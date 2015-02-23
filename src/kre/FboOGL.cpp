@@ -24,6 +24,7 @@
 #include <GL/glew.h>
 
 #include <cstddef>
+#include <stack>
 
 #include "asserts.hpp"
 #include "DisplayDevice.hpp"
@@ -34,6 +35,34 @@
 
 namespace KRE
 {
+	namespace
+	{
+		struct fbo_info
+		{
+			explicit fbo_info(GLuint i, GLint v0, GLint v1, GLint v2, GLint v3) : id(i)
+			{
+				viewport[0] = v0;
+				viewport[1] = v1;
+				viewport[2] = v2;
+				viewport[3] = v3;
+			}
+			GLuint id;
+			GLint viewport[4];
+		};
+		typedef std::stack<fbo_info> fbo_stack_type;
+		fbo_stack_type& get_fbo_stack()
+		{
+			static fbo_stack_type res;
+			if(res.empty()) {
+				// default framebuffer id is 0.
+				GLint vp[4];
+				glGetIntegerv(GL_VIEWPORT, vp);
+				res.emplace(0, vp[0], vp[1], vp[2], vp[3]);
+			}
+			return res;
+		}
+	}
+
 	FboOpenGL::FboOpenGL(unsigned width, unsigned height, 
 		unsigned color_plane_count, 
 		bool depth, 
@@ -44,8 +73,10 @@ namespace KRE
 		uses_ext_(false),
 		depth_stencil_buffer_id_(0),
 		tex_width_(0),
-		tex_height_(0)
+		tex_height_(0),
+		applied_(false)
 	{
+		on_create();
 	}
 
 	FboOpenGL::FboOpenGL(const variant& node)
@@ -55,6 +86,7 @@ namespace KRE
 		tex_width_(0),
 		tex_height_(0)
 	{
+		on_create();
 	}
 
 	FboOpenGL::FboOpenGL(const FboOpenGL& op)
@@ -62,7 +94,8 @@ namespace KRE
 		uses_ext_(false),
 		depth_stencil_buffer_id_(0),
 		tex_width_(0),
-		tex_height_(0)
+		tex_height_(0),
+		applied_(false)
 	{
 		if(op.tex_height_ != 0 && op.tex_width_ != 0) {
 			on_create();
@@ -75,8 +108,8 @@ namespace KRE
 		GLenum ds_attachment;
 		getDSInfo(ds_attachment, depth_stencil_internal_format);
 
-		tex_width_ = next_power_of_two(width());
-		tex_height_ = next_power_of_two(height());
+		//tex_width_ = next_power_of_two(width());
+		//tex_height_ = next_power_of_two(height());
 
 		// check for fbo support
 		if(GLEW_ARB_framebuffer_object) {
@@ -147,6 +180,14 @@ namespace KRE
 				glBindFramebuffer(GL_FRAMEBUFFER, 0);*/
 
 			} else {
+				int color_planes = getColorPlanes();
+				auto tex = Texture::createTexture2D(color_planes, width(), height(), PixelFormat::PF::PIXELFORMAT_BGRA8888);
+				tex->setSourceRect(rect(0, 0, width(), height()));
+				setTexture(tex);
+
+				tex_width_ = tex->actualWidth();
+				tex_height_ = tex->actualHeight();
+
 				if(getDepthPlane() || getStencilPlane()) {
 					depth_stencil_buffer_id_ = std::shared_ptr<GLuint>(new GLuint, [](GLuint* id){ 
 						glBindRenderbuffer(GL_RENDERBUFFER, 0); 
@@ -158,11 +199,6 @@ namespace KRE
 					glRenderbufferStorage(GL_RENDERBUFFER, depth_stencil_internal_format, tex_width_, tex_height_);
 					glBindRenderbuffer(GL_RENDERBUFFER, 0);
 				}
-
-				int color_planes = getColorPlanes();
-				auto tex = Texture::createTexture2D(color_planes, tex_width_, tex_height_, PixelFormat::PF::PIXELFORMAT_BGRA8888);
-				tex->setSourceRect(rect(0, 0, width(), height()));
-				setTexture(tex);
 
 				framebuffer_id_ = std::shared_ptr<GLuint>(new GLuint, [](GLuint* id) {
 					glDeleteFramebuffers(1, id); 
@@ -218,24 +254,38 @@ namespace KRE
 		ASSERT_LOG(framebuffer_id_ != nullptr, "Framebuffer object hasn't been created.");
 		glBindFramebuffer(GL_FRAMEBUFFER, *framebuffer_id_);
 
-		glGetIntegerv(GL_VIEWPORT, viewport_);
+		applied_ = true;
+		get_fbo_stack().emplace(*framebuffer_id_, 0, 0, width(), height());
+
 		glViewport(0, 0, width(), height());
 	}
 
 	void FboOpenGL::handleUnapply() const
 	{
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		glViewport(viewport_[0], viewport_[1], viewport_[2], viewport_[3]);
+		ASSERT_LOG(!get_fbo_stack().empty(), "FBO id stack was empty. This should never happen if calls to apply/unapply are balanced.");
+		// This should be our id at top.
+		auto chk = get_fbo_stack().top(); get_fbo_stack().pop();
+		ASSERT_LOG(chk.id == *framebuffer_id_, "Our FBO id was not the one at the top of the stack. This should never happen if calls to apply/unapply are balanced.");
+		ASSERT_LOG(!get_fbo_stack().empty(), "FBO id stack was empty. This should never happen if calls to apply/unapply are balanced.");
+		auto last = get_fbo_stack().top();
+		glBindFramebuffer(GL_FRAMEBUFFER, last.id);
+		glViewport(last.viewport[0], last.viewport[1], last.viewport[2], last.viewport[3]);
+		applied_ = false;
+		setChanged();
 	}
 
 	void FboOpenGL::handleClear() const
 	{
-		ASSERT_LOG(framebuffer_id_ != nullptr, "Framebuffer object hasn't been created.");
-		glBindFramebuffer(GL_FRAMEBUFFER, *framebuffer_id_);
+		bool appl = applied_;
+		if(!appl) {
+			handleApply();
+		}
 		auto& color = getClearColor();
 		glClearColor(color.red(), color.green(), color.blue(), color.alpha());
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		if(!appl) {
+			handleUnapply();
+		}
 	}
 
 	RenderTargetPtr FboOpenGL::handleClone()

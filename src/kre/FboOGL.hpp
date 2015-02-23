@@ -60,6 +60,7 @@ namespace KRE
 		unsigned tex_width_;
 		unsigned tex_height_;
 		mutable GLint viewport_[4];
+		mutable bool applied_;
 
 		FboOpenGL();
 		void operator=(const FboOpenGL&);
