@@ -1889,15 +1889,16 @@ FUNCTION_DEF(sort, 1, 2, "sort(list, criteria): Returns a nicely-ordered list. I
 	}
 
 	if(args().size() == 1) {
-		std::sort(vars.begin(), vars.end());
+		std::stable_sort(vars.begin(), vars.end());
 	} else {
 		boost::intrusive_ptr<variant_comparator> comparator(new variant_comparator(args()[1], variables));
-		std::sort(vars.begin(), vars.end(), [=](const variant& a, const variant& b) { return (*comparator)(a,b); });
+		std::stable_sort(vars.begin(), vars.end(), [=](const variant& a, const variant& b) { return (*comparator)(a,b); });
 	}
 
 	return variant(&vars);
 FUNCTION_ARGS_DEF
 	ARG_TYPE("list");
+	ARG_TYPE("bool");
 FUNCTION_TYPE_DEF
 	return args()[0]->query_variant_type();
 END_FUNCTION_DEF(sort)
