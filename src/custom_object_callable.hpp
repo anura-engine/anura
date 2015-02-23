@@ -203,6 +203,8 @@ enum CUSTOM_OBJECT_PROPERTY {
 	NUM_CUSTOM_OBJECT_PROPERTIES
 };
 
+enum { NUM_CUSTOM_OBJECT_NON_PLAYER_PROPERTIES = CUSTOM_OBJECT_PLAYER_DIFFICULTY };
+
 class custom_object_callable : public game_logic::formula_callable_definition
 {
 public:

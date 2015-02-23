@@ -1069,7 +1069,7 @@ FUNCTION_DEF(keys, 1, 1, "keys(map) -> list: gives the keys for a map")
 	return map.get_keys();
 
 FUNCTION_ARGS_DEF
-	ARG_TYPE("map");
+	ARG_TYPE("map|object");
 FUNCTION_TYPE_DEF
 	return variant_type::get_list(args()[0]->query_variant_type()->is_map_of().first);
 END_FUNCTION_DEF(keys)
