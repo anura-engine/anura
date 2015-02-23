@@ -1560,7 +1560,7 @@ namespace box2d
 	void debug_draw::DrawCircle(const b2Vec2& center, float32 radius, const b2Color& color)
 	{
 		auto canvas = KRE::Canvas::getInstance();
-		canvas->drawHollowCircle(pointf(center.x * this_world->scale(), center.y * this_world->scale()), radius, KRE::Color(color.r, color.g, color.b));
+		canvas->drawHollowCircle(pointf(center.x * this_world->scale(), center.y * this_world->scale()), radius, radius-2.0f, KRE::Color(color.r, color.g, color.b));
 	}
 
 	void debug_draw::DrawSolidCircle(const b2Vec2& center, float32 radius, const b2Vec2& axis, const b2Color& color)
