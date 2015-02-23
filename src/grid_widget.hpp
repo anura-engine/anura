@@ -87,9 +87,9 @@ namespace gui
 
 		virtual std::vector<WidgetPtr> getChildren() const;
 	protected:
-		virtual bool handleEvent(const SDL_Event& event, bool claimed) override;
-		virtual void handleDraw() const override;
-		virtual void handleProcess() override;
+		bool handleEvent(const SDL_Event& event, bool claimed) override;
+		void handleDraw() const override;
+		void handleProcess() override;
 
 	private:
 		DECLARE_CALLABLE(grid);

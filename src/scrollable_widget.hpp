@@ -34,8 +34,8 @@ namespace gui
 		ScrollableWidget();
 		ScrollableWidget(const variant& v, game_logic::FormulaCallable* e);
 		void setYscroll(int yscroll);
-		virtual void setDim(int w, int h);
-		virtual void setLoc(int x, int y);
+		void setDim(int w, int h);
+		void setLoc(int x, int y);
 	protected:
 		~ScrollableWidget();
 		void setVirtualHeight(int height);
@@ -47,9 +47,9 @@ namespace gui
 		int getVirtualHeight() const { return virtual_height_; }
 	private:
 		DECLARE_CALLABLE(ScrollableWidget)
-		virtual void onSetYscroll(int old_yscroll, int new_yscroll);
-		virtual void handleDraw() const override;
-		virtual bool handleEvent(const SDL_Event& event, bool claimed) override;
+		void onSetYscroll(int old_yscroll, int new_yscroll);
+		void handleDraw() const override;
+		bool handleEvent(const SDL_Event& event, bool claimed) override;
 
 		int yscroll_;
 		int virtual_height_;
