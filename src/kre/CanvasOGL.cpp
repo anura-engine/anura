@@ -57,8 +57,8 @@ namespace KRE
 	{
 		const float tx1 = texture->getNormalisedTextureCoordW<float>(src.x());
 		const float ty1 = texture->getNormalisedTextureCoordH<float>(src.y());
-		const float tx2 = texture->getNormalisedTextureCoordW<float>(src.w() == 0 ? texture->width() : src.x2());
-		const float ty2 = texture->getNormalisedTextureCoordH<float>(src.h() == 0 ? texture->height() : src.y2());
+		const float tx2 = texture->getNormalisedTextureCoordW<float>(src.w() == 0 ? texture->surfaceWidth() : src.x2());
+		const float ty2 = texture->getNormalisedTextureCoordH<float>(src.h() == 0 ? texture->surfaceHeight() : src.y2());
 		const float uv_coords[] = {
 			tx1, ty1,
 			tx2, ty1,
@@ -66,10 +66,11 @@ namespace KRE
 			tx2, ty2,
 		};
 
-		const float vx1 = float(dst.x());
-		const float vy1 = float(dst.y());
-		const float vx2 = float(dst.x2());
-		const float vy2 = float(dst.y2());
+		auto& tex_dst = texture->getSourceRect();
+		const float vx1 = static_cast<float>(dst.x());
+		const float vy1 = static_cast<float>(dst.y());
+		const float vx2 = static_cast<float>(dst.w() == 0 ? tex_dst.w() == 0 ? texture->surfaceWidth() : dst.x() + tex_dst.w() : dst.x2());
+		const float vy2 = static_cast<float>(dst.h() == 0 ? tex_dst.h() == 0 ? texture->surfaceHeight() : dst.y() + tex_dst.h() : dst.y2());
 		const float vtx_coords[] = {
 			vx1, vy1,
 			vx2, vy1,
@@ -448,7 +449,7 @@ namespace KRE
 		static OpenGL::ShaderProgramPtr shader = OpenGL::ShaderProgram::factory("attr_color_shader");
 		shader->makeActive();
 		shader->setUniformValue(shader->getMvpUniform(), glm::value_ptr(mvp));
-		shader->setUniformValue(shader->getColorUniform(), /*getColor().asFloatVector()*/ glm::value_ptr(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f)));
+		shader->setUniformValue(shader->getColorUniform(), getColor().asFloatVector());
 
 		// XXX figure out a nice way to do this with shaders.
 		std::vector<glm::vec2> varray;
