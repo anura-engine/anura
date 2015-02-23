@@ -45,11 +45,12 @@ namespace gui
 
 		int getYscroll() const { return yscroll_; }
 		int getVirtualHeight() const { return virtual_height_; }
+
+		void handleDraw() const override;
+		bool handleEvent(const SDL_Event& event, bool claimed) override;
 	private:
 		DECLARE_CALLABLE(ScrollableWidget)
 		void onSetYscroll(int old_yscroll, int new_yscroll);
-		void handleDraw() const override;
-		bool handleEvent(const SDL_Event& event, bool claimed) override;
 
 		int yscroll_;
 		int virtual_height_;
