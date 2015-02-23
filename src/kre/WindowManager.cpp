@@ -175,6 +175,9 @@ namespace KRE
 		}
 
 		void clear(ClearFlags f) override {
+			// N.B. Clear color is global GL state, so we need to re-configure it everytime we clear.
+			// Since it may have changed by some sneaky render target user.
+			display_->setClearColor(clear_color_);
 			display_->clear(ClearFlags::ALL);
 		}
 
