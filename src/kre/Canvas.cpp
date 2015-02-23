@@ -77,19 +77,19 @@ namespace KRE
 		blitTexture(tex, rect(0,0,0,0), rotation, rect(x,y), color);
 	}
 
+	Canvas::ModelManager::ModelManager()
+		: canvas_(KRE::Canvas::getInstance())
+	{
+		canvas_->model_stack_.emplace(glm::mat4(1.0f));
+	}
+
 	Canvas::ModelManager::ModelManager(int tx, int ty, float rotation, float scale)
 		: canvas_(KRE::Canvas::getInstance())
 	{
-		//glm::mat4 m_trans   = glm::translate(glm::mat4(1.0f), glm::vec3(static_cast<float>(tx), static_cast<float>(ty),0.0f));
-		//glm::mat4 m_rotate  = glm::rotate(m_trans, rotation, glm::vec3(0.0f,0.0f,1.0f));
-		//glm::mat4 model     = glm::scale(m_rotate, glm::vec3(scale));
-		glm::mat4 m_trans   = glm::translate(glm::mat4(1.0f), glm::vec3(static_cast<float>(tx), static_cast<float>(ty),0.0f));
-		//glm::mat4 m_rotate  = glm::rotate(glm::mat4(1.0f), rotation, glm::vec3(0.0f,0.0f,1.0f));
-		//glm::mat4 m_scale     = glm::scale(glm::mat4(1.0f), glm::vec3(scale));
-		glm::mat4 model = m_trans;
-		if(!canvas_->model_stack_.empty()) {
-			model = model * canvas_->model_stack_.top();
-		}
+		const glm::mat4 m_trans   = glm::translate(glm::mat4(1.0f), glm::vec3(static_cast<float>(tx), static_cast<float>(ty),0.0f));
+		const glm::mat4 m_rotate  = glm::rotate(glm::mat4(1.0f), rotation, glm::vec3(0.0f,0.0f,1.0f));
+		const glm::mat4 m_scale   = glm::scale(glm::mat4(1.0f), glm::vec3(scale));
+		glm::mat4 model = m_trans * m_rotate * m_scale;
 		canvas_->model_stack_.emplace(model);
 	}
 
@@ -97,5 +97,49 @@ namespace KRE
 	{
 		canvas_->model_stack_.pop();
 	}
-}
 
+	void Canvas::ModelManager::setIdentity()
+	{
+		ASSERT_LOG(!canvas_->model_stack_.empty(), "Model stack was empty.");
+		canvas_->model_stack_.top() = glm::mat4(1.0f);
+	}
+
+	void Canvas::ModelManager::translate(int tx, int ty)
+	{
+		ASSERT_LOG(!canvas_->model_stack_.empty(), "Model stack was empty.");
+		canvas_->model_stack_.top() = glm::translate(canvas_->model_stack_.top(), glm::vec3(static_cast<float>(tx), static_cast<float>(ty),0.0f));
+	}
+
+	void Canvas::ModelManager::rotate(float angle)
+	{
+		ASSERT_LOG(!canvas_->model_stack_.empty(), "Model stack was empty.");
+		canvas_->model_stack_.top() = glm::rotate(canvas_->model_stack_.top(), angle, glm::vec3(0.0f, 0.0f, 1.0f));
+	}
+
+	void Canvas::ModelManager::scale(float sx, float sy)
+	{
+		ASSERT_LOG(!canvas_->model_stack_.empty(), "Model stack was empty.");
+		canvas_->model_stack_.top() = glm::scale(canvas_->model_stack_.top(), glm::vec3(static_cast<float>(sx), static_cast<float>(sy),1.0f));
+	}
+
+	void Canvas::ModelManager::scale(float s)
+	{
+		ASSERT_LOG(!canvas_->model_stack_.empty(), "Model stack was empty.");
+		canvas_->model_stack_.top() = glm::scale(canvas_->model_stack_.top(), glm::vec3(static_cast<float>(s), static_cast<float>(s),1.0f));
+	}
+
+	void generate_color_wheel(int num_points, std::vector<glm::u8vec4>* color_array, const Color& centre, float start_hue, float end_hue)
+	{
+		ASSERT_LOG(num_points > 0, "Must be more than one point in call to generate_color_wheel()");
+		color_array->emplace_back(centre.ri(), centre.gi(), centre.bi(), centre.ai()); // center color.
+		float hue = start_hue;
+		const float sat = 1.0f;
+		const float value = 1.0f;
+		for(int n = 0; n != num_points; n++) {
+			auto c = Color::from_hsv(hue, sat, value);
+			color_array->emplace_back(c.ri(), c.gi(), c.bi(), c.ai());
+			hue += (end_hue - start_hue)/static_cast<float>(num_points);
+		}
+		color_array->emplace_back((*color_array)[1]);
+	}
+}

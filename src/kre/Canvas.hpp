@@ -100,8 +100,14 @@ namespace KRE
 
 		struct ModelManager
 		{
-			ModelManager(int tx, int ty, float rotation, float scale);
+			ModelManager();
+			explicit ModelManager(int tx, int ty, float rotation=0.0f, float scale=1.0f);
 			~ModelManager();
+			void setIdentity();
+			void translate(int tx, int ty);
+			void rotate(float angle);
+			void scale(float sx, float sy);
+			void scale(float s);
 			CanvasPtr canvas_;
 		};
 
@@ -129,5 +135,7 @@ namespace KRE
 		std::stack<glm::mat4> model_stack_;
 	};
 
-	Color operator*(const Color& lhs, const Color& rhs);
+	// Helper function to generate a color wheel between the given hue values.
+	// Generated color values can be passed as input to the appropriate drawSolidCircle() version.
+	void generate_color_wheel(int num_points, std::vector<glm::u8vec4>* color_array, const Color& centre=Color::colorWhite(), float start_hue=0.0f, float end_hue=1.0f);
 }
