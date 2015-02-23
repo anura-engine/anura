@@ -64,6 +64,12 @@ namespace KRE
 	void Blittable::preRender(const WindowManagerPtr& wm)
 	{
 		if(changed_) {
+			changed_ = false;
+
+			if(draw_rect_.w() == 0 || draw_rect_.h() == 0) {
+				draw_rect_ = rectf(0.0f, 0.0f, static_cast<float>(getTexture()->surfaceWidth()), static_cast<float>(getTexture()->surfaceHeight()));
+			}
+
 			float offs_x = 0.0f;
 			float offs_y = 0.0f;
 			switch(centre_) {
@@ -90,7 +96,6 @@ namespace KRE
 					break;
 			}
 
-			// XXX we should only do this if things changed.
 			const float vx1 = draw_rect_.x() + offs_x;
 			const float vy1 = draw_rect_.y() + offs_y;
 			const float vx2 = draw_rect_.x2() + offs_x;
