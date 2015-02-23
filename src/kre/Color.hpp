@@ -23,6 +23,7 @@
 
 #pragma once
 
+#include <iostream>
 #include <memory>
 #include <string>
 #include <glm/gtc/type_precision.hpp>
@@ -129,153 +130,153 @@ namespace KRE
 
 		static ColorPtr factory(const std::string& name);
 
-		static Color colorAliceblue() { return Color(240, 248, 255); }
-		static Color colorAntiquewhite() { return Color(250, 235, 215); }
-		static Color colorAqua() { return Color(0, 255, 255); }
-		static Color colorAquamarine() { return Color(127, 255, 212); }
-		static Color colorAzure() { return Color(240, 255, 255); }
-		static Color colorBeige() { return Color(245, 245, 220); }
-		static Color colorBisque() { return Color(255, 228, 196); }
-		static Color colorBlack() { return Color(0, 0, 0); }
-		static Color colorBlanchedalmond() { return Color(255, 235, 205); }
-		static Color colorBlue() { return Color(0, 0, 255); }
-		static Color colorBlueviolet() { return Color(138, 43, 226); }
-		static Color colorBrown() { return Color(165, 42, 42); }
-		static Color colorBurlywood() { return Color(222, 184, 135); }
-		static Color colorCadetblue() { return Color(95, 158, 160); }
-		static Color colorChartreuse() { return Color(127, 255, 0); }
-		static Color colorChocolate() { return Color(210, 105, 30); }
-		static Color colorCoral() { return Color(255, 127, 80); }
-		static Color colorCornflowerblue() { return Color(100, 149, 237); }
-		static Color colorCornsilk() { return Color(255, 248, 220); }
-		static Color colorCrimson() { return Color(220, 20, 60); }
-		static Color colorCyan() { return Color(0, 255, 255); }
-		static Color colorDarkblue() { return Color(0, 0, 139); }
-		static Color colorDarkcyan() { return Color(0, 139, 139); }
-		static Color colorDarkgoldenrod() { return Color(184, 134, 11); }
-		static Color colorDarkgray() { return Color(169, 169, 169); }
-		static Color colorDarkgreen() { return Color(0, 100, 0); }
-		static Color colorDarkgrey() { return Color(169, 169, 169); }
-		static Color colorDarkkhaki() { return Color(189, 183, 107); }
-		static Color colorDarkmagenta() { return Color(139, 0, 139); }
-		static Color colorDarkolivegreen() { return Color(85, 107, 47); }
-		static Color colorDarkorange() { return Color(255, 140, 0); }
-		static Color colorDarkorchid() { return Color(153, 50, 204); }
-		static Color colorDarkred() { return Color(139, 0, 0); }
-		static Color colorDarksalmon() { return Color(233, 150, 122); }
-		static Color colorDarkseagreen() { return Color(143, 188, 143); }
-		static Color colorDarkslateblue() { return Color(72, 61, 139); }
-		static Color colorDarkslategray() { return Color(47, 79, 79); }
-		static Color colorDarkslategrey() { return Color(47, 79, 79); }
-		static Color colorDarkturquoise() { return Color(0, 206, 209); }
-		static Color colorDarkviolet() { return Color(148, 0, 211); }
-		static Color colorDeeppink() { return Color(255, 20, 147); }
-		static Color colorDeepskyblue() { return Color(0, 191, 255); }
-		static Color colorDimgray() { return Color(105, 105, 105); }
-		static Color colorDimgrey() { return Color(105, 105, 105); }
-		static Color colorDodgerblue() { return Color(30, 144, 255); }
-		static Color colorFirebrick() { return Color(178, 34, 34); }
-		static Color colorFloralwhite() { return Color(255, 250, 240); }
-		static Color colorForestgreen() { return Color(34, 139, 34); }
-		static Color colorFuchsia() { return Color(255, 0, 255); }
-		static Color colorGainsboro() { return Color(220, 220, 220); }
-		static Color colorGhostwhite() { return Color(248, 248, 255); }
-		static Color colorGold() { return Color(255, 215, 0); }
-		static Color colorGoldenrod() { return Color(218, 165, 32); }
-		static Color colorGray() { return Color(128, 128, 128); }
-		static Color colorGrey() { return Color(128, 128, 128); }
-		static Color colorGreen() { return Color(0, 128, 0); }
-		static Color colorGreenyellow() { return Color(173, 255, 47); }
-		static Color colorHoneydew() { return Color(240, 255, 240); }
-		static Color colorHotpink() { return Color(255, 105, 180); }
-		static Color colorIndianred() { return Color(205, 92, 92); }
-		static Color colorIndigo() { return Color(75, 0, 130); }
-		static Color colorIvory() { return Color(255, 255, 240); }
-		static Color colorKhaki() { return Color(240, 230, 140); }
-		static Color colorLavender() { return Color(230, 230, 250); }
-		static Color colorLavenderblush() { return Color(255, 240, 245); }
-		static Color colorLawngreen() { return Color(124, 252, 0); }
-		static Color colorLemonchiffon() { return Color(255, 250, 205); }
-		static Color colorLightblue() { return Color(173, 216, 230); }
-		static Color colorLightcoral() { return Color(240, 128, 128); }
-		static Color colorLightcyan() { return Color(224, 255, 255); }
-		static Color colorLightgoldenrodyellow() { return Color(250, 250, 210); }
-		static Color colorLightgray() { return Color(211, 211, 211); }
-		static Color colorLightgreen() { return Color(144, 238, 144); }
-		static Color colorLightgrey() { return Color(211, 211, 211); }
-		static Color colorLightpink() { return Color(255, 182, 193); }
-		static Color colorLightsalmon() { return Color(255, 160, 122); }
-		static Color colorLightseagreen() { return Color(32, 178, 170); }
-		static Color colorLightskyblue() { return Color(135, 206, 250); }
-		static Color colorLightslategray() { return Color(119, 136, 153); }
-		static Color colorLightslategrey() { return Color(119, 136, 153); }
-		static Color colorLightsteelblue() { return Color(176, 196, 222); }
-		static Color colorLightyellow() { return Color(255, 255, 224); }
-		static Color colorLime() { return Color(0, 255, 0); }
-		static Color colorLimegreen() { return Color(50, 205, 50); }
-		static Color colorLinen() { return Color(250, 240, 230); }
-		static Color colorMagenta() { return Color(255, 0, 255); }
-		static Color colorMaroon() { return Color(128, 0, 0); }
-		static Color colorMediumaquamarine() { return Color(102, 205, 170); }
-		static Color colorMediumblue() { return Color(0, 0, 205); }
-		static Color colorMediumorchid() { return Color(186, 85, 211); }
-		static Color colorMediumpurple() { return Color(147, 112, 219); }
-		static Color colorMediumseagreen() { return Color(60, 179, 113); }
-		static Color colorMediumslateblue() { return Color(123, 104, 238); }
-		static Color colorMediumspringgreen() { return Color(0, 250, 154); }
-		static Color colorMediumturquoise() { return Color(72, 209, 204); }
-		static Color colorMediumvioletred() { return Color(199, 21, 133); }
-		static Color colorMidnightblue() { return Color(25, 25, 112); }
-		static Color colorMintcream() { return Color(245, 255, 250); }
-		static Color colorMistyrose() { return Color(255, 228, 225); }
-		static Color colorMoccasin() { return Color(255, 228, 181); }
-		static Color colorNavajowhite() { return Color(255, 222, 173); }
-		static Color colorNavy() { return Color(0, 0, 128); }
-		static Color colorOldlace() { return Color(253, 245, 230); }
-		static Color colorOlive() { return Color(128, 128, 0); }
-		static Color colorOlivedrab() { return Color(107, 142, 35); }
-		static Color colorOrange() { return Color(255, 165, 0); }
-		static Color colorOrangered() { return Color(255, 69, 0); }
-		static Color colorOrchid() { return Color(218, 112, 214); }
-		static Color colorPalegoldenrod() { return Color(238, 232, 170); }
-		static Color colorPalegreen() { return Color(152, 251, 152); }
-		static Color colorPaleturquoise() { return Color(175, 238, 238); }
-		static Color colorPalevioletred() { return Color(219, 112, 147); }
-		static Color colorPapayawhip() { return Color(255, 239, 213); }
-		static Color colorPeachpuff() { return Color(255, 218, 185); }
-		static Color colorPeru() { return Color(205, 133, 63); }
-		static Color colorPink() { return Color(255, 192, 203); }
-		static Color colorPlum() { return Color(221, 160, 221); }
-		static Color colorPowderblue() { return Color(176, 224, 230); }
-		static Color colorPurple() { return Color(128, 0, 128); }
-		static Color colorRed() { return Color(255, 0, 0); }
-		static Color colorRosybrown() { return Color(188, 143, 143); }
-		static Color colorRoyalblue() { return Color(65, 105, 225); }
-		static Color colorSaddlebrown() { return Color(139, 69, 19); }
-		static Color colorSalmon() { return Color(250, 128, 114); }
-		static Color colorSandybrown() { return Color(244, 164, 96); }
-		static Color colorSeagreen() { return Color(46, 139, 87); }
-		static Color colorSeashell() { return Color(255, 245, 238); }
-		static Color colorSienna() { return Color(160, 82, 45); }
-		static Color colorSilver() { return Color(192, 192, 192); }
-		static Color colorSkyblue() { return Color(135, 206, 235); }
-		static Color colorSlateblue() { return Color(106, 90, 205); }
-		static Color colorSlategray() { return Color(112, 128, 144); }
-		static Color colorSlategrey() { return Color(112, 128, 144); }
-		static Color colorSnow() { return Color(255, 250, 250); }
-		static Color colorSpringgreen() { return Color(0, 255, 127); }
-		static Color colorSteelblue() { return Color(70, 130, 180); }
-		static Color colorTan() { return Color(210, 180, 140); }
-		static Color colorTeal() { return Color(0, 128, 128); }
-		static Color colorThistle() { return Color(216, 191, 216); }
-		static Color colorTomato() { return Color(255, 99, 71); }
-		static Color colorTurquoise() { return Color(64, 224, 208); }
-		static Color colorViolet() { return Color(238, 130, 238); }
-		static Color colorWheat() { return Color(245, 222, 179); }
-		static Color colorWhite() { return Color(255, 255, 255); }
-		static Color colorWhitesmoke() { return Color(245, 245, 245); }
-		static Color colorYellow() { return Color(255, 255, 0); }
-		static Color colorYellowgreen() { return Color(154, 205, 50); }		
+		static const Color& colorAliceblue() { static Color res(240, 248, 255); return res; }
+		static const Color& colorAntiquewhite() { static Color res(250, 235, 215); return res; }
+		static const Color& colorAqua() { static Color res(0, 255, 255); return res; }
+		static const Color& colorAquamarine() { static Color res(127, 255, 212); return res; }
+		static const Color& colorAzure() { static Color res(240, 255, 255); return res; }
+		static const Color& colorBeige() { static Color res(245, 245, 220); return res; }
+		static const Color& colorBisque() { static Color res(255, 228, 196); return res; }
+		static const Color& colorBlack() { static Color res(0, 0, 0); return res; }
+		static const Color& colorBlanchedalmond() { static Color res(255, 235, 205); return res; }
+		static const Color& colorBlue() { static Color res(0, 0, 255); return res; }
+		static const Color& colorBlueviolet() { static Color res(138, 43, 226); return res; }
+		static const Color& colorBrown() { static Color res(165, 42, 42); return res; }
+		static const Color& colorBurlywood() { static Color res(222, 184, 135); return res; }
+		static const Color& colorCadetblue() { static Color res(95, 158, 160); return res; }
+		static const Color& colorChartreuse() { static Color res(127, 255, 0); return res; }
+		static const Color& colorChocolate() { static Color res(210, 105, 30); return res; }
+		static const Color& colorCoral() { static Color res(255, 127, 80); return res; }
+		static const Color& colorCornflowerblue() { static Color res(100, 149, 237); return res; }
+		static const Color& colorCornsilk() { static Color res(255, 248, 220); return res; }
+		static const Color& colorCrimson() { static Color res(220, 20, 60); return res; }
+		static const Color& colorCyan() { static Color res(0, 255, 255); return res; }
+		static const Color& colorDarkblue() { static Color res(0, 0, 139); return res; }
+		static const Color& colorDarkcyan() { static Color res(0, 139, 139); return res; }
+		static const Color& colorDarkgoldenrod() { static Color res(184, 134, 11); return res; }
+		static const Color& colorDarkgray() { static Color res(169, 169, 169); return res; }
+		static const Color& colorDarkgreen() { static Color res(0, 100, 0); return res; }
+		static const Color& colorDarkgrey() { static Color res(169, 169, 169); return res; }
+		static const Color& colorDarkkhaki() { static Color res(189, 183, 107); return res; }
+		static const Color& colorDarkmagenta() { static Color res(139, 0, 139); return res; }
+		static const Color& colorDarkolivegreen() { static Color res(85, 107, 47); return res; }
+		static const Color& colorDarkorange() { static Color res(255, 140, 0); return res; }
+		static const Color& colorDarkorchid() { static Color res(153, 50, 204); return res; }
+		static const Color& colorDarkred() { static Color res(139, 0, 0); return res; }
+		static const Color& colorDarksalmon() { static Color res(233, 150, 122); return res; }
+		static const Color& colorDarkseagreen() { static Color res(143, 188, 143); return res; }
+		static const Color& colorDarkslateblue() { static Color res(72, 61, 139); return res; }
+		static const Color& colorDarkslategray() { static Color res(47, 79, 79); return res; }
+		static const Color& colorDarkslategrey() { static Color res(47, 79, 79); return res; }
+		static const Color& colorDarkturquoise() { static Color res(0, 206, 209); return res; }
+		static const Color& colorDarkviolet() { static Color res(148, 0, 211); return res; }
+		static const Color& colorDeeppink() { static Color res(255, 20, 147); return res; }
+		static const Color& colorDeepskyblue() { static Color res(0, 191, 255); return res; }
+		static const Color& colorDimgray() { static Color res(105, 105, 105); return res; }
+		static const Color& colorDimgrey() { static Color res(105, 105, 105); return res; }
+		static const Color& colorDodgerblue() { static Color res(30, 144, 255); return res; }
+		static const Color& colorFirebrick() { static Color res(178, 34, 34); return res; }
+		static const Color& colorFloralwhite() { static Color res(255, 250, 240); return res; }
+		static const Color& colorForestgreen() { static Color res(34, 139, 34); return res; }
+		static const Color& colorFuchsia() { static Color res(255, 0, 255); return res; }
+		static const Color& colorGainsboro() { static Color res(220, 220, 220); return res; }
+		static const Color& colorGhostwhite() { static Color res(248, 248, 255); return res; }
+		static const Color& colorGold() { static Color res(255, 215, 0); return res; }
+		static const Color& colorGoldenrod() { static Color res(218, 165, 32); return res; }
+		static const Color& colorGray() { static Color res(128, 128, 128); return res; }
+		static const Color& colorGrey() { static Color res(128, 128, 128); return res; }
+		static const Color& colorGreen() { static Color res(0, 128, 0); return res; }
+		static const Color& colorGreenyellow() { static Color res(173, 255, 47); return res; }
+		static const Color& colorHoneydew() { static Color res(240, 255, 240); return res; }
+		static const Color& colorHotpink() { static Color res(255, 105, 180); return res; }
+		static const Color& colorIndianred() { static Color res(205, 92, 92); return res; }
+		static const Color& colorIndigo() { static Color res(75, 0, 130); return res; }
+		static const Color& colorIvory() { static Color res(255, 255, 240); return res; }
+		static const Color& colorKhaki() { static Color res(240, 230, 140); return res; }
+		static const Color& colorLavender() { static Color res(230, 230, 250); return res; }
+		static const Color& colorLavenderblush() { static Color res(255, 240, 245); return res; }
+		static const Color& colorLawngreen() { static Color res(124, 252, 0); return res; }
+		static const Color& colorLemonchiffon() { static Color res(255, 250, 205); return res; }
+		static const Color& colorLightblue() { static Color res(173, 216, 230); return res; }
+		static const Color& colorLightcoral() { static Color res(240, 128, 128); return res; }
+		static const Color& colorLightcyan() { static Color res(224, 255, 255); return res; }
+		static const Color& colorLightgoldenrodyellow() { static Color res(250, 250, 210); return res; }
+		static const Color& colorLightgray() { static Color res(211, 211, 211); return res; }
+		static const Color& colorLightgreen() { static Color res(144, 238, 144); return res; }
+		static const Color& colorLightgrey() { static Color res(211, 211, 211); return res; }
+		static const Color& colorLightpink() { static Color res(255, 182, 193); return res; }
+		static const Color& colorLightsalmon() { static Color res(255, 160, 122); return res; }
+		static const Color& colorLightseagreen() { static Color res(32, 178, 170); return res; }
+		static const Color& colorLightskyblue() { static Color res(135, 206, 250); return res; }
+		static const Color& colorLightslategray() { static Color res(119, 136, 153); return res; }
+		static const Color& colorLightslategrey() { static Color res(119, 136, 153); return res; }
+		static const Color& colorLightsteelblue() { static Color res(176, 196, 222); return res; }
+		static const Color& colorLightyellow() { static Color res(255, 255, 224); return res; }
+		static const Color& colorLime() { static Color res(0, 255, 0); return res; }
+		static const Color& colorLimegreen() { static Color res(50, 205, 50); return res; }
+		static const Color& colorLinen() { static Color res(250, 240, 230); return res; }
+		static const Color& colorMagenta() { static Color res(255, 0, 255); return res; }
+		static const Color& colorMaroon() { static Color res(128, 0, 0); return res; }
+		static const Color& colorMediumaquamarine() { static Color res(102, 205, 170); return res; }
+		static const Color& colorMediumblue() { static Color res(0, 0, 205); return res; }
+		static const Color& colorMediumorchid() { static Color res(186, 85, 211); return res; }
+		static const Color& colorMediumpurple() { static Color res(147, 112, 219); return res; }
+		static const Color& colorMediumseagreen() { static Color res(60, 179, 113); return res; }
+		static const Color& colorMediumslateblue() { static Color res(123, 104, 238); return res; }
+		static const Color& colorMediumspringgreen() { static Color res(0, 250, 154); return res; }
+		static const Color& colorMediumturquoise() { static Color res(72, 209, 204); return res; }
+		static const Color& colorMediumvioletred() { static Color res(199, 21, 133); return res; }
+		static const Color& colorMidnightblue() { static Color res(25, 25, 112); return res; }
+		static const Color& colorMintcream() { static Color res(245, 255, 250); return res; }
+		static const Color& colorMistyrose() { static Color res(255, 228, 225); return res; }
+		static const Color& colorMoccasin() { static Color res(255, 228, 181); return res; }
+		static const Color& colorNavajowhite() { static Color res(255, 222, 173); return res; }
+		static const Color& colorNavy() { static Color res(0, 0, 128); return res; }
+		static const Color& colorOldlace() { static Color res(253, 245, 230); return res; }
+		static const Color& colorOlive() { static Color res(128, 128, 0); return res; }
+		static const Color& colorOlivedrab() { static Color res(107, 142, 35); return res; }
+		static const Color& colorOrange() { static Color res(255, 165, 0); return res; }
+		static const Color& colorOrangered() { static Color res(255, 69, 0); return res; }
+		static const Color& colorOrchid() { static Color res(218, 112, 214); return res; }
+		static const Color& colorPalegoldenrod() { static Color res(238, 232, 170); return res; }
+		static const Color& colorPalegreen() { static Color res(152, 251, 152); return res; }
+		static const Color& colorPaleturquoise() { static Color res(175, 238, 238); return res; }
+		static const Color& colorPalevioletred() { static Color res(219, 112, 147); return res; }
+		static const Color& colorPapayawhip() { static Color res(255, 239, 213); return res; }
+		static const Color& colorPeachpuff() { static Color res(255, 218, 185); return res; }
+		static const Color& colorPeru() { static Color res(205, 133, 63); return res; }
+		static const Color& colorPink() { static Color res(255, 192, 203); return res; }
+		static const Color& colorPlum() { static Color res(221, 160, 221); return res; }
+		static const Color& colorPowderblue() { static Color res(176, 224, 230); return res; }
+		static const Color& colorPurple() { static Color res(128, 0, 128); return res; }
+		static const Color& colorRed() { static Color res(255, 0, 0); return res; }
+		static const Color& colorRosybrown() { static Color res(188, 143, 143); return res; }
+		static const Color& colorRoyalblue() { static Color res(65, 105, 225); return res; }
+		static const Color& colorSaddlebrown() { static Color res(139, 69, 19); return res; }
+		static const Color& colorSalmon() { static Color res(250, 128, 114); return res; }
+		static const Color& colorSandybrown() { static Color res(244, 164, 96); return res; }
+		static const Color& colorSeagreen() { static Color res(46, 139, 87); return res; }
+		static const Color& colorSeashell() { static Color res(255, 245, 238); return res; }
+		static const Color& colorSienna() { static Color res(160, 82, 45); return res; }
+		static const Color& colorSilver() { static Color res(192, 192, 192); return res; }
+		static const Color& colorSkyblue() { static Color res(135, 206, 235); return res; }
+		static const Color& colorSlateblue() { static Color res(106, 90, 205); return res; }
+		static const Color& colorSlategray() { static Color res(112, 128, 144); return res; }
+		static const Color& colorSlategrey() { static Color res(112, 128, 144); return res; }
+		static const Color& colorSnow() { static Color res(255, 250, 250); return res; }
+		static const Color& colorSpringgreen() { static Color res(0, 255, 127); return res; }
+		static const Color& colorSteelblue() { static Color res(70, 130, 180); return res; }
+		static const Color& colorTan() { static Color res(210, 180, 140); return res; }
+		static const Color& colorTeal() { static Color res(0, 128, 128); return res; }
+		static const Color& colorThistle() { static Color res(216, 191, 216); return res; }
+		static const Color& colorTomato() { static Color res(255, 99, 71); return res; }
+		static const Color& colorTurquoise() { static Color res(64, 224, 208); return res; }
+		static const Color& colorViolet() { static Color res(238, 130, 238); return res; }
+		static const Color& colorWheat() { static Color res(245, 222, 179); return res; }
+		static const Color& colorWhite() { static Color res(255, 255, 255); return res; }
+		static const Color& colorWhitesmoke() { static Color res(245, 245, 245); return res; }
+		static const Color& colorYellow() { static Color res(255, 255, 0); return res; }
+		static const Color& colorYellowgreen() { static Color res(154, 205, 50); return res; }		
 
 		// XXX We should have a ColorCallable, in a seperate file, then move these two into the ColorCallable.
 		static std::string getSetFieldType() { return "string"
@@ -287,6 +288,8 @@ namespace KRE
 	private:
 		float color_[4];
 	};
+
+	std::ostream& operator<<(std::ostream& os, const Color& c);
 
 	inline bool operator<(const Color& lhs, const Color& rhs)
 	{
@@ -302,6 +305,8 @@ namespace KRE
 	{
 		return !operator==(lhs, rhs);
 	}
+
+	Color operator*(const Color& lhs, const Color& rhs);
 
 	typedef std::shared_ptr<Color> ColorPtr;
 }

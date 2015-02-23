@@ -385,8 +385,8 @@ namespace KRE
 				const float h_dash = h * 360.0f;
 				// n.b. we assume h is scaled 0-1 rather than 0-360, hence the scaling factor is 6 rather than 60
 				const float region = h_dash / 60.0f;
-				const int int_region = static_cast<int>(std::floor(region));
-				const float remainder = h_dash - static_cast<float>(int_region);
+				const int int_region = static_cast<int>(std::floor(region)) % 6;
+				const float remainder = region - std::floor(region);
 
 				const float p = v * (1.0f - s);
 				const float q = v * (1.0f - s * remainder);
@@ -713,5 +713,11 @@ namespace KRE
 		outp.a = a;
 		hsv_to_rgb(h, s, v, glm::value_ptr(outp));
 		return Color(outp);
+	}
+
+	std::ostream& operator<<(std::ostream& os, const Color& c)
+	{
+		os << "rgba(" << c.ri() << "," << c.gi() << "," << c.bi() << "); rgbaf(" << c.r() << "," << c.g() << "," << c.b() << ")";
+		return os;
 	}
 }
