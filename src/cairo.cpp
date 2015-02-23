@@ -333,6 +333,8 @@ MarkupEntry MarkupMap[] = {
 	{ "rdquo", {0xE2, 0x80, 0x9D, 0x00} },
 	{ "emdash", { 0xE2, 0x80, 0x94, 0x00 } },
 	{ "amp", { '&', 0x00, 0x00, 0x00 } },
+	{ "aelig", { 0xC3, 0xA6, 0x00, 0x00 } },
+	{ "AElig", { 0xC3, 0x86, 0x00, 0x00 } },
 };
 
 std::string parse_special_chars_internal(const std::string& s)
@@ -668,7 +670,6 @@ void parse_text_markup_impl(std::vector<TextMarkupFragment>& stack, std::vector<
 	static const std::string XMLAttr = "<xmlattr>";
 
 	for(auto itor = ptree.begin(); itor != ptree.end(); ++itor) {
-		fprintf(stderr, "XML: %s -> %s\n", itor->first.c_str(), itor->second.data().c_str());
 
 		const size_t start_size = stack.size();
 
@@ -755,7 +756,6 @@ void parse_text_markup_impl(std::vector<TextMarkupFragment>& stack, std::vector<
 		parse_text_markup_impl(stack, output, itor->second, get_font_fn, itor->first);
 
 		stack.resize(start_size);
-		fprintf(stderr, "DONE: %s\n", itor->first.c_str());
 	}
 }
 
