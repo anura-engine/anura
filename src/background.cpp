@@ -358,6 +358,7 @@ void Background::drawLayers(int x, int y, const rect& area_ref, const std::vecto
 				drawLayer(x, y, a, rotation, bg, cycle);
 			}
 			if(bg.attr_->size() > 0) {
+				LOG_DEBUG("attribute size: " << bg.attr_->size());
 				wnd->render(&bg);
 			}
 			bg.attr_->clear();
@@ -548,4 +549,5 @@ void Background::drawLayer(int x, int y, const rect& area, float rotation, const
 		screen_width -= static_cast<int>(blit_width + bg.xpad * ScaleImage);
 	}
 	bg.attr_->update(&q, bg.attr_->end());
+	bg.getAttributeSet().back()->setCount(bg.attr_->size());
 }

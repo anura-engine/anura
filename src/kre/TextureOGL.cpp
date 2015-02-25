@@ -274,13 +274,14 @@ namespace KRE
 			int sw = surfaceWidth();
 			int sh = surfaceHeight();
 			auto surf = Surface::create(sw, sh, PixelFormat::PF::PIXELFORMAT_INDEX8);
+			int rp = surf->rowPitch();
 
 			std::vector<uint8_t> new_pixels;
-			new_pixels.resize(sw * sh);
+			new_pixels.resize(rp * sh);
 
 			auto& td = texture_data_[0];
 			td.palette.clear();
-			getSurface(0)->iterateOverSurface([&new_pixels, &sw, &td](int x, int y, int r, int g, int b, int a){
+			getSurface(0)->iterateOverSurface([&new_pixels, rp, &td](int x, int y, int r, int g, int b, int a){
 				color_histogram_type::key_type color = (static_cast<uint32_t>(r) << 24)
 					| (static_cast<uint32_t>(g) << 16)
 					| (static_cast<uint32_t>(b) << 8)
@@ -290,10 +291,10 @@ namespace KRE
 				if(it == td.color_index_map.end()) {
 					const int index = td.palette.size();
 					td.color_index_map[color] = index;
-					new_pixels[x + y * sw] = static_cast<uint8_t>(index);
+					new_pixels[x + y * rp] = static_cast<uint8_t>(index);
 					td.palette.emplace_back(color);
 				} else {
-					new_pixels[x + y * sw] = static_cast<uint8_t>(it->second);
+					new_pixels[x + y * rp] = static_cast<uint8_t>(it->second);
 				}
 				ASSERT_LOG(td.palette.size() < 256, "Can't convert surface to palettized version. Too many colors in source image > 256");
 			});

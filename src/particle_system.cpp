@@ -461,7 +461,9 @@ namespace
 
 	void SimpleParticleSystem::draw(const KRE::WindowManagerPtr& wm, const rect& area, const Entity& e) const
 	{
-		wm->render(this);
+		if(getAttributeSet().back()->getCount() > 0) {
+			wm->render(this);	
+		}
 	}
 
 	BEGIN_DEFINE_CALLABLE(SimpleParticleSystem, ParticleSystem)
