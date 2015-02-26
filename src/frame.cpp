@@ -125,7 +125,7 @@ void Frame::buildPatterns(variant obj_variant)
 		}
 
 		// Create uncached texture from surface.
-		auto tex = KRE::Texture::createTexture(sheet, false);
+		auto tex = KRE::Texture::createTexture(sheet);
 
 		boost::intrusive_ptr<TextureObject> tex_obj(new TextureObject(tex));
 
@@ -681,10 +681,10 @@ void Frame::draw(graphics::AnuraShaderPtr shader, int x, int y, const rect& area
 	auto wnd = KRE::WindowManager::getMainWindow();
 	blit_target_.setRotation(rotate, glm::vec3(0, 0, 1.0f));
 	blit_target_.setDrawRect(rect(x, y, static_cast<int>(w + w_adjust * scale_) * (face_right ? 1 : -1), static_cast<int>(h + h_adjust * scale_) * (upside_down ? -1 : 1)));
-	blit_target_.getTexture()->setSourceRect(rect(src_rect.x() + x_adjust, src_rect.y() + y_adjust, src_rect.w() + x_adjust + w_adjust, src_rect.h() + y_adjust + h_adjust));
+	blit_target_.getTexture()->setSourceRect(0, rect(src_rect.x() + x_adjust, src_rect.y() + y_adjust, src_rect.w() + x_adjust + w_adjust, src_rect.h() + y_adjust + h_adjust));
 	blit_target_.preRender(wnd);
 	wnd->render(&blit_target_);
-	blit_target_.getTexture()->setSourceRect(src_rect);
+	//blit_target_.getTexture()->setSourceRect(src_rect);
 }
 
 
@@ -715,10 +715,10 @@ void Frame::drawCustom(graphics::AnuraShaderPtr shader, int x, int y, const std:
 		const int w_adjust = area->w() - img_rect_.w();
 		const int h_adjust = area->h() - img_rect_.h();
 
-		r = rectf::from_coordinates(r.x() + blit_target_.getTexture()->getNormalisedTextureCoordW<float>(x_adjust),
-			r.y() + blit_target_.getTexture()->getNormalisedTextureCoordH<float>(y_adjust),
-			r.x2() + blit_target_.getTexture()->getNormalisedTextureCoordW<float>(x_adjust + w_adjust),
-			r.y2() + blit_target_.getTexture()->getNormalisedTextureCoordH<float>(y_adjust + h_adjust));
+		r = rectf::from_coordinates(r.x() + blit_target_.getTexture()->getNormalisedTextureCoordW<float>(0, x_adjust),
+			r.y() + blit_target_.getTexture()->getNormalisedTextureCoordH<float>(0, y_adjust),
+			r.x2() + blit_target_.getTexture()->getNormalisedTextureCoordW<float>(0, x_adjust + w_adjust),
+			r.y2() + blit_target_.getTexture()->getNormalisedTextureCoordH<float>(0, y_adjust + h_adjust));
 
 		w += static_cast<int>(w_adjust * scale_);
 		h += static_cast<int>(h_adjust * scale_);
@@ -868,7 +868,7 @@ void Frame::getRectInFrameNumber(int nframe, const FrameInfo*& info_result) cons
 	const int current_col = (nframes_per_row_ > 0) ? (nframe % nframes_per_row_) : nframe ;
 	const int current_row = (nframes_per_row_ > 0) ? (nframe/nframes_per_row_) : 0 ;
 
-	blit_target_.getTexture()->setSourceRect(info.area);
+	blit_target_.getTexture()->setSourceRect(0, info.area);
 	info.draw_rect = blit_target_.getTexture()->getSourceRectNormalised();
 	info.draw_rect_init = true;
 }

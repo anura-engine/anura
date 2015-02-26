@@ -134,7 +134,7 @@ rect GraphicalFont::doDraw(int x, int y, const std::string& text, bool draw_text
 		const rectf& r = it->second.as_type<float>();
 
 		if(draw_text) {
-			const rectf uv = texture_->getNormalisedTextureCoords<float>(it->second);
+			const rectf uv = texture_->getNormalisedTextureCoords<float>(0, it->second);
 
 			const float x = static_cast<float>(xpos & preferences::xypos_draw_mask);
 			const float y = static_cast<float>(ypos & preferences::xypos_draw_mask);

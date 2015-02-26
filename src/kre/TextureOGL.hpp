@@ -33,36 +33,31 @@ namespace KRE
 	{
 	public:
 		explicit OpenGLTexture(const variant& node, const std::vector<SurfacePtr>& surfaces);
-		explicit OpenGLTexture(const std::vector<SurfacePtr>& surfaces, 
-			TextureType type=TextureType::TEXTURE_2D, 
-			int mipmap_levels=0);
-		explicit OpenGLTexture(int count,
-			int width, 
-			int height, 			
-			PixelFormat::PF fmt, 
-			TextureType type=TextureType::TEXTURE_2D,
-			unsigned depth=0);
-		explicit OpenGLTexture(const SurfacePtr& surf, SurfacePtr palette);
+		explicit OpenGLTexture(const std::vector<SurfacePtr>& surfaces, TextureType type, int mipmap_levels);
+		explicit OpenGLTexture(int count, int width, int height, int depth, PixelFormat::PF fmt, TextureType type);
 		virtual ~OpenGLTexture();
 
 		void bind() override;
 
-		void init() override;
+		void init(int n) override;
 		unsigned id(int n) override;
 
-		void update(int x, unsigned width, void* pixels) override;
-		void update(int x, int y, unsigned width, unsigned height, const int* stride, const void* pixels) override;
-		void update(int x, int y, unsigned width, unsigned height, const std::vector<unsigned>& stride, const void* pixels) override;
-		void update(int x, int y, int z, unsigned width, unsigned height, unsigned depth, void* pixels) override;
+		void update(int n, int x, int width, void* pixels) override;
+		void update(int n, int x, int y, int width, int height, const void* pixels) override;
+		void update2D(int n, int x, int y, int width, int height, int stride, const void* pixels) override;
+		void updateYUV(int x, int y, int width, int height, const std::vector<int>& stride, const void* pixels) override;
+		void update(int n, int x, int y, int z, int width, int height, int depth, void* pixels) override;
 
 		const unsigned char* colorAt(int x, int y) const override;
 
 		TexturePtr clone() override;
 		static void handleClearTextures();
 	private:
-		void createTexture(const PixelFormat::PF& fmt);
+		void createTexture(int n);
+		void updatePaletteRow(SurfacePtr new_palette_surface, int palette_width, const std::vector<glm::u8vec4>& pixels);
 		void rebuild() override;
 		void handleAddPalette(const SurfacePtr& palette) override;
+		void handleInit(int n);
 
 		// For YUV family textures we need two more texture id's
 		// since we hold them in seperate textures.
@@ -71,14 +66,30 @@ namespace KRE
 		// Still deciding whether to use a vector of shared_ptr<GLuint>
 		// Whether to store the textures in a registry, with ref-counting.
 		// or what we do here.
-		std::vector<std::shared_ptr<GLuint>> texture_ids_;
+		struct TextureData {
+			TextureData() 
+				: id(), 
+				  surface_format(PixelFormat::PF::PIXELFORMAT_UNKNOWN), 
+				  palette(), 
+				  color_index_map(),
+				  format(GL_RGBA), 
+				  internal_format(GL_RGBA), 
+				  type(GL_UNSIGNED_BYTE),
+				  palette_row_index(0)
+			{
+			}
+			std::shared_ptr<GLuint> id;
+			PixelFormat::PF surface_format;
+			std::vector<color_histogram_type::key_type> palette;
+			color_histogram_type color_index_map;
+			GLenum format;
+			GLenum internal_format;
+			GLenum type;
+			int palette_row_index;
+		};
+		std::vector<TextureData> texture_data_;
 
-		PixelFormat::PF pixel_format_;
 		// Set for YUV style textures;
 		bool is_yuv_planar_;
-
-		GLenum format_;
-		GLenum internal_format_;
-		GLenum type_;
 	};
 }

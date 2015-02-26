@@ -329,7 +329,7 @@ void LevelObject::setCurrentPalette(unsigned int palette)
 LevelObject::LevelObject(variant node, const char* id)
   : id_(node["id"].as_string_default()), 
     info_(node["info"].as_string_default()),
-    t_(KRE::DisplayDevice::createTexture(node["image"])),
+    t_(KRE::Texture::createTexture(node["image"])),
 	all_solid_(node["solid"].is_bool() ? node["solid"].as_bool() : node["solid"].as_string_default() == "yes"),
     passthrough_(node["passthrough"].as_bool()),
     flip_(node["flip"].as_bool(false)),
@@ -892,13 +892,14 @@ void LevelObject::setPalette(unsigned int palette)
 		}
 	
 		// I guess what we want to do here is something like,
+		// XXX I think this is still broken.
+		// should just be t_->setPalette(npalette);
+		t_ = KRE::Texture::createTexture(image_);
 		const std::string& str = graphics::get_palette_name(npalette);
 		if(str.empty()) {
 			LOG_WARN("No palette from id: " << npalette);
-			t_ = KRE::Texture::createTexture(image_);
 		} else {
-			auto surf = graphics::SurfaceCache::get(str);
-			t_ = KRE::Texture::createPalettizedTexture(image_, surf);
+			t_->addPalette(graphics::get_palette_surface(npalette));
 		}
 	}
 }

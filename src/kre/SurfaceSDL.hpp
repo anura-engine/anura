@@ -84,10 +84,11 @@ namespace KRE
 
 		void getRGBA(uint32_t pix, int& r, int& g, int& b, int& a) override;
 
-		std::tuple<int,int> extractRGBA(const void* pixels, int ndx, int& red, int& green, int& blue, int& alpha) override;
+		void extractRGBA(const void* pixels, int ndx, int& red, int& green, int& blue, int& alpha) override;
 		void encodeRGBA(void* pixels, int red, int green, int blue, int alpha) override; 
 
 		bool hasPalette() const override;
+		SDL_PixelFormat* get() { return pf_; }
 	private:
 		SDL_PixelFormat* pf_;
 		SDLPixelFormat(const SDLPixelFormat&);
@@ -139,6 +140,16 @@ namespace KRE
 			ASSERT_LOG(surface_ != nullptr, "surface_ is null");
 			return surface_->pitch;
 		}
+		int bytesPerPixel() const override {
+			ASSERT_LOG(surface_ != nullptr, "surface_ is null");
+			ASSERT_LOG(surface_->format != nullptr, "surface_->format is null");
+			return surface_->format->BytesPerPixel;
+		}
+		int bitsPerPixel() const override {
+			ASSERT_LOG(surface_ != nullptr, "surface_ is null");
+			ASSERT_LOG(surface_->format != nullptr, "surface_->format is null");
+			return surface_->format->BitsPerPixel;
+		}
 
 		virtual bool hasData() const override {
 			if(surface_ == nullptr) {
@@ -151,6 +162,8 @@ namespace KRE
 		void blitTo(SurfacePtr src, const rect& src_rect, const rect& dst_rect) override;
 		void blitTo(SurfacePtr src, const rect& dst_rect) override;
 		void blitToScaled(SurfacePtr src, const rect& src_rect, const rect& dst_rect) override;
+
+		const std::vector<Color>& getPalette() override { return palette_; }
 
 		void setBlendMode(BlendMode bm) override;
 		BlendMode getBlendMode() const override;
@@ -190,9 +203,11 @@ namespace KRE
 	private:
 		SurfacePtr handleConvert(PixelFormat::PF fmt, SurfaceConvertFn convert) override;
 		SurfacePtr runGlobalAlphaFilter() override;
+		void createPalette();
 
 		SDL_Surface* surface_;
 		bool has_data_;
+		std::vector<Color> palette_;
 		SurfaceSDL();
 	};
 }

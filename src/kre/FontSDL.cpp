@@ -140,7 +140,7 @@ namespace KRE
 				SDL_FreeSurface(part);
 			}
 		}
-		return DisplayDevice::getCurrent()->createTexture(SurfacePtr(surf), false);
+		return Texture::createTexture(SurfacePtr(surf));
 	}
 
 	void FontSDL::calcTextSize(const std::string& text, int size, const std::string& font_name, int* width, int* height) const

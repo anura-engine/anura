@@ -24,6 +24,7 @@
 #ifndef _USE_MATH_DEFINES
 #	define _USE_MATH_DEFINES	1
 #endif 
+#define HAVE_M_PI
 
 #include "SDL_image.h"
 
@@ -105,6 +106,7 @@ namespace KRE
 		
 		auto pf = std::make_shared<SDLPixelFormat>(surface_->format->format);
 		setPixelFormat(PixelFormatPtr(pf));
+		createPalette();
 	}
 
 	SurfaceSDL::SurfaceSDL(int width, 
@@ -122,6 +124,7 @@ namespace KRE
 		ASSERT_LOG(surface_ != nullptr, "Error creating surface: " << SDL_GetError());
 		auto pf = std::make_shared<SDLPixelFormat>(surface_->format->format);
 		setPixelFormat(PixelFormatPtr(pf));
+		createPalette();
 	}
 
 	SurfaceSDL::SurfaceSDL(const std::string& filename)
@@ -134,6 +137,7 @@ namespace KRE
 		}
 		auto pf = std::make_shared<SDLPixelFormat>(surface_->format->format);
 		setPixelFormat(PixelFormatPtr(pf));
+		createPalette();
 	}
 
 	SurfaceSDL::SurfaceSDL(SDL_Surface* surface)
@@ -142,6 +146,7 @@ namespace KRE
 		ASSERT_LOG(surface_ != nullptr, "Error creating surface: " << SDL_GetError());
 		auto pf = std::make_shared<SDLPixelFormat>(surface_->format->format);
 		setPixelFormat(PixelFormatPtr(pf));
+		createPalette();
 	}
 
 	SurfaceSDL::SurfaceSDL(int width, int height, PixelFormat::PF format)
@@ -155,6 +160,7 @@ namespace KRE
 		ASSERT_LOG(surface_ != nullptr, "Error creating surface: " << SDL_GetError());
 		auto pf = std::make_shared<SDLPixelFormat>(surface_->format->format);
 		setPixelFormat(PixelFormatPtr(pf));
+		createPalette();
 	}
 
 	SurfaceSDL::~SurfaceSDL()
@@ -203,11 +209,28 @@ namespace KRE
 		if(filter_fn && !(getFlags() & SurfaceFlags::NO_ALPHA_FILTER)) {
 			return handleConvert(PixelFormat::PF::PIXELFORMAT_ARGB8888, [&filter_fn](int& r, int& g, int& b, int& a) {
 				if(filter_fn(r, g, b)) {
-					a = 0;
+					r = g = b = a = 0;
 				}
 			});	
 		}
 		return shared_from_this();
+	}
+
+	void SurfaceSDL::createPalette()
+	{
+		ASSERT_LOG(surface_ != nullptr, "No internal surface for createPalette.");
+		ASSERT_LOG(surface_->format != nullptr, "No internal format field.");
+		if(surface_->format->palette) {
+			auto p = surface_->format->palette;
+			palette_.resize(p->ncolors);
+			for(int n = 0; n != p->ncolors; ++n) {
+				palette_[n] = Color(p->colors[n].r, p->colors[n].g, p->colors[n].b, p->colors[n].a);
+			}
+
+			auto pf = std::dynamic_pointer_cast<SDLPixelFormat>(getPixelFormat());
+			ASSERT_LOG(pf != nullptr, "Couldn't cast pixelformat -- this is an error.");
+			SDL_SetPixelFormatPalette(pf->get(), surface_->format->palette);
+		}
 	}
 
 	const void* SurfaceSDL::pixels() const
@@ -355,6 +378,7 @@ namespace KRE
 	{
 		pf_ = SDL_AllocFormat(pf);
 		ASSERT_LOG(pf_ != nullptr, "SDLPixelFormat constructor passed a null pixel format: " << SDL_GetError());
+		//SDL_SetPixelFormatPalette(pf_, SDL_AllocPalette(ncols));
 	}
 
 	SDLPixelFormat::~SDLPixelFormat()
@@ -637,10 +661,9 @@ namespace KRE
 		return surf->runGlobalAlphaFilter();
 	}
 
-	std::tuple<int,int> SDLPixelFormat::extractRGBA(const void* pixels, int ndx, int& red, int& green, int& blue, int& alpha)
+	void SDLPixelFormat::extractRGBA(const void* pixels, int ndx, int& red, int& green, int& blue, int& alpha)
 	{
 		auto fmt = getFormat();
-		int pixel_shift_return = bytesPerPixel();
 		red = 0;
 		green = 0;
 		blue = 0;
@@ -655,12 +678,6 @@ namespace KRE
 				green = color.g;
 				blue = color.b;
 				alpha = color.a;
-				if(ndx == 7) {
-					ndx = 0;
-				} else {
-					pixel_shift_return = 0;
-					++ndx;
-				}
 				break;
 			}
             case PixelFormat::PF::PIXELFORMAT_INDEX1MSB: {
@@ -672,12 +689,6 @@ namespace KRE
 				green = color.g;
 				blue = color.b;
 				alpha = color.a;
-				if(ndx == 7) {
-					ndx = 0;
-				} else {
-					pixel_shift_return = 0;
-					++ndx;
-				}
 				break;
 			}
             case PixelFormat::PF::PIXELFORMAT_INDEX4LSB: {
@@ -689,12 +700,6 @@ namespace KRE
 				green = color.g;
 				blue = color.b;
 				alpha = color.a;
-				if(ndx == 4) {
-					ndx = 0;
-				} else {
-					pixel_shift_return = 0;
-					ndx = 4;
-				}
 				break;
 			}
 			case PixelFormat::PF::PIXELFORMAT_INDEX4MSB: {
@@ -706,24 +711,18 @@ namespace KRE
 				green = color.g;
 				blue = color.b;
 				alpha = color.a;
-				if(ndx == 4) {
-					ndx = 0;
-				} else {
-					pixel_shift_return = 0;
-					ndx = 4;
-				}
 				break;
 			}
             case PixelFormat::PF::PIXELFORMAT_INDEX8: {
-				ASSERT_LOG(pf_->palette != nullptr, "Index type has no palette.");
+				auto palette = pf_->palette;
+				ASSERT_LOG(palette != nullptr, "Index type has no palette.");
 				uint8_t px = *static_cast<const uint8_t*>(pixels);
-				ASSERT_LOG(px < pf_->palette->ncolors, "Index into palette invalid. " << px << " >= " << pf_->palette->ncolors);
-				auto color = pf_->palette->colors[px];
+				ASSERT_LOG(px < palette->ncolors, "Index into palette invalid. " << px << " >= " << palette->ncolors);
+				auto color = palette->colors[px];
 				red = color.r;
 				green = color.g;
 				blue = color.b;
 				alpha = color.a;
-				pixel_shift_return = bytesPerPixel();
 				break;
 			}
 
@@ -741,11 +740,26 @@ namespace KRE
             case PixelFormat::PF::PIXELFORMAT_BGRA5551:
             case PixelFormat::PF::PIXELFORMAT_RGB565:
             case PixelFormat::PF::PIXELFORMAT_BGR565:
+				ASSERT_LOG(false, "Deal with extractRGB with format: " << static_cast<int>(fmt));
+				break;
             case PixelFormat::PF::PIXELFORMAT_RGB24:
             case PixelFormat::PF::PIXELFORMAT_BGR24:
             case PixelFormat::PF::PIXELFORMAT_RGB888:
+            case PixelFormat::PF::PIXELFORMAT_BGR888: {
+				const uint8_t* pix = reinterpret_cast<const uint8_t*>(pixels);
+				const uint32_t px = pix[0] | (pix[1] << 8) | (pix[2] << 16);
+				if(hasRedChannel()) {
+					red = (px & getRedMask()) >> getRedShift();
+				}
+				if(hasGreenChannel()) {
+					green = (px & getGreenMask()) >> getGreenShift();
+				}
+				if(hasBlueChannel()) {
+					blue = (px & getBlueMask()) >> getBlueShift();
+				}
+				break;
+			}
             case PixelFormat::PF::PIXELFORMAT_RGBX8888:
-            case PixelFormat::PF::PIXELFORMAT_BGR888:
             case PixelFormat::PF::PIXELFORMAT_BGRX8888:
             case PixelFormat::PF::PIXELFORMAT_ARGB8888:
 			case PixelFormat::PF::PIXELFORMAT_XRGB8888:
@@ -753,18 +767,18 @@ namespace KRE
             case PixelFormat::PF::PIXELFORMAT_ABGR8888:
             case PixelFormat::PF::PIXELFORMAT_BGRA8888:
             case PixelFormat::PF::PIXELFORMAT_ARGB2101010: {
-				const uint32_t* px = static_cast<const uint32_t*>(pixels);
+				const uint32_t px = *static_cast<const uint32_t*>(pixels);
 				if(hasRedChannel()) {
-					red = (*px) & getRedMask() >> getRedShift();
+					red = (px & getRedMask()) >> getRedShift();
 				}
 				if(hasGreenChannel()) {
-					green = ((*px) & getGreenMask()) >> getGreenShift();
+					green = (px & getGreenMask()) >> getGreenShift();
 				}
 				if(hasBlueChannel()) {
-					blue = ((*px) & getBlueMask()) >> getBlueShift();
+					blue = (px & getBlueMask()) >> getBlueShift();
 				}
 				if(hasAlphaChannel()) {
-					alpha = ((*px) & getAlphaMask()) >> getAlphaShift();
+					alpha = (px & getAlphaMask()) >> getAlphaShift();
 				}
 				break;
 			}
@@ -777,7 +791,6 @@ namespace KRE
 			default:
 				ASSERT_LOG(false, "unsupported pixel format value for conversion.");
 		}
-		return std::make_tuple(pixel_shift_return, ndx);
 	}
 
 	void SDLPixelFormat::encodeRGBA(void* pixels, int red, int green, int blue, int alpha)
@@ -863,19 +876,11 @@ namespace KRE
 		void* dst_pixels = new uint8_t[dst_size];
 
 		int dst_bpp = dst->getPixelFormat()->bytesPerPixel();
-		//int pixels_modified = 0;
-		for(auto col : *this) {
-			uint8_t* dst_pixel_ptr = static_cast<uint8_t*>(dst_pixels) + col.y * dst->rowPitch() + col.x * dst_bpp;
-			//int r = col.red, g = col.green, b = col.blue, a = col.alpha;
-			convert(col.red, col.green, col.blue, col.alpha);
-			//if(r != col.red || g != col.green || b != col.blue || a != col.alpha) {
-			//	++pixels_modified;
-			//}
-			dst->getPixelFormat()->encodeRGBA(dst_pixel_ptr, col.red, col.green, col.blue, col.alpha);
-		}
-		//if(pixels_modified) {
-		//	LOG_DEBUG("handleConvert: " << pixels_modified << " pixels changed.");
-		//}
+		iterateOverSurface([&](int x, int y, int r, int g, int b, int a) {
+			uint8_t* dst_pixel_ptr = static_cast<uint8_t*>(dst_pixels) + y * dst->rowPitch() + x * dst_bpp;
+			convert(r, g, b, a);
+			dst->getPixelFormat()->encodeRGBA(dst_pixel_ptr, r, g, b, a);
+		});
 		dst->writePixels(dst_pixels, dst_size);
 		delete[] static_cast<uint8_t*>(dst_pixels);
 		return dst;

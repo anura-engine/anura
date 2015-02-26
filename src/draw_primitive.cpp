@@ -221,7 +221,7 @@ namespace graphics
 			width_head_(static_cast<float>(v["width_head"].as_decimal(decimal(5.0)).as_float()))
 		{
 			if(v.has_key("texture")) {
-				texture_ = KRE::DisplayDevice::createTexture(v["texture"]);
+				texture_ = KRE::Texture::createTexture(v["texture"]);
 				texture_scale_ = static_cast<float>(v["texture_scale"].as_decimal(decimal(1.0)).as_float());
 			}
 

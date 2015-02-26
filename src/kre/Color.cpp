@@ -469,11 +469,9 @@ namespace KRE
 	}
 
 	Color::Color()
+		: icolor_(255),
+		  color_(1.0f)
 	{
-		color_[0] = 1.0f;
-		color_[1] = 1.0f;
-		color_[2] = 1.0f;
-		color_[3] = 1.0f;
 	}
 
 	Color::~Color()
@@ -481,42 +479,33 @@ namespace KRE
 	}
 
 	Color::Color(const float r, const float g, const float b, const float a)
+		: color_(r, g, b, a)
 	{
-		color_[0] = float(r);
-		color_[1] = float(g);
-		color_[2] = float(b);
-		color_[3] = float(a);
+		convert_to_icolor();
 	}
 
 	Color::Color(const int r, const int g, const int b, const int a)
+		: icolor_(r, g, b, a)
 	{
-		color_[0] = clamp<int>(r,0,255)/255.0f;
-		color_[1] = clamp<int>(g,0,255)/255.0f;
-		color_[2] = clamp<int>(b,0,255)/255.0f;
-		color_[3] = clamp<int>(a,0,255)/255.0f;
+		convert_to_color();
 	}
 
 	Color::Color(const glm::vec4& value)
+		: color_(value)
 	{
-		color_[0] = value.r;
-		color_[1] = value.g;
-		color_[2] = value.b;
-		color_[3] = value.a;
+		convert_to_icolor();
 	}
 
 	Color::Color(const glm::u8vec4& value)
+		: icolor_(value)
 	{
-		color_[0] = clamp<int>(value.r,0,255)/255.0f;
-		color_[1] = clamp<int>(value.g,0,255)/255.0f;
-		color_[2] = clamp<int>(value.b,0,255)/255.0f;
-		color_[3] = clamp<int>(value.a,0,255)/255.0f;
+		convert_to_color();
 	}
 
 	Color::Color(const variant& node)
+		: icolor_(0, 0, 0, 255),
+		  color_(0.0f, 0.0f, 0.0f, 1.0f)
 	{
-		color_[0] = color_[1] = color_[2] = 0.0f;
-		color_[3] = 1.0f;
-
 		if(node.is_string()) {
 			color_from_string(node.as_string(), this);
 		} else if(node.is_list()) {
@@ -524,27 +513,36 @@ namespace KRE
 				"Color nodes must be lists of 3 or 4 numbers.");
 			for(size_t n = 0; n != node.num_elements(); ++n) {
 				color_[n] = convert_numeric(node[n]);
+				icolor_[n] = static_cast<int>(color_[n] * 255.0f);
 			}
 		} else if(node.is_map()) {
 			if(node.has_key("red")) {
 				color_[0] = convert_numeric(node["red"]);
+				icolor_[0] = static_cast<int>(color_[0] * 255.0f);
 			} else if(node.has_key("r")) {
 				color_[0] = convert_numeric(node["r"]);
+				icolor_[0] = static_cast<int>(color_[0] * 255.0f);
 			}
 			if(node.has_key("green")) {
 				color_[1] = convert_numeric(node["green"]);
+				icolor_[1] = static_cast<int>(color_[1] * 255.0f);
 			} else if(node.has_key("g")) {
 				color_[1] = convert_numeric(node["g"]);
+				icolor_[1] = static_cast<int>(color_[1] * 255.0f);
 			}
 			if(node.has_key("blue")) {
 				color_[2] = convert_numeric(node["blue"]);
+				icolor_[2] = static_cast<int>(color_[2] * 255.0f);
 			} else if(node.has_key("b")) {
 				color_[2] = convert_numeric(node["b"]);
+				icolor_[2] = static_cast<int>(color_[2] * 255.0f);
 			}
 			if(node.has_key("alpha")) {
 				color_[3] = convert_numeric(node["alpha"]);
+				icolor_[3] = static_cast<int>(color_[3] * 255.0f);
 			} else if(node.has_key("a")) {
 				color_[3] = convert_numeric(node["a"]);
+				icolor_[3] = static_cast<int>(color_[3] * 255.0f);
 			}
 		} else {
 			ASSERT_LOG(false, "Unrecognised Color value: " << node.to_debug_string());
@@ -553,40 +551,29 @@ namespace KRE
 
 	Color::Color(unsigned long n, ColorByteOrder order)
 	{
-		float b0 = (n & 0xff)/255.0f;
-		float b1 = ((n >> 8) & 0xff)/255.0f;
-		float b2 = ((n >> 16) & 0xff)/255.0f;
-		float b3 = ((n >> 24) & 0xff)/255.0f;
-		switch (order)
+		int ib0 = (n & 0xff);
+		int ib1 = ((n >> 8) & 0xff);
+		int ib2 = ((n >> 16) & 0xff);
+		int ib3 = ((n >> 24) & 0xff);
+		switch(order)
 		{
 			case ColorByteOrder::RGBA:
-				color_[0] = b3;
-				color_[1] = b2;
-				color_[2] = b1;
-				color_[3] = b0;
+				icolor_ = glm::u8vec4(ib3, ib2, ib1, ib0);
 				break;
 			case ColorByteOrder::ARGB:
-				color_[0] = b2;
-				color_[1] = b1;
-				color_[2] = b0;
-				color_[3] = b3;
+				icolor_ = glm::u8vec4(ib2, ib1, ib0, ib3);
 				break;
 			case ColorByteOrder::BGRA:
-				color_[0] = b1;
-				color_[1] = b2;
-				color_[2] = b3;
-				color_[3] = b0;
+				icolor_ = glm::u8vec4(ib1, ib2, ib3, ib0);
 				break;
 			case ColorByteOrder::ABGR:
-				color_[0] = b0;
-				color_[1] = b1;
-				color_[2] = b2;
-				color_[3] = b3;
+				icolor_ = glm::u8vec4(ib0, ib1, ib2, ib3);
 				break;
 			default: 
 				ASSERT_LOG(false, "Unknown ColorByteOrder value: " << static_cast<int>(order));
 				break;
 		}
+		convert_to_color();
 	}
 
 	Color::Color(const std::string& colstr)
@@ -597,42 +584,50 @@ namespace KRE
 
 	void Color::setAlpha(int a)
 	{
+		icolor_.a = a;
 		color_[3] = clamp<int>(a, 0, 255) / 255.0f;
 	}
 
 	void Color::setAlpha(float a)
 	{
-		color_[3] = clamp<float>(a, 0.0f, 1.0f);
+		color_.a = clamp<float>(a, 0.0f, 1.0f);
+		icolor_.a = static_cast<int>(color_.a * 255.0f);
 	}
 
 	void Color::setRed(int r)
 	{
-		color_[0] = clamp<int>(r, 0, 255) / 255.0f;
+		icolor_.r = r;
+		color_.r = clamp<int>(r, 0, 255) / 255.0f;
 	}
 
 	void Color::setRed(float r)
 	{
-		color_[0] = clamp<float>(r, 0.0f, 1.0f);
+		color_.r = clamp<float>(r, 0.0f, 1.0f);
+		icolor_.r = static_cast<int>(color_.r * 255.0f);
 	}
 
 	void Color::setGreen(int g)
 	{
-		color_[1] = clamp<int>(g, 0, 255) / 255.0f;
+		icolor_.g = g;
+		color_.g = clamp<int>(g, 0, 255) / 255.0f;
 	}
 
 	void Color::setGreen(float g)
 	{
-		color_[1] = clamp<float>(g, 0.0f, 1.0f);
+		color_.g = clamp<float>(g, 0.0f, 1.0f);
+		icolor_.g = static_cast<int>(color_.g * 255.0f);
 	}
 
 	void Color::setBlue(int b)
 	{
-		color_[2] = clamp<int>(b, 0, 255) / 255.0f;
+		icolor_.b = b;
+		color_.b = clamp<int>(b, 0, 255) / 255.0f;
 	}
 
 	void Color::setBlue(float b)
 	{
-		color_[2] = clamp<float>(b, 0.0f, 1.0f);
+		color_.b = clamp<float>(b, 0.0f, 1.0f);
+		icolor_.b = static_cast<int>(color_.b * 255.0f);
 	}
 
 	ColorPtr Color::factory(const std::string& name)
@@ -668,6 +663,7 @@ namespace KRE
 		color_[1] *= a;
 		color_[2] *= a;
 		color_[3] = 1.0f;
+		convert_to_icolor();
 	}
 
 	void Color::preMultiply(float alpha)
@@ -678,6 +674,7 @@ namespace KRE
 		color_[1] *= a;
 		color_[2] *= a;
 		color_[3] = 1.0f;
+		convert_to_icolor();
 	}
 
 	void Color::preMultiply()
@@ -697,7 +694,7 @@ namespace KRE
 	glm::vec4 Color::to_hsv_vec4() const
 	{
 		glm::vec4 vec;
-		rgb_to_hsv(color_, glm::value_ptr(vec));
+		rgb_to_hsv(glm::value_ptr(color_), glm::value_ptr(vec));
 		return vec;
 	}
 
@@ -713,6 +710,22 @@ namespace KRE
 		outp.a = a;
 		hsv_to_rgb(h, s, v, glm::value_ptr(outp));
 		return Color(outp);
+	}
+
+	void Color::convert_to_icolor()
+	{
+		icolor_.r = clamp(static_cast<int>(color_.r * 255.0f), 0, 255);
+		icolor_.g = clamp(static_cast<int>(color_.g * 255.0f), 0, 255);
+		icolor_.b = clamp(static_cast<int>(color_.b * 255.0f), 0, 255);
+		icolor_.a = clamp(static_cast<int>(color_.a * 255.0f), 0, 255);
+	}
+
+	void Color::convert_to_color()
+	{
+		color_.r = clamp(icolor_.r / 255.0f, 0.0f, 1.0f);
+		color_.g = clamp(icolor_.g / 255.0f, 0.0f, 1.0f);
+		color_.b = clamp(icolor_.b / 255.0f, 0.0f, 1.0f);
+		color_.a = clamp(icolor_.a / 255.0f, 0.0f, 1.0f);
 	}
 
 	std::ostream& operator<<(std::ostream& os, const Color& c)

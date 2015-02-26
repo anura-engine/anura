@@ -147,76 +147,39 @@ namespace KRE
 			multi_samples);
 	}
 
-	TexturePtr DisplayDevice::createTexture(const variant& node)
-	{
-		// XXX Need to get a cache key from a variant to see if we've already create a texture.
-		auto tex = getCurrent()->handleCreateTexture(node);
-		return tex;
-	}
-
-	TexturePtr DisplayDevice::createTexture(const SurfacePtr& surface, bool cache, const variant& node)
-	{
-		//if(cache) {
-		//	auto it = get_texture_cache().find(surface.getKey());
-		//	if(it != get_texture_cache().end()) {
-		//		return it->second;
-		//	}
-		//}
-		auto tex = getCurrent()->handleCreateTexture(surface, node);
-		if(!cache) {
-			return tex;
-		}
-		//auto it = get_texture_cache().find(surface.getKey());
-		//if(it != get_texture_cache().end()) {
-		//	LOG_WARN("replacing texture in cache: " << surface.name());
-		//}
-		//get_texture_cache[surface.getKey()] = tex;
-		return tex;
-	}
-
 	TexturePtr DisplayDevice::createTexture(const SurfacePtr& surface, TextureType type, int mipmap_levels)
 	{
 		return getCurrent()->handleCreateTexture(surface, type, mipmap_levels);
 	}
 
-	TexturePtr DisplayDevice::createTexture1D(unsigned width, PixelFormat::PF fmt)
+	TexturePtr DisplayDevice::createTexture(const SurfacePtr& surface, const variant& node)
+	{
+		return getCurrent()->handleCreateTexture(surface, node);
+	}
+
+	TexturePtr DisplayDevice::createTexture1D(int width, PixelFormat::PF fmt)
 	{
 		return getCurrent()->handleCreateTexture1D(width, fmt);
 	}
 
-	TexturePtr DisplayDevice::createTexture2D(unsigned width, unsigned height, PixelFormat::PF fmt, TextureType type)
+	TexturePtr DisplayDevice::createTexture2D(int width, int height, PixelFormat::PF fmt)
 	{
-		return getCurrent()->handleCreateTexture2D(width, height, fmt, type);
+		return getCurrent()->handleCreateTexture2D(width, height, fmt);
 	}
 
-	TexturePtr DisplayDevice::createTexture3D(unsigned width, unsigned height, unsigned depth, PixelFormat::PF fmt)
+	TexturePtr DisplayDevice::createTexture3D(int width, int height, int depth, PixelFormat::PF fmt)
 	{
 		return getCurrent()->handleCreateTexture3D(width, height, depth, fmt);
 	}
 
-	TexturePtr DisplayDevice::createTexture(const std::string& filename, TextureType type, int mipmap_levels)
+	TexturePtr DisplayDevice::createTextureArray(int count, int width, int height, PixelFormat::PF fmt, TextureType type)
 	{
-		return getCurrent()->handleCreateTexture(filename, type, mipmap_levels);
+		return getCurrent()->handleCreateTextureArray(count, width, height, fmt, type);
 	}
 
-	TexturePtr DisplayDevice::createTexture(const SurfacePtr& surface, const SurfacePtr& palette)
+	TexturePtr DisplayDevice::createTextureArray(const std::vector<SurfacePtr>& surfaces, const variant& node)
 	{
-		return getCurrent()->handleCreateTexture(surface, palette);
-	}
-
-	TexturePtr DisplayDevice::createTexture2D(int count, int width, int height, PixelFormat::PF fmt)
-	{
-		return getCurrent()->handleCreateTexture2D(count, width, height, fmt);
-	}
-
-	TexturePtr DisplayDevice::createTexture2D(const std::vector<std::string>& filenames, const variant& node)
-	{
-		return getCurrent()->handleCreateTexture2D(filenames, node);
-	}
-
-	TexturePtr DisplayDevice::createTexture2D(const std::vector<SurfacePtr>& surfaces, bool cache)
-	{
-		return getCurrent()->handleCreateTexture2D(surfaces, cache);
+		return getCurrent()->handleCreateTextureArray(surfaces, node);
 	}
 
 	RenderTargetPtr DisplayDevice::renderTargetInstance(const variant& node)

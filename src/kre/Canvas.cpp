@@ -23,19 +23,16 @@
 
 #include "Canvas.hpp"
 #include "DisplayDevice.hpp"
-#include "WindowManager.hpp"
 
 namespace KRE
 {
 	Canvas::Canvas()
 		: width_(0),
-		  height_(0)
+		  height_(0),
+		  window_(WindowManager::getMainWindow())
 	{
-		auto wnd = WindowManager::getMainWindow();
-		if(wnd) {
-			width_ = wnd->logicalWidth();
-			height_ = wnd->logicalHeight();			
-		}
+		width_ = getWindow()->logicalWidth();
+		height_ = getWindow()->logicalHeight();			
 		model_stack_.emplace(glm::mat4(1.0f));
 	}
 
@@ -142,4 +139,17 @@ namespace KRE
 		}
 		color_array->emplace_back((*color_array)[1]);
 	}
+
+	WindowManagerPtr Canvas::getWindow() const
+	{
+		auto wnd = window_.lock();
+		ASSERT_LOG(wnd != nullptr, "The window attached to this canvas is no longer valid.");
+		return wnd;
+	}
+
+	void Canvas::setWindow(WindowManagerPtr wnd)
+	{
+		window_ = wnd; 
+	}
 }
+

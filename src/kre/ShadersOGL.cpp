@@ -49,12 +49,20 @@ namespace KRE
 				"}\n";
 			const char* const default_fs =
 				"uniform sampler2D u_tex_map;\n"
+				"uniform sampler2D u_palette_map;\n"
+				"uniform bool u_enable_palette_lookup;\n"
+				"uniform float u_palette;\n"
+				"uniform float u_palette_width;\n"
 				"varying vec2 v_texcoord;\n"
 				"uniform bool u_discard;\n"
 				"uniform vec4 u_color;\n"
 				"void main()\n"
 				"{\n"
 				"    vec4 color = texture2D(u_tex_map, v_texcoord);\n"
+				"    if(u_enable_palette_lookup) {\n"
+				// XXX replace the 15.0 below with the number of colors in the row
+				"        color = texture2D(u_palette_map, vec2(255.0 * color.r / (u_palette_width-0.5), u_palette));\n"
+				"    }\n"
 				"    if(u_discard && color[3] == 0.0) {\n"
 				"        discard;\n"
 				"    } else {\n"
@@ -68,6 +76,10 @@ namespace KRE
 				{"color", "u_color"},
 				{"discard", "u_discard"},
 				{"tex_map", "u_tex_map"},
+				{"palette", "u_palette"},
+				{"palette_width", "u_palette_width"},
+				{"palette_map", "u_palette_map"},
+				{"enable_palette_lookup", "u_enable_palette_lookup"},
 				{"tex_map0", "u_tex_map"},
 				{"", ""},
 			};
@@ -464,12 +476,12 @@ namespace KRE
 			}
 			auto alt_name_it = uniform_alternate_name_map_.find(attr);
 			if(alt_name_it == uniform_alternate_name_map_.end()) {
-				LOG_WARN("Uniform '" << attr << "' not found in alternate names list and is not a name defined in the shader: " << name_);
+				//LOG_WARN("Uniform '" << attr << "' not found in alternate names list and is not a name defined in the shader: " << name_);
 				return GLint(-1);
 			}
 			it = uniforms_.find(alt_name_it->second);
 			if(it == uniforms_.end()) {
-				LOG_WARN("Uniform \"" << alt_name_it->second << "\" not found in list, looked up from symbol " << attr << " in shader: " << name_);
+				//LOG_WARN("Uniform \"" << alt_name_it->second << "\" not found in list, looked up from symbol " << attr << " in shader: " << name_);
 				return GLint(-1);
 			}
 			return it->second.location;
@@ -717,7 +729,7 @@ namespace KRE
 		void ShaderProgram::setUniformValue(ConstActivesMapIterator it, const GLfloat* value)
 		{
 			if(it == uniforms_.end()) {
-				LOG_WARN("Tried to set value for invalid uniform iterator.");
+				//LOG_WARN("Tried to set value for invalid uniform iterator.");
 				return;
 			}
 			const Actives& u = it->second;

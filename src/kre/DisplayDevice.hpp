@@ -37,12 +37,15 @@
 
 namespace KRE
 {
-	enum class DisplayDeviceCapabilties
-	{
+	enum class DisplayDeviceCapabilties {
 		NPOT_TEXTURES,
 		BLEND_EQUATION_SEPERATE,
 		RENDER_TO_TEXTURE,
 		SHADERS,
+	};
+
+	enum class DisplayDeviceParameters {
+		MAX_TEXTURE_UNITS,
 	};
 
 	enum class ClearFlags {
@@ -118,24 +121,16 @@ namespace KRE
 		virtual void render(const Renderable* r) const = 0;
 
 		virtual void clearTextures() = 0;
-		static TexturePtr createTexture(const std::string& filename, 
-			TextureType type=TextureType::TEXTURE_2D, 
-			int mipmap_levels=0);
 
-		static TexturePtr createTexture(const variant& node);
-		static TexturePtr createTexture(const SurfacePtr& surface);
-		static TexturePtr createTexture(const SurfacePtr& surface, const SurfacePtr& palette);
-		static TexturePtr createTexture(const SurfacePtr& surface, bool cache, const variant& node);
-		static TexturePtr createTexture(const SurfacePtr& surface, 
-			TextureType type=TextureType::TEXTURE_2D, 
-			int mipmap_levels=0);
-		static TexturePtr createTexture1D(unsigned width, PixelFormat::PF fmt);
-		static TexturePtr createTexture2D(unsigned width, unsigned height, PixelFormat::PF fmt, TextureType type=TextureType::TEXTURE_2D);
-		static TexturePtr createTexture3D(unsigned width, unsigned height, unsigned depth, PixelFormat::PF fmt);
+		static TexturePtr createTexture(const SurfacePtr& surface, TextureType type, int mipmap_levels);
+		static TexturePtr createTexture(const SurfacePtr& surface, const variant& node);
 
-		static TexturePtr createTexture2D(int count, int width, int height, PixelFormat::PF fmt);
-		static TexturePtr createTexture2D(const std::vector<std::string>& filenames, const variant& node);
-		static TexturePtr createTexture2D(const std::vector<SurfacePtr>& surfaces, bool cache);
+		static TexturePtr createTexture1D(int width, PixelFormat::PF fmt);
+		static TexturePtr createTexture2D(int width, int height, PixelFormat::PF fmt);
+		static TexturePtr createTexture3D(int width, int height, int depth, PixelFormat::PF fmt);
+
+		static TexturePtr createTextureArray(int count, int width, int height, PixelFormat::PF fmt, TextureType type);
+		static TexturePtr createTextureArray(const std::vector<SurfacePtr>& surfaces, const variant& node);
 
 		virtual CanvasPtr getCanvas() = 0;
 
@@ -150,6 +145,10 @@ namespace KRE
 		virtual ShaderProgramPtr getShaderProgram(const std::string& name) = 0;
 		virtual ShaderProgramPtr getShaderProgram(const variant& node) = 0;
 		virtual ShaderProgramPtr getDefaultShader() = 0;
+		// special handling for setting internal uniforms before blitting a texture.
+		virtual void setUniformsForTexture(const ShaderProgramPtr& shader, const TexturePtr& tex) const = 0;
+
+		virtual int queryParameteri(DisplayDeviceParameters param) = 0;
 
 		virtual BlendEquationImplBasePtr getBlendEquationImpl() = 0;
 
@@ -198,17 +197,15 @@ namespace KRE
 
 		virtual bool handleReadPixels(int x, int y, unsigned width, unsigned height, ReadFormat fmt, AttrFormat type, void* data) = 0;
 		
-		virtual TexturePtr handleCreateTexture(const variant& node) = 0;
-		virtual TexturePtr handleCreateTexture(const std::string& filename, TextureType type, int mipmap_levels) = 0;
-		virtual TexturePtr handleCreateTexture(const SurfacePtr& surface, const variant& node) = 0;
 		virtual TexturePtr handleCreateTexture(const SurfacePtr& surface, TextureType type, int mipmap_levels) = 0;
-		virtual TexturePtr handleCreateTexture1D(unsigned width, PixelFormat::PF fmt) = 0;
-		virtual TexturePtr handleCreateTexture2D(unsigned width, unsigned height, PixelFormat::PF fmt, TextureType type=TextureType::TEXTURE_2D) = 0;
-		virtual TexturePtr handleCreateTexture3D(unsigned width, unsigned height, unsigned depth, PixelFormat::PF fmt) = 0;
-		virtual TexturePtr handleCreateTexture(const SurfacePtr& surface, const SurfacePtr& palette) = 0;
-		virtual TexturePtr handleCreateTexture2D(int count, int width, int height, PixelFormat::PF fmt) = 0;
-		virtual TexturePtr handleCreateTexture2D(const std::vector<std::string>& filenames, const variant& node) = 0;
-		virtual TexturePtr handleCreateTexture2D(const std::vector<SurfacePtr>& surfaces, bool cache) = 0;
+		virtual TexturePtr handleCreateTexture(const SurfacePtr& surface, const variant& node) = 0;
+
+		virtual TexturePtr handleCreateTexture1D(int width, PixelFormat::PF fmt) = 0;
+		virtual TexturePtr handleCreateTexture2D(int width, int height, PixelFormat::PF fmt) = 0;
+		virtual TexturePtr handleCreateTexture3D(int width, int height, int depth, PixelFormat::PF fmt) = 0;
+
+		virtual TexturePtr handleCreateTextureArray(int count, int width, int height, PixelFormat::PF fmt, TextureType type) = 0;
+		virtual TexturePtr handleCreateTextureArray(const std::vector<SurfacePtr>& surfaces, const variant& node) = 0;
 
 		virtual bool doCheckForFeature(DisplayDeviceCapabilties cap) = 0;
 

@@ -124,7 +124,7 @@ namespace KRE
 
 		virtual void getRGBA(uint32_t pix, int& r, int& g, int& b, int& a) = 0; 
 
-		virtual std::tuple<int,int> extractRGBA(const void* pixels, int ndx, int& red, int& green, int& blue, int& alpha) = 0;
+		virtual void extractRGBA(const void* pixels, int ndx, int& red, int& green, int& blue, int& alpha) = 0;
 		virtual void encodeRGBA(void* pixels, int red, int green, int blue, int alpha) = 0;
 		
 		static bool isIndexedFormat(PixelFormat::PF pf);

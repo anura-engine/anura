@@ -43,7 +43,7 @@ int get_tile_corners(std::vector<tile_corner>* result, const KRE::TexturePtr& t,
 	const int xpos = BaseTileSize*(tile_num%(width/BaseTileSize)) + area.x();
 	const int ypos = BaseTileSize*(tile_num/(width/BaseTileSize)) + area.y();
 
-	rectf coords = t->getNormalisedTextureCoords<float>(rect(xpos,ypos,xpos+area.w(),ypos+area.h()));
+	rectf coords = t->getNormalisedTextureCoords<float>(0, rect(xpos,ypos,xpos+area.w(),ypos+area.h()));
 
 	int area_x = area.x()*g_tile_scale;
 	if(reverse) {

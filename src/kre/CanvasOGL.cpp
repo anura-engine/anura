@@ -55,10 +55,10 @@ namespace KRE
 
 	void CanvasOGL::blitTexture(const TexturePtr& texture, const rect& src, float rotation, const rect& dst, const Color& color) const
 	{
-		const float tx1 = texture->getNormalisedTextureCoordW<float>(src.x());
-		const float ty1 = texture->getNormalisedTextureCoordH<float>(src.y());
-		const float tx2 = texture->getNormalisedTextureCoordW<float>(src.w() == 0 ? texture->surfaceWidth() : src.x2());
-		const float ty2 = texture->getNormalisedTextureCoordH<float>(src.h() == 0 ? texture->surfaceHeight() : src.y2());
+		const float tx1 = texture->getNormalisedTextureCoordW<float>(0, src.x());
+		const float ty1 = texture->getNormalisedTextureCoordH<float>(0, src.y());
+		const float tx2 = texture->getNormalisedTextureCoordW<float>(0, src.w() == 0 ? texture->surfaceWidth() : src.x2());
+		const float ty2 = texture->getNormalisedTextureCoordH<float>(0, src.h() == 0 ? texture->surfaceHeight() : src.y2());
 		const float uv_coords[] = {
 			tx1, ty1,
 			tx2, ty1,
@@ -82,14 +82,13 @@ namespace KRE
 		glm::mat4 mvp = mvp_ * model * getModelMatrix();
 		auto shader = OpenGL::ShaderProgram::defaultSystemShader();
 		shader->makeActive();
-		texture->bind();
+		DisplayDevice::getCurrent()->setUniformsForTexture(shader, texture);
 		shader->setUniformValue(shader->getMvpUniform(), glm::value_ptr(mvp));
 		if(color != KRE::Color::colorWhite()) {
 			shader->setUniformValue(shader->getColorUniform(), (color*getColor()).asFloatVector());
 		} else {
 			shader->setUniformValue(shader->getColorUniform(), getColor().asFloatVector());
 		}
-		shader->setUniformValue(shader->getTexMapUniform(), 0);
 		// XXX the following line are only temporary, obviously.
 		//shader->SetUniformValue(shader->GetUniformIterator("discard"), 0);
 		glEnableVertexAttribArray(shader->getVertexAttribute()->second.location);
@@ -109,14 +108,13 @@ namespace KRE
 		glm::mat4 mvp = mvp_ * model * getModelMatrix();
 		auto shader = OpenGL::ShaderProgram::defaultSystemShader();
 		shader->makeActive();
-		tex->bind();
+		shader->setUniformValue(shader->getMvpUniform(), glm::value_ptr(mvp));
 		shader->setUniformValue(shader->getMvpUniform(), glm::value_ptr(mvp));
 		if(color != KRE::Color::colorWhite()) {
 			shader->setUniformValue(shader->getColorUniform(), (color*getColor()).asFloatVector());
 		} else {
 			shader->setUniformValue(shader->getColorUniform(), getColor().asFloatVector());
 		}
-		shader->setUniformValue(shader->getTexMapUniform(), 0);
 		// XXX the following line are only temporary, obviously.
 		//shader->SetUniformValue(shader->GetUniformIterator("discard"), 0);
 		glEnableVertexAttribArray(shader->getVertexAttribute()->second.location);
@@ -417,7 +415,7 @@ namespace KRE
 
 		try {
 			static auto screen_dim = shader->getUniformIterator("screen_dimensions");
-			shader->setUniformValue(screen_dim, glm::value_ptr(glm::vec2(width(), height())));
+			shader->setUniformValue(screen_dim, glm::value_ptr(glm::vec2(getWindow()->width(), getWindow()->height())));
 		} catch(ShaderUniformError&) {
 		}
 		try {

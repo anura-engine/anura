@@ -77,7 +77,7 @@ ConstGuiSectionPtr GuiSection::get(const std::string& key)
 }
 
 GuiSection::GuiSection(variant node)
-	: texture_(KRE::DisplayDevice::createTexture(node["image"])),
+	: texture_(KRE::Texture::createTexture(node["image"])),
     area_(node["rect"]),
 	x_adjust_(0), y_adjust_(0), x2_adjust_(0), y2_adjust_(0)
 {

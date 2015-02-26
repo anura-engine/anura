@@ -23,12 +23,12 @@
 
 #pragma once
 
-#include <boost/iterator/iterator_facade.hpp>
-
 #include <cstdint>
 #include <functional>
+#include <map>
 #include <memory>
 #include <tuple>
+#include <unordered_map>
 
 #include "geometry.hpp"
 #include "PixelFormat.hpp"
@@ -91,30 +91,6 @@ namespace KRE
 		int x, y;
 	};
 
-	class SurfaceIterator;
-
-	class SurfaceIterator : public boost::iterator_facade<SurfaceIterator, SurfacePtr, std::random_access_iterator_tag, SimpleColor>
-	{
-	public:
-		SurfaceIterator();
-		explicit SurfaceIterator(SurfacePtr surface);
-	private:
-		friend class boost::iterator_core_access;
-		
-		SimpleColor dereference() const;
-		bool equal(SurfaceIterator const& other) const;
-		void increment();
-		void decrement();
-		void advance(std::ptrdiff_t n);
-
-		SurfacePtr surface_;
-		int x_;
-		int y_;
-		int index_;
-		mutable int index_incr_;
-		const unsigned char* pixels_;
-	};
-
 	inline bool operator&(SurfaceFlags lhs, SurfaceFlags rhs) {
 		return (static_cast<int>(lhs) & static_cast<int>(rhs)) != 0;
 	}
@@ -122,13 +98,17 @@ namespace KRE
 	inline SurfaceFlags operator|(SurfaceFlags lhs, SurfaceFlags rhs) {
 		return static_cast<SurfaceFlags>(static_cast<int>(lhs) | static_cast<int>(rhs));
 	}
+	
+	//typedef std::unordered_map<Color, int, Color> color_histogram_type;
+	//typedef std::map<Color, int> color_histogram_type;
+	//typedef std::map<uint32_t, int> color_histogram_type;
+	typedef std::unordered_map<uint32_t, int> color_histogram_type;
+
+	typedef std::function<void(int,int,int,int,int,int)> surface_iterator_fn;
 
 	class Surface : public std::enable_shared_from_this<Surface>
 	{
 	public:
-		typedef SurfaceIterator iterator;
-		typedef const SurfaceIterator const_iterator;
-
 		virtual ~Surface();
 		virtual const void* pixels() const = 0;
 		// This is a potentially dangerous function and significant care must
@@ -138,11 +118,14 @@ namespace KRE
 		virtual int width() const = 0;
 		virtual int height() const = 0;
 		virtual int rowPitch() const = 0;
+		virtual int bytesPerPixel() const = 0;
+		virtual int bitsPerPixel() const = 0;
 
 		void init();
 
-		iterator begin() { return iterator(shared_from_this()); }
-		iterator end() { return iterator(); }
+		void iterateOverSurface(surface_iterator_fn fn);
+		void iterateOverSurface(rect r, surface_iterator_fn fn);
+		void iterateOverSurface(int x, int y, int w, int h, surface_iterator_fn fn);
 
 		virtual void blit(SurfacePtr src, const rect& src_rect) = 0;
 		virtual void blitTo(SurfacePtr src, const rect& src_rect, const rect& dst_rect) = 0;
@@ -186,7 +169,10 @@ namespace KRE
 		SurfacePtr convert(PixelFormat::PF fmt, SurfaceConvertFn convert=nullptr);
 		void convertInPlace(PixelFormat::PF fmt, SurfaceConvertFn convert=nullptr);
 
+		color_histogram_type getColorHistogram(ColorCountFlags flags=ColorCountFlags::NONE);
 		unsigned getColorCount(ColorCountFlags flags=ColorCountFlags::NONE);
+
+		virtual const std::vector<Color>& getPalette() = 0;
 
 		static bool registerSurfaceCreator(const std::string& name, 
 			SurfaceCreatorFileFn file_fn, 
@@ -224,6 +210,8 @@ namespace KRE
 
 		SurfaceFlags getFlags() const { return flags_; }
 		virtual SurfacePtr runGlobalAlphaFilter() = 0;
+
+		virtual Color getColorAt(int x, int y) const;
 
 		virtual const unsigned char* colorAt(int x, int y) const { return nullptr; }
 		bool isAlpha(unsigned x, unsigned y) const;

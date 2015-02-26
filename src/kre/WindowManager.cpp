@@ -164,8 +164,8 @@ namespace KRE
 			}
 
 			display_->setClearColor(clear_color_);
-			display_->printDeviceInfo();
 			display_->init(width_, height_);
+			display_->printDeviceInfo();
 			display_->clear(ClearFlags::ALL);
 			swap();
 		}
@@ -214,7 +214,38 @@ namespace KRE
 		}
 
 		bool autoWindowSize(int& width, int& height) override {
-			// XXX
+			std::vector<WindowMode> res;
+			int num_displays = SDL_GetNumVideoDisplays();
+			if(num_displays < 0) {
+				LOG_ERROR("Error enumerating number of displays: " << std::string(SDL_GetError()));
+				return false;
+			}
+			for(int n = 0; n != num_displays; ++n) {
+				SDL_Rect display_bounds;
+				SDL_GetDisplayBounds(n, &display_bounds);
+				int num_modes = SDL_GetNumDisplayModes(n);
+				if(num_modes < 0) {
+					LOG_ERROR("Error enumerating number of display modes for display " << n << ": " << std::string(SDL_GetError()));
+					return false;
+				}
+				for(int m = 0; m != num_modes; ++m) {
+					SDL_DisplayMode mode;
+					int err = SDL_GetDisplayMode(n, m, &mode);
+					if(err < 0) {
+						LOG_ERROR("Couldn't get display mode information for display: " << n << " mode: " << m << " : " << std::string(SDL_GetError()));
+					} else {
+						WindowMode new_mode = { mode.w, mode.h, std::make_shared<SDLPixelFormat>(mode.format), mode.refresh_rate };
+						res.emplace_back(new_mode);
+						LOG_DEBUG("added mode w: " << mode.w << ", h: " << mode.h << ", refresh: " << mode.refresh_rate);
+					}
+				}
+			}
+
+			if(!res.empty()) {
+				width = static_cast<int>(res.front().width * 0.8f);
+				height = static_cast<int>(res.front().height * 0.8f);
+				return true;
+			}
 			return false;
 		}
 
@@ -242,7 +273,7 @@ namespace KRE
 				WindowMode mode = { new_mode.w, new_mode.h, std::make_shared<SDLPixelFormat>(new_mode.format), new_mode.refresh_rate };
 				// filter modes based on pixel format here
 				if(mode_filter(mode)) {
-					res.push_back(mode);
+					res.emplace_back(mode);
 				}
 			}
 			return res;

@@ -31,7 +31,7 @@
 namespace gui 
 {
 	ImageWidget::ImageWidget(const std::string& fname, int w, int h)
-	  : texture_(KRE::DisplayDevice::getCurrent()->createTexture(fname)), 
+	  : texture_(KRE::Texture::createTexture(fname)), 
 	  rotate_(0.0f), 
 	  image_name_(fname)
 	{
@@ -54,10 +54,7 @@ namespace gui
 			area_ = rect(v["area"]);
 		}
 
-		if(v["image"].is_string()) {
-			image_name_ = v["image"].as_string();
-			texture_ = KRE::DisplayDevice::getCurrent()->createTexture(image_name_);
-		}
+		texture_ = KRE::Texture::createTexture(v);
 
 		rotate_ = v.has_key("rotation") ? v["rotation"].as_float() : 0.0f;
 		init(v["image_width"].as_int(-1), v["image_height"].as_int(-1));
@@ -98,10 +95,12 @@ namespace gui
 	BEGIN_DEFINE_CALLABLE(ImageWidget, Widget)
 		DEFINE_FIELD(image, "string")
 			return variant(obj.image_name_);
-		DEFINE_SET_FIELD_TYPE("string")
+		DEFINE_SET_FIELD_TYPE("string|map")
 			if(value.is_string()) {
 				obj.image_name_ = value.as_string();
-				obj.texture_ = KRE::DisplayDevice::getCurrent()->createTexture(obj.image_name_);
+				obj.texture_ = KRE::Texture::createTexture(obj.image_name_);
+			} else {
+				obj.texture_ = KRE::Texture::createTexture(value);
 			}
 			
 		DEFINE_FIELD(area, "[int,int,int,int]")

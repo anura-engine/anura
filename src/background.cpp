@@ -357,7 +357,9 @@ void Background::drawLayers(int x, int y, const rect& area_ref, const std::vecto
 			for(auto& a : areas) {
 				drawLayer(x, y, a, rotation, bg, cycle);
 			}
-			wnd->render(&bg);
+			if(bg.attr_->size() > 0) {
+				wnd->render(&bg);
+			}
 			bg.attr_->clear();
 		}
 	}
@@ -369,7 +371,9 @@ void Background::drawForeground(int xpos, int ypos, float rotation, int cycle) c
 	for(auto& bg : layers_) {
 		if(bg.foreground) {
 			drawLayer(xpos, ypos, rect(xpos, ypos, wnd->width(), wnd->height()), rotation, bg, cycle);
-			wnd->render(&bg);
+			if(bg.attr_->size() > 0) {
+				wnd->render(&bg);
+			}
 		}
 	}
 }
@@ -402,7 +406,8 @@ void Background::drawLayer(int x, int y, const rect& area, float rotation, const
 		if(palette_ == -1) {
 			bg.texture = KRE::Texture::createTexture(bg.image);
 		} else {
-			bg.texture = KRE::Texture::createTexture(graphics::map_palette(KRE::Surface::create(bg.image), palette_), false);
+			bg.texture = KRE::Texture::createTexture(bg.image);
+			bg.texture->addPalette(graphics::get_palette_surface(palette_));
 		}
 
 		if(bg.y2 == 0) {
@@ -417,8 +422,8 @@ void Background::drawLayer(int x, int y, const rect& area, float rotation, const
 	ASSERT_GT(bg.texture->surfaceHeight(), 0);
 	ASSERT_GT(bg.texture->surfaceWidth(), 0);
 
-	float v1 = bg.texture->getNormalisedTextureCoordH<float>(bg.y1);
-	float v2 = bg.texture->getNormalisedTextureCoordH<float>(bg.y2);
+	float v1 = bg.texture->getNormalisedTextureCoordH<float>(0, bg.y1);
+	float v2 = bg.texture->getNormalisedTextureCoordH<float>(0, bg.y2);
 
 	if(y1 < area.y()) {
 		//Making y1 == y2 is problematic, so don't allow it.
@@ -523,8 +528,8 @@ void Background::drawLayer(int x, int y, const rect& area, float rotation, const
 			const short x1 = x;
 			const short x2 = x1 + blit_width;
 
-			const float u1 = bg.texture->getNormalisedTextureCoordW<float>(xpos);
-			const float u2 = bg.texture->getNormalisedTextureCoordW<float>(xpos2);
+			const float u1 = bg.texture->getNormalisedTextureCoordW<float>(0, xpos);
+			const float u2 = bg.texture->getNormalisedTextureCoordW<float>(0, xpos2);
 
 			//if(!q.empty()) {
 			//	q.emplace_back(q.back());

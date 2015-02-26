@@ -131,9 +131,9 @@ namespace KRE
 			setColor(KRE::Color(node["color"]));
 		}
 		if(node.has_key("texture")) {
-			texture_ = DisplayDevice::createTexture(node["texture"]);
+			texture_ = Texture::createTexture(node["texture"]);
 		} else if(node.has_key("image")) {
-			texture_ = DisplayDevice::createTexture(node["image"]);			
+			texture_ = Texture::createTexture(node["image"]);			
 		}
 	}
 

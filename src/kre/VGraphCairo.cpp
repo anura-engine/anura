@@ -337,7 +337,7 @@ namespace KRE
 					ASSERT_LOG(false, "Unrecognised cairo surface format: " << fmt);
 			}
 			tex_ = Texture::createTexture2D(w, h, pffmt);
-			tex_->setAddressModes(Texture::AddressMode::CLAMP, Texture::AddressMode::CLAMP);
+			tex_->setAddressModes(-1, Texture::AddressMode::CLAMP, Texture::AddressMode::CLAMP);
 			setTexture(tex_);
 
 			auto as = DisplayDevice::createAttributeSet();
@@ -623,8 +623,7 @@ namespace KRE
 
 		void CairoContext::preRender(const WindowManagerPtr& wnd) 
 		{
-			std::vector<unsigned> stride (1, cairo_image_surface_get_width(surface_));
-			tex_->update(0, 0, width(), height(), stride, cairo_image_surface_get_data(surface_));
+			tex_->update2D(0, 0, 0, width(), height(), cairo_image_surface_get_width(surface_), cairo_image_surface_get_data(surface_));
 		}
 
 		void CairoContext::PathExtents(double& x1, double& y1, double& x2, double& y2) 

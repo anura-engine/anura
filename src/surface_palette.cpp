@@ -25,6 +25,7 @@
 #include <vector>
 
 #include "asserts.hpp"
+#include "module.hpp"
 #include "surface_cache.hpp"
 #include "surface_palette.hpp"
 
@@ -61,6 +62,12 @@ namespace graphics
 			palettes.push_back(def);
 		}
 	}
+
+	KRE::SurfacePtr get_palette_surface(int palette)
+	{
+		return KRE::Surface::create(module::map_file("palette/" + get_palette_name(palette) + ".png"));
+	}
+
 
 	int get_palette_id(const std::string& name)
 	{

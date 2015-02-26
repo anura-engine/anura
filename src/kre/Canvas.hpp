@@ -34,6 +34,7 @@
 #include "Util.hpp"
 #include "VGraph.hpp"
 #include "SceneUtil.hpp"
+#include "WindowManager.hpp"
 
 namespace KRE
 {
@@ -124,6 +125,9 @@ namespace KRE
 			return color_stack_.top();
 		}
 
+		WindowManagerPtr getWindow() const;
+		void setWindow(WindowManagerPtr wnd);
+
 	protected:
 		Canvas();
 	private:
@@ -133,6 +137,7 @@ namespace KRE
 		virtual void handleDimensionsChanged() = 0;
 		std::stack<Color> color_stack_;
 		std::stack<glm::mat4> model_stack_;
+		std::weak_ptr<WindowManager> window_;
 	};
 
 	// Helper function to generate a color wheel between the given hue values.

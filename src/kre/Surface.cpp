@@ -22,7 +22,6 @@
 */
 
 #include <tuple>
-#include <unordered_map>
 
 #include "Surface.hpp"
 
@@ -176,9 +175,11 @@ namespace KRE
 		std::fill(alpha_map_.begin(), alpha_map_.end(), false);
 
 		if(getPixelFormat()->hasAlphaChannel()) {
-			for(auto col : *this) {
-				alpha_map_[col.x+col.y*width()] = col.alpha == 0;
-			}
+			int w = width();
+			auto& am = alpha_map_;
+			iterateOverSurface([&am, w](int x, int y, int r, int g, int b, int a) {
+				am[x + y * w] = a == 0;
+			});
 		}
 	}
 
@@ -217,34 +218,54 @@ namespace KRE
 		}		
 	}
 
-	// Actually creates a histogram of colors.
-	// Could be used for other things.
+	Color Surface::getColorAt(int x, int y) const
+	{
+		int r, g, b, a;
+		const int bpp = pf_->bytesPerPixel();
+		const unsigned char* pix = reinterpret_cast<const unsigned char*>(pixels());
+		const unsigned char* p = &pix[x * bpp + y * rowPitch()];
+		switch(bpp) {
+			case 1: pf_->getRGBA(*p, r, g, b, a); break;
+			case 2: pf_->getRGBA(*reinterpret_cast<const unsigned short*>(p), r, g, b, a); break;
+			case 3: pf_->getRGBA(*reinterpret_cast<const unsigned long*>(p), r, g, b, a); break;
+			case 4: pf_->getRGBA(*reinterpret_cast<const unsigned long*>(p), r, g, b, a); break;
+		}
+		return Color(r, g, b, a);
+	}
+
+	color_histogram_type Surface::getColorHistogram(ColorCountFlags flags)
+	{
+		color_histogram_type res;
+		iterateOverSurface([&res](int x, int y, int r, int g, int b, int a) {
+			//Color color(r, g, b, a);
+			color_histogram_type::key_type color = (static_cast<uint32_t>(r) << 24)
+				| (static_cast<uint32_t>(g) << 16)
+				| (static_cast<uint32_t>(b) << 8)
+				| (static_cast<uint32_t>(a));
+			//ASSERT_LOG(color >= 18446744072937384447UL, "ugh: " << r << "," << g << "," << b << "," << a);
+			auto it = res.find(color);
+			if(it == res.end()) {
+				res[color] = 1;
+			} else {
+				it->second += 1;
+			}
+		});
+		//for(auto px : *this) {
+		//	Color color(px.red, px.green, px.blue, (flags & ColorCountFlags::IGNORE_ALPHA_VARIATIONS ? 255 : px.alpha));
+		//	auto it = res.find(color);
+		//	if(it == res.end()) {
+		//		LOG_DEBUG("Adding color: " << px.red << "," << px.green << "," << px.blue);
+		//		res[color] = 1;
+		//	} else {
+		//		it->second += 1;
+		//	}
+		//}
+		return res;
+	}
+
 	unsigned Surface::getColorCount(ColorCountFlags flags)
 	{
-		const unsigned char* pix = reinterpret_cast<const unsigned char*>(pixels());
-		const int bpp = pf_->bytesPerPixel();
-		std::unordered_map<uint32_t,uint32_t> color_list;
-		for(int y = 0; y < height(); ++y) {
-			for(int x = 0; x < width(); ++x) {
-				const unsigned char* p = pix;
-				int r, g, b, a;
-				switch(bpp) {
-					case 1: pf_->getRGBA(*p, r, g, b, a); break;
-					case 2: pf_->getRGBA(*reinterpret_cast<const unsigned short*>(p), r, g, b, a); break;
-					case 3: pf_->getRGBA(*reinterpret_cast<const unsigned long*>(p), r, g, b, a); break;
-					case 4: pf_->getRGBA(*reinterpret_cast<const unsigned long*>(p), r, g, b, a); break;
-				}
-				uint32_t col = (r << 24) | (g << 16) | (b << 8) | (flags & ColorCountFlags::IGNORE_ALPHA_VARIATIONS ? 255 : a);
-				if(color_list.find(col) == color_list.end()) {
-					color_list[col] = 0;
-				} else {
-					color_list[col]++;
-				}
-				p += bpp;
-			}
-			pix += rowPitch();
-		}
-		return color_list.size();
+		return getColorHistogram(flags).size();
 	}
 
 	namespace 
@@ -287,84 +308,6 @@ namespace KRE
 		alpha_filter_fn = nullptr;
 	}
 
-	SurfaceIterator::SurfaceIterator(SurfacePtr surface) 
-		: surface_(surface),
-		  x_(0),
-		  y_(0),
-		  index_(0),
-		  pixels_(nullptr)
-	{
-		pixels_ = reinterpret_cast<const unsigned char*>(surface_->pixels());
-	}
-
-	SurfaceIterator::SurfaceIterator()
-		: surface_(nullptr),
-		  x_(-1),
-		  y_(-1),
-		  index_(0),
-		  pixels_(nullptr)
-	{
-	}
-
-
-	SimpleColor SurfaceIterator::dereference() const 
-	{
-		SurfaceLock lck(surface_);
-		SimpleColor res;
-		int offs = y_ * surface_->rowPitch() + x_ * surface_->getPixelFormat()->bytesPerPixel();
-		std::tie(offs, index_incr_) = surface_->getPixelFormat()->extractRGBA(&pixels_[offs], index_, res.red, res.green, res.blue, res.alpha);
-		res.x = x_;
-		res.y = y_;
-		return res;
-	}
-
-	bool SurfaceIterator::equal(SurfaceIterator const& other) const 
-	{
-		return x_ == other.x_ && y_ == other.y_;
-	}
-
-	void SurfaceIterator::increment() 
-	{
-		if(index_incr_ != 0) {
-			index_ = index_incr_;
-		} else {
-			if(++x_ >= surface_->width()) {
-				if(++y_ >= surface_->height()) {
-					// indicate we reached the end of the surface.
-					y_ = x_ = -1;
-				} else {
-					// reset x to start new row.
-					x_ = 0;
-				}
-			}
-		}
-	}
-
-	void SurfaceIterator::decrement() 
-	{
-		if(--x_ <= 0) {
-			if(--y_ <= 0) {
-				y_ = x_ = 0;
-			} else {
-				x_ = surface_->width() - 1;
-			}
-		}
-	}
-
-	void SurfaceIterator::advance(std::ptrdiff_t n) 
-	{
-		x_ += n;
-		while(x_ >= surface_->width()) {
-			if(++y_ >= surface_->height()) {
-				// indicate we reached the end of the surface.
-				y_ = x_ = -1;
-				break;
-			} else {
-				x_ -= surface_->width();
-			}			
-		}
-	}
-
 	PixelFormat::PixelFormat()
 	{
 	}
@@ -380,6 +323,7 @@ namespace KRE
 		case PixelFormat::PF::PIXELFORMAT_INDEX1MSB:
 		case PixelFormat::PF::PIXELFORMAT_INDEX4LSB:
 		case PixelFormat::PF::PIXELFORMAT_INDEX4MSB:
+		case PixelFormat::PF::PIXELFORMAT_INDEX8:
 			return true;
 		default: break;
 		}
@@ -405,4 +349,45 @@ namespace KRE
 		return alpha_map_.end(); 
 	}
 
+	void Surface::iterateOverSurface(surface_iterator_fn fn)
+	{
+		iterateOverSurface(0, 0, width(), height(), fn);
+	}
+
+	void Surface::iterateOverSurface(rect r, surface_iterator_fn fn)
+	{
+		iterateOverSurface(r.x(), r.y(), r.h(), r.w(), fn);
+	}
+
+	void Surface::iterateOverSurface(int sx, int sy, int sw, int sh, surface_iterator_fn iterator_fn)
+	{
+		SurfaceLock lck(shared_from_this());
+		auto pf = getPixelFormat();
+		if(pf->getFormat() == PixelFormat::PF::PIXELFORMAT_INDEX1LSB 
+			|| pf->getFormat() == PixelFormat::PF::PIXELFORMAT_INDEX1MSB 
+			|| pf->getFormat() == PixelFormat::PF::PIXELFORMAT_INDEX4LSB 
+			|| pf->getFormat() == PixelFormat::PF::PIXELFORMAT_INDEX4MSB) {
+			int cnt = (pf->getFormat() == PixelFormat::PF::PIXELFORMAT_INDEX1LSB || pf->getFormat() == PixelFormat::PF::PIXELFORMAT_INDEX1MSB) ? 8 : 2;
+			for(int y = sy; y != sh; ++y) {
+				for(int x = sx; x != sw; ++x) {
+					for(int n = 0; n != cnt; ++n) {
+						int red = 0, green = 0, blue = 0, alpha = 0;
+						const uint8_t* px = &reinterpret_cast<const uint8_t*>(pixels())[x * bytesPerPixel() + y * rowPitch()];
+						pf->extractRGBA(px, n, red, green, blue, alpha);
+						iterator_fn(x, y, red, green, blue, alpha);
+					}
+				}
+			}
+		} else {
+			for(int y = sy; y != sh; ++y) {
+				for(int x = sx; x != sw; ++x) {
+					int red = 0, green = 0, blue = 0, alpha = 0;
+					const uint8_t* px = &reinterpret_cast<const uint8_t*>(pixels())[x * bytesPerPixel() + y * rowPitch()];
+					pf->extractRGBA(px, 0, red, green, blue, alpha);
+					iterator_fn(x, y, red, green, blue, alpha);
+				}
+			}
+		}
+	}
 }
+

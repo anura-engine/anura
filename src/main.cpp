@@ -250,55 +250,6 @@ int load_module(const std::string& mod, std::vector<std::string>* argv)
 	return 0;
 }
 
-struct FreeTextureHolder : public KRE::SceneObject
-{
-	FreeTextureHolder(const std::string& filename)
-		: KRE::SceneObject("FreeTextureHolder") 
-	{
-		using namespace KRE;
-		setColor(1.0f, 1.0f, 1.0f, 1.0f);
-		auto tex = DisplayDevice::createTexture(filename, TextureType::TEXTURE_2D, 4);
-		tex->setFiltering(Texture::Filtering::LINEAR, Texture::Filtering::LINEAR, Texture::Filtering::POINT);
-		tex->setAddressModes(Texture::AddressMode::BORDER, Texture::AddressMode::BORDER);
-		setTexture(tex);
-
-		auto as = DisplayDevice::createAttributeSet();
-		attribs_.reset(new Attribute<vertex_texcoord>(AccessFreqHint::DYNAMIC, AccessTypeHint::DRAW));
-		attribs_->addAttributeDesc(AttributeDesc(AttrType::POSITION, 2, AttrFormat::FLOAT, false, sizeof(vertex_texcoord), offsetof(vertex_texcoord, vtx)));
-		attribs_->addAttributeDesc(AttributeDesc(AttrType::TEXTURE,  2, AttrFormat::FLOAT, false, sizeof(vertex_texcoord), offsetof(vertex_texcoord, tc)));
-		as->addAttribute(AttributeBasePtr(attribs_));
-		as->setDrawMode(DrawMode::TRIANGLE_STRIP);
-		
-		addAttributeSet(as);
-	}
-	void preRender(const KRE::WindowManagerPtr& wm) override
-	{
-		const float offs_x = 0.0f;
-		const float offs_y = 0.0f;
-		const float vx1 = draw_rect_.x() + offs_x;
-		const float vy1 = draw_rect_.y() + offs_y;
-		const float vx2 = draw_rect_.x2() + offs_x;
-		const float vy2 = draw_rect_.y2() + offs_y;
-
-		const rectf& r = getTexture()->getSourceRectNormalised();
-
-		std::vector<KRE::vertex_texcoord> vertices;
-		vertices.emplace_back(glm::vec2(vx1,vy1), glm::vec2(r.x(),r.y()));
-		vertices.emplace_back(glm::vec2(vx2,vy1), glm::vec2(r.x2(),r.y()));
-		vertices.emplace_back(glm::vec2(vx1,vy2), glm::vec2(r.x(),r.y2()));
-		vertices.emplace_back(glm::vec2(vx2,vy2), glm::vec2(r.x2(),r.y2()));
-		getAttributeSet().back()->setCount(vertices.size());
-		attribs_->update(&vertices);
-	}
-	template<typename T>
-	void setDrawRect(const geometry::Rect<T>& r) {
-		draw_rect_ = r.template as_type<float>();
-	}
-private:
-	std::shared_ptr<KRE::Attribute<KRE::vertex_texcoord>> attribs_;
-	rectf draw_rect_;
-};
-
 
 void set_alpha_masks()
 {
@@ -307,10 +258,11 @@ void set_alpha_masks()
 	std::vector<SimpleColor> alpha_colors;
 
 	auto surf = Surface::create("alpha-colors.png");
-	for(auto col : *surf) {
-		alpha_colors.emplace_back(col.red, col.green, col.blue);
-		LOG_DEBUG("Added alpha color: (" << col.red << "," << col.green << "," << col.blue << ")");	
-	}
+	surf->iterateOverSurface([&alpha_colors](int x, int y, int r, int g, int b, int a) {
+		alpha_colors.emplace_back(r, g, b);
+		LOG_DEBUG("Added alpha color: (" << r << "," << g << "," << b << ")");	
+	});
+
 	Surface::setAlphaFilter([=](int r, int g, int b) {
 		for(auto& c : alpha_colors) {
 			if(c.red == r && c.green == g && c.blue == b) {
@@ -320,6 +272,7 @@ void set_alpha_masks()
 		return false;
 	});
 }
+
 
 int main(int argcount, char* argvec[])
 {

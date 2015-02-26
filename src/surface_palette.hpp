@@ -35,4 +35,6 @@ namespace graphics
 
 	KRE::SurfacePtr map_palette(KRE::SurfacePtr s, int palette);
 	KRE::Color map_palette(const KRE::Color& c, int palette);
+
+	KRE::SurfacePtr get_palette_surface(int palette);
 }

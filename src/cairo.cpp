@@ -177,9 +177,8 @@ namespace graphics
 
 	KRE::TexturePtr cairo_context::write() const
 	{
-		std::vector<unsigned> stride (1, cairo_image_surface_get_width(surface_));
 		auto tex = KRE::Texture::createTexture2D(width_, height_, KRE::PixelFormat::PF::PIXELFORMAT_ARGB8888);
-		tex->update(0, 0, width_, height_, stride, cairo_image_surface_get_data(surface_));
+		tex->update2D(0, 0, 0, width_, height_, cairo_image_surface_get_width(surface_),cairo_image_surface_get_data(surface_));
 		// Use the blend mode below to give correct for pre-multiplied alpha.
 		// If that doesn't work satisfactorily, then creating a texture with PIXELFORMAT_XRGB8888
 		// might be a better option. 

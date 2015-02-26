@@ -28,7 +28,7 @@
 
 ConstSolidMapPtr SolidMap::createObjectSolidMapFromSolidNode(variant node)
 {
-	SolidMapPtr result(createFromTexture(KRE::DisplayDevice::createTexture(node["image"]), rect(node["area"])));
+	SolidMapPtr result(createFromTexture(KRE::Texture::createTexture(node["image"]), rect(node["area"])));
 	result->id_ = node["id"].as_string();
 	return result;
 

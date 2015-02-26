@@ -38,75 +38,155 @@ using std::round;
 namespace KRE
 {
 	Texture::Texture(const variant& node, const std::vector<SurfacePtr>& surfaces)
-		: type_(TextureType::TEXTURE_2D), 
-		  mipmaps_(0), 
-		  max_anisotropy_(1),
-		  lod_bias_(0.0f),
-		  surface_width_(-1),
-		  surface_height_(-1),
-		  surfaces_(surfaces),
-		  width_(0),
-		  height_(0),
-		  depth_(0),
-		  unpack_alignment_(4),
-		  src_rect_(),
-		  src_rect_norm_(0.0f, 0.0f, 1.0f, 1.0f)
+		: is_paletteized_(false),
+		  palette_(0),
+		  max_palettes_(0)
 	{
-		if(surfaces_.size() == 0 && node.is_string()) {
-			surfaces_.emplace_back(Surface::create(node.as_string()));
-		} else if(surfaces_.size() == 0 && node.has_key("image") && node["image"].is_string()) {
-			surfaces_.emplace_back(Surface::create(node["image"].as_string()));
-		}
-		ASSERT_LOG(surfaces_.size() > 0, "Error no surface.");
-		surface_width_ = surfaces_.front()->width();
-		surface_height_ = surfaces_.front()->height();
+		if(node.is_list()) {
+			if(surfaces.size() > 0) {
+				ASSERT_LOG(surfaces.size() == node.num_elements(), "Number of items in node list must match number of surfaces.");
+			}
+			texture_params_.resize(node.num_elements());
+			for(int n = 0; n != node.num_elements(); ++n) {
+				if(surfaces.size() == 0) {
+					ASSERT_LOG(node[n].has_key("image") && node[n]["image"].is_string(), "No 'image' attribute found");
+					texture_params_[n].surface = Surface::create(node.as_string());
+					texture_params_[n].surface_width = texture_params_[n].surface->width();
+					texture_params_[n].surface_height = texture_params_[n].surface->height();
+				} else {
+					texture_params_[n].surface = surfaces[n];
+					texture_params_[n].surface_width = texture_params_[n].surface->width();
+					texture_params_[n].surface_height = texture_params_[n].surface->height();
+				}
+				initFromVariant(texture_params_.begin() + n, node[n]);
+			}
+		} else {
+			if(surfaces.size() == 0 && node.is_string()) {
+				texture_params_.resize(1);
+				texture_params_[0].surface = Surface::create(node.as_string());
+				texture_params_[0].surface_width = texture_params_[0].surface->width();
+				texture_params_[0].surface_height = texture_params_[0].surface->height();
+			} else if(surfaces.size() == 0 && node.has_key("image") && node["image"].is_string()) {
+				texture_params_.resize(1);
+				texture_params_[0].surface = Surface::create(node["image"].as_string());
+				texture_params_[0].surface_width = texture_params_[0].surface->width();
+				texture_params_[0].surface_height = texture_params_[0].surface->height();
+			} else if(surfaces.size() == 0 && node.has_key("images") && node["images"].is_list()) {
+				texture_params_.resize(node["images"].num_elements());
+				int n = 0;
+				for(auto s : node["images"].as_list_string()) {
+					texture_params_[n].surface = Surface::create(s);
+					texture_params_[n].surface_width = texture_params_[n].surface->width();
+					texture_params_[n].surface_height = texture_params_[n].surface->height();
+				}
+			} else if(surfaces.size() > 0) {
+				texture_params_.resize(surfaces.size());
+				for(int n = 0; n != surfaces.size(); ++n) {
+					texture_params_[n].surface = surfaces[n];
+					texture_params_[n].surface_width = texture_params_[n].surface->width();
+					texture_params_[n].surface_height = texture_params_[n].surface->height();
+				}
+			}
 
-		internalInit();
-		if(node.has_key("type")) {
-			const std::string& type = node["type"].as_string();
+
+			ASSERT_LOG(texture_params_.size() > 0, "Error no surfaces.");
+			// Assumes that we want to use the same parameters for all surfaces.
+			for(auto tp = texture_params_.begin(); tp != texture_params_.end(); ++tp) {
+				initFromVariant(tp, node);
+			}
+		}
+	}
+
+	Texture::Texture(const std::vector<SurfacePtr>& surfaces, TextureType type, int mipmap_levels)
+		: is_paletteized_(false),
+		  palette_(0),
+		  max_palettes_(0)
+	{
+		texture_params_.reserve(surfaces.size());
+		for(auto s : surfaces) {
+			texture_params_.emplace_back(TextureParams());
+			texture_params_.back().surface = s;
+			texture_params_.back().surface_width = s->width();
+			texture_params_.back().surface_height = s->height();
+			texture_params_.back().type = type;
+			texture_params_.back().mipmaps = mipmap_levels;
+			internalInit(texture_params_.begin() + (texture_params_.size() - 1));
+		}
+	}
+
+	Texture::Texture(int count, 
+		int width, 
+		int height, 
+		int depth,
+		PixelFormat::PF fmt, 
+		TextureType type)
+		: is_paletteized_(false),
+		  palette_(0),
+		  max_palettes_(0)
+	{
+		texture_params_.resize(1);
+		texture_params_[0].surface = Surface::create(width, height, fmt);
+		texture_params_[0].surface_width = width;
+		texture_params_[0].surface_height = height;
+		texture_params_[0].width = width;
+		texture_params_[0].height = height;
+		texture_params_[0].depth = depth;
+		texture_params_[0].type = type;
+		internalInit(texture_params_.begin());
+	}
+
+	Texture::~Texture()
+	{
+	}
+
+	void Texture::initFromVariant(texture_params_iterator tp, const variant& node)
+	{
+		internalInit(tp);
+		if(node.has_key("image_type")) {
+			const std::string& type = node["image_type"].as_string();
 			if(type == "1d") {
-				type_ = TextureType::TEXTURE_1D;
+				tp->type = TextureType::TEXTURE_1D;
 			} else if(type == "2d") {
-				type_ = TextureType::TEXTURE_2D;
+				tp->type = TextureType::TEXTURE_2D;
 			} else if(type == "3d") {
-				type_ = TextureType::TEXTURE_3D;
+				tp->type = TextureType::TEXTURE_3D;
 			} else if(type == "cubic") {
-				type_ = TextureType::TEXTURE_CUBIC;
+				tp->type = TextureType::TEXTURE_CUBIC;
 			} else {
 				ASSERT_LOG(false, "Unrecognised texture type '" << type << "'. Valid values are 1d,2d,3d and cubic.");
 			}
 		}
 		if(node.has_key("mipmaps")) {
 			ASSERT_LOG(node["mipmaps"].is_int(), "'mipmaps' not an integer type, found: " << node["mipmaps"].to_debug_string());
-			mipmaps_ = int(node["mipmaps"].as_int());
+			tp->mipmaps = int(node["mipmaps"].as_int());
 		}
 		if(node.has_key("lod_bias")) {
 			ASSERT_LOG(node["lod_bias"].is_numeric(), "'lod_bias' not a numeric type, found: " << node["lod_bias"].to_debug_string());
-			lod_bias_ = node["lod_bias"].as_float();
+			tp->lod_bias = node["lod_bias"].as_float();
 		}
 		if(node.has_key("max_anisotropy")) {
 			ASSERT_LOG(node["max_anisotropy"].is_int(), "'max_anisotropy' not an integer type, found: " << node["max_anisotropy"].to_debug_string());
-			max_anisotropy_ = int(node["max_anisotropy"].as_int());
+			tp->max_anisotropy = int(node["max_anisotropy"].as_int());
 		}
 		if(node.has_key("filtering")) {
 			if(node["filtering"].is_string()) {
 				const std::string& filtering = node["filtering"].as_string();
 				if(filtering == "none") {
-					filtering_[0] = Filtering::POINT;
-					filtering_[1] = Filtering::POINT;
-					filtering_[2] = Filtering::NONE;
+					tp->filtering[0] = Filtering::POINT;
+					tp->filtering[1] = Filtering::POINT;
+					tp->filtering[2] = Filtering::NONE;
 				} else if(filtering == "bilinear") {
-					filtering_[0] = Filtering::LINEAR;
-					filtering_[1] = Filtering::LINEAR;
-					filtering_[2] = Filtering::POINT;
+					tp->filtering[0] = Filtering::LINEAR;
+					tp->filtering[1] = Filtering::LINEAR;
+					tp->filtering[2] = Filtering::POINT;
 				} else if(filtering == "trilinear") {
-					filtering_[0] = Filtering::LINEAR;
-					filtering_[1] = Filtering::LINEAR;
-					filtering_[2] = Filtering::LINEAR;
+					tp->filtering[0] = Filtering::LINEAR;
+					tp->filtering[1] = Filtering::LINEAR;
+					tp->filtering[2] = Filtering::LINEAR;
 				} else if(filtering == "anisotropic") {
-					filtering_[0] = Filtering::ANISOTROPIC;
-					filtering_[1] = Filtering::ANISOTROPIC;
-					filtering_[2] = Filtering::LINEAR;
+					tp->filtering[0] = Filtering::ANISOTROPIC;
+					tp->filtering[1] = Filtering::ANISOTROPIC;
+					tp->filtering[2] = Filtering::LINEAR;
 				} else {
 					ASSERT_LOG(false, "'filtering' must be either 'none','bilinear','trilinear' or 'anisotropic'. Found: " << filtering);
 				}
@@ -117,13 +197,13 @@ namespace KRE
 					ASSERT_LOG(node["filtering"][n].is_string(), "Element " << n << " of filtering is not a string: " << node["filtering"][0].to_debug_string());
 					const std::string& f = node["filtering"][n].as_string();
 					if(f == "none") {
-						filtering_[n] = Filtering::NONE;
+						tp->filtering[n] = Filtering::NONE;
 					} else if(f == "point") {
-						filtering_[n] = Filtering::POINT;
+						tp->filtering[n] = Filtering::POINT;
 					} else if(f == "linear") {
-						filtering_[n] = Filtering::LINEAR;
+						tp->filtering[n] = Filtering::LINEAR;
 					} else if(f == "anisotropic") {
-						filtering_[n] = Filtering::ANISOTROPIC;
+						tp->filtering[n] = Filtering::ANISOTROPIC;
 					} else {
 						ASSERT_LOG(false, "Filtering element(" << n << ") invalid: " << f);
 					}
@@ -141,160 +221,133 @@ namespace KRE
 					ASSERT_LOG(node["address_mode"][n].is_string(), "Element " << n << " of 'address_mode' attribute is not a string: " << node["address_mode"][0].to_debug_string());
 					const std::string& am = node["address_mode"][n].as_string();
 					if(am == "wrap") {
-						address_mode_[n] = AddressMode::WRAP;
+						tp->address_mode[n] = AddressMode::WRAP;
 					} else if(am == "clamp") {
-						address_mode_[n] = AddressMode::CLAMP;
+						tp->address_mode[n] = AddressMode::CLAMP;
 					} else if(am == "mirror") {
-						address_mode_[n] = AddressMode::MIRROR;
+						tp->address_mode[n] = AddressMode::MIRROR;
 					} else if(am == "border") {
-						address_mode_[n] = AddressMode::BORDER;
+						tp->address_mode[n] = AddressMode::BORDER;
 					} else {
 						ASSERT_LOG(false, "address_mode element(" << n << ") invalid: " << am);
 					}
 				}
 				for(; n < 3; ++n) {
-					address_mode_[n] = AddressMode::WRAP;
+					tp->address_mode[n] = AddressMode::WRAP;
 				}
 			} else {
 				ASSERT_LOG(false, "'filtering' must be a list of strings. Found: " << node["filtering"].to_debug_string());
 			}
 		}
 		if(node.has_key("border_color")) {
-			border_color_ = Color(node["border_color"]);
+			tp->border_color = Color(node["border_color"]);
 		}
 		if(node.has_key("rect")) {
 			ASSERT_LOG(node["rect"].is_list(), "'rect' attribute must be a list of numbers.");
 			ASSERT_LOG(node["rect"].num_elements() >= 4, "'rect' attribute must have at least 4 elements.");
-			setSourceRect(rect(node["rect"]));
+			tp->src_rect = rect(node["rect"]);
+			tp->src_rect_norm = getNormalisedTextureCoords<float>(std::distance(texture_params_.begin(), tp), tp->src_rect);
 		}
 	}
 
-	Texture::Texture(const std::vector<SurfacePtr>& surfaces, TextureType type, int mipmap_levels)
-		: type_(type), 
-		  mipmaps_(mipmap_levels), 
-		  max_anisotropy_(1),
-		  lod_bias_(0.0f),
-		  surfaces_(surfaces),
-		  surface_width_(-1),
-		  surface_height_(-1),
-		  width_(0),
-		  height_(0),
-		  depth_(0),
-		  unpack_alignment_(4),
-		  src_rect_(),
-		  src_rect_norm_(0.0f, 0.0f, 1.0f, 1.0f)
+	void Texture::internalInit(texture_params_iterator tp)
 	{
-		surface_width_ = surfaces.front()->width();
-		surface_height_ = surfaces.front()->height();
-		for(auto s : surfaces) {
-			ASSERT_LOG(surface_width_ == s->width(), "Surface width didn't match. When creating a multi-surface texture all the surface widths must be the same. May relax this requirement in the future.");
-			ASSERT_LOG(surface_height_ == s->height(), "Surface height didn't match. When creating a multi-surface texture all the surface heights must be the same. May relax this requirement in the future.");
-		}
-		internalInit();
-	}
-
-	Texture::Texture(int count, 
-		int width, 
-		int height, 
-		int depth,
-		PixelFormat::PF fmt, 
-		TextureType type)
-		: type_(type), 
-		  mipmaps_(0), 
-		  max_anisotropy_(1),
-		  lod_bias_(0.0f),
-		  surface_width_(width),
-		  surface_height_(height),
-		  width_(width),
-		  height_(height),
-		  depth_(depth),
-		  unpack_alignment_(4),
-		  src_rect_(),
-		  src_rect_norm_(0.0f, 0.0f, 1.0f, 1.0f)
-	{
-		internalInit();
-	}
-
-	Texture::Texture(const SurfacePtr& surf, const SurfacePtr& palette)
-		: type_(TextureType::TEXTURE_2D), 
-		  mipmaps_(0), 
-		  max_anisotropy_(1),
-		  lod_bias_(0.0f),
-		  surface_width_(surf->width()),
-		  surface_height_(surf->height()),
-		  width_(0),
-		  height_(0),
-		  depth_(0),
-		  unpack_alignment_(4),
-		  src_rect_(),
-		  src_rect_norm_(0.0f, 0.0f, 1.0f, 1.0f)
-	{
-		surfaces_.emplace_back(surf);
-		surfaces_.emplace_back(palette);
-		internalInit();	
-	}
-	
-	Texture::~Texture()
-	{
-	}
-
-	void Texture::internalInit()
-	{
-		for(auto& am : address_mode_) {
+		for(auto& am : tp->address_mode) {
 			am = AddressMode::CLAMP;
 		}
-		filtering_[0] = Filtering::POINT;
-		filtering_[1] = Filtering::POINT;
-		filtering_[2] = Filtering::NONE;
+		tp->filtering[0] = Filtering::POINT;
+		tp->filtering[1] = Filtering::POINT;
+		tp->filtering[2] = Filtering::NONE;
 
 		// XXX For reasons (i.e. some video cards are problematic either hardware/drivers)
 		// we are forced to use power-of-two textures anyway if we want mip-mapping and
 		// address modes other than CLAMP.
 		if(!DisplayDevice::checkForFeature(DisplayDeviceCapabilties::NPOT_TEXTURES)) {
-			width_ = next_power_of_two(surface_width_);
-			height_ = next_power_of_two(surface_height_);
-			depth_ = 0;
+			tp->width = next_power_of_two(tp->surface_width);
+			tp->height = next_power_of_two(tp->surface_height);
+			ASSERT_LOG(tp->type != TextureType::TEXTURE_3D && tp->type != TextureType::TEXTURE_CUBIC, "fixme texture type3d or cubic");
+			tp->depth = 0;
 		} else {
-			width_ = surface_width_;
-			height_ = surface_height_;
-			depth_ = 0;
+			tp->width = tp->surface_width;
+			tp->height = tp->surface_height;
+			ASSERT_LOG(tp->type != TextureType::TEXTURE_3D && tp->type != TextureType::TEXTURE_CUBIC, "fixme texture type3d or cubic");
+			tp->depth = 0;
 		}
 
-		setSourceRect(rect(0, 0, surface_width_, surface_height_));
+		tp->src_rect = rect(0, 0, tp->surface_width, tp->surface_height);
+		tp->src_rect_norm = getNormalisedTextureCoords<float>(std::distance(texture_params_.begin(), tp), tp->src_rect);
 	}
 
-	void Texture::setAddressModes(Texture::AddressMode u, Texture::AddressMode v, Texture::AddressMode w, const Color& bc)
+	void Texture::setAddressModes(int n, Texture::AddressMode u, Texture::AddressMode v, Texture::AddressMode w, const Color& bc)
 	{
-		address_mode_[0] = u;
-		address_mode_[1] = v;
-		address_mode_[2] = w;
-		border_color_ = bc;
-		init();
-	}
-
-	void Texture::setAddressModes(const Texture::AddressMode uvw[3], const Color& bc)
-	{
-		for(int n = 0; n < 3; ++n) {
-			address_mode_[n] = uvw[n];
+		ASSERT_LOG(n < static_cast<int>(texture_params_.size()), "index exceeds number of textures present.");
+		if(n < 0) {
+			for(auto& tp : texture_params_) {
+				tp.address_mode[0] = u;
+				tp.address_mode[1] = v;
+				tp.address_mode[2] = w;
+				tp.border_color = bc;
+			}
+		} else {
+			texture_params_[n].address_mode[0] = u;
+			texture_params_[n].address_mode[1] = v;
+			texture_params_[n].address_mode[2] = w;
+			texture_params_[n].border_color = bc;
 		}
-		border_color_ = bc;
-		init();
+		init(n);
 	}
 
-	void Texture::setFiltering(Texture::Filtering min, Texture::Filtering max, Texture::Filtering mip)
+	void Texture::setAddressModes(int n, const Texture::AddressMode uvw[3], const Color& bc)
 	{
-		filtering_[0] = min;
-		filtering_[1] = max;
-		filtering_[2] = mip;
-		init();
-	}
-
-	void Texture::setFiltering(const Texture::Filtering f[3])
-	{
-		for(int n = 0; n < 3; ++n) {
-			filtering_[n] = f[n];
+		ASSERT_LOG(n < static_cast<int>(texture_params_.size()), "index exceeds number of textures present.");
+		if(n < 0) {
+			for(auto& tp : texture_params_) {
+				for(int m = 0; m < 3; ++m) {
+					tp.address_mode[m] = uvw[m];
+					tp.border_color = bc;
+				}
+			}
+		} else {
+			for(int m = 0; m < 3; ++m) {
+				texture_params_[n].address_mode[m] = uvw[m];
+			}
+			texture_params_[n].border_color = bc;
 		}
-		init();
+		init(n);
+	}
+
+	void Texture::setFiltering(int n, Texture::Filtering min, Texture::Filtering max, Texture::Filtering mip)
+	{
+		ASSERT_LOG(n < static_cast<int>(texture_params_.size()), "index exceeds number of textures present.");
+		if(n < 0) {
+			for(auto& tp : texture_params_) {
+				tp.filtering[0] = min;
+				tp.filtering[1] = max;
+				tp.filtering[2] = mip;
+			}
+		} else {
+			texture_params_[n].filtering[0] = min;
+			texture_params_[n].filtering[1] = max;
+			texture_params_[n].filtering[2] = mip;
+		}
+		init(n);
+	}
+
+	void Texture::setFiltering(int n, const Texture::Filtering f[3])
+	{
+		ASSERT_LOG(n < static_cast<int>(texture_params_.size()), "index exceeds number of textures present.");
+		if(n < 0) {
+			for(auto& tp : texture_params_) {
+				for(int m = 0; m < 3; ++m) {
+					tp.filtering[m] = f[m];
+				}
+			}
+		} else {
+			for(int m = 0; m < 3; ++m) {
+				texture_params_[n].filtering[m] = f[m];
+			}
+		}
+		init(n);
 	}
 
 	void Texture::rebuildAll()
@@ -302,79 +355,99 @@ namespace KRE
 		ASSERT_LOG(false, "Texture::rebuildAll()");
 	}
 
-	void Texture::setTextureDimensions(int w, int h, int d)
+	void Texture::setUnpackAlignment(int n, int align)
 	{
-		width_ = w;
-		height_ = h;
-		depth_ = d;
-	}
-
-	void Texture::setUnpackAlignment(int align)
-	{
+		ASSERT_LOG(n < static_cast<int>(texture_params_.size()), "index exceeds number of textures present.");
 		ASSERT_LOG(align == 1 || align == 2 || align == 4 || align == 8, 
 			"texture unpacking alignment must be either 1,2,4 or 8: " << align);
-		unpack_alignment_ = align;
+		if(n < 0) {
+			for(auto& tp : texture_params_) {
+				tp.unpack_alignment = align;
+			}
+		} else {
+			texture_params_[n].unpack_alignment = align;
+		}
 	}
 
-	void Texture::setSourceRect(const rect& r)
+	void Texture::setSourceRect(int n, const rect& r)
 	{
-		src_rect_ = r;
-		src_rect_norm_ = getNormalisedTextureCoords<float>(src_rect_);
+		ASSERT_LOG(n < static_cast<int>(texture_params_.size()), "index exceeds number of textures present.");
+		if(n < 0) {
+			for(auto tp = texture_params_.begin(); tp != texture_params_.end(); ++tp) {
+				tp->src_rect = r;
+				tp->src_rect_norm = getNormalisedTextureCoords<float>(std::distance(texture_params_.begin(), tp), tp->src_rect);
+			}
+		} else {
+			texture_params_[n].src_rect = r;
+			texture_params_[n].src_rect_norm = getNormalisedTextureCoords<float>(n, texture_params_[n].src_rect);
+		}
 	}
 
-	void Texture::setSourceRectNormalised(const rectf& r)
+	void Texture::setSourceRectNormalised(int n, const rectf& r)
 	{
-		src_rect_norm_ = r;
-		src_rect_ = rect::from_coordinates(static_cast<int>(round(r.x() * width_)),
-			static_cast<int>(round(r.y() * height_)),
-			static_cast<int>(round(r.x2() * width_)),
-			static_cast<int>(round(r.y2() * height_)));
+		ASSERT_LOG(n < static_cast<int>(texture_params_.size()), "index exceeds number of textures present.");
+		if(n < 0) {
+			for(auto tp = texture_params_.begin(); tp != texture_params_.end(); ++tp) {
+				tp->src_rect_norm = r;
+				tp->src_rect = rect::from_coordinates(static_cast<int>(round(r.x() * tp->width)),
+					static_cast<int>(round(r.y() * tp->height)),
+					static_cast<int>(round(r.x2() * tp->width)),
+					static_cast<int>(round(r.y2() * tp->height)));
+			}
+		} else {
+			texture_params_[n].src_rect_norm = r;
+			texture_params_[n].src_rect = rect::from_coordinates(static_cast<int>(round(r.x() * texture_params_[n].width)),
+				static_cast<int>(round(r.y() * texture_params_[n].height)),
+				static_cast<int>(round(r.x2() * texture_params_[n].width)),
+				static_cast<int>(round(r.y2() * texture_params_[n].height)));
+		}
 	}
 
 	void Texture::addPalette(const SurfacePtr& palette)
 	{
-		surfaces_.emplace_back(palette);
+		ASSERT_LOG(static_cast<int>(texture_params_.size()) == 1 && !is_paletteized_ || is_paletteized_ && static_cast<int>(texture_params_.size()) == 2, "Currently we only support converting textures to palette versions that have one texture. may life in future.");
+		is_paletteized_ = true;
 		handleAddPalette(palette);
+	}
+
+	void Texture::setMaxPalettes(int n)
+	{
+		max_palettes_ = n;
+		if(palette_ >= max_palettes_) {
+			LOG_WARN("maximum palettes for texture changed in a way that invalidates current palette: " << palette_ << " >= " << max_palettes_ << ". Resetting palette index.");
+			palette_ = 0;
+		}
+	}
+
+	void Texture::setPalette(int n)
+	{ 
+		ASSERT_LOG(n < max_palettes_, "Value to set palette to exceeds maximum: " << n << " >= " << max_palettes_);
+		palette_ = n;
 	}
 
 	TexturePtr Texture::createTexture(const variant& node)
 	{
-		return DisplayDevice::createTexture(nullptr, true, node);
+		return DisplayDevice::createTexture(nullptr, node);
+	}
+
+	TexturePtr Texture::createTexture(const std::string& filename, const variant& node)
+	{
+		return DisplayDevice::createTexture(Surface::create(filename), node);
 	}
 
 	TexturePtr Texture::createTexture(const std::string& filename, TextureType type, int mipmap_levels)
 	{
-		return DisplayDevice::createTexture(filename, type, mipmap_levels);
+		return DisplayDevice::createTexture(Surface::create(filename), type, mipmap_levels);
 	}
 
-	TexturePtr Texture::createTexture(const SurfacePtr& surface, bool cache)
+	TexturePtr Texture::createTexture(const SurfacePtr& surface)
 	{
-		return DisplayDevice::createTexture(surface, cache, variant());
+		return DisplayDevice::createTexture(surface, variant());
 	}
 
-	TexturePtr Texture::createTexture(const SurfacePtr& surface, bool cache, const variant& node)
+	TexturePtr Texture::createTexture(const SurfacePtr& surface, const variant& node)
 	{
-		return DisplayDevice::createTexture(surface, cache, node);
-	}
-
-	TexturePtr Texture::createPalettizedTexture(const std::string& filename)
-	{
-		return DisplayDevice::createTexture(Surface::create(filename), SurfacePtr());
-	}
-
-	TexturePtr Texture::createPalettizedTexture(const std::string& filename, const SurfacePtr& palette)
-	{
-		return DisplayDevice::createTexture(Surface::create(filename), palette);
-	}
-
-	TexturePtr Texture::createPalettizedTexture(const SurfacePtr& surf)
-	{
-		return DisplayDevice::createTexture(surf, SurfacePtr());
-	}
-
-	TexturePtr Texture::createPalettizedTexture(const SurfacePtr& surf, const SurfacePtr& palette)
-	{
-		return DisplayDevice::createTexture(surf, palette);
+		return DisplayDevice::createTexture(surface, node);
 	}
 
 	TexturePtr Texture::createTexture1D(int width, PixelFormat::PF fmt)
@@ -392,19 +465,14 @@ namespace KRE
 		return DisplayDevice::createTexture3D(width, height, depth, fmt);
 	}
 
-	TexturePtr Texture::createTexture2D(int count, int width, int height, PixelFormat::PF fmt)
+	TexturePtr Texture::createTextureArray(int count, int width, int height, PixelFormat::PF fmt, TextureType type)
 	{
-		return DisplayDevice::createTexture2D(count, width, height, fmt);
+		return DisplayDevice::createTextureArray(count, width, height, fmt, type);
 	}
 
-	TexturePtr Texture::createTexture2D(const std::vector<std::string>& filenames, const variant& node)
+	TexturePtr Texture::createTextureArray(const std::vector<SurfacePtr>& surfaces, const variant& node)
 	{
-		return DisplayDevice::createTexture2D(filenames, node);
-	}
-
-	TexturePtr Texture::createTexture2D(const std::vector<SurfacePtr>& surfaces, bool cache)
-	{
-		return DisplayDevice::createTexture2D(surfaces, cache);
+		return DisplayDevice::createTextureArray(surfaces, node);
 	}
 
 	void Texture::clearTextures()
@@ -416,4 +484,33 @@ namespace KRE
 	{
 		clearTextures();
 	}
+
+	std::vector<SurfacePtr> Texture::getSurfaces() const
+	{
+		std::vector<SurfacePtr> res;
+		for(auto& tp : texture_params_) {
+			res.emplace_back(tp.surface);
+		}
+		return res;
+	}
+
+	void Texture::addSurface(SurfacePtr surf)
+	{
+		texture_params_.emplace_back(TextureParams());
+		texture_params_.back().surface = surf;
+		texture_params_.back().surface_width = surf->width();
+		texture_params_.back().surface_height = surf->height();
+		internalInit(texture_params_.begin() + (texture_params_.size() - 1));
+	}
+
+	void Texture::replaceSurface(int n, SurfacePtr surf)
+	{
+		ASSERT_LOG(n < static_cast<int>(texture_params_.size()), "index out of bounds. " << n << " >= " << texture_params_.size());
+		texture_params_[n] = TextureParams();
+		texture_params_[n].surface = surf;
+		texture_params_[n].surface_width = surf->width();
+		texture_params_[n].surface_height = surf->height();
+		internalInit(texture_params_.begin() + n);
+	}
 }
+

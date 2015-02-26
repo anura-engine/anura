@@ -204,7 +204,7 @@ namespace KRE
 	{
 		auto it = get_font_path_cache().find(fontname);
 		if(it == get_font_path_cache().end()) {
-			LOG_DEBUG("Font name: " << fontname << " not found.");
+			//LOG_DEBUG("Font name: " << fontname << " not found.");
 			std::stringstream ss;
 			ss << "Font '" << fontname << "' not found in any available path.\n";
 			ss << "Paths were: ";
@@ -215,10 +215,10 @@ namespace KRE
 			} else {
 				ss << "<empty>";
 			}
-			LOG_DEBUG(ss.str());
+			//LOG_DEBUG(ss.str());
 			throw FontError(ss.str().c_str());
 		}
-		LOG_DEBUG("Font name " << it->first << " at " << it->second);
+		//LOG_DEBUG("Font name " << it->first << " at " << it->second);
 		return it->second;
 	}
 

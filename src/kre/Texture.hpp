@@ -58,99 +58,100 @@ namespace KRE
 		};
 		virtual ~Texture();
 
-		void setAddressModes(AddressMode u, AddressMode v=AddressMode::WRAP, AddressMode w=AddressMode::WRAP, const Color& bc=Color(0.0f,0.0f,0.0f));
-		void setAddressModes(const AddressMode uvw[3], const Color& bc=Color(0.0f,0.0f,0.0f));
+		void setAddressModes(int n, AddressMode u, AddressMode v=AddressMode::WRAP, AddressMode w=AddressMode::WRAP, const Color& bc=Color(0.0f,0.0f,0.0f));
+		void setAddressModes(int n, const AddressMode uvw[3], const Color& bc=Color(0.0f,0.0f,0.0f));
 
-		void setFiltering(Filtering min, Filtering max, Filtering mip);
-		void setFiltering(const Filtering f[3]);
+		void setFiltering(int n, Filtering min, Filtering max, Filtering mip);
+		void setFiltering(int n, const Filtering f[3]);
 
-		void setBorderColor(const Color& bc);
+		void setBorderColor(int n, const Color& bc);
 
-		TextureType getType() const { return type_; }
-		int getMipMapLevels() const { return mipmaps_; }
-		int getMaxAnisotropy() const { return max_anisotropy_; }
-		AddressMode getAddressModeU() const { return address_mode_[0]; }
-		AddressMode getAddressModeV() const { return address_mode_[1]; }
-		AddressMode getAddressModeW() const { return address_mode_[2]; }
-		Filtering getFilteringMin() const { return filtering_[0]; }
-		Filtering getFilteringMax() const { return filtering_[1]; }
-		Filtering getFilteringMip() const { return filtering_[2]; }
-		const Color& getBorderColor() const { return border_color_; }
-		float getLodBias() const { return lod_bias_; }
+		TextureType getType(int n) const { return texture_params_[n].type; }
+		int getMipMapLevels(int n = 0) const { return texture_params_[n].mipmaps; }
+		int getMaxAnisotropy(int n = 0) const { return texture_params_[n].max_anisotropy; }
+		AddressMode getAddressModeU(int n = 0) const { return texture_params_[n].address_mode[0]; }
+		AddressMode getAddressModeV(int n = 0) const { return texture_params_[n].address_mode[1]; }
+		AddressMode getAddressModeW(int n = 0) const { return texture_params_[n].address_mode[2]; }
+		Filtering getFilteringMin(int n = 0) const { return texture_params_[n].filtering[0]; }
+		Filtering getFilteringMax(int n = 0) const { return texture_params_[n].filtering[1]; }
+		Filtering getFilteringMip(int n = 0) const { return texture_params_[n].filtering[2]; }
+		const Color& getBorderColor(int n = 0) const { return texture_params_[n].border_color; }
+		float getLodBias(int n = 0) const { return texture_params_[n].lod_bias; }
 
-		void internalInit();
+		int actualWidth(int n = 0) const { return texture_params_[n].width; }
+		int actualHeight(int n = 0) const { return texture_params_[n].height; }
+		int actualDepth(int n = 0) const { return texture_params_[n].depth; }
 
-		int actualWidth() const { return width_; }
-		int actualHeight() const { return height_; }
-		int actualDepth() const { return depth_; }
+		int width(int n = 0) const { return texture_params_[n].src_rect.w(); }
+		int height(int n = 0) const { return texture_params_[n].src_rect.h(); }
+		int depth(int n = 0) const { return 0; }
 
-		int width() const { return src_rect_.w(); }
-		int height() const { return src_rect_.h(); }
-		int depth() const { return surfaces_.size(); }
+		int surfaceWidth(int n = 0) const { return texture_params_[n].surface_width; }
+		int surfaceHeight(int n = 0) const { return texture_params_[n].surface_height; }
 
-		int surfaceWidth() const { return surface_width_; }
-		int surfaceHeight() const { return surface_height_; }
-
-		virtual void init() = 0;
+		virtual void init(int n) = 0;
 		virtual void bind() = 0;
 		virtual unsigned id(int n = 0) = 0;
 
-		virtual void update(int x, unsigned width, void* pixels) = 0;
+		virtual void update(int n, int x, int width, void* pixels) = 0;
 		// Less safe version for updating a multi-texture.
-		virtual void update(int x, int y, unsigned width, unsigned height, const int* stride, const void* pixels) = 0;
-		virtual void update(int x, int y, unsigned width, unsigned height, const std::vector<unsigned>& stride, const void* pixels) = 0;
-		virtual void update(int x, int y, int z, unsigned width, unsigned height, unsigned depth, void* pixels) = 0;
+		virtual void update(int n, int x, int y, int width, int height, const void* pixels) = 0;
+		virtual void update2D(int n, int x, int y, int width, int height, int stride, const void* pixels) = 0;
+		virtual void updateYUV(int x, int y, int width, int height, const std::vector<int>& stride, const void* pixels) = 0;
+		virtual void update(int n, int x, int y, int z, int width, int height, int depth, void* pixels) = 0;
 
 		static void rebuildAll();
 		static void clearTextures();
 
-		// XXX Need to add a pixel filter function, so when we load the surface we apply the filter.
-		static TexturePtr createTexture(const std::string& filename,
-			TextureType type=TextureType::TEXTURE_2D, 
-			int mipmap_levels=0);
 		static TexturePtr createTexture(const variant& node);
+		static TexturePtr createTexture(const std::string& filename, TextureType type=TextureType::TEXTURE_2D, int mipmap_levels=0);
 		static TexturePtr createTexture(const std::string& filename, const variant& node);
-		static TexturePtr createTexture(const SurfacePtr& surface, bool cache);
-		static TexturePtr createTexture(const SurfacePtr& surface, bool cache, const variant& node);
+		static TexturePtr createTexture(const SurfacePtr& surface, const variant& node);
+		static TexturePtr createTexture(const SurfacePtr& surface);
 		
 		static TexturePtr createTexture1D(int width, PixelFormat::PF fmt);
 		static TexturePtr createTexture2D(int width, int height, PixelFormat::PF fmt);
 		static TexturePtr createTexture3D(int width, int height, int depth, PixelFormat::PF fmt);
 
-		static TexturePtr createTexture2D(int count, int width, int height, PixelFormat::PF fmt);
-		static TexturePtr createTexture2D(const std::vector<std::string>& filenames, const variant& node);
-		static TexturePtr createTexture2D(const std::vector<SurfacePtr>& surfaces, bool cache);
-
-		/* Functions for creating a texture that only has a single channel and an associated
-			secondary texture that is used for doing palette look-ups to get the actual color.
-		*/
-		static TexturePtr createPalettizedTexture(const std::string& filename);
-		static TexturePtr createPalettizedTexture(const std::string& filename, const SurfacePtr& palette);
-		static TexturePtr createPalettizedTexture(const SurfacePtr& surf);
-		static TexturePtr createPalettizedTexture(const SurfacePtr& surf, const SurfacePtr& palette);
+		static TexturePtr createTextureArray(int count, int width, int height, PixelFormat::PF fmt, TextureType type);
+		static TexturePtr createTextureArray(const std::vector<SurfacePtr>& surfaces, const variant& node);
 
 		void addPalette(const SurfacePtr& palette);
 
-		const SurfacePtr& getFrontSurface() const { return surfaces_.front(); }
-		std::vector<SurfacePtr> getSurfaces() const { return surfaces_; }
+		int getTextureCount() const { return static_cast<int>(texture_params_.size()); }
+		const SurfacePtr& getFrontSurface() const { return texture_params_.front().surface; }
+		const SurfacePtr& getSurface(int n) const { return texture_params_[n].surface; }
+		std::vector<SurfacePtr> getSurfaces() const;
 
-		int getUnpackAlignment() const { return unpack_alignment_; }
-		void setUnpackAlignment(int align);
+		int getUnpackAlignment(int n = 0) const { return texture_params_[n].unpack_alignment; }
+		void setUnpackAlignment(int n, int align);
 
 		template<typename N, typename T>
-		const geometry::Rect<N> getNormalisedTextureCoords(const geometry::Rect<T>& r) {
-			float w = static_cast<float>(surface_width_);
-			float h = static_cast<float>(surface_height_);
+		const geometry::Rect<N> getNormalisedTextureCoords(int n, const geometry::Rect<T>& r) {
+			float w = static_cast<float>(texture_params_[n].surface_width);
+			float h = static_cast<float>(texture_params_[n].surface_height);
 			return geometry::Rect<N>::from_coordinates(static_cast<N>(r.x())/w, static_cast<N>(r.y())/h, static_cast<N>(r.x2())/w, static_cast<N>(r.y2())/h);		
 		}
+		template<typename N, typename T>
+		const geometry::Rect<N> getNormalizedTextureCoords(int n, const geometry::Rect<T>& r) {
+			return getNormalisedTextureCoords<N,T>(n, r);
+		}
 
 		template<typename N, typename T>
-		const N getNormalisedTextureCoordW(const T& x) {
-			return static_cast<N>(x) / static_cast<N>(surface_width_);
+		const N getNormalisedTextureCoordW(int n, const T& x) {
+			return static_cast<N>(x) / static_cast<N>(texture_params_[n].surface_width);
 		}
 		template<typename N, typename T>
-		const N getNormalisedTextureCoordH(const T& y) {
-			return static_cast<N>(y) / static_cast<N>(surface_height_);
+		const N getNormalisedTextureCoordH(int n, const T& y) {
+			return static_cast<N>(y) / static_cast<N>(texture_params_[n].surface_height);
+		}
+		template<typename N, typename T>
+		const N getNormalizedTextureCoordW(int n, const T& x) {
+			return getNormalisedTextureCoordW<N,T>(n, x);
+		}
+		template<typename N, typename T>
+		const N getNormalizedTextureCoordH(int n, const T& y) {
+			return getNormalisedTextureCoordH<N,T>(n, y);
 		}
 
 		// Can return nullptr if not-implemented, invalid underlying surface.
@@ -159,12 +160,17 @@ namespace KRE
 		static void clearCache();
 
 		// Set source rect in un-normalised co-ordinates.
-		void setSourceRect(const rect& r);
+		void setSourceRect(int n, const rect& r);
 		// Set source rect in normalised co-ordinates.
-		void setSourceRectNormalised(const rectf& r);
+		void setSourceRectNormalised(int n, const rectf& r);
 
-		const rectf& getSourceRectNormalised() const { return src_rect_norm_; }
-		const rect& getSourceRect() const { return src_rect_; }
+		const rectf& getSourceRectNormalised(int n = 0) const { return texture_params_[n].src_rect_norm; }
+		const rect& getSourceRect(int n = 0) const { return texture_params_[n].src_rect; }
+
+		bool isPaletteized() const { return is_paletteized_; }
+		void setPalette(int n);
+		int getPalette() const { return palette_; }
+		int getMaxPalettes() const { return max_palettes_; }
 
 		virtual TexturePtr clone() = 0;
 	protected:
@@ -178,36 +184,65 @@ namespace KRE
 			int depth,
 			PixelFormat::PF fmt, 
 			TextureType type);
-		// Constrcutor to create paletteized texture from a file name and optional surface.
-		explicit Texture(const SurfacePtr& surf, const SurfacePtr& palette);
-		void setTextureDimensions(int w, int h, int d=0);
+		void setMaxPalettes(int n);
+		void addSurface(SurfacePtr surf);
+		void replaceSurface(int n, SurfacePtr surf);
 	private:
+		Texture();
 		virtual void rebuild() = 0;
 		virtual void handleAddPalette(const SurfacePtr& palette) = 0;
 
-		TextureType type_;
-		int mipmaps_;
-		AddressMode address_mode_[3]; // u,v,w
-		Filtering filtering_[3]; // minification, magnification, mip
-		Color border_color_;
-		int max_anisotropy_;
-		float lod_bias_;
-		Texture();
-		std::vector<SurfacePtr> surfaces_;
+		struct TextureParams {
+			TextureParams()
+				: surface(),
+				  type(TextureType::TEXTURE_2D),
+				  mipmaps(0),
+				  border_color(),
+				  max_anisotropy(1),
+				  lod_bias(0.0f),
+				  surface_width(-1),
+				  surface_height(-1),
+				  width(0),
+				  height(0),
+				  depth(0),
+				  unpack_alignment(4),
+				  src_rect(),
+				  src_rect_norm(0.0f, 0.0f, 1.0f, 1.0f)
+			{
+			}
+			SurfacePtr surface;
+			
+			TextureType type;
+			int mipmaps;
+			AddressMode address_mode[3]; // u,v,w
+			Filtering filtering[3]; // minification, magnification, mip
+			Color border_color;
+			int max_anisotropy;
+			float lod_bias;
 
-		int surface_width_;
-		int surface_height_;
+			int surface_width;
+			int surface_height;
 
-		// Width/Height/Depth of the created texture -- may be a 
-		// different size than the surface if things like only
-		// allowing power-of-two textures is in effect.
-		int width_;
-		int height_;
-		int depth_;
+			// Width/Height/Depth of the created texture -- may be a 
+			// different size than the surface if things like only
+			// allowing power-of-two textures is in effect.
+			int width;
+			int height;
+			int depth;
+			
+			int unpack_alignment;
 
-		int unpack_alignment_;
+			rect src_rect;
+			rectf src_rect_norm;
+		};
+		std::vector<TextureParams> texture_params_;
+		typedef std::vector<TextureParams>::iterator texture_params_iterator;
 
-		rect src_rect_;
-		rectf src_rect_norm_;
+		bool is_paletteized_;
+		int palette_;
+		int max_palettes_;
+
+		void initFromVariant(texture_params_iterator tp, const variant& node);
+		void internalInit(texture_params_iterator tp);
 	};
 }
