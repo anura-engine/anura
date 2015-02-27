@@ -195,14 +195,19 @@ struct variant_list {
 		}
 	}
 
+#if defined(_MSC_VER) && defined(_DEBUG)
+	// hack to work around checked iterators failing on this.
+	size_t size() const { return end._Ptr - begin._Ptr; }
+#else
 	size_t size() const { return end - begin; }
+#endif
 
 	variant::debug_info info;
 	boost::intrusive_ptr<const game_logic::FormulaExpression> expression;
 	std::vector<variant> elements;
-	std::vector<variant>::iterator begin, end;
 	int refcount;
 	variant_list* storage;
+	std::vector<variant>::iterator begin, end;
 };
 
 struct variant_string {

@@ -262,7 +262,7 @@ namespace
 	};
 
 	BEGIN_DEFINE_CALLABLE_NOBASE(FilterCallable)
-		DEFINE_FIELD(tiles, "builtin TileMap")
+		DEFINE_FIELD(tiles, "builtin tile_map")
 			return variant(&obj.m_);
 		DEFINE_FIELD(x, "int")
 			return variant(obj.x_);
@@ -326,7 +326,7 @@ void TileMap::load(const std::string& fname, const std::string& tile_id)
 
 	palette_scope palette_setter(parse_variant_list_or_csv_string(node["palettes"]));
 
-	for(variant pattern : node["TilePattern"].as_list()) {
+	for(variant pattern : node["tile_pattern"].as_list()) {
 		patterns.push_back(TilePattern(pattern, tile_id));
 	}
 
@@ -905,9 +905,10 @@ void TileMap::buildTiles(std::vector<LevelTile>* tiles, const rect* r) const
 {
 	const int begin_time = profile::get_tick_time();
 	int width = 0;
-	for(const std::vector<int>& row : map_) {
-		if(row.size() > static_cast<unsigned>(width)) {
-			width = static_cast<int>(row.size());
+	for(const auto& row : map_) {
+		int rs = static_cast<int>(row.size());
+		if(rs > width) {
+			width = rs;
 		}
 	}
 
@@ -944,7 +945,7 @@ void TileMap::buildTiles(std::vector<LevelTile>* tiles, const rect* r) const
 		t.zorder = i.first.second;
 		t.object = i.second;
 		t.face_right = false;
-		tiles->push_back(t);
+		tiles->emplace_back(t);
 	}
 
 
@@ -970,7 +971,7 @@ void TileMap::buildTiles(std::vector<LevelTile>* tiles, const rect* r) const
 				t.zorder = zorder_;
 				t.object = obj;
 				t.face_right = false;
-				tiles->push_back(t);
+				tiles->emplace_back(t);
 				continue;
 			}
 
@@ -994,7 +995,7 @@ void TileMap::buildTiles(std::vector<LevelTile>* tiles, const rect* r) const
 			t.zorder = zorder_;
 
 			int variation_num = variation(x, y);
-			if(static_cast<unsigned>(variation_num) >= p->variations.size()) {
+			if(variation_num >= static_cast<int>(p->variations.size())) {
 				variation_num = 0;
 			}
 			assert(p->variations[variation_num]);
@@ -1003,7 +1004,7 @@ void TileMap::buildTiles(std::vector<LevelTile>* tiles, const rect* r) const
 			if(t.object->flipped()) {
 				t.face_right = !t.face_right;
 			}
-			tiles->push_back(t);
+			tiles->emplace_back(t);
 
 			for(const TilePattern::added_tile& a : p->added_tiles) {
 				//std::cerr << "added_tile\n";
@@ -1021,11 +1022,11 @@ void TileMap::buildTiles(std::vector<LevelTile>* tiles, const rect* r) const
 					t.face_right = !t.face_right;
 				}
 
-				tiles->push_back(t);
+				tiles->emplace_back(t);
 			}
 		}
 	}
-	//std::cerr << "done build tiles: " << ntiles << " " << (profile::get_tick_time() - begin_time) << "\n";
+	LOG_DEBUG("done build tiles: " << ntiles << " " << (profile::get_tick_time() - begin_time));
 }
 
 const TilePattern* TileMap::getMatchingPattern(int x, int y, TilePatternCache& cache, bool* face_right) const

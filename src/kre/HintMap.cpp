@@ -24,31 +24,37 @@
 #include "asserts.hpp"
 #include "HintMap.hpp"
 
-namespace KRE
+HintMapContainer::HintMapContainer()
 {
-	HintMapContainer::HintMapContainer()
-	{
-	}
+}
 
-	const std::vector<std::string>& HintMapContainer::findHint(const std::string& name) const
-	{
-		static std::vector<std::string> no_hint_list;
-		auto it = hints_.find(name);
-		if(it != hints_.end()) {
-			return it->second;
-		}
-		LOG_WARN("No hint named '" << name << "' found.");
-		return no_hint_list;
+const std::vector<std::string>& HintMapContainer::findHint(const std::string& name) const
+{
+	static std::vector<std::string> no_hint_list;
+	auto it = hints_.find(name);
+	if(it != hints_.end()) {
+		return it->second;
 	}
+	LOG_WARN("No hint named '" << name << "' found.");
+	return no_hint_list;
+}
 
-	void HintMapContainer::setHint(const std::string& hint_name, const std::string& hint)
-	{
-		HintList hint_list(1,hint);
-		hints_.insert(std::make_pair(hint_name, hint_list));
+const std::string& HintMapContainer::findFirstHint(const std::string& name, const std::string& default) const
+{
+	auto it = hints_.find(name);
+	if(it != hints_.end()) {
+		return it->second.front();
 	}
+	return default;
+}
 
-	void HintMapContainer::setHint(const std::string& hint_name, const HintList& hint)
-	{
-		hints_[hint_name] = hint;
-	}
+void HintMapContainer::setHint(const std::string& hint_name, const std::string& hint)
+{
+	HintList hint_list(1,hint);
+	hints_.insert(std::make_pair(hint_name, hint_list));
+}
+
+void HintMapContainer::setHint(const std::string& hint_name, const HintList& hint)
+{
+	hints_[hint_name] = hint;
 }

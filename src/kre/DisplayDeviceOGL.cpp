@@ -95,6 +95,7 @@ namespace KRE
 		: seperate_blend_equations_(false),
 		  have_render_to_texture_(false),
 		  npot_textures_(false),
+		  hardware_uniform_buffers_(false),
 		  major_version_(0),
 		  minor_version_(0),
 		  max_texture_units_(-1)
@@ -135,9 +136,10 @@ namespace KRE
 			}
 		}
 
-		seperate_blend_equations_ = extensions_.find("EXT_blend_equation_separate") != extensions_.end();
-		have_render_to_texture_ = extensions_.find("EXT_framebuffer_object") != extensions_.end();
-		npot_textures_ = extensions_.find("ARB_texture_non_power_of_two") != extensions_.end();
+		seperate_blend_equations_ = extensions_.find("GL_EXT_blend_equation_separate") != extensions_.end();
+		have_render_to_texture_ = extensions_.find("GL_EXT_framebuffer_object") != extensions_.end();
+		npot_textures_ = extensions_.find("GL_ARB_texture_non_power_of_two") != extensions_.end();
+		hardware_uniform_buffers_ = extensions_.find("GL_ARB_uniform_buffer_object") != extensions_.end();
 
 		glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &max_texture_units_);
 		if((err = glGetError()) != GL_NONE) {
@@ -237,9 +239,7 @@ namespace KRE
 
 	void DisplayDeviceOpenGL::render(const Renderable* r) const
 	{
-		// XXX work out removing this dynamic_pointer_cast.
-		auto shader = std::dynamic_pointer_cast<OpenGL::ShaderProgram>(r->getShader());
-		ASSERT_LOG(shader != nullptr, "Failed to cast shader to the type required(OpenGL::ShaderProgram).");
+		auto shader = r->getShader();
 		shader->makeActive();
 
 		BlendEquationScopeOGL be_scope(*r);
@@ -266,12 +266,12 @@ namespace KRE
 			r->getRenderTarget()->apply();
 		}
 
-		if(shader->getMvpUniform() != shader->uniformsIteratorEnd()) {
+		if(shader->getMvpUniform() != ShaderProgram::INALID_UNIFORM) {
 			pvmat *= r->getModelMatrix();
 			shader->setUniformValue(shader->getMvpUniform(), glm::value_ptr(pvmat));
 		}
 
-		if(shader->getColorUniform() != shader->uniformsIteratorEnd()) {
+		if(shader->getColorUniform() != ShaderProgram::INALID_UNIFORM) {
 			if(r->isColorSet()) {
 				shader->setUniformValue(shader->getColorUniform(), r->getColor().asFloatVector());
 			} else {
@@ -279,7 +279,7 @@ namespace KRE
 			}
 		}
 
-		setUniformsForTexture(r->getShader(), r->getTexture());
+		shader->setUniformsForTexture(r->getTexture());
 
 		// Loop through uniform render variables and set them.
 		/*for(auto& urv : r->UniformRenderVariables()) {
@@ -293,14 +293,18 @@ namespace KRE
 		// Need to figure the interaction with shaders.
 		/// XXX Need to create a mapping between attributes and the index value below.
 		for(auto as : r->getAttributeSet()) {
-			ASSERT_LOG(as->getCount() > 0, "No (or negative) number of vertices in attribute set. " << as->getCount());
+			//ASSERT_LOG(as->getCount() > 0, "No (or negative) number of vertices in attribute set. " << as->getCount());
+			if(as->getCount() <= 0) {
+				LOG_WARN("No (or negative) number of vertices in attribute set. " << as->getCount());
+				continue;
+			}
 			GLenum draw_mode = convert_drawing_mode(as->getDrawMode());
 
 			// apply blend, if any, from attribute set.
 			BlendEquationScopeOGL be_scope(*as);
 			BlendModeScopeOGL bm_scope(*as);
 
-			if(shader->getColorUniform() != shader->uniformsIteratorEnd() && as->isColorSet()) {
+			if(shader->getColorUniform() != ShaderProgram::INALID_UNIFORM && as->isColorSet()) {
 				shader->setUniformValue(shader->getColorUniform(), as->getColor().asFloatVector());
 			}
 
@@ -446,6 +450,8 @@ namespace KRE
 			return have_render_to_texture_;
 		case DisplayDeviceCapabilties::SHADERS:
 			return true;
+		case DisplayDeviceCapabilties::UNIFORM_BUFFERS:
+			return hardware_uniform_buffers_;
 		default:
 			ASSERT_LOG(false, "Unknown value for DisplayDeviceCapabilties given.");
 		}
@@ -454,7 +460,7 @@ namespace KRE
 
 	void DisplayDeviceOpenGL::loadShadersFromVariant(const variant& node) 
 	{
-		OpenGL::ShaderProgram::loadFromVariant(node);
+		OpenGL::ShaderProgram::loadShadersFromVariant(node);
 	}
 
 	ShaderProgramPtr DisplayDeviceOpenGL::getShaderProgram(const std::string& name)
@@ -470,13 +476,12 @@ namespace KRE
 	// XXX Need a way to deal with blits with Camera/Lighting.
 	void DisplayDeviceOpenGL::doBlitTexture(const TexturePtr& tex, int dstx, int dsty, int dstw, int dsth, float rotation, int srcx, int srcy, int srcw, int srch)
 	{
-		auto texture = std::dynamic_pointer_cast<OpenGLTexture>(tex);
-		ASSERT_LOG(texture != nullptr, "Texture passed in was not of expected type.");
+		ASSERT_LOG(tex != nullptr, "Texture passed in was not of expected type.");
 
-		const float tx1 = float(srcx) / texture->width();
-		const float ty1 = float(srcy) / texture->height();
-		const float tx2 = srcw == 0 ? 1.0f : float(srcx + srcw) / texture->width();
-		const float ty2 = srch == 0 ? 1.0f : float(srcy + srch) / texture->height();
+		const float tx1 = float(srcx) / tex->width();
+		const float ty1 = float(srcy) / tex->height();
+		const float tx2 = srcw == 0 ? 1.0f : float(srcx + srcw) / tex->width();
+		const float ty2 = srch == 0 ? 1.0f : float(srcy + srch) / tex->height();
 		const float uv_coords[] = {
 			tx1, ty1,
 			tx2, ty1,
@@ -503,21 +508,21 @@ namespace KRE
 		glm::mat4 mvp = glm::ortho(0.0f, 800.0f, 600.0f, 0.0f) * model;
 		auto shader = OpenGL::ShaderProgram::defaultSystemShader();
 		shader->makeActive();
-		texture->bind();
+		getDefaultShader()->setUniformsForTexture(tex);
+
 		shader->setUniformValue(shader->getMvpUniform(), glm::value_ptr(mvp));
 		shader->setUniformValue(shader->getColorUniform(), glm::value_ptr(glm::vec4(1.0f,1.0f,1.0f,1.0f)));
-		shader->setUniformValue(shader->getTexMapUniform(), 0);
 		// XXX the following line are only temporary, obviously.
-		shader->setUniformValue(shader->getUniformIterator("discard"), 0);
-		glEnableVertexAttribArray(shader->getVertexAttribute()->second.location);
-		glVertexAttribPointer(shader->getVertexAttribute()->second.location, 2, GL_FLOAT, GL_FALSE, 0, vtx_coords);
-		glEnableVertexAttribArray(shader->getTexcoordAttribute()->second.location);
-		glVertexAttribPointer(shader->getTexcoordAttribute()->second.location, 2, GL_FLOAT, GL_FALSE, 0, uv_coords);
+		//shader->setUniformValue(shader->getUniform("discard"), 0);
+		glEnableVertexAttribArray(shader->getVertexAttribute());
+		glVertexAttribPointer(shader->getVertexAttribute(), 2, GL_FLOAT, GL_FALSE, 0, vtx_coords);
+		glEnableVertexAttribArray(shader->getTexcoordAttribute());
+		glVertexAttribPointer(shader->getTexcoordAttribute(), 2, GL_FLOAT, GL_FALSE, 0, uv_coords);
 
 		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
-		glDisableVertexAttribArray(shader->getTexcoordAttribute()->second.location);
-		glDisableVertexAttribArray(shader->getVertexAttribute()->second.location);
+		glDisableVertexAttribArray(shader->getTexcoordAttribute());
+		glDisableVertexAttribArray(shader->getVertexAttribute());
 	}
 
 	namespace
@@ -597,54 +602,6 @@ namespace KRE
 		}
 		// XXX Add more effects here as and if needed.
 		return EffectPtr();
-	}
-
-	void DisplayDeviceOpenGL::setUniformsForTexture(const ShaderProgramPtr& shaderp, const TexturePtr& tex) const
-	{
-		if(tex) {
-			// XXX work out removing this dynamic_pointer_cast.
-			auto shader = std::dynamic_pointer_cast<OpenGL::ShaderProgram>(shaderp);
-			ASSERT_LOG(shader != nullptr, "Failed to cast shader to the type required(OpenGL::ShaderProgram).");
-
-			// XXX The material may need to set more texture uniforms for multi-texture -- need to do that here.
-			// Or maybe it should be done through the uniform block and override this somehow.
-			if(shader->getTexMapUniform() != shader->uniformsIteratorEnd()) {
-				shader->setUniformValue(shader->getTexMapUniform(), 0);
-			}
-
-			tex->bind();
-			static auto u_enable_palette_lookup = shader->getUniformIterator("enable_palette_lookup");
-
-			bool enable_palette = tex->isPaletteized();
-			if(enable_palette) {
-				static auto upm = shader->getUniformIterator("palette_map");
-				if(upm != shader->uniformsIteratorEnd()) {
-					shader->setUniformValue(upm, 1);
-				} else {
-					enable_palette = false;
-				}
-				static auto u_palette = shader->getUniformIterator("palette");
-				if(u_palette != shader->uniformsIteratorEnd()) {
-					// XXX replace tex->getSurfaces()[1]->height() with tex->getNormalizedCoordH(1, 1);
-					float h = static_cast<float>(tex->getSurfaces()[1]->height() - 1);
-					const float palette_sel = static_cast<float>(tex->getPalette()) / h;
-					shader->setUniformValue(u_palette, palette_sel); 
-				} else {
-					enable_palette = false;
-				}
-				static auto u_palette_width = shader->getUniformIterator("u_palette_width");
-				if(u_palette_width != shader->uniformsIteratorEnd()) {
-					// XXX this needs adjusted for pot texture width.
-					shader->setUniformValue(u_palette_width, static_cast<float>(tex->getSurfaces()[1]->width()));
-				} else {
-					enable_palette = false;
-				}
-			}
-
-			if(u_enable_palette_lookup != shader->uniformsIteratorEnd()) {
-				shader->setUniformValue(u_enable_palette_lookup, enable_palette);
-			}
-		}
 	}
 }
 

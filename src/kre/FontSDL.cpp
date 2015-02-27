@@ -107,7 +107,7 @@ namespace KRE
 		TTF_Font* font = getFont(size, font_name);
 		SurfaceSDL* surf;
 		if(text.find('\n') == std::string::npos) {
-			auto sdl_surf = TTF_RenderUTF8_Blended(font, "test"/*text.c_str()*/, to_SDL_Color(color));
+			auto sdl_surf = TTF_RenderUTF8_Blended(font, text.c_str(), to_SDL_Color(color));
 			ASSERT_LOG(sdl_surf != nullptr, "Rendered surface was empty: " << SDL_GetError());
 			ASSERT_LOG(sdl_surf->w != 0 && sdl_surf->h != 0, "Created surface had 0 width or height. " << sdl_surf->w << "," << sdl_surf->h);
 			surf = new SurfaceSDL(sdl_surf);

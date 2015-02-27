@@ -1606,9 +1606,8 @@ bool LevelRunner::play_cycle()
 					}
 				}
 				{
-					profile::manager pman("render_scene");
+					//profile::manager pman("render_scene");
 					render_scene(*lvl_, last_draw_position());
-					KRE::Canvas::getInstance()->drawSolidRect(rect(100, 100, 100, 100), KRE::Color("red"));
 				}
 #ifndef NO_EDITOR
 				int index = 0;

@@ -51,6 +51,10 @@ namespace KRE
 	class ShaderProgram
 	{
 	public:
+		enum {
+			INALID_UNIFORM		= -1,
+			INALID_ATTRIBUTE	= -1,
+		};
 		ShaderProgram(const variant& node);
 		virtual ~ShaderProgram();
 
@@ -59,8 +63,34 @@ namespace KRE
 		//virtual void applyUniformSet(UniformSetPtr uniforms) = 0;
 		virtual void cleanUpAfterDraw() = 0;
 
+		virtual int getAttributeOrDie(const std::string& attr) const = 0;
+		virtual int getUniformOrDie(const std::string& attr) const = 0;
+
+		virtual int getAttribute(const std::string& attr) const = 0;
+		virtual int getUniform(const std::string& attr) const = 0;
+
+		virtual void setUniformValue(int uid, const int) const = 0;
+		virtual void setUniformValue(int uid, const float) const = 0;
+		virtual void setUniformValue(int uid, const float*) const = 0;
+		virtual void setUniformValue(int uid, const int*) const = 0;
+		virtual void setUniformValue(int uid, const void*) const = 0;
+
 		virtual void configureActives(AttributeSetPtr attrset) = 0;
-		//virtual void configureUniforms(UniformSetPtr uniforms) = 0;
+		virtual void configureUniforms(UniformBufferBase& uniforms) = 0;
+
+		virtual int getColorUniform() const = 0;
+		virtual int getLineWidthUniform() const = 0;
+		virtual int getMvUniform() const = 0;
+		virtual int getPUniform() const = 0;
+		virtual int getMvpUniform() const = 0;
+		virtual int getTexMapUniform() const = 0;
+
+		virtual int getColorAttribute() const = 0;
+		virtual int getVertexAttribute() const = 0;
+		virtual int getTexcoordAttribute() const = 0;
+		virtual int getNormalAttribute() const = 0;
+
+		virtual void setUniformsForTexture(const TexturePtr& tex) const = 0;
 
 		static ShaderProgramPtr getSystemDefault();
 

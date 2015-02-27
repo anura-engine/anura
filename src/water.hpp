@@ -69,7 +69,7 @@ public:
 		void process();
 	};
 	
-	void preRender(const KRE::WindowManagerPtr& wm) override;
+	void preRender(const KRE::WindowManagerPtr& wm) const;
 private:
 	void init();
 

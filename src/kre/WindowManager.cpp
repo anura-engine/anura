@@ -62,17 +62,33 @@ namespace KRE
 	class SDLWindowManager : public WindowManager
 	{
 	public:
-		SDLWindowManager(const std::string& title, const std::string& renderer_hint) 
+		SDLWindowManager(const std::string& title, const HintMapContainer& hints) 
 			: WindowManager(title), 
-			renderer_hint_(renderer_hint),
+			renderer_hint_(),
 			renderer_(nullptr),
 			context_(nullptr) {
-			if(renderer_hint_.empty()) {
-				renderer_hint_ = "opengl";
+			auto it = hints.findHint("renderer");
+			if(it.size() == 0) {
+				renderer_hint_.emplace_back("opengl");
+			} else {
+				renderer_hint_ = it;
 			}
-			current_display_device() = display_ = DisplayDevice::factory(renderer_hint_);
+			for(auto rh : renderer_hint_) {
+				current_display_device() = display_ = DisplayDevice::factory(rh);
+				if(display_ != nullptr) {
+					break;
+				}
+			}
+
 			// XXX figure out a better way to pass this hint.
-			SDL_SetHint(SDL_HINT_RENDER_DRIVER, renderer_hint_.c_str());
+			SDL_SetHint(SDL_HINT_RENDER_DRIVER, renderer_hint_.front().c_str());
+
+			auto dpi_aware = hints.findFirstHint("dpi_aware", "false");
+			if(dpi_aware == "true" || dpi_aware == "1") {
+				SDL_SetHint(SDL_HINT_VIDEO_HIGHDPI_DISABLED, "0");
+			} else {
+				SDL_SetHint(SDL_HINT_VIDEO_HIGHDPI_DISABLED, "1");
+			}
 		}
 		~SDLWindowManager() {
 			//destroyWindow();
@@ -163,9 +179,10 @@ namespace KRE
 				ASSERT_LOG(context_ != nullptr, "Failed to GL Context: " << SDL_GetError());
 			}
 
-			display_->setClearColor(clear_color_);
 			display_->init(width_, height_);
 			display_->printDeviceInfo();
+
+			display_->setClearColor(clear_color_);
 			display_->clear(ClearFlags::ALL);
 			swap();
 		}
@@ -301,7 +318,7 @@ namespace KRE
 		SDL_WindowPtr window_;
 		SDL_GLContext context_;
 		SDL_Renderer* renderer_;
-		std::string renderer_hint_;
+		std::vector<std::string> renderer_hint_;
 		SDLWindowManager(const SDLWindowManager&);
 	};
 
@@ -436,12 +453,12 @@ namespace KRE
 		}
 	}
 
-	WindowManagerPtr WindowManager::createInstance(const std::string& title, const std::string& wnd_hint, const std::string& rend_hint)
+	WindowManagerPtr WindowManager::create(const std::string& title, const HintMapContainer& hints)
 	{
 		// We really only support one sub-class of the window manager
 		// at the moment, so we just return it. We could use hint in the
 		// future if we had more.
-		WindowManagerPtr wm = std::make_shared<SDLWindowManager>(title, rend_hint);
+		WindowManagerPtr wm = std::make_shared<SDLWindowManager>(title, hints);
 		get_window_list()[wm->getWindowID()] = wm;
 		// We consider the first window created the main one.
 		if(main_window == nullptr) {

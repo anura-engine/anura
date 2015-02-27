@@ -122,4 +122,6 @@ namespace KRE
 
 	class ShaderProgram;
 	typedef std::shared_ptr<ShaderProgram> ShaderProgramPtr;
+
+	class UniformBufferBase;
 }

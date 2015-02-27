@@ -27,6 +27,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <unordered_map>
 
 #include <GL/glew.h>
 
@@ -65,11 +66,9 @@ namespace KRE
 			GLint location;
 		};
 
-		typedef std::map<std::string, Actives> ActivesMap;
-		typedef ActivesMap::iterator ActivesMapIterator;
-		typedef ActivesMap::const_iterator ConstActivesMapIterator;
-
 		typedef std::pair<std::string,std::string> ShaderDef;
+
+		typedef std::map<std::string, Actives> ActivesMap;
 
 		class ShaderProgram;
 		typedef std::shared_ptr<ShaderProgram> ShaderProgramPtr;
@@ -81,24 +80,25 @@ namespace KRE
 			virtual ~ShaderProgram();
 			void init(const std::string& name, const ShaderDef& vs, const ShaderDef& fs);
 			std::string name() const { return name_; }
-			GLint getAttributeOrDie(const std::string& attr) const;
-			GLint getUniformOrDie(const std::string& attr) const;
-			GLint getAttribute(const std::string& attr) const;
-			GLint getUniform(const std::string& attr) const;
-			ConstActivesMapIterator getAttributeIterator(const std::string& attr) const;
-			ConstActivesMapIterator getUniformIterator(const std::string& attr) const;
+
+			int getAttributeOrDie(const std::string& attr) const override;
+			int getUniformOrDie(const std::string& attr) const override;
+
+			int getAttribute(const std::string& attr) const override;
+			int getUniform(const std::string& attr) const override;
 
 			void setActives();
 
-			void setUniformValue(ConstActivesMapIterator it, const GLint);
-			void setUniformValue(ConstActivesMapIterator it, const GLfloat);
-			void setUniformValue(ConstActivesMapIterator it, const GLfloat*);
-			void setUniformValue(ConstActivesMapIterator it, const GLint*);
-			void setUniformValue(ConstActivesMapIterator it, const void*);
+			void setUniformValue(int uid, const GLint) const override;
+			void setUniformValue(int uid, const GLfloat) const override;
+			void setUniformValue(int uid, const GLfloat*) const override;
+			void setUniformValue(int uid, const GLint*) const override;
+			void setUniformValue(int uid, const void*) const override;
 
 			void makeActive() override;
 
 			void configureActives(AttributeSetPtr attrset) override;
+			void configureUniforms(UniformBufferBase& uniforms) override;
 
 			void setAlternateUniformName(const std::string& name, const std::string& alt_name);
 			void setAlternateAttributeName(const std::string& name, const std::string& alt_name);
@@ -109,22 +109,22 @@ namespace KRE
 			static void loadShadersFromVariant(const variant& node);
 			static ShaderProgramPtr getProgramFromVariant(const variant& node);
 
-			ConstActivesMapIterator getColorUniform() const { return u_color_; }
-			ConstActivesMapIterator getLineWidthUniform() const { return u_line_width_; }
-			ConstActivesMapIterator getMvUniform() const { return u_mv_; }
-			ConstActivesMapIterator getPUniform() const { return u_p_; }
-			ConstActivesMapIterator getMvpUniform() const { return u_mvp_; }
-			ConstActivesMapIterator getTexMapUniform() const { return u_tex_; }
-			ConstActivesMapIterator getColorAttribute() const { return a_color_; }
-			ConstActivesMapIterator getVertexAttribute() const { return a_vertex_; }
-			ConstActivesMapIterator getTexcoordAttribute() const { return a_texcoord_; }
-			ConstActivesMapIterator getNormalAttribute() const { return a_normal_; }
+			int getColorUniform() const override { return u_color_; }
+			int getLineWidthUniform() const override { return u_line_width_; }
+			int getMvUniform() const override { return u_mv_; }
+			int getPUniform() const override { return u_p_; }
+			int getMvpUniform() const override { return u_mvp_; }
+			int getTexMapUniform() const override { return u_tex_; }
+			
+			int getColorAttribute() const override { return a_color_; }
+			int getVertexAttribute() const override { return a_vertex_; }
+			int getTexcoordAttribute() const override { return a_texcoord_; }
+			int getNormalAttribute() const override { return a_normal_; }
 		
-			ConstActivesMapIterator uniformsIteratorEnd() const { return uniforms_.end(); }
-			ConstActivesMapIterator attributesIteratorEnd() const { return attribs_.end(); }
-
 			void applyAttribute(AttributeBasePtr attr) override;
 			void cleanUpAfterDraw() override;
+
+			void setUniformsForTexture(const TexturePtr& tex) const override;
 
 		protected:
 			bool link();
@@ -141,20 +141,27 @@ namespace KRE
 			GLuint object_;
 			ActivesMap attribs_;
 			ActivesMap uniforms_;
+			std::unordered_map<int, Actives> v_uniforms_;
+			std::unordered_map<int, Actives> v_attribs_;
 			std::map<std::string, std::string> uniform_alternate_name_map_;
 			std::map<std::string, std::string> attribute_alternate_name_map_;
 
 			// Store for common attributes and uniforms
-			ConstActivesMapIterator u_mvp_;
-			ConstActivesMapIterator u_mv_;
-			ConstActivesMapIterator u_p_;
-			ConstActivesMapIterator u_color_;
-			ConstActivesMapIterator u_line_width_;
-			ConstActivesMapIterator u_tex_;
-			ConstActivesMapIterator a_vertex_;
-			ConstActivesMapIterator a_texcoord_;
-			ConstActivesMapIterator a_color_;
-			ConstActivesMapIterator a_normal_;
+			int u_mvp_;
+			int u_mv_;
+			int u_p_;
+			int u_color_;
+			int u_line_width_;
+			int u_tex_;
+			int a_vertex_;
+			int a_texcoord_;
+			int a_color_;
+			int a_normal_;
+
+			int u_enable_palette_lookup_;
+			int u_palette_;
+			int u_palette_width_;
+			int u_palette_map_;
 
 			std::vector<GLuint> enabled_attribs_;
 		};

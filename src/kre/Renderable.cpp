@@ -229,12 +229,21 @@ namespace KRE
 
 	void Renderable::addAttributeSet(const AttributeSetPtr& attrset)
 	{
+		attributes_.emplace_back(attrset);
 		if(shader_) {
 			shader_->configureActives(attrset);
-			attributes_.emplace_back(attrset);
 		} else {
 			LOG_WARN("No shader is set when adding an attribute set");
 		}
+	}
+
+	void Renderable::addUniformBuffer(UniformBufferBase&& ub)
+	{
+		//uniforms_.emplace_back(std::move(ub));
+		//uniforms_.insert(uniforms_.end(), std::move(ub));
+		//if(shader_) {
+		//	shader_->configureUniforms(ub);
+		//}
 	}
 
 	void Renderable::setShader(ShaderProgramPtr shader)
@@ -244,6 +253,9 @@ namespace KRE
 		for(auto& attrset : attributes_) {
 			shader_->configureActives(attrset);
 		}
+		//for(auto& ub : uniforms_) {
+		//	shader_->configureUniforms(ub);
+		//}
 	}
 
 	//void Renderable::clearUniformSets()

@@ -561,16 +561,16 @@ namespace voxel
 				obj.objects_.insert(new user_voxel_object(value[n]));
 			}
 		}
-	DEFINE_FIELD(logical, "builtin LogicalWorld")
+	DEFINE_FIELD(logical, "builtin logical_world")
 		return variant(obj.logic_.get());
 
-	DEFINE_FIELD(DrawPrimitive, "[builtin DrawPrimitive]")
+	DEFINE_FIELD(DrawPrimitive, "[builtin draw_primitive]")
 		std::vector<variant> v;
 		for(auto prim : obj.DrawPrimitives_) {
 			v.push_back(variant(prim.get()));
 		}
 		return variant(&v);
-	DEFINE_SET_FIELD_TYPE("[map|builtin DrawPrimitive]")
+	DEFINE_SET_FIELD_TYPE("[map|builtin draw_primitive]")
 		obj.DrawPrimitives_.clear();
 		for(int n = 0; n != value.num_elements(); ++n) {
 			obj.DrawPrimitives_.push_back(graphics::DrawPrimitive::create(value[n]));

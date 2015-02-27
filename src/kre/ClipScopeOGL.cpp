@@ -69,8 +69,8 @@ namespace KRE
 		shader->setUniformValue(shader->getMvpUniform(), glm::value_ptr(mvp));
 		shader->setUniformValue(shader->getColorUniform(), Color::colorWhite().asFloatVector());
 
-		glEnableVertexAttribArray(shader->getVertexAttribute()->second.location);
-		glVertexAttribPointer(shader->getVertexAttribute()->second.location, 2, GL_FLOAT, GL_FALSE, 0, varray);
+		glEnableVertexAttribArray(shader->getVertexAttribute());
+		glVertexAttribPointer(shader->getVertexAttribute(), 2, GL_FLOAT, GL_FALSE, 0, varray);
 		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
 		glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);

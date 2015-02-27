@@ -202,20 +202,31 @@ namespace
 
 Level::Level(const std::string& level_cfg, variant node)
 	: id_(level_cfg),
-	  x_resolution_(0), y_resolution_(0),
+	  x_resolution_(0), 
+	  y_resolution_(0),
 	  set_screen_resolution_on_entry_(false),
 	  highlight_layer_(std::numeric_limits<int>::min()),
 	  num_compiled_tiles_(0),
-	  entered_portal_active_(false), save_point_x_(-1), save_point_y_(-1),
-	  editor_(false), show_foreground_(true), show_background_(true), dark_(false), 
+	  entered_portal_active_(false), 
+	  save_point_x_(-1), 
+	  save_point_y_(-1),
+	  editor_(false), 
+	  show_foreground_(true), 
+	  show_background_(true), 
+	  dark_(false), 
 	  dark_color_(KRE::ColorTransform(255, 255, 255, 255, 0, 0, 0, 255)), 
-	  air_resistance_(0), water_resistance_(7), end_game_(false),
-      editor_tile_updates_frozen_(0), editor_dragging_objects_(false),
+	  air_resistance_(0), 
+	  water_resistance_(7), 
+	  end_game_(false),
+      editor_tile_updates_frozen_(0), 
+	  editor_dragging_objects_(false),
 	  zoom_level_(decimal::from_int(1)),
 	  palettes_used_(0),
 	  background_palette_(-1),
-	  segment_width_(0), segment_height_(0),
-	  mouselook_enabled_(false), mouselook_inverted_(false),
+	  segment_width_(0), 
+	  segment_height_(0),
+	  mouselook_enabled_(false), 
+	  mouselook_inverted_(false),
 	  allow_touch_controls_(true),
 	  show_builtin_settings_(false)
 {
@@ -1613,7 +1624,7 @@ void Level::draw_layer(int layer, int x, int y, int w, int h) const
 	}
 
 	auto& blit_cache_info = layer_itor->second;
-
+	LOG_DEBUG("size of blit_cache_: " << blit_cache_info.getAttributeSet().back()->getCount());
 	KRE::WindowManager::getMainWindow()->render(&blit_cache_info);
 
 	/*
@@ -1954,6 +1965,7 @@ void Level::draw_absolutely_positioned_objects() const
 
 void Level::draw(int x, int y, int w, int h) const
 {
+	auto wnd = KRE::WindowManager::getMainWindow();
 	if(shader_) {
 		ASSERT_LOG(false, "apply shader_ here");
 	}
@@ -2016,7 +2028,7 @@ void Level::draw(int x, int y, int w, int h) const
 			KRE::StencilOperation::KEEP,
 			KRE::StencilOperation::KEEP,
 			KRE::StencilOperation::REPLACE));
-		KRE::WindowManager::getMainWindow()->clear(KRE::ClearFlags::STENCIL);
+		wnd->clear(KRE::ClearFlags::STENCIL);
 
 
 		frameBufferEnterZorder(-100000);
@@ -2033,7 +2045,8 @@ void Level::draw(int x, int y, int w, int h) const
 			
 			if(!water_drawn && *layer > water_zorder) {
 				//water_->draw(x, y, w, h);
-				KRE::WindowManager::getMainWindow()->render(get_water());
+				get_water()->preRender(wnd);
+				wnd->render(get_water());
 				water_drawn = true;
 			}
 
@@ -2047,7 +2060,7 @@ void Level::draw(int x, int y, int w, int h) const
 
 		if(!water_drawn) {
 			//water_->draw(x, y, w, h);
-			KRE::WindowManager::getMainWindow()->render(get_water());
+			wnd->render(get_water());
 			water_drawn = true;
 		}
 
@@ -2133,7 +2146,7 @@ void Level::draw(int x, int y, int w, int h) const
 			KRE::StencilOperation::KEEP));
 		RectRenderable rr;
 		rr.update(rect(x,y,w,h), KRE::Color(255, 255, 255, 196 + static_cast<int>(std::sin(profile::get_tick_time() / 100.0f) * 8.0f)));
-		KRE::WindowManager::getMainWindow()->render(&rr);
+		wnd->render(&rr);
 	}
 }
 
@@ -2162,7 +2175,7 @@ void Level::frameBufferEnterZorder(int zorder) const
 			//now there are no shaders, flush all to the screen and proceed with
 			//rendering to the screen.
 			flushFrameBufferShadersToScreen();
-			rt_->renderToPrevious();
+			//rt_->renderToPrevious();
 		} else {
 			bool add_shaders = false;
 			for(auto& s : shaders) {
@@ -2200,7 +2213,7 @@ void Level::flushFrameBufferShadersToScreen() const
 
 void Level::applyShaderToFrameBufferTexture(graphics::AnuraShaderPtr shader, bool render_to_screen) const
 {
-	rt_->renderToPrevious();
+	//rt_->renderToPrevious();
 
 	if(render_to_screen) {
 		rt_->renderToPrevious();
@@ -2215,6 +2228,7 @@ void Level::applyShaderToFrameBufferTexture(graphics::AnuraShaderPtr shader, boo
 	if(preferences::screen_rotated()) {
 		rt_->setRotation(0, glm::vec3(0.0f, 0.0f, 1.0f));
 	}
+	rt_->preRender(wnd);
 	wnd->render(rt_.get());
 }
 

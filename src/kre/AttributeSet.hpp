@@ -199,29 +199,29 @@ namespace KRE
 		}
 		void update(const Container<T>& values) {
 			elements_ = values;
-			if(getDeviceBufferData()) {
+			if(getDeviceBufferData() && elements_.size() > 0) {
 				getDeviceBufferData()->update(&elements_[0], 0, elements_.size() * sizeof(T));
 			}
 		}
 		void update(const Container<T>& src, iterator dst) {
-			auto dst1 = std::distance(elements_.begin(), dst);
-			auto dst2 = std::distance(src.begin(), src.end()) * sizeof(T);
+			std::ptrdiff_t dst1 = std::distance(elements_.begin(), dst);
+			std::ptrdiff_t dst2 = std::distance(src.begin(), src.end());
 			std::copy(src.begin(), src.end(), std::inserter(elements_, dst));
-			if(getDeviceBufferData()) {
-				getDeviceBufferData()->update(&elements_[0], dst1, dst2);
+			if(getDeviceBufferData() && dst2 > 0) {
+				getDeviceBufferData()->update(&elements_[0], dst1, dst2 * sizeof(T));
 			}
 		}
 		void update(Container<T>* src, iterator dst) {
-			auto dst1 = std::distance(elements_.begin(), dst);
-			auto dst2 = std::distance(src->begin(), src->end()) * sizeof(T);
+			std::ptrdiff_t dst1 = std::distance(elements_.begin(), dst);
+			std::ptrdiff_t dst2 = std::distance(src->begin(), src->end());
 			std::move(src->begin(), src->end(), std::inserter(elements_, dst));
-			if(getDeviceBufferData()) {
-				getDeviceBufferData()->update(&elements_[0], dst1, dst2);
+			if(getDeviceBufferData() && dst2 > 0) {
+				getDeviceBufferData()->update(&elements_[0], dst1, dst2 * sizeof(T));
 			}
 		}
 		void update(Container<T>* values) {
 			elements_.swap(*values);
-			if(getDeviceBufferData()) {
+			if(getDeviceBufferData() && elements_.size() > 0) {
 				getDeviceBufferData()->update(&elements_[0], 0, elements_.size() * sizeof(T));
 			}
 		}

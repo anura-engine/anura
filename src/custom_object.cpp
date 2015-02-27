@@ -1218,7 +1218,7 @@ void CustomObject::draw(int xx, int yy) const
 	for(const gui::WidgetPtr& w : widgets_) {
 		if(w->zorder() < widget_zorder_draw_later_threshold) {
 			if(w->drawWithObjectShader()) {
-				w->draw(offs_x, offs_y, static_cast<float>(rotate_z_.as_float()), draw_scale_ ? static_cast<float>(draw_scale_->as_float()) : 0);
+				w->draw(offs_x, offs_y, static_cast<float>(rotate_z_.as_float()), draw_scale_ ? static_cast<float>(draw_scale_->as_float()) : 1.0f);
 			}
 		}
 	}

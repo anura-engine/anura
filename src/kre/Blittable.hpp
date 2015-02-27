@@ -67,6 +67,8 @@ namespace KRE
 		}
 		void update(std::vector<vertex_texcoord>* queue);
 		void setDrawMode(DrawMode mode);
+		void setMirrorHoriz(bool mirrorh) { horizontal_mirrored_ = mirrorh; }
+		void setMirrorVert(bool mirrorv) { vertical_mirrored_ = mirrorv; }
 	protected:
 		void setChanged() const { changed_ = true; }
 	private:
@@ -78,5 +80,7 @@ namespace KRE
 		pointf centre_offset_;
 		Centre centre_;
 		mutable bool changed_;
+		bool horizontal_mirrored_;
+		bool vertical_mirrored_;
 	};
 }

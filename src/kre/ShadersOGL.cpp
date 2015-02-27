@@ -26,7 +26,10 @@
 
 #include "asserts.hpp"
 #include "AttributeSet.hpp"
+#include "DisplayDevice.hpp"
 #include "ShadersOGL.hpp"
+#include "TextureOGL.hpp"
+#include "UniformBufferOGL.hpp"
 
 namespace KRE
 {
@@ -53,14 +56,13 @@ namespace KRE
 				"uniform bool u_enable_palette_lookup;\n"
 				"uniform float u_palette;\n"
 				"uniform float u_palette_width;\n"
-				"varying vec2 v_texcoord;\n"
 				"uniform bool u_discard;\n"
 				"uniform vec4 u_color;\n"
+				"varying vec2 v_texcoord;\n"
 				"void main()\n"
 				"{\n"
 				"    vec4 color = texture2D(u_tex_map, v_texcoord);\n"
 				"    if(u_enable_palette_lookup) {\n"
-				// XXX replace the 15.0 below with the number of colors in the row
 				"        color = texture2D(u_palette_map, vec2(255.0 * color.r / (u_palette_width-0.5), u_palette));\n"
 				"    }\n"
 				"    if(u_discard && color[3] == 0.0) {\n"
@@ -304,6 +306,34 @@ namespace KRE
 				{"", ""},
 			};
 
+			const char* const point_shader_vs = 
+				"uniform mat4 u_mvp_matrix;\n"
+				"uniform float u_point_size;\n"
+				"attribute vec2 a_position;\n"
+				"void main()\n"
+				"{\n"
+				"    gl_PointSize = u_point_size;\n"
+				"    gl_Position = u_mvp_matrix * vec4(a_position,0.0,1.0);\n"
+				"}\n";
+			const char* const point_shader_fs = 
+				"uniform vec4 u_color;\n"
+				"void main()\n"
+				"{\n"
+				"    gl_FragColor = u_color;\n"
+				"}\n";
+			const uniform_mapping point_shader_uniform_mapping[] = 
+			{
+				{"mvp_matrix", "u_mvp_matrix"},
+				{"color", "u_color"},
+				{"point_size", "u_point_size"},
+				{"", ""},
+			};
+			const attribute_mapping point_shader_attribute_mapping[] = 
+			{
+				{"position", "a_position"},
+				{"", ""},
+			};
+
 			const struct {
 				const char* shader_name;
 				const char* vertex_shader_name;
@@ -320,6 +350,7 @@ namespace KRE
 				{ "attr_color_shader", "attr_color_vs", attr_color_vs, "attr_color_fs", attr_color_fs, attr_color_uniform_mapping, attr_color_attribue_mapping },
 				{ "vtc_shader", "vtc_vs", vtc_vs, "vtc_fs", vtc_fs, vtc_uniform_mapping, vtc_attribue_mapping },
 				{ "circle", "circle_vs", circle_vs, "circle_fs", circle_fs, circle_uniform_mapping, circle_attribue_mapping },
+				{ "point_shader", "point_shader_vs", point_shader_vs, "point_shader_fs", point_shader_fs, point_shader_uniform_mapping, point_shader_attribute_mapping },
 			};
 
 			typedef std::map<std::string, ShaderProgramPtr> shader_factory_map;
@@ -329,11 +360,12 @@ namespace KRE
 				if(res.empty()) {
 					// XXX load some default shaders here.
 					for(auto& def : shader_defs) {
-						auto spp = new OpenGL::ShaderProgram(def.shader_name, 
+						
+						auto spp = std::make_shared<OpenGL::ShaderProgram>(def.shader_name, 
 							ShaderDef(def.vertex_shader_name, def.vertex_shader_data),
 							ShaderDef(def.fragment_shader_name, def.fragment_shader_data),
 							variant());
-						res[def.shader_name] = ShaderProgramPtr(spp);
+						res[def.shader_name] = spp;
 						auto um = def.u_mapping;
 						while(strlen(um->alt_name) > 0) {
 							spp->setAlternateUniformName(um->name, um->alt_name);
@@ -374,7 +406,9 @@ namespace KRE
 		}
 
 		Shader::Shader(GLenum type, const std::string& name, const std::string& code)
-			: type_(type), shader_(0), name_(name)
+			: type_(type), 
+			  shader_(0), 
+			  name_(name)
 		{
 			bool compiled_ok = compile(code);
 			ASSERT_LOG(compiled_ok == true, "Error compiling shader for " << name_);
@@ -417,7 +451,7 @@ namespace KRE
 
 		ShaderProgram::ShaderProgram(const std::string& name, const ShaderDef& vs, const ShaderDef& fs, const variant& node)
 			: KRE::ShaderProgram(node),
-			object_(0)
+			  object_(0)
 		{
 			init(name, vs, fs);
 		}
@@ -439,17 +473,21 @@ namespace KRE
 			ASSERT_LOG(linked_ok == true, "Error linking program: " << name_);
 		}
 
-		GLint ShaderProgram::getAttributeOrDie(const std::string& attr) const
+		int ShaderProgram::getAttributeOrDie(const std::string& attr) const
 		{
-			return getAttributeIterator(attr)->second.location;
+			int attr_value = getAttribute(attr);
+			ASSERT_LOG(attr_value != ShaderProgram::INALID_ATTRIBUTE, "Could not find attribute '" << attr << "' in shader: " << name());
+			return attr_value;
 		}
 
-		GLint ShaderProgram::getUniformOrDie(const std::string& attr) const
+		int ShaderProgram::getUniformOrDie(const std::string& attr) const
 		{
-			return getUniformIterator(attr)->second.location;
+			int uniform_value = getUniform(attr);
+			ASSERT_LOG(uniform_value != ShaderProgram::INALID_UNIFORM, "Could not find uniform '" << attr << "' in shader: " << name());
+			return uniform_value;
 		}
 
-		GLint ShaderProgram::getAttribute(const std::string& attr) const
+		int ShaderProgram::getAttribute(const std::string& attr) const
 		{
 			auto it = attribs_.find(attr);
 			if(it != attribs_.end()) {
@@ -458,17 +496,17 @@ namespace KRE
 			auto alt_name_it = attribute_alternate_name_map_.find(attr);
 			if(alt_name_it == attribute_alternate_name_map_.end()) {
 				LOG_WARN("Attribute '" << attr << "' not found in alternate names list and is not a name defined in the shader: " << name_);
-				return GLint(-1);
+				return ShaderProgram::INALID_ATTRIBUTE;
 			}
 			it = attribs_.find(alt_name_it->second);
 			if(it == attribs_.end()) {
 				LOG_WARN("Attribute \"" << alt_name_it->second << "\" not found in list, looked up from symbol " << attr << " in shader: " << name_);
-				return GLint(-1);
+				return ShaderProgram::INALID_ATTRIBUTE;
 			}
 			return it->second.location;
 		}
 
-		GLint ShaderProgram::getUniform(const std::string& attr) const
+		int ShaderProgram::getUniform(const std::string& attr) const
 		{
 			auto it = uniforms_.find(attr);
 			if(it != uniforms_.end()) {
@@ -477,48 +515,14 @@ namespace KRE
 			auto alt_name_it = uniform_alternate_name_map_.find(attr);
 			if(alt_name_it == uniform_alternate_name_map_.end()) {
 				//LOG_WARN("Uniform '" << attr << "' not found in alternate names list and is not a name defined in the shader: " << name_);
-				return GLint(-1);
+				return ShaderProgram::INALID_UNIFORM;
 			}
 			it = uniforms_.find(alt_name_it->second);
 			if(it == uniforms_.end()) {
 				//LOG_WARN("Uniform \"" << alt_name_it->second << "\" not found in list, looked up from symbol " << attr << " in shader: " << name_);
-				return GLint(-1);
+				return ShaderProgram::INALID_UNIFORM;
 			}
 			return it->second.location;
-		}
-
-		ConstActivesMapIterator ShaderProgram::getAttributeIterator(const std::string& attr) const
-		{
-			auto it = attribs_.find(attr);
-			if(it == attribs_.end()) {
-				auto alt_name_it = attribute_alternate_name_map_.find(attr);
-				ASSERT_LOG(alt_name_it != attribute_alternate_name_map_.end(), 
-					"Attribute '" << attr << "' not found in alternate names list and is not a name defined in the shader: " << name_);
-				it = attribs_.find(alt_name_it->second);
-				ASSERT_LOG(it != attribs_.end(), 
-					"Attribute \"" << alt_name_it->second << "\" not found in list, looked up from symbol " << attr << " in shader: " << name_);
-			}
-			return it;
-		}
-
-		ConstActivesMapIterator ShaderProgram::getUniformIterator(const std::string& attr) const
-		{
-			auto it = uniforms_.find(attr);
-			if(it == uniforms_.end()) {
-				auto alt_name_it = uniform_alternate_name_map_.find(attr);
-				if(alt_name_it == uniform_alternate_name_map_.end()) {
-					std::stringstream ss;
-					ss << "Unable to find attribute named: " << attr << " << in shader '" << name_ << "'";
-					throw ShaderUniformError(ss.str().c_str());
-				}
-				it = uniforms_.find(alt_name_it->second);
-				//ASSERT_LOG(alt_name_it != uniform_alternate_name_map_.end(), 
-				//	"Uniform '" << attr << "' not found in alternate names list and is not a name defined in the shader: " << name_);
-				//it = uniforms_.find(alt_name_it->second);
-				//ASSERT_LOG(it != uniforms_.end(), 
-				//	"Uniform \"" << alt_name_it->second << "\" not found in list, looked up from symbol " << attr << " in shader: " << name_);
-			}
-			return it;
 		}
 
 		bool ShaderProgram::link()
@@ -567,6 +571,7 @@ namespace KRE
 				u.location = glGetUniformLocation(object_, u.name.c_str());
 				ASSERT_LOG(u.location >= 0, "Unable to determine the location of the uniform: " << u.name);
 				uniforms_[u.name] = u;
+				v_uniforms_[u.location] = u;
 			}
 			return true;
 		}
@@ -588,6 +593,7 @@ namespace KRE
 				ASSERT_LOG(a.location >= 0, "Unable to determine the location of the attribute: " << a.name);
 				ASSERT_LOG(a.num_elements == 1, "More than one element was found for an attribute(" << a.name << ") in shader(" << this->name() << "): " << a.num_elements);
 				attribs_[a.name] = a;
+				v_attribs_[a.location] = a;
 			}
 			return true;
 		}
@@ -597,12 +603,14 @@ namespace KRE
 			glUseProgram(object_);
 		}
 
-		void ShaderProgram::setUniformValue(ConstActivesMapIterator it, const void* value)
+		void ShaderProgram::setUniformValue(int uid, const void* value) const
 		{
-			if(it == uniforms_.end()) {
+			if(uid == ShaderProgram::INALID_UNIFORM) {
 				LOG_WARN("Tried to set value for invalid uniform iterator.");
 				return;
 			}
+			auto it = v_uniforms_.find(uid);
+			ASSERT_LOG(it != v_uniforms_.end(), "Couldn't find location " << uid << " on the uniform list.");
 			const Actives& u = it->second;
 			ASSERT_LOG(value != nullptr, "setUniformValue(): value is nullptr");
 			switch(u.type) {
@@ -658,12 +666,14 @@ namespace KRE
 			}
 		}
 
-		void ShaderProgram::setUniformValue(ConstActivesMapIterator it, const GLint value)
+		void ShaderProgram::setUniformValue(int uid, const GLint value) const
 		{
-			if(it == uniforms_.end()) {
+			if(uid == ShaderProgram::INALID_UNIFORM) {
 				LOG_WARN("Tried to set value for invalid uniform iterator.");
 				return;
 			}
+			auto it = v_uniforms_.find(uid);
+			ASSERT_LOG(it != v_uniforms_.end(), "Couldn't find location " << uid << " on the uniform list.");
 			const Actives& u = it->second;
 			switch(u.type) {
 			case GL_INT:
@@ -677,12 +687,14 @@ namespace KRE
 			}
 		}
 
-		void ShaderProgram::setUniformValue(ConstActivesMapIterator it, const GLfloat value)
+		void ShaderProgram::setUniformValue(int uid, const GLfloat value) const
 		{
-			if(it == uniforms_.end()) {
+			if(uid == ShaderProgram::INALID_UNIFORM) {
 				LOG_WARN("Tried to set value for invalid uniform iterator.");
 				return;
 			}
+			auto it = v_uniforms_.find(uid);
+			ASSERT_LOG(it != v_uniforms_.end(), "Couldn't find location " << uid << " on the uniform list.");
 			const Actives& u = it->second;
 			switch(u.type) {
 			case GL_FLOAT: {
@@ -694,12 +706,14 @@ namespace KRE
 			}	
 		}
 
-		void ShaderProgram::setUniformValue(ConstActivesMapIterator it, const GLint* value)
+		void ShaderProgram::setUniformValue(int uid, const GLint* value) const
 		{
-			if(it == uniforms_.end()) {
+			if(uid == ShaderProgram::INALID_UNIFORM) {
 				LOG_WARN("Tried to set value for invalid uniform iterator.");
 				return;
 			}
+			auto it = v_uniforms_.find(uid);
+			ASSERT_LOG(it != v_uniforms_.end(), "Couldn't find location " << uid << " on the uniform list.");
 			const Actives& u = it->second;
 			ASSERT_LOG(value != nullptr, "set_uniform(): value is nullptr");
 			switch(u.type) {
@@ -726,12 +740,14 @@ namespace KRE
 			}
 		}
 
-		void ShaderProgram::setUniformValue(ConstActivesMapIterator it, const GLfloat* value)
+		void ShaderProgram::setUniformValue(int uid, const GLfloat* value) const
 		{
-			if(it == uniforms_.end()) {
-				//LOG_WARN("Tried to set value for invalid uniform iterator.");
+			if(uid == ShaderProgram::INALID_UNIFORM) {
+				LOG_WARN("Tried to set value for invalid uniform iterator.");
 				return;
 			}
+			auto it = v_uniforms_.find(uid);
+			ASSERT_LOG(it != v_uniforms_.end(), "Couldn't find location " << uid << " on the uniform list.");
 			const Actives& u = it->second;
 			ASSERT_LOG(value != nullptr, "setUniformValue(): value is nullptr");
 			switch(u.type) {
@@ -786,58 +802,22 @@ namespace KRE
 		{
 			glUseProgram(object_);
 			// Cache some frequently used uniforms.
-			if(getUniform("mvp_matrix") != -1) {
-				u_mvp_ = getUniformIterator("mvp_matrix");
-			} else {
-				u_mvp_ = uniforms_.end();
-			}
-			if(getUniform("mv_matrix") != -1) {
-				u_mv_ = getUniformIterator("mv_matrix");
-			} else {
-				u_mv_ = uniforms_.end();
-			}
-			if(getUniform("p_matrix") != -1) {
-				u_p_ = getUniformIterator("p_matrix");
-			} else {
-				u_p_ = uniforms_.end();
-			}
-			if(getUniform("color") != -1) {
-				u_color_ = getUniformIterator("color");
-				setUniformValue(u_color_, glm::value_ptr(glm::vec4(1.0f)));
-			} else {
-				u_color_ = uniforms_.end();
-			}
-			if(getUniform("line_width") != -1) {
-				u_line_width_ = getUniformIterator("line_width");
-				setUniformValue(u_line_width_, 1.0f);
-			} else {
-				u_line_width_ = uniforms_.end();
-			}
-			if(getUniform("tex_map") != -1) {
-				u_tex_ = getUniformIterator("tex_map");
-			} else {
-				u_tex_ = uniforms_.end();
-			}
-			if(getAttribute("position") != -1) {
-				a_vertex_ = getAttributeIterator("position");
-			} else {
-				a_vertex_ = attribs_.end();
-			}
-			if(getAttribute("texcoord") != -1) {
-				a_texcoord_ = getAttributeIterator("texcoord");
-			} else {
-				a_texcoord_ = attribs_.end();
-			}
-			if(getAttribute("a_color") != -1) {
-				a_color_ = getAttributeIterator("a_color");
-			} else {
-				a_color_ = attribs_.end();
-			}
-			if(getAttribute("normal") != -1) {
-				a_normal_ = getAttributeIterator("normal");
-			} else {
-				a_normal_ = attribs_.end();
-			}
+			u_mvp_ = getUniform("mvp_matrix");
+			u_mv_ = getUniform("mv_matrix");
+			u_p_ = getUniform("p_matrix");
+			u_color_ = getUniform("color");
+			u_line_width_ = getUniform("line_width");
+			u_tex_ = getUniform("tex_map");
+			a_vertex_ = getAttribute("position");
+			a_texcoord_ = getAttribute("texcoord");
+			a_color_ = getAttribute("a_color");
+			a_normal_ = getAttribute("normal");
+
+			// I don't like having to have these as well.
+			u_enable_palette_lookup_ = getUniform("enable_palette_lookup");
+			u_palette_ = getUniform("palette");
+			u_palette_width_ = getUniform("u_palette_width");
+			u_palette_map_ = getUniform("palette_map");
 		}
 
 		ShaderProgramPtr ShaderProgram::factory(const std::string& name)
@@ -878,7 +858,7 @@ namespace KRE
 				return it->second;
 			}
 
-			auto spp = new ShaderProgram(name, 
+			auto spp = std::make_shared<OpenGL::ShaderProgram>(name, 
 				ShaderDef(name + "_vs", vert_data),
 				ShaderDef(name + "_fs", frag_data),
 				node);
@@ -886,28 +866,26 @@ namespace KRE
 			if(it != sf.end()) {
 				LOG_WARN("Overwriting shader with name: " << name);
 			}
-			sf[name] = ShaderProgramPtr(spp);
+			sf[name] = spp;
 			if(node.has_key("uniforms")) {
 				ASSERT_LOG(node["uniforms"].is_map(), "'uniforms' attribute in shader(" << name << ") must be a map.");
 				for(auto uni : node["uniforms"].as_map()) {
-					spp->setAlternateUniformName(uni.first.as_string(), uni.second.as_string());
+					spp->setAlternateUniformName(uni.second.as_string(), uni.first.as_string());
 				}
 			}
 			if(node.has_key("attributes")) {
 				ASSERT_LOG(node["attributes"].is_map(), "'attributes' attribute in shader(" << name << ") must be a map.");
 				for(auto attr : node["attributes"].as_map()) {
-					spp->setAlternateAttributeName(attr.first.as_string(), attr.second.as_string());
+					spp->setAlternateAttributeName(attr.second.as_string(), attr.first.as_string());
 				}
 			}
 			spp->setActives();
 
-			return ShaderProgramPtr(spp);
+			return spp;
 		}
 
 		void ShaderProgram::loadShadersFromVariant(const variant& node)
 		{
-			auto& sf = get_shader_factory();
-
 			ASSERT_LOG(node.has_key("instances"), "Shader data must have 'instances' attribute.");
 			ASSERT_LOG(node["instances"].is_list(), "'instances' attribute should be a list.");
 
@@ -924,9 +902,17 @@ namespace KRE
 		{
 			for(auto& attr : attrset->getAttributes()) {
 				for(auto& desc : attr->getAttrDesc()) {
-					desc.setLocation(getAttributeIterator(desc.getAttrName())->second.location);
+					desc.setLocation(getAttribute(desc.getAttrName()));
 				}
 			}
+		}
+		
+		void ShaderProgram::configureUniforms(UniformBufferBase& uniforms)
+		{
+			/*if(DisplayDevice::checkForFeature(DisplayDeviceCapabilties::UNIFORM_BUFFERS)) {
+				auto hw = std::unique_ptr<UniformHardwareOGL>(new UniformHardwareOGL(uniforms.getName()));
+				uniforms.setHardware(std::move(hw));
+			}*/
 		}
 
 		void ShaderProgram::applyAttribute(AttributeBasePtr attr) 
@@ -952,6 +938,46 @@ namespace KRE
 				glDisableVertexAttribArray(attrib);
 			}
 			enabled_attribs_.clear();
+		}
+
+		void ShaderProgram::setUniformsForTexture(const TexturePtr& tex) const
+		{
+			if(tex) {
+				// XXX The material may need to set more texture uniforms for multi-texture -- need to do that here.
+				// Or maybe it should be done through the uniform block and override this somehow.
+				if(getTexMapUniform() != ShaderProgram::INALID_UNIFORM) {
+					setUniformValue(getTexMapUniform(), 0);
+				}
+
+				tex->bind();
+
+				bool enable_palette = tex->isPaletteized();
+				if(enable_palette) {
+					if(u_palette_map_ != ShaderProgram::INALID_UNIFORM) {
+						setUniformValue(u_palette_map_, 1);
+					} else {
+						enable_palette = false;
+					}
+					if(u_palette_ != ShaderProgram::INALID_UNIFORM) {
+						// XXX replace tex->getSurfaces()[1]->height() with tex->getNormalizedCoordH(1, 1);
+						float h = static_cast<float>(tex->getSurfaces()[1]->height() - 1);
+						const float palette_sel = static_cast<float>(tex->getPalette()) / h;
+						setUniformValue(u_palette_, palette_sel); 
+					} else {
+						enable_palette = false;
+					}
+					if(u_palette_width_ != ShaderProgram::INALID_UNIFORM) {
+						// XXX this needs adjusted for pot texture width.
+						setUniformValue(u_palette_width_, static_cast<float>(tex->getSurfaces()[1]->width()));
+					} else {
+						enable_palette = false;
+					}
+				}
+
+				if(u_enable_palette_lookup_ != ShaderProgram::INALID_UNIFORM) {
+					setUniformValue(u_enable_palette_lookup_, enable_palette);
+				}
+			}
 		}
 	}
 }

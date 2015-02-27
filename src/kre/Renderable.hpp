@@ -29,6 +29,7 @@
 #include "RenderQueue.hpp"
 #include "SceneFwd.hpp"
 #include "ScopeableValue.hpp"
+#include "UniformBuffer.hpp"
 #include "variant.hpp"
 
 namespace KRE
@@ -81,6 +82,7 @@ namespace KRE
 		//const std::vector<UniformSetPtr>& getUniformSet() const { return uniforms_; }
 		void clearAttributeSets();
 		//void clearUniformSets();
+		void addUniformBuffer(UniformBufferBase&& ub);
 
 		virtual void preRender(const WindowManagerPtr& wm) {}
 		virtual void postRender(const WindowManagerPtr& wm) {}
@@ -104,6 +106,6 @@ namespace KRE
 		ShaderProgramPtr shader_;
 
 		std::vector<AttributeSetPtr> attributes_;
-		//std::vector<UniformSetPtr> uniforms_;
+		//std::vector<UniformBufferBase> uniforms_;
 	};
 }

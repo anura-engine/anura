@@ -258,7 +258,7 @@ namespace KRE
 			if(s[0] == '#') {
 				s = s.substr(1);
 			}
-			if(s.length() != 3 && s.length() != 6) {
+			if(s.length() != 3 && s.length() != 6 && s.length() != 8) {
 				return false;
 			}
 			if(s.length() == 3) {
@@ -273,7 +273,13 @@ namespace KRE
 			if(convert_hex_digit(s[0], &rh_hex) && convert_hex_digit(s[1], &rl_hex) 
 				&& convert_hex_digit(s[2], &gh_hex) && convert_hex_digit(s[3], &gl_hex)
 				&& convert_hex_digit(s[4], &bh_hex) && convert_hex_digit(s[5], &bl_hex)) {
-					*value = Color((rh_hex << 4) | rl_hex, (gh_hex << 4) | gl_hex, (bh_hex << 4) | bl_hex);
+					int ah_hex = 0xf, al_hex = 0xf;
+					if(s.length() == 8) {
+						if(!convert_hex_digit(s[6], &ah_hex) || !convert_hex_digit(s[7], &al_hex)) {
+							return false;
+						}
+					}
+					*value = Color((rh_hex << 4) | rl_hex, (gh_hex << 4) | gl_hex, (bh_hex << 4) | bl_hex, (ah_hex << 4) | al_hex);
 					return true;
 			}
 			return false;
@@ -462,8 +468,9 @@ namespace KRE
 						}
 					}
 				}
+			} else {
+				*color = it->second;
 			}
-			*color = it->second;
 			return true;
 		}
 	}
@@ -485,7 +492,7 @@ namespace KRE
 	}
 
 	Color::Color(const int r, const int g, const int b, const int a)
-		: icolor_(r, g, b, a)
+		: icolor_(clamp(r,0,255), clamp(g,0,255), clamp(b,0,255), clamp(a,0,255))
 	{
 		convert_to_color();
 	}

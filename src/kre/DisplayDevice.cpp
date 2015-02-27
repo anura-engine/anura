@@ -84,10 +84,10 @@ namespace KRE
 		if(it == get_display_registry().end()) {			
 			LOG_WARN("Requested display driver '" << type << "' not found, using default: " << get_display_registry().begin()->first);
 			current_display_device() = get_display_registry().begin()->second();
-			return get_display_registry().begin()->second();
+			return current_display_device();
 		}
 		current_display_device() = it->second();
-		return it->second();
+		return current_display_device();
 	}
 
 	DisplayDevicePtr DisplayDevice::getCurrent()

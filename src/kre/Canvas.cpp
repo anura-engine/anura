@@ -26,14 +26,37 @@
 
 namespace KRE
 {
+	namespace 
+	{
+		// These are purely for 2D
+		std::stack<glm::vec2>& get_translation_stack()
+		{
+			static std::stack<glm::vec2> res;
+			return res;
+		}
+
+		std::stack<float>& get_rotation_stack()
+		{
+			static std::stack<float> res;
+			return res;
+		}
+
+		std::stack<glm::vec2>& get_scale_stack()
+		{
+			static std::stack<glm::vec2> res;
+			return res;
+		}
+	}
+
 	Canvas::Canvas()
 		: width_(0),
 		  height_(0),
+		  model_matrix_(1.0f),
+		  model_changed_(false),
 		  window_(WindowManager::getMainWindow())
 	{
 		width_ = getWindow()->logicalWidth();
 		height_ = getWindow()->logicalHeight();			
-		model_stack_.emplace(glm::mat4(1.0f));
 	}
 
 	void Canvas::setDimensions(unsigned w, unsigned h)
@@ -74,57 +97,6 @@ namespace KRE
 		blitTexture(tex, rect(0,0,0,0), rotation, rect(x,y), color);
 	}
 
-	Canvas::ModelManager::ModelManager()
-		: canvas_(KRE::Canvas::getInstance())
-	{
-		canvas_->model_stack_.emplace(glm::mat4(1.0f));
-	}
-
-	Canvas::ModelManager::ModelManager(int tx, int ty, float rotation, float scale)
-		: canvas_(KRE::Canvas::getInstance())
-	{
-		const glm::mat4 m_trans   = glm::translate(glm::mat4(1.0f), glm::vec3(static_cast<float>(tx), static_cast<float>(ty),0.0f));
-		const glm::mat4 m_rotate  = glm::rotate(glm::mat4(1.0f), rotation, glm::vec3(0.0f,0.0f,1.0f));
-		const glm::mat4 m_scale   = glm::scale(glm::mat4(1.0f), glm::vec3(scale));
-		glm::mat4 model = m_trans * m_rotate * m_scale;
-		canvas_->model_stack_.emplace(model);
-	}
-
-	Canvas::ModelManager::~ModelManager() 
-	{
-		canvas_->model_stack_.pop();
-	}
-
-	void Canvas::ModelManager::setIdentity()
-	{
-		ASSERT_LOG(!canvas_->model_stack_.empty(), "Model stack was empty.");
-		canvas_->model_stack_.top() = glm::mat4(1.0f);
-	}
-
-	void Canvas::ModelManager::translate(int tx, int ty)
-	{
-		ASSERT_LOG(!canvas_->model_stack_.empty(), "Model stack was empty.");
-		canvas_->model_stack_.top() = glm::translate(canvas_->model_stack_.top(), glm::vec3(static_cast<float>(tx), static_cast<float>(ty),0.0f));
-	}
-
-	void Canvas::ModelManager::rotate(float angle)
-	{
-		ASSERT_LOG(!canvas_->model_stack_.empty(), "Model stack was empty.");
-		canvas_->model_stack_.top() = glm::rotate(canvas_->model_stack_.top(), angle, glm::vec3(0.0f, 0.0f, 1.0f));
-	}
-
-	void Canvas::ModelManager::scale(float sx, float sy)
-	{
-		ASSERT_LOG(!canvas_->model_stack_.empty(), "Model stack was empty.");
-		canvas_->model_stack_.top() = glm::scale(canvas_->model_stack_.top(), glm::vec3(static_cast<float>(sx), static_cast<float>(sy),1.0f));
-	}
-
-	void Canvas::ModelManager::scale(float s)
-	{
-		ASSERT_LOG(!canvas_->model_stack_.empty(), "Model stack was empty.");
-		canvas_->model_stack_.top() = glm::scale(canvas_->model_stack_.top(), glm::vec3(static_cast<float>(s), static_cast<float>(s),1.0f));
-	}
-
 	void generate_color_wheel(int num_points, std::vector<glm::u8vec4>* color_array, const Color& centre, float start_hue, float end_hue)
 	{
 		ASSERT_LOG(num_points > 0, "Must be more than one point in call to generate_color_wheel()");
@@ -151,5 +123,138 @@ namespace KRE
 	{
 		window_ = wnd; 
 	}
-}
 
+	const glm::mat4& Canvas::getModelMatrix() const 
+	{
+		if(model_changed_) {
+			model_changed_ = false;
+			
+			model_matrix_ = glm::mat4(1.0f);
+			if(!get_translation_stack().empty()) {
+				auto& top = get_translation_stack().top();
+				model_matrix_ = glm::translate(model_matrix_, glm::vec3(top, 0.0f));
+			}
+
+			if(!get_rotation_stack().empty()) {
+				model_matrix_ = glm::rotate(model_matrix_, get_rotation_stack().top(), glm::vec3(0.0f, 0.0f, 1.0f));
+			}
+
+			if(!get_scale_stack().empty()) {
+				auto& top = get_scale_stack().top();
+				model_matrix_ = glm::scale(model_matrix_, glm::vec3(top, 1.0f));
+			}
+		}
+		return model_matrix_;
+	}
+
+	Canvas::ModelManager::ModelManager()
+		: canvas_(KRE::Canvas::getInstance())
+	{
+	}
+
+	Canvas::ModelManager::ModelManager(int tx, int ty, float angle, float scale)
+		: canvas_(KRE::Canvas::getInstance())
+	{
+		if(get_translation_stack().empty()) {
+			get_translation_stack().emplace(static_cast<float>(tx), static_cast<float>(ty));
+		} else {
+			auto top = get_translation_stack().top();
+			get_translation_stack().emplace(static_cast<float>(tx) + top.x, static_cast<float>(ty) + top.y);
+		}
+
+		if(get_rotation_stack().empty()) {
+			get_rotation_stack().emplace(angle);
+		} else {
+			auto top = get_rotation_stack().top();
+			get_rotation_stack().emplace(angle + top);
+		}
+
+		if(get_scale_stack().empty()) {
+			get_scale_stack().emplace(scale, scale);
+		} else {
+			auto top = get_scale_stack().top();
+			get_scale_stack().emplace(scale * top.x, scale * top.y);
+		}
+		canvas_->model_changed_ = true;
+	}
+
+	Canvas::ModelManager::~ModelManager() 
+	{
+		if(!get_translation_stack().empty()) {
+			get_translation_stack().pop();
+			canvas_->model_changed_ = true;
+		}
+		if(!get_rotation_stack().empty()) {
+			get_rotation_stack().pop();
+			canvas_->model_changed_ = true;
+		}
+		if(!get_scale_stack().empty()) {
+			get_scale_stack().pop();
+			canvas_->model_changed_ = true;
+		}
+	}
+
+	void Canvas::ModelManager::setIdentity()
+	{
+		if(!get_translation_stack().empty()) {
+			auto& top = get_translation_stack().top();
+			top.x = top.y = 0.0f;
+			canvas_->model_changed_ = true;
+		}
+		if(!get_rotation_stack().empty()) {
+			get_rotation_stack().top() = 0.0f;
+			canvas_->model_changed_ = true;
+		}
+		if(!get_scale_stack().empty()) {
+			auto& top = get_scale_stack().top();
+			top.x = top.y = 1.0f;
+			canvas_->model_changed_ = true;
+		}
+	}
+
+	void Canvas::ModelManager::translate(int tx, int ty)
+	{
+		if(get_translation_stack().empty()) {
+			get_translation_stack().emplace(static_cast<float>(tx), static_cast<float>(ty));
+		} else {
+			auto& top = get_translation_stack().top();
+			top.x += static_cast<float>(tx);
+			top.y += static_cast<float>(ty);
+		}
+		canvas_->model_changed_ = true;
+	}
+
+	void Canvas::ModelManager::rotate(float angle)
+	{
+		if(get_rotation_stack().empty()) {
+			get_rotation_stack().emplace(angle);
+		} else {
+			get_rotation_stack().top() += angle;
+		}
+		canvas_->model_changed_ = true;
+	}
+
+	void Canvas::ModelManager::scale(float sx, float sy)
+	{
+		if(get_scale_stack().empty()) {
+			get_scale_stack().emplace(sx, sy);
+		} else {
+			auto& top = get_scale_stack().top();
+			top.x += sx;
+			top.y += sy;
+		}
+		canvas_->model_changed_ = true;
+	}
+
+	void Canvas::ModelManager::scale(float s)
+	{
+		if(get_scale_stack().empty()) {
+			get_scale_stack().emplace(s, s);
+		} else {
+			auto& top = get_scale_stack().top();
+			top.x *= s;
+			top.y *= s;
+		}
+		canvas_->model_changed_ = true;
+	}
+}

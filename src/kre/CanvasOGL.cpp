@@ -78,11 +78,16 @@ namespace KRE
 			vx2, vy2,
 		};
 
-		glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3((vx1+vx2)/2.0f,(vy1+vy2)/2.0f,0.0f)) * glm::rotate(glm::mat4(1.0f), rotation, glm::vec3(0.0f,0.0f,1.0f)) * glm::translate(glm::mat4(1.0f), glm::vec3(-(vx1+vx2)/2.0f,-(vy1+vy2)/2.0f,0.0f));
-		glm::mat4 mvp = mvp_ * model * getModelMatrix();
+		glm::mat4 mvp;
+		if(std::abs(rotation) > FLT_EPSILON) {
+			glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3((vx1+vx2)/2.0f,(vy1+vy2)/2.0f,0.0f)) * glm::rotate(glm::mat4(1.0f), rotation, glm::vec3(0.0f,0.0f,1.0f)) * glm::translate(glm::mat4(1.0f), glm::vec3(-(vx1+vx2)/2.0f,-(vy1+vy2)/2.0f,0.0f));
+			mvp = mvp_ * model * getModelMatrix();
+		} else {
+			mvp = mvp_ * getModelMatrix();
+		}
 		auto shader = OpenGL::ShaderProgram::defaultSystemShader();
 		shader->makeActive();
-		DisplayDevice::getCurrent()->setUniformsForTexture(shader, texture);
+		shader->setUniformsForTexture(texture);
 		shader->setUniformValue(shader->getMvpUniform(), glm::value_ptr(mvp));
 		if(color != KRE::Color::colorWhite()) {
 			shader->setUniformValue(shader->getColorUniform(), (color*getColor()).asFloatVector());
@@ -91,15 +96,15 @@ namespace KRE
 		}
 		// XXX the following line are only temporary, obviously.
 		//shader->SetUniformValue(shader->GetUniformIterator("discard"), 0);
-		glEnableVertexAttribArray(shader->getVertexAttribute()->second.location);
-		glVertexAttribPointer(shader->getVertexAttribute()->second.location, 2, GL_FLOAT, GL_FALSE, 0, vtx_coords);
-		glEnableVertexAttribArray(shader->getTexcoordAttribute()->second.location);
-		glVertexAttribPointer(shader->getTexcoordAttribute()->second.location, 2, GL_FLOAT, GL_FALSE, 0, uv_coords);
+		glEnableVertexAttribArray(shader->getVertexAttribute());
+		glVertexAttribPointer(shader->getVertexAttribute(), 2, GL_FLOAT, GL_FALSE, 0, vtx_coords);
+		glEnableVertexAttribArray(shader->getTexcoordAttribute());
+		glVertexAttribPointer(shader->getTexcoordAttribute(), 2, GL_FLOAT, GL_FALSE, 0, uv_coords);
 
 		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
-		glDisableVertexAttribArray(shader->getTexcoordAttribute()->second.location);
-		glDisableVertexAttribArray(shader->getVertexAttribute()->second.location);
+		glDisableVertexAttribArray(shader->getTexcoordAttribute());
+		glDisableVertexAttribArray(shader->getVertexAttribute());
 	}
 
 	void CanvasOGL::blitTexture(const TexturePtr& tex, const std::vector<vertex_texcoord>& vtc, float rotation, const Color& color)
@@ -108,7 +113,7 @@ namespace KRE
 		glm::mat4 mvp = mvp_ * model * getModelMatrix();
 		auto shader = OpenGL::ShaderProgram::defaultSystemShader();
 		shader->makeActive();
-		shader->setUniformValue(shader->getMvpUniform(), glm::value_ptr(mvp));
+		shader->setUniformsForTexture(tex);
 		shader->setUniformValue(shader->getMvpUniform(), glm::value_ptr(mvp));
 		if(color != KRE::Color::colorWhite()) {
 			shader->setUniformValue(shader->getColorUniform(), (color*getColor()).asFloatVector());
@@ -117,15 +122,15 @@ namespace KRE
 		}
 		// XXX the following line are only temporary, obviously.
 		//shader->SetUniformValue(shader->GetUniformIterator("discard"), 0);
-		glEnableVertexAttribArray(shader->getVertexAttribute()->second.location);
-		glVertexAttribPointer(shader->getVertexAttribute()->second.location, 2, GL_FLOAT, GL_FALSE, sizeof(vertex_texcoord), reinterpret_cast<const unsigned char*>(&vtc[0]) + offsetof(vertex_texcoord, vtx));
-		glEnableVertexAttribArray(shader->getTexcoordAttribute()->second.location);
-		glVertexAttribPointer(shader->getTexcoordAttribute()->second.location, 2, GL_FLOAT, GL_FALSE, sizeof(vertex_texcoord), reinterpret_cast<const unsigned char*>(&vtc[0]) + offsetof(vertex_texcoord, tc));
+		glEnableVertexAttribArray(shader->getVertexAttribute());
+		glVertexAttribPointer(shader->getVertexAttribute(), 2, GL_FLOAT, GL_FALSE, sizeof(vertex_texcoord), reinterpret_cast<const unsigned char*>(&vtc[0]) + offsetof(vertex_texcoord, vtx));
+		glEnableVertexAttribArray(shader->getTexcoordAttribute());
+		glVertexAttribPointer(shader->getTexcoordAttribute(), 2, GL_FLOAT, GL_FALSE, sizeof(vertex_texcoord), reinterpret_cast<const unsigned char*>(&vtc[0]) + offsetof(vertex_texcoord, tc));
 
 		glDrawArrays(GL_TRIANGLES, 0, vtc.size());
 
-		glDisableVertexAttribArray(shader->getTexcoordAttribute()->second.location);
-		glDisableVertexAttribArray(shader->getVertexAttribute()->second.location);
+		glDisableVertexAttribArray(shader->getTexcoordAttribute());
+		glDisableVertexAttribArray(shader->getVertexAttribute());
 	}
 
 	void CanvasOGL::drawSolidRect(const rect& r, const Color& fill_color, const Color& stroke_color, float rotation) const
@@ -146,8 +151,8 @@ namespace KRE
 
 		// Draw a filled rect
 		shader->setUniformValue(shader->getColorUniform(), fill_color.asFloatVector());
-		glEnableVertexAttribArray(shader->getVertexAttribute()->second.location);
-		glVertexAttribPointer(shader->getVertexAttribute()->second.location, 2, GL_FLOAT, GL_FALSE, 0, vtx_coords);
+		glEnableVertexAttribArray(shader->getVertexAttribute());
+		glVertexAttribPointer(shader->getVertexAttribute(), 2, GL_FLOAT, GL_FALSE, 0, vtx_coords);
 		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
 		// Draw stroke if stroke_color is specified.
@@ -160,11 +165,11 @@ namespace KRE
 			vtx.x1(), vtx.y1(),
 		};
 		shader->setUniformValue(shader->getColorUniform(), stroke_color.asFloatVector());
-		glEnableVertexAttribArray(shader->getVertexAttribute()->second.location);
-		glVertexAttribPointer(shader->getVertexAttribute()->second.location, 2, GL_FLOAT, GL_FALSE, 0, vtx_coords_line);
+		glEnableVertexAttribArray(shader->getVertexAttribute());
+		glVertexAttribPointer(shader->getVertexAttribute(), 2, GL_FLOAT, GL_FALSE, 0, vtx_coords_line);
 		// XXX this may not be right.
 		glDrawArrays(GL_LINE_STRIP, 0, 5);
-		glDisableVertexAttribArray(shader->getVertexAttribute()->second.location);
+		glDisableVertexAttribArray(shader->getVertexAttribute());
 	}
 
 	void CanvasOGL::drawSolidRect(const rect& r, const Color& fill_color, float rotation) const
@@ -185,10 +190,10 @@ namespace KRE
 
 		// Draw a filled rect
 		shader->setUniformValue(shader->getColorUniform(), fill_color.asFloatVector());
-		glEnableVertexAttribArray(shader->getVertexAttribute()->second.location);
-		glVertexAttribPointer(shader->getVertexAttribute()->second.location, 2, GL_FLOAT, GL_FALSE, 0, vtx_coords);
+		glEnableVertexAttribArray(shader->getVertexAttribute());
+		glVertexAttribPointer(shader->getVertexAttribute(), 2, GL_FLOAT, GL_FALSE, 0, vtx_coords);
 		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-		glDisableVertexAttribArray(shader->getVertexAttribute()->second.location);
+		glDisableVertexAttribArray(shader->getVertexAttribute());
 	}
 
 	void CanvasOGL::drawHollowRect(const rect& r, const Color& stroke_color, float rotation) const
@@ -212,10 +217,10 @@ namespace KRE
 		// Draw stroke if stroke_color is specified.
 		// XXX I think there is an easier way of doing this, with modern GL
 		shader->setUniformValue(shader->getColorUniform(), stroke_color.asFloatVector());
-		glEnableVertexAttribArray(shader->getVertexAttribute()->second.location);
-		glVertexAttribPointer(shader->getVertexAttribute()->second.location, 2, GL_FLOAT, GL_FALSE, 0, vtx_coords_line);
+		glEnableVertexAttribArray(shader->getVertexAttribute());
+		glVertexAttribPointer(shader->getVertexAttribute(), 2, GL_FLOAT, GL_FALSE, 0, vtx_coords_line);
 		glDrawArrays(GL_LINE_STRIP, 0, 5);
-		glDisableVertexAttribArray(shader->getVertexAttribute()->second.location);
+		glDisableVertexAttribArray(shader->getVertexAttribute());
 	}
 
 	void CanvasOGL::drawLine(const point& p1, const point& p2, const Color& color) const
@@ -232,10 +237,10 @@ namespace KRE
 		shader->setUniformValue(shader->getMvpUniform(), glm::value_ptr(mvp));
 
 		shader->setUniformValue(shader->getColorUniform(), color.asFloatVector());
-		glEnableVertexAttribArray(shader->getVertexAttribute()->second.location);
-		glVertexAttribPointer(shader->getVertexAttribute()->second.location, 2, GL_FLOAT, GL_FALSE, 0, vtx_coords_line);
+		glEnableVertexAttribArray(shader->getVertexAttribute());
+		glVertexAttribPointer(shader->getVertexAttribute(), 2, GL_FLOAT, GL_FALSE, 0, vtx_coords_line);
 		glDrawArrays(GL_LINES, 0, 2);
-		glDisableVertexAttribArray(shader->getVertexAttribute()->second.location);
+		glDisableVertexAttribArray(shader->getVertexAttribute());
 	}
 
 	std::ostream& operator<<(std::ostream& os, const glm::vec2& v)
@@ -251,7 +256,8 @@ namespace KRE
 		shader->setUniformValue(shader->getMvUniform(), glm::value_ptr(getModelMatrix()));
 		shader->setUniformValue(shader->getPUniform(), glm::value_ptr(mvp_));
 
-		if(shader->getNormalAttribute() == shader->attributesIteratorEnd() || shader->getVertexAttribute() == shader->attributesIteratorEnd()) {
+		if(shader->getNormalAttribute() == ShaderProgram::INALID_ATTRIBUTE 
+			|| shader->getVertexAttribute() == ShaderProgram::INALID_ATTRIBUTE) {
 			return;
 		}
 
@@ -277,17 +283,17 @@ namespace KRE
 			normals.emplace_back(d2);
 		}
 
-		static auto blur_uniform = shader->getUniformIterator("u_blur");
+		static auto blur_uniform = shader->getUniform("u_blur");
 		shader->setUniformValue(blur_uniform, 2.0f);
 		shader->setUniformValue(shader->getLineWidthUniform(), line_width);
 		shader->setUniformValue(shader->getColorUniform(), color.asFloatVector());
-		glEnableVertexAttribArray(shader->getVertexAttribute()->second.location);
-		glEnableVertexAttribArray(shader->getNormalAttribute()->second.location);
-		glVertexAttribPointer(shader->getVertexAttribute()->second.location, 2, GL_FLOAT, GL_FALSE, 0, &vertices[0]);
-		glVertexAttribPointer(shader->getNormalAttribute()->second.location, 2, GL_FLOAT, GL_FALSE, 0, &normals[0]);
+		glEnableVertexAttribArray(shader->getVertexAttribute());
+		glEnableVertexAttribArray(shader->getNormalAttribute());
+		glVertexAttribPointer(shader->getVertexAttribute(), 2, GL_FLOAT, GL_FALSE, 0, &vertices[0]);
+		glVertexAttribPointer(shader->getNormalAttribute(), 2, GL_FLOAT, GL_FALSE, 0, &normals[0]);
 		glDrawArrays(GL_TRIANGLE_STRIP, 0, vertices.size());
-		glDisableVertexAttribArray(shader->getNormalAttribute()->second.location);
-		glDisableVertexAttribArray(shader->getVertexAttribute()->second.location);
+		glDisableVertexAttribArray(shader->getNormalAttribute());
+		glDisableVertexAttribArray(shader->getVertexAttribute());
 	}
 
 	void CanvasOGL::drawLines(const std::vector<glm::vec2>& varray, float line_width, const std::vector<glm::u8vec4>& carray) const 
@@ -302,13 +308,13 @@ namespace KRE
 
 		shader->setUniformValue(shader->getLineWidthUniform(), line_width);
 		shader->setUniformValue(shader->getColorUniform(), glm::value_ptr(glm::vec4(1.0f)));
-		glEnableVertexAttribArray(shader->getVertexAttribute()->second.location);
-		glEnableVertexAttribArray(shader->getColorAttribute()->second.location);
-		glVertexAttribPointer(shader->getVertexAttribute()->second.location, 2, GL_FLOAT, GL_FALSE, 0, &varray[0]);
-		glVertexAttribPointer(shader->getColorAttribute()->second.location, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, &carray[0]);
+		glEnableVertexAttribArray(shader->getVertexAttribute());
+		glEnableVertexAttribArray(shader->getColorAttribute());
+		glVertexAttribPointer(shader->getVertexAttribute(), 2, GL_FLOAT, GL_FALSE, 0, &varray[0]);
+		glVertexAttribPointer(shader->getColorAttribute(), 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, &carray[0]);
 		glDrawArrays(GL_LINES, 0, varray.size());
-		glDisableVertexAttribArray(shader->getColorAttribute()->second.location);
-		glDisableVertexAttribArray(shader->getVertexAttribute()->second.location);
+		glDisableVertexAttribArray(shader->getColorAttribute());
+		glDisableVertexAttribArray(shader->getVertexAttribute());
 	}
 
 	void CanvasOGL::drawLineStrip(const std::vector<glm::vec2>& varray, float line_width, const Color& color) const 
@@ -322,10 +328,10 @@ namespace KRE
 
 		shader->setUniformValue(shader->getLineWidthUniform(), line_width);
 		shader->setUniformValue(shader->getColorUniform(), color.asFloatVector());
-		glEnableVertexAttribArray(shader->getVertexAttribute()->second.location);
-		glVertexAttribPointer(shader->getVertexAttribute()->second.location, 2, GL_FLOAT, GL_FALSE, 0, &varray[0]);
+		glEnableVertexAttribArray(shader->getVertexAttribute());
+		glVertexAttribPointer(shader->getVertexAttribute(), 2, GL_FLOAT, GL_FALSE, 0, &varray[0]);
 		glDrawArrays(GL_LINE_STRIP, 0, varray.size());
-		glDisableVertexAttribArray(shader->getVertexAttribute()->second.location);
+		glDisableVertexAttribArray(shader->getVertexAttribute());
 	}
 
 	void CanvasOGL::drawLineLoop(const std::vector<glm::vec2>& varray, float line_width, const Color& color) const 
@@ -339,10 +345,10 @@ namespace KRE
 
 		shader->setUniformValue(shader->getLineWidthUniform(), line_width);
 		shader->setUniformValue(shader->getColorUniform(), color.asFloatVector());
-		glEnableVertexAttribArray(shader->getVertexAttribute()->second.location);
-		glVertexAttribPointer(shader->getVertexAttribute()->second.location, 2, GL_FLOAT, GL_FALSE, 0, &varray[0]);
+		glEnableVertexAttribArray(shader->getVertexAttribute());
+		glVertexAttribPointer(shader->getVertexAttribute(), 2, GL_FLOAT, GL_FALSE, 0, &varray[0]);
 		glDrawArrays(GL_LINE_LOOP, 0, varray.size());
-		glDisableVertexAttribArray(shader->getVertexAttribute()->second.location);
+		glDisableVertexAttribArray(shader->getVertexAttribute());
 	}
 
 	void CanvasOGL::drawLine(const pointf& p1, const pointf& p2, const Color& color) const 
@@ -359,10 +365,10 @@ namespace KRE
 		shader->setUniformValue(shader->getMvpUniform(), glm::value_ptr(mvp));
 
 		shader->setUniformValue(shader->getColorUniform(), color.asFloatVector());
-		glEnableVertexAttribArray(shader->getVertexAttribute()->second.location);
-		glVertexAttribPointer(shader->getVertexAttribute()->second.location, 2, GL_FLOAT, GL_FALSE, 0, vtx_coords_line);
+		glEnableVertexAttribArray(shader->getVertexAttribute());
+		glVertexAttribPointer(shader->getVertexAttribute(), 2, GL_FLOAT, GL_FALSE, 0, vtx_coords_line);
 		glDrawArrays(GL_LINES, 0, 2);
-		glDisableVertexAttribArray(shader->getVertexAttribute()->second.location);
+		glDisableVertexAttribArray(shader->getVertexAttribute());
 	}
 
 	void CanvasOGL::drawPolygon(const std::vector<glm::vec2>& varray, const Color& color) const 
@@ -376,10 +382,10 @@ namespace KRE
 
 		shader->setUniformValue(shader->getLineWidthUniform(), 1.0f);
 		shader->setUniformValue(shader->getColorUniform(), color.asFloatVector());
-		glEnableVertexAttribArray(shader->getVertexAttribute()->second.location);
-		glVertexAttribPointer(shader->getVertexAttribute()->second.location, 2, GL_FLOAT, GL_FALSE, 0, &varray[0]);
+		glEnableVertexAttribArray(shader->getVertexAttribute());
+		glVertexAttribPointer(shader->getVertexAttribute(), 2, GL_FLOAT, GL_FALSE, 0, &varray[0]);
 		glDrawArrays(GL_POLYGON, 0, varray.size());
-		glDisableVertexAttribArray(shader->getVertexAttribute()->second.location);
+		glDisableVertexAttribArray(shader->getVertexAttribute());
 	}
 
 	void CanvasOGL::drawSolidCircle(const point& centre, float radius, const Color& color) const 
@@ -414,30 +420,30 @@ namespace KRE
 		shader->setUniformValue(shader->getMvpUniform(), glm::value_ptr(mvp));
 
 		try {
-			static auto screen_dim = shader->getUniformIterator("screen_dimensions");
+			static auto screen_dim = shader->getUniform("screen_dimensions");
 			shader->setUniformValue(screen_dim, glm::value_ptr(glm::vec2(getWindow()->width(), getWindow()->height())));
 		} catch(ShaderUniformError&) {
 		}
 		try {
-			static auto radius_it = shader->getUniformIterator("outer_radius");
+			static auto radius_it = shader->getUniform("outer_radius");
 			shader->setUniformValue(radius_it, radius);
 		} catch(ShaderUniformError&) {
 		}
 		try {
-			static auto inner_radius_it = shader->getUniformIterator("inner_radius");
+			static auto inner_radius_it = shader->getUniform("inner_radius");
 			shader->setUniformValue(inner_radius_it, 0.0f);
 		} catch(ShaderUniformError&) {
 		}
 		try {
-			static auto centre_it = shader->getUniformIterator("centre");
+			static auto centre_it = shader->getUniform("centre");
 			shader->setUniformValue(centre_it, glm::value_ptr(glm::vec2(centre.x, centre.y)));
 		} catch(ShaderUniformError&) {
 		}
 		shader->setUniformValue(shader->getColorUniform(), color.asFloatVector());
-		glEnableVertexAttribArray(shader->getVertexAttribute()->second.location);
-		glVertexAttribPointer(shader->getVertexAttribute()->second.location, 2, GL_FLOAT, GL_FALSE, 0, vtx_coords);
+		glEnableVertexAttribArray(shader->getVertexAttribute());
+		glVertexAttribPointer(shader->getVertexAttribute(), 2, GL_FLOAT, GL_FALSE, 0, vtx_coords);
 		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-		glDisableVertexAttribArray(shader->getVertexAttribute()->second.location);
+		glDisableVertexAttribArray(shader->getVertexAttribute());
 	}
 
 	void CanvasOGL::drawSolidCircle(const pointf& centre, float radius, const std::vector<glm::u8vec4>& color) const 
@@ -461,13 +467,13 @@ namespace KRE
 		// last co-ordinate is repeated first point on circle.
 		varray.emplace_back(varray[1]);
 
-		glEnableVertexAttribArray(shader->getVertexAttribute()->second.location);
-		glEnableVertexAttribArray(shader->getColorAttribute()->second.location);
-		glVertexAttribPointer(shader->getVertexAttribute()->second.location, 2, GL_FLOAT, GL_FALSE, 0, &varray[0]);
-		glVertexAttribPointer(shader->getColorAttribute()->second.location, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, &color[0]);
+		glEnableVertexAttribArray(shader->getVertexAttribute());
+		glEnableVertexAttribArray(shader->getColorAttribute());
+		glVertexAttribPointer(shader->getVertexAttribute(), 2, GL_FLOAT, GL_FALSE, 0, &varray[0]);
+		glVertexAttribPointer(shader->getColorAttribute(), 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, &color[0]);
 		glDrawArrays(GL_TRIANGLE_FAN, 0, varray.size());
-		glDisableVertexAttribArray(shader->getColorAttribute()->second.location);
-		glDisableVertexAttribArray(shader->getVertexAttribute()->second.location);
+		glDisableVertexAttribArray(shader->getColorAttribute());
+		glDisableVertexAttribArray(shader->getVertexAttribute());
 
 	}
 
@@ -488,30 +494,30 @@ namespace KRE
 		shader->setUniformValue(shader->getMvpUniform(), glm::value_ptr(mvp));
 
 		try {
-			static auto screen_dim = shader->getUniformIterator("screen_dimensions");
+			static auto screen_dim = shader->getUniform("screen_dimensions");
 			shader->setUniformValue(screen_dim, glm::value_ptr(glm::vec2(width(), height())));
 		} catch(ShaderUniformError&) {
 		}
 		try {
-			static auto radius_it = shader->getUniformIterator("outer_radius");
+			static auto radius_it = shader->getUniform("outer_radius");
 			shader->setUniformValue(radius_it, outer_radius);
 		} catch(ShaderUniformError&) {
 		}
 		try {
-			static auto inner_radius_it = shader->getUniformIterator("inner_radius");
+			static auto inner_radius_it = shader->getUniform("inner_radius");
 			shader->setUniformValue(inner_radius_it, inner_radius);
 		} catch(ShaderUniformError&) {
 		}
 		try {
-			static auto centre_it = shader->getUniformIterator("centre");
+			static auto centre_it = shader->getUniform("centre");
 			shader->setUniformValue(centre_it, glm::value_ptr(glm::vec2(centre.x, centre.y)));
 		} catch(ShaderUniformError&) {
 		}
 		shader->setUniformValue(shader->getColorUniform(), color.asFloatVector());
-		glEnableVertexAttribArray(shader->getVertexAttribute()->second.location);
-		glVertexAttribPointer(shader->getVertexAttribute()->second.location, 2, GL_FLOAT, GL_FALSE, 0, vtx_coords);
+		glEnableVertexAttribArray(shader->getVertexAttribute());
+		glVertexAttribPointer(shader->getVertexAttribute(), 2, GL_FLOAT, GL_FALSE, 0, vtx_coords);
 		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-		glDisableVertexAttribArray(shader->getVertexAttribute()->second.location);
+		glDisableVertexAttribArray(shader->getVertexAttribute());
 	}
 
 	void CanvasOGL::drawPoints(const std::vector<glm::vec2>& varray, float radius, const Color& color) const 
@@ -523,14 +529,14 @@ namespace KRE
 		shader->makeActive();
 		shader->setUniformValue(shader->getMvpUniform(), glm::value_ptr(mvp));
 
-		static auto it = shader->getUniformIterator("point_size");
+		static auto it = shader->getUniform("point_size");
 		shader->setUniformValue(it, radius);
 		shader->setUniformValue(shader->getLineWidthUniform(), 1.0f);
 		shader->setUniformValue(shader->getColorUniform(), color.asFloatVector());
-		glEnableVertexAttribArray(shader->getVertexAttribute()->second.location);
-		glVertexAttribPointer(shader->getVertexAttribute()->second.location, 2, GL_FLOAT, GL_FALSE, 0, &varray[0]);
+		glEnableVertexAttribArray(shader->getVertexAttribute());
+		glVertexAttribPointer(shader->getVertexAttribute(), 2, GL_FLOAT, GL_FALSE, 0, &varray[0]);
 		glDrawArrays(GL_POINTS, 0, varray.size());
-		glDisableVertexAttribArray(shader->getVertexAttribute()->second.location);
+		glDisableVertexAttribArray(shader->getVertexAttribute());
 	}
 
 	CanvasPtr CanvasOGL::getInstance()

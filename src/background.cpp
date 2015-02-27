@@ -358,10 +358,10 @@ void Background::drawLayers(int x, int y, const rect& area_ref, const std::vecto
 				drawLayer(x, y, a, rotation, bg, cycle);
 			}
 			if(bg.attr_->size() > 0) {
-				LOG_DEBUG("attribute size: " << bg.attr_->size());
 				wnd->render(&bg);
 			}
 			bg.attr_->clear();
+			bg.getAttributeSet().back()->setCount(0);
 		}
 	}
 }

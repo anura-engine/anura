@@ -7,6 +7,7 @@
 
 #include "Canvas.hpp"
 #include "Font.hpp"
+#include "HintMap.hpp"
 #include "Texture.hpp"
 
 namespace 
@@ -86,7 +87,9 @@ void auto_update_window::process()
 	++nframes_;
 	if(window_ == nullptr && SDL_GetTicks() - start_time_ > 2000) {
 		manager_.reset(new SDL::SDL());
-		window_ = KRE::WindowManager::createInstance("SDL", "opengl");
+		HintMapContainer hints;
+		hints.setHint("renderer", "opengl");
+		window_ = KRE::WindowManager::create("Anura auto-update", hints);
 		window_->enableVsync(true);
 		window_->createWindow(800,600);
 		window_->setWindowTitle("Updating Anura...");

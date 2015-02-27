@@ -27,19 +27,17 @@
 #include <string>
 #include <vector>
 
-namespace KRE
+typedef std::vector<std::string> HintList;
+typedef std::map<std::string,HintList> HintMap;
+class HintMapContainer
 {
-	typedef std::vector<std::string> HintList;
-	typedef std::map<std::string,HintList> HintMap;
-	class HintMapContainer
-	{
-	public:
-		HintMapContainer();
-		void setHint(const std::string& hint_name, const std::string& hint);
-		void setHint(const std::string& hint_name, const HintList& hint);
-		const std::vector<std::string>& findHint(const std::string& name) const;
-		HintMap getHints() const { return hints_; }
-	private:
-		HintMap hints_;
-	};
-}
+public:
+	HintMapContainer();
+	void setHint(const std::string& hint_name, const std::string& hint);
+	void setHint(const std::string& hint_name, const HintList& hint);
+	const std::vector<std::string>& findHint(const std::string& name) const;
+	const std::string& findFirstHint(const std::string& name, const std::string& default=std::string()) const;
+	HintMap getHints() const { return hints_; }
+private:
+	HintMap hints_;
+};

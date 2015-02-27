@@ -122,13 +122,16 @@ namespace gui
 		font_size_(14),
 		char_width_(KRE::Font::charWidth(font_size_, monofont())),
 		char_height_(KRE::Font::charHeight(font_size_, monofont())),
-		select_(0,0), cursor_(0,0),
+		select_(0,0), 
+		cursor_(0,0),
 		nrows_((height - BorderSize*2)/char_height_),
 		ncols_((width - 20 - BorderSize*2)/char_width_),
-		scroll_pos_(0), xscroll_pos_(0),
-		begin_highlight_line_(-1), end_highlight_line_(-1),
+		scroll_pos_(0), 
+		xscroll_pos_(0),
+		begin_highlight_line_(-1), 
+		end_highlight_line_(-1),
 		has_focus_(false), 
-	editable_(true), 
+		editable_(true), 
 		is_dragging_(false),
 		begin_enter_return_(true),
 		last_click_at_(-1),
@@ -155,20 +158,26 @@ namespace gui
 	}
 
 	TextEditorWidget::TextEditorWidget(const variant& v, game_logic::FormulaCallable* e)
-		: ScrollableWidget(v,e), last_op_type_(nullptr), font_size_(14), 
-		select_(0,0), cursor_(0,0), scroll_pos_(0), xscroll_pos_(0),
-		begin_highlight_line_(-1), end_highlight_line_(-1),
-		has_focus_(v["focus"].as_bool(false)), 
-	editable_(v["editable"].as_bool(true)), 
-		is_dragging_(false),
-		begin_enter_return_(true),
-		last_click_at_(-1),
-		consecutive_clicks_(0),
-		text_color_(255, 255, 255, 255),
-		in_event_(0),
-		password_entry_(v["password"].as_bool(false)),
-		no_border_(v["no_border"].as_bool(false)),
-		clear_on_focus_(v["clear_on_focus"].as_bool(false))
+		: ScrollableWidget(v,e), 
+		  last_op_type_(nullptr), 
+		  font_size_(14), 
+		  select_(0,0), 
+		  cursor_(0,0), 
+		  scroll_pos_(0), 
+		  xscroll_pos_(0),
+		  begin_highlight_line_(-1), 
+		  end_highlight_line_(-1),
+		  has_focus_(v["focus"].as_bool(false)), 
+		  editable_(v["editable"].as_bool(true)), 
+		  is_dragging_(false),
+		  begin_enter_return_(true),
+		  last_click_at_(-1),
+		  consecutive_clicks_(0),
+		  text_color_(255, 255, 255, 255),
+		  in_event_(0),
+		  password_entry_(v["password"].as_bool(false)),
+		  no_border_(v["no_border"].as_bool(false)),
+		  clear_on_focus_(v["clear_on_focus"].as_bool(false))
 	{
 		ASSERT_LOG(getEnvironment() != 0, "You must specify a callable environment");
 
@@ -483,7 +492,8 @@ namespace gui
 			canvas->drawHollowRect(rect(x()+1, y()+1, width()-2, height()-2), has_focus_ ? KRE::Color::colorWhite() : KRE::Color::colorGray());
 		}
 
-		ScrollableWidget::draw();
+		KRE::Canvas::ModelManager mm(x(), y(), getRotation(), getScale());
+		ScrollableWidget::handleDraw();
 	}
 
 	bool TextEditorWidget::handleEvent(const SDL_Event& event, bool claimed)
@@ -497,7 +507,7 @@ namespace gui
 			claimed = clipboard_handleEvent(event);
 		}
 
-		claimed = ScrollableWidget::processEvent(event, claimed) || claimed;
+		claimed = ScrollableWidget::handleEvent(event, claimed) || claimed;
 
 		switch(event.type) {
 		case SDL_KEYDOWN:

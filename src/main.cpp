@@ -31,10 +31,12 @@
 #endif
 
 #if defined(_MSC_VER)
+#define WIN32_LEAN_AND_MEAN
+#include "windows.h"
 #if defined(_DEBUG)
 #pragma comment(linker, "/SUBSYSTEM:CONSOLE")
 #else
-#pragma comment(linker, "/SUBSYSTEM:WINDOWS")
+//#pragma comment(linker, "/SUBSYSTEM:WINDOWS")
 #endif
 #endif
 
@@ -286,12 +288,17 @@ int main(int argcount, char* argvec[])
 	}
 
 #ifdef _MSC_VER
+#if(_WIN32_WINNT >= 0x0600)
+	SetProcessDPIAware();
+#endif
 #if defined(_DEBUG)
 	std::freopen("CON", "w", stderr);
 	std::freopen("CON", "w", stdout);
 #else
-	std::freopen("stdout.txt","w",stdout);
-	std::freopen("stderr.txt","w",stderr);
+	std::freopen("CON", "w", stderr);
+	std::freopen("CON", "w", stdout);
+//	std::freopen("stdout.txt","w",stdout);
+//	std::freopen("stderr.txt","w",stderr);
 #endif
 #endif
 #if defined(__ANDROID__)
@@ -735,11 +742,15 @@ int main(int argcount, char* argvec[])
 
 	SDL::SDL_ptr manager(new SDL::SDL());
 
-	WindowManagerPtr main_wnd = WindowManager::createInstance("SDL", "opengl");
+	HintMapContainer hints;
+	hints.setHint("renderer", "opengl");
+	WindowManagerPtr main_wnd = WindowManager::create("SDL", hints);
 	main_wnd->enableVsync(true);
 	main_wnd->createWindow(preferences::actual_screen_width(), preferences::actual_screen_height());
 
 	auto canvas = Canvas::getInstance();
+
+	ShaderProgram::loadFromVariant(json::parse_from_file("data/shaders.cfg"));
 
 	// Set the image loading filter function, so that files are found in the correct place.
 	Surface::setFileFilter(FileFilterType::LOAD, [](const std::string& s){ return module::map_file("images/" + s); });
@@ -939,6 +950,5 @@ int main(int argcount, char* argvec[])
 		LOG_ERROR("Illegal object: " << (void*)(*loading.begin())->as_callable_loading());
 		ASSERT_LOG(false, "Unresolved unserialized objects: " << loading.size());
 	}
-
 	return 0;
 }

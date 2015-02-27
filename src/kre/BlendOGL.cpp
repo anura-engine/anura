@@ -59,20 +59,20 @@ namespace KRE
 		GLenum convert_blend_mode(BlendModeConstants bm)
 		{
 			switch(bm) {
-				case BlendModeConstants::BM_ZERO:					return GL_ZERO;
+				case BlendModeConstants::BM_ZERO:						return GL_ZERO;
 				case BlendModeConstants::BM_ONE:						return GL_ONE;
-				case BlendModeConstants::BM_SRC_COLOR:				return GL_SRC_COLOR;
+				case BlendModeConstants::BM_SRC_COLOR:					return GL_SRC_COLOR;
 				case BlendModeConstants::BM_ONE_MINUS_SRC_COLOR:		return GL_ONE_MINUS_SRC_COLOR;
-				case BlendModeConstants::BM_DST_COLOR:				return GL_DST_COLOR;
+				case BlendModeConstants::BM_DST_COLOR:					return GL_DST_COLOR;
 				case BlendModeConstants::BM_ONE_MINUS_DST_COLOR:		return GL_ONE_MINUS_DST_COLOR;
-				case BlendModeConstants::BM_SRC_ALPHA:				return GL_SRC_ALPHA;
+				case BlendModeConstants::BM_SRC_ALPHA:					return GL_SRC_ALPHA;
 				case BlendModeConstants::BM_ONE_MINUS_SRC_ALPHA:		return GL_ONE_MINUS_SRC_ALPHA;
-				case BlendModeConstants::BM_DST_ALPHA:				return GL_DST_ALPHA;
+				case BlendModeConstants::BM_DST_ALPHA:					return GL_DST_ALPHA;
 				case BlendModeConstants::BM_ONE_MINUS_DST_ALPHA:		return GL_ONE_MINUS_DST_ALPHA;
-				case BlendModeConstants::BM_CONSTANT_COLOR:			return GL_CONSTANT_COLOR;
-				case BlendModeConstants::BM_ONE_MINUS_CONSTANT_COLOR:return GL_ONE_MINUS_CONSTANT_COLOR;
-				case BlendModeConstants::BM_CONSTANT_ALPHA:			return GL_CONSTANT_ALPHA;
-				case BlendModeConstants::BM_ONE_MINUS_CONSTANT_ALPHA:return GL_ONE_MINUS_CONSTANT_ALPHA;
+				case BlendModeConstants::BM_CONSTANT_COLOR:				return GL_CONSTANT_COLOR;
+				case BlendModeConstants::BM_ONE_MINUS_CONSTANT_COLOR:	return GL_ONE_MINUS_CONSTANT_COLOR;
+				case BlendModeConstants::BM_CONSTANT_ALPHA:				return GL_CONSTANT_ALPHA;
+				case BlendModeConstants::BM_ONE_MINUS_CONSTANT_ALPHA:	return GL_ONE_MINUS_CONSTANT_ALPHA;
 			}
 			ASSERT_LOG(false, "Unrecognised blend mode");
 			return GL_ZERO;
@@ -136,8 +136,12 @@ namespace KRE
 		if(stored_) {
 			ASSERT_LOG(!get_equation_stack().empty(), "Something went badly wrong blend equation stack was empty.");
 			get_equation_stack().pop();
-			BlendEquation& eqn = get_equation_stack().top();
-			glBlendEquationSeparate(convert_eqn(eqn.getRgbEquation()), convert_eqn(eqn.getAlphaEquation()));
+			if(!get_equation_stack().empty()) {
+				BlendEquation& eqn = get_equation_stack().top();
+				glBlendEquationSeparate(convert_eqn(eqn.getRgbEquation()), convert_eqn(eqn.getAlphaEquation()));
+			} else {
+				glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
+			}
 		}
 	}
 
@@ -162,8 +166,12 @@ namespace KRE
 		if(stored_) {
 			ASSERT_LOG(!get_blend_mode_stack().empty(), "Something went badly wrong blend mode stack was empty.");
 			get_blend_mode_stack().pop();
-			BlendMode& bm = get_blend_mode_stack().top();
-			glBlendFunc(convert_blend_mode(bm.src()), convert_blend_mode(bm.dst()));
+			if(!get_blend_mode_stack().empty()) {
+				BlendMode& bm = get_blend_mode_stack().top();
+				glBlendFunc(convert_blend_mode(bm.src()), convert_blend_mode(bm.dst()));
+			} else {
+				glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			}
 		}
 	}
 

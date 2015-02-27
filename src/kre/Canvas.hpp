@@ -102,7 +102,7 @@ namespace KRE
 		struct ModelManager
 		{
 			ModelManager();
-			explicit ModelManager(int tx, int ty, float rotation=0.0f, float scale=1.0f);
+			explicit ModelManager(int tx, int ty, float angle=0.0f, float scale=1.0f);
 			~ModelManager();
 			void setIdentity();
 			void translate(int tx, int ty);
@@ -112,11 +112,7 @@ namespace KRE
 			CanvasPtr canvas_;
 		};
 
-		const glm::mat4& getModelMatrix() const 
-		{
-			ASSERT_LOG(!model_stack_.empty(), "Model stack was empty");
-			return model_stack_.top();
-		}
+		const glm::mat4& getModelMatrix() const;
 
 		const Color getColor() const {
 			if(color_stack_.empty()) {
@@ -136,7 +132,8 @@ namespace KRE
 		unsigned height_;
 		virtual void handleDimensionsChanged() = 0;
 		std::stack<Color> color_stack_;
-		std::stack<glm::mat4> model_stack_;
+		mutable glm::mat4 model_matrix_;
+		mutable bool model_changed_;
 		std::weak_ptr<WindowManager> window_;
 	};
 

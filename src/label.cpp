@@ -174,8 +174,12 @@ namespace gui
 
 	void Label::recalculateTexture()
 	{
-		texture_ = KRE::Font::getInstance()->renderText(currentText(), *color_, size_, true, font_);
-		innerSetDim(texture_->width(),texture_->height());
+		if(!currentText().empty()) {
+			texture_ = KRE::Font::getInstance()->renderText(currentText(), *color_, size_, true, font_);
+			innerSetDim(texture_->width(), texture_->height());
+		} else {
+			texture_.reset();
+		}
 
 		if(border_color_) {
 			border_texture_ = KRE::Font::getInstance()->renderText(currentText(), *border_color_, size_, true, font_);
@@ -194,7 +198,9 @@ namespace gui
 			KRE::Canvas::getInstance()->blitTexture(border_texture_, 0, rect(x(), y() - border_size_));
 			KRE::Canvas::getInstance()->blitTexture(border_texture_, 0, rect(y() + border_size_));
 		}
-		KRE::Canvas::getInstance()->blitTexture(texture_, 0, rect(x(), y()));
+		if(texture_) {
+			KRE::Canvas::getInstance()->blitTexture(texture_, 0, rect(x(), y()));
+		}
 	}
 
 	void Label::setTexture(KRE::TexturePtr t) {

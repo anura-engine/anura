@@ -28,18 +28,22 @@ namespace KRE
 {
 	Blittable::Blittable()
 		: SceneObject("blittable"),
-		centre_(Centre::MIDDLE),
-		centre_offset_(),
-		changed_(false)
+		  centre_(Centre::MIDDLE),
+		  centre_offset_(),
+		  changed_(false),
+		  horizontal_mirrored_(false),
+		  vertical_mirrored_(false)
 	{
 		init();
 	}
 
 	Blittable::Blittable(const TexturePtr& tex)
 		: SceneObject("blittable"),
-		centre_(Centre::MIDDLE),
-		centre_offset_(),
-		changed_(true)
+		  centre_(Centre::MIDDLE),
+		  centre_offset_(),
+		  changed_(true),
+		  horizontal_mirrored_(false),
+		  vertical_mirrored_(false)
 	{
 		setTexture(tex);
 		init();
@@ -96,10 +100,10 @@ namespace KRE
 					break;
 			}
 
-			const float vx1 = draw_rect_.x() + offs_x;
-			const float vy1 = draw_rect_.y() + offs_y;
-			const float vx2 = draw_rect_.x2() + offs_x;
-			const float vy2 = draw_rect_.y2() + offs_y;
+			const float vx1 = (horizontal_mirrored_ ? draw_rect_.x2() : draw_rect_.x()) + offs_x;
+			const float vy1 = (vertical_mirrored_ ? draw_rect_.y2() : draw_rect_.y()) + offs_y;
+			const float vx2 = (horizontal_mirrored_ ? draw_rect_.x() : draw_rect_.x2()) + offs_x;
+			const float vy2 = (vertical_mirrored_ ? draw_rect_.y() : draw_rect_.y2()) + offs_y;
 
 			const rectf& r = getTexture()->getSourceRectNormalised();
 

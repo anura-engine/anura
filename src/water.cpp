@@ -154,7 +154,7 @@ void Water::addWave(const point& p, double xvelocity, double height, double leng
 	}
 }
 
-void Water::preRender(const KRE::WindowManagerPtr& wm)
+void Water::preRender(const KRE::WindowManagerPtr& wm) const
 {
 	for(const area& a : areas_) {
 		drawArea(a);
@@ -196,6 +196,7 @@ bool Water::drawArea(const Water::area& a) const
 	water_rect.emplace_back(glm::vec2(waterline_rect.x() + waterline_rect.w(), waterline_rect.y() + std::min(100.0f, underwater_rect.h())), col);
 	water_rect.emplace_back(glm::vec2(waterline_rect.x(), underwater_rect.y() + underwater_rect.h()), col);
 	water_rect.emplace_back(glm::vec2(waterline_rect.x() + waterline_rect.w(), underwater_rect.y() + underwater_rect.h()), col);
+	getAttributeSet()[0]->setCount(water_rect.size());
 	waterline_->update(&water_rect);
 
 	// XXX set line width uniform to 2.0
@@ -211,6 +212,7 @@ bool Water::drawArea(const Water::area& a) const
 		line1.emplace_back(glm::vec2(static_cast<float>(seg.first), waterline_rect.y()), glm::u8vec4(255, 255, 255, 255));
 		line1.emplace_back(glm::vec2(static_cast<float>(seg.second), waterline_rect.y()), glm::u8vec4(255, 255, 255, 255));
 		line1.emplace_back(glm::vec2(static_cast<float>(seg.second + EndSegmentSize), waterline_rect.y()), glm::u8vec4(255, 255, 255, 0));
+		getAttributeSet()[0]->setCount(line1.size());
 		line1_->update(&line1);
 
 		std::vector<KRE::vertex_color> line2;
@@ -218,6 +220,7 @@ bool Water::drawArea(const Water::area& a) const
 		line2.emplace_back(glm::vec2(static_cast<float>(seg.first), waterline_rect.y()+2.0f), glm::u8vec4(0, 230, 200, 128));
 		line2.emplace_back(glm::vec2(static_cast<float>(seg.second), waterline_rect.y()+2.0f), glm::u8vec4(0, 230, 200, 128));
 		line2.emplace_back(glm::vec2(static_cast<float>(seg.second + EndSegmentSize), waterline_rect.y()+2.0f), glm::u8vec4(0, 230, 200, 0));
+		getAttributeSet()[0]->setCount(line2.size());
 		line2_->update(&line2);
 	}
 

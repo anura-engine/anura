@@ -475,7 +475,7 @@ namespace gui
 
 		DEFINE_FIELD(on_select, "null")
 			return variant();
-		DEFINE_SET_FIELD_TYPE("builtin Callable")
+		DEFINE_SET_FIELD_TYPE("builtin callable")
 			obj.on_select_ = std::bind(&DropdownWidget::selectDelegate, obj, _1, _2);
 			obj.select_handler_ = obj.getEnvironment()->createFormula(value);
 
