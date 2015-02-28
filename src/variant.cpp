@@ -2011,7 +2011,7 @@ void variant::serializeToString(std::string& str) const
 	}
 	case VARIANT_TYPE_FUNCTION:
 		if(fn_->fn) {
-			fprintf(stderr, "ATTEMPT TO SERIALIZE FUNCTION: %s\n", fn_->fn->str().c_str());
+			LOG_ERROR("ATTEMPT TO SERIALIZE FUNCTION: " << fn_->fn->str());
 		}
 		assert(false);
 	default:

@@ -425,7 +425,7 @@ namespace KRE
 			ASSERT_LOG(glCreateShader != nullptr, "Something bad happened with Glew shader not initialised.");
 			shader_ = glCreateShader(type_);
 			if(shader_ == 0) {
-				std::cerr << "Enable to create shader." << std::endl;
+				LOG_ERROR("Unable to create shader: " << name());
 				return false;
 			}
 			const char* shader_code = code.c_str();
@@ -440,7 +440,7 @@ namespace KRE
 					info_log.resize(info_len);
 					glGetShaderInfoLog(shader_, info_log.capacity(), nullptr, &info_log[0]);
 					std::string s(info_log.begin(), info_log.end());
-					std::cerr << "Error compiling shader: " << s << std::endl;
+					LOG_ERROR("Error compiling shader(" << name() << "): " << s);
 				}
 				glDeleteShader(shader_);
 				shader_ = 0;
@@ -546,7 +546,7 @@ namespace KRE
 					info_log.resize(info_len);
 					glGetProgramInfoLog(object_, info_log.capacity(), nullptr, &info_log[0]);
 					std::string s(info_log.begin(), info_log.end());
-					std::cerr << "Error linking object: " << s << std::endl;
+					LOG_ERROR("Error linking object: " << s);
 				}
 				glDeleteProgram(object_);
 				object_ = 0;

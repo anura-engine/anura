@@ -1556,7 +1556,7 @@ namespace
 
 void Level::setPosition(float x, float y, float z)
 {
-	// XXX fixme
+	position_ = glm::vec3(x, y, z);
 }
 
 void Level::setRotation(float angle, const glm::vec3& axis)
@@ -1583,7 +1583,7 @@ void Level::draw_layer(int layer, int x, int y, int w, int h) const
 	}
 
 	KRE::Color color = KRE::Color::colorWhite();
-	glm::vec2 position;
+	glm::vec3 position;
 
 	if(editor_ && layer == highlight_layer_) {
 		const float alpha = static_cast<float>(0.3f + (1.0f+sin(draw_count/5.0f))*0.35f);
@@ -1623,9 +1623,16 @@ void Level::draw_layer(int layer, int x, int y, int w, int h) const
 		return;
 	}
 
-	auto& blit_cache_info = layer_itor->second;
-	LOG_DEBUG("size of blit_cache_: " << blit_cache_info.getAttributeSet().back()->getCount());
-	KRE::WindowManager::getMainWindow()->render(&blit_cache_info);
+	{
+		// XXX disable blend
+		draw_layer_solid(layer, x, y, w, h);
+	}
+	{
+		auto& blit_cache_info = layer_itor->second;
+		blit_cache_info.setPosition(position_ + position);
+		//LOG_DEBUG("size of blit_cache_: " << blit_cache_info.getAttributeSet().back()->getCount());
+		KRE::WindowManager::getMainWindow()->render(&blit_cache_info);
+	}
 
 	/*
 	const LevelTile* t = &*tile_itor;
@@ -1759,6 +1766,7 @@ void Level::draw_layer_solid(int layer, int x, int y, int w, int h) const
 
 void Level::prepare_tiles_for_drawing()
 {
+	auto main_wnd = KRE::WindowManager::getMainWindow();
 	LevelObject::setCurrentPalette(palettes_used_);
 
 	solid_color_rects_.clear();
@@ -1778,6 +1786,7 @@ void Level::prepare_tiles_for_drawing()
 		auto& blit_cache_info = blit_cache_[tiles_[n].zorder];
 
 		if(!blit_cache_info.isInitialised()) {
+			LOG_DEBUG("zorder: " << tiles_[n].zorder << ", set texture with id: "<< tiles_[n].object->texture()->id());
 			blit_cache_info.setTexture(tiles_[n].object->texture());
 			blit_cache_info.setBase(tiles_[n].x, tiles_[n].y);
 		}
@@ -1790,8 +1799,7 @@ void Level::prepare_tiles_for_drawing()
 		}
 	}
 
-	std::map<int, std::vector<tile_corner>> vertices_o;
-	std::map<int, std::vector<tile_corner>> vertices_t;
+	std::map<int, std::pair<std::vector<tile_corner>, std::vector<tile_corner>>> vertices_ot;
 
 	for(int n = 0; n != tiles_.size(); ++n) {
 		if(!editor_ && (tiles_[n].x <= boundaries().x() - TileSize || tiles_[n].y <= boundaries().y() - TileSize || tiles_[n].x >= boundaries().x2() || tiles_[n].y >= boundaries().y2())) {
@@ -1820,12 +1828,11 @@ void Level::prepare_tiles_for_drawing()
 
 		tiles_[n].draw_disabled = false;
 
-		const int npoints = LevelObject::calculateTileCorners(tiles_[n].object->isOpaque() ? &vertices_o[n] : &vertices_t[n] , tiles_[n]);
+		const int npoints = LevelObject::calculateTileCorners(tiles_[n].object->isOpaque() ? &vertices_ot[tiles_[n].zorder].first : &vertices_ot[tiles_[n].zorder].second, tiles_[n]);
 		if(npoints > 0) {
 			//blit_cache_info.addTextureToList(tiles_[n].object->texture());
 			if(tiles_[n].object->texture() != blit_cache_info.getTexture()) {
-				ASSERT_LOG(false, "Will no deal with multiple textures per level tile -- is a stupid case to have to handle.");
-				//blit_cache_info.clearTexture();
+				ASSERT_LOG(false, "Will not deal with multiple textures per level per zorder -- is a stupid case to have to handle. level '" << this->id() << "' zorder: " << tiles_[n].zorder);
 			}
 
 			/*const int xtile = (tiles_[n].x - blit_cache_info.xbase())/TileSize;
@@ -1845,9 +1852,12 @@ void Level::prepare_tiles_for_drawing()
 		}
 	}
 
-	for(int n = 0; n != tiles_.size(); ++n) {
-		auto& blit_cache_info = blit_cache_[tiles_[n].zorder];
-		blit_cache_info.setVertices(&vertices_o[n], &vertices_t[n]);
+	for(auto& v_ot : vertices_ot) {
+	//for(int n = 0; n != tiles_.size(); ++n) {
+		LOG_DEBUG("Adding " << v_ot.second.first.size() << " opaque vertices and " << v_ot.second.second.size() << " transparent vertices at zorder: " << v_ot.first);
+		//auto& blit_cache_info = blit_cache_[tiles_[n].zorder];
+		auto& blit_cache_info = blit_cache_[v_ot.first];
+		blit_cache_info.setVertices(&v_ot.second.first, &v_ot.second.second);
 	}
 
 	for(int n = 1; n < static_cast<int>(solid_color_rects_.size()); ++n) {
@@ -2044,7 +2054,6 @@ void Level::draw(int x, int y, int w, int h) const
 			stencil->updateMask(alpha_test ? 0x02 : 0x0);
 			
 			if(!water_drawn && *layer > water_zorder) {
-				//water_->draw(x, y, w, h);
 				get_water()->preRender(wnd);
 				wnd->render(get_water());
 				water_drawn = true;
@@ -2059,7 +2068,7 @@ void Level::draw(int x, int y, int w, int h) const
 		}
 
 		if(!water_drawn) {
-			//water_->draw(x, y, w, h);
+			get_water()->preRender(wnd);
 			wnd->render(get_water());
 			water_drawn = true;
 		}
@@ -2127,9 +2136,9 @@ void Level::draw(int x, int y, int w, int h) const
 
 		draw_debug_solid(x, y, w, h);
 
-		if(background_) {
-			background_->drawForeground(start_x, start_y, 0.0f, cycle());
-		}
+//		if(background_) {
+//			background_->drawForeground(start_x, start_y, 0.0f, cycle());
+//		}
 	}
 
 	calculateLighting(start_x, start_y, start_w, start_h);

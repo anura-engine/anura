@@ -21,6 +21,8 @@
 	   distribution.
 */
 
+#include "WindowManager.hpp"
+
 #include "button.hpp"
 #include "controls_dialog.hpp"
 #include "slider.hpp"
@@ -215,7 +217,9 @@ PAUSE_GAME_RESULT show_pause_game_dialog()
 		window_w = button_width*2 + padding*5;
 		window_h = button_height * num_buttons/2 + t1->height() + s1->height() + padding*(3+2+num_buttons/2);
 	}
-	Dialog d((preferences::virtual_screen_width()/2 - window_w/2) & ~1, (preferences::virtual_screen_height()/2 - window_h/2) & ~1, window_w, window_h);
+	//Dialog d((preferences::virtual_screen_width()/2 - window_w/2) & ~1, (preferences::virtual_screen_height()/2 - window_h/2) & ~1, window_w, window_h);
+	auto wnd = KRE::WindowManager::getMainWindow();
+	Dialog d((wnd->logicalWidth()/2 - window_w/2) & ~1, (wnd->logicalHeight()/2 - window_h/2) & ~1, window_w, window_h);
 	d.setPadding(padding);
 	d.setBackgroundFrame("empty_window");
 	d.setUpscaleFrame(upscale_dialog_frame);

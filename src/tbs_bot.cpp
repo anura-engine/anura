@@ -79,13 +79,13 @@ private:
 
 	bot::~bot()
 	{
-	fprintf(stderr, "YYY: destroy bot: %p\n", this);
+	LOG_DEBUG("YYY: destroy bot: " << this);
 //	has_quit_ = true;
 		timer_.cancel();
 	if(timer_proxy_ != nullptr) {
 		timer_proxy_->cancel();
 	}
-	fprintf(stderr, "YYY: done destroy bot: %p\n", this);
+	LOG_DEBUG("YYY: done destroy bot: " << this);
 	}
 
 	void bot::process(const boost::system::error_code& error)
@@ -94,7 +94,6 @@ private:
 	if(has_quit_) {
 		return;
 	}
-	//fprintf(stderr, "BOT: PROCESS @%d %d/%d\n", SDL_GetTicks(), (int)response_.size(), (int)script_.size());
 		if(error == boost::asio::error::operation_aborted) {
 			LOG_INFO("tbs::bot::process cancelled");
 			return;
@@ -105,10 +104,9 @@ private:
 			on_create_.reset();
 		}
 
-		if(((!client_ && !preferences::internal_tbs_server()) || (!internal_client_ && preferences::internal_tbs_server()))
-			&& response_.size() < script_.size()) {
+		if(((!client_ && !preferences::internal_tbs_server()) || (!internal_client_ && preferences::internal_tbs_server())) && response_.size() < script_.size()) {
 			variant script = script_[response_.size()];
-		fprintf(stderr, "BOT: SEND @%d Sending response %d/%d: %p %s\n", SDL_GetTicks(), (int)response_.size(), (int)script_.size(), internal_client_.get(), script.write_json().c_str());
+			LOG_DEBUG("BOT: SEND @" << profile::get_tick_time() << " Sending response " << response_.size() << "/" << script_.size() << ": " << internal_client_.get() << " " << script.write_json());
 			variant send = script["send"];
 			if(send.is_string()) {
 				send = game_logic::Formula(send).execute(*this);
@@ -129,8 +127,8 @@ private:
 				client_->set_use_local_cache(false);
 				client_->send_request(send, callable, std::bind(&bot::handle_response, this, std::placeholders::_1, callable));
 			}
-	} else if(response_.size() >= script_.size()) {
-		fprintf(stderr, "BOT: NO PROCESS DUE TO %p, %d < %d\n", internal_client_.get(), (int)response_.size(), (int)script_.size());
+		} else if(response_.size() >= script_.size()) {
+			LOG_INFO("BOT: NO PROCESS DUE TO " << internal_client_.get() << ", " << response_.size() << " < " << script_.size());
 		}
 
 		timer_.expires_from_now(boost::posix_time::milliseconds(g_tbs_bot_delay_ms));

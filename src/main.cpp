@@ -275,6 +275,8 @@ void set_alpha_masks()
 	});
 }
 
+extern int g_tile_scale;
+extern int g_tile_size;
 
 int main(int argcount, char* argvec[])
 {
@@ -350,6 +352,9 @@ int main(int argcount, char* argvec[])
             argv.resize(argv.size()-2);
         }
 	}
+
+	LOG_INFO("Default Tile Size: " << g_tile_size);
+	LOG_INFO("Default Tile Scale: " << g_tile_scale);
 
 	LOG_INFO_NOLF("Build Options:");
 	for(auto bo : preferences::get_build_options()) {
@@ -746,7 +751,7 @@ int main(int argcount, char* argvec[])
 	hints.setHint("renderer", "opengl");
 	WindowManagerPtr main_wnd = WindowManager::create("SDL", hints);
 	main_wnd->enableVsync(true);
-	main_wnd->createWindow(preferences::actual_screen_width(), preferences::actual_screen_height());
+	main_wnd->createWindow(1600, 900);
 
 	auto canvas = Canvas::getInstance();
 

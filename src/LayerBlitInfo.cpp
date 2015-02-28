@@ -28,16 +28,11 @@ LayerBlitInfo::LayerBlitInfo()
 	addAttributeSet(tab);
 }
 
-void LayerBlitInfo::addTextureToList(KRE::TexturePtr tex)
-{
-	tex_list_.emplace_back(tex);
-}
-
 void LayerBlitInfo::setVertices(std::vector<tile_corner>* op, std::vector<tile_corner>* tr)
 {
 	//LOG_DEBUG("Adding " << op->size() << " opqaue vertices and " << tr->size() << " transparent vertices.");
-	getAttributeSet()[0]->setCount(getAttributeSet()[0]->getCount() + op->size());
-	opaques_->update(op, opaques_->end());
-	getAttributeSet()[1]->setCount(getAttributeSet()[1]->getCount() + tr->size());
-	transparent_->update(tr, transparent_->end());
+	getAttributeSet()[0]->setCount(op->size());
+	opaques_->update(op);
+	getAttributeSet()[1]->setCount(tr->size());
+	transparent_->update(tr);
 }

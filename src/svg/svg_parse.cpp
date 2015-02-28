@@ -49,14 +49,14 @@ namespace KRE
 			void display_ptree(ptree const& pt)
 			{
 				for(auto& v : pt) {
-					std::cout << v.first << ": " << v.second.get_value<std::string>() << "\n";
+					LOG_DEBUG(v.first << ": " << v.second.get_value<std::string>());
 					display_ptree( v.second );
 				}
 			}
 
 			void print_matrix(const cairo_matrix_t& mat)
 			{
-				std::cerr << "MAT(" << mat.xx << " " << mat.yx << " " << mat.xy << " " << mat.yy << " " << mat.x0 << " " << mat.y0 << ")" << std::endl;
+				LOG_DEBUG("MAT(" << mat.xx << " " << mat.yx << " " << mat.xy << " " << mat.yy << " " << mat.x0 << " " << mat.y0 << ")");
 			}
 		}
 

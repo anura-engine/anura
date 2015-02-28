@@ -300,17 +300,14 @@ void set_core_module_name(const std::string& module_name)
 	}
 
 	const std::string make_base_module_path(const std::string& name) {
-	fprintf(stderr, "ZZZ: FINDING BASE MODULE PATH FOR %s\n", name.c_str());
 		std::string result;
 		variant best_version;
 		for(int i = 0; i != module_dirs().size(); ++i) {
 			const std::string& path = module_dirs()[i];
-		fprintf(stderr, "ZZZ: CANDIDATE: %s\n", path.c_str());
 			std::string full_path = path + "/" + name + "/";
 			if(sys::file_exists(full_path + "module.cfg")) {
 				variant config = json::parse(sys::read_file(full_path + "module.cfg"));
 				variant version = config["version"];
-		fprintf(stderr, "ZZZ: CANDIDATE VERSION %s\n", version.write_json().c_str());
 				if(best_version.is_null() || version > best_version) {
 					best_version = version;
 					result = full_path;
@@ -318,8 +315,6 @@ void set_core_module_name(const std::string& module_name)
 
 			}
 		}
-
-	fprintf(stderr, "ZZZ: MODULE PATH FOR %s -> %s\n", name.c_str(), result.c_str());
 
 		if(result.empty() == false) {
 			return result;
@@ -1002,13 +997,11 @@ const char* InstallImagePath = ".";
 		request.add("module_id", module_id);
 
 		std::string version_str;
-	std::string current_path = install_image_ ? InstallImagePath : make_base_module_path(module_id);
+		std::string current_path = install_image_ ? InstallImagePath : make_base_module_path(module_id);
 
-	fprintf(stderr, "ZZZ: install_module %s -> %s\n", module_id.c_str(), current_path.c_str());
 		if(!current_path.empty() && !force && sys::file_exists(current_path + "/module.cfg")) {
 			variant config = json::parse(sys::read_file(current_path + "/module.cfg"));
 			request.add("current_version", config["version"]);
-		fprintf(stderr, "ZZZ: current version: %s\n", config["version"].write_json().c_str());
 
 			if(!current_path.empty() && !force && sys::file_exists(current_path + "/manifest.cfg")) {
 				request.add("manifest", json::parse(sys::read_file(current_path + "/manifest.cfg")));

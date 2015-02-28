@@ -89,9 +89,9 @@ namespace KRE
 			if(size_ == 0) {
 				glBufferData(GL_ARRAY_BUFFER, size+offset, 0, access_pattern_);
 			}
-			ASSERT_LOG(size <= size_, 
-				"When buffering data size exceeds data store size: " 
-				<< size 
+			ASSERT_LOG(size+offset <= size_, 
+				"When buffering data offset+size exceeds data store size: " 
+				<< size+offset 
 				<< " > " 
 				<< size_);
 			glBufferSubData(GL_ARRAY_BUFFER, offset, size, value);

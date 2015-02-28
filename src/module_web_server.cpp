@@ -101,7 +101,7 @@ void ModuleWebServer::handlePost(socket_ptr socket, variant doc, const http::env
 				std::string response = "{\nstatus: \"ok\",\nversion: " + server_version.write_json() + ",\nmodule: ";
 				{
 					std::string contents = sys::read_file(module_path);
-					fprintf(stderr, "MANIFEST: %d\n", (int)doc.has_key("manifest"));
+					LOG_INFO("MANIFEST: " << static_cast<int>(doc.has_key("manifest")));
 					if(doc.has_key("manifest")) {
 						variant their_manifest = doc["manifest"];
 						variant module = json::parse(contents);
@@ -122,12 +122,12 @@ void ModuleWebServer::handlePost(socket_ptr socket, variant doc, const http::env
 
 						for(auto p : our_manifest.as_map()) {
 							if(!their_manifest.has_key(p.first)) {
-								fprintf(stderr, "their manifest does not have key: %s\n", p.first.write_json().c_str());
+								LOG_WARN("their manifest does not have key: " << p.first.write_json().c_str());
 								continue;
 							}
 
 							if(p.second["md5"] != their_manifest[p.first]["md5"]) {
-								fprintf(stderr, "their manifest mismatch key: %s\n", p.first.write_json().c_str());
+								LOG_ERROR("their manifest mismatch key: " << p.first.write_json().c_str());
 								continue;
 							}
 

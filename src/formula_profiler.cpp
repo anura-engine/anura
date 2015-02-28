@@ -96,13 +96,12 @@ namespace formula_profiler
 		if(!first_call && g_instrumentation.empty() == false) {
 			const int time_us = (tv.tv_sec - prev_call.tv_sec)*1000000 + (tv.tv_usec - prev_call.tv_usec);
 			if(time_us) {
-				fprintf(stderr, "FRAME INSTRUMENTATION TOTAL TIME: %dus. INSTRUMENTS: ", time_us);
+				LOG_INFO_NOLF("FRAME INSTRUMENTATION TOTAL TIME: " << time_us << "us. INSTRUMENTS: ");
 				for(std::map<const char*,InstrumentationRecord>::const_iterator i = g_instrumentation.begin(); i != g_instrumentation.end(); ++i) {
 					const int percent = (i->second.time_us*100)/time_us;
-					fprintf(stderr, "%s: %dus (%d%%) in %d calls; ", i->first, i->second.time_us, percent, i->second.nsamples);
+					LOG_INFO_NOLF(i->first << ": " << i->second.time_us << "us (" << percent << "%) in " << i->second.nsamples << " calls; ");
 				}
-
-				fprintf(stderr, "\n");
+				LOG_INFO("");
 			}
 
 			g_instrumentation.clear();
@@ -202,7 +201,7 @@ namespace formula_profiler
 
 			main_thread = SDL_ThreadID();
 
-			fprintf(stderr, "SETTING UP PROFILING: %s\n", output_file);
+			LOG_INFO("SETTING UP PROFILING: " << output_file);
 			profiler_on = true;
 			output_fname = output_file;
 
@@ -212,7 +211,7 @@ namespace formula_profiler
 			// Crappy windows approximation.
 			sdl_profile_timer = SDL_AddTimer(10, sdl_timer_callback, 0);
 			if(sdl_profile_timer == 0) {
-				std::cerr << "Couldn't create a profiling timer!" << std::endl;
+				LOG_WARN("Couldn't create a profiling timer!");
 			}
 #else
 			signal(SIGPROF, sigprof_handler);

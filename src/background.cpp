@@ -161,8 +161,16 @@ Background::Background(variant node, int palette)
 			bg.scale = 1;
 		}
 
+		if(palette_ == -1) {
+			bg.texture = KRE::Texture::createTexture(bg.image);
+		} else {
+			bg.texture = KRE::Texture::createTexture(bg.image);
+			bg.texture->addPalette(graphics::get_palette_surface(palette_));
+		}
+
+
 		using namespace KRE;
-		auto ab = DisplayDevice::createAttributeSet(true, false, false);
+		auto ab = DisplayDevice::createAttributeSet(false, false, false);
 		bg.attr_ = std::make_shared<Attribute<short_vertex_texcoord>>(AccessFreqHint::DYNAMIC, AccessTypeHint::DRAW);
 		bg.attr_->addAttributeDesc(AttributeDesc(AttrType::POSITION, 2, AttrFormat::SHORT, false, sizeof(short_vertex_texcoord), offsetof(short_vertex_texcoord, vertex)));
 		bg.attr_->addAttributeDesc(AttributeDesc(AttrType::TEXTURE, 2, AttrFormat::FLOAT, false, sizeof(short_vertex_texcoord), offsetof(short_vertex_texcoord, tc)));
@@ -404,20 +412,11 @@ void Background::drawLayer(int x, int y, const rect& area, float rotation, const
 	}
 
 	if(!bg.texture) {
-		if(palette_ == -1) {
-			bg.texture = KRE::Texture::createTexture(bg.image);
-		} else {
-			bg.texture = KRE::Texture::createTexture(bg.image);
-			bg.texture->addPalette(graphics::get_palette_surface(palette_));
-		}
-
-		if(bg.y2 == 0) {
-			bg.y2 = bg.texture->surfaceHeight();
-		}
+		return;
 	}
 
-	if(!bg.texture) {
-		return;
+	if(bg.y2 == 0) {
+		bg.y2 = bg.texture->surfaceHeight();
 	}
 
 	ASSERT_GT(bg.texture->surfaceHeight(), 0);

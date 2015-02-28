@@ -343,10 +343,10 @@ void remove_callback(lcb_t instance, const void* cookie, lcb_error_t error, cons
 	{
 		DbClientPtr client = DbClient::create();
 
-		client->get("abc", [](variant value) { fprintf(stderr, "RESULT: %s\n", value.write_json().c_str()); });
+		client->get("abc", [](variant value) { LOG_DEBUG("RESULT: " << value.write_json()); });
 		client->process();
 
-		client->put("abc", variant(54), []() { fprintf(stderr, "DONE\n"); }, []() { fprintf(stderr, "ERROR\n"); } );
+		client->put("abc", variant(54), []() { LOG_DEBUG("DONE"); }, []() { LOG_ERROR("ERROR"); } );
 
 		client->process();
 	}

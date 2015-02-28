@@ -295,7 +295,7 @@ namespace KRE
 		for(auto as : r->getAttributeSet()) {
 			//ASSERT_LOG(as->getCount() > 0, "No (or negative) number of vertices in attribute set. " << as->getCount());
 			if(as->getCount() <= 0) {
-				LOG_WARN("No (or negative) number of vertices in attribute set. " << as->getCount());
+				//LOG_WARN("No (or negative) number of vertices in attribute set. " << as->getCount());
 				continue;
 			}
 			GLenum draw_mode = convert_drawing_mode(as->getDrawMode());

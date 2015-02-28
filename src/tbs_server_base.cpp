@@ -77,7 +77,6 @@ namespace tbs
 		g->nlast_touch = nheartbeat_;
 
 		std::vector<variant> users = msg["users"].as_list();
-		fprintf(stderr, "ZZZ: Add users: %d\n", (int)users.size());
 		for(int i = 0; i != users.size(); ++i) {
 			const std::string user = users[i]["user"].as_string();
 			const int session_id = users[i]["session_id"].as_int();
@@ -94,12 +93,9 @@ namespace tbs
 			cli_info.last_contact = nheartbeat_;
 			cli_info.session_id = session_id;
 
-			fprintf(stderr, "ZZZ: Add player: %s\n", users[i].write_json().c_str());
-
 			if(users[i]["bot"].as_bool(false) == false) {
 				g->game_state->add_player(user);
 			} else {
-				fprintf(stderr, "ZZZ: Add AI\n");
 				g->game_state->add_ai_player(user, users[i]);
 			}
 
@@ -158,7 +154,6 @@ namespace tbs
 		}
 
 		if(type == "observe_game") {
-			fprintf(stderr, "ZZZ: RECEIVE observe_game\n");
 			const int id = msg["game_id"].as_int(-1);
 			const std::string user = msg["user"].as_string();
 
@@ -171,13 +166,11 @@ namespace tbs
 			}
 
 			if(!g) {
-				fprintf(stderr, "ZZZ: SEND unknown_game\n");
 				send_fn(json::parse("{ \"type\": \"unknown_game\" }"));
 				return;
 			}
 
 			if(clients_.count(session_id)) {
-				fprintf(stderr, "ZZZ: SEND reuse_ssoin_id\n");
 				send_fn(json::parse("{ \"type\": \"reuse_session_id\" }"));
 				return;
 			}
@@ -192,7 +185,6 @@ namespace tbs
 			g->clients.push_back(session_id);
 
 			send_fn(json::parse(formatter() << "{ \"type\": \"observing_game\" }"));
-			fprintf(stderr, "ZZZ: RESPONDED TO observe_game\n");
 
 			return;
 		}
@@ -201,7 +193,7 @@ namespace tbs
 		if(client_itor == clients_.end()) {
 			LOG_INFO("BAD SESSION ID: " << session_id << ": " << type);
 			for(auto i : clients_) {
-				fprintf(stderr, "VALID SESSION ID: %d\n", i.first);
+				LOG_INFO("VALID SESSION ID: " << i.first);
 			}
 			send_fn(json::parse("{ \"type\": \"invalid_session\" }"));
 			return;
@@ -311,7 +303,7 @@ namespace tbs
 
 		games_.erase(std::remove(games_.begin(), games_.end(), game_info_ptr()), games_.end());
 
-		std::cerr << "USE_COUNT RESET cli_info.game: " << cli_info.game.use_count() << " / " << clients_.size() << "\n";
+		LOG_INFO("USE_COUNT RESET cli_info.game: " << cli_info.game.use_count() << " / " << clients_.size());
 		cli_info.game.reset();
 
 		if(games_size != games_.size()) {
@@ -368,7 +360,7 @@ namespace tbs
 
 		if(cli_info.game) {
 			if(type == "quit") {
-				std::cerr << "GOT_QUIT: " << cli_info.session_id << "\n";
+				LOG_INFO("GOT_QUIT: " << cli_info.session_id);
 				quit_games(cli_info.session_id);
 				queue_msg(cli_info.session_id, "{ \"type\": \"bye\" }");
 

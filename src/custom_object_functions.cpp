@@ -325,7 +325,7 @@ namespace
 			tbs::client* tbs_client = client_.try_convert<tbs::client>();
 			if(tbs_client == nullptr) {
 				tbs::internal_client* tbs_iclient = client_.try_convert<tbs::internal_client>();
-			fprintf(stderr, "XX tbs_send: %d\n", tbs_iclient->session_id());
+				LOG_DEBUG("XX tbs_send: " << tbs_iclient->session_id());
 				ASSERT_LOG(tbs_iclient != nullptr, "tbs_client object isn't valid.");
 				tbs_iclient->send_request(msg_, tbs_iclient->session_id(), callable, std::bind(tbs_send_event, EntityPtr(&ob), callable, _1));
 			} else {

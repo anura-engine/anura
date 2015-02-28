@@ -775,79 +775,90 @@ namespace preferences
 	
 	void set_widescreen()
 	{
-		virtual_screen_width_ = (virtual_screen_height_*16)/9;
-		actual_screen_width_ = (actual_screen_height_*16)/9;
-		recalculate_draw_mask();
+		LOG_ERROR("Ignored: set_widescreen()");
+		//virtual_screen_width_ = (virtual_screen_height_*16)/9;
+		//actual_screen_width_ = (actual_screen_height_*16)/9;
+		//recalculate_draw_mask();
 	}
 	
 	int virtual_screen_width()
 	{
-		return virtual_screen_width_;
+		return KRE::WindowManager::getMainWindow()->logicalWidth();
+		//return virtual_screen_width_;
 	}
 	
 	int virtual_screen_height()
 	{
-		return virtual_screen_height_;
+		return KRE::WindowManager::getMainWindow()->logicalHeight();
+		//return virtual_screen_height_;
 	}
 	
-	void set_virtual_screen_width (int width)
+	void set_virtual_screen_width(int width)
 	{
-		virtual_screen_width_ = width;
-		recalculate_draw_mask();
+		LOG_ERROR("Ignored: set_virtual_screen_width()");
+		//virtual_screen_width_ = width;
+		//recalculate_draw_mask();
 	}
 
 	void tweak_virtual_screen(int awidth, int aheight) 
 	{
-		virtual_screen_width_ = (virtual_screen_height_ * awidth)/aheight;
+		LOG_ERROR("Ignored: tweak_virtual_screen()");
+		//virtual_screen_width_ = (virtual_screen_height_ * awidth)/aheight;
 	}
 	
 	void set_virtual_screen_height (int height)
 	{
-		virtual_screen_height_ = height;
+		LOG_ERROR("Ignored: set_virtual_screen_height()");
+		//virtual_screen_height_ = height;
 	}
 	
 	int actual_screen_width()
 	{
-		return actual_screen_width_;
+		//return actual_screen_width_;
+		return KRE::WindowManager::getMainWindow()->width();
 	}
 	
 	int actual_screen_height()
 	{
-		return actual_screen_height_;
+		return KRE::WindowManager::getMainWindow()->height();
+		//return actual_screen_height_;
 	}
 	
 	void set_actual_screen_width(int width)
 	{
-		assert(width);
-		actual_screen_width_ = width;
-		if(screen_editor_mode) {
-			virtual_screen_width_ = actual_screen_width_;
-		}
-		recalculate_draw_mask();
+		LOG_ERROR("Ignored: set_actual_screen_width()");
+		//assert(width);
+		//actual_screen_width_ = width;
+		//if(screen_editor_mode) {
+		//	virtual_screen_width_ = actual_screen_width_;
+		//}
+		//recalculate_draw_mask();
 	}
 	
 	void set_actual_screen_height(int height)
 	{
-		assert(height);
-		actual_screen_height_ = height;
-		if(screen_editor_mode) {
-			virtual_screen_height_ = actual_screen_height_;
-		}
+		LOG_ERROR("Ignored: set_actual_screen_width()");
+		//assert(height);
+		//actual_screen_height_ = height;
+		//if(screen_editor_mode) {
+		//	virtual_screen_height_ = actual_screen_height_;
+		//}
 	}
 	
 	void set_actual_screen_dimensions_persistent(int width, int height)
 	{
-		assert(width);
-		assert(height);
-		actual_screen_width_ = width;
-		actual_screen_height_ = height;
-		tweak_virtual_screen(width, height);
-		screen_dimensions_are_persistent = true;
-		if(screen_editor_mode) {
-			virtual_screen_width_ = actual_screen_width_;
-			virtual_screen_height_ = actual_screen_height_;
-		}
-		recalculate_draw_mask();
+		LOG_ERROR("Ignored: set_actual_screen_width()");
+		//assert(width);
+		//assert(height);
+		//actual_screen_width_ = width;
+		//actual_screen_height_ = height;
+		//tweak_virtual_screen(width, height);
+		//screen_dimensions_are_persistent = true;
+		//if(screen_editor_mode) {
+		//	virtual_screen_width_ = actual_screen_width_;
+		//	virtual_screen_height_ = actual_screen_height_;
+		//}
+		//recalculate_draw_mask();
 	}
 
 	bool load_compiled()
@@ -1321,10 +1332,10 @@ namespace preferences
 			type_safety_checks_ = false;
 		} else if(s == "--tbs-server") {
 			internal_tbs_server_ = true;
-			fprintf(stderr, "TURN ON internal server\n");
+			LOG_INFO("TURN ON internal server");
 		} else if(s == "--no-tbs-server") {
 			internal_tbs_server_ = false;
-			fprintf(stderr, "TURN OFF internal server\n");
+			LOG_INFO("TURN OFF internal server");
 		} else if(s == "--no-autopause") {
 			allow_autopause_ = false;
 		} else if(s == "--autopause") {

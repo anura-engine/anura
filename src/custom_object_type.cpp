@@ -848,7 +848,7 @@ std::map<std::string,CustomObjectType::EditorSummary> CustomObjectType::getEdito
 		variant info;
 		const std::string* path = getObjectPath(id + ".cfg");
 		if(path == nullptr) {
-			fprintf(stderr, "NO FILE FOR OBJECT '%s'\n", id.c_str());
+			LOG_WARN("NO FILE FOR OBJECT '" << id << "'");
 		}
 
 		const int mod_time = static_cast<int>(sys::file_mod_time(*path));
@@ -1381,17 +1381,6 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 	//END OF FIRST PARSE.
 	//We've now constructed our definition of the object, and we can
 	//safely query other object type definitions
-/*
-	for(int n = 0; n != callable_definition_->getNumSlots(); ++n) {
-		if(callable_definition_->getEntry(n)->variant_type) {
-			//fprintf(stderr, "  %s: %s\n", callable_definition_->getEntry(n)->id.c_str(), callable_definition_->getEntry(n)->variant_type->to_string().c_str());
-		} else {
-			//fprintf(stderr, "  %s: (none)\n", callable_definition_->getEntry(n)->id.c_str());
-		}
-	}
-	//fprintf(stderr, "}\n");
-*/
-
 	callable_definition_->setObjectType(variant_type::get_custom_object(id_));
 
 	if(!is_variation && is_recursive_call) {

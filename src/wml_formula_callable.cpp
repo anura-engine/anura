@@ -175,7 +175,6 @@ namespace game_logic
 
 	void wmlFormulaCallableReadScope::registerSerializedObject(intptr_t addr, WmlSerializableFormulaCallablePtr ptr)
 	{
-		//fprintf(stderr, "REGISTER SERIALIZED: 0x%x\n", (int)addr);
 		if(ptr.get() != nullptr) {
 			get_registered_objects()[addr] = ptr;
 		}
@@ -206,12 +205,11 @@ namespace game_logic
 		std::set<variant*> v;
 		std::set<variant*> unfound_variants;
 		swap_variants_loading(v);
-		for(std::set<variant*>::iterator i = v.begin(); i != v.end(); ++i) {
-			variant& var = **i;
-			//fprintf(stderr, "LOAD SERIALIZED: 0x%x\n", (int)var.as_callable_loading());
+		for(auto& i : v) {
+			variant& var = *i;
 			auto itor = get_registered_objects().find(var.as_callable_loading());
 			if(itor == get_registered_objects().end()) {
-				unfound_variants.insert(*i);
+				unfound_variants.insert(i);
 			} else {
 				var = variant(itor->second.get());
 			}

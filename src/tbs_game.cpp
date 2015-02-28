@@ -354,7 +354,7 @@ namespace tbs
 			outgoing_messages_.back().recipients.push_back(nplayer);
 		}
 
-	fprintf(stderr, "QUEUE MESSAGE %d (((%s)))\n", nplayer, msg.c_str());
+		LOG_DEBUG("QUEUE MESSAGE " << nplayer << " (((" << msg << ")))");
 	}
 
 	void game::queue_message(const char* msg, int nplayer)

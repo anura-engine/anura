@@ -380,7 +380,7 @@ namespace controls
 		++npackets_received;
 
 		if(len < 13) {
-			fprintf(stderr, "ERROR: CONTROL PACKET TOO SHORT: %d\n", (int)len);
+			LOG_ERROR("CONTROL PACKET TOO SHORT: " << len);
 			return;
 		}
 
@@ -389,12 +389,12 @@ namespace controls
 		unsigned slot = static_cast<unsigned>(*buf++);
 
 		if(slot >= nplayers) {
-			fprintf(stderr, "ERROR: BAD SLOT NUMBER: %d/%d\n", slot, nplayers);
+			LOG_ERROR("BAD SLOT NUMBER: " << slot << "/" << nplayers);
 			return;
 		}
 
 		if(slot == local_player) {
-			fprintf(stderr, "ERROR: NETWORK PLAYER SAYS THEY HAVE THE SAME SLOT AS US!\n");
+			LOG_ERROR("NETWORK PLAYER SAYS THEY HAVE THE SAME SLOT AS US!");
 			return;
 		}
 
@@ -404,7 +404,7 @@ namespace controls
 		buf += 4;
 
 		if(current_cycle < highest_confirmed[slot]) {
-			fprintf(stderr, "DISCARDING PACKET -- OUT OF ORDER: %d < %d\n", current_cycle, highest_confirmed[slot]);
+			LOG_ERROR("DISCARDING PACKET -- OUT OF ORDER: " << current_cycle << " < " << highest_confirmed[slot]);
 			return;
 		}
 
@@ -415,9 +415,9 @@ namespace controls
 
 		if(checksum && our_checksums[current_cycle-1]) {
 			if(checksum == our_checksums[current_cycle-1]) {
-				std::cerr << "CHECKSUM MATCH FOR " << current_cycle << ": " << checksum << "\n";
+				LOG_DEBUG("CHECKSUM MATCH FOR " << current_cycle << ": " << checksum);
 			} else {
-				std::cerr << "CHECKSUM DID NOT MATCH FOR " << current_cycle << ": " << checksum << " VS " << our_checksums[current_cycle-1] << "\n";
+				LOG_ERROR("CHECKSUM DID NOT MATCH FOR " << current_cycle << ": " << checksum << " VS " << our_checksums[current_cycle-1]);
 			}
 
 		}
@@ -437,7 +437,7 @@ namespace controls
 		buf += 4;
 
 		if(*(end_buf-1) != 0) {
-			fprintf(stderr, "bad packet, no null terminator\n");
+			LOG_ERROR("bad packet, no null terminator");
 			return;
 		}
 
@@ -451,7 +451,7 @@ namespace controls
 			for(int n = 0; n != diff && buf != end_buf; ++n) {
 				++buf;
 				if(buf == end_buf) {
-					fprintf(stderr, "bad packet, incorrect null termination\n");
+					LOG_ERROR("bad packet, no null termination");
 					return;
 				}
 				buf += strlen(buf)+1;
@@ -462,7 +462,7 @@ namespace controls
 
 		for(int cycle = start_cycle; cycle <= current_cycle; ++cycle) {
 			if(buf == end_buf) {
-				fprintf(stderr, "bad packet, incorrect number of null terminators\n");
+				LOG_ERROR("bad packet, incorrect number of null terminators");
 				return;
 			}
 			ControlFrame state;
@@ -470,7 +470,7 @@ namespace controls
 
 			++buf;
 			if(buf == end_buf) {
-				fprintf(stderr, "bad packet, incorrect number of null terminators\n");
+				LOG_ERROR("bad packet, incorrect number of null terminators");
 				return;
 			}
 
@@ -479,7 +479,7 @@ namespace controls
 
 			if(unsigned(cycle) < controls[slot].size()) {
 				if(controls[slot][cycle] != state) {
-					fprintf(stderr, "RECEIVED CORRECTION\n");
+					LOG_INFO("RECEIVED CORRECTION");
 					controls[slot][cycle] = state;
 					if(first_invalid_cycle_var == -1 || first_invalid_cycle_var > cycle) {
 						//mark us as invalid back to this point, so game logic
@@ -488,7 +488,7 @@ namespace controls
 					}
 				}
 			} else {
-				fprintf(stderr, "RECEIVED FUTURE PACKET!\n");
+				LOG_INFO("RECEIVED FUTURE PACKET!");
 				while(controls[slot].size() <= unsigned(cycle)) {
 					controls[slot].push_back(state);
 				}
@@ -514,7 +514,7 @@ namespace controls
 	void write_control_packet(std::vector<char>& v)
 	{
 		if(local_player < 0 || local_player >= nplayers) {
-			fprintf(stderr, "NO VALID LOCAL PLAYER\n");
+			LOG_ERROR("NO VALID LOCAL PLAYER");
 			return;
 		}
 
@@ -556,7 +556,7 @@ namespace controls
 			v.insert(v.end(), user, user + controls[local_player][index].user.size()+1);
 		}
 
-		fprintf(stderr, "WRITE CONTROL PACKET: %d\n", (int)v.size());
+		LOG_INFO("WRITE CONTROL PACKET: " << v.size());
 	}
 
 	const variant& user_ctrl_output()
@@ -615,24 +615,23 @@ namespace controls
 
 	void debug_dump_controls()
 	{
-		fprintf(stderr, "CONTROLS:");
+		LOG_INFO_NOLF("CONTROLS:");
 		for(unsigned n = 0; n < nplayers; ++n) {
-			fprintf(stderr, " %d:", n);
+			LOG_INFO_NOLF(" %d:" << n);
 			for(unsigned m = 0; m < controls[n].size() && m < static_cast<unsigned>(highest_confirmed[n]); ++m) {
 				char c = controls[n][m].keys;
-				fprintf(stderr, "%02x", (int)c);
+				LOG_INFO_NOLF("%02x" << static_cast<int>(c));
 			}
 		}
-
-		fprintf(stderr, "\n");
+		LOG_INFO("");
 
 		for(unsigned n = 0; n < nplayers; ++n) {
 			for(unsigned m = 0; m < controls[n].size() && m < static_cast<unsigned>(highest_confirmed[n]); ++m) {
-				fprintf(stderr, "CTRL PLAYER %d CYCLE %d: ", n, m);
+				LOG_INFO_NOLF("CTRL PLAYER " << n << " CYCLE " << m << ": ");
 				for(int j = 0; j != NUM_CONTROLS; ++j) {
-					fprintf(stderr, (1 << j)&controls[n][m].keys ? "1" : "0");
+					LOG_INFO_NOLF(((1 << j)&controls[n][m].keys) ? "1" : "0");
 				}
-				fprintf(stderr, "\n");
+				LOG_INFO("");
 			}
 		}
 	}

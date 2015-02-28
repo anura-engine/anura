@@ -189,7 +189,7 @@ namespace http
 
 			environment env = parse_env(msg);
 			const int content_length = atoi(env["content-length"].c_str());
-			fprintf(stderr, "PARSE content-length: %d\n", content_length);
+			LOG_DEBUG("PARSE content-length: " << content_length);
 
 			const char* payload = nullptr;
 			const char* payload1 = strstr(msg.c_str(), "\n\n");
@@ -206,7 +206,7 @@ namespace http
 
 			const int payload_len = payload ? (msg.c_str() + msg.size() - payload) : 0;
 
-			fprintf(stderr, "PAYLOAD LEN: %d < %d\n", payload_len, content_length);
+			LOG_DEBUG("PAYLOAD LEN: " << payload_len << " < " << content_length);
 			if(!payload || payload_len < content_length) {
 				if(payload_len) {
 					recv_buf->wanted = msg.size() + (content_length - payload_len);
@@ -303,7 +303,7 @@ namespace http
 		std::shared_ptr<std::string> str(new std::string(buf.str()));
 		*str += msg;
 
-	fprintf(stderr, "SEND_MSG(((%s)))\n", str->c_str());
+		LOG_INFO("SEND_MSG(((" << str << ")))");
 
 		boost::asio::async_write(*socket, boost::asio::buffer(*str),
 								 std::bind(&web_server::handle_send, this, socket, std::placeholders::_1, std::placeholders::_2, str->size(), str));

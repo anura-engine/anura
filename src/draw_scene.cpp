@@ -132,7 +132,7 @@ void draw_scene(const Level& lvl, screen_position& pos, const Entity* focus, boo
 {
 	const bool draw_ready = update_camera_position(lvl, pos, focus, doDraw);
 	if(draw_ready) {
-		render_scene(lvl, pos);
+		render_scene(const_cast<Level&>(lvl), pos);
 	}
 }
 
@@ -361,7 +361,7 @@ bool update_camera_position(const Level& lvl, screen_position& pos, const Entity
 	return draw_level;
 }
 
-void render_scene(const Level& lvl, const screen_position& pos) 
+void render_scene(Level& lvl, const screen_position& pos) 
 {
 	auto wnd = KRE::WindowManager::getMainWindow();
 	auto canvas = KRE::Canvas::getInstance();
@@ -409,7 +409,7 @@ void render_scene(const Level& lvl, const screen_position& pos)
 	}
 
 	// XXX fixme
-	// lvl.setPosition(static_cast<float>(-xscroll), static_cast<float>(-yscroll));
+	lvl.setPosition(static_cast<float>(-xscroll), static_cast<float>(-yscroll));
 	lvl.draw_background(bg_xscroll, bg_yscroll, camera_rotation);
 
 	int draw_width = screen_width;

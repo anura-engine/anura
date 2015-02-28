@@ -33,11 +33,6 @@ class LayerBlitInfo : public KRE::SceneObject
 {
 public:
 	LayerBlitInfo();
-	void setTexture(KRE::TexturePtr tex) { tex_ = tex; }
-	KRE::TexturePtr getTexture() { return tex_; }
-	void clearTexture() { tex_.reset(); }
-	void addTextureToList(KRE::TexturePtr tex);
-	void clearTextureList() { tex_list_.clear(); }
 	bool isInitialised() const { return initialised_; }
 	int xbase() const { return xbase_; }
 	int ybase() const { return ybase_; }
@@ -47,8 +42,6 @@ public:
 
 	void setVertices(std::vector<tile_corner>* op, std::vector<tile_corner>* tr);
 private:
-	KRE::TexturePtr tex_;
-	std::vector<KRE::TexturePtr> tex_list_;
 	int xbase_;
 	int ybase_;
 	bool initialised_;

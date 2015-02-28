@@ -43,16 +43,16 @@ int get_tile_corners(std::vector<tile_corner>* result, const KRE::TexturePtr& t,
 	const int xpos = BaseTileSize*(tile_num%(width/BaseTileSize)) + area.x();
 	const int ypos = BaseTileSize*(tile_num/(width/BaseTileSize)) + area.y();
 
-	rectf coords = t->getNormalisedTextureCoords<float>(0, rect(xpos,ypos,xpos+area.w(),ypos+area.h()));
+	rectf coords = t->getNormalisedTextureCoords<float>(0, rect(xpos,ypos,area.w(),area.h()));
 
 	int area_x = area.x()*g_tile_scale;
 	if(reverse) {
 		coords = rectf::from_coordinates(coords.x2(), coords.y(), coords.x(), coords.y2());
-		area_x = 32 - area.x()*g_tile_scale - area.w()*g_tile_scale;
+		area_x = (BaseTileSize * g_tile_scale) - (area.x() - area.w()) * g_tile_scale;
 	}
 
-	const unsigned short x2 = area_x + x + area.w()*g_tile_scale;
-	const unsigned short y2 = area.y()*g_tile_scale + y + area.h()*g_tile_scale;
+	const unsigned short x2 = x + area_x + area.w() * g_tile_scale;
+	const unsigned short y2 = y + (area.y() + area.h()) * g_tile_scale;
 
 	result->emplace_back(glm::u16vec2(x,y), glm::vec2(coords.x(), coords.y()));
 	result->emplace_back(glm::u16vec2(x,y2), glm::vec2(coords.x(), coords.y2()));

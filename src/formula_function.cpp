@@ -3661,8 +3661,6 @@ FUNCTION_DEF_IMPL
 				str += args()[n]->evaluate(variables).to_debug_string();
 			}
 
-			//fprintf(stderr, "DEBUG FUNCTION: %s\n", str.c_str());
-
 			return variant(new debug_command(str));
 
 		FUNCTION_TYPE_DEF

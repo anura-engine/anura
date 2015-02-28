@@ -1333,7 +1333,7 @@ END_DEFINE_FN
 	{
 		std::deque<std::string> argv(args.begin(), args.end());
 		if(argv.size() != 1) {
-			fprintf(stderr, "ERROR: Provide one argument: name of svg to convert");
+			std::cerr << "ERROR: Provide one argument: name of svg to convert\n";
 		}
 
 		{

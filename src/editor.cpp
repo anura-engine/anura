@@ -2356,7 +2356,7 @@ void editor::handleMouseButtonUp(const SDL_MouseButtonEvent& event)
 	} else {
 		//some kind of object editing
 		if(event.button == SDL_BUTTON_RIGHT) {
-			fprintf(stderr, "RIGHT: %d, %d -- %d, %d\n", anchorx_, xpos, anchory_, ypos);
+			LOG_DEBUG("RIGHT: " << anchorx_ << ", " << xpos << " -- " << anchory_ << ", " << ypos);
 			if(abs(anchorx_ - xpos) < 16 && abs(anchory_ - ypos) < 16) {
 				std::vector<EntityPtr> chars = lvl_->get_characters_at_point(anchorx_, anchory_, xpos_, ypos_);
 				std::vector<editor_menu_dialog::menu_item> items;
