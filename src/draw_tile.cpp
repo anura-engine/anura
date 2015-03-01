@@ -62,6 +62,7 @@ int get_tile_corners(std::vector<tile_corner>* result, const KRE::TexturePtr& t,
 	result->emplace_back(glm::u16vec2(x2,y), glm::vec2(coords.x2(), coords.y()));
 	result->emplace_back(glm::u16vec2(x2,y2), glm::vec2(coords.x2(), coords.y2()));
 
+	LOG_DEBUG("Added rect: [" << x << "," << y << "," << x2 << "," << y2 << "] : " << coords << " tile_num: " << tile_num);
 	return 6;
 }
 

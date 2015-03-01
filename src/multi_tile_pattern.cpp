@@ -79,7 +79,7 @@ void MultiTilePattern::init(variant node)
 
 void MultiTilePattern::load(variant node, const std::string& tile_id)
 {
-	for(variant pattern : node["MultiTilePattern"].as_list()) {
+	for(variant pattern : node["multi_tile_pattern"].as_list()) {
 		patterns().push_back(MultiTilePattern(pattern, tile_id));
 	}
 }
@@ -111,7 +111,7 @@ namespace
 				width = items.size();
 			}
 
-			ASSERT_LOG(width == items.size(), "Inconsistent MultiTilePattern size in pattern " << pattern);
+			ASSERT_LOG(width == items.size(), "Inconsistent multi-tile pattern size in pattern " << pattern);
 
 			for(std::string item : items) {
 				std::vector<const char*> arrows;

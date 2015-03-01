@@ -302,11 +302,12 @@ namespace KRE
 		// This draws an aliased line -- consider making this a nicer unaliased line.
 		glm::mat4 mvp = mvp_ * getModelMatrix();
 
-		static OpenGL::ShaderProgramPtr shader = OpenGL::ShaderProgram::factory("simple");
+		static OpenGL::ShaderProgramPtr shader = OpenGL::ShaderProgram::factory("attr_color_shader");
 		shader->makeActive();
 		shader->setUniformValue(shader->getMvpUniform(), glm::value_ptr(mvp));
 
-		shader->setUniformValue(shader->getLineWidthUniform(), line_width);
+		/// XXX FIXME no line_width in attr_color_shader
+		//shader->setUniformValue(shader->getLineWidthUniform(), line_width);
 		shader->setUniformValue(shader->getColorUniform(), glm::value_ptr(glm::vec4(1.0f)));
 		glEnableVertexAttribArray(shader->getVertexAttribute());
 		glEnableVertexAttribArray(shader->getColorAttribute());
