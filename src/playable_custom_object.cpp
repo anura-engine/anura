@@ -335,7 +335,6 @@ variant playable_custom_object::get_player_value_by_slot(int slot) const
             return variant();
         }
         
-        fprintf(stderr,"control lock %x\n", (int) *locked_control_frame);
         for(int i = 0; i < 8; ++i){
             if((*locked_control_frame & (0x01 << i)) ){
                 
