@@ -58,7 +58,9 @@ public:
 	explicit local_controls_lock(unsigned char state=0);
 	~local_controls_lock();
 };
+const unsigned char* get_local_control_lock();
 
+    
 enum { CLEAR_LOCKS = 1 };
 
 class control_backup_scope_impl;

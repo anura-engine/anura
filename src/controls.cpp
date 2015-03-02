@@ -240,6 +240,16 @@ local_controls_lock::~local_controls_lock()
 	}
 }
 
+
+const unsigned char* get_local_control_lock()
+{
+    if(local_control_locks.empty() == false){
+        return &local_control_locks.top().keys;
+    }else{
+        return nullptr;
+    }
+}
+
 namespace {
 //array of keys which we are ignoring. We ignore keys on the end of a dialog.
 //keys will be unignored as soon as they are no longer depressed.
