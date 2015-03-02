@@ -27,7 +27,6 @@
 #include <vector>
 
 #include "Blittable.hpp"
-#include "SceneObject.hpp"
 
 #include "anura_shader.hpp"
 #include "formula.hpp"

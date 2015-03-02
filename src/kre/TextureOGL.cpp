@@ -734,7 +734,7 @@ namespace KRE
 		}
 	}
 
-	unsigned OpenGLTexture::id(int n)
+	unsigned OpenGLTexture::id(int n) const
 	{
 		ASSERT_LOG(n < static_cast<int>(texture_data_.size()), "Requested texture id outside bounds.");
 		return *texture_data_[n].id;

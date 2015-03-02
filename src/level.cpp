@@ -1783,7 +1783,7 @@ void Level::prepare_tiles_for_drawing()
 			continue;
 		}
 
-		auto& blit_cache_info = blit_cache_[tiles_[n].zorder];
+		LayerBlitInfo& blit_cache_info = blit_cache_[tiles_[n].zorder];
 
 		if(!blit_cache_info.isInitialised()) {
 			LOG_DEBUG("zorder: " << tiles_[n].zorder << ", set texture with id: "<< tiles_[n].object->texture()->id());

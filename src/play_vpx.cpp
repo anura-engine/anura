@@ -167,7 +167,7 @@ namespace movie
 			}
 		}
 
-		if(texture_ == nullptr) {
+		if(!texture_) {
 			genTextures();
 		}
 	}
@@ -205,10 +205,12 @@ namespace movie
 			return;
 		}
 
+		ASSERT_LOG(false, "vpx::handleDraw() fixme");
 		//KRE::Canvas::ShaderManger sm("");
-		texture_->update(0, 0, img_->d_w, img_->d_h, img_->stride, static_cast<const void*>(img_->planes));
+		/*texture_->update(0, 0, img_->d_w, img_->d_h, img_->stride, static_cast<const void*>(img_->planes));
 
 		KRE::Canvas::getInstance()->blitTexture(texture_, 0, rect(0, 0, width(), height()));
+		*/
 	}
 }
 

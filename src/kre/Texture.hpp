@@ -91,7 +91,7 @@ namespace KRE
 
 		virtual void init(int n) = 0;
 		virtual void bind() = 0;
-		virtual unsigned id(int n = 0) = 0;
+		virtual unsigned id(int n = 0) const = 0;
 
 		virtual void update(int n, int x, int width, void* pixels) = 0;
 		// Less safe version for updating a multi-texture.
@@ -173,6 +173,22 @@ namespace KRE
 		int getMaxPalettes() const { return max_palettes_; }
 
 		virtual TexturePtr clone() = 0;
+
+		bool operator==(const Texture& other) const {
+			if(texture_params_.size() == other.texture_params_.size()) {
+				for(int n = 0; n != static_cast<int>(texture_params_.size()); ++n) {
+					// XXX how far should we got here to compare the textures?
+					if(id(n) != other.id(n)) {
+						return false;
+					}
+				}
+				return true;
+			}
+			return false;
+		}
+		bool operator!=(const Texture& other) const {
+			return !operator==(other);
+		}
 	protected:
 		explicit Texture(const variant& node, const std::vector<SurfacePtr>& surfaces);
 		explicit Texture(const std::vector<SurfacePtr>& surfaces,
@@ -245,4 +261,12 @@ namespace KRE
 		void initFromVariant(texture_params_iterator tp, const variant& node);
 		void internalInit(texture_params_iterator tp);
 	};
+
+	inline bool operator==(const TexturePtr& lhs, const TexturePtr& rhs) {
+		return *lhs == *rhs;
+	}
+
+	inline bool operator!=(const TexturePtr& lhs, const TexturePtr& rhs) {
+		return *lhs != *rhs;
+	}
 }

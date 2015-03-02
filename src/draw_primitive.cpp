@@ -256,7 +256,7 @@ namespace graphics
 
 			tex_.reset(new Attribute<glm::vec2>(AccessFreqHint::DYNAMIC, KRE::AccessTypeHint::DRAW));
 			tex_->addAttributeDesc(AttributeDesc(AttrType::POSITION, 2, AttrFormat::FLOAT, false));
-			if(texture_ == nullptr) {
+			if(!texture_) {
 				tex_->disable();
 			}
 			ab->addAttribute(tex_);

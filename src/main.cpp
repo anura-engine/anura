@@ -751,7 +751,8 @@ int main(int argcount, char* argvec[])
 	hints.setHint("renderer", "opengl");
 	WindowManagerPtr main_wnd = WindowManager::create("SDL", hints);
 	main_wnd->enableVsync(true);
-	main_wnd->createWindow(1600, 900);
+	//main_wnd->createWindow(1600, 900);
+	main_wnd->createWindow(800, 600);
 
 	auto canvas = Canvas::getInstance();
 

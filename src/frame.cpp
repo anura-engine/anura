@@ -27,7 +27,6 @@
 
 #include <boost/lexical_cast.hpp>
 
-#include "Blittable.hpp"
 #include "DisplayDevice.hpp"
 #include "TextureUtils.hpp"
 #include "WindowManager.hpp"
@@ -196,6 +195,7 @@ Frame::Frame(variant node)
 	 collision_areas_inside_frame_(true),
 	 current_palette_(-1)
 {
+	blit_target_.setCentre(KRE::Blittable::Centre::TOP_LEFT);
 	if(node.has_key("obj") == false) {		
 		if(node.has_key("fbo")) {
 			blit_target_.setTexture(node["fbo"].convert_to<TextureObject>()->texture());
@@ -430,7 +430,7 @@ void Frame::playSound(const void* object) const
 
 void Frame::buildAlphaFromFrameInfo()
 {
-	if(blit_target_.getTexture() == nullptr) {
+	if(!blit_target_.getTexture()) {
 		return;
 	}
 
@@ -464,7 +464,7 @@ void Frame::buildAlphaFromFrameInfo()
 void Frame::buildAlpha()
 {
 	frames_.resize(nframes_);
-	if(blit_target_.getTexture() == nullptr) {
+	if(!blit_target_.getTexture()) {
 		return;
 	}
 

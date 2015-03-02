@@ -137,13 +137,13 @@ void auto_update_window::draw() const
 	}
 
 	KRE::TexturePtr message_surf(render_updater_text(message_, KRE::Color(255, 255, 255)));
-	if(message_surf != nullptr) {
+	if(!message_surf) {
 		canvas->blitTexture(message_surf, 0, window_->width()/2 - message_surf->width()/2, 40 + window_->height()/2 - message_surf->height()/2);
 	}
 	
 	progress_animation& anim = progress_animation::get();
 	auto anim_tex = anim.tex();
-	if(anim_tex != nullptr) {
+	if(!anim_tex) {
 		rect src = anim.calculate_rect(nframes_);
 		rect dest(window_->width()/2 - src.w()/2, window_->height()/2 - src.h()*2, src.w(), src.h());
 		canvas->blitTexture(anim_tex, src, 0, dest);

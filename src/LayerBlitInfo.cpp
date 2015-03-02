@@ -31,8 +31,10 @@ LayerBlitInfo::LayerBlitInfo()
 void LayerBlitInfo::setVertices(std::vector<tile_corner>* op, std::vector<tile_corner>* tr)
 {
 	//LOG_DEBUG("Adding " << op->size() << " opqaue vertices and " << tr->size() << " transparent vertices.");
+	LOG_DEBUG("Adding " << op->size() << " opaque vertices");
 	getAttributeSet()[0]->setCount(op->size());
 	opaques_->update(op);
+	LOG_DEBUG("Adding " << tr->size() << " transparent vertices");
 	getAttributeSet()[1]->setCount(tr->size());
 	transparent_->update(tr);
 }

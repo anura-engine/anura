@@ -40,7 +40,7 @@ namespace KRE
 		void bind() override;
 
 		void init(int n) override;
-		unsigned id(int n) override;
+		unsigned id(int n) const override;
 
 		void update(int n, int x, int width, void* pixels) override;
 		void update(int n, int x, int y, int width, int height, const void* pixels) override;

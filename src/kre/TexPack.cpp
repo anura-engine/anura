@@ -76,7 +76,6 @@ namespace KRE
 				tn->child_[0] = child_[0];
 				tn->child_[1] = child_[1];
 				surface_ = nullptr;
-				r_ = rect();
 				child_[0] = tn;
 				if(should_grow_vertically(r.w(), r.h())) {
 					child_[1] = new tex_node(surface, rect(r_.x(), r_.y()+r_.h(), r_.w(), r.h()));
@@ -120,8 +119,6 @@ namespace KRE
 			
 			const rect& get_rect() const { return r_; }
 			
-			const rect& get_bounds() const { return bounds_; }
-
 			void blit(SurfacePtr dest, std::vector<rect>* rects) {
 				if(child_[0]) {
 					child_[0]->blit(dest, rects);
@@ -136,7 +133,6 @@ namespace KRE
 			}
 		private:
 			rect r_;
-			rect bounds_;
 			tex_node* child_[2];
 			SurfacePtr surface_;
 		};
@@ -178,19 +174,15 @@ namespace KRE
 			}
 		}
 
+		ASSERT_LOG(root.size() > 1, "Currently we are limiting things to one surface.");
+
 		// process root
 		for(auto& n : root) {
 			std::stringstream ss;
-			auto dest = Surface::create(n->get_rect().w(), n->get_rect().h(), PixelFormat::PF::PIXELFORMAT_RGBA8888);
-			n->blit(dest, &out_rects_);
-			ss << "images/temp/nn" << counter++ << ".png";
-			dest->savePng(ss.str());
-			if(outp_ == nullptr) {
-				outp_ = Texture::createTexture(dest);
-			} else {
-				//outp_->addTexture(dest);
-				ASSERT_LOG(false, "need to add more interfaces for multi-dimension textures.");
-			}
+			outp_ = Surface::create(n->get_rect().w(), n->get_rect().h(), PixelFormat::PF::PIXELFORMAT_RGBA8888);
+			n->blit(outp_, &out_rects_);
+			ss << "temp/nn" << counter++ << ".png";
+			outp_->savePng(ss.str());
 		}
 
 		// delete root.

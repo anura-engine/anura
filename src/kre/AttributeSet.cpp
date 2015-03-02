@@ -174,6 +174,8 @@ namespace KRE
 		  hardware_buffer_(a.hardware_buffer_),
 		  enabled_(a.enabled_)
 	{
-		hardware_ = DisplayDevice::createAttributeBuffer(hardware_buffer_, this);
+		// XXX still don't really like this. need to consider it more.
+		//hardware_ = DisplayDevice::createAttributeBuffer(hardware_buffer_, this);
+		hardware_ = a.hardware_;
 	}
 }
