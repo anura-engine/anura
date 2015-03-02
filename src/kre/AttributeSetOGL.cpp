@@ -80,11 +80,9 @@ namespace KRE
 
 	void HardwareAttributeOGL::update(const void* value, ptrdiff_t offset, size_t size)
 	{
-		LOG_DEBUG("updating buffer: " << buffer_id_);
 		glBindBuffer(GL_ARRAY_BUFFER, buffer_id_);
 		if(offset == 0) {
 			// this is a minor optimisation.
-			LOG_DEBUG("buffering " << size << " bytes of data.");
 			glBufferData(GL_ARRAY_BUFFER, size, 0, access_pattern_);
 			glBufferSubData(GL_ARRAY_BUFFER, 0, size, value);
 			size_ = size;

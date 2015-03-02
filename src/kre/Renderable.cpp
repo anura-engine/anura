@@ -248,7 +248,7 @@ namespace KRE
 
 	void Renderable::setShader(ShaderProgramPtr shader)
 	{
-		LOG_DEBUG("Reconfiguring attribute sets as new shader specified.");
+		//LOG_DEBUG("Reconfiguring attribute sets as new shader specified.");
 		shader_ = shader;
 		for(auto& attrset : attributes_) {
 			shader_->configureActives(attrset);
