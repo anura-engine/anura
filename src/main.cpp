@@ -356,11 +356,10 @@ int main(int argcount, char* argvec[])
 	LOG_INFO("Default Tile Size: " << g_tile_size);
 	LOG_INFO("Default Tile Scale: " << g_tile_scale);
 
-	LOG_INFO_NOLF("Build Options:");
+	LOG_INFO("Build Options:");
 	for(auto bo : preferences::get_build_options()) {
-		LOG_INFO_NOLF(" " << bo);
+		LOG_INFO("    " << bo);
 	}
-	LOG_INFO("");
 
 	if(sys::file_exists("./master-config.cfg")) {
 		LOG_INFO("LOADING CONFIGURATION FROM master-config.cfg");

@@ -1628,7 +1628,7 @@ void Level::draw_layer(int layer, int x, int y, int w, int h) const
 		draw_layer_solid(layer, x, y, w, h);
 	}
 	{
-		auto& blit_cache_info = layer_itor->second;
+		auto& blit_cache_info = *layer_itor->second;
 		blit_cache_info.setPosition(position_ + position);
 		//LOG_DEBUG("size of blit_cache_: " << blit_cache_info.getAttributeSet().back()->getCount());
 		KRE::WindowManager::getMainWindow()->render(&blit_cache_info);
@@ -1783,19 +1783,22 @@ void Level::prepare_tiles_for_drawing()
 			continue;
 		}
 
-		LayerBlitInfo& blit_cache_info = blit_cache_[tiles_[n].zorder];
+		std::shared_ptr<LayerBlitInfo>& blit_cache_info_ptr = blit_cache_[tiles_[n].zorder];
+		if(blit_cache_info_ptr == nullptr) {
+			blit_cache_info_ptr = std::make_shared<LayerBlitInfo>();
+		}
 
-		if(!blit_cache_info.isInitialised()) {
+		if(!blit_cache_info_ptr->isInitialised()) {
 			LOG_DEBUG("zorder: " << tiles_[n].zorder << ", set texture with id: "<< tiles_[n].object->texture()->id());
-			blit_cache_info.setTexture(tiles_[n].object->texture());
-			blit_cache_info.setBase(tiles_[n].x, tiles_[n].y);
+			blit_cache_info_ptr->setTexture(tiles_[n].object->texture());
+			blit_cache_info_ptr->setBase(tiles_[n].x, tiles_[n].y);
 		}
 
-		if(tiles_[n].x < blit_cache_info.xbase()) {
-			blit_cache_info.setXbase(tiles_[n].x);
+		if(tiles_[n].x < blit_cache_info_ptr->xbase()) {
+			blit_cache_info_ptr->setXbase(tiles_[n].x);
 		}
-		if(tiles_[n].y < blit_cache_info.ybase()) {
-			blit_cache_info.setYbase(tiles_[n].y);
+		if(tiles_[n].y < blit_cache_info_ptr->ybase()) {
+			blit_cache_info_ptr->setYbase(tiles_[n].y);
 		}
 	}
 
@@ -1824,40 +1827,22 @@ void Level::prepare_tiles_for_drawing()
 			continue;
 		}
 
-		auto& blit_cache_info = blit_cache_[tiles_[n].zorder];
+		auto blit_cache_info_ptr = blit_cache_[tiles_[n].zorder];
 
 		tiles_[n].draw_disabled = false;
 
 		const int npoints = LevelObject::calculateTileCorners(tiles_[n].object->isOpaque() ? &vertices_ot[tiles_[n].zorder].first : &vertices_ot[tiles_[n].zorder].second, tiles_[n]);
 		if(npoints > 0) {
-			//blit_cache_info.addTextureToList(tiles_[n].object->texture());
-			if(tiles_[n].object->texture() != blit_cache_info.getTexture()) {
+			if(tiles_[n].object->texture() != blit_cache_info_ptr->getTexture()) {
 				ASSERT_LOG(false, "Will not deal with multiple textures per level per zorder -- is a stupid case to have to handle. level '" << this->id() << "' zorder: " << tiles_[n].zorder);
 			}
-
-			/*const int xtile = (tiles_[n].x - blit_cache_info.xbase())/TileSize;
-			const int ytile = (tiles_[n].y - blit_cache_info.ybase())/TileSize;
-			ASSERT_GE(xtile, 0);
-			ASSERT_GE(ytile, 0);
-			if(blit_cache_info.indicies.size() <= ytile) {
-				blit_cache_info.indicies.resize(ytile+1);
-			}
-
-			if(blit_cache_info.indicies[ytile].size() <= xtile) {
-				blit_cache_info.indicies[ytile].resize(xtile+1, std::numeric_limits<LayerBlitInfo::index_type>::max());
-			}
-
-			blit_cache_info.indicies[ytile][xtile] = (blit_cache_info.vertices.size() - npoints) * (tiles_[n].object->isOpaque() ? 1 : -1);
-			*/
 		}
 	}
 
 	for(auto& v_ot : vertices_ot) {
-	//for(int n = 0; n != tiles_.size(); ++n) {
 		LOG_DEBUG("Adding " << v_ot.second.first.size() << " opaque vertices and " << v_ot.second.second.size() << " transparent vertices at zorder: " << v_ot.first);
-		//auto& blit_cache_info = blit_cache_[tiles_[n].zorder];
-		auto& blit_cache_info = blit_cache_[v_ot.first];
-		blit_cache_info.setVertices(&v_ot.second.first, &v_ot.second.second);
+		auto blit_cache_info_ptr = blit_cache_[v_ot.first];
+		blit_cache_info_ptr->setVertices(&v_ot.second.first, &v_ot.second.second);
 	}
 
 	for(int n = 1; n < static_cast<int>(solid_color_rects_.size()); ++n) {

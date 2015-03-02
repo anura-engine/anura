@@ -629,7 +629,7 @@ private:
 
 	LevelPtr suspended_level_;
 
-	mutable std::map<int, LayerBlitInfo> blit_cache_;
+	mutable std::map<int, std::shared_ptr<LayerBlitInfo>> blit_cache_;
 	mutable glm::vec3 position_;
 
 	KRE::RenderTargetPtr rt_;
