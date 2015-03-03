@@ -1767,7 +1767,7 @@ void Level::draw_layer_solid(int layer, int x, int y, int w, int h) const
 void Level::prepare_tiles_for_drawing()
 {
 	auto main_wnd = KRE::WindowManager::getMainWindow();
-	LevelObject::setCurrentPalette(palettes_used_);
+	LevelObject::setCurrentPalette(0/*palettes_used_*/);
 
 	solid_color_rects_.clear();
 	blit_cache_.clear();
@@ -1833,8 +1833,10 @@ void Level::prepare_tiles_for_drawing()
 
 		const int npoints = LevelObject::calculateTileCorners(tiles_[n].object->isOpaque() ? &vertices_ot[tiles_[n].zorder].first : &vertices_ot[tiles_[n].zorder].second, tiles_[n]);
 		if(npoints > 0) {
-			if(tiles_[n].object->texture() != blit_cache_info_ptr->getTexture()) {
-				ASSERT_LOG(false, "Will not deal with multiple textures per level per zorder -- is a stupid case to have to handle. level '" << this->id() << "' zorder: " << tiles_[n].zorder);
+			if(*tiles_[n].object->texture() != *blit_cache_info_ptr->getTexture()) {
+				ASSERT_LOG(false, "Will not deal with multiple textures per level per zorder -- is a stupid case to have to handle. level '" 
+					<< this->id() << "' zorder: " << tiles_[n].zorder
+					<< " ; " << tiles_[n].object->texture()->isPaletteized() << " " << blit_cache_info_ptr->getTexture()->isPaletteized());
 			}
 		}
 	}

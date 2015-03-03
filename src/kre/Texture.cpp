@@ -405,6 +405,10 @@ namespace KRE
 
 	void Texture::addPalette(const SurfacePtr& palette)
 	{
+		if(palette == nullptr) {
+			LOG_WARN("Ignoring request to add empty palette surface.");
+			return;
+		}
 		ASSERT_LOG(static_cast<int>(texture_params_.size()) == 1 && !is_paletteized_ || is_paletteized_ && static_cast<int>(texture_params_.size()) == 2, "Currently we only support converting textures to palette versions that have one texture. may life in future.");
 		is_paletteized_ = true;
 		handleAddPalette(palette);
@@ -511,6 +515,24 @@ namespace KRE
 		texture_params_[n].surface_width = surf->width();
 		texture_params_[n].surface_height = surf->height();
 		internalInit(texture_params_.begin() + n);
+	}
+
+	Color Texture::mapPaletteColor(const Color& color, int palette)
+	{
+		if(!isPaletteized()) {
+			return color;
+		}
+		if(palette >= getMaxPalettes()) {
+			return color;
+		}
+		ASSERT_LOG(texture_params_.size() == 2, "Incorrect number of surfaces in texture.");
+		auto& surf = texture_params_[1].surface;
+		for(int x = 0; x != surf->width(); ++x) {
+			if(surf->getColorAt(x, 0) == color) {
+				return surf->getColorAt(x, palette);
+			}			
+		}
+		return color;
 	}
 }
 

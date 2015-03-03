@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
+	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -51,6 +51,8 @@ namespace KRE
 				} else if(v.first == "rect") {
 					elements_.emplace_back(new rectangle(parent, v.second));
 				} else if(v.first == "text") {
+					elements_.emplace_back(new text(parent, v.second));
+				} else if(v.first == "tspan") {
 					elements_.emplace_back(new text(parent, v.second));
 				} else if(v.first == "line") {
 					elements_.emplace_back(new line(parent,v.second));

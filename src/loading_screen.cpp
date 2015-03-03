@@ -121,7 +121,7 @@ void LoadingScreen::drawInternal(const std::string& message)
 		// todo: we need to load this information (x,y offsets, colors, sizes from a customisation file)
 		const int size = 18;
 		auto tex = KRE::Font::getInstance()->renderText(i18n::tr(message), KRE::Color::colorWhite(), size, false, font);
-		ASSERT_LOG(!tex, "Couldn't render text to texture.");
+		ASSERT_LOG(tex, "Couldn't render text to texture.");
 		canvas->blitTexture(tex, 0, rect(screen_w/2 - tex->width()/2, screen_h/2 - tex->height()/2 + bar_height + 10));
 	}
 }

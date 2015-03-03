@@ -24,6 +24,8 @@
 #include <map>
 #include <vector>
 
+#include <boost/bimap.hpp>
+
 #include "asserts.hpp"
 #include "module.hpp"
 #include "surface_cache.hpp"
@@ -33,39 +35,23 @@ namespace graphics
 {
 	namespace 
 	{
-		struct palette_definition 
+		typedef boost::bimap<std::string,int> palette_map_type;
+		typedef palette_map_type::value_type palette_pair;
+
+		palette_map_type& get_palette_map()
 		{
-			std::string name;
-			std::map<uint32_t, uint32_t> mapping;
-		};
-
-		std::vector<palette_definition> palettes;
-
-		void load_palette_def(const std::string& id)
-		{
-			palette_definition def;
-			def.name = id;
-			KRE::SurfacePtr s = SurfaceCache::get("palette/" + id + ".png", false);
-
-			auto converted = s->convert(KRE::PixelFormat::PF::PIXELFORMAT_ARGB8888);
-			s = converted;
-
-			ASSERT_LOG(s != nullptr, "COULD NOT LOAD PALETTE IMAGE " << id);
-			ASSERT_LOG(s->getPixelFormat()->bytesPerPixel() == 4, "PALETTE " << id << " NOT IN 32bpp PIXEL FORMAT");
-
-			const uint32_t* pixels = reinterpret_cast<const uint32_t*>(s->pixelsWriteable());
-			for(int n = 0; n < s->width() * s->height() - 1; n += 2) {
-				def.mapping.insert(std::pair<uint32_t,uint32_t>(pixels[0], pixels[1]));
-				pixels += 2;
-			}
-
-			palettes.push_back(def);
+			static palette_map_type res;
+			return res;
 		}
 	}
 
 	KRE::SurfacePtr get_palette_surface(int palette)
 	{
-		return KRE::Surface::create(module::map_file("palette/" + get_palette_name(palette) + ".png"));
+		auto& name = get_palette_name(palette);
+		if(name.empty()) {
+			return nullptr;
+		}
+		return KRE::Surface::create(module::map_file("palette/" + name + ".png"));
 	}
 
 
@@ -75,71 +61,78 @@ namespace graphics
 			return -1;
 		}
 
-		static std::map<std::string, int> m;
-		std::map<std::string, int>::const_iterator i = m.find(name);
-		if(i != m.end()) {
-			return i->second;
+		auto it = get_palette_map().left.find(name);
+		if(it != get_palette_map().left.end()) {
+			return it->second;
 		}
-
-		const int id = m.size();
-		m[name] = id;
-		load_palette_def(name);
-		return get_palette_id(name);
+		int id = get_palette_map().size();
+		get_palette_map().insert(palette_pair(name, id));
+		LOG_DEBUG("Added palette '" << name << "' at index: " << id);
+		return id;
 	}
 
 	const std::string& get_palette_name(int id)
 	{
-		if(id < 0 || static_cast<unsigned>(id) >= palettes.size()) {
+		auto it = get_palette_map().right.find(id);
+		if(it == get_palette_map().right.end()) {
 			static const std::string str;
 			return str;
-		} else {
-			return palettes[id].name;
 		}
+		return it->second;
 	}
 
-	KRE::SurfacePtr map_palette(KRE::SurfacePtr s, int palette)
+	KRE::SurfacePtr map_palette(KRE::SurfacePtr surface, int palette)
 	{
-		if(palette < 0 || static_cast<unsigned>(palette) >= palettes.size() || palettes[palette].mapping.empty()) {
-			return s;
+		using namespace KRE;
+
+		auto psurf = get_palette_surface(palette);
+		if(psurf == nullptr) {
+			return surface;
 		}
 
-		auto result = KRE::Surface::create(s->width(), s->height(), KRE::PixelFormat::PF::PIXELFORMAT_ARGB8888);
-		s = s->convert(KRE::PixelFormat::PF::PIXELFORMAT_ARGB8888);
-		ASSERT_LOG(s->getPixelFormat()->bytesPerPixel() == 4, "SURFACE NOT IN 32bpp PIXEL FORMAT");
-
-		LOG_INFO("mapping palette " << palette);
-
-		uint32_t* dst = reinterpret_cast<uint32_t*>(result->pixelsWriteable());
-		const uint32_t* src = reinterpret_cast<const uint32_t*>(s->pixels());
-
-		const std::map<uint32_t,uint32_t>& mapping = palettes[palette].mapping;
-
-		for(int n = 0; n != s->width() * s->height(); ++n) {
-			std::map<uint32_t,uint32_t>::const_iterator i = mapping.find(*src);
-			if(i != mapping.end()) {
-				*dst = i->second;
-			} else {
-				*dst = *src;
+		// generate a map of the palette.
+		std::map<uint32_t, uint32_t> color_map;
+		if(psurf->width() > psurf->height()) {
+			for(int x = 0; x != psurf->width(); ++x) {
+				Color normal_color = psurf->getColorAt(x, 0);
+				Color mapped_color = psurf->getColorAt(x, 1);
+				color_map[normal_color.asRGBA()] = mapped_color.asRGBA();
 			}
-
-			++src;
-			++dst;
-		}
-		return result;
-	}
-
-	KRE::Color map_palette(const KRE::Color& c, int palette)
-	{
-		if(palette < 0 || static_cast<unsigned>(palette) >= palettes.size() || palettes[palette].mapping.empty()) {
-			return c;
-		}
-
-		const std::map<uint32_t,uint32_t>& mapping = palettes[palette].mapping;
-		std::map<uint32_t,uint32_t>::const_iterator i = mapping.find(c.asARGB());
-		if(i != mapping.end()) {
-			return KRE::Color(i->second, KRE::ColorByteOrder::RGBA);
 		} else {
-			return c;
+			for(int y = 0; y != psurf->height(); ++y) {
+				Color normal_color = psurf->getColorAt(0, y);
+				Color mapped_color = psurf->getColorAt(1, y);
+				color_map[normal_color.asRGBA()] = mapped_color.asRGBA();
+			}
 		}
+
+		int rp = surface->rowPitch();
+		int bpp = surface->bytesPerPixel();
+		std::vector<uint8_t> new_pixels;
+		new_pixels.resize(rp * surface->height());
+
+		surface->iterateOverSurface([&color_map, &new_pixels, rp, bpp](int x, int y, int r, int g, int b, int a) {
+			uint32_t color = (static_cast<uint32_t>(r) << 24)
+				| (static_cast<uint32_t>(g) << 16)
+				| (static_cast<uint32_t>(b) << 8)
+				| (static_cast<uint32_t>(a));
+			const int index = x * bpp + y * rp;
+			
+			auto it = color_map.find(color);
+			if(it == color_map.end()) {
+				new_pixels[index + 0] = r;
+				new_pixels[index + 1] = g;
+				new_pixels[index + 2] = b;
+				new_pixels[index + 3] = a;
+			} else {
+				new_pixels[index + 0] = (it->second >> 24) & 0xff;
+				new_pixels[index + 1] = (it->second >> 16) & 0xff;
+				new_pixels[index + 2] = (it->second >>  8) & 0xff;
+				new_pixels[index + 3] = (it->second >>  0) & 0xff;
+			}
+		});
+		auto new_surf = Surface::create(surface->width(), surface->height(), PixelFormat::PF::PIXELFORMAT_RGBA8888);
+		new_surf->writePixels(&new_pixels[0], new_pixels.size());
+		return new_surf;
 	}
 }

@@ -33,8 +33,7 @@ namespace graphics
 	int get_palette_id(const std::string& name);
 	const std::string& get_palette_name(int id);
 
-	KRE::SurfacePtr map_palette(KRE::SurfacePtr s, int palette);
-	KRE::Color map_palette(const KRE::Color& c, int palette);
-
 	KRE::SurfacePtr get_palette_surface(int palette);
+	
+	KRE::SurfacePtr map_palette(KRE::SurfacePtr surface, int palette);
 }

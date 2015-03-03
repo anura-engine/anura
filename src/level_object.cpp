@@ -54,6 +54,24 @@ namespace
 {
 	typedef std::map<std::string,ConstLevelObjectPtr> tiles_map;
 	tiles_map tiles_cache;
+
+	struct PaletteTextureKey
+	{
+		std::string name;
+		int palettes;
+	};
+	
+	bool operator<(const PaletteTextureKey& lhs, const PaletteTextureKey& rhs) 
+	{
+		return lhs.name == rhs.name ? lhs.palettes < rhs.palettes : lhs.name < rhs.name;
+	}
+
+	typedef std::map<PaletteTextureKey, KRE::TexturePtr> palette_texture_cache_map;
+	palette_texture_cache_map& get_palette_texture_cache()
+	{
+		static palette_texture_cache_map res;
+		return res;
+	}
 }
 
 bool LevelTile::isSolid(int xpos, int ypos) const
@@ -186,7 +204,7 @@ void create_compiled_tiles_image()
 
 		LOG_INFO("WRITING PALETTE: " << palette);
 
-		auto src = graphics::SurfaceCache::get(filename);
+		auto src = Surface::create(filename);
 		if(palette >= 0) {
 			src = graphics::map_palette(src, palette);
 		}
@@ -310,7 +328,11 @@ palette_scope::palette_scope(const std::vector<std::string>& v)
 	current_palette_set = 0;	
 	for(const std::string& pal : v) {
 		const int id = graphics::get_palette_id(pal);
-		current_palette_set |= 1 << id;
+		if(id >= 0) {
+			current_palette_set |= 1 << id;
+		} else {
+			LOG_ERROR("Unrecognised palette: " << pal);
+		}
 	}
 }
 
@@ -321,6 +343,7 @@ palette_scope::~palette_scope()
 
 void LevelObject::setCurrentPalette(unsigned int palette)
 {
+	LOG_DEBUG("LevelObject::setCurrentPalette: " << palette_level_objects().size() << " LevelObject's");
 	for(LevelObject* obj : palette_level_objects()) {
 		obj->setPalette(palette);
 	}
@@ -329,7 +352,7 @@ void LevelObject::setCurrentPalette(unsigned int palette)
 LevelObject::LevelObject(variant node, const char* id)
   : id_(node["id"].as_string_default()), 
     info_(node["info"].as_string_default()),
-    t_(KRE::Texture::createTexture(node["image"])),
+    t_(),
 	all_solid_(node["solid"].is_bool() ? node["solid"].as_bool() : node["solid"].as_string_default() == "yes"),
     passthrough_(node["passthrough"].as_bool()),
     flip_(node["flip"].as_bool(false)),
@@ -346,8 +369,16 @@ LevelObject::LevelObject(variant node, const char* id)
 		id_ = id;
 	}
 
-	if(node["image"].is_string()) {
-		image_ = node["image"].as_string();
+	if(node.has_key("image")) {
+		if(node["image"].is_string()) {
+			image_ = node["image"].as_string();
+		} else if(node["image"].is_map()) {
+			image_ = node["image"]["image"].as_string();
+		} else if(node["image"].is_list()) {
+			image_ = node["image"][0]["image"].as_string();
+		}
+	} else {
+		ASSERT_LOG(false, "No 'image' attribute found.");
 	}
 
 	if(node.has_key("palettes")) {
@@ -355,8 +386,34 @@ LevelObject::LevelObject(variant node, const char* id)
 		std::vector<std::string> p = parse_variant_list_or_csv_string(node["palettes"]);
 		for(const std::string& pal : p) {
 			const int id = graphics::get_palette_id(pal);
-			palettes_recognized_ |= 1 << id;
+			if(id >= 0) {
+				palettes_recognized_ |= 1 << id;
+			} else {
+				LOG_ERROR("Unrecognised palette name: " << pal);
+			}
 		}
+	}
+
+	if(palettes_recognized_ > 0) {
+		PaletteTextureKey key = { image_, palettes_recognized_ };
+		auto it = get_palette_texture_cache().find(key);
+		if(it == get_palette_texture_cache().end()) {
+			t_ = KRE::Texture::createTexture(node["image"]);
+			int p = palettes_recognized_;
+			int id = 0;
+			while(p != 0) {
+				if(p & 1) {
+					t_->addPalette(graphics::get_palette_surface(id));
+				}
+				p >>= 1;
+				++id;
+			}
+			get_palette_texture_cache()[key] = t_;
+		} else {
+			t_ = it->second;
+		}
+	} else {
+		t_ = KRE::Texture::createTexture(node["image"]);
 	}
 
 	if(palettes_recognized_) {
@@ -583,7 +640,7 @@ LevelObject::LevelObject(variant node, const char* id)
 			KRE::Color col;
 			if(calculateIsSolidColor(col)) {
 				if(palette >= 0) {
-					col = graphics::map_palette(col, palette);
+					col = t_->mapPaletteColor(col, palette);
 				}
 				node_copy = node_copy.add_attr(variant("solid_color"), variant(KRE::ColorTransform(col).toString()));
 			}
@@ -874,33 +931,17 @@ bool LevelObject::calculateDrawArea()
 
 void LevelObject::setPalette(unsigned int palette)
 {
-	/// XXX this function requires fixing.
-	palette &= palettes_recognized_;
-	if(palette == current_palettes_) {
-		return;
-	}
-
-	current_palettes_ = palette;
-
-	if(palette == 0) {
-		t_ = KRE::Texture::createTexture(image_);
-	} else {
-		int npalette = 0;
-		while((palette&1) == 0) {
-			palette >>= 1;
-			++npalette;
-		}
-	
-		// I guess what we want to do here is something like,
-		// XXX I think this is still broken.
-		// should just be t_->setPalette(npalette);
-		t_ = KRE::Texture::createTexture(image_);
-		const std::string& str = graphics::get_palette_name(npalette);
-		if(str.empty()) {
-			LOG_WARN("No palette from id: " << npalette);
-		} else {
-			t_->addPalette(graphics::get_palette_surface(npalette));
-		}
+	if(t_ != nullptr) {
+		int p = palette;
+		int id = 0;
+		while(p != 0) {
+			if(p & 1) {
+				t_->setPalette(id);
+				break;
+			}
+			p >>= 1;
+			++id;
+		}		
 	}
 }
 

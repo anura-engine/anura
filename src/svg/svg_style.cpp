@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
+	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -27,7 +27,7 @@
 
 #include <cairo-ft.h>
 
-#include "../asserts.hpp"
+#include "asserts.hpp"
 #include "svg_element.hpp"
 #include "svg_style.hpp"
 
@@ -195,6 +195,7 @@ namespace KRE
 						family_.push_back(t);
 						boost::replace_all(family_.back(), "'", "");
 					}
+					std::cerr << "font-family: " << family_.back() << "\n";
 				}
 
 				auto font_size_adjust = attributes->get_child_optional("font-size-adjust");
@@ -222,15 +223,19 @@ namespace KRE
 
 		void font_attribs::apply(render_context& ctx) const
 		{
-			if(family_.size() > 0 && !family_[0].empty()) {
-				//FT_Face ff = ctx.fa().top_font_face();
+			bool font_set = false;
+			for(auto& family : family_) {
+				FT_Face face = FT::get_font_face(family);
+				if(face) {
+					auto ff = cairo_ft_font_face_create_for_ft_face(face, 0);
+					cairo_set_font_face(ctx.cairo(), ff);
 
-				FT_Face face = FT::get_font_face(family_[0]);
-				auto ff = cairo_ft_font_face_create_for_ft_face(face, 0);
-				cairo_set_font_face(ctx.cairo(), ff);
-
-				ctx.fa().push_font_face(face);
+					ctx.fa().push_font_face(face);
+					font_set = true;
+					break;
+				}
 			}
+			ASSERT_LOG(font_set == true, "Couldn't set requested font.");
 			double size = 0;
 			switch(size_)
 			{
@@ -979,7 +984,7 @@ namespace KRE
 			stroke_miter_limit_value_(4.0),
 			stroke_dash_array_(DashArrayAttrib::UNSET),
 			stroke_dash_offset_(DashOffsetAttrib::UNSET),
-			stroke_dash_offsetValue_(0, svg_length::SVG_LENGTHTYPE_NUMBER),
+			stroke_dash_offset_value_(0, svg_length::SVG_LENGTHTYPE_NUMBER),
 			fill_(paint_ptr()),
 			fill_rule_(FillRuleAttrib::UNSET),
 			fill_opacity_(OpacityAttrib::UNSET),
@@ -1003,7 +1008,7 @@ namespace KRE
 			stroke_miter_limit_value_(4.0),
 			stroke_dash_array_(DashArrayAttrib::NONE),
 			stroke_dash_offset_(DashOffsetAttrib::VALUE),
-			stroke_dash_offsetValue_(0, svg_length::SVG_LENGTHTYPE_NUMBER),
+			stroke_dash_offset_value_(0, svg_length::SVG_LENGTHTYPE_NUMBER),
 			fill_(paint_ptr(new paint(0,0,0))),
 			fill_rule_(FillRuleAttrib::EVENODD),
 			fill_opacity_(OpacityAttrib::VALUE),
@@ -1132,7 +1137,7 @@ namespace KRE
 						stroke_dash_offset_ = DashOffsetAttrib::INHERIT;
 					} else {
 						stroke_dash_offset_ = DashOffsetAttrib::VALUE;
-						stroke_dash_offsetValue_ = svg_length(sdo);
+						stroke_dash_offset_value_ = svg_length(sdo);
 					}
 				}
 

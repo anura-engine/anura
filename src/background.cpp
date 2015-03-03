@@ -133,13 +133,10 @@ Background::Background(variant node, int palette)
 	top_ = KRE::Color(node["top"]);
 	bot_ = KRE::Color(node["bottom"]);
 
-	if(palette_ != -1) {
-		top_ = graphics::map_palette(top_, palette);
-		bot_ = graphics::map_palette(bot_, palette);
-	}
-
 	width_ = node["width"].as_int();
 	height_ = node["height"].as_int();
+
+	bool colors_mapped = false;
 
 	for(variant layer_node : node["layer"].as_list()) {
 		Layer bg;
@@ -161,13 +158,16 @@ Background::Background(variant node, int palette)
 			bg.scale = 1;
 		}
 
-		if(palette_ == -1) {
-			bg.texture = KRE::Texture::createTexture(bg.image);
-		} else {
-			bg.texture = KRE::Texture::createTexture(bg.image);
+		bg.texture = KRE::Texture::createTexture(bg.image);
+		if(palette_ != -1) {
 			bg.texture->addPalette(graphics::get_palette_surface(palette_));
 		}
 
+		if(palette_ != -1 && !colors_mapped) {
+			top_ = bg.texture->mapPaletteColor(top_, palette);
+			bot_ = bg.texture->mapPaletteColor(bot_, palette);
+			colors_mapped = true;
+		}
 
 		using namespace KRE;
 		auto ab = DisplayDevice::createAttributeSet(false, false, false);
@@ -199,14 +199,14 @@ Background::Background(variant node, int palette)
 		if(layer_node.has_key("color_above")) {
 			bg.color_above.reset(new Color(layer_node["color_above"]));
 			if(palette_ != -1) {
-				*bg.color_above = graphics::map_palette(*bg.color_above, palette);
+				*bg.color_above = bg.texture->mapPaletteColor(*bg.color_above, palette);
 			}
 		}
 
 		if(layer_node.has_key("color_below")) {
 			bg.color_below.reset(new Color(layer_node["color_below"]));
 			if(palette_ != -1) {
-				*bg.color_below = graphics::map_palette(*bg.color_below, palette);
+				*bg.color_below = bg.texture->mapPaletteColor(*bg.color_below, palette);
 			}
 		}
 

@@ -171,6 +171,7 @@ namespace KRE
 		void setPalette(int n);
 		int getPalette() const { return palette_; }
 		int getMaxPalettes() const { return max_palettes_; }
+		Color mapPaletteColor(const Color& color, int palette);
 
 		virtual TexturePtr clone() = 0;
 
@@ -261,12 +262,4 @@ namespace KRE
 		void initFromVariant(texture_params_iterator tp, const variant& node);
 		void internalInit(texture_params_iterator tp);
 	};
-
-	inline bool operator==(const TexturePtr& lhs, const TexturePtr& rhs) {
-		return *lhs == *rhs;
-	}
-
-	inline bool operator!=(const TexturePtr& lhs, const TexturePtr& rhs) {
-		return *lhs != *rhs;
-	}
 }
