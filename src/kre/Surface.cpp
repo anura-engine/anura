@@ -63,7 +63,7 @@ namespace KRE
 		pf_ = pf;
 	}
 
-	SurfaceLock::SurfaceLock(const SurfacePtr& surface)
+	SurfaceLock::SurfaceLock(SurfacePtr surface)
 		: surface_(surface)
 	{
 		surface_->lock();

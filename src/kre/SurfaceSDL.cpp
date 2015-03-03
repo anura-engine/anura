@@ -889,7 +889,7 @@ namespace KRE
 	void SurfaceSDL::savePng(const std::string& filename)
 	{
 		auto filter = Surface::getFileFilter(FileFilterType::SAVE);
-		SurfaceLock lock(SurfacePtr(this));
+		SurfaceLock lock(shared_from_this());
 		auto err = IMG_SavePNG(surface_, filter(filename).c_str());
 		ASSERT_LOG(err == 0, "Error saving PNG file: " << SDL_GetError());
 	}

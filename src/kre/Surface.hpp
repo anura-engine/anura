@@ -77,9 +77,11 @@ namespace KRE
 	class SurfaceLock
 	{
 	public:
-		SurfaceLock(const SurfacePtr& surface);
+		SurfaceLock(SurfacePtr surface);
 		~SurfaceLock();
 	private:
+		void operator=(const SurfaceLock&);
+		SurfaceLock(const SurfaceLock&);
 		SurfacePtr surface_;
 	};
 
