@@ -601,7 +601,11 @@ namespace lua
 	{
 		lua_compiled* chunk = new lua_compiled();
 		luaL_loadbuffer(context_ptr(), str.c_str(), str.size(), name.c_str());		// (-0,+1,-)
+#if LUA_VERSION_NUM == 503
+		lua_dump(context_ptr(), chunk_writer, reinterpret_cast<void*>(chunk), 0);		// (-0,+0,-)
+#else
 		lua_dump(context_ptr(), chunk_writer, reinterpret_cast<void*>(chunk));		// (-0,+0,-)
+#endif
 		lua_pop(context_ptr(), 1);													// (-n(1),+0,-)
 		chunk->add_chunk(0, 0);
 		return lua_compiled_ptr(chunk);
@@ -611,7 +615,11 @@ namespace lua
 	{
 		compiled_chunk* chunk = new compiled_chunk();
 		luaL_loadbuffer(context_ptr(), str.c_str(), str.size(), name.c_str());		// (-0,+1,-)
+#if LUA_VERSION_NUM == 503
+		lua_dump(context_ptr(), chunk_writer, reinterpret_cast<void*>(chunk), 0);		// (-0,+0,-)
+#else
 		lua_dump(context_ptr(), chunk_writer, reinterpret_cast<void*>(chunk));		// (-0,+0,-)
+#endif
 		lua_pop(context_ptr(), 1);													// (-n(1),+0,-)
 		chunk->add_chunk(0, 0);
 		return chunk;

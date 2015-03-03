@@ -81,7 +81,7 @@ namespace KRE
 		}
 
 		shape::shape(element* doc, const ptree& pt)
-				: element(doc, pt)
+				: container(doc, pt)
 		{
 			auto attributes = pt.get_child_optional("<xmlattr>");
 			if(attributes) {
@@ -435,7 +435,8 @@ namespace KRE
 			std::vector<cairo_glyph_t> glyphs;
 			FT_Face face = ctx.fa().top_font_face();
 			auto glyph_indicies = FT::get_glyphs_from_string(face, text_);
-			double x(0), y(0);
+			double x = x1_.size() > 0 ? x1_[0].value_in_specified_units(svg_length::LengthUnit::SVG_LENGTHTYPE_NUMBER) : ctx.get_text_x();
+			double y = y1_.size() > 0 ? y1_[0].value_in_specified_units(svg_length::LengthUnit::SVG_LENGTHTYPE_NUMBER) : ctx.get_text_y();
 			const double letter_spacing = ctx.letter_spacing_top();
 			for(auto g : glyph_indicies) {
 				cairo_glyph_t cg;
@@ -454,18 +455,25 @@ namespace KRE
 			}
 			cairo_glyph_path(ctx.cairo(), &glyphs[0], glyphs.size());
 			stroke_and_fill(ctx);
+			ctx.set_text_xy(x, y);
 		}
 
 		void text::handle_render(render_context& ctx) const 
 		{
-			render_text(ctx);
+			if(!text_.empty()) {
+				render_text(ctx);
+			}
+			render_children(ctx);
 			shape::render_path(ctx);
 		}
 
 		void text::handle_clip_render(render_context& ctx) const
 		{
-			render_text(ctx);
+			if(!text_.empty()) {
+				render_text(ctx);
+			}
 			cairo_clip(ctx.cairo());
+			clip_render_children(ctx);
 			shape::clip_render_path(ctx);
 		}
 

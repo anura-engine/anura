@@ -52,6 +52,8 @@ namespace KRE
 					elements_.emplace_back(new rectangle(parent, v.second));
 				} else if(v.first == "text") {
 					elements_.emplace_back(new text(parent, v.second));
+				} else if(v.first == "tspan") {
+					elements_.emplace_back(new text(parent, v.second));
 				} else if(v.first == "line") {
 					elements_.emplace_back(new line(parent,v.second));
 				} else if(v.first == "circle") {

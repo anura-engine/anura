@@ -25,6 +25,7 @@
 
 #include <boost/property_tree/ptree.hpp>
 #include <set>
+#include "svg_container.hpp"
 #include "svg_fwd.hpp"
 #include "svg_element.hpp"
 #include "svg_path_parse.hpp"
@@ -35,7 +36,7 @@ namespace KRE
 {
 	namespace SVG
 	{
-		class shape : public element
+		class shape : public container
 		{
 		public:
 			shape(element* doc, const boost::property_tree::ptree& pt);

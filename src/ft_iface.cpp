@@ -67,7 +67,10 @@ namespace KRE
 						}
 					}
 				}
-				ASSERT_LOG(error == 0, "Could not load font face: " << font_file << " error: " << error);
+				if(error != 0) {
+					return nullptr;
+				}
+				//ASSERT_LOG(error == 0, "Could not load font face: " << font_file << " error: " << error);
 				font_map[font_file] = face;
 				return face;
 			} 

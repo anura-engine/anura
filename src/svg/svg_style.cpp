@@ -195,6 +195,7 @@ namespace KRE
 						family_.push_back(t);
 						boost::replace_all(family_.back(), "'", "");
 					}
+					std::cerr << "font-family: " << family_.back() << "\n";
 				}
 
 				auto font_size_adjust = attributes->get_child_optional("font-size-adjust");
@@ -222,15 +223,19 @@ namespace KRE
 
 		void font_attribs::apply(render_context& ctx) const
 		{
-			if(family_.size() > 0 && !family_[0].empty()) {
-				//FT_Face ff = ctx.fa().top_font_face();
+			bool font_set = false;
+			for(auto& family : family_) {
+				FT_Face face = FT::get_font_face(family);
+				if(face) {
+					auto ff = cairo_ft_font_face_create_for_ft_face(face, 0);
+					cairo_set_font_face(ctx.cairo(), ff);
 
-				FT_Face face = FT::get_font_face(family_[0]);
-				auto ff = cairo_ft_font_face_create_for_ft_face(face, 0);
-				cairo_set_font_face(ctx.cairo(), ff);
-
-				ctx.fa().push_font_face(face);
+					ctx.fa().push_font_face(face);
+					font_set = true;
+					break;
+				}
 			}
+			ASSERT_LOG(font_set == true, "Couldn't set requested font.");
 			double size = 0;
 			switch(size_)
 			{

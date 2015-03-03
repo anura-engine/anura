@@ -63,9 +63,12 @@ namespace KRE
 			// the drawing canvas.
 			render_context(cairo_t* cairo, unsigned width, unsigned height)
 				: cairo_(cairo),
-				width_(width),
-				height_(height)
-			{}
+				  width_(width),
+				  height_(height),
+				  text_x_(0),
+				  text_y_(0)
+			{
+			}
 			~render_context() {
 				ASSERT_LOG(fill_color_stack_.empty(), "Fill color stack in rendering context not empty at exit");
 				ASSERT_LOG(stroke_color_stack_.empty(), "Stroke color stack in rendering context not empty at exit");
@@ -122,6 +125,9 @@ namespace KRE
 			}
 
 			font_attribs_set& fa() { return font_attributes_; }
+			void set_text_xy(double x, double y) { text_x_ = x; text_y_ = y; }
+			double get_text_x() { return text_x_; }
+			double get_text_y() { return text_y_; }
 		private:
 			cairo_t* cairo_;
 			color_ptr current_color_;
@@ -151,6 +157,8 @@ namespace KRE
 			svg_length kerning_value_;
 			*/
 			std::stack<double> letter_spacing_;
+			double text_x_;
+			double text_y_;
 		};
 
 	}
