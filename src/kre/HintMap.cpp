@@ -39,13 +39,13 @@ const std::vector<std::string>& HintMapContainer::findHint(const std::string& na
 	return no_hint_list;
 }
 
-const std::string& HintMapContainer::findFirstHint(const std::string& name, const std::string& default) const
+const std::string& HintMapContainer::findFirstHint(const std::string& name, const std::string& def) const
 {
 	auto it = hints_.find(name);
 	if(it != hints_.end()) {
 		return it->second.front();
 	}
-	return default;
+	return def;
 }
 
 void HintMapContainer::setHint(const std::string& hint_name, const std::string& hint)

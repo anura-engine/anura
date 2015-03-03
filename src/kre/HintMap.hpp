@@ -36,7 +36,7 @@ public:
 	void setHint(const std::string& hint_name, const std::string& hint);
 	void setHint(const std::string& hint_name, const HintList& hint);
 	const std::vector<std::string>& findHint(const std::string& name) const;
-	const std::string& findFirstHint(const std::string& name, const std::string& default=std::string()) const;
+	const std::string& findFirstHint(const std::string& name, const std::string& def=std::string()) const;
 	HintMap getHints() const { return hints_; }
 private:
 	HintMap hints_;

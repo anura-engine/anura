@@ -15,7 +15,7 @@
 */
 
 #include <sstream>
-#include "texpack.hpp"
+#include "TexPack.hpp"
 
 namespace KRE
 {
