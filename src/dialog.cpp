@@ -76,9 +76,23 @@ namespace gui
 	}
 
 	Dialog::Dialog(int x, int y, int w, int h)
-	  : opened_(false), cancelled_(false), clear_bg_(196), padding_(10),
-		add_x_(0), add_y_(0), bg_alpha_(1.0), last_draw_(-1), upscale_frame_(true),
-		current_tab_focus_(tab_widgets_.end()), control_lockout_(0)
+	  : widgets_(),
+	    tab_widgets_(),
+		control_lockout_(0),
+		current_tab_focus_(tab_widgets_.end()),
+	    opened_(false), 
+	    cancelled_(false), 
+		clear_bg_(196), 
+		padding_(10),
+		add_x_(0), 
+		add_y_(0), 
+		bg_(),
+		bg_alpha_(1.0), 
+		last_draw_(-1), 
+		forced_dimensions_(),
+		background_framed_gui_element_(),
+		draw_background_fn_(),
+		upscale_frame_(true)
 	{
 		setEnvironment();
 		setLoc(x,y);
@@ -96,7 +110,7 @@ namespace gui
 		forced_dimensions_ = rect(x(), y(), width(), height());
 		padding_ = v["padding"].as_int(10);
 		if(v.has_key("background_frame")) {
-			background_FramedGuiElement_ = v["background_frame"].as_string();
+			background_framed_gui_element_ = v["background_frame"].as_string();
 		}
 		if(v.has_key("background_draw")) {
 			std::string scene = v["background_draw"].as_string();
@@ -463,9 +477,9 @@ namespace gui
 			draw_background_fn_();
 		}
 
-		if(background_FramedGuiElement_.empty() == false) {
+		if(background_framed_gui_element_.empty() == false) {
 			canvas->drawSolidRect(rect(x(),y(),width(),height()), KRE::Color(0,0,0,getAlpha() >= 255 ? 204 : getAlpha()));
-			ConstFramedGuiElementPtr window(FramedGuiElement::get(background_FramedGuiElement_));
+			ConstFramedGuiElementPtr window(FramedGuiElement::get(background_framed_gui_element_));
 			// XXX may need to apply the alpha here?
 			window->blit(x(),y(),width(),height(), upscale_frame_);
 		}

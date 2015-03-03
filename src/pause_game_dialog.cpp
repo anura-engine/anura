@@ -219,18 +219,18 @@ PAUSE_GAME_RESULT show_pause_game_dialog()
 	}
 	//Dialog d((preferences::virtual_screen_width()/2 - window_w/2) & ~1, (preferences::virtual_screen_height()/2 - window_h/2) & ~1, window_w, window_h);
 	auto wnd = KRE::WindowManager::getMainWindow();
-	Dialog d((wnd->logicalWidth()/2 - window_w/2) & ~1, (wnd->logicalHeight()/2 - window_h/2) & ~1, window_w, window_h);
-	d.setPadding(padding);
-	d.setBackgroundFrame("empty_window");
-	d.setUpscaleFrame(upscale_dialog_frame);
+	Dialog dd((wnd->logicalWidth()/2 - window_w/2) & ~1, (wnd->logicalHeight()/2 - window_h/2) & ~1, window_w, window_h);
+	dd.setPadding(padding);
+	dd.setBackgroundFrame("empty_window");
+	dd.setUpscaleFrame(upscale_dialog_frame);
 
-	d.setDrawBackgroundFn(draw_last_scene);
+	dd.setDrawBackgroundFn(draw_last_scene);
 
-	ButtonPtr b1(new Button(resume_label, std::bind(end_dialog, &d, &result, PAUSE_GAME_RESULT::CONTINUE), BUTTON_STYLE_NORMAL, buttonResolution));
+	ButtonPtr b1(new Button(resume_label, std::bind(end_dialog, &dd, &result, PAUSE_GAME_RESULT::CONTINUE), BUTTON_STYLE_NORMAL, buttonResolution));
 	ButtonPtr b2(new Button(controls_label, show_controls_dialog, BUTTON_STYLE_NORMAL, buttonResolution));
 	ButtonPtr language_button(new Button(language_label, show_language_dialog, BUTTON_STYLE_NORMAL, buttonResolution));
-	ButtonPtr b3(new Button(return_label, std::bind(end_dialog, &d, &result, PAUSE_GAME_RESULT::GO_TO_TITLESCREEN), BUTTON_STYLE_NORMAL, buttonResolution));
-	ButtonPtr b4(new Button(exit_label, std::bind(end_dialog, &d, &result, PAUSE_GAME_RESULT::QUIT), BUTTON_STYLE_DEFAULT, buttonResolution));
+	ButtonPtr b3(new Button(return_label, std::bind(end_dialog, &dd, &result, PAUSE_GAME_RESULT::GO_TO_TITLESCREEN), BUTTON_STYLE_NORMAL, buttonResolution));
+	ButtonPtr b4(new Button(exit_label, std::bind(end_dialog, &dd, &result, PAUSE_GAME_RESULT::QUIT), BUTTON_STYLE_DEFAULT, buttonResolution));
 	ButtonPtr b5(new Checkbox(button_swap_label, preferences::reverse_ab(), std::bind(preferences::set_reverse_ab, _1), buttonResolution));
 	ButtonPtr b_video(new Button(video_select_label, show_video_selection_dialog, BUTTON_STYLE_NORMAL, buttonResolution));
 
@@ -243,44 +243,44 @@ PAUSE_GAME_RESULT show_pause_game_dialog()
 	language_button->setDim(button_width, button_height);
 	b_video->setDim(button_width, button_height);
 	
-	d.setPadding(padding-12);
-	d.addWidget(t1, padding*2, padding*2);
-	d.setPadding(padding+12);
-	d.addWidget(s1);
+	dd.setPadding(padding-12);
+	dd.addWidget(t1, padding*2, padding*2);
+	dd.setPadding(padding+12);
+	dd.addWidget(s1);
 
 	if(preferences::virtual_screen_height() >= 600) {
-		d.setPadding(padding-12);
-		d.addWidget(t2);
-		d.setPadding(padding+12);
-		d.addWidget(s2);
-		d.setPadding(padding);
-		if(show_button_swap) { d.addWidget(b5); }
-		d.addWidget(b1);
-		if(show_controls) { d.addWidget(b2); }
-		if(show_video_mode_select) { d.addWidget(b_video); }
-		d.addWidget(language_button);
-		d.addWidget(b3);
-		if(show_exit) { d.addWidget(b4); }
+		dd.setPadding(padding-12);
+		dd.addWidget(t2);
+		dd.setPadding(padding+12);
+		dd.addWidget(s2);
+		dd.setPadding(padding);
+		if(show_button_swap) { dd.addWidget(b5); }
+		dd.addWidget(b1);
+		if(show_controls) { dd.addWidget(b2); }
+		if(show_video_mode_select) { dd.addWidget(b_video); }
+		dd.addWidget(language_button);
+		dd.addWidget(b3);
+		if(show_exit) { dd.addWidget(b4); }
 	} else {
-		d.setPadding(padding);
-		d.addWidget(b1);
-		if(show_controls) { d.addWidget(b2); }
-		if(show_video_mode_select) { d.addWidget(b_video); }
-		d.setPadding(padding-12);
-		d.addWidget(t2, padding*3 + button_width, padding*2);
-		d.setPadding(padding+12);
-		d.addWidget(s2);
-		d.setPadding(padding);
-		d.addWidget(language_button);
-		d.addWidget(b3);
-		if(show_exit) { d.addWidget(b4); }
+		dd.setPadding(padding);
+		dd.addWidget(b1);
+		if(show_controls) { dd.addWidget(b2); }
+		if(show_video_mode_select) { dd.addWidget(b_video); }
+		dd.setPadding(padding-12);
+		dd.addWidget(t2, padding*3 + button_width, padding*2);
+		dd.setPadding(padding+12);
+		dd.addWidget(s2);
+		dd.setPadding(padding);
+		dd.addWidget(language_button);
+		dd.addWidget(b3);
+		if(show_exit) { dd.addWidget(b4); }
 	}
 
-	d.setOnQuit(std::bind(end_dialog, &d, &result, PAUSE_GAME_RESULT::QUIT));
-	d.showModal();
-	if(d.cancelled() && result == PAUSE_GAME_RESULT::QUIT) {
+	//d->setOnQuit(std::bind(end_dialog, d, &result, PAUSE_GAME_RESULT::QUIT));
+	dd.setOnQuit([&dd, &result](){ end_dialog(&dd, &result, PAUSE_GAME_RESULT::QUIT); });
+	dd.showModal();
+	if(dd.cancelled() && result == PAUSE_GAME_RESULT::QUIT) {
 		result = PAUSE_GAME_RESULT::CONTINUE;
 	}
-
 	return result;
 }

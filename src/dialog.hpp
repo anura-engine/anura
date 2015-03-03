@@ -63,7 +63,7 @@ namespace gui
 	
 		void setOnQuit(std::function<void ()> onquit) { on_quit_ = onquit; }
 
-		void setBackgroundFrame(const std::string& id) { background_FramedGuiElement_ = id; }
+		void setBackgroundFrame(const std::string& id) { background_framed_gui_element_ = id; }
 		void setDrawBackgroundFn(std::function<void()> fn) { draw_background_fn_ = fn; }
 		void setUpscaleFrame(bool upscale=true) { upscale_frame_ = upscale; }
 
@@ -135,7 +135,7 @@ namespace gui
 		int last_draw_;
 		rect forced_dimensions_;
 
-		std::string background_FramedGuiElement_;
+		std::string background_framed_gui_element_;
 		std::function<void()> draw_background_fn_;
 
 		bool upscale_frame_;

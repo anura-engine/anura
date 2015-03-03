@@ -324,15 +324,16 @@ namespace KRE
 
 	WindowManager::WindowManager(const std::string& title)
 		: width_(0), 
-		height_(0),
-		logical_width_(0),
-		logical_height_(0),
-		use_16bpp_(false),
-		use_multi_sampling_(false),
-		samples_(4),
-		is_resizeable_(false),
-		title_(title),
-		clear_color_(0.0f,0.0f,0.0f,1.0f)
+		  height_(0),
+		  logical_width_(0),
+		  logical_height_(0),
+		  use_16bpp_(false),
+		  use_multi_sampling_(false),
+		  samples_(4),
+		  is_resizeable_(false),
+		  fullscreen_mode_(FullScreenMode::WINDOWED),
+		  title_(title),
+		  clear_color_(0.0f,0.0f,0.0f,1.0f)
 	{
 	}
 
