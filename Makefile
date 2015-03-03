@@ -74,6 +74,14 @@ ifeq ($(USE_LIBVPX),yes)
 	LIBS += $(shell pkg-config --libs vpx)
 endif
 
+# cairo check
+USE_SVG?=$(shell pkg-config --exists cairo && echo yes)
+ifeq ($(USE_SVG),yes)
+	BASE_CXXFLAGS += -DUSE_SVG
+	INC += $(shell pkg-config --cflags cairo)
+	LIBS += $(shell pkg-config --libs cairo)
+endif
+
 MODULES   := kre svg Box2D
 SRC_DIR   := $(addprefix src/,$(MODULES)) src
 BUILD_DIR := $(addprefix build/,$(MODULES)) build
