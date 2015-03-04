@@ -162,6 +162,7 @@ Background::Background(variant node, int palette)
 		if(palette_ != -1) {
 			bg.texture->addPalette(graphics::get_palette_surface(palette_));
 		}
+		bg.setTexture(bg.texture);
 
 		if(palette_ != -1 && !colors_mapped) {
 			top_ = bg.texture->mapPaletteColor(top_, palette);
@@ -171,9 +172,9 @@ Background::Background(variant node, int palette)
 
 		using namespace KRE;
 		auto ab = DisplayDevice::createAttributeSet(false, false, false);
-		bg.attr_ = std::make_shared<Attribute<short_vertex_texcoord>>(AccessFreqHint::DYNAMIC, AccessTypeHint::DRAW);
-		bg.attr_->addAttributeDesc(AttributeDesc(AttrType::POSITION, 2, AttrFormat::SHORT, false, sizeof(short_vertex_texcoord), offsetof(short_vertex_texcoord, vertex)));
-		bg.attr_->addAttributeDesc(AttributeDesc(AttrType::TEXTURE, 2, AttrFormat::FLOAT, false, sizeof(short_vertex_texcoord), offsetof(short_vertex_texcoord, tc)));
+		bg.attr_ = std::make_shared<Attribute<vertex_texcoord>>(AccessFreqHint::DYNAMIC, AccessTypeHint::DRAW);
+		bg.attr_->addAttributeDesc(AttributeDesc(AttrType::POSITION, 2, AttrFormat::FLOAT, false, sizeof(vertex_texcoord), offsetof(vertex_texcoord, vtx)));
+		bg.attr_->addAttributeDesc(AttributeDesc(AttrType::TEXTURE, 2, AttrFormat::FLOAT, false, sizeof(vertex_texcoord), offsetof(vertex_texcoord, tc)));
 		ab->addAttribute(bg.attr_);
 		ab->setDrawMode(DrawMode::TRIANGLE_STRIP);
 		bg.addAttributeSet(ab);
@@ -516,30 +517,27 @@ void Background::drawLayer(int x, int y, const rect& area, float rotation, const
 	x = area.x();
 	y = area.y();
 
-	std::vector<KRE::short_vertex_texcoord> q;
+	std::vector<KRE::vertex_texcoord> q;
 
 	while(screen_width > 0) {
 		const int texture_blit_width = static_cast<int>((1.0f - xpos) * bg.texture->surfaceWidth() * ScaleImage);
 		const int blit_width = std::min(texture_blit_width, screen_width);
 
 		if(blit_width > 0) {
-			const float xpos2 = xpos + static_cast<float>(blit_width) / (static_cast<float>(bg.texture->surfaceWidth()) * 2.0f);
+			const float xpos2 = xpos + static_cast<float>(blit_width) / (static_cast<float>(bg.texture->actualWidth()) * 2.0f);
 
-			const short x1 = x;
-			const short x2 = x1 + blit_width;
+			const float x1 = x;
+			const float x2 = x1 + blit_width;
 
 			const float u1 = bg.texture->getNormalisedTextureCoordW<float>(0, xpos);
-			const float u2 = bg.texture->getNormalisedTextureCoordW<float>(0, xpos2);
+			const float u2 = xpos2;//bg.texture->getNormalisedTextureCoordW<float>(0, xpos2);
 
-			//if(!q.empty()) {
-			//	q.emplace_back(q.back());
-			//}
-			q.emplace_back(glm::u16vec2(x1, y1), glm::vec2(u1, v1));
-			q.emplace_back(glm::u16vec2(x1, y1), glm::vec2(u1, v1));
-			//q.emplace_back(q.back());
-			q.emplace_back(glm::u16vec2(x2, y1), glm::vec2(u2, v1));
-			q.emplace_back(glm::u16vec2(x1, y2), glm::vec2(u1, v2));
-			q.emplace_back(glm::u16vec2(x2, y2), glm::vec2(u2, v2));
+			q.emplace_back(glm::vec2(x1, y1), glm::vec2(u1, v1));
+			q.emplace_back(glm::vec2(x2, y1), glm::vec2(u2, v1));
+			q.emplace_back(glm::vec2(x2, y2), glm::vec2(u2, v2));
+			q.emplace_back(glm::vec2(x1, y2), glm::vec2(u1, v2));
+//LOG_DEBUG("background: " << x1 << "," << y1 << "," << x2 << "," << y2 << " : " << u1 << "," << v1 << "," << u2 << "," << v2);
+
 		}
 
 		x += static_cast<int>(blit_width + bg.xpad * ScaleImage);

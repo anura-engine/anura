@@ -1113,7 +1113,7 @@ void CustomObject::drawLater(int xx, int yy) const
 	}
 	for(const gui::WidgetPtr& w : widgets_) {
 		if(w->zorder() >= widget_zorder_draw_later_threshold) {
-			w->draw(offs_x, offs_y, static_cast<float>(rotate_z_.as_float()), draw_scale_ ? static_cast<float>(draw_scale_->as_float()) : 0);
+			w->draw(offs_x, offs_y, rotate_z_.as_float(), draw_scale_ ? draw_scale_->as_float() : 0);
 		}
 	}
 }
@@ -1125,19 +1125,18 @@ void CustomObject::draw(int xx, int yy) const
 	}
 	auto wnd = KRE::WindowManager::getMainWindow();
 
-	int offs_x = x();
-	int offs_y = y();
+	int offs_x = xx+x();
+	int offs_y = yy+y();
 
 	if(use_absolute_screen_coordinates_) {
 		adjusted_draw_position_.x = xx;
 		adjusted_draw_position_.y = yy;
-		offs_x = xx;
-		offs_y = yy;
+		xx = yy = 0;
 	}
 
 	for(const EntityPtr& attached : attachedObjects()) {
 		if(attached->zorder() < zorder()) {
-			attached->draw(xx, yy);
+			attached->draw(offs_x, offs_y);
 		}
 	}
 
@@ -1159,7 +1158,7 @@ void CustomObject::draw(int xx, int yy) const
 	}
 
 	if(driver_) {
-		driver_->draw(xx, yy);
+		driver_->draw(offs_x, offs_y);
 	}
 
 	KRE::Color current_color = KRE::Color::colorWhite();
@@ -1175,15 +1174,15 @@ void CustomObject::draw(int xx, int yy) const
 		//pass
 	} else if(custom_draw_xy_.size() >= 6 &&
 	          custom_draw_xy_.size() == custom_draw_uv_.size()) {
-		frame_->drawCustom(shader_, draw_x-draw_x%2, draw_y-draw_y%2, &custom_draw_xy_[0], &custom_draw_uv_[0], custom_draw_xy_.size()/2, isFacingRight(), isUpsideDown(), time_in_frame_, static_cast<float>(rotate_z_.as_float()), cycle_);
+		frame_->drawCustom(shader_, draw_x-draw_x%2, draw_y-draw_y%2, &custom_draw_xy_[0], &custom_draw_uv_[0], custom_draw_xy_.size()/2, isFacingRight(), isUpsideDown(), time_in_frame_, rotate_z_.as_float(), cycle_);
 	} else if(custom_draw_.get() != nullptr) {
-		frame_->drawCustom(shader_, draw_x-draw_x%2, draw_y-draw_y%2, *custom_draw_, draw_area_.get(), isFacingRight(), isUpsideDown(), time_in_frame_, static_cast<float>(rotate_z_.as_float()));
+		frame_->drawCustom(shader_, draw_x-draw_x%2, draw_y-draw_y%2, *custom_draw_, draw_area_.get(), isFacingRight(), isUpsideDown(), time_in_frame_, rotate_z_.as_float());
 	} else if(draw_scale_) {
-		frame_->draw(shader_, draw_x-draw_x%2, draw_y-draw_y%2, isFacingRight(), isUpsideDown(), time_in_frame_, static_cast<float>(rotate_z_.as_float()), static_cast<float>(draw_scale_->as_float()));
+		frame_->draw(shader_, draw_x-draw_x%2, draw_y-draw_y%2, isFacingRight(), isUpsideDown(), time_in_frame_, rotate_z_.as_float(), draw_scale_->as_float());
 	} else if(!draw_area_.get()) {
-		frame_->draw(shader_, draw_x-draw_x%2, draw_y-draw_y%2, isFacingRight(), isUpsideDown(), time_in_frame_, static_cast<float>(rotate_z_.as_float()));
+		frame_->draw(shader_, draw_x-draw_x%2, draw_y-draw_y%2, isFacingRight(), isUpsideDown(), time_in_frame_, rotate_z_.as_float());
 	} else {
-		frame_->draw(shader_, draw_x-draw_x%2, draw_y-draw_y%2, *draw_area_, isFacingRight(), isUpsideDown(), time_in_frame_, static_cast<float>(rotate_z_.as_float()));
+		frame_->draw(shader_, draw_x-draw_x%2, draw_y-draw_y%2, *draw_area_, isFacingRight(), isUpsideDown(), time_in_frame_, rotate_z_.as_float());
 	}
 
 	if(blur_) {
@@ -1197,7 +1196,7 @@ void CustomObject::draw(int xx, int yy) const
 			while(!transform.fits_in_color()) {
 				transform = transform - transform.toColor();
 				KRE::ColorScope color_scope(transform.toColor());
-				frame_->draw(shader_, draw_x-draw_x%2, draw_y-draw_y%2, isFacingRight(), isUpsideDown(), time_in_frame_, static_cast<float>(rotate_z_.as_float()));
+				frame_->draw(shader_, draw_x-draw_x%2, draw_y-draw_y%2, isFacingRight(), isUpsideDown(), time_in_frame_, rotate_z_.as_float());
 			}
 		}
 
@@ -1205,7 +1204,7 @@ void CustomObject::draw(int xx, int yy) const
 
 	for(const EntityPtr& attached : attachedObjects()) {
 		if(attached->zorder() >= zorder()) {
-			attached->draw(xx, yy);
+			attached->draw(offs_x, offs_y);
 		}
 	}
 
@@ -1218,7 +1217,7 @@ void CustomObject::draw(int xx, int yy) const
 	for(const gui::WidgetPtr& w : widgets_) {
 		if(w->zorder() < widget_zorder_draw_later_threshold) {
 			if(w->drawWithObjectShader()) {
-				w->draw(offs_x, offs_y, static_cast<float>(rotate_z_.as_float()), draw_scale_ ? static_cast<float>(draw_scale_->as_float()) : 1.0f);
+				w->draw(offs_x, offs_y, rotate_z_.as_float(), draw_scale_ ? draw_scale_->as_float() : 1.0f);
 			}
 		}
 	}
@@ -1284,7 +1283,7 @@ void CustomObject::draw(int xx, int yy) const
 	for(const gui::WidgetPtr& w : widgets_) {
 		if(w->zorder() < widget_zorder_draw_later_threshold) {
 			if(w->drawWithObjectShader() == false) {
-				w->draw(offs_x, offs_y, static_cast<float>(rotate_z_.as_float()), draw_scale_ ? static_cast<float>(draw_scale_->as_float()) : 0);
+				w->draw(offs_x, offs_y, rotate_z_.as_float(), draw_scale_ ? draw_scale_->as_float() : 0);
 			}
 		}
 	}

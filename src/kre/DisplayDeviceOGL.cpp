@@ -582,7 +582,7 @@ namespace KRE
 		}
 	}
 
-	bool DisplayDeviceOpenGL::handleReadPixels(int x, int y, unsigned width, unsigned height, ReadFormat fmt, AttrFormat type, void* data)
+	bool DisplayDeviceOpenGL::handleReadPixels(int x, int y, unsigned width, unsigned height, ReadFormat fmt, AttrFormat type, void* data, int data_size)
 	{
 		glReadPixels(x, y, width, height, convert_read_format(fmt), convert_attr_format(type), data);
 		GLenum ok = glGetError();

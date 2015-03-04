@@ -1371,7 +1371,7 @@ bool LevelRunner::play_cycle()
 				} else if(key == SDLK_s && (mod&KMOD_ALT)) {
 #if !defined(__native_client__)
 					const std::string fname = std::string(preferences::user_data_path()) + "screenshot.png";
-					KRE::WindowManager::getMainWindow()->saveFrameBuffer(fname);
+					KRE::WindowManager::getMainWindow()->saveFrameBuffer("screenshot.png");
 					std::shared_ptr<upload_screenshot_info> info(new upload_screenshot_info);
 					background_task_pool::submit(
 					  std::bind(upload_screenshot, fname, info),

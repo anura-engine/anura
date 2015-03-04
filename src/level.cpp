@@ -1,5 +1,5 @@
 /*
-s	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -2123,9 +2123,9 @@ void Level::draw(int x, int y, int w, int h) const
 
 		draw_debug_solid(x, y, w, h);
 
-//		if(background_) {
-//			background_->drawForeground(start_x, start_y, 0.0f, cycle());
-//		}
+		if(background_) {
+			background_->drawForeground(start_x, start_y, 0.0f, cycle());
+		}
 	}
 
 	calculateLighting(start_x, start_y, start_w, start_h);
