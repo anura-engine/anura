@@ -633,7 +633,7 @@ void Frame::draw(graphics::AnuraShaderPtr shader, int x, int y, bool face_right,
 
 	auto wnd = KRE::WindowManager::getMainWindow();
 	blit_target_.setRotation(rotate, z_axis);
-	blit_target_.setDrawRect(rect(x, y, w, h));
+	blit_target_.setDrawRect(rect(x&preferences::xypos_draw_mask, y&preferences::xypos_draw_mask, w, h));
 	blit_target_.setMirrorHoriz(!face_right);
 	blit_target_.setMirrorVert(upside_down);
 	blit_target_.preRender(wnd);
@@ -662,7 +662,7 @@ void Frame::draw(graphics::AnuraShaderPtr shader, int x, int y, bool face_right,
 
 	auto wnd = KRE::WindowManager::getMainWindow();
 	blit_target_.setRotation(rotate, z_axis);
-	blit_target_.setDrawRect(rect(x, y, w, h));
+	blit_target_.setDrawRect(rect(x&preferences::xypos_draw_mask, y&preferences::xypos_draw_mask, w, h));
 	blit_target_.setMirrorHoriz(!face_right);
 	blit_target_.setMirrorVert(upside_down);
 	blit_target_.preRender(wnd);
@@ -686,7 +686,7 @@ void Frame::draw(graphics::AnuraShaderPtr shader, int x, int y, const rect& area
 
 	auto wnd = KRE::WindowManager::getMainWindow();
 	blit_target_.setRotation(rotate, z_axis);
-	blit_target_.setDrawRect(rect(x, y, static_cast<int>(w + w_adjust * scale_) * (face_right ? 1 : -1), static_cast<int>(h + h_adjust * scale_) * (upside_down ? -1 : 1)));
+	blit_target_.setDrawRect(rect(x&preferences::xypos_draw_mask, y&preferences::xypos_draw_mask, static_cast<int>(w + w_adjust * scale_) * (face_right ? 1 : -1), static_cast<int>(h + h_adjust * scale_) * (upside_down ? -1 : 1)));
 	blit_target_.getTexture()->setSourceRect(0, rect(src_rect.x() + x_adjust, src_rect.y() + y_adjust, src_rect.w() + x_adjust + w_adjust, src_rect.h() + y_adjust + h_adjust));
 	blit_target_.setMirrorHoriz(!face_right);
 	blit_target_.setMirrorVert(upside_down);
@@ -874,7 +874,7 @@ void Frame::getRectInFrameNumber(int nframe, const FrameInfo*& info_result) cons
 	info_result = &info;
 
 	if(info.draw_rect_init) {
-		return;
+	//	return;
 	}
 
 	const int current_col = (nframes_per_row_ > 0) ? (nframe % nframes_per_row_) : nframe ;

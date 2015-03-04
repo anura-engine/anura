@@ -28,7 +28,7 @@ namespace KRE
 {
 	Blittable::Blittable()
 		: SceneObject("blittable"),
-		  centre_(Centre::MIDDLE),
+		  centre_(Centre::TOP_LEFT),
 		  centre_offset_(),
 		  changed_(false),
 		  horizontal_mirrored_(false),
@@ -39,7 +39,7 @@ namespace KRE
 
 	Blittable::Blittable(const TexturePtr& tex)
 		: SceneObject("blittable"),
-		  centre_(Centre::MIDDLE),
+		  centre_(Centre::TOP_LEFT),
 		  centre_offset_(),
 		  changed_(true),
 		  horizontal_mirrored_(false),

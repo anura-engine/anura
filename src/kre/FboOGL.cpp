@@ -246,6 +246,7 @@ namespace KRE
 			//glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 		}
 
+		setMirrorVert(true);
 		Blittable::preRender(wnd);
 	}
 

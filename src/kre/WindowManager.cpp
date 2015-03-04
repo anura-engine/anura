@@ -227,6 +227,7 @@ namespace KRE
 			SDL_SetWindowSize(window_.get(), width, height);
 			width_ = width;
 			height_ = height;
+			setViewPort(0, 0, width_, height_);
 			return false;
 		}
 
