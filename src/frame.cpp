@@ -738,7 +738,7 @@ void Frame::drawCustom(graphics::AnuraShaderPtr shader, int x, int y, const std:
 	const float center_x = x + static_cast<float>(w)/2.0f;
 	const float center_y = y + static_cast<float>(h)/2.0f;
 
-	blit.setTexture(blit_target_.getTexture()->clone());
+	blit.setTexture(blit_target_.getTexture());
 	blit.setMirrorHoriz(!face_right);
 	blit.setMirrorVert(upside_down);
 	blit.setPosition(center_x, center_y);
@@ -798,8 +798,8 @@ void Frame::drawCustom(graphics::AnuraShaderPtr shader, int x, int y, const std:
 	ASSERT_LOG(queue.size() > 4, "ILLEGAL CUSTOM BLIT: " << queue.size());
 
 	auto wnd = KRE::WindowManager::getMainWindow();
+	blit.getAttributeSet().back()->setCount(queue.size());
 	blit.update(&queue);
-	blit.preRender(wnd);
 	wnd->render(&blit);
 }
 
@@ -832,7 +832,7 @@ void Frame::drawCustom(graphics::AnuraShaderPtr shader, int x, int y, const floa
 	const float center_x = x + static_cast<float>(w)/2.0f;
 	const float center_y = y + static_cast<float>(h)/2.0f;
 
-	blit.setTexture(blit_target_.getTexture()->clone());
+	blit.setTexture(blit_target_.getTexture());
 	blit.setRotation(rotation, z_axis);
 
 	for(int n = 0; n < nelements; ++n) {
@@ -841,7 +841,7 @@ void Frame::drawCustom(graphics::AnuraShaderPtr shader, int x, int y, const floa
 		uv += 2;
 	}
 
-	auto wnd = KRE::WindowManager::getMainWindow();
+	blit.getAttributeSet().back()->setCount(queue.size());
 	blit.update(&queue);
 	if(shader) {
 		//shader->makeActive();
@@ -852,7 +852,7 @@ void Frame::drawCustom(graphics::AnuraShaderPtr shader, int x, int y, const floa
 
 	blit.setMirrorHoriz(!face_right);
 	blit.setMirrorVert(upside_down);
-	blit.preRender(wnd);
+	auto wnd = KRE::WindowManager::getMainWindow();
 	wnd->render(&blit);
 
 	if(g_debug_custom_draw) {
