@@ -246,7 +246,11 @@ namespace KRE
 			ASSERT_LOG(node["rect"].is_list(), "'rect' attribute must be a list of numbers.");
 			ASSERT_LOG(node["rect"].num_elements() >= 4, "'rect' attribute must have at least 4 elements.");
 			tp->src_rect = rect(node["rect"]);
-			tp->src_rect_norm = getNormalisedTextureCoords<float>(std::distance(texture_params_.begin(), tp), tp->src_rect);
+			const int n = std::distance(texture_params_.begin(), tp);
+			tp->src_rect_norm = rectf::from_coordinates(getTextureCoordW(n, tp->src_rect.x1()), 
+				getTextureCoordH(n, tp->src_rect.y1()), 
+				getTextureCoordW(n, tp->src_rect.x2()), 
+				getTextureCoordH(n, tp->src_rect.y2()));
 		}
 	}
 
@@ -278,7 +282,11 @@ namespace KRE
 		}
 
 		tp->src_rect = rect(0, 0, tp->surface_width, tp->surface_height);
-		tp->src_rect_norm = getNormalisedTextureCoords<float>(std::distance(texture_params_.begin(), tp), tp->src_rect);
+		const int n = std::distance(texture_params_.begin(), tp);
+		tp->src_rect_norm = rectf::from_coordinates(getTextureCoordW(n, tp->src_rect.x1()), 
+			getTextureCoordH(n, tp->src_rect.y1()), 
+			getTextureCoordW(n, tp->src_rect.x2()), 
+			getTextureCoordH(n, tp->src_rect.y2()));
 	}
 
 	void Texture::setAddressModes(int n, Texture::AddressMode u, Texture::AddressMode v, Texture::AddressMode w, const Color& bc)
@@ -378,11 +386,18 @@ namespace KRE
 		if(n < 0) {
 			for(auto tp = texture_params_.begin(); tp != texture_params_.end(); ++tp) {
 				tp->src_rect = r;
-				tp->src_rect_norm = getNormalisedTextureCoords<float>(std::distance(texture_params_.begin(), tp), tp->src_rect);
+				const int n = std::distance(texture_params_.begin(), tp);
+				tp->src_rect_norm = rectf::from_coordinates(getTextureCoordW(n, tp->src_rect.x1()), 
+					getTextureCoordH(n, tp->src_rect.y1()), 
+					getTextureCoordW(n, tp->src_rect.x2()), 
+					getTextureCoordH(n, tp->src_rect.y2()));
 			}
 		} else {
 			texture_params_[n].src_rect = r;
-			texture_params_[n].src_rect_norm = getNormalisedTextureCoords<float>(n, texture_params_[n].src_rect);
+			texture_params_[n].src_rect_norm = rectf::from_coordinates(getTextureCoordW(n, texture_params_[n].src_rect.x1()), 
+				getTextureCoordH(n, texture_params_[n].src_rect.y1()), 
+				getTextureCoordW(n, texture_params_[n].src_rect.x2()), 
+				getTextureCoordH(n, texture_params_[n].src_rect.y2()));
 		}
 	}
 
