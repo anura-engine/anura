@@ -409,7 +409,7 @@ void render_scene(Level& lvl, const screen_position& pos)
 	}
 
 	// XXX fixme
-	lvl.setPosition(static_cast<float>(-xscroll), static_cast<float>(-yscroll));
+	lvl.setPosition(-xscroll, -yscroll);
 	lvl.draw_background(bg_xscroll, bg_yscroll, camera_rotation);
 
 	int draw_width = screen_width;

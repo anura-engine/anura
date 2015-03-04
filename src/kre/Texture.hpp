@@ -127,31 +127,59 @@ namespace KRE
 		void setUnpackAlignment(int n, int align);
 
 		template<typename N, typename T>
-		const geometry::Rect<N> getNormalisedTextureCoords(int n, const geometry::Rect<T>& r) {
-			float w = static_cast<float>(texture_params_[n].surface_width);
-			float h = static_cast<float>(texture_params_[n].surface_height);
+		const geometry::Rect<N> getNormalisedTextureCoords(int n, const geometry::Rect<T>& r) const {
+			const float w = texture_params_[n].w_ratio;
+			const float h = texture_params_[n].h_ratio;
 			return geometry::Rect<N>::from_coordinates(static_cast<N>(r.x())/w, static_cast<N>(r.y())/h, static_cast<N>(r.x2())/w, static_cast<N>(r.y2())/h);		
 		}
 		template<typename N, typename T>
-		const geometry::Rect<N> getNormalizedTextureCoords(int n, const geometry::Rect<T>& r) {
+		const geometry::Rect<N> getNormalizedTextureCoords(int n, const geometry::Rect<T>& r) const {
 			return getNormalisedTextureCoords<N,T>(n, r);
 		}
 
 		template<typename N, typename T>
-		const N getNormalisedTextureCoordW(int n, const T& x) {
-			return static_cast<N>(x) / static_cast<N>(texture_params_[n].surface_width);
+		const N getNormalisedTextureCoordW(int n, const T& x) const {
+			return static_cast<N>(x) * texture_params_[n].w_ratio;
 		}
 		template<typename N, typename T>
-		const N getNormalisedTextureCoordH(int n, const T& y) {
-			return static_cast<N>(y) / static_cast<N>(texture_params_[n].surface_height);
+		const N getNormalisedTextureCoordH(int n, const T& y) const {
+			return static_cast<N>(y) * texture_params_[n].h_ratio;
 		}
 		template<typename N, typename T>
-		const N getNormalizedTextureCoordW(int n, const T& x) {
+		const N getNormalizedTextureCoordW(int n, const T& x) const {
 			return getNormalisedTextureCoordW<N,T>(n, x);
 		}
 		template<typename N, typename T>
-		const N getNormalizedTextureCoordH(int n, const T& y) {
+		const N getNormalizedTextureCoordH(int n, const T& y) const {
 			return getNormalisedTextureCoordH<N,T>(n, y);
+		}
+
+		// Translates a normalised coord to texture range [0.0, 1.0]
+		template<typename T>
+		const float translateCoordW(int n, const T& x) const {
+			return static_cast<float>(x) / static_cast<float>(texture_params_[0].width);
+		}
+		// Translates a normalised coord to texture range [0.0, 1.0]
+		template<typename T>
+		const float translateCoordH(int n, const T& y) const {
+			return static_cast<float>(y) / static_cast<float>(texture_params_[0].height);
+		}
+
+		// normalise and translate a width value in surface co-ordinates to texture co-ordinates.
+		template<typename T>
+		const float getTextureCoordW(int n, const T& x) const {
+			return translateCoordW<float>(n, getNormalisedTextureCoordW<float,T>(n, x));
+		}
+		// normalise and translate a height value in surface co-ordinates to texture co-ordinates.
+		template<typename T>
+		const float getTextureCoordH(int n, const T& x) const {
+			return translateCoordH<float>(n, getNormalisedTextureCoordH<float,T>(n, x));
+		}
+		// normalise and translate a pair of x, y co-ordinates.
+		template<typename T>
+		const std::pair<float,float> getTextureCoords(int n, const T& x, const T&y) const {
+			return std::make_pair<float,float>(translateCoordW<float>(n, getNormalisedTextureCoordW<float,T>(n, x))
+				translateCoordH<float>(n, getNormalisedTextureCoordH<float,T>(n, x)));
 		}
 
 		// Can return nullptr if not-implemented, invalid underlying surface.
@@ -223,6 +251,8 @@ namespace KRE
 				  height(0),
 				  depth(0),
 				  unpack_alignment(4),
+				  h_ratio(1.0f),
+				  w_ratio(1.0f),
 				  src_rect(),
 				  src_rect_norm(0.0f, 0.0f, 1.0f, 1.0f)
 			{
@@ -248,6 +278,9 @@ namespace KRE
 			int depth;
 			
 			int unpack_alignment;
+
+			float h_ratio;
+			float w_ratio;
 
 			rect src_rect;
 			rectf src_rect_norm;

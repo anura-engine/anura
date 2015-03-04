@@ -1113,7 +1113,7 @@ void CustomObject::drawLater(int xx, int yy) const
 	}
 	for(const gui::WidgetPtr& w : widgets_) {
 		if(w->zorder() >= widget_zorder_draw_later_threshold) {
-			w->draw(offs_x, offs_y, rotate_z_.as_float(), draw_scale_ ? draw_scale_->as_float() : 0);
+			w->draw(offs_x, offs_y, rotate_z_.as_float32(), draw_scale_ ? draw_scale_->as_float32() : 0);
 		}
 	}
 }
@@ -1174,15 +1174,15 @@ void CustomObject::draw(int xx, int yy) const
 		//pass
 	} else if(custom_draw_xy_.size() >= 6 &&
 	          custom_draw_xy_.size() == custom_draw_uv_.size()) {
-		frame_->drawCustom(shader_, draw_x-draw_x%2, draw_y-draw_y%2, &custom_draw_xy_[0], &custom_draw_uv_[0], custom_draw_xy_.size()/2, isFacingRight(), isUpsideDown(), time_in_frame_, rotate_z_.as_float(), cycle_);
+		frame_->drawCustom(shader_, draw_x-draw_x%2, draw_y-draw_y%2, &custom_draw_xy_[0], &custom_draw_uv_[0], custom_draw_xy_.size()/2, isFacingRight(), isUpsideDown(), time_in_frame_, rotate_z_.as_float32(), cycle_);
 	} else if(custom_draw_.get() != nullptr) {
-		frame_->drawCustom(shader_, draw_x-draw_x%2, draw_y-draw_y%2, *custom_draw_, draw_area_.get(), isFacingRight(), isUpsideDown(), time_in_frame_, rotate_z_.as_float());
+		frame_->drawCustom(shader_, draw_x-draw_x%2, draw_y-draw_y%2, *custom_draw_, draw_area_.get(), isFacingRight(), isUpsideDown(), time_in_frame_, rotate_z_.as_float32());
 	} else if(draw_scale_) {
-		frame_->draw(shader_, draw_x-draw_x%2, draw_y-draw_y%2, isFacingRight(), isUpsideDown(), time_in_frame_, rotate_z_.as_float(), draw_scale_->as_float());
+		frame_->draw(shader_, draw_x-draw_x%2, draw_y-draw_y%2, isFacingRight(), isUpsideDown(), time_in_frame_, rotate_z_.as_float32(), draw_scale_->as_float32());
 	} else if(!draw_area_.get()) {
-		frame_->draw(shader_, draw_x-draw_x%2, draw_y-draw_y%2, isFacingRight(), isUpsideDown(), time_in_frame_, rotate_z_.as_float());
+		frame_->draw(shader_, draw_x-draw_x%2, draw_y-draw_y%2, isFacingRight(), isUpsideDown(), time_in_frame_, rotate_z_.as_float32());
 	} else {
-		frame_->draw(shader_, draw_x-draw_x%2, draw_y-draw_y%2, *draw_area_, isFacingRight(), isUpsideDown(), time_in_frame_, rotate_z_.as_float());
+		frame_->draw(shader_, draw_x-draw_x%2, draw_y-draw_y%2, *draw_area_, isFacingRight(), isUpsideDown(), time_in_frame_, rotate_z_.as_float32());
 	}
 
 	if(blur_) {
@@ -1196,7 +1196,7 @@ void CustomObject::draw(int xx, int yy) const
 			while(!transform.fits_in_color()) {
 				transform = transform - transform.toColor();
 				KRE::ColorScope color_scope(transform.toColor());
-				frame_->draw(shader_, draw_x-draw_x%2, draw_y-draw_y%2, isFacingRight(), isUpsideDown(), time_in_frame_, rotate_z_.as_float());
+				frame_->draw(shader_, draw_x-draw_x%2, draw_y-draw_y%2, isFacingRight(), isUpsideDown(), time_in_frame_, rotate_z_.as_float32());
 			}
 		}
 
@@ -1217,7 +1217,7 @@ void CustomObject::draw(int xx, int yy) const
 	for(const gui::WidgetPtr& w : widgets_) {
 		if(w->zorder() < widget_zorder_draw_later_threshold) {
 			if(w->drawWithObjectShader()) {
-				w->draw(offs_x, offs_y, rotate_z_.as_float(), draw_scale_ ? draw_scale_->as_float() : 1.0f);
+				w->draw(offs_x, offs_y, rotate_z_.as_float32(), draw_scale_ ? draw_scale_->as_float32() : 1.0f);
 			}
 		}
 	}
@@ -1283,7 +1283,7 @@ void CustomObject::draw(int xx, int yy) const
 	for(const gui::WidgetPtr& w : widgets_) {
 		if(w->zorder() < widget_zorder_draw_later_threshold) {
 			if(w->drawWithObjectShader() == false) {
-				w->draw(offs_x, offs_y, rotate_z_.as_float(), draw_scale_ ? draw_scale_->as_float() : 0);
+				w->draw(offs_x, offs_y, rotate_z_.as_float32(), draw_scale_ ? draw_scale_->as_float32() : 0);
 			}
 		}
 	}
@@ -1336,8 +1336,8 @@ void CustomObject::process(Level& lvl)
 	box2d::world_ptr world = box2d::world::our_world_ptr();
 	if(body_) {
 		const b2Vec2 v = body_->get_body_ptr()->GetPosition();
-		const float a = body_->get_body_ptr()->GetAngle();
-		rotate_z_ = decimal(double(a) * 180.0 / M_PI);
+		const double a = body_->get_body_ptr()->GetAngle();
+		rotate_z_ = decimal(a * 180.0 / M_PI);
 		setX(int(v.x * world->scale() - (solidRect().w() ? (solidRect().w()/2) : getCurrentFrame().width()/2)));
 		setY(int(v.y * world->scale() - (solidRect().h() ? (solidRect().h()/2) : getCurrentFrame().height()/2)));
 		//setY(graphics::screen_height() - v.y * world->scale() - getCurrentFrame().height());

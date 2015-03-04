@@ -100,10 +100,10 @@ namespace KRE
 					break;
 			}
 
-			const float vx1 = (horizontal_mirrored_ ? draw_rect_.x2() : draw_rect_.x()) + offs_x;
-			const float vy1 = (vertical_mirrored_ ? draw_rect_.y2() : draw_rect_.y()) + offs_y;
-			const float vx2 = (horizontal_mirrored_ ? draw_rect_.x() : draw_rect_.x2()) + offs_x;
-			const float vy2 = (vertical_mirrored_ ? draw_rect_.y() : draw_rect_.y2()) + offs_y;
+			const float vx1 = (vertical_mirrored_ ? draw_rect_.x2() : draw_rect_.x()) + offs_x;
+			const float vy1 = (horizontal_mirrored_ ? draw_rect_.y2() : draw_rect_.y()) + offs_y;
+			const float vx2 = (vertical_mirrored_ ? draw_rect_.x() : draw_rect_.x2()) + offs_x;
+			const float vy2 = (horizontal_mirrored_ ? draw_rect_.y() : draw_rect_.y2()) + offs_y;
 
 			const rectf& r = getTexture()->getSourceRectNormalised();
 

@@ -52,6 +52,7 @@ public:
 	int64_t value() const { return value_; }
 	int as_int() const { return int( value_/DECIMAL_PRECISION ); }
 	double as_float() const { return value_/static_cast<double>(DECIMAL_PRECISION); }
+	float as_float32() const { return static_cast<float>(as_float()); }
 	int64_t fractional() const { return value_%DECIMAL_PRECISION; }
 
 	decimal operator-() const {

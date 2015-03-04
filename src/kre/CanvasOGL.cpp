@@ -55,10 +55,10 @@ namespace KRE
 
 	void CanvasOGL::blitTexture(const TexturePtr& texture, const rect& src, float rotation, const rect& dst, const Color& color) const
 	{
-		const float tx1 = texture->getNormalisedTextureCoordW<float>(0, src.x());
-		const float ty1 = texture->getNormalisedTextureCoordH<float>(0, src.y());
-		const float tx2 = texture->getNormalisedTextureCoordW<float>(0, src.w() == 0 ? texture->surfaceWidth() : src.x2());
-		const float ty2 = texture->getNormalisedTextureCoordH<float>(0, src.h() == 0 ? texture->surfaceHeight() : src.y2());
+		const float tx1 = texture->getTextureCoordW(0, src.x());
+		const float ty1 = texture->getTextureCoordH(0, src.y());
+		const float tx2 = texture->getTextureCoordW(0, src.w() == 0 ? texture->surfaceWidth() : src.x2());
+		const float ty2 = texture->getTextureCoordH(0, src.h() == 0 ? texture->surfaceHeight() : src.y2());
 		const float uv_coords[] = {
 			tx1, ty1,
 			tx2, ty1,

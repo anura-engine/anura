@@ -92,7 +92,7 @@ private:
 
 		bool tile_upwards, tile_downwards;
 
-		std::shared_ptr<KRE::Attribute<KRE::vertex_texcoord>> attr_;
+		std::shared_ptr<KRE::Attribute<KRE::short_vertex_texcoord>> attr_;
 	};
 
 	void drawLayer(int x, int y, const rect& area, float rotation, const Layer& bg, int cycle) const;

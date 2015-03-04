@@ -267,6 +267,9 @@ namespace KRE
 			tp->height = next_power_of_two(tp->surface_height);
 			ASSERT_LOG(tp->type != TextureType::TEXTURE_3D && tp->type != TextureType::TEXTURE_CUBIC, "fixme texture type3d or cubic");
 			tp->depth = 0;
+
+			tp->w_ratio = static_cast<float>(tp->width) / static_cast<float>(tp->surface_width);
+			tp->h_ratio = static_cast<float>(tp->height) / static_cast<float>(tp->surface_height);
 		} else {
 			tp->width = tp->surface_width;
 			tp->height = tp->surface_height;

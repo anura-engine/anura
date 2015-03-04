@@ -172,9 +172,9 @@ Background::Background(variant node, int palette)
 
 		using namespace KRE;
 		auto ab = DisplayDevice::createAttributeSet(false, false, false);
-		bg.attr_ = std::make_shared<Attribute<vertex_texcoord>>(AccessFreqHint::DYNAMIC, AccessTypeHint::DRAW);
-		bg.attr_->addAttributeDesc(AttributeDesc(AttrType::POSITION, 2, AttrFormat::FLOAT, false, sizeof(vertex_texcoord), offsetof(vertex_texcoord, vtx)));
-		bg.attr_->addAttributeDesc(AttributeDesc(AttrType::TEXTURE, 2, AttrFormat::FLOAT, false, sizeof(vertex_texcoord), offsetof(vertex_texcoord, tc)));
+		bg.attr_ = std::make_shared<Attribute<short_vertex_texcoord>>(AccessFreqHint::DYNAMIC, AccessTypeHint::DRAW);
+		bg.attr_->addAttributeDesc(AttributeDesc(AttrType::POSITION, 2, AttrFormat::SHORT, false, sizeof(short_vertex_texcoord), offsetof(short_vertex_texcoord, vertex)));
+		bg.attr_->addAttributeDesc(AttributeDesc(AttrType::TEXTURE, 2, AttrFormat::FLOAT, false, sizeof(short_vertex_texcoord), offsetof(short_vertex_texcoord, tc)));
 		ab->addAttribute(bg.attr_);
 		ab->setDrawMode(DrawMode::TRIANGLE_STRIP);
 		bg.addAttributeSet(ab);
@@ -423,15 +423,8 @@ void Background::drawLayer(int x, int y, const rect& area, float rotation, const
 	ASSERT_GT(bg.texture->surfaceHeight(), 0);
 	ASSERT_GT(bg.texture->surfaceWidth(), 0);
 
-	const float ah = static_cast<float>(bg.texture->actualHeight());
-	const float aw = static_cast<float>(bg.texture->actualWidth());
-	const float sh = static_cast<float>(bg.texture->surfaceHeight());
-	const float sw = static_cast<float>(bg.texture->surfaceWidth());
-	const float h_ratio = ah / sh;
-	const float w_ratio = aw / sw;
-
-	float v1 = bg.y1 / ah * h_ratio;//bg.texture->getNormalisedTextureCoordH<float>(0, bg.y1);
-	float v2 = bg.y2 / ah * h_ratio;//bg.texture->getNormalisedTextureCoordH<float>(0, bg.y2);
+	float v1 = bg.texture->getNormalisedTextureCoordH<float>(0, bg.y1);
+	float v2 = bg.texture->getNormalisedTextureCoordH<float>(0, bg.y2);
 
 	if(y1 < area.y()) {
 		//Making y1 == y2 is problematic, so don't allow it.
@@ -518,33 +511,33 @@ void Background::drawLayer(int x, int y, const rect& area, float rotation, const
 	}
 
 	if(bg.xpad > 0) {
-		xpos *= 1.0f + static_cast<float>(bg.xpad) / aw;
+		xpos *= 1.0f + static_cast<float>(bg.xpad) / bg.texture->actualWidth();
 	}
 
 	x = area.x();
 	y = area.y();
 
-	std::vector<KRE::vertex_texcoord> q;
+	std::vector<KRE::short_vertex_texcoord> q;
 
 	while(screen_width > 0) {
-		const int texture_blit_width = static_cast<int>((1.0f - xpos) * aw * ScaleImage);
+		const int texture_blit_width = static_cast<int>((1.0f - xpos) * bg.texture->actualWidth() * ScaleImage);
 		const int blit_width = std::min(texture_blit_width, screen_width);
 
 		if(blit_width > 0) {
-			const float xpos2 = xpos + static_cast<float>(blit_width) / (aw * 2.0f);
+			const float xpos2 = xpos + static_cast<float>(blit_width) / (bg.texture->actualWidth() * 2.0f);
 
-			const float x1 = x & preferences::xypos_draw_mask;
-			const float x2 = (static_cast<int>(x1) + blit_width) & preferences::xypos_draw_mask;
+			const unsigned short x1 = x & preferences::xypos_draw_mask;
+			const unsigned short x2 = (x1 + blit_width) & preferences::xypos_draw_mask;
 			y1 &= preferences::xypos_draw_mask;
 			y2 &= preferences::xypos_draw_mask;
 
-			const float u1 = w_ratio * xpos;//bg.texture->getNormalisedTextureCoordW<float>(0, xpos);
-			const float u2 = w_ratio * xpos2;//bg.texture->getNormalisedTextureCoordW<float>(0, xpos2);
+			const float u1 = bg.texture->getNormalisedTextureCoordW<float>(0, xpos);
+			const float u2 = bg.texture->getNormalisedTextureCoordW<float>(0, xpos2);
 
-			q.emplace_back(glm::vec2(x1, y1), glm::vec2(u1, v1));
-			q.emplace_back(glm::vec2(x2, y1), glm::vec2(u2, v1));
-			q.emplace_back(glm::vec2(x1, y2), glm::vec2(u1, v2));
-			q.emplace_back(glm::vec2(x2, y2), glm::vec2(u2, v2));
+			q.emplace_back(glm::u16vec2(x1, y1), glm::vec2(u1, v1));
+			q.emplace_back(glm::u16vec2(x2, y1), glm::vec2(u2, v1));
+			q.emplace_back(glm::u16vec2(x1, y2), glm::vec2(u1, v2));
+			q.emplace_back(glm::u16vec2(x2, y2), glm::vec2(u2, v2));
 //LOG_DEBUG("background: " << x1 << "," << y1 << "," << x2 << "," << y2 << " : " << u1 << "," << v1 << "," << u2 << "," << v2);
 
 		}

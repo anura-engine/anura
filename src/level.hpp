@@ -385,9 +385,7 @@ public:
 
 	bool show_builtin_settingsDialog() const { return show_builtin_settings_; }
 
-	void setPosition(float x, float y, float z=0.0f);
-	void setRotation(float angle, const glm::vec3& axis);
-	void setScale(float xs, float ys, float zs=1.0f);
+	void setPosition(int x, int y);
 
 private:
 	DECLARE_CALLABLE(Level);
@@ -630,7 +628,7 @@ private:
 	LevelPtr suspended_level_;
 
 	mutable std::map<int, std::shared_ptr<LayerBlitInfo>> blit_cache_;
-	mutable glm::vec3 position_;
+	mutable point position_;
 
 	KRE::RenderTargetPtr rt_;
 };

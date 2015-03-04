@@ -1554,19 +1554,9 @@ namespace
 	int draw_count = 0;
 }
 
-void Level::setPosition(float x, float y, float z)
+void Level::setPosition(int x, int y)
 {
-	position_ = glm::vec3(x, y, z);
-}
-
-void Level::setRotation(float angle, const glm::vec3& axis)
-{
-	// XXX fixme
-}
-
-void Level::setScale(float xs, float ys, float zs)
-{
-	// XXX fixme
+	position_ = point(x, y);
 }
 
 void Level::draw_layer(int layer, int x, int y, int w, int h) const
@@ -1577,13 +1567,13 @@ void Level::draw_layer(int layer, int x, int y, int w, int h) const
 
 	for(auto& i : sub_levels_) {
 		if(i.second.active) {
-			i.second.lvl->setPosition(static_cast<float>(i.second.xoffset), static_cast<float>(i.second.yoffset));
+			i.second.lvl->setPosition(i.second.xoffset + position_.x, i.second.yoffset + position_.y);
 			i.second.lvl->draw_layer(layer, x - i.second.xoffset, y - i.second.yoffset - TileSize, w, h + TileSize);
 		}
 	}
 
 	KRE::Color color = KRE::Color::colorWhite();
-	glm::vec3 position;
+	point position;
 
 	if(editor_ && layer == highlight_layer_) {
 		const float alpha = static_cast<float>(0.3f + (1.0f+sin(draw_count/5.0f))*0.35f);
@@ -1603,8 +1593,8 @@ void Level::draw_layer(int layer, int x, int y, int w, int h) const
 		const int diffx = ((scrollx - 100)*x)/100;
 		const int diffy = ((scrolly - 100)*y)/100;
 
-		position.x = static_cast<float>(diffx);
-		position.y = static_cast<float>(diffy);
+		position.x = diffx;
+		position.y = diffy;
 		
 		//here, we adjust the screen bounds (they're a first order optimization) to account for the parallax shift
 		x -= diffx;
@@ -1629,7 +1619,8 @@ void Level::draw_layer(int layer, int x, int y, int w, int h) const
 	}
 	{
 		auto& blit_cache_info = *layer_itor->second;
-		blit_cache_info.setPosition(position_ + position);
+		point adjusted_pos = position_ + position;
+		blit_cache_info.setPosition(glm::vec3(static_cast<float>(adjusted_pos.x), static_cast<float>(adjusted_pos.y), 0.0f));
 		//LOG_DEBUG("size of blit_cache_: " << blit_cache_info.getAttributeSet().back()->getCount());
 		KRE::WindowManager::getMainWindow()->render(&blit_cache_info);
 	}
