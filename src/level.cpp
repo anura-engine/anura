@@ -2319,6 +2319,8 @@ void Level::draw_debug_solid(int x, int y, int w, int h) const
 
 void Level::draw_background(int x, int y, int rotation) const
 {
+	x += position_.x;
+	y += position_.y;
 	if(show_background_ == false) {
 		return;
 	}
