@@ -1619,7 +1619,7 @@ void Level::draw_layer(int layer, int x, int y, int w, int h) const
 	}
 	{
 		auto& blit_cache_info = *layer_itor->second;
-		point adjusted_pos = position_ + position;
+		point adjusted_pos = position_ - position;
 		blit_cache_info.setPosition(glm::vec3(static_cast<float>(adjusted_pos.x), static_cast<float>(adjusted_pos.y), 0.0f));
 		//LOG_DEBUG("size of blit_cache_: " << blit_cache_info.getAttributeSet().back()->getCount());
 		KRE::WindowManager::getMainWindow()->render(&blit_cache_info);

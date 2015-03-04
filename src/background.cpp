@@ -423,8 +423,8 @@ void Background::drawLayer(int x, int y, const rect& area, float rotation, const
 	ASSERT_GT(bg.texture->surfaceHeight(), 0);
 	ASSERT_GT(bg.texture->surfaceWidth(), 0);
 
-	float v1 = bg.texture->getNormalisedTextureCoordH<float>(0, bg.y1);
-	float v2 = bg.texture->getNormalisedTextureCoordH<float>(0, bg.y2);
+	float v1 = bg.texture->getTextureCoordH(0, bg.y1);
+	float v2 = bg.texture->getTextureCoordH(0, bg.y2);
 
 	if(y1 < area.y()) {
 		//Making y1 == y2 is problematic, so don't allow it.
@@ -539,7 +539,6 @@ void Background::drawLayer(int x, int y, const rect& area, float rotation, const
 			q.emplace_back(glm::u16vec2(x1, y2), glm::vec2(u1, v2));
 			q.emplace_back(glm::u16vec2(x2, y2), glm::vec2(u2, v2));
 //LOG_DEBUG("background: " << x1 << "," << y1 << "," << x2 << "," << y2 << " : " << u1 << "," << v1 << "," << u2 << "," << v2);
-
 		}
 
 		x += static_cast<int>(blit_width + bg.xpad * ScaleImage);

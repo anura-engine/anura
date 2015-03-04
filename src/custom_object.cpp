@@ -1136,7 +1136,7 @@ void CustomObject::draw(int xx, int yy) const
 
 	for(const EntityPtr& attached : attachedObjects()) {
 		if(attached->zorder() < zorder()) {
-			attached->draw(offs_x, offs_y);
+			attached->draw(xx, yy);
 		}
 	}
 
@@ -1158,7 +1158,7 @@ void CustomObject::draw(int xx, int yy) const
 	}
 
 	if(driver_) {
-		driver_->draw(offs_x, offs_y);
+		driver_->draw(xx, yy);
 	}
 
 	KRE::Color current_color = KRE::Color::colorWhite();
@@ -1204,7 +1204,7 @@ void CustomObject::draw(int xx, int yy) const
 
 	for(const EntityPtr& attached : attachedObjects()) {
 		if(attached->zorder() >= zorder()) {
-			attached->draw(offs_x, offs_y);
+			attached->draw(xx, yy);
 		}
 	}
 

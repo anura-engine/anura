@@ -12,7 +12,7 @@ LayerBlitInfo::LayerBlitInfo()
 
 	auto ab = DisplayDevice::createAttributeSet(true, false, false);
 	opaques_ = std::make_shared<Attribute<tile_corner>>(AccessFreqHint::DYNAMIC, AccessTypeHint::DRAW);
-	opaques_->addAttributeDesc(AttributeDesc(AttrType::POSITION, 2, AttrFormat::UNSIGNED_SHORT, false, sizeof(tile_corner), offsetof(tile_corner, vertex)));
+	opaques_->addAttributeDesc(AttributeDesc(AttrType::POSITION, 2, AttrFormat::SHORT, false, sizeof(tile_corner), offsetof(tile_corner, vertex)));
 	opaques_->addAttributeDesc(AttributeDesc(AttrType::TEXTURE, 2, AttrFormat::FLOAT, false, sizeof(tile_corner), offsetof(tile_corner, uv)));
 	ab->addAttribute(opaques_);	
 	ab->setDrawMode(DrawMode::TRIANGLES);
@@ -20,7 +20,7 @@ LayerBlitInfo::LayerBlitInfo()
 
 	auto tab = DisplayDevice::createAttributeSet(true, false, false);
 	transparent_ = std::make_shared<Attribute<tile_corner>>(AccessFreqHint::DYNAMIC, AccessTypeHint::DRAW);
-	transparent_->addAttributeDesc(AttributeDesc(AttrType::POSITION, 2, AttrFormat::UNSIGNED_SHORT, false, sizeof(tile_corner), offsetof(tile_corner, vertex)));
+	transparent_->addAttributeDesc(AttributeDesc(AttrType::POSITION, 2, AttrFormat::SHORT, false, sizeof(tile_corner), offsetof(tile_corner, vertex)));
 	transparent_->addAttributeDesc(AttributeDesc(AttrType::TEXTURE, 2, AttrFormat::FLOAT, false, sizeof(tile_corner), offsetof(tile_corner, uv)));
 	tab->addAttribute(transparent_);
 
