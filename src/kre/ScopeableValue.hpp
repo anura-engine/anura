@@ -37,7 +37,8 @@ namespace KRE
 			  blend_eqn_(),
 			  blend_equation_set_(false),
 			  blend_mode_(),
-			  blend_mode_set_(false)
+			  blend_mode_set_(false),
+			  blend_enabled_(true)
 		{
 		}
 		bool isBlendEquationSet() const { return blend_equation_set_; }
@@ -48,8 +49,13 @@ namespace KRE
 		bool isBlendModeSet() const { return blend_mode_set_; }
 		const BlendMode& getBlendMode() const { return blend_mode_; }
 		void setBlendMode(const BlendMode& bm) { blend_mode_ = bm; blend_mode_set_ = true; }
-		void setBlendMode(BlendModeConstants src, BlendModeConstants dst) { blend_mode_.set(src, dst); blend_mode_set_ = true; }
+		void setBlendMode(BlendModeConstants src, BlendModeConstants dst) { blend_mode_.set(src, dst); blend_mode_set_ = true; }		
 		void clearBlendMode() { blend_mode_set_ = false; }
+
+		bool isBlendEnabled() const { return blend_enabled_; }
+		bool isBlendStateSet() const { return blend_state_set_; }
+		void setBlendState(bool en = true) { blend_enabled_ = en; blend_state_set_ = true; }
+		void clearblendState() { blend_state_set_ = false; blend_enabled_ = true; }
 
 		void setColor(float r, float g, float b, float a=1.0) { color_ = Color(r, g, b, a); }
 		void setColor(int r, int g, int b, int a=255) { color_ = Color(r, g, b, a); }
@@ -65,5 +71,7 @@ namespace KRE
 		bool blend_equation_set_;
 		BlendMode blend_mode_;
 		bool blend_mode_set_;
+		bool blend_enabled_;
+		bool blend_state_set_;
 	};
 }

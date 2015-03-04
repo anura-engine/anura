@@ -52,6 +52,7 @@ namespace KRE
 		~BlendModeScopeOGL();
 	private:
 		bool stored_;
+		bool state_stored_;
 	};
 
 	void set_blend_mode(const BlendMode& bm);

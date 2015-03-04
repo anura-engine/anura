@@ -89,6 +89,12 @@ namespace KRE
 			static std::stack<BlendMode> res;
 			return res;
 		}
+
+		std::stack<bool>& get_blend_state_stack()
+		{
+			static std::stack<bool> res;
+			return res;
+		}
 	}
 
 	BlendEquationImplOGL::BlendEquationImplOGL()
@@ -146,9 +152,20 @@ namespace KRE
 	}
 
 	BlendModeScopeOGL::BlendModeScopeOGL(const ScopeableValue& sv)
-		: stored_(false)
+		: stored_(false),
+		  state_stored_(false)
 	{
 		auto& bm = sv.getBlendMode();
+		if(sv.isBlendStateSet()) {
+			if(sv.isBlendEnabled()) {
+				glEnable(GL_BLEND);
+			} else {
+				glDisable(GL_BLEND);
+			}
+			get_blend_state_stack().emplace(sv.isBlendEnabled());
+			state_stored_ = true;
+		}
+
 		if(sv.isBlendModeSet() && bm != BlendMode()) {
 			get_blend_mode_stack().emplace(bm);
 			stored_ = true;
@@ -171,6 +188,20 @@ namespace KRE
 				glBlendFunc(convert_blend_mode(bm.src()), convert_blend_mode(bm.dst()));
 			} else {
 				glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			}
+		}
+
+		if(state_stored_) {
+			ASSERT_LOG(!get_blend_state_stack().empty(), "Something went badly wrong blend state stack was empty.");
+			get_blend_state_stack().pop();
+			if(!get_blend_state_stack().empty()) {
+				if(get_blend_state_stack().top()) {
+					glEnable(GL_BLEND);
+				} else {
+					glDisable(GL_BLEND);
+				}
+			} else {
+				glEnable(GL_BLEND);
 			}
 		}
 	}
