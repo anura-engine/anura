@@ -100,13 +100,15 @@ void GuiSection::blit(int x, int y, int w, int h) const
 	const int scale = w/area_.w();
 
 	auto canvas = KRE::Canvas::getInstance();
-	rect dest(x+x_adjust_*scale, y+y_adjust_*scale, w - x_adjust_*scale - x2_adjust_*scale, h - y_adjust_*scale - y2_adjust_*scale);
 	KRE::CanvasBlitFlags flags = KRE::CanvasBlitFlags::NONE;
 	if(w < 0) {
 		flags = KRE::CanvasBlitFlags::FLIP_VERTICAL;
+		w *= -1;
 	}
 	if(h < 0) {
 		flags = flags | KRE::CanvasBlitFlags::FLIP_HORIZONTAL;
+		h *= -1;
 	}
+	rect dest(x+x_adjust_*scale, y+y_adjust_*scale, w - x_adjust_*scale - x2_adjust_*scale, h - y_adjust_*scale - y2_adjust_*scale);
 	canvas->blitTexture(texture_, draw_area_, 0.0f, dest, KRE::Color::colorWhite(), flags);
 }
