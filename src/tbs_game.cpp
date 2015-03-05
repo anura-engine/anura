@@ -557,6 +557,13 @@ namespace tbs
 		DEFINE_FIELD(db_client, "null")
 		return variant();
 #endif
+	} else if(key == "players_disconnected") {
+		std::vector<variant> result;
+		for(auto n : players_disconnected_) {
+			result.push_back(variant(n));
+		}
+
+		return variant(&result);
 
 		DEFINE_FIELD(state_id, "int")
 			return variant(obj.state_id_);
@@ -771,6 +778,42 @@ namespace tbs
 				variant v = f.execute(*callable);
 				executeCommand(v);
 			}
+	}
+}
+
+void game::player_disconnect(int nplayer)
+{
+	variant_builder result;
+	result.add("type", "player_disconnect");
+	result.add("player", players()[nplayer].name);
+	variant msg = result.build();
+	for(int n = 0; n != players().size(); ++n) {
+		if(n != nplayer) {
+			queue_message(msg, n);
+		}
+	}
+	
+}
+
+void game::player_reconnect(int nplayer)
+{
+	variant_builder result;
+	result.add("type", "player_reconnect");
+	result.add("player", players()[nplayer].name);
+	variant msg = result.build();
+	for(int n = 0; n != players().size(); ++n) {
+		if(n != nplayer) {
+			queue_message(msg, n);
+		}
+	}
+}
+
+void game::player_disconnected_for(int nplayer, int time_ms)
+{
+	if(time_ms >= 60000 && std::find(players_disconnected_.begin(), players_disconnected_.end(), nplayer) == players_disconnected_.end()) {
+		players_disconnected_.push_back(nplayer);
+		handle_event("player_disconnected");
+		send_game_state();
 		}
 	}
 

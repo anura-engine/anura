@@ -150,6 +150,8 @@ namespace tbs
 
 		std::vector<player> players_;
 
+	std::vector<int> players_disconnected_;
+
 		std::vector<int> players_disconnected_;
 
 		std::vector<message> outgoing_messages_;

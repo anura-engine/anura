@@ -45,6 +45,16 @@ variant_type::~variant_type()
 {
 }
 
+void variant_type::set_expr(const game_logic::formula_expression* expr)
+{
+	expr_.reset(expr);
+}
+
+const game_logic::formula_expression* variant_type::get_expr() const
+{
+	return expr_.get();
+}
+
 namespace {
 
 std::set<std::string> g_generic_variant_names;
@@ -977,7 +987,32 @@ public:
 	bool is_compatible(variant_type_ptr type, std::ostringstream* why) const {
 		variant_type_ptr value_type = type->is_list_of();
 		if(value_type) {
-			return variant_types_compatible(value_type_, value_type);
+			bool result = variant_types_compatible(value_type_, value_type);
+			if(!result && why != NULL && type->is_specific_list()) {
+				variant_type_ptr mismatching_element;
+				for(variant_type_ptr eltype : *type->is_specific_list()) {
+					if(variant_types_compatible(value_type_, eltype) == false) {
+						if(mismatching_element.get() == NULL) {
+							mismatching_element = eltype;
+						} else {
+							mismatching_element = variant_type_ptr();
+							break;
+						}
+					}
+				}
+
+				if(mismatching_element.get() != NULL) {
+					*why << "Element of list does not match: " << mismatching_element->to_string() << "\nExpected " << value_type_->to_string() << "\n";
+					if(mismatching_element->get_expr() && mismatching_element->get_expr()->has_debug_info()) {
+						*why << mismatching_element->get_expr()->debug_pinpoint_location() << "\n";
+					}
+
+					variant_types_compatible(get_null_excluded(value_type_), get_null_excluded(mismatching_element), why);
+					
+				}
+			}
+
+			return result;
 		}
 
 		if(type->is_type(variant::VARIANT_TYPE_LIST)) {

@@ -179,6 +179,8 @@ namespace tbs
 	}
 http_client* g_game_server_http_client_to_matchmaking_server;
 
+http_client* g_game_server_http_client_to_matchmaking_server;
+
 }
 
 namespace 

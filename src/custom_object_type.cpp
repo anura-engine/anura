@@ -1614,7 +1614,7 @@ void CustomObjectType::initSubObjects(variant node, const CustomObjectType* old_
 			if(old_type && type->node_.is_null()){
 				type->node_ = merged;
 			}
-		//std::cerr << "MERGED PROTOTYPE FOR " << type->id_ << ": " << merged.write_json() << "\n";
+		std::cerr << "MERGED PROTOTYPE FOR " << type->id_ << ": " << merged.write_json() << "\n";
 			sub_objects_[sub_key].reset(type);
 		}
 	}
@@ -1769,10 +1769,32 @@ UTILITY(object_definition)
 		ConstCustomObjectTypePtr obj = CustomObjectType::get(arg);
 		ASSERT_LOG(obj.get() != nullptr, "NO OBJECT FOUND: " << arg);
 
-		const std::string* fname = CustomObjectType::getObjectPath(arg + ".cfg");
-		ASSERT_LOG(fname != nullptr, "NO OBJECT FILE FOUND: " << arg);
+		auto dot = std::find(arg.begin(), arg.end(), '.');
 
-		const variant node = CustomObjectType::mergePrototype(json::parse_from_file(*fname));
+		std::string baseobj = arg;
+		if(dot != arg.end()) {
+			baseobj = std::string(arg.begin(), dot);
+		}
+		
+		const std::string* fname = custom_object_type::get_object_path(baseobj + ".cfg");
+
+		variant json = json::parse_from_file(*fname);
+		if(dot != arg.end()) {
+			std::string subtype(dot+1, arg.end());
+			variant items = json[variant("object_type")];
+			int n = 0;
+			for(; n != items.num_elements(); ++n) {
+				if(items[n][variant("id")].as_string() == subtype) {
+					break;
+				}
+			}
+
+			ASSERT_LOG(n != items.num_elements(), "Could not find object " << arg);
+
+			json = items[n];
+		}
+
+		const variant node = custom_object_type::merge_prototype(json);
 
 		std::cout << "OBJECT " << arg << "\n---\n" << node.write_json(true) << "\n---\n";
 	}

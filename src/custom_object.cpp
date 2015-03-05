@@ -3266,7 +3266,8 @@ variant CustomObject::getValue(const std::string& key) const
 
 void CustomObject::getInputs(std::vector<game_logic::FormulaInput>* inputs) const
 {
-	for(int n = CUSTOM_OBJECT_ARG+1; n != NUM_CUSTOM_OBJECT_PROPERTIES; ++n) {
+	const int end = is_human() ? static_cast<int>(NUM_CUSTOM_OBJECT_PROPERTIES) : static_cast<int>(NUM_CUSTOM_OBJECT_NON_PLAYER_PROPERTIES);
+	for(int n = CUSTOM_OBJECT_ARG+1; n != end; ++n) {
 		auto entry = CustomObjectCallable::instance().getEntry(n);
 		if(!getValueBySlot(n).is_null()) {
 			inputs->push_back(entry->id);

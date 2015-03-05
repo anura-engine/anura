@@ -45,7 +45,7 @@ namespace graphics
 		cairo_t* get() const;
 		KRE::TexturePtr write() const;
 	
-		void render_svg(const std::string& fname);
+		void render_svg(const std::string& fname, int w, int h);
 		void write_png(const std::string& fname);
 
 		void set_pattern(cairo_pattern_t* pattern, bool take_ownership=true);

@@ -1435,7 +1435,7 @@ namespace game_logic
 			ExpressionPtr left_, start_, end_;
 		};
 
-	variant_type_ptr get_variant_type_and_or(ExpressionPtr left, ExpressionPtr right, bool is_or=false) {
+		variant_type_ptr get_variant_type_and_or(ExpressionPtr left, ExpressionPtr right, bool is_or=false) {
 			variant_type_ptr left_type = left->queryVariantType();
 			variant_type_ptr right_type = right->queryVariantType();
 			if(left_type->is_equal(*right_type)) {
@@ -2906,7 +2906,8 @@ namespace game_logic
 	
 			if(formula_name.empty()) {
 				if(g_strict_formula_checking) {
-					STRICT_ASSERT(!result_type || variant_types_compatible(result_type, fml->queryVariantType()), "Formula function return type mis-match. Expects " << result_type->to_string() << " but expression evaluates to " << fml->queryVariantType()->to_string() << "\n" << pinpoint_location(formula_str, beg->begin, (i2-1)->end));
+			std::ostringstream why;
+			STRICT_ASSERT(!result_type || variant_types_compatible(result_type, fml->query_variant_type(), &why), "Formula function return type mis-match. Expects " << result_type->to_string() << " but expression evaluates to " << fml->query_variant_type()->to_string() << "\n" << pinpoint_location(formula_str, beg->begin, (i2-1)->end) << "\n" << why.str());
 				}
 
 				return ExpressionPtr(new LambdaFunctionExpression(args, fml, callable_def ? callable_def->getNumSlots() : 0, default_args, variant_types, result_type ? result_type : fml->queryVariantType()));

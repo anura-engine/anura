@@ -36,7 +36,10 @@ enum CUSTOM_OBJECT_PROPERTY {
 	NUM_CUSTOM_OBJECT_PROPERTIES
 };
 
+enum { NUM_CUSTOM_OBJECT_NON_PLAYER_PROPERTIES = CUSTOM_OBJECT_PLAYER_DIFFICULTY };
+
 class CustomObjectCallable : public game_logic::FormulaCallableDefinition
+
 {
 public:
 	static const CustomObjectCallable& instance();

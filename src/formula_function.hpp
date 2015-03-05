@@ -117,7 +117,7 @@ namespace game_logic
 
 		int getNTimesCalled() const { return ntimes_called_; }
 
-		variant_type_ptr queryVariantType() const { variant_type_ptr res = getVariantType(); if(res) { return res; } else { return variant_type::get_any(); } }
+		variant_type_ptr queryVariantType() const { variant_type_ptr res = get_variant_type(); if(res) { if(res->refcount() == 1) { const_cast<variant_type*>(res.get())->set_expr(this); } return res; } else { return variant_type::get_any(); } }
 
 		variant_type_ptr queryMutableType() const { return getMutableType(); }
 

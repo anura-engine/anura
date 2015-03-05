@@ -319,8 +319,27 @@ variant PlayableCustomObject::getPlayerValueBySlot(int slot) const
 		return variant(vertical_look_);
 	}
 	case CUSTOM_OBJECT_PLAYER_CONTROL_LOCK: {
-		return variant();
-	}
+        std::vector<variant> result;
+        
+        const unsigned char* locked_control_frame = controls::get_local_control_lock();
+        
+        if (locked_control_frame == nullptr) {
+            return variant();
+        }
+        
+        for(int i = 0; i < 8; ++i){
+            if((*locked_control_frame & (0x01 << i)) ){
+                
+                result.push_back( variant(ctrl[i]) );
+            } else {
+                //this key isn't pressed
+            }            
+        }
+       
+        return variant(&result);
+       
+    }
+        
 	}
 
 	ASSERT_LOG(false, "unknown slot in get_player_value_by_slot: " << slot);
