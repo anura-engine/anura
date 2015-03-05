@@ -156,30 +156,37 @@ namespace KRE
 
 		// Translates a normalised coord to texture range [0.0, 1.0]
 		template<typename T>
-		const float translateCoordW(int n, const T& x) const {
+		float translateCoordW(int n, const T& x) const {
 			return static_cast<float>(x) / static_cast<float>(texture_params_[0].width);
 		}
 		// Translates a normalised coord to texture range [0.0, 1.0]
 		template<typename T>
-		const float translateCoordH(int n, const T& y) const {
+		float translateCoordH(int n, const T& y) const {
 			return static_cast<float>(y) / static_cast<float>(texture_params_[0].height);
 		}
 
 		// normalise and translate a width value in surface co-ordinates to texture co-ordinates.
 		template<typename T>
-		const float getTextureCoordW(int n, const T& x) const {
+		float getTextureCoordW(int n, const T& x) const {
 			return translateCoordW<float>(n, getNormalisedTextureCoordW<float,T>(n, x));
 		}
 		// normalise and translate a height value in surface co-ordinates to texture co-ordinates.
 		template<typename T>
-		const float getTextureCoordH(int n, const T& x) const {
-			return translateCoordH<float>(n, getNormalisedTextureCoordH<float,T>(n, x));
+		float getTextureCoordH(int n, const T& y) const {
+			return translateCoordH<float>(n, getNormalisedTextureCoordH<float,T>(n, y));
 		}
 		// normalise and translate a pair of x, y co-ordinates.
 		template<typename T>
-		const std::pair<float,float> getTextureCoords(int n, const T& x, const T&y) const {
-			return std::make_pair<float,float>(translateCoordW<float>(n, getNormalisedTextureCoordW<float,T>(n, x))
+		std::pair<float,float> getTextureCoords(int n, const T& x, const T&y) const {
+			return std::make_pair<float,float>(translateCoordW<float>(n, getNormalisedTextureCoordW<float,T>(n, x)),
 				translateCoordH<float>(n, getNormalisedTextureCoordH<float,T>(n, x)));
+		}
+		template<typename T>
+		rectf getTextureCoords(int n, const geometry::Rect<T>& r) const {
+			return rectf::from_coordinates(translateCoordW<float>(n, getNormalisedTextureCoordW<float,T>(n, r.x1())),
+				translateCoordH<float>(n, getNormalisedTextureCoordH<float,T>(n, r.y1())),
+				translateCoordH<float>(n, getNormalisedTextureCoordW<float,T>(n, r.x2())),
+				translateCoordH<float>(n, getNormalisedTextureCoordH<float,T>(n, r.y2())));
 		}
 
 		// Can return nullptr if not-implemented, invalid underlying surface.
