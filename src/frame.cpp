@@ -874,7 +874,9 @@ void Frame::getRectInFrameNumber(int nframe, const FrameInfo*& info_result) cons
 	info_result = &info;
 
 	if(info.draw_rect_init) {
-	//	return;
+		blit_target_.getTexture()->setSourceRect(0, info.area);
+		info.draw_rect = blit_target_.getTexture()->getSourceRectNormalised();
+		return;
 	}
 
 	const int current_col = (nframes_per_row_ > 0) ? (nframe % nframes_per_row_) : nframe ;
