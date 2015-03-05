@@ -40,6 +40,7 @@
 #include "EffectsOGL.hpp"
 #include "FboOGL.hpp"
 #include "LightObject.hpp"
+#include "ModelMatrixScope.hpp"
 #include "ScissorOGL.hpp"
 #include "ShadersOGL.hpp"
 #include "StencilScopeOGL.hpp"
@@ -267,7 +268,11 @@ namespace KRE
 		}
 
 		if(shader->getMvpUniform() != ShaderProgram::INALID_UNIFORM) {
-			pvmat *= r->getModelMatrix();
+			if(is_global_model_matrix_valid()) {
+				pvmat = pvmat * get_global_model_matrix() * r->getModelMatrix();
+			} else {
+				pvmat *= r->getModelMatrix();
+			}
 			shader->setUniformValue(shader->getMvpUniform(), glm::value_ptr(pvmat));
 		}
 

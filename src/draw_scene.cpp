@@ -29,6 +29,7 @@
 
 #include "Canvas.hpp"
 #include "Font.hpp"
+#include "ModelMatrixScope.hpp"
 #include "WindowManager.hpp"
 
 #include "asserts.hpp"
@@ -400,16 +401,17 @@ void render_scene(Level& lvl, const screen_position& pos)
 
 	// XXX fixme
 	// lvl.setScale(pos.zoom, pos.zoom);
-	xscroll += static_cast<int>((screen_width/2)*(-1.0/pos.zoom + 1.0));
-	yscroll += static_cast<int>((wnd->height()/2)*(-1.0/pos.zoom + 1.0));
+	xscroll += static_cast<int>((screen_width/2)*(-1.0f/pos.zoom + 1.0f));
+	yscroll += static_cast<int>((wnd->height()/2)*(-1.0f/pos.zoom + 1.0f));
 
-	if(pos.zoom < 1.0) {
+	if(pos.zoom < 1.0f) {
 		bg_xscroll = xscroll;
 		bg_yscroll = yscroll;
 	}
 
 	// XXX fixme
-	lvl.setPosition(-xscroll, -yscroll);
+	//lvl.setPosition(-xscroll, -yscroll);
+	KRE::ModelManager2D model_matrix(-xscroll, -yscroll, 0, pos.zoom);
 	lvl.draw_background(bg_xscroll, bg_yscroll, camera_rotation);
 
 	int draw_width = screen_width;

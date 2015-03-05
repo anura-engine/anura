@@ -29,6 +29,7 @@
 #include "ClipScope.hpp"
 #include "ColorScope.hpp"
 #include "Font.hpp"
+#include "ModelMatrixScope.hpp"
 #include "StencilScope.hpp"
 #include "WindowManager.hpp"
 
@@ -1129,9 +1130,10 @@ void CustomObject::draw(int xx, int yy) const
 	int offs_y = yy+y();
 
 	if(use_absolute_screen_coordinates_) {
+		std::unique_ptr<KRE::ModelManager2D> model_scope(new KRE::ModelManager2D(xx, yy));
 		adjusted_draw_position_.x = xx;
 		adjusted_draw_position_.y = yy;
-		xx = yy = 0;
+		//xx = yy = 0;
 	}
 
 	for(const EntityPtr& attached : attachedObjects()) {
@@ -1167,8 +1169,8 @@ void CustomObject::draw(int xx, int yy) const
 	}
 	KRE::ColorScope color_scope(current_color);
 
-	const int draw_x = x() - xx;
-	const int draw_y = y() - yy;
+	const int draw_x = x()/* - xx*/;
+	const int draw_y = y()/* - yy*/;
 
 	if(type_->isHiddenInGame() && !Level::current().in_editor()) {
 		//pass

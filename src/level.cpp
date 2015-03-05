@@ -28,6 +28,7 @@
 #include "BlendModeScope.hpp"
 #include "ColorScope.hpp"
 #include "Font.hpp"
+#include "ModelMatrixScope.hpp"
 #include "RenderTarget.hpp"
 #include "StencilScope.hpp"
 #include "WindowManager.hpp"
@@ -1567,7 +1568,8 @@ void Level::draw_layer(int layer, int x, int y, int w, int h) const
 
 	for(auto& i : sub_levels_) {
 		if(i.second.active) {
-			i.second.lvl->setPosition(i.second.xoffset + position_.x, i.second.yoffset + position_.y);
+			KRE::ModelManager2D matrix_scope(i.second.xoffset, i.second.yoffset);
+			//i.second.lvl->setPosition(i.second.xoffset + position_.x, i.second.yoffset + position_.y);
 			i.second.lvl->draw_layer(layer, x - i.second.xoffset, y - i.second.yoffset - TileSize, w, h + TileSize);
 		}
 	}
@@ -1619,8 +1621,9 @@ void Level::draw_layer(int layer, int x, int y, int w, int h) const
 	}
 	{
 		auto& blit_cache_info = *layer_itor->second;
-		point adjusted_pos = position_ - position;
-		blit_cache_info.setPosition(glm::vec3(static_cast<float>(adjusted_pos.x), static_cast<float>(adjusted_pos.y), 0.0f));
+		//point adjusted_pos = position_ - position;
+		KRE::ModelManager2D model_matrix_scope(position.x, position.y);
+		//blit_cache_info.setPosition(glm::vec3(static_cast<float>(adjusted_pos.x), static_cast<float>(adjusted_pos.y), 0.0f));
 		KRE::WindowManager::getMainWindow()->render(&blit_cache_info);
 	}
 }
@@ -1799,7 +1802,9 @@ namespace
 			diffy = ((scrolly - 1000)*y)/1000;
 		}
 
-		obj.draw(x + diffx, y + diffy);
+		KRE::ModelManager2D model_scope(diffx, diffy);
+		//obj.draw(x + diffx, y + diffy);
+		obj.draw(x, y);
 		if(editor) {
 			obj.drawGroup();
 		}
@@ -1819,7 +1824,8 @@ namespace
 			diffy = ((scrolly - 1000)*y)/1000;
 		}
 
-		obj.drawLater(x + diffx, y + diffy);
+		KRE::ModelManager2D model_scope(diffx, diffy);
+		obj.drawLater(x, y);
 	}
 }
 
@@ -2208,8 +2214,8 @@ void Level::draw_debug_solid(int x, int y, int w, int h) const
 
 void Level::draw_background(int x, int y, int rotation) const
 {
-	x += position_.x;
-	y += position_.y;
+	//x += position_.x;
+	//y += position_.y;
 	if(show_background_ == false) {
 		return;
 	}

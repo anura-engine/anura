@@ -1,0 +1,197 @@
+/*
+	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
+	
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
+
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
+
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
+*/
+
+#include <stack>
+
+#include "ModelMatrixScope.hpp"
+
+namespace KRE
+{
+	namespace 
+	{
+		// These are purely for 2D
+		std::stack<glm::vec2>& get_translation_stack()
+		{
+			static std::stack<glm::vec2> res;
+			return res;
+		}
+
+		std::stack<float>& get_rotation_stack()
+		{
+			static std::stack<float> res;
+			return res;
+		}
+
+		std::stack<glm::vec2>& get_scale_stack()
+		{
+			static std::stack<glm::vec2> res;
+			return res;
+		}
+
+		glm::mat4& get_model_matrix() 
+		{
+			static glm::mat4 res(1.0f);
+			return res;
+		}
+
+		static bool model_matrix_changed = true;
+	}
+
+	ModelManager2D::ModelManager2D()
+	{
+	}
+
+	ModelManager2D::ModelManager2D(int tx, int ty, float angle, float scale)
+	{
+		if(get_translation_stack().empty()) {
+			get_translation_stack().emplace(static_cast<float>(tx), static_cast<float>(ty));
+		} else {
+			auto top = get_translation_stack().top();
+			get_translation_stack().emplace(static_cast<float>(tx) + top.x, static_cast<float>(ty) + top.y);
+		}
+
+		if(get_rotation_stack().empty()) {
+			get_rotation_stack().emplace(angle);
+		} else {
+			auto top = get_rotation_stack().top();
+			get_rotation_stack().emplace(angle + top);
+		}
+
+		if(get_scale_stack().empty()) {
+			get_scale_stack().emplace(scale, scale);
+		} else {
+			auto top = get_scale_stack().top();
+			get_scale_stack().emplace(scale * top.x, scale * top.y);
+		}
+		model_matrix_changed = true;
+	}
+
+	ModelManager2D::~ModelManager2D() 
+	{
+		if(!get_translation_stack().empty()) {
+			get_translation_stack().pop();
+			model_matrix_changed = true;
+		}
+		if(!get_rotation_stack().empty()) {
+			get_rotation_stack().pop();
+			model_matrix_changed = true;
+		}
+		if(!get_scale_stack().empty()) {
+			get_scale_stack().pop();
+			model_matrix_changed = true;
+		}
+	}
+
+	void ModelManager2D::setIdentity()
+	{
+		if(!get_translation_stack().empty()) {
+			auto& top = get_translation_stack().top();
+			top.x = top.y = 0.0f;
+			model_matrix_changed = true;
+		}
+		if(!get_rotation_stack().empty()) {
+			get_rotation_stack().top() = 0.0f;
+			model_matrix_changed = true;
+		}
+		if(!get_scale_stack().empty()) {
+			auto& top = get_scale_stack().top();
+			top.x = top.y = 1.0f;
+			model_matrix_changed = true;
+		}
+	}
+
+	void ModelManager2D::translate(int tx, int ty)
+	{
+		if(get_translation_stack().empty()) {
+			get_translation_stack().emplace(static_cast<float>(tx), static_cast<float>(ty));
+		} else {
+			auto& top = get_translation_stack().top();
+			top.x += static_cast<float>(tx);
+			top.y += static_cast<float>(ty);
+		}
+		model_matrix_changed = true;
+	}
+
+	void ModelManager2D::rotate(float angle)
+	{
+		if(get_rotation_stack().empty()) {
+			get_rotation_stack().emplace(angle);
+		} else {
+			get_rotation_stack().top() += angle;
+		}
+		model_matrix_changed = true;
+	}
+
+	void ModelManager2D::scale(float sx, float sy)
+	{
+		if(get_scale_stack().empty()) {
+			get_scale_stack().emplace(sx, sy);
+		} else {
+			auto& top = get_scale_stack().top();
+			top.x += sx;
+			top.y += sy;
+		}
+		model_matrix_changed = true;
+	}
+
+	void ModelManager2D::scale(float s)
+	{
+		if(get_scale_stack().empty()) {
+			get_scale_stack().emplace(s, s);
+		} else {
+			auto& top = get_scale_stack().top();
+			top.x *= s;
+			top.y *= s;
+		}
+		model_matrix_changed = true;
+	}
+
+	bool is_global_model_matrix_valid()
+	{
+		return !get_translation_stack().empty() || !get_rotation_stack().empty() || !get_scale_stack().empty();
+	}
+
+	const glm::mat4& get_global_model_matrix()
+	{
+		if(model_matrix_changed) {
+			model_matrix_changed = false;
+			
+			get_model_matrix() = glm::mat4(1.0f);
+			if(!get_translation_stack().empty()) {
+				auto& top = get_translation_stack().top();
+				get_model_matrix() = glm::translate(get_model_matrix(), glm::vec3(top, 0.0f));
+			}
+
+			if(!get_rotation_stack().empty()) {
+				get_model_matrix() = glm::rotate(get_model_matrix(), get_rotation_stack().top(), glm::vec3(0.0f, 0.0f, 1.0f));
+			}
+
+			if(!get_scale_stack().empty()) {
+				auto& top = get_scale_stack().top();
+				get_model_matrix() = glm::scale(get_model_matrix(), glm::vec3(top, 1.0f));
+			}
+		}
+		return get_model_matrix();
+	}
+
+}
