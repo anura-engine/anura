@@ -25,6 +25,7 @@
 
 #include <algorithm>
 
+#include "Blittable.hpp"
 #include "Canvas.hpp"
 #include "DisplayDevice.hpp"
 #include "Font.hpp"
@@ -33,6 +34,7 @@
 #include "asserts.hpp"
 #include "clipboard.hpp"
 #include "input.hpp"
+#include "preferences.hpp"
 #include "profile_timer.hpp"
 #include "scoped_resource.hpp"
 #include "string_utils.hpp"
@@ -50,22 +52,22 @@ namespace gui
 		typedef KRE::TexturePtr char_texture_ptr;
 		std::vector<char_texture_ptr> char_textures;
 
-		std::map<int, std::map<char, rect>> all_char_to_area;
+		std::map<int, std::map<char, rectf>> all_char_to_area;
 
 		std::string monofont()
 		{
 			return KRE::Font::get_default_monospace_font();
 		}
 
-		const rect& get_char_area(int font_size, char c)
+		const rectf& get_char_area(int font_size, char c)
 		{
-			std::map<char, rect>& char_to_area = all_char_to_area[font_size];
-			std::map<char, rect>::const_iterator i = char_to_area.find(c);
+			std::map<char, rectf>& char_to_area = all_char_to_area[font_size];
+			auto i = char_to_area.find(c);
 			if(i != char_to_area.end()) {
 				return i->second;
 			}
 
-			const rect& result = char_to_area[c];
+			const rectf& result = char_to_area[c];
 
 			const int char_width = KRE::Font::charWidth(font_size, monofont());
 			const int char_height = KRE::Font::charHeight(font_size, monofont());
@@ -73,24 +75,30 @@ namespace gui
 			std::string str;
 			int row = 0, col = 0;
 			int nchars = 0;
-			for(std::map<char, rect>::iterator i = char_to_area.begin();
-				i != char_to_area.end(); ++i) {
-				str.push_back(i->first);
-	
-				rect area(col*char_width, row*char_height, (col+1)*char_width, (row+1)*char_height);
+			for(auto& i : char_to_area) {
+				str.push_back(i.first);
 
-				char_to_area[i->first] = area;
+				char_to_area[i.first] = rectf(static_cast<float>(col), 
+					static_cast<float>(row), 
+					static_cast<float>(char_width), 
+					static_cast<float>(char_height));
 
-				++col;
-				if(col == 128) {
+				col += char_width;
+				if(col >= 128 * char_width) {
 					str += "\n";
 					col = 0;
-					++row;
+					row += char_height;
 				}
 			}
 
-			char_texture_ptr& char_texture = char_textures[font_size];
-			char_texture = KRE::Font::getInstance()->renderText(str, KRE::Color::colorWhite(),font_size, true, monofont());
+			auto char_texture = char_textures[font_size] = KRE::Font::getInstance()->renderText(str, KRE::Color::colorWhite(), font_size, true, monofont());
+
+			for(auto& area : char_to_area) {
+				area.second = rectf::from_coordinates(char_texture->getTextureCoordW(0, area.second.x1()),
+					char_texture->getTextureCoordH(0, area.second.y1()),
+					char_texture->getTextureCoordW(0, area.second.x2()),
+					char_texture->getTextureCoordH(0, area.second.y2()));
+			}
 
 			return result;
 		}
@@ -105,10 +113,10 @@ namespace gui
 				return;
 			}
 
-			std::map<char, rect>& char_to_area = all_char_to_area[font_size];
+			std::map<char, rectf>& char_to_area = all_char_to_area[font_size];
 			for(char c = 1; c < 127; ++c) {
 				if(util::c_isprint(c) && c != 'a') {
-					char_to_area[c] = rect();
+					char_to_area[c] = rectf();
 				}
 			}
 
@@ -390,6 +398,7 @@ namespace gui
 		init_char_area(font_size_);
 
 		std::vector<RectDraw> rects;
+		std::map<uint32_t, std::vector<KRE::vertex_texcoord>> chars;
 
 		int begin_build = profile::get_tick_time();
 
@@ -460,14 +469,24 @@ namespace gui
 				}
 
 				if(!util::c_isspace(ch) && util::c_isprint(ch)) {
-					const rect& area = get_char_area(font_size_, ch);
+					const rectf& area = get_char_area(font_size_, ch);
 
-					const int x1 = xpos + c*char_width_;
-					const int y1 = ypos + r*char_height_;
-					const int x2 = x1 + char_width_;
-					const int y2 = y1 + char_height_;
+					const int x1 = (xpos + c*char_width_) & preferences::xypos_draw_mask;
+					const int y1 = (ypos + r*char_height_) & preferences::xypos_draw_mask;
+					const int x2 = (x1 + char_width_) & preferences::xypos_draw_mask;
+					const int y2 = (y1 + char_height_) & preferences::xypos_draw_mask;
 
-					canvas->blitTexture(char_textures[font_size_], area, 0, rect::from_coordinates(x1,y1,x2,y2), col);
+					auto& queue = chars[col.asRGBA()];
+					queue.emplace_back(glm::vec2(x1, y1), glm::vec2(area.x1(), area.y1()));
+					queue.emplace_back(glm::vec2(x2, y1), glm::vec2(area.x2(), area.y1()));
+					queue.emplace_back(glm::vec2(x2, y2), glm::vec2(area.x2(), area.y2()));
+
+					queue.emplace_back(glm::vec2(x2, y2), glm::vec2(area.x2(), area.y2()));
+					queue.emplace_back(glm::vec2(x1, y1), glm::vec2(area.x1(), area.y1()));
+					queue.emplace_back(glm::vec2(x1, y2), glm::vec2(area.x1(), area.y2()));
+					
+					//canvas->drawSolidRect(rect::from_coordinates(x1, y1, x2, y2), KRE::Color::colorBlue());
+					//canvas->blitTexture(char_textures[font_size_], area.as_type<int>(), 0, rect::from_coordinates(x1, y1, x2, y2), col);
 				}
 
 				if(cursor_.row == n && cursor_.col == m &&
@@ -490,6 +509,12 @@ namespace gui
 
 		if(no_border_ == false) {
 			canvas->drawHollowRect(rect(x()+1, y()+1, width()-2, height()-2), has_focus_ ? KRE::Color::colorWhite() : KRE::Color::colorGray());
+		}
+
+		for(auto& c : chars) {
+			if(c.second.size() > 0) {
+				canvas->blitTexture(char_textures[font_size_], c.second, 0, KRE::Color(c.first));
+			}
 		}
 
 		KRE::Canvas::ModelManager mm(x(), y(), getRotation(), getScale());

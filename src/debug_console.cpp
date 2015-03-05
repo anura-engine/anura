@@ -250,7 +250,7 @@ namespace debug_console
 		}
 
 		try {
-			messages().push_back(KRE::Font::getInstance()->renderText(msg, KRE::Color::colorWhite(), 14));
+			messages().push_back(KRE::Font::getInstance()->renderText(msg, KRE::Color::colorWhite(), 14, false));
 		} catch(KRE::FontError&) {
 			LOG_ERROR("FAILED TO ADD MESSAGE DUE TO FONT RENDERING FAILURE");
 			return;

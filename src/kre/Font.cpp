@@ -226,8 +226,9 @@ namespace KRE
 	{
 		auto font_instance = getInstance();
 		if(font_instance) {
-			font_instance->getCharWidth(size, fn);
+			return font_instance->getCharWidth(size, fn);
 		}
+		ASSERT_LOG(false, "No font instance found.");
 		return size;
 	}
 
@@ -235,8 +236,9 @@ namespace KRE
 	{
 		auto font_instance = getInstance();
 		if(font_instance) {
-			font_instance->getCharHeight(size, fn);
+			return font_instance->getCharHeight(size, fn);
 		}
+		ASSERT_LOG(false, "No font instance found.");
 		return size;
 	}
 
