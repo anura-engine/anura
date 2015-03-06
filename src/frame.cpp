@@ -251,7 +251,6 @@ Frame::Frame(variant node)
 		if(create_palette) {
 			if(node.has_key("fbo")) {
 				blit_target_.setTexture(node["fbo"].convert_to<TextureObject>()->texture());
-				LOG_DEBUG("Set frame::fbo texture to: " << blit_target_.getTexture()->getFrontSurface()->getName());
 			} else if(node.has_key("image")) {
 				blit_target_.setTexture(KRE::Texture::createTexture(node["image"]));
 			}
@@ -270,7 +269,6 @@ Frame::Frame(variant node)
 	} else {
 		if(node.has_key("fbo")) {
 			blit_target_.setTexture(node["fbo"].convert_to<TextureObject>()->texture());
-				LOG_DEBUG("Set frame::fbo texture to: " << blit_target_.getTexture()->getFrontSurface()->getName());
 		} else if(node.has_key("image")) {
 			blit_target_.setTexture(KRE::Texture::createTexture(node["image"]));
 		}
