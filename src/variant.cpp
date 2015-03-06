@@ -786,7 +786,7 @@ variant variant::getValues() const
 	return variant(&tmp);
 }
 
-size_t variant::num_elements() const
+int variant::num_elements() const
 {
 	if (type_ == VARIANT_TYPE_NULL){
 		return 0;
@@ -794,13 +794,13 @@ size_t variant::num_elements() const
 		return 1;
 	} else if (type_ == VARIANT_TYPE_LIST) {
 		assert(list_);
-		return list_->size();
+		return static_cast<int>(list_->size());
 	} else if (type_ == VARIANT_TYPE_STRING) {
 		assert(string_);
-		return string_->str.size();
+		return static_cast<int>(string_->str.size());
 	} else if (type_ == VARIANT_TYPE_MAP) {
 		assert(map_);
-		return map_->elements.size();
+		return static_cast<int>(map_->elements.size());
 	} else {
 		const debug_info* info = get_debug_info();
 		std::string loc;

@@ -374,7 +374,7 @@ int main(int argcount, char* argvec[])
 				std::vector<std::string> additional_args = cfg["arguments"].as_list_string();
 				argv.insert(argv.begin(), additional_args.begin(), additional_args.end());
 				LOG_INFO_NOLF("ADDING ARGUMENTS FROM master-config.cfg:");
-				for(size_t n = 0; n < cfg["arguments"].num_elements(); ++n) {
+				for(int n = 0; n < cfg["arguments"].num_elements(); ++n) {
 					LOG_INFO_NOLF(" " << cfg["arguments"][n].as_string());
 				}
 				LOG_INFO("");

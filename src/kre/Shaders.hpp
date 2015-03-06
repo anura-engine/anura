@@ -79,6 +79,7 @@ namespace KRE
 		virtual void setUniformValue(int uid, const float*) const = 0;
 		virtual void setUniformValue(int uid, const int*) const = 0;
 		virtual void setUniformValue(int uid, const void*) const = 0;
+		virtual void setUniformFromVariant(int uid, const variant& value) const = 0;
 
 		virtual void configureActives(AttributeSetPtr attrset) = 0;
 		virtual void configureUniforms(UniformBufferBase& uniforms) = 0;

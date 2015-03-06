@@ -95,6 +95,8 @@ namespace KRE
 			void setUniformValue(int uid, const GLint*) const override;
 			void setUniformValue(int uid, const void*) const override;
 
+			void setUniformFromVariant(int uid, const variant& value) const override;
+
 			void makeActive() override;
 
 			void configureActives(AttributeSetPtr attrset) override;

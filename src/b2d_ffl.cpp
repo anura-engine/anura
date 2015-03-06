@@ -145,7 +145,7 @@ namespace box2d
 		}
 		if(w.has_key("joints")) {
 			if(w["joints"].is_list()) {
-				for(size_t n = 0; n < w["joints"].num_elements(); ++n) {
+				for(int n = 0; n < w["joints"].num_elements(); ++n) {
 					std::shared_ptr<joint_factory> p = std::shared_ptr<joint_factory>(new joint_factory(w["joints"][n]));
 					get_joint_defs()[w["joints"][n]["id"].as_string()] = p;
 				}
@@ -400,7 +400,7 @@ namespace box2d
 				ASSERT_LOG(shape.has_key("vertices") && shape["vertices"].is_list(), "verticies must be a list");
 				bool loop = shape["loop"].as_bool(false);
 				std::vector<b2Vec2> vertices;
-				for(size_t n = 0; n < shape["vertices"].num_elements(); ++n) {
+				for(int n = 0; n < shape["vertices"].num_elements(); ++n) {
 					ASSERT_LOG(shape["vertices"][n].is_list() && shape["vertices"][n].num_elements() > 2, 
 						"Inner items on vertices must be lists of length > 2.");
 					vertices.push_back(b2Vec2(float32(shape["vertices"][n][0].as_decimal().as_float()), float32(shape["vertex3"][n][1].as_decimal().as_float())));

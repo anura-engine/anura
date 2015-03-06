@@ -105,7 +105,7 @@ namespace KRE
 
 	BlendMode::BlendMode(const variant& node)
 		: src_(BlendModeConstants::BM_SRC_ALPHA), 
-		dst_(BlendModeConstants::BM_ONE_MINUS_SRC_ALPHA)
+		  dst_(BlendModeConstants::BM_ONE_MINUS_SRC_ALPHA)
 	{
 		set(node);
 	}	
@@ -163,19 +163,19 @@ namespace KRE
 
 	BlendEquation::BlendEquation()
 		: rgb_(BlendEquationConstants::BE_ADD),
-		alpha_(BlendEquationConstants::BE_ADD)
+		  alpha_(BlendEquationConstants::BE_ADD)
 	{
 	}
 
 	BlendEquation::BlendEquation(BlendEquationConstants rgba_eq)
 		: rgb_(rgba_eq),
-		alpha_(rgba_eq)
+		  alpha_(rgba_eq)
 	{
 	}
 
 	BlendEquation::BlendEquation(BlendEquationConstants rgb_eq, BlendEquationConstants alpha_eq)
 		: rgb_(rgb_eq),
-		alpha_(alpha_eq)
+		  alpha_(alpha_eq)
 	{
 	}
 
@@ -199,7 +199,7 @@ namespace KRE
 
 	BlendEquation::BlendEquation(const variant& node)
 		: rgb_(BlendEquationConstants::BE_ADD),
-		alpha_(BlendEquationConstants::BE_ADD)
+		  alpha_(BlendEquationConstants::BE_ADD)
 	{
 		if(node.is_map()) {
 			if(node.has_key("rgba")) {
@@ -272,7 +272,7 @@ namespace KRE
 
 	BlendEquation::Manager::Manager(const BlendEquation& eqn)
 		: impl_(DisplayDevice::getCurrent()->getBlendEquationImpl()),
-		eqn_(eqn)
+		  eqn_(eqn)
 	{
 		impl_->apply(eqn_);
 	}

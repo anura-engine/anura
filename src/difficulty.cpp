@@ -46,7 +46,7 @@ namespace difficulty
 			variant diff = json::parse_from_file("data/difficulty.cfg");
 			// Any option is always defined.
 			get_difficulty_map().insert(position("any", -1));
-			for(size_t i = 0; i < diff["difficulties"].num_elements(); i++) {
+			for(int i = 0; i < diff["difficulties"].num_elements(); i++) {
 				get_difficulty_map().insert(position(diff["difficulties"][i]["text"].as_string(), diff["difficulties"][i]["value"].as_int()));
 			}
 		}

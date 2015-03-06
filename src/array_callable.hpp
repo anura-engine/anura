@@ -44,7 +44,7 @@ namespace game_logic
 			if(key == "floats" || key == "value") {
 				ASSERT_LOG(value.is_list(), "Must be a list type");
 				f_.resize(value.num_elements());
-				for(size_t n = 0; n < value.num_elements(); ++n) {
+				for(int n = 0; n < value.num_elements(); ++n) {
 					f_[n] = float(value[n].as_decimal().as_float());
 				}
 			}
@@ -53,7 +53,7 @@ namespace game_logic
 		{
 			if(key == "floats" || key == "value") {
 				std::vector<variant> v;
-				for(size_t n = 0; n < f_.size(); ++n) {
+				for(int n = 0; n < static_cast<int>(f_.size()); ++n) {
 					v.push_back(variant(f_[n]));
 				}
 				return variant(&v);
@@ -82,8 +82,8 @@ namespace game_logic
 			if(key == "shorts" || key == "value") {
 				ASSERT_LOG(value.is_list(), "Must be a list type");
 				s_.resize(value.num_elements());
-				for(size_t n = 0; n < value.num_elements(); ++n) {
-					s_[n] = short(value[n].as_int());
+				for(int n = 0; n < value.num_elements(); ++n) {
+					s_[n] = static_cast<short>(value[n].as_int());
 				}
 			}
 		}
@@ -91,7 +91,7 @@ namespace game_logic
 		{
 			if(key == "shorts" || key == "value") {
 				std::vector<variant> v;
-				for(size_t n = 0; n < s_.size(); ++n) {
+				for(int n = 0; n < static_cast<int>(s_.size()); ++n) {
 					v.push_back(variant(s_[n]));
 				}
 				return variant(&v);

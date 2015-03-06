@@ -57,7 +57,7 @@ namespace KRE
 		add_rgba_[0] = add_rgba_[1] = add_rgba_[2] = add_rgba_[3] = 0.0f;
 
 		if(v.is_list()) {
-			for(unsigned n = 0; n != 4; ++n) {
+			for(int n = 0; n != 4; ++n) {
 				if(n < v.num_elements()) {
 					add_rgba_[n] = v[n].as_int() / 255.0f;
 				} else {
@@ -67,7 +67,7 @@ namespace KRE
 		} else if(v.is_map()) {
 			if(v.has_key("add")) {
 				const variant& a = v["add"];
-				for(unsigned n = 0; n != 4; ++n) {
+				for(int n = 0; n != 4; ++n) {
 					if(n < a.num_elements()) {
 						if(a.is_int()) {
 							add_rgba_[n] = a[n].as_int() / 255.0f;
@@ -79,7 +79,7 @@ namespace KRE
 			}
 			if(v.has_key("mul")) {
 				const variant& m = v["mul"];
-				for(unsigned n = 0; n != 4; ++n) {
+				for(int n = 0; n != 4; ++n) {
 					if(n < m.num_elements()) {
 						if(m.is_int()) {
 							add_rgba_[n] = m[n].as_int() / 255.0f;

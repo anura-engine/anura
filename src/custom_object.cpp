@@ -2163,6 +2163,10 @@ void CustomObject::process(Level& lvl)
 		w->process();
 	}
 
+	if(shader_) {
+		shader_->process();
+	}
+
 	staticProcess(lvl);
 }
 
@@ -5109,7 +5113,7 @@ namespace
 					}
 
 					new_values.push_back(var);
-					for(size_t i = n+1; i < v.num_elements(); ++i) {
+					for(int i = n+1; i < v.num_elements(); ++i) {
 						var = v[i];
 						map_variant_entities(var, m);
 						new_values.push_back(var);

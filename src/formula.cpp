@@ -1374,15 +1374,15 @@ namespace game_logic
 		private:
 			variant execute(const FormulaCallable& variables) const {
 				const variant left = left_->evaluate(variables);
-				unsigned begin_index = start_ ? start_->evaluate(variables).as_int() : 0;
-				unsigned end_index = end_ ? end_->evaluate(variables).as_int() : left.num_elements();
+				int begin_index = start_ ? start_->evaluate(variables).as_int() : 0;
+				int end_index = end_ ? end_->evaluate(variables).as_int() : left.num_elements();
 
 				if(left.is_string()) {
 					const std::string& s = left.as_string();
-					if(begin_index > s.length()) {
+					if(begin_index > static_cast<int>(s.length())) {
 						begin_index = s.length();
 					}
-					if(end_index > s.length()) {
+					if(end_index > static_cast<int>(s.length())) {
 						end_index = s.length();
 					}
 					if(s.length() == 0) {

@@ -60,7 +60,7 @@ namespace game_logic
 		variant flatten_list_of_maps(variant v) {
 			if(v.is_list() && v.num_elements() >= 1) {
 				variant result = flatten_list_of_maps(v[0]);
-				for(unsigned n = 1; n < v.num_elements(); ++n) {
+				for(int n = 1; n < v.num_elements(); ++n) {
 					result = result + flatten_list_of_maps(v[n]);
 				}
 

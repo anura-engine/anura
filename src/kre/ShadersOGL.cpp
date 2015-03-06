@@ -784,6 +784,153 @@ namespace KRE
 			}	
 		}
 
+		void ShaderProgram::setUniformFromVariant(int uid, const variant& value) const
+		{
+			if(uid == ShaderProgram::INALID_UNIFORM) {
+				LOG_WARN("Tried to set value for invalid uniform iterator.");
+				return;
+			}
+			auto it = v_uniforms_.find(uid);
+			ASSERT_LOG(it != v_uniforms_.end(), "Couldn't find location " << uid << " on the uniform list.");
+			const Actives& u = it->second;
+			ASSERT_LOG(value.is_null() == false, "setUniformFromVariant(): value is null");
+			switch(u.type) {
+			case GL_FLOAT: {
+				if(u.num_elements == 1) {
+					glUniform1f(u.location, value.as_float());
+				} else {
+					ASSERT_LOG(u.num_elements == value.num_elements(), "Incorrect number of elements for uniform array: " << u.num_elements << " vs " << value.num_elements());
+					std::vector<float> v(u.num_elements);
+					for(int n = 0; n < value.num_elements(); ++n) {
+						v[n] = value[n].as_float();
+					}
+
+					glUniform1fv(u.location, u.num_elements, &v[0]);
+				}
+				break;
+			}
+			case GL_FLOAT_VEC2: {
+				if(!(value.num_elements() % 2 == 0 && value.num_elements()/2 <= u.num_elements)) {
+					LOG_WARN("Elements in vector must be divisible by 2 and fit in the array");
+				}
+				std::vector<float> v(value.num_elements());
+				for(int n = 0; n < value.num_elements(); ++n) {
+					v[n] = value[n].as_float();
+				}
+				glUniform2fv(u.location, v.size()/2, &v[0]);
+				break;
+			}
+			case GL_FLOAT_VEC3: {
+				if(!(value.num_elements() % 3 == 0 && value.num_elements()/3 <= u.num_elements)) {
+					LOG_WARN("Elements in vector must be divisible by 3 and fit in the array");
+				}
+				std::vector<float> v(value.num_elements());
+				for(int n = 0; n < value.num_elements(); ++n) {
+					v[n] = value[n].as_float();
+				}
+				glUniform3fv(u.location, v.size()/3, &v[0]);
+				break;
+			}
+			case GL_FLOAT_VEC4: {
+				if(!(value.num_elements() % 4 == 0 && value.num_elements()/4 <= u.num_elements)) {
+					LOG_WARN("Elements in vector must be divisible by 4 and fit in the array");
+				}
+				std::vector<float> v(value.num_elements());
+				for(int n = 0; n < value.num_elements(); ++n) {
+					v[n] = value[n].as_float();
+				}
+				glUniform4fv(u.location, v.size()/4, &v[0]);
+				break;
+			}
+			
+			case GL_BOOL:
+			case GL_INT: {
+				if(u.num_elements == 1) {
+					glUniform1i(u.location, value.as_int32());
+				} else {
+					ASSERT_LOG(u.num_elements == value.num_elements(), "Incorrect number of elements for uniform array: " << u.num_elements << " vs " << value.num_elements());
+					std::vector<int> v(u.num_elements);
+					for(int n = 0; n < value.num_elements(); ++n) {
+						v[n] = value[n].as_int32();
+					}
+
+					glUniform1iv(u.location, u.num_elements, &v[0]);
+				}
+				break;
+			}
+			case GL_BOOL_VEC2:	
+			case GL_INT_VEC2: {
+				if(!(value.num_elements() % 2 == 0 && value.num_elements()/2 <= u.num_elements)) {
+					LOG_WARN("Elements in vector must be divisible by 2 and fit in the array");
+				}
+				std::vector<int> v(value.num_elements());
+				for(int n = 0; n < value.num_elements(); ++n) {
+					v[n] = value[n].as_int32();
+				}
+				glUniform2iv(u.location, v.size()/2, &v[0]);
+				break;
+			}
+			case GL_BOOL_VEC3:	
+			case GL_INT_VEC3:{
+				if(!(value.num_elements() % 3 == 0 && value.num_elements()/3 <= u.num_elements)) {
+					LOG_WARN("Elements in vector must be divisible by 3 and fit in the array");
+				}
+				std::vector<int> v(value.num_elements());
+				for(int n = 0; n < value.num_elements(); ++n) {
+					v[n] = value[n].as_int32();
+				}
+				glUniform3iv(u.location, v.size()/3, &v[0]);
+				break;
+			}
+			case GL_BOOL_VEC4:
+			case GL_INT_VEC4: {
+				if(!(value.num_elements() % 4 == 0 && value.num_elements()/4 <= u.num_elements)) {
+					LOG_WARN("Elements in vector must be divisible by 4 and fit in the array");
+				}
+				std::vector<int> v(value.num_elements());
+				for(int n = 0; n < value.num_elements(); ++n) {
+					v[n] = value[n].as_int32();
+				}
+				glUniform2iv(u.location, v.size()/4, &v[0]);
+				break;
+			}
+			
+			case GL_FLOAT_MAT2:	{
+				if(value.num_elements() != 4) { LOG_WARN("Must be four(4) elements in matrix."); }
+				float v[4];
+				for(int n = 0; n < value.num_elements(); ++n) {
+					v[n] = value[n].as_float();
+				}
+				glUniformMatrix2fv(u.location, u.num_elements, GL_FALSE, &v[0]);
+				break;
+			}
+			case GL_FLOAT_MAT3: {
+				if(value.num_elements() != 9) { LOG_WARN("Must be four(9) elements in matrix."); }
+				GLfloat v[9];
+				for(int n = 0; n < value.num_elements(); ++n) {
+					v[n] = GLfloat(value[n].as_decimal().as_float());
+				}
+				glUniformMatrix3fv(u.location, u.num_elements, GL_FALSE, &v[0]);
+				break;
+			}
+			case GL_FLOAT_MAT4: {
+				if(value.num_elements() != 16) { LOG_WARN("Must be four(16) elements in matrix."); }
+				GLfloat v[16];
+				for(int n = 0; n < value.num_elements(); ++n) {
+					v[n] = GLfloat(value[n].as_decimal().as_float());
+				}
+				glUniformMatrix4fv(u.location, u.num_elements, GL_FALSE, &v[0]);
+				break;
+			}
+
+			case GL_SAMPLER_2D:		glUniform1i(u.location, value.as_int()); break;
+
+			case GL_SAMPLER_CUBE:
+			default:
+				LOG_DEBUG("Unhandled uniform type: " << it->second.type);
+			}
+		}
+
 		void ShaderProgram::setAlternateUniformName(const std::string& name, const std::string& alt_name)
 		{
 			ASSERT_LOG(uniform_alternate_name_map_.find(alt_name) == uniform_alternate_name_map_.end(),

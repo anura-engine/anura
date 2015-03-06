@@ -2286,6 +2286,16 @@ void Level::process()
 	//}
 
 	sound::process();
+	
+	if(shader_) {
+		shader_->process();
+	}
+	
+	for(auto& fb : fb_shaders_) {
+		if(fb.shader) {
+			fb.shader->process();
+		}
+	}
 }
 
 void Level::process_draw()

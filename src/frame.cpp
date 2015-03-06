@@ -719,6 +719,7 @@ void Frame::draw(graphics::AnuraShaderPtr shader, int x, int y, bool face_right,
 
 	if(shader) {
 		shader->setSpriteArea(blit_target_.getTexture()->getSourceRectNormalised());
+		shader->setCycle(time);
 		blit_target_.setShader(shader->getShader());
 	}
 
@@ -753,7 +754,7 @@ void Frame::draw(graphics::AnuraShaderPtr shader, int x, int y, const rect& area
 
 	auto wnd = KRE::WindowManager::getMainWindow();
 	blit_target_.setRotation(rotate, z_axis);
-	blit_target_.setDrawRect(rect(x&preferences::xypos_draw_mask, y&preferences::xypos_draw_mask, static_cast<int>(w + w_adjust * scale_) * (face_right ? 1 : -1), static_cast<int>(h + h_adjust * scale_) * (upside_down ? -1 : 1)));
+	blit_target_.setDrawRect(rect(x&preferences::xypos_draw_mask, y&preferences::xypos_draw_mask, static_cast<int>(w + w_adjust * scale_), static_cast<int>(h + h_adjust * scale_)));
 	blit_target_.getTexture()->setSourceRect(0, rect(src_rect.x() + x_adjust, src_rect.y() + y_adjust, src_rect.w() + x_adjust + w_adjust, src_rect.h() + y_adjust + h_adjust));
 	blit_target_.setMirrorHoriz(upside_down);
 	blit_target_.setMirrorVert(!face_right);
@@ -906,6 +907,7 @@ void Frame::drawCustom(graphics::AnuraShaderPtr shader, int x, int y, const floa
 
 	if(shader) {
 		shader->setSpriteArea(blit.getTexture()->getSourceRectNormalised());
+		shader->setCycle(cycle);
 		blit.setShader(shader->getShader());
 	}
 

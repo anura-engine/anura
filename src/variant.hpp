@@ -156,7 +156,7 @@ public:
 	const variant& operator[](size_t n) const;
 	const variant& operator[](const variant v) const;
 	const variant& operator[](const std::string& key) const;
-	size_t num_elements() const;
+	int num_elements() const;
 
 	variant get_list_slice(int begin, int end) const;
 

@@ -1551,7 +1551,7 @@ FUNCTION_DEF_IMPL
 			boost::intrusive_ptr<variant_comparator> callable(new variant_comparator(args()[1], variables));
 
 			variant a = list[0];
-			for(unsigned n = 1; n < list.num_elements(); ++n) {
+			for(int n = 1; n < list.num_elements(); ++n) {
 				a = callable->eval(a, list[n]);
 			}
 
@@ -1576,27 +1576,27 @@ FUNCTION_DEF_IMPL
 
 			// Calculate breadth and depth of new list.
 			const int depth = item1.num_elements();
-			size_t breadth = 0;
-			for(size_t n = 0; n < item1.num_elements(); ++n) {
+			int breadth = 0;
+			for(int n = 0; n < item1.num_elements(); ++n) {
 				ASSERT_LOG(item1[n].is_list(), "Item " << n << " on list isn't list");
 				breadth = std::max(item1[n].num_elements(), breadth);
 			}
 
 			std::vector<std::vector<variant> > v;
-			for(size_t n = 0; n < breadth; ++n) {
+			for(int n = 0; n < breadth; ++n) {
 				std::vector<variant> e1;
 				e1.resize(depth);
 				v.push_back(e1);
 			}
 
-			for(size_t n = 0; n < item1.num_elements(); ++n) {
-				for(size_t m = 0; m < item1[n].num_elements(); ++m) {
+			for(int n = 0; n < item1.num_elements(); ++n) {
+				for(int m = 0; m < item1[n].num_elements(); ++m) {
 					v[m][n] = item1[n][m];
 				}
 			}
 
 			std::vector<variant> vl;
-			for(size_t n = 0; n < v.size(); ++n) {
+			for(int n = 0; n < static_cast<int>(v.size()); ++n) {
 				vl.push_back(variant(&v[n]));
 			}
 			return variant(&vl);
@@ -1690,7 +1690,7 @@ FUNCTION_DEF_IMPL
 			variant f = args()[0]->evaluate(variables);
 			int num_elems = args().size() == 1 ? 1 : args()[1]->evaluate(variables).as_int();
 			std::vector<float> floats;
-			for(size_t n = 0; n < f.num_elements(); ++n) {
+			for(int n = 0; n < f.num_elements(); ++n) {
 				floats.push_back(f[n].as_float());
 			}
 			return variant(new FloatArrayCallable(&floats, num_elems));
@@ -1704,7 +1704,7 @@ FUNCTION_DEF_IMPL
 			variant s = args()[0]->evaluate(variables);
 			int num_elems = args().size() == 1 ? 1 : args()[1]->evaluate(variables).as_int();
 			std::vector<short> shorts;
-			for(size_t n = 0; n < s.num_elements(); ++n) {
+			for(int n = 0; n < s.num_elements(); ++n) {
 				shorts.push_back(static_cast<short>(s[n].as_int()));
 			}
 			return variant(new ShortArrayCallable(&shorts, num_elems));
@@ -2877,7 +2877,7 @@ FUNCTION_DEF_IMPL
 		FUNCTION_DEF(index, 2, 2, "index(list, value) -> index of value in list: Returns the index of the value in the list or -1 if value wasn't found in the list.")
 			variant value = args()[1]->evaluate(variables);
 			variant li = args()[0]->evaluate(variables);
-			for(unsigned n = 0; n < li.num_elements(); n++) {
+			for(int n = 0; n < li.num_elements(); n++) {
 				if(value == li[n]) {
 					return variant(n);
 				}
