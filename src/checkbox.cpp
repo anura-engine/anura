@@ -81,7 +81,7 @@ namespace gui
 			? widget_factory::create(label_var, e) 
 			: WidgetPtr(new GraphicalFontLabel(label_, "door_label", 2));
 		ASSERT_LOG(getEnvironment() != 0, "You must specify a callable environment");
-		click_handler_ = getEnvironment()->createFormula(v["onClick"]);
+		click_handler_ = getEnvironment()->createFormula(v["on_click"]);
 		onclick_ = std::bind(&Checkbox::click, this, _1);
 		setClickHandler(std::bind(&Checkbox::onClick, this));
 
