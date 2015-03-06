@@ -399,8 +399,6 @@ void render_scene(Level& lvl, const screen_position& pos)
 	int bg_xscroll = xscroll;
 	int bg_yscroll = yscroll;
 
-	// XXX fixme
-	// lvl.setScale(pos.zoom, pos.zoom);
 	xscroll += static_cast<int>((screen_width/2)*(-1.0f/pos.zoom + 1.0f));
 	yscroll += static_cast<int>((wnd->height()/2)*(-1.0f/pos.zoom + 1.0f));
 
@@ -409,8 +407,6 @@ void render_scene(Level& lvl, const screen_position& pos)
 		bg_yscroll = yscroll;
 	}
 
-	// XXX fixme
-	//lvl.setPosition(-xscroll, -yscroll);
 	KRE::ModelManager2D model_matrix(-xscroll, -yscroll, 0, pos.zoom);
 	lvl.draw_background(bg_xscroll, bg_yscroll, camera_rotation);
 

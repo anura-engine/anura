@@ -385,8 +385,6 @@ public:
 
 	bool show_builtin_settingsDialog() const { return show_builtin_settings_; }
 
-	void setPosition(int x, int y);
-
 private:
 	DECLARE_CALLABLE(Level);
 
@@ -628,7 +626,6 @@ private:
 	LevelPtr suspended_level_;
 
 	mutable std::map<int, std::shared_ptr<LayerBlitInfo>> blit_cache_;
-	mutable point position_;
 
 	KRE::RenderTargetPtr rt_;
 };

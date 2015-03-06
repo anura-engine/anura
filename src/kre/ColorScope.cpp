@@ -21,15 +21,24 @@
 	   distribution.
 */
 
+#include <stack>
+
+#include "asserts.hpp"
 #include "ColorScope.hpp"
 
 namespace KRE
 {
 	namespace 
 	{
-		ColorScope::color_stack_type& get_color_stack()
+		//ColorScope::color_stack_type& get_color_stack()
+		//{
+		//	static ColorScope::color_stack_type res;
+		//	return res;
+		//}
+
+		std::stack<Color>& get_color_stack()
 		{
-			static ColorScope::color_stack_type res;
+			static std::stack<Color> res;
 			return res;
 		}
 
@@ -42,12 +51,15 @@ namespace KRE
 
 	ColorScope::ColorScope(const Color& color)
 	{
-		it_ = get_color_stack().emplace(get_color_stack().end(), color);
+		//it_ = get_color_stack().emplace(get_color_stack().end(), color);
+		get_color_stack().emplace(color);
 	}
 
 	ColorScope::~ColorScope()
 	{
-		get_color_stack().erase(it_);
+		//get_color_stack().erase(it_);
+		ASSERT_LOG(get_color_stack().empty() == false, "Color stack was empty in desctructor");
+		get_color_stack().pop();
 	}
 
 	const Color& ColorScope::getCurrentColor()
@@ -55,6 +67,10 @@ namespace KRE
 		if(get_color_stack().empty()) {
 			return get_default_color();
 		}
-		return get_color_stack().back();
+		return get_color_stack().top();
+		//if(get_color_stack().empty()) {
+		//	return get_default_color();
+		//}
+		//return get_color_stack().back();
 	}
 }

@@ -221,6 +221,8 @@ namespace KRE
 		std::vector<bool>::const_iterator endAlpha() const;
 
 		void createAlphaMap();
+
+		const std::string& getName() const { return name_; }
 	protected:
 		Surface();
 		void setPixelFormat(PixelFormatPtr pf);
@@ -230,5 +232,6 @@ namespace KRE
 		SurfaceFlags flags_;
 		PixelFormatPtr pf_;
 		std::vector<bool> alpha_map_;
+		std::string name_;
 	};
 }

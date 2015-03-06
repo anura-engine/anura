@@ -45,12 +45,12 @@ variant_type::~variant_type()
 {
 }
 
-void variant_type::set_expr(const game_logic::formula_expression* expr)
+void variant_type::set_expr(const game_logic::FormulaExpression* expr)
 {
 	expr_.reset(expr);
 }
 
-const game_logic::formula_expression* variant_type::get_expr() const
+const game_logic::FormulaExpression* variant_type::get_expr() const
 {
 	return expr_.get();
 }
@@ -1003,8 +1003,8 @@ public:
 
 				if(mismatching_element.get() != NULL) {
 					*why << "Element of list does not match: " << mismatching_element->to_string() << "\nExpected " << value_type_->to_string() << "\n";
-					if(mismatching_element->get_expr() && mismatching_element->get_expr()->has_debug_info()) {
-						*why << mismatching_element->get_expr()->debug_pinpoint_location() << "\n";
+					if(mismatching_element->get_expr() && mismatching_element->get_expr()->hasDebugInfo()) {
+						*why << mismatching_element->get_expr()->debugPinpointLocation() << "\n";
 					}
 
 					variant_types_compatible(get_null_excluded(value_type_), get_null_excluded(mismatching_element), why);

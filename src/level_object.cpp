@@ -66,7 +66,7 @@ namespace
 		return lhs.name == rhs.name ? lhs.palettes < rhs.palettes : lhs.name < rhs.name;
 	}
 
-	typedef std::map<PaletteTextureKey, KRE::TexturePtr> palette_texture_cache_map;
+	typedef std::map<PaletteTextureKey, std::weak_ptr<KRE::Texture>> palette_texture_cache_map;
 	palette_texture_cache_map& get_palette_texture_cache()
 	{
 		static palette_texture_cache_map res;
@@ -397,7 +397,7 @@ LevelObject::LevelObject(variant node, const char* id)
 	if(palettes_recognized_ > 0) {
 		PaletteTextureKey key = { image_, palettes_recognized_ };
 		auto it = get_palette_texture_cache().find(key);
-		if(it == get_palette_texture_cache().end()) {
+		if(it == get_palette_texture_cache().end() || it->second.lock() == nullptr) {
 			t_ = KRE::Texture::createTexture(node["image"]);
 			int p = palettes_recognized_;
 			int id = 0;
@@ -410,7 +410,7 @@ LevelObject::LevelObject(variant node, const char* id)
 			}
 			get_palette_texture_cache()[key] = t_;
 		} else {
-			t_ = it->second;
+			t_ = it->second.lock();
 		}
 	} else {
 		t_ = KRE::Texture::createTexture(node["image"]);

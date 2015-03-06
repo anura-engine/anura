@@ -111,11 +111,13 @@ namespace KRE
 				return it->second;
 			}
 			auto surface = std::get<0>(create_fn_tuple)(filename, fmt, flags, convert);
+			surface->name_ = filename;
 			get_surface_cache()[filename] = surface;
 			surface->init();
 			return surface;
 		} 
 		auto surf = std::get<0>(create_fn_tuple)(filename, fmt, flags, convert);
+		surf->name_ = filename;
 		surf->init();
 		return surf;
 	}
@@ -134,6 +136,9 @@ namespace KRE
 		ASSERT_LOG(get_surface_creator().empty() == false, "No resources registered to create surfaces from pixels.");
 		auto create_fn_tuple = get_surface_creator().begin()->second;
 		auto surf = std::get<1>(create_fn_tuple)(width, height, bpp, row_pitch, rmask, gmask, bmask, amask, pixels);
+		std::stringstream ss;
+		ss << "Surface(" << width << "," << height << "," << bpp << "," << row_pitch << "," << rmask << "," << gmask << "," << amask << ", has data:yes)";
+		surf->name_ = ss.str();
 		surf->init();
 		return surf;
 	}
@@ -150,6 +155,9 @@ namespace KRE
 		ASSERT_LOG(get_surface_creator().empty() == false, "No resources registered to create surfaces from masks.");
 		auto create_fn_tuple = get_surface_creator().begin()->second;
 		auto surf = std::get<2>(create_fn_tuple)(width, height, bpp, rmask, gmask, bmask, amask);
+		std::stringstream ss;
+		ss << "Surface(" << width << "," << height << "," << bpp << "," << rmask << "," << gmask << "," << amask << ", has data:no)";
+		surf->name_ = ss.str();
 		surf->init();
 		return surf;
 	}
@@ -159,6 +167,9 @@ namespace KRE
 		ASSERT_LOG(get_surface_creator().empty() == false, "No resources registered to create surfaces from pixel format.");
 		auto create_fn_tuple = get_surface_creator().begin()->second;
 		auto surf = std::get<3>(create_fn_tuple)(width, height, fmt);
+		std::stringstream ss;
+		ss << "Surface(" << width << "," << height << "," << static_cast<int>(fmt) << ")";
+		surf->name_ = ss.str();
 		surf->init();
 		return surf;
 	}

@@ -42,10 +42,11 @@
 
 namespace tbs 
 {
-	namespace {
-	boost::asio::io_service* g_service;
-	int g_listening_port = -1;
-	web_server* web_server_instance = nullptr;
+	namespace 
+	{
+		boost::asio::io_service* g_service;
+		int g_listening_port = -1;
+		web_server* web_server_instance = nullptr;
 	}
 
 	std::string global_debug_str;
@@ -177,10 +178,8 @@ namespace tbs
 		LOG_INFO("UNSUPPORTED GET REQUEST");
 		disconnect(socket);
 	}
-http_client* g_game_server_http_client_to_matchmaking_server;
 
-http_client* g_game_server_http_client_to_matchmaking_server;
-
+	http_client* g_game_server_http_client_to_matchmaking_server;
 }
 
 namespace 

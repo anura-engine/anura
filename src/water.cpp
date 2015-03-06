@@ -206,13 +206,12 @@ bool Water::drawArea(const Water::area& a) const
 	const int EndSegmentSize = 20;
 
 	for(const Segment& seg : a.surface_segments_) {
-
 		std::vector<KRE::vertex_color> line1;
 		line1.emplace_back(glm::vec2(static_cast<float>(seg.first - EndSegmentSize), waterline_rect.y()), glm::u8vec4(255, 255, 255, 0));
 		line1.emplace_back(glm::vec2(static_cast<float>(seg.first), waterline_rect.y()), glm::u8vec4(255, 255, 255, 255));
 		line1.emplace_back(glm::vec2(static_cast<float>(seg.second), waterline_rect.y()), glm::u8vec4(255, 255, 255, 255));
 		line1.emplace_back(glm::vec2(static_cast<float>(seg.second + EndSegmentSize), waterline_rect.y()), glm::u8vec4(255, 255, 255, 0));
-		getAttributeSet()[0]->setCount(line1.size());
+		getAttributeSet()[1]->setCount(line1.size());
 		line1_->update(&line1);
 
 		std::vector<KRE::vertex_color> line2;
@@ -220,7 +219,7 @@ bool Water::drawArea(const Water::area& a) const
 		line2.emplace_back(glm::vec2(static_cast<float>(seg.first), waterline_rect.y()+2.0f), glm::u8vec4(0, 230, 200, 128));
 		line2.emplace_back(glm::vec2(static_cast<float>(seg.second), waterline_rect.y()+2.0f), glm::u8vec4(0, 230, 200, 128));
 		line2.emplace_back(glm::vec2(static_cast<float>(seg.second + EndSegmentSize), waterline_rect.y()+2.0f), glm::u8vec4(0, 230, 200, 0));
-		getAttributeSet()[0]->setCount(line2.size());
+		getAttributeSet()[2]->setCount(line2.size());
 		line2_->update(&line2);
 	}
 

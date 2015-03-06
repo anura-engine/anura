@@ -1555,11 +1555,6 @@ namespace
 	int draw_count = 0;
 }
 
-void Level::setPosition(int x, int y)
-{
-	position_ = point(x, y);
-}
-
 void Level::draw_layer(int layer, int x, int y, int w, int h) const
 {
 	if(layer >= 1000 && editor_ && show_foreground_ == false) {
@@ -1569,7 +1564,6 @@ void Level::draw_layer(int layer, int x, int y, int w, int h) const
 	for(auto& i : sub_levels_) {
 		if(i.second.active) {
 			KRE::ModelManager2D matrix_scope(i.second.xoffset, i.second.yoffset);
-			//i.second.lvl->setPosition(i.second.xoffset + position_.x, i.second.yoffset + position_.y);
 			i.second.lvl->draw_layer(layer, x - i.second.xoffset, y - i.second.yoffset - TileSize, w, h + TileSize);
 		}
 	}
@@ -1621,9 +1615,7 @@ void Level::draw_layer(int layer, int x, int y, int w, int h) const
 	}
 	{
 		auto& blit_cache_info = *layer_itor->second;
-		//point adjusted_pos = position_ - position;
 		KRE::ModelManager2D model_matrix_scope(position.x, position.y);
-		//blit_cache_info.setPosition(glm::vec3(static_cast<float>(adjusted_pos.x), static_cast<float>(adjusted_pos.y), 0.0f));
 		KRE::WindowManager::getMainWindow()->render(&blit_cache_info);
 	}
 }
@@ -2214,8 +2206,6 @@ void Level::draw_debug_solid(int x, int y, int w, int h) const
 
 void Level::draw_background(int x, int y, int rotation) const
 {
-	//x += position_.x;
-	//y += position_.y;
 	if(show_background_ == false) {
 		return;
 	}

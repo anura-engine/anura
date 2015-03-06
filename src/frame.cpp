@@ -58,6 +58,24 @@ namespace
 	static unsigned int current_palette_mask = 0;
 
 	static const glm::vec3 z_axis(0, 0, 1.0f);
+
+	struct PaletteTextureKey
+	{
+		std::string name;
+		int palettes;
+	};
+	
+	bool operator<(const PaletteTextureKey& lhs, const PaletteTextureKey& rhs) 
+	{
+		return lhs.name == rhs.name ? lhs.palettes < rhs.palettes : lhs.name < rhs.name;
+	}
+
+	typedef std::map<PaletteTextureKey, std::weak_ptr<KRE::Texture>> palette_texture_cache_map;
+	palette_texture_cache_map& get_palette_texture_cache()
+	{
+		static palette_texture_cache_map res;
+		return res;
+	}
 }
 
 void Frame::buildPatterns(variant obj_variant)
@@ -196,15 +214,79 @@ Frame::Frame(variant node)
 	 current_palette_(-1)
 {
 	blit_target_.setCentre(KRE::Blittable::Centre::TOP_LEFT);
+
 	if(node.has_key("obj") == false) {		
-		if(node.has_key("fbo")) {
-			blit_target_.setTexture(node["fbo"].convert_to<TextureObject>()->texture());
-		} else if(node.has_key("image")) {
-			blit_target_.setTexture(KRE::Texture::createTexture(node["image"]));
-		} else if(node.has_key("texture")) {
-			blit_target_.setTexture(KRE::Texture::createTexture(node["texture"]));
+		if(node.has_key("image")) {
+			if(node["image"].is_string()) {
+				image_ = node["image"].as_string();
+			} else if(node["image"].is_map()) {
+				image_ = node["image"]["image"].as_string();
+			} else if(node["image"].is_list()) {
+				image_ = node["image"][0]["image"].as_string();
+			}
+		} else {
+			ASSERT_LOG(false, "No 'image' attribute found.");
 		}
 	}
+
+	std::vector<std::string> palettes = parse_variant_list_or_csv_string(node["palettes"]);
+	unsigned palettes_bitmap = 0;
+	for(const std::string& p : palettes) {
+		int id = graphics::get_palette_id(p);
+		palettes_recognized_.push_back(id);
+		if(id >= 0) {
+			palettes_bitmap |= 1 << id;
+		}
+	}
+
+	if(palettes_bitmap > 0) {
+		PaletteTextureKey key = { image_, palettes_bitmap };
+		auto it = get_palette_texture_cache().find(key);
+		bool create_palette = true;
+		if(it != get_palette_texture_cache().end()) {
+			auto t = it->second.lock();
+			if(t) {
+				blit_target_.setTexture(t);
+				create_palette = false;
+			}
+		}
+		if(create_palette) {
+			if(node.has_key("obj") == false) {		
+				if(node.has_key("fbo")) {
+					blit_target_.setTexture(node["fbo"].convert_to<TextureObject>()->texture());
+				} else if(node.has_key("image")) {
+					blit_target_.setTexture(KRE::Texture::createTexture(node["image"]));
+				}
+			}
+
+			int p = palettes_bitmap;
+			int id = 0;
+			while(p != 0) {
+				if(p & 1) {
+					blit_target_.getTexture()->addPalette(graphics::get_palette_surface(id));
+				}
+				p >>= 1;
+				++id;
+			}
+			get_palette_texture_cache()[key] = blit_target_.getTexture();
+		}
+	} else {
+		if(node.has_key("obj") == false) {		
+			if(node.has_key("fbo")) {
+				blit_target_.setTexture(node["fbo"].convert_to<TextureObject>()->texture());
+			} else if(node.has_key("image")) {
+				blit_target_.setTexture(KRE::Texture::createTexture(node["image"]));
+			} else if(node.has_key("texture")) {
+				blit_target_.setTexture(KRE::Texture::createTexture(node["texture"]));
+			}
+		}
+	}
+	/*if(palettes_recognized_.empty() == false) {
+		palette_frames().insert(this);
+		if(current_palette_mask) {
+			setPalettes(current_palette_mask);
+		}
+	}*/
 
 	std::vector<std::string> hit_frames = util::split(node["hit_frames"].as_string_default());
 	for(const std::string& f : hit_frames) {
@@ -304,7 +386,7 @@ Frame::Frame(variant node)
 			const int h = *i++;
 			info.area = rect(x, y, w, h);
 			frames_.push_back(info);
-			ASSERT_EQ(intersection_rect(info.area, rect(0, 0, static_cast<int>(blit_target_.getTexture()->width()), static_cast<int>(blit_target_.getTexture()->height()))), info.area);
+			ASSERT_EQ(intersection_rect(info.area, rect(0, 0, static_cast<int>(blit_target_.getTexture()->surfaceWidth()), static_cast<int>(blit_target_.getTexture()->surfaceHeight()))), info.area);
 			ASSERT_EQ(w + (info.x_adjust + info.x2_adjust), img_rect_.w());
 			ASSERT_EQ(h + (info.y_adjust + info.y2_adjust), img_rect_.h());
 
@@ -315,18 +397,6 @@ Frame::Frame(variant node)
 		buildAlphaFromFrameInfo();
 	} else {
 		buildAlpha();
-	}
-
-	std::vector<std::string> palettes = parse_variant_list_or_csv_string(node["palettes"]);
-	for(const std::string& p : palettes) {
-		palettes_recognized_.push_back(graphics::get_palette_id(p));
-	}
-
-	if(palettes_recognized_.empty() == false) {
-		palette_frames().insert(this);
-		if(current_palette_mask) {
-			setPalettes(current_palette_mask);
-		}
 	}
 
 	for(const variant_pair& value : node.as_map()) {
@@ -373,7 +443,7 @@ Frame::~Frame()
 
 void Frame::setPalettes(unsigned int palettes)
 {
-	if(current_palette_ >= 0 && (1 << current_palette_) == palettes) {
+	/*if(current_palette_ >= 0 && (1 << current_palette_) == palettes) {
 		return;
 	}
 
@@ -396,21 +466,19 @@ void Frame::setPalettes(unsigned int palettes)
 	const std::string& str = graphics::get_palette_name(npalette);
 	if(str.empty()) {
 		LOG_WARN("No palette from id: " << npalette);
-		//blit_target_.setTexture(KRE::Texture::createTexture(image_));
 	} else {
 		auto surf = graphics::SurfaceCache::get(module::map_file("palette/" + str + ".png"));
-		//blit_target_.setTexture(KRE::Texture::createPalettizedTexture(image_, surf));
 		blit_target_.getTexture()->addPalette(surf);
 		current_palette_ = npalette;
-	}
+	}*/
 }
 
 void Frame::setColorPalette(unsigned int palettes)
 {
-	current_palette_mask = palettes;
+	/*current_palette_mask = palettes;
 	for(auto i : palette_frames()) {
 		i->setPalettes(palettes);
-	}
+	}*/
 }
 
 void Frame::setImageAsSolid()
@@ -442,9 +510,9 @@ void Frame::buildAlphaFromFrameInfo()
 			ASSERT_INDEX_INTO_VECTOR(dst_index, alpha_);
 			std::vector<bool>::iterator dst = alpha_.begin() + dst_index;
 
-			ASSERT_LT(area.x(), static_cast<int>(blit_target_.getTexture()->width()));
-			ASSERT_LE(area.x() + area.w(), static_cast<int>(blit_target_.getTexture()->width()));
-			ASSERT_LT(area.y() + y, static_cast<int>(blit_target_.getTexture()->height()));
+			ASSERT_LT(area.x(), static_cast<int>(blit_target_.getTexture()->surfaceWidth()));
+			ASSERT_LE(area.x() + area.w(), static_cast<int>(blit_target_.getTexture()->surfaceWidth()));
+			ASSERT_LT(area.y() + y, static_cast<int>(blit_target_.getTexture()->surfaceHeight()));
 			std::vector<bool>::const_iterator src = blit_target_.getTexture()->getFrontSurface()->getAlphaRow(area.x(), area.y() + y);
 
 			std::copy(src, src + area.w(), dst);
@@ -477,9 +545,10 @@ void Frame::buildAlpha()
 		const int ybase = img_rect_.y() + current_row*(img_rect_.h()+pad_);
 
 		if(xbase < 0 || ybase < 0 
-			|| xbase + img_rect_.w() > static_cast<int>(blit_target_.getTexture()->width())
-			|| ybase + img_rect_.h() > static_cast<int>(blit_target_.getTexture()->height())) {
-			LOG_INFO("IMAGE RECT FOR FRAME '" << id_ << "' #" << n << ": " << img_rect_.x() << " + " << current_col << " * (" << img_rect_.w() << "+" << pad_ << ") IS INVALID: " << xbase << ", " << ybase << ", " << (xbase + img_rect_.w()) << ", " << (ybase + img_rect_.h()) << " / " << blit_target_.getTexture()->width() << "," << blit_target_.getTexture()->height());
+			|| xbase + img_rect_.w() > blit_target_.getTexture()->surfaceWidth()
+			|| ybase + img_rect_.h() > blit_target_.getTexture()->surfaceHeight()) {
+			LOG_INFO("IMAGE RECT FOR FRAME '" << id_ << "' #" << n << ": " << img_rect_.x() << " + " << current_col << " * (" << img_rect_.w() << "+" << pad_ << ") IS INVALID: " << xbase << ", " << ybase << ", " << (xbase + img_rect_.w()) << ", " << (ybase + img_rect_.h()) << " / " << blit_target_.getTexture()->surfaceWidth() << "," << blit_target_.getTexture()->surfaceHeight());
+			LOG_INFO("IMAGE_NAME: " << image_ << ", Name from texture: " << blit_target_.getTexture()->getFrontSurface()->getName());
 			throw Error();
 		}
 
@@ -528,7 +597,7 @@ void Frame::buildAlpha()
 					has_opaque = true;
 				}
 				if(n+1 != img_rect_.h()) {
-					a += blit_target_.getTexture()->width();
+					a += blit_target_.getTexture()->surfaceWidth();
 				}
 			}
 
@@ -548,7 +617,7 @@ void Frame::buildAlpha()
 				}
 
 				if(n+1 != img_rect_.h()) {
-					a += blit_target_.getTexture()->width();
+					a += blit_target_.getTexture()->surfaceWidth();
 				}
 			}
 

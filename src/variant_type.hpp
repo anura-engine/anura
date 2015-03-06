@@ -126,8 +126,8 @@ public:
 
 	static bool may_be_null(variant_type_ptr type);
 
-	void set_expr(const game_logic::formula_expression* expr);
-	const game_logic::formula_expression* get_expr() const;
+	void set_expr(const game_logic::FormulaExpression* expr);
+	const game_logic::FormulaExpression* get_expr() const;
 
 private:
 	virtual variant_type_ptr null_excluded() const { return variant_type_ptr(); }
@@ -139,7 +139,7 @@ private:
 
 	mutable std::string str_;
 
-	boost::intrusive_ptr<const game_logic::formula_expression> expr_;
+	boost::intrusive_ptr<const game_logic::FormulaExpression> expr_;
 };
 
 

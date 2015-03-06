@@ -1614,7 +1614,7 @@ void CustomObjectType::initSubObjects(variant node, const CustomObjectType* old_
 			if(old_type && type->node_.is_null()){
 				type->node_ = merged;
 			}
-		std::cerr << "MERGED PROTOTYPE FOR " << type->id_ << ": " << merged.write_json() << "\n";
+			//std::cerr << "MERGED PROTOTYPE FOR " << type->id_ << ": " << merged.write_json() << "\n";
 			sub_objects_[sub_key].reset(type);
 		}
 	}
@@ -1776,7 +1776,7 @@ UTILITY(object_definition)
 			baseobj = std::string(arg.begin(), dot);
 		}
 		
-		const std::string* fname = custom_object_type::get_object_path(baseobj + ".cfg");
+		const std::string* fname = CustomObjectType::getObjectPath(baseobj + ".cfg");
 
 		variant json = json::parse_from_file(*fname);
 		if(dot != arg.end()) {
@@ -1794,7 +1794,7 @@ UTILITY(object_definition)
 			json = items[n];
 		}
 
-		const variant node = custom_object_type::merge_prototype(json);
+		const variant node = CustomObjectType::mergePrototype(json);
 
 		std::cout << "OBJECT " << arg << "\n---\n" << node.write_json(true) << "\n---\n";
 	}

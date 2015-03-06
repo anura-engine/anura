@@ -45,6 +45,7 @@ namespace KRE
 		{
 			color_table["aliceblue"] = Color(240, 248, 255);
 			color_table["antiquewhite"] = Color(250, 235, 215);
+			color_table["antique_white"] = Color(250, 235, 215);
 			color_table["aqua"] = Color(0, 255, 255);
 			color_table["aquamarine"] = Color(127, 255, 212);
 			color_table["azure"] = Color(240, 255, 255);
@@ -737,7 +738,11 @@ namespace KRE
 
 	std::ostream& operator<<(std::ostream& os, const Color& c)
 	{
-		os << "rgba(" << c.ri() << "," << c.gi() << "," << c.bi() << "); rgbaf(" << c.r() << "," << c.g() << "," << c.b() << ")";
+		if(c.ai() == 255) {
+			os << "rgb(" << c.ri() << "," << c.gi() << "," << c.bi() << ")";
+		} else {
+			os << "rgba(" << c.ri() << "," << c.gi() << "," << c.bi() << "," << c.ai() << ")";
+		}
 		return os;
 	}
 }

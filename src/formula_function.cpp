@@ -4730,7 +4730,7 @@ RETURN_TYPE("bool")
 END_FUNCTION_DEF(solid)
 
 FUNCTION_DEF(solid_grid, 5, 9, "solid_grid(level, int x, int y, int w, int h, int stride_x=1, int stride_y=1, int stride_w=1, int stride_h=1)")
-	level* lvl = args()[0]->evaluate(variables).convert_to<level>();
+	Level* lvl = args()[0]->evaluate(variables).convert_to<Level>();
 	const int x = args()[1]->evaluate(variables).as_int();
 	const int y = args()[2]->evaluate(variables).as_int();
 	int w = args()[3]->evaluate(variables).as_int();
