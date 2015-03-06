@@ -408,6 +408,7 @@ void render_scene(Level& lvl, const screen_position& pos)
 	}
 
 	{
+		LOG_DEBUG("scroll: " << -xscroll << "," << -yscroll);
 		KRE::ModelManager2D model_matrix(-xscroll, -yscroll, 0, pos.zoom);
 		lvl.draw_background(bg_xscroll, bg_yscroll, camera_rotation);
 

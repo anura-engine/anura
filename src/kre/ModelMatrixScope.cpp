@@ -23,6 +23,7 @@
 
 #include <stack>
 
+#include "asserts.hpp"
 #include "ModelMatrixScope.hpp"
 
 namespace KRE
@@ -59,6 +60,26 @@ namespace KRE
 
 	ModelManager2D::ModelManager2D()
 	{
+		if(get_translation_stack().empty()) {
+			get_translation_stack().emplace(0.0f, 0.0f);
+		} else {
+			auto top = get_translation_stack().top();
+			get_translation_stack().emplace(top.x, top.y);
+		}
+
+		if(get_rotation_stack().empty()) {
+			get_rotation_stack().emplace(0.0f);
+		} else {
+			auto top = get_rotation_stack().top();
+			get_rotation_stack().emplace(top);
+		}
+
+		if(get_scale_stack().empty()) {
+			get_scale_stack().emplace(1.0f, 1.0f);
+		} else {
+			auto top = get_scale_stack().top();
+			get_scale_stack().emplace(top.x, top.y);
+		}
 	}
 
 	ModelManager2D::ModelManager2D(int tx, int ty, float angle, float scale)
@@ -88,18 +109,14 @@ namespace KRE
 
 	ModelManager2D::~ModelManager2D() 
 	{
-		if(!get_translation_stack().empty()) {
-			get_translation_stack().pop();
-			model_matrix_changed = true;
-		}
-		if(!get_rotation_stack().empty()) {
-			get_rotation_stack().pop();
-			model_matrix_changed = true;
-		}
-		if(!get_scale_stack().empty()) {
-			get_scale_stack().pop();
-			model_matrix_changed = true;
-		}
+		ASSERT_LOG(get_translation_stack().empty() == false, "Unbalanced translation stack.");
+		ASSERT_LOG(get_rotation_stack().empty() == false, "Unbalanced rotation stack.");
+		ASSERT_LOG(get_scale_stack().empty() == false, "Unbalanced scale stack.");
+
+		get_translation_stack().pop();
+		get_rotation_stack().pop();
+		get_scale_stack().pop();
+		model_matrix_changed = true;
 	}
 
 	void ModelManager2D::setIdentity()
@@ -168,7 +185,8 @@ namespace KRE
 
 	bool is_global_model_matrix_valid()
 	{
-		return !get_translation_stack().empty() || !get_rotation_stack().empty() || !get_scale_stack().empty();
+		//return !get_translation_stack().empty() || !get_rotation_stack().empty() || !get_scale_stack().empty();
+		return true;
 	}
 
 	const glm::mat4& get_global_model_matrix()

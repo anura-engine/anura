@@ -47,9 +47,6 @@ namespace preferences
 	void register_module_setting(const std::string& id, variant value);
 	variant get_module_settings();
 
-	void register_module_setting(const std::string& id, variant value);
-	variant get_module_settings();
-
 	int register_string_setting(const std::string& id, bool persistent, std::string* value, const char* helpstring);
 	int register_int_setting(const std::string& id, bool persistent, int* value, const char* helpstring);
 	int register_bool_setting(const std::string& id, bool persistent, bool* value, const char* helpstring);

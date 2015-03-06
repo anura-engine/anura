@@ -481,6 +481,7 @@ namespace KRE
 	// XXX Need a way to deal with blits with Camera/Lighting.
 	void DisplayDeviceOpenGL::doBlitTexture(const TexturePtr& tex, int dstx, int dsty, int dstw, int dsth, float rotation, int srcx, int srcy, int srcw, int srch)
 	{
+		ASSERT_LOG(false, "DisplayDevice::doBlitTexture deprecated");
 		ASSERT_LOG(!tex, "Texture passed in was not of expected type.");
 
 		const float tx1 = float(srcx) / tex->width();
