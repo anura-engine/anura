@@ -202,7 +202,7 @@ namespace gui
 			callable->add("selection", variant(s));
 			variant v(callable);
 			variant value = change_handler_->execute(*callable);
-			getEnvironment()->createFormula(value);
+			getEnvironment()->executeCommand(value);
 		} else {
 			std::cerr << "dropdown_widget::changeDelegate() called without environment!" << std::endl;
 		}
@@ -219,7 +219,7 @@ namespace gui
 			}
 			variant v(callable);
 			variant value = select_handler_->execute(*callable);
-			getEnvironment()->createFormula(value);
+			getEnvironment()->executeCommand(value);
 		} else {
 			std::cerr << "dropdown_widget::selectDelegate() called without environment!" << std::endl;
 		}

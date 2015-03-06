@@ -554,12 +554,12 @@ namespace gui
 			MapFormulaCallablePtr callable = MapFormulaCallablePtr(new MapFormulaCallable(handler_arg_.get()));
 			callable->add("color", getPrimaryColor().write());
 			variant value = change_handler_->execute(*callable);
-			getEnvironment()->createFormula(value);
+			getEnvironment()->executeCommand(value);
 		} else if(getEnvironment()) {
 			MapFormulaCallablePtr callable = MapFormulaCallablePtr(new MapFormulaCallable(getEnvironment()));
 			callable->add("color", getPrimaryColor().write());
 			variant value = change_handler_->execute(*callable);
-			getEnvironment()->createFormula(value);
+			getEnvironment()->executeCommand(value);
 		} else {
 			std::cerr << "ColorPicker::change() called without environment!" << std::endl;
 		}

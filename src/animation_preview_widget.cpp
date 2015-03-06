@@ -815,7 +815,7 @@ namespace gui
 			MapFormulaCallablePtr callable = MapFormulaCallablePtr(new MapFormulaCallable(getEnvironment()));
 			callable->add("new_rect", r.write());
 			variant value = ffl_rect_handler_->execute(*callable);
-			getEnvironment()->createFormula(value);
+			getEnvironment()->executeCommand(value);
 		} else {
 			std::cerr << "AnimationPreviewWidget::rectHandlerDelegate() called without environment!" << std::endl;
 		}
@@ -828,7 +828,7 @@ namespace gui
 			MapFormulaCallablePtr callable = MapFormulaCallablePtr(new MapFormulaCallable(getEnvironment()));
 			callable->add("new_pad", variant(pad));
 			variant value = ffl_pad_handler_->execute(*callable);
-			getEnvironment()->createFormula(value);
+			getEnvironment()->executeCommand(value);
 		} else {
 			std::cerr << "AnimationPreviewWidget::padHandlerDelegate() called without environment!" << std::endl;
 		}
@@ -841,7 +841,7 @@ namespace gui
 			MapFormulaCallablePtr callable = MapFormulaCallablePtr(new MapFormulaCallable(getEnvironment()));
 			callable->add("new_frames", variant(frames));
 			variant value = ffl_num_frames_handler_->execute(*callable);
-			getEnvironment()->createFormula(value);
+			getEnvironment()->executeCommand(value);
 		} else {
 			std::cerr << "AnimationPreviewWidget::numFramesHandlerDelegate() called without environment!" << std::endl;
 		}
@@ -854,7 +854,7 @@ namespace gui
 			MapFormulaCallablePtr callable = MapFormulaCallablePtr(new MapFormulaCallable(getEnvironment()));
 			callable->add("new_frames_per_row", variant(frames_per_row));
 			variant value = ffl_frames_per_row_handler_->execute(*callable);
-			getEnvironment()->createFormula(value);
+			getEnvironment()->executeCommand(value);
 		} else {
 			std::cerr << "AnimationPreviewWidget::framesPerRowHandlerDelegate() called without environment!" << std::endl;
 		}
@@ -868,7 +868,7 @@ namespace gui
 			callable->add("new_solidx", variant(x));
 			callable->add("new_solidy", variant(y));
 			variant value = ffl_solid_handler_->execute(*callable);
-			getEnvironment()->createFormula(value);
+			getEnvironment()->executeCommand(value);
 		} else {
 			std::cerr << "AnimationPreviewWidget::solidHandlerDelegate() called without environment!" << std::endl;
 		}

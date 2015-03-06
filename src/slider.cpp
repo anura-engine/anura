@@ -116,7 +116,7 @@ namespace gui
 			MapFormulaCallablePtr callable(new game_logic::MapFormulaCallable(getEnvironment()));
 			callable->add("position", variant(position));
 			variant value = ffl_handler_->execute(*getEnvironment());
-			getEnvironment()->createFormula(value);
+			getEnvironment()->executeCommand(value);
 		} else {
 			LOG_ERROR("slider::changeDelegate() called without environment!");
 		}
@@ -129,7 +129,7 @@ namespace gui
 			MapFormulaCallablePtr callable(new game_logic::MapFormulaCallable(getEnvironment()));
 			callable->add("position", variant(position));
 			variant value = ffl_end_handler_->execute(*getEnvironment());
-			getEnvironment()->createFormula(value);
+			getEnvironment()->executeCommand(value);
 		} else {
 			LOG_ERROR("slider::dragEndDelegate() called without environment!");
 		}

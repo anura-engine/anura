@@ -116,7 +116,7 @@ namespace gui
 			MapFormulaCallablePtr callable = MapFormulaCallablePtr(new MapFormulaCallable(getEnvironment()));
 			callable->add("checked", variant::from_bool(checked));
 			variant value = click_handler_->execute(*callable);
-			getEnvironment()->createFormula(value);
+			getEnvironment()->executeCommand(value);
 		} else {
 			std::cerr << "Checkbox::click() called without environment!" << std::endl;
 		}

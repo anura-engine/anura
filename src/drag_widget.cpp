@@ -165,7 +165,7 @@ namespace gui
 			callable->add("drag_dx", variant(dx));
 			callable->add("drag_dy", variant(dy));
 			variant value = drag_handler_->execute(*callable);
-			getEnvironment()->createFormula(value);
+			getEnvironment()->executeCommand(value);
 		} else {
 			std::cerr << "drag_widget::drag() called without environment!" << std::endl;
 		}
@@ -179,7 +179,7 @@ namespace gui
 			callable->add("drag_x", variant(x));
 			callable->add("drag_y", variant(y));
 			variant value = drag_start_handler_->execute(*callable);
-			getEnvironment()->createFormula(value);
+			getEnvironment()->executeCommand(value);
 		} else {
 			std::cerr << "drag_widget::drag_start() called without environment!" << std::endl;
 		}
@@ -193,7 +193,7 @@ namespace gui
 			callable->add("drag_x", variant(x));
 			callable->add("drag_y", variant(y));
 			variant value = drag_end_handler_->execute(*callable);
-			getEnvironment()->createFormula(value);
+			getEnvironment()->executeCommand(value);
 		} else {
 			std::cerr << "drag_widget::drag_end() called without environment!" << std::endl;
 		}

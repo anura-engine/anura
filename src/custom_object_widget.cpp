@@ -107,7 +107,7 @@ namespace gui
 			callable->add("object", variant(entity_.get()));
 			callable->add("mouse_button", variant(button));
 			variant value = click_handler_->execute(*callable);
-			getEnvironment()->createFormula(value);
+			getEnvironment()->executeCommand(value);
 		} else {
 			std::cerr << "custom_object_widget::click() called without environment!" << std::endl;
 		}
@@ -121,7 +121,7 @@ namespace gui
 			callable->add("id", variant(id()));
 			callable->add("object", variant(entity_.get()));
 			variant value = mouse_enter_handler_->execute(*callable);
-			getEnvironment()->createFormula(value);
+			getEnvironment()->executeCommand(value);
 		} else {
 			std::cerr << "custom_object_widget::mouse_enter() called without environment!" << std::endl;
 		}
@@ -135,7 +135,7 @@ namespace gui
 			callable->add("id", variant(id()));
 			callable->add("object", variant(entity_.get()));
 			variant value = mouse_leave_handler_->execute(*callable);
-			getEnvironment()->createFormula(value);
+			getEnvironment()->executeCommand(value);
 		} else {
 			std::cerr << "custom_object_widget::mouse_leave() called without environment!" << std::endl;
 		}

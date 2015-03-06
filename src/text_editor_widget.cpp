@@ -1683,7 +1683,7 @@ namespace gui
 			MapFormulaCallablePtr callable = MapFormulaCallablePtr(new MapFormulaCallable(getEnvironment()));
 			callable->add("text", variant(text()));
 			variant value = ffl_on_change_->execute(*callable);
-			getEnvironment()->createFormula(value);
+			getEnvironment()->executeCommand(value);
 		} else {
 			LOG_ERROR("TextEditorWidget::changeDelegate() called without environment!");
 		}
@@ -1693,7 +1693,7 @@ namespace gui
 	{
 		if(getEnvironment()) {
 			variant value = ffl_onMoveCursor_->execute(*getEnvironment());
-			getEnvironment()->createFormula(value);
+			getEnvironment()->executeCommand(value);
 		} else {
 			LOG_ERROR("TextEditorWidget::moveCursorDelegate() called without environment!");
 		}
@@ -1706,7 +1706,7 @@ namespace gui
 			MapFormulaCallablePtr callable = MapFormulaCallablePtr(new MapFormulaCallable(getEnvironment()));
 			callable->add("text", variant(text()));
 			variant value = ffl_on_enter_->execute(*callable);
-			getEnvironment()->createFormula(value);
+			getEnvironment()->executeCommand(value);
 		} else {
 			LOG_ERROR("TextEditorWidget::enterDelegate() called without environment!");
 		}
@@ -1719,7 +1719,7 @@ namespace gui
 			MapFormulaCallablePtr callable = MapFormulaCallablePtr(new MapFormulaCallable(getEnvironment()));
 			callable->add("text", variant(text()));
 			variant value = ffl_on_escape_->execute(*callable);
-			getEnvironment()->createFormula(value);
+			getEnvironment()->executeCommand(value);
 		} else {
 			LOG_ERROR("TextEditorWidget::escapeDelegate() called without environment!");
 		}
@@ -1732,7 +1732,7 @@ namespace gui
 			MapFormulaCallablePtr callable = MapFormulaCallablePtr(new MapFormulaCallable(getEnvironment()));
 			callable->add("text", variant(text()));
 			variant value = ffl_on_tab_->execute(*callable);
-			getEnvironment()->createFormula(value);
+			getEnvironment()->executeCommand(value);
 		} else {
 			LOG_ERROR("TextEditorWidget::tabDelegate() called without environment!");
 		}
@@ -1742,7 +1742,7 @@ namespace gui
 	{
 		if(getEnvironment()) {
 			variant value = ffl_onBeginEnter_->execute(*getEnvironment());
-			getEnvironment()->createFormula(value);
+			getEnvironment()->executeCommand(value);
 		} else {
 			LOG_ERROR("TextEditorWidget::beginEnterDelegate() called without environment!");
 		}
@@ -1758,7 +1758,7 @@ namespace gui
 			callable->add("focus", variant::from_bool(new_focus_value));
 			callable->add("text", variant(text()));
 			variant value = ffl_on_change_focus_->execute(*callable);
-			getEnvironment()->createFormula(value);
+			getEnvironment()->executeCommand(value);
 		} else {
 			LOG_ERROR("TextEditorWidget::tabDelegate() called without environment!");
 		}

@@ -101,7 +101,7 @@ namespace gui
 	{
 		if(getEnvironment()) {
 			variant value = ffl_click_handler_->execute(*getEnvironment());
-			getEnvironment()->createFormula(value);
+			getEnvironment()->executeCommand(value);
 		} else {
 			std::cerr << "Label::click() called without environment!" << std::endl;
 		}

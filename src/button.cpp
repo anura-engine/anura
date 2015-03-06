@@ -173,10 +173,10 @@ variant Button::getColorScheme()
 	{
 		if(handler_arg_) {
 			variant value = click_handler_->execute(*handler_arg_);
-			getEnvironment()->createFormula(value);
+			getEnvironment()->executeCommand(value);
 		} else if(getEnvironment()) {
 			variant value = click_handler_->execute(*getEnvironment());
-			getEnvironment()->createFormula(value);
+			getEnvironment()->executeCommand(value);
 		} else {
 			std::cerr << "Button::click() called without environment!" << std::endl;
 		}

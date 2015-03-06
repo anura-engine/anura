@@ -205,10 +205,10 @@ namespace gui
 		if(quit_arg_) {
 			using namespace game_logic;
 			variant value = ffl_on_quit_->execute(*quit_arg_);
-			getEnvironment()->createFormula(value);
+			getEnvironment()->executeCommand(value);
 		} else if(getEnvironment()) {
 			variant value = ffl_on_quit_->execute(*getEnvironment());
-			getEnvironment()->createFormula(value);
+			getEnvironment()->executeCommand(value);
 		} else {
 			std::cerr << "dialog::quitDelegate() called without environment!" << std::endl;
 		}
@@ -222,12 +222,12 @@ namespace gui
 			MapFormulaCallablePtr callable = MapFormulaCallablePtr(new MapFormulaCallable(close_arg_.get()));
 			callable->add("cancelled", variant::from_bool(cancelled));
 			variant value = ffl_on_close_->execute(*callable);
-			getEnvironment()->createFormula(value);
+			getEnvironment()->executeCommand(value);
 		} else if(getEnvironment()) {
 			MapFormulaCallablePtr callable = MapFormulaCallablePtr(new MapFormulaCallable(getEnvironment()));
 			callable->add("cancelled", variant::from_bool(cancelled));
 			variant value = ffl_on_close_->execute(*callable);
-			getEnvironment()->createFormula(value);
+			getEnvironment()->executeCommand(value);
 		} else {
 			std::cerr << "dialog::closeDelegate() called without environment!" << std::endl;
 		}

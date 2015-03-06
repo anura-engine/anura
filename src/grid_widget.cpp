@@ -604,13 +604,13 @@ namespace gui
 			MapFormulaCallablePtr callable = MapFormulaCallablePtr(new MapFormulaCallable(select_arg_.get()));
 			callable->add("selection", variant(selection));
 			variant value = ffl_on_select_->execute(*callable);
-			getEnvironment()->createFormula(value);
+			getEnvironment()->executeCommand(value);
 		} else if(getEnvironment()) {
 			game_logic::MapFormulaCallable* callable = new game_logic::MapFormulaCallable(getEnvironment());
 			callable->add("selection", variant(selection));
 			variant v(callable);
 			variant value = ffl_on_select_->execute(*callable);
-			getEnvironment()->createFormula(value);
+			getEnvironment()->executeCommand(value);
 		} else {
 			std::cerr << "grid::selectDelegate() called without environment!" << std::endl;
 		}
@@ -623,13 +623,13 @@ namespace gui
 			MapFormulaCallablePtr callable = MapFormulaCallablePtr(new MapFormulaCallable(mouseover_arg_.get()));
 			callable->add("selection", variant(selection));
 			variant value = ffl_on_mouseover_->execute(*callable);
-			getEnvironment()->createFormula(value);
+			getEnvironment()->executeCommand(value);
 		} else if(getEnvironment()) {
 			game_logic::MapFormulaCallable* callable = new game_logic::MapFormulaCallable(getEnvironment());
 			callable->add("selection", variant(selection));
 			variant v(callable);
 			variant value = ffl_on_mouseover_->execute(*callable);
-			getEnvironment()->createFormula(value);
+			getEnvironment()->executeCommand(value);
 		} else {
 			std::cerr << "grid::mouseover_delegate() called without environment!" << std::endl;
 		}

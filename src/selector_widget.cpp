@@ -262,7 +262,7 @@ namespace gui
 			callable->add("selected", variant(current_selection_));
 			variant v(callable);
 			variant value = change_handler_->execute(*callable);
-			getEnvironment()->createFormula(value);
+			getEnvironment()->executeCommand(value);
 		} else {
 			std::cerr << "SelectorWidget::changeDelegate() called without environment!" << std::endl;
 		}
@@ -276,7 +276,7 @@ namespace gui
 			callable->add("selected", variant(current_selection_));
 			variant v(callable);
 			variant value = change_handler_->execute(*callable);
-			getEnvironment()->createFormula(value);
+			getEnvironment()->executeCommand(value);
 		} else {
 			std::cerr << "SelectorWidget::selectDelegate() called without environment!" << std::endl;
 		}

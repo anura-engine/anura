@@ -81,7 +81,7 @@ namespace gui
 	{
 		if(getEnvironment()) {
 			variant value = completion_handler_->execute(*getEnvironment());
-			getEnvironment()->createFormula(value);
+			getEnvironment()->executeCommand(value);
 		} else {
 			std::cerr << "ProgressBar::complete() called without environment!" << std::endl;
 		}
