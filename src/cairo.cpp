@@ -973,13 +973,13 @@ END_CAIRO_FN
 		context.set_pattern(pattern);
 	END_CAIRO_FN
 
-	BEGIN_CAIRO_FN(setFont, "(string)")
+	BEGIN_CAIRO_FN(set_font, "(string)")
 		FT_Face face = get_ft_font(module::map_file("data/fonts/" + args[0].as_string()));
 		cairo_font_face_t* cairo_face = cairo_ft_font_face_create_for_ft_face(face, 0);
 		cairo_set_font_face(context.get(), cairo_face);
 	END_CAIRO_FN
 
-	BEGIN_CAIRO_FN(setFontSize, "(decimal)")
+	BEGIN_CAIRO_FN(set_font_size, "(decimal)")
 		cairo_set_font_size(context.get(), args[0].as_decimal().as_float());
 	END_CAIRO_FN
 
