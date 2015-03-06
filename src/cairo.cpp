@@ -96,6 +96,7 @@ namespace graphics
 					   (std::equal(key.end()-4, key.end(), ".ttf") ||
 						std::equal(key.end()-4, key.end(), ".otf"))) {
 						paths[std::string(key.begin(), key.end()-4)] = p.second;
+						LOG_DEBUG("Added Font: " << p.second << " at " << std::string(key.begin(), key.end()-4));
 					}
 				}
 			}
@@ -974,7 +975,7 @@ END_CAIRO_FN
 	END_CAIRO_FN
 
 	BEGIN_CAIRO_FN(set_font, "(string)")
-		FT_Face face = get_ft_font(module::map_file("data/fonts/" + args[0].as_string()));
+		FT_Face face = get_ft_font(args[0].as_string());
 		cairo_font_face_t* cairo_face = cairo_ft_font_face_create_for_ft_face(face, 0);
 		cairo_set_font_face(context.get(), cairo_face);
 	END_CAIRO_FN
@@ -1401,7 +1402,7 @@ END_CAIRO_FN
 	BEGIN_DEFINE_FN(text_extents, "(string, decimal, string) -> { width: decimal, height: decimal }")
 		static cairo_context& context = *new cairo_context(8,8);
 
-		FT_Face face = get_ft_font(module::map_file("data/fonts/" + FN_ARG(0).as_string()));
+		FT_Face face = get_ft_font(FN_ARG(0).as_string());
 		cairo_font_face_t* cairo_face = cairo_ft_font_face_create_for_ft_face(face, 0);
 		cairo_set_font_face(context.get(), cairo_face);
 
@@ -1416,8 +1417,8 @@ END_CAIRO_FN
 			cairo_text_extents_t extents;
 			cairo_text_extents(context.get(), line.c_str(), &extents);
 			height += extents.height;
-		if(extents.x_advance > width) {
-			width = extents.x_advance;
+			if(extents.x_advance > width) {
+				width = extents.x_advance;
 			}
 		}
 

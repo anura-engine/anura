@@ -283,8 +283,8 @@ void SpeechDialog::draw() const
 	if(pane_area_.w() == 0) {
 		pane_area_ = rect(
 		  top_corner->width(),
-		  preferences::virtual_screen_height() - TextAreaHeight + TextBorder,
-		  preferences::virtual_screen_width() - top_corner->width()*2,
+		  wnd->logicalHeight() - TextAreaHeight + TextBorder,
+		  wnd->logicalWidth() - top_corner->width()*2,
 		  TextAreaHeight - bottom_corner->height());
 		if(speaker_ypos < 100) {
 			pane_area_ = rect(pane_area_.x(), top_corner->height() + 50, pane_area_.w(), pane_area_.h());
