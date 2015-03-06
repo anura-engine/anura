@@ -65,7 +65,7 @@ namespace KRE
 		size_(0)
 	{
 		glGenBuffers(1, &buffer_id_);
-		LOG_DEBUG("Created Hardware Attribute Buffer id: " << buffer_id_);
+		//LOG_DEBUG("Created Hardware Attribute Buffer id: " << buffer_id_);
 	}
 
 	HardwareAttributePtr HardwareAttributeOGL::create(AttributeBase* parent)

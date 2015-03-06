@@ -407,28 +407,30 @@ void render_scene(Level& lvl, const screen_position& pos)
 		bg_yscroll = yscroll;
 	}
 
-	KRE::ModelManager2D model_matrix(-xscroll, -yscroll, 0, pos.zoom);
-	lvl.draw_background(bg_xscroll, bg_yscroll, camera_rotation);
+	{
+		KRE::ModelManager2D model_matrix(-xscroll, -yscroll, 0, pos.zoom);
+		lvl.draw_background(bg_xscroll, bg_yscroll, camera_rotation);
 
-	int draw_width = screen_width;
-	int draw_height = wnd->height();
-	if(pos.zoom < 1.0f) {
-		draw_width = static_cast<int>(draw_width/pos.zoom);
-		draw_height = static_cast<int>(draw_height/pos.zoom);
+		int draw_width = screen_width;
+		int draw_height = wnd->height();
+		if(pos.zoom < 1.0f) {
+			draw_width = static_cast<int>(draw_width/pos.zoom);
+			draw_height = static_cast<int>(draw_height/pos.zoom);
+		}
+		lvl.draw(xscroll, yscroll, draw_width, draw_height);
+
+		for(const rect& r : current_debug_rects) {
+			canvas->drawSolidRect(r, KRE::Color(0, 0, 255, 175));
+		}
+
+		if(current_debug_rects_valid_cycle != lvl.cycle()) {
+			current_debug_rects.clear();
+		}
+
+		current_debug_rects_valid_cycle = lvl.cycle();
+
+		lvl.drawLater(xscroll, yscroll, draw_width, draw_height);
 	}
-	lvl.draw(xscroll, yscroll, draw_width, draw_height);
-
-	for(const rect& r : current_debug_rects) {
-		canvas->drawSolidRect(r, KRE::Color(0, 0, 255, 175));
-	}
-
-	if(current_debug_rects_valid_cycle != lvl.cycle()) {
-		current_debug_rects.clear();
-	}
-
-	current_debug_rects_valid_cycle = lvl.cycle();
-
-	lvl.drawLater(xscroll, yscroll, draw_width, draw_height);
 
 	lvl.draw_absolutely_positioned_objects();
 

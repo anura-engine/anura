@@ -1609,15 +1609,11 @@ void Level::draw_layer(int layer, int x, int y, int w, int h) const
 		return;
 	}
 
-	{
-		// XXX disable blend
-		draw_layer_solid(layer, x, y, w, h);
-	}
-	{
-		auto& blit_cache_info = *layer_itor->second;
-		KRE::ModelManager2D model_matrix_scope(position.x, position.y);
-		KRE::WindowManager::getMainWindow()->render(&blit_cache_info);
-	}
+	draw_layer_solid(layer, x, y, w, h);
+	
+	auto& blit_cache_info = *layer_itor->second;
+	KRE::ModelManager2D model_matrix_scope(position.x, position.y);
+	KRE::WindowManager::getMainWindow()->render(&blit_cache_info);
 }
 
 void Level::draw_layer_solid(int layer, int x, int y, int w, int h) const
@@ -1673,7 +1669,7 @@ void Level::prepare_tiles_for_drawing()
 		}
 
 		if(!blit_cache_info_ptr->isInitialised()) {
-			LOG_DEBUG("zorder: " << tiles_[n].zorder << ", set texture with id: "<< tiles_[n].object->texture()->id());
+			//LOG_DEBUG("zorder: " << tiles_[n].zorder << ", set texture with id: "<< tiles_[n].object->texture()->id());
 			blit_cache_info_ptr->setTexture(tiles_[n].object->texture());
 			blit_cache_info_ptr->setBase(tiles_[n].x, tiles_[n].y);
 		}
@@ -1795,7 +1791,6 @@ namespace
 		}
 
 		KRE::ModelManager2D model_scope(diffx, diffy);
-		//obj.draw(x + diffx, y + diffy);
 		obj.draw(x, y);
 		if(editor) {
 			obj.drawGroup();

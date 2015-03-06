@@ -126,7 +126,7 @@ namespace KRE
 			CanvasPtr canvas_;
 		};
 
-		const glm::mat4& getModelMatrix() const;
+		glm::mat4 getModelMatrix() const;
 
 		const Color getColor() const {
 			if(color_stack_.empty()) {

@@ -255,7 +255,7 @@ namespace KRE
 
 	void OpenGLTexture::handleAddPalette(const SurfacePtr& palette)
 	{
-		profile::manager pman("handleAddPalette");
+		//profile::manager pman("handleAddPalette");
 		ASSERT_LOG(is_yuv_planar_ == false, "Can't create a palette for a YUV surface.");
 
 		if(PixelFormat::isIndexedFormat(getFrontSurface()->getPixelFormat()->getFormat())) {
@@ -300,7 +300,7 @@ namespace KRE
 			});
 			surf->writePixels(&new_pixels[0], new_pixels.size());
 
-			LOG_INFO("handleAddPalette: Color count: " << td.palette.size());
+			//LOG_INFO("handleAddPalette: Color count: " << td.palette.size());
 
 			// save old palette
 			auto old_palette = std::move(texture_data_[0].palette);
@@ -385,7 +385,7 @@ namespace KRE
 				}
 			}
 		}
-		LOG_INFO("Mapped " << colors_mapped << " out of " << palette_width << " colors from palette");
+		//LOG_INFO("Mapped " << colors_mapped << " out of " << palette_width << " colors from palette");
 
 		updatePaletteRow(new_palette_surface, palette_width, new_pixels);
 		setMaxPalettes(texture_data_[0].palette_row_index);

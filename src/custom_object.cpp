@@ -418,15 +418,13 @@ CustomObject::CustomObject(variant node)
 	}
 #endif
 
-	if(node.has_key("shader")) {
-		if(node.has_key("shader")) {
-			if(node["shader"].is_string()) {
-				shader_.reset(new graphics::AnuraShader(node["shader"].as_string()));
-			} else {
-				shader_.reset(new graphics::AnuraShader(node["shader"]["name"].as_string(), node["shader"]));
-			}
+	/*if(node.has_key("shader")) {
+		if(node["shader"].is_string()) {
+			shader_.reset(new graphics::AnuraShader(node["shader"].as_string()));
+		} else {
+			shader_.reset(new graphics::AnuraShader(node["shader"]["name"].as_string(), node["shader"]));
 		}
-	}
+	}*/
 
 	const variant property_data_node = node["property_data"];
 	for(int i = 0; i != type_->getSlotProperties().size(); ++i) {
@@ -614,7 +612,7 @@ CustomObject::CustomObject(const CustomObject& o)
 	driver_(o.driver_),
 	blur_(o.blur_),
 	fall_through_platforms_(o.fall_through_platforms_),
-	//shader_(o.shader_),
+	shader_(o.shader_),
 	//effects_(o.effects_),
 	always_active_(o.always_active_),
 	last_cycle_active_(0),
@@ -1106,15 +1104,18 @@ void CustomObject::drawLater(int xx, int yy) const
 	// idea is to draw widgets with z-orders over the
 	// threshold now rather than during the normal draw
 	// processing.
-	int offs_x = x();
-	int offs_y = y();
+	int offs_x = 0;
+	int offs_y = 0;
 	if(use_absolute_screen_coordinates_) {
 		adjusted_draw_position_.x = xx;
 		adjusted_draw_position_.y = yy;
+		offs_x = xx;
+		offs_y = yy;
 	}
+	KRE::ModelManager2D model_matrix(x()+offs_x, y()+offs_y);
 	for(const gui::WidgetPtr& w : widgets_) {
 		if(w->zorder() >= widget_zorder_draw_later_threshold) {
-			w->draw(offs_x, offs_y, rotate_z_.as_float32(), draw_scale_ ? draw_scale_->as_float32() : 0);
+			w->draw(0, 0, rotate_z_.as_float32(), draw_scale_ ? draw_scale_->as_float32() : 0);
 		}
 	}
 }
@@ -1126,14 +1127,11 @@ void CustomObject::draw(int xx, int yy) const
 	}
 	auto wnd = KRE::WindowManager::getMainWindow();
 
-	int offs_x = xx+x();
-	int offs_y = yy+y();
-
+	std::unique_ptr<KRE::ModelManager2D> model_scope;
 	if(use_absolute_screen_coordinates_) {
-		std::unique_ptr<KRE::ModelManager2D> model_scope(new KRE::ModelManager2D(xx, yy));
+		model_scope = std::unique_ptr<KRE::ModelManager2D>(new KRE::ModelManager2D(xx, yy));
 		adjusted_draw_position_.x = xx;
 		adjusted_draw_position_.y = yy;
-		//xx = yy = 0;
 	}
 
 	for(const EntityPtr& attached : attachedObjects()) {
@@ -1216,10 +1214,15 @@ void CustomObject::draw(int xx, int yy) const
 
 	drawDebugRects();
 
-	for(const gui::WidgetPtr& w : widgets_) {
-		if(w->zorder() < widget_zorder_draw_later_threshold) {
-			if(w->drawWithObjectShader()) {
-				w->draw(offs_x, offs_y, rotate_z_.as_float32(), draw_scale_ ? draw_scale_->as_float32() : 1.0f);
+	{
+		KRE::ModelManager2D model_matrix;
+		model_matrix.setIdentity();
+		model_matrix.translate(x()&~1, y()&~1);
+		for(const gui::WidgetPtr& w : widgets_) {
+			if(w->zorder() < widget_zorder_draw_later_threshold) {
+				if(w->drawWithObjectShader()) {
+					w->draw(0, 0, rotate_z_.as_float32(), draw_scale_ ? draw_scale_->as_float32() : 1.0f);
+				}
 			}
 		}
 	}
@@ -1282,10 +1285,15 @@ void CustomObject::draw(int xx, int yy) const
 		}
 	}
 
-	for(const gui::WidgetPtr& w : widgets_) {
-		if(w->zorder() < widget_zorder_draw_later_threshold) {
-			if(w->drawWithObjectShader() == false) {
-				w->draw(offs_x, offs_y, rotate_z_.as_float32(), draw_scale_ ? draw_scale_->as_float32() : 0);
+	{
+		KRE::ModelManager2D model_matrix;
+		model_matrix.setIdentity();
+		model_matrix.translate(x()&~1, y()&~1);
+		for(const gui::WidgetPtr& w : widgets_) {
+			if(w->zorder() < widget_zorder_draw_later_threshold) {
+				if(w->drawWithObjectShader() == false) {
+					w->draw(0, 0, rotate_z_.as_float32(), draw_scale_ ? draw_scale_->as_float32() : 0);
+				}
 			}
 		}
 	}
@@ -3380,15 +3388,15 @@ void CustomObject::setValue(const std::string& key, const variant& value)
 				tags_->add(value[n].as_string(), variant(1));
 			}
 		}
-#if defined(USE_SHADERS)
 	} else if(key == "shader") {
-		using namespace gles2;
-		if(value.is_map()) {
-			shader_.reset(new shader_program(value));
+		if(value.is_string()) {
+			shader_.reset(new graphics::AnuraShader(value.as_string()));
+		} else if(value.is_map()) {
+			shader_.reset(new graphics::AnuraShader(value["name"].as_string(), value));
 		} else {
-			shader_.reset(value.try_convert<shader_program>());
+			shader_.reset(value.try_convert<graphics::AnuraShader>());
 		}
-	} else if(key == "effects") {
+	/*} else if(key == "effects") {
 		using namespace gles2;
 		effects_.clear();
 		if(value.is_list()) {
@@ -3404,8 +3412,7 @@ void CustomObject::setValue(const std::string& key, const variant& value)
 		} else {
 			effects_.push_back(shader_program_ptr(value.try_convert<shader_program>()));
 			ASSERT_LOG(effects_.size() > 0, "Couldn't convert type to shader");
-		}
-#endif
+		}*/
 	} else if(key == "draw_area") {
 		if(value.is_list() && value.num_elements() == 4) {
 			draw_area_.reset(new rect(value[0].as_int(), value[1].as_int(), value[2].as_int(), value[3].as_int()));
@@ -5678,14 +5685,6 @@ void CustomObject::addToLevel()
 #if defined(USE_BOX2D)
 	if(body_) {
 		body_->set_active();
-	}
-#endif
-#if defined(USE_SHADERS)
-	if(shader_) {
-		shader_->init(this);
-	}
-	for(size_t n = 0; n < effects_.size(); ++n) {
-		effects_[n]->init(this);
 	}
 #endif
 }

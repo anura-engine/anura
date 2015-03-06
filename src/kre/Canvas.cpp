@@ -23,6 +23,7 @@
 
 #include "Canvas.hpp"
 #include "DisplayDevice.hpp"
+#include "ModelMatrixScope.hpp"
 
 namespace KRE
 {
@@ -124,7 +125,7 @@ namespace KRE
 		window_ = wnd; 
 	}
 
-	const glm::mat4& Canvas::getModelMatrix() const 
+	glm::mat4 Canvas::getModelMatrix() const 
 	{
 		if(model_changed_) {
 			model_changed_ = false;
@@ -143,6 +144,9 @@ namespace KRE
 				auto& top = get_scale_stack().top();
 				model_matrix_ = glm::scale(model_matrix_, glm::vec3(top, 1.0f));
 			}
+		}
+		if(is_global_model_matrix_valid()) {
+			return get_global_model_matrix() * model_matrix_;
 		}
 		return model_matrix_;
 	}

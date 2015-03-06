@@ -18,6 +18,8 @@ namespace graphics
 		void setCycle(int cycle);
 
 		void setSpriteArea(const rectf& area);
+
+		KRE::ShaderProgramPtr getShader() const { return shader_; }
 	private:
 		DECLARE_CALLABLE(AnuraShader);
 		void init();

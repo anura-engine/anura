@@ -25,6 +25,7 @@
 #include <math.h>
 
 #include "DisplayDevice.hpp"
+#include "Shaders.hpp"
 
 #include "preferences.hpp"
 #include "asserts.hpp"
@@ -71,6 +72,7 @@ void Water::init()
 {
 	using namespace KRE;
 
+	setShader(ShaderProgram::getProgram("attr_color_shader"));
 	auto ab = DisplayDevice::createAttributeSet(true);
 	waterline_.reset(new Attribute<vertex_color>(AccessFreqHint::DYNAMIC, AccessTypeHint::DRAW));
 	waterline_->addAttributeDesc(AttributeDesc(AttrType::POSITION, 2, AttrFormat::FLOAT, false, sizeof(vertex_color), offsetof(vertex_color, vertex)));

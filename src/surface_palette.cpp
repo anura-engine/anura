@@ -67,7 +67,6 @@ namespace graphics
 		}
 		int id = get_palette_map().size();
 		get_palette_map().insert(palette_pair(name, id));
-		LOG_DEBUG("Added palette '" << name << "' at index: " << id);
 		return id;
 	}
 

@@ -698,6 +698,7 @@ void Frame::draw(graphics::AnuraShaderPtr shader, int x, int y, bool face_right,
 
 	if(shader) {
 		shader->setSpriteArea(blit_target_.getTexture()->getSourceRectNormalised());
+		blit_target_.setShader(shader->getShader());
 	}
 
 	auto wnd = KRE::WindowManager::getMainWindow();
