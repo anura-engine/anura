@@ -73,10 +73,8 @@ namespace graphics
 		shader_->setUniformDrawFunction(std::bind(&AnuraShader::setUniformsForDraw, this));
 
 		std::vector<std::pair<std::string, std::string>> attr_map;
-		//attr_map.emplace_back("u_anura_vertex", "position");
-		//attr_map.emplace_back("u_anura_texcoord", "texcoord");
-		attr_map.emplace_back("position", "u_anura_vertex");
-		attr_map.emplace_back("texcoord", "u_anura_texcoord");
+		attr_map.emplace_back("a_anura_vertex", "position");
+		attr_map.emplace_back("a_anura_texcoord", "texcoord");
 		shader_->setAttributeMapping(attr_map);
 
 		// XXX Set the draw commands here if required from shader_->getShaderVariant()
@@ -97,7 +95,6 @@ namespace graphics
 
 	void AnuraShader::setUniformsForDraw()
 	{
-		LOG_DEBUG("AnuraShader::setUniformsForDraw()");
 		if(u_anura_discard_ != KRE::ShaderProgram::INALID_UNIFORM) {
 			shader_->setUniformValue(u_anura_discard_, static_cast<int>(discard_));
 		}

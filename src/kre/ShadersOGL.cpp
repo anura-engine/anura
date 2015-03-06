@@ -903,7 +903,6 @@ namespace KRE
 			for(auto& attr : attrset->getAttributes()) {
 				for(auto& desc : attr->getAttrDesc()) {
 					desc.setLocation(getAttribute(desc.getAttrName()));
-					LOG_DEBUG("Set location for attribute " << desc.getAttrName() << " in shader: " << name() << " to " << desc.getLocation());
 				}
 			}
 		}
