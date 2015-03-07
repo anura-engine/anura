@@ -241,13 +241,6 @@ int load_module(const std::string& mod, std::vector<std::string>* argv)
 		}
 
 		argv->insert(argv->begin() + insertion_point, arguments.begin(), arguments.end());
-
-		LOG_INFO_NOLF("ARGS:");
-		for(int i = 0; i != argv->size(); ++i) {
-			LOG_INFO_NOLF(" " << (*argv)[i]);
-		}
-		LOG_INFO("");
-
 	}	
 	return 0;
 }
@@ -274,6 +267,35 @@ void set_alpha_masks()
 		return false;
 	});
 }
+
+
+void auto_select_resolution(KRE::WindowManagerPtr wnd, int *width, int *height)
+{
+	ASSERT_LOG(wnd != nullptr, "WindowManager is null.");
+	ASSERT_LOG(width != nullptr, "width is null.");
+	ASSERT_LOG(height != nullptr, "height is null.");
+
+	auto mode = wnd->getDisplaySize();
+	auto best_mode = mode;
+	
+	const float MinReduction = 0.9f;
+	for(auto& candidate_mode : wnd->getWindowModes([](const KRE::WindowMode&){ return true; })) {
+		if(candidate_mode.width < mode.width && candidate_mode.height < mode.width
+			&& candidate_mode.width < mode.width * MinReduction
+			&& candidate_mode.height < mode.height * MinReduction
+			&& (candidate_mode.width >= best_mode.width
+			&& candidate_mode.height >= best_mode.height
+			|| best_mode.width == mode.width && best_mode.height == mode.height)) {
+			LOG_INFO("BETTER MODE IS " << candidate_mode.width << "x" << candidate_mode.height);
+			best_mode = candidate_mode;
+		} else {
+			LOG_INFO("REJECTED MODE IS " << candidate_mode.width << "x" << candidate_mode.height);
+		}
+	}
+	*width = best_mode.width;
+	*height = best_mode.height;
+}
+
 
 extern int g_tile_scale;
 extern int g_tile_size;
@@ -750,8 +772,13 @@ int main(int argcount, char* argvec[])
 	hints.setHint("renderer", "opengl");
 	WindowManagerPtr main_wnd = WindowManager::create("SDL", hints);
 	main_wnd->enableVsync(true);
-	//main_wnd->createWindow(1600, 900);
-	main_wnd->createWindow(800, 600);
+	int width = 800;
+	int height = 600;
+	LOG_ERROR("Need to fix width/height from commandline/preferences");
+	if(preferences::auto_size_window()) {
+		auto_select_resolution(main_wnd, &width, &height);
+	}
+	main_wnd->createWindow(width, height);
 
 	auto canvas = Canvas::getInstance();
 

@@ -276,10 +276,24 @@ namespace KRE
 			ASSERT_LOG(display_ != nullptr, "No display to render to.");
 			display_->render(r);
 		}
+		
+		WindowMode getDisplaySize() override {
+			SDL_DisplayMode new_mode;
+			int display_index = 0;
+			if(window_ != nullptr) {
+				display_index = SDL_GetWindowDisplayIndex(window_.get());
+			}
+			SDL_GetDesktopDisplayMode(display_index, &new_mode);
+			WindowMode mode = { new_mode.w, new_mode.h, std::make_shared<SDLPixelFormat>(new_mode.format), new_mode.refresh_rate };
+			return mode;
+		}
 
 		std::vector<WindowMode> getWindowModes(std::function<bool(const WindowMode&)> mode_filter) override {
 			std::vector<WindowMode> res;
-			const int display_index = SDL_GetWindowDisplayIndex(window_.get());
+			int display_index = 0;
+			if(window_ != nullptr) {
+				display_index = SDL_GetWindowDisplayIndex(window_.get());
+			}
 			const int nmodes = SDL_GetNumDisplayModes(display_index);
 			for(int n = 0; n != nmodes; ++n) {
 				SDL_DisplayMode new_mode;
