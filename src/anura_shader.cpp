@@ -373,10 +373,6 @@ namespace graphics
 			e->executeCommand(f->execute(*e));
 		}
 		uniform_commands_->executeOnDraw();
-		LOG_DEBUG("AnuraShader::process() - " << shader_->getShaderVariant()["name"]);
-		for(auto& u : uniforms_to_set_) {
-			LOG_DEBUG("    " << u.first << " : " << u.second.to_debug_string());
-		}
 	}
 
 	AnuraShader::DrawCommand::DrawCommand() 
