@@ -44,6 +44,7 @@
 #include "i18n.hpp"
 #include "level.hpp"
 #include "message_dialog.hpp"
+#include "module.hpp"
 #include "player_info.hpp"
 #include "preferences.hpp"
 #include "speech_dialog.hpp"
@@ -613,25 +614,48 @@ void draw_fps(const Level& lvl, const performance_data& data)
 		return;
 	}
 
-	ConstGraphicalFontPtr font(GraphicalFont::get("door_label"));
-	if(!font) {
-		return;
-	}
 	std::ostringstream s;
 	s << data.fps << "/" << data.cycles_per_second << "fps; " << (data.draw/10) << "% draw; " << (data.flip/10) << "% flip; " << (data.process/10) << "% process; " << (data.delay/10) << "% idle; " << lvl.num_active_chars() << " objects; " << data.nevents << " events";
 
-	rect area = font->draw(10, 60, s.str());
+	std::ostringstream nets;
 
 	if(controls::num_players() > 1) {
 		//draw networking stats
 		std::ostringstream s;
-		s << controls::packets_received() << " packets received; " << controls::num_errors() << " errors; " << controls::cycles_behind() << " behind; " << controls::their_highest_confirmed() << " remote cycles " << controls::last_packet_size() << " packet";
+		nets << controls::packets_received() << " packets received; " << controls::num_errors() << " errors; " << controls::cycles_behind() << " behind; " << controls::their_highest_confirmed() << " remote cycles " << controls::last_packet_size() << " packet";
 
-		area = font->draw(10, area.y2() + 5, s.str());
 	}
 
-	if(!data.profiling_info.empty()) {
-		font->draw(10, area.y2() + 5, data.profiling_info);
+	if(module::get_default_font() == "bitmap") {
+		ConstGraphicalFontPtr font(GraphicalFont::get("door_label"));
+		if(!font) {
+			return;
+		}
+
+		rect area = font->draw(10, 60, s.str());
+		if(!nets.str().empty()) {
+			area = font->draw(10, area.y2() + 5, nets.str());
+		}
+
+		if(!data.profiling_info.empty()) {
+			font->draw(10, area.y2() + 5, data.profiling_info);
+		}
+	} else {
+		int y = 60;
+		const int font_size = 18;
+		auto canvas = KRE::Canvas::getInstance();
+		auto t = KRE::Font::getInstance()->renderText(s.str(), KRE::Color::colorWhite(), font_size, false, module::get_default_font());
+		canvas->blitTexture(t, 0, 10, y);
+		y += t->surfaceHeight() + 5;
+		if(!nets.str().empty()) {
+			t = KRE::Font::getInstance()->renderText(nets.str(), KRE::Color::colorWhite(), font_size, false, module::get_default_font()); 
+			canvas->blitTexture(t, 0, 10, y);
+			y += t->surfaceHeight() + 5;
+		}
+		if(!data.profiling_info.empty()) {
+			t = KRE::Font::getInstance()->renderText(data.profiling_info, KRE::Color::colorWhite(), font_size, false, module::get_default_font()); 
+			canvas->blitTexture(t, 0, 10, y);
+		}
 	}
 }
 
