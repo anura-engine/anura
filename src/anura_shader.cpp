@@ -168,6 +168,16 @@ namespace graphics
 		}
 	}
 
+	void set_alpha_test(bool alpha)
+	{
+		g_alpha_test = alpha;
+	}
+
+	bool get_alpha_test()
+	{
+		return g_alpha_test;
+	}
+
 	AnuraShader::AnuraShader(const std::string& name)
 		: shader_(KRE::ShaderProgram::getProgram(name)),
 		  u_anura_discard_(KRE::ShaderProgram::INALID_UNIFORM),
@@ -356,21 +366,16 @@ namespace graphics
 		return game_logic::FormulaPtr(new game_logic::Formula(v, &get_shader_symbol_table()));
 	}
 
-	void set_alpha_test(bool alpha)
-	{
-		g_alpha_test = alpha;
-	}
-
-	bool get_alpha_test()
-	{
-		return g_alpha_test;
-	}
-
 	void AnuraShader::process()
 	{
 		game_logic::FormulaCallable* e = this;
 		for(auto& f : draw_formulas_) {
 			e->executeCommand(f->execute(*e));
+		}
+		uniform_commands_->executeOnDraw();
+		LOG_DEBUG("AnuraShader::process() - " << shader_->getShaderVariant()["name"]);
+		for(auto& u : uniforms_to_set_) {
+			LOG_DEBUG("    " << u.first << " : " << u.second.to_debug_string());
 		}
 	}
 
