@@ -418,13 +418,17 @@ CustomObject::CustomObject(variant node)
 	}
 #endif
 
-	/*if(node.has_key("shader")) {
+	if(node.has_key("shader")) {
 		if(node["shader"].is_string()) {
-			shader_.reset(new graphics::AnuraShader(node["shader"].as_string()));
+			std::string shader_name = node["shader"].as_string();
+			shader_.reset(new graphics::AnuraShader(shader_name));
+			LOG_DEBUG("Set shader for " << type_ << " to " << shader_name);
 		} else {
-			shader_.reset(new graphics::AnuraShader(node["shader"]["name"].as_string(), node["shader"]));
+			std::string shader_name = node["shader"]["name"].as_string();
+			shader_.reset(new graphics::AnuraShader(shader_name, node["shader"]));
+			LOG_DEBUG("Set shader for " << type_ << " to " << shader_name);
 		}
-	}*/
+	}
 
 	const variant property_data_node = node["property_data"];
 	for(int i = 0; i != type_->getSlotProperties().size(); ++i) {
@@ -2949,8 +2953,7 @@ variant CustomObject::getValueBySlot(int slot) const
 	}
 
 	case CUSTOM_OBJECT_SHADER: {
-		// Return shader variant
-		return variant();
+		return variant(shader_.get());
 	}
 
 	case CUSTOM_OBJECT_ACTIVATION_AREA: {
@@ -4031,7 +4034,11 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 		break;
 
 	case CUSTOM_OBJECT_SHADER: {
-		/// XXX custom object shader
+		if(value.is_string()) {
+			shader_.reset(new graphics::AnuraShader(value.as_string()));
+		} else {
+			shader_.reset(new graphics::AnuraShader(value["name"].as_string(), value));
+		}
 		break;
 	}
 

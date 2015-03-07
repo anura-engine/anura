@@ -47,6 +47,8 @@ namespace KRE
 	{
 		ShaderAttributeError(const char* what) : std::runtime_error(what) {}
 	};
+	
+	typedef std::function<void()> UniformSetFn;
 
 	class ShaderProgram
 	{
@@ -68,6 +70,9 @@ namespace KRE
 
 		virtual int getAttribute(const std::string& attr) const = 0;
 		virtual int getUniform(const std::string& attr) const = 0;
+
+		virtual void setUniformMapping(const std::vector<std::pair<std::string, std::string>>& mapping) = 0;
+		virtual void setAttributeMapping(const std::vector<std::pair<std::string, std::string>>& mapping) = 0;
 
 		virtual void setUniformValue(int uid, const int) const = 0;
 		virtual void setUniformValue(int uid, const float) const = 0;
@@ -91,6 +96,9 @@ namespace KRE
 		virtual int getNormalAttribute() const = 0;
 
 		virtual void setUniformsForTexture(const TexturePtr& tex) const = 0;
+		
+		void setUniformDrawFunction(UniformSetFn fn) { uniform_draw_fn_ = fn; }
+		UniformSetFn getUniformDrawFunction() const { return uniform_draw_fn_; }
 
 		static ShaderProgramPtr getSystemDefault();
 
@@ -99,7 +107,11 @@ namespace KRE
 
 		//! loads the internal store of shader programs from the given data.
 		static void loadFromVariant(const variant& node);
+
+		variant getShaderVariant() { return node_; }
 	private:
 		DISALLOW_COPY_ASSIGN_AND_DEFAULT(ShaderProgram);
+		UniformSetFn uniform_draw_fn_;
+		variant node_;
 	};
 }

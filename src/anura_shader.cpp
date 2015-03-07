@@ -12,12 +12,46 @@ namespace graphics
 	}
 
 	AnuraShader::AnuraShader(const std::string& name)
-		: shader_(KRE::ShaderProgram::getProgram(name))
+		: shader_(KRE::ShaderProgram::getProgram(name)),
+		  u_anura_discard_(KRE::ShaderProgram::INALID_UNIFORM),
+		  u_anura_tex_map_(KRE::ShaderProgram::INALID_UNIFORM),
+		  u_anura_mvp_matrix_(KRE::ShaderProgram::INALID_UNIFORM),
+		  u_anura_sprite_area_(KRE::ShaderProgram::INALID_UNIFORM),
+		  u_anura_draw_area_(KRE::ShaderProgram::INALID_UNIFORM),
+		  u_anura_cycle_(KRE::ShaderProgram::INALID_UNIFORM),
+		  u_anura_color_(KRE::ShaderProgram::INALID_UNIFORM),
+		  u_anura_point_size_(KRE::ShaderProgram::INALID_UNIFORM),
+		  discard_(false),
+		  tex_map_(0),
+		  mvp_matrix_(1.0f),
+		  sprite_area_(0.0f),
+		  draw_area_(0.0f),
+		  cycle_(0),
+		  color_(1.0f),
+		  point_size_(1.0f)
+
 	{
 		 init();
 	}
 
 	AnuraShader::AnuraShader(const std::string& name, const variant& node)
+		: shader_(),
+		  u_anura_discard_(KRE::ShaderProgram::INALID_UNIFORM),
+		  u_anura_tex_map_(KRE::ShaderProgram::INALID_UNIFORM),
+		  u_anura_mvp_matrix_(KRE::ShaderProgram::INALID_UNIFORM),
+		  u_anura_sprite_area_(KRE::ShaderProgram::INALID_UNIFORM),
+		  u_anura_draw_area_(KRE::ShaderProgram::INALID_UNIFORM),
+		  u_anura_cycle_(KRE::ShaderProgram::INALID_UNIFORM),
+		  u_anura_color_(KRE::ShaderProgram::INALID_UNIFORM),
+		  u_anura_point_size_(KRE::ShaderProgram::INALID_UNIFORM),
+		  discard_(false),
+		  tex_map_(0),
+		  mvp_matrix_(1.0f),
+		  sprite_area_(0.0f),
+		  draw_area_(0.0f),
+		  cycle_(0),
+		  color_(1.0f),
+		  point_size_(1.0f)
 	{
 		KRE::ShaderProgram::loadFromVariant(node);
 		shader_ = KRE::ShaderProgram::getProgram(name);
@@ -26,36 +60,68 @@ namespace graphics
 
 	void AnuraShader::init()
 	{
-		/*u_draw_area_ = shader_->getHandle("u_anura_draw_area");
-		u_cycle_ = shader_->getHandle("u_anura_cycle");
-		u_discard_ = shader_->getHandle("u_anura_discard");
-		u_sprite_area_ = shader_->getHandle("u_anura_sprite_area");*/
+		ASSERT_LOG(shader_ != nullptr, "No shader is set.");
+		u_anura_discard_ = shader_->getUniform("u_anura_discard");
+		u_anura_tex_map_ = shader_->getUniform("u_anura_tex_map");
+		u_anura_mvp_matrix_ = shader_->getUniform("u_anura_mvp_matrix");
+		u_anura_sprite_area_ = shader_->getUniform("u_anura_sprite_area");
+		u_anura_draw_area_ = shader_->getUniform("u_anura_draw_area");
+		u_anura_cycle_ = shader_->getUniform("u_anura_cycle");
+		u_anura_color_ = shader_->getUniform("u_anura_color");
+		u_anura_point_size_ = shader_->getUniform("u_anura_point_size");
+
+		shader_->setUniformDrawFunction(std::bind(&AnuraShader::setUniformsForDraw, this));
+
+		std::vector<std::pair<std::string, std::string>> attr_map;
+		//attr_map.emplace_back("u_anura_vertex", "position");
+		//attr_map.emplace_back("u_anura_texcoord", "texcoord");
+		attr_map.emplace_back("position", "u_anura_vertex");
+		attr_map.emplace_back("texcoord", "u_anura_texcoord");
+		shader_->setAttributeMapping(attr_map);
+
+		// XXX Set the draw commands here if required from shader_->getShaderVariant()
 	}
 
 	void AnuraShader::setDrawArea(const rect& draw_area)
 	{
-		/*if(u_draw_area_) {
-			glm::vec4 da(static_cast<float>(draw_area.x()), 
-				static_cast<float>(draw_area.y()), 
-				static_cast<float>(draw_area.w()),
-				static_cast<float>(draw_area.h()));
-			shader_->setUniform(u_draw_area_, glm::value_ptr(da));
-		}*/
+		draw_area_ = glm::vec4(static_cast<float>(draw_area.x()), 
+			static_cast<float>(draw_area.y()), 
+			static_cast<float>(draw_area.w()),
+			static_cast<float>(draw_area.h()));
 	}
 
 	void AnuraShader::setSpriteArea(const rectf& area)
 	{
-		/*if(u_sprite_area_) {
-			glm::vec4 da(area.x(), area.y(), area.w(), area.h());
-			shader_->setUniform(u_draw_area_, glm::value_ptr(da));
-		}*/
+		sprite_area_ = glm::vec4(area.x(), area.y(), area.w(), area.h());
 	}
 
-	void AnuraShader::setCycle(int cycle)
+	void AnuraShader::setUniformsForDraw()
 	{
-		/*if(u_draw_area_) {
-			shader_->setUniform(u_cycle_, reinterpret_cast<void*>(cycle));
-		}*/
+		LOG_DEBUG("AnuraShader::setUniformsForDraw()");
+		if(u_anura_discard_ != KRE::ShaderProgram::INALID_UNIFORM) {
+			shader_->setUniformValue(u_anura_discard_, static_cast<int>(discard_));
+		}
+		if(u_anura_tex_map_ != KRE::ShaderProgram::INALID_UNIFORM) {
+			shader_->setUniformValue(u_anura_tex_map_, tex_map_);
+		}
+		if(u_anura_mvp_matrix_ != KRE::ShaderProgram::INALID_UNIFORM) {
+			shader_->setUniformValue(u_anura_mvp_matrix_, glm::value_ptr(mvp_matrix_));
+		}
+		if(u_anura_sprite_area_ != KRE::ShaderProgram::INALID_UNIFORM) {
+			shader_->setUniformValue(u_anura_sprite_area_, glm::value_ptr(sprite_area_));
+		}
+		if(u_anura_draw_area_ != KRE::ShaderProgram::INALID_UNIFORM) {
+			shader_->setUniformValue(u_anura_draw_area_, glm::value_ptr(draw_area_));
+		}
+		if(u_anura_cycle_ != KRE::ShaderProgram::INALID_UNIFORM) {
+			shader_->setUniformValue(u_anura_cycle_, &cycle_);
+		}
+		if(u_anura_color_ != KRE::ShaderProgram::INALID_UNIFORM) {
+			shader_->setUniformValue(u_anura_color_, glm::value_ptr(color_));
+		}
+		if(u_anura_point_size_ != KRE::ShaderProgram::INALID_UNIFORM) {
+			shader_->setUniformValue(u_anura_point_size_, point_size_);
+		}
 	}
 
 	BEGIN_DEFINE_CALLABLE_NOBASE(AnuraShader)

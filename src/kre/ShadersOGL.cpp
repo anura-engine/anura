@@ -880,7 +880,7 @@ namespace KRE
 				}
 			}
 			spp->setActives();
-
+			LOG_INFO("Added shader: " << name);
 			return spp;
 		}
 
@@ -903,6 +903,7 @@ namespace KRE
 			for(auto& attr : attrset->getAttributes()) {
 				for(auto& desc : attr->getAttrDesc()) {
 					desc.setLocation(getAttribute(desc.getAttrName()));
+					LOG_DEBUG("Set location for attribute " << desc.getAttrName() << " in shader: " << name() << " to " << desc.getLocation());
 				}
 			}
 		}
@@ -930,6 +931,22 @@ namespace KRE
 					reinterpret_cast<const GLvoid*>(attr_hw->value() + attr->getOffset() + attrdesc.getOffset()));
 				enabled_attribs_.emplace_back(loc);
 			}
+		}
+
+		void ShaderProgram::setUniformMapping(const std::vector<std::pair<std::string, std::string>>& mapping)
+		{
+			for(auto& m : mapping) {
+				setAlternateUniformName(m.first, m.second);
+			}
+			setActives();
+		}
+
+		void ShaderProgram::setAttributeMapping(const std::vector<std::pair<std::string, std::string>>& mapping)
+		{
+			for(auto& m : mapping) {
+				setAlternateAttributeName(m.first, m.second);
+			}
+			setActives();
 		}
 
 		void ShaderProgram::cleanUpAfterDraw()

@@ -500,13 +500,11 @@ Level::Level(const std::string& level_cfg, variant node)
 	}
 #endif
 
-	if(KRE::DisplayDevice::checkForFeature(KRE::DisplayDeviceCapabilties::SHADERS)) {
-		if(node.has_key("shader")) {
-			if(node["shader"].is_string()) {
-				shader_.reset(new graphics::AnuraShader(node["shader"].as_string()));
-			} else {
-				shader_.reset(new graphics::AnuraShader(node["shader"]["name"].as_string(), node["shader"]));
-			}
+	if(node.has_key("shader")) {
+		if(node["shader"].is_string()) {
+			shader_.reset(new graphics::AnuraShader(node["shader"].as_string()));
+		} else {
+			shader_.reset(new graphics::AnuraShader(node["shader"]["name"].as_string(), node["shader"]));
 		}
 	}
 
@@ -2106,6 +2104,7 @@ void Level::applyShaderToFrameBufferTexture(graphics::AnuraShaderPtr shader, boo
 	if(preferences::screen_rotated()) {
 		rt_->setRotation(0, glm::vec3(0.0f, 0.0f, 1.0f));
 	}
+	rt_->setShader(shader->getShader());
 	rt_->preRender(wnd);
 	wnd->render(rt_.get());
 }

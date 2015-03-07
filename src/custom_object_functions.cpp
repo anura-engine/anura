@@ -224,7 +224,7 @@ namespace
 
 	END_FUNCTION_DEF(texture)
 
-	#ifdef USE_SVG
+#ifdef USE_SVG
 	FUNCTION_DEF(canvas, 0, 0, "canvas() -> canvas object")
 		static variant result(new graphics::cairo_callable());
 		return result;
@@ -232,7 +232,7 @@ namespace
 		RETURN_TYPE("builtin cairo_callable")
 
 	END_FUNCTION_DEF(canvas)
-	#endif
+#endif
 
 	FUNCTION_DEF(get_clipboard_text, 0, 0, "get_clipboard_text(): returns the text currentl in the windowing clipboard")
 		Formula::failIfStaticContext();

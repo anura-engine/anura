@@ -27,6 +27,7 @@
 namespace KRE
 {
 	ShaderProgram::ShaderProgram(const variant& node)
+		: node_(node)
 	{
 	}
 

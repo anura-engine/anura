@@ -103,6 +103,9 @@ namespace KRE
 			void setAlternateUniformName(const std::string& name, const std::string& alt_name);
 			void setAlternateAttributeName(const std::string& name, const std::string& alt_name);
 
+			void setUniformMapping(const std::vector<std::pair<std::string, std::string>>& mapping) override;
+			void setAttributeMapping(const std::vector<std::pair<std::string, std::string>>& mapping) override;
+
 			static ShaderProgramPtr factory(const std::string& name);
 			static ShaderProgramPtr factory(const variant& node);
 			static ShaderProgramPtr defaultSystemShader();

@@ -286,6 +286,12 @@ namespace KRE
 
 		shader->setUniformsForTexture(r->getTexture());
 
+		// XXX we should make this either or with setting the mvp/color uniforms above.
+		auto uniform_draw_fn = shader->getUniformDrawFunction();
+		if(uniform_draw_fn) {
+			uniform_draw_fn();
+		}
+
 		// Loop through uniform render variables and set them.
 		/*for(auto& urv : r->UniformRenderVariables()) {
 			for(auto& rvd : urv->VariableDescritionList()) {

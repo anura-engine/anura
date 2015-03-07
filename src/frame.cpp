@@ -215,18 +215,16 @@ Frame::Frame(variant node)
 {
 	blit_target_.setCentre(KRE::Blittable::Centre::TOP_LEFT);
 
-	if(node.has_key("obj") == false) {		
-		if(node.has_key("image")) {
-			if(node["image"].is_string()) {
-				image_ = node["image"].as_string();
-			} else if(node["image"].is_map()) {
-				image_ = node["image"]["image"].as_string();
-			} else if(node["image"].is_list()) {
-				image_ = node["image"][0]["image"].as_string();
-			}
-		} else {
-			ASSERT_LOG(false, "No 'image' attribute found.");
+	if(node.has_key("image")) {
+		if(node["image"].is_string()) {
+			image_ = node["image"].as_string();
+		} else if(node["image"].is_map()) {
+			image_ = node["image"]["image"].as_string();
+		} else if(node["image"].is_list()) {
+			image_ = node["image"][0]["image"].as_string();
 		}
+	} else {
+		ASSERT_LOG(false, "No 'image' attribute found.");
 	}
 
 	std::vector<std::string> palettes = parse_variant_list_or_csv_string(node["palettes"]);
@@ -251,34 +249,30 @@ Frame::Frame(variant node)
 			}
 		}
 		if(create_palette) {
-			if(node.has_key("obj") == false) {		
-				if(node.has_key("fbo")) {
-					blit_target_.setTexture(node["fbo"].convert_to<TextureObject>()->texture());
-				} else if(node.has_key("image")) {
-					blit_target_.setTexture(KRE::Texture::createTexture(node["image"]));
-				}
-			}
-
-			int p = palettes_bitmap;
-			int id = 0;
-			while(p != 0) {
-				if(p & 1) {
-					blit_target_.getTexture()->addPalette(graphics::get_palette_surface(id));
-				}
-				p >>= 1;
-				++id;
-			}
-			get_palette_texture_cache()[key] = blit_target_.getTexture();
-		}
-	} else {
-		if(node.has_key("obj") == false) {		
 			if(node.has_key("fbo")) {
 				blit_target_.setTexture(node["fbo"].convert_to<TextureObject>()->texture());
+				LOG_DEBUG("Set frame::fbo texture to: " << blit_target_.getTexture()->getFrontSurface()->getName());
 			} else if(node.has_key("image")) {
 				blit_target_.setTexture(KRE::Texture::createTexture(node["image"]));
-			} else if(node.has_key("texture")) {
-				blit_target_.setTexture(KRE::Texture::createTexture(node["texture"]));
 			}
+		}
+
+		int p = palettes_bitmap;
+		int id = 0;
+		while(p != 0) {
+			if(p & 1) {
+				blit_target_.getTexture()->addPalette(graphics::get_palette_surface(id));
+			}
+			p >>= 1;
+			++id;
+		}
+		get_palette_texture_cache()[key] = blit_target_.getTexture();
+	} else {
+		if(node.has_key("fbo")) {
+			blit_target_.setTexture(node["fbo"].convert_to<TextureObject>()->texture());
+				LOG_DEBUG("Set frame::fbo texture to: " << blit_target_.getTexture()->getFrontSurface()->getName());
+		} else if(node.has_key("image")) {
+			blit_target_.setTexture(KRE::Texture::createTexture(node["image"]));
 		}
 	}
 	/*if(palettes_recognized_.empty() == false) {
@@ -365,7 +359,6 @@ Frame::Frame(variant node)
 	}
 
 	if(node.has_key("frame_info")) {
-		ASSERT_LOG(node.has_key("obj"), "'frame_info' and 'obj' attributes don't play well together.");
 		std::vector<int> values = node["frame_info"].as_list_int();
 		int num_values = values.size();
 
@@ -728,6 +721,7 @@ void Frame::draw(graphics::AnuraShaderPtr shader, int x, int y, bool face_right,
 
 	if(shader) {
 		shader->setSpriteArea(blit_target_.getTexture()->getSourceRectNormalised());
+		blit_target_.setShader(shader->getShader());
 	}
 
 	auto wnd = KRE::WindowManager::getMainWindow();
@@ -753,6 +747,11 @@ void Frame::draw(graphics::AnuraShaderPtr shader, int x, int y, const rect& area
 	const int h = static_cast<int>(info->area.h() * scale_);
 
 	const rect src_rect = blit_target_.getTexture()->getSourceRect();
+
+	if(shader) {
+		shader->setSpriteArea(blit_target_.getTexture()->getSourceRectNormalised());
+		blit_target_.setShader(shader->getShader());
+	}
 
 	auto wnd = KRE::WindowManager::getMainWindow();
 	blit_target_.setRotation(rotate, z_axis);
@@ -813,6 +812,11 @@ void Frame::drawCustom(graphics::AnuraShaderPtr shader, int x, int y, const std:
 	blit.setMirrorVert(!face_right);
 	blit.setPosition(center_x, center_y);
 	blit.setRotation(rotation, z_axis);
+
+	if(shader) {
+		shader->setSpriteArea(blit_target_.getTexture()->getSourceRectNormalised());
+		blit_target_.setShader(shader->getShader());
+	}
 
 	for(const CustomPoint& p : points) {
 		float pos = p.pos;
@@ -880,7 +884,7 @@ void Frame::drawCustom(graphics::AnuraShaderPtr shader, int x, int y, const floa
 	const FrameInfo* info = nullptr;
 	getRectInTexture(time, info);
 	rectf r = blit_target_.getTexture()->getSourceRectNormalised();
-
+	
 	x += static_cast<int>((face_right ? info->x_adjust : info->x2_adjust) * scale_);
 	y += static_cast<int>(info->y_adjust * scale_);
 	int w = static_cast<int>(info->area.w() * scale_);
@@ -899,11 +903,16 @@ void Frame::drawCustom(graphics::AnuraShaderPtr shader, int x, int y, const floa
 	std::vector<KRE::vertex_texcoord> queue;
 	KRE::Blittable blit;
 
-	const float center_x = x + static_cast<float>(w)/2.0f;
-	const float center_y = y + static_cast<float>(h)/2.0f;
-
 	blit.setTexture(blit_target_.getTexture());
 	blit.setRotation(rotation, z_axis);
+
+	if(shader) {
+		shader->setSpriteArea(blit.getTexture()->getSourceRectNormalised());
+		blit.setShader(shader->getShader());
+	}
+
+	const float center_x = x + static_cast<float>(w)/2.0f;
+	const float center_y = y + static_cast<float>(h)/2.0f;
 
 	for(int n = 0; n < nelements; ++n) {
 		queue.emplace_back(glm::vec2(x + w*xy[0], y + h*xy[1]), glm::vec2(r.x() + r.w() * uv[0], r.y() + r.h() * uv[1]));
