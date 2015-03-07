@@ -2097,6 +2097,9 @@ void Level::applyShaderToFrameBufferTexture(graphics::AnuraShaderPtr shader, boo
 		rt_->renderToThis();
 	}
 
+	KRE::ModelManager2D model_scope;
+	model_scope.setIdentity();
+
 	auto wnd = KRE::WindowManager::getMainWindow();
 
 	shader->setDrawArea(rect(0, 0, wnd->width(), wnd->height()));
