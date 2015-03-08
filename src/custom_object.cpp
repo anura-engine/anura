@@ -614,7 +614,7 @@ CustomObject::CustomObject(const CustomObject& o)
 	clip_area_(o.clip_area_ ? new rect(*o.clip_area_) : nullptr),
 	activation_border_(o.activation_border_),
 	can_interact_with_(o.can_interact_with_),
-	ParticleSystems_(o.ParticleSystems_),
+	particle_systems_(o.particle_systems_),
 	text_(o.text_),
 	driver_(o.driver_),
 	blur_(o.blur_),
@@ -1046,10 +1046,10 @@ variant CustomObject::write() const
 		res.add("clip_area", clip_area_->write());
 	}
 
-	if(!ParticleSystems_.empty()) {
+	if(!particle_systems_.empty()) {
 		std::string systems;
-		for(std::map<std::string, ParticleSystemPtr>::const_iterator i = ParticleSystems_.begin(); i != ParticleSystems_.end(); ++i) {
-			if(i->second->shouldSave() == false) {
+		for(auto& i : particle_systems_) {
+			if(i.second->shouldSave() == false) {
 				continue;
 			}
 
@@ -1057,7 +1057,7 @@ variant CustomObject::write() const
 				systems += ",";
 			}
 
-			systems += i->first;
+			systems += i.first;
 		}
 
 		if(!systems.empty()) {
@@ -1222,7 +1222,7 @@ void CustomObject::draw(int xx, int yy) const
 		}
 	}
 
-	for(const graphics::DrawPrimitivePtr& p : DrawPrimitives_) {
+	for(const graphics::DrawPrimitivePtr& p : draw_primitives_) {
 		wnd->render(p.get());
 	}
 
@@ -1241,7 +1241,7 @@ void CustomObject::draw(int xx, int yy) const
 		}
 	}
 
-	for(auto& ps : ParticleSystems_) {
+	for(auto& ps : particle_systems_) {
 		ps.second->draw(wnd, rect(last_draw_position().x/100, last_draw_position().y/100, wnd->width(), wnd->height()), *this);
 	}
 
@@ -2190,10 +2190,10 @@ void CustomObject::staticProcess(Level& lvl)
 		handleEvent(OBJECT_EVENT_TIMER);
 	}
 
-	for(std::map<std::string, ParticleSystemPtr>::iterator i = ParticleSystems_.begin(); i != ParticleSystems_.end(); ) {
+	for(std::map<std::string, ParticleSystemPtr>::iterator i = particle_systems_.begin(); i != particle_systems_.end(); ) {
 		i->second->process(*this);
 		if(i->second->isDestroyed()) {
-			ParticleSystems_.erase(i++);
+			particle_systems_.erase(i++);
 		} else {
 			++i;
 		}
@@ -3114,7 +3114,7 @@ variant CustomObject::getValueBySlot(int slot) const
 	}
 	case CUSTOM_OBJECT_PARTICLE_SYSTEMS: {
 		std::map<variant, variant> v;
-		for(auto& ps : ParticleSystems_) {
+		for(auto& ps : particle_systems_) {
 			v[variant(ps.first)] = variant(ps.second.get());
 		}
 		return variant(&v);
@@ -3135,7 +3135,7 @@ variant CustomObject::getValueBySlot(int slot) const
 
 	case CUSTOM_OBJECT_DRAWPRIMITIVES: {
 		std::vector<variant> v;
-		for(auto& p : DrawPrimitives_) {
+		for(auto& p : draw_primitives_) {
 			v.push_back(variant(p.get()));
 		}
 		return variant(&v);
@@ -3271,8 +3271,8 @@ variant CustomObject::getValue(const std::string& key) const
 		return i->second;
 	}
 
-	std::map<std::string, ParticleSystemPtr>::const_iterator particle_itor = ParticleSystems_.find(key);
-	if(particle_itor != ParticleSystems_.end()) {
+	std::map<std::string, ParticleSystemPtr>::const_iterator particle_itor = particle_systems_.find(key);
+	if(particle_itor != particle_systems_.end()) {
 		return variant(particle_itor->second.get());
 	}
 
@@ -4472,14 +4472,14 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 	}
 
 	case CUSTOM_OBJECT_DRAWPRIMITIVES: {
-		DrawPrimitives_.clear();
+		draw_primitives_.clear();
 		for(int n = 0; n != value.num_elements(); ++n) {
 			if(value[n].is_callable()) {
 				boost::intrusive_ptr<graphics::DrawPrimitive> obj(value[n].try_convert<graphics::DrawPrimitive>());
 				ASSERT_LOG(obj.get() != nullptr, "BAD OBJECT PASSED WHEN SETTING DrawPrimitives");
-				DrawPrimitives_.push_back(obj);
+				draw_primitives_.push_back(obj);
 			} else if(!value[n].is_null()) {
-				DrawPrimitives_.push_back(graphics::DrawPrimitive::create(value[n]));
+				draw_primitives_.push_back(graphics::DrawPrimitive::create(value[n]));
 			}
 		}
 		break;
@@ -5287,13 +5287,13 @@ void CustomObject::restoreGcObjectReference(gc_object_reference ref)
 
 void CustomObject::addParticleSystem(const std::string& key, const std::string& type)
 {
-	ParticleSystems_[key] = type_->getParticleSystemFactory(type)->create(*this);
-	ParticleSystems_[key]->setType(type);
+	particle_systems_[key] = type_->getParticleSystemFactory(type)->create(*this);
+	particle_systems_[key]->setType(type);
 }
 
-void CustomObject::remove_ParticleSystem(const std::string& key)
+void CustomObject::removeParticleSystem(const std::string& key)
 {
-	ParticleSystems_.erase(key);
+	particle_systems_.erase(key);
 }
 
 void CustomObject::setText(const std::string& text, const std::string& font, int size, int align)
@@ -5596,7 +5596,7 @@ void CustomObject::updateType(ConstCustomObjectTypePtr old_type,
 	}
 
 	std::map<std::string, ParticleSystemPtr> systems;
-	systems.swap(ParticleSystems_);
+	systems.swap(particle_systems_);
 	for(std::map<std::string, ParticleSystemPtr>::const_iterator i = systems.begin(); i != systems.end(); ++i) {
 		addParticleSystem(i->first, i->second->type());
 	}

@@ -169,7 +169,7 @@ public:
 	void cleanup_references();
 
 	void addParticleSystem(const std::string& key, const std::string& type);
-	void remove_ParticleSystem(const std::string& key);
+	void removeParticleSystem(const std::string& key);
 
 	virtual int getHitpoints() const { return hitpoints_; }
 
@@ -443,10 +443,10 @@ private:
 	
 	bool can_interact_with_;
 
-	std::map<std::string, ParticleSystemPtr> ParticleSystems_;
+	std::map<std::string, ParticleSystemPtr> particle_systems_;
 
-	typedef std::shared_ptr<CustomObjectText> CustomObjectText_ptr;
-	CustomObjectText_ptr text_;
+	typedef std::shared_ptr<CustomObjectText> CustomObjectTextPtr;
+	CustomObjectTextPtr text_;
 
 	EntityPtr driver_;
 
@@ -520,7 +520,7 @@ private:
 
 	mutable screen_position adjusted_draw_position_;
 
-	std::vector<graphics::DrawPrimitivePtr> DrawPrimitives_;
+	std::vector<graphics::DrawPrimitivePtr> draw_primitives_;
 
 	bool paused_;
 
