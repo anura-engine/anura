@@ -128,7 +128,7 @@ namespace
 		std::vector<variant> result;
 		result.reserve(property_data.size());
 		for(const variant& v : property_data) {
-			result.push_back(deep_copy_variant(v));
+			result.emplace_back(deep_copy_variant(v));
 		}
 
 		return result;
@@ -383,7 +383,7 @@ CustomObject::CustomObject(variant node)
 		for(variant light_node : node["lights"].as_list()) {
 			LightPtr new_light(Light::createLight(*this, light_node));
 			if(new_light) {
-				lights_.push_back(new_light);
+				lights_.emplace_back(new_light);
 			}
 		}
 	}
@@ -734,6 +734,7 @@ void CustomObject::finishLoading(Level* lvl)
 
 	if(shader_ != nullptr) {
 		shader_->setParent(this);
+		LOG_DEBUG("shader '" << shader_->getName() << "' attached to object: " << type_->id());
 	}
 }
 
@@ -1268,8 +1269,8 @@ void CustomObject::draw(int xx, int yy) const
 				const std::string result_str = result.write_json();
 				auto key_texture = KRE::Font::getInstance()->renderText(s, KRE::Color::colorWhite(), 16);
 				auto value_texture = KRE::Font::getInstance()->renderText(result_str, KRE::Color::colorWhite(), 16);
-				left.push_back(key_texture);
-				right.push_back(value_texture);
+				left.emplace_back(key_texture);
+				right.emplace_back(value_texture);
 	
 				if(key_texture->width() > max_property_width) {
 					max_property_width = key_texture->width();
@@ -1511,7 +1512,7 @@ void CustomObject::process(Level& lvl)
 
 				follow_ons.insert(follow_ons.end(), move->follow_on.begin(), move->follow_on.end());
 
-				removal.push_back(move);
+				removal.emplace_back(move);
 			} else {
 				ASSERT_LOG(move->animation_values.size()%move->animation_slots.size() == 0, "Bad animation sizes");
 				variant* v = &move->animation_values[0] + move->pos*move->animation_slots.size();
@@ -2426,7 +2427,7 @@ variant call_stack(const CustomObject& obj) {
 
 #ifndef DISABLE_FORMULA_PROFILER
 	for(int n = 0; n != event_call_stack.size(); ++n) {
-		result.push_back(variant(get_object_event_str(event_call_stack[n].event_id)));
+		result.emplace_back(variant(get_object_event_str(event_call_stack[n].event_id)));
 	}
 #endif
 
@@ -2461,7 +2462,7 @@ void CustomObject::run_garbage_collection()
 
 	std::vector<EntityPtr> references;
 	for(CustomObject* obj : getAll()) {
-		references.push_back(EntityPtr(obj));
+		references.emplace_back(EntityPtr(obj));
 	}
 
 	std::set<const void*> safe;
@@ -2535,7 +2536,7 @@ void CustomObject::beingAdded()
 void CustomObject::setAnimatedSchedule(std::shared_ptr<AnimatedMovement> movement)
 {
 	assert(movement.get() != nullptr);
-	animated_movement_.push_back(movement);
+	animated_movement_.emplace_back(movement);
 }
 
 void CustomObject::addAnimatedMovement(variant attr_var, variant options)
@@ -2546,7 +2547,7 @@ void CustomObject::addAnimatedMovement(variant attr_var, variant options)
 	} else if(name != "") {
 		for(auto move : animated_movement_) {
 			if(move->name == name) {
-				move->follow_on.push_back(std::make_pair(attr_var, options));
+				move->follow_on.emplace_back(std::make_pair(attr_var, options));
 				return;
 			}
 		}
@@ -2562,10 +2563,10 @@ void CustomObject::addAnimatedMovement(variant attr_var, variant options)
 	const auto& attr = attr_var.as_map();
 
 	for(const auto& p : attr) {
-		slots.push_back(def->getSlot(p.first.as_string()));
+		slots.emplace_back(def->getSlot(p.first.as_string()));
 		ASSERT_LOG(slots.back() >= 0, "Unknown attribute in object: " << p.first.as_string());
-		end_values.push_back(p.second);
-		begin_values.push_back(queryValueBySlot(slots.back()));
+		end_values.emplace_back(p.second);
+		begin_values.emplace_back(queryValueBySlot(slots.back()));
 	}
 
 	const int ncycles = options["duration"].as_int(10);
@@ -2573,7 +2574,7 @@ void CustomObject::addAnimatedMovement(variant attr_var, variant options)
 	std::function<double(double)> easing_fn;
 	variant easing_var = options["easing"];
 	if(easing_var.is_function()) {
-		easing_fn = [=](double x) { std::vector<variant> args; args.push_back(variant(decimal(x))); return easing_var(args).as_decimal().as_float(); };
+		easing_fn = [=](double x) { std::vector<variant> args; args.emplace_back(variant(decimal(x))); return easing_var(args).as_decimal().as_float(); };
 	} else {
 		const std::string& easing = easing_var.as_string_default("swing");
 		if(easing == "linear") {
@@ -2595,7 +2596,7 @@ void CustomObject::addAnimatedMovement(variant attr_var, variant options)
 			ratio = static_cast<float>(easing_fn(ratio));
 		}
 		for(int n = 0; n != slots.size(); ++n) {
-			values.push_back(interpolate_variants(begin_values[n], end_values[n], ratio));
+			values.emplace_back(interpolate_variants(begin_values[n], end_values[n], ratio));
 		}
 	}
 
@@ -2725,8 +2726,8 @@ namespace
 	variant two_element_variant_list(const variant& a, const variant&b) 
 	{
 		std::vector<variant> v;
-		v.push_back(a);
-		v.push_back(b);
+		v.emplace_back(a);
+		v.emplace_back(b);
 		return variant(&v);
 	}
 }
@@ -2776,8 +2777,8 @@ variant CustomObject::getValueBySlot(int slot) const
 	case CUSTOM_OBJECT_Y:                 return variant(y());
 	case CUSTOM_OBJECT_XY:                {
 			 				 				std::vector<variant> v;
-											v.push_back(variant(x()));
-											v.push_back(variant(y()));
+											v.emplace_back(variant(x()));
+											v.emplace_back(variant(y()));
 											return variant(&v);
 										  }
 	case CUSTOM_OBJECT_Z:
@@ -2790,7 +2791,7 @@ variant CustomObject::getValueBySlot(int slot) const
 		std::vector<variant> children;
 		for(const EntityPtr& e : Level::current().get_chars()) {
 			if(e->wasSpawnedBy() == label()) {
-				children.push_back(variant(e.get()));
+				children.emplace_back(variant(e.get()));
 			}
 		}
 
@@ -2905,10 +2906,10 @@ variant CustomObject::getValueBySlot(int slot) const
 	case CUSTOM_OBJECT_UNDERWATER:        return variant(Level::current().isUnderwater(solid() ? solidRect() : rect(x(), y(), getCurrentFrame().width(), getCurrentFrame().height())));
 	case CUSTOM_OBJECT_PREVIOUS_WATER_BOUNDS: {
 		std::vector<variant> v;
-		v.push_back(variant(previous_water_bounds_.x()));
-		v.push_back(variant(previous_water_bounds_.y()));
-		v.push_back(variant(previous_water_bounds_.x2()));
-		v.push_back(variant(previous_water_bounds_.y2()));
+		v.emplace_back(variant(previous_water_bounds_.x()));
+		v.emplace_back(variant(previous_water_bounds_.y()));
+		v.emplace_back(variant(previous_water_bounds_.x2()));
+		v.emplace_back(variant(previous_water_bounds_.y2()));
 		return variant(&v);
 
 	}
@@ -2916,18 +2917,18 @@ variant CustomObject::getValueBySlot(int slot) const
 		rect area;
 		if(Level::current().isUnderwater(solidRect(), &area)) {
 			std::vector<variant> v;
-			v.push_back(variant(area.x()));
-			v.push_back(variant(area.y()));
-			v.push_back(variant(area.x2()));
-			v.push_back(variant(area.y2()));
+			v.emplace_back(variant(area.x()));
+			v.emplace_back(variant(area.y()));
+			v.emplace_back(variant(area.x2()));
+			v.emplace_back(variant(area.y2()));
 			return variant(&v);
         } else if( Level::current().isUnderwater(rect(x(), y(), getCurrentFrame().width(), getCurrentFrame().height()), &area)) {
             //N.B:  has a baked-in assumption that the image-rect will always be bigger than the solid-rect; the idea being that this will only fall through if the solid-rect just doesn't exist.  Make an object where the solidity is bigger than the image, and this will break down.
             std::vector<variant> v;
-            v.push_back(variant(area.x()));
-            v.push_back(variant(area.y()));
-            v.push_back(variant(area.x2()));
-            v.push_back(variant(area.y2()));
+            v.emplace_back(variant(area.x()));
+            v.emplace_back(variant(area.y()));
+            v.emplace_back(variant(area.x2()));
+            v.emplace_back(variant(area.y2()));
             return variant(&v);
         } else {
 			return variant();
@@ -2999,7 +3000,7 @@ variant CustomObject::getValueBySlot(int slot) const
 	case CUSTOM_OBJECT_VARIATIONS: {
 		std::vector<variant> result;
 		for(const std::string& s : current_variation_) {
-			result.push_back(variant(s));
+			result.emplace_back(variant(s));
 		}
 
 		return variant(&result);
@@ -3008,7 +3009,7 @@ variant CustomObject::getValueBySlot(int slot) const
 	case CUSTOM_OBJECT_ATTACHED_OBJECTS: {
 		std::vector<variant> result;
 		for(const EntityPtr& e : attachedObjects()) {
-			result.push_back(variant(e.get()));
+			result.emplace_back(variant(e.get()));
 		}
 
 		return variant(&result);
@@ -3021,7 +3022,7 @@ variant CustomObject::getValueBySlot(int slot) const
 	case CUSTOM_OBJECT_LIGHTS: {
 		std::vector<variant> result;
 		for(const LightPtr& p : lights_) {
-			result.push_back(variant(p.get()));
+			result.emplace_back(variant(p.get()));
 		}
 
 		return variant(&result);
@@ -3037,15 +3038,15 @@ variant CustomObject::getValueBySlot(int slot) const
 	case CUSTOM_OBJECT_PLATFORM_OFFSETS: {
 		std::vector<variant> result;
 		for(int n : platform_offsets_) {
-			result.push_back(variant(n));
+			result.emplace_back(variant(n));
 		}
 		return variant(&result);
 	}
 
 	case CUSTOM_OBJECT_SOLID_DIMENSIONS_IN: {
 		std::vector<variant> v;
-		v.push_back(variant(getSolidDimensions()));
-		v.push_back(variant(getWeakSolidDimensions()));
+		v.emplace_back(variant(getSolidDimensions()));
+		v.emplace_back(variant(getWeakSolidDimensions()));
 		return variant(&v);
 	}
 
@@ -3063,7 +3064,7 @@ variant CustomObject::getValueBySlot(int slot) const
 		std::vector<variant> result;
 		result.reserve(custom_draw_uv_.size());
 		for(float f : custom_draw_uv_) {
-			result.push_back(variant(decimal(f)));
+			result.emplace_back(variant(decimal(f)));
 		}
 
 		return variant(&result);
@@ -3073,7 +3074,7 @@ variant CustomObject::getValueBySlot(int slot) const
 		std::vector<variant> result;
 		result.reserve(custom_draw_xy_.size());
 		for(float f : custom_draw_xy_) {
-			result.push_back(variant(decimal(f)));
+			result.emplace_back(variant(decimal(f)));
 		}
 
 		return variant(&result);
@@ -3123,7 +3124,7 @@ variant CustomObject::getValueBySlot(int slot) const
 	case CUSTOM_OBJECT_ANIMATED_MOVEMENTS: {
 		std::vector<variant> result;
 		for(auto p : animated_movement_) {
-			result.push_back(variant(p->name));
+			result.emplace_back(variant(p->name));
 		}
 
 		return variant(&result);
@@ -3136,7 +3137,7 @@ variant CustomObject::getValueBySlot(int slot) const
 	case CUSTOM_OBJECT_DRAWPRIMITIVES: {
 		std::vector<variant> v;
 		for(auto& p : draw_primitives_) {
-			v.push_back(variant(p.get()));
+			v.emplace_back(variant(p.get()));
 		}
 		return variant(&v);
 	}
@@ -3295,7 +3296,7 @@ void CustomObject::getInputs(std::vector<game_logic::FormulaInput>* inputs) cons
 	for(int n = CUSTOM_OBJECT_ARG+1; n != end; ++n) {
 		auto entry = CustomObjectCallable::instance().getEntry(n);
 		if(!getValueBySlot(n).is_null()) {
-			inputs->push_back(entry->id);
+			inputs->emplace_back(entry->id);
 		}
 	}
 }
@@ -3419,15 +3420,15 @@ void CustomObject::setValue(const std::string& key, const variant& value)
 		if(value.is_list()) {
 			for(size_t n = 0; n < value.num_elements(); ++n) {
 				if(value[n].is_map()) {
-					effects_.push_back(new shader_program(value[n]));
+					effects_.emplace_back(new shader_program(value[n]));
 				} else {
-					effects_.push_back(shader_program_ptr(value[n].try_convert<shader_program>()));
+					effects_.emplace_back(shader_program_ptr(value[n].try_convert<shader_program>()));
 				}
 			}
 		} else if(value.is_map()) {
-			effects_.push_back(new shader_program(value));
+			effects_.emplace_back(new shader_program(value));
 		} else {
-			effects_.push_back(shader_program_ptr(value.try_convert<shader_program>()));
+			effects_.emplace_back(shader_program_ptr(value.try_convert<shader_program>()));
 			ASSERT_LOG(effects_.size() > 0, "Couldn't convert type to shader");
 		}*/
 	} else if(key == "draw_area") {
@@ -3460,10 +3461,10 @@ void CustomObject::setValue(const std::string& key, const variant& value)
 		current_variation_.clear();
 		if(value.is_list()) {
 			for(int n = 0; n != value.num_elements(); ++n) {
-				current_variation_.push_back(value[n].as_string());
+				current_variation_.emplace_back(value[n].as_string());
 			}
 		} else if(value.is_string()) {
-			current_variation_.push_back(value.as_string());
+			current_variation_.emplace_back(value.as_string());
 		}
 
 		if(current_variation_.empty()) {
@@ -3480,7 +3481,7 @@ void CustomObject::setValue(const std::string& key, const variant& value)
 		for(int n = 0; n != value.num_elements(); ++n) {
 			Entity* e = value[n].try_convert<Entity>();
 			if(e) {
-				v.push_back(EntityPtr(e));
+				v.emplace_back(EntityPtr(e));
 			}
 		}
 
@@ -4108,10 +4109,10 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 		current_variation_.clear();
 		if(value.is_list()) {
 			for(int n = 0; n != value.num_elements(); ++n) {
-				current_variation_.push_back(value[n].as_string());
+				current_variation_.emplace_back(value[n].as_string());
 			}
 		} else if(value.is_string()) {
-			current_variation_.push_back(value.as_string());
+			current_variation_.emplace_back(value.as_string());
 		}
 
 		if(current_variation_.empty()) {
@@ -4129,7 +4130,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 		for(int n = 0; n != value.num_elements(); ++n) {
 			Entity* e = value[n].try_convert<Entity>();
 			if(e) {
-				v.push_back(EntityPtr(e));
+				v.emplace_back(EntityPtr(e));
 			}
 
 			//this will initialize shaders and such, which is
@@ -4173,7 +4174,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 		for(int n = 0; n != value.num_elements(); ++n) {
 			Light* p = value[n].try_convert<Light>();
 			if(p) {
-				lights_.push_back(LightPtr(p));
+				lights_.emplace_back(LightPtr(p));
 			}
 		}
 		break;
@@ -4227,7 +4228,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 
 		position_schedule_->x_pos.clear();
 		for(int n = 0; n != value.num_elements(); ++n) {
-			position_schedule_->x_pos.push_back(value[n].as_int());
+			position_schedule_->x_pos.emplace_back(value[n].as_int());
 		}
 		break;
 	}
@@ -4239,7 +4240,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 
 		position_schedule_->y_pos.clear();
 		for(int n = 0; n != value.num_elements(); ++n) {
-			position_schedule_->y_pos.push_back(value[n].as_int());
+			position_schedule_->y_pos.emplace_back(value[n].as_int());
 		}
 		break;
 	}
@@ -4251,7 +4252,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 
 		position_schedule_->rotation.clear();
 		for(int n = 0; n != value.num_elements(); ++n) {
-			position_schedule_->rotation.push_back(value[n].as_decimal());
+			position_schedule_->rotation.emplace_back(value[n].as_decimal());
 		}
 		break;
 	}
@@ -4298,7 +4299,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 	case CUSTOM_OBJECT_PLATFORM_OFFSETS: {
 		platform_offsets_.clear();
 		for(int n = 0; n != value.num_elements(); ++n) {
-			platform_offsets_.push_back(value[n].as_int());
+			platform_offsets_.emplace_back(value[n].as_int());
 		}
 		break;
 	}
@@ -4314,10 +4315,10 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 		clearWidgets();
 		if(value.is_list()) {
 			for(const variant& v : value.as_list()) {
-				w.push_back(widget_factory::create(v, this));
+				w.emplace_back(widget_factory::create(v, this));
 			}
 		} else {
-			w.push_back(widget_factory::create(value, this));
+			w.emplace_back(widget_factory::create(value, this));
 		}
 		addWidgets(&w);
 		break;
@@ -4369,7 +4370,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 
 		for(int n = 0; n != value.num_elements(); ++n) {
 			if(value[n].is_decimal() || value[n].is_int()) {
-				positions.push_back(float(value[n].as_decimal().as_float()));
+				positions.emplace_back(float(value[n].as_decimal().as_float()));
 			} else if(value[n].is_list()) {
 				for(int index = 0; index != value[n].num_elements(); index += 2) {
 					ASSERT_LOG(value[n].num_elements() - index >= 2, "ILLEGAL VALUE TO custom_draw: " << value.to_debug_string() << ", " << n << ", " << index << "/" << value[n].num_elements());
@@ -4377,7 +4378,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 					ASSERT_LOG(v->size() < positions.size(), "ILLEGAL VALUE TO custom_draw -- not enough positions for number of offsets: " << value.to_debug_string() << " " << v->size() << " VS " << positions.size());
 					const float pos = positions[v->size()];
 
-					v->push_back(Frame::CustomPoint());
+					v->emplace_back(Frame::CustomPoint());
 					v->back().pos = pos;
 					v->back().offset = point(value[n][index].as_int(), value[n][index + 1].as_int());
 				}
@@ -4389,9 +4390,9 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 		std::vector<Frame::CustomPoint> draw_order;
 		int n1 = 0, n2 = v->size() - 1;
 		while(n1 <= n2) {
-			draw_order.push_back((*v)[n1]);
+			draw_order.emplace_back((*v)[n1]);
 			if(n2 > n1) {
-				draw_order.push_back((*v)[n2]);
+				draw_order.emplace_back((*v)[n2]);
 			}
 
 			++n1;
@@ -4409,7 +4410,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 		} else {
 			custom_draw_uv_.clear();
 			for(const variant& v : value.as_list()) {
-				custom_draw_uv_.push_back(v.as_float());
+				custom_draw_uv_.emplace_back(v.as_float());
 			}
 		}
 		break;
@@ -4421,7 +4422,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 		} else {
 			custom_draw_xy_.clear();
 			for(const variant& v : value.as_list()) {
-				custom_draw_xy_.push_back(v.as_float());
+				custom_draw_xy_.emplace_back(v.as_float());
 			}
 		}
 		break;
@@ -4451,18 +4452,18 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 				const float x = static_cast<float>(xpos)/static_cast<float>(xdim-1);
 
 				if(xpos == 0 && ypos > 0) {
-					custom_draw_uv_.push_back(x);
-					custom_draw_uv_.push_back(y);
+					custom_draw_uv_.emplace_back(x);
+					custom_draw_uv_.emplace_back(y);
 				}
 
-				custom_draw_uv_.push_back(x);
-				custom_draw_uv_.push_back(y);
-				custom_draw_uv_.push_back(x);
-				custom_draw_uv_.push_back(y2);
+				custom_draw_uv_.emplace_back(x);
+				custom_draw_uv_.emplace_back(y);
+				custom_draw_uv_.emplace_back(x);
+				custom_draw_uv_.emplace_back(y2);
 
 				if(xpos == xdim-1 && ypos != ydim-2) {
-					custom_draw_uv_.push_back(x);
-					custom_draw_uv_.push_back(y2);
+					custom_draw_uv_.emplace_back(x);
+					custom_draw_uv_.emplace_back(y2);
 				}
 			}
 		}
@@ -4477,9 +4478,9 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 			if(value[n].is_callable()) {
 				boost::intrusive_ptr<graphics::DrawPrimitive> obj(value[n].try_convert<graphics::DrawPrimitive>());
 				ASSERT_LOG(obj.get() != nullptr, "BAD OBJECT PASSED WHEN SETTING DrawPrimitives");
-				draw_primitives_.push_back(obj);
+				draw_primitives_.emplace_back(obj);
 			} else if(!value[n].is_null()) {
-				draw_primitives_.push_back(graphics::DrawPrimitive::create(value[n]));
+				draw_primitives_.emplace_back(graphics::DrawPrimitive::create(value[n]));
 			}
 		}
 		break;
@@ -4911,7 +4912,7 @@ bool CustomObject::handleEventInternal(int event, const FormulaCallable* context
 
 #ifndef DISABLE_FORMULA_PROFILER
 		formula_profiler::CustomObjectEventFrame event_frame = { type_.get(), event, false };
-		event_call_stack.push_back(event_frame);
+		event_call_stack.emplace_back(event_frame);
 #endif
 
 		++events_handled_per_second;
@@ -4940,7 +4941,7 @@ bool CustomObject::handleEventInternal(int event, const FormulaCallable* context
 				formula_profiler::Instrument instrumentation("COMMANDS");
 				result = executeCommand(var);
 			} else {
-				delayed_commands_.push_back(var);
+				delayed_commands_.emplace_back(var);
 			}
 		} catch(validation_failure_exception& e) {
 			current_error_msg = "Runtime error executing event commands: " + e.msg;
@@ -5119,14 +5120,14 @@ namespace
 				if(map_variant_entities(var, m)) {
 					std::vector<variant> new_values;
 					for(int i = 0; i != n; ++i) {
-						new_values.push_back(v[i]);
+						new_values.emplace_back(v[i]);
 					}
 
-					new_values.push_back(var);
+					new_values.emplace_back(var);
 					for(int i = n+1; i < v.num_elements(); ++i) {
 						var = v[i];
 						map_variant_entities(var, m);
-						new_values.push_back(var);
+						new_values.emplace_back(var);
 					}
 
 					v = variant(&new_values);
@@ -5229,7 +5230,7 @@ void CustomObject::extractGcObjectReferences(std::vector<gc_object_reference>& v
 		}
 	}
 
-	v.push_back(visitor);
+	v.emplace_back(visitor);
 }
 
 void CustomObject::extractGcObjectReferences(EntityPtr& e, std::vector<gc_object_reference>& v)
@@ -5603,6 +5604,7 @@ void CustomObject::updateType(ConstCustomObjectTypePtr old_type,
 
 	if(shader_ != nullptr) {
 		shader_->setParent(this);
+		LOG_DEBUG("shader '" << shader_->getName() << "' attached to object: " << type_->id());
 	}
 
 #if defined(USE_LUA)
@@ -5619,7 +5621,7 @@ std::vector<variant> CustomObject::getVariantWidgetList() const
 {
 	std::vector<variant> v;
 	for(widget_list::iterator it = widgets_.begin(); it != widgets_.end(); ++it) {
-		v.push_back(variant(it->get()));
+		v.emplace_back(variant(it->get()));
 	}
 	return v;
 }
@@ -5712,6 +5714,7 @@ void CustomObject::addToLevel()
 #endif
 	if(shader_ != nullptr) {
 		shader_->setParent(this);
+		LOG_DEBUG("shader '" << shader_->getName() << "' attached to object: " << type_->id());
 	}
 }
 
