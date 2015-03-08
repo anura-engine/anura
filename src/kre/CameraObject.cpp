@@ -84,8 +84,8 @@ namespace KRE
 		position_ = glm::vec3(0.0f, 0.0f, 0.7f); 
 		aspect_ = float(wnd->logicalWidth())/float(wnd->logicalHeight());
 	
-		computeView();
-		computeProjection();
+		//computeView();
+		//computeProjection();
 	}
 
 	Camera::Camera(const variant& node)

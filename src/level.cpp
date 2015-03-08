@@ -26,6 +26,7 @@
 #include <math.h>
 
 #include "BlendModeScope.hpp"
+#include "CameraObject.hpp"
 #include "ColorScope.hpp"
 #include "Font.hpp"
 #include "ModelMatrixScope.hpp"
@@ -229,14 +230,17 @@ Level::Level(const std::string& level_cfg, variant node)
 	  mouselook_enabled_(false), 
 	  mouselook_inverted_(false),
 	  allow_touch_controls_(true),
-	  show_builtin_settings_(false)
+	  show_builtin_settings_(false),
+	  have_render_to_texture_(false)
 {
 #ifndef NO_EDITOR
 	get_all_levels_set().insert(this);
 #endif
 
 	if(KRE::DisplayDevice::checkForFeature(KRE::DisplayDeviceCapabilties::RENDER_TO_TEXTURE)) {
+		have_render_to_texture_ = true;
 		rt_ = KRE::RenderTarget::create(KRE::WindowManager::getMainWindow()->width(), KRE::WindowManager::getMainWindow()->height());
+		//rt_->setCamera(std::make_shared<KRE::Camera>("render_target"));
 	}
 
 	LOG_INFO("in level constructor...");
@@ -2028,6 +2032,10 @@ void Level::draw(int x, int y, int w, int h) const
 
 void Level::frameBufferEnterZorder(int zorder) const
 {
+	if(!have_render_to_texture_) {
+		return;
+	}
+
 	std::vector<graphics::AnuraShaderPtr> shaders;
 	for(const FrameBufferShaderEntry& e : fb_shaders_) {
 		if(zorder >= e.begin_zorder && zorder <= e.end_zorder) {
@@ -2050,12 +2058,12 @@ void Level::frameBufferEnterZorder(int zorder) const
 		} else if(shaders.empty()) {
 			//now there are no shaders, flush all to the screen and proceed with
 			//rendering to the screen.
-			rt_->renderToPrevious();
 			flushFrameBufferShadersToScreen();
-			//rt_->renderToPrevious();
 		} else {
 			bool add_shaders = false;
+			int count = 0;
 			for(auto& s : shaders) {
+				count = active_fb_shaders_.size() - std::count(active_fb_shaders_.begin(), active_fb_shaders_.end(), s);
 				if(std::count(active_fb_shaders_.begin(), active_fb_shaders_.end(), s) == 0) {
 					add_shaders = true;
 					break;
@@ -2063,11 +2071,13 @@ void Level::frameBufferEnterZorder(int zorder) const
 			}
 
 			if(add_shaders) {
+				LOG_DEBUG("Added " << count << " at zorder: " << zorder);
 				//this works if we're adding and removing shaders.
 				rt_->renderToThis();
-				//rt_->setClearColor(KRE::Color(0,0,0,0));
-				//rt_->clear();
+				rt_->setClearColor(KRE::Color(0,0,0,0));
+				rt_->clear();
 			} else {
+				LOG_DEBUG("Removed " << (active_fb_shaders_.size() - shaders.size()) << " shaders at zorder: " << zorder);
 				//we must just be removing shaders.
 				for(auto& s : active_fb_shaders_) {
 					if(std::count(shaders.begin(), shaders.end(), s) == 0) {
@@ -2090,23 +2100,21 @@ void Level::flushFrameBufferShadersToScreen() const
 
 void Level::applyShaderToFrameBufferTexture(graphics::AnuraShaderPtr shader, bool render_to_screen) const
 {
-	//if(render_to_screen) {
-	//	rt_->renderToPrevious();
-	//}
+	if(render_to_screen) {
+		rt_->renderToPrevious();
+	}
 
 	KRE::ModelManager2D model_scope;
 	model_scope.setIdentity();
 
 	auto wnd = KRE::WindowManager::getMainWindow();
 
+	rt_->setShader(shader->getShader());
 	shader->setDrawArea(rect(0, 0, wnd->width(), wnd->height()));
 	shader->setCycle(cycle());
 	if(preferences::screen_rotated()) {
 		rt_->setRotation(0, glm::vec3(0.0f, 0.0f, 1.0f));
 	}
-	rt_->setShader(shader->getShader());
-	rt_->setCentre(KRE::Blittable::Centre::MIDDLE);
-	rt_->setDrawRect(rect());
 	rt_->preRender(wnd);
 	wnd->render(rt_.get());
 }
@@ -3559,7 +3567,6 @@ DEFINE_FIELD(frame_buffer_shaders, "[{begin_zorder: int, end_zorder: int, shader
 	return obj.fb_shaders_variant_;
 
 DEFINE_SET_FIELD
-
 	obj.fb_shaders_variant_ = variant();
 	obj.fb_shaders_.clear();
 	for(const variant& v : value.as_list()) {

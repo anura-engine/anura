@@ -321,7 +321,7 @@ namespace graphics
 	void AnuraShader::setDrawArea(const rect& draw_area)
 	{
 		draw_area_ = glm::vec4(static_cast<float>(draw_area.x1()), 
-			static_cast<float>(draw_area.y2()), 
+			static_cast<float>(draw_area.y1()), 
 			static_cast<float>(draw_area.x2()),
 			static_cast<float>(draw_area.y2()));
 	}
@@ -375,10 +375,10 @@ namespace graphics
 		DEFINE_FIELD(level, "object")
 			return variant(Level::getCurrentPtr());
 		DEFINE_FIELD(parent, "object")
-			ASSERT_LOG(obj.parent_ != NULL, "Tried to request parent, when value is null: " << obj.shader_->getShaderVariant()["name"]);
+			ASSERT_LOG(obj.parent_ != nullptr, "Tried to request parent, when value is null: " << obj.shader_->getShaderVariant()["name"]);
 			return variant(obj.parent_);
 		DEFINE_FIELD(object, "object")
-			ASSERT_LOG(obj.parent_ != NULL, "Tried to request parent, when value is null: " << obj.shader_->getShaderVariant()["name"]);
+			ASSERT_LOG(obj.parent_ != nullptr, "Tried to request parent, when value is null: " << obj.shader_->getShaderVariant()["name"]);
 			return variant(obj.parent_);
 	END_DEFINE_CALLABLE(AnuraShader)
 

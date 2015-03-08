@@ -121,20 +121,15 @@ namespace KRE
 
 	void ModelManager2D::setIdentity()
 	{
-		if(!get_translation_stack().empty()) {
-			auto& top = get_translation_stack().top();
-			top.x = top.y = 0.0f;
-			model_matrix_changed = true;
-		}
-		if(!get_rotation_stack().empty()) {
-			get_rotation_stack().top() = 0.0f;
-			model_matrix_changed = true;
-		}
-		if(!get_scale_stack().empty()) {
-			auto& top = get_scale_stack().top();
-			top.x = top.y = 1.0f;
-			model_matrix_changed = true;
-		}
+		auto& top = get_translation_stack().top();
+		top.x = top.y = 0.0f;
+
+		get_rotation_stack().top() = 0.0f;
+
+		auto& scale = get_scale_stack().top();
+		scale.x = scale.y = 1.0f;
+
+		model_matrix_changed = true;
 	}
 
 	void ModelManager2D::translate(int tx, int ty)

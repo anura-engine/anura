@@ -572,6 +572,13 @@ namespace KRE
 				GLsizei size;
 				glGetActiveUniform(object_, i, name.size(), &size, &u.num_elements, &u.type, &name[0]);
 				u.name = std::string(&name[0], &name[size]);
+
+				// Some drivers add a [0] on the end of array uniform names.
+				// Strip the [0] off the end here.
+				if(u.name.size() > 3 && std::equal(u.name.end()-3,u.name.end(),"[0]")) {
+					u.name.resize(u.name.size()-3);
+				}
+		
 				u.location = glGetUniformLocation(object_, u.name.c_str());
 				ASSERT_LOG(u.location >= 0, "Unable to determine the location of the uniform: " << u.name);
 				uniforms_[u.name] = u;

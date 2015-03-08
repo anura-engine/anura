@@ -418,21 +418,17 @@ CustomObject::CustomObject(variant node)
 	}
 #endif
 
-	LOG_DEBUG("111'" << type_->id() << "' has shader '" << (type_->getShader() ? type_->getShader()->getName() : "<<nullptr>>") << "'");
 	if(type_->getShader() != nullptr) {
 		shader_ = graphics::AnuraShaderPtr(new graphics::AnuraShader(*type_->getShader()));
-		LOG_DEBUG("set shader for '" << type_->id() << "' to '" << shader_->getName()  << "'");
 	}
 
 	if(node.has_key("shader")) {
 		if(node["shader"].is_string()) {
 			std::string shader_name = node["shader"].as_string();
 			shader_.reset(new graphics::AnuraShader(shader_name));
-			LOG_DEBUG("Set shader for " << type_ << " to " << shader_name);
 		} else {
 			std::string shader_name = node["shader"]["name"].as_string();
 			shader_.reset(new graphics::AnuraShader(shader_name, node["shader"]));
-			LOG_DEBUG("Set shader for " << type_ << " to " << shader_name);
 		}
 	}
 
@@ -526,10 +522,8 @@ CustomObject::CustomObject(const std::string& type, int x, int y, bool face_righ
 	getAll().insert(this);
 	getAll(base_type_->id()).insert(this);
 
-	LOG_DEBUG("'" << type_->id() << "' has shader '" << (type_->getShader() ? type_->getShader()->getName() : "<<nullptr>>") << "'");
 	if(type_->getShader() != nullptr) {
 		shader_ = graphics::AnuraShaderPtr(new graphics::AnuraShader(*type_->getShader()));
-		LOG_DEBUG("set shader for '" << type_->id() << "' to '" << shader_->getName()  << "'");
 	}
 
 #ifdef USE_BOX2D
@@ -672,7 +666,6 @@ CustomObject::CustomObject(const CustomObject& o)
 
 	if(o.shader_ != nullptr) {
 		shader_.reset(new graphics::AnuraShader(*o.shader_));
-		LOG_DEBUG("set shader for '" << type_->id() << "' to '" << shader_->getName()  << "'");
 	}
 }
 

@@ -628,6 +628,7 @@ private:
 	mutable std::map<int, std::shared_ptr<LayerBlitInfo>> blit_cache_;
 
 	KRE::RenderTargetPtr rt_;
+	bool have_render_to_texture_;
 };
 
 bool entity_in_current_level(const Entity* e);
