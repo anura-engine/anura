@@ -320,15 +320,15 @@ namespace graphics
 
 	void AnuraShader::setDrawArea(const rect& draw_area)
 	{
-		draw_area_ = glm::vec4(static_cast<float>(draw_area.x()), 
-			static_cast<float>(draw_area.y()), 
-			static_cast<float>(draw_area.w()),
-			static_cast<float>(draw_area.h()));
+		draw_area_ = glm::vec4(static_cast<float>(draw_area.x1()), 
+			static_cast<float>(draw_area.y2()), 
+			static_cast<float>(draw_area.x2()),
+			static_cast<float>(draw_area.y2()));
 	}
 
 	void AnuraShader::setSpriteArea(const rectf& area)
 	{
-		sprite_area_ = glm::vec4(area.x(), area.y(), area.w(), area.h());
+		sprite_area_ = glm::vec4(area.x1(), area.y1(), area.x2(), area.y2());
 	}
 
 	void AnuraShader::setUniformsForDraw()
