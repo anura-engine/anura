@@ -320,7 +320,6 @@ namespace
 		if(info_.velocity_x_schedule_.empty() == false) {
 			std::deque<particle>::iterator p = particles_.begin();
 			for(generation& gen : generations_) {
-
 				for(int n = 0; n != gen.members; ++n) {
 					const int ncycle = p->random + cycle_ - gen.created_at - 1;
 					p->velocity[0] += info_.velocity_x_schedule_[ncycle%info_.velocity_x_schedule_.size()];
@@ -455,8 +454,8 @@ namespace
 				++pp;
 			}
 		}
+		getAttributeSet().back()->setCount(vtc.size());
 		attrib_->update(&vtc);
-		getAttributeSet().back()->setCount(particles_.size());
 	}
 
 	void SimpleParticleSystem::draw(const KRE::WindowManagerPtr& wm, const rect& area, const Entity& e) const
@@ -672,7 +671,7 @@ namespace
 			setShader(KRE::ShaderProgram::getProgram("point_shader"));
 
 			// turn on hardware-backed, not indexed and instanced draw if available.
-			auto as = KRE::DisplayDevice::createAttributeSet(true, false, true);
+			auto as = KRE::DisplayDevice::createAttributeSet(true, false, false);
 			as->setDrawMode(KRE::DrawMode::POINTS);
 			addAttributeSet(as);
 			attribs_ = std::make_shared<KRE::Attribute<Coord>>(KRE::AccessFreqHint::DYNAMIC);
@@ -762,8 +761,8 @@ namespace
 				}
 				coords.emplace_back(Coord(glm::vec2(p.pos_x/1024, p.pos_y/1024), col));
 			}
+			getAttributeSet().back()->setCount(coords.size());
 			attribs_->update(&coords);
-			getAttributeSet().back()->setCount(particles_.size());
 			// XXX we need to set a uniform to indicate we draw a point as a sphere.
 			// uniform bool is_circlular;
 			// uniform float radius;

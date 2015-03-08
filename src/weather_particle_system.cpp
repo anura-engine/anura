@@ -61,12 +61,12 @@ WeatherParticleSystem::WeatherParticleSystem(const Entity& e, const WeatherParti
 	}
 
 	setShader(KRE::ShaderProgram::getProgram("line_shader"));
-	auto as = KRE::DisplayDevice::createAttributeSet(true, false, true);
+	auto as = KRE::DisplayDevice::createAttributeSet(true, false, false);
 	as->setDrawMode(KRE::DrawMode::POINTS);
-	addAttributeSet(as);
 	attribs_ = std::make_shared<KRE::Attribute<glm::vec2>>(KRE::AccessFreqHint::DYNAMIC);
 	attribs_->addAttributeDesc(KRE::AttributeDesc(KRE::AttrType::POSITION, 2, KRE::AttrFormat::FLOAT, false));
 	as->addAttribute(attribs_);
+	addAttributeSet(as);
 }
 
 void WeatherParticleSystem::process(const Entity& e)
@@ -80,6 +80,10 @@ void WeatherParticleSystem::process(const Entity& e)
 	}
 
 	// XXX set line width uniform from "info_.line_width" here
+	static auto u_line_width = getShader()->getUniform("line_width");
+	if(u_line_width != KRE::ShaderProgram::INALID_UNIFORM) {
+		getShader()->setUniformValue(u_line_width, info_.line_width);
+	}
 	setColor(info_.color);
 }
 
@@ -105,6 +109,7 @@ void WeatherParticleSystem::draw(const KRE::WindowManagerPtr& wm, const rect& ar
 			my_y += info_.repeat_period;
 		} while (my_y < area.y()+area.h());
 	}
+	getAttributeSet().back()->setCount(vertices.size());
 	attribs_->update(&vertices);
 
 	wm->render(this);
