@@ -779,6 +779,9 @@ int main(int argcount, char* argvec[])
 		auto_select_resolution(main_wnd, &width, &height);
 	}
 	main_wnd->createWindow(width, height);
+	main_wnd->setWindowTitle(module::get_module_pretty_name());
+	//main_wnd->setWindowIcon(module::map_file("images/window-icon.png"));
+	// XXX set window icon here.
 
 	auto canvas = Canvas::getInstance();
 

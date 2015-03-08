@@ -418,6 +418,12 @@ CustomObject::CustomObject(variant node)
 	}
 #endif
 
+	LOG_DEBUG("111'" << type_->id() << "' has shader '" << (type_->getShader() ? type_->getShader()->getName() : "<<nullptr>>") << "'");
+	if(type_->getShader() != nullptr) {
+		shader_ = graphics::AnuraShaderPtr(new graphics::AnuraShader(*type_->getShader()));
+		LOG_DEBUG("set shader for '" << type_->id() << "' to '" << shader_->getName()  << "'");
+	}
+
 	if(node.has_key("shader")) {
 		if(node["shader"].is_string()) {
 			std::string shader_name = node["shader"].as_string();
@@ -460,8 +466,7 @@ CustomObject::CustomObject(variant node)
 		}
 
 		if(!get_property_data(e.storage_slot).is_null()) {
-			properties_requiring_dynamic_initialization_.erase(std::remove(properties_requiring_dynamic_initialization_.begin(), properties_requiring_dynamic_initialization_.end(), i), properties_requiring_dynamic_initialization_.end());
-		}
+			properties_requiring_dynamic_initialization_.erase(std::remove(properties_requiring_dynamic_initialization_.begin(), properties_requiring_dynamic_initialization_.end(), i), properties_requiring_dynamic_initialization_.end());}
 	}
 }
 
@@ -521,7 +526,11 @@ CustomObject::CustomObject(const std::string& type, int x, int y, bool face_righ
 	getAll().insert(this);
 	getAll(base_type_->id()).insert(this);
 
-	// XXX Copy shader/effects from type_ here
+	LOG_DEBUG("'" << type_->id() << "' has shader '" << (type_->getShader() ? type_->getShader()->getName() : "<<nullptr>>") << "'");
+	if(type_->getShader() != nullptr) {
+		shader_ = graphics::AnuraShaderPtr(new graphics::AnuraShader(*type_->getShader()));
+		LOG_DEBUG("set shader for '" << type_->id() << "' to '" << shader_->getName()  << "'");
+	}
 
 #ifdef USE_BOX2D
 	if(type_->body()) {
@@ -553,7 +562,7 @@ CustomObject::CustomObject(const std::string& type, int x, int y, bool face_righ
 		lua_ptr_.reset(new lua::LuaContext());
 	}
 #endif
-
+	
 	setMouseoverDelay(type_->getMouseoverDelay());
 	if(type_->getMouseOverArea().w() != 0) {
 		setMouseOverArea(type_->getMouseOverArea());
@@ -616,7 +625,6 @@ CustomObject::CustomObject(const CustomObject& o)
 	driver_(o.driver_),
 	blur_(o.blur_),
 	fall_through_platforms_(o.fall_through_platforms_),
-	shader_(o.shader_),
 	//effects_(o.effects_),
 	always_active_(o.always_active_),
 	last_cycle_active_(0),
@@ -661,6 +669,11 @@ CustomObject::CustomObject(const CustomObject& o)
 		lua_ptr_.reset(new lua::LuaContext());
 	}
 #endif
+
+	if(o.shader_ != nullptr) {
+		shader_.reset(new graphics::AnuraShader(*o.shader_));
+		LOG_DEBUG("set shader for '" << type_->id() << "' to '" << shader_->getName()  << "'");
+	}
 }
 
 CustomObject::~CustomObject()
@@ -725,6 +738,10 @@ void CustomObject::finishLoading(Level* lvl)
 #if defined(USE_LUA)
 	init_lua();
 #endif
+
+	if(shader_ != nullptr) {
+		shader_->setParent(this);
+	}
 }
 
 
@@ -1179,8 +1196,8 @@ void CustomObject::draw(int xx, int yy) const
 	} else if(custom_draw_xy_.size() >= 6 &&
 	          custom_draw_xy_.size() == custom_draw_uv_.size()) {
 		frame_->drawCustom(shader_, draw_x-draw_x%2, draw_y-draw_y%2, &custom_draw_xy_[0], &custom_draw_uv_[0], custom_draw_xy_.size()/2, isFacingRight(), isUpsideDown(), time_in_frame_, rotate_z_.as_float32(), cycle_);
-	} else if(custom_draw_.get() != nullptr) {
-		frame_->drawCustom(shader_, draw_x-draw_x%2, draw_y-draw_y%2, *custom_draw_, draw_area_.get(), isFacingRight(), isUpsideDown(), time_in_frame_, rotate_z_.as_float32());
+	//} else if(custom_draw_.get() != nullptr) {
+	//	frame_->drawCustom(shader_, draw_x-draw_x%2, draw_y-draw_y%2, *custom_draw_, draw_area_.get(), isFacingRight(), isUpsideDown(), time_in_frame_, rotate_z_.as_float32());
 	} else if(draw_scale_) {
 		frame_->draw(shader_, draw_x-draw_x%2, draw_y-draw_y%2, isFacingRight(), isUpsideDown(), time_in_frame_, rotate_z_.as_float32(), draw_scale_->as_float32());
 	} else if(!draw_area_.get()) {
@@ -5591,7 +5608,9 @@ void CustomObject::updateType(ConstCustomObjectTypePtr old_type,
 		addParticleSystem(i->first, i->second->type());
 	}
 
-	// XXX Update shader and re-init with new object.
+	if(shader_ != nullptr) {
+		shader_->setParent(this);
+	}
 
 #if defined(USE_LUA)
 	if(!type_->getLuaSource().empty()) {
@@ -5698,6 +5717,9 @@ void CustomObject::addToLevel()
 		body_->set_active();
 	}
 #endif
+	if(shader_ != nullptr) {
+		shader_->setParent(this);
+	}
 }
 
 int CustomObject::currentRotation() const

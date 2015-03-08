@@ -51,7 +51,7 @@ namespace KRE
 			GLuint shader_;
 			std::string name_;
 		};
-		typedef std::unique_ptr<Shader> ShaderPtr;
+		//typedef std::unique_ptr<Shader> ShaderPtr;
 
 		struct Actives
 		{
@@ -131,18 +131,17 @@ namespace KRE
 
 			void setUniformsForTexture(const TexturePtr& tex) const override;
 
+			KRE::ShaderProgramPtr clone() override;
 		protected:
-			bool link();
+			bool link(const std::vector<Shader>& shader_programs);
 			bool queryUniforms();
 			bool queryAttributes();
 
 			std::vector<GLint> active_attributes_;
 		private:
-			DISALLOW_COPY_AND_ASSIGN(ShaderProgram);
+			void operator=(const ShaderProgram&);
 
 			std::string name_;
-			ShaderPtr vs_;
-			ShaderPtr fs_;
 			GLuint object_;
 			ActivesMap attribs_;
 			ActivesMap uniforms_;

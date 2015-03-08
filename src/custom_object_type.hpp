@@ -26,6 +26,7 @@
 #include <map>
 #include <string>
 
+#include "anura_shader.hpp"
 #include "custom_object_callable.hpp"
 #include "editor_variable_info.hpp"
 #include "formula.hpp"
@@ -266,6 +267,8 @@ public:
 	const std::string& getLuaSource() const { return lua_source_; }
 	void setLuaSource(const std::string& ls) { lua_source_ = ls; }
 
+	graphics::AnuraShaderPtr getShader() const { return shader_; }
+
 private:
 	void initSubObjects(variant node, const CustomObjectType* old_type);
 
@@ -396,5 +399,7 @@ private:
 
 	// For lua integration
 	std::string lua_source_;
+
+	graphics::AnuraShaderPtr shader_;
 };
 

@@ -237,7 +237,7 @@ Frame::Frame(variant node)
 		}
 	}
 
-	if(palettes_bitmap > 0) {
+	/*if(palettes_bitmap > 0) {
 		PaletteTextureKey key = { image_, palettes_bitmap };
 		auto it = get_palette_texture_cache().find(key);
 		bool create_palette = true;
@@ -266,13 +266,13 @@ Frame::Frame(variant node)
 			++id;
 		}
 		get_palette_texture_cache()[key] = blit_target_.getTexture();
-	} else {
+	} else {*/
 		if(node.has_key("fbo")) {
 			blit_target_.setTexture(node["fbo"].convert_to<TextureObject>()->texture());
 		} else if(node.has_key("image")) {
 			blit_target_.setTexture(KRE::Texture::createTexture(node["image"]));
 		}
-	}
+	//}
 	/*if(palettes_recognized_.empty() == false) {
 		palette_frames().insert(this);
 		if(current_palette_mask) {
@@ -905,12 +905,6 @@ void Frame::drawCustom(graphics::AnuraShaderPtr shader, int x, int y, const floa
 	blit.setTexture(blit_target_.getTexture());
 	blit.setRotation(rotation, z_axis);
 
-	if(shader) {
-		shader->setSpriteArea(blit.getTexture()->getSourceRectNormalised());
-		shader->setCycle(cycle);
-		blit.setShader(shader->getShader());
-	}
-
 	const float center_x = x + static_cast<float>(w)/2.0f;
 	const float center_y = y + static_cast<float>(h)/2.0f;
 
@@ -923,10 +917,10 @@ void Frame::drawCustom(graphics::AnuraShaderPtr shader, int x, int y, const floa
 	blit.getAttributeSet().back()->setCount(queue.size());
 	blit.update(&queue);
 	if(shader) {
-		//shader->makeActive();
 		shader->setDrawArea(rect(x, y, w, h));
 		shader->setSpriteArea(r);
 		shader->setCycle(cycle);
+		blit.setShader(shader->getShader());
 	}
 
 	blit.setMirrorHoriz(upside_down);
@@ -938,6 +932,7 @@ void Frame::drawCustom(graphics::AnuraShaderPtr shader, int x, int y, const floa
 		static auto tex = KRE::Texture::createTexture("white2x2.png");
 		blit.setTexture(tex);
 		blit.setDrawMode(KRE::DrawMode::LINE_STRIP);
+		wnd->render(&blit);
 	}
 }
 

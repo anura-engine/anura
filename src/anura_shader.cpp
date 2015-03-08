@@ -197,7 +197,8 @@ namespace graphics
 		  color_(1.0f),
 		  point_size_(1.0f),
 		  parent_(nullptr),
-		  enabled_(true)
+		  enabled_(true),
+		  name_(name)
 
 	{
 		 init();
@@ -221,10 +222,36 @@ namespace graphics
 		  cycle_(0),
 		  color_(1.0f),
 		  point_size_(1.0f),
-		  enabled_(true)
+		  enabled_(true),
+		  name_(name)
 	{
 		KRE::ShaderProgram::loadFromVariant(node);
 		shader_ = KRE::ShaderProgram::getProgram(name);
+		init();
+	}
+
+	AnuraShader::AnuraShader(const AnuraShader& o) 
+		: shader_(o.shader_),
+		  u_anura_discard_(KRE::ShaderProgram::INALID_UNIFORM),
+		  u_anura_tex_map_(KRE::ShaderProgram::INALID_UNIFORM),
+		  u_anura_mvp_matrix_(KRE::ShaderProgram::INALID_UNIFORM),
+		  u_anura_sprite_area_(KRE::ShaderProgram::INALID_UNIFORM),
+		  u_anura_draw_area_(KRE::ShaderProgram::INALID_UNIFORM),
+		  u_anura_cycle_(KRE::ShaderProgram::INALID_UNIFORM),
+		  u_anura_color_(KRE::ShaderProgram::INALID_UNIFORM),
+		  u_anura_point_size_(KRE::ShaderProgram::INALID_UNIFORM),
+		  discard_(o.discard_),
+		  tex_map_(o.tex_map_),
+		  mvp_matrix_(o.mvp_matrix_),
+		  sprite_area_(o.sprite_area_),
+		  draw_area_(o.draw_area_),
+		  cycle_(o.cycle_),
+		  color_(o.color_),
+		  point_size_(o.point_size_),
+		  enabled_(o.enabled_),
+		  name_(o.name_)
+	{
+		shader_ = o.shader_->clone();
 		init();
 	}
 
@@ -273,6 +300,22 @@ namespace graphics
 				ASSERT_LOG(false, "draw must be string or list, found: " << d.to_debug_string());
 			}
 		}
+
+		if(node.has_key("create")) {
+			const variant& c = node["create"];
+			if(c.is_list()) {
+				for(int n = 0; n < c.num_elements(); ++n) {
+					std::string cmd = c[n].as_string();
+					create_commands_.push_back(cmd);
+					ASSERT_LOG(node.has_key(cmd) == true, "No attribute found with name: " << cmd);
+					create_formulas_.push_back(e->createFormula(node[cmd]));
+				}
+			} else if(c.is_string()) {
+				create_formulas_.push_back(e->createFormula(c));
+			} else {
+				ASSERT_LOG(false, "draw must be string or list, found: " << c.to_debug_string());
+			}
+		}
 	}
 
 	void AnuraShader::setDrawArea(const rect& draw_area)
@@ -306,7 +349,7 @@ namespace graphics
 			shader_->setUniformValue(u_anura_draw_area_, glm::value_ptr(draw_area_));
 		}
 		if(u_anura_cycle_ != KRE::ShaderProgram::INALID_UNIFORM) {
-			shader_->setUniformValue(u_anura_cycle_, &cycle_);
+			shader_->setUniformValue(u_anura_cycle_, cycle_);
 		}
 		if(u_anura_color_ != KRE::ShaderProgram::INALID_UNIFORM) {
 			shader_->setUniformValue(u_anura_color_, glm::value_ptr(color_));
@@ -316,7 +359,9 @@ namespace graphics
 		}
 		
 		for(auto& u : uniforms_to_set_) {
-			shader_->setUniformFromVariant(u.first, u.second);
+			if(u.first != KRE::ShaderProgram::INALID_UNIFORM) {
+				shader_->setUniformFromVariant(u.first, u.second);
+			}
 		}
 	}
 
@@ -329,6 +374,12 @@ namespace graphics
 			obj.enabled_ = value.as_bool();
 		DEFINE_FIELD(level, "object")
 			return variant(Level::getCurrentPtr());
+		DEFINE_FIELD(parent, "object")
+			ASSERT_LOG(obj.parent_ != NULL, "Tried to request parent, when value is null: " << obj.shader_->getShaderVariant()["name"]);
+			return variant(obj.parent_);
+		DEFINE_FIELD(object, "object")
+			ASSERT_LOG(obj.parent_ != NULL, "Tried to request parent, when value is null: " << obj.shader_->getShaderVariant()["name"]);
+			return variant(obj.parent_);
 	END_DEFINE_CALLABLE(AnuraShader)
 
 	void AnuraShader::clear()
@@ -336,6 +387,8 @@ namespace graphics
 		shader_.reset();
 		draw_commands_.clear();
 		draw_formulas_.clear();
+		create_commands_.clear();
+		create_formulas_.clear();
 	}
 
 	bool AnuraShader::executeCommand(const variant& var)
@@ -425,4 +478,14 @@ namespace graphics
 			target->increment = false;
 		}
 	}
+
+	void AnuraShader::setParent(Entity* parent) 
+	{ 
+		parent_ = parent; 
+		game_logic::FormulaCallablePtr e(this);
+		for(auto & cf : create_formulas_) {
+			e->executeCommand(cf->execute(*e));
+		}
+	}
 }
+

@@ -2050,6 +2050,7 @@ void Level::frameBufferEnterZorder(int zorder) const
 		} else if(shaders.empty()) {
 			//now there are no shaders, flush all to the screen and proceed with
 			//rendering to the screen.
+			rt_->renderToPrevious();
 			flushFrameBufferShadersToScreen();
 			//rt_->renderToPrevious();
 		} else {
@@ -2064,8 +2065,8 @@ void Level::frameBufferEnterZorder(int zorder) const
 			if(add_shaders) {
 				//this works if we're adding and removing shaders.
 				rt_->renderToThis();
-				rt_->setClearColor(KRE::Color(0,0,0,0));
-				rt_->clear();
+				//rt_->setClearColor(KRE::Color(0,0,0,0));
+				//rt_->clear();
 			} else {
 				//we must just be removing shaders.
 				for(auto& s : active_fb_shaders_) {
@@ -2089,13 +2090,9 @@ void Level::flushFrameBufferShadersToScreen() const
 
 void Level::applyShaderToFrameBufferTexture(graphics::AnuraShaderPtr shader, bool render_to_screen) const
 {
-	//rt_->renderToPrevious();
-
-	if(render_to_screen) {
-		rt_->renderToPrevious();
-	} else {
-		rt_->renderToThis();
-	}
+	//if(render_to_screen) {
+	//	rt_->renderToPrevious();
+	//}
 
 	KRE::ModelManager2D model_scope;
 	model_scope.setIdentity();
@@ -2108,6 +2105,8 @@ void Level::applyShaderToFrameBufferTexture(graphics::AnuraShaderPtr shader, boo
 		rt_->setRotation(0, glm::vec3(0.0f, 0.0f, 1.0f));
 	}
 	rt_->setShader(shader->getShader());
+	rt_->setCentre(KRE::Blittable::Centre::MIDDLE);
+	rt_->setDrawRect(rect());
 	rt_->preRender(wnd);
 	wnd->render(rt_.get());
 }

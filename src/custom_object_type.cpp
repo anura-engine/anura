@@ -1550,6 +1550,18 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 	}
 #endif
 
+	if(node.has_key("shader")) {
+		if(node["shader"].is_string()) {
+			shader_ = graphics::AnuraShaderPtr(new graphics::AnuraShader(node["shader"].as_string()));
+		} else {
+			KRE::ShaderProgram::loadFromVariant(node["shader"]);
+			std::string shader_name = node["shader"]["name"].as_string();
+			ASSERT_LOG(!shader_name.empty(), "No name for shader found.");
+			shader_ = graphics::AnuraShaderPtr(new graphics::AnuraShader(shader_name));
+		}
+		LOG_DEBUG("Added shader '" << shader_->getName() << "' for CustomObjectType '" << id_ << "'");
+	}
+
 	if(base_type) {
 		//if we're a variation, just get the functions from our base type.
 		//variations can't define new functions.

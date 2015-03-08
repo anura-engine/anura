@@ -18,6 +18,7 @@ namespace graphics
 	public:
 		AnuraShader(const std::string& name);
 		AnuraShader(const std::string& name, const variant& node);
+		AnuraShader(const AnuraShader& o);
 
 		void setDiscard(bool discard) { discard_ = discard; }
 		void setTexMap(int tex) { tex_map_ = tex; }
@@ -38,6 +39,11 @@ namespace graphics
 		void setUniformsForDraw();
 
 		void process();
+
+		void setParent(Entity* parent);
+		Entity* getParent() const { return parent_; }
+
+		const std::string& getName() const { return name_; }
 	private:
 		DECLARE_CALLABLE(AnuraShader);
 		void init();
@@ -84,7 +90,9 @@ namespace graphics
 		float point_size_;
 
 		std::vector<std::string> draw_commands_;
+		std::vector<std::string> create_commands_;
 		std::vector<game_logic::FormulaPtr> draw_formulas_;
+		std::vector<game_logic::FormulaPtr> create_formulas_;
 
 		boost::intrusive_ptr<UniformCommandsCallable> uniform_commands_;
 
@@ -93,6 +101,8 @@ namespace graphics
 		bool enabled_;
 
 		std::map<int, variant> uniforms_to_set_;
+
+		std::string name_;
 	};
 
 	void set_alpha_test(bool alpha);

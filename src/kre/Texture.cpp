@@ -430,6 +430,7 @@ namespace KRE
 		ASSERT_LOG(static_cast<int>(texture_params_.size()) == 1 && !is_paletteized_ || is_paletteized_ && static_cast<int>(texture_params_.size()) == 2, "Currently we only support converting textures to palette versions that have one texture. may life in future.");
 		is_paletteized_ = true;
 		handleAddPalette(palette);
+		LOG_DEBUG("Adding palette '" << palette->getName() << "' to texture id: " << id());
 	}
 
 	void Texture::setMaxPalettes(int n)

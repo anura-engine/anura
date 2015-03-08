@@ -467,9 +467,12 @@ namespace KRE
 		void ShaderProgram::init(const std::string& name, const ShaderDef& vs, const ShaderDef& fs)
 		{
 			name_ = name;
-			vs_.reset(new Shader(GL_VERTEX_SHADER, vs.first, vs.second));
-			fs_.reset(new Shader(GL_FRAGMENT_SHADER, fs.first, fs.second));
-			bool linked_ok = link();
+			//vs_.reset(new Shader(GL_VERTEX_SHADER, vs.first, vs.second));
+			//fs_.reset(new Shader(GL_FRAGMENT_SHADER, fs.first, fs.second));
+			std::vector<Shader> shader_programs;
+			shader_programs.emplace_back(GL_VERTEX_SHADER, vs.first, vs.second);
+			shader_programs.emplace_back(GL_FRAGMENT_SHADER, fs.first, fs.second);
+			bool linked_ok = link(shader_programs);
 			ASSERT_LOG(linked_ok == true, "Error linking program: " << name_);
 		}
 
@@ -495,12 +498,12 @@ namespace KRE
 			}
 			auto alt_name_it = attribute_alternate_name_map_.find(attr);
 			if(alt_name_it == attribute_alternate_name_map_.end()) {
-				LOG_WARN("Attribute '" << attr << "' not found in alternate names list and is not a name defined in the shader: " << name_);
+				//LOG_WARN("Attribute '" << attr << "' not found in alternate names list and is not a name defined in the shader: " << name_);
 				return ShaderProgram::INALID_ATTRIBUTE;
 			}
 			it = attribs_.find(alt_name_it->second);
 			if(it == attribs_.end()) {
-				LOG_WARN("Attribute \"" << alt_name_it->second << "\" not found in list, looked up from symbol " << attr << " in shader: " << name_);
+				//LOG_WARN("Attribute \"" << alt_name_it->second << "\" not found in list, looked up from symbol " << attr << " in shader: " << name_);
 				return ShaderProgram::INALID_ATTRIBUTE;
 			}
 			return it->second.location;
@@ -525,7 +528,7 @@ namespace KRE
 			return it->second.location;
 		}
 
-		bool ShaderProgram::link()
+		bool ShaderProgram::link(const std::vector<Shader>& shader_programs)
 		{
 			if(object_) {
 				glDeleteProgram(object_);
@@ -533,8 +536,9 @@ namespace KRE
 			}
 			object_ = glCreateProgram();
 			ASSERT_LOG(object_ != 0, "Unable to create program object.");
-			glAttachShader(object_, vs_->get());
-			glAttachShader(object_, fs_->get());
+			for(auto sp : shader_programs) {
+				glAttachShader(object_, sp.get());
+			}
 			glLinkProgram(object_);
 			GLint linked = 0;
 			glGetProgramiv(object_, GL_LINK_STATUS, &linked);
@@ -682,6 +686,9 @@ namespace KRE
 			case GL_SAMPLER_CUBE:	
 				glUniform1i(u.location, value); 
 				break;
+			case GL_FLOAT:
+				glUniform1f(u.location, static_cast<float>(value));
+				break;
 			default:
 				ASSERT_LOG(false, "Unhandled uniform type: " << it->second.type);
 			}
@@ -734,6 +741,9 @@ namespace KRE
 			case GL_INT_VEC4: 	
 			case GL_BOOL_VEC4:
 				glUniform4iv(u.location, u.num_elements, value); 
+				break;
+			case GL_FLOAT:
+				glUniform1f(u.location, static_cast<float>(*value));
 				break;
 			default:
 				ASSERT_LOG(false, "Unhandled uniform type: " << it->second.type);
@@ -933,15 +943,15 @@ namespace KRE
 
 		void ShaderProgram::setAlternateUniformName(const std::string& name, const std::string& alt_name)
 		{
-			ASSERT_LOG(uniform_alternate_name_map_.find(alt_name) == uniform_alternate_name_map_.end(),
-				"Trying to replace alternative uniform name: " << alt_name << " " << name);
+			//ASSERT_LOG(uniform_alternate_name_map_.find(alt_name) == uniform_alternate_name_map_.end(),
+			//	"Trying to replace alternative uniform name: " << alt_name << " " << name);
 			uniform_alternate_name_map_[alt_name] = name;
 		}
 
 		void ShaderProgram::setAlternateAttributeName(const std::string& name, const std::string& alt_name)
 		{
-			ASSERT_LOG(attribute_alternate_name_map_.find(alt_name) == attribute_alternate_name_map_.end(),
-				"Trying to replace alternative attribute name: " << alt_name << " " << name);
+			//ASSERT_LOG(attribute_alternate_name_map_.find(alt_name) == attribute_alternate_name_map_.end(),
+			//	"Trying to replace alternative attribute name: " << alt_name << " " << name);
 			attribute_alternate_name_map_[alt_name] = name;
 		}
 
@@ -1033,7 +1043,10 @@ namespace KRE
 
 		void ShaderProgram::loadShadersFromVariant(const variant& node)
 		{
-			ASSERT_LOG(node.has_key("instances"), "Shader data must have 'instances' attribute.");
+			if(!node.has_key("instances")) {
+				getProgramFromVariant(node);
+				return;
+			}
 			ASSERT_LOG(node["instances"].is_list(), "'instances' attribute should be a list.");
 
 			if(node.has_key("instances") && node["instances"].is_list()) {
@@ -1141,6 +1154,11 @@ namespace KRE
 					setUniformValue(u_enable_palette_lookup_, enable_palette);
 				}
 			}
+		}
+
+		KRE::ShaderProgramPtr ShaderProgram::clone() 
+		{
+			return KRE::ShaderProgramPtr(new OpenGL::ShaderProgram(*this));
 		}
 	}
 }

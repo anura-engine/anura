@@ -193,6 +193,7 @@ namespace KRE
 
 		if(state_stored_) {
 			ASSERT_LOG(!get_blend_state_stack().empty(), "Something went badly wrong blend state stack was empty.");
+			bool state = get_blend_state_stack().top();
 			get_blend_state_stack().pop();
 			if(!get_blend_state_stack().empty()) {
 				if(get_blend_state_stack().top()) {
@@ -201,7 +202,10 @@ namespace KRE
 					glDisable(GL_BLEND);
 				}
 			} else {
-				glEnable(GL_BLEND);
+				// We check this so we don't have extraneous blend enable calls.
+				if(!state) {
+					glEnable(GL_BLEND);
+				}
 			}
 		}
 	}

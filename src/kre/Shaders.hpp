@@ -110,8 +110,9 @@ namespace KRE
 		static void loadFromVariant(const variant& node);
 
 		variant getShaderVariant() { return node_; }
+
+		virtual ShaderProgramPtr clone() = 0;
 	private:
-		DISALLOW_COPY_ASSIGN_AND_DEFAULT(ShaderProgram);
 		UniformSetFn uniform_draw_fn_;
 		variant node_;
 	};
