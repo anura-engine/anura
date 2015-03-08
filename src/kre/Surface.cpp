@@ -189,7 +189,9 @@ namespace KRE
 			int w = width();
 			auto& am = alpha_map_;
 			iterateOverSurface([&am, w](int x, int y, int r, int g, int b, int a) {
-				am[x + y * w] = a == 0;
+				if(a == 0) {
+					am[x + y * w] = true;
+				}
 			});
 		}
 	}

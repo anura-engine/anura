@@ -149,10 +149,10 @@ void Frame::buildPatterns(variant obj_variant)
 		boost::intrusive_ptr<TextureObject> tex_obj(new TextureObject(tex));
 
 		std::vector<variant> area;
-		area.push_back(variant(0));
-		area.push_back(variant(0));
-		area.push_back(variant(surfaces.front()->width()-1));
-		area.push_back(variant(surfaces.front()->height()-1));
+		area.emplace_back(variant(0));
+		area.emplace_back(variant(0));
+		area.emplace_back(variant(surfaces.front()->width()-1));
+		area.emplace_back(variant(surfaces.front()->height()-1));
 
 		item.add_attr_mutation(variant("fbo"), variant(tex_obj.get()));
 		item.add_attr_mutation(variant("image"), variant("fbo"));
@@ -231,7 +231,7 @@ Frame::Frame(variant node)
 	unsigned palettes_bitmap = 0;
 	for(const std::string& p : palettes) {
 		int id = graphics::get_palette_id(p);
-		palettes_recognized_.push_back(id);
+		palettes_recognized_.emplace_back(id);
 		if(id >= 0) {
 			palettes_bitmap |= 1 << id;
 		}
@@ -282,7 +282,7 @@ Frame::Frame(variant node)
 
 	std::vector<std::string> hit_frames = util::split(node["hit_frames"].as_string_default());
 	for(const std::string& f : hit_frames) {
-		hit_frames_.push_back(boost::lexical_cast<int>(f));
+		hit_frames_.emplace_back(boost::lexical_cast<int>(f));
 	}
 
 	const std::string& events = node["events"].as_string_default();
@@ -306,8 +306,8 @@ Frame::Frame(variant node)
 
 		typedef std::pair<int,std::string> event_pair;
 		for(const event_pair& p : event_map) {
-			event_frames_.push_back(p.first);
-			event_names_.push_back(p.second);
+			event_frames_.emplace_back(p.first);
+			event_names_.emplace_back(p.second);
 		}
 	}
 
@@ -332,7 +332,7 @@ Frame::Frame(variant node)
 			std::vector<int> v;
 			for(const variant& var : value.as_list()) {
 				if(var.is_int()) {
-					v.push_back(var.as_int());
+					v.emplace_back(var.as_int());
 				} else if(var.is_string() && var.as_string() == "solid") {
 					solid = true;
 				} else if(var.is_string() && var.as_string() == "all") {
@@ -349,7 +349,7 @@ Frame::Frame(variant node)
 		}
 
 		CollisionArea area = { area_id, r, solid };
-		collision_areas_.push_back(area);
+		collision_areas_.emplace_back(area);
 
 		if(solid && (r.x() < 0 || r.y() < 0 || r.x2() > width() || r.y2() > height())) {
 			collision_areas_inside_frame_ = false;
@@ -376,7 +376,7 @@ Frame::Frame(variant node)
 			const int w = *i++;
 			const int h = *i++;
 			info.area = rect(x, y, w, h);
-			frames_.push_back(info);
+			frames_.emplace_back(info);
 			ASSERT_EQ(intersection_rect(info.area, rect(0, 0, static_cast<int>(blit_target_.getTexture()->surfaceWidth()), static_cast<int>(blit_target_.getTexture()->surfaceHeight()))), info.area);
 			ASSERT_EQ(w + (info.x_adjust + info.x2_adjust), img_rect_.w());
 			ASSERT_EQ(h + (info.y_adjust + info.y2_adjust), img_rect_.h());
@@ -406,7 +406,7 @@ Frame::Frame(variant node)
 			for(int n = 0; n != num_points; ++n) {
 				point p(values[n*2], values[n*2+1]);
 				for(int m = 0; m != repeat; ++m) {
-					schedule.points.push_back(p);
+					schedule.points.emplace_back(p);
 				}
 			}
 
@@ -417,7 +417,7 @@ Frame::Frame(variant node)
 			}
 
 			if(schedule.points.empty() == false) {
-				pivots_.push_back(schedule);
+				pivots_.emplace_back(schedule);
 			}
 		}
 	}
@@ -541,6 +541,12 @@ void Frame::buildAlpha()
 			LOG_INFO("IMAGE RECT FOR FRAME '" << id_ << "' #" << n << ": " << img_rect_.x() << " + " << current_col << " * (" << img_rect_.w() << "+" << pad_ << ") IS INVALID: " << xbase << ", " << ybase << ", " << (xbase + img_rect_.w()) << ", " << (ybase + img_rect_.h()) << " / " << blit_target_.getTexture()->surfaceWidth() << "," << blit_target_.getTexture()->surfaceHeight());
 			LOG_INFO("IMAGE_NAME: " << image_ << ", Name from texture: " << blit_target_.getTexture()->getFrontSurface()->getName());
 			throw Error();
+		}
+
+		if(!blit_target_.getTexture()->getFrontSurface()) {
+			auto& f = frames_[n];
+			f.area = rect(xbase, ybase, img_rect_.w(), img_rect_.h());
+			continue;
 		}
 
 		for(int y = 0; y != img_rect_.h(); ++y) {
