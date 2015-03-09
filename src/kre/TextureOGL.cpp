@@ -147,9 +147,9 @@ namespace KRE
 		if(getUnpackAlignment(n) != 4) {
 			glPixelStorei(GL_UNPACK_ALIGNMENT, getUnpackAlignment(n));
 		}
-		glPixelStorei(GL_UNPACK_ROW_LENGTH, stride);
+		//glPixelStorei(GL_UNPACK_ROW_LENGTH, stride);
 		glTexSubImage2D(GetGLTextureType(getType(n)), 0, x, y, width, height, td.format, td.type, pixels);
-		glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+		//glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
 		if(getUnpackAlignment(n) != 4) {
 			glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
 		}

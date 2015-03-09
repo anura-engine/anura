@@ -125,7 +125,7 @@ namespace KRE
 		  max_palettes_(0)
 	{
 		texture_params_.resize(1);
-		//texture_params_[0].surface = Surface::create(width, height, fmt);
+		texture_params_[0].surface = Surface::create(width, height, fmt);
 		texture_params_[0].surface_width = width;
 		texture_params_[0].surface_height = height;
 		texture_params_[0].width = width;

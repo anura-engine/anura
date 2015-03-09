@@ -201,6 +201,7 @@
     <ClInclude Include="..\..\src\distortion.hpp" />
     <ClInclude Include="..\..\src\drag_widget.hpp" />
     <ClInclude Include="..\..\src\draw_primitive.hpp" />
+    <ClInclude Include="..\..\src\draw_primitive_fwd.hpp" />
     <ClInclude Include="..\..\src\draw_scene.hpp" />
     <ClInclude Include="..\..\src\draw_tile.hpp" />
     <ClInclude Include="..\..\src\dropdown_widget.hpp" />

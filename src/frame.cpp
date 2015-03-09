@@ -543,11 +543,11 @@ void Frame::buildAlpha()
 			throw Error();
 		}
 
-		if(!blit_target_.getTexture()->getFrontSurface()) {
+		/*if(!blit_target_.getTexture()->getFrontSurface()) {
 			auto& f = frames_[n];
 			f.area = rect(xbase, ybase, img_rect_.w(), img_rect_.h());
 			continue;
-		}
+		}*/
 
 		for(int y = 0; y != img_rect_.h(); ++y) {
 			const int dst_index = y*img_rect_.w()*nframes_ + n*img_rect_.w();

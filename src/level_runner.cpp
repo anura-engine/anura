@@ -420,8 +420,14 @@ bool LevelRunner::handle_mouse_events(const SDL_Event &event)
 	}
 
 	// Get the correct window from the ID.
-	auto wnd = KRE::WindowManager::getWindowFromID(event.type == SDL_MOUSEMOTION ? event.motion.windowID : event.button.windowID);
+	unsigned wnd_id = event.type == SDL_MOUSEMOTION ? event.motion.windowID : event.button.windowID;
+	auto wnd = KRE::WindowManager::getWindowFromID(wnd_id);
 	if(wnd == nullptr) {
+		std::stringstream ss;
+		for(auto windows : KRE::WindowManager::getWindowList()) {
+			ss << windows->getWindowID() << " : ";
+		}
+		LOG_WARN("No window to send mouse events to: " << wnd_id << ", Valid ids: " << ss.str());
 		return false;
 	}
 	// windowID seems unreliable at the moment, just get the main window
@@ -443,7 +449,7 @@ bool LevelRunner::handle_mouse_events(const SDL_Event &event)
 
 		case SDL_MOUSEBUTTONDOWN:
 		case SDL_MOUSEBUTTONUP:
-		mouse_drag_count_ = 0;
+			mouse_drag_count_ = 0;
 
 		case SDL_MOUSEMOTION:
 		    int x, mx = event.type == SDL_MOUSEMOTION ? event.motion.x : event.button.x;
@@ -451,8 +457,9 @@ bool LevelRunner::handle_mouse_events(const SDL_Event &event)
 			int event_type = event.type;
 			int event_button_button = event.button.button;
             
-			wnd->mapMousePosition(&x, &y);
 			wnd->mapMousePosition(&mx, &my);
+			x = mx;
+			y = my;
 
 			const int basic_evt = event_type == SDL_MOUSEBUTTONDOWN
 				? MouseDownEventID 
@@ -464,11 +471,8 @@ bool LevelRunner::handle_mouse_events(const SDL_Event &event)
 					? MouseMoveEventAllID : MouseUpEventAllID;
 			Uint8 button_state = input::sdl_get_mouse_state(0,0);
 
-			// XXX convert x to level position here.
 			x += last_draw_position().x/100;
 			y += last_draw_position().y/100;
-			//x = (mx*graphics::screen_width())/preferences::virtual_screen_width() + last_draw_position().x/100;
-			//y = (my*graphics::screen_height())/preferences::virtual_screen_height() + last_draw_position().y/100;
 			game_logic::MapFormulaCallablePtr callable(new game_logic::MapFormulaCallable);
 			callable->add("mouse_x", variant(x));
 			callable->add("mouse_y", variant(y));
@@ -479,24 +483,6 @@ bool LevelRunner::handle_mouse_events(const SDL_Event &event)
 			}
 
 			std::vector<EntityPtr> wcs;
-
-// XXX needs re-work
-#if 0
-			if(lvl_->iso_world()) {
-				// XXX need to get camera position.
-				glm::vec3 v3 = lvl_->camera()->screen_to_world(mx, my, wnd->width(), wnd->height());
-				callable->add("world_point", vec3_to_variant(v3));
-				glm::ivec3 iv3 = lvl_->camera()->get_facing(v3) + glm::ivec3(int(floor(v3.x)), int(floor(v3.y)), int(floor(v3.z)));
-				callable->add("voxel_point", ivec3_to_variant(iv3));
-
-				std::vector<voxel::UserVoxelObjectPtr> voxel_objs;
-				lvl_->iso_world()->getObjectsAtPoint(v3, voxel_objs);
-
-				handle_mouse_over_voxel_objects(event, voxel_objs, callable, basic_evt, catch_all_event);
-
-				wcs = lvl_->get_characters_at_world_point(v3);
-			}
-#endif
 
 			std::vector<variant> items;
 			// Grab characters around point, z-order sort them, so that when
@@ -527,6 +513,8 @@ bool LevelRunner::handle_mouse_events(const SDL_Event &event)
 						continue;
 					}
 				}
+
+				LOG_DEBUG("mouse event in entity: " << e->getDebugDescription());
 
 				if(event_type == SDL_MOUSEBUTTONDOWN) {
 					e->setMouseButtons(e->getMouseButtons() | SDL_BUTTON(event_button_button));
