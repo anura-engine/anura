@@ -692,6 +692,8 @@ void Frame::draw(graphics::AnuraShaderPtr shader, int x, int y, bool face_right,
 	y += static_cast<int>(info->y_adjust * scale_);
 	int w = static_cast<int>(info->area.w() * scale_);
 	int h = static_cast<int>(info->area.h() * scale_);
+	x &= preferences::xypos_draw_mask;
+	y &= preferences::xypos_draw_mask;
 
 	if(shader) {
 		shader->setSpriteArea(blit_target_.getTexture()->getSourceRectNormalised());
@@ -700,7 +702,7 @@ void Frame::draw(graphics::AnuraShaderPtr shader, int x, int y, bool face_right,
 
 	auto wnd = KRE::WindowManager::getMainWindow();
 	blit_target_.setCentre(KRE::Blittable::Centre::MIDDLE);
-	blit_target_.setPosition(x + info->x_adjust * scale_ + w/2, y + info->y_adjust * scale_ + h/2);
+	blit_target_.setPosition(x + w/2, y + h/2);
 	blit_target_.setRotation(rotate, z_axis);
 	blit_target_.setDrawRect(rect(0, 0, w, h));
 	blit_target_.setMirrorHoriz(upside_down);
@@ -716,25 +718,27 @@ void Frame::draw(graphics::AnuraShaderPtr shader, int x, int y, bool face_right,
 
 	x += static_cast<int>(info->x_adjust * scale_);
 	y += static_cast<int>(info->y_adjust * scale_);
-	const int w = static_cast<int>(info->area.w() * scale_ * scale);
-	const int h = static_cast<int>(info->area.h() * scale_ * scale);
+	const int w = static_cast<int>(info->area.w() * scale_);
+	const int h = static_cast<int>(info->area.h() * scale_);
+	x &= preferences::xypos_draw_mask;
+	y &= preferences::xypos_draw_mask;
 
 	//adjust x,y to accomodate scaling so that we scale from the center.
-	const int width_delta = static_cast<int>(img_rect_.w() * scale_ * scale - img_rect_.w() * scale_);
-	const int height_delta = static_cast<int>(img_rect_.h() * scale_ * scale - img_rect_.h() * scale_);
+	//const int width_delta = static_cast<int>(img_rect_.w() * scale_ * scale - img_rect_.w() * scale_);
+	//const int height_delta = static_cast<int>(img_rect_.h() * scale_ * scale - img_rect_.h() * scale_);
 	//x -= width_delta/2;
 	//y -= height_delta/2;
 
 	if(shader) {
 		shader->setSpriteArea(blit_target_.getTexture()->getSourceRectNormalised());
-		shader->setCycle(time);
 		blit_target_.setShader(shader->getShader());
 	}
 
 	auto wnd = KRE::WindowManager::getMainWindow();
 	blit_target_.setCentre(KRE::Blittable::Centre::MIDDLE);
-	blit_target_.setPosition(x, y);
+	blit_target_.setPosition(x + w/2, y + h/2);
 	blit_target_.setRotation(rotate, z_axis);
+	blit_target_.setScale(scale, scale);
 	blit_target_.setDrawRect(rect(0, 0, w, h));
 	blit_target_.setMirrorHoriz(upside_down);
 	blit_target_.setMirrorVert(!face_right);
@@ -752,8 +756,8 @@ void Frame::draw(graphics::AnuraShaderPtr shader, int x, int y, const rect& area
 	const int w_adjust = area.w() - img_rect_.w();
 	const int h_adjust = area.h() - img_rect_.h();
 
-	const int w = static_cast<int>(info->area.w() * scale_);
-	const int h = static_cast<int>(info->area.h() * scale_);
+	const int w = static_cast<int>(info->area.w() * scale_ + w_adjust * scale_);
+	const int h = static_cast<int>(info->area.h() * scale_ + h_adjust * scale_);
 
 	const rect src_rect = blit_target_.getTexture()->getSourceRect();
 
@@ -766,7 +770,7 @@ void Frame::draw(graphics::AnuraShaderPtr shader, int x, int y, const rect& area
 	blit_target_.setCentre(KRE::Blittable::Centre::MIDDLE);
 	blit_target_.setPosition(x + w/2, y + h/2);
 	blit_target_.setRotation(rotate, z_axis);
-	blit_target_.setDrawRect(rect(0, 0, static_cast<int>(w + w_adjust * scale_), static_cast<int>(h + h_adjust * scale_)));
+	blit_target_.setDrawRect(rect(0, 0, w, h));
 	blit_target_.getTexture()->setSourceRect(0, rect(src_rect.x() + x_adjust, src_rect.y() + y_adjust, src_rect.w() + x_adjust + w_adjust, src_rect.h() + y_adjust + h_adjust));
 	blit_target_.setMirrorHoriz(upside_down);
 	blit_target_.setMirrorVert(!face_right);
