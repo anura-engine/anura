@@ -154,6 +154,7 @@ namespace graphics
 				ab->setDrawMode(DrawMode::TRIANGLE_FAN);
 				ab->setColor(color_);
 				addAttributeSet(ab);
+				ab->setCount(varray.size());
 				pos->update(varray);
 			}
 
@@ -270,15 +271,14 @@ namespace graphics
 			if(varray_.empty()) {
 				calculate_draw_arrays();
 
+				getAttributeSet()[0]->setCount(varray_.size());	
 				pos_->update(varray_);
 				col_->update(carray_);
 				if(texture_) {
 					tex_->update(uvarray_);
 					tex_->enable();
-					// set shader if needed?
 				} else {
 					tex_->enable(false);
-					// set shader if needed?
 				}
 			}
 		}
@@ -520,6 +520,7 @@ namespace graphics
 			addAttributeSet(ab);
 
 			// might be better doing this in pre-render?
+			ab->setCount(varray_.size());
 			pos->update(&varray_);
 		}
 
@@ -576,9 +577,6 @@ namespace graphics
 
 			init();
 		}
-		virtual ~BoxPrimitive()
-		{}
-
 	private:
 		DECLARE_CALLABLE(BoxPrimitive);
 
@@ -655,6 +653,7 @@ namespace graphics
 			addAttributeSet(ab);
 
 			// might be better doing this in pre-render?
+			ab->setCount(varray_.size());
 			pos->update(&varray_);
 		}
 
@@ -702,7 +701,6 @@ namespace graphics
 	{
 	public:
 		explicit LinePrimitive(const variant& node);
-		~LinePrimitive() {}
 	private:
 		DECLARE_CALLABLE(LinePrimitive);
 		void init();
@@ -787,32 +785,36 @@ namespace graphics
 		using namespace KRE;
 
 		auto ab = DisplayDevice::createAttributeSet(false, false, false);
-		auto pos = new Attribute<glm::vec2>(AccessFreqHint::DYNAMIC, AccessTypeHint::DRAW);
-		pos->addAttributeDesc(AttributeDesc(AttrType::POSITION, 2, AttrFormat::FLOAT, false));
-		ab->addAttribute(AttributeBasePtr(pos));
-
-		auto col = new Attribute<glm::u8vec4>(AccessFreqHint::DYNAMIC, AccessTypeHint::DRAW);
-		col->addAttributeDesc(AttributeDesc(AttrType::COLOR, 4, AttrFormat::UNSIGNED_BYTE, true));
-		ab->addAttribute(AttributeBasePtr(col));
-
 		ab->setDrawMode(DrawMode::TRIANGLE_STRIP);
+
+		auto pos = std::make_shared<Attribute<glm::vec2>>(AccessFreqHint::DYNAMIC, AccessTypeHint::DRAW);
+		pos->addAttributeDesc(AttributeDesc(AttrType::POSITION, 2, AttrFormat::FLOAT, false));
+		ab->addAttribute(pos);
+
+		auto col = std::make_shared<Attribute<glm::u8vec4>>(AccessFreqHint::DYNAMIC, AccessTypeHint::DRAW);
+		col->addAttributeDesc(AttributeDesc(AttrType::COLOR, 4, AttrFormat::UNSIGNED_BYTE, true));
+		ab->addAttribute(col);
+
 		addAttributeSet(ab);
 
+		ab->setCount(v1array_.size());
 		pos->update(&v1array_);
 		col->update(&carray_);
 
 		if(has_stroke_) {
 			auto ll = DisplayDevice::createAttributeSet(false, false, false);
-			auto ll_pos = new Attribute<glm::vec2>(AccessFreqHint::DYNAMIC, KRE::AccessTypeHint::DRAW);
+			auto ll_pos = std::make_shared<Attribute<glm::vec2>>(AccessFreqHint::DYNAMIC, KRE::AccessTypeHint::DRAW);
 			ll_pos->addAttributeDesc(AttributeDesc(AttrType::POSITION, 2, AttrFormat::FLOAT, false));
 			ll->addAttribute(AttributeBasePtr(ll_pos));
 			ll->setColor(stroke_color_);
 			ll->setDrawMode(DrawMode::LINE_LOOP);
 			addAttributeSet(ll);
 
+			ll->setCount(v2array_.size());
 			ll_pos->update(&v2array_);
 		}
 	}
+
 
 	BEGIN_DEFINE_CALLABLE(LinePrimitive, DrawPrimitive)
 		DEFINE_FIELD(color1, "[int,int,int,int]")
