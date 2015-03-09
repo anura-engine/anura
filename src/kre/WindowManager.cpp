@@ -456,17 +456,19 @@ namespace KRE
 	}
 
 	//! Save the current window display to a file
-	void WindowManager::saveFrameBuffer(const std::string& filename)
+	std::string WindowManager::saveFrameBuffer(const std::string& filename)
 	{
 		auto surface = Surface::create(width_, height_, PixelFormat::PF::PIXELFORMAT_RGB24);
-		std::vector<glm::u8vec3> pixels;
-		if(display_->readPixels(0, 0, width_, height_, ReadFormat::RGB, AttrFormat::UNSIGNED_BYTE, pixels)) {
-			surface->writePixels(&pixels[0], pixels.size() * sizeof(glm::u8vec3));
-			surface->savePng(filename);
-			LOG_INFO("Saved screenshot to: " << filename);
+		int stride = surface->rowPitch();
+		std::vector<uint8_t> pixels;
+		pixels.resize(stride * height_);
+		if(display_->readPixels(0, 0, width_, height_, ReadFormat::RGB, AttrFormat::UNSIGNED_BYTE, pixels, stride)) {
+			surface->writePixels(&pixels[0], height_ * stride);
+			return surface->savePng(filename);
 		} else {
 			LOG_ERROR("Failed to save screenshot");
 		}
+		return std::string();
 	}
 
 	WindowManagerPtr WindowManager::create(const std::string& title, const HintMapContainer& hints)

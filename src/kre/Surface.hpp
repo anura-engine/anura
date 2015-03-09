@@ -153,7 +153,7 @@ namespace KRE
 
 		static void clearSurfaceCache();
 
-		virtual void savePng(const std::string& filename) = 0;
+		virtual std::string savePng(const std::string& filename) = 0;
 
 		enum BlendMode {
 			BLEND_MODE_NONE,

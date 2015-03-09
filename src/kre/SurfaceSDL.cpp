@@ -888,12 +888,13 @@ namespace KRE
 		return dst;
 	}
 
-	void SurfaceSDL::savePng(const std::string& filename)
+	std::string SurfaceSDL::savePng(const std::string& filename)
 	{
-		auto filter = Surface::getFileFilter(FileFilterType::SAVE);
+		auto filter = Surface::getFileFilter(FileFilterType::SAVE)(filename);
 		SurfaceLock lock(shared_from_this());
-		auto err = IMG_SavePNG(surface_, filter(filename).c_str());
+		auto err = IMG_SavePNG(surface_, filter.c_str());
 		ASSERT_LOG(err == 0, "Error saving PNG file: " << SDL_GetError());
+		return filter;
 	}
 
 	void SurfaceSDL::blit(SurfacePtr src, const rect& src_rect) 

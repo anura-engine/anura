@@ -107,7 +107,7 @@ namespace KRE
 
 		virtual void setViewPort(int x, int y, int width, int height) = 0;
 
-		void saveFrameBuffer(const std::string& filename);
+		std::string saveFrameBuffer(const std::string& filename);
 
 		virtual std::vector<WindowMode> getWindowModes(std::function<bool(const WindowMode&)> mode_filter) = 0;
 		virtual WindowMode getDisplaySize() = 0;

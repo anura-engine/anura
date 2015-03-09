@@ -269,30 +269,34 @@ namespace graphics
 
 		shader_->setUniformDrawFunction(std::bind(&AnuraShader::setUniformsForDraw, this));
 
-		std::vector<std::pair<std::string, std::string>> attr_map;
-		attr_map.emplace_back("a_anura_vertex", "position");
-		attr_map.emplace_back("a_anura_texcoord", "texcoord");
-		shader_->setAttributeMapping(attr_map);
+		const variant& shader_node = shader_->getShaderVariant();
+		if(!shader_node.has_key("attributes")) {
+			std::vector<std::pair<std::string, std::string>> attr_map;
+			attr_map.emplace_back("a_anura_vertex", "position");
+			attr_map.emplace_back("a_anura_texcoord", "texcoord");
+			shader_->setAttributeMapping(attr_map);
+		}
 
-		std::vector<std::pair<std::string, std::string>> uniform_map;
-		uniform_map.emplace_back("u_anura_mvp_matrix", "mvp_matrix");
-		uniform_map.emplace_back("u_anura_color", "color");
-		shader_->setUniformMapping(uniform_map);
+		if(!shader_node.has_key("uniforms")) {
+			std::vector<std::pair<std::string, std::string>> uniform_map;
+			uniform_map.emplace_back("u_anura_mvp_matrix", "mvp_matrix");
+			uniform_map.emplace_back("u_anura_color", "color");
+			shader_->setUniformMapping(uniform_map);
+		}
 
 		uniform_commands_.reset(new UniformCommandsCallable);
 		uniform_commands_->setShader(AnuraShaderPtr(this));
 
 		// Set the draw commands here if required from shader_->getShaderVariant()
-		const variant& node = shader_->getShaderVariant();
 		game_logic::FormulaCallable* e = this;
-		if(node.has_key("draw")) {
-			const variant& d = node["draw"];
+		if(shader_node.has_key("draw")) {
+			const variant& d = shader_node["draw"];
 			if(d.is_list()) {
 				for(int n = 0; n < d.num_elements(); ++n) {
 					std::string cmd = d[n].as_string();
 					draw_commands_.push_back(cmd);
-					ASSERT_LOG(node.has_key(cmd) == true, "No attribute found with name: " << cmd);
-					draw_formulas_.push_back(e->createFormula(node[cmd]));
+					ASSERT_LOG(shader_node.has_key(cmd) == true, "No attribute found with name: " << cmd);
+					draw_formulas_.push_back(e->createFormula(shader_node[cmd]));
 				}
 			} else if(d.is_string()) {
 				draw_formulas_.push_back(e->createFormula(d));
@@ -301,14 +305,14 @@ namespace graphics
 			}
 		}
 
-		if(node.has_key("create")) {
-			const variant& c = node["create"];
+		if(shader_node.has_key("create")) {
+			const variant& c = shader_node["create"];
 			if(c.is_list()) {
 				for(int n = 0; n < c.num_elements(); ++n) {
 					std::string cmd = c[n].as_string();
 					create_commands_.push_back(cmd);
-					ASSERT_LOG(node.has_key(cmd) == true, "No attribute found with name: " << cmd);
-					create_formulas_.push_back(e->createFormula(node[cmd]));
+					ASSERT_LOG(shader_node.has_key(cmd) == true, "No attribute found with name: " << cmd);
+					create_formulas_.push_back(e->createFormula(shader_node[cmd]));
 				}
 			} else if(c.is_string()) {
 				create_formulas_.push_back(e->createFormula(c));

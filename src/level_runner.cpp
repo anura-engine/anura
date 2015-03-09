@@ -1370,12 +1370,13 @@ bool LevelRunner::play_cycle()
 					sys::write_file(preferences::save_file_path(), lvl_node.write_json(true));
 				} else if(key == SDLK_s && (mod&KMOD_ALT)) {
 #if !defined(__native_client__)
-					const std::string fname = std::string(preferences::user_data_path()) + "screenshot.png";
-					KRE::WindowManager::getMainWindow()->saveFrameBuffer("screenshot.png");
-					std::shared_ptr<upload_screenshot_info> info(new upload_screenshot_info);
-					background_task_pool::submit(
-					  std::bind(upload_screenshot, fname, info),
-					  std::bind(done_upload_screenshot, info));
+					const std::string fname = KRE::WindowManager::getMainWindow()->saveFrameBuffer("screenshot.png");
+					if(!fname.empty()) {
+						std::shared_ptr<upload_screenshot_info> info(new upload_screenshot_info);
+						background_task_pool::submit(
+						  std::bind(upload_screenshot, fname, info),
+						  std::bind(done_upload_screenshot, info));
+					}
 #endif
 				} else if(key == SDLK_l && (mod&KMOD_CTRL)) {
 					preferences::set_use_pretty_scaling(!preferences::use_pretty_scaling());

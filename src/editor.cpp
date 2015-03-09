@@ -1470,7 +1470,10 @@ void editor::handleKeyPress(const SDL_KeyboardEvent& key)
 	}
 
 	if(key.keysym.sym == SDLK_s && (key.keysym.mod&KMOD_ALT)) {
-		KRE::WindowManager::getMainWindow()->saveFrameBuffer(std::string(preferences::user_data_path()) + "screenshot.png");
+		const std::string fname = KRE::WindowManager::getMainWindow()->saveFrameBuffer("screenshot.png");
+		if(!fname.empty()) {
+			LOG_INFO("Saved screenshot(in editor) to: " << fname);
+		}
 	}
 
 	if(key.keysym.sym == SDLK_1 && key.keysym.mod&KMOD_CTRL) {

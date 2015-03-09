@@ -541,8 +541,7 @@ namespace KRE
 	{
 		GLenum convert_read_format(ReadFormat fmt)
 		{
-			switch(fmt)
-			{
+			switch(fmt) {
 			case ReadFormat::DEPTH:			return GL_DEPTH_COMPONENT;
 			case ReadFormat::STENCIL:		return GL_STENCIL_INDEX;
 			case ReadFormat::DEPTH_STENCIL:	return GL_DEPTH_STENCIL;
@@ -571,8 +570,7 @@ namespace KRE
 
 		GLenum convert_attr_format(AttrFormat type)
 		{
-			switch (type)
-			{
+			switch(type) {
 			case AttrFormat::BOOL:				return GL_BOOL;
 			case AttrFormat::HALF_FLOAT:		return GL_HALF_FLOAT;
 			case AttrFormat::FLOAT:				return GL_FLOAT;
@@ -594,14 +592,32 @@ namespace KRE
 		}
 	}
 
-	bool DisplayDeviceOpenGL::handleReadPixels(int x, int y, unsigned width, unsigned height, ReadFormat fmt, AttrFormat type, void* data, int data_size)
+	bool DisplayDeviceOpenGL::handleReadPixels(int x, int y, unsigned width, unsigned height, ReadFormat fmt, AttrFormat type, void* data, int stride)
 	{
-		glReadPixels(x, y, width, height, convert_read_format(fmt), convert_attr_format(type), data);
+		ASSERT_LOG(width > 0 && height > 0, "Width or height was negative: " << width << " x " << height);
+		LOG_DEBUG("row_pitch: " << stride);
+		std::vector<uint8_t> new_data;
+		new_data.resize(height * stride);
+		//if(pixel_size != 4) {
+		//	glPixelStorei(GL_PACK_ALIGNMENT, 1);
+		//}
+		//glPixelStorei(GL_PACK_ALIGNMENT, 4);
+		LOG_DEBUG("before read pixels");
+		glReadPixels(x, y, static_cast<int>(width), static_cast<int>(height), convert_read_format(fmt), convert_attr_format(type), &new_data[0]);
+		LOG_DEBUG("after read pixels");
 		GLenum ok = glGetError();
 		if(ok != GL_NONE) {
 			LOG_ERROR("Unable to read pixels error was: " << ok);
 			return false;
 		}
+		LOG_DEBUG("before copy");
+		uint8_t* cp_data = reinterpret_cast<uint8_t*>(data);
+		
+		for(auto it = new_data.rbegin(); it != new_data.rend(); it += stride) {
+			std::copy(it, it + stride, cp_data);
+			cp_data += stride;
+		}
+		LOG_DEBUG("after copy");
 		return true;
 	}
 

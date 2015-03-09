@@ -197,7 +197,7 @@ namespace KRE
 		void lock() override;
 		void unlock() override;
 
-		void savePng(const std::string& filename) override;
+		std::string savePng(const std::string& filename) override;
 
 		SDL_Surface* get() { return surface_; }
 	private:

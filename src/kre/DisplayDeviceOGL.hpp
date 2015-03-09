@@ -99,7 +99,7 @@ namespace KRE
 		TexturePtr handleCreateTextureArray(int count, int width, int height, PixelFormat::PF fmt, TextureType type) override;
 		TexturePtr handleCreateTextureArray(const std::vector<SurfacePtr>& surfaces, const variant& node) override;
 
-		bool handleReadPixels(int x, int y, unsigned width, unsigned height, ReadFormat fmt, AttrFormat type, void* data, int data_size) override;
+		bool handleReadPixels(int x, int y, unsigned width, unsigned height, ReadFormat fmt, AttrFormat type, void* data, int stride) override;
 
 		std::set<std::string> extensions_;
 

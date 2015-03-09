@@ -97,10 +97,11 @@ UTILITY(render_level)
 
 				wnd->swap();
 
-				std::vector<uint8_t> data;
-				KRE::DisplayDevice::getCurrent()->readPixels(0, 0, seg_width, seg_height, KRE::ReadFormat::RGB, KRE::AttrFormat::BYTE, data);
-
 				auto s = KRE::Surface::create(seg_width, seg_height, KRE::PixelFormat::PF::PIXELFORMAT_RGB24);
+
+				std::vector<uint8_t> data;
+				KRE::DisplayDevice::getCurrent()->readPixels(0, 0, seg_width, seg_height, KRE::ReadFormat::RGB, KRE::AttrFormat::BYTE, data, s->rowPitch());
+
 				s->writePixels(&data[0], data.size());
 				
 				// XXX double check the logic below for pixel ordering.
