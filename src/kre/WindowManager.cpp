@@ -420,31 +420,34 @@ namespace KRE
 
 	namespace
 	{
-		std::map<unsigned,WindowManagerPtr>& get_window_list()
+		std::map<unsigned,std::weak_ptr<WindowManager>>& get_window_list()
 		{
-			static std::map<unsigned,WindowManagerPtr> res;
+			static std::map<unsigned,std::weak_ptr<WindowManager>> res;
 			return res;
 		}
 
-		WindowManagerPtr main_window = nullptr;
+		std::weak_ptr<WindowManager>& get_main_window()
+		{
+			static std::weak_ptr<WindowManager> res;
+			return res;
+		}
+		
 	}
 
 	void WindowManager::createWindow(int width, int height)
 	{
 		doCreateWindow(width, height);
+
+		get_window_list()[getWindowID()] = shared_from_this();
+		// We consider the first window created the main one.
+		if(get_main_window().lock() == nullptr) {
+			get_main_window() = shared_from_this();
+		}
+		LOG_DEBUG("Added window with id: " << getWindowID());
 	}
 
 	void WindowManager::destroyWindow()
 	{
-		if(!get_window_list().empty()) {
-			for(auto it = get_window_list().begin(); it != get_window_list().end(); ) {
-				if(it->second.get() == this) {
-					get_window_list().erase(it++);
-				} else {
-					++it;
-				}
-			}
-		}
 		doDestroyWindow();
 	}
 
@@ -477,12 +480,6 @@ namespace KRE
 		// at the moment, so we just return it. We could use hint in the
 		// future if we had more.
 		WindowManagerPtr wm = std::make_shared<SDLWindowManager>(title, hints);
-		get_window_list()[wm->getWindowID()] = wm;
-		// We consider the first window created the main one.
-		if(main_window == nullptr) {
-			main_window = wm;
-		}
-		LOG_DEBUG("Added window with id: " << wm->getWindowID());
 		return wm;
 	}
 
@@ -491,14 +488,14 @@ namespace KRE
 		std::vector<WindowManagerPtr> res;
 		auto it = get_window_list().begin();
 		for(auto w : get_window_list()) {
-			res.push_back(w.second);
+			res.push_back(w.second.lock());
 		}
 		return res;
 	}
 
 	WindowManagerPtr WindowManager::getMainWindow()
 	{
-		return main_window;
+		return get_main_window().lock();
 	}
 
 	WindowManagerPtr WindowManager::getWindowFromID(unsigned id)
@@ -508,6 +505,6 @@ namespace KRE
 		if(it == get_window_list().end()) {
 			return nullptr;
 		}
-		return it->second;
+		return it->second.lock();
 	}
 }

@@ -52,7 +52,7 @@ namespace KRE
 		return lhs.width == rhs.width && lhs.height == rhs.height;
 	}
 
-	class WindowManager
+	class WindowManager : public std::enable_shared_from_this<WindowManager>
 	{
 	public:
 		explicit WindowManager(const std::string& title);
