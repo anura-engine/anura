@@ -732,7 +732,6 @@ namespace graphics
 			width_(1.0f),
 			has_stroke_(false)
 	{
-		ASSERT_LOG(false, "LinePrimitive::LinePrimitive()");
 		if(node.has_key("p1") && node.has_key("p2")) {
 			point p1(node["p1"]);
 			x1_ = p1.x;
