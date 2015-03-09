@@ -23,23 +23,11 @@
 
 #pragma once
 
-#include "SceneObject.hpp"
-
-#include "anura_shader.hpp"
-#include "draw_primitive_fwd.hpp"
-#include "formula_callable.hpp"
-#include "formula_callable_definition.hpp"
+#include <boost/intrusive_ptr.hpp>
 
 namespace graphics
 {
-	class DrawPrimitive : public game_logic::FormulaCallable, public KRE::SceneObject
-	{
-	public:
-		static boost::intrusive_ptr<DrawPrimitive> create(const variant& v);
-		explicit DrawPrimitive(const variant& v);
-		AnuraShaderPtr getAnuraShader() const { return shader_; }
-	private:
-		DECLARE_CALLABLE(DrawPrimitive);
-		AnuraShaderPtr shader_;
-	};
+	class DrawPrimitive;
+	typedef boost::intrusive_ptr<DrawPrimitive> DrawPrimitivePtr;
+	typedef boost::intrusive_ptr<const DrawPrimitive> ConstDrawPrimitivePtr;
 }

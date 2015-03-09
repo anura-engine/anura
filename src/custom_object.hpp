@@ -31,7 +31,7 @@
 #include "anura_shader.hpp"
 #include "blur.hpp"
 #include "custom_object_type.hpp"
-#include "draw_primitive.hpp"
+#include "draw_primitive_fwd.hpp"
 #include "draw_scene.hpp"
 #include "entity.hpp"
 #include "formula.hpp"

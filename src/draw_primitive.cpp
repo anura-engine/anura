@@ -61,6 +61,9 @@ namespace graphics
 
 		void RectPrimitive::init()
 		{
+			if(getAnuraShader() == nullptr) {
+				setShader(KRE::ShaderProgram::getProgram("simple"));
+			}
 			std::vector<glm::vec2> varray;
 			varray.emplace_back(area_.x(), area_.y());
 			varray.emplace_back(area_.x2(),area_.y());
@@ -77,6 +80,7 @@ namespace graphics
 			ab->setDrawMode(KRE::DrawMode::TRIANGLE_STRIP);
 			addAttributeSet(ab);
 
+			ab->setCount(varray.size());
 			pos->update(&varray);
 
 			setColor(color_);
@@ -728,6 +732,7 @@ namespace graphics
 			width_(1.0f),
 			has_stroke_(false)
 	{
+		ASSERT_LOG(false, "LinePrimitive::LinePrimitive()");
 		if(node.has_key("p1") && node.has_key("p2")) {
 			point p1(node["p1"]);
 			x1_ = p1.x;
@@ -771,12 +776,12 @@ namespace graphics
 		v1array_.emplace_back(static_cast<float>(x2_), static_cast<float>(y2_));
 		v1array_.emplace_back(static_cast<float>(x1_ + wx_half), static_cast<float>(y1_ - wy_half));
 		v1array_.emplace_back(static_cast<float>(x2_ + wx_half), static_cast<float>(y2_ - wy_half));
-		carray_.emplace_back(color1_.r(), color1_.g(), color1_.b(), 0);
-		carray_.emplace_back(color2_.r(), color2_.g(), color2_.b(), 0);
-		carray_.emplace_back(color1_.r(), color1_.g(), color1_.b(), color1_.a());
-		carray_.emplace_back(color2_.r(), color2_.g(), color2_.b(), color2_.a());
-		carray_.emplace_back(color1_.r(), color1_.g(), color1_.b(), 0);
-		carray_.emplace_back(color2_.r(), color2_.g(), color2_.b(), 0);
+		carray_.emplace_back(color1_.ri(), color1_.gi(), color1_.bi(), 0);
+		carray_.emplace_back(color2_.ri(), color2_.gi(), color2_.bi(), 0);
+		carray_.emplace_back(color1_.ri(), color1_.gi(), color1_.bi(), color1_.ai());
+		carray_.emplace_back(color2_.ri(), color2_.gi(), color2_.bi(), color2_.ai());
+		carray_.emplace_back(color1_.ri(), color1_.gi(), color1_.bi(), 0);
+		carray_.emplace_back(color2_.ri(), color2_.gi(), color2_.bi(), 0);
 		v2array_.emplace_back(static_cast<float>(x1_ - wx_half), static_cast<float>(y1_ + wy_half));
 		v2array_.emplace_back(static_cast<float>(x2_ - wx_half), static_cast<float>(y2_ + wy_half));
 		v2array_.emplace_back(static_cast<float>(x2_ + wx_half), static_cast<float>(y2_ - wy_half));
@@ -869,7 +874,16 @@ namespace graphics
 	DrawPrimitive::DrawPrimitive(const variant& node)
 		: SceneObject(node)
 	{
-		setShader(KRE::ShaderProgram::getProgram("attr_color_shader"));
+		if(node.has_key("shader")) {
+			if(node["shader"].is_string()) {
+				shader_.reset(new AnuraShader(node["shader"].as_string()));
+			} else {
+				shader_.reset(new AnuraShader(node["shader"]["name"].as_string(), node["shader"]));
+			}
+			setShader(shader_->getShader());
+		} else {
+			setShader(KRE::ShaderProgram::getProgram("attr_color_shader"));
+		}
 	}
 
 	BEGIN_DEFINE_CALLABLE_NOBASE(DrawPrimitive)

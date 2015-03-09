@@ -30,7 +30,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "draw_primitive.hpp"
+#include "draw_primitive_fwd.hpp"
 #include "formula_callable.hpp"
 #include "formula_callable_definition.hpp"
 #include "geometry.hpp"
