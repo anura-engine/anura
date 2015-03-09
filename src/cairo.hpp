@@ -43,7 +43,7 @@ namespace graphics
 		~cairo_context();
 
 		cairo_t* get() const;
-		KRE::TexturePtr write() const;
+		KRE::TexturePtr write(const variant& node) const;
 	
 		void render_svg(const std::string& fname, int w, int h);
 		void write_png(const std::string& fname);

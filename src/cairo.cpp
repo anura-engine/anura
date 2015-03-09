@@ -197,16 +197,19 @@ namespace graphics
 		return cairo_;
 	}
 
-	KRE::TexturePtr cairo_context::write() const
+	KRE::TexturePtr cairo_context::write(const variant& node) const
 	{
-		auto tex = KRE::Texture::createTexture2D(width_, height_, KRE::PixelFormat::PF::PIXELFORMAT_ARGB8888);
-		tex->update2D(0, 0, 0, width_, height_, cairo_image_surface_get_width(surface_),cairo_image_surface_get_data(surface_));
+		auto surf = KRE::Surface::create(width_, height_, KRE::PixelFormat::PF::PIXELFORMAT_ARGB8888);
+		surf->writePixels(cairo_image_surface_get_data(surface_), cairo_image_surface_get_stride(surface_) * height_);
+		surf->createAlphaMap();
+		return KRE::Texture::createTexture(surf, node);
+		//tex->update2D(0, 0, 0, width_, height_, cairo_image_surface_get_stride(surface_), cairo_image_surface_get_data(surface_));
 		// Use the blend mode below to give correct for pre-multiplied alpha.
 		// If that doesn't work satisfactorily, then creating a texture with PIXELFORMAT_XRGB8888
 		// might be a better option. 
 		// Naturally if you had the luxury a shader that just ignored the texture alpha would work
 		// just as well.
-		return tex;
+		//return tex;
 	}
 
 	void cairo_context::render_svg(const std::string& fname, int w, int h)
@@ -806,7 +809,7 @@ namespace graphics
 		context.render_svg(args[0].as_string(), args[1].as_int(), args[2].as_int());
 	END_CAIRO_FN
 
-	BEGIN_DEFINE_FN(render, "(int, int, cairo_commands) ->builtin texture_object")
+	BEGIN_DEFINE_FN(render, "(int, int, cairo_commands, map|null=null) ->builtin texture_object")
 		const int w = FN_ARG(0).as_int();
 		const int h = FN_ARG(1).as_int();
 		ASSERT_LOG(w > 0 && h > 0, "Invalid canvas render: " << w << "x" << h);
@@ -815,7 +818,7 @@ namespace graphics
 		variant ops = FN_ARG(2);
 		execute_cairo_ops(context, ops);
 
-		return variant(new TextureObject(context.write()));
+		return variant(new TextureObject(context.write(NUM_FN_ARGS > 3 ? FN_ARG(3) : variant())));
 	END_DEFINE_FN
 
 	BEGIN_CAIRO_FN(new_path, "()")
@@ -1548,7 +1551,7 @@ END_CAIRO_FN
 			}
 
 
-			return context.write();
+			return context.write(variant());
 		}
 	}
 }
