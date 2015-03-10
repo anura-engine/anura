@@ -70,11 +70,14 @@ public:
 	}
 };
 
+//A map of base object filename -> full file paths.
+//the base filename might include module prefixes.
 std::map<std::string, std::string>& object_file_paths() {
 	static std::map<std::string, std::string> paths;
 	return paths;
 }
 
+//The undecorated path under which we will find object definitions.
 const std::string& object_path() {
 	if(preferences::load_compiled()) {
 		static const std::string value =  "data/compiled/objects";
