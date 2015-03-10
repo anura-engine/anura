@@ -1035,9 +1035,16 @@ namespace KRE
 		{
 			auto& sf = get_shader_factory();
 
+			if(node.has_key("name") && !node.has_key("vertex") && !node.has_key("fragment")) {
+				std::string name = node["name"].as_string();
+				auto it = sf.find(name);
+				ASSERT_LOG(it != sf.end(), "Unable to find shader '" << name << "'");
+				return it->second;
+			}
+
 			ASSERT_LOG(node.is_map(), "instance must be a map.");
 			ASSERT_LOG(node.has_key("fragment") && node.has_key("vertex") && node.has_key("name"), 
-				"instances must have 'fragment', 'vertex' and 'name' attributes.");
+				"instances must have 'fragment', 'vertex' and 'name' attributes. " << node.to_debug_string());
 		
 			const std::string& name = node["name"].as_string();
 			const std::string& vert_data = node["vertex"].as_string();

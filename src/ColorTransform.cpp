@@ -118,10 +118,10 @@ namespace KRE
 
 	ColorTransform::ColorTransform(int ar, int ag, int ab, int aa)
 	{
-		mul_rgba_[0] = 0;
-		mul_rgba_[1] = 0;
-		mul_rgba_[2] = 0;
-		mul_rgba_[3] = 0;
+		mul_rgba_[0] = 1.0f;
+		mul_rgba_[1] = 1.0f;
+		mul_rgba_[2] = 1.0f;
+		mul_rgba_[3] = 1.0f;
 		add_rgba_[0] = ar/255.0f;
 		add_rgba_[1] = ag/255.0f;
 		add_rgba_[2] = ab/255.0f;
@@ -138,10 +138,10 @@ namespace KRE
 			a.mulGreen() * b.mulGreen(),
 			a.mulBlue() * b.mulBlue(),
 			a.mulAlpha() * b.mulAlpha(),
-			a.addRed() + b.addRed(),
-			a.addGreen() + b.addGreen(),
-			a.addBlue() + b.addBlue(),
-			a.addAlpha() + b.addAlpha());
+			a.addRedf() + b.addRedf(),
+			a.addGreenf() + b.addGreenf(),
+			a.addBluef() + b.addBluef(),
+			a.addAlphaf() + b.addAlphaf());
 	}
 
 	ColorTransform operator-(const ColorTransform& a, const ColorTransform& b)
@@ -150,38 +150,38 @@ namespace KRE
 			a.mulGreen() * b.mulGreen(),
 			a.mulBlue() * b.mulBlue(),
 			a.mulAlpha() * b.mulAlpha(),
-			a.addRed() - b.addRed(),
-			a.addGreen() - b.addGreen(),
-			a.addBlue() - b.addBlue(),
-			a.addAlpha() - b.addAlpha());
+			a.addRedf() - b.addRedf(),
+			a.addGreenf() - b.addGreenf(),
+			a.addBluef() - b.addBluef(),
+			a.addAlphaf() - b.addAlphaf());
 	}
 
 	ColorTransform operator-(const ColorTransform& a, const Color& color)
 	{
 		ColorTransform result = a;
 
-		if(a.addRed() > color.red()) {
+		if(a.addRedf() > color.red()) {
 			result.setAddRed(a.addRed() - color.red());
 		} else {
 			result.setAddRed(0);
 		}
-		if(a.addGreen() > color.green()) {
+		if(a.addGreenf() > color.green()) {
 			result.setAddGreen(a.addGreen() - color.green());
 		} else {
 			result.setAddGreen(0);
 		}
-		if(a.addBlue() > color.blue()) {
+		if(a.addBluef() > color.blue()) {
 			result.setAddBlue(a.addBlue() - color.blue());
 		} else {
 			result.setAddBlue(0);
 		}
-		if(a.addAlpha() > color.alpha()) {
+		if(a.addAlphaf() > color.alpha()) {
 			result.setAddAlpha(a.addAlpha() - color.alpha());
 		} else {
 			result.setAddAlpha(0);
 		}
 
-		if(result.addAlpha() > 255) {
+		if(result.addAlphaf() > 255) {
 			result.setAddAlpha(255);
 		}
 
@@ -288,10 +288,10 @@ namespace KRE
 
 	bool operator==(const ColorTransform& a, const ColorTransform& b)
 	{
-		return std::abs(a.addRed()-b.addRed())<FLT_EPSILON 
-			&& std::abs(a.addGreen()-b.addGreen())<FLT_EPSILON 
-			&& std::abs(a.addBlue()-b.addBlue())<FLT_EPSILON 
-			&& std::abs(a.addAlpha()-b.addAlpha())<FLT_EPSILON 
+		return std::abs(a.addRedf()-b.addRedf())<FLT_EPSILON 
+			&& std::abs(a.addGreenf()-b.addGreenf())<FLT_EPSILON 
+			&& std::abs(a.addBluef()-b.addBluef())<FLT_EPSILON 
+			&& std::abs(a.addAlphaf()-b.addAlphaf())<FLT_EPSILON 
 			&& std::abs(a.mulRed()-b.mulRed())<FLT_EPSILON 
 			&& std::abs(a.mulGreen()-b.mulGreen())<FLT_EPSILON 
 			&& std::abs(a.mulBlue()-b.mulBlue())<FLT_EPSILON 

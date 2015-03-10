@@ -34,11 +34,9 @@ class TextureObject : public game_logic::FormulaCallable
 {
 public:
 	explicit TextureObject(KRE::TexturePtr texture);
-	~TextureObject();
-	const KRE::TexturePtr& texture() const { return texture_; }
+	KRE::TexturePtr texture() const { return texture_; }
 private:
 	DECLARE_CALLABLE(TextureObject);
-	DISALLOW_COPY_ASSIGN_AND_DEFAULT(TextureObject);
 	KRE::TexturePtr texture_;
 };
 

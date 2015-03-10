@@ -228,7 +228,7 @@ namespace gui
 
 	bool RichTextLabel::handleEvent(const SDL_Event& event, bool claimed)
 	{
-		claimed = ScrollableWidget::processEvent(event, claimed);
+		claimed = ScrollableWidget::handleEvent(event, claimed);
 
 		SDL_Event ev = event;
 		normalizeEvent(&ev);

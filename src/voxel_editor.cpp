@@ -986,10 +986,10 @@ void iso_renderer::render_fbo()
 			varray.push_back(pos[n%3]+vertex[n]);
 			narray.push_back(normal[n]);
 			if(n%3 == 0) {
-				carray.push_back(color.r()/255.0f); 
-				carray.push_back(color.g()/255.0f); 
-				carray.push_back(color.b()/255.0f); 
-				carray.push_back(color.a()/255.0f);
+				carray.push_back(color.r()); 
+				carray.push_back(color.g()); 
+				carray.push_back(color.b()); 
+				carray.push_back(color.a());
 			}
 		}
 	}

@@ -319,10 +319,10 @@ namespace graphics
 		DEFINE_FIELD(color, "[decimal,decimal,decimal,decimal]")
 			std::vector<variant> result;
 			result.resize(4);
-			result[0] = variant(obj.color.r()/255.0);
-			result[1] = variant(obj.color.g()/255.0);
-			result[2] = variant(obj.color.b()/255.0);
-			result[3] = variant(obj.color.a()/255.0);
+			result[0] = variant(obj.color.r());
+			result[1] = variant(obj.color.g());
+			result[2] = variant(obj.color.b());
+			result[3] = variant(obj.color.a());
 			return variant(&result);
 	END_DEFINE_CALLABLE(cairo_text_fragment)
 

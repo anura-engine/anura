@@ -24,6 +24,8 @@ namespace graphics
 		void setDrawMode(KRE::DrawMode dmode);
 		KRE::GenericAttributePtr getAttributeOrDie(int attr);
 	private:
+		ShaderRenderable(const ShaderRenderable&);
+		void operator=(const ShaderRenderable&);
 		std::map<int, KRE::GenericAttributePtr> attrs_;
 	};
 

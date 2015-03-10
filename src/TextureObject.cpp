@@ -33,10 +33,6 @@ TextureObject::TextureObject(KRE::TexturePtr texture)
 {
 }
 
-TextureObject::~TextureObject()
-{
-}
-
 BEGIN_DEFINE_CALLABLE_NOBASE(TextureObject)
 
 DEFINE_FIELD(id, "int")

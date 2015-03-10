@@ -1562,6 +1562,23 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 		LOG_DEBUG("Added shader '" << shader_->getName() << "' for CustomObjectType '" << id_ << "'");
 	}
 
+	if(node.has_key("effects")) {
+		if(node["effects"].is_list()) {
+			for(int n = 0; n != node["effects"].num_elements(); ++n) {
+				const variant& eff = node["effects"][n];
+				if(eff.is_string()) {
+					effects_shaders_.emplace_back(new graphics::AnuraShader(eff.as_string()));
+				} else {
+					effects_shaders_.emplace_back(new graphics::AnuraShader(eff["name"].as_string(), eff));
+				}
+			}
+		} else if(node["effects"].is_string()) {
+			effects_shaders_.emplace_back(new graphics::AnuraShader(node["effects"].as_string()));
+		} else if(node["effects"].is_map()) {
+			effects_shaders_.emplace_back(new graphics::AnuraShader(node["effects"]["name"].as_string(), node["effects"]));
+		}
+	}
+
 	if(base_type) {
 		//if we're a variation, just get the functions from our base type.
 		//variations can't define new functions.

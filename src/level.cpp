@@ -2071,13 +2071,13 @@ void Level::frameBufferEnterZorder(int zorder) const
 			}
 
 			if(add_shaders) {
-				LOG_DEBUG("Added " << count << " at zorder: " << zorder);
+				//LOG_DEBUG("Added " << count << " at zorder: " << zorder);
 				//this works if we're adding and removing shaders.
 				rt_->renderToThis();
 				rt_->setClearColor(KRE::Color(0,0,0,0));
 				rt_->clear();
 			} else {
-				LOG_DEBUG("Removed " << (active_fb_shaders_.size() - shaders.size()) << " shaders at zorder: " << zorder);
+				//LOG_DEBUG("Removed " << (active_fb_shaders_.size() - shaders.size()) << " shaders at zorder: " << zorder);
 				//we must just be removing shaders.
 				for(auto& s : active_fb_shaders_) {
 					if(std::count(shaders.begin(), shaders.end(), s) == 0) {

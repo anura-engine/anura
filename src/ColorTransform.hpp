@@ -49,10 +49,15 @@ namespace KRE
 		float mulBlue() const { return mul_rgba_[2]; }
 		float mulAlpha() const { return mul_rgba_[3]; }
 
-		float addRed() const { return add_rgba_[0]; }
-		float addGreen() const { return add_rgba_[1]; }
-		float addBlue() const { return add_rgba_[2]; }
-		float addAlpha() const { return add_rgba_[3]; }
+		float addRedf() const { return add_rgba_[0]; }
+		float addGreenf() const { return add_rgba_[1]; }
+		float addBluef() const { return add_rgba_[2]; }
+		float addAlphaf() const { return add_rgba_[3]; }
+
+		int addRed() const { return static_cast<int>(add_rgba_[0]*255.0f); }
+		int addGreen() const { return static_cast<int>(add_rgba_[1]*255.0f); }
+		int addBlue() const { return static_cast<int>(add_rgba_[2]*255.0f); }
+		int addAlpha() const { return static_cast<int>(add_rgba_[3]*255.0f); }
 
 		void setAddRed(int ar);
 		void setAddGreen(int ag);

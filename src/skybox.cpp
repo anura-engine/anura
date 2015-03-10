@@ -121,7 +121,7 @@ namespace graphics
 		glUniformMatrix4fv(u_p_inverse_matrix_, 1, GL_FALSE, glm::value_ptr(p_inv));
 
 		glUniform1i(u_texture_id_, 0);
-		glUniform4f(u_color_, color_.r()/255.0f, color_.g()/255.0f, color_.b()/255.0f, color_.a()/255.0f);
+		glUniform4f(u_color_, color_.r(), color_.g(), color_.b(), color_.a());
 
 		const GLfloat cube_verts[] = {
 			 1.0f, -1.0f, 0.0f, 

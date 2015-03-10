@@ -362,7 +362,7 @@ namespace gui
 
 	bool TreeViewWidget::handleEvent(const SDL_Event& event, bool claimed)
 	{
-		claimed = ScrollableWidget::processEvent(event, claimed);
+		claimed = ScrollableWidget::handleEvent(event, claimed);
 
 		rect r(x(), y(), width(), height());
 		if(!claimed && allow_selection_) {

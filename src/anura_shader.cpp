@@ -98,7 +98,7 @@ namespace graphics
 				tex_->texture()->bind(binding_point_);
 			}
 		private:
-			TextureObject* tex_;
+			boost::intrusive_ptr<TextureObject> tex_;
 			int binding_point_;
 		};
 
@@ -286,6 +286,7 @@ namespace graphics
 	void AnuraShader::init()
 	{
 		ASSERT_LOG(shader_ != nullptr, "No shader is set.");
+		ASSERT_LOG(!name_.empty(), "Name was empty");
 		u_anura_discard_ = shader_->getUniform("u_anura_discard");
 		u_anura_tex_map_ = shader_->getUniform("u_anura_tex_map");
 		u_anura_mvp_matrix_ = shader_->getUniform("u_anura_mvp_matrix");
@@ -380,6 +381,7 @@ namespace graphics
 		//	shader_->setUniformValue(u_anura_mvp_matrix_, glm::value_ptr(mvp_matrix_));
 		//}
 		if(u_anura_sprite_area_ != KRE::ShaderProgram::INALID_UNIFORM) {
+			//LOG_DEBUG("'" << getName() << "' set sprite area: " << sprite_area_[0] << "," << sprite_area_[1] << "," << sprite_area_[2] << "," << sprite_area_[3]);
 			shader_->setUniformValue(u_anura_sprite_area_, glm::value_ptr(sprite_area_));
 		}
 		if(u_anura_draw_area_ != KRE::ShaderProgram::INALID_UNIFORM) {
@@ -398,6 +400,7 @@ namespace graphics
 		for(auto& u : uniforms_to_set_) {
 			if(u.first != KRE::ShaderProgram::INALID_UNIFORM) {
 				shader_->setUniformFromVariant(u.first, u.second);
+				//LOG_DEBUG("'" << getName() << "' set " << u.first << " : " << u.second.to_debug_string());
 			}
 		}
 	}
@@ -656,6 +659,7 @@ namespace graphics
 		ASSERT_LOG(loc != ShaderProgram::INALID_ATTRIBUTE, "No attribute with name '" << name << "' in shader.");
 		getAttributeSet().back()->addAttribute(attr);
 		attrs_[loc] = attr;
+		LOG_DEBUG("Added attribute at " << loc << " : " << name << "  ; " << this);
 	}
 
 	void ShaderRenderable::clearAttributes()
@@ -673,7 +677,13 @@ namespace graphics
 	KRE::GenericAttributePtr ShaderRenderable::getAttributeOrDie(int attr)
 	{
 		auto it = attrs_.find(attr);
-		ASSERT_LOG(it != attrs_.end(), "Unable to find attribute: " << attr);
+		if(it == attrs_.end()) {
+			std::ostringstream ss;
+			for(auto& a : attrs_) {
+				ss << "{ " << a.first << ":" << a.second << "},";
+			}
+			ASSERT_LOG(false, "Unable to find attribute: " << attr << " : " << ss.str() << "  ; " << this);
+		}
 		return it->second;
 	}
 
