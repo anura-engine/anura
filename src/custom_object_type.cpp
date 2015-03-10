@@ -574,6 +574,10 @@ void custom_object_type::set_player_variant_type(variant type_str)
 
 formula_callable_definition_ptr custom_object_type::get_definition(const std::string& id)
 {
+	if(object_file_paths().empty()) {
+		load_file_paths();
+	}
+
 	std::map<std::string, formula_callable_definition_ptr>::const_iterator itor = object_type_definitions().find(id);
 	if(itor != object_type_definitions().end()) {
 		return itor->second;
