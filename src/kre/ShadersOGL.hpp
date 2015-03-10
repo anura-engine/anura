@@ -100,6 +100,7 @@ namespace KRE
 			void makeActive() override;
 
 			void configureActives(AttributeSetPtr attrset) override;
+			void configureAttribute(AttributeBasePtr attr) override;
 			void configureUniforms(UniformBufferBase& uniforms) override;
 
 			void setAlternateUniformName(const std::string& name, const std::string& alt_name);

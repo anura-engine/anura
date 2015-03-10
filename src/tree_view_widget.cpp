@@ -315,7 +315,7 @@ namespace gui
 			w->draw(offsx, offsy, getRotation(), getScale());
 		}
 
-		ScrollableWidget::draw();
+		ScrollableWidget::handleDraw();
 	}
 
 	int TreeViewWidget::getRowAt(int xpos, int ypos) const

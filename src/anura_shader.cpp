@@ -26,6 +26,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "Blend.hpp"
+#include "ColorScope.hpp"
 #include "ModelMatrixScope.hpp"
 
 #include "anura_shader.hpp"
@@ -88,22 +89,24 @@ namespace graphics
 		class BindTextureCommand : public game_logic::CommandCallable
 		{
 		public:
-			explicit BindTextureCommand(TextureObject* tex)
-				: tex_(tex)
+			explicit BindTextureCommand(TextureObject* tex, int bind_point)
+				: tex_(tex),
+				  binding_point_(bind_point)
 			{}
 			virtual void execute(FormulaCallable& ob) const
 			{
-				tex_->texture()->bind();
+				tex_->texture()->bind(binding_point_);
 			}
 		private:
 			TextureObject* tex_;
+			int binding_point_;
 		};
 
 		class BindTextureFunction : public game_logic::FunctionExpression 
 		{
 		public:
 			explicit BindTextureFunction(const args_list& args)
-			 : FunctionExpression("bind_texture", args, 1, 1)
+			 : FunctionExpression("bind_texture", args, 1, 2)
 			{}
 		private:
 			variant execute(const game_logic::FormulaCallable& variables) const 
@@ -111,7 +114,8 @@ namespace graphics
 				variant tex = args()[0]->evaluate(variables);
 				TextureObject* tex_obj = tex.try_convert<TextureObject>();
 				ASSERT_LOG(tex_obj != nullptr, "Unable to convert parameter to type TextureObject* in bind_texture.");
-				return variant(new BindTextureCommand(tex_obj));
+				int binding_point = args().size() > 1 ? args()[1]->evaluate(variables).as_int32() : 0;
+				return variant(new BindTextureCommand(tex_obj, binding_point));
 			}
 		};
 
@@ -119,14 +123,14 @@ namespace graphics
 		{
 		public:
 			explicit LoadTextureFunction(const args_list& args)
-			 : FunctionExpression("load_texture", args, 1, 1)
+			 : FunctionExpression("load_texture", args, 1, 2)
 			{}
 		private:
 			variant execute(const game_logic::FormulaCallable& variables) const 
 			{
 				game_logic::Formula::failIfStaticContext();
 				const std::string filename = module::map_file(args()[0]->evaluate(variables).as_string());
-				auto tex = KRE::Texture::createTexture(filename);
+				auto tex = KRE::Texture::createTexture(filename, args().size() > 1 ? args()[1]->evaluate(variables) : variant());
 				return variant(new TextureObject(tex));
 			}
 		};
@@ -314,6 +318,8 @@ namespace graphics
 		attribute_commands_.reset(new AttributeCommandsCallable);
 		attribute_commands_->setShader(AnuraShaderPtr(this));
 
+		renderable_.setShader(shader_);
+
 		// Set the draw commands here if required from shader_->getShaderVariant()
 		game_logic::FormulaCallable* e = this;
 		if(shader_node.has_key("draw")) {
@@ -347,8 +353,6 @@ namespace graphics
 				ASSERT_LOG(false, "draw must be string or list, found: " << c.to_debug_string());
 			}
 		}
-
-		renderable_.setShader(shader_);
 	}
 
 	void AnuraShader::setDrawArea(const rect& draw_area)
@@ -425,6 +429,11 @@ namespace graphics
 			for(int n = 0; n != value.num_elements(); ++n) {
 				obj.renderable_.addAttribute(value[n]);
 			}
+		DEFINE_FIELD(color, "[decimal]")
+			if(obj.renderable_.isColorSet()) {
+				return obj.renderable_.getColor().write();
+			} 
+			return KRE::ColorScope::getCurrentColor().write();
 	END_DEFINE_CALLABLE(AnuraShader)
 
 	void AnuraShader::clear()
@@ -532,7 +541,20 @@ namespace graphics
 				cmd.value = cmd.value + variant(1);
 			}
 
-			program_->attributes_to_set_[cmd.target] = cmd.value;
+			if(cmd.value.is_callable()) {
+				boost::intrusive_ptr<game_logic::FloatArrayCallable> f = cmd.value.try_convert<game_logic::FloatArrayCallable>();
+				if(f != nullptr) {
+					cmd.attr_target->update(&f->floats()[0], f->num_elements());
+					continue;
+				}
+				boost::intrusive_ptr<game_logic::ShortArrayCallable> s = cmd.value.try_convert<game_logic::ShortArrayCallable>();
+				if(s != nullptr) {
+					cmd.attr_target->update(&s->shorts()[0], s->num_elements());
+					continue;
+				}
+			} else {
+				ASSERT_LOG(false, "XXX no support for normal variants-- yet");
+			}
 		}
 	}
 
@@ -557,6 +579,7 @@ namespace graphics
 			attribute_commands_.push_back(DrawCommand());
 			target = &attribute_commands_.back();
 			target->target = program_->shader_->getAttribute(key);
+			target->attr_target = program_->renderable_.getAttributeOrDie(target->target);
 		}
 
 		if(value.is_map()) {
@@ -590,6 +613,7 @@ namespace graphics
 
 	void ShaderRenderable::addAttribute(const variant& node)
 	{
+		ASSERT_LOG(getShader() != nullptr, "shader was null.");
 		using namespace KRE;
 
 		int num_components = 2;
@@ -627,8 +651,11 @@ namespace graphics
 
 		auto attr = std::make_shared<GenericAttribute>(AccessFreqHint::DYNAMIC, AccessTypeHint::DRAW);
 		attr->addAttributeDesc(desc);
+		getShader()->configureAttribute(attr);
+		auto loc = attr->getAttrDesc().back().getLocation();
+		ASSERT_LOG(loc != ShaderProgram::INALID_ATTRIBUTE, "No attribute with name '" << name << "' in shader.");
 		getAttributeSet().back()->addAttribute(attr);
-		attrs_[name] = attr;
+		attrs_[loc] = attr;
 	}
 
 	void ShaderRenderable::clearAttributes()
@@ -642,5 +669,13 @@ namespace graphics
 	{
 		getAttributeSet().back()->setDrawMode(dmode);
 	}
+
+	KRE::GenericAttributePtr ShaderRenderable::getAttributeOrDie(int attr)
+	{
+		auto it = attrs_.find(attr);
+		ASSERT_LOG(it != attrs_.end(), "Unable to find attribute: " << attr);
+		return it->second;
+	}
+
 }
 

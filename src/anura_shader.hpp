@@ -2,7 +2,9 @@
 
 #include "geometry.hpp"
 #include "Color.hpp"
+#include "SceneObject.hpp"
 #include "Shaders.hpp"
+#include "WindowManagerFwd.hpp"
 
 #include "entity_fwd.hpp"
 #include "formula_callable.hpp"
@@ -20,8 +22,9 @@ namespace graphics
 		void addAttribute(const variant& node);
 		void clearAttributes();
 		void setDrawMode(KRE::DrawMode dmode);
+		KRE::GenericAttributePtr getAttributeOrDie(int attr);
 	private:
-		std::map<std::string, KRE::GenericAttributePtr> attrs_;
+		std::map<int, KRE::GenericAttributePtr> attrs_;
 	};
 
 	class AnuraShader : public game_logic::FormulaCallable
@@ -67,6 +70,7 @@ namespace graphics
 			DrawCommand();
 			std::string name;
 			int target;
+			KRE::GenericAttributePtr attr_target;
 			bool increment;
 			variant value;
 		};
@@ -132,7 +136,6 @@ namespace graphics
 		int zorder_;
 
 		std::map<int, variant> uniforms_to_set_;
-		std::map<int, variant> attributes_to_set_;
 
 		std::string name_;
 		

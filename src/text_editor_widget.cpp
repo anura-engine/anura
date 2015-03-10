@@ -1666,7 +1666,7 @@ namespace gui
 			return variant("");
 		DEFINE_SET_FIELD
 			obj.text_color_ = KRE::Color(value);
-		DEFINE_FIELD(hasFocus, "bool")
+		DEFINE_FIELD(has_focus, "bool")
 			return variant::from_bool(obj.has_focus_);
 		DEFINE_SET_FIELD
 			obj.has_focus_ = value.as_bool();

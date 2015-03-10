@@ -209,7 +209,7 @@ namespace gui
 
 	void RichTextLabel::handleDraw() const
 	{
-		ScrollableWidget::draw();
+		ScrollableWidget::handleDraw();
 
 		using namespace KRE;
 		ClipScope::Manager clip_scope(rect(x(),y(),width(),height()));

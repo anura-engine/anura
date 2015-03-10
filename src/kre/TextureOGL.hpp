@@ -37,7 +37,7 @@ namespace KRE
 		explicit OpenGLTexture(int count, int width, int height, int depth, PixelFormat::PF fmt, TextureType type);
 		virtual ~OpenGLTexture();
 
-		void bind() override;
+		void bind(int binding_point) override;
 
 		void init(int n) override;
 		unsigned id(int n) const override;

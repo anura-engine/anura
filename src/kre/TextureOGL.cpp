@@ -731,14 +731,15 @@ namespace KRE
 		}
 	}
 
-	void OpenGLTexture::bind() 
+	void OpenGLTexture::bind(int binding_point) 
 	{
+		// XXX fix this fore multiple texture binding.
 		if(get_current_bound_texture() == *texture_data_[0].id) {
 			return;
 		}
 		int n = texture_data_.size()-1;
 		for(auto it = texture_data_.rbegin(); it != texture_data_.rend(); ++it, --n) {
-			glActiveTexture(GL_TEXTURE0 + n);
+			glActiveTexture(GL_TEXTURE0 + n + binding_point);
 			glBindTexture(GetGLTextureType(getType(n)), *it->id);
 		}
 

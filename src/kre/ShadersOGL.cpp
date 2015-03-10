@@ -470,7 +470,7 @@ namespace KRE
 		}
 
 		ShaderProgram::ShaderProgram(const std::string& name, const ShaderDef& vs, const ShaderDef& fs, const variant& node)
-			: KRE::ShaderProgram(node),
+			: KRE::ShaderProgram(name, node),
 			  object_(0)
 		{
 			init(name, vs, fs);
@@ -834,7 +834,9 @@ namespace KRE
 			auto it = v_uniforms_.find(uid);
 			ASSERT_LOG(it != v_uniforms_.end(), "Couldn't find location " << uid << " on the uniform list.");
 			const Actives& u = it->second;
-			ASSERT_LOG(value.is_null() == false, "setUniformFromVariant(): value is null");
+			if(value.is_null()) {
+				ASSERT_LOG(false, "setUniformFromVariant(): value is null. shader='" << getName() << "', uid: " << uid << " : '" << u.name << "'");
+			}
 			switch(u.type) {
 			case GL_FLOAT: {
 				if(u.num_elements == 1) {
@@ -1095,6 +1097,13 @@ namespace KRE
 				for(auto& desc : attr->getAttrDesc()) {
 					desc.setLocation(getAttribute(desc.getAttrName()));
 				}
+			}
+		}
+
+		void ShaderProgram::configureAttribute(AttributeBasePtr attr)
+		{
+			for(auto& desc : attr->getAttrDesc()) {
+				desc.setLocation(getAttribute(desc.getAttrName()));
 			}
 		}
 		

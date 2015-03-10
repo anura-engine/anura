@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2003-2014 by Kristina Simpson <sweet.kristas@gmail.com>
+	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -11,7 +11,7 @@
 
 	   1. The origin of this software must not be misrepresented; you must not
 	   claim that you wrote the original software. If you use this software
-	   in a product, an acknowledgement in the product documentation would be
+	   in a product, an acknowledgment in the product documentation would be
 	   appreciated but is not required.
 
 	   2. Altered source versions must be plainly marked as such, and must not be
@@ -21,33 +21,28 @@
 	   distribution.
 */
 
-#include "Shaders.hpp"
-#include "DisplayDevice.hpp"
+#pragma once
 
-namespace KRE
+#include "ParticleSystemFwd.hpp"
+
+#include "widget.hpp"
+
+namespace gui
 {
-	ShaderProgram::ShaderProgram(const std::string& name, const variant& node)
-		: name_(name),
-		  node_(node)
+	class ParticleSystemWidget : public Widget
 	{
-	}
+		public:
+			explicit ParticleSystemWidget(const variant& v, game_logic::FormulaCallable* e);
+		private:
+			DECLARE_CALLABLE(ParticleSystemWidget);
+			virtual void handleDraw() const override;
+			virtual void handleProcess() override;
 
-	ShaderProgram::~ShaderProgram()
-	{
-	}
+			std::shared_ptr<KRE::Particles::ParticleSystemContainer> container_;
 
-	ShaderProgramPtr ShaderProgram::getProgram(const std::string& name)
-	{
-		return DisplayDevice::getCurrent()->getShaderProgram(name);
-	}
-
-	void ShaderProgram::loadFromVariant(const variant& node)
-	{
-		DisplayDevice::getCurrent()->loadShadersFromVariant(node);
-	}
-
-	ShaderProgramPtr ShaderProgram::getSystemDefault()
-	{
-		return DisplayDevice::getCurrent()->getDefaultShader();
-	}
+			ParticleSystemWidget();
+			ParticleSystemWidget(const ParticleSystemWidget&);
+			void operator=(const ParticleSystemWidget&);
+	};
 }
+

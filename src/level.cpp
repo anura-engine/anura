@@ -3371,7 +3371,7 @@ DEFINE_SET_FIELD
 DEFINE_FIELD(player, "custom_obj")
 	ASSERT_LOG(obj.last_touched_player_, "No player found in level");
 	return variant(obj.last_touched_player_.get());
-DEFINE_FIELD(PlayerInfo, "object")
+DEFINE_FIELD(player_info, "object")
 	ASSERT_LOG(obj.last_touched_player_, "No player found in level");
 	return variant(obj.last_touched_player_.get());
 DEFINE_FIELD(in_dialog, "bool")
@@ -3532,9 +3532,6 @@ DEFINE_SET_FIELD
 		obj.debug_properties_ = value.as_list_string();
 	}
 
-DEFINE_FIELD(shader, "null|object")
-	return variant();
-
 DEFINE_FIELD(is_paused, "bool")
 	if(LevelRunner::getCurrent()) {
 		return variant::from_bool(LevelRunner::getCurrent()->is_paused());
@@ -3655,7 +3652,7 @@ DEFINE_FIELD(suspended_level, "builtin level")
 	ASSERT_LOG(obj.suspended_level_, "Query of suspended_level when there is no suspended level");
 	return variant(obj.suspended_level_.get());
 
-DEFINE_FIELD(show_builtin_settingsDialog, "bool")
+DEFINE_FIELD(show_builtin_settings_dialog, "bool")
 	return variant::from_bool(obj.show_builtin_settings_);
 DEFINE_SET_FIELD
 	obj.show_builtin_settings_ = value.as_bool();

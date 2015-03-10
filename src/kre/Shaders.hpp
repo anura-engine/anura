@@ -57,7 +57,7 @@ namespace KRE
 			INALID_UNIFORM		= -1,
 			INALID_ATTRIBUTE	= -1,
 		};
-		ShaderProgram(const variant& node);
+		explicit ShaderProgram(const std::string& name, const variant& node);
 		virtual ~ShaderProgram();
 
 		virtual void makeActive() = 0;
@@ -82,6 +82,7 @@ namespace KRE
 		virtual void setUniformFromVariant(int uid, const variant& value) const = 0;
 
 		virtual void configureActives(AttributeSetPtr attrset) = 0;
+		virtual void configureAttribute(AttributeBasePtr attr) = 0;
 		virtual void configureUniforms(UniformBufferBase& uniforms) = 0;
 
 		virtual int getColorUniform() const = 0;
@@ -112,8 +113,13 @@ namespace KRE
 		variant getShaderVariant() { return node_; }
 
 		virtual ShaderProgramPtr clone() = 0;
+
+		const std::string& getName() const { return name_; }
 	private:
+		ShaderProgram();
+
 		UniformSetFn uniform_draw_fn_;
+		std::string name_;
 		variant node_;
 	};
 }

@@ -514,8 +514,6 @@ bool LevelRunner::handle_mouse_events(const SDL_Event &event)
 					}
 				}
 
-				LOG_DEBUG("mouse event in entity: " << e->getDebugDescription());
-
 				if(event_type == SDL_MOUSEBUTTONDOWN) {
 					e->setMouseButtons(e->getMouseButtons() | SDL_BUTTON(event_button_button));
 				} else if(event_type == SDL_MOUSEMOTION) {
