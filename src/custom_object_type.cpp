@@ -75,7 +75,7 @@ std::map<std::string, std::string>& object_file_paths() {
 	return paths;
 }
 
-const std::string& object_file_path() {
+const std::string& object_path() {
 	if(preferences::load_compiled()) {
 		static const std::string value =  "data/compiled/objects";
 		return value;
@@ -88,7 +88,7 @@ const std::string& object_file_path() {
 void load_file_paths() {
 
 	//find out the paths to all our files
-	module::get_unique_filenames_under_dir(object_file_path(), &object_file_paths());
+	module::get_unique_filenames_under_dir(object_path(), &object_file_paths());
 	module::get_unique_filenames_under_dir("data/object_prototypes", &::prototype_file_paths());
 }
 
@@ -574,15 +574,11 @@ void custom_object_type::set_player_variant_type(variant type_str)
 
 formula_callable_definition_ptr custom_object_type::get_definition(const std::string& id)
 {
-	if(object_file_paths().empty()) {
-		load_file_paths();
-	}
-
 	std::map<std::string, formula_callable_definition_ptr>::const_iterator itor = object_type_definitions().find(id);
 	if(itor != object_type_definitions().end()) {
 		return itor->second;
 	} else {
-		if(object_file_path().empty()) {
+		if(object_file_paths().empty()) {
 			load_file_paths();
 		}
 
@@ -806,7 +802,7 @@ std::vector<std::string> custom_object_type::get_all_ids()
 {
 	std::vector<std::string> res;
 	std::map<std::string, std::string> file_paths;
-	module::get_unique_filenames_under_dir(object_file_path(), &file_paths);
+	module::get_unique_filenames_under_dir(object_path(), &file_paths);
 	for(std::map<std::string, std::string>::const_iterator i = file_paths.begin(); i != file_paths.end(); ++i) {
 		const std::string& fname = i->first;
 		if(fname.size() < 4 || std::string(fname.end()-4, fname.end()) != ".cfg") {
