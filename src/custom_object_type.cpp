@@ -79,13 +79,16 @@ namespace
 		}
 	};
 
+	//A map of base object filename -> full file paths.
+	//the base filename might include module prefixes.
 	std::map<std::string, std::string>& object_file_paths() 
 	{
 		static std::map<std::string, std::string> paths;
 		return paths;
 	}
 
-	const std::string& object_file_path() 
+	//The undecorated path under which we will find object definitions.
+	const std::string& object_path() 
 	{
 		if(preferences::load_compiled()) {
 			static const std::string value =  "data/compiled/objects";
@@ -99,7 +102,7 @@ namespace
 	void load_file_paths() 
 	{
 		//find out the paths to all our files
-		module::get_unique_filenames_under_dir(object_file_path(), &object_file_paths());
+		module::get_unique_filenames_under_dir(object_path(), &object_file_paths());
 		module::get_unique_filenames_under_dir("data/object_prototypes", &::prototype_file_paths());
 	}
 
@@ -590,7 +593,7 @@ FormulaCallableDefinitionPtr CustomObjectType::getDefinition(const std::string& 
 	if(itor != object_type_definitions().end()) {
 		return itor->second;
 	} else {
-		if(object_file_path().empty()) {
+		if(object_file_paths().empty()) {
 			load_file_paths();
 		}
 
@@ -815,7 +818,7 @@ std::vector<std::string> CustomObjectType::getAllIds()
 {
 	std::vector<std::string> res;
 	std::map<std::string, std::string> file_paths;
-	module::get_unique_filenames_under_dir(object_file_path(), &file_paths);
+	module::get_unique_filenames_under_dir(object_path(), &file_paths);
 	for(std::map<std::string, std::string>::const_iterator i = file_paths.begin(); i != file_paths.end(); ++i) {
 		const std::string& fname = i->first;
 		if(fname.size() < 4 || std::string(fname.end()-4, fname.end()) != ".cfg") {
