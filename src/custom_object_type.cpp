@@ -1112,7 +1112,7 @@ void init_level_definition();
 CustomObjectType::CustomObjectType(const std::string& id, variant node, const CustomObjectType* base_type, const CustomObjectType* old_type)
   : id_(id),
 	hitpoints_(node["hitpoints"].as_int(1)),
-	timerFrequency_(node["timerFrequency"].as_int(-1)),
+	timerFrequency_(node["timer_frequency"].as_int(-1)),
 	zorder_(node["zorder"].as_int()),
 	zsub_order_(node["zsub_order"].as_int()),
 	is_human_(node["is_human"].as_bool(false)),
@@ -1175,7 +1175,7 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 	Frame::buildPatterns(node);
 
 	if(editor_force_standing_) {
-		ASSERT_LOG(has_feet_, "OBject type " << id_ << " has editor_force_standing set but has no feet. has_feet must be true for an object forced to standing");
+		ASSERT_LOG(has_feet_, "Object type " << id_ << " has editor_force_standing set but has no feet. has_feet must be true for an object forced to standing");
 	}
 	std::unique_ptr<StrictModeScope> strict_scope;
 	if(is_strict_) {

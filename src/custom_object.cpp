@@ -1211,9 +1211,6 @@ void CustomObject::draw(int xx, int yy) const
 
 	KRE::Color current_color = KRE::Color::colorWhite();
 	if(draw_color_) {
-		if(isHuman()) {
-			LOG_DEBUG("draw_color: " << draw_color_->toColor());
-		}
 		current_color = draw_color_->toColor();
 	}
 	KRE::ColorScope color_scope(current_color);
@@ -1231,9 +1228,6 @@ void CustomObject::draw(int xx, int yy) const
 	} else if(draw_scale_) {
 		frame_->draw(shader_, draw_x-draw_x%2, draw_y-draw_y%2, isFacingRight(), isUpsideDown(), time_in_frame_, rotate_z_.as_float32(), draw_scale_->as_float32());
 	} else if(!draw_area_.get()) {
-		/*if(isHuman()) {
-			LOG_DEBUG("draw_x,draw_y = " << draw_x << "," << draw_y << " : " << isFacingRight() << " : " << time_in_frame_ << " : " << rotate_z_.as_float32() << " ; " << KRE::ColorScope::getCurrentColor());
-		}*/
 		frame_->draw(shader_, draw_x-draw_x%2, draw_y-draw_y%2, isFacingRight(), isUpsideDown(), time_in_frame_, rotate_z_.as_float32());
 	} else {
 		frame_->draw(shader_, draw_x-draw_x%2, draw_y-draw_y%2, *draw_area_, isFacingRight(), isUpsideDown(), time_in_frame_, rotate_z_.as_float32());
