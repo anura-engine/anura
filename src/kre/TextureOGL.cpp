@@ -60,6 +60,12 @@ namespace KRE
 			static texture_id_cache res;
 			return res;
 		}
+
+		GLuint& get_current_bound_texture()
+		{
+			static GLuint res = -1;
+			return res;
+		}
 	}
 
 	OpenGLTexture::OpenGLTexture(const variant& node, const std::vector<SurfacePtr>& surfaces)
@@ -727,11 +733,16 @@ namespace KRE
 
 	void OpenGLTexture::bind() 
 	{
+		if(get_current_bound_texture() == *texture_data_[0].id) {
+			return;
+		}
 		int n = texture_data_.size()-1;
 		for(auto it = texture_data_.rbegin(); it != texture_data_.rend(); ++it, --n) {
 			glActiveTexture(GL_TEXTURE0 + n);
 			glBindTexture(GetGLTextureType(getType(n)), *it->id);
 		}
+
+		get_current_bound_texture() = *texture_data_[0].id;
 	}
 
 	unsigned OpenGLTexture::id(int n) const

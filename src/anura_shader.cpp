@@ -29,6 +29,7 @@
 #include "ModelMatrixScope.hpp"
 
 #include "anura_shader.hpp"
+#include "array_callable.hpp"
 #include "formula.hpp"
 #include "level.hpp"
 #include "module.hpp"
@@ -38,8 +39,34 @@ namespace graphics
 {
 	namespace 
 	{
-		// XXX Load shaders from file here.
 		bool g_alpha_test = false;
+
+		KRE::DrawMode convert_mode(const std::string& smode)
+		{
+			if(smode == "points") {
+				return KRE::DrawMode::POINTS;
+			} else if(smode == "lines") {
+				return KRE::DrawMode::LINES;
+			} else if(smode == "line_strips") {
+				return KRE::DrawMode::LINE_STRIP;
+			} else if(smode == "line_loop") {
+				return KRE::DrawMode::LINE_LOOP;
+			} else if(smode == "triangles") {
+				return KRE::DrawMode::TRIANGLES;
+			} else if(smode == "triangle_strip") {
+				return KRE::DrawMode::TRIANGLE_STRIP;
+			} else if(smode == "triangle_fan") {
+				return KRE::DrawMode::TRIANGLE_FAN;
+			} else if(smode == "polygon") {
+				return KRE::DrawMode::POLYGON;
+			} else if(smode == "quads") {
+				return KRE::DrawMode::QUADS;
+			} else if(smode == "quad_strip") {
+				return KRE::DrawMode::QUAD_STRIP;
+			}
+			ASSERT_LOG(false, "Unexpected mode type: " << smode);
+			return KRE::DrawMode::POINTS;
+		}
 
 		class GetMvpMatrixFunction : public game_logic::FunctionExpression
 		{
@@ -58,39 +85,35 @@ namespace graphics
 			}
 		};
 
-		/*class BindTextureFunction : public game_logic::CommandCallable
+		class BindTextureCommand : public game_logic::CommandCallable
 		{
 		public:
-			explicit BindTextureFunction(unsigned int tex_id, unsigned int active = 0)
-				: tex_id_(tex_id), active_(active)
+			explicit BindTextureCommand(TextureObject* tex)
+				: tex_(tex)
 			{}
 			virtual void execute(FormulaCallable& ob) const
 			{
-				glActiveTexture(GL_TEXTURE0 + active_);
-				GLenum err = glGetError();
-				ASSERT_LOG(err == GL_NO_ERROR, "glActiveTexture failed: " << active_ << ", " << (active_ + GL_TEXTURE0) << ", " << err);
-				glBindTexture(GL_TEXTURE_2D, tex_id_);
-				err = glGetError();
-				ASSERT_LOG(err == GL_NO_ERROR, "glBindTexture failed: " << tex_id_ << ", " << err);
+				tex_->texture()->bind();
 			}
 		private:
-			GLuint tex_id_;
-			GLuint active_;
+			TextureObject* tex_;
 		};
 
-		class bind_texture_function : public game_logic::function_expression 
+		class BindTextureFunction : public game_logic::FunctionExpression 
 		{
 		public:
-			explicit bind_texture_function(const args_list& args)
-			 : function_expression("bind_texture", args, 1, 2)
+			explicit BindTextureFunction(const args_list& args)
+			 : FunctionExpression("bind_texture", args, 1, 1)
 			{}
 		private:
-			variant execute(const game_logic::formula_callable& variables) const 
+			variant execute(const game_logic::FormulaCallable& variables) const 
 			{
-				GLuint active_tex = args().size() > 1 ? args()[1]->evaluate(variables).as_int() : 0;
-				return variant(new bind_texture_command(GLuint(args()[0]->evaluate(variables).as_int()), active_tex));
+				variant tex = args()[0]->evaluate(variables);
+				TextureObject* tex_obj = tex.try_convert<TextureObject>();
+				ASSERT_LOG(tex_obj != nullptr, "Unable to convert parameter to type TextureObject* in bind_texture.");
+				return variant(new BindTextureCommand(tex_obj));
 			}
-		};*/
+		};
 
 		class LoadTextureFunction : public game_logic::FunctionExpression 
 		{
@@ -136,7 +159,6 @@ namespace graphics
 			}
 		};
 
-
 		class ShaderSymbolTable : public game_logic::FunctionSymbolTable
 		{
 		public:
@@ -149,8 +171,8 @@ namespace graphics
 			{
 				if(fn == "get_mvp_matrix") {
 					return game_logic::ExpressionPtr(new GetMvpMatrixFunction(args));
-				//} else if(fn == "bind_texture") {
-				//	return game_logic::ExpressionPtr(new BindTextureFunction(args));
+				} else if(fn == "bind_texture") {
+					return game_logic::ExpressionPtr(new BindTextureFunction(args));
 				} else if(fn == "load_texture") {
 					return game_logic::ExpressionPtr(new LoadTextureFunction(args));
 				} else if(fn == "blend_mode") {
@@ -198,6 +220,7 @@ namespace graphics
 		  point_size_(1.0f),
 		  parent_(nullptr),
 		  enabled_(true),
+		  zorder_(0),
 		  name_(name)
 
 	{
@@ -223,6 +246,7 @@ namespace graphics
 		  color_(1.0f),
 		  point_size_(1.0f),
 		  enabled_(true),
+		  zorder_(0),
 		  name_(name)
 	{
 		KRE::ShaderProgram::loadFromVariant(node);
@@ -287,6 +311,9 @@ namespace graphics
 		uniform_commands_.reset(new UniformCommandsCallable);
 		uniform_commands_->setShader(AnuraShaderPtr(this));
 
+		attribute_commands_.reset(new AttributeCommandsCallable);
+		attribute_commands_->setShader(AnuraShaderPtr(this));
+
 		// Set the draw commands here if required from shader_->getShaderVariant()
 		game_logic::FormulaCallable* e = this;
 		if(shader_node.has_key("draw")) {
@@ -304,7 +331,7 @@ namespace graphics
 				ASSERT_LOG(false, "draw must be string or list, found: " << d.to_debug_string());
 			}
 		}
-
+	
 		if(shader_node.has_key("create")) {
 			const variant& c = shader_node["create"];
 			if(c.is_list()) {
@@ -320,6 +347,8 @@ namespace graphics
 				ASSERT_LOG(false, "draw must be string or list, found: " << c.to_debug_string());
 			}
 		}
+
+		renderable_.setShader(shader_);
 	}
 
 	void AnuraShader::setDrawArea(const rect& draw_area)
@@ -372,6 +401,8 @@ namespace graphics
 	BEGIN_DEFINE_CALLABLE_NOBASE(AnuraShader)
 		DEFINE_FIELD(uniform_commands, "object")
 			return variant(obj.uniform_commands_.get());
+		DEFINE_FIELD(attribute_commands, "object")
+			return variant(obj.attribute_commands_.get());
 		DEFINE_FIELD(enabled, "bool")
 			return variant(obj.enabled_);
 		DEFINE_SET_FIELD
@@ -384,6 +415,16 @@ namespace graphics
 		DEFINE_FIELD(object, "object")
 			ASSERT_LOG(obj.parent_ != nullptr, "Tried to request parent, when value is null: " << obj.shader_->getShaderVariant()["name"]);
 			return variant(obj.parent_);
+		DEFINE_FIELD(draw_mode, "null")
+			return variant();
+		DEFINE_SET_FIELD_TYPE("string")
+			obj.renderable_.setDrawMode(convert_mode(value.as_string()));
+		DEFINE_FIELD(attributes, "null")
+			return variant();
+		DEFINE_SET_FIELD_TYPE("[map]")
+			for(int n = 0; n != value.num_elements(); ++n) {
+				obj.renderable_.addAttribute(value[n]);
+			}
 	END_DEFINE_CALLABLE(AnuraShader)
 
 	void AnuraShader::clear()
@@ -429,6 +470,7 @@ namespace graphics
 		for(auto& f : draw_formulas_) {
 			e->executeCommand(f->execute(*e));
 		}
+		attribute_commands_->executeOnDraw();
 		uniform_commands_->executeOnDraw();
 	}
 
@@ -483,6 +525,49 @@ namespace graphics
 		}
 	}
 
+	void AnuraShader::AttributeCommandsCallable::executeOnDraw()
+	{
+		for(auto& cmd : attribute_commands_) {
+			if(cmd.increment) {
+				cmd.value = cmd.value + variant(1);
+			}
+
+			program_->attributes_to_set_[cmd.target] = cmd.value;
+		}
+	}
+
+	variant AnuraShader::AttributeCommandsCallable::getValue(const std::string& key) const
+	{
+		return variant();
+	}
+
+	void AnuraShader::AttributeCommandsCallable::setValue(const std::string& key, const variant& value)
+	{
+		ASSERT_LOG(program_ != nullptr, "NO PROGRAM SET FOR UNIFORM CALLABLE");
+
+		DrawCommand* target = nullptr;
+		for(DrawCommand& cmd : attribute_commands_) {
+			if(cmd.name == key) {
+				target = &cmd;
+				break;
+			}
+		}
+
+		if(target == nullptr) {
+			attribute_commands_.push_back(DrawCommand());
+			target = &attribute_commands_.back();
+			target->target = program_->shader_->getAttribute(key);
+		}
+
+		if(value.is_map()) {
+			target->increment = value["increment"].as_bool(false);
+			target->value = value["value"];
+		} else {
+			target->value = value;
+			target->increment = false;
+		}
+	}
+
 	void AnuraShader::setParent(Entity* parent) 
 	{ 
 		parent_ = parent; 
@@ -490,6 +575,72 @@ namespace graphics
 		for(auto & cf : create_formulas_) {
 			e->executeCommand(cf->execute(*e));
 		}
+	}
+
+	void AnuraShader::draw(KRE::WindowManagerPtr wnd) const
+	{
+		wnd->render(&renderable_);
+	}
+
+	ShaderRenderable::ShaderRenderable()
+		: SceneObject("ShaderRenderable")
+	{
+		addAttributeSet(KRE::DisplayDevice::createAttributeSet(false, false, false));		
+	}
+
+	void ShaderRenderable::addAttribute(const variant& node)
+	{
+		using namespace KRE;
+
+		int num_components = 2;
+		AttrFormat fmt = KRE::AttrFormat::FLOAT;
+		bool normalise = false;
+		ptrdiff_t stride = 0;
+		ptrdiff_t offset = 0;
+		int divisor = 1;
+		ASSERT_LOG(node.has_key("name"), "ShaderRenderable::addAttribute must have 'name' attribute at a minimum.");
+		if(node.has_key("type")) {
+			const std::string type = node["type"].as_string();
+			if(type == "float") {
+				fmt = AttrFormat::FLOAT;
+			} else if(type == "short" || type == "unsigned short" || type == "unsigned_short" || type == "ushort") {
+				fmt = AttrFormat::UNSIGNED_SHORT;
+			} else {
+				ASSERT_LOG(false, "Did not recognise type of attribute: " << type);
+			}
+		}
+		if(node.has_key("components")) {
+			num_components = node["components"].as_int32();
+		}
+		if(node.has_key("stride")) {
+			stride = static_cast<ptrdiff_t>(node["stride"].as_int32());
+		}
+		if(node.has_key("offset")) {
+			offset = static_cast<ptrdiff_t>(node["offset"].as_int32());
+		}
+		if(node.has_key("divisor")) {
+			divisor = node["divisor"].as_int32();
+		}
+		std::string name = node["name"].as_string();
+		KRE::AttributeDesc desc(name, num_components, fmt, normalise, stride, offset, divisor);
+		// XXX we should add in decodes for AccessFreqHint and AccessTypeHint
+
+		auto attr = std::make_shared<GenericAttribute>(AccessFreqHint::DYNAMIC, AccessTypeHint::DRAW);
+		attr->addAttributeDesc(desc);
+		getAttributeSet().back()->addAttribute(attr);
+		attrs_[name] = attr;
+	}
+
+	void ShaderRenderable::clearAttributes()
+	{
+		clearAttributeSets();
+		addAttributeSet(KRE::DisplayDevice::createAttributeSet(false, false, false));
+		attrs_.clear();
+	}
+
+	void ShaderRenderable::setDrawMode(KRE::DrawMode dmode)
+	{
+		getAttributeSet().back()->setDrawMode(dmode);
 	}
 }
 

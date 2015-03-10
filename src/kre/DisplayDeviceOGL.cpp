@@ -631,5 +631,11 @@ namespace KRE
 		// XXX Add more effects here as and if needed.
 		return EffectPtr();
 	}
+
+	void DisplayDeviceOpenGL::drawArrays(DrawMode dm, int first, int count) const
+	{
+		// XXX Annoying hack for anura effects shaders.
+		glDrawArrays(convert_drawing_mode(dm), 0, 4);
+	}
 }
 

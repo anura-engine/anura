@@ -534,4 +534,5 @@ private:
 #endif
 
 	graphics::AnuraShaderPtr shader_;
+	std::vector<graphics::AnuraShaderPtr> effects_shaders_;
 };

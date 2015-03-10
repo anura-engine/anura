@@ -171,6 +171,8 @@ namespace KRE
 			return handleReadPixels(x, y, width, height, fmt, type, static_cast<void*>(&data[0]), stride);
 		}
 
+		virtual void drawArrays(DrawMode dm, int first, int count) const = 0;
+
 		static AttributeSetPtr createAttributeSet(bool hardware_hint=false, bool indexed=false, bool instanced=false);
 		static HardwareAttributePtr createAttributeBuffer(bool hw_backed, AttributeBase* parent);
 

@@ -403,6 +403,12 @@ namespace KRE
 				ASSERT_LOG(false, "Unrecognised value for variable type.");
 				return GL_NONE;
 			}
+
+			GLuint& get_current_active_shader()
+			{
+				static GLuint res = -1;
+				return res;
+			}
 		}
 
 		Shader::Shader(GLenum type, const std::string& name, const std::string& code)
@@ -410,8 +416,22 @@ namespace KRE
 			  shader_(0), 
 			  name_(name)
 		{
+			std::string working_version_str;
+
 			bool compiled_ok = compile(code);
-			ASSERT_LOG(compiled_ok == true, "Error compiling shader for " << name_);
+			if(compiled_ok == false && code.find("#version") == std::string::npos) {
+				for(int n = 120; n <= 150; n += 10) {
+					std::stringstream versioned_code;
+					versioned_code << "#version " << n << "\n" << code;
+					const bool result = compile(versioned_code.str());
+					if(result) {
+						std::stringstream err_msg;
+						err_msg << " (Adding '#version " << n << "' to the top of this shader will make it work).";
+						working_version_str = err_msg.str();
+					}
+				}
+			}
+			ASSERT_LOG(compiled_ok == true, "Error compiling shader for " << name_ << working_version_str);
 		}
 
 		bool Shader::compile(const std::string& code)
@@ -611,7 +631,11 @@ namespace KRE
 
 		void ShaderProgram::makeActive()
 		{
+			if(get_current_active_shader() == object_) {
+				return;
+			}
 			glUseProgram(object_);
+			get_current_active_shader() = object_;
 		}
 
 		void ShaderProgram::setUniformValue(int uid, const void* value) const

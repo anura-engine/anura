@@ -96,6 +96,9 @@ namespace KRE
 	class AttributeBase;
 	typedef std::shared_ptr<AttributeBase> AttributeBasePtr;
 
+	class GenericAttribute;
+	typedef std::shared_ptr<GenericAttribute> GenericAttributePtr;
+
 	class AttributeSet;
 	typedef std::shared_ptr<AttributeSet> AttributeSetPtr;
 

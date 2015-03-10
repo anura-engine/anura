@@ -193,7 +193,6 @@ namespace KRE
 		Attribute(AccessFreqHint freq, AccessTypeHint type=AccessTypeHint::DRAW) 
 			:  AttributeBase(freq, type) {
 		}
-		virtual ~Attribute() {}
 		void clear() {
 			elements_.clear();
 		}
@@ -269,6 +268,17 @@ namespace KRE
 			}
 		}
 		Container<T> elements_;
+	};
+
+	// This is mostly ugly, do not use unless you're sure you know what you're doing.
+	class GenericAttribute : public AttributeBase
+	{
+	public:
+		GenericAttribute(AccessFreqHint freq, AccessTypeHint type=AccessTypeHint::DRAW);
+		AttributeBasePtr clone() override;
+		void update(const void* data_ptr, int data_size);
+	private:
+		void handleAttachHardwareBuffer() override;
 	};
 
 	class AttributeSet : public ScopeableValue

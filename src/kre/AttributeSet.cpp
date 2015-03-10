@@ -178,4 +178,24 @@ namespace KRE
 		//hardware_ = DisplayDevice::createAttributeBuffer(hardware_buffer_, this);
 		hardware_ = a.hardware_;
 	}
+
+	GenericAttribute::GenericAttribute(AccessFreqHint freq, AccessTypeHint type) 
+		:  AttributeBase(freq, type) 
+	{
+	}
+
+	AttributeBasePtr GenericAttribute::clone()
+	{
+		return std::make_shared<GenericAttribute>(*this);
+	}
+
+	void GenericAttribute::update(const void* data_ptr, int data_size)
+	{
+		ASSERT_LOG(getDeviceBufferData() != nullptr, "No device buffer attached.");
+		getDeviceBufferData()->update(data_ptr, 0, data_size);
+	}
+
+	void GenericAttribute::handleAttachHardwareBuffer()
+	{
+	}
 }

@@ -268,7 +268,7 @@ public:
 	void setLuaSource(const std::string& ls) { lua_source_ = ls; }
 
 	graphics::AnuraShaderPtr getShader() const { return shader_; }
-
+	const std::vector<graphics::AnuraShaderPtr>& getEffectsShaders() const { return effects_shaders_; }
 private:
 	void initSubObjects(variant node, const CustomObjectType* old_type);
 
@@ -401,5 +401,6 @@ private:
 	std::string lua_source_;
 
 	graphics::AnuraShaderPtr shader_;
+	std::vector<graphics::AnuraShaderPtr> effects_shaders_;	
 };
 

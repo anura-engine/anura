@@ -13,6 +13,17 @@ namespace graphics
 	class AnuraShader;
 	typedef boost::intrusive_ptr<AnuraShader> AnuraShaderPtr;
 
+	class ShaderRenderable : public KRE::SceneObject
+	{
+	public:
+		ShaderRenderable();
+		void addAttribute(const variant& node);
+		void clearAttributes();
+		void setDrawMode(KRE::DrawMode dmode);
+	private:
+		std::map<std::string, KRE::GenericAttributePtr> attrs_;
+	};
+
 	class AnuraShader : public game_logic::FormulaCallable
 	{
 	public:
@@ -40,10 +51,14 @@ namespace graphics
 
 		void process();
 
+		void draw(KRE::WindowManagerPtr wnd) const;
+
 		void setParent(Entity* parent);
 		Entity* getParent() const { return parent_; }
 
 		const std::string& getName() const { return name_; }
+
+		int zorder() const { return zorder_; }
 	private:
 		DECLARE_CALLABLE(AnuraShader);
 		void init();
@@ -67,6 +82,19 @@ namespace graphics
 
 			AnuraShaderPtr program_;
 			std::vector<DrawCommand> uniform_commands_;
+		};
+
+		class AttributeCommandsCallable : public game_logic::FormulaCallable
+		{
+		public:
+			void setShader(AnuraShaderPtr program) { program_ = program; }
+			void executeOnDraw();
+		private:
+			virtual variant getValue(const std::string& key) const override;
+			virtual void setValue(const std::string& key, const variant& value) override;
+
+			AnuraShaderPtr program_;
+			std::vector<DrawCommand> attribute_commands_;
 		};
 
 		KRE::ShaderProgramPtr shader_;
@@ -95,14 +123,20 @@ namespace graphics
 		std::vector<game_logic::FormulaPtr> create_formulas_;
 
 		boost::intrusive_ptr<UniformCommandsCallable> uniform_commands_;
+		boost::intrusive_ptr<AttributeCommandsCallable> attribute_commands_;
 
 		Entity* parent_;
 
 		bool enabled_;
 
+		int zorder_;
+
 		std::map<int, variant> uniforms_to_set_;
+		std::map<int, variant> attributes_to_set_;
 
 		std::string name_;
+		
+		ShaderRenderable renderable_;
 	};
 
 	void set_alpha_test(bool alpha);

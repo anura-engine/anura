@@ -431,6 +431,25 @@ CustomObject::CustomObject(variant node)
 			shader_.reset(new graphics::AnuraShader(shader_name, node["shader"]));
 		}
 	}
+	if(node.has_key("effects")) {
+		const variant& value = node["effects"];
+		if(value.is_list()) {
+			for(int n = 0; n != value.num_elements(); ++n) {
+				if(value[n].is_string()) {
+					effects_shaders_.emplace_back(new graphics::AnuraShader(value[n].as_string()));
+				} else {
+					effects_shaders_.emplace_back(new graphics::AnuraShader(value[n]["name"].as_string(), value["name"]));
+				}
+			}
+		} else if(value.is_map()) {
+			effects_shaders_.emplace_back(new graphics::AnuraShader(value["name"].as_string(), value["name"]));
+		} else if(value.is_string()) {
+			effects_shaders_.emplace_back(new graphics::AnuraShader(value.as_string()));
+		} else {
+			effects_shaders_.emplace_back(graphics::AnuraShaderPtr(value.try_convert<graphics::AnuraShader>()));
+			ASSERT_LOG(effects_shaders_.size() > 0, "Couldn't convert type to shader");
+		}
+	}
 
 	const variant property_data_node = node["property_data"];
 	for(int i = 0; i != type_->getSlotProperties().size(); ++i) {
@@ -524,6 +543,9 @@ CustomObject::CustomObject(const std::string& type, int x, int y, bool face_righ
 
 	if(type_->getShader() != nullptr) {
 		shader_ = graphics::AnuraShaderPtr(new graphics::AnuraShader(*type_->getShader()));
+	}
+	for(auto eff : type_->getEffectsShaders()) {
+		effects_shaders_.emplace_back(new graphics::AnuraShader(*eff));
 	}
 
 #ifdef USE_BOX2D
@@ -619,7 +641,6 @@ CustomObject::CustomObject(const CustomObject& o)
 	driver_(o.driver_),
 	blur_(o.blur_),
 	fall_through_platforms_(o.fall_through_platforms_),
-	//effects_(o.effects_),
 	always_active_(o.always_active_),
 	last_cycle_active_(0),
 	parent_(o.parent_),
@@ -666,6 +687,9 @@ CustomObject::CustomObject(const CustomObject& o)
 
 	if(o.shader_ != nullptr) {
 		shader_.reset(new graphics::AnuraShader(*o.shader_));
+	}
+	for(auto eff : o.effects_shaders_) {
+		effects_shaders_.emplace_back(new graphics::AnuraShader(*eff));
 	}
 }
 
@@ -735,6 +759,9 @@ void CustomObject::finishLoading(Level* lvl)
 	if(shader_ != nullptr) {
 		shader_->setParent(this);
 		LOG_DEBUG("shader '" << shader_->getName() << "' attached to object: " << type_->id());
+	}
+	for(auto eff : effects_shaders_) {
+		eff->setParent(this);
 	}
 }
 
@@ -1155,6 +1182,12 @@ void CustomObject::draw(int xx, int yy) const
 		}
 	}
 
+	for(auto& eff : effects_shaders_) {
+		if(eff->zorder() < 0 && eff->isEnabled()) {
+			eff->draw(wnd);
+		}
+	}
+
 	std::unique_ptr<KRE::ClipScope::Manager> clip_scope;
 
 	KRE::StencilScopePtr stencil_scope;
@@ -1261,6 +1294,12 @@ void CustomObject::draw(int xx, int yy) const
 	}
 	
 	clip_scope.reset();
+
+	for(auto& eff : effects_shaders_) {
+		if(eff->zorder() >= 0 && eff->isEnabled()) {
+			eff->draw(wnd);
+		}
+	}
 
 	if(Level::current().debug_properties().empty() == false) {
 		std::vector<KRE::TexturePtr> left, right;
@@ -2974,6 +3013,14 @@ variant CustomObject::getValueBySlot(int slot) const
 		return variant(shader_.get());
 	}
 
+	case CUSTOM_OBJECT_EFFECTS: {
+		std::vector<variant> v;
+		for(auto eff : effects_shaders_) {
+			v.emplace_back(eff.get());
+		}
+		return variant(&v);
+	}
+
 	case CUSTOM_OBJECT_ACTIVATION_AREA: {
 		if(activation_area_.get() != nullptr) {
 			std::vector<variant> v(4);
@@ -3417,23 +3464,24 @@ void CustomObject::setValue(const std::string& key, const variant& value)
 		} else {
 			shader_.reset(value.try_convert<graphics::AnuraShader>());
 		}
-	/*} else if(key == "effects") {
-		using namespace gles2;
-		effects_.clear();
+	} else if(key == "effects") {
+		effects_shaders_.clear();
 		if(value.is_list()) {
-			for(size_t n = 0; n < value.num_elements(); ++n) {
-				if(value[n].is_map()) {
-					effects_.emplace_back(new shader_program(value[n]));
+			for(int n = 0; n != value.num_elements(); ++n) {
+				if(value[n].is_string()) {
+					effects_shaders_.emplace_back(new graphics::AnuraShader(value[n].as_string()));
 				} else {
-					effects_.emplace_back(shader_program_ptr(value[n].try_convert<shader_program>()));
+					effects_shaders_.emplace_back(new graphics::AnuraShader(value[n]["name"].as_string(), value["name"]));
 				}
 			}
 		} else if(value.is_map()) {
-			effects_.emplace_back(new shader_program(value));
+			effects_shaders_.emplace_back(new graphics::AnuraShader(value["name"].as_string(), value["name"]));
+		} else if(value.is_string()) {
+			effects_shaders_.emplace_back(new graphics::AnuraShader(value.as_string()));
 		} else {
-			effects_.emplace_back(shader_program_ptr(value.try_convert<shader_program>()));
-			ASSERT_LOG(effects_.size() > 0, "Couldn't convert type to shader");
-		}*/
+			effects_shaders_.emplace_back(graphics::AnuraShaderPtr(value.try_convert<graphics::AnuraShader>()));
+			ASSERT_LOG(effects_shaders_.size() > 0, "Couldn't convert type to shader");
+		}
 	} else if(key == "draw_area") {
 		if(value.is_list() && value.num_elements() == 4) {
 			draw_area_.reset(new rect(value[0].as_int(), value[1].as_int(), value[2].as_int(), value[3].as_int()));
@@ -4056,6 +4104,18 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 			shader_.reset(new graphics::AnuraShader(value.as_string()));
 		} else {
 			shader_.reset(new graphics::AnuraShader(value["name"].as_string(), value));
+		}
+		break;
+	}
+
+	case CUSTOM_OBJECT_EFFECTS: {
+		effects_shaders_.clear();
+		for(int n = 0; n != value.num_elements(); ++n) {
+			if(value[n].is_string()) {
+				effects_shaders_.emplace_back(new graphics::AnuraShader(value[n].as_string()));
+			} else {
+				effects_shaders_.emplace_back(new graphics::AnuraShader(value[n]["name"].as_string(), value["name"]));
+			}
 		}
 		break;
 	}
@@ -5609,6 +5669,9 @@ void CustomObject::updateType(ConstCustomObjectTypePtr old_type,
 		shader_->setParent(this);
 		LOG_DEBUG("shader '" << shader_->getName() << "' attached to object: " << type_->id());
 	}
+	for(auto eff : effects_shaders_) {
+		eff->setParent(this);
+	}
 
 #if defined(USE_LUA)
 	if(!type_->getLuaSource().empty()) {
@@ -5718,6 +5781,9 @@ void CustomObject::addToLevel()
 	if(shader_ != nullptr) {
 		shader_->setParent(this);
 		LOG_DEBUG("shader '" << shader_->getName() << "' attached to object: " << type_->id());
+	}
+	for(auto eff : effects_shaders_) {
+		eff->setParent(this);
 	}
 }
 

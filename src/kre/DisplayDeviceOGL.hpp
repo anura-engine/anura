@@ -72,6 +72,8 @@ namespace KRE
 		int queryParameteri(DisplayDeviceParameters param) override;
 
 		void setViewPort(int x, int y, unsigned width, unsigned height) override;
+
+		void drawArrays(DrawMode dm, int first, int count) const override;
 	private:
 		DisplayDeviceOpenGL(const DisplayDeviceOpenGL&);
 
