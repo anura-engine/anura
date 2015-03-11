@@ -73,19 +73,19 @@ namespace json
 
 	ParseError::ParseError(const std::string& msg)
 	  : message(msg), 
-	  line(-1), 
-	  col(-1)
+	    line(-1), 
+	    col(-1)
 	{
-		std::cerr << errorMessage() << "\n";
+		//std::cerr << errorMessage() << "\n";
 	}
 
 	ParseError::ParseError(const std::string& msg, const std::string& filename, int line, int col)
 	  : message(msg), 
-	  fname(filename), 
-	  line(line), 
-	  col(col)
+	    fname(filename), 
+	    line(line), 
+	    col(col)
 	{
-		std::cerr << errorMessage() << "\n";
+		//std::cerr << errorMessage() << "\n";
 	}
 
 	std::string ParseError::errorMessage() const
@@ -637,7 +637,7 @@ namespace json
 			cache[key] = result;
 			return result;
 		} catch(ParseError& e) {
-			std::cerr << e.errorMessage() << "\n";
+			//std::cerr << e.errorMessage() << "\n";
 			e.fname = fname;
 			throw(e);
 		}
