@@ -127,7 +127,7 @@ namespace utils
 		if(cp <= 0x7f) {
 			utf8_str[0] = static_cast<char>(cp);
 		} else if(cp <= 0x7ff) {
-			utf8_str[0] = static_cast<char>((cp & 0x1f)>>6)|0xc0;
+			utf8_str[0] = static_cast<char>((cp >> 6) & 0x1f)|0xc0;
 			utf8_str[1] = static_cast<char>(cp & 0x3f)|0x80;
 			++n;
 		} else if(cp <= 0xffff) {

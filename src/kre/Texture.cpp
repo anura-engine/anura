@@ -236,7 +236,7 @@ namespace KRE
 					tp->address_mode[n] = AddressMode::WRAP;
 				}
 			} else {
-				ASSERT_LOG(false, "'filtering' must be a list of strings. Found: " << node["filtering"].to_debug_string());
+				ASSERT_LOG(false, "'address_mode' must be a list of strings. Found: " << node["address_mode"].to_debug_string());
 			}
 		}
 		if(node.has_key("border_color")) {

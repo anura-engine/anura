@@ -77,7 +77,7 @@ namespace KRE
 			handle_cairo_render(ctx);
 
 			auto status = cairo_status(ctx.cairo_context());
-			ASSERT_LOG(status == CAIRO_STATUS_SUCCESS, "Cairo error: " << cairo_status_to_string(status));
+			ASSERT_LOG(status == CAIRO_STATUS_SUCCESS, "Cairo error: " << cairo_status_to_string(status) << " : " << static_cast<int>(ins_));
 		}
 
 		class move_to_command : public path_command

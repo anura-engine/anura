@@ -631,9 +631,9 @@ namespace KRE
 
 		void ShaderProgram::makeActive()
 		{
-			if(get_current_active_shader() == object_) {
-				return;
-			}
+			//if(get_current_active_shader() == object_) {
+			//	return;
+			//}
 			glUseProgram(object_);
 			get_current_active_shader() = object_;
 		}
@@ -998,7 +998,11 @@ namespace KRE
 			u_color_ = getUniform("color");
 			u_line_width_ = getUniform("line_width");
 			u_tex_ = getUniform("tex_map");
-			a_vertex_ = getAttribute("position");
+			if(getAttribute("position") != KRE::ShaderProgram::INALID_UNIFORM) {
+				a_vertex_ = getAttribute("position");
+			} else {
+				a_vertex_ = getAttribute("vertex");
+			}
 			a_texcoord_ = getAttribute("texcoord");
 			a_color_ = getAttribute("a_color");
 			a_normal_ = getAttribute("normal");

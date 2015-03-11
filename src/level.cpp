@@ -2045,8 +2045,9 @@ void Level::frameBufferEnterZorder(int zorder) const
 				} else {
 					e.shader = graphics::AnuraShaderPtr(new graphics::AnuraShader(e.shader_node["name"].as_string(), e.shader_node));
 				}
+				e.shader->setParent(nullptr);
 			}
-			shaders.push_back(e.shader);
+			shaders.emplace_back(e.shader);
 		}
 	}
 
@@ -3586,6 +3587,7 @@ DEFINE_SET_FIELD
 			} else {
 				e.shader = graphics::AnuraShaderPtr(new graphics::AnuraShader(e.shader_node["name"].as_string(), e.shader_node));
 			}
+			e.shader->setParent(nullptr);
 		}
 
 		obj.fb_shaders_.push_back(e);
