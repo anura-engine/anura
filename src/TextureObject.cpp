@@ -29,7 +29,8 @@
 
 
 TextureObject::TextureObject(KRE::TexturePtr texture)
-	: texture_(texture)
+	: texture_(texture),
+	  binding_point_(0)
 {
 }
 

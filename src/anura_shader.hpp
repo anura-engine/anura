@@ -9,6 +9,7 @@
 #include "entity_fwd.hpp"
 #include "formula_callable.hpp"
 #include "formula_callable_definition.hpp"
+#include "TextureObject.hpp"
 
 namespace graphics
 {
@@ -142,6 +143,9 @@ namespace graphics
 		std::string name_;
 		
 		ShaderRenderable renderable_;
+		std::vector<boost::intrusive_ptr<TextureObject>> textures_;
+
+		bool initialised_;
 	};
 
 	void set_alpha_test(bool alpha);

@@ -35,9 +35,12 @@ class TextureObject : public game_logic::FormulaCallable
 public:
 	explicit TextureObject(KRE::TexturePtr texture);
 	KRE::TexturePtr texture() const { return texture_; }
+	void setBindingPoint(int binding) { binding_point_ = binding; }
+	int getBindingPoint() const { return binding_point_; }
 private:
 	DECLARE_CALLABLE(TextureObject);
 	KRE::TexturePtr texture_;
+	int binding_point_;
 };
 
 // XXX - ideall this function isn't needed.

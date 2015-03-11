@@ -89,16 +89,16 @@ namespace graphics
 		class BindTextureCommand : public game_logic::CommandCallable
 		{
 		public:
-			explicit BindTextureCommand(TextureObject* tex, int bind_point)
-				: tex_(tex),
-				  binding_point_(bind_point)
+			explicit BindTextureCommand(TextureObject* tex, int binding_point)
+				: texture_(tex), 
+				  binding_point_(binding_point)
 			{}
-			virtual void execute(FormulaCallable& ob) const
+			virtual void execute(FormulaCallable& ob) const override
 			{
-				tex_->texture()->bind(binding_point_);
+				texture_->setBindingPoint(binding_point_);
 			}
 		private:
-			boost::intrusive_ptr<TextureObject> tex_;
+			boost::intrusive_ptr<TextureObject> texture_;
 			int binding_point_;
 		};
 
@@ -111,10 +111,10 @@ namespace graphics
 		private:
 			variant execute(const game_logic::FormulaCallable& variables) const 
 			{
+				int binding_point = args().size() > 1 ? args()[1]->evaluate(variables).as_int() : 0;
 				variant tex = args()[0]->evaluate(variables);
 				TextureObject* tex_obj = tex.try_convert<TextureObject>();
 				ASSERT_LOG(tex_obj != nullptr, "Unable to convert parameter to type TextureObject* in bind_texture.");
-				int binding_point = args().size() > 1 ? args()[1]->evaluate(variables).as_int32() : 0;
 				return variant(new BindTextureCommand(tex_obj, binding_point));
 			}
 		};
@@ -251,7 +251,8 @@ namespace graphics
 		  point_size_(1.0f),
 		  enabled_(true),
 		  zorder_(0),
-		  name_(name)
+		  name_(name),
+		  initialised_(false)
 	{
 		KRE::ShaderProgram::loadFromVariant(node);
 		shader_ = KRE::ShaderProgram::getProgram(name);
@@ -277,7 +278,8 @@ namespace graphics
 		  color_(o.color_),
 		  point_size_(o.point_size_),
 		  enabled_(o.enabled_),
-		  name_(o.name_)
+		  name_(o.name_),
+		  initialised_(false)
 	{
 		shader_ = o.shader_->clone();
 		init();
@@ -396,6 +398,10 @@ namespace graphics
 		if(u_anura_point_size_ != KRE::ShaderProgram::INALID_UNIFORM) {
 			shader_->setUniformValue(u_anura_point_size_, point_size_);
 		}
+
+		for(auto& tex : textures_) {
+			tex->texture()->bind(tex->getBindingPoint());
+		}
 		
 		for(auto& u : uniforms_to_set_) {
 			if(u.first != KRE::ShaderProgram::INALID_UNIFORM) {
@@ -437,6 +443,23 @@ namespace graphics
 				return obj.renderable_.getColor().write();
 			} 
 			return KRE::ColorScope::getCurrentColor().write();
+		DEFINE_FIELD(textures, "[object]")
+			std::vector<variant> res;
+			for(const auto& tex : obj.textures_) {
+				res.emplace_back(tex.get());
+			}
+			auto vvv = variant(&res);
+			//LOG_DEBUG("textures: " << vvv.to_debug_string() << " : " << obj.getName());
+			return vvv;
+		DEFINE_SET_FIELD
+			obj.textures_.clear();
+			//LOG_DEBUG("set textures: " << value.to_debug_string());
+			for(int n = 0; n != value.num_elements(); ++n) {
+				TextureObject* tex_obj = value[n].try_convert<TextureObject>();
+				ASSERT_LOG(tex_obj != nullptr, "Couldn't convert to TextureObject: " << value[n].to_debug_string());
+				obj.textures_.emplace_back(tex_obj);
+				//LOG_DEBUG("Added texture: " << tex_obj->texture()->getFrontSurface()->getName() << " : " << obj.getName());
+			}
 	END_DEFINE_CALLABLE(AnuraShader)
 
 	void AnuraShader::clear()
@@ -478,6 +501,10 @@ namespace graphics
 
 	void AnuraShader::process()
 	{
+		if(!initialised_) {
+			setParent(nullptr);
+		}
+
 		game_logic::FormulaCallable* e = this;
 		for(auto& f : draw_formulas_) {
 			e->executeCommand(f->execute(*e));
@@ -596,11 +623,13 @@ namespace graphics
 
 	void AnuraShader::setParent(Entity* parent) 
 	{ 
+		//LOG_DEBUG("Set parent for '" << getName() << "' to " << parent);
 		parent_ = parent; 
 		game_logic::FormulaCallablePtr e(this);
 		for(auto & cf : create_formulas_) {
 			e->executeCommand(cf->execute(*e));
 		}
+		initialised_ = true;
 	}
 
 	void AnuraShader::draw(KRE::WindowManagerPtr wnd) const
