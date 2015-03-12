@@ -320,7 +320,9 @@ namespace KRE
 			}
 
 			for(auto& attr : as->getAttributes()) {
-				shader->applyAttribute(attr);
+				if(attr->isEnabled()) {
+					shader->applyAttribute(attr);
+				}
 			}
 
 			if(as->isInstanced()) {

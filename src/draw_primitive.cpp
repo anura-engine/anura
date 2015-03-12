@@ -260,7 +260,7 @@ namespace graphics
 			ab->addAttribute(col_);
 
 			tex_.reset(new Attribute<glm::vec2>(AccessFreqHint::DYNAMIC, KRE::AccessTypeHint::DRAW));
-			tex_->addAttributeDesc(AttributeDesc(AttrType::POSITION, 2, AttrFormat::FLOAT, false));
+			tex_->addAttributeDesc(AttributeDesc(AttrType::TEXTURE, 2, AttrFormat::FLOAT, false));
 			if(!texture_) {
 				tex_->disable();
 			}
@@ -275,7 +275,6 @@ namespace graphics
 			if(varray_.empty()) {
 				calculate_draw_arrays();
 
-				getAttributeSet()[0]->setCount(varray_.size());	
 				pos_->update(varray_);
 				col_->update(carray_);
 				if(texture_) {
@@ -318,59 +317,47 @@ namespace graphics
 
 			const float PathLength = static_cast<float>(path.size()-1);
 
-			std::vector<glm::vec2> left_path, right_path;
+			std::vector<std::pair<glm::vec2, glm::vec2>> lr_path;
 			for(unsigned n = 0; n < path.size()-1; ++n) {
 				const glm::vec2& p = path[n];
 				const glm::vec2& next = path[n+1];
 
-				glm::vec2 direction;
-				for(int m = 0; m != 2; ++m) {
-					direction[m] = next[m] - p[m];
-				}
-
-				glm::vec2 unit_direction = glm::normalize(direction);
+				const glm::vec2 unit_direction = glm::normalize(next - p);
 		
-				glm::vec2 normal_direction_left, normal_direction_right;
-				normal_direction_left[0] = -unit_direction[1];
-				normal_direction_left[1] = unit_direction[0];
-				normal_direction_right[0] = unit_direction[1];
-				normal_direction_right[1] = -unit_direction[0];
+				const glm::vec2 normal_direction_left(-unit_direction.y, unit_direction.x);
+				const glm::vec2 normal_direction_right(unit_direction.y, -unit_direction.x);
 
-				const float ratio = n/PathLength;
+				const float ratio = n / PathLength;
 
-				float arrow_width = width_base_ - (width_base_-width_head_)*ratio;
+				float arrow_width = width_base_ - (width_base_ - width_head_) * ratio;
 
 				const int time_until_end = path.size()-2 - n;
 				if(time_until_end < arrow_head_length_) {
-					arrow_width = arrow_head_width_*time_until_end;
+					arrow_width = arrow_head_width_ * time_until_end;
 				}
 
-				glm::vec2 left, right;
-				for(int m = 0; m != 2; ++m) {
-					left[m] = p[m] + normal_direction_left[m]*arrow_width;
-					right[m] = p[m] + normal_direction_right[m]*arrow_width;
-				}
-
-				left_path.push_back(left);
-				right_path.push_back(right);
+				lr_path.emplace_back(p + normal_direction_left * arrow_width, p + normal_direction_right * arrow_width);
 			}
 
-			for(unsigned n = 0; n != left_path.size(); ++n) {
-				varray_.emplace_back(left_path[n]);
-				varray_.emplace_back(right_path[n]);
+			int n = 0;
+			const int alpha = color_.a_int();
+			glm::u8vec4 col = color_.as_u8vec4();
+			for(auto& p : lr_path) {
+				varray_.emplace_back(p.first);
+				varray_.emplace_back(p.second);
 
-				uvarray_.emplace_back(n*texture_scale_, 0.0f);
-				uvarray_.emplace_back(n*texture_scale_, 1.0f);
+				uvarray_.emplace_back(n * texture_scale_, 0.0f);
+				uvarray_.emplace_back(n * texture_scale_, 1.0f);
 
-				for(int m = 0; m != 2; ++m) {
-					carray_.emplace_back(color_.r_int(), 
-						color_.g_int(), 
-						color_.b_int(), 
-						n < static_cast<unsigned>(fade_in_length_) 
-							? color_.a_int()
-							: static_cast<uint8_t>((color_.a_int()*n)/static_cast<float>(fade_in_length_))
-					);
+				if(n < fade_in_length_) {
+					col.a = static_cast<uint8_t>((alpha * n) / static_cast<float>(fade_in_length_));
+				} else {
+					col.a = alpha;
 				}
+				carray_.emplace_back(col);
+				carray_.emplace_back(col);
+				
+				++n;
 			}
 		}
 

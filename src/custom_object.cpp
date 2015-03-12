@@ -1256,6 +1256,7 @@ void CustomObject::draw(int xx, int yy) const
 	}
 
 	for(const graphics::DrawPrimitivePtr& p : draw_primitives_) {
+		p->preRender(wnd);
 		wnd->render(p.get());
 	}
 
