@@ -73,6 +73,8 @@ private:
 	{
 		LOG_DEBUG("YYY: create_bot: " << intptr_t(this) << ", (" << v["on_create"].write_json() << ") -> " << intptr_t(on_create_.get()));
 
+		timer_.expires_from_now(boost::posix_time::milliseconds(g_tbs_bot_delay_ms));
+
 		timer_proxy_ = new tbs_bot_timer_proxy(this);
 		timer_.async_wait(boost::bind(&tbs_bot_timer_proxy::signal, timer_proxy_, boost::asio::placeholders::error));
 	}
