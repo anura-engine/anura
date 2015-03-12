@@ -254,7 +254,7 @@ void http_client::handle_receive(connection_ptr conn, const boost::system::error
 			header_term_len = 4;
 		}
 		ASSERT_LOG(end_headers, "COULD NOT FIND END OF HEADERS IN MESSAGE: " << conn->response);
-		LOG_INFO("HEADERS: (((" << std::string(conn->response.c_str(), end_headers) << ")))");
+		//LOG_DEBUG("HEADERS: (((" << std::string(conn->response.c_str(), end_headers) << ")))");
 		--in_flight_;
 		const char* payload = end_headers + header_term_len;
 		conn->handler(std::string(payload, conn->response.c_str() + conn->response.size()));

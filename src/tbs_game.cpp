@@ -354,7 +354,7 @@ namespace tbs
 			outgoing_messages_.back().recipients.push_back(nplayer);
 		}
 
-		LOG_DEBUG("QUEUE MESSAGE " << nplayer << " (((" << msg << ")))");
+		//LOG_DEBUG("QUEUE MESSAGE " << nplayer << " (((" << msg << ")))");
 	}
 
 	void game::queue_message(const char* msg, int nplayer)
@@ -639,7 +639,7 @@ namespace tbs
 
 	void game::handle_message(int nplayer, const variant& msg)
 	{
-		LOG_DEBUG("HANDLE MESSAGE (((" << msg.write_json() << ")))");
+		//LOG_DEBUG("HANDLE MESSAGE (((" << msg.write_json() << ")))");
 		rng::set_seed(rng_seed_);
 		const std::string type = msg["type"].as_string();
 		if(type == "start_game") {

@@ -101,14 +101,14 @@ private:
 			return;
 		}
 		if(on_create_) {
-			LOG_DEBUG("YYY: call on_create: " << intptr_t(this) << " -> " << intptr_t(on_create_.get()));
+			///LOG_DEBUG("YYY: call on_create: " << intptr_t(this) << " -> " << intptr_t(on_create_.get()));
 			executeCommand(on_create_->execute(*this));
 			on_create_.reset();
 		}
 
 		if(((!client_ && !preferences::internal_tbs_server()) || (!internal_client_ && preferences::internal_tbs_server())) && response_.size() < script_.size()) {
 			variant script = script_[response_.size()];
-			LOG_DEBUG("BOT: SEND @" << profile::get_tick_time() << " Sending response " << response_.size() << "/" << script_.size() << ": " << internal_client_.get() << " " << script.write_json());
+			//LOG_DEBUG("BOT: SEND @" << profile::get_tick_time() << " Sending response " << response_.size() << "/" << script_.size() << ": " << internal_client_.get() << " " << script.write_json());
 			variant send = script["send"];
 			if(send.is_string()) {
 				send = game_logic::Formula(send).execute(*this);
@@ -170,10 +170,10 @@ private:
 			return;
 		} else {
 			const int ms = profile::get_tick_time();
-			LOG_INFO("BOT: handle_message @ " << ms << " : " << type << "... ( " << callable->queryValue("message").write_json() << " )");
+			//LOG_INFO("BOT: handle_message @ " << ms << " : " << type << "... ( " << callable->queryValue("message").write_json() << " )");
 			executeCommand(on_message_->execute(*this));
 			const int time_taken = profile::get_tick_time() - ms;
-			LOG_INFO("BOT: handled message in " << time_taken << "ms");
+			//LOG_INFO("BOT: handled message in " << time_taken << "ms");
 		}
 		}
 
