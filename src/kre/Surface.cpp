@@ -158,7 +158,6 @@ namespace KRE
 		std::stringstream ss;
 		ss << "Surface(" << width << "," << height << "," << bpp << "," << rmask << "," << gmask << "," << amask << ", has data:no)";
 		surf->name_ = ss.str();
-		surf->init();
 		return surf;
 	}
 
@@ -170,7 +169,6 @@ namespace KRE
 		std::stringstream ss;
 		ss << "Surface(" << width << "," << height << "," << static_cast<int>(fmt) << ")";
 		surf->name_ = ss.str();
-		surf->init();
 		return surf;
 	}
 
@@ -183,17 +181,37 @@ namespace KRE
 	{
 		const int npixels = width() * height();
 		alpha_map_.resize(npixels);
-		std::fill(alpha_map_.begin(), alpha_map_.end(), false);
 
 		if(getPixelFormat()->hasAlphaChannel()) {
-			int w = width();
-			auto& am = alpha_map_;
-			iterateOverSurface([&am, w](int x, int y, int r, int g, int b, int a) {
-				if(a == 0) {
-					am[x + y * w] = true;
+			SurfaceLock lck(shared_from_this());
+			auto pf = getPixelFormat();
+			uint32_t alpha_mask = pf->getAlphaMask();
+			if(bytesPerPixel() == 4 && rowPitch() % 4 == 0) {
+				// Optimization for a common case. Operates ~25 faster than default case.
+				const uint32_t* px = reinterpret_cast<const uint32_t*>(pixels());
+				auto it = alpha_map_.begin();
+				for(int n = 0; n != npixels; ++n) {
+					*it++ = (*px++ & alpha_mask) ? false : true;
 				}
-			});
+			} else {
+				std::fill(alpha_map_.begin(), alpha_map_.end(), false);
+				int w = width();
+				auto& am = alpha_map_;
+				iterateOverSurface([&am, w](int x, int y, int r, int g, int b, int a) {
+					if(a == 0) {
+						am[x + y * w] = true;
+					}
+				});
+			}
 		}
+
+		//if(getPixelFormat()->hasAlphaChannel()) {
+			//int w = width();
+			//auto& am = alpha_map_;
+			//iterateOverSurface([&am, w](int x, int y, int r, int g, int b, int a) {
+			//	am[x + y * w] = a == 0 ? true : false;
+			//});
+		//}
 	}
 
 	void Surface::clearSurfaceCache()
