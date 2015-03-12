@@ -3196,17 +3196,23 @@ void editor::draw_gui() const
 	//draw grid
 	if(g_editor_grid){
 		std::vector<glm::vec2> varray;
+		std::vector<glm::u8vec4> carray;
 		const int w = canvas->width();
 		const int h = canvas->height();
 		for(int x = -TileSize - (xpos_/zoom_)%TileSize; x < w; x += (BaseTileSize*g_tile_scale)/zoom_) {
 			varray.emplace_back(x, 0);
 			varray.emplace_back(x, h);
+			carray.emplace_back(255, 255, 255, 64);
+			carray.emplace_back(255, 255, 255, 32);
 		}
 		for(int y = -TileSize - (ypos_/zoom_)%TileSize; y < h; y += (BaseTileSize*g_tile_scale)/zoom_) {
 			varray.emplace_back(0, y);
 			varray.emplace_back(w, y);
+			carray.emplace_back(255, 255, 255, 32);
+			carray.emplace_back(255, 255, 255, 64);
 		}
-		canvas->drawLines(varray, 1.0f, KRE::Color(255,255,255,64));
+		//canvas->drawLines(varray, 1.0f, KRE::Color(255,255,255,64));
+		canvas->drawLines(varray, 1.0f, carray);
 	}
 
 	// draw level boundaries in clear white
