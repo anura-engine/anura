@@ -236,7 +236,7 @@ namespace tbs
 		ai_.clear();
 		bots_.clear();
 		backup_callable_ = nullptr;
-		std::cerr << "CANCEL GAME: " << refcount() << "\n";
+		LOG_INFO("CANCEL GAME: " << refcount());
 	}
 
 	variant game::write(int nplayer, int processing_ms) const
@@ -591,7 +591,7 @@ namespace tbs
 				}
 			}
 
-		DEFINE_FIELD("players_disconnected", "[int]")
+		DEFINE_FIELD(players_disconnected, "[int]")
 			std::vector<variant> result;
 			for(auto n : obj.players_disconnected_) {
 				result.push_back(variant(n));
@@ -809,7 +809,7 @@ namespace tbs
 		}
 	}
 }
-/*
+
 namespace 
 {
 	bool g_create_bot_game = false;
@@ -856,4 +856,3 @@ COMMAND_LINE_UTILITY(tbs_bot_game)
 		internal_server::process();
 	}
 }
-*/
