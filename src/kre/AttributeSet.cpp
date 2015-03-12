@@ -119,6 +119,7 @@ namespace KRE
 		attributes_.emplace_back(attrib);
 		auto hwbuffer = DisplayDevice::createAttributeBuffer(isHardwareBacked(), attrib.get());
 		attrib->setDeviceBufferData(hwbuffer);
+		attrib->setParent(shared_from_this());
 	}
 
 
@@ -172,11 +173,19 @@ namespace KRE
 		  desc_(a.desc_),
 		  hardware_(),
 		  hardware_buffer_(a.hardware_buffer_),
-		  enabled_(a.enabled_)
+		  enabled_(a.enabled_),
+		  parent_()
 	{
 		// XXX still don't really like this. need to consider it more.
 		//hardware_ = DisplayDevice::createAttributeBuffer(hardware_buffer_, this);
 		hardware_ = a.hardware_;
+	}
+
+	AttributeSetPtr AttributeBase::getParent() const
+	{
+		auto parent = parent_.lock();
+		ASSERT_LOG(parent != nullptr, "Attribute parent was null.");
+		return parent;
 	}
 
 	GenericAttribute::GenericAttribute(AccessFreqHint freq, AccessTypeHint type) 
@@ -189,10 +198,11 @@ namespace KRE
 		return std::make_shared<GenericAttribute>(*this);
 	}
 
-	void GenericAttribute::update(const void* data_ptr, int data_size)
+	void GenericAttribute::update(const void* data_ptr, int data_size, int count)
 	{
 		ASSERT_LOG(getDeviceBufferData() != nullptr, "No device buffer attached.");
 		getDeviceBufferData()->update(data_ptr, 0, data_size);
+		getParent()->setCount(count);
 	}
 
 	void GenericAttribute::handleAttachHardwareBuffer()

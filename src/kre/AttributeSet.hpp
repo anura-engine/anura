@@ -160,6 +160,8 @@ namespace KRE
 		bool isEnabled() const { return enabled_; }
 
 		virtual AttributeBasePtr clone() = 0;
+		void setParent(std::weak_ptr<AttributeSet> attrset) { parent_ = attrset; }
+		AttributeSetPtr getParent() const;
 	private:
 		virtual void handleAttachHardwareBuffer() = 0;
 		AccessFreqHint access_freq_;
@@ -169,6 +171,7 @@ namespace KRE
 		HardwareAttributePtr hardware_;
 		bool hardware_buffer_;
 		bool enabled_;
+		std::weak_ptr<AttributeSet> parent_;
 	};
 
 	/* Templated attribute buffer. Is sub-optimal in that we double buffer attributes
@@ -200,6 +203,7 @@ namespace KRE
 			elements_ = values;
 			if(getDeviceBufferData() && elements_.size() > 0) {
 				getDeviceBufferData()->update(&elements_[0], 0, elements_.size() * sizeof(T));
+				getParent()->setCount(elements_.size());
 			}
 		}
 		void update(const Container<T>& src, iterator dst) {
@@ -208,6 +212,7 @@ namespace KRE
 			std::copy(src.begin(), src.end(), std::inserter(elements_, dst));
 			if(getDeviceBufferData() && dst2 > 0) {
 				getDeviceBufferData()->update(&elements_[0], dst1, dst2 * sizeof(T));
+				getParent()->setCount(dst1 + dst2);
 			}
 		}
 		void update(Container<T>* src, iterator dst) {
@@ -216,12 +221,14 @@ namespace KRE
 			std::move(src->begin(), src->end(), std::inserter(elements_, dst));
 			if(getDeviceBufferData() && dst2 > 0) {
 				getDeviceBufferData()->update(&elements_[0], dst1, dst2 * sizeof(T));
+				getParent()->setCount(dst1 + dst2);
 			}
 		}
 		void update(Container<T>* values) {
 			elements_.swap(*values);
 			if(getDeviceBufferData() && elements_.size() > 0) {
 				getDeviceBufferData()->update(&elements_[0], 0, elements_.size() * sizeof(T));
+				getParent()->setCount(elements_.size());
 			}
 		}
 		size_t size() const { 
@@ -265,6 +272,7 @@ namespace KRE
 			// before an attach then they are all updated correctly.
 			if(elements_.size() > 0) {
 				getDeviceBufferData()->update(&elements_[0], 0, elements_.size() * sizeof(T));
+				getParent()->setCount(elements_.size());
 			}
 		}
 		Container<T> elements_;
@@ -276,12 +284,12 @@ namespace KRE
 	public:
 		GenericAttribute(AccessFreqHint freq, AccessTypeHint type=AccessTypeHint::DRAW);
 		AttributeBasePtr clone() override;
-		void update(const void* data_ptr, int data_size);
+		void update(const void* data_ptr, int data_size, int count);
 	private:
 		void handleAttachHardwareBuffer() override;
 	};
 
-	class AttributeSet : public ScopeableValue
+	class AttributeSet : public ScopeableValue, public std::enable_shared_from_this<AttributeSet>
 	{
 	public:
 		explicit AttributeSet(bool indexed, bool instanced);

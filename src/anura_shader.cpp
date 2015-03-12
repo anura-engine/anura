@@ -574,12 +574,12 @@ namespace graphics
 			if(cmd.value.is_callable()) {
 				boost::intrusive_ptr<game_logic::FloatArrayCallable> f = cmd.value.try_convert<game_logic::FloatArrayCallable>();
 				if(f != nullptr) {
-					cmd.attr_target->update(&f->floats()[0], f->num_elements());
+					cmd.attr_target->update(&f->floats()[0], f->num_elements() * sizeof(float), f->num_elements());
 					continue;
 				}
 				boost::intrusive_ptr<game_logic::ShortArrayCallable> s = cmd.value.try_convert<game_logic::ShortArrayCallable>();
 				if(s != nullptr) {
-					cmd.attr_target->update(&s->shorts()[0], s->num_elements());
+					cmd.attr_target->update(&s->shorts()[0], s->num_elements() * sizeof(short), s->num_elements());
 					continue;
 				}
 			} else {
