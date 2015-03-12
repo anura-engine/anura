@@ -281,7 +281,6 @@
     <ClInclude Include="..\..\src\kre\FontSDL.hpp" />
     <ClInclude Include="..\..\src\kre\Frustum.hpp" />
     <ClInclude Include="..\..\src\kre\geometry.hpp" />
-    <ClInclude Include="..\..\src\kre\HintMap.hpp" />
     <ClInclude Include="..\..\src\kre\LightObject.hpp" />
     <ClInclude Include="..\..\src\kre\ModelMatrixScope.hpp" />
     <ClInclude Include="..\..\src\kre\PaletteMap.hpp" />
@@ -351,6 +350,7 @@
     <ClInclude Include="..\..\src\multi_tile_pattern.hpp" />
     <ClInclude Include="..\..\src\nocopy.hpp" />
     <ClInclude Include="..\..\src\object_events.hpp" />
+    <ClInclude Include="..\..\src\ParticleSystemWidget.hpp" />
     <ClInclude Include="..\..\src\particle_system.hpp" />
     <ClInclude Include="..\..\src\pathfinding.hpp" />
     <ClInclude Include="..\..\src\pause_game_dialog.hpp" />
@@ -629,7 +629,6 @@
     <ClCompile Include="..\..\src\kre\Font.cpp" />
     <ClCompile Include="..\..\src\kre\FontSDL.cpp" />
     <ClCompile Include="..\..\src\kre\Frustum.cpp" />
-    <ClCompile Include="..\..\src\kre\HintMap.cpp" />
     <ClCompile Include="..\..\src\kre\LightObject.cpp" />
     <ClCompile Include="..\..\src\kre\ModelMatrixScope.cpp" />
     <ClCompile Include="..\..\src\kre\ParticleSystem.cpp" />
@@ -685,6 +684,7 @@
     <ClCompile Include="..\..\src\multiplayer.cpp" />
     <ClCompile Include="..\..\src\multi_tile_pattern.cpp" />
     <ClCompile Include="..\..\src\object_events.cpp" />
+    <ClCompile Include="..\..\src\ParticleSystemWidget.cpp" />
     <ClCompile Include="..\..\src\particle_system.cpp" />
     <ClCompile Include="..\..\src\pathfinding.cpp" />
     <ClCompile Include="..\..\src\pause_game_dialog.cpp" />

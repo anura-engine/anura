@@ -960,13 +960,13 @@
     <ClInclude Include="..\..\src\kre\VGraphOGLFixed.hpp">
       <Filter>Header Files\kre</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\kre\HintMap.hpp">
-      <Filter>Header Files\kre</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\kre\ModelMatrixScope.hpp">
       <Filter>Header Files\kre</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\draw_primitive_fwd.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ParticleSystemWidget.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -1925,11 +1925,11 @@
     <ClCompile Include="..\..\src\kre\Util.cpp">
       <Filter>Source Files\kre</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\kre\HintMap.cpp">
-      <Filter>Source Files\kre</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\kre\ModelMatrixScope.cpp">
       <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ParticleSystemWidget.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
