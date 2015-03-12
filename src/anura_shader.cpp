@@ -224,7 +224,7 @@ namespace graphics
 		  point_size_(1.0f),
 		  parent_(nullptr),
 		  enabled_(true),
-		  zorder_(0),
+		  zorder_(-1),
 		  name_(name)
 
 	{
@@ -250,7 +250,7 @@ namespace graphics
 		  color_(1.0f),
 		  point_size_(1.0f),
 		  enabled_(true),
-		  zorder_(0),
+		  zorder_(node["zorder"].as_int(-1)),
 		  name_(name),
 		  initialised_(false)
 	{
@@ -278,6 +278,7 @@ namespace graphics
 		  color_(o.color_),
 		  point_size_(o.point_size_),
 		  enabled_(o.enabled_),
+		  zorder_(o.zorder_),
 		  name_(o.name_),
 		  initialised_(false)
 	{
@@ -574,12 +575,24 @@ namespace graphics
 			if(cmd.value.is_callable()) {
 				boost::intrusive_ptr<game_logic::FloatArrayCallable> f = cmd.value.try_convert<game_logic::FloatArrayCallable>();
 				if(f != nullptr) {
-					cmd.attr_target->update(&f->floats()[0], f->num_elements() * sizeof(float), f->num_elements());
+					int count = f->num_elements();
+					int divisor = 0;
+					for(auto& desc : cmd.attr_target->getAttrDesc()) {
+						divisor += desc.getNumElements();
+					}
+					count /= divisor;
+					cmd.attr_target->update(&f->floats()[0], f->num_elements() * sizeof(float), count);
 					continue;
 				}
 				boost::intrusive_ptr<game_logic::ShortArrayCallable> s = cmd.value.try_convert<game_logic::ShortArrayCallable>();
 				if(s != nullptr) {
-					cmd.attr_target->update(&s->shorts()[0], s->num_elements() * sizeof(short), s->num_elements());
+					int count = f->num_elements();
+					int divisor = 0;
+					for(auto& desc : cmd.attr_target->getAttrDesc()) {
+						divisor += desc.getNumElements();
+					}
+					count /= divisor;
+					cmd.attr_target->update(&s->shorts()[0], s->num_elements() * sizeof(short), count);
 					continue;
 				}
 			} else {
