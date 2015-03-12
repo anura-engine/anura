@@ -32,24 +32,22 @@ namespace KRE
 		class Affector : public EmitObject
 		{
 		public:
-			explicit Affector(ParticleSystemContainer* parent, const variant& node);
+			explicit Affector(std::weak_ptr<ParticleSystemContainer> parent, const variant& node);
 			virtual ~Affector();
-			virtual Affector* clone() = 0;
+			virtual AffectorPtr clone() const = 0;
 
 			bool isEnabled() const { return enabled_; }
 			void enable(bool en) { enabled_ = en; }
-			Technique* getTechnique() { return technique_; }
-			void setParentTechnique(Technique* tq) {
-				technique_ = tq;
-			}
+			TechniquePtr getTechnique() const;
+			void setParentTechnique(std::weak_ptr<Technique> tq) { technique_ = tq; }
 
 			float mass() const { return mass_; }
 			const glm::vec3& getPosition() const { return position_; }
 			void setPosition(const glm::vec3& pos) { position_ = pos; }
 			const glm::vec3& getScale() const { return scale_; }
-			bool isEmitterExcluded(const std::string& name);
+			bool isEmitterExcluded(const std::string& name) const;
 
-			static Affector* factory(ParticleSystemContainer* parent, const variant& node);
+			static AffectorPtr factory(std::weak_ptr<ParticleSystemContainer> parent, const variant& node);
 		protected:
 			virtual void handleEmitProcess(float t);
 			virtual void internalApply(Particle& p, float t) = 0;
@@ -59,7 +57,7 @@ namespace KRE
 			glm::vec3 position_;
 			std::vector<std::string> excluded_emitters_;
 			glm::vec3 scale_;
-			Technique* technique_;
+			std::weak_ptr<Technique> technique_;
 			Affector();
 		};
 	}

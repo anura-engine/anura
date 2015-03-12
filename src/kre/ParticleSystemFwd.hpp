@@ -39,6 +39,7 @@ namespace KRE
 		class EmitObject;
 		typedef std::shared_ptr<EmitObject> EmitObjectPtr;
 		class ParticleSystemContainer;
+		typedef std::shared_ptr<ParticleSystemContainer> ParticleSystemContainerPtr;
 		class ParticleSystem;
 		typedef std::shared_ptr<ParticleSystem> ParticleSystemPtr;
 		class Technique;

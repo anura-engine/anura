@@ -40,26 +40,24 @@ namespace KRE
 		class Emitter : public EmitObject
 		{
 		public:
-			explicit Emitter(ParticleSystemContainer* parent, const variant& node);
+			explicit Emitter(std::weak_ptr<ParticleSystemContainer> parent, const variant& node);
 			virtual ~Emitter();
 			Emitter(const Emitter&);
 
 			int getEmittedParticleCountPerCycle(float t);
 			color_vector getColor() const;
-			Technique* getTechnique() { return technique_; }
-			void setParentTechnique(Technique* tq) {
-				technique_ = tq;
-			}
+			TechniquePtr getTechnique() const;
+			void setParentTechnique(std::weak_ptr<Technique> tq) { technique_ = tq; }
 
-			virtual Emitter* clone() = 0;
-			static Emitter* factory(ParticleSystemContainer* parent, const variant& node);
+			virtual EmitterPtr clone() = 0;
+			static EmitterPtr factory(std::weak_ptr<ParticleSystemContainer> parent, const variant& node);
 		protected:
 			virtual void internalCreate(Particle& p, float t) = 0;
 			virtual bool durationExpired() { return can_be_deleted_; }
 		private:
 			virtual void handleEmitProcess(float t) override;
 			virtual void handleDraw() const override;
-			Technique* technique_;
+			std::weak_ptr<Technique> technique_;
 
 			// These are generation parameters.
 			ParameterPtr emission_rate_;

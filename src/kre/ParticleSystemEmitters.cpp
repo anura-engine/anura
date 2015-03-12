@@ -30,113 +30,18 @@
 
 namespace KRE
 {
-	/*namespace 
-	{
-		GLsizei add_box_data_to_vbo(std::shared_ptr<GLuint> vbo_id)
-		{
-			std::vector<GLfloat> lines;
-			lines.reserve(72);
-			lines.push_back(-0.5f); lines.push_back(-0.5f); lines.push_back(-0.5f); lines.push_back(0.5f); lines.push_back(-0.5f); lines.push_back(-0.5f); 
-			lines.push_back(-0.5f); lines.push_back(-0.5f); lines.push_back(-0.5f); lines.push_back(-0.5f); lines.push_back(0.5f); lines.push_back(-0.5f); 
-			lines.push_back(-0.5f); lines.push_back(-0.5f); lines.push_back(-0.5f); lines.push_back(-0.5f); lines.push_back(-0.5f); lines.push_back(0.5f); 
-
-			lines.push_back(0.5f); lines.push_back(0.5f); lines.push_back(0.5f); lines.push_back(0.5f); lines.push_back(0.5f); lines.push_back(-0.5f); 
-			lines.push_back(0.5f); lines.push_back(0.5f); lines.push_back(0.5f); lines.push_back(-0.5f); lines.push_back(0.5f); lines.push_back(0.5f); 
-			lines.push_back(0.5f); lines.push_back(0.5f); lines.push_back(0.5f); lines.push_back(0.5f); lines.push_back(-0.5f); lines.push_back(0.5f); 
-
-			lines.push_back(-0.5f); lines.push_back(0.5f); lines.push_back(0.5f); lines.push_back(-0.5f); lines.push_back(0.5f); lines.push_back(-0.5f); 
-			lines.push_back(-0.5f); lines.push_back(0.5f); lines.push_back(0.5f); lines.push_back(-0.5f); lines.push_back(-0.5f); lines.push_back(0.5f); 
-
-			lines.push_back(0.5f); lines.push_back(0.5f); lines.push_back(-0.5f); lines.push_back(-0.5f); lines.push_back(0.5f); lines.push_back(-0.5f); 
-			lines.push_back(0.5f); lines.push_back(0.5f); lines.push_back(-0.5f); lines.push_back(0.5f); lines.push_back(-0.5f); lines.push_back(-0.5f); 
-
-			lines.push_back(0.5f); lines.push_back(-0.5f); lines.push_back(0.5f); lines.push_back(-0.5f); lines.push_back(-0.5f); lines.push_back(0.5f); 
-			lines.push_back(0.5f); lines.push_back(-0.5f); lines.push_back(0.5f); lines.push_back(0.5f); lines.push_back(-0.5f); lines.push_back(-0.5f); 
-			glBindBuffer(GL_ARRAY_BUFFER, *vbo_id);
-			glBufferData(GL_ARRAY_BUFFER, lines.size()*sizeof(GLfloat), &lines[0], GL_STATIC_DRAW);
-			glBindBuffer(GL_ARRAY_BUFFER, 0);
-			return lines.size()/3;
-		}
-
-		std::shared_ptr<GLuint> get_box_outline_vbo(GLsizei& num_vertices)
-		{
-			static std::shared_ptr<GLuint> res;
-			static GLsizei num_verts = 0;
-			if(res == nullptr) {
-				// XXX This is probably broken since the context will be deleted before this destructor fires.
-				res.reset(new GLuint, [](GLuint* id){glDeleteBuffers(1, id); delete id;});
-				glGenBuffers(1, res.get());
-				num_verts = add_box_data_to_vbo(res);
-				GLenum ok = glGetError();
-				ASSERT_EQ(ok, GL_NO_ERROR);
-			}
-			num_vertices = num_verts;
-			return res;
-		}
-	}*/
-
-	/*class BoxOutline
-	{
-	public:
-		BoxOutline() : color_(0.25f, 1.0f, 0.25f, 1.0f), num_vertices_(0) {
-			shader_ = gles2::shader_program::get_global("line_3d")->shader();
-			ASSERT_LOG(shader_ != nullptr, "PSYSTEM2: test_draw_shader_ is null");
-			u_mvp_matrix_ = shader_->get_fixed_uniform("mvp_matrix");
-			ASSERT_LOG(u_mvp_matrix_ != -1, "PSYSTEM2: Uniform 'mvp_matrix' unknown");
-			u_color_ = shader_->get_fixed_uniform("color");
-			ASSERT_LOG(u_color_ != -1, "PSYSTEM2: Uniform 'color' unknown");
-			a_position_ = shader_->get_fixed_attribute("vertex");
-			ASSERT_LOG(a_position_ != -1, "PSYSTEM2: Attribute 'vertex' unknown");
-
-			// blah blah, allocate vbo then put data in that
-			box_vbo_ = get_box_outline_vbo(num_vertices_);
-		}
-		~BoxOutline() {}
-		const glm::vec4& get_color() const { return color_; }
-		void setColor(const glm::vec4& c) {
-			color_ = c;
-		}
-		void draw(const glm::vec3& translation, const glm::quat& rotation, const glm::vec3& scale) const {
-			shader::manager m(shader_);
-			glm::mat4 model = glm::translate(glm::mat4(1.0f), translation) * glm::toMat4(rotation) * glm::scale(glm::mat4(1.0f), scale);
-			//glm::mat4 mvp = level::current().camera()->projection_mat() * level::current().camera()->view_mat() * model;
-			glm::mat4 mvp = get_main_window()->camera()->projection_mat() * get_main_window()->camera()->view_mat() * model;
-			
-			glUniformMatrix4fv(u_mvp_matrix_, 1, GL_FALSE, glm::value_ptr(mvp));
-			glUniform4fv(u_color_, 1, glm::value_ptr(color_));
-#if defined(USE_SHADERS)
-			glEnableVertexAttribArray(a_position_);
-			glBindBuffer(GL_ARRAY_BUFFER, *box_vbo_);
-			glVertexAttribPointer(a_position_, 3, GL_FLOAT, GL_FALSE, 0, 0);
-			glDrawArrays(GL_LINES, 0, num_vertices_);
-			glBindBuffer(GL_ARRAY_BUFFER, 0);
-			glDisableVertexAttribArray(a_position_);
-#endif
-		}
-	private:
-		GLsizei num_vertices_;
-		std::shared_ptr<GLuint> vbo_id_;
-		gles2::program_ptr shader_;
-		std::shared_ptr<GLuint> box_vbo_;
-		GLuint u_mvp_matrix_;
-		GLuint u_color_;
-		GLuint a_position_;
-		glm::vec4 color_;
-	};*/
-
 	namespace Particles
 	{
 		class CircleEmitter : public Emitter
 		{
 		public:
-			CircleEmitter(ParticleSystemContainer* parent, const variant& node) 			
+			CircleEmitter(std::weak_ptr<ParticleSystemContainer> parent, const variant& node) 			
 				: Emitter(parent, node), 
-				circle_radius_(Parameter::factory(node["circle_radius"])),
-				circle_step_(node["circle_step"].as_float(0.1f)), 
-				circle_angle_(node["circle_angle"].as_float(0)), 
-				circle_random_(node["emit_random"].as_bool(true)) {
+				  circle_radius_(Parameter::factory(node["circle_radius"])),
+				  circle_step_(node["circle_step"].as_float(0.1f)), 
+				  circle_angle_(node["circle_angle"].as_float(0)), 
+				  circle_random_(node["emit_random"].as_bool(true)) {
 			}
-			virtual ~CircleEmitter() {}
 		protected:
 			void internalCreate(Particle& p, float t) {
 				float angle = 0.0f;
@@ -150,8 +55,8 @@ namespace KRE
 				p.initial.position.x += r * sin(angle + circle_angle_);
 				p.initial.position.y += r * cos(angle + circle_angle_);
 			}
-			virtual Emitter* clone() {
-				return new CircleEmitter(*this);
+			virtual EmitterPtr clone() {
+				return std::make_shared<CircleEmitter>(*this);
 			}
 		private:
 			ParameterPtr circle_radius_;
@@ -165,7 +70,7 @@ namespace KRE
 		class BoxEmitter : public Emitter
 		{
 		public:
-			BoxEmitter(ParticleSystemContainer* parent, const variant& node) 
+			BoxEmitter(std::weak_ptr<ParticleSystemContainer> parent, const variant& node) 
 				: Emitter(parent, node), 
 				  box_dimensions_(100.0f) {
 				if(node.has_key("box_width")) {
@@ -178,15 +83,14 @@ namespace KRE
 					box_dimensions_.z = node["box_depth"].as_float();
 				}
 			}
-			virtual ~BoxEmitter() {}
 		protected:
 			void internalCreate(Particle& p, float t) {
 				p.initial.position.x += get_random_float(0.0f, box_dimensions_.x) - box_dimensions_.x/2;
 				p.initial.position.y += get_random_float(0.0f, box_dimensions_.y) - box_dimensions_.y/2;
 				p.initial.position.z += get_random_float(0.0f, box_dimensions_.z) - box_dimensions_.z/2;
 			}
-			virtual Emitter* clone() {
-				return new BoxEmitter(*this);
+			virtual EmitterPtr clone() {
+				return std::make_shared<BoxEmitter>(*this);
 			}
 		private:
 			glm::vec3 box_dimensions_;
@@ -196,7 +100,7 @@ namespace KRE
 		class LineEmitter : public Emitter
 		{
 		public:
-			LineEmitter(ParticleSystemContainer* parent, const variant& node) 
+			LineEmitter(std::weak_ptr<ParticleSystemContainer> parent, const variant& node) 
 				: Emitter(parent, node), 
 				  line_end_(0.0f), 
 				  line_deviation_(0.0f),
@@ -213,13 +117,12 @@ namespace KRE
 				}
 				// XXX line_end_ ?
 			}
-			virtual ~LineEmitter() {}
 		protected:
 			void internalCreate(Particle& p, float t) override {
 				// XXX todo
 			}
-			virtual Emitter* clone() {
-				return new LineEmitter(*this);
+			virtual EmitterPtr clone() {
+				return std::make_shared<LineEmitter>(*this);
 			}
 		private:
 			glm::vec3 line_end_;
@@ -233,17 +136,15 @@ namespace KRE
 		class PointEmitter : public Emitter
 		{
 		public:
-			PointEmitter(ParticleSystemContainer* parent, const variant& node) 
+			PointEmitter(std::weak_ptr<ParticleSystemContainer> parent, const variant& node) 
 				: Emitter(parent, node) 
-			{}
-			virtual ~PointEmitter() 
 			{}
 		protected:
 			void internalCreate(Particle& p, float t) {
 				// intentionally does nothing.
 			}
-			virtual Emitter* clone() {
-				return new PointEmitter(*this);
+			virtual EmitterPtr clone() {
+				return std::make_shared<PointEmitter>(*this);
 			}
 		private:
 			PointEmitter();
@@ -252,11 +153,9 @@ namespace KRE
 		class SphereSurfaceEmitter : public Emitter
 		{
 		public:
-			SphereSurfaceEmitter(ParticleSystemContainer* parent, const variant& node) 
+			SphereSurfaceEmitter(std::weak_ptr<ParticleSystemContainer> parent, const variant& node) 
 				: Emitter(parent, node), 
 				  radius_(node["radius"].as_float(1.0)) 
-			{}
-			virtual ~SphereSurfaceEmitter() 
 			{}
 		protected:
 			void internalCreate(Particle& p, float t) {
@@ -266,8 +165,8 @@ namespace KRE
 				p.initial.position.y += radius_ * sin(phi) * sin(theta);
 				p.initial.position.z += radius_ * cos(phi);
 			}
-			virtual Emitter* clone() {
-				return new SphereSurfaceEmitter(*this);
+			virtual EmitterPtr clone() {
+				return std::make_shared<SphereSurfaceEmitter>(*this);
 			}
 		private:
 			float radius_;
@@ -275,14 +174,14 @@ namespace KRE
 		};
 
 
-		Emitter::Emitter(ParticleSystemContainer* parent, const variant& node)
+		Emitter::Emitter(std::weak_ptr<ParticleSystemContainer> parent, const variant& node)
 			: EmitObject(parent, node), 
-			emission_fraction_(0.0f),
-			force_emission_(node["force_emission"].as_bool(false)),
-			force_emission_processed_(false), 
-			can_be_deleted_(false),
-			emits_type_(EmitsType::VISUAL),
-			color_(1.0f,1.0f,1.0f,1.0f)
+			  emission_fraction_(0.0f),
+			  force_emission_(node["force_emission"].as_bool(false)),
+			  force_emission_processed_(false), 
+			  can_be_deleted_(false),
+			  emits_type_(EmitsType::VISUAL),
+			  color_(1.0f,1.0f,1.0f,1.0f)
 		{
 			init_physics_parameters(initial);
 			init_physics_parameters(current);
@@ -386,10 +285,7 @@ namespace KRE
 				emits_name_ = node["emits_name"].as_string();
 			}
 			if(node.has_key("debug_draw") && node["debug_draw"].as_bool()) {
-				/*debug_draw_outline_.reset(new BoxOutline());
-				if(node.has_key("debug_draw_color")) {
-					debug_draw_outline_->setColor(variant_to_vec4(node["debug_draw_color"]));
-				}*/
+				ASSERT_LOG(false, "Implement debug draw.");
 			}
 			// Set a default duration for the emitter.
 			ASSERT_LOG(duration_ != nullptr, "PSYSTEM2: duration_ is null");
@@ -402,25 +298,24 @@ namespace KRE
 
 		Emitter::Emitter(const Emitter& e)
 			: EmitObject(e),
-			technique_(nullptr),
-			emission_rate_(e.emission_rate_),
-			time_to_live_(e.time_to_live_),
-			velocity_(e.velocity_),
-			angle_(e.angle_),
-			mass_(e.mass_),
-			duration_(e.duration_),
-			repeat_delay_(e.repeat_delay_),
-			particle_width_(e.particle_width_),
-			particle_height_(e.particle_height_),
-			particle_depth_(e.particle_depth_),
-			force_emission_(e.force_emission_),
-			force_emission_processed_(false),
-			can_be_deleted_(false),
-			emits_type_(e.emits_type_),
-			emits_name_(e.emits_name_),
-			emission_fraction_(0),
-			duration_remaining_(0),
-			color_(e.color_)
+			  emission_rate_(e.emission_rate_),
+			  time_to_live_(e.time_to_live_),
+			  velocity_(e.velocity_),
+			  angle_(e.angle_),
+			  mass_(e.mass_),
+			  duration_(e.duration_),
+			  repeat_delay_(e.repeat_delay_),
+			  particle_width_(e.particle_width_),
+			  particle_height_(e.particle_height_),
+			  particle_depth_(e.particle_depth_),
+			  force_emission_(e.force_emission_),
+			  force_emission_processed_(false),
+			  can_be_deleted_(false),
+			  emits_type_(e.emits_type_),
+			  emits_name_(e.emits_name_),
+			  emission_fraction_(0),
+			  duration_remaining_(0),
+			  color_(e.color_)
 		{
 			if(e.orientation_range_) {
 				orientation_range_.reset(new std::pair<glm::quat,glm::quat>(e.orientation_range_->first, e.orientation_range_->second));
@@ -437,8 +332,8 @@ namespace KRE
 
 		void Emitter::handleEmitProcess(float t) 
 		{
-			ASSERT_LOG(technique_ != nullptr, "PSYSTEM2: technique is null");
-			std::vector<Particle>& particles = technique_->getActiveParticles();
+			auto tq = getTechnique();
+			std::vector<Particle>& particles = tq->getActiveParticles();
 
 			float duration = duration_->getValue(static_cast<float>(t));
 			if(duration == 0.0f || duration_remaining_ >= 0.0f) {
@@ -446,8 +341,7 @@ namespace KRE
 					std::vector<Particle>::iterator start;
 
 					//create_particles(particles, start, end, t);
-					ASSERT_LOG(technique_ != nullptr, "technique_ is null");
-					size_t cnt = calculateParticlesToEmit(t, technique_->getQuota(), particles.size());
+					size_t cnt = calculateParticlesToEmit(t, tq->getQuota(), particles.size());
 					// XXX: techincally this shouldn't be needed as we reserve the default quota upon initialising
 					// the particle list. We could hit some pathological case where we allocate particles past
 					// the quota (since it isn't enforced yet). This saves us from start from being invalidated
@@ -468,7 +362,7 @@ namespace KRE
 					setParticleStartingValues(start, particles.end());
 				} else {
 					if(emits_type_ == EmitsType::EMITTER) {
-						size_t cnt = calculateParticlesToEmit(t, technique_->getEmitterQuota(), technique_->getInstancedEmitters().size());
+						size_t cnt = calculateParticlesToEmit(t, tq->getEmitterQuota(), tq->getInstancedEmitters().size());
 						//std::cerr << "XXX: Emitting " << cnt << " emitters" << std::endl;
 						for(int n = 0; n != cnt; ++n) {
 							EmitterPtr e = getParentContainer()->cloneEmitter(emits_name_);
@@ -476,37 +370,37 @@ namespace KRE
 							initParticle(*e, t);
 							internalCreate(*e, t);
 							memcpy(&e->current, &e->initial, sizeof(e->current));
-							technique_->addEmitter(e);
+							tq->addEmitter(e);
 						}
 					} else if(emits_type_ == EmitsType::AFFECTOR) {
-						size_t cnt = calculateParticlesToEmit(t, technique_->getAffectorQuota(), technique_->getInstancedAffectors().size());
+						size_t cnt = calculateParticlesToEmit(t, tq->getAffectorQuota(), tq->getInstancedAffectors().size());
 						for(int n = 0; n != cnt; ++n) {
 							AffectorPtr a = getParentContainer()->cloneAffector(emits_name_);
 							a->emitted_by = this;
 							initParticle(*a, t);
 							internalCreate(*a, t);
 							memcpy(&a->current, &a->initial, sizeof(a->current));
-							technique_->addAffector(a);
+							tq->addAffector(a);
 						}
 					} else if(emits_type_ == EmitsType::TECHNIQUE) {
-						size_t cnt = calculateParticlesToEmit(t, technique_->getTechniqueQuota(), technique_->getParticleSystem()->getActiveTechniques().size());
+						size_t cnt = calculateParticlesToEmit(t, tq->getTechniqueQuota(), tq->getParticleSystem()->getActiveTechniques().size());
 						for(int n = 0; n != cnt; ++n) {
 							TechniquePtr tq = getParentContainer()->cloneTechnique(emits_name_);
 							tq->emitted_by = this;
 							initParticle(*tq, t);
 							internalCreate(*tq, t);
 							memcpy(&tq->current, &tq->initial, sizeof(tq->current));
-							technique_->getParticleSystem()->addTechnique(tq);
+							tq->getParticleSystem()->addTechnique(tq);
 						}
 					} else if(emits_type_ == EmitsType::SYSTEM) {
-						size_t cnt = calculateParticlesToEmit(t, technique_->getSystemQuota(), getParentContainer()->getActiveParticleSystems().size());
+						size_t cnt = calculateParticlesToEmit(t, tq->getSystemQuota(), getParentContainer()->getActiveParticleSystems().size());
 						for(int n = 0; n != cnt; ++n) {
 							ParticleSystemPtr ps = getParentContainer()->cloneParticleSystem(emits_name_);
 							ps->emitted_by = this;
 							initParticle(*ps, t);
 							internalCreate(*ps, t);
 							memcpy(&ps->current, &ps->initial, sizeof(ps->current));
-							getParentContainer()->addParticleSystem(ps.get());
+							getParentContainer()->addParticleSystem(ps);
 						}
 					} else {
 						ASSERT_LOG(false, "PSYSTEM2: unknown emits_type: " << static_cast<int>(emits_type_));
@@ -533,7 +427,7 @@ namespace KRE
 			if(force_emission_) {
 				if(!force_emission_processed_) {
 					// Single shot of all particles at once.
-					cnt = static_cast<size_t>(emission_rate_->getValue(technique_->getParticleSystem()->getElapsedTime()));
+					cnt = static_cast<size_t>(emission_rate_->getValue(getTechnique()->getParticleSystem()->getElapsedTime()));
 					force_emission_processed_ = true;
 				}
 			} else {
@@ -565,14 +459,15 @@ namespace KRE
 
 		void Emitter::initParticle(Particle& p, float t)
 		{
+			auto ps = getTechnique()->getParticleSystem();
 			init_physics_parameters(p.initial);
 			init_physics_parameters(p.current);
 			p.initial.position = current.position;
 			p.initial.color = getColor();
-			p.initial.time_to_live = time_to_live_->getValue(technique_->getParticleSystem()->getElapsedTime());
-			p.initial.velocity = velocity_->getValue(technique_->getParticleSystem()->getElapsedTime());
-			p.initial.mass = mass_->getValue(technique_->getParticleSystem()->getElapsedTime());
-			p.initial.dimensions = technique_->getDefaultDimensions();
+			p.initial.time_to_live = time_to_live_->getValue(ps->getElapsedTime());
+			p.initial.velocity = velocity_->getValue(ps->getElapsedTime());
+			p.initial.mass = mass_->getValue(ps->getElapsedTime());
+			p.initial.dimensions = getTechnique()->getDefaultDimensions();
 			if(orientation_range_) {
 				p.initial.orientation = glm::slerp(orientation_range_->first, orientation_range_->second, get_random_float(0.0f,1.0f));
 			} else {
@@ -593,9 +488,7 @@ namespace KRE
 
 		float Emitter::generateAngle() const
 		{
-			ASSERT_LOG(technique_ != nullptr, "PSYSTEM2: technique_ is null");
-			ASSERT_LOG(technique_->getParticleSystem() != nullptr, "PSYSTEM2: technique_->get_parent_system() is null");
-			float angle = angle_->getValue(technique_->getParticleSystem()->getElapsedTime());
+			float angle = angle_->getValue(getTechnique()->getParticleSystem()->getElapsedTime());
 			if(angle_->type() == ParameterType::FIXED) {
 				return get_random_float() * angle;
 			}
@@ -631,25 +524,29 @@ namespace KRE
 
 		void Emitter::handleDraw() const
 		{
-			/*if(debug_draw_outline_) {
-				debug_draw_outline_->draw(current.position, current.orientation, glm::vec3(0.25f,0.25f,0.25f));
-			}*/
 		}
 
-		Emitter* Emitter::factory(ParticleSystemContainer* parent, const variant& node)
+		TechniquePtr Emitter::getTechnique() const
+		{
+			auto tq = technique_.lock();
+			ASSERT_LOG(tq != nullptr, "No parent technique found.");
+			return tq;
+		}
+
+		EmitterPtr Emitter::factory(std::weak_ptr<ParticleSystemContainer> parent, const variant& node)
 		{
 			ASSERT_LOG(node.has_key("type"), "PSYSTEM2: emitter must have 'type' attribute");
 			const std::string& ntype = node["type"].as_string();
 			if(ntype == "circle") {
-				return new CircleEmitter(parent, node);
+				return std::make_shared<CircleEmitter>(parent, node);
 			} else if(ntype == "box") {
-				return new BoxEmitter(parent, node);
+				return std::make_shared<BoxEmitter>(parent, node);
 			} else if(ntype == "line") {
-				return new LineEmitter(parent, node);
+				return std::make_shared<LineEmitter>(parent, node);
 			} else if(ntype == "point") {
-				return new PointEmitter(parent, node);
+				return std::make_shared<PointEmitter>(parent, node);
 			} else if(ntype == "sphere_surface") {
-				return new SphereSurfaceEmitter(parent, node);
+				return std::make_shared<SphereSurfaceEmitter>(parent, node);
 			}
 			ASSERT_LOG(false, "PSYSTEM2: Unrecognised emitter type: " << ntype);
 			return nullptr;

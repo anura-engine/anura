@@ -30,16 +30,19 @@ namespace KRE
 	{
 		namespace 
 		{
-			class clear_event_handler : public event_handler
+			class ClearEventHandler : public EventHandler
 			{
 			public:
-				clear_event_handler(const variant& node) : event_handler(node), seen_particles_(false) {
+				ClearEventHandler(const variant& node) 
+					: EventHandler(node), 
+					  seen_particles_(false) 
+				{
 				}
-				event_handler* clone() override {
-					return new clear_event_handler(*this);
+				EventHandlerPtr clone() const override {
+					return std::make_shared<ClearEventHandler>(*this);
 				}
 			private:
-				bool handle_process(Technique* tech, float t) override {
+				bool handleProcess(TechniquePtr tech, float t) override {
 					ASSERT_LOG(tech != nullptr, "technique was null pointer.");
 					if(!seen_particles_) {
 						if(tech->getActiveParticles().size() > 0) {
@@ -57,7 +60,7 @@ namespace KRE
 			};
 		}
 
-		event_handler::event_handler(const variant& node)
+		EventHandler::EventHandler(const variant& node)
 			: name_(node["name"].as_string()),
 			  enabled_(node["enabled"].as_bool(true)),
 			  observe_till_event_(node["observe_till_event"].as_bool(false)),
@@ -65,28 +68,28 @@ namespace KRE
 		{
 		}
 
-		event_handler::~event_handler()
+		EventHandler::~EventHandler()
 		{
 		}
 
-		void event_handler::process(Technique* tech, float t)
+		void EventHandler::process(TechniquePtr tech, float t)
 		{
 			if(enabled_) {
 				if(observe_till_event_ && actions_executed_) {
 					return;
 				}
-				if(handle_process(tech, t)) {
-					process_actions(tech, t);
+				if(handleProcess(tech, t)) {
+					processActions(tech, t);
 				}
 			}
 		}
 
-		void event_handler::add_action(action_ptr evt)
+		void EventHandler::addAction(ActionPtr evt)
 		{
 			actions_.emplace_back(evt);
 		}
 
-		void event_handler::process_actions(Technique* tech, float t)
+		void EventHandler::processActions(TechniquePtr tech, float t)
 		{
 			for(auto a : actions_) {
 				a->execute(tech, t);
@@ -94,41 +97,41 @@ namespace KRE
 			actions_executed_ = true;
 		}
 
-		event_handler_ptr event_handler::create(const variant& node)
+		EventHandlerPtr EventHandler::create(const variant& node)
 		{
 			const std::string& type = node["type"].as_string();
 			if(type == "on_clear") {
-				return std::make_shared<clear_event_handler>(node);
+				return std::make_shared<ClearEventHandler>(node);
 			}
 
 			ASSERT_LOG(false, "No handler found of type: " << type);
-			return event_handler_ptr();
+			return EventHandlerPtr();
 		}
 
-		action::action(const variant& node)
+		Action::Action(const variant& node)
 			: name_(node["name"].as_string())
 		{
 			// XXX
 		}
 
-		action::~action()
+		Action::~Action()
 		{
 		}
 		
-		void action::execute(Technique* tech, float t)
+		void Action::execute(TechniquePtr tech, float t)
 		{
 			// XXX
 		}
 
-		action_ptr action::create(const variant& node)
+		ActionPtr Action::create(const variant& node)
 		{
 			const std::string& type = node["type"].as_string();
 			// XXX
 			//if(type == "stop_system") {
-			//	return std::make_shared<stop_system_action>(node);
+			//	return std::make_shared<StopSystemAction>(node);
 			//}
 			ASSERT_LOG(false, "No handler found of type: " << type);
-			return action_ptr();
+			return ActionPtr();
 		}
 	}
 }

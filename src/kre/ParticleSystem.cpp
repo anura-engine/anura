@@ -28,7 +28,6 @@
 #include "ParticleSystemAffectors.hpp"
 #include "ParticleSystemParameters.hpp"
 #include "ParticleSystemEmitters.hpp"
-#include "SceneGraph.hpp"
 #include "Shaders.hpp"
 #include "spline.hpp"
 #include "WindowManager.hpp"
@@ -38,14 +37,8 @@ namespace KRE
 {
 	namespace Particles
 	{
-		// This is set to be the frame rate/process interval
-		// XXX: This really should be a global system constant somewhere
-		const float process_step_time = 1.0f/50.0f;
-
 		namespace 
 		{
-			SceneNodeRegistrar<ParticleSystemContainer> psc_register("particle_system_container");
-
 			std::default_random_engine& get_rng_engine() 
 			{
 				static std::unique_ptr<std::default_random_engine> res;
@@ -146,21 +139,20 @@ namespace KRE
 			return q * v;
 		}
 
-		ParticleSystem::ParticleSystem(SceneGraph* sg, ParticleSystemContainer* parent, const variant& node)
+		ParticleSystem::ParticleSystem(std::weak_ptr<ParticleSystemContainer> parent, const variant& node)
 			: EmitObject(parent, node), 
-			SceneNode(sg),
-			elapsed_time_(0.0f), 
-			scale_velocity_(1.0f), 
-			scale_time_(1.0f),
-			scale_dimensions_(1.0f)
+			  elapsed_time_(0.0f), 
+			  scale_velocity_(1.0f), 
+			  scale_time_(1.0f),
+			  scale_dimensions_(1.0f)
 		{
-			ASSERT_LOG(node.has_key("Technique"), "PSYSTEM2: Must have a list of techniques to create particles.");
-			ASSERT_LOG(node["Technique"].is_map() || node["Technique"].is_list(), "PSYSTEM2: 'Technique' attribute must be map or list.");
-			if(node["Technique"].is_map()) {
-				getParentContainer()->addTechnique(new Technique(parent, node["Technique"]));
+			ASSERT_LOG(node.has_key("technique"), "PSYSTEM2: Must have a list of techniques to create particles.");
+			ASSERT_LOG(node["technique"].is_map() || node["Technique"].is_list(), "PSYSTEM2: 'technique' attribute must be map or list.");
+			if(node["technique"].is_map()) {
+				getParentContainer()->addTechnique(std::make_shared<Technique>(parent, node["technique"]));
 			} else {
-				for(size_t n = 0; n != node["Technique"].num_elements(); ++n) {
-					getParentContainer()->addTechnique(new Technique(parent, node["Technique"][n]));
+				for(size_t n = 0; n != node["technique"].num_elements(); ++n) {
+					getParentContainer()->addTechnique(std::make_shared<Technique>(parent, node["technique"][n]));
 				}
 			}
 			if(node.has_key("fast_forward")) {
@@ -182,19 +174,19 @@ namespace KRE
 			if(node.has_key("active_techniques")) {
 				if(node["active_techniques"].is_list()) {
 					for(size_t n = 0; n != node["active_techniques"].num_elements(); ++n) {
-						active_techniques_.push_back(getParentContainer()->cloneTechnique(node["active_techniques"][n].as_string()));
-						active_techniques_.back()->setParent(this);
+						active_techniques_.emplace_back(getParentContainer()->cloneTechnique(node["active_techniques"][n].as_string()));
+						active_techniques_.back()->setParent(ParticleSystem::shared_from_this());
 					}
 				} else if(node["active_techniques"].is_string()) {
-					active_techniques_.push_back(getParentContainer()->cloneTechnique(node["active_techniques"].as_string()));
-					active_techniques_.back()->setParent(this);					
+					active_techniques_.emplace_back(getParentContainer()->cloneTechnique(node["active_techniques"].as_string()));
+					active_techniques_.back()->setParent(ParticleSystem::shared_from_this());					
 				} else {
 					ASSERT_LOG(false, "PSYSTEM2: 'active_techniques' attribute must be list of strings or single string.");
 				}
 			} else {
 				active_techniques_ = getParentContainer()->cloneTechniques();
 				for(auto tq : active_techniques_) {
-					tq->setParent(this);
+					tq->setParent(ParticleSystem::shared_from_this());
 				}
 			}
 
@@ -212,24 +204,16 @@ namespace KRE
 
 		ParticleSystem::ParticleSystem(const ParticleSystem& ps)
 			: EmitObject(ps),
-			SceneNode(const_cast<ParticleSystem&>(ps).parentGraph()),
-			elapsed_time_(0),
-			scale_velocity_(ps.scale_velocity_),
-			scale_time_(ps.scale_time_),
-			scale_dimensions_(ps.scale_dimensions_)
+			  elapsed_time_(0),
+			  scale_velocity_(ps.scale_velocity_),
+			  scale_time_(ps.scale_time_),
+			  scale_dimensions_(ps.scale_dimensions_)
 		{
 			if(ps.fast_forward_) {
 				fast_forward_.reset(new std::pair<float,float>(ps.fast_forward_->first, ps.fast_forward_->second));
 			}
 			for(auto tq : ps.active_techniques_) {
-				active_techniques_.push_back(TechniquePtr(new Technique(*tq)));
-			}
-		}
-
-		void ParticleSystem::notifyNodeAttached(SceneNode* parent)
-		{
-			for(auto t : active_techniques_) {
-				attachObject(t);
+				active_techniques_.emplace_back(TechniquePtr(new Technique(*tq)));
 			}
 		}
 
@@ -248,31 +232,30 @@ namespace KRE
 
 		void ParticleSystem::addTechnique(TechniquePtr tq)
 		{
-			active_techniques_.push_back(tq);
-			tq->setParent(this);
+			active_techniques_.emplace_back(tq);
+			tq->setParent(shared_from_this());
 		}
 
-		ParticleSystem* ParticleSystem::factory(ParticleSystemContainer* parent, const variant& node)
+		ParticleSystemPtr ParticleSystem::factory(std::weak_ptr<ParticleSystemContainer> parent, const variant& node)
 		{
-			return new ParticleSystem(parent->parentGraph(), parent, node);
+			return std::make_shared<ParticleSystem>(parent, node);
 		}
 
-		Technique::Technique(ParticleSystemContainer* parent, const variant& node)
-			: SceneObject("Technique"),
-			EmitObject(parent, node), 
-			default_particle_width_(node["default_particle_width"].as_float(1.0f)),
-			default_particle_height_(node["default_particle_height"].as_float(1.0f)),
-			default_particle_depth_(node["default_particle_depth"].as_float(1.0f)),
-			lod_index_(node["lod_index"].as_int32(0)), velocity_(1.0f),
-			emitter_quota_(node["emitted_emitter_quota"].as_int32(50)),
-			affector_quota_(node["emitted_affector_quota"].as_int32(10)),
-			technique_quota_(node["emitted_technique_quota"].as_int32(10)),
-			system_quota_(node["emitted_system_quota"].as_int32(10))
+		Technique::Technique(std::weak_ptr<ParticleSystemContainer> parent, const variant& node)
+			: SceneObject(node),
+			  EmitObject(parent, node), 
+			  default_particle_width_(node["default_particle_width"].as_float(1.0f)),
+			  default_particle_height_(node["default_particle_height"].as_float(1.0f)),
+			  default_particle_depth_(node["default_particle_depth"].as_float(1.0f)),
+			  lod_index_(node["lod_index"].as_int32(0)), velocity_(1.0f),
+			  emitter_quota_(node["emitted_emitter_quota"].as_int32(50)),
+			  affector_quota_(node["emitted_affector_quota"].as_int32(10)),
+			  technique_quota_(node["emitted_technique_quota"].as_int32(10)),			
+			  system_quota_(node["emitted_system_quota"].as_int32(10))
 		{
 			ASSERT_LOG(node.has_key("visual_particle_quota"), "PSYSTEM2: 'Technique' must have 'visual_particle_quota' attribute.");
 			particle_quota_ = node["visual_particle_quota"].as_int32();
 			ASSERT_LOG(node.has_key("material"), "PSYSTEM2: 'Technique' must have 'material' attribute.");
-			setTexture(Texture::createTexture(node["texture"]));
 			//ASSERT_LOG(node.has_key("renderer"), "PSYSTEM2: 'Technique' must have 'renderer' attribute.");
 			//renderer_.reset(new renderer(node["renderer"]));
 			if(node.has_key("emitter")) {
@@ -307,12 +290,12 @@ namespace KRE
 				for(auto e : active_emitters) {
 					auto em = getParentContainer()->cloneEmitter(e);
 					active_emitters_.emplace_back(em);
-					em->setParentTechnique(this);
+					em->setParentTechnique(shared_from_this());
 				}
 			} else {
 				for(auto es : getParentContainer()->cloneEmitters()) {
 					active_emitters_.emplace_back(es);
-					es->setParentTechnique(this);
+					es->setParentTechnique(shared_from_this());
 				}
 			}
 			if(node.has_key("active_affectors")) {
@@ -320,12 +303,12 @@ namespace KRE
 				for(auto a : active_affectors) {
 					auto aff = getParentContainer()->cloneAffector(a);
 					active_affectors_.emplace_back(aff);
-					aff->setParentTechnique(this);
+					aff->setParentTechnique(shared_from_this());
 				}
 			} else {
 				for(auto as : getParentContainer()->cloneAffectors()) {
 					active_affectors_.emplace_back(as);
-					as->setParentTechnique(this);
+					as->setParentTechnique(shared_from_this());
 				}
 			}
 
@@ -339,20 +322,27 @@ namespace KRE
 		{
 		}
 
+		ParticleSystemPtr Technique::getParticleSystem() const
+		{ 
+			auto ps = particle_system_.lock();
+			ASSERT_LOG(ps != nullptr, "Parent particle system was null.");
+			return ps;
+		}
+
 		Technique::Technique(const Technique& tq) 
-			: SceneObject(tq.objectName()),
-			EmitObject(tq),
-			default_particle_width_(tq.default_particle_width_),
-			default_particle_height_(tq.default_particle_height_),
-			default_particle_depth_(tq.default_particle_depth_),
-			particle_quota_(tq.particle_quota_),
-			emitter_quota_(tq.emitter_quota_),
-			affector_quota_(tq.affector_quota_),
-			technique_quota_(tq.technique_quota_),
-			system_quota_(tq.system_quota_),
-			lod_index_(tq.lod_index_),
-			velocity_(tq.velocity_),
-			particle_system_(tq.particle_system_)
+			: SceneObject(tq),
+			  EmitObject(tq),
+			  default_particle_width_(tq.default_particle_width_),
+			  default_particle_height_(tq.default_particle_height_),
+			  default_particle_depth_(tq.default_particle_depth_),
+			  particle_quota_(tq.particle_quota_),
+			  emitter_quota_(tq.emitter_quota_),
+			  affector_quota_(tq.affector_quota_),
+			  technique_quota_(tq.technique_quota_),
+			  system_quota_(tq.system_quota_),
+			  lod_index_(tq.lod_index_),
+			  velocity_(tq.velocity_),
+			  particle_system_(tq.particle_system_)
 		{
 			setShader(ShaderProgram::getProgram("vtc_shader"));
 
@@ -366,36 +356,36 @@ namespace KRE
 			// emitters/affectors, or whether we should maintain a list of 
 			// emitters/affectors that were initially specified.
 			for(auto e : tq.active_emitters_) {
-				active_emitters_.push_back(EmitterPtr(e->clone()));
-				active_emitters_.back()->setParentTechnique(this);
+				active_emitters_.emplace_back(EmitterPtr(e->clone()));
+				active_emitters_.back()->setParentTechnique(shared_from_this());
 			}
 			for(auto a : tq.active_affectors_) {
-				active_affectors_.push_back(AffectorPtr(a->clone()));
-				active_affectors_.back()->setParentTechnique(this);
+				active_affectors_.emplace_back(AffectorPtr(a->clone()));
+				active_affectors_.back()->setParentTechnique(shared_from_this());
 			}
 			active_particles_.reserve(particle_quota_);
 
 			init();
 		}
 
-		void Technique::setParent(ParticleSystem* parent)
+		void Technique::setParent(std::weak_ptr<ParticleSystem> parent)
 		{
-			ASSERT_LOG(parent != nullptr, "PSYSTEM2: parent is null");
+			ASSERT_LOG(parent.lock() != nullptr, "PSYSTEM2: parent is null");
 			particle_system_ = parent;
 		}
 
 		void Technique::addEmitter(EmitterPtr e) 
 		{
-			e->setParentTechnique(this);
-			//active_emitters_.push_back(e);
-			instanced_emitters_.push_back(e);
+			e->setParentTechnique(shared_from_this());
+			//active_emitters_.emplace_back(e);
+			instanced_emitters_.emplace_back(e);
 		}
 
 		void Technique::addAffector(AffectorPtr a) 
 		{
-			a->setParentTechnique(this);
-			//active_affectors_.push_back(a);
-			instanced_affectors_.push_back(a);
+			a->setParentTechnique(shared_from_this());
+			//active_affectors_.emplace_back(a);
+			instanced_affectors_.emplace_back(a);
 		}
 
 		void Technique::handleEmitProcess(float t)
@@ -416,11 +406,11 @@ namespace KRE
 
 			// Decrement the ttl on particles
 			for(auto& p : active_particles_) {
-				p.current.time_to_live -= process_step_time;
+				p.current.time_to_live -= t;
 			}
 			// Decrement the ttl on instanced emitters
 			for(auto e : instanced_emitters_) {
-				e->current.time_to_live -= process_step_time;
+				e->current.time_to_live -= t;
 			}
 
 			// Kill end-of-life particles
@@ -479,7 +469,7 @@ namespace KRE
 			setOrder(1);
 		}
 
-		void Technique::preRender(const WindowManagerPtr& wnd)
+		void Technique::preRender(const WindowPtr& wnd)
 		{
 			//LOG_DEBUG("Technique::preRender, particle count: " << active_particles_.size());
 			std::vector<vertex_texture_color3> vtc;
@@ -498,30 +488,40 @@ namespace KRE
 			getAttributeSet().back()->setCount(active_particles_.size());
 		}
 
-		ParticleSystemContainer::ParticleSystemContainer(SceneGraph* sg, const variant& node) 
-			: SceneNode(sg)
+		ParticleSystemContainer::ParticleSystemContainer(const variant& node) 
+			: SceneObject(node)
+		{
+		}
+
+		ParticleSystemContainer::ParticleSystemContainer()
+			: SceneObject("ParticleSystemContainer")
+		{
+			ASSERT_LOG(false, "ParticleSystemContainer::ParticleSystemContainer() called.");
+		}
+
+		void ParticleSystemContainer::init(const variant& node)
 		{
 			if(node.has_key("systems")) {
 				if(node["systems"].is_list()) {
 					for(size_t n = 0; n != node["systems"].num_elements(); ++n) {
-						addParticleSystem(ParticleSystem::factory(this, node["systems"][n]));
+						addParticleSystem(ParticleSystem::factory(shared_from_this(), node["systems"][n]));
 					}
 				} else if(node["systems"].is_map()) {
-					addParticleSystem(ParticleSystem::factory(this, node["systems"]));
+					addParticleSystem(ParticleSystem::factory(shared_from_this(), node["systems"]));
 				} else {
 					ASSERT_LOG(false, "PSYSTEM2: unrecognised type for 'systems' attribute must be list or map");
 				}
 			} else {
-				addParticleSystem(ParticleSystem::factory(this, node));
+				addParticleSystem(ParticleSystem::factory(shared_from_this(), node));
 			}
 
 			if(node.has_key("active_systems")) {
 				if(node["active_systems"].is_list()) {
 					for(size_t n = 0; n != node["active_systems"].num_elements(); ++n) {
-						active_particle_systems_.push_back(cloneParticleSystem(node["active_systems"][n].as_string()));
+						active_particle_systems_.emplace_back(cloneParticleSystem(node["active_systems"][n].as_string()));
 					}
 				} else if(node["active_systems"].is_string()) {
-					active_particle_systems_.push_back(cloneParticleSystem(node["active_systems"].as_string()));
+					active_particle_systems_.emplace_back(cloneParticleSystem(node["active_systems"].as_string()));
 				} else {
 					ASSERT_LOG(false, "PSYSTEM2: 'active_systems' attribute must be a string or list of strings.");
 				}
@@ -530,56 +530,64 @@ namespace KRE
 			}
 		}
 
-		void ParticleSystemContainer::notifyNodeAttached(SceneNode* parent)
+		ParticleSystemContainerPtr ParticleSystemContainer::create(const variant& node)
 		{
-			for(auto& a : active_particle_systems_) {
-				attachNode(a);
-				a->setNodeName("ps_node_" + a->name());
-			}
+			auto ps = new ParticleSystemContainer;
+			ps->init(node);
+			return ParticleSystemContainerPtr(ps);
 		}
 
 		ParticleSystemContainer::~ParticleSystemContainer()
 		{
 		}
 
-		void ParticleSystemContainer::process(float current_time)
+		void ParticleSystemContainer::process(float delta_time)
 		{
 			//LOG_DEBUG("ParticleSystemContainer::Process: " << current_time);
 			for(auto ps : active_particle_systems_) {
-				ps->emitProcess(process_step_time);
+				ps->emitProcess(delta_time);
 			}
 		}
 
-		void ParticleSystemContainer::addParticleSystem(ParticleSystem* obj)
+		void ParticleSystemContainer::preRender(const WindowPtr& wnd)
 		{
-			particle_systems_.push_back(ParticleSystemPtr(obj));
+			for(auto& ps : active_particle_systems_) {
+				for(auto& tq : ps->getActiveTechniques()) {
+					tq->preRender(wnd);
+				}
+			}
 		}
 
-		void ParticleSystemContainer::addTechnique(Technique* obj)
+		void ParticleSystemContainer::addParticleSystem(ParticleSystemPtr obj)
 		{
-			techniques_.push_back(TechniquePtr(obj));
+			particle_systems_.emplace_back(obj);
 		}
 
-		void ParticleSystemContainer::addEmitter(Emitter* obj)
+		void ParticleSystemContainer::addTechnique(TechniquePtr obj)
 		{
-			emitters_.push_back(EmitterPtr(obj));
+			techniques_.emplace_back(obj);
 		}
 
-		void ParticleSystemContainer::addAffector(Affector* obj) 
+		void ParticleSystemContainer::addEmitter(EmitterPtr obj)
 		{
-			affectors_.push_back(AffectorPtr(obj));
+			emitters_.emplace_back(obj);
+		}
+
+		void ParticleSystemContainer::addAffector(AffectorPtr obj) 
+		{
+			affectors_.emplace_back(obj);
 		}
 
 		void ParticleSystemContainer::getActivateParticleSystem(const std::string& name)
 		{
-			active_particle_systems_.push_back(cloneParticleSystem(name));
+			active_particle_systems_.emplace_back(cloneParticleSystem(name));
 		}
 
 		ParticleSystemPtr ParticleSystemContainer::cloneParticleSystem(const std::string& name)
 		{
 			for(auto ps : particle_systems_) {
 				if(ps->name() == name) {
-					return ParticleSystemPtr(new ParticleSystem(*ps));
+					return std::make_shared<ParticleSystem>(*ps);
 				}
 			}
 			ASSERT_LOG(false, "PSYSTEM2: ParticleSystem not found: " << name);
@@ -590,7 +598,7 @@ namespace KRE
 		{
 			for(auto tq : techniques_) {
 				if(tq->name() == name) {
-					return TechniquePtr(new Technique(*tq));
+					return std::make_shared<Technique>(*tq);
 				}
 			}
 			ASSERT_LOG(false, "PSYSTEM2: Technique not found: " << name);
@@ -601,7 +609,7 @@ namespace KRE
 		{
 			for(auto e : emitters_) {
 				if(e->name() == name) {
-					return EmitterPtr(e->clone());
+					return e->clone();
 				}
 			}
 			ASSERT_LOG(false, "PSYSTEM2: emitter not found: " << name);
@@ -612,7 +620,7 @@ namespace KRE
 		{
 			for(auto a : affectors_) {
 				if(a->name() == name) {
-					return AffectorPtr(a->clone());
+					return a->clone();
 				}
 			}
 			ASSERT_LOG(false, "PSYSTEM2: affector not found: " << name);
@@ -623,7 +631,7 @@ namespace KRE
 		{
 			std::vector<ParticleSystemPtr> res;
 			for(auto ps : particle_systems_) {
-				res.push_back(ParticleSystemPtr(new ParticleSystem(*ps)));
+				res.emplace_back(std::make_shared<ParticleSystem>(*ps));
 			}
 			return res;
 		}
@@ -632,7 +640,7 @@ namespace KRE
 		{
 			std::vector<TechniquePtr> res;
 			for(auto tq : techniques_) {
-				res.push_back(TechniquePtr(new Technique(*tq)));
+				res.emplace_back(std::make_shared<Technique>(*tq));
 			}
 			return res;
 		}
@@ -641,7 +649,7 @@ namespace KRE
 		{
 			std::vector<EmitterPtr> res;
 			for(auto e : emitters_) {
-				res.push_back(EmitterPtr(e->clone()));
+				res.emplace_back(e->clone());
 			}
 			return res;
 		}
@@ -650,9 +658,29 @@ namespace KRE
 		{
 			std::vector<AffectorPtr> res;
 			for(auto a : affectors_) {
-				res.push_back(AffectorPtr(a->clone()));
+				res.emplace_back(a->clone());
 			}
 			return res;
+		}
+
+		EmitObject::EmitObject(std::weak_ptr<ParticleSystemContainer> parent, const variant& node) 
+			: parent_container_(parent) 
+		{
+			ASSERT_LOG(parent.lock() != nullptr, "PSYSTEM2: parent is null");
+			if(node.has_key("name")) {
+				name_ = node["name"].as_string();
+			} else {
+				std::stringstream ss;
+				ss << "emit_object_" << int(get_random_float());
+				name_ = ss.str();
+			}
+		}
+
+		ParticleSystemContainerPtr EmitObject::getParentContainer() const 
+		{ 
+			auto parent = parent_container_.lock();
+			ASSERT_LOG(parent != nullptr, "PSYSTEM2: parent container is nullptr");
+			return parent; 
 		}
 
 		const glm::vec3& EmitObject::getPosition() const 

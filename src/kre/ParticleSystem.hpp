@@ -70,6 +70,7 @@ namespace KRE
 		{
 			PhysicsParameters current;
 			PhysicsParameters initial;
+			// Still wavering over whether this should be std::weak_ptr<Emitter>
 			Emitter* emitted_by;
 		};
 
@@ -78,17 +79,7 @@ namespace KRE
 		class EmitObject : public Particle
 		{
 		public:
-			explicit EmitObject(ParticleSystemContainer* parent, const variant& node) 
-				: parent_container_(parent) {
-				ASSERT_LOG(parent != nullptr, "PSYSTEM2: parent is null");
-				if(node.has_key("name")) {
-					name_ = node["name"].as_string();
-				} else {
-					std::stringstream ss;
-					ss << "emit_object_" << int(get_random_float());
-					name_ = ss.str();
-				}
-			}
+			explicit EmitObject(std::weak_ptr<ParticleSystemContainer> parent, const variant& node);
 			virtual ~EmitObject() {}
 			const std::string& name() const { return name_; }
 			void emitProcess(float t) {
@@ -97,10 +88,7 @@ namespace KRE
 			void draw() const {
 				handleDraw();
 			}
-			ParticleSystemContainer* getParentContainer() { 
-				ASSERT_LOG(parent_container_ != nullptr, "PSYSTEM2: parent container is nullptr");
-				return parent_container_; 
-			}
+			ParticleSystemContainerPtr getParentContainer() const;
 			virtual const glm::vec3& getPosition() const;
 			virtual void setPosition(const glm::vec3& pos) {}
 		protected:
@@ -109,15 +97,15 @@ namespace KRE
 			virtual void handleEmitProcess(float t) = 0;
 			virtual void handleDraw() const {}
 			std::string name_;
-			ParticleSystemContainer* parent_container_;
+			std::weak_ptr<ParticleSystemContainer> parent_container_;
 
 			EmitObject();
 		};
 
-		class Technique  : public EmitObject, public SceneObject
+		class Technique  : public EmitObject, public SceneObject, public std::enable_shared_from_this<Technique>
 		{
 		public:
-			explicit Technique(ParticleSystemContainer* parent, const variant& node);
+			explicit Technique(std::weak_ptr<ParticleSystemContainer> parent, const variant& node);
 			Technique(const Technique& tq);
 			virtual ~Technique();
 
@@ -128,16 +116,16 @@ namespace KRE
 			size_t getTechniqueQuota() const { return technique_quota_; }
 			size_t getAffectorQuota() const { return affector_quota_; }
 			glm::vec3 getDefaultDimensions() const { return glm::vec3(default_particle_width_, default_particle_height_, default_particle_depth_); }
-			ParticleSystem* getParticleSystem() { return particle_system_; }
+			ParticleSystemPtr getParticleSystem() const;
 			EmitObjectPtr getEmitObject(const std::string& name);
-			void setParent(ParticleSystem* parent);
+			void setParent(std::weak_ptr<ParticleSystem> parent);
 			// Direct access here for *speed* reasons.
 			std::vector<Particle>& getActiveParticles() { return active_particles_; }
 			std::vector<EmitterPtr>& getInstancedEmitters() { return instanced_emitters_; }
 			std::vector<AffectorPtr>& getInstancedAffectors() { return instanced_affectors_; }
 			void addEmitter(EmitterPtr e);
 			void addAffector(AffectorPtr a);
-			void preRender(const WindowManagerPtr& wnd) override;
+			void preRender(const WindowPtr& wnd);
 		private:
 			void init();
 			void handleEmitProcess(float t) override;
@@ -164,7 +152,7 @@ namespace KRE
 			std::vector<AffectorPtr> instanced_affectors_;
 
 			// Parent particle system
-			ParticleSystem* particle_system_;
+			std::weak_ptr<ParticleSystem> particle_system_;
 
 			// List of particles currently active.
 			std::vector<Particle> active_particles_;
@@ -172,10 +160,10 @@ namespace KRE
 			Technique();
 		};
 
-		class ParticleSystem : public EmitObject, public SceneNode
+		class ParticleSystem : public EmitObject, public std::enable_shared_from_this<ParticleSystem>
 		{
 		public:
-			explicit ParticleSystem(SceneGraph* sg, ParticleSystemContainer* parent, const variant& node);
+			explicit ParticleSystem(std::weak_ptr<ParticleSystemContainer> parent, const variant& node);
 			ParticleSystem(const ParticleSystem& ps);
 			virtual ~ParticleSystem();
 
@@ -184,14 +172,13 @@ namespace KRE
 			float getScaleTime() const { return scale_time_; }
 			const glm::vec3& getScaleDimensions() const { return scale_dimensions_; }
 
-			static ParticleSystem* factory(ParticleSystemContainer* parent, const variant& node);
+			static std::shared_ptr<ParticleSystem> factory(std::weak_ptr<ParticleSystemContainer> parent, const variant& node);
 
 			void addTechnique(TechniquePtr tq);
 			std::vector<TechniquePtr>& getActiveTechniques() { return active_techniques_; }
 
 		protected:
 			virtual void handleEmitProcess(float t) override;
-			void notifyNodeAttached(SceneNode* parent) override;
 			void update(float t);
 
 			float elapsed_time_;
@@ -207,11 +194,13 @@ namespace KRE
 			ParticleSystem();
 		};
 
-		class ParticleSystemContainer : public SceneNode
+		class ParticleSystemContainer : public SceneObject, public std::enable_shared_from_this<ParticleSystemContainer>
 		{
 		public:
-			explicit ParticleSystemContainer(SceneGraph* sg, const variant& node);
 			virtual ~ParticleSystemContainer();
+
+			// Must be called after being created.
+			void init(const variant& node);
 
 			void getActivateParticleSystem(const std::string& name);
 			std::vector<ParticleSystemPtr>& getActiveParticleSystems() { return active_particle_systems_; }
@@ -221,19 +210,23 @@ namespace KRE
 			EmitterPtr cloneEmitter(const std::string& name);
 			AffectorPtr cloneAffector(const std::string& name);
 
-			void addParticleSystem(ParticleSystem* obj);
-			void addTechnique(Technique* obj);
-			void addEmitter(Emitter* obj);
-			void addAffector(Affector* obj);
+			void addParticleSystem(ParticleSystemPtr obj);
+			void addTechnique(TechniquePtr obj);
+			void addEmitter(EmitterPtr obj);
+			void addAffector(AffectorPtr obj);
 
 			std::vector<ParticleSystemPtr> cloneParticleSystems();
 			std::vector<TechniquePtr> cloneTechniques();
 			std::vector<EmitterPtr> cloneEmitters();
 			std::vector<AffectorPtr> cloneAffectors();
 
-			void process(float current_time) override;
+			void process(float delta_time);
+			void preRender(const WindowPtr& wnd) override;
+
+			static ParticleSystemContainerPtr create(const variant& node);
 		private:
-			void notifyNodeAttached(SceneNode* parent) override;
+			explicit ParticleSystemContainer(const variant& node);
+
 			std::vector<ParticleSystemPtr> active_particle_systems_;
 
 			std::vector<ParticleSystemPtr> particle_systems_;

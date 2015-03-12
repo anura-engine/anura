@@ -36,11 +36,11 @@ namespace KRE
 		class TimeColorAffector : public Affector
 		{
 		public:
-			explicit TimeColorAffector(ParticleSystemContainer* parent, const variant& node);
+			explicit TimeColorAffector(std::weak_ptr<ParticleSystemContainer> parent, const variant& node);
 		protected:
 			virtual void internalApply(Particle& p, float t);
-			virtual Affector* clone() {
-				return new TimeColorAffector(*this);
+			AffectorPtr clone() const override {
+				return std::make_shared<TimeColorAffector>(*this);
 			}
 		private:
 			enum ColourOperation {
@@ -59,11 +59,11 @@ namespace KRE
 		class JetAffector : public Affector
 		{
 		public:
-			explicit JetAffector(ParticleSystemContainer* parent, const variant& node);
+			explicit JetAffector(std::weak_ptr<ParticleSystemContainer> parent, const variant& node);
 		protected:
 			virtual void internalApply(Particle& p, float t);
-			virtual Affector* clone() {
-				return new JetAffector(*this);
+			AffectorPtr clone() const override {
+				return std::make_shared<JetAffector>(*this);
 			}
 		private:
 			ParameterPtr acceleration_;
@@ -86,11 +86,11 @@ namespace KRE
 		class ScaleAffector : public Affector
 		{
 		public:
-			explicit ScaleAffector(ParticleSystemContainer* parent, const variant& node);
+			explicit ScaleAffector(std::weak_ptr<ParticleSystemContainer> parent, const variant& node);
 		protected:
 			virtual void internalApply(Particle& p, float t);
-			virtual Affector* clone() {
-				return new ScaleAffector(*this);
+			AffectorPtr clone() const override {
+				return std::make_shared<ScaleAffector>(*this);
 			}
 		private:
 			ParameterPtr scale_x_;
@@ -105,11 +105,11 @@ namespace KRE
 		class VortexAffector : public Affector
 		{
 		public:
-			explicit VortexAffector(ParticleSystemContainer* parent, const variant& node);
+			explicit VortexAffector(std::weak_ptr<ParticleSystemContainer> parent, const variant& node);
 		protected:
 			virtual void internalApply(Particle& p, float t);
-			virtual Affector* clone() {
-				return new VortexAffector(*this);
+			AffectorPtr clone() const {
+				return std::make_shared<VortexAffector>(*this);
 			}
 		private:
 			glm::quat rotation_axis_;
@@ -120,12 +120,11 @@ namespace KRE
 		class GravityAffector : public Affector
 		{
 		public:
-			explicit GravityAffector(ParticleSystemContainer* parent, const variant& node);
-			virtual ~GravityAffector()  {}
+			explicit GravityAffector(std::weak_ptr<ParticleSystemContainer> parent, const variant& node);
 		protected:
 			virtual void internalApply(Particle& p, float t);
-			virtual Affector* clone() {
-				return new GravityAffector(*this);
+			AffectorPtr clone() const override {
+				return std::make_shared<GravityAffector>(*this);
 			}
 		private:
 			float gravity_;
@@ -135,7 +134,7 @@ namespace KRE
 		class ParticleFollowerAffector : public Affector
 		{
 		public:
-			explicit ParticleFollowerAffector(ParticleSystemContainer* parent, const variant& node)
+			explicit ParticleFollowerAffector(std::weak_ptr<ParticleSystemContainer> parent, const variant& node)
 				: Affector(parent, node),
 				  min_distance_(node["min_distance"].as_float(1.0f)),
 				  max_distance_(node["max_distance"].as_float(std::numeric_limits<float>::max())) {
@@ -159,8 +158,8 @@ namespace KRE
 					p.current.position = prev_particle_->current.position + (min_distance_/distance)*(p.current.position-prev_particle_->current.position);
 				}
 			}
-			virtual Affector* clone() override {
-				return new ParticleFollowerAffector(*this);
+			AffectorPtr clone() const override {
+				return std::make_shared<ParticleFollowerAffector>(*this);
 			}
 		private:
 			float min_distance_;
@@ -172,8 +171,10 @@ namespace KRE
 		class AlignAffector : public Affector
 		{
 		public:
-			explicit AlignAffector(ParticleSystemContainer* parent, const variant& node) 
-				: Affector(parent, node), resize_(node["resize"].as_bool(false)) {
+			explicit AlignAffector(std::weak_ptr<ParticleSystemContainer> parent, const variant& node) 
+				: Affector(parent, node), 
+				  resize_(node["resize"].as_bool(false)) 
+			{
 			}
 		protected:
 			virtual void internalApply(Particle& p, float t) override {
@@ -199,8 +200,8 @@ namespace KRE
 					prev_particle_ = p;
 				}
 			}
-			virtual Affector* clone() override {
-				return new AlignAffector(*this);
+			virtual AffectorPtr clone() const override {
+				return std::make_shared<AlignAffector>(*this);
 			}
 		private:
 			bool resize_;			
@@ -211,7 +212,7 @@ namespace KRE
 		class FlockCenteringAffector : public Affector
 		{
 		public:
-			explicit FlockCenteringAffector(ParticleSystemContainer* parent, const variant& node) 
+			explicit FlockCenteringAffector(std::weak_ptr<ParticleSystemContainer> parent, const variant& node) 
 				: Affector(parent, node), average_(0.0f)
 			{
 			}
@@ -237,8 +238,8 @@ namespace KRE
 					prev_particle_ = p;
 				}
 			}
-			virtual Affector* clone() {
-				return new FlockCenteringAffector(*this);
+			AffectorPtr clone() const override {
+				return std::make_shared<FlockCenteringAffector>(*this);
 			}
 		private:
 			int count_;
@@ -250,7 +251,7 @@ namespace KRE
 		class BlackHoleAffector : public Affector
 		{
 		public:
-			explicit BlackHoleAffector(ParticleSystemContainer* parent, const variant& node) 
+			explicit BlackHoleAffector(std::weak_ptr<ParticleSystemContainer> parent, const variant& node) 
 				: Affector(parent, node), 
 				  velocity_(node["velocity"].as_float()), 
 				  acceleration_(node["acceleration"].as_float())
@@ -274,8 +275,8 @@ namespace KRE
 				p.current.position += diff;
 			}
 
-			virtual Affector* clone() {
-				return new BlackHoleAffector(*this);
+			AffectorPtr clone() const override {
+				return std::make_shared<BlackHoleAffector>(*this);
 			}
 
 			float velocity_, acceleration_;
@@ -284,7 +285,7 @@ namespace KRE
 		class PathFollowerAffector : public Affector
 		{
 		public:
-			explicit PathFollowerAffector(ParticleSystemContainer* parent, const variant& node) 
+			explicit PathFollowerAffector(std::weak_ptr<ParticleSystemContainer> parent, const variant& node) 
 				: Affector(parent, node)
 			{
 				ASSERT_LOG(node.has_key("path") && node["path"].is_list(),
@@ -319,8 +320,8 @@ namespace KRE
 					prev_particle_ = p;
 				}
 			}
-			virtual Affector* clone() {
-				return new PathFollowerAffector(*this);
+			AffectorPtr clone() const override {
+				return std::make_shared<PathFollowerAffector>(*this);
 			}
 		private:
 			int count_;
@@ -333,7 +334,7 @@ namespace KRE
 		class RandomiserAffector : public Affector
 		{
 		public:
-			explicit RandomiserAffector(ParticleSystemContainer* parent, const variant& node) 
+			explicit RandomiserAffector(std::weak_ptr<ParticleSystemContainer> parent, const variant& node) 
 				: Affector(parent, node), 
 				  max_deviation_(0.0f), 
 				  time_step_(float(node["time_step"].as_float(0))), 
@@ -350,7 +351,6 @@ namespace KRE
 				}
 				last_update_time_[0] = last_update_time_[1] = 0.0f;
 			}
-			virtual ~RandomiserAffector() {}
 		protected:
 			virtual void internalApply(Particle& p, float t) override {
 				if(random_direction_) {
@@ -387,8 +387,8 @@ namespace KRE
 				handle_apply(getTechnique()->getActiveParticles(), t);
 				handle_apply(getTechnique()->getInstancedEmitters(), t);
 			}
-			virtual Affector* clone() {
-				return new RandomiserAffector(*this);
+			AffectorPtr clone() const {
+				return std::make_shared<RandomiserAffector>(*this);
 			}
 		private:
 			// randomiser (bool random_direction_, float time_step_ glm::vec3 max_deviation_)
@@ -402,7 +402,7 @@ namespace KRE
 		class SineForceAffector : public Affector
 		{
 		public:
-			explicit SineForceAffector(ParticleSystemContainer* parent, const variant& node) 
+			explicit SineForceAffector(std::weak_ptr<ParticleSystemContainer> parent, const variant& node) 
 				: Affector(parent, node),
 				  min_frequency_(1.0f),
 				  max_frequency_(1.0f),
@@ -436,7 +436,6 @@ namespace KRE
 					}
 				}
 			}
-			virtual ~SineForceAffector() {}
 		protected:
 			virtual void handleEmitProcess(float t) override {
 				angle_ += /*2.0f * M_PI **/ frequency_ * t;
@@ -458,8 +457,8 @@ namespace KRE
 					p.current.direction = (p.current.direction + force_vector_)/2.0f;
 				}
 			}
-			virtual Affector* clone() {
-				return new SineForceAffector(*this);
+			AffectorPtr clone() const {
+				return std::make_shared<SineForceAffector>(*this);
 			}
 		private:
 			enum ForceApplication {
@@ -476,7 +475,7 @@ namespace KRE
 			SineForceAffector();
 		};
 
-		Affector::Affector(ParticleSystemContainer* parent, const variant& node)
+		Affector::Affector(std::weak_ptr<ParticleSystemContainer> parent, const variant& node)
 			: EmitObject(parent, node), 
 			  enabled_(node["enabled"].as_bool(true)), 
 			  mass_(float(node["mass_affector"].as_float(1.0f))),
@@ -499,16 +498,23 @@ namespace KRE
 		{
 		}
 
+		TechniquePtr Affector::getTechnique() const
+		{
+			auto tq = technique_.lock();
+			ASSERT_LOG(tq != nullptr, "No parent technique found.");
+			return tq;
+		}
+
 		void Affector::handleEmitProcess(float t) 
 		{
-			ASSERT_LOG(technique_ != nullptr, "PSYSTEM2: technique_ is null");
-			for(auto& e : technique_->getInstancedEmitters()) {
+			auto tq = getTechnique();
+			for(auto& e : tq->getInstancedEmitters()) {
 				ASSERT_LOG(e->emitted_by != nullptr, "PSYSTEM2: e->emitted_by is null");
 				if(!isEmitterExcluded(e->emitted_by->name())) {
 					internalApply(*e,t);
 				}
 			}
-			for(auto& p : technique_->getActiveParticles()) {
+			for(auto& p : tq->getActiveParticles()) {
 				ASSERT_LOG(p.emitted_by != nullptr, "PSYSTEM2: p.emitted_by is null");
 				if(!isEmitterExcluded(p.emitted_by->name())) {
 					internalApply(p,t);
@@ -516,46 +522,46 @@ namespace KRE
 			}
 		}
 
-		bool Affector::isEmitterExcluded(const std::string& name)
+		bool Affector::isEmitterExcluded(const std::string& name) const
 		{
 			return std::find(excluded_emitters_.begin(), excluded_emitters_.end(), name) != excluded_emitters_.end();
 		}
 
-		Affector* Affector::factory(ParticleSystemContainer* parent, const variant& node)
+		AffectorPtr Affector::factory(std::weak_ptr<ParticleSystemContainer> parent, const variant& node)
 		{
 			ASSERT_LOG(node.has_key("type"), "PSYSTEM2: affector must have 'type' attribute");
 			const std::string& ntype = node["type"].as_string();
 			if(ntype == "color" || ntype == "colour") {
-				return new TimeColorAffector(parent, node);
+				return std::make_shared<TimeColorAffector>(parent, node);
 			} else if(ntype == "jet") {
-				return new JetAffector(parent, node);
+				return std::make_shared<JetAffector>(parent, node);
 			} else if(ntype == "vortex") {
-				return new VortexAffector(parent, node);
+				return std::make_shared<VortexAffector>(parent, node);
 			} else if(ntype == "gravity") {
-				return new GravityAffector(parent, node);
+				return std::make_shared<GravityAffector>(parent, node);
 			} else if(ntype == "scale") {
-				return new ScaleAffector(parent, node);
+				return std::make_shared<ScaleAffector>(parent, node);
 			} else if(ntype == "particle_follower") {
-				return new ParticleFollowerAffector(parent, node);
+				return std::make_shared<ParticleFollowerAffector>(parent, node);
 			} else if(ntype == "align") {
-				return new AlignAffector(parent, node);
+				return std::make_shared<AlignAffector>(parent, node);
 			} else if(ntype == "randomiser" || ntype == "randomizer") {
-				return new RandomiserAffector(parent, node);
+				return std::make_shared<RandomiserAffector>(parent, node);
 			} else if(ntype == "sine_force") {
-				return new SineForceAffector(parent, node);
+				return std::make_shared<SineForceAffector>(parent, node);
 			} else if(ntype == "path_follower") {
-				return new PathFollowerAffector(parent, node);
+				return std::make_shared<PathFollowerAffector>(parent, node);
 			} else if(ntype == "black_hole") {
-				return new BlackHoleAffector(parent, node);
+				return std::make_shared<BlackHoleAffector>(parent, node);
 			} else if(ntype == "flock_centering") {
-				return new FlockCenteringAffector(parent, node);
+				return std::make_shared<FlockCenteringAffector>(parent, node);
 			} else {
 				ASSERT_LOG(false, "PSYSTEM2: Unrecognised affector type: " << ntype);
 			}
 			return nullptr;
 		}
 
-		TimeColorAffector::TimeColorAffector(ParticleSystemContainer* parent, const variant& node)
+		TimeColorAffector::TimeColorAffector(std::weak_ptr<ParticleSystemContainer> parent, const variant& node)
 			: Affector(parent, node), 
 			  operation_(TimeColorAffector::COLOR_OP_SET)
 		{
@@ -657,7 +663,7 @@ namespace KRE
 			return --it;
 		}
 
-		JetAffector::JetAffector(ParticleSystemContainer* parent, const variant& node)
+		JetAffector::JetAffector(std::weak_ptr<ParticleSystemContainer> parent, const variant& node)
 			: Affector(parent, node)
 		{
 			if(node.has_key("acceleration")) {
@@ -677,7 +683,7 @@ namespace KRE
 			}
 		}
 
-		VortexAffector::VortexAffector(ParticleSystemContainer* parent, const variant& node)
+		VortexAffector::VortexAffector(std::weak_ptr<ParticleSystemContainer> parent, const variant& node)
 			: Affector(parent, node), 
 			  rotation_axis_(1.0f, 0.0f, 0.0f, 0.0f)
 		{
@@ -700,7 +706,7 @@ namespace KRE
 			p.current.direction = rotation_axis_ * p.current.direction;
 		}
 
-		GravityAffector::GravityAffector(ParticleSystemContainer* parent, const variant& node)
+		GravityAffector::GravityAffector(std::weak_ptr<ParticleSystemContainer> parent, const variant& node)
 			: Affector(parent, node), 
 			  gravity_(float(node["gravity"].as_float(1.0f)))
 		{
@@ -716,7 +722,7 @@ namespace KRE
 			}
 		}
 
-		ScaleAffector::ScaleAffector(ParticleSystemContainer* parent, const variant& node)
+		ScaleAffector::ScaleAffector(std::weak_ptr<ParticleSystemContainer> parent, const variant& node)
 			: Affector(parent, node), 
 			  since_system_start_(node["since_system_start"].as_bool(false))
 		{
