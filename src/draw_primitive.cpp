@@ -250,7 +250,7 @@ namespace graphics
 				setShader(KRE::ShaderProgram::getProgram("attr_color_shader"));
 			}
 
-			auto ab = DisplayDevice::createAttributeSet(false, false, false);
+			auto ab = DisplayDevice::createAttributeSet(true, false, false);
 			pos_.reset(new Attribute<glm::vec2>(AccessFreqHint::DYNAMIC, KRE::AccessTypeHint::DRAW));
 			pos_->addAttributeDesc(AttributeDesc(AttrType::POSITION, 2, AttrFormat::FLOAT, false));
 			ab->addAttribute(pos_);
@@ -320,10 +320,8 @@ namespace graphics
 			std::vector<std::pair<glm::vec2, glm::vec2>> lr_path;
 			for(unsigned n = 0; n < path.size()-1; ++n) {
 				const glm::vec2& p = path[n];
-				const glm::vec2& next = path[n+1];
 
-				const glm::vec2 unit_direction = glm::normalize(next - p);
-		
+				const glm::vec2 unit_direction = glm::normalize(path[n+1] - p);		
 				const glm::vec2 normal_direction_left(-unit_direction.y, unit_direction.x);
 				const glm::vec2 normal_direction_right(unit_direction.y, -unit_direction.x);
 
@@ -331,7 +329,7 @@ namespace graphics
 
 				float arrow_width = width_base_ - (width_base_ - width_head_) * ratio;
 
-				const int time_until_end = path.size()-2 - n;
+				const int time_until_end = path.size() - 2 - n;
 				if(time_until_end < arrow_head_length_) {
 					arrow_width = arrow_head_width_ * time_until_end;
 				}
