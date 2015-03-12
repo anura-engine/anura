@@ -2215,6 +2215,9 @@ void CustomObject::process(Level& lvl)
 	if(shader_) {
 		shader_->process();
 	}
+	for(auto& eff : effects_shaders_) {
+		eff->process();
+	}
 
 	staticProcess(lvl);
 }
