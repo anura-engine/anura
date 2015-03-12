@@ -53,8 +53,8 @@ namespace graphics
 
 		RectPrimitive::RectPrimitive(const variant& v)
 			: DrawPrimitive(v), 
-			area_(v["area"]), 
-			color_(v["color"])
+			  area_(v["area"]), 
+			  color_(v["color"])
 		{
 			init();
 		}
