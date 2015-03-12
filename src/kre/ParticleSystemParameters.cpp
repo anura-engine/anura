@@ -102,7 +102,7 @@ namespace KRE
 				// single fixed attribute
 				return ParameterPtr(new FixedParameter(float(node.as_float())));
 			}
-			ASSERT_LOG(node.has_key("type"), "PSYSTEM2: parameter must have 'type' attribute");
+			ASSERT_LOG(node.has_key("type"), "parameter must have 'type' attribute");
 			const std::string& ntype = node["type"].as_string();
 			if(ntype == "fixed") {
 				return ParameterPtr(new FixedParameter(node));
@@ -115,7 +115,7 @@ namespace KRE
 			} else if(ntype == "dyn_oscillate") {
 				return ParameterPtr(new OscillateParameter(node));
 			} else {
-				ASSERT_LOG(false, "PSYSTEM2: Unrecognised affector type: " << ntype);
+				ASSERT_LOG(false, "Unrecognised affector type: " << ntype);
 			}
 			return ParameterPtr();
 		}
@@ -186,7 +186,7 @@ namespace KRE
 				} else if(type == "square") {
 					osc_type_ = WaveType::SQUARE;
 				} else {
-					ASSERT_LOG(false, "PSYSTEM2: unrecognised oscillate type: " << type);
+					ASSERT_LOG(false, "unrecognised oscillate type: " << type);
 				}
 			}             
 		}
@@ -212,11 +212,11 @@ namespace KRE
 			ASSERT_LOG(node.has_key("control_point") 
 				&& node["control_point"].is_list()
 				&& node["control_point"].num_elements() >= 2, 
-				"PSYSTEM2: curved parameters must have at least 2 control points.");
+				"curved parameters must have at least 2 control points.");
 			for(size_t n = 0; n != node["control_point"].num_elements(); ++n) {
 				ASSERT_LOG(node["control_point"][n].is_list() 
 					&& node["control_point"][n].num_elements() == 2,
-					"PSYSTEM2: Control points should be list of two elements.");
+					"Control points should be list of two elements.");
 				auto p = std::make_pair(node["control_point"][n][0].as_float(), 
 					node["control_point"][n][1].as_float());
 				control_points_.push_back(p);

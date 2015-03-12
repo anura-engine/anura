@@ -24,6 +24,8 @@
 #pragma once
 
 #include "ParticleSystemFwd.hpp"
+#include "RenderFwd.hpp"
+#include "SceneFwd.hpp"
 
 #include "widget.hpp"
 
@@ -40,6 +42,9 @@ namespace gui
 
 			int last_process_time_;
 			KRE::Particles::ParticleSystemContainerPtr container_;
+			KRE::SceneGraphPtr scene_;
+			KRE::SceneNodePtr root_;
+			KRE::RenderManagerPtr rmanager_;
 
 			ParticleSystemWidget();
 			ParticleSystemWidget(const ParticleSystemWidget&);

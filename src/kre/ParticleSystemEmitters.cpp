@@ -243,13 +243,13 @@ namespace KRE
 				glm::detail::tvec4<unsigned char> start;
 				glm::detail::tvec4<unsigned char> end;
 				ASSERT_LOG(node["start_colour_range"].is_list() && node["start_colour_range"].num_elements() == 4,
-					"PSYSTEM2: 'start_colour_range' should be a list of 4 elements.");
+					"'start_colour_range' should be a list of 4 elements.");
 				start.r = node["start_colour_range"][0].as_int32();
 				start.g = node["start_colour_range"][1].as_int32();
 				start.b = node["start_colour_range"][2].as_int32();
 				start.a = node["start_colour_range"][3].as_int32();
 				ASSERT_LOG(node["end_colour_range"].is_list() && node["end_colour_range"].num_elements() == 4,
-					"PSYSTEM2: 'end_colour_range' should be a list of 4 elements.");
+					"'end_colour_range' should be a list of 4 elements.");
 				end.r = node["end_colour_range"][0].as_int32();
 				end.g = node["end_colour_range"][1].as_int32();
 				end.b = node["end_colour_range"][2].as_int32();
@@ -267,7 +267,7 @@ namespace KRE
 			}
 			if(node.has_key("emits_type")) {
 				ASSERT_LOG(node.has_key("emits_name"), 
-					"PSYSTEM2: Emitters that specify the 'emits_type' attribute must give have and 'emits_type' attribute");
+					"Emitters that specify the 'emits_type' attribute must give have and 'emits_type' attribute");
 				const std::string& etype = node["emits_type"].as_string();
 				if(etype == "emitter_particle") {
 					emits_type_ = EmitsType::EMITTER;
@@ -280,7 +280,7 @@ namespace KRE
 				} else if(etype == "system_particle") {
 					emits_type_ = EmitsType::SYSTEM;
 				} else {
-					ASSERT_LOG(false, "PSYSTEM2: Unrecognised 'emit_type' attribute value: " << etype);
+					ASSERT_LOG(false, "Unrecognised 'emit_type' attribute value: " << etype);
 				}
 				emits_name_ = node["emits_name"].as_string();
 			}
@@ -288,7 +288,7 @@ namespace KRE
 				ASSERT_LOG(false, "Implement debug draw.");
 			}
 			// Set a default duration for the emitter.
-			ASSERT_LOG(duration_ != nullptr, "PSYSTEM2: duration_ is null");
+			ASSERT_LOG(duration_ != nullptr, "duration_ is null");
 			duration_remaining_ = duration_->getValue(0);
 		}
 
@@ -403,19 +403,19 @@ namespace KRE
 							getParentContainer()->addParticleSystem(ps);
 						}
 					} else {
-						ASSERT_LOG(false, "PSYSTEM2: unknown emits_type: " << static_cast<int>(emits_type_));
+						ASSERT_LOG(false, "unknown emits_type: " << static_cast<int>(emits_type_));
 					}
 				}
 
 				duration_remaining_ -= static_cast<float>(t);
 				if(duration_remaining_ < 0.0f) {
-					ASSERT_LOG(repeat_delay_ != nullptr, "PSYSTEM2: repeat_delay_ is null");
+					ASSERT_LOG(repeat_delay_ != nullptr, "repeat_delay_ is null");
 					repeat_delay_remaining_ = repeat_delay_->getValue(t);
 				}
 			} else {
 				repeat_delay_remaining_ -= static_cast<float>(t);
 				if(repeat_delay_remaining_ < 0.0f) {
-					ASSERT_LOG(duration_ != nullptr, "PSYSTEM2: duration_ is null");
+					ASSERT_LOG(duration_ != nullptr, "duration_ is null");
 					duration_remaining_ = duration_->getValue(t);
 				}
 			}
@@ -479,7 +479,7 @@ namespace KRE
 
 		int Emitter::getEmittedParticleCountPerCycle(float t)
 		{
-			ASSERT_LOG(emission_rate_ != nullptr, "PSYSTEM2: emission_rate_ is nullptr");
+			ASSERT_LOG(emission_rate_ != nullptr, "emission_rate_ is nullptr");
 			// at each step we produce emission_rate()*process_step_time particles.
 			float cnt = 0;
 			emission_fraction_ = std::modf(emission_fraction_ + emission_rate_->getValue(t)*t, &cnt);
@@ -535,7 +535,7 @@ namespace KRE
 
 		EmitterPtr Emitter::factory(std::weak_ptr<ParticleSystemContainer> parent, const variant& node)
 		{
-			ASSERT_LOG(node.has_key("type"), "PSYSTEM2: emitter must have 'type' attribute");
+			ASSERT_LOG(node.has_key("type"), "emitter must have 'type' attribute");
 			const std::string& ntype = node["type"].as_string();
 			if(ntype == "circle") {
 				return std::make_shared<CircleEmitter>(parent, node);
@@ -548,7 +548,7 @@ namespace KRE
 			} else if(ntype == "sphere_surface") {
 				return std::make_shared<SphereSurfaceEmitter>(parent, node);
 			}
-			ASSERT_LOG(false, "PSYSTEM2: Unrecognised emitter type: " << ntype);
+			ASSERT_LOG(false, "Unrecognised emitter type: " << ntype);
 			return nullptr;
 		}
 	}

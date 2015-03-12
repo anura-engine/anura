@@ -45,19 +45,19 @@ namespace KRE
 
 	SceneNode::SceneNode(std::weak_ptr<SceneGraph> sg)
 		: scene_graph_(sg),
-		position_(0.0f),
-		rotation_(1.0f, 0.0f, 0.0f, 0.0f),
-		scale_(1.0f)
+		  position_(0.0f),
+		  rotation_(1.0f, 0.0f, 0.0f, 0.0f),
+		  scale_(1.0f)
 	{
 		ASSERT_LOG(scene_graph_.lock() != nullptr, "scene_graph_ was null.");
 	}
 
 	SceneNode::SceneNode(std::weak_ptr<SceneGraph> sg, const variant& node)
 		: scene_graph_(sg),
-		parent_(),
-		position_(0.0f),
-		rotation_(1.0f, 0.0f, 0.0f, 0.0f),
-		scale_(1.0f)
+		  parent_(),
+		  position_(0.0f),
+		  rotation_(1.0f, 0.0f, 0.0f, 0.0f),
+		  scale_(1.0f)
 	{
 		ASSERT_LOG(scene_graph_.lock() != nullptr, "scene_graph_ was null.");
 		if(node.has_key("camera")) {
@@ -93,11 +93,11 @@ namespace KRE
 
 	SceneNode::SceneNode(const SceneNode& op)
 		: name_(op.name_),
-		scene_graph_(op.scene_graph_),
-		parent_(),
-		position_(op.position_),
-		rotation_(op.rotation_),
-		scale_(op.scale_),
+		  scene_graph_(op.scene_graph_),
+		  parent_(),
+		  position_(op.position_),
+		  rotation_(op.rotation_),
+		  scale_(op.scale_),
 		// Should we copy the pointers or create new instances ?
 		objects_(op.objects_)
 	{

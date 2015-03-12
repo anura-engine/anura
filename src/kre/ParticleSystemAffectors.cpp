@@ -432,7 +432,7 @@ namespace KRE
 					} else if(fa == "add") {
 						fa_ = FA_ADD;
 					} else {
-						ASSERT_LOG(false, "PSYSTEM2: 'force_application' attribute should have value average or add");
+						ASSERT_LOG(false, "'force_application' attribute should have value average or add");
 					}
 				}
 			}
@@ -509,13 +509,13 @@ namespace KRE
 		{
 			auto tq = getTechnique();
 			for(auto& e : tq->getInstancedEmitters()) {
-				ASSERT_LOG(e->emitted_by != nullptr, "PSYSTEM2: e->emitted_by is null");
+				ASSERT_LOG(e->emitted_by != nullptr, "e->emitted_by is null");
 				if(!isEmitterExcluded(e->emitted_by->name())) {
 					internalApply(*e,t);
 				}
 			}
 			for(auto& p : tq->getActiveParticles()) {
-				ASSERT_LOG(p.emitted_by != nullptr, "PSYSTEM2: p.emitted_by is null");
+				ASSERT_LOG(p.emitted_by != nullptr, "p.emitted_by is null");
 				if(!isEmitterExcluded(p.emitted_by->name())) {
 					internalApply(p,t);
 				}
@@ -529,7 +529,7 @@ namespace KRE
 
 		AffectorPtr Affector::factory(std::weak_ptr<ParticleSystemContainer> parent, const variant& node)
 		{
-			ASSERT_LOG(node.has_key("type"), "PSYSTEM2: affector must have 'type' attribute");
+			ASSERT_LOG(node.has_key("type"), "affector must have 'type' attribute");
 			const std::string& ntype = node["type"].as_string();
 			if(ntype == "color" || ntype == "colour") {
 				return std::make_shared<TimeColorAffector>(parent, node);
@@ -556,7 +556,7 @@ namespace KRE
 			} else if(ntype == "flock_centering") {
 				return std::make_shared<FlockCenteringAffector>(parent, node);
 			} else {
-				ASSERT_LOG(false, "PSYSTEM2: Unrecognised affector type: " << ntype);
+				ASSERT_LOG(false, "Unrecognised affector type: " << ntype);
 			}
 			return nullptr;
 		}
@@ -572,10 +572,10 @@ namespace KRE
 				} else if(op == "set") {
 					operation_ = COLOR_OP_SET;
 				} else {
-					ASSERT_LOG(false, "PSYSTEM2: unrecognised time_color affector operation: " << op);
+					ASSERT_LOG(false, "unrecognised time_color affector operation: " << op);
 				}
 			}
-			ASSERT_LOG(node.has_key("time_colour") || node.has_key("time_color"), "PSYSTEM2: Must be a 'time_colour' attribute");
+			ASSERT_LOG(node.has_key("time_colour") || node.has_key("time_color"), "Must be a 'time_colour' attribute");
 			const variant& tc_node = node.has_key("time_colour") ? node["time_colour"] : node["time_color"];
 			if(tc_node.is_map()) {
 				float t = tc_node["time"].as_float();

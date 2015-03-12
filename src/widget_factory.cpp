@@ -45,6 +45,7 @@
 #include "key_button.hpp"
 #include "label.hpp"
 #include "layout_widget.hpp"
+#include "ParticleSystemWidget.hpp"
 #include "play_vpx.hpp"
 #include "poly_line_widget.hpp"
 #include "poly_map.hpp"
@@ -134,6 +135,8 @@ namespace widget_factory
 			return WidgetPtr(new View3DWidget(v, e));
 		} else if(wtype == "poly_map") {
 			return WidgetPtr(new geometry::PolyMap(v, e));
+		} else if(wtype == "particle_system_widget") {
+			return WidgetPtr(new ParticleSystemWidget(v, e));
 	#if defined(USE_LIBVPX)
 		} else if(wtype == "movie") {
 			return WidgetPtr(new movie::vpx(v, e));
@@ -212,6 +215,8 @@ namespace widget_factory
 			return "builtin view3d_widget";
 		} else if(wtype == "poly_map") {
 			return "builtin poly_map";
+		} else if(wtype == "particle_system_widget") {
+			return "builtin particle_system_widget";
 	#if defined(USE_LIBVPX)
 		} else if(wtype == "movie") {
 			return "builtin movie";

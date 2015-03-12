@@ -22,6 +22,9 @@
 */
 
 #include "ParticleSystem.hpp"
+#include "RenderManager.hpp"
+#include "SceneGraph.hpp"
+#include "SceneNode.hpp"
 
 #include "ParticleSystemWidget.hpp"
 #include "profile_timer.hpp"
@@ -35,11 +38,23 @@ namespace gui
 		: Widget(v, e),
 		  last_process_time_(-1)
 	{
-		container_ = ParticleSystemContainer::create(v["particles"]);
+		// Create a mini-scene to use.
+		scene_ = KRE::SceneGraph::create("ParticleSystemWidget");
+		root_ = scene_->getRootNode();
+		root_->setNodeName("root_node");
+		container_ = ParticleSystemContainer::create(scene_, v["particles"]);
+		root_->attachNode(container_);
+
+		rmanager_ = std::make_shared<KRE::RenderManager>();
+		rmanager_->addQueue(0, "PS");
+
 	}
 
 	void ParticleSystemWidget::handleDraw() const
 	{
+		auto wnd = KRE::WindowManager::getMainWindow();
+		scene_->renderScene(rmanager_);
+		rmanager_->render(wnd);
 	}
 
 	void ParticleSystemWidget::handleProcess()
@@ -48,9 +63,12 @@ namespace gui
 		if(last_process_time_ == -1) {
 			last_process_time_ = profile::get_tick_time();
 		}
-		if(container_) {
-			container_->process(delta_time);
+		auto current_time = profile::get_tick_time();
+		delta_time = (last_process_time_ - current_time) / 1000.0f;
+		if(scene_) {
+			scene_->process(delta_time);
 		}
+		last_process_time_ = current_time;
 	}
 
 	BEGIN_DEFINE_CALLABLE(ParticleSystemWidget, Widget)
