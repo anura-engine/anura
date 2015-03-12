@@ -32,9 +32,10 @@ namespace gui
 	using namespace KRE::Particles;
 
 	ParticleSystemWidget::ParticleSystemWidget(const variant& v, game_logic::FormulaCallable* e)
-		: Widget(v, e)
+		: Widget(v, e),
+		  last_process_time_(-1)
 	{
-		container_ = std::make_shared<ParticleSystemContainer>(nullptr, v);
+		container_ = ParticleSystemContainer::create(v["particles"]);
 	}
 
 	void ParticleSystemWidget::handleDraw() const
@@ -43,6 +44,13 @@ namespace gui
 
 	void ParticleSystemWidget::handleProcess()
 	{
+		float delta_time = 0.0f;
+		if(last_process_time_ == -1) {
+			last_process_time_ = profile::get_tick_time();
+		}
+		if(container_) {
+			container_->process(delta_time);
+		}
 	}
 
 	BEGIN_DEFINE_CALLABLE(ParticleSystemWidget, Widget)

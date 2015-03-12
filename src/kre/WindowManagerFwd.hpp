@@ -30,6 +30,8 @@ namespace KRE
 	class Surface;
 	typedef std::shared_ptr<Surface> SurfacePtr;
 
+	class Window;
+	typedef std::shared_ptr<Window> WindowPtr;
+
 	class WindowManager;
-	typedef std::shared_ptr<WindowManager> WindowManagerPtr;
 }

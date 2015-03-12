@@ -27,7 +27,6 @@
 
 #include "Color.hpp"
 #include "DisplayDevice.hpp"
-#include "HintMap.hpp"
 #include "Texture.hpp"
 #include "PixelFormat.hpp"
 #include "Renderable.hpp"
@@ -52,20 +51,22 @@ namespace KRE
 		return lhs.width == rhs.width && lhs.height == rhs.height;
 	}
 
-	class WindowManager : public std::enable_shared_from_this<WindowManager>
+	class Window : public std::enable_shared_from_this<Window>
 	{
 	public:
-		explicit WindowManager(const std::string& title);
-		virtual ~WindowManager();
-		void createWindow(int width, int height);
-		void destroyWindow();
-		
+		Window(int width, int height, const variant& hints);
+		virtual ~Window();
+
+		virtual void createWindow() = 0;
+		virtual void destroyWindow() = 0;
+
 		virtual bool setWindowSize(int width, int height) = 0;
 		virtual bool autoWindowSize(int& width, int& height) = 0;
 		
 		bool setLogicalWindowSize(int width, int height);
 
-		virtual void setWindowTitle(const std::string& title) = 0;
+		void setWindowTitle(const std::string& title);
+		
 		virtual void setWindowIcon(const std::string& name) = 0;
 
 		virtual unsigned getWindowID() const = 0;
@@ -109,15 +110,10 @@ namespace KRE
 
 		std::string saveFrameBuffer(const std::string& filename);
 
-		virtual std::vector<WindowMode> getWindowModes(std::function<bool(const WindowMode&)> mode_filter) = 0;
-		virtual WindowMode getDisplaySize() = 0;
+		virtual std::vector<WindowMode> getWindowModes(std::function<bool(const WindowMode&)> mode_filter) const = 0;
+		virtual WindowMode getDisplaySize() const = 0;
 
 		void notifyNewWindowSize(int new_width, int new_height);
-
-		static WindowManagerPtr create(const std::string& title, const HintMapContainer& hints);
-		static std::vector<WindowManagerPtr> getWindowList();
-		static WindowManagerPtr getWindowFromID(unsigned id);
-		static WindowManagerPtr getMainWindow();
 	protected:
 		int width_;
 		int height_;
@@ -127,13 +123,6 @@ namespace KRE
 
 		DisplayDevicePtr display_;
 	private:
-		virtual void changeFullscreenMode() = 0;
-		virtual void handleSetClearColor() const = 0;
-		virtual bool handleLogicalWindowSizeChange() = 0;
-		virtual bool handlePhysicalWindowSizeChange() = 0;
-		virtual void doCreateWindow(int width, int height) = 0;
-		virtual void doDestroyWindow() = 0;
-
 		bool use_16bpp_;
 		bool use_multi_sampling_;
 		int samples_;
@@ -142,7 +131,30 @@ namespace KRE
 		std::string title_;
 		bool use_vsync_;
 
-		WindowManager();
+		virtual void changeFullscreenMode() = 0;
+		virtual void handleSetClearColor() const = 0;
+		virtual bool handleLogicalWindowSizeChange() = 0;
+		virtual bool handlePhysicalWindowSizeChange() = 0;
+		virtual void handleSetWindowTitle() = 0;
+	};
+
+	class WindowManager
+	{
+	public:
+		WindowManager(const std::string& window_hint);
+		// API creation function (1) All-in-one window creation based on the hints given.
+		WindowPtr createWindow(int width, int height, const variant& hints=variant());
+
+		// API creation functions (2) Allocate a window structure, allowing you to programmatically
+		// set the parameters, then actually create the window.
+		WindowPtr allocateWindow(const variant& hints=variant());
+		void createWindow(WindowPtr wnd);
+		
+		static std::vector<WindowPtr> getWindowList();
+		static WindowPtr getWindowFromID(unsigned id);
+		static WindowPtr getMainWindow();
+	private:
 		WindowManager(const WindowManager&);
+		std::string window_hint_;
 	};
 }

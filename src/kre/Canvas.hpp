@@ -135,8 +135,8 @@ namespace KRE
 			return color_stack_.top();
 		}
 
-		WindowManagerPtr getWindow() const;
-		void setWindow(WindowManagerPtr wnd);
+		WindowPtr getWindow() const;
+		void setWindow(WindowPtr wnd);
 
 	protected:
 		Canvas();
@@ -148,7 +148,7 @@ namespace KRE
 		std::stack<Color> color_stack_;
 		mutable glm::mat4 model_matrix_;
 		mutable bool model_changed_;
-		std::weak_ptr<WindowManager> window_;
+		std::weak_ptr<Window> window_;
 	};
 
 	// Helper function to generate a color wheel between the given hue values.

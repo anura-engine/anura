@@ -112,7 +112,7 @@ void WaterParticleSystem::process(const Entity& e)
 	setColor(info_.color);
 }
 
-void WaterParticleSystem::draw(const KRE::WindowManagerPtr& wm, const rect& screen_area, const Entity& e) const
+void WaterParticleSystem::draw(const KRE::WindowPtr& wm, const rect& screen_area, const Entity& e) const
 {
 	const rect area = intersection_rect(screen_area, area_);
 	if(area.w() == 0 || area.h() == 0 || particles_.empty()) {

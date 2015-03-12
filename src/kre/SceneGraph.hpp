@@ -30,12 +30,12 @@
 
 namespace KRE
 {
-	class SceneGraph
+	class SceneGraph : public std::enable_shared_from_this<SceneGraph>
 	{
 	public:
 		SceneGraph(const std::string& name);
 		~SceneGraph();
-		void attachNode(SceneNode* parent, SceneNodePtr node);
+		void attachNode(std::weak_ptr<SceneNode> parent, SceneNodePtr node);
 		static SceneGraphPtr create(const std::string& name);
 		SceneNodePtr createNode(const std::string& node_type=std::string(), const variant& node=variant());
 		SceneNodePtr getRootNode();
@@ -44,7 +44,7 @@ namespace KRE
 	
 		void process(float);
 
-		static void registerFactoryFunction(const std::string& type, std::function<SceneNodePtr(SceneGraph*,const variant&)>);
+		static void registerFactoryFunction(const std::string& type, std::function<SceneNodePtr(std::weak_ptr<SceneGraph>,const variant&)>);
 	private:
 		std::string name_;
 		the::tree<SceneNodePtr> graph_;
@@ -61,7 +61,7 @@ namespace KRE
 		SceneNodeRegistrar(const std::string& type)
 		{
 			// register the class factory function 
-			SceneGraph::registerFactoryFunction(type, [](SceneGraph* sg, const variant& node) -> SceneNodePtr { return std::make_shared<SceneNode>(sg, node); });
+			SceneGraph::registerFactoryFunction(type, [](std::weak_ptr<SceneNode> sg, const variant& node) -> SceneNodePtr { return std::make_shared<SceneNode>(sg, node); });
 		}
 	};
 }

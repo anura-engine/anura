@@ -37,7 +37,7 @@ namespace KRE
 		RenderQueuePtr addQueue(int priority, const std::string& queue_name);
 		void removeQueue(int priority);
 
-		void render(const WindowManagerPtr& wm) const;
+		void render(const WindowPtr& wm) const;
 		void addRenderableToQueue(size_t q, size_t order, const RenderablePtr& r);
 
 		static RenderManagerPtr getInstance();

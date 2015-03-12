@@ -38,8 +38,8 @@ namespace KRE
 	class SceneNode : public std::enable_shared_from_this<SceneNode>
 	{
 	public:
-		explicit SceneNode(SceneGraph* sg);
-		explicit SceneNode(SceneGraph* sg, const variant& node);
+		explicit SceneNode(std::weak_ptr<SceneGraph> sg);
+		explicit SceneNode(std::weak_ptr<SceneGraph> sg, const variant& node);
 		SceneNode(const SceneNode& node);
 		virtual ~SceneNode();
 		void attachNode(const SceneNodePtr& node);
@@ -52,9 +52,10 @@ namespace KRE
 		const LightPtrList& getLights() const { return lights_; }
 		const RenderTargetPtr getRenderTarget() const { return render_target_; }
 		void renderNode(const RenderManagerPtr& renderer, SceneNodeParams* rp);
-		SceneGraph* parentGraph() { return scene_graph_; }
+		std::shared_ptr<SceneGraph> getParentGraph();
+		std::shared_ptr<SceneNode> getParent();
 		virtual void process(float);
-		virtual void notifyNodeAttached(SceneNode* parent);
+		virtual void notifyNodeAttached(std::weak_ptr<SceneNode> parent);
 		void setNodeName(const std::string& s) { name_ = s; }
 		const std::string& getNodeName() const { return name_; }
 
@@ -80,8 +81,8 @@ namespace KRE
 		void operator=(const SceneNode&);
 
 		std::string name_;
-		SceneGraph* scene_graph_;
-		SceneNode* parent_;
+		std::weak_ptr<SceneGraph> scene_graph_;
+		std::weak_ptr<SceneNode> parent_;
 		std::set<SceneObjectPtr> objects_;
 		LightPtrList lights_;
 		CameraPtr camera_;

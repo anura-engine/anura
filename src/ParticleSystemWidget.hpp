@@ -38,7 +38,8 @@ namespace gui
 			virtual void handleDraw() const override;
 			virtual void handleProcess() override;
 
-			std::shared_ptr<KRE::Particles::ParticleSystemContainer> container_;
+			int last_process_time_;
+			KRE::Particles::ParticleSystemContainerPtr container_;
 
 			ParticleSystemWidget();
 			ParticleSystemWidget(const ParticleSystemWidget&);

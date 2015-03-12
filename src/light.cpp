@@ -101,7 +101,7 @@ void CircleLight::init()
 	updateVertices();
 }
 
-void CircleLight::preRender(const KRE::WindowManagerPtr& wnd)
+void CircleLight::preRender(const KRE::WindowPtr& wnd)
 {
 	if(getColor() != last_color_) {
 		updateVertices();

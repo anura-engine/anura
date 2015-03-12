@@ -232,7 +232,7 @@ namespace KRE
 	{
 	}
 
-	void FboOpenGL::preRender(const WindowManagerPtr& wnd)
+	void FboOpenGL::preRender(const WindowPtr& wnd)
 	{
 		ASSERT_LOG(framebuffer_id_ != nullptr, "Framebuffer object hasn't been created.");
 		// XXX wip

@@ -65,7 +65,7 @@ namespace KRE
 		addAttributeSet(as);
 	}
 
-	void Blittable::preRender(const WindowManagerPtr& wm)
+	void Blittable::preRender(const WindowPtr& wm)
 	{
 		if(changed_) {
 			changed_ = false;

@@ -43,23 +43,23 @@ namespace KRE
 
 	}
 
-	SceneNode::SceneNode(SceneGraph* sg)
+	SceneNode::SceneNode(std::weak_ptr<SceneGraph> sg)
 		: scene_graph_(sg),
 		position_(0.0f),
 		rotation_(1.0f, 0.0f, 0.0f, 0.0f),
 		scale_(1.0f)
 	{
-		ASSERT_LOG(scene_graph_ != nullptr, "scene_graph_ was null.");
+		ASSERT_LOG(scene_graph_.lock() != nullptr, "scene_graph_ was null.");
 	}
 
-	SceneNode::SceneNode(SceneGraph* sg, const variant& node)
+	SceneNode::SceneNode(std::weak_ptr<SceneGraph> sg, const variant& node)
 		: scene_graph_(sg),
-		parent_(nullptr),
+		parent_(),
 		position_(0.0f),
 		rotation_(1.0f, 0.0f, 0.0f, 0.0f),
 		scale_(1.0f)
 	{
-		ASSERT_LOG(scene_graph_ != nullptr, "scene_graph_ was null.");
+		ASSERT_LOG(scene_graph_.lock() != nullptr, "scene_graph_ was null.");
 		if(node.has_key("camera")) {
 			attachCamera(Camera::createInstance(node["camera"]));
 		}
@@ -94,14 +94,14 @@ namespace KRE
 	SceneNode::SceneNode(const SceneNode& op)
 		: name_(op.name_),
 		scene_graph_(op.scene_graph_),
-		parent_(nullptr),
+		parent_(),
 		position_(op.position_),
 		rotation_(op.rotation_),
 		scale_(op.scale_),
 		// Should we copy the pointers or create new instances ?
 		objects_(op.objects_)
 	{
-		scene_graph_->attachNode(op.parent_, shared_from_this());
+		getParentGraph()->attachNode(getParent(), shared_from_this());
 		if(op.camera_) {
 			camera_ = op.camera_->clone();
 		}
@@ -119,8 +119,7 @@ namespace KRE
 
 	void SceneNode::attachNode(const SceneNodePtr& node)
 	{
-		ASSERT_LOG(scene_graph_ != nullptr, "scene_graph_ was null.");
-		scene_graph_->attachNode(this, node);
+		getParentGraph()->attachNode(shared_from_this(), node);
 	}
 
 	void SceneNode::attachObject(const SceneObjectPtr& obj)
@@ -215,7 +214,7 @@ namespace KRE
 		return glm::translate(glm::mat4(1.0f), position_) * glm::toMat4(rotation_) * glm::scale(glm::mat4(1.0f), scale_);
 	}
 
-	void SceneNode::notifyNodeAttached(SceneNode* parent)
+	void SceneNode::notifyNodeAttached(std::weak_ptr<SceneNode> parent)
 	{
 		parent_ = parent;
 	}
@@ -223,6 +222,20 @@ namespace KRE
 	void SceneNode::process(float)
 	{
 		// nothing need be done as default
+	}
+
+	std::shared_ptr<SceneGraph> SceneNode::getParentGraph() 
+	{ 
+		auto sg = scene_graph_.lock(); 
+		ASSERT_LOG(sg != nullptr, "Parent scene graph has been deleted.")
+		return sg;
+	}
+
+	std::shared_ptr<SceneNode> SceneNode::getParent()
+	{
+		auto parent = parent_.lock();
+		ASSERT_LOG(parent != nullptr, "Parent scene node has been deleted.");
+		return parent;
 	}
 
 	void SceneNode::registerObjectType(const std::string& type, ObjectTypeFunction fn)

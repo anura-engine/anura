@@ -57,7 +57,7 @@ namespace graphics
 
 		void process();
 
-		void draw(KRE::WindowManagerPtr wnd) const;
+		void draw(KRE::WindowPtr wnd) const;
 
 		void setParent(Entity* parent);
 		Entity* getParent() const { return parent_; }

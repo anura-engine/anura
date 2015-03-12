@@ -87,7 +87,7 @@ void WeatherParticleSystem::process(const Entity& e)
 	setColor(info_.color);
 }
 
-void WeatherParticleSystem::draw(const KRE::WindowManagerPtr& wm, const rect& area, const Entity& e) const
+void WeatherParticleSystem::draw(const KRE::WindowPtr& wm, const rect& area, const Entity& e) const
 {
 	int offset_x = area.x() - area.x()%info_.repeat_period;
 	if (area.x() < 0) offset_x -= info_.repeat_period;

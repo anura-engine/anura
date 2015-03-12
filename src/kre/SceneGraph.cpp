@@ -33,7 +33,7 @@ namespace KRE
 {
 	namespace 
 	{
-		typedef std::map<std::string, std::function<SceneNodePtr(SceneGraph* sg, const variant&)>> SceneNodeRegistry;
+		typedef std::map<std::string, std::function<SceneNodePtr(std::weak_ptr<SceneGraph> sg, const variant&)>> SceneNodeRegistry;
 		SceneNodeRegistry& get_scene_node_registry()
 		{
 			static SceneNodeRegistry res;
@@ -55,16 +55,16 @@ namespace KRE
 		return *graph_.begin();
 	}
 
-	void SceneGraph::attachNode(SceneNode* parent, SceneNodePtr node) 
+	void SceneGraph::attachNode(std::weak_ptr<SceneNode> parent, SceneNodePtr node) 
 	{
-		if(parent == nullptr) {
+		if(parent.lock() == nullptr) {
 			graph_.insert(graph_.end_child(), node);
-			node->notifyNodeAttached(graph_.end_child()->get());
+			node->notifyNodeAttached(*graph_.end_child());
 			return;
 		}
 		the::tree<SceneNodePtr>::pre_iterator it = graph_.begin();
 		for(; it != graph_.end(); ++it) {
-			if(it->get() == parent) {
+			if(*it == parent.lock()) {
 				//graph_.insert(it, node);
 				graph_.insert_below(it, node);
 				node->notifyNodeAttached(parent);
@@ -86,13 +86,13 @@ namespace KRE
 	{
 		auto it = get_scene_node_registry().find(node_type);
 		if(node_type.empty()) {
-			return std::make_shared<SceneNode>(this);
+			return std::make_shared<SceneNode>(shared_from_this());
 		}
 		ASSERT_LOG(it != get_scene_node_registry().end(), "Couldn't find a node with name '" << node_type << "' to create.");
-		return it->second(this, node);
+		return it->second(shared_from_this(), node);
 	}
 
-	void SceneGraph::registerFactoryFunction(const std::string& type, std::function<SceneNodePtr(SceneGraph*,const variant&)> create_fn)
+	void SceneGraph::registerFactoryFunction(const std::string& type, std::function<SceneNodePtr(std::weak_ptr<SceneGraph>,const variant&)> create_fn)
 	{
 		auto it = get_scene_node_registry().find(type);
 		if(it != get_scene_node_registry().end()) {

@@ -17,7 +17,7 @@ public:
 	void process();
 	void draw() const;
 private:
-	KRE::WindowManagerPtr window_;
+	KRE::WindowPtr window_;
 	SDL::SDL_ptr manager_;
 	int nframes_;
 	int start_time_;

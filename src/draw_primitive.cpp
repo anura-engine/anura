@@ -185,7 +185,7 @@ namespace graphics
 		{
 		public:
 			explicit ArrowPrimitive(const variant& v);
-			void preRender(const KRE::WindowManagerPtr& wnd) override;
+			void preRender(const KRE::WindowPtr& wnd) override;
 		private:
 			DECLARE_CALLABLE(ArrowPrimitive);
 			void init();
@@ -270,7 +270,7 @@ namespace graphics
 			addAttributeSet(ab);	
 		}
 
-		void ArrowPrimitive::preRender(const KRE::WindowManagerPtr& wnd)
+		void ArrowPrimitive::preRender(const KRE::WindowPtr& wnd)
 		{
 			if(varray_.empty()) {
 				calculate_draw_arrays();

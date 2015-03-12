@@ -26,7 +26,6 @@
 #include <algorithm>
 
 #include "Font.hpp"
-#include "HintMap.hpp"
 #include "WindowManager.hpp"
 #include "SDLWrapper.hpp"
 
@@ -1171,11 +1170,14 @@ void edit_and_continue_assert(const std::string& msg, std::function<void()> fn)
 COMMAND_LINE_UTILITY(codeedit)
 {
 	SDL::SDL_ptr manager(new SDL::SDL());
-	HintMapContainer hints;
-	hints.setHint("renderer", "opengl");
-	KRE::WindowManagerPtr main_wnd = KRE::WindowManager::create("Anura Code Editor", hints);
-	main_wnd->enableVsync(false);
-	main_wnd->createWindow(600, 600);
+
+	variant_builder hints;
+	hints.add("renderer", "opengl");
+	hints.add("title", "Anura auto-update");
+	hints.add("clear_color", "black");
+
+	KRE::WindowManager wm("SDL");
+	auto wnd = wm.createWindow(800, 600, hints.build());
 
 	variant gui_node = json::parse_from_file("data/gui.cfg");
 	GuiSection::init(gui_node);

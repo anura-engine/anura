@@ -632,7 +632,7 @@ namespace graphics
 		initialised_ = true;
 	}
 
-	void AnuraShader::draw(KRE::WindowManagerPtr wnd) const
+	void AnuraShader::draw(KRE::WindowPtr wnd) const
 	{
 		wnd->render(&renderable_);
 	}

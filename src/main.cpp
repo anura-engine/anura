@@ -269,17 +269,16 @@ void set_alpha_masks()
 }
 
 
-void auto_select_resolution(KRE::WindowManagerPtr wnd, int *width, int *height)
+void auto_select_resolution(const KRE::WindowPtr& wm, int *width, int *height)
 {
-	ASSERT_LOG(wnd != nullptr, "WindowManager is null.");
 	ASSERT_LOG(width != nullptr, "width is null.");
 	ASSERT_LOG(height != nullptr, "height is null.");
 
-	auto mode = wnd->getDisplaySize();
+	auto mode = wm->getDisplaySize();
 	auto best_mode = mode;
 	
 	const float MinReduction = 0.9f;
-	for(auto& candidate_mode : wnd->getWindowModes([](const KRE::WindowMode&){ return true; })) {
+	for(auto& candidate_mode : wm->getWindowModes([](const KRE::WindowMode&){ return true; })) {
 		if(candidate_mode.width < mode.width && candidate_mode.height < mode.width
 			&& candidate_mode.width < mode.width * MinReduction
 			&& candidate_mode.height < mode.height * MinReduction
@@ -768,20 +767,29 @@ int main(int argcount, char* argvec[])
 
 	SDL::SDL_ptr manager(new SDL::SDL());
 
-	HintMapContainer hints;
-	hints.setHint("renderer", "opengl");
-	WindowManagerPtr main_wnd = WindowManager::create("SDL", hints);
-	main_wnd->enableVsync(true);
-	int width = 800;
-	int height = 600;
+	WindowManager wm("SDL");
+
+	variant_builder hints;
+	hints.add("renderer", "opengl");
+	hints.add("use_vsync", "false");
+	hints.add("width", 800);
+	hints.add("height", 600);
+
+	WindowPtr main_wnd = wm.allocateWindow(hints.build());
+	main_wnd->setWindowTitle(module::get_module_pretty_name());
+
 	LOG_ERROR("Need to fix width/height from commandline/preferences");
 	if(preferences::auto_size_window()) {
+		int width = 0;
+		int height = 0;
 		auto_select_resolution(main_wnd, &width, &height);
+
+		main_wnd->setWindowSize(width, height);
+		main_wnd->setLogicalWindowSize(width, height);
 	}
-	main_wnd->createWindow(width, height);
-	main_wnd->setWindowTitle(module::get_module_pretty_name());
+
+	wm.createWindow(main_wnd);
 	//main_wnd->setWindowIcon(module::map_file("images/window-icon.png"));
-	// XXX set window icon here.
 
 	auto canvas = Canvas::getInstance();
 

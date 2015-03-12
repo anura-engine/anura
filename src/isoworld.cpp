@@ -564,7 +564,7 @@ namespace voxel
 	DEFINE_FIELD(logical, "builtin logical_world")
 		return variant(obj.logic_.get());
 
-	DEFINE_FIELD(DrawPrimitive, "[builtin draw_primitive]")
+	DEFINE_FIELD(draw_primitive, "[builtin draw_primitive]")
 		std::vector<variant> v;
 		for(auto prim : obj.DrawPrimitives_) {
 			v.push_back(variant(prim.get()));

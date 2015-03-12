@@ -125,7 +125,7 @@ namespace KRE
 			virtual void AddPath(const PathPtr& path) override;
 			virtual void AddSubPath(const PathPtr& path) override;
 		
-			virtual void preRender(const WindowManagerPtr& wnd) override;
+			virtual void preRender(const WindowPtr& wnd) override;
 
 			void translate(double tx, double ty) override;
 			void scale(double sx, double sy) override;

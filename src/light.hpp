@@ -59,7 +59,7 @@ public:
 	variant write() const;
 	void process();
 	bool onScreen(const rect& screen_area) const;
-	void preRender(const KRE::WindowManagerPtr& wnd) override;
+	void preRender(const KRE::WindowPtr& wnd) override;
 private:
 	DECLARE_CALLABLE(CircleLight);
 	void init();

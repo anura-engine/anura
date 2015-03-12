@@ -156,7 +156,7 @@ void Water::addWave(const point& p, double xvelocity, double height, double leng
 	}
 }
 
-void Water::preRender(const KRE::WindowManagerPtr& wm) const
+void Water::preRender(const KRE::WindowPtr& wm) const
 {
 	for(const area& a : areas_) {
 		drawArea(a);

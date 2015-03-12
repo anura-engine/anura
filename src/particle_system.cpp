@@ -225,7 +225,7 @@ namespace
 		bool isDestroyed() const override { return info_.system_time_to_live_ == 0 || info_.spawn_rate_ < 0 && particles_.empty(); }
 		bool shouldSave() const override { return info_.spawn_rate_ >= 0; }
 		void process(const Entity& e) override;
-		void draw(const KRE::WindowManagerPtr& wm, const rect& area, const Entity& e) const override;
+		void draw(const KRE::WindowPtr& wm, const rect& area, const Entity& e) const override;
 	private:
 		DECLARE_CALLABLE(SimpleParticleSystem);
 
@@ -458,7 +458,7 @@ namespace
 		attrib_->update(&vtc);
 	}
 
-	void SimpleParticleSystem::draw(const KRE::WindowManagerPtr& wm, const rect& area, const Entity& e) const
+	void SimpleParticleSystem::draw(const KRE::WindowPtr& wm, const rect& area, const Entity& e) const
 	{
 		if(getAttributeSet().back()->getCount() > 0) {
 			wm->render(this);	
@@ -775,7 +775,7 @@ namespace
 			// XXX we need to set a uniform with the point size
 		}
 
-		void draw(const KRE::WindowManagerPtr& wm, const rect& area, const Entity& e) const {
+		void draw(const KRE::WindowPtr& wm, const rect& area, const Entity& e) const {
 			if(particles_.empty()) {
 				return;
 			}

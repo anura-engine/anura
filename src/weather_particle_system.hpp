@@ -68,7 +68,7 @@ public:
 	
 	bool isDestroyed() const override { return false; }
 	void process(const Entity& e) override;
-	void draw(const KRE::WindowManagerPtr& wm, const rect& area, const Entity& e) const override;
+	void draw(const KRE::WindowPtr& wm, const rect& area, const Entity& e) const override;
 private:
 	DECLARE_CALLABLE(WeatherParticleSystem);
 	

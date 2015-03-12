@@ -4,10 +4,10 @@
 #include "auto_update_window.hpp"
 #include "filesystem.hpp"
 #include "json_parser.hpp"
+#include "variant_utils.hpp"
 
 #include "Canvas.hpp"
 #include "Font.hpp"
-#include "HintMap.hpp"
 #include "Texture.hpp"
 
 namespace 
@@ -87,13 +87,14 @@ void auto_update_window::process()
 	++nframes_;
 	if(window_ == nullptr && SDL_GetTicks() - start_time_ > 2000) {
 		manager_.reset(new SDL::SDL());
-		HintMapContainer hints;
-		hints.setHint("renderer", "opengl");
-		window_ = KRE::WindowManager::create("Anura auto-update", hints);
-		window_->enableVsync(true);
-		window_->createWindow(800,600);
-		window_->setWindowTitle("Updating Anura...");
-		window_->setClearColor(KRE::Color("black"));
+
+		variant_builder hints;
+		hints.add("renderer", "opengl");
+		hints.add("title", "Anura auto-update");
+		hints.add("clear_color", "black");
+
+		KRE::WindowManager wm("SDL");
+		window_ = wm.createWindow(800, 600, hints.build());
 	}
 }
 

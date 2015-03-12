@@ -43,7 +43,7 @@ namespace KRE
 		explicit FboOpenGL(const variant& node);
 		FboOpenGL(const FboOpenGL& op);
 		virtual ~FboOpenGL();
-		virtual void preRender(const WindowManagerPtr&) override;
+		virtual void preRender(const WindowPtr&) override;
 	private:
 		void handleCreate() override;
 		void handleApply() const override;

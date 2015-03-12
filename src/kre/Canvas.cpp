@@ -113,14 +113,14 @@ namespace KRE
 		color_array->emplace_back((*color_array)[1]);
 	}
 
-	WindowManagerPtr Canvas::getWindow() const
+	WindowPtr Canvas::getWindow() const
 	{
 		auto wnd = window_.lock();
 		ASSERT_LOG(wnd != nullptr, "The window attached to this canvas is no longer valid.");
 		return wnd;
 	}
 
-	void Canvas::setWindow(WindowManagerPtr wnd)
+	void Canvas::setWindow(WindowPtr wnd)
 	{
 		window_ = wnd; 
 	}

@@ -25,7 +25,6 @@
 
 #include <glm/gtx/quaternion.hpp>
 
-#include "HintMap.hpp"
 #include "RenderQueue.hpp"
 #include "SceneFwd.hpp"
 #include "ScopeableValue.hpp"
@@ -84,8 +83,8 @@ namespace KRE
 		//void clearUniformSets();
 		void addUniformBuffer(UniformBufferBase&& ub);
 
-		virtual void preRender(const WindowManagerPtr& wm) {}
-		virtual void postRender(const WindowManagerPtr& wm) {}
+		virtual void preRender(const WindowPtr& wm) {}
+		virtual void postRender(const WindowPtr& wm) {}
 
 		// Called just before rendering this item, after shaders and other variables
 		// have been set-up

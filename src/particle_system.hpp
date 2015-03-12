@@ -56,7 +56,7 @@ public:
 	virtual bool isDestroyed() const { return false; }
 	virtual bool shouldSave() const { return true; }
 	virtual void process(const Entity& e) = 0;
-	virtual void draw(const KRE::WindowManagerPtr& wm, const rect& area, const Entity& e) const = 0;
+	virtual void draw(const KRE::WindowPtr& wm, const rect& area, const Entity& e) const = 0;
 
 	void setType(const std::string& type) { type_ = type; }
 	const std::string& type() const { return type_; }

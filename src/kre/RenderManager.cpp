@@ -55,7 +55,7 @@ namespace KRE
 		render_queues_.erase(it);
 	}
 
-	void RenderManager::render(const WindowManagerPtr& wm) const
+	void RenderManager::render(const WindowPtr& wm) const
 	{
 		for(auto& q : render_queues_) {
 			q.second->preRender(wm);

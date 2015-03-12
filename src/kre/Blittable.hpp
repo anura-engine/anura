@@ -54,7 +54,7 @@ namespace KRE
 			changed_ = true;
 		}
 
-		void preRender(const WindowManagerPtr& wm) override;
+		void preRender(const WindowPtr& wm) override;
 
 		Centre getCentre() const { return centre_; }
 		void setCentre(Centre c);
