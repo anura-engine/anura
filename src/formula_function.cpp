@@ -1685,29 +1685,26 @@ FUNCTION_DEF_IMPL
 			return variant_type::get_any();
 		END_FUNCTION_DEF(zip)
 
-		FUNCTION_DEF(float_array, 1, 2, "float_array(list, (opt) num_elements) -> callable: Converts a list of floating point values into an efficiently accessible object.")
+		FUNCTION_DEF(float_array, 1, 1, "float_array(list) -> callable: Converts a list of floating point values into an efficiently accessible object.")
 			game_logic::Formula::failIfStaticContext();
 			variant f = args()[0]->evaluate(variables);
-			int num_elems = args().size() == 1 ? 1 : args()[1]->evaluate(variables).as_int();
 			std::vector<float> floats;
 			for(int n = 0; n < f.num_elements(); ++n) {
 				floats.push_back(f[n].as_float());
 			}
-			return variant(new FloatArrayCallable(&floats, num_elems));
+			return variant(new FloatArrayCallable(&floats));
 		FUNCTION_ARGS_DEF
 			ARG_TYPE("[decimal|int]");
-			ARG_TYPE("int");
 		END_FUNCTION_DEF(float_array)
 
-		FUNCTION_DEF(short_array, 1, 2, "short_array(list) -> callable: Converts a list of integer values into an efficiently accessible object.")
+		FUNCTION_DEF(short_array, 1, 1, "short_array(list) -> callable: Converts a list of integer values into an efficiently accessible object.")
 			game_logic::Formula::failIfStaticContext();
 			variant s = args()[0]->evaluate(variables);
-			int num_elems = args().size() == 1 ? 1 : args()[1]->evaluate(variables).as_int();
 			std::vector<short> shorts;
 			for(int n = 0; n < s.num_elements(); ++n) {
 				shorts.push_back(static_cast<short>(s[n].as_int()));
 			}
-			return variant(new ShortArrayCallable(&shorts, num_elems));
+			return variant(new ShortArrayCallable(&shorts));
 		FUNCTION_ARGS_DEF
 			ARG_TYPE("[int]");
 		END_FUNCTION_DEF(short_array)

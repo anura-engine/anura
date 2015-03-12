@@ -34,8 +34,7 @@ namespace game_logic
 	class FloatArrayCallable : public FormulaCallable
 	{
 	public:
-		explicit FloatArrayCallable(std::vector<float>* f, int ne = 1)
-			: ne_(ne)
+		explicit FloatArrayCallable(std::vector<float>* f)
 		{
 			f_.swap(*f);
 		}
@@ -45,7 +44,7 @@ namespace game_logic
 				ASSERT_LOG(value.is_list(), "Must be a list type");
 				f_.resize(value.num_elements());
 				for(int n = 0; n < value.num_elements(); ++n) {
-					f_[n] = float(value[n].as_decimal().as_float());
+					f_[n] = float(value[n].as_float());
 				}
 			}
 		}
@@ -63,17 +62,15 @@ namespace game_logic
 			return variant();
 		}
 		const std::vector<float>& floats() { return f_; }
-		int num_elements() const { return ne_; }
+		int num_elements() const { return f_.size(); }
 	private:
-		int ne_;
 		std::vector<float> f_;
 	};
 
 	class ShortArrayCallable : public FormulaCallable
 	{
 	public:
-		explicit ShortArrayCallable(std::vector<short>* s, int ne = 1)
-			: ne_(ne)
+		explicit ShortArrayCallable(std::vector<short>* s)
 		{
 			s_.swap(*s);
 		}
@@ -101,9 +98,8 @@ namespace game_logic
 			return variant();
 		}
 		const std::vector<short>& shorts() { return s_; }
-		int num_elements() const { return ne_; }
+		int num_elements() const { return s_.size(); }
 	private:
-		int ne_;
 		std::vector<short> s_;
 	};
 
