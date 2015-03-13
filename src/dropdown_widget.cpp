@@ -147,11 +147,7 @@ namespace gui
 		editor_->setDim(width() - dropdown_image_size + 20 + 4, dropdown_image_size + 4);
 		editor_->setLoc(-2, -2);
 
-		if(dropdown_menu_) {
-			dropdown_menu_.reset(new Grid(1));
-		} else {
-			dropdown_menu_ = new Grid(1);
-		}
+		dropdown_menu_.reset(new Grid(1));
 
 		if(normal_color_) {
 			dropdown_menu_->setBgColor(*normal_color_);
@@ -204,7 +200,7 @@ namespace gui
 			variant value = change_handler_->execute(*callable);
 			getEnvironment()->executeCommand(value);
 		} else {
-			std::cerr << "dropdown_widget::changeDelegate() called without environment!" << std::endl;
+			LOG_ERROR("DropdownWidget::changeDelegate() called without environment!");
 		}
 	}
 
@@ -221,7 +217,7 @@ namespace gui
 			variant value = select_handler_->execute(*callable);
 			getEnvironment()->executeCommand(value);
 		} else {
-			std::cerr << "dropdown_widget::selectDelegate() called without environment!" << std::endl;
+			LOG_ERROR("DropdownWidget::selectDelegate() called without environment!");
 		}
 	}
 
@@ -403,7 +399,6 @@ namespace gui
 		if(selection < 0 || size_t(selection) >= list_.size()) {
 			return;
 		}
-		//std::cerr << "execute_selection: " << selection << std::endl;
 		current_selection_ = selection;
 		if(type_ == DropdownType::LIST) {
 			label_->setText(list_[current_selection_]);
