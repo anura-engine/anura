@@ -269,6 +269,7 @@ Frame::Frame(variant node)
 	} else {*/
 		if(node.has_key("fbo")) {
 			blit_target_.setTexture(node["fbo"].convert_to<TextureObject>()->texture());
+			blit_target_.setBlendMode(KRE::BlendModeConstants::BM_ONE, KRE::BlendModeConstants::BM_ONE_MINUS_SRC_ALPHA);
 		} else if(node.has_key("image")) {
 			blit_target_.setTexture(KRE::Texture::createTexture(node["image"]));
 		}
