@@ -260,7 +260,7 @@ void set_alpha_masks()
 
 	Surface::setAlphaFilter([=](int r, int g, int b) {
 		for(auto& c : alpha_colors) {
-			if(c.red == r && c.green == g && c.blue == b) {
+			if(c.ri() == r && c.gi() == g && c.bi() == b) {
 				return true;
 			}
 		}
