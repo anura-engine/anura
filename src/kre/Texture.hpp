@@ -249,6 +249,10 @@ namespace KRE
 				: surface(),
 				  type(TextureType::TEXTURE_2D),
 				  mipmaps(0),
+#if !defined(BOOST_NO_CXX11_UNIFIED_INITIALIZATION_SYNTAX)
+				  address_mode{AddressMode::CLAMP, AddressMode::CLAMP, AddressMode::CLAMP},
+				  filtering{Filtering::NONE, Filtering::NONE, Filtering::POINT},
+#endif
 				  border_color(),
 				  max_anisotropy(1),
 				  lod_bias(0.0f),

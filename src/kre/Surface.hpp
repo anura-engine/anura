@@ -85,14 +85,6 @@ namespace KRE
 		SurfacePtr surface_;
 	};
 
-	struct SimpleColor
-	{
-		SimpleColor() : red(0), green(0), blue(0), alpha(0), x(0), y(0) {}
-		SimpleColor(int r, int g, int b, int a=255) : red(r), green(g), blue(b), alpha(a) {}
-		int red, green, blue, alpha;
-		int x, y;
-	};
-
 	inline bool operator&(SurfaceFlags lhs, SurfaceFlags rhs) {
 		return (static_cast<int>(lhs) & static_cast<int>(rhs)) != 0;
 	}

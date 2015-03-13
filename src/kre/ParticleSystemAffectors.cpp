@@ -213,7 +213,8 @@ namespace KRE
 		{
 		public:
 			explicit FlockCenteringAffector(std::weak_ptr<ParticleSystemContainer> parent, const variant& node) 
-				: Affector(parent, node), average_(0.0f)
+				: Affector(parent, node), 
+                  average_(0.0f)
 			{
 			}
 		protected:
@@ -242,7 +243,6 @@ namespace KRE
 				return std::make_shared<FlockCenteringAffector>(*this);
 			}
 		private:
-			int count_;
 			glm::vec3 average_;
 			std::vector<Particle>::iterator prev_particle_;
 			FlockCenteringAffector();
@@ -324,7 +324,6 @@ namespace KRE
 				return std::make_shared<PathFollowerAffector>(*this);
 			}
 		private:
-			int count_;
 			std::shared_ptr<geometry::spline3d<float>> spl_;
 			std::vector<glm::vec3> points_;
 			std::vector<Particle>::iterator prev_particle_;

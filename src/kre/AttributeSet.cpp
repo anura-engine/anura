@@ -136,7 +136,8 @@ namespace KRE
 		  normalise_(normalise),
 		  stride_(stride),
 		  offset_(offset),
-		  divisor_(divisor)
+		  divisor_(divisor),
+          location_(-1)
 	{
 		switch(type_) {
 		case AttrType::POSITION:	type_name_ = "position"; break;
@@ -156,13 +157,14 @@ namespace KRE
 		ptrdiff_t offset,
 		size_t divisor)
 		: type_(AttrType::UNKOWN),
-		type_name_(type_name),
-		num_elements_(num_elements),
-		var_type_(var_type),
-		normalise_(normalise),
-		stride_(stride),
-		offset_(offset),
-		divisor_(divisor)
+		  type_name_(type_name),
+		  num_elements_(num_elements),
+		  var_type_(var_type),
+		  normalise_(normalise),
+		  stride_(stride),
+		  offset_(offset),
+		  divisor_(divisor),
+          location_(-1)
 	{
 	}
 
@@ -171,14 +173,13 @@ namespace KRE
 		  access_type_(a.access_type_),
 		  offs_(a.offs_),
 		  desc_(a.desc_),
-		  hardware_(),
+		  hardware_(a.hardware_),
 		  hardware_buffer_(a.hardware_buffer_),
 		  enabled_(a.enabled_),
 		  parent_()
 	{
 		// XXX still don't really like this. need to consider it more.
 		//hardware_ = DisplayDevice::createAttributeBuffer(hardware_buffer_, this);
-		hardware_ = a.hardware_;
 	}
 
 	AttributeSetPtr AttributeBase::getParent() const

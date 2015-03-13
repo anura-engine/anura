@@ -208,9 +208,9 @@ namespace KRE
 
 	void DisplayDeviceOpenGL::clear(ClearFlags clr)
 	{
-		glClear(clr & ClearFlags::COLOR ? GL_COLOR_BUFFER_BIT : 0 
-			| clr & ClearFlags::DEPTH ? GL_DEPTH_BUFFER_BIT : 0 
-			| clr & ClearFlags::STENCIL ? GL_STENCIL_BUFFER_BIT : 0);
+		glClear((clr & ClearFlags::COLOR ? GL_COLOR_BUFFER_BIT : 0) 
+			| (clr & ClearFlags::DEPTH ? GL_DEPTH_BUFFER_BIT : 0) 
+			| (clr & ClearFlags::STENCIL ? GL_STENCIL_BUFFER_BIT : 0));
 	}
 
 	void DisplayDeviceOpenGL::setClearColor(float r, float g, float b, float a) const

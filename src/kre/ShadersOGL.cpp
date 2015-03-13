@@ -471,7 +471,29 @@ namespace KRE
 
 		ShaderProgram::ShaderProgram(const std::string& name, const ShaderDef& vs, const ShaderDef& fs, const variant& node)
 			: KRE::ShaderProgram(name, node),
-			  object_(0)
+              name_(name),
+			  object_(0),
+              attribs_(),
+              uniforms_(),
+              v_uniforms_(),
+              v_attribs_(),
+              uniform_alternate_name_map_(),
+              attribute_alternate_name_map_(),
+			  u_mvp_(-1),
+			  u_mv_(-1),
+			  u_p_(-1),
+			  u_color_(-1),
+			  u_line_width_(-1),
+			  u_tex_(-1),
+			  a_vertex_(-1),
+			  a_texcoord_(-1),
+			  a_color_(-1),
+			  a_normal_(-1),              
+			  u_enable_palette_lookup_(-1),
+			  u_palette_(-1),
+			  u_palette_width_(-1),
+			  u_palette_map_(-1),
+			  enabled_attribs_()
 		{
 			init(name, vs, fs);
 		}
@@ -486,7 +508,6 @@ namespace KRE
 
 		void ShaderProgram::init(const std::string& name, const ShaderDef& vs, const ShaderDef& fs)
 		{
-			name_ = name;
 			//vs_.reset(new Shader(GL_VERTEX_SHADER, vs.first, vs.second));
 			//fs_.reset(new Shader(GL_FRAGMENT_SHADER, fs.first, fs.second));
 			std::vector<Shader> shader_programs;

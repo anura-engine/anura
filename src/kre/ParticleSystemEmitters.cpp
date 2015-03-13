@@ -181,7 +181,8 @@ namespace KRE
 			  force_emission_processed_(false), 
 			  can_be_deleted_(false),
 			  emits_type_(EmitsType::VISUAL),
-			  color_(1.0f,1.0f,1.0f,1.0f)
+			  color_(1.0f,1.0f,1.0f,1.0f),
+              repeat_delay_remaining_(0)
 		{
 			init_physics_parameters(initial);
 			init_physics_parameters(current);
@@ -315,7 +316,8 @@ namespace KRE
 			  emits_name_(e.emits_name_),
 			  emission_fraction_(0),
 			  duration_remaining_(0),
-			  color_(e.color_)
+			  color_(e.color_),
+              repeat_delay_remaining_(0)
 		{
 			if(e.orientation_range_) {
 				orientation_range_.reset(new std::pair<glm::quat,glm::quat>(e.orientation_range_->first, e.orientation_range_->second));
@@ -346,7 +348,6 @@ namespace KRE
 					// the particle list. We could hit some pathological case where we allocate particles past
 					// the quota (since it isn't enforced yet). This saves us from start from being invalidated
 					// if push_back were to cause a reallocation.
-					start = particles.begin() + particles.size();
 					auto last_index = particles.size();
 					particles.resize(particles.size() + cnt);
 					//start = particles.end();
@@ -356,6 +357,7 @@ namespace KRE
 						particles[n+last_index] = p;
 					}
 
+                    start = particles.begin() + last_index;
 					for(auto it = start; it != particles.end(); ++it) {
 						internalCreate(*it, t);
 					}

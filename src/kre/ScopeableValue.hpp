@@ -38,7 +38,8 @@ namespace KRE
 			  blend_equation_set_(false),
 			  blend_mode_(),
 			  blend_mode_set_(false),
-			  blend_enabled_(true)
+			  blend_enabled_(true),
+              blend_state_set_(false)
 		{
 		}
 		bool isBlendEquationSet() const { return blend_equation_set_; }

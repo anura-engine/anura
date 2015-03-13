@@ -306,7 +306,7 @@ namespace KRE
 
 		CairoContext::CairoContext(int width, int height)
 			: Context(width, height),
-			draw_rect_(0.0f, 0.0f, float(width), float(height))
+			  draw_rect_(0.0f, 0.0f, float(width), float(height))
 		{
 			surface_ = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);
 			auto status = cairo_surface_status(surface_);
@@ -319,7 +319,7 @@ namespace KRE
 			int w = cairo_image_surface_get_width(surface_);
 			int h = cairo_image_surface_get_height(surface_);
 			auto fmt = cairo_image_surface_get_format(surface_);
-			int stride = cairo_image_surface_get_stride(surface_);
+			//int stride = cairo_image_surface_get_stride(surface_);
 
 			PixelFormat::PF pffmt;
 			switch(fmt) {
@@ -348,10 +348,8 @@ namespace KRE
 			as->setDrawMode(DrawMode::TRIANGLE_STRIP);
 			addAttributeSet(as);
 
-			float offs_x = 0.0f;
-			float offs_y = 0.0f;
-			offs_x = -draw_rect_.w()/2.0f;
-			offs_y = -draw_rect_.h()/2.0f;
+			float offs_x = -draw_rect_.w()/2.0f;
+			float offs_y = -draw_rect_.h()/2.0f;
 			// XXX we should only do this if things changed.
 			const float vx1 = draw_rect_.x() + offs_x;
 			const float vy1 = draw_rect_.y() + offs_y;

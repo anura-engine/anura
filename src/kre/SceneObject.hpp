@@ -38,7 +38,7 @@ namespace KRE
 		size_t getQueue() const { return queue_; }
 		void setQueue(size_t q) { queue_ = q; }
 		const std::string& objectName() const { return name_; }
-		void setObjectName(const std::string name) { name_ = name; }
+		void setObjectName(const std::string& name) { name_ = name; }
 	private:
 		size_t queue_;
 		std::string name_;

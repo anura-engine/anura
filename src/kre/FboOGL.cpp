@@ -84,7 +84,8 @@ namespace KRE
 		uses_ext_(false),
 		depth_stencil_buffer_id_(0),
 		tex_width_(0),
-		tex_height_(0)
+		tex_height_(0),
+		applied_(false)
 	{
 		on_create();
 	}

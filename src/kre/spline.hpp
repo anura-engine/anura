@@ -48,7 +48,6 @@ namespace geometry
 				size_t i;
  
 				// working variables
-				double p;
 				std::vector<double> u;
  
 				u.resize(n);
@@ -61,7 +60,7 @@ namespace geometry
 				// decomposition loop
 				for(i = 1; i < n-1; i++) {
 					double sig = (cps[i].first-cps[i-1].first)/(cps[i+1].first-cps[i-1].first);
-					p = sig * z_prime_prime_[i-1] + 2.0;
+					double p = sig * z_prime_prime_[i-1] + 2.0;
 					z_prime_prime_[i] = (sig-1.0)/p;
 					u[i] = (cps[i+1].second-cps[i].second)/(cps[i+1].first-cps[i].first) - (cps[i].second-cps[i-1].second)/(cps[i].first-cps[i-1].first);
 					u[i] = (6.0*u[i]/(cps[i+1].first-cps[i-1].first)-sig*u[i-1])/p;
@@ -76,11 +75,10 @@ namespace geometry
 			{
 				size_t lo = 0;
 				size_t hi = z_prime_prime_.size()-1;
-				size_t k;
 				double h, b, a;
 
 				while(hi - lo > 1) {
-						k = (hi + lo) >> 1;
+						size_t k = (hi + lo) >> 1;
 						if(control_points_[k].first > x) {
 								hi = k;
 						} else {

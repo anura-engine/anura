@@ -136,6 +136,7 @@ namespace KRE
 			: access_freq_(freq),
 			  access_type_(type),
 			  offs_(0),
+              hardware_buffer_(false),
 			  enabled_(true) {
 		}
 		AttributeBase(const AttributeBase& a);

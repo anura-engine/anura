@@ -250,7 +250,7 @@ void set_alpha_masks()
 {
 	LOG_DEBUG("SETTING ALPHA MASKS");
 	using namespace KRE;
-	std::vector<SimpleColor> alpha_colors;
+	std::vector<Color> alpha_colors;
 
 	auto surf = Surface::create("alpha-colors.png");
 	surf->iterateOverSurface([&alpha_colors](int x, int y, int r, int g, int b, int a) {

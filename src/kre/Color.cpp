@@ -359,17 +359,17 @@ namespace KRE
 		rgb hsv_to_rgb(uint8_t h, uint8_t s, uint8_t v)
 		{
 			rgb out;
-			uint8_t region, remainder, p, q, t;
+			
 
 			if(s == 0) {
 				out.r = out.g = out.b = v;
 			} else {
-				region = h / 43;
-				remainder = (h - (region * 43)) * 6; 
+				const uint8_t region = h / 43;
+				const uint8_t remainder = (h - (region * 43)) * 6; 
 
-				p = (v * (255 - s)) >> 8;
-				q = (v * (255 - ((s * remainder) >> 8))) >> 8;
-				t = (v * (255 - ((s * (255 - remainder)) >> 8))) >> 8;
+				const uint8_t p = (v * (255 - s)) >> 8;
+				const uint8_t q = (v * (255 - ((s * remainder) >> 8))) >> 8;
+				const uint8_t t = (v * (255 - ((s * (255 - remainder)) >> 8))) >> 8;
 
 				switch(region)
 				{
