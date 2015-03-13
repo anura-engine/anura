@@ -46,7 +46,7 @@ namespace gui
 		display_alpha_(256), pad_h_(0), pad_w_(0), claim_mouse_events_(true),
 		draw_with_object_shader_(true), tooltip_font_size_(18),
 		swallow_all_events_(false), tab_stop_(0), has_focus_(false),
-		tooltip_color_(255,255,255), rotation_(0), scale_(1.0f)
+		tooltip_color_(255,255,255), rotation_(0), scale_(1.0f),  position_()
 		{
 		}
 
@@ -59,7 +59,7 @@ namespace gui
 		pad_w_(0), pad_h_(0), claim_mouse_events_(v["claim_mouse_events"].as_bool(true)),
 		draw_with_object_shader_(v["draw_with_object_shader"].as_bool(true)), tooltip_font_size_(18),
 		swallow_all_events_(false), tab_stop_(v["tab_stop"].as_int(0)), has_focus_(false),
-		tooltip_color_(255,255,255), rotation_(0), scale_(1.0f)
+		tooltip_color_(255,255,255), rotation_(0), scale_(1.0f), position_()
 	{
 		setAlpha(display_alpha_ < 0 ? 0 : (display_alpha_ > 256 ? 256 : display_alpha_));
 		if(v.has_key("width")) {
@@ -237,16 +237,12 @@ namespace gui
 			tx = event->motion.x; 
 			ty = event->motion.y;
 			wnd->mapMousePosition(&tx, &ty);
-			event->motion.x = tx-x();
-			event->motion.y = ty-y();
 			break;
 		case SDL_MOUSEBUTTONDOWN:
 		case SDL_MOUSEBUTTONUP:
 			tx = event->button.x; 
 			ty = event->button.y;
 			wnd->mapMousePosition(&tx, &ty);
-			event->button.x = tx-x();
-			event->button.y = ty-y();
 			break;
 		default:
 			break;
@@ -272,8 +268,9 @@ namespace gui
 		tooltip_.reset(new gui::TooltipItem(std::string(i18n::tr(str)), fontsize, color, font));
 	}
 
-	bool Widget::processEvent(const SDL_Event& event, bool claimed)
+	bool Widget::processEvent(const point& p, const SDL_Event& event, bool claimed)
 	{
+		position_ = point(p.x+x(), p.y+y());
 		if(disabled_) {
 			tooltip_ticks_ = std::numeric_limits<int>::max();
 			return claimed;
@@ -304,9 +301,7 @@ namespace gui
 
 		const bool must_swallow = swallow_all_events_ && event.type != SDL_QUIT;
 
-		SDL_Event ev = event;
-		normalizeEvent(&ev);
-		return handleEvent(ev, claimed) || must_swallow;
+		return handleEvent(event, claimed) || must_swallow;
 	}
 
 	void Widget::draw(int xt, int yt, float rotate, float scale) const
@@ -551,14 +546,16 @@ namespace gui
 
 	bool Widget::inWidget(int xloc, int yloc) const
 	{
+		xloc -= getPos().x;
+		yloc -= getPos().y;
 		if(xloc > 32767) {xloc -= 65536;}
 		if(yloc > 32767) {yloc -= 65536;}
 		if(clip_area_ && !pointInRect(point(xloc, yloc), *clip_area_)) {
 			return false;
 		}
 
-		return xloc > x() && xloc < x() + width() &&
-				yloc > y() && yloc < y() + height();
+		return xloc > 0 && xloc < width() &&
+				yloc > 0 && yloc < height();
 	}
 
 	void Widget::setFrameSet(const std::string& frame) 

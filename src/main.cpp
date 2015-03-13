@@ -365,6 +365,9 @@ int main(int argcount, char* argvec[])
 
 	int modules_loaded = 0;
 
+	int requested_width = 0;
+	int requested_height = 0;
+
 	std::vector<std::string> argv;
 	for(int n = 1; n < argcount; ++n) {
 		argv.push_back(argvec[n]);        
@@ -489,16 +492,32 @@ int main(int argcount, char* argvec[])
 			skip_tests = true;
 		} else if(arg_name == "--width") {
 			std::string w(arg_value);
-			preferences::set_actual_screen_width(boost::lexical_cast<int>(w));
+			try {
+				requested_width = boost::lexical_cast<int>(w);
+			} catch(boost::bad_lexical_cast&) {
+				ASSERT_LOG(false, "Invalid width value: " << w);
+			}
 		} else if(arg == "--width" && n+1 < argc) {
 			std::string w(argv[++n]);
-			preferences::set_actual_screen_width(boost::lexical_cast<int>(w));
+			try {
+				requested_width = boost::lexical_cast<int>(w);
+			} catch(boost::bad_lexical_cast&) {
+				ASSERT_LOG(false, "Invalid width value: " << w);
+			}
 		} else if(arg_name == "--height") {
 			std::string h(arg_value);
-			preferences::set_actual_screen_height(boost::lexical_cast<int>(h));
+			try {
+				requested_height = boost::lexical_cast<int>(h);
+			} catch(boost::bad_lexical_cast&) {
+				ASSERT_LOG(false, "Invalid height value: " << h);
+			}
 		} else if(arg == "--height" && n+1 < argc) {
 			std::string h(argv[++n]);
-			preferences::set_actual_screen_height(boost::lexical_cast<int>(h));
+			try {
+				requested_height = boost::lexical_cast<int>(h);
+			} catch(boost::bad_lexical_cast&) {
+				ASSERT_LOG(false, "Invalid height value: " << h);
+			}
 		} else if(arg_name == "--level") {
 			override_level_cfg = arg_value;
 		} else if(arg == "--level" && n+1 < argc) {
@@ -772,14 +791,14 @@ int main(int argcount, char* argvec[])
 	variant_builder hints;
 	hints.add("renderer", "opengl");
 	hints.add("use_vsync", "false");
-	hints.add("width", 800);
-	hints.add("height", 600);
+	hints.add("width", requested_width > 0 ? requested_width : 800);
+	hints.add("height", requested_height > 0 ? requested_height : 600);
 
 	WindowPtr main_wnd = wm.allocateWindow(hints.build());
 	main_wnd->setWindowTitle(module::get_module_pretty_name());
 
 	LOG_ERROR("Need to fix width/height from commandline/preferences");
-	if(preferences::auto_size_window()) {
+	if(preferences::auto_size_window() && requested_width == 0 && requested_height == 0) {
 		int width = 0;
 		int height = 0;
 		auto_select_resolution(main_wnd, &width, &height);

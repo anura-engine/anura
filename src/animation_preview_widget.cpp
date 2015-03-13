@@ -569,7 +569,7 @@ namespace gui
 	bool AnimationPreviewWidget::handleEvent(const SDL_Event& event, bool claimed)
 	{
 		for(WidgetPtr w : widgets_) {
-			claimed = w->processEvent(event, claimed) || claimed;
+			claimed = w->processEvent(getPos(), event, claimed) || claimed;
 		}
 
 		if(event.type == SDL_MOUSEBUTTONUP) {

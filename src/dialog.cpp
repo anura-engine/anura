@@ -364,7 +364,7 @@ namespace gui
 			default:
 				break;
 			}
-			claimed = processEvent(event, claimed);
+			claimed = processEvent(point(), event, claimed);
 		}
 
 		return running;
@@ -473,10 +473,10 @@ namespace gui
 		handleDrawChildren();
 	}
 
-	bool Dialog::processEvent(const SDL_Event& ev, bool claimed) {
+	bool Dialog::processEvent(const point& p, const SDL_Event& ev, bool claimed) {
 		if (ev.type == SDL_QUIT && on_quit_)
 			on_quit_();
-		return Widget::processEvent(ev, claimed);
+		return Widget::processEvent(p, ev, claimed);
 	}
 
 	bool Dialog::handleEventChildren(const SDL_Event &event, bool claimed) {
@@ -486,7 +486,7 @@ namespace gui
 		// a widget to get removed and thus the iterator to be invalidated.
 		SortedWidgetList wlist = widgets_;
 		for(auto w : boost::adaptors::reverse(wlist)) {
-			claimed |= w->processEvent(ev, claimed);
+			claimed |= w->processEvent(getPos(), ev, claimed);
 		}
 		return claimed;
 	}

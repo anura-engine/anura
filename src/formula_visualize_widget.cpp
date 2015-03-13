@@ -244,7 +244,7 @@ namespace gui
 	{
 		if(!claimed) {
 			for(const WidgetPtr& child : children_) {
-				claimed = child->processEvent(event, claimed) || claimed;
+				claimed = child->processEvent(getPos(), event, claimed) || claimed;
 				if(claimed) {
 					//we MUST break here as when claiming an event it might
 					//modify children_.

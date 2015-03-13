@@ -336,14 +336,14 @@ bool CodeEditorDialog::hasKeyboardFocus() const
 bool CodeEditorDialog::handleEvent(const SDL_Event& event, bool claimed)
 {
 	if(animation_preview_) {
-		claimed = animation_preview_->processEvent(event, claimed) || claimed;
+		claimed = animation_preview_->processEvent(getPos(), event, claimed) || claimed;
 		if(claimed) {
 			return claimed;
 		}
 	}
 
 	if(visualize_widget_) {
-		claimed = visualize_widget_->processEvent(event, claimed) || claimed;
+		claimed = visualize_widget_->processEvent(getPos(), event, claimed) || claimed;
 		if(claimed) {
 			return claimed;
 		}
@@ -353,7 +353,7 @@ bool CodeEditorDialog::handleEvent(const SDL_Event& event, bool claimed)
 		//since an event could cause removal of the suggestions grid,
 		//make sure the object doesn't get cleaned up until after the event.
 		gui::WidgetPtr suggestions = suggestions_grid_;
-		claimed = suggestions->processEvent(event, claimed) || claimed;
+		claimed = suggestions->processEvent(getPos(), event, claimed) || claimed;
 		if(claimed) {
 			return claimed;
 		}
@@ -1148,7 +1148,7 @@ void edit_and_continue_assert(const std::string& msg, std::function<void()> fn)
 			bool swallowed = false;
 			for(WidgetPtr w : widgets) {
 				if(!swallowed) {
-					swallowed = w->processEvent(event, swallowed) || swallowed;
+					swallowed = w->processEvent(point(), event, swallowed) || swallowed;
 				}
 			}
 		}

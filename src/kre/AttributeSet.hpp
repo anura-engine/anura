@@ -199,6 +199,7 @@ namespace KRE
 		}
 		void clear() {
 			elements_.clear();
+			getParent()->setCount(0);
 		}
 		void update(const Container<T>& values) {
 			elements_ = values;

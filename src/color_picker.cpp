@@ -276,10 +276,10 @@ namespace gui
 		SDL_Event ev = event;
 		//normalizeEvent(&ev);
 
-		if(g_ && g_->processEvent(ev, claimed)) {
+		if(g_ && g_->processEvent(getPos(), ev, claimed)) {
 			return true;
 		}
-		if(copy_to_palette_ && copy_to_palette_->processEvent(ev, claimed)) {
+		if(copy_to_palette_ && copy_to_palette_->processEvent(getPos(), ev, claimed)) {
 			return true;
 		}
 

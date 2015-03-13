@@ -331,7 +331,7 @@ namespace gui
 	bool AnimationCreatorDialog::handleEvent(const SDL_Event& event, bool claimed)
 	{
 		if(animation_preview_) {
-			claimed = animation_preview_->processEvent(event, claimed) || claimed;
+			claimed = animation_preview_->processEvent(getPos(), event, claimed) || claimed;
 			if(claimed) {
 				return claimed;
 			}

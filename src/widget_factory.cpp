@@ -58,7 +58,6 @@
 #include "slider.hpp"
 #include "text_editor_widget.hpp"
 #include "tree_view_widget.hpp"
-#include "view3d_widget.hpp"
 
 namespace widget_factory 
 {
@@ -131,8 +130,6 @@ namespace widget_factory
 			return WidgetPtr(new LayoutWidget(v, e));
 		} else if(wtype == "file_chooser") {
 			return WidgetPtr(new FileChooserDialog(v, e));
-		} else if(wtype == "view3d") {
-			return WidgetPtr(new View3DWidget(v, e));
 		} else if(wtype == "poly_map") {
 			return WidgetPtr(new geometry::PolyMap(v, e));
 		} else if(wtype == "particle_system_widget") {
@@ -211,8 +208,6 @@ namespace widget_factory
 			return "builtin layout_widget";
 		} else if(wtype == "file_chooser") {
 			return "builtin file_chooser_dialog";
-		} else if(wtype == "view3d") {
-			return "builtin view3d_widget";
 		} else if(wtype == "poly_map") {
 			return "builtin poly_map";
 		} else if(wtype == "particle_system_widget") {

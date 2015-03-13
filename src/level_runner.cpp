@@ -419,20 +419,6 @@ bool LevelRunner::handle_mouse_events(const SDL_Event &event)
 		return false;
 	}
 
-	// Get the correct window from the ID.
-	unsigned wnd_id = event.type == SDL_MOUSEMOTION ? event.motion.windowID : event.button.windowID;
-	auto wnd = KRE::WindowManager::getWindowFromID(wnd_id);
-	if(wnd == nullptr) {
-		std::stringstream ss;
-		for(auto windows : KRE::WindowManager::getWindowList()) {
-			ss << windows->getWindowID() << " : ";
-		}
-		LOG_WARN("No window to send mouse events to: " << wnd_id << ", Valid ids: " << ss.str());
-		return false;
-	}
-	// windowID seems unreliable at the moment, just get the main window
-	//auto wnd = KRE::WindowManager::getMainWindow();
-	
 	const int DragThresholdMilliPx = g_mouse_drag_threshold;
 
 	switch(event.type)
@@ -457,7 +443,6 @@ bool LevelRunner::handle_mouse_events(const SDL_Event &event)
 			int event_type = event.type;
 			int event_button_button = event.button.button;
             
-			wnd->mapMousePosition(&mx, &my);
 			x = mx;
 			y = my;
 
@@ -1169,12 +1154,12 @@ bool LevelRunner::play_cycle()
 			bool swallowed = false;
 #ifndef NO_EDITOR
 			if(console_) {
-				swallowed = console_->processEvent(event, swallowed);
+				swallowed = console_->processEvent(point(), event, swallowed);
 			}
 
 			if(history_slider_ && paused) {
-				swallowed = history_slider_->processEvent(event, swallowed) || swallowed;
-				swallowed = history_button_->processEvent(event, false) || swallowed;
+				swallowed = history_slider_->processEvent(point(), event, swallowed) || swallowed;
+				swallowed = history_button_->processEvent(point(), event, false) || swallowed;
 			}
 
 			if(editor_) {
@@ -1217,15 +1202,10 @@ bool LevelRunner::play_cycle()
 			swallowed = joystick::pump_events(event, swallowed);
 
 			{
-				// pre-translate the mouse positions.
-				SDL_Event ev(event);
-				int& x = ev.type == SDL_MOUSEMOTION ? ev.motion.x : ev.button.x;
-				int& y = ev.type == SDL_MOUSEMOTION ? ev.motion.y : ev.button.y;
-				KRE::WindowManager::getMainWindow()->mapMousePosition(&x, &y);
 				const std::vector<EntityPtr> active_chars = lvl_->get_active_chars();
 				for(const EntityPtr& e : active_chars) {
 					CustomObject* custom_obj = dynamic_cast<CustomObject*>(e.get());
-					swallowed = custom_obj->handle_sdl_event(ev, swallowed);
+					swallowed = custom_obj->handle_sdl_event(event, swallowed);
 				}
 			}
 

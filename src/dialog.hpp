@@ -59,7 +59,7 @@ namespace gui
 		void setCursor(int x, int y) { add_x_ = x; add_y_ = y; }
 		int getCursorX() const { return add_x_; }
 		int getCursorY() const { return add_y_; }
-		bool processEvent(const SDL_Event& e, bool claimed);
+		bool processEvent(const point& p, const SDL_Event& e, bool claimed);
 	
 		void setOnQuit(std::function<void ()> onquit) { on_quit_ = onquit; }
 

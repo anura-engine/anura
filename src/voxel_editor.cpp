@@ -539,7 +539,7 @@ glm::ivec3 iso_renderer::position_to_cube(int xp, int yp, glm::ivec3* facing)
 
 bool iso_renderer::handleEvent(const SDL_Event& event, bool claimed)
 {
-	claimed = maximize_button_->processEvent(event, claimed);
+	claimed = maximize_button_->processEvent(getPos(), event, claimed);
 	if(claimed) {
 		return widget::handleEvent(event, claimed);
 	}
@@ -547,7 +547,7 @@ bool iso_renderer::handleEvent(const SDL_Event& event, bool claimed)
 	if(light_power_slider_) {
 		SDL_Event ev(event);
 		//normalizeEvent(&ev);
-		if(light_power_slider_->processEvent(ev, claimed)) {
+		if(light_power_slider_->processEvent(getPos(), ev, claimed)) {
 			return claimed;
 		}
 	}

@@ -33,9 +33,11 @@ namespace input
 		if(result) {
 			switch(event->type) {
 			case SDL_MOUSEMOTION: {
+				unsigned wnd_id = event->type == SDL_MOUSEMOTION ? event->motion.windowID : event->button.windowID;
+				auto wnd = KRE::WindowManager::getWindowFromID(wnd_id);
 				int x = event->motion.x;
 				int y = event->motion.y;
-				KRE::WindowManager::getMainWindow()->mapMousePosition(&x, &y);
+				wnd->mapMousePosition(&x, &y);
 				event->motion.x = x;
 				event->motion.y = y;
 				break;
@@ -43,11 +45,13 @@ namespace input
 
 			case SDL_MOUSEBUTTONUP:
 			case SDL_MOUSEBUTTONDOWN: {
+				unsigned wnd_id = event->type == SDL_MOUSEMOTION ? event->motion.windowID : event->button.windowID;
+				auto wnd = KRE::WindowManager::getWindowFromID(wnd_id);
 				int x = event->button.x;
 				int y = event->button.y;
-				KRE::WindowManager::getMainWindow()->mapMousePosition(&x, &y);
+				wnd->mapMousePosition(&x, &y);
 				event->button.x = x;
-					event->button.y = y;
+				event->button.y = y;
 				break;
 			}
 		
@@ -60,7 +64,13 @@ namespace input
 	Uint32 sdl_get_mouse_state(int* x, int* y)
 	{
 		const Uint32 result = SDL_GetMouseState(x, y);
-		KRE::WindowManager::getMainWindow()->mapMousePosition(x, y);
+		auto sdl_wnd = SDL_GetMouseFocus();
+		auto wnd = KRE::WindowManager::getMainWindow();
+		if(sdl_wnd != nullptr) {
+			auto id = SDL_GetWindowID(sdl_wnd);
+			wnd = KRE::WindowManager::getWindowFromID(id);
+		}
+		wnd->mapMousePosition(x, y);
 		return result;
 	}
 }

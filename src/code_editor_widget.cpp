@@ -362,7 +362,7 @@ namespace gui
 	bool code_editor_widget::handleEvent(const SDL_Event& event, bool claimed)
 	{
 		if(slider_) {
-			if(slider_->processEvent(event, claimed)) {
+			if(slider_->processEvent(getPos(), event, claimed)) {
 				return true;
 			}
 		}

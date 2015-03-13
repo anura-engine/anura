@@ -46,13 +46,13 @@ namespace KRE
 		  index8_(as.index8_),
 		  index16_(as.index16_),
 		  index32_(as.index32_),
-		  attributes_(),
+		  attributes_(as.attributes_),
 		  count_(as.count_),
 		  offset_(as.offset_)
 	{
-		for(auto& attr : as.attributes_) {
-			attributes_.emplace_back(attr->clone());
-		}
+		//for(auto& attr : as.attributes_) {
+		//	attributes_.emplace_back(attr->clone());
+		//}
 	}
 
 	AttributeSet::~AttributeSet()
@@ -61,7 +61,11 @@ namespace KRE
 
 	AttributeSetPtr AttributeSet::clone()
 	{
-		return std::make_shared<AttributeSet>(*this);
+		auto as = std::make_shared<AttributeSet>(*this);
+		//for(auto& attr : as->attributes_) {
+		//	attr->setParent(as);
+		//}
+		return as;
 	}
 
 	void AttributeSet::setDrawMode(DrawMode dm)
@@ -176,7 +180,7 @@ namespace KRE
 		  hardware_(a.hardware_),
 		  hardware_buffer_(a.hardware_buffer_),
 		  enabled_(a.enabled_),
-		  parent_()
+		  parent_(a.parent_)
 	{
 		// XXX still don't really like this. need to consider it more.
 		//hardware_ = DisplayDevice::createAttributeBuffer(hardware_buffer_, this);

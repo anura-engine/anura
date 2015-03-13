@@ -116,7 +116,7 @@ namespace gui
 	bool LayoutWidget::handleEvent(const SDL_Event& event, bool claimed)
 	{
 		for(auto w : children_) {
-			claimed = w->processEvent(event, claimed);
+			claimed = w->processEvent(getPos(), event, claimed);
 			if(claimed) {
 				return claimed;
 			}

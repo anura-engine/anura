@@ -62,6 +62,7 @@ PAUSE_GAME_RESULT show_pause_game_dialog()
 	bool show_button_swap = false;
 	bool show_video_mode_select = true;
 	bool show_of = false;
+	bool show_language = true;
 	gui::BUTTON_RESOLUTION buttonResolution = gui::BUTTON_SIZE_DOUBLE_RESOLUTION;
 	bool upscale_dialog_frame = true;
 	
@@ -93,6 +94,8 @@ PAUSE_GAME_RESULT show_pause_game_dialog()
 		show_controls = v["show_controls"].as_bool(true);
 		show_button_swap = v["show_button_swap"].as_bool(false);
 		show_of = v["show_openfeint"].as_bool(false);
+		show_video_mode_select = v["show_video_mode_select"].as_bool(true);
+		show_language = v["show_language"].as_bool(true);
 		if(v.has_key("button_width")) {
 			button_width = v["button_width"].as_int();
 		}
@@ -198,7 +201,7 @@ PAUSE_GAME_RESULT show_pause_game_dialog()
 	t1->setTabStop(-1);
 	t2->setTabStop(-1);
 
-	const int num_buttons = 3 + show_exit + show_controls + show_button_swap + show_of + show_video_mode_select;
+	const int num_buttons = 2 + show_exit + show_controls + show_button_swap + show_of + show_video_mode_select + show_language;
 	int window_w, window_h;
 	if(preferences::virtual_screen_height() >= 600) {
 		window_w = button_width + padding*4;
@@ -248,7 +251,7 @@ PAUSE_GAME_RESULT show_pause_game_dialog()
 		dd.addWidget(b1);
 		if(show_controls) { dd.addWidget(b2); }
 		if(show_video_mode_select) { dd.addWidget(b_video); }
-		dd.addWidget(language_button);
+		if(show_language) { dd.addWidget(language_button); }
 		dd.addWidget(b3);
 		if(show_exit) { dd.addWidget(b4); }
 	} else {
@@ -261,7 +264,7 @@ PAUSE_GAME_RESULT show_pause_game_dialog()
 		dd.setPadding(padding+12);
 		dd.addWidget(s2);
 		dd.setPadding(padding);
-		dd.addWidget(language_button);
+		if(show_language) { dd.addWidget(language_button); }
 		dd.addWidget(b3);
 		if(show_exit) { dd.addWidget(b4); }
 	}

@@ -52,7 +52,7 @@ namespace gui
 		enum HORIZONTAL_ALIGN {HALIGN_LEFT, HALIGN_CENTER, HALIGN_RIGHT};
 		enum VERTICAL_ALIGN   {VALIGN_TOP,  VALIGN_CENTER, VALIGN_BOTTOM};
 
-		bool processEvent(const SDL_Event& event, bool claimed);
+		bool processEvent(const point& p, const SDL_Event& event, bool claimed);
 		void draw(int xt=0, int yt=0, float rotate=0, float scale=1.0f) const;
 
 		virtual void setLoc(int x, int y) { true_x_ = x_ = x; true_y_ = y_ = y; recalcLoc(); }
@@ -143,6 +143,8 @@ namespace gui
 
 		float getScale() const { return scale_; }
 		void setScale(float s);
+
+		const point& getPos() const { return position_; }
 	protected:
 		Widget();
 		explicit Widget(const variant& v, game_logic::FormulaCallable* e);
@@ -207,6 +209,7 @@ namespace gui
 		bool swallow_all_events_;
 
 		std::shared_ptr<rect> clip_area_;
+		point position_;
 	};
 
 	// Functor to sort widgets by z-ordering.

@@ -147,14 +147,14 @@ namespace KRE
 		  texture_(r.texture_ ? r.texture_->clone() : nullptr),
 		  render_target_(r.render_target_ ? r.render_target_->clone() : nullptr),
 		  shader_(r.shader_),
-		  attributes_()
+		  attributes_(r.attributes_)
 	{
 		for(auto& l : r.lights_) {
 			lights_[l.first] = l.second->clone();
 		}
-		for(auto& att : r.attributes_) {
-			attributes_.emplace_back(att->clone());
-		}
+		//for(auto& att : r.attributes_) {
+		//	attributes_.emplace_back(att->clone());
+		//}
 	}
 
 	Renderable::~Renderable()

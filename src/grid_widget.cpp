@@ -479,7 +479,7 @@ namespace gui
 		std::vector<WidgetPtr> cells = visible_cells_;
 		for(WidgetPtr widget : boost::adaptors::reverse(cells)) {
 			if(widget) {
-				claimed = widget->processEvent(ev, claimed);
+				claimed = widget->processEvent(getPos(), ev, claimed);
 			}
 		}
 
@@ -692,7 +692,7 @@ namespace gui
 		while(!quit) {
 			SDL_Event event;
 			while(input::sdl_poll_event(&event)) {
-				bool claimed = grid->processEvent(event, false);
+				bool claimed = grid->processEvent(point(), event, false);
 
 				if(claimed) {
 					continue;

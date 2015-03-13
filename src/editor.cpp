@@ -1071,7 +1071,7 @@ void editor::setup_for_editing()
 bool editor::handleEvent(const SDL_Event& event, bool swallowed)
 {
 	const bool dialog_started_with_focus = code_dialog_ && code_dialog_->hasFocus() || current_dialog_ && current_dialog_->hasFocus();
-	if(code_dialog_ && code_dialog_->processEvent(event, swallowed)) {
+	if(code_dialog_ && code_dialog_->processEvent(point(), event, swallowed)) {
 		return true;
 	}
 
@@ -1083,19 +1083,19 @@ bool editor::handleEvent(const SDL_Event& event, bool swallowed)
 //		return false;
 //	}
 
-	if(editor_menu_dialog_->processEvent(event, false)) {
+	if(editor_menu_dialog_->processEvent(point(), event, false)) {
 		return true;
 	}
 
-	if(editor_mode_dialog_->processEvent(event, false)) {
+	if(editor_mode_dialog_->processEvent(point(), event, false)) {
 		return true;
 	}
 
-	if(current_dialog_ && current_dialog_->processEvent(event, false)) {
+	if(current_dialog_ && current_dialog_->processEvent(point(), event, false)) {
 		return true;
 	}
 
-	if(layers_dialog_ && layers_dialog_->processEvent(event, false)) {
+	if(layers_dialog_ && layers_dialog_->processEvent(point(), event, false)) {
 		return true;
 	}
 	

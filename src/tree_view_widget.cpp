@@ -427,7 +427,7 @@ namespace gui
 		//normalizeEvent(&ev);
 		for(const WidgetPtr& widget : boost::adaptors::reverse(widgets_)) {
 			if(widget) {
-				if(widget->processEvent(ev, claimed)) {
+				if(widget->processEvent(getPos(), ev, claimed)) {
 					return true;
 				}
 			}
@@ -510,15 +510,15 @@ namespace gui
 
 	bool TreeEditorWidget::handleEvent(const SDL_Event& event, bool claimed)
 	{
-		if(edit_menu_ && edit_menu_->processEvent(event, claimed)) {
+		if(edit_menu_ && edit_menu_->processEvent(getPos(), event, claimed)) {
 			return true;
 		}
 
-		if(context_menu_ && context_menu_->processEvent(event, claimed)) {
+		if(context_menu_ && context_menu_->processEvent(getPos(), event, claimed)) {
 			return claimMouseEvents();
 		}
 
-		if(claimed || TreeViewWidget::processEvent(event, claimed)) {
+		if(claimed || TreeViewWidget::processEvent(getPos(), event, claimed)) {
 			return claimMouseEvents();
 		}
 		return claimed;

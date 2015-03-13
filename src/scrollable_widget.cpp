@@ -121,7 +121,7 @@ namespace gui
 	bool ScrollableWidget::handleEvent(const SDL_Event& event, bool claimed)
 	{
 		if(scrollbar_) {
-			return scrollbar_->processEvent(event, claimed);
+			return scrollbar_->processEvent(getPos(), event, claimed);
 		}
 
 		return claimed;

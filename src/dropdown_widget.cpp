@@ -304,13 +304,13 @@ namespace gui
 		}
 
 		if(type_ == DropdownType::COMBOBOX && editor_) {
-			if(editor_->processEvent(ev, claimed)) {
+			if(editor_->processEvent(getPos(), ev, claimed)) {
 				return true;
 			}
 		}
 
 		if(dropdown_menu_ && dropdown_menu_->visible()) {
-			if(dropdown_menu_->processEvent(ev, claimed)) {
+			if(dropdown_menu_->processEvent(getPos(), ev, claimed)) {
 				return true;
 			}
 		}
@@ -338,7 +338,7 @@ namespace gui
 	{
 		point p(event.x, event.y);
 		//int button_state = input::sdl_get_mouse_state(&p.x, &p.y);
-		if(pointInRect(p, rect(x(), y(), width(), height()))) {
+		if(inWidget(p.x, p.y)) {
 			claimed = claimMouseEvents();
 			if(dropdown_menu_) {
 				dropdown_menu_->setVisible(!dropdown_menu_->visible());
@@ -359,7 +359,7 @@ namespace gui
 	{
 		point p(event.x, event.y);
 		//int button_state = input::sdl_get_mouse_state(&p.x, &p.y);
-		if(pointInRect(p, rect(x(), y(), width(), height()))) {
+		if(inWidget(p.x, p.y)) {
 			claimed = claimMouseEvents();
 		}
 		return claimed;

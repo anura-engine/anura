@@ -72,7 +72,7 @@ namespace gui
 		SDL_Event ev = event;
 		//normalizeEvent(&ev);
 		if(child_) {
-			return child_->processEvent(ev, claimed);
+			return child_->processEvent(getPos(), ev, claimed);
 		}
 		return claimed;
 	}

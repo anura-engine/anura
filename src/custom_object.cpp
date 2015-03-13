@@ -5717,27 +5717,29 @@ void CustomObject::removeWidget(gui::WidgetPtr w)
 
 bool CustomObject::handle_sdl_event(const SDL_Event& event, bool claimed)
 {
-	SDL_Event ev(event);
-	if(event.type == SDL_MOUSEMOTION) {
-		ev.motion.x -= x();
-		ev.motion.y -= y();
-		if(use_absolute_screen_coordinates_) {
-			ev.motion.x -= adjusted_draw_position_.x;
-			ev.motion.y -= adjusted_draw_position_.y;
-		}
-	} else if(event.type == SDL_MOUSEBUTTONDOWN || event.type == SDL_MOUSEBUTTONUP) {
-		ev.button.x -= x();
-		ev.button.y -= y();
-		if(use_absolute_screen_coordinates_) {
-			ev.button.x -= adjusted_draw_position_.x;
-			ev.button.y -= adjusted_draw_position_.y;
-		}
-	}
+	//SDL_Event ev(event);
+	int tx = x() + (use_absolute_screen_coordinates_ ? adjusted_draw_position_.x : 0);
+	int ty = y() + (use_absolute_screen_coordinates_ ? adjusted_draw_position_.y : 0);
+	//if(event.type == SDL_MOUSEMOTION) {
+		//ev.motion.x -= x();
+		//ev.motion.y -= y();
+		//if(use_absolute_screen_coordinates_) {
+		//	ev.motion.x -= adjusted_draw_position_.x;
+		//	ev.motion.y -= adjusted_draw_position_.y;
+		//}
+	//} else if(event.type == SDL_MOUSEBUTTONDOWN || event.type == SDL_MOUSEBUTTONUP) {
+		//ev.button.x -= x();
+		//ev.button.y -= y();
+		//if(use_absolute_screen_coordinates_) {
+		//	ev.button.x -= adjusted_draw_position_.x;
+		//	ev.button.y -= adjusted_draw_position_.y;
+		//}
+	//}
 
 	widget_list w = widgets_;
 	widget_list::const_reverse_iterator ritor = w.rbegin();
 	while(ritor != w.rend()) {
-		claimed |= (*ritor++)->processEvent(ev, claimed);
+		claimed |= (*ritor++)->processEvent(point(tx, ty), event, claimed);
 	}
 	return claimed;
 }
