@@ -356,11 +356,9 @@ public:
 	const std::vector<const game_logic::Formula*>* formulae_using_this() const;
 
 	void must_be(TYPE t) const {
-#if !TARGET_OS_IPHONE
 		if(type_ != t) {
 			throw_type_error(t);
 		}
-#endif
 	}
 
 private:

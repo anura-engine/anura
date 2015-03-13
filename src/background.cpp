@@ -302,19 +302,11 @@ void Background::draw(int x, int y, const rect& area, const std::vector<rect>& o
 		//the scissor test does not respect any rotations etc. We use a rotation
 		//to transform the iPhone's display, which is fine normally, but
 		//here we have to accomodate the iPhone being "on its side"
-#if TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR
-		KRE::Scissor::Manager sm1(rect(dist_from_bottom/scissor_scale, 0, (wnd->height() - dist_from_bottom)/scissor_scale, wnd->width()/scissor_scale));
-#else
 		KRE::Scissor::Manager sm1(rect(0, dist_from_bottom, preferences::actual_screen_width(), preferences::actual_screen_width()*(1-dist_from_bottom/600)));
-#endif
 		wnd->setClearColor(top_);
 		wnd->clear(KRE::ClearFlags::COLOR);
 
-#if TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR
-		KRE::Scissor::Manager sm2(rect(0, 0, dist_from_bottom/scissor_scale, wnd->width()/scissor_scale));
-#else
 		KRE::Scissor::Manager sm2(rect(0, 0, preferences::actual_screen_width(), dist_from_bottom));
-#endif
 		wnd->setClearColor(bot_);
 		wnd->clear(KRE::ClearFlags::COLOR);
 	}
@@ -442,11 +434,7 @@ void Background::drawLayer(int x, int y, const rect& area, float rotation, const
 		const int width = area.w();
 		const int height = y1 - area.y();
 
-#if TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR
-		KRE::Scissor::Manager sm2(rect((wnd->height() - ypos)/2, (wnd->width() - (xpos + width))/2, height/2, width/2));
-#else
 		KRE::Scissor::Manager sm2(rect(xpos, wnd->height() - ypos, width, height));
-#endif
 		wnd->setClearColor(*bg.color_above);
 		wnd->clear(KRE::ClearFlags::COLOR);
 	}
@@ -460,11 +448,7 @@ void Background::drawLayer(int x, int y, const rect& area, float rotation, const
 		const int width = area.w();
 		const int height = area.y2() - y2;
 
-#if TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR
-		KRE::Scissor::Manager sm2(rect((wnd->height() - ypos)/2, (wnd->width() - (xpos + width))/2, height/2, width/2));
-#else
 		KRE::Scissor::Manager sm2(rect(xpos, wnd->height() - ypos, width, height));
-#endif
 		wnd->setClearColor(*bg.color_below);
 		wnd->clear(KRE::ClearFlags::COLOR);
 	}

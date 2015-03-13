@@ -915,7 +915,7 @@ bool LevelRunner::play_cycle()
 	}
 
 	//record player movement every minute on average.
-#if !TARGET_OS_HARMATTAN && !TARGET_OS_IPHONE
+#if !defined(MOBILE_BUILD)
 	if(rand()%3000 == 0 && lvl_->player()) {
 		point p = lvl_->player()->getEntity().getMidpoint();
 
@@ -1240,54 +1240,6 @@ bool LevelRunner::play_cycle()
 				quit_ = true;
 				break;
 			}
-#if TARGET_IPHONE_SIMULATOR || TARGET_OS_IPHONE || defined(__ANDROID__)
-			// make sure nothing happens while the app is supposed to be "inactive"
-			case SDL_WINDOWEVENT:
-				if (event.window.event == SDL_WINDOWEVENT_MINIMIZED)
-				{
-					SDL_Event e;
-					while (SDL_WaitEvent(&e))
-					{
-						if (e.type == SDL_WINDOWEVENT && e.window.event == SDL_WINDOWEVENT_RESTORED)
-							break;
-					}
-				}
-			break;
-#elif TARGET_OS_HARMATTAN
-			// make sure nothing happens while the app is supposed to be "inactive"
-			case SDL_ACTIVEEVENT:
-				if (event.active.state & SDL_APPINPUTFOCUS && event.active.gain == 0)
-				{
-					SDL_Event e;
-					while (SDL_WaitEvent(&e))
-					{
-						if (e.type == SDL_ACTIVEEVENT && e.active.state & SDL_APPINPUTFOCUS && e.active.gain == 1)
-							break;
-					}
-				}
-			break;
-#elif TARGET_BLACKBERRY
-			// make sure nothing happens while the app is supposed to be "inactive"
-			case SDL_ACTIVEEVENT:
-				if (event.active.state & SDL_APPINPUTFOCUS && event.active.gain == 0)
-				{
-					write_autosave();
-					preferences::save_preferences();
-
-					SDL_Event e;
-					while (SDL_WaitEvent(&e))
-					{
-						if (e.type == SDL_ACTIVEEVENT && e.active.state & SDL_APPINPUTFOCUS && e.active.gain == 1)
-							break;
-					}
-				}
-			break;
-			case SDL_USEREVENT:
-				if(event.user.code == ST_EVENT_SWIPE_DOWN) {
-					should_pause = true;
-				}
-			break;
-#else
 			case SDL_WINDOWEVENT:
 				if((event.window.event == SDL_WINDOWEVENT_FOCUS_GAINED 
 					|| event.window.event == SDL_WINDOWEVENT_FOCUS_LOST)
@@ -1306,7 +1258,7 @@ bool LevelRunner::play_cycle()
 					video_resize_event(event);
 				}
 			break;
-#endif
+
 			case SDL_KEYDOWN: {
 				const SDL_Keymod mod = SDL_GetModState();
 				const SDL_Keycode key = event.key.keysym.sym;
@@ -1355,7 +1307,6 @@ bool LevelRunner::play_cycle()
 					}
 					sys::write_file(preferences::save_file_path(), lvl_node.write_json(true));
 				} else if(key == SDLK_s && (mod&KMOD_ALT)) {
-#if !defined(__native_client__)
 					const std::string fname = KRE::WindowManager::getMainWindow()->saveFrameBuffer("screenshot.png");
 					if(!fname.empty()) {
 						std::shared_ptr<upload_screenshot_info> info(new upload_screenshot_info);
@@ -1363,15 +1314,10 @@ bool LevelRunner::play_cycle()
 						  std::bind(upload_screenshot, fname, info),
 						  std::bind(done_upload_screenshot, info));
 					}
-#endif
 				} else if(key == SDLK_l && (mod&KMOD_CTRL)) {
 					preferences::set_use_pretty_scaling(!preferences::use_pretty_scaling());
 					graphics::SurfaceCache::clear();
 					KRE::Texture::clearCache();
-				} else if(key == SDLK_i && lvl_->player()) {
-// INVENTORY CURRENTLY DISABLED
-//					pause_scope pauser;
-//					show_inventory(*lvl_, lvl_->player()->getEntity());
 				} else if(key == SDLK_m && mod & KMOD_CTRL) {
 					sound::mute(!sound::muted()); //toggle sound
 				} else if(key == SDLK_p && mod & KMOD_CTRL) {
@@ -1403,27 +1349,6 @@ bool LevelRunner::play_cycle()
 				handle_mouse_events(event);
 				break;
 
-#if defined(__ANDROID__)
-            case SDL_JOYBUTTONUP:
-            case SDL_JOYBUTTONDOWN:
-            case SDL_JOYBALLMOTION:
-                iphone_controls::handleEvent(event);
-				handle_mouse_events(event);
-                break;
-#elif defined(TARGET_OS_HARMATTAN) || defined(TARGET_BLACKBERRY)
-			case SDL_MOUSEMOTION:
-			case SDL_MOUSEBUTTONDOWN:
-			case SDL_MOUSEBUTTONUP:
-				iphone_controls::handleEvent(event);
-				handle_mouse_events(event);
-				break;
-#elif TARGET_IPHONE_SIMULATOR || TARGET_OS_IPHONE
-                case SDL_MOUSEMOTION:
-                case SDL_MOUSEBUTTONDOWN:
-                case SDL_MOUSEBUTTONUP:
-                    handle_mouse_events(event);
-                    break;
-#else
 #ifndef NO_EDITOR
 			case SDL_MOUSEBUTTONDOWN: {
 				const SDL_Keymod mod = SDL_GetModState();
@@ -1450,7 +1375,6 @@ bool LevelRunner::play_cycle()
 				handle_mouse_events(event);
 				break;
 #endif // NO_EDITOR
-#endif
 			default:
 				break;
 			}
@@ -1632,13 +1556,7 @@ bool LevelRunner::play_cycle()
 #endif
 
 		performance_data perf(current_fps_, current_cycles_, current_delay_, current_draw_, current_process_, current_flip_, cycle, current_events_, profiling_summary_);
-
-#if TARGET_IPHONE_SIMULATOR || TARGET_OS_HARMATTAN || TARGET_OS_IPHONE
-		if( ! isAchievementDisplayed() ){
-			settingsDialog.draw(in_speech_dialog());
-		}
-#endif
-		
+	
 		if(!is_skipping_game() && preferences::show_fps()) {
 			draw_fps(*lvl_, perf);
 		}
@@ -1710,15 +1628,6 @@ bool LevelRunner::play_cycle()
 
 	if (!paused && g_pause_stack == 0) ++cycle;
 
-	
-#if TARGET_IPHONE_SIMULATOR || TARGET_OS_IPHONE
-	if (quit_)
-	{
-		write_autosave();
-		preferences::save_preferences();
-	}
-#endif
-	
 	return !quit_;
 }
 

@@ -130,11 +130,11 @@ namespace formula_profiler
 
 		int nframes_profiled = 0;
 
-#if defined(_MSC_VER) || TARGET_OS_IPHONE
+#if defined(_MSC_VER) || MOBILE_BUILD
 		SDL_TimerID sdl_profile_timer;
 #endif
 
-#if defined(_MSC_VER) || TARGET_OS_IPHONE
+#if defined(_MSC_VER) || MOBILE_BUILD
 		Uint32 sdl_timer_callback(Uint32 interval, void *param)
 #else
 		void sigprof_handler(int sig)
@@ -142,7 +142,7 @@ namespace formula_profiler
 		{
 			//NOTE: Nothing in this function should allocate memory, since
 			//we might be called while allocating memory.
-#if defined(_MSC_VER) || TARGET_OS_IPHONE
+#if defined(_MSC_VER) || MOBILE_BUILD
 			if(handler_disabled) {
 				return interval;
 			}
@@ -175,7 +175,7 @@ namespace formula_profiler
 			}
 
 			if(num_samples == max_samples) {
-#if defined(_MSC_VER) || TARGET_OS_IPHONE
+#if defined(_MSC_VER) || MOBILE_BUILD
 				return interval;
 #else
 				return;
@@ -187,7 +187,7 @@ namespace formula_profiler
 			} else {
 				event_call_stack_samples[num_samples++] = event_call_stack.back();
 			}
-	#if defined(_MSC_VER) || TARGET_OS_IPHONE
+	#if defined(_MSC_VER) || MOBILE_BUILD
 			return interval;
 	#endif
 		}
@@ -207,7 +207,7 @@ namespace formula_profiler
 
 			init_call_stack(65536);
 
-#if defined(_MSC_VER) || TARGET_OS_IPHONE
+#if defined(_MSC_VER) || MOBILE_BUILD
 			// Crappy windows approximation.
 			sdl_profile_timer = SDL_AddTimer(10, sdl_timer_callback, 0);
 			if(sdl_profile_timer == 0) {
@@ -234,7 +234,7 @@ namespace formula_profiler
 	{
 		LOG_INFO("END PROFILING: " << (int)profiler_on);
 		if(profiler_on) {
-#if defined(_MSC_VER) || TARGET_OS_IPHONE
+#if defined(_MSC_VER) || MOBILE_BUILD
 			SDL_RemoveTimer(sdl_profile_timer);
 #else
 			struct itimerval timer;

@@ -239,7 +239,6 @@ variant PlayableCustomObject::getPlayerValueBySlot(int slot) const
 			return variant(&result);
 		}
 
-#if !TARGET_OS_IPHONE && !TARGET_IPHONE_SIMULATOR
 		int ary_length;
 		const Uint8* key_state = SDL_GetKeyboardState(&ary_length);
 
@@ -265,7 +264,6 @@ variant PlayableCustomObject::getPlayerValueBySlot(int slot) const
 				}
 			}
 		}
-#endif
 		return variant(&result);
 	}
 	case CUSTOM_OBJECT_PLAYER_CTRL_MICE: {

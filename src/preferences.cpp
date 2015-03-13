@@ -1103,7 +1103,6 @@ namespace preferences
 			}
 		}
 		
-#if !TARGET_OS_IPHONE && !TARGET_IPHONE_SIMULATOR
 		controls::set_keycode(controls::CONTROL_UP, static_cast<key_type>(node["key_up"].as_int(SDLK_UP)));
 		controls::set_keycode(controls::CONTROL_DOWN, static_cast<key_type>(node["key_down"].as_int(SDLK_DOWN)));
 		controls::set_keycode(controls::CONTROL_LEFT, static_cast<key_type>(node["key_left"].as_int(SDLK_LEFT)));
@@ -1121,8 +1120,7 @@ namespace preferences
 			}
 		}
 
-        preferences::set_32bpp_textures_if_kb_memory_at_least( 512000 );
-#endif
+        preferences::set_32bpp_textures_if_kb_memory_at_least(512000);
 	}
 	
 	void save_preferences()

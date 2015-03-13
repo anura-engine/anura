@@ -64,7 +64,7 @@ namespace test
 #define CHECK_GT(a, b) CHECK_CMP(a, b, >)
 
 //on mobile phones we don't do unit tests or benchmarks.
-#if TARGET_OS_IPHONE || defined(TARGET_OS_HARMATTAN)
+#if defined(MOBILE_BUILD)
 
 #define UNIT_TEST(name) \
 	void TEST_##name()

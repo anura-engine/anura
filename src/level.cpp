@@ -165,7 +165,6 @@ void Level::setAsCurrentLevel()
 		KRE::WindowManager::getMainWindow()->setWindowSize(w, h);
 	}
 
-#if !TARGET_OS_IPHONE && !TARGET_BLACKBERRY
 #ifndef NO_EDITOR
 	static const int starting_x_resolution = preferences::actual_screen_width();
 	static const int starting_y_resolution = preferences::actual_screen_height();
@@ -189,7 +188,6 @@ void Level::setAsCurrentLevel()
 	}
 	
 #endif // !NO_EDITOR
-#endif
 }
 
 namespace 

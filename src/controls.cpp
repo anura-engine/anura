@@ -98,13 +98,8 @@ namespace controls
 		SDLK_LEFT,
 		SDLK_RIGHT,
 		SDLK_d,
-	#if TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR
-		SDLK_b,
-		SDLK_a
-	#else
 		SDLK_a,
 		SDLK_s
-	#endif
 	};
 
 	CONTROL_ITEM g_mouse_controls[3] = {

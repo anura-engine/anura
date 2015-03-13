@@ -65,16 +65,6 @@ PAUSE_GAME_RESULT show_pause_game_dialog()
 	gui::BUTTON_RESOLUTION buttonResolution = gui::BUTTON_SIZE_DOUBLE_RESOLUTION;
 	bool upscale_dialog_frame = true;
 	
-#if TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR
-	show_exit = false;
-	show_controls = false;
-	show_button_swap = false;
-	show_of = true;
-#elif TARGET_BLACKBERRY
-	show_exit = false;
-	show_controls = false;
-#endif
-
 	using namespace gui;
 	using std::placeholders::_1;
 

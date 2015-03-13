@@ -71,17 +71,13 @@ namespace game_logic
 		}
 
 		variant evaluate(const FormulaCallable& variables) const {
-	#if !TARGET_OS_IPHONE
 			++ntimes_called_;
 			CallStackManager manager(this, &variables);
-	#endif
 			return execute(variables);
 		}
 
 		variant evaluateWithMember(const FormulaCallable& variables, std::string& id, variant* variant_id=nullptr) const {
-	#if !TARGET_OS_IPHONE
 			CallStackManager manager(this, &variables);
-	#endif
 			return executeMember(variables, id, variant_id);
 		}
 

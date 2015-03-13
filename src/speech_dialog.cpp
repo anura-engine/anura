@@ -44,7 +44,7 @@
 
 namespace 
 {
-#if TARGET_IPHONE_SIMULATOR || TARGET_OS_IPHONE
+#if defined(MOBILE_BUILD)
 	const int OptionHeight = 70;
 	const int OptionMinWidth = 200;
 	const int OptionXPad = 20;
@@ -62,18 +62,18 @@ SpeechDialog::SpeechDialog()
 	  horizontal_position_(0), 
 	  text_char_(0), 
 	  option_selected_(0),
-#if defined(__ANDROID__)
+#if defined(MOBILE_BUILD)
       joystick_button_pressed_(false),
       joystick_up_pressed_(false),
-     joystick_down_pressed_(false),
-#else // !defined(__ANDROID__)
+      joystick_down_pressed_(false),
+#else 
       joystick_button_pressed_(true),
       joystick_up_pressed_(true),
       joystick_down_pressed_(true),
-#endif // defined(__ANDROID__)
+#endif 
 	  expiration_(-1)
 {
-#if TARGET_IPHONE_SIMULATOR || TARGET_OS_IPHONE || defined(__ANDROID__)
+#if defined(MOBILE_BUILD)
 	option_selected_ = -1;
 #endif
 }
@@ -90,7 +90,6 @@ bool SpeechDialog::handleMouseMove(int x, int y)
 		0,
 		option_width_ + OptionsBorder*2, OptionHeight*options_.size() + OptionsBorder*2
 	);
-	//std::cerr << "Options box: " << box << " : " << x << " : " << y << "\n";
 	if(pointInRect(point(x, y), box)) {
 		option_selected_ = (y-box.y())/OptionHeight;
 		return true;
@@ -131,30 +130,6 @@ bool SpeechDialog::keyPress(const SDL_Event& event)
 				return true;
 			}
 		}
-	
-#if defined(__ANDROID__)
-		// XXX: todo
-#elif TARGET_IPHONE_SIMULATOR || TARGET_OS_IPHONE || TARGET_BLACKBERRY
-		if(event.type == SDL_MOUSEBUTTONDOWN)
-		{
-			last_mouse = event.button.which;
-			handleMouseMove(event.button.x, event.button.y);
-		}
-		if (event.type == SDL_MOUSEMOTION)
-		{
-			if (event.motion.which == last_mouse)
-				handleMouseMove(event.motion.x, event.motion.y);
-		}
-		if (event.type == SDL_MOUSEBUTTONUP)
-		{
-			if (event.motion.which == last_mouse)
-			{
-				last_mouse = -1;
-				return handleMouseMove(event.motion.x, event.motion.y);
-			}
-		}
-#endif
-
 		return false;
 	} else if (event.type != SDL_KEYDOWN && event.type != SDL_MOUSEBUTTONDOWN) {
 		return false; // only keydown and mousebuttondown should be handled by the rest of the function
@@ -212,7 +187,6 @@ bool SpeechDialog::process()
 		}
 	}
 
-#if !defined(__ANDROID__)
 	if(expiration_ <= 0) {
 		joystick::update();
 
@@ -227,16 +201,12 @@ bool SpeechDialog::process()
 
 	joystick_up_pressed_ = joystick::up();
 	joystick_down_pressed_ = joystick::down();
-#endif 
 
 	return cycle_ == expiration_;
 }
 
 bool SpeechDialog::detectJoystickPress()
 {
-#if defined(__ANDROID__)
-    return false;
-#else //!defined(__ANDROID__)
 	const bool new_press = joystick::button(0) || joystick::button(1);
 	const bool is_pressed = new_press && !joystick_button_pressed_;
 	joystick_button_pressed_ = new_press;
@@ -246,7 +216,6 @@ bool SpeechDialog::detectJoystickPress()
 	} else {
 		return false;
 	}
-#endif
 }
 
 void SpeechDialog::draw() const
@@ -383,22 +352,14 @@ void SpeechDialog::draw() const
 		KRE::Canvas::ColorManager cm(KRE::Color(255, 187, 10, 255));
 		int index = 0;
 		for(const std::string& option : options_) {
-#if TARGET_IPHONE_SIMULATOR || TARGET_OS_IPHONE
-			if(index == option_selected_) {
-				canvas->drawSolidRect(rect(xpos-OptionXPad, ypos, option_width_, OptionHeight), KRE::Color(199, 69, 69));
-			}
-#endif
 			rect area = font->dimensions(option);
 			area = font->draw(xpos, ypos+(OptionHeight/3-area.h()/4), option);
 
-#if !TARGET_IPHONE_SIMULATOR && !TARGET_OS_IPHONE
 			if(index == option_selected_) {
 				KRE::Canvas::ColorManager cm(KRE::Color::colorWhite());
 				ConstGuiSectionPtr cursor = GuiSection::get("cursor");
 				cursor->blit(area.x2(), area.y());
 			}
-#endif
-
 			ypos += OptionHeight;
 			++index;
 		}
@@ -407,7 +368,6 @@ void SpeechDialog::draw() const
 
 void SpeechDialog::setSpeakerAndFlipSide(ConstEntityPtr e)
 {
-	//std::cerr << "set speaker\n";
 	left_side_speaking_ = !left_side_speaking_;
 	setSpeaker(e, left_side_speaking_);
 }
@@ -477,7 +437,7 @@ void SpeechDialog::setText(const std::vector<std::string>& text)
 void SpeechDialog::setOptions(const std::vector<std::string>& options)
 {
 	options_ = options;
-#if TARGET_IPHONE_SIMULATOR || TARGET_OS_IPHONE  || defined(__ANDROID__)
+#if defined(MOBILE_BUILD)
 	option_selected_ = -1;
 #else
 	option_selected_ = 0;

@@ -361,20 +361,6 @@ namespace gui
 				claimed = true;
 				SDL_PushEvent(&event);
 				break;
-
-	#if TARGET_IPHONE_SIMULATOR || TARGET_OS_IPHONE || defined(__ANDROID__)
-				case SDL_WINDOWEVENT:
-				if (event.window.event == SDL_WINDOWEVENT_MINIMIZED)
-				{
-					SDL_Event e;
-					while (SDL_WaitEvent(&e))
-					{
-						if (e.type == SDL_WINDOWEVENT && e.window.event == SDL_WINDOWEVENT_RESTORED)
-							break;
-					}
-				}
-				break;
-	#endif
 			default:
 				break;
 			}

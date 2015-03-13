@@ -50,17 +50,11 @@ namespace game_logic
 		} else if(id == "SCREEN_HEIGHT") {
 			return variant(KRE::WindowManager::getMainWindow()->height());
 		} else if(id == "LOW_END_SYSTEM") {
-	#if TARGET_OS_HARMATTAN || TARGET_OS_IPHONE || TARGET_BLACKBERRY || defined(__ANDROID__)
+#if defined(MOBILE_BUILD)
 			return variant(1);
-	#else
+#else
 			return variant(0);
-	#endif
-		} else if(id == "IPHONE_SYSTEM") {
-	#if TARGET_OS_HARMATTAN || TARGET_OS_IPHONE || TARGET_BLACKBERRY || defined(__ANDROID__)
-			return variant(1);
-	#else
-			return variant(preferences::sim_iphone() ? 1 : 0);
-	#endif
+#endif
 		} else if(id == "HIGH_END_SYSTEM") {
 			return variant(!get_constant("LOW_END_SYSTEM").as_bool());
 		} else if(id == "TBS_SERVER_ADDRESS") {

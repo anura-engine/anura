@@ -899,11 +899,6 @@ int main(int argcount, char* argvec[])
 	}
 	loader.draw(_("Loading level"));
 
-#if defined(__APPLE__) && !(TARGET_IPHONE_SIMULATOR || TARGET_OS_IPHONE) && !defined(USE_SHADERS)
-	GLint swapInterval = 1;
-	CGLSetParameter(CGLGetCurrentContext(), kCGLCPSwapInterval, &swapInterval);
-#endif
-
 	loader.finishLoading();
 	//look to see if we got any quit events while loading.
 	{

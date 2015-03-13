@@ -21,8 +21,7 @@
 	   distribution.
 */
 
-#ifndef IPHONE_SOUND_H_INCLUDED
-#define IPHONE_SOUND_H_INCLUDED
+#pragma once
 
 #ifdef __cplusplus
 extern "C" {
@@ -40,6 +39,4 @@ void iphone_set_music_volume(float v);
 
 #ifdef __cplusplus
 } //extern "C"
-#endif
-
 #endif
