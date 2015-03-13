@@ -353,8 +353,7 @@ namespace gui
 	{
 		if(row_height_ == 0) {
 			return -1;
-		} else if(xpos > x() && xpos < x() + width() &&
-		   ypos > y() && ypos < y() + height()) {
+		} else if(inWidget(xpos, ypos)) {
 			return (ypos + getYscroll() - y()) / row_height_;
 		} else {
 			return -1;
@@ -440,15 +439,10 @@ namespace gui
 	{
 		auto canvas = KRE::Canvas::getInstance();
 		{
-			const int xpos = x() & ~1;
-			const int ypos = y() & ~1;
-
-			KRE::ClipScope::Manager clip_scope(rect(xpos, ypos, width(), height()));
+			KRE::ClipScope::Manager clip_scope(rect(x() & ~1, y() & ~1, width(), height()));
 
 			if(show_background_) {
-			
 				canvas->drawSolidRect(rect(0, 0, width(), height()), bg_color_ ? *bg_color_ : KRE::Color(50, 50, 50));
-
 			}
 
 			if(draw_selection_highlight_ && default_selection_ >= 0 && default_selection_ < getNRows()) {
@@ -467,7 +461,7 @@ namespace gui
 
 			for(const WidgetPtr& widget : visible_cells_) {
 				if(widget) {
-					widget->draw(x(), y(), getRotation(), getScale());
+					widget->draw();
 				}
 			}
 		} //end of scope so clip_scope goes away.
@@ -489,13 +483,11 @@ namespace gui
 			}
 		}
 
-		if(!claimed && event.type == SDL_MOUSEWHEEL) {
+		if(!claimed && ev.type == SDL_MOUSEWHEEL) {
 			int mx, my;
 			input::sdl_get_mouse_state(&mx, &my);
-			point p(mx, my);
-			rect r(x(), y(), width(), height());
-			if(pointInRect(p, r)) {
-				if(event.wheel.y > 0) {
+			if(inWidget(mx, my)) {
+				if(ev.wheel.y > 0) {
 					setYscroll(getYscroll() - 3*row_height_ < 0 ? 0 : getYscroll() - 3*row_height_);
 					if(allow_selection_) {
 						selected_row_ -= 3;
@@ -520,8 +512,8 @@ namespace gui
 		}
 
 		if(!claimed && allow_selection_) {
-			if(event.type == SDL_MOUSEMOTION) {
-				const SDL_MouseMotionEvent& e = event.motion;
+			if(ev.type == SDL_MOUSEMOTION) {
+				const SDL_MouseMotionEvent& e = ev.motion;
 				int new_row = getRowAt(e.x,e.y);
 				if(new_row != selected_row_) {
 					selected_row_ = new_row;
@@ -529,10 +521,8 @@ namespace gui
 						on_mouseover_(new_row);
 					}
 				}
-			} else if(event.type == SDL_MOUSEBUTTONDOWN) {
-				point p(event.button.x, event.button.y);
-				rect r(x(), y(), width(), height());
-				const SDL_MouseButtonEvent& e = event.button;
+			} else if(ev.type == SDL_MOUSEBUTTONDOWN) {
+				const SDL_MouseButtonEvent& e = ev.button;
 				if(e.state == SDL_PRESSED) {
 					const int row_index = getRowAt(e.x, e.y);
 					LOG_INFO("SELECT ROW: " << row_index);
@@ -555,15 +545,15 @@ namespace gui
 		}
 
 		if(!claimed && must_select_) {
-			if(event.type == SDL_KEYDOWN) {
-				if(event.key.keysym.sym == SDLK_UP) {
+			if(ev.type == SDL_KEYDOWN) {
+				if(ev.key.keysym.sym == SDLK_UP) {
 					setYscroll(getYscroll() - row_height_ < 0 ? 0 : getYscroll() - row_height_);
 					if(selected_row_-- == 0) {
 						selected_row_ = getNRows()-1;
 						setYscroll(std::min(getVirtualHeight(),row_height_*getNRows()) - height());
 					}
 					claimed = true;
-				} else if(event.key.keysym.sym == SDLK_DOWN) {
+				} else if(ev.key.keysym.sym == SDLK_DOWN) {
 					int y1 = getYscroll() + row_height_;
 					setYscroll(std::min(getVirtualHeight(),row_height_*getNRows()) - y1 < height() 
 						? std::min(getVirtualHeight(),row_height_*getNRows()) - height()

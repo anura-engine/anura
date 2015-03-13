@@ -228,34 +228,19 @@ namespace gui
 
 	void Widget::normalizeEvent(SDL_Event* event, bool translate_coords)
 	{
-		int tx, ty; //temp x, y
+		int tx, ty;
 		switch(event->type) {
 		case SDL_MOUSEMOTION:
-	#if TARGET_IPHONE_SIMULATOR || TARGET_OS_IPHONE
-			event->motion.x = (event->motion.x*graphics::screen_width())/preferences::virtual_screen_width();
-			event->motion.y = (event->motion.y*graphics::screen_height())/preferences::virtual_screen_height();
-	#else
-			event->motion.x = (event->motion.x*preferences::virtual_screen_width())/preferences::actual_screen_width();
-			event->motion.y = (event->motion.y*preferences::virtual_screen_height())/preferences::actual_screen_height();
-	#endif
-			tx = event->motion.x; ty = event->motion.y;
-	
-			/// XXX fixme
+			tx = event->motion.x; 
+			ty = event->motion.y;
 			KRE::WindowManager::getMainWindow()->mapMousePosition(&tx, &ty);
 			event->motion.x = tx-x();
 			event->motion.y = ty-y();
 			break;
 		case SDL_MOUSEBUTTONDOWN:
 		case SDL_MOUSEBUTTONUP:
-	#if TARGET_IPHONE_SIMULATOR || TARGET_OS_IPHONE
-			event->button.x = (event->button.x*graphics::screen_width())/preferences::virtual_screen_width();
-			event->button.y = (event->button.y*graphics::screen_height())/preferences::virtual_screen_height();
-	#else
-			event->button.x = (event->button.x*preferences::virtual_screen_width())/preferences::actual_screen_width();
-			event->button.y = (event->button.y*preferences::virtual_screen_height())/preferences::actual_screen_height();
-	#endif
-			tx = event->button.x; ty = event->button.y;
-			/// XXX fixme
+			tx = event->button.x; 
+			ty = event->button.y;
 			KRE::WindowManager::getMainWindow()->mapMousePosition(&tx, &ty);
 			event->button.x = tx-x();
 			event->button.y = ty-y();
