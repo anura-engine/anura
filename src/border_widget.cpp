@@ -70,7 +70,7 @@ namespace gui
 	bool BorderWidget::handleEvent(const SDL_Event& event, bool claimed)
 	{
 		SDL_Event ev = event;
-		normalizeEvent(&ev);
+		//normalizeEvent(&ev);
 		if(child_) {
 			return child_->processEvent(ev, claimed);
 		}

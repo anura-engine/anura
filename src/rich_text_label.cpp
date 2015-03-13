@@ -231,7 +231,7 @@ namespace gui
 		claimed = ScrollableWidget::handleEvent(event, claimed);
 
 		SDL_Event ev = event;
-		normalizeEvent(&ev);
+		//normalizeEvent(&ev);
 		for(const std::vector<WidgetPtr>& v : children_) {
 			for(const WidgetPtr& widget : v) {
 				claimed = widget->processEvent(ev, claimed);

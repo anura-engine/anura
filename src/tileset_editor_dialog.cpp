@@ -177,7 +177,7 @@ namespace editor_dialogs
 			if(context_menu_) {
 				gui::WidgetPtr ptr = context_menu_;
 				SDL_Event ev = event;
-				normalizeEvent(&ev);
+				//normalizeEvent(&ev);
 				return ptr->processEvent(ev, claimed);
 			}
 

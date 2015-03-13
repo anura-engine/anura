@@ -481,7 +481,7 @@ namespace gui
 
 	bool Dialog::handleEventChildren(const SDL_Event &event, bool claimed) {
 		SDL_Event ev = event;
-		normalizeEvent(&ev, false);
+		//normalizeEvent(&ev, false);
 		// We copy the list here to cover the case that event processing causes
 		// a widget to get removed and thus the iterator to be invalidated.
 		SortedWidgetList wlist = widgets_;

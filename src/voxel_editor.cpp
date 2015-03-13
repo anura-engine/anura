@@ -546,7 +546,7 @@ bool iso_renderer::handleEvent(const SDL_Event& event, bool claimed)
 
 	if(light_power_slider_) {
 		SDL_Event ev(event);
-		normalizeEvent(&ev);
+		//normalizeEvent(&ev);
 		if(light_power_slider_->processEvent(ev, claimed)) {
 			return claimed;
 		}

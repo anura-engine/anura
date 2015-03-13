@@ -424,7 +424,7 @@ namespace gui
 		}
 
 		SDL_Event ev = event;
-		normalizeEvent(&ev);
+		//normalizeEvent(&ev);
 		for(const WidgetPtr& widget : boost::adaptors::reverse(widgets_)) {
 			if(widget) {
 				if(widget->processEvent(ev, claimed)) {

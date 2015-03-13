@@ -173,7 +173,7 @@ namespace gui
 	bool SelectorWidget::handleEvent(const SDL_Event& event, bool claimed)
 	{
 		SDL_Event ev = event;
-		normalizeEvent(&ev);
+		//normalizeEvent(&ev);
 
 		if(claimed) {
 			return claimed;

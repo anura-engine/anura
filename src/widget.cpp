@@ -228,12 +228,15 @@ namespace gui
 
 	void Widget::normalizeEvent(SDL_Event* event, bool translate_coords)
 	{
+		unsigned wnd_id = event->type == SDL_MOUSEMOTION ? event->motion.windowID : event->button.windowID;
+		auto wnd = KRE::WindowManager::getWindowFromID(wnd_id);
+
 		int tx, ty;
 		switch(event->type) {
 		case SDL_MOUSEMOTION:
 			tx = event->motion.x; 
 			ty = event->motion.y;
-			KRE::WindowManager::getMainWindow()->mapMousePosition(&tx, &ty);
+			wnd->mapMousePosition(&tx, &ty);
 			event->motion.x = tx-x();
 			event->motion.y = ty-y();
 			break;
@@ -241,7 +244,7 @@ namespace gui
 		case SDL_MOUSEBUTTONUP:
 			tx = event->button.x; 
 			ty = event->button.y;
-			KRE::WindowManager::getMainWindow()->mapMousePosition(&tx, &ty);
+			wnd->mapMousePosition(&tx, &ty);
 			event->button.x = tx-x();
 			event->button.y = ty-y();
 			break;
@@ -301,7 +304,9 @@ namespace gui
 
 		const bool must_swallow = swallow_all_events_ && event.type != SDL_QUIT;
 
-		return handleEvent(event, claimed) || must_swallow;
+		SDL_Event ev = event;
+		normalizeEvent(&ev);
+		return handleEvent(ev, claimed) || must_swallow;
 	}
 
 	void Widget::draw(int xt, int yt, float rotate, float scale) const

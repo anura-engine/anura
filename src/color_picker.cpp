@@ -274,7 +274,7 @@ namespace gui
 			return claimed;
 		}
 		SDL_Event ev = event;
-		normalizeEvent(&ev);
+		//normalizeEvent(&ev);
 
 		if(g_ && g_->processEvent(ev, claimed)) {
 			return true;
