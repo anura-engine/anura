@@ -553,6 +553,7 @@ namespace graphics
 		if(target == nullptr) {
 			uniform_commands_.push_back(DrawCommand());
 			target = &uniform_commands_.back();
+			target->name = key;
 			target->target = program_->shader_->getUniform(key);
 		}
 
@@ -573,7 +574,7 @@ namespace graphics
 			}
 
 			if(cmd.value.is_callable()) {
-				boost::intrusive_ptr<game_logic::FloatArrayCallable> f = cmd.value.try_convert<game_logic::FloatArrayCallable>();
+				game_logic::FloatArrayCallable* f = cmd.value.try_convert<game_logic::FloatArrayCallable>();
 				if(f != nullptr) {
 					int count = f->num_elements();
 					int divisor = 0;
@@ -584,7 +585,7 @@ namespace graphics
 					cmd.attr_target->update(&f->floats()[0], f->num_elements() * sizeof(float), count);
 					continue;
 				}
-				boost::intrusive_ptr<game_logic::ShortArrayCallable> s = cmd.value.try_convert<game_logic::ShortArrayCallable>();
+				game_logic::ShortArrayCallable* s = cmd.value.try_convert<game_logic::ShortArrayCallable>();
 				if(s != nullptr) {
 					int count = f->num_elements();
 					int divisor = 0;
@@ -621,6 +622,7 @@ namespace graphics
 		if(target == nullptr) {
 			attribute_commands_.push_back(DrawCommand());
 			target = &attribute_commands_.back();
+			target->name = key;
 			target->target = program_->shader_->getAttribute(key);
 			target->attr_target = program_->renderable_.getAttributeOrDie(target->target);
 		}
