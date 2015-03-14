@@ -745,6 +745,7 @@ void Frame::draw(graphics::AnuraShaderPtr shader, int x, int y, bool face_right,
 	blit_target_.setMirrorVert(!face_right);
 	blit_target_.preRender(wnd);
 	wnd->render(&blit_target_);
+	blit_target_.setScale(1.0f, 1.0f);
 }
 
 void Frame::draw(graphics::AnuraShaderPtr shader, int x, int y, const rect& area, bool face_right, bool upside_down, int time, float rotate) const
