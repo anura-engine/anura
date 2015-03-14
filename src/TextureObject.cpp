@@ -60,7 +60,7 @@ BEGIN_DEFINE_FN(save, "(string) ->commands")
 
 	return variant(new FnCommandCallable([=]() {
 		auto t = ptr->texture();
-		ASSERT_LOG(!t, "Could not get texture");
+		ASSERT_LOG(t, "Could not get texture");
 		auto s = t->getFrontSurface();
 		ASSERT_LOG(s != nullptr, "Could not get surface from texture");
 		s->savePng(fname);
