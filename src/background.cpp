@@ -440,7 +440,7 @@ void Background::drawLayer(int x, int y, const rect& area, float rotation, const
 	}
 
 	if(bg.tile_downwards && y2 < area.y2()) {
-		v2 += (static_cast<float>((area.y2()) - y2)/static_cast<float>(y2 - y1))*(v2 - v1);
+		v2 += (static_cast<float>(area.y2() - y2)/static_cast<float>(y2 - y1))*(v2 - v1);
 		y2 = area.y() + area.h();
 	} else if(bg.color_below && y2 < area.y2()) {
 		const int xpos = area.x() - x;
