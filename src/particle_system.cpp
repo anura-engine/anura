@@ -77,7 +77,7 @@ namespace
 				const rect& area = info.area;
 
 				frame_area a;
-				rectf ra = texture_->getSourceRectNormalised();
+				rectf ra = texture_->getTextureCoords(0, area);
 				a.u1 = ra.x();
 				a.u2 = ra.x2();
 				a.v1 = ra.y();
@@ -258,9 +258,9 @@ namespace
 
 	SimpleParticleSystem::SimpleParticleSystem(const Entity& e, const SimpleParticleSystemFactory& factory)
 	  : factory_(factory), 
-	  info_(factory.info_), 
-	  cycle_(0), 
-	  spawn_buildup_(0)
+	    info_(factory.info_), 
+	    cycle_(0), 
+	    spawn_buildup_(0)
 	{
 		setShader(KRE::ShaderProgram::getProgram("vtc_shader"));
 
@@ -270,7 +270,7 @@ namespace
 		attrib_->addAttributeDesc(KRE::AttributeDesc(KRE::AttrType::TEXTURE,  2, KRE::AttrFormat::FLOAT, false, sizeof(KRE::vertex_texture_color), offsetof(KRE::vertex_texture_color, texcoord)));
 		attrib_->addAttributeDesc(KRE::AttributeDesc(KRE::AttrType::COLOR,    4, KRE::AttrFormat::UNSIGNED_BYTE, true, sizeof(KRE::vertex_texture_color), offsetof(KRE::vertex_texture_color, color)));
 		as->addAttribute(KRE::AttributeBasePtr(attrib_));
-		as->setDrawMode(KRE::DrawMode::TRIANGLE_STRIP);
+		as->setDrawMode(KRE::DrawMode::TRIANGLES);
 		
 		addAttributeSet(as);
 	}
@@ -447,14 +447,21 @@ namespace
 					color.a = std::max(256 - info_.delta_a_*(cycle_ - gen.created_at), 0);
 				}
 
-				vtc.emplace_back(glm::vec2(pp->pos[0] + f.x_adjust*facing, pp->pos[1] + f.y_adjust), glm::vec2(f.u1, f.v1), color);
-				vtc.emplace_back(glm::vec2(pp->pos[0] + (anim->width() - f.x2_adjust)*facing, pp->pos[1] + f.y_adjust), glm::vec2(f.u2, f.v1), color);
-				vtc.emplace_back(glm::vec2(pp->pos[0] + f.x_adjust*facing, pp->pos[1] + anim->height() - f.y2_adjust), glm::vec2(f.u1, f.v2), color);
-				vtc.emplace_back(glm::vec2(pp->pos[0] + (anim->width() - f.x2_adjust)*facing, pp->pos[1] + anim->height() - f.y2_adjust), glm::vec2(f.u2, f.v2), color);
+				const float x1 = pp->pos[0] + f.x_adjust * facing;
+				const float x2 = pp->pos[0] + (anim->width() - f.x2_adjust) * facing;
+				const float y1 = pp->pos[1] + f.y_adjust;
+				const float y2 = pp->pos[1] + anim->height() - f.y2_adjust;
+
+				vtc.emplace_back(glm::vec2(x1, y1), glm::vec2(f.u1, f.v1), color);
+				vtc.emplace_back(glm::vec2(x2, y1), glm::vec2(f.u2, f.v1), color);
+				vtc.emplace_back(glm::vec2(x1, y2), glm::vec2(f.u1, f.v2), color);
+
+				vtc.emplace_back(glm::vec2(x1, y2), glm::vec2(f.u1, f.v2), color);
+				vtc.emplace_back(glm::vec2(x2, y1), glm::vec2(f.u2, f.v1), color);
+				vtc.emplace_back(glm::vec2(x2, y2), glm::vec2(f.u2, f.v2), color);
 				++pp;
 			}
 		}
-		getAttributeSet().back()->setCount(vtc.size());
 		attrib_->update(&vtc);
 	}
 
@@ -657,6 +664,7 @@ namespace
 
 	class PointParticleSystem : public ParticleSystem, public std::enable_shared_from_this<PointParticleSystem>
 	{
+		int u_point_size_;
 	public:
 		PointParticleSystem(const Entity& obj, const PointParticleInfo& info) 
 			: obj_(obj), 
@@ -668,16 +676,23 @@ namespace
 			pos_y_(info.pos_y), 
 			pos_y_rand_(info.pos_y_rand) 
 		{
-			setShader(KRE::ShaderProgram::getProgram("point_shader"));
+			setShader(KRE::ShaderProgram::getProgram("point_shader")->clone());
+			getShader()->setUniformDrawFunction(std::bind(&PointParticleSystem::executeOnDraw, this));
+			u_point_size_  = getShader()->getAttribute("point_size");
 
 			// turn on hardware-backed, not indexed and instanced draw if available.
 			auto as = KRE::DisplayDevice::createAttributeSet(true, false, false);
 			as->setDrawMode(KRE::DrawMode::POINTS);
-			addAttributeSet(as);
 			attribs_ = std::make_shared<KRE::Attribute<Coord>>(KRE::AccessFreqHint::DYNAMIC);
 			attribs_->addAttributeDesc(KRE::AttributeDesc(KRE::AttrType::POSITION, 2, KRE::AttrFormat::FLOAT, false, sizeof(Coord), offsetof(Coord, vertex)));
 			attribs_->addAttributeDesc(KRE::AttributeDesc(KRE::AttrType::COLOR, 4, KRE::AttrFormat::UNSIGNED_BYTE, true, sizeof(Coord), offsetof(Coord, color)));
 			as->addAttribute(attribs_);
+			addAttributeSet(as);
+		}
+
+		void executeOnDraw() {
+			LOG_DEBUG("executeOnDraw: point_size=" << info_.dot_size);
+			getShader()->setUniformValue(u_point_size_, info_.dot_size);
 		}
 		
 		void process(const Entity& e) {
@@ -757,9 +772,9 @@ namespace
 			for(const auto& p : particles_) {
 				glm::u8vec4 col(p.color.as_u8vec4());
 				if(info_.colors.size() >= 2) {
-					col /= p.ttl/info_.ttl_divisor;
+					col = info_.colors[p.ttl/info_.ttl_divisor].as_u8vec4();
 				}
-				coords.emplace_back(Coord(glm::vec2(p.pos_x/1024, p.pos_y/1024), col));
+				coords.emplace_back(glm::vec2(p.pos_x/1024, p.pos_y/1024), col);
 			}
 			getAttributeSet().back()->setCount(coords.size());
 			attribs_->update(&coords);

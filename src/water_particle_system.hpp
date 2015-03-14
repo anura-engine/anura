@@ -58,6 +58,7 @@ public:
 	void process(const Entity& e) override;
 	void draw(const KRE::WindowPtr& wm, const rect& area, const Entity& e) const override;
 
+	void executeOnDraw();
 private:
 	DECLARE_CALLABLE(WaterParticleSystem);
 
@@ -80,4 +81,5 @@ private:
 	std::shared_ptr<KRE::Attribute<glm::u16vec2>> attribs_;
 	
 	std::vector<particle> particles_;
+	int u_point_size_;
 };
