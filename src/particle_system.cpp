@@ -678,7 +678,7 @@ namespace
 		{
 			setShader(KRE::ShaderProgram::getProgram("point_shader")->clone());
 			getShader()->setUniformDrawFunction(std::bind(&PointParticleSystem::executeOnDraw, this));
-			u_point_size_  = getShader()->getAttribute("point_size");
+			u_point_size_  = getShader()->getUniform("point_size");
 
 			// turn on hardware-backed, not indexed and instanced draw if available.
 			auto as = KRE::DisplayDevice::createAttributeSet(true, false, false);
@@ -691,7 +691,6 @@ namespace
 		}
 
 		void executeOnDraw() {
-			LOG_DEBUG("executeOnDraw: point_size=" << info_.dot_size);
 			getShader()->setUniformValue(u_point_size_, info_.dot_size);
 		}
 		
