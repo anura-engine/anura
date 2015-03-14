@@ -2170,7 +2170,8 @@ RETURN_TYPE("bool")
 		void draw(const Level& lvl) const {
 			draw_scene(lvl, last_draw_position(), &lvl.player()->getEntity());
 
-			// XXX If the frame rate is made configurable this should be changed.
+			KRE::WindowManager::getMainWindow()->swap();
+
 			profile::delay(preferences::frame_time_millis());
 		}
 

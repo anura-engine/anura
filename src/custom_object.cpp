@@ -1157,7 +1157,7 @@ void CustomObject::drawLater(int xx, int yy) const
 	KRE::ModelManager2D model_matrix(x()+offs_x, y()+offs_y);
 	for(const gui::WidgetPtr& w : widgets_) {
 		if(w->zorder() >= widget_zorder_draw_later_threshold) {
-			w->draw(0, 0, rotate_z_.as_float32(), draw_scale_ ? draw_scale_->as_float32() : 0);
+			w->draw(0, 0, rotate_z_.as_float32(), draw_scale_ ? draw_scale_->as_float32() : 1);
 		}
 	}
 }
