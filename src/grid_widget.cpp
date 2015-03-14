@@ -354,7 +354,7 @@ namespace gui
 		if(row_height_ == 0) {
 			return -1;
 		} else if(inWidget(xpos, ypos)) {
-			return (ypos + getYscroll() - y()) / row_height_;
+			return (ypos + getYscroll() - getPos().y) / row_height_;
 		} else {
 			return -1;
 		}
@@ -442,26 +442,26 @@ namespace gui
 			KRE::ClipScope::Manager clip_scope(rect(x() & ~1, y() & ~1, width(), height()));
 
 			if(show_background_) {
-				canvas->drawSolidRect(rect(0, 0, width(), height()), bg_color_ ? *bg_color_ : KRE::Color(50, 50, 50));
+				canvas->drawSolidRect(rect(x(), y(), width(), height()), bg_color_ ? *bg_color_ : KRE::Color(50, 50, 50));
 			}
 
 			if(draw_selection_highlight_ && default_selection_ >= 0 && default_selection_ < getNRows()) {
 				if(std::find(header_rows_.begin(), header_rows_.end(), default_selection_) == header_rows_.end()) {
-					canvas->drawSolidRect(rect(0,row_height_*default_selection_ - getYscroll(),width(),row_height_),
+					canvas->drawSolidRect(rect(x(),y()+row_height_*default_selection_ - getYscroll(),width(),row_height_),
 						KRE::Color(0,0,255,128));
 				}
 			}
 
 			if(allow_highlight_ && selected_row_ >= 0 && selected_row_ < getNRows()) {
 				if(std::find(header_rows_.begin(), header_rows_.end(), selected_row_) == header_rows_.end()) {
-					canvas->drawSolidRect(rect(0,row_height_*selected_row_ - getYscroll(),width(),row_height_), 
+					canvas->drawSolidRect(rect(x(),y()+row_height_*selected_row_ - getYscroll(),width(),row_height_), 
 						focus_color_ ? *focus_color_ : KRE::Color(255,0,0,128));
 				}
 			}
 
 			for(const WidgetPtr& widget : visible_cells_) {
 				if(widget) {
-					widget->draw();
+					widget->draw(x(), y());
 				}
 			}
 		} //end of scope so clip_scope goes away.
