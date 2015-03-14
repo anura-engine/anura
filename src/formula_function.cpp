@@ -1343,6 +1343,20 @@ namespace game_logic
 			return variant_type::get_type(variant::VARIANT_TYPE_INT);
 		END_FUNCTION_DEF(round)
 
+		FUNCTION_DEF(round_to_even, 1, 1, "Returns the nearest integer that is even")
+			const double a = args()[0]->evaluate(variables).as_float();
+			int result = static_cast<int>(a);
+			if(result&1) {
+				++result;
+			}
+
+			return variant(result);
+		FUNCTION_ARGS_DEF
+			ARG_TYPE("decimal");
+		FUNCTION_TYPE_DEF
+			return variant_type::get_type(variant::VARIANT_TYPE_INT);
+		END_FUNCTION_DEF(round_to_even)
+
 		FUNCTION_DEF(ceil, 1, 1, "Returns the smaller near integer. 3.9 -> 3, 3.3 -> 3, 3 -> 3")
 			const float a = args()[0]->evaluate(variables).as_float();
 			return variant(static_cast<int>(ceil(a)));
