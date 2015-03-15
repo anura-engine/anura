@@ -147,7 +147,7 @@ namespace KRE
 		have_render_to_texture_ = extensions_.find("GL_EXT_framebuffer_object") != extensions_.end();
 		npot_textures_ = extensions_.find("GL_ARB_texture_non_power_of_two") != extensions_.end();
 		hardware_uniform_buffers_ = extensions_.find("GL_ARB_uniform_buffer_object") != extensions_.end();
-
+		
 		glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &max_texture_units_);
 		if((err = glGetError()) != GL_NONE) {
 			LOG_ERROR("Failed query for GL_MAX_TEXTURE_IMAGE_UNITS: 0x" << std::hex << err);
@@ -163,6 +163,8 @@ namespace KRE
 			minor_version_ = static_cast<int>(std::modf(vers, &integral) * 100.0f);
 			major_version_ = static_cast<int>(integral);
 		}
+
+		glEnable(GL_POINT_SPRITE);
 	}
 
 	void DisplayDeviceOpenGL::printDeviceInfo()
@@ -625,7 +627,7 @@ namespace KRE
 		LOG_DEBUG("before copy");
 		uint8_t* cp_data = reinterpret_cast<uint8_t*>(data);
 		
-		for(auto it = new_data.rbegin(); it != new_data.rend(); it += stride) {
+		for(auto it = new_data.begin() + (height-1)*stride; it != new_data.begin(); it -= stride) {
 			std::copy(it, it + stride, cp_data);
 			cp_data += stride;
 		}
