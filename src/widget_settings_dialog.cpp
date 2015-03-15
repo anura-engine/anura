@@ -21,6 +21,9 @@
 	   distribution.
 */
 
+#if 0
+// XXX
+//
 #include "Font.hpp"
 
 #include "asserts.hpp"
@@ -230,3 +233,5 @@ namespace gui
 		widget_->setId(text->text());
 	}
 }
+#endif
+

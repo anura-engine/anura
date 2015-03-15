@@ -59,6 +59,7 @@
 #include "profile_timer.hpp"
 #include "random.hpp"
 #include "rect_renderable.hpp"
+#include "screen_handling.hpp"
 #include "sound.hpp"
 #include "stats.hpp"
 #include "string_utils.hpp"
@@ -154,6 +155,8 @@ void Level::setAsCurrentLevel()
 	get_current_level() = this;
 	Frame::setColorPalette(palettes_used_);
 
+	auto wnd = KRE::WindowManager::getMainWindow();
+
 	if(false && preferences::auto_size_window()) {
 		static bool auto_sized = false;
 		if(!auto_sized) {
@@ -161,33 +164,9 @@ void Level::setAsCurrentLevel()
 		}
 
 		int w,h;
-		KRE::WindowManager::getMainWindow()->autoWindowSize(w, h);
-		KRE::WindowManager::getMainWindow()->setWindowSize(w, h);
+		wnd->autoWindowSize(w, h);
+		wnd->setWindowSize(w, h);
 	}
-
-#ifndef NO_EDITOR
-	static const int starting_x_resolution = preferences::actual_screen_width();
-	static const int starting_y_resolution = preferences::actual_screen_height();
-	static const int starting_virtual_x_resolution = preferences::virtual_screen_width();
-	static const int starting_virtual_y_resolution = preferences::virtual_screen_height();
-
-	if(set_screen_resolution_on_entry_ && !editor_ && !editor_resolution_manager::isActive() && starting_x_resolution == starting_virtual_x_resolution && !preferences::auto_size_window()) {
-		if(!x_resolution_) {
-			x_resolution_ = starting_x_resolution;
-		}
-
-		if(!y_resolution_) {
-			y_resolution_ = starting_y_resolution;
-		}
-
-		if(x_resolution_ != preferences::actual_screen_width() || y_resolution_ != preferences::actual_screen_height()) {
-
-			LOG_INFO("RESETTING VIDEO MODE: " << x_resolution_ << ", " << y_resolution_);
-			KRE::WindowManager::getMainWindow()->setWindowSize(x_resolution_, y_resolution_);
-		}
-	}
-	
-#endif // !NO_EDITOR
 }
 
 namespace 
@@ -4365,6 +4344,7 @@ bool Level::executeCommand(const variant& var)
 	return result;
 }
 
+/*
 UTILITY(correct_solidity)
 {
 	std::vector<std::string> files;
@@ -4430,7 +4410,7 @@ UTILITY(compile_levels)
 
 	LevelObject::writeCompiled();
 }
-
+*/
 BENCHMARK(level_solid)
 {
 	//benchmark which tells us how long Level::solid takes.
@@ -4447,6 +4427,7 @@ BENCHMARK(load_nene)
 	}
 }
 
+/*
 BENCHMARK(load_all_levels)
 {
 	std::vector<std::string> files;
@@ -4474,4 +4455,4 @@ UTILITY(load_and_save_all_levels)
 		sys::write_file(path, lvl->write().write_json(true));
 	}
 }
-
+*/

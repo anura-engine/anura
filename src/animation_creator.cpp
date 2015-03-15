@@ -27,6 +27,8 @@
 #include <fstream>
 #include <math.h>
 
+#include "WindowManager.hpp"
+
 #include "animation_creator.hpp"
 #include "draw_scene.hpp"
 #include "dropdown_widget.hpp"
@@ -34,7 +36,6 @@
 #include "frame.hpp"
 #include "message_dialog.hpp"
 #include "module.hpp"
-#include "preferences.hpp"
 #include "slider.hpp"
  
 namespace gui 
@@ -400,14 +401,15 @@ namespace gui
 
 	void AnimationCreatorDialog::setImageFile()
 	{
+		auto wnd = KRE::WindowManager::getMainWindow();
 		gui::filter_list f;
 		f.push_back(gui::filter_pair("Image Files", ".*?\\.(png|jpg|gif|bmp|tif|tiff|tga|webp|xpm|xv|pcx)"));
 		f.push_back(gui::filter_pair("All Files", ".*"));
 		gui::FileChooserDialog open_dlg(
-			int(preferences::virtual_screen_width()*0.1), 
-			int(preferences::virtual_screen_height()*0.1), 
-			int(preferences::virtual_screen_width()*0.8), 
-			int(preferences::virtual_screen_height()*0.8),
+			static_cast<int>(wnd->width()*0.1f), 
+			static_cast<int>(wnd->height()*0.1f), 
+			static_cast<int>(wnd->width()*0.8f), 
+			static_cast<int>(wnd->height()*0.8f),
 			f);
 		open_dlg.setBackgroundFrame("empty_window");
 		open_dlg.setDrawBackgroundFn(draw_last_scene);
@@ -597,11 +599,12 @@ namespace gui
 
 	void AnimationCreatorDialog::setDestination()
 	{
+		auto wnd = KRE::WindowManager::getMainWindow();
 		FileChooserDialog dir_dlg(
-			static_cast<int>(preferences::virtual_screen_width()*0.2), 
-			static_cast<int>(preferences::virtual_screen_height()*0.2), 
-			static_cast<int>(preferences::virtual_screen_width()*0.6), 
-			static_cast<int>(preferences::virtual_screen_height()*0.6),
+			static_cast<int>(wnd->width()*0.2f), 
+			static_cast<int>(wnd->height()*0.2f), 
+			static_cast<int>(wnd->width()*0.6f), 
+			static_cast<int>(wnd->height()*0.6f),
 			gui::filter_list(), 
 			true, module::get_module_path("") + "images");
 		dir_dlg.setBackgroundFrame("empty_window");

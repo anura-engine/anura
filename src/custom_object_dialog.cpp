@@ -307,11 +307,12 @@ namespace editor_dialogs
 
 	void CustomObjectDialog::onSetPath()
 	{
+		auto wnd = KRE::WindowManager::getMainWindow();
 		gui::FileChooserDialog dir_dlg(
-			static_cast<int>(preferences::virtual_screen_width()*0.2), 
-			static_cast<int>(preferences::virtual_screen_height()*0.2), 
-			static_cast<int>(preferences::virtual_screen_width()*0.6), 
-			static_cast<int>(preferences::virtual_screen_height()*0.6),
+			static_cast<int>(wnd->width() * 0.2f), 
+			static_cast<int>(wnd->height() * 0.2f), 
+			static_cast<int>(wnd->width() * 0.6f), 
+			static_cast<int>(wnd->height() * 0.6f),
 			gui::filter_list(), 
 			true, current_object_save_path_);
 		dir_dlg.setBackgroundFrame("empty_window");
@@ -585,9 +586,8 @@ namespace editor_dialogs
 
 	void CustomObjectDialog::onEditAnimations()
 	{
-		gui::AnimationCreatorDialog d(0, 0, preferences::virtual_screen_width(), 
-			preferences::virtual_screen_height(),
-			object_template_.has_key("animation") ? object_template_["animation"] : variant());
+		auto wnd = KRE::WindowManager::getMainWindow();
+		gui::AnimationCreatorDialog d(0, 0, wnd->width(), wnd->height(), object_template_.has_key("animation") ? object_template_["animation"] : variant());
 		d.setBackgroundFrame("empty_window");
 		d.setDrawBackgroundFn(draw_last_scene);
 
@@ -599,10 +599,8 @@ namespace editor_dialogs
 
 	void CustomObjectDialog::onEditItems(const std::string& name, const std::string& attr, bool allow_functions)
 	{
-		gui::ItemEditDialog d(0, 0, preferences::virtual_screen_width(), 
-			preferences::virtual_screen_height(),
-			name,
-			object_template_.has_key(attr) ? object_template_[attr] : variant());
+		auto wnd = KRE::WindowManager::getMainWindow();
+		gui::ItemEditDialog d(0, 0, wnd->width(), wnd->height(), name, object_template_.has_key(attr) ? object_template_[attr] : variant());
 		d.setBackgroundFrame("empty_window");
 		d.setDrawBackgroundFn(draw_last_scene);
 		d.allowFunctions(allow_functions);
@@ -615,14 +613,15 @@ namespace editor_dialogs
 
 	void CustomObjectDialog::showModal()
 	{
+		auto wnd = KRE::WindowManager::getMainWindow();
 		gui::filter_list f;
 		f.push_back(gui::filter_pair("Image Files", ".*?\\.(png|jpg|gif|bmp|tif|tiff|tga|webp|xpm|xv|pcx)"));
 		f.push_back(gui::filter_pair("All Files", ".*"));
 		gui::FileChooserDialog open_dlg(
-			static_cast<int>(preferences::virtual_screen_width()*0.1), 
-			static_cast<int>(preferences::virtual_screen_height()*0.1), 
-			static_cast<int>(preferences::virtual_screen_width()*0.8), 
-			static_cast<int>(preferences::virtual_screen_height()*0.8),
+			static_cast<int>(wnd->width() * 0.1f), 
+			static_cast<int>(wnd->height() * 0.1f), 
+			static_cast<int>(wnd->width() * 0.8f), 
+			static_cast<int>(wnd->height() * 0.8f),
 			f, false, module::map_file("images/"));
 		open_dlg.setBackgroundFrame("empty_window");
 		open_dlg.setDrawBackgroundFn(draw_last_scene);

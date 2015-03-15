@@ -36,10 +36,9 @@ namespace game_logic
 
 namespace preferences 
 {
-	enum FullscreenMode {
-		FULLSCREEN_NONE,
+	enum class ScreenMode {
+		WINDOWED,
 		FULLSCREEN_WINDOWED,
-		FULLSCREEN,
 	};
 
 	game_logic::FormulaCallable* get_settings_obj();
@@ -93,7 +92,7 @@ namespace preferences
 	const variant& version_decimal();
 	int get_unique_user_id();
 
-	bool parse_arg(const char* arg);
+	bool parse_arg(const std::string& arg, const std::string& next_arg);
 	bool no_sound();
 	bool no_music();
 
@@ -102,8 +101,6 @@ namespace preferences
 
 	bool setup_preferences_dir();
 
-	const std::string& level_path();
-	bool is_level_path_set();
 	const char* user_data_path();
 	const char* save_file_path();
 	const char* auto_save_file_path();
@@ -116,41 +113,13 @@ namespace preferences
 	bool toogle_debug_hitboxes();
 	bool edit_and_continue();
 	void set_edit_and_continue(bool value);
-	bool show_iphone_controls(); //iphone control hit rects
 	bool use_pretty_scaling();
 	void set_use_pretty_scaling(bool value);
-	FullscreenMode fullscreen();
-	void set_fullscreen(FullscreenMode value);
-	bool no_fullscreen_ever();
 
-	bool resizable();
-	bool proportional_resize();
-	
-	// Reverse A and B buttons for iPhone
-	bool reverse_ab();
-	void set_reverse_ab(bool value);
-	
 	// Control scheme to use on iOS or other touch systems
 	const std::string& control_scheme();
 	void set_control_scheme(const std::string& scheme);
 	
-	void set_widescreen();
-	
-	int virtual_screen_width();
-	int virtual_screen_height();
-	
-	int actual_screen_width();
-	int actual_screen_height();
-
-	void set_actual_screen_dimensions_persistent(int width, int height);
-
-	class ScreenDimensionOverrideScope {
-		int old_width, old_height, vold_width, vold_height;
-	public:
-		ScreenDimensionOverrideScope(int width, int height, int vwidth, int vheight);
-		~ScreenDimensionOverrideScope();
-	};
-
 	//whether we are debugging
 	bool debug();
 	
@@ -195,12 +164,13 @@ namespace preferences
 	//'compiled' tile output.
 	extern bool compiling_tiles;
 	
-	void set_actual_screen_width(int width);
-	void set_actual_screen_height(int height);
-	void set_virtual_screen_width(int width);
-	void set_virtual_screen_height(int height);
-
 	bool auto_size_window();
+	int requested_window_width();
+	int requested_window_height();
+	bool is_resizeable();
+	ScreenMode get_screen_mode();
+	void set_screen_mode(ScreenMode mode);
+	bool no_fullscreen_ever();
 	
 	bool allow_autopause();
 
@@ -212,10 +182,6 @@ namespace preferences
 
 	void set_32bpp_textures_if_kb_memory_at_least(int memory_required );
     
-	bool sim_iphone();
-
-	bool no_iphone_controls();
-
 	bool send_stats();
 
 	int force_difficulty();
@@ -251,11 +217,4 @@ namespace preferences
 
 	bool internal_tbs_server();
 	const std::set<std::string>& get_build_options();
-
-	class editor_screen_size_scope {
-		int width_, height_;
-	public:
-		editor_screen_size_scope();
-		~editor_screen_size_scope();
-	};
 }

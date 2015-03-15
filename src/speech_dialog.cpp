@@ -39,7 +39,7 @@
 #include "input.hpp"
 #include "joystick.hpp"
 #include "module.hpp"
-#include "preferences.hpp"
+#include "screen_handling.hpp"
 #include "speech_dialog.hpp"
 
 namespace 
@@ -86,7 +86,7 @@ bool SpeechDialog::handleMouseMove(int x, int y)
 {
 	input::sdl_get_mouse_state(&x, &y);
 	rect box(
-		preferences::virtual_screen_width() - option_width_/2 - OptionsBorder*2,
+		graphics::GameScreen::get().getWidth() - option_width_/2 - OptionsBorder*2,
 		0,
 		option_width_ + OptionsBorder*2, OptionHeight*options_.size() + OptionsBorder*2
 	);
@@ -249,11 +249,14 @@ void SpeechDialog::draw() const
 		speaker_ypos = static_cast<int>((speaker->getFeetY() - screen_y)*pos.zoom - 10);
 	}
 
+	const int vw = graphics::GameScreen::get().getVirtualWidth();
+	const int vh = graphics::GameScreen::get().getVirtualHeight();
+
 	if(pane_area_.w() == 0) {
 		pane_area_ = rect(
 		  top_corner->width(),
-		  wnd->logicalHeight() - TextAreaHeight + TextBorder,
-		  wnd->logicalWidth() - top_corner->width()*2,
+		  vh - TextAreaHeight + TextBorder,
+		  vw - top_corner->width()*2,
 		  TextAreaHeight - bottom_corner->height());
 		if(speaker_ypos < 100) {
 			pane_area_ = rect(pane_area_.x(), top_corner->height() + 50, pane_area_.w(), pane_area_.h());

@@ -366,15 +366,13 @@ namespace preferences
 	namespace {
 		int unique_user_id = 0;
 		
-		int screen_editor_mode = 0;
-		
 		bool no_sound_ = false;
 		bool no_music_ = false;
 		bool show_debug_hitboxes_ = false;
 		bool edit_and_continue_ = false;
 		bool show_iphone_controls_ = false;
 		bool use_pretty_scaling_ = false;
-		FullscreenMode fullscreen_ = FULLSCREEN_NONE;
+		ScreenMode fullscreen_ = ScreenMode::WINDOWED;
 		bool fullscreen_disabled_ = false;
 		bool resizable_ = false;
 		bool proportional_resize_ = false;
@@ -387,9 +385,6 @@ namespace preferences
 		bool allow_autopause_ = false;
 		bool auto_size_window_ = false;
 		bool screen_dimensions_are_persistent = false;
-		
-		std::string level_path_ = "data/level/";
-		bool level_path_set_ = false;
 		
 		bool relay_through_server_ = false;
 		
@@ -420,14 +415,6 @@ namespace preferences
 #endif
 		bool send_stats_ = false;
 		
-		bool sim_iphone_ = true;
-		
-		int virtual_screen_width_ = 960;
-		int virtual_screen_height_ = 640;
-		
-		int actual_screen_width_ = 320;
-		int actual_screen_height_ = 480;
-		
 		bool screen_rotated_ = true;
 		
 		bool use_joystick_ = false;
@@ -439,17 +426,9 @@ namespace preferences
 		
 		bool send_stats_ = false;
 		
-		bool sim_iphone_ = false;
-		
 #ifndef PREFERENCES_PATH
 #define PREFERENCES_PATH "~/.frogatto/"
 #endif
-		int virtual_screen_width_ = 854;
-		int virtual_screen_height_ = 480;
-		
-		int actual_screen_width_ = 854;
-		int actual_screen_height_ = 480;
-		
 		bool screen_rotated_ = false;
 		
 		bool use_joystick_ = true;
@@ -467,12 +446,6 @@ namespace preferences
 #endif
 		
 		bool send_stats_ = false;
-		bool sim_iphone_ = false;
-		int virtual_screen_width_ = 800;
-		int virtual_screen_height_ = 480;
-		
-		int actual_screen_width_ = 800;
-		int actual_screen_height_ = 480;
 		
 		bool screen_rotated_ = false;
 		
@@ -490,13 +463,8 @@ namespace preferences
 #define PREFERENCES_PATH "~/.frogatto/"
 #endif
 		bool send_stats_ = true;
-		bool sim_iphone_ = false;
 		bool use_joystick_ = true;
 		bool screen_rotated_ = false;
-		int virtual_screen_width_ = 1024;
-		int virtual_screen_height_ = 600;
-		int actual_screen_width_ = 1024;
-		int actual_screen_height_ = 600;
 		bool load_compiled_ = true;
 		bool use_fbo_ = true;
 		bool use_bequ_ = true;
@@ -514,8 +482,6 @@ namespace preferences
 		bool send_stats_ = false;
 #endif
 		
-		bool sim_iphone_ = false;
-		
 #ifndef PREFERENCES_PATH
 #define PREFERENCES_PATH "~/.frogatto/"
 #endif
@@ -524,22 +490,10 @@ namespace preferences
 		bool use_joystick_ = true;
 		
 #if defined(TARGET_TEGRA)
-		int virtual_screen_width_ = 1024;
-		int virtual_screen_height_ = 600;
-		
-		int actual_screen_width_ = 1024;
-		int actual_screen_height_ = 600;
-		
 		bool load_compiled_ = true;
 		bool use_fbo_ = true;
 		bool use_bequ_ = true;
 #else
-		int virtual_screen_width_ = 800;
-		int virtual_screen_height_ = 600;
-		
-		int actual_screen_width_ = 800;
-		int actual_screen_height_ = 600;
-		
 		bool load_compiled_ = false;
 #endif
 		
@@ -570,6 +524,9 @@ namespace preferences
 		bool serialize_bad_objects_ = true;
 		bool die_on_assert_ = false;
 		bool type_safety_checks_ = true;
+
+		int requested_window_width_ = 0;
+		int requested_window_height_ = 0;
 	}
 	
 	int get_unique_user_id() {
@@ -583,17 +540,12 @@ namespace preferences
 		return unique_user_id;
 	}
 	
-	int xypos_draw_mask = actual_screen_width_ < virtual_screen_width_ ? ~1 : ~0;
+	int xypos_draw_mask = ~1;
+	
 	bool double_scale() {
-		return xypos_draw_mask&1;
+		return xypos_draw_mask & 1;
 	}
 	bool compiling_tiles = false;
-	
-	namespace {
-		void recalculate_draw_mask() {
-			xypos_draw_mask = actual_screen_width_ < virtual_screen_width_ ? ~1 : ~0;
-		}
-	}
 	
 	bool no_sound() {
 		return no_sound_;
@@ -639,14 +591,6 @@ namespace preferences
 		auto_save_file_path_ = preferences_path_ + AUTOSAVE_FILENAME;	
 	}
 	
-	const std::string& level_path() {
-		return level_path_;
-	}
-	
-	bool is_level_path_set() {
-		return level_path_set_;
-	}
-	
 	const char *save_file_path() {
 		LOG_INFO("GET SAVE FILE PATH: " << save_file_path_);
 		return save_file_path_.c_str();
@@ -688,7 +632,6 @@ namespace preferences
 	}
 	
 	void expand_data_paths() {
-		expand_path(level_path_);
 		expand_path(save_file_path_);
 		expand_path(auto_save_file_path_);
 		expand_path(preferences_path_);
@@ -711,15 +654,11 @@ namespace preferences
 	}
 
 	bool edit_and_continue() {
-		return edit_and_continue_ && !editor_resolution_manager::isActive();
+		return edit_and_continue_ && !EditorResolutionManager::isActive();
 	}
 
 	void set_edit_and_continue(bool value) {
 		edit_and_continue_ = value;
-	}
-	
-	bool show_iphone_controls() {
-		return show_iphone_controls_;
 	}
 	
 	bool use_pretty_scaling() {
@@ -730,7 +669,7 @@ namespace preferences
 		use_pretty_scaling_ = value;
 	}
 	
-	FullscreenMode fullscreen() {
+	ScreenMode get_screen_mode() {
 		return fullscreen_;
 	}
 
@@ -739,28 +678,12 @@ namespace preferences
 		return fullscreen_disabled_;
 	}
 	
-	void set_fullscreen(FullscreenMode value) {
+	void set_screen_mode(ScreenMode value) {
 		fullscreen_ = value;
 	}
 	
-	bool resizable() {
+	bool is_resizable() {
 		return resizable_;
-	}
-	
-	bool no_iphone_controls() {
-		return no_iphone_controls_;
-	}
-	
-	bool proportional_resize() {
-		return proportional_resize_;
-	}
-	
-	bool reverse_ab() {
-		return reverse_ab_;
-	}
-	
-	void set_reverse_ab(bool value) {
-		reverse_ab_ = value;
 	}
 	
 	const std::string& control_scheme()
@@ -773,94 +696,6 @@ namespace preferences
 		control_scheme_ = scheme;
 	}
 	
-	void set_widescreen()
-	{
-		LOG_ERROR("Ignored: set_widescreen()");
-		//virtual_screen_width_ = (virtual_screen_height_*16)/9;
-		//actual_screen_width_ = (actual_screen_height_*16)/9;
-		//recalculate_draw_mask();
-	}
-	
-	int virtual_screen_width()
-	{
-		return KRE::WindowManager::getMainWindow()->logicalWidth();
-		//return virtual_screen_width_;
-	}
-	
-	int virtual_screen_height()
-	{
-		return KRE::WindowManager::getMainWindow()->logicalHeight();
-		//return virtual_screen_height_;
-	}
-	
-	void set_virtual_screen_width(int width)
-	{
-		LOG_ERROR("Ignored: set_virtual_screen_width()");
-		//virtual_screen_width_ = width;
-		//recalculate_draw_mask();
-	}
-
-	void tweak_virtual_screen(int awidth, int aheight) 
-	{
-		LOG_ERROR("Ignored: tweak_virtual_screen()");
-		//virtual_screen_width_ = (virtual_screen_height_ * awidth)/aheight;
-	}
-	
-	void set_virtual_screen_height (int height)
-	{
-		LOG_ERROR("Ignored: set_virtual_screen_height()");
-		//virtual_screen_height_ = height;
-	}
-	
-	int actual_screen_width()
-	{
-		//return actual_screen_width_;
-		return KRE::WindowManager::getMainWindow()->width();
-	}
-	
-	int actual_screen_height()
-	{
-		return KRE::WindowManager::getMainWindow()->height();
-		//return actual_screen_height_;
-	}
-	
-	void set_actual_screen_width(int width)
-	{
-		LOG_ERROR("Ignored: set_actual_screen_width()");
-		//assert(width);
-		//actual_screen_width_ = width;
-		//if(screen_editor_mode) {
-		//	virtual_screen_width_ = actual_screen_width_;
-		//}
-		//recalculate_draw_mask();
-	}
-	
-	void set_actual_screen_height(int height)
-	{
-		LOG_ERROR("Ignored: set_actual_screen_width()");
-		//assert(height);
-		//actual_screen_height_ = height;
-		//if(screen_editor_mode) {
-		//	virtual_screen_height_ = actual_screen_height_;
-		//}
-	}
-	
-	void set_actual_screen_dimensions_persistent(int width, int height)
-	{
-		LOG_ERROR("Ignored: set_actual_screen_width()");
-		//assert(width);
-		//assert(height);
-		//actual_screen_width_ = width;
-		//actual_screen_height_ = height;
-		//tweak_virtual_screen(width, height);
-		//screen_dimensions_are_persistent = true;
-		//if(screen_editor_mode) {
-		//	virtual_screen_width_ = actual_screen_width_;
-		//	virtual_screen_height_ = actual_screen_height_;
-		//}
-		//recalculate_draw_mask();
-	}
-
 	bool load_compiled()
 	{
 		return load_compiled_;
@@ -879,6 +714,16 @@ namespace preferences
 	bool auto_size_window()
 	{
 		return auto_size_window_;
+	}
+
+	int requested_window_width()
+	{
+		return requested_window_width_;
+	}
+
+	int requested_window_height()
+	{
+		return requested_window_height_;
 	}
 	
 	bool edit_on_start()
@@ -932,28 +777,6 @@ namespace preferences
 		password_ = str.str();
 	}
 
-#if defined(TARGET_OS_HARMATTAN) || defined(TARGET_PANDORA) || defined(TARGET_TEGRA) || defined(TARGET_BLACKBERRY)
-	bool use_fbo()
-	{
-		return use_fbo_;
-	}
-	
-	bool use_bequ()
-	{
-		return use_bequ_;
-	}
-	
-    void set_fbo( bool value )
-    {
-		use_fbo_ = value;
-    }
-	
-    void set_bequ( bool value )
-    {
-		use_bequ_ = value;
-    }
-#endif
-	
 	bool force_no_npot_textures()
 	{
 		return force_no_npot_textures_;
@@ -1086,23 +909,6 @@ namespace preferences
 		password_ = node["passhash"].as_string_default("");
 		cookie_ = node.has_key("cookie") ? node["cookie"] : variant();
 
-		if(node.has_key("width") && node.has_key("height")) {
-			int w = node["width"].as_int();
-			int h = node["height"].as_int();
-			if(w > 0 && h > 0 && w < 4096 && h < 4096) {
-				set_actual_screen_width(w);
-				set_actual_screen_height(h);
-				screen_dimensions_are_persistent = true;
-				if(node.has_key("fullscreen")) {
-					if(node["fullscreen"].is_bool()) {
-						set_fullscreen(node["fullscreen"].as_bool() ? FULLSCREEN_NONE : FULLSCREEN_WINDOWED);
-					} else {
-						set_fullscreen(FullscreenMode(node["fullscreen"].as_int()));
-					}
-				}
-			}
-		}
-		
 		controls::set_keycode(controls::CONTROL_UP, static_cast<key_type>(node["key_up"].as_int(SDLK_UP)));
 		controls::set_keycode(controls::CONTROL_DOWN, static_cast<key_type>(node["key_down"].as_int(SDLK_DOWN)));
 		controls::set_keycode(controls::CONTROL_LEFT, static_cast<key_type>(node["key_left"].as_int(SDLK_LEFT)));
@@ -1155,12 +961,6 @@ namespace preferences
 		node.add("passhash", variant(get_password()));
 		node.add("cookie", get_cookie());
 			
-		if(screen_dimensions_are_persistent) {
-			node.add("width", actual_screen_width());
-			node.add("height", actual_screen_height());
-			node.add("fullscreen", fullscreen());
-		}
-
 		node.add("sdl_version", SDL_COMPILEDVERSION);
 		if(external_code_editor_.is_null() == false) {
 			node.add("code_editor", external_code_editor_);
@@ -1178,32 +978,19 @@ namespace preferences
 		sys::write_file(preferences_path_ + "preferences.cfg", node.build().write_json());
 	}
 	
-	editor_screen_size_scope::editor_screen_size_scope() : width_(virtual_screen_width_), height_(virtual_screen_height_) {
-		++screen_editor_mode;
-		virtual_screen_width_ = actual_screen_width_;
-		virtual_screen_height_ = actual_screen_height_;
-	}
-	
-	editor_screen_size_scope::~editor_screen_size_scope() {
-		virtual_screen_width_ = width_;
-		virtual_screen_height_ = height_;
-		--screen_editor_mode;
-	}
-	
-	bool parse_arg(const char* arg) {
-		const std::string s(arg);
-		
-		std::string arg_name, arg_value;
-		std::string::const_iterator equal = std::find(s.begin(), s.end(), '=');
-		if(equal != s.end()) {
-			arg_name = std::string(s.begin(), equal);
-			arg_value = std::string(equal+1, s.end());
+	bool parse_arg(const std::string& arg, const std::string& next_arg) 
+	{
+		std::string s, arg_value;
+		std::string::const_iterator equal = std::find(arg.begin(), arg.end(), '=');
+		if(equal != arg.end()) {
+			s = std::string(arg.begin(), equal);
+			arg_value = std::string(equal+1, arg.end());
+		} else {
+			s = arg;
+			arg_value = next_arg;
 		}
 		
-		if(arg_name == "--level-path") {
-			level_path_ = arg_value + "/";
-			level_path_set_ = true;
-		} else if(s == "--editor_save_to_user_preferences") {
+		if(s == "--editor_save_to_user_preferences") {
 			editor_save_to_user_preferences_ = true;
 		} else if(s == "--show-hitboxes") {
 			show_debug_hitboxes_ = true;
@@ -1222,80 +1009,48 @@ namespace preferences
 		} else if(s == "--disable-fullscreen") {
 			fullscreen_disabled_ = true;
 		} else if(s == "--fullscreen") {
-			fullscreen_ = FULLSCREEN_WINDOWED;
+			fullscreen_ = ScreenMode::FULLSCREEN_WINDOWED;
 		} else if(s == "--windowed") {
-			fullscreen_ = FULLSCREEN_NONE;
-		} else if(s == "--proportional-resize") {
-			resizable_ = true;
-			proportional_resize_ = true;
+			fullscreen_ = ScreenMode::WINDOWED;
 		} else if(s == "--resizable") {
 			resizable_ = true;
+        } else if(s == "--width") {
+            try {
+                requested_window_width_ = boost::lexical_cast<int>(arg_value);
+            } catch(boost::bad_lexical_cast&) {
+                ASSERT_LOG(false, "Invalid width value: " << arg_value);
+            }
+        } else if(s == "--height") {
+            try {
+                requested_window_height_ = boost::lexical_cast<int>(arg_value);
+            } catch(boost::bad_lexical_cast&) {
+                ASSERT_LOG(false, "Invalid height value: " << arg_value);
+            }
 		} else if(s == "--no-resizable") {
 			resizable_ = false;
-		} else if(s == "--widescreen") {
-			set_widescreen();
-		} else if(s == "--bigscreen") {
-			virtual_screen_width_ = actual_screen_width_;
-			virtual_screen_height_ = actual_screen_height_;
 		} else if(s == "--potonly") {
 			force_no_npot_textures_ = true;
 		} else if(s == "--textures16") {
 			use_16bpp_textures_ = true;
 		} else if(s == "--textures32") {
 			use_16bpp_textures_ = false;
-		} else if(arg_name == "--textures32_if_kb_memory_at_least") {
+		} else if(s == "--textures32_if_kb_memory_at_least") {
             preferences::set_32bpp_textures_if_kb_memory_at_least( atoi(arg_value.c_str()) );
 		} else if(s == "--debug") {
 			debug_ = true;
 		} else if(s == "--no-debug") {
 			debug_ = false;
-		} else if(s == "--simiphone") {
-			sim_iphone_ = true;
-			
-			virtual_screen_width_ = 960;
-			virtual_screen_height_ = 640;
-			
-			actual_screen_width_ = 480;
-			actual_screen_height_ = 320;
-			use_16bpp_textures_ = true;
-			
-			recalculate_draw_mask();
-		} else if(s == "--simipad") {
-			sim_iphone_ = true;
-			control_scheme_ = "ipad_2d";
-			
-			virtual_screen_width_ = 1024;
-			virtual_screen_height_ = 768;
-			
-			actual_screen_width_ = 1024;
-			actual_screen_height_ = 768;
-			
-			recalculate_draw_mask();
-		} else if(s == "--no-iphone-controls") {
-			no_iphone_controls_ = true;
-		} else if(s == "--wvga") {
-			virtual_screen_width_ = 800;
-			virtual_screen_height_ = 480;
-			
-			actual_screen_width_ = 800;
-			actual_screen_height_ = 480;
-			
-			recalculate_draw_mask();
-		} else if(s == "--native") {
-			virtual_screen_width_ = (actual_screen_width_) * 2;
-			virtual_screen_height_ = (actual_screen_height_) * 2;
-			recalculate_draw_mask();
 		} else if(s == "--fps") {
 			show_fps_ = true;
 		} else if(s == "--no-fps") {
 			show_fps_ = false;
-		} else if(arg_name == "--set-fps" && !arg_value.empty()) {
+		} else if(s == "--set-fps" && !arg_value.empty()) {
 			frame_time_millis_ = 1000/boost::lexical_cast<int, std::string>(arg_value);
 			LOG_INFO("FPS: " << arg_value << " = " << frame_time_millis_ << "ms/frame");
-		} else if(arg_name == "--alt-fps" && !arg_value.empty()) {
+		} else if(s == "--alt-fps" && !arg_value.empty()) {
 			alt_frame_time_millis_ = 1000/boost::lexical_cast<int, std::string>(arg_value);
 			LOG_INFO("FPS: " << arg_value << " = " << alt_frame_time_millis_ << "ms/frame");
-		} else if(arg_name == "--config-path" && !arg_value.empty()) {
+		} else if(s == "--config-path" && !arg_value.empty()) {
 			set_preferences_path(arg_value);
 		} else if(s == "--send-stats") {
 			send_stats_ = true;
@@ -1307,13 +1062,13 @@ namespace preferences
 			use_joystick_ = true;
 		} else if(s == "--no-joystick") {
 			use_joystick_ = false;
-		} else if(arg_name == "--server") {
+		} else if(s == "--server") {
 			tbs_uri_ = uri::uri::parse(arg_value);
-		} else if(arg_name == "--user") {
+		} else if(s == "--user") {
 			username_ = arg_value;
-		} else if(arg_name == "--pass") {
+		} else if(s == "--pass") {
 			set_password(arg_value);
-		} else if(arg_name == "--module-args") {
+		} else if(s == "--module-args") {
 			game_logic::ConstFormulaCallablePtr callable = map_into_callable(json::parse(arg_value));
 			module::set_module_args(callable);
 		} else if(s == "--relay") {
@@ -1340,7 +1095,7 @@ namespace preferences
 			allow_autopause_ = true;
 		} else if(s == "--auto-size-window") {
 			auto_size_window_ = true;
-		} else if(arg_name == "--difficulty" && !arg_value.empty()) {
+		} else if(s == "--difficulty" && !arg_value.empty()) {
 			if(boost::regex_match(arg_value, boost::regex("-?[0-9]+"))) {
 				force_difficulty_ = boost::lexical_cast<int>(arg_value);
 			} else {
@@ -1349,20 +1104,20 @@ namespace preferences
 		} else if(s == "--edit-and-continue") {
 			set_edit_and_continue(true);
 		} else {
-			if(s.size() > 2 && s[0] == '-' && s[1] == '-' && std::find(s.begin(), s.end(), '=') != s.end()) {
-				std::string::const_iterator equal = std::find(s.begin(), s.end(), '=');
-				std::string base_name(s.begin()+2,equal);
+			if(arg.size() > 2 && arg[0] == '-' && arg[1] == '-' && std::find(arg.begin(), arg.end(), '=') != s.end()) {
+				std::string::const_iterator equal = std::find(arg.begin(), arg.end(), '=');
+				std::string base_name(arg.begin()+2,equal);
 				std::replace(base_name.begin(), base_name.end(), '-', '_');
 				if(g_registered_settings().count(base_name)) {
 					RegisteredSetting& setting = g_registered_settings()[base_name];
 					if(setting.string_value) {
-						*setting.string_value = std::string(equal+1, s.end());
+						*setting.string_value = std::string(equal+1, arg.end());
 					} else if(setting.int_value) {
-						*setting.int_value = atoi(std::string(equal+1, s.end()).c_str());
+						*setting.int_value = atoi(std::string(equal+1, arg.end()).c_str());
 					} else if(setting.double_value) {
-						*setting.double_value = boost::lexical_cast<double>(std::string(equal+1, s.end()));
+						*setting.double_value = boost::lexical_cast<double>(std::string(equal+1, arg.end()));
 					} else if(setting.bool_value) {
-						std::string value(equal+1, s.end());
+						std::string value(equal+1, arg.end());
 						if(value == "yes" || value == "true") {
 							*setting.bool_value = true;
 						} else if(value == "no" || value == "false") {
@@ -1371,7 +1126,7 @@ namespace preferences
 							ASSERT_LOG(false, "Invalid value for boolean parameter " << base_name << ". Must be true or false");
 						}
 					} else if(setting.variant_value) {
-						std::string value(equal+1, s.end());
+						std::string value(equal+1, arg.end());
 						*setting.variant_value = variant(value);
 					} else {
 						ASSERT_LOG(false, "Error making sense of preference type " << base_name);
@@ -1379,15 +1134,15 @@ namespace preferences
 
 					return true;
 				}
-			} else if(s.size() > 2 && s[0] == '-' && s[1] == '-') {
-				std::string::const_iterator begin = s.begin() + 2;
+			} else if(arg.size() > 2 && arg[0] == '-' && arg[1] == '-') {
+				std::string::const_iterator begin = arg.begin() + 2;
 				bool value = true;
-				if(s.size() > 5 && std::equal(begin, begin+3, "no-")) {
+				if(arg.size() > 5 && std::equal(begin, begin+3, "no-")) {
 					value = false;
 					begin += 3;
 				}
 
-				std::string base_name(begin, s.end());
+				std::string base_name(begin, arg.end());
 				std::replace(base_name.begin(), base_name.end(), '-', '_');
 				if(g_registered_settings().count(base_name)) {
 					RegisteredSetting& setting = g_registered_settings()[base_name];
@@ -1417,10 +1172,6 @@ namespace preferences
         }
     }
     
-	bool sim_iphone() {
-		return sim_iphone_;
-	}
-	
 	bool send_stats() {
 		return send_stats_;
 	}
@@ -1496,26 +1247,5 @@ namespace preferences
 
 	void setLocale(const std::string& value) {
 		locale_ = value;
-	}
-
-	ScreenDimensionOverrideScope::ScreenDimensionOverrideScope(int width, int height, int vwidth, int vheight) 
-		: vold_width(virtual_screen_width_), 
-		vold_height(virtual_screen_height_), 
-		old_width(actual_screen_width_), 
-		old_height(actual_screen_height_)
-	{
-		actual_screen_width_ = width;
-		actual_screen_height_ = height;
-		virtual_screen_width_ = vwidth;
-		virtual_screen_height_ = vheight;
-	}
-
-	ScreenDimensionOverrideScope::~ScreenDimensionOverrideScope()
-	{
-		actual_screen_width_ = old_width;
-		actual_screen_height_ = old_height;
-		virtual_screen_width_ = vold_width;
-		virtual_screen_height_ = vold_height;
-	
 	}
 }

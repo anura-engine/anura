@@ -39,7 +39,7 @@ struct multiplayer_exception {
 };
 
 class editor;
-struct editor_resolution_manager;
+class EditorResolutionManager;
 
 class LevelRunner 
 {
@@ -110,7 +110,7 @@ private:
 
 	editor* editor_;
 #ifndef NO_EDITOR
-	std::unique_ptr<editor_resolution_manager> editor_resolution_manager_;
+	std::unique_ptr<EditorResolutionManager> editor_resolution_manager_;
 	gui::SliderPtr history_slider_;
 	gui::ButtonPtr history_button_;
 	std::vector<EntityPtr> history_trails_;

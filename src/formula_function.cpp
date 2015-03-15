@@ -4777,6 +4777,25 @@ FUNCTION_ARGS_DEF
 RETURN_TYPE("bool")
 END_FUNCTION_DEF(solid_grid)
 
+/*
+FUNCTION_DEF(hsv, 3, 4, "hsv(decimal h, decimal s, decimal v, decimal alpha) -> color_callable")
+	float hue = args()[0]->evaluate(variables).as_float() / 360.0f;
+	float saturation = args()[1]->evaluate(variables).as_float();
+	float value = args()[2]->evaluate(variables).as_float();
+	float alpha = args().size() > 3 ? args()[3]->evaluate(variables).as_float() : 1.0f;
+	
+	auto color = KRE::Color::from_hsv(hue, saturation, value);
+
+	return variant(new graphics::ColorCallable(color));
+FUNCTION_ARGS_DEF
+	ARG_TYPE("decimal")
+	ARG_TYPE("decimal")
+	ARG_TYPE("decimal")
+	ARG_TYPE("decimal")
+	RETURN_TYPE("builtin color_callable")
+END_FUNCTION_DEF
+*/
+
 UNIT_TEST(modulo_operation) {
 	CHECK(game_logic::Formula(variant("mod(-5, 20)")).execute() == game_logic::Formula(variant("15")).execute(), "test failed");
 	CHECK(game_logic::Formula(variant("mod(-25, 20)")).execute() == game_logic::Formula(variant("15")).execute(), "test failed");

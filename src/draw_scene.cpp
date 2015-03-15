@@ -47,6 +47,7 @@
 #include "module.hpp"
 #include "player_info.hpp"
 #include "preferences.hpp"
+#include "screen_handling.hpp"
 #include "speech_dialog.hpp"
 
 #include "tooltip.hpp"
@@ -156,9 +157,8 @@ bool update_camera_position(const Level& lvl, screen_position& pos, const Entity
 	const int codebar_height = 0;
 #endif
 
-	auto wnd = KRE::WindowManager::getMainWindow();
-	const int screen_width = wnd->width() - (lvl.in_editor() ? sidebar_width : 0);
-	const int screen_height = wnd->height() - (lvl.in_editor() ? codebar_height : 0);
+	const int screen_width = graphics::GameScreen::get().getWidth();
+	const int screen_height = graphics::GameScreen::get().getHeight();
 
 	ASSERT_LOG(focus || lvl.in_editor(), "No player found in level. Must have a player object. (An object with is_human: true marked");
 
@@ -265,7 +265,7 @@ bool update_camera_position(const Level& lvl, screen_position& pos, const Entity
 
 		//for small screens the speech dialog arrows cover the entities they are
 		//pointing to. adjust to that by looking up a little bit.
-		if (lvl.current_speech_dialog() && preferences::virtual_screen_height() < 600)
+		if (lvl.current_speech_dialog() && graphics::GameScreen::get().getVirtualHeight() < 600)
 			y = (y + (600 - screen_height)/(2*lvl.zoom_level())).as_int();
 
 		//find the target x,y position of the camera in centi-pixels. Note that
@@ -369,12 +369,10 @@ void render_scene(Level& lvl, const screen_position& pos)
 	auto canvas = KRE::Canvas::getInstance();
 	formula_profiler::Instrument instrumentation("DRAW");
 
-#ifndef NO_EDITOR
-	const int sidebar_width = editor::sidebar_width();
-#else
-	const int sidebar_width = 0;
-#endif
-	const int screen_width = wnd->width() - (lvl.in_editor() ? sidebar_width : 0);
+	const int screen_width = graphics::GameScreen::get().getWidth();
+	const int screen_height = graphics::GameScreen::get().getHeight();
+
+	graphics::GameScreen::get().setupForDraw(wnd);
 
 	const int camera_rotation = lvl.camera_rotation();
 	if(camera_rotation) {
@@ -384,14 +382,16 @@ void render_scene(Level& lvl, const screen_position& pos)
 	}
 
 	if(pos.flip_rotate) {
-		wnd->setClearColor(KRE::Color(0.0f, 0.0f, 0.0f, 0.0f));
+		/*wnd->setClearColor(KRE::Color(0.0f, 0.0f, 0.0f, 0.0f));
 		wnd->clear(KRE::ClearFlags::COLOR);
 
 		const double angle = sin(0.5f*static_cast<float>(M_PI*pos.flip_rotate)/1000.0f);
-		const int pixels = static_cast<int>((preferences::actual_screen_width()/2)*angle);
+		const int pixels = static_cast<int>((graphics::GameScreen::get().getWidth()/2)*angle);
 		
 		//then squish all future drawing inwards
-		wnd->setViewPort(pixels, 0, preferences::actual_screen_width() - pixels*2, preferences::actual_screen_height());
+		wnd->setViewPort(pixels, 0, graphics::GameScreen::get().getWidth() - pixels*2, graphics::GameScreen::get().getHeight());
+		*/
+		ASSERT_LOG(false, "Fix pos.flip_rotate");
 	}
 
 	int xscroll = (pos.x/100)&preferences::xypos_draw_mask;
@@ -401,7 +401,7 @@ void render_scene(Level& lvl, const screen_position& pos)
 	int bg_yscroll = yscroll;
 
 	xscroll += static_cast<int>((screen_width/2)*(-1.0f/pos.zoom + 1.0f));
-	yscroll += static_cast<int>((wnd->height()/2)*(-1.0f/pos.zoom + 1.0f));
+	yscroll += static_cast<int>((screen_height/2)*(-1.0f/pos.zoom + 1.0f));
 
 	if(pos.zoom < 1.0f) {
 		bg_xscroll = xscroll;
@@ -443,11 +443,7 @@ void render_scene(Level& lvl, const screen_position& pos)
 			canvas->drawSolidRect(rect(0, 0, wnd->width(), wnd->height()), tint);
 		}
 
-		i->color = i->color + i->delta;/*KRE::ColorTransform(1.0, 1.0, 1.0, 1.0, 
-			i->color.addRed() + i->delta.addRed(),
-			i->color.addGreen() + i->delta.addGreen(),
-			i->color.addBlue() + i->delta.addBlue(),
-			i->color.addAlpha() + i->delta.addAlpha());*/
+		i->color = i->color + i->delta;
 
 		if(--i->duration <= 0) {
 			i = flashes().erase(i);
@@ -485,8 +481,8 @@ void render_scene(Level& lvl, const screen_position& pos)
 		ASSERT_LOG(f.get() != nullptr, "COULD NOT LOAD DEFAULT FONT");
 		const rect r = f->dimensions(scene_title());
 		const float alpha = scene_title_duration_ > 10 ? 1.0f : scene_title_duration_/10.0f;
-		f->draw(wnd->width()/2 - r.w()/2 + 2, wnd->height()/2 - r.h()/2 + 2, scene_title(), 2, KRE::Color(0.f, 0.f, 0., 0.5f*alpha));
-		f->draw(wnd->width()/2 - r.w()/2, wnd->height()/2 - r.h()/2, scene_title(), 2, KRE::Color(1.f,1.f,1.f,alpha));
+		f->draw(screen_width/2 - r.w()/2 + 2, screen_height/2 - r.h()/2 + 2, scene_title(), 2, KRE::Color(0.f, 0.f, 0.f, 0.5f*alpha));
+		f->draw(screen_width/2 - r.w()/2, screen_height/2 - r.h()/2, scene_title(), 2, KRE::Color(1.f,1.f,1.f,alpha));
 	}
 	
 	if(current_achievement && current_achievement_duration > 0) {

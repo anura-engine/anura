@@ -119,11 +119,7 @@ std::vector<std::string> get_known_levels()
 	std::vector<std::string> files;
 	std::map<std::string, std::string> file_map;
 	std::map<std::string, std::string>::iterator it;
-	if(preferences::is_level_path_set()) {
-		sys::get_unique_filenames_under_dir(preferences::level_path(), &file_map, "");
-	} else {
-		module::get_unique_filenames_under_dir(preferences::level_path(), &file_map);
-	}
+	module::get_unique_filenames_under_dir("data/levels/", &file_map);
 	for(it = file_map.begin(); it != file_map.end(); ) {
 		if(not_cfg_file(it->first)) {
 			file_map.erase(it++);

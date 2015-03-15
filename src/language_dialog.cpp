@@ -27,8 +27,9 @@
 #include "draw_scene.hpp"
 #include "graphical_font_label.hpp"
 #include "i18n.hpp"
-#include "preferences.hpp"
 #include "json_parser.hpp"
+#include "preferences.hpp"
+#include "screen_handling.hpp"
 
 namespace 
 {
@@ -126,8 +127,8 @@ void show_language_dialog()
 
         int dialog_width = g.total_width() + padding;
         int dialog_height = g.total_height() + padding;
-        d.setLoc((preferences::virtual_screen_width() - dialog_width) / 2,
-		(preferences::virtual_screen_height() - dialog_height) / 2);
+        d.setLoc((graphics::GameScreen::get().getWidth() - dialog_width) / 2,
+		(graphics::GameScreen::get().getHeight() - dialog_height) / 2);
 	d.setDim(g.total_width() + padding, g.total_height() + padding);
 
 	d.showModal();

@@ -62,6 +62,7 @@
 #include "player_info.hpp"
 #include "preferences.hpp"
 #include "profile_timer.hpp"
+#include "screen_handling.hpp"
 #include "settings_dialog.hpp"
 #include "sound.hpp"
 #include "stats.hpp"
@@ -301,41 +302,38 @@ bool is_skipping_game()
 // XXX We should handle the window resize event in the WindowManager code
 void video_resize(const SDL_Event &event) 
 {
-	if(preferences::fullscreen() == preferences::FULLSCREEN_NONE) {
+	if(preferences::get_screen_mode() == preferences::ScreenMode::WINDOWED) {
 		int width = event.window.data1;
 		int height = event.window.data2;
 
-		if(preferences::proportional_resize() == false) {
-			const int aspect = (preferences::actual_screen_width()*1000)/preferences::actual_screen_height();
+		const float aspect = graphics::GameScreen::get().getAspectRatio();
+		const float wa = static_cast<float>(width) * aspect;
+		const float ha = static_cast<float>(height) * aspect;
 
-			if(preferences::actual_screen_width()*preferences::actual_screen_height() < width*height) {
-				//making the window larger
-				if((height*aspect)/1000 > width) {
-					width = (height*aspect)/1000;
-				} else if((height*aspect)/1000 < width) {
-					height = (width*1000)/aspect;
-				}
-			} else {
-				//making the window smaller
-				if((height*aspect)/1000 > width) {
-					height = (width*1000)/aspect;
-				} else if((height*aspect)/1000 < width) {
-					width = (height*aspect)/1000;
-				}
+		if(graphics::GameScreen::get().getArea() < width * height) {
+			//making the window larger
+			if(ha > static_cast<float>(width)) {
+				width = static_cast<int>(ha);
+			} else if(ha < static_cast<float>(width)) {
+				height = static_cast<int>(wa);
 			}
-
-			//make sure we don't have some ugly fractional aspect ratio
-			while((width*1000)/height != aspect) {
-				++width;
-				height = (width*1000)/aspect;
-			}
-
 		} else {
-			preferences::set_virtual_screen_width(width);
-			preferences::set_virtual_screen_height(height);
+			//making the window smaller
+			if(ha > static_cast<float>(width)) {
+				height = static_cast<int>(wa);
+			} else if(ha < static_cast<float>(width)) {
+				width = static_cast<int>(ha);
+			}
 		}
-		preferences::set_actual_screen_width(width);
-		preferences::set_actual_screen_height(height);
+
+		//make sure we don't have some ugly fractional aspect ratio
+		while(static_cast<float>(width)/static_cast<float>(height) != aspect) {
+			++width;
+			height = static_cast<int>(static_cast<float>(width)/aspect);
+		}
+
+		// XXX If we're in the editor this isn't right.
+		graphics::GameScreen::get().setDimensions(width, height);
 
 		KRE::WindowManager::getMainWindow()->notifyNewWindowSize(width, height);
 	}
@@ -687,7 +685,7 @@ void LevelRunner::start_editor()
 	if(!editor_) {
 		controls::control_backup_scope ctrl_backup;
 		editor_ = editor::get_editor(lvl_->id().c_str());
-		editor_resolution_manager_.reset(new editor_resolution_manager(editor_->xres(), editor_->yres()));
+		editor_resolution_manager_.reset(new EditorResolutionManager(editor_->xres(), editor_->yres()));
 		editor_->set_playing_level(lvl_);
 		editor_->setup_for_editing();
 		lvl_->set_editor();
@@ -710,15 +708,16 @@ void LevelRunner::start_editor()
 
 void LevelRunner::close_editor()
 {
+	LOG_DEBUG("LevelRunner::close_editor()");
 #ifndef NO_EDITOR
 	if(editor_->mouselook_mode()) {
 		SDL_SetRelativeMouseMode(SDL_FALSE);
 	}
 	editor_ = nullptr;
+	editor_resolution_manager_.reset();
 	history_slider_.reset();
 	history_button_.reset();
 	history_trails_.clear();
-	editor_resolution_manager_.reset();
 	lvl_->mutateValue("zoom", variant(1));
 	lvl_->set_editor(false);
 	paused = false;
@@ -1313,14 +1312,15 @@ bool LevelRunner::play_cycle()
 					preferences::set_use_pretty_scaling(!preferences::use_pretty_scaling());
 					KRE::Texture::clearTextures();
 				} else if(key == SDLK_f && mod & KMOD_CTRL && !preferences::no_fullscreen_ever()) {
-					preferences::set_fullscreen(preferences::fullscreen() == preferences::FULLSCREEN_NONE 
-						? preferences::FULLSCREEN_WINDOWED 
-						: preferences::FULLSCREEN_NONE);
-					wnd->setFullscreenMode(preferences::fullscreen() == preferences::FULLSCREEN_NONE
-						? KRE::FullScreenMode::FULLSCREEN_WINDOWED
-						: KRE::FullScreenMode::WINDOWED);
-					wnd->setWindowSize(preferences::actual_screen_width(), preferences::actual_screen_height());
+					// XXX this changes if editor is active.
+					if(wnd->fullscreenMode() == KRE::FullScreenMode::WINDOWED) {
+						wnd->setFullscreenMode(KRE::FullScreenMode::FULLSCREEN_WINDOWED);
+					} else {
+						wnd->setFullscreenMode(KRE::FullScreenMode::WINDOWED);
+						wnd->setWindowSize(graphics::GameScreen::get().getWidth(), graphics::GameScreen::get().getHeight());
+					}
 				} else if(key == SDLK_F3) {
+					LOG_DEBUG("F3 pressed");
 					preferences::set_show_fps(!preferences::show_fps());
 				}
 				break;
@@ -1512,6 +1512,9 @@ bool LevelRunner::play_cycle()
 			}
 
 			if(editor_) {
+				// XXX need a scope?
+				auto wnd = KRE::WindowManager::getMainWindow();
+				wnd->setViewPort(0, 0, wnd->width(), wnd->height());
 				editor_->draw_gui();
 			}
 

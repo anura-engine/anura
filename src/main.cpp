@@ -78,6 +78,7 @@
 #include "preferences.hpp"
 #include "preprocessor.hpp"
 #include "profile_timer.hpp"
+#include "screen_handling.hpp"
 #include "sound.hpp"
 #include "stats.hpp"
 #include "string_utils.hpp"
@@ -490,34 +491,6 @@ int main(int argcount, char* argvec[])
 			// ignore as already processed.
 		} else if(arg == "--no-tests") {
 			skip_tests = true;
-		} else if(arg_name == "--width") {
-			std::string w(arg_value);
-			try {
-				requested_width = boost::lexical_cast<int>(w);
-			} catch(boost::bad_lexical_cast&) {
-				ASSERT_LOG(false, "Invalid width value: " << w);
-			}
-		} else if(arg == "--width" && n+1 < argc) {
-			std::string w(argv[++n]);
-			try {
-				requested_width = boost::lexical_cast<int>(w);
-			} catch(boost::bad_lexical_cast&) {
-				ASSERT_LOG(false, "Invalid width value: " << w);
-			}
-		} else if(arg_name == "--height") {
-			std::string h(arg_value);
-			try {
-				requested_height = boost::lexical_cast<int>(h);
-			} catch(boost::bad_lexical_cast&) {
-				ASSERT_LOG(false, "Invalid height value: " << h);
-			}
-		} else if(arg == "--height" && n+1 < argc) {
-			std::string h(argv[++n]);
-			try {
-				requested_height = boost::lexical_cast<int>(h);
-			} catch(boost::bad_lexical_cast&) {
-				ASSERT_LOG(false, "Invalid height value: " << h);
-			}
 		} else if(arg_name == "--level") {
 			override_level_cfg = arg_value;
 		} else if(arg == "--level" && n+1 < argc) {
@@ -534,18 +507,13 @@ int main(int argcount, char* argvec[])
 #endif
 		} else if(arg == "--no-compiled") {
 			preferences::set_load_compiled(false);
-#if defined(TARGET_PANDORA)
-		} else if(arg == "--no-fbo") {
-			preferences::set_fbo(false);
-		} else if(arg == "--no-bequ") {
-			preferences::set_bequ(false);
-#endif
 		} else if(arg == "--help" || arg == "-h") {
 			print_help(std::string(argvec[0]));
 			return 0;
 		} else {
-			const bool res = preferences::parse_arg(argv[n].c_str());
+			const bool res = preferences::parse_arg(argv[n], n+1 < argc ? argv[n+1] : "");
 			if(!res) {
+				print_help(std::string(argvec[0]));
 				LOG_ERROR("unrecognized arg: '" << arg);
 				return -1;
 			}
@@ -791,23 +759,25 @@ int main(int argcount, char* argvec[])
 	variant_builder hints;
 	hints.add("renderer", "opengl");
 	hints.add("use_vsync", "false");
-	hints.add("width", requested_width > 0 ? requested_width : 800);
-	hints.add("height", requested_height > 0 ? requested_height : 600);
+	hints.add("width", preferences::requested_window_width() > 0 ? preferences::requested_window_width() : 800);
+	hints.add("height", preferences::requested_window_height() > 0 ? preferences::requested_window_height() : 600);
 
 	WindowPtr main_wnd = wm.allocateWindow(hints.build());
 	main_wnd->setWindowTitle(module::get_module_pretty_name());
 
-	LOG_ERROR("Need to fix width/height from commandline/preferences");
-	if(preferences::auto_size_window() && requested_width == 0 && requested_height == 0) {
+	if(preferences::auto_size_window() 
+		&& preferences::requested_window_width() == 0 
+		&& preferences::requested_window_height() == 0) {
 		int width = 0;
 		int height = 0;
 		auto_select_resolution(main_wnd, &width, &height);
 
 		main_wnd->setWindowSize(width, height);
-		main_wnd->setLogicalWindowSize(width, height);
 	}
 
 	wm.createWindow(main_wnd);
+	graphics::GameScreen::get().setDimensions(main_wnd->width(), main_wnd->height());
+	graphics::GameScreen::get().setVirtualDimensions(main_wnd->width(), main_wnd->height());
 	//main_wnd->setWindowIcon(module::map_file("images/window-icon.png"));
 
 	auto canvas = Canvas::getInstance();
@@ -820,26 +790,14 @@ int main(int argcount, char* argvec[])
 
 	set_alpha_masks();
 
-	SceneGraphPtr scene = SceneGraph::create("root");
-	SceneNodePtr root = scene->getRootNode();
-	root->setNodeName("root_node");
-	auto orthocam = std::make_shared<Camera>("orthocam", 0, main_wnd->logicalWidth(), 0, main_wnd->logicalHeight());
-	root->attachCamera(orthocam);
+	//SceneGraphPtr scene = SceneGraph::create("root");
+	//SceneNodePtr root = scene->getRootNode();
+	//root->setNodeName("root_node");
+	auto orthocam = std::make_shared<Camera>("orthocam", 0, main_wnd->width(), 0, main_wnd->height());
+	//root->attachCamera(orthocam);
 
 	// Set a default camera in case no other is specified.
 	DisplayDevice::getCurrent()->setDefaultCamera(orthocam);
-
-	//@@@ TEST
-	//auto free_tex = std::make_shared<FreeTextureHolder>("backgrounds/loading_screen.png");
-	//free_tex->setDrawRect(rectf(0.0f,0.0f,480.0f,320.0f));
-	//free_tex->setPosition(0.0f, 0.0f);
-
-	//while(1) {
-	//	free_tex->preRender(main_wnd);
-	//	main_wnd->render(free_tex.get());
-	//	main_wnd->swap();
-	//}
-	//@@@ TEST
 
 	// Set the default font to use for rendering. This can of course be overridden when rendering the
 	// text to a texture.

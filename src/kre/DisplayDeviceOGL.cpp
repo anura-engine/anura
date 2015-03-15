@@ -57,6 +57,12 @@ namespace KRE
 			static CameraPtr res = nullptr;
 			return res;
 		}
+
+		rect& get_current_viewport()
+		{
+			static rect res;
+			return res;
+		}
 	}
 
 	namespace 
@@ -448,7 +454,11 @@ namespace KRE
 
 	void DisplayDeviceOpenGL::setViewPort(int x, int y, unsigned width, unsigned height)
 	{
-		glViewport(x, y, width, height);
+		rect new_vp(x, y, width, height);
+		if(get_current_viewport() != new_vp) {
+			get_current_viewport() = new_vp;
+			glViewport(x, y, width, height);
+		}
 	}
 	
 	bool DisplayDeviceOpenGL::doCheckForFeature(DisplayDeviceCapabilties cap)

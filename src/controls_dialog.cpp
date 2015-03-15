@@ -29,7 +29,7 @@
 #include "graphical_font_label.hpp"
 #include "i18n.hpp"
 #include "key_button.hpp"
-#include "preferences.hpp"
+#include "screen_handling.hpp"
 
 namespace 
 {
@@ -50,10 +50,13 @@ void show_controls_dialog()
 {
 	using namespace gui;
 	using namespace controls;
-	int height = preferences::virtual_screen_height() - 20;
-	if (preferences::virtual_screen_height() > 480)
+	const int vw = graphics::GameScreen::get().getVirtualWidth();
+	const int vh = graphics::GameScreen::get().getVirtualHeight();
+	int height = vh- 20;
+	if(vh > 480) {
 		height -= 100;
-	Dialog d(200, (preferences::virtual_screen_height() > 480) ? 60 : 10, preferences::virtual_screen_width()-400, height);
+	}
+	Dialog d(200, (vh > 480) ? 60 : 10, vw - 400, height);
 	d.setBackgroundFrame("empty_window");
 	d.setDrawBackgroundFn(draw_last_scene);
 

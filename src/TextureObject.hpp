@@ -43,5 +43,3 @@ private:
 	int binding_point_;
 };
 
-// XXX - ideall this function isn't needed.
-//KRE::TexturePtr render_fbo(const rect& area, const std::vector<EntityPtr> objects);

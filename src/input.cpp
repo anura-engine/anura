@@ -24,6 +24,7 @@
 #include "WindowManager.hpp"
 
 #include "input.hpp"
+#include "screen_handling.hpp"
 
 namespace input
 {
@@ -37,7 +38,7 @@ namespace input
 				auto wnd = KRE::WindowManager::getWindowFromID(wnd_id);
 				int x = event->motion.x;
 				int y = event->motion.y;
-				wnd->mapMousePosition(&x, &y);
+
 				event->motion.x = x;
 				event->motion.y = y;
 				break;
@@ -49,7 +50,6 @@ namespace input
 				auto wnd = KRE::WindowManager::getWindowFromID(wnd_id);
 				int x = event->button.x;
 				int y = event->button.y;
-				wnd->mapMousePosition(&x, &y);
 				event->button.x = x;
 				event->button.y = y;
 				break;

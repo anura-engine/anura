@@ -136,8 +136,6 @@ void PlayableCustomObject::process(Level& lvl)
 		--can_interact_;
 	}
 
-	reverse_ab_ = preferences::reverse_ab();
-
 	bool controls[controls::NUM_CONTROLS];
 	for(int n = 0; n != controls::NUM_CONTROLS; ++n) {
 		controls[n] = controlStatus(static_cast<controls::CONTROL_ITEM>(n));
@@ -188,8 +186,6 @@ variant PlayableCustomObject::getValue(const std::string& key) const
 		return getValueBySlot(CUSTOM_OBJECT_PLAYER_CTRL_X);
 	} else if(key == "ctrl_y") {
 		return getValueBySlot(CUSTOM_OBJECT_PLAYER_CTRL_Y);
-	} else if(key == "ctrl_reverse_ab") {
-		return getValueBySlot(CUSTOM_OBJECT_PLAYER_CTRL_REVERSE_AB);
 	} else if(key == "control_scheme") {
 		return getValueBySlot(CUSTOM_OBJECT_PLAYER_CONTROL_SCHEME);
 	}
@@ -306,9 +302,6 @@ variant PlayableCustomObject::getPlayerValueBySlot(int slot) const
 	}
 	case CUSTOM_OBJECT_PLAYER_CTRL_Y: {
 		return variant(underwater_ctrl_y_);
-	}
-	case CUSTOM_OBJECT_PLAYER_CTRL_REVERSE_AB: {
-		return variant::from_bool(reverse_ab_);
 	}
 	case CUSTOM_OBJECT_PLAYER_CONTROL_SCHEME: {
 		return variant(preferences::control_scheme());

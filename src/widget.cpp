@@ -384,7 +384,8 @@ namespace gui
 
 	WidgetSettingsDialog* Widget::settingsDialog(int x, int y, int w, int h)
 	{
-		return new WidgetSettingsDialog(x,y,w,h,this);
+		//return new WidgetSettingsDialog(x,y,w,h,this);
+		return nullptr;
 	}
 
 	DialogPtr Widget::getSettingsDialog(int x, int y, int w, int h)

@@ -35,6 +35,7 @@
 #include "module.hpp"
 #include "pause_game_dialog.hpp"
 #include "preferences.hpp"
+#include "screen_handling.hpp"
 #include "sound.hpp"
 #include "language_dialog.hpp"
 #include "video_selections.hpp"
@@ -59,7 +60,6 @@ PAUSE_GAME_RESULT show_pause_game_dialog()
 	int slider_width = 175;//200;
 	bool show_exit = true;
 	bool show_controls = true;
-	bool show_button_swap = false;
 	bool show_video_mode_select = true;
 	bool show_of = false;
 	bool show_language = true;
@@ -92,7 +92,6 @@ PAUSE_GAME_RESULT show_pause_game_dialog()
 
 		show_exit = v["show_exit"].as_bool(true);
 		show_controls = v["show_controls"].as_bool(true);
-		show_button_swap = v["show_button_swap"].as_bool(false);
 		show_of = v["show_openfeint"].as_bool(false);
 		show_video_mode_select = v["show_video_mode_select"].as_bool(true);
 		show_language = v["show_language"].as_bool(true);
@@ -167,11 +166,6 @@ PAUSE_GAME_RESULT show_pause_game_dialog()
 	} else {
 		return_label = WidgetPtr(new GraphicalFontLabel(_("Return to Titlescreen"), "door_label", 2));
 	}
-	if(v.is_null() == false && v.has_key("button_swap_label")) {
-		button_swap_label = widget_factory::create(v["button_swap_label"], nullptr);
-	} else {
-		button_swap_label = WidgetPtr(new GraphicalFontLabel(_("Reverse A and B"), "door_label", 2));
-	}
 	if(module::get_module_args() != nullptr) {
 		variant mod_args = module::get_module_args()->queryValue("from_lobby");
 		if(mod_args.is_bool() && mod_args.as_bool() == true && module::get_module_name() != "lobby") {
@@ -191,7 +185,6 @@ PAUSE_GAME_RESULT show_pause_game_dialog()
 	ASSERT_LOG(video_select_label != nullptr, "Couldn't create video select label widget.");
 	ASSERT_LOG(return_label != nullptr, "Couldn't create return label widget.");
 	ASSERT_LOG(exit_label != nullptr, "Couldn't create exit label widget.");
-	ASSERT_LOG(button_swap_label != nullptr, "Couldn't create button swap label widget.");
 
 	using namespace std::placeholders;
 	WidgetPtr s1(new Slider(slider_width, std::bind(sound::set_music_volume, _1), sound::get_music_volume()));
@@ -201,38 +194,35 @@ PAUSE_GAME_RESULT show_pause_game_dialog()
 	t1->setTabStop(-1);
 	t2->setTabStop(-1);
 
-	const int num_buttons = 2 + show_exit + show_controls + show_button_swap + show_of + show_video_mode_select + show_language;
+	const int num_buttons = 2 + show_exit + show_controls + show_of + show_video_mode_select + show_language;
 	int window_w, window_h;
-	if(preferences::virtual_screen_height() >= 600) {
+	if(graphics::GameScreen::get().getHeight() >= 600) {
 		window_w = button_width + padding*4;
 		window_h = button_height * num_buttons + t1->height()*2 + s1->height()*2 + padding*(3+4+num_buttons);
 	} else {
 		window_w = button_width*2 + padding*5;
 		window_h = button_height * num_buttons/2 + t1->height() + s1->height() + padding*(3+2+num_buttons/2);
 	}
-	//Dialog d((preferences::virtual_screen_width()/2 - window_w/2) & ~1, (preferences::virtual_screen_height()/2 - window_h/2) & ~1, window_w, window_h);
-	auto wnd = KRE::WindowManager::getMainWindow();
-	Dialog dd((wnd->logicalWidth()/2 - window_w/2) & ~1, (wnd->logicalHeight()/2 - window_h/2) & ~1, window_w, window_h);
+
+	const int screen_w = graphics::GameScreen::get().getWidth();
+	const int screen_h = graphics::GameScreen::get().getHeight();
+	Dialog dd((screen_w/2 - window_w/2) & ~1, (screen_h/2 - window_h/2) & ~1, window_w, window_h);
 	dd.setPadding(padding);
 	dd.setBackgroundFrame("empty_window");
 	dd.setUpscaleFrame(upscale_dialog_frame);
-
 	dd.setDrawBackgroundFn(draw_last_scene);
-
+							
 	ButtonPtr b1(new Button(resume_label, std::bind(end_dialog, &dd, &result, PAUSE_GAME_RESULT::CONTINUE), BUTTON_STYLE_NORMAL, buttonResolution));
 	ButtonPtr b2(new Button(controls_label, show_controls_dialog, BUTTON_STYLE_NORMAL, buttonResolution));
 	ButtonPtr language_button(new Button(language_label, show_language_dialog, BUTTON_STYLE_NORMAL, buttonResolution));
 	ButtonPtr b3(new Button(return_label, std::bind(end_dialog, &dd, &result, PAUSE_GAME_RESULT::GO_TO_TITLESCREEN), BUTTON_STYLE_NORMAL, buttonResolution));
 	ButtonPtr b4(new Button(exit_label, std::bind(end_dialog, &dd, &result, PAUSE_GAME_RESULT::QUIT), BUTTON_STYLE_DEFAULT, buttonResolution));
-	ButtonPtr b5(new Checkbox(button_swap_label, preferences::reverse_ab(), std::bind(preferences::set_reverse_ab, _1), buttonResolution));
 	ButtonPtr b_video(new Button(video_select_label, show_video_selection_dialog, BUTTON_STYLE_NORMAL, buttonResolution));
-
 	
 	b1->setDim(button_width, button_height);
 	b2->setDim(button_width, button_height);
 	b3->setDim(button_width, button_height);
 	b4->setDim(button_width, button_height);
-	b5->setDim(button_width, button_height);
 	language_button->setDim(button_width, button_height);
 	b_video->setDim(button_width, button_height);
 	
@@ -241,13 +231,12 @@ PAUSE_GAME_RESULT show_pause_game_dialog()
 	dd.setPadding(padding+12);
 	dd.addWidget(s1);
 
-	if(preferences::virtual_screen_height() >= 600) {
+	if(screen_h >= 600) {
 		dd.setPadding(padding-12);
 		dd.addWidget(t2);
 		dd.setPadding(padding+12);
 		dd.addWidget(s2);
 		dd.setPadding(padding);
-		if(show_button_swap) { dd.addWidget(b5); }
 		dd.addWidget(b1);
 		if(show_controls) { dd.addWidget(b2); }
 		if(show_video_mode_select) { dd.addWidget(b_video); }

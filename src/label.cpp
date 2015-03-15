@@ -33,7 +33,6 @@
 #include "i18n.hpp"
 #include "input.hpp"
 #include "label.hpp"
-#include "preferences.hpp"
 #include "slider.hpp"
 #include "text_editor_widget.hpp"
 #include "widget_settings_dialog.hpp"

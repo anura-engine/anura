@@ -81,6 +81,13 @@ namespace
 
 void show_video_selection_dialog()
 {
+	// XX This code needs fixing.
+	// Windowed mode should be any size up to maximum desktop resolution (we should provide a cut-down list of standard values).
+	// The display modes are only for fullscreen.
+	// we should have a flag of resizeable.
+	// Font chosen should be based on the module configuration
+	// There should be an option to save the screen dimensions for future use
+	// There should be an option
 	const int x = static_cast<int>(KRE::WindowManager::getMainWindow()->width()*0.1);
 	const int y = static_cast<int>(KRE::WindowManager::getMainWindow()->height()*0.1);
 	const int w = static_cast<int>(KRE::WindowManager::getMainWindow()->width()*0.8);
@@ -119,19 +126,18 @@ void show_video_selection_dialog()
 	}
 
 	// Fullscreen selection
-	preferences::FullscreenMode fs_mode = preferences::fullscreen();
+	preferences::ScreenMode fs_mode = preferences::get_screen_mode();
 	std::vector<std::string> fs_options;
 	fs_options.emplace_back("Windowed mode");
 	fs_options.emplace_back("Fullscreen Windowed");
 	//fs_options.push_back("Fullscreen");
 	DropdownWidget* fs_list = new DropdownWidget(fs_options, 220, 20);
-	fs_list->setSelection(int(preferences::fullscreen()));
+	fs_list->setSelection(static_cast<int>(preferences::get_screen_mode()));
 	fs_list->setZOrder(9);
 	fs_list->setOnSelectHandler([&fs_mode](int selection,const std::string& s){ 
 		switch(selection) {
-			case 0:	fs_mode = preferences::FULLSCREEN_NONE; break;
-			case 1:	fs_mode = preferences::FULLSCREEN_WINDOWED; break;
-			//case 2:	fs_mode = preferences::FULLSCREEN; break;
+			case 0:	fs_mode = preferences::ScreenMode::WINDOWED; break;
+			case 1:	fs_mode = preferences::ScreenMode::FULLSCREEN_WINDOWED; break;
 		}
 	});
 	d.addWidget(WidgetPtr(fs_list));
@@ -168,10 +174,10 @@ void show_video_selection_dialog()
 	if(d.cancelled() == false) {
 		// set selected video mode here
 		if(selected_mode >= 0 && static_cast<unsigned>(selected_mode) < display_modes.size()) {
-			preferences::set_actual_screen_dimensions_persistent(display_modes[selected_mode].width, display_modes[selected_mode].height);
+			KRE::WindowManager::getMainWindow()->setWindowSize(display_modes[selected_mode].width, display_modes[selected_mode].height);
+			// XXX here we should scale the GameScreen dimensions as appropriate.
+			ASSERT_LOG(false, "XXX: set GameScreen dimensions here.");
 		}
-		preferences::set_fullscreen(fs_mode);
-
-		KRE::WindowManager::getMainWindow()->setWindowSize(preferences::actual_screen_width(), preferences::actual_screen_height());
+		//preferences::set_screen_mode(fs_mode);
 	}
 }

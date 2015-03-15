@@ -59,6 +59,16 @@ class CodeEditorDialog;
 class editor_menu_dialog;
 class editor_mode_dialog;
 
+class EditorResolutionManager
+{
+public:
+	EditorResolutionManager(int xres, int yres);
+	~EditorResolutionManager();
+	static bool isActive();
+private:
+	int original_width_, original_height_;
+};
+
 class editor
 {
 public:
@@ -371,15 +381,6 @@ private:
 	int prev_mousex_, prev_mousey_;
 
 	bool mouselook_mode_;
-};
-
-struct editor_resolution_manager : private preferences::editor_screen_size_scope
-{
-	static bool isActive();
-	explicit editor_resolution_manager(int xres, int yres);
-	~editor_resolution_manager();
-	
-	int original_width_, original_height_;
 };
 
 #endif // !NO_EDITOR

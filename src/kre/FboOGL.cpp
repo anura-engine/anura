@@ -259,7 +259,8 @@ namespace KRE
 		applied_ = true;
 		get_fbo_stack().emplace(*framebuffer_id_, 0, 0, width(), height());
 
-		glViewport(0, 0, width(), height());
+		//glViewport(0, 0, width(), height());
+		DisplayDevice::getCurrent()->setViewPort(0, 0, unsigned(width()), unsigned(height()));
 	}
 
 	void FboOpenGL::handleUnapply() const
@@ -271,7 +272,8 @@ namespace KRE
 		ASSERT_LOG(!get_fbo_stack().empty(), "FBO id stack was empty. This should never happen if calls to apply/unapply are balanced.");
 		auto last = get_fbo_stack().top();
 		glBindFramebuffer(GL_FRAMEBUFFER, last.id);
-		glViewport(last.viewport[0], last.viewport[1], last.viewport[2], last.viewport[3]);
+		//glViewport(last.viewport[0], last.viewport[1], last.viewport[2], last.viewport[3]);
+		DisplayDevice::getCurrent()->setViewPort(last.viewport[0], last.viewport[1], unsigned(last.viewport[2]), unsigned(last.viewport[3]));
 		applied_ = false;
 		setChanged();
 	}

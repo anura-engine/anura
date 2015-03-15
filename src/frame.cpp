@@ -694,10 +694,10 @@ void Frame::draw(graphics::AnuraShaderPtr shader, int x, int y, bool face_right,
 	int w = static_cast<int>(info->area.w() * scale_);
 	int h = static_cast<int>(info->area.h() * scale_);
 	if(x & preferences::xypos_draw_mask) {
-		w -= scale_;
+		--w;
 	}
 	if(h & preferences::xypos_draw_mask) {
-		h -= scale_;
+		--h;
 	}
 	x &= preferences::xypos_draw_mask;
 	y &= preferences::xypos_draw_mask;

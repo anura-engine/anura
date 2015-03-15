@@ -78,6 +78,7 @@
 #include "preferences.hpp"
 #include "profile_timer.hpp"
 #include "property_editor_dialog.hpp"
+#include "screen_handling.hpp"
 #include "segment_editor_dialog.hpp"
 #include "stats.hpp"
 #include "text_editor_widget.hpp"
@@ -153,6 +154,7 @@ public:
 
 		removeWidget(context_menu_);
 		context_menu_.reset(grid);
+		LOG_DEBUG(mousex << "," << mousey);
 		addWidget(context_menu_, mousex, mousey);
 	}
 
@@ -390,13 +392,9 @@ public:
 
 			std::string id = module::make_module_id(name);
 			empty_lvl.add_attr(variant("id"), variant(module::get_id(id)));
-			if(preferences::is_level_path_set()) {
-				sys::write_file(preferences::level_path() + name, empty_lvl.write_json());
-			} else {
-				std::string nn = module::get_id(name);
-				std::string modname = module::get_module_id(name);
-				sys::write_file(module::get_module_path(modname, (preferences::editor_save_to_user_preferences() ? module::BASE_PATH_USER : module::BASE_PATH_GAME)) + preferences::level_path() + nn, empty_lvl.write_json());
-			}
+			std::string nn = module::get_id(name);
+			std::string modname = module::get_module_id(name);
+			sys::write_file(module::get_module_path(modname, (preferences::editor_save_to_user_preferences() ? module::BASE_PATH_USER : module::BASE_PATH_GAME)) + nn, empty_lvl.write_json());
 			load_level_paths();
 			editor_.close();
 			g_last_edited_level() = id;
@@ -817,16 +815,31 @@ int editor::codebar_height()
 }
 
 editor::editor(const char* level_cfg)
-  : zoom_(1), xpos_(0), ypos_(0), anchorx_(0), anchory_(0),
-    selected_entity_startx_(0), selected_entity_starty_(0),
-    filename_(level_cfg), tool_(TOOL_ADD_RECT),
-    done_(false), face_right_(true), upside_down_(false),
-	cur_tileset_(0), cur_object_(0),
+  : zoom_(1), 
+    xpos_(0), 
+	ypos_(0), 
+	anchorx_(0), 
+	anchory_(0),
+    selected_entity_startx_(0), 
+	selected_entity_starty_(0),
+    filename_(level_cfg), 
+	tool_(TOOL_ADD_RECT),
+    done_(false), 
+	face_right_(true), 
+	upside_down_(false),
+	cur_tileset_(0), 
+	cur_object_(0),
     current_dialog_(nullptr), 
-	drawing_rect_(false), dragging_(false), level_changed_(0),
+	drawing_rect_(false), 
+	dragging_(false), 
+	level_changed_(0),
 	selected_segment_(-1),
-	mouse_buttons_down_(0), prev_mousex_(-1), prev_mousey_(-1),
-	xres_(0), yres_(0), mouselook_mode_(false)
+	mouse_buttons_down_(0), 
+	prev_mousex_(-1), 
+	prev_mousey_(-1),
+	xres_(0), 
+	yres_(0), 
+	mouselook_mode_(false)
 {
 	LOG_INFO("BEGIN EDITOR::EDITOR");
 	const int begin = profile::get_tick_time();
@@ -867,6 +880,7 @@ editor::editor(const char* level_cfg)
 	if(preferences::external_code_editor().is_null() == false && !external_code_editor_) {
 		external_code_editor_ = ExternalTextEditor::create(preferences::external_code_editor());
 	}
+
 	LOG_INFO("END EDITOR::EDITOR: " << (profile::get_tick_time() - begin) << "ms");
 }
 
@@ -973,32 +987,29 @@ void editor::remove_ghost_objects()
 
 namespace 
 {
-	unsigned int get_mouse_state(int& mousex, int& mousey) 
-	{
-		auto wnd = KRE::WindowManager::getMainWindow();
-		unsigned int res = input::sdl_get_mouse_state(&mousex, &mousey);
-		mousex = (mousex*wnd->width())/wnd->logicalWidth();
-		mousey = (mousey*wnd->height())/wnd->logicalHeight();
-
-		return res;
-	}
-
 	int editor_resolution_manager_count = 0;
 
 	int editor_x_resolution = 0, editor_y_resolution = 0;
 }
 
-bool editor_resolution_manager::isActive()
+bool EditorResolutionManager::isActive()
 {
 	return editor_resolution_manager_count != 0;
 }
 
-editor_resolution_manager::editor_resolution_manager(int xres, int yres) 
+EditorResolutionManager::EditorResolutionManager(int xres, int yres) 
 	: original_width_(KRE::WindowManager::getMainWindow()->width()),
 	  original_height_(KRE::WindowManager::getMainWindow()->height()) 
 {
 	LOG_INFO("EDITOR RESOLUTION MANAGER: " << xres << ", " << yres);
 
+	// XXX Some notes for fixing this.
+	// If we are in fullscreen mode need to do things differently.
+	// We keep the resolution the same and shrink the GameScreen down to accomodate
+	// This is assuming the fullscreen window size is adequate for our needs.
+	//
+	// We should be checking the maximum monitor resolution, 1200 seems anachronistic in
+	// these days where 4k monitors are available and 1920 being a very common width.
 	if(!editor_x_resolution) {
 		if(xres != 0 && yres != 0) {
 			editor_x_resolution = xres;
@@ -1009,23 +1020,22 @@ editor_resolution_manager::editor_resolution_manager(int xres, int yres)
 			} else {
 				editor_x_resolution = 1200; //KRE::WindowManager::getMainWindow()->width() + EDITOR_SIDEBAR_WIDTH + editor_dialogs::LAYERS_DIALOG_WIDTH;
 			}
-			editor_y_resolution = KRE::WindowManager::getMainWindow()->height() + EDITOR_MENUBAR_HEIGHT;
+			editor_y_resolution = KRE::WindowManager::getMainWindow()->height() + EDITOR_MENUBAR_HEIGHT + 100;
 		}
 	}
 
 	if(++editor_resolution_manager_count == 1) {
 		LOG_INFO("EDITOR RESOLUTION: " << editor_x_resolution << "," << editor_y_resolution);
-		preferences::set_actual_screen_width(editor_x_resolution);
-		preferences::set_actual_screen_height(editor_y_resolution);
 		KRE::WindowManager::getMainWindow()->setWindowSize(editor_x_resolution, editor_y_resolution);
+		graphics::GameScreen::get().setLocation(0, EDITOR_MENUBAR_HEIGHT + 100);
 	}
 }
 
-editor_resolution_manager::~editor_resolution_manager() {
+EditorResolutionManager::~EditorResolutionManager()
+{
 	if(--editor_resolution_manager_count == 0) {
-		preferences::set_actual_screen_width(original_width_);
-		preferences::set_actual_screen_height(original_height_);
 		KRE::WindowManager::getMainWindow()->setWindowSize(original_width_, original_height_);
+		graphics::GameScreen::get().setLocation(0, 0);
 	}
 }
 
@@ -1134,7 +1144,7 @@ bool editor::handleEvent(const SDL_Event& event, bool swallowed)
 		break;
 	case SDL_MOUSEWHEEL: {
 			int mousex, mousey;
-			const unsigned int buttons = get_mouse_state(mousex, mousey);
+			const unsigned int buttons = input::sdl_get_mouse_state(&mousex, &mousey);
 			
 			const int xpos = xpos_ + mousex*zoom_;
 			if(xpos < editor_x_resolution-sidebar_width()) {
@@ -1203,7 +1213,7 @@ void editor::process()
 	process_ghost_objects();
 
 	int mousex, mousey;
-	const unsigned int buttons = get_mouse_state(mousex, mousey)&mouse_buttons_down_;
+	const unsigned int buttons = input::sdl_get_mouse_state(&mousex, &mousey) & mouse_buttons_down_;
 
 	if(buttons == 0) {
 		drawing_rect_ = false;
@@ -1416,15 +1426,16 @@ bool editor::editing_level_being_played() const
 
 void editor::reset_dialog_positions()
 {
+	auto wnd = KRE::WindowManager::getMainWindow();
 	if(editor_mode_dialog_) {
-		editor_mode_dialog_->setLoc(KRE::WindowManager::getMainWindow()->width() - editor_mode_dialog_->width(), editor_mode_dialog_->y());
+		editor_mode_dialog_->setLoc(wnd->width() - editor_mode_dialog_->width(), editor_mode_dialog_->y());
 	}
 
 #define SET_DIALOG_POS(d) if(d) { \
-	d->setLoc(KRE::WindowManager::getMainWindow()->width() - d->width(), d->y()); \
+	d->setLoc(wnd->width() - d->width(), d->y()); \
 	\
 	d->setDim(d->width(), \
-	 std::max<int>(10, preferences::actual_screen_height() - d->y())); \
+	 std::max<int>(10, wnd->height() - d->y())); \
 }
 	SET_DIALOG_POS(character_dialog_);
 	SET_DIALOG_POS(property_dialog_);
@@ -1433,11 +1444,11 @@ void editor::reset_dialog_positions()
 
 	if(layers_dialog_ && editor_mode_dialog_) {
 		layers_dialog_->setLoc(editor_mode_dialog_->x() - layers_dialog_->width(), EDITOR_MENUBAR_HEIGHT);
-		layers_dialog_->setDim(layers_dialog_->width(), preferences::actual_screen_height() - EDITOR_MENUBAR_HEIGHT);
+		layers_dialog_->setDim(layers_dialog_->width(), wnd->height() - EDITOR_MENUBAR_HEIGHT);
 	}
 
 	if(editor_menu_dialog_ && editor_mode_dialog_) {
-		editor_menu_dialog_->setDim(preferences::actual_screen_width() - editor_mode_dialog_->width(), editor_menu_dialog_->height());
+		editor_menu_dialog_->setDim(wnd->width() - editor_mode_dialog_->width(), editor_menu_dialog_->height());
 	}
 }
 
@@ -1807,7 +1818,7 @@ void editor::handle_object_dragging(int mousex, int mousey)
 
 void editor::handleDrawing_rect(int mousex, int mousey)
 {
-	const unsigned int buttons = get_mouse_state(mousex, mousey);
+	const unsigned int buttons = input::sdl_get_mouse_state(&mousex, &mousey);
 
 	const int xpos = xpos_ + mousex*zoom_;
 	const int ypos = ypos_ + mousey*zoom_;
@@ -1859,7 +1870,7 @@ void editor::handleMouseButtonDown(const SDL_MouseButtonEvent& event)
 	const bool shift_pressed = (SDL_GetModState()&(KMOD_LSHIFT|KMOD_RSHIFT)) != 0;
 	const bool alt_pressed = (SDL_GetModState()&KMOD_ALT) != 0;
 	int mousex, mousey;
-	const unsigned int buttons = get_mouse_state(mousex, mousey);
+	const unsigned int buttons = input::sdl_get_mouse_state(&mousex, &mousey);
 
 	anchorx_ = xpos_ + mousex*zoom_;
 	anchory_ = ypos_ + mousey*zoom_;
@@ -2184,7 +2195,7 @@ void editor::handleMouseButtonUp(const SDL_MouseButtonEvent& event)
 	const bool ctrl_pressed = (SDL_GetModState()&(KMOD_LCTRL|KMOD_RCTRL)) != 0;
 	const bool shift_pressed = (SDL_GetModState()&(KMOD_LSHIFT|KMOD_RSHIFT)) != 0;
 	int mousex, mousey;
-	const unsigned int buttons = get_mouse_state(mousex, mousey);
+	const unsigned int buttons = input::sdl_get_mouse_state(&mousex, &mousey);
 			
 	const int xpos = xpos_ + mousex*zoom_;
 	const int ypos = ypos_ + mousey*zoom_;
@@ -2810,7 +2821,7 @@ void editor::save_level_as(const std::string& fname)
 
 	std::string path = module::get_id(fname);
 	std::string modname = module::get_module_id(fname);
-	sys::write_file(module::get_module_path(modname, preferences::editor_save_to_user_preferences() ? module::BASE_PATH_USER : module::BASE_PATH_GAME) + preferences::level_path() + path, "");
+	sys::write_file(module::get_module_path(modname, preferences::editor_save_to_user_preferences() ? module::BASE_PATH_USER : module::BASE_PATH_GAME) + path, "");
 	load_level_paths();
 	filename_ = id;
 	save_level();
@@ -2930,17 +2941,13 @@ void editor::save_level()
 								   //all levels start at cycle 0.
 	lvl_node = variant(&attr);
 	LOG_INFO("GET LEVEL FILENAME: " << filename_);
-	if(preferences::is_level_path_set()) {
-		sys::write_file(preferences::level_path() + filename_, lvl_node.write_json(true));
-	} else {
-		std::string path = get_level_path(filename_);
-		if(preferences::editor_save_to_user_preferences()) {
-			path = module::get_module_path(module::get_module_name(), module::BASE_PATH_USER) + "/data/level/" + filename_;
-		}
-
-		LOG_INFO("WRITE_LEVEL: " << path);
-		sys::write_file(path, lvl_node.write_json(true));
+	std::string path = get_level_path(filename_);
+	if(preferences::editor_save_to_user_preferences()) {
+		path = module::get_module_path(module::get_module_name(), module::BASE_PATH_USER) + "/data/level/" + filename_;
 	}
+
+	LOG_INFO("WRITE_LEVEL: " << path);
+	sys::write_file(path, lvl_node.write_json(true));
 
 	//see if we should write the next/previous levels also
 	//based on them having changed.
@@ -2950,9 +2957,7 @@ void editor::save_level()
 			prev->finishLoading();
 			if(prev->next_level() != lvl_->id()) {
 				prev->set_next_level(lvl_->id());
-				if(preferences::is_level_path_set()) {
-					sys::write_file(preferences::level_path() + prev->id(), prev->write().write_json(true));
-				} else if(preferences::editor_save_to_user_preferences()) {
+				if(preferences::editor_save_to_user_preferences()) {
 					sys::write_file(module::get_module_path(module::get_module_name(), module::BASE_PATH_USER) + "/data/level/" + prev->id(), prev->write().write_json(true));
 				} else {
 					sys::write_file(module::map_file(prev->id()), prev->write().write_json(true));
@@ -2968,9 +2973,7 @@ void editor::save_level()
 			next->finishLoading();
 			if(next->previous_level() != lvl_->id()) {
 				next->set_previous_level(lvl_->id());
-				if(preferences::is_level_path_set()) {
-					sys::write_file(preferences::level_path() + next->id(), next->write().write_json(true));
-				} else if(preferences::editor_save_to_user_preferences()) {
+				if(preferences::editor_save_to_user_preferences()) {
 					sys::write_file(module::get_module_path("", module::BASE_PATH_USER) + "/data/level/" + next->id(), next->write().write_json(true));
 				} else {
 					sys::write_file(module::map_file(next->id()), next->write().write_json(true));
@@ -3024,7 +3027,7 @@ void editor::draw_gui() const
 
 	const bool ctrl_pressed = (SDL_GetModState()&(KMOD_LCTRL|KMOD_RCTRL)) != 0;
 	int mousex, mousey;
-	get_mouse_state(mousex, mousey);
+	input::sdl_get_mouse_state(&mousex, &mousey);
 	const int selectx = xpos_ + mousex*zoom_;
 	const int selecty = ypos_ + mousey*zoom_;
 
@@ -3541,10 +3544,10 @@ void editor::create_new_object()
 {
 	auto wnd = KRE::WindowManager::getMainWindow();
 	editor_dialogs::CustomObjectDialog object_dialog(*this, 
-		static_cast<int>(wnd->logicalWidth()*0.05), 
-		static_cast<int>(wnd->logicalHeight()*0.05), 
-		static_cast<int>(wnd->logicalWidth()*0.9), 
-		static_cast<int>(wnd->logicalHeight()*0.9));
+		static_cast<int>(wnd->width() * 0.05f), 
+		static_cast<int>(wnd->height() * 0.05f), 
+		static_cast<int>(wnd->width() * 0.9f), 
+		static_cast<int>(wnd->height() * 0.9f));
 	object_dialog.setBackgroundFrame("empty_window");
 	object_dialog.setDrawBackgroundFn(draw_last_scene);
 	object_dialog.showModal();

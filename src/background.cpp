@@ -36,6 +36,7 @@
 #include "level.hpp"
 #include "module.hpp"
 #include "preferences.hpp"
+#include "screen_handling.hpp"
 #include "surface_palette.hpp"
 #include "variant.hpp"
 #include "variant_utils.hpp"
@@ -302,11 +303,11 @@ void Background::draw(int x, int y, const rect& area, const std::vector<rect>& o
 		//the scissor test does not respect any rotations etc. We use a rotation
 		//to transform the iPhone's display, which is fine normally, but
 		//here we have to accomodate the iPhone being "on its side"
-		KRE::Scissor::Manager sm1(rect(0, dist_from_bottom, preferences::actual_screen_width(), preferences::actual_screen_width()*(1-dist_from_bottom/600)));
+		KRE::Scissor::Manager sm1(rect(0, dist_from_bottom, graphics::GameScreen::get().getWidth(), graphics::GameScreen::get().getHeight()*(1-dist_from_bottom/600)));
 		wnd->setClearColor(top_);
 		wnd->clear(KRE::ClearFlags::COLOR);
 
-		KRE::Scissor::Manager sm2(rect(0, 0, preferences::actual_screen_width(), dist_from_bottom));
+		KRE::Scissor::Manager sm2(rect(0, 0, graphics::GameScreen::get().getWidth(), dist_from_bottom));
 		wnd->setClearColor(bot_);
 		wnd->clear(KRE::ClearFlags::COLOR);
 	}
@@ -372,7 +373,7 @@ void Background::drawForeground(int xpos, int ypos, float rotation, int cycle) c
 	auto wnd = KRE::WindowManager::getMainWindow();
 	for(auto& bg : layers_) {
 		if(bg.foreground) {
-			drawLayer(xpos, ypos, rect(xpos, ypos, wnd->width(), wnd->height()), rotation, bg, cycle);
+			drawLayer(xpos, ypos, rect(xpos, ypos, graphics::GameScreen::get().getVirtualWidth(), graphics::GameScreen::get().getVirtualHeight()), rotation, bg, cycle);
 			if(bg.attr_->size() > 0) {
 				wnd->render(&bg);
 			}
@@ -387,7 +388,6 @@ void Background::setOffset(const point& offset)
 
 void Background::drawLayer(int x, int y, const rect& area, float rotation, const Background::Layer& bg, int cycle) const
 {	
-	auto wnd = KRE::WindowManager::getMainWindow();
 	const float ScaleImage = 2.0f;
 	unsigned short y1 = static_cast<unsigned short>(y + (bg.yoffset+offset_.y)*ScaleImage - (y*bg.yscale_top)/100);
 	unsigned short y2 = static_cast<unsigned short>(y + (bg.yoffset+offset_.y)*ScaleImage - (y*bg.yscale_bot)/100 + (bg.y2 - bg.y1) * ScaleImage);
@@ -418,6 +418,9 @@ void Background::drawLayer(int x, int y, const rect& area, float rotation, const
 	float v1 = bg.texture->getTextureCoordH(0, bg.y1);
 	float v2 = bg.texture->getTextureCoordH(0, bg.y2);
 
+	const int screen_w = graphics::GameScreen::get().getWidth();
+	const int screen_h = graphics::GameScreen::get().getHeight();
+
 	if(y1 < area.y()) {
 		//Making y1 == y2 is problematic, so don't allow it.
 		const int target_y = area.y() == y2 ? area.y()-1 : area.y();
@@ -425,6 +428,7 @@ void Background::drawLayer(int x, int y, const rect& area, float rotation, const
 		y1 = target_y;
 	}
 
+	auto wnd = KRE::WindowManager::getMainWindow();
 	if(bg.tile_upwards && y1 > area.y()) {
 		v1 -= (static_cast<float>(y1 - area.y())/static_cast<float>(y2 - y1))*(v2 - v1);
 		y1 = area.y();
@@ -434,7 +438,7 @@ void Background::drawLayer(int x, int y, const rect& area, float rotation, const
 		const int width = area.w();
 		const int height = y1 - area.y();
 
-		KRE::Scissor::Manager sm2(rect(xpos, wnd->height() - ypos, width, height));
+		KRE::Scissor::Manager sm2(rect(xpos, screen_h - ypos, width, height));
 		wnd->setClearColor(*bg.color_above);
 		wnd->clear(KRE::ClearFlags::COLOR);
 	}
@@ -448,7 +452,7 @@ void Background::drawLayer(int x, int y, const rect& area, float rotation, const
 		const int width = area.w();
 		const int height = area.y2() - y2;
 
-		KRE::Scissor::Manager sm2(rect(xpos, wnd->height() - ypos, width, height));
+		KRE::Scissor::Manager sm2(rect(xpos, screen_h - ypos, width, height));
 		wnd->setClearColor(*bg.color_below);
 		wnd->clear(KRE::ClearFlags::COLOR);
 	}
