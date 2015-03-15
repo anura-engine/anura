@@ -665,20 +665,22 @@ namespace
 	class PointParticleSystem : public ParticleSystem, public std::enable_shared_from_this<PointParticleSystem>
 	{
 		int u_point_size_;
+		int u_is_circular_;
 	public:
 		PointParticleSystem(const Entity& obj, const PointParticleInfo& info) 
 			: obj_(obj), 
-			info_(info), 
-			particle_generation_(0), 
-			generation_rate_millis_(info.generation_rate_millis), 
-			pos_x_(info.pos_x), 
-			pos_x_rand_(info.pos_x_rand), 
-			pos_y_(info.pos_y), 
-			pos_y_rand_(info.pos_y_rand) 
+			  info_(info), 
+			  particle_generation_(0), 
+			  generation_rate_millis_(info.generation_rate_millis), 
+			  pos_x_(info.pos_x), 
+			  pos_x_rand_(info.pos_x_rand), 
+			  pos_y_(info.pos_y), 
+			  pos_y_rand_(info.pos_y_rand) 
 		{
 			setShader(KRE::ShaderProgram::getProgram("point_shader")->clone());
 			getShader()->setUniformDrawFunction(std::bind(&PointParticleSystem::executeOnDraw, this));
 			u_point_size_  = getShader()->getUniform("point_size");
+			u_is_circular_ = getShader()->getUniform("u_is_circular");
 
 			// turn on hardware-backed, not indexed and instanced draw if available.
 			auto as = KRE::DisplayDevice::createAttributeSet(true, false, false);
@@ -692,6 +694,7 @@ namespace
 
 		void executeOnDraw() {
 			getShader()->setUniformValue(u_point_size_, info_.dot_size);
+			getShader()->setUniformValue(u_is_circular_, true);
 		}
 		
 		void process(const Entity& e) {

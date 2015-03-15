@@ -323,8 +323,12 @@ namespace KRE
 				"}\n";
 			const char* const point_shader_fs = 
 				"uniform vec4 u_color;\n"
+				"uniform bool u_is_circular;\n"
 				"void main()\n"
 				"{\n"
+				"	 if(u_is_circular && length(gl_PointCoord - vec2(0.5, 0.5)) > 0.5) {\n"
+				"        discard;\n"
+				"    }\n"
 				"    gl_FragColor = u_color;\n"
 				"}\n";
 			const uniform_mapping point_shader_uniform_mapping[] = 
