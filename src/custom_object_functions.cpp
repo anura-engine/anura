@@ -1843,8 +1843,8 @@ RETURN_TYPE("bool")
 		std::vector<EntityPtr> v;
 		v = lvl->get_characters_at_point(args()[0]->evaluate(variables).as_int(),
 														 args()[1]->evaluate(variables).as_int(),
-														 (last_draw_position().x/100 * lvl->zoom_level()).as_int(),
-														 (last_draw_position().y/100 * lvl->zoom_level()).as_int());
+														 static_cast<int>(last_draw_position().x / 100 * lvl->zoom_level()),
+														 static_cast<int>(last_draw_position().y / 100 * lvl->zoom_level()));
 		if(!v.empty()){
 			std::vector<variant> res;
 			res.reserve(v.size());

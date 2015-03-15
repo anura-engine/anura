@@ -478,6 +478,17 @@ namespace KRE
 		return counter++;
 	}
 
+	bool Window::registerSizeChangeObserver(int key, std::function<void(int,int)> fn)
+	{
+		auto it = dimensions_changed_observers_.find(key);
+		if(it == dimensions_changed_observers_.end()) {
+			dimensions_changed_observers_[key] = fn;
+			return false;
+		}
+		it->second = fn;
+		return true;
+	}
+
 	void Window::unregisterSizeChangeObserver(int index)
 	{
 		auto it = dimensions_changed_observers_.find(index);

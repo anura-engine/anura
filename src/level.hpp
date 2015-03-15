@@ -324,7 +324,7 @@ public:
 
 	void editor_freeze_tile_updates(bool value);
 
-	decimal zoom_level() const;
+	float zoom_level() const;
 
 	void add_speech_dialog(std::shared_ptr<SpeechDialog> d);
 	void remove_speech_dialog();
@@ -577,7 +577,7 @@ private:
 	int editor_tile_updates_frozen_;
 	bool editor_dragging_objects_;
 
-	decimal zoom_level_;
+	float zoom_level_;
 	std::vector<EntityPtr> focus_override_;
 
 	std::stack<std::shared_ptr<SpeechDialog> > speech_dialogs_;

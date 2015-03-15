@@ -54,14 +54,15 @@ namespace KRE
 		  height_(0),
 		  model_matrix_(1.0f),
 		  model_changed_(false),
-		  window_(WindowManager::getMainWindow())
+		  window_(WindowManager::getMainWindow()),
+		  size_change_key_(-1)
 	{
 		width_ = getWindow()->width();
 		height_ = getWindow()->height();			
 		LOG_DEBUG("canvas dimensions set to: " << width_ << " x " << height_);
 		auto wnd = window_.lock();
 		if(wnd) {
-			wnd->registerSizeChangeObserver([this](int w, int h) {
+			size_change_key_ = wnd->registerSizeChangeObserver([this](int w, int h) {
 				this->setDimensions(w, h);
 			});
 		}
@@ -132,9 +133,15 @@ namespace KRE
 	{
 		window_ = wnd;
 		if(wnd) {
-			wnd->registerSizeChangeObserver([this](int w, int h) {
-				this->setDimensions(w, h);
-			});
+			if(size_change_key_ >= 0) {
+				wnd->registerSizeChangeObserver(size_change_key_, [this](int w, int h) {
+					this->setDimensions(w, h);
+				});	
+			} else {
+				size_change_key_ = wnd->registerSizeChangeObserver([this](int w, int h) {
+					this->setDimensions(w, h);
+				});	
+			}
 		}
 	}
 

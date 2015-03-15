@@ -188,20 +188,20 @@ namespace KRE
 	{
 		if(model_matrix_changed) {
 			model_matrix_changed = false;
-			
 			get_model_matrix() = glm::mat4(1.0f);
-			if(!get_translation_stack().empty()) {
-				auto& top = get_translation_stack().top();
-				get_model_matrix() = glm::translate(get_model_matrix(), glm::vec3(top, 0.0f));
+
+			if(!get_scale_stack().empty()) {
+				auto& top = get_scale_stack().top();
+				get_model_matrix() = glm::scale(get_model_matrix(), glm::vec3(top, 1.0f));
 			}
 
 			if(!get_rotation_stack().empty()) {
 				get_model_matrix() = glm::rotate(get_model_matrix(), get_rotation_stack().top(), glm::vec3(0.0f, 0.0f, 1.0f));
 			}
 
-			if(!get_scale_stack().empty()) {
-				auto& top = get_scale_stack().top();
-				get_model_matrix() = glm::scale(get_model_matrix(), glm::vec3(top, 1.0f));
+			if(!get_translation_stack().empty()) {
+				auto& top = get_translation_stack().top();
+				get_model_matrix() = glm::translate(get_model_matrix(), glm::vec3(top, 0.0f));
 			}
 		}
 		return get_model_matrix();

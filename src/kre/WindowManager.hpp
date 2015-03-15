@@ -116,6 +116,7 @@ namespace KRE
 		void notifyNewWindowSize(int new_width, int new_height);
 
 		int registerSizeChangeObserver(std::function<void(int,int)> fn);
+		bool registerSizeChangeObserver(int key, std::function<void(int,int)> fn);
 		void unregisterSizeChangeObserver(int);
 	protected:
 		int width_;

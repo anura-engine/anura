@@ -149,6 +149,7 @@ namespace KRE
 		mutable glm::mat4 model_matrix_;
 		mutable bool model_changed_;
 		std::weak_ptr<Window> window_;
+		int size_change_key_;
 	};
 
 	// Helper function to generate a color wheel between the given hue values.

@@ -149,29 +149,21 @@ bool update_camera_position(const Level& lvl, screen_position& pos, const Entity
 	//screen position being initialized now.
 	const bool draw_level = doDraw && pos.init;
 	
-#ifndef NO_EDITOR
-	const int sidebar_width = editor::sidebar_width();
-	const int codebar_height = editor::codebar_height();
-#else
-	const int sidebar_width = 0;
-	const int codebar_height = 0;
-#endif
-
 	const int screen_width = graphics::GameScreen::get().getWidth();
 	const int screen_height = graphics::GameScreen::get().getHeight();
 
 	ASSERT_LOG(focus || lvl.in_editor(), "No player found in level. Must have a player object. (An object with is_human: true marked");
 
 	if(focus) {
-		const float target_zoom = static_cast<float>(lvl.zoom_level().as_float());
-		const float ZoomSpeed = 0.03f;
+		const float target_zoom = lvl.zoom_level();
+		const float zoom_speed = 0.03f;
 		const float prev_zoom = pos.zoom;
-		if(std::abs(target_zoom - pos.zoom) < ZoomSpeed) {
+		if(std::abs(target_zoom - pos.zoom) < zoom_speed) {
 			pos.zoom = target_zoom;
 		} else if(pos.zoom > target_zoom) {
-			pos.zoom -= ZoomSpeed;
+			pos.zoom -= zoom_speed;
 		} else {
-			pos.zoom += ZoomSpeed;
+			pos.zoom += zoom_speed;
 		}
         
         //if we've set the zoom inside the very first cycle of a level (i.e. using on_start_level), then we're doing some kind of cutscene which has the camera start zoomed out.  We want the camera to immediately start in this state, not "progress to this state gradually from the normal zoom". 
@@ -190,20 +182,20 @@ bool update_camera_position(const Level& lvl, screen_position& pos, const Entity
 		const int x_screen_pad = std::max<int>(0, screen_width - lvl.boundaries().w());
 
 		const int y_screen_pad = std::max<int>(0, screen_height - lvl.boundaries().h());
-		pos.x_border = x_screen_pad/2;
-		pos.y_border = y_screen_pad/2;
+		pos.x_border = x_screen_pad / 2;
+		pos.y_border = y_screen_pad / 2;
 
 		//find the boundary values for the camera position based on the size
 		//of the level. These boundaries keep the camera from ever going out
 		//of the bounds of the level.
 		
-		const float inverse_zoom_level = 1.0f/pos.zoom;
+		const float inverse_zoom_level = 1.0f / pos.zoom;
 
 		//we look a certain number of frames ahead -- assuming the focus
 		//keeps moving at the current velocity, we converge toward the point
 		//they will be at in x frames.
-		const int PredictiveFramesHorz = 20;
-		const int PredictiveFramesVert = 5;
+		const int predictive_frames_horz = 20;
+		const int predictive_frames_vert = 5;
 
 		int displacement_x = 0, displacement_y = 0;
 		if(pos.focus_x || pos.focus_y) {
@@ -216,7 +208,7 @@ bool update_camera_position(const Level& lvl, screen_position& pos, const Entity
 
 		//find the point we want the camera to converge toward. It will be the
 		//feet of the player, but inside the boundaries we calculated above.
-		int x = focus->getFeetX() + displacement_x*PredictiveFramesHorz;
+		int x = focus->getFeetX() + displacement_x * predictive_frames_horz;
 
 		//calculate the adjustment to the camera's target position based on
 		//our vertical look. This is calculated as the square root of the
@@ -224,7 +216,7 @@ bool update_camera_position(const Level& lvl, screen_position& pos, const Entity
 		const int vertical_look = focus->verticalLook();
 
 		//find the y point for the camera to converge toward
-		int y = focus->getFeetY() - (screen_height/(5*lvl.zoom_level())).as_int() + displacement_y*PredictiveFramesVert + vertical_look;
+		int y = focus->getFeetY() - static_cast<int>(screen_height / (5.0f * target_zoom)) + displacement_y * predictive_frames_vert + vertical_look;
 
 		if(lvl.focus_override().empty() == false) {
 			std::vector<EntityPtr> v = lvl.focus_override();
@@ -241,8 +233,10 @@ bool update_camera_position(const Level& lvl, screen_position& pos, const Entity
 					bottom = std::min<int>(e->getFeetY(), bottom);
 				}
 
-				const int BorderSize = 20;
-				if(v.size() == 1 || right - left < screen_width/lvl.zoom_level() - BorderSize && bottom - top < screen_height/lvl.zoom_level() - BorderSize) {
+				const int border_size = 20;
+				if(v.size() == 1 
+					|| (right - left < static_cast<int>(screen_width / target_zoom) - border_size 
+					&& bottom - top < static_cast<int>(screen_height / target_zoom) - border_size)) {
 					break;
 				}
 
@@ -252,7 +246,7 @@ bool update_camera_position(const Level& lvl, screen_position& pos, const Entity
 			}
 
 			x = (left + right)/2;
-			y = ((top + bottom)/2 - screen_height/(5*lvl.zoom_level())).as_int();
+			y = (top + bottom)/2 - static_cast<int>(screen_height / (5.0f * target_zoom));
 		}
 
 		pos.target_xpos = 100*(x - screen_width/2);
@@ -266,15 +260,15 @@ bool update_camera_position(const Level& lvl, screen_position& pos, const Entity
 		//for small screens the speech dialog arrows cover the entities they are
 		//pointing to. adjust to that by looking up a little bit.
 		if (lvl.current_speech_dialog() && graphics::GameScreen::get().getVirtualHeight() < 600)
-			y = (y + (600 - screen_height)/(2*lvl.zoom_level())).as_int();
+			y += (600 - screen_height) / static_cast<int>(2.0f * target_zoom);
 
 		//find the target x,y position of the camera in centi-pixels. Note that
 		//(x,y) represents the position the camera should center on, while
 		//now we're calculating the top-left point.
 		//
 		//the actual camera position will converge toward this point
-		const int target_xpos = 100*(x - screen_width/2);
-		const int target_ypos = 100*(y - screen_height/2);
+		const int target_xpos = 100 * (x - screen_width/2);
+		const int target_ypos = 100 * (y - screen_height/2);
 
 		if(pos.init == false) {
 			pos.x_pos = target_xpos;
@@ -286,10 +280,10 @@ bool update_camera_position(const Level& lvl, screen_position& pos, const Entity
 			//We do this by moving asymptotically toward the target, which
 			//makes the camera have a nice acceleration/decceleration effect
 			//as the target position moves.
-			const int horizontal_move_speed = (30/lvl.zoom_level()).as_int();
-			const int vertical_move_speed = (10/lvl.zoom_level()).as_int();
-			int xdiff = (target_xpos - pos.x_pos)/horizontal_move_speed;
-			int ydiff = (target_ypos - pos.y_pos)/vertical_move_speed;
+			const int horizontal_move_speed = static_cast<int>(30.0f / target_zoom);
+			const int vertical_move_speed = static_cast<int>(10.0f / target_zoom);
+			int xdiff = (target_xpos - pos.x_pos) / horizontal_move_speed;
+			int ydiff = (target_ypos - pos.y_pos) / vertical_move_speed;
 
 			pos.x_pos += xdiff;
 			pos.y_pos += ydiff;
@@ -308,11 +302,11 @@ bool update_camera_position(const Level& lvl, screen_position& pos, const Entity
 		pos.shake_y_offset += pos.shake_y_vel;
 			
 		//shake acceleration
-		if ((std::abs(pos.shake_x_vel) < 50) && (std::abs(pos.shake_x_offset) < 50)){
+		if((std::abs(pos.shake_x_vel) < 50) && (std::abs(pos.shake_x_offset) < 50)){
 			//prematurely end the oscillation if it's in the asymptote
 			pos.shake_x_offset = 0;
 			pos.shake_x_vel = 0;
-		}else{
+		} else {
 			//extraneous signs kept for consistency with conventional spring physics, also
 			//the value that "offset" is divided by, is (the inverse of) 'k', aka "spring stiffness"
 			//the value that "velocity" is divided by, is (the inverse of) 'b', aka "oscillation damping",
@@ -320,9 +314,9 @@ bool update_camera_position(const Level& lvl, screen_position& pos, const Entity
 			//These values are very sensitive, and tweaking them wrongly will cause the spring to 'explode',
 			//and increase its motion out of game-bounds. 
 			if(pos.shake_x_offset > 0) {
-				pos.shake_x_vel -= (1 * pos.shake_x_offset/3 + pos.shake_x_vel/15);
+				pos.shake_x_vel -= 1 * pos.shake_x_offset/3 + pos.shake_x_vel/15;
 			} else if(pos.shake_x_offset < 0) {
-				pos.shake_x_vel += (-1 * pos.shake_x_offset/3 - pos.shake_x_vel/15);
+				pos.shake_x_vel += -1 * pos.shake_x_offset/3 - pos.shake_x_vel/15;
 			}
 		}
 
@@ -338,13 +332,13 @@ bool update_camera_position(const Level& lvl, screen_position& pos, const Entity
 			}
 		}
 
-		const int minmax_x_adjust = static_cast<int>(screen_width*(1.0 - inverse_zoom_level)*0.5);
-		const int minmax_y_adjust = static_cast<int>(screen_height*(1.0 - inverse_zoom_level)*0.5);
+		const int minmax_x_adjust = static_cast<int>(screen_width*(1.0f - inverse_zoom_level)*0.5f);
+		const int minmax_y_adjust = static_cast<int>(screen_height*(1.0f - inverse_zoom_level)*0.5f);
 	
-		int min_x = (lvl.boundaries().x() - minmax_x_adjust)*100;
-		int min_y = (lvl.boundaries().y() - minmax_y_adjust)*100;
-		int max_x = (lvl.boundaries().x2() - minmax_x_adjust - static_cast<int>(screen_width*inverse_zoom_level))*100;
-		int max_y = (lvl.boundaries().y2() - minmax_y_adjust - static_cast<int>(screen_height*inverse_zoom_level))*100;
+		int min_x = (lvl.boundaries().x() - minmax_x_adjust) * 100;
+		int min_y = (lvl.boundaries().y() - minmax_y_adjust) * 100;
+		int max_x = (lvl.boundaries().x2() - minmax_x_adjust - static_cast<int>(screen_width * inverse_zoom_level)) * 100;
+		int max_y = (lvl.boundaries().y2() - minmax_y_adjust - static_cast<int>(screen_height * inverse_zoom_level)) * 100;
 
 		if(min_x > max_x) {
 			min_x = max_x = (min_x + max_x)/2;
@@ -394,14 +388,14 @@ void render_scene(Level& lvl, const screen_position& pos)
 		ASSERT_LOG(false, "Fix pos.flip_rotate");
 	}
 
-	int xscroll = (pos.x/100)&preferences::xypos_draw_mask;
-	int yscroll = (pos.y/100)&preferences::xypos_draw_mask;
+	int xscroll = (pos.x / 100) & preferences::xypos_draw_mask;
+	int yscroll = (pos.y / 100) & preferences::xypos_draw_mask;
 
 	int bg_xscroll = xscroll;
 	int bg_yscroll = yscroll;
 
-	xscroll += static_cast<int>((screen_width/2)*(-1.0f/pos.zoom + 1.0f));
-	yscroll += static_cast<int>((screen_height/2)*(-1.0f/pos.zoom + 1.0f));
+	xscroll += static_cast<int>((screen_width / 2) * (1.0f - 1.0f / pos.zoom));
+	yscroll += static_cast<int>((screen_height / 2) * (1.0f - 1.0f / pos.zoom));
 
 	if(pos.zoom < 1.0f) {
 		bg_xscroll = xscroll;
@@ -413,10 +407,10 @@ void render_scene(Level& lvl, const screen_position& pos)
 		lvl.draw_background(bg_xscroll, bg_yscroll, camera_rotation);
 
 		int draw_width = screen_width;
-		int draw_height = wnd->height();
+		int draw_height = screen_height;
 		if(pos.zoom < 1.0f) {
-			draw_width = static_cast<int>(draw_width/pos.zoom);
-			draw_height = static_cast<int>(draw_height/pos.zoom);
+			draw_width = static_cast<int>(draw_width / pos.zoom);
+			draw_height = static_cast<int>(draw_height / pos.zoom);
 		}
 		lvl.draw(xscroll, yscroll, draw_width, draw_height);
 
@@ -440,7 +434,7 @@ void render_scene(Level& lvl, const screen_position& pos)
 		const KRE::Color& tint = i->color.toColor();
 		if(tint.a() > 0) {
 			auto canvas = KRE::Canvas::getInstance();
-			canvas->drawSolidRect(rect(0, 0, wnd->width(), wnd->height()), tint);
+			canvas->drawSolidRect(rect(0, 0, screen_width, screen_height), tint);
 		}
 
 		i->color = i->color + i->delta;
@@ -454,13 +448,13 @@ void render_scene(Level& lvl, const screen_position& pos)
 	
 	//draw borders around the screen if the screen is bigger than the level.
 	if(pos.x_border > 0) {
-		canvas->drawSolidRect(rect(0, 0, pos.x_border, wnd->height()), KRE::Color::colorBlack());
-		canvas->drawSolidRect(rect(wnd->width() - pos.x_border, 0, pos.x_border, wnd->height()), KRE::Color::colorBlack());
+		canvas->drawSolidRect(rect(0, 0, pos.x_border, screen_height), KRE::Color::colorBlack());
+		canvas->drawSolidRect(rect(screen_width - pos.x_border, 0, pos.x_border, screen_width), KRE::Color::colorBlack());
 	}
 
 	if(pos.y_border > 0) {
-		canvas->drawSolidRect(rect(pos.x_border, 0, wnd->width() - pos.x_border*2, pos.y_border), KRE::Color::colorBlack());
-		canvas->drawSolidRect(rect(pos.x_border, wnd->height() - pos.y_border, wnd->width() - pos.x_border*2, pos.y_border), KRE::Color::colorBlack());
+		canvas->drawSolidRect(rect(pos.x_border, 0, screen_width - pos.x_border*2, pos.y_border), KRE::Color::colorBlack());
+		canvas->drawSolidRect(rect(pos.x_border, screen_height - pos.y_border, screen_width - pos.x_border*2, pos.y_border), KRE::Color::colorBlack());
 	}
 
 

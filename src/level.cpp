@@ -199,7 +199,7 @@ Level::Level(const std::string& level_cfg, variant node)
 	  end_game_(false),
       editor_tile_updates_frozen_(0), 
 	  editor_dragging_objects_(false),
-	  zoom_level_(decimal::from_int(1)),
+	  zoom_level_(1.0f),
 	  palettes_used_(0),
 	  background_palette_(-1),
 	  segment_width_(0), 
@@ -2314,13 +2314,16 @@ namespace
 
 void Level::set_active_chars()
 {
-	auto wnd = KRE::WindowManager::getMainWindow();
-	const decimal inverse_zoom_level = zoom_level_ != decimal(0) ? (decimal(1.0)/zoom_level_) : decimal(0);
-	const int zoom_buffer = (std::max(decimal(0.0),(inverse_zoom_level - decimal(1.0))) * wnd->width()).as_int(); //pad the screen if we're zoomed out so stuff now-visible becomes active 
+	int screen_width = graphics::GameScreen::get().getWidth();
+	int screen_height = graphics::GameScreen::get().getHeight();
+	
+	const float inverse_zoom_level = std::abs(zoom_level_) > FLT_EPSILON ? (1.0f / zoom_level_) : 0.0f;
+	// pad the screen if we're zoomed out so stuff now-visible becomes active  
+	const int zoom_buffer = static_cast<int>(std::max(0.0f, (inverse_zoom_level - 1.0f)) * screen_width);
 	const int screen_left = last_draw_position().x/100 - zoom_buffer;
-	const int screen_right = last_draw_position().x/100 + wnd->width() + zoom_buffer;
+	const int screen_right = last_draw_position().x/100 + screen_width + zoom_buffer;
 	const int screen_top = last_draw_position().y/100 - zoom_buffer;
-	const int screen_bottom = last_draw_position().y/100 + wnd->height() + zoom_buffer;
+	const int screen_bottom = last_draw_position().y/100 + screen_height + zoom_buffer;
 
 	const rect screen_area(screen_left, screen_top, screen_right - screen_left, screen_bottom - screen_top);
 	active_chars_.clear();
@@ -3383,7 +3386,7 @@ DEFINE_FIELD(in_editor, "bool")
 DEFINE_FIELD(zoom, "decimal")
 	return variant(obj.zoom_level_);
 DEFINE_SET_FIELD
-	obj.zoom_level_ = value.as_decimal();
+	obj.zoom_level_ = value.as_float();
 DEFINE_FIELD(focus, "[custom_obj]")
 	std::vector<variant> v;
 	for(const EntityPtr& e : obj.focus_override_) {
@@ -3396,6 +3399,7 @@ DEFINE_SET_FIELD
 		Entity* e = value[n].try_convert<Entity>();
 		if(e) {
 			obj.focus_override_.push_back(EntityPtr(e));
+			LOG_DEBUG("entity '" << e->label() << "' added as focus override");
 		}
 	}
 
@@ -4019,7 +4023,7 @@ void Level::editor_freeze_tile_updates(bool value)
 	}
 }
 
-decimal Level::zoom_level() const
+float Level::zoom_level() const
 {
 	return zoom_level_;
 }
