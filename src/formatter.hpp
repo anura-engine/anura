@@ -39,7 +39,8 @@ public:
 	}
 
 	const char* c_str() {
-		return str().c_str();
+        str_ = str();
+		return str_.c_str();
 	}
 
 	operator std::string() {
@@ -48,4 +49,5 @@ public:
 
 private:
 	std::ostringstream stream_;
+    std::string str_;
 };

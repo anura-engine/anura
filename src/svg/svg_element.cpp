@@ -228,8 +228,8 @@ namespace KRE
 			// Acts as a <g ...> attribute when rendered.
 			double x1 = x().value_in_specified_units(svg_length::SVG_LENGTHTYPE_NUMBER);
 			double y1 = y().value_in_specified_units(svg_length::SVG_LENGTHTYPE_NUMBER);
-			double w = width().value_in_specified_units(svg_length::SVG_LENGTHTYPE_NUMBER);
-			double h = height().value_in_specified_units(svg_length::SVG_LENGTHTYPE_NUMBER);
+			//double w = width().value_in_specified_units(svg_length::SVG_LENGTHTYPE_NUMBER);
+			//double h = height().value_in_specified_units(svg_length::SVG_LENGTHTYPE_NUMBER);
 			if(x1 != 0 || y1 != 0) {
 				// The whole list_of could be more eloquently replaced by an
 				// initialiser list. If certain compilers would actually bother supporting

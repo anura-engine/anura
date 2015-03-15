@@ -69,9 +69,6 @@
     <ClInclude Include="..\..\src\isoworld.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\view3d_widget.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\voxel_model.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -969,6 +966,9 @@
     <ClInclude Include="..\..\src\ParticleSystemWidget.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\screen_handling.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\bar_widget.cpp">
@@ -1002,9 +1002,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\isoworld.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\view3d_widget.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\voxel_animation.cpp">
@@ -1929,6 +1926,9 @@
       <Filter>Source Files\kre</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\ParticleSystemWidget.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\screen_handling.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -114,6 +114,9 @@ namespace KRE
 		virtual WindowMode getDisplaySize() const = 0;
 
 		void notifyNewWindowSize(int new_width, int new_height);
+
+		int registerSizeChangeObserver(std::function<void(int,int)> fn);
+		void unregisterSizeChangeObserver(int);
 	protected:
 		int width_;
 		int height_;
@@ -136,6 +139,8 @@ namespace KRE
 		virtual bool handleLogicalWindowSizeChange() = 0;
 		virtual bool handlePhysicalWindowSizeChange() = 0;
 		virtual void handleSetWindowTitle() = 0;
+
+		std::map<int, std::function<void(int,int)>> dimensions_changed_observers_;
 	};
 
 	class WindowManager

@@ -56,8 +56,15 @@ namespace KRE
 		  model_changed_(false),
 		  window_(WindowManager::getMainWindow())
 	{
-		width_ = getWindow()->logicalWidth();
-		height_ = getWindow()->logicalHeight();			
+		width_ = getWindow()->width();
+		height_ = getWindow()->height();			
+		LOG_DEBUG("canvas dimensions set to: " << width_ << " x " << height_);
+		auto wnd = window_.lock();
+		if(wnd) {
+			wnd->registerSizeChangeObserver([this](int w, int h) {
+				this->setDimensions(w, h);
+			});
+		}
 	}
 
 	void Canvas::setDimensions(unsigned w, unsigned h)
@@ -65,6 +72,7 @@ namespace KRE
 		width_ = w;
 		height_ = h;
 		handleDimensionsChanged();
+		LOG_DEBUG("canvas dimensions set to: " << width_ << " x " << height_);
 	}
 
 	Canvas::~Canvas()
@@ -122,7 +130,12 @@ namespace KRE
 
 	void Canvas::setWindow(WindowPtr wnd)
 	{
-		window_ = wnd; 
+		window_ = wnd;
+		if(wnd) {
+			wnd->registerSizeChangeObserver([this](int w, int h) {
+				this->setDimensions(w, h);
+			});
+		}
 	}
 
 	glm::mat4 Canvas::getModelMatrix() const 

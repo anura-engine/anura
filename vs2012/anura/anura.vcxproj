@@ -374,6 +374,7 @@
     <ClInclude Include="..\..\src\rich_text_label.hpp" />
     <ClInclude Include="..\..\src\SceneObjectCallable.hpp" />
     <ClInclude Include="..\..\src\scoped_resource.hpp" />
+    <ClInclude Include="..\..\src\screen_handling.hpp" />
     <ClInclude Include="..\..\src\scrollable_widget.hpp" />
     <ClInclude Include="..\..\src\scrollbar_widget.hpp" />
     <ClInclude Include="..\..\src\SDLMain.h" />
@@ -465,7 +466,6 @@
     <ClInclude Include="..\..\src\user_voxel_object.hpp" />
     <ClInclude Include="..\..\src\variant_type.hpp" />
     <ClInclude Include="..\..\src\video_selections.hpp" />
-    <ClInclude Include="..\..\src\view3d_widget.hpp" />
     <ClInclude Include="..\..\src\VoronoiDiagramGenerator.h" />
     <ClInclude Include="..\..\src\voxel_model.hpp" />
     <ClInclude Include="..\..\src\voxel_object.hpp" />
@@ -702,6 +702,7 @@
     <ClCompile Include="..\..\src\rect_renderable.cpp" />
     <ClCompile Include="..\..\src\rich_text_label.cpp" />
     <ClCompile Include="..\..\src\SceneObjectCallable.cpp" />
+    <ClCompile Include="..\..\src\screen_handling.cpp" />
     <ClCompile Include="..\..\src\scrollable_widget.cpp" />
     <ClCompile Include="..\..\src\scrollbar_widget.cpp" />
     <ClCompile Include="..\..\src\segment_editor_dialog.cpp" />
@@ -784,7 +785,6 @@
     <ClCompile Include="..\..\src\user_voxel_object.cpp" />
     <ClCompile Include="..\..\src\variant_type.cpp" />
     <ClCompile Include="..\..\src\video_selections.cpp" />
-    <ClCompile Include="..\..\src\view3d_widget.cpp" />
     <ClCompile Include="..\..\src\VoronoiDiagramGenerator.cpp" />
     <ClCompile Include="..\..\src\voxel_animation.cpp" />
     <ClCompile Include="..\..\src\voxel_editor.cpp" />

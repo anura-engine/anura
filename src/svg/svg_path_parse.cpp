@@ -293,10 +293,12 @@ namespace KRE
 		public:
 			elliptical_arc_command(bool absolute, double x, double y, double rx, double ry, double x_axis_rot, bool large_arc, bool sweep)
 				: path_command(PathInstruction::CUBIC_BEZIER, absolute),
-				x_(x), y_(y), 
-				rx_(rx), ry_(ry), 
-				large_arc_flag_(large_arc), 
-				sweep_flag_(sweep) 
+				  x_(x), 
+                  y_(y), 
+				  rx_(rx), 
+                  ry_(ry), 
+				  large_arc_flag_(large_arc), 
+				  sweep_flag_(sweep) 
 			{
 				x_axis_rotation_ = x_axis_rot / 180.0 * M_PI;
 				//std::cerr << "Elliptical arc: end(" << x << "," << y << "), axis(" << rx << "," << ry << "), x_axis_rot(" << x_axis_rot << "), large_arc(" << large_arc << "), sweep(" << sweep << ")" << std::endl;
@@ -395,7 +397,6 @@ namespace KRE
 
 				ctx.clear_control_points();
 			}
-			bool smooth_;
 			double x_;
 			double y_;
 			// elliptical arc radii

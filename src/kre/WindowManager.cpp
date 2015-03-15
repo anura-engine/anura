@@ -443,6 +443,10 @@ namespace KRE
 		width_ = new_width;
 		height_ = new_height;
 		handlePhysicalWindowSizeChange();
+
+		for(auto& observer : dimensions_changed_observers_) {
+			observer.second(new_width, new_height);
+		}
 	}
 
 	void Window::setWindowTitle(const std::string& title)
@@ -466,6 +470,21 @@ namespace KRE
 		}
 		return std::string();
 	}
+
+	int Window::registerSizeChangeObserver(std::function<void(int,int)> fn)
+	{
+		static int counter = 0;
+		dimensions_changed_observers_[counter] = fn;
+		return counter++;
+	}
+
+	void Window::unregisterSizeChangeObserver(int index)
+	{
+		auto it = dimensions_changed_observers_.find(index);
+		ASSERT_LOG(it != dimensions_changed_observers_.end(), "Unable to remove observer with id: " << index);
+		dimensions_changed_observers_.erase(it);
+	}
+
 
 	WindowPtr WindowManager::createWindow(int width, int height, const variant& hints)
 	{
@@ -525,5 +544,4 @@ namespace KRE
 		}
 		return it->second.lock();
 	}
-
 }

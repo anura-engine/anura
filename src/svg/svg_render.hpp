@@ -70,8 +70,12 @@ namespace KRE
 			{
 			}
 			~render_context() {
-				ASSERT_LOG(fill_color_stack_.empty(), "Fill color stack in rendering context not empty at exit");
-				ASSERT_LOG(stroke_color_stack_.empty(), "Stroke color stack in rendering context not empty at exit");
+                if(!fill_color_stack_.empty()) {
+                    LOG_ERROR("Fill color stack in rendering context not empty at exit.");
+                }
+                if(!stroke_color_stack_.empty()) {
+                    LOG_ERROR("Stroke color stack in rendering context not empty at exit.");
+                }
 			}
 
 			cairo_t* cairo() { return cairo_; }

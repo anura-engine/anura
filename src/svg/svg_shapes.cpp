@@ -307,8 +307,8 @@ namespace KRE
 			ASSERT_LOG(is_rounded_ == false, "XXX we don't support rounded rectangles -- yet");
 			double x = x_.value_in_specified_units(svg_length::SVG_LENGTHTYPE_NUMBER);
 			double y = y_.value_in_specified_units(svg_length::SVG_LENGTHTYPE_NUMBER);
-			double rx = rx_.value_in_specified_units(svg_length::SVG_LENGTHTYPE_NUMBER);
-			double ry = ry_.value_in_specified_units(svg_length::SVG_LENGTHTYPE_NUMBER);
+			//double rx = rx_.value_in_specified_units(svg_length::SVG_LENGTHTYPE_NUMBER);
+			//double ry = ry_.value_in_specified_units(svg_length::SVG_LENGTHTYPE_NUMBER);
 			double w  = width_.value_in_specified_units(svg_length::SVG_LENGTHTYPE_NUMBER);
 			double h  = height_.value_in_specified_units(svg_length::SVG_LENGTHTYPE_NUMBER);
 
