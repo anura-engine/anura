@@ -232,14 +232,19 @@ Frame::Frame(variant node)
 		}
 		if(tex == nullptr) {
 			tex = KRE::Texture::createTexture(node["image"]);
-			get_palette_texture_cache()[image_] = tex->clone();
+			get_palette_texture_cache()[image_] = tex;
 		}
 		blit_target_.setTexture(tex);
+
+		std::stringstream ss;
 		for(auto& palette_id : palettes_recognized_) {
 			if(!tex->hasPaletteAt(palette_id)) {
 				tex->addPalette(palette_id, graphics::get_palette_surface(palette_id));
 			}
+			ss << " " << palette_id;
 		}
+		LOG_DEBUG("Adding palettes: " << ss.str() << "' at: " << " to texture id: " << tex->id() << ", '" << image_ << "'");
+
 	} else {
 		if(node.has_key("fbo")) {
 			blit_target_.setTexture(node["fbo"].convert_to<TextureObject>()->texture());
@@ -412,12 +417,13 @@ void Frame::setPalettes(unsigned int palettes)
 {
 	int npalette = -1;
 	for(auto palette : palettes_recognized_) {
-		if(palette & palettes) {
+		if((1 << palette) & palettes) {
 			npalette = palette;
+			break;
 		}
 	}
 	blit_target_.getTexture()->setPalette(palettes == 0 ? -1 : npalette);
-	LOG_DEBUG("Set palette " << npalette << " on " << blit_target_.getTexture()->id());
+	LOG_DEBUG("Set palette " << npalette << " on " << blit_target_.getTexture()->id() << " from selection: " << std::hex << palettes);
 
 	/*if(current_palette_ >= 0 && (1 << current_palette_) == palettes) {
 		return;

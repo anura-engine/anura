@@ -431,10 +431,12 @@ namespace KRE
 			LOG_WARN("Ignoring request to add empty palette surface.");
 			return;
 		}
-		LOG_DEBUG("Adding palette '" << palette->getName() << "' at: " << index << " to texture id: " << id() << ", '" << getFrontSurface()->getName() << "'");
 
 		ASSERT_LOG(static_cast<int>(texture_params_.size()) == 1 && !is_paletteized_ || is_paletteized_ && static_cast<int>(texture_params_.size()) == 2, "Currently we only support converting textures to palette versions that have one texture. may life in future.");
 
+		if(!is_paletteized_) {
+			palette_row_map_[-1] = 0;
+		}
 		is_paletteized_ = true;
 		auto it = palette_row_map_.find(index);
 		if(it != palette_row_map_.end()) {
