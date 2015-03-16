@@ -303,6 +303,7 @@ namespace KRE
 				ASSERT_LOG(td.palette.size() < 256, "Can't convert surface to palettized version. Too many colors in source image > 256");
 			});
 			surf->writePixels(&new_pixels[0], new_pixels.size());
+			surf->setAlphaMap(getSurface(0)->getAlphaMap());
 
 			//LOG_INFO("handleAddPalette: Color count: " << td.palette.size());
 

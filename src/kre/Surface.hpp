@@ -215,6 +215,9 @@ namespace KRE
 		void createAlphaMap();
 
 		const std::string& getName() const { return name_; }
+
+		std::shared_ptr<std::vector<bool>> getAlphaMap() { return alpha_map_; }
+		void setAlphaMap(std::shared_ptr<std::vector<bool>> am) { alpha_map_ = am; }
 	protected:
 		Surface();
 		void setPixelFormat(PixelFormatPtr pf);
@@ -223,7 +226,7 @@ namespace KRE
 		virtual SurfacePtr handleConvert(PixelFormat::PF fmt, SurfaceConvertFn convert) = 0;
 		SurfaceFlags flags_;
 		PixelFormatPtr pf_;
-		std::vector<bool> alpha_map_;
+		std::shared_ptr<std::vector<bool>> alpha_map_;
 		std::string name_;
 	};
 }

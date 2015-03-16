@@ -180,7 +180,8 @@ namespace KRE
 	void Surface::createAlphaMap()
 	{
 		const int npixels = width() * height();
-		alpha_map_.resize(npixels);
+		alpha_map_ = std::make_shared<std::vector<bool>>();
+		alpha_map_->resize(npixels);
 
 		if(getPixelFormat()->hasAlphaChannel()) {
 			SurfaceLock lck(shared_from_this());
@@ -189,14 +190,14 @@ namespace KRE
 			if(bytesPerPixel() == 4 && rowPitch() % 4 == 0) {
 				// Optimization for a common case. Operates ~25 faster than default case.
 				const uint32_t* px = reinterpret_cast<const uint32_t*>(pixels());
-				auto it = alpha_map_.begin();
+				auto it = alpha_map_->begin();
 				for(int n = 0; n != npixels; ++n) {
 					*it++ = (*px++ & alpha_mask) ? false : true;
 				}
 			} else {
-				std::fill(alpha_map_.begin(), alpha_map_.end(), false);
+				std::fill(alpha_map_->begin(), alpha_map_->end(), false);
 				int w = width();
-				auto& am = alpha_map_;
+				auto& am = *alpha_map_;
 				iterateOverSurface([&am, w](int x, int y, int r, int g, int b, int a) {
 					if(a == 0) {
 						am[x + y * w] = true;
@@ -363,21 +364,21 @@ namespace KRE
 
 	bool Surface::isAlpha(unsigned x, unsigned y) const
 	{ 
-		ASSERT_LOG(alpha_map_.size() > 0, "No alpha map found.");
-		ASSERT_LOG(x + y* width() < static_cast<int>(alpha_map_.size()), "Index exceeds alpha map size.");
-		return alpha_map_[y*width()+x]; 
+		ASSERT_LOG(alpha_map_ != nullptr && alpha_map_->size() > 0, "No alpha map found.");
+		ASSERT_LOG(x + y* width() < static_cast<int>(alpha_map_->size()), "Index exceeds alpha map size.");
+		return (*alpha_map_)[y*width()+x]; 
 	}
 
 	std::vector<bool>::const_iterator Surface::getAlphaRow(int x, int y) const 
 	{ 
-		ASSERT_LOG(alpha_map_.size() > 0, "No alpha map found.");
-		ASSERT_LOG(x + y* width() < static_cast<int>(alpha_map_.size()), "Index exceeds alpha map size.");
-		return alpha_map_.begin() + y*width() + x; 
+		ASSERT_LOG(alpha_map_ != nullptr && alpha_map_->size() > 0, "No alpha map found.");
+		ASSERT_LOG(x + y* width() < static_cast<int>(alpha_map_->size()), "Index exceeds alpha map size.");
+		return alpha_map_->begin() + y * width() + x; 
 	}
 
 	std::vector<bool>::const_iterator Surface::endAlpha() const 
 	{ 
-		return alpha_map_.end(); 
+		return alpha_map_->end(); 
 	}
 
 	void Surface::iterateOverSurface(surface_iterator_fn fn)
