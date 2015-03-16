@@ -210,7 +210,7 @@ namespace KRE
 		Color mapPaletteColor(const Color& color, int palette);
 		float getMixingRatio() const { return mix_ratio_; }
 		bool shouldMixPalettes() const { return mix_palettes_; }
-		bool hasPaletteAt(int n) { return n < static_cast<int>(valid_palettes_indices_.size()) ? valid_palettes_indices_[n] : false; } 
+		bool hasPaletteAt(int n) const;
 
 		virtual TexturePtr clone() = 0;
 
@@ -304,9 +304,9 @@ namespace KRE
 
 		bool is_paletteized_;
 		int palette_[2];
-		std::vector<bool> valid_palettes_indices_;
 		float mix_ratio_;
 		bool mix_palettes_;
+		std::map<int,int> palette_row_map_;
 
 		void initFromVariant(texture_params_iterator tp, const variant& node);
 		void internalInit(texture_params_iterator tp);

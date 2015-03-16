@@ -39,7 +39,6 @@ namespace KRE
 {
 	Texture::Texture(const variant& node, const std::vector<SurfacePtr>& surfaces)
 		: is_paletteized_(false),
-		  valid_palettes_indices_(64),
 		  mix_ratio_(0.0f),
 		  mix_palettes_(false)
 	{
@@ -101,7 +100,6 @@ namespace KRE
 
 	Texture::Texture(const std::vector<SurfacePtr>& surfaces, TextureType type, int mipmap_levels)
 		: is_paletteized_(false),
-		  valid_palettes_indices_(64),
 		  mix_ratio_(0.0f),
 		  mix_palettes_(false)
 	{
@@ -125,7 +123,6 @@ namespace KRE
 		PixelFormat::PF fmt, 
 		TextureType type)
 		: is_paletteized_(false),
-		  valid_palettes_indices_(64),
 		  mix_ratio_(0.0f),
 		  mix_palettes_(false)
 	{
@@ -262,8 +259,6 @@ namespace KRE
 
 	void Texture::internalInit(texture_params_iterator tp)
 	{
-		std::fill(valid_palettes_indices_.begin(), valid_palettes_indices_.end(), false);
-
 		for(auto& am : tp->address_mode) {
 			am = AddressMode::CLAMP;
 		}
@@ -431,30 +426,48 @@ namespace KRE
 
 	void Texture::addPalette(int index, const SurfacePtr& palette)
 	{
+		++index;
 		if(palette == nullptr) {
 			LOG_WARN("Ignoring request to add empty palette surface.");
 			return;
 		}
+		LOG_DEBUG("Adding palette '" << palette->getName() << "' at: " << index << " to texture id: " << id() << ", '" << getFrontSurface()->getName() << "'");
+
 		ASSERT_LOG(static_cast<int>(texture_params_.size()) == 1 && !is_paletteized_ || is_paletteized_ && static_cast<int>(texture_params_.size()) == 2, "Currently we only support converting textures to palette versions that have one texture. may life in future.");
+
 		is_paletteized_ = true;
-		handleAddPalette(index+1, palette);
-		LOG_DEBUG("Adding palette '" << palette->getName() << "' to texture id: " << id());
-		if(index+1 > static_cast<int>(valid_palettes_indices_.size())) {
-			valid_palettes_indices_.resize(index+2);
+		auto it = palette_row_map_.find(index);
+		if(it != palette_row_map_.end()) {
+			index = it->second;
+		} else {
+			palette_row_map_[index] = palette_row_map_.size();
+			index = palette_row_map_.size() - 1;
 		}
-		valid_palettes_indices_[index+1] = true;
+		handleAddPalette(index, palette);
 	}
 
-	void Texture::setPalette(int n)
-	{ 
-		ASSERT_LOG(n < static_cast<int>(valid_palettes_indices_.size()) && valid_palettes_indices_[n], "Value to set palette is invalid: " << n);
-		palette_[0] = n;
+	void Texture::setPalette(int index)
+	{
+		auto it = palette_row_map_.find(index);
+		if(it != palette_row_map_.end()) {
+			palette_[0] = it->second;
+		} else {
+			palette_[0] = 0;
+		}
+	}
+
+	bool Texture::hasPaletteAt(int index) const
+	{
+		auto it = palette_row_map_.find(index);
+		return it != palette_row_map_.end();
 	}
 
 	void Texture::setPaletteMixing(int n1, int n2, float ratio)
 	{
-		palette_[0] = n1;
-		palette_[1] = n2;
+		auto it = palette_row_map_.find(n1);
+		palette_[0] = it != palette_row_map_.end() ? it->second : 0;
+		it = palette_row_map_.find(n2);
+		palette_[1] = it != palette_row_map_.end() ? it->second : 0;
 		mix_ratio_ = ratio;
 		mix_palettes_ = true;
 	}
@@ -557,14 +570,15 @@ namespace KRE
 		if(!isPaletteized()) {
 			return color;
 		}
-		if(palette >= static_cast<int>(valid_palettes_indices_.size()) || !valid_palettes_indices_[palette]) {
+		auto it = palette_row_map_.find(palette);
+		if(it == palette_row_map_.end()) {
 			return color;
 		}
 		ASSERT_LOG(texture_params_.size() == 2, "Incorrect number of surfaces in texture.");
 		auto& surf = texture_params_[1].surface;
 		for(int x = 0; x != surf->width(); ++x) {
 			if(surf->getColorAt(x, 0) == color) {
-				return surf->getColorAt(x, palette);
+				return surf->getColorAt(x, it->second);
 			}			
 		}
 		return color;

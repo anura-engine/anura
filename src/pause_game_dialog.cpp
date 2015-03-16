@@ -207,7 +207,6 @@ PAUSE_GAME_RESULT show_pause_game_dialog()
 	const int screen_w = graphics::GameScreen::get().getWidth();
 	const int screen_h = graphics::GameScreen::get().getHeight();
 	Dialog dd((screen_w/2 - window_w/2) & ~1, (screen_h/2 - window_h/2) & ~1, window_w, window_h);
-	LOG_DEBUG("PGD: " << dd.x() << "," << dd.y() << "," << dd.width() << "," << dd.height());
 	dd.setPadding(padding);
 	dd.setBackgroundFrame("empty_window");
 	dd.setUpscaleFrame(upscale_dialog_frame);

@@ -232,7 +232,7 @@ Frame::Frame(variant node)
 		}
 		if(tex == nullptr) {
 			tex = KRE::Texture::createTexture(node["image"]);
-			get_palette_texture_cache()[image_] = tex;
+			get_palette_texture_cache()[image_] = tex->clone();
 		}
 		blit_target_.setTexture(tex);
 		for(auto& palette_id : palettes_recognized_) {
@@ -410,15 +410,14 @@ Frame::~Frame()
 
 void Frame::setPalettes(unsigned int palettes)
 {
-	int npalette = 0;
-	while(palettes) {
-		if((palettes & 1) && std::count(palettes_recognized_.begin(), palettes_recognized_.end(), npalette)) {
-			break;
+	int npalette = -1;
+	for(auto palette : palettes_recognized_) {
+		if(palette & palettes) {
+			npalette = palette;
 		}
-		++npalette;
-		palettes >>= 1;
 	}
-	blit_target_.getTexture()->setPalette(npalette);
+	blit_target_.getTexture()->setPalette(palettes == 0 ? -1 : npalette);
+	LOG_DEBUG("Set palette " << npalette << " on " << blit_target_.getTexture()->id());
 
 	/*if(current_palette_ >= 0 && (1 << current_palette_) == palettes) {
 		return;
