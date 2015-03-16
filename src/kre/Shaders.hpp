@@ -54,8 +54,8 @@ namespace KRE
 	{
 	public:
 		enum {
-			INALID_UNIFORM		= -1,
-			INALID_ATTRIBUTE	= -1,
+			INVALID_UNIFORM		= -1,
+			INVALID_ATTRIBUTE	= -1,
 		};
 		explicit ShaderProgram(const std::string& name, const variant& node);
 		virtual ~ShaderProgram();

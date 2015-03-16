@@ -275,7 +275,7 @@ namespace KRE
 			r->getRenderTarget()->apply();
 		}
 
-		if(shader->getMvpUniform() != ShaderProgram::INALID_UNIFORM) {
+		if(shader->getMvpUniform() != ShaderProgram::INVALID_UNIFORM) {
 			if(is_global_model_matrix_valid()) {
 				pvmat = pvmat * get_global_model_matrix() * r->getModelMatrix();
 			} else {
@@ -284,7 +284,7 @@ namespace KRE
 			shader->setUniformValue(shader->getMvpUniform(), glm::value_ptr(pvmat));
 		}
 
-		if(shader->getColorUniform() != ShaderProgram::INALID_UNIFORM) {
+		if(shader->getColorUniform() != ShaderProgram::INVALID_UNIFORM) {
 			if(r->isColorSet()) {
 				shader->setUniformValue(shader->getColorUniform(), r->getColor().asFloatVector());
 			} else {
@@ -323,7 +323,7 @@ namespace KRE
 			BlendEquationScopeOGL be_scope(*as);
 			BlendModeScopeOGL bm_scope(*as);
 
-			if(shader->getColorUniform() != ShaderProgram::INALID_UNIFORM && as->isColorSet()) {
+			if(shader->getColorUniform() != ShaderProgram::INVALID_UNIFORM && as->isColorSet()) {
 				shader->setUniformValue(shader->getColorUniform(), as->getColor().asFloatVector());
 			}
 

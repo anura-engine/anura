@@ -81,7 +81,7 @@ void WeatherParticleSystem::process(const Entity& e)
 
 	// XXX set line width uniform from "info_.line_width" here
 	static auto u_line_width = getShader()->getUniform("line_width");
-	if(u_line_width != KRE::ShaderProgram::INALID_UNIFORM) {
+	if(u_line_width != KRE::ShaderProgram::INVALID_UNIFORM) {
 		getShader()->setUniformValue(u_line_width, info_.line_width);
 	}
 	setColor(info_.color);

@@ -263,8 +263,8 @@ namespace KRE
 		shader->setUniformValue(shader->getMvUniform(), glm::value_ptr(getModelMatrix()));
 		shader->setUniformValue(shader->getPUniform(), glm::value_ptr(mvp_));
 
-		if(shader->getNormalAttribute() == ShaderProgram::INALID_ATTRIBUTE 
-			|| shader->getVertexAttribute() == ShaderProgram::INALID_ATTRIBUTE) {
+		if(shader->getNormalAttribute() == ShaderProgram::INVALID_ATTRIBUTE 
+			|| shader->getVertexAttribute() == ShaderProgram::INVALID_ATTRIBUTE) {
 			return;
 		}
 

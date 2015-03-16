@@ -54,9 +54,9 @@ namespace KRE
 		static void handleClearTextures();
 	private:
 		void createTexture(int n);
-		void updatePaletteRow(SurfacePtr new_palette_surface, int palette_width, const std::vector<glm::u8vec4>& pixels);
+		void updatePaletteRow(int index, SurfacePtr new_palette_surface, int palette_width, const std::vector<glm::u8vec4>& pixels);
 		void rebuild() override;
-		void handleAddPalette(const SurfacePtr& palette) override;
+		void handleAddPalette(int index, const SurfacePtr& palette) override;
 		void handleInit(int n);
 
 		// For YUV family textures we need two more texture id's
@@ -74,8 +74,7 @@ namespace KRE
 				  color_index_map(),
 				  format(GL_RGBA), 
 				  internal_format(GL_RGBA), 
-				  type(GL_UNSIGNED_BYTE),
-				  palette_row_index(0)
+				  type(GL_UNSIGNED_BYTE)
 			{
 			}
 			std::shared_ptr<GLuint> id;
@@ -85,7 +84,6 @@ namespace KRE
 			GLenum format;
 			GLenum internal_format;
 			GLenum type;
-			int palette_row_index;
 		};
 		std::vector<TextureData> texture_data_;
 

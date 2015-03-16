@@ -503,6 +503,8 @@ namespace KRE
 			  u_palette_(-1),
 			  u_palette_width_(-1),
 			  u_palette_map_(-1),
+			  u_mix_palettes_(-1),
+			  u_mix_(-1),
 			  enabled_attribs_()
 		{
 			init(name, vs, fs);
@@ -530,14 +532,14 @@ namespace KRE
 		int ShaderProgram::getAttributeOrDie(const std::string& attr) const
 		{
 			int attr_value = getAttribute(attr);
-			ASSERT_LOG(attr_value != ShaderProgram::INALID_ATTRIBUTE, "Could not find attribute '" << attr << "' in shader: " << name());
+			ASSERT_LOG(attr_value != ShaderProgram::INVALID_ATTRIBUTE, "Could not find attribute '" << attr << "' in shader: " << name());
 			return attr_value;
 		}
 
 		int ShaderProgram::getUniformOrDie(const std::string& attr) const
 		{
 			int uniform_value = getUniform(attr);
-			ASSERT_LOG(uniform_value != ShaderProgram::INALID_UNIFORM, "Could not find uniform '" << attr << "' in shader: " << name());
+			ASSERT_LOG(uniform_value != ShaderProgram::INVALID_UNIFORM, "Could not find uniform '" << attr << "' in shader: " << name());
 			return uniform_value;
 		}
 
@@ -550,12 +552,12 @@ namespace KRE
 			auto alt_name_it = attribute_alternate_name_map_.find(attr);
 			if(alt_name_it == attribute_alternate_name_map_.end()) {
 				//LOG_WARN("Attribute '" << attr << "' not found in alternate names list and is not a name defined in the shader: " << name_);
-				return ShaderProgram::INALID_ATTRIBUTE;
+				return ShaderProgram::INVALID_ATTRIBUTE;
 			}
 			it = attribs_.find(alt_name_it->second);
 			if(it == attribs_.end()) {
 				//LOG_WARN("Attribute \"" << alt_name_it->second << "\" not found in list, looked up from symbol " << attr << " in shader: " << name_);
-				return ShaderProgram::INALID_ATTRIBUTE;
+				return ShaderProgram::INVALID_ATTRIBUTE;
 			}
 			return it->second.location;
 		}
@@ -569,12 +571,12 @@ namespace KRE
 			auto alt_name_it = uniform_alternate_name_map_.find(attr);
 			if(alt_name_it == uniform_alternate_name_map_.end()) {
 				//LOG_WARN("Uniform '" << attr << "' not found in alternate names list and is not a name defined in the shader: " << name_);
-				return ShaderProgram::INALID_UNIFORM;
+				return ShaderProgram::INVALID_UNIFORM;
 			}
 			it = uniforms_.find(alt_name_it->second);
 			if(it == uniforms_.end()) {
 				//LOG_WARN("Uniform \"" << alt_name_it->second << "\" not found in list, looked up from symbol " << attr << " in shader: " << name_);
-				return ShaderProgram::INALID_UNIFORM;
+				return ShaderProgram::INVALID_UNIFORM;
 			}
 			return it->second.location;
 		}
@@ -671,7 +673,7 @@ namespace KRE
 
 		void ShaderProgram::setUniformValue(int uid, const void* value) const
 		{
-			if(uid == ShaderProgram::INALID_UNIFORM) {
+			if(uid == ShaderProgram::INVALID_UNIFORM) {
 				LOG_WARN("Tried to set value for invalid uniform iterator.");
 				return;
 			}
@@ -734,7 +736,7 @@ namespace KRE
 
 		void ShaderProgram::setUniformValue(int uid, const GLint value) const
 		{
-			if(uid == ShaderProgram::INALID_UNIFORM) {
+			if(uid == ShaderProgram::INVALID_UNIFORM) {
 				LOG_WARN("Tried to set value for invalid uniform iterator.");
 				return;
 			}
@@ -758,7 +760,7 @@ namespace KRE
 
 		void ShaderProgram::setUniformValue(int uid, const GLfloat value) const
 		{
-			if(uid == ShaderProgram::INALID_UNIFORM) {
+			if(uid == ShaderProgram::INVALID_UNIFORM) {
 				LOG_WARN("Tried to set value for invalid uniform iterator.");
 				return;
 			}
@@ -777,7 +779,7 @@ namespace KRE
 
 		void ShaderProgram::setUniformValue(int uid, const GLint* value) const
 		{
-			if(uid == ShaderProgram::INALID_UNIFORM) {
+			if(uid == ShaderProgram::INVALID_UNIFORM) {
 				LOG_WARN("Tried to set value for invalid uniform iterator.");
 				return;
 			}
@@ -814,7 +816,7 @@ namespace KRE
 
 		void ShaderProgram::setUniformValue(int uid, const GLfloat* value) const
 		{
-			if(uid == ShaderProgram::INALID_UNIFORM) {
+			if(uid == ShaderProgram::INVALID_UNIFORM) {
 				LOG_WARN("Tried to set value for invalid uniform iterator.");
 				return;
 			}
@@ -858,7 +860,7 @@ namespace KRE
 
 		void ShaderProgram::setUniformFromVariant(int uid, const variant& value) const
 		{
-			if(uid == ShaderProgram::INALID_UNIFORM) {
+			if(uid == ShaderProgram::INVALID_UNIFORM) {
 				LOG_WARN("Tried to set value for invalid uniform iterator.");
 				return;
 			}
@@ -1029,7 +1031,7 @@ namespace KRE
 			u_color_ = getUniform("color");
 			u_line_width_ = getUniform("line_width");
 			u_tex_ = getUniform("tex_map");
-			if(getAttribute("position") != KRE::ShaderProgram::INALID_UNIFORM) {
+			if(getAttribute("position") != KRE::ShaderProgram::INVALID_UNIFORM) {
 				a_vertex_ = getAttribute("position");
 			} else {
 				a_vertex_ = getAttribute("vertex");
@@ -1043,6 +1045,8 @@ namespace KRE
 			u_palette_ = getUniform("palette");
 			u_palette_width_ = getUniform("u_palette_width");
 			u_palette_map_ = getUniform("palette_map");
+			u_mix_palettes_ = getUniform("u_mix_palettes");
+			u_mix_ = getUniform("u_mix");
 		}
 
 		ShaderProgramPtr ShaderProgram::factory(const std::string& name)
@@ -1203,7 +1207,7 @@ namespace KRE
 			if(tex) {
 				// XXX The material may need to set more texture uniforms for multi-texture -- need to do that here.
 				// Or maybe it should be done through the uniform block and override this somehow.
-				if(getTexMapUniform() != ShaderProgram::INALID_UNIFORM) {
+				if(getTexMapUniform() != ShaderProgram::INVALID_UNIFORM) {
 					setUniformValue(getTexMapUniform(), 0);
 				}
 
@@ -1211,20 +1215,31 @@ namespace KRE
 
 				bool enable_palette = tex->isPaletteized();
 				if(enable_palette) {
-					if(u_palette_map_ != ShaderProgram::INALID_UNIFORM) {
+					if(u_palette_map_ != ShaderProgram::INVALID_UNIFORM) {
 						setUniformValue(u_palette_map_, 1);
 					} else {
 						enable_palette = false;
 					}
-					if(u_palette_ != ShaderProgram::INALID_UNIFORM) {
+					if(u_palette_ != ShaderProgram::INVALID_UNIFORM) {
 						// XXX replace tex->getSurfaces()[1]->height() with tex->getNormalizedCoordH(1, 1);
 						float h = static_cast<float>(tex->getSurfaces()[1]->height() - 1);
-						const float palette_sel = static_cast<float>(tex->getPalette()) / h;
+						float palette_sel[2];
+						palette_sel[0] = static_cast<float>(tex->getPalette()) / h;
+						palette_sel[1] = 0;
+						if(u_mix_palettes_ != ShaderProgram::INVALID_UNIFORM && u_mix_ != ShaderProgram::INVALID_UNIFORM) {
+							bool do_mix = false;
+							if(tex->shouldMixPalettes()) {
+								palette_sel[1] = static_cast<float>(tex->getPalette(1)) / h;
+								setUniformValue(u_mix_, tex->getMixingRatio()); 
+								do_mix = true;
+							}
+							setUniformValue(u_mix_palettes_, do_mix);
+						}
 						setUniformValue(u_palette_, palette_sel); 
 					} else {
 						enable_palette = false;
 					}
-					if(u_palette_width_ != ShaderProgram::INALID_UNIFORM) {
+					if(u_palette_width_ != ShaderProgram::INVALID_UNIFORM) {
 						// XXX this needs adjusted for pot texture width.
 						setUniformValue(u_palette_width_, static_cast<float>(tex->getSurfaces()[1]->width()));
 					} else {
@@ -1232,7 +1247,7 @@ namespace KRE
 					}
 				}
 
-				if(u_enable_palette_lookup_ != ShaderProgram::INALID_UNIFORM) {
+				if(u_enable_palette_lookup_ != ShaderProgram::INVALID_UNIFORM) {
 					setUniformValue(u_enable_palette_lookup_, enable_palette);
 				}
 			}

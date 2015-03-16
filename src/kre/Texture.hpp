@@ -116,7 +116,7 @@ namespace KRE
 		static TexturePtr createTextureArray(int count, int width, int height, PixelFormat::PF fmt, TextureType type);
 		static TexturePtr createTextureArray(const std::vector<SurfacePtr>& surfaces, const variant& node);
 
-		void addPalette(const SurfacePtr& palette);
+		void addPalette(int index, const SurfacePtr& palette);
 
 		int getTextureCount() const { return static_cast<int>(texture_params_.size()); }
 		const SurfacePtr& getFrontSurface() const { return texture_params_.front().surface; }
@@ -204,9 +204,13 @@ namespace KRE
 
 		bool isPaletteized() const { return is_paletteized_; }
 		void setPalette(int n);
-		int getPalette() const { return palette_; }
-		int getMaxPalettes() const { return max_palettes_; }
+		void setPaletteMixing(int n1, int n2, float ratio);
+		void clearPaletteMixing();
+		int getPalette(int n=0) const { return n < 2 ? palette_[n] : palette_[0]; }
 		Color mapPaletteColor(const Color& color, int palette);
+		float getMixingRatio() const { return mix_ratio_; }
+		bool shouldMixPalettes() const { return mix_palettes_; }
+		bool hasPaletteAt(int n) { return n < static_cast<int>(valid_palettes_indices_.size()) ? valid_palettes_indices_[n] : false; } 
 
 		virtual TexturePtr clone() = 0;
 
@@ -236,13 +240,12 @@ namespace KRE
 			int depth,
 			PixelFormat::PF fmt, 
 			TextureType type);
-		void setMaxPalettes(int n);
 		void addSurface(SurfacePtr surf);
 		void replaceSurface(int n, SurfacePtr surf);
 	private:
 		Texture();
 		virtual void rebuild() = 0;
-		virtual void handleAddPalette(const SurfacePtr& palette) = 0;
+		virtual void handleAddPalette(int index, const SurfacePtr& palette) = 0;
 
 		struct TextureParams {
 			TextureParams()
@@ -300,8 +303,10 @@ namespace KRE
 		typedef std::vector<TextureParams>::iterator texture_params_iterator;
 
 		bool is_paletteized_;
-		int palette_;
-		int max_palettes_;
+		int palette_[2];
+		std::vector<bool> valid_palettes_indices_;
+		float mix_ratio_;
+		bool mix_palettes_;
 
 		void initFromVariant(texture_params_iterator tp, const variant& node);
 		void internalInit(texture_params_iterator tp);

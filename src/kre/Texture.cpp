@@ -39,9 +39,11 @@ namespace KRE
 {
 	Texture::Texture(const variant& node, const std::vector<SurfacePtr>& surfaces)
 		: is_paletteized_(false),
-		  palette_(0),
-		  max_palettes_(0)
+		  valid_palettes_indices_(64),
+		  mix_ratio_(0.0f),
+		  mix_palettes_(false)
 	{
+		palette_[0] = palette_[1] = 0;
 		if(node.is_list()) {
 			if(surfaces.size() > 0) {
 				ASSERT_LOG(surfaces.size() == node.num_elements(), "Number of items in node list must match number of surfaces.");
@@ -99,9 +101,11 @@ namespace KRE
 
 	Texture::Texture(const std::vector<SurfacePtr>& surfaces, TextureType type, int mipmap_levels)
 		: is_paletteized_(false),
-		  palette_(0),
-		  max_palettes_(0)
+		  valid_palettes_indices_(64),
+		  mix_ratio_(0.0f),
+		  mix_palettes_(false)
 	{
+		palette_[0] = palette_[1] = 0;
 		texture_params_.reserve(surfaces.size());
 		for(auto s : surfaces) {
 			texture_params_.emplace_back(TextureParams());
@@ -121,9 +125,11 @@ namespace KRE
 		PixelFormat::PF fmt, 
 		TextureType type)
 		: is_paletteized_(false),
-		  palette_(0),
-		  max_palettes_(0)
+		  valid_palettes_indices_(64),
+		  mix_ratio_(0.0f),
+		  mix_palettes_(false)
 	{
+		palette_[0] = palette_[1] = 0;
 		texture_params_.resize(1);
 		texture_params_[0].surface = Surface::create(width, height, fmt);
 		texture_params_[0].surface_width = width;
@@ -256,6 +262,8 @@ namespace KRE
 
 	void Texture::internalInit(texture_params_iterator tp)
 	{
+		std::fill(valid_palettes_indices_.begin(), valid_palettes_indices_.end(), false);
+
 		for(auto& am : tp->address_mode) {
 			am = AddressMode::CLAMP;
 		}
@@ -421,7 +429,7 @@ namespace KRE
 		}
 	}
 
-	void Texture::addPalette(const SurfacePtr& palette)
+	void Texture::addPalette(int index, const SurfacePtr& palette)
 	{
 		if(palette == nullptr) {
 			LOG_WARN("Ignoring request to add empty palette surface.");
@@ -429,23 +437,31 @@ namespace KRE
 		}
 		ASSERT_LOG(static_cast<int>(texture_params_.size()) == 1 && !is_paletteized_ || is_paletteized_ && static_cast<int>(texture_params_.size()) == 2, "Currently we only support converting textures to palette versions that have one texture. may life in future.");
 		is_paletteized_ = true;
-		handleAddPalette(palette);
+		handleAddPalette(index+1, palette);
 		LOG_DEBUG("Adding palette '" << palette->getName() << "' to texture id: " << id());
-	}
-
-	void Texture::setMaxPalettes(int n)
-	{
-		max_palettes_ = n;
-		if(palette_ >= max_palettes_) {
-			LOG_WARN("maximum palettes for texture changed in a way that invalidates current palette: " << palette_ << " >= " << max_palettes_ << ". Resetting palette index.");
-			palette_ = 0;
+		if(index+1 > static_cast<int>(valid_palettes_indices_.size())) {
+			valid_palettes_indices_.resize(index+2);
 		}
+		valid_palettes_indices_[index+1] = true;
 	}
 
 	void Texture::setPalette(int n)
 	{ 
-		ASSERT_LOG(n < max_palettes_, "Value to set palette to exceeds maximum: " << n << " >= " << max_palettes_);
-		palette_ = n;
+		ASSERT_LOG(n < static_cast<int>(valid_palettes_indices_.size()) && valid_palettes_indices_[n], "Value to set palette is invalid: " << n);
+		palette_[0] = n;
+	}
+
+	void Texture::setPaletteMixing(int n1, int n2, float ratio)
+	{
+		palette_[0] = n1;
+		palette_[1] = n2;
+		mix_ratio_ = ratio;
+		mix_palettes_ = true;
+	}
+
+	void Texture::clearPaletteMixing()
+	{
+		mix_palettes_ = false;
 	}
 
 	TexturePtr Texture::createTexture(const variant& node)
@@ -541,7 +557,7 @@ namespace KRE
 		if(!isPaletteized()) {
 			return color;
 		}
-		if(palette >= getMaxPalettes()) {
+		if(palette >= static_cast<int>(valid_palettes_indices_.size()) || !valid_palettes_indices_[palette]) {
 			return color;
 		}
 		ASSERT_LOG(texture_params_.size() == 2, "Incorrect number of surfaces in texture.");

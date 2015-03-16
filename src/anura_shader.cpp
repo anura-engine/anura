@@ -206,14 +206,14 @@ namespace graphics
 
 	AnuraShader::AnuraShader(const std::string& name)
 		: shader_(KRE::ShaderProgram::getProgram(name)),
-		  u_anura_discard_(KRE::ShaderProgram::INALID_UNIFORM),
-		  u_anura_tex_map_(KRE::ShaderProgram::INALID_UNIFORM),
-		  u_anura_mvp_matrix_(KRE::ShaderProgram::INALID_UNIFORM),
-		  u_anura_sprite_area_(KRE::ShaderProgram::INALID_UNIFORM),
-		  u_anura_draw_area_(KRE::ShaderProgram::INALID_UNIFORM),
-		  u_anura_cycle_(KRE::ShaderProgram::INALID_UNIFORM),
-		  u_anura_color_(KRE::ShaderProgram::INALID_UNIFORM),
-		  u_anura_point_size_(KRE::ShaderProgram::INALID_UNIFORM),
+		  u_anura_discard_(KRE::ShaderProgram::INVALID_UNIFORM),
+		  u_anura_tex_map_(KRE::ShaderProgram::INVALID_UNIFORM),
+		  u_anura_mvp_matrix_(KRE::ShaderProgram::INVALID_UNIFORM),
+		  u_anura_sprite_area_(KRE::ShaderProgram::INVALID_UNIFORM),
+		  u_anura_draw_area_(KRE::ShaderProgram::INVALID_UNIFORM),
+		  u_anura_cycle_(KRE::ShaderProgram::INVALID_UNIFORM),
+		  u_anura_color_(KRE::ShaderProgram::INVALID_UNIFORM),
+		  u_anura_point_size_(KRE::ShaderProgram::INVALID_UNIFORM),
 		  discard_(false),
 		  tex_map_(0),
 		  mvp_matrix_(1.0f),
@@ -233,14 +233,14 @@ namespace graphics
 
 	AnuraShader::AnuraShader(const std::string& name, const variant& node)
 		: shader_(),
-		  u_anura_discard_(KRE::ShaderProgram::INALID_UNIFORM),
-		  u_anura_tex_map_(KRE::ShaderProgram::INALID_UNIFORM),
-		  u_anura_mvp_matrix_(KRE::ShaderProgram::INALID_UNIFORM),
-		  u_anura_sprite_area_(KRE::ShaderProgram::INALID_UNIFORM),
-		  u_anura_draw_area_(KRE::ShaderProgram::INALID_UNIFORM),
-		  u_anura_cycle_(KRE::ShaderProgram::INALID_UNIFORM),
-		  u_anura_color_(KRE::ShaderProgram::INALID_UNIFORM),
-		  u_anura_point_size_(KRE::ShaderProgram::INALID_UNIFORM),
+		  u_anura_discard_(KRE::ShaderProgram::INVALID_UNIFORM),
+		  u_anura_tex_map_(KRE::ShaderProgram::INVALID_UNIFORM),
+		  u_anura_mvp_matrix_(KRE::ShaderProgram::INVALID_UNIFORM),
+		  u_anura_sprite_area_(KRE::ShaderProgram::INVALID_UNIFORM),
+		  u_anura_draw_area_(KRE::ShaderProgram::INVALID_UNIFORM),
+		  u_anura_cycle_(KRE::ShaderProgram::INVALID_UNIFORM),
+		  u_anura_color_(KRE::ShaderProgram::INVALID_UNIFORM),
+		  u_anura_point_size_(KRE::ShaderProgram::INVALID_UNIFORM),
 		  discard_(false),
 		  tex_map_(0),
 		  mvp_matrix_(1.0f),
@@ -261,14 +261,14 @@ namespace graphics
 
 	AnuraShader::AnuraShader(const AnuraShader& o) 
 		: shader_(o.shader_),
-		  u_anura_discard_(KRE::ShaderProgram::INALID_UNIFORM),
-		  u_anura_tex_map_(KRE::ShaderProgram::INALID_UNIFORM),
-		  u_anura_mvp_matrix_(KRE::ShaderProgram::INALID_UNIFORM),
-		  u_anura_sprite_area_(KRE::ShaderProgram::INALID_UNIFORM),
-		  u_anura_draw_area_(KRE::ShaderProgram::INALID_UNIFORM),
-		  u_anura_cycle_(KRE::ShaderProgram::INALID_UNIFORM),
-		  u_anura_color_(KRE::ShaderProgram::INALID_UNIFORM),
-		  u_anura_point_size_(KRE::ShaderProgram::INALID_UNIFORM),
+		  u_anura_discard_(KRE::ShaderProgram::INVALID_UNIFORM),
+		  u_anura_tex_map_(KRE::ShaderProgram::INVALID_UNIFORM),
+		  u_anura_mvp_matrix_(KRE::ShaderProgram::INVALID_UNIFORM),
+		  u_anura_sprite_area_(KRE::ShaderProgram::INVALID_UNIFORM),
+		  u_anura_draw_area_(KRE::ShaderProgram::INVALID_UNIFORM),
+		  u_anura_cycle_(KRE::ShaderProgram::INVALID_UNIFORM),
+		  u_anura_color_(KRE::ShaderProgram::INVALID_UNIFORM),
+		  u_anura_point_size_(KRE::ShaderProgram::INVALID_UNIFORM),
 		  discard_(o.discard_),
 		  tex_map_(o.tex_map_),
 		  mvp_matrix_(o.mvp_matrix_),
@@ -374,29 +374,29 @@ namespace graphics
 
 	void AnuraShader::setUniformsForDraw()
 	{
-		if(u_anura_discard_ != KRE::ShaderProgram::INALID_UNIFORM) {
+		if(u_anura_discard_ != KRE::ShaderProgram::INVALID_UNIFORM) {
 			shader_->setUniformValue(u_anura_discard_, static_cast<int>(discard_));
 		}
-		if(u_anura_tex_map_ != KRE::ShaderProgram::INALID_UNIFORM) {
+		if(u_anura_tex_map_ != KRE::ShaderProgram::INVALID_UNIFORM) {
 			shader_->setUniformValue(u_anura_tex_map_, tex_map_);
 		}
-		//if(u_anura_mvp_matrix_ != KRE::ShaderProgram::INALID_UNIFORM) {
+		//if(u_anura_mvp_matrix_ != KRE::ShaderProgram::INVALID_UNIFORM) {
 		//	shader_->setUniformValue(u_anura_mvp_matrix_, glm::value_ptr(mvp_matrix_));
 		//}
-		if(u_anura_sprite_area_ != KRE::ShaderProgram::INALID_UNIFORM) {
+		if(u_anura_sprite_area_ != KRE::ShaderProgram::INVALID_UNIFORM) {
 			//LOG_DEBUG("'" << getName() << "' set sprite area: " << sprite_area_[0] << "," << sprite_area_[1] << "," << sprite_area_[2] << "," << sprite_area_[3]);
 			shader_->setUniformValue(u_anura_sprite_area_, glm::value_ptr(sprite_area_));
 		}
-		if(u_anura_draw_area_ != KRE::ShaderProgram::INALID_UNIFORM) {
+		if(u_anura_draw_area_ != KRE::ShaderProgram::INVALID_UNIFORM) {
 			shader_->setUniformValue(u_anura_draw_area_, glm::value_ptr(draw_area_));
 		}
-		if(u_anura_cycle_ != KRE::ShaderProgram::INALID_UNIFORM) {
+		if(u_anura_cycle_ != KRE::ShaderProgram::INVALID_UNIFORM) {
 			shader_->setUniformValue(u_anura_cycle_, cycle_);
 		}
-		if(u_anura_color_ != KRE::ShaderProgram::INALID_UNIFORM) {
+		if(u_anura_color_ != KRE::ShaderProgram::INVALID_UNIFORM) {
 			shader_->setUniformValue(u_anura_color_, glm::value_ptr(color_));
 		}
-		if(u_anura_point_size_ != KRE::ShaderProgram::INALID_UNIFORM) {
+		if(u_anura_point_size_ != KRE::ShaderProgram::INVALID_UNIFORM) {
 			shader_->setUniformValue(u_anura_point_size_, point_size_);
 		}
 
@@ -405,7 +405,7 @@ namespace graphics
 		}
 		
 		for(auto& u : uniforms_to_set_) {
-			if(u.first != KRE::ShaderProgram::INALID_UNIFORM) {
+			if(u.first != KRE::ShaderProgram::INVALID_UNIFORM) {
 				shader_->setUniformFromVariant(u.first, u.second);
 				//LOG_DEBUG("'" << getName() << "' set " << u.first << " : " << u.second.to_debug_string());
 			}
@@ -516,7 +516,7 @@ namespace graphics
 
 	AnuraShader::DrawCommand::DrawCommand() 
 		: name(),
-		  target(KRE::ShaderProgram::INALID_UNIFORM), 
+		  target(KRE::ShaderProgram::INVALID_UNIFORM), 
 		  increment(false),
 		  value()
 	{
@@ -700,7 +700,7 @@ namespace graphics
 		attr->addAttributeDesc(desc);
 		getShader()->configureAttribute(attr);
 		auto loc = attr->getAttrDesc().back().getLocation();
-		ASSERT_LOG(loc != ShaderProgram::INALID_ATTRIBUTE, "No attribute with name '" << name << "' in shader.");
+		ASSERT_LOG(loc != ShaderProgram::INVALID_ATTRIBUTE, "No attribute with name '" << name << "' in shader.");
 		getAttributeSet().back()->addAttribute(attr);
 		attrs_[loc] = attr;
 		LOG_DEBUG("Added attribute at " << loc << " : " << name << "  ; " << this);

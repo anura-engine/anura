@@ -27,6 +27,7 @@
 #include <boost/bimap.hpp>
 
 #include "asserts.hpp"
+#include "json_parser.hpp"
 #include "module.hpp"
 #include "surface_cache.hpp"
 #include "surface_palette.hpp"
@@ -38,9 +39,32 @@ namespace graphics
 		typedef boost::bimap<std::string,int> palette_map_type;
 		typedef palette_map_type::value_type palette_pair;
 
+		void read_all_palettes(palette_map_type& pmap)
+		{
+			try {
+				variant v = json::parse_from_file(module::map_file("data/palettes.cfg"));
+				int id = 0;
+				if(v.is_map()) {
+					auto m = v.as_map();
+					for(auto& p : m) {
+						if(p.second.is_list()) {
+							auto palette_names = p.second.as_list_string();
+							for(auto& ps : palette_names) {
+								pmap.insert(palette_pair(ps, id++));
+							}
+						}
+					}
+				}
+			} catch(json::ParseError&) {
+			}
+		}
+
 		palette_map_type& get_palette_map()
 		{
 			static palette_map_type res;
+			if(res.empty()) {
+				read_all_palettes(res);
+			}
 			return res;
 		}
 	}

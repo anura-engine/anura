@@ -403,7 +403,7 @@ LevelObject::LevelObject(variant node, const char* id)
 			int id = 0;
 			while(p != 0) {
 				if(p & 1) {
-					t_->addPalette(graphics::get_palette_surface(id));
+					t_->addPalette(id, graphics::get_palette_surface(id));
 				}
 				p >>= 1;
 				++id;

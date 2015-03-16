@@ -167,6 +167,8 @@ namespace KRE
 			int u_palette_;
 			int u_palette_width_;
 			int u_palette_map_;
+			int u_mix_palettes_;
+			int u_mix_;
 
 			std::vector<GLuint> enabled_attribs_;
 		};

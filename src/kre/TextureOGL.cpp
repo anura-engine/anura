@@ -30,7 +30,7 @@ namespace KRE
 {
 	namespace
 	{
-		const int maximum_palette_variations = 32;
+		const int maximum_palette_variations = 48;
 
 		GLenum GetGLAddressMode(Texture::AddressMode am)
 		{
@@ -247,22 +247,20 @@ namespace KRE
 		}
 	}
 
-	void OpenGLTexture::updatePaletteRow(SurfacePtr new_palette_surface, int palette_width, const std::vector<glm::u8vec4>& pixels)
+	void OpenGLTexture::updatePaletteRow(int index, SurfacePtr new_palette_surface, int palette_width, const std::vector<glm::u8vec4>& pixels)
 	{
 		// write altered pixel data to texture.
-		update(1, 0, texture_data_[0].palette_row_index, palette_width, 1, &pixels[0]);
+		update(1, 0, index, palette_width, 1, &pixels[0]);
 		// write altered pixel data to surface.
 		unsigned char* px = reinterpret_cast<unsigned char*>(new_palette_surface->pixelsWriteable());
-		memcpy(&px[texture_data_[0].palette_row_index * new_palette_surface->rowPitch()], &pixels[0], pixels.size() * sizeof(glm::u8vec4));
-
-		// Update the palette row index so it points to the next free location.
-		++texture_data_[0].palette_row_index;
+		memcpy(&px[index * new_palette_surface->rowPitch()], &pixels[0], pixels.size() * sizeof(glm::u8vec4));
 	}
 
-	void OpenGLTexture::handleAddPalette(const SurfacePtr& palette)
+	void OpenGLTexture::handleAddPalette(int index, const SurfacePtr& palette)
 	{
 		//profile::manager pman("handleAddPalette");
 		ASSERT_LOG(is_yuv_planar_ == false, "Can't create a palette for a YUV surface.");
+		ASSERT_LOG(index < maximum_palette_variations, "index of (" << index << ") exceeds the maximum soft palette limit: " << maximum_palette_variations);
 
 		if(PixelFormat::isIndexedFormat(getFrontSurface()->getPixelFormat()->getFormat())) {
 			// Is already an indexed format.
@@ -328,7 +326,6 @@ namespace KRE
 
 		if(texture_data_.size() > 1) {
 			// Already have a palette texture we can use.
-			ASSERT_LOG(texture_data_[0].palette_row_index + 1 < maximum_palette_variations, "Only support a maximum of " << maximum_palette_variations << " palettes per texture.");
 			new_palette_surface = getSurface(1);
 			ASSERT_LOG(new_palette_surface != nullptr, "There was no palette surface found, when there should have been.");
 		} else {
@@ -346,7 +343,7 @@ namespace KRE
 			for(auto& color : texture_data_[0].palette) {
 				new_pixels.emplace_back((color >> 24) & 0xff, (color >> 16) & 0xff, (color >> 8) & 0xff, color & 0xff);
 			}
-			updatePaletteRow(new_palette_surface, palette_width, new_pixels);
+			updatePaletteRow(0, new_palette_surface, palette_width, new_pixels);
 		}
 
 		// Create altered pixel data and update the surface/texture.
@@ -393,8 +390,7 @@ namespace KRE
 		}
 		//LOG_INFO("Mapped " << colors_mapped << " out of " << palette_width << " colors from palette");
 
-		updatePaletteRow(new_palette_surface, palette_width, new_pixels);
-		setMaxPalettes(texture_data_[0].palette_row_index);
+		updatePaletteRow(index, new_palette_surface, palette_width, new_pixels);
 	}
 
 	void OpenGLTexture::createTexture(int n)

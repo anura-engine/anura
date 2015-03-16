@@ -161,7 +161,7 @@ Background::Background(variant node, int palette)
 
 		bg.texture = KRE::Texture::createTexture(bg.image);
 		if(palette_ != -1) {
-			bg.texture->addPalette(graphics::get_palette_surface(palette_));
+			bg.texture->addPalette(palette_, graphics::get_palette_surface(palette_));
 		}
 		bg.setTexture(bg.texture);
 

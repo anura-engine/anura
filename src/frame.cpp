@@ -59,18 +59,7 @@ namespace
 
 	static const glm::vec3 z_axis(0, 0, 1.0f);
 
-	struct PaletteTextureKey
-	{
-		std::string name;
-		int palettes;
-	};
-	
-	bool operator<(const PaletteTextureKey& lhs, const PaletteTextureKey& rhs) 
-	{
-		return lhs.name == rhs.name ? lhs.palettes < rhs.palettes : lhs.name < rhs.name;
-	}
-
-	typedef std::map<PaletteTextureKey, std::weak_ptr<KRE::Texture>> palette_texture_cache_map;
+	typedef std::map<std::string, std::weak_ptr<KRE::Texture>> palette_texture_cache_map;
 	palette_texture_cache_map& get_palette_texture_cache()
 	{
 		static palette_texture_cache_map res;
@@ -232,54 +221,40 @@ Frame::Frame(variant node)
 	for(const std::string& p : palettes) {
 		int id = graphics::get_palette_id(p);
 		palettes_recognized_.emplace_back(id);
-		if(id >= 0) {
-			palettes_bitmap |= 1 << id;
-		}
 	}
 
-	/*if(palettes_bitmap > 0) {
-		PaletteTextureKey key = { image_, palettes_bitmap };
-		auto it = get_palette_texture_cache().find(key);
-		bool create_palette = true;
+	if(!palettes_recognized_.empty()) {
+		ASSERT_LOG(!image_.empty(), "palettes are set but image is empty.");
+		auto it = get_palette_texture_cache().find(image_);
+		KRE::TexturePtr tex = nullptr;
 		if(it != get_palette_texture_cache().end()) {
-			auto t = it->second.lock();
-			if(t) {
-				blit_target_.setTexture(t);
-				create_palette = false;
+			tex = it->second.lock();
+		}
+		if(tex == nullptr) {
+			tex = KRE::Texture::createTexture(node["image"]);
+			get_palette_texture_cache()[image_] = tex;
+		}
+		blit_target_.setTexture(tex);
+		for(auto& palette_id : palettes_recognized_) {
+			if(!tex->hasPaletteAt(palette_id)) {
+				tex->addPalette(palette_id, graphics::get_palette_surface(palette_id));
 			}
 		}
-		if(create_palette) {
-			if(node.has_key("fbo")) {
-				blit_target_.setTexture(node["fbo"].convert_to<TextureObject>()->texture());
-			} else if(node.has_key("image")) {
-				blit_target_.setTexture(KRE::Texture::createTexture(node["image"]));
-			}
-		}
-
-		int p = palettes_bitmap;
-		int id = 0;
-		while(p != 0) {
-			if(p & 1) {
-				blit_target_.getTexture()->addPalette(graphics::get_palette_surface(id));
-			}
-			p >>= 1;
-			++id;
-		}
-		get_palette_texture_cache()[key] = blit_target_.getTexture();
-	} else {*/
+	} else {
 		if(node.has_key("fbo")) {
 			blit_target_.setTexture(node["fbo"].convert_to<TextureObject>()->texture());
 			blit_target_.setBlendMode(KRE::BlendModeConstants::BM_ONE, KRE::BlendModeConstants::BM_ONE_MINUS_SRC_ALPHA);
 		} else if(node.has_key("image")) {
 			blit_target_.setTexture(KRE::Texture::createTexture(node["image"]));
 		}
-	//}
-	/*if(palettes_recognized_.empty() == false) {
+	}
+
+	if(palettes_recognized_.empty() == false) {
 		palette_frames().insert(this);
 		if(current_palette_mask) {
 			setPalettes(current_palette_mask);
 		}
-	}*/
+	}
 
 	std::vector<std::string> hit_frames = util::split(node["hit_frames"].as_string_default());
 	for(const std::string& f : hit_frames) {
@@ -435,6 +410,16 @@ Frame::~Frame()
 
 void Frame::setPalettes(unsigned int palettes)
 {
+	int npalette = 0;
+	while(palettes) {
+		if((palettes & 1) && std::count(palettes_recognized_.begin(), palettes_recognized_.end(), npalette)) {
+			break;
+		}
+		++npalette;
+		palettes >>= 1;
+	}
+	blit_target_.getTexture()->setPalette(npalette);
+
 	/*if(current_palette_ >= 0 && (1 << current_palette_) == palettes) {
 		return;
 	}
@@ -467,10 +452,10 @@ void Frame::setPalettes(unsigned int palettes)
 
 void Frame::setColorPalette(unsigned int palettes)
 {
-	/*current_palette_mask = palettes;
+	current_palette_mask = palettes;
 	for(auto i : palette_frames()) {
 		i->setPalettes(palettes);
-	}*/
+	}
 }
 
 void Frame::setImageAsSolid()
