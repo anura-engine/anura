@@ -456,6 +456,7 @@ namespace KRE
 		} else {
 			palette_[0] = 0;
 		}
+		//LOG_DEBUG("Setting palette to " << index << ":" << palette_[0]);
 	}
 
 	bool Texture::hasPaletteAt(int index) const

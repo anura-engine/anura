@@ -30,6 +30,19 @@ void RectRenderable::update(const rect& r, const KRE::Color& color)
 	r_->update(&vc);
 }
 
+void RectRenderable::update(int x, int y, int w, int h, const KRE::Color& color)
+{
+	setColor(color);
+
+	std::vector<glm::u16vec2> vc;
+	vc.emplace_back(glm::u16vec2(x, y));
+	vc.emplace_back(glm::u16vec2(x + w, y));
+	vc.emplace_back(glm::u16vec2(x, y + h));
+	vc.emplace_back(glm::u16vec2(x + w, y + h));
+
+	r_->update(&vc);
+}
+
 void RectRenderable::update(const std::vector<glm::u16vec2>& rs, const KRE::Color& color)
 {
 	setColor(color);

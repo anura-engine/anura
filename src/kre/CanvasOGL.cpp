@@ -51,6 +51,7 @@ namespace KRE
 	void CanvasOGL::handleDimensionsChanged()
 	{
 		mvp_ = glm::ortho(0.0f, static_cast<float>(width()), static_cast<float>(height()), 0.0f);
+		LOG_DEBUG("canvas dimesions changed: " << width() << " x " << height());
 	}
 
 	void CanvasOGL::blitTexture(const TexturePtr& texture, const rect& src, float rotation, const rect& dst, const Color& color, CanvasBlitFlags flags) const

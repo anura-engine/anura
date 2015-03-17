@@ -609,7 +609,7 @@ namespace
 			accel_y(node["accel_y"].as_int()),
 			velocity_x_rand(node["velocity_x_rand"].as_int()),
 			velocity_y_rand(node["velocity_y_rand"].as_int()),
-			dot_size(node["dot_size"].as_int(1)*(preferences::double_scale() ? 2 : 1)),
+			dot_size(node["dot_size"].as_int(1)),
 			dot_rounded(node["dot_rounded"].as_bool(false)),
 			time_to_live(node["time_to_live"].as_int()),
 			time_to_live_max(node["time_to_live_rand"].as_int() + time_to_live) {

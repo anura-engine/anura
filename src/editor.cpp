@@ -1020,14 +1020,14 @@ EditorResolutionManager::EditorResolutionManager(int xres, int yres)
 			} else {
 				editor_x_resolution = 1200; //KRE::WindowManager::getMainWindow()->width() + EDITOR_SIDEBAR_WIDTH + editor_dialogs::LAYERS_DIALOG_WIDTH;
 			}
-			editor_y_resolution = KRE::WindowManager::getMainWindow()->height() + EDITOR_MENUBAR_HEIGHT + 100;
+			editor_y_resolution = KRE::WindowManager::getMainWindow()->height() + EDITOR_MENUBAR_HEIGHT;
 		}
 	}
 
 	if(++editor_resolution_manager_count == 1) {
 		LOG_INFO("EDITOR RESOLUTION: " << editor_x_resolution << "," << editor_y_resolution);
 		KRE::WindowManager::getMainWindow()->setWindowSize(editor_x_resolution, editor_y_resolution);
-		graphics::GameScreen::get().setLocation(0, EDITOR_MENUBAR_HEIGHT + 100);
+		graphics::GameScreen::get().setLocation(0, EDITOR_MENUBAR_HEIGHT);
 	}
 }
 

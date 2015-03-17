@@ -22,6 +22,7 @@
        distribution.
 */
 
+#include "CameraObject.hpp"
 #include "WindowManager.hpp"
 
 #include "asserts.hpp"
@@ -35,7 +36,8 @@ namespace graphics
 		  virtual_width_(0),
 		  virtual_height_(0),
 		  x_(0),
-		  y_(0)
+		  y_(0),
+		  screen_clip_()
 	{
 	}
 
@@ -79,7 +81,28 @@ namespace graphics
 
 	void GameScreen::setupForDraw(KRE::WindowPtr wnd)
 	{
-		wnd->setViewPort(x_, y_, width_, height_);
+		auto orthocam = std::make_shared<KRE::Camera>("orthocam", 0, width_, 0, height_);
+		KRE::DisplayDevice::getCurrent()->setDefaultCamera(orthocam);
+		screen_clip_.reset(new KRE::Scissor::Manager(rect(x_, y_, width_, height_)));
+		wnd->setViewPort(0, 0, width_, height_);
+	}
+
+	void GameScreen::cleanupAfterDraw(KRE::WindowPtr wnd)
+	{
+		screen_clip_.reset();
+		wnd->setViewPort(0, 0, wnd->width(), wnd->height());
+		auto orthocam = std::make_shared<KRE::Camera>("orthocam", 0, wnd->width(), 0, wnd->height());
+		KRE::DisplayDevice::getCurrent()->setDefaultCamera(orthocam);
+	}
+
+	GameScreen::Manager::Manager(KRE::WindowPtr wnd)
+		: wnd_(wnd)
+	{
+		GameScreen::get().setupForDraw(wnd_);
+	}
+
+	GameScreen::Manager::~Manager()
+	{
+		GameScreen::get().cleanupAfterDraw(wnd_);
 	}
 }
-

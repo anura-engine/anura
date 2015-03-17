@@ -249,14 +249,14 @@ int load_module(const std::string& mod, std::vector<std::string>* argv)
 
 void set_alpha_masks()
 {
-	LOG_DEBUG("SETTING ALPHA MASKS");
+	LOG_INFO("Setting Alpha Masks:");
 	using namespace KRE;
 	std::vector<Color> alpha_colors;
 
 	auto surf = Surface::create("alpha-colors.png");
 	surf->iterateOverSurface([&alpha_colors](int x, int y, int r, int g, int b, int a) {
 		alpha_colors.emplace_back(r, g, b);
-		LOG_DEBUG("Added alpha color: (" << r << "," << g << "," << b << ")");	
+		LOG_INFO("Added alpha color: (" << r << "," << g << "," << b << ")");	
 	});
 
 	Surface::setAlphaFilter([=](int r, int g, int b) {
@@ -775,9 +775,16 @@ int main(int argcount, char* argvec[])
 		main_wnd->setWindowSize(width, height);
 	}
 
+	int vw = preferences::requested_virtual_window_width() > 0 
+		? preferences::requested_virtual_window_width() 
+		: main_wnd->width();
+	int vh = preferences::requested_virtual_window_height() > 0 
+		? preferences::requested_virtual_window_height() 
+		: main_wnd->height();
+
 	wm.createWindow(main_wnd);
 	graphics::GameScreen::get().setDimensions(main_wnd->width(), main_wnd->height());
-	graphics::GameScreen::get().setVirtualDimensions(main_wnd->width(), main_wnd->height());
+	graphics::GameScreen::get().setVirtualDimensions(vw, vh);
 	//main_wnd->setWindowIcon(module::map_file("images/window-icon.png"));
 
 	auto canvas = Canvas::getInstance();

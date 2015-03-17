@@ -24,9 +24,11 @@
 #include <math.h>
 #include <climits>
 
+#include "CameraObject.hpp"
 #include "Canvas.hpp"
 #include "Font.hpp"
 #include "DisplayDevice.hpp"
+#include "ModelMatrixScope.hpp"
 #include "WindowManager.hpp"
 
 #include "background_task_pool.hpp"
@@ -1477,6 +1479,8 @@ bool LevelRunner::play_cycle()
 		lvl_->process_draw();
 
 		if(should_draw) {
+			wnd->setClearColor(KRE::Color::colorPink());
+			wnd->clear(KRE::ClearFlags::ALL);
 #ifndef NO_EDITOR
 			const Uint8 *key = SDL_GetKeyboardState(nullptr);
 			if(editor_ && key[SDL_SCANCODE_L] 
@@ -1512,9 +1516,6 @@ bool LevelRunner::play_cycle()
 			}
 
 			if(editor_) {
-				// XXX need a scope?
-				auto wnd = KRE::WindowManager::getMainWindow();
-				wnd->setViewPort(0, 0, wnd->width(), wnd->height());
 				editor_->draw_gui();
 			}
 

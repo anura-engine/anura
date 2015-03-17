@@ -60,7 +60,7 @@ namespace util
 	//to the size of 'output'. The number of ints found will be stored in
 	//output_size.
 	const char* split_into_ints(const char* s, int* output, int* output_size);
-	std::vector<int> split_into_vector_int(const std::string& s);
+	std::vector<int> split_into_vector_int(const std::string& s, char delim=',');
 
 	std::string join_ints(const int* buf, int size);
 

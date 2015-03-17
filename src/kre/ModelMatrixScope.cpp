@@ -107,6 +107,31 @@ namespace KRE
 		model_matrix_changed = true;
 	}
 
+	ModelManager2D::ModelManager2D(int tx, int ty, float angle, const glm::vec2& scale)
+	{
+		if(get_translation_stack().empty()) {
+			get_translation_stack().emplace(static_cast<float>(tx), static_cast<float>(ty));
+		} else {
+			auto top = get_translation_stack().top();
+			get_translation_stack().emplace(static_cast<float>(tx) + top.x, static_cast<float>(ty) + top.y);
+		}
+
+		if(get_rotation_stack().empty()) {
+			get_rotation_stack().emplace(angle);
+		} else {
+			auto top = get_rotation_stack().top();
+			get_rotation_stack().emplace(angle + top);
+		}
+
+		if(get_scale_stack().empty()) {
+			get_scale_stack().emplace(scale.x, scale.y);
+		} else {
+			auto top = get_scale_stack().top();
+			get_scale_stack().emplace(scale.x * top.x, scale.y * top.y);
+		}
+		model_matrix_changed = true;
+	}
+
 	ModelManager2D::~ModelManager2D() 
 	{
 		ASSERT_LOG(get_translation_stack().empty() == false, "Unbalanced translation stack.");

@@ -60,7 +60,7 @@ namespace KRE
 		virtual void createWindow() = 0;
 		virtual void destroyWindow() = 0;
 
-		virtual bool setWindowSize(int width, int height) = 0;
+		bool setWindowSize(int width, int height);
 		virtual bool autoWindowSize(int& width, int& height) = 0;
 		
 		bool setLogicalWindowSize(int width, int height);

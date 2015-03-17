@@ -1562,7 +1562,7 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 			ASSERT_LOG(!shader_name.empty(), "No name for shader found.");
 			shader_ = graphics::AnuraShaderPtr(new graphics::AnuraShader(shader_name));
 		}
-		LOG_DEBUG("Added shader '" << shader_->getName() << "' for CustomObjectType '" << id_ << "'");
+		//LOG_DEBUG("Added shader '" << shader_->getName() << "' for CustomObjectType '" << id_ << "'");
 	}
 
 	if(node.has_key("effects")) {

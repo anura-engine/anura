@@ -363,10 +363,12 @@ void render_scene(Level& lvl, const screen_position& pos)
 	auto canvas = KRE::Canvas::getInstance();
 	formula_profiler::Instrument instrumentation("DRAW");
 
-	const int screen_width = graphics::GameScreen::get().getWidth();
-	const int screen_height = graphics::GameScreen::get().getHeight();
+	auto& gs = graphics::GameScreen::get();
+	const int screen_width = gs.getWidth();
+	const int screen_height = gs.getHeight();
 
-	graphics::GameScreen::get().setupForDraw(wnd);
+	graphics::GameScreen::Manager screen_manager(wnd);
+	KRE::ModelManager2D model(gs.x(), gs.y(), 0, glm::vec2(1.0f/gs.getScaleW(), 1.0f/gs.getScaleH()));
 
 	const int camera_rotation = lvl.camera_rotation();
 	if(camera_rotation) {

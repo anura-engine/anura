@@ -758,7 +758,7 @@ void CustomObject::finishLoading(Level* lvl)
 
 	if(shader_ != nullptr) {
 		shader_->setParent(this);
-		LOG_DEBUG("shader '" << shader_->getName() << "' attached to object: " << type_->id());
+		//LOG_DEBUG("shader '" << shader_->getName() << "' attached to object: " << type_->id());
 	}
 	for(auto eff : effects_shaders_) {
 		eff->setParent(this);
@@ -5667,7 +5667,7 @@ void CustomObject::updateType(ConstCustomObjectTypePtr old_type,
 
 	if(shader_ != nullptr) {
 		shader_->setParent(this);
-		LOG_DEBUG("shader '" << shader_->getName() << "' attached to object: " << type_->id());
+		//LOG_DEBUG("shader '" << shader_->getName() << "' attached to object: " << type_->id());
 	}
 	for(auto eff : effects_shaders_) {
 		eff->setParent(this);
@@ -5782,7 +5782,7 @@ void CustomObject::addToLevel()
 #endif
 	if(shader_ != nullptr) {
 		shader_->setParent(this);
-		LOG_DEBUG("shader '" << shader_->getName() << "' attached to object: " << type_->id());
+		//LOG_DEBUG("shader '" << shader_->getName() << "' attached to object: " << type_->id());
 	}
 	for(auto eff : effects_shaders_) {
 		eff->setParent(this);

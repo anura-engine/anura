@@ -32,6 +32,8 @@
 #include "geometry.hpp"
 #include "SceneObject.hpp"
 #include "Texture.hpp"
+
+#include "rect_renderable.hpp"
 #include "variant.hpp"
 
 //class which represents the background to a level.
@@ -99,4 +101,11 @@ private:
 
 	std::vector<Layer> layers_;
 	int palette_;
+
+	// marked as mutable so we can modify them in the const draw functions. ideally the Background class is a scene node
+	// we update the drawable stuff in preRender, then these aren't mutable any longer.
+	mutable RectRenderable top_rect_;
+	mutable RectRenderable bot_rect_;
+	mutable RectRenderable above_rect_;
+	mutable RectRenderable below_rect_;
 };

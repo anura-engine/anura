@@ -227,9 +227,9 @@ namespace util
 		return endptr;
 	}
 
-	std::vector<int> split_into_vector_int(const std::string& s)
+	std::vector<int> split_into_vector_int(const std::string& s, char delim)
 	{
-		std::vector<std::string> v = util::split(s);
+		std::vector<std::string> v = util::split(s, delim);
 		std::vector<int> result(v.size());
 		for(int n = 0; n != v.size(); ++n) {
 			result[n] = atoi(v[n].c_str());

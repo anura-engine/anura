@@ -223,6 +223,7 @@ namespace KRE
 			}
 		}
 
+		// N.B. The viewport x,y location is the lower left hand corner!
 		void setViewPort(int x, int y, int width, int height) override {
 			display_->setViewPort(x, y, width, height);
 		}
@@ -236,16 +237,6 @@ namespace KRE
 			SDL_SetWindowIcon(window_.get(), icon.get());
 		}
 		
-		bool setWindowSize(int width, int height) override {
-			width_ = width;
-			height_ = height;
-			if(window_) {
-				SDL_SetWindowSize(window_.get(), width, height);
-				setViewPort(0, 0, width_, height_);
-			}
-			return false;
-		}
-
 		bool autoWindowSize(int& width, int& height) override {
 			std::vector<WindowMode> res;
 			int num_displays = SDL_GetNumVideoDisplays();
@@ -342,9 +333,14 @@ namespace KRE
 		}
 
 		bool handlePhysicalWindowSizeChange() override {
-			// XXX do nothing for now
-			return true;
+			if(window_) {
+				SDL_SetWindowSize(window_.get(), width(), height());
+				setViewPort(0, 0, width(), height());
+				return true;
+			}
+			return false;
 		}
+
 
 		SDL_WindowPtr window_;
 		SDL_GLContext context_;
@@ -411,6 +407,19 @@ namespace KRE
 		if(y) {
 			*y = int(*y * double(logical_height_) / height_);
 		}
+	}
+
+	bool Window::setWindowSize(int width, int height)
+	{
+		width_ = width;
+		height_ = height;
+		bool result = handlePhysicalWindowSizeChange();
+		if(result) {
+			for(auto& observer : dimensions_changed_observers_) {
+				observer.second(width_, height_);
+			}
+		}
+		return result;
 	}
 
 	bool Window::setLogicalWindowSize(int width, int height)
@@ -524,7 +533,6 @@ namespace KRE
 		if(get_main_window().lock() == nullptr) {
 			get_main_window() = wnd;
 		}
-		LOG_DEBUG("Added window with id: " << wnd->getWindowID());
 	}
 
 	WindowManager::WindowManager(const std::string& window_hint)

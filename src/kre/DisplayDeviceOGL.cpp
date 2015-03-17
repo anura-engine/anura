@@ -248,6 +248,11 @@ namespace KRE
 
 	void DisplayDeviceOpenGL::render(const Renderable* r) const
 	{
+		if(!r->isEnabled()) {
+			// Renderable item not enabled then early return.
+			return;
+		}
+
 		auto shader = r->getShader();
 		shader->makeActive();
 
@@ -459,6 +464,7 @@ namespace KRE
 		rect new_vp(x, y, width, height);
 		if(get_current_viewport() != new_vp) {
 			get_current_viewport() = new_vp;
+			//LOG_DEBUG("Viewport changed to: " << x << "," << y << "," << width << "," << height);
 			glViewport(x, y, width, height);
 		}
 	}

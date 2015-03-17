@@ -129,7 +129,9 @@ std::vector<std::string> Background::getAvailableBackgrounds()
 }
 
 Background::Background(variant node, int palette) 
-	: palette_(palette)
+	: palette_(palette),
+	  top_rect_(),
+	  bot_rect_()
 {
 	top_ = KRE::Color(node["top"]);
 	bot_ = KRE::Color(node["bottom"]);
@@ -278,8 +280,8 @@ variant Background::write() const
 
 void Background::draw(int x, int y, const rect& area, const std::vector<rect>& opaque_areas, float rotation, int cycle) const
 {
-	auto wnd = KRE::WindowManager::getMainWindow();
-	const int height = height_ + offset_.y*2;
+	auto& gs = graphics::GameScreen::get();
+	const int height = height_ + offset_.y * 2;
 
 	//set the background colors for the level. The area above 'height' is
 	//painted with the top color, and the area below height is painted with
@@ -287,30 +289,27 @@ void Background::draw(int x, int y, const rect& area, const std::vector<rect>& o
 	//scissors to divide the screen into top and bottom.
 	if(height < y) {
 		//the entire screen is full of the bottom color
-		wnd->setClearColor(bot_);
-		wnd->clear(KRE::ClearFlags::COLOR);
-	} else if(height > y + wnd->height()) {
+		bot_rect_.update(x, y, gs.getWidth(), gs.getHeight(), bot_);
+		bot_rect_.enable();
+		top_rect_.disable();
+	} else if(height > y + gs.getHeight()) {
 		//the entire screen is full of the top color.
-		wnd->setClearColor(top_);
-		wnd->clear(KRE::ClearFlags::COLOR);
+		top_rect_.update(x, y, gs.getWidth(), gs.getHeight(), top_);
+		top_rect_.enable();
+		bot_rect_.disable();
 	} else {
 		//both bottom and top colors are on the screen, so draw them both,
-		//using scissors to delinate their areas.
-		const int dist_from_bottom = y + wnd->height() - height;
+		const int dist_from_bottom = y + gs.getHeight() - height;
 
-		const int scissor_scale = preferences::double_scale() ? 2 : 1;
+		top_rect_.update(0, 0, gs.getWidth(), dist_from_bottom, top_);
+		top_rect_.enable();
 
-		//the scissor test does not respect any rotations etc. We use a rotation
-		//to transform the iPhone's display, which is fine normally, but
-		//here we have to accomodate the iPhone being "on its side"
-		KRE::Scissor::Manager sm1(rect(0, dist_from_bottom, graphics::GameScreen::get().getWidth(), graphics::GameScreen::get().getHeight()*(1-dist_from_bottom/600)));
-		wnd->setClearColor(top_);
-		wnd->clear(KRE::ClearFlags::COLOR);
-
-		KRE::Scissor::Manager sm2(rect(0, 0, graphics::GameScreen::get().getWidth(), dist_from_bottom));
-		wnd->setClearColor(bot_);
-		wnd->clear(KRE::ClearFlags::COLOR);
+		bot_rect_.update(0, dist_from_bottom, gs.getWidth(), gs.getHeight() - dist_from_bottom, bot_);
+		bot_rect_.enable();
 	}
+	auto wnd = KRE::WindowManager::getMainWindow();
+	wnd->render(&bot_rect_);
+	wnd->render(&top_rect_);
 
 	drawLayers(x, y, area, opaque_areas, rotation, cycle);
 }
@@ -387,7 +386,7 @@ void Background::setOffset(const point& offset)
 }
 
 void Background::drawLayer(int x, int y, const rect& area, float rotation, const Background::Layer& bg, int cycle) const
-{	
+{
 	const float ScaleImage = 2.0f;
 	unsigned short y1 = static_cast<unsigned short>(y + (bg.yoffset+offset_.y)*ScaleImage - (y*bg.yscale_top)/100);
 	unsigned short y2 = static_cast<unsigned short>(y + (bg.yoffset+offset_.y)*ScaleImage - (y*bg.yscale_bot)/100 + (bg.y2 - bg.y1) * ScaleImage);
@@ -438,9 +437,10 @@ void Background::drawLayer(int x, int y, const rect& area, float rotation, const
 		const int width = area.w();
 		const int height = y1 - area.y();
 
-		KRE::Scissor::Manager sm2(rect(xpos, screen_h - ypos, width, height));
-		wnd->setClearColor(*bg.color_above);
-		wnd->clear(KRE::ClearFlags::COLOR);
+		// XXX above_rect_ should go into Background::Layer
+		above_rect_.update(xpos, screen_h - ypos, width, height, *bg.color_above);
+		above_rect_.enable();
+		wnd->render(&above_rect_);
 	}
 
 	if(bg.tile_downwards && y2 < area.y2()) {
@@ -452,9 +452,10 @@ void Background::drawLayer(int x, int y, const rect& area, float rotation, const
 		const int width = area.w();
 		const int height = area.y2() - y2;
 
-		KRE::Scissor::Manager sm2(rect(xpos, screen_h - ypos, width, height));
-		wnd->setClearColor(*bg.color_below);
-		wnd->clear(KRE::ClearFlags::COLOR);
+		// XXX below_rect_ should go into Background::Layer
+		below_rect_.update(xpos, screen_h - ypos, width, height, *bg.color_below);
+		below_rect_.enable();
+		wnd->render(&below_rect_);
 	}
 
 	if(y2 > area.y2()) {

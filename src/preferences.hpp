@@ -167,6 +167,8 @@ namespace preferences
 	bool auto_size_window();
 	int requested_window_width();
 	int requested_window_height();
+	int requested_virtual_window_width();
+	int requested_virtual_window_height();
 	bool is_resizeable();
 	ScreenMode get_screen_mode();
 	void set_screen_mode(ScreenMode mode);

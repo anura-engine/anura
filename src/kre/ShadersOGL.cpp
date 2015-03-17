@@ -1041,10 +1041,10 @@ namespace KRE
 			a_normal_ = getAttribute("normal");
 
 			// I don't like having to have these as well.
-			u_enable_palette_lookup_ = getUniform("enable_palette_lookup");
-			u_palette_ = getUniform("palette");
+			u_enable_palette_lookup_ = getUniform("u_enable_palette_lookup");
+			u_palette_ = getUniform("u_palette");
 			u_palette_width_ = getUniform("u_palette_width");
-			u_palette_map_ = getUniform("palette_map");
+			u_palette_map_ = getUniform("u_palette_map");
 			u_mix_palettes_ = getUniform("u_mix_palettes");
 			u_mix_ = getUniform("u_mix");
 		}

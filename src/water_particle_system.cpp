@@ -39,7 +39,7 @@ WaterParticleSystemInfo::WaterParticleSystemInfo(variant node)
 	  velocity_x(node["velocity_x"].as_int()),
 	  velocity_y(node["velocity_y"].as_int(-5)),
 	  velocity_rand(node["velocity_rand"].as_int(3)),
-	  dot_size(node["dot_size"].as_int(1)*(preferences::double_scale() ? 2 : 1))
+	  dot_size(node["dot_size"].as_int(1))
 {
 	color = KRE::Color(node["color"]);
 

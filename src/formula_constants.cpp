@@ -43,9 +43,7 @@ namespace game_logic
 
 	variant get_constant(const std::string& id)
 	{
-		if(id == "DOUBLE_SCALE") {
-			return variant(preferences::double_scale());
-		} else if(id == "SCREEN_WIDTH") {
+		if(id == "SCREEN_WIDTH") {
 			return variant(KRE::WindowManager::getMainWindow()->width());
 		} else if(id == "SCREEN_HEIGHT") {
 			return variant(KRE::WindowManager::getMainWindow()->height());

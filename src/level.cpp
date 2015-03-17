@@ -1701,7 +1701,6 @@ void Level::prepare_tiles_for_drawing()
 	}
 
 	for(auto& v_ot : vertices_ot) {
-		LOG_DEBUG("Adding " << v_ot.second.first.size() << " opaque vertices and " << v_ot.second.second.size() << " transparent vertices at zorder: " << v_ot.first);
 		auto blit_cache_info_ptr = blit_cache_[v_ot.first];
 		blit_cache_info_ptr->setVertices(&v_ot.second.first, &v_ot.second.second);
 	}

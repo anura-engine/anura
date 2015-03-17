@@ -423,36 +423,7 @@ void Frame::setPalettes(unsigned int palettes)
 		}
 	}
 	blit_target_.getTexture()->setPalette(palettes == 0 ? -1 : npalette);
-	LOG_DEBUG("Set palette " << npalette << " on " << blit_target_.getTexture()->id() << " from selection: " << std::hex << palettes);
-
-	/*if(current_palette_ >= 0 && (1 << current_palette_) == palettes) {
-		return;
-	}
-
-	int npalette = 0;
-	while(palettes) {
-		if((palettes&1) && std::count(palettes_recognized_.begin(), palettes_recognized_.end(), npalette)) {
-			break;
-		}
-		++npalette;
-		palettes >>= 1;
-	}
-
-	if(palettes == 0) {
-		if(current_palette_ != -1) {
-			current_palette_ = -1;
-		}
-		return;
-	}
-
-	const std::string& str = graphics::get_palette_name(npalette);
-	if(str.empty()) {
-		LOG_WARN("No palette from id: " << npalette);
-	} else {
-		auto surf = graphics::SurfaceCache::get(module::map_file("palette/" + str + ".png"));
-		blit_target_.getTexture()->addPalette(surf);
-		current_palette_ = npalette;
-	}*/
+	//LOG_DEBUG("Set palette " << npalette << " on " << blit_target_.getTexture()->id() << " from selection: " << std::hex << palettes);
 }
 
 void Frame::setColorPalette(unsigned int palettes)

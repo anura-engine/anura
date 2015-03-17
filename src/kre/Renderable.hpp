@@ -83,6 +83,10 @@ namespace KRE
 		//void clearUniformSets();
 		void addUniformBuffer(UniformBufferBase&& ub);
 
+		bool isEnabled() const { return enabled_; }
+		void enable(bool en=true) { enabled_ = en; }
+		void disable() { enabled_ = false; }
+
 		virtual void preRender(const WindowPtr& wm) {}
 		virtual void postRender(const WindowPtr& wm) {}
 
@@ -106,5 +110,6 @@ namespace KRE
 
 		std::vector<AttributeSetPtr> attributes_;
 		//std::vector<UniformBufferBase> uniforms_;
+		bool enabled_;
 	};
 }

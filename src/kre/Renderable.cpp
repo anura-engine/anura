@@ -38,28 +38,31 @@ namespace KRE
 {
 	Renderable::Renderable()
 		: order_(0),
-		position_(0.0f),
-		rotation_(1.0f, 0.0f, 0.0f, 0.0f),
-		scale_(1.0f),
-		shader_(ShaderProgram::getSystemDefault())
+		  position_(0.0f),
+		  rotation_(1.0f, 0.0f, 0.0f, 0.0f),
+		  scale_(1.0f),
+		  shader_(ShaderProgram::getSystemDefault()),
+		  enabled_(true)
 	{
 	}
 
 	Renderable::Renderable(size_t order)
 		: order_(order), 
-		position_(0.0f),
-		rotation_(1.0f, 0.0f, 0.0f, 0.0f),
-		scale_(1.0f),
-		shader_(ShaderProgram::getSystemDefault())
+		  position_(0.0f),
+		  rotation_(1.0f, 0.0f, 0.0f, 0.0f),
+		  scale_(1.0f),
+		  shader_(ShaderProgram::getSystemDefault()),
+		  enabled_(true)
 	{
 	}
 
 	Renderable::Renderable(const variant& node)
 		: order_(0),
-		position_(0.0f),
-		rotation_(1.0f, 0.0f, 0.0f, 0.0f),
-		scale_(1.0f),
-		shader_(ShaderProgram::getSystemDefault())
+		  position_(0.0f),
+		  rotation_(1.0f, 0.0f, 0.0f, 0.0f),
+		  scale_(1.0f),
+		  shader_(ShaderProgram::getSystemDefault()),
+		  enabled_(true)
 	{
 		if(node.has_key("order")) {
 			order_ = node["order"].as_int32();

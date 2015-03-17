@@ -24,6 +24,7 @@
 
 #pragma once
 
+#include "Scissor.hpp"
 #include "WindowManagerFwd.hpp"
 
 namespace graphics
@@ -48,17 +49,27 @@ namespace graphics
 		void setDimensions(int width, int height);
 		void setVirtualDimensions(int vwidth, int vheight);
 
-		void setupForDraw(KRE::WindowPtr wnd);
+		struct Manager
+		{
+			Manager(KRE::WindowPtr wnd);
+			~Manager();
+			KRE::WindowPtr wnd_;
+		};
 
 		static GameScreen& get();
 	private:
 		GameScreen();
+		void setupForDraw(KRE::WindowPtr wnd);
+		void cleanupAfterDraw(KRE::WindowPtr wnd);
+
 		int width_;
 		int height_;
 		int virtual_width_;
 		int virtual_height_;
 		int x_;
 		int y_;
+
+		std::unique_ptr<KRE::Scissor::Manager> screen_clip_;
 
 		GameScreen(const GameScreen&);
 		void operator=(const GameScreen&);

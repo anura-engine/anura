@@ -43,6 +43,7 @@
 #include "preferences.hpp"
 #include "sound.hpp"
 #include "sys.hpp"
+#include "string_utils.hpp"
 #include "variant_utils.hpp"
 
 #include <time.h>
@@ -363,7 +364,8 @@ namespace preferences
 		return versiond;
 	}
 	
-	namespace {
+	namespace 
+	{
 		int unique_user_id = 0;
 		
 		bool no_sound_ = false;
@@ -527,8 +529,14 @@ namespace preferences
 
 		int requested_window_width_ = 0;
 		int requested_window_height_ = 0;
+		int requested_virtual_window_width_ = 0;
+		int requested_virtual_window_height_ = 0;
+	
 	}
 	
+	int xypos_draw_mask = ~1;
+	bool compiling_tiles = false;
+
 	int get_unique_user_id() {
 		if(unique_user_id == 0) {
 			time_t t1;
@@ -539,13 +547,6 @@ namespace preferences
 		
 		return unique_user_id;
 	}
-	
-	int xypos_draw_mask = ~1;
-	
-	bool double_scale() {
-		return xypos_draw_mask & 1;
-	}
-	bool compiling_tiles = false;
 	
 	bool no_sound() {
 		return no_sound_;
@@ -725,7 +726,17 @@ namespace preferences
 	{
 		return requested_window_height_;
 	}
-	
+
+	int requested_virtual_window_width()
+	{
+		return requested_virtual_window_width_;
+	}
+
+	int requested_virtual_window_height()
+	{
+		return requested_virtual_window_height_;
+	}
+
 	bool edit_on_start()
 	{
 		return edit_on_start_;
@@ -1015,17 +1026,28 @@ namespace preferences
 		} else if(s == "--resizable") {
 			resizable_ = true;
         } else if(s == "--width") {
-            try {
-                requested_window_width_ = boost::lexical_cast<int>(arg_value);
-            } catch(boost::bad_lexical_cast&) {
-                ASSERT_LOG(false, "Invalid width value: " << arg_value);
-            }
+			auto widths = util::split_into_vector_int(arg_value, ':');
+			if(widths.size() > 0) {
+				requested_window_width_ = widths[0];
+			}
+			if(widths.size() > 1) {
+				requested_virtual_window_width_ = widths[1];
+				//if(requested_virtual_window_width_ > requested_window_width_) {
+				//	xypos_draw_mask = 0;
+				//}
+			} else {
+				requested_virtual_window_width_ = requested_window_width_;
+			}
         } else if(s == "--height") {
-            try {
-                requested_window_height_ = boost::lexical_cast<int>(arg_value);
-            } catch(boost::bad_lexical_cast&) {
-                ASSERT_LOG(false, "Invalid height value: " << arg_value);
-            }
+			auto heights = util::split_into_vector_int(arg_value, ':');
+			if(heights.size() > 0) {
+				requested_window_height_ = heights[0];
+			}
+			if(heights.size() > 1) {
+				requested_virtual_window_height_ = heights[1];
+			} else {
+				requested_virtual_window_height_ = requested_window_height_;
+			}
 		} else if(s == "--no-resizable") {
 			resizable_ = false;
 		} else if(s == "--potonly") {
