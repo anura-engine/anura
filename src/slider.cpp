@@ -86,9 +86,11 @@ namespace gui
 
 	bool Slider::inButton(int xloc, int yloc) const
 	{
-		int button_x = x() + slider_left_->width() + int(position_*width_);
-		return xloc > button_x-40 && xloc < button_x + slider_button_->width()+40 &&
-		yloc > y()-10 && yloc < y() + height()+10;
+		xloc -= getPos().x;
+		yloc -= getPos().y;
+
+		int button_x = slider_left_->width() + int(position_*width_);
+		return xloc > button_x-40 && xloc < button_x + slider_button_->width()+40 && yloc > -10 && yloc < height()+10;
 	}
 	
 	bool Slider::inSlider(int xloc, int yloc) const
@@ -177,10 +179,10 @@ namespace gui
 		
 		if(event.type == SDL_MOUSEMOTION && dragging_) {
 			const SDL_MouseMotionEvent& e = event.motion;
-			int mouse_x = e.x;
-			int mouse_y = e.y;
+			int mouse_x = e.x - getPos().x;
+			int mouse_y = e.y - getPos().y;
 
-			int rel_x = mouse_x - x() - slider_left_->width();
+			int rel_x = mouse_x - slider_left_->width();
 			if (rel_x < 0) rel_x = 0;
 			if (rel_x > width_) rel_x = width_;
 			float pos = static_cast<float>(rel_x)/width_;
@@ -202,10 +204,10 @@ namespace gui
 			claimed = claimMouseEvents();
 			if(ondragend_) {
 				const SDL_MouseButtonEvent& e = event.button;
-				int mouse_x = e.x;
-				int mouse_y = e.y;
+				int mouse_x = e.x - getPos().x;
+				int mouse_y = e.y - getPos().y;
 
-				int rel_x = mouse_x - x() - slider_left_->width();
+				int rel_x = mouse_x - slider_left_->width();
 				if (rel_x < 0) rel_x = 0;
 				if (rel_x > width_) rel_x = width_;
 				float pos = static_cast<float>(rel_x)/width_;
