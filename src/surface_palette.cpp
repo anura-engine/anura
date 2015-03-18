@@ -50,6 +50,7 @@ namespace graphics
 						if(p.second.is_list()) {
 							auto palette_names = p.second.as_list_string();
 							for(auto& ps : palette_names) {
+								LOG_DEBUG("Added palette: " << ps << " at " << id);
 								pmap.insert(palette_pair(ps, id++));
 							}
 						}
