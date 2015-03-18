@@ -265,7 +265,7 @@ private:
 	void handleKeyPress(const SDL_KeyboardEvent& key);
 
 	void handle_object_dragging(int mousex, int mousey);
-	void handleDrawing_rect(int mousex, int mousey);
+	void handleDrawingRect(int mousex, int mousey);
 
 	void process_ghost_objects();
 	void remove_ghost_objects();

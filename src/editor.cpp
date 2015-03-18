@@ -1027,7 +1027,7 @@ EditorResolutionManager::EditorResolutionManager(int xres, int yres)
 	if(++editor_resolution_manager_count == 1) {
 		LOG_INFO("EDITOR RESOLUTION: " << editor_x_resolution << "," << editor_y_resolution);
 		KRE::WindowManager::getMainWindow()->setWindowSize(editor_x_resolution, editor_y_resolution);
-		graphics::GameScreen::get().setLocation(0, EDITOR_MENUBAR_HEIGHT);
+		//graphics::GameScreen::get().setLocation(0, EDITOR_MENUBAR_HEIGHT);
 	}
 }
 
@@ -1035,7 +1035,7 @@ EditorResolutionManager::~EditorResolutionManager()
 {
 	if(--editor_resolution_manager_count == 0) {
 		KRE::WindowManager::getMainWindow()->setWindowSize(original_width_, original_height_);
-		graphics::GameScreen::get().setLocation(0, 0);
+		//graphics::GameScreen::get().setLocation(0, 0);
 	}
 }
 
@@ -1336,7 +1336,7 @@ void editor::process()
 			handle_object_dragging(mousex, mousey);
 		}
 	} else if(drawing_rect_) {
-		handleDrawing_rect(mousex, mousey);
+		handleDrawingRect(mousex, mousey);
 	}
 
 	if(!object_mode) {
@@ -1816,7 +1816,7 @@ void editor::handle_object_dragging(int mousex, int mousey)
 	}
 }
 
-void editor::handleDrawing_rect(int mousex, int mousey)
+void editor::handleDrawingRect(int mousex, int mousey)
 {
 	const unsigned int buttons = input::sdl_get_mouse_state(&mousex, &mousey);
 
