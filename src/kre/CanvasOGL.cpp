@@ -540,7 +540,6 @@ namespace KRE
 
 		static auto it = shader->getUniform("point_size");
 		shader->setUniformValue(it, radius);
-		shader->setUniformValue(shader->getLineWidthUniform(), 1.0f);
 		shader->setUniformValue(shader->getColorUniform(), color.asFloatVector());
 		glEnableVertexAttribArray(shader->getVertexAttribute());
 		glVertexAttribPointer(shader->getVertexAttribute(), 2, GL_FLOAT, GL_FALSE, 0, &varray[0]);
