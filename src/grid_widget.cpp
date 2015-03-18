@@ -514,9 +514,6 @@ namespace gui
 		if(!claimed && allow_selection_) {
 			if(ev.type == SDL_MOUSEMOTION) {
 				const SDL_MouseMotionEvent& e = ev.motion;
-				if(inWidget(e.x, e.y)) {
-					LOG_DEBUG("in grid widget. " << e.x << "," << e.y);
-				}
 				int new_row = getRowAt(e.x,e.y);
 				if(new_row != selected_row_) {
 					selected_row_ = new_row;
