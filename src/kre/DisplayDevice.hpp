@@ -140,7 +140,7 @@ namespace KRE
 
 		virtual ScissorPtr getScissor(const rect& r) = 0;
 
-		virtual void setDefaultCamera(const CameraPtr& cam) = 0;
+		virtual CameraPtr setDefaultCamera(const CameraPtr& cam) = 0;
 
 		virtual void loadShadersFromVariant(const variant& node) = 0;
 		virtual ShaderProgramPtr getShaderProgram(const std::string& name) = 0;

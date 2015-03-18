@@ -241,9 +241,11 @@ namespace KRE
 		return OpenGL::ShaderProgram::defaultSystemShader();
 	}
 
-	void DisplayDeviceOpenGL::setDefaultCamera(const CameraPtr& cam)
+	CameraPtr DisplayDeviceOpenGL::setDefaultCamera(const CameraPtr& cam)
 	{
+		auto old_cam = get_default_camera();
 		get_default_camera() = cam;
+		return old_cam;
 	}
 
 	void DisplayDeviceOpenGL::render(const Renderable* r) const

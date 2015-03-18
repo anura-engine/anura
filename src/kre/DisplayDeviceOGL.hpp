@@ -48,7 +48,7 @@ namespace KRE
 		void render(const Renderable* r) const override;
 
 		// Lets us set a default camera if nothing else is configured.
-		void setDefaultCamera(const CameraPtr& cam) override;
+		CameraPtr setDefaultCamera(const CameraPtr& cam) override;
 
 		CanvasPtr getCanvas() override;
 		ClipScopePtr createClipScope(const rect& r) override;
