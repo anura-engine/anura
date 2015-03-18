@@ -179,7 +179,7 @@ Background::Background(variant node, int palette)
 		bg.attr_->addAttributeDesc(AttributeDesc(AttrType::POSITION, 2, AttrFormat::SHORT, false, sizeof(short_vertex_texcoord), offsetof(short_vertex_texcoord, vertex)));
 		bg.attr_->addAttributeDesc(AttributeDesc(AttrType::TEXTURE, 2, AttrFormat::FLOAT, false, sizeof(short_vertex_texcoord), offsetof(short_vertex_texcoord, tc)));
 		ab->addAttribute(bg.attr_);
-		ab->setDrawMode(DrawMode::TRIANGLE_STRIP);
+		ab->setDrawMode(DrawMode::TRIANGLES);
 		bg.addAttributeSet(ab);
 
 		if(layer_node.has_key("mode")) {
@@ -282,6 +282,9 @@ void Background::draw(int x, int y, const rect& area, const std::vector<rect>& o
 {
 	auto& gs = graphics::GameScreen::get();
 	const int height = height_ + offset_.y * 2;
+	//LOG_DEBUG("xy: " << x << "," << y << " wh: " << gs.getWidth() << "," << gs.getHeight());
+	//LOG_DEBUG("height_: " << height_ << ", offset_.y: " << offset_.y << ", height: " << height);
+	//LOG_DEBUG("area: " << area);
 
 	//set the background colors for the level. The area above 'height' is
 	//painted with the top color, and the area below height is painted with
@@ -289,22 +292,26 @@ void Background::draw(int x, int y, const rect& area, const std::vector<rect>& o
 	//scissors to divide the screen into top and bottom.
 	if(height < y) {
 		//the entire screen is full of the bottom color
-		bot_rect_.update(x, y, gs.getWidth(), gs.getHeight(), bot_);
+		//LOG_DEBUG("fill all bot: " << bot_);
+		bot_rect_.update(area, bot_);
 		bot_rect_.enable();
 		top_rect_.disable();
-	} else if(height > y + gs.getHeight()) {
+	} else if(height > area.y2()) {
 		//the entire screen is full of the top color.
-		top_rect_.update(x, y, gs.getWidth(), gs.getHeight(), top_);
+		//LOG_DEBUG("fill all top: " << top_);
+		top_rect_.update(area, top_);
 		top_rect_.enable();
 		bot_rect_.disable();
 	} else {
 		//both bottom and top colors are on the screen, so draw them both,
-		const int dist_from_bottom = y + gs.getHeight() - height;
+		const int dist_from_bottom = area.y2() - (y - height);
 
-		top_rect_.update(0, 0, gs.getWidth(), dist_from_bottom, top_);
+		//LOG_DEBUG("fill top: " << x << "," << y << "," << area.w() << "," << dist_from_bottom << " with: " << top_);
+		top_rect_.update(x, y, area.w(), dist_from_bottom, top_);
 		top_rect_.enable();
 
-		bot_rect_.update(0, dist_from_bottom, gs.getWidth(), gs.getHeight() - dist_from_bottom, bot_);
+		//LOG_DEBUG("fill bot: " << x << "," << dist_from_bottom << "," << area.w() << "," << (area.h() - dist_from_bottom) << " with: " << bot_);
+		bot_rect_.update(x, dist_from_bottom, area.w(), area.h() - dist_from_bottom, bot_);
 		bot_rect_.enable();
 	}
 	auto wnd = KRE::WindowManager::getMainWindow();
@@ -358,9 +365,7 @@ void Background::drawLayers(int x, int y, const rect& area_ref, const std::vecto
 			for(auto& a : areas) {
 				drawLayer(x, y, a, rotation, bg, cycle);
 			}
-			if(bg.attr_->size() > 0) {
-				wnd->render(&bg);
-			}
+			wnd->render(&bg);
 			bg.attr_->clear();
 			bg.getAttributeSet().back()->setCount(0);
 		}
@@ -387,9 +392,12 @@ void Background::setOffset(const point& offset)
 
 void Background::drawLayer(int x, int y, const rect& area, float rotation, const Background::Layer& bg, int cycle) const
 {
+	auto& gs = graphics::GameScreen::get();
+	//LOG_DEBUG("xy: " << x << "," << y << " wh: " << gs.getWidth() << "," << gs.getHeight() << ", area: " << area);
 	const float ScaleImage = 2.0f;
-	unsigned short y1 = static_cast<unsigned short>(y + (bg.yoffset+offset_.y)*ScaleImage - (y*bg.yscale_top)/100);
-	unsigned short y2 = static_cast<unsigned short>(y + (bg.yoffset+offset_.y)*ScaleImage - (y*bg.yscale_bot)/100 + (bg.y2 - bg.y1) * ScaleImage);
+	int y1 = static_cast<int>(y + (bg.yoffset+offset_.y)*ScaleImage - (y*bg.yscale_top)/100);
+	int y2 = static_cast<int>(y + (bg.yoffset+offset_.y)*ScaleImage - (y*bg.yscale_bot)/100 + (bg.y2 - bg.y1) * ScaleImage);
+	//LOG_DEBUG("y1,y2: " << y1 << "," << y2);
 
 	if(!bg.tile_downwards && y2 <= y) {
 		return;
@@ -407,17 +415,16 @@ void Background::drawLayer(int x, int y, const rect& area, float rotation, const
 		return;
 	}
 
+	ASSERT_GT(bg.texture->surfaceHeight(), 0);
+	ASSERT_GT(bg.texture->surfaceWidth(), 0);
+
 	if(bg.y2 == 0) {
 		bg.y2 = bg.texture->surfaceHeight();
 	}
 
-	ASSERT_GT(bg.texture->surfaceHeight(), 0);
-	ASSERT_GT(bg.texture->surfaceWidth(), 0);
-
 	float v1 = bg.texture->getTextureCoordH(0, bg.y1);
 	float v2 = bg.texture->getTextureCoordH(0, bg.y2);
 
-	const int screen_w = graphics::GameScreen::get().getWidth();
 	const int screen_h = graphics::GameScreen::get().getHeight();
 
 	if(y1 < area.y()) {
@@ -428,34 +435,36 @@ void Background::drawLayer(int x, int y, const rect& area, float rotation, const
 	}
 
 	auto wnd = KRE::WindowManager::getMainWindow();
-	if(bg.tile_upwards && y1 > area.y()) {
-		v1 -= (static_cast<float>(y1 - area.y())/static_cast<float>(y2 - y1))*(v2 - v1);
-		y1 = area.y();
-	} else if(bg.color_above && y1 > area.y()) {
-		const int xpos = area.x() - x;
-		const int ypos = y1 - y;
-		const int width = area.w();
-		const int height = y1 - area.y();
+	if(y1 > area.y()) {
+		if(bg.tile_upwards) {
+			v1 -= (static_cast<float>(y1 - area.y())/static_cast<float>(y2 - y1))*(v2 - v1);
+			y1 = area.y();
+		} else if(bg.color_above != nullptr) {
+			const int xpos = area.x() - x;
+			const int ypos = y1 - y;
+			const int width = area.w();
+			const int height = y1 - area.y();
 
-		// XXX above_rect_ should go into Background::Layer
-		above_rect_.update(xpos, screen_h - ypos, width, height, *bg.color_above);
-		above_rect_.enable();
-		wnd->render(&above_rect_);
+			bg.above_rect.update(area.x(), y1, area.w(), height, *bg.color_above);
+			bg.above_rect.enable();
+			wnd->render(&bg.above_rect);
+		}
 	}
 
-	if(bg.tile_downwards && y2 < area.y2()) {
-		v2 += (static_cast<float>(area.y2() - y2)/static_cast<float>(y2 - y1))*(v2 - v1);
-		y2 = area.y() + area.h();
-	} else if(bg.color_below && y2 < area.y2()) {
-		const int xpos = area.x() - x;
-		const int ypos = area.y2() - y;
-		const int width = area.w();
-		const int height = area.y2() - y2;
+	if(y2 < area.y2()) {
+		if(bg.tile_downwards) {
+			v2 += (static_cast<float>(area.y2() - y2)/static_cast<float>(y2 - y1))*(v2 - v1);
+			y2 = area.y() + area.h();
+		} else if(bg.color_below != nullptr) {
+			const int xpos = area.x() - x;
+			const int ypos = area.y2() - y;
+			const int width = area.w();
+			const int height = area.y2() - y2;
 
-		// XXX below_rect_ should go into Background::Layer
-		below_rect_.update(xpos, screen_h - ypos, width, height, *bg.color_below);
-		below_rect_.enable();
-		wnd->render(&below_rect_);
+			bg.below_rect.update(xpos, screen_h - ypos, width, height, *bg.color_below);
+			bg.below_rect.enable();
+			//wnd->render(&bg.below_rect);
+		}
 	}
 
 	if(y2 > area.y2()) {
@@ -515,19 +524,23 @@ void Background::drawLayer(int x, int y, const rect& area, float rotation, const
 		if(blit_width > 0) {
 			const float xpos2 = xpos + static_cast<float>(blit_width) / (bg.texture->actualWidth() * 2.0f);
 
-			const unsigned short x1 = x & preferences::xypos_draw_mask;
-			const unsigned short x2 = (x1 + blit_width) & preferences::xypos_draw_mask;
+			const short x1 = x & preferences::xypos_draw_mask;
+			const short x2 = (x1 + blit_width) & preferences::xypos_draw_mask;
 			y1 &= preferences::xypos_draw_mask;
 			y2 &= preferences::xypos_draw_mask;
 
 			const float u1 = bg.texture->getNormalisedTextureCoordW<float>(0, xpos);
 			const float u2 = bg.texture->getNormalisedTextureCoordW<float>(0, xpos2);
 
-			q.emplace_back(glm::u16vec2(x1, y1), glm::vec2(u1, v1));
-			q.emplace_back(glm::u16vec2(x2, y1), glm::vec2(u2, v1));
-			q.emplace_back(glm::u16vec2(x1, y2), glm::vec2(u1, v2));
-			q.emplace_back(glm::u16vec2(x2, y2), glm::vec2(u2, v2));
-//LOG_DEBUG("background: " << x1 << "," << y1 << "," << x2 << "," << y2 << " : " << u1 << "," << v1 << "," << u2 << "," << v2);
+			q.emplace_back(glm::i16vec2(x1, y1), glm::vec2(u1, v1));
+			q.emplace_back(glm::i16vec2(x2, y1), glm::vec2(u2, v1));
+			q.emplace_back(glm::i16vec2(x2, y2), glm::vec2(u2, v2));
+
+			q.emplace_back(glm::i16vec2(x2, y2), glm::vec2(u2, v2));
+			q.emplace_back(glm::i16vec2(x1, y1), glm::vec2(u1, v1));
+			q.emplace_back(glm::i16vec2(x1, y2), glm::vec2(u1, v2));
+
+//LOG_DEBUG(bg.texture->id() << ": " << x1 << "," << y1 << "," << x2 << "," << y2 << " : " << u1 << "," << v1 << "," << u2 << "," << v2);
 		}
 
 		x += static_cast<int>(blit_width + bg.xpad * ScaleImage);
@@ -536,5 +549,4 @@ void Background::drawLayer(int x, int y, const rect& area, float rotation, const
 		screen_width -= static_cast<int>(blit_width + bg.xpad * ScaleImage);
 	}
 	bg.attr_->update(&q, bg.attr_->end());
-	bg.getAttributeSet().back()->setCount(bg.attr_->size());
 }

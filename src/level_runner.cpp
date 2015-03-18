@@ -81,6 +81,8 @@ namespace
 	PREF_BOOL(reload_modified_objects, false, "Reload object definitions when their file is modified on disk");
 	PREF_INT(mouse_drag_threshold, 1000, "Threshold for how much motion can take place in a mouse drag");
 
+	PREF_FLOAT(global_scale, 1.0f, "Global scale value.");
+
 	LevelRunner* current_level_runner = nullptr;
 
 	class current_level_runner_scope 
@@ -1502,6 +1504,7 @@ bool LevelRunner::play_cycle()
 				}
 				{
 					//profile::manager pman("render_scene");
+					KRE::ModelManager2D(0, 0, 0.0f, g_global_scale);
 					render_scene(*lvl_, last_draw_position());
 				}
 #ifndef NO_EDITOR

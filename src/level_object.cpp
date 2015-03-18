@@ -35,6 +35,7 @@
 #include "filesystem.hpp"
 #include "json_parser.hpp"
 #include "level_object.hpp"
+#include "LayerBlitInfo.hpp"
 #include "module.hpp"
 #include "preferences.hpp"
 #include "string_utils.hpp"
@@ -976,15 +977,16 @@ void LevelObject::queueDraw(KRE::CanvasPtr canvas, const LevelTile& t)
 
 	rect src_rect(xpos, ypos, xpos + area.w(), ypos + area.h());
 
-	int area_x = area.x() * g_tile_scale;
-	if(t.face_right) {
-		src_rect = rect::from_coordinates(src_rect.x2(), src_rect.y(), src_rect.x(), src_rect.y2());
-		area_x = (BaseTileSize - area.x() - area.w()) * g_tile_scale;
-	}
+	//int area_x = area.x() * g_tile_scale;
+	//if(t.face_right) {
+	//	src_rect = rect::from_coordinates(src_rect.x2(), src_rect.y(), src_rect.x(), src_rect.y2());
+	//	area_x = (BaseTileSize - area.x() - area.w()) * g_tile_scale;
+	//}
 
-	const int x = t.x + area_x;
-	const int y = t.y + area.y() * g_tile_scale;
-	rect dst_rect(x, y, area.w() * g_tile_scale, area.h() * g_tile_scale);
+	//const int x = t.x + area_x;
+	//const int y = t.y + area.y() * g_tile_scale;
+	//rect dst_rect(x, y, area.w() * g_tile_scale, area.h() * g_tile_scale);
+	rect dst_rect(area.x(), area.y(), area.w() * g_tile_scale, area.h() * g_tile_scale);
 
 	canvas->blitTexture(t.object->t_, src_rect, 0, dst_rect);
 }

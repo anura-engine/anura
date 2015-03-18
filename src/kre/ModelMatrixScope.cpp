@@ -185,8 +185,8 @@ namespace KRE
 			get_scale_stack().emplace(sx, sy);
 		} else {
 			auto& top = get_scale_stack().top();
-			top.x += sx;
-			top.y += sy;
+			top.x *= sx;
+			top.y *= sy;
 		}
 		model_matrix_changed = true;
 	}
@@ -217,7 +217,7 @@ namespace KRE
 
 			if(!get_scale_stack().empty()) {
 				auto& top = get_scale_stack().top();
-				get_model_matrix() = glm::scale(get_model_matrix(), glm::vec3(top, 1.0f));
+				get_model_matrix() = glm::scale(get_model_matrix(), glm::vec3(top.x, top.y, 1.0f));
 			}
 
 			if(!get_rotation_stack().empty()) {

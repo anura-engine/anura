@@ -95,6 +95,8 @@ private:
 		bool tile_upwards, tile_downwards;
 
 		std::shared_ptr<KRE::Attribute<KRE::short_vertex_texcoord>> attr_;
+		mutable RectRenderable above_rect;
+		mutable RectRenderable below_rect;
 	};
 
 	void drawLayer(int x, int y, const rect& area, float rotation, const Layer& bg, int cycle) const;
@@ -106,6 +108,4 @@ private:
 	// we update the drawable stuff in preRender, then these aren't mutable any longer.
 	mutable RectRenderable top_rect_;
 	mutable RectRenderable bot_rect_;
-	mutable RectRenderable above_rect_;
-	mutable RectRenderable below_rect_;
 };

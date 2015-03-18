@@ -84,7 +84,7 @@ namespace graphics
 
 	void GameScreen::setupForDraw(KRE::WindowPtr wnd)
 	{
-		//last_cam_ = KRE::DisplayDevice::getCurrent()->setDefaultCamera(cam_);
+		last_cam_ = KRE::DisplayDevice::getCurrent()->setDefaultCamera(cam_);
 		//screen_clip_.reset(new KRE::Scissor::Manager(rect(x_, y_, width_, height_)));
 		wnd->setViewPort(0, 0, width_, height_);
 	}
@@ -93,7 +93,7 @@ namespace graphics
 	{
 		//screen_clip_.reset();
 		wnd->setViewPort(0, 0, wnd->width(), wnd->height());
-		//KRE::DisplayDevice::getCurrent()->setDefaultCamera(last_cam_);
+		KRE::DisplayDevice::getCurrent()->setDefaultCamera(last_cam_);
 	}
 
 	GameScreen::Manager::Manager(KRE::WindowPtr wnd)

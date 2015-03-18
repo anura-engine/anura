@@ -66,10 +66,11 @@ namespace gui
 			return;
 		}
 
-		const float scale = std::min(static_cast<float>(width())/width_, static_cast<float>(height())/height_);
-		KRE::Canvas::ModelManager mm(x(), y(), 0, scale);
+		//const float scale = std::min(static_cast<float>(width())/width_, static_cast<float>(height())/height_);
+		KRE::Canvas::ModelManager mm(x()+4, y()+4/*, 0, scale*/);
 		auto canvas = KRE::Canvas::getInstance();
 		for(auto& t : tiles_) {
+			//KRE::Canvas::ModelManager mm(t.x, t.y);
 			LevelObject::queueDraw(canvas, t);
 		}
 	}
