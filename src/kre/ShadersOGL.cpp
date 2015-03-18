@@ -322,6 +322,7 @@ namespace KRE
 				"    gl_Position = u_mvp_matrix * vec4(a_position,0.0,1.0);\n"
 				"}\n";
 			const char* const point_shader_fs = 
+				"#version 120\n"
 				"uniform vec4 u_color;\n"
 				"uniform bool u_is_circular;\n"
 				"void main()\n"
@@ -620,6 +621,7 @@ namespace KRE
 			glGetProgramiv(object_, GL_ACTIVE_UNIFORM_MAX_LENGTH, &uniform_max_len);
 			std::vector<char> name;
 			name.resize(uniform_max_len+1);
+			LOG_DEBUG("actives(uniforms) for shader: " << name_);
 			for(int i = 0; i < active_uniforms; i++) {
 				Actives u;
 				GLsizei size;
@@ -636,6 +638,7 @@ namespace KRE
 				ASSERT_LOG(u.location >= 0, "Unable to determine the location of the uniform: " << u.name);
 				uniforms_[u.name] = u;
 				v_uniforms_[u.location] = u;
+				LOG_DEBUG("    " << u.name << " loc: " << u.location << ", num elements: " << u.num_elements << ", type: " << u.type);
 			}
 			return true;
 		}
@@ -1222,7 +1225,7 @@ namespace KRE
 					}
 					if(u_palette_ != ShaderProgram::INVALID_UNIFORM) {
 						// XXX replace tex->getSurfaces()[1]->height() with tex->getNormalizedCoordH(1, 1);
-						float h = static_cast<float>(tex->getSurfaces()[1]->height() - 1);
+						float h = static_cast<float>(tex->getSurfaces()[1]->height()) - 1.0f;
 						float palette_sel[2];
 						palette_sel[0] = static_cast<float>(tex->getPalette()) / h;
 						palette_sel[1] = 0;
