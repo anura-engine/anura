@@ -154,7 +154,7 @@ namespace
 	int global_pause_time;
 
 	typedef std::function<void(const Level&, screen_position&, float)> TransitionFn;
-
+		
 	//prepare to call transition_scene by making sure that frame buffers are
 	//filled with the image of the screen.
 	void prepare_transition_scene(Level& lvl, screen_position& screen_pos)
@@ -172,11 +172,14 @@ namespace
 		}
 
 		const int start_time = profile::get_tick_time();
+		auto wnd = KRE::WindowManager::getMainWindow();
 
 		for(int n = 0; n <= 20; ++n) {
+			wnd->setClearColor(KRE::Color::colorBlack());
+			wnd->clear(KRE::ClearFlags::COLOR);
 			draw_fn(lvl, screen_pos, transition_out ? (n/20.0f) : (1 - n/20.0f));
 
-			KRE::WindowManager::getMainWindow()->swap();
+			wnd->swap();
 
 			const int target_end_time = start_time + (n+1)*preferences::frame_time_millis();
 			const int current_time = profile::get_tick_time();
@@ -246,7 +249,9 @@ namespace
 				canvas->drawSolidRect(rect(wnd->width() - right_rect_width, 0, right_rect_width, wnd->height()), KRE::Color::colorBlack());
 			}
 
-			canvas->drawSolidCircle(point(center_x,center_y), static_cast<float>(radius), KRE::Color::colorBlack());
+			float inner_radius = static_cast<float>(radius);
+			float outer_radius = (center_rect.w() + center_rect.h()) / 2.0f + inner_radius;
+			canvas->drawHollowCircle(point(center_x, center_y), outer_radius, inner_radius, KRE::Color::colorBlack());
 		}
 	}
 
@@ -1504,7 +1509,7 @@ bool LevelRunner::play_cycle()
 				}
 				{
 					//profile::manager pman("render_scene");
-					KRE::ModelManager2D(0, 0, 0.0f, static_cast<float>(g_global_scale));
+					//KRE::ModelManager2D(0, 0, 0.0f, static_cast<float>(g_global_scale));
 					render_scene(*lvl_, last_draw_position());
 				}
 #ifndef NO_EDITOR
