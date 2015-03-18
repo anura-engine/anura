@@ -185,7 +185,7 @@ namespace KRE
 		rectf getTextureCoords(int n, const geometry::Rect<T>& r) const {
 			return rectf::from_coordinates(translateCoordW<float>(n, getNormalisedTextureCoordW<float,T>(n, r.x1())),
 				translateCoordH<float>(n, getNormalisedTextureCoordH<float,T>(n, r.y1())),
-				translateCoordH<float>(n, getNormalisedTextureCoordW<float,T>(n, r.x2())),
+				translateCoordW<float>(n, getNormalisedTextureCoordW<float,T>(n, r.x2())),
 				translateCoordH<float>(n, getNormalisedTextureCoordH<float,T>(n, r.y2())));
 		}
 
