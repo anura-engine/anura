@@ -277,8 +277,7 @@ namespace gui
 		}
 		if(!claimed) {
 			if(tooltip_ && event.type == SDL_MOUSEMOTION) {
-				if(event.motion.x >= x() && event.motion.x <= x()+width() &&
-					event.motion.y >= y() && event.motion.y <= y()+height()) {
+				if(inWidget(event.motion.x, event.motion.y)) {
 					if(!tooltip_displayed_) {
 						if(tooltip_display_delay_ == 0 || profile::get_tick_time() > tooltip_ticks_) {
 							gui::set_tooltip(tooltip_);
