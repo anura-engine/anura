@@ -426,7 +426,6 @@ namespace KRE
 
 	void Texture::addPalette(int index, const SurfacePtr& palette)
 	{
-		++index;
 		if(palette == nullptr) {
 			LOG_WARN("Ignoring request to add empty palette surface.");
 			return;
@@ -440,6 +439,7 @@ namespace KRE
 		is_paletteized_ = true;
 		auto it = palette_row_map_.find(index);
 		if(it != palette_row_map_.end()) {
+			ASSERT_LOG(false, "adding palette at existing location. " << index << " internal: " << it->second << " id: " << id());
 			index = it->second;
 		} else {
 			palette_row_map_[index] = palette_row_map_.size();
@@ -461,8 +461,7 @@ namespace KRE
 
 	bool Texture::hasPaletteAt(int index) const
 	{
-		auto it = palette_row_map_.find(index);
-		return it != palette_row_map_.end();
+		return palette_row_map_.find(index) != palette_row_map_.end();
 	}
 
 	void Texture::setPaletteMixing(int n1, int n2, float ratio)
