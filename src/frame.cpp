@@ -239,6 +239,7 @@ Frame::Frame(variant node)
 		std::stringstream ss;
 		for(auto& palette_id : palettes_recognized_) {
 			if(!tex->hasPaletteAt(palette_id)) {
+				//LOG_DEBUG("no palette at " << palette_id << " texture id: " << tex->id() << " : " << tex.get());
 				tex->addPalette(palette_id, graphics::get_palette_surface(palette_id));
 			}
 			ss << " " << palette_id;
