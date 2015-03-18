@@ -64,13 +64,13 @@ namespace input
 	Uint32 sdl_get_mouse_state(int* x, int* y)
 	{
 		const Uint32 result = SDL_GetMouseState(x, y);
-		auto sdl_wnd = SDL_GetMouseFocus();
+		/*auto sdl_wnd = SDL_GetMouseFocus();
 		auto wnd = KRE::WindowManager::getMainWindow();
 		if(sdl_wnd != nullptr) {
 			auto id = SDL_GetWindowID(sdl_wnd);
 			wnd = KRE::WindowManager::getWindowFromID(id);
 		}
-		wnd->mapMousePosition(x, y);
+		wnd->mapMousePosition(x, y);*/
 		return result;
 	}
 }
