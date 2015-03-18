@@ -24,6 +24,7 @@
 
 #pragma once
 
+#include "CameraObject.hpp"
 #include "Scissor.hpp"
 #include "WindowManagerFwd.hpp"
 
@@ -70,6 +71,7 @@ namespace graphics
 		int y_;
 
 		std::unique_ptr<KRE::Scissor::Manager> screen_clip_;
+		KRE::CameraPtr cam_, last_cam_;
 
 		GameScreen(const GameScreen&);
 		void operator=(const GameScreen&);

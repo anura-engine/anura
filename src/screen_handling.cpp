@@ -37,7 +37,9 @@ namespace graphics
 		  virtual_height_(0),
 		  x_(0),
 		  y_(0),
-		  screen_clip_()
+		  screen_clip_(),
+		  cam_(),
+		  last_cam_()
 	{
 	}
 
@@ -65,6 +67,7 @@ namespace graphics
 	{
 		width_ = width;
 		height_ = height;
+		cam_ = std::make_shared<KRE::Camera>("gs.cam", 0, width_, 0, height_);
 	}
 
 	void GameScreen::setVirtualDimensions(int vwidth, int vheight)
@@ -81,18 +84,16 @@ namespace graphics
 
 	void GameScreen::setupForDraw(KRE::WindowPtr wnd)
 	{
-		auto orthocam = std::make_shared<KRE::Camera>("orthocam", 0, width_, 0, height_);
-		KRE::DisplayDevice::getCurrent()->setDefaultCamera(orthocam);
-		screen_clip_.reset(new KRE::Scissor::Manager(rect(x_, y_, width_, height_)));
+		//last_cam_ = KRE::DisplayDevice::getCurrent()->setDefaultCamera(cam_);
+		//screen_clip_.reset(new KRE::Scissor::Manager(rect(x_, y_, width_, height_)));
 		wnd->setViewPort(0, 0, width_, height_);
 	}
 
 	void GameScreen::cleanupAfterDraw(KRE::WindowPtr wnd)
 	{
-		screen_clip_.reset();
+		//screen_clip_.reset();
 		wnd->setViewPort(0, 0, wnd->width(), wnd->height());
-		auto orthocam = std::make_shared<KRE::Camera>("orthocam", 0, wnd->width(), 0, wnd->height());
-		KRE::DisplayDevice::getCurrent()->setDefaultCamera(orthocam);
+		//KRE::DisplayDevice::getCurrent()->setDefaultCamera(last_cam_);
 	}
 
 	GameScreen::Manager::Manager(KRE::WindowPtr wnd)
