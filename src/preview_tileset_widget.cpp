@@ -32,7 +32,7 @@ namespace gui
 {
 	PreviewTilesetWidget::PreviewTilesetWidget(const TileMap& tiles)
 	  : width_(0), 
-	  height_(0)
+	    height_(0)
 	{
 		setEnvironment();
 		tiles.buildTiles(&tiles_);
@@ -40,7 +40,9 @@ namespace gui
 	}
 
 	PreviewTilesetWidget::PreviewTilesetWidget(const variant& v, game_logic::FormulaCallable* e)
-		: Widget(v,e)
+		: Widget(v,e),
+		  width_(0),
+		  height_(0)
 	{
 		build(v["tile_map"]);
 	}

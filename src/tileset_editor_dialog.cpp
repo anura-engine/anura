@@ -160,6 +160,7 @@ namespace editor_dialogs
 
 		removeWidget(context_menu_);
 		context_menu_.reset(grid);
+		context_menu_->setZOrder(1000);
 		addWidget(context_menu_, mousex, mousey);
 	}
 
