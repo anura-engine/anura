@@ -1,4 +1,6 @@
 #include "DisplayDevice.hpp"
+#include "Shaders.hpp"
+
 #include "rect_renderable.hpp"
 
 RectRenderable::RectRenderable(bool strips)
@@ -6,6 +8,7 @@ RectRenderable::RectRenderable(bool strips)
 {
 	using namespace KRE;
 
+	setShader(ShaderProgram::getProgram("simple"));
 	auto ab = DisplayDevice::createAttributeSet(false, false, false);
 	r_ = std::make_shared<Attribute<glm::u16vec2>>(AccessFreqHint::DYNAMIC, AccessTypeHint::DRAW);
 	r_->addAttributeDesc(AttributeDesc(AttrType::POSITION, 2, AttrFormat::SHORT, false));
