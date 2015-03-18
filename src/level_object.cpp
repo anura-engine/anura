@@ -976,15 +976,15 @@ void LevelObject::queueDraw(KRE::CanvasPtr canvas, const LevelTile& t)
 
 	rect src_rect(xpos, ypos, xpos + area.w(), ypos + area.h());
 
-	int area_x = area.x() * 2;
+	int area_x = area.x() * g_tile_scale;
 	if(t.face_right) {
 		src_rect = rect::from_coordinates(src_rect.x2(), src_rect.y(), src_rect.x(), src_rect.y2());
-		area_x = 2 * BaseTileSize - area.x() * 2 - area.w() * 2;
+		area_x = (BaseTileSize - area.x() - area.w()) * g_tile_scale;
 	}
 
 	const int x = t.x + area_x;
-	const int y = t.y + area.y() * 2;
-	rect dst_rect(x, y, area.w() * 2, area.h() * 2);
+	const int y = t.y + area.y() * g_tile_scale;
+	rect dst_rect(x, y, area.w() * g_tile_scale, area.h() * g_tile_scale);
 
 	canvas->blitTexture(t.object->t_, src_rect, 0, dst_rect);
 }
