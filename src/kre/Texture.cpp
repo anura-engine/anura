@@ -260,7 +260,7 @@ namespace KRE
 	void Texture::internalInit(texture_params_iterator tp)
 	{
 		for(auto& am : tp->address_mode) {
-			am = AddressMode::CLAMP;
+			am = AddressMode::WRAP;
 		}
 		tp->filtering[0] = Filtering::POINT;
 		tp->filtering[1] = Filtering::POINT;

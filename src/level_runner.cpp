@@ -1504,7 +1504,7 @@ bool LevelRunner::play_cycle()
 				}
 				{
 					//profile::manager pman("render_scene");
-					KRE::ModelManager2D(0, 0, 0.0f, g_global_scale);
+					KRE::ModelManager2D(0, 0, 0.0f, static_cast<float>(g_global_scale));
 					render_scene(*lvl_, last_draw_position());
 				}
 #ifndef NO_EDITOR

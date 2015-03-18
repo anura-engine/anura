@@ -154,7 +154,7 @@ Background::Background(variant node, int palette)
 		bg.xpad = layer_node["xpad"].as_int(0);
 		bg.xoffset = layer_node["xoffset"].as_int(0);
 		bg.yoffset = layer_node["yoffset"].as_int(0);
-		bg.scale = layer_node["scale"].as_int(1);
+		bg.scale = layer_node["scale"].as_int(2);
 		bg.blend = layer_node["blend"].as_bool(true);
 		bg.notile = layer_node["notile"].as_bool(false);
 		if(bg.scale < 1) {
@@ -304,7 +304,7 @@ void Background::draw(int x, int y, const rect& area, const std::vector<rect>& o
 		bot_rect_.disable();
 	} else {
 		//both bottom and top colors are on the screen, so draw them both,
-		const int dist_from_bottom = area.y2() - (y - height);
+		const int dist_from_bottom = height - y;
 
 		//LOG_DEBUG("fill top: " << x << "," << y << "," << area.w() << "," << dist_from_bottom << " with: " << top_);
 		top_rect_.update(x, y, area.w(), dist_from_bottom, top_);
@@ -392,12 +392,11 @@ void Background::setOffset(const point& offset)
 
 void Background::drawLayer(int x, int y, const rect& area, float rotation, const Background::Layer& bg, int cycle) const
 {
+
 	auto& gs = graphics::GameScreen::get();
-	//LOG_DEBUG("xy: " << x << "," << y << " wh: " << gs.getWidth() << "," << gs.getHeight() << ", area: " << area);
 	const float ScaleImage = 2.0f;
 	int y1 = static_cast<int>(y + (bg.yoffset+offset_.y)*ScaleImage - (y*bg.yscale_top)/100);
 	int y2 = static_cast<int>(y + (bg.yoffset+offset_.y)*ScaleImage - (y*bg.yscale_bot)/100 + (bg.y2 - bg.y1) * ScaleImage);
-	//LOG_DEBUG("y1,y2: " << y1 << "," << y2);
 
 	if(!bg.tile_downwards && y2 <= y) {
 		return;
@@ -524,10 +523,8 @@ void Background::drawLayer(int x, int y, const rect& area, float rotation, const
 		if(blit_width > 0) {
 			const float xpos2 = xpos + static_cast<float>(blit_width) / (bg.texture->actualWidth() * 2.0f);
 
-			const short x1 = x & preferences::xypos_draw_mask;
-			const short x2 = (x1 + blit_width) & preferences::xypos_draw_mask;
-			y1 &= preferences::xypos_draw_mask;
-			y2 &= preferences::xypos_draw_mask;
+			const short x1 = x;
+			const short x2 = (x1 + blit_width);
 
 			const float u1 = bg.texture->getNormalisedTextureCoordW<float>(0, xpos);
 			const float u2 = bg.texture->getNormalisedTextureCoordW<float>(0, xpos2);
@@ -539,8 +536,6 @@ void Background::drawLayer(int x, int y, const rect& area, float rotation, const
 			q.emplace_back(glm::i16vec2(x2, y2), glm::vec2(u2, v2));
 			q.emplace_back(glm::i16vec2(x1, y1), glm::vec2(u1, v1));
 			q.emplace_back(glm::i16vec2(x1, y2), glm::vec2(u1, v2));
-
-//LOG_DEBUG(bg.texture->id() << ": " << x1 << "," << y1 << "," << x2 << "," << y2 << " : " << u1 << "," << v1 << "," << u2 << "," << v2);
 		}
 
 		x += static_cast<int>(blit_width + bg.xpad * ScaleImage);
