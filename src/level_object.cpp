@@ -55,24 +55,6 @@ namespace
 {
 	typedef std::map<std::string,ConstLevelObjectPtr> tiles_map;
 	tiles_map tiles_cache;
-
-	struct PaletteTextureKey
-	{
-		std::string name;
-		int palettes;
-	};
-	
-	bool operator<(const PaletteTextureKey& lhs, const PaletteTextureKey& rhs) 
-	{
-		return lhs.name == rhs.name ? lhs.palettes < rhs.palettes : lhs.name < rhs.name;
-	}
-
-	typedef std::map<PaletteTextureKey, std::weak_ptr<KRE::Texture>> palette_texture_cache_map;
-	palette_texture_cache_map& get_palette_texture_cache()
-	{
-		static palette_texture_cache_map res;
-		return res;
-	}
 }
 
 bool LevelTile::isSolid(int xpos, int ypos) const
@@ -382,6 +364,7 @@ LevelObject::LevelObject(variant node, const char* id)
 		ASSERT_LOG(false, "No 'image' attribute found.");
 	}
 
+	std::vector<int> palettes_id_list;
 	if(node.has_key("palettes")) {
 		palettes_recognized_ = 0;
 		std::vector<std::string> p = parse_variant_list_or_csv_string(node["palettes"]);
@@ -389,33 +372,14 @@ LevelObject::LevelObject(variant node, const char* id)
 			const int id = graphics::get_palette_id(pal);
 			if(id >= 0) {
 				palettes_recognized_ |= 1 << id;
+				palettes_id_list.emplace_back(id);
 			} else {
 				LOG_ERROR("Unrecognised palette name: " << pal);
 			}
 		}
 	}
 
-	if(palettes_recognized_ > 0) {
-		PaletteTextureKey key = { image_, palettes_recognized_ };
-		auto it = get_palette_texture_cache().find(key);
-		if(it == get_palette_texture_cache().end() || it->second.lock() == nullptr) {
-			t_ = KRE::Texture::createTexture(node["image"]);
-			int p = palettes_recognized_;
-			int id = 0;
-			while(p != 0) {
-				if(p & 1) {
-					t_->addPalette(id, graphics::get_palette_surface(id));
-				}
-				p >>= 1;
-				++id;
-			}
-			get_palette_texture_cache()[key] = t_;
-		} else {
-			t_ = it->second.lock();
-		}
-	} else {
-		t_ = KRE::Texture::createTexture(node["image"]);
-	}
+	t_ = graphics::get_palette_texture(image_, node["image"], palettes_id_list);
 
 	if(palettes_recognized_) {
 		palette_level_objects().insert(this);

@@ -58,13 +58,6 @@ namespace
 	static unsigned int current_palette_mask = 0;
 
 	static const glm::vec3 z_axis(0, 0, 1.0f);
-
-	typedef std::map<std::string, std::weak_ptr<KRE::Texture>> palette_texture_cache_map;
-	palette_texture_cache_map& get_palette_texture_cache()
-	{
-		static palette_texture_cache_map res;
-		return res;
-	}
 }
 
 void Frame::buildPatterns(variant obj_variant)
@@ -205,13 +198,9 @@ Frame::Frame(variant node)
 	blit_target_.setCentre(KRE::Blittable::Centre::TOP_LEFT);
 
 	if(node.has_key("image")) {
-		if(node["image"].is_string()) {
-			image_ = node["image"].as_string();
-		} else if(node["image"].is_map()) {
-			image_ = node["image"]["image"].as_string();
-		} else if(node["image"].is_list()) {
-			image_ = node["image"][0]["image"].as_string();
-		}
+		auto res = KRE::Texture::findImageNames(node["image"]);
+		ASSERT_LOG(res.size() > 0 && !res[0].empty(), "No valid filenames for texture found in: " << node["image"].to_debug_string());
+		image_ = res[0];
 	} else {
 		ASSERT_LOG(false, "No 'image' attribute found.");
 	}
@@ -223,36 +212,11 @@ Frame::Frame(variant node)
 		palettes_recognized_.emplace_back(id);
 	}
 
-	if(!palettes_recognized_.empty()) {
-		ASSERT_LOG(!image_.empty(), "palettes are set but image is empty.");
-		auto it = get_palette_texture_cache().find(image_);
-		KRE::TexturePtr tex = nullptr;
-		if(it != get_palette_texture_cache().end()) {
-			tex = it->second.lock();
-		}
-		if(tex == nullptr) {
-			tex = KRE::Texture::createTexture(node["image"]);
-			get_palette_texture_cache()[image_] = tex;
-		}
-		blit_target_.setTexture(tex);
-
-		std::stringstream ss;
-		for(auto& palette_id : palettes_recognized_) {
-			if(!tex->hasPaletteAt(palette_id)) {
-				//LOG_DEBUG("no palette at " << palette_id << " texture id: " << tex->id() << " : " << tex.get());
-				tex->addPalette(palette_id, graphics::get_palette_surface(palette_id));
-			}
-			ss << " " << palette_id;
-		}
-		LOG_DEBUG("Adding palettes: " << ss.str() << "' at: " << " to texture id: " << tex->id() << ", '" << image_ << "'");
-
-	} else {
-		if(node.has_key("fbo")) {
-			blit_target_.setTexture(node["fbo"].convert_to<TextureObject>()->texture());
-			blit_target_.setBlendMode(KRE::BlendModeConstants::BM_ONE, KRE::BlendModeConstants::BM_ONE_MINUS_SRC_ALPHA);
-		} else if(node.has_key("image")) {
-			blit_target_.setTexture(KRE::Texture::createTexture(node["image"]));
-		}
+	if(node.has_key("fbo")) {
+		blit_target_.setTexture(node["fbo"].convert_to<TextureObject>()->texture());
+		blit_target_.setBlendMode(KRE::BlendModeConstants::BM_ONE, KRE::BlendModeConstants::BM_ONE_MINUS_SRC_ALPHA);
+	} else if(node.has_key("image")) {
+		blit_target_.setTexture(graphics::get_palette_texture(image_, node["image"], palettes_recognized_));
 	}
 
 	if(palettes_recognized_.empty() == false) {

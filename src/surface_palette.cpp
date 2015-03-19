@@ -29,7 +29,6 @@
 #include "asserts.hpp"
 #include "json_parser.hpp"
 #include "module.hpp"
-#include "surface_cache.hpp"
 #include "surface_palette.hpp"
 
 namespace graphics
@@ -66,6 +65,13 @@ namespace graphics
 			if(res.empty()) {
 				read_all_palettes(res);
 			}
+			return res;
+		}
+
+		typedef std::map<std::string, std::weak_ptr<KRE::Texture>> palette_texture_cache;
+		palette_texture_cache& get_palette_texture_cache()
+		{
+			static palette_texture_cache res;
 			return res;
 		}
 	}
@@ -158,5 +164,41 @@ namespace graphics
 		auto new_surf = Surface::create(surface->width(), surface->height(), PixelFormat::PF::PIXELFORMAT_RGBA8888);
 		new_surf->writePixels(&new_pixels[0], new_pixels.size());
 		return new_surf;
+	}
+
+	KRE::TexturePtr get_palette_texture(const std::string& name, const variant& node, int palette)
+	{
+		std::vector<int> p;
+		p.emplace_back(palette);
+		return get_palette_texture(name, node, p);
+	}
+
+	KRE::TexturePtr get_palette_texture(const std::string& name, const variant& node, const std::vector<int>& palette)
+	{
+		ASSERT_LOG(!name.empty(), "palettes are set but image is empty.");
+		auto it = get_palette_texture_cache().find(name);
+		KRE::TexturePtr tex = nullptr;
+		if(it != get_palette_texture_cache().end()) {
+			tex = it->second.lock();
+		}
+		if(tex == nullptr) {
+			tex = KRE::Texture::createTexture(node);
+			get_palette_texture_cache()[name] = tex;
+		}
+		ASSERT_LOG(tex != nullptr, "No texture was created.");
+
+		std::stringstream ss;
+		for(auto& palette_id : palette) {
+			if(!tex->hasPaletteAt(palette_id)) {
+				//LOG_DEBUG("no palette at " << palette_id << " texture id: " << tex->id() << " : " << tex.get());
+				tex->addPalette(palette_id, graphics::get_palette_surface(palette_id));
+				ss << " " << palette_id;
+			}
+		}
+		std::string palette_str = ss.str();
+		if(!palette_str.empty()) {
+			LOG_DEBUG("Adding palettes: " << palette_str << " at: " << " to texture id: " << tex->id() << ", '" << name << "'");
+		}
+		return tex;
 	}
 }

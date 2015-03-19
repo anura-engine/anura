@@ -25,7 +25,7 @@
 
 #include <string>
 
-#include "Surface.hpp"
+#include "Texture.hpp"
 
 namespace graphics
 {
@@ -36,4 +36,7 @@ namespace graphics
 	KRE::SurfacePtr get_palette_surface(int palette);
 	
 	KRE::SurfacePtr map_palette(KRE::SurfacePtr surface, int palette);
+
+	KRE::TexturePtr get_palette_texture(const std::string& name, const variant& node, int palette);
+	KRE::TexturePtr get_palette_texture(const std::string& name, const variant& node, const std::vector<int>& palette);
 }

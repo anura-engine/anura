@@ -56,13 +56,6 @@ namespace
 		files_updated.insert(path);
 	}
 #endif // NO_EDITOR
-
-	typedef std::map<std::string, std::weak_ptr<KRE::Texture>> texture_cache_type;
-	texture_cache_type& get_texture_cache()
-	{
-		static texture_cache_type res;
-		return res;
-	}
 }
 
 #ifndef NO_EDITOR
@@ -168,25 +161,12 @@ Background::Background(variant node, int palette)
 			bg.scale = 1;
 		}
 
-		auto it = get_texture_cache().find(bg.image);
-		if(it != get_texture_cache().end()) {
-			auto tex = it->second.lock();
-			if(tex != nullptr) {
-				bg.texture = tex;
-			}
-		}
-		if(bg.texture == nullptr) {
-			bg.texture = KRE::Texture::createTexture(bg.image);
-			get_texture_cache()[bg.image] = bg.texture;
-			if(palette_ != -1) {
-				if(!bg.texture->hasPaletteAt(palette_)) {
-					bg.texture->addPalette(palette_, graphics::get_palette_surface(palette_));
-				}
-				bg.texture->setPalette(palette);
-			}
-		}
-		ASSERT_LOG(bg.texture != nullptr, "No texture assigned in background layer.");
+		bg.texture = graphics::get_palette_texture(bg.image, layer_node["image"], palette_);
 		bg.setTexture(bg.texture);
+
+		if(palette_ != -1) {
+			bg.texture->setPalette(palette_);
+		}
 
 		if(palette_ != -1 && !colors_mapped) {
 			top_ = bg.texture->mapPaletteColor(top_, palette);
