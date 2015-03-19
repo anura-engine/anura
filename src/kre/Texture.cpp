@@ -442,8 +442,10 @@ namespace KRE
 			ASSERT_LOG(false, "adding palette at existing location. " << index << " internal: " << it->second << " id: " << id());
 			index = it->second;
 		} else {
-			palette_row_map_[index] = palette_row_map_.size();
-			index = palette_row_map_.size() - 1;
+			int size = palette_row_map_.size();
+			//LOG_DEBUG("adding palette '" << palette->getName() << "' at index: " << size << " from: " << index);
+			palette_row_map_[index] = size;
+			index = size;
 		}
 		handleAddPalette(index, palette);
 	}

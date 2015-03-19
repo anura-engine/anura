@@ -305,6 +305,8 @@ namespace KRE
 			surf->writePixels(&new_pixels[0], new_pixels.size());
 			surf->setAlphaMap(getSurface(0)->getAlphaMap());
 
+			//LOG_DEBUG("adding palette '" << palette->getName() << "' to: " << getSurface(0)->getName() << ". " << td.color_index_map.size() << " colors in map");
+
 			//LOG_INFO("handleAddPalette: Color count: " << td.palette.size());
 
 			// save old palette
