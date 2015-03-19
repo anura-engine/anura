@@ -227,7 +227,7 @@ namespace KRE
 	std::shared_ptr<SceneGraph> SceneNode::getParentGraph() 
 	{ 
 		auto sg = scene_graph_.lock(); 
-		ASSERT_LOG(sg != nullptr, "Parent scene graph has been deleted.")
+		ASSERT_LOG(sg != nullptr, "Parent scene graph has been deleted.");
 		return sg;
 	}
 

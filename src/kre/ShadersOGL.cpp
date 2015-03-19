@@ -987,7 +987,7 @@ namespace KRE
 				if(value.num_elements() != 9) { LOG_WARN("Must be four(9) elements in matrix."); }
 				GLfloat v[9];
 				for(int n = 0; n < value.num_elements(); ++n) {
-					v[n] = GLfloat(value[n].as_decimal().as_float());
+					v[n] = GLfloat(value[n].as_float());
 				}
 				glUniformMatrix3fv(u.location, u.num_elements, GL_FALSE, &v[0]);
 				break;
@@ -996,13 +996,13 @@ namespace KRE
 				if(value.num_elements() != 16) { LOG_WARN("Must be four(16) elements in matrix."); }
 				GLfloat v[16];
 				for(int n = 0; n < value.num_elements(); ++n) {
-					v[n] = GLfloat(value[n].as_decimal().as_float());
+					v[n] = GLfloat(value[n].as_float());
 				}
 				glUniformMatrix4fv(u.location, u.num_elements, GL_FALSE, &v[0]);
 				break;
 			}
 
-			case GL_SAMPLER_2D:		glUniform1i(u.location, value.as_int()); break;
+			case GL_SAMPLER_2D:		glUniform1i(u.location, value.as_int32()); break;
 
 			case GL_SAMPLER_CUBE:
 			default:

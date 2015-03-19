@@ -98,6 +98,7 @@ namespace KRE
 					break;
 				}
 			}
+			ASSERT_LOG(display_ != nullptr, "No display driver was created.");
 
 			// XXX figure out a better way to pass this hint.
 			SDL_SetHint(SDL_HINT_RENDER_DRIVER, renderer_hint_.front().c_str());
@@ -350,10 +351,10 @@ namespace KRE
 	};
 
 	Window::Window(int width, int height, const variant& hints)
-		: width_(hints["width"].as_int(width)), 
-		  height_(hints["height"].as_int(height)),
-		  logical_width_(hints["logical_width"].as_int(width_)),
-		  logical_height_(hints["logical_height"].as_int(height_)),
+		: width_(hints["width"].as_int32(width)), 
+		  height_(hints["height"].as_int32(height)),
+		  logical_width_(hints["logical_width"].as_int32(width_)),
+		  logical_height_(hints["logical_height"].as_int32(height_)),
 		  use_16bpp_(hints["use_16bpp"].as_bool(false)),
 		  use_multi_sampling_(hints["use_multisampling"].as_bool(false)),
 		  samples_(hints["samples"].as_int32(4)),
@@ -512,7 +513,6 @@ namespace KRE
 		// at the moment, so we just return it. We could use window_hint_ in the
 		// future if we had more.
 		WindowPtr wp = std::make_shared<SDLWindow>(width, height, hints);
-		wp->createWindow();
 		createWindow(wp);
 		return wp;
 	}
