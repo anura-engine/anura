@@ -434,6 +434,7 @@ namespace KRE
 		ASSERT_LOG(static_cast<int>(texture_params_.size()) == 1 && !is_paletteized_ || is_paletteized_ && static_cast<int>(texture_params_.size()) == 2, "Currently we only support converting textures to palette versions that have one texture. may life in future.");
 
 		if(!is_paletteized_) {
+			palette_[0] = palette_[1] = 0;
 			palette_row_map_[-1] = 0;
 		}
 		is_paletteized_ = true;
@@ -443,7 +444,7 @@ namespace KRE
 			index = it->second;
 		} else {
 			int size = palette_row_map_.size();
-			//LOG_DEBUG("adding palette '" << palette->getName() << "' at index: " << size << " from: " << index);
+			LOG_DEBUG("adding palette '" << palette->getName() << "' at index: " << size << " from: " << index);
 			palette_row_map_[index] = size;
 			index = size;
 		}
@@ -586,6 +587,33 @@ namespace KRE
 			}			
 		}
 		return color;
+	}
+
+	std::vector<std::string> Texture::findImageNames(const variant& node)
+	{
+		std::vector<std::string> res;
+		if(node.is_string()) {
+			res.emplace_back(node.as_string());
+		} else if(node.is_map()) {
+			if(node.has_key("image")) {
+				res.emplace_back(node["image"].as_string());
+			} else if(node.has_key("texture")) {
+				res.emplace_back(node["texture"].as_string());
+			}
+		} else if(node.is_list()) {
+			for(int n = 0; n != node.num_elements(); ++n) {
+				if(node[n].is_map()) {
+					if(node[n].has_key("image")) {
+						res.emplace_back(node[n]["image"].as_string());
+					} else if(node[n].has_key("texture")) {
+						res.emplace_back(node[n]["texture"].as_string());
+					}
+				} else if(node[n].is_string()) {
+					res.emplace_back(node[n].as_string());
+				}
+			}
+		}
+		return res;
 	}
 }
 

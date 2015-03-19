@@ -229,6 +229,9 @@ namespace KRE
 		bool operator!=(const Texture& other) const {
 			return !operator==(other);
 		}
+
+		// Helper function to extract all the image names out of a node and return them.
+		static std::vector<std::string> findImageNames(const variant& node);
 	protected:
 		explicit Texture(const variant& node, const std::vector<SurfacePtr>& surfaces);
 		explicit Texture(const std::vector<SurfacePtr>& surfaces,
