@@ -56,6 +56,13 @@ namespace
 		files_updated.insert(path);
 	}
 #endif // NO_EDITOR
+
+	typedef std::map<std::string, std::weak_ptr<KRE::Texture>> texture_cache_type;
+	texture_cache_type& get_texture_cache()
+	{
+		static texture_cache_type res;
+		return res;
+	}
 }
 
 #ifndef NO_EDITOR
@@ -161,10 +168,24 @@ Background::Background(variant node, int palette)
 			bg.scale = 1;
 		}
 
-		bg.texture = KRE::Texture::createTexture(bg.image);
-		if(palette_ != -1) {
-			bg.texture->addPalette(palette_, graphics::get_palette_surface(palette_));
+		auto it = get_texture_cache().find(bg.image);
+		if(it != get_texture_cache().end()) {
+			auto tex = it->second.lock();
+			if(tex != nullptr) {
+				bg.texture = tex;
+			}
 		}
+		if(bg.texture == nullptr) {
+			bg.texture = KRE::Texture::createTexture(bg.image);
+			get_texture_cache()[bg.image] = bg.texture;
+			if(palette_ != -1) {
+				if(!bg.texture->hasPaletteAt(palette_)) {
+					bg.texture->addPalette(palette_, graphics::get_palette_surface(palette_));
+				}
+				bg.texture->setPalette(palette);
+			}
+		}
+		ASSERT_LOG(bg.texture != nullptr, "No texture assigned in background layer.");
 		bg.setTexture(bg.texture);
 
 		if(palette_ != -1 && !colors_mapped) {
@@ -462,7 +483,7 @@ void Background::drawLayer(int x, int y, const rect& area, float rotation, const
 
 			bg.below_rect.update(xpos, screen_h - ypos, width, height, *bg.color_below);
 			bg.below_rect.enable();
-			//wnd->render(&bg.below_rect);
+			wnd->render(&bg.below_rect);
 		}
 	}
 
