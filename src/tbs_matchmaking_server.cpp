@@ -205,11 +205,9 @@ public:
 				variant_builder b;
 				b.add("id", p.second.user_id);
 
-				std::string status = "idle";
+				std::string status = p.second.status;
 				if(p.second.queued_for_game) {
 					status = "queued";
-				} else if(p.second.game_port) {
-					status = "ingame";
 				}
 
 				b.add("status", status);
@@ -581,6 +579,10 @@ public:
 					fprintf(stderr, "Error: Unknown session: %d\n", session_id);
 					send_msg(socket, "text/json", "{ type: \"error\", message: \"unknown session\" }", "");
 				} else {
+					if(doc["status"].is_string()) {
+						itor->second.status = doc["status"].as_string();
+					}
+
 					itor->second.last_contact = time_ms_;
 					if(itor->second.game_details != "" && !itor->second.game_pending) {
 						send_msg(socket, "text/json", itor->second.game_details, "");
@@ -891,6 +893,7 @@ private:
 		int session_id;
 		std::string user_id;
 		std::string game_details;
+		std::string status;
 		int last_contact;
 		int game_pending;
 		int game_port;
