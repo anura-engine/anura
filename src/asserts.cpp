@@ -107,7 +107,9 @@ void report_assert_msg(const std::string& m)
 
 
 #if defined(WIN32)
-	DebugBreak();
+	if(IsDebuggerPresent()) {
+		DebugBreak();
+	}
     //i*((int *) NULL) = 0;
     //exit(3);
 #elif defined(__APPLE__)
