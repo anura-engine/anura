@@ -260,7 +260,11 @@ CustomObject::CustomObject(variant node)
 	}
 
 	if(node.has_key("draw_area")) {
-		draw_area_.reset(new rect(node["draw_area"].as_string()));
+		if(node["draw_area"].is_string()) {
+			draw_area_.reset(new rect(json::parse(node["draw_area"].as_string())));
+		} else {
+			draw_area_.reset(new rect(node["draw_area"]));
+		}
 	}
 
 	if(node.has_key("draw_scale")) {

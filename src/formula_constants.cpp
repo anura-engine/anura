@@ -47,6 +47,12 @@ namespace game_logic
 			return variant(KRE::WindowManager::getMainWindow()->width());
 		} else if(id == "SCREEN_HEIGHT") {
 			return variant(KRE::WindowManager::getMainWindow()->height());
+		} else if(id == "TOUCH_SCREEN") {
+#if defined(MOBILE_BUILD)
+			return variant::from_bool(true);
+#else
+			return variant::from_bool(false);
+#endif
 		} else if(id == "LOW_END_SYSTEM") {
 #if defined(MOBILE_BUILD)
 			return variant(1);
