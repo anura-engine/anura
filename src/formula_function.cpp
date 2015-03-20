@@ -1023,6 +1023,7 @@ FUNCTION_TYPE_DEF
 	if(args().size() == 1) {
 		std::vector<variant_type_ptr> items;
 		variant_type_ptr result = args()[0]->query_variant_type()->is_list_of();
+		ASSERT_LOG(result.get(), "Single argument to max must be a list, found " << args()[0]->query_variant_type()->to_string());
 		items.push_back(result);
 		items.push_back(variant_type::get_type(variant::VARIANT_TYPE_NULL));
 		return variant_type::get_union(items);

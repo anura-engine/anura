@@ -42,6 +42,7 @@
 #include "raster.hpp"
 #include "stats.hpp"
 #include "text_editor_widget.hpp"
+#include "unit_test.hpp"
 
 namespace editor_dialogs
 {
@@ -236,9 +237,10 @@ const std::string editor_module_properties_dialog::on_exit() {
 	return mod_.name_ + ":titlescreen.cfg";
 }
 
-void editor_module_properties_dialog::create_new_module() {
-	if(!mod_.name_.empty()) {
-		std::string mod_path = "./modules/" + mod_.name_ + "/";
+namespace {
+void create_module(const module::modules& mod) {
+	if(!mod.name_.empty()) {
+		std::string mod_path = "./modules/" + mod.name_ + "/";
 		// create some default directories.
 		sys::get_dir(mod_path + "data");
 		sys::get_dir(mod_path + "data/level");
@@ -267,7 +269,7 @@ void editor_module_properties_dialog::create_new_module() {
 		sys::write_file(mod_path + preferences::level_path() + "titlescreen.cfg", empty_lvl.write_json());
 
 		// Module specifed as standalone, write out a few extra useful files.
-		if(mod_.included_modules_.empty()) {
+		if(mod.included_modules_.empty()) {
 			// data/fonts.cfg			-- {font:["@flatten","@include data/dialog_font.cfg","@include data/label_font.cfg"]}
 			// data/gui.cfg				-- {section:["@flatten","@include data/editor-tools.cfg","@include data/gui-elements.cfg"],framed_gui_element: ["@flatten","@include data/framed-gui-elements.cfg"]}
 			// data/music.cfg			-- {}
@@ -299,29 +301,49 @@ void editor_module_properties_dialog::create_new_module() {
 	}
 }
 
-void editor_module_properties_dialog::save_module_properties() {
-	if(!mod_.name_.empty()) {
+void write_module_properties(const module::modules& mod) {
+	if(!mod.name_.empty()) {
 		std::map<variant,variant> m;
-		m[variant("id")] = variant(mod_.name_);
-		if(mod_.pretty_name_.empty() == false) {
-			m[variant("name")] = variant(mod_.pretty_name_);
+		m[variant("id")] = variant(mod.name_);
+		if(mod.pretty_name_.empty() == false) {
+			m[variant("name")] = variant(mod.pretty_name_);
 		}
-		if(mod_.abbreviation_.empty() == false) {
-			m[variant("abbreviation")] = variant(mod_.abbreviation_);
+		if(mod.abbreviation_.empty() == false) {
+			m[variant("abbreviation")] = variant(mod.abbreviation_);
 		}
-		if(mod_.included_modules_.empty() == false) {
+		if(mod.included_modules_.empty() == false) {
 			std::vector<variant> v;
-			foreach(const std::string& s, mod_.included_modules_) {
+			foreach(const std::string& s, mod.included_modules_) {
 				v.push_back(variant(s));
 			}
 			m[variant("dependencies")] = variant(&v);
 		}
 		m[variant("min_engine_version")] = preferences::version_decimal();
 		variant new_module(&m);
-		std::string mod_path = "./modules/" + mod_.name_ + "/";
+		std::string mod_path = "./modules/" + mod.name_ + "/";
 		// create the module file.
 		sys::write_file(mod_path + "module.cfg", new_module.write_json());
 	}
+}
+}
+
+COMMAND_LINE_UTILITY(create_module) {
+	module::modules mod;
+
+	ASSERT_LOG(args.size() == 1, "Must provide name of module to create");
+
+	mod.name_ = args[0];
+
+	create_module(mod);
+	write_module_properties(mod);
+}
+
+void editor_module_properties_dialog::create_new_module() {
+	create_module(mod_);
+}
+
+void editor_module_properties_dialog::save_module_properties() {
+	write_module_properties(mod_);
 }
 
 }

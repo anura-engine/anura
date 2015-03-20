@@ -53,7 +53,7 @@ USE_LUA?=$(shell pkg-config --exists lua5.2 && echo yes)
 BASE_CXXFLAGS += -std=c++0x -g -rdynamic -fno-inline-functions \
 	-fthreadsafe-statics -Wnon-virtual-dtor -Werror \
 	-Wignored-qualifiers -Wformat -Wswitch -Wreturn-type \
-	-DUSE_SHADERS -DUTILITY_IN_PROC -DUSE_ISOMAP  -DUSE_BOX2D \
+	-DUSE_SHADERS -DUTILITY_IN_PROC -DUSE_ISOMAP  -DUSE_BOX2D -DUSE_DB_CLIENT \
 	-Wno-narrowing -Wno-literal-suffix
 
 # Compiler include options, used after CXXFLAGS and CPPFLAGS.
@@ -65,7 +65,7 @@ endif
 
 # Linker library options.
 LIBS := $(shell pkg-config --libs x11 gl ) \
-	$(shell pkg-config --libs sdl2 glew SDL2_image libpng zlib) -lSDL2_ttf -lSDL2_mixer
+	$(shell pkg-config --libs sdl2 glew SDL2_image libpng zlib) -lSDL2_ttf -lSDL2_mixer -lcouchbase
 
 ifeq ($(USE_LUA),yes)
 	BASE_CXXFLAGS += -DUSE_LUA

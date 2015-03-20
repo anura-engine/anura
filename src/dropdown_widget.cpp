@@ -116,7 +116,7 @@ dropdown_widget::dropdown_widget(const variant& v, game_logic::formula_callable*
 void dropdown_widget::init()
 {
 	const int dropdown_image_size = std::max(height(), dropdown_image_->height());
-	label_ = new label(list_.size() > 0 ? list_[current_selection_] : "No items");
+	label_ = new label(list_.size() > 0 && current_selection_ >= 0 && current_selection_ < list_.size() ? list_[current_selection_] : "No items");
 	if(font_.empty() == false) {
 		label_->set_font(font_);
 	}

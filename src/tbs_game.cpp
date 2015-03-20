@@ -173,7 +173,7 @@ boost::intrusive_ptr<game> game::create(const variant& v)
 
 game::game(const game_type& type)
   : type_(type), game_id_(generate_game_id()),
-    started_(false), state_(STATE_SETUP), state_id_(0), rng_seed_(rng::get_seed()), cycle_(0), tick_rate_(50),
+    started_(false), state_(STATE_SETUP), state_id_(0), cycle_(0), tick_rate_(50),
 	backup_callable_(NULL)
 {
 }
@@ -183,7 +183,7 @@ game::game(const variant& value)
 	game_id_(generate_game_id()),
     started_(value["started"].as_bool(false)),
 	state_(STATE_SETUP),
-	state_id_(0), rng_seed_(rng::get_seed()),
+	state_id_(0),
 	cycle_(value["cycle"].as_int(0)),
 	tick_rate_(value["tick_rate"].as_int(50)),
 	backup_callable_(NULL)
@@ -196,7 +196,6 @@ game::game(const std::string& game_type, const variant& doc)
 	started_(doc["started"].as_bool()),
 	state_(started_ ? STATE_PLAYING : STATE_SETUP),
 	state_id_(doc["state_id"].as_int()),
-	rng_seed_(doc["rng_seed"].as_int()),
 	cycle_(doc["cycle"].as_int(0)),
 	tick_rate_(doc["tick_rate"].as_int(50)),
 	backup_callable_(NULL),
@@ -236,7 +235,6 @@ variant game::write(int nplayer, int processing_ms) const
 	result.add("game_type", variant(type_.name));
 	result.add("started", variant::from_bool(started_));
 	result.add("state_id", state_id_);
-	result.add("rng_seed", rng_seed_);
 
 	if(processing_ms != -1) {
 		fprintf(stderr, "ZZZ: server_time: %d\n", processing_ms);
@@ -606,7 +604,6 @@ void game::set_value(const std::string& key, const variant& value)
 void game::handle_message(int nplayer, const variant& msg)
 {
 	fprintf(stderr, "HANDLE MESSAGE (((%s)))\n", msg.write_json().c_str());
-	rng::set_seed(rng_seed_);
 	const std::string type = msg["type"].as_string();
 	if(type == "start_game") {
 		start_game();
@@ -665,9 +662,7 @@ void game::handle_message(int nplayer, const variant& msg)
 	game_logic::map_formula_callable_ptr vars(new game_logic::map_formula_callable);
 	vars->add("message", msg);
 	vars->add("player", variant(nplayer));
-	rng::set_seed(rng_seed_);
 	handle_event("message", vars.get());
-	rng_seed_ = rng::get_seed();
 
 	const int time_taken = SDL_GetTicks() - start_time;
 

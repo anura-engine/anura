@@ -1613,7 +1613,7 @@ private:
 					
 					return variant::from_bool(!result);
 				} else if(right.is_map()) {
-					return variant(right.has_key(left) ? result : !result);
+					return variant::from_bool(right.has_key(left) ? result : !result);
 				} else {
 					ASSERT_LOG(false, "ILLEGAL OPERAND TO 'in': " << right.write_json() << " AT " << debug_pinpoint_location());
 					return variant();
@@ -2686,7 +2686,7 @@ expression_ptr optimize_expression(expression_ptr result, function_symbol_table*
 		//it is static if it never reads its input, if it doesn't call the rng,
 		//and if a reference to the input itself is not stored.
 		try {
-			const unsigned int rng_seed = rng::get_seed();
+			const rng::Seed rng_seed = rng::get_seed();
 			formula_callable_ptr static_callable(new static_formula_callable);
 
 			variant res;

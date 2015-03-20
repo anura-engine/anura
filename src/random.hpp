@@ -17,11 +17,16 @@
 #ifndef RANDOM_HPP_INCLUDED
 #define RANDOM_HPP_INCLUDED
 
+#include <boost/random/mersenne_twister.hpp>
+
 namespace rng {
 
+typedef boost::random::mt19937 Seed;
+
 int generate();
-void set_seed(unsigned int seed);
-unsigned int get_seed();
+void seed_from_int(unsigned int seed);
+void set_seed(const Seed& seed);
+Seed get_seed();
 }
 
 #endif

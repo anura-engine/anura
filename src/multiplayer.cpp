@@ -513,7 +513,7 @@ void sync_start_time(const level& lvl, boost::function<bool()> idle_fn)
 		}
 	}
 
-	rng::set_seed(0);
+	rng::seed_from_int(0);
 }
 
 namespace {
