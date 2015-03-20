@@ -3956,10 +3956,12 @@ FUNCTION_DEF(get_document, 1, 2, "get_document(string filename, [enum {'null_on_
 		}
 	}
 
-	variant& v = get_doc_cache()[docname];
-	if(v.is_null() == false) {
-		return v;
+	auto itor = get_doc_cache().find(docname);
+	if(itor != get_doc_cache().end()) {
+		return itor->second;
 	}
+
+	variant& v = get_doc_cache()[docname];
 
 	ASSERT_LOG(std::adjacent_find(docname.begin(), docname.end(), consecutive_periods) == docname.end(), "DOCUMENT NAME CONTAINS ADJACENT PERIODS " << docname);
 
@@ -3972,7 +3974,8 @@ FUNCTION_DEF(get_document, 1, 2, "get_document(string filename, [enum {'null_on_
 	}
 
 	try {
-		return game_logic::deserialize_file_with_objects(docname);
+		v = game_logic::deserialize_file_with_objects(docname);
+		return v;
 	} catch(json::parse_error& e) {
 		if(allow_failure) {
 			return variant();
