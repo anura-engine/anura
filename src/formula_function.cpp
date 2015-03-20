@@ -3733,9 +3733,15 @@ bool consecutive_periods(char a, char b) {
 	return a == '.' && b == '.';
 }
 
-std::map<std::string, variant>& get_doc_cache() {
-	static std::map<std::string, variant> cache;
-	return cache;
+std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
+
+	if(prefs_dir) {
+		static std::map<std::string, variant> cache;
+		return cache;
+	} else {
+		static std::map<std::string, variant> cache2;
+		return cache2;
+	}
 }
 
 PREF_BOOL(write_backed_maps, false, "Write to backed maps such as used in Citadel's evolutionary system");
@@ -3919,7 +3925,7 @@ FUNCTION_DEF(write_document, 2, 2, "write_document(string filename, doc): writes
 	}
 
 	return variant(new fn_command_callable_arg([=](formula_callable* callable) {
-		get_doc_cache()[docname] = doc;
+		get_doc_cache(true)[docname] = doc;
 
 		std::string real_docname = preferences::user_data_path() + docname;
 		sys::write_file(real_docname, game_logic::serialize_doc_with_objects(doc).write_json());
@@ -3956,12 +3962,10 @@ FUNCTION_DEF(get_document, 1, 2, "get_document(string filename, [enum {'null_on_
 		}
 	}
 
-	auto itor = get_doc_cache().find(docname);
-	if(itor != get_doc_cache().end()) {
+	auto itor = get_doc_cache(prefs_directory).find(docname);
+	if(itor != get_doc_cache(prefs_directory).end()) {
 		return itor->second;
 	}
-
-	variant& v = get_doc_cache()[docname];
 
 	ASSERT_LOG(std::adjacent_find(docname.begin(), docname.end(), consecutive_periods) == docname.end(), "DOCUMENT NAME CONTAINS ADJACENT PERIODS " << docname);
 
@@ -3974,10 +3978,13 @@ FUNCTION_DEF(get_document, 1, 2, "get_document(string filename, [enum {'null_on_
 	}
 
 	try {
-		v = game_logic::deserialize_file_with_objects(docname);
-		return v;
+		variant result = game_logic::deserialize_file_with_objects(docname);
+		get_doc_cache(prefs_directory)[docname] = result;
+
+		return result;
 	} catch(json::parse_error& e) {
 		if(allow_failure) {
+			get_doc_cache(prefs_directory)[docname] = variant();
 			return variant();
 		}
 
@@ -3997,7 +4004,8 @@ END_FUNCTION_DEF(get_document)
 
 void remove_formula_function_cached_doc(const std::string& name)
 {
-	get_doc_cache().erase(name);
+	get_doc_cache(true).erase(name);
+	get_doc_cache(false).erase(name);
 }
 
 void function_expression::check_arg_type(int narg, const std::string& type_str) const
