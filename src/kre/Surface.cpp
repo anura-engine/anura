@@ -254,13 +254,13 @@ namespace KRE
 	{
 		int r, g, b, a;
 		const int bpp = pf_->bytesPerPixel();
-		const unsigned char* pix = reinterpret_cast<const unsigned char*>(pixels());
-		const unsigned char* p = &pix[x * bpp + y * rowPitch()];
+		const uint8_t* pix = reinterpret_cast<const uint8_t*>(pixels());
+		const uint8_t* p = &pix[x * bpp + y * rowPitch()];
 		switch(bpp) {
 			case 1: pf_->getRGBA(*p, r, g, b, a); break;
-			case 2: pf_->getRGBA(*reinterpret_cast<const unsigned short*>(p), r, g, b, a); break;
-			case 3: pf_->getRGBA(*reinterpret_cast<const unsigned long*>(p), r, g, b, a); break;
-			case 4: pf_->getRGBA(*reinterpret_cast<const unsigned long*>(p), r, g, b, a); break;
+			case 2: pf_->getRGBA(*reinterpret_cast<const uint16_t*>(p), r, g, b, a); break;
+			case 3: pf_->getRGBA(*reinterpret_cast<const uint32_t*>(p), r, g, b, a); break;
+			case 4: pf_->getRGBA(*reinterpret_cast<const uint32_t*>(p), r, g, b, a); break;
 		}
 		return Color(r, g, b, a);
 	}

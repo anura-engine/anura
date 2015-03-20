@@ -150,7 +150,8 @@ namespace KRE
 		  texture_(r.texture_ ? r.texture_->clone() : nullptr),
 		  render_target_(r.render_target_ ? r.render_target_->clone() : nullptr),
 		  shader_(r.shader_),
-		  attributes_(r.attributes_)
+		  attributes_(r.attributes_),
+		  enabled_(r.enabled_)
 	{
 		for(auto& l : r.lights_) {
 			lights_[l.first] = l.second->clone();
