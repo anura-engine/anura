@@ -37,6 +37,7 @@
 #include "Canvas.hpp"
 #include "Effects.hpp"
 #include "Font.hpp"
+#include "ModelMatrixScope.hpp"
 #include "WindowManager.hpp"
 
 #include "asserts.hpp"
@@ -1214,6 +1215,7 @@ void editor::process()
 
 	int mousex, mousey;
 	const unsigned int buttons = input::sdl_get_mouse_state(&mousex, &mousey) & mouse_buttons_down_;
+	mousey -= EDITOR_MENUBAR_HEIGHT;
 
 	if(buttons == 0) {
 		drawing_rect_ = false;
@@ -1819,6 +1821,7 @@ void editor::handle_object_dragging(int mousex, int mousey)
 void editor::handleDrawingRect(int mousex, int mousey)
 {
 	const unsigned int buttons = input::sdl_get_mouse_state(&mousex, &mousey);
+	mousey -= EDITOR_MENUBAR_HEIGHT;
 
 	const int xpos = xpos_ + mousex*zoom_;
 	const int ypos = ypos_ + mousey*zoom_;
@@ -1871,6 +1874,7 @@ void editor::handleMouseButtonDown(const SDL_MouseButtonEvent& event)
 	const bool alt_pressed = (SDL_GetModState()&KMOD_ALT) != 0;
 	int mousex, mousey;
 	const unsigned int buttons = input::sdl_get_mouse_state(&mousex, &mousey);
+	mousey -= EDITOR_MENUBAR_HEIGHT;
 
 	anchorx_ = xpos_ + mousex*zoom_;
 	anchory_ = ypos_ + mousey*zoom_;
@@ -2196,6 +2200,7 @@ void editor::handleMouseButtonUp(const SDL_MouseButtonEvent& event)
 	const bool shift_pressed = (SDL_GetModState()&(KMOD_LSHIFT|KMOD_RSHIFT)) != 0;
 	int mousex, mousey;
 	const unsigned int buttons = input::sdl_get_mouse_state(&mousex, &mousey);
+	mousey -= EDITOR_MENUBAR_HEIGHT;
 			
 	const int xpos = xpos_ + mousex*zoom_;
 	const int ypos = ypos_ + mousey*zoom_;
@@ -3023,11 +3028,12 @@ void editor::draw() const
 void editor::draw_gui() const
 {
 	auto canvas = KRE::Canvas::getInstance();
-	auto mm = std::unique_ptr<KRE::Canvas::ModelManager>(new KRE::Canvas::ModelManager(-xpos(), -ypos(), 0, 1.0f/zoom_));
+	auto mm = std::unique_ptr<KRE::Canvas::ModelManager>(new KRE::Canvas::ModelManager(-xpos_, EDITOR_MENUBAR_HEIGHT-ypos_, 0, 1.0f/zoom_));
 
 	const bool ctrl_pressed = (SDL_GetModState()&(KMOD_LCTRL|KMOD_RCTRL)) != 0;
 	int mousex, mousey;
 	input::sdl_get_mouse_state(&mousex, &mousey);
+	mousey -= EDITOR_MENUBAR_HEIGHT;
 	const int selectx = xpos_ + mousex*zoom_;
 	const int selecty = ypos_ + mousey*zoom_;
 
@@ -3063,25 +3069,22 @@ void editor::draw_gui() const
 
 		e.setPos(x, y);
 		if(place_entity_in_level(*lvl_, e)) {
+			//KRE::ModelManager2D model(-xpos_, EDITOR_MENUBAR_HEIGHT-ypos_, 0, 1.0f/zoom_);
+			graphics::GameScreen::Manager screen_manager(KRE::WindowManager::getMainWindow());
+			KRE::ModelManager2D model(-xpos_, -ypos_, 0, 1.0f/zoom_);
 			KRE::Canvas::ColorManager cm(KRE::Color(1.0f, 1.0f, 1.0f, 0.5f));
 			all_characters()[cur_object_].preview_frame()->draw(nullptr, e.x(), e.y(), face_right_, upside_down_);
 		}
 	}
 
 	if(drawing_rect_) {
-		int x1 = anchorx_;
-		int x2 = xpos_ + mousex*zoom_;
-		if(x1 > x2) {
-			std::swap(x1,x2);
-		}
+		const int x1 = anchorx_;
+		const int x2 = xpos_ + mousex*zoom_;
 
-		int y1 = anchory_;
-		int y2 = ypos_ + mousey*zoom_;
-		if(y1 > y2) {
-			std::swap(y1,y2);
-		}
+		const int y1 = anchory_;
+		const int y2 = ypos_ + mousey*zoom_;
 
-		canvas->drawHollowRect(rect(x1, y1, x2 - x1, y2 - y1), KRE::Color::colorWhite());
+		canvas->drawHollowRect(rect::from_coordinates(x1, y1, x2, y2), KRE::Color::colorWhite());
 	}
 	
 	if(property_dialog_ && property_dialog_.get() == current_dialog_ &&
@@ -3208,7 +3211,7 @@ void editor::draw_gui() const
 			carray.emplace_back(255, 255, 255, 64);
 			carray.emplace_back(255, 255, 255, 32);
 		}
-		for(int y = -TileSize - (ypos_/zoom_)%TileSize; y < h; y += (BaseTileSize*g_tile_scale)/zoom_) {
+		for(int y = EDITOR_MENUBAR_HEIGHT - TileSize - (ypos_/zoom_)%TileSize; y < h; y += (BaseTileSize*g_tile_scale)/zoom_) {
 			varray.emplace_back(0, y);
 			varray.emplace_back(w, y);
 			carray.emplace_back(255, 255, 255, 32);
@@ -3226,8 +3229,8 @@ void editor::draw_gui() const
 		rect boundaries = modify_selected_rect(*this, lvl_->boundaries(), selectx, selecty);
 		const int x1 = boundaries.x()/zoom_;
 		const int x2 = boundaries.x2()/zoom_;
-		const int y1 = boundaries.y()/zoom_;
-		const int y2 = boundaries.y2()/zoom_;
+		const int y1 = boundaries.y()/zoom_+EDITOR_MENUBAR_HEIGHT;
+		const int y2 = boundaries.y2()/zoom_+EDITOR_MENUBAR_HEIGHT;
 		
 		glm::u8vec4 selected_color = KRE::Color::colorYellow().as_u8vec4();
 		glm::u8vec4 normal_color = KRE::Color::colorWhite().as_u8vec4();
@@ -3378,6 +3381,7 @@ void editor::draw_selection(int xoffset, int yoffset) const
 	KRE::EffectPtr stipple_effect = KRE::Effect::create(effect.build());
 
 	std::vector<glm::vec2> varray;
+	std::vector<glm::u8vec4> carray;
 	for(const point& p : tile_selection_.tiles) {
 		const int size = TileSize/zoom_;
 		const int xpos = xoffset/zoom_ + p.x*size - xpos_/zoom_;
@@ -3386,25 +3390,33 @@ void editor::draw_selection(int xoffset, int yoffset) const
 		if(std::binary_search(tile_selection_.tiles.begin(), tile_selection_.tiles.end(), point(p.x, p.y - 1)) == false) {
 			varray.emplace_back(xpos, ypos);
 			varray.emplace_back(xpos + size, ypos);
+			carray.emplace_back(255, 0, 0, 255);
+			carray.emplace_back(255, 255, 0, 255);
 		}
 
 		if(std::binary_search(tile_selection_.tiles.begin(), tile_selection_.tiles.end(), point(p.x, p.y + 1)) == false) {
 			varray.emplace_back(xpos + size, ypos + size);
 			varray.emplace_back(xpos, ypos + size);
+			carray.emplace_back(255, 0, 0, 255);
+			carray.emplace_back(255, 255, 0, 255);
 		}
 
 		if(std::binary_search(tile_selection_.tiles.begin(), tile_selection_.tiles.end(), point(p.x - 1, p.y)) == false) {
 			varray.emplace_back(xpos, ypos + size);
 			varray.emplace_back(xpos, ypos);
+			carray.emplace_back(255, 0, 0, 255);
+			carray.emplace_back(255, 255, 0, 255);
 		}
 
 		if(std::binary_search(tile_selection_.tiles.begin(), tile_selection_.tiles.end(), point(p.x + 1, p.y)) == false) {
 			varray.emplace_back(xpos + size, ypos);
 			varray.emplace_back(xpos + size, ypos + size);
+			carray.emplace_back(255, 0, 0, 255);
+			carray.emplace_back(255, 255, 0, 255);
 		}
 	}
 	KRE::EffectsManager em(stipple_effect);
-	KRE::Canvas::getInstance()->drawLines(varray, 0);
+	KRE::Canvas::getInstance()->drawLines(varray, 0, carray);
 }
 
 void editor::run_script(const std::string& id)

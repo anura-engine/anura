@@ -846,7 +846,10 @@ bool LevelRunner::play_cycle()
 
 	if(editor_) {
 		controls::control_backup_scope ctrl_backup;
-		editor_->setPos(last_draw_position().x/100 - (editor_->zoom()-1)*(wnd->width()-editor::sidebar_width())/2, last_draw_position().y/100 - (editor_->zoom()-1)*(wnd->height())/2);
+		auto& gs = graphics::GameScreen::get();
+		editor_->setPos(last_draw_position().x/100 - (editor_->zoom() - 1) * gs.getWidth()/2, 
+			last_draw_position().y/100 - (editor_->zoom() - 1) * gs.getHeight()/2);
+		//editor_->setPos(last_draw_position().x/100 - (editor_->zoom()-1)*(wnd->width()-editor::sidebar_width())/2, last_draw_position().y/100 - (editor_->zoom()-1)*(wnd->height())/2);
 		editor_->process();
 		lvl_->complete_rebuild_tiles_in_background();
 		lvl_->setAsCurrentLevel();
