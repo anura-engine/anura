@@ -22,7 +22,8 @@
 */
 #include <map>
 
-#include "Canvas.hpp"
+#include "Blittable.hpp"
+#include "WindowManager.hpp"
 
 #include "filesystem.hpp"
 #include "graphical_font.hpp"
@@ -166,8 +167,15 @@ rect GraphicalFont::doDraw(int x, int y, const std::string& text, bool draw_text
 	}
 
 	if(draw_text && !font_vtxarray.empty()) {
-		auto canvas = KRE::Canvas::getInstance();
-		canvas->blitTexture(texture_, font_vtxarray, 0, color);
+		KRE::Blittable blit;
+		blit.setTexture(texture_);
+		blit.update(&font_vtxarray);
+		blit.setColor(color);
+		blit.setDrawMode(KRE::DrawMode::TRIANGLES);
+		auto wnd = KRE::WindowManager::getMainWindow();
+		wnd->render(&blit);
+		//auto canvas = KRE::Canvas::getInstance();
+		//canvas->blitTexture(texture_, font_vtxarray, 0, color);
 	}
 	return rect(x, y, x2 - x, y2 - y);
 }

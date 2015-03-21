@@ -171,6 +171,30 @@ namespace KRE
 		return model_matrix_;
 	}
 
+	glm::vec2 Canvas::getCurrentTranslation()
+	{
+		if(get_translation_stack().empty()) {
+			return glm::vec2();
+		}
+		return get_translation_stack().top();
+	}
+
+	float Canvas::getCurrentRotation()
+	{
+		if(get_rotation_stack().empty()) {
+			return 0;
+		}
+		return get_rotation_stack().top();
+	}
+
+	glm::vec2 Canvas::getCurrentScale()
+	{
+		if(get_scale_stack().empty()) {
+			return glm::vec2(1.0f,1.0f);
+		}
+		return get_scale_stack().top();
+	}
+						 
 	Canvas::ModelManager::ModelManager()
 		: canvas_(KRE::Canvas::getInstance())
 	{

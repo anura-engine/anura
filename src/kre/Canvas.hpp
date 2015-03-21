@@ -126,6 +126,9 @@ namespace KRE
 			CanvasPtr canvas_;
 		};
 
+		static glm::vec2 getCurrentTranslation();
+		static float getCurrentRotation();
+		static glm::vec2 getCurrentScale();
 		glm::mat4 getModelMatrix() const;
 
 		const Color getColor() const {
