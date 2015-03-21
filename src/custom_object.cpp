@@ -1268,7 +1268,7 @@ void CustomObject::draw(int xx, int yy) const
 
 	{
 		KRE::ModelManager2D model_matrix;
-		model_matrix.setIdentity();
+		//model_matrix.setIdentity();
 		model_matrix.translate(x()&~1, y()&~1);
 		for(const gui::WidgetPtr& w : widgets_) {
 			if(w->zorder() < widget_zorder_draw_later_threshold) {
@@ -1345,7 +1345,7 @@ void CustomObject::draw(int xx, int yy) const
 
 	{
 		KRE::ModelManager2D model_matrix;
-		model_matrix.setIdentity();
+		//model_matrix.setIdentity();
 		model_matrix.translate(x()&~1, y()&~1);
 		for(const gui::WidgetPtr& w : widgets_) {
 			if(w->zorder() < widget_zorder_draw_later_threshold) {
