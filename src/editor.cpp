@@ -3385,7 +3385,7 @@ void editor::draw_selection(int xoffset, int yoffset) const
 	for(const point& p : tile_selection_.tiles) {
 		const int size = TileSize/zoom_;
 		const int xpos = xoffset/zoom_ + p.x*size - xpos_/zoom_;
-		const int ypos = yoffset/zoom_ + p.y*size - ypos_/zoom_;
+		const int ypos = yoffset/zoom_ + p.y*size - ypos_/zoom_ + EDITOR_MENUBAR_HEIGHT;
 
 		if(std::binary_search(tile_selection_.tiles.begin(), tile_selection_.tiles.end(), point(p.x, p.y - 1)) == false) {
 			varray.emplace_back(xpos, ypos);
