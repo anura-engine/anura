@@ -2430,7 +2430,9 @@ void variant::write_json(std::ostream& s, write_flags flags) const
 		return;
 	}
 	default:
-		generate_error(formatter() << "illegal type to serialize to json: " << to_debug_string());
+		std::cerr << "Illegal type to serialize: " << to_debug_string();
+		s << "q(ILLEGAL TYPE TO SERIALIZE: " << to_debug_string() << ")";
+		return;
 	}
 }
 
