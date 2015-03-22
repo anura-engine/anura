@@ -23,6 +23,7 @@
 
 #pragma once
 
+#include <array>
 #include <memory>
 #include <string>
 #include "geometry.hpp"
@@ -255,10 +256,8 @@ namespace KRE
 				: surface(),
 				  type(TextureType::TEXTURE_2D),
 				  mipmaps(0),
-#if !defined(BOOST_NO_CXX11_UNIFIED_INITIALIZATION_SYNTAX)
-				  address_mode{AddressMode::CLAMP, AddressMode::CLAMP, AddressMode::CLAMP},
-				  filtering{Filtering::NONE, Filtering::NONE, Filtering::POINT},
-#endif
+				  address_mode(),
+				  filtering(),
 				  border_color(),
 				  max_anisotropy(1),
 				  lod_bias(0.0f),
@@ -278,8 +277,8 @@ namespace KRE
 			
 			TextureType type;
 			int mipmaps;
-			AddressMode address_mode[3]; // u,v,w
-			Filtering filtering[3]; // minification, magnification, mip
+			std::array<AddressMode, 3> address_mode; // u,v,w
+			std::array<Filtering, 3> filtering; // minification, magnification, mip
 			Color border_color;
 			int max_anisotropy;
 			float lod_bias;
