@@ -1028,7 +1028,7 @@ EditorResolutionManager::EditorResolutionManager(int xres, int yres)
 	if(++editor_resolution_manager_count == 1) {
 		LOG_INFO("EDITOR RESOLUTION: " << editor_x_resolution << "," << editor_y_resolution);
 		KRE::WindowManager::getMainWindow()->setWindowSize(editor_x_resolution, editor_y_resolution);
-		//graphics::GameScreen::get().setLocation(0, EDITOR_MENUBAR_HEIGHT);
+		graphics::GameScreen::get().setLocation(0, EDITOR_MENUBAR_HEIGHT);
 	}
 }
 
@@ -1036,7 +1036,7 @@ EditorResolutionManager::~EditorResolutionManager()
 {
 	if(--editor_resolution_manager_count == 0) {
 		KRE::WindowManager::getMainWindow()->setWindowSize(original_width_, original_height_);
-		//graphics::GameScreen::get().setLocation(0, 0);
+		graphics::GameScreen::get().setLocation(0, 0);
 	}
 }
 
@@ -3005,7 +3005,7 @@ void editor::zoomOut()
 	}
 }
 
-void editor::draw() const
+/*void editor::draw() const
 {
 	auto wnd = KRE::WindowManager::getMainWindow();
 	wnd->setClearColor(KRE::Color(0,0,0,0));
@@ -3023,7 +3023,7 @@ void editor::draw() const
 	debug_console::draw();
 
 	wnd->swap();
-}
+}*/
 
 void editor::draw_gui() const
 {

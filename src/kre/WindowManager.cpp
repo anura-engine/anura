@@ -92,15 +92,6 @@ namespace KRE
 				renderer_hint_.emplace_back("opengl");
 			}
 
-			for(auto rh : renderer_hint_) {
-				setDisplayDevice(DisplayDevice::factory(rh));
-				current_display_device() = getDisplayDevice();
-				if(getDisplayDevice() != nullptr) {
-					break;
-				}
-			}
-			ASSERT_LOG(getDisplayDevice() != nullptr, "No display driver was created.");
-
 			// XXX figure out a better way to pass this hint.
 			SDL_SetHint(SDL_HINT_RENDER_DRIVER, renderer_hint_.front().c_str());
 
@@ -114,6 +105,15 @@ namespace KRE
 
 		void createWindow() override {
 			Uint32 wnd_flags = 0;
+
+			for(auto rh : renderer_hint_) {
+				setDisplayDevice(DisplayDevice::factory(rh, shared_from_this()));
+				current_display_device() = getDisplayDevice();
+				if(getDisplayDevice() != nullptr) {
+					break;
+				}
+			}
+			ASSERT_LOG(getDisplayDevice() != nullptr, "No display driver was created.");
 
 			if(getDisplayDevice()->ID() == DisplayDevice::DISPLAY_DEVICE_OPENGL) {
 				// We need to do extra SDL set-up for an OpenGL context.
@@ -334,8 +334,7 @@ namespace KRE
 		}
 
 		void handleSetViewPort() override {
-			auto& vp = getViewPort();
-			getDisplayDevice()->setViewPort(vp.x(), vp.y(), vp.w(), vp.h());
+			getDisplayDevice()->setViewPort(getViewPort());
 		}
 
 

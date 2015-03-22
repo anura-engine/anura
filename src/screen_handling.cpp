@@ -86,7 +86,7 @@ namespace graphics
 	{
 		last_cam_ = KRE::DisplayDevice::getCurrent()->setDefaultCamera(cam_);
 		//screen_clip_.reset(new KRE::Scissor::Manager(rect(x_, y_, width_, height_)));
-		wnd->setViewPort(0, 0, width_, height_);
+		wnd->setViewPort(x_, y_, virtual_width_, virtual_height_);
 	}
 
 	void GameScreen::cleanupAfterDraw(KRE::WindowPtr wnd)

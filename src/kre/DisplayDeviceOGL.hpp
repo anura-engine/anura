@@ -34,7 +34,7 @@ namespace KRE
 	class DisplayDeviceOpenGL : public DisplayDevice
 	{
 	public:
-		DisplayDeviceOpenGL();
+		explicit DisplayDeviceOpenGL(WindowPtr wnd);
 		~DisplayDeviceOpenGL();
 
 		DisplayDeviceId ID() const override { return DISPLAY_DEVICE_OPENGL; }
@@ -71,10 +71,11 @@ namespace KRE
 
 		int queryParameteri(DisplayDeviceParameters param) override;
 
-		void setViewPort(int x, int y, unsigned width, unsigned height) override;
-
-		void drawArrays(DrawMode dm, int first, int count) const override;
+		void setViewPort(const rect& vp) override;
+		void setViewPort(int x, int y, int width, int height) override;
+		const rect& getViewPort() const override;
 	private:
+		DisplayDeviceOpenGL();
 		DisplayDeviceOpenGL(const DisplayDeviceOpenGL&);
 
 		AttributeSetPtr handleCreateAttributeSet(bool indexed, bool instanced) override;

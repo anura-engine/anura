@@ -45,6 +45,7 @@
 #include "ShadersOGL.hpp"
 #include "StencilScopeOGL.hpp"
 #include "TextureOGL.hpp"
+#include "WindowManager.hpp"
 
 namespace KRE
 {
@@ -98,8 +99,9 @@ namespace KRE
 		}
 	}
 
-	DisplayDeviceOpenGL::DisplayDeviceOpenGL()
-		: seperate_blend_equations_(false),
+	DisplayDeviceOpenGL::DisplayDeviceOpenGL(WindowPtr wnd)
+		: DisplayDevice(wnd),
+		  seperate_blend_equations_(false),
 		  have_render_to_texture_(false),
 		  npot_textures_(false),
 		  hardware_uniform_buffers_(false),
@@ -461,7 +463,7 @@ namespace KRE
 		return BlendEquationImplBasePtr(new BlendEquationImplOGL());
 	}
 
-	void DisplayDeviceOpenGL::setViewPort(int x, int y, unsigned width, unsigned height)
+	void DisplayDeviceOpenGL::setViewPort(int x, int y, int width, int height)
 	{
 		rect new_vp(x, y, width, height);
 		if(get_current_viewport() != new_vp) {
@@ -469,8 +471,23 @@ namespace KRE
 			//LOG_DEBUG("Viewport changed to: " << x << "," << y << "," << width << "," << height);
 			// N.B. glViewPort has the origin in the bottom-left corner. Hence the modification
 			// to the y value.
-			glViewport(x, y, width, height);
+			auto wnd = getParentWindow();
+			glViewport(x, wnd->height() - (y + height), width, height);
 		}
+	}
+
+	void DisplayDeviceOpenGL::setViewPort(const rect& vp)
+	{
+		if(get_current_viewport() != vp) {
+			get_current_viewport() = vp;
+			auto wnd = getParentWindow();
+			glViewport(vp.x(), wnd->height() - vp.y2(), vp.w(), vp.h());
+		}
+	}
+
+	const rect& DisplayDeviceOpenGL::getViewPort() const 
+	{
+		return get_current_viewport();
 	}
 	
 	bool DisplayDeviceOpenGL::doCheckForFeature(DisplayDeviceCapabilties cap)
@@ -654,12 +671,6 @@ namespace KRE
 		}
 		// XXX Add more effects here as and if needed.
 		return EffectPtr();
-	}
-
-	void DisplayDeviceOpenGL::drawArrays(DrawMode dm, int first, int count) const
-	{
-		// XXX Annoying hack for anura effects shaders.
-		glDrawArrays(convert_drawing_mode(dm), 0, 4);
 	}
 }
 

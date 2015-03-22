@@ -39,28 +39,19 @@ namespace KRE
 	{
 		struct fbo_info
 		{
-			explicit fbo_info(GLuint i, GLint v0, GLint v1, GLint v2, GLint v3) : id(i)
-			{
-				viewport[0] = v0;
-				viewport[1] = v1;
-				viewport[2] = v2;
-				viewport[3] = v3;
-			}
-			GLuint id;
-			GLint viewport[4];
+			explicit fbo_info(int i, const rect& vp) : id(i), viewport(vp) {}
+			int id;
+			rect viewport;
 		};
 		typedef std::stack<fbo_info> fbo_stack_type;
 		fbo_stack_type& get_fbo_stack()
 		{
 			static fbo_stack_type res;
-			if(res.empty()) {
-				// default framebuffer id is 0.
-				GLint vp[4];
-				glGetIntegerv(GL_VIEWPORT, vp);
-				res.emplace(0, vp[0], vp[1], vp[2], vp[3]);
-			}
 			return res;
 		}
+
+		const int default_framebuffer_id = 0;
+		rect last_viewport;
 	}
 
 	FboOpenGL::FboOpenGL(unsigned width, unsigned height, 
@@ -256,11 +247,13 @@ namespace KRE
 		ASSERT_LOG(framebuffer_id_ != nullptr, "Framebuffer object hasn't been created.");
 		glBindFramebuffer(GL_FRAMEBUFFER, *framebuffer_id_);
 
+		last_viewport = DisplayDevice::getCurrent()->getViewPort();
+
 		applied_ = true;
-		get_fbo_stack().emplace(*framebuffer_id_, r.x(), r.y(), r.w() == 0 ? width() : r.w(), r.h() == 0 ? height() : r.h());
+		get_fbo_stack().emplace(*framebuffer_id_, r);
 
 		//glViewport(0, 0, width(), height());
-		DisplayDevice::getCurrent()->setViewPort(r.x(), r.y(), r.w() == 0 ? width() : r.w(), r.h() == 0 ? height() : r.h());
+		DisplayDevice::getCurrent()->setViewPort(r);
 	}
 
 	void FboOpenGL::handleUnapply() const
@@ -269,11 +262,15 @@ namespace KRE
 		// This should be our id at top.
 		auto chk = get_fbo_stack().top(); get_fbo_stack().pop();
 		ASSERT_LOG(chk.id == *framebuffer_id_, "Our FBO id was not the one at the top of the stack. This should never happen if calls to apply/unapply are balanced.");
-		ASSERT_LOG(!get_fbo_stack().empty(), "FBO id stack was empty. This should never happen if calls to apply/unapply are balanced.");
-		auto last = get_fbo_stack().top();
-		glBindFramebuffer(GL_FRAMEBUFFER, last.id);
-		//glViewport(last.viewport[0], last.viewport[1], last.viewport[2], last.viewport[3]);
-		DisplayDevice::getCurrent()->setViewPort(last.viewport[0], last.viewport[1], unsigned(last.viewport[2]), unsigned(last.viewport[3]));
+		if(get_fbo_stack().empty()) {
+			glBindFramebuffer(GL_FRAMEBUFFER, default_framebuffer_id);
+			DisplayDevice::getCurrent()->setViewPort(last_viewport);
+		} else {
+			auto last = get_fbo_stack().top();
+			glBindFramebuffer(GL_FRAMEBUFFER, last.id);
+			//glViewport(last.viewport[0], last.viewport[1], last.viewport[2], last.viewport[3]);
+			DisplayDevice::getCurrent()->setViewPort(last.viewport);
+		}
 		applied_ = false;
 		setChanged();
 	}

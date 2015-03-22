@@ -50,7 +50,7 @@ namespace KRE
 						{ return toupper(l1) == toupper(r1); });
 		}	
 
-		typedef std::map<std::string, std::function<DisplayDevicePtr()>> DisplayDeviceRegistry;
+		typedef std::map<std::string, std::function<DisplayDevicePtr(WindowPtr)>> DisplayDeviceRegistry;
 		DisplayDeviceRegistry& get_display_registry()
 		{
 			static DisplayDeviceRegistry res;
@@ -64,7 +64,8 @@ namespace KRE
 		};
 	}
 
-	DisplayDevice::DisplayDevice()
+	DisplayDevice::DisplayDevice(WindowPtr wnd)
+		: parent_(wnd)
 	{
 	}
 
@@ -77,16 +78,16 @@ namespace KRE
 		setClearColor(r/255.0f, g/255.0f, b/255.0f, a/255.0f);
 	}
 
-	DisplayDevicePtr DisplayDevice::factory(const std::string& type)
+	DisplayDevicePtr DisplayDevice::factory(const std::string& type, WindowPtr parent)
 	{
 		ASSERT_LOG(!get_display_registry().empty(), "No display device drivers registered.");
 		auto it = get_display_registry().find(type);
 		if(it == get_display_registry().end()) {			
 			LOG_WARN("Requested display driver '" << type << "' not found, using default: " << get_display_registry().begin()->first);
-			current_display_device() = get_display_registry().begin()->second();
+			current_display_device() = get_display_registry().begin()->second(parent);
 			return current_display_device();
 		}
-		current_display_device() = it->second();
+		current_display_device() = it->second(parent);
 		return current_display_device();
 	}
 
@@ -96,7 +97,7 @@ namespace KRE
 		return current_display_device();
 	}
 
-	void DisplayDevice::registerFactoryFunction(const std::string& type, std::function<DisplayDevicePtr()> create_fn)
+	void DisplayDevice::registerFactoryFunction(const std::string& type, std::function<DisplayDevicePtr(WindowPtr)> create_fn)
 	{
 		auto it = get_display_registry().find(type);
 		if(it != get_display_registry().end()) {
@@ -190,5 +191,12 @@ namespace KRE
 	bool DisplayDevice::checkForFeature(DisplayDeviceCapabilties cap)
 	{
 		return DisplayDevice::getCurrent()->doCheckForFeature(cap);
+	}
+
+	WindowPtr DisplayDevice::getParentWindow() const
+	{
+		auto parent = parent_.lock();
+		ASSERT_LOG(parent != nullptr, "parent for display was null");
+		return parent;
 	}
 }

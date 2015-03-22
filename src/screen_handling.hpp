@@ -37,7 +37,9 @@ namespace graphics
 		int y() const { return y_; }
 		int getWidth() const { return width_; }
 		int getHeight() const { return height_; }
-		int getArea() const { return width_ * height_; }
+		rect getArea() const { return rect(x_, y_, width_, height_); }
+		rect getVirtualArea() const { return rect(x_, y_, virtual_width_, virtual_height_); }
+		int getSquareArea() const { return width_ * height_; }
 		float getAspectRatio() const { return static_cast<float>(width_) / static_cast<float>(height_); }
 		int getVirtualWidth() const { return virtual_width_; }
 		int getVirtualHeight() const { return virtual_height_; }

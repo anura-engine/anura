@@ -319,7 +319,7 @@ void video_resize(const SDL_Event &event)
 		const float wa = static_cast<float>(width) * aspect;
 		const float ha = static_cast<float>(height) * aspect;
 
-		if(graphics::GameScreen::get().getArea() < width * height) {
+		if(graphics::GameScreen::get().getSquareArea() < width * height) {
 			//making the window larger
 			if(ha > static_cast<float>(width)) {
 				width = static_cast<int>(ha);

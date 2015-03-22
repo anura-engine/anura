@@ -2031,7 +2031,7 @@ void Level::frameBufferEnterZorder(int zorder) const
 	if(shaders != active_fb_shaders_) {		
 		if(active_fb_shaders_.empty()) {
 			auto& gs = graphics::GameScreen::get();
-			rt_->renderToThis(rect(0, 0, gs.getWidth(), gs.getHeight()));
+			rt_->renderToThis(gs.getVirtualArea());
 			rt_->setClearColor(KRE::Color(0,0,0,0));
 			rt_->clear();
 		} else if(shaders.empty()) {
@@ -2053,7 +2053,7 @@ void Level::frameBufferEnterZorder(int zorder) const
 				//LOG_DEBUG("Added " << count << " at zorder: " << zorder);
 				//this works if we're adding and removing shaders.)
 				auto& gs = graphics::GameScreen::get();
-				rt_->renderToThis(rect(0, 0, gs.getWidth(), gs.getHeight()));
+				rt_->renderToThis(gs.getVirtualArea());
 				rt_->setClearColor(KRE::Color(0,0,0,0));
 				rt_->clear();
 			} else {
