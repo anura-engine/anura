@@ -1325,21 +1325,36 @@ void CustomObject::draw(int xx, int yy) const
 		int pos = y();
 		for(int n = 0; n != left.size(); ++n) {
 			const int xpos = getMidpoint().x + 10;
-			KRE::Canvas::getInstance()->blitTexture(left[n], 0, xpos, pos, KRE::Color::colorWhite());
-			KRE::Canvas::getInstance()->blitTexture(right[n], 0, xpos + max_property_width + 10, pos, KRE::Color::colorWhite());
+			KRE::Blittable blit;
+			blit.setTexture(left[n]);
+			blit.setPosition(xpos, pos);
+			blit.preRender(wnd);
+			wnd->render(&blit);
+			
+			blit.setTexture(right[n]);
+			blit.setPosition(xpos + max_property_width + 10, pos);
+			blit.preRender(wnd);
+			wnd->render(&blit);
 			pos += std::max(left[n]->height(), right[n]->height());
 		}
 	}
 
 	if(platform_area_ && (preferences::show_debug_hitboxes() || !platform_offsets_.empty() && Level::current().in_editor())) {
-		std::vector<glm::vec2> v;
+		std::vector<glm::u16vec2> v;
 		const rect& r = platformRect();
 		for(int x = 0; x < r.w(); x += 2) {
 			v.emplace_back(static_cast<float>(r.x() + x), static_cast<float>(platformRectAt(r.x() + x).y()));
 		}
 
 		if(!v.empty()) {
-			KRE::Canvas::getInstance()->drawPoints(v, 2.0f, KRE::Color(1.0f, 0.0f, 0.0f));
+			RectRenderable rr(false);
+			auto shd = rr.getShader();
+			int ps_loc = -1;
+			if(shd && (ps_loc = shd->getUniform("u_point_size")) != KRE::ShaderProgram::INVALID_UNIFORM) {
+				shd->setUniformValue(ps_loc, 2.0f);
+			}
+			rr.update(&v, KRE::Color::colorRed());
+			wnd->render(&rr);
 		}
 	}
 
@@ -1359,13 +1374,23 @@ void CustomObject::draw(int xx, int yy) const
 
 void CustomObject::drawGroup() const
 {
-	auto canvas = KRE::Canvas::getInstance();
+	auto wnd = KRE::WindowManager::getMainWindow();
 	if(label().empty() == false && label()[0] != '_') {
-		canvas->blitTexture(KRE::Font::getInstance()->renderText(label(), KRE::Color::colorYellow(), 32), 0, x(), y() + 26);
+		auto label_tex = KRE::Font::getInstance()->renderText(label(), KRE::Color::colorYellow(), 32);
+		KRE::Blittable blit;
+		blit.setTexture(label_tex);
+		blit.setPosition(x(), y() + 26);
+		blit.preRender(wnd);
+		wnd->render(&blit);
 	}
 
 	if(group() >= 0) {
-		canvas->blitTexture(KRE::Font::getInstance()->renderText(formatter() << group(), KRE::Color::colorYellow(), 24), 0, x(), y());
+		auto group_tex = KRE::Font::getInstance()->renderText(formatter() << group(), KRE::Color::colorYellow(), 24);
+		KRE::Blittable blit;
+		blit.setTexture(group_tex);
+		blit.setPosition(x(), y());
+		blit.preRender(wnd);
+		wnd->render(&blit);
 	}
 }
 

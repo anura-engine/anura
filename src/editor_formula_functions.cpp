@@ -252,7 +252,7 @@ namespace editor_script
 				std::vector<variant> result;
 
 				std::map<int, std::vector<std::string> > m;
-				editor_.get_level().getAll_tiles_rect(x*TileSize, y*TileSize, x*TileSize, y*TileSize, m);
+				editor_.get_level().getAllTilesRect(x*TileSize, y*TileSize, x*TileSize, y*TileSize, m);
 				for(auto i : m) {
 					for(const std::string& s : i.second) {
 						result.push_back(variant(s));

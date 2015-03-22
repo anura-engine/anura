@@ -2693,10 +2693,10 @@ void Level::add_tile(const LevelTile& t)
 
 bool Level::add_tile_rect(int zorder, int x1, int y1, int x2, int y2, const std::string& str)
 {
-	return add_tile_rect_vector(zorder, x1, y1, x2, y2, std::vector<std::string>(1, str));
+	return addTileRectVector(zorder, x1, y1, x2, y2, std::vector<std::string>(1, str));
 }
 
-bool Level::add_tile_rect_vector(int zorder, int x1, int y1, int x2, int y2, const std::vector<std::string>& tiles)
+bool Level::addTileRectVector(int zorder, int x1, int y1, int x2, int y2, const std::vector<std::string>& tiles)
 {
 	if(x1 > x2) {
 		std::swap(x1, x2);
@@ -2799,7 +2799,7 @@ void Level::get_tile_rect(int zorder, int x1, int y1, int x2, int y2, std::vecto
 	}
 }
 
-void Level::getAll_tiles_rect(int x1, int y1, int x2, int y2, std::map<int, std::vector<std::string> >& tiles) const
+void Level::getAllTilesRect(int x1, int y1, int x2, int y2, std::map<int, std::vector<std::string> >& tiles) const
 {
 	for(std::set<int>::const_iterator i = layers_.begin(); i != layers_.end(); ++i) {
 		if(hidden_layers_.count(*i)) {

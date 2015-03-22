@@ -259,7 +259,7 @@ namespace KRE
 
 	void CanvasOGL::drawLines(const std::vector<glm::vec2>& varray, float line_width, const Color& color) const 
 	{
-		static OpenGL::ShaderProgramPtr shader = OpenGL::ShaderProgram::factory("complex");
+		/*static OpenGL::ShaderProgramPtr shader = OpenGL::ShaderProgram::factory("complex");
 		shader->makeActive();
 		shader->setUniformValue(shader->getMvUniform(), glm::value_ptr(getModelMatrix()));
 		shader->setUniformValue(shader->getPUniform(), glm::value_ptr(mvp_));
@@ -301,6 +301,18 @@ namespace KRE
 		glVertexAttribPointer(shader->getNormalAttribute(), 2, GL_FLOAT, GL_FALSE, 0, &normals[0]);
 		glDrawArrays(GL_TRIANGLE_STRIP, 0, vertices.size());
 		glDisableVertexAttribArray(shader->getNormalAttribute());
+		glDisableVertexAttribArray(shader->getVertexAttribute());*/
+		glm::mat4 mvp = mvp_ * getModelMatrix();
+
+		static OpenGL::ShaderProgramPtr shader = OpenGL::ShaderProgram::factory("simple");
+		shader->makeActive();
+		shader->setUniformValue(shader->getMvpUniform(), glm::value_ptr(mvp));
+
+		shader->setUniformValue(shader->getLineWidthUniform(), line_width);
+		shader->setUniformValue(shader->getColorUniform(), color.asFloatVector());
+		glEnableVertexAttribArray(shader->getVertexAttribute());
+		glVertexAttribPointer(shader->getVertexAttribute(), 2, GL_FLOAT, GL_FALSE, 0, &varray[0]);
+		glDrawArrays(GL_LINES, 0, varray.size());
 		glDisableVertexAttribArray(shader->getVertexAttribute());
 	}
 

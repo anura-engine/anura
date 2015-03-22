@@ -1630,9 +1630,9 @@ void editor::handleKeyPress(const SDL_KeyboardEvent& key)
 
 				redo.push_back([&](){ lvl->clear_tile_rect(x, y, x, y); });
 				std::map<int, std::vector<std::string> > old_tiles;
-				lvl->getAll_tiles_rect(x, y, x, y, old_tiles);
+				lvl->getAllTilesRect(x, y, x, y, old_tiles);
 				for(auto i : old_tiles) {
-					undo.push_back([=](){ lvl->add_tile_rect_vector(i.first, x, y, x, y, i.second); });
+					undo.push_back([=](){ lvl->addTileRectVector(i.first, x, y, x, y, i.second); });
 				}
 			}
 
@@ -1981,7 +1981,7 @@ void editor::handleMouseButtonDown(const SDL_MouseButtonEvent& event)
 		} else {
 			//pick the top most tile at this point.
 			std::map<int, std::vector<std::string> > tiles;
-			lvl_->getAll_tiles_rect(anchorx_, anchory_, anchorx_, anchory_, tiles);
+			lvl_->getAllTilesRect(anchorx_, anchory_, anchorx_, anchory_, tiles);
 			std::string tile;
 			for(std::map<int, std::vector<std::string> >::reverse_iterator i = tiles.rbegin(); i != tiles.rend(); ++i) {
 				if(i->second.empty() == false) {
@@ -2279,10 +2279,10 @@ void editor::handleMouseButtonUp(const SDL_MouseButtonEvent& event)
 					max_y = std::max(y, max_y);
 
 					std::map<int, std::vector<std::string> > old_tiles;
-					lvl->getAll_tiles_rect(x, y, x, y, old_tiles);
+					lvl->getAllTilesRect(x, y, x, y, old_tiles);
 					for(auto i : old_tiles) {
-						undo.push_back([=](){ lvl->add_tile_rect_vector(i.first, x, y, x, y, i.second); });
-						redo.push_back([=](){ lvl->add_tile_rect_vector(i.first, x, y, x, y, std::vector<std::string>(1,"")); });
+						undo.push_back([=](){ lvl->addTileRectVector(i.first, x, y, x, y, i.second); });
+						redo.push_back([=](){ lvl->addTileRectVector(i.first, x, y, x, y, std::vector<std::string>(1,"")); });
 					}
 
 					old_tiles.clear();
@@ -2295,10 +2295,10 @@ void editor::handleMouseButtonUp(const SDL_MouseButtonEvent& event)
 					min_y = std::min(y, min_y);
 					max_y = std::max(y, max_y);
 
-					lvl->getAll_tiles_rect(x, y, x, y, old_tiles);
+					lvl->getAllTilesRect(x, y, x, y, old_tiles);
 					for(auto i : old_tiles) {
-						undo.push_back([=](){ lvl->add_tile_rect_vector(i.first, x, y, x, y, i.second); });
-						redo.push_back([=](){ lvl->add_tile_rect_vector(i.first, x, y, x, y, std::vector<std::string>(1,"")); });
+						undo.push_back([=](){ lvl->addTileRectVector(i.first, x, y, x, y, i.second); });
+						redo.push_back([=](){ lvl->addTileRectVector(i.first, x, y, x, y, std::vector<std::string>(1,"")); });
 					}
 				}
 
@@ -2313,9 +2313,9 @@ void editor::handleMouseButtonUp(const SDL_MouseButtonEvent& event)
 					max_y = std::max(y + diffy*TileSize, max_y);
 	
 					std::map<int, std::vector<std::string> > old_tiles;
-					lvl->getAll_tiles_rect(x, y, x, y, old_tiles);
+					lvl->getAllTilesRect(x, y, x, y, old_tiles);
 					for(auto i : old_tiles) {
-						redo.push_back([=](){ lvl->add_tile_rect_vector(i.first, x + diffx*TileSize, y + diffy*TileSize, x + diffx*TileSize, y + diffy*TileSize, i.second); });
+						redo.push_back([=](){ lvl->addTileRectVector(i.first, x + diffx*TileSize, y + diffy*TileSize, x + diffx*TileSize, y + diffy*TileSize, i.second); });
 					}
 				}
 
@@ -2551,7 +2551,7 @@ void editor::add_tile_rect(int zorder, const std::string& tile_id, int x1, int y
 		}
 
 		redo.push_back([=](){ lvl->add_tile_rect(zorder, x1, y1, x2, y2, tile_id); });
-		undo.push_back([=](){ lvl->add_tile_rect_vector(zorder, x1, y1, x2, y2, old_rect); });
+		undo.push_back([=](){ lvl->addTileRectVector(zorder, x1, y1, x2, y2, old_rect); });
 
 		std::vector<int> layers;
 		layers.push_back(zorder);
@@ -2602,9 +2602,9 @@ void editor::remove_tile_rect(int x1, int y1, int x2, int y2)
 	for(LevelPtr lvl : levels_) {
 
 		std::map<int, std::vector<std::string> > old_tiles;
-		lvl->getAll_tiles_rect(x1, y1, x2, y2, old_tiles);
+		lvl->getAllTilesRect(x1, y1, x2, y2, old_tiles);
 		for(auto i : old_tiles) {
-			undo.push_back([=](){ lvl->add_tile_rect_vector(i.first, x1, y1, x2, y2, i.second); });
+			undo.push_back([=](){ lvl->addTileRectVector(i.first, x1, y1, x2, y2, i.second); });
 		}
 
 		redo.push_back([=](){ lvl->clear_tile_rect(x1, y1, x2, y2); });

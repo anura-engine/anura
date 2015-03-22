@@ -127,11 +127,11 @@ public:
 	void set_boundaries(const rect& bounds) { boundaries_ = bounds; }
 	void add_tile(const LevelTile& t);
 	bool add_tile_rect(int zorder, int x1, int y1, int x2, int y2, const std::string& tile);
-	bool add_tile_rect_vector(int zorder, int x1, int y1, int x2, int y2, const std::vector<std::string>& tiles);
+	bool addTileRectVector(int zorder, int x1, int y1, int x2, int y2, const std::vector<std::string>& tiles);
 	void set_tile_layer_speed(int zorder, int x_speed, int y_speed);
 	void refresh_tile_rect(int x1, int y1, int x2, int y2);
 	void get_tile_rect(int zorder, int x1, int y1, int x2, int y2, std::vector<std::string>& tiles) const;
-	void getAll_tiles_rect(int x1, int y1, int x2, int y2, std::map<int, std::vector<std::string> >& tiles) const;
+	void getAllTilesRect(int x1, int y1, int x2, int y2, std::map<int, std::vector<std::string> >& tiles) const;
 	bool clear_tile_rect(int x1, int y1, int x2, int y2);
 	bool remove_tiles_at(int x, int y);
 
