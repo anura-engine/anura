@@ -106,7 +106,9 @@ namespace KRE
 
 		virtual void clear(ClearFlags f) = 0;
 
-		virtual void setViewPort(int x, int y, int width, int height) = 0;
+		void setViewPort(int x, int y, int width, int height);
+		void setViewPort(const rect& vp);
+		const rect& getViewPort() const { return view_port_; }
 
 		std::string saveFrameBuffer(const std::string& filename);
 
@@ -134,12 +136,14 @@ namespace KRE
 		FullScreenMode fullscreen_mode_;
 		std::string title_;
 		bool use_vsync_;
+		rect view_port_;
 
 		virtual void changeFullscreenMode() = 0;
 		virtual void handleSetClearColor() const = 0;
 		virtual bool handleLogicalWindowSizeChange() = 0;
 		virtual bool handlePhysicalWindowSizeChange() = 0;
 		virtual void handleSetWindowTitle() = 0;
+		virtual void handleSetViewPort() = 0;
 
 		std::map<int, std::function<void(int,int)>> dimensions_changed_observers_;
 	};

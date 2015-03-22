@@ -467,6 +467,8 @@ namespace KRE
 		if(get_current_viewport() != new_vp) {
 			get_current_viewport() = new_vp;
 			//LOG_DEBUG("Viewport changed to: " << x << "," << y << "," << width << "," << height);
+			// N.B. glViewPort has the origin in the bottom-left corner. Hence the modification
+			// to the y value.
 			glViewport(x, y, width, height);
 		}
 	}

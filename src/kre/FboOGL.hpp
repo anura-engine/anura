@@ -46,7 +46,7 @@ namespace KRE
 		virtual void preRender(const WindowPtr&) override;
 	private:
 		void handleCreate() override;
-		void handleApply() const override;
+		void handleApply(const rect& r) const override;
 		void handleUnapply() const override;
 		void handleClear() const override;
 		RenderTargetPtr handleClone() override;

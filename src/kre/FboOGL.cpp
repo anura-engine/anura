@@ -251,16 +251,16 @@ namespace KRE
 		Blittable::preRender(wnd);
 	}
 
-	void FboOpenGL::handleApply() const
+	void FboOpenGL::handleApply(const rect& r) const
 	{
 		ASSERT_LOG(framebuffer_id_ != nullptr, "Framebuffer object hasn't been created.");
 		glBindFramebuffer(GL_FRAMEBUFFER, *framebuffer_id_);
 
 		applied_ = true;
-		get_fbo_stack().emplace(*framebuffer_id_, 0, 0, width(), height());
+		get_fbo_stack().emplace(*framebuffer_id_, r.x(), r.y(), r.w() == 0 ? width() : r.w(), r.h() == 0 ? height() : r.h());
 
 		//glViewport(0, 0, width(), height());
-		DisplayDevice::getCurrent()->setViewPort(0, 0, unsigned(width()), unsigned(height()));
+		DisplayDevice::getCurrent()->setViewPort(r.x(), r.y(), r.w() == 0 ? width() : r.w(), r.h() == 0 ? height() : r.h());
 	}
 
 	void FboOpenGL::handleUnapply() const
@@ -282,7 +282,7 @@ namespace KRE
 	{
 		bool appl = applied_;
 		if(!appl) {
-			handleApply();
+			handleApply(rect());
 		}
 		auto& color = getClearColor();
 		glClearColor(color.red(), color.green(), color.blue(), color.alpha());

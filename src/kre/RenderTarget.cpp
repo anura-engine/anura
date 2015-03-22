@@ -88,9 +88,9 @@ namespace KRE
 		handleCreate();
 	}
 	
-	void RenderTarget::apply() const
+	void RenderTarget::apply(const rect& r) const
 	{
-		handleApply();
+		handleApply(r);
 	}
 
 	void RenderTarget::unapply() const

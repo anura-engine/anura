@@ -224,11 +224,6 @@ namespace KRE
 			}
 		}
 
-		// N.B. The viewport x,y location is the lower left hand corner!
-		void setViewPort(int x, int y, int width, int height) override {
-			display_->setViewPort(x, y, width, height);
-		}
-
 		unsigned getWindowID() const override {
 			return SDL_GetWindowID(window_.get());
 		}
@@ -342,6 +337,11 @@ namespace KRE
 			return false;
 		}
 
+		void handleSetViewPort() override {
+			auto& vp = getViewPort();
+			display_->setViewPort(vp.x(), vp.y(), vp.w(), vp.h());
+		}
+
 
 		SDL_WindowPtr window_;
 		SDL_GLContext context_;
@@ -362,7 +362,8 @@ namespace KRE
 		  fullscreen_mode_(hints["fullscreen"].as_bool(false) ? FullScreenMode::FULLSCREEN_WINDOWED : FullScreenMode::WINDOWED),
 		  title_(hints["title"].as_string_default("")),
 		  use_vsync_(hints["use_vsync"].as_bool(false)),
-		  clear_color_(0.0f,0.0f,0.0f,1.0f)
+		  clear_color_(0.0f,0.0f,0.0f,1.0f),
+		  view_port_(0, 0, width_, height_)
 	{
 		if(hints.has_key("clear_color")) {
 			clear_color_ = Color(hints["clear_color"]);
@@ -506,6 +507,17 @@ namespace KRE
 		dimensions_changed_observers_.erase(it);
 	}
 
+	void Window::setViewPort(int x, int y, int w, int h) 
+	{
+		view_port_ = rect(x, y, w, h);
+		handleSetViewPort();
+	}
+
+	void Window::setViewPort(const rect& vp)
+	{
+		view_port_ = vp;
+		handleSetViewPort();
+	}
 
 	WindowPtr WindowManager::createWindow(int width, int height, const variant& hints)
 	{

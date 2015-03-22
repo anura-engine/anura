@@ -37,16 +37,16 @@ namespace KRE
 		variant write();
 
 		void on_create();
-		void apply() const;
+		void apply(const rect& r=rect()) const;
 		void unapply() const;
 		void clear() const;
 
-		void renderToThis() const { apply(); }
+		void renderToThis(const rect& r=rect()) const { apply(r); }
 		void renderToPrevious() const { unapply(); }
 
 		struct RenderScope {
-			RenderScope(RenderTargetPtr rt) : rt_(rt) {
-				rt_->apply();
+			RenderScope(RenderTargetPtr rt, const rect& r=rect()) : rt_(rt) {
+				rt_->apply(r);
 			}
 			~RenderScope() {
 				rt_->unapply();
@@ -86,7 +86,7 @@ namespace KRE
 		explicit RenderTarget(const variant& node);
 	private:
 		virtual void handleCreate() = 0;
-		virtual void handleApply() const = 0;
+		virtual void handleApply(const rect& r) const = 0;
 		virtual void handleUnapply() const = 0;
 		virtual void handleClear() const = 0;
 		virtual RenderTargetPtr handleClone() = 0;

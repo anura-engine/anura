@@ -216,7 +216,8 @@ Level::Level(const std::string& level_cfg, variant node)
 
 	if(KRE::DisplayDevice::checkForFeature(KRE::DisplayDeviceCapabilties::RENDER_TO_TEXTURE)) {
 		have_render_to_texture_ = true;
-		rt_ = KRE::RenderTarget::create(KRE::WindowManager::getMainWindow()->width(), KRE::WindowManager::getMainWindow()->height());
+		auto& gs = graphics::GameScreen::get();
+		rt_ = KRE::RenderTarget::create(gs.getWidth(), gs.getHeight());
 		//rt_->setCamera(std::make_shared<KRE::Camera>("render_target"));
 	}
 
@@ -2027,9 +2028,10 @@ void Level::frameBufferEnterZorder(int zorder) const
 		}
 	}
 
-	if(shaders != active_fb_shaders_) {
+	if(shaders != active_fb_shaders_) {		
 		if(active_fb_shaders_.empty()) {
-			rt_->renderToThis();
+			auto& gs = graphics::GameScreen::get();
+			rt_->renderToThis(rect(0, 0, gs.getWidth(), gs.getHeight()));
 			rt_->setClearColor(KRE::Color(0,0,0,0));
 			rt_->clear();
 		} else if(shaders.empty()) {
@@ -2049,8 +2051,9 @@ void Level::frameBufferEnterZorder(int zorder) const
 
 			if(add_shaders) {
 				//LOG_DEBUG("Added " << count << " at zorder: " << zorder);
-				//this works if we're adding and removing shaders.
-				rt_->renderToThis();
+				//this works if we're adding and removing shaders.)
+				auto& gs = graphics::GameScreen::get();
+				rt_->renderToThis(rect(0, 0, gs.getWidth(), gs.getHeight()));
 				rt_->setClearColor(KRE::Color(0,0,0,0));
 				rt_->clear();
 			} else {
