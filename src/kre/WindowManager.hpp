@@ -71,7 +71,7 @@ namespace KRE
 
 		virtual unsigned getWindowID() const = 0;
 
-		virtual void render(const Renderable* r) const = 0;
+		void render(const Renderable* r) const;
 
 		virtual void swap() = 0;
 
@@ -120,15 +120,16 @@ namespace KRE
 		int registerSizeChangeObserver(std::function<void(int,int)> fn);
 		bool registerSizeChangeObserver(int key, std::function<void(int,int)> fn);
 		void unregisterSizeChangeObserver(int);
+
+		DisplayDevicePtr getDisplayDevice() const { return display_; }
 	protected:
+		void setDisplayDevice(DisplayDevicePtr display) { display_ = display; }
+		mutable Color clear_color_;
+	private:
 		int width_;
 		int height_;
 		int logical_width_;
 		int logical_height_;
-		mutable Color clear_color_;
-
-		DisplayDevicePtr display_;
-	private:
 		bool use_16bpp_;
 		bool use_multi_sampling_;
 		int samples_;
@@ -137,6 +138,8 @@ namespace KRE
 		std::string title_;
 		bool use_vsync_;
 		rect view_port_;
+
+		DisplayDevicePtr display_;
 
 		virtual void changeFullscreenMode() = 0;
 		virtual void handleSetClearColor() const = 0;
