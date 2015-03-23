@@ -67,12 +67,12 @@ namespace module
 
 		game_logic::ConstFormulaCallablePtr module_args;
 
-std::string core_module_name;
-}
+	std::string core_module_name;
+	}
 
-void set_core_module_name(const std::string& module_name)
-{
-	core_module_name = module_name;
+	void set_core_module_name(const std::string& module_name)
+	{
+		core_module_name = module_name;
 	}
 
 	const std::string get_module_name(){

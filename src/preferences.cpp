@@ -96,9 +96,9 @@ std::string get_windows_error_as_string()
 class WindowsPrefs
 {
 public:
-	const std::string& getPreferencePath() const   { return preferences_path_; }
-	const std::string& getSaveFilePath() const     { return save_file_path_; }
-	const std::string& getAutoSaveFilePath() const { return auto_save_file_path_; }
+	std::string getPreferencePath() const   { return app_data_path_ + "/" + module::get_module_name() + "/";; }
+	std::string getSaveFilePath() const     { return getPreferencePath() + SAVE_FILENAME; }
+	std::string getAutoSaveFilePath() const { return getPreferencePath() + AUTOSAVE_FILENAME; }
 	const std::string& getAppDataPath() const      { return app_data_path_; }
 	static WindowsPrefs& getInstance() {
 		static WindowsPrefs res;
@@ -112,14 +112,7 @@ private:
 		} else {
 			ASSERT_LOG(false, "Failed to read the application data path: " << get_windows_error_as_string());
 		}
-
-		preferences_path_ = app_data_path_ + "/" + module::get_module_name() + "/";
-		save_file_path_ = preferences_path_ + SAVE_FILENAME;
-		auto_save_file_path_ = preferences_path_ + AUTOSAVE_FILENAME;
 	}
-	std::string preferences_path_;
-	std::string save_file_path_;
-	std::string auto_save_file_path_;
 	std::string app_data_path_;
 };
 
