@@ -332,7 +332,9 @@ namespace KRE
 				case CAIRO_FORMAT_ARGB32:	pffmt = PixelFormat::PF::PIXELFORMAT_ARGB8888;	break;
 				case CAIRO_FORMAT_RGB24:	pffmt = PixelFormat::PF::PIXELFORMAT_RGB888;	break;
 				case CAIRO_FORMAT_RGB16_565:pffmt = PixelFormat::PF::PIXELFORMAT_RGB565;	break;
+#if CAIRO_VERSION_MAJOR >= 1 && CAIRO_VERSION_MINOR >= 2
 				case CAIRO_FORMAT_RGB30:	pffmt = PixelFormat::PF::PIXELFORMAT_RGB101010;	break;
+#endif
 				default:
 					ASSERT_LOG(false, "Unrecognised cairo surface format: " << fmt);
 			}
