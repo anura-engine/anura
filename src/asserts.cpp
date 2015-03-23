@@ -29,9 +29,7 @@
 #include "StackWalker.h"
 #else
 #include <csignal>
-#include <execinfo.h> //for backtrace. May not be available on some platforms.
-                      //If not available implement output_backtrace() some
-					  //other way.
+#include "stacktrace.hpp"
 #endif
 
 #ifndef NO_EDITOR
@@ -182,6 +180,7 @@ void output_backtrace()
 //	void* trace_buffer[nframes];
 //	const int nsymbols = backtrace(trace_buffer, nframes);
 //	backtrace_symbols_fd(trace_buffer, nsymbols, 2);
+	print_stacktrace(stderr, 256);
 #endif
 	std::cerr << "---\n";
 }

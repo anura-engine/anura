@@ -80,6 +80,7 @@ namespace graphics
 	{
 		x_ = x;
 		y_ = y;
+		cam_ = std::make_shared<KRE::Camera>("gs.cam", x_, width_, y_, height_);
 	}
 
 	void GameScreen::setupForDraw(KRE::WindowPtr wnd)
