@@ -26,7 +26,7 @@
 
 #include <cfloat>
 #include <cmath>
-#include "../asserts.hpp"
+#include "asserts.hpp"
 #include "svg_transform.hpp"
 
 namespace KRE

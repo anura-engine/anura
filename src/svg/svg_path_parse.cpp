@@ -40,8 +40,7 @@ reflected point (i.e., (newx1, newy1), the first control point of the current pa
 #include <iostream>
 #include <list>
 
-#include "../asserts.hpp"
-#include "../formatter.hpp"
+#include "formatter.hpp"
 #include "svg_fwd.hpp"
 #include "svg_path_parse.hpp"
 

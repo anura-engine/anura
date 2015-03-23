@@ -23,7 +23,7 @@
 
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/uniform_int_distribution.hpp>
-
+#include <ctime>
 
 #include "random.hpp"
 
@@ -39,7 +39,7 @@ namespace rng
 	int generate() 
 	{
 		if(!rng_init) {
-			seed_from_int(time(NULL));
+			seed_from_int(std::time(NULL));
 		}
 		return generator(state);
 	}
