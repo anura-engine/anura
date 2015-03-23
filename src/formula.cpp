@@ -3866,8 +3866,20 @@ UNIT_TEST(formula_types_compatible) {
 	CHECK_EQ(Formula(variant("types_compatible('any', '[int,int]')")).execute().as_bool(), true);
 	CHECK_EQ(Formula(variant("types_compatible('string|int', 'string')")).execute().as_bool(), true);
 	CHECK_EQ(Formula(variant("types_compatible('string', 'string|int')")).execute().as_bool(), false);
+	CHECK_EQ(Formula(variant("types_compatible('int|string', 'string|int')")).execute().as_bool(), true);
 	CHECK_EQ(Formula(variant("types_compatible('[int]', '[int,int]')")).execute().as_bool(), true);
 	CHECK_EQ(Formula(variant("types_compatible('[int,int]', '[int]')")).execute().as_bool(), false);
+}
+
+UNIT_TEST(formula_function_types_compatible) {
+	CHECK_EQ(Formula(variant("types_compatible('function(string) ->int', 'function(string) ->any')")).execute().as_bool(), false);
+	CHECK_EQ(Formula(variant("types_compatible('function(string) ->any', 'function(string) ->int')")).execute().as_bool(), true);
+	CHECK_EQ(Formula(variant("types_compatible('function(string) ->int', 'function(any) ->int')")).execute().as_bool(), false);
+	CHECK_EQ(Formula(variant("types_compatible('function(any) ->int', 'function(string) ->int')")).execute().as_bool(), true);
+	CHECK_EQ(Formula(variant("types_compatible('function(string) ->int', 'function(any) ->any')")).execute().as_bool(), false);
+	CHECK_EQ(Formula(variant("types_compatible('function(any) ->any', 'function(string) ->int')")).execute().as_bool(), true);
+	CHECK_EQ(Formula(variant("types_compatible('function(any) ->int', 'function(string) ->any')")).execute().as_bool(), false);
+	CHECK_EQ(Formula(variant("types_compatible('function(string) ->any', 'function(any) ->int')")).execute().as_bool(), false);
 }
 
 UNIT_TEST(formula_list_comprehension) {
