@@ -39,7 +39,7 @@ namespace rng
 	int generate() 
 	{
 		if(!rng_init) {
-			seed_from_int(std::time(NULL));
+			seed_from_int(static_cast<unsigned int>(std::time(NULL)));
 		}
 		return generator(state);
 	}
