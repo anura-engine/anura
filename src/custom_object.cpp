@@ -1463,7 +1463,7 @@ void CustomObject::process(Level& lvl)
 	}
 
 	CollisionInfo debug_collide_info;
-	ASSERT_LOG(type_->isStaticObject() || lvl.in_editor() || !entity_collides(Level::current(), *this, MOVE_DIRECTION::NONE, &debug_collide_info), "ENTITY " << getDebugDescription() << " COLLIDES WITH " << (debug_collide_info.collide_with ? debug_collide_info.collide_with->getDebugDescription() : "THE LEVEL") << " AT START OF PROCESS");
+	ASSERT_LOG(type_->isStaticObject() || lvl.in_editor() || !entity_collides(Level::current(), *this, MOVE_DIRECTION::NONE, &debug_collide_info), "ENTITY " << getDebugDescription() << " COLLIDES WITH " << (debug_collide_info.collide_with ? debug_collide_info.collide_with->getDebugDescription() : "THE LEVEL") << " AT START OF PROCESS, WITH ITS SOLID RECT BEING [x,y,x2,y2]: " << solidRect());
 
 	if(parent_.get() != nullptr) {
 		const point pos = parent_position();

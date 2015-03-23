@@ -129,7 +129,7 @@ namespace gui
 	void DropdownWidget::init()
 	{
 		const int dropdown_image_size = std::max(height(), dropdown_image_->height());
-		label_ = new Label(list_.size() > 0 ? list_[current_selection_] : "No items");
+		label_ = new Label(list_.size() > 0 && current_selection_ >= 0 && current_selection_ < static_cast<int>(list_.size()) ? list_[current_selection_] : "No items");
 		if(font_.empty() == false) {
 			label_->setFont(font_);
 		}

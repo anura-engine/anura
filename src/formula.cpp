@@ -1624,7 +1624,7 @@ namespace game_logic
 					
 							return variant::from_bool(!result);
 						} else if(right.is_map()) {
-							return variant(right.has_key(left) ? result : !result);
+							return variant::from_bool(right.has_key(left) ? result : !result);
 						} else {
 							ASSERT_LOG(false, "ILLEGAL OPERAND TO 'in': " << right.write_json() << " AT " << debugPinpointLocation());
 							return variant();
@@ -2697,7 +2697,7 @@ namespace game_logic
 				//it is static if it never reads its input, if it doesn't call the rng,
 				//and if a reference to the input itself is not stored.
 				try {
-					const unsigned int rng_seed = rng::get_seed();
+					const rng::Seed rng_seed = rng::get_seed();
 					FormulaCallablePtr static_callable(new static_FormulaCallable);
 
 					variant res;

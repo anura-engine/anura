@@ -46,6 +46,7 @@
 #include "LayerBlitInfo.hpp"
 #include "level_object.hpp"
 #include "level_solid_map.hpp"
+#include "random.hpp"
 #include "speech_dialog.hpp"
 #include "tile_map.hpp"
 #include "variant.hpp"
@@ -560,7 +561,7 @@ private:
 	std::shared_ptr<point> lock_screen_;
 
 	struct backup_snapshot {
-		unsigned int rng_seed;
+		rng::Seed rng_seed;
 		int cycle;
 		std::vector<EntityPtr> chars;
 		std::vector<EntityPtr> players;

@@ -140,8 +140,6 @@ namespace tbs
 
 		int state_id_; //upward counting integer keeping track of the game state.
 
-		int rng_seed_;
-
 		int cycle_;
 		int tick_rate_;
 

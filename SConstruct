@@ -22,7 +22,7 @@ opts = Variables('.scons-option-cache')
 opts.AddVariables(
     EnumVariable('build', 'Build variant: debug, release profile', "release", ["release", "debug", "profile"]),
     PathVariable('build_dir', 'Build all intermediate files(objects, test programs, etc) under this dir', "build", PathVariable.PathAccept),
-    BoolVariable('ccache', "Use ccache", False),
+    BoolVariable('ccache', "Use ccache", True),
     BoolVariable('extrawarn', "Use wesnoth-level warnings", False),
     BoolVariable('shaders', "Use shaders", False),
     BoolVariable('strict', 'Set to strict compilation', False),
@@ -39,7 +39,7 @@ env.ParseConfig("pkg-config --libs --cflags cairo freetype2")
 env.ParseConfig("sdl2-config --libs --cflags")
 env.Append(LIBS = ["SDL2_mixer", "SDL2_image", "SDL2_ttf"])
 env.Append(LIBS = ["GL", "GLEW", "boost_filesystem", "boost_regex", "boost_system", "boost_iostreams", "png", "z"])
-env.Append(CXXFLAGS= ["-pthread", "-DIMPLEMENT_SAVE_PNG", "-DUSE_ISOMAP", "-DUSE_BOX2D"], LINKFLAGS = ["-pthread"])
+env.Append(CXXFLAGS= ["-pthread", "-DIMPLEMENT_SAVE_PNG", "-DUSE_ISOMAP", "-DUSE_BOX2D", "-DUSE_SVG"], LINKFLAGS = ["-pthread"])
 if sys.platform.startswith('linux'):
     env.Append(LIBS = ["X11"])
 

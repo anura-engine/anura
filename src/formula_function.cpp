@@ -1019,6 +1019,7 @@ namespace game_logic
 			if(args().size() == 1) {
 				std::vector<variant_type_ptr> items;
 				variant_type_ptr result = args()[0]->queryVariantType()->is_list_of();
+		ASSERT_LOG(result.get(), "Single argument to max must be a list, found " << args()[0]->query_variant_type()->to_string());
 				items.push_back(result);
 				items.push_back(variant_type::get_type(variant::VARIANT_TYPE_NULL));
 				return variant_type::get_union(items);
@@ -3704,9 +3705,15 @@ FUNCTION_DEF_IMPL
 			return a == '.' && b == '.';
 		}
 
-		std::map<std::string, variant>& get_doc_cache() {
-			static std::map<std::string, variant> cache;
-			return cache;
+std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
+
+	if(prefs_dir) {
+		static std::map<std::string, variant> cache;
+		return cache;
+	} else {
+		static std::map<std::string, variant> cache2;
+		return cache2;
+	}
 		}
 
 		PREF_BOOL(write_backed_maps, false, "Write to backed maps such as used in Citadel's evolutionary system");
@@ -3890,7 +3897,7 @@ FUNCTION_DEF_IMPL
 			}
 
 			return variant(new FnCommandCallableArg([=](FormulaCallable* callable) {
-				get_doc_cache()[docname] = doc;
+				get_doc_cache(true)[docname] = doc;
 
 				std::string real_docname = preferences::user_data_path() + docname;
 				sys::write_file(real_docname, game_logic::serialize_doc_with_objects(doc).write_json());
@@ -3926,9 +3933,9 @@ FUNCTION_DEF_IMPL
 				}
 			}
 
-			variant& v = get_doc_cache()[docname];
-			if(v.is_null() == false) {
-				return v;
+			auto itor = get_doc_cache(prefs_directory).find(docname);
+			if(itor != get_doc_cache(prefs_directory).end()) {
+				return itor->second;
 			}
 
 			ASSERT_LOG(std::adjacent_find(docname.begin(), docname.end(), consecutive_periods) == docname.end(), "DOCUMENT NAME CONTAINS ADJACENT PERIODS " << docname);
@@ -3942,9 +3949,12 @@ FUNCTION_DEF_IMPL
 			}
 
 			try {
-				return game_logic::deserialize_file_with_objects(docname);
-			} catch(json::ParseError& e) {
+		variant result = game_logic::deserialize_file_with_objects(docname);
+		get_doc_cache(prefs_directory)[docname] = result;
+
+		return result;
 				if(allow_failure) {
+			get_doc_cache(prefs_directory)[docname] = variant();
 					return variant();
 				}
 
@@ -3963,7 +3973,8 @@ FUNCTION_DEF_IMPL
 
 	void remove_formula_function_cached_doc(const std::string& name)
 	{
-		get_doc_cache().erase(name);
+	get_doc_cache(true).erase(name);
+	get_doc_cache(false).erase(name);
 	}
 
 	void FunctionExpression::check_arg_type(int narg, const std::string& type_str) const

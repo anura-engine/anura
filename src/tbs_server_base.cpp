@@ -68,6 +68,7 @@ namespace tbs
 
 	server_base::game_info_ptr server_base::create_game(variant msg)
 	{
+		fprintf(stderr, "DDD: create_game(((%s)))\n", msg.write_json().c_str());
 		game_info_ptr g(new game_info(msg));
 		if(!g->game_state) {
 			LOG_INFO("COULD NOT CREATE GAME TYPE: " << msg["game_type"].as_string() << ": " << msg.write_json());
@@ -128,6 +129,7 @@ namespace tbs
 					return;
 				}
 
+				fprintf(stderr, "DDD: SEND game_created\n");
 				send_fn(json::parse(formatter() << "{ \"type\": \"game_created\", \"game_id\": " << g->game_state->game_id() << " }"));
 			
 				status_change();

@@ -21,7 +21,9 @@
 	   distribution.
 */
 
-#include <ctime>
+#include <boost/random/mersenne_twister.hpp>
+#include <boost/random/uniform_int_distribution.hpp>
+
 
 #include "random.hpp"
 
@@ -29,28 +31,32 @@ namespace rng
 {
 	namespace 
 	{
-		static unsigned int UninitSeed = 11483;
-		static unsigned int next = UninitSeed;
+		boost::random::mt19937 state;
+		boost::random::uniform_int_distribution<> generator(0,0xFFFFFF);
+		bool rng_init = false;
 	}
 
 	int generate() 
 	{
-		if(next == UninitSeed) {
-			next = static_cast<unsigned int>(time(nullptr));
+		if(!rng_init) {
+			seed_from_int(time(NULL));
 		}
-
-		next = next * 1103515245 + 12345;
-		const int result = ((unsigned int)(next/65536) % 32768);
-		return result;
+		return generator(state);
 	}
 
-	void set_seed(unsigned int seed) 
+	void seed_from_int(unsigned int seed) 
 	{
-		next = seed;
+		rng_init = true;
+		state = boost::random::mt19937(seed);
 	}
 
-	unsigned int get_seed() 
+	void set_seed(const Seed& seed) 
 	{
-		return next;
+		state = seed;
+	}
+
+	Seed get_seed() 
+	{
+		return state;
 	}
 }

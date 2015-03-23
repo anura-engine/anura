@@ -516,7 +516,7 @@ namespace multiplayer
 			}
 		}
 
-		rng::set_seed(0);
+		rng::seed_from_int(0);
 	}
 
 	namespace {

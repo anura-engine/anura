@@ -114,8 +114,8 @@ variant g_auto_update_info;
 
 namespace 
 {
-	PREF_BOOL(force_auto_update, false, "Will do a forced sync of auto-updates");
 	PREF_BOOL(auto_update_module, false, "Auto updates the module from the module server on startup (number of milliseconds to spend attempting to update the module)");
+	PREF_BOOL(force_auto_update, false, "Will do a forced sync of auto-updates");
 	PREF_STRING(auto_update_anura, "", "Auto update Anura's binaries from the module server using the given name as the module ID (e.g. anura-windows might be the id for the windows binary)");
 	PREF_INT(auto_update_timeout, 5000, "Timeout to use on auto updates (given in milliseconds)");
 
@@ -390,11 +390,6 @@ int main(int argcount, char* argvec[])
 		LOG_INFO("LOADING CONFIGURATION FROM master-config.cfg");
 		variant cfg = json::parse_from_file("./master-config.cfg");
 		if(cfg.is_map()) {
-			if( cfg["id"].is_null() == false) {
-				LOG_INFO("SETTING MODULE PATH FROM master-config.cfg: " << cfg["id"].as_string());
-				preferences::set_preferences_path_from_module(cfg["id"].as_string());
-				//XXX module::set_module_name(cfg["id"].as_string(), cfg["id"].as_string());
-			}
 			if(cfg["arguments"].is_null() == false) {
 				std::vector<std::string> additional_args = cfg["arguments"].as_list_string();
 				argv.insert(argv.begin(), additional_args.begin(), additional_args.end());
@@ -420,6 +415,7 @@ int main(int argcount, char* argvec[])
 			arg_value = std::string(equal+1, arg.end());
 		}
 		if(arg_name == "--module") {
+			preferences::set_preferences_path_from_module(arg_value);
 			if(load_module(arg_value, &argv) != 0) {
 				bool auto_update = false;
 				for(size_t n = 0; n < argv.size(); ++n) {

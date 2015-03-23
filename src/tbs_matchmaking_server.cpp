@@ -206,6 +206,21 @@ public:
 			}
 
 			heartbeat_message.add("servers", variant(&servers));
+			std::vector<variant> user_list;
+			for(auto p : sessions_) {
+				variant_builder b;
+				b.add("id", p.second.user_id);
+
+				std::string status = p.second.status;
+				if(p.second.queued_for_game) {
+					status = "queued";
+				}
+
+				b.add("status", status);
+				user_list.push_back(b.build());
+			}
+			heartbeat_message.add("user_list", variant(&user_list));
+
 			variant heartbeat_message_value = heartbeat_message.build();
 			std::string heartbeat_msg = heartbeat_message_value.write_json();
 
@@ -456,6 +471,28 @@ public:
 			} else if(request_type == "get_server_info") {
 				static const std::string server_info = get_server_info_file().write_json();
 				send_msg(socket, "text/json", server_info, "");
+			} else if(request_type == "delete_account") {
+				const int session_id = doc["session_id"].as_int(request_session_id);
+
+				if(sessions_.count(session_id) == 0) {
+					variant_builder response;
+					response.add("type", "fail");
+					response.add("reason", "bad_session");
+					response.add("message", "Invalid session ID");
+					send_response(socket, response.build());
+					return;
+				}
+
+				SessionInfo& info = sessions_[session_id];
+
+				db_client_->remove("user:" + info.user_id);
+
+				variant_builder response;
+				response.add("type", "account_deleted");
+				send_response(socket, response.build());
+
+				sessions_.erase(session_id);
+
 			} else if(request_type == "cancel_matchmake") {
 				const int session_id = doc["session_id"].as_int(request_session_id);
 
@@ -548,6 +585,10 @@ public:
 					fprintf(stderr, "Error: Unknown session: %d\n", session_id);
 					send_msg(socket, "text/json", "{ type: \"error\", message: \"unknown session\" }", "");
 				} else {
+					if(doc["status"].is_string()) {
+						itor->second.status = doc["status"].as_string();
+					}
+
 					itor->second.last_contact = time_ms_;
 					if(itor->second.game_details != "" && !itor->second.game_pending) {
 						send_msg(socket, "text/json", itor->second.game_details, "");
@@ -858,6 +899,7 @@ private:
 		int session_id;
 		std::string user_id;
 		std::string game_details;
+		std::string status;
 		int last_contact;
 		int game_pending;
 		int game_port;
