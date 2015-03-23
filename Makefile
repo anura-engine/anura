@@ -20,6 +20,7 @@
 #   USE_CCACHE       If set to 'yes' (default), builds using the CCACHE binary
 #                     to run the compiler. If ccache is not installed (i.e.
 #                     found in PATH), this option has no effect.
+#   USE_DB_CLIENT    If set to 'yes' and couchbase is present will build.
 #
 
 OPTIMIZE?=yes
@@ -74,6 +75,13 @@ ifeq ($(USE_LIBVPX),yes)
 	BASE_CXXFLAGS += -DUSE_LIBVPX
 	INC += $(shell pkg-config --cflags vpx)
 	LIBS += $(shell pkg-config --libs vpx)
+endif
+
+# couchbase check
+USE_DB_CLIENT?=no
+ifeq ($(USE_DB_CLIENT),yes)
+    BASE_CXXFLAGS += USE_DB_CLIENT
+    LIBS += -lcouchbase
 endif
 
 # cairo check
