@@ -1019,7 +1019,7 @@ namespace game_logic
 			if(args().size() == 1) {
 				std::vector<variant_type_ptr> items;
 				variant_type_ptr result = args()[0]->queryVariantType()->is_list_of();
-		ASSERT_LOG(result.get(), "Single argument to max must be a list, found " << args()[0]->query_variant_type()->to_string());
+				ASSERT_LOG(result.get(), "Single argument to max must be a list, found " << args()[0]->queryVariantType()->to_string());
 				items.push_back(result);
 				items.push_back(variant_type::get_type(variant::VARIANT_TYPE_NULL));
 				return variant_type::get_union(items);
@@ -3949,12 +3949,12 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 			}
 
 			try {
-		variant result = game_logic::deserialize_file_with_objects(docname);
-		get_doc_cache(prefs_directory)[docname] = result;
-
-		return result;
+				variant result = game_logic::deserialize_file_with_objects(docname);
+				get_doc_cache(prefs_directory)[docname] = result;
+				return result;
+			} catch(json::ParseError& e) {
 				if(allow_failure) {
-			get_doc_cache(prefs_directory)[docname] = variant();
+					get_doc_cache(prefs_directory)[docname] = variant();
 					return variant();
 				}
 

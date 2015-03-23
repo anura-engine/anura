@@ -72,6 +72,96 @@ namespace editor_dialogs
 			254, 5, 216, 48, 136, 243, 10, 12, 65, 156, 6, 143, 175, 131, 213, 
 			248, 62, 206, 251, 2, 161, 49, 129, 1, 89, 58, 130, 187, 0, 0, 0,
 			0, 73, 69, 78, 68, 174, 66, 96, 130};
+
+		void create_module(const module::modules& mod) 
+		{
+			if(!mod.name_.empty()) {
+				std::string mod_path = "./modules/" + mod.name_ + "/";
+				// create some default directories.
+				sys::get_dir(mod_path + "data");
+				sys::get_dir(mod_path + "data/level");
+				sys::get_dir(mod_path + "data/objects");
+				sys::get_dir(mod_path + "data/object_prototypes");
+				sys::get_dir(mod_path + "data/gui");
+				sys::get_dir(mod_path + "images");
+				sys::get_dir(mod_path + "sounds");
+				sys::get_dir(mod_path + "music");
+				// Create an empty titlescreen.cfg
+				variant empty_lvl = json::parse_from_file("data/level/empty.cfg");
+				empty_lvl.add_attr(variant("id"), variant("titlescreen.cfg"));
+
+				std::map<variant, variant> playable_m;
+				playable_m[variant("_addr")] = variant("1010101");
+				playable_m[variant("current_frame")] = variant("normal");
+				playable_m[variant("custom")] = variant("yes");
+				playable_m[variant("face_right")] = variant(1);
+				playable_m[variant("is_human")] = variant(1);
+				playable_m[variant("label")] = variant("_1111");
+				playable_m[variant("time_in_frame")] = variant(0);
+				playable_m[variant("type")] = variant("simple_playable");
+				playable_m[variant("x")] = variant(0);
+				playable_m[variant("y")] = variant(0);
+				empty_lvl.add_attr(variant("character"), variant(&playable_m));
+				sys::write_file(mod_path + "titlescreen.cfg", empty_lvl.write_json());
+
+				// Module specifed as standalone, write out a few extra useful files.
+				if(mod.included_modules_.empty()) {
+					// data/fonts.cfg			-- {font:["@flatten","@include data/dialog_font.cfg","@include data/label_font.cfg"]}
+					// data/gui.cfg				-- {section:["@flatten","@include data/editor-tools.cfg","@include data/gui-elements.cfg"],FramedGuiElement: ["@flatten","@include data/framed-gui-elements.cfg"]}
+					// data/music.cfg			-- {}
+					// data/preload.cfg			-- { preload: [], }
+					// data/tiles.cfg			-- {}
+					// data/gui/null.cfg		-- {}
+					sys::write_file(mod_path + "data/fonts.cfg", "{font:[\"@flatten\",\"@include data/fonts-bitmap/dialog_font.cfg\",\"@include data/fonts-bitmap/label_font.cfg\"]}");
+					sys::write_file(mod_path + "data/music.cfg", "{\n}");
+					sys::write_file(mod_path + "data/tiles.cfg", "{\n}");
+					sys::write_file(mod_path + "data/gui/null.cfg", "{\n}");
+					sys::write_file(mod_path + "data/preload.cfg", "{\npreload: [\n],\n}");
+					sys::write_file(mod_path + "data/gui/default.cfg", "{\n}");
+					sys::write_file(mod_path + "data/objects/simple_playable.cfg", 
+					"{\n"
+					"\tid: \"simple_playable\",\n"
+					"\tis_human: true,\n"
+					"\thitpoints: 4,\n"
+					"\tEditorInfo: { category: \"player\" },\n"
+					"\tanimation: [\n"
+					"\t\t{\n"
+					"\t\tid: \"stand\",\n"
+					"\t\timage: \"cube.png\",\n"
+					"\t\trect: [0,0,15,15]\n"
+					"\t\t}\n"
+					"\t],\n"
+					"}");
+					sys::write_file(mod_path + "images/cube.png", std::string(reinterpret_cast<const char *>(cube_img), 266));
+				}
+			}
+		}
+
+		void write_module_properties(const module::modules& mod) 
+		{
+			if(!mod.name_.empty()) {
+				std::map<variant,variant> m;
+				m[variant("id")] = variant(mod.name_);
+				if(mod.pretty_name_.empty() == false) {
+					m[variant("name")] = variant(mod.pretty_name_);
+				}
+				if(mod.abbreviation_.empty() == false) {
+					m[variant("abbreviation")] = variant(mod.abbreviation_);
+				}
+				if(mod.included_modules_.empty() == false) {
+					std::vector<variant> v;
+					for(const std::string& s : mod.included_modules_) {
+						v.push_back(variant(s));
+					}
+					m[variant("dependencies")] = variant(&v);
+				}
+				m[variant("min_engine_version")] = preferences::version_decimal();
+				variant new_module(&m);
+			std::string mod_path = "./modules/" + mod.name_ + "/";
+			// create the module file.
+			sys::write_file(mod_path + "module.cfg", new_module.write_json());
+			}
+		}
 	}
 
 	EditorModulePropertiesDialog::EditorModulePropertiesDialog(editor& e)
@@ -249,95 +339,14 @@ namespace editor_dialogs
 		return mod_.name_ + ":titlescreen.cfg";
 	}
 
-	namespace 
+	void EditorModulePropertiesDialog::createNewModule() 
 	{
-	void create_module(const module::modules& mod) {
-		if(!mod.name_.empty()) {
-			std::string mod_path = "./modules/" + mod_.name_ + "/";
-			// create some default directories.
-			sys::get_dir(mod_path + "data");
-			sys::get_dir(mod_path + "data/level");
-			sys::get_dir(mod_path + "data/objects");
-			sys::get_dir(mod_path + "data/object_prototypes");
-			sys::get_dir(mod_path + "data/gui");
-			sys::get_dir(mod_path + "images");
-			sys::get_dir(mod_path + "sounds");
-			sys::get_dir(mod_path + "music");
-			// Create an empty titlescreen.cfg
-			variant empty_lvl = json::parse_from_file("data/level/empty.cfg");
-			empty_lvl.add_attr(variant("id"), variant("titlescreen.cfg"));
-
-			std::map<variant, variant> playable_m;
-			playable_m[variant("_addr")] = variant("1010101");
-			playable_m[variant("current_frame")] = variant("normal");
-			playable_m[variant("custom")] = variant("yes");
-			playable_m[variant("face_right")] = variant(1);
-			playable_m[variant("is_human")] = variant(1);
-			playable_m[variant("label")] = variant("_1111");
-			playable_m[variant("time_in_frame")] = variant(0);
-			playable_m[variant("type")] = variant("simple_playable");
-			playable_m[variant("x")] = variant(0);
-			playable_m[variant("y")] = variant(0);
-			empty_lvl.add_attr(variant("character"), variant(&playable_m));
-			sys::write_file(mod_path + "titlescreen.cfg", empty_lvl.write_json());
-
-			// Module specifed as standalone, write out a few extra useful files.
-			if(mod.included_modules_.empty()) {
-				// data/fonts.cfg			-- {font:["@flatten","@include data/dialog_font.cfg","@include data/label_font.cfg"]}
-				// data/gui.cfg				-- {section:["@flatten","@include data/editor-tools.cfg","@include data/gui-elements.cfg"],FramedGuiElement: ["@flatten","@include data/framed-gui-elements.cfg"]}
-				// data/music.cfg			-- {}
-				// data/preload.cfg			-- { preload: [], }
-				// data/tiles.cfg			-- {}
-				// data/gui/null.cfg		-- {}
-				sys::write_file(mod_path + "data/fonts.cfg", "{font:[\"@flatten\",\"@include data/fonts-bitmap/dialog_font.cfg\",\"@include data/fonts-bitmap/label_font.cfg\"]}");
-				sys::write_file(mod_path + "data/music.cfg", "{\n}");
-				sys::write_file(mod_path + "data/tiles.cfg", "{\n}");
-				sys::write_file(mod_path + "data/gui/null.cfg", "{\n}");
-				sys::write_file(mod_path + "data/preload.cfg", "{\npreload: [\n],\n}");
-				sys::write_file(mod_path + "data/gui/default.cfg", "{\n}");
-				sys::write_file(mod_path + "data/objects/simple_playable.cfg", 
-					"{\n"
-					"\tid: \"simple_playable\",\n"
-					"\tis_human: true,\n"
-					"\thitpoints: 4,\n"
-					"\tEditorInfo: { category: \"player\" },\n"
-					"\tanimation: [\n"
-					"\t\t{\n"
-					"\t\tid: \"stand\",\n"
-					"\t\timage: \"cube.png\",\n"
-					"\t\trect: [0,0,15,15]\n"
-					"\t\t}\n"
-					"\t],\n"
-					"}");
-				sys::write_file(mod_path + "images/cube.png", std::string(reinterpret_cast<const char *>(cube_img), 266));
-			}
-		}
+		create_module(mod_);
 	}
 
-	void write_module_properties(const module::modules& mod) 
+	void EditorModulePropertiesDialog::saveModuleProperties() 
 	{
-		if(!mod.name_.empty()) {
-			std::map<variant,variant> m;
-		m[variant("id")] = variant(mod.name_);
-		if(mod.pretty_name_.empty() == false) {
-			m[variant("name")] = variant(mod.pretty_name_);
-			}
-		if(mod.abbreviation_.empty() == false) {
-			m[variant("abbreviation")] = variant(mod.abbreviation_);
-			}
-		if(mod.included_modules_.empty() == false) {
-				std::vector<variant> v;
-			foreach(const std::string& s, mod.included_modules_) {
-					v.push_back(variant(s));
-				}
-				m[variant("dependencies")] = variant(&v);
-			}
-			m[variant("min_engine_version")] = preferences::version_decimal();
-			variant new_module(&m);
-		std::string mod_path = "./modules/" + mod.name_ + "/";
-			// create the module file.
-			sys::write_file(mod_path + "module.cfg", new_module.write_json());
-		}
+		write_module_properties(mod_);
 	}
 }
 
@@ -348,17 +357,8 @@ COMMAND_LINE_UTILITY(create_module) {
 
 	mod.name_ = args[0];
 
-	create_module(mod);
-	write_module_properties(mod);
-}
-
-void editor_module_properties_dialog::create_new_module() {
-	create_module(mod_);
-}
-
-void editor_module_properties_dialog::save_module_properties() {
-	write_module_properties(mod_);
-	}
+	editor_dialogs::create_module(mod);
+	editor_dialogs::write_module_properties(mod);
 }
 
 #endif // !NO_EDITOR
