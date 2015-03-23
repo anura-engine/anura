@@ -1,263 +1,251 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
-#ifndef CUSTOM_OBJECT_HPP_INCLUDED
-#define CUSTOM_OBJECT_HPP_INCLUDED
 
+#pragma once
+
+#include <cstdint>
 #include <memory>
 #include <set>
-
-#include <boost/scoped_ptr.hpp>
-#include <boost/shared_ptr.hpp>
-#include <boost/cstdint.hpp>
 #include <stack>
-#include <glm/glm.hpp>
-#include <glm/gtc/type_ptr.hpp>
 
-#include "graphics.hpp"
+#include "anura_shader.hpp"
 #include "blur.hpp"
-#include "color_utils.hpp"
 #include "custom_object_type.hpp"
-#include "decimal.hpp"
-#include "draw_primitive.hpp"
+#include "draw_primitive_fwd.hpp"
 #include "draw_scene.hpp"
 #include "entity.hpp"
 #include "formula.hpp"
 #include "formula_callable.hpp"
 #include "formula_callable_visitor.hpp"
 #include "formula_variable_storage.hpp"
+#include "frame.hpp"
 #include "light.hpp"
 #include "particle_system.hpp"
-#include "raster_distortion.hpp"
-#include "variant.hpp"
-#include "vector_text.hpp"
 #include "widget.hpp"
 
-struct collision_info;
-class level;
+struct CollisionInfo;
+class Level;
+struct CustomObjectText;
 
-struct custom_object_text;
 
-class custom_object : public entity
+class CustomObject : public Entity
 {
 public:
-	static const std::string* current_debug_error();
-	static void reset_current_debug_error();
+	static const std::string* currentDebugError();
+	static void resetCurrentDebugError();
 
-	static std::set<custom_object*>& get_all();
-	static std::set<custom_object*>& get_all(const std::string& type);
+	static std::set<CustomObject*>& getAll();
+	static std::set<CustomObject*>& getAll(const std::string& type);
 	static void init();
 
 	static void run_garbage_collection();
 
-	explicit custom_object(variant node);
-	custom_object(const std::string& type, int x, int y, bool face_right);
-	custom_object(const custom_object& o);
-	virtual ~custom_object();
+	explicit CustomObject(variant node);
+	CustomObject(const std::string& type, int x, int y, bool face_right);
+	CustomObject(const CustomObject& o);
+	virtual ~CustomObject();
 
 	void validate_properties();
 
-	bool is_a(const std::string& type) const;
+	bool isA(const std::string& type) const;
 
-	//finish_loading(): called when a level finishes loading all objects,
+	//finishLoading(): called when a level finishes loading all objects,
 	//and allows us to do any final setup such as finding our parent.
-	void finish_loading(level* lvl);
+	void finishLoading(Level* lvl);
 	virtual variant write() const;
-	virtual void setup_drawing() const;
-	virtual void draw(int x, int y) const;
-	virtual void draw_later(int x, int y) const;
-	virtual void draw_group() const;
-	virtual void process(level& lvl);
+	virtual void draw(int xx, int yy) const;
+	virtual void drawLater(int x, int y) const;
+	virtual void drawGroup() const;
+	virtual void process(Level& lvl);
 	virtual void construct();
-	virtual bool create_object();
-	void set_level(level& lvl) { }
+	virtual bool createObject();
+	void setLevel(Level& lvl) { }
 
-	void check_initialized();
+	void checkInitialized();
 
-	int parallax_scale_millis_x() const {
-		if(parallax_scale_millis_.get() == NULL){
-			return type_->parallax_scale_millis_x();
+	int parallaxScaleMillisX() const {
+		if(parallax_scale_millis_ == nullptr){
+			return type_->parallaxScaleMillisX();
 		}else{
 			return parallax_scale_millis_->first;
 		}
 	}
-	int parallax_scale_millis_y() const {
-		if(parallax_scale_millis_.get() == NULL){
-			return type_->parallax_scale_millis_y();
+	int parallaxScaleMillisY() const {
+		if(parallax_scale_millis_ == nullptr){
+			return type_->parallaxScaleMillisY();
 		}else{
 			return parallax_scale_millis_->second;
 		}
 	}
-
 	
 	virtual int zorder() const;
-	virtual int zsub_order() const;
+	virtual int zSubOrder() const;
 
-	virtual int velocity_x() const;
-	virtual int velocity_y() const;
+	virtual int velocityX() const;
+	virtual int velocityY() const;
 	virtual int mass() const { return type_->mass(); }
 
-	int teleport_offset_x() const { return type_->teleport_offset_x(); }
-	int teleport_offset_y() const { return type_->teleport_offset_y(); }
-	bool no_move_to_standing() const { return type_->no_move_to_standing(); };
-	bool reverse_global_vertical_zordering() const { return type_->reverse_global_vertical_zordering(); };
+	int getTeleportOffsetX() const { return type_->getTeleportOffsetX(); }
+	int getTeleportOffsetY() const { return type_->getTeleportOffsetY(); }
+	bool hasNoMoveToStanding() const { return type_->hasNoMoveToStanding(); };
+	bool hasReverseGlobalVerticalZordering() const { return type_->hasReverseGlobalVerticalZordering(); };
 
-	bool has_feet() const;
-
+	bool hasFeet() const;
 	
-	virtual bool is_standable(int x, int y, int* friction=NULL, int* traction=NULL, int* adjust_y=NULL) const;
+	virtual bool isStandable(int x, int y, int* friction=nullptr, int* traction=nullptr, int* adjust_y=nullptr) const;
 
 	virtual bool destroyed() const;
-	virtual bool point_collides(int x, int y) const;
-	virtual bool rect_collides(const rect& r) const;
+	virtual bool pointCollides(int x, int y) const;
+	virtual bool rectCollides(const rect& r) const;
 
-	virtual const frame& current_frame() const { return *frame_; }
+	virtual const Frame& getCurrentFrame() const { return *frame_; }
 
-	void set_frame(const std::string& name);
-	void set_frame(const frame& new_frame);
+	void setFrame(const std::string& name);
+	void setFrame(const Frame& new_frame);
 
-	virtual rect draw_rect() const;
+	virtual rect getDrawRect() const;
 
 	//bare setting of the frame without adjusting position/checking solidity
 	//etc etc.
-	void set_frame_no_adjustments(const std::string& name);
-	void set_frame_no_adjustments(const frame& new_frame);
+	void setFrameNoAdjustments(const std::string& name);
+	void setFrameNoAdjustments(const Frame& new_frame);
 	void die();
-	void die_with_no_event();
-	virtual bool is_active(const rect& screen_area) const;
-	bool dies_on_inactive() const;
-	bool always_active() const;
-	bool move_to_standing(level& lvl, int max_displace=10000);
+	void dieWithNoEvent();
+	virtual bool isActive(const rect& screen_area) const;
+	bool diesOnInactive() const;
+	bool isAlwaysActive() const;
+	bool moveToStanding(Level& lvl, int max_displace=10000);
 
-	bool body_harmful() const;
-	bool body_passthrough() const;
+	bool isBodyHarmful() const;
+	bool isBodyPassthrough() const;
 
-	int time_in_frame() const { return time_in_frame_; }
+	int getTimeInFrame() const { return time_in_frame_; }
 
-	formula_callable* vars() { return vars_.get(); }
-	const formula_callable* vars() const { return vars_.get(); }
+	FormulaCallable* vars() { return vars_.get(); }
+	const FormulaCallable* vars() const { return vars_.get(); }
 
 	int cycle() const { return cycle_; }
 
-	int surface_friction() const;
-	int surface_traction() const;
+	int getSurfaceFriction() const;
+	int getSurfaceTraction() const;
 
-	variant get_child(const std::string& key) const {
-		return type_->get_child(key);
+	variant getChild(const std::string& key) const {
+		return type_->getChild(key);
 	}
 
-	const frame& icon_frame() const;
+	const Frame& getIconFrame() const;
 
-	virtual entity_ptr clone() const;
-	virtual entity_ptr backup() const;
+	virtual EntityPtr clone() const;
+	virtual EntityPtr backup() const;
 
-	game_logic::const_formula_ptr get_event_handler(int key) const;
-	void set_event_handler(int, game_logic::const_formula_ptr f);
+	game_logic::ConstFormulaPtr getEventHandler(int key) const;
+	void setEventHandler(int, game_logic::ConstFormulaPtr f);
 
-	bool can_interact_with() const;
+	bool canInteractWith() const;
 
-	std::string debug_description() const;
+	std::string getDebugDescription() const;
 
-	void map_entities(const std::map<entity_ptr, entity_ptr>& m);
+	void mapEntities(const std::map<EntityPtr, EntityPtr>& m);
 	void cleanup_references();
 
-	void add_particle_system(const std::string& key, const std::string& type);
-	void remove_particle_system(const std::string& key);
+	void addParticleSystem(const std::string& key, const std::string& type);
+	void removeParticleSystem(const std::string& key);
 
-	void set_text(const std::string& text, const std::string& font, int size, int align);
-	void add_vector_text(const gui::vector_text_ptr& txtp) {
-		vector_text_.push_back(txtp);
-	}
-	void clear_vector_text() { vector_text_.clear(); }
+	virtual int getHitpoints() const { return hitpoints_; }
 
-	virtual int hitpoints() const { return hitpoints_; }
+	void setText(const std::string& text, const std::string& font, int size, int align);
 
-	virtual bool boardable_vehicle() const;
+	virtual bool boardableVehicle() const;
 
-	virtual void boarded(level& lvl, const entity_ptr& player);
-	virtual void unboarded(level& lvl);
+	virtual void boarded(Level& lvl, const EntityPtr& player);
+	virtual void unboarded(Level& lvl);
 
-	virtual void board_vehicle();
-	virtual void unboard_vehicle();
+	virtual void boardVehicle();
+	virtual void unboardVehicle();
 
 	void set_driver_position();
 
-	virtual bool use_absolute_screen_coordinates() const { return use_absolute_screen_coordinates_; }
+	virtual bool useAbsoluteScreenCoordinates() const { return use_absolute_screen_coordinates_; }
 
-	virtual int current_animation_id() const { return current_animation_id_; }
+	virtual int getCurrentAnimationId() const { return current_animation_id_; }
 
 	virtual bool handle_sdl_event(const SDL_Event& event, bool claimed);
 #ifndef NO_EDITOR
-	virtual const_editor_entity_info_ptr editor_info() const;
+	virtual ConstEditorEntityInfoPtr getEditorInfo() const override;
 #endif // !NO_EDITOR
 
-	virtual bool handle_event(const std::string& event, const formula_callable* context=NULL);
-	virtual bool handle_event(int event, const formula_callable* context=NULL);
-	virtual bool handle_event_delay(int event, const formula_callable* context=NULL);
+	virtual bool handleEvent(const std::string& event, const FormulaCallable* context=nullptr);
+	virtual bool handleEvent(int event, const FormulaCallable* context=nullptr);
+	virtual bool handleEventDelay(int event, const FormulaCallable* context=nullptr);
 
-	virtual void resolve_delayed_events();
+	virtual void resolveDelayedEvents();
 
 	virtual bool serializable() const;
 
-	void set_blur(const blur_info* blur);
-	void set_sound_volume(const int volume);
-	void set_zsub_order(const int zsub_order) {zsub_order_ = zsub_order;}
+	void set_blur(const BlurInfo* blur);
+	void setSoundVolume(const int volume);
+	void setZSubOrder(const int zsub_order) {zsub_order_ = zsub_order;}
 	
-	bool execute_command(const variant& var);
+	bool executeCommand(const variant& var);
 
-	virtual game_logic::formula_ptr create_formula(const variant& v);
+	virtual game_logic::FormulaPtr createFormula(const variant& v);
 
-	bool allow_level_collisions() const;
+	bool allowLevelCollisions() const;
 
 	//statistic on how many FFL events are handled every second.
 	static int events_handled_per_second;
 
-	const std::vector<light_ptr>& lights() const { return lights_; }
-	void swap_lights(std::vector<light_ptr>& lights) { lights_.swap(lights); }
+	const std::vector<LightPtr>& lights() const { return lights_; }
+	void swapLights(std::vector<LightPtr>& lights) { lights_.swap(lights); }
 
-	void shift_position(int x, int y);
+	void shiftPosition(int x, int y);
 
-	bool appears_at_difficulty(int difficulty) const;
+	bool appearsAtDifficulty(int difficulty) const;
 
-	int min_difficulty() const { return min_difficulty_; }
-	int max_difficulty() const { return max_difficulty_; }
+	int getMinDifficulty() const { return min_difficulty_; }
+	int getMaxDifficulty() const { return max_difficulty_; }
 
-	void set_difficulty(int min, int max) { min_difficulty_ = min; max_difficulty_ = max; }
+	void setDifficultyRange(int min, int max) { min_difficulty_ = min; max_difficulty_ = max; }
 
-	void update_type(const_custom_object_type_ptr old_type,
-	                 const_custom_object_type_ptr new_type);
+	void updateType(ConstCustomObjectTypePtr old_type,
+	                 ConstCustomObjectTypePtr new_type);
 
-	bool mouse_event_swallowed() const {return swallow_mouse_event_;}
-	void reset_mouse_event() {swallow_mouse_event_ = false;}
-	void add_widget(const gui::widget_ptr& w);
-	void add_widgets(std::vector<gui::widget_ptr>* widgets);
-	void clear_widgets();
-	void remove_widget(gui::widget_ptr w);
-	gui::widget_ptr get_widget_by_id(const std::string& id);
-	gui::const_widget_ptr get_widget_by_id(const std::string& id) const;
-	std::vector<variant> get_variant_widget_list() const;
-	bool get_clip_area(rect* clip_area) {
+	bool isMouseEventSwallowed() const {return swallow_mouse_event_;}
+	void resetMouseEvent() {swallow_mouse_event_ = false;}
+	void addWidget(const gui::WidgetPtr& w);
+	void addWidgets(std::vector<gui::WidgetPtr>* widgets);
+	void clearWidgets();
+	void removeWidget(gui::WidgetPtr w);
+	gui::WidgetPtr getWidgetById(const std::string& id);
+	gui::ConstWidgetPtr getWidgetById(const std::string& id) const;
+	std::vector<variant> getVariantWidgetList() const;
+	bool getClipArea(rect* clip_area) {
 		if(clip_area_ && clip_area) {
 			*clip_area = *clip_area_.get();
 			return true;
 		}
 		return false;
 	}
-
-	const GLfloat* model() const { return glm::value_ptr(model_); }
 
 	struct AnimatedMovement {
 		std::string name;
@@ -273,103 +261,105 @@ public:
 
 		variant on_process, on_complete;
 
-		std::vector<std::pair<variant,variant> > follow_on;
+		std::vector<std::pair<variant,variant>> follow_on;
 
 		AnimatedMovement() : pos(0)
 		{}
 
-		int animation_frames() const { return animation_values.size()/animation_slots.size(); }
+		int getAnimationFrames() const { return animation_values.size()/animation_slots.size(); }
 	};
 
-	void add_animated_movement(variant attr, variant options);
-	void set_animated_schedule(boost::shared_ptr<AnimatedMovement> movement);
-	void cancel_animated_schedule(const std::string& name);
+	void addAnimatedMovement(variant attr, variant options);
+	void setAnimatedSchedule(std::shared_ptr<AnimatedMovement> movement);
+	void cancelAnimatedSchedule(const std::string& name);
+
+	bool hasOwnDraw() const { return true; }
 
 protected:
 	//components of per-cycle process() that can be done even on
 	//static objects.
-	void static_process(level& lvl);
+	void staticProcess(Level& lvl);
 
-	virtual void control(const level& lvl);
-	variant get_value(const std::string& key) const;
-	variant get_value_by_slot(int slot) const;
-	void set_value(const std::string& key, const variant& value);
-	void set_value_by_slot(int slot, const variant& value);
+	virtual void control(const Level& lvl);
+	variant getValue(const std::string& key) const;
+	variant getValueBySlot(int slot) const;
+	void setValue(const std::string& key, const variant& value);
+	void setValueBySlot(int slot, const variant& value);
 
-	virtual variant get_player_value_by_slot(int slot) const;
-	virtual void set_player_value_by_slot(int slot, const variant& value);
+	virtual variant getPlayerValueBySlot(int slot) const;
+	virtual void setPlayerValueBySlot(int slot, const variant& value);
 
 	//function which indicates if the object wants to walk up or down stairs.
 	//-1 = up stairs, 0 = no change, 1 = down stairs
-	virtual int walk_up_or_down_stairs() const { return 0; }
+	virtual int walkUpOrDownStairs() const { return 0; }
 
-	bool is_underwater() const {
+	bool isUnderwater() const {
 		return was_underwater_;
 	}
 
-	const std::pair<int,int>* parallax_scale_millis() const { return parallax_scale_millis_.get(); }
+	const std::pair<int,int>* parallaxScaleMillis() const { return parallax_scale_millis_.get(); }
 
-	enum STANDING_STATUS { NOT_STANDING, STANDING_BACK_FOOT, STANDING_FRONT_FOOT };
-	STANDING_STATUS is_standing(const level& lvl, collision_info* info=NULL) const;
+	enum class STANDING_STATUS { NOT_STANDING, BACK_FOOT, FRONT_FOOT };
+	STANDING_STATUS isStanding(const Level& lvl, CollisionInfo* info=nullptr) const;
 
-	void set_parent(entity_ptr e, const std::string& pivot_point);
+	void setParent(EntityPtr e, const std::string& pivot_point);
 
-	virtual int parent_depth(bool* has_human_parent=NULL, int cur_depth=0) const;
+	virtual int parentDepth(bool* has_human_parent=nullptr, int cur_depth=0) const;
 
-	virtual bool editor_force_standing() const;
+	virtual bool editorForceStanding() const;
 
-	virtual game_logic::const_formula_callable_definition_ptr get_definition() const;
+	virtual game_logic::ConstFormulaCallableDefinitionPtr getDefinition() const;
 
-	entity_ptr standing_on() const { return standing_on_; }
-	virtual void add_to_level();
+	EntityPtr standingOn() const { return standing_on_; }
+	virtual void addToLevel();
 
-	virtual rect platform_rect_at(int xpos) const;
-	virtual int platform_slope_at(int xpos) const;
+	virtual rect platformRectAt(int xpos) const;
+	virtual int platformSlopeAt(int xpos) const;
 
-	virtual bool solid_platform() const;
+	virtual bool isSolidPlatform() const;
 
-	virtual void being_removed();
-	virtual void being_added();
+	virtual void beingRemoved();
+	virtual void beingAdded();
 
 	//set up an animation schedule. values.size() should be a multiple of
 	//slots.size().
 
 private:
-	void init_properties();
-	custom_object& operator=(const custom_object& o);
+	void initProperties();
+	CustomObject& operator=(const CustomObject& o);
 	struct Accessor;
 
 	struct gc_object_reference {
-		entity* owner;
-		entity* target;
+		Entity* owner;
+		Entity* target;
 		variant* from_variant;
-		entity_ptr* from_ptr;
-		boost::shared_ptr<game_logic::formula_callable_visitor> visitor;
+		EntityPtr* from_ptr;
+		std::shared_ptr<game_logic::FormulaCallableVisitor> visitor;
 	};
 
-	void extract_gc_object_references(std::vector<gc_object_reference>& v);
-	void extract_gc_object_references(entity_ptr& e, std::vector<gc_object_reference>& v);
-	void extract_gc_object_references(variant& var, std::vector<gc_object_reference>& v);
-	static void restore_gc_object_reference(gc_object_reference ref);
+	void extractGcObjectReferences(std::vector<gc_object_reference>& v);
+	void extractGcObjectReferences(EntityPtr& e, std::vector<gc_object_reference>& v);
+	void extractGcObjectReferences(variant& var, std::vector<gc_object_reference>& v);
+	static void restoreGcObjectReference(gc_object_reference ref);
 
-	bool move_to_standing_internal(level& lvl, int max_displace);
+	bool moveToStandingInternal(Level& lvl, int max_displace);
 
-	void process_frame();
+	void processFrame();
 
-	const_solid_info_ptr calculate_solid() const;
-	const_solid_info_ptr calculate_platform() const;
+	ConstSolidInfoPtr calculateSolid() const;
+	ConstSolidInfoPtr calculatePlatform() const;
 
-	virtual void get_inputs(std::vector<game_logic::formula_input>* inputs) const;
+	virtual void getInputs(std::vector<game_logic::FormulaInput>* inputs) const;
 
-	int slope_standing_on(int range) const;
+	int slopeStandingOn(int range) const;
 
 	int previous_y_;
 
 	variant custom_type_;
-	const_custom_object_type_ptr type_; //the type after variations are applied
-	const_custom_object_type_ptr base_type_; //the type without any variation
+	ConstCustomObjectTypePtr type_; //the type after variations are applied
+	ConstCustomObjectTypePtr base_type_; //the type without any variation
 	std::vector<std::string> current_variation_;
-	boost::intrusive_ptr<const frame> frame_;
+	boost::intrusive_ptr<const Frame> frame_;
 	std::string frame_name_;
 	int time_in_frame_;
 	int time_in_frame_delta_;
@@ -378,24 +368,22 @@ private:
 	int accel_x_, accel_y_;
 	int gravity_shift_;
 
-	virtual int current_rotation() const;
+	virtual int currentRotation() const override;
 
-	decimal rotate_x_;
-	decimal rotate_y_;
 	decimal rotate_z_;
 
-    void set_mid_x(int new_mid_x) {
-        const int current_x = x() + current_frame().width()/2;
+    void setMidX(int new_mid_x) {
+        const int current_x = x() + getCurrentFrame().width()/2;
 		const int xdiff = current_x - x();
-		set_pos(new_mid_x - xdiff, y());
+		setPos(new_mid_x - xdiff, y());
     }
-    void set_mid_y(int new_mid_y) {
-		const int current_y = y() + current_frame().height()/2;
+    void setMidY(int new_mid_y) {
+		const int current_y = y() + getCurrentFrame().height()/2;
 		const int ydiff = current_y - y();
-		set_pos(x(), new_mid_y - ydiff);
+		setPos(x(), new_mid_y - ydiff);
     }
     
-	boost::scoped_ptr<std::pair<int, int> > parallax_scale_millis_;
+	std::unique_ptr<std::pair<int, int>> parallax_scale_millis_;
 
 	int zorder_;
 	int zsub_order_;
@@ -411,13 +399,13 @@ private:
 	
 	int sound_volume_;	//see sound.cpp; valid values are 0-128, note that this affects all sounds spawned by this object
 
-	game_logic::const_formula_ptr next_animation_formula_;
+	game_logic::ConstFormulaPtr next_animation_formula_;
 
-	game_logic::formula_variable_storage_ptr vars_, tmp_vars_;
-	game_logic::map_formula_callable_ptr tags_;
+	game_logic::FormulaVariableStoragePtr vars_, tmp_vars_;
+	game_logic::MapFormulaCallablePtr tags_;
 
-	variant& get_property_data(int slot) { if(property_data_.size() <= slot) { property_data_.resize(slot+1); } return property_data_[slot]; }
-	variant get_property_data(int slot) const { if(property_data_.size() <= slot) { return variant(); } return property_data_[slot]; }
+	variant& get_property_data(int slot) { if(property_data_.size() <= size_t(slot)) { property_data_.resize(slot+1); } return property_data_[slot]; }
+	variant get_property_data(int slot) const { if(property_data_.size() <= size_t(slot)) { return variant(); } return property_data_[slot]; }
 	std::vector<variant> property_data_;
 	mutable int active_property_;
 
@@ -425,9 +413,9 @@ private:
 	//property setters.
 	mutable std::stack<variant> value_stack_;
 
-	friend class active_property_scope;
+	friend class ActivePropertyScope;
 
-	entity_ptr last_hit_by_;
+	EntityPtr last_hit_by_;
 	int last_hit_by_anim_;
 	int current_animation_id_;
 
@@ -439,45 +427,34 @@ private:
 	//first time process is called will fire the on_load event and set to false
 	bool loaded_;
 
-	std::vector<game_logic::const_formula_ptr> event_handlers_;
+	std::vector<game_logic::ConstFormulaPtr> event_handlers_;
 
-	entity_ptr standing_on_;
+	EntityPtr standing_on_;
 
 	int standing_on_prev_x_, standing_on_prev_y_;
 
-	graphics::const_raster_distortion_ptr distortion_;
-
 	void make_draw_color();
-	const graphics::color_transform& draw_color() const;
-	boost::shared_ptr<graphics::color_transform> draw_color_;
+	const KRE::ColorTransform& draw_color() const;
+	std::shared_ptr<KRE::ColorTransform> draw_color_;
 
-	boost::shared_ptr<decimal> draw_scale_;
-	boost::shared_ptr<rect> draw_area_, activation_area_, clip_area_;
+	std::shared_ptr<decimal> draw_scale_;
+	std::shared_ptr<rect> draw_area_, activation_area_, clip_area_;
 	int activation_border_;
 	
 	bool can_interact_with_;
 
-	std::map<std::string, particle_system_ptr> particle_systems_;
+	std::map<std::string, ParticleSystemPtr> particle_systems_;
 
-	typedef boost::shared_ptr<custom_object_text> custom_object_text_ptr;
-	custom_object_text_ptr text_;
+	typedef std::shared_ptr<CustomObjectText> CustomObjectTextPtr;
+	CustomObjectTextPtr text_;
 
-	std::vector<gui::vector_text_ptr> vector_text_;
+	EntityPtr driver_;
 
-	entity_ptr driver_;
-
-	boost::shared_ptr<blur_info> blur_;
+	std::shared_ptr<BlurInfo> blur_;
 
 	//set if we should fall through platforms. This is decremented automatically
 	//at the end of every cycle.
 	int fall_through_platforms_;
-
-#ifdef USE_SHADERS
-	//current shader we're using to draw with.
-	gles2::shader_program_ptr shader_;
-	// List of shader effects to run.
-	std::vector<gles2::shader_program_ptr> effects_;
-#endif
 
 #ifdef USE_BOX2D
 	box2d::body_ptr body_;
@@ -485,8 +462,7 @@ private:
 
 	bool always_active_;
 
-	mutable std::stack<const formula_callable*> backup_callable_stack_;
-
+	mutable std::stack<const FormulaCallable*> backup_callable_stack_;
 
 	int last_cycle_active_;
 
@@ -499,21 +475,21 @@ private:
 		std::vector<decimal> rotation;
 	};
 
-	boost::scoped_ptr<PositionSchedule> position_schedule_;
+	std::unique_ptr<PositionSchedule> position_schedule_;
 
-	std::vector<boost::shared_ptr<AnimatedMovement> > animated_movement_;
+	std::vector<std::shared_ptr<AnimatedMovement>> animated_movement_;
 
-	std::vector<light_ptr> lights_;
+	std::vector<LightPtr> lights_;
 
-	boost::scoped_ptr<rect> platform_area_;
-	const_solid_info_ptr platform_solid_info_;
+	std::unique_ptr<rect> platform_area_;
+	ConstSolidInfoPtr platform_solid_info_;
 
 	point parent_position() const;
 
 	//storage of the parent object while we're loading the object still.
 	variant parent_loading_;
 
-	entity_ptr parent_;
+	EntityPtr parent_;
 	std::string parent_pivot_;
 	int parent_prev_x_, parent_prev_y_;
 	bool parent_prev_facing_;
@@ -521,10 +497,10 @@ private:
 
 	int min_difficulty_, max_difficulty_;
 
-	boost::shared_ptr<const std::vector<frame::CustomPoint> > custom_draw_;
+	std::shared_ptr<const std::vector<Frame::CustomPoint>> custom_draw_;
 
-	std::vector<GLfloat> custom_draw_xy_;
-	std::vector<GLfloat> custom_draw_uv_;
+	std::vector<float> custom_draw_xy_;
+	std::vector<float> custom_draw_uv_;
 
 	void set_platform_area(const rect& area);
 
@@ -532,36 +508,31 @@ private:
 
 	bool swallow_mouse_event_;
 
-	bool handle_event_internal(int event, const formula_callable* context, bool execute_commands_now=true);
+	bool handleEventInternal(int event, const FormulaCallable* context, bool executeCommands_now=true);
 	std::vector<variant> delayed_commands_;
 
 	int currently_handling_die_event_;
 
-	typedef std::set<gui::widget_ptr, gui::widget_sort_zorder> widget_list;
+	typedef std::set<gui::WidgetPtr, gui::WidgetSortZOrder> widget_list;
 	widget_list widgets_;
 
 	rect previous_water_bounds_;
 
 	mutable screen_position adjusted_draw_position_;
 
-#if defined(USE_SHADERS)
-	std::vector<graphics::draw_primitive_ptr> draw_primitives_;
-#endif
+	std::vector<graphics::DrawPrimitivePtr> draw_primitives_;
 
 	bool paused_;
 
-	glm::mat4 model_;
-	// XXX these are hacks.
-	mutable GLint vertex_location_;
-	mutable GLint texcoord_location_;
 	std::vector<int> properties_requiring_dynamic_initialization_;
 
 	// for lua integration
 #if defined(USE_LUA)
 	void init_lua();
-	std::unique_ptr<lua::lua_context> lua_ptr_;
-	std::unique_ptr<lua::compiled_chunk> lua_chunk_;
+	std::unique_ptr<lua::LuaContext> lua_ptr_;
+	std::unique_ptr<lua::CompiledChunk> lua_chunk_;
 #endif
-};
 
-#endif
+	graphics::AnuraShaderPtr shader_;
+	std::vector<graphics::AnuraShaderPtr> effects_shaders_;
+};

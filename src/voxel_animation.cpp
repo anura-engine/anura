@@ -1,34 +1,37 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
 
-#if defined(USE_SHADERS) && defined(USE_ISOMAP)
+/* XXX -- needs a re-write
 
-#include <boost/bind.hpp>
 #include <boost/shared_array.hpp>
 
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "button.hpp"
-#include "camera.hpp"
 #include "dialog.hpp"
 #include "grid_widget.hpp"
 #include "input.hpp"
 #include "label.hpp"
-#include "lighting.hpp"
 #include "module.hpp"
 #include "preferences.hpp"
 #include "unit_test.hpp"
@@ -51,9 +54,9 @@ public:
 
 	const voxel_model& model() const { return *vox_model_; }
 private:
-	void handle_draw() const;
-	void handle_process();
-	bool handle_event(const SDL_Event& event, bool claimed);
+	void handleDraw() const override;
+	void handleProcess() override;
+	bool handleEvent(const SDL_Event& event, bool claimed) override;
 
 	void calculate_camera();
 
@@ -61,8 +64,8 @@ private:
 
 	boost::shared_array<GLuint> fbo_texture_ids_;
 	glm::mat4 fbo_proj_;
-	boost::shared_ptr<GLuint> framebuffer_id_;
-	boost::shared_ptr<GLuint> depth_id_;
+	std::shared_ptr<GLuint> framebuffer_id_;
+	std::shared_ptr<GLuint> depth_id_;
 
 	graphics::lighting_ptr lighting_;
 
@@ -105,8 +108,8 @@ animation_renderer::animation_renderer(const rect& area, const std::string& fnam
 	//lighting_->set_light_position(0, glm::vec3(0.0f, 0.0f, 50.0f));
 	//lighting_->set_light_power(0, 2000.0f);
 
-	set_loc(area.x(), area.y());
-	set_dim(area.w(), area.h());
+	setLoc(area.x(), area.y());
+	setDim(area.w(), area.h());
 
 	init();
 	calculate_camera();
@@ -135,14 +138,14 @@ void animation_renderer::init()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glBindTexture(GL_TEXTURE_2D, 0);
 
-	framebuffer_id_ = boost::shared_ptr<GLuint>(new GLuint, [](GLuint* id){glDeleteFramebuffers(1, id); delete id;});
+	framebuffer_id_ = std::shared_ptr<GLuint>(new GLuint, [](GLuint* id){glDeleteFramebuffers(1, id); delete id;});
 	EXT_CALL(glGenFramebuffers)(1, framebuffer_id_.get());
 	EXT_CALL(glBindFramebuffer)(EXT_MACRO(GL_FRAMEBUFFER), *framebuffer_id_);
 
 	// attach the texture to FBO color attachment point
 	EXT_CALL(glFramebufferTexture2D)(EXT_MACRO(GL_FRAMEBUFFER), EXT_MACRO(GL_COLOR_ATTACHMENT0),
                           GL_TEXTURE_2D, fbo_texture_ids_[0], 0);
-	depth_id_ = boost::shared_ptr<GLuint>(new GLuint, [](GLuint* id){glBindRenderbuffer(GL_RENDERBUFFER, 0); glDeleteRenderbuffers(1, id); delete id;});
+	depth_id_ = std::shared_ptr<GLuint>(new GLuint, [](GLuint* id){glBindRenderbuffer(GL_RENDERBUFFER, 0); glDeleteRenderbuffers(1, id); delete id;});
 	glGenRenderbuffers(1, depth_id_.get());
 	glBindRenderbuffer(GL_RENDERBUFFER, *depth_id_);
 	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, tex_width_, tex_height_);
@@ -231,12 +234,12 @@ void animation_renderer::render_fbo()
 	glDisable(GL_DEPTH_TEST);
 }
 
-void animation_renderer::handle_draw() const
+void animation_renderer::handleDraw() const
 {
 	//std::cerr << "draw anim...\n";
 	gles2::manager gles2_manager(gles2::shader_program::get_global("texture2d"));
 
-	GLint cur_id = graphics::texture::get_current_texture();
+	GLint cur_id = graphics::texture::get_currentTexture();
 	glBindTexture(GL_TEXTURE_2D, fbo_texture_ids_[0]);
 
 	const int w_odd = width() % 2;
@@ -270,7 +273,7 @@ void animation_renderer::handle_draw() const
 	glPopMatrix();
 }
 
-void animation_renderer::handle_process()
+void animation_renderer::handleProcess()
 {
 	int num_keys = 0;
 	const Uint8* keystate = SDL_GetKeyboardState(&num_keys);
@@ -295,7 +298,7 @@ void animation_renderer::handle_process()
 	render_fbo();
 }
 
-bool animation_renderer::handle_event(const SDL_Event& event, bool claimed)
+bool animation_renderer::handleEvent(const SDL_Event& event, bool claimed)
 {
 	switch(event.type) {
 	case SDL_MOUSEBUTTONDOWN: {
@@ -306,7 +309,7 @@ bool animation_renderer::handle_event(const SDL_Event& event, bool claimed)
 	case SDL_MOUSEMOTION: {
 		const SDL_MouseMotionEvent& motion = event.motion;
 
-		Uint8 button_state = input::sdl_get_mouse_state(NULL, NULL);
+		Uint8 button_state = input::sdl_get_mouse_state(nullptr, nullptr);
 		if(dragging_view_ && button_state&SDL_BUTTON(SDL_BUTTON_LEFT)) {
 			if(motion.xrel) {
 				camera_hangle_ += motion.xrel*0.02;
@@ -331,7 +334,7 @@ bool animation_renderer::handle_event(const SDL_Event& event, bool claimed)
 
 	}
 
-	return widget::handle_event(event, claimed);
+	return widget::handleEvent(event, claimed);
 }
 
 void animation_renderer::calculate_camera()
@@ -351,7 +354,7 @@ public:
 	voxel_animation_editor(const rect& r, const std::string& fname);
 	void init();
 private:
-	bool handle_event(const SDL_Event& event, bool claimed);
+	bool handleEvent(const SDL_Event& event, bool claimed) override;
 
 	boost::intrusive_ptr<animation_renderer> renderer_;
 	rect area_;
@@ -373,20 +376,20 @@ void voxel_animation_editor::init()
 		renderer_.reset(new animation_renderer(rect(area_.x() + 10, area_.y() + 10, area_.w() - 200, area_.h() - 20), fname_));
 	}
 
-	add_widget(renderer_, renderer_->x(), renderer_->y());
+	addWidget(renderer_, renderer_->x(), renderer_->y());
 
 	grid_ptr anim_grid(new grid(1));
 
 	for(auto p : renderer_->model().animations()) {
-		anim_grid->add_col(new button(new label(p.first, graphics::color("antique_white").as_sdl_color(), 14, "Montaga-Regular"), boost::bind(&animation_renderer::set_animation, renderer_.get(), p.first)));
+		anim_grid->addCol(new button(new label(p.first, graphics::color("antique_white").as_sdl_color(), 14, "Montaga-Regular"), std::bind(&animation_renderer::set_animation, renderer_.get(), p.first)));
 	}
 
-	add_widget(anim_grid, renderer_->x() + renderer_->width() + 10, renderer_->y());
+	addWidget(anim_grid, renderer_->x() + renderer_->width() + 10, renderer_->y());
 }
 
-bool voxel_animation_editor::handle_event(const SDL_Event& event, bool claimed)
+bool voxel_animation_editor::handleEvent(const SDL_Event& event, bool claimed)
 {
-	return dialog::handle_event(event, claimed);
+	return dialog::handleEvent(event, claimed);
 }
 
 }
@@ -403,7 +406,6 @@ UTILITY(voxel_animator)
 	}
 
 	boost::intrusive_ptr<voxel_animation_editor> editor(new voxel_animation_editor(rect(0, 0, preferences::actual_screen_width(), preferences::actual_screen_height()), fname));
-	editor->show_modal();
+	editor->showModal();
 }
-
-#endif //USE_SHADERS
+*/

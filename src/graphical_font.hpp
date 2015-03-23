@@ -1,57 +1,59 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
-#ifndef GRAPHICAL_FONT_HPP_INCLUDED
-#define GRAPHICAL_FONT_HPP_INCLUDED
 
-#include <boost/shared_ptr.hpp>
-#include <boost/unordered_map.hpp>
+#pragma once
 
 #include <string>
 #include <vector>
+#include <unordered_map>
 
 #include "geometry.hpp"
-#include "texture.hpp"
+#include "Texture.hpp"
 #include "variant.hpp"
 
-class graphical_font;
-typedef boost::shared_ptr<graphical_font> graphical_font_ptr;
-typedef boost::shared_ptr<const graphical_font> const_graphical_font_ptr;
+class GraphicalFont;
+typedef std::shared_ptr<GraphicalFont> GraphicalFontPtr;
+typedef std::shared_ptr<const GraphicalFont> ConstGraphicalFontPtr;
 
-class graphical_font
+class GraphicalFont
 {
 public:
 	static void init(variant node);
-	static void init_for_locale(const std::string& locale);
-	static const_graphical_font_ptr get(const std::string& id);
-	explicit graphical_font(variant node);
+	static void initForLocale(const std::string& locale);
+	static ConstGraphicalFontPtr get(const std::string& id);
+	explicit GraphicalFont(variant node);
 	const std::string& id() const { return id_; }
-	rect draw(int x, int y, const std::string& text, int size=2) const;
+	rect draw(int x, int y, const std::string& text, int size=2, const KRE::Color& color=KRE::Color::colorWhite()) const;
 	rect dimensions(const std::string& text, int size=2) const;
 
 private:
-	rect do_draw(int x, int y, const std::string& text, bool draw_text, int size) const;
+	rect doDraw(int x, int y, const std::string& text, bool draw_text, int size, const KRE::Color& color) const;
 
 	std::string id_;
 
-	graphics::texture texture_;
+	KRE::TexturePtr texture_;
 	//hashmap to map characters to rectangles in the texture
-	typedef boost::unordered_map<unsigned int, rect> char_rect_map;
+	typedef std::unordered_map<unsigned int, rect> char_rect_map;
 	char_rect_map char_rect_map_;
 	int kerning_;
 };
-
-#endif

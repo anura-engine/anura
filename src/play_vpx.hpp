@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
+	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -25,7 +25,6 @@
 
 #if defined(USE_LIBVPX)
 
-#include <boost/shared_array.hpp>
 #include <cstdint>
 #include <iostream>
 #include <fstream>
@@ -35,25 +34,29 @@
 
 #include "vpx/vpx_decoder.h"
 #include "vpx/vp8dx.h"
+
+#include "Texture.hpp"
+
 #include "widget.hpp"
 
 namespace movie
 {
-	class vpx : public gui::widget, private boost::noncopyable
+	class vpx : public gui::Widget, private boost::noncopyable
 	{
 	public:
 		vpx(const std::string& file, int x, int y, int width, int height, bool loop, bool cancel_on_keypress);
-		vpx(const variant& v, game_logic::formula_callable* e);
+		vpx(const variant& v, game_logic::FormulaCallable* e);
 		virtual ~vpx();
 	protected:
 		void init();
 		void stop();
-		void gen_textures();
-		void decode_frame();
-		virtual void handle_process();
-		virtual bool handle_event(const SDL_Event& event, bool claimed);
-		virtual void handle_draw() const;
+		void genTextures();
+		void decodeFrame();
 	private:
+		virtual void handleProcess() override;
+		virtual bool handleEvent(const SDL_Event& event, bool claimed) override;
+		virtual void handleDraw() const override;
+
 		std::ifstream file_;
 		std::string file_name_;
 		bool loop_;
@@ -72,16 +75,7 @@ namespace movie
 
 		bool playing_;
 
-		boost::shared_array<GLuint> texture_id_;
-		GLint u_tex_[3];
-		GLint u_color_;
-		GLint a_vertex_;
-		GLint a_texcoord_;
-
-		size_t texture_width_;
-		size_t texture_height_;
-
-		gles2::shader_program_ptr shader_;
+		KRE::TexturePtr texture_;
 	};
 	typedef boost::intrusive_ptr<vpx> vpx_ptr;
 }

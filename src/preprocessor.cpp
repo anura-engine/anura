@@ -1,19 +1,26 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
+
 #include <algorithm>
 #include <iostream>
 #include <fstream>
@@ -29,9 +36,9 @@
 #include "variant_callable.hpp"
 #include "wml_formula_callable.hpp"
 
-std::string preprocess(const std::string& input){
-	
-	const game_logic::formula::strict_check_scope strict_checking(false);
+std::string preprocess(const std::string& input)
+{
+	const game_logic::Formula::StrictCheckScope strict_checking(false);
 
 	std::string output_string;
 	bool in_comment = false;
@@ -46,7 +53,7 @@ std::string preprocess(const std::string& input){
 		if(*i == '@' && !in_comment){
 			// process pre-processing directive here. See what comes after the '@' and do something appropriate
 			static const std::string IncludeString = "@include";
-			if(input.end() - i > IncludeString.size() && std::equal(IncludeString.begin(), IncludeString.end(), i)) {
+			if(static_cast<unsigned>(input.end() - i) > IncludeString.size() && std::equal(IncludeString.begin(), IncludeString.end(), i)) {
 					std::string filename_string;
 
 					i += IncludeString.size(); //skip past the directive - we've tested that it exists
@@ -84,9 +91,9 @@ std::string preprocess(const std::string& input){
 	return output_string;
 }
 
-variant preprocess_string_value(const std::string& input, const game_logic::formula_callable* callable)
+variant preprocess_string_value(const std::string& input, const game_logic::FormulaCallable* callable)
 {
-	const game_logic::formula::strict_check_scope strict_checking(false);
+	const game_logic::Formula::StrictCheckScope strict_checking(false);
 
 	if(input.empty() || input[0] != '@') {
 		return variant(input);
@@ -101,7 +108,7 @@ variant preprocess_string_value(const std::string& input, const game_logic::form
 		return variant(input);
 	}
 
-	if(game_logic::wml_serializable_formula_callable::registered_types().count(input)) {
+	if(game_logic::WmlSerializableFormulaCallable::registeredTypes().count(input)) {
 		return variant(input);
 	}
 
@@ -124,8 +131,8 @@ variant preprocess_string_value(const std::string& input, const game_logic::form
 			variant doc = json::parse_from_file(file);
 			const std::string expr(colon+1, fname.end());
 			const variant expr_variant(expr);
-			const game_logic::formula f(expr_variant);
-			game_logic::formula_callable* vars = new game_logic::map_formula_callable(doc);
+			const game_logic::Formula f(expr_variant);
+			game_logic::FormulaCallable* vars = new game_logic::MapFormulaCallable(doc);
 			const variant callable(vars);
 			if(vars) {
 				return f.execute(*vars);
@@ -139,10 +146,10 @@ variant preprocess_string_value(const std::string& input, const game_logic::form
 			//treatment of a list of @includes is to make non-list items
 			//into singleton lists, and then concatenate all lists together.
 			std::vector<variant> res;
-			foreach(const std::string& inc, includes) {
+			for(const std::string& inc : includes) {
 				variant v = json::parse_from_file(inc);
 				if(v.is_list()) {
-					foreach(const variant& item, v.as_list()) {
+					for(const variant& item : v.as_list()) {
 						res.push_back(item);
 					}
 				} else {
@@ -153,7 +160,7 @@ variant preprocess_string_value(const std::string& input, const game_logic::form
 			return variant(&res);
 		}
 	} else if(directive == "@eval") {
-		game_logic::formula f(variant(std::string(i, input.end())));
+		game_logic::Formula f(variant(std::string(i, input.end())));
 		if(callable) {
 			return f.execute(*callable);
 		} else {

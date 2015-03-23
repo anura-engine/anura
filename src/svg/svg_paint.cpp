@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
+	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -25,7 +25,7 @@
 #include <boost/lexical_cast.hpp>
 #include <map>
 
-#include "../asserts.hpp"
+#include "asserts.hpp"
 #include "svg_paint.hpp"
 
 namespace KRE
@@ -74,30 +74,20 @@ namespace KRE
 			} else if(s == "currentColor") {
 				color_attrib_ = ColorAttrib::CURRENT_COLOR;
 			} else if(s.length() > 1 && s[0] == '#') {
-				ASSERT_LOG(s.length() == 4 || s.length() == 7, "Expected length of color definition to be 3 or 6 characters long, found: " << s.substr(1));
-				if(s.length() == 4) {
-					int r_hex = convert_hex_digit(s[1]);
-					int g_hex = convert_hex_digit(s[2]);
-					int b_hex = convert_hex_digit(s[3]);
-					color_value_ = color((r_hex << 4) | r_hex, (g_hex << 4) | g_hex, (b_hex << 4) | b_hex);
-				} else {
-					color_value_ = color((convert_hex_digit(s[1]) << 4) | convert_hex_digit(s[2]),
-						(convert_hex_digit(s[3]) << 4) | convert_hex_digit(s[4]),
-						(convert_hex_digit(s[5]) << 4) | convert_hex_digit(s[6]));
-				}
+				color_value_ = Color(s);
 			} else if(s.length() > 3 && s.substr(0,3) == "rgb") {
 				boost::char_separator<char> seperators(" \n\t\r,()");
 				boost::tokenizer<boost::char_separator<char>> tok(s.substr(3), seperators);
 				int count = 0;
 				int cv[3];
 				for(auto it = tok.begin(); it != tok.end(); ++it) {
-					char* end = NULL;
+					char* end = nullptr;
 					long value = strtol(it->c_str(), &end, 10);
 					uint8_t col_val = 0;
 					if(value == 0 && end == it->c_str()) {
 						ASSERT_LOG(false, "Unable to parse string as an integer: " << *it);
 					}
-					if(end != NULL && *end == '%') {
+					if(end != nullptr && *end == '%') {
 						ASSERT_LOG(value >= 0 && value <= 100, "Percentage values range from 0-100: " << value);
 						col_val = uint8_t(value / 100.0 * 255);
 					} else {
@@ -107,7 +97,7 @@ namespace KRE
 					ASSERT_LOG(count < 3, "Too many numbers in color value");
 					cv[count] = col_val;
 				}
-				color_value_ = color(cv[0],cv[1],cv[2]);
+				color_value_ = Color(cv[0],cv[1],cv[2]);
 			} else if(s.length() > 4 && s.substr(0, 4) == "url(") {
 				auto st_it = std::find(s.begin(), s.end(), '(');
 				auto ed_it = std::find(s.begin(), s.end(), '0');
@@ -133,7 +123,7 @@ namespace KRE
 				}
 				color_attrib_ = ColorAttrib::ICC_COLOR;
 			} else {
-				color_value_ = color::from_name(s);
+				color_value_ = Color(s);
 			}
 		}
 
@@ -149,7 +139,7 @@ namespace KRE
 				return false;
 			case ColorAttrib::CURRENT_COLOR: {
 				auto cc = ctx.get_current_color();
-				ASSERT_LOG(cc != NULL, "Current color specified as color source, but there is no current color value.");
+				ASSERT_LOG(cc != nullptr, "Current color specified as color source, but there is no current color value.");
 				cairo_set_source_rgb(ctx.cairo(), cc->r(), cc->g(), cc->b());
 				return true;
 			}

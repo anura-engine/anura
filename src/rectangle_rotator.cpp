@@ -1,64 +1,84 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
-#include "graphics.hpp"
-#include "rectangle_rotator.hpp"
-#include <math.h>
+
 #include <cmath>
-#ifndef M_PI
-#define M_PI 3.14159265358979323846
-#endif
+
+#include "rectangle_rotator.hpp"
 #include "unit_test.hpp"
 
-#if defined(_MSC_VER)
-#include <boost/math/special_functions/round.hpp>
-#define bmround	boost::math::round
-#else
-#define bmround	std::round
-#endif
-
-void rotate_rect(GLshort center_x, GLshort center_y, float rotation, GLshort* rect_vertexes){
-
+void rotate_rect(short center_x, short center_y, float rotation, short* rect_vertexes)
+{
 	point p;
 	
-	float rotate_radians = (rotation * M_PI)/180;
+	float rotate_radians = static_cast<float>((rotation * M_PI)/180.0);
 	
 	//rect r(rect_vertexes[0],rect_vertexes[1],rect_vertexes[4]-rect_vertexes[0],rect_vertexes[5]-rect_vertexes[1]);
 	
-	p = rotate_point_around_origin_with_offset( rect_vertexes[0], rect_vertexes[1], rotate_radians, center_x, center_y );
+	p = rotate_point_around_origin_with_offset<int>(rect_vertexes[0], rect_vertexes[1], rotate_radians, center_x, center_y);
 	rect_vertexes[0] = p.x;
 	rect_vertexes[1] = p.y;
 	
-	p = rotate_point_around_origin_with_offset( rect_vertexes[2], rect_vertexes[3], rotate_radians, center_x, center_y );
+	p = rotate_point_around_origin_with_offset<int>(rect_vertexes[2], rect_vertexes[3], rotate_radians, center_x, center_y);
 	rect_vertexes[2] = p.x;
 	rect_vertexes[3] = p.y;
 	
-	p = rotate_point_around_origin_with_offset( rect_vertexes[4], rect_vertexes[5], rotate_radians, center_x, center_y );
+	p = rotate_point_around_origin_with_offset<int>(rect_vertexes[4], rect_vertexes[5], rotate_radians, center_x, center_y);
 	rect_vertexes[4] = p.x;
 	rect_vertexes[5] = p.y;
 	
-	p = rotate_point_around_origin_with_offset( rect_vertexes[6], rect_vertexes[7], rotate_radians, center_x, center_y );
+	p = rotate_point_around_origin_with_offset<int>(rect_vertexes[6], rect_vertexes[7], rotate_radians, center_x, center_y);
 	rect_vertexes[6] = p.x;
 	rect_vertexes[7] = p.y;
+}
+
+void rotate_rect(float center_x, float center_y, float rotation, float* rect_vertexes)
+{
+	pointf p;
 	
+	float rotate_radians = static_cast<float>((rotation * M_PI)/180.0);
+	
+	//rect r(rect_vertexes[0],rect_vertexes[1],rect_vertexes[4]-rect_vertexes[0],rect_vertexes[5]-rect_vertexes[1]);
+	
+	p = rotate_point_around_origin_with_offset(rect_vertexes[0], rect_vertexes[1], rotate_radians, center_x, center_y, false);
+	rect_vertexes[0] = p.x;
+	rect_vertexes[1] = p.y;
+	
+	p = rotate_point_around_origin_with_offset(rect_vertexes[2], rect_vertexes[3], rotate_radians, center_x, center_y, false);
+	rect_vertexes[2] = p.x;
+	rect_vertexes[3] = p.y;
+	
+	p = rotate_point_around_origin_with_offset(rect_vertexes[4], rect_vertexes[5], rotate_radians, center_x, center_y, false);
+	rect_vertexes[4] = p.x;
+	rect_vertexes[5] = p.y;
+	
+	p = rotate_point_around_origin_with_offset(rect_vertexes[6], rect_vertexes[7], rotate_radians, center_x, center_y, false);
+	rect_vertexes[6] = p.x;
+	rect_vertexes[7] = p.y;
 }
 
 
-void rotate_rect(const rect& r, GLfloat angle, GLshort* output){
-	
+void rotate_rect(const rect& r, float angle, short* output)
+{
 	point offset;
 	offset.x = r.x() + r.w()/2;
 	offset.y = r.y() + r.h()/2;
@@ -83,33 +103,6 @@ void rotate_rect(const rect& r, GLfloat angle, GLshort* output){
 
 }
 
-point rotate_point_around_origin_with_offset(int x1, int y1, float alpha, int u1, int v1){
-	
-	point beta = rotate_point_around_origin(x1 - u1, y1 - v1, alpha);
-	
-	beta.x += u1;
-	beta.y += v1;
-	
-	return beta;
-}
-
-point rotate_point_around_origin(int x1, int y1, float alpha){
-
-	point beta;
-	
-	/*   //we actually don't need the initial theta and radius.  This is why:
-	x2 = R * (cos(theta) * cos(alpha) + sin(theta) * sin(alpha))
-	y2 = R * (sin(theta) * cos(alpha) + cos(theta) * sin(alpha));
-	but
-	R * (cos(theta)) = x1
-	R * (sin(theta)) = x2
-	this collapses the above to:  */
-
-	beta.x = bmround(x1 * cos(alpha)) - bmround(y1 * sin(alpha));
-	beta.y = bmround(y1 * cos(alpha)) + bmround(x1 * sin(alpha));
-
-	return beta;
-}
 
 /*UNIT_TEST(rotate_test) {
 	std::cerr << "rotating_a_point \n";
@@ -130,7 +123,7 @@ point rotate_point_around_origin(int x1, int y1, float alpha){
 
 BENCHMARK(rect_rotation) {
 	rect r(10, 10, 20, 30);
-	GLshort output[8];
+	short output[8];
 	BENCHMARK_LOOP {
 		rotate_rect(r, 75, output);
 	}

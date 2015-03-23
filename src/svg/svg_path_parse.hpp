@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
+	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -30,7 +30,7 @@
 #include <string>
 #include <vector>
 
-#include "../asserts.hpp"
+#include "asserts.hpp"
 
 #ifdef _MSC_VER
 #   define _GLIBCXX_USE_NOEXCEPT
@@ -71,8 +71,8 @@ namespace KRE
 				control_point_set_ = false;
 			}
 			void get_control_points(double* x, double* y) {
-				ASSERT_LOG(x != NULL, "x is null. no place for result");
-				ASSERT_LOG(y != NULL, "y is null. no place for result");
+				ASSERT_LOG(x != nullptr, "x is null. no place for result");
+				ASSERT_LOG(y != nullptr, "y is null. no place for result");
 				if(control_point_set_) {
 					*x = cp1x_;
 					*y = cp1y_;

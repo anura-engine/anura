@@ -1,48 +1,49 @@
 /*
 	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
-#ifndef ACHIEVEMENTS_HPP_INCLUDED
-#define ACHIEVEMENTS_HPP_INCLUDED
 
-#include <boost/shared_ptr.hpp>
+#pragma once
 
 #include <string>
 
 #include "variant.hpp"
 
-class achievement;
+class Achievement;
 
-typedef boost::shared_ptr<const achievement> achievement_ptr;
+typedef std::shared_ptr<const Achievement> AchievementPtr;
 
-class achievement
+class Achievement
 {
 public:
-	static achievement_ptr get(const std::string& id);
+	static AchievementPtr get(const std::string& id);
 
-	explicit achievement(variant node);
+	explicit Achievement(variant node);
 
 	const std::string& id() const { return id_; }
 	const std::string& name() const { return name_; }
 	const std::string& description() const { return description_; }
 	int points() const { return points_; }
+	static bool attain(const std::string& id);
 private:
 	std::string id_, name_, description_;
 	int points_;
 };
-
-bool attain_achievement(const std::string& id);
-
-#endif

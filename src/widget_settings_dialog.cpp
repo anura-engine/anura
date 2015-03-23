@@ -20,13 +20,16 @@
 	   3. This notice may not be removed or altered from any source
 	   distribution.
 */
-#include <boost/bind.hpp>
+
+#if 0
+// XXX
+//
+#include "Font.hpp"
 
 #include "asserts.hpp"
 #include "checkbox.hpp"
 #include "color_picker.hpp"
 #include "dropdown_widget.hpp"
-#include "font.hpp"
 #include "formatter.hpp"
 #include "grid_widget.hpp"
 #include "input.hpp"
@@ -36,197 +39,199 @@
 
 namespace gui
 {
-	widget_settings_dialog::widget_settings_dialog(int x, int y, int w, int h, widget_ptr ptr) 
-		: dialog(x,y,w,h), widget_(ptr), text_size_(14)
+	WidgetSettingsDialog::WidgetSettingsDialog(int x, int y, int w, int h, WidgetPtr ptr) 
+		: Dialog(x,y,w,h), widget_(ptr), text_size_(14)
 	{
-		ASSERT_LOG(ptr != NULL, "widget_settings_dialog::widget_settings_dialog: widget_ == NULL");
+		ASSERT_LOG(ptr != nullptr, "WidgetSettingsDialog::WidgetSettingsDialog: widget_ == nullptr");
 		init();
 	}
 
-	widget_settings_dialog::~widget_settings_dialog()
+	WidgetSettingsDialog::~WidgetSettingsDialog()
 	{
 	}
 
-	void widget_settings_dialog::set_font(const std::string& fn) 
+	void WidgetSettingsDialog::setFont(const std::string& fn) 
 	{ 
 		font_name_ = fn; 
 		init();
 	}
-	void widget_settings_dialog::set_text_size(int ts) 
+	void WidgetSettingsDialog::setTextSize(int ts) 
 	{ 
 		text_size_ = ts; 
 		init();
 	}
 
-	void widget_settings_dialog::init()
+	void WidgetSettingsDialog::init()
 	{
-		set_clear_bg_amount(255);
+		setClearBgAmount(255);
 	
-		grid_ptr g = grid_ptr(new grid(2));
-		g->set_max_height(height()-50);
-		g->add_col(new label("ID:", text_size_, font_name_));
-		text_editor_widget_ptr id_edit = new text_editor_widget(150, 30);
-		id_edit->set_text(widget_->id());
-		id_edit->set_on_user_change_handler([=](){widget_->set_id(id_edit->text());});
-		g->add_col(id_edit);
+		GridPtr g = GridPtr(new Grid(2));
+		g->setMaxHeight(height()-50);
+		g->addCol(new Label("ID:", text_size_, font_name_));
+		TextEditorWidgetPtr id_edit = new TextEditorWidget(150, 30);
+		id_edit->setText(widget_->id());
+		id_edit->setOnUserChangeHandler([=](){widget_->setId(id_edit->text());});
+		g->addCol(id_edit);
 
-		g->add_col(new label("", text_size(), font()))
-			.add_col(new checkbox(widget_ptr(new label("Enabled", text_size_, font_name_)), 
+		g->addCol(new Label("", getTextSize(), font()))
+			.addCol(new Checkbox(WidgetPtr(new Label("Enabled", text_size_, font_name_)), 
 			!widget_->disabled(), 
 			[&](bool checked){widget_->enable(!checked);}, 
 			BUTTON_SIZE_NORMAL_RESOLUTION));
 
-		g->add_col(new label("Disabled Opacity:", text_size(), font()))
-			.add_col(new slider(120, [&](double f){this->widget_->set_disabled_opacity(int(f*255.0));}, 
-			this->widget_->disabled_opacity()/255.0, 1));
+		g->addCol(new Label("Disabled Opacity:", getTextSize(), font()))
+			.addCol(new Slider(120, [&](float f){this->widget_->setDisabledOpacity(static_cast<int>(f*255.0f));}, 
+			this->widget_->disabledOpacity()/255.0f, 1));
 
-		g->add_col(new label("", text_size(), font()))
-			.add_col(new checkbox(widget_ptr(new label("Visible", text_size_, font_name_)), 
+		g->addCol(new Label("", getTextSize(), font()))
+			.addCol(new Checkbox(WidgetPtr(new Label("Visible", text_size_, font_name_)), 
 			!widget_->visible(), 
 			[&](bool checked){}, 
 			BUTTON_SIZE_NORMAL_RESOLUTION));
 
-		g->add_col(new label("Alpha:", text_size(), font()))
-			.add_col(new slider(120, [&](double f){widget_->set_alpha(int(f*255.0));}, 
-			this->widget_->get_alpha()/255.0, 1));
+		g->addCol(new Label("Alpha:", getTextSize(), font()))
+			.addCol(new Slider(120, [&](float f){widget_->setAlpha(static_cast<int>(f*255.0f));}, 
+			this->widget_->getAlpha()/255.0f, 1));
 
-		std::vector<std::string> sections = framed_gui_element::get_elements();
+		std::vector<std::string> sections = FramedGuiElement::getElements();
 		sections.insert(sections.begin(), "<<none>>");
-		dropdown_widget_ptr frame_set(new dropdown_widget(sections, 150, 28, dropdown_widget::DROPDOWN_LIST));
-		frame_set->set_font_size(14);
-		frame_set->set_dropdown_height(height());
+		DropdownWidgetPtr frame_set(new DropdownWidget(sections, 150, 28, DropdownType::LIST));
+		frame_set->setFontSize(14);
+		frame_set->setDropdownHeight(height());
 		
-		auto it = std::find(sections.begin(), sections.end(), widget_->frame_set_name());
-		frame_set->set_selection(it == sections.end() ? 0 : it-sections.begin());
-		frame_set->set_on_select_handler([&](int n, const std::string& s){
+		auto it = std::find(sections.begin(), sections.end(), widget_->frameSetName());
+		frame_set->setSelection(it == sections.end() ? 0 : it-sections.begin());
+		frame_set->setOnSelectHandler([&](int n, const std::string& s){
 			if(s != "<<none>>") {
-				widget_->set_frame_set(s);
+				widget_->setFrameSet(s);
 			} else {
-				widget_->set_frame_set("");
+				widget_->setFrameSet("");
 			}
 		});
-		frame_set->set_zorder(20);
-		g->add_col(new label("Frame Set:", text_size(), font()));
-		g->add_col(frame_set);
+		frame_set->setZOrder(20);
+		g->addCol(new Label("Frame Set:", getTextSize(), font()));
+		g->addCol(frame_set);
 
-		g->add_col(new label("", text_size(), font()))
-			.add_col(new checkbox(widget_ptr(new label("Double frame size", text_size_, font_name_)), 
-			widget_->get_frame_resolution() != 0, 
-			[&](bool checked){widget_->set_frame_resolution(checked ? 1 : 0);}, 
+		g->addCol(new Label("", getTextSize(), font()))
+			.addCol(new Checkbox(WidgetPtr(new Label("Double frame size", text_size_, font_name_)), 
+			widget_->getFrameResolution() != 0, 
+			[&](bool checked){widget_->setFrameResolution(checked ? 1 : 0);}, 
 			BUTTON_SIZE_NORMAL_RESOLUTION));
 
-		g->add_col(new label("pad width:", text_size(), font()))
-			.add_col(new slider(120, [&](double f){widget_->set_padding(int(f*100.0), widget_->get_pad_height());}, 
-			widget_->get_pad_width()/100.0, 1));
-		g->add_col(new label("pad height:", text_size(), font()))
-			.add_col(new slider(120, [&](double f){widget_->set_padding(widget_->get_pad_width(), int(f*100.0));}, 
-			widget_->get_pad_height()/100.0, 1));
+		g->addCol(new Label("pad width:", getTextSize(), font()))
+			.addCol(new Slider(120, [&](float f){widget_->setPadding(static_cast<int>(f*100.0f), widget_->getPadHeight());}, 
+			widget_->getPadWidth()/100.0f, 1));
+		g->addCol(new Label("pad height:", getTextSize(), font()))
+			.addCol(new Slider(120, [&](float f){widget_->setPadding(widget_->getPadWidth(), static_cast<int>(f*100.0f));}, 
+			widget_->getPadHeight()/100.0f, 1));
 
-		text_editor_widget_ptr tooltip_edit = new text_editor_widget(150, 30);
-		tooltip_edit->set_text(widget_->tooltip_text());
-		tooltip_edit->set_on_user_change_handler([=](){widget_->set_tooltip_text(tooltip_edit->text());});
-		g->add_col(new label("Tooltip:", text_size_, font_name_))
-			.add_col(tooltip_edit);
-		g->add_col(new label("Tooltip Height:", text_size(), font()))
-			.add_col(new slider(120, [&](double f){widget_->set_tooltip_fontsize(int(f*72.0+6.0));}, 
-			(widget_->tooltip_fontsize()-6.0)/72.0, 1));
+		TextEditorWidgetPtr tooltip_edit = new TextEditorWidget(150, 30);
+		tooltip_edit->setText(widget_->tooltipText());
+		tooltip_edit->setOnUserChangeHandler([=](){widget_->setTooltipText(tooltip_edit->text());});
+		g->addCol(new Label("Tooltip:", text_size_, font_name_))
+			.addCol(tooltip_edit);
+		g->addCol(new Label("Tooltip Height:", getTextSize(), font()))
+			.addCol(new Slider(120, [&](float f){widget_->setTooltipFontSize(static_cast<int>(f*72.0f+6.0f));}, 
+			(widget_->tooltipFontSize()-6.0f)/72.0f, 1));
 		
-		std::vector<std::string> fonts = font::get_available_fonts();
+		std::vector<std::string> fonts = KRE::Font::getAvailableFonts();
 		fonts.insert(fonts.begin(), "");
-		dropdown_widget_ptr font_list(new dropdown_widget(fonts, 150, 28, dropdown_widget::DROPDOWN_LIST));
-		font_list->set_font_size(14);
-		font_list->set_dropdown_height(height());
-		auto fit = std::find(fonts.begin(), fonts.end(), widget_->tooltip_font());
-		font_list->set_selection(fit == fonts.end() ? 0 : fit-fonts.begin());
-		font_list->set_on_select_handler([&](int n, const std::string& s){widget_->set_tooltip_font(s);});
-		font_list->set_zorder(19);
-		g->add_col(new label("Tooltip Font:", text_size(), font()))
-			.add_col(font_list);
-		g->add_col(new label("Tooltip Color:", text_size(), font()))
-			.add_col(new button(new label("Choose...", text_size_, font_name_), [&](){
+		DropdownWidgetPtr font_list(new DropdownWidget(fonts, 150, 28, DropdownType::LIST));
+		font_list->setFontSize(14);
+		font_list->setDropdownHeight(height());
+		auto fit = std::find(fonts.begin(), fonts.end(), widget_->tooltipFont());
+		font_list->setSelection(fit == fonts.end() ? 0 : fit-fonts.begin());
+		font_list->setOnSelectHandler([&](int n, const std::string& s){widget_->setTooltipFont(s);});
+		font_list->setZOrder(19);
+		g->addCol(new Label("Tooltip Font:", getTextSize(), font()))
+			.addCol(font_list);
+		g->addCol(new Label("Tooltip Color:", getTextSize(), font()))
+			.addCol(new Button(new Label("Choose...", text_size_, font_name_), [&](){
 				int mx, my;
 				input::sdl_get_mouse_state(&mx, &my);
 				mx = mx + 200 > preferences::actual_screen_width() ? preferences::actual_screen_width()-200 : mx;
 				my = my + 600 > preferences::actual_screen_height() ? preferences::actual_screen_height()-600 : my;
 				my -= y();
-				color_picker* cp = new color_picker(rect(0, 0, 200, 600), [&](const graphics::color& color){widget_->set_tooltip_color(color);});
-				cp->set_primary_color(graphics::color(widget_->tooltip_color()));
+				ColorPicker* cp = new ColorPicker(rect(0, 0, 200, 600), [&](const KRE::Color& color){widget_->setTooltipColor(color);});
+				cp->setPrimaryColor(widget_->tooltipColor());
 
-				grid_ptr gg = new grid(1);
-				gg->allow_selection();
-				gg->swallow_clicks();
-				gg->set_show_background(true);
-				gg->allow_draw_highlight(false);
-				gg->register_selection_callback([=](int n){std::cerr << "n = " << n << std::endl; if(n != 0){remove_widget(gg); init();}});
-				gg->set_zorder(100);
-				gg->add_col(cp);
-				add_widget(gg, x()-mx-100, my);
+				GridPtr gg = new Grid(1);
+				gg->allowSelection();
+				gg->swallowClicks();
+				gg->setShowBackground(true);
+				gg->allowDrawHighlight(false);
+				gg->registerSelectionCallback([=](int n){std::cerr << "n = " << n << std::endl; if(n != 0){removeWidget(gg); init();}});
+				gg->setZOrder(100);
+				gg->addCol(cp);
+				addWidget(gg, x()-mx-100, my);
 		}));
 
-		g->add_col(new label("Tooltip Delay:", text_size(), font()))
-			.add_col(new slider(120, [&](double f){widget_->set_tooltip_delay(int(f*5000.0));}, 
-			widget_->get_tooltip_delay()/5000.0, 1));
+		g->addCol(new Label("Tooltip Delay:", getTextSize(), font()))
+			.addCol(new Slider(120, [&](float f){widget_->setTooltipDelay(static_cast<int>(f*5000.0f));}, 
+			widget_->getTooltipDelay()/5000.0f, 1));
 
-		g->add_col(new label("", text_size(), font()))
-			.add_col(new checkbox(widget_ptr(new label("Claim Mouse Events", text_size_, font_name_)), 
-			claim_mouse_events(), 
-			[&](bool checked){widget_->set_claim_mouse_events(checked);}, 
+		g->addCol(new Label("", getTextSize(), font()))
+			.addCol(new Checkbox(WidgetPtr(new Label("Claim Mouse Events", text_size_, font_name_)), 
+			claimMouseEvents(), 
+			[&](bool checked){widget_->setClaimMouseEvents(checked);}, 
 			BUTTON_SIZE_NORMAL_RESOLUTION));
 
-		g->add_col(new label("", text_size(), font()))
-			.add_col(new checkbox(widget_ptr(new label("Draw with Object shader", text_size_, font_name_)), 
-			draw_with_object_shader(), 
-			[&](bool checked){widget_->set_draw_with_object_shader(checked);}, 
+		g->addCol(new Label("", getTextSize(), font()))
+			.addCol(new Checkbox(WidgetPtr(new Label("Draw with Object shader", text_size_, font_name_)), 
+			drawWithObjectShader(), 
+			[&](bool checked){widget_->setDrawWithObjectShader(checked);}, 
 			BUTTON_SIZE_NORMAL_RESOLUTION));
 
-		g->add_col(new label("Width:", text_size(), font()))
-			.add_col(new slider(120, [&](double f){widget_->set_dim(int(f*width()), widget_->height());}, 
-			widget_->width()/double(width()), 1));
-		g->add_col(new label("Height:", text_size(), font()))
-			.add_col(new slider(120, [&](double f){widget_->set_dim(widget_->width(), int(f*height()));}, 
-			widget_->height()/double(height()), 1));
+		g->addCol(new Label("Width:", getTextSize(), font()))
+			.addCol(new Slider(120, [&](float f){widget_->setDim(int(f*width()), widget_->height());}, 
+			widget_->width()/static_cast<float>(width()), 1));
+		g->addCol(new Label("Height:", getTextSize(), font()))
+			.addCol(new Slider(120, [&](float f){widget_->setDim(widget_->width(), int(f*height()));}, 
+			widget_->height()/static_cast<float>(height()), 1));
 
-		g->add_col(new label("X:", text_size(), font()))
-			.add_col(new slider(120, [&](double f){widget_->set_loc(int(f*width()), widget_->y());}, 
-			widget_->x()/double(width()), 1));
-		g->add_col(new label("Y:", text_size(), font()))
-			.add_col(new slider(120, [&](double f){widget_->set_loc(widget_->x(), int(f*height()));}, 
-			widget_->y()/double(height()), 1));
+		g->addCol(new Label("X:", getTextSize(), font()))
+			.addCol(new Slider(120, [&](float f){widget_->setLoc(int(f*width()), widget_->y());}, 
+			widget_->x()/static_cast<float>(width()), 1));
+		g->addCol(new Label("Y:", getTextSize(), font()))
+			.addCol(new Slider(120, [&](float f){widget_->setLoc(widget_->x(), int(f*height()));}, 
+			widget_->y()/static_cast<float>(height()), 1));
 
-		grid* zg = new grid(3);
-		text_editor_widget_ptr z_edit = new text_editor_widget(60, 30);
-		z_edit->set_text(formatter() << widget_->zorder());
-		z_edit->set_on_user_change_handler([=](){widget_->set_zorder(atoi(z_edit->text().c_str()));});
-		zg->add_col(new button(new label("+", text_size(), font()), [=](){widget_->set_zorder(widget_->zorder()+1); z_edit->set_text(formatter() << widget_->zorder());}))
-			.add_col(z_edit)
-			.add_col(new button(new label("-", text_size(), font()), [=](){widget_->set_zorder(widget_->zorder()-1); z_edit->set_text(formatter() << widget_->zorder());}));
-		g->add_col(new label("Z-order:", text_size(), font()))
-			.add_col(zg);
+		Grid* zg = new Grid(3);
+		TextEditorWidgetPtr z_edit = new TextEditorWidget(60, 30);
+		z_edit->setText(formatter() << widget_->zorder());
+		z_edit->setOnUserChangeHandler([=](){widget_->setZOrder(atoi(z_edit->text().c_str()));});
+		zg->addCol(new Button(new Label("+", getTextSize(), font()), [=](){widget_->setZOrder(widget_->zorder()+1); z_edit->setText(formatter() << widget_->zorder());}))
+			.addCol(z_edit)
+			.addCol(new Button(new Label("-", getTextSize(), font()), [=](){widget_->setZOrder(widget_->zorder()-1); z_edit->setText(formatter() << widget_->zorder());}));
+		g->addCol(new Label("Z-order:", getTextSize(), font()))
+			.addCol(zg);
 
-		grid* ahg = new grid(3);
-		ahg->add_col(new button(new label("Left", text_size(), font()), [&](){widget_->set_halign(HALIGN_LEFT);}))
-			.add_col(new button(new label("Center", text_size(), font()), [&](){widget_->set_halign(HALIGN_CENTER);}))
-			.add_col(new button(new label("Right", text_size(), font()), [&](){widget_->set_halign(HALIGN_RIGHT);}));
-		g->add_col(new label("Horiz Align:", text_size(), font()))
-			.add_col(ahg);
+		Grid* ahg = new Grid(3);
+		ahg->addCol(new Button(new Label("Left", getTextSize(), font()), [&](){widget_->setHAlign(HALIGN_LEFT);}))
+			.addCol(new Button(new Label("Center", getTextSize(), font()), [&](){widget_->setHAlign(HALIGN_CENTER);}))
+			.addCol(new Button(new Label("Right", getTextSize(), font()), [&](){widget_->setHAlign(HALIGN_RIGHT);}));
+		g->addCol(new Label("Horiz Align:", getTextSize(), font()))
+			.addCol(ahg);
 
-		grid* avg = new grid(3);
-		avg->add_col(new button(new label("Top", text_size(), font()), [&](){widget_->set_valign(VALIGN_TOP);}))
-			.add_col(new button(new label("Center", text_size(), font()), [&](){widget_->set_valign(VALIGN_CENTER);}))
-			.add_col(new button(new label("Bottom", text_size(), font()), [&](){widget_->set_valign(VALIGN_BOTTOM);}));
-		g->add_col(new label("Vert Align:", text_size(), font()))
-			.add_col(avg);
+		Grid* avg = new Grid(3);
+		avg->addCol(new Button(new Label("Top", getTextSize(), font()), [&](){widget_->setVAlign(VALIGN_TOP);}))
+			.addCol(new Button(new Label("Center", getTextSize(), font()), [&](){widget_->setVAlign(VALIGN_CENTER);}))
+			.addCol(new Button(new Label("Bottom", getTextSize(), font()), [&](){widget_->setVAlign(VALIGN_BOTTOM);}));
+		g->addCol(new Label("Vert Align:", getTextSize(), font()))
+			.addCol(avg);
 		/*
 		on_process: function
 		children: widget_list
 		*/
-		add_widget(g);
+		addWidget(g);
 	}
 
-	void widget_settings_dialog::id_changed(text_editor_widget_ptr text)
+	void WidgetSettingsDialog::idChanged(TextEditorWidgetPtr text)
 	{
-		ASSERT_LOG(text != NULL, "widget_settings_dialog::id_changed: text == NULL");
-		ASSERT_LOG(widget_ != NULL, "widget_settings_dialog::id_changed: widget_ == NULL");
-		widget_->set_id(text->text());
+		ASSERT_LOG(text != nullptr, "WidgetSettingsDialog::idChanged: text == nullptr");
+		ASSERT_LOG(widget_ != nullptr, "WidgetSettingsDialog::idChanged: widget_ == nullptr");
+		widget_->setId(text->text());
 	}
 }
+#endif
+

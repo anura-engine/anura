@@ -1,75 +1,83 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
+
 #include <boost/intrusive_ptr.hpp>
 
 #include "formula.hpp"
 #include "formula_callable.hpp"
 #include "unit_test.hpp"
 
-namespace {
-using namespace game_logic;
-class mock_char : public formula_callable {
-	variant get_value(const std::string& key) const {
-		if(key == "strength") {
-			return variant(15);
-		} else if(key == "agility") {
-			return variant(12);
-		}
+namespace 
+{
+	using namespace game_logic;
 
-		return variant(10);
-	}
-};
-class mock_party : public formula_callable {
-	variant get_value(const std::string& key) const {
-		c_.add_ref();
-		i_[0].add_ref();
-		i_[1].add_ref();
-		i_[2].add_ref();
-		if(key == "members") {
-			i_[0].add("strength",variant(12));
-			i_[1].add("strength",variant(16));
-			i_[2].add("strength",variant(14));
-			std::vector<variant> members;
-			for(int n = 0; n != 3; ++n) {
-				members.push_back(variant(&i_[n]));
+	class MockChar : public FormulaCallable {
+		variant getValue(const std::string& key) const {
+			if(key == "strength") {
+				return variant(15);
+			} else if(key == "agility") {
+				return variant(12);
 			}
 
-			return variant(&members);
-		} else if(key == "char") {
-			return variant(&c_);
-		} else {
-			return variant(0);
+			return variant(10);
 		}
-	}
+	};
+	class MockParty : public FormulaCallable {
+		variant getValue(const std::string& key) const {
+			c_.add_ref();
+			i_[0].add_ref();
+			i_[1].add_ref();
+			i_[2].add_ref();
+			if(key == "members") {
+				i_[0].add("strength",variant(12));
+				i_[1].add("strength",variant(16));
+				i_[2].add("strength",variant(14));
+				std::vector<variant> members;
+				for(int n = 0; n != 3; ++n) {
+					members.push_back(variant(&i_[n]));
+				}
 
-	mock_char c_;
-	mutable map_formula_callable i_[3];
+				return variant(&members);
+			} else if(key == "char") {
+				return variant(&c_);
+			} else {
+				return variant(0);
+			}
+		}
 
-};
+		MockChar c_;
+		mutable MapFormulaCallable i_[3];
 
+	};
 }
 
 UNIT_TEST(formula)
 {
-	boost::intrusive_ptr<mock_char> cp(new mock_char);
-	boost::intrusive_ptr<mock_party> pp(new mock_party);
-#define FML(a) formula(variant(a))
-	mock_char& c = *cp;
-	mock_party& p = *pp;
+	boost::intrusive_ptr<MockChar> cp(new MockChar);
+	boost::intrusive_ptr<MockParty> pp(new MockParty);
+#define FML(a) Formula(variant(a))
+	MockChar& c = *cp;
+	MockParty& p = *pp;
 	CHECK_EQ(FML("strength").execute(c).as_int(), 15);
 	CHECK_EQ(FML("17").execute(c).as_int(), 17);
 	CHECK_EQ(FML("strength/2 + agility").execute(c).as_int(), 19);
@@ -129,8 +137,8 @@ BENCHMARK(construct_int_variant)
 
 BENCHMARK_ARG(formula, const std::string& fm)
 {
-	static mock_party p;
-	formula f = formula(variant(fm));
+	static MockParty p;
+	Formula f = Formula(variant(fm));
 	BENCHMARK_LOOP {
 		f.execute(p);
 	}

@@ -1,4 +1,25 @@
-#if defined(USE_ISOMAP)
+/*
+	Copyright (C) 2012-2014 by Kristina Simpson <sweet.kristas@gmail.com>
+	
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
+
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
+
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
+*/
 
 #if defined(_MSC_VER)
 #include <boost/math/special_functions/round.hpp>
@@ -6,7 +27,7 @@
 #else
 #define bmround	round
 #endif
-
+/*
 #include <vector>
 #include "asserts.hpp"
 #include "isoworld.hpp"
@@ -24,7 +45,7 @@ namespace voxel
 
 	const int default_view_distance = 5;
 
-	logical_world::logical_world(const variant& node)
+	LogicalWorld::LogicalWorld(const variant& node)
 		:size_x_(0), size_y_(0), size_z_(0), 
 		scale_x_(node["scale_x"].as_int(1)), scale_y_(node["scale_y"].as_int(1)), scale_z_(node["scale_z"].as_int(1)),
 		chunks_(node)
@@ -38,11 +59,11 @@ namespace voxel
 		max_x = max_y = max_z = std::numeric_limits<int>::min();
 
 		for(int n = 0; n != node["chunks"].num_elements(); ++n) {
-			const int wpx = node["chunks"][n]["worldspace_position"][0].as_int();
-			const int wpy = node["chunks"][n]["worldspace_position"][1].as_int();
-			const int wpz = node["chunks"][n]["worldspace_position"][2].as_int();
+			const int wpx = node["chunks"][n]["getWorldspacePosition"][0].as_int();
+			const int wpy = node["chunks"][n]["getWorldspacePosition"][1].as_int();
+			const int wpz = node["chunks"][n]["getWorldspacePosition"][2].as_int();
 
-			foreach(const variant_pair& p, node["chunks"][n]["voxels"].as_map()) {
+			for(auto& p : node["chunks"][n]["voxels"].as_map()) {
 				const int gpx = p.first.as_list()[0].as_int() + wpx;
 				const int gpy = p.first.as_list()[1].as_int() + wpy;
 				const int gpz = p.first.as_list()[2].as_int() + wpz;
@@ -61,18 +82,18 @@ namespace voxel
 		size_z_ = max_z - min_z + 1;
 	}
 
-	logical_world::~logical_world()
+	LogicalWorld::~LogicalWorld()
 	{
 	}
 
-	glm::ivec3 logical_world::worldspace_to_logical(const glm::vec3& wsp) const
+	glm::ivec3 LogicalWorld::worldspaceToLogical(const glm::vec3& wsp) const
 	{
+		// XXX fixme
 		glm::ivec3 voxel_coord = glm::ivec3(
 			abs(wsp[0]-bmround(wsp[0])) < 0.05f ? int(bmround(wsp[0])) : int(floor(wsp[0])),
 			abs(wsp[1]-bmround(wsp[1])) < 0.05f ? int(bmround(wsp[1])) : int(floor(wsp[1])),
 			abs(wsp[2]-bmround(wsp[2])) < 0.05f ? int(bmround(wsp[2])) : int(floor(wsp[2])));
-		glm::ivec3 facing = level::current().camera()->get_facing(wsp);
-		//std::cerr << "WSP:" << wsp.x << "," << wsp.y << "," << wsp.z << " : VC:" << voxel_coord.x << "," << voxel_coord.y << "," << voxel_coord.z << " FACING:" << facing.x << "," << facing.y << "," << facing.z;
+		glm::ivec3 facing = Level::current().camera()->get_facing(wsp);
 		if(facing.x > 0) {
 			--voxel_coord.x; 
 		}
@@ -83,23 +104,15 @@ namespace voxel
 			--voxel_coord.z; 
 		}
 		voxel_coord /= glm::ivec3(scale_x_, scale_y_, scale_z_);
-		//std::cerr << " : SCALED:" << voxel_coord.x << "," << voxel_coord.y << "," << voxel_coord.z << std::endl;
 		return voxel_coord;
+		return glm::ivec3();
 	}
 
 
-	world::world(const variant& node)
+	World::World(const variant& node)
 		: view_distance_(node["view_distance"].as_int(default_view_distance)), 
 		seed_(node["seed"].as_int(0))
 	{
-		ASSERT_LOG(node.has_key("shader"), "Must have 'shader' attribute");
-		ASSERT_LOG(node["shader"].is_string(), "'shader' attribute must be a string");
-		shader_ = gles2::shader_program::get_global(node["shader"].as_string())->shader();
-
-		if(node.has_key("lighting")) {
-			lighting_.reset(new graphics::lighting(shader_, node["lighting"]));
-		}
-
 		if(node.has_key("objects")) {
 			for(int n = 0; n != node["objects"].num_elements(); ++n) {
 				add_object(new user_voxel_object(node["objects"][n]));
@@ -111,10 +124,10 @@ namespace voxel
 		}
 
 		if(node.has_key("chunks")) {
-			logic_.reset(new logical_world(node));
+			logic_.reset(new LogicalWorld(node));
 			build_fixed(node["chunks"]);
 		} else {
-			build_infinite();
+			buildInfinite();
 		}
 	}
 
@@ -122,14 +135,14 @@ namespace voxel
 	{
 	}
 
-	void world::set_tile(int x, int y, int z, const variant& type)
+	void world::setTile(int x, int y, int z, const variant& type)
 	{
 		int fx = int(floor(x));
 		int fy = int(floor(y));
 		int fz = int(floor(z));
 		auto it = chunks_.find(position(fx, fy, fz));
 		if(it != chunks_.end()) {
-			it->second->set_tile(x-fx, y-fy, z-fz, type);
+			it->second->setTile(x-fx, y-fy, z-fz, type);
 		}
 	}
 	
@@ -144,31 +157,31 @@ namespace voxel
 		}
 	}
 
-	variant world::get_tile_type(int x, int y, int z) const
+	variant world::get_TileType(int x, int y, int z) const
 	{
 		int fx = int(floor(x));
 		int fy = int(floor(y));
 		int fz = int(floor(z));
 		auto it = chunks_.find(position(fx, fy, fz));
 		if(it != chunks_.end()) {
-			return it->second->get_tile_type(x-fx, y-fy, z-fz);
+			return it->second->get_TileType(x-fx, y-fy, z-fz);
 		}
 		return variant();
 	}
 
-	void world::add_object(user_voxel_object_ptr obj)
+	void world::add_object(UserVoxelObjectPtr obj)
 	{
 		objects_.insert(obj);
 	}
 
-	void world::remove_object(user_voxel_object_ptr obj)
+	void world::remove_object(UserVoxelObjectPtr obj)
 	{
 		auto it = objects_.find(obj);
 		ASSERT_LOG(it != objects_.end(), "Unable to remove object '" << obj->type() << "' from level");
 		objects_.erase(it);
 	}
 
-	void world::get_objects_at_point(const glm::vec3& pt, std::vector<user_voxel_object_ptr>& obj_list)
+	void world::get_objects_at_point(const glm::vec3& pt, std::vector<UserVoxelObjectPtr>& obj_list)
 	{
 		for(auto obj : objects_) {
 			if(obj->pt_in_object(pt)) {
@@ -181,14 +194,14 @@ namespace voxel
 	{
 		for(int n = 0; n != node.num_elements(); ++n) {
 			chunk_ptr cp = voxel::chunk_factory::create(shader_, logic_, node[n]);
-			int wpx = node[n]["worldspace_position"][0].as_int() * logic_->scale_x();
-			int wpy = node[n]["worldspace_position"][1].as_int() * logic_->scale_y();
-			int wpz = node[n]["worldspace_position"][2].as_int() * logic_->scale_z();
+			int wpx = node[n]["getWorldspacePosition"][0].as_int() * logic_->scale_x();
+			int wpy = node[n]["getWorldspacePosition"][1].as_int() * logic_->scale_y();
+			int wpz = node[n]["getWorldspacePosition"][2].as_int() * logic_->scale_z();
 			chunks_[position(wpx,wpy,wpz)] = cp;
 		}
 	}
 
-	void world::build_infinite()
+	void world::buildInfinite()
 	{
 		profile::manager pman("Built voxel::world in");
 
@@ -221,10 +234,10 @@ namespace voxel
 					v.push_back(variant(worldspace_pos.x));
 					v.push_back(variant(worldspace_pos.y));
 					v.push_back(variant(worldspace_pos.z));
-					m[variant("worldspace_position")] = variant(&v);
+					m[variant("getWorldspacePosition")] = variant(&v);
 					m[variant("random")] = rnd.build();
 
-					chunk_ptr cp = voxel::chunk_factory::create(shader_, logical_world_ptr(), variant(&m));
+					chunk_ptr cp = voxel::chunk_factory::create(shader_, LogicalWorldPtr(), variant(&m));
 					chunks_[position(worldspace_pos.x,worldspace_pos.y,worldspace_pos.z)] = cp;
 					active_chunks_.push_back(cp);
 				}
@@ -257,7 +270,7 @@ namespace voxel
 			obj->draw(lighting_, camera);
 		}
 
-		for(auto prim : draw_primitives_) {
+		for(auto prim : DrawPrimitives_) {
 			prim->draw(lighting_, camera);
 		}
 
@@ -287,9 +300,9 @@ namespace voxel
 
 		for(auto chnk : chunks_) {
 			variant_builder wsp;
-			wsp.add("worldspace_position", chnk.first.x);
-			wsp.add("worldspace_position", chnk.first.y);
-			wsp.add("worldspace_position", chnk.first.z);
+			wsp.add("getWorldspacePosition", chnk.first.x);
+			wsp.add("getWorldspacePosition", chnk.first.y);
+			wsp.add("getWorldspacePosition", chnk.first.z);
 			wsp.add("data", chnk.second->write());
 
 			res.add("chunks", wsp.build());
@@ -323,12 +336,12 @@ namespace voxel
 		}
 	}
 
-	REGISTER_SERIALIZABLE_CALLABLE(logical_world, "@logical_world");
+	REGISTER_SERIALIZABLE_CALLABLE(LogicalWorld, "@LogicalWorld");
 
-	variant logical_world::serialize_to_wml() const
+	variant LogicalWorld::serializeToWml() const
 	{
 		variant v(chunks_);
-		v.add_attr(variant("@logical_world"), variant("logical_world"));
+		v.add_attr(variant("@LogicalWorld"), variant("LogicalWorld"));
 		return v;
 	}
 
@@ -342,7 +355,7 @@ namespace voxel
 		}
 	}
 
-	bool logical_world::is_xedge(int x) const
+	bool LogicalWorld::is_xedge(int x) const
 	{
 		if(x >= 0 && x < size_x()) {
 			return false;
@@ -350,7 +363,7 @@ namespace voxel
 		return true;
 	}
 
-	bool logical_world::is_yedge(int y) const
+	bool LogicalWorld::is_yedge(int y) const
 	{
 		if(y >= 0 && y < size_y()) {
 			return false;
@@ -358,7 +371,7 @@ namespace voxel
 		return true;
 	}
 
-	bool logical_world::is_zedge(int z) const
+	bool LogicalWorld::is_zedge(int z) const
 	{
 		if(z >= 0 && z < size_z()) {
 			return false;
@@ -366,7 +379,7 @@ namespace voxel
 		return true;
 	}
 
-	bool logical_world::is_solid(int x, int y, int z) const
+	bool LogicalWorld::isSolid(int x, int y, int z) const
 	{
 		auto it = heightmap_.find(std::make_pair(x,z));
 		if(it == heightmap_.end()) {
@@ -379,9 +392,9 @@ namespace voxel
 		}
 	}
 
-	pathfinding::directed_graph_ptr logical_world::create_directed_graph(bool allow_diagonals) const
+	pathfinding::directed_graph_ptr LogicalWorld::createDirectedGraph(bool allow_diagonals) const
 	{
-		profile::manager pman("logical_world::create_directed_graph");
+		profile::manager pman("LogicalWorld::createDirectedGraph");
 
 		std::vector<variant> vertex_list;
 		std::map<std::pair<int,int>, int> vlist;
@@ -392,7 +405,7 @@ namespace voxel
 			int z = p.first.second;
 
 			if(y < size_y() - 1) {
-				if(is_solid(x, y+1, z) == false) {
+				if(isSolid(x, y+1, z) == false) {
 					vertex_list.push_back(variant_list_from_position(x,y+1,z));
 					vlist[std::make_pair(x,z)] = y+1;
 				}
@@ -411,36 +424,36 @@ namespace voxel
 			std::vector<variant> current_edges;
 			
 			auto it = vlist.find(std::make_pair(x+1,z));
-			if(it != vlist.end() && !is_xedge(x+1) && !is_solid(x+1,it->second,z)) {
+			if(it != vlist.end() && !is_xedge(x+1) && !isSolid(x+1,it->second,z)) {
 				current_edges.push_back(variant_list_from_position(x+1,it->second,z));
 			}
 			it = vlist.find(std::make_pair(x-1,z));
-			if(it != vlist.end() && !is_xedge(x-1) && !is_solid(x-1,it->second,z)) {
+			if(it != vlist.end() && !is_xedge(x-1) && !isSolid(x-1,it->second,z)) {
 				current_edges.push_back(variant_list_from_position(x-1,it->second,z));
 			}
 			it = vlist.find(std::make_pair(x,z+1));
-			if(it != vlist.end() && !is_zedge(z+1) && !is_solid(x,it->second,z+1)) {
+			if(it != vlist.end() && !is_zedge(z+1) && !isSolid(x,it->second,z+1)) {
 				current_edges.push_back(variant_list_from_position(x,it->second,z+1));
 			}
 			it = vlist.find(std::make_pair(x,z-1));
-			if(it != vlist.end() && !is_zedge(z-1) && !is_solid(x,it->second,z-1)) {
+			if(it != vlist.end() && !is_zedge(z-1) && !isSolid(x,it->second,z-1)) {
 				current_edges.push_back(variant_list_from_position(x,it->second,z-1));
 			}
 			if(allow_diagonals) {
 				it = vlist.find(std::make_pair(x+1,z+1));
-				if(it != vlist.end() && !is_xedge(x+1) && !is_zedge(z+1) && !is_solid(x+1,it->second,z+1)) {
+				if(it != vlist.end() && !is_xedge(x+1) && !is_zedge(z+1) && !isSolid(x+1,it->second,z+1)) {
 					current_edges.push_back(variant_list_from_position(x+1,it->second,z+1));
 				}
 				it = vlist.find(std::make_pair(x+1,z-1));
-				if(it != vlist.end() && !is_xedge(x+1) && !is_zedge(z-1) && !is_solid(x+1,it->second,z-1)) {
+				if(it != vlist.end() && !is_xedge(x+1) && !is_zedge(z-1) && !isSolid(x+1,it->second,z-1)) {
 					current_edges.push_back(variant_list_from_position(x+1,it->second,z-1));
 				}
 				it = vlist.find(std::make_pair(x-1,z+1));
-				if(it != vlist.end() && !is_xedge(x-1) && !is_zedge(z+1) && !is_solid(x-1,it->second,z+1)) {
+				if(it != vlist.end() && !is_xedge(x-1) && !is_zedge(z+1) && !isSolid(x-1,it->second,z+1)) {
 					current_edges.push_back(variant_list_from_position(x-1,it->second,z+1));
 				}
 				it = vlist.find(std::make_pair(x-1,z-1));
-				if(it != vlist.end() && !is_xedge(x-1) && !is_zedge(z-1) && !is_solid(x-1,it->second,z-1)) {
+				if(it != vlist.end() && !is_xedge(x-1) && !is_zedge(z-1) && !isSolid(x-1,it->second,z-1)) {
 					current_edges.push_back(variant_list_from_position(x-1,it->second,z-1));
 				}
 			}
@@ -449,13 +462,13 @@ namespace voxel
 		return pathfinding::directed_graph_ptr(new pathfinding::directed_graph(&vertex_list, &edges));
 	}
 
-	class create_world_callable : public game_logic::formula_callable 
+	class create_world_callable : public game_logic::FormulaCallable 
 	{
 		variant world_;
-		variant get_value(const std::string& key) const {
+		variant getValue(const std::string& key) const {
 			return variant();
 		}
-		virtual void execute(game_logic::formula_callable& ob) const {
+		virtual void execute(game_logic::FormulaCallable& ob) const {
 			level::current().iso_world().reset(new world(world_));
 		}
 	public:
@@ -464,15 +477,15 @@ namespace voxel
 		{}
 	};
 
-	// Start definitions for voxel::logical_world
-	BEGIN_DEFINE_CALLABLE_NOBASE(logical_world)
-	BEGIN_DEFINE_FN(create_directed_graph, "(bool=false) ->builtin directed_graph")
+	// Start definitions for voxel::LogicalWorld
+	BEGIN_DEFINE_CALLABLE_NOBASE(LogicalWorld)
+	BEGIN_DEFINE_FN(createDirectedGraph, "(bool=false) ->builtin directed_graph")
 		bool allow_diagonals = NUM_FN_ARGS ? FN_ARG(0).as_bool() : false;
-		return variant(obj.create_directed_graph(allow_diagonals).get());
+		return variant(obj.createDirectedGraph(allow_diagonals).get());
 	END_DEFINE_FN
 
 	BEGIN_DEFINE_FN(point_convert, "([decimal,decimal,decimal]) -> [int,int,int]")
-		glm::ivec3 iv = obj.worldspace_to_logical(variant_to_vec3(FN_ARG(0)));
+		glm::ivec3 iv = obj.worldspaceToLogical(variant_to_vec3(FN_ARG(0)));
 		std::vector<variant> v;
 		v.push_back(variant(iv.x)); v.push_back(variant(iv.y)); v.push_back(variant(iv.z));
 		return variant(&v);
@@ -515,7 +528,7 @@ namespace voxel
 
 	DEFINE_FIELD(size_z, "int")
 		return variant(obj.size_z());
-	END_DEFINE_CALLABLE(logical_world)
+	END_DEFINE_CALLABLE(LogicalWorld)
 
 	//////////////////////////////////////////////////
 	// Start definitions for voxel::world
@@ -541,8 +554,8 @@ namespace voxel
 		obj.objects_.clear();
 		for(int n = 0; n != value.num_elements(); ++n) {
 			if(value[n].is_callable()) {
-				user_voxel_object_ptr o = value.try_convert<user_voxel_object>();
-				ASSERT_LOG(o != NULL, "Couldn't convert value to user_voxel_object.");
+				UserVoxelObjectPtr o = value.try_convert<user_voxel_object>();
+				ASSERT_LOG(o != nullptr, "Couldn't convert value to user_voxel_object.");
 				obj.objects_.insert(o.get());
 			} else {				
 				obj.objects_.insert(new user_voxel_object(value[n]));
@@ -553,16 +566,15 @@ namespace voxel
 
 	DEFINE_FIELD(draw_primitive, "[builtin draw_primitive]")
 		std::vector<variant> v;
-		for(auto prim : obj.draw_primitives_) {
+		for(auto prim : obj.DrawPrimitives_) {
 			v.push_back(variant(prim.get()));
 		}
 		return variant(&v);
 	DEFINE_SET_FIELD_TYPE("[map|builtin draw_primitive]")
-		obj.draw_primitives_.clear();
+		obj.DrawPrimitives_.clear();
 		for(int n = 0; n != value.num_elements(); ++n) {
-			obj.draw_primitives_.push_back(graphics::draw_primitive::create(value[n]));
+			obj.DrawPrimitives_.push_back(graphics::DrawPrimitive::create(value[n]));
 		}
 	END_DEFINE_CALLABLE(world)
 }
-
-#endif
+*/

@@ -23,6 +23,7 @@
 
 #pragma once
 
+#include <exception>
 #include <iterator>
 #include <string>
 #include <cstdint>
@@ -117,4 +118,32 @@ namespace utils
 		std::string utf8_;
 		utf8_to_codepoint();
 	};
+    
+    inline std::string codepoint_to_utf8(const char32_t cp) 
+    {
+		char utf8_str[4];		// max length of a utf-8 encoded string is 4 bytes, as per RFC-3629
+		int n = 1;				// Count of characters pushed into array.
+
+		if(cp <= 0x7f) {
+			utf8_str[0] = static_cast<char>(cp);
+		} else if(cp <= 0x7ff) {
+			utf8_str[0] = static_cast<char>((cp >> 6) & 0x1f)|0xc0;
+			utf8_str[1] = static_cast<char>(cp & 0x3f)|0x80;
+			++n;
+		} else if(cp <= 0xffff) {
+			utf8_str[0] = static_cast<char>(cp >> 12)|0xe0;
+			utf8_str[1] = static_cast<char>((cp >> 6) & 0x3f)|0x80;
+			utf8_str[2] = static_cast<char>(cp & 0x3f)|0x80;
+			n += 2;
+		} else if(cp <= 0x10ffff) {
+			utf8_str[0] = static_cast<char>(cp >> 18)|0xf0;
+			utf8_str[1] = static_cast<char>((cp >> 12) & 0x3f)|0x80;
+			utf8_str[2] = static_cast<char>((cp >> 6) & 0x3f)|0x80;
+			utf8_str[3] = static_cast<char>(cp & 0x3f)|0x80;
+			n += 3;
+		} else {
+			throw std::runtime_error("Unable to convert codepoint value to utf-8 encoded string.");
+		}
+		return std::string(utf8_str, n);
+    }
 }

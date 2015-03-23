@@ -1,65 +1,83 @@
-#include "foreach.hpp"
+/*
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
+	
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
+
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
+
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
+*/
+
 #include "formula_callable_visitor.hpp"
-#include "variant.hpp"
 
 namespace game_logic
 {
-
-formula_callable_suspended::~formula_callable_suspended()
-{
-}
-
-void formula_callable_visitor::visit(variant* v)
-{
-	if(!v) {
-		return;
+	FormulaCallableSuspended::~FormulaCallableSuspended()
+	{
 	}
 
-
-	if(v->is_list()) {
-		if(visited_.count(v->get_addr())) {
+	void FormulaCallableVisitor::visit(variant* v)
+	{
+		if(!v) {
 			return;
 		}
-		visited_.insert(v->get_addr());
 
-		for(int n = 0; n != v->num_elements(); ++n) {
-			visit(v->get_index_mutable(n));
+		if(v->is_list()) {
+			if(visited_.count(v->get_addr())) {
+				return;
+			}
+			visited_.insert(v->get_addr());
+
+			for(int n = 0; n != v->num_elements(); ++n) {
+				visit(v->get_index_mutable(n));
+			}
+		} else if(v->is_map()) {
+			if(visited_.count(v->get_addr())) {
+				return;
+			}
+			visited_.insert(v->get_addr());
+
+			for(const variant& key : v->getKeys().as_list()) {
+				visit(v->get_attr_mutable(key));
+			}
+		} else if(v->is_callable()) {
+			ptr_.push_back(FormulaCallableSuspendedPtr(new FormulaCallableSuspendedVariant(v)));
+			visit(*v->as_callable());
+		} else if(v->is_function()) {
+			std::vector<boost::intrusive_ptr<const FormulaCallable>*> items;
+			v->get_mutable_closure_ref(items);
+			for(boost::intrusive_ptr<const FormulaCallable>* ptr : items) {
+				visit(ptr);
+			}
 		}
-	} else if(v->is_map()) {
-		if(visited_.count(v->get_addr())) {
+	}
+
+	void FormulaCallableVisitor::visit(const FormulaCallable& callable)
+	{
+		visit(const_cast<FormulaCallable&>(callable));
+	}
+
+	void FormulaCallableVisitor::visit(FormulaCallable& callable)
+	{
+		if(visited_.count(&callable)) {
 			return;
 		}
-		visited_.insert(v->get_addr());
 
-		foreach(const variant& key, v->get_keys().as_list()) {
-			visit(v->get_attr_mutable(key));
-		}
-	} else if(v->is_callable()) {
-		ptr_.push_back(formula_callable_suspended_ptr(new formula_callable_suspended_variant(v)));
-		visit(*v->as_callable());
-	} else if(v->is_function()) {
-		std::vector<boost::intrusive_ptr<const formula_callable>*> items;
-		v->get_mutable_closure_ref(items);
-		foreach(boost::intrusive_ptr<const formula_callable>* ptr, items) {
-			visit(ptr);
-		}
+		visited_.insert(&callable);
+
+		callable.performVisitValues(*this);
 	}
-}
-
-void formula_callable_visitor::visit(const formula_callable& callable)
-{
-	visit(const_cast<formula_callable&>(callable));
-}
-
-void formula_callable_visitor::visit(formula_callable& callable)
-{
-	if(visited_.count(&callable)) {
-		return;
-	}
-
-	visited_.insert(&callable);
-
-	callable.perform_visit_values(*this);
-}
-
 }

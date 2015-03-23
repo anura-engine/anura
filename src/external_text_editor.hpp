@@ -1,60 +1,67 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
-#ifndef EXTERNAL_TEXT_EDITOR_HPP_INCLUDED
-#define EXTERNAL_TEXT_EDITOR_HPP_INCLUDED
+
+#pragma once
+
 #ifndef NO_EDITOR
 
 #include <string>
 
-#include <boost/shared_ptr.hpp>
-
 #include "asserts.hpp"
 #include "variant.hpp"
 
-class external_text_editor;
+class ExternalTextEditor;
 
-typedef boost::shared_ptr<external_text_editor> external_text_editor_ptr;
+typedef std::shared_ptr<ExternalTextEditor> ExternalTextEditorPtr;
 
-class external_text_editor
+class ExternalTextEditor
 {
 public:
-	struct manager {
-		manager();
-		~manager();
+	struct Manager {
+		Manager();
+		~Manager();
 	};
 
-	static external_text_editor_ptr create(variant key);
+	static ExternalTextEditorPtr create(variant key);
 
-	external_text_editor();
-	virtual ~external_text_editor();
+	virtual ~ExternalTextEditor();
 
 	void process();
 
-	bool replace_in_game_editor() const { return replace_in_game_editor_; }
+	bool replaceInGameEditor() const { return replace_in_game_editor_; }
 	
-	virtual void load_file(const std::string& fname) = 0;
+	virtual void loadFile(const std::string& fname) = 0;
 	virtual void shutdown() = 0;
 protected:
-	struct editor_error {};
+	ExternalTextEditor();
+	struct EditorError {};
 private:
-	external_text_editor(const external_text_editor&);
-	virtual std::string get_file_contents(const std::string& fname) = 0;
-	virtual int get_line(const std::string& fname) const = 0;
-	virtual std::vector<std::string> loaded_files() const = 0;
+	ExternalTextEditor(const ExternalTextEditor&);
+	void operator=(const ExternalTextEditor&);
+
+	virtual std::string getFileContents(const std::string& fname) = 0;
+	virtual int getLine(const std::string& fname) const = 0;
+	virtual std::vector<std::string> getLoadedFiles() const = 0;
 
 	bool replace_in_game_editor_;
 
@@ -64,4 +71,3 @@ private:
 };
 
 #endif // NO_EDITOR
-#endif

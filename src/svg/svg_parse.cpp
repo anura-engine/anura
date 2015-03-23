@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
+	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -25,7 +25,7 @@
 #include <boost/property_tree/xml_parser.hpp>
 #include <sstream>
 
-#include "../asserts.hpp"
+#include "asserts.hpp"
 #include "geometry.hpp"
 
 #include "svg_element.hpp"
@@ -49,14 +49,14 @@ namespace KRE
 			void display_ptree(ptree const& pt)
 			{
 				for(auto& v : pt) {
-					std::cout << v.first << ": " << v.second.get_value<std::string>() << "\n";
+					LOG_DEBUG(v.first << ": " << v.second.get_value<std::string>());
 					display_ptree( v.second );
 				}
 			}
 
 			void print_matrix(const cairo_matrix_t& mat)
 			{
-				std::cerr << "MAT(" << mat.xx << " " << mat.yx << " " << mat.xy << " " << mat.yy << " " << mat.x0 << " " << mat.y0 << ")" << std::endl;
+				LOG_DEBUG("MAT(" << mat.xx << " " << mat.yx << " " << mat.xy << " " << mat.yy << " " << mat.x0 << " " << mat.y0 << ")");
 			}
 		}
 

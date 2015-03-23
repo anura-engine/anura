@@ -1,36 +1,38 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
-#include <boost/bind.hpp>
 
 #include <SDL.h>
 
 #include "asserts.hpp"
-#include "foreach.hpp"
 #include "json_parser.hpp"
 #include "tbs_internal_server.hpp"
 #include "variant_utils.hpp"
 #include "wml_formula_callable.hpp"
 
-#if defined(_MSC_VER)
-#define strtoll _strtoi64
-#endif
-
 namespace tbs
 {
+	using std::placeholders::_1;
+
 	namespace 
 	{
 		internal_server_ptr server_ptr;
@@ -49,18 +51,18 @@ namespace tbs
 
 	void internal_server::send_request(const variant& request, 
 		int session_id,
-		game_logic::map_formula_callable_ptr callable, 
-		boost::function<void(const std::string&)> handler)
+		game_logic::MapFormulaCallablePtr callable, 
+		std::function<void(const std::string&)> handler)
 	{
-		ASSERT_LOG(server_ptr != NULL, "Internal server pointer is NULL");
-		send_function send_fn = boost::bind(&internal_server::send_msg, server_ptr.get(), _1, session_id, handler, callable);
+		ASSERT_LOG(server_ptr != nullptr, "Internal server pointer is nullptr");
+		send_function send_fn = std::bind(&internal_server::send_msg, server_ptr.get(), _1, session_id, handler, callable);
 		server_ptr->write_queue(send_fn, request, session_id);
 	}
 
 	void internal_server::send_msg(const variant& resp, 
 		int session_id,
-		boost::function<void(const std::string&)> handler, 
-		game_logic::map_formula_callable_ptr callable)
+		std::function<void(const std::string&)> handler, 
+		game_logic::MapFormulaCallablePtr callable)
 	{
 		if(handler) {
 			callable->add("message", resp);
@@ -158,15 +160,14 @@ namespace tbs
 		while(read_queue(&send_fn, &request, &session_id)) {
 			server_ptr->handle_message(
 				send_fn,
-				boost::bind(&internal_server::finish_socket, this, send_fn, _1),
-				boost::bind(&internal_server::create_socket_info, server_ptr.get(), send_fn),
+				std::bind(&internal_server::finish_socket, this, send_fn, _1),
+				std::bind(&internal_server::create_socket_info, server_ptr.get(), send_fn),
 				session_id, 
 				request);
 		}
 		io_service_.poll();
 		io_service_.reset();
 	}
-
 
 	void internal_server::queue_msg(int session_id, const std::string& msg, bool has_priority)
 	{
@@ -184,8 +185,8 @@ namespace tbs
 
 	bool internal_server::read_queue(send_function* send_fn, variant* v, int *session_id)
 	{
-		ASSERT_LOG(send_fn != NULL && v != NULL && session_id != NULL,
-			"read_queue called with NULL parameter.");
+		ASSERT_LOG(send_fn != nullptr && v != nullptr && session_id != nullptr,
+			"read_queue called with nullptr parameter.");
 		if(msg_queue_.empty()) {
 			return false;
 		}

@@ -1,38 +1,43 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
-#include "asserts.hpp"
-#include "foreach.hpp"
+
+#include "DisplayDevice.hpp"
+
 #include "solid_map.hpp"
 #include "string_utils.hpp"
-#include "texture.hpp"
-#include "variant.hpp"
 
-const_solid_map_ptr solid_map::create_object_solid_map_from_solid_node(variant node)
+ConstSolidMapPtr SolidMap::createObjectSolidMapFromSolidNode(variant node)
 {
-	solid_map_ptr result(create_from_texture(graphics::texture::get(node["image"].as_string()), rect(node["area"])));
+	SolidMapPtr result(createFromTexture(KRE::Texture::createTexture(node["image"]), rect(node["area"])));
 	result->id_ = node["id"].as_string();
 	return result;
 
 }
 
-void solid_map::create_object_solid_maps(variant node, std::vector<const_solid_map_ptr>& v)
+void SolidMap::createObjectSolidMaps(variant node, std::vector<ConstSolidMapPtr>& v)
 {
-	foreach(variant solid_node, node["solid"].as_list()) {
-		v.push_back(create_object_solid_map_from_solid_node(solid_node));
+	for(variant solid_node : node["solid"].as_list()) {
+		v.push_back(createObjectSolidMapFromSolidNode(solid_node));
 	}
 
 	if(!node.has_key("solid_area")) {
@@ -59,21 +64,21 @@ void solid_map::create_object_solid_maps(variant node, std::vector<const_solid_m
 
 	if(legs_height < area.h()) {
 		rect body(area.x(), area.y(), area.w(), area.h() - legs_height);
-		solid_map_ptr body_map(new solid_map);
+		SolidMapPtr body_map(new SolidMap());
 		body_map->id_ = "body";
 		body_map->area_ = body;
 		body_map->solid_.resize(body.w()*body.h(), true);
 		if(node.has_key("solid_offsets")) {
-			body_map->apply_offsets(node["solid_offsets"].as_list_int());
+			body_map->applyOffsets(node["solid_offsets"].as_list_int());
 		}
 
-		body_map->calculate_side(0, -1, body_map->top_);
-		body_map->calculate_side(-1, 0, body_map->left_);
-		body_map->calculate_side(1, 0, body_map->right_);
-		body_map->calculate_side(-100000, 0, body_map->all_);
+		body_map->calculateSide(0, -1, body_map->top_);
+		body_map->calculateSide(-1, 0, body_map->left_);
+		body_map->calculateSide(1, 0, body_map->right_);
+		body_map->calculateSide(-100000, 0, body_map->all_);
 
 		if(legs_height == 0) {
-			body_map->calculate_side(0, 1, body_map->bottom_);
+			body_map->calculateSide(0, 1, body_map->bottom_);
 		}
 		v.push_back(body_map);
 	} else {
@@ -81,32 +86,30 @@ void solid_map::create_object_solid_maps(variant node, std::vector<const_solid_m
 	}
 
 	if(legs_height) {
-		//std::cerr << "LEGS_HEIGHT: " << node["id"].as_string() << " " << legs_height << ", FEET_WIDTH: " << feet_width << "\n";
 		rect legs(area.x(), area.y2() - legs_height, area.w(), legs_height);
-		solid_map_ptr legs_map(new solid_map);
+		SolidMapPtr legs_map(new SolidMap());
 		legs_map->id_ = "legs";
 		legs_map->area_ = legs;
 		legs_map->solid_.resize(legs.w()*legs.h(), false);
 		for(int y = 0; y < legs.h()-1; ++y) {
 			for(int x = y; x < legs.w() - y; ++x) {
-				//std::cerr << "LEGS_SOLID: " << x << ", " << y << "\n";
-				legs_map->set_solid(x, y);
+				legs_map->setSolid(x, y);
 			}
 		}
 
 		if(area.h() <= legs_height) {
-			legs_map->calculate_side(0, -1, legs_map->top_);
+			legs_map->calculateSide(0, -1, legs_map->top_);
 		}
 
-		legs_map->calculate_side(0, 1, legs_map->bottom_);
-		legs_map->calculate_side(-1, 0, legs_map->left_);
-		legs_map->calculate_side(1, 0, legs_map->right_);
-		legs_map->calculate_side(-10000, 0, legs_map->all_);
+		legs_map->calculateSide(0, 1, legs_map->bottom_);
+		legs_map->calculateSide(-1, 0, legs_map->left_);
+		legs_map->calculateSide(1, 0, legs_map->right_);
+		legs_map->calculateSide(-10000, 0, legs_map->all_);
 		v.push_back(legs_map);
 	}
 }
 
-void solid_map::create_object_platform_maps(const rect& area_ref, std::vector<const_solid_map_ptr>& v)
+void SolidMap::createObjectPlatformMaps(const rect& area_ref, std::vector<ConstSolidMapPtr>& v)
 {
 
 	//intentionally do NOT double the height of the area.
@@ -114,25 +117,25 @@ void solid_map::create_object_platform_maps(const rect& area_ref, std::vector<co
 
 	ASSERT_EQ(area.h(), 1);
 
-	solid_map_ptr platform(new solid_map);
+	SolidMapPtr platform(new SolidMap());
 	platform->id_ = "platform";
 	platform->area_ = area;
 	platform->solid_.resize(area.w()*area.h(), true);
-	platform->calculate_side(0, -1, platform->top_);
-	platform->calculate_side(0, 1, platform->bottom_);
-	platform->calculate_side(-1, 0, platform->left_);
-	platform->calculate_side(1, 0, platform->right_);
-	platform->calculate_side(-100000, 0, platform->all_);
+	platform->calculateSide(0, -1, platform->top_);
+	platform->calculateSide(0, 1, platform->bottom_);
+	platform->calculateSide(-1, 0, platform->left_);
+	platform->calculateSide(1, 0, platform->right_);
+	platform->calculateSide(-100000, 0, platform->all_);
 	v.push_back(platform);
 }
-solid_map_ptr solid_map::create_from_texture(const graphics::texture& t, const rect& area_rect)
+SolidMapPtr SolidMap::createFromTexture(const KRE::TexturePtr& t, const rect& area_rect)
 {
 	rect area = area_rect;
 
 	bool found_solid = false;
 	while(!found_solid && area.h() > 0) {
 		for(int x = 0; x < area.w(); ++x) {
-			if(!t.is_alpha(area.x() + x, area.y() + area.h() - 1)) {
+			if(!t->getFrontSurface()->isAlpha(area.x() + x, area.y() + area.h() - 1)) {
 				found_solid = true;
 				break;
 			}
@@ -146,7 +149,7 @@ solid_map_ptr solid_map::create_from_texture(const graphics::texture& t, const r
 	found_solid = false;
 	while(!found_solid && area.h() > 0) {
 		for(int x = 0; x < area.w(); ++x) {
-			if(!t.is_alpha(area.x() + x, area.y())) {
+			if(!t->getFrontSurface()->isAlpha(area.x() + x, area.y())) {
 				found_solid = true;
 				break;
 			}
@@ -160,7 +163,7 @@ solid_map_ptr solid_map::create_from_texture(const graphics::texture& t, const r
 	found_solid = false;
 	while(!found_solid && area.w() > 0) {
 		for(int y = 0; y < area.h(); ++y) {
-			if(!t.is_alpha(area.x(), area.y() + y)) {
+			if(!t->getFrontSurface()->isAlpha(area.x(), area.y() + y)) {
 				found_solid = true;
 				break;
 			}
@@ -174,7 +177,7 @@ solid_map_ptr solid_map::create_from_texture(const graphics::texture& t, const r
 	found_solid = false;
 	while(!found_solid && area.w() > 0) {
 		for(int y = 0; y < area.h(); ++y) {
-			if(!t.is_alpha(area.x() + area.w() - 1, area.y() + y)) {
+			if(!t->getFrontSurface()->isAlpha(area.x() + area.w() - 1, area.y() + y)) {
 				found_solid = true;
 				break;
 			}
@@ -185,33 +188,33 @@ solid_map_ptr solid_map::create_from_texture(const graphics::texture& t, const r
 		}
 	}
 
-	solid_map_ptr solid(new solid_map);
+	SolidMapPtr solid(new SolidMap());
 	solid->area_ = rect(area.x()*2, area.y()*2, area.w()*2, area.h()*2);
 	solid->solid_.resize(solid->area_.w()*solid->area_.h(), false);
 	for(int y = 0; y < solid->area_.h(); ++y) {
 		for(int x = 0; x < solid->area_.w(); ++x) {
-			bool is_solid = !t.is_alpha(area.x() + x/2, area.y() + y/2);
-			if(!is_solid && (y&1) && y < solid->area_.h() - 1 && !t.is_alpha(area.x() + x/2, area.y() + y/2 + 1)) {
+			bool is_solid = !t->getFrontSurface()->isAlpha(area.x() + x/2, area.y() + y/2);
+			if(!is_solid && (y&1) && y < solid->area_.h() - 1 && !t->getFrontSurface()->isAlpha(area.x() + x/2, area.y() + y/2 + 1)) {
 				//we are scaling things up by double, so we want to smooth
 				//things out. In the bottom half of an empty source pixel, we
 				//will set it to solid if the pixel below is solid, and the
 				//adjacent horizontal pixel is solid
-				if((x&1) && x < solid->area_.w() - 1 && !t.is_alpha(area.x() + x/2 + 1, area.y() + y/2)) {
+				if((x&1) && x < solid->area_.w() - 1 && !t->getFrontSurface()->isAlpha(area.x() + x/2 + 1, area.y() + y/2)) {
 					is_solid = true;
-				} else if(!(x&1) && x > 0 && !t.is_alpha(area.x() + x/2 - 1, area.y() + y/2)) {
+				} else if(!(x&1) && x > 0 && !t->getFrontSurface()->isAlpha(area.x() + x/2 - 1, area.y() + y/2)) {
 					is_solid = true;
 				}
 			}
 
 			if(is_solid) {
-				solid->set_solid(x, y);
+				solid->setSolid(x, y);
 			}
 		}
 	}
 	return solid;
 }
 
-bool solid_map::solid_at(int x, int y) const
+bool SolidMap::isSolidAt(int x, int y) const
 {
 	if(x < 0 || y < 0 || x >= area_.w() || y >= area_.h()) {
 		return false;
@@ -220,21 +223,21 @@ bool solid_map::solid_at(int x, int y) const
 	return solid_[y*area_.w() + x];
 }
 
-const std::vector<point>& solid_map::dir(MOVE_DIRECTION d) const
+const std::vector<point>& SolidMap::dir(MOVE_DIRECTION d) const
 {
 	switch(d) {
-	case MOVE_LEFT: return left();
-	case MOVE_RIGHT: return right();
-	case MOVE_UP: return top();
-	case MOVE_DOWN: return bottom();
-	case MOVE_NONE: return all();
-	default:
-		assert(false);
-		return all();
+		case MOVE_DIRECTION::LEFT: return left();
+		case MOVE_DIRECTION::RIGHT: return right();
+		case MOVE_DIRECTION::UP: return top();
+		case MOVE_DIRECTION::DOWN: return bottom();
+		case MOVE_DIRECTION::NONE: return all();
+		default:
+			assert(false);
+			return all();
 	}
 }
 
-void solid_map::set_solid(int x, int y, bool value)
+void SolidMap::setSolid(int x, int y, bool value)
 {
 	ASSERT_EQ(solid_.size(), area_.w()*area_.h());
 	if(x < 0 || y < 0 || x >= area_.w() || y >= area_.h()) {
@@ -244,7 +247,7 @@ void solid_map::set_solid(int x, int y, bool value)
 	solid_[y*area_.w() + x] = value;
 }
 
-void solid_map::apply_offsets(const std::vector<int>& offsets)
+void SolidMap::applyOffsets(const std::vector<int>& offsets)
 {
 	if(offsets.size() <= 1) {
 		return;
@@ -255,18 +258,18 @@ void solid_map::apply_offsets(const std::vector<int>& offsets)
 		const int pos = x*1024;
 		const int segment = pos/seg_width;
 		ASSERT_GE(segment, 0);
-		ASSERT_LT(segment, offsets.size()-1);
+		ASSERT_LT(static_cast<unsigned>(segment), offsets.size()-1);
 
 		const int partial = pos%seg_width;
 		const int offset = (partial*offsets[segment+1]*2 + (seg_width-partial)*offsets[segment]*2)/seg_width;
 
 		for(int y = 0; y < offset; ++y) {
-			set_solid(x, y, false);
+			setSolid(x, y, false);
 		}
 	}
 }
 
-void solid_map::calculate_side(int xdir, int ydir, std::vector<point>& points) const
+void SolidMap::calculateSide(int xdir, int ydir, std::vector<point>& points) const
 {
 	int index = 0;
 	const int height = area_.h();
@@ -274,8 +277,8 @@ void solid_map::calculate_side(int xdir, int ydir, std::vector<point>& points) c
 	for(int y = 0; y < height; ++y) {
 		for(int x = 0; x < width; ++x) {
 			//for performance reasons, check our current position directly
-			//rather than calling solid_at() so we don't do bounds checking.
-			if(solid_[index] && !solid_at(x + xdir, y + ydir)) {
+			//rather than calling isSolidAt() so we don't do bounds checking.
+			if(solid_[index] && !isSolidAt(x + xdir, y + ydir)) {
 				points.push_back(point(area_.x() + x, area_.y() + y));
 			}
 
@@ -284,17 +287,17 @@ void solid_map::calculate_side(int xdir, int ydir, std::vector<point>& points) c
 	}
 }
 
-const_solid_info_ptr solid_info::create_from_solid_maps(const std::vector<const_solid_map_ptr>& solid)
+ConstSolidInfoPtr SolidInfo::createFromSolidMaps(const std::vector<ConstSolidMapPtr>& solid)
 {
 	if(solid.empty()) {
-		return const_solid_info_ptr();
+		return ConstSolidInfoPtr();
 	} else {
-		solid_info* result = new solid_info;
+		SolidInfo* result = new SolidInfo();
 		int x1 = solid.front()->area().x();
 		int y1 = solid.front()->area().y();
 		int x2 = solid.front()->area().x2();
 		int y2 = solid.front()->area().y2();
-		foreach(const_solid_map_ptr s, solid) {
+		for(ConstSolidMapPtr s : solid) {
 			if(s->area().x() < x1) {
 				x1 = s->area().x();
 			}
@@ -311,48 +314,48 @@ const_solid_info_ptr solid_info::create_from_solid_maps(const std::vector<const_
 
 		result->area_ = rect::from_coordinates(x1, y1, x2-1, y2-1);
 		result->solid_= solid;
-		return const_solid_info_ptr(result);
+		return ConstSolidInfoPtr(result);
 	}
 }
 
-const_solid_info_ptr solid_info::create(variant node)
+ConstSolidInfoPtr SolidInfo::create(variant node)
 {
-	std::vector<const_solid_map_ptr> solid;
-	solid_map::create_object_solid_maps(node, solid);
-	return create_from_solid_maps(solid);
+	std::vector<ConstSolidMapPtr> solid;
+	SolidMap::createObjectSolidMaps(node, solid);
+	return createFromSolidMaps(solid);
 }
 
-const_solid_info_ptr solid_info::create_platform(variant node)
+ConstSolidInfoPtr SolidInfo::createPlatform(variant node)
 {
-	std::vector<const_solid_map_ptr> platform;
+	std::vector<ConstSolidMapPtr> platform;
 
 	if(!node.has_key("platform_area")) {
-		return const_solid_info_ptr();
+		return ConstSolidInfoPtr();
 	}
 
-	solid_map::create_object_platform_maps(rect(node["platform_area"]), platform);
+	SolidMap::createObjectPlatformMaps(rect(node["platform_area"]), platform);
 
-	return create_from_solid_maps(platform);
+	return createFromSolidMaps(platform);
 }
 
-const_solid_info_ptr solid_info::create_platform(const rect& area)
+ConstSolidInfoPtr SolidInfo::createPlatform(const rect& area)
 {
-	std::vector<const_solid_map_ptr> platform;
-	solid_map::create_object_platform_maps(area, platform);
-	return create_from_solid_maps(platform);
+	std::vector<ConstSolidMapPtr> platform;
+	SolidMap::createObjectPlatformMaps(area, platform);
+	return createFromSolidMaps(platform);
 }
 
-const_solid_info_ptr solid_info::create_from_texture(const graphics::texture& t, const rect& area)
+ConstSolidInfoPtr SolidInfo::createFromTexture(const KRE::TexturePtr& t, const rect& area)
 {
-	std::vector<const_solid_map_ptr> solid;
-	solid.push_back(solid_map::create_from_texture(t, area));
-	return create_from_solid_maps(solid);
+	std::vector<ConstSolidMapPtr> solid;
+	solid.push_back(SolidMap::createFromTexture(t, area));
+	return createFromSolidMaps(solid);
 }
 
-bool solid_info::solid_at(int x, int y, const std::string** area_id) const
+bool SolidInfo::isSolidAt(int x, int y, const std::string** area_id) const
 {
-	foreach(const const_solid_map_ptr& s, solid_) {
-		if(s->solid_at(x - s->area().x(), y - s->area().y())) {
+	for(const ConstSolidMapPtr& s : solid_) {
+		if(s->isSolidAt(x - s->area().x(), y - s->area().y())) {
 			if(area_id) {
 				*area_id = &s->id();
 			}

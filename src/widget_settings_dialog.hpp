@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -11,7 +11,7 @@
 
 	   1. The origin of this software must not be misrepresented; you must not
 	   claim that you wrote the original software. If you use this software
-	   in a product, an acknowledgment in the product documentation would be
+	   in a product, an acknowledgement in the product documentation would be
 	   appreciated but is not required.
 
 	   2. Altered source versions must be plainly marked as such, and must not be
@@ -27,28 +27,28 @@
 
 namespace gui 
 {
-	class widget_settings_dialog : public dialog
+	class WidgetSettingsDialog : public Dialog
 	{
 	public:
-		widget_settings_dialog(int x, int y, int w, int h, widget_ptr ptr);
-		virtual ~widget_settings_dialog();
-		widget_ptr widget() { return widget_; }
+		WidgetSettingsDialog(int x, int y, int w, int h, WidgetPtr ptr);
+		virtual ~WidgetSettingsDialog();
+		WidgetPtr widget() { return widget_; }
 		void init();
 
-		void set_font(const std::string& fn);
+		void setFont(const std::string& fn);
 		std::string font() const { return font_name_; }
-		void set_text_size(int ts);
-		int text_size() const { return text_size_; }
+		void setTextSize(int ts);
+		int getTextSize() const { return text_size_; }
 	private:
-		widget_ptr widget_;
+		WidgetPtr widget_;
 		int text_size_;
 		std::string font_name_;
 
-		void id_changed(text_editor_widget_ptr text);
+		void idChanged(TextEditorWidgetPtr text);
 
-		widget_settings_dialog();
-		widget_settings_dialog(const widget_settings_dialog&);
+		WidgetSettingsDialog();
+		WidgetSettingsDialog(const WidgetSettingsDialog&);
 	};
 
-	typedef boost::intrusive_ptr<widget_settings_dialog> widget_settings_dialog_ptr;
+	typedef boost::intrusive_ptr<WidgetSettingsDialog> WidgetSettingsDialogPtr;
 }

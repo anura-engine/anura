@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -26,7 +26,6 @@
 #include <cmath>
 #include <iostream>
 #include <functional>
-#include <boost/bind.hpp>
 #ifdef _MSC_VER
 #include <boost/math/special_functions/round.hpp>
 #endif
@@ -54,54 +53,54 @@ namespace lua
 		const char* const lib_functions_str = "anura.lib";
 	}
 
-	lua_context& get_global_lua_instance()
+	LuaContext& get_global_lua_instance()
 	{
-		static lua_context res;
+		static LuaContext res;
 		return res;
 	}
 
-	lua_context& lua_context::get_instance()
+	LuaContext& LuaContext::getInstance()
 	{
 		return get_global_lua_instance();
 	}
 
-	void lua_context::set_self_callable(game_logic::formula_callable& callable)
+	void LuaContext::setSelfCallable(game_logic::FormulaCallable& callable)
 	{
 		using namespace game_logic;
 		// Gets the global "Anura" table
-		lua_getglobal(context_ptr(), anura_str);			// (-0,+1,e)
+		lua_getglobal(getContextPtr(), anura_str);			// (-0,+1,e)
 
 		// Create a new holder for a fomula callable for the given callable
-		formula_callable** a = static_cast<formula_callable**>(lua_newuserdata(context_ptr(), sizeof(formula_callable*))); //(-0,+1,e)
+		FormulaCallable** a = static_cast<FormulaCallable**>(lua_newuserdata(getContextPtr(), sizeof(FormulaCallable*))); //(-0,+1,e)
 		*a = &callable;
 		intrusive_ptr_add_ref(*a);
 
 		// Set metatable for the callable
-		luaL_getmetatable(context_ptr(), callable_str);	// (-0,+1,e)
-		lua_setmetatable(context_ptr(), -2);			// (-1,+0,e)
+		luaL_getmetatable(getContextPtr(), callable_str);	// (-0,+1,e)
+		lua_setmetatable(getContextPtr(), -2);			// (-1,+0,e)
 
 		// Set the me Anura["me"] = callable
-		lua_setfield(context_ptr(), -2, "me");			// (-1,+0,e)
-		lua_pop(context_ptr(),1);						// (-n(1),+0,-)
+		lua_setfield(getContextPtr(), -2, "me");			// (-1,+0,e)
+		lua_pop(getContextPtr(),1);						// (-n(1),+0,-)
 	}
 
-	bool lua_context::dostring(const std::string&name, const std::string&str, game_logic::formula_callable* callable)
+	bool LuaContext::dostring(const std::string&name, const std::string&str, game_logic::FormulaCallable* callable)
 	{
 		if(callable) {
-			set_self_callable(*callable);
+			setSelfCallable(*callable);
 		}
 
-		if (luaL_loadbuffer(context_ptr(), str.c_str(), str.size(), name.c_str()) || lua_pcall(context_ptr(), 0, 0, 0))
+		if (luaL_loadbuffer(getContextPtr(), str.c_str(), str.size(), name.c_str()) || lua_pcall(getContextPtr(), 0, 0, 0))
 		{
-			const char* a = lua_tostring(context_ptr(), -1);
+			const char* a = lua_tostring(getContextPtr(), -1);
 			std::cerr << a << "\n";
-			lua_pop(context_ptr(), 1);
+			lua_pop(getContextPtr(), 1);
 			return true;
 		}
 		return false;
 	}
 
-	bool lua_context::dofile(const std::string&name, const std::string&str, game_logic::formula_callable* callable)
+	bool LuaContext::dofile(const std::string&name, const std::string&str, game_logic::FormulaCallable* callable)
 	{
 		std::string file_contents = sys::read_file(module::map_file(str));
 		return dostring(name, file_contents, callable);
@@ -155,8 +154,8 @@ namespace lua
 				}
 				case variant::VARIANT_TYPE_CALLABLE: {
 					using namespace game_logic;
-					formula_callable** a = static_cast<formula_callable**>(lua_newuserdata(L, sizeof(formula_callable*))); //(-0,+1,e)
-					*a = const_cast<formula_callable*>(value.as_callable());
+					FormulaCallable** a = static_cast<FormulaCallable**>(lua_newuserdata(L, sizeof(FormulaCallable*))); //(-0,+1,e)
+					*a = const_cast<FormulaCallable*>(value.as_callable());
 					intrusive_ptr_add_ref(*a);
 
 					luaL_getmetatable(L, callable_str);	// (-0,+1,e)
@@ -210,7 +209,7 @@ namespace lua
 				}
 				case LUA_TFUNCTION: {
 					 int ref = luaL_ref(L, LUA_REGISTRYINDEX);
-					 return variant(new lua_function_reference(L, ref));
+					 return variant(new LuaFunctionReference(L, ref));
 					break;
 				}
 				case LUA_TTABLE:
@@ -229,19 +228,19 @@ namespace lua
 			using namespace game_logic;
 			ffl_function_userdata* fn = static_cast<ffl_function_userdata*>(luaL_checkudata(L,1,function_str)); // (-0,+0,-)
 			auto& symbols = get_formula_functions_symbol_table();
-			std::vector<expression_ptr> args;
+			std::vector<ExpressionPtr> args;
 			int nargs = lua_gettop(L);
 			for(int n = 2; n <= nargs; ++n) {
-				args.push_back(expression_ptr(new variant_expression(lua_value_to_variant(L, n))));
+				args.push_back(ExpressionPtr(new VariantExpression(lua_value_to_variant(L, n))));
 			}
-			auto& player = level::current().player()->get_entity();
-			auto value = symbols.create_function(fn->name, args, player.get_definition());
-			if(value == NULL) {
+			auto& player = Level::current().player()->getEntity();
+			auto value = symbols.createFunction(fn->name, args, player.getDefinition());
+			if(value == nullptr) {
 				luaL_error(L, "Function not found: %s", fn->name);
 			}
 			auto ret = value->evaluate(player);
 			if(ret.is_callable()) {
-				player.execute_command(ret);
+				player.executeCommand(ret);
 			} else {
 				return variant_to_lua_value(L, ret);
 			}
@@ -252,15 +251,15 @@ namespace lua
 		{
 			ffl_function_userdata* fn = static_cast<ffl_function_userdata*>(luaL_checkudata(L,1,function_str)); // (-0,+0,-)
 			delete[] fn->name;
-			fn->name = NULL;
+			fn->name = nullptr;
 			return 0;
 		}
 
 		static int remove_callable_reference(lua_State* L)
 		{
 			using namespace game_logic;
-			formula_callable* callable = *static_cast<formula_callable**>(lua_touserdata(L, 1));	// (-0,+0,-)
-			luaL_argcheck(L, callable != NULL, 1, "'callable' was null");
+			FormulaCallable* callable = *static_cast<FormulaCallable**>(lua_touserdata(L, 1));	// (-0,+0,-)
+			luaL_argcheck(L, callable != nullptr, 1, "'callable' was null");
 			intrusive_ptr_release(callable);
 			return 0;
 		}
@@ -268,9 +267,9 @@ namespace lua
 		static int get_callable_index(lua_State* L)
 		{
 			using namespace game_logic;
-			formula_callable* callable = *static_cast<formula_callable**>(luaL_checkudata(L, 1, callable_str));	// (-0,+0,-)
+			FormulaCallable* callable = *static_cast<FormulaCallable**>(luaL_checkudata(L, 1, callable_str));	// (-0,+0,-)
 			const char *name = lua_tostring(L, 2);						// (-0,+0,e)
-			variant value = callable->query_value(name);
+			variant value = callable->queryValue(name);
 			if(!value.is_null()) {
 				return variant_to_lua_value(L, value);
 			}
@@ -286,10 +285,10 @@ namespace lua
 		{
 			// stack -- table, key, value
 			using namespace game_logic;
-			formula_callable* callable = *static_cast<formula_callable**>(luaL_checkudata(L, 1, callable_str));	// (-0,+0,-)
+			FormulaCallable* callable = *static_cast<FormulaCallable**>(luaL_checkudata(L, 1, callable_str));	// (-0,+0,-)
 			const char *name = lua_tostring(L, 2);						// (-0,+0,e)
 			variant value = lua_value_to_variant(L, 3);
-			callable->mutate_value(name, value);
+			callable->mutateValue(name, value);
 			return 0;
 		}
 
@@ -297,8 +296,8 @@ namespace lua
 		{
 			using namespace game_logic;
 			std::string res;
-			formula_callable* callable = *static_cast<formula_callable**>(luaL_checkudata(L, 1, callable_str));	// (-0,+0,-)
-			std::vector<formula_input> inputs = callable->inputs();
+			FormulaCallable* callable = *static_cast<FormulaCallable**>(luaL_checkudata(L, 1, callable_str));	// (-0,+0,-)
+			std::vector<FormulaInput> inputs = callable->inputs();
 			for(auto inp : inputs) {
 				std::stringstream ss;
 				static const char* const access[] = {
@@ -306,12 +305,12 @@ namespace lua
 					"wo",
 					"rw",
 				};
-				if(inp.access != FORMULA_READ_ONLY 
-					&& inp.access != FORMULA_WRITE_ONLY
-					&& inp.access != FORMULA_READ_WRITE) {
+				if(inp.access != FORMULA_ACCESS_TYPE::READ_ONLY 
+					&& inp.access != FORMULA_ACCESS_TYPE::WRITE_ONLY
+					&& inp.access != FORMULA_ACCESS_TYPE::READ_WRITE) {
 					luaL_error(L, "Unrecognised access mode: ", inp.access);
 				}
-				ss << inp.name << "(" << access[inp.access] << ") : " << callable->query_value(inp.name) << std::endl;
+				ss << inp.name << "(" << access[static_cast<int>(inp.access)] << ") : " << callable->queryValue(inp.name) << std::endl;
 				res += ss.str();
 			}
 			lua_pushstring(L, res.c_str());			// (-0,+1,-)
@@ -327,30 +326,30 @@ namespace lua
 			}
 
 			ffl_function_userdata* fn = static_cast<ffl_function_userdata*>(luaL_checkudata(L,1,callable_function_str)); // (-0,+0,-)
-			std::vector<expression_ptr> args;
+			std::vector<ExpressionPtr> args;
 			int nargs = lua_gettop(L);
 			for(int n = 3; n <= nargs; ++n) {
-				args.push_back(expression_ptr(new variant_expression(lua_value_to_variant(L, n))));
+				args.push_back(ExpressionPtr(new VariantExpression(lua_value_to_variant(L, n))));
 			}
-			formula_callable* callable = *static_cast<formula_callable**>(luaL_checkudata(L, 2, callable_str));	// (-0,+0,-)
+			FormulaCallable* callable = *static_cast<FormulaCallable**>(luaL_checkudata(L, 2, callable_str));	// (-0,+0,-)
 
 			auto& symbols = get_formula_functions_symbol_table();
-			auto value = symbols.create_function(fn->name, args, NULL);
-			if(value != NULL) {
+			auto value = symbols.createFunction(fn->name, args, nullptr);
+			if(value != nullptr) {
 				auto ret = value->evaluate(*callable);
 				if(ret.is_callable()) {
-					callable->execute_command(ret);
+					callable->executeCommand(ret);
 				} else {
 					return variant_to_lua_value(L, ret);
 				}
 				return 0;
 			}
 
-			value = get_custom_object_functions_symbol_table().create_function(fn->name, args, NULL);
-			if(value != NULL) {
+			value = get_custom_object_functions_symbol_table().createFunction(fn->name, args, nullptr);
+			if(value != nullptr) {
 				auto ret = value->evaluate(*callable);
 				if(ret.is_callable()) {
-					callable->execute_command(ret);
+					callable->executeCommand(ret);
 				} else {
 					return variant_to_lua_value(L, ret);
 				}
@@ -364,7 +363,7 @@ namespace lua
 		{
 			ffl_function_userdata* fn = static_cast<ffl_function_userdata*>(luaL_checkudata(L,1,callable_function_str)); // (-0,+0,-)
 			delete[] fn->name;
-			fn->name = NULL;
+			fn->name = nullptr;
 			return 0;
 		}
 
@@ -398,7 +397,7 @@ namespace lua
 			lua_pop(L,1);
 			
 			if(ud->value.is_callable()) {
-				ud->value = ud->value.as_callable()->query_value(name);
+				ud->value = ud->value.as_callable()->queryValue(name);
 			} else {
 				return variant_to_lua_value(L, ud->value);
 			}
@@ -408,20 +407,20 @@ namespace lua
 		const luaL_Reg gFFLFunctions[] = {
 			{"__call", call_function},
 			{"__gc", gc_function},
-			{NULL, NULL},
+			{nullptr, nullptr},
 		};
 
 		const luaL_Reg gLibMetaFunctions[] = {
 			{"__call", call_variant_function},
 			{"__gc", gc_variant_function},
 			{"__index", index_variant_function},
-			{NULL, NULL},
+			{nullptr, nullptr},
 		};
 
 		const luaL_Reg gFFLCallableFunctions[] = {
 			{"__call", call_callable_function},
 			{"__gc", gc_callable_function},
-			{NULL, NULL},
+			{nullptr, nullptr},
 		};
 
 		const luaL_Reg gCallableFunctions[] = {
@@ -429,14 +428,14 @@ namespace lua
 			{"__newindex", set_callable_index},
 			{"__tostring", serialize_callable},
 			{"__gc", remove_callable_reference},
-			{NULL, NULL},
+			{nullptr, nullptr},
 		};
 
 		static int get_level(lua_State* L) 
 		{
-			level& lvl = level::current();
+			Level& lvl = Level::current();
 
-			level** a = static_cast<level**>(lua_newuserdata(L, sizeof(level*))); //(-0,+1,e)
+			Level** a = static_cast<Level**>(lua_newuserdata(L, sizeof(Level*))); //(-0,+1,e)
 			*a = &lvl;
 			intrusive_ptr_add_ref(&lvl);
 
@@ -471,7 +470,7 @@ namespace lua
 		static const struct luaL_Reg anura_functions [] = {
 			{"level", get_level},
 			{"lib", get_lib},
-			{NULL, NULL},
+			{nullptr, nullptr},
 		};
 
 		static void push_anura_table(lua_State* L) 
@@ -491,64 +490,64 @@ namespace lua
 		}
 	}
 
-	bool lua_context::execute(const variant& value, game_logic::formula_callable* callable)
+	bool LuaContext::execute(const variant& value, game_logic::FormulaCallable* callable)
 	{
 		bool res = false;
 		if(callable) {
-			set_self_callable(*callable);
+			setSelfCallable(*callable);
 		}
 		if(value.is_string()) {
 			res = dostring("", value.as_string());
 		} else {
-			lua_compiled_ptr compiled = value.try_convert<lua_compiled>();
-			ASSERT_LOG(compiled != NULL, "FATAL: object given couldn't be converted to type 'lua_compiled'");
-			res = compiled->run(context_ptr());
+			LuaCompiledPtr compiled = value.try_convert<LuaCompiled>();
+			ASSERT_LOG(compiled != nullptr, "FATAL: object given couldn't be converted to type 'lua_compiled'");
+			res = compiled->run(getContextPtr());
 		}
 		return res;
 	}
 
-	lua_context::lua_context()
+	LuaContext::LuaContext()
 	{
 		init();
 	}
 
-	lua_context::lua_context(game_logic::formula_callable& callable)
+	LuaContext::LuaContext(game_logic::FormulaCallable& callable)
 	{
 		init();
-		set_self_callable(callable);
+		setSelfCallable(callable);
 	}
 
-	lua_context::~lua_context()
+	LuaContext::~LuaContext()
 	{
 	}
 
-	void lua_context::init()
+	void LuaContext::init()
 	{
 		// initialize Lua
 		state_.reset(luaL_newstate(), [](lua_State* L) { lua_close(L); });
 
 		// load various Lua libraries
-		luaopen_base(context_ptr());
-		luaopen_string(context_ptr());
-		luaopen_table(context_ptr());
-		luaopen_math(context_ptr());
-		luaopen_io(context_ptr());
-		luaopen_debug(context_ptr());
-		luaL_openlibs(context_ptr());
+		luaopen_base(getContextPtr());
+		luaopen_string(getContextPtr());
+		luaopen_table(getContextPtr());
+		luaopen_math(getContextPtr());
+		luaopen_io(getContextPtr());
+		luaopen_debug(getContextPtr());
+		luaL_openlibs(getContextPtr());
 
-		luaL_newmetatable(context_ptr(), function_str);
-		luaL_setfuncs(context_ptr(), gFFLFunctions, 0);	
+		luaL_newmetatable(getContextPtr(), function_str);
+		luaL_setfuncs(getContextPtr(), gFFLFunctions, 0);	
 
-		luaL_newmetatable(context_ptr(), callable_str);
-		luaL_setfuncs(context_ptr(), gCallableFunctions, 0);
+		luaL_newmetatable(getContextPtr(), callable_str);
+		luaL_setfuncs(getContextPtr(), gCallableFunctions, 0);
 
-		luaL_newmetatable(context_ptr(), callable_function_str);
-		luaL_setfuncs(context_ptr(), gFFLCallableFunctions, 0);
+		luaL_newmetatable(getContextPtr(), callable_function_str);
+		luaL_setfuncs(getContextPtr(), gFFLCallableFunctions, 0);
 
-		luaL_newmetatable(context_ptr(), lib_functions_str);
-		luaL_setfuncs(context_ptr(), gLibMetaFunctions, 0);
+		luaL_newmetatable(getContextPtr(), lib_functions_str);
+		luaL_setfuncs(getContextPtr(), gLibMetaFunctions, 0);
 
-		push_anura_table(context_ptr());
+		push_anura_table(getContextPtr());
 
 		/*dostring(
 			"local lvl = Anura.level()\n"
@@ -581,14 +580,14 @@ namespace lua
 	{
 		int chunk_writer(lua_State *L, const void* p, size_t sz, void* ud)
 		{
-			compiled_chunk* chunks = reinterpret_cast<compiled_chunk*>(ud);
-			chunks->add_chunk(p, sz);
+			CompiledChunk* chunks = reinterpret_cast<CompiledChunk*>(ud);
+			chunks->addChunk(p, sz);
 			return 0;
 		}
 
 		const char* chunk_reader(lua_State* L, void* ud, size_t* sz)
 		{
-			compiled_chunk* chunks = reinterpret_cast<compiled_chunk*>(ud);
+			CompiledChunk* chunks = reinterpret_cast<CompiledChunk*>(ud);
 			auto& it = chunks->current(); chunks->next();
 			if(sz) {
 				*sz = it.size();
@@ -597,47 +596,47 @@ namespace lua
 		}
 	}
 
-	lua_compiled_ptr lua_context::compile(const std::string& name, const std::string& str)
+	LuaCompiledPtr LuaContext::compile(const std::string& name, const std::string& str)
 	{
-		lua_compiled* chunk = new lua_compiled();
-		luaL_loadbuffer(context_ptr(), str.c_str(), str.size(), name.c_str());		// (-0,+1,-)
-#if LUA_VERSION_NUM == 503
-		lua_dump(context_ptr(), chunk_writer, reinterpret_cast<void*>(chunk), 0);		// (-0,+0,-)
-#else
-		lua_dump(context_ptr(), chunk_writer, reinterpret_cast<void*>(chunk));		// (-0,+0,-)
+		LuaCompiled* chunk = new LuaCompiled();
+		luaL_loadbuffer(getContextPtr(), str.c_str(), str.size(), name.c_str());		// (-0,+1,-)
+#if LUA_VERSION_NUM == 502
+		lua_dump(getContextPtr(), chunk_writer, reinterpret_cast<void*>(chunk));		// (-0,+0,-)
+#elif LUA_VERSION_NUM == 503
+		lua_dump(getContextPtr(), chunk_writer, reinterpret_cast<void*>(chunk), 0);		// (-0,+0,-)
 #endif
-		lua_pop(context_ptr(), 1);													// (-n(1),+0,-)
-		chunk->add_chunk(0, 0);
-		return lua_compiled_ptr(chunk);
+		lua_pop(getContextPtr(), 1);													// (-n(1),+0,-)
+		chunk->addChunk(0, 0);
+		return LuaCompiledPtr(chunk);
 	}
 
-	compiled_chunk* lua_context::compile_chunk(const std::string& name, const std::string& str)
+	CompiledChunk* LuaContext::compileChunk(const std::string& name, const std::string& str)
 	{
-		compiled_chunk* chunk = new compiled_chunk();
-		luaL_loadbuffer(context_ptr(), str.c_str(), str.size(), name.c_str());		// (-0,+1,-)
-#if LUA_VERSION_NUM == 503
-		lua_dump(context_ptr(), chunk_writer, reinterpret_cast<void*>(chunk), 0);		// (-0,+0,-)
-#else
-		lua_dump(context_ptr(), chunk_writer, reinterpret_cast<void*>(chunk));		// (-0,+0,-)
+		CompiledChunk* chunk = new CompiledChunk();
+		luaL_loadbuffer(getContextPtr(), str.c_str(), str.size(), name.c_str());		// (-0,+1,-)
+#if LUA_VERSION_NUM == 502
+		lua_dump(getContextPtr(), chunk_writer, reinterpret_cast<void*>(chunk));		// (-0,+0,-)
+#elif LUA_VERSION_NUM == 503
+		lua_dump(getContextPtr(), chunk_writer, reinterpret_cast<void*>(chunk), 0);		// (-0,+0,-)
 #endif
-		lua_pop(context_ptr(), 1);													// (-n(1),+0,-)
-		chunk->add_chunk(0, 0);
+		lua_pop(getContextPtr(), 1);													// (-n(1),+0,-)
+		chunk->addChunk(0, 0);
 		return chunk;
 	}
 
 
-	lua_compiled::lua_compiled()
+	LuaCompiled::LuaCompiled()
 	{
 	}
 
-	lua_compiled::~lua_compiled()
+	LuaCompiled::~LuaCompiled()
 	{
 	}
 
-	bool compiled_chunk::run(lua_State* L) const 
+	bool CompiledChunk::run(lua_State* L) const 
 	{
 		chunks_it_ = chunks_.begin();
-		if(lua_load(L, chunk_reader, reinterpret_cast<void*>(const_cast<compiled_chunk*>(this)), NULL, NULL) || lua_pcall(L, 0, 0, 0)) {
+		if(lua_load(L, chunk_reader, reinterpret_cast<void*>(const_cast<CompiledChunk*>(this)), nullptr, nullptr) || lua_pcall(L, 0, 0, 0)) {
 			const char* a = lua_tostring(L, -1);
 			std::cerr << a << "\n";
 			lua_pop(L, 1);
@@ -646,36 +645,36 @@ namespace lua
 		return false;
 	}
 
-	BEGIN_DEFINE_CALLABLE_NOBASE(lua_compiled)
+	BEGIN_DEFINE_CALLABLE_NOBASE(LuaCompiled)
 	BEGIN_DEFINE_FN(execute, "(object) ->any")
-		lua::lua_context ctx;
-		game_logic::formula_callable* callable = const_cast<game_logic::formula_callable*>(FN_ARG(0).as_callable());
-		ctx.set_self_callable(*callable);
-		obj.run(ctx.context_ptr());
-		//return lua_value_to_variant(ctx.context_ptr());
+		lua::LuaContext ctx;
+		game_logic::FormulaCallable* callable = const_cast<game_logic::FormulaCallable*>(FN_ARG(0).as_callable());
+		ctx.setSelfCallable(*callable);
+		obj.run(ctx.getContextPtr());
+		//return lua_value_to_variant(ctx.getContextPtr());
 		return variant();
 	END_DEFINE_FN
 	DEFINE_FIELD(dummy, "int")
 		return variant(0);
-	END_DEFINE_CALLABLE(lua_compiled)
+	END_DEFINE_CALLABLE(LuaCompiled)
 
 
-	lua_function_reference::lua_function_reference(lua_State* L, int ref)
+	LuaFunctionReference::LuaFunctionReference(lua_State* L, int ref)
 		: ref_(ref), L_(L)
 	{
 	}
 
-	lua_function_reference::~lua_function_reference()
+	LuaFunctionReference::~LuaFunctionReference()
 	{
 		luaL_unref(L_, LUA_REGISTRYINDEX, ref_);
 	}
 
-	variant lua_function_reference::get_value(const std::string& key) const
+	variant LuaFunctionReference::getValue(const std::string& key) const
 	{
 		return variant();
 	}
 
-	variant lua_function_reference::call()
+	variant LuaFunctionReference::call()
 	{
 		lua_rawgeti(L_, LUA_REGISTRYINDEX, ref_);
 		// XXX: decide how arguments will get passed in and push them onto the lua stack here.
@@ -703,7 +702,7 @@ namespace lua
 
 UNIT_TEST(lua_test)
 {
-	lua::lua_context ctx;
+	lua::LuaContext ctx;
 }
 
 #endif

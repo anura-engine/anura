@@ -1,217 +1,216 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
-#ifndef TEXT_EDITOR_WIDGET_HPP_INCLUDED
-#define TEXT_EDITOR_WIDGET_HPP_INCLUDED
+
+#pragma once
 
 #include <boost/intrusive_ptr.hpp>
-#include <boost/shared_ptr.hpp>
 
-#include "color_utils.hpp"
 #include "scrollable_widget.hpp"
 
-namespace gui {
-
-class text_editor_widget;
-typedef boost::intrusive_ptr<text_editor_widget> text_editor_widget_ptr;
-
-class dropdown_widget;
-
-class text_editor_widget : public scrollable_widget
+namespace gui 
 {
-public:
-	text_editor_widget(int width, int height=0);
-	text_editor_widget(const variant& v, game_logic::formula_callable* e);
-	~text_editor_widget();
+	class TextEditorWidget;
+	typedef boost::intrusive_ptr<TextEditorWidget> TextEditorWidgetPtr;
 
-	std::string text() const;
-	void set_text(const std::string& value, bool reset_cursor=true);
+	class TextEditorWidget : public ScrollableWidget
+	{
+	public:
+		TextEditorWidget(int width, int height=0);
+		TextEditorWidget(const variant& v, game_logic::FormulaCallable* e);
+		~TextEditorWidget();
 
-	int get_font_size() const { return font_size_; }
-	void set_font_size(int font_size);
-	void change_font_size(int amount);
+		std::string text() const;
+		void setText(const std::string& value, bool resetCursor=true);
 
-	virtual void set_dim(int w, int h);
+		int getFontSize() const { return font_size_; }
+		void setFontSize(int font_size);
+		void changeFontSize(int amount);
 
-	void undo();
-	void redo();
+		virtual void setDim(int w, int h);
 
-	struct Loc {
-		Loc(int r, int c) : row(r), col(c)
-		{}
-		bool operator==(const Loc& o) const { return row == o.row && col == o.col; }
-		bool operator!=(const Loc& o) const { return !(*this == o); }
-		bool operator<(const Loc& o) const { return row < o.row || row == o.row && col < o.col; }
-		bool operator>(const Loc& o) const { return o < *this; }
-		bool operator<=(const Loc& o) const { return operator==(o) || operator<(o); }
-		bool operator>=(const Loc& o) const { return o <= *this; }
-		int row, col;
-	};
+		void undo();
+		void redo();
 
-	const std::vector<std::string>& get_data() const { return text_; }
+		struct Loc {
+			Loc(int r, int c) : row(r), col(c)
+			{}
+			bool operator==(const Loc& o) const { return row == o.row && col == o.col; }
+			bool operator!=(const Loc& o) const { return !(*this == o); }
+			bool operator<(const Loc& o) const { return row < o.row || row == o.row && col < o.col; }
+			bool operator>(const Loc& o) const { return o < *this; }
+			bool operator<=(const Loc& o) const { return operator==(o) || operator<(o); }
+			bool operator>=(const Loc& o) const { return o <= *this; }
+			int row, col;
+		};
 
-	void set_search(const std::string& term);
-	void next_search_match();
-	bool has_search_matches() const { return search_matches_.empty() == false; }
+		const std::vector<std::string>& getData() const { return text_; }
 
-	void replace(const std::string& replace_with);
+		void setSearch(const std::string& term);
+		void nextSearchMatch();
+		bool hasSearchMatches() const { return search_matches_.empty() == false; }
 
-	void set_on_change_handler(boost::function<void()> fn) { on_change_ = fn; }
-	void set_on_user_change_handler(boost::function<void()> fn) { on_user_change_ = fn; }
-	void set_on_move_cursor_handler(boost::function<void()> fn) { on_move_cursor_ = fn; }
-	void set_on_enter_handler(boost::function<void()> fn) { on_enter_ = fn; }
-	void set_on_begin_enter_handler(boost::function<bool()> fn) { on_begin_enter_ = fn; }
-	void set_on_tab_handler(boost::function<void()> fn) { on_tab_ = fn; }
-	void set_on_esc_handler(boost::function<void()> fn) { on_escape_ = fn; }
-	void set_on_change_focus_handler(boost::function<void(bool)> fn) { on_change_focus_ = fn; }
+		void replace(const std::string& replace_with);
 
-	bool has_focus() const { return has_focus_; }
-	void set_focus(bool value);
+		void setOnChangeHandler(std::function<void()> fn) { on_change_ = fn; }
+		void setOnUserChangeHandler(std::function<void()> fn) { on_user_change_ = fn; }
+		void setOnMoveCursorHandler(std::function<void()> fn) { onMoveCursor_ = fn; }
+		void setOnEnterHandler(std::function<void()> fn) { on_enter_ = fn; }
+		void setOnBeginEnterHandler(std::function<bool()> fn) { onBeginEnter_ = fn; }
+		void setOnTabHandler(std::function<void()> fn) { on_tab_ = fn; }
+		void setOnEscHandler(std::function<void()> fn) { on_escape_ = fn; }
+		void setOnChangeFocusHandler(std::function<void(bool)> fn) { on_change_focus_ = fn; }
 
-	int cursor_row() const { return cursor_.row; }
-	int cursor_col() const { return cursor_.col; }
+		bool hasFocus() const { return has_focus_; }
+		void setFocus(bool value);
 
-	void set_cursor(int row, int col, bool move_selection=true);
+		int cursorRow() const { return cursor_.row; }
+		int cursorCol() const { return cursor_.col; }
 
-	//convert a row/col cursor position to a position within the text()
-	//string that is returned.
-	int row_col_to_text_pos(int row, int col) const;
+		void setCursor(int row, int col, bool move_selection=true);
 
-	std::pair<int,int> text_pos_to_row_col(int pos) const;
+		//convert a row/col cursor position to a position within the text()
+		//string that is returned.
+		int rowColToTextPos(int row, int col) const;
 
-	void set_highlight_lines(int begin, int end);
-	void clear_highlight_lines();
+		std::pair<int,int> text_pos_to_row_col(int pos) const;
 
-	std::pair<int, int> char_position_on_screen(int row, int col) const;
+		void setHighlightLines(int begin, int end);
+		void clearHighlightLines();
 
-	void set_row_contents(int row, const std::string& value);
+		std::pair<int, int> charPositionOnScreen(int row, int col) const;
 
-	void highlight(Loc begin, Loc end);
+		void setRowContents(int row, const std::string& value);
 
-protected:
-	virtual void select_token(const std::string& row, int& begin_row, int& end_row, int& begin_col, int& end_col);
+		void highlight(Loc begin, Loc end);
 
-	virtual void on_change();
+	protected:
+		virtual void selectToken(const std::string& row, int& begin_row, int& end_row, int& begin_col, int& end_col);
 
-	void handle_draw() const;
-	bool handle_event(const SDL_Event& event, bool claimed);
+		virtual void onChange();
 
-	void save_undo_state();
-	bool record_op(const char* type=NULL);
+		void handleDraw() const override;
+		bool handleEvent(const SDL_Event& event, bool claimed) override;
 
-	std::pair<int, int> mouse_position_to_row_col(int x, int y) const;
+		void saveUndoState();
+		bool recordOp(const char* type=nullptr);
 
-	virtual void on_move_cursor(bool auto_shift=false);
+		std::pair<int, int> mousePositiontoRowCol(int x, int y) const;
 
-private:
-	DECLARE_CALLABLE(text_editor_widget);
-	bool handle_mouse_button_down(const SDL_MouseButtonEvent& event);
-	bool handle_mouse_button_up(const SDL_MouseButtonEvent& event);
-	bool handle_mouse_motion(const SDL_MouseMotionEvent& event);
-	bool handle_key_press(const SDL_KeyboardEvent& key);
-	bool handle_mouse_wheel(const SDL_MouseWheelEvent& event);
-	bool handle_text_input(const SDL_TextInputEvent& event);
-	bool handle_text_input_internal(const char* text);
-	bool handle_text_editing(const SDL_TextEditingEvent& event);
+		virtual void onMoveCursor(bool auto_shift=false);
 
-	void handle_paste(std::string txt);
-	void handle_copy(bool mouse_based=false);
+	private:
+		DECLARE_CALLABLE(TextEditorWidget);
 
-	virtual graphics::color get_character_color(int row, int col) const;
+		bool handleMouseButtonDown(const SDL_MouseButtonEvent& event);
+		bool handleMouseButtonUp(const SDL_MouseButtonEvent& event);
+		bool handleMouseMotion(const SDL_MouseMotionEvent& event);
+		bool handleKeyPress(const SDL_KeyboardEvent& key);
+		bool handleMouseWheel(const SDL_MouseWheelEvent& event);
+		bool handleTextInput(const SDL_TextInputEvent& event);
+		bool handleTextInputInternal(const char* text);
+		bool handleTextEditing(const SDL_TextEditingEvent& event);
 
-	void delete_selection();
+		void handlePaste(std::string txt);
+		void handleCopy(bool mouse_based=false);
 
-	void on_page_up();
-	void on_page_down();
+		virtual KRE::Color getCharacterColor(int row, int col) const;
 
-	int find_equivalent_col(int old_col, int old_row, int new_row) const;
+		void deleteSelection();
 
-	void on_set_yscroll(int old_pos, int new_pos);
+		void onPageUp();
+		void onPageDown();
 
-	void refresh_scrollbar();
+		int findEquivalentCol(int old_col, int old_row, int new_row) const;
 
-	virtual text_editor_widget_ptr clone() const;
-	virtual void restore(const text_editor_widget* state);
+		void onSetYscroll(int old_pos, int new_pos);
 
-	const char* last_op_type_;
+		void refreshScrollbar();
 
-	std::vector<text_editor_widget_ptr> undo_, redo_;
+		virtual TextEditorWidgetPtr clone() const;
+		virtual void restore(const TextEditorWidget* state);
 
-	std::vector<std::string> text_;
+		const char* last_op_type_;
 
-	size_t font_size_;
-	int char_width_, char_height_;
+		std::vector<TextEditorWidgetPtr> undo_, redo_;
 
-	Loc select_, cursor_;
+		std::vector<std::string> text_;
 
-	int nrows_, ncols_;
-	int scroll_pos_;
+		size_t font_size_;
+		int char_width_, char_height_;
 
-	//scroll pos for when we have a single row widget.
-	int xscroll_pos_;
+		Loc select_, cursor_;
 
-	int begin_highlight_line_, end_highlight_line_;
+		int nrows_, ncols_;
+		int scroll_pos_;
+
+		//scroll pos for when we have a single row widget.
+		int xscroll_pos_;
+
+		int begin_highlight_line_, end_highlight_line_;
 	
 	bool editable_;
-	bool has_focus_;
-	bool is_dragging_;
+		bool has_focus_;
+		bool is_dragging_;
 
-	int last_click_at_, consecutive_clicks_;
+		int last_click_at_, consecutive_clicks_;
 
-	graphics::color text_color_;
+		KRE::Color text_color_;
 
-	std::string search_;
-	std::vector<std::pair<Loc, Loc> > search_matches_;
-	void calculate_search_matches();
+		std::string search_;
+		std::vector<std::pair<Loc, Loc> > search_matches_;
+		void calculateSearchMatches();
 
-	void truncate_col_position();
+		void truncateColPosition();
 
-	boost::function<void()> on_change_, on_user_change_, on_move_cursor_, on_enter_, on_tab_, on_escape_;
-	boost::function<void(bool)> on_change_focus_;
-	boost::function<bool()> on_begin_enter_;
+		std::function<void()> on_change_, on_user_change_, onMoveCursor_, on_enter_, on_tab_, on_escape_;
+		std::function<void(bool)> on_change_focus_;
+		std::function<bool()> onBeginEnter_;
 
-	void change_delegate();
-	void move_cursor_delegate();
-	void enter_delegate();
-	void tab_delegate();
-	void escape_delegate();
-	void change_focus_delgate(bool new_focus_value);
-	bool begin_enter_delegate();
+		void changeDelegate();
+		void moveCursorDelegate();
+		void enterDelegate();
+		void tabDelegate();
+		void escapeDelegate();
+		void changeFocusDelgate(bool new_focus_value);
+		bool beginEnterDelegate();
 
-	game_logic::formula_ptr ffl_on_change_;
-	game_logic::formula_ptr ffl_on_move_cursor_;
-	game_logic::formula_ptr ffl_on_enter_;
-	game_logic::formula_ptr ffl_on_tab_;
-	game_logic::formula_ptr ffl_on_escape_;
-	game_logic::formula_ptr ffl_on_change_focus_;
-	game_logic::formula_ptr ffl_on_begin_enter_;
+		game_logic::FormulaPtr ffl_on_change_;
+		game_logic::FormulaPtr ffl_onMoveCursor_;
+		game_logic::FormulaPtr ffl_on_enter_;
+		game_logic::FormulaPtr ffl_on_tab_;
+		game_logic::FormulaPtr ffl_on_escape_;
+		game_logic::FormulaPtr ffl_on_change_focus_;
+		game_logic::FormulaPtr ffl_onBeginEnter_;
 
-	bool begin_enter_return_;
+		bool begin_enter_return_;
 
-	int in_event_;
+		int in_event_;
 
-	bool password_entry_;
-	bool no_border_;
-	bool clear_on_focus_;
+		bool password_entry_;
+		bool no_border_;
+		bool clear_on_focus_;
 
-	boost::shared_ptr<graphics::color> bg_color_;
-
-	friend class dropdown_widget;
-};
+		KRE::ColorPtr bg_color_;
+	};
 
 }
-
-#endif

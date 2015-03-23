@@ -1,19 +1,26 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
+
 #if defined(__ANDROID__)
 
 #include "filesystem.hpp"
@@ -132,9 +139,9 @@ void get_files_in_dir(const std::string& sdirectory,
 		//LOG("get_files_in_dir() : after split");
 	}
 
-	if(files != NULL)
+	if(files != nullptr)
 		std::sort(files->begin(),files->end());
-	if (dirs != NULL)
+	if (dirs != nullptr)
 		std::sort(dirs->begin(),dirs->end());
 	//LOG("get_files_in_dir : after sorts");
 }
@@ -171,7 +178,7 @@ void get_unique_filenames_under_dir(const std::string& sdir,
 std::string get_dir(const std::string& dir_path)
 {
 	DIR* dir = opendir(dir_path.c_str());
-	if(dir == NULL) {
+	if(dir == nullptr) {
 		const int res = mkdir(dir_path.c_str(),AccessMode);
 		if(res == 0) {
 			dir = opendir(dir_path.c_str());
@@ -180,7 +187,7 @@ std::string get_dir(const std::string& dir_path)
 		}
 	}
 
-	if(dir == NULL)
+	if(dir == nullptr)
 		return "";
 
 	closedir(dir);
@@ -192,7 +199,7 @@ std::string get_user_data_dir()
 {
     std::string dir_path = preferences::user_data_path();
 	DIR* dir = opendir(dir_path.c_str());
-	if(dir == NULL) {
+	if(dir == nullptr) {
 		const int res = mkdir(dir_path.c_str(),AccessMode);
 
 		// Also create the maps directory
@@ -205,7 +212,7 @@ std::string get_user_data_dir()
 		}
 	}
 
-	if(dir == NULL)
+	if(dir == nullptr)
 		return "";
 
 	closedir(dir);
@@ -405,13 +412,13 @@ SDL_RWops* read_sdl_rw_from_asset(const std::string& name)
     }
 	ops->hidden.unknown.data1 = asset;
 	ops->read = aa_rw_read;
-	ops->write = NULL;
+	ops->write = nullptr;
 	ops->seek = aa_rw_seek;
 	ops->close = aa_rw_close;
 	return ops;
 }
 
-void notify_on_file_modification(const std::string& path, boost::function<void()> handler)
+void notify_on_file_modification(const std::string& path, std::function<void()> handler)
 {
 	// XXX do nothing currently
 }

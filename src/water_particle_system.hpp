@@ -1,88 +1,85 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
-#ifndef water_PARTICLE_SYSTEM_H
-#define water_PARTICLE_SYSTEM_H
 
-#include "graphics.hpp"
+#pragma once
 
 #include <deque>
 
-#include "color_utils.hpp"
-#include "foreach.hpp"
-#include "geometry.hpp"
-#include "entity.hpp"
 #include "particle_system.hpp"
-#include "variant.hpp"
 
-struct water_particle_system_info {
-	water_particle_system_info(variant node);
+struct WaterParticleSystemInfo 
+{
+	WaterParticleSystemInfo(variant node);
 
 	int number_of_particles;
 	int repeat_period;
 	int velocity_x, velocity_y;
 	int velocity_rand;
 	int dot_size;
-	
-	union {
-		uint8_t rgba[4];
-		uint32_t irgba;
-	};
+	KRE::Color color;
 };
 
-class water_particle_system_factory : public particle_system_factory {
-public:
-	explicit water_particle_system_factory(variant node);
-	~water_particle_system_factory() {}
-	
-	particle_system_ptr create(const entity& e) const;
-	water_particle_system_info info;
-};
-
-class water_particle_system : public particle_system
+class WaterParticleSystemFactory : public ParticleSystemFactory 
 {
 public:
-	water_particle_system(const entity& e, const water_particle_system_factory& factory);
+	explicit WaterParticleSystemFactory(variant node);
+	~WaterParticleSystemFactory() {}
 	
-	bool is_destroyed() const { return false; }
-	void process(const entity& e);
-	void draw(const rect& area, const entity& e) const;
+	ParticleSystemPtr create(const Entity& e) const;
+	WaterParticleSystemInfo info;
+};
+
+class WaterParticleSystem : public ParticleSystem
+{
+public:
+	WaterParticleSystem(const Entity& e, const WaterParticleSystemFactory& factory);
 	
+	bool isDestroyed() const override { return false; }
+	void process(const Entity& e) override;
+	void draw(const KRE::WindowPtr& wm, const rect& area, const Entity& e) const override;
+
+	void executeOnDraw();
 private:
-	variant get_value(const std::string& key) const { return variant(); }
-	void set_value(const std::string& key, const variant& value);	
-	
-	const water_particle_system_factory& factory_;
-	const water_particle_system_info& info_;
+	DECLARE_CALLABLE(WaterParticleSystem);
+
+	const WaterParticleSystemFactory& factory_;
+	const WaterParticleSystemInfo& info_;
 	
 	int cycle_;
 	
 	rect area_;
 	
 	struct particle {
-		GLfloat pos[2];
-		GLfloat velocity;
+		float pos[2];
+		float velocity;
 	};
 	
-	GLfloat direction[2];
-	GLfloat base_velocity;
+	float direction[2];
+	float base_velocity;
 	int velocity_x_, velocity_y_;
 	
+	std::shared_ptr<KRE::Attribute<glm::u16vec2>> attribs_;
 	
 	std::vector<particle> particles_;
+	int u_point_size_;
 };
-
-#endif

@@ -1,48 +1,47 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
-#ifndef PREFERENCES_HPP_INCLUDED
-#define PREFERENCES_HPP_INCLUDED
+
+#pragma once
 
 #include <set>
 #include <string>
 
-#include "graphics.hpp"
 #include "uri.hpp"
 #include "variant.hpp"
-#if defined(TARGET_OS_HARMATTAN) || defined(TARGET_PANDORA) || defined(TARGET_TEGRA) || defined(TARGET_BLACKBERRY)
-#include <EGL/egl.h>
-#endif
 
-namespace game_logic {
-class formula_callable;
+namespace game_logic 
+{
+	class FormulaCallable;
 }
 
-#ifdef _WINDOWS
-std::string GetAppDataPath();
-#endif
-
-namespace preferences {
-	enum FullscreenMode {
-		FULLSCREEN_NONE,
+namespace preferences 
+{
+	enum class ScreenMode {
+		WINDOWED,
 		FULLSCREEN_WINDOWED,
-		FULLSCREEN,
 	};
 
-	game_logic::formula_callable* get_settings_obj();
+	game_logic::FormulaCallable* get_settings_obj();
 
 	void register_module_setting(const std::string& id, variant value);
 	variant get_module_settings();
@@ -93,7 +92,7 @@ namespace preferences {
 	const variant& version_decimal();
 	int get_unique_user_id();
 
-	bool parse_arg(const char* arg);
+	bool parse_arg(const std::string& arg, const std::string& next_arg);
 	bool no_sound();
 	bool no_music();
 
@@ -102,8 +101,6 @@ namespace preferences {
 
 	bool setup_preferences_dir();
 
-	const std::string& level_path();
-	bool is_level_path_set();
 	const char* user_data_path();
 	const char* save_file_path();
 	const char* auto_save_file_path();
@@ -116,41 +113,13 @@ namespace preferences {
 	bool toogle_debug_hitboxes();
 	bool edit_and_continue();
 	void set_edit_and_continue(bool value);
-	bool show_iphone_controls(); //iphone control hit rects
 	bool use_pretty_scaling();
 	void set_use_pretty_scaling(bool value);
-	FullscreenMode fullscreen();
-	void set_fullscreen(FullscreenMode value);
-	bool no_fullscreen_ever();
 
-	bool resizable();
-	bool proportional_resize();
-	
-	// Reverse A and B buttons for iPhone
-	bool reverse_ab();
-	void set_reverse_ab(bool value);
-	
 	// Control scheme to use on iOS or other touch systems
 	const std::string& control_scheme();
 	void set_control_scheme(const std::string& scheme);
 	
-	void set_widescreen();
-	
-	int virtual_screen_width();
-	int virtual_screen_height();
-	
-	int actual_screen_width();
-	int actual_screen_height();
-
-	void set_actual_screen_dimensions_persistent(int width, int height);
-
-	class screen_dimension_override_scope {
-		int old_width, old_height, vold_width, vold_height;
-	public:
-		screen_dimension_override_scope(int width, int height, int vwidth, int vheight);
-		~screen_dimension_override_scope();
-	};
-
 	//whether we are debugging
 	bool debug();
 	
@@ -182,14 +151,7 @@ namespace preferences {
 
 	// Configured language
 	const std::string& locale();
-	void set_locale(const std::string& value);
-
-#if defined(TARGET_OS_HARMATTAN) || defined(TARGET_PANDORA) || defined(TARGET_TEGRA) || defined(TARGET_BLACKBERRY)
-bool use_fbo();
-bool use_bequ();
-void set_fbo( bool value );
-void set_bequ( bool value );
-#endif
+	void setLocale(const std::string& value);
 
 	//this is the mask which we apply to all x,y values before drawing, to
 	//avoid drawing things at "half pixels" when the actual screen dimensions
@@ -202,12 +164,15 @@ void set_bequ( bool value );
 	//'compiled' tile output.
 	extern bool compiling_tiles;
 	
-	void set_actual_screen_width(int width);
-	void set_actual_screen_height(int height);
-	void set_virtual_screen_width(int width);
-	void set_virtual_screen_height(int height);
-
 	bool auto_size_window();
+	int requested_window_width();
+	int requested_window_height();
+	int requested_virtual_window_width();
+	int requested_virtual_window_height();
+	bool is_resizeable();
+	ScreenMode get_screen_mode();
+	void set_screen_mode(ScreenMode mode);
+	bool no_fullscreen_ever();
 	
 	bool allow_autopause();
 
@@ -219,10 +184,6 @@ void set_bequ( bool value );
 
 	void set_32bpp_textures_if_kb_memory_at_least(int memory_required );
     
-	bool sim_iphone();
-
-	bool no_iphone_controls();
-
 	bool send_stats();
 
 	int force_difficulty();
@@ -243,7 +204,7 @@ void set_bequ( bool value );
 
 	bool type_safety_checks();
 
-	game_logic::formula_callable* registry();
+	game_logic::FormulaCallable* registry();
 
 	void load_preferences();
 	void save_preferences();
@@ -258,22 +219,4 @@ void set_bequ( bool value );
 
 	bool internal_tbs_server();
 	const std::set<std::string>& get_build_options();
-
-	class editor_screen_size_scope {
-		int width_, height_;
-	public:
-		editor_screen_size_scope();
-		~editor_screen_size_scope();
-	};
-
-#if defined(TARGET_OS_HARMATTAN) || defined(TARGET_PANDORA) || defined(TARGET_TEGRA) || defined(TARGET_BLACKBERRY)
-	void init_oes( void );
-	extern PFNGLBLENDEQUATIONOESPROC           glBlendEquationOES;
-	extern PFNGLGENFRAMEBUFFERSOESPROC         glGenFramebuffersOES;
-	extern PFNGLBINDFRAMEBUFFEROESPROC         glBindFramebufferOES;
-	extern PFNGLFRAMEBUFFERTEXTURE2DOESPROC    glFramebufferTexture2DOES;
-	extern PFNGLCHECKFRAMEBUFFERSTATUSOESPROC  glCheckFramebufferStatusOES;
-#endif
 }
-
-#endif

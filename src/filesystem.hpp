@@ -1,97 +1,86 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
-#ifndef FILESYSTEM_HPP_INCLUDED
-#define FILESYSTEM_HPP_INCLUDED
 
-#include <boost/cstdint.hpp>
-#include <boost/function.hpp>
+#pragma once
 
+#include <functional>
 #include <map>
 #include <string>
 #include <vector>
 
-#if defined(__ANDROID__)
-#include "SDL.h"
-#include "SDL_rwops.h"
-#endif
-
 namespace sys
 {
+	bool is_directory(const std::string& dname);
 
-enum FILE_NAME_MODE { ENTIRE_FILE_PATH, FILE_NAME_ONLY };
+	//! Populates 'files' with all the files and
+	//! 'dirs' with all the directories in dir.
+	//! If files or dirs are nullptr they will not be used.
+	//!
+	//! Mode determines whether the entire path or just the filename is retrieved.
+	void get_files_in_dir(const std::string& dir,
+						  std::vector<std::string>* files,
+						  std::vector<std::string>* dirs=nullptr);
 
-bool is_directory(const std::string& dname);
+	typedef std::map<std::string, std::string> file_path_map;
+	//Function which given a directory, will recurse through all sub-directories,
+	//and find each distinct filename. It will fill the files map such that the
+	//keys are filenames and the values are the full path to the file.
+	void get_unique_filenames_under_dir(const std::string& dir,
+										file_path_map* file_map,
+										const std::string& prefix);
 
-//! Populates 'files' with all the files and
-//! 'dirs' with all the directories in dir.
-//! If files or dirs are NULL they will not be used.
-//!
-//! Mode determines whether the entire path or just the filename is retrieved.
-void get_files_in_dir(const std::string& dir,
-                      std::vector<std::string>* files,
-                      std::vector<std::string>* dirs=NULL);
+	//creates a dir if it doesn't exist and returns the path
+	std::string get_dir(const std::string& dir);
+	std::string get_user_data_dir();
+	std::string get_saves_dir();
 
-//Function which given a directory, will recurse through all sub-directories,
-//and find each distinct filename. It will fill the files map such that the
-//keys are filenames and the values are the full path to the file.
-void get_unique_filenames_under_dir(const std::string& dir,
-                                    std::map<std::string, std::string>* file_map,
-									const std::string& prefix);
+	std::string read_file(const std::string& fname);
+	void write_file(const std::string& fname, const std::string& data);
 
-//creates a dir if it doesn't exist and returns the path
-std::string get_dir(const std::string& dir);
-std::string get_user_data_dir();
-std::string get_saves_dir();
+	bool dir_exists(const std::string& fname);
+	bool file_exists(const std::string& fname);
+	std::string find_file(const std::string& name);
 
-std::string read_file(const std::string& fname);
-void write_file(const std::string& fname, const std::string& data);
+	long long file_mod_time(const std::string& fname);
 
-bool dir_exists(const std::string& fname);
-bool file_exists(const std::string& fname);
-std::string find_file(const std::string& name);
+	void move_file(const std::string& from, const std::string& to);
+	void remove_file(const std::string& fname);
+	void copy_file(const std::string& from, const std::string& to);
 
-int64_t file_mod_time(const std::string& fname);
+	void rmdir_recursive(const std::string& path);
 
-#if defined(__ANDROID__)
-SDL_RWops* read_sdl_rw_from_asset(const std::string& name);
-void print_assets();
-#endif // ANDROID
+	bool is_path_absolute(const std::string& path);
+	std::string make_conformal_path(const std::string& path);
+	std::string compute_relative_path(const std::string& source, const std::string& target);
 
-void move_file(const std::string& from, const std::string& to);
-void remove_file(const std::string& fname);
-void copy_file(const std::string& from, const std::string& to);
+	struct FilesystemManager 
+	{
+		FilesystemManager();
+		~FilesystemManager();
+	};
 
-void rmdir_recursive(const std::string& path);
+	void notify_on_file_modification(const std::string& path, std::function<void()> handler);
+	void pump_file_modifications();
 
-bool is_path_absolute(const std::string& path);
-std::string make_conformal_path(const std::string& path);
-std::string compute_relative_path(const std::string& source, const std::string& target);
-
-struct filesystem_manager {
-	filesystem_manager();
-	~filesystem_manager();
-};
-
-void notify_on_file_modification(const std::string& path, boost::function<void()> handler);
-void pump_file_modifications();
-
-bool is_safe_write_path(const std::string& path, std::string* error=NULL);
-
+	bool is_safe_write_path(const std::string& path, std::string* error=nullptr);
 }
-
-#endif
-

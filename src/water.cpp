@@ -1,86 +1,117 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
-#include "graphics.hpp"
 
 #include <iostream>
 #include <math.h>
 
+#include "DisplayDevice.hpp"
+#include "Shaders.hpp"
+
 #include "preferences.hpp"
 #include "asserts.hpp"
-#include "color_utils.hpp"
-#include "foreach.hpp"
 #include "formatter.hpp"
 #include "formula.hpp"
 #include "level.hpp"
-#include "raster.hpp"
 #include "string_utils.hpp"
 #include "tile_map.hpp"
 #include "variant_utils.hpp"
 #include "water.hpp"
 
-#if defined(TARGET_OS_HARMATTAN) || defined(TARGET_PANDORA) || defined(TARGET_TEGRA) || defined(TARGET_BLACKBERRY)
-#include <EGL/egl.h>
-#define glBlendEquationOES          preferences::glBlendEquationOES
-#endif
-
-namespace {
+namespace 
+{
 	const int WaterZorder = 15;
 }
 
-water::water()
-  : zorder_(WaterZorder)
+Water::Water()
+  : KRE::SceneObject("water"),
+    zorder_(WaterZorder)
 {
+	init();
 }
 
-water::water(variant water_node) :
-  zorder_(parse_zorder(water_node["zorder"], variant("water"))),
-  current_x_formula_(game_logic::formula::create_optional_formula(water_node["current_x_formula"])),
-  current_y_formula_(game_logic::formula::create_optional_formula(water_node["current_y_formula"]))
+Water::Water(variant water_node) 
+	: KRE::SceneObject("water"),
+	zorder_(parse_zorder(water_node["zorder"], variant("water"))),
+	current_x_formula_(game_logic::Formula::createOptionalFormula(water_node["current_x_formula"])),
+	current_y_formula_(game_logic::Formula::createOptionalFormula(water_node["current_y_formula"]))
 {
-	foreach(variant area_node, water_node["area"].as_list()) {
+	for(variant area_node : water_node["area"].as_list()) {
 		const rect r(area_node["rect"]);
-		std::vector<int> color_vec = area_node["color"].as_list_int();
-		unsigned char color[4];
-		for(int n = 0; n != 4; ++n) {
-			if(n < color_vec.size()) {
-				color[n] = static_cast<unsigned char>(color_vec[n]);
-			} else {
-				color[n] = 0;
-			}
+		KRE::Color color(KRE::Color::colorWhite());
+		if(area_node.has_key("color")) {
+			color = KRE::Color(area_node["color"]);
 		}
 
 		variant obj = area_node["object"];
-		areas_.push_back(area(r, color, obj));
+		areas_.emplace_back(r, color, obj);
 	}
+	init();
 }
 
-variant water::write() const
+void Water::init()
+{
+	using namespace KRE;
+
+	setShader(ShaderProgram::getProgram("attr_color_shader"));
+	auto ab = DisplayDevice::createAttributeSet(true);
+	waterline_.reset(new Attribute<vertex_color>(AccessFreqHint::DYNAMIC, AccessTypeHint::DRAW));
+	waterline_->addAttributeDesc(AttributeDesc(AttrType::POSITION, 2, AttrFormat::FLOAT, false, sizeof(vertex_color), offsetof(vertex_color, vertex)));
+	waterline_->addAttributeDesc(AttributeDesc(AttrType::COLOR, 4, AttrFormat::UNSIGNED_BYTE, true, sizeof(vertex_color), offsetof(vertex_color, color)));
+	ab->addAttribute(AttributeBasePtr(waterline_));
+	ab->setDrawMode(DrawMode::TRIANGLE_STRIP);
+	/// Set appropriate blend equation/functions on each of these attribute sets
+	if(DisplayDevice::checkForFeature(DisplayDeviceCapabilties::BLEND_EQUATION_SEPERATE)) {
+		ab->setBlendEquation(BlendEquation(BlendEquationConstants::BE_REVERSE_SUBTRACT));
+	}
+	ab->setBlendMode(BlendModeConstants::BM_ONE, BlendModeConstants::BM_ONE);
+	addAttributeSet(ab);
+
+	auto seg1 = DisplayDevice::createAttributeSet(true);
+	line1_.reset(new Attribute<vertex_color>(AccessFreqHint::DYNAMIC, AccessTypeHint::DRAW));
+	line1_->addAttributeDesc(AttributeDesc(AttrType::POSITION, 2, AttrFormat::FLOAT, false, sizeof(vertex_color), offsetof(vertex_color, vertex)));
+	line1_->addAttributeDesc(AttributeDesc(AttrType::COLOR, 4, AttrFormat::UNSIGNED_BYTE, true, sizeof(vertex_color), offsetof(vertex_color, color)));
+	seg1->addAttribute(AttributeBasePtr(line1_));
+	seg1->setDrawMode(DrawMode::LINE_STRIP);
+	addAttributeSet(seg1);
+
+	auto seg2 = DisplayDevice::createAttributeSet(true);
+	line2_.reset(new Attribute<vertex_color>(AccessFreqHint::DYNAMIC, AccessTypeHint::DRAW));
+	line2_->addAttributeDesc(AttributeDesc(AttrType::POSITION, 2, AttrFormat::FLOAT, false, sizeof(vertex_color), offsetof(vertex_color, vertex)));
+	line2_->addAttributeDesc(AttributeDesc(AttrType::COLOR, 4, AttrFormat::UNSIGNED_BYTE, true, sizeof(vertex_color), offsetof(vertex_color, color)));
+	seg2->addAttribute(AttributeBasePtr(line2_));
+	seg2->setDrawMode(DrawMode::LINE_STRIP);
+	seg2->setColor(Color(0.0f, 0.9f, 0.75f, 0.5f));
+	addAttributeSet(seg2);
+}
+
+variant Water::write() const
 {
 	variant_builder result;
 	result.add("zorder", write_zorder(zorder_));
-	foreach(const area& a, areas_) {
+	for(const area& a : areas_) {
 		variant_builder area_node;
 		area_node.add("rect", a.rect_.write());
-		std::vector<variant> color_vec;
-		color_vec.reserve(4);
-		for(int n = 0; n != 4; ++n) {
-			color_vec.push_back(variant(static_cast<int>(a.color_[n])));
-		}
-		area_node.add("color", variant(&color_vec));
+		area_node.add("color", a.color_.write());
 		area_node.add("object", a.obj_);
 
 		result.add("area", area_node.build());
@@ -89,13 +120,13 @@ variant water::write() const
 	return result.build();
 }
 
-void water::add_rect(const rect& r, const unsigned char* color, variant obj)
+void Water::addRect(const rect& r, const KRE::Color& color, variant obj)
 {
-	std::cerr << "ADD WATER: " << r << "\n";
-	areas_.push_back(area(r, color, obj));
+	LOG_INFO("ADD WATER: " << r);
+	areas_.emplace_back(r, color, obj);
 }
 
-void water::delete_rect(const rect& r)
+void Water::deleteRect(const rect& r)
 {
 	for(std::vector<area>::iterator i = areas_.begin(); i != areas_.end(); ) {
 		if(r == i->rect_) {
@@ -106,54 +137,11 @@ void water::delete_rect(const rect& r)
 	}
 }
 
-void water::begin_drawing()
+
+void Water::addWave(const point& p, double xvelocity, double height, double length, double delta_height, double delta_length)
 {
-	foreach(area& a, areas_) {
-		graphics::add_raster_distortion(&a.distortion_);
-	}
-}
-
-void water::end_drawing() const
-{
-	foreach(const area& a, areas_) {
-		graphics::remove_raster_distortion(&a.distortion_);
-	}
-}
-
-/*
-void water::set_surface_detection_rects(int zorder)
-{
-	const int offset = get_offset(zorder);
-	foreach(area& a, areas_) {
-		//detect drawing at the surface of the water.
-		a.draw_detection_buf_.resize(a.rect_.w());
-		memset(&a.draw_detection_buf_[0], 0, a.draw_detection_buf_.size());
-		graphics::set_draw_detection_rect(rect(a.rect_.x(), a.rect_.y() + offset, a.rect_.w(), 1), &a.draw_detection_buf_[0]);
-	}
-}
-*/
-
-bool water::draw(int x, int y, int w, int h) const
-{
-	glShadeModel(GL_SMOOTH);
-
-	bool result = false;
-	foreach(const area& a, areas_) {
-		if(draw_area(a, x, y, w, h)) {
-			result = true;
-		}
-	}
-
-	end_drawing();
-	glShadeModel(GL_FLAT);
-
-	return result;
-}
-
-void water::add_wave(const point& p, double xvelocity, double height, double length, double delta_height, double delta_length)
-{
-	foreach(area& a, areas_) {
-		if(point_in_rect(p, a.rect_)) {
+	for(area& a : areas_) {
+		if(pointInRect(p, a.rect_)) {
 			std::pair<int, int> bounds(a.rect_.x(), a.rect_.x2());
 			for(int n = 0; n != a.surface_segments_.size(); ++n) {
 				if(p.x >= a.surface_segments_[n].first && p.x <= a.surface_segments_[n].second) {
@@ -168,166 +156,84 @@ void water::add_wave(const point& p, double xvelocity, double height, double len
 	}
 }
 
-bool water::draw_area(const water::area& a, int x, int y, int w, int h) const
+void Water::preRender(const KRE::WindowPtr& wm) const
 {
-	const graphics::color waterline_color(250, 240, 205, 255);
-	const graphics::color shallowwater_color(0, 51, 61, 140);
-	const graphics::color deepwater_color(0, 51, 61, 153);
-	const SDL_Rect waterline_rect = {a.rect_.x(), a.rect_.y(), a.rect_.w(), 2};
-	const SDL_Rect underwater_rect = {a.rect_.x(), a.rect_.y(), a.rect_.w(), a.rect_.h()};
-
-	unsigned char water_color[] = {a.color_[0], a.color_[1], a.color_[2], a.color_[3]};
-	
-#if defined(TARGET_OS_HARMATTAN) || defined(TARGET_PANDORA) || defined(TARGET_TEGRA) || defined(TARGET_BLACKBERRY)
-	if (glBlendEquationOES) {
-		glBlendEquationOES(GL_FUNC_REVERSE_SUBTRACT_OES);
+	for(const area& a : areas_) {
+		drawArea(a);
 	}
-#elif defined(GL_OES_blend_subtract)
-	glBlendEquationOES(GL_FUNC_REVERSE_SUBTRACT_OES);
-#elif defined(USE_SHADERS)
-	glBlendEquation(GL_FUNC_REVERSE_SUBTRACT);
-#else
-	if(GLEW_EXT_blend_equation_separate && (GLEW_ARB_imaging || GLEW_VERSION_1_4)) {
-		glBlendEquation(GL_FUNC_REVERSE_SUBTRACT);
-	} else {
-		const int max_color = std::max(water_color[0], std::max(water_color[1], water_color[2]));
-		water_color[0] = (max_color - water_color[0])/8;
-		water_color[1] = (max_color - water_color[1])/8;
-		water_color[2] = (max_color - water_color[2])/8;
-	}
-#endif
+}
 
-#if !defined(USE_SHADERS)
-	glDisable(GL_TEXTURE_2D);
-	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-#endif
-	
-	GLfloat vertices[] = {
-		(GLfloat)waterline_rect.x, (GLfloat)waterline_rect.y, //shallow water colored
-		(GLfloat)waterline_rect.x + waterline_rect.w, (GLfloat)waterline_rect.y,
+bool Water::drawArea(const Water::area& a) const
+{
+	const KRE::Color waterline_color(250, 240, 205, 255);
+	const KRE::Color shallowwater_color(0, 51, 61, 140);
+	const KRE::Color deepwater_color(0, 51, 61, 153);
+	const rectf underwater_rect = a.rect_.as_type<float>();
+	const rectf waterline_rect(underwater_rect.x(), underwater_rect.y(), underwater_rect.w(), 2.0f);
+
+	KRE::Color water_color = a.color_;
+
+	if(KRE::DisplayDevice::checkForFeature(KRE::DisplayDeviceCapabilties::BLEND_EQUATION_SEPERATE)) {
+		const float max_color = std::max(water_color.r(), std::max(water_color.g(), water_color.b()));
+		water_color.setRed((max_color - water_color.r())/8.0f);
+		water_color.setGreen((max_color - water_color.g())/8.0f);
+		water_color.setBlue((max_color - water_color.b())/8.0f);
+	}
+
+	float vertices[] = {
+		waterline_rect.x(), waterline_rect.y(), //shallow water colored
+		waterline_rect.x() + waterline_rect.w(), waterline_rect.y(),
 		
-		(GLfloat)waterline_rect.x, (GLfloat)waterline_rect.y + std::min(100, underwater_rect.h), //deep water colored
-		(GLfloat)waterline_rect.x + waterline_rect.w, (GLfloat)waterline_rect.y + std::min(100, underwater_rect.h),
-		(GLfloat)waterline_rect.x, (GLfloat)underwater_rect.y + underwater_rect.h,
-		(GLfloat)waterline_rect.x + waterline_rect.w, (GLfloat)underwater_rect.y + underwater_rect.h
+		waterline_rect.x(), waterline_rect.y() + std::min(100.0f, underwater_rect.h()), //deep water colored
+		waterline_rect.x() + waterline_rect.w(), waterline_rect.y() + std::min(100.0f, underwater_rect.h()),
+		waterline_rect.x(), underwater_rect.y() + underwater_rect.h(),
+		waterline_rect.x() + waterline_rect.w(), underwater_rect.y() + underwater_rect.h()
 	};
 
-#if defined(TARGET_TEGRA)	
-	glColor4ub (0,0,0,255); // tegra linux drivers have some issues
-#else
-	glColor4ub(water_color[0], water_color[1], water_color[2], water_color[3]);
-#endif	
-#if defined(USE_SHADERS)
-	gles2::manager gles2_manager(gles2::get_simple_shader());
-	gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, 0, 0, vertices);
-#else
-	glVertexPointer(2, GL_FLOAT, 0, vertices);
-#endif
-	glBlendFunc(GL_ONE, GL_ONE);
-	glDrawArrays(GL_TRIANGLE_STRIP, 0, sizeof(vertices)/sizeof(GLfloat)/2);
-#if defined(TARGET_OS_HARMATTAN) || defined(TARGET_PANDORA) || defined(TARGET_TEGRA) || defined(TARGET_BLACKBERRY)
-	if (glBlendEquationOES) {
-		glBlendEquationOES(GL_FUNC_ADD_OES);
-	}
-#elif defined(GL_OES_blend_subtract)
-	glBlendEquationOES(GL_FUNC_ADD_OES);
-#elif defined(USE_SHADERS)
-	glBlendEquation(GL_FUNC_ADD);
-#else
-	if (GLEW_EXT_blend_equation_separate && (GLEW_ARB_imaging || GLEW_VERSION_1_4)) {
-		glBlendEquation(GL_FUNC_ADD);
-	}
-#endif
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	std::vector<KRE::vertex_color> water_rect;
+	glm::u8vec4 col(water_color.r_int(),water_color.g_int(),water_color.b_int(),water_color.a_int());
+	water_rect.emplace_back(glm::vec2(waterline_rect.x(), waterline_rect.y()), col);
+	water_rect.emplace_back(glm::vec2(waterline_rect.x() + waterline_rect.w(), waterline_rect.y()), col);
+	water_rect.emplace_back(glm::vec2(waterline_rect.x(), waterline_rect.y() + std::min(100.0f, underwater_rect.h())), col);
+	water_rect.emplace_back(glm::vec2(waterline_rect.x() + waterline_rect.w(), waterline_rect.y() + std::min(100.0f, underwater_rect.h())), col);
+	water_rect.emplace_back(glm::vec2(waterline_rect.x(), underwater_rect.y() + underwater_rect.h()), col);
+	water_rect.emplace_back(glm::vec2(waterline_rect.x() + waterline_rect.w(), underwater_rect.y() + underwater_rect.h()), col);
+	getAttributeSet()[0]->setCount(water_rect.size());
+	waterline_->update(&water_rect);
 
-	glLineWidth(2.0);
+	// XXX set line width uniform to 2.0
 
 	typedef std::pair<int, int> Segment;
 
-#if !defined(USE_SHADERS)
-	glEnableClientState(GL_COLOR_ARRAY);
-#endif
-
 	const int EndSegmentSize = 20;
 
-	foreach(const Segment& seg, a.surface_segments_) {
-		glColor4f(1.0, 1.0, 1.0, 1.0);
-		GLfloat varray[] = {
-			(GLfloat)seg.first - EndSegmentSize, (GLfloat)waterline_rect.y,
-			(GLfloat)seg.first, (GLfloat)waterline_rect.y,
-			(GLfloat)seg.second, (GLfloat)waterline_rect.y,
-			(GLfloat)seg.second + EndSegmentSize, (GLfloat)waterline_rect.y,
-		};
-		static const unsigned char vcolors[] = {
-			255, 255, 255, 0,
-			255, 255, 255, 255,
-			255, 255, 255, 255,
-			255, 255, 255, 0,
-		};
-#if defined(USE_SHADERS)
-		{
-			gles2::manager gles2_manager(gles2::get_simple_col_shader());
-			gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, GL_FALSE, 0, varray);
-			gles2::active_shader()->shader()->color_array(4, GL_UNSIGNED_BYTE, GL_TRUE, 0, vcolors);
-			glDrawArrays(GL_LINE_STRIP, 0, 4);
-		}
-#else
-		glVertexPointer(2, GL_FLOAT, 0, varray);
-		glColorPointer(4, GL_UNSIGNED_BYTE, 0, vcolors);
-		glDrawArrays(GL_LINE_STRIP, 0, 4);
-#endif
-	
-		//draw a second line, in a different color, just below the first
-		glColor4f(0.0, 0.9, 0.75, 0.5);
-		GLfloat varray2[] = {
-			(GLfloat)seg.first - EndSegmentSize, (GLfloat)waterline_rect.y+2,
-			(GLfloat)seg.first, (GLfloat)waterline_rect.y+2,
-			(GLfloat)seg.second, (GLfloat)waterline_rect.y+2,
-			(GLfloat)seg.second + EndSegmentSize, (GLfloat)waterline_rect.y+2,
-		};
-		static const unsigned char vcolors2[] = {
-			0, 230, 200, 0,
-			0, 230, 200, 128,
-			0, 230, 200, 128,
-			0, 230, 200, 0,
-		};
-#if defined(USE_SHADERS)
-		{
-			gles2::manager gles2_manager(gles2::get_simple_col_shader());
-			gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, 0, 0, varray2);
-			gles2::active_shader()->shader()->color_array(4, GL_UNSIGNED_BYTE, GL_TRUE, 0, vcolors2);
-			glDrawArrays(GL_LINE_STRIP, 0, 4);
-		}
-#else
-		glVertexPointer(2, GL_FLOAT, 0, varray2);
-		glColorPointer(4, GL_UNSIGNED_BYTE, 0, vcolors2);
-		glDrawArrays(GL_LINE_STRIP, 0, 4);
-#endif
-	}
+	for(const Segment& seg : a.surface_segments_) {
+		std::vector<KRE::vertex_color> line1;
+		line1.emplace_back(glm::vec2(static_cast<float>(seg.first - EndSegmentSize), waterline_rect.y()), glm::u8vec4(255, 255, 255, 0));
+		line1.emplace_back(glm::vec2(static_cast<float>(seg.first), waterline_rect.y()), glm::u8vec4(255, 255, 255, 255));
+		line1.emplace_back(glm::vec2(static_cast<float>(seg.second), waterline_rect.y()), glm::u8vec4(255, 255, 255, 255));
+		line1.emplace_back(glm::vec2(static_cast<float>(seg.second + EndSegmentSize), waterline_rect.y()), glm::u8vec4(255, 255, 255, 0));
+		getAttributeSet()[1]->setCount(line1.size());
+		line1_->update(&line1);
 
-#if !defined(USE_SHADERS)
-	glDisableClientState(GL_COLOR_ARRAY);
-	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-	glEnable(GL_TEXTURE_2D);
-#endif
-	glColor4f(1.0, 1.0, 1.0, 1.0);
+		std::vector<KRE::vertex_color> line2;
+		line2.emplace_back(glm::vec2(static_cast<float>(seg.first - EndSegmentSize), waterline_rect.y()+2.0f), glm::u8vec4(0, 230, 200, 0));
+		line2.emplace_back(glm::vec2(static_cast<float>(seg.first), waterline_rect.y()+2.0f), glm::u8vec4(0, 230, 200, 128));
+		line2.emplace_back(glm::vec2(static_cast<float>(seg.second), waterline_rect.y()+2.0f), glm::u8vec4(0, 230, 200, 128));
+		line2.emplace_back(glm::vec2(static_cast<float>(seg.second + EndSegmentSize), waterline_rect.y()+2.0f), glm::u8vec4(0, 230, 200, 0));
+		getAttributeSet()[2]->setCount(line2.size());
+		line2_->update(&line2);
+	}
 
 	return true;
 }
 
-namespace {
-bool wave_dead(const water::wave& w) {
-	return w.height <= 0.5 || w.length <= 0;
-}
-}
-
-void water::process(const level& lvl)
+void Water::process(const Level& lvl)
 {
-	foreach(area& a, areas_) {
-		init_area_surface_segments(lvl, a);
+	for(area& a : areas_) {
+		initAreaSurfaceSegments(lvl, a);
 
-		a.distortion_ = graphics::water_distortion(lvl.cycle(), a.rect_);
-		foreach(wave& w, a.waves_) {
+		for(wave& w : a.waves_) {
 			w.process();
 
 			//if the wave has hit the edge, then turn it around.
@@ -340,17 +246,20 @@ void water::process(const level& lvl)
 			}
 		}
 
-		a.waves_.erase(std::remove_if(a.waves_.begin(), a.waves_.end(), wave_dead), a.waves_.end());
+		a.waves_.erase(std::remove_if(a.waves_.begin(), a.waves_.end(), 
+			[](const Water::wave& w){ return w.height <= 0.5 || w.length <= 0; }), 
+			a.waves_.end());
 	}
 }
 
-void water::wave::process() {
+void Water::wave::process() 
+{
 	xpos += xvelocity;
 	height *= 0.996;
 	length += delta_length;
 }
 
-void water::get_current(const entity& e, int* velocity_x, int* velocity_y) const
+void Water::getCurrent(const Entity& e, int* velocity_x, int* velocity_y) const
 {
 	if(velocity_x && current_x_formula_) {
 		*velocity_x += current_x_formula_->execute(e).as_int();
@@ -361,7 +270,7 @@ void water::get_current(const entity& e, int* velocity_x, int* velocity_y) const
 	}
 }
 
-bool water::is_underwater(const rect& r, rect* result_water_area, variant* e) const
+bool Water::isUnderwater(const rect& r, rect* result_water_area, variant* e) const
 {
 	//we don't take the vertical midpoint, because doing so can cause problems
 	//when objects change their animations and flip between not being
@@ -369,8 +278,8 @@ bool water::is_underwater(const rect& r, rect* result_water_area, variant* e) co
 	//TODO: potentially review this way of determinining if something is
 	//underwater.
 	const point p((r.x() + r.x2())/2, r.y2() - 20);
-	foreach(const area& a, areas_) {
-		if(point_in_rect(p, a.rect_)) {
+	for(const area& a : areas_) {
+		if(pointInRect(p, a.rect_)) {
 			if(result_water_area) {
 				*result_water_area = a.rect_;
 			}
@@ -385,7 +294,7 @@ bool water::is_underwater(const rect& r, rect* result_water_area, variant* e) co
 	return false;
 }
 
-void water::init_area_surface_segments(const level& lvl, water::area& a)
+void Water::initAreaSurfaceSegments(const Level& lvl, Water::area& a)
 {
 	if(a.surface_segments_init_) {
 		return;
@@ -407,10 +316,10 @@ void water::init_area_surface_segments(const level& lvl, water::area& a)
 	}
 }
 
-water::area::area(const rect& r, const unsigned char* pcolor, variant obj)
-  : rect_(r), distortion_(0, rect(0,0,0,0)), surface_segments_init_(false), obj_(obj)
+Water::area::area(const rect& r, const KRE::Color& color, variant obj)
+	: rect_(r), 
+	color_(color), 
+	surface_segments_init_(false), 
+	obj_(obj)
 {
-	for(int n = 0; n != 4; ++n) {
-		color_[n] = pcolor[n];
-	}
 }

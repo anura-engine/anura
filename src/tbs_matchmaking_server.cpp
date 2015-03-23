@@ -1,18 +1,24 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
 
 //This file is designed to only work on Linux.
@@ -31,12 +37,10 @@
 #include "asserts.hpp"
 #include "db_client.hpp"
 #include "filesystem.hpp"
-#include "foreach.hpp"
 #include "formatter.hpp"
 #include "formula.hpp"
 #include "formula_object.hpp"
 #include "http_server.hpp"
-#include "ipc.hpp"
 #include "json_parser.hpp"
 #include "module.hpp"
 #include "preferences.hpp"
@@ -98,7 +102,8 @@ bool username_valid(const std::string& username)
 
 PREF_INT(matchmaking_heartbeat_ms, 50, "Frequency of matchmaking heartbeats");
 
-class matchmaking_server : public game_logic::formula_callable, public http::web_server
+class matchmaking_server : public game_logic::FormulaCallable, public http::web_server
+
 {
 public:
 	matchmaking_server(boost::asio::io_service& io_service, int port)
@@ -106,19 +111,20 @@ public:
 	    io_service_(io_service), port_(port),
 		timer_(io_service), db_timer_(io_service),
 		time_ms_(0), send_at_time_ms_(1000), terminated_servers_(0),
-		controller_(game_logic::formula_object::create("matchmaking_server"))
+		controller_(game_logic::FormulaObject::create("matchmaking_server"))
 	{
 
-		create_account_fn_ = controller_->query_value("create_account");
+		create_account_fn_ = controller_->queryValue("create_account");
 		ASSERT_LOG(create_account_fn_.is_function(), "Could not find create_account in matchmaking_server class");
 
-		handle_request_fn_ = controller_->query_value("handle_request");
+		handle_request_fn_ = controller_->queryValue("handle_request");
 		ASSERT_LOG(handle_request_fn_.is_function(), "Could not find handle_request in matchmaking_server class");
 
-		matchmake_fn_ = controller_->query_value("matchmake");
+		matchmake_fn_ = controller_->queryValue("matchmake");
 		ASSERT_LOG(matchmake_fn_.is_function(), "Could not find matchmake function in matchmaking_server class");
 
-		db_client_ = db_client::create();
+		db_client_ = DbClient::create();
+
 
 		db_timer_.expires_from_now(boost::posix_time::milliseconds(10));
 		db_timer_.async_wait(boost::bind(&matchmaking_server::db_process, this, boost::asio::placeholders::error));
@@ -144,7 +150,7 @@ public:
 		db_client_->process(1000);
 	}
 
-	void execute_command(variant cmd);
+	void executeCommand(variant cmd);
 
 	void heartbeat(const boost::system::error_code& error)
 	{
@@ -277,7 +283,7 @@ public:
 	}
 
 
-	void handle_post(socket_ptr socket, variant doc, const http::environment& env)
+	void handlePost(socket_ptr socket, variant doc, const http::environment& env)
 	{
 		int request_session_id = -1;
 		std::map<std::string, std::string>::const_iterator i = env.find("cookie");
@@ -372,7 +378,7 @@ public:
 						response.add("reason", "db_error");
 						response.add("message", "There was an error with registering. Please try again.");
 						send_response(socket, response.build());
-					}, db_client::PUT_ADD);
+					}, DbClient::PUT_ADD);
 				});
 
 				
@@ -653,7 +659,7 @@ public:
 				args.push_back(variant(this));
 				args.push_back(doc);
 				variant cmd = handle_request_fn_(args);
-				execute_command(cmd);
+				executeCommand(cmd);
 
 				send_msg(socket, "text/json", current_response_.write_json(), "");
 				current_response_ = variant();
@@ -665,7 +671,7 @@ public:
 		}
 	}
 
-	void handle_get(socket_ptr socket, const std::string& url, const std::map<std::string, std::string>& args)
+	void handleGet(socket_ptr socket, const std::string& url, const std::map<std::string, std::string>& args)
 	{
 		fprintf(stderr, "HANDLE GET: %s\n", url.c_str());
 
@@ -886,7 +892,7 @@ private:
 	boost::asio::deadline_timer db_timer_;
 
 
-	db_client_ptr db_client_;
+	DbClientPtr db_client_;
 
 	struct SessionInfo {
 		SessionInfo() : game_pending(0), game_port(0), queued_for_game(false), sent_heartbeat(false), messages_this_time_segment(0), time_segment(0), flood_mute_expires(0) {}
@@ -949,7 +955,7 @@ private:
 	//stats
 	int terminated_servers_;
 
-	boost::intrusive_ptr<game_logic::formula_object> controller_;
+	boost::intrusive_ptr<game_logic::FormulaObject> controller_;
 	variant create_account_fn_;
 	variant handle_request_fn_;
 	variant matchmake_fn_;
@@ -964,25 +970,25 @@ DEFINE_FIELD(response, "any")
 	return obj.current_response_;
 DEFINE_SET_FIELD
 	obj.current_response_ = value;
-DEFINE_FIELD(db_client, "builtin db_client")
+DEFINE_FIELD(db_client, "builtin DbClient")
 	return variant(obj.db_client_.get());
 END_DEFINE_CALLABLE(matchmaking_server)
 
-void matchmaking_server::execute_command(variant cmd)
+void matchmaking_server::executeCommand(variant cmd)
 {
 	if(cmd.is_list()) {
 		for(variant v : cmd.as_list()) {
-			execute_command(v);
+			executeCommand(v);
 		}
 
 		return;
 	} else if(cmd.is_null()) {
 		return;
 	} else {
-		const game_logic::command_callable* command = cmd.try_convert<game_logic::command_callable>();
+		const game_logic::CommandCallable* command = cmd.try_convert<game_logic::CommandCallable>();
 		ASSERT_LOG(command, "Unrecognize command: " << cmd.write_json());
 
-		command->run_command(*this);
+		command->runCommand(*this);
 	}
 }
 
@@ -1024,11 +1030,11 @@ COMMAND_LINE_UTILITY(db_script) {
 		arg.push_back(variant(s));
 	}
 
-	formula f = formula(variant(script));
+	Formula f = Formula(variant(script));
 
-	map_formula_callable_ptr callable(new map_formula_callable);
+	MapFormulaCallablePtr callable(new MapFormulaCallable);
 
-	db_client_ptr db = db_client::create();
+	auto db = DbClient::create();
 	callable->add("db", variant(db.get()));
 	callable->add("args", variant(&arg));
 	callable->add("lib", variant(game_logic::get_library_object().get()));
@@ -1038,7 +1044,7 @@ COMMAND_LINE_UTILITY(db_script) {
 	boost::asio::io_service io_service;
 	boost::intrusive_ptr<matchmaking_server> server(new matchmaking_server(io_service, 29543));
 
-	server->execute_command(commands);
+	server->executeCommand(commands);
 
 	while(db->process()) {
 	}
@@ -1046,7 +1052,7 @@ COMMAND_LINE_UTILITY(db_script) {
 
 #else
 
-class matchmaking_server : public game_logic::formula_callable, public http::web_server
+class matchmaking_server : public game_logic::FormulaCallable, public http::web_server
 {
 	DECLARE_CALLABLE(matchmaking_server);
 };
@@ -1056,7 +1062,7 @@ BEGIN_DEFINE_CALLABLE_NOBASE(matchmaking_server)
 DEFINE_FIELD(response, "any")
 	return variant();
 DEFINE_SET_FIELD
-DEFINE_FIELD(db_client, "builtin db_client")
+DEFINE_FIELD(db_client, "builtin DbClient")
 	return variant();
 END_DEFINE_CALLABLE(matchmaking_server)
 

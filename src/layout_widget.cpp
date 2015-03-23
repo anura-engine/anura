@@ -1,21 +1,43 @@
+/*
+	Copyright (C) 2012-2014 by Kristina Simpson <sweet.kristas@gmail.com>
+	
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
+
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
+
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
+*/
+
 #include <algorithm>
 #include "asserts.hpp"
 #include "formula_callable_visitor.hpp"
 #include "layout_widget.hpp"
-#include "raster.hpp"
 #include "widget_factory.hpp"
 
 namespace gui
 {
-	layout_widget::layout_widget(const variant& v, game_logic::formula_callable* e)
-		: widget(v,e), fixed_width_(0), fixed_height_(0), layout_type_(ABSOLUTE_LAYOUT)
+	LayoutWidget::LayoutWidget(const variant& v, game_logic::FormulaCallable* e)
+		: Widget(v,e), fixed_width_(0), fixed_height_(0), layout_type_(LayoutType::ABSOLUTE)
 	{
 		if(v.has_key("style")) {
 			const std::string style = v["style"].as_string();
 			if(style == "absolute") {
-				layout_type_ = ABSOLUTE_LAYOUT;
+				layout_type_ = LayoutType::ABSOLUTE;
 			} else if(style == "relative") {
-				layout_type_ = RELATIVE_LAYOUT;
+				layout_type_ = LayoutType::RELATIVE;
 			} else {
 				ASSERT_LOG(false, "Unrecognised layout style: " << style);
 			}
@@ -34,20 +56,20 @@ namespace gui
 			fixed_height_ = height();
 		}
 
-		reflow_children();
+		reflowChildren();
 	}
 
-	layout_widget::~layout_widget()
+	LayoutWidget::~LayoutWidget()
 	{
 	}
 
-	void layout_widget::reflow_children()
+	void LayoutWidget::reflowChildren()
 	{
 		int lx = 0;
 		int ly = 0;
 		int lw = 0;
 		int lh = 0;
-		if(layout_type_ == RELATIVE_LAYOUT) {
+		if(layout_type_ == LayoutType::RELATIVE) {
 			for(auto w : children_) {
 				ASSERT_LOG(w->width() < fixed_width_, "width of child widget is greater than width of layout widget");
 				if(lx + w->width() > fixed_width_) {
@@ -55,11 +77,11 @@ namespace gui
 					lh = 0;
 				}
 				lh = std::max(lh, w->height());
-				w->set_loc(lx, ly);
+				w->setLoc(lx, ly);
 				lx += w->width();
 				lw = std::max(lw, lx);
 			}
-		} else if(layout_type_ == ABSOLUTE_LAYOUT) {
+		} else if(layout_type_ == LayoutType::ABSOLUTE) {
 			// do nothing
 			for(auto w : children_) {
 				lw = std::max(lw, w->width());
@@ -69,13 +91,13 @@ namespace gui
 			ASSERT_LOG(false, "Incorrect layout style");
 		}
 		if(fixed_height_ == 0 && fixed_width_ == 0) {
-			set_dim(lw, lh);
+			setDim(lw, lh);
 		}
 	}
 
-	void layout_widget::recalc_loc()
+	void LayoutWidget::recalcLoc()
 	{
-		widget::recalc_loc();
+		Widget::recalcLoc();
 		if(width()) {
 			fixed_width_ = width();
 		}
@@ -84,20 +106,17 @@ namespace gui
 		}
 	}
 
-	void layout_widget::handle_draw() const
+	void LayoutWidget::handleDraw() const
 	{
-		glPushMatrix();
-		glTranslatef(GLfloat(x() & ~1), GLfloat(y() & ~1), 0.0);
 		for(auto w : children_) {
-			w->draw();
+			w->draw(x(), y());
 		}
-		glPopMatrix();
 	}
 
-	bool layout_widget::handle_event(const SDL_Event& event, bool claimed)
+	bool LayoutWidget::handleEvent(const SDL_Event& event, bool claimed)
 	{
 		for(auto w : children_) {
-			claimed = w->process_event(event, claimed);
+			claimed = w->processEvent(getPos(), event, claimed);
 			if(claimed) {
 				return claimed;
 			}
@@ -105,30 +124,30 @@ namespace gui
 		return claimed;
 	}
 
-	std::vector<widget_ptr> layout_widget::get_children() const
+	std::vector<WidgetPtr> LayoutWidget::getChildren() const
 	{
 
-		std::vector<widget_ptr> v;
+		std::vector<WidgetPtr> v;
 		for(auto w : children_) {
 			v.push_back(w);
 		}
 		return v;
 	}
 
-	void layout_widget::visit_values(game_logic::formula_callable_visitor& visitor)
+	void LayoutWidget::visitValues(game_logic::FormulaCallableVisitor& visitor)
 	{
 		for(auto w : children_) {
 			visitor.visit(&w);
 		}
 	}
 
-	variant layout_widget::handle_write()
+	variant LayoutWidget::handleWrite()
 	{
 		variant_builder res;
 		res.add("type", "layout");
 		switch(layout_type_) {
-			case ABSOLUTE_LAYOUT: res.add("style", "absolute"); break;
-			case RELATIVE_LAYOUT: res.add("style", "relative"); break;
+			case LayoutType::ABSOLUTE: res.add("style", "absolute"); break;
+			case LayoutType::RELATIVE: res.add("style", "relative"); break;
 			default:
 				ASSERT_LOG(false, "Incorrect layout style");
 		}
@@ -138,8 +157,8 @@ namespace gui
 		return res.build();
 	}
 
-	BEGIN_DEFINE_CALLABLE(layout_widget, widget)
+	BEGIN_DEFINE_CALLABLE(LayoutWidget, Widget)
 		DEFINE_FIELD(dummy, "int")
 			return variant();
-	END_DEFINE_CALLABLE(layout_widget)
+	END_DEFINE_CALLABLE(LayoutWidget)
 }

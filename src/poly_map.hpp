@@ -1,25 +1,35 @@
+/*
+	Copyright (C) 2012-2014 by Kristina Simpson <sweet.kristas@gmail.com>
+	
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
+
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
+
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
+*/
+
 #pragma once
 
-#include <vector>
-#include "formula_callable.hpp"
-#include "formula_callable_definition.hpp"
+#include "geometry.hpp"
+
 #include "widget.hpp"
 
 namespace geometry
 {
-	template<class T>
-	struct point
-	{
-		point() : x(0), y(0) {}
-		explicit point(T xx, T yy) : x(xx), y(yy) {}
-		T x, y;
-
-		bool operator==(const point<T>& o) const {
-			return o.x == x && o.y == y;
-		}
-	};
-
-	typedef point<double> fpoint;
+	typedef geometry::Point<double> fpoint;
 	typedef std::vector<fpoint> fpoint_list;	
 
 	struct edge
@@ -29,44 +39,23 @@ namespace geometry
 		edge(const fpoint& a, const fpoint& b) : p1(a), p2(b) {}
 	};
 
-	class polygon
+	class Polygon
 	{
 	public:
-		polygon(int id) : id_(id), height_(0) {}
-		virtual ~polygon() {}
+		Polygon(int id) : id_(id), height_(0) {}
+		virtual ~Polygon() {}
 		
-		void add_point(double x, double y) {
+		void addPoint(double x, double y) {
 			pts_.push_back(fpoint(x,y));
 		}
-		void set_height(int height) {
+		void setHeight(int height) {
 			height_ = height;
 		}
-
-		void init() {
-			if(pts_.size() > 0) {
-				varray_.push_back(centroid().x); 
-				varray_.push_back(centroid().y);
-				for(auto& p : pts_) {
-					varray_.push_back(p.x); 
-					varray_.push_back(p.y);
-				}
-				// close the loop
-				varray_.push_back(varray_[2]); 
-				varray_.push_back(varray_[3]);
-
-				for(int n = 1; n != pts_.size(); ++n) {
-					vedges_.push_back(GLfloat(pts_[n-1].x));
-					vedges_.push_back(GLfloat(pts_[n-1].y));
-					vedges_.push_back(GLfloat(pts_[n].x));
-					vedges_.push_back(GLfloat(pts_[n].y));
-				}
-
-			}
-		}
+		void init();
 		void normalise() {
 			pts_.erase(std::unique(pts_.begin(), pts_.end()), pts_.end());
 		}
-		void calculate_centroid(fpoint& centroid) {
+		void calculateCentroid(fpoint& centroid) {
 			centroid.x = 0;
 			centroid.y = 0;
 			for(auto& p : pts_) {
@@ -77,23 +66,20 @@ namespace geometry
 			centroid.y /= double(pts_.size());
 		}
 
-		void set_centroid(const fpoint& ct) {
+		void setCentroid(const fpoint& ct) {
 			centroid_ = ct;
 		}
-		void set_color(const graphics::color& c) {
+		void setColor(const KRE::Color& c) {
 			color_ = c;
 		}
-		void set_color(const SDL_Color& c) {
-			color_ = graphics::color(c);
-		}
 
-		int id() const { return id_; }
+		int getId() const { return id_; }
 		int height() const { return height_; }
-		const fpoint& centroid() const { return centroid_; }
-		const std::vector<fpoint>& points() const { return pts_; }
-		const graphics::color& color() const { return color_; }
+		const fpoint& getCentroid() const { return centroid_; }
+		const std::vector<fpoint>& getPoints() const { return pts_; }
+		const KRE::Color& getColor() const { return color_; }
 
-		virtual void draw() const;
+		void draw(int xt=0, int yt=0, float rotate=0, float scale=0) const;
 	private:
 		std::vector<fpoint> pts_;
 		int id_;
@@ -103,37 +89,37 @@ namespace geometry
 
 		// Stuff for drawing.
 		// Constructed triangle fan
-		std::vector<GLfloat> varray_;
+		std::vector<glm::vec2> varray_;
 		// Color of polygon
-		graphics::color color_;
+		KRE::Color color_;
 		// edges for drawing black border.
-		std::vector<GLfloat> vedges_;
+		std::vector<glm::vec2> vedges_;
 
 		fpoint centroid_;
 
-		polygon();
-		polygon(const polygon&);
+		Polygon();
+		Polygon(const Polygon&);
 	};
-	typedef std::shared_ptr<polygon> polygon_ptr;
+	typedef std::shared_ptr<Polygon> PolygonPtr;
 
-	std::ostream& operator<<(std::ostream& os, const polygon& poly);
+	std::ostream& operator<<(std::ostream& os, const Polygon& poly);
 
 	namespace voronoi
 	{
-		class wrapper
+		class Wrapper
 		{
 		public:
-			wrapper(const fpoint_list& pts, int relaxations=1, double left=0, double top=0, double right=0, double bottom=0);
-			~wrapper();
+			Wrapper(const fpoint_list& pts, int relaxations=1, double left=0, double top=0, double right=0, double bottom=0);
+			~Wrapper();
 
 			double left() const { return left_; }
 			double right() const { return right_; }
 			double top() const { return top_; }
 			double bottom() const { return bottom_; }
 
-			const std::vector<edge>& get_edges() const { return output_; }
-			const std::vector<polygon_ptr>& get_polys() const { return polygons_; }
-			const fpoint_list& sites() const { return sites_; }
+			const std::vector<edge>& getEdges() const { return output_; }
+			const std::vector<PolygonPtr>& getPolys() const { return polygons_; }
+			const fpoint_list& getSites() const { return sites_; }
 		private:
 			// bounding box
 			double left_;
@@ -143,47 +129,47 @@ namespace geometry
 
 			fpoint_list sites_;
 
-			void calculate_bounding_box(const fpoint_list& pts);
+			void calculateBoundingBox(const fpoint_list& pts);
 			void generate(fpoint_list& pts);
 
 			std::vector<edge> output_;
-			std::vector<polygon_ptr> polygons_;
+			std::vector<PolygonPtr> polygons_;
 
-			wrapper();
-			wrapper(const wrapper&);
+			Wrapper();
+			Wrapper(const Wrapper&);
 		};
 
-		std::ostream& operator<<(std::ostream& os, const wrapper& obj);
+		std::ostream& operator<<(std::ostream& os, const Wrapper& obj);
 	}
 
-	class poly_map : public gui::widget
+	class PolyMap : public gui::Widget
 	{
 	public:
-		explicit poly_map(int n_pts, int relaxations_, int width, int height);
-		explicit poly_map(const variant& v, game_logic::formula_callable* e);
-		virtual ~poly_map();
+		explicit PolyMap(int n_pts, int relaxations_, int width, int height);
+		explicit PolyMap(const variant& v, game_logic::FormulaCallable* e);
+		virtual ~PolyMap();
 
 		void init();
 
 	protected:
-		virtual void handle_draw() const;
+		virtual void handleDraw() const override;
 	private:
-		DECLARE_CALLABLE(poly_map);
+		DECLARE_CALLABLE(PolyMap);
 
 		int npts_;
 		int relaxations_;
 		uint32_t noise_seed_;
 		std::vector<fpoint> pts_;
-		std::vector<GLfloat> edges_;
+		std::vector<glm::vec2> edges_;
 
 		// Controls the island-ness of the terrain.
 		float noise_multiplier_;
 
-		std::vector<polygon_ptr> polygons_;
+		std::vector<PolygonPtr> polygons_;
 
-		poly_map();
-		poly_map(const poly_map&);
+		PolyMap();
+		PolyMap(const PolyMap&);
 	};
 
-	typedef boost::intrusive_ptr<poly_map> poly_map_ptr;
+	typedef boost::intrusive_ptr<PolyMap> PolyMapPtr;
 }

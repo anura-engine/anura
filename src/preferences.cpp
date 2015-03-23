@@ -1,24 +1,30 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
+
 #include <iostream>
 #include <algorithm>
 #include <string>
 #include <iomanip>
-#include "graphics.hpp"
 
 #include <boost/regex.hpp>
 #include <boost/lexical_cast.hpp>
@@ -37,6 +43,7 @@
 #include "preferences.hpp"
 #include "sound.hpp"
 #include "sys.hpp"
+#include "string_utils.hpp"
 #include "variant_utils.hpp"
 
 #include <time.h>
@@ -44,194 +51,189 @@
 #define SAVE_FILENAME					"save.cfg"
 #define AUTOSAVE_FILENAME				"autosave.cfg"
 
-#ifdef _WINDOWS
+#if defined(_MSC_VER)
+
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <shlobj.h>
 #include <shlwapi.h>
 
+std::string multi_byte_from_wide_string(LPCWSTR pwsz, UINT cp) 
+{
+    int cch = WideCharToMultiByte(cp, 0, pwsz, -1, 0, 0, nullptr, nullptr);
+    char* psz = new char[cch];
+    WideCharToMultiByte(cp, 0, pwsz, -1, psz, cch, nullptr, nullptr);
+    std::string st(psz);
+    delete[] psz;
+	return st;
+}
+
+std::string get_windows_error_as_string()
+{
+	LPVOID lpMsgBuf;
+	FormatMessage( 
+		FORMAT_MESSAGE_ALLOCATE_BUFFER | 
+		FORMAT_MESSAGE_FROM_SYSTEM | 
+		FORMAT_MESSAGE_IGNORE_INSERTS,
+		nullptr,
+		GetLastError(),
+		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
+		(LPTSTR) &lpMsgBuf,
+		0,
+		nullptr 
+	);
+
+#if defined(_UNICODE)
+	std::string res = multi_byte_from_wide_string((LPCTSTR)lpMsgBuf, CP_UTF8);
+#else
+	std::string res((LPCSTR)lpMsgBuf);
+#endif
+	// Free the buffer.
+	::LocalFree(lpMsgBuf);
+	return res;
+}
+
 class WindowsPrefs
+{
+public:
+	const std::string& getPreferencePath() const   { return preferences_path_; }
+	const std::string& getSaveFilePath() const     { return save_file_path_; }
+	const std::string& getAutoSaveFilePath() const { return auto_save_file_path_; }
+	const std::string& getAppDataPath() const      { return app_data_path_; }
+	static WindowsPrefs& getInstance() {
+		static WindowsPrefs res;
+		return res;
+	}
+private:
+	WindowsPrefs() {
+		char szPath[MAX_PATH];
+		if(SUCCEEDED(SHGetFolderPathA(nullptr, CSIDL_APPDATA, nullptr, 0, szPath))) {
+			app_data_path_ = std::string(szPath);
+		} else {
+			ASSERT_LOG(false, "Failed to read the application data path: " << get_windows_error_as_string());
+		}
+
+		preferences_path_ = app_data_path_ + "/" + module::get_module_name() + "/";
+		save_file_path_ = preferences_path_ + SAVE_FILENAME;
+		auto_save_file_path_ = preferences_path_ + AUTOSAVE_FILENAME;
+	}
+	std::string preferences_path_;
+	std::string save_file_path_;
+	std::string auto_save_file_path_;
+	std::string app_data_path_;
+};
+
+#endif // _MSC_VER
+
+
+namespace preferences 
+{
+	namespace 
 	{
-	public:
-		std::string GetPreferencePath()   { if (State* i = Instance()) return i->GetPreferencePath(); }
-		std::string GetSaveFilePath()     { if (State* i = Instance()) return i->GetSaveFilePath(); }
-		std::string GetAutoSaveFilePath() { if (State* i = Instance()) return i->GetAutoSaveFilePath(); }
-		
-	private:
-		struct State 
+		struct RegisteredSetting 
+		{
+			RegisteredSetting() : persistent(false), int_value(nullptr), bool_value(nullptr), double_value(nullptr), string_value(nullptr), variant_value(nullptr), helpstring(nullptr)
+			{}
+			variant write() const {
+				if(int_value) {
+					return variant(*int_value);
+				} else if(string_value) {
+					return variant(*string_value);
+				} else if(bool_value) {
+					return variant::from_bool(*bool_value);
+				} else if(double_value) {
+					return variant(*double_value);
+				} else if(variant_value) {
+					return *variant_value;
+				} else {
+					return variant();
+				}
+			}
+
+			void read(variant value) {
+				if(int_value && value.is_int()) {
+					*int_value = value.as_int();
+				} else if(string_value && value.is_string()) {
+					*string_value = value.as_string();
+				} else if(bool_value && (value.is_bool() || value.is_int())) {
+					*bool_value = value.as_bool();
+				} else if(double_value && (value.is_decimal() || value.is_int())) {
+					*double_value = value.as_decimal().as_float();
+				} else if(variant_value) {
+					*variant_value = value;
+				}
+			}
+			bool persistent;
+			int* int_value;
+			bool* bool_value;
+			double* double_value;
+			std::string* string_value;
+			variant* variant_value;
+			const char* helpstring;
+		};
+
+		std::map<std::string, RegisteredSetting>& g_registered_settings() {
+			static std::map<std::string, RegisteredSetting> instance;
+			return instance;
+		}
+
+		class SettingsObject : public game_logic::FormulaCallable
 		{
 		private:
-			std::string preferences_path;
-			std::string save_file_path;
-			std::string auto_save_file_path;
-		public:
-			State::State()
-			{
-				this->preferences_path = GetAppDataPath() + "/" + module::get_module_name() + "/";
-				this->save_file_path = this->preferences_path + SAVE_FILENAME;
-				this->auto_save_file_path = this->preferences_path + AUTOSAVE_FILENAME;
-			}
-			std::string GetPreferencePath()
-			{
-				return this->preferences_path;
-			};
-			
-			std::string GetSaveFilePath()
-			{
-				return this->save_file_path;
-			}
-			
-			std::string GetAutoSaveFilePath()
-			{
-				return this->auto_save_file_path;
-			}
-		};
-		
-		static State* Instance();
-		static void CleanUp();
-		
-		static bool MDestroyed;
-		static State* MInstance;
-	};
+			variant getValue(const std::string& key) const {
+				if(key == "dir") {
+					std::vector<variant> result;
+					for(std::map<std::string, RegisteredSetting>::iterator itor = g_registered_settings().begin(); itor != g_registered_settings().end(); ++itor) {
+						result.push_back(variant(itor->first));
+					}
 
-std::string GetAppDataPath() {
-	char szPath[ MAX_PATH ];
-	if(SUCCEEDED(SHGetFolderPathA(NULL, CSIDL_APPDATA, NULL, 0, szPath))) 
-	{
-		return std::string(szPath);
-	}
-	return std::string();
-}
-
-bool WindowsPrefs::MDestroyed = false;
-WindowsPrefs::State* WindowsPrefs::MInstance = 0;
-
-WindowsPrefs::State* WindowsPrefs::Instance()
-{
-	if( !MDestroyed && !MInstance ) {
-		MInstance = new State();
-		atexit( &CleanUp );
-	}
-	return MInstance;
-}
-
-void WindowsPrefs::CleanUp()
-{
-	delete MInstance;
-	MInstance = 0;
-	MDestroyed = true;
-}
-
-WindowsPrefs winPrefs;
-#endif // _WINDOWS
-
-
-namespace preferences {
-	namespace {
-	struct RegisteredSetting {
-		RegisteredSetting() : persistent(false), int_value(NULL), bool_value(NULL), double_value(NULL), string_value(NULL), variant_value(NULL), helpstring(NULL)
-		{}
-		variant write() const {
-			if(int_value) {
-				return variant(*int_value);
-			} else if(string_value) {
-				return variant(*string_value);
-			} else if(bool_value) {
-				return variant::from_bool(*bool_value);
-			} else if(double_value) {
-				return variant(*double_value);
-			} else if(variant_value) {
-				return *variant_value;
-			} else {
-				return variant();
-			}
-		}
-
-		void read(variant value) {
-			if(int_value && value.is_int()) {
-				*int_value = value.as_int();
-			} else if(string_value && value.is_string()) {
-				*string_value = value.as_string();
-			} else if(bool_value && (value.is_bool() || value.is_int())) {
-				*bool_value = value.as_bool();
-			} else if(double_value && (value.is_decimal() || value.is_int())) {
-				*double_value = value.as_decimal().as_float();
-			} else if(variant_value) {
-				*variant_value = value;
-			}
-		}
-		bool persistent;
-		int* int_value;
-		bool* bool_value;
-		double* double_value;
-		std::string* string_value;
-		variant* variant_value;
-		const char* helpstring;
-	};
-
-	std::map<std::string, RegisteredSetting>& g_registered_settings() {
-		static std::map<std::string, RegisteredSetting> instance;
-		return instance;
-	}
-
-	class SettingsObject : public game_logic::formula_callable
-	{
-	public:
-	private:
-		variant get_value(const std::string& key) const {
-			if(key == "dir") {
-				std::vector<variant> result;
-				for(std::map<std::string, RegisteredSetting>::iterator itor = g_registered_settings().begin(); itor != g_registered_settings().end(); ++itor) {
-					result.push_back(variant(itor->first));
+					return variant(&result);
 				}
 
-				return variant(&result);
+				std::map<std::string, RegisteredSetting>::const_iterator itor = g_registered_settings().find(key);
+				if(itor == g_registered_settings().end()) {
+					return variant();
+				}
+
+				if(itor->second.int_value) {
+					return variant(*itor->second.int_value);
+				} else if(itor->second.string_value) {
+					return variant(*itor->second.string_value);
+				} else if(itor->second.bool_value) {
+					return variant::from_bool(*itor->second.bool_value);
+				} else if(itor->second.double_value) {
+					return variant(*itor->second.double_value);
+				} else {
+					return variant();
+				}
 			}
 
-			std::map<std::string, RegisteredSetting>::const_iterator itor = g_registered_settings().find(key);
-			if(itor == g_registered_settings().end()) {
-				return variant();
+			void setValue(const std::string& key, const variant& value) {
+				std::map<std::string, RegisteredSetting>::iterator itor = g_registered_settings().find(key);
+				if(itor == g_registered_settings().end()) {
+					return;
+				}
+
+				if(itor->second.int_value) {
+					*itor->second.int_value = value.as_int();
+				} else if(itor->second.string_value) {
+					*itor->second.string_value = value.as_string();
+				} else if(itor->second.double_value) {
+					*itor->second.double_value = value.as_decimal().as_float();
+				}
 			}
 
-			if(itor->second.int_value) {
-				return variant(*itor->second.int_value);
-			} else if(itor->second.string_value) {
-				return variant(*itor->second.string_value);
-			} else if(itor->second.bool_value) {
-				return variant::from_bool(*itor->second.bool_value);
-			} else if(itor->second.double_value) {
-				return variant(*itor->second.double_value);
-			} else {
-				return variant();
+			void getInputs(std::vector<game_logic::FormulaInput>* inputs) const {
+				for(std::map<std::string, RegisteredSetting>::iterator itor = g_registered_settings().begin(); itor != g_registered_settings().end(); ++itor) {
+					inputs->push_back(game_logic::FormulaInput(itor->first, game_logic::FORMULA_ACCESS_TYPE::READ_WRITE));
+				}
 			}
-		}
-
-		void set_value(const std::string& key, const variant& value) {
-			std::map<std::string, RegisteredSetting>::iterator itor = g_registered_settings().find(key);
-			if(itor == g_registered_settings().end()) {
-				return;
-			}
-
-			if(itor->second.int_value) {
-				*itor->second.int_value = value.as_int();
-			} else if(itor->second.string_value) {
-				*itor->second.string_value = value.as_string();
-			} else if(itor->second.double_value) {
-				*itor->second.double_value = value.as_decimal().as_float();
-			}
-		}
-
-		void get_inputs(std::vector<game_logic::formula_input>* inputs) const {
-			for(std::map<std::string, RegisteredSetting>::iterator itor = g_registered_settings().begin(); itor != g_registered_settings().end(); ++itor) {
-				inputs->push_back(game_logic::formula_input(itor->first, game_logic::FORMULA_READ_WRITE));
-			}
-		}
-	};
+		};
 	}
 
-	game_logic::formula_callable* get_settings_obj()
+	game_logic::FormulaCallable* get_settings_obj()
 	{
-		static boost::intrusive_ptr<game_logic::formula_callable> obj(new SettingsObject);
+		static boost::intrusive_ptr<game_logic::FormulaCallable> obj(new SettingsObject);
 		return obj.get();
 	}
 
@@ -362,10 +364,9 @@ namespace preferences {
 		return versiond;
 	}
 	
-	namespace {
+	namespace 
+	{
 		int unique_user_id = 0;
-		
-		int screen_editor_mode = 0;
 		
 		bool no_sound_ = false;
 		bool no_music_ = false;
@@ -373,7 +374,7 @@ namespace preferences {
 		bool edit_and_continue_ = false;
 		bool show_iphone_controls_ = false;
 		bool use_pretty_scaling_ = false;
-		FullscreenMode fullscreen_ = FULLSCREEN_NONE;
+		ScreenMode fullscreen_ = ScreenMode::WINDOWED;
 		bool fullscreen_disabled_ = false;
 		bool resizable_ = false;
 		bool proportional_resize_ = false;
@@ -387,9 +388,6 @@ namespace preferences {
 		bool auto_size_window_ = false;
 		bool screen_dimensions_are_persistent = false;
 		
-		std::string level_path_ = "data/level/";
-		bool level_path_set_ = false;
-		
 		bool relay_through_server_ = false;
 		
 		std::string control_scheme_ = "iphone_2d";
@@ -400,7 +398,7 @@ namespace preferences {
 		
 		variant external_code_editor_;
 		
-		int force_difficulty_ = INT_MIN;
+		int force_difficulty_ = std::numeric_limits<int>::min();
 		
 		uri::uri tbs_uri_ = uri::uri::parse("http://localhost:23456");
 		
@@ -419,14 +417,6 @@ namespace preferences {
 #endif
 		bool send_stats_ = false;
 		
-		bool sim_iphone_ = true;
-		
-		int virtual_screen_width_ = 960;
-		int virtual_screen_height_ = 640;
-		
-		int actual_screen_width_ = 320;
-		int actual_screen_height_ = 480;
-		
 		bool screen_rotated_ = true;
 		
 		bool use_joystick_ = false;
@@ -438,17 +428,9 @@ namespace preferences {
 		
 		bool send_stats_ = false;
 		
-		bool sim_iphone_ = false;
-		
 #ifndef PREFERENCES_PATH
 #define PREFERENCES_PATH "~/.frogatto/"
 #endif
-		int virtual_screen_width_ = 854;
-		int virtual_screen_height_ = 480;
-		
-		int actual_screen_width_ = 854;
-		int actual_screen_height_ = 480;
-		
 		bool screen_rotated_ = false;
 		
 		bool use_joystick_ = true;
@@ -466,12 +448,6 @@ namespace preferences {
 #endif
 		
 		bool send_stats_ = false;
-		bool sim_iphone_ = false;
-		int virtual_screen_width_ = 800;
-		int virtual_screen_height_ = 480;
-		
-		int actual_screen_width_ = 800;
-		int actual_screen_height_ = 480;
 		
 		bool screen_rotated_ = false;
 		
@@ -489,13 +465,8 @@ namespace preferences {
 #define PREFERENCES_PATH "~/.frogatto/"
 #endif
 		bool send_stats_ = true;
-		bool sim_iphone_ = false;
 		bool use_joystick_ = true;
 		bool screen_rotated_ = false;
-		int virtual_screen_width_ = 1024;
-		int virtual_screen_height_ = 600;
-		int actual_screen_width_ = 1024;
-		int actual_screen_height_ = 600;
 		bool load_compiled_ = true;
 		bool use_fbo_ = true;
 		bool use_bequ_ = true;
@@ -513,8 +484,6 @@ namespace preferences {
 		bool send_stats_ = false;
 #endif
 		
-		bool sim_iphone_ = false;
-		
 #ifndef PREFERENCES_PATH
 #define PREFERENCES_PATH "~/.frogatto/"
 #endif
@@ -523,22 +492,10 @@ namespace preferences {
 		bool use_joystick_ = true;
 		
 #if defined(TARGET_TEGRA)
-		int virtual_screen_width_ = 1024;
-		int virtual_screen_height_ = 600;
-		
-		int actual_screen_width_ = 1024;
-		int actual_screen_height_ = 600;
-		
 		bool load_compiled_ = true;
 		bool use_fbo_ = true;
 		bool use_bequ_ = true;
 #else
-		int virtual_screen_width_ = 800;
-		int virtual_screen_height_ = 600;
-		
-		int actual_screen_width_ = 800;
-		int actual_screen_height_ = 600;
-		
 		bool load_compiled_ = false;
 #endif
 		
@@ -569,29 +526,26 @@ namespace preferences {
 		bool serialize_bad_objects_ = true;
 		bool die_on_assert_ = false;
 		bool type_safety_checks_ = true;
+
+		int requested_window_width_ = 0;
+		int requested_window_height_ = 0;
+		int requested_virtual_window_width_ = 0;
+		int requested_virtual_window_height_ = 0;
+	
 	}
 	
+	int xypos_draw_mask = ~1;
+	bool compiling_tiles = false;
+
 	int get_unique_user_id() {
 		if(unique_user_id == 0) {
 			time_t t1;
 			time(&t1);
-			int tm = t1;
+			int tm = static_cast<int>(t1);
 			unique_user_id = tm^rand();
 		}
 		
 		return unique_user_id;
-	}
-	
-	int xypos_draw_mask = actual_screen_width_ < virtual_screen_width_ ? ~1 : ~0;
-	bool double_scale() {
-		return xypos_draw_mask&1;
-	}
-	bool compiling_tiles = false;
-	
-	namespace {
-		void recalculate_draw_mask() {
-			xypos_draw_mask = actual_screen_width_ < virtual_screen_width_ ? ~1 : ~0;
-		}
 	}
 	
 	bool no_sound() {
@@ -610,7 +564,7 @@ namespace preferences {
 	void set_preferences_path_from_module( const std::string& name)
 	{
 #ifdef _WINDOWS
-		preferences::set_preferences_path(GetAppDataPath() + "/" + name + "/"); 
+		preferences::set_preferences_path(WindowsPrefs::getInstance().getAppDataPath() + "/" + name + "/"); 
 #elif defined(__ANDROID__)
 		preferences::set_preferences_path("." + name + "/");
 #elif __APPLE__
@@ -628,7 +582,7 @@ namespace preferences {
 	
 	void set_preferences_path(const std::string& path)
 	{
-		std::cerr << "SET PREFERENCES PATH: " << path << "\n";
+		LOG_INFO("SET PREFERENCES PATH: " << path);
 		preferences_path_ = path;
 		if(preferences_path_[preferences_path_.length()-1] != '/') {
 			preferences_path_ += '/';
@@ -638,21 +592,13 @@ namespace preferences {
 		auto_save_file_path_ = preferences_path_ + AUTOSAVE_FILENAME;	
 	}
 	
-	const std::string& level_path() {
-		return level_path_;
-	}
-	
-	bool is_level_path_set() {
-		return level_path_set_;
-	}
-	
 	const char *save_file_path() {
-		std::cerr << "GET SAVE FILE PATH: " << save_file_path_ << std::endl;
+		LOG_INFO("GET SAVE FILE PATH: " << save_file_path_);
 		return save_file_path_.c_str();
 	}
 	
 	const char *auto_save_file_path() {
-		std::cerr << "GET AUTOSAVE FILE PATH: " << auto_save_file_path_ << std::endl;
+		LOG_INFO("GET AUTOSAVE FILE PATH: " << auto_save_file_path_);
 		return auto_save_file_path_.c_str();
 	}
 	
@@ -678,7 +624,7 @@ namespace preferences {
 	
 	std::string dlc_path() {
 #if defined(_MSC_VER)
-		std::string result(GetAppDataPath() + "/" + module::get_module_name() + "/dlc");
+		std::string result(WindowsPrefs::getInstance().getAppDataPath() + "/" + module::get_module_name() + "/dlc");
 #else
 		std::string result(preferences_path_ + "/dlc");
 #endif
@@ -687,16 +633,15 @@ namespace preferences {
 	}
 	
 	void expand_data_paths() {
-		expand_path(level_path_);
 		expand_path(save_file_path_);
 		expand_path(auto_save_file_path_);
 		expand_path(preferences_path_);
-		std::cerr << "EXPAND DATA PATHS\n";
+		LOG_INFO("EXPAND DATA PATHS");
 	}
 	
 	void set_save_slot(const std::string& fname) {
 		save_file_path_ = std::string(user_data_path()) + fname;
-		std::cerr << "SET SAVE FILE PATH TO " << save_file_path_ << "\n";
+		LOG_INFO("SET SAVE FILE PATH TO " << save_file_path_);
 	}
 	
 	bool show_debug_hitboxes() {
@@ -710,15 +655,11 @@ namespace preferences {
 	}
 
 	bool edit_and_continue() {
-		return edit_and_continue_ && !editor_resolution_manager::is_active();
+		return edit_and_continue_ && !EditorResolutionManager::isActive();
 	}
 
 	void set_edit_and_continue(bool value) {
 		edit_and_continue_ = value;
-	}
-	
-	bool show_iphone_controls() {
-		return show_iphone_controls_;
 	}
 	
 	bool use_pretty_scaling() {
@@ -729,7 +670,7 @@ namespace preferences {
 		use_pretty_scaling_ = value;
 	}
 	
-	FullscreenMode fullscreen() {
+	ScreenMode get_screen_mode() {
 		return fullscreen_;
 	}
 
@@ -738,28 +679,12 @@ namespace preferences {
 		return fullscreen_disabled_;
 	}
 	
-	void set_fullscreen(FullscreenMode value) {
+	void set_screen_mode(ScreenMode value) {
 		fullscreen_ = value;
 	}
 	
-	bool resizable() {
+	bool is_resizable() {
 		return resizable_;
-	}
-	
-	bool no_iphone_controls() {
-		return no_iphone_controls_;
-	}
-	
-	bool proportional_resize() {
-		return proportional_resize_;
-	}
-	
-	bool reverse_ab() {
-		return reverse_ab_;
-	}
-	
-	void set_reverse_ab(bool value) {
-		reverse_ab_ = value;
 	}
 	
 	const std::string& control_scheme()
@@ -772,83 +697,6 @@ namespace preferences {
 		control_scheme_ = scheme;
 	}
 	
-	void set_widescreen()
-	{
-		virtual_screen_width_ = (virtual_screen_height_*16)/9;
-		actual_screen_width_ = (actual_screen_height_*16)/9;
-		recalculate_draw_mask();
-	}
-	
-	int virtual_screen_width()
-	{
-		return virtual_screen_width_;
-	}
-	
-	int virtual_screen_height()
-	{
-		return virtual_screen_height_;
-	}
-	
-	void set_virtual_screen_width (int width)
-	{
-		virtual_screen_width_ = width;
-		recalculate_draw_mask();
-	}
-
-	void tweak_virtual_screen(int awidth, int aheight) 
-	{
-		virtual_screen_width_ = (virtual_screen_height_ * awidth)/aheight;
-	}
-	
-	void set_virtual_screen_height (int height)
-	{
-		virtual_screen_height_ = height;
-	}
-	
-	int actual_screen_width()
-	{
-		return actual_screen_width_;
-	}
-	
-	int actual_screen_height()
-	{
-		return actual_screen_height_;
-	}
-	
-	void set_actual_screen_width(int width)
-	{
-		assert(width);
-		actual_screen_width_ = width;
-		if(screen_editor_mode) {
-			virtual_screen_width_ = actual_screen_width_;
-		}
-		recalculate_draw_mask();
-	}
-	
-	void set_actual_screen_height(int height)
-	{
-		assert(height);
-		actual_screen_height_ = height;
-		if(screen_editor_mode) {
-			virtual_screen_height_ = actual_screen_height_;
-		}
-	}
-	
-	void set_actual_screen_dimensions_persistent(int width, int height)
-	{
-		assert(width);
-		assert(height);
-		actual_screen_width_ = width;
-		actual_screen_height_ = height;
-		tweak_virtual_screen(width, height);
-		screen_dimensions_are_persistent = true;
-		if(screen_editor_mode) {
-			virtual_screen_width_ = actual_screen_width_;
-			virtual_screen_height_ = actual_screen_height_;
-		}
-		recalculate_draw_mask();
-	}
-
 	bool load_compiled()
 	{
 		return load_compiled_;
@@ -868,7 +716,27 @@ namespace preferences {
 	{
 		return auto_size_window_;
 	}
-	
+
+	int requested_window_width()
+	{
+		return requested_window_width_;
+	}
+
+	int requested_window_height()
+	{
+		return requested_window_height_;
+	}
+
+	int requested_virtual_window_width()
+	{
+		return requested_virtual_window_width_;
+	}
+
+	int requested_virtual_window_height()
+	{
+		return requested_virtual_window_height_;
+	}
+
 	bool edit_on_start()
 	{
 		return edit_on_start_;
@@ -920,28 +788,6 @@ namespace preferences {
 		password_ = str.str();
 	}
 
-#if defined(TARGET_OS_HARMATTAN) || defined(TARGET_PANDORA) || defined(TARGET_TEGRA) || defined(TARGET_BLACKBERRY)
-	bool use_fbo()
-	{
-		return use_fbo_;
-	}
-	
-	bool use_bequ()
-	{
-		return use_bequ_;
-	}
-	
-    void set_fbo( bool value )
-    {
-		use_fbo_ = value;
-    }
-	
-    void set_bequ( bool value )
-    {
-		use_bequ_ = value;
-    }
-#endif
-	
 	bool force_no_npot_textures()
 	{
 		return force_no_npot_textures_;
@@ -995,23 +841,24 @@ namespace preferences {
 		return use_joystick_;
 	}
 	
-	game_logic::formula_callable* registry()
+	game_logic::FormulaCallable* registry()
 	{
-		return &game_registry::instance();
+		return &GameRegistry::getInstance();
 	}
 	
 	void load_preferences()
 	{
 		std::string path;
 		if(preferences_path_.empty()) {
-#if defined( _WINDOWS )
-			preferences_path_ = winPrefs.GetPreferencePath();
-			save_file_path_ = winPrefs.GetSaveFilePath();
-			auto_save_file_path_ = winPrefs.GetAutoSaveFilePath();
+#if defined(_MSC_VER)
+			
+			preferences_path_ = WindowsPrefs::getInstance().getPreferencePath();
+			save_file_path_ = WindowsPrefs::getInstance().getSaveFilePath();
+			auto_save_file_path_ = WindowsPrefs::getInstance().getAutoSaveFilePath();
 			path = preferences_path_;
 #else
 			path = PREFERENCES_PATH;
-#endif // defined( _WINDOWS )
+#endif
 		} else {
 			path = preferences_path_;
 		}
@@ -1031,7 +878,7 @@ namespace preferences {
 		if(node.is_null()) {
 			try {
 				node = json::parse_from_file(path + "preferences.cfg");
-			} catch(json::parse_error&) {
+			} catch(json::ParseError&) {
 				return;
 			}
 		}
@@ -1055,14 +902,14 @@ namespace preferences {
 		reverse_ab_ = node["reverse_ab"].as_bool(reverse_ab_);
 		allow_autopause_ = node["allow_autopause"].as_bool(allow_autopause_);
 		
-		sound::set_music_volume(node["music_volume"].as_int(1000)/1000.0);
-		sound::set_sound_volume(node["sound_volume"].as_int(1000)/1000.0);
+		sound::set_music_volume(node["music_volume"].as_int(1000)/1000.0f);
+		sound::set_sound_volume(node["sound_volume"].as_int(1000)/1000.0f);
 
 		locale_ = node["locale"].as_string_default("system");
 		
 		const variant registry_node = node["registry"];
 		if(registry_node.is_null() == false) {
-			game_registry::instance().set_contents(registry_node);
+			GameRegistry::getInstance().setContents(registry_node);
 		}
 		
 		if(node["code_editor"].is_map()) {
@@ -1073,24 +920,6 @@ namespace preferences {
 		password_ = node["passhash"].as_string_default("");
 		cookie_ = node.has_key("cookie") ? node["cookie"] : variant();
 
-		if(node.has_key("width") && node.has_key("height")) {
-			int w = node["width"].as_int();
-			int h = node["height"].as_int();
-			if(w > 0 && h > 0 && w < 4096 && h < 4096) {
-				set_actual_screen_width(w);
-				set_actual_screen_height(h);
-				screen_dimensions_are_persistent = true;
-				if(node.has_key("fullscreen")) {
-					if(node["fullscreen"].is_bool()) {
-						set_fullscreen(node["fullscreen"].as_bool() ? FULLSCREEN_NONE : FULLSCREEN_WINDOWED);
-					} else {
-						set_fullscreen(FullscreenMode(node["fullscreen"].as_int()));
-					}
-				}
-			}
-		}
-		
-#if !TARGET_OS_IPHONE && !TARGET_IPHONE_SIMULATOR
 		controls::set_keycode(controls::CONTROL_UP, static_cast<key_type>(node["key_up"].as_int(SDLK_UP)));
 		controls::set_keycode(controls::CONTROL_DOWN, static_cast<key_type>(node["key_down"].as_int(SDLK_DOWN)));
 		controls::set_keycode(controls::CONTROL_LEFT, static_cast<key_type>(node["key_left"].as_int(SDLK_LEFT)));
@@ -1108,8 +937,7 @@ namespace preferences {
 			}
 		}
 
-        preferences::set_32bpp_textures_if_kb_memory_at_least( 512000 );
-#endif
+        preferences::set_32bpp_textures_if_kb_memory_at_least(512000);
 	}
 	
 	void save_preferences()
@@ -1144,18 +972,12 @@ namespace preferences {
 		node.add("passhash", variant(get_password()));
 		node.add("cookie", get_cookie());
 			
-		if(screen_dimensions_are_persistent) {
-			node.add("width", actual_screen_width());
-			node.add("height", actual_screen_height());
-			node.add("fullscreen", fullscreen());
-		}
-
 		node.add("sdl_version", SDL_COMPILEDVERSION);
 		if(external_code_editor_.is_null() == false) {
 			node.add("code_editor", external_code_editor_);
 		}
 		
-		node.add("registry", game_registry::instance().write_contents());
+		node.add("registry", GameRegistry::getInstance().writeContents());
 
 		for(std::map<std::string, RegisteredSetting>::const_iterator i = g_registered_settings().begin(); i != g_registered_settings().end(); ++i) {
 			if(i->second.persistent) {
@@ -1163,36 +985,23 @@ namespace preferences {
 			}
 		}
 		
-		std::cerr << "WRITE PREFS: " << (preferences_path_ + "preferences.cfg") << std::endl;
+		LOG_INFO("WRITE PREFS: " << (preferences_path_ + "preferences.cfg"));
 		sys::write_file(preferences_path_ + "preferences.cfg", node.build().write_json());
 	}
 	
-	editor_screen_size_scope::editor_screen_size_scope() : width_(virtual_screen_width_), height_(virtual_screen_height_) {
-		++screen_editor_mode;
-		virtual_screen_width_ = actual_screen_width_;
-		virtual_screen_height_ = actual_screen_height_;
-	}
-	
-	editor_screen_size_scope::~editor_screen_size_scope() {
-		virtual_screen_width_ = width_;
-		virtual_screen_height_ = height_;
-		--screen_editor_mode;
-	}
-	
-	bool parse_arg(const char* arg) {
-		const std::string s(arg);
-		
-		std::string arg_name, arg_value;
-		std::string::const_iterator equal = std::find(s.begin(), s.end(), '=');
-		if(equal != s.end()) {
-			arg_name = std::string(s.begin(), equal);
-			arg_value = std::string(equal+1, s.end());
+	bool parse_arg(const std::string& arg, const std::string& next_arg) 
+	{
+		std::string s, arg_value;
+		std::string::const_iterator equal = std::find(arg.begin(), arg.end(), '=');
+		if(equal != arg.end()) {
+			s = std::string(arg.begin(), equal);
+			arg_value = std::string(equal+1, arg.end());
+		} else {
+			s = arg;
+			arg_value = next_arg;
 		}
 		
-		if(arg_name == "--level-path") {
-			level_path_ = arg_value + "/";
-			level_path_set_ = true;
-		} else if(s == "--editor_save_to_user_preferences") {
+		if(s == "--editor_save_to_user_preferences") {
 			editor_save_to_user_preferences_ = true;
 		} else if(s == "--show-hitboxes") {
 			show_debug_hitboxes_ = true;
@@ -1211,80 +1020,59 @@ namespace preferences {
 		} else if(s == "--disable-fullscreen") {
 			fullscreen_disabled_ = true;
 		} else if(s == "--fullscreen") {
-			fullscreen_ = FULLSCREEN_WINDOWED;
+			fullscreen_ = ScreenMode::FULLSCREEN_WINDOWED;
 		} else if(s == "--windowed") {
-			fullscreen_ = FULLSCREEN_NONE;
-		} else if(s == "--proportional-resize") {
-			resizable_ = true;
-			proportional_resize_ = true;
+			fullscreen_ = ScreenMode::WINDOWED;
 		} else if(s == "--resizable") {
 			resizable_ = true;
+        } else if(s == "--width") {
+			auto widths = util::split_into_vector_int(arg_value, ':');
+			if(widths.size() > 0) {
+				requested_window_width_ = widths[0];
+			}
+			if(widths.size() > 1) {
+				requested_virtual_window_width_ = widths[1];
+				//if(requested_virtual_window_width_ > requested_window_width_) {
+				//	xypos_draw_mask = 0;
+				//}
+			} else {
+				requested_virtual_window_width_ = requested_window_width_;
+			}
+        } else if(s == "--height") {
+			auto heights = util::split_into_vector_int(arg_value, ':');
+			if(heights.size() > 0) {
+				requested_window_height_ = heights[0];
+			}
+			if(heights.size() > 1) {
+				requested_virtual_window_height_ = heights[1];
+			} else {
+				requested_virtual_window_height_ = requested_window_height_;
+			}
 		} else if(s == "--no-resizable") {
 			resizable_ = false;
-		} else if(s == "--widescreen") {
-			set_widescreen();
-		} else if(s == "--bigscreen") {
-			virtual_screen_width_ = actual_screen_width_;
-			virtual_screen_height_ = actual_screen_height_;
 		} else if(s == "--potonly") {
 			force_no_npot_textures_ = true;
 		} else if(s == "--textures16") {
 			use_16bpp_textures_ = true;
 		} else if(s == "--textures32") {
 			use_16bpp_textures_ = false;
-		} else if(arg_name == "--textures32_if_kb_memory_at_least") {
+		} else if(s == "--textures32_if_kb_memory_at_least") {
             preferences::set_32bpp_textures_if_kb_memory_at_least( atoi(arg_value.c_str()) );
 		} else if(s == "--debug") {
 			debug_ = true;
 		} else if(s == "--no-debug") {
 			debug_ = false;
-		} else if(s == "--simiphone") {
-			sim_iphone_ = true;
-			
-			virtual_screen_width_ = 960;
-			virtual_screen_height_ = 640;
-			
-			actual_screen_width_ = 480;
-			actual_screen_height_ = 320;
-			use_16bpp_textures_ = true;
-			
-			recalculate_draw_mask();
-		} else if(s == "--simipad") {
-			sim_iphone_ = true;
-			control_scheme_ = "ipad_2d";
-			
-			virtual_screen_width_ = 1024;
-			virtual_screen_height_ = 768;
-			
-			actual_screen_width_ = 1024;
-			actual_screen_height_ = 768;
-			
-			recalculate_draw_mask();
-		} else if(s == "--no-iphone-controls") {
-			no_iphone_controls_ = true;
-		} else if(s == "--wvga") {
-			virtual_screen_width_ = 800;
-			virtual_screen_height_ = 480;
-			
-			actual_screen_width_ = 800;
-			actual_screen_height_ = 480;
-			
-			recalculate_draw_mask();
-		} else if(s == "--native") {
-			virtual_screen_width_ = (actual_screen_width_) * 2;
-			virtual_screen_height_ = (actual_screen_height_) * 2;
-			recalculate_draw_mask();
 		} else if(s == "--fps") {
 			show_fps_ = true;
 		} else if(s == "--no-fps") {
 			show_fps_ = false;
-		} else if(arg_name == "--set-fps" && !arg_value.empty()) {
+		} else if(s == "--set-fps" && !arg_value.empty()) {
 			frame_time_millis_ = 1000/boost::lexical_cast<int, std::string>(arg_value);
-			std::cerr << "FPS: " << arg_value << " = " << frame_time_millis_ << "ms/frame\n";
-		} else if(arg_name == "--alt-fps" && !arg_value.empty()) {
+			LOG_INFO("FPS: " << arg_value << " = " << frame_time_millis_ << "ms/frame");
+		} else if(s == "--alt-fps" && !arg_value.empty()) {
 			alt_frame_time_millis_ = 1000/boost::lexical_cast<int, std::string>(arg_value);
-			std::cerr << "FPS: " << arg_value << " = " << alt_frame_time_millis_ << "ms/frame\n";
-		} else if(arg_name == "--config-path" && !arg_value.empty()) {
+			LOG_INFO("FPS: " << arg_value << " = " << alt_frame_time_millis_ << "ms/frame");
+		} else if(s == "--config-path" && !arg_value.empty()) {
 			set_preferences_path(arg_value);
 		} else if(s == "--send-stats") {
 			send_stats_ = true;
@@ -1296,14 +1084,14 @@ namespace preferences {
 			use_joystick_ = true;
 		} else if(s == "--no-joystick") {
 			use_joystick_ = false;
-		} else if(arg_name == "--server") {
+		} else if(s == "--server") {
 			tbs_uri_ = uri::uri::parse(arg_value);
-		} else if(arg_name == "--user") {
+		} else if(s == "--user") {
 			username_ = arg_value;
-		} else if(arg_name == "--pass") {
+		} else if(s == "--pass") {
 			set_password(arg_value);
-		} else if(arg_name == "--module-args") {
-			game_logic::const_formula_callable_ptr callable = map_into_callable(json::parse(arg_value));
+		} else if(s == "--module-args") {
+			game_logic::ConstFormulaCallablePtr callable = map_into_callable(json::parse(arg_value));
 			module::set_module_args(callable);
 		} else if(s == "--relay") {
 			relay_through_server_ = true;
@@ -1319,17 +1107,17 @@ namespace preferences {
 			type_safety_checks_ = false;
 		} else if(s == "--tbs-server") {
 			internal_tbs_server_ = true;
-			fprintf(stderr, "TURN ON internal server\n");
+			LOG_INFO("TURN ON internal server");
 		} else if(s == "--no-tbs-server") {
 			internal_tbs_server_ = false;
-			fprintf(stderr, "TURN OFF internal server\n");
+			LOG_INFO("TURN OFF internal server");
 		} else if(s == "--no-autopause") {
 			allow_autopause_ = false;
 		} else if(s == "--autopause") {
 			allow_autopause_ = true;
 		} else if(s == "--auto-size-window") {
 			auto_size_window_ = true;
-		} else if(arg_name == "--difficulty" && !arg_value.empty()) {
+		} else if(s == "--difficulty" && !arg_value.empty()) {
 			if(boost::regex_match(arg_value, boost::regex("-?[0-9]+"))) {
 				force_difficulty_ = boost::lexical_cast<int>(arg_value);
 			} else {
@@ -1338,20 +1126,20 @@ namespace preferences {
 		} else if(s == "--edit-and-continue") {
 			set_edit_and_continue(true);
 		} else {
-			if(s.size() > 2 && s[0] == '-' && s[1] == '-' && std::find(s.begin(), s.end(), '=') != s.end()) {
-				std::string::const_iterator equal = std::find(s.begin(), s.end(), '=');
-				std::string base_name(s.begin()+2,equal);
+			if(arg.size() > 2 && arg[0] == '-' && arg[1] == '-' && std::find(arg.begin(), arg.end(), '=') != s.end()) {
+				std::string::const_iterator equal = std::find(arg.begin(), arg.end(), '=');
+				std::string base_name(arg.begin()+2,equal);
 				std::replace(base_name.begin(), base_name.end(), '-', '_');
 				if(g_registered_settings().count(base_name)) {
 					RegisteredSetting& setting = g_registered_settings()[base_name];
 					if(setting.string_value) {
-						*setting.string_value = std::string(equal+1, s.end());
+						*setting.string_value = std::string(equal+1, arg.end());
 					} else if(setting.int_value) {
-						*setting.int_value = atoi(std::string(equal+1, s.end()).c_str());
+						*setting.int_value = atoi(std::string(equal+1, arg.end()).c_str());
 					} else if(setting.double_value) {
-						*setting.double_value = boost::lexical_cast<double>(std::string(equal+1, s.end()));
+						*setting.double_value = boost::lexical_cast<double>(std::string(equal+1, arg.end()));
 					} else if(setting.bool_value) {
-						std::string value(equal+1, s.end());
+						std::string value(equal+1, arg.end());
 						if(value == "yes" || value == "true") {
 							*setting.bool_value = true;
 						} else if(value == "no" || value == "false") {
@@ -1360,7 +1148,7 @@ namespace preferences {
 							ASSERT_LOG(false, "Invalid value for boolean parameter " << base_name << ". Must be true or false");
 						}
 					} else if(setting.variant_value) {
-						std::string value(equal+1, s.end());
+						std::string value(equal+1, arg.end());
 						*setting.variant_value = variant(value);
 					} else {
 						ASSERT_LOG(false, "Error making sense of preference type " << base_name);
@@ -1368,15 +1156,15 @@ namespace preferences {
 
 					return true;
 				}
-			} else if(s.size() > 2 && s[0] == '-' && s[1] == '-') {
-				std::string::const_iterator begin = s.begin() + 2;
+			} else if(arg.size() > 2 && arg[0] == '-' && arg[1] == '-') {
+				std::string::const_iterator begin = arg.begin() + 2;
 				bool value = true;
-				if(s.size() > 5 && std::equal(begin, begin+3, "no-")) {
+				if(arg.size() > 5 && std::equal(begin, begin+3, "no-")) {
 					value = false;
 					begin += 3;
 				}
 
-				std::string base_name(begin, s.end());
+				std::string base_name(begin, arg.end());
 				std::replace(base_name.begin(), base_name.end(), '-', '_');
 				if(g_registered_settings().count(base_name)) {
 					RegisteredSetting& setting = g_registered_settings()[base_name];
@@ -1398,18 +1186,14 @@ namespace preferences {
 	}
 
 	void set_32bpp_textures_if_kb_memory_at_least( int memory_required ) {
-        sys::available_memory_info mem_info;
+        sys::AvailableMemoryInfo mem_info;
         const bool result = sys::get_available_memory(&mem_info);
         if(result) {
             use_16bpp_textures_ = mem_info.mem_total_kb < memory_required;
-            std::cerr << "USING " << (use_16bpp_textures_ ? 16 : 32) << "bpp TEXTURES BECAUSE SYSTEM HAS " << mem_info.mem_total_kb << "KB AND " << memory_required << "KB REQUIRED FOR 32bpp TEXTURES\n";
+            LOG_INFO("USING " << (use_16bpp_textures_ ? 16 : 32) << "bpp TEXTURES BECAUSE SYSTEM HAS " << mem_info.mem_total_kb << "KB AND " << memory_required << "KB REQUIRED FOR 32bpp TEXTURES");
         }
     }
     
-	bool sim_iphone() {
-		return sim_iphone_;
-	}
-	
 	bool send_stats() {
 		return send_stats_;
 	}
@@ -1466,177 +1250,24 @@ namespace preferences {
 	{
 		static std::set<std::string> res;
 		if(res.empty()) {
-#if defined(USE_ISOMAP)
 			res.insert("isomap");
-#endif
-#if defined(USE_SHADERS)
-			res.insert("shaders");
-#endif
+			res.insert("sdl2");
+			res.insert("save_png");
+			res.insert("svg");
 #if defined(USE_BOX2D)
 			res.insert("box2d");
 #endif
 #if defined(USE_BULLET)
 			res.insert("bullet");
 #endif
-			res.insert("sdl2");
-#if defined(GL_ES_VERSION_2_0)
-			res.insert("gles2");
-#endif
-#if defined(IMPLEMENT_SAVE_PNG)
-			res.insert("save_png");
-#endif
 #if defined(USE_LUA)
 			res.insert("lua");
 #endif
-#if defined(USE_SVG)
-			res.insert("svg");
-#endif
-
 		}
 		return res;
 	}
 
-	void set_locale(const std::string& value) {
+	void setLocale(const std::string& value) {
 		locale_ = value;
 	}
-#if defined(TARGET_OS_HARMATTAN) || defined(TARGET_PANDORA) || defined(TARGET_TEGRA) || defined(TARGET_BLACKBERRY)
-	PFNGLBLENDEQUATIONOESPROC           glBlendEquationOES;
-	PFNGLGENFRAMEBUFFERSOESPROC         glGenFramebuffersOES;
-	PFNGLBINDFRAMEBUFFEROESPROC         glBindFramebufferOES;
-	PFNGLFRAMEBUFFERTEXTURE2DOESPROC    glFramebufferTexture2DOES;
-	PFNGLCHECKFRAMEBUFFERSTATUSOESPROC  glCheckFramebufferStatusOES;
-	
-	void init_oes( void )
-	{
-		int retry;
-		const GLubyte* pszGLExtensions = NULL;
-		
-		glBlendEquationOES          = NULL;
-		glGenFramebuffersOES        = NULL;
-		glBindFramebufferOES        = NULL;
-		glFramebufferTexture2DOES   = NULL;
-		glCheckFramebufferStatusOES = NULL;
-		
-		/* Retrieve GL extension string */
-		pszGLExtensions = glGetString(GL_EXTENSIONS);
-		
-		// Blend subtract Functions
-		if(preferences::use_bequ())
-		{
-			/* GL_OES_framebuffer_object */
-			if (strstr((char *)pszGLExtensions, "GL_OES_blend_subtract"))
-			{
-				for (retry=1; retry<4; retry++)
-				{
-					glBlendEquationOES = (PFNGLBLENDEQUATIONOESPROC)eglGetProcAddress("glBlendEquationOES");
-					if (glBlendEquationOES!=NULL) {
-						std::cerr << "glBlendEquationOES was set correctly\n";
-						break;
-					}
-					else
-					{
-						std::cerr << "glBlendEquationOES was set to NULL by eglGetProcAddress retry #" << retry << "\n";
-					}
-				}
-			}
-			else
-			{
-				glBlendEquationOES = NULL;
-			}
-		}
-		else
-		{
-			glBlendEquationOES = NULL;
-		}
-		
-		// FBO Functions
-		if(preferences::use_fbo())
-		{
-			/* GL_OES_framebuffer_object */
-			if (strstr((char *)pszGLExtensions, "GL_OES_framebuffer_object"))
-			{
-				for (retry=1; retry<4; retry++)
-				{
-					glGenFramebuffersOES        = (PFNGLGENFRAMEBUFFERSOESPROC)eglGetProcAddress("glGenFramebuffersOES");
-					if (glGenFramebuffersOES!=NULL) {
-						std::cerr << "glGenFramebuffersOES was set correctly\n";
-						break;
-					}
-					else
-					{
-						std::cerr << "glGenFramebuffersOES was set to NULL by eglGetProcAddress retry #" << retry << "\n";
-					}
-				}
-				for (retry=1; retry<4; retry++)
-				{
-					glBindFramebufferOES        = (PFNGLBINDFRAMEBUFFEROESPROC)eglGetProcAddress("glBindFramebufferOES");
-					if (glBindFramebufferOES!=NULL) {
-						std::cerr << "glBindFramebufferOES was set correctly\n";
-						break;
-					}
-					else
-					{
-						std::cerr << "glBindFramebufferOES was set to NULL by eglGetProcAddress retry #" << retry << "\n";
-					}
-				}
-				for (retry=1; retry<4; retry++)
-				{
-					glFramebufferTexture2DOES   = (PFNGLFRAMEBUFFERTEXTURE2DOESPROC)eglGetProcAddress("glFramebufferTexture2DOES");
-					if (glFramebufferTexture2DOES!=NULL) {
-						std::cerr << "glFramebufferTexture2DOES was set correctly\n";
-						break;
-					}
-					else
-					{
-						std::cerr << "glFramebufferTexture2DOES was set to NULL by eglGetProcAddress retry #" << retry << "\n";
-					}
-				}
-				for (retry=1; retry<4; retry++)
-				{
-					glCheckFramebufferStatusOES = (PFNGLCHECKFRAMEBUFFERSTATUSOESPROC)eglGetProcAddress("glCheckFramebufferStatusOES");
-					if (glCheckFramebufferStatusOES!=NULL) {
-						std::cerr << "glCheckFramebufferStatusOES was set correctly\n";
-						break;
-					}
-					else
-					{
-						std::cerr << "glCheckFramebufferStatusOES was set to NULL by eglGetProcAddress retry #" << retry << "\n";
-					}
-				}
-			}
-			else
-			{
-				glGenFramebuffersOES        = NULL;
-				glBindFramebufferOES        = NULL;
-				glFramebufferTexture2DOES   = NULL;
-				glCheckFramebufferStatusOES = NULL;
-			}
-		}
-		else
-		{
-			glGenFramebuffersOES        = NULL;
-			glBindFramebufferOES        = NULL;
-			glFramebufferTexture2DOES   = NULL;
-			glCheckFramebufferStatusOES = NULL;
-		}
-	}
-#endif
-
-screen_dimension_override_scope::screen_dimension_override_scope(int width, int height, int vwidth, int vheight) : vold_width(virtual_screen_width_), vold_height(virtual_screen_height_), old_width(actual_screen_width_), old_height(actual_screen_height_)
-{
-	actual_screen_width_ = width;
-	actual_screen_height_ = height;
-	virtual_screen_width_ = vwidth;
-	virtual_screen_height_ = vheight;
-}
-
-screen_dimension_override_scope::~screen_dimension_override_scope()
-{
-	actual_screen_width_ = old_width;
-	actual_screen_height_ = old_height;
-	virtual_screen_width_ = vold_width;
-	virtual_screen_height_ = vold_height;
-	
-}
-
 }

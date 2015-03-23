@@ -1,69 +1,67 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
-#ifndef SCROLLABLE_WIDGET_HPP_INCLUDED
-#define SCROLLABLE_WIDGET_HPP_INCLUDED
 
-#include <boost/shared_ptr.hpp>
+#pragma once
 
 #include "scrollbar_widget.hpp"
 #include "widget.hpp"
 
-namespace gui {
-
-class scrollable_widget : public widget
+namespace gui 
 {
-public:
-	scrollable_widget();
-	scrollable_widget(const variant& v, game_logic::formula_callable* e);
-	void set_yscroll(int yscroll);
-	virtual void set_dim(int w, int h);
+	class ScrollableWidget : public Widget
+	{
+	public:
+		ScrollableWidget();
+		ScrollableWidget(const variant& v, game_logic::FormulaCallable* e);
+		void setYscroll(int yscroll);
+		void setDim(int w, int h);
+		void setLoc(int x, int y);
+	protected:
+		~ScrollableWidget();
+		void setVirtualHeight(int height);
+		void setScrollStep(int step);
+		void setArrowScrollStep(int step);
+		void updateScrollbar();
 
-	virtual void handle_draw() const;
-	virtual bool handle_event(const SDL_Event& event, bool claimed);
+		int getYscroll() const { return yscroll_; }
+		int getVirtualHeight() const { return virtual_height_; }
 
-	virtual void set_loc(int x, int y);
-protected:
-	~scrollable_widget();
-	void set_virtual_height(int height);
-	void set_scroll_step(int step);
-	void set_arrow_scroll_step(int step);
-	void update_scrollbar();
+		void handleDraw() const override;
+		bool handleEvent(const SDL_Event& event, bool claimed) override;
+	private:
+		DECLARE_CALLABLE(ScrollableWidget)
+		void onSetYscroll(int old_yscroll, int new_yscroll);
 
-	int yscroll() const { return yscroll_; }
-	int virtual_height() const { return virtual_height_; }
+		int yscroll_;
+		int virtual_height_;
+		int step_;
+		int arrow_step_;
 
-	virtual void set_value(const std::string& key, const variant& v);
-	virtual variant get_value(const std::string& key) const;
-private:
-	virtual void on_set_yscroll(int old_yscroll, int new_yscroll);
+		bool auto_scroll_bottom_;
 
-	int yscroll_;
-	int virtual_height_;
-	int step_;
-	int arrow_step_;
+		ScrollbarWidgetPtr scrollbar_;
+	};
 
-	bool auto_scroll_bottom_;
-
-	scrollbar_widget_ptr scrollbar_;
-};
-
-typedef boost::intrusive_ptr<scrollable_widget> scrollable_widget_ptr;
-typedef boost::intrusive_ptr<const scrollable_widget> const_scrollable_widget_ptr;
-
+	typedef boost::intrusive_ptr<ScrollableWidget> ScrollableWidgetPtr;
+	typedef boost::intrusive_ptr<const ScrollableWidget> ConstScrollableWidgetPtr;
 }
-
-#endif

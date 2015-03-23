@@ -1,46 +1,35 @@
 /*
 	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
-#ifndef ASSERTS_HPP_INCLUDED
-#define ASSERTS_HPP_INCLUDED
 
-#include <boost/function.hpp>
+#pragma once
 
+#include <functional>
 #include <iostream>
 #include <sstream>
 #include <stdlib.h>
 #include <string>
 
-#if defined(__ANDROID__)
-#include <android/log.h>
-#include <sstream>
-#define LOG(str_data) \
-    do{ std::stringstream oss; \
-	    oss << str_data; \
-	    __android_log_print(ANDROID_LOG_INFO, "Frogatto", oss.str().c_str()); }while(0)
-#else
-#define LOG(fmt,...) do {}while(0)
-#endif // ANDROID
-
-#if defined(_MSC_VER)
-#ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN
-#endif
-#include <windows.h>
-#endif
+#include "logger.hpp"
 
 void report_assert_msg(const std::string& m );
 
@@ -56,9 +45,9 @@ bool throw_validation_failure_on_assert();
 void output_backtrace();
 
 class assert_edit_and_continue_fn_scope {
-	boost::function<void()> fn_;
+	std::function<void()> fn_;
 public:
-	assert_edit_and_continue_fn_scope(boost::function<void()> fn);
+	assert_edit_and_continue_fn_scope(std::function<void()> fn);
 	~assert_edit_and_continue_fn_scope();
 };
 
@@ -87,16 +76,10 @@ public:
 	~fatal_assert_scope();
 };
 
+#define ABORT()		do { exit(1); } while(0)
+
 //various asserts of standard "equality" tests, such as "equals", "not equals", "greater than", etc.  Example usage:
 //ASSERT_NE(x, y);
-
-#if defined(_MSC_VER)
-// To make windows exit cleanly we do this.
-#define ABORT()		do{ ::ExitProcess(1); } while(0)
-#else
-// In order to break into GDB on linux we need to do this.
-#define ABORT()		abort()
-#endif
 
 #define ASSERT_EQ(a,b) if((a) != (b)) { std::ostringstream s; s << __FILE__ << ":" << __LINE__ << " ASSERT EQ FAILED: " << #a << " != " << #b << ": " << (a) << " != " << (b) << "\n"; if(throw_validation_failure_on_assert()) { throw validation_failure_exception(s.str()); } else if(throw_fatal_error_on_assert()) { throw fatal_assert_failure_exception(s.str()); } else { std::cerr << s.str(); output_backtrace(); report_assert_msg(s.str()); ABORT(); } }
 
@@ -120,5 +103,3 @@ public:
 #define ASSERT_FATAL(_b) { std::ostringstream _s; _s << __FILE__ << ":" << __LINE__ << " ASSERTION FAILED: " << _b << "\n"; if(throw_validation_failure_on_assert()) { throw validation_failure_exception(_s.str()); } else { std::cerr << _s.str(); output_backtrace(); report_assert_msg(_s.str()); ABORT(); } }
 
 #define VALIDATE_LOG(a,b) if( !(a) ) { std::ostringstream s; s << __FILE__ << ":" << __LINE__ << " VALIDATION FAILED: " << b << "\n"; throw validation_failure_exception(s.str()); }
-
-#endif

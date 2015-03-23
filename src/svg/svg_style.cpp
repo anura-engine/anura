@@ -27,7 +27,7 @@
 
 #include <cairo-ft.h>
 
-#include "logger.hpp"
+#include "asserts.hpp"
 #include "svg_element.hpp"
 #include "svg_style.hpp"
 
@@ -840,7 +840,7 @@ namespace KRE
 				default: break;
 			}
 			
-			if(path_ == FuncIriValue::FUNC_IRI && path_resolved_ != NULL) {
+			if(path_ == FuncIriValue::FUNC_IRI && path_resolved_ != nullptr) {
 				path_resolved_->clip(ctx);
 			}
 		}

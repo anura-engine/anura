@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
+	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -28,6 +28,8 @@
 #include "module.hpp"
 #include "utf8_to_codepoint.hpp"
 
+#pragma comment(lib, "libfreetype-6")
+
 namespace KRE
 {
 	namespace FT
@@ -39,8 +41,8 @@ namespace KRE
 
 			FT_Library& get_freetype_library()
 			{
-				static FT_Library library = NULL;
-				if(library == NULL) {
+				static FT_Library library = nullptr;
+				if(library == nullptr) {
 					FT_Error error = FT_Init_FreeType(&library);
 					ASSERT_LOG(error == 0, "Error initialising freetype library: " << error);
 				}

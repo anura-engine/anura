@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2012-2014 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -20,13 +20,12 @@
 	   3. This notice may not be removed or altered from any source
 	   distribution.
 */
-#if defined(USE_ISOMAP)
+
+/* XXX -- needs fixing and addition of cubic texture suport
 
 #include <vector>
 
 #include "asserts.hpp"
-#include "surface.hpp"
-#include "surface_cache.hpp"
 #include "skybox.hpp"
 
 namespace graphics
@@ -63,7 +62,7 @@ namespace graphics
 
 	skybox::skybox(const variant& node)
 	{
-		tex_id_ = boost::shared_ptr<GLuint>(new GLuint, [](GLuint* id){glDeleteTextures(1,id); delete id;});
+		tex_id_ = std::shared_ptr<GLuint>(new GLuint, [](GLuint* id){glDeleteTextures(1,id); delete id;});
 		glGenTextures(1, tex_id_.get());
 		glBindTexture(GL_TEXTURE_CUBE_MAP, *tex_id_);
 
@@ -122,7 +121,7 @@ namespace graphics
 		glUniformMatrix4fv(u_p_inverse_matrix_, 1, GL_FALSE, glm::value_ptr(p_inv));
 
 		glUniform1i(u_texture_id_, 0);
-		glUniform4f(u_color_, color_.r()/255.0f, color_.g()/255.0f, color_.b()/255.0f, color_.a()/255.0f);
+		glUniform4f(u_color_, color_.r(), color_.g(), color_.b(), color_.a());
 
 		const GLfloat cube_verts[] = {
 			 1.0f, -1.0f, 0.0f, 
@@ -150,4 +149,4 @@ namespace graphics
 
 }
 
-#endif
+*/

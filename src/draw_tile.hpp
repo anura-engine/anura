@@ -1,48 +1,45 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
-#ifndef DRAW_TILE_HPP_INCLUDED
-#define DRAW_TILE_HPP_INCLUDED
 
-#include "color_utils.hpp"
+#pragma once
+
+#include <glm/glm.hpp>
+
 #include "geometry.hpp"
-#include "texture.hpp"
+#include "Texture.hpp"
 
-namespace graphics {
-class blit_queue;
-}
+#include "level_object_fwd.hpp"
 
-struct level_tile;
-struct hex_level_tile;
-
-class tile_corner
+struct tile_corner
 {
-public:
-	GLshort vertex[2];
-	GLfloat uv[2];
+	tile_corner(const glm::u16vec2& v, const glm::vec2& st) : vertex(v), uv(st) {}
+	glm::u16vec2 vertex;
+	glm::vec2 uv;
 };
 
-void queue_draw_tile(graphics::blit_queue& q, const level_tile& t);
-int get_tile_corners(tile_corner* result, const graphics::texture& t, const rect& area, int tile_num, int x, int y, bool reverse);
-void queue_draw_from_tilesheet(graphics::blit_queue& q, const graphics::texture& t, const rect& area, int tile_num, int x, int y, bool reverse);
+int get_tile_corners(std::vector<tile_corner>* result, const KRE::TexturePtr& t, const rect& area, int tile_num, int x, int y, bool reverse);
 
-bool is_tile_opaque(const graphics::texture& t, int tile_num);
-bool is_tile_using_alpha_channel(const graphics::texture& t, int tile_num);
-bool is_tile_solid_color(const graphics::texture& t, int tile_num, graphics::color& col);
-
-rect get_tile_non_alpha_area(const graphics::texture& t, int tile_num);
-
-#endif
+bool is_tile_using_alpha_channel(const KRE::TexturePtr& t, int tile_num);
+bool is_tile_opaque(const KRE::TexturePtr& t, int tile_num);
+bool is_tile_solid_color(const KRE::TexturePtr& t, int tile_num, KRE::Color& col);
+rect get_tile_non_alpha_area(const KRE::TexturePtr& t, int tile_num);

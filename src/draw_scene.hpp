@@ -1,35 +1,38 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
+
 */
-#ifndef DRAW_SCENE_HPP_INCLUDED
-#define DRAW_SCENE_HPP_INCLUDED
+
+#pragma once
 
 #include <string>
+
+#include "ColorTransform.hpp"
 
 #include "achievements.hpp"
 #include "formula_callable.hpp"
 
-namespace graphics {
-class color;
-class color_transform;
-}
-
-class entity;
-class rect;
-class level;
+class Entity;
+class Level;
 
 struct screen_position {
 	screen_position() : init(false), x(0), y(0), x_pos(0), y_pos(0),
@@ -65,19 +68,19 @@ struct disable_flashes_scope {
 	~disable_flashes_scope();
 };
 
-void screen_color_flash(const graphics::color_transform& color, const graphics::color_transform& color_delta, int duration);
+void screen_color_flash(const KRE::ColorTransform& color, const KRE::ColorTransform& color_delta, int duration);
 void set_scene_title(const std::string& msg, int duration=150);
-void set_displayed_achievement(achievement_ptr a);
-bool is_achievement_displayed();
+void set_displayed_Achievement(AchievementPtr a);
+bool isAchievementDisplayed();
 
 
-bool update_camera_position(const level& lvl, screen_position& pos, const entity* focus=NULL, bool do_draw=true);
-void render_scene(const level& lvl, const screen_position& pos);
+bool update_camera_position(const Level& lvl, screen_position& pos, const Entity* focus=nullptr, bool doDraw=true);
+void render_scene(Level& lvl, const screen_position& pos);
 
 //draw_scene calls both update_camera_position() and then render_scene()
-void draw_scene(const level& lvl, screen_position& pos, const entity* focus=NULL, bool do_draw=true);
+void draw_scene(const Level& lvl, screen_position& pos, const Entity* focus=nullptr, bool doDraw=true);
 
-struct performance_data : public game_logic::formula_callable {
+struct performance_data : public game_logic::FormulaCallable {
 	int fps;
 	int cycles_per_second;
 	int delay;
@@ -95,15 +98,15 @@ struct performance_data : public game_logic::formula_callable {
 		nevents(nevents_), profiling_info(profiling_info_)
 	{}
 
-	variant get_value(const std::string& key) const;
-	void get_inputs(std::vector<game_logic::formula_input>* inputs) const;
+	variant getValue(const std::string& key) const;
+	void getInputs(std::vector<game_logic::FormulaInput>* inputs) const;
 
 	static void set_current(const performance_data& d);
 	static performance_data* current();
 };
 
-void draw_fps(const level& lvl, const performance_data& data);
+void draw_fps(const Level& lvl, const performance_data& data);
 
 void add_debug_rect(const rect& r);
 
-#endif
+void draw_last_scene();

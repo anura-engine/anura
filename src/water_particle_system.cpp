@@ -1,36 +1,47 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
+
+#include "AttributeSet.hpp"
+#include "DisplayDevice.hpp"
+#include "Shaders.hpp"
+#include "WindowManager.hpp"
+
 #include <cstdio>
-#include <math.h>
+#include <cmath>
 #include <vector>
 
 #include "preferences.hpp"
-#include "variant.hpp"
 #include "water_particle_system.hpp"
 
-water_particle_system_info::water_particle_system_info(variant node)
-: number_of_particles(node["number_of_particles"].as_int(1500)),
-repeat_period(node["repeat_period"].as_int(1000)),
-velocity_x(node["velocity_x"].as_int()),
-velocity_y(node["velocity_y"].as_int(-5)),
-velocity_rand(node["velocity_rand"].as_int(3)),
-dot_size(node["dot_size"].as_int(1)*(preferences::double_scale() ? 2 : 1))
+WaterParticleSystemInfo::WaterParticleSystemInfo(variant node)
+	: number_of_particles(node["number_of_particles"].as_int(1500)),
+	  repeat_period(node["repeat_period"].as_int(1000)),
+	  velocity_x(node["velocity_x"].as_int()),
+	  velocity_y(node["velocity_y"].as_int(-5)),
+	  velocity_rand(node["velocity_rand"].as_int(3)),
+	  dot_size(node["dot_size"].as_int(1))
 {
-	irgba = graphics::color(node["color"]).value();
+	color = KRE::Color(node["color"]);
 
 	if(dot_size > 1 && preferences::xypos_draw_mask) {
 		//if we are clipping our drawing granularity, then we have a small
@@ -39,68 +50,87 @@ dot_size(node["dot_size"].as_int(1)*(preferences::double_scale() ? 2 : 1))
 	}
 }
 
-water_particle_system_factory::water_particle_system_factory(variant node)
- : info(node)
+WaterParticleSystemFactory::WaterParticleSystemFactory(variant node)
+	: info(node)
 {
 	
 }
 
-particle_system_ptr water_particle_system_factory::create(const entity& e) const
+ParticleSystemPtr WaterParticleSystemFactory::create(const Entity& e) const
 {
-	return particle_system_ptr(new water_particle_system(e, *this));
+	return ParticleSystemPtr(new WaterParticleSystem(e, *this));
 }
 
 
-water_particle_system::water_particle_system(const entity& e, const water_particle_system_factory& factory)
- : factory_(factory), info_(factory.info), velocity_x_(factory.info.velocity_x), velocity_y_(factory.info.velocity_y), cycle_(0)
+WaterParticleSystem::WaterParticleSystem(const Entity& e, const WaterParticleSystemFactory& factory)
+	: factory_(factory), 
+	  info_(factory.info), 
+	  velocity_x_(factory.info.velocity_x), 
+	  velocity_y_(factory.info.velocity_y), 
+	  cycle_(0),
+	  u_point_size_(-1)
 {
 	area_ = rect("0,0,1,1");
-	base_velocity = sqrtf(info_.velocity_x*info_.velocity_x + info_.velocity_y*info_.velocity_y);
+	base_velocity = sqrtf(static_cast<float>(info_.velocity_x*info_.velocity_x + info_.velocity_y*info_.velocity_y));
 	direction[0] = velocity_x_ / base_velocity;
 	direction[1] = velocity_y_ / base_velocity;
 	particles_.reserve(info_.number_of_particles);
 	for (int i = 0; i < info_.number_of_particles; i++)
 	{
 		particle new_p;
-		new_p.pos[0] = rand()%info_.repeat_period;
-		new_p.pos[1] = rand()%info_.repeat_period;
+		new_p.pos[0] = static_cast<float>(rand()%info_.repeat_period);
+		new_p.pos[1] = static_cast<float>(rand()%info_.repeat_period);
 		new_p.velocity = base_velocity + (info_.velocity_rand ? (rand() % info_.velocity_rand) : 0);
 		particles_.push_back(new_p);
 	}
+
+	setShader(KRE::ShaderProgram::getProgram("point_shader")->clone());
+	getShader()->setUniformDrawFunction(std::bind(&WaterParticleSystem::executeOnDraw, this));
+	u_point_size_ = getShader()->getUniform("point_size");
+
+	auto as = KRE::DisplayDevice::createAttributeSet(true, false, false);
+	as->setDrawMode(KRE::DrawMode::POINTS);
+	attribs_ = std::make_shared<KRE::Attribute<glm::u16vec2>>(KRE::AccessFreqHint::DYNAMIC);
+	attribs_->addAttributeDesc(KRE::AttributeDesc(KRE::AttrType::POSITION, 2, KRE::AttrFormat::UNSIGNED_SHORT, false));
+	as->addAttribute(attribs_);
+	addAttributeSet(as);
 }
 
-void water_particle_system::process(const entity& e)
+void WaterParticleSystem::executeOnDraw()
+{
+	getShader()->setUniformValue(u_point_size_, info_.dot_size);
+}
+
+void WaterParticleSystem::process(const Entity& e)
 {
 	++cycle_;
 	
-	foreach(particle& p, particles_)
-	{
-		
-		p.pos[0] = static_cast<int>(p.pos[0]+direction[0] * p.velocity) % info_.repeat_period;
-		p.pos[1] = static_cast<int>(p.pos[1]+direction[1] * p.velocity) % info_.repeat_period;
+	for(particle& p : particles_)
+	{		
+		p.pos[0] = fmod(p.pos[0]+direction[0] * p.velocity, static_cast<float>(info_.repeat_period));
+		p.pos[1] = fmod(p.pos[1]+direction[1] * p.velocity, static_cast<float>(info_.repeat_period));
 	}
 	
-	
-	//while (particles_.size() > 1500) particles_.pop_front();
+
+	// XXX set is_circlular uniform to false/true
+	setColor(info_.color);
 }
 
-void water_particle_system::draw(const rect& screen_area, const entity& e) const
+void WaterParticleSystem::draw(const KRE::WindowPtr& wm, const rect& screen_area, const Entity& e) const
 {
 	const rect area = intersection_rect(screen_area, area_);
-	if(area.w() == 0 || area.h() == 0) {
+	if(area.w() == 0 || area.h() == 0 || particles_.empty()) {
 		return;
 	}
-	
+
 	int offset_x = area.x() - area.x()%info_.repeat_period;
 	if (area.x() < 0) offset_x -= info_.repeat_period;
 	int offset_y = area.y() - area.y()%info_.repeat_period;
 	if (area.y() < 0) offset_y -= info_.repeat_period;
-	static std::vector<GLshort> vertices;
-	vertices.clear();
-	foreach(const particle& p, particles_)
-	{
-		GLshort my_y = p.pos[1]+offset_y;
-		GLshort xpos = p.pos[0]+offset_x;
+	std::vector<glm::u16vec2> vertices;
+	for(const particle& p : particles_) {
+		short my_y = static_cast<short>(p.pos[1]+offset_y);
+		short xpos = static_cast<short>(p.pos[0]+offset_x);
 		while(my_y < area_.y()) {
 			my_y += info_.repeat_period;
 		}
@@ -114,59 +144,37 @@ void water_particle_system::draw(const rect& screen_area, const entity& e) const
 		}
 
 		while(my_y <= area.y2()) {
-			GLshort my_x = xpos;
+			short my_x = xpos;
 
 			while (my_x <= area.x2()) {
-				vertices.push_back(my_x);
-				vertices.push_back(my_y);
+				vertices.emplace_back(my_x, my_y);
 				my_x += info_.repeat_period;
 			}
 			my_y += info_.repeat_period;
 		}
 	}
+	attribs_->update(&vertices);
 
-	if(vertices.empty()) {
-		return;
-	}
-
-	glColor4f(info_.rgba[0]/255.0, info_.rgba[1]/255.0, info_.rgba[2]/255.0, info_.rgba[3]/255.0);
-#if defined(USE_SHADERS)
-	glPointSize(info_.dot_size);
-	gles2::manager gles2_manager(gles2::get_simple_shader());
-	gles2::active_shader()->shader()->vertex_array(2, GL_SHORT, GL_FALSE, 0, &vertices.front());
-	glDrawArrays(GL_POINTS, 0, vertices.size()/2);
-#else
-	glDisable(GL_TEXTURE_2D);
-	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-	glPointSize(info_.dot_size);
-
-	glVertexPointer(2, GL_SHORT, 0, &vertices.front());
-	glDrawArrays(GL_POINTS, 0, vertices.size()/2);
-
-	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-	glEnable(GL_TEXTURE_2D);
-#endif
-	glColor4f(1.0, 1.0, 1.0, 1.0);
+	wm->render(this);
 }
 
+BEGIN_DEFINE_CALLABLE(WaterParticleSystem, ParticleSystem)
+	DEFINE_FIELD(area, "[int]")
+		return obj.area_.write();
+	DEFINE_SET_FIELD_TYPE("[int]|string")
+		obj.area_ = rect(value);
+		
+	DEFINE_FIELD(velocity_x, "int")
+		return variant(obj.velocity_x_);
+	DEFINE_SET_FIELD
+		obj.velocity_x_ = value.as_int();
+		obj.direction[0] = obj.velocity_x_ / obj.base_velocity;
+		obj.direction[1] = obj.velocity_y_ / obj.base_velocity;
 
-void water_particle_system::set_value(const std::string& key, const variant& value)
-{
-	if(key == "area") {
-		if(value.is_string()) {
-			area_ = rect(value.as_string());
-		} else if(value.is_list() && value.num_elements() == 4) {
-			area_ = rect::from_coordinates(value[0].as_int(), value[1].as_int(), value[2].as_int(), value[3].as_int());
-		}		
-	} else if(key=="velocity_x") {
-		velocity_x_ = value.as_int();
-		direction[0] = velocity_x_ / base_velocity;
-		direction[1] = velocity_y_ / base_velocity;
-
-	} else if(key=="velocity_y") {
-		velocity_y_ = value.as_int();
-		direction[0] = velocity_x_ / base_velocity;
-		direction[1] = velocity_y_ / base_velocity;
-
-	}
-}
+	DEFINE_FIELD(velocity_y, "int")
+		return variant(obj.velocity_y_);
+	DEFINE_SET_FIELD
+		obj.velocity_y_ = value.as_int();
+		obj.direction[0] = obj.velocity_x_ / obj.base_velocity;
+		obj.direction[1] = obj.velocity_y_ / obj.base_velocity;
+END_DEFINE_CALLABLE(WaterParticleSystem)

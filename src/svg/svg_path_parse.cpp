@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
+	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -77,7 +77,7 @@ namespace KRE
 			handle_cairo_render(ctx);
 
 			auto status = cairo_status(ctx.cairo_context());
-			ASSERT_LOG(status == CAIRO_STATUS_SUCCESS, "Cairo error: " << cairo_status_to_string(status));
+			ASSERT_LOG(status == CAIRO_STATUS_SUCCESS, "Cairo error: " << cairo_status_to_string(status) << " : " << static_cast<int>(ins_));
 		}
 
 		class move_to_command : public path_command
@@ -293,10 +293,12 @@ namespace KRE
 		public:
 			elliptical_arc_command(bool absolute, double x, double y, double rx, double ry, double x_axis_rot, bool large_arc, bool sweep)
 				: path_command(PathInstruction::CUBIC_BEZIER, absolute),
-				x_(x), y_(y), 
-				rx_(rx), ry_(ry), 
-				large_arc_flag_(large_arc), 
-				sweep_flag_(sweep) 
+				  x_(x), 
+                  y_(y), 
+				  rx_(rx), 
+                  ry_(ry), 
+				  large_arc_flag_(large_arc), 
+				  sweep_flag_(sweep) 
 			{
 				x_axis_rotation_ = x_axis_rot / 180.0 * M_PI;
 				//std::cerr << "Elliptical arc: end(" << x << "," << y << "), axis(" << rx << "," << ry << "), x_axis_rot(" << x_axis_rot << "), large_arc(" << large_arc << "), sweep(" << sweep << ")" << std::endl;
@@ -395,7 +397,6 @@ namespace KRE
 
 				ctx.clear_control_points();
 			}
-			bool smooth_;
 			double x_;
 			double y_;
 			// elliptical arc radii

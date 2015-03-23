@@ -1,67 +1,70 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
-#ifndef STATS_HPP_INCLUDED
-#define STATS_HPP_INCLUDED
 
-#include <boost/shared_ptr.hpp>
+#pragma once
 
 #include "geometry.hpp"
 #include "thread.hpp"
 #include "variant.hpp"
 
-#include <string>
+void http_upload(const std::string& payload, 
+	const std::string& script, 
+	const char* hostname=nullptr, 
+	const char* port=nullptr);
 
-void http_upload(const std::string& payload, const std::string& script,
-                 const char* hostname=NULL, const char* port=NULL);
+namespace stats 
+{
+	//download stats for a given level.
+	bool download(const std::string& lvl);
 
-namespace stats {
+	class Manager 
+	{
+	public:
+		Manager();
+		~Manager();
+	};
 
-//download stats for a given level.
-bool download(const std::string& lvl);
+	class Entry 
+	{
+	public:
+		explicit Entry(const std::string& type);
+		Entry(const std::string& type, const std::string& level_id);
+		~Entry();
+		Entry& set(const std::string& name, const variant& value);
+		Entry& addPlayerPos();
+	private:
+		Entry(const Entry& o);
+		void operator=(const Entry& o) const;
 
-class manager {
-public:
-	manager();
-	~manager();
-};
+		std::string level_id_;
+		std::map<variant, variant> records_;
+	};
 
-class entry {
-public:
-	explicit entry(const std::string& type);
-	entry(const std::string& type, const std::string& level_id);
-	~entry();
-	entry& set(const std::string& name, const variant& value);
-	entry& add_player_pos();
-private:
-	entry(const entry& o);
-	void operator=(const entry& o) const;
+	void record_program_args(const std::vector<std::string>& args);
 
-	std::string level_id_;
-	std::map<variant, variant> records_;
-};
+	void record(const variant& value);
+	void record(const variant& value, const std::string& level_id);
 
-void record_program_args(const std::vector<std::string>& args);
-
-void record(const variant& value);
-void record(const variant& value, const std::string& level_id);
-
-void flush();
-void flush_and_quit();
-
+	void flush();
+	void flush_and_quit();
 }
-
-#endif

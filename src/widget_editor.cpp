@@ -1,3 +1,5 @@
+// XXX needs fixing
+#if 0
 /*
 	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
 	
@@ -28,11 +30,8 @@
 #include "border_widget.hpp"
 #include "button.hpp"
 #include "checkbox.hpp"
-#include "color_utils.hpp"
 #include "dialog.hpp"
-#include "font.hpp"
 #include "framed_gui_element.hpp"
-#include "graphics.hpp"
 #include "grid_widget.hpp"
 #include "gui_section.hpp"
 #include "image_widget.hpp"
@@ -41,7 +40,6 @@
 #include "label.hpp"
 #include "module.hpp"
 #include "preferences.hpp"
-#include "raster.hpp"
 #include "unit_test.hpp"
 #include "scrollbar_widget.hpp"
 #include "slider.hpp"
@@ -61,7 +59,7 @@ const char* ToolIcons[] = {
 	"widget_checkbox",
 	"widget_image",
 	"widget_scrollbar",
-	"widget_slider",
+	"widget_Slider",
 	"widget_textbox",
 };
 
@@ -85,49 +83,49 @@ enum WIDGET_TOOL {
 void dummy_fn(int n, double d) {
 }
 
-gui::widget_ptr create_widget_from_tool(WIDGET_TOOL tool, size_t x, size_t y)
+gui::WidgetPtr create_widget_from_tool(WIDGET_TOOL tool, size_t x, size_t y)
 {
 	assert(tool >= TOOL_BUTTON && tool < NUM_WIDGET_TOOLS);
-	gui::widget_ptr p;
+	gui::WidgetPtr p;
 	switch(tool) {
 	case TOOL_BUTTON:
-		p.reset(new gui::button("button", boost::bind(dummy_fn, -1, 0.0)));
+		p.reset(new gui::button("button", std::bind(dummy_fn, -1, 0.0)));
 		break;
 	case TOOL_LABEL:
 		p.reset(new gui::label("label text", 14, default_font_name));
 		break;
 	case TOOL_GRID: {
 		gui::grid* gg = new gui::grid(1);
-		gg->set_dim(100,100);
-		gg->set_show_background(true);
+		gg->setDim(100,100);
+		gg->setShowBackground(true);
 		p.reset(gg);
 		break;
 	}
 	case TOOL_DIALOG: {
 		gui::dialog* d = new gui::dialog(x, y, 100, 100);
-		d->set_background_frame("empty_window");
+		d->setBackgroundFrame("empty_window");
 		return d;
 	}
 	case TOOL_CHECKBOX:
-		p.reset(new gui::checkbox("checkbox", false, boost::bind(dummy_fn, -1, 0.0)));
+		p.reset(new gui::Checkbox("Checkbox", false, std::bind(dummy_fn, -1, 0.0)));
 		break;
 	case TOOL_IMAGE:
-		p.reset(new gui::image_widget("window-icon.png"));
+		p.reset(new gui::ImageWidget("window-icon.png"));
 		break;
 	case TOOL_SCROLLBAR:
-		p.reset(new gui::scrollbar_widget(boost::bind(dummy_fn, _1, 0.0)));
+		p.reset(new gui::ScrollBarWidget(std::bind(dummy_fn, _1, 0.0)));
 		break;
 	case TOOL_SLIDE:
-		p.reset(new gui::slider(100, boost::bind(dummy_fn, -1, _1)));
+		p.reset(new gui::Slider(100, std::bind(dummy_fn, -1, _1)));
 		break;
 	case TOOL_TEXTBOX:
-		p.reset(new gui::text_editor_widget(100, 20));
+		p.reset(new gui::TextEditorWidget(100, 20));
 		break;
 	default:
 		break;
 	}
 	if(p) {
-		p->set_loc(x, y);
+		p->setLoc(x, y);
 	}
 	return p;
 }
@@ -144,18 +142,18 @@ public:
 	void save(const std::string& fname);
 private:
 	widget_editor& editor_;
-	gui::widget_ptr placement_;
+	gui::WidgetPtr placement_;
 	WIDGET_TOOL selected_;
-	std::set<gui::widget_ptr, gui::widget_sort_zorder> widget_list_;
+	std::set<gui::WidgetPtr, gui::WidgetSortZOrder> widget_list_;
 	SDL_Color text_color_;
 	size_t info_bar_height_;
-	gui::widget_ptr highlighted_widget_;
+	gui::WidgetPtr highlighted_widget_;
 	size_t cycle_;
-	gui::widget_ptr selected_widget_;
+	gui::WidgetPtr selected_widget_;
 
-	void handle_draw() const;
-	bool handle_event(const SDL_Event& event, bool claimed);
-	void handle_process();
+	void handleDraw() const override;
+	bool handleEvent(const SDL_Event& event, bool claimed) override;
+	void handleProcess() override;
 
 	widget_window();
 	widget_window(const widget_window&);
@@ -175,7 +173,7 @@ public:
 	WIDGET_TOOL tool() const { return tool_; }
 	bool is_tool_widget() const { return tool_ >= TOOL_BUTTON; }
 
-	void set_selected_widget(gui::widget_ptr w)
+	void set_selected_widget(gui::WidgetPtr w)
 	{
 		selected_widget_ = w;
 		init();
@@ -187,44 +185,44 @@ private:
 	rect area_;
 	std::string fname_;
 	WIDGET_TOOL tool_;
-	std::vector<gui::border_widget*> tool_borders_;
+	std::vector<gui::BorderWidget*> tool_borders_;
 	widget_window_ptr ww_;
-	gui::widget_ptr selected_widget_;
+	gui::WidgetPtr selected_widget_;
 
 	void init()
 	{
 		clear();
-		set_clear_bg_amount(255);
+		setClearBgAmount(255);
 
 		if(!ww_) {
 			ww_.reset(new widget_window(rect(area_.x(), area_.y(), area_.w()-sidebar_width,area_.h()), *this));
 		}
-		add_widget(ww_, 0, 0);
+		addWidget(ww_, 0, 0);
 
-		gui::button_ptr save_button = new gui::button(new gui::label("Save", graphics::color("antique_white").as_sdl_color(), 16, default_font_name),
+		gui::ButtonPtr save_button = new gui::button(new gui::label("Save", graphics::color("antique_white").as_sdl_color(), 16, default_font_name),
 			[&](){ww_->save(fname_);});
 		if(fname_.empty()) {
 			save_button->enable(false);
 		}
-		add_widget(save_button, area_.x2() - sidebar_width, area_.y() + 4);
+		addWidget(save_button, area_.x2() - sidebar_width, area_.y() + 4);
 
 		tool_borders_.clear();
 		gui::grid_ptr tools_grid(new gui::grid(5));
 		for(size_t n = WIDGET_TOOL_FIRST; n != NUM_WIDGET_TOOLS; ++n) {
-			gui::button_ptr tool_button(
-			  new gui::button(gui::widget_ptr(new gui::gui_section_widget(ToolIcons[n], 26, 26)),
-				  boost::bind(&widget_editor::select_tool, this, static_cast<WIDGET_TOOL>(n))));
-			tool_borders_.push_back(new gui::border_widget(tool_button, tool_ == n ? graphics::color_white() : graphics::color_black()));
-			tools_grid->add_col(gui::widget_ptr(tool_borders_.back()));
+			gui::ButtonPtr tool_button(
+			  new gui::button(gui::WidgetPtr(new gui::GuiSectionWidget(ToolIcons[n], 26, 26)),
+				  std::bind(&widget_editor::select_tool, this, static_cast<WIDGET_TOOL>(n))));
+			tool_borders_.push_back(new gui::BorderWidget(tool_button, tool_ == n ? KRE::Color::colorWhite() : graphics::color_black()));
+			tools_grid->addCol(gui::WidgetPtr(tool_borders_.back()));
 		}
-		tools_grid->finish_row();
+		tools_grid->finishRow();
 
-		add_widget(tools_grid, area_.x2() - sidebar_width, save_button->y() + save_button->height() + 4);
+		addWidget(tools_grid, area_.x2() - sidebar_width, save_button->y() + save_button->height() + 4);
 
-		// need a checkbox for relative/absolute mode
+		// need a Checkbox for relative/absolute mode
 
 		if(selected_widget_) {
-			add_widget(selected_widget_->get_settings_dialog(0, 0, sidebar_width,height()-tools_grid->height()-20), 
+			addWidget(selected_widget_->getSettingsDialog(0, 0, sidebar_width,height()-tools_grid->height()-20), 
 				area_.x2()-sidebar_width, 
 				tools_grid->height()+20);
 		}
@@ -244,11 +242,11 @@ widget_window::widget_window(const rect& area, widget_editor& editor)
 	: editor_(editor), selected_(editor.tool()),
 	text_color_(graphics::color("antique_white").as_sdl_color())
 {
-	info_bar_height_ = font::char_height(14, default_font_name);
-	set_loc(area.x(), area.y());
-	set_dim(area.w(), area.h());
+	info_bar_height_ = KRE::Font::charHeight(14, default_font_name);
+	setLoc(area.x(), area.y());
+	setDim(area.w(), area.h());
 	if(editor_.is_tool_widget()) {
-		placement_.reset(new gui::gui_section_widget(ToolIcons[editor_.tool()], 26, 26));
+		placement_.reset(new gui::GuiSectionWidget(ToolIcons[editor_.tool()], 26, 26));
 	}
 }
 
@@ -268,7 +266,7 @@ void widget_window::save(const std::string& fname)
 	sys::write_file(fname, res.build().write_json());
 }
 
-void widget_window::handle_draw() const
+void widget_window::handleDraw() const
 {
 	glPushMatrix();
 	glTranslatef(GLfloat(x() & ~1), GLfloat(y() & ~1), 0.0);
@@ -295,7 +293,7 @@ void widget_window::handle_draw() const
 	if(placement_) {
 		int mx, my;
 		input::sdl_get_mouse_state(&mx, &my);
-		placement_->set_loc(mx, my);
+		placement_->setLoc(mx, my);
 		placement_->draw();
 	}
 
@@ -307,7 +305,7 @@ void widget_window::handle_draw() const
 	glPopMatrix();
 }
 
-void widget_window::handle_process()
+void widget_window::handleProcess()
 {
 	++cycle_;
 
@@ -316,14 +314,14 @@ void widget_window::handle_process()
 	}
 }
 
-bool widget_window::handle_event(const SDL_Event& event, bool claimed)
+bool widget_window::handleEvent(const SDL_Event& event, bool claimed)
 {
 	if(claimed) {
 		return true;
 	}
 
 	for(auto w : widget_list_) {
-		w->process_event(event, false);
+		w->processEvent(event, false);
 	}
 
 	switch(event.type) {
@@ -344,10 +342,10 @@ bool widget_window::handle_event(const SDL_Event& event, bool claimed)
 
 		case SDL_MOUSEMOTION: {
 			const SDL_MouseMotionEvent& motion = event.motion;
-			//Uint8 button_state = input::sdl_get_mouse_state(NULL, NULL);
+			//Uint8 button_state = input::sdl_get_mouse_state(nullptr, nullptr);
 			if(motion.x >= x() && motion.x < x()+width() && motion.y >= y() && motion.y < y()+height()-info_bar_height_ && editor_.tool() < NUM_WIDGET_TOOLS) {
-				if((selected_ != editor_.tool() || placement_ == NULL) && editor_.is_tool_widget()) {
-					placement_.reset(new gui::gui_section_widget(ToolIcons[editor_.tool()], 26, 26));
+				if((selected_ != editor_.tool() || placement_ == nullptr) && editor_.is_tool_widget()) {
+					placement_.reset(new gui::GuiSectionWidget(ToolIcons[editor_.tool()], 26, 26));
 					selected_ = editor_.tool();
 				} else if(editor_.tool() == TOOL_SELECT) {
 					bool highlight_one = false;
@@ -403,13 +401,14 @@ UTILITY(widget_editor)
 	}
 
 	variant gui_node = json::parse_from_file("data/gui.cfg");
-	gui_section::init(gui_node);
-	framed_gui_element::init(gui_node);
+	GuiSection::init(gui_node);
+	FramedGuiElement::init(gui_node);
 
 	if(!fname.empty() && sys::file_exists(fname)) {
 		// load file
 	}
 	
 	boost::intrusive_ptr<widget_editor> editor(new widget_editor(rect(0, 0, preferences::actual_screen_width(), preferences::actual_screen_height()), fname));
-	editor->show_modal();
+	editor->showModal();
 }
+#endif

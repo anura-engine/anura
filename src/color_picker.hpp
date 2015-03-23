@@ -1,27 +1,33 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
+
 #pragma once
 
 #include <vector>
-#include <boost/function.hpp>
+
+#include "Color.hpp"
 
 #include "button.hpp"
-#include "color_utils.hpp"
-#include "color_chart.hpp"
 #include "formula_callable_definition.hpp"
 #include "grid_widget.hpp"
 #include "slider.hpp"
@@ -30,37 +36,37 @@
 
 namespace gui
 {
-	class color_picker : public widget
+	class ColorPicker : public Widget
 	{
 	public:
-		color_picker(const rect& area);
-		explicit color_picker(const rect& area, boost::function<void (const graphics::color&)> change_fun);
-		explicit color_picker(const variant& v, game_logic::formula_callable* e);
-		virtual ~color_picker();
-		void set_change_handler(boost::function<void (const graphics::color&)> change_fun) { onchange_ = change_fun; }
+		ColorPicker(const rect& area);
+		explicit ColorPicker(const rect& area, std::function<void (const KRE::Color&)> change_fun);
+		explicit ColorPicker(const variant& v, game_logic::FormulaCallable* e);
+		virtual ~ColorPicker();
+		void setChangeHandler(std::function<void (const KRE::Color&)> change_fun) { onchange_ = change_fun; }
 
-		void set_primary_color(graphics::color color);
-		void set_secondary_color(graphics::color color);
+		void setPrimaryColor(KRE::Color color);
+		void setSecondaryColor(KRE::Color color);
 
-		graphics::color get_primary_color() const { return primary_; }
-		graphics::color get_secondary_color() const { return secondary_; }
-		graphics::color get_selected_color() const { return main_color_selected_ ? primary_ : secondary_; }
-		graphics::color get_unselected_color() const { return main_color_selected_ ? secondary_ : primary_; }
-		bool get_palette_color(int n, graphics::color* color);
-		void set_palette_color(int n, const graphics::color& color);
+		KRE::Color getPrimaryColor() const { return primary_; }
+		KRE::Color getSecondaryColor() const { return secondary_; }
+		KRE::Color getSelectedColor() const { return main_color_selected_ ? primary_ : secondary_; }
+		KRE::Color getUnselectedColor() const { return main_color_selected_ ? secondary_ : primary_; }
+		bool getPaletteColor(int n, KRE::Color* color);
+		void setPaletteColor(int n, const KRE::Color& color);
 	protected:
 		void init();
 	private:
-		DECLARE_CALLABLE(color_picker);
+		DECLARE_CALLABLE(ColorPicker);
 
-		void color_updated();
+		void colorUpdated();
 
-		graphics::color primary_;
-		graphics::color secondary_;
-		std::vector<graphics::color> palette_;
+		KRE::Color primary_;
+		KRE::Color secondary_;
+		std::vector<KRE::Color> palette_;
 
 		int main_color_selected_;
-		int selected_palette_color_;
+		unsigned selected_palette_color_;
 		uint8_t hue_;
 		uint8_t saturation_;
 		uint8_t value_;
@@ -69,38 +75,38 @@ namespace gui
 		uint8_t green_;
 		uint8_t blue_;
 
-		grid_ptr g_;
-		std::vector<slider_ptr> s_;
-		std::vector<text_editor_widget_ptr> t_;
-		button_ptr copy_to_palette_;
-		void copy_to_palette_fn();
+		GridPtr g_;
+		std::vector<SliderPtr> s_;
+		std::vector<TextEditorWidgetPtr> t_;
+		ButtonPtr copy_to_palette_;
+		void copyToPaletteFn();
 
-		void slider_change(int n, double p);
-		void text_change(int n);
-		void text_tab_pressed(int n);
+		void sliderChange(int n, float p);
+		void textChange(int n);
+		void textTabPressed(int n);
 
-		void set_sliders_from_color(const graphics::color& c);
-		void set_text_from_color(const graphics::color& c, int n=-1);
+		void setSlidersFromColor(const KRE::Color& c);
+		void setTextFromColor(const KRE::Color& c, int n=-1);
 
-		void set_hsv_from_color(const graphics::color&);
+		void setHSVFromColor(const KRE::Color&);
 
-		void handle_process();
-		void handle_draw() const;
-		bool handle_event(const SDL_Event& event, bool claimed);
+		void handleProcess() override;
+		void handleDraw() const override;
+		bool handleEvent(const SDL_Event& event, bool claimed) override;
 
 		int color_box_length_;
 		int wheel_radius_;
 		int palette_offset_y_;
 
-		void process_mouse_in_wheel(int x, int y);
+		void processMouseInWheel(int x, int y);
 		bool dragging_;
 
 		void change();
-		boost::function<void (const graphics::color&)> onchange_;
-		game_logic::formula_ptr change_handler_;
-		game_logic::formula_callable_ptr handler_arg_;
+		std::function<void (const KRE::Color&)> onchange_;
+		game_logic::FormulaPtr change_handler_;
+		game_logic::FormulaCallablePtr handler_arg_;
 	};
 
-	typedef boost::intrusive_ptr<color_picker> color_picker_ptr;
-	typedef boost::intrusive_ptr<const color_picker> const_color_picker_ptr;
+	typedef boost::intrusive_ptr<ColorPicker> ColorPickerPtr;
+	typedef boost::intrusive_ptr<const ColorPicker> ConstColorPickerPtr;
 }

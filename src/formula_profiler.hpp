@@ -1,21 +1,27 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
-#ifndef FORMULA_PROFILER_HPP_INCLUDED
-#define FORMULA_PROFILER_HPP_INCLUDED
+
+#pragma once
 
 #include <string>
 
@@ -23,98 +29,93 @@
 
 namespace formula_profiler
 {
+	void dump_instrumentation() {}
 
-void dump_instrumentation() {}
+	class Instrument
+	{
+	public:
+		explicit Instrument(const char* id) {}
+		~Instrument() {}
+	};
 
-class instrument
-{
-public:
-	explicit instrument(const char* id) {}
-	~instrument() {}
-};
+	//should be called every cycle while the profiler is running.
+	void pump();
 
-//should be called every cycle while the profiler is running.
-void pump();
+	class Manager
+	{
+	public:
+		explicit Manager(const char* output_file) {}
+		~Manager() {}
+	};
 
-class manager
-{
-public:
-	explicit manager(const char* output_file) {}
-	~manager() {}
-};
+	class SuspendScope
+	{
+	};
 
-class suspend_scope
-{
-};
-
-inline std::string get_profile_summary() { return ""; }
-
+	inline std::string get_profile_summary() { return ""; }
 }
 
 #else
 
 #include <vector>
 
-#if defined(_WINDOWS)
+#if defined(_MSC_VER)
 #include "utils.hpp"
 #else
 #include <sys/time.h>
 #endif
 
-class custom_object_type;
+class CustomObjectType;
 
 namespace formula_profiler
 {
+	//instruments inside a given scope.
+	class Instrument
+	{
+	public:
+		explicit Instrument(const char* id);
+		~Instrument();
+	private:
+		const char* id_;
+		struct timeval tv_;
+	};
 
-//instruments inside a given scope.
-class instrument
-{
-public:
-	explicit instrument(const char* id);
-	~instrument();
-private:
-	const char* id_;
-	struct timeval tv_;
-};
+	void dump_instrumentation();
 
-void dump_instrumentation();
+	//should be called every cycle while the profiler is running.
+	void pump();
 
-//should be called every cycle while the profiler is running.
-void pump();
+	struct CustomObjectEventFrame 
+	{
+		const CustomObjectType* type;
+		int event_id;
+		bool executing_commands;
 
-struct custom_object_event_frame {
-	const custom_object_type* type;
-	int event_id;
-	bool executing_commands;
+		bool operator<(const CustomObjectEventFrame& f) const;
+	};
 
-	bool operator<(const custom_object_event_frame& f) const;
-};
+	typedef std::vector<CustomObjectEventFrame> EventCallStackType;
+	extern EventCallStackType event_call_stack;
 
-typedef std::vector<custom_object_event_frame> event_call_stack_type;
-extern event_call_stack_type event_call_stack;
+	class Manager
+	{
+	public:
+		explicit Manager(const char* output_file);
+		~Manager();
+	};
 
-class manager
-{
-public:
-	explicit manager(const char* output_file);
-	~manager();
-};
+	void end_profiling();
 
-void end_profiling();
+	class SuspendScope
+	{
+	public:
+		SuspendScope() { event_call_stack.swap(backup_); }
+		~SuspendScope() { event_call_stack.swap(backup_); }
+	private:
+		EventCallStackType backup_;
+	};
 
-class suspend_scope
-{
-public:
-	suspend_scope() { event_call_stack.swap(backup_); }
-	~suspend_scope() { event_call_stack.swap(backup_); }
-private:
-	event_call_stack_type backup_;
-};
-
-std::string get_profile_summary();
-
+	std::string get_profile_summary();
 }
-
-#endif
 
 #endif

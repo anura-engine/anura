@@ -26,9 +26,9 @@
 #include <cairo.h>
 #include <stack>
 
-#include "../asserts.hpp"
-#include "../ft_iface.hpp"
-#include "color.hpp"
+#include "asserts.hpp"
+#include "ft_iface.hpp"
+#include "Color.hpp"
 
 namespace KRE
 {
@@ -70,8 +70,12 @@ namespace KRE
 			{
 			}
 			~render_context() {
-				ASSERT_LOG(fill_color_stack_.empty(), "Fill color stack in rendering context not empty at exit");
-				ASSERT_LOG(stroke_color_stack_.empty(), "Stroke color stack in rendering context not empty at exit");
+                if(!fill_color_stack_.empty()) {
+                    LOG_ERROR("Fill color stack in rendering context not empty at exit.");
+                }
+                if(!stroke_color_stack_.empty()) {
+                    LOG_ERROR("Stroke color stack in rendering context not empty at exit.");
+                }
 			}
 
 			cairo_t* cairo() { return cairo_; }
@@ -111,8 +115,8 @@ namespace KRE
 			double opacity_top() const {
 				return opacity_stack_.top();
 			}
-			color_ptr get_current_color() const { return current_color_; }
-			void set_current_color(color_ptr cc) { current_color_ = cc; }
+			ColorPtr get_current_color() const { return current_color_; }
+			void set_current_color(ColorPtr cc) { current_color_ = cc; }
 			unsigned width() const { return width_; }
 			unsigned height() const { return height_; }
 
@@ -130,7 +134,7 @@ namespace KRE
 			double get_text_y() { return text_y_; }
 		private:
 			cairo_t* cairo_;
-			color_ptr current_color_;
+			ColorPtr current_color_;
 			std::stack<paint_ptr> fill_color_stack_;
 			std::stack<paint_ptr> stroke_color_stack_;
 			std::stack<double> opacity_stack_;

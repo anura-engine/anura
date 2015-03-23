@@ -1,51 +1,53 @@
 /*
 	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
-#ifndef CHECKBOX_HPP_INCLUDED
-#define CHECKBOX_HPP_INCLUDED
+
+#pragma once
 
 #include "button.hpp"
 
 #include <string>
 
-namespace gui {
-
-class checkbox : public button
+namespace gui 
 {
-public:
-	checkbox(const std::string& label, bool checked, boost::function<void(bool)> onclick, BUTTON_RESOLUTION button_resolution=BUTTON_SIZE_NORMAL_RESOLUTION);
-	checkbox(widget_ptr label, bool checked, boost::function<void(bool)> onclick, BUTTON_RESOLUTION button_resolution=BUTTON_SIZE_NORMAL_RESOLUTION);
-	checkbox(const variant& v, game_logic::formula_callable* e);
-	bool checked() const { return checked_; }
-protected:
-	virtual variant get_value(const std::string& key) const;
-private:
-	void on_click();
+	class Checkbox : public Button
+	{
+	public:
+		Checkbox(const std::string& label, bool checked, std::function<void(bool)> onclick, BUTTON_RESOLUTION buttonResolution=BUTTON_SIZE_NORMAL_RESOLUTION);
+		Checkbox(WidgetPtr label, bool checked, std::function<void(bool)> onclick, BUTTON_RESOLUTION buttonResolution=BUTTON_SIZE_NORMAL_RESOLUTION);
+		Checkbox(const variant& v, game_logic::FormulaCallable* e);
+		bool checked() const { return checked_; }
+	private:
+		DECLARE_CALLABLE(Checkbox);
+		void onClick();
 
-	std::string label_;
-	widget_ptr label_widget_;
-	boost::function<void(bool)> onclick_;
-	bool checked_;
-	game_logic::formula_ptr click_handler_;
-	void click(bool checked);
-	int hpadding_;
-};
+		std::string label_;
+		WidgetPtr label_widget_;
+		std::function<void(bool)> onclick_;
+		bool checked_;
+		game_logic::FormulaPtr click_handler_;
+		void click(bool checked);
+		int hpadding_;
+	};
 
-typedef boost::intrusive_ptr<checkbox> checkbox_ptr;
-
+	typedef boost::intrusive_ptr<Checkbox> CheckboxPtr;
 }
-
-#endif

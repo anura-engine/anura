@@ -1,19 +1,26 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
+
 #include <map>
 #include <string>
 #include <vector>
@@ -21,88 +28,88 @@
 #include "asserts.hpp"
 #include "object_events.hpp"
 
-namespace {
-std::vector<std::string> create_object_event_names()
+namespace 
 {
-	std::vector<std::string> res;
-	res.push_back("any");
-	res.push_back("start_level");
-	res.push_back("player_death");
-	res.push_back("load");
-	res.push_back("load_checkpoint");
-	res.push_back("construct");
-	res.push_back("create");
-	res.push_back("done_create");
-	res.push_back("become_active");
-	res.push_back("surface_damage");
-	res.push_back("enter_anim");
-	res.push_back("end_anim");
-	res.push_back("collide_level");
-	res.push_back("collide_head");
-	res.push_back("collide_feet");
-	res.push_back("collide_damage");
-	res.push_back("collide_side");
-	res.push_back("stuck");
-	res.push_back("jumped_on");
-	res.push_back("get_hit");
-	res.push_back("process");
-	res.push_back("timer");
-	res.push_back("enter_water");
-	res.push_back("exit_water");
-	res.push_back("change_solid_dimensions_fail");
-	res.push_back("add_object_fail");
-	res.push_back("change_animation_failure");
-	res.push_back("die");
-	res.push_back("interact");
-	res.push_back("child_spawned");
-	res.push_back("spawned");
-	res.push_back("draw");
-	res.push_back("begin_dialog");
-	res.push_back("cosmic_shift");
-	res.push_back("schedule_finished");
-	res.push_back("outside_level");
-	res.push_back("being_added");
-	res.push_back("being_removed");
-	res.push_back("window_resize");
-	res.push_back("settings_menu");
-	res.push_back("mouse_down");
-	res.push_back("mouse_up");
-	res.push_back("mouse_move");
-	res.push_back("mouse_down*");
-	res.push_back("mouse_up*");
-	res.push_back("mouse_move*");
-	res.push_back("mouse_enter");
-	res.push_back("mouse_leave");
-	res.push_back("click");
-	res.push_back("drag");
-	res.push_back("drag_start");
-	res.push_back("drag_end");
+	std::vector<std::string> create_object_event_names()
+	{
+		std::vector<std::string> res;
+		res.push_back("any");
+		res.push_back("start_level");
+		res.push_back("player_death");
+		res.push_back("load");
+		res.push_back("load_checkpoint");
+		res.push_back("construct");
+		res.push_back("create");
+		res.push_back("done_create");
+		res.push_back("become_active");
+		res.push_back("surface_damage");
+		res.push_back("enter_anim");
+		res.push_back("end_anim");
+		res.push_back("collide_level");
+		res.push_back("collide_head");
+		res.push_back("collide_feet");
+		res.push_back("collide_damage");
+		res.push_back("collide_side");
+		res.push_back("stuck");
+		res.push_back("jumped_on");
+		res.push_back("get_hit");
+		res.push_back("process");
+		res.push_back("timer");
+		res.push_back("enter_water");
+		res.push_back("exit_water");
+		res.push_back("change_solid_dimensions_fail");
+		res.push_back("add_object_fail");
+		res.push_back("change_animation_failure");
+		res.push_back("die");
+		res.push_back("interact");
+		res.push_back("child_spawned");
+		res.push_back("spawned");
+		res.push_back("draw");
+		res.push_back("begin_dialog");
+		res.push_back("cosmic_shift");
+		res.push_back("schedule_finished");
+		res.push_back("outside_level");
+		res.push_back("being_added");
+		res.push_back("being_removed");
+		res.push_back("window_resize");
+		res.push_back("settings_menu");
+		res.push_back("mouse_down");
+		res.push_back("mouse_up");
+		res.push_back("mouse_move");
+		res.push_back("mouse_down*");
+		res.push_back("mouse_up*");
+		res.push_back("mouse_move*");
+		res.push_back("mouse_enter");
+		res.push_back("mouse_leave");
+		res.push_back("click");
+		res.push_back("drag");
+		res.push_back("drag_start");
+		res.push_back("drag_end");
 	res.push_back("mouse_wheel");
 
-	ASSERT_EQ(res.size(), NUM_OBJECT_BUILTIN_EVENT_IDS);
-	return res;
-}
-
-std::vector<std::string>& object_event_names() {
-	static std::vector<std::string> event_names = create_object_event_names();
-	return event_names;
-}
-
-std::map<std::string, int> create_object_event_ids()
-{
-	std::map<std::string, int> result;
-	for(int n = 0; n != object_event_names().size(); ++n) {
-		result[object_event_names()[n]] = n;
+		ASSERT_EQ(res.size(), NUM_OBJECT_BUILTIN_EVENT_IDS);
+		return res;
 	}
 
-	return result;
-}
+	std::vector<std::string>& object_event_names() {
+		static std::vector<std::string> event_names = create_object_event_names();
+		return event_names;
+	}
 
-std::map<std::string, int>& object_event_ids() {
-	static std::map<std::string, int> event_ids = create_object_event_ids();
-	return event_ids;
-}
+	std::map<std::string, int> create_object_event_ids()
+	{
+		std::map<std::string, int> result;
+		for(int n = 0; n != object_event_names().size(); ++n) {
+			result[object_event_names()[n]] = n;
+		}
 
+		return result;
+	}
+
+	std::map<std::string, int>& object_event_ids() {
+		static std::map<std::string, int> event_ids = create_object_event_ids();
+		return event_ids;
+	}
 }
 
 const std::string& get_object_event_str(int id)
@@ -127,7 +134,7 @@ int get_object_event_id(const std::string& str)
 int get_object_event_id_maybe_proto(const std::string& str)
 {
 	const char* proto_str = strstr(str.c_str(), "_PROTO_");
-	if(proto_str != NULL) {
+	if(proto_str != nullptr) {
 		proto_str += 7;
 		return get_object_event_id(std::string(proto_str));
 	}

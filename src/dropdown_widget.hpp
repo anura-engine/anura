@@ -1,108 +1,111 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2012-2014 by Kristina Simpson <sweet.kristas@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
+
 #pragma once
-#ifndef DROPDOWN_WIDGET_HPP_INCLUDED
-#define DROPDOWN_WIDGET_HPP_INCLUDED
 #ifndef NO_EDITOR
 
 #include <vector>
-#include <boost/intrusive_ptr.hpp>
-#include <boost/function.hpp>
 
 #include "border_widget.hpp"
 #include "label.hpp"
 #include "grid_widget.hpp"
+#include "gui_section.hpp"
 #include "image_widget.hpp"
 #include "text_editor_widget.hpp"
 #include "widget.hpp"
 
-namespace gui {
-
-typedef std::vector<std::string> dropdown_list;
-
-class dropdown_widget : public widget
+namespace gui 
 {
-public:
-	enum dropdown_type {
-		DROPDOWN_LIST,
-		DROPDOWN_COMBOBOX,
+	typedef std::vector<std::string> DropdownList;
+
+	enum class DropdownType {
+		LIST,
+		COMBOBOX,
 	};
-	dropdown_widget(const dropdown_list& list, int width, int height=0, dropdown_type type=DROPDOWN_LIST);
-	dropdown_widget(const variant& v, game_logic::formula_callable* e);
-	virtual ~dropdown_widget() {}
 
-	void set_on_change_handler(boost::function<void(const std::string&)> fn) { on_change_ = fn; }
-	void set_on_select_handler(boost::function<void(int,const std::string&)> fn) { on_select_ = fn; }
-	void set_selection(int selection);
-	int get_max_height() const;
-	void set_dropdown_height(int h);
-	void set_font_size(int size) { editor_->set_font_size(size); }
-	void set_text(const std::string& s) { editor_->set_text(s); }
-protected:
-	virtual void handle_draw() const;
-	virtual bool handle_event(const SDL_Event& event, bool claimed);
-	virtual void handle_process();
+	class DropdownWidget : public Widget
+	{
+	public:
+		DropdownWidget(const DropdownList& list, int width, int height=0, DropdownType type=DropdownType::LIST);
+		DropdownWidget(const variant& v, game_logic::FormulaCallable* e);
 
-	void init();
-	void text_enter();
-	void text_change();
+		void setOnChangeHandler(std::function<void(const std::string&)> fn) { on_change_ = fn; }
+		void setOnSelectHandler(std::function<void(int,const std::string&)> fn) { on_select_ = fn; }
+		void setSelection(int selection);
+		int getMaxHeight() const;
+		void setDropdownHeight(int h);
+		void setFontSize(int size) { editor_->setFontSize(size); }
+		void setText(const std::string& s) { editor_->setText(s); }
+	protected:
+		virtual void handleDraw() const override;
+		virtual bool handleEvent(const SDL_Event& event, bool claimed) override;
+		virtual void handleProcess() override;
 
-	DECLARE_CALLABLE(dropdown_widget);
-private:
-	bool handle_mousedown(const SDL_MouseButtonEvent& event, bool claimed);
-	bool handle_mouseup(const SDL_MouseButtonEvent& event, bool claimed);
-	bool handle_mousemotion(const SDL_MouseMotionEvent& event, bool claimed);
-	void execute_selection(int selection);
-	void mouseover_item(int selection);
+		void init();
+		void textEnter();
+		void textChange();
+	private:
+		DECLARE_CALLABLE(DropdownWidget)
+		bool handleMousedown(const SDL_MouseButtonEvent& event, bool claimed);
+		bool handleMouseup(const SDL_MouseButtonEvent& event, bool claimed);
+		bool handleMouseMotion(const SDL_MouseMotionEvent& event, bool claimed);
+		void executeSelection(int selection);
+		void mouseoverItem(int selection);
 
-	int dropdown_height_;
-	dropdown_list list_;
-	int current_selection_;
-	dropdown_type type_;
-	text_editor_widget_ptr editor_;
-	grid_ptr dropdown_menu_;
-	std::vector<label_ptr> labels_;
-	label_ptr label_;
-	gui_section_widget_ptr dropdown_image_;
-	std::string normal_image_, focus_image_;
-	std::string font_;
-	boost::function<void(const std::string&)> on_change_;
-	boost::function<void(int, const std::string&)> on_select_;
+		int dropdown_height_;
+		DropdownList list_;
+		int current_selection_;
+		DropdownType type_;
+		TextEditorWidgetPtr editor_;
+		GridPtr dropdown_menu_;
+		std::vector<LabelPtr> labels_;
+		LabelPtr label_;
+		GuiSectionWidgetPtr dropdown_image_;
+		
+		std::function<void(const std::string&)> on_change_;
+		std::function<void(int, const std::string&)> on_select_;
+		
+		std::string normal_image_, focus_image_;
+		std::string font_;
 
-	// delgate 
-	void change_delegate(const std::string& s);
-	void select_delegate(int selection, const std::string& s);
+		// delgate 
+		void changeDelegate(const std::string& s);
+		void selectDelegate(int selection, const std::string& s);
 
-	void set_color_scheme(const variant& v);
+		void setColorScheme(const variant& v);
 
-	// FFL formula
-	game_logic::formula_ptr change_handler_;
-	game_logic::formula_ptr select_handler_;
+		// FFL formula
+		game_logic::FormulaPtr change_handler_;
+		game_logic::FormulaPtr select_handler_;
 
-	boost::scoped_ptr<graphics::color> normal_color_, depressed_color_, focus_color_;
-	boost::scoped_ptr<graphics::color> text_normal_color_, text_depressed_color_, text_focus_color_;
+		KRE::ColorPtr normal_color_, depressed_color_, focus_color_;
+		KRE::ColorPtr text_normal_color_, text_depressed_color_, text_focus_color_;
 
-	bool in_widget_;
-};
+		bool in_widget_;
+	};
 
-typedef boost::intrusive_ptr<dropdown_widget> dropdown_widget_ptr;
-typedef boost::intrusive_ptr<const dropdown_widget> const_dropdown_widget_ptr;
-
+	typedef boost::intrusive_ptr<DropdownWidget> DropdownWidgetPtr;
+	typedef boost::intrusive_ptr<const DropdownWidget> ConstDropdownWidgetPtr;
 }
 
 #endif // NO_EDITOR
-#endif // DROPDOWN_WIDGET_HPP_INCLUDED

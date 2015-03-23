@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
+	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -33,20 +33,20 @@ namespace KRE
 
 		element::element(element* parent, const ptree& pt) 
 			: core_attribs(pt), 
-			visual_attribs_(pt),
-			clipping_attribs_(pt),
-			filter_effect_attribs_(pt),
-			painting_properties_(pt),
-			marker_attribs_(pt),
-			font_attribs_(pt),
-			text_attribs_(pt),
-            parent_(parent == nullptr ? this : parent),
-            external_resources_required_(false),
-			x_(0,svg_length::SVG_LENGTHTYPE_NUMBER),
-			y_(0,svg_length::SVG_LENGTHTYPE_NUMBER),
-			width_(100,svg_length::SVG_LENGTHTYPE_PERCENTAGE),
-			height_(100,svg_length::SVG_LENGTHTYPE_PERCENTAGE),
-			view_box_(0.0,0.0,0.0,0.0)
+			  visual_attribs_(pt),
+			  clipping_attribs_(pt),
+			  filter_effect_attribs_(pt),
+			  painting_properties_(pt),
+			  marker_attribs_(pt),
+			  font_attribs_(pt),
+			  text_attribs_(pt),
+              parent_(parent == nullptr ? this : parent),
+              external_resources_required_(false),
+			  x_(0,svg_length::SVG_LENGTHTYPE_NUMBER),
+			  y_(0,svg_length::SVG_LENGTHTYPE_NUMBER),
+			  width_(100,svg_length::SVG_LENGTHTYPE_PERCENTAGE),
+			  height_(100,svg_length::SVG_LENGTHTYPE_PERCENTAGE),
+			  view_box_(0.0,0.0,0.0,0.0)
 		{
 			auto attributes = pt.get_child_optional("<xmlattr>");
 			if(attributes) {
@@ -221,15 +221,15 @@ namespace KRE
 
 		void use_element::handle_render(render_context& ctx) const
 		{
-			if(xlink_ref_ == NULL) {
+			if(xlink_ref_ == nullptr) {
 				return;
 			}
 
 			// Acts as a <g ...> attribute when rendered.
 			double x1 = x().value_in_specified_units(svg_length::SVG_LENGTHTYPE_NUMBER);
 			double y1 = y().value_in_specified_units(svg_length::SVG_LENGTHTYPE_NUMBER);
-			double w = width().value_in_specified_units(svg_length::SVG_LENGTHTYPE_NUMBER);
-			double h = height().value_in_specified_units(svg_length::SVG_LENGTHTYPE_NUMBER);
+			//double w = width().value_in_specified_units(svg_length::SVG_LENGTHTYPE_NUMBER);
+			//double h = height().value_in_specified_units(svg_length::SVG_LENGTHTYPE_NUMBER);
 			if(x1 != 0 || y1 != 0) {
 				// The whole list_of could be more eloquently replaced by an
 				// initialiser list. If certain compilers would actually bother supporting

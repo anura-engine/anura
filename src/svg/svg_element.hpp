@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
+	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -95,7 +95,7 @@ namespace KRE
 			virtual void handle_clip(render_context& ctx) const;
 			virtual void handle_clip_render(render_context& ctx) const = 0;
 
-			// top level parent element. if NULL then this is the top level element.
+			// top level parent element. if nullptr then this is the top level element.
 			element* parent_;
 
 			visual_attribs visual_attribs_;

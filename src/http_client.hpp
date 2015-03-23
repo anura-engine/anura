@@ -1,53 +1,56 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
-#ifndef HTTP_CLIENT_HPP_INCLUDED
-#define HTTP_CLIENT_HPP_INCLUDED
+
+
+#pragma once
 
 #include <boost/array.hpp>
 #include <boost/asio.hpp>
-#include <boost/function.hpp>
-#include <boost/shared_ptr.hpp>
 
 #include <string>
 #include <vector>
 
 #include "formula_callable.hpp"
+#include "formula_callable_definition.hpp"
 
 using boost::asio::ip::tcp;
 
-class http_client : public game_logic::formula_callable
+class http_client : public game_logic::FormulaCallable
 {
 public:
-	http_client(const std::string& host, const std::string& port, int session=-1, boost::asio::io_service* service=NULL);
+	http_client(const std::string& host, const std::string& port, int session=-1, boost::asio::io_service* service=nullptr);
 	void send_request(const std::string& method_path,
 	                  const std::string& request,
-					  boost::function<void(std::string)> handler,
-					  boost::function<void(std::string)> error_handler,
-					  boost::function<void(int,int,bool)> progress_handler);
+					  std::function<void(std::string)> handler,
+					  std::function<void(std::string)> error_handler,
+					  std::function<void(int,int,bool)> progress_handler);
 	virtual void process();
 
-protected:
-	variant get_value(const std::string& key) const;
-
 private:
-	
+	DECLARE_CALLABLE(http_client)
 	int session_id_;
 
-	boost::shared_ptr<boost::asio::io_service> io_service_buf_;
+	std::shared_ptr<boost::asio::io_service> io_service_buf_;
 	boost::asio::io_service& io_service_;
 
 	struct Connection {
@@ -57,21 +60,21 @@ private:
 		std::string method_path;
 		std::string request, response;
 		int nbytes_sent;
-		boost::function<void(int,int,bool)> progress_handler;
-		boost::function<void(std::string)> handler, error_handler;
-		game_logic::map_formula_callable_ptr callable;
+		std::function<void(int,int,bool)> progress_handler;
+		std::function<void(std::string)> handler, error_handler;
+		game_logic::MapFormulaCallablePtr callable;
 
 		boost::array<char, 65536> buf;
 		
 		int expected_len;
 	};
 
-	typedef boost::shared_ptr<Connection> connection_ptr;
+	typedef std::shared_ptr<Connection> connection_ptr;
 
 	void handle_resolve(const boost::system::error_code& err, tcp::resolver::iterator endpoint_iterator, connection_ptr conn);
 	void handle_connect(const boost::system::error_code& error, connection_ptr conn, tcp::resolver::iterator resolve_itor);
 	void write_connection_data(connection_ptr conn);
-	void handle_send(connection_ptr conn, const boost::system::error_code& e, size_t nbytes, boost::shared_ptr<std::string> buf_ptr);
+	void handle_send(connection_ptr conn, const boost::system::error_code& e, size_t nbytes, std::shared_ptr<std::string> buf_ptr);
 	void handle_receive(connection_ptr conn, const boost::system::error_code& e, size_t nbytes);
 
 	void async_connect(connection_ptr conn);
@@ -93,6 +96,3 @@ private:
 
 	std::vector<connection_ptr> connections_waiting_on_dns_;
 };
-
-
-#endif

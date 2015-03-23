@@ -1,7 +1,27 @@
-#ifndef FORMULA_CALLABLE_VISITOR_HPP_INCLUDED
-#define FORMULA_CALLABLE_VISITOR_HPP_INCLUDED
+/*
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
+	
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-#include <boost/shared_ptr.hpp>
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
+
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
+*/
+
+#pragma once
 
 #include <set>
 #include <vector>
@@ -10,75 +30,71 @@
 
 namespace game_logic
 {
-
-class formula_callable_suspended
-{
-public:
-	virtual ~formula_callable_suspended();
-	virtual const formula_callable* value() const = 0;
-	virtual void destroy_ref() = 0;
-	virtual void restore_ref() = 0;
-private:
-};
-
-typedef boost::shared_ptr<formula_callable_suspended> formula_callable_suspended_ptr;
-
-class formula_callable_suspended_variant : public formula_callable_suspended
-{
-public:
-	explicit formula_callable_suspended_variant(variant* v)
-	  : value_(v->as_callable()), v_(v)
+	class FormulaCallableSuspended
 	{
-	}
+	public:
+		virtual ~FormulaCallableSuspended();
+		virtual const FormulaCallable* value() const = 0;
+		virtual void destroy_ref() = 0;
+		virtual void restore_ref() = 0;
+	private:
+	};
 
-	virtual const formula_callable* value() const { return value_; }
-	virtual void destroy_ref() { *v_ = variant(); }
-	virtual void restore_ref() { *v_ = variant(value_); }
-private:
-	const formula_callable* value_;
-	variant* v_;
-};
+	typedef std::shared_ptr<FormulaCallableSuspended> FormulaCallableSuspendedPtr;
 
-template<typename T>
-class formula_callable_suspended_impl : public formula_callable_suspended
-{
-public:
-	explicit formula_callable_suspended_impl(boost::intrusive_ptr<T>* ref)
-	  : value_(ref->get()), ref_(ref)
+	class FormulaCallableSuspendedVariant : public FormulaCallableSuspended
 	{
-	}
-
-	virtual const formula_callable* value() const { return value_; }
-	virtual void destroy_ref() { if((*ref_)->refcount() == 1) { value_ = NULL; } ref_->reset(); }
-	virtual void restore_ref() { if(!*ref_) { ref_->reset(dynamic_cast<T*>(const_cast<formula_callable*>(value_))); } }
-private:
-	const formula_callable* value_;
-	boost::intrusive_ptr<T>* ref_;
-};
-
-class formula_callable_visitor
-{
-public:
-	template<typename T>
-	void visit(boost::intrusive_ptr<T>* ref) {
-		if(ref->get() == NULL) {
-			return;
+	public:
+		explicit FormulaCallableSuspendedVariant(variant* v)
+		  : value_(v->as_callable()), v_(v)
+		{
 		}
 
-		ptr_.push_back(formula_callable_suspended_ptr(new formula_callable_suspended_impl<T>(ref)));
+		virtual const FormulaCallable* value() const { return value_; }
+		virtual void destroy_ref() { *v_ = variant(); }
+		virtual void restore_ref() { *v_ = variant(value_); }
+	private:
+		const FormulaCallable* value_;
+		variant* v_;
+	};
 
-		visit(**ref);
-	}
+	template<typename T>
+	class FormulaCallableSuspendedImpl : public FormulaCallableSuspended
+	{
+	public:
+		explicit FormulaCallableSuspendedImpl(boost::intrusive_ptr<T>* ref)
+		  : value_(ref->get()), ref_(ref)
+		{
+		}
 
-	void visit(variant* v);
-	void visit(const formula_callable& callable);
-	void visit(formula_callable& callable);
-	const std::vector<formula_callable_suspended_ptr>& pointers() const { return ptr_; }
-private:
-	std::vector<formula_callable_suspended_ptr> ptr_;
-	std::set<const void*> visited_;
-};
+		virtual const FormulaCallable* value() const { return value_; }
+		virtual void destroy_ref() { if((*ref_)->refcount() == 1) { value_ = nullptr; } ref_->reset(); }
+		virtual void restore_ref() { if(!*ref_) { ref_->reset(dynamic_cast<T*>(const_cast<FormulaCallable*>(value_))); } }
+	private:
+		const FormulaCallable* value_;
+		boost::intrusive_ptr<T>* ref_;
+	};
 
+	class FormulaCallableVisitor
+	{
+	public:
+		template<typename T>
+		void visit(boost::intrusive_ptr<T>* ref) {
+			if(ref->get() == nullptr) {
+				return;
+			}
+
+			ptr_.push_back(FormulaCallableSuspendedPtr(new FormulaCallableSuspendedImpl<T>(ref)));
+
+			visit(**ref);
+		}
+
+		void visit(variant* v);
+		void visit(const FormulaCallable& callable);
+		void visit(FormulaCallable& callable);
+		const std::vector<FormulaCallableSuspendedPtr>& pointers() const { return ptr_; }
+	private:
+		std::vector<FormulaCallableSuspendedPtr> ptr_;
+		std::set<const void*> visited_;
+	};
 }
-
-#endif

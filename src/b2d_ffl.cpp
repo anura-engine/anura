@@ -1,25 +1,35 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2012-2014 by Kristina Simpson <sweet.kristas@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
+
+#include <cstdarg>
+
+#include "Canvas.hpp"
+#include "Font.hpp"
+
 #include "asserts.hpp"
 #include "b2d_ffl.hpp"
-#include "graphics.hpp"			// -- needed for debug functions
 #include "json_parser.hpp"
 #include "level.hpp"
-#include "raster.hpp"
 #include "variant_utils.hpp"
 
 #ifdef USE_BOX2D
@@ -35,7 +45,7 @@ namespace box2d
 		variant write();
 	protected:
 	private:
-		boost::shared_ptr<b2JointDef> joint_def_;
+		std::shared_ptr<b2JointDef> joint_def_;
 		std::string id_;
 
 		variant joint_variant_def_;
@@ -43,11 +53,11 @@ namespace box2d
 
 	namespace 
 	{
-		b2World *current_world = NULL;
+		b2World *current_world = nullptr;
 		world_ptr this_world;
 
-		typedef std::map<std::string, boost::shared_ptr<joint_factory> > joint_factory_map;
-		typedef std::pair<std::string, boost::shared_ptr<joint_factory> > joint_factory_pair;
+		typedef std::map<std::string, std::shared_ptr<joint_factory> > joint_factory_map;
+		typedef std::pair<std::string, std::shared_ptr<joint_factory> > joint_factory_pair;
 		joint_factory_map& get_joint_defs()
 		{
 			static joint_factory_map res;
@@ -60,7 +70,7 @@ namespace box2d
 		void operator()(b2Body* b) const 
 		{
 			// if the world has destructed the body will already have been destroyed.
-			if(current_world != NULL) {
+			if(current_world != nullptr) {
 				std::cerr << "body_destructor: " << b << std::endl;
 				current_world->DestroyBody(b);
 			}
@@ -69,7 +79,7 @@ namespace box2d
 
 	joint_ptr world::find_joint_by_id(const std::string& key) const
 	{
-		for(b2Joint* j = current_world->GetJointList(); j != NULL; j = j->GetNext()) {
+		for(b2Joint* j = current_world->GetJointList(); j != nullptr; j = j->GetNext()) {
 			std::string* s = (std::string*)j->GetUserData();
 			if(*s == key) {
 				return joint_ptr(new joint(j));
@@ -78,16 +88,16 @@ namespace box2d
 		return joint_ptr();
 	}
 
-	class joints_command : public game_logic::formula_callable
+	class joints_command : public game_logic::FormulaCallable
 	{
 	public:
 		explicit joints_command()
 		{}
-		virtual variant get_value(const std::string& key) const
+		virtual variant getValue(const std::string& key) const
 		{
 			return variant(this_world->find_joint_by_id(key).get());
 		}
-		void set_value(const std::string& key, const variant& value)
+		void setValue(const std::string& key, const variant& value)
 		{
 		}
 	};
@@ -97,8 +107,8 @@ namespace box2d
 		try {
 			variant w = json::parse_from_file("data/world.cfg");
 			this_world = new world(w);
-			this_world->finish_loading();
-		} catch(json::parse_error&) {
+			this_world->finishLoading();
+		} catch(json::ParseError&) {
 			std::cerr << "WORLD NOT FOUND/NOT VALID. NOT LOADING WORLD. WORLD IS SAD." << std::endl;
 		}
 	}
@@ -135,12 +145,12 @@ namespace box2d
 		}
 		if(w.has_key("joints")) {
 			if(w["joints"].is_list()) {
-				for(size_t n = 0; n < w["joints"].num_elements(); ++n) {
-					boost::shared_ptr<joint_factory> p = boost::shared_ptr<joint_factory>(new joint_factory(w["joints"][n]));
+				for(int n = 0; n < w["joints"].num_elements(); ++n) {
+					std::shared_ptr<joint_factory> p = std::shared_ptr<joint_factory>(new joint_factory(w["joints"][n]));
 					get_joint_defs()[w["joints"][n]["id"].as_string()] = p;
 				}
 			} else if(w["joints"].is_map()) {
-				boost::shared_ptr<joint_factory> p = boost::shared_ptr<joint_factory>(new joint_factory(w["joints"]));
+				std::shared_ptr<joint_factory> p = std::shared_ptr<joint_factory>(new joint_factory(w["joints"]));
 				get_joint_defs()[w["joints"]["id"].as_string()] = p;
 			}
 		}
@@ -174,7 +184,7 @@ namespace box2d
 		get_world().Step(time_step, velocity_iterations_, position_iterations_);
 	}
 
-	void world::finish_loading()
+	void world::finishLoading()
 	{
 		set_as_current_world();
 		debug_draw_.SetFlags(b2Draw::e_shapeBit | b2Draw::e_jointBit | b2Draw::e_aabbBit | b2Draw::e_pairBit | b2Draw::e_centerOfMassBit);
@@ -184,11 +194,11 @@ namespace box2d
 
 	b2World& world::current()
 	{
-		ASSERT_LOG(current_world != NULL, "Access to world::current() denied. world is NULL");
+		ASSERT_LOG(current_world != nullptr, "Access to world::current() denied. world is nullptr");
 		return *current_world;
 	}
 
-	b2World* world::current_ptr()
+	b2World* world::getCurrentPtr()
 	{
 		return current_world;
 	}
@@ -200,10 +210,10 @@ namespace box2d
 
 	void world::clear_current_world()
 	{
-		current_world = NULL;
+		current_world = nullptr;
 	}
 
-	variant world::get_value(const std::string& key) const
+	variant world::getValue(const std::string& key) const
 	{
 		if(key == "gravity") {
 			std::vector<variant> v;
@@ -234,7 +244,7 @@ namespace box2d
 		return variant();
 	}
 
-	void world::set_value(const std::string& key, const variant& value)
+	void world::setValue(const std::string& key, const variant& value)
 	{
 		if(key == "gravity") {
 			ASSERT_LOG(value.is_list() && value.num_elements() == 2, 
@@ -274,11 +284,11 @@ namespace box2d
 	variant world::write()
 	{
 		variant_builder res;
-		res.add("gravity", get_value("gravity"));
-		res.add("allow_sleeping", get_value("allow_sleeping"));
-		res.add("iterations", get_value("iterations"));
-		res.add("viewport", get_value("viewport"));
-		foreach(const joint_factory_pair& j, get_joint_defs()) {
+		res.add("gravity", getValue("gravity"));
+		res.add("allow_sleeping", getValue("allow_sleeping"));
+		res.add("iterations", getValue("iterations"));
+		res.add("viewport", getValue("viewport"));
+		for(const joint_factory_pair& j : get_joint_defs()) {
 			res.add("joints", j.second->write());
 		}
 		return res.build();
@@ -300,7 +310,7 @@ namespace box2d
 		//std::cerr << "fixture being destructed: " << std::hex << intptr_t(fix) << std::dec << std::endl;
 	}
 
-	boost::shared_ptr<b2FixtureDef> body::create_fixture(const variant& fix)
+	std::shared_ptr<b2FixtureDef> body::create_fixture(const variant& fix)
 	{
 		b2FixtureDef* fix_def = new b2FixtureDef();
 		fix_def->friction = float(fix["friction"].as_decimal().as_float());
@@ -351,7 +361,7 @@ namespace box2d
 					poly_shape->Set(&v[0], num_elements);
 				}
 				fix_def->shape = poly_shape;
-				shape_list_.push_back(boost::shared_ptr<b2Shape>(poly_shape));
+				shape_list_.push_back(std::shared_ptr<b2Shape>(poly_shape));
 			} else if(type == "circle") {
 				b2CircleShape* circle_shape = new b2CircleShape;
 				circle_shape->m_radius = float(shape["radius"].as_decimal().as_float());
@@ -362,7 +372,7 @@ namespace box2d
 						float(shape["position"][1].as_decimal().as_float()));
 				}
 				fix_def->shape = circle_shape;
-				shape_list_.push_back(boost::shared_ptr<b2Shape>(circle_shape));
+				shape_list_.push_back(std::shared_ptr<b2Shape>(circle_shape));
 			} else if(type == "edge") {
 				b2EdgeShape* edge_shape = new b2EdgeShape;
 				ASSERT_LOG(shape.has_key("vertex1") && shape["vertex1"].is_list() && shape["vertex1"].num_elements() == 2,
@@ -384,13 +394,13 @@ namespace box2d
 					edge_shape->m_hasVertex3 = true;
 				}
 				fix_def->shape = edge_shape;
-				shape_list_.push_back(boost::shared_ptr<b2Shape>(edge_shape));
+				shape_list_.push_back(std::shared_ptr<b2Shape>(edge_shape));
 			} else if(type == "chain") {
 				b2ChainShape* chain_shape = new b2ChainShape;
 				ASSERT_LOG(shape.has_key("vertices") && shape["vertices"].is_list(), "verticies must be a list");
 				bool loop = shape["loop"].as_bool(false);
 				std::vector<b2Vec2> vertices;
-				for(size_t n = 0; n < shape["vertices"].num_elements(); ++n) {
+				for(int n = 0; n < shape["vertices"].num_elements(); ++n) {
 					ASSERT_LOG(shape["vertices"][n].is_list() && shape["vertices"][n].num_elements() > 2, 
 						"Inner items on vertices must be lists of length > 2.");
 					vertices.push_back(b2Vec2(float32(shape["vertices"][n][0].as_decimal().as_float()), float32(shape["vertex3"][n][1].as_decimal().as_float())));
@@ -407,12 +417,12 @@ namespace box2d
 					chain_shape->SetNextVertex(b2Vec2(float32(shape["next_vertex"][0].as_decimal().as_float()), float32(shape["next_vertex"][1].as_decimal().as_float())));
 				}
 				fix_def->shape = chain_shape;
-				shape_list_.push_back(boost::shared_ptr<b2Shape>(chain_shape));
+				shape_list_.push_back(std::shared_ptr<b2Shape>(chain_shape));
 			} else {
 				ASSERT_LOG(false, "Unrecognised shape type: " << type);
 			}
 		}
-		return boost::shared_ptr<b2FixtureDef>(fix_def);
+		return std::shared_ptr<b2FixtureDef>(fix_def);
 	}
 
 	body::body(const variant& value) 
@@ -488,23 +498,23 @@ namespace box2d
 	}
 
 	
-	void body::finish_loading(entity_ptr e)
+	void body::finishLoading(EntityPtr e)
 	{
 		world_ptr wp = world::our_world_ptr();
-		if(e != NULL) {
+		if(e != nullptr) {
 			if(body_def_.position.x == 0 && body_def_.position.y == 0) {
 				body_def_.position.x = float(e->x());
 				body_def_.position.y = float(e->y());
 			}
 			body_def_.userData = e.get();
 		} else {
-			body_def_.userData = NULL;
+			body_def_.userData = nullptr;
 		}
 		body_def_.position.x /= wp->scale();
 		body_def_.position.y /= wp->scale();
 
-		body_ = boost::shared_ptr<b2Body>(wp->create_body(this), body_destructor());
-		foreach(const boost::shared_ptr<b2FixtureDef> fix_def, fix_defs_) {
+		body_ = std::shared_ptr<b2Body>(wp->create_body(this), body_destructor());
+		for(const std::shared_ptr<b2FixtureDef> fix_def : fix_defs_) {
 			body_->CreateFixture(fix_def.get());
 		}
 		body_->ResetMassData();
@@ -512,20 +522,20 @@ namespace box2d
 
 	bool body::active() const
 	{
-		ASSERT_LOG(body_ != NULL, "body_ is NULL in active()");
+		ASSERT_LOG(body_ != nullptr, "body_ is nullptr in active()");
 		return body_->IsActive();
 	}
 
 	void body::set_active(bool actv)
 	{
-		ASSERT_LOG(body_ != NULL, "body_ is NULL in set_active()");
+		ASSERT_LOG(body_ != nullptr, "body_ is nullptr in set_active()");
 		body_->SetActive(actv);
 	}
 
 
-	variant body::get_value(const std::string& key) const
+	variant body::getValue(const std::string& key) const
 	{
-		ASSERT_LOG(body_ != NULL, "Can't set parameters on this body. body_ == NULL");
+		ASSERT_LOG(body_ != nullptr, "Can't set parameters on this body. body_ == nullptr");
 		if(key == "active") {
 			return variant::from_bool(body_->IsActive());
 		} else if(key == "angle") {
@@ -581,9 +591,9 @@ namespace box2d
 		return variant();
 	}
 
-	void body::set_value(const std::string& key, const variant& value)
+	void body::setValue(const std::string& key, const variant& value)
 	{
-		ASSERT_LOG(body_ != NULL, "Can't set parameters on this body. body_ == NULL");
+		ASSERT_LOG(body_ != nullptr, "Can't set parameters on this body. body_ == nullptr");
 		if(key == "active") {
 			body_->SetActive(value.as_bool());
 		} else if(key == "angular_velocity") {
@@ -723,7 +733,7 @@ namespace box2d
 	variant body::fix_write()
 	{
 		variant_builder res;
-		std::vector<boost::shared_ptr<b2FixtureDef> >::const_iterator it = fix_defs_.begin();
+		std::vector<std::shared_ptr<b2FixtureDef> >::const_iterator it = fix_defs_.begin();
 		while(it != fix_defs_.end()) {
 			variant_builder fix;
 			fix.add("friction", variant((*it)->friction));
@@ -861,7 +871,7 @@ namespace box2d
 		bool collide_connected = value["collide_connected"].as_bool(false);
 
 		if(type == "revolute") {
-			boost::shared_ptr<b2RevoluteJointDef> revolute = boost::shared_ptr<b2RevoluteJointDef>(new b2RevoluteJointDef);
+			std::shared_ptr<b2RevoluteJointDef> revolute = std::shared_ptr<b2RevoluteJointDef>(new b2RevoluteJointDef);
 			b2Vec2 anchor = body_a_->get_raw_body_ptr()->GetWorldCenter();
 			if(value.has_key("anchor")) {
 				ASSERT_LOG(value["anchor"].is_list() && value["anchor"].num_elements() == 2,
@@ -892,7 +902,7 @@ namespace box2d
 			}
 			joint_def_ = revolute;
 		} else if(type == "distance") {
-			boost::shared_ptr<b2DistanceJointDef> distance = boost::shared_ptr<b2DistanceJointDef>(new b2DistanceJointDef);
+			std::shared_ptr<b2DistanceJointDef> distance = std::shared_ptr<b2DistanceJointDef>(new b2DistanceJointDef);
 			b2Vec2 anchor_a = body_a_->get_body_ptr()->GetWorldCenter();
 			b2Vec2 anchor_b = body_b_->get_body_ptr()->GetWorldCenter();
 			if(value.has_key("anchor_a")) {
@@ -914,7 +924,7 @@ namespace box2d
 			}
 			joint_def_ = distance;
 		} else if(type == "prismatic") {
-			boost::shared_ptr<b2PrismaticJointDef> prismatic = boost::shared_ptr<b2PrismaticJointDef>(new b2PrismaticJointDef);
+			std::shared_ptr<b2PrismaticJointDef> prismatic = std::shared_ptr<b2PrismaticJointDef>(new b2PrismaticJointDef);
 			b2Vec2 anchor = body_a_->get_body_ptr()->GetWorldCenter();
 			if(value.has_key("anchor")) {
 				ASSERT_LOG(value["anchor"].is_list() && value["anchor"].num_elements() == 2,
@@ -951,7 +961,7 @@ namespace box2d
 			}
 			joint_def_ = prismatic;
 		} else if(type == "pulley") {
-			boost::shared_ptr<b2PulleyJointDef> pulley = boost::shared_ptr<b2PulleyJointDef>(new b2PulleyJointDef);
+			std::shared_ptr<b2PulleyJointDef> pulley = std::shared_ptr<b2PulleyJointDef>(new b2PulleyJointDef);
 			b2Vec2 anchor_a = body_a_->get_body_ptr()->GetWorldCenter();
 			b2Vec2 anchor_b = body_b_->get_body_ptr()->GetWorldCenter();
 			b2Vec2 ground_anchor_a;
@@ -976,7 +986,7 @@ namespace box2d
 			pulley->Initialize(body_a_->get_raw_body_ptr(), body_b_->get_raw_body_ptr(), ground_anchor_a, ground_anchor_b, anchor_a, anchor_b, ratio);
 			joint_def_ = pulley;
 		} else if(type == "gear") {
-			boost::shared_ptr<b2GearJointDef> gear = boost::shared_ptr<b2GearJointDef>(new b2GearJointDef);
+			std::shared_ptr<b2GearJointDef> gear = std::shared_ptr<b2GearJointDef>(new b2GearJointDef);
 			gear->ratio = float(value["ratio"].as_decimal(decimal(1.0)).as_float());
 			gear->bodyA = body_a_->get_raw_body_ptr();
 			gear->bodyB = body_b_->get_raw_body_ptr();
@@ -989,7 +999,7 @@ namespace box2d
 			gear->joint2 = j1->get_b2Joint();
 			joint_def_ = gear;
 		} else if(type == "mouse") {
-			boost::shared_ptr<b2MouseJointDef> mouse = boost::shared_ptr<b2MouseJointDef>(new b2MouseJointDef);
+			std::shared_ptr<b2MouseJointDef> mouse = std::shared_ptr<b2MouseJointDef>(new b2MouseJointDef);
 			b2Vec2 target = body_a_->get_body_ptr()->GetWorldCenter();
 			if(value.has_key("target")) {
 				ASSERT_LOG(value["target"].is_list() && value["target"].num_elements() == 2,
@@ -1008,7 +1018,7 @@ namespace box2d
 			}
 			joint_def_ = mouse;
 		} else if(type == "wheel") {
-			boost::shared_ptr<b2WheelJointDef> wheel = boost::shared_ptr<b2WheelJointDef>(new b2WheelJointDef);
+			std::shared_ptr<b2WheelJointDef> wheel = std::shared_ptr<b2WheelJointDef>(new b2WheelJointDef);
 			b2Vec2 anchor = body_a_->get_body_ptr()->GetWorldCenter();
 			if(value.has_key("anchor")) {
 				ASSERT_LOG(value["anchor"].is_list() && value["anchor"].num_elements() == 2,
@@ -1029,7 +1039,7 @@ namespace box2d
 			wheel->dampingRatio = float(value["damping_ratio"].as_decimal(decimal(0.7)).as_float());
 			joint_def_ = wheel;
 		} else if(type == "weld") {
-			boost::shared_ptr<b2WeldJointDef> weld = boost::shared_ptr<b2WeldJointDef>(new b2WeldJointDef);
+			std::shared_ptr<b2WeldJointDef> weld = std::shared_ptr<b2WeldJointDef>(new b2WeldJointDef);
 			b2Vec2 anchor = body_a_->get_body_ptr()->GetWorldCenter();
 			if(value.has_key("anchor")) {
 				ASSERT_LOG(value["anchor"].is_list() && value["anchor"].num_elements() == 2,
@@ -1042,7 +1052,7 @@ namespace box2d
 			weld->dampingRatio = float(value["damping_ratio"].as_decimal(decimal(0.0)).as_float());
 			joint_def_ = weld;
 		} else if(type == "rope") {
-			boost::shared_ptr<b2RopeJointDef> rope = boost::shared_ptr<b2RopeJointDef>(new b2RopeJointDef);
+			std::shared_ptr<b2RopeJointDef> rope = std::shared_ptr<b2RopeJointDef>(new b2RopeJointDef);
 			rope->bodyA = body_a_->get_raw_body_ptr();
 			rope->bodyB = body_b_->get_raw_body_ptr();
 			b2Vec2 local_anchor_a(-1.0f, 0.0f);
@@ -1062,7 +1072,7 @@ namespace box2d
 			rope->maxLength = float(value["max_length"].as_decimal(decimal(0.0)).as_float());
 			joint_def_ = rope;
 		} else if(type == "friction") {
-			boost::shared_ptr<b2FrictionJointDef> friction = boost::shared_ptr<b2FrictionJointDef>(new b2FrictionJointDef);
+			std::shared_ptr<b2FrictionJointDef> friction = std::shared_ptr<b2FrictionJointDef>(new b2FrictionJointDef);
 			b2Vec2 anchor = body_a_->get_body_ptr()->GetWorldCenter();
 			if(value.has_key("anchor")) {
 				ASSERT_LOG(value["anchor"].is_list() && value["anchor"].num_elements() == 2,
@@ -1102,8 +1112,8 @@ namespace box2d
 	variant joint_factory::write()
 	{
 		variant_builder res;
-		ASSERT_LOG(joint_def_ != NULL, "No joint definition found.");
-		variant keys = joint_variant_def_.get_keys();
+		ASSERT_LOG(joint_def_ != nullptr, "No joint definition found.");
+		variant keys = joint_variant_def_.getKeys();
 		for(int n = 0; n != keys.num_elements(); ++n) {
 			res.add(keys[n].as_string(), joint_variant_def_[keys[n]]);
 		}
@@ -1116,9 +1126,9 @@ namespace box2d
 	{
 	}
 
-	variant joint::get_value(const std::string& key) const
+	variant joint::getValue(const std::string& key) const
 	{
-		ASSERT_LOG(joint_ != NULL, "Internal joint has been destroyed.");
+		ASSERT_LOG(joint_ != nullptr, "Internal joint has been destroyed.");
 		if(key == "a") {
 			return variant((body*)joint_->GetBodyA()->GetUserData());
 		} else if(key == "b") {
@@ -1426,9 +1436,9 @@ namespace box2d
 		return variant();
 	}
 
-	void joint::set_value(const std::string& key, const variant& value)
+	void joint::setValue(const std::string& key, const variant& value)
 	{
-		ASSERT_LOG(joint_ != NULL, "Internal joint has been destroyed.");
+		ASSERT_LOG(joint_ != nullptr, "Internal joint has been destroyed.");
 		if(joint_->GetType() == e_revoluteJoint) {
 			b2RevoluteJoint* revolute = (b2RevoluteJoint*)joint_;
 			if(key == "enable_limit") {
@@ -1526,190 +1536,51 @@ namespace box2d
 
 	void debug_draw::DrawPolygon(const b2Vec2* vertices, int32 vertexCount, const b2Color& color)
 	{
-		std::vector<GLfloat>& varray = graphics::global_vertex_array();
-		varray.clear();
+		auto canvas = KRE::Canvas::getInstance();
+		std::vector<glm::vec2> varray;
 		for(int n = 0; n != vertexCount; ++n) {
-			varray.push_back(GLfloat(vertices[n].x * this_world->scale()));
-			varray.push_back(GLfloat(vertices[n].y * this_world->scale()));
+			varray.emplace_back(static_cast<float>(vertices[n].x * this_world->scale()), 
+				static_cast<float>(vertices[n].y * this_world->scale()));
 		}
-#if defined(USE_SHADERS)
-		glColor4f(color.r, color.g, color.b, 1.0);
-		gles2::manager gles2_manager(gles2::get_simple_shader());
-		gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, 0, 0, &varray.front());
-		glDrawArrays(GL_LINE_LOOP, 0, varray.size()/2);
-		glColor4ub(255, 255, 255, 255);
-#else
-		glDisable(GL_TEXTURE_2D);
-		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-		glLineWidth(1.0f);
-		glColor4f(color.r, color.g, color.b, 1.0);
-		glVertexPointer(2, GL_FLOAT, 0, &varray.front());
-		glDrawArrays(GL_LINE_LOOP, 0, varray.size()/2);
-		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-		glEnable(GL_TEXTURE_2D);
-		glColor4ub(255, 255, 255, 255);
-#endif
+		canvas->drawLineLoop(varray, 1.0f, KRE::Color(color.r, color.g, color.b));
 	}
 
 	void debug_draw::DrawSolidPolygon(const b2Vec2* vertices, int32 vertexCount, const b2Color& color)
 	{
-		std::vector<GLfloat>& varray = graphics::global_vertex_array();
-		varray.clear();
+		auto canvas = KRE::Canvas::getInstance();
+		std::vector<glm::vec2> varray;
 		for(int n = 0; n != vertexCount; ++n) {
-			varray.push_back(GLfloat(vertices[n].x * this_world->scale()));
-			varray.push_back(GLfloat(vertices[n].y * this_world->scale()));
+			varray.emplace_back(static_cast<float>(vertices[n].x * this_world->scale()), 
+				static_cast<float>(vertices[n].y * this_world->scale()));
 		}
-#if defined(USE_SHADERS)
-		glEnable(GL_BLEND);
-		glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		glColor4f(color.r *0.5f, color.g*0.5f, color.b*0.5f, 0.5f);
-		gles2::manager gles2_manager(gles2::get_simple_shader());
-		gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, 0, 0, &varray.front());
-		glDrawArrays(GL_TRIANGLE_FAN, 0, varray.size()/2);
-		glDisable(GL_BLEND);
-
-		glColor4f(color.r, color.g, color.b, 1.0f);
-		glDrawArrays(GL_LINE_LOOP, 0, varray.size()/2);
-		glColor4ub(255, 255, 255, 255);
-#else
-		glEnable(GL_BLEND);
-		glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		glDisable(GL_TEXTURE_2D);
-		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-		glLineWidth(1.0f);
-		glColor4f(color.r *0.5f, color.g*0.5f, color.b*0.5f, 0.5f);
-		glVertexPointer(2, GL_FLOAT, 0, &varray.front());
-		glDrawArrays(GL_TRIANGLE_FAN, 0, varray.size()/2);
-		glDisable(GL_BLEND);
-
-		glColor4f(color.r, color.g, color.b, 1.0f);
-		glDrawArrays(GL_LINE_LOOP, 0, varray.size()/2);
-
-		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-		glEnable(GL_TEXTURE_2D);
-		glColor4ub(255, 255, 255, 255);
-#endif
+		canvas->drawPolygon(varray, KRE::Color(color.r*0.5f, color.g*0.5f, color.b*0.5f, 0.5f));
+		canvas->drawLineLoop(varray, 1.0f, KRE::Color(color.r, color.g, color.b));
 	}
 
 	void debug_draw::DrawCircle(const b2Vec2& center, float32 radius, const b2Color& color)
 	{
-		const float32 k_segments = 32;
-		const float32 k_increment = 2.0f * b2_pi / k_segments;
-		float32 theta = 0.0f;
-
-		std::vector<GLfloat>& varray = graphics::global_vertex_array();
-		varray.clear();
-		for(int n = 0; n < k_segments; ++n, theta += k_increment) {
-			b2Vec2 v = center + radius * b2Vec2(cosf(theta), sinf(theta));
-			varray.push_back(GLfloat(v.x * this_world->scale()));
-			varray.push_back(GLfloat(v.y * this_world->scale()));
-		}
-#if defined(USE_SHADERS)
-		glColor4f(color.r, color.g, color.b, 1.0);
-		gles2::manager gles2_manager(gles2::get_simple_shader());
-		gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, 0, 0, &varray.front());
-		glDrawArrays(GL_LINE_LOOP, 0, varray.size()/2);
-		glColor4ub(255, 255, 255, 255);
-#else
-		glDisable(GL_TEXTURE_2D);
-		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-		glLineWidth(1.0f);
-		glColor4f(color.r, color.g, color.b, 1.0);
-		glVertexPointer(2, GL_FLOAT, 0, &varray.front());
-		glDrawArrays(GL_LINE_LOOP, 0, varray.size()/2);
-		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-		glEnable(GL_TEXTURE_2D);
-		glColor4ub(255, 255, 255, 255);
-#endif
+		auto canvas = KRE::Canvas::getInstance();
+		canvas->drawHollowCircle(pointf(center.x * this_world->scale(), center.y * this_world->scale()), radius, radius-2.0f, KRE::Color(color.r, color.g, color.b));
 	}
 
 	void debug_draw::DrawSolidCircle(const b2Vec2& center, float32 radius, const b2Vec2& axis, const b2Color& color)
 	{
-		const float32 k_segments = 32.0f;
-		const float32 k_increment = 2.0f * b2_pi / k_segments;
-		float32 theta = 0.0f;
-
-		std::vector<GLfloat>& varray = graphics::global_vertex_array();
-		varray.clear();
-		for(int n = 0; n < k_segments; ++n, theta += k_increment) {
-			b2Vec2 v = center + radius * b2Vec2(cosf(theta), sinf(theta));
-			varray.push_back(GLfloat(v.x * this_world->scale()));
-			varray.push_back(GLfloat(v.y * this_world->scale()));
-		}
-#if defined(USE_SHADERS)
-		glEnable(GL_BLEND);
-		glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		glColor4f(color.r *0.5f, color.g*0.5f, color.b*0.5f, 0.5f);
-		gles2::manager gles2_manager(gles2::get_simple_shader());
-		gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, 0, 0, &varray.front());
-		glDrawArrays(GL_TRIANGLE_FAN, 0, varray.size()/2);
-		glDisable(GL_BLEND);
-
-		glColor4f(color.r, color.g, color.b, 1.0f);
-		glDrawArrays(GL_LINE_LOOP, 0, varray.size()/2);
-
-		varray.clear();
+		auto canvas = KRE::Canvas::getInstance();
+		canvas->drawSolidCircle(pointf(center.x * this_world->scale(), center.y * this_world->scale()), 
+			radius, 
+			KRE::Color(color.r*0.5f, color.g*0.5f, color.b*0.5f, 0.5f));
 		b2Vec2 p = center + radius * axis;
-		varray.push_back(center.x * this_world->scale());
-		varray.push_back(center.y * this_world->scale());
-		varray.push_back(p.x);
-		varray.push_back(p.y);
-		glDrawArrays(GL_LINE_LOOP, 0, varray.size()/2);
-
-		glColor4ub(255, 255, 255, 255);
-#else
-		glEnable(GL_BLEND);
-		glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		glDisable(GL_TEXTURE_2D);
-		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-		glLineWidth(1.0f);
-		glColor4f(color.r *0.5f, color.g*0.5f, color.b*0.5f, 0.5f);
-		glVertexPointer(2, GL_FLOAT, 0, &varray.front());
-		glDrawArrays(GL_TRIANGLE_FAN, 0, varray.size()/2);
-		glDisable(GL_BLEND);
-
-		glColor4f(color.r, color.g, color.b, 1.0f);
-		glDrawArrays(GL_LINE_LOOP, 0, varray.size()/2);
-
-		varray.clear();
-		b2Vec2 p = center + radius * axis;
-		varray.push_back(center.x * world_->scale());
-		varray.push_back(center.y * world_->scale());
-		varray.push_back(p.x);
-		varray.push_back(p.y);
-		glDrawArrays(GL_LINE_LOOP, 0, varray.size()/2);
-
-		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-		glEnable(GL_TEXTURE_2D);
-		glColor4ub(255, 255, 255, 255);
-#endif
+		canvas->drawLine(pointf(center.x * this_world->scale(), center.y * this_world->scale()), 
+			pointf(p.x, p.y), 
+			KRE::Color(color.r, color.g, color.b));
 	}
 
 	void debug_draw::DrawSegment(const b2Vec2& p1, const b2Vec2& p2, const b2Color& color)
 	{
-		std::vector<GLfloat>& varray = graphics::global_vertex_array();
-		varray.clear();
-		varray.push_back(GLfloat(p1.x * this_world->scale()));
-		varray.push_back(GLfloat(p1.y * this_world->scale()));
-		varray.push_back(GLfloat(p2.x * this_world->scale()));
-		varray.push_back(GLfloat(p2.y * this_world->scale()));
-#if defined(USE_SHADERS)
-		glColor4f(color.r, color.g, color.b, 1.0);
-		gles2::manager gles2_manager(gles2::get_simple_shader());
-		gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, 0, 0, &varray.front());
-		glDrawArrays(GL_LINES, 0, varray.size()/2);
-		glColor4ub(255, 255, 255, 255);
-#else
-		glDisable(GL_TEXTURE_2D);
-		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-		glLineWidth(1.0f);
-		glColor4f(color.r, color.g, color.b, 1.0);
-		glVertexPointer(2, GL_FLOAT, 0, &varray.front());
-		glDrawArrays(GL_LINES, 0, varray.size()/2);
-		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-		glEnable(GL_TEXTURE_2D);
-		glColor4ub(255, 255, 255, 255);
-#endif
+		auto canvas = KRE::Canvas::getInstance();
+		canvas->drawLine(pointf(p1.x * this_world->scale(), p1.y * this_world->scale()), 
+			pointf(p2.x * this_world->scale(), p2.y * this_world->scale()), 
+			KRE::Color(color.r, color.g, color.b));
 	}
 
 	void debug_draw::DrawTransform(const b2Transform& xf)
@@ -1718,111 +1589,46 @@ namespace box2d
 		const float32 k_axisScale = 0.4f;
 		p2 = p1 + k_axisScale * xf.q.GetXAxis();
 
-		std::vector<GLfloat>& varray = graphics::global_vertex_array();
-		varray.clear();
-		varray.push_back(GLfloat(p1.x * this_world->scale()));
-		varray.push_back(GLfloat(p1.y * this_world->scale()));
-		varray.push_back(GLfloat(p2.x * this_world->scale()));
-		varray.push_back(GLfloat(p2.y * this_world->scale()));
-#if defined(USE_SHADERS)
-		glColor4f(1.0f, 0.0f, 0.0f, 1.0);
-		gles2::manager gles2_manager(gles2::get_simple_shader());
-		gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, 0, 0, &varray.front());
-		glDrawArrays(GL_LINES, 0, varray.size()/2);
-
+		auto canvas = KRE::Canvas::getInstance();
+		canvas->drawLine(pointf(p1.x * this_world->scale(),p1.y * this_world->scale()), 
+			pointf(p2.x * this_world->scale(),p2.y * this_world->scale()), 
+			KRE::Color::colorRed());
 		p2 = p1 + k_axisScale * xf.q.GetYAxis();
-		glColor4f(0.0f, 1.0f, 0.0f, 1.0);
-		varray.clear();
-		varray.push_back(GLfloat(p1.x * this_world->scale()));
-		varray.push_back(GLfloat(p1.y * this_world->scale()));
-		varray.push_back(GLfloat(p2.x * this_world->scale()));
-		varray.push_back(GLfloat(p2.y * this_world->scale()));
-		gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, 0, 0, &varray.front());
-		glDrawArrays(GL_LINES, 0, varray.size()/2);
-
-		glColor4ub(255, 255, 255, 255);
-#else
-		glDisable(GL_TEXTURE_2D);
-		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-		glColor4f(color.r, color.g, color.b, 1.0);
-		glVertexPointer(2, GL_FLOAT, 0, &varray.front());
-		glDrawArrays(GL_LINES, 0, varray.size()/2);
-
-		p2 = p1 + k_axisScale * xf.q.GetYAxis();
-		glColor4f(0.0f, 1.0f, 0.0f, 1.0);
-		varray.clear();
-		varray.push_back(GLfloat(p1.x * this_world->scale()));
-		varray.push_back(GLfloat(p1.y * this_world->scale()));
-		varray.push_back(GLfloat(p2.x * this_world->scale()));
-		varray.push_back(GLfloat(p2.y * this_world->scale()));
-		glDrawArrays(GL_LINES, 0, varray.size()/2);
-
-		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-		glEnable(GL_TEXTURE_2D);
-		glColor4ub(255, 255, 255, 255);
-#endif
+		canvas->drawLine(pointf(p1.x * this_world->scale(),p1.y * this_world->scale()), 
+			pointf(p2.x * this_world->scale(),p2.y * this_world->scale()), 
+			KRE::Color::colorGreen());
 	}
 
 	void debug_draw::DrawPoint(const b2Vec2& p, float32 size, const b2Color& color)
 	{
-		std::vector<GLfloat>& varray = graphics::global_vertex_array();
-		varray.clear();
-		varray.push_back(GLfloat(p.x));
-		varray.push_back(GLfloat(p.y));
-		glPointSize(size);
-#if defined(USE_SHADERS)
-		glColor4f(color.r, color.g, color.b, 1.0);
-		gles2::manager gles2_manager(gles2::get_simple_shader());
-		gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, 0, 0, &varray.front());
-		glDrawArrays(GL_POINTS, 0, varray.size()/2);
-		glColor4ub(255, 255, 255, 255);
-#else
-		glDisable(GL_TEXTURE_2D);
-		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-		glColor4f(color.r, color.g, color.b, 1.0);
-		glVertexPointer(2, GL_FLOAT, 0, &varray.front());
-		glDrawArrays(GL_POINTS, 0, varray.size()/2);
-		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-		glEnable(GL_TEXTURE_2D);
-		glColor4ub(255, 255, 255, 255);
-#endif
-		glPointSize(1.0f);
+		auto canvas = KRE::Canvas::getInstance();
+		// This is a little fudge, draw a circle rather than a point.
+		canvas->drawSolidCircle(pointf(p.x,p.y), size, KRE::Color(color.r,color.g,color.b));
 	}
 
 	void debug_draw::DrawString(int x, int y, const char *string, ...)
 	{
-		// XXX
+		char buffer[1024];
+		va_list args;
+		va_start(args, string);
+		int result = vsnprintf(buffer, sizeof(buffer), string, args);
+		va_end(args);
+		ASSERT_LOG(result < sizeof(buffer), "Unable to write all characters to buffer: " << result);
+		ASSERT_LOG(result >= 0, "Error encoding the string to be drawn: " << result);
+		auto canvas = KRE::Canvas::getInstance();
+		auto tex = KRE::Font::getInstance()->renderText(std::string(buffer), KRE::Color::colorWhite(), 12, false);
+		canvas->blitTexture(tex, 0, rect(x,y,0,0));
 	}
 
 	void debug_draw::DrawAABB(b2AABB* aabb, const b2Color& color)
 	{
-		std::vector<GLfloat>& varray = graphics::global_vertex_array();
-		varray.clear();
-		varray.push_back(GLfloat(aabb->lowerBound.x * this_world->scale()));
-		varray.push_back(GLfloat(aabb->lowerBound.y * this_world->scale()));
-		varray.push_back(GLfloat(aabb->upperBound.x * this_world->scale()));
-		varray.push_back(GLfloat(aabb->lowerBound.y * this_world->scale()));
-		varray.push_back(GLfloat(aabb->upperBound.x * this_world->scale()));
-		varray.push_back(GLfloat(aabb->upperBound.y * this_world->scale()));
-		varray.push_back(GLfloat(aabb->lowerBound.y * this_world->scale()));
-		varray.push_back(GLfloat(aabb->upperBound.y * this_world->scale()));
-#if defined(USE_SHADERS)
-		glColor4f(color.r, color.g, color.b, 1.0);
-		gles2::manager gles2_manager(gles2::get_simple_shader());
-		gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, 0, 0, &varray.front());
-		glDrawArrays(GL_LINE_LOOP, 0, varray.size()/2);
-		glColor4ub(255, 255, 255, 255);
-#else
-		glDisable(GL_TEXTURE_2D);
-		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-		glLineWidth(1.0f);
-		glColor4f(color.r, color.g, color.b, 1.0);
-		glVertexPointer(2, GL_FLOAT, 0, &varray.front());
-		glDrawArrays(GL_LINE_LOOP, 0, varray.size()/2);
-		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-		glEnable(GL_TEXTURE_2D);
-		glColor4ub(255, 255, 255, 255);
-#endif
+		auto canvas = KRE::Canvas::getInstance();
+		std::vector<glm::vec2> varray;
+		varray.emplace_back(static_cast<float>(aabb->lowerBound.x * this_world->scale()), static_cast<float>(aabb->lowerBound.y * this_world->scale()));
+		varray.emplace_back(static_cast<float>(aabb->upperBound.x * this_world->scale()), static_cast<float>(aabb->lowerBound.y * this_world->scale()));
+		varray.emplace_back(static_cast<float>(aabb->upperBound.x * this_world->scale()), static_cast<float>(aabb->upperBound.y * this_world->scale()));
+		varray.emplace_back(static_cast<float>(aabb->lowerBound.y * this_world->scale()), static_cast<float>(aabb->upperBound.y * this_world->scale()));
+		canvas->drawLineLoop(varray, 1.0f, KRE::Color(color.r, color.g, color.b));
 	}
 
 }

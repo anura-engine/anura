@@ -1,30 +1,34 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
+
 #include <algorithm>
 #include <boost/algorithm/string/replace.hpp>
-#include <boost/bind.hpp>
 #include <iostream>
 
 #include "asserts.hpp"
 #include "filesystem.hpp"
-#include "foreach.hpp"
 #include "formatter.hpp"
 #include "formula_object.hpp"
-#include "ipc.hpp"
 #include "json_parser.hpp"
 #include "module.hpp"
 #include "string_utils.hpp"
@@ -36,159 +40,159 @@
 #include "variant.hpp"
 #include "variant_utils.hpp"
 
-namespace tbs {
-
-namespace {
-boost::asio::io_service* g_service;
-int g_listening_port = -1;
-web_server* web_server_instance = NULL;
-}
-
-std::string global_debug_str;
-
-using boost::asio::ip::tcp;
-
-boost::asio::io_service* web_server::service() { return g_service; }
-int web_server::port() { return g_listening_port; }
-
-web_server::web_server(server& serv, boost::asio::io_service& io_service, int port)
-	: http::web_server(io_service, port), server_(serv), timer_(io_service)
+namespace tbs 
 {
-	web_server_instance = this;
-	timer_.expires_from_now(boost::posix_time::milliseconds(1000));
-	timer_.async_wait(boost::bind(&web_server::heartbeat, this, boost::asio::placeholders::error));
-}
+	namespace 
+	{
+		boost::asio::io_service* g_service;
+		int g_listening_port = -1;
+		web_server* web_server_instance = nullptr;
+	}
 
-web_server::~web_server()
-{
-	timer_.cancel();
-	web_server_instance = NULL;
-}
+	std::string global_debug_str;
 
-void web_server::handle_post(socket_ptr socket, variant doc, const http::environment& env)
-{
-	int session_id = -1;
-	std::map<std::string, std::string>::const_iterator i = env.find("cookie");
-	if(i != env.end()) {
-		const char* cookie_start = strstr(i->second.c_str(), " session=");
-		if(cookie_start != NULL) {
-			++cookie_start;
-		} else {
-			cookie_start = strstr(i->second.c_str(), "session=");
-			if(cookie_start != i->second.c_str()) {
-				cookie_start = NULL;
+	using boost::asio::ip::tcp;
+
+	boost::asio::io_service* web_server::service() { return g_service; }
+	int web_server::port() { return g_listening_port; }
+
+	web_server::web_server(server& serv, boost::asio::io_service& io_service, int port)
+		: http::web_server(io_service, port), server_(serv), timer_(io_service)
+	{
+		web_server_instance = this;
+		timer_.expires_from_now(boost::posix_time::milliseconds(1000));
+		timer_.async_wait(std::bind(&web_server::heartbeat, this, std::placeholders::_1));
+	}
+
+	web_server::~web_server()
+	{
+		timer_.cancel();
+		web_server_instance = nullptr;
+	}
+
+	void web_server::handlePost(socket_ptr socket, variant doc, const http::environment& env)
+	{
+		int session_id = -1;
+		std::map<std::string, std::string>::const_iterator i = env.find("cookie");
+		if(i != env.end()) {
+			const char* cookie_start = strstr(i->second.c_str(), " session=");
+			if(cookie_start != nullptr) {
+				++cookie_start;
+			} else {
+				cookie_start = strstr(i->second.c_str(), "session=");
+				if(cookie_start != i->second.c_str()) {
+					cookie_start = nullptr;
+				}
+			}
+
+			if(cookie_start) {
+				session_id = atoi(cookie_start+8);
 			}
 		}
 
-		if(cookie_start) {
-			session_id = atoi(cookie_start+8);
+		if(doc["debug_session"].is_bool()) {
+			session_id = doc["debug_session"].as_bool();
 		}
-	}
 
-	if(doc["debug_session"].is_bool()) {
-		session_id = doc["debug_session"].as_bool();
-	}
-
-	server_.adopt_ajax_socket(socket, session_id, doc);
-	return;
-}
-
-namespace {
-struct KnownFile {
-	const char* url;
-	const char* fname;
-	const char* type;
-};
-
-const KnownFile known_files[] = {
-	{"/tbs_monitor.html", "data/tbs/tbs_monitor.html", "text/html"},
-	{"/tbs_monitor.js", "data/tbs/tbs_monitor.js", "text/javascript"},
-};
-
-variant current_debug_state;
-int debug_state_id = 0;
-std::string current_debug_state_msg = "{ \"new_data\": false }";
-
-std::vector<socket_ptr> debug_state_sockets;
-
-}
-
-void web_server::set_debug_state(variant v)
-{
-	debug_state_id = rand();
-	current_debug_state = v;
-	std::map<variant, variant> m;
-	m[variant("info")] = current_debug_state;
-	m[variant("state")] = variant(debug_state_id);
-	m[variant("new_data")] = variant(true);
-	current_debug_state_msg = variant(&m).write_json();
-	foreach(socket_ptr sock, debug_state_sockets) {
-		web_server_instance->send_msg(sock, "text/json", current_debug_state_msg, "");
-	}
-	debug_state_sockets.clear();
-}
-
-void web_server::heartbeat(const boost::system::error_code& error)
-{
-	if(error == boost::asio::error::operation_aborted) {
-		std::cerr << "tbs_webserver::heartbeat cancelled" << std::endl;
+		server_.adopt_ajax_socket(socket, session_id, doc);
 		return;
 	}
-	foreach(socket_ptr sock, debug_state_sockets) {
-		send_msg(sock, "text/json", "{ \"new_data\": false }", "");
-		fprintf(stderr, "send no new data\n");
+
+	namespace {
+	struct KnownFile {
+		const char* url;
+		const char* fname;
+		const char* type;
+	};
+
+	const KnownFile known_files[] = {
+		{"/tbs_monitor.html", "data/tbs/tbs_monitor.html", "text/html"},
+		{"/tbs_monitor.js", "data/tbs/tbs_monitor.js", "text/javascript"},
+	};
+
+	variant current_debug_state;
+	int debug_state_id = 0;
+	std::string current_debug_state_msg = "{ \"new_data\": false }";
+
+	std::vector<socket_ptr> debug_state_sockets;
 
 	}
-	debug_state_sockets.clear();
-	timer_.expires_from_now(boost::posix_time::milliseconds(1000));
-	timer_.async_wait(boost::bind(&web_server::heartbeat, this, boost::asio::placeholders::error));
-}
 
-void web_server::handle_get(socket_ptr socket, 
-	const std::string& url, 
-	const std::map<std::string, std::string>& args)
-{
-	if(url == "/tbs_monitor") {
-		std::map<std::string,std::string>::const_iterator state_arg = args.find("state");
-		if(state_arg != args.end()) {
-			const int state_id = atoi(state_arg->second.c_str());
-			if(state_id == debug_state_id) {
-				debug_state_sockets.push_back(socket);
+	void web_server::set_debug_state(variant v)
+	{
+		debug_state_id = rand();
+		current_debug_state = v;
+		std::map<variant, variant> m;
+		m[variant("info")] = current_debug_state;
+		m[variant("state")] = variant(debug_state_id);
+		m[variant("new_data")] = variant(true);
+		current_debug_state_msg = variant(&m).write_json();
+		for(socket_ptr sock : debug_state_sockets) {
+			web_server_instance->send_msg(sock, "text/json", current_debug_state_msg, "");
+		}
+		debug_state_sockets.clear();
+	}
+
+	void web_server::heartbeat(const boost::system::error_code& error)
+	{
+		if(error == boost::asio::error::operation_aborted) {
+			LOG_INFO("tbs_webserver::heartbeat cancelled");
+			return;
+		}
+		for(socket_ptr sock : debug_state_sockets) {
+			send_msg(sock, "text/json", "{ \"new_data\": false }", "");
+			LOG_INFO("send no new data\n");
+
+		}
+		debug_state_sockets.clear();
+		timer_.expires_from_now(boost::posix_time::milliseconds(1000));
+		timer_.async_wait(std::bind(&web_server::heartbeat, this, std::placeholders::_1));
+	}
+
+	void web_server::handleGet(socket_ptr socket, 
+		const std::string& url, 
+		const std::map<std::string, std::string>& args)
+	{
+		if(url == "/tbs_monitor") {
+			std::map<std::string,std::string>::const_iterator state_arg = args.find("state");
+			if(state_arg != args.end()) {
+				const int state_id = atoi(state_arg->second.c_str());
+				if(state_id == debug_state_id) {
+					debug_state_sockets.push_back(socket);
+					return;
+				}
+
+				LOG_INFO("send debug msg: " << current_debug_state_msg.c_str());
+				send_msg(socket, "text/json", current_debug_state_msg, "");
 				return;
 			}
-
-			fprintf(stderr, "send debug msg: %s\n", current_debug_state_msg.c_str());
-			send_msg(socket, "text/json", current_debug_state_msg, "");
-			return;
 		}
+
+		for(const KnownFile& f : known_files) {
+			if(url == f.url) {
+				send_msg(socket, f.type, sys::read_file(f.fname), "");
+				return;
+			}
+		}
+
+		LOG_INFO("UNSUPPORTED GET REQUEST");
+		disconnect(socket);
 	}
 
-	foreach(const KnownFile& f, known_files) {
-		if(url == f.url) {
-			send_msg(socket, f.type, sys::read_file(f.fname), "");
-			return;
-		}
-	}
-
-	std::cerr << "UNSUPPORTED GET REQUEST" << std::endl;
-	disconnect(socket);
+	http_client* g_game_server_http_client_to_matchmaking_server;
 }
 
-http_client* g_game_server_http_client_to_matchmaking_server;
-
-}
-
-namespace {
-
-struct code_modified_exception {};
-
-void on_code_modified()
+namespace 
 {
-	fprintf(stderr, "code modified\n");
-	tbs::game::reload_game_types();
-	game_logic::formula_object::reload_classes();
-	throw code_modified_exception();
-}
+	struct code_modified_exception {};
+
+	void on_code_modified()
+	{
+		LOG_INFO("code modified");
+		tbs::game::reload_game_types();
+		game_logic::FormulaObject::reloadClasses();
+		throw code_modified_exception();
+	}
 }
 
 
@@ -223,23 +227,23 @@ COMMAND_LINE_UTILITY(tbs_server) {
 	}
 
 	const std::string MonitorDirs[] = { "data/tbs", "data/tbs_test", "data/classes" };
-	foreach(const std::string& dir, MonitorDirs) {
+	for(const std::string& dir : MonitorDirs) {
 		std::vector<std::string> files;
 		module::get_files_in_dir(dir, &files);
-		foreach(const std::string& fname, files) {
+		for(const std::string& fname : files) {
 			if(fname.size() > 4 && std::string(fname.end()-4,fname.end()) == ".cfg") {
 				std::string path = module::map_file(dir + "/" + fname);
-				std::cerr << "NOTIFY ON: " << path << "\n";
+				LOG_INFO("NOTIFY ON: " << path);
 				sys::notify_on_file_modification(path, on_code_modified);
 			}
 		}
 	}
 
-	std::cerr << "MONITOR URL: " << "http://localhost:" << port << "/tbs_monitor.html\n";
+	LOG_INFO("MONITOR URL: " << "http://localhost:" << port << "/tbs_monitor.html");
 
 	boost::asio::io_service io_service;
 
-	std::cerr << "tbs_server(): Listening on port " << std::dec << port << std::endl;
+	LOG_INFO("tbs_server(): Listening on port " << std::dec << port);
 	tbs::g_service = &io_service;
 	tbs::g_listening_port = port;
 
@@ -256,14 +260,18 @@ COMMAND_LINE_UTILITY(tbs_server) {
 
 		variant_builder msg;
 		msg.add("type", "server_created_game");
+#if defined(_MSC_VER)
+		msg.add("pid", static_cast<int>(_getpid()));
+#else
 		msg.add("pid", static_cast<int>(getpid()));
+#endif
 		msg.add("game", config["game"]);
 		msg.add("game_id", result->game_state->game_id());
 		msg.add("port", port);
 
 		bool complete = false;
 
-		fprintf(stderr, "Sending confirmation request to: %s %d\n", config["matchmaking_host"].as_string().c_str(), config["matchmaking_port"].as_int());
+		LOG_INFO("Sending confirmation request to: " << config["matchmaking_host"].as_string() << " " << config["matchmaking_port"].as_int());
 
 		client.send_request("POST /server", msg.build().write_json(),
 		  [&complete](std::string response) {
@@ -280,49 +288,28 @@ COMMAND_LINE_UTILITY(tbs_server) {
 			client.process();
 		}
 
-		fprintf(stderr, "Started server, reported game availability\n");
+		LOG_INFO("Started server, reported game availability");
 	}
 
 	std::vector<boost::intrusive_ptr<tbs::bot> > bots;
 	for(;;) {
 		try {
 			const assert_recover_scope assert_scope;
-			foreach(const std::string& id, bot_id) {
+			for(const std::string& id : bot_id) {
 				bots.push_back(boost::intrusive_ptr<tbs::bot>(new tbs::bot(io_service, "localhost", formatter() << port, json::parse_from_file("data/tbs_test/" + id + ".cfg"))));
 			}
 		} catch(validation_failure_exception& e) {
 			std::map<variant,variant> m;
 			m[variant("error")] = variant(e.msg);
 			tbs::web_server::set_debug_state(variant(&m));
-		} catch(json::parse_error& e) {
+		} catch(json::ParseError& e) {
 			std::map<variant,variant> m;
 			m[variant("error")] = variant(e.message);
 			tbs::web_server::set_debug_state(variant(&m));
 		}
 	
 		try {
-#if defined(UTILITY_IN_PROC)
-			if(ipc::semaphore::in_use()) {
-				while(!ipc::semaphore::trywait()) {
-					io_service.reset();
-					io_service.poll();
-				}
-#if defined(_MSC_VER)
-				::ExitProcess(0);
-#else
-				return;
-#endif
-			} else {
-				//for(int i = 0; i < 10000000; ++i) {
-				//	io_service.reset();
-				//	io_service.poll();
-				//}
-				io_service.run();
-			}
-			//exit(EXIT_SUCCESS);
-#else
 			io_service.run();
-#endif
 		} catch(code_modified_exception&) {
 			s.clear_games();
 		} catch(tbs::exit_exception&) {

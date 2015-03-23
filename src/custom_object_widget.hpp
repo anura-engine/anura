@@ -1,22 +1,27 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2012-2014 by Kristina Simpson <sweet.kristas@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
+
 #pragma once
-#ifndef CUSTOM_OBJECT_WIDGET_HPP_INCLUDED
-#define CUSTOM_OBJECT_WIDGET_HPP_INCLUDED
 
 #include <boost/intrusive_ptr.hpp>
 
@@ -26,44 +31,41 @@
 
 namespace gui
 {
-	class custom_object_widget : public widget
+	class CustomObjectWidget : public Widget
 	{
 	public:
-		custom_object_widget(const variant& v, game_logic::formula_callable* e);
-		virtual ~custom_object_widget();
-		void set_entity(entity_ptr e);
-		entity_ptr get_entity();
-		const_entity_ptr get_entity() const;
+		CustomObjectWidget(const variant& v, game_logic::FormulaCallable* e);
+		virtual ~CustomObjectWidget();
+		void setEntity(EntityPtr e);
+		EntityPtr getEntity();
+		ConstEntityPtr getEntity() const;
 		void init(const variant& v);
 	protected:
 
-		void handle_draw() const;
-		bool handle_event(const SDL_Event& event, bool claimed);
-		virtual void handle_process();
+		void handleDraw() const override;
+		bool handleEvent(const SDL_Event& event, bool claimed) override;
+		virtual void handleProcess() override;
 	private:
-		DECLARE_CALLABLE(custom_object_widget);
+		DECLARE_CALLABLE(CustomObjectWidget);
 
 		void click(int button);
-		void mouse_enter();
-		void mouse_leave();
+		void mouseEnter();
+		void mouseLeave();
 
-		boost::function<void (int)> on_click_;
-		game_logic::formula_ptr click_handler_;
-		boost::function<void ()> on_mouse_enter_;
-		game_logic::formula_ptr mouse_enter_handler_;
-		boost::function<void ()> on_mouse_leave_;
-		game_logic::formula_ptr mouse_leave_handler_;
+		std::function<void (int)> on_click_;
+		game_logic::FormulaPtr click_handler_;
+		std::function<void ()> on_mouse_enter_;
+		game_logic::FormulaPtr mouse_enter_handler_;
+		std::function<void ()> on_mouse_leave_;
+		game_logic::FormulaPtr mouse_leave_handler_;
 
-		game_logic::formula_ptr commands_handler_;
+		game_logic::FormulaPtr commands_handler_;
 
-		widget_ptr overlay_;
+		WidgetPtr overlay_;
 
-		entity_ptr entity_;
-		bool handle_process_on_entity_;
+		EntityPtr entity_;
+		bool handleProcess_on_entity_;
 	};
 
-	typedef boost::intrusive_ptr<custom_object_widget> custom_object_widget_ptr;
-	typedef boost::intrusive_ptr<const custom_object_widget> const_custom_object_widget_ptr;
+	typedef boost::intrusive_ptr<CustomObjectWidget> CustomObjectWidgetPtr;
 }
-
-#endif

@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2012-2014 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -21,49 +21,30 @@
 	   distribution.
 */
 
+/* XXX -- needs fixed and support for cubic textures added.
 #pragma once
-#if defined(USE_ISOMAP)
 
-#include <boost/shared_ptr.hpp>
-#include <boost/intrusive_ptr.hpp>
-
-#include "camera.hpp"
-#include "formula_callable.hpp"
-#include "formula_callable_definition.hpp"
-#include "lighting.hpp"
-#include "raster.hpp"
-#include "shaders.hpp"
-#include "texture.hpp"
-#include "variant.hpp"
+#include "Texture.hpp"
+#include "Color.hpp"
+#include "SceneObjectCallable.hpp"
 
 namespace graphics
 {
-	class skybox : public game_logic::formula_callable
+	class Skybox : public SceneObjectCallable
 	{
 	public:
-		explicit skybox(const variant& node);
-		virtual ~skybox();
-		void draw(const lighting_ptr lighting, const camera_callable_ptr& camera) const;
+		explicit Skybox(const variant& node);
+		virtual ~Skybox();
 	private:
-		DECLARE_CALLABLE(skybox);
+		DECLARE_CALLABLE(Skybox);
 
-		gles2::program_ptr shader_;
-
-		boost::shared_ptr<GLuint> tex_id_;
+		KRE::TexturePtr tex_;
 		
-		GLuint u_texture_id_;
-		GLuint u_mv_inverse_matrix_;
-		GLuint u_p_inverse_matrix_;
-		GLuint u_color_;
-		GLuint a_position_;
+		KRE::Color color_;
 
-		graphics::color color_;
-
-		skybox();
-		skybox(const skybox&);
+		Skybox();
+		Skybox(const Skybox&);
+		void operator=(const Skybox&);
 	};
-
-	typedef boost::intrusive_ptr<skybox> skybox_ptr;
 }
-
-#endif
+*/

@@ -1,19 +1,26 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
+
 #include <iostream>
 #include <sstream>
 #include <fstream>
@@ -31,8 +38,8 @@
 
 #include "asserts.hpp"
 #include "filesystem.hpp"
-#include "foreach.hpp"
 #include "preferences.hpp"
+#include "profile_timer.hpp"
 #include "thread.hpp"
 #include "unit_test.hpp"
 
@@ -72,19 +79,19 @@ namespace sys
 		}
 		for(directory_iterator it = directory_iterator(p); it != directory_iterator(); ++it) {
 			if(is_directory(it->path()) || is_other(it->path())) {
-				if(dirs != NULL) {
+				if(dirs != nullptr) {
 					dirs->push_back(it->path().filename().generic_string());
 				}
 			} else {
-				if(files != NULL) {
+				if(files != nullptr) {
 					files->push_back(it->path().filename().generic_string());
 				}
 			}
 		}
-		if(files != NULL)
+		if(files != nullptr)
 			std::sort(files->begin(), files->end());
 
-		if (dirs != NULL)
+		if (dirs != nullptr)
 			std::sort(dirs->begin(), dirs->end());
 	}
 
@@ -93,7 +100,7 @@ namespace sys
                                     std::map<std::string, std::string>* file_map,
 									const std::string& prefix)
 	{
-		ASSERT_LOG(file_map != NULL, "get_unique_filenames_under_dir() passed a NULL file_map");
+		ASSERT_LOG(file_map != nullptr, "get_unique_filenames_under_dir() passed a nullptr file_map");
 		path p(dir);
 		if(!is_directory(p)) {
 			return;
@@ -163,7 +170,7 @@ namespace sys
 		return fname;
 	}
 
-	int64_t file_mod_time(const std::string& fname)
+	long long file_mod_time(const std::string& fname)
 	{
 		path p(fname);
 		if(is_regular_file(p)) {
@@ -222,7 +229,7 @@ namespace sys
 			std::vector<std::string> cur_path;
 			std::string norm_path;
 			boost::split(cur_path, path, std::bind2nd(std::equal_to<char>(), '/'));
-			foreach(const std::string& s, cur_path) {
+			for(const std::string& s : cur_path) {
 				if(s != ".") {
 					norm_path += s + "/";
 				}
@@ -234,7 +241,6 @@ namespace sys
 	// Calculates the path of target relative to source.
 	std::string compute_relative_path(const std::string& source, const std::string& target)
 	{
-		//std::cerr << "compute_relative_path(a): " << source << " : " << target << std::endl;
 		std::string common_part = normalise_path(source);
 		std::string back;
 		if(common_part.length() > 1 && common_part[common_part.length()-1] == '/') {
@@ -242,7 +248,6 @@ namespace sys
 		}
 		while(boost::iequals(del_substring_front(target, common_part), target)) {
 			size_t offs = common_part.rfind('/');
-			//std::cerr << "compute_relative_path(b2): " << back << " : " << common_part << std::endl;
 			if(common_part.length() > 1 && offs != std::string::npos) {
 				common_part.erase(offs);
 				back = "../" + back;
@@ -263,18 +268,12 @@ namespace sys
 				back.erase(back.length()-1);
 			}
 		}
-		//std::cerr << "compute_relative_path(b): " << back << " : " << common_part << std::endl;
 		return back + common_part;
 	}
 
-
-
-
-
-
 	namespace 
 	{
-		typedef std::map<std::string, std::vector<boost::function<void()> > > file_mod_handler_map;
+		typedef std::map<std::string, std::vector<std::function<void()> > > file_mod_handler_map;
 		file_mod_handler_map& get_mod_map() 
 		{
 			static file_mod_handler_map instance;
@@ -289,7 +288,7 @@ namespace sys
 		return instance;
 	}
 
-	std::vector<boost::function<void()> > file_mod_notification_queue;
+	std::vector<std::function<void()> > file_mod_notification_queue;
 
 	threading::mutex& get_mod_queue_mutex() {
 		static threading::mutex instance;
@@ -326,21 +325,21 @@ namespace sys
 				if(fd > 0) {
 					fd_to_path[fd] = new_files[n];
 				} else {
-					std::cerr << "COULD NOT LISTEN ON FILE " << new_files[n] << "\n";
+					LOG_WARN("COULD NOT LISTEN ON FILE " << new_files[n]);
 				}
 			}
 
 			FD_ZERO(&read_set);
 			FD_SET(inotify_fd, &read_set);
 			timeval tv = {1, 0};
-			const int select_res = select(inotify_fd+1, &read_set, NULL, NULL, &tv);
+			const int select_res = select(inotify_fd+1, &read_set, nullptr, nullptr, &tv);
 			if(select_res > 0) {
 				inotify_event ev;
 				const int nbytes = read(inotify_fd, &ev, sizeof(ev));
 				if(nbytes == sizeof(ev)) {
 
 					const std::string path = fd_to_path[ev.wd];
-					std::cerr << "LINUX FILE MOD: " << path << "\n";
+					LOG_INFO("LINUX FILE MOD: " << path);
 					if(ev.mask&IN_IGNORED) {
 						fd_to_path.erase(ev.wd);
 						const int fd = inotify_add_watch(inotify_fd, path.c_str(), IN_MODIFY);
@@ -348,19 +347,19 @@ namespace sys
 							fd_to_path[fd] = path;
 						}
 					}
-					std::vector<boost::function<void()> >& handlers = m[path];
-					std::cerr << "FILE HANDLERS: " << handlers.size() << "\n";
+					std::vector<std::function<void()> >& handlers = m[path];
+					LOG_INFO("FILE HANDLERS: " << handlers.size());
 
 					threading::lock lck(get_mod_queue_mutex());
 					file_mod_notification_queue.insert(file_mod_notification_queue.end(), handlers.begin(), handlers.end());
 				} else {
-					std::cerr << "READ FAILURE IN FILE NOTIFY\n";
+					LOG_ERROR("READ FAILURE IN FILE NOTIFY");
 				}
 			}
 
 #else
 
-			const int begin = SDL_GetTicks();
+			const int begin = profile::get_tick_time();
 
 			for(file_mod_handler_map::iterator i = m.begin(); i != m.end(); ++i) {
 				std::map<std::string, int64_t>::iterator mod_itor = mod_times.find(i->first);
@@ -368,7 +367,7 @@ namespace sys
 				if(mod_itor == mod_times.end()) {
 					mod_times[i->first] = mod_time;
 				} else if(mod_time != mod_itor->second) {
-					std::cerr << "MODIFY: " << mod_itor->first << "\n";
+					LOG_INFO("MODIFY: " << mod_itor->first);
 					mod_itor->second = mod_time;
 
 					threading::lock lck(get_mod_queue_mutex());
@@ -376,22 +375,20 @@ namespace sys
 				}
 			}
 
-			//std::cerr << "CHECKED " << m.size() << " FILES IN " << (SDL_GetTicks() - begin) << "\n";
-
-			SDL_Delay(100);
+			profile::delay(100);
 #endif
 		}
 	}
 
-	threading::thread* file_mod_worker_thread = NULL;
+	threading::thread* file_mod_worker_thread = nullptr;
 
 	}
 
-	filesystem_manager::filesystem_manager()
+	FilesystemManager::FilesystemManager()
 	{
 	}
 
-	filesystem_manager::~filesystem_manager()
+	FilesystemManager::~FilesystemManager()
 	{
 		{
 			threading::lock lck(get_mod_map_mutex());
@@ -399,7 +396,7 @@ namespace sys
 		}
 
 		delete file_mod_worker_thread;
-		file_mod_worker_thread = NULL;
+		file_mod_worker_thread = nullptr;
 	}
 
 	std::string get_user_data_dir()
@@ -423,36 +420,36 @@ namespace sys
 		return get_dir(dir_path);
 	}
 
-	void notify_on_file_modification(const std::string& path, boost::function<void()> handler)
+	void notify_on_file_modification(const std::string& path, std::function<void()> handler)
 	{
 		{
 			threading::lock lck(get_mod_map_mutex());
-			std::vector<boost::function<void()> >& handlers = get_mod_map()[path];
+			std::vector<std::function<void()> >& handlers = get_mod_map()[path];
 			if(handlers.empty()) {
 				new_files_listening.push_back(path);
 			}
 			handlers.push_back(handler);
 		}
 
-		if(file_mod_worker_thread == NULL) {
+		if(file_mod_worker_thread == nullptr) {
 			file_mod_worker_thread = new threading::thread("file_change_notify", file_mod_worker_thread_fn);
 		}
 	}
 
 	void pump_file_modifications()
 	{
-		if(file_mod_worker_thread == NULL) {
+		if(file_mod_worker_thread == nullptr) {
 			return;
 		}
 
-		std::vector<boost::function<void()> > v;
+		std::vector<std::function<void()> > v;
 		{
 			threading::lock lck(get_mod_queue_mutex());
 			v.swap(file_mod_notification_queue);
 		}
 
-		foreach(boost::function<void()> f, v) {
-			std::cerr << "CALLING FILE MOD HANDLER\n";
+		for(std::function<void()> f : v) {
+			LOG_INFO("CALLING FILE MOD HANDLER");
 			f();
 		}
 	}

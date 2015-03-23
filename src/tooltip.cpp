@@ -1,85 +1,92 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
-#include "graphics.hpp"
 
-#include "font.hpp"
+
+#include "Canvas.hpp"
+#include "Font.hpp"
+#include "WindowManager.hpp"
+
 #include "input.hpp"
-#include "raster.hpp"
 #include "tooltip.hpp"
 
-namespace gui {
-
-namespace {
-boost::shared_ptr<tooltip_item> cur_tooltip;
-
-graphics::texture& text() {
-	static graphics::texture t;
-	return t;
-}
-}
-
-void set_tooltip(const boost::shared_ptr<tooltip_item>& tip)
+namespace gui 
 {
-	cur_tooltip = tip;
-	text() = font::render_text(cur_tooltip->text, cur_tooltip->font_color, cur_tooltip->font_size, cur_tooltip->font_name);
-}
+	namespace 
+	{
+		TooltipItemPtr cur_tooltip;
 
-void remove_tooltip(const boost::shared_ptr<tooltip_item>& tip)
-{
-	if(tip == cur_tooltip) {
-		cur_tooltip.reset();
-		text() = graphics::texture();
-	}
-}
-
-void draw_tooltip()
-{
-	if(!cur_tooltip) {
-		return;
+		KRE::TexturePtr& text() {
+			static KRE::TexturePtr t;
+			return t;
+		}
 	}
 
-	int mousex, mousey;
-	input::sdl_get_mouse_state(&mousex,&mousey);
-
-	const int pad = 10;
-	const int width = text().width() + pad*2;
-	const int height = text().height() + pad*2;
-	int x = mousex - width/2;
-	int y = mousey - height;
-	if(x < 0) {
-		x = 0;
+	void set_tooltip(const TooltipItemPtr& tip)
+	{
+		cur_tooltip = tip;
+		text() = KRE::Font::getInstance()->renderText(cur_tooltip->text, cur_tooltip->font_color, cur_tooltip->font_size, true, cur_tooltip->font_name);
 	}
 
-	if(x > graphics::screen_width()-width) {
-		x = graphics::screen_width()-width;
+	void remove_tooltip(const TooltipItemPtr& tip)
+	{
+		if(tip == cur_tooltip) {
+			cur_tooltip.reset();
+			text() = KRE::TexturePtr();
+		}
 	}
 
-	if(y < 0) {
-		y = 0;
+	void draw_tooltip()
+	{
+		if(!cur_tooltip || !text()) {
+			return;
+		}
+
+		int mousex, mousey;
+		input::sdl_get_mouse_state(&mousex,&mousey);
+
+		const int pad = 10;
+		const int width = text()->width() + pad*2;
+		const int height = text()->height() + pad*2;
+		int x = mousex - width/2;
+		int y = mousey - height;
+		if(x < 0) {
+			x = 0;
+		}
+
+		if(x > KRE::WindowManager::getMainWindow()->width()-width) {
+			x = KRE::WindowManager::getMainWindow()->width()-width;
+		}
+
+		if(y < 0) {
+			y = 0;
+		}
+
+		if(y > KRE::WindowManager::getMainWindow()->height()-height) {
+			y = KRE::WindowManager::getMainWindow()->height()-height;
+		}
+
+		auto canvas = KRE::Canvas::getInstance();
+		canvas->drawSolidRect(rect(x,y,width,height), KRE::Color(0,0,0,160));
+		canvas->blitTexture(text(), 0, x+pad, y+pad);
 	}
-
-	if(y > graphics::screen_height()-height) {
-		y = graphics::screen_height()-height;
-	}
-
-	SDL_Rect rect = {x,y,width,height};
-	graphics::draw_rect(rect, graphics::color_black(), 160);
-
-	graphics::blit_texture(text(),x+pad,y+pad);
-}
-
 }

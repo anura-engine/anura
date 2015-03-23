@@ -1,59 +1,65 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
-#include <math.h>
 
-#include <boost/bind.hpp>
+#include <cmath>
 
 #include <iostream>
 #include <map>
 
+#include "Scissor.hpp"
+#include "WindowManager.hpp"
+
 #include "background.hpp"
-#include "color_utils.hpp"
 #include "filesystem.hpp"
-#include "foreach.hpp"
 #include "formatter.hpp"
-#include "graphics.hpp"
 #include "json_parser.hpp"
 #include "level.hpp"
 #include "module.hpp"
 #include "preferences.hpp"
-#include "raster.hpp"
+#include "screen_handling.hpp"
 #include "surface_palette.hpp"
 #include "variant.hpp"
 #include "variant_utils.hpp"
 
-namespace {
-//a cache key with background name and palette ID.
-typedef std::pair<std::string, int> cache_key;
-typedef std::map<cache_key, boost::shared_ptr<background> > bg_cache;
-bg_cache cache;
+namespace 
+{
+	//a cache key with background name and palette ID.
+	typedef std::pair<std::string, int> cache_key;
+	typedef std::map<cache_key, std::shared_ptr<Background>> bg_cache;
+	bg_cache cache;
 
 #ifndef NO_EDITOR
-std::set<std::string> listening_for_files, files_updated;
+	std::set<std::string> listening_for_files, files_updated;
 
-void on_bg_file_updated(std::string path)
-{
-	files_updated.insert(path);
-}
+	void on_bg_file_updated(std::string path)
+	{
+		files_updated.insert(path);
+	}
 #endif // NO_EDITOR
 }
 
 #ifndef NO_EDITOR
-void background::load_modified_backgrounds()
+void Background::loadModifiedBackgrounds()
 {
 	static int prev_nitems = 0;
 	const int nitems = cache.size();
@@ -71,16 +77,16 @@ void background::load_modified_backgrounds()
 		}
 
 		if(listening_for_files.count(j->second->file_) == 0) {
-			sys::notify_on_file_modification(j->second->file_, boost::bind(on_bg_file_updated, j->second->file_));
+			sys::notify_on_file_modification(j->second->file_, std::bind(on_bg_file_updated, j->second->file_));
 			listening_for_files.insert(j->second->file_);
 		}
 
 		if(files_updated.count(j->second->file_)) {
 
-			background backup = *j->second;
+			Background backup = *j->second;
 			try {
 				const std::string path = "data/backgrounds/" + j->second->id_ + ".cfg";
-				*j->second = background(json::parse_from_file(path), j->first.second);
+				*j->second = Background(json::parse_from_file(path), j->first.second);
 			} catch(...) {
 				std::cerr << "ERROR REFRESHING BACKGROUND\n";
 				error_paths.insert(j->second->file_);
@@ -92,14 +98,14 @@ void background::load_modified_backgrounds()
 }
 #endif // NO_EDITOR
 
-boost::shared_ptr<background> background::get(const std::string& name, int palette_id)
+std::shared_ptr<Background> Background::get(const std::string& name, int palette_id)
 {
 	const cache_key id(name, palette_id);
 
-	boost::shared_ptr<background>& obj = cache[id];
+	std::shared_ptr<Background>& obj = cache[id];
 	if(!obj) {
 		const std::string fname = "data/backgrounds/" + name + ".cfg";
-		obj.reset(new background(json::parse_from_file(fname), palette_id));
+		obj.reset(new Background(json::parse_from_file(fname), palette_id));
 		obj->id_ = name;
 		obj->file_ = module::map_file(fname);
 	}
@@ -107,38 +113,39 @@ boost::shared_ptr<background> background::get(const std::string& name, int palet
 	return obj;
 }
 
-std::vector<std::string> background::get_available_backgrounds()
+std::vector<std::string> Background::getAvailableBackgrounds()
 {
 	std::vector<std::string> files;
 	module::get_files_in_dir("data/backgrounds/", &files);
 
 	std::vector<std::string> result;
-	foreach(const std::string& fname, files) {
+	for(const std::string& fname : files) {
 		if(fname.size() > 4 && std::equal(fname.end() - 4, fname.end(), ".cfg")) {
-			result.push_back(std::string(fname.begin(), fname.end() - 4));
+			result.emplace_back(std::string(fname.begin(), fname.end() - 4));
 		}
 	}
 
 	return result;
 }
 
-background::background(variant node, int palette) : palette_(palette)
+Background::Background(variant node, int palette) 
+	: palette_(palette),
+	  top_rect_(),
+	  bot_rect_()
 {
-	top_ = string_to_color(node["top"].as_string());
-	bot_ = string_to_color(node["bottom"].as_string());
-
-	if(palette_ != -1) {
-		top_ = graphics::map_palette(top_, palette);
-		bot_ = graphics::map_palette(bot_, palette);
-	}
+	top_ = KRE::Color(node["top"]);
+	bot_ = KRE::Color(node["bottom"]);
 
 	width_ = node["width"].as_int();
 	height_ = node["height"].as_int();
 
-	foreach(variant layer_node, node["layer"].as_list()) {
-		layer bg;
+	bool colors_mapped = false;
+
+	for(variant layer_node : node["layer"].as_list()) {
+		Layer bg;
 		bg.image = layer_node["image"].as_string();
 		bg.image_formula = layer_node["image_formula"].as_string_default();
+		ASSERT_LOG(bg.image_formula.empty(), "Image formula's aren't supported.");
 		bg.xscale = layer_node["xscale"].as_int(100);
 		bg.yscale_top = bg.yscale_bot = layer_node["yscale"].as_int(100);
 		bg.yscale_top = layer_node["yscale_top"].as_int(bg.yscale_top);
@@ -147,45 +154,64 @@ background::background(variant node, int palette) : palette_(palette)
 		bg.xpad = layer_node["xpad"].as_int(0);
 		bg.xoffset = layer_node["xoffset"].as_int(0);
 		bg.yoffset = layer_node["yoffset"].as_int(0);
-		bg.scale = layer_node["scale"].as_int(1);
+		bg.scale = layer_node["scale"].as_int(2);
 		bg.blend = layer_node["blend"].as_bool(true);
 		bg.notile = layer_node["notile"].as_bool(false);
 		if(bg.scale < 1) {
 			bg.scale = 1;
 		}
 
-		std::string blend_mode = layer_node["mode"].as_string_default();
-#if defined(__GLEW_H__)
-		if(GLEW_EXT_blend_minmax) {
-			if(blend_mode == "GL_MAX") {
-				bg.mode = GL_MAX;
-			} else if(blend_mode == "GL_MIN") {
-				bg.mode = GL_MIN;
+		bg.texture = graphics::get_palette_texture(bg.image, layer_node["image"], palette_);
+		bg.setTexture(bg.texture);
+
+		if(palette_ != -1) {
+			bg.texture->setPalette(palette_);
+		}
+
+		if(palette_ != -1 && !colors_mapped) {
+			top_ = bg.texture->mapPaletteColor(top_, palette);
+			bot_ = bg.texture->mapPaletteColor(bot_, palette);
+			colors_mapped = true;
+		}
+
+		using namespace KRE;
+		auto ab = DisplayDevice::createAttributeSet(false, false, false);
+		bg.attr_ = std::make_shared<Attribute<short_vertex_texcoord>>(AccessFreqHint::DYNAMIC, AccessTypeHint::DRAW);
+		bg.attr_->addAttributeDesc(AttributeDesc(AttrType::POSITION, 2, AttrFormat::SHORT, false, sizeof(short_vertex_texcoord), offsetof(short_vertex_texcoord, vertex)));
+		bg.attr_->addAttributeDesc(AttributeDesc(AttrType::TEXTURE, 2, AttrFormat::FLOAT, false, sizeof(short_vertex_texcoord), offsetof(short_vertex_texcoord, tc)));
+		ab->addAttribute(bg.attr_);
+		ab->setDrawMode(DrawMode::TRIANGLES);
+		bg.addAttributeSet(ab);
+
+		if(layer_node.has_key("mode")) {
+			if(layer_node["mode"].is_string()) {
+				std::string blend_mode = layer_node["mode"].as_string_default();
+				if(blend_mode == "GL_MAX" || blend_mode == "MAX") {
+					bg.setBlendEquation(BlendEquation(BlendEquationConstants::BE_MAX));
+				} else if(blend_mode == "GL_MIN" || blend_mode == "MIN") { 
+					bg.setBlendEquation(BlendEquation(BlendEquationConstants::BE_MIN));
+				} else {
+					bg.setBlendEquation(BlendEquation(BlendEquationConstants::BE_ADD));
+				}
 			} else {
-				bg.mode = GL_FUNC_ADD;
+				bg.setBlendEquation(BlendEquation(layer_node["mode"]));
 			}
 		}
-#endif
 		
-		std::fill(bg.color, bg.color + 4, GLfloat(0.0));
-		bg.color[0] = layer_node["red"].as_decimal(decimal(1.0)).as_float();
-		bg.color[1] = layer_node["green"].as_decimal(decimal(1.0)).as_float();
-		bg.color[2] = layer_node["blue"].as_decimal(decimal(1.0)).as_float();
-		bg.color[3] = layer_node["alpha"].as_decimal(decimal(1.0)).as_float();
+		bg.color = Color(layer_node);
+		bg.setColor(bg.color);
 
 		if(layer_node.has_key("color_above")) {
-			bg.color_above.reset(new SDL_Color);
-			*bg.color_above = string_to_color(layer_node["color_above"].as_string());
+			bg.color_above.reset(new Color(layer_node["color_above"]));
 			if(palette_ != -1) {
-				*bg.color_above = graphics::map_palette(*bg.color_above, palette);
+				*bg.color_above = bg.texture->mapPaletteColor(*bg.color_above, palette);
 			}
 		}
 
 		if(layer_node.has_key("color_below")) {
-			bg.color_below.reset(new SDL_Color);
-			*bg.color_below = string_to_color(layer_node["color_below"].as_string());
+			bg.color_below.reset(new Color(layer_node["color_below"]));
 			if(palette_ != -1) {
-				*bg.color_below = graphics::map_palette(*bg.color_below, palette);
+				*bg.color_below = bg.texture->mapPaletteColor(*bg.color_below, palette);
 			}
 		}
 
@@ -195,22 +221,19 @@ background::background(variant node, int palette) : palette_(palette)
 		bg.foreground = layer_node["foreground"].as_bool(false);
 		bg.tile_upwards = layer_node["tile_upwards"].as_bool(false);
 		bg.tile_downwards = layer_node["tile_downwards"].as_bool(false);
-		layers_.push_back(bg);
+		layers_.emplace_back(bg);
 	}
 }
 
-variant background::write() const
+variant Background::write() const
 {
 	variant_builder res;
-	char buf[128];
-	sprintf(buf, "%02x%02x%02x", top_.r, top_.g, top_.b);
-	res.add("top", buf);
-	sprintf(buf, "%02x%02x%02x", bot_.r, bot_.g, bot_.b);
-	res.add("bottom", buf);
+	res.add("top", top_.write());
+	res.add("bottom", bot_.write());
 	res.add("width", formatter() << width_);
 	res.add("height", formatter() << height_);
 
-	foreach(const layer& bg, layers_) {
+	for(auto& bg : layers_) {
 		variant_builder layer_node;
 		layer_node.add("image", bg.image);
 		layer_node.add("xscale", formatter() << bg.xscale);
@@ -227,19 +250,17 @@ variant background::write() const
 		layer_node.add("y1", formatter() << bg.y1);
 		layer_node.add("y2", formatter() << bg.y2);
 		layer_node.add("scale", formatter() << bg.scale);
-		layer_node.add("red", formatter() << bg.color[0]);
-		layer_node.add("green", formatter() << bg.color[1]);
-		layer_node.add("blue", formatter() << bg.color[2]);
-		layer_node.add("alpha", formatter() << bg.color[3]);
+		layer_node.add("red", formatter() << bg.color.r_int());
+		layer_node.add("green", formatter() << bg.color.g_int());
+		layer_node.add("blue", formatter() << bg.color.b_int());
+		layer_node.add("alpha", formatter() << bg.color.a_int());
 
 		if(bg.color_above) {
-			sprintf(buf, "%02x%02x%02x", bg.color_above->r, bg.color_above->g, bg.color_above->b);
-			layer_node.add("color_above", buf);
+			layer_node.add("color_above", bg.color_above->write());
 		}
 
 		if(bg.color_below) {
-			sprintf(buf, "%02x%02x%02x", bg.color_below->r, bg.color_below->g, bg.color_below->b);
-			layer_node.add("color_below", buf);
+			layer_node.add("color_below", bg.color_below->write());
 		}
 		if(bg.foreground) {
 			layer_node.add("foreground", "true");
@@ -258,9 +279,13 @@ variant background::write() const
 	return res.build();
 }
 
-void background::draw(int x, int y, const rect& area, const std::vector<rect>& opaque_areas, int rotation, int cycle) const
+void Background::draw(int x, int y, const rect& area, const std::vector<rect>& opaque_areas, float rotation, int cycle) const
 {
-	const int height = height_ + offset_.y*2;
+	auto& gs = graphics::GameScreen::get();
+	const int height = height_ + offset_.y * 2;
+	//LOG_DEBUG("xy: " << x << "," << y << " wh: " << gs.getWidth() << "," << gs.getHeight());
+	//LOG_DEBUG("height_: " << height_ << ", offset_.y: " << offset_.y << ", height: " << height);
+	//LOG_DEBUG("area: " << area);
 
 	//set the background colors for the level. The area above 'height' is
 	//painted with the top color, and the area below height is painted with
@@ -268,134 +293,111 @@ void background::draw(int x, int y, const rect& area, const std::vector<rect>& o
 	//scissors to divide the screen into top and bottom.
 	if(height < y) {
 		//the entire screen is full of the bottom color
-		glClearColor(bot_.r/255.0, bot_.g/255.0, bot_.b/255.0, 1.0);
-		glClear(GL_COLOR_BUFFER_BIT);
-	} else if(height > y + graphics::screen_height()) {
+		//LOG_DEBUG("fill all bot: " << bot_);
+		bot_rect_.update(area, bot_);
+		bot_rect_.enable();
+		top_rect_.disable();
+	} else if(height > area.y2()) {
 		//the entire screen is full of the top color.
-		glClearColor(top_.r/255.0, top_.g/255.0, top_.b/255.0, 1.0);
-		glClear(GL_COLOR_BUFFER_BIT);
+		//LOG_DEBUG("fill all top: " << top_);
+		top_rect_.update(area, top_);
+		top_rect_.enable();
+		bot_rect_.disable();
 	} else {
 		//both bottom and top colors are on the screen, so draw them both,
-		//using scissors to delinate their areas.
-		const int dist_from_bottom = y + graphics::screen_height() - height;
+		const int dist_from_bottom = height - y;
 
-		glEnable(GL_SCISSOR_TEST);
+		//LOG_DEBUG("fill top: " << x << "," << y << "," << area.w() << "," << dist_from_bottom << " with: " << top_);
+		top_rect_.update(x, y, area.w(), dist_from_bottom, top_);
+		top_rect_.enable();
 
-		const int scissor_scale = preferences::double_scale() ? 2 : 1;
-
-		//the scissor test does not respect any rotations etc. We use a rotation
-		//to transform the iPhone's display, which is fine normally, but
-		//here we have to accomodate the iPhone being "on its side"
-#if TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR
-		glScissor(dist_from_bottom/scissor_scale, 0, (graphics::screen_height() - dist_from_bottom)/scissor_scale, graphics::screen_width()/scissor_scale);
-#else
-		glScissor(0, dist_from_bottom, preferences::actual_screen_width(), preferences::actual_screen_width()*(1-dist_from_bottom/600));
-#endif
-		glClearColor(top_.r/255.0, top_.g/255.0, top_.b/255.0, 1.0);
-		glClear(GL_COLOR_BUFFER_BIT);
-
-#if TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR
-		glScissor(0, 0, dist_from_bottom/scissor_scale, graphics::screen_width()/scissor_scale);
-#else
-		glScissor(0, 0, preferences::actual_screen_width(), dist_from_bottom);
-#endif
-		glClearColor(bot_.r/255.0, bot_.g/255.0, bot_.b/255.0, 1.0);
-		glClear(GL_COLOR_BUFFER_BIT);
-
-		glDisable(GL_SCISSOR_TEST);
+		//LOG_DEBUG("fill bot: " << x << "," << dist_from_bottom << "," << area.w() << "," << (area.h() - dist_from_bottom) << " with: " << bot_);
+		bot_rect_.update(x, dist_from_bottom, area.w(), area.h() - dist_from_bottom, bot_);
+		bot_rect_.enable();
 	}
+	auto wnd = KRE::WindowManager::getMainWindow();
+	wnd->render(&bot_rect_);
+	wnd->render(&top_rect_);
 
-	draw_layers(x, y, area, opaque_areas, rotation, cycle);
+	drawLayers(x, y, area, opaque_areas, rotation, cycle);
 }
 
-namespace {
-graphics::blit_queue blit_queue;
-
-void calculate_draw_areas(rect area, std::vector<rect>::const_iterator opaque1, std::vector<rect>::const_iterator opaque2, std::vector<rect>* areas) {
-	if(opaque1 == opaque2) {
-		areas->push_back(area);
-		return;
-	}
-
-	rect sub_areas[4];
-	for(; opaque1 != opaque2; ++opaque1) {
-		const int result = rect_difference(area, *opaque1, sub_areas);
-		if(result == -1) {
-			continue;
-		}
-
-		if(result != 1) {
-			for(int n = 0; n < result; ++n) {
-
-				calculate_draw_areas(sub_areas[n], opaque1+1, opaque2, areas);
-			}
-
+namespace 
+{
+	void calculate_draw_areas(rect area, std::vector<rect>::const_iterator opaque1, std::vector<rect>::const_iterator opaque2, std::vector<rect>* areas) {
+		if(opaque1 == opaque2) {
+			areas->emplace_back(area);
 			return;
 		}
 
-		area = sub_areas[0];
+		rect sub_areas[4];
+		for(; opaque1 != opaque2; ++opaque1) {
+			const int result = geometry::rect_difference(area, *opaque1, sub_areas);
+			if(result == -1) {
+				continue;
+			}
+
+			if(result != 1) {
+				for(int n = 0; n < result; ++n) {
+
+					calculate_draw_areas(sub_areas[n], opaque1+1, opaque2, areas);
+				}
+
+				return;
+			}
+
+			area = sub_areas[0];
+		}
+
+		areas->emplace_back(area);
 	}
-
-	areas->push_back(area);
 }
 
-}
-
-void background::draw_layers(int x, int y, const rect& area_ref, const std::vector<rect>& opaque_areas, int rotation, int cycle) const
+void Background::drawLayers(int x, int y, const rect& area_ref, const std::vector<rect>& opaque_areas, float rotation, int cycle) const
 {
+	auto wnd = KRE::WindowManager::getMainWindow();
 	static std::vector<rect> areas;
 	areas.clear();
 	calculate_draw_areas(area_ref, opaque_areas.begin(), opaque_areas.end(), &areas);
 
-	for(std::vector<layer>::const_iterator i = layers_.begin(); i != layers_.end(); ++i) {
-		const layer& bg = *i;
+	for(auto& bg : layers_) {
 		if(bg.foreground == false) {
 
-			for(std::vector<rect>::const_iterator a = areas.begin(); a != areas.end(); ++a) {
-				draw_layer(x, y, *a, rotation, bg, cycle);
+			for(auto& a : areas) {
+				drawLayer(x, y, a, rotation, bg, cycle);
 			}
-
-			if(!blit_queue.empty() && (i+1 == layers_.end() || i->texture != (i+1)->texture || (i+1)->foreground || i->blend != (i+1)->blend)) {
-				if(bg.blend == false) {
-					glDisable(GL_BLEND);
-				}
-				blit_queue.set_texture(bg.texture.get_id());
-				blit_queue.do_blit();
-				blit_queue.clear();
-				if(bg.blend == false) {
-					glEnable(GL_BLEND);
-				}
-			}
-
+			wnd->render(&bg);
+			bg.attr_->clear();
+			bg.getAttributeSet().back()->setCount(0);
 		}
 	}
 }
 
-void background::draw_foreground(double xpos, double ypos, int rotation, int cycle) const
+void Background::drawForeground(int xpos, int ypos, float rotation, int cycle) const
 {
-	foreach(const layer& bg, layers_) {
+	auto wnd = KRE::WindowManager::getMainWindow();
+	for(auto& bg : layers_) {
 		if(bg.foreground) {
-			draw_layer(xpos, ypos, rect(xpos, ypos, graphics::screen_width(), graphics::screen_height()), rotation, bg, cycle);
-			if(!blit_queue.empty()) {
-				blit_queue.set_texture(bg.texture.get_id());
-				blit_queue.do_blit();
-				blit_queue.clear();
+			drawLayer(xpos, ypos, rect(xpos, ypos, graphics::GameScreen::get().getVirtualWidth(), graphics::GameScreen::get().getVirtualHeight()), rotation, bg, cycle);
+			if(bg.attr_->size() > 0) {
+				wnd->render(&bg);
 			}
 		}
 	}
 }
 
-void background::set_offset(const point& offset)
+void Background::setOffset(const point& offset)
 {
 	offset_ = offset;
 }
 
-void background::draw_layer(int x, int y, const rect& area, int rotation, const background::layer& bg, int cycle) const
-{	
-	const double ScaleImage = 2.0;
-	GLshort y1 = y + (bg.yoffset+offset_.y)*ScaleImage - (y*bg.yscale_top)/100;
-	GLshort y2 = y + (bg.yoffset+offset_.y)*ScaleImage - (y*bg.yscale_bot)/100 +
-	                 (bg.y2 - bg.y1)*ScaleImage;
+void Background::drawLayer(int x, int y, const rect& area, float rotation, const Background::Layer& bg, int cycle) const
+{
+
+	auto& gs = graphics::GameScreen::get();
+	const float ScaleImage = 2.0f;
+	int y1 = static_cast<int>(y + (bg.yoffset+offset_.y)*ScaleImage - (y*bg.yscale_top)/100);
+	int y2 = static_cast<int>(y + (bg.yoffset+offset_.y)*ScaleImage - (y*bg.yscale_bot)/100 + (bg.y2 - bg.y1) * ScaleImage);
 
 	if(!bg.tile_downwards && y2 <= y) {
 		return;
@@ -409,80 +411,65 @@ void background::draw_layer(int x, int y, const rect& area, int rotation, const 
 		return;
 	}
 
-	if(!bg.texture.valid()) {
-		if(palette_ == -1) {
-			bg.texture = graphics::texture::get(bg.image, bg.image_formula);
-		} else {
-			bg.texture = graphics::texture::get_palette_mapped(bg.image, palette_);
-		}
-
-		if(bg.y2 == 0) {
-			bg.y2 = bg.texture.height();
-		}
-	}
-
-	if(!bg.texture.valid()) {
+	if(!bg.texture) {
 		return;
 	}
 
-	ASSERT_GT(bg.texture.height(), 0);
-	ASSERT_GT(bg.texture.width(), 0);
+	ASSERT_GT(bg.texture->surfaceHeight(), 0);
+	ASSERT_GT(bg.texture->surfaceWidth(), 0);
 
-	GLfloat v1 = bg.texture.translate_coord_y(double(bg.y1)/double(bg.texture.height()));
-	GLfloat v2 = bg.texture.translate_coord_y(double(bg.y2)/double(bg.texture.height()));
+	if(bg.y2 == 0) {
+		bg.y2 = bg.texture->surfaceHeight();
+	}
+
+	float v1 = bg.texture->getTextureCoordH(0, bg.y1);
+	float v2 = bg.texture->getTextureCoordH(0, bg.y2);
+
+	const int screen_h = graphics::GameScreen::get().getHeight();
 
 	if(y1 < area.y()) {
 		//Making y1 == y2 is problematic, so don't allow it.
 		const int target_y = area.y() == y2 ? area.y()-1 : area.y();
-		v1 += (GLfloat(target_y - y1)/GLfloat(y2 - y1))*(v2 - v1);
+		v1 += (static_cast<float>(target_y - y1)/static_cast<float>(y2 - y1))*(v2 - v1);
 		y1 = target_y;
 	}
 
-	if(bg.tile_upwards && y1 > area.y()) {
-		v1 -= (GLfloat(y1 - area.y())/GLfloat(y2 - y1))*(v2 - v1);
-		y1 = area.y();
-	} else if(bg.color_above && y1 > area.y()) {
-		glEnable(GL_SCISSOR_TEST);
+	auto wnd = KRE::WindowManager::getMainWindow();
+	if(y1 > area.y()) {
+		if(bg.tile_upwards) {
+			v1 -= (static_cast<float>(y1 - area.y())/static_cast<float>(y2 - y1))*(v2 - v1);
+			y1 = area.y();
+		} else if(bg.color_above != nullptr) {
+			const int xpos = area.x() - x;
+			const int ypos = y1 - y;
+			const int width = area.w();
+			const int height = y1 - area.y();
 
-		const int xpos = area.x() - x;
-		const int ypos = y1 - y;
-		const int width = area.w();
-		const int height = y1 - area.y();
-#if TARGET_OS_IPHONE
-		glScissor((graphics::screen_height() - ypos)/2, (graphics::screen_width() - (xpos + width))/2, height/2, width/2);
-#else
-		glScissor(xpos, graphics::screen_height() - ypos, width, height);
-#endif
-		glClearColor(bg.color_above->r, bg.color_above->g, bg.color_above->b, 1.0);
-		glClear(GL_COLOR_BUFFER_BIT);
-		glDisable(GL_SCISSOR_TEST);
+			bg.above_rect.update(area.x(), y1, area.w(), height, *bg.color_above);
+			bg.above_rect.enable();
+			wnd->render(&bg.above_rect);
+		}
 	}
 
-	if(bg.tile_downwards && y2 < area.y() + area.h()) {
-		v2 += (GLfloat((area.y() + area.h()) - y2)/GLfloat(y2 - y1))*(v2 - v1);
-		y2 = area.y() + area.h();
-	} else if(bg.color_below && y2 < area.y() + area.h()) {
-		glEnable(GL_SCISSOR_TEST);
+	if(y2 < area.y2()) {
+		if(bg.tile_downwards) {
+			v2 += (static_cast<float>(area.y2() - y2)/static_cast<float>(y2 - y1))*(v2 - v1);
+			y2 = area.y() + area.h();
+		} else if(bg.color_below != nullptr) {
+			const int xpos = area.x() - x;
+			const int ypos = area.y2() - y;
+			const int width = area.w();
+			const int height = area.y2() - y2;
 
-		const int xpos = area.x() - x;
-		const int ypos = area.y() + area.h() - y;
-		const int width = area.w();
-		const int height = area.y() + area.h() - y2;
-
-#if TARGET_OS_IPHONE
-		glScissor((graphics::screen_height() - ypos)/2, (graphics::screen_width() - (xpos + width))/2, height/2, width/2);
-#else
-		glScissor(xpos, graphics::screen_height() - ypos, width, height);
-#endif
-
-		glClearColor(bg.color_below->r, bg.color_below->g, bg.color_below->b, 1.0);
-		glClear(GL_COLOR_BUFFER_BIT);
-		glDisable(GL_SCISSOR_TEST);
+			bg.below_rect.update(xpos, screen_h - ypos, width, height, *bg.color_below);
+			bg.below_rect.enable();
+			wnd->render(&bg.below_rect);
+		}
 	}
 
-	if(y2 > area.y() + area.h()) {
-		v2 -= (GLfloat(y2 - (area.y() + area.h()))/GLfloat(y2 - y1))*(v2 - v1);
-		y2 = area.y() + area.h();
+	if(y2 > area.y2()) {
+		v2 -= (static_cast<float>(y2 - area.y2())/static_cast<float>(y2 - y1))*(v2 - v1);
+		y2 = area.y2();
 	}
 
 	if(y2 <= y1) {
@@ -494,80 +481,68 @@ void background::draw_layer(int x, int y, const rect& area, int rotation, const 
 	}
 
 	//clamp [v1, v2] into the [0.0, 1.0] range
-	if(v1 > 1.0) {
-		const GLfloat f = floor(v1);
+	if(v1 > 1.0f) {
+		const float f = std::floor(v1);
 		v1 -= f;
 		v2 -= f;
 	}
 
-	if(v1 < 0.0) {
-		const GLfloat diff = v2 - v1;
-		const GLfloat f = floor(-v1);
-		v1 = 1.0 - (-v1 - f);
+	if(v1 < 0.0f) {
+		const float diff = v2 - v1;
+		const float f = std::floor(-v1);
+		v1 = 1.0f - (-v1 - f);
 		v2 = v1 + diff;
 	}
 
 	int screen_width = area.w();
 
-	const double xscale = double(bg.xscale)/100.0;
-	GLfloat xpos = (-GLfloat(bg.xspeed)*GLfloat(cycle)/1000 + int(GLfloat(x + bg.xoffset)*xscale))/GLfloat((bg.texture.width()+bg.xpad)*ScaleImage) + GLfloat(area.x() - x)/GLfloat((bg.texture.width()+bg.xpad)*ScaleImage);
+	const float xscale = static_cast<float>(bg.xscale) / 100.0f;
+	float xpos = (-static_cast<float>(bg.xspeed)*static_cast<float>(cycle)/1000.0f + int(static_cast<float>(x + bg.xoffset)*xscale))
+		/ static_cast<float>((bg.texture->surfaceWidth()+bg.xpad)*ScaleImage) + static_cast<float>(area.x() - x)/static_cast<float>((bg.texture->surfaceWidth()+bg.xpad)*ScaleImage);
 
 	//clamp xpos into the [0.0, 1.0] range
 	if(xpos > 0) {
 		xpos -= floor(xpos);
 	} else {
-		while(xpos < 0) { xpos += 1.0; }
+		while(xpos < 0) { xpos += 1.0f; }
 		//xpos += ceil(-xpos);
 	}
 
 	if(bg.xpad > 0) {
-		xpos *= GLfloat(bg.texture.width() + bg.xpad)/GLfloat(bg.texture.width());
+		xpos *= 1.0f + static_cast<float>(bg.xpad) / bg.texture->actualWidth();
 	}
-
-	glColor4f(bg.color[0], bg.color[1], bg.color[2], bg.color[3]);
-
-#if defined(__GLEW_H__)
-	if (GLEW_EXT_blend_minmax && (GLEW_ARB_imaging || GLEW_VERSION_1_4)) {
-		glBlendEquation(bg.mode);
-	}
-#endif
 
 	x = area.x();
 	y = area.y();
 
-	while(screen_width > 0) {
-		const int texture_blit_width = (1.0 - xpos)*bg.texture.width()*ScaleImage;
+	std::vector<KRE::short_vertex_texcoord> q;
 
+	while(screen_width > 0) {
+		const int texture_blit_width = static_cast<int>((1.0f - xpos) * bg.texture->actualWidth() * ScaleImage);
 		const int blit_width = std::min(texture_blit_width, screen_width);
 
 		if(blit_width > 0) {
-			const GLfloat xpos2 = xpos + GLfloat(blit_width)/(GLfloat(bg.texture.width())*2.0);
+			const float xpos2 = xpos + static_cast<float>(blit_width) / (bg.texture->actualWidth() * 2.0f);
 
-			const GLshort x1 = x;
-			const GLshort x2 = x1 + blit_width;
+			const short x1 = x;
+			const short x2 = (x1 + blit_width);
 
-			const GLfloat u1 = bg.texture.translate_coord_x(xpos);
-			const GLfloat u2 = bg.texture.translate_coord_x(xpos2);
+			const float u1 = bg.texture->getNormalisedTextureCoordW<float>(0, xpos);
+			const float u2 = bg.texture->getNormalisedTextureCoordW<float>(0, xpos2);
 
-			blit_queue.repeat_last();
-			blit_queue.add(x1, y1, u1, v1);
-			blit_queue.repeat_last();
-			blit_queue.add(x2, y1, u2, v1);
-			blit_queue.add(x1, y2, u1, v2);
-			blit_queue.add(x2, y2, u2, v2);
+			q.emplace_back(glm::i16vec2(x1, y1), glm::vec2(u1, v1));
+			q.emplace_back(glm::i16vec2(x2, y1), glm::vec2(u2, v1));
+			q.emplace_back(glm::i16vec2(x2, y2), glm::vec2(u2, v2));
+
+			q.emplace_back(glm::i16vec2(x2, y2), glm::vec2(u2, v2));
+			q.emplace_back(glm::i16vec2(x1, y1), glm::vec2(u1, v1));
+			q.emplace_back(glm::i16vec2(x1, y2), glm::vec2(u1, v2));
 		}
 
-		x += blit_width + bg.xpad*ScaleImage;
+		x += static_cast<int>(blit_width + bg.xpad * ScaleImage);
 
-		xpos = 0.0;
-		screen_width -= blit_width + bg.xpad*ScaleImage;
+		xpos = 0.0f;
+		screen_width -= static_cast<int>(blit_width + bg.xpad * ScaleImage);
 	}
-
-	glColor4f(1.0,1.0,1.0,1.0);
-#if defined(__GLEW_H__)
-	if (GLEW_EXT_blend_minmax && (GLEW_ARB_imaging || GLEW_VERSION_1_4)) {
-		glBlendEquation(GL_FUNC_ADD);
-	}
-#endif
+	bg.attr_->update(&q, bg.attr_->end());
 }
-

@@ -1,20 +1,25 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
-#include "graphics.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -25,13 +30,17 @@
 #include <sys/wait.h>
 #endif
 
-#include <boost/bind.hpp>
-#include <boost/lexical_cast.hpp>
-#include <boost/scoped_ptr.hpp>
-
-#ifdef TARGET_OS_HARMATTAN
-#include <glib-object.h>
+#if defined(_MSC_VER)
+#define WIN32_LEAN_AND_MEAN
+#include "windows.h"
+#if defined(_DEBUG)
+#pragma comment(linker, "/SUBSYSTEM:CONSOLE")
+#else
+//#pragma comment(linker, "/SUBSYSTEM:WINDOWS")
 #endif
+#endif
+
+#include <boost/lexical_cast.hpp>
 
 #include "asserts.hpp"
 #include "auto_update_window.hpp"
@@ -40,16 +49,11 @@
 #include "controls.hpp"
 #include "custom_object.hpp"
 #include "custom_object_functions.hpp"
-#include "custom_object_type.hpp"
 #include "draw_scene.hpp"
-#ifndef NO_EDITOR
 #include "editor.hpp"
-#endif
 #include "difficulty.hpp"
 #include "external_text_editor.hpp"
 #include "filesystem.hpp"
-#include "font.hpp"
-#include "foreach.hpp"
 #include "formula_callable_definition.hpp"
 #include "formula_object.hpp"
 #include "formula_profiler.hpp"
@@ -58,7 +62,6 @@
 #include "gui_section.hpp"
 #include "i18n.hpp"
 #include "input.hpp"
-#include "ipc.hpp"
 #include "iphone_device_info.h"
 #include "joystick.hpp"
 #include "json_parser.hpp"
@@ -74,18 +77,23 @@
 #include "player_info.hpp"
 #include "preferences.hpp"
 #include "preprocessor.hpp"
-#include "raster.hpp"
+#include "profile_timer.hpp"
+#include "screen_handling.hpp"
 #include "sound.hpp"
 #include "stats.hpp"
 #include "string_utils.hpp"
-#include "surface_cache.hpp"
 #include "tbs_internal_server.hpp"
-#include "texture.hpp"
-#include "texture_frame_buffer.hpp"
 #include "tile_map.hpp"
 #include "unit_test.hpp"
 #include "variant_utils.hpp"
-#include "wm.hpp"
+
+#include "CameraObject.hpp"
+#include "Canvas.hpp"
+#include "SDLWrapper.hpp"
+#include "Font.hpp"
+#include "SceneGraph.hpp"
+#include "SceneNode.hpp"
+#include "WindowManager.hpp"
 
 #if defined(__APPLE__)
     #include "TargetConditionals.h"
@@ -100,23 +108,18 @@
 #include "b2d_ffl.hpp"
 #endif
 
-#if defined(TARGET_PANDORA) || defined(TARGET_TEGRA)
-#include "eglport.h"
-#elif defined(TARGET_BLACKBERRY)
-#include <EGL/egl.h>
-#endif
-
 #define DEFAULT_MODULE	"frogatto"
 
 variant g_auto_update_info;
 
-namespace {
+namespace 
+{
 	PREF_BOOL(auto_update_module, false, "Auto updates the module from the module server on startup (number of milliseconds to spend attempting to update the module)");
 	PREF_BOOL(force_auto_update, false, "Will do a forced sync of auto-updates");
 	PREF_STRING(auto_update_anura, "", "Auto update Anura's binaries from the module server using the given name as the module ID (e.g. anura-windows might be the id for the windows binary)");
 	PREF_INT(auto_update_timeout, 5000, "Timeout to use on auto updates (given in milliseconds)");
 
-#if defined(_WINDOWS)
+#if defined(_MSC_VER)
 	const std::string anura_exe_name = "anura.exe";
 #else
 	const std::string anura_exe_name = "";
@@ -124,7 +127,7 @@ namespace {
 
 	std::vector<std::string> alternative_anura_exe_names() {
 		std::vector<std::string> result;
-#if defined(_WINDOWS)
+#if defined(_MSC_VER)
 		for(int i = 0; i != 10; ++i) {
 			std::ostringstream s;
 			s << "anura" << i << ".exe";
@@ -134,213 +137,89 @@ namespace {
 		return result;
 	}
 
-	graphics::window_manager_ptr main_window;
-
 	bool show_title_screen(std::string& level_cfg)
 	{
 		//currently the titlescreen is disabled.
 		return false;
 	}
 
-void print_help(const std::string& argv0)
-{
-	std::cout << "Usage: " << argv0 << " [OPTIONS]\n" <<
-"\n" <<
-"User options:\n" <<
-//"      --bigscreen              FIXME\n" <<
-"      --config-path=PATH       sets the path to the user config dir\n" <<
-"      --fullscreen             starts in fullscreen mode\n" <<
-"      --height[=]NUM           sets the game window height to which contents\n" <<
-"                                 are scaled\n" <<
-"      --host                   set the game server host address\n" <<
-"      --[no-]joystick          enables/disables joystick support\n" <<
-"      --level[=]LEVEL_FILE     starts the game using the specified level file,\n" <<
-"                                 relative to the level path\n" <<
-"      --level-path=PATH        sets the path to the game level files\n" <<
-"      --[no-]music             enables/disables game music\n" <<
-"      --native                 one pixel in-game equals one pixel on monitor\n" <<
-"      --relay                  use the server as a relay in multiplayer rather\n" <<
-"                                 than trying to initiate direct connections\n" <<
-"      --[no-]resizable         allows/disallows to resize the game window\n" <<
-"      ----module-args=ARGS     map of arguments passed to the module\n" <<
-"      --scale                  enables an experimental pixel art interpolation\n" <<
-"                                 algorithm for scaling the game graphics (some\n" <<
-"                                 issues with this still have to be solved)\n" <<
-"      --[no-]send-stats        enables/disables sending game statistics over\n"
-"                                 the network\n" <<
-"      --server=URL             sets the server to use for the TBS client based\n"
-"                                 on the given url\n" <<
-"      --user=USERNAME          sets the username to use as part of the TBS\n"
-"                                 server and module system\n" <<
-"      --pass=PASSWORD          sets the password to use as part of the TBS\n"
-"                                 server and module system\n" <<
-"      --[no-]sound             enables/disables sound and music support\n" <<
-"      --widescreen             sets widescreen mode, increasing the game view\n" <<
-"                                 area for wide screen displays\n" <<
-"      --width[=]NUM            sets the game window width to which contents are\n" <<
-"                                 scaled\n" <<
-"      --windowed               starts in windowed mode\n" <<
-"      --wvga                   sets the display size to 800x480\n" <<
-"\n" <<
-"Diagnostic options:\n" <<
-"      --[no-]debug             enables/disables debug mode\n" <<
-"      --[no-]fps               enables/disables framerate display\n" <<
-"      --set-fps=FPS            sets the framerate to FPS\n" <<
-"      --potonly                use power of two-sized textures only\n" <<
-"      --textures16             use 16 bpp textures only (default on iPhone)\n" <<
-"      --textures32             use 32 bpp textures (default on PC/Mac)\n" <<
-"\n" <<
-"Developer options:\n" <<
-"      --benchmarks             runs all the engine's benchmarks (intended to\n" <<
-"                                 measure the speed of certain low-level\n" <<
-"                                 functions), only useful if you're actually\n" <<
-"                                 hacking on the engine to optimize the speed\n" <<
-"                                 of these\n" <<
-"      --benchmarks=NAME        runs a single named benchmark code\n" <<
-"      --[no-]compiled          enable or disable precompiled game data\n" <<
-"      --edit                   starts the game in edit mode.\n" <<
-//"      --profile                FIXME\n" <<
-//"      --profile=FILE           FIXME\n" <<
-"      --show-hitboxes          turns on the display of object hitboxes\n" <<
-"      --show-controls          turns on the display of iPhone control hitboxes\n" <<
-"      --simipad                changes various options to emulate an iPad\n" <<
-"                                 environment\n" <<
-"      --simiphone              changes various options to emulate an iPhone\n" <<
-"                                 environment\n" <<
-"      --no-autopause           Stops the game from pausing automatically\n" <<
-"                                 when it loses focus\n" <<
-"      --tests                  runs the game's unit tests and exits\n" <<
-"      --no-tests               skips the execution of unit tests on startup\n"
-"      --utility=NAME           runs the specified UTILITY( NAME ) code block,\n" <<
-"                                 such as compile_levels or compile_objects,\n" <<
-"                                 with the specified arguments\n" <<
-   preferences::get_registered_helpstring();
-}
-
-}
-
-graphics::window_manager_ptr get_main_window()
-{
-	return main_window;
-}
-
-#if defined(UTILITY_IN_PROC)
-boost::shared_ptr<char> child_args;
-
-#if defined(_MSC_VER)
-const std::string shared_sem_name = "Local\anura_local_process_semaphore";
-HANDLE child_process;
-HANDLE child_thread;
-HANDLE child_stderr;
-HANDLE child_stdout;
-#else
-const std::string shared_sem_name = "/anura_local_process_semaphore";
-pid_t child_pid;
-#endif
-
-bool create_utility_process(const std::string& app, const std::vector<std::string>& argv)
-{
-#if defined(_MSC_VER)
-	char app_np[MAX_PATH];
-	// Grab the full path name
-	DWORD chararacters_copied = GetModuleFileNameA(NULL, app_np,  MAX_PATH);
-	ASSERT_LOG(chararacters_copied > 0, "Failed to get module name: " << GetLastError());
-	std::string app_name_and_path(app_np, chararacters_copied);
-
-	// windows version
-	std::string command_line_params;
-	command_line_params += app_name_and_path + " ";
-	for(size_t n = 0; n != argv.size(); ++n) {
-		command_line_params += argv[n] + " ";
+	void print_help(const std::string& argv0)
+	{
+		std::cout << "Usage: " << argv0 << " [OPTIONS]\n" <<
+			"\n" <<
+			"User options:\n" <<
+			//"      --bigscreen              FIXME\n" <<
+			"      --config-path=PATH       sets the path to the user config dir\n" <<
+			"      --fullscreen             starts in fullscreen mode\n" <<
+			"      --height[=]NUM           sets the game window height to which contents\n" <<
+			"                                 are scaled\n" <<
+			"      --host                   set the game server host address\n" <<
+			"      --[no-]joystick          enables/disables joystick support\n" <<
+			"      --level[=]LEVEL_FILE     starts the game using the specified level file,\n" <<
+			"                                 relative to the level path\n" <<
+			"      --level-path=PATH        sets the path to the game level files\n" <<
+			"      --[no-]music             enables/disables game music\n" <<
+			"      --native                 one pixel in-game equals one pixel on monitor\n" <<
+			"      --relay                  use the server as a relay in multiplayer rather\n" <<
+			"                                 than trying to initiate direct connections\n" <<
+			"      --[no-]resizable         allows/disallows to resize the game window\n" <<
+			"      ----module-args=ARGS     map of arguments passed to the module\n" <<
+			"      --scale                  enables an experimental pixel art interpolation\n" <<
+			"                                 algorithm for scaling the game graphics (some\n" <<
+			"                                 issues with this still have to be solved)\n" <<
+			"      --[no-]send-stats        enables/disables sending game statistics over\n"
+			"                                 the network\n" <<
+			"      --server=URL             sets the server to use for the TBS client based\n"
+			"                                 on the given url\n" <<
+			"      --user=USERNAME          sets the username to use as part of the TBS\n"
+			"                                 server and module system\n" <<
+			"      --pass=PASSWORD          sets the password to use as part of the TBS\n"
+			"                                 server and module system\n" <<
+			"      --[no-]sound             enables/disables sound and music support\n" <<
+			"      --widescreen             sets widescreen mode, increasing the game view\n" <<
+			"                                 area for wide screen displays\n" <<
+			"      --width[=]NUM            sets the game window width to which contents are\n" <<
+			"                                 scaled\n" <<
+			"      --windowed               starts in windowed mode\n" <<
+			"      --wvga                   sets the display size to 800x480\n" <<
+			"\n" <<
+			"Diagnostic options:\n" <<
+			"      --[no-]debug             enables/disables debug mode\n" <<
+			"      --[no-]fps               enables/disables framerate display\n" <<
+			"      --set-fps=FPS            sets the framerate to FPS\n" <<
+			"      --potonly                use power of two-sized textures only\n" <<
+			"      --textures16             use 16 bpp textures only (default on iPhone)\n" <<
+			"      --textures32             use 32 bpp textures (default on PC/Mac)\n" <<
+			"\n" <<
+			"Developer options:\n" <<
+			"      --benchmarks             runs all the engine's benchmarks (intended to\n" <<
+			"                                 measure the speed of certain low-level\n" <<
+			"                                 functions), only useful if you're actually\n" <<
+			"                                 hacking on the engine to optimize the speed\n" <<
+			"                                 of these\n" <<
+			"      --benchmarks=NAME        runs a single named benchmark code\n" <<
+			"      --[no-]compiled          enable or disable precompiled game data\n" <<
+			"      --edit                   starts the game in edit mode.\n" <<
+			//"      --profile                FIXME\n" <<
+			//"      --profile=FILE           FIXME\n" <<
+			"      --show-hitboxes          turns on the display of object hitboxes\n" <<
+			"      --show-controls          turns on the display of iPhone control hitboxes\n" <<
+			"      --simipad                changes various options to emulate an iPad\n" <<
+			"                                 environment\n" <<
+			"      --simiphone              changes various options to emulate an iPhone\n" <<
+			"                                 environment\n" <<
+			"      --no-autopause           Stops the game from pausing automatically\n" <<
+			"                                 when it loses focus\n" <<
+			"      --tests                  runs the game's unit tests and exits\n" <<
+			"      --no-tests               skips the execution of unit tests on startup\n"
+			"      --utility=NAME           runs the specified UTILITY( NAME ) code block,\n" <<
+			"                                 such as compile_levels or compile_objects,\n" <<
+			"                                 with the specified arguments\n" <<
+		   preferences::get_registered_helpstring();
 	}
-	child_args = boost::shared_ptr<char>(new char[command_line_params.size()+1]);
-	memset(child_args.get(), 0, command_line_params.size()+1);
-	memcpy(child_args.get(), &command_line_params[0], command_line_params.size());
 
-	STARTUPINFOA siStartupInfo; 
-	PROCESS_INFORMATION piProcessInfo;
-	SECURITY_ATTRIBUTES saFileSecurityAttributes;
-	memset(&siStartupInfo, 0, sizeof(siStartupInfo));
-	memset(&piProcessInfo, 0, sizeof(piProcessInfo));
-	siStartupInfo.cb = sizeof(siStartupInfo);
-	saFileSecurityAttributes.nLength = sizeof(saFileSecurityAttributes);
-	saFileSecurityAttributes.lpSecurityDescriptor = NULL;
-	saFileSecurityAttributes.bInheritHandle = true;
-	child_stderr = siStartupInfo.hStdError = CreateFileA("stderr_server.txt", GENERIC_WRITE, FILE_SHARE_READ|FILE_SHARE_WRITE, &saFileSecurityAttributes, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-	ASSERT_LOG(siStartupInfo.hStdError != INVALID_HANDLE_VALUE, 
-		"Unable to open stderr_server.txt for child process.");
-	child_stdout = siStartupInfo.hStdOutput = CreateFileA("stdout_server.txt", GENERIC_WRITE, FILE_SHARE_READ|FILE_SHARE_WRITE, &saFileSecurityAttributes, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-	ASSERT_LOG(siStartupInfo.hStdOutput != INVALID_HANDLE_VALUE, 
-		"Unable to open stdout_server.txt for child process.");
-	siStartupInfo.hStdInput = GetStdHandle(STD_INPUT_HANDLE);
-	siStartupInfo.dwFlags = STARTF_USESTDHANDLES;
-	std::cerr << "CREATE CHILD PROCESS: " << app_name_and_path << std::endl;
-	ASSERT_LOG(CreateProcessA(app_name_and_path.c_str(), child_args.get(), NULL, NULL, true, CREATE_DEFAULT_ERROR_MODE, 0, 0, &siStartupInfo, &piProcessInfo),
-		"Unable to create child process for utility: " << GetLastError());
-	child_process = piProcessInfo.hProcess;
-	child_thread = piProcessInfo.hThread;
-#else
-	// everyone else version using fork()
-	//...
-	child_pid = fork();
-	if(child_pid == 0) {
-		FILE* fout = std::freopen("stdout_server.txt","w", stdout);
-		FILE* ferr = std::freopen("stderr_server.txt","w", stderr);
-		std::cerr.sync_with_stdio(true);
-	}
-	ASSERT_LOG(child_pid >= 0, "Unable to fork process: " << errno);
-#endif
-	// Create a semaphore to signal termination.
-	ASSERT_LOG(ipc::semaphore::create(shared_sem_name, 0), 
-		"Unable to create shared semaphore");
-#if defined(_MSC_VER)
-	return false;
-#else
-	return child_pid == 0;
-#endif
 }
 
-void terminate_utility_process()
-{
-	ipc::semaphore::post();
-#if defined(_MSC_VER)
-	WaitForSingleObject(child_process, INFINITE);
-	CloseHandle(child_process);
-	CloseHandle(child_thread);
-	CloseHandle(child_stderr);
-	CloseHandle(child_stdout);
-#else
-	// .. close child or whatever.
-	int status;
-	if(waitpid(child_pid, &status, 0) != child_pid) {
-		std::cerr << "Error waiting for child process to finish: " << errno << std::endl;
-	}
-#endif
-}
-#endif
-
-
-#if defined(__ANDROID__)
-#include <jni.h>
-#include <android/asset_manager_jni.h>
-AAssetManager* static_assetManager = 0;
-extern "C" void app_set_asset_manager(AAssetManager* assetMan)
-{
-	static_assetManager = assetMan;	
-}
-namespace sys {
-AAssetManager* GetJavaAssetManager()
-{
-	return static_assetManager;
-}
-}
-#endif
-
-#if defined(__native_client__)
-void register_file_and_data(const char* filename, const char* mode, char* buffer, int size)
-{
-}
-#endif
 
 int load_module(const std::string& mod, std::vector<std::string>* argv)
 {
@@ -363,23 +242,65 @@ int load_module(const std::string& mod, std::vector<std::string>* argv)
 		}
 
 		argv->insert(argv->begin() + insertion_point, arguments.begin(), arguments.end());
-
-		std::cerr << "ARGS: ";
-		for(int i = 0; i != argv->size(); ++i) {
-			std::cerr << (*argv)[i] << " ";
-		}
-
-		std::cerr << "\n";
-
 	}	
 	return 0;
 }
 
-#if defined(__native_client__)
-extern "C" int game_main(int argcount, char* argvec[])
-#else
-extern "C" int main(int argcount, char* argvec[])
-#endif
+
+void set_alpha_masks()
+{
+	LOG_INFO("Setting Alpha Masks:");
+	using namespace KRE;
+	std::vector<Color> alpha_colors;
+
+	auto surf = Surface::create("alpha-colors.png");
+	surf->iterateOverSurface([&alpha_colors](int x, int y, int r, int g, int b, int a) {
+		alpha_colors.emplace_back(r, g, b);
+		LOG_INFO("Added alpha color: (" << r << "," << g << "," << b << ")");	
+	});
+
+	Surface::setAlphaFilter([=](int r, int g, int b) {
+		for(auto& c : alpha_colors) {
+			if(c.ri() == r && c.gi() == g && c.bi() == b) {
+				return true;
+			}
+		}
+		return false;
+	});
+}
+
+
+void auto_select_resolution(const KRE::WindowPtr& wm, int *width, int *height)
+{
+	ASSERT_LOG(width != nullptr, "width is null.");
+	ASSERT_LOG(height != nullptr, "height is null.");
+
+	auto mode = wm->getDisplaySize();
+	auto best_mode = mode;
+	
+	const float MinReduction = 0.9f;
+	for(auto& candidate_mode : wm->getWindowModes([](const KRE::WindowMode&){ return true; })) {
+		if(candidate_mode.width < mode.width && candidate_mode.height < mode.width
+			&& candidate_mode.width < mode.width * MinReduction
+			&& candidate_mode.height < mode.height * MinReduction
+			&& (candidate_mode.width >= best_mode.width
+			&& candidate_mode.height >= best_mode.height
+			|| best_mode.width == mode.width && best_mode.height == mode.height)) {
+			LOG_INFO("BETTER MODE IS " << candidate_mode.width << "x" << candidate_mode.height);
+			best_mode = candidate_mode;
+		} else {
+			LOG_INFO("REJECTED MODE IS " << candidate_mode.width << "x" << candidate_mode.height);
+		}
+	}
+	*width = best_mode.width;
+	*height = best_mode.height;
+}
+
+
+extern int g_tile_scale;
+extern int g_tile_size;
+
+int main(int argcount, char* argvec[])
 {
 	{
 		std::vector<std::string> args;
@@ -390,38 +311,41 @@ extern "C" int main(int argcount, char* argvec[])
 		preferences::set_argv(args);
 	}
 
-#if defined(__native_client__)
-	std::cerr << "Running game_main" << std::endl;
-
-	chdir("/frogatto");
-	{
-		char buf[256];
-		const char* const res = getcwd(buf,sizeof(buf));
-		std::cerr << "Current working directory: " << res << std::endl;
-	}
-#endif 
-
 #ifdef _MSC_VER
-	freopen("CON", "w", stderr);
-	freopen("CON", "w", stdout);
+#if(_WIN32_WINNT >= 0x0600)
+	SetProcessDPIAware();
+#endif
+#if defined(_DEBUG)
+	std::freopen("CON", "w", stderr);
+	std::freopen("CON", "w", stdout);
+#else
+	std::freopen("CON", "w", stderr);
+	std::freopen("CON", "w", stdout);
+//	std::freopen("stdout.txt","w",stdout);
+//	std::freopen("stderr.txt","w",stderr);
+#endif
+#endif
+#if defined(__ANDROID__)
+	std::freopen("stdout.txt","w",stdout);
+	std::freopen("stderr.txt","w",stderr);
+	std::cerr.sync_with_stdio(true);
 #endif
 
 #if defined(__APPLE__) && TARGET_OS_MAC
     chdir([[[NSBundle mainBundle] resourcePath] fileSystemRepresentation]);
 #endif
 
-	#ifdef NO_STDERR
+#ifdef NO_STDERR
 	std::freopen("/dev/null", "w", stderr);
 	std::cerr.sync_with_stdio(true);
-	#endif
+#endif
 
-	std::cerr << "Frogatto engine version " << preferences::version() << "\n";
-	LOG( "After print engine version" );
+	LOG_INFO("Anura engine version " << preferences::version());
 
-	#if defined(TARGET_BLACKBERRY)
-		chdir("app/native");
-		std::cout<< "Changed working directory to: " << getcwd(0, 0) << std::endl;
-	#endif
+#if defined(TARGET_BLACKBERRY)
+	chdir("app/native");
+	std::cout<< "Changed working directory to: " << getcwd(0, 0) << std::endl;
+#endif
 
 	game_logic::init_callable_definitions();
 
@@ -432,80 +356,48 @@ extern "C" int main(int argcount, char* argvec[])
 	std::string utility_program;
 	std::vector<std::string> util_args;
 	std::string server = "wesnoth.org";
-#if defined(UTILITY_IN_PROC)
-	bool create_utility_in_new_process = false;
-	std::string utility_name;
-#endif
 	bool is_child_utility = false;
 
-	const char* profile_output = NULL;
+	const char* profile_output = nullptr;
 	std::string profile_output_buf;
-
-#if defined(__ANDROID__)
-	//monstartup("libapplication.so");
-#endif
 
 	std::string orig_level_cfg = level_cfg;
 	std::string override_level_cfg = "";
 
 	int modules_loaded = 0;
 
+	int requested_width = 0;
+	int requested_height = 0;
+
 	std::vector<std::string> argv;
 	for(int n = 1; n < argcount; ++n) {
-#if defined(UTILITY_IN_PROC)
-		std::string sarg(argvec[n]);
-		if(sarg.compare(0, 15, "--utility-proc=") == 0) {
-			create_utility_in_new_process = true;
-			utility_name = "--utility-child=" + sarg.substr(15);
-		} else {
-			argv.push_back(argvec[n]);
-		}
-#else
-		argv.push_back(argvec[n]);
-#endif
-        
+		argv.push_back(argvec[n]);        
         if(argv.size() >= 2 && argv[argv.size()-2] == "-NSDocumentRevisionsDebugMode" && argv.back() == "YES") {
             //XCode passes these arguments by default when debugging -- make sure they are ignored.
             argv.resize(argv.size()-2);
         }
 	}
 
-	std::cerr << "Build Options:";
-	for(auto bo : preferences::get_build_options()) {
-		std::cerr << " " << bo;
-	}
-	std::cerr << std::endl;
+	LOG_INFO("Default Tile Size: " << g_tile_size);
+	LOG_INFO("Default Tile Scale: " << g_tile_scale);
 
-#if defined(UTILITY_IN_PROC)
-	if(create_utility_in_new_process) {
-		argv.push_back(utility_name);
-#if defined(_MSC_VER)
-		// app name is ignored for windows, we get windows to tell us.
-		is_child_utility = create_utility_process("", argv);
-#else 
-		is_child_utility = create_utility_process(argvec[0], argv);
-#endif
-		if(!is_child_utility) {
-			argv.pop_back();
-		}
-#if defined(_MSC_VER)
-		atexit(terminate_utility_process);
-#endif
+	LOG_INFO("Build Options:");
+	for(auto bo : preferences::get_build_options()) {
+		LOG_INFO("    " << bo);
 	}
-#endif
 
 	if(sys::file_exists("./master-config.cfg")) {
-		std::cerr << "LOADING CONFIGURATION FROM master-config.cfg" << std::endl;
+		LOG_INFO("LOADING CONFIGURATION FROM master-config.cfg");
 		variant cfg = json::parse_from_file("./master-config.cfg");
 		if(cfg.is_map()) {
 			if(cfg["arguments"].is_null() == false) {
 				std::vector<std::string> additional_args = cfg["arguments"].as_list_string();
 				argv.insert(argv.begin(), additional_args.begin(), additional_args.end());
-				std::cerr << "ADDING ARGUMENTS FROM master-config.cfg:";
-				for(size_t n = 0; n < cfg["arguments"].num_elements(); ++n) {
-					std::cerr << " " << cfg["arguments"][n].as_string();
+				LOG_INFO_NOLF("ADDING ARGUMENTS FROM master-config.cfg:");
+				for(int n = 0; n < cfg["arguments"].num_elements(); ++n) {
+					LOG_INFO_NOLF(" " << cfg["arguments"][n].as_string());
 				}
-				std::cerr << std::endl;
+				LOG_INFO("");
 			}
 		}
 	}
@@ -534,7 +426,7 @@ extern "C" int main(int argcount, char* argvec[])
 				}
 
 				if(!auto_update) {
-					std::cerr << "FAILED TO LOAD MODULE: " << arg_value << "\n";
+					LOG_ERROR("FAILED TO LOAD MODULE: " << arg_value);
 					return -1;
 				}
 			}
@@ -546,7 +438,7 @@ extern "C" int main(int argcount, char* argvec[])
 
 	if(modules_loaded == 0 && !unit_tests_only) {
 		if(load_module(DEFAULT_MODULE, &argv) != 0) {
-			std::cerr << "FAILED TO LOAD MODULE: " << DEFAULT_MODULE << "\n";
+			LOG_INFO("FAILED TO LOAD MODULE: " << DEFAULT_MODULE);
 			return -1;
 		}
 	} else if(unit_tests_only) {
@@ -554,7 +446,6 @@ extern "C" int main(int argcount, char* argvec[])
 	}
 
 	preferences::load_preferences();
-	LOG( "After load_preferences()" );
 
 	// load difficulty settings after module, before rest of args.
 	difficulty::manager();
@@ -568,7 +459,7 @@ extern "C" int main(int argcount, char* argvec[])
 			arg_name = std::string(arg.begin(), equal);
 			arg_value = std::string(equal+1, arg.end());
 		}
-		std::cerr << "ARGS: " << arg << std::endl;
+		LOG_INFO("ARGS: " << arg);
 		if(arg.substr(0,4) == "-psn") {
 			// ignore.
 		} else if(arg_name == "--module") {
@@ -596,18 +487,6 @@ extern "C" int main(int argcount, char* argvec[])
 			// ignore as already processed.
 		} else if(arg == "--no-tests") {
 			skip_tests = true;
-		} else if(arg_name == "--width") {
-			std::string w(arg_value);
-			preferences::set_actual_screen_width(boost::lexical_cast<int>(w));
-		} else if(arg == "--width" && n+1 < argc) {
-			std::string w(argv[++n]);
-			preferences::set_actual_screen_width(boost::lexical_cast<int>(w));
-		} else if(arg_name == "--height") {
-			std::string h(arg_value);
-			preferences::set_actual_screen_height(boost::lexical_cast<int>(h));
-		} else if(arg == "--height" && n+1 < argc) {
-			std::string h(argv[++n]);
-			preferences::set_actual_screen_height(boost::lexical_cast<int>(h));
 		} else if(arg_name == "--level") {
 			override_level_cfg = arg_value;
 		} else if(arg == "--level" && n+1 < argc) {
@@ -624,19 +503,14 @@ extern "C" int main(int argcount, char* argvec[])
 #endif
 		} else if(arg == "--no-compiled") {
 			preferences::set_load_compiled(false);
-#if defined(TARGET_PANDORA)
-		} else if(arg == "--no-fbo") {
-			preferences::set_fbo(false);
-		} else if(arg == "--no-bequ") {
-			preferences::set_bequ(false);
-#endif
 		} else if(arg == "--help" || arg == "-h") {
 			print_help(std::string(argvec[0]));
 			return 0;
 		} else {
-			const bool res = preferences::parse_arg(argv[n].c_str());
+			const bool res = preferences::parse_arg(argv[n], n+1 < argc ? argv[n+1] : "");
 			if(!res) {
-				std::cerr << "unrecognized arg: '" << arg << "'\n";
+				print_help(std::string(argvec[0]));
+				LOG_ERROR("unrecognized arg: '" << arg);
 				return -1;
 			}
 		}
@@ -676,14 +550,17 @@ extern "C" int main(int argcount, char* argvec[])
 						for(char** a = argvec; *a; ++a) {
 							args.push_back(*a);
 						}
-						args.push_back(NULL);
+						args.push_back(nullptr);
 				
 						exe_name.resize(exe_name.size() - anura_exe_name.size());
 						exe_name += match;
 						args[0] = const_cast<char*>(exe_name.c_str());
-						fprintf(stderr, "ZZZ: CALLING EXEC...\n");
+#if defined(_MSC_VER)
+						_execv(args[0], &args[0]);
+#else
 						execv(args[0], &args[0]);
-						fprintf(stderr, "Could not exec()\n");
+#endif
+						LOG_ERROR("Could not exec()");
 					}
 				}
 			}
@@ -691,16 +568,13 @@ extern "C" int main(int argcount, char* argvec[])
 	}
 
 	background_task_pool::manager bg_task_pool_manager;
-	LOG( "After expand_data_paths()" );
 
-	std::cerr << "Preferences dir: " << preferences::user_data_path() << '\n';
+	LOG_INFO("Preferences dir: " << preferences::user_data_path());
 
 	//make sure that the user data path exists.
 	if(!preferences::setup_preferences_dir()) {
-		std::cerr << "cannot create preferences dir!\n";
+		LOG_ERROR("cannot create preferences dir!");
 	}
-
-	std::cerr << "\n";
 
 	bool update_require_restart = false;
 	variant_builder update_info;
@@ -708,7 +582,7 @@ extern "C" int main(int argcount, char* argvec[])
 
 		//remove any .tmp files that may have been left from previous runs.
 		std::vector<std::string> tmp_files;
-		sys::get_files_in_dir(".", &tmp_files, NULL);
+		sys::get_files_in_dir(".", &tmp_files, nullptr);
 		for(auto f : tmp_files) {
 			if(f.size() > 4 && std::equal(f.end()-4,f.end(),".tmp")) {
 				try {
@@ -735,10 +609,10 @@ extern "C" int main(int argcount, char* argvec[])
 
 
 		int nbytes_transferred = 0, nbytes_anura_transferred = 0;
-		int start_time = SDL_GetTicks();
-		int original_start_time = SDL_GetTicks();
+		int start_time = profile::get_tick_time();
+		int original_start_time = profile::get_tick_time();
 		bool timeout = false;
-		fprintf(stderr, "Requesting update to module from server...\n");
+		LOG_INFO("Requesting update to module from server...");
 		int nupdate_cycle = 0;
 
 		{
@@ -757,9 +631,9 @@ extern "C" int main(int argcount, char* argvec[])
 				nbytes_needed += cl->nbytes_total();
 				if(transferred != nbytes_transferred) {
 					if(nupdate_cycle%10 == 0) {
-						fprintf(stderr, "Transferred %d/%dKB\n", transferred/1024, cl->nbytes_total()/1024);
+						LOG_INFO("Transferred " << (transferred/1024) << "/" << (cl->nbytes_total()/1024) << "KB");
 					}
-					start_time = SDL_GetTicks();
+					start_time = profile::get_tick_time();
 					nbytes_transferred = transferred;
 				}
 			}
@@ -770,16 +644,16 @@ extern "C" int main(int argcount, char* argvec[])
 				nbytes_needed += anura_cl->nbytes_total();
 				if(transferred != nbytes_anura_transferred) {
 					if(nupdate_cycle%10 == 0) {
-						fprintf(stderr, "Transferred (anura) %d/%dKB\n", transferred/1024, anura_cl->nbytes_total()/1024);
+						LOG_INFO("Transferred " << (transferred/1024) << "/" << (anura_cl->nbytes_total()/1024) << "KB");
 					}
-					start_time = SDL_GetTicks();
+					start_time = profile::get_tick_time();
 					nbytes_anura_transferred = transferred;
 				}
 			}
 
-			const int time_taken = SDL_GetTicks() - start_time;
+			const int time_taken = profile::get_tick_time() - start_time;
 			if(time_taken > g_auto_update_timeout) {
-				fprintf(stderr, "Timed out updating module. Canceling. %dms vs %dms\n", time_taken, g_auto_update_timeout);
+				LOG_ERROR("Timed out updating module. Canceling. " << time_taken << "ms vs " << g_auto_update_timeout << "ms");
 				break;
 			}
 
@@ -788,7 +662,7 @@ extern "C" int main(int argcount, char* argvec[])
 
 			update_window.set_message(msg);
 
-			const float ratio = nbytes_needed <= 0 ? 0.0 : float(nbytes_obtained)/float(nbytes_needed);
+			const float ratio = nbytes_needed <= 0 ? 0 : static_cast<float>(nbytes_obtained)/static_cast<float>(nbytes_needed);
 			update_window.set_progress(ratio);
 			update_window.draw();
 
@@ -801,11 +675,11 @@ extern "C" int main(int argcount, char* argvec[])
 				}
 			}
 
-			const int target_end = SDL_GetTicks() + 50;
-			while(SDL_GetTicks() < target_end && (cl || anura_cl)) {
+			const int target_end = profile::get_tick_time() + 50;
+			while(static_cast<int>(profile::get_tick_time()) < target_end && (cl || anura_cl)) {
 				if(cl && !cl->process()) {
 					if(cl->error().empty() == false) {
-						fprintf(stderr, "Error while updating module: %s\n", cl->error().c_str());
+						LOG_ERROR("Error while updating module: " << cl->error().c_str());
 						update_info.add("module_error", variant(cl->error()));
 					} else {
 						update_info.add("complete_module", true);
@@ -816,7 +690,7 @@ extern "C" int main(int argcount, char* argvec[])
 
 				if(anura_cl && !anura_cl->process()) {
 					if(anura_cl->error().empty() == false) {
-						fprintf(stderr, "Error while updating anura: %s\n", anura_cl->error().c_str());
+						LOG_ERROR("Error while updating anura: " << anura_cl->error().c_str());
 						update_info.add("anura_error", variant(anura_cl->error()));
 					} else {
 						update_info.add("complete_anura", true);
@@ -837,10 +711,13 @@ extern "C" int main(int argcount, char* argvec[])
 					args.push_back(*a);
 				}
 			}
-			args.push_back(NULL);
-			fprintf(stderr, "ZZZ: CALLING EXEC...\n");
+			args.push_back(nullptr);
+#if defined(_MSC_VER)
+			_execv(args[0], &args[0]);
+#else
 			execv(args[0], &args[0]);
-			fprintf(stderr, "Could not exec()\n");
+#endif
+			LOG_ERROR("Could not exec()");
 		}
 	}
 
@@ -848,35 +725,16 @@ extern "C" int main(int argcount, char* argvec[])
 
 	checksum::manager checksum_manager;
 #ifndef NO_EDITOR
-	sys::filesystem_manager fs_manager;
+	sys::FilesystemManager fs_manager;
 #endif // NO_EDITOR
 
 	const tbs::internal_server_manager internal_server_manager_scope(preferences::internal_tbs_server());
 
 	if(utility_program.empty() == false 
 		&& test::utility_needs_video(utility_program) == false) {
-#if defined(UTILITY_IN_PROC)
-		if(is_child_utility) {
-			ASSERT_LOG(ipc::semaphore::create(shared_sem_name, 1) != false, 
-				"Unable to create shared semaphore: " << errno);
-			std::cerr.sync_with_stdio(true);
-		}
-#endif
 		test::run_utility(utility_program, util_args);
 		return 0;
 	}
-
-#if defined(TARGET_PANDORA)
-    EGL_Open();
-#endif
-
-#if defined(__ANDROID__)
-	std::freopen("stdout.txt","w",stdout);
-	std::freopen("stderr.txt","w",stderr);
-	std::cerr.sync_with_stdio(true);
-#endif
-
-	LOG( "Start of main" );
 
 	if(!skip_tests && !test::run_tests()) {
 		return -1;
@@ -888,31 +746,95 @@ extern "C" int main(int argcount, char* argvec[])
 
 	// Create the main window.
 	// Initalise SDL and Open GL.
-	main_window = graphics::window_manager_ptr(new graphics::window_manager());
-	main_window->create_window(preferences::actual_screen_width(), preferences::actual_screen_height());
+	using namespace KRE;
 
-#ifdef TARGET_OS_HARMATTAN
-	g_type_init();
-#endif
+	SDL::SDL_ptr manager(new SDL::SDL());
+
+	WindowManager wm("SDL");
+
+	variant_builder hints;
+	hints.add("renderer", "opengl");
+	hints.add("use_vsync", "false");
+	hints.add("width", preferences::requested_window_width() > 0 ? preferences::requested_window_width() : 800);
+	hints.add("height", preferences::requested_window_height() > 0 ? preferences::requested_window_height() : 600);
+
+	WindowPtr main_wnd = wm.allocateWindow(hints.build());
+	main_wnd->setWindowTitle(module::get_module_pretty_name());
+
+	if(preferences::auto_size_window() 
+		&& preferences::requested_window_width() == 0 
+		&& preferences::requested_window_height() == 0) {
+		int width = 0;
+		int height = 0;
+		auto_select_resolution(main_wnd, &width, &height);
+
+		main_wnd->setWindowSize(width, height);
+	}
+
+	int vw = preferences::requested_virtual_window_width() > 0 
+		? preferences::requested_virtual_window_width() 
+		: main_wnd->width();
+	int vh = preferences::requested_virtual_window_height() > 0 
+		? preferences::requested_virtual_window_height() 
+		: main_wnd->height();
+
+	wm.createWindow(main_wnd);
+	graphics::GameScreen::get().setDimensions(main_wnd->width(), main_wnd->height());
+	graphics::GameScreen::get().setVirtualDimensions(vw, vh);
+	//main_wnd->setWindowIcon(module::map_file("images/window-icon.png"));
+
+	auto canvas = Canvas::getInstance();
+
+	ShaderProgram::loadFromVariant(json::parse_from_file("data/shaders.cfg"));
+
+	// Set the image loading filter function, so that files are found in the correct place.
+	Surface::setFileFilter(FileFilterType::LOAD, [](const std::string& s){ return module::map_file("images/" + s); });
+	Surface::setFileFilter(FileFilterType::SAVE, [](const std::string& s){ return std::string(preferences::user_data_path()) + s; });
+
+	set_alpha_masks();
+
+	//SceneGraphPtr scene = SceneGraph::create("root");
+	//SceneNodePtr root = scene->getRootNode();
+	//root->setNodeName("root_node");
+	auto orthocam = std::make_shared<Camera>("orthocam", 0, main_wnd->width(), 0, main_wnd->height());
+	//root->attachCamera(orthocam);
+
+	// Set a default camera in case no other is specified.
+	DisplayDevice::getCurrent()->setDefaultCamera(orthocam);
+
+	// Set the default font to use for rendering. This can of course be overridden when rendering the
+	// text to a texture.
+	Font::setDefaultFont(module::get_default_font() == "bitmap" 
+		? "FreeMono" 
+		: module::get_default_font());
+	std::map<std::string,std::string> font_paths;
+	std::map<std::string,std::string> font_paths2;
+	module::get_unique_filenames_under_dir("data/fonts/", &font_paths);
+	for(auto& fp : font_paths) {
+		font_paths2[module::get_id(fp.first)] = fp.second;
+	}
+	KRE::Font::setAvailableFonts(font_paths2);
+	font_paths.clear();
+	font_paths2.clear();
+
 	i18n::init ();
-	LOG( "After i18n::init()" );
+	LOG_DEBUG("After i18n::init()");
 
-#if TARGET_OS_IPHONE || defined(TARGET_BLACKBERRY) || defined(__ANDROID__)
-	//on the iPhone and PlayBook, try to restore the auto-save if it exists
-	if(sys::file_exists(preferences::auto_save_file_path()) && sys::read_file(std::string(preferences::auto_save_file_path()) + ".stat") == "1") {
+	// Read auto-save file if it exists.
+	if(sys::file_exists(preferences::auto_save_file_path()) 
+		&& sys::read_file(std::string(preferences::auto_save_file_path()) + ".stat") == "1") {
 		level_cfg = "autosave.cfg";
 		sys::write_file(std::string(preferences::auto_save_file_path()) + ".stat", "0");
 	}
-#endif
 
 	if(override_level_cfg.empty() != true) {
 		level_cfg = override_level_cfg;
 		orig_level_cfg = level_cfg;
 	}
 
-	const stats::manager stats_manager;
+	const stats::Manager stats_manager;
 #ifndef NO_EDITOR
-	const external_text_editor::manager editor_manager;
+	const ExternalTextEditor::Manager editor_manager;
 #endif // NO_EDITOR
 
 #if defined(USE_BOX2D)
@@ -922,75 +844,54 @@ extern "C" int main(int argcount, char* argvec[])
 	const load_level_manager load_manager;
 
 	{ //manager scope
-	const font::manager font_manager;
-	const sound::manager sound_manager;
-#if !defined(__native_client__)
-	const joystick::manager joystick_manager;
-#endif 
+	const sound::Manager sound_manager;
+	const joystick::Manager joystick_manager;
 	
-	graphics::texture::manager texture_manager;
-
 #ifndef NO_EDITOR
 	editor::manager editor_manager;
 #endif
 
 	variant preloads;
-	loading_screen loader;
+	LoadingScreen loader;
 	try {
 		variant gui_node = json::parse_from_file(preferences::load_compiled() ? "data/compiled/gui.cfg" : "data/gui.cfg");
-		gui_section::init(gui_node);
-		loader.draw_and_increment(_("Initializing GUI"));
-		framed_gui_element::init(gui_node);
+		GuiSection::init(gui_node);
+		loader.drawAndIncrement(_("Initializing GUI"));
+		FramedGuiElement::init(gui_node);
 
 		sound::init_music(json::parse_from_file("data/music.cfg"));
-		graphical_font::init_for_locale(i18n::get_locale());
+		GraphicalFont::initForLocale(i18n::get_locale());
 		preloads = json::parse_from_file("data/preload.cfg");
 		int preload_items = preloads["preload"].num_elements();
-		loader.set_number_of_items(preload_items+7); // 7 is the number of items that will be loaded below
-		custom_object::init();
-		loader.draw_and_increment(_("Initializing custom object functions"));
-		loader.draw_and_increment(_("Initializing textures"));
+		loader.setNumberOfItems(preload_items+7); // 7 is the number of items that will be loaded below
+		CustomObject::init();
+		loader.drawAndIncrement(_("Initializing custom object functions"));
+		loader.drawAndIncrement(_("Initializing textures"));
 		loader.load(preloads);
-		loader.draw_and_increment(_("Initializing tiles"));
-		tile_map::init(json::parse_from_file("data/tiles.cfg"));
+		loader.drawAndIncrement(_("Initializing tiles"));
+		TileMap::init(json::parse_from_file("data/tiles.cfg"));
 
+		game_logic::FormulaObject::loadAllClasses();
 
-		game_logic::formula_object::load_all_classes();
-
-	} catch(const json::parse_error& e) {
-		std::cerr << "ERROR PARSING: " << e.error_message() << "\n";
+	} catch(const json::ParseError& e) {
+		LOG_ERROR("ERROR PARSING: " << e.errorMessage());
 		return 0;
 	}
 	loader.draw(_("Loading level"));
 
-#if defined(__native_client__)
-	while(1) {
-	}
-#endif
-
-#if defined(__APPLE__) && !(TARGET_IPHONE_SIMULATOR || TARGET_OS_IPHONE) && !defined(USE_SHADERS)
-	GLint swapInterval = 1;
-	CGLSetParameter(CGLGetCurrentContext(), kCGLCPSwapInterval, &swapInterval);
-#endif
-
-	loader.finish_loading();
+	loader.finishLoading();
 	//look to see if we got any quit events while loading.
 	{
-	SDL_Event event;
-	while(input::sdl_poll_event(&event)) {
-		if(event.type == SDL_QUIT) {
-			return 0;
+		SDL_Event event;
+		while(input::sdl_poll_event(&event)) {
+			if(event.type == SDL_QUIT) {
+				return 0;
+			}
 		}
 	}
-	}
+	LOG_INFO("finishloading()");
 
-	formula_profiler::manager profiler(profile_output);
-
-#ifdef USE_SHADERS
-	texture_frame_buffer::init(preferences::actual_screen_width(), preferences::actual_screen_height());
-#else
-	texture_frame_buffer::init();
-#endif
+	formula_profiler::Manager profiler(profile_output);
 
 	if(run_benchmarks) {
 		if(benchmarks_list.empty() == false) {
@@ -1007,13 +908,11 @@ extern "C" int main(int argcount, char* argvec[])
 	bool quit = false;
 
 	while(!quit && !show_title_screen(level_cfg)) {
-		boost::intrusive_ptr<level> lvl(load_level(level_cfg));
+		LevelPtr lvl(load_level(level_cfg));
 		
-
-#if !defined(__native_client__)
 		//see if we're loading a multiplayer level, in which case we
 		//connect to the server.
-		multiplayer::manager mp_manager(lvl->is_multiplayer());
+		multiplayer::Manager mp_manager(lvl->is_multiplayer());
 		if(lvl->is_multiplayer()) {
 			multiplayer::setup_networked_game(server);
 		}
@@ -1021,21 +920,20 @@ extern "C" int main(int argcount, char* argvec[])
 		if(lvl->is_multiplayer()) {
 			last_draw_position() = screen_position();
 			std::string level_cfg = "waiting-room.cfg";
-			boost::intrusive_ptr<level> wait_lvl(load_level(level_cfg));
-			wait_lvl->finish_loading();
-			wait_lvl->set_multiplayer_slot(0);
+			LevelPtr wait_lvl(load_level(level_cfg));
+			wait_lvl->finishLoading();
+			wait_lvl->setMultiplayerSlot(0);
 			if(wait_lvl->player()) {
-				wait_lvl->player()->set_current_level(level_cfg);
+				wait_lvl->player()->setCurrentLevel(level_cfg);
 			}
-			wait_lvl->set_as_current_level();
+			wait_lvl->setAsCurrentLevel();
 
-			level_runner runner(wait_lvl, level_cfg, orig_level_cfg);
+			LevelRunner runner(wait_lvl, level_cfg, orig_level_cfg);
 
-			multiplayer::sync_start_time(*lvl, boost::bind(&level_runner::play_cycle, &runner));
+			multiplayer::sync_start_time(*lvl, std::bind(&LevelRunner::play_cycle, &runner));
 
-			lvl->set_multiplayer_slot(multiplayer::slot());
+			lvl->setMultiplayerSlot(multiplayer::slot());
 		}
-#endif
 
 		last_draw_position() = screen_position();
 
@@ -1045,45 +943,30 @@ extern "C" int main(int argcount, char* argvec[])
 		}
 
 		if(lvl->player() && level_cfg != "autosave.cfg") {
-			lvl->player()->set_current_level(level_cfg);
-			lvl->player()->get_entity().save_game();
+			lvl->player()->setCurrentLevel(level_cfg);
+			lvl->player()->getEntity().saveGame();
 		}
 
 		set_scene_title(lvl->title());
 
 		try {
-			quit = level_runner(lvl, level_cfg, orig_level_cfg).play_level();
+			quit = LevelRunner(lvl, level_cfg, orig_level_cfg).play_level();
 			level_cfg = orig_level_cfg;
 		} catch(multiplayer_exception&) {
 		}
 	}
 
-	level::clear_current_level();
+	Level::clearCurrentLevel();
 
 	} //end manager scope, make managers destruct before calling SDL_Quit
-//	controls::debug_dump_controls();
-#if defined(TARGET_PANDORA) || defined(TARGET_TEGRA)
-    EGL_Destroy();
-#endif
 
 	preferences::save_preferences();
-
-#if !defined(_MSC_VER) && defined(UTILITY_IN_PROC)
-	if(create_utility_in_new_process) {
-		terminate_utility_process();
-	}
-#endif
 
 	std::set<variant*> loading;
 	swap_variants_loading(loading);
 	if(loading.empty() == false) {
-		fprintf(stderr, "Illegal object: %p\n", (void*)(*loading.begin())->as_callable_loading());
+		LOG_ERROR("Illegal object: " << (void*)(*loading.begin())->as_callable_loading());
 		ASSERT_LOG(false, "Unresolved unserialized objects: " << loading.size());
 	}
-
-//#ifdef _MSC_VER
-//	ExitProcess(0);
-//#endif
-
 	return 0;
 }

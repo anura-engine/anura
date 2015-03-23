@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
+	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -27,7 +27,7 @@
 #include <memory>
 #include <string>
 
-#include "color.hpp"
+#include "Color.hpp"
 #include "svg_render.hpp"
 #include "uri.hpp"
 
@@ -66,14 +66,14 @@ namespace KRE
 			explicit paint(const std::string& s);
 
 			ColorAttrib color_attrib_;
-			color color_value_;
+			Color color_value_;
 			uri::uri color_ref_;
 
 			std::string icc_color_name_;
 			std::vector<double> icc_color_values_;
 
 			ColorAttrib backup_color_attrib_;
-			color backup_color_value_;
+			Color backup_color_value_;
 
 			double opacity_;
 		};

@@ -1,24 +1,29 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
-#ifndef TBS_BOT_HPP_INCLUDED
-#define TBS_BOT_HPP_INCLUDED
+
+#pragma once
 
 #include <boost/asio.hpp>
-#include <boost/shared_ptr.hpp>
 
 #include <string>
 #include <vector>
@@ -29,48 +34,45 @@
 #include "tbs_internal_client.hpp"
 #include "variant.hpp"
 
-namespace tbs {
-
+namespace tbs 
+{
 class tbs_bot_timer_proxy;
 
-class bot : public game_logic::formula_callable
-{
-public:
-	bot(boost::asio::io_service& io_service, const std::string& host, const std::string& port, variant v);
-	~bot();
+class bot : public game_logic::FormulaCallable
+	{
+	public:
+		bot(boost::asio::io_service& io_service, const std::string& host, const std::string& port, variant v);
+		~bot();
 
-	void process(const boost::system::error_code& error);
+		void process(const boost::system::error_code& error);
 
-private:
-	void handle_response(const std::string& type, game_logic::formula_callable_ptr callable);
-	variant get_value(const std::string& key) const;
-	void set_value(const std::string& key, const variant& value);
+	private:
+		DECLARE_CALLABLE(bot)
+		variant getValueDefault(const std::string& key) const override;
+		void handle_response(const std::string& type, game_logic::FormulaCallablePtr callable);
 
-	variant generate_report() const;
+		variant generate_report() const;
 
 	int session_id_;
 
-	std::string host_, port_;
-	std::vector<variant> script_;
-	std::vector<variant> response_;
-	boost::shared_ptr<client> client_;
-	boost::shared_ptr<internal_client> internal_client_;
+		std::string host_, port_;
+		std::vector<variant> script_;
+		std::vector<variant> response_;
+		std::shared_ptr<client> client_;
+		std::shared_ptr<internal_client> internal_client_;
 
-	boost::asio::io_service& service_;
-	boost::asio::deadline_timer timer_;
+		boost::asio::io_service& service_;
+		boost::asio::deadline_timer timer_;
 
-	game_logic::formula_ptr on_create_, on_message_;
+		game_logic::FormulaPtr on_create_, on_message_;
 
-	variant data_;
+		variant data_;
 
-	std::string message_type_;
-	game_logic::formula_callable_ptr message_callable_;
+		std::string message_type_;
+		game_logic::FormulaCallablePtr message_callable_;
 
 	bool has_quit_;
 
 	tbs_bot_timer_proxy* timer_proxy_;
-};
-
+	};
 }
-
-#endif

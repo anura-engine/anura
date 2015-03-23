@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -33,14 +33,14 @@
 
 namespace lua
 {
-	class compiled_chunk
+	class CompiledChunk
 	{
 	public:
-		compiled_chunk() {}
-		virtual ~compiled_chunk() {}
+		CompiledChunk() {}
+		virtual ~CompiledChunk() {}
 
-		void reset_chunks() { chunks_.clear(); chunks_it_ = chunks_.begin(); }
-		void add_chunk(const void* p, size_t sz) {
+		void resetChunks() { chunks_.clear(); chunks_it_ = chunks_.begin(); }
+		void addChunk(const void* p, size_t sz) {
 			const char* pp = static_cast<const char*>(p);
 			chunks_.push_back(std::vector<char>(pp,pp+sz));
 		}
@@ -53,62 +53,62 @@ namespace lua
 		mutable chunk_list_type::const_iterator chunks_it_;
 	};
 
-	class lua_compiled : public game_logic::formula_callable, public compiled_chunk
+	class LuaCompiled : public game_logic::FormulaCallable, public CompiledChunk
 	{
 	public:
-		lua_compiled();
-		virtual ~lua_compiled();
+		LuaCompiled();
+		virtual ~LuaCompiled();
 	private:
-		DECLARE_CALLABLE(lua_compiled);
+		DECLARE_CALLABLE(LuaCompiled);
 	};
-	typedef boost::intrusive_ptr<lua_compiled> lua_compiled_ptr;
+	typedef boost::intrusive_ptr<LuaCompiled> LuaCompiledPtr;
 
-	class lua_function_reference : public game_logic::formula_callable
+	class LuaFunctionReference : public game_logic::FormulaCallable
 	{
 	public:
-		lua_function_reference(lua_State* L, int ref);
-		virtual ~lua_function_reference();
+		LuaFunctionReference(lua_State* L, int ref);
+		virtual ~LuaFunctionReference();
 
-		virtual variant get_value(const std::string& key) const;
+		virtual variant getValue(const std::string& key) const;
 		virtual variant call();
 	private:
 		lua_State* L_; 
 		int ref_;
 
-		lua_function_reference();
-		lua_function_reference(const lua_function_reference&);
+		LuaFunctionReference();
+		LuaFunctionReference(const LuaFunctionReference&);
 	};
 
-	typedef boost::intrusive_ptr<lua_function_reference> lua_function_reference_ptr;
+	typedef boost::intrusive_ptr<LuaFunctionReference> LuaFunctionReferencePtr;
 
-	class lua_context
+	class LuaContext
 	{
 	public:
-		lua_context();
-		explicit lua_context(game_logic::formula_callable& callable);
-		virtual ~lua_context();
+		LuaContext();
+		explicit LuaContext(game_logic::FormulaCallable& callable);
+		virtual ~LuaContext();
 
-		static lua_context& get_instance();
+		static LuaContext& getInstance();
 
 		std::shared_ptr<lua_State>& context() { return state_; }
-		lua_State* context_ptr() { return state_.get(); }
+		lua_State* getContextPtr() { return state_.get(); }
 
-		void set_self_callable(game_logic::formula_callable& callable);
+		void setSelfCallable(game_logic::FormulaCallable& callable);
 
-		bool execute(const variant& value, game_logic::formula_callable* callable=NULL);
+		bool execute(const variant& value, game_logic::FormulaCallable* callable=nullptr);
 
-		bool dostring(const std::string&name, const std::string& str, game_logic::formula_callable* callable=NULL);
-		bool dofile(const std::string&name, const std::string& str, game_logic::formula_callable* callable=NULL);
+		bool dostring(const std::string&name, const std::string& str, game_logic::FormulaCallable* callable=nullptr);
+		bool dofile(const std::string&name, const std::string& str, game_logic::FormulaCallable* callable=nullptr);
 
-		lua_compiled_ptr compile(const std::string& name, const std::string& str);
+		LuaCompiledPtr compile(const std::string& name, const std::string& str);
 
-		compiled_chunk* compile_chunk(const std::string& name, const std::string& str);
+		CompiledChunk* compileChunk(const std::string& name, const std::string& str);
 	private:
 		void init();
 
 		std::shared_ptr<lua_State> state_;
 
-		lua_context(const lua_context&);
+		LuaContext(const LuaContext&);
 	};
 }
 

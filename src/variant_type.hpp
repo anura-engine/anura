@@ -1,24 +1,27 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
-#pragma once
-#ifndef VARIANT_TYPE_HPP_INCLUDED
-#define VARIANT_TYPE_HPP_INCLUDED
 
-#include <boost/shared_ptr.hpp>
+#pragma once
 
 #include <map>
 
@@ -28,8 +31,8 @@
 
 namespace game_logic
 {
-class formula_callable_definition;
-class formula_interface;
+	class FormulaCallableDefinition;
+	class FormulaInterface;
 class formula_expression;
 }
 
@@ -87,35 +90,35 @@ public:
 	virtual bool is_numeric() const { return false; }
 	virtual bool is_none() const { return false; }
 	virtual bool is_any() const { return false; }
-	virtual const std::vector<variant_type_ptr>* is_union() const { return NULL; }
+	virtual const std::vector<variant_type_ptr>* is_union() const { return nullptr; }
 	virtual variant_type_ptr is_list_of() const { return variant_type_ptr(); }
-	virtual const std::vector<variant_type_ptr>* is_specific_list() const { return NULL; }
+	virtual const std::vector<variant_type_ptr>* is_specific_list() const { return nullptr; }
 	virtual std::pair<variant_type_ptr,variant_type_ptr> is_map_of() const { return std::pair<variant_type_ptr,variant_type_ptr>(); }
-	virtual const std::map<variant, variant_type_ptr>* is_specific_map() const { return NULL; }
+	virtual const std::map<variant, variant_type_ptr>* is_specific_map() const { return nullptr; }
 	virtual bool is_type(variant::TYPE type) const { return false; }
-	virtual bool is_class(std::string* class_name=NULL) const { return false; }
-	virtual const std::string* is_builtin() const { return NULL; }
-	virtual const std::string* is_custom_object() const { return NULL; }
-	virtual const std::string* is_voxel_object() const { return NULL; }
+	virtual bool is_class(std::string* class_name=nullptr) const { return false; }
+	virtual const std::string* is_builtin() const { return nullptr; }
+	virtual const std::string* is_custom_object() const { return nullptr; }
+	virtual const std::string* is_voxel_object() const { return nullptr; }
 
-	virtual const std::vector<variant_range>* is_enumerable() const { return NULL; }
+	virtual const std::vector<variant_range>* is_enumerable() const { return nullptr; }
 
-	virtual bool is_function(std::vector<variant_type_ptr>* args, variant_type_ptr* return_type, int* min_args, bool* return_type_specified=NULL) const { return false; }
-	virtual bool is_generic(std::string* id=NULL) const { return false; }
-	virtual variant_type_ptr function_return_type_with_args(const std::vector<variant_type_ptr>& args) const { variant_type_ptr result; is_function(NULL, &result, NULL); return result; }
+	virtual bool is_function(std::vector<variant_type_ptr>* args, variant_type_ptr* return_type, int* min_args, bool* return_type_specified=nullptr) const { return false; }
+	virtual bool is_generic(std::string* id=nullptr) const { return false; }
+	virtual variant_type_ptr function_return_type_with_args(const std::vector<variant_type_ptr>& args) const { variant_type_ptr result; is_function(nullptr, &result, nullptr); return result; }
 
-	virtual const game_logic::formula_callable_definition* get_definition() const { return NULL; }
+	virtual const game_logic::FormulaCallableDefinition* getDefinition() const { return nullptr; }
 
-	virtual const game_logic::formula_interface* is_interface() const { return NULL; }
+	virtual const game_logic::FormulaInterface* is_interface() const { return nullptr; }
 
-	void set_str(const std::string& s) const { str_ = s; }
+	void setStr(const std::string& s) const { str_ = s; }
 	const std::string& str() const { return str_; }
 
 	std::string to_string() const { return to_string_impl(); }
 
 	virtual bool is_equal(const variant_type& o) const = 0;
 
-	virtual bool is_compatible(variant_type_ptr type, std::ostringstream* why=NULL) const { return false; }
+	virtual bool is_compatible(variant_type_ptr type, std::ostringstream* why=nullptr) const { return false; }
 
 	virtual bool maybe_convertible_to(variant_type_ptr type) const { return false; }
 	virtual variant_type_ptr map_generic_types(const std::map<std::string, variant_type_ptr>& mapping) const { return variant_type_ptr(); }
@@ -123,8 +126,8 @@ public:
 
 	static bool may_be_null(variant_type_ptr type);
 
-	void set_expr(const game_logic::formula_expression* expr);
-	const game_logic::formula_expression* get_expr() const;
+	void set_expr(const game_logic::FormulaExpression* expr);
+	const game_logic::FormulaExpression* get_expr() const;
 
 private:
 	virtual variant_type_ptr null_excluded() const { return variant_type_ptr(); }
@@ -136,7 +139,7 @@ private:
 
 	mutable std::string str_;
 
-	boost::intrusive_ptr<const game_logic::formula_expression> expr_;
+	boost::intrusive_ptr<const game_logic::FormulaExpression> expr_;
 };
 
 
@@ -144,25 +147,25 @@ variant_type_ptr get_variant_type_from_value(const variant& value);
 
 std::string variant_type_is_class_or_null(variant_type_ptr type);
 
-bool variant_types_compatible(variant_type_ptr to, variant_type_ptr from, std::ostringstream* why=NULL);
+bool variant_types_compatible(variant_type_ptr to, variant_type_ptr from, std::ostringstream* why=nullptr);
 bool variant_types_might_match(variant_type_ptr to, variant_type_ptr from);
 
 variant_type_ptr parse_variant_type(const variant& original_str,
-                                    const formula_tokenizer::token*& i1,
-                                    const formula_tokenizer::token* i2,
+                                    const formula_tokenizer::Token*& i1,
+                                    const formula_tokenizer::Token* i2,
 									bool allow_failure=false);
 variant_type_ptr parse_variant_type(const variant& v);
 
 variant_type_ptr
 parse_optional_function_type(const variant& original_str,
-                             const formula_tokenizer::token*& i1,
-                             const formula_tokenizer::token* i2);
+                             const formula_tokenizer::Token*& i1,
+                             const formula_tokenizer::Token* i2);
 variant_type_ptr parse_optional_function_type(const variant& v);
 
 variant_type_ptr
 parse_optional_formula_type(const variant& original_str,
-                            const formula_tokenizer::token*& i1,
-                            const formula_tokenizer::token* i2);
+                            const formula_tokenizer::Token*& i1,
+                            const formula_tokenizer::Token* i2);
 variant_type_ptr parse_optional_formula_type(const variant& v);
 
 class generic_variant_type_scope
@@ -174,6 +177,3 @@ public:
 	void register_type(const std::string& id);
 	void clear();
 };
-
-
-#endif

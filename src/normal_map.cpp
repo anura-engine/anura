@@ -1,9 +1,30 @@
+// XXX needs fixing
+#if 0
+/*
+	Copyright (C) 2012-2014 by Kristina Simpson <sweet.kristas@gmail.com>
+	
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
+
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
+
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
+*/
 #include <boost/array.hpp>
-#include <boost/bind.hpp>
-#include <boost/shared_ptr.hpp>
 #include <boost/shared_array.hpp>
 #include <boost/intrusive_ptr.hpp>
-#include <boost/scoped_ptr.hpp>
 
 #include <assert.h>
 
@@ -23,7 +44,6 @@
 #include "color_picker.hpp"
 #include "filesystem.hpp"
 #include "formatter.hpp"
-#include "gles2.hpp"
 #include "grid_widget.hpp"
 #include "gui_section.hpp"
 #include "image_widget.hpp"
@@ -31,19 +51,11 @@
 #include "json_parser.hpp"
 #include "label.hpp"
 #include "level_runner.hpp"
-#include "lighting.hpp"
 #include "module.hpp"
 #include "preferences.hpp"
 #include "slider.hpp"
-#include "surface.hpp"
-#include "surface_cache.hpp"
-#include "texture.hpp"
+#include "surface_utils.hpp"
 #include "unit_test.hpp"
-
-namespace graphics 
-{
-	extern void set_alpha_for_transparent_colors_in_rgba_surface(SDL_Surface* s, int options);
-}
 
 namespace
 {
@@ -130,9 +142,9 @@ namespace
 
 	void calculate_normal(SDL_Surface* s, double gs_param[3])
 	{
-		ASSERT_LOG(s != NULL, "FATAL: Invalid surface");
+		ASSERT_LOG(s != nullptr, "FATAL: Invalid surface");
 
-		graphics::set_alpha_for_transparent_colors_in_rgba_surface(s, 0);
+		graphics::setAlpha_for_transparent_colors_in_rgba_surface(s, 0);
 
 		// convert to array of values (from hsv)
 		const int sz = s->w * s->h;
@@ -199,7 +211,7 @@ namespace
 	graphics::surface make_grayscale(const graphics::surface& src, double* gs_param)
 	{
 		double gs_p[3];
-		if(gs_param == NULL) {
+		if(gs_param == nullptr) {
 			gs_p[0] = 0.21;
 			gs_p[1] = 0.71;
 			gs_p[2] = 0.07;
@@ -400,11 +412,11 @@ namespace
 		graphics::surface mask = extract_alpha_mask(s, shadow_color, graphics::color(255,255,255));
 		// 2) Scale the surface
 		//SDL_Surface* scaled = SDL_CreateRGBSurface(0, mask->w, mask->h, 32, SURFACE_MASK);
-		//SDL_FillRect(scaled, NULL, shadow_color.value());
+		//SDL_FillRect(scaled, nullptr, shadow_color.value());
 		//SDL_Rect scaled_rect = {
 		//	int(distance/2), int(distance/2), int(mask->w-distance/2), int(mask->h-distance/2)
 		//};
-		//SDL_BlitScaled(mask, NULL, scaled, &scaled_rect);
+		//SDL_BlitScaled(mask, nullptr, scaled, &scaled_rect);
 
 		mask = blur_filter(mask, blur_x, blur_y, passes);
 
@@ -522,11 +534,11 @@ namespace
 	};
 
 
-	class image_widget_lighted : public gui::image_widget
+	class ImageWidget_lighted : public gui::ImageWidget
 	{
 	public:
-		explicit image_widget_lighted(graphics::texture tex, graphics::texture tex_normal, int w, int h) 
-			: image_widget(tex, w, h), tex_normal_(tex_normal) {
+		explicit ImageWidget_lighted(graphics::texture tex, graphics::texture tex_normal, int w, int h) 
+			: ImageWidget(tex, w, h), tex_normal_(tex_normal) {
 			shader_ = gles2::shader_program::get_global("texture_2d_lighted")->shader();
 			u_mvp_matrix_ = shader_->get_fixed_uniform("mvp_matrix");
 
@@ -544,9 +556,9 @@ namespace
 
 			set_uniforms();
 
-			set_frame_set("empty_window");
+			setFrameSet("empty_window");
 		}
-		virtual ~image_widget_lighted() {
+		virtual ~ImageWidget_lighted() {
 		}
 		void set_uniforms() const {
 			manager m(shader_);
@@ -555,19 +567,19 @@ namespace
 			glUniform2f(u_resolution_, GLfloat(width()), GLfloat(height()));
 		}
 	protected:
-		virtual void handle_draw() const {
+		virtual void handleDraw() const {
 			manager m(shader_);
 
-			GLint cur_id = graphics::texture::get_current_texture();
+			GLint cur_id = graphics::texture::get_currentTexture();
 
 			if(lighting_) {
 				lighting_->set_all_uniforms();
 			}
 
 			glActiveTexture(GL_TEXTURE1);
-			glBindTexture(GL_TEXTURE_2D, tex_normal_.get_id());
+			glBindTexture(GL_TEXTURE_2D, tex_normal_.getId());
 			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, tex().get_id());
+			glBindTexture(GL_TEXTURE_2D, tex().getId());
 
 			const int w_odd = width() % 2;
 			const int h_odd = height() % 2;
@@ -613,10 +625,10 @@ namespace
 			glPopMatrix();
 		}
 
-		virtual bool handle_event(const SDL_Event& event, bool claimed) { 
+		virtual bool handleEvent(const SDL_Event& event, bool claimed) { 
 			if(event.type == SDL_MOUSEMOTION) {
 				const SDL_MouseMotionEvent& e = event.motion;
-				if(in_widget(e.x, e.y) && lighting_) {
+				if(inWidget(e.x, e.y) && lighting_) {
 					lighting_->set_light_position(0, glm::vec3(float(e.x-x()), float(e.y-y()), 0.07f));
 					claimed = true;
 				}
@@ -638,7 +650,7 @@ namespace
 		graphics::lighting_ptr lighting_;
 	};
 
-	typedef boost::intrusive_ptr<image_widget_lighted> image_widget_lighted_ptr;
+	typedef boost::intrusive_ptr<ImageWidget_lighted> ImageWidget_lighted_ptr;
 
 	class normal_viewer : public gui::dialog
 	{
@@ -651,10 +663,10 @@ namespace
 		std::string fname_;
 		rect area_;
 
-		gui::image_widget_ptr img_;
-		gui::image_widget_ptr normal_;
-		gui::image_widget_ptr aux_;
-		image_widget_lighted_ptr output_img_;
+		gui::ImageWidgetPtr img_;
+		gui::ImageWidgetPtr normal_;
+		gui::ImageWidgetPtr aux_;
+		ImageWidget_lighted_ptr output_img_;
 
 		normal_viewer();
 		normal_viewer(const normal_viewer&);
@@ -684,30 +696,30 @@ namespace
 		surface s = surface_cache::get_no_cache(fname_);
 		texture tex = texture::get_no_cache(s);
 
-		img_.reset(new gui::image_widget(tex, widget_width, widget_height));
-		add_widget(img_, 0, 0);
+		img_.reset(new gui::ImageWidget(tex, widget_width, widget_height));
+		addWidget(img_, 0, 0);
 
 		surface s_sobel = s.clone();
 		double gs_param[3] = {0.21, 0.71, 0.07};
 		calculate_normal(s_sobel.get(), gs_param);
 		texture s_tex = texture::get_no_cache(s_sobel);
 
-		graphics::set_alpha_for_transparent_colors_in_rgba_surface(s, 0);
+		graphics::setAlpha_for_transparent_colors_in_rgba_surface(s, 0);
 		surface s_aux = drop_shadow_filter(s, graphics::color(0,0,0), 3, 3, 0.0, 3, 1.0, true, false, 3);
 		//graphics::surface s_aux = extract_alpha_mask(s, graphics::color(0,0,0), graphics::color(255,255,255));
 		//surface s_emb_h = emboss(s_aux, 0);
-		s_aux = make_grayscale(s_aux, NULL);
+		s_aux = make_grayscale(s_aux, nullptr);
 		surface s_norm = calculate_normal2(emboss(s_aux, 0), emboss(s_aux, 90));
 		s_norm = alpha_clip(s_norm, s);
 		//surface s_emb = s_aux;
-		aux_.reset(new gui::image_widget(texture::get_no_cache(s_norm), widget_width, widget_height));
-		add_widget(aux_, 0, widget_height + between_padding);
+		aux_.reset(new gui::ImageWidget(texture::get_no_cache(s_norm), widget_width, widget_height));
+		addWidget(aux_, 0, widget_height + between_padding);
 
-		normal_.reset(new gui::image_widget(s_tex, widget_width, widget_height));
-		add_widget(normal_, widget_width + between_padding, 0);
+		normal_.reset(new gui::ImageWidget(s_tex, widget_width, widget_height));
+		addWidget(normal_, widget_width + between_padding, 0);
 
-		output_img_.reset(new image_widget_lighted(tex, texture::get_no_cache(s_norm), widget_width, widget_height));
-		add_widget(output_img_, widget_width + between_padding, widget_height + between_padding);
+		output_img_.reset(new ImageWidget_lighted(tex, texture::get_no_cache(s_norm), widget_width, widget_height));
+		addWidget(output_img_, widget_width + between_padding, widget_height + between_padding);
 	}
 
 }
@@ -724,6 +736,7 @@ UTILITY(calculate_normal_map)
 	}
 
 	boost::intrusive_ptr<normal_viewer> editor(new normal_viewer(rect(0, 0, preferences::actual_screen_width(), preferences::actual_screen_height()), fname));
-	editor->show_modal();
+	editor->showModal();
 }
 
+#endif

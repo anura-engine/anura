@@ -1,20 +1,27 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2012-2014 by Kristina Simpson <sweet.kristas@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
-#if defined(USE_SHADERS) && defined(USE_ISOMAP)
+
+/* XXX -- this needs re-written
 
 #include "json_parser.hpp"
 #include "module.hpp"
@@ -45,7 +52,7 @@ namespace voxel
 			return res;
 		}
 
-		std::string model_path_get_or_die(const std::string& model_name)
+		std::string model_path_getOrDie(const std::string& model_name)
 		{
 			auto it = model_path_cache().find(model_name);
 			if(it ==  model_path_cache().end()) {
@@ -79,7 +86,7 @@ namespace voxel
 		
 		if(!model_ || node.has_key("model")) {
 			std::map<variant,variant> m;
-			m[variant("model")] = variant(model_path_get_or_die(node["model"].as_string()));
+			m[variant("model")] = variant(model_path_getOrDie(node["model"].as_string()));
  			model_.reset(new voxel_model(variant(&m)));
 			model_->set_animation("stand");
 		}
@@ -154,9 +161,9 @@ namespace voxel
 			return;
 		}
 
-		std::vector<variant> scheduled_commands = pop_scheduled_commands();
+		std::vector<variant> scheduled_commands = popScheduledCommands();
 		foreach(const variant& cmd, scheduled_commands) {
-			execute_command(cmd);
+			executeCommand(cmd);
 		}
 
 		if(model_) {
@@ -187,12 +194,12 @@ namespace voxel
 		event_arg_ = v;
 	}
 
-	void voxel_object::add_scheduled_command(int cycle, variant cmd)
+	void voxel_object::addScheduledCommand(int cycle, variant cmd)
 	{
 		scheduled_commands_.push_back(ScheduledCommand(cycle, cmd));
 	}
 
-	std::vector<variant> voxel_object::pop_scheduled_commands()
+	std::vector<variant> voxel_object::popScheduledCommands()
 	{
 		std::vector<variant> result;
 		std::vector<ScheduledCommand>::iterator i = scheduled_commands_.begin();
@@ -218,7 +225,7 @@ namespace voxel
 		boost::intrusive_ptr<voxel_model> model(model_var.convert_to<voxel_model>());
 
 		std::function<void()> fn = [=]() { obj.model_->attach_child(model, child_point.as_string(), parent_point.as_string()); };
-		return variant(new game_logic::fn_command_callable(fn));
+		return variant(new game_logic::FnCommandCallable(fn));
 	END_DEFINE_FN
 
 	DEFINE_FIELD(world, "builtin world")
@@ -286,7 +293,7 @@ namespace voxel_object_factory
 	{
 		if(node.is_callable()) {
 			voxel_object_ptr c = node.try_convert<voxel_object>();
-			ASSERT_LOG(c != NULL, "Error converting voxel_object from callable.");
+			ASSERT_LOG(c != nullptr, "Error converting voxel_object from callable.");
 			return c;
 		}
 		ASSERT_LOG(node.has_key("type"), "No 'type' attribute found in definition.");
@@ -295,4 +302,4 @@ namespace voxel_object_factory
 	}
 }
 
-#endif
+*/

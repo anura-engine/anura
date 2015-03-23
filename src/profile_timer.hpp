@@ -1,22 +1,20 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
-	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+   Copyright 2014 Kristina Simpson <sweet.kristas@gmail.com>
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
 */
+
 #pragma once
-#ifndef PROFILE_TIMER_HPP_INCLUDED
-#define PROFILE_TIMER_HPP_INCLUDED
 
 #include "SDL.h"
 #include <iostream>
@@ -44,6 +42,38 @@ namespace profile
 			std::cerr << name << ": " << elapsedTime << " milliseconds" << std::endl;
 		}
 	};
-}
 
-#endif 
+	struct timer
+	{
+		Uint64 frequency;
+		Uint64 t1, t2;
+
+		timer()
+		{
+			frequency = SDL_GetPerformanceFrequency();
+			t1 = SDL_GetPerformanceCounter();
+		}
+
+		// Elapsed time in milliseconds
+		double get_time()
+		{
+			t2 = SDL_GetPerformanceCounter();
+			return (t2 - t1) * 1000000.0 / frequency;
+		}
+	};
+
+	inline void sleep(unsigned long t) 
+	{
+		SDL_Delay(t);
+	}
+
+	inline void delay(unsigned long t) 
+	{
+		sleep(t);
+	}
+
+	inline int get_tick_time()
+	{
+		return static_cast<int>(SDL_GetTicks());
+	}
+}

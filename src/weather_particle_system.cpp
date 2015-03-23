@@ -1,83 +1,100 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
+
+#include "DisplayDevice.hpp"
+#include "Shaders.hpp"
+#include "WindowManager.hpp"
+
 #include <cstdio>
-#include <math.h>
+#include <cmath>
 #include <vector>
 
 #include "weather_particle_system.hpp"
 #include "variant_utils.hpp"
 
-weather_particle_system_factory::weather_particle_system_factory (variant node)
+WeatherParticleSystemFactory::WeatherParticleSystemFactory (variant node)
  : info(node)
 {
 	
 }
 
-particle_system_ptr weather_particle_system_factory::create(const entity& e) const
+ParticleSystemPtr WeatherParticleSystemFactory::create(const Entity& e) const
 {
-	return particle_system_ptr(new weather_particle_system(e, *this));
+	return ParticleSystemPtr(new WeatherParticleSystem(e, *this));
 }
 
 
-weather_particle_system::weather_particle_system(const entity& e, const weather_particle_system_factory& factory)
+WeatherParticleSystem::WeatherParticleSystem(const Entity& e, const WeatherParticleSystemFactory& factory)
  : factory_(factory), info_(factory.info), cycle_(0)
 {
-	base_velocity = sqrtf(info_.velocity_x*info_.velocity_x + info_.velocity_y*info_.velocity_y);
+	base_velocity = sqrtf(static_cast<float>(info_.velocity_x*info_.velocity_x + info_.velocity_y*info_.velocity_y));
 	direction[0] = info_.velocity_x / base_velocity;
 	direction[1] = info_.velocity_y / base_velocity;
 	particles_.reserve(info_.number_of_particles);
 	for (int i = 0; i < info_.number_of_particles; i++)
 	{
 		particle new_p;
-		new_p.pos[0] = rand()%info_.repeat_period;
-		new_p.pos[1] = rand()%info_.repeat_period;
+		new_p.pos[0] = static_cast<float>(rand()%info_.repeat_period);
+		new_p.pos[1] = static_cast<float>(rand()%info_.repeat_period);
 		new_p.velocity = base_velocity + (info_.velocity_rand ? (rand() % info_.velocity_rand) : 0);
 		particles_.push_back(new_p);
 	}
+
+	setShader(KRE::ShaderProgram::getProgram("line_shader"));
+	auto as = KRE::DisplayDevice::createAttributeSet(true, false, false);
+	as->setDrawMode(KRE::DrawMode::POINTS);
+	attribs_ = std::make_shared<KRE::Attribute<glm::vec2>>(KRE::AccessFreqHint::DYNAMIC);
+	attribs_->addAttributeDesc(KRE::AttributeDesc(KRE::AttrType::POSITION, 2, KRE::AttrFormat::FLOAT, false));
+	as->addAttribute(attribs_);
+	addAttributeSet(as);
 }
 
-void weather_particle_system::process(const entity& e)
+void WeatherParticleSystem::process(const Entity& e)
 {
 	++cycle_;
 	
-	foreach(particle& p, particles_)
+	for(particle& p : particles_)
 	{
-		p.pos[0] = static_cast<int>(p.pos[0]+direction[0] * p.velocity) % info_.repeat_period;
-		p.pos[1] = static_cast<int>(p.pos[1]+direction[1] * p.velocity) % info_.repeat_period;
+		p.pos[0] = static_cast<float>(static_cast<int>(p.pos[0]+direction[0] * p.velocity) % info_.repeat_period);
+		p.pos[1] = static_cast<float>(static_cast<int>(p.pos[1]+direction[1] * p.velocity) % info_.repeat_period);
 	}
-	
-	//while (particles_.size() > 1500) particles_.pop_front();
+
+	// XXX set line width uniform from "info_.line_width" here
+	static auto u_line_width = getShader()->getUniform("line_width");
+	if(u_line_width != KRE::ShaderProgram::INVALID_UNIFORM) {
+		getShader()->setUniformValue(u_line_width, info_.line_width);
+	}
+	setColor(info_.color);
 }
 
-void weather_particle_system::draw(const rect& area, const entity& e) const
+void WeatherParticleSystem::draw(const KRE::WindowPtr& wm, const rect& area, const Entity& e) const
 {
-#if !defined(USE_SHADERS)
-	glDisable(GL_TEXTURE_2D);
-	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-#endif
-	glLineWidth(info_.line_width);
-	glColor4f(info_.rgba[0]/255.0, info_.rgba[1]/255.0, info_.rgba[2]/255.0, info_.rgba[3]/255.0);
 	int offset_x = area.x() - area.x()%info_.repeat_period;
 	if (area.x() < 0) offset_x -= info_.repeat_period;
 	int offset_y = area.y() - area.y()%info_.repeat_period;
 	if (area.y() < 0) offset_y -= info_.repeat_period;
-	static std::vector<GLfloat> vertices;
-	vertices.clear();
-	foreach(const particle& p, particles_)
+	std::vector<glm::vec2> vertices;
+	for(const particle& p : particles_)
 	{
 		float my_y = p.pos[1]+offset_y;
 		do
@@ -85,48 +102,27 @@ void weather_particle_system::draw(const rect& area, const entity& e) const
 			float my_x = p.pos[0]+offset_x;
 			do
 			{
-				vertices.push_back(my_x);
-				vertices.push_back(my_y);
-				vertices.push_back(my_x+direction[0]*info_.line_length);
-				vertices.push_back(my_y+direction[1]*info_.line_length);
+				vertices.emplace_back(my_x, my_y);
+				vertices.emplace_back(my_x+direction[0]*info_.line_length, my_y+direction[1]*info_.line_length);
 				my_x += info_.repeat_period;
-				//printf("my_x: %f, area.x: %i, area.w: %i\n", my_x, area.x(), area.w());
 			} while (my_x < area.x()+area.w());
 			my_y += info_.repeat_period;
 		} while (my_y < area.y()+area.h());
 	}
-#if defined(USE_SHADERS)
-	gles2::manager gles2_manager(gles2::get_simple_shader());
-	gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, 0, 0, &vertices.front());
-#else
-	glVertexPointer(2, GL_FLOAT, 0, &vertices.front());
-#endif
-	glDrawArrays(GL_LINES, 0, vertices.size()/2);
-#if !defined(USE_SHADERS)
-	//glDisable(GL_SMOOTH);
-	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-	glEnable(GL_TEXTURE_2D);
-#endif
-	glColor4f(1.0, 1.0, 1.0, 1.0);
+	getAttributeSet().back()->setCount(vertices.size());
+	attribs_->update(&vertices);
+
+	wm->render(this);
 }
 
-variant weather_particle_system::get_value(const std::string& key) const
-{
-	if(key == "velocity_x") {
-		return variant(decimal(direction[0]));
-	} else if(key == "velocity_y") {
-		return variant(decimal(direction[1]));
-	} else {
-		return variant();
-	}
-}
+BEGIN_DEFINE_CALLABLE(WeatherParticleSystem, ParticleSystem)
+	DEFINE_FIELD(velocity_x, "decimal|int")
+		return variant(decimal(obj.direction[0]));
+	DEFINE_SET_FIELD
+		obj.direction[0] = value.as_float();	
 
-void weather_particle_system::set_value(const std::string& key, const variant& value)
-{
-	if(key == "velocity_x") {
-		direction[0] = value.as_decimal().as_float();
-	} else if(key == "velocity_y") {
-		direction[1] = value.as_decimal().as_float();
-	}
-}
-
+	DEFINE_FIELD(velocity_y, "decimal|int")
+		return variant(decimal(obj.direction[1]));
+	DEFINE_SET_FIELD
+		obj.direction[1] = value.as_float();	
+END_DEFINE_CALLABLE(WeatherParticleSystem)

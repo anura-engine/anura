@@ -1,26 +1,32 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
+
 #include "asserts.hpp"
 #include "collision_utils.hpp"
 #include "difficulty.hpp"
 #include "formatter.hpp"
 #include "preferences.hpp"
 #include "input.hpp"
-#include "iphone_controls.hpp"
 #include "joystick.hpp"
 #include "level.hpp"
 #include "level_runner.hpp"
@@ -32,36 +38,48 @@
 #include "editor.hpp"
 #endif
 
-playable_custom_object::playable_custom_object(const custom_object& obj)
-  : custom_object(obj), player_info_(*this), difficulty_(0), vertical_look_(0),
-    underwater_ctrl_x_(0), underwater_ctrl_y_(0), underwater_controls_(false),
-	can_interact_(0)
+PlayableCustomObject::PlayableCustomObject(const CustomObject& obj)
+	: CustomObject(obj), 
+	  player_info_(*this), 
+	  difficulty_(0), 
+ 	  vertical_look_(0),
+      underwater_ctrl_x_(0), 
+	  underwater_ctrl_y_(0), 
+	  underwater_controls_(false),
+	  can_interact_(0)
 {
 }
 
-playable_custom_object::playable_custom_object(const playable_custom_object& obj)
-  : custom_object(obj), player_info_(obj.player_info_),
-    difficulty_(obj.difficulty_),
-    save_condition_(obj.save_condition_), vertical_look_(0),
-    underwater_ctrl_x_(0), underwater_ctrl_y_(0), underwater_controls_(false),
-	can_interact_(0)
+PlayableCustomObject::PlayableCustomObject(const PlayableCustomObject& obj)
+	: CustomObject(obj), 
+	  player_info_(obj.player_info_),
+      difficulty_(obj.difficulty_),
+      save_condition_(obj.save_condition_), 
+	  vertical_look_(0),
+      underwater_ctrl_x_(0), 
+	  underwater_ctrl_y_(0), 
+	  underwater_controls_(false),
+	  can_interact_(0)
 {
-	player_info_.set_entity(*this);
+	player_info_.setEntity(*this);
 }
 
-playable_custom_object::playable_custom_object(variant node)
-  : custom_object(node), player_info_(*this, node),
-    difficulty_(node["difficulty"].as_int(0)),
-    vertical_look_(0), underwater_ctrl_x_(0), underwater_ctrl_y_(0),
-	underwater_controls_(node["underwater_controls"].as_bool(false)),
-	can_interact_(0)
+PlayableCustomObject::PlayableCustomObject(variant node)
+	: CustomObject(node), 
+	  player_info_(*this, node),
+      difficulty_(node["difficulty"].as_int(0)),
+      vertical_look_(0), 
+	  underwater_ctrl_x_(0), 
+	  underwater_ctrl_y_(0),
+	  underwater_controls_(node["underwater_controls"].as_bool(false)),
+	  can_interact_(0)
 {
 }
 
-variant playable_custom_object::write() const
+variant PlayableCustomObject::write() const
 {
 	variant_builder node;
-	node.merge_object(custom_object::write());
+	node.merge_object(CustomObject::write());
 	node.merge_object(player_info_.write());
 	node.add("is_human", true);
 	if(difficulty_) {
@@ -74,144 +92,128 @@ variant playable_custom_object::write() const
 	return node.build();
 }
 
-void playable_custom_object::save_game()
+void PlayableCustomObject::saveGame()
 {
 	save_condition_ = clone();
-	save_condition_->add_to_level();
+	save_condition_->addToLevel();
 }
 
-entity_ptr playable_custom_object::backup() const
+EntityPtr PlayableCustomObject::backup() const
 {
-	return entity_ptr(new playable_custom_object(*this));
+	return EntityPtr(new PlayableCustomObject(*this));
 }
 
-entity_ptr playable_custom_object::clone() const
+EntityPtr PlayableCustomObject::clone() const
 {
-	return entity_ptr(new playable_custom_object(*this));
+	return EntityPtr(new PlayableCustomObject(*this));
 }
 
-bool playable_custom_object::is_active(const rect& screen_area) const
+bool PlayableCustomObject::isActive(const rect& screen_area) const
 {
 	//player objects are always active.
 	return true;
 }
 
-bool playable_custom_object::on_platform() const
+bool PlayableCustomObject::onPlatform() const
 {
-	collision_info stand_info;
-	const bool standing = is_standing(level::current(), &stand_info);
+	CollisionInfo stand_info;
+	const bool standing = isStanding(Level::current(), &stand_info) != CustomObject::STANDING_STATUS::NOT_STANDING;
 	return standing && stand_info.platform;
 }
 
-int playable_custom_object::walk_up_or_down_stairs() const
+int PlayableCustomObject::walkUpOrDownStairs() const
 {
-	return control_status(controls::CONTROL_DOWN) - control_status(controls::CONTROL_UP);
+	return controlStatus(controls::CONTROL_DOWN) - controlStatus(controls::CONTROL_UP);
 }
 
-void playable_custom_object::process(level& lvl)
+void PlayableCustomObject::process(Level& lvl)
 {
-	if(player_info_.current_level() != lvl.id()) {
-		player_info_.set_current_level(lvl.id());
+	if(player_info_.currentLevel() != lvl.id()) {
+		player_info_.setCurrentLevel(lvl.id());
 	}
 
 	if(can_interact_ > 0) {
 		--can_interact_;
 	}
 
-	iphone_controls::set_underwater(underwater_controls_);
-	iphone_controls::set_can_interact(can_interact_ != 0);
-	iphone_controls::set_on_platform(on_platform());
-	iphone_controls::set_standing(is_standing(level::current()));
-
-	float underwater_x, underwater_y;
-	if(underwater_controls_ && iphone_controls::water_dir(&underwater_x, &underwater_y)) {
-		underwater_ctrl_x_ = underwater_x*1000;
-		underwater_ctrl_y_ = underwater_y*1000;
-	} else {
-		underwater_ctrl_x_ = 0;
-		underwater_ctrl_y_ = 0;
-	}
-	
-	reverse_ab_ = preferences::reverse_ab();
-
 	bool controls[controls::NUM_CONTROLS];
 	for(int n = 0; n != controls::NUM_CONTROLS; ++n) {
-		controls[n] = control_status(static_cast<controls::CONTROL_ITEM>(n));
+		controls[n] = controlStatus(static_cast<controls::CONTROL_ITEM>(n));
 	}
 
-	clear_control_status();
-	read_controls(lvl.cycle());
+	clearControlStatus();
+	readControls(lvl.cycle());
+	// XX Need to abstract this to read controls and mappings from global game file.
 	static const std::string keys[] = { "up", "down", "left", "right", "attack", "jump", "tongue" };	
 	for(int n = 0; n != controls::NUM_CONTROLS; ++n) {
-		if(controls[n] != control_status(static_cast<controls::CONTROL_ITEM>(n))) {
+		if(controls[n] != controlStatus(static_cast<controls::CONTROL_ITEM>(n))) {
 			if(controls[n]) {
-				handle_event("end_ctrl_" + keys[n]);
+				handleEvent("end_ctrl_" + keys[n]);
 			} else {
-				handle_event("ctrl_" + keys[n]);
+				handleEvent("ctrl_" + keys[n]);
 			}
 		}
 	}
 
-	custom_object::process(lvl);
+	CustomObject::process(lvl);
 
 }
 
-namespace {
+namespace 
+{
 	static const char* ctrl[] = { "ctrl_up", "ctrl_down", "ctrl_left", "ctrl_right", "ctrl_attack", "ctrl_jump", "ctrl_tongue" };
 }
 
-variant playable_custom_object::get_value(const std::string& key) const
+variant PlayableCustomObject::getValue(const std::string& key) const
 {
 	if(key.substr(0, 11) == "difficulty_") {
 		return variant(difficulty::from_string(key.substr(11)));		
 	} else if(key == "difficulty") {
-		return get_value_by_slot(CUSTOM_OBJECT_PLAYER_DIFFICULTY);
+		return getValueBySlot(CUSTOM_OBJECT_PLAYER_DIFFICULTY);
 	} else if(key == "can_interact") {
-		return get_value_by_slot(CUSTOM_OBJECT_PLAYER_CAN_INTERACT);
+		return getValueBySlot(CUSTOM_OBJECT_PLAYER_CAN_INTERACT);
 	} else if(key == "underwater_controls") {
-		return get_value_by_slot(CUSTOM_OBJECT_PLAYER_UNDERWATER_CONTROLS);
+		return getValueBySlot(CUSTOM_OBJECT_PLAYER_UNDERWATER_CONTROLS);
 	} else if(key == "ctrl_mod_key") {
-		return get_value_by_slot(CUSTOM_OBJECT_PLAYER_CTRL_MOD_KEY);
+		return getValueBySlot(CUSTOM_OBJECT_PLAYER_CTRL_MOD_KEY);
 	} else if(key == "ctrl_keys") {
-		return get_value_by_slot(CUSTOM_OBJECT_PLAYER_CTRL_KEYS);
+		return getValueBySlot(CUSTOM_OBJECT_PLAYER_CTRL_KEYS);
 	} else if(key == "ctrl_mice") {
-		return get_value_by_slot(CUSTOM_OBJECT_PLAYER_CTRL_MICE);
+		return getValueBySlot(CUSTOM_OBJECT_PLAYER_CTRL_MICE);
 	} else if(key == "ctrl_tilt") {
-		return get_value_by_slot(CUSTOM_OBJECT_PLAYER_CTRL_TILT);
+		return getValueBySlot(CUSTOM_OBJECT_PLAYER_CTRL_TILT);
 	} else if(key == "ctrl_x") {
-		return get_value_by_slot(CUSTOM_OBJECT_PLAYER_CTRL_X);
+		return getValueBySlot(CUSTOM_OBJECT_PLAYER_CTRL_X);
 	} else if(key == "ctrl_y") {
-		return get_value_by_slot(CUSTOM_OBJECT_PLAYER_CTRL_Y);
-	} else if(key == "ctrl_reverse_ab") {
-		return get_value_by_slot(CUSTOM_OBJECT_PLAYER_CTRL_REVERSE_AB);
+		return getValueBySlot(CUSTOM_OBJECT_PLAYER_CTRL_Y);
 	} else if(key == "control_scheme") {
-		return get_value_by_slot(CUSTOM_OBJECT_PLAYER_CONTROL_SCHEME);
+		return getValueBySlot(CUSTOM_OBJECT_PLAYER_CONTROL_SCHEME);
 	}
 
 	for(int n = 0; n < sizeof(ctrl)/sizeof(*ctrl); ++n) {
 		if(key == ctrl[n]) {
-			return variant(control_status(static_cast<controls::CONTROL_ITEM>(n)));
+			return variant(controlStatus(static_cast<controls::CONTROL_ITEM>(n)));
 		}
 	}
 
 	if(key == "ctrl_user") {
-		return control_status_user();
+		return controlStatusUser();
 	}
 
 	if(key == "player") {
 		return variant::from_bool(true);
 	} else if(key == "vertical_look") {
-		return get_value_by_slot(CUSTOM_OBJECT_PLAYER_VERTICAL_LOOK);
+		return getValueBySlot(CUSTOM_OBJECT_PLAYER_VERTICAL_LOOK);
 	}
 
-	return custom_object::get_value(key);
+	return CustomObject::getValue(key);
 }
 
-variant playable_custom_object::get_player_value_by_slot(int slot) const
+variant PlayableCustomObject::getPlayerValueBySlot(int slot) const
 {
 	switch(slot) {
 	case CUSTOM_OBJECT_PLAYER_DIFFICULTY: {
-		if(preferences::force_difficulty() != INT_MIN) {
+		if(preferences::force_difficulty() != std::numeric_limits<int>::min()) {
 			return variant(preferences::force_difficulty());
 		}
 
@@ -228,19 +230,18 @@ variant playable_custom_object::get_player_value_by_slot(int slot) const
 	}
 	case CUSTOM_OBJECT_PLAYER_CTRL_KEYS: {
 		std::vector<variant> result;
-		if(level_runner::get_current() && level_runner::get_current()->get_debug_console() && level_runner::get_current()->get_debug_console()->has_keyboard_focus()) {
+		if(LevelRunner::getCurrent() && LevelRunner::getCurrent()->get_debug_console() && LevelRunner::getCurrent()->get_debug_console()->hasKeyboardFocus()) {
 			//the debug console is stealing all keystrokes.
 			return variant(&result);
 		}
 
-#if !TARGET_OS_IPHONE && !TARGET_IPHONE_SIMULATOR
 		int ary_length;
 		const Uint8* key_state = SDL_GetKeyboardState(&ary_length);
 
 #ifndef NO_EDITOR
-		if(level_runner::get_current()) {
-			const editor* e = level_runner::get_current()->get_editor();
-			if(e && e->has_keyboard_focus()) {
+		if(LevelRunner::getCurrent()) {
+			const editor* e = LevelRunner::getCurrent()->get_editor();
+			if(e && e->hasKeyboardFocus()) {
 				//the editor has the focus, so we tell the game there
 				//are no keys pressed.
 				ary_length = 0;
@@ -259,53 +260,38 @@ variant playable_custom_object::get_player_value_by_slot(int slot) const
 				}
 			}
 		}
-#endif
 		return variant(&result);
 	}
 	case CUSTOM_OBJECT_PLAYER_CTRL_MICE: {
-		std::vector<variant> result;
-		
+		std::vector<variant> info;
+		int x, y;
+		Uint8 button_state = input::sdl_get_mouse_state(&x, &y);
 
-#if TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR
-		const int nmice = SDL_GetNumMice();
-#else
-		const int nmice = 1;
-#endif
-		for(int n = 0; n != nmice; ++n) {
-#if TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR
-			SDL_SelectMouse(n);
-#endif
-			std::vector<variant> info;
-			int x, y;
-			Uint8 button_state = input::sdl_get_mouse_state(&x, &y);
-			translate_mouse_coords(&x, &y);
+		info.push_back(variant(x));
+		info.push_back(variant(y));
 
-			info.push_back(variant(x));
-			info.push_back(variant(y));
-
-			if(button_state & SDL_BUTTON(SDL_BUTTON_LEFT)) {
-				info.push_back(variant("left"));
-			}
-
-			if(button_state & SDL_BUTTON(SDL_BUTTON_RIGHT)) {
-				info.push_back(variant("right"));
-			}
-
-			if(button_state & SDL_BUTTON(SDL_BUTTON_MIDDLE)) {
-				info.push_back(variant("middle"));
-			}
-
-			if(button_state & SDL_BUTTON(SDL_BUTTON_X1)) { //these aren't tested
-				info.push_back(variant("x1"));
-			}
-
-			if(button_state & SDL_BUTTON(SDL_BUTTON_X2)) {
-				info.push_back(variant("x2"));
-			}
-
-			result.push_back(variant(&info));
+		if(button_state & SDL_BUTTON(SDL_BUTTON_LEFT)) {
+			info.push_back(variant("left"));
 		}
 
+		if(button_state & SDL_BUTTON(SDL_BUTTON_RIGHT)) {
+			info.push_back(variant("right"));
+		}
+
+		if(button_state & SDL_BUTTON(SDL_BUTTON_MIDDLE)) {
+			info.push_back(variant("middle"));
+		}
+
+		if(button_state & SDL_BUTTON(SDL_BUTTON_X1)) { //these aren't tested
+			info.push_back(variant("x1"));
+		}
+
+		if(button_state & SDL_BUTTON(SDL_BUTTON_X2)) {
+			info.push_back(variant("x2"));
+		}
+
+		std::vector<variant> result;
+		result.push_back(variant(&info));
 		return variant(&result);
 	}
 	case CUSTOM_OBJECT_PLAYER_CTRL_TILT: {
@@ -316,9 +302,6 @@ variant playable_custom_object::get_player_value_by_slot(int slot) const
 	}
 	case CUSTOM_OBJECT_PLAYER_CTRL_Y: {
 		return variant(underwater_ctrl_y_);
-	}
-	case CUSTOM_OBJECT_PLAYER_CTRL_REVERSE_AB: {
-		return variant::from_bool(reverse_ab_);
 	}
 	case CUSTOM_OBJECT_PLAYER_CONTROL_SCHEME: {
 		return variant(preferences::control_scheme());
@@ -353,7 +336,7 @@ variant playable_custom_object::get_player_value_by_slot(int slot) const
 	ASSERT_LOG(false, "unknown slot in get_player_value_by_slot: " << slot);
 }
 
-void playable_custom_object::set_player_value_by_slot(int slot, const variant& value)
+void PlayableCustomObject::setPlayerValueBySlot(int slot, const variant& value)
 {
 	switch(slot) {
 	case CUSTOM_OBJECT_PLAYER_DIFFICULTY:
@@ -394,25 +377,25 @@ void playable_custom_object::set_player_value_by_slot(int slot, const variant& v
 			control_lock_.reset();
 			control_lock_.reset(new controls::local_controls_lock(state));
 		} else {
-			ASSERT_LOG(false, "BAD VALUE WHEN SETTING control_lock KEY. A LIST OR NULL IS REQUIRED: " << value.to_debug_string());
+			ASSERT_LOG(false, "BAD VALUE WHEN SETTING control_lock KEY. A LIST OR nullptr IS REQUIRED: " << value.to_debug_string());
 		}
 	break;
 	}
 }
 
-void playable_custom_object::set_value(const std::string& key, const variant& value)
+void PlayableCustomObject::setValue(const std::string& key, const variant& value)
 {
 	if(key == "difficulty") {
-		set_player_value_by_slot(CUSTOM_OBJECT_PLAYER_DIFFICULTY, value);
+		setPlayerValueBySlot(CUSTOM_OBJECT_PLAYER_DIFFICULTY, value);
 	} else if(key == "can_interact") {
-		set_player_value_by_slot(CUSTOM_OBJECT_PLAYER_CAN_INTERACT, value);
+		setPlayerValueBySlot(CUSTOM_OBJECT_PLAYER_CAN_INTERACT, value);
 	} else if(key == "underwater_controls") {
-		set_player_value_by_slot(CUSTOM_OBJECT_PLAYER_UNDERWATER_CONTROLS, value);
+		setPlayerValueBySlot(CUSTOM_OBJECT_PLAYER_UNDERWATER_CONTROLS, value);
 	} else if(key == "vertical_look") {
-		set_player_value_by_slot(CUSTOM_OBJECT_PLAYER_VERTICAL_LOOK, value);
+		setPlayerValueBySlot(CUSTOM_OBJECT_PLAYER_VERTICAL_LOOK, value);
 	} else if(key == "control_lock") {
-		set_player_value_by_slot(CUSTOM_OBJECT_PLAYER_CONTROL_LOCK, value);
+		setPlayerValueBySlot(CUSTOM_OBJECT_PLAYER_CONTROL_LOCK, value);
 	} else {
-		custom_object::set_value(key, value);
+		CustomObject::setValue(key, value);
 	}
 }
