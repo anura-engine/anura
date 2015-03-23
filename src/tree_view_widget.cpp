@@ -100,11 +100,12 @@ namespace gui
 		col_widths_.push_back(col_size_/2);
 		genTraverse(0, std::bind(&TreeViewWidget::calcColumnWidths, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3), variant(), &tree_);
 
-		LOG_INFO_NOLF("Column widths: ");
+		std::ostringstream ss;
+		ss << "Column widths: ";
 		for(int colw : col_widths_) {
-			LOG_INFO_NOLF(colw << ", ");
+			ss << colw << ", ";
 		}
-		LOG_INFO("");
+		LOG_INFO(ss.str());
 
 		selection_map_.clear();
 		widgets_.clear();

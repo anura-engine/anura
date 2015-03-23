@@ -4001,7 +4001,7 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 			if(msg.empty() == false) {
 				msg = " (" + msg + ")";
 			}
-			ASSERT_LOG(variant_types_compatible(type, provided), "Function call argument " << (narg+1) << " does not match. Function expects " << type_str << " provided " << provided->to_string() << msg << " " << debugPinpointLocation())
+			ASSERT_LOG(variant_types_compatible(type, provided), "Function call argument " << (narg+1) << " does not match. Function expects " << type_str << " provided " << provided->to_string() << msg << " " << debugPinpointLocation());
 		}
 	}
 
@@ -4091,10 +4091,12 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 
 		if(precondition_) {
 			if(!precondition_->execute(*tmp_callable).as_bool()) {
-				LOG_ERROR_NOLF("FAILED function precondition (" << precondition_->str() << ") for function '" << formula_->str() << "' with arguments: ");
+				std::ostringstream ss;
+				ss << "FAILED function precondition (" << precondition_->str() << ") for function '" << formula_->str() << "' with arguments: ";
 				for(size_t n = 0; n != arg_names_.size(); ++n) {
-					LOG_ERROR("  arg " << (n+1) << ": " << args()[n]->evaluate(variables).to_debug_string());
+					ss << "  arg " << (n+1) << ": " << args()[n]->evaluate(variables).to_debug_string();
 				}
+				LOG_ERROR(ss.str());
 			}
 		}
 

@@ -23,20 +23,10 @@
 
 #pragma once
 
-#include <iostream>
 #include <sstream>
 #include <cstring>
 
-enum LogLevel
-{
-	LOG_LEVEL_DEBUG, 
-	LOG_LEVEL_INFO,
-	LOG_LEVEL_WARN,
-	LOG_LEVEL_ERROR,
-	LOG_LEVEL_FATAL,
-};
-
-const char* get_log_level_as_string(LogLevel l);
+#include "SDL.h"
 
 #if defined(_MSC_VER)
 #define __SHORT_FORM_OF_FILE__	\
@@ -52,37 +42,32 @@ const char* get_log_level_as_string(LogLevel l);
 	)
 #endif
 
-#define LOG_MSG_NOLF(_ll, _msg)												\
-	do {																	\
-			std::ostringstream _s;											\
-			_s  << __SHORT_FORM_OF_FILE__ << ":" << __LINE__ << " "			\
-				<< get_log_level_as_string(_ll) << ": " << _msg;			\
-			std::cerr << _s.str();											\
+#define LOG_INFO(_a)																\
+	do {																			\
+		std::ostringstream _s;														\
+		_s << __SHORT_FORM_OF_FILE__ << ":" << __LINE__ << " : " << _a;				\
+		SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "%s\n", _s.str().c_str());		\
 	} while(0)
 
-#define LOG_INFO_NOLF(_msg)		LOG_MSG_NOLF(LOG_LEVEL_INFO, _msg)
-#define LOG_ERROR_NOLF(_msg)	LOG_MSG_NOLF(LOG_LEVEL_ERROR, _msg)
-
-#define LOG_MSG(_ll, _msg)													\
-	do {																	\
-			std::ostringstream _s;											\
-			_s  << __SHORT_FORM_OF_FILE__ << ":" << __LINE__ << " "			\
-				<< get_log_level_as_string(_ll) << ": " << _msg << "\n";	\
-			std::cerr << _s.str();											\
+#define LOG_DEBUG(_a)																\
+	do {																			\
+		std::ostringstream _s;														\
+		_s << __SHORT_FORM_OF_FILE__ << ":" << __LINE__ << " : " << _a;				\
+		SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "%s\n", _s.str().c_str());		\
 	} while(0)
 
-#define LOG_DEBUG(_msg)	LOG_MSG(LOG_LEVEL_DEBUG, _msg)
-#define LOG_INFO(_msg)	LOG_INFO_NOLF(_msg << "\n")
-#define LOG_WARN(_msg)	LOG_MSG(LOG_LEVEL_WARN, _msg)
-#define LOG_ERROR(_msg) LOG_MSG(LOG_LEVEL_ERROR, _msg)
+#define LOG_WARN(_a)																\
+	do {																			\
+		std::ostringstream _s;														\
+		_s << __SHORT_FORM_OF_FILE__ << ":" << __LINE__ << " : " << _a;				\
+		SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION, "%s\n", _s.str().c_str());		\
+	} while(0)
 
-#if defined(__ANDROID__)
-#include <android/log.h>
-#include <sstream>
-#define LOG(str_data) \
-    do{ std::stringstream oss; \
-	    oss << str_data; \
-	    __android_log_print(ANDROID_LOG_INFO, "Frogatto", oss.str().c_str()); }while(0)
-#else
-#define LOG(fmt,...) do {}while(0)
-#endif // ANDROID
+#define LOG_ERROR(_a)																\
+	do {																			\
+		std::ostringstream _s;														\
+		_s << __SHORT_FORM_OF_FILE__ << ":" << __LINE__ << " : " << _a;				\
+		SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s\n", _s.str().c_str());		\
+	} while(0)
+
+

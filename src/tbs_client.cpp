@@ -68,11 +68,12 @@ namespace tbs
 			std::vector<game::message> messages;
 			local_game_cache_->swap_outgoing_messages(messages);
 			for(const game::message& msg : messages) {
-				LOG_INFO_NOLF("LOCAL: RECIPIENTS:");
+				std::ostringstream ss;
+				ss << "LOCAL: RECIPIENTS:";
 				for(int i = 0; i != msg.recipients.size(); ++i) {
-					LOG_INFO_NOLF(" " << msg.recipients[i]);
+					ss << " " << msg.recipients[i];
 				}
-				LOG_INFO("");
+				LOG_INFO(ss.str());
 				if(std::count(msg.recipients.begin(), msg.recipients.end(), local_nplayer_)) {
 					local_responses_.push_back(msg.contents);
 				}

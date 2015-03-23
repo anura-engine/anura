@@ -71,7 +71,7 @@ namespace gui
 			color_ = KRE::Color::colorGray();
 		}
 		if(v.has_key("padding")) {
-			ASSERT_LOG(v["padding"].num_elements() == 2, "Padding field must be two element, found " << v["padding"].num_elements())
+			ASSERT_LOG(v["padding"].num_elements() == 2, "Padding field must be two element, found " << v["padding"].num_elements());
 			hpad_ = v["padding"][0].as_int();
 			vpad_ = v["padding"][1].as_int();
 		}

@@ -620,23 +620,25 @@ namespace controls
 
 	void debug_dump_controls()
 	{
-		LOG_INFO_NOLF("CONTROLS:");
+		std::ostringstream ss;
+		ss << "CONTROLS:";
 		for(unsigned n = 0; n < nplayers; ++n) {
-			LOG_INFO_NOLF(" %d:" << n);
+			ss << " " << n << ":";
 			for(unsigned m = 0; m < controls[n].size() && m < static_cast<unsigned>(highest_confirmed[n]); ++m) {
 				char c = controls[n][m].keys;
-				LOG_INFO_NOLF("%02x" << static_cast<int>(c));
+				ss << std::hex << static_cast<int>(c);
 			}
 		}
-		LOG_INFO("");
+		LOG_INFO(ss.str());
 
 		for(unsigned n = 0; n < nplayers; ++n) {
 			for(unsigned m = 0; m < controls[n].size() && m < static_cast<unsigned>(highest_confirmed[n]); ++m) {
-				LOG_INFO_NOLF("CTRL PLAYER " << n << " CYCLE " << m << ": ");
+				ss.clear();
+				ss << "CTRL PLAYER " << n << " CYCLE " << m << ": ";
 				for(int j = 0; j != NUM_CONTROLS; ++j) {
-					LOG_INFO_NOLF(((1 << j)&controls[n][m].keys) ? "1" : "0");
+					ss << (((1 << j)&controls[n][m].keys) ? "1" : "0");
 				}
-				LOG_INFO("");
+				LOG_INFO(ss);
 			}
 		}
 	}

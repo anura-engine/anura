@@ -393,11 +393,10 @@ int main(int argcount, char* argvec[])
 			if(cfg["arguments"].is_null() == false) {
 				std::vector<std::string> additional_args = cfg["arguments"].as_list_string();
 				argv.insert(argv.begin(), additional_args.begin(), additional_args.end());
-				LOG_INFO_NOLF("ADDING ARGUMENTS FROM master-config.cfg:");
+				LOG_INFO("ADDING ARGUMENTS FROM master-config.cfg:");
 				for(int n = 0; n < cfg["arguments"].num_elements(); ++n) {
-					LOG_INFO_NOLF(" " << cfg["arguments"][n].as_string());
+					LOG_INFO("   " << cfg["arguments"][n].as_string());
 				}
-				LOG_INFO("");
 			}
 		}
 	}

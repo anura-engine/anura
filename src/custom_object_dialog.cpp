@@ -495,7 +495,7 @@ namespace editor_dialogs
 		if(template_file_.first.empty() == false) {
 			object_template_ = json::parse_from_file(template_file_.second);
 			ASSERT_LOG(object_template_.is_map(), 
-				"OBJECT TEMPLATE READ FROM FILE IS NOT MAP: " << template_file_.second)
+				"OBJECT TEMPLATE READ FROM FILE IS NOT MAP: " << template_file_.second);
 			// ignorning these exceptions till we're finished
 			//assert_recover_scope recover_from_assert;
 			//try {

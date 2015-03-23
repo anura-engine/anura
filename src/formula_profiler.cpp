@@ -96,12 +96,13 @@ namespace formula_profiler
 		if(!first_call && g_instrumentation.empty() == false) {
 			const int time_us = (tv.tv_sec - prev_call.tv_sec)*1000000 + (tv.tv_usec - prev_call.tv_usec);
 			if(time_us) {
-				LOG_INFO_NOLF("FRAME INSTRUMENTATION TOTAL TIME: " << time_us << "us. INSTRUMENTS: ");
+				std::ostringstream ss;
+				ss << "FRAME INSTRUMENTATION TOTAL TIME: " << time_us << "us. INSTRUMENTS: ";
 				for(std::map<const char*,InstrumentationRecord>::const_iterator i = g_instrumentation.begin(); i != g_instrumentation.end(); ++i) {
 					const int percent = (i->second.time_us*100)/time_us;
-					LOG_INFO_NOLF(i->first << ": " << i->second.time_us << "us (" << percent << "%) in " << i->second.nsamples << " calls; ");
+					ss << i->first << ": " << i->second.time_us << "us (" << percent << "%) in " << i->second.nsamples << " calls; ";
 				}
-				LOG_INFO("");
+				LOG_INFO(ss.str());
 			}
 
 			g_instrumentation.clear();

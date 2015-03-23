@@ -649,16 +649,20 @@ int goodness_of_fit(KRE::SurfacePtr surf, rect areaa, rect areab)
 	while(areaa.h() < areab.h() && can_slice) {
 		can_slice = false;
 		if(rect_in_surf_empty(surf, rect(areab.x(), areab.y(), areab.w(), 1))) {
-			LOG_INFO_NOLF("SLICE: " << areab << " -> ");
+			std::ostringstream ss;
+			ss << "SLICE: " << areab << " -> ";
 			areab = rect(areab.x(), areab.y()+1, areab.w(), areab.h()-1);
-			LOG_INFO(areab);
+			ss << areab;
+			LOG_INFO(ss.str());
 			can_slice = true;
 		}
 
 		if(areaa.h() < areab.h() && rect_in_surf_empty(surf, rect(areab.x(), areab.y()+areab.h()-1, areab.w(), 1))) {
-			LOG_INFO_NOLF("SLICE: " << areab << " -> ");
+			std::ostringstream ss;
+			ss << "SLICE: " << areab << " -> ";
 			areab = rect(areab.x(), areab.y(), areab.w(), areab.h()-1);
-			LOG_INFO(areab);
+			ss << areab;
+			LOG_INFO(ss.str());
 			can_slice = true;
 		}
 
@@ -1034,12 +1038,12 @@ COMMAND_LINE_UTILITY(bake_spritesheet)
 					sequence.push_back(value);
 				}
 
-				LOG_INFO_NOLF("RECOMMENDED SEQUENCE: ");
+				std::ostringstream ss;
+				ss << "RECOMMENDED SEQUENCE: ";
 				for(auto p : sequence) {
-					LOG_INFO_NOLF("[" << p.first << "," << p.second << "], ");
+					ss << "[" << p.first << "," << p.second << "], ";
 				}
-
-				LOG_INFO("");
+				LOG_INFO(ss.str());
 			}
 		}
 */
