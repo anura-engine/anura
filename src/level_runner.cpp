@@ -1489,7 +1489,7 @@ bool LevelRunner::play_cycle()
 		lvl_->process_draw();
 
 		if(should_draw) {
-			wnd->setClearColor(KRE::Color::colorPink());
+			wnd->setClearColor(KRE::Color(0, 0, 0, 0));
 			wnd->clear(KRE::ClearFlags::ALL);
 #ifndef NO_EDITOR
 			const Uint8 *key = SDL_GetKeyboardState(nullptr);
