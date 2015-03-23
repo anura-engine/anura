@@ -61,20 +61,20 @@ namespace KRE
 
 	Camera::Camera(const std::string& name)
 		: SceneObject(name), 
-		fov_(default_fov), 
-		horizontal_angle_(default_horizontal_angle), 
-		vertical_angle_(default_vertical_angle), 
-		speed_(default_speed), 
-		mouse_speed_(default_mouse_speed), 
-		near_clip_(default_near_clip), 
-		far_clip_(default_far_clip),
-		type_(CAMERA_PERSPECTIVE), 
-		ortho_left_(0), 
-		ortho_bottom_(0),
-		ortho_top_(0), 
-		ortho_right_(0),
-		clip_planes_set_(false),
-		view_mode_(VIEW_MODE_AUTO)
+		  fov_(default_fov), 
+		  horizontal_angle_(default_horizontal_angle), 
+		  vertical_angle_(default_vertical_angle), 
+		  speed_(default_speed), 
+		  mouse_speed_(default_mouse_speed), 
+		  near_clip_(default_near_clip), 
+		  far_clip_(default_far_clip),
+		  type_(CAMERA_PERSPECTIVE), 
+		  ortho_left_(0), 
+		  ortho_bottom_(0),
+		  ortho_top_(0), 
+		  ortho_right_(0),
+		  clip_planes_set_(false),
+		  view_mode_(VIEW_MODE_AUTO)
 	{
 		auto wnd = WindowManager::getMainWindow();
 		ortho_top_ = wnd->logicalHeight(); 
@@ -90,20 +90,20 @@ namespace KRE
 
 	Camera::Camera(const variant& node)
 		: SceneObject(node["name"].as_string()), 
-		fov_(default_fov), 
-		horizontal_angle_(default_horizontal_angle), 
-		vertical_angle_(default_vertical_angle), 
-		speed_(default_speed), 
-		mouse_speed_(default_mouse_speed), 
-		near_clip_(default_near_clip), 
-		far_clip_(default_far_clip),
-		type_(CAMERA_PERSPECTIVE), 
-		ortho_left_(0), 
-		ortho_bottom_(0),
-		ortho_top_(0), 
-		ortho_right_(0),
-		clip_planes_set_(false)
-	{
+		  fov_(default_fov), 
+		  horizontal_angle_(default_horizontal_angle), 
+		  vertical_angle_(default_vertical_angle), 
+		  speed_(default_speed), 
+		  mouse_speed_(default_mouse_speed), 
+		  near_clip_(default_near_clip), 
+		  far_clip_(default_far_clip),
+		  type_(CAMERA_PERSPECTIVE), 
+		  ortho_left_(0), 
+		  ortho_bottom_(0),
+		  ortho_top_(0), 
+		  ortho_right_(0),
+		  clip_planes_set_(false)
+	{	  
 		auto wnd = WindowManager::getMainWindow();
 		ortho_top_ = wnd->logicalHeight(); 
 		ortho_right_ = wnd->logicalWidth();
@@ -175,21 +175,21 @@ namespace KRE
 
 	Camera::Camera(const std::string& name, int left, int right, int top, int bottom)
 		: SceneObject(name), 
-		fov_(default_fov), 
-		horizontal_angle_(default_horizontal_angle), 
-		vertical_angle_(default_vertical_angle), 
-		speed_(default_speed), 
-		mouse_speed_(default_mouse_speed), 
-		near_clip_(default_near_clip), 
-		far_clip_(default_far_clip),
-		type_(CAMERA_ORTHOGONAL), 
-		ortho_left_(left), 
-		ortho_bottom_(bottom),
-		ortho_top_(top), 
-		ortho_right_(right), 
-		clip_planes_set_(false), 
-		view_(1.0f),
-		view_mode_(VIEW_MODE_AUTO)
+		  fov_(default_fov), 
+		  horizontal_angle_(default_horizontal_angle), 
+		  vertical_angle_(default_vertical_angle), 
+		  speed_(default_speed), 
+		  mouse_speed_(default_mouse_speed), 
+		  near_clip_(default_near_clip), 
+		  far_clip_(default_far_clip),
+		  type_(CAMERA_ORTHOGONAL), 
+		  ortho_left_(left), 
+		  ortho_bottom_(bottom),
+		  ortho_top_(top), 
+		  ortho_right_(right), 
+		  clip_planes_set_(false), 
+		  view_(1.0f),
+		  view_mode_(VIEW_MODE_AUTO)
 	{
 		up_ = glm::vec3(0.0f, 1.0f, 0.0f);
 		position_ = glm::vec3(0.0f, 0.0f, 0.70f); 
@@ -198,23 +198,49 @@ namespace KRE
 		computeProjection();
 	}
 
+	Camera::Camera(const std::string& name, const rect& r)
+		: SceneObject(name), 
+		  fov_(default_fov), 
+		  horizontal_angle_(default_horizontal_angle), 
+		  vertical_angle_(default_vertical_angle), 
+		  speed_(default_speed), 
+		  mouse_speed_(default_mouse_speed), 
+		  near_clip_(default_near_clip), 
+		  far_clip_(default_far_clip),
+		  type_(CAMERA_ORTHOGONAL), 
+		  ortho_left_(r.x()), 
+		  ortho_bottom_(r.y2()),
+		  ortho_top_(r.y()), 
+		  ortho_right_(r.x2()), 
+		  clip_planes_set_(false), 
+		  view_(1.0f),
+		  view_mode_(VIEW_MODE_AUTO)
+	{
+		up_ = glm::vec3(0.0f, 1.0f, 0.0f);
+		position_ = glm::vec3(0.0f, 0.0f, 0.70f); 
+		aspect_ = float(ortho_right_ - ortho_left_)/float(ortho_top_ - ortho_bottom_);
+	
+		computeProjection();
+	}
+
+
 	Camera::Camera(const std::string& name, float fov, float aspect, float near_clip, float far_clip)
 		: SceneObject(name), 
-		fov_(fov), 
-		horizontal_angle_(default_horizontal_angle), 
-		vertical_angle_(default_vertical_angle), 
-		speed_(default_speed), 
-		mouse_speed_(default_mouse_speed), 
-		near_clip_(near_clip), 
-		far_clip_(far_clip),
-		aspect_(aspect), 
-		type_(CAMERA_PERSPECTIVE), 
-		ortho_left_(0), 
-		ortho_bottom_(0),
-		ortho_top_(0), 
-		ortho_right_(0),
-		clip_planes_set_(true),
-		view_mode_(VIEW_MODE_AUTO)
+		  fov_(fov), 
+		  horizontal_angle_(default_horizontal_angle), 
+		  vertical_angle_(default_vertical_angle), 
+		  speed_(default_speed), 
+		  mouse_speed_(default_mouse_speed), 
+		  near_clip_(near_clip), 
+		  far_clip_(far_clip),
+		  aspect_(aspect), 
+		  type_(CAMERA_PERSPECTIVE), 
+		  ortho_left_(0), 
+		  ortho_bottom_(0),
+		  ortho_top_(0), 
+		  ortho_right_(0),
+		  clip_planes_set_(true),
+		  view_mode_(VIEW_MODE_AUTO)
 	{
 		auto wnd = WindowManager::getMainWindow();
 		ortho_top_ = wnd->logicalHeight(); 

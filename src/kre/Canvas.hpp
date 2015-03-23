@@ -28,6 +28,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+#include "CameraObject.hpp"
 #include "Color.hpp"
 #include "geometry.hpp"
 #include "Texture.hpp"
@@ -113,6 +114,22 @@ namespace KRE
 			CanvasPtr canvas_;
 		};
 
+		struct CameraScope
+		{
+			CameraScope(CameraPtr cam) 
+				: canvas_(Canvas::getInstance()), 
+				  saved_pvmat_(canvas_->mvp_) 
+			{
+				canvas_->mvp_ = cam->getProjectionMat() * cam->getViewMat();
+			}
+			~CameraScope()
+			{
+				canvas_->mvp_ = saved_pvmat_;
+			}
+			CanvasPtr canvas_;
+			glm::mat4 saved_pvmat_;
+		};
+
 		struct ModelManager
 		{
 			ModelManager();
@@ -141,6 +158,7 @@ namespace KRE
 		WindowPtr getWindow() const;
 		void setWindow(WindowPtr wnd);
 
+		const glm::mat4& getMvpMatrix() const { return mvp_; }
 	protected:
 		Canvas();
 	private:
@@ -153,6 +171,7 @@ namespace KRE
 		mutable bool model_changed_;
 		std::weak_ptr<Window> window_;
 		int size_change_key_;
+		glm::mat4 mvp_;
 	};
 
 	// Helper function to generate a color wheel between the given hue values.

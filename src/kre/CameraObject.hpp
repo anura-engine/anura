@@ -25,6 +25,7 @@
 
 #include <glm/gtc/type_ptr.hpp>
 
+#include "geometry.hpp"
 #include "Frustum.hpp"
 #include "SceneObject.hpp"
 
@@ -36,6 +37,7 @@ namespace KRE
 		enum CameraType { CAMERA_PERSPECTIVE, CAMERA_ORTHOGONAL };
 		explicit Camera(const std::string& name);
 		explicit Camera(const std::string& name, int left, int right, int top, int bottom);
+		explicit Camera(const std::string& name, const rect& r);
 		explicit Camera(const std::string& name, float fov, float aspect, float near_clip, float far_clip);
 		explicit Camera(const variant& node);
 

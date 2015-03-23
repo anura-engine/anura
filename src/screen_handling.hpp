@@ -52,6 +52,8 @@ namespace graphics
 		void setDimensions(int width, int height);
 		void setVirtualDimensions(int vwidth, int vheight);
 
+		KRE::CameraPtr getCurrentCamera() const { return cam_; }
+
 		struct Manager
 		{
 			Manager(KRE::WindowPtr wnd);

@@ -66,6 +66,5 @@ namespace KRE
 	private:
 		DISALLOW_COPY_AND_ASSIGN(CanvasOGL);
 		void handleDimensionsChanged() override;
-		glm::mat4 mvp_;
 	};
 }
