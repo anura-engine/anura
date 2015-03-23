@@ -49,6 +49,8 @@ endif
 
 USE_LUA?=$(shell pkg-config --exists lua5.2 && echo yes)
 
+TARBALL := /var/www/anura/anura-$(shell date +"%Y%m%d-%H%M").tar.bz2
+
 # Initial compiler options, used before CXXFLAGS and CPPFLAGS.
 BASE_CXXFLAGS += -std=c++0x -g -rdynamic -fno-inline-functions \
 	-fthreadsafe-statics -Wnon-virtual-dtor -Werror \
@@ -123,6 +125,12 @@ $(BUILD_DIR):
 clean:
 	rm -rf $(BUILD_DIR)
 	rm anura
+
+unittests: anura
+	./anura --tests
+	    
+tarball: unittests
+	@tar --transform='s,^,anura/,g' -cjf $(TARBALL) anura data/ images/
 
 $(foreach bdir,$(BUILD_DIR),$(eval $(call cc-command,$(bdir))))
 
