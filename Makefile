@@ -90,6 +90,7 @@ BUILD_DIR := $(addprefix build/,$(MODULES)) build
 
 SRC       := $(foreach sdir,$(SRC_DIR),$(wildcard $(sdir)/*.cpp))
 OBJ       := $(patsubst src/%.cpp,./build/%.o,$(SRC))
+DEPS      := $(patsubst src/%.cpp,./build/%.o.d,$(SRC))
 INCLUDES  := $(addprefix -I,$(SRC_DIR))
 
 vpath %.cpp $(SRC_DIR)
@@ -123,8 +124,7 @@ $(BUILD_DIR):
 	@mkdir -p $@
 
 clean:
-	rm -rf $(BUILD_DIR)
-	rm anura
+	rm -f $(foreach bdir,$(BUILD_DIR),$(bdir)/*.o) $(foreach bdir,$(BUILD_DIR),$(bdir)/*.o.d) anura
 
 unittests: anura
 	./anura --tests
