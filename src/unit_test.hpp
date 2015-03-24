@@ -28,6 +28,8 @@
 #include <string>
 #include <vector>
 
+#include "logger.hpp"
+
 namespace test 
 {
 	struct FailureException 
@@ -52,7 +54,7 @@ namespace test
 	std::string run_benchmark(const std::string& name, BenchmarkTest fn);
 }
 
-#define CHECK(cond, msg) if(!(cond)) { std::cerr << __FILE__ << ":" << __LINE__ << ": TEST CHECK FAILED: " << #cond << ": " << msg << "\n"; throw test::FailureException(); }
+#define CHECK(cond, msg) do { if(!(cond)) { std::ostringstream _s; _s << __SHORT_FORM_OF_FILE__ << ":" << __LINE__ << ": TEST CHECK FAILED: " << #cond << ": " << msg << "\n"; std::string _ss = _s.str(); SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION, "%s\n", _ss.c_str()); throw test::FailureException(); } } while(0)
 
 #define CHECK_CMP(a, b, cmp) CHECK((a) cmp (b), #a << ": " << (a) << "; " << #b << ": " << (b))
 

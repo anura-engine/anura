@@ -42,32 +42,44 @@
 	)
 #endif
 
+#define LOG_VERBOSE(_a)																\
+	do {																			\
+		std::ostringstream _s;														\
+		_s << __SHORT_FORM_OF_FILE__ << ":" << __LINE__ << " : " << _a;				\
+		std::string _ss = _s.str();													\
+		SDL_LogVerbose(SDL_LOG_CATEGORY_APPLICATION, "%s\n", _ss.c_str());			\
+	} while(0)
+
 #define LOG_INFO(_a)																\
 	do {																			\
 		std::ostringstream _s;														\
 		_s << __SHORT_FORM_OF_FILE__ << ":" << __LINE__ << " : " << _a;				\
-		SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "%s\n", _s.str().c_str());		\
+		std::string _ss = _s.str();													\
+		SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "%s\n", _ss.c_str());				\
 	} while(0)
 
 #define LOG_DEBUG(_a)																\
 	do {																			\
 		std::ostringstream _s;														\
 		_s << __SHORT_FORM_OF_FILE__ << ":" << __LINE__ << " : " << _a;				\
-		SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "%s\n", _s.str().c_str());		\
+		std::string _ss = _s.str();													\
+		SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "%s\n", _ss.c_str());			\
 	} while(0)
 
 #define LOG_WARN(_a)																\
 	do {																			\
 		std::ostringstream _s;														\
 		_s << __SHORT_FORM_OF_FILE__ << ":" << __LINE__ << " : " << _a;				\
-		SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION, "%s\n", _s.str().c_str());		\
+		std::string _ss = _s.str();													\
+		SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION, "%s\n", _ss.c_str());				\
 	} while(0)
 
 #define LOG_ERROR(_a)																\
 	do {																			\
 		std::ostringstream _s;														\
 		_s << __SHORT_FORM_OF_FILE__ << ":" << __LINE__ << " : " << _a;				\
-		SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s\n", _s.str().c_str());		\
+		std::string _ss = _s.str();													\
+		SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s\n", _ss.c_str());			\
 	} while(0)
 
 

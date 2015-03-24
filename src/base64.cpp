@@ -177,7 +177,7 @@ UNIT_TEST(base64_encode) {
 	in.push_back('a');
 	std::vector<char> resv = base64::b64encode(in);
 	std::string s(resv.begin(), resv.end());
-	CHECK_EQ(s,ress)
+	CHECK_EQ(s,ress);
 }
 
 UNIT_TEST(base64_encode_bin) {
@@ -194,7 +194,7 @@ UNIT_TEST(base64_encode_bin) {
 		"8PHy8/T19vf4+fr7/P3+/w==";
 	std::vector<char> resv = base64::b64encode(in);
 	std::string s(resv.begin(), resv.end());
-	CHECK_EQ(s,ress)
+	CHECK_EQ(s,ress);
 }
 
 UNIT_TEST(base64_decode) {

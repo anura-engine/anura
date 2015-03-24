@@ -80,7 +80,9 @@ namespace KRE
 			: Window(width, height, hints),
 			  renderer_hint_(),
 			  renderer_(nullptr),
-			  context_(nullptr) 
+			  context_(nullptr),
+			  nonfs_width_(width),
+			  nonfs_height_(height)
 		{
 			if(hints.has_key("renderer")) {
 				if(hints["renderer"].is_string()) {
@@ -318,6 +320,9 @@ namespace KRE
 		}
 		void changeFullscreenMode() override {
 			if(fullscreenMode() == FullScreenMode::FULLSCREEN_WINDOWED) {
+				nonfs_width_ = width();
+				nonfs_height_ = height();
+
 				if(SDL_SetWindowFullscreen(window_.get(), SDL_WINDOW_FULLSCREEN_DESKTOP) != 0) {
 					LOG_WARN("Unable to set windowed fullscreen mode at " << width() << " x " << height());
 					return;
@@ -330,7 +335,7 @@ namespace KRE
 					LOG_WARN("Unable to set windowed mode at " << width() << " x " << height());
 					return;
 				}
-				SDL_SetWindowSize(window_.get(), width(), height());
+				SDL_SetWindowSize(window_.get(), nonfs_width_, nonfs_height_);
 				SDL_SetWindowPosition(window_.get(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
 			}
 			int w, h;
@@ -358,11 +363,16 @@ namespace KRE
 			getDisplayDevice()->setViewPort(getViewPort());
 		}
 
-
 		SDL_WindowPtr window_;
 		SDL_GLContext context_;
 		SDL_Renderer* renderer_;
 		std::vector<std::string> renderer_hint_;
+
+		// Width of the window before changing to full-screen mode
+		int nonfs_width_;
+		// Height of the window before changing to full-screen mode
+		int nonfs_height_;
+
 		SDLWindow(const SDLWindow&);
 	};
 
