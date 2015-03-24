@@ -96,7 +96,8 @@ void report_assert_msg(const std::string& m)
 	
 	std::stringstream ss;
 	ss << "Assertion failed\n\n" << m;
-	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Assertion Failed", ss.str().c_str(), nullptr);
+	std::string assert_str = ss.str();
+	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Assertion Failed", assert_str.c_str(), nullptr);
 
 
 #if defined(WIN32)
@@ -161,7 +162,8 @@ protected:
 
 void output_backtrace()
 {
-	SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION, "%s\n---\n", get_call_stack());
+	std::string call_stack = get_call_stack();
+	SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION, "%s\n---\n", call_stack.c_str());
 #ifdef _MSC_VER
 	StderrStackWalker sw; 
 	sw.ShowCallstack();

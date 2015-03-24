@@ -126,7 +126,7 @@
       <WholeProgramOptimization>false</WholeProgramOptimization>
       <DisableSpecificWarnings>4250</DisableSpecificWarnings>
       <ExceptionHandling>SyncCThrow</ExceptionHandling>
-      <AdditionalIncludeDirectories>C:\Projects\anura\src;C:\Projects\anura\src\kre;..\..\..\libvpx;..\..\..\lua\src;..\..\..\bullet\src;..\..\..\zlib;..\..\..\glew\include;..\..\..\boost;..\..\..\SDL\include;..\..\..\SDL_mixer;..\..\..\SDL_image;..\..\..\SDL_ttf;..\..\external\include;..\..\include;c:\projects\anura\include;c:\projects\lua\src;c:\projects\bullet\src;c:\projects\zlib;c:\projects\glew\include;c:\projects\boost;c:\projects\SDL\include;c:\projects\SDL_mixer;c:\projects\SDL_image;c:\projects\SDL_ttf;c:\projects\libvpx;C:\Projects\anura\external\include;C:\Projects\SDL_ttf\external\freetype-2.4.12\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\..\libvpx;..\..\..\lua\src;..\..\..\bullet\src;..\..\..\zlib;..\..\..\glew\include;..\..\..\boost;..\..\..\SDL\include;..\..\..\SDL_mixer;..\..\..\SDL_image;..\..\..\SDL_ttf;..\..\external\include;..\..\src;..\..\src\kre;..\..\include;c:\projects\anura\include;c:\projects\lua\src;c:\projects\bullet\src;c:\projects\zlib;c:\projects\glew\include;c:\projects\boost;c:\projects\SDL\include;c:\projects\SDL_mixer;c:\projects\SDL_image;c:\projects\SDL_ttf;c:\projects\libvpx;C:\Projects\anura\external\include;C:\Projects\SDL_ttf\external\freetype-2.4.12\include;C:\Projects\anura\src;C:\Projects\anura\src\kre;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <UndefinePreprocessorDefinitions>
       </UndefinePreprocessorDefinitions>
     </ClCompile>
