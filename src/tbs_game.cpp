@@ -493,8 +493,8 @@ namespace tbs
 
 	void game::process()
 	{
-		if(DbClient_) {
-			DbClient_->process(100);
+		if(db_client_) {
+			db_client_->process(100);
 		}
 
 		if(started_) {
@@ -546,15 +546,15 @@ namespace tbs
 			}
 
 #ifdef USE_DB_CLIENT
-		DEFINE_FIELD(db_client, "builtin DbClient")
-		if(db_client_.get() == NULL) {
-			db_client_ = DbClient::create();
-		}
+		DEFINE_FIELD(db_client, "builtin db_client")
+			if(obj.db_client_.get() == NULL) {
+				obj.db_client_ = DbClient::create();
+			}
 
-		return variant(db_client_.get());
+			return variant(obj.db_client_.get());
 #else
 		DEFINE_FIELD(db_client, "null")
-		return variant();
+			return variant();
 #endif
 		DEFINE_FIELD(state_id, "int")
 			return variant(obj.state_id_);

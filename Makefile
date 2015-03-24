@@ -80,7 +80,7 @@ endif
 # couchbase check
 USE_DB_CLIENT?=no
 ifeq ($(USE_DB_CLIENT),yes)
-    BASE_CXXFLAGS += -DUSE_DB_CLIENT
+    BASE_CXXFLAGS += -DUSE_DBCLIENT
     LIBS += -lcouchbase
 endif
 

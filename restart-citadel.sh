@@ -27,7 +27,7 @@ if [ $? != "0" ] ; then
 fi
 
 
-nohup $HOME/steam-runtime-sdk/runtime/run.sh ./$SERVER_NAME --module=Citadel --utility=tbs_server --port $LISTEN_PORT  > nohup.citadel.out &
+nohup ./$SERVER_NAME --module=Citadel --utility=tbs_server --port $LISTEN_PORT  > nohup.citadel.out &
 if [ $? != "0" ] ; then
   die "Failed to run server on port $LISTEN_PORT"
 fi
