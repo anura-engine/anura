@@ -177,8 +177,8 @@ std::string copy_from_clipboard(const bool)
 			#else
 				[pasteboard declareTypes:[NSArray arrayWithObjects:NSStringPboardType, nil] owner:nil];
 			#endif
-          BOOL OK = [pasteboard setString:clipString forType:NSStringPboardType];
-            std::cerr << OK << "okay?\n";
+			BOOL ok = [pasteboard setString:clipString forType:NSStringPboardType];
+			LOG_DEBUG(ok << "okay?");
             NSLog(@"%@",clipString);
             
             NSLog(@"%@", [[NSPasteboard generalPasteboard] stringForType:NSStringPboardType]);

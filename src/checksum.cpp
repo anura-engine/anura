@@ -86,7 +86,7 @@ namespace checksum
 
 	manager::~manager() 
 	{
-		std::cerr << "EXITING WITH " << (verified ? "VERIFIED" : "UNVERIFIED") << " SESSION\n";
+		LOG_INFO("EXITING WITH " << (verified ? "VERIFIED" : "UNVERIFIED") << " SESSION");
 	}
 
 	const std::string& build_description()
@@ -127,7 +127,7 @@ namespace checksum
 		const std::map<std::string,std::string>::const_iterator itor = hashes.find(fname);
 		if(itor == hashes.end()) {
 			if(!contents.empty()) {
-				std::cerr << "UNVERIFIED NEW FILE: " << fname << "\n";
+				LOG_INFO("UNVERIFIED NEW FILE: " << fname);
 				verified = false;
 			}
 			return;
@@ -135,7 +135,7 @@ namespace checksum
 
 		verified = md5::sum(contents) == itor->second;
 		if(!verified) {
-			std::cerr << "UNVERIFIED FILE: " << fname << " (((" << contents << ")))\n";
+			LOG_INFO("UNVERIFIED FILE: " << fname << " (((" << contents << ")))");
 		}
 	}
 

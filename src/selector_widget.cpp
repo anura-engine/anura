@@ -264,7 +264,7 @@ namespace gui
 			variant value = change_handler_->execute(*callable);
 			getEnvironment()->executeCommand(value);
 		} else {
-			std::cerr << "SelectorWidget::changeDelegate() called without environment!" << std::endl;
+			LOG_ERROR("SelectorWidget::changeDelegate() called without environment!");
 		}
 	}
 
@@ -278,7 +278,7 @@ namespace gui
 			variant value = change_handler_->execute(*callable);
 			getEnvironment()->executeCommand(value);
 		} else {
-			std::cerr << "SelectorWidget::selectDelegate() called without environment!" << std::endl;
+			LOG_ERROR("SelectorWidget::selectDelegate() called without environment!");
 		}
 	}
 

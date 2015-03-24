@@ -120,7 +120,7 @@ namespace
 							if(s.size() > 4 && std::string(s.end()-4,s.end()) == ".cfg") {
 								threading::lock l(mutex_);
 								files_[s] = server;
-								std::cerr << "VIM LOADED FILE: " << s << " -> " << server << "\n";
+								LOG_INFO("VIM LOADED FILE: " << s << " -> " << server);
 							}
 						}
 
@@ -188,7 +188,7 @@ namespace
 
 					for(const str_pair& item : results) {
 						if(file_contents_[item.first] != item.second) {
-							std::cerr << "CONTENTS OF " << item.first << " UPDATED..\n";
+							LOG_INFO("CONTENTS OF " << item.first << " UPDATED..");
 							file_contents_[item.first] = item.second;
 							active_file_ = item.first;
 						}

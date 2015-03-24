@@ -123,6 +123,7 @@ namespace KRE
 
 		DisplayDevicePtr getDisplayDevice() const { return display_; }
 	protected:
+		void updateDimensions(int w, int h);
 		void setDisplayDevice(DisplayDevicePtr display) { display_ = display; }
 		mutable Color clear_color_;
 	private:

@@ -210,7 +210,7 @@ namespace gui
 			variant value = ffl_on_quit_->execute(*getEnvironment());
 			getEnvironment()->executeCommand(value);
 		} else {
-			std::cerr << "dialog::quitDelegate() called without environment!" << std::endl;
+			LOG_ERROR("Dialog::quitDelegate() called without environment!");
 		}
 	}
 
@@ -229,7 +229,7 @@ namespace gui
 			variant value = ffl_on_close_->execute(*callable);
 			getEnvironment()->executeCommand(value);
 		} else {
-			std::cerr << "dialog::closeDelegate() called without environment!" << std::endl;
+			LOG_ERROR("Dialog::closeDelegate() called without environment!");
 		}
 	}
 

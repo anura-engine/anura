@@ -195,7 +195,7 @@ namespace KRE
 						family_.push_back(t);
 						boost::replace_all(family_.back(), "'", "");
 					}
-					std::cerr << "font-family: " << family_.back() << "\n";
+					LOG_DEBUG("font-family: " << family_.back());
 				}
 
 				auto font_size_adjust = attributes->get_child_optional("font-size-adjust");
@@ -1271,7 +1271,7 @@ namespace KRE
 					} else if(cp == "sRGBA") {
 						color_profile_ = ColorProfileAttrib::sRGB;
 					} else {
-						std::cerr << "XXX: unhandled 'color-profile' attribute value: " << cp << std::endl;
+						LOG_ERROR("unhandled 'color-profile' attribute value: " << cp);
 					}
 				}
 			}

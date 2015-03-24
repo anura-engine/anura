@@ -178,7 +178,7 @@ variant Button::getColorScheme()
 			variant value = click_handler_->execute(*getEnvironment());
 			getEnvironment()->executeCommand(value);
 		} else {
-			std::cerr << "Button::click() called without environment!" << std::endl;
+			LOG_ERROR("Button::click() called without environment!");
 		}
 	}
 
@@ -266,11 +266,6 @@ variant Button::getColorScheme()
 		} else if(event.type == SDL_MOUSEBUTTONDOWN) {
 			const SDL_MouseButtonEvent& e = event.button;
 			if(inWidget(e.x,e.y)) {
-			if(clipArea()) {
-				std::cerr << *clipArea() << "\n";
-			} else {
-				std::cerr << "(null)\n";
-			}
 				current_button_image_set_ = depressed_button_image_set_;
 				down_ = true;
 				claimed = claimMouseEvents();

@@ -292,12 +292,13 @@ namespace KRE
 			}
 
 			void execute(cairo_t* context) {
-				std::cerr << "Executing path:";
+				std::ostringstream ss;
+				ss << "Executing path:";
 				for(auto ins : path_instructions_) {
-					std::cerr << " " << ins->asString();
+					ss << " " << ins->asString();
 					ins->execute(context);
 				}
-				std::cerr << std::endl;
+				LOG_DEBUG(ss.str());
 			}
 		private:
 			CairoContext* context_;

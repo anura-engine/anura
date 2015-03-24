@@ -381,7 +381,6 @@ namespace gui
 
 	void ColorPicker::copyToPaletteFn()
 	{
-		std::cerr << "copyToPaletteFn()" << std::endl;
 		if(selected_palette_color_ < palette_.size()) {
 			palette_[selected_palette_color_] = main_color_selected_ ? primary_ : secondary_;
 		}
@@ -561,7 +560,7 @@ namespace gui
 			variant value = change_handler_->execute(*callable);
 			getEnvironment()->executeCommand(value);
 		} else {
-			std::cerr << "ColorPicker::change() called without environment!" << std::endl;
+			LOG_ERROR("ColorPicker::change() called without environment!");
 		}
 	}
 

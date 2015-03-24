@@ -86,7 +86,7 @@ namespace gui
 		if(v.has_key("on_click")) {
 			ASSERT_LOG(getEnvironment() != 0, "You must specify a callable environment");
 			ffl_click_handler_ = getEnvironment()->createFormula(v["on_click"]);
-			on_click_ = std::bind(&Label::click_delegate, this);
+			on_click_ = std::bind(&Label::clickDelegate, this);
 		}
 		if(v.has_key("highlight_color")) {
 			highlight_color_.reset(new KRE::Color(v["highlight_color"]));
@@ -96,13 +96,13 @@ namespace gui
 		recalculateTexture();
 	}
 
-	void Label::click_delegate()
+	void Label::clickDelegate()
 	{
 		if(getEnvironment()) {
 			variant value = ffl_click_handler_->execute(*getEnvironment());
 			getEnvironment()->executeCommand(value);
 		} else {
-			std::cerr << "Label::click() called without environment!" << std::endl;
+			LOG_ERROR("Label::clickDelegate() called without environment!");
 		}
 	}
 

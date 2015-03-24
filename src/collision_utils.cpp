@@ -195,25 +195,26 @@ void debug_check_entity_solidity(const Level& lvl, const Entity& e)
 			}
 		}
 
-		std::cerr << "COLLIDING OBJECT MAP:\n";
+		LOG_DEBUG("COLLIDING OBJECT MAP:");
+		std::ostringstream ss;
 		for(int y = min_y - 5; y < max_y + 5; ++y) {
 			for(int x = min_x - 5; x < max_x + 5; ++x) {
 				const bool lvl_solid = lvl.solid(x, y, nullptr);
 				const bool char_solid = solid_points.count(point(x, y)) != 0;
 				if(lvl_solid && char_solid) {
-					std::cerr << "X";
+					ss << "X";
 				} else if(lvl_solid) {
-					std::cerr << "L";
+					ss << "L";
 				} else if(char_solid) {
-					std::cerr << "C";
+					ss << "C";
 				} else {
-					std::cerr << "-";
+					ss << "-";
 				}
 			}
-
-			std::cerr << "\n";
+			ss << "\n";
 		}
-		std::cerr << "\n";
+		ss << "\n";
+		LOG_DEBUG(ss.str());
 
 		ASSERT_LOG(false, "ENTITY " << e.getDebugDescription() << " COLLIDES WITH LEVEL");
 	}

@@ -317,7 +317,28 @@ namespace KRE
 			}
 		}
 		void changeFullscreenMode() override {
-			// XXX
+			if(fullscreenMode() == FullScreenMode::FULLSCREEN_WINDOWED) {
+				if(SDL_SetWindowFullscreen(window_.get(), SDL_WINDOW_FULLSCREEN_DESKTOP) != 0) {
+					LOG_WARN("Unable to set windowed fullscreen mode at " << width() << " x " << height());
+					return;
+				}
+				SDL_SetWindowSize(window_.get(), SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED);
+				SDL_SetWindowPosition(window_.get(), 0, 0);
+
+			} else {
+				if(SDL_SetWindowFullscreen(window_.get(), 0) != 0) {
+					LOG_WARN("Unable to set windowed mode at " << width() << " x " << height());
+					return;
+				}
+				SDL_SetWindowSize(window_.get(), width(), height());
+				SDL_SetWindowPosition(window_.get(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
+			}
+			int w, h;
+			SDL_GetWindowSize(window_.get(), &w, &h);
+			// update viewport
+			setViewPort(0, 0, w, h);
+			// update width_ and height_ and notify observers
+			updateDimensions(w, h);
 		}
 		bool handleLogicalWindowSizeChange() override {
 			// XXX do nothing for now
@@ -424,6 +445,15 @@ namespace KRE
 			}
 		}
 		return result;
+	}
+
+	void Window::updateDimensions(int w, int h)
+	{
+		width_ = w;
+		height_ = h;
+		for(auto& observer : dimensions_changed_observers_) {
+			observer.second(width_, height_);
+		}
 	}
 
 	bool Window::setLogicalWindowSize(int width, int height)

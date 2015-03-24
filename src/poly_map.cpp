@@ -157,11 +157,8 @@ namespace geometry
 					poly->addPoint(pp[m].coord.x, pp[m].coord.y);
 				}
 				poly->normalise();
-				//std::cerr << "XXX: " << pts[n].x << "," << pts[n].y << " -- ";
 				poly->calculateCentroid(pts[n]);
 				poly->setCentroid(pts[n]);
-				//std::cerr << pts[n].x << "," << pts[n].y << std::endl;
-				//std::cerr << *poly;
 				polygons_.emplace_back(poly);
 			}
 		}
@@ -260,7 +257,6 @@ namespace geometry
 		}
 
 		for(auto& p : v.getPolys()) {
-			//std::cerr << *p;
 			auto& points = p->getPoints();
 			for(int n = 1; n != points.size(); ++n) {
 				edges_.emplace_back(static_cast<float>(points[n-1].x), static_cast<float>(points[n-1].y));

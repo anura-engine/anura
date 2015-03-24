@@ -240,7 +240,7 @@ namespace gui
 		std::string token(row.begin() + begin_col, row.begin() + end_col);
 	
 		boost::regex numeric_regex("-?\\d+(\\.\\d+)?", boost::regex::perl);
-		std::cerr << "token: (" << token << ")\n";
+		LOG_DEBUG("token: (" << token << ")");
 		if(boost::regex_match(token.c_str(), numeric_regex)) {
 
 			const decimal current_value(decimal::from_string(token));
@@ -394,7 +394,7 @@ namespace gui
 				token = json::get_token(begin, end);
 			}
 		} catch(json::TokenizerError& e) {
-			std::cerr << "Tokenizer error: " << e.msg << "\n";
+			LOG_ERROR("Tokenizer error: " << e.msg);
 		}
 	}
 
@@ -480,7 +480,7 @@ namespace gui
 		try {
 			result.obj = get_map_editing(row, col, current_obj_);
 		} catch(json::ParseError&) {
-			std::cerr << "json parse error: " << std::string(begin_token->begin, end_token->end) << "\n";
+			LOG_ERROR("json parse error: " << std::string(begin_token->begin, end_token->end));
 			return result;
 		}
 

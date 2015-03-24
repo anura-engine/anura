@@ -61,17 +61,17 @@ std::string preprocess(const std::string& input)
 					//test for an argument to @include - e.g. "filename.cfg".  First the open quote:
 					std::string::const_iterator quote = std::find(i, input.end(), '"');
 					if(quote == input.end()) {
-						std::cerr << "We didn't find a opening quote. Syntax error." << std::endl;
+						LOG_ERROR("We didn't find a opening quote. Syntax error.");
 					}
 					if(std::count_if(i, quote, util::c_isspace) != quote - i) {
 					// # of whitespaces != number of intervening chars => something else was present.  Syntax Error. 
-						std::cerr << "# of whitespaces != number of intervening chars." << std::endl;
+						LOG_ERROR("# of whitespaces != number of intervening chars.");
 					}
 					i = quote + 1; //we've found a quote, advance past it
 					//now the closing quote, and use it to find what's inbetween:
 					std::string::const_iterator endQuote = std::find(i, input.end(), '"');
 					if(endQuote == input.end()) {
-						std::cerr << "We didn't find a closing quote. Syntax error." << std::endl;
+						LOG_ERROR("We didn't find a closing quote. Syntax error.");
 					}
 					
 					filename_string = std::string(i, endQuote);

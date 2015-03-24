@@ -364,7 +364,7 @@ namespace debug_console
 
 			assert_recover_scope recover_from_assert;
 			try {
-				std::cerr << "EVALUATING: " << ffl << "\n";
+				LOG_INFO("EVALUATING: " << ffl);
 				variant ffl_variant(ffl);
 				std::string filename = "(debug console)";
 				variant::debug_info info;
@@ -390,7 +390,7 @@ namespace debug_console
 
 				std::string output = v.to_debug_string();
 				debug_console::addMessage(output);
-				std::cerr << "OUTPUT: " << output << std::endl;
+				LOG_INFO("OUTPUT: " << output);
 			} catch(validation_failure_exception& e) {
 				debug_console::addMessage("error parsing formula: " + e.msg);
 			} catch(type_error& e) {

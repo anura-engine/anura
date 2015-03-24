@@ -710,7 +710,7 @@ namespace json
 		std::string doc = "{\"@macro f\": {a: \"@eval 4 + x\", b: \"@eval y\"},"
 						  "value: {\"@call\": \"f\", x: 2, y: {a: 4, z: 5}}}";
 		variant v = parse(doc);
-		std::cerr << v.write_json();
+		LOG_DEBUG(v.write_json());
 		CHECK_EQ(v.getKeys().num_elements(), 1);
 
 		v = v["value"];

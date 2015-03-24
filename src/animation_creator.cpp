@@ -374,7 +374,6 @@ namespace gui
 	{
 		changed_ = true;
 
-		//std::cerr << "setIntegerAttr: " << attr << ": " << value << std::endl;
 		slider_offset_[attr] = value;
 		if(current_.is_null() == false) {
 			current_.add_attr(variant(attr), variant(value));

@@ -88,7 +88,7 @@ void Background::loadModifiedBackgrounds()
 				const std::string path = "data/backgrounds/" + j->second->id_ + ".cfg";
 				*j->second = Background(json::parse_from_file(path), j->first.second);
 			} catch(...) {
-				std::cerr << "ERROR REFRESHING BACKGROUND\n";
+				LOG_ERROR("ERROR REFRESHING BACKGROUND");
 				error_paths.insert(j->second->file_);
 			}
 			j->second->id_ = backup.id_;

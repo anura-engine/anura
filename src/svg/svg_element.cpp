@@ -192,7 +192,7 @@ namespace KRE
 					xlink_href_ = xlink_href->data();
 					if(!xlink_href_.empty()) {
 						if(xlink_href_[0] != '#') {
-							std::cerr << "Only supporting inter-document cross-references: " << xlink_href_ << std::endl;
+							LOG_ERROR("Only supporting inter-document cross-references: " << xlink_href_);
 						} else {
 							xlink_href_ = xlink_href_.substr(1);
 						}
@@ -215,7 +215,7 @@ namespace KRE
 			if(s) {
 				xlink_ref_ = s;
 			} else {
-				std::cerr << "WARNING: Couldn't find element '" << xlink_href_ << "' in document." << std::endl;
+				LOG_WARN("Couldn't find element '" << xlink_href_ << "' in document.");
 			}
 		}
 

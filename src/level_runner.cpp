@@ -1289,7 +1289,7 @@ bool LevelRunner::play_cycle()
 					}
 #endif
 				} else if(key == SDLK_s && (mod&KMOD_CTRL) && !editor_) {
-					std::cerr << "SAVING...\n";
+					LOG_INFO("SAVING...");
 					std::string data;
 					
 					variant lvl_node = lvl_->write();
@@ -1324,10 +1324,13 @@ bool LevelRunner::play_cycle()
 					preferences::set_use_pretty_scaling(!preferences::use_pretty_scaling());
 					KRE::Texture::clearTextures();
 				} else if(key == SDLK_f && mod & KMOD_CTRL && !preferences::no_fullscreen_ever()) {
+					LOG_DEBUG("ctrl-f pushed");
 					// XXX this changes if editor is active.
 					if(wnd->fullscreenMode() == KRE::FullScreenMode::WINDOWED) {
+						LOG_DEBUG("Enter full-screen mode");
 						wnd->setFullscreenMode(KRE::FullScreenMode::FULLSCREEN_WINDOWED);
 					} else {
+						LOG_DEBUG("Enter windowed mode");
 						wnd->setFullscreenMode(KRE::FullScreenMode::WINDOWED);
 						wnd->setWindowSize(graphics::GameScreen::get().getWidth(), graphics::GameScreen::get().getHeight());
 					}

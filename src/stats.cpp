@@ -177,7 +177,7 @@ namespace stats
 
 	void download_progress(int sent, int total, bool uploaded)
 	{
-		std::cerr << "SENT " << sent << "/" << total << "\n";
+		LOG_INFO("SENT " << sent << "/" << total);
 	}
 
 	bool download(const std::string& lvl) {

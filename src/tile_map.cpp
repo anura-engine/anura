@@ -1007,7 +1007,6 @@ void TileMap::buildTiles(std::vector<LevelTile>* tiles, const rect* r) const
 			tiles->emplace_back(t);
 
 			for(const TilePattern::added_tile& a : p->added_tiles) {
-				//std::cerr << "added_tile\n";
 				LevelTile t;
 				t.x = xpos;
 				t.y = ypos;

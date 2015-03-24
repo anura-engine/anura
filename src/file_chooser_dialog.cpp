@@ -442,7 +442,6 @@ namespace gui
 	std::string FileChooserDialog::getPath()
 	{
 		if(use_relative_paths_) {
-			//std::cerr << "get_path: " << std::endl << "\t" << relative_path_ << std::endl << "\t" << current_path_ << std::endl;
 			return sys::compute_relative_path(relative_path_, current_path_);
 		} 
 		return current_path_;

@@ -300,7 +300,6 @@ namespace KRE
 				  sweep_flag_(sweep) 
 			{
 				x_axis_rotation_ = x_axis_rot / 180.0 * M_PI;
-				//std::cerr << "Elliptical arc: end(" << x << "," << y << "), axis(" << rx << "," << ry << "), x_axis_rot(" << x_axis_rot << "), large_arc(" << large_arc << "), sweep(" << sweep << ")" << std::endl;
 			}
 			virtual ~elliptical_arc_command() {}
 		private:
@@ -373,7 +372,6 @@ namespace KRE
 				const double t2 = theta_delta > 0 && !sweep_flag_ ? theta_delta-2.0*M_PI : theta_delta < 0 && sweep_flag_ ? theta_delta+2.0*M_PI : theta_delta;
 
 				const int n_segs = int(std::ceil(std::abs(t2/(M_PI*0.5+0.001))));
-				//std::cerr << "theta1=" << t1 << ", theta_delta=" << t2 << ", n_segs=" << n_segs << std::endl;
 				for(int i = 0; i < n_segs; i++) {
 					const double th0 = t1 + i * t2 / n_segs;
 					const double th1 = t1 + (i + 1) * t2 / n_segs;

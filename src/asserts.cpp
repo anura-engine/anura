@@ -67,7 +67,7 @@ assert_edit_and_continue_fn_scope::~assert_edit_and_continue_fn_scope()
 void report_assert_msg(const std::string& m)
 {
 	if(Level::getCurrentPtr()) {
-		std::cerr << "ATTEMPTING TO SEND CRASH REPORT...\n";
+		LOG_INFO("ATTEMPTING TO SEND CRASH REPORT...");
 		std::map<variant,variant> obj;
 		obj[variant("type")] = variant("crash");
 		obj[variant("msg")] = variant(m);
@@ -90,13 +90,8 @@ void report_assert_msg(const std::string& m)
 		stats::flush_and_quit();
 	}
 
-#if defined(__native_client__)
-	std::cerr << m;
-#endif
-
 #if defined(__ANDROID__)
 	__android_log_print(ANDROID_LOG_INFO, "Frogatto", m.c_str());
-
 #endif
 	
 	std::stringstream ss;
@@ -108,8 +103,6 @@ void report_assert_msg(const std::string& m)
 	if(IsDebuggerPresent()) {
 		DebugBreak();
 	}
-    //i*((int *) NULL) = 0;
-    //exit(3);
 #elif defined(__APPLE__)
     *((int *) NULL) = 0;	/* To continue from here in GDB: "return" then "continue". */
     raise(SIGABRT);			/* In case above statement gets nixed by the optimizer. */
@@ -121,14 +114,14 @@ void report_assert_msg(const std::string& m)
 validation_failure_exception::validation_failure_exception(const std::string& m)
   : msg(m)
 {
-	std::cerr << "ASSERT FAIL: " << m << "\n";
+	LOG_ERROR("ASSERT FAIL: " << m);
 	output_backtrace();
 }
 
 fatal_assert_failure_exception::fatal_assert_failure_exception(const std::string& m)
   : msg(m)
 {
-	std::cerr << "ASSERT FAIL: " << m << "\n";
+	LOG_ERROR("ASSERT FAIL: " << m);
 	output_backtrace();
 }
 
@@ -160,7 +153,7 @@ public:
 protected:
 	virtual void OnOutput(LPCSTR szText)
 	{
-		std::cerr << std::string(szText);
+		SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION, "%s\n", szText);
 		StackWalker::OnOutput(szText);
 	}
 };
@@ -168,9 +161,7 @@ protected:
 
 void output_backtrace()
 {
-	std::cerr << get_call_stack() << "\n";
-
-	std::cerr << "---\n";
+	SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION, "%s\n---\n", get_call_stack());
 #ifdef _MSC_VER
 	StderrStackWalker sw; 
 	sw.ShowCallstack();
@@ -180,9 +171,9 @@ void output_backtrace()
 //	void* trace_buffer[nframes];
 //	const int nsymbols = backtrace(trace_buffer, nframes);
 //	backtrace_symbols_fd(trace_buffer, nsymbols, 2);
-	print_stacktrace(stderr, 256);
+	print_stacktrace(256);
 #endif
-	std::cerr << "---\n";
+	SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION, "%s\n", "---");
 }
 
 bool throw_fatal_error_on_assert()

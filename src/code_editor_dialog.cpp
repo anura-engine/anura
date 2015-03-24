@@ -92,7 +92,6 @@ void CodeEditorDialog::init()
 	using std::placeholders::_1;
 	using std::placeholders::_2;
 
-	//std::cerr << "CED: " << x() << "," << y() << "; " << width() << "," << height() << std::endl;
 	DragWidget* dragger = new DragWidget(x(), y(), width(), height(),
 		DragWidget::Direction::HORIZONTAL, [](int,int){}, 
 		std::bind(&CodeEditorDialog::on_drag_end, this, _1, _2), 

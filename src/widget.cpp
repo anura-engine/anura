@@ -206,7 +206,7 @@ namespace gui
 			variant value = ffl_on_process_->execute(*getEnvironment());
 			getEnvironment()->executeCommand(value);
 		} else {
-			std::cerr << "Widget::processDelegate() called without environment!" << std::endl;
+			LOG_ERROR("Widget::processDelegate() called without environment!");
 		}
 	}
 

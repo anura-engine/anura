@@ -771,7 +771,7 @@ std::map<std::string, std::string>& class_path_map()
 					result = build_class(type);
 				} catch(...) {
 					result = backup_classes_[type];
-					std::cerr << "ERROR LOADING NEW CLASS\n";
+					LOG_ERROR("ERROR LOADING NEW CLASS");
 				}
 			} else {
 				if(preferences::edit_and_continue()) {
@@ -1533,8 +1533,8 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 
 	void invalidate_class_definition(const std::string& name)
 	{
-		std::cerr << "INVALIDATE CLASS: " << name << "\n";
-		for(std::map<std::string, variant>::iterator i = class_node_map.begin(); i != class_node_map.end(); ) {
+		LOG_DEBUG("INVALIDATE CLASS: " << name);
+		for(auto i = class_node_map.begin(); i != class_node_map.end(); ) {
 			const std::string& class_name = i->first;
 			std::string::const_iterator dot = std::find(class_name.begin(), class_name.end(), '.');
 			std::string base_class(class_name.begin(), dot);
@@ -1545,7 +1545,7 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 			}
 		}
 
-		for(class_definition_map::iterator i = class_definitions.begin(); i != class_definitions.end(); )
+		for(auto i = class_definitions.begin(); i != class_definitions.end(); )
 		{
 			const std::string& class_name = i->first;
 			std::string::const_iterator dot = std::find(class_name.begin(), class_name.end(), '.');
@@ -1557,7 +1557,7 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 			}
 		}
 
-		for(classes_map::iterator i = classes_.begin(); i != classes_.end(); )
+		for(auto i = classes_.begin(); i != classes_.end(); )
 		{
 			const std::string& class_name = i->first;
 			std::string::const_iterator dot = std::find(class_name.begin(), class_name.end(), '.');

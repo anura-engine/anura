@@ -93,7 +93,7 @@ namespace lua
 		if (luaL_loadbuffer(getContextPtr(), str.c_str(), str.size(), name.c_str()) || lua_pcall(getContextPtr(), 0, 0, 0))
 		{
 			const char* a = lua_tostring(getContextPtr(), -1);
-			std::cerr << a << "\n";
+			LOG_DEBUG(a);
 			lua_pop(getContextPtr(), 1);
 			return true;
 		}
@@ -638,7 +638,7 @@ namespace lua
 		chunks_it_ = chunks_.begin();
 		if(lua_load(L, chunk_reader, reinterpret_cast<void*>(const_cast<CompiledChunk*>(this)), nullptr, nullptr) || lua_pcall(L, 0, 0, 0)) {
 			const char* a = lua_tostring(L, -1);
-			std::cerr << a << "\n";
+			LOG_DEBUG(a);
 			lua_pop(L, 1);
 			return true;
 		}
@@ -681,7 +681,7 @@ namespace lua
 		int nargs = 0;
 		if(lua_pcall(L_, nargs, LUA_MULTRET, 0) != LUA_OK) {				// (-(nargs + 1), +(nresults|1),-)
 			const char* a = lua_tostring(L_, -1);
-			std::cerr << a << "\n";
+			LOG_DEBUG(a);
 			lua_pop(L_, 1);
 			return variant();
 		}

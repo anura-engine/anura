@@ -2441,7 +2441,7 @@ void variant::write_json(std::ostream& s, write_flags flags) const
 		return;
 	}
 	default:
-		std::cerr << "Illegal type to serialize: " << to_debug_string();
+		LOG_ERROR("Illegal type to serialize: " << to_debug_string());
 		s << "q(ILLEGAL TYPE TO SERIALIZE: " << to_debug_string() << ")";
 		return;
 	}

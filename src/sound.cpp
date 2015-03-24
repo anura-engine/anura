@@ -352,7 +352,7 @@ namespace sound
 		if(SDL_WasInit(SDL_INIT_AUDIO) == 0) {
 			if(SDL_InitSubSystem(SDL_INIT_AUDIO) == -1) {
 				sound_ok = false;
-				std::cerr << "failed to init sound!\n";
+				LOG_ERROR("failed to init sound!");
 				return;
 			}
 		}
@@ -361,7 +361,7 @@ namespace sound
 
 		if(Mix_OpenAudio(SampleRate, MIX_DEFAULT_FORMAT, 2, BufferSize) == -1) {
 			sound_ok = false;
-			std::cerr << "failed to open audio!\n";
+			LOG_ERROR("failed to open audio!");
 			return;
 		}
 
@@ -647,7 +647,7 @@ namespace sound
 
 
 		const int result = play_internal(file, -1, object, volume, fade_in_time);
-		std::cerr << "PLAY: " << object << " " << file << " -> " << result << "\n";
+		LOG_DEBUG("PLAY: " << object << " " << file << " -> " << result);
 		return result;
 	}
 
@@ -778,7 +778,7 @@ namespace sound
 		std::map<std::string, std::string>::const_iterator itor = module::find(get_music_paths(), song_file);
 		if(itor == get_music_paths().end()) {
 			ASSERT_LOG(!g_assert_on_missing_sound, "FATAL: Music file: " << song_file << " missing");
-			std::cerr << "FILE NOT FOUND: " << song_file << std::endl;
+			LOG_ERROR("FILE NOT FOUND: " << song_file);
 			return;
 		}
 		const std::string& path = itor->second;
@@ -797,7 +797,7 @@ namespace sound
 		current_mix_music = Mix_LoadMUS(path.c_str());
 	#endif
 		if(!current_mix_music) {
-			std::cerr << "Mix_LoadMUS ERROR loading " << path << ": " << Mix_GetError() << "\n";
+			LOG_ERROR("Mix_LoadMUS ERROR loading " << path << ": " << Mix_GetError());
 			return;
 		}
 
@@ -855,7 +855,7 @@ namespace sound
 
 		std::map<std::string, std::string>::const_iterator itor = module::find(get_music_paths(), song_file);
 		if(itor == get_music_paths().end()) {
-			std::cerr << "FILE NOT FOUND: " << song_file << std::endl;
+			LOG_ERROR("FILE NOT FOUND: " << song_file);
 			return;
 		}
 		const std::string& path = itor->second;
@@ -875,7 +875,7 @@ namespace sound
 	#endif
 
 		if(!current_mix_music) {
-			std::cerr << "Mix_LoadMUS ERROR loading " << file << ": " << Mix_GetError() << "\n";
+			LOG_ERROR("Mix_LoadMUS ERROR loading " << file << ": " << Mix_GetError());
 			return;
 		}
 

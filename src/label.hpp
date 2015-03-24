@@ -93,7 +93,7 @@ namespace gui
 
 		std::function<void()> on_click_;
 		game_logic::FormulaPtr ffl_click_handler_;
-		void click_delegate();
+		void clickDelegate();
 		bool highlight_on_mouseover_;
 		bool draw_highlight_;
 		bool down_;

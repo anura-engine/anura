@@ -273,10 +273,10 @@ namespace editor_dialogs
 			addWidget(preview, width() - border_offset - 128, border_offset + 200);
 		} catch(validation_failure_exception& e) {
 			error_text_ = e.msg;
-			std::cerr << "error parsing formula: " << e.msg << std::endl;
+			LOG_ERROR("error parsing formula: " << e.msg);
 		} catch(type_error& e) {
 			error_text_ = e.message;
-			std::cerr << "error executing formula: " << e.message << std::endl;
+			LOG_ERROR("error executing formula: " << e.message);
 		}
 
 		std::string err_text = error_text_;
@@ -445,7 +445,7 @@ namespace editor_dialogs
 			}
 			return rows;
 		}
-		std::cerr << "Unhandled attribute " << attr << std::endl;
+		LOG_WARN("Unhandled attribute " << attr);
 		return std::vector<gui::WidgetPtr>();
 	}
 
@@ -501,9 +501,9 @@ namespace editor_dialogs
 			//try {
 			//	object_ = CustomObjectTypePtr(new CustomObjectType(object_template_, nullptr, nullptr));
 			//} catch(validation_failure_exception& e) {
-			//	std::cerr << "error parsing formula: " << e.msg << std::endl;
+			//	LOG_ERROR("error parsing formula: " << e.msg);
 			//} catch(type_error& e) {
-			//	std::cerr << "error executing formula: " << e.message << std::endl;
+			//	LOG_ERROR("error executing formula: " << e.message);
 			//}
 		} else {
 			std::map<variant, variant> m;

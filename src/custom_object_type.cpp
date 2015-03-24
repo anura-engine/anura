@@ -662,7 +662,7 @@ variant CustomObjectType::mergePrototype(variant node, std::vector<std::string>*
 
 	std::vector<std::string> protos = node["prototype"].as_list_string();
 	if(protos.size() > 1) {
-		std::cerr << "WARNING: Multiple inheritance of objects is deprecated: " << node["prototype"].debug_location() << "\n";
+		LOG_WARN("Multiple inheritance of objects is deprecated: " << node["prototype"].debug_location());
 	}
 
 	for(const std::string& proto : protos) {
@@ -1040,7 +1040,7 @@ void CustomObjectType::reloadObject(const std::string& type)
 	}
 
 	const int end = profile::get_tick_time();
-	std::cerr << "UPDATED " << CustomObject::getAll(old_obj->id()).size() << " OBJECTS IN " << (end - start) << "ms\n";
+	LOG_INFO("UPDATED " << CustomObject::getAll(old_obj->id()).size() << " OBJECTS IN " << (end - start) << "ms");
 
 	itor->second = new_obj;
 
@@ -1354,8 +1354,6 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 		}
 	}
 
-	//std::cerr << "TMP_VARIABLES: '" << id_ << "' -> " << tmp_variables_.size() << "\n";
-
 	consts_.reset(new game_logic::MapFormulaCallable);
 	variant consts = node["consts"];
 	if(consts.is_null() == false) {
@@ -1646,7 +1644,7 @@ void CustomObjectType::initSubObjects(variant node, const CustomObjectType* old_
 			if(old_type && type->node_.is_null()){
 				type->node_ = merged;
 			}
-			//std::cerr << "MERGED PROTOTYPE FOR " << type->id_ << ": " << merged.write_json() << "\n";
+			//LOG_DEBUG("MERGED PROTOTYPE FOR " << type->id_ << ": " << merged.write_json());
 			sub_objects_[sub_key].reset(type);
 		}
 	}
@@ -1737,7 +1735,7 @@ ConstCustomObjectTypePtr CustomObjectType::getVariation(const std::vector<std::s
 
 			execute_variation_command(cmd, *callable);
 
-			//std::cerr << "VARIATION " << v << ":\n--- BEFORE ---\n" << node.write_json() << "\n--- AFTER ---\n" << node_.write_json() << "\n--- DONE ---\n";
+			//LOG_DEBUG("VARIATION " << v << ":\n--- BEFORE ---\n" << node.write_json() << "\n--- AFTER ---\n" << node_.write_json() << "\n--- DONE ---");
 		}
 
 		//set our constants so the variation can decide whether it needs

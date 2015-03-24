@@ -464,12 +464,12 @@ namespace
 			}
 
 			if(slot_ >= 0) {
-				std::cerr << "setting save slot: " << slot_ << " -> " << SaveFiles[slot_] << "\n";
+				LOG_INFO("setting save slot: " << slot_ << " -> " << SaveFiles[slot_]);
 				preferences::set_save_slot(SaveFiles[slot_]);
 			} else if(has_options) {
 				const int noption = show_simple_option_dialog(lvl, _("Select save slot to use."), options);
 				if(noption != -1) {
-					std::cerr << "setting save slot: " << noption << " -> " << SaveFiles[noption] << "\n";
+					LOG_INFO("setting save slot: " << noption << " -> " << SaveFiles[noption]);
 					preferences::set_save_slot(SaveFiles[noption]);
 				}
 			}
@@ -728,7 +728,6 @@ namespace
 				}
 			
 			}else{
-				//std::cerr << "PLAY SOUND COMMAND: " << name_ << "\n";
 				if (names_.empty() == false){
 					int randomNum = rand()%names_.size();  //like a 1d-size die
 					if(names_[randomNum].empty() == false) {
@@ -2015,7 +2014,6 @@ RETURN_TYPE("bool")
 	END_FUNCTION_DEF(begin_skip_dialog_sequence)
 
 	FUNCTION_DEF(end_skip_dialog_sequence, 0, 0, "end_skip_dialog_sequence(): ends the sequence begun with begin_skip_dialog_sequence().")
-		std::cerr << "ENDDIALOG\n";
 		skip_sequence_command* cmd = (new skip_sequence_command(false));
 		cmd->setExpression(this);
 		return variant(cmd);
@@ -2056,7 +2054,6 @@ RETURN_TYPE("bool")
 				if(var.is_callable()) {
 					ConstEntityPtr e = var.try_convert<Entity>();
 					if(e) {
-						//std::cerr << "set speaker...\n";
 						d->setSpeakerAndFlipSide(e);
 					}
 
@@ -2426,7 +2423,7 @@ RETURN_TYPE("bool")
 			cmd->setExpression(this);
 			return variant(cmd);
 		} else if(args().size() == 2) {
-			std::cerr << "TWO ARGMENTS ISN'T A SUPPORTED OPTION FOR resolve_solid() CONTINUING AS IF ONE ARGUMENT SUPPLIED\n";
+			LOG_ERROR("TWO ARGMENTS ISN'T A SUPPORTED OPTION FOR resolve_solid() CONTINUING AS IF ONE ARGUMENT SUPPLIED");
 			resolve_solid_command* cmd = (new resolve_solid_command(e, 0, 0, 0));
 			cmd->setExpression(this);
 			return variant(cmd);
@@ -2490,7 +2487,7 @@ RETURN_TYPE("bool")
 			cmd->setExpression(this);
 			return variant(cmd);
 		} else {
-			std::cerr << "NOT AN OBJECT!\n";
+			LOG_ERROR("NOT AN OBJECT!");
 			return variant();
 		}
 	FUNCTION_ARGS_DEF
@@ -2739,8 +2736,6 @@ RETURN_TYPE("bool")
 			if(!w) {
 				return;
 			}
-
-			std::cerr << "EXECUTE ADD WAVE...\n";
 
 			point p(x_, y_);
 			w->addWave(p, xvelocity_/1000.0, height_/1000.0, length_/1000.0, delta_height_/1000.0, delta_length_/1000.0);
@@ -3286,7 +3281,7 @@ RETURN_TYPE("bool")
 		} catch(type_error&) {
 		} catch(validation_failure_exception&) {
 		}
-		std::cerr << "ERROR IN EVAL\n";
+		LOG_ERROR("ERROR IN EVAL");
 		return variant();
 	FUNCTION_ARGS_DEF
 		ARG_TYPE("string")

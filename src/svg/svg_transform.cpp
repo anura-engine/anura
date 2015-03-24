@@ -80,7 +80,6 @@ namespace KRE
 			}
 		private:
 			void handle_apply(render_context& ctx) override {
-				//std::cerr << "XXX: " << as_string() << std::endl;
 				cairo_translate(ctx.cairo(), x_, y_);
 			}
 			void handle_apply_matrix(cairo_matrix_t* mtx) const override {

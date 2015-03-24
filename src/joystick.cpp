@@ -62,13 +62,13 @@ namespace joystick
 	Manager::Manager() 
 	{
 		if(SDL_InitSubSystem(SDL_INIT_JOYSTICK) != 0) {
-			std::cerr << "ERROR: Unable to initialise joystick subsystem" << std::endl;
+			LOG_ERROR("Unable to initialise joystick subsystem");
 		}
 		if(SDL_InitSubSystem(SDL_INIT_GAMECONTROLLER) != 0) {
-			std::cerr << "ERROR: Unable to initialise game controller subsystem" << std::endl;
+			LOG_ERROR("Unable to initialise game controller subsystem");
 		}
 		if(SDL_InitSubSystem(SDL_INIT_HAPTIC) != 0) {
-			std::cerr << "ERROR: Unable to initialise haptic subsystem" << std::endl;
+			LOG_ERROR("Unable to initialise haptic subsystem");
 		}
 #if defined(__ANDROID__)
 		// We're just going to open 1 joystick on android platform.
@@ -81,7 +81,7 @@ namespace joystick
 				if(controller) {
 					game_controllers[n] = std::shared_ptr<SDL_GameController>(controller, [](SDL_GameController* p){SDL_GameControllerClose(p);});
 				} else {
-					std::cerr << "WARNING: Couldn't open game controller: " << SDL_GetError() << std::endl;
+					LOG_WARN("Couldn't open game controller: " << SDL_GetError());
 				}
 			} else {
 				SDL_Joystick* j = SDL_JoystickOpen(n);
@@ -90,7 +90,7 @@ namespace joystick
 						// We're probably dealing with an accellerometer here.
 						SDL_JoystickClose(j);
 
-						std::cerr << "INFO: discarding joystick " << n << " for being an accellerometer\n";
+						LOG_INFO("discarding joystick " << n << " for being an accellerometer");
 					} else {
 						joysticks.push_back(std::shared_ptr<SDL_Joystick>(j, [](SDL_Joystick* js){SDL_JoystickClose(js);}));
 					}
@@ -101,20 +101,20 @@ namespace joystick
 			if(haptic) {
 				haptic::haptic_devices[n] = std::shared_ptr<SDL_Haptic>(haptic, [](SDL_Haptic* h){SDL_HapticClose(h);});
 				if(SDL_HapticRumbleInit(haptic) != 0) {
-					std::cerr << "Failed to initialise a simple rumble effect" << std::endl;
+					LOG_WARN("Failed to initialise a simple rumble effect");
 					haptic::haptic_devices.erase(n);
 				}
 				// buzz the device when we start.
 				if(SDL_HapticRumblePlay(haptic, 0.5, 1000) != 0) {
-					std::cerr << "Failed to play a simple rumble effect" << std::endl;
+					LOG_WARN("Failed to play a simple rumble effect");
 					haptic::haptic_devices.erase(n);
 				}
 			}
 		}
 
-		std::cerr << "INFO: Initialized " << joysticks.size() << " joysticks" << std::endl;
-		std::cerr << "INFO: Initialized " << game_controllers.size() << " game controllers" << std::endl;
-		std::cerr << "INFO: Initialized " << haptic::haptic_devices.size() << " haptic devices" << std::endl;
+		LOG_INFO("Initialized " << joysticks.size() << " joysticks");
+		LOG_INFO("Initialized " << game_controllers.size() << " game controllers");
+		LOG_INFO("Initialized " << haptic::haptic_devices.size() << " haptic devices");
 	}
 
 	Manager::~Manager() 
@@ -140,14 +140,14 @@ namespace joystick
 			case SDL_CONTROLLERDEVICEADDED: {
 				auto it = game_controllers.find(ev.cdevice.which);
 				if(it != game_controllers.end()) {
-					std::cerr << "INFO: replacing game controller at index " << ev.cdevice.which << std::endl;
+					LOG_INFO("replacing game controller at index " << ev.cdevice.which);
 					game_controllers.erase(it);
 				}
 				SDL_GameController *controller = SDL_GameControllerOpen(ev.cdevice.which);
 				if(controller) {
 					game_controllers[ev.cdevice.which] = std::shared_ptr<SDL_GameController>(controller, [](SDL_GameController* p){SDL_GameControllerClose(p);});
 				} else {
-					std::cerr << "WARNING: Couldn't open game controller: " << SDL_GetError() << std::endl;
+					LOG_WARN("Couldn't open game controller: " << SDL_GetError());
 				}
 				return true;
 			}
@@ -156,7 +156,7 @@ namespace joystick
 				if(it != game_controllers.end()) {
 					game_controllers.erase(it);
 				} else {
-					std::cerr << "WARNING: Controller removed message, no matching controller in list" << std::endl;
+					LOG_WARN("Controller removed message, no matching controller in list");
 				}
 				return true;
 			}
@@ -613,7 +613,7 @@ namespace haptic
 					get_effects()[hd.second.get()] = m;
 				}
 			} else {
-				std::cerr << "WARNING: error creating haptic effect(" << name << "): " << SDL_GetError() << std::endl;
+				LOG_WARN("error creating haptic effect(" << name << "): " << SDL_GetError());
 			}
 		}
 	}

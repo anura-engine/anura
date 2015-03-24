@@ -118,7 +118,7 @@ namespace gui
 			variant value = click_handler_->execute(*callable);
 			getEnvironment()->executeCommand(value);
 		} else {
-			std::cerr << "Checkbox::click() called without environment!" << std::endl;
+			LOG_ERROR("Checkbox::click() called without environment!");
 		}
 	}
 

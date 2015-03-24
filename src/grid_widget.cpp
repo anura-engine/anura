@@ -602,7 +602,7 @@ namespace gui
 			variant value = ffl_on_select_->execute(*callable);
 			getEnvironment()->executeCommand(value);
 		} else {
-			std::cerr << "grid::selectDelegate() called without environment!" << std::endl;
+			LOG_ERROR("Grid::selectDelegate() called without environment!");
 		}
 	}
 
@@ -621,7 +621,7 @@ namespace gui
 			variant value = ffl_on_mouseover_->execute(*callable);
 			getEnvironment()->executeCommand(value);
 		} else {
-			std::cerr << "grid::mouseover_delegate() called without environment!" << std::endl;
+			LOG_ERROR("Grid::mouseover_delegate() called without environment!");
 		}
 	}
 

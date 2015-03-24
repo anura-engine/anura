@@ -2527,7 +2527,7 @@ void CustomObject::run_garbage_collection()
 {
 	const int starting_ticks = profile::get_tick_time();
 
-	std::cerr << "RUNNING GARBAGE COLLECTION FOR " << getAll().size() << " OBJECTS...\n";
+	LOG_INFO("RUNNING GARBAGE COLLECTION FOR " << getAll().size() << " OBJECTS...");
 
 	std::vector<EntityPtr> references;
 	for(CustomObject* obj : getAll()) {
@@ -2553,7 +2553,7 @@ void CustomObject::run_garbage_collection()
 			break;
 		}
 
-		std::cerr << "PASS " << pass << ": " << safe.size() << " OBJECTS SAFE\n";
+		LOG_INFO("PASS " << pass << ": " << safe.size() << " OBJECTS SAFE");
 
 		for(gc_object_reference& ref : refs) {
 			if(ref.owner == nullptr) {
@@ -2579,7 +2579,7 @@ void CustomObject::run_garbage_collection()
 		}
 	}
 
-	std::cerr << "RAN GARBAGE COLLECTION IN " << (profile::get_tick_time() - starting_ticks) << "ms. Releasing " << (getAll().size() - safe.size()) << "/" << getAll().size() << " OBJECTS\n";
+	LOG_INFO("RAN GARBAGE COLLECTION IN " << (profile::get_tick_time() - starting_ticks) << "ms. Releasing " << (getAll().size() - safe.size()) << "/" << getAll().size() << " OBJECTS");
 }
 
 void CustomObject::beingRemoved()
@@ -3641,7 +3641,6 @@ void CustomObject::setValue(const std::string& key, const variant& value)
 
 			//set the animation to the default animation for the new type.
 			setFrame(type_->defaultFrame().id());
-			//std::cerr << "SET TYPE WHEN CHANGING TO '" << type_->id() << "'\n";
 		}
 	} else if(key == "use_absolute_screen_coordinates") {
 		use_absolute_screen_coordinates_ = value.as_bool();
@@ -3736,7 +3735,6 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 
 			//set the animation to the default animation for the new type.
 			setFrame(type_->defaultFrame().id());
-			//std::cerr << "SET TYPE WHEN CHANGING TO '" << type_->id() << "'\n";
 		}
 	}
 		break;

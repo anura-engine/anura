@@ -179,7 +179,6 @@ namespace
 		}
 
 		LOG_INFO("CALC RECT " << x1 << "," << y1 << "," << x2 << "," << y2);
-		//std::cerr << "PIXEL: 0x" << std::hex << int(pixel[0]) << ",0x" << int(pixel[1]) << ",0x" << int(pixel[2]) << ",0x" << int(pixel[3]) << std::endl;
 		return rect::from_coordinates(x1, y1, x2, y2);
 	}
 
@@ -706,7 +705,7 @@ namespace gui
 							}
 
 							if(num_frames_handler_) {
-								std::cerr << "SETTING NUM FRAMES TO " << num_frames << "\n";
+								LOG_INFO("SETTING NUM FRAMES TO " << num_frames);
 								num_frames_handler_(num_frames);
 							}
 
@@ -817,7 +816,7 @@ namespace gui
 			variant value = ffl_rect_handler_->execute(*callable);
 			getEnvironment()->executeCommand(value);
 		} else {
-			std::cerr << "AnimationPreviewWidget::rectHandlerDelegate() called without environment!" << std::endl;
+			LOG_ERROR("AnimationPreviewWidget::rectHandlerDelegate() called without environment!");
 		}
 	}
 
@@ -830,7 +829,7 @@ namespace gui
 			variant value = ffl_pad_handler_->execute(*callable);
 			getEnvironment()->executeCommand(value);
 		} else {
-			std::cerr << "AnimationPreviewWidget::padHandlerDelegate() called without environment!" << std::endl;
+			LOG_ERROR("AnimationPreviewWidget::padHandlerDelegate() called without environment!");
 		}
 	}
 
@@ -843,7 +842,7 @@ namespace gui
 			variant value = ffl_num_frames_handler_->execute(*callable);
 			getEnvironment()->executeCommand(value);
 		} else {
-			std::cerr << "AnimationPreviewWidget::numFramesHandlerDelegate() called without environment!" << std::endl;
+			LOG_ERROR("AnimationPreviewWidget::numFramesHandlerDelegate() called without environment!");
 		}
 	}
 
@@ -856,7 +855,7 @@ namespace gui
 			variant value = ffl_frames_per_row_handler_->execute(*callable);
 			getEnvironment()->executeCommand(value);
 		} else {
-			std::cerr << "AnimationPreviewWidget::framesPerRowHandlerDelegate() called without environment!" << std::endl;
+			LOG_ERROR("AnimationPreviewWidget::framesPerRowHandlerDelegate() called without environment!");
 		}
 	}
 
@@ -870,7 +869,7 @@ namespace gui
 			variant value = ffl_solid_handler_->execute(*callable);
 			getEnvironment()->executeCommand(value);
 		} else {
-			std::cerr << "AnimationPreviewWidget::solidHandlerDelegate() called without environment!" << std::endl;
+			LOG_ERROR("AnimationPreviewWidget::solidHandlerDelegate() called without environment!");
 		}
 	}
 

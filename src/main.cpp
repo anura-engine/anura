@@ -296,16 +296,45 @@ void auto_select_resolution(const KRE::WindowPtr& wm, int *width, int *height)
 	*height = best_mode.height;
 }
 
+void process_log_level(const std::string& argstr)
+{
+	SDL_LogPriority log_priority = SDL_LOG_PRIORITY_INFO;
+	std::string::size_type pos = argstr.find('=');
+	if(pos != std::string::npos) {
+		std::string level = argstr.substr(pos+1);
+		if(level == "verbose") {
+			log_priority = SDL_LOG_PRIORITY_INFO;
+		} else if(level == "debug") {
+			log_priority = SDL_LOG_PRIORITY_DEBUG;
+		} else if(level == "info") {
+			log_priority = SDL_LOG_PRIORITY_INFO;
+		} else if(level == "warn") {
+			log_priority = SDL_LOG_PRIORITY_WARN;
+		} else if(level == "error") {
+			log_priority = SDL_LOG_PRIORITY_ERROR;
+		} else if(level == "critical") {
+			log_priority = SDL_LOG_PRIORITY_CRITICAL;
+		}
+	}
+	SDL_LogSetPriority(SDL_LOG_CATEGORY_APPLICATION, log_priority);
+}
 
 extern int g_tile_scale;
 extern int g_tile_size;
 
 int main(int argcount, char* argvec[])
 {
+	SDL_LogSetPriority(SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_INFO);
+
 	{
 		std::vector<std::string> args;
 		for(int i = 0; i != argcount; ++i) {
-			args.push_back(argvec[i]);
+			std::string argstr(argvec[i]);
+			if(argstr.substr(0,11) == "--log-level") {
+				process_log_level(argstr);
+			} else {
+				args.emplace_back(argstr);
+			}
 		}
 
 		preferences::set_argv(args);
@@ -486,6 +515,8 @@ int main(int argcount, char* argvec[])
 			// ignore as already processed.
 		} else if(arg == "--no-tests") {
 			skip_tests = true;
+		} else if(arg.substr(0, 11) == "--log-level") {
+			// ignore
 		} else if(arg_name == "--level") {
 			override_level_cfg = arg_value;
 		} else if(arg == "--level" && n+1 < argc) {

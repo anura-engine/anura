@@ -167,7 +167,7 @@ namespace gui
 			variant value = drag_handler_->execute(*callable);
 			getEnvironment()->executeCommand(value);
 		} else {
-			std::cerr << "drag_widget::drag() called without environment!" << std::endl;
+			LOG_ERROR("DragWidget::drag() called without environment!");
 		}
 	}
 
@@ -181,7 +181,7 @@ namespace gui
 			variant value = drag_start_handler_->execute(*callable);
 			getEnvironment()->executeCommand(value);
 		} else {
-			std::cerr << "drag_widget::drag_start() called without environment!" << std::endl;
+			LOG_ERROR("DragWidget::dragStart() called without environment!");
 		}
 	}
 
@@ -195,7 +195,7 @@ namespace gui
 			variant value = drag_end_handler_->execute(*callable);
 			getEnvironment()->executeCommand(value);
 		} else {
-			std::cerr << "drag_widget::drag_end() called without environment!" << std::endl;
+			LOG_ERROR("DragWidget::dragEnd() called without environment!");
 		}
 	}
 

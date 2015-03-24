@@ -71,7 +71,7 @@ namespace box2d
 		{
 			// if the world has destructed the body will already have been destroyed.
 			if(current_world != nullptr) {
-				std::cerr << "body_destructor: " << b << std::endl;
+				LOG_DEBUG("body_destructor: " << b);
 				current_world->DestroyBody(b);
 			}
 		}
@@ -109,7 +109,7 @@ namespace box2d
 			this_world = new world(w);
 			this_world->finishLoading();
 		} catch(json::ParseError&) {
-			std::cerr << "WORLD NOT FOUND/NOT VALID. NOT LOADING WORLD. WORLD IS SAD." << std::endl;
+			LOG_INFO("WORLD NOT FOUND/NOT VALID. NOT LOADING WORLD. WORLD IS SAD.");
 		}
 	}
 
@@ -158,7 +158,7 @@ namespace box2d
 
 	world::~world()
 	{
-		std::cerr << "DESTRUCTING WORLD" << std::endl;
+		LOG_INFO("DESTRUCTING WORLD");
 		clear_current_world();
 	}
 
@@ -277,7 +277,7 @@ namespace box2d
 	b2Body* world::create_body(body* b)
 	{
 		b2Body* bp = current().CreateBody(b->get_body_definition());
-		std::cerr << "create_body: " << std::hex << bp << " " << b << std::dec << std::endl;
+		LOG_INFO("create_body: " << std::hex << bp << " " << b << std::dec);
 		return bp;
 	}
 
@@ -300,14 +300,14 @@ namespace box2d
 
 	void destruction_listener::SayGoodbye(b2Joint* j)
 	{
-		std::cerr << "joint being destructed: " << std::hex << intptr_t(j) << std::dec << std::endl;
+		LOG_INFO("joint being destructed: " << std::hex << intptr_t(j) << std::dec);
 		delete (std::string*)j->GetUserData();
 	}
 
 	void destruction_listener::SayGoodbye(b2Fixture* fix)
 	{
 		// do nothing.
-		//std::cerr << "fixture being destructed: " << std::hex << intptr_t(fix) << std::dec << std::endl;
+		//LOG_INFO("fixture being destructed: " << std::hex << intptr_t(fix) << std::dec);
 	}
 
 	std::shared_ptr<b2FixtureDef> body::create_fixture(const variant& fix)

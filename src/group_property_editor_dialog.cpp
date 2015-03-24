@@ -51,7 +51,6 @@ namespace editor_dialogs
 		setPadding(20);
 
 		if(group_.empty() == false) {
-			std::cerr << "ADD BUTTON\n";
 			addWidget(WidgetPtr(new Button(WidgetPtr(new Label("Group Objects", KRE::Color::colorWhite())), std::bind(&GroupPropertyEditorDialog::groupObjects, this))), 10, 10);
 		}
 	}

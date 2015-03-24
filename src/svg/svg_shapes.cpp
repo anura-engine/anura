@@ -162,10 +162,10 @@ namespace KRE
 				}
 			}
 			if(0) {
-				std::cerr << "SVG: CIRCLE(" << cx_.value_in_specified_units(svg_length::SVG_LENGTHTYPE_NUMBER)
+				LOG_DEBUG("SVG: CIRCLE(" << cx_.value_in_specified_units(svg_length::SVG_LENGTHTYPE_NUMBER)
 					<< "," << cy_.value_in_specified_units(svg_length::SVG_LENGTHTYPE_NUMBER)
 					<< "," << radius_.value_in_specified_units(svg_length::SVG_LENGTHTYPE_NUMBER)
-					<< ")" << std::endl;
+					<< ")");
 			}
 		}
 

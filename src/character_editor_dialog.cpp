@@ -88,7 +88,7 @@ namespace editor_dialogs
 
 	gui::WidgetPtr CharacterEditorDialog::generate_grid(const std::string& category)
 	{
-		std::cerr << "generate grid: " << category << "\n";
+		LOG_DEBUG("generate grid: " << category);
 		using namespace gui;
 		WidgetPtr& result = grids_[category];
 		std::vector<gui::BorderWidgetPtr>& borders = grid_borders_[category];
@@ -143,7 +143,7 @@ namespace editor_dialogs
 			}
 			borders[n]->setColor(n == editor_.get_object() ? KRE::Color::colorWhite() : KRE::Color(0,0,0,0));
 		}
-		std::cerr << "done generate grid: " << category << "\n";
+		LOG_DEBUG("done generate grid: " << category);
 
 		return result;
 	}
@@ -221,7 +221,7 @@ namespace editor_dialogs
 
 	void CharacterEditorDialog::select_category(const std::string& category)
 	{
-		std::cerr << "SELECT CATEGORY: " << category << "\n";
+		LOG_DEBUG("SELECT CATEGORY: " << category);
 		category_ = category;
 		init();
 		set_character(first_obj_[category_]);

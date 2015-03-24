@@ -156,7 +156,7 @@ namespace pathfinding
 				}
 			}
 		} catch (PathfindingException<variant>& e) {
-			std::cerr << e.msg << " " << e.src.to_debug_string() << ", " << e.dest.to_debug_string() << std::endl;
+			LOG_ERROR(e.msg << " " << e.src.to_debug_string() << ", " << e.dest.to_debug_string());
 		}
 		wg->resetGraph();
 		return variant(&path);
@@ -294,13 +294,6 @@ namespace pathfinding
 				current = open_list.top(); open_list.pop();
 				current->setOnOpenList(false);
 
-				//std::cerr << std::endl << "CURRENT: " << *current;
-				//std::cerr << "OPEN_LIST:\n";
-				//graph_node<point, double>::graph_node_ptr g;
-				//foreach(g, open_list) {
-				//	std::cerr << *g; 
-				//}
-
 				if(current->getNodeValue() == dst) {
 					// Found the path to our node.
 					searching = false;
@@ -359,7 +352,7 @@ namespace pathfinding
 				}
 			}
 		} catch (PathfindingException<point>& e) {
-			std::cerr << e.msg << " (" << e.src.x << "," << e.src.y << ") : (" << e.dest.x << "," << e.dest.y << ")" << std::endl;
+			LOG_ERROR(e.msg << " (" << e.src.x << "," << e.src.y << ") : (" << e.dest.x << "," << e.dest.y << ")");
 		}
 		return variant(&path);
 	}
@@ -410,7 +403,7 @@ namespace pathfinding
 				}
 			}
 		} catch (PathfindingException<variant>& e) {
-			std::cerr << e.msg << " " << e.src.to_debug_string() << ", " << e.dest.to_debug_string() << std::endl;
+			LOG_ERROR(e.msg << " " << e.src.to_debug_string() << ", " << e.dest.to_debug_string());
 		}
 		wg->resetGraph();
 		return variant(&reachable);

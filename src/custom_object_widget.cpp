@@ -109,7 +109,7 @@ namespace gui
 			variant value = click_handler_->execute(*callable);
 			getEnvironment()->executeCommand(value);
 		} else {
-			std::cerr << "custom_object_widget::click() called without environment!" << std::endl;
+			LOG_ERROR("CustomObjectWidget::click() called without environment!");
 		}
 	}
 
@@ -123,7 +123,7 @@ namespace gui
 			variant value = mouse_enter_handler_->execute(*callable);
 			getEnvironment()->executeCommand(value);
 		} else {
-			std::cerr << "custom_object_widget::mouse_enter() called without environment!" << std::endl;
+			LOG_ERROR("CustomObjectWidget::mouseEnter() called without environment!");
 		}
 	}
 
@@ -137,7 +137,7 @@ namespace gui
 			variant value = mouse_leave_handler_->execute(*callable);
 			getEnvironment()->executeCommand(value);
 		} else {
-			std::cerr << "custom_object_widget::mouse_leave() called without environment!" << std::endl;
+			LOG_ERROR("CustomObjectWidget::mouseLeave() called without environment!");
 		}
 	}
 

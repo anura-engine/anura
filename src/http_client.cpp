@@ -97,7 +97,7 @@ void http_client::async_connect(connection_ptr conn)
 void http_client::handle_connect(const boost::system::error_code& error, connection_ptr conn, tcp::resolver::iterator resolve_itor)
 {
 	if(error) {
-		std::cerr << "HANDLE_CONNECT_ERROR: " << error << std::endl;
+		LOG_WARN("HANDLE_CONNECT_ERROR: " << error);
 		if(endpoint_iterator_ == resolve_itor) {
 			++endpoint_iterator_;
 		}
