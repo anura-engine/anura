@@ -1154,7 +1154,7 @@ public:
 			// The given type of map can be used as a map of this type if,
 			// a key to this type of map can be used as a key of that map,
 			// and a value resulting from that map can be returned as a value of this type of map.
-			return variant_types_compatible(p.first, key_type_) &&
+			return variant_types_compatible(key_type_, p.first) &&
 			       variant_types_compatible(value_type_, p.second);
 		}
 
@@ -2674,7 +2674,7 @@ UNIT_TEST(variant_type) {
 	TYPES_COMPAT("list", "[any]");
 	TYPES_COMPAT("[any]", "[int|string]");
 	TYPES_COMPAT("[any]", "list");
-	TYPES_COMPAT("{int -> string}", "{int|string -> string}");
+	TYPES_COMPAT("{int|string -> string}", "{int -> string}");
 	TYPES_COMPAT("map", "{int -> string}");
 
 	TYPES_COMPAT("[int]", "[int,int]");
@@ -2702,7 +2702,7 @@ UNIT_TEST(variant_type) {
 	TYPES_INCOMPAT("enum { 2, 3 }", "enum { 2, 3, 4 }");
 	TYPES_INCOMPAT("int|null", "enum { 2, 3, 4.5 }");
 	TYPES_INCOMPAT("enum { 2..8 }", "enum { 2, 3, 4..6, 9 }");
-	TYPES_INCOMPAT("{int|string -> string}", "{int -> string}");
+	TYPES_INCOMPAT("{int -> string}", "{int|string -> string}");
 
 #undef TYPES_COMPAT	
 }

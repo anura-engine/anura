@@ -3885,12 +3885,12 @@ UNIT_TEST(formula_function_types_compatible) {
 UNIT_TEST(formula_map_types_compatible) {
 	CHECK_EQ(Formula(variant("types_compatible('{string -> int}', '{string -> any}')")).execute().as_bool(), false);
 	CHECK_EQ(Formula(variant("types_compatible('{string -> any}', '{string -> int}')")).execute().as_bool(), true);
-	CHECK_EQ(Formula(variant("types_compatible('{string -> int}', '{any -> int}')")).execute().as_bool(), true);
-	CHECK_EQ(Formula(variant("types_compatible('{any -> int}', '{string -> int}')")).execute().as_bool(), false);
+	CHECK_EQ(Formula(variant("types_compatible('{string -> int}', '{any -> int}')")).execute().as_bool(), false);
+	CHECK_EQ(Formula(variant("types_compatible('{any -> int}', '{string -> int}')")).execute().as_bool(), true);
 	CHECK_EQ(Formula(variant("types_compatible('{string -> int}', '{any -> any}')")).execute().as_bool(), false);
-	CHECK_EQ(Formula(variant("types_compatible('{any -> any}', '{string -> int}')")).execute().as_bool(), false);
+	CHECK_EQ(Formula(variant("types_compatible('{any -> any}', '{string -> int}')")).execute().as_bool(), true);
 	CHECK_EQ(Formula(variant("types_compatible('{any -> int}', '{string -> any}')")).execute().as_bool(), false);
-	CHECK_EQ(Formula(variant("types_compatible('{string -> any}', '{any -> int}')")).execute().as_bool(), true);
+	CHECK_EQ(Formula(variant("types_compatible('{string -> any}', '{any -> int}')")).execute().as_bool(), false);
 }
 
 UNIT_TEST(formula_multifunction_types_compatible) {
