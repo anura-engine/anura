@@ -42,44 +42,47 @@
 	)
 #endif
 
+void log_internal(SDL_LogPriority priority, const std::string& s);
+
 #define LOG_VERBOSE(_a)																\
 	do {																			\
 		std::ostringstream _s;														\
 		_s << __SHORT_FORM_OF_FILE__ << ":" << __LINE__ << " : " << _a;				\
-		std::string _ss = _s.str();													\
-		SDL_LogVerbose(SDL_LOG_CATEGORY_APPLICATION, "%s\n", _ss.c_str());			\
+		log_internal(SDL_LOG_PRIORITY_VERBOSE, _s.str());							\
 	} while(0)
 
 #define LOG_INFO(_a)																\
 	do {																			\
 		std::ostringstream _s;														\
 		_s << __SHORT_FORM_OF_FILE__ << ":" << __LINE__ << " : " << _a;				\
-		std::string _ss = _s.str();													\
-		SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "%s\n", _ss.c_str());				\
+		log_internal(SDL_LOG_PRIORITY_INFO, _s.str());								\
 	} while(0)
 
 #define LOG_DEBUG(_a)																\
 	do {																			\
 		std::ostringstream _s;														\
 		_s << __SHORT_FORM_OF_FILE__ << ":" << __LINE__ << " : " << _a;				\
-		std::string _ss = _s.str();													\
-		SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "%s\n", _ss.c_str());			\
+		log_internal(SDL_LOG_PRIORITY_DEBUG, _s.str());								\
 	} while(0)
 
 #define LOG_WARN(_a)																\
 	do {																			\
 		std::ostringstream _s;														\
 		_s << __SHORT_FORM_OF_FILE__ << ":" << __LINE__ << " : " << _a;				\
-		std::string _ss = _s.str();													\
-		SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION, "%s\n", _ss.c_str());				\
+		log_internal(SDL_LOG_PRIORITY_WARN, _s.str());								\
 	} while(0)
 
 #define LOG_ERROR(_a)																\
 	do {																			\
 		std::ostringstream _s;														\
 		_s << __SHORT_FORM_OF_FILE__ << ":" << __LINE__ << " : " << _a;				\
-		std::string _ss = _s.str();													\
-		SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s\n", _ss.c_str());			\
+		log_internal(SDL_LOG_PRIORITY_ERROR, _s.str());								\
 	} while(0)
 
+#define LOG_CRITICAL(_a)															\
+	do {																			\
+		std::ostringstream _s;														\
+		_s << __SHORT_FORM_OF_FILE__ << ":" << __LINE__ << " : " << _a;				\
+		log_internal(SDL_LOG_PRIORITY_CRITICAL, _s.str());							\
+	} while(0)
 
