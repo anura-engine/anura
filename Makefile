@@ -138,6 +138,7 @@ unittests: anura
 	./anura --tests
 	    
 tarball: unittests
+	@strip anura
 	@tar --transform='s,^,anura/,g' -cjf $(TARBALL) anura data/ images/
 
 $(foreach bdir,$(BUILD_DIR),$(eval $(call cc-command,$(bdir))))
