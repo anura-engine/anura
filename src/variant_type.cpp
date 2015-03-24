@@ -1152,8 +1152,8 @@ public:
 		std::pair<variant_type_ptr,variant_type_ptr> p = type->is_map_of();
 		if(p.first && p.second) {
 			// The given type of map can be used as a map of this type if,
-			// a key to this type of map can be used as a key of that map,
-			// and a value resulting from that map can be returned as a value of this type of map.
+			// every key of that type of map can be converted to the key type of this map,
+			// and every value of that type of map can be converted to the value type of this map
 			return variant_types_compatible(key_type_, p.first) &&
 			       variant_types_compatible(value_type_, p.second);
 		}
