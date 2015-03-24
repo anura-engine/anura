@@ -143,6 +143,7 @@ namespace KRE
 				"	v_position = a_position;\n"
 				"}\n";
 			const char* const circle_fs =
+                "#version 120\n"
 				"uniform bool u_discard;\n"
 				"uniform vec4 u_color;\n"
 				"uniform float u_outer_radius;\n"
