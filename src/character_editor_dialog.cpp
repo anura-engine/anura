@@ -103,7 +103,7 @@ namespace editor_dialogs
 				if(search_string.empty() == false) {
 					const std::string id = module::get_id(c.node["type"].as_string());
 					const char* p = strstr(id.c_str(), search_string.c_str());
-					matches = p == id.c_str() || p != nullptr && *(p-1) == '_';
+					matches = p == id.c_str() || (p != nullptr && *(p-1) == '_');
 				}
 
 				if(matches) {

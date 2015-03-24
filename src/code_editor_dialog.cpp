@@ -371,7 +371,7 @@ bool CodeEditorDialog::handleEvent(const SDL_Event& event, bool claimed)
 				replace_->setFocus(false);
 				editor_->setFocus(false);
 				return true;
-			} else if(event.key.keysym.sym == SDLK_n && (event.key.keysym.mod&KMOD_CTRL) || event.key.keysym.sym == SDLK_F3) {
+			} else if((event.key.keysym.sym == SDLK_n && (event.key.keysym.mod&KMOD_CTRL)) || event.key.keysym.sym == SDLK_F3) {
 				editor_->nextSearchMatch();
 			} else if(event.key.keysym.sym == SDLK_s && (event.key.keysym.mod&KMOD_CTRL)) {
 				save();
@@ -860,9 +860,9 @@ void visit_potential_formula_str(variant candidate, variant* result, int row, in
 {
 	if(candidate.is_string() && candidate.get_debug_info()) {
 		const variant::debug_info* info = candidate.get_debug_info();
-		if(row > info->line && row < info->end_line ||
-		   row == info->line && col >= info->column && (row < info->end_line || col <= info->end_column) ||
-		   row == info->end_line && col <= info->end_column && (row > info->line || col >= info->column)) {
+		if((row > info->line && row < info->end_line) ||
+		   (row == info->line && col >= info->column && (row < info->end_line || col <= info->end_column)) ||
+		   (row == info->end_line && col <= info->end_column && (row > info->line || col >= info->column))) {
 			*result = candidate;
 		}
 	}

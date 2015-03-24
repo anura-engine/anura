@@ -212,7 +212,7 @@ namespace gui
 				const int match_row = itor->second[n].first;
 				const int match_col = itor->second[n].second;
 				if(cursorRow() == match_row) {
-					if(cursorCol() == match_col+1 || colors_[match_row].size() == match_col+1 && cursorCol() > match_col+1) {
+					if(cursorCol() == match_col+1 || (colors_[match_row].size() == match_col+1 && cursorCol() > match_col+1)) {
 						return KRE::Color::colorRed();
 					}
 				}

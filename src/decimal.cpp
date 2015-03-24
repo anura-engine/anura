@@ -135,7 +135,7 @@ decimal operator/(const decimal& a, const decimal& b)
 	}
 
 	const decimal result(decimal::from_raw_value(value));
-	if(a.value() < 0 && b.value() > 0 || b.value() < 0 && a.value() > 0) {
+	if((a.value() < 0 && b.value() > 0) || (b.value() < 0 && a.value() > 0)) {
 		return -result;
 	} else {
 		return result;

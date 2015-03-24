@@ -32,7 +32,7 @@ namespace json
 {
 	Token get_token(const char*& i1, const char* i2)
 	{
-		while(i1 != i2 && util::c_isspace(*i1) || *i1 == '#' || *i1 == '/' && i1+1 != i2 && (*(i1 + 1) == '/' || *(i1 + 1) == '*')) {
+		while((i1 != i2 && util::c_isspace(*i1)) || *i1 == '#' || (*i1 == '/' && i1+1 != i2 && (*(i1 + 1) == '/' || *(i1 + 1) == '*'))) {
 			if(*i1 == '/' && *(i1 + 1) == '*') {
 				const char* begin = i1;
 				i1 += 2;

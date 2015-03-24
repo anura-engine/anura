@@ -607,7 +607,7 @@ namespace sound
 	void stop_looped_sounds(const void* object)
 	{
 		for(int n = 0; n != channels_to_sounds_playing.size(); ++n) {
-			if((object == nullptr && channels_to_sounds_playing[n].object != nullptr
+			if(((object == nullptr && channels_to_sounds_playing[n].object != nullptr)
 			   || channels_to_sounds_playing[n].object == object) &&
 			   (channels_to_sounds_playing[n].loops != 0)) {
 	#if !TARGET_IPHONE_SIMULATOR && !TARGET_OS_IPHONE
@@ -625,7 +625,7 @@ namespace sound
 		}
 
 		for(int n = 0; n != queued_sounds.size(); ++n) {
-			if((object == nullptr && queued_sounds[n].object != nullptr
+			if(((object == nullptr && queued_sounds[n].object != nullptr)
 			   || queued_sounds[n].object == object) &&
 			   (queued_sounds[n].loops != 0)) {
 				queued_sounds.erase(queued_sounds.begin() + n);

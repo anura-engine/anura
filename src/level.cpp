@@ -2309,8 +2309,8 @@ namespace
 
 		const bool standa = a->standingOn().get() ? true : false;
 		const bool standb = b->standingOn().get() ? true : false;
-		return deptha < depthb || deptha == depthb && standa < standb ||
-			 deptha == depthb && standa == standb && a->isHuman() < b->isHuman();
+		return deptha < depthb || (deptha == depthb && standa < standb) ||
+			 (deptha == depthb && standa == standb && a->isHuman() < b->isHuman());
 	}
 }
 
@@ -2911,7 +2911,7 @@ std::vector<point> Level::get_solid_contiguous_region(int xpos, int ypos) const
 
 	tile_pos base(xpos/TileSize, ypos/TileSize);
 	const TileSolidInfo* info = solid_.find(base);
-	if(info == nullptr || info->all_solid == false && info->bitmap.any() == false) {
+	if(info == nullptr || (info->all_solid == false && info->bitmap.any() == false)) {
 		return result;
 	}
 
@@ -2936,7 +2936,7 @@ std::vector<point> Level::get_solid_contiguous_region(int xpos, int ypos) const
 			}
 
 			const TileSolidInfo* info = solid_.find(pos);
-			if(info == nullptr || info->all_solid == false && info->bitmap.any() == false) {
+			if(info == nullptr || (info->all_solid == false && info->bitmap.any() == false)) {
 				continue;
 			}
 

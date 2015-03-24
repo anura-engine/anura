@@ -57,9 +57,9 @@ namespace graphics
 			static const unsigned char* AlphaPixel2 = AlphaColors+3; //the border color, red
 			unsigned char* pixel = reinterpret_cast<unsigned char*>(s->pixelsWriteable()) + n*4;
 
-			if(pixel[0] == AlphaPixel[0] && pixel[1] == AlphaPixel[1] && pixel[2] == AlphaPixel[2] ||
-			   strip_red_rects &&
-			   pixel[0] == AlphaPixel2[0] && pixel[1] == AlphaPixel2[1] && pixel[2] == AlphaPixel2[2]) {
+			if((pixel[0] == AlphaPixel[0] && pixel[1] == AlphaPixel[1] && pixel[2] == AlphaPixel[2]) ||
+			   (strip_red_rects &&
+			   pixel[0] == AlphaPixel2[0] && pixel[1] == AlphaPixel2[1] && pixel[2] == AlphaPixel2[2])) {
 				pixel[3] = 0;
 			}
 		}

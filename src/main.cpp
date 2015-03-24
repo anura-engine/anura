@@ -283,9 +283,9 @@ void auto_select_resolution(const KRE::WindowPtr& wm, int *width, int *height)
 		if(candidate_mode.width < mode.width && candidate_mode.height < mode.width
 			&& candidate_mode.width < mode.width * MinReduction
 			&& candidate_mode.height < mode.height * MinReduction
-			&& (candidate_mode.width >= best_mode.width
-			&& candidate_mode.height >= best_mode.height
-			|| best_mode.width == mode.width && best_mode.height == mode.height)) {
+			&& ((candidate_mode.width >= best_mode.width
+			&& candidate_mode.height >= best_mode.height)
+			|| (best_mode.width == mode.width && best_mode.height == mode.height))) {
 			LOG_INFO("BETTER MODE IS " << candidate_mode.width << "x" << candidate_mode.height);
 			best_mode = candidate_mode;
 		} else {

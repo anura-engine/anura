@@ -1339,7 +1339,7 @@ void CustomObject::draw(int xx, int yy) const
 		}
 	}
 
-	if(platform_area_ && (preferences::show_debug_hitboxes() || !platform_offsets_.empty() && Level::current().in_editor())) {
+	if(platform_area_ && (preferences::show_debug_hitboxes() || (!platform_offsets_.empty() && Level::current().in_editor()))) {
 		std::vector<glm::u16vec2> v;
 		const rect& r = platformRect();
 		for(int x = 0; x < r.w(); x += 2) {
@@ -1720,7 +1720,7 @@ void CustomObject::process(Level& lvl)
 
 	const int traction_from_surface = (stand_info.traction*type_->traction())/1000;
 	velocity_x_ += (accel_x_ * (stand_info.traction ? traction_from_surface : (is_underwater?type_->getTractionInWater() : type_->getTractionInAir())) * (isFacingRight() ? 1 : -1))/1000;
-	if(!standing_on_ && !started_standing || accel_y_ < 0) {
+	if((!standing_on_ && !started_standing) || accel_y_ < 0) {
 		//do not accelerate downwards if standing on something.
 		velocity_y_ += accel_y_ * (gravity_shift_ + (is_underwater ? type_->getTractionInWater() : 1000))/1000;
 	}
@@ -1976,8 +1976,8 @@ void CustomObject::process(Level& lvl)
 			bool place_on_object = false;
 			if(standing_on_ && !fall_through_platforms_ && velocity_y_ >= 0) {
 				rect area = standing_on_->platformRect();
-				if(left_foot >= area.x() && left_foot < area.x() + area.w() ||
-					right_foot >= area.x() && right_foot < area.x() + area.w()) {
+				if((left_foot >= area.x() && left_foot < area.x() + area.w()) ||
+					(right_foot >= area.x() && right_foot < area.x() + area.w())) {
 					place_on_object = true;
 				}
 			}
@@ -2094,7 +2094,7 @@ void CustomObject::process(Level& lvl)
 					isStanding(lvl, &slope_standing_info);
 					if(slope_standing_info.platform) {
 						setY(y()+1);
-						if(isStanding(lvl) == STANDING_STATUS::NOT_STANDING || detect_collisions && entity_collides(lvl, *this, MOVE_DIRECTION::DOWN)) {
+						if(isStanding(lvl) == STANDING_STATUS::NOT_STANDING || (detect_collisions && entity_collides(lvl, *this, MOVE_DIRECTION::DOWN))) {
 							setY(y()-1);
 						}
 					}
@@ -4966,7 +4966,7 @@ bool CustomObject::handleEventInternal(int event, const FormulaCallable* context
 	}
 
 #ifndef NO_EDITOR
-	if(event != OBJECT_EVENT_ANY && (size_t(event) < event_handlers_.size() && event_handlers_[OBJECT_EVENT_ANY] || type_->getEventHandler(OBJECT_EVENT_ANY))) {
+	if(((event != OBJECT_EVENT_ANY && static_cast<size_t>(event) < event_handlers_.size() && event_handlers_[OBJECT_EVENT_ANY]) || type_->getEventHandler(OBJECT_EVENT_ANY))) {
 		game_logic::MapFormulaCallable* callable = new game_logic::MapFormulaCallable;
 		variant v(callable);
 
