@@ -985,7 +985,7 @@ namespace game_logic
 				}
 			}
 
-			void set_no_closure() { requires_closure_ = false; }
+			void setNoClosure() { requires_closure_ = false; }
 	
 		private:
 			variant execute(const FormulaCallable& variables) const {
@@ -2999,7 +2999,7 @@ namespace game_logic
 				if(uses_closure == false) {
 					//tell the expression that when we create the function we don't need to attach
 					//a closure since it's not used.
-					result->set_no_closure();
+					result->setNoClosure();
 				}
 
 				return ExpressionPtr(result);

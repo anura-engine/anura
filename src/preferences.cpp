@@ -1132,13 +1132,17 @@ namespace preferences
 					} else if(setting.double_value) {
 						*setting.double_value = boost::lexical_cast<double>(std::string(equal+1, arg.end()));
 					} else if(setting.bool_value) {
-						std::string value(equal+1, arg.end());
-						if(value == "yes" || value == "true") {
-							*setting.bool_value = true;
-						} else if(value == "no" || value == "false") {
-							*setting.bool_value = false;
+						if(equal != arg.end()) {
+							std::string value(equal+1, arg.end());
+							if(value == "yes" || value == "true") {
+								*setting.bool_value = true;
+							} else if(value == "no" || value == "false") {
+								*setting.bool_value = false;
+							} else {
+								ASSERT_LOG(false, "Invalid value for boolean parameter " << base_name << ". Must be true or false");
+							}
 						} else {
-							ASSERT_LOG(false, "Invalid value for boolean parameter " << base_name << ". Must be true or false");
+							*setting.bool_value = true;
 						}
 					} else if(setting.variant_value) {
 						std::string value(equal+1, arg.end());
