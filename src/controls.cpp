@@ -638,7 +638,7 @@ namespace controls
 				for(int j = 0; j != NUM_CONTROLS; ++j) {
 					ss << (((1 << j)&controls[n][m].keys) ? "1" : "0");
 				}
-				LOG_INFO(ss);
+				LOG_INFO(ss.str());
 			}
 		}
 	}

@@ -431,10 +431,6 @@ void CodeEditorDialog::process()
 		try {
 			CustomObject::resetCurrentDebugError();
 
-#if defined(USE_SHADERS)
-			gles2::shader::get_and_clear_runtime_error();
-#endif
-
 			has_error_ = true;
 			file_contents_set_ = true;
 			if(op_fn_) {
