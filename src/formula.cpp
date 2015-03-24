@@ -677,6 +677,9 @@ namespace game_logic
 				}
 			}
 
+			int getSlot() const { return slot_; }
+			const FormulaCallableDefinition& getDefinition() const { return *callable_def_; }
+
 			variant_type_ptr variant_type() const { return callable_def_->getEntry(slot_)->variant_type; }
 		private:
 			variant executeMember(const FormulaCallable& variables, std::string& id, variant* variant_id) const {
@@ -963,7 +966,7 @@ namespace game_logic
 
 		class LambdaFunctionExpression : public FormulaExpression {
 		public:
-			LambdaFunctionExpression(const std::vector<std::string>& args, ConstFormulaPtr fml, int base_slot, const std::vector<variant>& default_args, const std::vector<variant_type_ptr>& variant_types, const variant_type_ptr& return_type) :    fml_(fml), base_slot_(base_slot), type_info_(new VariantFunctionTypeInfo)
+			LambdaFunctionExpression(const std::vector<std::string>& args, ConstFormulaPtr fml, int base_slot, const std::vector<variant>& default_args, const std::vector<variant_type_ptr>& variant_types, const variant_type_ptr& return_type) :    fml_(fml), base_slot_(base_slot), type_info_(new VariantFunctionTypeInfo), requires_closure_(true)
 			{
 				type_info_->arg_names = args;
 				type_info_->default_args = default_args;
@@ -981,11 +984,19 @@ namespace game_logic
 					}
 				}
 			}
+
+			void set_no_closure() { requires_closure_ = false; }
 	
 		private:
 			variant execute(const FormulaCallable& variables) const {
-				variant v(fml_, variables, base_slot_, type_info_);
-				return v;
+				if(requires_closure_) {
+					variant v(fml_, variables, base_slot_, type_info_);
+					return v;
+				} else {
+					static boost::intrusive_ptr<SlotFormulaCallable> callable(new SlotFormulaCallable);
+					variant v(fml_, *callable, base_slot_, type_info_);
+					return v;
+				}
 			}
 
 			variant_type_ptr getVariantType() const {
@@ -1002,6 +1013,8 @@ namespace game_logic
 			int base_slot_;
 
 			VariantFunctionTypeInfoPtr type_info_;
+
+			bool requires_closure_;
 	
 		};
 
@@ -2660,6 +2673,29 @@ namespace game_logic
 					throw non_static_expression_exception();
 				}
 			};
+
+			//A helper function which queries an expression and finds all the occurrences where it
+			//looks up a symbol in its enclosing scope.
+			void query_formula_expression_lookups(ConstExpressionPtr expr, std::vector<const SlotIdentifierExpression*>* slot_expr, std::vector<const IdentifierExpression*>* id_expr) {
+
+				std::vector<ConstExpressionPtr> children = expr->queryChildren();
+
+				if(dynamic_cast<const DotExpression*>(expr.get())) {
+					if(children.empty() == false) {
+						query_formula_expression_lookups(children.front(), slot_expr, id_expr);
+					}
+
+					return;
+				} else if(dynamic_cast<const SlotIdentifierExpression*>(expr.get())) {
+					slot_expr->push_back(dynamic_cast<const SlotIdentifierExpression*>(expr.get()));
+				} else if(dynamic_cast<const IdentifierExpression*>(expr.get())) {
+					id_expr->push_back(dynamic_cast<const IdentifierExpression*>(expr.get()));
+				} else {
+					for(auto c : children) {
+						query_formula_expression_lookups(c, slot_expr, id_expr);
+					}
+				}
+			}
 		}
 
 		int in_static_context = 0;
@@ -2905,12 +2941,68 @@ namespace game_logic
 			recursive_symbols->resolveRecursiveCalls(fml);
 	
 			if(formula_name.empty()) {
+				bool uses_closure = false;
+
+				//search and see if we make use of the closure. If we don't we can elide it.
+				//this involves getting all the possible lookups the function makes and see
+				//if any of them reference symbols in callable_def. If any of them do we
+				//have to use the closure otherwise we don't.
+				if(!callable_def) {
+					uses_closure = true;
+				} else {
+
+					std::vector<const SlotIdentifierExpression*> slot_expr;
+					std::vector<const IdentifierExpression*> id_expr;
+					query_formula_expression_lookups(fml->expr(), &slot_expr, &id_expr);
+
+					for(auto id : id_expr) {
+						if(callable_def->isStrict() == false || callable_def->getSlot(id->id()) >= 0) {
+							uses_closure = true;
+							break;
+						}
+					}
+
+					if(uses_closure == false) {
+						for(auto slot_callable : slot_expr) {
+							const FormulaCallableDefinition& def = slot_callable->getDefinition();
+
+							//the basis is our symbol table's offset relative to the symbol table
+							//in the scope of the symbol being resolved
+							const int basis = def.querySubsetSlotBase(callable_def.get());
+							if(basis == -1) {
+								//our symbol table is unrelated to the symbol table of the symbol
+								//getting looked up. As long as we are strict that means we
+								//can be certain nothing is looking us up and we don't need the closure.
+								if(!callable_def->isStrict()) {
+									uses_closure = true;
+									break;
+								}
+							} else {
+								//look up the slot and see if it's within our symbol table.
+								int numSlot = slot_callable->getSlot() - basis;
+								if(numSlot >= 0 && numSlot < callable_def->getNumSlots()) {
+									uses_closure = true;
+									break;
+								}
+							}
+						}
+					}
+				} //end of checking if we need the closure.
+
 				if(g_strict_formula_checking) {
 					std::ostringstream why;
 					STRICT_ASSERT(!result_type || variant_types_compatible(result_type, fml->queryVariantType(), &why), "Formula function return type mis-match. Expects " << result_type->to_string() << " but expression evaluates to " << fml->queryVariantType()->to_string() << "\n" << pinpoint_location(formula_str, beg->begin, (i2-1)->end) << "\n" << why.str());
 				}
 
-				return ExpressionPtr(new LambdaFunctionExpression(args, fml, callable_def ? callable_def->getNumSlots() : 0, default_args, variant_types, result_type ? result_type : fml->queryVariantType()));
+				LambdaFunctionExpression* result = new LambdaFunctionExpression(args, fml, callable_def ? callable_def->getNumSlots() : 0, default_args, variant_types, result_type ? result_type : fml->queryVariantType());
+
+				if(uses_closure == false) {
+					//tell the expression that when we create the function we don't need to attach
+					//a closure since it's not used.
+					result->set_no_closure();
+				}
+
+				return ExpressionPtr(result);
 			}
 
 			const std::string precond = "";

@@ -62,6 +62,10 @@ namespace game_logic
 		FormulaCallableDefinition();
 		virtual ~FormulaCallableDefinition();
 
+		//subset is a definition we expect to be a subset of this definition.
+		//returns its slot offset, or -1 if it's not recognized as a subset.
+		int querySubsetSlotBase(const FormulaCallableDefinition* subset) const;
+
 		virtual int getSlot(const std::string& key) const = 0;
 		virtual Entry* getEntry(int slot) = 0;
 		virtual const Entry* getEntry(int slot) const = 0;
@@ -88,6 +92,9 @@ namespace game_logic
 		bool supportsSlotLookups() const { return supports_slot_lookups_; }
 		void setSupportsSlotLookups(bool value) { supports_slot_lookups_ = value; }
 	private:
+
+		virtual int getSubsetSlotBase(const FormulaCallableDefinition* subset) const = 0;
+
 		bool is_strict_;
 		bool supports_slot_lookups_;
 		std::string type_name_;

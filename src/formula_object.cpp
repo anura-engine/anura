@@ -433,6 +433,12 @@ std::map<std::string, std::string>& class_path_map()
 				}
 			}
 
+			int getSubsetSlotBase(const FormulaCallableDefinition* subset) const
+			{
+				return -1;
+			}
+			
+
 		private:
 			std::map<std::string, int> properties_;
 			std::vector<Entry> slots_;
@@ -977,6 +983,7 @@ void FormulaObject::applyDiff(variant delta)
 	visitVariants(variant(this), [&objects](variant v) {
 		FormulaObject* obj = v.try_convert<FormulaObject>();
 		if(obj) {
+			obj->previous_.reset();
 			obj->previous_.reset(new FormulaObject(*obj));
 			objects[obj->id_] = obj;
 		}});

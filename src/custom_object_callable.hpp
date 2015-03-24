@@ -65,6 +65,8 @@ public:
 	void popPrivateAccess();
 
 private:
+	int getSubsetSlotBase(const FormulaCallableDefinition* subset) const { return -1; }
+	
 	std::vector<Entry> entries_;
 
 	std::map<std::string, int> properties_;

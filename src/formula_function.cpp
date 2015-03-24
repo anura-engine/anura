@@ -1522,6 +1522,20 @@ namespace game_logic
 					return 2 + (base_ ? base_->getNumSlots() : 0);
 				}
 
+				int getSubsetSlotBase(const FormulaCallableDefinition* subset) const
+				{
+					if(!base_) {
+						return -1;
+					}
+
+					const int slot = base_->querySubsetSlotBase(subset);
+					if(slot == -1) {
+						return -1;
+					}
+
+					return 2 + slot;
+				}
+
 			private:
 				ConstFormulaCallableDefinitionPtr base_;
 				variant_type_ptr type_;
@@ -2109,6 +2123,20 @@ FUNCTION_DEF_IMPL
 
 			int getNumSlots() const {
 				return NUM_MAP_CALLABLE_SLOTS + (base_ ? base_->getNumSlots() : 0);
+			}
+
+			int getSubsetSlotBase(const FormulaCallableDefinition* subset) const
+			{
+				if(!base_) {
+					return -1;
+				}
+
+				const int slot = base_->querySubsetSlotBase(subset);
+				if(slot == -1) {
+					return -1;
+				}
+
+				return NUM_MAP_CALLABLE_SLOTS + slot;
 			}
 
 		private:

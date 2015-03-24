@@ -50,6 +50,15 @@ namespace game_logic
 	{
 	}
 
+	int FormulaCallableDefinition::querySubsetSlotBase(const FormulaCallableDefinition* subset) const
+	{
+		if(subset == this) {
+			return 0;
+		}
+
+		return getSubsetSlotBase(subset);
+	}
+
 	namespace
 	{
 		class simple_definition : public FormulaCallableDefinition
@@ -107,6 +116,16 @@ namespace game_logic
 			}
 
 			int getNumSlots() const { return base_getNumSlots() + entries_.size(); }
+
+			int getSubsetSlotBase(const FormulaCallableDefinition* subset) const
+			{
+				if(base_) {
+					return base_->querySubsetSlotBase(subset);
+				} else {
+					return -1;
+				}
+			}
+			
 
 			void add(const std::string& id) {
 				entries_.push_back(Entry(id));
@@ -174,6 +193,11 @@ namespace game_logic
 			}
 
 			int getNumSlots() const { return base_->getNumSlots(); }
+			
+			int getSubsetSlotBase(const FormulaCallableDefinition* subset) const
+			{
+				return base_->querySubsetSlotBase(subset);
+			}
 
 			const std::string* getTypeName() const { return base_->getTypeName(); }
 
