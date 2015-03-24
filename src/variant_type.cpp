@@ -1151,7 +1151,10 @@ public:
 	bool is_compatible(variant_type_ptr type, std::ostringstream* why) const {
 		std::pair<variant_type_ptr,variant_type_ptr> p = type->is_map_of();
 		if(p.first && p.second) {
-			return variant_types_compatible(key_type_, p.first) &&
+			// The given type of map can be used as a map of this type if,
+			// a key to this type of map can be used as a key of that map,
+			// and a value resulting from that map can be returned as a value of this type of map.
+			return variant_types_compatible(p.first, key_type_) &&
 			       variant_types_compatible(value_type_, p.second);
 		}
 
@@ -1439,8 +1442,12 @@ public:
 				return false;
 			}
 
+			// Order is args[n], args_[n] here, and return_, return_type above,
+			// Because type argument can serve as an instance of this type if,
+			// the inputs to this can be used as arguments of type,
+			// and the result of type can be used as the return value of this.
 			for(int n = 0; n != args_.size(); ++n) {
-				if(!variant_types_compatible(args_[n], args[n])) {
+				if(!variant_types_compatible(args[n], args_[n])) {
 					return false;
 				}
 			}
@@ -2667,7 +2674,7 @@ UNIT_TEST(variant_type) {
 	TYPES_COMPAT("list", "[any]");
 	TYPES_COMPAT("[any]", "[int|string]");
 	TYPES_COMPAT("[any]", "list");
-	TYPES_COMPAT("{int|string -> string}", "{int -> string}");
+	TYPES_COMPAT("{int -> string}", "{int|string -> string}");
 	TYPES_COMPAT("map", "{int -> string}");
 
 	TYPES_COMPAT("[int]", "[int,int]");
@@ -2695,6 +2702,7 @@ UNIT_TEST(variant_type) {
 	TYPES_INCOMPAT("enum { 2, 3 }", "enum { 2, 3, 4 }");
 	TYPES_INCOMPAT("int|null", "enum { 2, 3, 4.5 }");
 	TYPES_INCOMPAT("enum { 2..8 }", "enum { 2, 3, 4..6, 9 }");
+	TYPES_INCOMPAT("{int|string -> string}", "{int -> string}");
 
 #undef TYPES_COMPAT	
 }
