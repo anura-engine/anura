@@ -671,8 +671,7 @@ namespace gui
 	bool TextEditorWidget::handleMouseButtonDown(const SDL_MouseButtonEvent& event)
 	{
 		recordOp();
-		if(event.x >= x() && event.x < x() + width() && event.y >= y() && event.y < y() + height()) {
-
+		if(inWidget(event.x, event.y)) {
 			setFocus(true);
 			std::pair<int, int> pos = mousePositiontoRowCol(event.x, event.y);
 			if(pos.first != -1) {
