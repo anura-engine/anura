@@ -326,8 +326,8 @@ void SpeechDialog::draw() const
 				continue;
 			}
 
-			KRE::Canvas::ColorManager cm(markup[m].color ? *markup[m].color : KRE::Color(255,187,10,255));
-			const rect r = font->draw(text_left_align[n] + xadj, ypos - 2, std::string(str.begin() + begin_index, str.begin() + end_index));
+			KRE::Color draw_color(markup[m].color ? *markup[m].color : KRE::Color(255,187,10,255));
+			const rect r = font->draw(text_left_align[n] + xadj, ypos - 2, std::string(str.begin() + begin_index, str.begin() + end_index), 2, draw_color);
 			xadj += r.w();
 		}
 		//add some space between the lines
