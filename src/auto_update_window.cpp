@@ -4,6 +4,7 @@
 #include "auto_update_window.hpp"
 #include "filesystem.hpp"
 #include "json_parser.hpp"
+#include "module.hpp"
 #include "variant_utils.hpp"
 
 #include "Canvas.hpp"
@@ -14,7 +15,7 @@ namespace
 {
 	KRE::TexturePtr render_updater_text(const std::string& str, const KRE::Color& color)
 	{
-		return KRE::Font::getInstance()->renderText(str, color, 16, true, "FreeMono.ttf");
+		return KRE::Font::getInstance()->renderText(str, color, 16, true, KRE::Font::get_default_monospace_font());
 	}
 
 	class progress_animation
@@ -95,6 +96,23 @@ void auto_update_window::process()
 
 		KRE::WindowManager wm("SDL");
 		window_ = wm.createWindow(800, 600, hints.build());
+
+		using namespace KRE;
+
+		// Set the default font to use for rendering. This can of course be overridden when rendering the
+		// text to a texture.
+		Font::setDefaultFont(module::get_default_font() == "bitmap" 
+			? "FreeMono" 
+			: module::get_default_font());
+		std::map<std::string,std::string> font_paths;
+		std::map<std::string,std::string> font_paths2;
+		module::get_unique_filenames_under_dir("data/fonts/", &font_paths);
+		for(auto& fp : font_paths) {
+			font_paths2[module::get_id(fp.first)] = fp.second;
+		}
+		KRE::Font::setAvailableFonts(font_paths2);
+		font_paths.clear();
+		font_paths2.clear();
 	}
 }
 
@@ -123,11 +141,18 @@ void auto_update_window::draw() const
 	KRE::TexturePtr percent_surf_black(render_updater_text(percent_stream.str(), KRE::Color(0, 0, 0)));
 
 	if(percent_surf_white.get() != nullptr) {
-		canvas->blitTexture(percent_surf_white, 0, window_->width()/2 - percent_surf_white->width()/2, window_->height()/2 - percent_surf_white->height()/2);
+		rect dest(window_->width()/2 - percent_surf_white->width()/2,
+		          window_->height()/2 - percent_surf_white->height()/2,
+				  percent_surf_white->width(),
+				  percent_surf_white->height());
+		canvas->blitTexture(percent_surf_white, 0, dest);
 	}
 
 	if(percent_surf_black.get() != nullptr) {
-		rect dest(window_->width()/2 - percent_surf_black->width()/2, window_->height()/2 - percent_surf_black->height()/2, percent_surf_black->width(), percent_surf_black->height());
+		rect dest(window_->width()/2 - percent_surf_black->width()/2,
+		          window_->height()/2 - percent_surf_black->height()/2,
+				  percent_surf_black->width(),
+				  percent_surf_black->height());
 
 		if(bar_point > dest.x()) {
 			if(bar_point < dest.x() + dest.w()) {
