@@ -171,13 +171,13 @@ std::string copy_from_clipboard(const bool)
         {
             NSString *clipString = [NSString stringWithCString:text.c_str()
                                                 encoding:[NSString defaultCStringEncoding]];
-			NSPasteboard *pasteboard = [NSPasteboard generalPasteboard];
+			NSPasteboard *pasteboard;
 			#if (MAC_OS_X_VERSION_MIN_REQUIRED > MAC_OS_X_VERSION_10_5)
-				NSInteger changeCount = [pasteboard clearContents];
+				NSInteger changeCount;
 			#else
 				[pasteboard declareTypes:[NSArray arrayWithObjects:NSStringPboardType, nil] owner:nil];
 			#endif
-			BOOL ok = [pasteboard setString:clipString forType:NSStringPboardType];
+			BOOL ok;
             NSLog(@"%@",clipString);
             
             NSLog(@"%@", [[NSPasteboard generalPasteboard] stringForType:NSStringPboardType]);
