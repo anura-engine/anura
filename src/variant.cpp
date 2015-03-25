@@ -1695,7 +1695,7 @@ bool variant::operator==(const variant& v) const
 {
 	if(type_ != v.type_) {
 		if(type_ == VARIANT_TYPE_DECIMAL || v.type_ == VARIANT_TYPE_DECIMAL) {
-			if(!is_numeric() && !is_null() || !v.is_numeric() && !v.is_null()) {
+			if((!is_numeric() && !is_null()) || (!v.is_numeric() && !v.is_null())) {
 				return false;
 			}
 
@@ -1778,8 +1778,8 @@ bool variant::operator!=(const variant& v) const
 bool variant::operator<=(const variant& v) const
 {
 	if(type_ != v.type_) {
-		if(type_ == VARIANT_TYPE_DECIMAL && v.is_numeric() ||
-		   v.type_ == VARIANT_TYPE_DECIMAL && is_numeric()) {
+		if((type_ == VARIANT_TYPE_DECIMAL && v.is_numeric()) ||
+		   (v.type_ == VARIANT_TYPE_DECIMAL && is_numeric())) {
 			return as_decimal() <= v.as_decimal();
 		}
 

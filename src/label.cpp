@@ -250,7 +250,7 @@ namespace gui
 		variant_builder res;
 		res.add("type", "Label");
 		res.add("text", text());
-		if(color_ && color_->r_int() != 255 || color_->g_int() != 255 || color_->b_int() != 255 || color_->a_int() != 255) {
+		if((color_ && color_->r_int() != 255) || color_->g_int() != 255 || color_->b_int() != 255 || color_->a_int() != 255) {
 			res.add("color", color_->write());
 		}
 		if(size() != default_font_size) {

@@ -698,9 +698,9 @@ namespace gui
 	bool WidgetSortZOrder::operator()(const WidgetPtr& lhs, const WidgetPtr& rhs) const
 	{
 		return lhs->zorder() < rhs->zorder() 
-			|| lhs->zorder() == rhs->zorder() && lhs->y() < rhs->y() 
-			|| lhs->zorder() == rhs->zorder() && lhs->y() == rhs->y() && lhs->x() < rhs->x() 
-			|| lhs->zorder() == rhs->zorder() && lhs->y() == rhs->y() && lhs->x() == rhs->x() && lhs.get() < rhs.get();
+			|| (lhs->zorder() == rhs->zorder() && lhs->y() < rhs->y()) 
+			|| (lhs->zorder() == rhs->zorder() && lhs->y() == rhs->y() && lhs->x() < rhs->x()) 
+			|| (lhs->zorder() == rhs->zorder() && lhs->y() == rhs->y() && lhs->x() == rhs->x() && lhs.get() < rhs.get());
 	}
 
 	bool widgetSortTabOrder::operator()(const int lhs, const int rhs) const

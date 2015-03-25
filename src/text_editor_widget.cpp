@@ -671,8 +671,7 @@ namespace gui
 	bool TextEditorWidget::handleMouseButtonDown(const SDL_MouseButtonEvent& event)
 	{
 		recordOp();
-		if(event.x >= x() && event.x < x() + width() && event.y >= y() && event.y < y() + height()) {
-
+		if(inWidget(event.x, event.y)) {
 			setFocus(true);
 			std::pair<int, int> pos = mousePositiontoRowCol(event.x, event.y);
 			if(pos.first != -1) {
@@ -1451,7 +1450,7 @@ namespace gui
 
 	void TextEditorWidget::selectToken(const std::string& row, int& begin_row, int& end_row, int& begin_col, int& end_col)
 	{
-		if(util::c_isdigit(row[begin_col]) || row[begin_col] == '.' && static_cast<unsigned>(begin_col+1) < row.size() && util::c_isdigit(row[begin_col+1])) {
+		if(util::c_isdigit(row[begin_col]) || (row[begin_col] == '.' && static_cast<unsigned>(begin_col+1) < row.size() && util::c_isdigit(row[begin_col+1]))) {
 			while(begin_col >= 0 && (util::c_isdigit(row[begin_col]) || row[begin_col] == '.')) {
 				--begin_col;
 			}

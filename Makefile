@@ -36,6 +36,7 @@ endif
 
 ifeq ($(CXX), g++)
 GCC_GTEQ_490 := $(shell expr `$(CXX) -dumpversion | sed -e 's/\.\([0-9][0-9]\)/\1/g' -e 's/\.\([0-9]\)/0\1/g' -e 's/^[0-9]\{3,4\}$$/&00/'` \>= 40900)
+BASE_CXXFLAGS += -Wno-literal-suffix
 ifeq "$(GCC_GTEQ_490)" "1"
 BASE_CXXFLAGS += -fdiagnostics-color=auto -fsanitize=undefined
 endif
@@ -52,11 +53,13 @@ USE_LUA?=$(shell pkg-config --exists lua5.2 && echo yes)
 
 TARBALL := /var/www/anura/anura-$(shell date +"%Y%m%d-%H%M").tar.bz2
 
-# Initial compiler options, used before CXXFLAGS and CPPFLAGS.
-BASE_CXXFLAGS += -std=c++0x -g -rdynamic -fno-inline-functions \
+# Initial compiler options, used before CXXFLAGS and CPPFLAGS. -rdynamic -Wno-literal-suffix
+BASE_CXXFLAGS += -std=c++0x -g -fno-inline-functions \
 	-fthreadsafe-statics -Wnon-virtual-dtor -Werror \
 	-Wignored-qualifiers -Wformat -Wswitch -Wreturn-type \
-	-Wno-narrowing -Wno-literal-suffix
+	-Wno-narrowing
+
+LDFLAGS?=-rdynamic
 
 # Compiler include options, used after CXXFLAGS and CPPFLAGS.
 INC := -Iinclude $(shell pkg-config --cflags x11 sdl2 glew SDL2_image SDL2_ttf libpng zlib freetype2 cairo)
@@ -67,7 +70,8 @@ endif
 
 # Linker library options.
 LIBS := $(shell pkg-config --libs x11 gl ) \
-	$(shell pkg-config --libs sdl2 glew SDL2_image libpng zlib freetype2 cairo) -lSDL2_ttf -lSDL2_mixer
+	$(shell pkg-config --libs sdl2 glew SDL2_image libpng zlib freetype2 cairo) \
+	-lSDL2_ttf -lSDL2_mixer
 
 # libvpx check
 USE_LIBVPX?=$(shell pkg-config --exists vpx && echo yes)
@@ -80,7 +84,7 @@ endif
 # couchbase check
 USE_DB_CLIENT?=no
 ifeq ($(USE_DB_CLIENT),yes)
-    BASE_CXXFLAGS += -DUSE_DB_CLIENT
+    BASE_CXXFLAGS += -DUSE_DBCLIENT
     LIBS += -lcouchbase
 endif
 
@@ -121,7 +125,7 @@ all: checkdirs anura
 
 anura: $(OBJ)
 	@echo "Linking : anura"
-	@$(CCACHE) $(CXX) \
+	@$(CXX) \
 		$(BASE_CXXFLAGS) $(LDFLAGS) $(CXXFLAGS) $(CPPFLAGS) \
 		$(OBJ) -o anura \
 		$(LIBS) -lboost_regex -lboost_system -lboost_filesystem -lpthread -fthreadsafe-statics

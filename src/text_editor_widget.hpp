@@ -56,7 +56,7 @@ namespace gui
 			{}
 			bool operator==(const Loc& o) const { return row == o.row && col == o.col; }
 			bool operator!=(const Loc& o) const { return !(*this == o); }
-			bool operator<(const Loc& o) const { return row < o.row || row == o.row && col < o.col; }
+			bool operator<(const Loc& o) const { return row < o.row || (row == o.row && col < o.col); }
 			bool operator>(const Loc& o) const { return o < *this; }
 			bool operator<=(const Loc& o) const { return operator==(o) || operator<(o); }
 			bool operator>=(const Loc& o) const { return o <= *this; }

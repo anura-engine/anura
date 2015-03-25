@@ -254,7 +254,7 @@ namespace controls
 
 	void read_until(int ncycle)
 	{
-		if(local_player < 0 || local_player >= nplayers) {
+		if(local_player >= nplayers) {
 			return;
 		}
 
@@ -269,7 +269,7 @@ namespace controls
 
 	int local_controls_end()
 	{
-		if(local_player < 0 || local_player >= nplayers) {
+		if(local_player >= nplayers) {
 			return 0;
 		}
 
@@ -278,7 +278,7 @@ namespace controls
 
 	void read_local_controls()
 	{
-		if(local_player < 0 || local_player >= nplayers) {
+		if(local_player >= nplayers) {
 			return;
 		}
 
@@ -341,7 +341,7 @@ namespace controls
 
 	void unread_local_controls()
 	{
-		if(local_player < 0 || local_player >= nplayers || controls[local_player].empty()) {
+		if(local_player >= nplayers || controls[local_player].empty()) {
 			return;
 		}
 
@@ -518,7 +518,7 @@ namespace controls
 
 	void write_control_packet(std::vector<char>& v)
 	{
-		if(local_player < 0 || local_player >= nplayers) {
+		if(local_player >= nplayers) {
 			LOG_ERROR("NO VALID LOCAL PLAYER");
 			return;
 		}
@@ -601,7 +601,7 @@ namespace controls
 
 	int cycles_behind()
 	{
-		if(local_player < 0 || local_player >= nplayers) {
+		if(local_player >= nplayers) {
 			return 0;
 		}
 
@@ -638,7 +638,7 @@ namespace controls
 				for(int j = 0; j != NUM_CONTROLS; ++j) {
 					ss << (((1 << j)&controls[n][m].keys) ? "1" : "0");
 				}
-				LOG_INFO(ss);
+				LOG_INFO(ss.str());
 			}
 		}
 	}

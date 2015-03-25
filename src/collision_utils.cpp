@@ -69,8 +69,8 @@ int get_solid_dimension_id(const std::string& key)
 
 bool point_standable(const Level& lvl, const Entity& e, int x, int y, CollisionInfo* info, ALLOW_PLATFORM allow_platform)
 {
-	if(allow_platform == SOLID_AND_PLATFORMS  && lvl.standable(x, y, info ? &info->surf_info : nullptr) ||
-	   allow_platform != SOLID_AND_PLATFORMS  && lvl.solid(x, y, info ? &info->surf_info : nullptr)) {
+	if((allow_platform == SOLID_AND_PLATFORMS  && lvl.standable(x, y, info ? &info->surf_info : nullptr)) ||
+	   (allow_platform != SOLID_AND_PLATFORMS  && lvl.solid(x, y, info ? &info->surf_info : nullptr))) {
 		if(info) {
 			info->readSurfInfo();
 		}
@@ -452,8 +452,8 @@ int entity_user_collision(const Entity& a, const Entity& b, CollisionPair* areas
 	const Frame& fb = b.getCurrentFrame();
 
 	if(fa.getCollisionAreas().empty() || fb.getCollisionAreas().empty() ||
-	   fa.hasCollisionAreasInsideFrame() && fb.hasCollisionAreasInsideFrame() &&
-	   !rects_intersect(a.frameRect(), b.frameRect())) {
+	   (fa.hasCollisionAreasInsideFrame() && fb.hasCollisionAreasInsideFrame() &&
+	   !rects_intersect(a.frameRect(), b.frameRect()))) {
 		return 0;
 	}
 
@@ -634,8 +634,8 @@ void detect_user_collisions(Level& lvl)
 			const EntityPtr& a = *i;
 			const EntityPtr& b = *j;
 			if(a == b ||
-			   (a->getWeakCollideDimensions()&b->getCollideDimensions()) == 0 &&
-			   (a->getCollideDimensions()&b->getWeakCollideDimensions()) == 0) {
+			   ((a->getWeakCollideDimensions()&b->getCollideDimensions()) == 0 &&
+			   (a->getCollideDimensions()&b->getWeakCollideDimensions()) == 0)) {
 				//the objects do not share a dimension, and so can't collide.
 				continue;
 			}

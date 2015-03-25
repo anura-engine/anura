@@ -57,7 +57,7 @@ namespace threading
 		// \param data passed to f
 		//
 		// \pre f != nullptr
-		explicit thread(const std::string& name, std::function<void ()> f);
+		explicit thread(const std::string& name, std::function<void()> f);
 
 		// Destroy the thread object. This is done by waiting on the
 		// thread with the join() operation, thus blocking until the

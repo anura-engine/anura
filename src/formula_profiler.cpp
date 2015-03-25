@@ -351,8 +351,8 @@ namespace formula_profiler
 
 	bool CustomObjectEventFrame::operator<(const CustomObjectEventFrame& f) const
 	{
-		return type < f.type || type == f.type && event_id < f.event_id ||
-			   type == f.type && event_id == f.event_id && executing_commands < f.executing_commands;
+		return type < f.type || (type == f.type && event_id < f.event_id) ||
+			   (type == f.type && event_id == f.event_id && executing_commands < f.executing_commands);
 	}
 
 	std::string get_profile_summary()

@@ -49,7 +49,7 @@ struct CallStackEntry
 {
 	const game_logic::FormulaExpression* expression;
 	const game_logic::FormulaCallable* callable;
-	bool operator<(const CallStackEntry& o) const { return expression < o.expression || expression == o.expression && callable < o.callable; }
+	bool operator<(const CallStackEntry& o) const { return (expression < o.expression) || (expression == o.expression && callable < o.callable); }
 };
 
 void push_call_stack(const game_logic::FormulaExpression* frame, const game_logic::FormulaCallable* callable);

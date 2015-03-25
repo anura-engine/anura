@@ -2168,8 +2168,8 @@ FUNCTION_DEF_IMPL
 				}
 			private:
 				variant getValue(const std::string& key) const {
-					if(value_name_.empty() && key == "value" ||
-					   !value_name_.empty() && key == value_name_) {
+					if((value_name_.empty() && key == "value") ||
+					   (!value_name_.empty() && key == value_name_)) {
 						return value_;
 					} else if(key == "index") {
 						return variant(index_);
@@ -4353,8 +4353,8 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 	{
 		FormulaExpression::setDebugInfo(parent_formula, begin_str, end_str);
 
-		if(min_args_ >= 0 && args_.size() < static_cast<size_t>(min_args_) ||
-		   max_args_ >= 0 && args_.size() > static_cast<size_t>(max_args_)) {
+		if((min_args_ >= 0 && args_.size() < static_cast<size_t>(min_args_)) ||
+		   (max_args_ >= 0 && args_.size() > static_cast<size_t>(max_args_))) {
 			ASSERT_LOG(false, "ERROR: incorrect number of arguments to function '" << name_ << "': expected between " << min_args_ << " and " << max_args_ << ", found " << args_.size() << "\n" << debugPinpointLocation());
 		}
 	}

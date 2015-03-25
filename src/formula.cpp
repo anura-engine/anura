@@ -2506,9 +2506,9 @@ namespace game_logic
 				}
 
 				if(function_name != nullptr &&
-				   (n == 1 && (*function_name == "sort" || *function_name == "fold" ||
-							   *function_name == "weighted_graph") ||
-					n == 2 &&  *function_name == "zip")) {
+				   ((n == 1 && (*function_name == "sort" || *function_name == "fold" ||
+							   *function_name == "weighted_graph")) ||
+					(n == 2 &&  *function_name == "zip"))) {
 					variant_type_ptr sequence_type = (*res)[0]->queryVariantType();
 					variant_type_ptr value_type = sequence_type->is_list_of();
 					if(!value_type && *function_name == "zip") {
@@ -3055,7 +3055,7 @@ namespace game_logic
 					if(parens == 0 && i+1 != i2) {
 						fn_call = nullptr;
 					}
-				} else if(parens == 0 && (i->type == FFL_TOKEN_TYPE::OPERATOR || i->type == FFL_TOKEN_TYPE::LEFT_POINTER || i->type == FFL_TOKEN_TYPE::LDUBANGLE && (i2-1)->type == FFL_TOKEN_TYPE::RDUBANGLE)) {
+				} else if(parens == 0 && (i->type == FFL_TOKEN_TYPE::OPERATOR || i->type == FFL_TOKEN_TYPE::LEFT_POINTER || (i->type == FFL_TOKEN_TYPE::LDUBANGLE && (i2-1)->type == FFL_TOKEN_TYPE::RDUBANGLE))) {
 					if(op == nullptr || operator_precedence(*op) >= operator_precedence(*i)) {
 						if(i != i1 && i->end - i->begin == 3 && std::equal(i->begin, i->end, "not")) {
 							//The not operator is always unary and can only
@@ -3480,7 +3480,7 @@ Formula::StrictCheckScope::~StrictCheckScope()
 
 FormulaPtr Formula::createOptionalFormula(const variant& val, FunctionSymbolTable* symbols, ConstFormulaCallableDefinitionPtr callableDefinition, FORMULA_LANGUAGE lang)
 {
-	if(val.is_null() || val.is_string() && val.as_string().empty()) {
+	if(val.is_null() || (val.is_string() && val.as_string().empty())) {
 		return FormulaPtr();
 	}
 	

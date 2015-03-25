@@ -117,9 +117,9 @@ namespace KRE
 			std::string font_name;
 
 			bool operator<(const CacheKey& k) const {
-				return text < k.text || text == k.text && color < k.color
-					|| text == k.text && color == k.color && font_size < k.font_size
-					|| text == k.text && color == k.color && font_size == k.font_size && font_name < k.font_name;
+				return text < k.text || (text == k.text && color < k.color)
+					|| (text == k.text && color == k.color && font_size < k.font_size)
+					|| (text == k.text && color == k.color && font_size == k.font_size && font_name < k.font_name);
 		}	
 		};
 

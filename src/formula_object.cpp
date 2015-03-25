@@ -1519,7 +1519,7 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 	{
 		for(const PropertyEntry& entry : class_->slots()) {
 			FORMULA_ACCESS_TYPE type = FORMULA_ACCESS_TYPE::READ_ONLY;
-			if(entry.getter && entry.setter || entry.variable_slot != -1) {
+			if((entry.getter && entry.setter) || entry.variable_slot != -1) {
 				type = FORMULA_ACCESS_TYPE::READ_WRITE;
 			} else if(entry.getter) {
 				type = FORMULA_ACCESS_TYPE::READ_ONLY;
