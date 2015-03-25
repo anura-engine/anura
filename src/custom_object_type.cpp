@@ -507,7 +507,7 @@ void init_object_definition(variant node, const std::string& id_, CustomObjectCa
 					const game_logic::FormulaCallableDefinition::Entry* entry = callable_definition_->getEntry(current_slot);
 					ASSERT_LOG(!entry->variant_type || variant_types_compatible(entry->variant_type, type), "Type mis-match for object property " << id_ << "." << k << " has a different type than the definition in the prototype: " << type->to_string() << " prototype defines as " << entry->variant_type->to_string());
 					ASSERT_LOG(!set_type || set_type->is_none() == entry->getWriteType()->is_none(), "Object property " << id_ << "." << k << " is immutable in the " << (set_type->is_none() ? "object" : "prototype") << " but not in the " << (set_type->is_none() ? "prototype" : "object"));
-					ASSERT_LOG(!set_type || set_type->is_none() && entry->getWriteType()->is_none() || variant_types_compatible(entry->getWriteType(), set_type), "Type mis-match for object property " << id_ << "." << k << " has a different mutable type than the definition in the prototype. The property can be mutated with a " << set_type->to_string() << " while prototype allows mutation as " << entry->getWriteType()->to_string());
+					ASSERT_LOG(!set_type || (set_type->is_none() && entry->getWriteType()->is_none()) || (variant_types_compatible(entry->getWriteType(), set_type)), "Type mis-match for object property " << id_ << "." << k << " has a different mutable type than the definition in the prototype. The property can be mutated with a " << set_type->to_string() << " while prototype allows mutation as " << entry->getWriteType()->to_string());
 				}
 			}
 

@@ -431,7 +431,7 @@ namespace KRE
 			return;
 		}
 
-		ASSERT_LOG(static_cast<int>(texture_params_.size()) == 1 && !is_paletteized_ || is_paletteized_ && static_cast<int>(texture_params_.size()) == 2, "Currently we only support converting textures to palette versions that have one texture. may life in future.");
+		ASSERT_LOG((static_cast<int>(texture_params_.size()) == 1 && !is_paletteized_) || (is_paletteized_ && static_cast<int>(texture_params_.size()) == 2), "Currently we only support converting textures to palette versions that have one texture. may life in future.");
 
 		if(!is_paletteized_) {
 			palette_[0] = palette_[1] = 0;

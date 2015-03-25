@@ -66,7 +66,7 @@ void RadialCurrentGenerator::generate(int center_x, int center_y, int target_x, 
 
 	const float xdiff = static_cast<float>(target_x - center_x);
 	const float ydiff = static_cast<float>(target_y - center_y);
-	if(abs(xdiff) >= radius_ || abs(ydiff) > radius_) {
+	if(std::abs(xdiff) >= radius_ || std::abs(ydiff) > radius_) {
 		return;
 	}
 
@@ -76,8 +76,8 @@ void RadialCurrentGenerator::generate(int center_x, int center_y, int target_x, 
 	}
 
 	const float intensity = intensity_*(1.0f - distance/radius_);
-	const float xdiff_normalized = xdiff/(abs(xdiff) + abs(ydiff));
-	const float ydiff_normalized = ydiff/(abs(xdiff) + abs(ydiff));
+	const float xdiff_normalized = xdiff/(std::abs(xdiff) + std::abs(ydiff));
+	const float ydiff_normalized = ydiff/(std::abs(xdiff) + std::abs(ydiff));
 
 	LOG_INFO("DO_CURRENT: " << center_x << "," << center_y << " ~ " << target_x << "," << target_y << ": "<< intensity << " x " << xdiff_normalized << "," << ydiff_normalized);
 	*velocity_x += static_cast<int>(xdiff_normalized*intensity);
