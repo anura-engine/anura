@@ -370,6 +370,8 @@ void render_scene(Level& lvl, const screen_position& pos)
 	graphics::GameScreen::Manager screen_manager(wnd);
 	KRE::ModelManager2D model(gs.x(), gs.y(), 0, glm::vec2(1.0f/gs.getScaleW(), 1.0f/gs.getScaleH()));
 
+	KRE::Canvas::CameraScope cam_scope(gs.getCurrentCamera());
+
 	const int camera_rotation = lvl.camera_rotation();
 	if(camera_rotation) {
 		float rotate = static_cast<float>(camera_rotation)/1000.0f;

@@ -230,7 +230,6 @@ void SpeechDialog::draw() const
 	ConstGraphicalFontPtr font = GraphicalFont::get("default");
 
 	auto canvas = KRE::Canvas::getInstance();
-	auto wnd = KRE::WindowManager::getMainWindow();
 
 	const int TextAreaHeight = 80;
 
@@ -238,19 +237,19 @@ void SpeechDialog::draw() const
 
 	int speaker_xpos = std::numeric_limits<int>::max();
 	int speaker_ypos = std::numeric_limits<int>::max();
+	
+	const int vw = graphics::GameScreen::get().getVirtualWidth();
+	const int vh = graphics::GameScreen::get().getVirtualHeight();
 
 	ConstEntityPtr speaker = left_side_speaking_ ? left_ : right_;
 	if(speaker) {
 		const screen_position& pos = last_draw_position();
-		const int screen_x = static_cast<int>(pos.x/100.0f + (wnd->width()/2)*(-1.0f/pos.zoom + 1.0f));
-		const int screen_y = static_cast<int>(pos.y/100.0f + (wnd->height()/2)*(-1.0f/pos.zoom + 1.0f));
+		const int screen_x = static_cast<int>(pos.x/100.0f + (vw / 2) * (1.0f - 1.0f / pos.zoom));
+		const int screen_y = static_cast<int>(pos.y/100.0f + (vh / 2) * (1.0f - 1.0f / pos.zoom));
 
 		speaker_xpos = static_cast<int>((speaker->getFeetX() - screen_x)*pos.zoom - 36);
 		speaker_ypos = static_cast<int>((speaker->getFeetY() - screen_y)*pos.zoom - 10);
 	}
-
-	const int vw = graphics::GameScreen::get().getVirtualWidth();
-	const int vh = graphics::GameScreen::get().getVirtualHeight();
 
 	if(pane_area_.w() == 0) {
 		pane_area_ = rect(
@@ -286,7 +285,7 @@ void SpeechDialog::draw() const
 	if(speaker) {
 		//if the arrow to the speaker is within reasonable limits, then
 		//blit it.
-		if(speaker_xpos > top_corner->width() && speaker_xpos < wnd->width() - top_corner->width() - arrow->width()) {
+		if(speaker_xpos > top_corner->width() && speaker_xpos < vw - top_corner->width() - arrow->width()) {
 			arrow->blit(speaker_xpos, pane_area_.y() - arrow->height() - 32);
 		}
 	}
@@ -345,7 +344,7 @@ void SpeechDialog::draw() const
 	if(text_char_ == num_chars() && options_.empty() == false) {
 		//ConstGuiSectionPtr options_panel = GuiSection::get("speech_portrait_pane");
 		ConstFramedGuiElementPtr options_panel = FramedGuiElement::get("regular_window");
-		int xpos = wnd->width()/2 - option_width_/2 - OptionsBorder*2;
+		int xpos = vw/2 - option_width_/2 - OptionsBorder*2;
 		int ypos = 0;
 		options_panel->blit(xpos, ypos, OptionsBorder*4 + option_width_, OptionsBorder*2 + OptionHeight*options_.size(), true);
 
