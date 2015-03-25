@@ -788,7 +788,7 @@ int main(int argcount, char* argvec[])
 	hints.add("width", preferences::requested_window_width() > 0 ? preferences::requested_window_width() : 800);
 	hints.add("height", preferences::requested_window_height() > 0 ? preferences::requested_window_height() : 600);
 
-	WindowPtr main_wnd = wm.allocateWindow(hints.build());
+    KRE::WindowPtr main_wnd = wm.allocateWindow(hints.build());
 	main_wnd->setWindowTitle(module::get_module_pretty_name());
 
 	if(preferences::auto_size_window() 

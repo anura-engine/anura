@@ -21,8 +21,10 @@
 	   distribution.
 */
 
+#include <functional>
 #include <map>
 #include <memory>
+#include <string>
 #include <vector>
 
 #include "background_task_pool.hpp"
@@ -72,7 +74,12 @@ namespace background_task_pool
 
 	void submit(std::function<void()> job, std::function<void()> on_complete)
 	{
-		task t = { job, on_complete, std::shared_ptr<threading::thread>(new threading::thread("background_task", std::bind(run_task, job, next_task_id))) };
+        std::string task_name = "background_task";
+        std::function<void()> f = std::bind(run_task, job, next_task_id);
+        task t = {
+            job,
+            on_complete,
+            std::make_shared<threading::thread>(task_name, f) };
 		task_map[next_task_id] = t;
 		++next_task_id;
 	}
