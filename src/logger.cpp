@@ -22,3 +22,22 @@
 */
 
 #include "logger.hpp"
+
+namespace
+{
+	const int max_log_packet_length = 3072;
+}
+
+void log_internal(SDL_LogPriority priority, const std::string& str)
+{
+	std::string s(str);
+	// break up long strings into something about max_log_packet_length in size.
+	while(s.size() > max_log_packet_length) {
+		SDL_LogMessage(SDL_LOG_CATEGORY_APPLICATION, priority, "%s\n", s.substr(0, max_log_packet_length).c_str());
+		s = s.substr(max_log_packet_length+1);
+	}
+	if(!s.empty()) {
+		SDL_LogMessage(SDL_LOG_CATEGORY_APPLICATION, priority, "%s\n", s.c_str());
+	}
+}
+

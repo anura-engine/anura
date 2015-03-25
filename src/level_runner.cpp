@@ -824,8 +824,8 @@ bool LevelRunner::play_cycle()
 
 	std::unique_ptr<controls::local_controls_lock> controls_lock;
 #ifndef NO_EDITOR
-	if(editor_ && editor_->hasKeyboardFocus() ||
-	   console_ && console_->hasKeyboardFocus()) {
+	if((editor_ && editor_->hasKeyboardFocus()) ||
+	   (console_ && console_->hasKeyboardFocus())) {
 		controls_lock.reset(new controls::local_controls_lock);
 	}
 

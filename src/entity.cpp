@@ -426,14 +426,14 @@ bool zorder_compare(const EntityPtr& a, const EntityPtr& b)
 	//the reverse_global_vertical_zordering flag is set in the player object (our general repository for all major game rules et al).  It's meant to reverse vertical sorting of objects in the same zorder, depending on whether objects are being viewed from above, or below.  In frogatto proper, objects at a higher vertical position should overlap those below.  In a top-down game, the reverse is desirable.
 	if(Level::current().player() && Level::current().player()->hasReverseGlobalVerticalZordering()){
 		return a->zorder() < b->zorder() ||
-			a->zorder() == b->zorder() && a->zSubOrder() < b->zSubOrder() ||
-			a->zorder() == b->zorder() && a->zSubOrder() == b->zSubOrder() && a->getMidpoint().y < b->getMidpoint().y ||
-			a->zorder() == b->zorder() && a->zSubOrder() == b->zSubOrder() && a->getMidpoint().y == b->getMidpoint().y && a.get() < b.get();		
+			(a->zorder() == b->zorder() && a->zSubOrder() < b->zSubOrder()) ||
+			(a->zorder() == b->zorder() && a->zSubOrder() == b->zSubOrder() && a->getMidpoint().y < b->getMidpoint().y) ||
+			(a->zorder() == b->zorder() && a->zSubOrder() == b->zSubOrder() && a->getMidpoint().y == b->getMidpoint().y && a.get() < b.get());		
 	}
 	return a->zorder() < b->zorder() ||
-		a->zorder() == b->zorder() && a->zSubOrder() < b->zSubOrder() ||
-		a->zorder() == b->zorder() && a->zSubOrder() == b->zSubOrder() && a->getMidpoint().y > b->getMidpoint().y ||
-		a->zorder() == b->zorder() && a->zSubOrder() == b->zSubOrder() && a->getMidpoint().y == b->getMidpoint().y && a.get() > b.get();
+		(a->zorder() == b->zorder() && a->zSubOrder() < b->zSubOrder()) ||
+		(a->zorder() == b->zorder() && a->zSubOrder() == b->zSubOrder() && a->getMidpoint().y > b->getMidpoint().y) ||
+		(a->zorder() == b->zorder() && a->zSubOrder() == b->zSubOrder() && a->getMidpoint().y == b->getMidpoint().y && a.get() > b.get());
 }
 
 bool EntityZOrderCompare::operator()(const EntityPtr& lhs, const EntityPtr& rhs) 

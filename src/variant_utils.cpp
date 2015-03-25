@@ -125,8 +125,8 @@ variant append_variants(variant a, variant b)
 		return a;
 	} else if(a.is_list()) {
 		if(b.is_list()) {
-			if(b.num_elements() > 0 && (b[0].is_numeric() || b[0].is_string()) ||
-			   a.num_elements() > 0 && (a[0].is_numeric() || a[0].is_string())) {
+			if((b.num_elements() > 0 && (b[0].is_numeric() || b[0].is_string())) ||
+			   (a.num_elements() > 0 && (a[0].is_numeric() || a[0].is_string()))) {
 				//lists of numbers or strings are treated like scalars and we
 				//set the value of b.
 				return b;

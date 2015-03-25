@@ -56,7 +56,7 @@ namespace tbs
 		game(const std::string& game_type, const variant& doc);
 		virtual ~game();
 
-	void cancel_game();
+		void cancel_game();
 
 		virtual variant write(int nplayer=-1, int processing_ms=-1) const;
 		virtual void handle_message(int nplayer, const variant& msg);
@@ -109,9 +109,9 @@ namespace tbs
 	
 		int state_id() const { return state_id_; }
 
-	void player_disconnect(int nplayer);
-	void player_reconnect(int nplayer);
-	void player_disconnected_for(int nplayer, int time_ms);
+		void player_disconnect(int nplayer);
+		void player_reconnect(int nplayer);
+		void player_disconnected_for(int nplayer, int time_ms);
 
 	protected:
 		void start_game();
@@ -168,7 +168,7 @@ namespace tbs
 		void handleEvent(const std::string& name, game_logic::FormulaCallable* variables=nullptr);
 		void executeCommand(variant cmd);
 
-		mutable DbClientPtr DbClient_;
+		mutable DbClientPtr db_client_;
 	};
 
 	class game_context 

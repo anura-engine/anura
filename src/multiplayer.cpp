@@ -301,7 +301,7 @@ namespace multiplayer
 
 		int confirmation_point = 1000;
 
-		for(unsigned m = 0; m != 1000 && confirmed_players.size() < static_cast<unsigned>(nplayers) || m < static_cast<unsigned>(confirmation_point) + 50; ++m) {
+		for(unsigned m = 0; (m != 1000 && confirmed_players.size() < static_cast<unsigned>(nplayers)) || m < static_cast<unsigned>(confirmation_point) + 50; ++m) {
 
 			std::vector<char> msg;
 

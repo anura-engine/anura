@@ -1081,7 +1081,7 @@ void editor::setup_for_editing()
 
 bool editor::handleEvent(const SDL_Event& event, bool swallowed)
 {
-	const bool dialog_started_with_focus = code_dialog_ && code_dialog_->hasFocus() || current_dialog_ && current_dialog_->hasFocus();
+	const bool dialog_started_with_focus = (code_dialog_ && code_dialog_->hasFocus()) || (current_dialog_ && current_dialog_->hasFocus());
 	if(code_dialog_ && code_dialog_->processEvent(point(), event, swallowed)) {
 		return true;
 	}

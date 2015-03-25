@@ -482,7 +482,7 @@ namespace gui
 						canvas->drawSolidRect(rect(box.x(), box.y()-1, box.w(), 2), KRE::Color::colorRed());
 					}
 				
-					if(rect_chosen || !(dragging_sides_bitmap_&TOP_SIDE) && pointInRect(point(mousex, mousey), rect(box.x(), box.y2()-4, box.w(), 9))) {
+					if(rect_chosen || (!(dragging_sides_bitmap_&TOP_SIDE) && pointInRect(point(mousex, mousey), rect(box.x(), box.y2()-4, box.w(), 9)))) {
 						dragging_sides_bitmap_ |= BOTTOM_SIDE;
 						canvas->drawSolidRect(rect(box.x(), box.y2()-1, box.w(), 2), KRE::Color::colorRed());
 					}
@@ -492,7 +492,7 @@ namespace gui
 						canvas->drawSolidRect(rect(box.x()-1, box.y(), 2, box.h()), KRE::Color::colorRed());
 					}
 				
-					if(rect_chosen || (!dragging_sides_bitmap_&LEFT_SIDE) && pointInRect(point(mousex, mousey), rect(box.x2()-4, box.y(), 9, box.h()))) {
+					if(rect_chosen || ((!dragging_sides_bitmap_&LEFT_SIDE) && pointInRect(point(mousex, mousey), rect(box.x2()-4, box.y(), 9, box.h())))) {
 						dragging_sides_bitmap_ |= RIGHT_SIDE;
 						canvas->drawSolidRect(rect(box.x2()-1, box.y(), 2, box.h()), KRE::Color::colorRed());
 					}

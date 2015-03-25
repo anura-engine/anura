@@ -56,7 +56,7 @@ BEGIN_DEFINE_FN(remove, "(string) ->commands")
 #else
 	std::string key = FN_ARG(0).as_string();
 	DbClient* cli = const_cast<DbClient*>(&obj);
-	variant v(new game_logic::fn_command_callable([=]() {
+	variant v(new game_logic::FnCommandCallable([=]() {
 		cli->remove(key);
 	}
 	));
@@ -162,13 +162,13 @@ void remove_callback(lcb_t instance, const void* cookie, lcb_error_t error, cons
 			lcb_error_t err = lcb_create(&instance_, &create_options);
 			ASSERT_LOG(err == LCB_SUCCESS, "Could not connect to couchbase server: " << lcb_strerror(nullptr, err));
 
-		lcb_set_bootstrap_callback(instance_, couchbase_error_handler);
+			//lcb_set_bootstrap_callback(instance_, couchbase_error_handler);
 
 			err = lcb_connect(instance_);
 			ASSERT_LOG(err == LCB_SUCCESS, "Failed to connect to couchbase server: " << lcb_strerror(nullptr, err));
 
 			lcb_set_get_callback(instance_, get_callback);
-		lcb_set_remove_callback(instance_, remove_callback);
+			lcb_set_remove_callback(instance_, remove_callback);
 			lcb_set_store_callback(instance_, store_callback);
 
 			lcb_wait(instance_);

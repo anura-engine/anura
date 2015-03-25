@@ -222,7 +222,7 @@ namespace
 		SimpleParticleSystem(const Entity& e, const SimpleParticleSystemFactory& factory);
 		~SimpleParticleSystem() {}
 
-		bool isDestroyed() const override { return info_.system_time_to_live_ == 0 || info_.spawn_rate_ < 0 && particles_.empty(); }
+		bool isDestroyed() const override { return info_.system_time_to_live_ == 0 || (info_.spawn_rate_ < 0 && particles_.empty()); }
 		bool shouldSave() const override { return info_.spawn_rate_ >= 0; }
 		void process(const Entity& e) override;
 		void draw(const KRE::WindowPtr& wm, const rect& area, const Entity& e) const override;

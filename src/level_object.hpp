@@ -64,22 +64,22 @@ struct level_tile_zorder_comparer
 struct level_tile_pos_comparer 
 {
 	bool operator()(const LevelTile& a, const LevelTile& b) const {
-		return a.y < b.y || a.y == b.y && a.x < b.x;
+		return a.y < b.y || (a.y == b.y && a.x < b.x);
 	}
 
 	bool operator()(const LevelTile& a, const std::pair<int, int>& b) const {
-		return a.y < b.second || a.y == b.second && a.x < b.first;
+		return a.y < b.second || (a.y == b.second && a.x < b.first);
 	}
 
 	bool operator()(const std::pair<int, int>& a, const LevelTile& b) const {
-		return a.second < b.y || a.second == b.y && a.first < b.x;
+		return a.second < b.y || (a.second == b.y && a.first < b.x);
 	}
 };
 
 struct level_tile_zorder_pos_comparer 
 {
 	bool operator()(const LevelTile& a, const LevelTile& b) const {
-		return a.zorder < b.zorder || a.zorder == b.zorder && a.y < b.y || a.zorder == b.zorder && a.y == b.y && a.x < b.x;
+		return a.zorder < b.zorder || (a.zorder == b.zorder && a.y < b.y) || (a.zorder == b.zorder && a.y == b.y && a.x < b.x);
 	}
 };
 

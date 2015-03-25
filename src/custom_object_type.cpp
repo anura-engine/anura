@@ -494,7 +494,7 @@ void init_object_definition(variant node, const std::string& id_, CustomObjectCa
 			} else if(property_override_type.count(k)) {
 				ASSERT_LOG(!is_strict_ || property_override_type[k], "Type mis-match for object property " << id_ << "." << k << " derived object gives a type while base object does not");
 
-				if(is_strict_ || property_override_type[k] && type) {
+				if(is_strict_ || (property_override_type[k] && type)) {
 					ASSERT_LOG(variant_types_compatible(property_override_type[k], type), "Type mis-match for object property " << id_ << "." << k << " has a different type than the definition in the prototype type: " << type->to_string() << " prototype defines as " << property_override_type[k]->to_string());
 				}
 			}
@@ -604,7 +604,7 @@ FormulaCallableDefinitionPtr CustomObjectType::getDefinition(const std::string& 
 			CustomObjectCallablePtr callableDefinition(new CustomObjectCallable);
 			callableDefinition->setTypeName("obj " + id);
 			int slot = -1;
-			init_object_definition(node, node["id"].as_string(), callableDefinition, slot, !g_suppress_strict_mode && node["is_strict"].as_bool(custom_object_strict_mode) || g_force_strict_mode);
+			init_object_definition(node, node["id"].as_string(), callableDefinition, slot, (!g_suppress_strict_mode && node["is_strict"].as_bool(custom_object_strict_mode)) || g_force_strict_mode);
 			std::map<std::string, FormulaCallableDefinitionPtr>::const_iterator itor = object_type_definitions().find(id);
 			ASSERT_LOG(itor != object_type_definitions().end(), "Could not load object prototype definition " << id);
 			return itor->second;
@@ -636,7 +636,7 @@ FormulaCallableDefinitionPtr CustomObjectType::getDefinition(const std::string& 
 			CustomObjectCallablePtr callableDefinition(new CustomObjectCallable);
 			callableDefinition->setTypeName("obj " + p.first);
 			int slot = -1;
-			init_object_definition(p.second, p.first, callableDefinition, slot, !g_suppress_strict_mode && p.second["is_strict"].as_bool(custom_object_strict_mode) || g_force_strict_mode);
+			init_object_definition(p.second, p.first, callableDefinition, slot, (!g_suppress_strict_mode && p.second["is_strict"].as_bool(custom_object_strict_mode)) || g_force_strict_mode);
 		}
 
 		itor = object_type_definitions().find(id);
@@ -994,7 +994,7 @@ void CustomObjectType::setFileContents(const std::string& file_path, const std::
 	for(auto i : cache()) {
 		const std::vector<std::string>& proto_paths = object_prototype_paths[i.first];
 		const std::string* path = getObjectPath(i.first + ".cfg");
-		if(path && *path == file_path || std::count(proto_paths.begin(), proto_paths.end(), file_path)) {
+		if((path && *path == file_path) || std::count(proto_paths.begin(), proto_paths.end(), file_path)) {
 			reloadObject(i.first);
 		}
 	}
@@ -1161,7 +1161,7 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 	slot_properties_base_(-1), 
 	use_absolute_screen_coordinates_(node["use_absolute_screen_coordinates"].as_bool(false)),
 	mouseover_delay_(node["mouseover_delay"].as_int(0)),
-	is_strict_(!g_suppress_strict_mode && node["is_strict"].as_bool(custom_object_strict_mode) || g_force_strict_mode),
+	is_strict_((!g_suppress_strict_mode && node["is_strict"].as_bool(custom_object_strict_mode)) || g_force_strict_mode),
 	is_shadow_(node["is_shadow"].as_bool(false))
 {
 	if(g_player_type_str.is_null() == false) {

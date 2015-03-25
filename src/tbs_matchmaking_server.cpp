@@ -970,7 +970,7 @@ DEFINE_FIELD(response, "any")
 	return obj.current_response_;
 DEFINE_SET_FIELD
 	obj.current_response_ = value;
-DEFINE_FIELD(db_client, "builtin DbClient")
+DEFINE_FIELD(db_client, "builtin db_client")
 	return variant(obj.db_client_.get());
 END_DEFINE_CALLABLE(matchmaking_server)
 
@@ -1062,7 +1062,7 @@ BEGIN_DEFINE_CALLABLE_NOBASE(matchmaking_server)
 DEFINE_FIELD(response, "any")
 	return variant();
 DEFINE_SET_FIELD
-DEFINE_FIELD(db_client, "builtin DbClient")
+DEFINE_FIELD(db_client, "builtin db_client")
 	return variant();
 END_DEFINE_CALLABLE(matchmaking_server)
 

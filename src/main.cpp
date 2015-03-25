@@ -283,9 +283,9 @@ void auto_select_resolution(const KRE::WindowPtr& wm, int *width, int *height)
 		if(candidate_mode.width < mode.width && candidate_mode.height < mode.width
 			&& candidate_mode.width < mode.width * MinReduction
 			&& candidate_mode.height < mode.height * MinReduction
-			&& (candidate_mode.width >= best_mode.width
-			&& candidate_mode.height >= best_mode.height
-			|| best_mode.width == mode.width && best_mode.height == mode.height)) {
+			&& ((candidate_mode.width >= best_mode.width
+			&& candidate_mode.height >= best_mode.height)
+			|| (best_mode.width == mode.width && best_mode.height == mode.height))) {
 			LOG_INFO("BETTER MODE IS " << candidate_mode.width << "x" << candidate_mode.height);
 			best_mode = candidate_mode;
 		} else {
@@ -788,7 +788,7 @@ int main(int argcount, char* argvec[])
 	hints.add("width", preferences::requested_window_width() > 0 ? preferences::requested_window_width() : 800);
 	hints.add("height", preferences::requested_window_height() > 0 ? preferences::requested_window_height() : 600);
 
-	WindowPtr main_wnd = wm.allocateWindow(hints.build());
+    KRE::WindowPtr main_wnd = wm.allocateWindow(hints.build());
 	main_wnd->setWindowTitle(module::get_module_pretty_name());
 
 	if(preferences::auto_size_window() 

@@ -86,19 +86,19 @@ public:
 //various asserts of standard "equality" tests, such as "equals", "not equals", "greater than", etc.  Example usage:
 //ASSERT_NE(x, y);
 
-#define ASSERT_EQ(a,b) if((a) != (b)) do { std::ostringstream _s; _s << __SHORT_FORM_OF_FILE__ << ":" << __LINE__ << " ASSERT EQ FAILED: " << #a << " != " << #b << ": " << (a) << " != " << (b) << "\n"; if(throw_validation_failure_on_assert()) { throw validation_failure_exception(_s.str()); } else if(throw_fatal_error_on_assert()) { throw fatal_assert_failure_exception(_s.str()); } else { std::string _ss = _s.str(); SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION, "%s\n", _ss.c_str()); output_backtrace(); report_assert_msg(_s.str()); ABORT(); } } while(0)
+#define ASSERT_EQ(a,b) if((a) != (b)) do { std::ostringstream _s; _s << __SHORT_FORM_OF_FILE__ << ":" << __LINE__ << " ASSERT EQ FAILED: " << #a << " != " << #b << ": " << (a) << " != " << (b) << "\n"; if(throw_validation_failure_on_assert()) { throw validation_failure_exception(_s.str()); } else if(throw_fatal_error_on_assert()) { throw fatal_assert_failure_exception(_s.str()); } else { log_internal(SDL_LOG_PRIORITY_CRITICAL, _s.str()); output_backtrace(); report_assert_msg(_s.str()); ABORT(); } } while(0)
 
-#define ASSERT_NE(a,b) if((a) == (b)) do { std::ostringstream _s; _s << __SHORT_FORM_OF_FILE__ << ":" << __LINE__ << " ASSERT NE FAILED: " << #a << " == " << #b << ": " << (a) << " == " << (b) << "\n"; if(throw_validation_failure_on_assert()) { throw validation_failure_exception(_s.str()); } else if(throw_fatal_error_on_assert()) { throw fatal_assert_failure_exception(_s.str()); } else { std::string _ss = _s.str(); SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION, "%s\n", _ss.c_str()); output_backtrace(); report_assert_msg(_s.str()); ABORT(); } } while(0)
+#define ASSERT_NE(a,b) if((a) == (b)) do { std::ostringstream _s; _s << __SHORT_FORM_OF_FILE__ << ":" << __LINE__ << " ASSERT NE FAILED: " << #a << " == " << #b << ": " << (a) << " == " << (b) << "\n"; if(throw_validation_failure_on_assert()) { throw validation_failure_exception(_s.str()); } else if(throw_fatal_error_on_assert()) { throw fatal_assert_failure_exception(_s.str()); } else { log_internal(SDL_LOG_PRIORITY_CRITICAL, _s.str()); output_backtrace(); report_assert_msg(_s.str()); ABORT(); } } while(0)
 
-#define ASSERT_GE(a,b) if((a) < (b)) do { std::ostringstream _s; _s << __SHORT_FORM_OF_FILE__ << ":" << __LINE__ << " ASSERT GE FAILED: " << #a << " < " << #b << ": " << (a) << " < " << (b) << "\n"; if(throw_validation_failure_on_assert()) { throw validation_failure_exception(_s.str()); } else if(throw_fatal_error_on_assert()) { throw fatal_assert_failure_exception(_s.str()); } else { std::string _ss = _s.str(); SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION, "%s\n", _ss.c_str()); output_backtrace(); report_assert_msg(_s.str()); ABORT(); } } while(0)
+#define ASSERT_GE(a,b) if((a) < (b)) do { std::ostringstream _s; _s << __SHORT_FORM_OF_FILE__ << ":" << __LINE__ << " ASSERT GE FAILED: " << #a << " < " << #b << ": " << (a) << " < " << (b) << "\n"; if(throw_validation_failure_on_assert()) { throw validation_failure_exception(_s.str()); } else if(throw_fatal_error_on_assert()) { throw fatal_assert_failure_exception(_s.str()); } else { log_internal(SDL_LOG_PRIORITY_CRITICAL, _s.str()); output_backtrace(); report_assert_msg(_s.str()); ABORT(); } } while(0)
 
-#define ASSERT_LE(a,b) if((a) > (b)) do { std::ostringstream _s; _s << __SHORT_FORM_OF_FILE__ << ":" << __LINE__ << " ASSERT LE FAILED: " << #a << " > " << #b << ": " << (a) << " > " << (b) << "\n"; if(throw_validation_failure_on_assert()) { throw validation_failure_exception(_s.str()); } else if(throw_fatal_error_on_assert()) { throw fatal_assert_failure_exception(_s.str()); } else { std::string _ss = _s.str(); SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION, "%s\n", _ss.c_str()); output_backtrace(); report_assert_msg(_s.str()); ABORT(); } } while(0)
+#define ASSERT_LE(a,b) if((a) > (b)) do { std::ostringstream _s; _s << __SHORT_FORM_OF_FILE__ << ":" << __LINE__ << " ASSERT LE FAILED: " << #a << " > " << #b << ": " << (a) << " > " << (b) << "\n"; if(throw_validation_failure_on_assert()) { throw validation_failure_exception(_s.str()); } else if(throw_fatal_error_on_assert()) { throw fatal_assert_failure_exception(_s.str()); } else { log_internal(SDL_LOG_PRIORITY_CRITICAL, _s.str()); output_backtrace(); report_assert_msg(_s.str()); ABORT(); } } while(0)
 
-#define ASSERT_GT(a,b) if((a) <= (b)) do { std::ostringstream _s; _s << __SHORT_FORM_OF_FILE__ << ":" << __LINE__ << " ASSERT GT FAILED: " << #a << " <= " << #b << ": " << (a) << " <= " << (b) << "\n"; if(throw_validation_failure_on_assert()) { throw validation_failure_exception(_s.str()); } else if(throw_fatal_error_on_assert()) { throw fatal_assert_failure_exception(_s.str()); } else { std::string _ss = _s.str(); SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION, "%s\n", _ss.c_str()); output_backtrace(); report_assert_msg(_s.str()); ABORT(); } } while(0)
+#define ASSERT_GT(a,b) if((a) <= (b)) do { std::ostringstream _s; _s << __SHORT_FORM_OF_FILE__ << ":" << __LINE__ << " ASSERT GT FAILED: " << #a << " <= " << #b << ": " << (a) << " <= " << (b) << "\n"; if(throw_validation_failure_on_assert()) { throw validation_failure_exception(_s.str()); } else if(throw_fatal_error_on_assert()) { throw fatal_assert_failure_exception(_s.str()); } else { log_internal(SDL_LOG_PRIORITY_CRITICAL, _s.str()); output_backtrace(); report_assert_msg(_s.str()); ABORT(); } } while(0)
 
-#define ASSERT_LT(a,b) if((a) >= (b)) do { std::ostringstream _s; _s << __SHORT_FORM_OF_FILE__ << ":" << __LINE__ << " ASSERT LT FAILED: " << #a << " >= " << #b << ": " << (a) << " >= " << (b) << "\n"; if(throw_validation_failure_on_assert()) { throw validation_failure_exception(_s.str()); } else if(throw_fatal_error_on_assert()) { throw fatal_assert_failure_exception(_s.str()); } else { std::string _ss = _s.str(); SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION, "%s\n", _ss.c_str()); output_backtrace(); report_assert_msg(_s.str()); ABORT(); } } while(0)
+#define ASSERT_LT(a,b) if((a) >= (b)) do { std::ostringstream _s; _s << __SHORT_FORM_OF_FILE__ << ":" << __LINE__ << " ASSERT LT FAILED: " << #a << " >= " << #b << ": " << (a) << " >= " << (b) << "\n"; if(throw_validation_failure_on_assert()) { throw validation_failure_exception(_s.str()); } else if(throw_fatal_error_on_assert()) { throw fatal_assert_failure_exception(_s.str()); } else { log_internal(SDL_LOG_PRIORITY_CRITICAL, _s.str()); output_backtrace(); report_assert_msg(_s.str()); ABORT(); } } while(0)
 
-#define ASSERT_INDEX_INTO_VECTOR(a,b) do { if((a) < 0 || size_t(a) >= (b).size()) { std::ostringstream _s; _s << __SHORT_FORM_OF_FILE__ << ":" << __LINE__ << " ASSERT INDEX INTO VECTOR FAILED: " << #a << " (" << (a) << " indexes " << #b << " (" << (b).size() << ")\n"; if(throw_validation_failure_on_assert()) { throw validation_failure_exception(_s.str()); } else if(throw_fatal_error_on_assert()) { throw fatal_assert_failure_exception(_s.str()); } else { std::string _ss = _s.str(); SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION, "%s\n", _ss.c_str()); output_backtrace(); report_assert_msg(_s.str()); ABORT(); } } } while(0)
+#define ASSERT_INDEX_INTO_VECTOR(a,b) do { if((a) < 0 || size_t(a) >= (b).size()) { std::ostringstream _s; _s << __SHORT_FORM_OF_FILE__ << ":" << __LINE__ << " ASSERT INDEX INTO VECTOR FAILED: " << #a << " (" << (a) << " indexes " << #b << " (" << (b).size() << ")\n"; if(throw_validation_failure_on_assert()) { throw validation_failure_exception(_s.str()); } else if(throw_fatal_error_on_assert()) { throw fatal_assert_failure_exception(_s.str()); } else { log_internal(SDL_LOG_PRIORITY_CRITICAL, _s.str()); output_backtrace(); report_assert_msg(_s.str()); ABORT(); } } } while(0)
 
 //for custom logging.  Example usage:
 //ASSERT_LOG(x != y, "x not equal to y. Value of x: " << x << ", y: " << y);
@@ -112,8 +112,7 @@ public:
 		} else if(throw_fatal_error_on_assert()) {				\
 			throw fatal_assert_failure_exception(_s.str());		\
 		} else {												\
-			std::string _ss = _s.str();							\
-			SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION, "%s\n", _ss.c_str()); \
+			log_internal(SDL_LOG_PRIORITY_CRITICAL, _s.str());	\
 			output_backtrace();									\
 			report_assert_msg(_s.str());						\
 			ABORT();											\
@@ -127,8 +126,7 @@ public:
 		if(throw_validation_failure_on_assert()) {				\
 			throw validation_failure_exception(_s.str());		\
 		} else {												\
-			std::string _ss = _s.str();							\
-			SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION, "%s\n", _ss.c_str()); \
+			log_internal(SDL_LOG_PRIORITY_CRITICAL, _s.str());	\
 			output_backtrace();									\
 			report_assert_msg(_s.str());						\
 			ABORT();											\

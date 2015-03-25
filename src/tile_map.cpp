@@ -919,7 +919,7 @@ void TileMap::buildTiles(std::vector<LevelTile>* tiles, const rect* r) const
 		for(int y = -p->height(); y < static_cast<int>(map_.size()) + p->height(); ++y) {
 			const int ypos = ypos_ + y*TileSize;
 	
-			if(r && ypos < r->y() || r && ypos > r->y2()) {
+			if((r && ypos < r->y()) || (r && ypos > r->y2())) {
 				continue;
 			}
 
@@ -955,7 +955,7 @@ void TileMap::buildTiles(std::vector<LevelTile>* tiles, const rect* r) const
 	for(int y = -g_tile_pattern_search_border; y < static_cast<int>(map_.size()) + g_tile_pattern_search_border; ++y) {
 		const int ypos = ypos_ + y*TileSize;
 
-		if(r && ypos < r->y() || r && ypos > r->y2()) {
+		if((r && ypos < r->y()) || (r && ypos > r->y2())) {
 			continue;
 		}
 
@@ -982,7 +982,7 @@ void TileMap::buildTiles(std::vector<LevelTile>* tiles, const rect* r) const
 			}
 
 
-			if(r && xpos < r->x() || r && xpos > r->x2()) {
+			if((r && xpos < r->x()) || (r && xpos > r->x2())) {
 				continue;
 			}
 
