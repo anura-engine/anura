@@ -513,6 +513,7 @@ CustomObject::CustomObject(const std::string& type, int x, int y, bool face_righ
 	tags_(new game_logic::MapFormulaCallable(type_->tags())),
 	active_property_(-1),
 	last_hit_by_anim_(0),
+	current_animation_id_(0),
 	cycle_(0),
 	created_(false), loaded_(false), fall_through_platforms_(0),
 	always_active_(false),
