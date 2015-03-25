@@ -83,6 +83,9 @@ namespace KRE
 			vx1, vy2,
 			vx2, vy2,
 		};
+		
+		//LOG_DEBUG("blit: " << src << "," << dst);
+		//LOG_DEBUG("blit: " << tx1 << "," << ty1 << "," << tx2 << "," << ty2 << " : " << vx1 << "," << vy1 << "," << vx2 << "," << vy2);
 
 		glm::mat4 mvp;
 		if(std::abs(rotation) > FLT_EPSILON) {

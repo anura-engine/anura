@@ -7,6 +7,7 @@
 #include "module.hpp"
 #include "variant_utils.hpp"
 
+#include "CameraObject.hpp"
 #include "Canvas.hpp"
 #include "Font.hpp"
 #include "Texture.hpp"
@@ -53,8 +54,7 @@ namespace
 			int row = ntime / cols_;
 			int col = ntime % cols_;
 
-			rect result = area_;
-			result.set_xy(result.x() + (result.w() + pad_) * col, result.y() + (result.h() + pad_) * row);
+			rect result(area_.x() + (area_.w() + pad_) * col, area_.y() + (area_.h() + pad_) * row, area_.w(), area_.h());
 			return result;
 		}
 
@@ -140,19 +140,17 @@ void auto_update_window::draw() const
 	KRE::TexturePtr percent_surf_white(render_updater_text(percent_stream.str(), KRE::Color(255, 255, 255)));
 	KRE::TexturePtr percent_surf_black(render_updater_text(percent_stream.str(), KRE::Color(0, 0, 0)));
 
-	if(percent_surf_white.get() != nullptr) {
+	if(percent_surf_white != nullptr) {
 		rect dest(window_->width()/2 - percent_surf_white->width()/2,
 		          window_->height()/2 - percent_surf_white->height()/2,
-				  percent_surf_white->width(),
-				  percent_surf_white->height());
+				  0, 0);
 		canvas->blitTexture(percent_surf_white, 0, dest);
 	}
 
-	if(percent_surf_black.get() != nullptr) {
+	if(percent_surf_black != nullptr) {
 		rect dest(window_->width()/2 - percent_surf_black->width()/2,
 		          window_->height()/2 - percent_surf_black->height()/2,
-				  percent_surf_black->width(),
-				  percent_surf_black->height());
+				  0, 0);
 
 		if(bar_point > dest.x()) {
 			if(bar_point < dest.x() + dest.w()) {

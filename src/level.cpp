@@ -1627,7 +1627,7 @@ void Level::draw_layer_solid(int layer, int x, int y, int w, int h) const
 void Level::prepare_tiles_for_drawing()
 {
 	auto main_wnd = KRE::WindowManager::getMainWindow();
-	LevelObject::setCurrentPalette(0/*palettes_used_*/);
+	LevelObject::setCurrentPalette(palettes_used_);
 
 	solid_color_rects_.clear();
 	blit_cache_.clear();

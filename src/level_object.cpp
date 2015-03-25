@@ -326,7 +326,7 @@ palette_scope::~palette_scope()
 
 void LevelObject::setCurrentPalette(unsigned int palette)
 {
-	LOG_DEBUG("LevelObject::setCurrentPalette: " << palette_level_objects().size() << " LevelObject's");
+	LOG_DEBUG("LevelObject::setCurrentPalette: " << palette_level_objects().size() << " LevelObject's, id=" << palette);
 	for(LevelObject* obj : palette_level_objects()) {
 		obj->setPalette(palette);
 	}
@@ -352,17 +352,9 @@ LevelObject::LevelObject(variant node, const char* id)
 		id_ = id;
 	}
 
-	if(node.has_key("image")) {
-		if(node["image"].is_string()) {
-			image_ = node["image"].as_string();
-		} else if(node["image"].is_map()) {
-			image_ = node["image"]["image"].as_string();
-		} else if(node["image"].is_list()) {
-			image_ = node["image"][0]["image"].as_string();
-		}
-	} else {
-		ASSERT_LOG(false, "No 'image' attribute found.");
-	}
+	auto image_names = KRE::Texture::findImageNames(node);
+	ASSERT_LOG(!image_names.empty(), "no image attribute found.");
+	image_ = image_names[0];
 
 	std::vector<int> palettes_id_list;
 	if(node.has_key("palettes")) {
