@@ -198,6 +198,8 @@ namespace graphics
 		std::string palette_str = ss.str();
 		if(!palette_str.empty()) {
 			LOG_DEBUG("Adding palettes: " << palette_str << " at: " << " to texture id: " << tex->id() << ", '" << name << "'");
+		} else {
+			LOG_DEBUG("Return texture for '" << name << "', id=" << tex->id() << " has_palette: " << (tex->isPaletteized() ? "yes" : "no"));
 		}
 		return tex;
 	}

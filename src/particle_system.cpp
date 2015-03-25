@@ -679,7 +679,7 @@ namespace
 		{
 			setShader(KRE::ShaderProgram::getProgram("point_shader")->clone());
 			getShader()->setUniformDrawFunction(std::bind(&PointParticleSystem::executeOnDraw, this));
-			u_point_size_  = getShader()->getUniform("point_size");
+			u_point_size_  = getShader()->getUniform("u_point_size");
 			u_is_circular_ = getShader()->getUniform("u_is_circular");
 
 			// turn on hardware-backed, not indexed and instanced draw if available.

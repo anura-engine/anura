@@ -86,7 +86,7 @@ WaterParticleSystem::WaterParticleSystem(const Entity& e, const WaterParticleSys
 
 	setShader(KRE::ShaderProgram::getProgram("point_shader")->clone());
 	getShader()->setUniformDrawFunction(std::bind(&WaterParticleSystem::executeOnDraw, this));
-	u_point_size_ = getShader()->getUniform("point_size");
+	u_point_size_ = getShader()->getUniform("u_point_size");
 
 	auto as = KRE::DisplayDevice::createAttributeSet(true, false, false);
 	as->setDrawMode(KRE::DrawMode::POINTS);
