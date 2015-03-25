@@ -1,42 +1,3 @@
-game
-anura
-server
-test
-.DS_Store
-a.out
-*~
-*.kate-swp
-*.sublime-workspace
-*.sublime-project
-.sconsign.dblite
-.scons-option-cache
-.directory
-*.blend1
-*.blend2
-*.blend3
-*.db
-*.odt#
-.*.swp
-dirs.txt
-/core
-/core.*
-compiled-*
-tiles-compiled-*
-
-compiled/
-modules/*
-!modules/hex
-!modules/icons
-!modules/iso
-!modules/lib_2d
-!modules/phydemo
-!modules/projection_test
-
-MacOS/include
-MacOS/lib
-xcuserdata
-project.xcworkspace
-
 # Compiled Object files
 *.slo
 *.lo
@@ -46,21 +7,20 @@ project.xcworkspace
 # Compiled Dynamic libraries
 *.so
 *.dylib
-*.dll
 
 # Compiled Static libraries
 *.lai
 *.la
 *.a
-*.lib
-
-# compiler dependency tracking
-*.d
 
 # Executables
 *.exe
 *.out
 *.app
+anura
+
+# Dependency files
+*.d
 
 # msvc files we definitely do not want
 *.sdf
@@ -74,9 +34,45 @@ project.xcworkspace
 *.user
 *.unsuccessfulbuild
 *.opensdf
+*.def
+*.exp
+vs2013/anura/Debug/
+vs2013/anura/Release/
+vs2013/anura/Win32/
+vs2013/anura/x64/
+vs2012/anura/Debug/
+vs2012/anura/Release/
+vs2012/anura/Win32/
+vs2012/anura/x64/
 
-log.txt
+# exclude any temporary files.
+*.pb.cc
+*.pb.h
 
-qt
-android-project
-sdk
+# random stuff
+.DS_Store
+a.out
+*~
+*.kate-swp
+*.sublime-workspace
+*.sublime-project
+.sconsign.dblite
+.scons-option-cache
+.directory
+*.db
+*.odt#
+.*.swp
+/core
+/core.*
+compiled-*
+tiles-compiled-*
+compiled/
+modules/*
+!modules/icons
+!modules/lib_2d
+
+MacOS/include
+MacOS/lib
+xcuserdata
+project.xcworkspace
+sdk/
