@@ -2230,7 +2230,6 @@ namespace game_logic
 					while((pos = str.find("\\n", pos)) != std::string::npos) {
 						str = str.replace(pos, 2, "\n");
 					}
-					pos = 0;
 
 					str.erase(std::remove(str.begin(), str.end(), '\t'), str.end());
 
