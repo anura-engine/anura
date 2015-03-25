@@ -239,7 +239,7 @@ namespace gui
 	bool DragWidget::handleMousedown(const SDL_MouseButtonEvent& event, bool claimed)
 	{
 		point p;
-		int button_state = input::sdl_get_mouse_state(&p.x, &p.y);
+		input::sdl_get_mouse_state(&p.x, &p.y);
 		if(pointInRect(p, getBorderRect()) || pointInRect(p, getDraggerRect())) {
 			if(dragging_handle_ == 0) {
 				dragging_handle_ = event.button;
@@ -256,7 +256,7 @@ namespace gui
 	bool DragWidget::handleMouseup(const SDL_MouseButtonEvent& event, bool claimed)
 	{
 		int mousex, mousey;
-		int button_state = input::sdl_get_mouse_state(&mousex, &mousey);
+		input::sdl_get_mouse_state(&mousex, &mousey);
 		if(dragging_handle_ == event.button) {
 			dragging_handle_ = 0;
 			if(drag_end_) {
@@ -270,7 +270,7 @@ namespace gui
 	bool DragWidget::handleMouseMotion(const SDL_MouseMotionEvent& event, bool claimed)
 	{
 		point p;
-		int button_state = input::sdl_get_mouse_state(&p.x, &p.y);
+		input::sdl_get_mouse_state(&p.x, &p.y);
 		if(dragging_handle_) {
 			int dx = start_pos_.x - p.x;
 			int dy = start_pos_.y - p.y;

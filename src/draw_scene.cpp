@@ -157,7 +157,6 @@ bool update_camera_position(const Level& lvl, screen_position& pos, const Entity
 	if(focus) {
 		const float target_zoom = lvl.zoom_level();
 		const float zoom_speed = 0.03f;
-		const float prev_zoom = pos.zoom;
 		if(std::abs(target_zoom - pos.zoom) < zoom_speed) {
 			pos.zoom = target_zoom;
 		} else if(pos.zoom > target_zoom) {
@@ -374,7 +373,7 @@ void render_scene(Level& lvl, const screen_position& pos)
 
 	const int camera_rotation = lvl.camera_rotation();
 	if(camera_rotation) {
-		float rotate = static_cast<float>(camera_rotation)/1000.0f;
+		float rotate;
 		//lvl.setRotation(rotate, glm::vec3(0.0f, 0.0f, 1.0f));
 		// XXX fixme
 	}

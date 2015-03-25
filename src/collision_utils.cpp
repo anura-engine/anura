@@ -117,7 +117,6 @@ bool point_standable(const Level& lvl, const Entity& e, int x, int y, CollisionI
 		}
 
 		const Frame& f = obj->getCurrentFrame();
-		const int xpos = obj->isFacingRight() ? x - obj->x() : obj->x() + f.width() - x - 1;
 
 		const SolidInfo* solid = obj->solid();
 

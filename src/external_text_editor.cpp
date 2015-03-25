@@ -68,7 +68,6 @@ namespace
 
 		void refreshEditorList()
 		{
-			const int begin = profile::get_tick_time();
 			const std::string cmd = "gvim --serverlist";
 			FILE* p = popen(cmd.c_str(), "r");
 			if(p) {
@@ -228,7 +227,6 @@ namespace
 
 			if(existing_instance.empty() == false) {
 				const std::string command = "gvim --servername " + existing_instance + " --remote-expr 'foreground()'";
-				const int result = system(command.c_str());
 				return;
 			}
 
@@ -242,7 +240,6 @@ namespace
 			}
 
 			const std::string command = cmd_ + " --servername " + server_name + " " + fname;
-			const int result = system(command.c_str());
 
 			threading::lock l(mutex_);
 			files_[fname] = server_name;
@@ -325,7 +322,6 @@ void ExternalTextEditor::process()
 {
 	std::vector<std::string> files = getLoadedFiles();
 	if(files.empty() == false) {
-		const int begin = profile::get_tick_time();
 		for(const std::string& fname : files) {
 			const std::string contents = getFileContents(fname);
 			if(contents != json::get_file_contents(fname)) {

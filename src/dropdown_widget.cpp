@@ -368,7 +368,7 @@ namespace gui
 	bool DropdownWidget::handleMouseMotion(const SDL_MouseMotionEvent& event, bool claimed)
 	{
 		point p;
-		int button_state = input::sdl_get_mouse_state(&p.x, &p.y);
+		input::sdl_get_mouse_state(&p.x, &p.y);
 	if(in_widget_ != inWidget(event.x, event.y)) {
 		in_widget_ = !in_widget_;
 		if(!in_widget_ && text_normal_color_) {
