@@ -155,7 +155,7 @@ protected:
 	virtual void OnOutput(LPCSTR szText)
 	{
 		SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION, "%s\n", szText);
-		StackWalker::OnOutput(szText);
+		//StackWalker::OnOutput(szText);
 	}
 };
 #endif
