@@ -211,6 +211,7 @@ namespace
 			"      --no-autopause           Stops the game from pausing automatically\n" <<
 			"                                 when it loses focus\n" <<
 			"      --tests                  runs the game's unit tests and exits\n" <<
+			"      --tests=\"foo,bar,baz\"  runs the named unit tests and exits\n" <<
 			"      --no-tests               skips the execution of unit tests on startup\n"
 			"      --utility=NAME           runs the specified UTILITY( NAME ) code block,\n" <<
 			"                                 such as compile_levels or compile_objects,\n" <<
@@ -384,6 +385,7 @@ int main(int argcount, char* argvec[])
 	std::vector<std::string> benchmarks_list;
 	std::string utility_program;
 	std::vector<std::string> util_args;
+	boost::scoped_ptr<std::vector<std::string> > test_names;
 	std::string server = "wesnoth.org";
 	bool is_child_utility = false;
 
@@ -459,7 +461,7 @@ int main(int argcount, char* argvec[])
 				}
 			}
 			++modules_loaded;
-		} else if(arg == "--tests") {
+		} else if(arg == "--tests" || arg_name == "--tests") {
 			unit_tests_only = true;
 		}
 	}
@@ -511,10 +513,18 @@ int main(int argcount, char* argvec[])
 		} else if(arg_name == "--benchmarks") {
 			run_benchmarks = true;
 			benchmarks_list = util::split(arg_value);
-		} else if(arg == "--tests") {
-			// ignore as already processed.
 		} else if(arg == "--no-tests") {
 			skip_tests = true;
+		} else if(arg == "--tests" || arg_name == "--tests") {
+			// If there is a value, split it as the list of tests
+			if (arg_value.size()) {
+				// If the list is quoted, remove the quotes
+				if (arg_value.at(0) == '\"' && arg_value.at(arg_value.size()-1) == '\"') {
+					test_names.reset(new std::vector<std::string> (util::split(arg_value.substr(1, arg_value.size()-2))));
+				} else {
+					test_names.reset(new std::vector<std::string> (util::split(arg_value)));
+				}
+			}
 		} else if(arg.substr(0, 11) == "--log-level") {
 			// ignore
 		} else if(arg_name == "--level") {
@@ -766,8 +776,16 @@ int main(int argcount, char* argvec[])
 		return 0;
 	}
 
-	if(!skip_tests && !test::run_tests()) {
-		return -1;
+	if(!skip_tests) {
+		if (test_names) {
+			if (!test::run_tests(test_names.get())) {
+				return -1;
+			}
+		} else {
+			if (!test::run_tests()) {
+				return -1;
+			}
+		}
 	}
 
 	if(unit_tests_only) {
