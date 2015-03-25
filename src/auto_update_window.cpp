@@ -169,7 +169,7 @@ void auto_update_window::draw() const
 	
 	progress_animation& anim = progress_animation::get();
 	auto anim_tex = anim.tex();
-	if(!anim_tex) {
+	if(anim_tex != nullptr) {
 		rect src = anim.calculate_rect(nframes_);
 		rect dest(window_->width()/2 - src.w()/2, window_->height()/2 - src.h()*2, src.w(), src.h());
 		canvas->blitTexture(anim_tex, src, 0, dest);
