@@ -816,7 +816,7 @@ bool LevelObject::isSolid(int x, int y) const
 	}
 
 	const unsigned index = y*width() + x;
-	assert(index >= 0 && index < solid_.size());
+	assert(index < solid_.size());
 	return solid_[index];
 }
 

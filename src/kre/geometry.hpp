@@ -234,7 +234,7 @@ namespace geometry
 			return;
 		} else if(v.is_map()) {
 			ASSERT_LOG((v.has_key("x") && v.has_key("y") && v.has_key("w") && v.has_key("h"))
-				|| v.has_key("x1") && v.has_key("y1") && v.has_key("x2") && v.has_key("y2"), 
+				|| (v.has_key("x1") && v.has_key("y1") && v.has_key("x2") && v.has_key("y2")), 
 				"map must have 'x','y','w','h' or 'x1','y1','x2','y2' attributes.");
 			if(v.has_key("x")) {
 				*this = Rect<int>(v["x"].as_int32(),v["y"].as_int32(),v["w"].as_int32(),v["h"].as_int32());
@@ -258,7 +258,7 @@ namespace geometry
 			return;
 		} else if(v.is_map()) {
 			ASSERT_LOG((v.has_key("x") && v.has_key("y") && v.has_key("w") && v.has_key("h"))
-				|| v.has_key("x1") && v.has_key("y1") && v.has_key("x2") && v.has_key("y2"), 
+				|| (v.has_key("x1") && v.has_key("y1") && v.has_key("x2") && v.has_key("y2")), 
 				"map must have 'x','y','w','h' or 'x1','y1','x2','y2' attributes.");
 			if(v.has_key("x")) {
 				*this = Rect<float>(v["x"].as_float(),v["y"].as_float(),v["w"].as_float(),v["h"].as_float());

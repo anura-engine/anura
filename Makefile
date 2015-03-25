@@ -40,6 +40,8 @@ BASE_CXXFLAGS += -Wno-literal-suffix
 ifeq "$(GCC_GTEQ_490)" "1"
 BASE_CXXFLAGS += -fdiagnostics-color=auto -fsanitize=undefined
 endif
+else ifneq (,$(findstring clang, `$(CXX)`))
+BASE_CXXFLAGS += -Qunused-arguments -Wno-unknown-warning-option -Wno-deprecated-register
 endif
 
 SDL2_CONFIG?=sdl2-config

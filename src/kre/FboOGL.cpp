@@ -211,7 +211,7 @@ namespace KRE
 			}
 		} else if(GLEW_EXT_framebuffer_object) {
 			ASSERT_LOG(!(usesMultiSampling() && !GLEW_EXT_framebuffer_multisample), "Multi-sample texture requested but hardware doesn't support multi-sampling.");
-			ASSERT_LOG(!(getDepthPlane() || getStencilPlane() && !GLEW_EXT_packed_depth_stencil), "Depth or Stencil plane required but hardware doesn't support it.");
+			ASSERT_LOG(!((getDepthPlane() || getStencilPlane()) && !GLEW_EXT_packed_depth_stencil), "Depth or Stencil plane required but hardware doesn't support it.");
 			uses_ext_ = true;
 			// XXX wip
 		}

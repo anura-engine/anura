@@ -995,7 +995,7 @@ namespace
 		const variant delta = args().size() > 2 ? args()[1]->evaluate(variables) : variant();
 		const variant duration = args()[args().size() - 1]->evaluate(variables);
 		ASSERT_LOG(color.is_list() && color.num_elements() == 4 &&
-				   (delta.is_null() || delta.is_list() && delta.num_elements() == 4) &&
+				   (delta.is_null() || (delta.is_list() && delta.num_elements() == 4)) &&
 				   duration.is_int(),
 				   "BAD ARGUMENT TO screen_flash() FUNCTION: ARGUMENT FORMAT "
 				   "IS screen_flash([r,g,b,a], (optional)[dr,dg,db,da], duration)");
@@ -1248,7 +1248,7 @@ namespace
 				}
 			}
 
-			ASSERT_LOG(type->slots_requiring_initialization().empty() || args().size() > 3 && args()[3]->queryVariantType()->is_map_of().first, "Illegal spawn of " << v.as_string() << " property " << type->getEntry(type->slots_requiring_initialization()[0])->id << " requires initialization " << debugPinpointLocation());
+			ASSERT_LOG(type->slots_requiring_initialization().empty() || (args().size() > 3 && args()[3]->queryVariantType()->is_map_of().first), "Illegal spawn of " << v.as_string() << " property " << type->getEntry(type->slots_requiring_initialization()[0])->id << " requires initialization " << debugPinpointLocation());
 		}
 	RETURN_TYPE("commands")
 	END_FUNCTION_DEF(spawn)

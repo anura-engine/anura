@@ -49,7 +49,7 @@ namespace gui
 		{
 			// normalize to [-20.0,20.0] range.
 			d = (d - 0.5) * 2.0 * 20;
-			double d_abs = abs(d);
+			double d_abs = std::abs(d);
 			if(d_abs > 10) {
 				// Above 10 units we go non-linear.
 				return int((d < 0 ? -1.0 : 1.0) * pow(10, d_abs/10));

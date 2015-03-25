@@ -568,7 +568,7 @@ namespace KRE
 	{
 		float dti(float val) 
 		{
-			return abs(val - round(val));
+			return std::abs(val - round(val));
 		}
 	}
 

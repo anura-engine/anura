@@ -106,7 +106,7 @@ namespace
 	{
 		// normalize to [-20.0,20.0] range.
 		d = (d - 0.5f) * 2.0f * 20.0f;
-		float d_abs = abs(d);
+		float d_abs = std::abs(d);
 		if(d_abs > 10) {
 			// Above 10 units we go non-linear.
 			return static_cast<int>((d < 0 ? -1.0f : 1.0f) * pow(10.0f, d_abs/10.0f));

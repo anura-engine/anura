@@ -4168,7 +4168,7 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 				const int base = args_.size() - default_args_.size();
 				while(args.size() < args_.size()) {
 					const unsigned index = args.size() - base;
-					ASSERT_LOG(index >= 0 && index < default_args_.size(), "INVALID INDEX INTO DEFAULT ARGS: " << index << " / " << default_args_.size());
+					ASSERT_LOG(index < default_args_.size(), "INVALID INDEX INTO DEFAULT ARGS: " << index << " / " << default_args_.size());
 					args.push_back(ExpressionPtr(new VariantExpression(default_args_[index])));
 				}
 			}
