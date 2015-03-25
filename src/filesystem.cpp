@@ -358,9 +358,6 @@ namespace sys
 			}
 
 #else
-
-			const int begin = profile::get_tick_time();
-
 			for(file_mod_handler_map::iterator i = m.begin(); i != m.end(); ++i) {
 				std::map<std::string, int64_t>::iterator mod_itor = mod_times.find(i->first);
 				const int64_t mod_time = file_mod_time(i->first);
