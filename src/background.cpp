@@ -440,9 +440,6 @@ void Background::drawLayer(int x, int y, const rect& area, float rotation, const
 			v1 -= (static_cast<float>(y1 - area.y())/static_cast<float>(y2 - y1))*(v2 - v1);
 			y1 = area.y();
 		} else if(bg.color_above != nullptr) {
-			const int xpos = area.x() - x;
-			const int ypos = y1 - y;
-			const int width = area.w();
 			const int height = y1 - area.y();
 
 			bg.above_rect.update(area.x(), y1, area.w(), height, *bg.color_above);
@@ -513,7 +510,6 @@ void Background::drawLayer(int x, int y, const rect& area, float rotation, const
 	}
 
 	x = area.x();
-	y = area.y();
 
 	std::vector<KRE::short_vertex_texcoord> q;
 
