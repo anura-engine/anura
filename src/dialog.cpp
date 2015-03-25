@@ -364,7 +364,7 @@ namespace gui
 			default:
 				break;
 			}
-			claimed = processEvent(point(), event, claimed);
+			processEvent(point(), event, claimed);
 		}
 
 		return running;
