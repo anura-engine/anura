@@ -76,3 +76,5 @@ MacOS/lib
 xcuserdata
 project.xcworkspace
 sdk/
+vs2013/Box2D/Release/
+vs2013/lua/Release/
