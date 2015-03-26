@@ -101,7 +101,7 @@ struct VariantFunctionTypeInfo : public reference_counted_object
 
 	int num_unneeded_args;
 
-	int num_default_args() const { return default_args.size() + num_unneeded_args; }
+	int num_default_args() const { return static_cast<int>(default_args.size()) + num_unneeded_args; }
 };
 
 typedef boost::intrusive_ptr<VariantFunctionTypeInfo> VariantFunctionTypeInfoPtr;
