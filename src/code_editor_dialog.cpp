@@ -909,7 +909,6 @@ void CodeEditorDialog::onMoveCursor()
 
 				if(best_formula) {
 					const variant::debug_info& info = *result_variant.get_debug_info();
-					const int text_pos = editor_->rowColToTextPos(editor_->cursorRow(), editor_->cursorCol()) - editor_->rowColToTextPos(info.line-1, info.column-1);
 					//TODO: make the visualize widget good enough to use.
 					//visualize_widget_.reset(new gui::formula_visualize_widget(best_formula->expr(), text_pos, editor_->cursorRow()+1, editor_->cursorCol()+1, 20, 20, 500, 400, editor_.get()));
 				}

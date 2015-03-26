@@ -689,8 +689,6 @@ namespace gui
 		item_grid_->allowPersistentHighlight();
 		item_grid_->setEditorHandler(variant::VARIANT_TYPE_STRING, string_entry_, std::bind(&ItemEditDialog::editorSelect, this, _1, _2));
 		addWidget(item_grid_, border_offset, current_height);
-
-		current_height += item_grid_->height() + hpad;
 	}
 
 	void ItemEditDialog::editorSelect(variant* v, std::function<void(const variant&)> save_fn)

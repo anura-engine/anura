@@ -957,7 +957,6 @@ void editor::process_ghost_objects()
 
 	lvl_->swap_chars(ghost_objects_);
 
-	const size_t num_chars_before = lvl_->get_chars().size();
 	const std::vector<EntityPtr> chars = lvl_->get_chars();
 	for(const EntityPtr& p : chars) {
 		p->process(*lvl_);
@@ -1145,7 +1144,7 @@ bool editor::handleEvent(const SDL_Event& event, bool swallowed)
 		break;
 	case SDL_MOUSEWHEEL: {
 			int mousex, mousey;
-			const unsigned int buttons = input::sdl_get_mouse_state(&mousex, &mousey);
+			input::sdl_get_mouse_state(&mousex, &mousey);
 			
 			const int xpos = xpos_ + mousex*zoom_;
 			if(xpos < editor_x_resolution-sidebar_width()) {
@@ -1234,10 +1233,6 @@ void editor::process()
 
 	prev_mousex_ = mousex;
 	prev_mousey_ = mousey;
-
-	
-	const int selectx = round_tile_size(xpos_ + mousex*zoom_);
-	const int selecty = round_tile_size(ypos_ + mousey*zoom_);
 
 	const bool object_mode = (tool() == TOOL_ADD_OBJECT || tool() == TOOL_SELECT_OBJECT);
 	if(property_dialog_ && g_variable_editing) {
@@ -2196,10 +2191,8 @@ void editor::handleMouseButtonDown(const SDL_MouseButtonEvent& event)
 
 void editor::handleMouseButtonUp(const SDL_MouseButtonEvent& event)
 {
-	const bool ctrl_pressed = (SDL_GetModState()&(KMOD_LCTRL|KMOD_RCTRL)) != 0;
-	const bool shift_pressed = (SDL_GetModState()&(KMOD_LSHIFT|KMOD_RSHIFT)) != 0;
 	int mousex, mousey;
-	const unsigned int buttons = input::sdl_get_mouse_state(&mousex, &mousey);
+	input::sdl_get_mouse_state(&mousex, &mousey);
 	mousey -= EDITOR_MENUBAR_HEIGHT;
 			
 	const int xpos = xpos_ + mousex*zoom_;
@@ -2765,7 +2758,7 @@ editor::EDIT_TOOL editor::tool() const
 
 void editor::change_tool(EDIT_TOOL tool)
 {
-	EDIT_TOOL last_tool = tool_;
+	EDIT_TOOL last_tool;
 	tool_ = tool;
 	selected_segment_ = -1;
 

@@ -263,7 +263,6 @@ namespace gui
 			}
 		}
 		addWidget(g, border_offset, current_height);
-		current_height += g->height() + hpad;
 
 		// Add/Delete animation buttons
 		g.reset(new Grid(4));
