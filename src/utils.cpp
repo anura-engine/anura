@@ -75,7 +75,7 @@ std::string get_http_datetime()
 	return std::string(buffer);
 }
 
-#ifdef _WINDOWS
+#ifdef _MSC_VER
 const __int64 DELTA_EPOCH_IN_MICROSECS= 11644473600000000;
 
 struct timezone2 

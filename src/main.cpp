@@ -62,7 +62,6 @@
 #include "gui_section.hpp"
 #include "i18n.hpp"
 #include "input.hpp"
-#include "iphone_device_info.h"
 #include "joystick.hpp"
 #include "json_parser.hpp"
 #include "level.hpp"

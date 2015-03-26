@@ -21,7 +21,7 @@
 	   distribution.
 */
 
-#pragma comment(lib, "cairo")
+#pragma comment(lib, "libcairo-2")
 
 #include "asserts.hpp"
 #include "AttributeSet.hpp"

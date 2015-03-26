@@ -4,6 +4,10 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 12.0.31101.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "anura", "anura.vcxproj", "{716CE053-6375-400F-BEB5-0AC23E709C55}"
+	ProjectSection(ProjectDependencies) = postProject
+		{D58A2972-AFA1-4363-9777-52D8BC187DC0} = {D58A2972-AFA1-4363-9777-52D8BC187DC0}
+		{4D133DD4-C7F6-4867-B53C-8A27711438A1} = {4D133DD4-C7F6-4867-B53C-8A27711438A1}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "lua", "..\lua\lua.vcxproj", "{4D133DD4-C7F6-4867-B53C-8A27711438A1}"
 EndProject

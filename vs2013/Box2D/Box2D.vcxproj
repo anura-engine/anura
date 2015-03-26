@@ -62,6 +62,7 @@
   <ItemGroup>
     <ClCompile Include="..\..\src\Box2D\Collision\b2BroadPhase.cpp" />
     <ClCompile Include="..\..\src\Box2D\Collision\b2CollideCircle.cpp" />
+    <ClCompile Include="..\..\src\Box2D\Collision\b2CollideEdge.cpp" />
     <ClCompile Include="..\..\src\Box2D\Collision\b2CollidePolygon.cpp" />
     <ClCompile Include="..\..\src\Box2D\Collision\b2Collision.cpp" />
     <ClCompile Include="..\..\src\Box2D\Collision\b2Distance.cpp" />

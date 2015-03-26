@@ -293,5 +293,8 @@
     <ClCompile Include="..\..\src\Box2D\Dynamics\Joints\b2WheelJoint.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\Box2D\Collision\b2CollideEdge.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

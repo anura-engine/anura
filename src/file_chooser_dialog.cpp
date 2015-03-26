@@ -44,7 +44,7 @@
 #include "text_editor_widget.hpp"
 #include "unit_test.hpp"
 
-#if defined(_WINDOWS)
+#if defined(_MSC_VER)
 #include <direct.h>
 #define getcwd	_getcwd
 #endif

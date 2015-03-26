@@ -31,8 +31,10 @@
 #include <iostream>
 
 #include <sys/types.h>
+#ifdef __linux__
 #include <sys/wait.h>
 #include <unistd.h>
+#endif
 
 #include "asserts.hpp"
 #include "db_client.hpp"

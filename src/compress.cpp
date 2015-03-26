@@ -26,6 +26,8 @@
 #include "unit_test.hpp"
 #include "zlib.h"
 
+#pragma comment(lib, "zlib1")
+
 #define CHUNK 16384
 
 namespace zip 
