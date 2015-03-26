@@ -145,6 +145,12 @@ namespace gui
 		void setScale(float s);
 
 		const point& getPos() const { return position_; }
+
+		void setColor(const KRE::Color& color);
+		const KRE::Color& getColor() const { return color_; }
+
+		void setDrawColor(const KRE::Color& color) { draw_color_ = color; }
+		const KRE::Color& getDrawColor() const { return draw_color_; }
 	protected:
 		Widget();
 		explicit Widget(const variant& v, game_logic::FormulaCallable* e);
@@ -166,6 +172,7 @@ namespace gui
 		DECLARE_CALLABLE(Widget);
 		
 		virtual void visitValues(game_logic::FormulaCallableVisitor& visitor) {}
+		virtual void handleColorChanged() {}
 
 		int x_, y_;
 		int w_, h_;
@@ -210,6 +217,9 @@ namespace gui
 
 		std::shared_ptr<rect> clip_area_;
 		point position_;
+
+		KRE::Color color_;
+		KRE::Color draw_color_;
 	};
 
 	// Functor to sort widgets by z-ordering.

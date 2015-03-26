@@ -28,9 +28,10 @@
 
 namespace gui 
 {
-	GraphicalFontLabel::GraphicalFontLabel(
-		   const std::string& text, const std::string& font, int size)
-	  : text_(text), font_(GraphicalFont::get(font)), size_(size)
+	GraphicalFontLabel::GraphicalFontLabel(const std::string& text, const std::string& font, int size)
+	  : text_(text), 
+	    font_(GraphicalFont::get(font)), 
+		size_(size)
 	{
 		setEnvironment();
 		ASSERT_LOG(font_.get(), "UNKNOWN FONT: " << font);
@@ -38,12 +39,12 @@ namespace gui
 	}
 
 	GraphicalFontLabel::GraphicalFontLabel(const variant& v, game_logic::FormulaCallable* e)
-		: Widget(v,e)
+		: Widget(v,e),
+		  text_(v["text"].as_string_default("TEXT")), 
+	      font_(GraphicalFont::get(v.has_key("font") ? v["font"].as_string() : "door_label")), 
+		  size_(v["size"].as_int(2))
 	{
-		text_ = v["text"].as_string_default("TEXT");
-		font_ = GraphicalFont::get(v.has_key("font") ? v["font"].as_string() : "door_label");
 		ASSERT_LOG(font_.get(), "UNKNOWN FONT: " << v["font"].as_string());
-		size_ = v["size"].as_int(12);
 		resetTextDimensions();
 	}
 

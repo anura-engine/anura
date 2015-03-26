@@ -29,10 +29,13 @@
 #include "asserts.hpp"
 #include "button.hpp"
 #include "controls.hpp"
-#include "image_widget.hpp"
-#include "joystick.hpp"
 #include "dropdown_widget.hpp"
+#include "graphical_font_label.hpp"
+#include "i18n.hpp"
+#include "image_widget.hpp"
 #include "input.hpp"
+#include "joystick.hpp"
+#include "module.hpp"
 
 namespace gui 
 {
@@ -45,10 +48,28 @@ namespace gui
 	}
 
 	DropdownWidget::DropdownWidget(const DropdownList& list, int width, int height, DropdownType type)
-		: list_(list), 
-		  type_(type), 
+		: dropdown_height_(100),
+		  list_(list), 
 		  current_selection_(0), 
-		  dropdown_height_(100),
+		  type_(type), 
+		  editor_(),
+		  dropdown_menu_(),
+		  labels_(),
+		  label_(),
+		  dropdown_image_(),
+		  on_change_(),
+		  on_select_(),
+		  normal_image_(),
+		  focus_image_(),
+		  font_(module::get_default_font()),
+		  change_handler_(),
+		  select_handler_(),
+		  normal_color_(),
+		  depressed_color_(),
+		  focus_color_(),
+		  text_normal_color_(),
+		  text_depressed_color_(),
+		  text_focus_color_(),
 		  in_widget_(false)
 	{
 		setEnvironment();
@@ -68,9 +89,29 @@ namespace gui
 
 	DropdownWidget::DropdownWidget(const variant& v, game_logic::FormulaCallable* e)
 		: Widget(v,e), 
-		current_selection_(0), 
-		dropdown_height_(100),
-		in_widget_(false)
+		  dropdown_height_(100),
+		  list_(), 
+		  current_selection_(0), 
+		  type_(DropdownType::LIST), 
+		  editor_(),
+		  dropdown_menu_(),
+		  labels_(),
+		  label_(),
+		  dropdown_image_(),
+		  on_change_(),
+		  on_select_(),
+		  normal_image_(),
+		  focus_image_(),
+		  font_(module::get_default_font()),
+		  change_handler_(),
+		  select_handler_(),
+		  normal_color_(),
+		  depressed_color_(),
+		  focus_color_(),
+		  text_normal_color_(),
+		  text_depressed_color_(),
+		  text_focus_color_(),
+		  in_widget_(false)
 	{
 		ASSERT_LOG(getEnvironment() != 0, "You must specify a callable environment");
 		if(v.has_key("font")) {
@@ -128,11 +169,19 @@ namespace gui
 
 	void DropdownWidget::init()
 	{
-		const int dropdown_image_size = std::max(height(), dropdown_image_->height());
-		label_ = new Label(list_.size() > 0 && current_selection_ >= 0 && current_selection_ < static_cast<int>(list_.size()) ? list_[current_selection_] : "No items");
-		if(font_.empty() == false) {
-			label_->setFont(font_);
+		std::function<WidgetPtr(const std::string&, int)> make_label;
+		if(font_ == "bitmap") {
+			make_label = [](const std::string& label, int size){
+				return WidgetPtr(new GraphicalFontLabel(label, "door_label", 2));
+			};
+		} else {
+			make_label = [this](const std::string& label, int size){
+				return WidgetPtr(new Label(label, size, this->font_));
+			};
 		}
+
+		const int dropdown_image_size = std::max(height(), dropdown_image_->height());
+		label_ = make_label(list_.size() > 0 && current_selection_ >= 0 && current_selection_ < static_cast<int>(list_.size()) ? list_[current_selection_] : _("No items"), 16);
 
 		label_->setLoc((width() - dropdown_image_->width() - 8 - label_->width())/2, (height() - label_->height()) / 2);
 		if(text_normal_color_) {
@@ -167,8 +216,13 @@ namespace gui
 		dropdown_menu_->mustSelect();
 		dropdown_menu_->setDim(width(), 0);
 		dropdown_menu_->setVpad(8);
+
+		labels_.clear();
 		for(auto& s : list_) {
-			labels_.emplace_back(LabelPtr(new Label(s, text_normal_color_ ? *text_normal_color_ : KRE::Color::colorWhite(), 14, font_)));
+			labels_.emplace_back(make_label(i18n::tr(s), 14));
+			if(text_normal_color_ != nullptr) {
+				labels_.back()->setColor(*text_normal_color_);
+			}
 		}
 
 		for(auto item : labels_) {
@@ -179,12 +233,18 @@ namespace gui
 		dropdown_menu_->setVisible(false);
 	}
 
+	void DropdownWidget::setFont(const std::string& font)
+	{
+		font_ = font;
+		init();
+	}
+
 	void DropdownWidget::setSelection(int selection)
 	{
 		if(selection >= 0 || size_t(selection) < list_.size()) {
 			current_selection_ = selection;
 			if(type_ == DropdownType::LIST) {
-				label_->setText(list_[current_selection_]);
+				label_ = labels_[current_selection_];
 			} else if(type_ == DropdownType::COMBOBOX) {
 				editor_->setText(list_[current_selection_]);
 			}
@@ -401,7 +461,7 @@ namespace gui
 		}
 		current_selection_ = selection;
 		if(type_ == DropdownType::LIST) {
-			label_->setText(list_[current_selection_]);
+			label_ = labels_[current_selection_];
 		} else if(type_ == DropdownType::COMBOBOX) {
 			editor_->setText(list_[current_selection_]);
 		}

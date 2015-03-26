@@ -45,33 +45,45 @@ namespace gui
 	}
 
 	Label::Label(const std::string& text, int size, const std::string& font)
-		: text_(i18n::tr(text)), border_size_(0), size_(size), down_(false),
-		  fixed_width_(false), highlight_color_(KRE::Color::factory("red")),
-		  highlight_on_mouseover_(false), draw_highlight_(false), font_(font),
-		  color_(KRE::Color::factory("white"))
+		: text_(i18n::tr(text)), 
+		  border_size_(0), 
+		  size_(size), 
+		  down_(false),
+		  fixed_width_(false), 
+		  highlight_color_(KRE::Color::colorRed()),
+		  highlight_on_mouseover_(false), 
+		  draw_highlight_(false), 
+		  font_(font)
 	{
 		setEnvironment();
 		recalculateTexture();
 	}
 
 	Label::Label(const std::string& text, const KRE::Color& color, int size, const std::string& font)
-		: text_(i18n::tr(text)), color_(new KRE::Color(color)), border_size_(0),
-		  size_(size), down_(false), font_(font),
-		  fixed_width_(false), highlight_color_(KRE::Color::factory("red")),
-		  highlight_on_mouseover_(false), draw_highlight_(false)
+		: text_(i18n::tr(text)), 
+		  border_size_(0),
+		  size_(size), 
+		  down_(false),
+		  font_(font),
+		  fixed_width_(false),
+		  highlight_color_(KRE::Color::colorRed()),
+		  highlight_on_mouseover_(false), 
+		  draw_highlight_(false)
 	{
+		setColor(color);
 		setEnvironment();
 		recalculateTexture();
 	}
 
 	Label::Label(const variant& v, game_logic::FormulaCallable* e)
-		: Widget(v,e), fixed_width_(false), down_(false), 
-		highlight_color_(KRE::Color::factory("red")), draw_highlight_(false),
-		font_(v["font"].as_string_default())
+		: Widget(v,e), 
+		  fixed_width_(false), 
+		  down_(false), 
+		  highlight_color_(KRE::Color::colorRed()), 
+		  draw_highlight_(false),
+		  font_(v["font"].as_string_default())
 	{
 		text_ = i18n::tr(v["text"].as_string());
-	
-		color_ = v.has_key("color") ? KRE::ColorPtr(new KRE::Color(v["color"])) : KRE::Color::factory("white");
 	
 		if(v.has_key("border_color")) {
 			border_color_.reset(new KRE::Color(v["border_color"]));
@@ -89,7 +101,7 @@ namespace gui
 			on_click_ = std::bind(&Label::clickDelegate, this);
 		}
 		if(v.has_key("highlight_color")) {
-			highlight_color_.reset(new KRE::Color(v["highlight_color"]));
+			highlight_color_ = KRE::Color(v["highlight_color"]);
 		}
 		highlight_on_mouseover_ = v["highlight_on_mouseover"].as_bool(false);
 		setClaimMouseEvents(v["claim_mouse_events"].as_bool(false));
@@ -104,12 +116,6 @@ namespace gui
 		} else {
 			LOG_ERROR("Label::clickDelegate() called without environment!");
 		}
-	}
-
-	void Label::setColor(const KRE::Color& color)
-	{
-		color_.reset(new KRE::Color(color));
-		recalculateTexture();
 	}
 
 	void Label::setFontSize(int size)
@@ -160,6 +166,11 @@ namespace gui
 		}
 	}
 
+	void Label::handleColorChanged()
+	{
+		recalculateTexture();
+	}
+
 	void Label::innerSetDim(int w, int h) {
 		Widget::setDim(w, h);
 	}
@@ -174,7 +185,7 @@ namespace gui
 	void Label::recalculateTexture()
 	{
 		if(!currentText().empty()) {
-			texture_ = KRE::Font::getInstance()->renderText(currentText(), *color_, size_, true, font_);
+			texture_ = KRE::Font::getInstance()->renderText(currentText(), getColor(), size_, true, font_);
 			innerSetDim(texture_->width(), texture_->height());
 		} else {
 			texture_.reset();
@@ -187,8 +198,8 @@ namespace gui
 
 	void Label::handleDraw() const
 	{
-		if(draw_highlight_ && highlight_color_) {
-			KRE::Canvas::getInstance()->drawSolidRect(rect(x(), y(), width(), height()), *highlight_color_);
+		if(draw_highlight_) {
+			KRE::Canvas::getInstance()->drawSolidRect(rect(x(), y(), width(), height()), highlight_color_);
 		}
 
 		if(border_texture_) {
@@ -250,9 +261,6 @@ namespace gui
 		variant_builder res;
 		res.add("type", "Label");
 		res.add("text", text());
-		if((color_ && color_->r_int() != 255) || color_->g_int() != 255 || color_->b_int() != 255 || color_->a_int() != 255) {
-			res.add("color", color_->write());
-		}
 		if(size() != default_font_size) {
 			res.add("size", size());
 		}
@@ -377,7 +385,7 @@ namespace gui
 		std::string txt = currentText().substr(0, prog);
 
 		if(prog > 0) {
-			setTexture(KRE::Font::getInstance()->renderText(txt, color(), size(), false, font()));
+			setTexture(KRE::Font::getInstance()->renderText(txt, getColor(), size(), false, font()));
 		} else {
 			setTexture(KRE::TexturePtr());
 		}
@@ -401,11 +409,10 @@ namespace gui
 
 	LabelPtr LabelFactory::create(const std::string& text) const
 	{
-		return LabelPtr(new Label(text,color_,size_));
+		return LabelPtr(new Label(text, color_, size_));
 	}
 
-	LabelPtr LabelFactory::create(const std::string& text,
-									const std::string& tip) const
+	LabelPtr LabelFactory::create(const std::string& text, const std::string& tip) const
 	{
 		const LabelPtr res(create(text));
 		res->setTooltip(tip);

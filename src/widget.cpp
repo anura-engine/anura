@@ -39,27 +39,74 @@
 namespace gui 
 {
 	Widget::Widget() 
-		: x_(0), y_(0), w_(0), h_(0), align_h_(HALIGN_LEFT), align_v_(VALIGN_TOP),
-		true_x_(0), true_y_(0), disabled_(false), disabled_opacity_(127),
-		tooltip_displayed_(false), visible_(true), zorder_(0), environ_(0),
-		tooltip_display_delay_(0), tooltip_ticks_(std::numeric_limits<int>::max()), resolution_(0),
-		display_alpha_(256), pad_h_(0), pad_w_(0), claim_mouse_events_(true),
-		draw_with_object_shader_(true), tooltip_font_size_(18),
-		swallow_all_events_(false), tab_stop_(0), has_focus_(false),
-		tooltip_color_(255,255,255), rotation_(0), scale_(1.0f),  position_()
+		: x_(0), 
+		  y_(0), 
+		  w_(0), 
+		  h_(0), 
+		  align_h_(HALIGN_LEFT), 
+		  align_v_(VALIGN_TOP),
+		  true_x_(0), 
+		  true_y_(0), 
+		  disabled_(false), 
+		  disabled_opacity_(127),
+		  tooltip_displayed_(false), 
+		  visible_(true), 
+		  zorder_(0), 
+		  environ_(0),
+		  tooltip_display_delay_(0), 
+		  tooltip_ticks_(std::numeric_limits<int>::max()), 
+		  resolution_(0),
+		  display_alpha_(256), 
+		  pad_h_(0), 
+		  pad_w_(0), 
+		  claim_mouse_events_(true),
+		  draw_with_object_shader_(true), 
+		  tooltip_font_size_(18),
+		  swallow_all_events_(false), 
+		  tab_stop_(0), 
+		  has_focus_(false),
+		  tooltip_color_(255,255,255), 
+		  rotation_(0), 
+		  scale_(1.0f),  
+		  position_(),
+		  color_(),
+		  draw_color_()
 		{
 		}
 
 	Widget::Widget(const variant& v, game_logic::FormulaCallable* e) 
-		: environ_(e), w_(0), h_(0), x_(0), y_(0), zorder_(0), 
-		true_x_(0), true_y_(0), disabled_(false), disabled_opacity_(v["disabled_opacity"].as_int(127)),
-		tooltip_displayed_(false), id_(v["id"].as_string_default()), align_h_(HALIGN_LEFT), align_v_(VALIGN_TOP),
-		tooltip_display_delay_(v["tooltip_delay"].as_int(0)), tooltip_ticks_(std::numeric_limits<int>::max()),
-		resolution_(v["frame_size"].as_int(0)), display_alpha_(v["alpha"].as_int(256)),
-		pad_w_(0), pad_h_(0), claim_mouse_events_(v["claim_mouse_events"].as_bool(true)),
-		draw_with_object_shader_(v["draw_with_object_shader"].as_bool(true)), tooltip_font_size_(18),
-		swallow_all_events_(false), tab_stop_(v["tab_stop"].as_int(0)), has_focus_(false),
-		tooltip_color_(255,255,255), rotation_(0), scale_(1.0f), position_()
+		: environ_(e), 
+		  w_(0), 
+		  h_(0), 
+		  x_(0), 
+		  y_(0), 
+		  zorder_(0), 
+		  true_x_(0), 
+		  true_y_(0), 
+		  disabled_(false), 
+		  disabled_opacity_(v["disabled_opacity"].as_int(127)),
+		  tooltip_displayed_(false), 
+		  id_(v["id"].as_string_default()), 
+		  align_h_(HALIGN_LEFT), 
+		  align_v_(VALIGN_TOP),
+		  tooltip_display_delay_(v["tooltip_delay"].as_int(0)), 
+		  tooltip_ticks_(std::numeric_limits<int>::max()),
+		  resolution_(v["frame_size"].as_int(0)), 
+		  display_alpha_(v["alpha"].as_int(256)),
+		  pad_w_(0), 
+		  pad_h_(0), 
+		  claim_mouse_events_(v["claim_mouse_events"].as_bool(true)),
+		  draw_with_object_shader_(v["draw_with_object_shader"].as_bool(true)), 
+		  tooltip_font_size_(18),
+		  swallow_all_events_(false), 
+		  tab_stop_(v["tab_stop"].as_int(0)), 
+		  has_focus_(false),
+		  tooltip_color_(255,255,255), 
+		  rotation_(0), 
+		  scale_(1.0f), 
+		  position_(),
+		  color_(),
+		  draw_color_()
 	{
 		setAlpha(display_alpha_ < 0 ? 0 : (display_alpha_ > 256 ? 256 : display_alpha_));
 		if(v.has_key("width")) {
@@ -172,6 +219,13 @@ namespace gui
 		if(v.has_key("scale")) {
 			setScale(v["scale"].as_float());
 		}
+
+		if(v.has_key("color")) {
+			setColor(KRE::Color(v["color"]));
+		}
+		if(v.has_key("draw_color")) {
+			setDrawColor(KRE::Color(v["draw_color"]));
+		}
 	}
 
 	Widget::~Widget()
@@ -224,6 +278,7 @@ namespace gui
 
 	void Widget::process() {
 		handleProcess();
+		draw_color_.setAlpha(disabled() ? disabledOpacity() : getAlpha());
 	}
 
 	void Widget::normalizeEvent(SDL_Event* event, bool translate_coords)
@@ -305,9 +360,10 @@ namespace gui
 
 	void Widget::draw(int xt, int yt, float rotate, float scale) const
 	{
+		using namespace KRE;
 		if(visible_) {
-			KRE::Canvas::ModelManager mm(xt, yt, rotate, scale);
-			KRE::Canvas::ColorManager cm(KRE::Color(255,255,255,disabled() ? disabledOpacity() : getAlpha()));
+			Canvas::ModelManager mm(xt, yt, rotate, scale);
+			Canvas::ColorManager cm(draw_color_);
 			if(frame_set_ != nullptr) {
 				frame_set_->blit(x() - getPadWidth() - frame_set_->cornerHeight(),
 					y() - getPadHeight() - frame_set_->cornerHeight(), 
@@ -316,7 +372,7 @@ namespace gui
 			}
 
 			if(clip_area_) {
-				auto cs = KRE::ClipScope::create(*clip_area_);
+				auto cs = ClipScope::create(*clip_area_);
 				handleDraw();
 			} else {
 				handleDraw();
@@ -692,7 +748,20 @@ namespace gui
 		if(getScale() != 1.0f) {
 			res.add("scale", getScale());
 		}
+		
+		if(getColor() != KRE::Color::colorWhite()) {
+			res.add("color", getColor().write());
+		}
+		if(getDrawColor() != KRE::Color::colorWhite()) {
+			res.add("draw_color", getDrawColor().write());
+		}
 		return res.build();
+	}
+
+	void Widget::setColor(const KRE::Color& color)
+	{
+		color_ = color;
+		handleColorChanged();
 	}
 
 	bool WidgetSortZOrder::operator()(const WidgetPtr& lhs, const WidgetPtr& rhs) const

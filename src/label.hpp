@@ -52,16 +52,14 @@ namespace gui
 
 		void setFontSize(int font_size);
 		void setFont(const std::string& font);
-		void setColor(const KRE::Color& color);
 		void setText(const std::string& text);
 		void setFixedWidth(bool fixed_width);
 		virtual void setDim(int x, int y);
-		const KRE::Color& color() const { return *color_; }
 		std::string font() const { return font_; }
 		int size() { return size_; }
 		std::string text() { return text_; }
 		void setClickHandler(std::function<void()> click) { on_click_ = click; }
-		void setHighlightColor(const KRE::Color &col) {highlight_color_.reset(new KRE::Color(col));}
+		void setHighlightColor(const KRE::Color &col) { highlight_color_ = col;}
 		void allowHighlightOnMouseover(bool val=true) { highlight_on_mouseover_ = val; }
 	protected:
 		std::string& currentText();
@@ -78,14 +76,14 @@ namespace gui
 		DECLARE_CALLABLE(Label);
 
 		void handleDraw() const override;
+		void handleColorChanged() override;
 		void innerSetDim(int x, int y);
 		void reformatText();
 
 		std::string text_, formatted_;
 		KRE::TexturePtr texture_, border_texture_;
 		int border_size_;
-		KRE::ColorPtr color_;
-		KRE::ColorPtr highlight_color_;
+		KRE::Color highlight_color_;
 		std::unique_ptr<KRE::Color> border_color_;
 		int size_;
 		std::string font_;

@@ -54,6 +54,7 @@ namespace gui
 		void setSelection(int selection);
 		int getMaxHeight() const;
 		void setDropdownHeight(int h);
+		void setFont(const std::string& font);
 		void setFontSize(int size) { editor_->setFontSize(size); }
 		void setText(const std::string& s) { editor_->setText(s); }
 	protected:
@@ -78,8 +79,8 @@ namespace gui
 		DropdownType type_;
 		TextEditorWidgetPtr editor_;
 		GridPtr dropdown_menu_;
-		std::vector<LabelPtr> labels_;
-		LabelPtr label_;
+		std::vector<WidgetPtr> labels_;
+		WidgetPtr label_;
 		GuiSectionWidgetPtr dropdown_image_;
 		
 		std::function<void(const std::string&)> on_change_;
