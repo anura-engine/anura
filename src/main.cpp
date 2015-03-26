@@ -434,10 +434,10 @@ int main(int argcount, char* argvec[])
 
 	stats::record_program_args(argv);
 
-
-	for(size_t n = 0; n < argv.size(); ++n) {
-		const int argc = argv.size();
-		const std::string arg(argv[n]);
+	{
+	//copy argv since the loop can modify it
+	std::vector<std::string> argv_copy = argv;
+	for(const std::string& arg : argv_copy) {
 		std::string arg_name, arg_value;
 		std::string::const_iterator equal = std::find(arg.begin(), arg.end(), '=');
 		if(equal != arg.end()) {
@@ -449,7 +449,7 @@ int main(int argcount, char* argvec[])
 			if(load_module(arg_value, &argv) != 0) {
 				bool auto_update = false;
 				for(size_t n = 0; n < argv.size(); ++n) {
-					if(argv[n] == "--auto-update-module" || argv[n] == "--utility=update_launcher") {
+					if(argv[n] == "--auto-update-module") {
 						auto_update = true;
 						break;
 					}
@@ -464,6 +464,7 @@ int main(int argcount, char* argvec[])
 		} else if(arg == "--tests" || arg_name == "--tests") {
 			unit_tests_only = true;
 		}
+	}
 	}
 
 	if(modules_loaded == 0 && !unit_tests_only) {
