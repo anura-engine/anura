@@ -490,7 +490,7 @@ namespace sys
 
 	bool is_file_executable(const std::string& path)
 	{
-		return boost::filesystem::status(path).permissions()&boost::filesystem::owner_exe != 0;
+		return (boost::filesystem::status(path).permissions()&boost::filesystem::owner_exe) != 0;
 	}
 
 	void set_file_executable(const std::string& path)
