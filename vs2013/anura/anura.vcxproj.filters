@@ -1,0 +1,1196 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Header Files\kre">
+      <UniqueIdentifier>{56401d5e-3806-4274-b3dc-3963fd9b0adb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\svg">
+      <UniqueIdentifier>{1fdba8ef-4108-44ac-813e-c7759f245999}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\kre">
+      <UniqueIdentifier>{a1e2d246-ccc0-4888-bddf-502c7f8aeff3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\svg">
+      <UniqueIdentifier>{661cf2de-cf6b-496b-822c-ee6b0b0273ab}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\src\achievements.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\animation_creator.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\animation_preview_widget.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\animation_widget.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\anura_shader.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Appirater.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\array_callable.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\asserts.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\auto_update_window.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\b2d_ffl.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\background.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\background_task_pool.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\bar_widget.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\base64.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\blur.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\border_widget.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\button.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\cairo.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\character_editor_dialog.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\checkbox.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\checksum.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\clipboard.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\code_editor_dialog.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\code_editor_widget.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\collision_utils.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\color_picker.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ColorTransform.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\compress.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\concurrent_cache.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\controls.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\controls_dialog.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\current_generator.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\custom_object.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\custom_object_callable.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\custom_object_dialog.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\custom_object_functions.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\custom_object_type.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\custom_object_widget.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\db_client.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\debug_console.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\decimal.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\dialog.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\difficulty.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\distortion.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\drag_widget.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\draw_primitive.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\draw_primitive_fwd.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\draw_scene.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\draw_tile.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\drawable_level_tiles.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\dropdown_widget.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\editor.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\editor_dialogs.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\editor_formula_functions.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\editor_layers_dialog.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\editor_level_properties_dialog.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\editor_module_properties_dialog.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\editor_stats_dialog.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\editor_variable_info.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\eglport.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\entity.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\entity_fwd.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external_text_editor.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ffl_weak_ptr.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\file_chooser_dialog.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\filesystem.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\formatter.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\formula.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\formula_callable.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\formula_callable_definition.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\formula_callable_definition_fwd.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\formula_callable_utils.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\formula_callable_visitor.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\formula_constants.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\formula_function.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\formula_function_registry.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\formula_fwd.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\formula_interface.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\formula_object.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\formula_profiler.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\formula_tokenizer.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\formula_variable_storage.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\formula_visualize_widget.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\frame.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\framed_gui_element.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ft_iface.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\game_registry.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\geometry_callable.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\globals.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\graphical_font.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\graphical_font_label.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\grid_widget.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\grid_widget_fwd.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\group_property_editor_dialog.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\gui_section.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\haptic.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\http_client.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\http_server.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\i18n.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\image_widget.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\image_widget_fwd.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\input.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\iphone_device_info.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\iphone_sound.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\isochunk.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\isoworld.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\joystick.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\json_parser.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\json_tokenizer.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\key_button.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\label.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\language_dialog.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\LayerBlitInfo.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\layout_widget.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\level.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\level_logic.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\level_object.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\level_object_fwd.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\level_runner.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\level_solid_map.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\light.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\load_level.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\loading_screen.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\logger.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\lua_iface.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\md5.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\message_dialog.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\module.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\module_web_server.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\multi_tile_pattern.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\multiplayer.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\nocopy.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\object_events.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\octree.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\particle_system.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ParticleSystemWidget.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\pathfinding.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\pause_game_dialog.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\play_vpx.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\playable_custom_object.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\player_info.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\point_map.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\poly_line_widget.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\poly_map.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\preferences.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\preprocessor.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\preview_tileset_widget.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\profile_timer.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\progress_bar.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\property_editor_dialog.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\random.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\rect_renderable.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\rectangle_rotator.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\reference_counted_object.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\regex_utils.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\rich_text_label.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\SceneNodeCallable.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\SceneObjectCallable.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\scoped_resource.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\screen_handling.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\scrollable_widget.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\scrollbar_widget.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\SDLMain.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\segment_editor_dialog.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\selector_widget.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\settings_dialog.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\simplex_noise.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\skybox.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\slider.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\solid_map.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\solid_map_fwd.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\sound.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\speech_dialog.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\spline.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\spline3d.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\stacktrace.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\StackWalker.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\stats.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\stats_server.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\stats_web_server.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\string_utils.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\surface_cache.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\surface_palette.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\surface_utils.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\sys.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\tbs_ai_player.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\tbs_bot.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\tbs_client.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\tbs_functions.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\tbs_game.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\tbs_internal_client.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\tbs_internal_server.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\tbs_server.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\tbs_server_base.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\tbs_web_server.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\text_editor_widget.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\TextureObject.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\thread.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\tile_map.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\tileset_editor_dialog.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\tooltip.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\translate.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\tree_view_widget.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\unit_test.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\uri.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\user_voxel_object.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\userevents.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\utf8_to_codepoint.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\utility_query.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\utils.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\uuid.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\variant.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\variant_callable.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\variant_type.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\variant_utils.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\video_selections.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\VoronoiDiagramGenerator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\voxel_model.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\voxel_object.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\voxel_object_functions.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\voxel_object_type.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\water.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\water_particle_system.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\weather_particle_system.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\widget.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\widget_factory.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\widget_fwd.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\widget_settings_dialog.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\wml_formula_callable.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\svg\svg_attribs.hpp">
+      <Filter>Header Files\svg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\svg\svg_container.hpp">
+      <Filter>Header Files\svg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\svg\svg_element.hpp">
+      <Filter>Header Files\svg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\svg\svg_fwd.hpp">
+      <Filter>Header Files\svg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\svg\svg_gradient.hpp">
+      <Filter>Header Files\svg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\svg\svg_length.hpp">
+      <Filter>Header Files\svg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\svg\svg_paint.hpp">
+      <Filter>Header Files\svg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\svg\svg_parse.hpp">
+      <Filter>Header Files\svg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\svg\svg_path_parse.hpp">
+      <Filter>Header Files\svg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\svg\svg_render.hpp">
+      <Filter>Header Files\svg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\svg\svg_shapes.hpp">
+      <Filter>Header Files\svg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\svg\svg_style.hpp">
+      <Filter>Header Files\svg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\svg\svg_transform.hpp">
+      <Filter>Header Files\svg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\svg\utils.hpp">
+      <Filter>Header Files\svg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\AttributeSet.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\AttributeSetOGL.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\Blend.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\BlendModeScope.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\BlendOGL.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\Blittable.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\CameraObject.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\Canvas.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\CanvasOGL.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\ClipScope.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\ClipScopeOGL.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\Color.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\ColorScope.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\DisplayDevice.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\DisplayDeviceFwd.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\DisplayDeviceOGL.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\DisplayDeviceOGLFixed.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\DisplayDeviceSDL.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\Effects.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\EffectsOGL.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\FboOGL.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\Font.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\FontSDL.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\Frustum.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\geometry.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\LightObject.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\ModelMatrixScope.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\ParticleSystem.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\ParticleSystemAffectors.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\ParticleSystemEmitters.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\ParticleSystemFwd.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\ParticleSystemObservers.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\ParticleSystemParameters.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\PixelFormat.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\Renderable.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\RenderFwd.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\RenderManager.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\RenderQueue.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\RenderTarget.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\SceneFwd.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\SceneGraph.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\SceneNode.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\SceneObject.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\SceneParameters.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\SceneUtil.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\Scissor.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\ScissorOGL.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\ScopeableValue.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\SDLWrapper.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\Shaders.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\ShadersOGL.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\spline.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\spline3d.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\StencilScope.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\StencilScopeOGL.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\StencilSettings.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\Surface.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\SurfaceSDL.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\TexPack.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\Texture.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\TextureOGL.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\TextureSDL.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\TextureUtils.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\UniformBuffer.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\UniformBufferOGL.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\Util.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\VGraph.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\VGraphCairo.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\VGraphFwd.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\VGraphOGL.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\VGraphOGLFixed.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\VGraphPatterns.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\WindowManager.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\WindowManagerFwd.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\src\kre\geometry.inl">
+      <Filter>Header Files\kre</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\src\svg\svg_attribs.cpp">
+      <Filter>Source Files\svg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\svg\svg_container.cpp">
+      <Filter>Source Files\svg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\svg\svg_element.cpp">
+      <Filter>Source Files\svg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\svg\svg_gradient.cpp">
+      <Filter>Source Files\svg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\svg\svg_paint.cpp">
+      <Filter>Source Files\svg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\svg\svg_parse.cpp">
+      <Filter>Source Files\svg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\svg\svg_path_parse.cpp">
+      <Filter>Source Files\svg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\svg\svg_shapes.cpp">
+      <Filter>Source Files\svg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\svg\svg_style.cpp">
+      <Filter>Source Files\svg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\svg\svg_transform.cpp">
+      <Filter>Source Files\svg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\svg\svg_utils.cpp">
+      <Filter>Source Files\svg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\AttributeSet.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\AttributeSetOGL.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\Blend.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\BlendModeScope.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\BlendOGL.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\Blittable.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\CameraObject.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\Canvas.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\CanvasOGL.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\ClipScope.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\ClipScopeOGL.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\Color.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\ColorScope.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\DisplayDevice.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\DisplayDeviceOGL.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\DisplayDeviceOGLFixed.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\DisplayDeviceSDL.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\EffectsOGL.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\FboOGL.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\Font.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\FontSDL.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\Frustum.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\LightObject.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\ModelMatrixScope.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\ParticleSystem.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\ParticleSystemAffectors.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\ParticleSystemEmitters.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\ParticleSystemObservers.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\ParticleSystemParameters.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\Renderable.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\RenderManager.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\RenderQueue.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\RenderTarget.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\SceneGraph.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\SceneNode.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\SceneObject.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\SceneParameters.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\Scissor.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\ScissorOGL.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\Shaders.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\ShadersOGL.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\StencilScope.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\StencilScopeOGL.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\Surface.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\SurfaceSDL.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\TexPack.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\Texture.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\TextureOGL.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\TextureSDL.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\UniformBuffer.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\UniformBufferOGL.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\Util.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\VGraph.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\VGraphCairo.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\VGraphOGL.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\VGraphOGLFixed.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\WindowManager.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Library Include="..\Box2D\Release\x64\Box2D.lib" />
+  </ItemGroup>
+</Project>

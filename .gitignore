@@ -35,15 +35,10 @@ anura
 *.unsuccessfulbuild
 *.opensdf
 *.def
-*.exp
-vs2013/anura/Debug/
-vs2013/anura/Release/
-vs2013/anura/Win32/
-vs2013/anura/x64/
-vs2012/anura/Debug/
-vs2012/anura/Release/
-vs2012/anura/Win32/
-vs2012/anura/x64/
+#*.exp
+Box2D.lib
+lua.lib
+!vs2013
 
 # exclude any temporary files.
 *.pb.cc
@@ -51,7 +46,6 @@ vs2012/anura/x64/
 
 # random stuff
 .DS_Store
-a.out
 *~
 *.kate-swp
 *.sublime-workspace
@@ -76,5 +70,3 @@ MacOS/lib
 xcuserdata
 project.xcworkspace
 sdk/
-vs2013/Box2D/Release/
-vs2013/lua/Release/
