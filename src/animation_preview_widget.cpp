@@ -492,7 +492,7 @@ namespace gui
 						canvas->drawSolidRect(rect(box.x()-1, box.y(), 2, box.h()), KRE::Color::colorRed());
 					}
 				
-					if(rect_chosen || ((!dragging_sides_bitmap_&LEFT_SIDE) && pointInRect(point(mousex, mousey), rect(box.x2()-4, box.y(), 9, box.h())))) {
+					if(rect_chosen || (!(dragging_sides_bitmap_&LEFT_SIDE) && pointInRect(point(mousex, mousey), rect(box.x2()-4, box.y(), 9, box.h())))) {
 						dragging_sides_bitmap_ |= RIGHT_SIDE;
 						canvas->drawSolidRect(rect(box.x2()-1, box.y(), 2, box.h()), KRE::Color::colorRed());
 					}
