@@ -311,7 +311,7 @@ void SpeechDialog::draw() const
 	int nchars = text_char_;
 	for(unsigned n = 0; n < 2 && n < text_.size() && nchars > 0; ++n) {
 		std::string str(text_[n].begin(), text_[n].begin() +
-		                  std::min<int>(nchars, text_[n].size()));
+		                  std::min<int>(nchars, static_cast<int>(text_[n].size())));
 		//move the first line slightly up so that accents don't mess up centering
 		rect area = font->dimensions(str);
 		area = rect(text_left_align[n], ypos - 2, area.w(), area.h());
