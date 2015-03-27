@@ -1804,8 +1804,6 @@ void CustomObject::process(Level& lvl)
 		const int dir = effective_velocity_y > 0 ? 1 : -1;
 		int damage = 0;
 
-		const int original_centi_y = centiY();
-
 		const int move_amount = std::min(std::max(move_left, 0), 100);
 		
 		const bool moved = moveCentipixels(0, move_amount*dir);
@@ -2059,7 +2057,6 @@ void CustomObject::process(Level& lvl)
 				//However, if there is a platform immediately above us, we only
 				//adjust our feet upward if the object is trying to walk up
 				//stairs, normally by the player pressing up while walking.
-				const int begin_y = getFeetY();
 				int max_slope = 5;
 				while(--max_slope && isStanding(lvl, &slope_standing_info) != STANDING_STATUS::NOT_STANDING) {
 					if(slope_standing_info.platform && walkUpOrDownStairs() >= 0) {

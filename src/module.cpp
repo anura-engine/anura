@@ -602,6 +602,9 @@ namespace module
 			std::map<variant, variant> attr;
 
 			const std::string contents = sys::read_file(file);
+			if(sys::is_file_executable(file)) {
+				attr[variant("exe")] = variant::from_bool(true);
+			}
 
 			attr[variant("md5")] = variant(md5::sum(contents));
 			attr[variant("size")] = variant(static_cast<int>(contents.size()));
@@ -1241,6 +1244,10 @@ const char* InstallImagePath = ".";
 			std::string contents(data.begin(), data.end());
 			ASSERT_LOG(variant(md5::sum(contents)) == info["md5"], "md5 sum for " << path.as_string() << " does not match");
 			sys::write_file(path_str, contents);
+
+			if(info["exe"].as_bool(false)) {
+				sys::set_file_executable(path_str);
+			}
 
 			if(path.as_string() == "manifest.cfg") {
 				full_manifest = json::parse(contents);

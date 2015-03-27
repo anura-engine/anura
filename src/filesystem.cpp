@@ -27,7 +27,14 @@
 #include <algorithm>
 #include <boost/algorithm/string.hpp>
 
+#ifdef __APPLE__
+#include <sys/stat.h>
+#endif
+
 #if defined(__linux__)
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 //Avoid link error on Linux when compiling with -std=c++0x and linking with
 //a Boost lib not compiled with these flags.
 #define BOOST_NO_SCOPED_ENUMS
@@ -358,9 +365,6 @@ namespace sys
 			}
 
 #else
-
-			const int begin = profile::get_tick_time();
-
 			for(file_mod_handler_map::iterator i = m.begin(); i != m.end(); ++i) {
 				std::map<std::string, int64_t>::iterator mod_itor = mod_times.find(i->first);
 				const int64_t mod_time = file_mod_time(i->first);
@@ -482,5 +486,15 @@ namespace sys
 		}
 
 		return true;
+	}
+
+	bool is_file_executable(const std::string& path)
+	{
+		return (boost::filesystem::status(path).permissions()&boost::filesystem::owner_exe) != 0;
+	}
+
+	void set_file_executable(const std::string& path)
+	{
+		boost::filesystem::permissions(path, boost::filesystem::owner_exe);
 	}
 }

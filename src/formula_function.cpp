@@ -82,6 +82,7 @@ using boost::math::acosh;
 using boost::math::atanh;
 #endif
 
+PREF_STRING(auto_update_status, "", "");
 extern variant g_auto_update_info;
 
 namespace 
@@ -4691,6 +4692,9 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 	END_FUNCTION_DEF(DrawPrimitive)
 
 	FUNCTION_DEF(auto_update_status, 0, 0, "auto_update_info(): get info on auto update status")
+		if(g_auto_update_status.empty() == false) {
+			return json::parse(g_auto_update_status);
+		}
 		return g_auto_update_info;
 	FUNCTION_ARGS_DEF
 	RETURN_TYPE("map")

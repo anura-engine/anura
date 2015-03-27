@@ -22,12 +22,14 @@
 */
 
 #include "db_client.hpp"
+#include "filesystem.hpp"
+#include "json_parser.hpp"
+#include "preferences.hpp"
+
+PREF_STRING(db_json_file, "", "The file to output database content to when using a file to simulate a database");
 
 BEGIN_DEFINE_CALLABLE_NOBASE(DbClient)
 BEGIN_DEFINE_FN(read_modify_write, "(string, function(any)->any) ->commands")
-#ifndef USE_DBCLIENT
-	return variant();
-#else
 	std::string key = FN_ARG(0).as_string();
 	variant fn = FN_ARG(1);
 	DbClient* cli = const_cast<DbClient*>(&obj);
@@ -47,13 +49,9 @@ BEGIN_DEFINE_FN(read_modify_write, "(string, function(any)->any) ->commands")
 	));
 
 	return v;
-#endif
 END_DEFINE_FN
 
 BEGIN_DEFINE_FN(remove, "(string) ->commands")
-#ifndef USE_DB_CLIENT
-	return variant();
-#else
 	std::string key = FN_ARG(0).as_string();
 	DbClient* cli = const_cast<DbClient*>(&obj);
 	variant v(new game_logic::FnCommandCallable([=]() {
@@ -62,13 +60,8 @@ BEGIN_DEFINE_FN(remove, "(string) ->commands")
 	));
 
 	return v;
-	
-#endif
 END_DEFINE_FN
 BEGIN_DEFINE_FN(get, "(string) ->any")
-#ifndef USE_DBCLIENT
-	return variant();
-#else
 	std::string key = FN_ARG(0).as_string();
 	DbClient* cli = const_cast<DbClient*>(&obj);
 
@@ -82,8 +75,6 @@ BEGIN_DEFINE_FN(get, "(string) ->any")
 
 	return result;
 		
-#endif
-	
 END_DEFINE_FN
 END_DEFINE_CALLABLE(DbClient)
 
@@ -92,11 +83,61 @@ DbClient::error::error(const std::string& message) : msg(message)
 
 DbClient::~DbClient() {}
 
+namespace
+{
+	class FileBackedDbClient : public DbClient
+	{
+	public:
+		explicit FileBackedDbClient(const std::string& fname) : fname_(fname), dirty_(false) {
+			if(sys::file_exists(fname_)) {
+				json::parse(sys::read_file(fname_), json::JSON_PARSE_OPTIONS::NO_PREPROCESSOR);
+			}
+			
+			if(!doc_.is_map()) {
+				std::map<variant,variant> m;
+				doc_ = variant(&m);
+			}
+		}
+
+		~FileBackedDbClient() {
+		}
+
+		bool process(int timeout_us) {
+			if(dirty_) {
+				sys::write_file(fname_, doc_.write_json());
+				dirty_ = false;
+			}
+			return false;
+		}
+
+		void put(const std::string& key, variant doc, std::function<void()> on_done, std::function<void()> on_error, PUT_OPERATION op=PUT_SET)
+		{
+			doc_.add_attr_mutation(variant(key), doc);
+			dirty_ = true;
+			on_done();
+		}
+
+		void get(const std::string& key, std::function<void(variant)> on_done, int lock_seconds) {
+			on_done(doc_[key]);
+		}
+
+		void remove(const std::string& key) {
+			doc_.remove_attr_mutation(variant(key));
+			dirty_ = true;
+		}
+
+	private:
+		std::string fname_;
+		variant doc_;
+		bool dirty_;
+	};
+}
+
 #ifndef USE_DBCLIENT
 
 DbClientPtr DbClient::create() 
 {
-	throw error("No db_client supported");
+	return DbClientPtr(new FileBackedDbClient(g_db_json_file.empty() ? "db.json" : g_db_json_file.c_str()));
 }
 
 #else
@@ -355,7 +396,11 @@ void remove_callback(lcb_t instance, const void* cookie, lcb_error_t error, cons
 
 DbClientPtr DbClient::create() 
 {
-	return DbClientPtr(new CouchbaseDbClient);
+	if(g_db_json_file.empty()) {
+		return DbClientPtr(new CouchbaseDbClient);
+	} else {
+		return DbClientPtr(new FileBackedDbClient(g_db_json_file));
+	}
 }
 
 #endif //USE_DBCLIENT

@@ -262,7 +262,6 @@ namespace gui
 		g->addCol(WidgetPtr(new Button(WidgetPtr(new Label("OK", KRE::Color::colorWhite())), std::bind(&FileChooserDialog::okButton, this))));
 		g->addCol(WidgetPtr(new Button(WidgetPtr(new Label("Cancel", KRE::Color::colorWhite())), std::bind(&FileChooserDialog::cancelButton, this))));
 		addWidget(g, 30, current_height);
-		current_height += g->height() + hpad;
 	}
 
 	void FileChooserDialog::changeFilter(int selection, const std::string& s)

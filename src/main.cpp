@@ -118,6 +118,8 @@ namespace
 	PREF_STRING(auto_update_anura, "", "Auto update Anura's binaries from the module server using the given name as the module ID (e.g. anura-windows might be the id for the windows binary)");
 	PREF_INT(auto_update_timeout, 5000, "Timeout to use on auto updates (given in milliseconds)");
 
+	PREF_BOOL(resizeable, false, "Window is dynamically resizeable.");
+
 #if defined(_MSC_VER)
 	const std::string anura_exe_name = "anura.exe";
 #else
@@ -210,6 +212,7 @@ namespace
 			"      --no-autopause           Stops the game from pausing automatically\n" <<
 			"                                 when it loses focus\n" <<
 			"      --tests                  runs the game's unit tests and exits\n" <<
+			"      --tests=\"foo,bar,baz\"  runs the named unit tests and exits\n" <<
 			"      --no-tests               skips the execution of unit tests on startup\n"
 			"      --utility=NAME           runs the specified UTILITY( NAME ) code block,\n" <<
 			"                                 such as compile_levels or compile_objects,\n" <<
@@ -383,6 +386,7 @@ int main(int argcount, char* argvec[])
 	std::vector<std::string> benchmarks_list;
 	std::string utility_program;
 	std::vector<std::string> util_args;
+	boost::scoped_ptr<std::vector<std::string> > test_names;
 	std::string server = "wesnoth.org";
 	bool is_child_utility = false;
 
@@ -431,10 +435,10 @@ int main(int argcount, char* argvec[])
 
 	stats::record_program_args(argv);
 
-
-	for(size_t n = 0; n < argv.size(); ++n) {
-		const auto argc = argv.size();
-		const std::string arg(argv[n]);
+	{
+	//copy argv since the loop can modify it
+	std::vector<std::string> argv_copy = argv;
+	for(const std::string& arg : argv_copy) {
 		std::string arg_name, arg_value;
 		std::string::const_iterator equal = std::find(arg.begin(), arg.end(), '=');
 		if(equal != arg.end()) {
@@ -458,9 +462,10 @@ int main(int argcount, char* argvec[])
 				}
 			}
 			++modules_loaded;
-		} else if(arg == "--tests") {
+		} else if(arg == "--tests" || arg_name == "--tests") {
 			unit_tests_only = true;
 		}
+	}
 	}
 
 	if(modules_loaded == 0 && !unit_tests_only) {
@@ -510,10 +515,18 @@ int main(int argcount, char* argvec[])
 		} else if(arg_name == "--benchmarks") {
 			run_benchmarks = true;
 			benchmarks_list = util::split(arg_value);
-		} else if(arg == "--tests") {
-			// ignore as already processed.
 		} else if(arg == "--no-tests") {
 			skip_tests = true;
+		} else if(arg == "--tests" || arg_name == "--tests") {
+			// If there is a value, split it as the list of tests
+			if (arg_value.size()) {
+				// If the list is quoted, remove the quotes
+				if (arg_value.at(0) == '\"' && arg_value.at(arg_value.size()-1) == '\"') {
+					test_names.reset(new std::vector<std::string> (util::split(arg_value.substr(1, arg_value.size()-2))));
+				} else {
+					test_names.reset(new std::vector<std::string> (util::split(arg_value)));
+				}
+			}
 		} else if(arg.substr(0, 11) == "--log-level") {
 			// ignore
 		} else if(arg_name == "--level") {
@@ -765,8 +778,16 @@ int main(int argcount, char* argvec[])
 		return 0;
 	}
 
-	if(!skip_tests && !test::run_tests()) {
-		return -1;
+	if(!skip_tests) {
+		if (test_names) {
+			if (!test::run_tests(test_names.get())) {
+				return -1;
+			}
+		} else {
+			if (!test::run_tests()) {
+				return -1;
+			}
+		}
 	}
 
 	if(unit_tests_only) {
@@ -786,6 +807,7 @@ int main(int argcount, char* argvec[])
 	hints.add("use_vsync", "false");
 	hints.add("width", preferences::requested_window_width() > 0 ? preferences::requested_window_width() : 800);
 	hints.add("height", preferences::requested_window_height() > 0 ? preferences::requested_window_height() : 600);
+	hints.add("resizeable", g_resizeable);
 
     KRE::WindowPtr main_wnd = wm.allocateWindow(hints.build());
 	main_wnd->setWindowTitle(module::get_module_pretty_name());

@@ -1014,7 +1014,6 @@ void CustomObjectType::reloadObject(const std::string& type)
 
 	CustomObjectTypePtr new_obj;
 	
-	const int begin = profile::get_tick_time();
 	{
 		const assert_recover_scope scope;
 		new_obj = recreate(type, old_obj.get());
