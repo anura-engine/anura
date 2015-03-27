@@ -73,7 +73,7 @@
 #include "voxel_model.hpp"
 
 #include <boost/regex.hpp>
-#if defined(_WINDOWS)
+#if defined(_MSC_VER) && _MSC_VER < 1800
 #include <boost/math/special_functions/asinh.hpp>
 #include <boost/math/special_functions/acosh.hpp>
 #include <boost/math/special_functions/atanh.hpp>

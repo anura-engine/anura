@@ -467,9 +467,9 @@ namespace preferences
 		
 #else
 		
-#if defined(_WINDOWS)
+#if defined(_MSC_VER)
 #define PREFERENCES_PATH ""
-#endif // _WINDOWS
+#endif // _MSC_VER
 		
 #ifndef NO_UPLOAD_STATS
 		bool send_stats_ = true;
@@ -556,7 +556,7 @@ namespace preferences
 	
 	void set_preferences_path_from_module( const std::string& name)
 	{
-#ifdef _WINDOWS
+#ifdef _MSC_VER
 		preferences::set_preferences_path(WindowsPrefs::getInstance().getAppDataPath() + "/" + name + "/"); 
 #elif defined(__ANDROID__)
 		preferences::set_preferences_path("." + name + "/");
