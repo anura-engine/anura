@@ -56,7 +56,6 @@ decimal decimal::from_string(const std::string& s)
 		m = -m;
 	}
 
-	int64_t result_value;
 	return decimal::from_raw_value(n*DECIMAL_PRECISION + m);
 }
 

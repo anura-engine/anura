@@ -373,7 +373,6 @@ void render_scene(Level& lvl, const screen_position& pos)
 
 	const int camera_rotation = lvl.camera_rotation();
 	if(camera_rotation) {
-		float rotate;
 		//lvl.setRotation(rotate, glm::vec3(0.0f, 0.0f, 1.0f));
 		// XXX fixme
 	}

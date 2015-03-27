@@ -2758,7 +2758,6 @@ editor::EDIT_TOOL editor::tool() const
 
 void editor::change_tool(EDIT_TOOL tool)
 {
-	EDIT_TOOL last_tool;
 	tool_ = tool;
 	selected_segment_ = -1;
 
