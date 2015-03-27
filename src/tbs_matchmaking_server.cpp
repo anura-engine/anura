@@ -23,6 +23,8 @@
 
 //This file is designed to only work on Linux.
 
+#if !defined(_MSC_VER)
+
 #include <algorithm>
 #include <ctype.h>
 #include <deque>
@@ -1049,3 +1051,5 @@ COMMAND_LINE_UTILITY(db_script) {
 	while(db->process()) {
 	}
 }
+
+#endif
