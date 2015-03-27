@@ -70,3 +70,5 @@ MacOS/lib
 xcuserdata
 project.xcworkspace
 sdk/
+build-x64/
+build-Win32/
