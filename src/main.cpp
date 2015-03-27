@@ -119,6 +119,8 @@ namespace
 	PREF_STRING(auto_update_anura, "", "Auto update Anura's binaries from the module server using the given name as the module ID (e.g. anura-windows might be the id for the windows binary)");
 	PREF_INT(auto_update_timeout, 5000, "Timeout to use on auto updates (given in milliseconds)");
 
+	PREF_BOOL(resizeable, false, "Window is dynamically resizeable.");
+
 #if defined(_MSC_VER)
 	const std::string anura_exe_name = "anura.exe";
 #else
@@ -806,6 +808,7 @@ int main(int argcount, char* argvec[])
 	hints.add("use_vsync", "false");
 	hints.add("width", preferences::requested_window_width() > 0 ? preferences::requested_window_width() : 800);
 	hints.add("height", preferences::requested_window_height() > 0 ? preferences::requested_window_height() : 600);
+	hints.add("resizeable", g_resizeable);
 
     KRE::WindowPtr main_wnd = wm.allocateWindow(hints.build());
 	main_wnd->setWindowTitle(module::get_module_pretty_name());
