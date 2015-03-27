@@ -81,12 +81,12 @@ namespace base64
 
 	std::vector<char> b64encode(const std::vector<char>& data, int output_line_length) {
 		std::vector<char> dest;
-		dest.resize(encode_buffer_req(data.size(), output_line_length));
+		dest.resize(encode_buffer_req(static_cast<int>(data.size()), output_line_length));
 		std::vector<char>::const_iterator in_pos = data.begin();
 		std::vector<char>::iterator out_pos = dest.begin();
 		int line_cnt = 0;
 		for(unsigned i = 0; i < data.size(); i += 3) {
-			encode_block( in_pos, out_pos, ( data.size() - i ) > 2 ? 3 : data.size() - i );
+			encode_block(in_pos, out_pos, (static_cast<int>(data.size()) - i ) > 2 ? 3 : static_cast<int>(data.size()) - i );
 			line_cnt += 4;
 			if(line_cnt >= output_line_length) {
 				line_cnt = 0;
@@ -142,7 +142,7 @@ namespace base64
 	*/
 	std::vector<char> b64decode(const std::vector<char>& data) {
 		std::vector<char> dest;
-		dest.resize(decode_buffer_req(data.size()));
+		dest.resize(decode_buffer_req(static_cast<int>(data.size())));
 		std::vector<char>::const_iterator in_pos = data.begin();
 		std::vector<char>::iterator out_pos = dest.begin();
 

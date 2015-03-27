@@ -313,19 +313,19 @@ namespace KRE
 			}
 			ASSERT_LOG(false, "Index type not set to valid value.");
 		};
-		size_t getTotalArraySize() const {
+		int getTotalArraySize() const {
 			switch(index_type_) {
 			case IndexType::INDEX_NONE:		break;
-			case IndexType::INDEX_UCHAR:	return index8_.size() * sizeof(uint8_t);
-			case IndexType::INDEX_USHORT:	return index16_.size() * sizeof(uint16_t);
-			case IndexType::INDEX_ULONG:	return index32_.size() * sizeof(uint32_t);
+			case IndexType::INDEX_UCHAR:	return static_cast<int>(index8_.size() * sizeof(uint8_t));
+			case IndexType::INDEX_USHORT:	return static_cast<int>(index16_.size() * sizeof(uint16_t));
+			case IndexType::INDEX_ULONG:	return static_cast<int>(index32_.size() * sizeof(uint32_t));
 			}
 			ASSERT_LOG(false, "Index type not set to valid value.");
 		}
 		void setCount(size_t count) { count_= count; }
 		size_t getCount() const { return count_; }
-		void setInstanceCount(size_t instance_count) { instance_count_ = instance_count; }
-		size_t getInstanceCount() const { return instance_count_; }
+		void setInstanceCount(int instance_count) { instance_count_ = instance_count; }
+		int getInstanceCount() const { return instance_count_; }
 
 		void updateIndicies(const std::vector<uint8_t>& value);
 		void updateIndicies(const std::vector<uint16_t>& value);
@@ -363,7 +363,7 @@ namespace KRE
 		bool indexed_draw_;
 		bool instanced_draw_;
 		IndexType index_type_;
-		size_t instance_count_;
+		int instance_count_;
 		std::vector<uint8_t> index8_;
 		std::vector<uint16_t> index16_;
 		std::vector<uint32_t> index32_;

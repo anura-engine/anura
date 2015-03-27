@@ -1229,7 +1229,7 @@ void CustomObject::draw(int xx, int yy) const
 		//pass
 	} else if(custom_draw_xy_.size() >= 6 &&
 	          custom_draw_xy_.size() == custom_draw_uv_.size()) {
-		frame_->drawCustom(shader_, draw_x-draw_x%2, draw_y-draw_y%2, &custom_draw_xy_[0], &custom_draw_uv_[0], custom_draw_xy_.size()/2, isFacingRight(), isUpsideDown(), time_in_frame_, rotate_z_.as_float32(), cycle_);
+		frame_->drawCustom(shader_, draw_x-draw_x%2, draw_y-draw_y%2, &custom_draw_xy_[0], &custom_draw_uv_[0], static_cast<int>(custom_draw_xy_.size())/2, isFacingRight(), isUpsideDown(), time_in_frame_, rotate_z_.as_float32(), cycle_);
 	} else if(custom_draw_.get() != nullptr) {
 		frame_->drawCustom(shader_, draw_x-draw_x%2, draw_y-draw_y%2, *custom_draw_, draw_area_.get(), isFacingRight(), isUpsideDown(), time_in_frame_, rotate_z_.as_float32());
 	} else if(draw_scale_) {
@@ -2543,7 +2543,7 @@ void CustomObject::run_garbage_collection()
 	}
 	
 	for(int pass = 1;; ++pass) {
-		const int starting_safe = safe.size();
+		const int starting_safe = static_cast<int>(safe.size());
 		for(auto* obj : getAll()) {
 			if(obj->refcount() > 1) {
 				safe.insert(obj);
@@ -4477,7 +4477,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 		ASSERT_LOG(v->size() >= 3, "ILLEGAL VALUE TO custom_draw: " << value.to_debug_string());
 
 		std::vector<Frame::CustomPoint> draw_order;
-		int n1 = 0, n2 = v->size() - 1;
+		int n1 = 0, n2 = static_cast<int>(v->size()) - 1;
 		while(n1 <= n2) {
 			draw_order.emplace_back((*v)[n1]);
 			if(n2 > n1) {
@@ -5591,7 +5591,7 @@ rect CustomObject::platformRectAt(int xpos) const
 	}
 
 	const int pos = (xpos - area.x())*1024;
-	const int seg_width = (area.w()*1024)/(platform_offsets_.size()-1);
+	const int seg_width = (area.w()*1024)/(static_cast<int>(platform_offsets_.size())-1);
 	const size_t segment = pos/seg_width;
 	ASSERT_LT(segment, platform_offsets_.size()-1);
 
@@ -5613,7 +5613,7 @@ int CustomObject::platformSlopeAt(int xpos) const
 	}
 
 	const int pos = (xpos - area.x())*1024;
-	const int dx = (area.w()*1024)/(platform_offsets_.size()-1);
+	const int dx = (area.w()*1024)/(static_cast<int>(platform_offsets_.size())-1);
 	const size_t segment = pos/dx;
 	ASSERT_LT(segment, platform_offsets_.size()-1);
 

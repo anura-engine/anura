@@ -231,8 +231,8 @@ int load_module(const std::string& mod, std::vector<std::string>* argv)
 	module::reload(mod);
 	if(mod_info["arguments"].is_list()) {
 		const std::vector<std::string>& arguments = mod_info["arguments"].as_list_string();
-		int insertion_point = argv->size();
-		for(int i = 0; i != argv->size(); ++i) {
+		auto insertion_point = argv->size();
+		for(std::vector<std::string>::size_type i = 0; i != argv->size(); ++i) {
 			const char* utility_arg = "--module=";
 			if(std::equal(utility_arg, utility_arg+strlen(utility_arg), (*argv)[i].c_str())) {
 				insertion_point = i+1;
@@ -433,7 +433,7 @@ int main(int argcount, char* argvec[])
 
 
 	for(size_t n = 0; n < argv.size(); ++n) {
-		const int argc = argv.size();
+		const auto argc = argv.size();
 		const std::string arg(argv[n]);
 		std::string arg_name, arg_value;
 		std::string::const_iterator equal = std::find(arg.begin(), arg.end(), '=');

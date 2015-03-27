@@ -81,7 +81,7 @@ namespace game_logic
 
 		void setBaseSlot(int base) { base_slot_ = base; }
 
-		int getNumArgs() const { return values_.size(); }
+		int getNumArgs() const { return static_cast<int>(values_.size()); }
 
 	private:
 		const std::vector<std::string>* value_names_;

@@ -406,9 +406,9 @@ namespace box2d
 					vertices.push_back(b2Vec2(float32(shape["vertices"][n][0].as_decimal().as_float()), float32(shape["vertex3"][n][1].as_decimal().as_float())));
 				}
 				if(loop) {
-					chain_shape->CreateLoop(&vertices[0], vertices.size());
+					chain_shape->CreateLoop(&vertices[0], static_cast<int>(vertices.size()));
 				} else {
-					chain_shape->CreateChain(&vertices[0], vertices.size());
+					chain_shape->CreateChain(&vertices[0], static_cast<int>(vertices.size()));
 				}
 				if(shape.has_key("previous_vertex")) {
 					chain_shape->SetPrevVertex(b2Vec2(float32(shape["previous_vertex"][0].as_decimal().as_float()), float32(shape["previous_vertex"][1].as_decimal().as_float())));

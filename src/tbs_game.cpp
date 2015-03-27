@@ -390,7 +390,7 @@ namespace tbs
 	{
 		players_.push_back(player());
 		players_.back().name = name;
-		players_.back().side = players_.size() - 1;
+		players_.back().side = static_cast<int>(players_.size() - 1);
 		players_.back().is_human = true;
 	}
 
@@ -398,7 +398,7 @@ namespace tbs
 	{
 		players_.push_back(player());
 		players_.back().name = name;
-		players_.back().side = players_.size() - 1;
+		players_.back().side = static_cast<int>(players_.size() - 1);
 		players_.back().is_human = false;
 
 		handleEvent("add_bot", map_into_callable(info).get());
@@ -622,7 +622,7 @@ namespace tbs
 					complete = true;
 					ASSERT_LOG(false, "Could not connect to server: " << msg);
 				  },
-				  [](int a, int b, bool c) {
+				  [](size_t a, size_t b, bool c) {
 				  });
 			
 				while(!complete) {

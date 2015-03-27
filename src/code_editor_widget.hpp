@@ -41,7 +41,7 @@ namespace gui
 
 		const std::string& currentText() const { return currentText_; }
 		struct ObjectInfo {
-			int begin, end;
+			std::intptr_t begin, end;
 			variant obj;
 			std::vector<json::Token> tokens;
 		};
@@ -59,7 +59,7 @@ namespace gui
 
 		virtual void handleDraw() const override;
 		virtual bool handleEvent(const SDL_Event& event, bool claimed) override;
-		void selectToken(const std::string& row, int& begin_row, int& end_row, int& begin_col, int& end_col);
+		void selectToken(const std::string& row, size_t& begin_row, size_t& end_row, size_t& begin_col, size_t& end_col) override;
 		void onChange();
 		void onMoveCursor(bool auto_shift=false);
 		KRE::Color getCharacterColor(int row, int col) const;

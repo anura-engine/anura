@@ -629,7 +629,7 @@ namespace editor_dialogs
 
 		if(open_dlg.cancelled() == false) {
 			image_file_ = open_dlg.getFileName();
-			int offs = image_file_.rfind("/");
+			auto offs = image_file_.rfind("/");
 			image_file_name_ = image_file_.substr(offs+1);
 
 			Dialog::showModal();

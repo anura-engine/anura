@@ -115,7 +115,7 @@ namespace KRE
 	{
 	}
 
-	void DisplayDeviceOpenGL::init(size_t width, size_t height)
+	void DisplayDeviceOpenGL::init(int width, int height)
 	{
 		GLenum err = glewInit();
 		ASSERT_LOG(err == GLEW_OK, "Could not initialise GLEW: " << glewGetErrorString(err));
@@ -346,19 +346,19 @@ namespace KRE
 				if(as->isIndexed()) {
 					as->bindIndex();
 					// XXX as->GetIndexArray() should be as->GetIndexArray()+as->GetOffset()
-					glDrawElementsInstanced(draw_mode, as->getCount(), convert_index_type(as->getIndexType()), as->getIndexArray(), as->getInstanceCount());
+					glDrawElementsInstanced(draw_mode, static_cast<GLsizei>(as->getCount()), convert_index_type(as->getIndexType()), as->getIndexArray(), as->getInstanceCount());
 					as->unbindIndex();
 				} else {
-					glDrawArraysInstanced(draw_mode, as->getOffset(), as->getCount(), as->getInstanceCount());
+					glDrawArraysInstanced(draw_mode, static_cast<GLint>(as->getOffset()), static_cast<GLsizei>(as->getCount()), as->getInstanceCount());
 				}
 			} else {
 				if(as->isIndexed()) {
 					as->bindIndex();
 					// XXX as->GetIndexArray() should be as->GetIndexArray()+as->GetOffset()
-					glDrawElements(draw_mode, as->getCount(), convert_index_type(as->getIndexType()), as->getIndexArray());
+					glDrawElements(draw_mode, static_cast<GLsizei>(as->getCount()), convert_index_type(as->getIndexType()), as->getIndexArray());
 					as->unbindIndex();
 				} else {
-					glDrawArrays(draw_mode, as->getOffset(), as->getCount());
+					glDrawArrays(draw_mode, static_cast<GLint>(as->getOffset()), static_cast<GLsizei>(as->getCount()));
 				}
 			}
 
@@ -417,29 +417,29 @@ namespace KRE
 		return std::make_shared<OpenGLTexture>(node, surfaces);
 	}
 
-	RenderTargetPtr DisplayDeviceOpenGL::handleCreateRenderTarget(size_t width, size_t height, 
-			size_t color_plane_count, 
+	RenderTargetPtr DisplayDeviceOpenGL::handleCreateRenderTarget(int width, int height, 
+			int color_plane_count, 
 			bool depth, 
 			bool stencil, 
 			bool use_multi_sampling, 
-			size_t multi_samples)
+			int multi_samples)
 	{
-		return RenderTargetPtr(new FboOpenGL(width, height, color_plane_count, depth, stencil, use_multi_sampling, multi_samples));
+		return std::make_shared<FboOpenGL>(width, height, color_plane_count, depth, stencil, use_multi_sampling, multi_samples);
 	}
 
 	RenderTargetPtr DisplayDeviceOpenGL::handleCreateRenderTarget(const variant& node)
 	{
-		return RenderTargetPtr(new FboOpenGL(node));
+		return std::make_shared<FboOpenGL>(node);
 	}
 
 	AttributeSetPtr DisplayDeviceOpenGL::handleCreateAttributeSet(bool indexed, bool instanced)
 	{
-		return AttributeSetPtr(new AttributeSetOGL(indexed, instanced));
+		return std::make_shared<AttributeSetOGL>(indexed, instanced);
 	}
 
 	HardwareAttributePtr DisplayDeviceOpenGL::handleCreateAttribute(AttributeBase* parent)
 	{
-		return HardwareAttributePtr(new HardwareAttributeOGL(parent));
+		return std::make_shared<HardwareAttributeOGL>(parent);
 	}
 
 	CanvasPtr DisplayDeviceOpenGL::getCanvas()

@@ -57,12 +57,12 @@ namespace game_logic
 				}
 				return variant(&v);
 			} else if(key == "size") {
-				return variant(f_.size());
+				return variant(static_cast<int>(f_.size()));
 			}
 			return variant();
 		}
 		const std::vector<float>& floats() { return f_; }
-		int num_elements() const { return f_.size(); }
+		int num_elements() const { return static_cast<int>(f_.size()); }
 	private:
 		std::vector<float> f_;
 	};
@@ -93,12 +93,12 @@ namespace game_logic
 				}
 				return variant(&v);
 			} else if(key == "size") {
-				return variant(s_.size());
+				return variant(static_cast<int>(s_.size()));
 			}
 			return variant();
 		}
 		const std::vector<short>& shorts() { return s_; }
-		int num_elements() const { return s_.size(); }
+		int num_elements() const { return static_cast<int>(s_.size()); }
 	private:
 		std::vector<short> s_;
 	};

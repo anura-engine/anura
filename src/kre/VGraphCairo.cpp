@@ -490,7 +490,7 @@ namespace KRE
 
 		void CairoContext::SetDashStyle(const std::vector<double>& dashes, const double offset)
 		{
-			cairo_set_dash(context_, &dashes[0], dashes.size(), offset);
+			cairo_set_dash(context_, &dashes[0], static_cast<int>(dashes.size()), offset);
 		}
 
 		const std::vector<double> CairoContext::GetDashStyle() const

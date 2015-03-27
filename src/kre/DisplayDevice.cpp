@@ -133,12 +133,12 @@ namespace KRE
 		return std::make_shared<HardwareAttributeImpl>(parent);
 	}
 
-	RenderTargetPtr DisplayDevice::renderTargetInstance(size_t width, size_t height, 
-		size_t color_plane_count, 
+	RenderTargetPtr DisplayDevice::renderTargetInstance(int width, int height, 
+		int color_plane_count, 
 		bool depth, 
 		bool stencil, 
 		bool use_multi_sampling, 
-		size_t multi_samples)
+		int multi_samples)
 	{
 		return getCurrent()->handleCreateRenderTarget(width, height, 
 			color_plane_count, 

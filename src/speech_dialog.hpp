@@ -65,7 +65,7 @@ private:
 	int horizontal_position_;
 
 	struct TextMarkup {
-		int begin;
+		size_t begin;
 		std::shared_ptr<KRE::Color> color;
 	};
 

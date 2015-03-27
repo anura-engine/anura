@@ -60,7 +60,7 @@ namespace game_logic
 	
 		std::string key(name);
 		type_registry()[key] = ctor;
-		return type_registry().size();
+		return static_cast<int>(type_registry().size());
 	}
 
 	bool WmlSerializableFormulaCallable::deserializeObj(const variant& var, variant* target)
@@ -155,7 +155,7 @@ namespace game_logic
 		}
 
 		if(num_objects) {
-			*num_objects = objects.size();
+			*num_objects = static_cast<int>(objects.size());
 		}
 
 		res[variant("character")] = variant(&results_list);

@@ -204,7 +204,7 @@ namespace http
 				payload = payload2;
 			}
 
-			const int payload_len = payload ? (msg.c_str() + msg.size() - payload) : 0;
+			const auto payload_len = payload ? (msg.c_str() + msg.size() - payload) : 0;
 
 			LOG_DEBUG("PAYLOAD LEN: " << payload_len << " < " << content_length);
 			if(!payload || payload_len < content_length) {

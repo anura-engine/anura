@@ -67,7 +67,7 @@ namespace sys
 		} else {
 			if(curdir.empty()) {
 				std::vector<char> buf(1024);
-				const char* const res = getcwd(&buf[0], buf.capacity());
+				const char* const res = getcwd(&buf[0], static_cast<int>(buf.capacity()));
 				if(res != nullptr) {
 					abs_path  = sys::make_conformal_path(res);
 				} else {

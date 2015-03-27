@@ -125,10 +125,10 @@ int get_object_event_id(const std::string& str)
 	}
 
 	//we have to add a new entry for this new string
-	object_event_ids()[str] = object_event_names().size();
+	object_event_ids()[str] = static_cast<int>(object_event_names().size());
 	object_event_names().push_back(str);
 
-	return object_event_names().size()-1;
+	return static_cast<int>(object_event_names().size() - 1);
 }
 
 int get_object_event_id_maybe_proto(const std::string& str)

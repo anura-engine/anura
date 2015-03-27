@@ -164,7 +164,7 @@ namespace KRE
 		void convertInPlace(PixelFormat::PF fmt, SurfaceConvertFn convert=nullptr);
 
 		color_histogram_type getColorHistogram(ColorCountFlags flags=ColorCountFlags::NONE);
-		unsigned getColorCount(ColorCountFlags flags=ColorCountFlags::NONE);
+		size_t getColorCount(ColorCountFlags flags=ColorCountFlags::NONE);
 
 		virtual const std::vector<Color>& getPalette() = 0;
 

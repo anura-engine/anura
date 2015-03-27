@@ -295,7 +295,7 @@ namespace tbs
 			}
 		}
 
-		int games_size = games_.size();
+		auto games_size = games_.size();
 
 		for(auto& g : games_) {
 			if(deletes.count(g)) {

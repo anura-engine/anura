@@ -36,29 +36,29 @@ namespace noise
 	{
 		void init(uint32_t seed);
 
-		#define s_curve(t) ( t * t * (3. - 2. * t) )
+		#define s_curve(t) ( t * t * (3.f - 2.f * t) )
 
 		#define lerp(t, a, b) ( a + t * (b - a) )
 
-		#define setup(i,b0,b1,r0,r1)\
-			t = vec[i] + N;\
-			b0 = ((int)t) & BM;\
-			b1 = (b0+1) & BM;\
-			r0 = t - (int)t;\
-			r1 = r0 - 1.;
+		#define setup(i, b0, b1, r0, r1)	\
+			t = vec[i] + N;					\
+			b0 = ((int)t) & BM;				\
+			b1 = (b0+1) & BM;				\
+			r0 = t - (int)t;				\
+			r1 = r0 - 1.f;
 
 		double noise1(double arg)
 		{
 			int bx0, bx1;
 			float rx0, rx1, sx, t, u, v, vec[1];
 
-			vec[0] = arg;
+			vec[0] = static_cast<float>(arg);
 			if (start) {
 				start = false;
 				init(0);
 			}
 
-			setup(0, bx0,bx1, rx0,rx1);
+			setup(0, bx0, bx1, rx0, rx1);
 
 			sx = s_curve(rx0);
 

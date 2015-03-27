@@ -266,7 +266,7 @@ public:
 		AnimatedMovement() : pos(0)
 		{}
 
-		int getAnimationFrames() const { return animation_values.size()/animation_slots.size(); }
+		int getAnimationFrames() const { return static_cast<int>(animation_values.size()/animation_slots.size()); }
 	};
 
 	void addAnimatedMovement(variant attr, variant options);

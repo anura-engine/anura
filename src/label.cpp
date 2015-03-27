@@ -378,7 +378,7 @@ namespace gui
 	void DialogLabel::recalculateTexture()
 	{
 		Label::recalculateTexture();
-		stages_ = currentText().size();
+		stages_ = static_cast<int>(currentText().size());
 		int prog = progress_;
 		if(prog < 0) prog = 0;
 		if(prog > stages_) prog = stages_;

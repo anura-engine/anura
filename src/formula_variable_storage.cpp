@@ -93,7 +93,7 @@ namespace game_logic
 			values_[i->second] = value;
 		} else {
 			ASSERT_LOG(!disallow_new_keys_, "UNKNOWN KEY SET IN VAR STORAGE: " << key << " in object '" << debug_object_name_ << "'");
-			strings_to_values_[key] = values_.size();
+			strings_to_values_[key] = static_cast<int>(values_.size());
 			values_.push_back(value);
 		}
 	}

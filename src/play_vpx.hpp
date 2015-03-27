@@ -62,10 +62,10 @@ namespace movie
 		bool loop_;
 		bool cancel_on_keypress_;
 		size_t frame_cnt_;
-		size_t flags_;
+		vpx_codec_flags_t flags_;
 		std::vector<char> file_hdr_;
 		std::vector<uint8_t> frame_hdr_;
-		size_t frame_size_;
+		int frame_size_;
 		std::vector<uint8_t> frame_;
 		vpx_codec_err_t res_;
 

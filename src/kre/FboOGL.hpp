@@ -34,12 +34,12 @@ namespace KRE
 	class FboOpenGL : public RenderTarget
 	{
 	public:
-		explicit FboOpenGL(unsigned width, unsigned height, 
-			unsigned color_plane_count=1, 
+		explicit FboOpenGL(int width, int height, 
+			int color_plane_count=1, 
 			bool depth=false, 
 			bool stencil=false, 
 			bool use_multi_sampling=false, 
-			unsigned multi_samples=0);		
+			int multi_samples=0);		
 		explicit FboOpenGL(const variant& node);
 		FboOpenGL(const FboOpenGL& op);
 		virtual ~FboOpenGL();
@@ -57,8 +57,8 @@ namespace KRE
 		std::shared_ptr<GLuint> sample_framebuffer_id_;
 		std::shared_ptr<std::vector<GLuint>> render_buffer_id_;
 
-		unsigned tex_width_;
-		unsigned tex_height_;
+		int tex_width_;
+		int tex_height_;
 		mutable GLint viewport_[4];
 		mutable bool applied_;
 

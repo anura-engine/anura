@@ -41,7 +41,7 @@ decimal decimal::from_string(const std::string& s)
 	char* endptr = nullptr, *enddec = nullptr;
 	int64_t n = strtol(ptr, &endptr, 10);
 	int64_t m = strtol(endptr+1, &enddec, 10);
-	int dist = enddec - endptr;
+	auto dist = enddec - endptr;
 	while(dist > (DECIMAL_PLACES+1)) {
 		m /= 10;
 		--dist;

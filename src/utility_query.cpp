@@ -168,12 +168,12 @@ namespace
 
 	struct Modification 
 	{
-		Modification(int begin, int end, const std::string& ins)
+		Modification(std::ptrdiff_t begin, std::ptrdiff_t end, const std::string& ins)
 		  : begin_pos(begin), 
-		  end_pos(end), 
-		  insert(ins)
+		    end_pos(end), 
+		    insert(ins)
 		{}
-		int begin_pos, end_pos;
+		std::ptrdiff_t begin_pos, end_pos;
 		std::string insert;
 
 		void apply(std::string& target) const {
@@ -277,7 +277,7 @@ std::string modify_variant_text(const std::string& contents, variant original, v
 			std::ostringstream s;
 
 			indent += "\t";
-			for(unsigned n = a.size(); n < b.size(); ++n) {
+			for(std::vector<variant>::size_type n = a.size(); n < b.size(); ++n) {
 				s << ",";
 				if(b[n].is_list() || b[n].is_map()) {
 					s << "\n" << indent;

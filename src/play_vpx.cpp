@@ -38,8 +38,8 @@ namespace movie
 {
 	namespace 
 	{
-		size_t mem_get_le32(const std::vector<uint8_t>& mem) {
-			return (size_t(mem[3]) << 24)|(size_t(mem[2]) << 16)|(size_t(mem[1]) << 8)|size_t(mem[0]);
+		unsigned mem_get_le32(const std::vector<uint8_t>& mem) {
+			return (static_cast<unsigned>(mem[3]) << 24)|(static_cast<unsigned>(mem[2]) << 16)|(static_cast<unsigned>(mem[1]) << 8)|static_cast<unsigned>(mem[0]);
 		}
 	}
 

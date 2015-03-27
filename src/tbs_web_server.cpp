@@ -281,7 +281,7 @@ COMMAND_LINE_UTILITY(tbs_server) {
 			complete = true;
 			ASSERT_LOG(false, "Could not connect to server: " << msg);
 		  },
-		  [](int a, int b, bool c) {
+		  [](size_t a, size_t b, bool c) {
 		  });
 		
 		while(!complete) {

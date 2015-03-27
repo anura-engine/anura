@@ -1680,7 +1680,7 @@ void editor::handleKeyPress(const SDL_KeyboardEvent& key)
 			}
 		}
 
-		controls::new_level(lvl_->cycle(), lvl_->players().empty() ? 1 : lvl_->players().size(), multiplayer::slot());
+		controls::new_level(lvl_->cycle(), lvl_->players().empty() ? 1 : static_cast<int>(lvl_->players().size()), multiplayer::slot());
 
 	}
 
@@ -1746,7 +1746,7 @@ void editor::reset_playing_level(bool keep_player)
 			}
 		}
 
-		controls::new_level(lvl_->cycle(), lvl_->players().empty() ? 1 : lvl_->players().size(), multiplayer::slot());
+		controls::new_level(lvl_->cycle(), lvl_->players().empty() ? 1 : static_cast<int>(lvl_->players().size()), multiplayer::slot());
 
 	}
 }
@@ -2718,7 +2718,7 @@ void editor::set_tileset(int index)
 {
 	cur_tileset_ = index;
 	if(cur_tileset_ < 0) {
-		cur_tileset_ = tilesets.size()-1;
+		cur_tileset_ = static_cast<int>(tilesets.size()) - 1;
 	} else if(static_cast<unsigned>(cur_tileset_) >= tilesets.size()) {
 		cur_tileset_ = 0;
 	}
@@ -2732,7 +2732,7 @@ void editor::set_tileset(int index)
 
 void editor::setObject(int index)
 {
-	int max = all_characters().size();
+	int max = static_cast<int>(all_characters().size());
 
 	if(index < 0) {
 		index = max - 1;
@@ -3442,7 +3442,7 @@ void editor::executeCommand(std::function<void()> command, std::function<void()>
 
 void editor::begin_command_group()
 {
-	undo_commands_groups_.push(undo_.size());
+	undo_commands_groups_.push(static_cast<int>(undo_.size()));
 
 	lvl_->editor_freeze_tile_updates(true);
 }
