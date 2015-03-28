@@ -21,6 +21,7 @@
 	   distribution.
 */
 
+#include <cstddef>
 #include <algorithm>
 #include <boost/algorithm/string/replace.hpp>
 #include <deque>

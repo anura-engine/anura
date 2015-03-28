@@ -563,9 +563,6 @@ namespace gui
 				if(cursor_.row > 2) {
 					cursor_.row -= 3;
 					scroll_pos_ -= 3;
-					if( scroll_pos_ < 0 ){ 
-						scroll_pos_ = 0; 
-					}
 					cursor_.col = findEquivalentCol(cursor_.col, cursor_.row+3, cursor_.row);
 					onMoveCursor();
 				}
@@ -871,15 +868,14 @@ namespace gui
 					cursor_.col = static_cast<int>(text_[cursor_.row].size());
 				}
 
-				--cursor_.col;
-				if(cursor_.col < 0) {
-					if(cursor_.row == 0) {
-						cursor_.col = 0;
-					} else {
-						--cursor_.row;
-						cursor_.col = static_cast<int>(text_[cursor_.row].size());
-					}
-				}
+                if(cursor_.col == 0) {
+                    if(cursor_.row != 0) {
+                        cursor_.row--;
+                        cursor_.col = text_[cursor_.row].size();
+                    }
+                } else {
+                    --cursor_.col;
+                }
 			}
 
 			onMoveCursor();
@@ -1011,11 +1007,11 @@ namespace gui
 						break;
 					}
 
-					--cursor_.col;
-					if(cursor_.col < 0) {
-						--cursor_.row;
-						cursor_.col = static_cast<int>(text_[cursor_.row].size());
-					}
+                    if(cursor_.col == 1) {
+                        cursor_.col = 0;
+                    } else {
+                        --cursor_.col;
+                    }
 
 					onMoveCursor();
 				}
@@ -1443,11 +1439,11 @@ namespace gui
 	void TextEditorWidget::selectToken(const std::string& row, size_t& begin_row, size_t& end_row, size_t& begin_col, size_t& end_col)
 	{
 		if(util::c_isdigit(row[begin_col]) || (row[begin_col] == '.' && begin_col+1 < row.size() && util::c_isdigit(row[begin_col+1]))) {
-			while(begin_col >= 0 && (util::c_isdigit(row[begin_col]) || row[begin_col] == '.')) {
+			while(begin_col != 0 && (util::c_isdigit(row[begin_col]) || row[begin_col] == '.')) {
 				--begin_col;
 			}
 
-			if(begin_col < 0 || row[begin_col] != '-') {
+			if(row[begin_col] != '-') {
 				++begin_col;
 			}
 
@@ -1455,7 +1451,7 @@ namespace gui
 				++end_col;
 			}
 		} else if(util::c_isalnum(row[begin_col]) || row[begin_col] == '_') {
-			while(begin_col >= 0 && (util::c_isalnum(row[begin_col]) || row[begin_col] == '_')) {
+			while(begin_col != 0 && (util::c_isalnum(row[begin_col]) || row[begin_col] == '_')) {
 				--begin_col;
 			}
 
