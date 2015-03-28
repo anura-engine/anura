@@ -75,6 +75,8 @@ namespace gui
 		virtual variant handleWrite();
 		virtual WidgetSettingsDialog* settingsDialog(int x, int y, int w, int h);
 
+		void surrenderReferences(GarbageCollector* collector) override;
+
 	private:
 		DECLARE_CALLABLE(Button);
 		virtual void visitValues(game_logic::FormulaCallableVisitor& visitor);

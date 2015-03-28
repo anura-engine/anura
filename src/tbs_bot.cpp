@@ -209,7 +209,7 @@ private:
 		client_.reset();
 		internal_client_.reset();
 
-		tbs::web_server::set_debug_state(generate_report());
+		//tbs::web_server::set_debug_state(generate_report());
 	}
 
 	variant bot::getValueDefault(const std::string& key) const
@@ -245,5 +245,22 @@ private:
 		std::vector<variant> response = response_;
 		m[variant("response")] = variant(&response);
 		return variant(&m);
+	}
+
+	void bot::surrenderReferences(GarbageCollector* collector)
+	{
+		for(variant& script : script_) {
+			collector->surrenderVariant(&script, "script");
+		}
+
+		for(variant& response : response_) {
+			collector->surrenderVariant(&response, "response");
+		}
+
+		collector->surrenderPtr(&client_, "client");
+		collector->surrenderPtr(&internal_client_, "internal_client");
+
+		collector->surrenderVariant(&data_, "data");
+		collector->surrenderPtr(&message_callable_, "message_callable");
 	}
 }

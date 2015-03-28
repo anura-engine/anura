@@ -302,15 +302,4 @@ namespace KRE
 	{
 		return !operator==(a,b);
 	}
-
-	BEGIN_DEFINE_CALLABLE_NOBASE(ColorTransform)
-		DEFINE_FIELD(r, "int")
-			return variant(obj.add_rgba_[0]);
-		DEFINE_FIELD(g, "int")
-			return variant(obj.add_rgba_[1]);
-		DEFINE_FIELD(b, "int")
-			return variant(obj.add_rgba_[2]);
-		DEFINE_FIELD(a, "int")
-			return variant(obj.add_rgba_[3]);
-	END_DEFINE_CALLABLE(ColorTransform)
 }

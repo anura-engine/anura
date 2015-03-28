@@ -38,6 +38,7 @@
 #include "formula.hpp"
 #include "formula_callable.hpp"
 #include "formula_callable_utils.hpp"
+#include "formula_garbage_collector.hpp"
 #include "formula_interface.hpp"
 #include "formula_object.hpp"
 
@@ -170,15 +171,15 @@ type_error::type_error(const std::string& str) : message(str) {
 VariantFunctionTypeInfo::VariantFunctionTypeInfo() : num_unneeded_args(0)
 {}
 
-struct variant_list {
+struct variant_list : public GarbageCollectible {
 
 	variant_list() : begin(elements.begin()), end(elements.end()),
-	                 refcount(0), storage(nullptr)
+	                 storage(nullptr)
 	{}
 
 	variant_list(const variant_list& o) :
 	   elements(o.begin, o.end), begin(elements.begin()), end(elements.end()),
-	   refcount(1), storage(nullptr)
+	   storage(nullptr)
 	{}
 
 	const variant_list& operator=(const variant_list& o) {
@@ -190,9 +191,19 @@ struct variant_list {
 	}
 
 	~variant_list() {
-		if(storage && --storage->refcount == 0) {
-			delete storage;
+	}
+
+	void surrenderReferences(GarbageCollector* collector) override {
+		collector->surrenderPtr(&storage, "STORAGE");
+		for(variant& el : elements) {
+			collector->surrenderVariant(&el, "ELEMENT");
 		}
+	}
+
+	std::string debugObjectName() const override {
+		std::ostringstream s;
+		s << "list[" << size() << "]";
+		return s.str();
 	}
 
 #if defined(_MSC_VER) && defined(_DEBUG)
@@ -205,8 +216,7 @@ struct variant_list {
 	variant::debug_info info;
 	boost::intrusive_ptr<const game_logic::FormulaExpression> expression;
 	std::vector<variant> elements;
-	int refcount;
-	variant_list* storage;
+	boost::intrusive_ptr<variant_list> storage;
 	std::vector<variant>::iterator begin, end;
 };
 
@@ -227,27 +237,58 @@ struct variant_string {
 	void operator=(const variant_string&);
 };
 
-struct variant_map {
+struct variant_map : public GarbageCollectible {
 	variant::debug_info info;
 	boost::intrusive_ptr<const game_logic::FormulaExpression> expression;
 
-	variant_map() : refcount(0), modcount(0)
-	{}
-	variant_map(const variant_map& o) : expression(o.expression), elements(o.elements), refcount(1), modcount(0)
-	{}
+	variant_map() : GarbageCollectible(), modcount(0)
+	{
+	}
+	variant_map(const variant_map& o) : GarbageCollectible(o), expression(o.expression), elements(o.elements), modcount(0)
+	{
+	}
+
+	~variant_map()
+	{
+	}
+
+	void surrenderReferences(GarbageCollector* collector) override {
+		for(std::pair<const variant,variant>& p : elements) {
+			collector->surrenderVariant(&p.first, "KEY");
+			collector->surrenderVariant(&p.second, p.first.is_string() ? p.first.as_string().c_str() : "VALUE");
+		}
+	}
+
+	std::string debugObjectName() const override {
+		std::string res = "map(";
+		for(const std::pair<const variant,variant>& p : elements) {
+			if(p.first.is_string()) {
+				res += p.first.as_string() + ",";
+			}
+		}
+
+		res += ")";
+		return res;
+	}
 
 	std::map<variant,variant> elements;
-	int refcount;
 	int modcount;
 private:
 	void operator=(const variant_map&);
 };
 
-struct variant_fn {
+struct variant_fn : public GarbageCollectible {
 	variant::debug_info info;
 
-	variant_fn() : refcount(0)
+	variant_fn()
 	{}
+
+	void surrenderReferences(GarbageCollector* collector) override {
+		collector->surrenderPtr(&callable, "CLOSURE");
+		for(variant& v : bound_args) {
+			collector->surrenderVariant(&v, "BOUND ARG");
+		}
+	}
 
 	VariantFunctionTypeInfoPtr type;
 
@@ -258,14 +299,21 @@ struct variant_fn {
 	std::vector<variant> bound_args;
 
 	int base_slot;
-	int refcount;
 };
 
-struct variant_generic_fn {
+struct variant_generic_fn : public GarbageCollectible {
 	variant::debug_info info;
 
-	variant_generic_fn() : refcount(0)
+	variant_generic_fn()
 	{}
+
+	void surrenderReferences(GarbageCollector* collector) override {
+		collector->surrenderVariant(&fn, "CLOSURE");
+		collector->surrenderPtr(&callable);
+		for(variant& v : bound_args) {
+			collector->surrenderVariant(&v, "BOUND ARG");
+		}
+	}
 
 	VariantFunctionTypeInfoPtr type;
 
@@ -280,14 +328,21 @@ struct variant_generic_fn {
 	mutable std::map<std::vector<std::string>, variant> cache;
 
 	int base_slot;
-	int refcount;
 };
 
-struct variant_multi_fn {
-	variant_multi_fn() : refcount(0)
+struct variant_multi_fn : public GarbageCollectible {
+	variant_multi_fn()
 	{}
 
-	int refcount;
+	~variant_multi_fn()
+	{
+	}
+
+	void surrenderReferences(GarbageCollector* collector) override {
+		for(variant& fn : functions) {
+			collector->surrenderVariant(&fn, "FUNCTION");
+		}
+	}
 
 	std::vector<variant> functions;
 };
@@ -330,13 +385,13 @@ void variant::increment_refcount()
 {
 switch(type_) {
 case VARIANT_TYPE_LIST:
-++list_->refcount;
+list_->add_ref();
 break;
 case VARIANT_TYPE_STRING:
 ++string_->refcount;
 break;
 case VARIANT_TYPE_MAP:
-++map_->refcount;
+map_->add_ref();
 break;
 case VARIANT_TYPE_CALLABLE:
 intrusive_ptr_add_ref(callable_);
@@ -345,13 +400,13 @@ case VARIANT_TYPE_CALLABLE_LOADING:
 callable_variants_loading.insert(this);
 break;
 case VARIANT_TYPE_FUNCTION:
-++fn_->refcount;
+fn_->add_ref();
 break;
 case VARIANT_TYPE_GENERIC_FUNCTION:
-++generic_fn_->refcount;
+generic_fn_->add_ref();
 break;
 case VARIANT_TYPE_MULTI_FUNCTION:
-++multi_fn_->refcount;
+multi_fn_->add_ref();
 break;
 case VARIANT_TYPE_DELAYED:
 delayed_variants_loading.insert(this);
@@ -375,9 +430,7 @@ void variant::release()
 {
 switch(type_) {
 case VARIANT_TYPE_LIST:
-if(--list_->refcount == 0) {
-	delete list_;
-}
+list_->dec_ref();
 break;
 case VARIANT_TYPE_STRING:
 if(--string_->refcount == 0) {
@@ -385,9 +438,7 @@ if(--string_->refcount == 0) {
 }
 break;
 case VARIANT_TYPE_MAP:
-if(--map_->refcount == 0) {
-	delete map_;
-}
+map_->dec_ref();
 break;
 case VARIANT_TYPE_CALLABLE:
 intrusive_ptr_release(callable_);
@@ -396,19 +447,14 @@ case VARIANT_TYPE_CALLABLE_LOADING:
 callable_variants_loading.erase(this);
 break;
 case VARIANT_TYPE_FUNCTION:
-if(--fn_->refcount == 0) {
-	delete fn_;
-}
+fn_->dec_ref();
 break;
 case VARIANT_TYPE_GENERIC_FUNCTION:
-if(--generic_fn_->refcount == 0) {
-	delete generic_fn_;
-}
+generic_fn_->dec_ref();
 break;
 case VARIANT_TYPE_MULTI_FUNCTION:
-if(--multi_fn_->refcount == 0) {
-	delete multi_fn_;
-}
+fprintf(stderr, "DESTROY: %p -> %d %04x\n", multi_fn_, multi_fn_->refcount(), *(unsigned int*)multi_fn_);
+multi_fn_->dec_ref();
 break;
 case VARIANT_TYPE_DELAYED:
 delayed_variants_loading.erase(this);
@@ -463,9 +509,13 @@ void variant::setDebugInfo(const debug_info& info)
 {
 	switch(type_) {
 	case VARIANT_TYPE_LIST:
+		list_->info = info;
+		break;
 	case VARIANT_TYPE_STRING:
+		string_->info = info;
+		break;
 	case VARIANT_TYPE_MAP:
-		*debug_info_ = info;
+		map_->info = info;
 		break;
 	default:
 		break;
@@ -476,11 +526,13 @@ const variant::debug_info* variant::get_debug_info() const
 {
 	switch(type_) {
 	case VARIANT_TYPE_LIST:
+		if(list_->info.filename) { return &list_->info; }
+		break;
 	case VARIANT_TYPE_STRING:
+		if(string_->info.filename) { return &string_->info; }
+		break;
 	case VARIANT_TYPE_MAP:
-		if(debug_info_->filename) {
-			return debug_info_;
-		}
+		if(map_->info.filename) { return &map_->info; }
 		break;
 	default:
 		break;
@@ -529,8 +581,9 @@ variant variant::create_function_overload(const std::vector<variant>& fn)
 	variant result;
 	result.type_ = VARIANT_TYPE_MULTI_FUNCTION;
 	result.multi_fn_ = new variant_multi_fn;
+	fprintf(stderr, "ALLOC: %p %04x\n", result.multi_fn_, *(unsigned int*)result.multi_fn_);
+	result.multi_fn_->add_ref();
 	result.multi_fn_->functions = fn;
-	result.increment_refcount();
 	return result;
 }
 
@@ -549,10 +602,10 @@ variant::variant(std::vector<variant>* array)
 {
 	assert(array);
 	list_ = new variant_list;
+	list_->add_ref();
 	list_->elements.swap(*array);
 	list_->begin = list_->elements.begin();
 	list_->end = list_->elements.end();
-	increment_refcount();
 }
 
 variant::variant(const char* s)
@@ -596,25 +649,24 @@ variant::variant(std::map<variant,variant>* map)
 			assert(false);
 		}
 	}
-
+	
 	assert(map);
 	map_ = new variant_map;
+	map_->add_ref();
 	map_->elements.swap(*map);
-	increment_refcount();
 }
 
 variant::variant(const variant& formula_var, const game_logic::FormulaCallable& callable, int base_slot, const VariantFunctionTypeInfoPtr& type_info, const std::vector<std::string>& generic_types, std::function<game_logic::ConstFormulaPtr(const std::vector<variant_type_ptr>&)> factory)
 	: type_(VARIANT_TYPE_GENERIC_FUNCTION)
 {
 	generic_fn_ = new variant_generic_fn;
+	generic_fn_->add_ref();
 	generic_fn_->fn = formula_var;
 	generic_fn_->callable = &callable;
 	generic_fn_->base_slot = base_slot;
 	generic_fn_->type = type_info;
 	generic_fn_->generic_types = generic_types;
 	generic_fn_->factory = factory;
-
-	increment_refcount();
 
 	if(formula_var.get_debug_info()) {
 		setDebugInfo(*formula_var.get_debug_info());
@@ -625,14 +677,13 @@ variant::variant(const game_logic::ConstFormulaPtr& formula, const game_logic::F
   : type_(VARIANT_TYPE_FUNCTION)
 {
 	fn_ = new variant_fn;
+	fn_->add_ref();
 	fn_->fn = formula;
 	fn_->callable = &callable;
 	fn_->base_slot = base_slot;
 	fn_->type = type_info;
 
 	ASSERT_EQ(fn_->type->variant_types.size(), fn_->type->arg_names.size());
-
-	increment_refcount();
 
 	if(formula->strVal().get_debug_info()) {
 		setDebugInfo(*formula->strVal().get_debug_info());
@@ -643,13 +694,12 @@ variant::variant(std::function<variant(const game_logic::FormulaCallable&)> buil
   : type_(VARIANT_TYPE_FUNCTION)
 {
 	fn_ = new variant_fn;
+	fn_->add_ref();
 	fn_->builtin_fn = builtin_fn;
 	fn_->base_slot = 0;
 	fn_->type = type_info;
 
 	ASSERT_EQ(fn_->type->variant_types.size(), fn_->type->arg_names.size());
-
-	increment_refcount();
 }
 
 /*
@@ -828,8 +878,7 @@ variant variant::get_list_slice(int begin, int end) const
 
 	result.list_->begin = list_->begin + begin;
 	result.list_->end = list_->begin + end;
-	result.list_->storage = list_;
-	list_->refcount++;
+	result.list_->storage.reset(list_);
 
 	return result;
 }
@@ -1207,7 +1256,7 @@ const std::map<variant,variant>& variant::as_map() const
 bool variant::is_unmodified_single_reference() const
 {
 	if(is_map()) {
-		if(map_->refcount > 1 || map_->modcount > 0) {
+		if(map_->refcount() > 1 || map_->modcount > 0) {
 			return false;
 		}
 
@@ -1222,7 +1271,7 @@ bool variant::is_unmodified_single_reference() const
 		}
 
 	} else if(is_list()) {
-		if(list_->refcount > 1) {
+		if(list_->refcount() > 1) {
 			return false;
 		}
 		for(auto i = list_->begin; i != list_->end; ++i) {
@@ -1240,10 +1289,10 @@ variant variant::add_attr(variant key, variant value)
 	last_query_map = variant();
 
 	if(is_map()) {
-		if(map_->refcount > 1) {
-			map_->refcount--;
+		if(map_->refcount() > 1) {
+			map_->dec_ref();
 			map_ = new variant_map(*map_);
-			map_->refcount = 1;
+			map_->add_ref();
 		}
 
 		make_unique();
@@ -1259,10 +1308,10 @@ variant variant::remove_attr(variant key)
 	last_query_map = variant();
 
 	if(is_map()) {
-		if(map_->refcount > 1) {
-			map_->refcount--;
+		if(map_->refcount() > 1) {
+			map_->dec_ref();
 			map_ = new variant_map(*map_);
-			map_->refcount = 1;
+			map_->add_ref();
 		}
 
 		make_unique();
@@ -1340,7 +1389,7 @@ variant variant::bind_closure(const game_logic::FormulaCallable* callable)
 	variant result;
 	result.type_ = VARIANT_TYPE_FUNCTION;
 	result.fn_ = new variant_fn(*fn_);
-	result.fn_->refcount = 1;
+	result.fn_->add_ref();
 	result.fn_->callable.reset(callable);
 	return result;
 }
@@ -1355,7 +1404,7 @@ variant variant::bind_args(const std::vector<variant>& args)
 	variant result;
 	result.type_ = VARIANT_TYPE_FUNCTION;
 	result.fn_ = new variant_fn(*fn_);
-	result.fn_->refcount = 1;
+	result.fn_->add_ref();
 	result.fn_->bound_args.insert(result.fn_->bound_args.end(), args.begin(), args.end());
 
 	return result;
@@ -1546,7 +1595,7 @@ variant variant::operator+(const variant& v) const
 			bool adopt_list = false;
 
 			std::vector<variant> res;
-			if(new_size <= list_->elements.capacity() && list_->storage == nullptr) {
+			if(new_size <= list_->elements.capacity() && list_->storage.get() == nullptr) {
 				res.swap(list_->elements);
 				adopt_list = true;
 			} else {
@@ -1564,8 +1613,7 @@ variant variant::operator+(const variant& v) const
 
 			variant result(&res);
 			if(adopt_list) {
-				list_->storage = result.list_;
-				result.list_->refcount++;
+				list_->storage.reset(result.list_);
 			}
 			return result;
 		}
@@ -2046,13 +2094,13 @@ int variant::refcount() const
 
 	switch(type_) {
 	case VARIANT_TYPE_LIST:
-		return list_->refcount;
+		return list_->refcount();
 		break;
 	case VARIANT_TYPE_STRING:
 		return string_->refcount;
 		break;
 	case VARIANT_TYPE_MAP:
-		return map_->refcount;
+		return map_->refcount();
 		break;
 	case VARIANT_TYPE_CALLABLE:
 		return callable_->refcount();
@@ -2070,8 +2118,9 @@ void variant::make_unique()
 
 	switch(type_) {
 	case VARIANT_TYPE_LIST: {
-		list_->refcount--;
+		list_->dec_ref();
 		list_ = new variant_list(*list_);
+		list_->add_ref();
 		for(variant& v : list_->elements) {
 			v.make_unique();
 		}
@@ -2092,11 +2141,11 @@ void variant::make_unique()
 			m[key] = value;
 		}
 
-		map_->refcount--;
+		map_->dec_ref();
 
 		variant_map* vm = new variant_map;
+		vm->add_ref();
 		vm->info = map_->info;
-		vm->refcount = 1;
 		vm->elements.swap(m);
 		map_ = vm;
 		break;

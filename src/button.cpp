@@ -321,6 +321,13 @@ variant Button::getColorScheme()
 		}
 	}
 
+	void Button::surrenderReferences(GarbageCollector* collector)
+	{
+		Widget::surrenderReferences(collector);
+		collector->surrenderPtr(&label_);
+		collector->surrenderPtr(&handler_arg_);
+	}
+
 	void Button::setHPadding(int hpad)
 	{
 		hpadding_ = hpad;

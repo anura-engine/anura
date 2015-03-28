@@ -174,13 +174,6 @@ namespace
 	RETURN_TYPE("string")
 	END_FUNCTION_DEF(translate)
 
-	FUNCTION_DEF(performance, 0, 0, "performance(): returns an object with current performance stats")
-		Formula::failIfStaticContext();
-		return variant(performance_data::current());
-
-	RETURN_TYPE("object")
-	END_FUNCTION_DEF(performance)
-
 	FUNCTION_DEF(texture, 2, 3, "texture(objects, rect, bool half_size=false): render a texture")
 		// XXX FIXME
 	/*
@@ -2266,6 +2259,11 @@ RETURN_TYPE("bool")
 			Entity* e = target_ ? target_.get() : &ob;
 			e->handleEvent(event_, callable_.get());
 		}
+
+		void surrenderReferences(GarbageCollector* collector) override {
+			collector->surrenderPtr(&target_);
+			collector->surrenderPtr(&callable_);
+		}
 	};
 
 	FUNCTION_DEF(fire_event, 1, 3, "fire_event((optional) object target, string id, (optional)callable arg): fires the event with the given id. Targets the current object by default, or target if given. Sends arg as the event argument if given")
@@ -2504,6 +2502,10 @@ RETURN_TYPE("bool")
 		virtual void execute(Level& lvl, Entity& ob) const {
 			lvl.remove_character(e_);
 		}
+
+		void surrenderReferences(GarbageCollector* collector) override {
+			collector->surrenderPtr(&e_);
+		}
 	};
 
 	FUNCTION_DEF(remove_object, 1, 1, "remove_object(object): removes the given object from the Level. If there are no references to the object stored, then the object will immediately be destroyed. However it is possible to keep a reference to the object and even insert it back into the Level later using add_object()")
@@ -2636,6 +2638,10 @@ RETURN_TYPE("bool")
 
 		virtual void execute(Level& lvl, Entity& ob) const {
 			ob.addScheduledCommand(cycles_, cmd_);
+		}
+
+		void surrenderReferences(GarbageCollector* collector) override {
+			collector->surrenderVariant(&cmd_);
 		}
 	private:
 		int cycles_;

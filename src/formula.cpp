@@ -191,6 +191,13 @@ namespace game_logic
 		fallback_(nullptr), 
 		values_(values)
 	{}
+
+	void MapFormulaCallable::surrenderReferences(GarbageCollector* collector) 
+	{
+		for(std::pair<const std::string,variant>& p : values_) {
+			collector->surrenderVariant(&p.second);
+		}
+	}
 	
 	MapFormulaCallable& MapFormulaCallable::add(const std::string& key, const variant& value)
 	{

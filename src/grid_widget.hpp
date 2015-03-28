@@ -91,6 +91,8 @@ namespace gui
 		void handleDraw() const override;
 		void handleProcess() override;
 
+		void surrenderReferences(GarbageCollector* collector) override;
+
 	private:
 		DECLARE_CALLABLE(grid);
 

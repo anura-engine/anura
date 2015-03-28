@@ -46,6 +46,8 @@ class bot : public game_logic::FormulaCallable
 
 		void process(const boost::system::error_code& error);
 
+		void surrenderReferences(GarbageCollector* collector) override;
+
 	private:
 		DECLARE_CALLABLE(bot)
 		variant getValueDefault(const std::string& key) const override;
@@ -53,13 +55,13 @@ class bot : public game_logic::FormulaCallable
 
 		variant generate_report() const;
 
-	int session_id_;
+		int session_id_;
 
 		std::string host_, port_;
 		std::vector<variant> script_;
 		std::vector<variant> response_;
-		std::shared_ptr<client> client_;
-		std::shared_ptr<internal_client> internal_client_;
+		boost::intrusive_ptr<client> client_;
+		boost::intrusive_ptr<internal_client> internal_client_;
 
 		boost::asio::io_service& service_;
 		boost::asio::deadline_timer timer_;
@@ -71,8 +73,8 @@ class bot : public game_logic::FormulaCallable
 		std::string message_type_;
 		game_logic::FormulaCallablePtr message_callable_;
 
-	bool has_quit_;
+		bool has_quit_;
 
-	tbs_bot_timer_proxy* timer_proxy_;
+		tbs_bot_timer_proxy* timer_proxy_;
 	};
 }

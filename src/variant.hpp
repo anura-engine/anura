@@ -109,6 +109,10 @@ typedef boost::intrusive_ptr<VariantFunctionTypeInfo> VariantFunctionTypeInfoPtr
 class variant 
 {
 public:
+
+	friend class GarbageCollectorImpl;
+	friend class GarbageCollectorAnalyzer;
+
 	enum DECIMAL_VARIANT_TYPE { DECIMAL_VARIANT };
 
 	static variant from_bool(bool b) { variant v; v.type_ = VARIANT_TYPE_BOOL; v.bool_value_ = b; return v; }
@@ -380,7 +384,6 @@ private:
 		variant_multi_fn* multi_fn_;
 		variant_delayed* delayed_;
 		variant_weak* weak_;
-		debug_info* debug_info_;
 
 		int64_t value_;
 	};

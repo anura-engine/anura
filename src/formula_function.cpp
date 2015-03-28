@@ -317,6 +317,13 @@ namespace game_logic
 
 				cache_[key] = value;
 			}
+
+			void surrenderReferences(GarbageCollector* collector) {
+				for(std::pair<const variant, variant>& p : cache_) {
+					collector->surrenderVariant(&p.first);
+					collector->surrenderVariant(&p.second);
+				}
+			}
 		private:
 			variant getValue(const std::string& key) const {
 				return variant();
@@ -3360,6 +3367,12 @@ FUNCTION_DEF_IMPL
 					ob.mutateValue(attr_, val_);
 				}
 			}
+
+			void surrenderReferences(GarbageCollector* collector) {
+				collector->surrenderVariant(&variant_attr_);
+				collector->surrenderVariant(&val_);
+				collector->surrenderVariant(&target_);
+			}
 		private:
 			mutable variant target_;
 			std::string attr_;
@@ -4564,13 +4577,33 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 	public:
 		virtual void execute(game_logic::FormulaCallable& ob) const 
 		{
-			CustomObject::run_garbage_collection();
+			//CustomObject::run_garbage_collection();
+			runGarbageCollection();
 		}
 	};
 
 	FUNCTION_DEF(trigger_garbage_collection, 0, 0, "trigger_garbage_collection(): trigger an FFL garbage collection")
 		return variant(new gc_command);
 	END_FUNCTION_DEF(trigger_garbage_collection)
+
+	class debug_gc_command : public game_logic::CommandCallable
+	{
+		std::string path_;
+	public:
+		explicit debug_gc_command(const std::string& path) : path_(path) {}
+		virtual void execute(game_logic::FormulaCallable& ob) const 
+		{
+			//CustomObject::run_garbage_collection();
+			runGarbageCollectionDebug(path_.c_str());
+		}
+	};
+
+	FUNCTION_DEF(trigger_debug_garbage_collection, 1, 1, "trigger_debug_garbage_collection(): trigger an FFL garbage collection with additional memory usage information")
+		std::string path = args()[0]->evaluate(variables).as_string();
+		return variant(new debug_gc_command(path));
+	FUNCTION_ARGS_DEF
+		ARG_TYPE("string");
+	END_FUNCTION_DEF(trigger_debug_garbage_collection)
 
 	class debug_dump_textures_command : public game_logic::CommandCallable
 	{

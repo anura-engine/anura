@@ -33,7 +33,7 @@
 
 namespace KRE
 {
-	class ColorTransform : public game_logic::FormulaCallable
+	class ColorTransform
 	{
 	public:
 		ColorTransform();
@@ -80,7 +80,6 @@ namespace KRE
 		Color toColor() const;
 		std::string toString() const;
 	private:
-		DECLARE_CALLABLE(ColorTransform);
 		float mul_rgba_[4];
 		float add_rgba_[4];
 	};

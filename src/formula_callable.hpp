@@ -28,7 +28,7 @@
 #include <map>
 #include <string>
 
-#include "reference_counted_object.hpp"
+#include "formula_garbage_collector.hpp"
 #include "variant.hpp"
 
 namespace game_logic
@@ -46,7 +46,7 @@ namespace game_logic
 	class FormulaCallableVisitor;
 
 	//interface for objects that can have formulae run on them
-	class FormulaCallable : public reference_counted_object
+	class FormulaCallable : public GarbageCollectible
 	{
 	public:
 		explicit FormulaCallable(bool has_self=false) : has_self_(has_self)
@@ -220,6 +220,8 @@ namespace game_logic
 		const_iterator end() const { return values_.end(); }
 
 		variant& ref(const std::string& key) { return values_[key]; }
+
+		void surrenderReferences(GarbageCollector* collector) override;
 
 	private:
 		//MapFormulaCallable(const MapFormulaCallable&);

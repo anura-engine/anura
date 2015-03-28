@@ -23,6 +23,8 @@
 
 #pragma once
 
+#include <boost/intrusive_ptr.hpp>
+
 #include <string>
 
 #include "button.hpp"
@@ -122,7 +124,7 @@ private:
 	void onHistoryChange(float value);
 	void update_history_trails();
 
-	std::unique_ptr<debug_console::ConsoleDialog> console_;
+	boost::intrusive_ptr<debug_console::ConsoleDialog> console_;
 #endif
 };
 

@@ -57,7 +57,6 @@ public:
 	reference_counted_object& operator=(const reference_counted_object& /*obj*/) {
 		return *this;
 	}
-	virtual ~reference_counted_object() { if(weak_ != nullptr) { weak_->release(); } }
 
 	void add_ref() const { ++count_; }
 	void dec_ref() const { if(--count_ == 0) { delete this; } }
@@ -69,6 +68,7 @@ public:
 
 protected:
 	void turn_reference_counting_off() { count_ = 1000000; }
+	virtual ~reference_counted_object() { if(weak_ != nullptr) { weak_->release(); } }
 private:
 	mutable int count_;
 	mutable weak_ptr_base* weak_;

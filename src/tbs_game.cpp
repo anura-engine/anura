@@ -804,6 +804,14 @@ namespace tbs
 			send_game_state();
 		}
 	}
+
+	void game::surrenderReferences(GarbageCollector* collector)
+	{
+		collector->surrenderVariant(&doc_, "doc");
+		for(boost::intrusive_ptr<tbs::bot>& bot : bots_) {
+			collector->surrenderPtr(&bot, "bot");
+		}
+	}
 }
 
 namespace 

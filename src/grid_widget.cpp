@@ -745,4 +745,21 @@ namespace gui
 		DEFINE_FIELD(selected_row, "int")
 			return variant(obj.selected_row_);
 	END_DEFINE_CALLABLE(Grid)
+
+	void Grid::surrenderReferences(GarbageCollector* collector)
+	{
+		Widget::surrenderReferences(collector);
+
+		for(WidgetPtr& w : cells_ ){
+			collector->surrenderPtr(&w);
+		}
+
+		for(WidgetPtr& w : visible_cells_ ){
+			collector->surrenderPtr(&w);
+		}
+
+		for(WidgetPtr& w : new_row_ ){
+			collector->surrenderPtr(&w);
+		}
+	}
 }

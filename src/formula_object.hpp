@@ -74,7 +74,10 @@ namespace game_logic
 
 		void validate() const;
 
-	std::string write_id() const;
+		std::string write_id() const;
+
+		void surrenderReferences(GarbageCollector* collector) override;
+		std::string debugObjectName() const override;
 	private:
 		//construct with type and constructor parameters.
 		//Don't call directly, use create() instead.

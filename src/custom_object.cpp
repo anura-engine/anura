@@ -5372,6 +5372,29 @@ void CustomObject::restoreGcObjectReference(gc_object_reference ref)
 	}
 }
 
+void CustomObject::surrenderReferences(GarbageCollector* collector)
+{
+	const std::vector<const CustomObjectType::PropertyEntry*>& entries = type_->getVariableProperties();
+	int index = 0;
+	for(variant& var : property_data_) {
+		collector->surrenderVariant(&var, entries[index] ? entries[index]->id.c_str() : nullptr);
+		++index;
+	}
+
+	for(const gui::WidgetPtr& w : widgets_) {
+		collector->surrenderPtr(&w, "WIDGET");
+	}
+
+	collector->surrenderPtr(&last_hit_by_, "LAST_HIT_BY");
+	collector->surrenderPtr(&standing_on_, "STANDING_ON");
+	collector->surrenderPtr(&parent_, "PARENT");
+}
+
+std::string CustomObject::debugObjectName() const
+{
+	return "obj " + type_->id();
+}
+
 void CustomObject::addParticleSystem(const std::string& key, const std::string& type)
 {
 	particle_systems_[key] = type_->getParticleSystemFactory(type)->create(*this);

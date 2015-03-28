@@ -558,7 +558,7 @@ void render_scene(Level& lvl, const screen_position& pos)
 
 namespace 
 {
-	boost::intrusive_ptr<performance_data> current_perf_data;
+	boost::shared_ptr<performance_data> current_perf_data;
 }
 
 variant performance_data::getValue(const std::string& key) const

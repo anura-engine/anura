@@ -83,6 +83,13 @@ namespace game_logic
 
 		int getNumArgs() const { return values_.size(); }
 
+		void surrenderReferences(GarbageCollector* collector) override {
+			collector->surrenderPtr(&fallback_);
+			for(variant& v : values_) {
+				collector->surrenderVariant(&v);
+			}
+		}
+
 	private:
 		const std::vector<std::string>* value_names_;
 		std::vector<variant> values_;

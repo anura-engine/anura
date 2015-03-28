@@ -630,6 +630,8 @@ private:
 
 	KRE::RenderTargetPtr rt_;
 	bool have_render_to_texture_;
+
+	void surrenderReferences(GarbageCollector* gc) override;
 };
 
 bool entity_in_current_level(const Entity* e);

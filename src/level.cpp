@@ -4350,6 +4350,46 @@ bool Level::executeCommand(const variant& var)
 	return result;
 }
 
+void Level::surrenderReferences(GarbageCollector* gc)
+{
+	for(std::pair<const std::string, EntityPtr>& p : chars_by_label_) {
+		gc->surrenderPtr(&p.second);
+	}
+
+	gc->surrenderPtr(&suspended_level_, "suspended_level");
+
+	gc->surrenderPtr(&editor_highlight_);
+	gc->surrenderPtr(&player_);
+	gc->surrenderPtr(&last_touched_player_);
+	for(EntityPtr& e : chars_) {
+		gc->surrenderPtr(&e);
+	}
+	for(EntityPtr& e : new_chars_) {
+		gc->surrenderPtr(&e);
+	}
+	for(EntityPtr& e : active_chars_) {
+		gc->surrenderPtr(&e);
+	}
+	for(EntityPtr& e : solid_chars_) {
+		gc->surrenderPtr(&e);
+	}
+	for(EntityPtr& e : chars_immune_from_time_freeze_) {
+		gc->surrenderPtr(&e);
+	}
+	for(EntityPtr& e : players_) {
+		gc->surrenderPtr(&e);
+	}
+	for(EntityPtr& e : editor_selection_) {
+		gc->surrenderPtr(&e);
+	}
+
+	for(entity_group& group : groups_) {
+		for(EntityPtr& e : group) {
+			gc->surrenderPtr(&e);
+		}
+	}
+}
+
 /*
 UTILITY(correct_solidity)
 {

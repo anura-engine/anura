@@ -168,6 +168,8 @@ namespace gui
 
 		virtual void handleDraw() const = 0;
 
+		void surrenderReferences(GarbageCollector* collector);
+
 	private:
 		DECLARE_CALLABLE(Widget);
 		

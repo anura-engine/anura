@@ -1527,6 +1527,16 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 		}
 	}
 
+	for(const PropertyEntry& entry  : slot_properties_) {
+		if(entry.storage_slot >= 0) {
+			if(variable_properties_.size() < entry.storage_slot+1) {
+				variable_properties_.resize(entry.storage_slot+1);
+			}
+
+			variable_properties_[entry.storage_slot] = &entry;
+		}
+	}
+
 	variant variations = node["variations"];
 	if(variations.is_null() == false) {
 		for(const variant_pair& v : variations.as_map()) {

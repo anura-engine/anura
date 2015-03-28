@@ -443,6 +443,10 @@ namespace gui
 		return nullptr;
 	}
 
+	void Widget::surrenderReferences(GarbageCollector* collector)
+	{
+	}
+
 	DialogPtr Widget::getSettingsDialog(int x, int y, int w, int h)
 	{
 		return settingsDialog(x,y,w,h);

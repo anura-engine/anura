@@ -493,6 +493,7 @@ std::map<std::string, std::string>& class_path_map()
 		const std::vector<game_logic::ConstFormulaPtr>& constructor() const { return constructor_; }
 		const std::map<std::string, int>& properties() const { return properties_; }
 		const std::vector<PropertyEntry>& slots() const { return slots_; }
+		const std::vector<const PropertyEntry*>& variableSlots() const { return variable_slots_; }
 		const classes_map& subClasses() const { return sub_classes_; }
 
 		bool isA(const std::string& name) const;
@@ -511,6 +512,8 @@ std::map<std::string, std::string>& class_path_map()
 		std::map<std::string, int> properties_;
 
 		std::vector<PropertyEntry> slots_;
+
+		std::vector<const PropertyEntry*> variable_slots_;
 	
 		classes_map sub_classes_;
 
@@ -593,6 +596,18 @@ std::map<std::string, std::string>& class_path_map()
 
 			slots_[properties_[key.as_string()]] = entry;
 		}
+
+		for(const PropertyEntry& entry : slots_) {
+			if(entry.variable_slot >= 0) {
+				if(variable_slots_.size() < entry.variable_slot+1) {
+					variable_slots_.resize(entry.variable_slot+1);
+				}
+
+				variable_slots_[entry.variable_slot] = &entry;
+			}
+		}
+
+		ASSERT_LOG(variable_slots_.size() == nstate_slots_, "MISMATCH: " << variable_slots_.size() << " VS " << nstate_slots_);
 
 		nested_classes_ = node["classes"];
 
@@ -1177,6 +1192,25 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 		}
 
 		setAddr(write_id());
+	}
+
+	void FormulaObject::surrenderReferences(GarbageCollector* collector)
+	{
+		collector->surrenderPtr(&previous_, "PREV");
+		collector->surrenderVariant(&tmp_value_, "TMP");
+
+		const std::vector<const PropertyEntry*>& entries = class_->variableSlots();
+
+		int index = 0;
+		for(variant& v : variables_) {
+			collector->surrenderVariant(&v, entries[index] ? entries[index]->name.c_str() : nullptr);
+			++index;
+		}
+	}
+
+	std::string FormulaObject::debugObjectName() const
+	{
+		return "class " + class_->name();
 	}
 
 	std::string FormulaObject::write_id() const
