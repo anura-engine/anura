@@ -120,7 +120,7 @@ namespace game_logic
 typedef std::function<variant(const game_logic::FormulaCallable&)> GetterFn;
 typedef std::function<void(game_logic::FormulaCallable&, const variant&)> SetterFn;
 
-struct callable_PropertyEntry {
+struct CallablePropertyEntry {
 	std::string id;
 	variant_type_ptr type, set_type;
 	GetterFn get;
@@ -135,52 +135,52 @@ public: \
 	virtual void setValueBySlot(int slot, const variant& value) override; \
 	virtual std::string getObjectId() const override { return game_logic::modify_class_id(#classname); } \
 public: \
-	static void init_callable_type(std::vector<callable_PropertyEntry>& v, std::map<std::string, int>& properties); \
+	static void init_callable_type(std::vector<CallablePropertyEntry>& v, std::map<std::string, int>& properties); \
 private:
 
 #define BEGIN_DEFINE_CALLABLE_NOBASE(classname) \
 int classname##_num_base_slots = 0; \
 const char* classname##_base_str_name = ""; \
-std::vector<callable_PropertyEntry> classname##_fields; \
+std::vector<CallablePropertyEntry> classname##_fields; \
 std::map<std::string, int> classname##_properties; \
-void classname::init_callable_type(std::vector<callable_PropertyEntry>& fields, std::map<std::string, int>& properties) { \
+void classname::init_callable_type(std::vector<CallablePropertyEntry>& fields, std::map<std::string, int>& properties) { \
 	typedef classname this_type; \
 	{ {
 
 #define BEGIN_DEFINE_CALLABLE(classname, base_type) \
 int classname##_num_base_slots = 0; \
 const char* classname##_base_str_name = #base_type; \
-std::vector<callable_PropertyEntry> classname##_fields; \
+std::vector<CallablePropertyEntry> classname##_fields; \
 std::map<std::string, int> classname##_properties; \
-void classname::init_callable_type(std::vector<callable_PropertyEntry>& fields, std::map<std::string, int>& properties) { \
+void classname::init_callable_type(std::vector<CallablePropertyEntry>& fields, std::map<std::string, int>& properties) { \
 	typedef classname this_type; \
 	base_type::init_callable_type(fields, properties); \
-	classname##_num_base_slots = fields.size(); \
+	classname##_num_base_slots = static_cast<int>(fields.size()); \
 	{ {
 
 #define DEFINE_FIELD(fieldname, type_str) }; } { \
-	int field_index = fields.size(); \
+	int field_index = static_cast<int>(fields.size()); \
 	if(properties.count(#fieldname)) { \
 		field_index = properties[#fieldname]; \
 	} else { \
 		fields.resize(fields.size()+1); \
 		properties[#fieldname] = field_index; \
 	} \
-	callable_PropertyEntry& entry = fields[field_index]; \
+	CallablePropertyEntry& entry = fields[field_index]; \
 	entry.id = #fieldname; \
 	entry.type = parse_variant_type(variant(type_str)); \
 	entry.get = [](const game_logic::FormulaCallable& obj_instance) ->variant { \
 		const this_type& obj = *dynamic_cast<const this_type*>(&obj_instance);
 
 #define BEGIN_DEFINE_FN(fieldname, type_str) }; } { \
-	int field_index = fields.size(); \
+	int field_index = static_cast<int>(fields.size()); \
 	if(properties.count(#fieldname)) { \
 		field_index = properties[#fieldname]; \
 	} else { \
 		fields.resize(fields.size()+1); \
 		properties[#fieldname] = field_index; \
 	} \
-	callable_PropertyEntry& entry = fields[field_index]; \
+	CallablePropertyEntry& entry = fields[field_index]; \
 	entry.id = #fieldname; \
 	entry.type = parse_variant_type(variant("function" type_str)); \
 	entry.get = [](const game_logic::FormulaCallable& obj_instance) ->variant { \
@@ -190,7 +190,7 @@ void classname::init_callable_type(std::vector<callable_PropertyEntry>& fields, 
 			type_info.reset(new VariantFunctionTypeInfo); \
 			variant_type_ptr type = parse_variant_type(variant("function" type_str)); \
 			type->is_function(&type_info->variant_types, &type_info->return_type, &min_args, nullptr); \
-			type_info->num_unneeded_args = type_info->variant_types.size() - min_args; \
+			type_info->num_unneeded_args = static_cast<int>(type_info->variant_types.size()) - min_args; \
 			type_info->arg_names.resize(type_info->variant_types.size()); \
 		} \
 		boost::intrusive_ptr<const FormulaCallable> ref(&obj_instance); \

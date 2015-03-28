@@ -39,12 +39,12 @@ namespace json
 	struct ParseError 
 	{
 		explicit ParseError(const std::string& msg);
-		ParseError(const std::string& msg, const std::string& filename, int line, int col);
+		ParseError(const std::string& msg, const std::string& filename, std::ptrdiff_t line, std::ptrdiff_t col);
 
 		std::string errorMessage() const;
 
 		std::string message;
 		std::string fname;
-		int line, col;
+		std::ptrdiff_t line, col;
 	};
 }

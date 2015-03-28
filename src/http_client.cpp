@@ -38,7 +38,7 @@ http_client::http_client(const std::string& host, const std::string& port, int s
 {
 }
 
-void http_client::send_request(const std::string& method_path, const std::string& request, std::function<void(std::string)> handler, std::function<void(std::string)> error_handler, std::function<void(int,int,bool)> progress_handler)
+void http_client::send_request(const std::string& method_path, const std::string& request, std::function<void(std::string)> handler, std::function<void(std::string)> error_handler, std::function<void(size_t,size_t,bool)> progress_handler)
 {
 	++in_flight_;
 	connection_ptr conn(new Connection(io_service_));
@@ -153,8 +153,8 @@ void http_client::handle_connect(const boost::system::error_code& error, connect
 
 void http_client::write_connection_data(connection_ptr conn)
 {
-	const int bytes_to_send = conn->request.size() - conn->nbytes_sent;
-	const int nbytes = std::min<int>(bytes_to_send, 1024*64);
+	const auto bytes_to_send = conn->request.size() - conn->nbytes_sent;
+	const auto nbytes = std::min<size_t>(bytes_to_send, 1024*64);
 
 	const std::shared_ptr<std::string> msg(new std::string(conn->request.begin() + conn->nbytes_sent, conn->request.begin() + conn->nbytes_sent + nbytes));
 	boost::asio::async_write(conn->socket, boost::asio::buffer(*msg),
@@ -236,7 +236,7 @@ void http_client::handle_receive(connection_ptr conn, const boost::system::error
 				content_length += strlen("content-length:");
 				const int payload_len = strtol(content_length, nullptr, 10);
 				if(payload_len > 0) {
-					conn->expected_len = (end_headers - conn->response.c_str()) + payload_len + header_term_len;
+					conn->expected_len = static_cast<int>((end_headers - conn->response.c_str()) + payload_len + header_term_len);
 				}
 			}
 		}

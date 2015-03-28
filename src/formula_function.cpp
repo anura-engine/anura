@@ -73,7 +73,7 @@
 #include "voxel_model.hpp"
 
 #include <boost/regex.hpp>
-#if defined(_WINDOWS)
+#if defined(_MSC_VER) && _MSC_VER < 1800
 #include <boost/math/special_functions/asinh.hpp>
 #include <boost/math/special_functions/acosh.hpp>
 #include <boost/math/special_functions/atanh.hpp>
@@ -199,16 +199,16 @@ namespace game_logic
 		std::string::const_iterator end_line = std::find(begin_line, v.as_string().end(), '\n');
 
 		std::string line(begin_line, end_line);
-		int pos = begin - begin_line;
+		auto pos = begin - begin_line;
 
 		if(pos_info) {
-			const int col = (begin - real_start_of_line) + begin_line_base;
+			const int col = static_cast<int>((begin - real_start_of_line) + begin_line_base);
 			pos_info->begin_line = line_num;
 			pos_info->begin_col = col+1;
 
 			int end_line = line_num;
 			int end_col = col+1;
-			for(std::string::const_iterator itor = begin; itor != end; ++itor) {
+			for(auto itor = begin; itor != end; ++itor) {
 				if(*itor == '\n') {
 					end_col = 1;
 					end_line++;
@@ -267,8 +267,8 @@ namespace game_logic
 		if(!hasDebugInfo()) {
 			return std::pair<int,int>(-1,-1);
 		}
-		return std::pair<int,int>(begin_str_ - parent_formula_.as_string().begin(),
-								  end_str_ - parent_formula_.as_string().begin());
+		return std::pair<int,int>(static_cast<int>(begin_str_ - parent_formula_.as_string().begin()),
+								  static_cast<int>(end_str_ - parent_formula_.as_string().begin()));
 	}
 
 	variant FormulaExpression::executeMember(const FormulaCallable& variables, std::string& id, variant* variant_id) const
@@ -467,15 +467,15 @@ namespace game_logic
 
 			private:
 				variant execute(const FormulaCallable& variables) const {
-					const int nargs = args().size();
-					for(int n = 0; n < nargs-1; n += 2) {
+					const auto nargs = args().size();
+					for(auto n = 0; n < nargs-1; n += 2) {
 						const bool result = args()[n]->evaluate(variables).as_bool();
 						if(result) {
 							return args()[n+1]->evaluate(variables);
 						}
 					}
 
-					if(nargs%2 == 0) {
+					if((nargs % 2) == 0) {
 						return variant();
 					}
 
@@ -486,12 +486,12 @@ namespace game_logic
 				variant_type_ptr getVariantType() const {
 					std::vector<variant_type_ptr> types;
 					types.push_back(args()[1]->queryVariantType());
-					const int nargs = args().size();
-					for(int n = 1; n < nargs; n += 2) {
+					const auto nargs = args().size();
+					for(auto n = 1; n < nargs; n += 2) {
 						types.push_back(args()[n]->queryVariantType());
 					}
 
-					if(nargs%2 == 1) {
+					if((nargs % 2) == 1) {
 						types.push_back(args()[nargs-1]->queryVariantType());
 					} else {
 						types.push_back(variant_type::get_type(variant::VARIANT_TYPE_NULL));
@@ -532,9 +532,9 @@ namespace game_logic
 			int min_args = 0;
 
 			if(type->is_function(&fn_args, &return_type, &min_args)) {
-				const int nargs = args().size()-1;
+				const int nargs = static_cast<int>(args().size() - 1);
 				min_args = std::max<int>(0, min_args - nargs);
-				if(fn_args.size() <= static_cast<unsigned>(nargs)) {
+				if(static_cast<int>(fn_args.size()) <= nargs) {
 					fn_args.erase(fn_args.begin(), fn_args.begin() + nargs);
 				} else {
 					ASSERT_LOG(false, "bind called with too many arguments");
@@ -1393,8 +1393,8 @@ namespace game_logic
 				return variant(std::string(m[0].first, m[0].second));
 			} 
 			std::vector<variant> v;
-			for(size_t i = 1; i < m.size(); i++) {
-				v.push_back(variant(std::string(m[i].first, m[i].second)));
+			for(int i = 1; i < static_cast<int>(m.size()); i++) {
+				v.emplace_back(std::string(m[i].first, m[i].second));
 			}
 			return variant(&v);
 		FUNCTION_ARGS_DEF
@@ -1497,7 +1497,7 @@ namespace game_logic
 					}
 
 					if(base_) {
-						return const_cast<FormulaCallableDefinition*>(base_.get())->getEntry(slot - entries_.size());
+						return const_cast<FormulaCallableDefinition*>(base_.get())->getEntry(slot - static_cast<int>(entries_.size()));
 					}
 
 					return nullptr;
@@ -1513,7 +1513,7 @@ namespace game_logic
 					}
 
 					if(base_) {
-						return base_->getEntry(slot - entries_.size());
+						return base_->getEntry(slot - static_cast<int>(entries_.size()));
 					}
 
 					return nullptr;
@@ -1692,9 +1692,9 @@ FUNCTION_DEF_IMPL
 
 			if(type_a->is_specific_list() && type_b->is_specific_list()) {
 				std::vector<variant_type_ptr> types;
-				const int num_elements = std::min(type_a->is_specific_list()->size(), type_b->is_specific_list()->size());
+				const auto num_elements = std::min(type_a->is_specific_list()->size(), type_b->is_specific_list()->size());
 				const variant_type_ptr type = args()[2]->queryVariantType();
-				for(int n = 0; n != num_elements; ++n) {
+				for(auto n = 0; n != num_elements; ++n) {
 					types.push_back(type);
 				}
 
@@ -2228,7 +2228,7 @@ FUNCTION_DEF_IMPL
 			} else {
 				int res = 0;
 				boost::intrusive_ptr<map_callable> callable(new map_callable(variables));
-				for(size_t n = 0; n != items.num_elements(); ++n) {
+				for(int n = 0; n != items.num_elements(); ++n) {
 					callable->set(items[n], n);
 					const variant val = args().back()->evaluate(*callable);
 					if(val.as_bool()) {
@@ -2278,7 +2278,7 @@ FUNCTION_DEF_IMPL
 						return variant(&m);
 					} else {
 						boost::intrusive_ptr<map_callable> callable(new map_callable(variables));
-						for(size_t n = 0; n != items.num_elements(); ++n) {
+						for(int n = 0; n != items.num_elements(); ++n) {
 							callable->set(items[n], n);
 							const variant val = args().back()->evaluate(*callable);
 							if(val.as_bool()) {
@@ -2291,7 +2291,7 @@ FUNCTION_DEF_IMPL
 					const std::string self = identifier_.empty() ? args()[1]->evaluate(variables).as_string() : identifier_;
 					callable->setValue_name(self);
 
-					for(size_t n = 0; n != items.num_elements(); ++n) {
+					for(int n = 0; n != items.num_elements(); ++n) {
 						callable->set(items[n], n);
 						const variant val = args().back()->evaluate(*callable);
 						if(val.as_bool()) {
@@ -2386,7 +2386,7 @@ FUNCTION_DEF_IMPL
 
 				if(args().size() == 2) {
 					boost::intrusive_ptr<map_callable> callable(new map_callable(variables));
-					for(size_t n = 0; n != items.num_elements(); ++n) {
+					for(int n = 0; n != items.num_elements(); ++n) {
 						callable->set(items[n], n);
 						const variant val = args().back()->evaluate(*callable);
 						if(val.as_bool()) {
@@ -2399,7 +2399,7 @@ FUNCTION_DEF_IMPL
 					const std::string self = identifier_.empty() ? args()[1]->evaluate(variables).as_string() : identifier_;
 					callable->setValue_name(self);
 
-					for(size_t n = 0; n != items.num_elements(); ++n) {
+					for(int n = 0; n != items.num_elements(); ++n) {
 						callable->set(items[n], n);
 						const variant val = args().back()->evaluate(*callable);
 						if(val.as_bool()) {
@@ -2474,7 +2474,7 @@ FUNCTION_DEF_IMPL
 
 				if(args().size() == 2) {
 					boost::intrusive_ptr<map_callable> callable(new map_callable(variables));
-					for(size_t n = 0; n != items.num_elements(); ++n) {
+					for(int n = 0; n != items.num_elements(); ++n) {
 						callable->set(items[n], n);
 						const variant val = args().back()->evaluate(*callable);
 						if(val.as_bool()) {
@@ -2487,7 +2487,7 @@ FUNCTION_DEF_IMPL
 					const std::string self = identifier_.empty() ? args()[1]->evaluate(variables).as_string() : identifier_;
 					callable->setValue_name(self);
 
-					for(size_t n = 0; n != items.num_elements(); ++n) {
+					for(int n = 0; n != items.num_elements(); ++n) {
 						callable->set(items[n], n);
 						const variant val = args().back()->evaluate(*callable);
 						if(val.as_bool()) {
@@ -2631,7 +2631,7 @@ FUNCTION_DEF_IMPL
 			int max_index = -1;
 			variant max_value;
 			boost::intrusive_ptr<map_callable> callable(new map_callable(variables));
-			for(size_t n = 0; n != items.num_elements(); ++n) {
+			for(int n = 0; n != items.num_elements(); ++n) {
 				variant val;
 		
 				if(args().size() >= 2) {
@@ -2686,7 +2686,7 @@ FUNCTION_DEF_IMPL
 					} else if(items.is_string()) {
 						const std::string& s = items.as_string();
 						boost::intrusive_ptr<map_callable> callable(new map_callable(variables));
-						for(size_t n = 0; n != s.length(); ++n) {
+						for(int n = 0; n != s.length(); ++n) {
 							variant v(s.substr(n,1));
 							callable->set(v, n);
 							const variant val = args().back()->evaluate(*callable);
@@ -2694,7 +2694,7 @@ FUNCTION_DEF_IMPL
 						}
 					} else {
 						boost::intrusive_ptr<map_callable> callable(new map_callable(variables));
-						for(size_t n = 0; n != items.num_elements(); ++n) {
+						for(int n = 0; n != items.num_elements(); ++n) {
 							callable->set(items[n], n);
 							const variant val = args().back()->evaluate(*callable);
 							vars.push_back(val);
@@ -2704,7 +2704,7 @@ FUNCTION_DEF_IMPL
 					boost::intrusive_ptr<map_callable> callable(new map_callable(variables));
 					const std::string self = identifier_.empty() ? args()[1]->evaluate(variables).as_string() : identifier_;
 					callable->setValue_name(self);
-					for(size_t n = 0; n != items.num_elements(); ++n) {
+					for(int n = 0; n != items.num_elements(); ++n) {
 						callable->set(items[n], n);
 						const variant val = args().back()->evaluate(*callable);
 						vars.push_back(val);
@@ -2719,8 +2719,8 @@ FUNCTION_DEF_IMPL
 				if(spec_type->is_specific_list()) {
 					std::vector<variant_type_ptr> types;
 					variant_type_ptr type = args().back()->queryVariantType();
-					const int num_items = spec_type->is_specific_list()->size();
-					for(int n = 0; n != num_items; ++n) {
+					const auto num_items = spec_type->is_specific_list()->size();
+					for(size_t n = 0; n != num_items; ++n) {
 						types.push_back(type);
 					}
 
@@ -2738,7 +2738,7 @@ FUNCTION_DEF_IMPL
 			if(args().size() >= 2) {
 				res = args()[1]->evaluate(variables);
 			}
-			for(size_t n = 0; n != items.num_elements(); ++n) {
+			for(int n = 0; n != items.num_elements(); ++n) {
 				res = res + items[n];
 			}
 
@@ -2965,7 +2965,7 @@ FUNCTION_DEF_IMPL
 				variant execute(const FormulaCallable& variables) const {
 					const variant items = args()[0]->evaluate(variables);
 					if(items.is_string()) {
-						return variant(items.as_string().size());
+						return variant(static_cast<int>(items.as_string().size()));
 					}
 					return variant(static_cast<int>(items.num_elements()));
 				}
@@ -3096,7 +3096,7 @@ FUNCTION_DEF_IMPL
 					if(pos == std::string::npos) {
 						return variant(0);
 					} else {
-						return variant(pos + 1);
+						return variant(static_cast<int>(pos + 1));
 					}
 				}
 				variant_type_ptr getVariantType() const {
@@ -4035,20 +4035,20 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 	}
 
 	FormulaFunctionExpression::FormulaFunctionExpression(const std::string& name, const args_list& args, ConstFormulaPtr formula, ConstFormulaPtr precondition, const std::vector<std::string>& arg_names, const std::vector<variant_type_ptr>& variant_types)
-		: FunctionExpression(name, args, arg_names.size(), arg_names.size()),
-		formula_(formula), 
-		precondition_(precondition), 
-		arg_names_(arg_names), 
-		variant_types_(variant_types), 
-		star_arg_(-1), 
-		has_closure_(false), 
-		base_slot_(0)
+		: FunctionExpression(name, args, static_cast<int>(arg_names.size()), static_cast<int>(arg_names.size())),
+		  formula_(formula), 
+		  precondition_(precondition), 
+		  arg_names_(arg_names), 
+		  variant_types_(variant_types), 
+		  star_arg_(-1), 
+		  has_closure_(false), 
+		  base_slot_(0)
 	{
 		assert(!precondition_ || !precondition_->str().empty());
 		for(size_t n = 0; n != arg_names_.size(); ++n) {
 			if(arg_names_.empty() == false && arg_names_[n][arg_names_[n].size()-1] == '*') {
 				arg_names_[n].resize(arg_names_[n].size()-1);
-				star_arg_ = n;
+				star_arg_ = static_cast<int>(n);
 				break;
 			}
 		}
@@ -4166,9 +4166,9 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 		{
 			std::vector<ExpressionPtr> args = args_input;
 			if(args.size() + default_args_.size() >= args_.size()) {
-				const int base = args_.size() - default_args_.size();
+				const auto base = args_.size() - default_args_.size();
 				while(args.size() < args_.size()) {
-					const unsigned index = args.size() - base;
+					const auto index = args.size() - base;
 					ASSERT_LOG(index < default_args_.size(), "INVALID INDEX INTO DEFAULT ARGS: " << index << " / " << default_args_.size());
 					args.push_back(ExpressionPtr(new VariantExpression(default_args_[index])));
 				}

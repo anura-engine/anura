@@ -337,7 +337,7 @@ Level::Level(const std::string& level_cfg, variant node)
 	}
 	LOG_INFO("done building..." << profile::get_tick_time());
 
-	int begin_tile_index = tiles_.size();
+	auto begin_tile_index = tiles_.size();
 	for(variant tile_node : node["tile_map"].as_list()) {
 		variant tiles_value = tile_node["tiles"];
 		if(!tiles_value.is_string()) {
@@ -360,7 +360,7 @@ Level::Level(const std::string& level_cfg, variant node)
 		TileMap m(tile_node);
 		ASSERT_LOG(tile_maps_.count(m.zorder()) == 0, "repeated zorder in tile map: " << m.zorder());
 		tile_maps_[m.zorder()] = m;
-		const int before = tiles_.size();
+		const auto before = tiles_.size();
 		tile_maps_[m.zorder()].buildTiles(&tiles_);
 		LOG_INFO("LAYER " << m.zorder() << " BUILT " << (tiles_.size() - before) << " tiles");
 	}
@@ -379,7 +379,7 @@ Level::Level(const std::string& level_cfg, variant node)
 
 	ASSERT_LOG(compiled_itor == tiles_.end(), "INCORRECT NUMBER OF COMPILED TILES");
 
-	for(int i = begin_tile_index; i != tiles_.size(); ++i) {
+	for(std::vector<LevelTile>::size_type i = begin_tile_index; i != tiles_.size(); ++i) {
 		add_tile_solid(tiles_[i]);
 		layers_.insert(tiles_[i].zorder);
 	}
@@ -562,7 +562,7 @@ void Level::load_character(variant c)
 	chars_.push_back(Entity::build(c));
 	layers_.insert(chars_.back()->zorder());
 	if(!chars_.back()->isHuman()) {
-		chars_.back()->setId(chars_.size());
+		chars_.back()->setId(static_cast<int>(chars_.size()));
 	}
 	if(chars_.back()->isHuman()) {
 		if(players_.size() == multiplayer::slot()) {
@@ -571,7 +571,7 @@ void Level::load_character(variant c)
 		ASSERT_LOG(!g_player_type || g_player_type->match(variant(chars_.back().get())), "Player object being added to level does not match required player type. " << chars_.back()->getDebugDescription() << " is not a " << g_player_type->to_string());
 
 		players_.push_back(chars_.back());
-		players_.back()->getPlayerInfo()->setPlayerSlot(players_.size() - 1);
+		players_.back()->getPlayerInfo()->setPlayerSlot(static_cast<int>(players_.size() - 1));
 	}
 
 	const int group = chars_.back()->group();
@@ -713,7 +713,7 @@ void Level::finishLoading()
 	wml_chars_.clear();
 	serialized_objects_.clear();
 
-	controls::new_level(cycle_, players_.empty() ? 1 : players_.size(), multiplayer::slot());
+	controls::new_level(cycle_, players_.empty() ? 1 : static_cast<int>(players_.size()), multiplayer::slot());
 
 	//start loading FML for previous and next level
 	if(!previous_level().empty()) {
@@ -792,7 +792,7 @@ void Level::setMultiplayerSlot(int slot)
 {
 	ASSERT_INDEX_INTO_VECTOR(slot, players_);
 	last_touched_player_ = player_ = players_[slot];
-	controls::new_level(cycle_, players_.empty() ? 1 : players_.size(), slot);
+	controls::new_level(cycle_, players_.empty() ? 1 : static_cast<int>(players_.size()), slot);
 }
 
 void Level::load_save_point(const Level& lvl)
@@ -1352,7 +1352,7 @@ variant Level::write() const
 
 					bool found_non_opaque = false;
 					while(found_non_opaque == false) {
-						for(int n = rows < prev_rows ? v.size()-1 : 0; n != v.size(); ++n) {
+						for(int n = rows < prev_rows ? static_cast<int>(v.size())-1 : 0; n != static_cast<int>(v.size()); ++n) {
 							if(!opaque.count(OpaqueLoc(v[n].first, v[n].second + rows*TileSize))) {
 								found_non_opaque = true;
 								break;
@@ -1366,7 +1366,7 @@ variant Level::write() const
 
 					prev_rows = rows;
 
-					rect r(v.front().first, v.front().second, v.size()*TileSize, rows*TileSize);
+					rect r(v.front().first, v.front().second, static_cast<int>(v.size()*TileSize), rows*TileSize);
 					if(r.w()*r.h() > largest_rect.w()*largest_rect.h()) {
 						largest_rect = r;
 					}
@@ -1719,7 +1719,7 @@ void Level::prepare_tiles_for_drawing()
 
 	//remove tiles that are obscured by other tiles.
 	std::set<std::pair<int, int> > opaque;
-	for(int n = tiles_.size(); n > 0; --n) {
+	for(auto n = tiles_.size(); n > 0; --n) {
 		LevelTile& t = tiles_[n-1];
 		const TileMap& map = tile_maps_[t.zorder];
 		if(map.getXSpeed() != 100 || map.getYSpeed() != 100) {
@@ -2040,7 +2040,7 @@ void Level::frameBufferEnterZorder(int zorder) const
 			flushFrameBufferShadersToScreen();
 		} else {
 			bool add_shaders = false;
-			int count = 0;
+			std::vector<graphics::AnuraShader>::size_type count = 0;
 			for(auto& s : shaders) {
 				count = active_fb_shaders_.size() - std::count(active_fb_shaders_.begin(), active_fb_shaders_.end(), s);
 				if(std::count(active_fb_shaders_.begin(), active_fb_shaders_.end(), s) == 0) {
@@ -2221,7 +2221,7 @@ void Level::draw_background(int x, int y, int rotation) const
 
 				if(intersection.w() == screen_area.w() || intersection.h() == screen_area.h()) {
 					rect result[2];
-					const int nrects = geometry::rect_difference(screen_area, intersection, result);
+					const auto nrects = geometry::rect_difference(screen_area, intersection, result);
 					ASSERT_LOG(nrects <= 2, "TOO MANY RESULTS " << nrects << " IN " << screen_area << " - " << intersection);
 					if(nrects < 1) {
 						//background is completely obscured, so return
@@ -2895,7 +2895,7 @@ struct tile_on_point {
 
 bool Level::remove_tiles_at(int x, int y)
 {
-	const int nitems = tiles_.size();
+	const auto nitems = tiles_.size();
 	tiles_.erase(std::remove_if(tiles_.begin(), tiles_.end(), tile_on_point(x,y)), tiles_.end());
 	const bool result = nitems != tiles_.size();
 	prepare_tiles_for_drawing();
@@ -2918,7 +2918,7 @@ std::vector<point> Level::get_solid_contiguous_region(int xpos, int ypos) const
 	std::set<tile_pos> positions;
 	positions.insert(base);
 
-	int last_count = -1;
+	std::set<std::pair<int,int>>::size_type last_count = -1;
 	while(positions.size() != last_count) {
 		last_count = positions.size();
 
@@ -3136,7 +3136,7 @@ void Level::setSolid(LevelSolidMap& map, int x, int y, int friction, int tractio
 void Level::add_multi_player(EntityPtr p)
 {
 	last_touched_player_ = p;
-	p->getPlayerInfo()->setPlayerSlot(players_.size());
+	p->getPlayerInfo()->setPlayerSlot(static_cast<int>(players_.size()));
 	ASSERT_LOG(!g_player_type || g_player_type->match(variant(p.get())), "Player object being added to level does not match required player type. " << p->getDebugDescription() << " is not a " << g_player_type->to_string());
 	players_.push_back(p);
 	chars_.push_back(p);
@@ -3158,7 +3158,7 @@ void Level::add_player(EntityPtr p)
 	last_touched_player_ = player_ = p;
 	ASSERT_LOG(!g_player_type || g_player_type->match(variant(p.get())), "Player object being added to level does not match required player type. " << p->getDebugDescription() << " is not a " << g_player_type->to_string());
 	if(players_.empty()) {
-		player_->getPlayerInfo()->setPlayerSlot(players_.size());
+		player_->getPlayerInfo()->setPlayerSlot(static_cast<int>(players_.size()));
 		players_.push_back(player_);
 	} else {
 		ASSERT_LOG(player_->isHuman(), "Level::add_player(): Tried to add player to the level that isn't human.");
@@ -3310,7 +3310,7 @@ void Level::set_character_group(EntityPtr c, int group_num)
 int Level::add_group()
 {
 	groups_.resize(groups_.size() + 1);
-	return groups_.size() - 1;
+	return static_cast<int>(groups_.size() - 1);
 }
 
 void Level::editor_select_object(EntityPtr c)

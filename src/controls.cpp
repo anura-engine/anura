@@ -273,7 +273,7 @@ namespace controls
 			return 0;
 		}
 
-		return controls[local_player].size();
+		return static_cast<int>(controls[local_player].size());
 	}
 
 	void read_local_controls()
@@ -527,7 +527,7 @@ namespace controls
 		v.push_back(local_player);
 
 		//write our current cycle
-		int32_t current_cycle = controls[local_player].size()-1;
+		int32_t current_cycle = static_cast<int>(controls[local_player].size()) - 1;
 		int32_t current_cycle_net = htonl(current_cycle);
 		v.resize(v.size() + 4);
 		memcpy(&v[v.size()-4], &current_cycle_net, 4);
@@ -555,7 +555,7 @@ namespace controls
 		memcpy(&v[v.size()-4], &ncycles_to_write_net, 4);
 
 		for(int n = 0; n != ncycles_to_write; ++n) {
-			const int index = (controls[local_player].size() - ncycles_to_write) + n;
+			const int index = (static_cast<int>(controls[local_player].size()) - ncycles_to_write) + n;
 			v.push_back(controls[local_player][index].keys);
 			const char* user = controls[local_player][index].user.c_str();
 			v.insert(v.end(), user, user + controls[local_player][index].user.size()+1);

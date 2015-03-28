@@ -80,7 +80,6 @@ namespace graphics
 			ab->setDrawMode(KRE::DrawMode::TRIANGLE_STRIP);
 			addAttributeSet(ab);
 
-			ab->setCount(varray.size());
 			pos->update(&varray);
 
 			setColor(color_);
@@ -158,7 +157,6 @@ namespace graphics
 				ab->setDrawMode(DrawMode::TRIANGLE_FAN);
 				ab->setColor(color_);
 				addAttributeSet(ab);
-				ab->setCount(varray.size());
 				pos->update(varray);
 			}
 
@@ -302,7 +300,7 @@ namespace graphics
 					path.swap(new_path);
 				} else {
 					ASSERT_LOG(path.size() >= new_path.size(), "path.size() < new_path.size() : " << path.size() << " < " << new_path.size());
-					const int overlap = path.size()/2;
+					const auto overlap = path.size()/2;
 					for(int n = 0; n != overlap; ++n) {
 						const float ratio = static_cast<float>(n)/static_cast<float>(overlap);
 						glm::vec2& value = path[(path.size() - overlap) + n];
@@ -329,7 +327,7 @@ namespace graphics
 
 				float arrow_width = width_base_ - (width_base_ - width_head_) * ratio;
 
-				const int time_until_end = path.size() - 2 - n;
+				const auto time_until_end = path.size() - 2 - n;
 				if(time_until_end < arrow_head_length_) {
 					arrow_width = arrow_head_width_ * time_until_end;
 				}
@@ -509,7 +507,6 @@ namespace graphics
 			addAttributeSet(ab);
 
 			// might be better doing this in pre-render?
-			ab->setCount(varray_.size());
 			pos->update(&varray_);
 		}
 
@@ -642,7 +639,6 @@ namespace graphics
 			addAttributeSet(ab);
 
 			// might be better doing this in pre-render?
-			ab->setCount(varray_.size());
 			pos->update(&varray_);
 		}
 
@@ -786,7 +782,6 @@ namespace graphics
 
 		addAttributeSet(ab);
 
-		ab->setCount(v1array_.size());
 		pos->update(&v1array_);
 		col->update(&carray_);
 
@@ -799,7 +794,6 @@ namespace graphics
 			ll->setDrawMode(DrawMode::LINE_LOOP);
 			addAttributeSet(ll);
 
-			ll->setCount(v2array_.size());
 			ll_pos->update(&v2array_);
 		}
 	}

@@ -71,7 +71,7 @@ namespace game_logic
 				int index = 0;
 				for(const Entry& e : entries_) {
 					if(e.id == key) {
-						return base_getNumSlots() + index;
+						return getBaseNumSlots() + index;
 					}
 
 					++index;
@@ -88,11 +88,11 @@ namespace game_logic
 			}
 
 			Entry* getEntry(int slot) {
-				if(base_ && slot < base_getNumSlots()) {
+				if(base_ && slot < getBaseNumSlots()) {
 					return const_cast<FormulaCallableDefinition*>(base_.get())->getEntry(slot);
 				}
 
-				slot -= base_getNumSlots();
+				slot -= getBaseNumSlots();
 
 				if(slot < 0 || slot >= static_cast<int>(entries_.size())) {
 					return nullptr;
@@ -102,11 +102,11 @@ namespace game_logic
 			}
 
 			const Entry* getEntry(int slot) const {
-				if(base_ && slot < base_getNumSlots()) {
+				if(base_ && slot < getBaseNumSlots()) {
 					return base_->getEntry(slot);
 				}
 
-				slot -= base_getNumSlots();
+				slot -= getBaseNumSlots();
 
 				if(slot < 0 || slot >= static_cast<int>(entries_.size())) {
 					return nullptr;
@@ -115,7 +115,7 @@ namespace game_logic
 				return &entries_[slot];
 			}
 
-			int getNumSlots() const { return base_getNumSlots() + entries_.size(); }
+			int getNumSlots() const { return getBaseNumSlots() + static_cast<int>(entries_.size()); }
 
 			int getSubsetSlotBase(const FormulaCallableDefinition* subset) const
 			{
@@ -156,7 +156,7 @@ namespace game_logic
 			const Entry* getDefaultEntry() const { return default_entry_.get(); }
 
 		private:
-			int base_getNumSlots() const { return base_ ? base_->getNumSlots() : 0; }
+			int getBaseNumSlots() const { return base_ ? base_->getNumSlots() : 0; }
 			ConstFormulaCallableDefinitionPtr base_;
 			std::vector<Entry> entries_;
 
@@ -353,7 +353,7 @@ namespace game_logic
 	int add_callable_definition_init(void(*fn)())
 	{
 		callable_init_routines().push_back(fn);
-		return callable_init_routines().size();
+		return static_cast<int>(callable_init_routines().size());
 	}
 
 	void init_callable_definitions()

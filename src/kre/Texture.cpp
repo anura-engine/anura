@@ -249,7 +249,7 @@ namespace KRE
 			ASSERT_LOG(node["rect"].is_list(), "'rect' attribute must be a list of numbers.");
 			ASSERT_LOG(node["rect"].num_elements() >= 4, "'rect' attribute must have at least 4 elements.");
 			tp->src_rect = rect(node["rect"]);
-			const int n = std::distance(texture_params_.begin(), tp);
+			const int n = static_cast<int>(std::distance(texture_params_.begin(), tp));
 			tp->src_rect_norm = rectf::from_coordinates(getTextureCoordW(n, tp->src_rect.x1()), 
 				getTextureCoordH(n, tp->src_rect.y1()), 
 				getTextureCoordW(n, tp->src_rect.x2()), 
@@ -285,7 +285,7 @@ namespace KRE
 		}
 
 		tp->src_rect = rect(0, 0, tp->surface_width, tp->surface_height);
-		const int n = std::distance(texture_params_.begin(), tp);
+		const int n = static_cast<int>(std::distance(texture_params_.begin(), tp));
 		tp->src_rect_norm = rectf::from_coordinates(getTextureCoordW(n, tp->src_rect.x1()), 
 			getTextureCoordH(n, tp->src_rect.y1()), 
 			getTextureCoordW(n, tp->src_rect.x2()), 
@@ -389,7 +389,7 @@ namespace KRE
 		if(n < 0) {
 			for(auto tp = texture_params_.begin(); tp != texture_params_.end(); ++tp) {
 				tp->src_rect = r;
-				const int n = std::distance(texture_params_.begin(), tp);
+				const int n = static_cast<int>(std::distance(texture_params_.begin(), tp));
 				tp->src_rect_norm = rectf::from_coordinates(getTextureCoordW(n, tp->src_rect.x1()), 
 					getTextureCoordH(n, tp->src_rect.y1()), 
 					getTextureCoordW(n, tp->src_rect.x2()), 
@@ -443,7 +443,7 @@ namespace KRE
 			ASSERT_LOG(false, "adding palette at existing location. " << index << " internal: " << it->second << " id: " << id());
 			index = it->second;
 		} else {
-			int size = palette_row_map_.size();
+			int size = static_cast<int>(palette_row_map_.size());
 			LOG_DEBUG("adding palette '" << palette->getName() << "' at index: " << size << " from: " << index);
 			palette_row_map_[index] = size;
 			index = size;

@@ -88,7 +88,7 @@ bool SpeechDialog::handleMouseMove(int x, int y)
 	rect box(
 		graphics::GameScreen::get().getWidth() - option_width_/2 - OptionsBorder*2,
 		0,
-		option_width_ + OptionsBorder*2, OptionHeight*options_.size() + OptionsBorder*2
+		option_width_ + OptionsBorder*2, OptionHeight * static_cast<int>(options_.size()) + OptionsBorder*2
 	);
 	if(pointInRect(point(x, y), box)) {
 		option_selected_ = (y-box.y())/OptionHeight;
@@ -103,7 +103,7 @@ void SpeechDialog::moveUp()
 {
 	--option_selected_;
 	if(option_selected_ < 0) {
-		option_selected_ = options_.size() - 1;
+		option_selected_ = static_cast<int>(options_.size() - 1);
 	}
 }
 
@@ -148,7 +148,7 @@ bool SpeechDialog::scrollText()
 	if(text_.size() > 2) {
 		markup_.erase(markup_.begin());
 		text_.erase(text_.begin());
-		text_char_ = text_.front().size();
+		text_char_ = static_cast<int>(text_.front().size());
 		return false;
 	}
 
@@ -311,7 +311,7 @@ void SpeechDialog::draw() const
 	int nchars = text_char_;
 	for(unsigned n = 0; n < 2 && n < text_.size() && nchars > 0; ++n) {
 		std::string str(text_[n].begin(), text_[n].begin() +
-		                  std::min<int>(nchars, text_[n].size()));
+		                  std::min<int>(nchars, static_cast<int>(text_[n].size())));
 		//move the first line slightly up so that accents don't mess up centering
 		rect area = font->dimensions(str);
 		area = rect(text_left_align[n], ypos - 2, area.w(), area.h());
@@ -320,8 +320,8 @@ void SpeechDialog::draw() const
 		int xadj = 0;
 		const std::vector<TextMarkup>& markup = markup_[n];
 		for(int m = 0; m != markup.size(); ++m) {
-			const int begin_index = markup[m].begin;
-			const int end_index = std::min<int>(str.size(), m+1 == markup.size() ? str.size() : markup[m+1].begin);
+			const auto begin_index = markup[m].begin;
+			const auto end_index = std::min<int>(static_cast<int>(str.size()), m+1 == markup.size() ? static_cast<int>(str.size()) : static_cast<int>(markup[m+1].begin));
 			if(begin_index >= end_index) {
 				continue;
 			}
@@ -332,7 +332,7 @@ void SpeechDialog::draw() const
 		}
 		//add some space between the lines
 		ypos = area.y2() + 4;
-		nchars -= text_[n].size();
+		nchars -= static_cast<int>(text_[n].size());
 	}
 
 	if(text_.size() > 2 && text_char_ == num_chars() && (cycle_&16)) {
@@ -346,7 +346,7 @@ void SpeechDialog::draw() const
 		ConstFramedGuiElementPtr options_panel = FramedGuiElement::get("regular_window");
 		int xpos = vw/2 - option_width_/2 - OptionsBorder*2;
 		int ypos = 0;
-		options_panel->blit(xpos, ypos, OptionsBorder*4 + option_width_, OptionsBorder*2 + OptionHeight*options_.size(), true);
+		options_panel->blit(xpos, ypos, OptionsBorder*4 + option_width_, OptionsBorder*2 + static_cast<int>(OptionHeight*options_.size()), true);
 
 		xpos += OptionsBorder + OptionXPad;
 		ypos += OptionsBorder;
@@ -408,7 +408,7 @@ void SpeechDialog::setText(const std::vector<std::string>& text)
 			static const std::string EndEmStr = "</em>";
 			std::string::iterator begin_em = std::search(txt.begin(), txt.end(), BeginEmStr.begin(), BeginEmStr.end());
 			while(begin_em != txt.end()) {
-				const int begin_index = begin_em - txt.begin();
+				const auto begin_index = begin_em - txt.begin();
 				txt.erase(begin_em, begin_em + BeginEmStr.size());
 
 				TextMarkup m;
@@ -418,7 +418,7 @@ void SpeechDialog::setText(const std::vector<std::string>& text)
 
 				std::string::iterator end_em = std::search(txt.begin(), txt.end(), EndEmStr.begin(), EndEmStr.end());
 				if(end_em != txt.end()) {
-					const int end_index = end_em - txt.begin();
+					const auto end_index = end_em - txt.begin();
 					txt.erase(end_em, end_em + EndEmStr.size());
 
 					TextMarkup m;
@@ -457,11 +457,11 @@ int SpeechDialog::num_chars() const
 {
 	int res = 0;
 	if(text_.size() >= 1) {
-		res += text_[0].size();
+		res += static_cast<int>(text_[0].size());
 	}
 
 	if(text_.size() >= 2) {
-		res += text_[1].size();
+		res += static_cast<int>(text_[1].size());
 	}
 
 	return res;

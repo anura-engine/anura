@@ -147,7 +147,7 @@ namespace geometry
 			}
 
 			VoronoiDiagramGenerator v;
-			v.generateVoronoi(srcpts.get(), pts.size(), float(left_), float(right_), float(top_), float(bottom_));
+			v.generateVoronoi(srcpts.get(), static_cast<int>(pts.size()), static_cast<float>(left_), static_cast<float>(right_), static_cast<float>(top_), static_cast<float>(bottom_));
 			for(int n = 0; n != pts.size(); ++n) {
 				int npoints = 0;
 				PolygonPoint* pp = nullptr;

@@ -99,8 +99,8 @@ void Frame::buildPatterns(variant obj_variant)
 			ASSERT_LOG(surfaces.back()->width() <= 2048 && surfaces.back()->height() <= 2048, "Image too large: " << fname);
 		}
 
-		int frames_per_row = files.size();
-		int total_width = surfaces.front()->width()*surfaces.size();
+		int frames_per_row = static_cast<int>(files.size());
+		int total_width = surfaces.front()->width() * static_cast<int>(surfaces.size());
 		int total_height = surfaces.front()->height();
 		while(total_width > 2048) {
 			frames_per_row = frames_per_row/2 + frames_per_row%2;
@@ -140,7 +140,7 @@ void Frame::buildPatterns(variant obj_variant)
 		item.add_attr_mutation(variant("image"), variant("fbo"));
 		item.add_attr_mutation(variant("rect"), variant(&area));
 		item.add_attr_mutation(variant("frames_per_row"), variant(frames_per_row));
-		item.add_attr_mutation(variant("frames"), variant(surfaces.size()));
+		item.add_attr_mutation(variant("frames"), variant(static_cast<int>(surfaces.size())));
 		item.add_attr_mutation(variant("pad"), variant(0));
 	}
 }
@@ -304,7 +304,7 @@ Frame::Frame(variant node)
 
 	if(node.has_key("frame_info")) {
 		std::vector<int> values = node["frame_info"].as_list_int();
-		int num_values = values.size();
+		int num_values = static_cast<int>(values.size());
 
 		ASSERT_GT(num_values, 0);
 		ASSERT_EQ(num_values%8, 0);
@@ -346,7 +346,7 @@ Frame::Frame(variant node)
 			std::vector<int> values = value.second.as_list_int();
 
 			ASSERT_LOG(values.size()%2 == 0, "PIVOT POINTS IN INCORRECT FORMAT, ODD NUMBER OF INTEGERS");
-			const int num_points = values.size()/2;
+			const int num_points = static_cast<int>(values.size())/2;
 
 			int repeat = std::max<int>(1, (nframes_*frame_time_)/std::max<int>(1, num_points));
 			for(int n = 0; n != num_points; ++n) {
@@ -440,7 +440,7 @@ void Frame::buildAlphaFromFrameInfo()
 	}
 
 	if(force_no_alpha_) {
-		const int nsize = alpha_.size();
+		const auto nsize = alpha_.size();
 		alpha_.clear();
 		alpha_.resize(nsize, false);
 		return;
@@ -568,7 +568,7 @@ void Frame::buildAlpha()
 	}
 
 	if(force_no_alpha_) {
-		const int nsize = alpha_.size();
+		const auto nsize = alpha_.size();
 		alpha_.clear();
 		alpha_.resize(nsize, false);
 		return;

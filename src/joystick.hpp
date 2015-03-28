@@ -47,5 +47,5 @@ namespace joystick
 
 	int iphone_tilt();
 
-	std::vector<int> get_info();
+	std::vector<size_t> get_info();
 }

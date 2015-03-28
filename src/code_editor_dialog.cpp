@@ -280,7 +280,7 @@ void CodeEditorDialog::load_file(std::string fname, bool focus, std::function<vo
 		}
 
 		//in case any files have been inserted, update the index.
-		index = files_.size();
+		index = static_cast<int>(files_.size());
 		files_.push_back(f);
 	}
 
@@ -545,17 +545,17 @@ void CodeEditorDialog::process()
 	replace_label_->setVisible(show_replace);
 	replace_->setVisible(show_replace);
 
-	const int cursor_pos = editor_->rowColToTextPos(editor_->cursorRow(), editor_->cursorCol());
+	const int cursor_pos = static_cast<int>(editor_->rowColToTextPos(editor_->cursorRow(), editor_->cursorCol()));
 	const std::string& text = editor_->currentText();
 
 	const gui::code_editor_widget::ObjectInfo info = editor_->get_current_object();
 	const json::Token* selected_token = nullptr;
 	int token_pos = 0;
 	for(const json::Token& token : info.tokens) {
-		const int begin_pos = token.begin - text.c_str();
-		const int end_pos = token.end - text.c_str();
+		const auto begin_pos = token.begin - text.c_str();
+		const auto end_pos = token.end - text.c_str();
 		if(cursor_pos >= begin_pos && cursor_pos <= end_pos) {
-			token_pos = cursor_pos - begin_pos;
+			token_pos = static_cast<int>(cursor_pos - begin_pos);
 			selected_token = &token;
 			break;
 		}
@@ -599,7 +599,7 @@ void CodeEditorDialog::process()
 				}
 			}
 
-			suggestions_prefix_ = str.size();
+			suggestions_prefix_ = static_cast<int>(str.size());
 		} else if(selected_token->type == json::Token::TYPE::STRING) {
 			try {
 				const std::string formula_str(selected_token->begin, selected_token->end);
@@ -660,7 +660,7 @@ void CodeEditorDialog::process()
 						}
 					}
 
-					suggestions_prefix_ = identifier.size();
+					suggestions_prefix_ = static_cast<int>(identifier.size());
 				}
 			} catch(formula_tokenizer::TokenError&) {
 			}
@@ -694,8 +694,8 @@ void CodeEditorDialog::process()
 	}
 
 	if(suggestions_grid_) {
-		const std::pair<int,int> cursor_pos = editor_->charPositionOnScreen(editor_->cursorRow(), editor_->cursorCol());
-		suggestions_grid_->setLoc(x() + editor_->x() + cursor_pos.second, y() + editor_->y() + cursor_pos.first - suggestions_grid_->height());
+		const auto cursor_pos = editor_->charPositionOnScreen(editor_->cursorRow(), editor_->cursorCol());
+		suggestions_grid_->setLoc(static_cast<int>(x() + editor_->x() + cursor_pos.second), static_cast<int>(y() + editor_->y() + cursor_pos.first - suggestions_grid_->height()));
 		
 		if(suggestions_grid_->y() < 10) {
 			suggestions_grid_->setLoc(suggestions_grid_->x(), suggestions_grid_->y() + suggestions_grid_->height() + 14);
@@ -878,7 +878,7 @@ void CodeEditorDialog::onMoveCursor()
 			variant v = json::parse_from_file(fname_);
 			variant formula_str;
 			assert(v.is_map());
-			visitVariants(v, std::bind(visit_potential_formula_str, _1, &formula_str, editor_->cursorRow()+1, editor_->cursorCol()+1));
+			visitVariants(v, std::bind(visit_potential_formula_str, _1, &formula_str, static_cast<int>(editor_->cursorRow()+1), static_cast<int>(editor_->cursorCol()+1)));
 
 			if(formula_str.is_string()) {
 
@@ -894,7 +894,7 @@ void CodeEditorDialog::onMoveCursor()
 					}
 
 					variant result;
-					visit_potential_formula_str(f->strVal(), &result, editor_->cursorRow()+1, editor_->cursorCol()+1);
+					visit_potential_formula_str(f->strVal(), &result, static_cast<int>(editor_->cursorRow()+1), static_cast<int>(editor_->cursorCol()+1));
 					if(result.is_null()) {
 						continue;
 					}
@@ -996,13 +996,13 @@ void CodeEditorDialog::select_suggestion(int index)
 		LOG_INFO("SELECT " << suggestions_[index].suggestion);
 		const std::string& str = suggestions_[index].suggestion;
 		if(suggestions_prefix_ >= 0 && static_cast<unsigned>(suggestions_prefix_) < str.size()) {
-			const int col = editor_->cursorCol();
+			const int col = static_cast<int>(editor_->cursorCol());
 			const std::string insert(str.begin() + suggestions_prefix_, str.end());
 			const std::string postfix = suggestions_[index].postfix;
 			const std::string row = editor_->getData()[editor_->cursorRow()];
 			const std::string new_row = std::string(row.begin(), row.begin() + editor_->cursorCol()) + insert + postfix + std::string(row.begin() + editor_->cursorCol(), row.end());
 			editor_->setRowContents(editor_->cursorRow(), new_row);
-			editor_->setCursor(editor_->cursorRow(), col + insert.size() + suggestions_[index].postfix_index);
+			editor_->setCursor(editor_->cursorRow(), col + static_cast<int>(insert.size()) + suggestions_[index].postfix_index);
 		}
 	} else {
 		suggestions_grid_.reset();

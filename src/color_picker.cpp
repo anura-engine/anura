@@ -293,7 +293,7 @@ namespace gui
 			} else if(button.x >= 10+color_box_length_ && button.x <= 10+color_box_length_*2 && button.y >= 5 && button.y <= color_box_length_+5) {
 				main_color_selected_ = 0;
 			} else if(button.x >= 5 && button.x < 5 + 22*8 && button.y >= palette_offset_y_ && button.y <= palette_offset_y_ + static_cast<int>(palette_.size()/8*22)) {
-				size_t color_ndx = (button.y-palette_offset_y_)/22*8+(button.x-5)/22;
+				int color_ndx = (button.y-palette_offset_y_)/22*8+(button.x-5)/22;
 				if(color_ndx < palette_.size()) {
 					selected_palette_color_ = color_ndx;
 					if(!(SDL_GetModState()&KMOD_CTRL)) {
@@ -314,7 +314,7 @@ namespace gui
 		} else if(ev.type == SDL_MOUSEBUTTONDOWN && ev.button.button == SDL_BUTTON_RIGHT) {
 			const SDL_MouseButtonEvent& button = ev.button;
 			if(button.x >= 5 && button.x < 5 + 22*8 && button.y >= palette_offset_y_ && button.y <= palette_offset_y_ + static_cast<int>(palette_.size()/8*22)) {
-				size_t color_ndx = (button.y-palette_offset_y_)/22*8+(button.x-5)/22;
+				int color_ndx = (button.y-palette_offset_y_)/22*8+(button.x-5)/22;
 				if(color_ndx < palette_.size()) {
 					selected_palette_color_ = color_ndx;
 					if(!(SDL_GetModState()&KMOD_CTRL)) {

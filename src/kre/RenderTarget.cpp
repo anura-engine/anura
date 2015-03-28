@@ -29,11 +29,11 @@
 namespace KRE
 {
 	RenderTarget::RenderTarget(int width, int height, 
-		unsigned color_plane_count, 
+		int color_plane_count, 
 		bool depth, 
 		bool stencil, 
 		bool use_multi_sampling, 
-		unsigned multi_samples)
+		int multi_samples)
 		: width_(width),
 		  height_(height),
 		  color_attachments_(color_plane_count),

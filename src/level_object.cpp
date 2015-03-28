@@ -116,7 +116,7 @@ void create_compiled_tiles_image()
 	std::set<int> zorder_with_alpha_channel;
 
 	//calculate how many tiles are in each zorder
-	std::map<int, int> zorder_to_num_tiles;
+	std::map<int, std::vector<std::string>::size_type> zorder_to_num_tiles;
 	for(std::map<obj_variant_ptr, int>::const_iterator i = tile_nodes_to_zorders.begin(); i != tile_nodes_to_zorders.end(); ++i) {
 		obj_variant_ptr node = i->first;
 		std::vector<std::string> tiles_vec = util::split((*node)["tiles"].as_string(), '|');
@@ -139,8 +139,7 @@ void create_compiled_tiles_image()
 	//they'll go in the first tilesheet together, then those without.
 	for(int use_alpha_channel = 1; use_alpha_channel >= 0; --use_alpha_channel) {
 		LOG_INFO("ZORDER_PROC");
-		for(std::map<int, int>::const_iterator i = zorder_to_num_tiles.begin();
-		    i != zorder_to_num_tiles.end(); ++i) {
+		for(auto i = zorder_to_num_tiles.begin(); i != zorder_to_num_tiles.end(); ++i) {
 			if(zorder_with_alpha_channel.count(i->first) != use_alpha_channel) {
 				continue;
 			}
@@ -157,16 +156,16 @@ void create_compiled_tiles_image()
 	
 
 			if(sheet == tiles_in_sheet.size()) {
-				const int num_sheets = 1 + i->second/TilesInSheet;
+				const int num_sheets = static_cast<int>(1 + i->second / TilesInSheet);
 				LOG_INFO("ZORDER_ALLOC " << i->first << " (" << i->second << ") -> NEW SHEET " << sheet << "(" << num_sheets << ")");
 				for(int n = 0; n != num_sheets; ++n) {
 					tiles_in_sheet.push_back(0);
 					sheet_next_image_index.push_back(0);
 					sheets.push_back(Surface::create(1024, 1024, PixelFormat::PF::PIXELFORMAT_ARGB8888));
-					tiles_in_sheet[sheet+n] += i->second;
+					tiles_in_sheet[sheet+n] += static_cast<int>(i->second);
 				}
 			} else {
-				tiles_in_sheet[sheet] += i->second;
+				tiles_in_sheet[sheet] += static_cast<int>(i->second);
 			}
 
 			if(!(tiles_in_sheet[sheet] <= TilesInSheet)) {
@@ -178,7 +177,7 @@ void create_compiled_tiles_image()
 
 	LOG_INFO("NUM_TILES: " << tile_nodes_to_zorders.size() << " / " << TilesInSheet);
 
-	auto s = Surface::create(1024, (compiled_tile_ids.size()/64 + 1)*BaseTileSize, PixelFormat::PF::PIXELFORMAT_ARGB8888);
+	auto s = Surface::create(1024, static_cast<int>(compiled_tile_ids.size()/64 + 1) * BaseTileSize, PixelFormat::PF::PIXELFORMAT_ARGB8888);
 	for(auto& itor : compiled_tile_ids) {
 		const tile_id& tile_info = itor.first;
 		const std::string& filename = tile_info.first.first;
@@ -215,7 +214,7 @@ void create_compiled_tiles_image()
 	s->setBlendMode(Surface::BlendMode::BLEND_MODE_NONE);
 
 	for(auto& i : tile_nodes_to_zorders) {
-		const int num_tiles = zorder_to_num_tiles[i.second];
+		const int num_tiles = static_cast<int>(zorder_to_num_tiles[i.second]);
 		const int num_sheets = 1 + num_tiles/TilesInSheet;
 		int sheet = zorder_to_sheet_number[i.second];
 
@@ -538,11 +537,11 @@ LevelObject::LevelObject(variant node, const char* id)
 		if(!heights.empty()) {
 			solid_.resize(width()*height());
 			for(int x = 0; x < width(); ++x) {
-				const int heights_index = (heights.size()*x)/width();
-				assert(heights_index >= 0 && static_cast<unsigned>(heights_index) < heights.size());
+				const auto heights_index = (heights.size() * x) / width();
+				assert(heights_index < heights.size());
 				const int h = heights[heights_index];
 				for(int y = height() - h; y < height(); ++y) {
-					const int index = y*width() + x;
+					const int index = y * width() + x;
 					solid_[index] = true;
 				}
 			}
@@ -570,7 +569,7 @@ LevelObject::LevelObject(variant node, const char* id)
 	}
 	
 	if(preferences::compiling_tiles) {
-		tile_index_ = level_object_index.size();
+		tile_index_ = static_cast<int>(level_object_index.size());
 
 		//set solid colors to always false if we're compiling, since having
 		//solid colors will confuse the compilation.
@@ -612,7 +611,7 @@ LevelObject::LevelObject(variant node, const char* id)
 				tile_id id(filename_palette_pair(node_copy["image"].as_string(), palette), tile);
 				std::map<tile_id, int>::const_iterator itor = compiled_tile_ids.find(id);
 				if(itor == compiled_tile_ids.end()) {
-					compiled_tile_ids[id] = compiled_tile_ids.size();
+					compiled_tile_ids[id] = static_cast<int>(compiled_tile_ids.size());
 					itor = compiled_tile_ids.find(id);
 				}
 
@@ -791,7 +790,7 @@ void LevelObject::writeCompiledIndex(char* buf) const
 		getPalettesUsed(palettes);
 		std::vector<int>::const_iterator i = std::find(palettes.begin(), palettes.end(), npalette);
 		ASSERT_LOG(i != palettes.end(), "PALETTE NOT FOUND: " << npalette);
-		base64_encode(tile_index_ + 1 + (i - palettes.begin()), buf, 3);
+		base64_encode(static_cast<int>(tile_index_ + 1 + (i - palettes.begin())), buf, 3);
 	}
 }
 

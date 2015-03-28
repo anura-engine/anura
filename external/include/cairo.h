@@ -290,6 +290,8 @@ typedef struct _cairo_user_data_key {
  *   cairo_mesh_pattern_begin_patch()/cairo_mesh_pattern_end_patch()
  *   pair (Since 1.12)
  * @CAIRO_STATUS_DEVICE_FINISHED: target device has been finished (Since 1.12)
+ * @CAIRO_STATUS_JBIG2_GLOBAL_MISSING: %CAIRO_MIME_TYPE_JBIG2_GLOBAL_ID has been used on at least one image
+ *   but no image provided %CAIRO_MIME_TYPE_JBIG2_GLOBAL (Since 1.14)
  * @CAIRO_STATUS_LAST_STATUS: this is a special value indicating the number of
  *   status values defined in this enumeration.  When using this value, note
  *   that the version of cairo at run-time may have additional status values
@@ -345,6 +347,7 @@ typedef enum _cairo_status {
     CAIRO_STATUS_DEVICE_ERROR,
     CAIRO_STATUS_INVALID_MESH_CONSTRUCTION,
     CAIRO_STATUS_DEVICE_FINISHED,
+    CAIRO_STATUS_JBIG2_GLOBAL_MISSING,
 
     CAIRO_STATUS_LAST_STATUS
 } cairo_status_t;
@@ -2208,6 +2211,15 @@ cairo_surface_create_for_rectangle (cairo_surface_t	*target,
                                     double		 width,
                                     double		 height);
 
+/**
+ * cairo_surface_observer_mode_t:
+ * @CAIRO_SURFACE_OBSERVER_NORMAL: no recording is done
+ * @CAIRO_SURFACE_OBSERVER_RECORD_OPERATIONS: operations are recorded
+ *
+ * Whether operations should be recorded.
+ *
+ * Since: 1.12
+ **/
 typedef enum {
 	CAIRO_SURFACE_OBSERVER_NORMAL = 0,
 	CAIRO_SURFACE_OBSERVER_RECORD_OPERATIONS = 0x1
@@ -2419,6 +2431,9 @@ cairo_surface_set_user_data (cairo_surface_t		 *surface,
 #define CAIRO_MIME_TYPE_JP2 "image/jp2"
 #define CAIRO_MIME_TYPE_URI "text/x-uri"
 #define CAIRO_MIME_TYPE_UNIQUE_ID "application/x-cairo.uuid"
+#define CAIRO_MIME_TYPE_JBIG2 "application/x-cairo.jbig2"
+#define CAIRO_MIME_TYPE_JBIG2_GLOBAL "application/x-cairo.jbig2-global"
+#define CAIRO_MIME_TYPE_JBIG2_GLOBAL_ID "application/x-cairo.jbig2-global-id"
 
 cairo_public void
 cairo_surface_get_mime_data (cairo_surface_t		*surface,
@@ -2454,6 +2469,16 @@ cairo_surface_mark_dirty_rectangle (cairo_surface_t *surface,
 				    int              y,
 				    int              width,
 				    int              height);
+
+cairo_public void
+cairo_surface_set_device_scale (cairo_surface_t *surface,
+				double           x_scale,
+				double           y_scale);
+
+cairo_public void
+cairo_surface_get_device_scale (cairo_surface_t *surface,
+				double          *x_scale,
+				double          *y_scale);
 
 cairo_public void
 cairo_surface_set_device_offset (cairo_surface_t *surface,
@@ -3023,6 +3048,17 @@ cairo_matrix_transform_point (const cairo_matrix_t *matrix,
  **/
 typedef struct _cairo_region cairo_region_t;
 
+/**
+ * cairo_region_overlap_t:
+ * @CAIRO_REGION_OVERLAP_IN: The contents are entirely inside the region. (Since 1.10)
+ * @CAIRO_REGION_OVERLAP_OUT: The contents are entirely outside the region. (Since 1.10)
+ * @CAIRO_REGION_OVERLAP_PART: The contents are partially inside and
+ *     partially outside the region. (Since 1.10)
+ *
+ * Used as the return value for cairo_region_contains_rectangle().
+ *
+ * Since: 1.10
+ **/
 typedef enum _cairo_region_overlap {
     CAIRO_REGION_OVERLAP_IN,		/* completely inside region */
     CAIRO_REGION_OVERLAP_OUT,		/* completely outside region */

@@ -265,12 +265,12 @@ namespace KRE
 		if(PixelFormat::isIndexedFormat(getFrontSurface()->getPixelFormat()->getFormat())) {
 			// Is already an indexed format.
 			// Which means that texture_data_[0].palette should be already valid.
-			const int num_colors = texture_data_[0].palette.size();
+			const auto num_colors = texture_data_[0].palette.size();
 			ASSERT_LOG(num_colors > 0, "Indexed data format but no palette present. createTexture() probably not called.");
 			if(texture_data_[0].color_index_map.empty()) {
 				ASSERT_LOG(static_cast<int>(texture_data_.size()) == 1, "programmer bug");
-				for(int n = 0; n != num_colors; ++n) {
-					texture_data_[0].color_index_map[texture_data_[0].palette[n]] = n;
+				for(size_t n = 0; n != num_colors; ++n) {
+					texture_data_[0].color_index_map[texture_data_[0].palette[n]] = static_cast<int>(n);
 				}
 			}
 		} else {
@@ -293,8 +293,8 @@ namespace KRE
 
 				auto it = td.color_index_map.find(color);
 				if(it == td.color_index_map.end()) {
-					const int index = td.palette.size();
-					td.color_index_map[color] = index;
+					const auto index = td.palette.size();
+					td.color_index_map[color] = static_cast<uint8_t>(index);
 					new_pixels[x + y * rp] = static_cast<uint8_t>(index);
 					td.palette.emplace_back(color);
 				} else {
@@ -302,7 +302,7 @@ namespace KRE
 				}
 				ASSERT_LOG(td.palette.size() < 256, "Can't convert surface to palettized version. Too many colors in source image > 256");
 			});
-			surf->writePixels(&new_pixels[0], new_pixels.size());
+			surf->writePixels(&new_pixels[0], static_cast<int>(new_pixels.size()));
 			surf->setAlphaMap(getSurface(0)->getAlphaMap());
 
 			//LOG_DEBUG("adding palette '" << palette->getName() << "' to: " << getSurface(0)->getName() << ". " << td.color_index_map.size() << " colors in map");
@@ -325,7 +325,7 @@ namespace KRE
 		}
 
 		SurfacePtr new_palette_surface;
-		const int palette_width = texture_data_[0].palette.size();
+		const auto palette_width = texture_data_[0].palette.size();
 
 		if(texture_data_.size() > 1) {
 			// Already have a palette texture we can use.
@@ -334,7 +334,7 @@ namespace KRE
 		} else {
 			texture_data_.resize(2);
 			// We create a surface with <maximum_palette_variations> rows, this allows for a maximum of <maximum_palette_variations> palettes.
-			new_palette_surface = Surface::create(texture_data_[0].palette.size(), maximum_palette_variations, PixelFormat::PF::PIXELFORMAT_RGBA8888);
+			new_palette_surface = Surface::create(static_cast<int>(texture_data_[0].palette.size()), maximum_palette_variations, PixelFormat::PF::PIXELFORMAT_RGBA8888);
 			addSurface(new_palette_surface);
 			texture_data_[1].surface_format = new_palette_surface->getPixelFormat()->getFormat();
 			createTexture(1);
@@ -346,7 +346,7 @@ namespace KRE
 			for(auto& color : texture_data_[0].palette) {
 				new_pixels.emplace_back((color >> 24) & 0xff, (color >> 16) & 0xff, (color >> 8) & 0xff, color & 0xff);
 			}
-			updatePaletteRow(0, new_palette_surface, palette_width, new_pixels);
+			updatePaletteRow(0, new_palette_surface, static_cast<int>(palette_width), new_pixels);
 		}
 
 		// Create altered pixel data and update the surface/texture.
@@ -393,7 +393,7 @@ namespace KRE
 		}
 		//LOG_INFO("Mapped " << colors_mapped << " out of " << palette_width << " colors from palette");
 
-		updatePaletteRow(index, new_palette_surface, palette_width, new_pixels);
+		updatePaletteRow(index, new_palette_surface, static_cast<int>(palette_width), new_pixels);
 	}
 
 	void OpenGLTexture::createTexture(int n)
@@ -736,7 +736,7 @@ namespace KRE
 		if(get_current_bound_texture() == *texture_data_[0].id) {
 			return;
 		}
-		int n = texture_data_.size()-1;
+		int n = static_cast<int>(texture_data_.size() - 1);
 		for(auto it = texture_data_.rbegin(); it != texture_data_.rend(); ++it, --n) {
 			glActiveTexture(GL_TEXTURE0 + n + binding_point);
 			glBindTexture(GetGLTextureType(getType(n)), *it->id);
@@ -754,7 +754,7 @@ namespace KRE
 	void OpenGLTexture::rebuild()
 	{
 		// Delete the old ids
-		int num_tex = texture_data_.size();
+		int num_tex = static_cast<int>(texture_data_.size());
 		texture_data_.clear();
 		texture_data_.resize(num_tex);
 

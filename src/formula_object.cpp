@@ -318,7 +318,7 @@ std::map<std::string, std::string>& class_path_map()
 						ASSERT_LOG(key.as_string() != "", "Class " << class_name << " has property name which is empty");
 
 						if(properties_.count(key.as_string()) == 0) {
-							properties_[key.as_string()] = slots_.size();
+							properties_[key.as_string()] = static_cast<int>(slots_.size());
 							slots_.push_back(Entry(key.as_string()));
 							if(key.as_string()[0] == '_') {
 								slots_.back().private_counter++;
@@ -414,7 +414,7 @@ std::map<std::string, std::string>& class_path_map()
 				return &slots_[slot];
 			}
 			virtual int getNumSlots() const {
-				return slots_.size();
+				return static_cast<int>(slots_.size());
 			}
 
 			const std::string* getTypeName() const {
@@ -587,7 +587,7 @@ std::map<std::string, std::string>& class_path_map()
 			PropertyEntry entry(class_name, key.as_string(), prop_node, nstate_slots_);
 
 			if(properties_.count(key.as_string()) == 0) {
-				properties_[key.as_string()] = slots_.size();
+				properties_[key.as_string()] = static_cast<int>(slots_.size());
 				slots_.push_back(PropertyEntry());
 			}
 
@@ -973,7 +973,7 @@ variant FormulaObject::generateDiff(variant before, variant b)
 
 	variant_builder result;
 	result.add("delta", std::string(compressed.begin(), compressed.end()));
-	result.add("size", res_doc.size());
+	result.add("size", static_cast<int>(res_doc.size()));
 	return result.build();
 }
 

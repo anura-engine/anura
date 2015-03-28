@@ -26,7 +26,7 @@
 #include <deque>
 #include <iostream>
 
-#if !defined(_WINDOWS)
+#if !defined(_MSC_VER)
 #include <sys/time.h>
 #endif
 

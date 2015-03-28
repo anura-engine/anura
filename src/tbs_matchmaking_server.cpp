@@ -23,6 +23,8 @@
 
 //This file is designed to only work on Linux.
 
+#if !defined(_MSC_VER)
+
 #include <algorithm>
 #include <ctype.h>
 #include <deque>
@@ -31,8 +33,10 @@
 #include <iostream>
 
 #include <sys/types.h>
+#ifdef __linux__
 #include <sys/wait.h>
 #include <unistd.h>
+#endif
 
 #include "asserts.hpp"
 #include "db_client.hpp"
@@ -1047,3 +1051,5 @@ COMMAND_LINE_UTILITY(db_script) {
 	while(db->process()) {
 	}
 }
+
+#endif

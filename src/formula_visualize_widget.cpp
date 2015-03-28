@@ -226,8 +226,8 @@ namespace gui
 		parent = children_.back();
 		const std::vector<ConstExpressionPtr>& children = expr->queryChildren();
 		for(int n = 0; n != children.size(); ++n) {
-			const int xpos = children.size() == 1 ? x : (x - spacing/2 + (spacing*n)/(children.size()-1));
-			addExpression(children[n], xpos, y + 100, spacing/children.size(), depth+1, parent);
+			const int xpos = children.size() == 1 ? x : (x - spacing/2 + (spacing*n)/(static_cast<int>(children.size())-1));
+			addExpression(children[n], xpos, y + 100, spacing/static_cast<int>(children.size()), depth+1, parent);
 		}
 	}
 

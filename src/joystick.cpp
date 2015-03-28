@@ -387,9 +387,9 @@ namespace joystick
 		return 0;
 	}
 
-	std::vector<int> get_info() 
+	std::vector<size_t> get_info() 
 	{
-		std::vector<int> res;
+		std::vector<size_t> res;
 		res.push_back(joysticks.size());
 		for(auto j : joysticks) {
 			res.push_back(SDL_JoystickGetAxis(j.get(), 0));

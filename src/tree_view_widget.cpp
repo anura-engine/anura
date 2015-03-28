@@ -242,11 +242,11 @@ namespace gui
 		}
 		int str_chars = 0;
 		if(value->is_string()) {
-			str_chars = value->as_string().length();
+			str_chars = static_cast<int>(value->as_string().length());
 		} else if(value->is_numeric()) {
 			std::stringstream ss;
 			ss << *value;
-			str_chars = ss.str().length();
+			str_chars = static_cast<int>(ss.str().length());
 		} else if(value->is_null()) {
 			str_chars = 6;  // "<null>"
 		} else if(value->is_bool()) {
@@ -256,7 +256,7 @@ namespace gui
 		}
 		if(key.is_null() == false) {
 			if(int(key.as_string().length()*char_width_) > col_widths_[depth-1]) {
-				col_widths_[depth-1] = key.as_string().length()*char_width_;
+				col_widths_[depth-1] = static_cast<int>(key.as_string().length() * char_width_);
 				if(col_widths_[depth-1] > max_col_size_) {
 					col_widths_[depth-1] = max_col_size_;
 				}

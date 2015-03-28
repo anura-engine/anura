@@ -369,7 +369,7 @@ void Entity::setControlStatus(const std::string& key, bool value)
 		return;
 	}
 
-	const int index = k - keys;
+	const auto index = k - keys;
 	controls_[index] = value;
 }
 

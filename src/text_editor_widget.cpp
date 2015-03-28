@@ -103,7 +103,7 @@ namespace gui
 			return result;
 		}
 
-		void init_char_area(size_t font_size)
+		void init_char_area(int font_size)
 		{
 			if(char_textures.size() <= font_size) {
 				char_textures.resize(font_size+1);
@@ -253,7 +253,7 @@ namespace gui
 		}
 
 		if(v["select_all"].as_bool(false)) {
-			cursor_ = Loc(text_.size()-1, text_.back().size());
+			cursor_ = Loc(static_cast<int>(text_.size()-1), static_cast<int>(text_.back().size()));
 		}
 
 		init_clipboard();
@@ -275,9 +275,9 @@ namespace gui
 		return result;
 	}
 
-	void TextEditorWidget::setRowContents(int row, const std::string& value)
+	void TextEditorWidget::setRowContents(size_t row, const std::string& value)
 	{
-		ASSERT_LOG(row >= 0 && size_t(row) < text_.size(), "ILLEGAL ROW SET: " << row << " / " << text_.size());
+		ASSERT_LOG(row < text_.size(), "ILLEGAL ROW SET: " << row << " / " << text_.size());
 		text_[row] = value;
 		refreshScrollbar();
 		onChange();
@@ -287,13 +287,13 @@ namespace gui
 	{
 		search_matches_.clear();
 
-		for(int n = begin.row; n <= end.row && static_cast<unsigned>(n) < text_.size(); ++n) {
-			int begin_col = 0;
+		for(auto n = begin.row; n <= end.row && n < text_.size(); ++n) {
+			size_t begin_col = 0;
 			if(n == begin.row) {
 				begin_col = begin.col;
 			}
 
-			int end_col = text_[n].size();
+			size_t end_col = text_[n].size();
 			if(n == end.row) {
 				end_col = end.col;
 			}
@@ -325,11 +325,11 @@ namespace gui
 			xscroll_pos_ = scroll_pos_ = 0;
 		} else {
 			if(static_cast<unsigned>(select_.row) >= text_.size()) {
-				select_.row = text_.size() - 1;
+				select_.row = static_cast<int>(text_.size() - 1);
 			}
 
 			if(static_cast<unsigned>(cursor_.row) >= text_.size()) {
-				cursor_.row = text_.size() - 1;
+				cursor_.row = static_cast<int>(text_.size() - 1);
 			}
 		}
 
@@ -416,16 +416,16 @@ namespace gui
 			canvas->drawSolidRect(r.area, r.col);
 		}
 
-		int r = 0;
-		for(int n = scroll_pos_; static_cast<unsigned>(n) < text_.size() && r < nrows_; ++n, ++r) {
+		size_t r = 0;
+		for(auto n = scroll_pos_; n < text_.size() && r < nrows_; ++n, ++r) {
 			if(n >= begin_highlight_line_ && n <= end_highlight_line_) {
-				RectDraw rect_draw = { rect(xpos, ypos + r*char_height_, width(), char_height_), KRE::Color(255, 255, 255, 32) };
+				RectDraw rect_draw = { rect(xpos, static_cast<int>(ypos + r * char_height_), width(), char_height_), KRE::Color(255, 255, 255, 32) };
 				rects.push_back(rect_draw);
 			}
 
-			int c = 0;
+			size_t c = 0;
 			std::vector<std::pair<Loc, Loc> >::const_iterator search_itor = std::lower_bound(search_matches_.begin(), search_matches_.end(), std::pair<Loc,Loc>(Loc(n,0),Loc(n,0)));
-			for(int m = xscroll_pos_; static_cast<unsigned>(m) < text_[n].size(); ++m, ++c) {
+			for(auto m = xscroll_pos_; m < text_[n].size(); ++m, ++c) {
 				if(c >= ncols_) {
 					++r;
 					c -= ncols_;
@@ -448,7 +448,7 @@ namespace gui
 
 
 				if(pos >= begin_select && pos < end_select) {
-					RectDraw rect_draw = { rect(xpos + c*char_width_, ypos + r*char_height_, char_width_*char_size, char_height_), col };
+					RectDraw rect_draw = { rect(static_cast<int>(xpos + c*char_width_), static_cast<int>(ypos + r*char_height_), char_width_ * char_size, char_height_), col };
 
 					if(rects.empty() || !rects.back().merge(rect_draw)) {
 						rects.push_back(rect_draw);
@@ -458,7 +458,7 @@ namespace gui
 				} else {
 					for(std::vector<std::pair<Loc,Loc> >::const_iterator i = search_itor; i != search_matches_.end() && i->first <= pos; ++i) {
 						if(pos >= i->first && pos < i->second) {
-							RectDraw rect_draw = { rect(xpos + c*char_width_, ypos + r*char_height_, char_width_*char_size, char_height_), KRE::Color(255,255,0,128) };
+							RectDraw rect_draw = { rect(static_cast<int>(xpos + c*char_width_), static_cast<int>(ypos + r*char_height_), char_width_*char_size, char_height_), KRE::Color(255,255,0,128) };
 							if(rects.empty() || !rects.back().merge(rect_draw)) {
 								rects.push_back(rect_draw);
 							}
@@ -471,8 +471,8 @@ namespace gui
 				if(!util::c_isspace(ch) && util::c_isprint(ch)) {
 					const rectf& area = get_char_area(font_size_, ch);
 
-					const int x1 = (xpos + c*char_width_) & preferences::xypos_draw_mask;
-					const int y1 = (ypos + r*char_height_) & preferences::xypos_draw_mask;
+					const int x1 = static_cast<int>(xpos + c*char_width_) & preferences::xypos_draw_mask;
+					const int y1 = static_cast<int>(ypos + r*char_height_) & preferences::xypos_draw_mask;
 					const int x2 = (x1 + char_width_) & preferences::xypos_draw_mask;
 					const int y2 = (y1 + char_height_) & preferences::xypos_draw_mask;
 
@@ -492,7 +492,7 @@ namespace gui
 				if(cursor_.row == n && cursor_.col == m &&
 				   (profile::get_tick_time()%500 < 350 || !has_focus_) &&
 				   !clear_on_focus_) {
-					RectDraw rect_draw = { rect(xpos + c*char_width_+1, ypos + r*char_height_, 1, char_height_), KRE::Color::colorWhite() };
+					RectDraw rect_draw = { rect(static_cast<int>(xpos + c*char_width_+1), static_cast<int>(ypos + r*char_height_), 1, char_height_), KRE::Color::colorWhite() };
 					rects.push_back(rect_draw);
 				}
 
@@ -502,7 +502,7 @@ namespace gui
 			}
 
 			if(has_focus_ && cursor_.row == n && static_cast<unsigned>(cursor_.col) >= text_[n].size() && profile::get_tick_time()%500 < 350) {
-				RectDraw rect_draw = { rect(xpos + c*char_width_+1, ypos + r*char_height_, 1, char_height_), KRE::Color::colorWhite() };
+				RectDraw rect_draw = { rect(static_cast<int>(xpos + c*char_width_+1), static_cast<int>(ypos + r*char_height_), 1, char_height_), KRE::Color::colorWhite() };
 				rects.push_back(rect_draw);
 			}
 		}
@@ -574,8 +574,8 @@ namespace gui
 				if(text_.size() > 2 && static_cast<unsigned>(cursor_.row) < text_.size()-3) {
 					cursor_.row += 3;
 					scroll_pos_ += 3;
-					if(static_cast<unsigned>(scroll_pos_) > text_.size()){ 
-						scroll_pos_ = text_.size(); 
+					if(scroll_pos_ > static_cast<int>(text_.size())){ 
+						scroll_pos_ = static_cast<int>(text_.size()); 
 					}
 					cursor_.col = findEquivalentCol(cursor_.col, cursor_.row-3, cursor_.row);
 					onMoveCursor();
@@ -599,27 +599,19 @@ namespace gui
 		}
 
 		if(nrows_ == 1 && value) {
-			cursor_ = Loc(0, text_.front().size());
+			cursor_ = Loc(0, static_cast<int>(text_.front().size()));
 			select_ = Loc(0, 0);
 			onMoveCursor();
 		}
 	}
 
-	void TextEditorWidget::setCursor(int row, int col, bool move_selection)
+	void TextEditorWidget::setCursor(size_t row, size_t col, bool move_selection)
 	{
-		if(row < 0) {
-			row = 0;
-		}
-
-		if(col < 0) {
-			col = 0;
-		}
-
-		if(static_cast<unsigned>(row) >= text_.size()) {
+		if(row >= text_.size()) {
 			row = text_.size() - 1;
 		}
 
-		if(static_cast<unsigned>(col) > text_[row].size()) {
+		if(col > text_[row].size()) {
 			col = text_[row].size();
 		}
 
@@ -632,32 +624,32 @@ namespace gui
 		onMoveCursor();
 	}
 
-	int TextEditorWidget::rowColToTextPos(int row, int col) const
+	size_t TextEditorWidget::rowColToTextPos(size_t row, size_t col) const
 	{
-		if(static_cast<unsigned>(col) > text_[row].size()) {
+		if(col > text_[row].size()) {
 			col = text_[row].size();
 		}
 
-		int result = 0;
-		for(unsigned n = 0; n != row; ++n) {
+		size_t result = 0;
+		for(size_t n = 0; n != row; ++n) {
 			result += text_[n].size() + 1;
 		}
 
 		return result + col;
 	}
 
-	std::pair<int,int> TextEditorWidget::text_pos_to_row_col(int pos) const
+	std::pair<size_t,size_t> TextEditorWidget::text_pos_to_row_col(size_t pos) const
 	{
-		int nrow = 0;
-		while(static_cast<unsigned>(pos) > text_[nrow].size()+1) {
+		size_t nrow = 0;
+		while(pos > text_[nrow].size()+1) {
 			pos -= text_[nrow].size()+1;
 			++nrow;
 		}
 
-		return std::pair<int,int>(nrow, pos);
+		return std::pair<size_t,size_t>(nrow, pos);
 	}
 
-	void TextEditorWidget::setHighlightLines(int begin, int end)
+	void TextEditorWidget::setHighlightLines(size_t begin, size_t end)
 	{
 		begin_highlight_line_ = begin;
 		end_highlight_line_ = end;
@@ -673,7 +665,7 @@ namespace gui
 		recordOp();
 		if(inWidget(event.x, event.y)) {
 			setFocus(true);
-			std::pair<int, int> pos = mousePositiontoRowCol(event.x, event.y);
+			auto pos = mousePositiontoRowCol(event.x, event.y);
 			if(pos.first != -1) {
 				cursor_.row = pos.first;
 				cursor_.col = pos.second;
@@ -734,7 +726,7 @@ namespace gui
 	{
 		int mousex, mousey;
 		if(is_dragging_ && has_focus_ && input::sdl_get_mouse_state(&mousex, &mousey)) {
-			std::pair<int, int> pos = mousePositiontoRowCol(event.x, event.y);
+			auto pos = mousePositiontoRowCol(event.x, event.y);
 			if(pos.first != -1) {
 				cursor_.row = pos.first;
 				cursor_.col = pos.second;
@@ -743,8 +735,8 @@ namespace gui
 
 			if(mousey >= y() + height() && scroll_pos_ < int(text_.size())-2) {
 				++scroll_pos_;
-				int end = scroll_pos_ + nrows_ - 1;
-				if(static_cast<unsigned>(end) >= text_.size()) {
+				auto end = scroll_pos_ + nrows_ - 1;
+				if(end >= text_.size()) {
 					end = text_.size() - 1;
 				}
 
@@ -771,8 +763,8 @@ namespace gui
 
 		if(event.keysym.sym == SDLK_a && (event.keysym.mod&KMOD_CTRL)) {
 			recordOp();
-			cursor_.row = text_.size()-1;
-			cursor_.col = text_[cursor_.row].size();
+			cursor_.row = static_cast<int>(text_.size() - 1);
+			cursor_.col = static_cast<int>(text_[cursor_.row].size());
 			onMoveCursor();
 			select_ = Loc(0, 0);
 			if(select_ != cursor_) {
@@ -823,7 +815,7 @@ namespace gui
 					}
 
 					const std::string& line = text_[select_.row];
-					int col = select_.col;
+					size_t col = select_.col;
 					while(col > 0 && !(util::c_isalnum(line[col-1]) || line[col-1] == '_')) {
 						--col;
 					}
@@ -846,7 +838,7 @@ namespace gui
 						saveUndoState();
 					}
 
-					select_ = Loc(select_.row, text_[select_.row].size());
+					select_ = Loc(select_.row, static_cast<int>(text_[select_.row].size()));
 					deleteSelection();
 					recordOp();
 					return true;
@@ -875,8 +867,8 @@ namespace gui
 				}
 			} else {
 
-				if(static_cast<unsigned>(cursor_.col) > text_[cursor_.row].size()) {
-					cursor_.col = text_[cursor_.row].size();
+				if(cursor_.col > static_cast<int>(text_[cursor_.row].size())) {
+					cursor_.col = static_cast<int>(text_[cursor_.row].size());
 				}
 
 				--cursor_.col;
@@ -885,7 +877,7 @@ namespace gui
 						cursor_.col = 0;
 					} else {
 						--cursor_.row;
-						cursor_.col = text_[cursor_.row].size();
+						cursor_.col = static_cast<int>(text_[cursor_.row].size());
 					}
 				}
 			}
@@ -904,10 +896,10 @@ namespace gui
 				}
 			} else {
 				++cursor_.col;
-				if(static_cast<unsigned>(cursor_.col) > text_[cursor_.row].size()) {
+				if(cursor_.col > static_cast<int>(text_[cursor_.row].size())) {
 					if(cursor_.row == text_.size()-1) {
 						--cursor_.col;
-					} else if(static_cast<unsigned>(cursor_.row) < text_.size()-1) {
+					} else if(cursor_.row < static_cast<int>(text_.size()-1)) {
 						++cursor_.row;
 						cursor_.col = 0;
 					} else {
@@ -991,11 +983,11 @@ namespace gui
 	#ifdef __APPLE__
 			cursor_.row = text_.size()-1;
 	#endif
-			if((SDL_GetModState()&KMOD_CTRL)) {
-				cursor_.row = text_.size()-1;
+			if(SDL_GetModState() & KMOD_CTRL) {
+				cursor_.row = static_cast<int>(text_.size() - 1);
 			}
 
-			cursor_.col = text_[cursor_.row].size();
+			cursor_.col = static_cast<int>(text_[cursor_.row].size());
 			onMoveCursor();
 			break;
 		case SDLK_DELETE:
@@ -1011,8 +1003,8 @@ namespace gui
 
 				if(event.keysym.sym == SDLK_BACKSPACE) {
 					//backspace is like delete but we move to the left first.
-					if(static_cast<unsigned>(cursor_.col) > text_[cursor_.row].size()) {
-						cursor_.col = text_[cursor_.row].size();
+					if(cursor_.col > static_cast<int>(text_[cursor_.row].size())) {
+						cursor_.col = static_cast<int>(text_[cursor_.row].size());
 					}
 
 					if(cursor_.row == 0 && cursor_.col == 0) {
@@ -1022,15 +1014,15 @@ namespace gui
 					--cursor_.col;
 					if(cursor_.col < 0) {
 						--cursor_.row;
-						cursor_.col = text_[cursor_.row].size();
+						cursor_.col = static_cast<int>(text_[cursor_.row].size());
 					}
 
 					onMoveCursor();
 				}
 
-				if(static_cast<unsigned>(cursor_.col) >= text_[cursor_.row].size()) {
-					if(text_.size() > static_cast<unsigned>(cursor_.row+1)) {
-						cursor_.col = text_[cursor_.row].size();
+				if(cursor_.col >= static_cast<int>(text_[cursor_.row].size())) {
+					if(static_cast<int>(text_.size()) > cursor_.row+1) {
+						cursor_.col = static_cast<int>(text_[cursor_.row].size());
 						text_[cursor_.row] += text_[cursor_.row+1];
 						text_.erase(text_.begin() + cursor_.row + 1);
 					}
@@ -1079,7 +1071,7 @@ namespace gui
 
 			new_line.insert(new_line.begin(), text_[cursor_.row].begin(), indent);
 
-			cursor_.col = indent - text_[cursor_.row].begin();
+			cursor_.col = static_cast<int>(indent - text_[cursor_.row].begin());
 
 			text_.insert(text_.begin() + cursor_.row + 1, new_line);
 			++cursor_.row;
@@ -1125,8 +1117,8 @@ namespace gui
 			saveUndoState();
 		}
 		deleteSelection();
-		if(static_cast<unsigned>(cursor_.col) > text_[cursor_.row].size()) {
-			cursor_.col = text_[cursor_.row].size();
+		if(cursor_.col > static_cast<int>(text_[cursor_.row].size())) {
+			cursor_.col = static_cast<int>(text_[cursor_.row].size());
 		}
 		for(const char* c = text; *c != 0; ++c) {
 			text_[cursor_.row].insert(text_[cursor_.row].begin() + cursor_.col, *c);
@@ -1166,14 +1158,14 @@ namespace gui
 
 		if(lines.size() == 1) {
 			text_[cursor_.row].insert(text_[cursor_.row].begin() + cursor_.col, lines.front().begin(), lines.front().end());
-			cursor_.col += lines.front().size();
+			cursor_.col += static_cast<int>(lines.front().size());
 			refreshScrollbar();
 			select_ = cursor_;
 		} else if(lines.size() >= 2) {
 			text_.insert(text_.begin() + cursor_.row + 1, lines.back() + std::string(text_[cursor_.row].begin() + cursor_.col, text_[cursor_.row].end()));
 			text_[cursor_.row] = std::string(text_[cursor_.row].begin(), text_[cursor_.row].begin() + cursor_.col) + lines.front();
 			text_.insert(text_.begin() + cursor_.row + 1, lines.begin()+1, lines.end()-1);
-			cursor_ = select_ = Loc(cursor_.row + lines.size() - 1, lines.back().size());
+			cursor_ = select_ = Loc(static_cast<int>(cursor_.row + lines.size() - 1), static_cast<int>(lines.back().size()));
 		}
 
 		onChange();
@@ -1189,12 +1181,12 @@ namespace gui
 		Loc begin = cursor_;
 		Loc end = select_;
 
-		if(static_cast<unsigned>(begin.col) > text_[begin.row].size()) {
-			begin.col = text_[begin.row].size();
+		if(begin.col > static_cast<int>(text_[begin.row].size())) {
+			begin.col = static_cast<int>(text_[begin.row].size());
 		}
 
-		if(static_cast<unsigned>(end.col) > text_[end.row].size()) {
-			end.col = text_[end.row].size();
+		if(end.col > static_cast<int>(text_[end.row].size())) {
+			end.col = static_cast<int>(text_[end.row].size());
 		}
 
 		if(end < begin) {
@@ -1225,12 +1217,12 @@ namespace gui
 			return;
 		}
 
-		if(static_cast<unsigned>(cursor_.col) > text_[cursor_.row].size()) {
-			cursor_.col = text_[cursor_.row].size();
+		if(cursor_.col > static_cast<int>(text_[cursor_.row].size())) {
+			cursor_.col = static_cast<int>(text_[cursor_.row].size());
 		}
 
-		if(static_cast<unsigned>(select_.col) > text_[select_.row].size()) {
-			select_.col = text_[select_.row].size();
+		if(select_.col > static_cast<int>(text_[select_.row].size())) {
+			select_.col = static_cast<int>(text_[select_.row].size());
 		}
 
 		if(select_ < cursor_) {
@@ -1250,19 +1242,19 @@ namespace gui
 		select_ = cursor_;
 	}
 
-	KRE::Color TextEditorWidget::getCharacterColor(int row, int col) const
+	KRE::Color TextEditorWidget::getCharacterColor(size_t row, size_t col) const
 	{
 		return text_color_;
 	}
 
-	std::pair<int, int> TextEditorWidget::mousePositiontoRowCol(int xpos, int ypos) const
+	std::pair<size_t, size_t> TextEditorWidget::mousePositiontoRowCol(int xpos, int ypos) const
 	{
 		const int xloc = x() + BorderSize;
 		const int yloc = y() + BorderSize;
 
-		int r = 0;
-		for(unsigned n = scroll_pos_; n < text_.size() && r < nrows_; ++n, ++r) {
-			int c = 0;
+		size_t r = 0;
+		for(size_t n = scroll_pos_; n < text_.size() && r < nrows_; ++n, ++r) {
+			size_t c = 0;
 			bool matches_row = ypos >= yloc + r*char_height_ && ypos < yloc + (r+1)*char_height_;
 			for(size_t m = xscroll_pos_; m < text_[n].size(); ++m, ++c) {
 				if(c >= ncols_) {
@@ -1280,7 +1272,7 @@ namespace gui
 				const int char_size = text_[n][m] == '\t' ? TabWidth : 1;
 
 				if(matches_row && xpos >= xloc + c*char_width_ && xpos < xloc + (c+char_size)*char_width_) {
-					return std::pair<int, int>(n, m);
+					return std::pair<size_t, size_t>(n, m);
 				}
 
 				if(text_[n][m] == '\t') {
@@ -1290,22 +1282,22 @@ namespace gui
 			}
 
 			if(matches_row) {
-				return std::pair<int, int>(n, text_[n].size());
+				return std::pair<size_t, size_t>(n, text_[n].size());
 			}
 		}
 
-		return std::pair<int, int>(-1,-1);
+		return std::pair<size_t, size_t>(-1,-1);
 	}
 
-	std::pair<int, int> TextEditorWidget::charPositionOnScreen(int row, int col) const
+	std::pair<size_t, size_t> TextEditorWidget::charPositionOnScreen(size_t row, size_t col) const
 	{
 		if(row < scroll_pos_) {
-			return std::pair<int, int>(-1, -1);
+			return std::pair<size_t, size_t>(-1, -1);
 		}
 
 		int r = 0;
 		for(size_t n = scroll_pos_; n < text_.size() && r < nrows_; ++n, ++r) {
-			int c = 0;
+			size_t c = 0;
 			size_t m;
 			for(m = 0; m < text_[n].size(); ++m, ++c) {
 				if(c >= ncols_) {
@@ -1317,7 +1309,7 @@ namespace gui
 				}
 
 				if(row == n && col == m) {
-					return std::pair<int, int>(BorderSize + r*char_height_, BorderSize + c*char_width_);
+					return std::pair<size_t, size_t>(BorderSize + r*char_height_, BorderSize + c*char_width_);
 				}
 
 				if(text_[n][m] == '\t') {
@@ -1327,21 +1319,21 @@ namespace gui
 			}
 
 			if(row == n && m == text_[n].size()) {
-				return std::pair<int, int>(BorderSize + r*char_height_, BorderSize + c*char_width_);
+				return std::pair<size_t, size_t>(BorderSize + r*char_height_, BorderSize + c*char_width_);
 			}
 		}
 
-		return std::pair<int, int>(-1,-1);
+		return std::pair<size_t, size_t>(-1,-1);
 	}
 
 	void TextEditorWidget::onPageUp()
 	{
-		int leap = nrows_ - 1;
+		size_t leap = nrows_ - 1;
 		while(scroll_pos_ > 0 && leap > 0) {
 			--scroll_pos_;
 			--leap;
 
-			for(int n = int(text_[scroll_pos_].size()) - ncols_; n > 0; n -= ncols_) {
+			for(size_t n = text_[scroll_pos_].size() - ncols_; n > 0; n -= ncols_) {
 				--leap;
 			}
 		}
@@ -1351,12 +1343,12 @@ namespace gui
 
 	void TextEditorWidget::onPageDown()
 	{
-		int leap = nrows_ - 1;
-		while(scroll_pos_ < int(text_.size())-2 && leap > 0) {
+		size_t leap = nrows_ - 1;
+		while(scroll_pos_ < text_.size()-2 && leap > 0) {
 			++scroll_pos_;
 			--leap;
 
-			for(int n = int(text_[scroll_pos_].size()) - ncols_; n > 0; n -= ncols_) {
+			for(size_t n = text_[scroll_pos_].size() - ncols_; n > 0; n -= ncols_) {
 				--leap;
 			}
 		}
@@ -1366,7 +1358,7 @@ namespace gui
 
 	void TextEditorWidget::onMoveCursor(bool auto_shift)
 	{
-		const int start_pos = scroll_pos_;
+		const size_t start_pos = scroll_pos_;
 		if(cursor_.row < scroll_pos_) {
 			scroll_pos_ = cursor_.row;
 		} else {
@@ -1377,7 +1369,7 @@ namespace gui
 
 		if(nrows_ == 1) {
 			if(cursor_.col < xscroll_pos_) {
-				xscroll_pos_ = std::max<int>(0, cursor_.col - 4);
+				xscroll_pos_ = std::max<size_t>(0, cursor_.col - 4);
 			} else if(cursor_.col >= xscroll_pos_ + ncols_) {
 				xscroll_pos_ = cursor_.col + 4 - ncols_;
 			}
@@ -1391,7 +1383,7 @@ namespace gui
 			select_ = cursor_;
 		}
 
-		ScrollableWidget::setYscroll(scroll_pos_*char_height_);
+		ScrollableWidget::setYscroll(static_cast<int>(scroll_pos_ * char_height_));
 
 		if(select_ != cursor_) {
 			//a mouse-based copy for X-style copy/paste
@@ -1403,10 +1395,10 @@ namespace gui
 		}
 	}
 
-	int TextEditorWidget::findEquivalentCol(int old_col, int old_row, int new_row) const
+	size_t TextEditorWidget::findEquivalentCol(size_t old_col, size_t old_row, size_t new_row) const
 	{
-		unsigned actual_pos = old_col + std::count(text_[old_row].begin(), text_[old_row].end(), '\t')*TabAdjust;
-		for(unsigned n = 0; n < actual_pos; ++n) {
+		auto actual_pos = old_col + std::count(text_[old_row].begin(), text_[old_row].end(), '\t') * TabAdjust;
+		for(size_t n = 0; n < actual_pos; ++n) {
 			if(n < text_[new_row].size() && text_[new_row][n] == '\t') {
 				actual_pos -= TabAdjust;
 			}
@@ -1425,7 +1417,7 @@ namespace gui
 		int total_rows = 0;
 		//See if it can all fit without a scrollbar.
 		for(int n = 0; n != text_.size(); ++n) {
-			const int rows = 1 + text_[n].size()/ncols_;
+			const int rows = static_cast<int>(1 + text_[n].size()/ncols_);
 			total_rows += rows;
 			if(total_rows > nrows_) {
 				break;
@@ -1439,18 +1431,18 @@ namespace gui
 			return;
 		}
 
-		setVirtualHeight(text_.size()*char_height_ + height() - char_height_);
+		setVirtualHeight(static_cast<int>(text_.size() * char_height_ + height() - char_height_));
 		setScrollStep(char_height_);
 		setArrowScrollStep(char_height_);
 
-		setYscroll(scroll_pos_*char_height_);
+		setYscroll(static_cast<int>(scroll_pos_ * char_height_));
 
 		updateScrollbar();
 	}
 
-	void TextEditorWidget::selectToken(const std::string& row, int& begin_row, int& end_row, int& begin_col, int& end_col)
+	void TextEditorWidget::selectToken(const std::string& row, size_t& begin_row, size_t& end_row, size_t& begin_col, size_t& end_col)
 	{
-		if(util::c_isdigit(row[begin_col]) || (row[begin_col] == '.' && static_cast<unsigned>(begin_col+1) < row.size() && util::c_isdigit(row[begin_col+1]))) {
+		if(util::c_isdigit(row[begin_col]) || (row[begin_col] == '.' && begin_col+1 < row.size() && util::c_isdigit(row[begin_col+1]))) {
 			while(begin_col >= 0 && (util::c_isdigit(row[begin_col]) || row[begin_col] == '.')) {
 				--begin_col;
 			}
@@ -1459,7 +1451,7 @@ namespace gui
 				++begin_col;
 			}
 
-			while(static_cast<unsigned>(end_col) < row.size() && (util::c_isdigit(row[end_col]) || row[end_col] == '.')) {
+			while(end_col < row.size() && (util::c_isdigit(row[end_col]) || row[end_col] == '.')) {
 				++end_col;
 			}
 		} else if(util::c_isalnum(row[begin_col]) || row[begin_col] == '_') {
@@ -1469,10 +1461,10 @@ namespace gui
 
 			++begin_col;
 
-			while(static_cast<unsigned>(end_col) < row.size() && (util::c_isalnum(row[end_col]) || row[end_col] == '_')) {
+			while(end_col < row.size() && (util::c_isalnum(row[end_col]) || row[end_col] == '_')) {
 				++end_col;
 			}
-		} else if(static_cast<unsigned>(end_col) < row.size()) {
+		} else if(end_col < row.size()) {
 			++end_col;
 		}
 	}
@@ -1547,12 +1539,12 @@ namespace gui
 
 	void TextEditorWidget::truncateColPosition()
 	{
-		if(static_cast<unsigned>(cursor_.col) > text_[cursor_.row].size()) {
-			cursor_.col = text_[cursor_.row].size();
+		if(cursor_.col > static_cast<int>(text_[cursor_.row].size())) {
+			cursor_.col = static_cast<int>(text_[cursor_.row].size());
 		}
 
-		if(static_cast<unsigned>(select_.col) > text_[select_.row].size()) {
-			select_.col = text_[select_.row].size();
+		if(select_.col > static_cast<int>(text_[select_.row].size())) {
+			select_.col = static_cast<int>(text_[select_.row].size());
 		}
 	}
 
@@ -1600,12 +1592,12 @@ namespace gui
 				boost::cmatch match;
 				const char* ptr = text_[n].c_str();
 				while(boost::regex_search(ptr, match, re)) {
-					const int base = ptr - text_[n].c_str();
+					const int base = static_cast<int>(ptr - text_[n].c_str());
 					const Loc begin(n, base + match.position());
 					const Loc end(n, base + match.position() + match.length());
 					search_matches_.push_back(std::pair<Loc,Loc>(begin,end));
 	
-					const int advance = match.position() + match.length();
+					const auto advance = match.position() + match.length();
 					if(advance == 0) {
 						break;
 					}

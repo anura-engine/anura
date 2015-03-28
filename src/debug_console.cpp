@@ -168,7 +168,7 @@ namespace debug_console
 			const KRE::Color& graph_color = GraphColors[colors_index%(sizeof(GraphColors)/sizeof(*GraphColors))];
 
 			const int gap = graph_cycle - p.second.last_cycle;
-			int index = (gap + p.second.samples.size()) - 1000;
+			int index = (gap + static_cast<int>(p.second.samples.size())) - 1000;
 			int pos = 0;
 			if(index < 0) {
 				pos -= index;
@@ -294,7 +294,7 @@ namespace debug_console
 		if(sys::file_exists(console_history_path())) {
 			try {
 				history_ = json::parse(sys::read_file(console_history_path())).as_list_string();
-				history_pos_ = history_.size();
+				history_pos_ = static_cast<int>(history_.size());
 			} catch(...) {
 			}
 		}
@@ -322,17 +322,17 @@ namespace debug_console
 		text_editor_->setOnEnterHandler(std::bind(&ConsoleDialog::onEnter, this));
 
 		text_editor_->setText(Prompt);
-		text_editor_->setCursor(0, Prompt.size());
+		text_editor_->setCursor(0, static_cast<int>(Prompt.size()));
 	}
 
 	void ConsoleDialog::onMoveCursor()
 	{
 		if(static_cast<unsigned>(text_editor_->cursorRow()) < text_editor_->getData().size()-1) {
-			text_editor_->setCursor(text_editor_->getData().size()-1, text_editor_->cursorCol());
+			text_editor_->setCursor(static_cast<int>(text_editor_->getData().size())-1, text_editor_->cursorCol());
 		}
 
 		if(static_cast<unsigned>(text_editor_->cursorCol()) < Prompt.size() && text_editor_->getData().back().size() >= Prompt.size()) {
-			text_editor_->setCursor(text_editor_->getData().size()-1, Prompt.size());
+			text_editor_->setCursor(static_cast<int>(text_editor_->getData().size())-1, Prompt.size());
 		}
 	}
 
@@ -353,13 +353,13 @@ namespace debug_console
 
 		ffl.erase(ffl.begin(), ffl.begin() + Prompt.size());
 		text_editor_->setText(text_editor_->text() + "\n" + Prompt);
-		text_editor_->setCursor(text_editor_->getData().size()-1, Prompt.size());
+		text_editor_->setCursor(static_cast<int>(text_editor_->getData().size())-1, Prompt.size());
 		if(!ffl.empty()) {
 			history_.push_back(ffl);
 			if(history_.size() > 128) {
 				history_.erase(history_.begin(), history_.begin() + history_.size()-96);
 			}
-			history_pos_ = history_.size();
+			history_pos_ = static_cast<int>(history_.size());
 			sys::write_file(console_history_path(), vector_to_variant(history_).write_json());
 
 			assert_recover_scope recover_from_assert;
@@ -421,9 +421,9 @@ namespace debug_console
 		m += msg + "\n";
 		m += text_editor_->getData().back();
 
-		int col = text_editor_->cursorCol();
+		auto col = text_editor_->cursorCol();
 		text_editor_->setText(m);
-		text_editor_->setCursor(text_editor_->getData().size()-1, col);
+		text_editor_->setCursor(static_cast<int>(text_editor_->getData().size())-1, col);
 	}
 
 	bool ConsoleDialog::handleEvent(const SDL_Event& event, bool claimed)
@@ -439,9 +439,9 @@ namespace debug_console
 					}
 
 					if(history_pos_ < 0) {
-						history_pos_ = history_.size();
-					} else if(static_cast<unsigned>(history_pos_) > history_.size()) {
-						history_pos_ = history_.size();
+						history_pos_ = static_cast<int>(history_.size());
+					} else if(history_pos_ > static_cast<int>(history_.size())) {
+						history_pos_ = static_cast<int>(history_.size());
 					}
 
 					loadHistory();
@@ -469,7 +469,7 @@ namespace debug_console
 		m += Prompt + str;
 		text_editor_->setText(m);
 
-		text_editor_->setCursor(text_editor_->getData().size()-1, text_editor_->getData().back().size());
+		text_editor_->setCursor(static_cast<int>(text_editor_->getData().size())-1, text_editor_->getData().back().size());
 	}
 
 	void ConsoleDialog::setFocus(game_logic::FormulaCallablePtr e)

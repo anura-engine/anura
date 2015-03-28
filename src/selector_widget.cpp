@@ -259,7 +259,7 @@ namespace gui
 		if(getEnvironment()) {
 			game_logic::MapFormulaCallable* callable = new game_logic::MapFormulaCallable(getEnvironment());
 			callable->add("selection", variant(s));
-			callable->add("selected", variant(current_selection_));
+			callable->add("selected", variant(static_cast<int>(current_selection_)));
 			variant v(callable);
 			variant value = change_handler_->execute(*callable);
 			getEnvironment()->executeCommand(value);
@@ -273,7 +273,7 @@ namespace gui
 		if(getEnvironment()) {
 			game_logic::MapFormulaCallable* callable = new game_logic::MapFormulaCallable(getEnvironment());
 			callable->add("selection", variant(s));
-			callable->add("selected", variant(current_selection_));
+			callable->add("selected", variant(static_cast<int>(current_selection_)));
 			variant v(callable);
 			variant value = change_handler_->execute(*callable);
 			getEnvironment()->executeCommand(value);

@@ -287,7 +287,7 @@ namespace gui
 		if(it == list_.end()) {
 			current_selection_ = -1;
 		} else {
-			current_selection_ = it - list_.begin();
+			current_selection_ = static_cast<int>(it - list_.begin());
 		}
 		if(on_select_) {
 			on_select_(current_selection_, editor_->text());

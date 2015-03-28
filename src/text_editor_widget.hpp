@@ -52,7 +52,7 @@ namespace gui
 		void redo();
 
 		struct Loc {
-			Loc(int r, int c) : row(r), col(c)
+			Loc(size_t r, size_t c) : row(r), col(c)
 			{}
 			bool operator==(const Loc& o) const { return row == o.row && col == o.col; }
 			bool operator!=(const Loc& o) const { return !(*this == o); }
@@ -60,7 +60,7 @@ namespace gui
 			bool operator>(const Loc& o) const { return o < *this; }
 			bool operator<=(const Loc& o) const { return operator==(o) || operator<(o); }
 			bool operator>=(const Loc& o) const { return o <= *this; }
-			int row, col;
+			size_t row, col;
 		};
 
 		const std::vector<std::string>& getData() const { return text_; }
@@ -83,28 +83,28 @@ namespace gui
 		bool hasFocus() const { return has_focus_; }
 		void setFocus(bool value);
 
-		int cursorRow() const { return cursor_.row; }
-		int cursorCol() const { return cursor_.col; }
+		size_t cursorRow() const { return cursor_.row; }
+		size_t cursorCol() const { return cursor_.col; }
 
-		void setCursor(int row, int col, bool move_selection=true);
+		void setCursor(size_t row, size_t col, bool move_selection=true);
 
 		//convert a row/col cursor position to a position within the text()
 		//string that is returned.
-		int rowColToTextPos(int row, int col) const;
+		size_t rowColToTextPos(size_t row, size_t col) const;
 
-		std::pair<int,int> text_pos_to_row_col(int pos) const;
+		std::pair<size_t,size_t> text_pos_to_row_col(size_t pos) const;
 
-		void setHighlightLines(int begin, int end);
+		void setHighlightLines(size_t begin, size_t end);
 		void clearHighlightLines();
 
-		std::pair<int, int> charPositionOnScreen(int row, int col) const;
+		std::pair<size_t, size_t> charPositionOnScreen(size_t row, size_t col) const;
 
-		void setRowContents(int row, const std::string& value);
+		void setRowContents(size_t row, const std::string& value);
 
 		void highlight(Loc begin, Loc end);
 
 	protected:
-		virtual void selectToken(const std::string& row, int& begin_row, int& end_row, int& begin_col, int& end_col);
+		virtual void selectToken(const std::string& row, size_t& begin_row, size_t& end_row, size_t& begin_col, size_t& end_col);
 
 		virtual void onChange();
 
@@ -114,7 +114,7 @@ namespace gui
 		void saveUndoState();
 		bool recordOp(const char* type=nullptr);
 
-		std::pair<int, int> mousePositiontoRowCol(int x, int y) const;
+		std::pair<size_t, size_t> mousePositiontoRowCol(int x, int y) const;
 
 		virtual void onMoveCursor(bool auto_shift=false);
 
@@ -133,14 +133,14 @@ namespace gui
 		void handlePaste(std::string txt);
 		void handleCopy(bool mouse_based=false);
 
-		virtual KRE::Color getCharacterColor(int row, int col) const;
+		virtual KRE::Color getCharacterColor(size_t row, size_t col) const;
 
 		void deleteSelection();
 
 		void onPageUp();
 		void onPageDown();
 
-		int findEquivalentCol(int old_col, int old_row, int new_row) const;
+		size_t findEquivalentCol(size_t old_col, size_t old_row, size_t new_row) const;
 
 		void onSetYscroll(int old_pos, int new_pos);
 
@@ -155,18 +155,18 @@ namespace gui
 
 		std::vector<std::string> text_;
 
-		size_t font_size_;
+		int font_size_;
 		int char_width_, char_height_;
 
 		Loc select_, cursor_;
 
-		int nrows_, ncols_;
-		int scroll_pos_;
+		size_t nrows_, ncols_;
+		size_t scroll_pos_;
 
 		//scroll pos for when we have a single row widget.
-		int xscroll_pos_;
+		size_t xscroll_pos_;
 
-		int begin_highlight_line_, end_highlight_line_;
+		size_t begin_highlight_line_, end_highlight_line_;
 	
 	bool editable_;
 		bool has_focus_;

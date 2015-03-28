@@ -66,7 +66,7 @@ namespace KRE
 
 		BlendEquationImplBasePtr getBlendEquationImpl() override;
 
-		void init(size_t width, size_t height) override;
+		void init(int width, int height) override;
 		void printDeviceInfo() override;
 
 		int queryParameteri(DisplayDeviceParameters param) override;
@@ -81,12 +81,12 @@ namespace KRE
 		AttributeSetPtr handleCreateAttributeSet(bool indexed, bool instanced) override;
 		HardwareAttributePtr handleCreateAttribute(AttributeBase* parent) override;
 
-		RenderTargetPtr handleCreateRenderTarget(size_t width, size_t height, 
-			size_t color_plane_count, 
+		RenderTargetPtr handleCreateRenderTarget(int width, int height, 
+			int color_plane_count, 
 			bool depth, 
 			bool stencil, 
 			bool use_multi_sampling, 
-			size_t multi_samples) override;
+			int multi_samples) override;
 		RenderTargetPtr handleCreateRenderTarget(const variant& node) override;
 		void doBlitTexture(const TexturePtr& tex, int dstx, int dsty, int dstw, int dsth, float rotation, int srcx, int srcy, int srcw, int srch) override;
 

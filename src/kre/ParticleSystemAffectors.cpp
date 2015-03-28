@@ -226,7 +226,7 @@ namespace KRE
 				if(particles.size() < 1) {
 					return;
 				}
-				int count = particles.size();
+				auto count = particles.size();
 				glm::vec3 sum(0.0f);
 				for(const auto& p : particles) {
 					sum += p.current.position;

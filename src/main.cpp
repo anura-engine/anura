@@ -62,7 +62,6 @@
 #include "gui_section.hpp"
 #include "i18n.hpp"
 #include "input.hpp"
-#include "iphone_device_info.h"
 #include "joystick.hpp"
 #include "json_parser.hpp"
 #include "level.hpp"
@@ -235,8 +234,8 @@ int load_module(const std::string& mod, std::vector<std::string>* argv)
 	module::reload(mod);
 	if(mod_info["arguments"].is_list()) {
 		const std::vector<std::string>& arguments = mod_info["arguments"].as_list_string();
-		int insertion_point = argv->size();
-		for(int i = 0; i != argv->size(); ++i) {
+		auto insertion_point = argv->size();
+		for(std::vector<std::string>::size_type i = 0; i != argv->size(); ++i) {
 			const char* utility_arg = "--module=";
 			if(std::equal(utility_arg, utility_arg+strlen(utility_arg), (*argv)[i].c_str())) {
 				insertion_point = i+1;

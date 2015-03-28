@@ -213,7 +213,7 @@ void MessageDialog::process()
 					if(event.key.keysym.sym == SDLK_UP) {
 						selected_option_--;
 						if(selected_option_ == -1) {
-							selected_option_ = options_.size() - 1;
+							selected_option_ = static_cast<int>(options_.size() - 1);
 						}
 						break;
 					}

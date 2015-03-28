@@ -238,10 +238,10 @@ namespace geometry
 	}
 
 	template<typename T> inline
-	int rect_difference(const Rect<T>& a, const Rect<T>& b, Rect<T>* output)
+	std::ptrdiff_t rect_difference(const Rect<T>& a, const Rect<T>& b, Rect<T>* output)
 	{
 		if (rects_intersect(a,b) == false){ //return empty if there's no intersection
-		return -1;
+			return -1;
 		}
 
 		/* returning 4 rectangles in this orientation:
@@ -256,17 +256,17 @@ namespace geometry
 		if(a.x() < b.x()) {
 			//get the left section of the source rectangle
 			*output++ = Rect<T>(a.x(), a.y(), b.x() - a.x(), a.h());
-			}
+		}
 
 		if(a.x() + a.w() > b.x() + b.w()) {
 			*output++ = Rect<T>(b.x() + b.w(), a.y(), (a.x() + a.w()) - (b.x() + b.w()), a.h());
-			}
+		}
 
 		if(a.y() < b.y()) {
 			const int x1 = std::max(a.x(), b.x());
 			const int x2 = std::min(a.x() + a.w(), b.x() + b.w());
 			*output++ = Rect<T>(x1, a.y(), x2 - x1, b.y() - a.y());
-			}
+		}
 
 		if(a.y() + a.h() > b.y() + b.h()) {
 			const int x1 = std::max(a.x(), b.x());

@@ -522,7 +522,7 @@ void init_object_definition(variant node, const std::string& id_, CustomObjectCa
 	object_type_definitions()[id_] = callable_definition_;
 
 	while(is_strict_ && !properties_to_infer.empty()) {
-		const int num_items = properties_to_infer.size();
+		const int num_items = static_cast<int>(properties_to_infer.size());
 		for(variant properties_node : node["properties"].as_list()) {
 			if(properties_node.is_string()) {
 				continue;
@@ -950,7 +950,7 @@ namespace
 int CustomObjectType::reloadModifiedCode()
 {
 	static int prev_nitems = 0;
-	const int nitems = cache().size();
+	const int nitems = static_cast<int>(cache().size());
 	if(prev_nitems == nitems && files_updated.empty()) {
 		return 0;
 	}
@@ -1494,7 +1494,7 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 				}
 			}
 
-			entry.slot = slot_properties_.size();
+			entry.slot = static_cast<int>(slot_properties_.size());
 			if(property_to_slot.count(k)) {
 				entry.slot = property_to_slot[k];
 			} else {

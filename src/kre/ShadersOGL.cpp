@@ -470,7 +470,7 @@ namespace KRE
 				if(info_len > 1) {
 					std::vector<char> info_log;
 					info_log.resize(info_len);
-					glGetShaderInfoLog(shader_, info_log.capacity(), nullptr, &info_log[0]);
+					glGetShaderInfoLog(shader_, static_cast<GLsizei>(info_log.capacity()), nullptr, &info_log[0]);
 					std::string s(info_log.begin(), info_log.end());
 					LOG_ERROR("Error compiling shader(" << name() << "): " << s);
 				}
@@ -603,7 +603,7 @@ namespace KRE
 				if(info_len > 1) {
 					std::vector<char> info_log;
 					info_log.resize(info_len);
-					glGetProgramInfoLog(object_, info_log.capacity(), nullptr, &info_log[0]);
+					glGetProgramInfoLog(object_, static_cast<GLsizei>(info_log.capacity()), nullptr, &info_log[0]);
 					std::string s(info_log.begin(), info_log.end());
 					LOG_ERROR("Error linking object: " << s);
 				}
@@ -626,7 +626,7 @@ namespace KRE
 			for(int i = 0; i < active_uniforms; i++) {
 				Actives u;
 				GLsizei size;
-				glGetActiveUniform(object_, i, name.size(), &size, &u.num_elements, &u.type, &name[0]);
+				glGetActiveUniform(object_, i, static_cast<GLsizei>(name.size()), &size, &u.num_elements, &u.type, &name[0]);
 				u.name = std::string(&name[0], &name[size]);
 
 				// Some drivers add a [0] on the end of array uniform names.
@@ -655,7 +655,7 @@ namespace KRE
 			for(int i = 0; i < active_attribs; i++) {
 				Actives a;
 				GLsizei size;
-				glGetActiveAttrib(object_, i, name.size(), &size, &a.num_elements, &a.type, &name[0]);
+				glGetActiveAttrib(object_, i, static_cast<GLsizei>(name.size()), &size, &a.num_elements, &a.type, &name[0]);
 				a.name = std::string(&name[0], &name[size]);
 				a.location = glGetAttribLocation(object_, a.name.c_str());
 				ASSERT_LOG(a.location >= 0, "Unable to determine the location of the attribute: " << a.name);
@@ -897,7 +897,7 @@ namespace KRE
 				for(int n = 0; n < value.num_elements(); ++n) {
 					v[n] = value[n].as_float();
 				}
-				glUniform2fv(u.location, v.size()/2, &v[0]);
+				glUniform2fv(u.location, static_cast<GLsizei>(v.size()/2), &v[0]);
 				break;
 			}
 			case GL_FLOAT_VEC3: {
@@ -908,7 +908,7 @@ namespace KRE
 				for(int n = 0; n < value.num_elements(); ++n) {
 					v[n] = value[n].as_float();
 				}
-				glUniform3fv(u.location, v.size()/3, &v[0]);
+				glUniform3fv(u.location, static_cast<GLsizei>(v.size()/3), &v[0]);
 				break;
 			}
 			case GL_FLOAT_VEC4: {
@@ -919,7 +919,7 @@ namespace KRE
 				for(int n = 0; n < value.num_elements(); ++n) {
 					v[n] = value[n].as_float();
 				}
-				glUniform4fv(u.location, v.size()/4, &v[0]);
+				glUniform4fv(u.location, static_cast<GLsizei>(v.size()/4), &v[0]);
 				break;
 			}
 			
@@ -947,7 +947,7 @@ namespace KRE
 				for(int n = 0; n < value.num_elements(); ++n) {
 					v[n] = value[n].as_int32();
 				}
-				glUniform2iv(u.location, v.size()/2, &v[0]);
+				glUniform2iv(u.location, static_cast<GLsizei>(v.size()/2), &v[0]);
 				break;
 			}
 			case GL_BOOL_VEC3:	
@@ -959,7 +959,7 @@ namespace KRE
 				for(int n = 0; n < value.num_elements(); ++n) {
 					v[n] = value[n].as_int32();
 				}
-				glUniform3iv(u.location, v.size()/3, &v[0]);
+				glUniform3iv(u.location, static_cast<GLsizei>(v.size()/3), &v[0]);
 				break;
 			}
 			case GL_BOOL_VEC4:
@@ -971,7 +971,7 @@ namespace KRE
 				for(int n = 0; n < value.num_elements(); ++n) {
 					v[n] = value[n].as_int32();
 				}
-				glUniform2iv(u.location, v.size()/4, &v[0]);
+				glUniform2iv(u.location, static_cast<GLsizei>(v.size()/4), &v[0]);
 				break;
 			}
 			
@@ -1176,7 +1176,7 @@ namespace KRE
 					attrdesc.getNumElements(), 
 					convert_render_variable_type(attrdesc.getVarType()), 
 					attrdesc.normalise(), 
-					attrdesc.getStride(), 
+					static_cast<GLsizei>(attrdesc.getStride()), 
 					reinterpret_cast<const GLvoid*>(attr_hw->value() + attr->getOffset() + attrdesc.getOffset()));
 				enabled_attribs_.emplace_back(loc);
 			}

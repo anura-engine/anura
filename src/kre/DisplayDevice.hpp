@@ -116,7 +116,7 @@ namespace KRE
 		virtual void clear(ClearFlags clr) = 0;
 		virtual void swap() = 0;
 
-		virtual void init(size_t width, size_t height) = 0;
+		virtual void init(int width, int height) = 0;
 		virtual void printDeviceInfo() = 0;
 
 		virtual void render(const Renderable* r) const = 0;
@@ -155,12 +155,12 @@ namespace KRE
 
 		static void blitTexture(const TexturePtr& tex, int dstx, int dsty, int dstw, int dsth, float rotation, int srcx, int srcy, int srcw, int srch);
 
-		static RenderTargetPtr renderTargetInstance(size_t width, size_t height, 
-			size_t color_plane_count=1, 
+		static RenderTargetPtr renderTargetInstance(int width, int height, 
+			int color_plane_count=1, 
 			bool depth=false, 
 			bool stencil=false, 
 			bool use_multi_sampling=false, 
-			size_t multi_samples=0);
+			int multi_samples=0);
 		static RenderTargetPtr renderTargetInstance(const variant& node);
 
 		virtual void setViewPort(const rect& vp) = 0;
@@ -193,12 +193,12 @@ namespace KRE
 		virtual AttributeSetPtr handleCreateAttributeSet(bool indexed, bool instanced) = 0;
 		virtual HardwareAttributePtr handleCreateAttribute(AttributeBase* parent) = 0;
 
-		virtual RenderTargetPtr handleCreateRenderTarget(size_t width, size_t height, 
-			size_t color_plane_count, 
+		virtual RenderTargetPtr handleCreateRenderTarget(int width, int height, 
+			int color_plane_count, 
 			bool depth, 
 			bool stencil, 
 			bool use_multi_sampling, 
-			size_t multi_samples) = 0;
+			int multi_samples) = 0;
 		virtual RenderTargetPtr handleCreateRenderTarget(const variant& node) = 0;
 
 		virtual bool handleReadPixels(int x, int y, unsigned width, unsigned height, ReadFormat fmt, AttrFormat type, void* data, int stride) = 0;
