@@ -155,7 +155,7 @@ const game_logic::FormulaCallableDefinition::Entry* CustomObjectCallable::getEnt
 void CustomObjectCallable::addProperty(const std::string& id, variant_type_ptr type, variant_type_ptr write_type, bool requires_initialization, bool is_private)
 {
 	if(properties_.count(id) == 0) {
-		properties_[id] = entries_.size();
+		properties_[id] = static_cast<int>(entries_.size());
 		entries_.push_back(Entry(id));
 	}
 

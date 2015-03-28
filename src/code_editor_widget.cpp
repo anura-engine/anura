@@ -96,7 +96,7 @@ namespace gui
 							case formula_tokenizer::FFL_TOKEN_TYPE::LSQUARE:
 							case formula_tokenizer::FFL_TOKEN_TYPE::LBRACKET:
 								opening_brackets.resize(opening_brackets.size()+1);
-								opening_brackets.back().push_back(std::pair<int,int>(colors_.size()-1, colors_.back().size()));
+								opening_brackets.back().push_back(std::pair<int,int>(static_cast<int>(colors_.size())-1, static_cast<int>(colors_.back().size())));
 								break;
 							case formula_tokenizer::FFL_TOKEN_TYPE::RPARENS:
 							case formula_tokenizer::FFL_TOKEN_TYPE::RSQUARE:
@@ -104,8 +104,8 @@ namespace gui
 								if(opening_brackets.empty()) {
 									error_color = true;
 								} else {
-									opening_brackets.back().push_back(std::pair<int,int>(colors_.size()-1, colors_.back().size()));
-									std::pair<int,int> key(colors_.size()-1, colors_.back().size());
+									opening_brackets.back().push_back(std::pair<int,int>(static_cast<int>(colors_.size())-1, static_cast<int>(colors_.back().size())));
+									std::pair<int,int> key(static_cast<int>(colors_.size())-1, static_cast<int>(colors_.back().size()));
 									for(int n = 0; n != opening_brackets.back().size(); ++n) {
 										bracket_match_[opening_brackets.back()[n]] = opening_brackets.back();
 									}
@@ -114,7 +114,7 @@ namespace gui
 								break;
 							case formula_tokenizer::FFL_TOKEN_TYPE::COMMA:
 								if(opening_brackets.empty() == false) {
-									opening_brackets.back().push_back(std::pair<int,int>(colors_.size()-1, colors_.back().size()));
+									opening_brackets.back().push_back(std::pair<int,int>(static_cast<int>(colors_.size())-1, static_cast<int>(colors_.back().size())));
 								}
 								break;
 							default:
@@ -224,9 +224,9 @@ namespace gui
 		return colors_[row][col];
 	}
 
-	void code_editor_widget::selectToken(const std::string& row, int& begin_row, int& end_row, int& begin_col, int& end_col)
+	void code_editor_widget::selectToken(const std::string& row, size_t& begin_row, size_t& end_row, size_t& begin_col, size_t& end_col)
 	{
-		std::pair<int,int> key(begin_row, begin_col);
+		std::pair<int,int> key(static_cast<int>(begin_row), static_cast<int>(begin_col));
 		if(bracket_match_.count(key)) {
 			begin_row = bracket_match_.find(key)->second.front().first;
 			begin_col = bracket_match_.find(key)->second.front().second;
@@ -272,14 +272,14 @@ namespace gui
 					slider_->setPosition(0.25f);
 				}
 
-				std::pair<int,int> pos = charPositionOnScreen(begin_row, (begin_col+end_col)/2);
+				auto pos = charPositionOnScreen(begin_row, (begin_col+end_col)/2);
 
-				row_slider_ = begin_row;
-				begin_col_slider_ = begin_col;
-				end_col_slider_ = end_col;
+				row_slider_ = static_cast<int>(begin_row);
+				begin_col_slider_ = static_cast<int>(begin_col);
+				end_col_slider_ = static_cast<int>(end_col);
 
-				int x = pos.second - slider_->width()/2;
-				int y = pos.first + 20 - slider_->height();
+				int x = static_cast<int>(pos.second) - slider_->width()/2;
+				int y = static_cast<int>(pos.first) + 20 - slider_->height();
 				if(x < 10) {
 					x = 10;
 				}
@@ -338,7 +338,7 @@ namespace gui
 		row.insert(row.begin() + begin_col_slider_, new_string.begin(), new_string.end());
 
 		const int old_end = end_col_slider_;
-		end_col_slider_ = begin_col_slider_ + new_string.size();
+		end_col_slider_ = begin_col_slider_ + static_cast<int>(new_string.size());
 
 		if(cursorRow() == row_slider_ && cursorCol() == old_end) {
 			setCursor(cursorRow(), end_col_slider_);
@@ -442,9 +442,9 @@ namespace gui
 
 	code_editor_widget::ObjectInfo code_editor_widget::get_object_at(int row, int col) const
 	{
-		const int pos = rowColToTextPos(row, col);
+		const auto pos = rowColToTextPos(row, col);
 		const char* ptr = currentText_.c_str() + pos;
-		ASSERT_LOG(pos >= 0 && static_cast<unsigned>(pos) <= currentText_.size(), "Unexpected position in code editor widget: " << pos << " / " << currentText_.size());
+		ASSERT_LOG(pos <= currentText_.size(), "Unexpected position in code editor widget: " << pos << " / " << currentText_.size());
 		const json::Token* begin_token = nullptr;
 		const json::Token* end_token = nullptr;
 		std::stack<const json::Token*> begin_stack;
@@ -489,7 +489,7 @@ namespace gui
 
 	code_editor_widget::ObjectInfo code_editor_widget::get_current_object() const
 	{
-		return get_object_at(cursorRow(), cursorCol());
+		return get_object_at(static_cast<int>(cursorRow()), static_cast<int>(cursorCol()));
 	}
 
 	void code_editor_widget::set_highlight_current_object(bool value)

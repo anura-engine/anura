@@ -295,7 +295,7 @@ namespace KRE
 		return res;
 	}
 
-	unsigned Surface::getColorCount(ColorCountFlags flags)
+	size_t Surface::getColorCount(ColorCountFlags flags)
 	{
 		return getColorHistogram(flags).size();
 	}

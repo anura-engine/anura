@@ -64,7 +64,7 @@ BASE_CXXFLAGS += -std=c++0x -g -fno-inline-functions \
 LDFLAGS?=-rdynamic
 
 # Compiler include options, used after CXXFLAGS and CPPFLAGS.
-INC := -Iinclude $(shell pkg-config --cflags x11 sdl2 glew SDL2_image SDL2_ttf libpng zlib freetype2 cairo)
+INC := -Iexternal/include $(shell pkg-config --cflags x11 sdl2 glew SDL2_image SDL2_ttf libpng zlib freetype2 cairo)
 
 ifdef STEAM_RUNTIME_ROOT
 	INC += -I$(STEAM_RUNTIME_ROOT)/include

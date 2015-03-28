@@ -79,7 +79,7 @@ namespace json
 		//std::cerr << errorMessage() << "\n";
 	}
 
-	ParseError::ParseError(const std::string& msg, const std::string& filename, int line, int col)
+	ParseError::ParseError(const std::string& msg, const std::string& filename, std::ptrdiff_t line, std::ptrdiff_t col)
 	  : message(msg), 
 	    fname(filename), 
 	    line(line), 
@@ -99,14 +99,14 @@ namespace json
 
 	namespace 
 	{
-		int get_line_num(const std::string& doc, int pos) 
+		std::ptrdiff_t get_line_num(const std::string& doc, std::ptrdiff_t pos) 
 		{
 			return 1 + std::count(doc.begin(), doc.begin() + pos, '\n');
 		}
 
-		int get_col_number(const std::string& doc, int pos) 
+		std::ptrdiff_t get_col_number(const std::string& doc, std::ptrdiff_t pos) 
 		{
-			const int init = pos;
+			const auto init = pos;
 			while(pos >= 0 && doc[pos] != '\n' && doc[pos] != '\r') {
 				--pos;
 			}
@@ -128,11 +128,11 @@ namespace json
 	}
 
 #define CHECK_PARSE(cond, msg, pos)						\
-		if(!(cond)) {									\
-			int ln = get_line_num(doc, (pos));			\
-			int col = get_col_number(doc, (pos));		\
+		do { if(!(cond)) {								\
+			auto ln = get_line_num(doc, (pos));			\
+			auto col = get_col_number(doc, (pos));		\
 			throw ParseError((msg), fname, ln, col);	\
-		}
+		} } while(0)
 
 	namespace 
 	{
@@ -159,16 +159,16 @@ namespace json
 		{
 			JsonObject(variant::debug_info debug_info, bool preprocess) 
 				: type(VAL_TYPE::NONE), 
-				is_base(false), 
-				is_call(false), 
-				is_deriving(false), 
-				is_merging(false), 
-				require_comma(false), 
-				require_colon(false), 
-				flatten(false), 
-				info(debug_info), 
-				begin_macro(nullptr), 
-				use_preprocessor(preprocess) 
+				  is_base(false), 
+				  is_call(false), 
+				  is_deriving(false), 
+				  is_merging(false), 
+				  require_comma(false), 
+				  require_colon(false), 
+				  flatten(false), 
+				  info(debug_info), 
+				  begin_macro(nullptr), 
+				  use_preprocessor(preprocess) 
 			{}
 			std::map<variant, variant> obj;
 			std::vector<variant> array;

@@ -48,7 +48,7 @@ const std::map<std::string, FunctionCreator*>& get_function_creators(const std::
 int register_function_creator(const std::string& module, const std::string& id, FunctionCreator* creator)
 {
 	function_creators()[module][id] = creator;
-	return function_creators()[module].size();
+	return static_cast<int>(function_creators()[module].size());
 }
 
 const std::vector<std::string>& function_helpstrings(const std::string& module)
@@ -59,7 +59,7 @@ const std::vector<std::string>& function_helpstrings(const std::string& module)
 int register_function_helpstring(const std::string& module, const std::string& str)
 {
 	helpstrings()[module].push_back(str);
-	return helpstrings()[module].size();
+	return static_cast<int>(helpstrings()[module].size());
 }
 
 COMMAND_LINE_UTILITY(document_ffl_functions)

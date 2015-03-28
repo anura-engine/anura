@@ -607,7 +607,7 @@ namespace module
 			}
 
 			attr[variant("md5")] = variant(md5::sum(contents));
-			attr[variant("size")] = variant(contents.size());
+			attr[variant("size")] = variant(static_cast<int>(contents.size()));
 
 			auto attr_copy = attr;
 
@@ -631,7 +631,7 @@ namespace module
 			const std::string contents = variant(&manifest_file).write_json();
 
 			attr[variant("md5")] = variant(md5::sum(contents));
-			attr[variant("size")] = variant(contents.size());
+			attr[variant("size")] = variant(static_cast<int>(contents.size()));
 
 			std::vector<char> data(contents.begin(), contents.end());
 

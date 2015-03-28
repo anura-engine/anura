@@ -125,7 +125,7 @@ namespace
 			base64::b64encode(sys::read_file(file)), 
 			std::bind(&upload_screenshot_info::finished, info.get(), _1, false),
 			std::bind(&upload_screenshot_info::finished, info.get(), _1, true),
-			[](int,int,bool){});
+			[](size_t,size_t,bool){});
 		while(!info->done) {
 			client.process();
 		}

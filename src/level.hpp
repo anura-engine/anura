@@ -289,7 +289,7 @@ public:
 	const std::vector<EntityPtr>& get_chars() const { return chars_; }
 	const std::vector<EntityPtr>& get_solid_chars() const;
 	void swap_chars(std::vector<EntityPtr>& v) { chars_.swap(v); solid_chars_.clear(); }
-	int num_active_chars() const { return active_chars_.size(); }
+	int num_active_chars() const { return static_cast<int>(active_chars_.size()); }
 
 	//function which, given the rect of the player's body will return true iff
 	//the player can currently "interact" with a portal or object. i.e. if

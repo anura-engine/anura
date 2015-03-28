@@ -62,7 +62,7 @@ namespace
 void Background::loadModifiedBackgrounds()
 {
 	static int prev_nitems = 0;
-	const int nitems = cache.size();
+	const int nitems = static_cast<int>(cache.size());
 	if(prev_nitems == nitems && files_updated.empty()) {
 		return;
 	}
@@ -332,23 +332,19 @@ namespace
 
 		rect sub_areas[4];
 		for(; opaque1 != opaque2; ++opaque1) {
-			const int result = geometry::rect_difference(area, *opaque1, sub_areas);
+			const auto result = geometry::rect_difference(area, *opaque1, sub_areas);
 			if(result == -1) {
 				continue;
 			}
 
 			if(result != 1) {
 				for(int n = 0; n < result; ++n) {
-
 					calculate_draw_areas(sub_areas[n], opaque1+1, opaque2, areas);
 				}
-
 				return;
 			}
-
 			area = sub_areas[0];
 		}
-
 		areas->emplace_back(area);
 	}
 }

@@ -54,12 +54,12 @@ namespace KRE
 		rect last_viewport;
 	}
 
-	FboOpenGL::FboOpenGL(unsigned width, unsigned height, 
-		unsigned color_plane_count, 
+	FboOpenGL::FboOpenGL(int width, int height, 
+		int color_plane_count, 
 		bool depth, 
 		bool stencil, 
 		bool use_multi_sampling, 
-		unsigned multi_samples)
+		int multi_samples)
 		: RenderTarget(width, height, color_plane_count, depth, stencil, use_multi_sampling, multi_samples),
 		uses_ext_(false),
 		depth_stencil_buffer_id_(0),

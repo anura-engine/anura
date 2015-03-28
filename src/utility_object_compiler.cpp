@@ -322,7 +322,7 @@ UTILITY(compile_objects)
 		}
 
 		if(match == -1) {
-			match = output_areas.size();
+			match = static_cast<int>(output_areas.size());
 			output_areas.push_back(output_area(num_output_images++));
 		}
 
@@ -493,7 +493,7 @@ struct SpritesheetAnimation {
 	}
 
 	int width() const {
-		return (cell_width()+3)*frames.size() + 4;
+		return static_cast<int>((cell_width() + 3) * frames.size() + 4);
 	}
 };
 
@@ -1176,7 +1176,7 @@ COMMAND_LINE_UTILITY(build_spritesheet_from_images)
 
 	int sheet_width = 0;
 	for(int nrow = 0; nrow != surfaces.size(); ++nrow) {
-		const int row_width = 3 + (3+cell_widths[nrow])*surfaces[nrow].size();
+		const int row_width = static_cast<int>(3 + (3+cell_widths[nrow]) * surfaces[nrow].size());
 		if(row_width > sheet_width) {
 			sheet_width = row_width;
 		}

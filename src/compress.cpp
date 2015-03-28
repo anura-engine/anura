@@ -26,6 +26,8 @@
 #include "unit_test.hpp"
 #include "zlib.h"
 
+#pragma comment(lib, "zlib1")
+
 #define CHUNK 16384
 
 namespace zip 
@@ -37,13 +39,13 @@ namespace zip
 			return data;
 		}
 
-		std::vector<char> output(compressBound(data.size()));
+		std::vector<char> output(compressBound(static_cast<int>(data.size())));
 
 		Bytef* dst = reinterpret_cast<Bytef*>(&output[0]);
-		uLongf dst_len = output.size();
+		uLongf dst_len = static_cast<uLongf>(output.size());
 		const Bytef* src = reinterpret_cast<const Bytef*>(&data[0]);
 
-		const int result = compress2(dst, &dst_len, src, data.size(), compression_level);
+		const int result = compress2(dst, &dst_len, src, static_cast<uLong>(data.size()), compression_level);
 		ASSERT_EQ(result, Z_OK);
 
 		output.resize(dst_len);
@@ -54,7 +56,7 @@ namespace zip
 	{
 		const unsigned int MAX_OUTPUT_SIZE = 256*1024*1024;
 
-		unsigned int output_size = data.size()*10;
+		unsigned int output_size = static_cast<int>(data.size())*10;
 		if(output_size > MAX_OUTPUT_SIZE) {
 			output_size = MAX_OUTPUT_SIZE;
 		}
@@ -63,10 +65,10 @@ namespace zip
 			std::vector<char> output(output_size);
 
 			Bytef* dst = reinterpret_cast<Bytef*>(&output[0]);
-			uLongf dst_len = output.size();
+			uLongf dst_len = static_cast<uLongf>(output.size());
 			const Bytef* src = reinterpret_cast<const Bytef*>(&data[0]);
 
-			const int result = uncompress(dst, &dst_len, src, data.size());
+			const int result = uncompress(dst, &dst_len, src, static_cast<uLong>(data.size()));
 			if(result == Z_OK) {
 				output.resize(dst_len);
 				return output;
@@ -83,14 +85,14 @@ namespace zip
 		std::vector<char> output(size);
 
 		Bytef* dst = reinterpret_cast<Bytef*>(&output[0]);
-		uLongf dst_len = output.size();
+		uLongf dst_len = static_cast<uLongf>(output.size());
 		const Bytef* src = reinterpret_cast<const Bytef*>(&data[0]);
 
-		const int result = uncompress(dst, &dst_len, src, data.size());
+		const int result = uncompress(dst, &dst_len, src, static_cast<uLong>(data.size()));
 		ASSERT_LOG(result != Z_MEM_ERROR, "Decompression out of memory");
 		ASSERT_LOG(result != Z_BUF_ERROR, "Insufficient space in output buffer");
 		ASSERT_LOG(result != Z_DATA_ERROR, "Compression data corrupt");
-		ASSERT_LOG(result == Z_OK && dst_len == output.size(), "FAILED TO DECOMPRESS " << data.size() << " BYTES OF DATA TO EXPECTED " << output.size() << " BYTES: " << " result = " << result << " (Z_OK = " << Z_OK << ") OUTPUT " << dst_len);
+		ASSERT_LOG(result == Z_OK && dst_len == static_cast<uLongf>(output.size()), "FAILED TO DECOMPRESS " << data.size() << " BYTES OF DATA TO EXPECTED " << output.size() << " BYTES: " << " result = " << result << " (Z_OK = " << Z_OK << ") OUTPUT " << dst_len);
 		return output;
 	}
 

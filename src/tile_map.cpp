@@ -168,11 +168,11 @@ struct TilePattern
 		assert(!patterns.empty());
 
 		//the main pattern is always the very middle one.
-		int main_tile = patterns.size()/2;
+		auto main_tile = patterns.size()/2;
 
 		int width = node["pattern_width"].as_int(static_cast<int>(sqrt(static_cast<float>(patterns.size()))));
 		assert(width != 0);
-		int height = patterns.size()/width;
+		int height = static_cast<int>(patterns.size() / width);
 
 		int top = -height/2;
 		int left = -width/2;
@@ -188,13 +188,13 @@ struct TilePattern
 
 		current_tile_pattern = &get_regex_from_pool(patterns[main_tile].empty() ? "^$" : patterns[main_tile]);
 
-		for(int n = 0; n != patterns.size(); ++n) {
+		for(std::vector<std::string>::size_type n = 0; n != patterns.size(); ++n) {
 			if(n == main_tile) {
 				continue;
 			}
 
-			const int x = left + n%width;
-			const int y = top + n/width;
+			const int x = static_cast<int>(left + n % width);
+			const int y = static_cast<int>(top + n / width);
 			surrounding_tiles.push_back(SurroundingTile(x, y, patterns[n]));
 		}
 
@@ -655,7 +655,7 @@ variant TileMap::write() const
 	for(const std::vector<int>& row : map_) {
 		
 		//cut off any empty cells at the end.
-		int size = row.size();
+		auto size = row.size();
 		while(size > 2 && *pattern_index_[row[size-1]].str.data() == 0) {
 			--size;
 		}
@@ -666,7 +666,7 @@ variant TileMap::write() const
 		}
 
 		first = false;
-		for(int i = 0; i != size; ++i) {
+		for(std::vector<int>::size_type i = 0; i != size; ++i) {
 			if(i) {
 				tiles << ",";
 			}
@@ -768,7 +768,7 @@ int TileMap::getVariations(int x, int y) const
 		return 0;
 	}
 
-	return p->variations.size();
+	return static_cast<int>(p->variations.size());
 }
 
 int TileMap::variation(int x, int y) const

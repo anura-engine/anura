@@ -2478,7 +2478,6 @@ RETURN_TYPE("bool")
 	FUNCTION_DEF(add_object, 1, 1, "add_object(object): inserts the given object into the Level. The object should not currently be present in the Level. The position of the object is tweaked to make sure there are no solid overlaps, however if it is not possible to reasonably place the object without a solid overlap, then the object will not be placed and the object and caller will both receive the event add_object_fail.")
 
 		EntityPtr e(args()[0]->evaluate(variables).try_convert<Entity>());
-		CustomObject* obj;
 
 		if(e) {
 			add_object_command* cmd = (new add_object_command(e));

@@ -97,9 +97,9 @@ std::vector<std::map<std::string, variant> >& named_type_symbols()
 
 variant_type_ptr get_named_variant_type(const std::string& name)
 {
-	for(int n = named_type_cache().size()-1; n >= 0; --n) {
-		std::map<std::string, variant>& info = named_type_symbols()[n];
-		std::map<std::string, variant_type_ptr>& cache = named_type_cache()[n];
+	for(auto n = named_type_cache().size(); n > 0; --n) {
+		std::map<std::string, variant>& info = named_type_symbols()[n-1];
+		std::map<std::string, variant_type_ptr>& cache = named_type_cache()[n-1];
 
 		std::map<std::string,variant_type_ptr>::const_iterator itor = cache.find(name);
 		if(itor != cache.end()) {
@@ -781,7 +781,7 @@ public:
 
 	bool is_function(std::vector<variant_type_ptr>* args, variant_type_ptr* return_type, int* min_args, bool* return_type_specified) const
 	{
-		std::vector<std::vector<variant_type_ptr> > arg_lists(types_.size());
+		std::vector<std::vector<variant_type_ptr>> arg_lists(types_.size());
 		std::vector<variant_type_ptr> return_types(types_.size());
 		std::vector<int> min_args_list(types_.size());
 
@@ -790,8 +790,8 @@ public:
 		}
 
 		int max_min_args = -1;
-		int num_args = 0;
-		for(int n = 0; n != types_.size(); ++n) {
+		std::vector<std::vector<variant_type_ptr>>::size_type num_args = 0;
+		for(std::vector<variant_type_ptr>::size_type n = 0; n != types_.size(); ++n) {
 			bool return_type_spec = false;
 			if(!types_[n]->is_function(&arg_lists[n], &return_types[n], &min_args_list[n], &return_type_spec)) {
 				return false;
@@ -2037,7 +2037,7 @@ variant_type_ptr parse_variant_type(const variant& original_str,
 					++i1;
 					if(i1 != i2) {
 						if(min_args == -1) {
-							min_args = arg_types.size()-1;
+							min_args = static_cast<int>(arg_types.size()-1);
 						}
 						++i1;
 					}
@@ -2067,7 +2067,7 @@ variant_type_ptr parse_variant_type(const variant& original_str,
 			}
 
 			if(min_args == -1) {
-				min_args = arg_types.size();
+				min_args = static_cast<int>(arg_types.size());
 			}
 
 			v.push_back(variant_type::get_function_type(arg_types, return_type, min_args));
@@ -2345,7 +2345,7 @@ parse_optional_function_type(const variant& original_str,
 		return_type = parse_variant_type(original_str, i1, i2);
 	}
 
-	return variant_type::get_function_type(args, return_type, args.size() - optional_args);
+	return variant_type::get_function_type(args, return_type, static_cast<int>(args.size()) - optional_args);
 }
 
 variant_type_ptr parse_optional_function_type(const variant& type)

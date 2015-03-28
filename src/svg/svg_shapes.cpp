@@ -453,7 +453,7 @@ namespace KRE
 				} 
 				y += extent.y_advance;
 			}
-			cairo_glyph_path(ctx.cairo(), &glyphs[0], glyphs.size());
+			cairo_glyph_path(ctx.cairo(), &glyphs[0], static_cast<int>(glyphs.size()));
 			stroke_and_fill(ctx);
 			ctx.set_text_xy(x, y);
 		}

@@ -952,7 +952,7 @@ namespace game_logic
 			}
 
 			variant_type_ptr getVariantType() const {
-				return variant_type::get_function_type(type_info_->variant_types, type_info_->return_type, type_info_->variant_types.size() - type_info_->default_args.size());
+				return variant_type::get_function_type(type_info_->variant_types, type_info_->return_type, static_cast<int>(type_info_->variant_types.size() - type_info_->default_args.size()));
 			}
 
 			std::vector<ConstExpressionPtr> getChildren() const {
@@ -1007,7 +1007,7 @@ namespace game_logic
 			}
 
 			variant_type_ptr getVariantType() const {
-				return variant_type::get_function_type(type_info_->variant_types, type_info_->return_type, type_info_->variant_types.size() - type_info_->default_args.size());
+				return variant_type::get_function_type(type_info_->variant_types, type_info_->return_type, static_cast<int>(type_info_->variant_types.size() - type_info_->default_args.size()));
 			}
 
 			std::vector<ConstExpressionPtr> getChildren() const {
@@ -1399,11 +1399,12 @@ namespace game_logic
 
 				if(left.is_string()) {
 					const std::string& s = left.as_string();
-					if(begin_index > static_cast<int>(s.length())) {
-						begin_index = s.length();
+					int s_len = static_cast<int>(s.length());
+					if(begin_index > s_len) {
+						begin_index = s_len;
 					}
 					if(end_index > static_cast<int>(s.length())) {
-						end_index = s.length();
+						end_index = s_len;
 					}
 					if(s.length() == 0) {
 						return variant();
@@ -1990,7 +1991,7 @@ namespace game_logic
 				if(result.is_null()) {
 					std::vector<std::string>::const_iterator i = std::find(info_->names.begin(), info_->names.end(), key);
 					if(i != info_->names.end()) {
-						const int slot = i - info_->names.begin();
+						const int slot = static_cast<int>(i - info_->names.begin());
 						return getValueBySlot(info_->base_slot + slot);
 					}
 				}
@@ -2253,7 +2254,7 @@ namespace game_logic
 						}
 			
 						const std::string formula_str(i+BeginSub.size(), j);
-						const int pos = i - str.begin();
+						const auto pos = i - str.begin();
 						str.erase(i, j+1);
 			
 						substitution sub;
@@ -2304,7 +2305,7 @@ namespace game_logic
 			}
 	
 			struct substitution {
-				int pos;
+				std::ptrdiff_t pos;
 				ConstFormulaPtr calculation;
 			};
 	
@@ -3713,9 +3714,9 @@ void Formula::checkBracketsMatch(const std::vector<Token>& tokens) const
 		std::string error_line(begin_line, end_line);
 
 		if(whitespace.size() > 60) {
-			const int erase_size = whitespace.size() - 60;
+			const auto erase_size = whitespace.size() - 60;
 			whitespace.erase(whitespace.begin(), whitespace.begin() + erase_size);
-			ASSERT_LOG(static_cast<unsigned>(erase_size) <= error_line.size(), "ERROR WHILE PARSING ERROR MESSAGE: " << erase_size << " <= " << error_line.size() << " IN " << error_line);
+			ASSERT_LOG(erase_size <= error_line.size(), "ERROR WHILE PARSING ERROR MESSAGE: " << erase_size << " <= " << error_line.size() << " IN " << error_line);
 			error_line.erase(error_line.begin(), error_line.begin() + erase_size);
 			std::fill(error_line.begin(), error_line.begin() + 3, '.');
 		}

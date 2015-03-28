@@ -62,7 +62,6 @@
 #include "gui_section.hpp"
 #include "i18n.hpp"
 #include "input.hpp"
-#include "iphone_device_info.h"
 #include "joystick.hpp"
 #include "json_parser.hpp"
 #include "level.hpp"
@@ -118,6 +117,8 @@ namespace
 	PREF_BOOL(force_auto_update, false, "Will do a forced sync of auto-updates");
 	PREF_STRING(auto_update_anura, "", "Auto update Anura's binaries from the module server using the given name as the module ID (e.g. anura-windows might be the id for the windows binary)");
 	PREF_INT(auto_update_timeout, 5000, "Timeout to use on auto updates (given in milliseconds)");
+
+	PREF_BOOL(resizeable, false, "Window is dynamically resizeable.");
 
 #if defined(_MSC_VER)
 	const std::string anura_exe_name = "anura.exe";
@@ -233,8 +234,8 @@ int load_module(const std::string& mod, std::vector<std::string>* argv)
 	module::reload(mod);
 	if(mod_info["arguments"].is_list()) {
 		const std::vector<std::string>& arguments = mod_info["arguments"].as_list_string();
-		int insertion_point = argv->size();
-		for(int i = 0; i != argv->size(); ++i) {
+		auto insertion_point = argv->size();
+		for(std::vector<std::string>::size_type i = 0; i != argv->size(); ++i) {
 			const char* utility_arg = "--module=";
 			if(std::equal(utility_arg, utility_arg+strlen(utility_arg), (*argv)[i].c_str())) {
 				insertion_point = i+1;
@@ -806,6 +807,7 @@ int main(int argcount, char* argvec[])
 	hints.add("use_vsync", "false");
 	hints.add("width", preferences::requested_window_width() > 0 ? preferences::requested_window_width() : 800);
 	hints.add("height", preferences::requested_window_height() > 0 ? preferences::requested_window_height() : 600);
+	hints.add("resizeable", g_resizeable);
 
     KRE::WindowPtr main_wnd = wm.allocateWindow(hints.build());
 	main_wnd->setWindowTitle(module::get_module_pretty_name());

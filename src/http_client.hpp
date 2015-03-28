@@ -43,7 +43,7 @@ public:
 	                  const std::string& request,
 					  std::function<void(std::string)> handler,
 					  std::function<void(std::string)> error_handler,
-					  std::function<void(int,int,bool)> progress_handler);
+					  std::function<void(size_t,size_t,bool)> progress_handler);
 	virtual void process();
 
 private:
@@ -59,8 +59,8 @@ private:
 		tcp::socket socket;
 		std::string method_path;
 		std::string request, response;
-		int nbytes_sent;
-		std::function<void(int,int,bool)> progress_handler;
+		size_t nbytes_sent;
+		std::function<void(size_t, size_t, bool)> progress_handler;
 		std::function<void(std::string)> handler, error_handler;
 		game_logic::MapFormulaCallablePtr callable;
 

@@ -587,7 +587,7 @@ namespace graphics
 				}
 				game_logic::ShortArrayCallable* s = cmd.value.try_convert<game_logic::ShortArrayCallable>();
 				if(s != nullptr) {
-					int count = f->num_elements();
+					int count = s->num_elements();
 					int divisor = 0;
 					for(auto& desc : cmd.attr_target->getAttrDesc()) {
 						divisor += desc.getNumElements();

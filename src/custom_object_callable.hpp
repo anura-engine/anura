@@ -53,7 +53,7 @@ public:
 	int getSlot(const std::string& key) const;
 	Entry* getEntry(int slot);
 	const Entry* getEntry(int slot) const;
-	int getNumSlots() const { return entries_.size(); }
+	int getNumSlots() const { return static_cast<int>(entries_.size()); }
 
 	const std::vector<int>& slots_requiring_initialization() const { return slots_requiring_initialization_; }
 

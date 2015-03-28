@@ -1307,7 +1307,7 @@ END_CAIRO_FN
 			ASSERT_LOG(false, "Error parsing XML: " << markup);
 		}
 
-		static game_logic::FormulaCallablePtr lib_obj = game_logic::get_library_object();
+		game_logic::FormulaCallablePtr lib_obj = game_logic::get_library_object();
 		static game_logic::ConstFormulaCallablePtr font_lib(lib_obj->queryValue("font").as_callable());
 		ASSERT_LOG(font_lib.get(), "Could not find font class needed to call markup_text");
 

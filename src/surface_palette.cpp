@@ -96,7 +96,7 @@ namespace graphics
 		if(it != get_palette_map().left.end()) {
 			return it->second;
 		}
-		int id = get_palette_map().size();
+		int id = static_cast<int>(get_palette_map().size());
 		get_palette_map().insert(palette_pair(name, id));
 		return id;
 	}
@@ -162,7 +162,7 @@ namespace graphics
 			}
 		});
 		auto new_surf = Surface::create(surface->width(), surface->height(), PixelFormat::PF::PIXELFORMAT_RGBA8888);
-		new_surf->writePixels(&new_pixels[0], new_pixels.size());
+		new_surf->writePixels(&new_pixels[0], static_cast<int>(new_pixels.size()));
 		return new_surf;
 	}
 

@@ -268,7 +268,7 @@ namespace preferences
 		setting.string_value = value;
 		setting.persistent = persistent;
 		setting.helpstring = helpstring;
-		return g_registered_settings().size();
+		return static_cast<int>(g_registered_settings().size());
 	}
 
 	int register_int_setting(const std::string& id, bool persistent, int* value, const char* helpstring)
@@ -278,7 +278,7 @@ namespace preferences
 		setting.int_value = value;
 		setting.persistent = persistent;
 		setting.helpstring = helpstring;
-		return g_registered_settings().size();
+		return static_cast<int>(g_registered_settings().size());
 	}
 
 	int register_bool_setting(const std::string& id, bool persistent, bool* value, const char* helpstring)
@@ -288,7 +288,7 @@ namespace preferences
 		setting.bool_value = value;
 		setting.persistent = persistent;
 		setting.helpstring = helpstring;
-		return g_registered_settings().size();
+		return static_cast<int>(g_registered_settings().size());
 	}
 
 	int register_float_setting(const std::string& id, bool persistent, double* value, const char* helpstring)
@@ -298,7 +298,7 @@ namespace preferences
 		setting.double_value = value;
 		setting.persistent = persistent;
 		setting.helpstring = helpstring;
-		return g_registered_settings().size();
+		return static_cast<int>(g_registered_settings().size());
 	}
 
 	std::string get_registered_helpstring()
@@ -467,9 +467,9 @@ namespace preferences
 		
 #else
 		
-#if defined(_WINDOWS)
+#if defined(_MSC_VER)
 #define PREFERENCES_PATH ""
-#endif // _WINDOWS
+#endif // _MSC_VER
 		
 #ifndef NO_UPLOAD_STATS
 		bool send_stats_ = true;
@@ -556,7 +556,7 @@ namespace preferences
 	
 	void set_preferences_path_from_module( const std::string& name)
 	{
-#ifdef _WINDOWS
+#ifdef _MSC_VER
 		preferences::set_preferences_path(WindowsPrefs::getInstance().getAppDataPath() + "/" + name + "/"); 
 #elif defined(__ANDROID__)
 		preferences::set_preferences_path("." + name + "/");

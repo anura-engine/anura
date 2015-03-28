@@ -253,7 +253,7 @@ void SolidMap::applyOffsets(const std::vector<int>& offsets)
 		return;
 	}
 
-	const int seg_width = (area_.w()*1024)/(offsets.size()-1);
+	const int seg_width = static_cast<int>((area_.w()*1024)/(offsets.size()-1));
 	for(int x = 0; x != area_.w(); ++x) {
 		const int pos = x*1024;
 		const int segment = pos/seg_width;

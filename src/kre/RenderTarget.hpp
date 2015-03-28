@@ -78,11 +78,11 @@ namespace KRE
 		static RenderTargetPtr create(const variant& node);
 	protected:
 		explicit RenderTarget(int width, int height, 
-			unsigned color_plane_count, 
+			int color_plane_count, 
 			bool depth, 
 			bool stencil, 
 			bool use_multi_sampling, 
-			unsigned multi_samples);
+			int multi_samples);
 		explicit RenderTarget(const variant& node);
 	private:
 		virtual void handleCreate() = 0;

@@ -21,6 +21,8 @@
 	   distribution.
 */
 
+#include <boost/lexical_cast.hpp>
+
 #include "SceneObjectCallable.hpp"
 
 namespace graphics
@@ -89,10 +91,16 @@ namespace graphics
 		DEFINE_SET_FIELD
 			obj.setBlendEquation(KRE::BlendEquation(value));
 
-		DEFINE_FIELD(order, "int")
-			return variant(obj.getOrder());
+		DEFINE_FIELD(order, "string")
+			std::ostringstream ss;
+			ss << obj.getOrder();
+			return variant(ss.str());
 		DEFINE_SET_FIELD
-			obj.setOrder(value.as_int());
+			try {
+				obj.setOrder(boost::lexical_cast<size_t>(value.as_string()));
+			} catch(boost::bad_lexical_cast& e) {
+				ASSERT_LOG(false, "unable to convert order to integer" << e.what());
+			}
 
 	END_DEFINE_CALLABLE(SceneObjectCallable)
 }

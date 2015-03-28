@@ -109,11 +109,11 @@ namespace
 				index = 0;
 			} else if(static_cast<unsigned>(index) >= frames_.size()) {
 				if(loops_ && !reverse_frame_) {
-					index = index%frames_.size();
+					index = index % frames_.size();
 				} else if (loops_ && reverse_frame_){
-					index = (runningInReverse(index)? frames_.size()- 1 - index%frames_.size(): index%frames_.size());
+					index = static_cast<int>((runningInReverse(index) ? frames_.size()- 1 - index % frames_.size(): index % frames_.size()));
 				} else {
-					index = frames_.size() - 1;
+					index = static_cast<int>(frames_.size() - 1);
 				}
 			}
 
@@ -631,7 +631,7 @@ namespace
 
 			std::reverse(colors.begin(), colors.end());
 
-			ttl_divisor = time_to_live_max/(colors.size()-1);
+			ttl_divisor = time_to_live_max/static_cast<int>(colors.size() - 1);
 
 			rgba[0] = node["red"].as_int();
 			rgba[1] = node["green"].as_int();

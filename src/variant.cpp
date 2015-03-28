@@ -932,17 +932,17 @@ bool variant::function_call_valid(const std::vector<variant>& passed_args, std::
 
 	const std::vector<variant>& args = args_buf.empty() ? passed_args : args_buf;
 
-	const int max_args = fn_->type->arg_names.size();
-	const int min_args = max_args - fn_->type->num_default_args();
+	const auto max_args = fn_->type->arg_names.size();
+	const auto min_args = max_args - fn_->type->num_default_args();
 
-	if(args.size() > static_cast<unsigned>(max_args) || (args.size() < static_cast<unsigned>(min_args) && !allow_partial)) {
+	if(args.size() > max_args || (args.size() < min_args && !allow_partial)) {
 		if(message) {
 			*message = "Incorrect number of arguments to function";
 		}
 		return false;
 	}
 
-	for(unsigned n = 0; n != args.size(); ++n) {
+	for(std::vector<variant>::size_type n = 0; n != args.size(); ++n) {
 		if(n < fn_->type->variant_types.size() && fn_->type->variant_types[n]) {
 			if(fn_->type->variant_types[n]->match(args[n]) == false) {
 				if(message) {
@@ -1005,10 +1005,10 @@ variant variant::operator()(const std::vector<variant>& passed_args) const
 
 	callable->setBaseSlot(fn_->base_slot);
 
-	const int max_args = fn_->type->arg_names.size();
-	const int min_args = max_args - fn_->type->num_default_args();
+	const auto max_args = fn_->type->arg_names.size();
+	const auto min_args = max_args - fn_->type->num_default_args();
 
-	if(args->size() < static_cast<unsigned>(min_args) || args->size() > static_cast<unsigned>(max_args)) {
+	if(args->size() < min_args || args->size() > max_args) {
 		std::ostringstream str;
 		for(std::vector<std::string>::const_iterator a = fn_->type->arg_names.begin(); a != fn_->type->arg_names.end(); ++a) {
 			if(a != fn_->type->arg_names.begin()) {
@@ -1058,7 +1058,7 @@ variant variant::operator()(const std::vector<variant>& passed_args) const
 		callable->add((*args)[n]);
 	}
 
-	for(unsigned n = args->size(); n < static_cast<unsigned>(max_args) && (n - min_args) < fn_->type->default_args.size(); ++n) {
+	for(std::vector<variant>::size_type n = args->size(); n < max_args && (n - min_args) < fn_->type->default_args.size(); ++n) {
 		callable->add(fn_->type->default_args[n - min_args]);
 	}
 
@@ -1443,7 +1443,7 @@ int variant::min_function_arguments() const
 	}
 	
 	must_be(VARIANT_TYPE_FUNCTION);
-	return std::max<int>(0, fn_->type->arg_names.size() - fn_->type->num_default_args() - static_cast<int>(fn_->bound_args.size()));
+	return std::max(0, static_cast<int>(fn_->type->arg_names.size()) - static_cast<int>(fn_->bound_args.size()) - fn_->type->num_default_args());
 }
 
 int variant::max_function_arguments() const
@@ -1459,11 +1459,11 @@ int variant::max_function_arguments() const
 
 		return result;
 	} else if(type_ == VARIANT_TYPE_GENERIC_FUNCTION) {
-		return generic_fn_->type->arg_names.size() - generic_fn_->bound_args.size();
+		return static_cast<int>(generic_fn_->type->arg_names.size()) - static_cast<int>(generic_fn_->bound_args.size());
 	}
 
 	must_be(VARIANT_TYPE_FUNCTION);
-	return fn_->type->arg_names.size() - fn_->bound_args.size();
+	return static_cast<int>(fn_->type->arg_names.size()) - static_cast<int>(fn_->bound_args.size());
 }
 
 variant_type_ptr variant::function_return_type() const
@@ -2507,7 +2507,7 @@ void variant::write_function(std::ostream& s) const
 	}
 	
 	s << "def(";
-	const int default_base = fn_->type->arg_names.size() - fn_->type->default_args.size();
+	const int default_base = static_cast<int>(fn_->type->arg_names.size()) - static_cast<int>(fn_->type->default_args.size());
 	for(std::vector<std::string>::const_iterator p = fn_->type->arg_names.begin(); p != fn_->type->arg_names.end(); ++p) {
 		if(p != fn_->type->arg_names.begin()) {
 			s << ",";
@@ -2515,7 +2515,7 @@ void variant::write_function(std::ostream& s) const
 
 		s << *p;
 		
-		const int index = p - fn_->type->arg_names.begin();
+		const int index = static_cast<int>(p - fn_->type->arg_names.begin());
 		if(index >= default_base) {
 			variant v = fn_->type->default_args[index - default_base];
 			std::string str;

@@ -102,13 +102,12 @@ namespace
 	{
 
 		std::vector<std::string> lines = util::split(pattern, '\n', 0);
-		const int height = lines.size();
 		int width = -1;
 
 		for(const std::string& line : lines) {
 			std::vector<std::string> items = util::split(line, ',', util::STRIP_SPACES);
 			if(width == -1) {
-				width = items.size();
+				width = static_cast<int>(items.size());
 			}
 
 			ASSERT_LOG(width == items.size(), "Inconsistent multi-tile pattern size in pattern " << pattern);
@@ -165,7 +164,7 @@ MultiTilePattern::MultiTilePattern(variant node, const std::string& tile_id)
 	std::vector<raw_cell> cells;
 	std::vector<raw_cell> cells_different_zorder;
 	width_ = parse_pattern(node["pattern"].as_string(), cells);
-	height_ = cells.size()/width_;
+	height_ = static_cast<int>(cells.size() / width_);
 
 	cells_different_zorder.resize(cells.size());
 

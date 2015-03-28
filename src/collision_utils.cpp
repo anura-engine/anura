@@ -46,7 +46,7 @@ void CollisionInfo::readSurfInfo()
 
 int get_num_solid_dimensions()
 {
-	return solid_dimensions.size();
+	return static_cast<int>(solid_dimensions.size());
 }
 
 const std::string& get_solid_dimension_key(int id)
@@ -62,9 +62,9 @@ int get_solid_dimension_id(const std::string& key)
 		return itor->second;
 	}
 
-	solid_dimensions[key] = solid_dimension_ids.size();
+	solid_dimensions[key] = static_cast<int>(solid_dimension_ids.size());
 	solid_dimension_ids.push_back(key);
-	return solid_dimensions.size()-1;
+	return static_cast<int>(solid_dimensions.size())-1;
 }
 
 bool point_standable(const Level& lvl, const Entity& e, int x, int y, CollisionInfo* info, ALLOW_PLATFORM allow_platform)

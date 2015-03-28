@@ -44,7 +44,7 @@
 #include "text_editor_widget.hpp"
 #include "unit_test.hpp"
 
-#if defined(_WINDOWS)
+#if defined(_MSC_VER)
 #include <direct.h>
 #define getcwd	_getcwd
 #endif
@@ -67,7 +67,7 @@ namespace sys
 		} else {
 			if(curdir.empty()) {
 				std::vector<char> buf(1024);
-				const char* const res = getcwd(&buf[0], buf.capacity());
+				const char* const res = getcwd(&buf[0], static_cast<int>(buf.capacity()));
 				if(res != nullptr) {
 					abs_path  = sys::make_conformal_path(res);
 				} else {

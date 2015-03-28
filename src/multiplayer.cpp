@@ -506,7 +506,7 @@ namespace multiplayer
 				}
 
 				if(start_time.size() > 0) {
-					const int start_time_avg = std::accumulate(start_time.begin(), start_time.end(), 0)/start_time.size();
+					const int start_time_avg = static_cast<int>(std::accumulate(start_time.begin(), start_time.end(), 0)/start_time.size());
 					if(profile::get_tick_time() >= start_time_avg) {
 						break;
 					}

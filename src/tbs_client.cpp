@@ -58,7 +58,7 @@ namespace tbs
 			request_str,
 			std::bind(&client::recv_handler, this, _1), 
 			std::bind(&client::error_handler, this, _1), 
-			[](int,int,bool){});
+			[](size_t,size_t,bool){});
 
 		if(local_game_cache_ && request["type"].as_string() == "moves" && request["state_id"].as_int() == local_game_cache_->state_id()) {
 
