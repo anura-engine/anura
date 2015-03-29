@@ -1721,6 +1721,7 @@ void Level::prepare_tiles_for_drawing()
 	std::set<std::pair<int, int> > opaque;
 	for(auto n = tiles_.size(); n > 0; --n) {
 		LevelTile& t = tiles_[n-1];
+		ASSERT_LOG(t.object != nullptr, "Tile object is null.");
 		const TileMap& map = tile_maps_[t.zorder];
 		if(map.getXSpeed() != 100 || map.getYSpeed() != 100) {
 			while(n != 0 && tiles_[n-1].zorder == t.zorder) {
