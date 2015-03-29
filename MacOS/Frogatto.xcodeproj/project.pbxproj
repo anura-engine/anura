@@ -324,6 +324,11 @@
 		C02751C317FD4A1400173646 /* SDLMain.nib in Resources */ = {isa = PBXBuildFile; fileRef = C010C59F160AFB8F006E7D90 /* SDLMain.nib */; };
 		C02751C417FD4A1A00173646 /* master-config.cfg in Resources */ = {isa = PBXBuildFile; fileRef = C0917B12175480F7004307B0 /* master-config.cfg */; };
 		C02ACCAC16FD5F05006274BC /* variant_type.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C02ACCAA16FD5F05006274BC /* variant_type.cpp */; };
+		C0442A7B1AC7A2A400A17F91 /* libboost_iostreams.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 63D6F4D91AC68F38002250CC /* libboost_iostreams.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		C0442A7C1AC7A91C00A17F91 /* libboost_filesystem.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 631A8A0B1AC69A5D00AA55C8 /* libboost_filesystem.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		C0442A7D1AC7A91E00A17F91 /* libboost_date_time.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 63D6F4D71AC68F38002250CC /* libboost_date_time.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		C0442A7E1AC7A9BD00A17F91 /* libboost_system.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 63D6F4DA1AC68F38002250CC /* libboost_system.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		C0442A7F1AC7A9CB00A17F91 /* libboost_regex.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 631A8A091AC69A0800AA55C8 /* libboost_regex.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		C06FF3F11740B9F000377772 /* formula_visualize_widget.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C06FF3EF1740B9F000377772 /* formula_visualize_widget.cpp */; };
 		C07A47A119443FC000F1190E /* libfontconfig.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = C07A479E19443FC000F1190E /* libfontconfig.1.dylib */; };
 		C07A47A219443FC000F1190E /* libglib-2.0.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = C07A479F19443FC000F1190E /* libglib-2.0.0.dylib */; };
@@ -408,6 +413,11 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				C0442A7E1AC7A9BD00A17F91 /* libboost_system.dylib in CopyFiles */,
+				C0442A7D1AC7A91E00A17F91 /* libboost_date_time.dylib in CopyFiles */,
+				C0442A7C1AC7A91C00A17F91 /* libboost_filesystem.dylib in CopyFiles */,
+				C0442A7B1AC7A2A400A17F91 /* libboost_iostreams.dylib in CopyFiles */,
+				C0442A7F1AC7A9CB00A17F91 /* libboost_regex.dylib in CopyFiles */,
 				C07A47E21944699300F1190E /* libintl.8.dylib in CopyFiles */,
 				C07A47AC1944487C00F1190E /* libfreetype.6.dylib in CopyFiles */,
 				C07A47A9194440B500F1190E /* libcairo.2.dylib in CopyFiles */,
@@ -978,8 +988,6 @@
 		C010C6D8160AFD4D006E7D90 /* scrollable_widget.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = scrollable_widget.hpp; sourceTree = "<group>"; };
 		C010C6D9160AFD4D006E7D90 /* scrollbar_widget.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = scrollbar_widget.cpp; sourceTree = "<group>"; };
 		C010C6DA160AFD4D006E7D90 /* scrollbar_widget.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = scrollbar_widget.hpp; sourceTree = "<group>"; };
-		C010C6DB160AFD4D006E7D90 /* SDLMain.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SDLMain.h; sourceTree = "<group>"; };
-		C010C6DC160AFD4D006E7D90 /* SDLMain.m */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; fileEncoding = 4; path = SDLMain.m; sourceTree = "<group>"; };
 		C010C6DD160AFD4D006E7D90 /* segment_editor_dialog.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = segment_editor_dialog.cpp; sourceTree = "<group>"; };
 		C010C6DE160AFD4D006E7D90 /* segment_editor_dialog.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = segment_editor_dialog.hpp; sourceTree = "<group>"; };
 		C010C6E0160AFD4D006E7D90 /* settings_dialog.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = settings_dialog.cpp; sourceTree = "<group>"; };
@@ -1955,8 +1963,6 @@
 				C010C6D8160AFD4D006E7D90 /* scrollable_widget.hpp */,
 				C010C6D9160AFD4D006E7D90 /* scrollbar_widget.cpp */,
 				C010C6DA160AFD4D006E7D90 /* scrollbar_widget.hpp */,
-				C010C6DB160AFD4D006E7D90 /* SDLMain.h */,
-				C010C6DC160AFD4D006E7D90 /* SDLMain.m */,
 				C010C6DD160AFD4D006E7D90 /* segment_editor_dialog.cpp */,
 				C010C6DE160AFD4D006E7D90 /* segment_editor_dialog.hpp */,
 				C026F59F16C23963000482A1 /* selector_widget.cpp */,
