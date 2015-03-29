@@ -817,7 +817,7 @@ void Frame::drawCustom(graphics::AnuraShaderPtr shader, int x, int y, const std:
 		queue.emplace_back(glm::vec2(xpos - center_x, ypos - center_y), glm::vec2(u, v));
 	}
 
-	ASSERT_LOG(queue.size() > 4, "ILLEGAL CUSTOM BLIT: " << queue.size());
+	ASSERT_LOG(queue.size() > 2, "ILLEGAL CUSTOM BLIT: " << queue.size());
 
 	auto wnd = KRE::WindowManager::getMainWindow();
 	blit.getAttributeSet().back()->setCount(queue.size());
