@@ -119,6 +119,9 @@ namespace
 	PREF_INT(auto_update_timeout, 5000, "Timeout to use on auto updates (given in milliseconds)");
 
 	PREF_BOOL(resizeable, false, "Window is dynamically resizeable.");
+	PREF_INT(min_window_width, 1024, "Minimum window width when auto-determining window size");
+	PREF_INT(min_window_height, 768, "Minimum window height when auto-determining window size");
+
 
 #if defined(_MSC_VER)
 	const std::string anura_exe_name = "anura.exe";
@@ -294,6 +297,12 @@ void auto_select_resolution(const KRE::WindowPtr& wm, int *width, int *height)
 			LOG_INFO("REJECTED MODE IS " << candidate_mode.width << "x" << candidate_mode.height);
 		}
 	}
+
+	if(best_mode.width < g_min_window_width || best_mode.height < g_min_window_height) {
+		best_mode.width = g_min_window_width;
+		best_mode.height = g_min_window_height;
+	}
+
 	*width = best_mode.width;
 	*height = best_mode.height;
 }
