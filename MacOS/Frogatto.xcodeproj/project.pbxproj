@@ -42,6 +42,7 @@
 		63413B261AC693ED00542670 /* lutf8lib.c in Sources */ = {isa = PBXBuildFile; fileRef = 63413B021AC693ED00542670 /* lutf8lib.c */; };
 		63413B271AC693ED00542670 /* lvm.c in Sources */ = {isa = PBXBuildFile; fileRef = 63413B031AC693ED00542670 /* lvm.c */; };
 		63413B281AC693ED00542670 /* lzio.c in Sources */ = {isa = PBXBuildFile; fileRef = 63413B051AC693ED00542670 /* lzio.c */; };
+		634991D11AC794D300E1259F /* formula_garbage_collector.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 634991CF1AC794D300E1259F /* formula_garbage_collector.cpp */; };
 		639B53731AC20D5A00ECC4F8 /* AttributeSet.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 639B52EF1AC20D5900ECC4F8 /* AttributeSet.cpp */; };
 		639B53741AC20D5A00ECC4F8 /* AttributeSetOGL.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 639B52F11AC20D5900ECC4F8 /* AttributeSetOGL.cpp */; };
 		639B53751AC20D5A00ECC4F8 /* Blend.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 639B52F31AC20D5900ECC4F8 /* Blend.cpp */; };
@@ -323,6 +324,11 @@
 		C02751C317FD4A1400173646 /* SDLMain.nib in Resources */ = {isa = PBXBuildFile; fileRef = C010C59F160AFB8F006E7D90 /* SDLMain.nib */; };
 		C02751C417FD4A1A00173646 /* master-config.cfg in Resources */ = {isa = PBXBuildFile; fileRef = C0917B12175480F7004307B0 /* master-config.cfg */; };
 		C02ACCAC16FD5F05006274BC /* variant_type.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C02ACCAA16FD5F05006274BC /* variant_type.cpp */; };
+		C0442A7B1AC7A2A400A17F91 /* libboost_iostreams.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 63D6F4D91AC68F38002250CC /* libboost_iostreams.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		C0442A7C1AC7A91C00A17F91 /* libboost_filesystem.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 631A8A0B1AC69A5D00AA55C8 /* libboost_filesystem.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		C0442A7D1AC7A91E00A17F91 /* libboost_date_time.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 63D6F4D71AC68F38002250CC /* libboost_date_time.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		C0442A7E1AC7A9BD00A17F91 /* libboost_system.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 63D6F4DA1AC68F38002250CC /* libboost_system.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		C0442A7F1AC7A9CB00A17F91 /* libboost_regex.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 631A8A091AC69A0800AA55C8 /* libboost_regex.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		C06FF3F11740B9F000377772 /* formula_visualize_widget.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C06FF3EF1740B9F000377772 /* formula_visualize_widget.cpp */; };
 		C07A47A119443FC000F1190E /* libfontconfig.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = C07A479E19443FC000F1190E /* libfontconfig.1.dylib */; };
 		C07A47A219443FC000F1190E /* libglib-2.0.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = C07A479F19443FC000F1190E /* libglib-2.0.0.dylib */; };
@@ -407,6 +413,11 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				C0442A7E1AC7A9BD00A17F91 /* libboost_system.dylib in CopyFiles */,
+				C0442A7D1AC7A91E00A17F91 /* libboost_date_time.dylib in CopyFiles */,
+				C0442A7C1AC7A91C00A17F91 /* libboost_filesystem.dylib in CopyFiles */,
+				C0442A7B1AC7A2A400A17F91 /* libboost_iostreams.dylib in CopyFiles */,
+				C0442A7F1AC7A9CB00A17F91 /* libboost_regex.dylib in CopyFiles */,
 				C07A47E21944699300F1190E /* libintl.8.dylib in CopyFiles */,
 				C07A47AC1944487C00F1190E /* libfreetype.6.dylib in CopyFiles */,
 				C07A47A9194440B500F1190E /* libcairo.2.dylib in CopyFiles */,
@@ -487,6 +498,9 @@
 		63413B041AC693ED00542670 /* lvm.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = lvm.h; sourceTree = "<group>"; };
 		63413B051AC693ED00542670 /* lzio.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = lzio.c; sourceTree = "<group>"; };
 		63413B061AC693ED00542670 /* lzio.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = lzio.h; sourceTree = "<group>"; };
+		634991CE1AC794D300E1259F /* ColorTransform.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = ColorTransform.hpp; sourceTree = "<group>"; };
+		634991CF1AC794D300E1259F /* formula_garbage_collector.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = formula_garbage_collector.cpp; sourceTree = "<group>"; };
+		634991D01AC794D300E1259F /* formula_garbage_collector.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = formula_garbage_collector.hpp; sourceTree = "<group>"; };
 		639B52EF1AC20D5900ECC4F8 /* AttributeSet.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AttributeSet.cpp; sourceTree = "<group>"; };
 		639B52F01AC20D5900ECC4F8 /* AttributeSet.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = AttributeSet.hpp; sourceTree = "<group>"; };
 		639B52F11AC20D5900ECC4F8 /* AttributeSetOGL.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AttributeSetOGL.cpp; sourceTree = "<group>"; };
@@ -974,8 +988,6 @@
 		C010C6D8160AFD4D006E7D90 /* scrollable_widget.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = scrollable_widget.hpp; sourceTree = "<group>"; };
 		C010C6D9160AFD4D006E7D90 /* scrollbar_widget.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = scrollbar_widget.cpp; sourceTree = "<group>"; };
 		C010C6DA160AFD4D006E7D90 /* scrollbar_widget.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = scrollbar_widget.hpp; sourceTree = "<group>"; };
-		C010C6DB160AFD4D006E7D90 /* SDLMain.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SDLMain.h; sourceTree = "<group>"; };
-		C010C6DC160AFD4D006E7D90 /* SDLMain.m */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; fileEncoding = 4; path = SDLMain.m; sourceTree = "<group>"; };
 		C010C6DD160AFD4D006E7D90 /* segment_editor_dialog.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = segment_editor_dialog.cpp; sourceTree = "<group>"; };
 		C010C6DE160AFD4D006E7D90 /* segment_editor_dialog.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = segment_editor_dialog.hpp; sourceTree = "<group>"; };
 		C010C6E0160AFD4D006E7D90 /* settings_dialog.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = settings_dialog.cpp; sourceTree = "<group>"; };
@@ -1656,6 +1668,9 @@
 		C010C5BC160AFD4C006E7D90 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				634991CE1AC794D300E1259F /* ColorTransform.hpp */,
+				634991CF1AC794D300E1259F /* formula_garbage_collector.cpp */,
+				634991D01AC794D300E1259F /* formula_garbage_collector.hpp */,
 				63413ACA1AC693ED00542670 /* lua */,
 				639B54891AC2188A00ECC4F8 /* surface_utils.cpp */,
 				639B54871AC2187500ECC4F8 /* rect_renderable.cpp */,
@@ -1948,8 +1963,6 @@
 				C010C6D8160AFD4D006E7D90 /* scrollable_widget.hpp */,
 				C010C6D9160AFD4D006E7D90 /* scrollbar_widget.cpp */,
 				C010C6DA160AFD4D006E7D90 /* scrollbar_widget.hpp */,
-				C010C6DB160AFD4D006E7D90 /* SDLMain.h */,
-				C010C6DC160AFD4D006E7D90 /* SDLMain.m */,
 				C010C6DD160AFD4D006E7D90 /* segment_editor_dialog.cpp */,
 				C010C6DE160AFD4D006E7D90 /* segment_editor_dialog.hpp */,
 				C026F59F16C23963000482A1 /* selector_widget.cpp */,
@@ -2484,6 +2497,7 @@
 				C010C7F0160AFD4E006E7D90 /* utility_render_level.cpp in Sources */,
 				639B541B1AC20D7600ECC4F8 /* b2Distance.cpp in Sources */,
 				C010C7F1160AFD4E006E7D90 /* utils.cpp in Sources */,
+				634991D11AC794D300E1259F /* formula_garbage_collector.cpp in Sources */,
 				63413B1E1AC693ED00542670 /* lstate.c in Sources */,
 				C010C7F2160AFD4E006E7D90 /* variant.cpp in Sources */,
 				C010C7F3160AFD4E006E7D90 /* variant_callable.cpp in Sources */,
@@ -2725,24 +2739,8 @@
 					"\"$(SRCROOT)/dylibs/SDL2.framework/Versions/A\"",
 					"$(PROJECT_DIR)/dylibs",
 				);
-				OTHER_CFLAGS = (
-					"-DIMPLEMENT_SAVE_PNG",
-					"-DUSE_GLES2",
-					"-DUSE_ISOMAP",
-					"-DUSE_SVG",
-				);
-				OTHER_CPLUSPLUSFLAGS = (
-					"$(OTHER_CFLAGS)",
-					"-Wno-narrowing",
-					"-Wnon-virtual-dtor",
-					"-Werror",
-					"-Wignored-qualifiers",
-					"-Wformat",
-					"-Wswitch",
-					"-Wreturn-type",
-					"-fno-inline-functions",
-					"-fthreadsafe-statics",
-				);
+				OTHER_CFLAGS = "";
+				OTHER_CPLUSPLUSFLAGS = "";
 				OTHER_LDFLAGS = (
 					"-rpath",
 					"@executable_path/../Frameworks",
