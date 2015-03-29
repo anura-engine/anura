@@ -203,6 +203,12 @@ struct variant_list : public GarbageCollectible {
 	std::string debugObjectName() const override {
 		std::ostringstream s;
 		s << "list[" << size() << "]";
+		if(info.filename) {
+			s << " @" << info.message();
+		} else {
+			s << " @UNK";
+		}
+
 		return s.str();
 	}
 
@@ -453,7 +459,6 @@ case VARIANT_TYPE_GENERIC_FUNCTION:
 generic_fn_->dec_ref();
 break;
 case VARIANT_TYPE_MULTI_FUNCTION:
-fprintf(stderr, "DESTROY: %p -> %d %04x\n", multi_fn_, multi_fn_->refcount(), *(unsigned int*)multi_fn_);
 multi_fn_->dec_ref();
 break;
 case VARIANT_TYPE_DELAYED:
@@ -581,7 +586,6 @@ variant variant::create_function_overload(const std::vector<variant>& fn)
 	variant result;
 	result.type_ = VARIANT_TYPE_MULTI_FUNCTION;
 	result.multi_fn_ = new variant_multi_fn;
-	fprintf(stderr, "ALLOC: %p %04x\n", result.multi_fn_, *(unsigned int*)result.multi_fn_);
 	result.multi_fn_->add_ref();
 	result.multi_fn_->functions = fn;
 	return result;
@@ -1592,18 +1596,11 @@ variant variant::operator+(const variant& v) const
 		if(v.type_ == VARIANT_TYPE_LIST) {
 			const size_t new_size = list_->size() + v.list_->size();
 
-			bool adopt_list = false;
-
 			std::vector<variant> res;
-			if(new_size <= list_->elements.capacity() && list_->storage.get() == nullptr) {
-				res.swap(list_->elements);
-				adopt_list = true;
-			} else {
-				res.reserve(new_size*2);
-				for(size_t i = 0; i < list_->size(); ++i) {
-					const variant& var = list_->begin[i];
-					res.push_back(var);
-				}
+			res.reserve(new_size);
+			for(size_t i = 0; i < list_->size(); ++i) {
+				const variant& var = list_->begin[i];
+				res.push_back(var);
 			}
 
 			for(size_t j = 0; j < v.list_->size(); ++j) {
@@ -1611,11 +1608,7 @@ variant variant::operator+(const variant& v) const
 				res.push_back(var);
 			}
 
-			variant result(&res);
-			if(adopt_list) {
-				list_->storage.reset(result.list_);
-			}
-			return result;
+			return variant(&res);
 		}
 	}
 	if(type_ == VARIANT_TYPE_MAP) {
