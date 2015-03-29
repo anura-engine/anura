@@ -533,6 +533,33 @@ namespace graphics
 		}
 	}
 
+	void AnuraShader::surrenderReferences(GarbageCollector* collector)
+	{
+		collector->surrenderPtr(&uniform_commands_);
+		collector->surrenderPtr(&attribute_commands_);
+		for(std::pair<const int, variant>& p : uniforms_to_set_) {
+			collector->surrenderVariant(&p.second);
+		}
+	}
+
+	void AnuraShader::UniformCommandsCallable::surrenderReferences(GarbageCollector* collector)
+	{
+		for(const DrawCommand& cmd : uniform_commands_) {
+			collector->surrenderVariant(&cmd.value);
+		}
+
+		collector->surrenderPtr(&program_);
+	}
+
+	void AnuraShader::AttributeCommandsCallable::surrenderReferences(GarbageCollector* collector)
+	{
+		for(const DrawCommand& cmd : attribute_commands_) {
+			collector->surrenderVariant(&cmd.value);
+		}
+
+		collector->surrenderPtr(&program_);
+	}
+
 	variant AnuraShader::UniformCommandsCallable::getValue(const std::string& key) const
 	{
 		return variant();

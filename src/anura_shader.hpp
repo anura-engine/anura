@@ -65,6 +65,8 @@ namespace graphics
 		const std::string& getName() const { return name_; }
 
 		int zorder() const { return zorder_; }
+
+		void surrenderReferences(GarbageCollector* collector);
 	private:
 		DECLARE_CALLABLE(AnuraShader);
 		void init();
@@ -83,6 +85,8 @@ namespace graphics
 		public:
 			void setShader(AnuraShaderPtr program) { program_ = program; }
 			void executeOnDraw();
+
+			void surrenderReferences(GarbageCollector* collector);
 		private:
 			virtual variant getValue(const std::string& key) const override;
 			virtual void setValue(const std::string& key, const variant& value) override;
@@ -96,6 +100,8 @@ namespace graphics
 		public:
 			void setShader(AnuraShaderPtr program) { program_ = program; }
 			void executeOnDraw();
+
+			void surrenderReferences(GarbageCollector* collector);
 		private:
 			virtual variant getValue(const std::string& key) const override;
 			virtual void setValue(const std::string& key, const variant& value) override;
