@@ -90,7 +90,7 @@ namespace
 	public:
 		explicit FileBackedDbClient(const std::string& fname) : fname_(fname), dirty_(false) {
 			if(sys::file_exists(fname_)) {
-				json::parse(sys::read_file(fname_), json::JSON_PARSE_OPTIONS::NO_PREPROCESSOR);
+				doc_ = json::parse(sys::read_file(fname_), json::JSON_PARSE_OPTIONS::NO_PREPROCESSOR);
 			}
 			
 			if(!doc_.is_map()) {
