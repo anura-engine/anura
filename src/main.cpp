@@ -420,7 +420,14 @@ int main(int argcount, char* argvec[])
 
 	if(sys::file_exists("./master-config.cfg")) {
 		LOG_INFO("LOADING CONFIGURATION FROM master-config.cfg");
-		variant cfg = json::parse_from_file("./master-config.cfg");
+		variant cfg;
+		
+		try {
+			cfg = json::parse_from_file("./master-config.cfg");
+		} catch(json::ParseError& error) {
+			ASSERT_LOG(false, "" << error.errorMessage());
+		}
+
 		if(cfg.is_map()) {
 			if(cfg["arguments"].is_null() == false) {
 				std::vector<std::string> additional_args = cfg["arguments"].as_list_string();
