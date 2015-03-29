@@ -402,6 +402,7 @@
     <ClCompile Include="..\..\src\formula_constants.cpp" />
     <ClCompile Include="..\..\src\formula_function.cpp" />
     <ClCompile Include="..\..\src\formula_function_registry.cpp" />
+    <ClCompile Include="..\..\src\formula_garbage_collector.cpp" />
     <ClCompile Include="..\..\src\formula_interface.cpp" />
     <ClCompile Include="..\..\src\formula_object.cpp" />
     <ClCompile Include="..\..\src\formula_profiler.cpp" />

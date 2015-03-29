@@ -1822,6 +1822,9 @@
     <ClCompile Include="..\..\src\widget_settings_dialog.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\formula_garbage_collector.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\Box2D\$(Configuration)\$(Platform)\Box2D.lib" />
