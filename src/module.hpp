@@ -129,7 +129,7 @@ namespace module
 		bool module_prepared() const;
 
 		//begins download and installation of a given module.
-		void install_module(const std::string& module_name, bool force=false);
+		bool install_module(const std::string& module_name, bool force=false);
 		void rate_module(const std::string& module_id, int rating, const std::string& review);
 		void get_status();
 		bool process();

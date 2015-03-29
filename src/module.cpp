@@ -989,7 +989,7 @@ const char* InstallImagePath = ".";
 #endif
 }
 
-	void client::install_module(const std::string& module_id, bool force)
+	bool client::install_module(const std::string& module_id, bool force)
 	{
 		data_.clear();
 		operation_ = OPERATION_INSTALL;
@@ -1001,6 +1001,12 @@ const char* InstallImagePath = ".";
 
 		std::string version_str;
 		std::string current_path = install_image_ ? InstallImagePath : make_base_module_path(module_id);
+
+		if(!current_path.empty() && !force && sys::dir_exists(current_path + "/.git")) {
+			LOG_INFO("Not installing module " << module_id << " because a git sync exists in " << current_path);
+			operation_ = OPERATION_NONE;
+			return false;
+		}
 
 		if(!current_path.empty() && !force && sys::file_exists(current_path + "/module.cfg")) {
 			variant config = json::parse(sys::read_file(current_path + "/module.cfg"));
@@ -1021,6 +1027,7 @@ const char* InstallImagePath = ".";
 							  std::bind(&client::on_response, this, _1),
 							  std::bind(&client::on_error, this, _1),
 							  std::bind(&client::on_progress, this, _1, _2, _3));
+		return true;
 	}
 
 	void client::rate_module(const std::string& module_id, int rating, const std::string& review)

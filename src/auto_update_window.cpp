@@ -260,15 +260,23 @@ COMMAND_LINE_UTILITY(update_launcher)
 		
 		if(update_module) {
 			cl.reset(new module::client);
-			cl->install_module(module::get_module_name(), force);
-			update_info.add("attempt_module", true);
+			const bool res = cl->install_module(module::get_module_name(), force);
+			if(!res) {
+				cl.reset();
+			} else {
+				update_info.add("attempt_module", true);
+			}
 		}
 
 		if(update_anura) {
 			anura_cl.reset(new module::client);
 			//anura_cl->set_install_image(true);
-			anura_cl->install_module(real_anura, force);
-			update_info.add("attempt_anura", true);
+			const bool res = anura_cl->install_module(real_anura, force);
+			if(!res) {
+				anura_cl.reset();
+			} else {
+				update_info.add("attempt_anura", true);
+			}
 		}
 
 		int nbytes_transferred = 0, nbytes_anura_transferred = 0;
@@ -278,7 +286,7 @@ COMMAND_LINE_UTILITY(update_launcher)
 		LOG_INFO("Requesting update to module from server...");
 		int nupdate_cycle = 0;
 
-		{
+		if(cl || anura_cl) {
 		auto_update_window update_window;
 		while(cl || anura_cl) {
 			update_window.process();
