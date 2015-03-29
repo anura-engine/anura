@@ -52,6 +52,8 @@ namespace game_logic
 
 		void disallowNewKeys(bool value=true) { disallow_new_keys_ = value; }
 
+		void surrenderReferences(GarbageCollector* collector) override;
+
 	private:
 		variant getValue(const std::string& key) const;
 		variant getValueBySlot(int slot) const;

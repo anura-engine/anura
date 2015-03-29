@@ -391,5 +391,20 @@ COMMAND_LINE_UTILITY(update_launcher)
 	
 	execv(anura_args[0], &anura_args[0]);
 
-	ASSERT_LOG(false, "execv() failed");
+	const bool has_file = sys::file_exists(anura_exe);
+
+#ifndef _MSC_VER
+	if(has_file && !sys::is_file_executable(anura_exe)) {
+		sys::set_file_executable(anura_exe);
+
+		execv(anura_args[0], &anura_args[0]);
+
+		if(!sys::is_file_executable(anura_exe)) {
+			ASSERT_LOG(false, "Could not execute " << anura_exe << " from " << working_dir << " file does not appear to be executable");
+		}
+	}
+#endif
+
+	ASSERT_LOG(has_file, "Could not execute " << anura_exe << " from " << working_dir << ". The file does not exist. Try re-running the update process.");
+	ASSERT_LOG(false, "Could not execute " << anura_exe << " from " << working_dir << ". The file exists and appears to be executable.");
 }

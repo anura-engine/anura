@@ -450,7 +450,7 @@ int main(int argcount, char* argvec[])
 			if(load_module(arg_value, &argv) != 0) {
 				bool auto_update = false;
 				for(size_t n = 0; n < argv.size(); ++n) {
-					if(argv[n] == "--auto-update-module") {
+					if(argv[n] == "--auto-update-module" || argv[n] == "--utility=update_launcher") {
 						auto_update = true;
 						break;
 					}

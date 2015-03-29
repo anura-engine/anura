@@ -147,4 +147,11 @@ namespace game_logic
 
 		return result;
 	}
+
+	void FormulaVariableStorage::surrenderReferences(GarbageCollector* collector)
+	{
+		for(variant& v : values_) {
+			collector->surrenderVariant(&v);
+		}
+	}
 }
