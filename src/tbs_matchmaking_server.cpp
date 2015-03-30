@@ -187,7 +187,7 @@ public:
 
 			variant_builder heartbeat_message;
 			heartbeat_message.add("type", "heartbeat");
-			heartbeat_message.add("users", sessions_.size());
+			heartbeat_message.add("users", static_cast<int>(sessions_.size()));
 			heartbeat_message.add("users_queued", nqueue_size);
 			heartbeat_message.add("games", servers_.size());
 
