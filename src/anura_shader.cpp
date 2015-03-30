@@ -277,12 +277,19 @@ namespace graphics
 		  cycle_(o.cycle_),
 		  color_(o.color_),
 		  point_size_(o.point_size_),
+		  draw_commands_(o.draw_commands_),
+		  create_commands_(o.create_commands_),
 		  enabled_(o.enabled_),
 		  zorder_(o.zorder_),
 		  name_(o.name_),
 		  initialised_(false)
 	{
 		shader_ = o.shader_->clone();
+		renderable_.clearAttributes();
+		draw_formulas_.clear();
+		draw_commands_.clear();
+		create_formulas_.clear();
+		create_commands_.clear();
 		init();
 	}
 
@@ -436,6 +443,9 @@ namespace graphics
 		DEFINE_FIELD(attributes, "null")
 			return variant();
 		DEFINE_SET_FIELD_TYPE("[map]")
+	        obj.attribute_commands_->clearCommands();
+
+			obj.renderable_.clearAttributes();
 			for(int n = 0; n != value.num_elements(); ++n) {
 				obj.renderable_.addAttribute(value[n]);
 			}
@@ -728,16 +738,17 @@ namespace graphics
 		getShader()->configureAttribute(attr);
 		auto loc = attr->getAttrDesc().back().getLocation();
 		ASSERT_LOG(loc != ShaderProgram::INVALID_ATTRIBUTE, "No attribute with name '" << name << "' in shader.");
-		getAttributeSet().back()->addAttribute(attr);
+		getAttributeSet().front()->addAttribute(attr);
+		ASSERT_LOG(attr->getParent() != nullptr, "attribute parent was null after adding to attribute set.");
 		attrs_[loc] = attr;
 		LOG_DEBUG("Added attribute at " << loc << " : " << name << "  ; " << this);
 	}
 
 	void ShaderRenderable::clearAttributes()
 	{
+		attrs_.clear();
 		clearAttributeSets();
 		addAttributeSet(KRE::DisplayDevice::createAttributeSet(false, false, false));
-		attrs_.clear();
 	}
 
 	void ShaderRenderable::setDrawMode(KRE::DrawMode dmode)
