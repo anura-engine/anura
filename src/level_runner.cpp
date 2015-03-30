@@ -793,6 +793,8 @@ namespace
 	}
 }
 
+void process_tbs_matchmaking_server();
+
 bool LevelRunner::play_cycle()
 {
 	auto wnd = KRE::WindowManager::getMainWindow();
@@ -811,6 +813,8 @@ bool LevelRunner::play_cycle()
 	if(preferences::internal_tbs_server()) {
 		tbs::internal_server::process();
 	}
+
+	process_tbs_matchmaking_server();
 
 	if(controls::num_players() > 1) {
 		lvl_->backup();
