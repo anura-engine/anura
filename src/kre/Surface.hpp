@@ -104,6 +104,7 @@ namespace KRE
 	{
 	public:
 		virtual ~Surface();
+		unsigned id() const { return id_; }
 		virtual const void* pixels() const = 0;
 		// This is a potentially dangerous function and significant care must
 		// be taken when processing the pixel data to respect correct row pitch
@@ -228,5 +229,6 @@ namespace KRE
 		PixelFormatPtr pf_;
 		std::shared_ptr<std::vector<bool>> alpha_map_;
 		std::string name_;
+		unsigned id_;
 	};
 }

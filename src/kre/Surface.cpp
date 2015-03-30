@@ -42,10 +42,18 @@ namespace KRE
 			static SurfaceCacheType res;
 			return res;
 		}
+
+		unsigned get_next_id()
+		{
+			static unsigned id = 1;
+			return id++;
+		}
 	}
 
 	Surface::Surface()
-		: flags_(SurfaceFlags::NONE)
+		: flags_(SurfaceFlags::NONE),
+		  name_(),
+		  id_(get_next_id())
 	{
 	}
 
