@@ -412,10 +412,6 @@ namespace gui
 
 		}
 
-		for(const RectDraw& r : rects) {
-			canvas->drawSolidRect(r.area, r.col);
-		}
-
 		size_t r = 0;
 		for(auto n = scroll_pos_; n < text_.size() && r < nrows_; ++n, ++r) {
 			if(n >= begin_highlight_line_ && n <= end_highlight_line_) {
@@ -505,6 +501,10 @@ namespace gui
 				RectDraw rect_draw = { rect(static_cast<int>(xpos + c*char_width_+1), static_cast<int>(ypos + r*char_height_), 1, char_height_), KRE::Color::colorWhite() };
 				rects.push_back(rect_draw);
 			}
+		}
+
+		for(const RectDraw& r : rects) {
+			canvas->drawSolidRect(r.area, r.col);
 		}
 
 		if(no_border_ == false) {
