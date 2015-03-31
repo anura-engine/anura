@@ -189,7 +189,7 @@ public:
 			heartbeat_message.add("type", "heartbeat");
 			heartbeat_message.add("users", static_cast<int>(sessions_.size()));
 			heartbeat_message.add("users_queued", nqueue_size);
-			heartbeat_message.add("games", servers_.size());
+			heartbeat_message.add("games", static_cast<int>(servers_.size()));
 
 			std::vector<variant> servers;
 			for(auto p : servers_) {
