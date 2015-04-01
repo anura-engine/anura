@@ -1724,10 +1724,9 @@ void Level::prepare_tiles_for_drawing()
 		ASSERT_LOG(t.object != nullptr, "Tile object is null.");
 		const TileMap& map = tile_maps_[t.zorder];
 		if(map.getXSpeed() != 100 || map.getYSpeed() != 100) {
-			while(n != 0 && tiles_[n-1].zorder == t.zorder) {
+			while(n > 1 && tiles_[n-1].zorder == t.zorder) {
 				--n;
 			}
-
 			continue;
 		}
 

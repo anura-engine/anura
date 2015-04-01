@@ -54,7 +54,7 @@ namespace KRE
 			return GL_TEXTURE_2D;
 		}
 
-		typedef std::map<SurfacePtr, std::weak_ptr<GLuint>> texture_id_cache;
+		typedef std::map<unsigned, std::weak_ptr<GLuint>> texture_id_cache;
 		texture_id_cache& get_id_cache()
 		{
 			static texture_id_cache res;
@@ -126,6 +126,11 @@ namespace KRE
 
 	OpenGLTexture::~OpenGLTexture()
 	{
+		int n = 0;
+		for(auto& td : texture_data_) {
+			LOG_DEBUG("Release TexturePtr(" << n << "): id: " << *td.id << ", use_count: " << td.id.use_count());
+			++n;
+		}
 	}
 
 	void OpenGLTexture::update(int n, int x, int width, void* pixels)
@@ -579,11 +584,8 @@ namespace KRE
 		}
 
 		ASSERT_LOG(is_yuv_planar_ == false, "XXX Need to fix yuv planar textures now!");
-		//if(is_yuv_planar_) {
-		//	texture_data_.resize(3);
-		//}
 
-		auto it = get_id_cache().find(surf);
+		auto it = get_id_cache().find(surf->id());
 		if(it != get_id_cache().end()) {
 			auto cached_id = it->second.lock();
 			if(cached_id != nullptr) {
@@ -598,7 +600,7 @@ namespace KRE
 		auto id_ptr = std::shared_ptr<GLuint>(new GLuint(new_id), [](GLuint* id) { glDeleteTextures(1, id); delete id; });
 		td.id = id_ptr;
 		if(surf) {
-			get_id_cache()[surf] = id_ptr;
+			get_id_cache()[surf->id()] = id_ptr;
 		}
 
 		glBindTexture(GetGLTextureType(getType(n)), *td.id);

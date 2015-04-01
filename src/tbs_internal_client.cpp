@@ -57,10 +57,6 @@ void handler_proxy(std::shared_ptr<std::function<void(const std::string&)> > fn,
 		game_logic::MapFormulaCallablePtr callable, 
 		std::function<void(const std::string&)> handler)
 	{
-		if(handler_) {
-			*handler_ = [](const std::string& s){};
-		}
-
 		handler_.reset(new std::function<void(const std::string&)>(handler));
 
 		std::function<void(const std::string&)> fn = std::bind(handler_proxy, handler_, std::placeholders::_1);

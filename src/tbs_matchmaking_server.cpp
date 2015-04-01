@@ -23,8 +23,6 @@
 
 //This file is designed to only work on Linux.
 
-#if !defined(_MSC_VER)
-
 #include <algorithm>
 #include <ctype.h>
 #include <deque>
@@ -156,6 +154,7 @@ public:
 
 	void heartbeat(const boost::system::error_code& error)
 	{
+#if !defined(_MSC_VER)
 		int pid_status = 0;
 		const pid_t pid = waitpid(-1, &pid_status, WNOHANG);
 		if(pid < 0) {
@@ -177,6 +176,7 @@ public:
 				fprintf(stderr, "Child server exited without a result. %d servers running\n", (int)servers_.size());
 			}
 		}
+#endif //!defined(_MSC_VER)
 
 		time_ms_ += g_matchmaking_heartbeat_ms;
 
@@ -187,9 +187,9 @@ public:
 
 			variant_builder heartbeat_message;
 			heartbeat_message.add("type", "heartbeat");
-			heartbeat_message.add("users", sessions_.size());
+			heartbeat_message.add("users", static_cast<int>(sessions_.size()));
 			heartbeat_message.add("users_queued", nqueue_size);
-			heartbeat_message.add("games", servers_.size());
+			heartbeat_message.add("games", static_cast<int>(servers_.size()));
 
 			std::vector<variant> servers;
 			for(auto p : servers_) {
@@ -686,6 +686,10 @@ private:
 
 	int check_matchmaking_queue()
 	{
+
+#if defined(_MSC_VER)
+		return 0;
+#else
 		//build a list of queued users and then pass to our FFL matchmake() function
 		//to try to make an eligible match.
 		std::vector<int> session_ids;
@@ -840,6 +844,7 @@ private:
 		}
 
 		return static_cast<int>(session_ids.size() - match_sessions.size());
+#endif //!_MSC_VER
 	}
 
 	variant build_status() const {
@@ -996,6 +1001,18 @@ void matchmaking_server::executeCommand(variant cmd)
 
 }
 
+PREF_BOOL(internal_tbs_matchmaking_server, false, "Run an in-process tbs matchmaking server");
+
+void process_tbs_matchmaking_server()
+{
+	int port = 23456;
+	if(g_internal_tbs_matchmaking_server) {
+		static boost::asio::io_service io_service;
+		static boost::intrusive_ptr<matchmaking_server> server(new matchmaking_server(io_service, port));
+		io_service.poll();
+	}
+}
+
 COMMAND_LINE_UTILITY(tbs_matchmaking_server) {
 	int port = 23456;
 
@@ -1051,5 +1068,3 @@ COMMAND_LINE_UTILITY(db_script) {
 	while(db->process()) {
 	}
 }
-
-#endif

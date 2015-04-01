@@ -28,6 +28,7 @@
 #include <boost/algorithm/string.hpp>
 
 #ifdef __APPLE__
+#include <sys/types.h>
 #include <sys/stat.h>
 #endif
 
@@ -492,11 +493,23 @@ namespace sys
 
 	bool is_file_executable(const std::string& path)
 	{
+#ifdef __APPLE__
+		struct stat buf;
+		stat(path.c_str(), &buf);
+		return (buf.st_mode&S_IXUSR) != 0;
+#else
 		return (boost::filesystem::status(path).permissions()&boost::filesystem::owner_exe) != 0;
+#endif
 	}
 
 	void set_file_executable(const std::string& path)
 	{
+#ifdef __APPLE__
+		struct stat buf;
+		stat(path.c_str(), &buf);
+		chmod(path.c_str(), buf.st_mode|S_IXUSR);
+#else
 		boost::filesystem::permissions(path, boost::filesystem::owner_exe);
+#endif
 	}
 }

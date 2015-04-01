@@ -69,6 +69,7 @@ namespace graphics
 		void surrenderReferences(GarbageCollector* collector);
 	private:
 		DECLARE_CALLABLE(AnuraShader);
+		AnuraShader& operator=(const AnuraShader&) = delete;
 		void init();
 
 		struct DrawCommand {
@@ -87,6 +88,7 @@ namespace graphics
 			void executeOnDraw();
 
 			void surrenderReferences(GarbageCollector* collector);
+			void clearCommands() { uniform_commands_.clear(); }
 		private:
 			virtual variant getValue(const std::string& key) const override;
 			virtual void setValue(const std::string& key, const variant& value) override;
@@ -102,6 +104,7 @@ namespace graphics
 			void executeOnDraw();
 
 			void surrenderReferences(GarbageCollector* collector);
+			void clearCommands() { attribute_commands_.clear(); }
 		private:
 			virtual variant getValue(const std::string& key) const override;
 			virtual void setValue(const std::string& key, const variant& value) override;

@@ -494,7 +494,7 @@ bool LevelRunner::handle_mouse_events(const SDL_Event &event)
 			for(auto& it : cs) {
 				EntityPtr& e = it;
 				rect m_area = e->getMouseOverArea();
-				m_area += e->getMidpoint();
+				m_area += point(e->x(), e->y());
 				// n.b. mouse_over_area is relative to the object.
 				if(m_area.w() != 0) {
 					point p(x,y);
@@ -585,20 +585,21 @@ bool LevelRunner::handle_mouse_events(const SDL_Event &event)
 			}
 
 			if(event_type == SDL_MOUSEMOTION) {
+
 				// handling for mouse_leave
 				level_chars = Level::current().get_chars();
 
 				//make events happen with highest zorder objects first.
 				std::sort(level_chars.begin(), level_chars.end(), zorder_compare);
 				std::reverse(level_chars.begin(), level_chars.end());
+
 				for(const EntityPtr& e : level_chars) {
 					if(!e) {
 						continue;
 					}
 
-					// n.b. mouse_over_area is relative to the object.
 					rect m_area = e->getMouseOverArea();
-					m_area += e->getMidpoint();
+					m_area += point(e->x(), e->y());
 					bool has_m_area = m_area.w() != 0;
 					point p(x,y);
 					if(e->useAbsoluteScreenCoordinates()) {
@@ -792,6 +793,8 @@ namespace
 	}
 }
 
+void process_tbs_matchmaking_server();
+
 bool LevelRunner::play_cycle()
 {
 	auto wnd = KRE::WindowManager::getMainWindow();
@@ -810,6 +813,8 @@ bool LevelRunner::play_cycle()
 	if(preferences::internal_tbs_server()) {
 		tbs::internal_server::process();
 	}
+
+	process_tbs_matchmaking_server();
 
 	if(controls::num_players() > 1) {
 		lvl_->backup();
