@@ -169,19 +169,18 @@ namespace gui
 
 	void DropdownWidget::init()
 	{
-		std::function<WidgetPtr(const std::string&, int)> make_label;
 		if(font_ == "bitmap") {
-			make_label = [](const std::string& label, int size){
+			make_label_ = [](const std::string& label, int size){
 				return WidgetPtr(new GraphicalFontLabel(label, "door_label", 2));
 			};
 		} else {
-			make_label = [this](const std::string& label, int size){
+			make_label_ = [this](const std::string& label, int size){
 				return WidgetPtr(new Label(label, size, this->font_));
 			};
 		}
 
 		const int dropdown_image_size = std::max(height(), dropdown_image_->height());
-		label_ = make_label(list_.size() > 0 && current_selection_ >= 0 && current_selection_ < static_cast<int>(list_.size()) ? list_[current_selection_] : _("No items"), 16);
+		label_ = make_label_(list_.size() > 0 && current_selection_ >= 0 && current_selection_ < static_cast<int>(list_.size()) ? list_[current_selection_] : _("No items"), 16);
 
 		label_->setLoc((width() - dropdown_image_->width() - 8 - label_->width())/2, (height() - label_->height()) / 2);
 		if(text_normal_color_) {
@@ -219,7 +218,7 @@ namespace gui
 
 		labels_.clear();
 		for(auto& s : list_) {
-			labels_.emplace_back(make_label(i18n::tr(s), 14));
+			labels_.emplace_back(make_label_(i18n::tr(s), 14));
 			if(text_normal_color_ != nullptr) {
 				labels_.back()->setColor(*text_normal_color_);
 			}
@@ -239,12 +238,22 @@ namespace gui
 		init();
 	}
 
+	void DropdownWidget::setLabel()
+	{
+		//label_ = labels_[current_selection_];
+		label_ = make_label_(list_[current_selection_], 16);
+		label_->setLoc((width() - dropdown_image_->width() - 8 - label_->width())/2, (height() - label_->height()) / 2);
+		if(text_normal_color_) {
+			label_->setColor(*text_normal_color_);
+		}
+	}
+
 	void DropdownWidget::setSelection(int selection)
 	{
-		if(selection >= 0 || size_t(selection) < list_.size()) {
+		if(selection >= 0 || selection < static_cast<int>(list_.size())) {
 			current_selection_ = selection;
 			if(type_ == DropdownType::LIST) {
-				label_ = labels_[current_selection_];
+				setLabel();
 			} else if(type_ == DropdownType::COMBOBOX) {
 				editor_->setText(list_[current_selection_]);
 			}
@@ -429,25 +438,24 @@ namespace gui
 	{
 		point p;
 		input::sdl_get_mouse_state(&p.x, &p.y);
-	if(in_widget_ != inWidget(event.x, event.y)) {
-		in_widget_ = !in_widget_;
-		if(!in_widget_ && text_normal_color_) {
-			label_->setColor(*text_normal_color_);
-		}
+		if(in_widget_ != inWidget(event.x, event.y)) {
+			in_widget_ = !in_widget_;
+			if(!in_widget_ && text_normal_color_) {
+				label_->setColor(*text_normal_color_);
+			}
 
-		if(in_widget_ && text_focus_color_) {
-			label_->setColor(*text_focus_color_);
-		}
+			if(in_widget_ && text_focus_color_) {
+				label_->setColor(*text_focus_color_);
+			}	
 
-		if(normal_image_.empty() == false) {
-			if(in_widget_) {
-				dropdown_image_->setGuiSection(focus_image_);
-			} else {
-				dropdown_image_->setGuiSection(normal_image_);
+			if(normal_image_.empty() == false) {
+				if(in_widget_) {
+					dropdown_image_->setGuiSection(focus_image_);
+				} else {
+					dropdown_image_->setGuiSection(normal_image_);
+				}
 			}
 		}
-		
-	}
 		return claimed;
 	}
 
@@ -461,7 +469,7 @@ namespace gui
 		}
 		current_selection_ = selection;
 		if(type_ == DropdownType::LIST) {
-			label_ = labels_[current_selection_];
+			setLabel();
 		} else if(type_ == DropdownType::COMBOBOX) {
 			editor_->setText(list_[current_selection_]);
 		}

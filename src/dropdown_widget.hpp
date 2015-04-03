@@ -72,6 +72,7 @@ namespace gui
 		bool handleMouseMotion(const SDL_MouseMotionEvent& event, bool claimed);
 		void executeSelection(int selection);
 		void mouseoverItem(int selection);
+		void setLabel();
 
 		int dropdown_height_;
 		DropdownList list_;
@@ -101,6 +102,8 @@ namespace gui
 
 		KRE::ColorPtr normal_color_, depressed_color_, focus_color_;
 		KRE::ColorPtr text_normal_color_, text_depressed_color_, text_focus_color_;
+
+		std::function<WidgetPtr(const std::string&, int)> make_label_;
 
 		bool in_widget_;
 	};
