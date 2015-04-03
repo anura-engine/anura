@@ -163,6 +163,8 @@ namespace gui
 		virtual void handleProcess();
 		virtual void recalcLoc();
 		virtual bool inWidget(int xloc, int yloc) const;
+		void setPos(int x, int y) { position_ = point(x, y); }
+		void setPos(const point& p) { position_ = p; }
 		virtual variant handleWrite();
 		virtual WidgetSettingsDialog* settingsDialog(int x, int y, int w, int h);
 
