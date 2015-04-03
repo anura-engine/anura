@@ -46,6 +46,9 @@ namespace gui
 		virtual void handleDraw() const override;
 		void init();
 
+		std::string anim_name_;
+		std::string type_;
+
 		std::vector<variant> nodes_;
 		mutable LabelPtr label_;
 		mutable std::unique_ptr<Frame> frame_;
