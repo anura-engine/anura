@@ -467,10 +467,10 @@ namespace gui
 				if(!util::c_isspace(ch) && util::c_isprint(ch)) {
 					const rectf& area = get_char_area(font_size_, ch);
 
-					const int x1 = static_cast<int>(xpos + c*char_width_) & preferences::xypos_draw_mask;
-					const int y1 = static_cast<int>(ypos + r*char_height_) & preferences::xypos_draw_mask;
-					const int x2 = (x1 + char_width_) & preferences::xypos_draw_mask;
-					const int y2 = (y1 + char_height_) & preferences::xypos_draw_mask;
+					const int x1 = static_cast<int>(xpos + c*char_width_);
+					const int y1 = static_cast<int>(ypos + r*char_height_);
+					const int x2 = (x1 + char_width_);
+					const int y2 = (y1 + char_height_);
 
 					auto& queue = chars[col.asRGBA()];
 					queue.emplace_back(glm::vec2(x1, y1), glm::vec2(area.x1(), area.y1()));
