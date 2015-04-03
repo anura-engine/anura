@@ -400,6 +400,7 @@ namespace graphics
 		{
 			ASSERT_LOG(points.is_list(), "arrow points is not a list: " << points.debug_location());
 
+			varray_.clear();
 			points_.clear();
 
 			for(int n = 0; n != points.num_elements(); ++n) {
