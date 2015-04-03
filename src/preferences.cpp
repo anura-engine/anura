@@ -602,7 +602,7 @@ namespace preferences
 	bool editor_save_to_user_preferences() {
 		return editor_save_to_user_preferences_;
 	}
-	
+
 	namespace {
 		void expand_path(std::string& str) {
 			if(!str.empty() && str[0] == '~') {

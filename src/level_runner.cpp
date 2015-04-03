@@ -1310,10 +1310,6 @@ bool LevelRunner::play_cycle()
 						  std::bind(upload_screenshot, fname, info),
 						  std::bind(done_upload_screenshot, info));
 					}
-				} else if(key == SDLK_l && (mod&KMOD_CTRL)) {
-					preferences::set_use_pretty_scaling(!preferences::use_pretty_scaling());
-					graphics::SurfaceCache::clear();
-					KRE::Texture::clearCache();
 				} else if(key == SDLK_m && mod & KMOD_CTRL) {
 					sound::mute(!sound::muted()); //toggle sound
 				} else if(key == SDLK_p && mod & KMOD_CTRL) {
@@ -1325,9 +1321,6 @@ bool LevelRunner::play_cycle()
 					if(!paused) {
 						controls::read_until(lvl_->cycle());
 					}
-				} else if(key == SDLK_p && mod & KMOD_ALT) {
-					preferences::set_use_pretty_scaling(!preferences::use_pretty_scaling());
-					KRE::Texture::clearTextures();
 				} else if(key == SDLK_f && mod & KMOD_CTRL && !preferences::no_fullscreen_ever()) {
 					LOG_DEBUG("ctrl-f pushed");
 					// XXX this changes if editor is active.

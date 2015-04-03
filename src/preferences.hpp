@@ -113,8 +113,6 @@ namespace preferences
 	bool toogle_debug_hitboxes();
 	bool edit_and_continue();
 	void set_edit_and_continue(bool value);
-	bool use_pretty_scaling();
-	void set_use_pretty_scaling(bool value);
 
 	// Control scheme to use on iOS or other touch systems
 	const std::string& control_scheme();
@@ -157,8 +155,6 @@ namespace preferences
 	//avoid drawing things at "half pixels" when the actual screen dimensions
 	//are lower than the virtual screen dimensions.
 	extern int xypos_draw_mask;
-
-	bool double_scale();
 
 	//this is a flag set to true iff we are in a mode where we write
 	//'compiled' tile output.
