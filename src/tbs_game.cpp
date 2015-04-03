@@ -305,7 +305,7 @@ namespace tbs
 
 		if(nplayer >= 0 && nplayer < static_cast<int>(players_.size())) {
 			players_[nplayer].state_id_sent = state_id_;
-			players_[nplayer].state_sent = FormulaObject::deepClone(state_doc);
+			players_[nplayer].state_sent = state_doc;
 		}
 
 		std::string log_str;
