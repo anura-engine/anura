@@ -278,7 +278,6 @@ namespace tbs
 		if(nplayer >= 0 
 			&& nplayer < static_cast<int>(players_.size()) 
 			&& players_[nplayer].state_id_sent != -1 
-			&& players_[nplayer].state_id_sent == players_[nplayer].confirmed_state_id 
 			&& players_[nplayer].allow_deltas) {
 			send_delta = true;
 		}
@@ -299,14 +298,14 @@ namespace tbs
 
 		if(send_delta) {
 			result.add("delta", FormulaObject::generateDiff(players_[nplayer].state_sent, state_doc));
-			result.add("delta_basis", players_[nplayer].confirmed_state_id);
+			result.add("delta_basis", players_[nplayer].state_id_sent);
 		} else {
 			result.add("state", state_doc);
 		}
 
-		if(nplayer >= 0 && nplayer < static_cast<int>(players_.size()) && players_[nplayer].allow_deltas) {
+		if(nplayer >= 0 && nplayer < static_cast<int>(players_.size())) {
 			players_[nplayer].state_id_sent = state_id_;
-			players_[nplayer].state_sent = state_doc;
+			players_[nplayer].state_sent = FormulaObject::deepClone(state_doc);
 		}
 
 		std::string log_str;
@@ -645,8 +644,8 @@ namespace tbs
 			return;
 		} else if(type == "request_updates") {
 			if(msg.has_key("state_id") && !doc_.is_null()) {
-				if(nplayer >= 0 && nplayer < static_cast<int>(players_.size()) && msg.has_key("allow_deltas") && msg["allow_deltas"].as_bool() == false) {
-					players_[nplayer].allow_deltas = false;
+				if(nplayer >= 0 && nplayer < static_cast<int>(players_.size()) && msg.has_key("allow_deltas")) {
+					players_[nplayer].allow_deltas = msg["allow_deltas"].as_bool();
 				}
 
 				const variant state_id = msg["state_id"];
