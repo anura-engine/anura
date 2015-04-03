@@ -514,10 +514,10 @@ namespace KRE
 
 		ShaderProgram::~ShaderProgram()
 		{
-			if(object_ != 0) {
-				glDeleteShader(object_);
-				object_ = 0;
-			}
+			//if(object_ != 0) {
+			//	glDeleteShader(object_);
+			//	object_ = 0;
+			//}
 		}
 
 		void ShaderProgram::init(const std::string& name, const ShaderDef& vs, const ShaderDef& fs)
