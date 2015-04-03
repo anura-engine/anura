@@ -10,6 +10,7 @@ CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_TIME_IN_ANIMATION_DELTA,            "ti
 CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_FRAME_IN_ANIMATION,                 "frame_in_animation", "int" )
 CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_LEVEL,                              "level", "any" )
 CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_ANIMATION,                          "animation", "string/string|map" )
+CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_ANIMATION_MAP,                      "animation_map", "map" )
 CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_AVAILABLE_ANIMATIONS,               "available_animations", "[string]" )
 CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_HITPOINTS,                          "hitpoints", "int" )
 CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_MAX_HITPOINTS,                      "max_hitpoints", "int" )
