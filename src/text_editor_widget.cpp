@@ -730,7 +730,7 @@ namespace gui
 				onMoveCursor(true /*don't check for shift, assume it is*/);
 			}
 
-			if(mousey >= y() + height() && scroll_pos_ < int(text_.size())-2) {
+			if(mousey >= getPos().y + height() && scroll_pos_ < int(text_.size())-2) {
 				++scroll_pos_;
 				auto end = scroll_pos_ + nrows_ - 1;
 				if(end >= text_.size()) {
@@ -740,7 +740,7 @@ namespace gui
 				cursor_ = Loc(end, text_[end].size());
 				onMoveCursor(true /*don't check for shift, assume it is*/);
 				refreshScrollbar();
-			} else if(mousey <= y() && scroll_pos_ > 0) {
+			} else if(mousey <= getPos().y && scroll_pos_ > 0) {
 				--scroll_pos_;
 				cursor_ = Loc(scroll_pos_, 0);
 				onMoveCursor(true /*don't check for shift, assume it is*/);
@@ -1245,8 +1245,8 @@ namespace gui
 
 	std::pair<size_t, size_t> TextEditorWidget::mousePositiontoRowCol(int xpos, int ypos) const
 	{
-		const int xloc = x() + BorderSize;
-		const int yloc = y() + BorderSize;
+		const int xloc = BorderSize + getPos().x;
+		const int yloc = BorderSize + getPos().y;
 
 		size_t r = 0;
 		for(size_t n = scroll_pos_; n < text_.size() && r < nrows_; ++n, ++r) {
