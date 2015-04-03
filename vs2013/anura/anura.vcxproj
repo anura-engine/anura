@@ -48,7 +48,6 @@
     <ClInclude Include="..\..\src\custom_object_dialog.hpp" />
     <ClInclude Include="..\..\src\custom_object_functions.hpp" />
     <ClInclude Include="..\..\src\custom_object_type.hpp" />
-    <ClInclude Include="..\..\src\custom_object_widget.hpp" />
     <ClInclude Include="..\..\src\db_client.hpp" />
     <ClInclude Include="..\..\src\debug_console.hpp" />
     <ClInclude Include="..\..\src\decimal.hpp" />
@@ -368,7 +367,6 @@
     <ClCompile Include="..\..\src\custom_object_dialog.cpp" />
     <ClCompile Include="..\..\src\custom_object_functions.cpp" />
     <ClCompile Include="..\..\src\custom_object_type.cpp" />
-    <ClCompile Include="..\..\src\custom_object_widget.cpp" />
     <ClCompile Include="..\..\src\db_client.cpp" />
     <ClCompile Include="..\..\src\debug_console.cpp" />
     <ClCompile Include="..\..\src\decimal.cpp" />

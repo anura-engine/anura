@@ -120,8 +120,6 @@ namespace widget_factory
 			return WidgetPtr(new ProgressBar(v, e));
 		} else if(wtype == "selector") {
 			return WidgetPtr(new SelectorWidget(v, e));
-		} else if(wtype == "object") {
-			return WidgetPtr(new CustomObjectWidget(v, e));
 		} else if(wtype == "bar") {
 			return WidgetPtr(new BarWidget(v, e));
 		} else if(wtype == "color_picker") {
