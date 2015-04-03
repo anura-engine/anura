@@ -72,7 +72,7 @@ namespace widget_factory
 		}
 		ASSERT_LOG(v.is_map(), "TYPE ERROR: widget must be specified by a map, found: " << v.to_debug_string());
 		std::string wtype = v["type"].as_string();
-		if(wtype == "animation_widget") {
+		if(wtype == "animation") {
 			return WidgetPtr(new AnimationWidget(v,e));
 	#ifndef NO_EDITOR
 		} else if(wtype == "animation_preview") {
