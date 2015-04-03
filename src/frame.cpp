@@ -147,7 +147,9 @@ void Frame::buildPatterns(variant obj_variant)
 
 Frame::Frame(variant node)
    : id_(node["id"].as_string()),
+     image_(node["image"].as_string_default()),
      variant_id_(id_),
+	 doc_(node),
      enter_event_id_(get_object_event_id("enter_" + id_ + "_anim")),
 	 end_event_id_(get_object_event_id("end_" + id_ + "_anim")),
 	 leave_event_id_(get_object_event_id("leave_" + id_ + "_anim")),
@@ -189,7 +191,7 @@ Frame::Frame(variant node)
 	 blur_(node["blur"].as_int()),
 	 rotate_on_slope_(node["rotate_on_slope"].as_bool()),
 	 damage_(node["damage"].as_int()),
-	 sounds_(util::split(node["sound"].as_string_default())),
+	 sounds_(node["sound"].is_list() ? node["sound"].as_list_string() : util::split(node["sound"].as_string_default())),
 	 force_no_alpha_(node["force_no_alpha"].as_bool(false)),
 	 no_remove_alpha_borders_(node["no_remove_alpha_borders"].as_bool(false)),
 	 collision_areas_inside_frame_(true),
@@ -376,6 +378,69 @@ Frame::~Frame()
 	if(palettes_recognized_.empty() == false) {
 		palette_frames().erase(this);
 	}
+}
+
+variant Frame::write() const
+{
+	return doc_;
+
+	/* --if we decide we want to write this out instead of just saving the
+	     doc this is what it might look like.
+	variant_builder builder;
+
+	builder.add("id", id_);
+
+	builder.add("collide", collide_rect_.write());
+	builder.add("hit", hit_rect_.write());
+	builder.add("platform", platform_rect_.write());
+	builder.add("rect", img_rect_.write());
+
+	if(feet_x_ != img_rect_.w()/2) {
+		builder.add("feet_x", feet_x_);
+	}
+
+	if(feet_y_ != img_rect_.h()/2) {
+		builder.add("feet_y", feet_y_);
+	}
+
+	if(accel_x_ != std::numeric_limits<int>::min()) {
+		builder.add("accel_x", accel_x_);
+	}
+	
+	if(accel_y_ != std::numeric_limits<int>::min()) {
+		builder.add("accel_y", accel_y_);
+	}
+
+	if(velocity_x_ != std::numeric_limits<int>::min()) {
+		builder.add("velocity_x", velocity_x_);
+	}
+	
+	if(velocity_y_ != std::numeric_limits<int>::min()) {
+		builder.add("velocity_y", velocity_y_);
+	}
+
+	builder.add("frames", nframes_);
+	builder.add("frames_per_row", nframes_per_row_);
+	builder.add("duration", frame_time_);
+	builder.add("reverse", reverse_frame_);
+	builder.add("play_backwards", play_backwards_);
+	builder.add("scale", scale_);
+	builder.add("pad", pad_);
+	builder.add("rotate", rotate_);
+	builder.add("blur", blur_);
+	builder.add("rotate_on_slope", rotate_on_slope_);
+	builder.add("damage", damage_);
+	builder.add("sounds", sounds_);
+	builder.add("force_no_alpha", force_no_alpha_);
+	builder.add("no_remove_alpha_borders", no_remove_alpha_borders_);
+
+	if(image_.empty()) {
+	} else {
+		builder.add("image", image_);
+	}
+
+	return builder.build();
+	*/
 }
 
 void Frame::setPalettes(unsigned int palettes)

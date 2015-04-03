@@ -57,6 +57,8 @@ public:
 	explicit Frame(variant node);
 	~Frame();
 
+	variant write() const;
+
 	//ID of the frame. Not unique, but is the name of the element the frame
 	//came from. Useful to tell what kind of frame it is.
 	const std::string& id() const { return id_; }
@@ -152,6 +154,9 @@ private:
 	//ID as a variant, useful to be able to get a variant of the ID
 	//very efficiently.
 	variant variant_id_;
+
+	//the document fragment this was created from.
+	variant doc_;
 
 	//ID's used to signal events that occur on this animation.
 	int enter_event_id_, end_event_id_, leave_event_id_, processEvent_id_;

@@ -2835,6 +2835,7 @@ variant CustomObject::getValueBySlot(int slot) const
 	case CUSTOM_OBJECT_FRAME_IN_ANIMATION: return variant(getCurrentFrame().frameNumber(time_in_frame_));
 	case CUSTOM_OBJECT_LEVEL:             return variant(&Level::current());
 	case CUSTOM_OBJECT_ANIMATION:         return frame_->variantId();
+	case CUSTOM_OBJECT_ANIMATION_MAP:     return frame_->write();
 	case CUSTOM_OBJECT_AVAILABLE_ANIMATIONS: return type_->getAvailableFrames();
 	case CUSTOM_OBJECT_HITPOINTS:         return variant(hitpoints_);
 	case CUSTOM_OBJECT_MAX_HITPOINTS:     return variant(type_->getHitpoints() + max_hitpoints_);
@@ -3756,6 +3757,15 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 			setFrame(*value.convert_to<Frame>());
 		}
 		break;
+
+	case CUSTOM_OBJECT_ANIMATION_MAP: {
+		FramePtr f(new Frame(value));
+		if(type_->useImageForCollisions()) {
+			f->setImageAsSolid();
+		}
+		setFrame(*f);
+		break;
+	}
 	
 	case CUSTOM_OBJECT_X1:
 	case CUSTOM_OBJECT_X: {
