@@ -166,7 +166,7 @@ void GarbageCollectorImpl::collect()
 	int count = 0;
 	for(GarbageCollectible* p = g_head; p != nullptr; p = p->next_) {
 		p->add_ref();
-		ASSERT_LOG(p->refcount() > 1, "Object with bad refcount: " << p->refcount());
+		ASSERT_LOG(p->refcount() > 1, "Object with bad refcount: " << p->refcount() << ": " << p->debugObjectName());
 		items.push_back(p);
 		++count;
 	}
