@@ -313,7 +313,6 @@
 		C010C7FC160AFD4E006E7D90 /* wml_formula_callable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C010C73F160AFD4D006E7D90 /* wml_formula_callable.cpp */; };
 		C026F59B16C23629000482A1 /* b2d_ffl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C026F59A16C23629000482A1 /* b2d_ffl.cpp */; };
 		C026F59D16C23649000482A1 /* rich_text_label.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C026F59C16C23649000482A1 /* rich_text_label.cpp */; };
-		C026F5A116C23963000482A1 /* selector_widget.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C026F59F16C23963000482A1 /* selector_widget.cpp */; };
 		C026F5A416C74B1E000482A1 /* draw_primitive.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C026F5A216C74B1E000482A1 /* draw_primitive.cpp */; };
 		C02751BB17FD417100173646 /* video_selections.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C02751B917FD417100173646 /* video_selections.cpp */; };
 		C02751BE17FD49EE00173646 /* modules in Resources */ = {isa = PBXBuildFile; fileRef = C0812FCC17EED7C400ADDA70 /* modules */; };
@@ -397,7 +396,6 @@
 		C0D6EB6D16DB25C000B5ABCA /* tbs_internal_server.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0D6EB6816DB25C000B5ABCA /* tbs_internal_server.cpp */; };
 		C0D6EB6E16DB25C000B5ABCA /* tbs_server_base.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0D6EB6A16DB25C000B5ABCA /* tbs_server_base.cpp */; };
 		C0D6EB7116DB25D700B5ABCA /* bar_widget.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0D6EB6F16DB25D700B5ABCA /* bar_widget.cpp */; };
-		C0D6EB7416DB285D00B5ABCA /* custom_object_widget.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0D6EB7216DB25EA00B5ABCA /* custom_object_widget.cpp */; };
 		C0D78B5F171F215D00980007 /* libpng15.15.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = C0D78B5E171F215D00980007 /* libpng15.15.dylib */; };
 		C0D78B60171F239D00980007 /* libpng15.15.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = C0D78B5E171F215D00980007 /* libpng15.15.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		C0DDFDC6163F7FF800F727DD /* sys.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0406533163F790000F84F94 /* sys.cpp */; };
@@ -1065,8 +1063,6 @@
 		C026F59A16C23629000482A1 /* b2d_ffl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = b2d_ffl.cpp; sourceTree = "<group>"; };
 		C026F59C16C23649000482A1 /* rich_text_label.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = rich_text_label.cpp; sourceTree = "<group>"; };
 		C026F59E16C23650000482A1 /* rich_text_label.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = rich_text_label.hpp; sourceTree = "<group>"; };
-		C026F59F16C23963000482A1 /* selector_widget.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = selector_widget.cpp; sourceTree = "<group>"; };
-		C026F5A016C23963000482A1 /* selector_widget.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = selector_widget.hpp; sourceTree = "<group>"; };
 		C026F5A216C74B1E000482A1 /* draw_primitive.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = draw_primitive.cpp; sourceTree = "<group>"; };
 		C026F5A316C74B1E000482A1 /* draw_primitive.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = draw_primitive.hpp; sourceTree = "<group>"; };
 		C02751B917FD417100173646 /* video_selections.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = video_selections.cpp; sourceTree = "<group>"; };
@@ -1184,8 +1180,6 @@
 		C0D6EB6B16DB25C000B5ABCA /* tbs_server_base.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = tbs_server_base.hpp; sourceTree = "<group>"; };
 		C0D6EB6F16DB25D700B5ABCA /* bar_widget.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = bar_widget.cpp; sourceTree = "<group>"; };
 		C0D6EB7016DB25D700B5ABCA /* bar_widget.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = bar_widget.hpp; sourceTree = "<group>"; };
-		C0D6EB7216DB25EA00B5ABCA /* custom_object_widget.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = custom_object_widget.cpp; sourceTree = "<group>"; };
-		C0D6EB7316DB25EA00B5ABCA /* custom_object_widget.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = custom_object_widget.hpp; sourceTree = "<group>"; };
 		C0D78B5E171F215D00980007 /* libpng15.15.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libpng15.15.dylib; sourceTree = "<group>"; };
 		C0EF2A5D16229160004CD227 /* libGLEW.1.9.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libGLEW.1.9.0.dylib; sourceTree = "<group>"; };
 		C0F5E468169AAC97005ADCF5 /* language_dialog.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = language_dialog.cpp; sourceTree = "<group>"; };
@@ -1768,8 +1762,6 @@
 				C010C5FB160AFD4C006E7D90 /* custom_object_functions.hpp */,
 				C010C5FC160AFD4C006E7D90 /* custom_object_type.cpp */,
 				C010C5FD160AFD4C006E7D90 /* custom_object_type.hpp */,
-				C0D6EB7216DB25EA00B5ABCA /* custom_object_widget.cpp */,
-				C0D6EB7316DB25EA00B5ABCA /* custom_object_widget.hpp */,
 				C0AECE0518E541A200CD3161 /* db_client.cpp */,
 				C0AECE0618E541A200CD3161 /* db_client.hpp */,
 				C010C5FE160AFD4C006E7D90 /* debug_console.cpp */,
@@ -1965,8 +1957,6 @@
 				C010C6DA160AFD4D006E7D90 /* scrollbar_widget.hpp */,
 				C010C6DD160AFD4D006E7D90 /* segment_editor_dialog.cpp */,
 				C010C6DE160AFD4D006E7D90 /* segment_editor_dialog.hpp */,
-				C026F59F16C23963000482A1 /* selector_widget.cpp */,
-				C026F5A016C23963000482A1 /* selector_widget.hpp */,
 				C010C6E0160AFD4D006E7D90 /* settings_dialog.cpp */,
 				C010C6E1160AFD4D006E7D90 /* settings_dialog.hpp */,
 				C0917B17176700BC004307B0 /* simplex_noise.cpp */,
@@ -2241,7 +2231,6 @@
 				639B53801AC20D5A00ECC4F8 /* DisplayDevice.cpp in Sources */,
 				C010C742160AFD4D006E7D90 /* animation_creator.cpp in Sources */,
 				639B54631AC20D7600ECC4F8 /* b2RevoluteJoint.cpp in Sources */,
-				C0D6EB7416DB285D00B5ABCA /* custom_object_widget.cpp in Sources */,
 				639B53981AC20D5A00ECC4F8 /* SceneParameters.cpp in Sources */,
 				639B54841AC2183B00ECC4F8 /* SceneObjectCallable.cpp in Sources */,
 				C010C743160AFD4D006E7D90 /* animation_preview_widget.cpp in Sources */,
@@ -2514,7 +2503,6 @@
 				C00160D116AF2E00001DAEB9 /* load_level_nothread.cpp in Sources */,
 				C026F59B16C23629000482A1 /* b2d_ffl.cpp in Sources */,
 				C026F59D16C23649000482A1 /* rich_text_label.cpp in Sources */,
-				C026F5A116C23963000482A1 /* selector_widget.cpp in Sources */,
 				C026F5A416C74B1E000482A1 /* draw_primitive.cpp in Sources */,
 				639B53A31AC20D5A00ECC4F8 /* TextureOGL.cpp in Sources */,
 				C0D6EB6C16DB25C000B5ABCA /* tbs_internal_client.cpp in Sources */,
@@ -2607,20 +2595,21 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
-				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_DYNAMIC_NO_PIC = YES;
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_OPTIMIZATION_LEVEL = fast;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
 					"$(inherited)",
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				ONLY_ACTIVE_ARCH = YES;
-				SDKROOT = "";
+				SDKROOT = macosx;
 			};
 			name = Debug;
 		};
@@ -2631,15 +2620,18 @@
 				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				COPY_PHASE_STRIP = YES;
+				COPY_PHASE_STRIP = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = YES;
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
-				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_OPTIMIZATION_LEVEL = fast;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
-				SDKROOT = "";
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
 			};
 			name = Release;
 		};
@@ -2651,7 +2643,7 @@
 					"$(inherited)",
 					"\"$(SRCROOT)/dylibs\"",
 				);
-				GCC_OPTIMIZATION_LEVEL = 3;
+				GCC_OPTIMIZATION_LEVEL = fast;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "";
 				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;
@@ -2673,9 +2665,9 @@
 					"\"$(SRCROOT)/dylibs/SDL2.framework/Versions/A\"",
 					"$(PROJECT_DIR)/dylibs",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				OTHER_CFLAGS = (
 					"-DUSE_LUA",
-					"-DUSE_ISOMAP",
 					"-DUSE_SVG",
 				);
 				OTHER_CPLUSPLUSFLAGS = (
@@ -2717,7 +2709,7 @@
 					"$(inherited)",
 					"\"$(SRCROOT)/dylibs\"",
 				);
-				GCC_OPTIMIZATION_LEVEL = 3;
+				GCC_OPTIMIZATION_LEVEL = fast;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "";
 				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;
@@ -2739,8 +2731,12 @@
 					"\"$(SRCROOT)/dylibs/SDL2.framework/Versions/A\"",
 					"$(PROJECT_DIR)/dylibs",
 				);
-				OTHER_CFLAGS = "";
-				OTHER_CPLUSPLUSFLAGS = "";
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				OTHER_CFLAGS = (
+					"-DUSE_LUA",
+					"-DUSE_SVG",
+				);
+				OTHER_CPLUSPLUSFLAGS = "$(OTHER_CFLAGS)";
 				OTHER_LDFLAGS = (
 					"-rpath",
 					"@executable_path/../Frameworks",
