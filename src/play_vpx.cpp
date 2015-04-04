@@ -93,8 +93,25 @@ namespace movie
 		iter_ = nullptr;
 	}
 
-	vpx::~vpx() 
+	vpx::vpx(const vpx& v)
+		: Widget(v),
+		  file_(),
+		  file_name_(v.file_name_),
+		  loop_(v.loop_),
+		  cancel_on_keypress_(v.cancel_on_keypress_),
+		  frame_cnt_(v.frame_cnt_),
+		  flags_(v.flags_),
+		  file_hdr_(v.file_hdr_),
+		  frame_hdr_(v.frame_hdr_),
+		  frame_size_(v.frame_size_),
+		  res_(v.res_),
+		  codec_(v.codec_),
+		  iter_(nullptr),
+		  img_(v.img_),
+		  playing_(false),
+		  texture_(nullptr)
 	{
+		init();
 	}
 
 	void vpx::genTextures()

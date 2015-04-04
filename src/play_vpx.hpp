@@ -46,7 +46,7 @@ namespace movie
 	public:
 		vpx(const std::string& file, int x, int y, int width, int height, bool loop, bool cancel_on_keypress);
 		vpx(const variant& v, game_logic::FormulaCallable* e);
-		virtual ~vpx();
+		vpx(const vpx& v);
 		gui::WidgetPtr clone() const override;
 	protected:
 		void init();
