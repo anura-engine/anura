@@ -1821,6 +1821,13 @@ namespace game_logic
 						return left_type;
 					}
 
+					if(left_type->is_specific_list() && right_type->is_specific_list()) {
+						std::vector<variant_type_ptr> items = *left_type->is_specific_list();
+						auto other = right_type->is_specific_list();
+						items.insert(items.end(), other->begin(), other->end());
+						return variant_type::get_specific_list(items);
+					}
+
 					variant_type_ptr left_list = left_type->is_list_of();
 					variant_type_ptr right_list = right_type->is_list_of();
 					if(left_list && right_list) {

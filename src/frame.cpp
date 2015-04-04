@@ -147,7 +147,6 @@ void Frame::buildPatterns(variant obj_variant)
 
 Frame::Frame(variant node)
    : id_(node["id"].as_string()),
-     image_(node["image"].as_string_default()),
      variant_id_(id_),
 	 doc_(node),
      enter_event_id_(get_object_event_id("enter_" + id_ + "_anim")),
