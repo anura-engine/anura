@@ -40,6 +40,7 @@ namespace gui
 
 		key_type get_key();
 
+		WidgetPtr clone() const override;
 		static std::string getKeyName(key_type key);
 	private:
 		DECLARE_CALLABLE(KeyButton);

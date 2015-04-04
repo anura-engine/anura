@@ -57,6 +57,18 @@ namespace gui
 	ScrollableWidget::~ScrollableWidget()
 	{}
 
+	ScrollableWidget::ScrollableWidget(const ScrollableWidget& s)
+		: Widget(s),
+		  yscroll_(s.yscroll_),
+		  virtual_height_(s.virtual_height_),
+		  step_(s.step_),
+		  arrow_step_(s.arrow_step_),
+		  auto_scroll_bottom_(s.auto_scroll_bottom_),
+		  // for update of scrollbar widget next time updateScrollbar is called.
+		  scrollbar_(nullptr)
+	{
+	}
+
 	void ScrollableWidget::setYscroll(int yscroll)
 	{
 		const int old = yscroll_;
@@ -133,6 +145,13 @@ namespace gui
 		if(scrollbar_) {
 			scrollbar_->setLoc(x + width(), y);
 		}
+	}
+
+	WidgetPtr ScrollableWidget::clone() const
+	{
+		ScrollableWidget* sw = new ScrollableWidget(*this);
+		sw->updateScrollbar();
+		return WidgetPtr(sw);
 	}
 
 	BEGIN_DEFINE_CALLABLE(ScrollableWidget, Widget)

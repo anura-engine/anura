@@ -33,11 +33,14 @@
 namespace gui 
 {
 	Slider::Slider(int width, ChangeFn onchange, float position, int scale)
-		: width_(width), onchange_(onchange), dragging_(false), position_(position),
-		slider_left_(new GuiSectionWidget("slider_side_left", -1, -1, scale)),
-		slider_right_(new GuiSectionWidget("slider_side_right", -1, -1, scale)),
-		slider_middle_(new GuiSectionWidget("slider_middle", -1, -1, scale)),
-		slider_button_(new GuiSectionWidget("slider_button", -1, -1, scale))
+		: width_(width), 
+		  onchange_(onchange), 
+		  dragging_(false), 
+		  position_(position),
+		  slider_left_(new GuiSectionWidget("slider_side_left", -1, -1, scale)),
+		  slider_right_(new GuiSectionWidget("slider_side_right", -1, -1, scale)),
+		  slider_middle_(new GuiSectionWidget("slider_middle", -1, -1, scale)),
+		  slider_button_(new GuiSectionWidget("slider_button", -1, -1, scale))
 	{
 		setEnvironment();
 		init();
@@ -45,7 +48,8 @@ namespace gui
 	}
 
 	Slider::Slider(const variant& v, game_logic::FormulaCallable* e)
-		: Widget(v,e), dragging_(false)
+		: Widget(v,e), 
+		  dragging_(false)
 	{
 		ASSERT_LOG(getEnvironment() != 0, "You must specify a callable environment");
 		onchange_ = std::bind(&Slider::changeDelegate, this, std::placeholders::_1);
@@ -240,6 +244,24 @@ namespace gui
 		}
 
 		return claimed;
+	}
+
+	WidgetPtr Slider::clone() const
+	{
+		Slider* s = new Slider(*this);
+		if(slider_left_) {
+			s->slider_left_ = slider_left_->clone();
+		}
+		if(slider_right_) {
+			s->slider_right_ = slider_right_->clone();
+		}
+		if(slider_middle_) {
+			s->slider_middle_ = slider_middle_->clone();
+		}
+		if(slider_button_) {
+			s->slider_button_ = slider_button_->clone();
+		}
+		return WidgetPtr(s);
 	}
 
 	BEGIN_DEFINE_CALLABLE(Slider, Widget)

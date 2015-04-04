@@ -44,6 +44,7 @@ namespace gui
 		float position() const {return position_;};
 		void setPosition (float position) {position_ = position;};
 		void setDragEnd(DragEndFn ondragend) { ondragend_ = ondragend; }
+		WidgetPtr clone() const override;
 	private:
 		DECLARE_CALLABLE(Slider);
 

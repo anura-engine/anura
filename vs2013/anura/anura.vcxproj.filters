@@ -516,9 +516,6 @@
     <ClInclude Include="..\..\src\segment_editor_dialog.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\selector_widget.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\settings_dialog.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -1625,9 +1622,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\segment_editor_dialog.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\selector_widget.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\settings_dialog.cpp">

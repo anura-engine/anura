@@ -67,6 +67,11 @@ namespace gui
 		resetTextDimensions();
 	}
 
+	WidgetPtr GraphicalFontLabel::clone() const
+	{
+		return WidgetPtr(new GraphicalFontLabel(*this));
+	}
+
 	BEGIN_DEFINE_CALLABLE(GraphicalFontLabel, Widget)
 		DEFINE_FIELD(text, "string")
 			return variant(obj.text_);

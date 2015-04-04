@@ -36,6 +36,8 @@ namespace gui
 
 		void setText(const std::string& text);
 		void resetTextDimensions();
+
+		WidgetPtr clone() const override;
 	private:
 		DECLARE_CALLABLE(GraphicalFontLabel);
 

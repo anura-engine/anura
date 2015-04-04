@@ -70,6 +70,21 @@ namespace gui
 		init();
 	}
 
+	AnimationWidget::AnimationWidget(const AnimationWidget& a) 
+		: Widget(a),
+		  anim_name_(a.anim_name_),
+		  type_(a.type_),
+		  nodes_(a.nodes_),
+		  label_(),
+		  frame_(),
+		  cycle_(0),
+		  play_sequence_count_(0),
+		  max_sequence_plays_(0),
+		  current_anim_(nodes_.begin())
+	{
+		init();
+	}
+
 	void AnimationWidget::init()
 	{
 		play_sequence_count_ = 0;
@@ -88,14 +103,14 @@ namespace gui
 		}
 	}
 
-	void AnimationWidget::handleDraw() const
+	WidgetPtr AnimationWidget::clone() const
 	{
-		rect preview_area(x(), y(), width(), height() - (label_ ? label_->height() : 0));
-		const float scale = 1.0f;
-		//const float scale = static_cast<float>(std::min(preview_area.w()/frame_->width(), preview_area.h()/frame_->height()));
-		const int framex = preview_area.x() + (preview_area.w() - int(frame_->width()*scale))/2;
-		const int framey = preview_area.y() + (preview_area.h() - int(frame_->height()*scale))/2;
-		frame_->draw(nullptr, framex, framey, true, false, cycle_, 0, 1.0f);
+		return WidgetPtr(new AnimationWidget(*this));
+	}
+
+	void AnimationWidget::handleProcess()
+	{
+		Widget::handleProcess();
 		if(++cycle_ >= frame_->duration()) {
 			cycle_ = 0;
 			if(++play_sequence_count_ > max_sequence_plays_) {
@@ -110,6 +125,16 @@ namespace gui
 				}
 			}
 		}
+	}
+
+	void AnimationWidget::handleDraw() const
+	{
+		rect preview_area(x(), y(), width(), height() - (label_ ? label_->height() : 0));
+		const float scale = 1.0f;
+		//const float scale = static_cast<float>(std::min(preview_area.w()/frame_->width(), preview_area.h()/frame_->height()));
+		const int framex = preview_area.x() + (preview_area.w() - int(frame_->width()*scale))/2;
+		const int framey = preview_area.y() + (preview_area.h() - int(frame_->height()*scale))/2;
+		frame_->draw(nullptr, framex, framey, true, false, cycle_, 0, 1.0f);
 		if(label_) {
 			label_->draw(x(), y(), getRotation(), getScale());
 		}

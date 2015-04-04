@@ -129,7 +129,7 @@ namespace gui
 
 		std::vector<WidgetPtr> v;
 		for(auto w : children_) {
-			v.push_back(w);
+			v.emplace_back(w);
 		}
 		return v;
 	}
@@ -155,6 +155,16 @@ namespace gui
 			res.add("children", w->write());
 		}
 		return res.build();
+	}
+
+	WidgetPtr LayoutWidget::clone() const
+	{
+		LayoutWidget* lw = new LayoutWidget(*this);
+		lw->children_.clear();
+		for(const auto& w : children_) {
+			lw->children_.emplace(w->clone());
+		}
+		return WidgetPtr(lw);
 	}
 
 	BEGIN_DEFINE_CALLABLE(LayoutWidget, Widget)

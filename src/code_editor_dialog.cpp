@@ -80,7 +80,7 @@ void CodeEditorDialog::init()
 	using namespace gui;
 
 	if(!editor_) {
-		editor_.reset(new code_editor_widget(width() - 40, height() - (60 + (optional_error_text_area_ ? 170 : 0))));
+		editor_.reset(new CodeEditorWidget(width() - 40, height() - (60 + (optional_error_text_area_ ? 170 : 0))));
 	}
 
 	Button* save_button = new Button("Save", std::bind(&CodeEditorDialog::save, this));
@@ -243,7 +243,7 @@ void CodeEditorDialog::load_file(std::string fname, bool focus, std::function<vo
 		if(fn) {
 			f.op_fn = *fn;
 		}
-		f.editor.reset(new code_editor_widget(width() - 40, height() - (60 + (optional_error_text_area_ ? 170 : 0))));
+		f.editor.reset(new CodeEditorWidget(width() - 40, height() - (60 + (optional_error_text_area_ ? 170 : 0))));
 		std::string text = json::get_file_contents(fname);
 		try {
 			file_contents_set_ = true;
@@ -548,7 +548,7 @@ void CodeEditorDialog::process()
 	const int cursor_pos = static_cast<int>(editor_->rowColToTextPos(editor_->cursorRow(), editor_->cursorCol()));
 	const std::string& text = editor_->currentText();
 
-	const gui::code_editor_widget::ObjectInfo info = editor_->get_current_object();
+	const gui::CodeEditorWidget::ObjectInfo info = editor_->getCurrentObject();
 	const json::Token* selected_token = nullptr;
 	int token_pos = 0;
 	for(const json::Token& token : info.tokens) {
@@ -708,7 +708,7 @@ void CodeEditorDialog::process()
 	}
 
 	try {
-		editor_->set_highlight_current_object(false);
+		editor_->setHighlightCurrentObject(false);
 		if(gui::AnimationPreviewWidget::is_animation(info.obj)) {
 			if(!animation_preview_) {
 				animation_preview_.reset(new gui::AnimationPreviewWidget(info.obj));
@@ -724,7 +724,7 @@ void CodeEditorDialog::process()
 				animation_preview_->setObject(info.obj);
 			}
 
-			editor_->set_highlight_current_object(true);
+			editor_->setHighlightCurrentObject(true);
 		} else {
 			animation_preview_.reset();
 		}
@@ -924,11 +924,11 @@ void CodeEditorDialog::onMoveCursor()
 
 void CodeEditorDialog::setAnimationRect(rect r)
 {
-	const gui::code_editor_widget::ObjectInfo info = editor_->get_current_object();
+	const gui::CodeEditorWidget::ObjectInfo info = editor_->getCurrentObject();
 	variant v = info.obj;
 	if(v.is_null() == false) {
 		v.add_attr(variant("rect"), r.write());
-		editor_->modify_current_object(v);
+		editor_->modifyCurrentObject(v);
 		try {
 			animation_preview_->setObject(v);
 		} catch(Frame::Error&) {
@@ -938,7 +938,7 @@ void CodeEditorDialog::setAnimationRect(rect r)
 
 void CodeEditorDialog::moveSolidRect(int dx, int dy)
 {
-	const gui::code_editor_widget::ObjectInfo info = editor_->get_current_object();
+	const gui::CodeEditorWidget::ObjectInfo info = editor_->getCurrentObject();
 	variant v = info.obj;
 	if(v.is_null() == false) {
 		variant solid_area = v["solid_area"];
@@ -955,7 +955,7 @@ void CodeEditorDialog::moveSolidRect(int dx, int dy)
 		rect area(solid_area);
 		area = rect(area.x() + dx, area.y() + dy, area.w(), area.h());
 		v.add_attr(variant("solid_area"), area.write());
-		editor_->modify_current_object(v);
+		editor_->modifyCurrentObject(v);
 		try {
 			animation_preview_->setObject(v);
 		} catch(Frame::Error&) {
@@ -965,11 +965,11 @@ void CodeEditorDialog::moveSolidRect(int dx, int dy)
 
 void CodeEditorDialog::setIntegerAttr(const char* attr, int value)
 {
-	const gui::code_editor_widget::ObjectInfo info = editor_->get_current_object();
+	const gui::CodeEditorWidget::ObjectInfo info = editor_->getCurrentObject();
 	variant v = info.obj;
 	if(v.is_null() == false) {
 		v.add_attr(variant(attr), variant(value));
-		editor_->modify_current_object(v);
+		editor_->modifyCurrentObject(v);
 		try {
 			animation_preview_->setObject(v);
 		} catch(Frame::Error&) {

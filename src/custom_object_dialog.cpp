@@ -676,12 +676,12 @@ namespace gui
 
 		addWidget(text_button_grid, width()/3 + border_offset + (string_entry_width - text_button_grid->width())/2, string_entry_height + current_height + 5);
 
-		string_entry_.reset(new code_editor_widget(string_entry_width, string_entry_height));
+		string_entry_.reset(new CodeEditorWidget(string_entry_width, string_entry_height));
 		string_entry_->setFontSize(12);
 		string_entry_->setOnEscHandler(std::bind(&ItemEditDialog::stringEntryDiscard, this));
 		string_entry_->setLoc(width()/3 + border_offset, current_height);
 		if(allow_functions_) {
-			string_entry_->set_formula();
+			string_entry_->setFormula();
 		}
 
 		item_grid_.reset(new TreeEditorWidget(width()/3 - border_offset, height() - current_height - border_offset, items_));

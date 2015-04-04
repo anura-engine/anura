@@ -151,6 +151,8 @@ namespace gui
 
 		void setDrawColor(const KRE::Color& color) { draw_color_ = color; }
 		const KRE::Color& getDrawColor() const { return draw_color_; }
+
+		virtual WidgetPtr clone() const = 0;
 	protected:
 		Widget();
 		explicit Widget(const variant& v, game_logic::FormulaCallable* e);

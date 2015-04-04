@@ -151,6 +151,7 @@ namespace geometry
 
 		void init();
 
+		gui::WidgetPtr clone() const override;
 	protected:
 		virtual void handleDraw() const override;
 	private:
@@ -167,8 +168,7 @@ namespace geometry
 
 		std::vector<PolygonPtr> polygons_;
 
-		PolyMap();
-		PolyMap(const PolyMap&);
+		PolyMap() = delete;
 	};
 
 	typedef boost::intrusive_ptr<PolyMap> PolyMapPtr;

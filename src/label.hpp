@@ -49,6 +49,7 @@ namespace gui
 		explicit Label(const std::string& text, const KRE::Color& color, int size=14, const std::string& font="");
 		explicit Label(const std::string& text, int size=14, const std::string& font="");
 		explicit Label(const variant& v, game_logic::FormulaCallable* e);
+		Label(const Label& l);
 
 		void setFontSize(int font_size);
 		void setFont(const std::string& font);
@@ -61,6 +62,8 @@ namespace gui
 		void setClickHandler(std::function<void()> click) { on_click_ = click; }
 		void setHighlightColor(const KRE::Color &col) { highlight_color_ = col;}
 		void allowHighlightOnMouseover(bool val=true) { highlight_on_mouseover_ = val; }
+
+		virtual WidgetPtr clone() const override;
 	protected:
 		std::string& currentText();
 		const std::string& currentText() const;
@@ -72,7 +75,6 @@ namespace gui
 		virtual WidgetSettingsDialog* settingsDialog(int x, int y, int w, int h);
 
 	private:
-		DISALLOW_COPY_ASSIGN_AND_DEFAULT(Label);
 		DECLARE_CALLABLE(Label);
 
 		void handleDraw() const override;
@@ -95,6 +97,8 @@ namespace gui
 		bool highlight_on_mouseover_;
 		bool draw_highlight_;
 		bool down_;
+
+		Label() = delete;
 	};
 
 	class DialogLabel : public Label
@@ -104,13 +108,15 @@ namespace gui
 		explicit DialogLabel(const variant& v, game_logic::FormulaCallable* e);
 		void setProgress(int progress);
 		int getMaxProgress() { return stages_; }
+		WidgetPtr clone() const override;
 	protected:
 		virtual void recalculateTexture();
 	private:
-		DISALLOW_COPY_ASSIGN_AND_DEFAULT(DialogLabel);
 		DECLARE_CALLABLE(DialogLabel);
 
 		int progress_, stages_;
+
+		DialogLabel() = delete;
 	};
 
 	class LabelFactory

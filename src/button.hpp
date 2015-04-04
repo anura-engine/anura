@@ -69,6 +69,8 @@ namespace gui
 		BUTTON_RESOLUTION buttonResolution() const { return button_resolution_; }
 
 		std::vector<WidgetPtr> getChildren() const;
+
+		virtual WidgetPtr clone() const override;
 	protected:
 		void setLabel(WidgetPtr label);
 		virtual void handleProcess() override;

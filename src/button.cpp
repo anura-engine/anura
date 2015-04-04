@@ -410,4 +410,13 @@ variant Button::getColorScheme()
 		res.add("label", label_->write());
 		return res.build();
 	}
+
+	WidgetPtr Button::clone() const
+	{
+		auto b = new Button(*this);
+		if(label_ != nullptr) {
+			b->label_ = label_->clone();
+		}
+		return WidgetPtr(b);
+	}
 }

@@ -33,10 +33,10 @@ namespace gui
 	public:
 		BorderWidget(WidgetPtr child, const KRE::Color& col, int border_size=2);
 		BorderWidget(const variant& v, game_logic::FormulaCallable* e);
-		void setColor(const KRE::Color& col);
-		virtual WidgetPtr getWidgetById(const std::string& id);
-		ConstWidgetPtr getWidgetById(const std::string& id) const;
-		std::vector<WidgetPtr> getChildren() const;
+		virtual WidgetPtr getWidgetById(const std::string& id) override;
+		ConstWidgetPtr getWidgetById(const std::string& id) const override;
+		std::vector<WidgetPtr> getChildren() const override;
+		WidgetPtr clone() const override;
 	protected:
 		virtual void handleDraw() const override;
 		virtual void handleProcess() override;
@@ -45,7 +45,6 @@ namespace gui
 		bool handleEvent(const SDL_Event& event, bool claimed) override;
 
 		WidgetPtr child_;
-		KRE::Color color_;
 		int border_size_;
 	};
 

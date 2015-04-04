@@ -36,6 +36,7 @@ namespace gui
 		Checkbox(WidgetPtr label, bool checked, std::function<void(bool)> onclick, BUTTON_RESOLUTION buttonResolution=BUTTON_SIZE_NORMAL_RESOLUTION);
 		Checkbox(const variant& v, game_logic::FormulaCallable* e);
 		bool checked() const { return checked_; }
+		WidgetPtr clone() const override;
 	private:
 		DECLARE_CALLABLE(Checkbox);
 		void onClick();

@@ -1465,11 +1465,11 @@ namespace gui
 		}
 	}
 
-	TextEditorWidgetPtr TextEditorWidget::clone() const
+	WidgetPtr TextEditorWidget::clone() const
 	{
 		TextEditorWidgetPtr result = new TextEditorWidget(*this);
 		result->last_op_type_ = nullptr;
-		return result;
+		return WidgetPtr(result);
 	}
 
 	void TextEditorWidget::restore(const TextEditorWidget* state)
@@ -1480,7 +1480,7 @@ namespace gui
 	void TextEditorWidget::saveUndoState()
 	{
 		redo_.clear();
-		undo_.push_back(TextEditorWidgetPtr(clone()));
+		undo_.push_back(boost::dynamic_pointer_cast<TextEditorWidget>(clone()));
 	}
 
 	bool TextEditorWidget::recordOp(const char* type)
@@ -1782,7 +1782,7 @@ UTILITY(textedit)
 
 	TextEditorWidgetPtr entry = new TextEditorWidget(120);
 
-	TextEditorWidgetPtr editor = new code_editor_widget(600, 400);
+	TextEditorWidgetPtr editor = new CodeEditorWidget(600, 400);
 	editor->setText(contents);
 
 	entry->setOnChangeHandler(std::bind(on_change_search, entry, editor));

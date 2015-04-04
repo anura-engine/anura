@@ -35,6 +35,7 @@ namespace gui
 	public:
 		explicit PreviewTilesetWidget(const TileMap& tiles);
 		explicit PreviewTilesetWidget(const variant& v, game_logic::FormulaCallable* e);
+		WidgetPtr clone() const override;
 	protected:
 		void init();
 	private:

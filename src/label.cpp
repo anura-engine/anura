@@ -108,6 +108,26 @@ namespace gui
 		recalculateTexture();
 	}
 
+	Label::Label(const Label& l)
+		: Widget(l),
+		  text_(l.text_),
+		  formatted_(l.formatted_),
+		  texture_(l.texture_),
+		  border_texture_(l.border_texture_),
+		  border_size_(l.border_size_),
+		  highlight_color_(l.highlight_color_),
+		  border_color_(l.border_color_ ? new KRE::Color(*l.border_color_) : nullptr),
+		  size_(l.size_),
+		  font_(l.font_),
+		  fixed_width_(l.fixed_width_),
+		  on_click_(l.on_click_),
+		  ffl_click_handler_(l.ffl_click_handler_),
+		  highlight_on_mouseover_(l.highlight_on_mouseover_),
+		  draw_highlight_(l.draw_highlight_),
+		  down_(l.down_)
+	{
+	}
+
 	void Label::clickDelegate()
 	{
 		if(getEnvironment()) {
@@ -333,6 +353,10 @@ namespace gui
 		return d;
 	}
 
+	WidgetPtr Label::clone() const
+	{
+		return WidgetPtr(new Label(*this));
+	}
 
 	BEGIN_DEFINE_CALLABLE(Label, Widget)
 		DEFINE_FIELD(text, "string")
@@ -358,13 +382,15 @@ namespace gui
 	END_DEFINE_CALLABLE(Label)
 
 	DialogLabel::DialogLabel(const std::string& text, const KRE::Color& color, int size)
-		: Label(text, color, size), progress_(0) {
-
+		: Label(text, color, size), 
+		  progress_(0) 
+	{
 		recalculateTexture();
 	}
 
 	DialogLabel::DialogLabel(const variant& v, game_logic::FormulaCallable* e)
-		: Label(v, e), progress_(0)
+		: Label(v, e), 
+		  progress_(0)
 	{
 		recalculateTexture();
 	}
@@ -389,6 +415,11 @@ namespace gui
 		} else {
 			setTexture(KRE::TexturePtr());
 		}
+	}
+
+	WidgetPtr DialogLabel::clone() const
+	{
+		return WidgetPtr(new DialogLabel(*this));
 	}
 
 	BEGIN_DEFINE_CALLABLE(DialogLabel, Label)

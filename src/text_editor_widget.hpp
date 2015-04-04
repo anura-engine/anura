@@ -103,6 +103,7 @@ namespace gui
 
 		void highlight(Loc begin, Loc end);
 
+		virtual WidgetPtr clone() const override;
 	protected:
 		virtual void selectToken(const std::string& row, size_t& begin_row, size_t& end_row, size_t& begin_col, size_t& end_col);
 
@@ -146,7 +147,6 @@ namespace gui
 
 		void refreshScrollbar();
 
-		virtual TextEditorWidgetPtr clone() const;
 		virtual void restore(const TextEditorWidget* state);
 
 		const char* last_op_type_;

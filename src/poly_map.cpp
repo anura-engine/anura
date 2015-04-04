@@ -287,6 +287,11 @@ namespace geometry
 		}
 	}
 
+	gui::WidgetPtr PolyMap::clone() const
+	{
+		return gui::WidgetPtr(new PolyMap(*this));
+	}
+
 	BEGIN_DEFINE_CALLABLE(PolyMap, Widget)
 		DEFINE_FIELD(dummy, "null")
 			return variant();

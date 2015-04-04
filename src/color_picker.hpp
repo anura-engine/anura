@@ -54,6 +54,8 @@ namespace gui
 		KRE::Color getUnselectedColor() const { return main_color_selected_ ? secondary_ : primary_; }
 		bool getPaletteColor(int n, KRE::Color* color);
 		void setPaletteColor(int n, const KRE::Color& color);
+
+		WidgetPtr clone() const override;
 	protected:
 		void init();
 	private:
@@ -90,7 +92,6 @@ namespace gui
 
 		void setHSVFromColor(const KRE::Color&);
 
-		void handleProcess() override;
 		void handleDraw() const override;
 		bool handleEvent(const SDL_Event& event, bool claimed) override;
 

@@ -285,5 +285,9 @@ END_DEFINE_CALLABLE(BarWidget)
 	{
 		return claimed;
 	}
-
+	
+	WidgetPtr BarWidget::clone() const
+	{
+		return WidgetPtr(new BarWidget(*this));
+	}
 }

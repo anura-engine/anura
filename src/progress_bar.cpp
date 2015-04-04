@@ -141,6 +141,11 @@ namespace gui
 		}
 	}
 
+	WidgetPtr ProgressBar::clone() const
+	{
+		return WidgetPtr(new ProgressBar(*this));
+	}
+
 	BEGIN_DEFINE_CALLABLE(ProgressBar, Widget)
 		DEFINE_FIELD(progress, "int")
 			return variant(obj.progress_);

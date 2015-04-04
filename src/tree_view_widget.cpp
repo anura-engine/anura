@@ -475,6 +475,13 @@ namespace gui
 		return Widget::getWidgetById(id);
 	}
 
+	WidgetPtr TreeViewWidget::clone() const
+	{
+		TreeViewWidget* tv = new TreeViewWidget(*this);
+		tv->init();
+		return WidgetPtr(tv);
+	}
+
 	BEGIN_DEFINE_CALLABLE(TreeViewWidget, ScrollableWidget)
 		DEFINE_FIELD(dummy, "null")
 			return variant();
@@ -851,6 +858,13 @@ namespace gui
 		}
 		*v = variant::from_bool(selection != 0);
 		init();
+	}
+
+	WidgetPtr TreeEditorWidget::clone() const
+	{
+		TreeEditorWidget* te = new TreeEditorWidget(*this);
+		te->init();
+		return WidgetPtr(te);
 	}
 
 	BEGIN_DEFINE_CALLABLE(TreeEditorWidget, TreeViewWidget)

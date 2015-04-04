@@ -38,25 +38,29 @@ namespace gui
 	public:
 		AnimationWidget(int w, int h, const variant& node);
 		AnimationWidget(const variant& v, game_logic::FormulaCallable* e);
+		AnimationWidget(const AnimationWidget& a);
 
 		void setSequencePlayCount(int count) { max_sequence_plays_ = count; }
+
+		WidgetPtr clone() const override;
 	private:
 		DECLARE_CALLABLE(AnimationWidget);
 
-		virtual void handleDraw() const override;
+		void handleDraw() const override;
+		void handleProcess() override;
 		void init();
 
 		std::string anim_name_;
 		std::string type_;
-
 		std::vector<variant> nodes_;
-		mutable LabelPtr label_;
-		mutable std::unique_ptr<Frame> frame_;
-		mutable int cycle_;
-		mutable int play_sequence_count_;
+
+		LabelPtr label_;
+		std::unique_ptr<Frame> frame_;
+		int cycle_;
+		int play_sequence_count_;
 		// Number of times to repeat play each animation sequence.
 		int max_sequence_plays_;
-		mutable std::vector<variant>::const_iterator current_anim_;
+		std::vector<variant>::const_iterator current_anim_;
 	};
 
 	typedef boost::intrusive_ptr<AnimationWidget> AnimationWidgetPtr;

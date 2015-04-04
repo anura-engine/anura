@@ -168,6 +168,15 @@ namespace gui
 		return key_;
 	}
 
+	WidgetPtr KeyButton::clone() const
+	{
+		auto kb = new KeyButton(*this);
+		if(label_) {
+			kb->label_ = label_->clone();
+		}
+		return WidgetPtr(kb);
+	}
+
 	BEGIN_DEFINE_CALLABLE(KeyButton, Widget)
 		DEFINE_FIELD(key, "int")
 			return variant(obj.key_);

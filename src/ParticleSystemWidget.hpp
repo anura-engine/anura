@@ -35,6 +35,7 @@ namespace gui
 	{
 		public:
 			explicit ParticleSystemWidget(const variant& v, game_logic::FormulaCallable* e);
+			WidgetPtr clone() const override;
 		private:
 			DECLARE_CALLABLE(ParticleSystemWidget);
 			virtual void handleDraw() const override;
@@ -46,8 +47,7 @@ namespace gui
 			KRE::SceneNodePtr root_;
 			KRE::RenderManagerPtr rmanager_;
 
-			ParticleSystemWidget();
-			ParticleSystemWidget(const ParticleSystemWidget&);
+			ParticleSystemWidget() = delete;
 			void operator=(const ParticleSystemWidget&);
 	};
 }

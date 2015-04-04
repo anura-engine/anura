@@ -38,6 +38,7 @@ namespace gui
 
 		explicit AnimationPreviewWidget(variant obj);
 		explicit AnimationPreviewWidget(const variant& v, game_logic::FormulaCallable* e);
+		AnimationPreviewWidget(const AnimationPreviewWidget& a);
 		void init();
 		void setObject(variant obj);
 
@@ -49,6 +50,7 @@ namespace gui
 		void setFramesPerRowHandler(std::function<void(int)>);
 		void setSolidHandler(std::function<void(int,int)>);
 
+		WidgetPtr clone() const override;
 	private:
 		DECLARE_CALLABLE(AnimationPreviewWidget);
 		
@@ -107,6 +109,8 @@ namespace gui
 		game_logic::FormulaPtr ffl_num_frames_handler_;
 		game_logic::FormulaPtr ffl_frames_per_row_handler_;
 		game_logic::FormulaPtr ffl_solid_handler_;
+
+		AnimationPreviewWidget() = delete;
 	};
 
 	typedef boost::intrusive_ptr<AnimationPreviewWidget> AnimationPreviewWidgetPtr;

@@ -41,12 +41,13 @@
 
 namespace movie
 {
-	class vpx : public gui::Widget, private boost::noncopyable
+	class vpx : public gui::Widget
 	{
 	public:
 		vpx(const std::string& file, int x, int y, int width, int height, bool loop, bool cancel_on_keypress);
 		vpx(const variant& v, game_logic::FormulaCallable* e);
 		virtual ~vpx();
+		gui::WidgetPtr clone() const override;
 	protected:
 		void init();
 		void stop();

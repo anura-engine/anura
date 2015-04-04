@@ -104,6 +104,12 @@ namespace gui
 		setDim(static_cast<int>(max_x-min_x), static_cast<int>(max_y-min_y));
 	}
 
+
+	WidgetPtr PolyLineWidget::clone() const
+	{
+		return WidgetPtr(new PolyLineWidget(*this));
+	}
+
 	BEGIN_DEFINE_CALLABLE(PolyLineWidget, Widget)
 		DEFINE_FIELD(points, "[[int,int]]")
 			std::vector<variant> v;

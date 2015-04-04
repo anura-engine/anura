@@ -81,6 +81,11 @@ namespace gui
 		init();
 	}
 
+	WidgetPtr PreviewTilesetWidget::clone() const
+	{
+		return WidgetPtr(new PreviewTilesetWidget(*this));
+	}
+
 	BEGIN_DEFINE_CALLABLE(PreviewTilesetWidget, Widget)
 		DEFINE_FIELD(tile_map, "null")
 			return variant();

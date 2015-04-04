@@ -42,6 +42,7 @@ namespace gui
 			std::function<void(int, int)> drag_move);
 		explicit DragWidget(const variant&, game_logic::FormulaCallable* e);
 
+		WidgetPtr clone() const override;
 	private:
 		void init();
 		void handleDraw() const override;

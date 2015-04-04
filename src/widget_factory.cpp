@@ -33,7 +33,6 @@
 #include "code_editor_widget.hpp"
 #include "color_picker.hpp"
 #include "checkbox.hpp"
-#include "custom_object_widget.hpp"
 #include "dialog.hpp"
 #include "drag_widget.hpp"
 #include "dropdown_widget.hpp"
@@ -54,7 +53,6 @@
 #include "rich_text_label.hpp"
 #include "scrollable_widget.hpp"
 #include "scrollbar_widget.hpp"
-#include "selector_widget.hpp"
 #include "slider.hpp"
 #include "text_editor_widget.hpp"
 #include "tree_view_widget.hpp"
@@ -118,8 +116,6 @@ namespace widget_factory
 			return WidgetPtr(new TextEditorWidget(v,e));
 		} else if(wtype == "progress") {
 			return WidgetPtr(new ProgressBar(v, e));
-		} else if(wtype == "selector") {
-			return WidgetPtr(new SelectorWidget(v, e));
 		} else if(wtype == "bar") {
 			return WidgetPtr(new BarWidget(v, e));
 		} else if(wtype == "color_picker") {
@@ -194,10 +190,6 @@ namespace widget_factory
 			return "builtin text_editor_widget";
 		} else if(wtype == "progress") {
 			return "builtin progress_bar";
-		} else if(wtype == "selector") {
-			return "builtin selector_widget";
-		} else if(wtype == "object") {
-			return "builtin custom_object_widget";
 		} else if(wtype == "bar") {
 			return "builtin bar_widget";
 		} else if(wtype == "color_picker") {

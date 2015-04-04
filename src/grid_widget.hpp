@@ -86,6 +86,8 @@ namespace gui
 		virtual ConstWidgetPtr getWidgetById(const std::string& id) const;
 
 		virtual std::vector<WidgetPtr> getChildren() const;
+		
+		WidgetPtr clone() const override;
 	protected:
 		bool handleEvent(const SDL_Event& event, bool claimed) override;
 		void handleDraw() const override;

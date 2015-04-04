@@ -56,6 +56,7 @@ namespace gui
 		variant getTree() const { return tree_; }
 		virtual WidgetPtr getWidgetById(const std::string& id);
 		virtual ConstWidgetPtr getWidgetById(const std::string& id) const;
+		virtual WidgetPtr clone() const override;
 	protected:
 		void onSetYscroll(int old_value, int value);
 		virtual void init();
@@ -119,6 +120,7 @@ namespace gui
 			on_editor_select_ = editor_select;
 		}
 		void externalEditorSave(variant* v, const variant &new_value);
+		WidgetPtr clone() const override;
 	protected:
 		virtual void init();
 		virtual void onSelect(Uint8 button, int selection);

@@ -40,6 +40,8 @@ namespace gui
 		void setStep(int step) { step_ = step; }
 		void setArrowStep(int step) { arrow_step_ = step; }
 		int getWindowPos() const { return window_pos_; }
+
+		WidgetPtr clone() const override;
 	private:
 		DECLARE_CALLABLE(ScrollBarWidget)
 

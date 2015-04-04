@@ -43,6 +43,7 @@ namespace gui
 		void updateProgress(int delta);
 		void setCompletionHandler(std::function<void ()> oncompletion);
 		void reset();
+		WidgetPtr clone() const override;
 	private:
 		DECLARE_CALLABLE(ProgressBar)
 		void complete();

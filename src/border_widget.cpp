@@ -30,24 +30,21 @@
 namespace gui 
 {
 	BorderWidget::BorderWidget(WidgetPtr child, const KRE::Color& col, int border_size)
-	  : child_(child), color_(col), border_size_(border_size)
+	  : child_(child), 
+	    border_size_(border_size)
 	{
 		setEnvironment();
 		setDim(child->width() + border_size*2, child->height() + border_size*2);
 		child_->setLoc(border_size, border_size);
 	}
 
-	BorderWidget::BorderWidget(const variant& v, game_logic::FormulaCallable* e) : Widget(v,e)
+	BorderWidget::BorderWidget(const variant& v, game_logic::FormulaCallable* e) 
+		: Widget(v,e),
+		  border_size_(1)
 	{
 		ASSERT_LOG(v.is_map(), "TYPE ERROR: parameter to border widget must be a map");
-		color_ = v.has_key("color") ? KRE::Color(0,0,0,255) : KRE::Color(v["color"]);
 		border_size_ = v.has_key("border_size") ? v["border_size"].as_int() : 2;
 		child_ = widget_factory::create(v["child"], e);
-	}
-
-	void BorderWidget::setColor(const KRE::Color& col)
-	{
-		color_ = col;
 	}
 
 	void BorderWidget::handleProcess()
@@ -61,7 +58,7 @@ namespace gui
 	void BorderWidget::handleDraw() const
 	{
 		auto canvas = KRE::Canvas::getInstance();
-		canvas->drawSolidRect(rect(x(),y(),width(),height()), color_);
+		canvas->drawSolidRect(rect(x(),y(),width(),height()), getColor());
 		if(child_) {
 			child_->draw(x(), y());
 		}
@@ -100,6 +97,15 @@ namespace gui
 		std::vector<WidgetPtr> result;
 		result.push_back(child_);
 		return result;
+	}
+
+	WidgetPtr BorderWidget::clone() const
+	{
+		BorderWidget* bw = new BorderWidget(*this);
+		if(child_ != nullptr) {
+			bw->child_ = child_->clone();
+		}
+		return WidgetPtr(bw);
 	}
 
 	BEGIN_DEFINE_CALLABLE(BorderWidget, Widget)

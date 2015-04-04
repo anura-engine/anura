@@ -524,6 +524,26 @@ namespace gui
 		}
 	}
 
+	WidgetPtr DropdownWidget::clone() const
+	{
+		DropdownWidget* d = new DropdownWidget(*this);
+		if(editor_ != nullptr) {
+			d->editor_ = boost::dynamic_pointer_cast<TextEditorWidget>(editor_->clone());
+		}
+		if(label_ != nullptr) {
+			d->label_ = label_->clone();
+		}
+		d->dropdown_menu_.reset();
+		for(const auto& label : labels_) {
+			if(label != nullptr) {
+				d->labels_.emplace_back(label->clone());
+			}
+		}
+		d->in_widget_ = false;
+		// XXX should we clone dropdown_image_ ?
+		return WidgetPtr(d);
+	}
+
 	BEGIN_DEFINE_CALLABLE(DropdownWidget, Widget)
 		DEFINE_FIELD(selection, "int")
 			return variant(obj.current_selection_);

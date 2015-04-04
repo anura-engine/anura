@@ -214,6 +214,11 @@ namespace movie
 		KRE::Canvas::getInstance()->blitTexture(texture_, 0, rect(0, 0, width(), height()));
 		*/
 	}
+
+	gui::WidgetPtr vpx::clone() const
+	{
+		return gui::WidgetPtr(new vpx(*this));
+	}
 }
 
 #endif

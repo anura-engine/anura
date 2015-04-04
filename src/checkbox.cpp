@@ -54,20 +54,28 @@ namespace gui
 	}
 
 	Checkbox::Checkbox(const std::string& label, bool checked, std::function<void(bool)> onclick, BUTTON_RESOLUTION buttonResolution)
-	  : Button(create_checkbox_widget(label, checked, buttonResolution), std::bind(&Checkbox::onClick, this), BUTTON_STYLE_NORMAL,buttonResolution), label_(label), onclick_(onclick), checked_(checked), hpadding_(12)
+	  : Button(create_checkbox_widget(label, checked, buttonResolution), std::bind(&Checkbox::onClick, this), BUTTON_STYLE_NORMAL,buttonResolution), 
+	    label_(label), 
+		onclick_(onclick), 
+		checked_(checked), 
+		hpadding_(12)
 	{
 		setEnvironment();
 	}
 
 	Checkbox::Checkbox(WidgetPtr label, bool checked, std::function<void(bool)> onclick, BUTTON_RESOLUTION buttonResolution)
-	  : Button(create_checkbox_widget(label, checked, buttonResolution), std::bind(&Checkbox::onClick, this), BUTTON_STYLE_NORMAL,buttonResolution), label_widget_(label), onclick_(onclick), checked_(checked), hpadding_(12)
+	  : Button(create_checkbox_widget(label, checked, buttonResolution), std::bind(&Checkbox::onClick, this), BUTTON_STYLE_NORMAL,buttonResolution), 
+	    label_widget_(label), 
+		onclick_(onclick), 
+		checked_(checked), 
+		hpadding_(12)
 	{
 		setEnvironment();
 	}
 
 	Checkbox::Checkbox(const variant& v, game_logic::FormulaCallable* e) 
 		: Button(v,e), 
-		checked_(false)
+		  checked_(false)
 	{
 		hpadding_ = v["hpad"].as_int(12);
 		if(v.has_key("padding")) {
@@ -120,6 +128,15 @@ namespace gui
 		} else {
 			LOG_ERROR("Checkbox::click() called without environment!");
 		}
+	}
+
+	WidgetPtr Checkbox::clone() const
+	{
+		Checkbox* cb = new Checkbox(*this);
+		if(label_widget_) {
+			cb->label_widget_ = label_widget_->clone();
+		}
+		return WidgetPtr(cb);
 	}
 
 	BEGIN_DEFINE_CALLABLE(Checkbox, Button)

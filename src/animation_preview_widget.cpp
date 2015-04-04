@@ -37,6 +37,8 @@
 #include "pathfinding.hpp"
 #include "solid_map.hpp"
 
+// A lot in this code scares me. the raw pointers needs changed to intrusive.
+
 namespace 
 {
 	using namespace KRE;
@@ -279,9 +281,19 @@ namespace gui
 	}
 
 	AnimationPreviewWidget::AnimationPreviewWidget(const variant& v, game_logic::FormulaCallable* e) 
-		: Widget(v,e), cycle_(0), zoom_label_(nullptr), pos_label_(nullptr), scale_(0), 
-		anchor_x_(-1), anchor_y_(-1), anchor_pad_(-1), has_motion_(false), dragging_sides_bitmap_(0), 
-		moving_solid_rect_(false), anchor_solid_x_(-1), anchor_solid_y_(-1)
+		: Widget(v,e), 
+		  cycle_(0), 
+		  zoom_label_(nullptr), 
+		  pos_label_(nullptr), 
+		  scale_(0), 
+		  anchor_x_(-1), 
+		  anchor_y_(-1), 
+		  anchor_pad_(-1), 
+		  has_motion_(false), 
+		  dragging_sides_bitmap_(0), 
+		  moving_solid_rect_(false), 
+		  anchor_solid_x_(-1), 
+		  anchor_solid_y_(-1)
 	{
 		ASSERT_LOG(getEnvironment() != 0, "You must specify a callable environment");
 
@@ -317,10 +329,57 @@ namespace gui
 		}
 	}
 
-	AnimationPreviewWidget::AnimationPreviewWidget(variant obj) : cycle_(0), zoom_label_(nullptr), pos_label_(nullptr), scale_(0), anchor_x_(-1), anchor_y_(-1), anchor_pad_(-1), has_motion_(false), dragging_sides_bitmap_(0), moving_solid_rect_(false), anchor_solid_x_(-1), anchor_solid_y_(-1)
+	AnimationPreviewWidget::AnimationPreviewWidget(variant obj) 
+		: cycle_(0), 
+		  zoom_label_(nullptr), 
+		  pos_label_(nullptr), 
+		  scale_(0), 
+		  anchor_x_(-1), 
+		  anchor_y_(-1), 
+		  anchor_pad_(-1), 
+		  has_motion_(false), 
+		  dragging_sides_bitmap_(0), 
+		  moving_solid_rect_(false), 
+		  anchor_solid_x_(-1), 
+		  anchor_solid_y_(-1)
 	{
 		setEnvironment();
 		setObject(obj);
+	}
+
+	AnimationPreviewWidget::AnimationPreviewWidget(const AnimationPreviewWidget& a)
+		: obj_(),
+		  frame_(nullptr),
+		  cycle_(a.cycle_), 
+		  widgets_(a.widgets_),
+		  zoom_label_(a.zoom_label_), 
+		  pos_label_(a.pos_label_), 
+		  scale_(a.scale_), 
+		  src_rect_(a.src_rect_),
+		  dst_rect_(a.dst_rect_),
+		  anchor_x_(a.anchor_x_), 
+		  anchor_y_(a.anchor_y_),
+		  anchor_area_(a.anchor_area_),
+		  anchor_pad_(a.anchor_pad_), 
+		  has_motion_(a.has_motion_), 
+		  locked_focus_(a.locked_focus_),
+		  dragging_sides_bitmap_(a.dragging_sides_bitmap_), 
+		  solid_rect_(a.solid_rect_),
+		  moving_solid_rect_(a.moving_solid_rect_), 
+		  anchor_solid_x_(a.anchor_solid_x_), 
+		  anchor_solid_y_(a.anchor_solid_y_),
+		  rect_handler_(a.rect_handler_),
+		  pad_handler_(a.pad_handler_),
+		  num_frames_handler_(a.num_frames_handler_),
+		  frames_per_row_handler_(a.frames_per_row_handler_),
+		  solid_handler_(a.solid_handler_),
+		  ffl_rect_handler_(a.ffl_rect_handler_),
+		  ffl_pad_handler_(a.ffl_pad_handler_),
+		  ffl_num_frames_handler_(a.ffl_num_frames_handler_),
+		  ffl_frames_per_row_handler_(a.ffl_frames_per_row_handler_),
+		  ffl_solid_handler_(a.ffl_solid_handler_)
+	{
+		setObject(a.obj_);
 	}
 
 	void AnimationPreviewWidget::init()
@@ -871,6 +930,13 @@ namespace gui
 		} else {
 			LOG_ERROR("AnimationPreviewWidget::solidHandlerDelegate() called without environment!");
 		}
+	}
+
+	WidgetPtr AnimationPreviewWidget::clone() const
+	{
+		AnimationPreviewWidget* ap = new AnimationPreviewWidget(*this);
+		ap->init();
+		return WidgetPtr(ap);
 	}
 
 	BEGIN_DEFINE_CALLABLE(AnimationPreviewWidget, Widget)

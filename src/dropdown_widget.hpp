@@ -57,10 +57,12 @@ namespace gui
 		void setFont(const std::string& font);
 		void setFontSize(int size) { editor_->setFontSize(size); }
 		void setText(const std::string& s) { editor_->setText(s); }
+
+		WidgetPtr clone() const override;
 	protected:
-		virtual void handleDraw() const override;
-		virtual bool handleEvent(const SDL_Event& event, bool claimed) override;
-		virtual void handleProcess() override;
+		void handleDraw() const override;
+		bool handleEvent(const SDL_Event& event, bool claimed) override;
+		void handleProcess() override;
 
 		void init();
 		void textEnter();

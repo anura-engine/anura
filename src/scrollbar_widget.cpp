@@ -174,8 +174,7 @@ namespace gui
 		if(event.type == SDL_MOUSEWHEEL) {
 			int mx, my;
 			input::sdl_get_mouse_state(&mx, &my);
-			if(mx < x() || mx > x() + width() 
-				|| my < y() || my > y() + height()) {
+			if(!inWidget(mx, my)) {
 				return claimed;
 			}
 
@@ -196,8 +195,7 @@ namespace gui
 		} else
 		if(event.type == SDL_MOUSEBUTTONDOWN) {
 			const SDL_MouseButtonEvent& e = event.button;
-			if(e.x < x() || e.x > x() + width() ||
-			   e.y < y() || e.y > y() + height()) {
+			if(!inWidget(e.x, e.y)) {
 				return claimed;
 			}
 
@@ -205,31 +203,34 @@ namespace gui
 
 			claimed = claimMouseEvents();
 
-			if(e.y < up_arrow_->y() + up_arrow_->height()) {
+			const int ex = e.x - getPos().x;
+			const int ey = e.y - getPos().y;
+
+			if(ey < up_arrow_->y() + up_arrow_->height()) {
 				//on up arrow
 				window_pos_ -= arrow_step_;
 				while(arrow_step_ && window_pos_%arrow_step_) {
 					//snap to a multiple of the step size.
 					++window_pos_;
 				}
-			} else if(e.y > down_arrow_->y()) {
+			} else if(ey > down_arrow_->y()) {
 				//on down arrow
 				window_pos_ += arrow_step_;
 				while(arrow_step_ && window_pos_%arrow_step_) {
 					//snap to a multiple of the step size.
 					--window_pos_;
 				}
-			} else if(e.y < handle_->y()) {
+			} else if(ey < handle_->y()) {
 				//page up
 				window_pos_ -= window_size_ - arrow_step_;
-			} else if(e.y > handle_->y() + handle_->height()) {
+			} else if(ey > handle_->y() + handle_->height()) {
 				//page down
 				window_pos_ += window_size_ - arrow_step_;
 			} else {
 				//on handle
 				dragging_handle_ = true;
 				drag_start_ = window_pos_;
-				drag_anchor_y_ = e.y;
+				drag_anchor_y_ = ey;
 			}
 
 			LOG_INFO("HANDLE: " << handle_->y() << ", " << handle_->height());
@@ -252,8 +253,9 @@ namespace gui
 			}
 
 			if(dragging_handle_) {
+				const int ey = e.y - getPos().y;
 				const int handle_height = height() - up_arrow_->height() - down_arrow_->height();
-				const int move = e.y - drag_anchor_y_;
+				const int move = ey - drag_anchor_y_;
 				const int window_move = (move*range_)/handle_height;
 				window_pos_ = drag_start_ + window_move;
 				if(step_) {
@@ -267,6 +269,11 @@ namespace gui
 			}
 		}
 		return claimed;
+	}
+
+	WidgetPtr ScrollBarWidget::clone() const
+	{
+		return WidgetPtr(new ScrollBarWidget(*this));
 	}
 
 	BEGIN_DEFINE_CALLABLE(ScrollBarWidget, Widget)

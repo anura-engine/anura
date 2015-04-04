@@ -45,6 +45,7 @@ namespace gui
 		void setRotation(float rotate) { rotate_ = rotate; }
 		void setArea(const rect& area) { area_ = area; }
 
+		WidgetPtr clone() const override;
 	private:
 		DECLARE_CALLABLE(ImageWidget);
 
@@ -66,9 +67,10 @@ namespace gui
 		//you should set a GUI section that is the same size.
 		void setGuiSection(const std::string& id);
 
-		void handleDraw() const override;
+		WidgetPtr clone() const override;
 	private:
 		DECLARE_CALLABLE(GuiSectionWidget);
+		void handleDraw() const override;
 		ConstGuiSectionPtr section_;
 		int scale_;
 	};

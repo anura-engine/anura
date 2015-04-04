@@ -32,8 +32,8 @@ namespace gui
 {
 	ImageWidget::ImageWidget(const std::string& fname, int w, int h)
 	  : texture_(KRE::Texture::createTexture(fname)), 
-	  rotate_(0.0f), 
-	  image_name_(fname)
+	    rotate_(0.0f), 
+	    image_name_(fname)
 	{
 		setEnvironment();
 		init(w, h);
@@ -41,7 +41,7 @@ namespace gui
 
 	ImageWidget::ImageWidget(KRE::TexturePtr tex, int w, int h)
 	  : texture_(tex), 
-	  rotate_(0.0)
+		rotate_(0.0)
 	{
 		setEnvironment();
 		init(w, h);
@@ -92,6 +92,11 @@ namespace gui
 		}
 	}
 
+	WidgetPtr ImageWidget::clone() const
+	{
+		return WidgetPtr(new ImageWidget(*this));
+	}
+
 	BEGIN_DEFINE_CALLABLE(ImageWidget, Widget)
 		DEFINE_FIELD(image, "string")
 			return variant(obj.image_name_);
@@ -132,7 +137,8 @@ namespace gui
 	END_DEFINE_CALLABLE(ImageWidget)
 
 	GuiSectionWidget::GuiSectionWidget(const std::string& id, int w, int h, int scale)
-	  : section_(GuiSection::get(id)), scale_(scale)
+	  : section_(GuiSection::get(id)), 
+	    scale_(scale)
 	{
 		setEnvironment();
 		if(section_ && w == -1) {
@@ -143,10 +149,10 @@ namespace gui
 	}
 
 	GuiSectionWidget::GuiSectionWidget(const variant& v, game_logic::FormulaCallable* e) 
-		: Widget(v,e)
+		: Widget(v,e),
+ 		  section_(GuiSection::get(v)),
+		  scale_(v["scale"].as_int(1))
 	{
-		section_ = GuiSection::get(v);
-		scale_ = v["scale"].as_int(1);
 		if(!v.has_key("width") && section_) {
 			setDim((section_->width()/2)*scale_, (section_->height()/2)*scale_);
 		}
@@ -162,6 +168,11 @@ namespace gui
 		if(section_) {
 			section_->blit(x(), y(), width(), height());
 		}
+	}
+
+	WidgetPtr GuiSectionWidget::clone() const
+	{
+		return WidgetPtr(new GuiSectionWidget(*this));
 	}
 
 	BEGIN_DEFINE_CALLABLE(GuiSectionWidget, Widget)

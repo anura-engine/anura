@@ -241,6 +241,21 @@ namespace gui
 		return claimed;
 	}
 
+	WidgetPtr RichTextLabel::clone() const
+	{
+		RichTextLabel* r = new RichTextLabel(*this);
+		r->children_.clear();
+		for(const auto& row : children_) {
+			r->children_.emplace_back(std::vector<WidgetPtr>());
+			for(const auto& w : row) {
+				if(w != nullptr) {
+					r->children_.back().emplace_back(w->clone());
+				}
+			}
+		}
+		return WidgetPtr(r);
+	}
+
 	BEGIN_DEFINE_CALLABLE(RichTextLabel, ScrollableWidget)
 		DEFINE_FIELD(dummy, "null")
 			return variant();

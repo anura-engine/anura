@@ -81,6 +81,7 @@ namespace gui
 		//add standardized okay/cancel buttons in the bottom right corner.
 		void addOkAndCancelButtons();
 
+		virtual WidgetPtr clone() const override;
 	protected:
 		virtual bool handleEvent(const SDL_Event& event, bool claimed) override;
 		virtual bool handleEventChildren(const SDL_Event& event, bool claimed);

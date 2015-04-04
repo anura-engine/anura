@@ -39,7 +39,7 @@ namespace gui
 		PolyLineWidget(const variant& v, game_logic::FormulaCallable* e);
 		virtual ~PolyLineWidget();
 		void addPoint(const glm::vec2& p);
-	protected:
+		WidgetPtr clone() const override;
 	private:
 		DECLARE_CALLABLE(PolyLineWidget);
 

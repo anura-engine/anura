@@ -42,6 +42,8 @@ namespace gui
 		std::vector<WidgetPtr> getChildren() const;
 
 		void reflowChildren();
+
+		WidgetPtr clone() const override;
 	protected:
 		variant handleWrite();
 		void recalcLoc();

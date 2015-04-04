@@ -466,13 +466,16 @@ namespace gui
 			}
 		} //end of scope so clip_scope goes away.
 
-		KRE::Canvas::ModelManager mm(x(), y(), getRotation(), getScale());
+		//KRE::Canvas::ModelManager mm(x(), y(), getRotation(), getScale());
 		ScrollableWidget::handleDraw();
 	}
 
 	bool Grid::handleEvent(const SDL_Event& event, bool claimed)
-	{
+	{		
 		claimed = ScrollableWidget::handleEvent(event, claimed);
+		if(claimed) {
+			return claimed;
+		}
 
 		SDL_Event ev = event;
 		//normalizeEvent(&ev);
@@ -722,6 +725,20 @@ namespace gui
 		}
 
 		return result;
+	}
+
+	WidgetPtr Grid::clone() const
+	{
+		Grid* g = new Grid(*this);
+		g->cells_.clear();
+		g->visible_cells_.clear();
+		g->new_row_.clear();
+		for(const auto& w : cells_) {
+			if(w) {
+				g->addCol(w->clone());
+			}
+		}
+		return WidgetPtr(g);
 	}
 
 	BEGIN_DEFINE_CALLABLE(Grid, Widget)

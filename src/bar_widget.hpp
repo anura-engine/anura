@@ -35,6 +35,8 @@ namespace gui
 		void init();
 
 		void setRotation(float rotate);
+
+		WidgetPtr clone() const override;
 	private:
 	DECLARE_CALLABLE(BarWidget);
 	protected:

@@ -59,8 +59,29 @@ namespace
 namespace gui
 {
 	ColorPicker::ColorPicker(const rect& area)
-		: selected_palette_color_(0), hue_(0), saturation_(0), value_(0), alpha_(255),
-		red_(255), green_(255), blue_(255), dragging_(false), palette_offset_y_(0), main_color_selected_(1)
+		: primary_(),
+		  secondary_(),
+		  palette_(),
+		  main_color_selected_(1),
+		  selected_palette_color_(0), 
+		  hue_(0), 
+		  saturation_(0), 
+		  value_(0), 
+		  alpha_(255),
+		  red_(255), 
+		  green_(255), 
+		  blue_(255), 
+		  g_(),
+		  s_(),
+		  t_(),
+		  copy_to_palette_(),
+		  color_box_length_(0),
+		  wheel_radius_(0),
+		  palette_offset_y_(0), 
+		  dragging_(false), 
+		  onchange_(),
+		  change_handler_(),
+		  handler_arg_()
 	{
 		setLoc(area.x(), area.y());
 		setDim(area.w(), area.h());
@@ -76,9 +97,29 @@ namespace gui
 	}
 
 	ColorPicker::ColorPicker(const rect& area, std::function<void (const KRE::Color&)> change_fun)
-		: selected_palette_color_(), hue_(0), saturation_(0), value_(0), alpha_(255),
-		red_(255), green_(255), blue_(255), dragging_(false), palette_offset_y_(0), main_color_selected_(1),
-		onchange_(change_fun)
+		: primary_(),
+  		  secondary_(),
+		  palette_(),
+		  main_color_selected_(1),
+		  selected_palette_color_(), 
+		  hue_(0), 
+		  saturation_(0), 
+		  value_(0), 
+		  alpha_(255),
+		  red_(255), 
+		  green_(255), 
+		  blue_(255), 
+		  g_(),
+		  s_(),
+		  t_(),
+		  copy_to_palette_(),
+		  color_box_length_(0),
+		  wheel_radius_(0),
+		  palette_offset_y_(0), 
+		  dragging_(false),
+		  onchange_(change_fun),
+		  change_handler_(),
+		  handler_arg_()
 	{
 		setLoc(area.x(), area.y());
 		setDim(area.w(), area.h());
@@ -94,9 +135,30 @@ namespace gui
 	}
 
 	ColorPicker::ColorPicker(const variant& v, game_logic::FormulaCallable* e)
-		: Widget(v, e), selected_palette_color_(0), hue_(0), saturation_(0), 
-		value_(0), alpha_(255), red_(255), green_(255), blue_(255), dragging_(false), palette_offset_y_(0),
-		main_color_selected_(1)
+		: Widget(v, e), 
+		  primary_(),
+  		  secondary_(),
+		  palette_(),
+		  main_color_selected_(1),
+		  selected_palette_color_(), 
+		  hue_(0), 
+		  saturation_(0), 
+		  value_(0), 
+		  alpha_(255),
+		  red_(255), 
+		  green_(255), 
+		  blue_(255), 
+		  g_(),
+		  s_(),
+		  t_(),
+		  copy_to_palette_(),
+		  color_box_length_(0),
+		  wheel_radius_(0),
+		  palette_offset_y_(0), 
+		  dragging_(false),
+		  onchange_(),
+		  change_handler_(),
+		  handler_arg_()
 	{
 		// create delegate for onchange
 		ASSERT_LOG(getEnvironment() != 0, "You must specify a callable environment");
@@ -177,10 +239,6 @@ namespace gui
 	{
 		ASSERT_LOG(size_t(n) < palette_.size(), "ColorPicker::setPaletteColor selected color out of range: " << n << " >= " << palette_.size());
 		palette_[size_t(n)] = color;
-	}
-
-	void ColorPicker::handleProcess()
-	{
 	}
 
 	namespace 
@@ -571,6 +629,28 @@ namespace gui
 		hue_ = out[0];
 		saturation_ = out[1];
 		value_ = out[2];
+	}
+
+	WidgetPtr ColorPicker::clone() const
+	{
+		ColorPicker* cp = new ColorPicker(*this);
+		if(g_ != nullptr) {
+			cp->g_ = boost::dynamic_pointer_cast<Grid>(g_->clone());
+		}
+		for(const auto& slider : s_) {
+			if(slider) {
+				cp->s_.emplace_back(boost::dynamic_pointer_cast<Slider>(slider->clone()));
+			}
+		}
+		for(const auto& te : t_) {
+			if(te != nullptr) {
+				cp->t_.emplace_back(boost::dynamic_pointer_cast<TextEditorWidget>(te->clone()));
+			}
+		}
+		if(copy_to_palette_ != nullptr) {
+			cp->copy_to_palette_ = boost::dynamic_pointer_cast<Button>(copy_to_palette_->clone());
+		}
+		return WidgetPtr(cp);
 	}
 
 	BEGIN_DEFINE_CALLABLE(ColorPicker, Widget)

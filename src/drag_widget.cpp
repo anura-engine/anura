@@ -101,7 +101,6 @@ namespace gui
 		std::function<void(int, int)> drag_move)
 		: x_(x), y_(y), w_(w), h_(h), dir_(dir), 
 		drag_start_(drag_start), drag_end_(drag_end), drag_move_(drag_move),
-	
 		old_cursor_(nullptr), dragging_handle_(0)
 	{
 		setEnvironment();
@@ -300,6 +299,15 @@ namespace gui
 			}
 		}
 		return claimed;
+	}
+
+	WidgetPtr DragWidget::clone() const
+	{
+		DragWidget* dw = new DragWidget(*this);
+		dw->old_cursor_ = nullptr;
+		dw->dragging_handle_ = 0;
+		dw->init();
+		return WidgetPtr(dw);
 	}
 }
 

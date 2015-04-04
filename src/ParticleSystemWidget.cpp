@@ -71,6 +71,11 @@ namespace gui
 		last_process_time_ = current_time;
 	}
 
+	WidgetPtr ParticleSystemWidget::clone() const
+	{
+		return WidgetPtr(new ParticleSystemWidget(*this));
+	}
+
 	BEGIN_DEFINE_CALLABLE(ParticleSystemWidget, Widget)
 		DEFINE_FIELD(dummy, "null")
 			return variant();

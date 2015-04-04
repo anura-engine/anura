@@ -32,30 +32,31 @@
 
 namespace gui 
 {
-	class code_editor_widget : public TextEditorWidget
+	class CodeEditorWidget : public TextEditorWidget
 	{
 	public:
-		code_editor_widget(int width, int height);
-		code_editor_widget(const variant& v, game_logic::FormulaCallable* e);
+		CodeEditorWidget(int width, int height);
+		CodeEditorWidget(const variant& v, game_logic::FormulaCallable* e);
 		void onSliderMove(float value);
 
-		const std::string& currentText() const { return currentText_; }
+		const std::string& currentText() const { return current_text_; }
 		struct ObjectInfo {
 			std::intptr_t begin, end;
 			variant obj;
 			std::vector<json::Token> tokens;
 		};
 
-		ObjectInfo get_current_object() const;
-		void set_highlight_current_object(bool value);
+		ObjectInfo getCurrentObject() const;
+		void setHighlightCurrentObject(bool value);
 
 		//modifies the currently selected object to be equal to this new value.
-		void modify_current_object(variant new_obj);
+		void modifyCurrentObject(variant new_obj);
 
-		void set_formula(bool val=true) { is_formula_ = true; }
+		void setFormula(bool val=true) { is_formula_ = true; }
 
+		WidgetPtr clone() const override;
 	private:
-		ObjectInfo get_object_at(int row, int col) const;
+		ObjectInfo getObjectAt(int row, int col) const;
 
 		virtual void handleDraw() const override;
 		virtual bool handleEvent(const SDL_Event& event, bool claimed) override;
@@ -86,12 +87,12 @@ namespace gui
 		std::vector<WidgetPtr> slider_labels_;
 
 		void generate_tokens();
-		std::string currentText_;
+		std::string current_text_;
 		variant current_obj_;
 		std::vector<json::Token> tokens_;
 
 		bool is_formula_;
 	};
 
-	typedef boost::intrusive_ptr<code_editor_widget> CodeEditorWidgetPtr;
+	typedef boost::intrusive_ptr<CodeEditorWidget> CodeEditorWidgetPtr;
 }

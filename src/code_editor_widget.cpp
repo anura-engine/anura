@@ -37,28 +37,70 @@
 
 namespace gui
 {
-	code_editor_widget::code_editor_widget(int width, int height)
+	CodeEditorWidget::CodeEditorWidget(int width, int height)
 	  : TextEditorWidget(width, height),
-	  row_slider_(0), begin_col_slider_(0), end_col_slider_(0),
-	  slider_decimal_(false), slider_magnitude_(0), is_formula_(false)
+		colors_(),
+		bracket_match_(),
+		slider_(),
+	    row_slider_(0), 
+		begin_col_slider_(0), 
+		end_col_slider_(0),
+	    slider_decimal_(false), 
+		slider_magnitude_(0), 
+		slider_range_(),
+		slider_labels_(),
+		current_text_(),
+		current_obj_(),
+		tokens_(),
+		is_formula_(false)
 	{
 		setEnvironment();
 	}
 
-	code_editor_widget::code_editor_widget(const variant& v, game_logic::FormulaCallable* e) 
-		: TextEditorWidget(v,e), row_slider_(0), begin_col_slider_(0), 
-		end_col_slider_(0),	slider_decimal_(false), slider_magnitude_(0), is_formula_(false)
+	CodeEditorWidget::CodeEditorWidget(const variant& v, game_logic::FormulaCallable* e) 
+		: TextEditorWidget(v,e), 
+		  colors_(),
+		  bracket_match_(),
+		  slider_(),
+		  row_slider_(0), 
+		  begin_col_slider_(0), 
+		  end_col_slider_(0),
+		  slider_decimal_(false), 
+		  slider_magnitude_(0), 
+		  slider_range_(),
+		  slider_labels_(),
+		  current_text_(),
+		  current_obj_(),
+		  tokens_(),
+		  is_formula_(false)
 	{
 	}
 
-	void code_editor_widget::onMoveCursor(bool auto_shift)
+	WidgetPtr CodeEditorWidget::clone() const
+	{
+		CodeEditorWidget* ce = new CodeEditorWidget(*this);
+		ce->slider_labels_.clear();
+		if(!slider_labels_.empty()) {
+			for(auto& label : slider_labels_) {
+				if(label != nullptr) {
+					ce->slider_labels_.emplace_back(label->clone());
+				}
+			}
+		}
+		if(slider_ != nullptr) {
+			ce->slider_ = boost::dynamic_pointer_cast<Slider>(slider_->clone());
+		}
+		return WidgetPtr(ce);
+	}
+
+	void CodeEditorWidget::onMoveCursor(bool auto_shift)
 	{
 		TextEditorWidget::onMoveCursor(auto_shift);
 
-		ObjectInfo info = get_current_object();
+		ObjectInfo info = getCurrentObject();
 	}
 
-	void code_editor_widget::onChange()
+	void CodeEditorWidget::onChange()
 	{
 		generate_tokens();
 
@@ -204,7 +246,7 @@ namespace gui
 		TextEditorWidget::onChange();
 	}
 
-	KRE::Color code_editor_widget::getCharacterColor(int row, int col) const
+	KRE::Color CodeEditorWidget::getCharacterColor(int row, int col) const
 	{
 		std::map<std::pair<int, int>, std::vector<std::pair<int, int> > >::const_iterator itor = bracket_match_.find(std::pair<int,int>(row,col));
 		if(itor != bracket_match_.end()) {
@@ -224,7 +266,7 @@ namespace gui
 		return colors_[row][col];
 	}
 
-	void code_editor_widget::selectToken(const std::string& row, size_t& begin_row, size_t& end_row, size_t& begin_col, size_t& end_col)
+	void CodeEditorWidget::selectToken(const std::string& row, size_t& begin_row, size_t& end_row, size_t& begin_col, size_t& end_col)
 	{
 		std::pair<int,int> key(static_cast<int>(begin_row), static_cast<int>(begin_col));
 		if(bracket_match_.count(key)) {
@@ -246,7 +288,7 @@ namespace gui
 			const decimal current_value(decimal::from_string(token));
 			if(current_value <= 10000000 && current_value >= -10000000) {
 				using std::placeholders::_1;
-				slider_.reset(new Slider(200, std::bind(&code_editor_widget::onSliderMove, this, _1)));
+				slider_.reset(new Slider(200, std::bind(&CodeEditorWidget::onSliderMove, this, _1)));
 				slider_decimal_ = std::count(token.begin(), token.end(), '.') ? true : false;
 				slider_magnitude_ = (abs(current_value.as_int())+1) * 5;
 	
@@ -306,7 +348,7 @@ namespace gui
 		}
 	}
 
-	void code_editor_widget::onSliderMove(float value)
+	void CodeEditorWidget::onSliderMove(float value)
 	{
 		if(recordOp("slider")) {
 			saveUndoState();
@@ -347,7 +389,7 @@ namespace gui
 		setRowContents(row_slider_, row);
 	}
 
-	void code_editor_widget::handleDraw() const
+	void CodeEditorWidget::handleDraw() const
 	{
 		TextEditorWidget::handleDraw();
 
@@ -359,7 +401,7 @@ namespace gui
 		}
 	}
 
-	bool code_editor_widget::handleEvent(const SDL_Event& event, bool claimed)
+	bool CodeEditorWidget::handleEvent(const SDL_Event& event, bool claimed)
 	{
 		if(slider_) {
 			if(slider_->processEvent(getPos(), event, claimed)) {
@@ -374,18 +416,18 @@ namespace gui
 		return TextEditorWidget::handleEvent(event, claimed) || claimed;
 	}
 
-	void code_editor_widget::generate_tokens()
+	void CodeEditorWidget::generate_tokens()
 	{
-		currentText_ = text();
+		current_text_ = text();
 
 		try {
-			current_obj_ = json::parse(currentText_);
+			current_obj_ = json::parse(current_text_);
 		} catch(...) {
 		}
 
 		tokens_.clear();
-		const char* begin = currentText_.c_str();
-		const char* end = begin + currentText_.size();
+		const char* begin = current_text_.c_str();
+		const char* end = begin + current_text_.size();
 
 		try {
 			json::Token token = json::get_token(begin, end);
@@ -440,11 +482,11 @@ namespace gui
 		}
 	}
 
-	code_editor_widget::ObjectInfo code_editor_widget::get_object_at(int row, int col) const
+	CodeEditorWidget::ObjectInfo CodeEditorWidget::getObjectAt(int row, int col) const
 	{
 		const auto pos = rowColToTextPos(row, col);
-		const char* ptr = currentText_.c_str() + pos;
-		ASSERT_LOG(pos <= currentText_.size(), "Unexpected position in code editor widget: " << pos << " / " << currentText_.size());
+		const char* ptr = current_text_.c_str() + pos;
+		ASSERT_LOG(pos <= current_text_.size(), "Unexpected position in code editor widget: " << pos << " / " << current_text_.size());
 		const json::Token* begin_token = nullptr;
 		const json::Token* end_token = nullptr;
 		std::stack<const json::Token*> begin_stack;
@@ -474,8 +516,8 @@ namespace gui
 		}
 
 		ObjectInfo result;
-		result.begin = begin_token->begin - currentText_.c_str();
-		result.end = end_token->end - currentText_.c_str();
+		result.begin = begin_token->begin - current_text_.c_str();
+		result.end = end_token->end - current_text_.c_str();
 		result.tokens = std::vector<json::Token>(begin_token, end_token+1);
 		try {
 			result.obj = get_map_editing(row, col, current_obj_);
@@ -487,19 +529,19 @@ namespace gui
 		return result;
 	}
 
-	code_editor_widget::ObjectInfo code_editor_widget::get_current_object() const
+	CodeEditorWidget::ObjectInfo CodeEditorWidget::getCurrentObject() const
 	{
-		return get_object_at(static_cast<int>(cursorRow()), static_cast<int>(cursorCol()));
+		return getObjectAt(static_cast<int>(cursorRow()), static_cast<int>(cursorCol()));
 	}
 
-	void code_editor_widget::set_highlight_current_object(bool value)
+	void CodeEditorWidget::setHighlightCurrentObject(bool value)
 	{
 		if(!value) {
 			clearHighlightLines();
 			return;
 		}
 
-		ObjectInfo info = get_current_object();
+		ObjectInfo info = getCurrentObject();
 		if(info.obj.is_null() == false) {
 			setHighlightLines(text_pos_to_row_col(info.begin).first,
 								text_pos_to_row_col(info.end).first);
@@ -508,9 +550,9 @@ namespace gui
 		}
 	}
 
-	void code_editor_widget::modify_current_object(variant new_obj)
+	void CodeEditorWidget::modifyCurrentObject(variant new_obj)
 	{
-		ObjectInfo info = get_current_object();
+		ObjectInfo info = getCurrentObject();
 		if(info.obj.is_null() || info.tokens.empty()) {
 			return;
 		}
@@ -518,7 +560,7 @@ namespace gui
 		saveUndoState();
 
 
-		const std::string str(currentText_.begin() + info.begin, currentText_.begin() + info.end);
+		const std::string str(current_text_.begin() + info.begin, current_text_.begin() + info.end);
 
 		//calculate the indentation this object has based on the first attribute.
 		std::string indent;
@@ -537,7 +579,8 @@ namespace gui
 		}
 
 		const std::string new_str = modify_variant_text(str, info.obj, new_obj, info.obj.get_debug_info()->line, info.obj.get_debug_info()->column, indent);
-		currentText_ = std::string(currentText_.begin(), currentText_.begin() + info.begin) + new_str + std::string(currentText_.begin() + info.end, currentText_.end());
-		setText(currentText_, false /*don't move cursor*/);
+		current_text_ = std::string(current_text_.begin(), current_text_.begin() + info.begin) + new_str + std::string(current_text_.begin() + info.end, current_text_.end());
+		setText(current_text_, false /*don't move cursor*/);
 	}
 }
+

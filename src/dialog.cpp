@@ -305,6 +305,17 @@ namespace gui
 		recalculateDimensions();
 	}
 
+	WidgetPtr Dialog::clone() const
+	{
+		Dialog* d = new Dialog(*this);
+		for(const auto& w : widgets_) {
+			d->addWidget(w->clone(), w->x(), w->y());
+		}
+		d->current_tab_focus_ = d->tab_widgets_.end();
+		// XXX Open question on cloning bg_
+		return WidgetPtr(d);
+	}
+
 	void Dialog::clear() { 
 		add_x_ = add_y_ = 0;
 		widgets_.clear(); 
