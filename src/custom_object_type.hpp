@@ -42,6 +42,8 @@
 #include "b2d_ffl.hpp"
 #endif
 
+#include "ParticleSystemFwd.hpp"
+
 class CustomObjectType;
 
 typedef std::shared_ptr<CustomObjectType> CustomObjectTypePtr;
@@ -270,6 +272,8 @@ public:
 
 	graphics::AnuraShaderPtr getShader() const { return shader_; }
 	const std::vector<graphics::AnuraShaderPtr>& getEffectsShaders() const { return effects_shaders_; }
+
+	variant getParticleSystemDesc() const { return particle_system_desc_; }
 private:
 	void initSubObjects(variant node, const CustomObjectType* old_type);
 
@@ -404,5 +408,7 @@ private:
 
 	graphics::AnuraShaderPtr shader_;
 	std::vector<graphics::AnuraShaderPtr> effects_shaders_;	
+
+	variant particle_system_desc_;	
 };
 

@@ -91,28 +91,6 @@ namespace KRE
 		}
 	}
 
-	SceneNode::SceneNode(const SceneNode& op)
-		: name_(op.name_),
-		  scene_graph_(op.scene_graph_),
-		  parent_(),
-		  position_(op.position_),
-		  rotation_(op.rotation_),
-		  scale_(op.scale_),
-		// Should we copy the pointers or create new instances ?
-		objects_(op.objects_)
-	{
-		getParentGraph()->attachNode(getParent(), shared_from_this());
-		if(op.camera_) {
-			camera_ = op.camera_->clone();
-		}
-		if(op.render_target_) {
-			render_target_ = op.render_target_->clone();
-		}
-		for(auto light : op.lights_) {
-			lights_.emplace(light.first, light.second->clone());
-		}
-	}
-
 	SceneNode::~SceneNode()
 	{
 	}

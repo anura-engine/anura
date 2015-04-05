@@ -125,8 +125,12 @@ namespace KRE
 			void addEmitter(EmitterPtr e);
 			void addAffector(AffectorPtr a);
 			void preRender(const WindowPtr& wnd);
+
+			static TechniquePtr create(std::weak_ptr<ParticleSystemContainer> parent, const variant& node);
+			TechniquePtr clone() const;
 		private:
-			void init();
+			void init(const variant& node);
+			void initAttributes();
 			void handleEmitProcess(float t) override;
 
 			std::shared_ptr<Attribute<vertex_texture_color3>> arv_;
@@ -156,7 +160,7 @@ namespace KRE
 			// List of particles currently active.
 			std::vector<Particle> active_particles_;
 
-			Technique();
+			Technique() = delete;
 		};
 
 		class ParticleSystem : public EmitObject, public SceneNode
@@ -172,12 +176,13 @@ namespace KRE
 			float getScaleTime() const { return scale_time_; }
 			const glm::vec3& getScaleDimensions() const { return scale_dimensions_; }
 
-			static ParticleSystemPtr factory(std::weak_ptr<ParticleSystemContainer> parent, const variant& node);
-
 			void addTechnique(TechniquePtr tq);
 			std::vector<TechniquePtr>& getActiveTechniques() { return active_techniques_; }
 
-		protected:
+			static ParticleSystemPtr factory(std::weak_ptr<ParticleSystemContainer> parent, const variant& node);
+			ParticleSystemPtr clone() const;
+		private:
+			void init(const variant& node);
 			void notifyNodeAttached(std::weak_ptr<SceneNode> parent) override;
 			virtual void handleEmitProcess(float t) override;
 			void update(float t);
@@ -199,6 +204,7 @@ namespace KRE
 		{
 		public:
 			// Must be called after being created.
+			explicit ParticleSystemContainer(std::weak_ptr<SceneGraph> sg, const variant& node);
 			void init(const variant& node);
 			ParticleSystemContainerPtr get_this_ptr();
 
@@ -225,7 +231,6 @@ namespace KRE
 			static ParticleSystemContainerPtr create(std::weak_ptr<SceneGraph> sg, const variant& node);
 		private:
 			void notifyNodeAttached(std::weak_ptr<SceneNode> parent) override;
-			explicit ParticleSystemContainer(std::weak_ptr<SceneGraph> sg, const variant& node);
 
 			std::vector<ParticleSystemPtr> active_particle_systems_;
 

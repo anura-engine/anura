@@ -140,27 +140,6 @@ namespace KRE
 		}
 	}
 
-	Renderable::Renderable(const Renderable& r)
-		: order_(r.order_),
-		  position_(r.position_),
-		  rotation_(r.rotation_),
-		  scale_(r.scale_),
-		  camera_(r.camera_),
-		  lights_(),
-		  texture_(r.texture_ ? r.texture_->clone() : nullptr),
-		  render_target_(r.render_target_ ? r.render_target_->clone() : nullptr),
-		  shader_(r.shader_),
-		  attributes_(r.attributes_),
-		  enabled_(r.enabled_)
-	{
-		for(auto& l : r.lights_) {
-			lights_[l.first] = l.second->clone();
-		}
-		//for(auto& att : r.attributes_) {
-		//	attributes_.emplace_back(att->clone());
-		//}
-	}
-
 	Renderable::~Renderable()
 	{
 	}

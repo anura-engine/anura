@@ -30,6 +30,10 @@
 #include "ColorScope.hpp"
 #include "Font.hpp"
 #include "ModelMatrixScope.hpp"
+#include "ParticleSystem.hpp"
+#include "RenderManager.hpp"
+#include "SceneGraph.hpp"
+#include "SceneNode.hpp"
 #include "StencilScope.hpp"
 #include "WindowManager.hpp"
 
@@ -193,7 +197,12 @@ CustomObject::CustomObject(variant node)
 	swallow_mouse_event_(false),
 	currently_handling_die_event_(0),
 	use_absolute_screen_coordinates_(node["use_absolute_screen_coordinates"].as_bool(type_->useAbsoluteScreenCoordinates())),
-	paused_(false)
+	paused_(false),
+	particle_system_container_(),
+	scene_(),
+	root_(),
+	rmanager_(),
+	last_process_time_(-1)
 {
 
 	vars_->setObjectName(getDebugDescription());
@@ -456,6 +465,8 @@ CustomObject::CustomObject(variant node)
 		}
 	}
 
+	createParticles();
+
 	const variant property_data_node = node["property_data"];
 	for(int i = 0; i != type_->getSlotProperties().size(); ++i) {
 		const CustomObjectType::PropertyEntry& e = type_->getSlotProperties()[i];
@@ -525,7 +536,12 @@ CustomObject::CustomObject(const std::string& type, int x, int y, bool face_righ
 	min_difficulty_(-1), max_difficulty_(-1),
 	currently_handling_die_event_(0),
 	use_absolute_screen_coordinates_(type_->useAbsoluteScreenCoordinates()),
-	paused_(false)
+	paused_(false),
+	particle_system_container_(),
+	scene_(),
+	root_(),
+	rmanager_(),
+	last_process_time_(-1)
 {
 	properties_requiring_dynamic_initialization_ = type_->getPropertiesRequiringDynamicInitialization();
 	properties_requiring_dynamic_initialization_.insert(properties_requiring_dynamic_initialization_.end(), type_->getPropertiesRequiringInitialization().begin(), type_->getPropertiesRequiringInitialization().end());
@@ -589,6 +605,7 @@ CustomObject::CustomObject(const std::string& type, int x, int y, bool face_righ
 	if(type_->getMouseOverArea().w() != 0) {
 		setMouseOverArea(type_->getMouseOverArea());
 	}
+	createParticles();
 	initProperties();
 }
 
@@ -665,7 +682,12 @@ CustomObject::CustomObject(const CustomObject& o)
 	//do NOT copy widgets since they do not support deep copying
 	//and re-seating references is difficult.
 	//widgets_(o.widgets_),
-	paused_(o.paused_)
+	paused_(o.paused_),
+	particle_system_container_(),
+	scene_(),
+	root_(),
+	rmanager_(),
+	last_process_time_(o.last_process_time_)
 {
 	vars_->setObjectName(getDebugDescription());
 	tmp_vars_->setObjectName(getDebugDescription());
@@ -697,6 +719,7 @@ CustomObject::CustomObject(const CustomObject& o)
 	for(auto eff : o.effects_shaders_) {
 		effects_shaders_.emplace_back(new graphics::AnuraShader(*eff));
 	}
+	createParticles();
 }
 
 CustomObject::~CustomObject()
@@ -782,6 +805,27 @@ void CustomObject::init_lua()
 	}
 }
 #endif
+
+void CustomObject::createParticles()
+{
+	// hack to create a mini-scene
+	if(type_->getParticleSystemDesc().is_map()) {
+		using namespace KRE;
+		scene_ = SceneGraph::create("CustomObject");
+		root_ = scene_->getRootNode();
+		root_->setNodeName("root_node");
+		particle_system_container_ = Particles::ParticleSystemContainer::create(scene_, type_->getParticleSystemDesc());
+
+		//auto particle_cam = std::make_shared<Camera>("particle_cam");
+		//particle_cam->lookAt(glm::vec3(0.0f, 10.0f, 20.0f), glm::vec3(0.0f), glm::vec3(0.0f,1.0f,0.0f));
+		//particle_system_container_->attachCamera(particle_cam);
+		
+		root_->attachNode(particle_system_container_);
+
+		rmanager_ = std::make_shared<RenderManager>();
+		rmanager_->addQueue(0, "PS");
+	}
+}
 
 bool CustomObject::serializable() const
 {
@@ -1301,6 +1345,12 @@ void CustomObject::draw(int xx, int yy) const
 		if(eff->zorder() >= 0 && eff->isEnabled()) {
 			eff->draw(wnd);
 		}
+	}
+
+	if(particle_system_container_ != nullptr) {
+		KRE::ModelManager2D mm(x(), y());
+		scene_->renderScene(rmanager_);
+		rmanager_->render(wnd);
 	}
 
 	if(Level::current().debug_properties().empty() == false) {
@@ -2243,6 +2293,16 @@ void CustomObject::process(Level& lvl)
 	}
 	for(auto& eff : effects_shaders_) {
 		eff->process();
+	}
+	if(scene_) {
+		float delta_time = 0.0f;
+		if(last_process_time_ == -1) {
+			last_process_time_ = profile::get_tick_time();
+		}
+		auto current_time = profile::get_tick_time();
+		delta_time = (current_time - last_process_time_) / 1000.0f;
+		scene_->process(delta_time);
+		last_process_time_ = current_time;
 	}
 
 	staticProcess(lvl);

@@ -40,7 +40,8 @@ namespace KRE
 				  circle_radius_(Parameter::factory(node["circle_radius"])),
 				  circle_step_(node["circle_step"].as_float(0.1f)), 
 				  circle_angle_(node["circle_angle"].as_float(0)), 
-				  circle_random_(node["emit_random"].as_bool(true)) {
+				  circle_random_(node["emit_random"].as_bool(true))
+			{
 			}
 		protected:
 			void internalCreate(Particle& p, float t) {
@@ -63,6 +64,9 @@ namespace KRE
 			float circle_step_;
 			float circle_angle_;
 			bool circle_random_;
+			bool use_x_;
+			bool use_y_;
+			bool use_z_;
 
 			CircleEmitter();
 		};

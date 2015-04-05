@@ -102,7 +102,9 @@ namespace KRE
 		  ortho_bottom_(0),
 		  ortho_top_(0), 
 		  ortho_right_(0),
-		  clip_planes_set_(false)
+		  view_(1.0f),
+		  clip_planes_set_(false),
+		  view_mode_(VIEW_MODE_AUTO)
 	{	  
 		auto wnd = WindowManager::getMainWindow();
 		ortho_top_ = wnd->logicalHeight(); 
@@ -168,9 +170,14 @@ namespace KRE
 			lookAt(position, target, up);
 			view_mode_ = VIEW_MODE_MANUAL;
 		} else {
-			computeView();
+			if(type_ != CAMERA_ORTHOGONAL) {
+				computeView();
+			}
 		}
 		computeProjection();
+
+
+		LOG_DEBUG("creating camera of type: " << static_cast<int>(type_));
 	}
 
 	Camera::Camera(const std::string& name, int left, int right, int top, int bottom)

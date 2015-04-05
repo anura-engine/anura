@@ -43,6 +43,10 @@
 #include "particle_system.hpp"
 #include "widget.hpp"
 
+#include "ParticleSystemFwd.hpp"
+#include "RenderFwd.hpp"
+#include "SceneFwd.hpp"
+
 struct CollisionInfo;
 class Level;
 struct CustomObjectText;
@@ -275,6 +279,7 @@ public:
 
 	bool hasOwnDraw() const { return true; }
 
+	void createParticles();
 protected:
 	//components of per-cycle process() that can be done even on
 	//static objects.
@@ -538,4 +543,11 @@ private:
 
 	graphics::AnuraShaderPtr shader_;
 	std::vector<graphics::AnuraShaderPtr> effects_shaders_;
+
+	// Hack integration for new particle systems
+	KRE::Particles::ParticleSystemContainerPtr particle_system_container_;
+	KRE::SceneGraphPtr scene_;
+	KRE::SceneNodePtr root_;
+	KRE::RenderManagerPtr rmanager_;
+	int last_process_time_;
 };
