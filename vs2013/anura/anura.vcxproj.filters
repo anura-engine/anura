@@ -969,6 +969,9 @@
     <ClInclude Include="..\..\src\kre\WindowManagerFwd.hpp">
       <Filter>Header Files\kre</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\particle_system_proxy.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\src\kre\geometry.inl">
@@ -1805,6 +1808,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\formula_garbage_collector.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\particle_system_proxy.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
