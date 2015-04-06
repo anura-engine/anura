@@ -142,85 +142,87 @@ Background::Background(variant node, int palette)
 	bool colors_mapped = false;
 
 	for(variant layer_node : node["layer"].as_list()) {
-		Layer bg;
-		bg.image = layer_node["image"].as_string();
-		bg.image_formula = layer_node["image_formula"].as_string_default();
-		ASSERT_LOG(bg.image_formula.empty(), "Image formula's aren't supported.");
-		bg.xscale = layer_node["xscale"].as_int(100);
-		bg.yscale_top = bg.yscale_bot = layer_node["yscale"].as_int(100);
-		bg.yscale_top = layer_node["yscale_top"].as_int(bg.yscale_top);
-		bg.yscale_bot = layer_node["yscale_bot"].as_int(bg.yscale_bot);
-		bg.xspeed = layer_node["xspeed"].as_int(0);
-		bg.xpad = layer_node["xpad"].as_int(0);
-		bg.xoffset = layer_node["xoffset"].as_int(0);
-		bg.yoffset = layer_node["yoffset"].as_int(0);
-		bg.scale = layer_node["scale"].as_int(2);
-		bg.blend = layer_node["blend"].as_bool(true);
-		bg.notile = layer_node["notile"].as_bool(false);
-		if(bg.scale < 1) {
-			bg.scale = 1;
+		std::shared_ptr<Layer> bg = std::make_shared<Layer>();
+		bg->image = layer_node["image"].as_string();
+		bg->image_formula = layer_node["image_formula"].as_string_default();
+		ASSERT_LOG(bg->image_formula.empty(), "Image formula's aren't supported.");
+		bg->xscale = layer_node["xscale"].as_int(100);
+		bg->yscale_top = bg->yscale_bot = layer_node["yscale"].as_int(100);
+		bg->yscale_top = layer_node["yscale_top"].as_int(bg->yscale_top);
+		bg->yscale_bot = layer_node["yscale_bot"].as_int(bg->yscale_bot);
+		bg->xspeed = layer_node["xspeed"].as_int(0);
+		bg->xpad = layer_node["xpad"].as_int(0);
+		bg->xoffset = layer_node["xoffset"].as_int(0);
+		bg->yoffset = layer_node["yoffset"].as_int(0);
+		bg->scale = layer_node["scale"].as_int(2);
+		bg->blend = layer_node["blend"].as_bool(true);
+		bg->notile = layer_node["notile"].as_bool(false);
+		if(bg->scale < 1) {
+			bg->scale = 1;
 		}
 
-		bg.texture = graphics::get_palette_texture(bg.image, layer_node["image"], palette_);
-		bg.setTexture(bg.texture);
+		bg->setBlendState(bg->blend);
+
+		bg->texture = graphics::get_palette_texture(bg->image, layer_node["image"], palette_);
+		bg->setTexture(bg->texture);
 
 		if(palette_ != -1) {
-			bg.texture->setPalette(palette_);
+			bg->texture->setPalette(palette_);
 		}
 
 		if(palette_ != -1 && !colors_mapped) {
-			top_ = bg.texture->mapPaletteColor(top_, palette);
-			bot_ = bg.texture->mapPaletteColor(bot_, palette);
+			top_ = bg->texture->mapPaletteColor(top_, palette);
+			bot_ = bg->texture->mapPaletteColor(bot_, palette);
 			colors_mapped = true;
 		}
 
 		using namespace KRE;
 		auto ab = DisplayDevice::createAttributeSet(false, false, false);
-		bg.attr_ = std::make_shared<Attribute<short_vertex_texcoord>>(AccessFreqHint::DYNAMIC, AccessTypeHint::DRAW);
-		bg.attr_->addAttributeDesc(AttributeDesc(AttrType::POSITION, 2, AttrFormat::SHORT, false, sizeof(short_vertex_texcoord), offsetof(short_vertex_texcoord, vertex)));
-		bg.attr_->addAttributeDesc(AttributeDesc(AttrType::TEXTURE, 2, AttrFormat::FLOAT, false, sizeof(short_vertex_texcoord), offsetof(short_vertex_texcoord, tc)));
-		ab->addAttribute(bg.attr_);
+		bg->attr_ = std::make_shared<Attribute<short_vertex_texcoord>>(AccessFreqHint::DYNAMIC, AccessTypeHint::DRAW);
+		bg->attr_->addAttributeDesc(AttributeDesc(AttrType::POSITION, 2, AttrFormat::SHORT, false, sizeof(short_vertex_texcoord), offsetof(short_vertex_texcoord, vertex)));
+		bg->attr_->addAttributeDesc(AttributeDesc(AttrType::TEXTURE, 2, AttrFormat::FLOAT, false, sizeof(short_vertex_texcoord), offsetof(short_vertex_texcoord, tc)));
+		ab->addAttribute(bg->attr_);
 		ab->setDrawMode(DrawMode::TRIANGLES);
-		bg.addAttributeSet(ab);
+		bg->addAttributeSet(ab);
 
 		if(layer_node.has_key("mode")) {
 			if(layer_node["mode"].is_string()) {
 				std::string blend_mode = layer_node["mode"].as_string_default();
 				if(blend_mode == "GL_MAX" || blend_mode == "MAX") {
-					bg.setBlendEquation(BlendEquation(BlendEquationConstants::BE_MAX));
+					bg->setBlendEquation(BlendEquation(BlendEquationConstants::BE_MAX));
 				} else if(blend_mode == "GL_MIN" || blend_mode == "MIN") { 
-					bg.setBlendEquation(BlendEquation(BlendEquationConstants::BE_MIN));
+					bg->setBlendEquation(BlendEquation(BlendEquationConstants::BE_MIN));
 				} else {
-					bg.setBlendEquation(BlendEquation(BlendEquationConstants::BE_ADD));
+					bg->setBlendEquation(BlendEquation(BlendEquationConstants::BE_ADD));
 				}
 			} else {
-				bg.setBlendEquation(BlendEquation(layer_node["mode"]));
+				bg->setBlendEquation(BlendEquation(layer_node["mode"]));
 			}
 		}
 		
-		bg.color = Color(layer_node);
-		bg.setColor(bg.color);
+		bg->color = Color(layer_node);
+		bg->setColor(bg->color);
 
 		if(layer_node.has_key("color_above")) {
-			bg.color_above.reset(new Color(layer_node["color_above"]));
+			bg->color_above.reset(new Color(layer_node["color_above"]));
 			if(palette_ != -1) {
-				*bg.color_above = bg.texture->mapPaletteColor(*bg.color_above, palette);
+				*bg->color_above = bg->texture->mapPaletteColor(*bg->color_above, palette);
 			}
 		}
 
 		if(layer_node.has_key("color_below")) {
-			bg.color_below.reset(new Color(layer_node["color_below"]));
+			bg->color_below.reset(new Color(layer_node["color_below"]));
 			if(palette_ != -1) {
-				*bg.color_below = bg.texture->mapPaletteColor(*bg.color_below, palette);
+				*bg->color_below = bg->texture->mapPaletteColor(*bg->color_below, palette);
 			}
 		}
 
-		bg.y1 = layer_node["y1"].as_int();
-		bg.y2 = layer_node["y2"].as_int();
+		bg->y1 = layer_node["y1"].as_int();
+		bg->y2 = layer_node["y2"].as_int();
 
-		bg.foreground = layer_node["foreground"].as_bool(false);
-		bg.tile_upwards = layer_node["tile_upwards"].as_bool(false);
-		bg.tile_downwards = layer_node["tile_downwards"].as_bool(false);
+		bg->foreground = layer_node["foreground"].as_bool(false);
+		bg->tile_upwards = layer_node["tile_upwards"].as_bool(false);
+		bg->tile_downwards = layer_node["tile_downwards"].as_bool(false);
 		layers_.emplace_back(bg);
 	}
 }
@@ -233,7 +235,8 @@ variant Background::write() const
 	res.add("width", formatter() << width_);
 	res.add("height", formatter() << height_);
 
-	for(auto& bg : layers_) {
+	for(auto& bgp : layers_) {
+		Background::Layer& bg = *bgp;
 		variant_builder layer_node;
 		layer_node.add("image", bg.image);
 		layer_node.add("xscale", formatter() << bg.xscale);
@@ -254,6 +257,9 @@ variant Background::write() const
 		layer_node.add("green", formatter() << bg.color.g_int());
 		layer_node.add("blue", formatter() << bg.color.b_int());
 		layer_node.add("alpha", formatter() << bg.color.a_int());
+		if(bg.blend == false) {
+			layer_node.add("blend", false);
+		}
 
 		if(bg.color_above) {
 			layer_node.add("color_above", bg.color_above->write());
@@ -357,14 +363,14 @@ void Background::drawLayers(int x, int y, const rect& area_ref, const std::vecto
 	calculate_draw_areas(area_ref, opaque_areas.begin(), opaque_areas.end(), &areas);
 
 	for(auto& bg : layers_) {
-		if(bg.foreground == false) {
+		if(bg->foreground == false) {
 
 			for(auto& a : areas) {
-				drawLayer(x, y, a, rotation, bg, cycle);
+				drawLayer(x, y, a, rotation, *bg, cycle);
 			}
-			wnd->render(&bg);
-			bg.attr_->clear();
-			bg.getAttributeSet().back()->setCount(0);
+			wnd->render(bg.get());
+			bg->attr_->clear();
+			bg->getAttributeSet().back()->setCount(0);
 		}
 	}
 }
@@ -373,10 +379,10 @@ void Background::drawForeground(int xpos, int ypos, float rotation, int cycle) c
 {
 	auto wnd = KRE::WindowManager::getMainWindow();
 	for(auto& bg : layers_) {
-		if(bg.foreground) {
-			drawLayer(xpos, ypos, rect(xpos, ypos, graphics::GameScreen::get().getVirtualWidth(), graphics::GameScreen::get().getVirtualHeight()), rotation, bg, cycle);
-			if(bg.attr_->size() > 0) {
-				wnd->render(&bg);
+		if(bg->foreground) {
+			drawLayer(xpos, ypos, rect(xpos, ypos, graphics::GameScreen::get().getVirtualWidth(), graphics::GameScreen::get().getVirtualHeight()), rotation, *bg, cycle);
+			if(bg->attr_->size() > 0) {
+				wnd->render(bg.get());
 			}
 		}
 	}

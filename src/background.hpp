@@ -101,7 +101,7 @@ private:
 
 	void drawLayer(int x, int y, const rect& area, float rotation, const Layer& bg, int cycle) const;
 
-	std::vector<Layer> layers_;
+	std::vector<std::shared_ptr<Layer>> layers_;
 	int palette_;
 
 	// marked as mutable so we can modify them in the const draw functions. ideally the Background class is a scene node

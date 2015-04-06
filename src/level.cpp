@@ -2236,7 +2236,6 @@ void Level::draw_background(int x, int y, int rotation) const
 				}
 			}
 		}
-
 		background_->draw(x, y, screen_area, opaque_areas, static_cast<float>(rotation), cycle());
 	} else {
 		wnd->setClearColor(KRE::Color(0.0f, 0.0f, 0.0f, 0.0f));

@@ -198,11 +198,7 @@ CustomObject::CustomObject(variant node)
 	currently_handling_die_event_(0),
 	use_absolute_screen_coordinates_(node["use_absolute_screen_coordinates"].as_bool(type_->useAbsoluteScreenCoordinates())),
 	paused_(false),
-	particle_system_container_(),
-	scene_(),
-	root_(),
-	rmanager_(),
-	last_process_time_(-1)
+	particles_()
 {
 
 	vars_->setObjectName(getDebugDescription());
@@ -465,7 +461,7 @@ CustomObject::CustomObject(variant node)
 		}
 	}
 
-	createParticles();
+	createParticles(type_->getParticleSystemDesc());
 
 	const variant property_data_node = node["property_data"];
 	for(int i = 0; i != type_->getSlotProperties().size(); ++i) {
@@ -537,11 +533,7 @@ CustomObject::CustomObject(const std::string& type, int x, int y, bool face_righ
 	currently_handling_die_event_(0),
 	use_absolute_screen_coordinates_(type_->useAbsoluteScreenCoordinates()),
 	paused_(false),
-	particle_system_container_(),
-	scene_(),
-	root_(),
-	rmanager_(),
-	last_process_time_(-1)
+	particles_()
 {
 	properties_requiring_dynamic_initialization_ = type_->getPropertiesRequiringDynamicInitialization();
 	properties_requiring_dynamic_initialization_.insert(properties_requiring_dynamic_initialization_.end(), type_->getPropertiesRequiringInitialization().begin(), type_->getPropertiesRequiringInitialization().end());
@@ -605,7 +597,7 @@ CustomObject::CustomObject(const std::string& type, int x, int y, bool face_righ
 	if(type_->getMouseOverArea().w() != 0) {
 		setMouseOverArea(type_->getMouseOverArea());
 	}
-	createParticles();
+	createParticles(type_->getParticleSystemDesc());
 	initProperties();
 }
 
@@ -683,11 +675,7 @@ CustomObject::CustomObject(const CustomObject& o)
 	//and re-seating references is difficult.
 	//widgets_(o.widgets_),
 	paused_(o.paused_),
-	particle_system_container_(),
-	scene_(),
-	root_(),
-	rmanager_(),
-	last_process_time_(o.last_process_time_)
+	particles_(o.particles_)
 {
 	vars_->setObjectName(getDebugDescription());
 	tmp_vars_->setObjectName(getDebugDescription());
@@ -719,7 +707,6 @@ CustomObject::CustomObject(const CustomObject& o)
 	for(auto eff : o.effects_shaders_) {
 		effects_shaders_.emplace_back(new graphics::AnuraShader(*eff));
 	}
-	createParticles();
 }
 
 CustomObject::~CustomObject()
@@ -806,24 +793,12 @@ void CustomObject::init_lua()
 }
 #endif
 
-void CustomObject::createParticles()
+void CustomObject::createParticles(const variant& node)
 {
-	// hack to create a mini-scene
-	if(type_->getParticleSystemDesc().is_map()) {
-		using namespace KRE;
-		scene_ = SceneGraph::create("CustomObject");
-		root_ = scene_->getRootNode();
-		root_->setNodeName("root_node");
-		particle_system_container_ = Particles::ParticleSystemContainer::create(scene_, type_->getParticleSystemDesc());
-
-		//auto particle_cam = std::make_shared<Camera>("particle_cam");
-		//particle_cam->lookAt(glm::vec3(0.0f, 10.0f, 20.0f), glm::vec3(0.0f), glm::vec3(0.0f,1.0f,0.0f));
-		//particle_system_container_->attachCamera(particle_cam);
-		
-		root_->attachNode(particle_system_container_);
-
-		rmanager_ = std::make_shared<RenderManager>();
-		rmanager_->addQueue(0, "PS");
+	if(node.is_null()) {
+		particles_.reset();
+	} else {
+		particles_.reset(new graphics::ParticleSystemProxy(node));
 	}
 }
 
@@ -1347,10 +1322,9 @@ void CustomObject::draw(int xx, int yy) const
 		}
 	}
 
-	if(particle_system_container_ != nullptr) {
+	if(particles_ != nullptr) {
 		KRE::ModelManager2D mm(x(), y());
-		scene_->renderScene(rmanager_);
-		rmanager_->render(wnd);
+		particles_->draw(wnd);
 	}
 
 	if(Level::current().debug_properties().empty() == false) {
@@ -2294,15 +2268,8 @@ void CustomObject::process(Level& lvl)
 	for(auto& eff : effects_shaders_) {
 		eff->process();
 	}
-	if(scene_) {
-		float delta_time = 0.0f;
-		if(last_process_time_ == -1) {
-			last_process_time_ = profile::get_tick_time();
-		}
-		auto current_time = profile::get_tick_time();
-		delta_time = (current_time - last_process_time_) / 1000.0f;
-		scene_->process(delta_time);
-		last_process_time_ = current_time;
+	if(particles_) {
+		particles_->process();
 	}
 
 	staticProcess(lvl);
@@ -3257,6 +3224,10 @@ variant CustomObject::getValueBySlot(int slot) const
 		return variant(&v);
 	}
 
+	case CUSTOM_OBJECT_PARTICLES: {
+		return variant(particles_.get());	
+	}
+
 	case CUSTOM_OBJECT_ANIMATED_MOVEMENTS: {
 		std::vector<variant> result;
 		for(auto p : animated_movement_) {
@@ -3568,6 +3539,8 @@ void CustomObject::setValue(const std::string& key, const variant& value)
 			effects_shaders_.emplace_back(graphics::AnuraShaderPtr(value.try_convert<graphics::AnuraShader>()));
 			ASSERT_LOG(effects_shaders_.size() > 0, "Couldn't convert type to shader");
 		}
+	} else if(key == "particles") {
+		createParticles(value);
 	} else if(key == "draw_area") {
 		if(value.is_list() && value.num_elements() == 4) {
 			draw_area_.reset(new rect(value[0].as_int(), value[1].as_int(), value[2].as_int(), value[3].as_int()));
@@ -4639,6 +4612,11 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 				draw_primitives_.emplace_back(graphics::DrawPrimitive::create(value[n]));
 			}
 		}
+		break;
+	}
+
+	case CUSTOM_OBJECT_PARTICLES: {
+		createParticles(value);
 		break;
 	}
 

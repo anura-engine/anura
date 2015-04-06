@@ -42,7 +42,8 @@ namespace KRE
 		  rotation_(1.0f, 0.0f, 0.0f, 0.0f),
 		  scale_(1.0f),
 		  shader_(ShaderProgram::getSystemDefault()),
-		  enabled_(true)
+		  enabled_(true),
+		  ignore_global_model_(false)
 	{
 	}
 
@@ -52,7 +53,8 @@ namespace KRE
 		  rotation_(1.0f, 0.0f, 0.0f, 0.0f),
 		  scale_(1.0f),
 		  shader_(ShaderProgram::getSystemDefault()),
-		  enabled_(true)
+		  enabled_(true),
+		  ignore_global_model_(false)
 	{
 	}
 
@@ -62,7 +64,8 @@ namespace KRE
 		  rotation_(1.0f, 0.0f, 0.0f, 0.0f),
 		  scale_(1.0f),
 		  shader_(ShaderProgram::getSystemDefault()),
-		  enabled_(true)
+		  enabled_(true),
+		  ignore_global_model_(node["ignore_global_model"].as_bool())
 	{
 		if(node.has_key("order")) {
 			order_ = node["order"].as_int32();

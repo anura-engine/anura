@@ -285,7 +285,7 @@ namespace KRE
 		}
 
 		if(shader->getMvpUniform() != ShaderProgram::INVALID_UNIFORM) {
-			if(is_global_model_matrix_valid()) {
+			if(is_global_model_matrix_valid() && !r->ignoreGlobalModelMatrix()) {
 				pvmat = pvmat * get_global_model_matrix() * r->getModelMatrix();
 			} else {
 				pvmat *= r->getModelMatrix();
