@@ -43,6 +43,7 @@
 		63413B271AC693ED00542670 /* lvm.c in Sources */ = {isa = PBXBuildFile; fileRef = 63413B031AC693ED00542670 /* lvm.c */; };
 		63413B281AC693ED00542670 /* lzio.c in Sources */ = {isa = PBXBuildFile; fileRef = 63413B051AC693ED00542670 /* lzio.c */; };
 		634991D11AC794D300E1259F /* formula_garbage_collector.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 634991CF1AC794D300E1259F /* formula_garbage_collector.cpp */; };
+		63855D6F1AD27E7100C58F6B /* particle_system_proxy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 63855D6D1AD27E7100C58F6B /* particle_system_proxy.cpp */; };
 		639B53731AC20D5A00ECC4F8 /* AttributeSet.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 639B52EF1AC20D5900ECC4F8 /* AttributeSet.cpp */; };
 		639B53741AC20D5A00ECC4F8 /* AttributeSetOGL.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 639B52F11AC20D5900ECC4F8 /* AttributeSetOGL.cpp */; };
 		639B53751AC20D5A00ECC4F8 /* Blend.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 639B52F31AC20D5900ECC4F8 /* Blend.cpp */; };
@@ -499,6 +500,8 @@
 		634991CE1AC794D300E1259F /* ColorTransform.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = ColorTransform.hpp; sourceTree = "<group>"; };
 		634991CF1AC794D300E1259F /* formula_garbage_collector.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = formula_garbage_collector.cpp; sourceTree = "<group>"; };
 		634991D01AC794D300E1259F /* formula_garbage_collector.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = formula_garbage_collector.hpp; sourceTree = "<group>"; };
+		63855D6D1AD27E7100C58F6B /* particle_system_proxy.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = particle_system_proxy.cpp; sourceTree = "<group>"; };
+		63855D6E1AD27E7100C58F6B /* particle_system_proxy.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = particle_system_proxy.hpp; sourceTree = "<group>"; };
 		639B52EF1AC20D5900ECC4F8 /* AttributeSet.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AttributeSet.cpp; sourceTree = "<group>"; };
 		639B52F01AC20D5900ECC4F8 /* AttributeSet.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = AttributeSet.hpp; sourceTree = "<group>"; };
 		639B52F11AC20D5900ECC4F8 /* AttributeSetOGL.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AttributeSetOGL.cpp; sourceTree = "<group>"; };
@@ -1662,6 +1665,8 @@
 		C010C5BC160AFD4C006E7D90 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				63855D6D1AD27E7100C58F6B /* particle_system_proxy.cpp */,
+				63855D6E1AD27E7100C58F6B /* particle_system_proxy.hpp */,
 				634991CE1AC794D300E1259F /* ColorTransform.hpp */,
 				634991CF1AC794D300E1259F /* formula_garbage_collector.cpp */,
 				634991D01AC794D300E1259F /* formula_garbage_collector.hpp */,
@@ -2380,6 +2385,7 @@
 				C0F5E46B169AACF4005ADCF5 /* language_dialog.cpp in Sources */,
 				639B539F1AC20D5A00ECC4F8 /* Surface.cpp in Sources */,
 				C010C7A3160AFD4D006E7D90 /* level.cpp in Sources */,
+				63855D6F1AD27E7100C58F6B /* particle_system_proxy.cpp in Sources */,
 				C010C7A4160AFD4D006E7D90 /* level_logic.cpp in Sources */,
 				639B54671AC20D7600ECC4F8 /* b2WeldJoint.cpp in Sources */,
 				639B54111AC20D7600ECC4F8 /* b2BroadPhase.cpp in Sources */,
