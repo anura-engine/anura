@@ -123,6 +123,29 @@ std::string get_call_stack()
 	return res;
 }
 
+std::string get_typed_call_stack()
+{
+	variant current_frame;
+	std::string res;
+	std::vector<CallStackEntry> reversed_call_stack = call_stack;
+	std::reverse(reversed_call_stack.begin(), reversed_call_stack.end());
+	for(std::vector<CallStackEntry>::const_iterator i = reversed_call_stack.begin(); i != reversed_call_stack.end(); ++i) {
+		const game_logic::FormulaExpression* p = i->expression;
+		if(p && p->getParentFormula() != current_frame) {
+			current_frame = p->getParentFormula();
+			const variant::debug_info* info = current_frame.get_debug_info();
+			if(!info) {
+				res += "(UNKNOWN LOCATION) (" + current_frame.write_json() + "\n";
+			} else {
+				res += p->debugPinpointLocation() + "\n";
+			}
+			res += " has type " + variant::variant_type_to_string(current_frame.type()) + ".\n\n";
+		}
+	}
+
+	return res;
+}
+
 const std::vector<CallStackEntry>& get_expression_call_stack()
 {
 	return call_stack;
@@ -151,7 +174,7 @@ void generate_error(std::string message)
 	}
 
 	std::ostringstream s;
-	s << "ERROR: " << message << "\n" << get_call_stack();
+	s << "ERROR: " << message << "\n" << get_typed_call_stack();
 	s << output_formula_error_info();
 
 	ASSERT_LOG(false, s.str() + "\ntype error");
@@ -164,7 +187,7 @@ type_error::type_error(const std::string& str) : message(str) {
 		message += "\n" + call_stack.back().expression->debugPinpointLocation();
 	}
 
-	LOG_ERROR(message << "\n" << get_call_stack());
+	LOG_ERROR(message << "\n" << get_typed_call_stack());
 	LOG_ERROR(output_formula_error_info());
 }
 
