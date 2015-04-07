@@ -65,8 +65,15 @@ namespace KRE
 		  scale_(1.0f),
 		  shader_(ShaderProgram::getSystemDefault()),
 		  enabled_(true),
-		  ignore_global_model_(node["ignore_global_model"].as_bool())
+		  ignore_global_model_(false)
 	{
+		if(!node.is_map()) {
+			return;
+		}
+
+		if(node.has_key("ignore_global_model")) {
+			ignore_global_model_ = node["ignore_global_model"].as_bool(false);
+		}
 		if(node.has_key("order")) {
 			order_ = node["order"].as_int32();
 		}
@@ -140,6 +147,16 @@ namespace KRE
 			texture_ = Texture::createTexture(node["texture"]);
 		} else if(node.has_key("image")) {
 			texture_ = Texture::createTexture(node["image"]);			
+		}
+		if(node.has_key("depth_check")) {
+			setDepthEnable(node["depth_check"].as_bool());
+		}
+		if(node.has_key("depth_write")) {
+			setDepthWrite(node["depth_write"].as_bool());
+		}
+		// XXX add depth function.
+		if(node.has_key("use_lighting")) {
+			enableLighting(node["use_lighting"].as_bool());
 		}
 	}
 

@@ -181,9 +181,9 @@ namespace KRE
 			} 
 			if(node.has_key("oscillate_type")) {
 				const std::string& type = node["oscillate_type"].as_string();
-				if(type == "sine") {
+				if(type == "sine" || type == "sin") {
 					osc_type_ = WaveType::SINE;
-				} else if(type == "square") {
+				} else if(type == "square" || type == "sq") {
 					osc_type_ = WaveType::SQUARE;
 				} else {
 					ASSERT_LOG(false, "unrecognised oscillate type: " << type);
@@ -206,7 +206,7 @@ namespace KRE
 		}
 
 		CurvedParameter::CurvedParameter(InterpolationType type, const variant& node)
-			: Parameter(ParameterType::OSCILLATE), 
+			: Parameter(ParameterType::CURVED), 
 			  curve_type_(type)
 		{
 			ASSERT_LOG(node.has_key("control_point") 

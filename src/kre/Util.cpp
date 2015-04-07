@@ -25,13 +25,13 @@
 
 namespace Util
 {
-	std::vector<std::string> split(const std::string& str, const std::string& delimiters)
+	std::vector<std::string> split(const std::string& str, const std::string& delimiters, SplitFlags flags)
 	{
 		std::vector<std::string> v;
 		std::string::size_type start = 0;
 		auto pos = str.find_first_of(delimiters, start);
 		while(pos != std::string::npos) {
-			if(pos != start) { // ignore empty tokens
+			if(pos != start && flags != SplitFlags::ALLOW_EMPTY_STRINGS) { // ignore empty tokens
 				v.emplace_back(str, start, pos - start);
 			}
 			start = pos + 1;

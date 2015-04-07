@@ -127,7 +127,7 @@ namespace KRE
 				return std::make_shared<GravityAffector>(*this);
 			}
 		private:
-			float gravity_;
+			ParameterPtr gravity_;
 			GravityAffector();
 		};
 
@@ -546,7 +546,7 @@ namespace KRE
 				return std::make_shared<AlignAffector>(parent, node);
 			} else if(ntype == "randomiser" || ntype == "randomizer") {
 				return std::make_shared<RandomiserAffector>(parent, node);
-			} else if(ntype == "sine_force") {
+			} else if(ntype == "sine_force" || ntype == "sin_force") {
 				return std::make_shared<SineForceAffector>(parent, node);
 			} else if(ntype == "path_follower") {
 				return std::make_shared<PathFollowerAffector>(parent, node);
@@ -707,8 +707,13 @@ namespace KRE
 
 		GravityAffector::GravityAffector(std::weak_ptr<ParticleSystemContainer> parent, const variant& node)
 			: Affector(parent, node), 
-			  gravity_(float(node["gravity"].as_float(1.0f)))
+			  gravity_()
 		{
+			if(node.has_key("gravity")) {
+				gravity_ = Parameter::factory(node["gravity"]);
+			} else {
+				gravity_ .reset(new FixedParameter(1.0f));
+			}
 		}
 
 		void GravityAffector::internalApply(Particle& p, float t)
@@ -716,7 +721,7 @@ namespace KRE
 			glm::vec3 d = getPosition() - p.current.position;
 			float len_sqr = sqrt(d.x*d.x + d.y*d.y + d.z*d.z);
 			if(len_sqr > 0) {
-				float force = (gravity_ * p.current.mass * mass()) / len_sqr;
+				float force = (gravity_->getValue(t) * p.current.mass * mass()) / len_sqr;
 				p.current.direction += (force * t) * d;
 			}
 		}

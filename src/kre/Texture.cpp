@@ -216,7 +216,20 @@ namespace KRE
 			}
 		}
 		if(node.has_key("address_mode")) {
-			if(node["address_mode"].is_list()) {
+			if(node["address_mode"].is_string()) {
+				const std::string& am = node["address_mode"].as_string();
+				if(am == "wrap") {
+					tp->address_mode[0] = tp->address_mode[1] = tp->address_mode[2] = AddressMode::WRAP;
+				} else if(am == "clamp") {
+					tp->address_mode[0] = tp->address_mode[1] = tp->address_mode[2] = AddressMode::CLAMP;
+				} else if(am == "mirror") {
+					tp->address_mode[0] = tp->address_mode[1] = tp->address_mode[2] = AddressMode::MIRROR;
+				} else if(am == "border") {
+					tp->address_mode[0] = tp->address_mode[1] = tp->address_mode[2] = AddressMode::BORDER;
+				} else {
+					ASSERT_LOG(false, "address_mode invalid: " << am << ", valid values are wrap, clamp, mirror, border.");
+				}
+			} else if(node["address_mode"].is_list()) {
 				size_t list_size = node["address_mode"].num_elements();
 				ASSERT_LOG(list_size >= 1 && list_size <= 3, "Size of list for 'address_mode' attribute must be between 1 and 3 elements. Found: " << list_size);
 				size_t n = 0;

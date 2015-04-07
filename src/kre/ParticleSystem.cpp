@@ -28,6 +28,7 @@
 #include "ParticleSystemAffectors.hpp"
 #include "ParticleSystemParameters.hpp"
 #include "ParticleSystemEmitters.hpp"
+#include "SceneGraph.hpp"
 #include "Shaders.hpp"
 #include "spline.hpp"
 #include "WindowManager.hpp"
@@ -39,6 +40,8 @@ namespace KRE
 	{
 		namespace 
 		{
+			SceneNodeRegistrar<ParticleSystemContainer> psc_register("particle_system_container");
+
 			std::default_random_engine& get_rng_engine() 
 			{
 				static std::unique_ptr<std::default_random_engine> res;
@@ -158,7 +161,7 @@ namespace KRE
 			}
 			if(node.has_key("fast_forward")) {
 				float ff_time = float(node["fast_forward"]["time"].as_float());
-				float ff_interval = float(node["fast_forward"]["time"].as_float());
+				float ff_interval = float(node["fast_forward"]["interval"].as_float());
 				fast_forward_.reset(new std::pair<float,float>(ff_time, ff_interval));
 			}
 
@@ -169,7 +172,12 @@ namespace KRE
 				scale_time_ = float(node["scale_time"].as_float());
 			}
 			if(node.has_key("scale")) {
-				scale_dimensions_ = variant_to_vec3(node["scale"]);
+				if(node["scale"].is_list()) {
+					scale_dimensions_ = variant_to_vec3(node["scale"]);
+				} else {
+					float s = node["scale"].as_float();
+					scale_dimensions_ = glm::vec3(s, s, s);
+				}
 			}
 		}
 
@@ -248,6 +256,7 @@ namespace KRE
 
 		void ParticleSystem::handleEmitProcess(float t)
 		{
+			t *= scale_time_;
 			update(static_cast<float>(t));
 			elapsed_time_ += static_cast<float>(t);
 		}
@@ -704,6 +713,8 @@ namespace KRE
 			ASSERT_LOG(parent.lock() != nullptr, "parent is null");
 			if(node.has_key("name")) {
 				name_ = node["name"].as_string();
+			} else if(node.has_key("id")) {
+				name_ = node["id"].as_string();
 			} else {
 				std::stringstream ss;
 				ss << "emit_object_" << int(get_random_float());

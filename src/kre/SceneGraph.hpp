@@ -61,7 +61,7 @@ namespace KRE
 		SceneNodeRegistrar(const std::string& type)
 		{
 			// register the class factory function 
-			SceneGraph::registerFactoryFunction(type, [](std::weak_ptr<SceneNode> sg, const variant& node) -> SceneNodePtr { return std::make_shared<SceneNode>(sg, node); });
+			SceneGraph::registerFactoryFunction(type, [](std::weak_ptr<SceneGraph> sg, const variant& node) -> SceneNodePtr { return T::create(sg, node); });
 		}
 	};
 }

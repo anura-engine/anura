@@ -64,10 +64,19 @@ namespace KRE
 			static rect res;
 			return res;
 		}
-	}
 
-	namespace 
-	{
+		bool& get_current_depth_enable()
+		{
+			static bool depth_enable = false;
+			return depth_enable;
+		}
+
+		bool& get_current_depth_write()
+		{
+			static bool depth_write = false;
+			return depth_write;
+		}
+
 		GLenum convert_drawing_mode(DrawMode dm)
 		{
 			switch(dm) {
@@ -264,7 +273,25 @@ namespace KRE
 		BlendModeScopeOGL bm_scope(*r);
 
 		// apply lighting/depth check/depth write here.
-		bool use_lighting = false;
+		bool use_lighting = r->isLightingStateSet() ? r->useLighting() : false;
+
+		// Set the depth enable.
+		if(r->isDepthEnableStateSet()) {
+			if(get_current_depth_enable() != r->isDepthEnabled()) {
+				if(r->isDepthEnabled()) {
+					glEnable(GL_DEPTH_TEST);
+				} else {
+					glDisable(GL_DEPTH_TEST);
+				}
+				get_current_depth_enable() = r->isDepthEnabled();
+			}
+		} else {
+			// We assume that depth is disabled if not specified.
+			if(get_current_depth_enable() == true) {
+				glDisable(GL_DEPTH_TEST);
+				get_current_depth_enable() = false;
+			}
+		}
 
 		glm::mat4 pvmat(1.0f);
 		if(r->getCamera()) {

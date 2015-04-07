@@ -94,7 +94,7 @@ namespace KRE
 			switch (bec)
 			{
 				case BlendEquationConstants::BE_ADD:				return "add";
-				case BlendEquationConstants::BE_REVERSE_SUBTRACT:	return "reverse_subtrace";
+				case BlendEquationConstants::BE_REVERSE_SUBTRACT:	return "reverse_subtract";
 				case BlendEquationConstants::BE_SUBTRACT:			return "subtract";
 				default: break;
 			}
