@@ -2813,6 +2813,15 @@ namespace game_logic
 			return result;
 		}
 
+static std::string debugSubexpressionTypes(ConstFormulaPtr & fml)
+{
+	std::stringstream ss;
+	for(auto & child : fml->expr()->queryChildrenRecursive()) {
+		ss << "Type " << child->queryVariantType()->to_string() << "\n";
+		ss << child->debugPinpointLocation(nullptr) << "\n\n";
+	}
+	return ss.str();
+}
 		//only returns a value in the case of a lambda function, otherwise
 		//returns nullptr.
 		ExpressionPtr parse_function_def(const variant& formula_str, const Token*& i1, const Token* i2, FunctionSymbolTable* symbols, ConstFormulaCallableDefinitionPtr callable_def)
@@ -3005,7 +3014,7 @@ namespace game_logic
 
 				if(g_strict_formula_checking) {
 					std::ostringstream why;
-					STRICT_ASSERT(!result_type || variant_types_compatible(result_type, fml->queryVariantType(), &why), "Formula function return type mis-match. Expects " << result_type->to_string() << " but expression evaluates to " << fml->queryVariantType()->to_string() << "\n" << pinpoint_location(formula_str, beg->begin, (i2-1)->end) << "\n" << why.str());
+					STRICT_ASSERT(!result_type || variant_types_compatible(result_type, fml->queryVariantType(), &why), "Formula function return type mis-match. Expects " << result_type->to_string() << " but expression evaluates to " << fml->queryVariantType()->to_string() << "\n" << pinpoint_location(formula_str, beg->begin, (i2-1)->end) << "\n" << why.str() << "\n\nSubexpressions:\n\n" << debugSubexpressionTypes(fml));
 				}
 
 				LambdaFunctionExpression* result = new LambdaFunctionExpression(args, fml, callable_def ? callable_def->getNumSlots() : 0, default_args, variant_types, result_type ? result_type : fml->queryVariantType());

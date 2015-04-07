@@ -4897,7 +4897,12 @@ UNIT_TEST(sqrt_function) {
 }
 
 UNIT_TEST(map_function) {
+	CHECK_EQ(game_logic::Formula(variant("map([2,3,4], value*value)")).execute(), game_logic::Formula(variant("[4,9,16]")).execute());
 	CHECK_EQ(game_logic::Formula(variant("map([2,3,4], value+index)")).execute(), game_logic::Formula(variant("[2,4,6]")).execute());
+	CHECK_EQ(game_logic::Formula(variant("map([1,2,3,4], range(value))")).execute(), game_logic::Formula(variant("[[0], [0,1], [0,1,2],[0,1,2,3]]")).execute());
+
+	CHECK_EQ(game_logic::Formula(variant("map(flatten(map([1,2,3,4], range(value))), value * value)")).execute(), game_logic::Formula(variant("[0,0,1,0,1,4,0,1,4,9]")).execute());
+
 }
 
 UNIT_TEST(where_scope_function) {
