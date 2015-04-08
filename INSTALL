@@ -1,5 +1,9 @@
 Prerequisites:
 
+You need a recent compiler, because of the use of C++11 features in the engine. The minimum 
+required version of GCC is 4.8. Versions of clang post 3.1 should work as well. There are build
+files for MSVC (requires 2013 desktop edition) for windows and Xcode (requires 4.6 or later).
+
 You'll need to have these libraries with equivalent development versions to 
 build the Anura engine:
 
