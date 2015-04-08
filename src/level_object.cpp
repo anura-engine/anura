@@ -403,7 +403,7 @@ LevelObject::LevelObject(variant node, const char* id)
 			//number. This is generally what is used for compiled tiles.
 			tiles_.push_back(strtol(variation.c_str()+1, nullptr, 10));
 		} else {
-			const int width = std::max<int>(t_->width(), t_->height());
+			const int width = std::max<int>(t_->surfaceWidth(), t_->surfaceHeight());
 			ASSERT_LOG(width%BaseTileSize == 0, "image width: " << width << " not multiple of base tile size: " << BaseTileSize << " image: " << t_->id() << " : " << image_ << " : " << id_ << " : " << info_);
 			const int base = std::min<int>(32, width/BaseTileSize);
 			tiles_.push_back((base == 1) ? 0 : strtol(variation.c_str(), nullptr, base));
