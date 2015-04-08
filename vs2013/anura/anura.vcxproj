@@ -140,6 +140,7 @@
     <ClInclude Include="..\..\src\kre\ClipScopeOGL.hpp" />
     <ClInclude Include="..\..\src\kre\Color.hpp" />
     <ClInclude Include="..\..\src\kre\ColorScope.hpp" />
+    <ClInclude Include="..\..\src\kre\Depth.hpp" />
     <ClInclude Include="..\..\src\kre\DisplayDevice.hpp" />
     <ClInclude Include="..\..\src\kre\DisplayDeviceFwd.hpp" />
     <ClInclude Include="..\..\src\kre\DisplayDeviceOGL.hpp" />
@@ -449,6 +450,7 @@
     <ClCompile Include="..\..\src\kre\ClipScopeOGL.cpp" />
     <ClCompile Include="..\..\src\kre\Color.cpp" />
     <ClCompile Include="..\..\src\kre\ColorScope.cpp" />
+    <ClCompile Include="..\..\src\kre\Depth.cpp" />
     <ClCompile Include="..\..\src\kre\DisplayDevice.cpp" />
     <ClCompile Include="..\..\src\kre\DisplayDeviceOGL.cpp" />
     <ClCompile Include="..\..\src\kre\DisplayDeviceOGLFixed.cpp" />

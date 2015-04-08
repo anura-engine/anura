@@ -101,6 +101,7 @@ namespace KRE
 			os << "P"<< p.current.position 
 				<< ", IP" << p.initial.position 
 				<< ", DIM" << p.current.dimensions 
+				<< ", IDIR" << p.initial.direction 
 				<< ", DIR" << p.current.direction 
 				<< ", TTL(" << p.current.time_to_live << ")" 
 				<< ", ITTL(" <<  p.initial.time_to_live << ")"
@@ -155,8 +156,13 @@ namespace KRE
 			if(node["technique"].is_map()) {
 				getParentContainer()->addTechnique(Technique::create(parent, node["technique"]));
 			} else {
-				for(size_t n = 0; n != node["technique"].num_elements(); ++n) {
-					getParentContainer()->addTechnique(Technique::create(parent, node["technique"][n]));
+				for(int n = 0; n != node["technique"].num_elements(); ++n) {
+					auto tq = Technique::create(parent, node["technique"][n]);
+					if(tq->getOrder() == 0) {
+						tq->setOrder(n+1);
+					}
+					getParentContainer()->addTechnique(tq);
+
 				}
 			}
 			if(node.has_key("fast_forward")) {
@@ -186,7 +192,7 @@ namespace KRE
 			// process "active_techniques" here
 			if(node.has_key("active_techniques")) {
 				if(node["active_techniques"].is_list()) {
-					for(size_t n = 0; n != node["active_techniques"].num_elements(); ++n) {
+					for(int n = 0; n != node["active_techniques"].num_elements(); ++n) {
 						active_techniques_.emplace_back(getParentContainer()->cloneTechnique(node["active_techniques"][n].as_string()));
 						active_techniques_.back()->setParent(get_this_ptr());
 					}
@@ -213,11 +219,10 @@ namespace KRE
 
 		ParticleSystemPtr ParticleSystem::clone() const
 		{
-			//auto ps = std::make_shared<ParticleSystem>(*this);
-			auto psc = new ParticleSystem(*this);
-			auto ps = std::shared_ptr<ParticleSystem>(psc);
+			auto ps = std::make_shared<ParticleSystem>(*this);
 			for(auto tq : active_techniques_) {
 				ps->active_techniques_.emplace_back(tq->clone());
+				ps->active_techniques_.back()->setParent(ps);
 			}
 			return ps;
 		}
@@ -257,8 +262,8 @@ namespace KRE
 		void ParticleSystem::handleEmitProcess(float t)
 		{
 			t *= scale_time_;
-			update(static_cast<float>(t));
-			elapsed_time_ += static_cast<float>(t);
+			update(t);
+			elapsed_time_ += t;
 		}
 
 		void ParticleSystem::addTechnique(TechniquePtr tq)
@@ -288,23 +293,34 @@ namespace KRE
 			  default_particle_width_(node["default_particle_width"].as_float(1.0f)),
 			  default_particle_height_(node["default_particle_height"].as_float(1.0f)),
 			  default_particle_depth_(node["default_particle_depth"].as_float(1.0f)),
-			  lod_index_(node["lod_index"].as_int32(0)), velocity_(1.0f),
+			  lod_index_(node["lod_index"].as_int32(0)),
+			  particle_quota_(node["visual_particle_quota"].as_int32(100)),
 			  emitter_quota_(node["emitted_emitter_quota"].as_int32(50)),
 			  affector_quota_(node["emitted_affector_quota"].as_int32(10)),
-			  technique_quota_(node["emitted_technique_quota"].as_int32(10)),			
-			  system_quota_(node["emitted_system_quota"].as_int32(10))
+			  technique_quota_(node["emitted_technique_quota"].as_int32(10)),
+			  system_quota_(node["emitted_system_quota"].as_int32(10)),
+			  velocity_(0.0f),
+			  max_velocity_(),
+			  active_emitters_(),
+			  active_affectors_(),
+			  active_particles_(),
+			  child_emitters_(),
+			  child_affectors_(),
+			  parent_particle_system_()
 		{
 			ASSERT_LOG(node.has_key("visual_particle_quota"), "'Technique' must have 'visual_particle_quota' attribute.");
-			particle_quota_ = node["visual_particle_quota"].as_int32();
-			ASSERT_LOG(node.has_key("texture"), "'Technique' must have 'material' attribute.");
 			//ASSERT_LOG(node.has_key("renderer"), "'Technique' must have 'renderer' attribute.");
 			//renderer_.reset(new renderer(node["renderer"]));
 			if(node.has_key("emitter")) {
 				if(node["emitter"].is_map()) {
-					getParentContainer()->addEmitter(Emitter::factory(parent, node["emitter"]));
+					auto em = Emitter::factory(parent, node["emitter"]);
+					child_emitters_.emplace_back(em);
+					getParentContainer()->addEmitter(em);
 				} else if(node["emitter"].is_list()) {
-					for(size_t n = 0; n != node["emitter"].num_elements(); ++n) {
-						getParentContainer()->addEmitter(Emitter::factory(parent, node["emitter"][n]));
+					for(int n = 0; n != node["emitter"].num_elements(); ++n) {
+						auto em = Emitter::factory(parent, node["emitter"][n]);
+						child_emitters_.emplace_back(em);
+						getParentContainer()->addEmitter(em);
 					}
 				} else {
 					ASSERT_LOG(false, "'emitter' attribute must be a list or map.");
@@ -312,10 +328,14 @@ namespace KRE
 			}
 			if(node.has_key("affector")) {
 				if(node["affector"].is_map()) {
-					getParentContainer()->addAffector(Affector::factory(parent, node["affector"]));
+					auto aff = Affector::factory(parent, node["affector"]);
+					child_affectors_.emplace_back(aff);
+					getParentContainer()->addAffector(aff);
 				} else if(node["affector"].is_list()) {
-					for(size_t n = 0; n != node["affector"].num_elements(); ++n) {
-						getParentContainer()->addAffector(Affector::factory(parent, node["affector"][n]));
+					for(int n = 0; n != node["affector"].num_elements(); ++n) {
+						auto aff = Affector::factory(parent, node["affector"][n]);
+						child_affectors_.emplace_back(aff);
+						getParentContainer()->addAffector(aff);
 					}
 				} else {
 					ASSERT_LOG(false, "'affector' attribute must be a list or map.");
@@ -335,12 +355,12 @@ namespace KRE
 				for(auto e : active_emitters) {
 					auto em = getParentContainer()->cloneEmitter(e);
 					active_emitters_.emplace_back(em);
-					em->setParentTechnique(shared_from_this());
+					em->init(shared_from_this());
 				}
 			} else {
-				for(auto es : getParentContainer()->cloneEmitters()) {
-					active_emitters_.emplace_back(es);
-					es->setParentTechnique(shared_from_this());
+				for(auto es : child_emitters_) {
+					active_emitters_.emplace_back(es->clone());
+					active_emitters_.back()->init(shared_from_this());
 				}
 			}
 			if(node.has_key("active_affectors")) {
@@ -351,9 +371,9 @@ namespace KRE
 					aff->setParentTechnique(shared_from_this());
 				}
 			} else {
-				for(auto as : getParentContainer()->cloneAffectors()) {
-					active_affectors_.emplace_back(as);
-					as->setParentTechnique(shared_from_this());
+				for(auto as : child_affectors_) {
+					active_affectors_.emplace_back(as->clone());
+					active_affectors_.back()->setParentTechnique(shared_from_this());
 				}
 			}
 
@@ -365,7 +385,7 @@ namespace KRE
 
 		ParticleSystemPtr Technique::getParticleSystem() const
 		{ 
-			auto ps = particle_system_.lock();
+			auto ps = parent_particle_system_.lock();
 			ASSERT_LOG(ps != nullptr, "Parent particle system was null.");
 			return ps;
 		}
@@ -383,13 +403,10 @@ namespace KRE
 			  system_quota_(tq.system_quota_),
 			  lod_index_(tq.lod_index_),
 			  velocity_(tq.velocity_),
-			  particle_system_(tq.particle_system_)
+			  parent_particle_system_(tq.parent_particle_system_)
 		{
 			setShader(ShaderProgram::getProgram("vtc_shader"));
 
-			if(tq.getTexture()) {
-				setTexture(tq.getTexture()->clone());
-			}
 			if(tq.max_velocity_) {
 				max_velocity_.reset(new float(*tq.max_velocity_));
 			}
@@ -400,21 +417,7 @@ namespace KRE
 		void Technique::setParent(std::weak_ptr<ParticleSystem> parent)
 		{
 			ASSERT_LOG(parent.lock() != nullptr, "parent is null");
-			particle_system_ = parent;
-		}
-
-		void Technique::addEmitter(EmitterPtr e) 
-		{
-			e->setParentTechnique(shared_from_this());
-			//active_emitters_.emplace_back(e);
-			instanced_emitters_.emplace_back(e);
-		}
-
-		void Technique::addAffector(AffectorPtr a) 
-		{
-			a->setParentTechnique(shared_from_this());
-			//active_affectors_.emplace_back(a);
-			instanced_affectors_.emplace_back(a);
+			parent_particle_system_ = parent;
 		}
 
 		void Technique::handleEmitProcess(float t)
@@ -423,13 +426,7 @@ namespace KRE
 			for(auto e : active_emitters_) {
 				e->emitProcess(t);
 			}
-			for(auto e : instanced_emitters_) {
-				e->emitProcess(t);
-			}
 			for(auto a : active_affectors_) {
-				a->emitProcess(t);
-			}
-			for(auto a : instanced_affectors_) {
 				a->emitProcess(t);
 			}
 
@@ -437,28 +434,35 @@ namespace KRE
 			for(auto& p : active_particles_) {
 				p.current.time_to_live -= t;
 			}
-			// Decrement the ttl on instanced emitters
-			for(auto e : instanced_emitters_) {
-				e->current.time_to_live -= t;
-			}
 
 			// Kill end-of-life particles
 			active_particles_.erase(std::remove_if(active_particles_.begin(), active_particles_.end(),
 				[](decltype(active_particles_[0]) p){return p.current.time_to_live < 0.0f;}), 
 				active_particles_.end());
 			// Kill end-of-life emitters
-			instanced_emitters_.erase(std::remove_if(instanced_emitters_.begin(), instanced_emitters_.end(),
-				[](decltype(instanced_emitters_[0]) e){return e->current.time_to_live < 0.0f;}), 
-				instanced_emitters_.end());
+			active_emitters_.erase(std::remove_if(active_emitters_.begin(), active_emitters_.end(),
+				[](decltype(active_emitters_[0]) e){return e->current.time_to_live < 0.0f;}), 
+				active_emitters_.end());
+			//active_affectors_.erase(std::remove_if(active_affectors_.begin(), active_affectors_.end(),
+			//	[](decltype(active_affectors_[0]) e){return e->current.time_to_live < 0.0f;}), 
+			//	active_affectors_.end());
 
 
-			for(auto e : instanced_emitters_) {
+			for(auto& e : active_emitters_) {
 				if(max_velocity_ && e->current.velocity*glm::length(e->current.direction) > *max_velocity_) {
 					e->current.direction *= *max_velocity_ / glm::length(e->current.direction);
 				}
-				e->current.position += e->current.direction * getParticleSystem()->getScaleVelocity() * static_cast<float>(t);
+				e->current.position += e->current.direction * e->current.velocity * getParticleSystem()->getScaleVelocity() * t;
 				//std::cerr << *e << std::endl;
 			}
+
+			/*for(auto a : active_affectors_) {
+				if(max_velocity_ && a->current.velocity*glm::length(a->current.direction) > *max_velocity_) {
+					a->current.direction *= *max_velocity_ / glm::length(a->current.direction);
+				}
+				a->current.position += a->current.direction * getParticleSystem()->getScaleVelocity() * static_cast<float>(t);
+				//std::cerr << *a << std::endl;
+			}*/
 
 			// update particle positions
 			for(auto& p : active_particles_) {
@@ -466,13 +470,16 @@ namespace KRE
 					p.current.direction *= *max_velocity_ / glm::length(p.current.direction);
 				}
 
-				p.current.position += p.current.direction * getParticleSystem()->getScaleVelocity() * static_cast<float>(t);
+				p.current.position += p.current.direction * p.current.velocity * getParticleSystem()->getScaleVelocity() * t;
 
 				//std::cerr << p << std::endl;
 			}
+			//if(active_particles_.size() > 0) {
+			//	std::cerr << active_particles_[0] << std::endl;
+			//}
 
-			//std::cerr << "XXX: Active Particle Count: " << active_particles_.size() << std::endl;
-			//std::cerr << "XXX: Active Emitter Count: " << active_emitters_.size() << std::endl;
+			//std::cerr << "XXX: " << name() << " Active Particle Count: " << active_particles_.size() << std::endl;
+			//std::cerr << "XXX: " << name() << " Active Emitter Count: " << active_emitters_.size() << std::endl;
 		}
 
 		void Technique::initAttributes()
@@ -497,27 +504,51 @@ namespace KRE
 
 			as->addAttribute(arv_);
 			addAttributeSet(as);
-
-			setOrder(1);
 		}
 
 		void Technique::preRender(const WindowPtr& wnd)
 		{
+			if(active_particles_.size() == 0) {
+				arv_->clear();
+				Renderable::disable();
+				return;
+			}
+			Renderable::enable();
 			//LOG_DEBUG("Technique::preRender, particle count: " << active_particles_.size());
 			std::vector<vertex_texture_color3> vtc;
 			vtc.reserve(active_particles_.size() * 6);
 			for(auto& p : active_particles_) {
-				vtc.emplace_back(glm::vec3(p.current.position.x,p.current.position.y,p.current.position.z), glm::vec2(0.0f,0.0f), p.current.color);
+				/*vtc.emplace_back(glm::vec3(p.current.position.x,p.current.position.y,p.current.position.z), glm::vec2(0.0f,0.0f), p.current.color);
 				vtc.emplace_back(glm::vec3(p.current.position.x,p.current.position.y+p.current.dimensions.y,p.current.position.z), glm::vec2(0.0f,1.0f), p.current.color);
 				vtc.emplace_back(glm::vec3(p.current.position.x+p.current.dimensions.x,p.current.position.y,p.current.position.z), glm::vec2(1.0f,0.0f), p.current.color);
 
 				vtc.emplace_back(glm::vec3(p.current.position.x+p.current.dimensions.x,p.current.position.y,p.current.position.z), glm::vec2(1.0f,0.0f), p.current.color);
 				vtc.emplace_back(glm::vec3(p.current.position.x,p.current.position.y+p.current.dimensions.y,p.current.position.z), glm::vec2(0.0f,1.0f), p.current.color);
-				vtc.emplace_back(glm::vec3(p.current.position.x+p.current.dimensions.x,p.current.position.y+p.current.dimensions.y,p.current.position.z), glm::vec2(1.0f,1.0f), p.current.color);
+				vtc.emplace_back(glm::vec3(p.current.position.x+p.current.dimensions.x,p.current.position.y+p.current.dimensions.y,p.current.position.z), glm::vec2(1.0f,1.0f), p.current.color);*/
+
+				vtc.emplace_back(glm::vec3(p.current.position.x-p.current.dimensions.x/2,p.current.position.y-p.current.dimensions.y/2,p.current.position.z), glm::vec2(0.0f,0.0f), p.current.color);
+				vtc.emplace_back(glm::vec3(p.current.position.x-p.current.dimensions.x/2,p.current.position.y+p.current.dimensions.y/2,p.current.position.z), glm::vec2(0.0f,1.0f), p.current.color);
+				vtc.emplace_back(glm::vec3(p.current.position.x+p.current.dimensions.x/2,p.current.position.y-p.current.dimensions.y/2,p.current.position.z), glm::vec2(1.0f,0.0f), p.current.color);
+
+				vtc.emplace_back(glm::vec3(p.current.position.x+p.current.dimensions.x/2,p.current.position.y-p.current.dimensions.y/2,p.current.position.z), glm::vec2(1.0f,0.0f), p.current.color);
+				vtc.emplace_back(glm::vec3(p.current.position.x-p.current.dimensions.x/2,p.current.position.y+p.current.dimensions.y/2,p.current.position.z), glm::vec2(0.0f,1.0f), p.current.color);
+				vtc.emplace_back(glm::vec3(p.current.position.x+p.current.dimensions.x/2,p.current.position.y+p.current.dimensions.y/2,p.current.position.z), glm::vec2(1.0f,1.0f), p.current.color);
 			}
 			arv_->update(&vtc);
+		}
 
-			//getAttributeSet().back()->setCount(active_particles_.size());
+		void Technique::postRender(const WindowPtr& wnd)
+		{
+			for(auto& em : active_emitters_) {
+				if(em->doDebugDraw()) {
+					em->draw(wnd);
+				}
+			}
+			for(auto& aff : active_affectors_) {
+				if(aff->doDebugDraw()) {
+					aff->draw(wnd);
+				}
+			}
 		}
 
 		ParticleSystemContainer::ParticleSystemContainer(std::weak_ptr<SceneGraph> sg, const variant& node) 
@@ -542,8 +573,9 @@ namespace KRE
 		{
 			if(node.has_key("systems")) {
 				if(node["systems"].is_list()) {
-					for(size_t n = 0; n != node["systems"].num_elements(); ++n) {
-						addParticleSystem(ParticleSystem::factory(get_this_ptr(), node["systems"][n]));
+					for(int n = 0; n != node["systems"].num_elements(); ++n) {
+						auto ps = ParticleSystem::factory(get_this_ptr(), node["systems"][n]);
+						addParticleSystem(ps);
 					}
 				} else if(node["systems"].is_map()) {
 					addParticleSystem(ParticleSystem::factory(get_this_ptr(), node["systems"]));
@@ -556,7 +588,7 @@ namespace KRE
 
 			if(node.has_key("active_systems")) {
 				if(node["active_systems"].is_list()) {
-					for(size_t n = 0; n != node["active_systems"].num_elements(); ++n) {
+					for(int n = 0; n != node["active_systems"].num_elements(); ++n) {
 						active_particle_systems_.emplace_back(cloneParticleSystem(node["active_systems"][n].as_string()));
 					}
 				} else if(node["active_systems"].is_string()) {
@@ -578,7 +610,7 @@ namespace KRE
 
 		void ParticleSystemContainer::process(float delta_time)
 		{
-			//LOG_DEBUG("ParticleSystemContainer::Process: " << current_time);
+			//LOG_DEBUG("ParticleSystemContainer::Process: " << delta_time);
 			for(auto ps : active_particle_systems_) {
 				ps->emitProcess(delta_time);
 			}
@@ -669,11 +701,11 @@ namespace KRE
 			// emitters/affectors, or whether we should maintain a list of 
 			// emitters/affectors that were initially specified.
 			for(auto e : active_emitters_) {
-				tq->active_emitters_.emplace_back(EmitterPtr(e->clone()));
-				tq->active_emitters_.back()->setParentTechnique(tq);
+				tq->active_emitters_.emplace_back(e->clone());
+				tq->active_emitters_.back()->init(tq);
 			}
 			for(auto a : active_affectors_) {
-				tq->active_affectors_.emplace_back(AffectorPtr(a->clone()));
+				tq->active_affectors_.emplace_back(a->clone());
 				tq->active_affectors_.back()->setParentTechnique(tq);
 			}
 			tq->active_particles_.reserve(particle_quota_);
@@ -708,7 +740,10 @@ namespace KRE
 		}
 
 		EmitObject::EmitObject(std::weak_ptr<ParticleSystemContainer> parent, const variant& node) 
-			: parent_container_(parent) 
+			: name_(),
+			  enabled_(node["enabled"].as_bool(true)),
+			  do_debug_draw_(node["debug_draw"].as_bool(false)),
+			  parent_container_(parent) 
 		{
 			ASSERT_LOG(parent.lock() != nullptr, "parent is null");
 			if(node.has_key("name")) {
@@ -717,7 +752,7 @@ namespace KRE
 				name_ = node["id"].as_string();
 			} else {
 				std::stringstream ss;
-				ss << "emit_object_" << int(get_random_float());
+				ss << "emit_object_" << static_cast<int>(get_random_float()*100);
 				name_ = ss.str();
 			}
 		}
@@ -733,6 +768,60 @@ namespace KRE
 		{ 
 			static glm::vec3 res; 
 			return res; 
+		}
+
+		DebugDrawHelper::DebugDrawHelper() 
+				: SceneObject("DebugDrawHelper")
+		{
+			setShader(ShaderProgram::getProgram("attr_color_shader"));
+
+			auto as = DisplayDevice::createAttributeSet(true, false, false);
+			as->setDrawMode(DrawMode::LINES);
+
+			attrs_ = std::make_shared<Attribute<vertex_color3>>(AccessFreqHint::DYNAMIC);
+			attrs_->addAttributeDesc(AttributeDesc(AttrType::POSITION, 3, AttrFormat::FLOAT, false, sizeof(vertex_color3), offsetof(vertex_color3, vertex)));
+			attrs_->addAttributeDesc(AttributeDesc(AttrType::COLOR, 4, AttrFormat::UNSIGNED_BYTE, true, sizeof(vertex_color3), offsetof(vertex_color3, color)));
+
+			as->addAttribute(attrs_);
+			addAttributeSet(as);
+		}
+
+		void DebugDrawHelper::update(const glm::vec3& p1, const glm::vec3& p2, const Color& col) 
+		{
+			std::vector<vertex_color3> res;
+			const glm::u8vec4& color = col.as_u8vec4();
+			res.emplace_back(p1, color);
+			res.emplace_back(glm::vec3(p1.x, p1.y, p1.z), color);
+			res.emplace_back(glm::vec3(p2.x, p1.y, p1.z), color);
+
+			res.emplace_back(glm::vec3(p1.x, p1.y, p1.z), color);
+			res.emplace_back(glm::vec3(p1.x, p2.y, p1.z), color);
+
+			res.emplace_back(glm::vec3(p1.x, p1.y, p1.z), color);
+			res.emplace_back(glm::vec3(p1.x, p1.y, p2.z), color);
+
+			res.emplace_back(glm::vec3(p2.x, p2.y, p2.z), color);
+			res.emplace_back(glm::vec3(p1.x, p2.y, p2.z), color);
+					
+			res.emplace_back(glm::vec3(p2.x, p2.y, p2.z), color);
+			res.emplace_back(glm::vec3(p2.x, p1.y, p2.z), color);
+					
+			res.emplace_back(glm::vec3(p2.x, p2.y, p2.z), color);
+			res.emplace_back(glm::vec3(p2.x, p2.y, p1.z), color);
+
+			res.emplace_back(glm::vec3(p1.x, p2.y, p1.z), color);
+			res.emplace_back(glm::vec3(p1.x, p2.y, p2.z), color);
+
+			res.emplace_back(glm::vec3(p1.x, p2.y, p1.z), color);
+			res.emplace_back(glm::vec3(p2.x, p2.y, p1.z), color);
+
+			res.emplace_back(glm::vec3(p2.x, p1.y, p1.z), color);
+			res.emplace_back(glm::vec3(p2.x, p2.y, p1.z), color);
+
+			res.emplace_back(glm::vec3(p2.x, p1.y, p1.z), color);
+			res.emplace_back(glm::vec3(p2.x, p1.y, p2.z), color);
+
+			attrs_->update(&res);
 		}
 	}
 }

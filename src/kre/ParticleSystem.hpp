@@ -51,6 +51,13 @@ namespace KRE
 			glm::u8vec4 color;
 		};
 
+		struct vertex_color3
+		{
+			vertex_color3(const glm::vec3& v, const glm::u8vec4& c) : vertex(v), color(c) {}
+			glm::vec3 vertex;
+			glm::u8vec4 color;
+		};
+
 		struct PhysicsParameters
 		{
 			glm::vec3 position;
@@ -85,18 +92,24 @@ namespace KRE
 			void emitProcess(float t) {
 				handleEmitProcess(t);
 			}
-			void draw() const {
-				handleDraw();
+			void draw(const WindowPtr& wnd) const {
+				handleDraw(wnd);
 			}
 			ParticleSystemContainerPtr getParentContainer() const;
 			virtual const glm::vec3& getPosition() const;
 			virtual void setPosition(const glm::vec3& pos) {}
+			bool isEnabled() const { return enabled_; }
+			void enable(bool en) { enabled_ = en; handleEnable(); }
+			bool doDebugDraw() const { return do_debug_draw_; }
 		protected:
 			virtual bool durationExpired() { return false; }
 		private:
 			virtual void handleEmitProcess(float t) = 0;
-			virtual void handleDraw() const {}
+			virtual void handleDraw(const WindowPtr& wnd) const {}
+			virtual void handleEnable() {}
 			std::string name_;
+			bool enabled_;
+			bool do_debug_draw_;
 			std::weak_ptr<ParticleSystemContainer> parent_container_;
 
 			EmitObject();
@@ -108,23 +121,22 @@ namespace KRE
 			explicit Technique(std::weak_ptr<ParticleSystemContainer> parent, const variant& node);
 			Technique(const Technique& tq);
 
-			size_t getParticleCount() const { return active_particles_.size(); };
-			size_t getQuota() const { return particle_quota_; }
-			size_t getEmitterQuota() const { return emitter_quota_; }
-			size_t getSystemQuota() const { return system_quota_; }
-			size_t getTechniqueQuota() const { return technique_quota_; }
-			size_t getAffectorQuota() const { return affector_quota_; }
+			int getParticleCount() const { return active_particles_.size(); };
+			int getQuota() const { return particle_quota_; }
+			int getEmitterQuota() const { return emitter_quota_; }
+			int getSystemQuota() const { return system_quota_; }
+			int getTechniqueQuota() const { return technique_quota_; }
+			int getAffectorQuota() const { return affector_quota_; }
 			glm::vec3 getDefaultDimensions() const { return glm::vec3(default_particle_width_, default_particle_height_, default_particle_depth_); }
 			ParticleSystemPtr getParticleSystem() const;
 			EmitObjectPtr getEmitObject(const std::string& name);
 			void setParent(std::weak_ptr<ParticleSystem> parent);
 			// Direct access here for *speed* reasons.
 			std::vector<Particle>& getActiveParticles() { return active_particles_; }
-			std::vector<EmitterPtr>& getInstancedEmitters() { return instanced_emitters_; }
-			std::vector<AffectorPtr>& getInstancedAffectors() { return instanced_affectors_; }
-			void addEmitter(EmitterPtr e);
-			void addAffector(AffectorPtr a);
-			void preRender(const WindowPtr& wnd);
+			std::vector<EmitterPtr>& getActiveEmitters() { return active_emitters_; }
+			std::vector<AffectorPtr>& getActiveAffectors() { return active_affectors_; }
+			void preRender(const WindowPtr& wnd) override;
+			void postRender(const WindowPtr& wnd) override;
 
 			static TechniquePtr create(std::weak_ptr<ParticleSystemContainer> parent, const variant& node);
 			TechniquePtr clone() const;
@@ -138,12 +150,13 @@ namespace KRE
 			float default_particle_width_;
 			float default_particle_height_;
 			float default_particle_depth_;
-			size_t particle_quota_;
-			size_t emitter_quota_;
-			size_t affector_quota_;
-			size_t technique_quota_;
-			size_t system_quota_;
 			int lod_index_;
+
+			int particle_quota_;
+			int emitter_quota_;
+			int affector_quota_;
+			int technique_quota_;
+			int system_quota_;
 			float velocity_;
 			std::unique_ptr<float> max_velocity_;
 
@@ -151,14 +164,14 @@ namespace KRE
 			std::vector<EmitterPtr> active_emitters_;
 			std::vector<AffectorPtr> active_affectors_;
 
-			std::vector<EmitterPtr> instanced_emitters_;
-			std::vector<AffectorPtr> instanced_affectors_;
-
-			// Parent particle system
-			std::weak_ptr<ParticleSystem> particle_system_;
+			std::vector<EmitterPtr> child_emitters_;
+			std::vector<AffectorPtr> child_affectors_;
 
 			// List of particles currently active.
 			std::vector<Particle> active_particles_;
+
+			// Parent particle system
+			std::weak_ptr<ParticleSystem> parent_particle_system_;
 
 			Technique() = delete;
 		};
@@ -249,5 +262,14 @@ namespace KRE
 
 		glm::vec3 perpendicular(const glm::vec3& v) ;
 		glm::vec3 create_deviating_vector(float angle, const glm::vec3& v, const glm::vec3& up = glm::vec3(0.0f));
+		
+		class DebugDrawHelper : public SceneObject
+		{
+		public:
+			DebugDrawHelper();
+			void update(const glm::vec3& p1, const glm::vec3& p2, const Color& color);
+		private:
+			std::shared_ptr<Attribute<vertex_color3>> attrs_;
+		};
 	}
 }

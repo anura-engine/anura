@@ -47,7 +47,7 @@ namespace KRE
 			int getEmittedParticleCountPerCycle(float t);
 			color_vector getColor() const;
 			TechniquePtr getTechnique() const;
-			void setParentTechnique(std::weak_ptr<Technique> tq) { technique_ = tq; }
+			void init(std::weak_ptr<Technique> tq);
 
 			virtual EmitterPtr clone() = 0;
 			static EmitterPtr factory(std::weak_ptr<ParticleSystemContainer> parent, const variant& node);
@@ -56,7 +56,9 @@ namespace KRE
 			virtual bool durationExpired() { return can_be_deleted_; }
 		private:
 			virtual void handleEmitProcess(float t) override;
-			virtual void handleDraw() const override;
+			virtual void handleDraw(const WindowPtr& wnd) const override;
+			void handleEnable() override;
+			void visualEmitProcess(float t);
 			std::weak_ptr<Technique> technique_;
 
 			// These are generation parameters.
@@ -86,7 +88,8 @@ namespace KRE
 			void initParticle(Particle& p, float t);
 			void setParticleStartingValues(const std::vector<Particle>::iterator& start, const std::vector<Particle>::iterator& end);
 			void createParticles(std::vector<Particle>& particles, std::vector<Particle>::iterator& start, std::vector<Particle>::iterator& end, float t);
-			size_t calculateParticlesToEmit(float t, size_t quota, size_t current_size);
+			int calculateParticlesToEmit(float t, int quota, int current_size);
+			void calculateQuota();
 
 			float generateAngle() const;
 			glm::vec3 getInitialDirection() const;
@@ -100,6 +103,10 @@ namespace KRE
 			float duration_remaining_;
 			// time remaining till a stopped emitter restarts.
 			float repeat_delay_remaining_;
+
+			int particles_remaining_;
+
+			glm::vec3 scale_;
 
 			Emitter();
 		};

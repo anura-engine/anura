@@ -36,8 +36,6 @@ namespace KRE
 			virtual ~Affector();
 			virtual AffectorPtr clone() const = 0;
 
-			bool isEnabled() const { return enabled_; }
-			void enable(bool en) { enabled_ = en; }
 			TechniquePtr getTechnique() const;
 			void setParentTechnique(std::weak_ptr<Technique> tq) { technique_ = tq; }
 
@@ -52,7 +50,6 @@ namespace KRE
 			virtual void handleEmitProcess(float t);
 			virtual void internalApply(Particle& p, float t) = 0;
 		private:
-			bool enabled_;
 			float mass_;
 			glm::vec3 position_;
 			std::vector<std::string> excluded_emitters_;

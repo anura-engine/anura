@@ -112,7 +112,7 @@ namespace KRE
 				return std::make_shared<VortexAffector>(*this);
 			}
 		private:
-			glm::quat rotation_axis_;
+			glm::vec3 rotation_axis_;
 			ParameterPtr rotation_speed_;
 			VortexAffector();
 		};
@@ -384,7 +384,7 @@ namespace KRE
 			}
 			virtual void handleProcess(float t) {
 				handle_apply(getTechnique()->getActiveParticles(), t);
-				handle_apply(getTechnique()->getInstancedEmitters(), t);
+				handle_apply(getTechnique()->getActiveEmitters(), t);
 			}
 			AffectorPtr clone() const {
 				return std::make_shared<RandomiserAffector>(*this);
@@ -476,7 +476,6 @@ namespace KRE
 
 		Affector::Affector(std::weak_ptr<ParticleSystemContainer> parent, const variant& node)
 			: EmitObject(parent, node), 
-			  enabled_(node["enabled"].as_bool(true)), 
 			  mass_(float(node["mass_affector"].as_float(1.0f))),
 			  position_(0.0f), 
 			  scale_(1.0f)
@@ -507,7 +506,7 @@ namespace KRE
 		void Affector::handleEmitProcess(float t) 
 		{
 			auto tq = getTechnique();
-			for(auto& e : tq->getInstancedEmitters()) {
+			for(auto& e : tq->getActiveEmitters()) {
 				ASSERT_LOG(e->emitted_by != nullptr, "e->emitted_by is null");
 				if(!isEmitterExcluded(e->emitted_by->name())) {
 					internalApply(*e,t);
@@ -564,8 +563,13 @@ namespace KRE
 			: Affector(parent, node), 
 			  operation_(TimeColorAffector::COLOR_OP_SET)
 		{
-			if(node.has_key("colour_operation")) {
-				const std::string& op = node["colour_operation"].as_string();
+			std::string op;
+			if(node.has_key("color_operation")) {
+				op = node["color_operation"].as_string();
+			} else if(node.has_key("colour_operation")) {
+				op = node["colour_operation"].as_string();
+			}
+			if(!op.empty()) {
 				if(op == "multiply") {
 					operation_ = COLOR_OP_MULTIPLY;
 				} else if(op == "set") {
@@ -596,7 +600,7 @@ namespace KRE
 				}
 				tc_data_.push_back(std::make_pair(t, result));
 			} else if(tc_node.is_list()) {
-				for(size_t n = 0; n != tc_node.num_elements(); ++n) {
+				for(int n = 0; n != tc_node.num_elements(); ++n) {
 					float t = tc_node[n]["time"].as_float();
 					glm::vec4 result;
 					if(tc_node[n].has_key("color")) {
@@ -684,7 +688,7 @@ namespace KRE
 
 		VortexAffector::VortexAffector(std::weak_ptr<ParticleSystemContainer> parent, const variant& node)
 			: Affector(parent, node), 
-			  rotation_axis_(1.0f, 0.0f, 0.0f, 0.0f)
+			  rotation_axis_(0.0f, 1.0f, 0.0f)
 		{
 			if(node.has_key("rotation_speed")) {
 				rotation_speed_ = Parameter::factory(node["rotation_speed"]);
@@ -692,7 +696,7 @@ namespace KRE
 				rotation_speed_.reset(new FixedParameter(1.0f));
 			}
 			if(node.has_key("rotation_axis")) {
-				rotation_axis_ = variant_to_quat(node["rotation_axis"]);
+				rotation_axis_ = variant_to_vec3(node["rotation_axis"]);
 			}
 		}
 
@@ -700,9 +704,11 @@ namespace KRE
 		{
 			glm::vec3 local = p.current.position - getPosition();
 			//p.current.position = position() + glm::rotate(rotation_axis_, local);
-			p.current.position = getPosition() + rotation_axis_ * local;
+			float spd = rotation_speed_->getValue(getTechnique()->getParticleSystem()->getElapsedTime());
+			glm::quat rotation = glm::angleAxis(spd, rotation_axis_);
+			p.current.position = getPosition() + rotation * local;
 			//p.current.direction = glm::rotate(rotation_axis_, p.current.direction);
-			p.current.direction = rotation_axis_ * p.current.direction;
+			p.current.direction = rotation * p.current.direction;
 		}
 
 		GravityAffector::GravityAffector(std::weak_ptr<ParticleSystemContainer> parent, const variant& node)
@@ -759,36 +765,36 @@ namespace KRE
 		{
 			if(scale_xyz_) {
 				float calc_scale = calculateScale(scale_xyz_, p);
-				float value = p.current.dimensions.x + calc_scale /** affector_scale.x*/;
+				float value = p.initial.dimensions.x * calc_scale * getScale().x;
 				if(value > 0) {
 					p.current.dimensions.x = value;
 				}
-				value = p.current.dimensions.y + calc_scale /** affector_scale.y*/;
+				value = p.initial.dimensions.y * calc_scale * getScale().y;
 				if(value > 0) {
 					p.current.dimensions.y = value;
 				}
-				value = p.current.dimensions.z + calc_scale /** affector_scale.z*/;
+				value = p.initial.dimensions.z * calc_scale * getScale().z;
 				if(value > 0) {
 					p.current.dimensions.z = value;
 				}
 			} else {
 				if(scale_x_) {
 					float calc_scale = calculateScale(scale_x_, p);
-					float value = p.current.dimensions.x + calc_scale /** affector_scale.x*/;
+					float value = p.initial.dimensions.x * calc_scale * getScale().x;
 					if(value > 0) {
 						p.current.dimensions.x = value;
 					}
 				}
 				if(scale_y_) {
 					float calc_scale = calculateScale(scale_y_, p);
-					float value = p.current.dimensions.x + calc_scale /** affector_scale.y*/;
+					float value = p.initial.dimensions.x * calc_scale * getScale().y;
 					if(value > 0) {
 						p.current.dimensions.y = value;
 					}
 				}
 				if(scale_z_) {
 					float calc_scale = calculateScale(scale_z_, p);
-					float value = p.current.dimensions.z + calc_scale /** affector_scale.z*/;
+					float value = p.initial.dimensions.z * calc_scale * getScale().z;
 					if(value > 0) {
 						p.current.dimensions.z = value;
 					}

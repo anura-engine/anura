@@ -26,6 +26,7 @@
 #include "ParticleSystemAffectors.hpp"
 #include "ParticleSystemEmitters.hpp"
 #include "ParticleSystemParameters.hpp"
+#include "WindowManager.hpp"
 #include "variant_utils.hpp"
 
 namespace KRE
@@ -186,11 +187,15 @@ namespace KRE
 			  can_be_deleted_(false),
 			  emits_type_(EmitsType::VISUAL),
 			  color_(1.0f,1.0f,1.0f,1.0f),
-              repeat_delay_remaining_(0)
+			  duration_remaining_(0),
+              repeat_delay_remaining_(0),
+			  particles_remaining_(0),
+			  scale_(1.0f)
 		{
 			init_physics_parameters(initial);
 			init_physics_parameters(current);
 			initial.time_to_live = current.time_to_live = 3;
+			initial.velocity = current.velocity = 0;
 
 			if(node.has_key("emission_rate")) {
 				emission_rate_ = Parameter::factory(node["emission_rate"]);
@@ -219,13 +224,9 @@ namespace KRE
 			}
 			if(node.has_key("duration")) {
 				duration_ = Parameter::factory(node["duration"]);
-			} else {
-				duration_.reset(new FixedParameter(0.0f));
 			}
 			if(node.has_key("repeat_delay")) {
 				repeat_delay_ = Parameter::factory(node["repeat_delay"]);
-			} else {
-				repeat_delay_.reset(new FixedParameter(0.0f));
 			}
 			if(node.has_key("direction")) {
 				initial.direction = current.direction = variant_to_vec3(node["direction"]);
@@ -261,6 +262,9 @@ namespace KRE
 				end.a = node["end_colour_range"][3].as_int32();
 				color_range_.reset(new color_range(std::make_pair(start,end)));
 			}
+			if(node.has_key("all_dimensions")) {
+				particle_depth_ = particle_height_ = particle_width_ = Parameter::factory(node["all_dimensions"]);
+			}
 			if(node.has_key("particle_width")) {
 				particle_width_ = Parameter::factory(node["particle_width"]);
 			}
@@ -289,12 +293,13 @@ namespace KRE
 				}
 				emits_name_ = node["emits_name"].as_string();
 			}
-			if(node.has_key("debug_draw") && node["debug_draw"].as_bool()) {
-				ASSERT_LOG(false, "Implement debug draw.");
-			}
 			// Set a default duration for the emitter.
-			ASSERT_LOG(duration_ != nullptr, "duration_ is null");
-			duration_remaining_ = duration_->getValue(0);
+			if(duration_) {
+				duration_remaining_ = duration_->getValue(0);
+			}
+			if(repeat_delay_) {
+				repeat_delay_remaining_ = repeat_delay_->getValue(0);
+			}
 		}
 
 		Emitter::~Emitter()
@@ -321,7 +326,9 @@ namespace KRE
 			  emission_fraction_(0),
 			  duration_remaining_(0),
 			  color_(e.color_),
-              repeat_delay_remaining_(0)
+              repeat_delay_remaining_(0),
+			  particles_remaining_(e.particles_remaining_),
+			  scale_(e.scale_)
 		{
 			if(e.orientation_range_) {
 				orientation_range_.reset(new std::pair<glm::quat,glm::quat>(e.orientation_range_->first, e.orientation_range_->second));
@@ -333,118 +340,126 @@ namespace KRE
 				debug_draw_outline_.reset(new BoxOutline());
 				debug_draw_outline_->setColor(e.debug_draw_outline_->get_color());
 			}*/
-			duration_remaining_ = duration_->getValue(0);
+			if(duration_) {
+				duration_remaining_ = duration_->getValue(0);
+			}
+			if(repeat_delay_) {
+				repeat_delay_remaining_ = repeat_delay_->getValue(0);
+			}
+		}
+
+		void Emitter::calculateQuota()
+		{
+			auto tq = getTechnique();
+			switch(emits_type_)
+			{
+			case EmitsType::VISUAL: particles_remaining_ = tq->getQuota(); break;
+			case EmitsType::EMITTER: particles_remaining_ = tq->getEmitterQuota(); break;
+			case EmitsType::AFFECTOR: particles_remaining_ = tq->getAffectorQuota(); break;
+			case EmitsType::TECHNIQUE: particles_remaining_ = tq->getTechniqueQuota(); break;
+			case EmitsType::SYSTEM: particles_remaining_ = tq->getSystemQuota(); break;
+			default: 
+				ASSERT_LOG(false, "emits_type_ unknown: " << static_cast<int>(emits_type_));
+				break;
+			}
+		}
+
+		void Emitter::visualEmitProcess(float t)
+		{
+			auto tq = getTechnique();
+			std::vector<Particle>& particles = tq->getActiveParticles();
+			std::vector<Particle>::iterator start;
+
+			int cnt = calculateParticlesToEmit(t, particles_remaining_, particles.size());
+			if(duration_) {
+				particles_remaining_ -= cnt;
+				if(particles_remaining_ <= 0) {
+					enable(false);
+				}
+			}
+			LOG_DEBUG(name() << " emits " << cnt << " particles, " << particles_remaining_ << " remain. active_particles=" << particles.size() << ", t=" << getTechnique()->getParticleSystem()->getElapsedTime());
+
+			// XXX: techincally this shouldn't be needed as we reserve the default quota upon initialising
+			// the particle list. We could hit some pathological case where we allocate particles past
+			// the quota (since it isn't enforced yet). This saves us from start from being invalidated
+			// if push_back were to cause a reallocation.
+			auto last_index = particles.size();
+			particles.resize(particles.size() + cnt);
+			//start = particles.end();
+			for(int n = 0; n != cnt; ++n) {
+				Particle p;
+				initParticle(p, t);
+				particles[n+last_index] = p;
+			}
+
+			start = particles.begin() + last_index;
+			for(auto it = start; it != particles.end(); ++it) {
+				internalCreate(*it, t);
+			}
+			setParticleStartingValues(start, particles.end());
+		}
+
+		void Emitter::handleEnable()
+		{
+			if(isEnabled()) {
+				if(duration_) {
+					duration_remaining_ = duration_->getValue(getTechnique()->getParticleSystem()->getElapsedTime());
+					calculateQuota();
+				}
+				if(duration_remaining_ > 0) {
+					repeat_delay_remaining_ = 0;
+				}
+			} else {
+				if(repeat_delay_) {
+					repeat_delay_remaining_ = repeat_delay_->getValue(getTechnique()->getParticleSystem()->getElapsedTime());
+				} else {
+					enable(true);
+				}
+				if(repeat_delay_remaining_ > 0) {
+					duration_remaining_ = 0;
+				}
+			}
 		}
 
 		void Emitter::handleEmitProcess(float t) 
 		{
-			auto tq = getTechnique();
-			std::vector<Particle>& particles = tq->getActiveParticles();
-
-			float duration = duration_->getValue(static_cast<float>(t));
-			if(duration == 0.0f || duration_remaining_ >= 0.0f) {
-				if(emits_type_ == EmitsType::VISUAL) {
-					std::vector<Particle>::iterator start;
-
-					//create_particles(particles, start, end, t);
-					size_t cnt = calculateParticlesToEmit(t, tq->getQuota(), particles.size());
-					// XXX: techincally this shouldn't be needed as we reserve the default quota upon initialising
-					// the particle list. We could hit some pathological case where we allocate particles past
-					// the quota (since it isn't enforced yet). This saves us from start from being invalidated
-					// if push_back were to cause a reallocation.
-					auto last_index = particles.size();
-					particles.resize(particles.size() + cnt);
-					//start = particles.end();
-					for(size_t n = 0; n != cnt; ++n) {
-						Particle p;
-						initParticle(p, t);
-						particles[n+last_index] = p;
-					}
-
-                    start = particles.begin() + last_index;
-					for(auto it = start; it != particles.end(); ++it) {
-						internalCreate(*it, t);
-					}
-					setParticleStartingValues(start, particles.end());
-				} else {
-					if(emits_type_ == EmitsType::EMITTER) {
-						size_t cnt = calculateParticlesToEmit(t, tq->getEmitterQuota(), tq->getInstancedEmitters().size());
-						//std::cerr << "XXX: Emitting " << cnt << " emitters" << std::endl;
-						for(int n = 0; n != cnt; ++n) {
-							EmitterPtr e = getParentContainer()->cloneEmitter(emits_name_);
-							e->emitted_by = this;
-							initParticle(*e, t);
-							internalCreate(*e, t);
-							memcpy(&e->current, &e->initial, sizeof(e->current));
-							tq->addEmitter(e);
-						}
-					} else if(emits_type_ == EmitsType::AFFECTOR) {
-						size_t cnt = calculateParticlesToEmit(t, tq->getAffectorQuota(), tq->getInstancedAffectors().size());
-						for(int n = 0; n != cnt; ++n) {
-							AffectorPtr a = getParentContainer()->cloneAffector(emits_name_);
-							a->emitted_by = this;
-							initParticle(*a, t);
-							internalCreate(*a, t);
-							memcpy(&a->current, &a->initial, sizeof(a->current));
-							tq->addAffector(a);
-						}
-					} else if(emits_type_ == EmitsType::TECHNIQUE) {
-						size_t cnt = calculateParticlesToEmit(t, tq->getTechniqueQuota(), tq->getParticleSystem()->getActiveTechniques().size());
-						for(int n = 0; n != cnt; ++n) {
-							TechniquePtr tq = getParentContainer()->cloneTechnique(emits_name_);
-							tq->emitted_by = this;
-							initParticle(*tq, t);
-							internalCreate(*tq, t);
-							memcpy(&tq->current, &tq->initial, sizeof(tq->current));
-							tq->getParticleSystem()->addTechnique(tq);
-						}
-					} else if(emits_type_ == EmitsType::SYSTEM) {
-						size_t cnt = calculateParticlesToEmit(t, tq->getSystemQuota(), getParentContainer()->getActiveParticleSystems().size());
-						for(int n = 0; n != cnt; ++n) {
-							ParticleSystemPtr ps = getParentContainer()->cloneParticleSystem(emits_name_);
-							ps->emitted_by = this;
-							initParticle(*ps, t);
-							internalCreate(*ps, t);
-							memcpy(&ps->current, &ps->initial, sizeof(ps->current));
-							getParentContainer()->addParticleSystem(ps);
-						}
-					} else {
-						ASSERT_LOG(false, "unknown emits_type: " << static_cast<int>(emits_type_));
-					}
+			if(isEnabled()) {
+				switch(emits_type_) {
+				case EmitsType::VISUAL:		visualEmitProcess(t); break;
+				case EmitsType::EMITTER:	// XXX writeme
+				case EmitsType::AFFECTOR:	// XXX writeme
+				case EmitsType::TECHNIQUE:	// XXX writeme
+				case EmitsType::SYSTEM:		// XXX writeme
+				default: 
+					ASSERT_LOG(false, "Unhandled emits_type_: " << static_cast<int>(emits_type_));
+					break;
 				}
 
-				duration_remaining_ -= static_cast<float>(t);
-				if(duration_remaining_ < 0.0f) {
-					ASSERT_LOG(repeat_delay_ != nullptr, "repeat_delay_ is null");
-					repeat_delay_remaining_ = repeat_delay_->getValue(t);
+				if(duration_) {
+					duration_remaining_ -= t;
+					if(duration_remaining_ < 0.0f) {
+						enable(false);					
+					}
 				}
-			} else {
-				repeat_delay_remaining_ -= static_cast<float>(t);
-				if(repeat_delay_remaining_ < 0.0f) {
-					ASSERT_LOG(duration_ != nullptr, "duration_ is null");
-					duration_remaining_ = duration_->getValue(t);
+			} else if(repeat_delay_) {
+				repeat_delay_remaining_ -= t;
+				if(repeat_delay_remaining_ < 0) {
+					enable(true);
 				}
 			}
 		}
 
-		size_t Emitter::calculateParticlesToEmit(float t, size_t quota, size_t current_size)
+		int Emitter::calculateParticlesToEmit(float t, int quota, int current_size)
 		{
-			size_t cnt = 0;
+			int cnt = 0;
 			if(force_emission_) {
 				if(!force_emission_processed_) {
 					// Single shot of all particles at once.
-					cnt = static_cast<size_t>(emission_rate_->getValue(getTechnique()->getParticleSystem()->getElapsedTime()));
+					cnt = static_cast<int>(emission_rate_->getValue(getTechnique()->getParticleSystem()->getElapsedTime()));
 					force_emission_processed_ = true;
 				}
 			} else {
 				cnt = getEmittedParticleCountPerCycle(t);
-			}
-			if(current_size + cnt > quota) {
-				if(current_size >= quota) {
-					cnt = 0;
-				} else {
-					cnt = quota - current_size;
-				}
 			}
 			return cnt;
 		}
@@ -474,12 +489,25 @@ namespace KRE
 			p.initial.velocity = velocity_->getValue(ps->getElapsedTime());
 			p.initial.mass = mass_->getValue(ps->getElapsedTime());
 			p.initial.dimensions = getTechnique()->getDefaultDimensions();
+			if(particle_width_ != nullptr) {
+				p.initial.dimensions.x = particle_width_->getValue(t);
+			}
+			if(particle_height_ != nullptr) {
+				p.initial.dimensions.y = particle_height_->getValue(t);
+			}
+			if(particle_depth_ != nullptr) {
+				p.initial.dimensions.z = particle_depth_->getValue(t);
+			}
+			p.initial.dimensions.x *= scale_.x;
+			p.initial.dimensions.y *= scale_.y;
+			p.initial.dimensions.z *= scale_.z;
 			if(orientation_range_) {
 				p.initial.orientation = glm::slerp(orientation_range_->first, orientation_range_->second, get_random_float(0.0f,1.0f));
 			} else {
 				p.initial.orientation = current.orientation;
 			}
 			p.initial.direction = getInitialDirection();
+			//std::cerr << "initial direction: " << p.initial.direction << "\n";
 			p.emitted_by = this;
 		}
 
@@ -488,7 +516,9 @@ namespace KRE
 			ASSERT_LOG(emission_rate_ != nullptr, "emission_rate_ is nullptr");
 			// at each step we produce emission_rate()*process_step_time particles.
 			float cnt = 0;
-			emission_fraction_ = std::modf(emission_fraction_ + emission_rate_->getValue(t)*t, &cnt);
+			const float particles_per_cycle = emission_rate_->getValue(t) * t;
+			emission_fraction_ = std::modf(emission_fraction_ + particles_per_cycle, &cnt);
+			//LOG_DEBUG("EPCPC: frac: " << emission_fraction_ << ", integral: " << cnt << ", ppc: " << particles_per_cycle << ", time: " << t);
 			return static_cast<int>(cnt);
 		}
 
@@ -506,9 +536,9 @@ namespace KRE
 			float angle = generateAngle();
 			//std::cerr << "angle:" << angle;
 			if(angle != 0) {
-				return create_deviating_vector(angle, current.direction);
+				return create_deviating_vector(angle, initial.direction);
 			}
-			return current.direction;
+			return initial.direction;
 		}
 
 		color_vector Emitter::getColor() const
@@ -528,8 +558,16 @@ namespace KRE
 			return c;
 		}
 
-		void Emitter::handleDraw() const
+		void Emitter::handleDraw(const WindowPtr& wnd) const
 		{
+			//if(isEnabled()) {
+				static DebugDrawHelper ddh;
+				ddh.update(current.position - current.dimensions / 2.0f, current.position + current.dimensions / 2.0f, Color::colorGreen());
+				ddh.setCamera(getTechnique()->getCamera());
+				ddh.useGlobalModelMatrix(getTechnique()->ignoreGlobalModelMatrix());
+				ddh.setDepthEnable(true);
+				wnd->render(&ddh);
+			//}
 		}
 
 		TechniquePtr Emitter::getTechnique() const
@@ -537,6 +575,12 @@ namespace KRE
 			auto tq = technique_.lock();
 			ASSERT_LOG(tq != nullptr, "No parent technique found.");
 			return tq;
+		}
+
+		void Emitter::init(std::weak_ptr<Technique> tq)
+		{
+			technique_ = tq;
+			calculateQuota();
 		}
 
 		EmitterPtr Emitter::factory(std::weak_ptr<ParticleSystemContainer> parent, const variant& node)

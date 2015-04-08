@@ -972,6 +972,9 @@
     <ClInclude Include="..\..\src\particle_system_proxy.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\kre\Depth.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\src\kre\geometry.inl">
@@ -1812,6 +1815,9 @@
     </ClCompile>
     <ClCompile Include="..\..\src\particle_system_proxy.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\Depth.cpp">
+      <Filter>Source Files\kre</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
