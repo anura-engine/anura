@@ -223,12 +223,18 @@ namespace KRE
 			}
 		}
 
-		float convert_numeric(const variant& node)
+		float convert_numeric(const variant& node, DecodingHint hint)
 		{
-			if(node.is_int()) {
-				return clamp<int>(node.as_int32(), 0, 255) / 255.0f;
-			} else if(node.is_float()) {
+			if(node.is_float()) {
+				if(node.as_float() > 1.0 && hint == DecodingHint::INTEGER) {
+					return clamp<int>(node.as_int32(), 0, 255) / 255.0f;
+				}
 				return clamp<float>(node.as_float(), 0.0f, 1.0f);
+			} else if(node.is_int()) {
+				if(node.as_float() <= 1.0f && hint == DecodingHint::DECIMAL) {
+					return clamp<float>(node.as_float(), 0.0f, 1.0f);
+				}
+				return clamp<int>(node.as_int32(), 0, 255) / 255.0f;
 			} else if(node.is_string()) {
 				return convert_string_to_number(node.as_string());
 			}
@@ -510,9 +516,9 @@ namespace KRE
 		convert_to_color();
 	}
 
-	Color::Color(const variant& node)
-		: icolor_(0, 0, 0, 255),
-		  color_(0.0f, 0.0f, 0.0f, 1.0f)
+	Color::Color(const variant& node, DecodingHint hint)
+		: icolor_(255, 255, 255, 255),
+		  color_(1.0f, 1.0f, 1.0f, 1.0f)
 	{
 		if(node.is_string()) {
 			color_from_string(node.as_string(), this);
@@ -520,36 +526,36 @@ namespace KRE
 			ASSERT_LOG(node.num_elements() == 3 || node.num_elements() == 4,
 				"Color nodes must be lists of 3 or 4 numbers.");
 			for(size_t n = 0; n != node.num_elements(); ++n) {
-				color_[n] = convert_numeric(node[n]);
+				color_[n] = convert_numeric(node[n], hint);
 				icolor_[n] = static_cast<int>(color_[n] * 255.0f);
 			}
 		} else if(node.is_map()) {
 			if(node.has_key("red")) {
-				color_[0] = convert_numeric(node["red"]);
+				color_[0] = convert_numeric(node["red"], hint);
 				icolor_[0] = static_cast<int>(color_[0] * 255.0f);
 			} else if(node.has_key("r")) {
-				color_[0] = convert_numeric(node["r"]);
+				color_[0] = convert_numeric(node["r"], hint);
 				icolor_[0] = static_cast<int>(color_[0] * 255.0f);
 			}
 			if(node.has_key("green")) {
-				color_[1] = convert_numeric(node["green"]);
+				color_[1] = convert_numeric(node["green"], hint);
 				icolor_[1] = static_cast<int>(color_[1] * 255.0f);
 			} else if(node.has_key("g")) {
-				color_[1] = convert_numeric(node["g"]);
+				color_[1] = convert_numeric(node["g"], hint);
 				icolor_[1] = static_cast<int>(color_[1] * 255.0f);
 			}
 			if(node.has_key("blue")) {
-				color_[2] = convert_numeric(node["blue"]);
+				color_[2] = convert_numeric(node["blue"], hint);
 				icolor_[2] = static_cast<int>(color_[2] * 255.0f);
 			} else if(node.has_key("b")) {
-				color_[2] = convert_numeric(node["b"]);
+				color_[2] = convert_numeric(node["b"], hint);
 				icolor_[2] = static_cast<int>(color_[2] * 255.0f);
 			}
 			if(node.has_key("alpha")) {
-				color_[3] = convert_numeric(node["alpha"]);
+				color_[3] = convert_numeric(node["alpha"], hint);
 				icolor_[3] = static_cast<int>(color_[3] * 255.0f);
 			} else if(node.has_key("a")) {
-				color_[3] = convert_numeric(node["a"]);
+				color_[3] = convert_numeric(node["a"], hint);
 				icolor_[3] = static_cast<int>(color_[3] * 255.0f);
 			}
 		} else {

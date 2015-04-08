@@ -200,7 +200,7 @@ Background::Background(variant node, int palette)
 			}
 		}
 		
-		bg->color = Color(layer_node);
+		bg->color = Color(layer_node, DecodingHint::DECIMAL);
 		bg->setColor(bg->color);
 
 		if(layer_node.has_key("color_above")) {

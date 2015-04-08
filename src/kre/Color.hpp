@@ -44,6 +44,12 @@ namespace KRE
 		ABGR,
 	};
 
+	enum class DecodingHint
+	{
+		INTEGER,
+		DECIMAL,
+	};
+
 	class Color
 	{
 	public:
@@ -52,7 +58,7 @@ namespace KRE
 		explicit Color(const float r, const float g, const float b, const float a=1.0f);
 		explicit Color(const int r, const int g, const int b, const int a=255);
 		explicit Color(const std::string& s);
-		explicit Color(const variant& node);
+		explicit Color(const variant& node, DecodingHint hint=DecodingHint::INTEGER);
 		explicit Color(const glm::vec4& value);
 		explicit Color(const glm::u8vec4& value);
 		explicit Color(unsigned long n, ColorByteOrder order=ColorByteOrder::RGBA);
