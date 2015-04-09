@@ -200,7 +200,7 @@ namespace lua
 					return variant::from_bool(lua_toboolean(L, ndx) != 0);
 				case LUA_TNUMBER: {
 					double d = lua_tonumber(L, ndx);
-					if(abs(d - round(d)) < 1e-14 && d < double(std::numeric_limits<int>::max())) {
+					if(std::abs(d - round(d)) < 1e-14 && d < double(std::numeric_limits<int>::max())) {
 						return variant(int(d));
 					} else {
 						return variant(d);
