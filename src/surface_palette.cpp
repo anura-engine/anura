@@ -175,6 +175,9 @@ namespace graphics
 
 	KRE::TexturePtr get_palette_texture(const std::string& name, const variant& node, const std::vector<int>& palette)
 	{
+		if(palette.empty()) {
+			return KRE::Texture::createTexture(node);
+		}
 		ASSERT_LOG(!name.empty(), "palettes are set but image is empty.");
 		auto it = get_palette_texture_cache().find(name);
 		KRE::TexturePtr tex = nullptr;
