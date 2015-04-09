@@ -138,6 +138,7 @@ namespace KRE
 		auto& td = texture_data_[n];
 		ASSERT_LOG(is_yuv_planar_ == false, "Use updateYUV to update a YUV texture.");
 		glBindTexture(GetGLTextureType(getType(n)), *td.id);
+		get_current_bound_texture() = *td.id;
 		ASSERT_LOG(getType(n) == TextureType::TEXTURE_1D, "Tried to do 1D texture update on non-1D texture");
 		if(getUnpackAlignment(n) != 4) {
 			glPixelStorei(GL_UNPACK_ALIGNMENT, getUnpackAlignment(n));
@@ -154,6 +155,7 @@ namespace KRE
 		ASSERT_LOG(is_yuv_planar_ == false, "Use updateYUV to update a YUV texture.");
 		auto& td = texture_data_[n];
 		glBindTexture(GetGLTextureType(getType(n)), *td.id);
+		get_current_bound_texture() = *td.id;
 		ASSERT_LOG(getType(n) == TextureType::TEXTURE_2D, "Tried to do 2D texture update on non-2D texture: " << static_cast<int>(getType(n)));
 		if(getUnpackAlignment(n) != 4) {
 			glPixelStorei(GL_UNPACK_ALIGNMENT, getUnpackAlignment(n));
@@ -171,6 +173,7 @@ namespace KRE
 		ASSERT_LOG(is_yuv_planar_ == false, "Use updateYUV to update a YUV texture.");
 		auto& td = texture_data_[n];
 		glBindTexture(GetGLTextureType(getType(n)), *td.id);
+		get_current_bound_texture() = *td.id;
 		ASSERT_LOG(getType(n) == TextureType::TEXTURE_2D, "Tried to do 2D texture update on non-2D texture: " << static_cast<int>(getType(n)));
 		if(getUnpackAlignment(n) != 4) {
 			glPixelStorei(GL_UNPACK_ALIGNMENT, getUnpackAlignment(n));
@@ -189,6 +192,7 @@ namespace KRE
 		for(int n = num_textures; n >= 0; --n) {
 			auto& td = texture_data_[n];
 			glBindTexture(GetGLTextureType(getType(n)), *td.id);
+			get_current_bound_texture() = *td.id;
 			if(static_cast<int>(stride.size()) > n) {
 				glPixelStorei(GL_UNPACK_ROW_LENGTH, stride[n]);
 			}
@@ -227,6 +231,7 @@ namespace KRE
 		ASSERT_LOG(is_yuv_planar_ == false, "3D Texture Update function called on YUV planar format.");
 		auto& td = texture_data_[n];
 		glBindTexture(GetGLTextureType(getType(n)), *td.id);
+		get_current_bound_texture() = *td.id;
 		if(getUnpackAlignment(n) != 4) {
 			glPixelStorei(GL_UNPACK_ALIGNMENT, getUnpackAlignment());
 		}
@@ -604,6 +609,7 @@ namespace KRE
 		}
 
 		glBindTexture(GetGLTextureType(getType(n)), *td.id);
+		get_current_bound_texture() = *td.id;
 
 		unsigned w = is_yuv_planar_ && n>0 ? width(n)/2 : width(n);
 		unsigned h = is_yuv_planar_ && n>0 ? height(n)/2 : height(n);
@@ -664,6 +670,7 @@ namespace KRE
 		GLenum type = GetGLTextureType(getType(n));
 
 		glBindTexture(type, *td.id);
+		get_current_bound_texture() = *td.id;
 
 		glTexParameteri(type, GL_TEXTURE_WRAP_S, GetGLAddressMode(getAddressModeU(n)));
 		if(getAddressModeU(n) == AddressMode::BORDER) {
@@ -743,8 +750,9 @@ namespace KRE
 			glActiveTexture(GL_TEXTURE0 + n + binding_point);
 			glBindTexture(GetGLTextureType(getType(n)), *it->id);
 		}
-
-		get_current_bound_texture() = *texture_data_[0].id;
+		if(binding_point == 0) {
+			get_current_bound_texture() = *texture_data_[0].id;
+		}
 	}
 
 	unsigned OpenGLTexture::id(int n) const

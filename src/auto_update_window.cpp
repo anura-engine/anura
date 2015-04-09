@@ -152,19 +152,18 @@ void auto_update_window::draw() const
 	KRE::TexturePtr percent_surf_black(render_updater_text(percent_stream.str(), KRE::Color(0, 0, 0)));
 
 	if(percent_surf_white != nullptr) {
-		rect dest(window_->width()/2 - percent_surf_white->width()/2,
-		          window_->height()/2 - percent_surf_white->height()/2,
-				  0, 0);
-		canvas->blitTexture(percent_surf_white, 0, dest);
+		canvas->blitTexture(percent_surf_white, 0, 
+			(window_->width() - percent_surf_white->width()) / 2, 
+			(window_->height() - percent_surf_white->height()) / 2);
 	}
 
 	if(percent_surf_black != nullptr) {
-		rect dest(window_->width()/2 - percent_surf_black->width()/2,
-		          window_->height()/2 - percent_surf_black->height()/2,
-				  0, 0);
-
+		rect dest((window_->width() - percent_surf_black->width()) / 2, 
+			(window_->height() - percent_surf_black->height()) / 2,
+			percent_surf_black->width(),
+			percent_surf_black->height());
 		if(bar_point > dest.x()) {
-			if(bar_point < dest.x() + dest.w()) {
+			if(bar_point < dest.x2()) {
 				dest.set_w(bar_point - dest.x());
 			}
 			canvas->blitTexture(percent_surf_black, 0, dest);
@@ -172,7 +171,7 @@ void auto_update_window::draw() const
 	}
 
 	KRE::TexturePtr message_surf(render_updater_text(message_, KRE::Color(255, 255, 255)));
-	if(!message_surf) {
+	if(message_surf != nullptr) {
 		canvas->blitTexture(message_surf, 0, window_->width()/2 - message_surf->width()/2, 40 + window_->height()/2 - message_surf->height()/2);
 	}
 	
@@ -183,7 +182,6 @@ void auto_update_window::draw() const
 		rect dest(window_->width()/2 - src.w()/2, window_->height()/2 - src.h()*2, src.w(), src.h());
 		canvas->blitTexture(anim_tex, src, 0, dest);
 	}
-
 	window_->swap();
 }
 
