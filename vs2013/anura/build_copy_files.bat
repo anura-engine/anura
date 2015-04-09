@@ -13,6 +13,8 @@ xcopy /y/s "%base_dir%images" "%build_dir%\images\"
 if ERRORLEVEL 1 goto return_error
 xcopy /y/s "%base_dir%modules" "%build_dir%\modules\"
 if ERRORLEVEL 1 goto return_error
+xcopy /y/s "%base_dir%update" "%build_dir%\update\"
+if ERRORLEVEL 1 goto return_error
 xcopy /y/s "%base_dir%external\bin\%3\*.*" "%build_dir%"
 if ERRORLEVEL 1 goto return_error
 
