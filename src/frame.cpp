@@ -679,7 +679,7 @@ void Frame::draw(graphics::AnuraShaderPtr shader, int x, int y, bool face_right,
 	const FrameInfo* info = nullptr;
 	getRectInTexture(time, info);
 
-	x += static_cast<int>(info->x_adjust * scale_);
+	x += static_cast<int>((face_right ? info->x_adjust : info->x2_adjust) * scale_);
 	y += static_cast<int>(info->y_adjust * scale_);
 	int w = static_cast<int>(info->area.w() * scale_);
 	int h = static_cast<int>(info->area.h() * scale_);
@@ -713,7 +713,7 @@ void Frame::draw(graphics::AnuraShaderPtr shader, int x, int y, bool face_right,
 	const FrameInfo* info = nullptr;
 	getRectInTexture(time, info);
 
-	x += static_cast<int>(info->x_adjust * scale_);
+	x += static_cast<int>((face_right ? info->x_adjust : info->x2_adjust) * scale_);
 	y += static_cast<int>(info->y_adjust * scale_);
 	const int w = static_cast<int>(info->area.w() * scale_);
 	const int h = static_cast<int>(info->area.h() * scale_);
