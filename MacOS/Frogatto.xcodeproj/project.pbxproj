@@ -44,6 +44,8 @@
 		63413B281AC693ED00542670 /* lzio.c in Sources */ = {isa = PBXBuildFile; fileRef = 63413B051AC693ED00542670 /* lzio.c */; };
 		634991D11AC794D300E1259F /* formula_garbage_collector.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 634991CF1AC794D300E1259F /* formula_garbage_collector.cpp */; };
 		63855D6F1AD27E7100C58F6B /* particle_system_proxy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 63855D6D1AD27E7100C58F6B /* particle_system_proxy.cpp */; };
+		63855D751AD78F0700C58F6B /* tiled.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 63855D711AD78F0700C58F6B /* tiled.cpp */; };
+		63855D761AD78F0700C58F6B /* tmx_reader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 63855D731AD78F0700C58F6B /* tmx_reader.cpp */; };
 		639B53731AC20D5A00ECC4F8 /* AttributeSet.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 639B52EF1AC20D5900ECC4F8 /* AttributeSet.cpp */; };
 		639B53741AC20D5A00ECC4F8 /* AttributeSetOGL.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 639B52F11AC20D5900ECC4F8 /* AttributeSetOGL.cpp */; };
 		639B53751AC20D5A00ECC4F8 /* Blend.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 639B52F31AC20D5900ECC4F8 /* Blend.cpp */; };
@@ -502,6 +504,10 @@
 		634991D01AC794D300E1259F /* formula_garbage_collector.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = formula_garbage_collector.hpp; sourceTree = "<group>"; };
 		63855D6D1AD27E7100C58F6B /* particle_system_proxy.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = particle_system_proxy.cpp; sourceTree = "<group>"; };
 		63855D6E1AD27E7100C58F6B /* particle_system_proxy.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = particle_system_proxy.hpp; sourceTree = "<group>"; };
+		63855D711AD78F0700C58F6B /* tiled.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = tiled.cpp; sourceTree = "<group>"; };
+		63855D721AD78F0700C58F6B /* tiled.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = tiled.hpp; sourceTree = "<group>"; };
+		63855D731AD78F0700C58F6B /* tmx_reader.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = tmx_reader.cpp; sourceTree = "<group>"; };
+		63855D741AD78F0700C58F6B /* tmx_reader.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = tmx_reader.hpp; sourceTree = "<group>"; };
 		639B52EF1AC20D5900ECC4F8 /* AttributeSet.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AttributeSet.cpp; sourceTree = "<group>"; };
 		639B52F01AC20D5900ECC4F8 /* AttributeSet.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = AttributeSet.hpp; sourceTree = "<group>"; };
 		639B52F11AC20D5900ECC4F8 /* AttributeSetOGL.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AttributeSetOGL.cpp; sourceTree = "<group>"; };
@@ -1287,6 +1293,17 @@
 			path = lua;
 			sourceTree = "<group>";
 		};
+		63855D701AD78F0700C58F6B /* tiled */ = {
+			isa = PBXGroup;
+			children = (
+				63855D711AD78F0700C58F6B /* tiled.cpp */,
+				63855D721AD78F0700C58F6B /* tiled.hpp */,
+				63855D731AD78F0700C58F6B /* tmx_reader.cpp */,
+				63855D741AD78F0700C58F6B /* tmx_reader.hpp */,
+			);
+			path = tiled;
+			sourceTree = "<group>";
+		};
 		639B52EE1AC20D5900ECC4F8 /* kre */ = {
 			isa = PBXGroup;
 			children = (
@@ -1665,6 +1682,7 @@
 		C010C5BC160AFD4C006E7D90 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				63855D701AD78F0700C58F6B /* tiled */,
 				63855D6D1AD27E7100C58F6B /* particle_system_proxy.cpp */,
 				63855D6E1AD27E7100C58F6B /* particle_system_proxy.hpp */,
 				634991CE1AC794D300E1259F /* ColorTransform.hpp */,
@@ -2249,6 +2267,7 @@
 				C010C748160AFD4D006E7D90 /* background_task_pool.cpp in Sources */,
 				C008A2CE1804EFFE0061363A /* input.cpp in Sources */,
 				C010C749160AFD4D006E7D90 /* base64.cpp in Sources */,
+				63855D751AD78F0700C58F6B /* tiled.cpp in Sources */,
 				63413B1A1AC693ED00542670 /* lobject.c in Sources */,
 				C010C74A160AFD4D006E7D90 /* blur.cpp in Sources */,
 				C010C74B160AFD4D006E7D90 /* border_widget.cpp in Sources */,
@@ -2417,6 +2436,7 @@
 				C010C7B5160AFD4D006E7D90 /* object_events.cpp in Sources */,
 				639B53761AC20D5A00ECC4F8 /* BlendModeScope.cpp in Sources */,
 				C010C7B8160AFD4D006E7D90 /* particle_system.cpp in Sources */,
+				63855D761AD78F0700C58F6B /* tmx_reader.cpp in Sources */,
 				639B53751AC20D5A00ECC4F8 /* Blend.cpp in Sources */,
 				C010C7B9160AFD4D006E7D90 /* pathfinding.cpp in Sources */,
 				C010C7BA160AFD4D006E7D90 /* pause_game_dialog.cpp in Sources */,
