@@ -377,7 +377,7 @@ namespace KRE
 					enable(false);
 				}
 			}
-			LOG_DEBUG(name() << " emits " << cnt << " particles, " << particles_remaining_ << " remain. active_particles=" << particles.size() << ", t=" << getTechnique()->getParticleSystem()->getElapsedTime());
+			//LOG_DEBUG(name() << " emits " << cnt << " particles, " << particles_remaining_ << " remain. active_particles=" << particles.size() << ", t=" << getTechnique()->getParticleSystem()->getElapsedTime());
 
 			// XXX: techincally this shouldn't be needed as we reserve the default quota upon initialising
 			// the particle list. We could hit some pathological case where we allocate particles past
