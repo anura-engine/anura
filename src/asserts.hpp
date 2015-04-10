@@ -53,11 +53,14 @@ public:
 	~assert_edit_and_continue_fn_scope();
 };
 
+enum AssertOptions { SilenceAsserts = 1 };
+
 //Scope to make us recover
 class assert_recover_scope 
 {
+	int options_;
 public:
-	assert_recover_scope();
+	assert_recover_scope(int options=0);
 	~assert_recover_scope();
 };
 

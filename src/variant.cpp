@@ -2282,7 +2282,7 @@ std::string variant::to_debug_string(std::vector<const game_logic::FormulaCallab
 					variant value;
 
 					try {
-						const assert_recover_scope scope;
+						const assert_recover_scope scope(SilenceAsserts);
 						if(def->supportsSlotLookups()) {
 							value = callable_->queryValueBySlot(slot);
 						} else {

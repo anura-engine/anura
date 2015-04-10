@@ -112,11 +112,19 @@ void report_assert_msg(const std::string& m)
 #endif
 }
 
+namespace {
+	int silence_on_assert = 0;
+	int throw_validation_failure = 0;
+	int throw_fatal = 0;
+}
+
 validation_failure_exception::validation_failure_exception(const std::string& m)
   : msg(m)
 {
-	LOG_ERROR("ASSERT FAIL: " << m);
-	output_backtrace();
+	if(!silence_on_assert) {
+		LOG_ERROR("ASSERT FAIL: " << m);
+		output_backtrace();
+	}
 }
 
 fatal_assert_failure_exception::fatal_assert_failure_exception(const std::string& m)
@@ -126,23 +134,24 @@ fatal_assert_failure_exception::fatal_assert_failure_exception(const std::string
 	output_backtrace();
 }
 
-namespace {
-	int throw_validation_failure = 0;
-	int throw_fatal = 0;
-}
-
 bool throw_validation_failure_on_assert()
 {
 	return throw_validation_failure != 0 && !preferences::die_on_assert();
 }
 
-assert_recover_scope::assert_recover_scope()
+assert_recover_scope::assert_recover_scope(int options) : options_(options)
 {
+	if(options_&static_cast<int>(SilenceAsserts)) {
+		silence_on_assert++;
+	}
 	throw_validation_failure++;
 }
 
 assert_recover_scope::~assert_recover_scope()
 {
+	if(options_&SilenceAsserts) {
+		silence_on_assert--;
+	}
 	throw_validation_failure--;
 }
 
