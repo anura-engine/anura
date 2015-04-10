@@ -58,6 +58,9 @@ namespace KRE
 		bool ignoreGlobalModelMatrix() const { return ignore_global_model_; }
 		void useGlobalModelMatrix(bool en=true) { ignore_global_model_ = en; }
 
+		// These are derived paramters, refreshed from parent SceneNode
+		void setDerivedModel(const glm::vec3& p, const glm::quat& r, const glm::vec3& s);
+
 		size_t getOrder() const { return order_; }
 		void setOrder(size_t o) { order_ = o; }
 
@@ -108,6 +111,10 @@ namespace KRE
 		TexturePtr texture_;
 		RenderTargetPtr render_target_;
 		ShaderProgramPtr shader_;
+
+		glm::vec3 derived_position_;
+		glm::quat derived_rotation_;
+		glm::vec3 derived_scale_;
 
 		std::vector<AttributeSetPtr> attributes_;
 		//std::vector<UniformBufferBase> uniforms_;

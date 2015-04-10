@@ -43,7 +43,10 @@ namespace KRE
 		  scale_(1.0f),
 		  shader_(ShaderProgram::getSystemDefault()),
 		  enabled_(true),
-		  ignore_global_model_(false)
+		  ignore_global_model_(false),
+		  derived_position_(0.0f),
+		  derived_rotation_(),
+		  derived_scale_(1.0f)
 	{
 	}
 
@@ -54,7 +57,10 @@ namespace KRE
 		  scale_(1.0f),
 		  shader_(ShaderProgram::getSystemDefault()),
 		  enabled_(true),
-		  ignore_global_model_(false)
+		  ignore_global_model_(false),
+		  derived_position_(0.0f),
+		  derived_rotation_(),
+		  derived_scale_(1.0f)
 	{
 	}
 
@@ -65,7 +71,10 @@ namespace KRE
 		  scale_(1.0f),
 		  shader_(ShaderProgram::getSystemDefault()),
 		  enabled_(true),
-		  ignore_global_model_(false)
+		  ignore_global_model_(false),
+		  derived_position_(0.0f),
+		  derived_rotation_(),
+		  derived_scale_(1.0f)
 	{
 		if(!node.is_map()) {
 			return;
@@ -164,6 +173,13 @@ namespace KRE
 	{
 	}
 
+	void Renderable::setDerivedModel(const glm::vec3& p, const glm::quat& r, const glm::vec3& s)
+	{
+		derived_position_ = p;
+		derived_rotation_ = r;
+		derived_scale_ = s;
+	}
+
 	void Renderable::setPosition(const glm::vec3& position) 
 	{
 		position_ = position;
@@ -201,7 +217,9 @@ namespace KRE
 
 	glm::mat4 Renderable::getModelMatrix() const 
 	{
-		return glm::translate(glm::mat4(1.0f), position_) * glm::toMat4(rotation_) * glm::scale(glm::mat4(1.0f), scale_);
+		return glm::translate(glm::mat4(1.0f), position_ + derived_position_) 
+			* glm::toMat4(derived_rotation_ * rotation_) 
+			* glm::scale(glm::mat4(1.0f), scale_ * derived_scale_);
 	}
 
 	void Renderable::setCamera(const CameraPtr& camera)
