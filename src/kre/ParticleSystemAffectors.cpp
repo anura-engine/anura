@@ -507,9 +507,10 @@ namespace KRE
 		{
 			auto tq = getTechnique();
 			for(auto& e : tq->getActiveEmitters()) {
-				ASSERT_LOG(e->emitted_by != nullptr, "e->emitted_by is null");
-				if(!isEmitterExcluded(e->emitted_by->name())) {
-					internalApply(*e,t);
+				if(e->emitted_by != nullptr) {
+					if(!isEmitterExcluded(e->emitted_by->name())) {
+						internalApply(*e,t);
+					}
 				}
 			}
 			for(auto& p : tq->getActiveParticles()) {
