@@ -39,6 +39,7 @@ namespace graphics
 		  root_(scene_->getRootNode()),
 		  rmanager_(),
 		  particle_system_container_(),
+		  last_process_time_(-1),
 		  running_(true)
 	{
 		root_->setNodeName("root_node");
