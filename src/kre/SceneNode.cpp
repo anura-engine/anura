@@ -29,6 +29,7 @@
 #include "SceneGraph.hpp"
 #include "SceneNode.hpp"
 #include "SceneObject.hpp"
+#include "variant_utils.hpp"
 
 namespace KRE
 {
@@ -41,6 +42,9 @@ namespace KRE
 			return res;
 		}
 
+		const glm::vec3 x_axis(1.0f, 0.0f, 0.0f);
+		const glm::vec3 y_axis(0.0f, 1.0f, 0.0f);
+		const glm::vec3 z_axis(0.0f, 0.0f, 1.0f);
 	}
 
 	SceneNode::SceneNode(std::weak_ptr<SceneGraph> sg)
@@ -88,6 +92,44 @@ namespace KRE
 		if(node.has_key("render_target")) {
 			auto rt = RenderTarget::create(node["render_target"]);
 			attachRenderTarget(rt);
+		}
+		if(node.has_key("position")) {
+			position_ = variant_to_vec3(node["position"]);
+		}
+		if(node.has_key("translation")) {
+			position_ = variant_to_vec3(node["translation"]);
+		}
+		// rotation.
+		if(node.has_key("rotation")) {
+			// single rotation value. Assume about z-axis.
+			if(node["rotation"].is_numeric()) {
+				rotation_ = glm::angleAxis(node["rotation"].as_float(), z_axis);
+			} else if(node["rotation"].is_list()) {
+				if(node["rotation"].num_elements() == 3 && node["rotation"][0].is_float()) {
+					// Attempt to specify rotation as Euler angles.
+					rotation_ = glm::quat(variant_to_vec3(node["rotation"]));
+				} else if(node["rotation"].num_elements() == 4 && node["rotation"][0].is_float()) {
+					// Attempt to specify rotation as quaternion
+					rotation_ = variant_to_quat(node["rotation"]);
+				} else {
+					// list of maps format. [{angle: 10, axis:[0,1,0]},{angle:20, axis:[0,0,1]}]
+					for(int n = 0; n != node["rotation"].num_elements(); ++n) {
+						const variant& aa = node["rotation"][n];
+						ASSERT_LOG(aa.is_map(), "Expected the 'rotation' attribute to be a list of maps. " << aa.to_debug_string());
+						ASSERT_LOG(aa.has_key("angle") && aa.has_key("axis"), "'rotation' attribute should me a list of maps containing 'angle' and 'axis'. " << aa.to_debug_string());
+						rotation_ = rotation_ * glm::angleAxis(aa["angle"].as_float(), variant_to_vec3(aa["axis"]));
+					}
+				}
+			} else {
+				ASSERT_LOG(false, "Unrecognised format for 'rotation' attribute. " << node["rotation"].to_debug_string());
+			}
+		}
+		if(node.has_key("scale")) {
+			if(node["scale"].is_numeric()) {
+				scale_ = glm::vec3(node["scale"].as_float());
+			} else {
+				scale_ = variant_to_vec3(node["scale"]);
+			}
 		}
 	}
 
@@ -145,6 +187,7 @@ namespace KRE
 		}
 		
 		for(auto o : objects_) {
+			o->setDerivedModel(getPosition(), getRotation(), getScale());
 			o->setCamera(rp->camera);
 			o->setLights(rp->lights);
 			o->setRenderTarget(rp->render_target);
