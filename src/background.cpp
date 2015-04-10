@@ -384,6 +384,7 @@ void Background::drawForeground(int xpos, int ypos, float rotation, int cycle) c
 			if(bg->attr_->size() > 0) {
 				wnd->render(bg.get());
 			}
+			bg->attr_->clear();
 		}
 	}
 }
