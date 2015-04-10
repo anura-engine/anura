@@ -98,7 +98,7 @@ ifeq ($(USE_SVG),yes)
 	LIBS += $(shell pkg-config --libs cairo)
 endif
 
-MODULES   := kre svg Box2D
+MODULES   := kre svg Box2D tiled
 SRC_DIR   := $(addprefix src/,$(MODULES)) src
 BUILD_DIR := $(addprefix build/,$(MODULES)) build
 

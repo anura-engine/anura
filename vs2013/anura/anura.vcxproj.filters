@@ -25,6 +25,12 @@
     <Filter Include="Source Files\svg">
       <UniqueIdentifier>{661cf2de-cf6b-496b-822c-ee6b0b0273ab}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\tiled">
+      <UniqueIdentifier>{4c77de95-4c9c-432b-ac10-409d80f11790}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\tiled">
+      <UniqueIdentifier>{d4f15d9e-20e2-42ea-b59d-21bd41826c6a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\achievements.hpp">
@@ -975,6 +981,12 @@
     <ClInclude Include="..\..\src\kre\Depth.hpp">
       <Filter>Header Files\kre</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\tiled\tiled.hpp">
+      <Filter>Header Files\tiled</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\tiled\tmx_reader.hpp">
+      <Filter>Header Files\tiled</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\src\kre\geometry.inl">
@@ -1818,6 +1830,12 @@
     </ClCompile>
     <ClCompile Include="..\..\src\kre\Depth.cpp">
       <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\tiled\tiled.cpp">
+      <Filter>Source Files\tiled</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\tiled\tmx_reader.cpp">
+      <Filter>Source Files\tiled</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
