@@ -50,10 +50,8 @@ mkdir build && cd build
 Building on Debian Wheezy
 -------------------------
 
-The following are some specific instructions for setting up the prerequisites
-for Anura on Debian Wheezy.
-
-Getting Boost
+The following are some specific instructions for setting up the pre
+requirements for Anura on Debian Wheezy.
 
 Boost 1.57.0 can be troublesome, but 1.56.0 seems to build more stable.
 Moreover the developers are building against 1.56.0 as of Apr 2015. You will
@@ -120,11 +118,13 @@ usage after a successful build, if you go the lazy way and do not specify which
 front-ends to compile, that builds all the available fronts.
 
 The GCC documentation for configuration, building, installing and testing is
-daunting, but the process, though uncommon, is relatively straightforward. If
-you did not specify a PREFIX when configuring, at the end of the process you
-should have a `/usr/local/bin/g++` that depending on your $PATH value it might
-or might not override the default `/usr/bin/g++`. You might check using
-`/usr/local/bin/g++ --version` or `/usr/bin/g++ --version`.
+daunting, but the process, though uncommon because it's weird to know when it
+built correctly until installation time, even running the tests suite, is
+relatively straightforward. If you did not specify a PREFIX when configuring,
+at the end of the process you should have a `/usr/local/bin/g++` that depending
+on your $PATH value it might or might not override the default `/usr/bin/g++`.
+You might check using `/usr/local/bin/g++ --version` or
+`/usr/bin/g++ --version`.
 
 However, if you did this and compiled Anura with a custom GCC built and
 installed from sources, living in `/usr/local/`, if you try to run it, you most
@@ -134,7 +134,7 @@ implementation of the C standard library) friendly to GCC 4.8.4. And very
 possibly, you might want this to apply ONLY to Anura.
 
 So, you could find reasonable to `find` libstdc++.so (which is a symlink) and
-wipe it and recreating it repointing to a newly created libstdc++.so.X.X.X
+wipe it recreating it repointing to a newly created libstdc++.so.X.X.X
 residing anywhere under /usr/local/. This should make Anura work, but you might
 find safer not to do more changes to /usr/ instead rather using the environment
 variable LD_LIBRARY_PATH when running Anura.
@@ -155,5 +155,5 @@ want to find under /usr/local/.
 Finally, running Anura at this point should tell you that it cannot find the
 frogatto module. Telling that would mean everything worked OK.
 
-You can continue, f.i., downloading Frogatto to ANURA_DIR/modules/frogatto, if
-you just want to run Frogatto.
+Build was successful, you could continue now, f.i., downloading Frogatto to
+ANURA_DIR/modules/frogatto, if you just want to run Frogatto.
