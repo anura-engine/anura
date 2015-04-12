@@ -452,11 +452,12 @@ void Frame::setPalettes(unsigned int palettes)
 		}
 	}
 	blit_target_.getTexture()->setPalette(palettes == 0 ? -1 : npalette);
-	//LOG_DEBUG("Set palette " << npalette << " on " << blit_target_.getTexture()->id() << " from selection: " << std::hex << palettes);
+	//LOG_DEBUG("Set palette " << npalette << " on " << blit_target_.getTexture()->id() << " from selection: " << std::hex << palettes << ", " << graphics::get_palette_name(npalette));
 }
 
 void Frame::setColorPalette(unsigned int palettes)
 {
+	LOG_DEBUG("Frame::setColorPalette: " << palettes);
 	current_palette_mask = palettes;
 	for(auto i : palette_frames()) {
 		i->setPalettes(palettes);
@@ -676,6 +677,8 @@ std::vector<bool>::const_iterator Frame::getAlphaItor(int x, int y, int time, bo
 
 void Frame::draw(graphics::AnuraShaderPtr shader, int x, int y, bool face_right, bool upside_down, int time, float rotate) const
 {
+	rect old_src_rect = blit_target_.getTexture()->getSourceRect();
+
 	const FrameInfo* info = nullptr;
 	getRectInTexture(time, info);
 
@@ -706,10 +709,14 @@ void Frame::draw(graphics::AnuraShaderPtr shader, int x, int y, bool face_right,
 	blit_target_.setMirrorVert(!face_right);
 	blit_target_.preRender(wnd);
 	wnd->render(&blit_target_);
+
+	blit_target_.getTexture()->setSourceRect(0, old_src_rect);
 }
 
 void Frame::draw(graphics::AnuraShaderPtr shader, int x, int y, bool face_right, bool upside_down, int time, float rotate, float scale) const
 {
+	rect old_src_rect = blit_target_.getTexture()->getSourceRect();
+
 	const FrameInfo* info = nullptr;
 	getRectInTexture(time, info);
 
@@ -742,10 +749,14 @@ void Frame::draw(graphics::AnuraShaderPtr shader, int x, int y, bool face_right,
 	blit_target_.preRender(wnd);
 	wnd->render(&blit_target_);
 	blit_target_.setScale(1.0f, 1.0f);
+
+	blit_target_.getTexture()->setSourceRect(0, old_src_rect);
 }
 
 void Frame::draw(graphics::AnuraShaderPtr shader, int x, int y, const rect& area, bool face_right, bool upside_down, int time, float rotate) const
 {
+	rect old_src_rect = blit_target_.getTexture()->getSourceRect();
+
 	const FrameInfo* info = nullptr;
 	getRectInTexture(time, info);
 
@@ -774,11 +785,15 @@ void Frame::draw(graphics::AnuraShaderPtr shader, int x, int y, const rect& area
 	blit_target_.setMirrorVert(!face_right);
 	blit_target_.preRender(wnd);
 	wnd->render(&blit_target_);
+
+	blit_target_.getTexture()->setSourceRect(0, old_src_rect);
 }
 
 
 void Frame::drawCustom(graphics::AnuraShaderPtr shader, int x, int y, const std::vector<CustomPoint>& points, const rect* area, bool face_right, bool upside_down, int time, float rotation) const
 {
+	rect old_src_rect = blit_target_.getTexture()->getSourceRect();
+
 	const FrameInfo* info = nullptr;
 	getRectInTexture(time, info);
 	rectf r = blit_target_.getTexture()->getSourceRectNormalised();
@@ -887,12 +902,15 @@ void Frame::drawCustom(graphics::AnuraShaderPtr shader, int x, int y, const std:
 	blit.getAttributeSet().back()->setCount(queue.size());
 	blit.update(&queue);
 	wnd->render(&blit);
+	blit_target_.getTexture()->setSourceRect(0, old_src_rect);
 }
 
 PREF_BOOL(debug_custom_draw, false, "Show debug visualization of custom drawing");
 
 void Frame::drawCustom(graphics::AnuraShaderPtr shader, int x, int y, const float* xy, const float* uv, int nelements, bool face_right, bool upside_down, int time, float rotation, int cycle) const
 {
+	rect old_src_rect = blit_target_.getTexture()->getSourceRect();
+
 	const FrameInfo* info = nullptr;
 	getRectInTexture(time, info);
 	rectf r = blit_target_.getTexture()->getSourceRectNormalised();
@@ -947,6 +965,7 @@ void Frame::drawCustom(graphics::AnuraShaderPtr shader, int x, int y, const floa
 		blit.setDrawMode(KRE::DrawMode::LINE_STRIP);
 		wnd->render(&blit);
 	}
+	blit_target_.getTexture()->setSourceRect(0, old_src_rect);
 }
 
 void Frame::getRectInTexture(int time, const FrameInfo*& info) const

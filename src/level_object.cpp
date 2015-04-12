@@ -368,6 +368,16 @@ LevelObject::LevelObject(variant node, const char* id)
 				LOG_ERROR("Unrecognised palette name: " << pal);
 			}
 		}
+	} else {
+		int id = 0;
+		unsigned cp = palettes_recognized_;
+		while (cp != 0) {
+			if (cp & 1) {
+				palettes_id_list.emplace_back(id);
+			}
+			++id;
+			cp >>= 1;
+		}
 	}
 
 	t_ = graphics::get_palette_texture(image_, node["image"], palettes_id_list);
@@ -887,12 +897,17 @@ bool LevelObject::calculateDrawArea()
 
 void LevelObject::setPalette(unsigned int palette)
 {
+	if (t_ != nullptr && palette == 0) {
+		t_->setPalette(0);
+		return;
+	}
 	if(t_ != nullptr) {
 		int p = palette;
 		int id = 0;
 		while(p != 0) {
 			if(p & 1) {
 				t_->setPalette(id);
+				LOG_DEBUG("set palette to id: " << id << "(" << graphics::get_palette_name(id) << ") on texture: " << image_ << ", result: " << t_->getPalette(0) << ", has_palette: " << (t_->isPaletteized() ? "true" : "false"));
 				break;
 			}
 			p >>= 1;
