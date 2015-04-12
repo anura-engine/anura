@@ -1180,7 +1180,7 @@ void CustomObject::drawLater(int xx, int yy) const
 		offs_y = yy;
 	}
 	KRE::Canvas::CameraScope cam_scope(graphics::GameScreen::get().getCurrentCamera());
-	KRE::Canvas::ModelManager model_matrix(x()+offs_x, y()+offs_y);
+	KRE::ModelManager2D model_matrix(x()+offs_x, y()+offs_y);
 	for(const gui::WidgetPtr& w : widgets_) {
 		if(w->zorder() >= widget_zorder_draw_later_threshold) {
 			w->draw(0, 0, rotate_z_.as_float32(), draw_scale_ ? draw_scale_->as_float32() : 1);
@@ -1384,11 +1384,12 @@ void CustomObject::draw(int xx, int yy) const
 	}
 
 	{
+		KRE::ModelManager2D mm(xx, yy);
 		KRE::Canvas::CameraScope cam_scope(graphics::GameScreen::get().getCurrentCamera());
 		for(const gui::WidgetPtr& w : widgets_) {
 			if(w->zorder() < widget_zorder_draw_later_threshold) {
 				if(w->drawWithObjectShader() == false) {
-					w->draw(x()&~1, y()&~1, rotate_z_.as_float32(), draw_scale_ ? draw_scale_->as_float32() : 0);
+					w->draw(x(), y(), rotate_z_.as_float32(), draw_scale_ ? draw_scale_->as_float32() : 0);
 				}
 			}
 		}
