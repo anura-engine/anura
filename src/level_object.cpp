@@ -902,7 +902,7 @@ void LevelObject::setPalette(unsigned int palette)
 		return;
 	}
 	if(t_ != nullptr) {
-		int p = palette;
+		int p = palette & palettes_recognized_;
 		int id = 0;
 		while(p != 0) {
 			if(p & 1) {
