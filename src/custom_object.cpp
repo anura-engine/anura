@@ -5433,9 +5433,20 @@ void CustomObject::surrenderReferences(GarbageCollector* collector)
 		collector->surrenderPtr(&w, "WIDGET");
 	}
 
+	collector->surrenderPtr(&vars_, "VARS");
+	collector->surrenderPtr(&tmp_vars_, "TMP_VARS");
+	collector->surrenderPtr(&tags_, "TAGS");
+
 	collector->surrenderPtr(&last_hit_by_, "LAST_HIT_BY");
 	collector->surrenderPtr(&standing_on_, "STANDING_ON");
 	collector->surrenderPtr(&parent_, "PARENT");
+
+	collector->surrenderPtr(&shader_, "SHADER");
+	for(graphics::AnuraShaderPtr& shader : effects_shaders_) {
+		collector->surrenderPtr(&shader, "EFFECTS_SHADER");
+	}
+
+	Entity::surrenderReferences(collector);
 }
 
 std::string CustomObject::debugObjectName() const

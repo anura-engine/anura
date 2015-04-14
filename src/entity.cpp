@@ -440,3 +440,17 @@ bool EntityZOrderCompare::operator()(const EntityPtr& lhs, const EntityPtr& rhs)
 {
 	return zorder_compare(lhs, rhs);
 }
+
+void Entity::surrenderReferences(GarbageCollector* collector)
+{
+	collector->surrenderVariant(&controls_user_, "CONTROLS_USER");
+
+	for(ScheduledCommand& cmd : scheduled_commands_) {
+		collector->surrenderVariant(&cmd.second, "SCHEDULED_CMD");
+	}
+
+	for(EntityPtr& attachment : attached_objects_) {
+		collector->surrenderPtr(&attachment, "ATTACHED");
+	}
+
+}

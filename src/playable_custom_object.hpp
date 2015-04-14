@@ -56,6 +56,9 @@ public:
 
 	int difficulty() const { return difficulty_; }
 
+protected:
+	void surrenderReferences(GarbageCollector* collector);
+
 private:
 	bool onPlatform() const;
 
