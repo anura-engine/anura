@@ -887,6 +887,7 @@ editor::editor(const char* level_cfg)
 
 editor::~editor()
 {
+	preferences::set_record_history(false);
 }
 
 void editor::group_selection()
@@ -3020,7 +3021,7 @@ void editor::zoomOut()
 void editor::draw_gui() const
 {
 	auto canvas = KRE::Canvas::getInstance();
-	auto mm = std::unique_ptr<KRE::Canvas::ModelManager>(new KRE::Canvas::ModelManager(-xpos_, EDITOR_MENUBAR_HEIGHT-ypos_, 0, 1.0f/zoom_));
+	auto mm = std::unique_ptr<KRE::ModelManager2D>(new KRE::ModelManager2D(-xpos_, EDITOR_MENUBAR_HEIGHT-ypos_, 0, 1.0f/zoom_));
 
 	const bool ctrl_pressed = (SDL_GetModState()&(KMOD_LCTRL|KMOD_RCTRL)) != 0;
 	int mousex, mousey;

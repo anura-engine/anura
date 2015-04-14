@@ -31,6 +31,7 @@
 #include "CameraObject.hpp"
 #include "Color.hpp"
 #include "geometry.hpp"
+#include "ModelMatrixScope.hpp"
 #include "Texture.hpp"
 #include "Util.hpp"
 #include "VGraph.hpp"
@@ -118,35 +119,17 @@ namespace KRE
 		{
 			CameraScope(CameraPtr cam) 
 				: canvas_(Canvas::getInstance()), 
-				  saved_pvmat_(canvas_->mvp_) 
+				saved_pvmat_(canvas_->pv_)
 			{
-				canvas_->mvp_ = cam->getProjectionMat() * cam->getViewMat();
+				canvas_->pv_ = cam->getProjectionMat() * cam->getViewMat();
 			}
 			~CameraScope()
 			{
-				canvas_->mvp_ = saved_pvmat_;
+				canvas_->pv_ = saved_pvmat_;
 			}
 			CanvasPtr canvas_;
 			glm::mat4 saved_pvmat_;
 		};
-
-		struct ModelManager
-		{
-			ModelManager();
-			explicit ModelManager(int tx, int ty, float angle=0.0f, float scale=1.0f);
-			~ModelManager();
-			void setIdentity();
-			void translate(int tx, int ty);
-			void rotate(float angle);
-			void scale(float sx, float sy);
-			void scale(float s);
-			CanvasPtr canvas_;
-		};
-
-		static glm::vec2 getCurrentTranslation();
-		static float getCurrentRotation();
-		static glm::vec2 getCurrentScale();
-		glm::mat4 getModelMatrix() const;
 
 		const Color getColor() const {
 			if(color_stack_.empty()) {
@@ -158,7 +141,7 @@ namespace KRE
 		WindowPtr getWindow() const;
 		void setWindow(WindowPtr wnd);
 
-		const glm::mat4& getMvpMatrix() const { return mvp_; }
+		const glm::mat4& getPVMatrix() const { return pv_; }
 	protected:
 		Canvas();
 	private:
@@ -171,7 +154,7 @@ namespace KRE
 		mutable bool model_changed_;
 		std::weak_ptr<Window> window_;
 		int size_change_key_;
-		glm::mat4 mvp_;
+		glm::mat4 pv_;
 	};
 
 	// Helper function to generate a color wheel between the given hue values.
