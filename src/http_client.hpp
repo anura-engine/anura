@@ -35,6 +35,11 @@
 
 using boost::asio::ip::tcp;
 
+namespace http
+{
+	std::map<std::string, std::string> parse_http_headers(std::string& str);
+}
+
 class http_client : public game_logic::FormulaCallable
 {
 public:
@@ -62,6 +67,7 @@ private:
 		size_t nbytes_sent;
 		std::function<void(size_t, size_t, bool)> progress_handler;
 		std::function<void(std::string)> handler, error_handler;
+		std::map<std::string,std::string> headers;
 		game_logic::MapFormulaCallablePtr callable;
 
 		boost::array<char, 65536> buf;

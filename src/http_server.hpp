@@ -31,10 +31,19 @@ namespace http
 {
 	typedef std::map<std::string, std::string> environment;
 
+	std::map<std::string, std::string> parse_http_headers(std::string& str);
+
 	class web_server
 	{
 	public:
-		typedef std::shared_ptr<boost::asio::ip::tcp::socket> socket_ptr;
+
+		struct SocketInfo {
+			explicit SocketInfo(boost::asio::io_service& service);
+			boost::asio::ip::tcp::socket socket;
+			bool supports_deflate;
+		};
+
+		typedef std::shared_ptr<SocketInfo> socket_ptr;
 		typedef std::shared_ptr<boost::array<char, 64*1024> > buffer_ptr;
 
 		explicit web_server(boost::asio::io_service& io_service, int port=23456);

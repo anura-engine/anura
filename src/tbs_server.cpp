@@ -27,6 +27,7 @@
 #include <ctime>
 
 #include "asserts.hpp"
+#include "compress.hpp"
 #include "filesystem.hpp"
 #include "formatter.hpp"
 #include "module.hpp"
@@ -158,8 +159,20 @@ namespace tbs
 		send_msg(socket, std::string(msg));
 	}
 
-	void server::send_msg(socket_ptr socket, const std::string& msg)
+	void server::send_msg(socket_ptr socket, const std::string& msg_ref)
 	{
+		std::string compressed_buf;
+		std::string compress_header;
+		const std::string* msg_ptr = &msg_ref;
+		if(socket->supports_deflate && msg_ref.size() > 1024) {
+			compressed_buf = zip::compress(msg_ref);
+			msg_ptr = &compressed_buf;
+
+			compress_header = "Content-Encoding: deflate\r\n"; 
+		}
+
+		const std::string& msg = *msg_ptr;
+
 		std::map<socket_ptr, socket_info>::const_iterator connections_itor = connections_.find(socket);
 		const int session_id = connections_itor == connections_.end() ? -1 : connections_itor->second.session_id;
 
@@ -172,12 +185,13 @@ namespace tbs
 			"Accept-Ranges: bytes\r\n"
 			"Access-Control-Allow-Origin: *\r\n"
 			"Content-Type: application/json\r\n"
-			"Content-Length: " << std::dec << (int)msg.size() << "\r\n"
+			"Content-Length: " << std::dec << (int)msg.size() << "\r\n" <<
+			compress_header <<
 			"Last-Modified: " << get_http_datetime() << "\r\n\r\n";
 		std::string header = buf.str();
 
 		std::shared_ptr<std::string> str_buf(new std::string(header.empty() ? msg : (header + msg)));
-		boost::asio::async_write(*socket, boost::asio::buffer(*str_buf),
+		boost::asio::async_write(socket->socket, boost::asio::buffer(*str_buf),
 										 std::bind(&server::handle_send, this, socket, _1, _2, str_buf, session_id));
 	}
 
@@ -209,7 +223,7 @@ namespace tbs
 
 		waiting_connections_.erase(socket);
 
-		socket->close();
+		socket->socket.close();
 	}
 
 	void server::heartbeat_internal(int send_heartbeat, std::map<int, client_info>& clients)
