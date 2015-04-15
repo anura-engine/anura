@@ -21,6 +21,8 @@
 	   distribution.
 */
 
+#include <set>
+
 #include "asserts.hpp"
 #include "collision_utils.hpp"
 #include "difficulty.hpp"
@@ -33,10 +35,21 @@
 #include "playable_custom_object.hpp"
 #include "string_utils.hpp"
 #include "variant_utils.hpp"
+#include "widget.hpp"
 
 #ifndef NO_EDITOR
 #include "editor.hpp"
 #endif
+
+
+namespace 
+{
+	std::set<gui::Widget*>& get_key_handling_widgets()
+	{
+		static std::set<gui::Widget*> res;
+		return res;
+	}
+}
 
 PlayableCustomObject::PlayableCustomObject(const CustomObject& obj)
 	: CustomObject(obj), 
@@ -136,21 +149,33 @@ void PlayableCustomObject::process(Level& lvl)
 		--can_interact_;
 	}
 
-	bool controls[controls::NUM_CONTROLS];
-	for(int n = 0; n != controls::NUM_CONTROLS; ++n) {
-		controls[n] = controlStatus(static_cast<controls::CONTROL_ITEM>(n));
+	// Additional check to ensure that if a widget has focus we don't
+	// pass the event on to the playable object.
+	bool process_controls = true;
+	for(auto& w : get_key_handling_widgets()) {
+		if(w->hasFocus()) {
+			process_controls = false;
+		}
 	}
 
-	clearControlStatus();
-	readControls(lvl.cycle());
-	// XX Need to abstract this to read controls and mappings from global game file.
-	static const std::string keys[] = { "up", "down", "left", "right", "attack", "jump", "tongue" };	
-	for(int n = 0; n != controls::NUM_CONTROLS; ++n) {
-		if(controls[n] != controlStatus(static_cast<controls::CONTROL_ITEM>(n))) {
-			if(controls[n]) {
-				handleEvent("end_ctrl_" + keys[n]);
-			} else {
-				handleEvent("ctrl_" + keys[n]);
+	if(process_controls) {
+		bool controls[controls::NUM_CONTROLS];
+		for(int n = 0; n != controls::NUM_CONTROLS; ++n) {
+			controls[n] = controlStatus(static_cast<controls::CONTROL_ITEM>(n));
+		}
+
+		clearControlStatus();
+		readControls(lvl.cycle());
+
+		// XX Need to abstract this to read controls and mappings from global game file.
+		static const std::string keys[] = { "up", "down", "left", "right", "attack", "jump", "tongue" };	
+		for(int n = 0; n != controls::NUM_CONTROLS; ++n) {
+			if(controls[n] != controlStatus(static_cast<controls::CONTROL_ITEM>(n))) {
+				if(controls[n]) {
+					handleEvent("end_ctrl_" + keys[n]);
+				} else {
+					handleEvent("ctrl_" + keys[n]);
+				}
 			}
 		}
 	}
@@ -233,6 +258,12 @@ variant PlayableCustomObject::getPlayerValueBySlot(int slot) const
 		if(LevelRunner::getCurrent() && LevelRunner::getCurrent()->get_debug_console() && LevelRunner::getCurrent()->get_debug_console()->hasKeyboardFocus()) {
 			//the debug console is stealing all keystrokes.
 			return variant(&result);
+		}
+
+		for(auto& w : get_key_handling_widgets()) {
+			if(w->hasFocus()) {
+				return variant(&result);
+			}
 		}
 
 		int ary_length;
@@ -399,3 +430,19 @@ void PlayableCustomObject::setValue(const std::string& key, const variant& value
 		CustomObject::setValue(key, value);
 	}
 }
+
+void PlayableCustomObject::registerKeyboardOverrideWidget(gui::Widget* widget)
+{
+	LOG_DEBUG("adding widget: " << widget);
+	get_key_handling_widgets().emplace(widget);	
+}
+
+void PlayableCustomObject::unregisterKeyboardOverrideWidget(gui::Widget* widget)
+{
+	LOG_DEBUG("removing widget: " << widget);
+	auto it = get_key_handling_widgets().find(widget);
+	if(it != get_key_handling_widgets().end()) {
+		get_key_handling_widgets().erase(it);
+	}
+}
+

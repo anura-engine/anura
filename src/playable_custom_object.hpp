@@ -27,6 +27,7 @@
 #include "custom_object.hpp"
 #include "player_info.hpp"
 #include "variant.hpp"
+#include "widget_fwd.hpp"
 
 class Level;
 
@@ -56,6 +57,9 @@ public:
 
 	int difficulty() const { return difficulty_; }
 
+	// XXX These would be much better served as taking weak pointers.
+	static void registerKeyboardOverrideWidget(gui::Widget* widget);
+	static void unregisterKeyboardOverrideWidget(gui::Widget* widget);
 private:
 	bool onPlatform() const;
 
