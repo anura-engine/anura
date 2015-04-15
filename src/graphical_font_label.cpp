@@ -50,8 +50,6 @@ namespace gui
 
 	void GraphicalFontLabel::handleDraw() const
 	{
-		auto tr = KRE::Canvas::getCurrentTranslation();
-		KRE::ModelManager2D mm(static_cast<int>(tr.x), static_cast<int>(tr.y));
 		font_->draw(x(), y(), text_, size_);
 	}
 

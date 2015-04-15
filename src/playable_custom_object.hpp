@@ -60,6 +60,9 @@ public:
 	// XXX These would be much better served as taking weak pointers.
 	static void registerKeyboardOverrideWidget(gui::Widget* widget);
 	static void unregisterKeyboardOverrideWidget(gui::Widget* widget);
+protected:
+	void surrenderReferences(GarbageCollector* collector);
+
 private:
 	bool onPlatform() const;
 

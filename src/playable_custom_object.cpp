@@ -107,6 +107,7 @@ variant PlayableCustomObject::write() const
 
 void PlayableCustomObject::saveGame()
 {
+	save_condition_.reset(); //reset before we clone so the clone doesn't copy it
 	save_condition_ = clone();
 	save_condition_->addToLevel();
 }
@@ -429,6 +430,13 @@ void PlayableCustomObject::setValue(const std::string& key, const variant& value
 	} else {
 		CustomObject::setValue(key, value);
 	}
+}
+
+void PlayableCustomObject::surrenderReferences(GarbageCollector* collector)
+{
+	CustomObject::surrenderReferences(collector);
+
+	collector->surrenderPtr(&save_condition_, "SAVE_CONDITION");
 }
 
 void PlayableCustomObject::registerKeyboardOverrideWidget(gui::Widget* widget)

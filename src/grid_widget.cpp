@@ -466,7 +466,7 @@ namespace gui
 			}
 		} //end of scope so clip_scope goes away.
 
-		//KRE::Canvas::ModelManager mm(x(), y(), getRotation(), getScale());
+		//KRE::ModelManager2D mm(x(), y(), getRotation(), getScale());
 		ScrollableWidget::handleDraw();
 	}
 

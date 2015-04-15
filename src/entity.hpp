@@ -343,6 +343,9 @@ protected:
 	int getPrevFeetX() const { return prev_feet_x_; }
 	int getPrevFeetY() const { return prev_feet_y_; }
 
+protected:
+	void surrenderReferences(GarbageCollector* collector);
+
 private:
 	virtual int currentRotation() const = 0;
 

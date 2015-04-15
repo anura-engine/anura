@@ -4387,6 +4387,18 @@ void Level::surrenderReferences(GarbageCollector* gc)
 			gc->surrenderPtr(&e);
 		}
 	}
+
+	gc->surrenderPtr(&shader_, "SHADER");
+	gc->surrenderVariant(&fb_shaders_variant_, "FB_SHADERS_VARIANT");
+
+	for(graphics::AnuraShaderPtr& ptr : active_fb_shaders_) {
+		gc->surrenderPtr(&ptr, "ACTIVE_FB_SHADERS");
+	}
+
+	for(FrameBufferShaderEntry& entry : fb_shaders_) {
+		gc->surrenderPtr(&entry.shader, "FB_SHADER");
+		gc->surrenderVariant(&entry.shader_node, "FB_SHADER_NODE");
+	}
 }
 
 /*

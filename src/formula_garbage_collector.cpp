@@ -353,6 +353,25 @@ void GarbageCollectorAnalyzer::run(const char* fname)
 		++currentIndex_;
 	}
 
+	std::map<std::string, int> obj_counts;
+	for(int i = 0; i != g_count; ++i) {
+		obj_counts[items_[i]->debugObjectName()]++;
+	}
+
+	std::vector<std::pair<int, std::string> > obj_counts_sorted;
+	for(auto p : obj_counts) {
+		obj_counts_sorted.push_back(std::pair<int, std::string>(p.second, p.first));
+	}
+
+	std::sort(obj_counts_sorted.begin(), obj_counts_sorted.end());
+	int ncount = 0;
+	for(auto p : obj_counts_sorted) {
+		fprintf(out, "%4d x %s\n", p.first, p.second.c_str());
+		ncount += p.first;
+	}
+
+	fprintf(out, "TOTAL OBJECTS: %d\n", ncount);
+
 
 	int root_node = g_count;
 	graph_.setNode(root_node, "(root)");
@@ -373,6 +392,10 @@ void GarbageCollectorAnalyzer::run(const char* fname)
 		fprintf(out, "[%s @%p (%d)] ", items_[i]->debugObjectName().c_str(), items_[i], items_[i]->refcount());
 
 		auto path_itor = paths.find(i);
+		if(path_itor == paths.end()) {
+			fprintf(out, "(UNFOUND)\n");
+			continue;
+		}
 		assert(path_itor != paths.end());
 
 		std::vector<int> path = path_itor->second;
