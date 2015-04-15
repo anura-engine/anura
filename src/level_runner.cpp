@@ -981,7 +981,7 @@ bool LevelRunner::play_cycle()
 		last_draw_position() = screen_position();
 
 		//trigger a garbage collection of objects now.
-		CustomObject::run_garbage_collection();
+		runGarbageCollection();
 	} else if(lvl_->players().size() > 1) {
 		for(const EntityPtr& c : lvl_->players()) {
 			if(c->getHitpoints() <= 0) {
@@ -1128,6 +1128,7 @@ bool LevelRunner::play_cycle()
 			last_draw_position() = screen_position();
 
 			//garbage collect objects from the last level.
+			runGarbageCollection();
 			CustomObject::run_garbage_collection();
 
 			if(transition == "flip") {

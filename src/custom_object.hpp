@@ -327,6 +327,9 @@ protected:
 	//set up an animation schedule. values.size() should be a multiple of
 	//slots.size().
 
+protected:
+	void surrenderReferences(GarbageCollector* collector);
+
 private:
 	void initProperties();
 	CustomObject& operator=(const CustomObject& o);
@@ -345,7 +348,6 @@ private:
 	void extractGcObjectReferences(variant& var, std::vector<gc_object_reference>& v);
 	static void restoreGcObjectReference(gc_object_reference ref);
 
-	void surrenderReferences(GarbageCollector* collector);
 	std::string debugObjectName() const override;
 
 	bool moveToStandingInternal(Level& lvl, int max_displace);

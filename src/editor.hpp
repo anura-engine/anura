@@ -332,15 +332,15 @@ private:
 
 	tile_selection tile_selection_;
 
-	std::unique_ptr<editor_menu_dialog> editor_menu_dialog_;
-	std::unique_ptr<editor_mode_dialog> editor_mode_dialog_;
-	std::unique_ptr<editor_dialogs::CharacterEditorDialog> character_dialog_;
-	std::unique_ptr<editor_dialogs::EditorLayersDialog> layers_dialog_;
-	std::unique_ptr<editor_dialogs::PropertyEditorDialog> property_dialog_;
-	std::unique_ptr<editor_dialogs::TilesetEditorDialog> tileset_dialog_;
-	std::unique_ptr<editor_dialogs::SegmentEditorDialog> segment_dialog_;
+	boost::intrusive_ptr<editor_menu_dialog> editor_menu_dialog_;
+	boost::intrusive_ptr<editor_mode_dialog> editor_mode_dialog_;
+	boost::intrusive_ptr<editor_dialogs::CharacterEditorDialog> character_dialog_;
+	boost::intrusive_ptr<editor_dialogs::EditorLayersDialog> layers_dialog_;
+	boost::intrusive_ptr<editor_dialogs::PropertyEditorDialog> property_dialog_;
+	boost::intrusive_ptr<editor_dialogs::TilesetEditorDialog> tileset_dialog_;
+	boost::intrusive_ptr<editor_dialogs::SegmentEditorDialog> segment_dialog_;
 
-	std::unique_ptr<CodeEditorDialog> code_dialog_;
+	boost::intrusive_ptr<CodeEditorDialog> code_dialog_;
 
 	ExternalTextEditorPtr external_code_editor_;
 

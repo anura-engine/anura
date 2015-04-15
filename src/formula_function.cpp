@@ -3368,10 +3368,12 @@ FUNCTION_DEF_IMPL
 				}
 			}
 
+
+		protected:
 			void surrenderReferences(GarbageCollector* collector) {
-				collector->surrenderVariant(&variant_attr_);
-				collector->surrenderVariant(&val_);
-				collector->surrenderVariant(&target_);
+				collector->surrenderVariant(&target_, "TARGET");
+				collector->surrenderVariant(&val_, "VALUE");
+				collector->surrenderVariant(&variant_attr_, "VARIANT_ATTR");
 			}
 		private:
 			mutable variant target_;
@@ -3402,6 +3404,12 @@ FUNCTION_DEF_IMPL
 					ob.mutateValue(attr_, ob.queryValue(attr_) + val_);
 				}
 			}
+		protected:
+			void surrenderReferences(GarbageCollector* collector) {
+				collector->surrenderVariant(&target_, "TARGET");
+				collector->surrenderVariant(&val_, "VALUE");
+				collector->surrenderVariant(&variant_attr_, "VARIANT_ATTR");
+			}
 		private:
 			mutable variant target_;
 			std::string attr_;
@@ -3422,6 +3430,11 @@ FUNCTION_DEF_IMPL
 
 			void setValue(const variant& value) { value_ = value; }
 
+		protected:
+			void surrenderReferences(GarbageCollector* collector) {
+				collector->surrenderVariant(&value_, "VALUE");
+			}
+
 		private:
 			int slot_;
 			variant value_;
@@ -3441,6 +3454,12 @@ FUNCTION_DEF_IMPL
 			}
 
 			void setValue(const variant& value) { value_ = value; }
+
+		protected:
+			void surrenderReferences(GarbageCollector* collector) {
+				collector->surrenderPtr(&target_, "TARGET");
+				collector->surrenderVariant(&value_, "VALUE");
+			}
 
 		private:
 			game_logic::FormulaCallablePtr target_;
@@ -3463,6 +3482,12 @@ FUNCTION_DEF_IMPL
 
 			void setValue(const variant& value) { value_ = value; }
 
+		protected:
+			void surrenderReferences(GarbageCollector* collector) {
+				collector->surrenderPtr(&target_, "TARGET");
+				collector->surrenderVariant(&value_, "VALUE");
+			}
+
 		private:
 			game_logic::FormulaCallablePtr target_;
 			int slot_;
@@ -3481,6 +3506,11 @@ FUNCTION_DEF_IMPL
 			}
 
 			void setValue(const variant& value) { value_ = value; }
+
+		protected:
+			void surrenderReferences(GarbageCollector* collector) {
+				collector->surrenderVariant(&value_, "VALUE");
+			}
 
 		private:
 			int slot_;

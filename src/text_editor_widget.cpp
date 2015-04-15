@@ -34,6 +34,7 @@
 #include "asserts.hpp"
 #include "clipboard.hpp"
 #include "input.hpp"
+#include "playable_custom_object.hpp"
 #include "preferences.hpp"
 #include "profile_timer.hpp"
 #include "scoped_resource.hpp"
@@ -163,6 +164,8 @@ namespace gui
 		text_.push_back("");
 
 		init_clipboard();
+
+		PlayableCustomObject::registerKeyboardOverrideWidget(this);
 	}
 
 	TextEditorWidget::TextEditorWidget(const variant& v, game_logic::FormulaCallable* e)
@@ -259,10 +262,12 @@ namespace gui
 		}
 
 		init_clipboard();
+		PlayableCustomObject::registerKeyboardOverrideWidget(this);
 	}
 
 	TextEditorWidget::~TextEditorWidget()
 	{
+		PlayableCustomObject::unregisterKeyboardOverrideWidget(this);
 	}
 
 	std::string TextEditorWidget::text() const
