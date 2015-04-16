@@ -102,7 +102,7 @@ namespace editor_dialogs
 				playable_m[variant("x")] = variant(0);
 				playable_m[variant("y")] = variant(0);
 				empty_lvl.add_attr(variant("character"), variant(&playable_m));
-				sys::write_file(mod_path + "titlescreen.cfg", empty_lvl.write_json());
+				sys::write_file(mod_path + "data/level/titlescreen.cfg", empty_lvl.write_json());
 
 				// Module specifed as standalone, write out a few extra useful files.
 				if(mod.included_modules_.empty()) {

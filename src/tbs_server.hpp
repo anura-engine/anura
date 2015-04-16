@@ -26,11 +26,12 @@
 #include <boost/array.hpp>
 #include <boost/asio.hpp>
 
+#include "http_server.hpp"
 #include "tbs_server_base.hpp"
 
 namespace tbs 
 {
-	typedef std::shared_ptr<boost::asio::ip::tcp::socket> socket_ptr;
+	typedef http::web_server::socket_ptr socket_ptr;
 	typedef std::shared_ptr<boost::array<char, 1024> > buffer_ptr;
 
 	class server : public server_base

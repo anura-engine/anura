@@ -32,6 +32,20 @@
 
 namespace zip 
 {
+	std::string compress(const std::string& data, int compression_level)
+	{
+		std::vector<char> v(data.begin(), data.end());
+		std::vector<char> res = compress(v, compression_level);
+		return std::string(res.begin(), res.end());
+	}
+
+	std::string decompress(const std::string& data)
+	{
+		std::vector<char> v(data.begin(), data.end());
+		std::vector<char> res = decompress(v);
+		return std::string(res.begin(), res.end());
+	}
+
 	std::vector<char> compress(const std::vector<char>& data, int compression_level)
 	{
 		ASSERT_LOG(compression_level >= -1 && compression_level <= 9, "Compression level must be between -1(default) and 9.");
