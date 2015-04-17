@@ -194,7 +194,8 @@ Frame::Frame(variant node)
 	 force_no_alpha_(node["force_no_alpha"].as_bool(false)),
 	 no_remove_alpha_borders_(node["no_remove_alpha_borders"].as_bool(false)),
 	 collision_areas_inside_frame_(true),
-	 current_palette_(-1)
+	 current_palette_(-1), 
+	 blit_target_(node)
 {
 	blit_target_.setCentre(KRE::Blittable::Centre::TOP_LEFT);
 

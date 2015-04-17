@@ -49,6 +49,17 @@ namespace KRE
 		init();
 	}
 
+	Blittable::Blittable(const variant& node)
+		: SceneObject(node),
+		  centre_(Centre::TOP_LEFT),
+		  centre_offset_(),
+		  changed_(true),
+		  horizontal_mirrored_(false),
+		  vertical_mirrored_(false)
+	{
+		init();
+	}
+
 	Blittable::~Blittable()
 	{
 	}
