@@ -45,6 +45,7 @@ namespace KRE
 			MANUAL,
 		};
 		Blittable();
+		explicit Blittable(const variant& node);
 		explicit Blittable(const TexturePtr& tex);
 		virtual ~Blittable();
 

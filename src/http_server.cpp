@@ -32,6 +32,7 @@
 #endif
 
 #include "asserts.hpp"
+#include "compress.hpp"
 #include "filesystem.hpp"
 #include "formatter.hpp"
 #include "json_parser.hpp"
@@ -45,6 +46,11 @@ using boost::asio::ip::tcp;
 
 namespace http 
 {
+	web_server::SocketInfo::SocketInfo(boost::asio::io_service& service)
+	  : socket(service), supports_deflate(false)
+	{
+	}
+
 	web_server::web_server(boost::asio::io_service& io_service, int port)
 	  : acceptor_(io_service, tcp::endpoint(tcp::v4(), port))
 	{
@@ -58,8 +64,8 @@ namespace http
 
 	void web_server::start_accept()
 	{
-		socket_ptr socket(new tcp::socket(acceptor_.get_io_service()));
-		acceptor_.async_accept(*socket, std::bind(&web_server::handle_accept, this, socket, std::placeholders::_1));
+		socket_ptr socket(new SocketInfo(acceptor_.get_io_service()));
+		acceptor_.async_accept(socket->socket, std::bind(&web_server::handle_accept, this, socket, std::placeholders::_1));
 	}
 
 	namespace {
@@ -84,7 +90,7 @@ namespace http
 		}
 
 		buffer_ptr buf(new boost::array<char, 64*1024>);
-		socket->async_read_some(boost::asio::buffer(*buf), std::bind(&web_server::handle_receive, this, socket, buf, std::placeholders::_1, std::placeholders::_2, recv_buf));
+		socket->socket.async_read_some(boost::asio::buffer(*buf), std::bind(&web_server::handle_receive, this, socket, buf, std::placeholders::_1, std::placeholders::_2, recv_buf));
 	}
 
 	void web_server::handle_receive(socket_ptr socket, buffer_ptr buf, 
@@ -151,30 +157,6 @@ namespace http
 		return request;
 	}
 
-	std::map<std::string, std::string> parse_env(const std::string& str)
-	{
-		std::map<std::string, std::string> env;
-		std::vector<std::string> lines = util::split(str, '\n');
-		for(const std::string& line : lines) {
-			if(line.empty()) {
-				break;
-			}
-
-			std::string::const_iterator colon = std::find(line.begin(), line.end(), ':');
-			if(colon == line.end() || colon+1 == line.end()) {
-				continue;
-			}
-
-			std::string key(line.begin(), colon);
-			const std::string value(colon+2, line.end());
-
-			std::transform(key.begin(), key.end(), key.begin(), tolower);
-			env[key] = value;
-		}
-
-		return env;
-	}
-
 	}
 
 	void web_server::handle_message(socket_ptr socket, receive_buf_ptr recv_buf)
@@ -188,10 +170,6 @@ namespace http
 
 		if(std::equal(msg.begin(), msg.begin()+5, "POST ")) {
 
-			environment env = parse_env(msg);
-			const int content_length = atoi(env["content-length"].c_str());
-			LOG_DEBUG("PARSE content-length: " << content_length);
-
 			const char* payload = nullptr;
 			const char* payload1 = strstr(msg.c_str(), "\n\n");
 			const char* payload2 = strstr(msg.c_str(), "\r\n\r\n");
@@ -204,6 +182,26 @@ namespace http
 				payload2 += 4;
 				payload = payload2;
 			}
+
+			std::string headers;
+			if(payload) {
+				headers = std::string(msg.c_str(), payload);
+			} else {
+				headers = msg;
+			}
+
+			environment env = parse_http_headers(headers);
+
+			static const std::string AcceptEncodingStr("accept-encoding");
+			auto encoding_itor = env.find(AcceptEncodingStr);
+			if(encoding_itor != env.end()) {
+				if(strstr(encoding_itor->second.c_str(), "deflate") || strstr(encoding_itor->second.c_str(), "Deflate")) {
+					socket->supports_deflate = true;
+				}
+			}
+
+			const int content_length = atoi(env["content-length"].c_str());
+			LOG_DEBUG("PARSE content-length: " << content_length);
 
 			const auto payload_len = payload ? (msg.c_str() + msg.size() - payload) : 0;
 
@@ -276,7 +274,7 @@ namespace http
 
 	void web_server::disconnect_socket(socket_ptr socket)
 	{
-		socket->close();
+		socket->socket.close();
 		--nconnections;
 	}
 
@@ -285,8 +283,20 @@ namespace http
 		disconnect_socket(socket);
 	}
 
-	void web_server::send_msg(socket_ptr socket, const std::string& type, const std::string& msg, const std::string& header_parms)
+	void web_server::send_msg(socket_ptr socket, const std::string& type, const std::string& msg_ref, const std::string& header_parms)
 	{
+		std::string compressed_buf;
+		std::string compress_header;
+		const std::string* msg_ptr = &msg_ref;
+		if(socket->supports_deflate && msg_ref.size() > 1024) {
+			compressed_buf = zip::compress(msg_ref);
+			msg_ptr = &compressed_buf;
+
+			compress_header = "Content-Encoding: deflate\r\n"; 
+		}
+
+		const std::string& msg = *msg_ptr;
+
 		std::stringstream buf;
 		buf <<
 			"HTTP/1.1 200 OK\r\n"
@@ -296,7 +306,8 @@ namespace http
 			"Accept-Ranges: bytes\r\n"
 			"Access-Control-Allow-Origin: *\r\n"
 			"Content-Type: " << type << "\r\n"
-			"Content-Length: " << std::dec << (int)msg.size() << "\r\n"
+			"Content-Length: " << std::dec << (int)msg.size() << "\r\n" <<
+			compress_header <<
 			"Last-Modified: " << get_http_datetime() << "\r\n" <<
 			(header_parms.empty() ? "" : header_parms + "\r\n")
 			<< "\r\n";
@@ -306,7 +317,7 @@ namespace http
 
 		LOG_INFO("SEND_MSG(((" << str << ")))");
 
-		boost::asio::async_write(*socket, boost::asio::buffer(*str),
+		boost::asio::async_write(socket->socket, boost::asio::buffer(*str),
 								 std::bind(&web_server::handle_send, this, socket, std::placeholders::_1, std::placeholders::_2, str->size(), str));
 	}
 
@@ -321,7 +332,7 @@ namespace http
 			"Accept-Ranges: none\r\n"
 			"\r\n";
 		std::shared_ptr<std::string> str(new std::string(buf.str()));
-		boost::asio::async_write(*socket, boost::asio::buffer(*str),
+		boost::asio::async_write(socket->socket, boost::asio::buffer(*str),
 					std::bind(&web_server::handle_send, this, socket, std::placeholders::_1, std::placeholders::_2, str->size(), str));
 	}
 
