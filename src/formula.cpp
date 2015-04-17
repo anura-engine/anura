@@ -2575,7 +2575,7 @@ namespace game_logic
 					++parens;
 				} else if(i1->type == FFL_TOKEN_TYPE::RPARENS || i1->type == FFL_TOKEN_TYPE::RSQUARE || i1->type == FFL_TOKEN_TYPE::RBRACKET) {
 					--parens;
-				} else if((i1->type == FFL_TOKEN_TYPE::POINTER || i1->type == FFL_TOKEN_TYPE::COLON) && !parens ) {
+				} else if(i1->type == FFL_TOKEN_TYPE::COLON && !parens ) {
 					if (!check_pointer) {
 						check_pointer = true;
 
