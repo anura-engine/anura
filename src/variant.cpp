@@ -235,6 +235,25 @@ struct variant_list : public GarbageCollectible {
 		return s.str();
 	}
 
+	std::string debugObjectSpew() const override {
+		std::ostringstream s;
+		s << "list[" << size() << "]";
+		if(info.filename) {
+			s << " @" << info.message();
+		} else {
+			s << " @UNK";
+		}
+
+		s << " [[";
+		for(const variant& el : elements) {
+			s << el.to_debug_string();
+		}
+
+		s << "]]";
+
+		return s.str();
+	}
+
 #if defined(_MSC_VER) && defined(_DEBUG)
 	// hack to work around checked iterators failing on this.
 	size_t size() const { return end._Ptr - begin._Ptr; }
@@ -294,6 +313,20 @@ struct variant_map : public GarbageCollectible {
 			if(p.first.is_string()) {
 				res += p.first.as_string() + ",";
 			}
+		}
+
+		res += ")";
+		return res;
+	}
+
+	std::string debugObjectSpew() const override {
+		std::string res = "map(";
+		if(info.filename) {
+			res += info.message() + ", ";
+		}
+
+		for(const std::pair<const variant,variant>& p : elements) {
+			res += p.first.to_debug_string() + ": " + p.second.to_debug_string() + ", ";
 		}
 
 		res += ")";

@@ -10,6 +10,7 @@ class GarbageCollector;
 class GarbageCollectible : public reference_counted_object
 {
 public:
+	static GarbageCollectible* debugGetObject(void* ptr);
 	GarbageCollectible();
 	GarbageCollectible(const GarbageCollectible& o);
 	virtual ~GarbageCollectible();
@@ -19,6 +20,7 @@ public:
 	virtual void surrenderReferences(GarbageCollector* collector);
 
 	virtual std::string debugObjectName() const;
+	virtual std::string debugObjectSpew() const;
 
 	friend class GarbageCollectorImpl;
 	friend class GarbageCollectorAnalyzer;

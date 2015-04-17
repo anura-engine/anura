@@ -16,6 +16,17 @@ namespace {
 	int g_count;
 }
 
+GarbageCollectible* GarbageCollectible::debugGetObject(void* ptr)
+{
+	for(GarbageCollectible* p = g_head; p != nullptr; p = p->next_) {
+		if(p == ptr) {
+			return p;
+		}
+	}
+
+	return NULL;
+}
+
 GarbageCollectible::GarbageCollectible() : reference_counted_object(), next_(g_head), prev_(nullptr)
 {
 	insertAtHead();
@@ -64,6 +75,11 @@ void GarbageCollectible::surrenderReferences(GarbageCollector* collector)
 std::string GarbageCollectible::debugObjectName() const
 {
 	return typeid(*this).name();
+}
+
+std::string GarbageCollectible::debugObjectSpew() const
+{
+	return debugObjectName();
 }
 
 GarbageCollector::~GarbageCollector()
