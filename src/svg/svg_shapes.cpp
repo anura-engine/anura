@@ -374,9 +374,10 @@ namespace KRE
 			shape::clip_render_path(ctx);
 		}
 
-		text::text(element* doc, const ptree& pt) 
+		text::text(element* doc, const ptree& pt, bool is_tspan) 
 			: shape(doc, pt),
-			adjust_(LengthAdjust::SPACING)
+			 adjust_(LengthAdjust::SPACING),
+			 is_tspan_(is_tspan)
 		{
 			// XXX should we use provided <xmltext> instead?
 			text_ = pt.get_value<std::string>();
@@ -435,8 +436,8 @@ namespace KRE
 			std::vector<cairo_glyph_t> glyphs;
 			FT_Face face = ctx.fa().top_font_face();
 			auto glyph_indicies = FT::get_glyphs_from_string(face, text_);
-			double x = x1_.size() > 0 ? x1_[0].value_in_specified_units(svg_length::LengthUnit::SVG_LENGTHTYPE_NUMBER) : ctx.get_text_x();
-			double y = y1_.size() > 0 ? y1_[0].value_in_specified_units(svg_length::LengthUnit::SVG_LENGTHTYPE_NUMBER) : ctx.get_text_y();
+			double x = x1_.size() > 0 ? x1_[0].value_in_specified_units(svg_length::LengthUnit::SVG_LENGTHTYPE_NUMBER) : is_tspan_ ? ctx.get_text_x() : 0;
+			double y = y1_.size() > 0 ? y1_[0].value_in_specified_units(svg_length::LengthUnit::SVG_LENGTHTYPE_NUMBER) : is_tspan_ ? ctx.get_text_y() : 0;
 			const double letter_spacing = ctx.letter_spacing_top();
 			for(auto g : glyph_indicies) {
 				cairo_glyph_t cg;
