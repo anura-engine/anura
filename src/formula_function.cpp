@@ -4635,6 +4635,21 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 		ARG_TYPE("string");
 	END_FUNCTION_DEF(trigger_debug_garbage_collection)
 
+	FUNCTION_DEF(debug_object_info, 1, 1, "debug_object_info(string) -> give info about the object at the given address")
+		std::string obj = args()[0]->evaluate(variables).as_string();
+		const intptr_t addr_id = static_cast<intptr_t>(strtoll(obj.c_str(), nullptr, 16));
+		void* ptr = reinterpret_cast<void*>(addr_id);
+		GarbageCollectible* obj_ptr = GarbageCollectible::debugGetObject(ptr);
+		if(obj_ptr == nullptr) {
+			return variant("(Invalid object)");
+		} else {
+			return variant(obj_ptr->debugObjectSpew());
+		}
+	FUNCTION_ARGS_DEF
+		ARG_TYPE("string");
+	END_FUNCTION_DEF(debug_object_info)
+
+
 	class debug_dump_textures_command : public game_logic::CommandCallable
 	{
 		std::string fname_, info_;

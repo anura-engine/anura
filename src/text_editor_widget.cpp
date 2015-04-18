@@ -194,6 +194,8 @@ namespace gui
 
 		if(v.has_key("bg_color")) {
 			bg_color_.reset(new KRE::Color(v["bg_color"]));
+		} else if(v.has_key("bg_colour")) {
+			bg_color_.reset(new KRE::Color(v["bg_colour"]));
 		}
 
 		int width = v.has_key("width") ? v["width"].as_int() : 0;
