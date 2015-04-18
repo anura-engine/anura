@@ -198,6 +198,8 @@ Frame::Frame(variant node)
 	 blit_target_(node)
 {
 	blit_target_.setCentre(KRE::Blittable::Centre::TOP_LEFT);
+	// We override any scale value set on the frame since we handle that ourselves.
+	blit_target_.setScale(1.0f, 1.0f);
 
 	if(node.has_key("image")) {
 		auto res = KRE::Texture::findImageNames(node["image"]);
