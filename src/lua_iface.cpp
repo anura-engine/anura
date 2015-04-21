@@ -30,6 +30,9 @@
 #include <boost/math/special_functions/round.hpp>
 #endif
 
+#include "eris/lauxlib.h"
+#include "eris/lualib.h"
+
 #include "custom_object.hpp"
 #include "custom_object_functions.hpp"
 #include "filesystem.hpp"

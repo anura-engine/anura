@@ -26,7 +26,7 @@
 #if defined(USE_LUA)
 
 #include <memory>
-#include <lua.hpp>
+#include "eris/lua.h"
 
 #include "formula_callable.hpp"
 #include "formula_callable_definition.hpp"
