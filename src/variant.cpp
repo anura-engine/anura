@@ -182,6 +182,35 @@ void generate_error(std::string message)
 
 }
 
+namespace
+{
+	void generate_error_2(
+			std::string console_message,
+			std::string window_message)
+	{
+		if(call_stack.empty() == false && call_stack.back().expression) {
+			console_message += (
+					"\n" + call_stack.back().expression->debugPinpointLocation());
+		}
+		std::ostringstream console_s, window_s;
+		console_s << "ERROR: " << console_message << "\n" <<
+			get_typed_call_stack();
+		console_s << output_formula_error_info();
+		window_s << "ERROR: " << window_message << "\n" <<
+			get_typed_call_stack();
+		window_s << output_formula_error_info();
+		if (console_message == window_message)
+		{
+			ASSERT_LOG(false, console_s.str() + "\ntype error");
+		}
+		else
+		{
+			ASSERT_LOG_3(false, console_s.str() + "\ntype error",
+				window_s.str() + "\ntype error");
+		}
+	}
+}
+
 type_error::type_error(const std::string& str) : message(str) {
 	if(call_stack.empty() == false && call_stack.back().expression) {
 		message += "\n" + call_stack.back().expression->debugPinpointLocation();
@@ -1946,8 +1975,17 @@ void variant::throw_type_error(variant::TYPE t) const
 				if(info == nullptr) {
 					info = last_query_map.get_debug_info();
 				}
-				generate_error(formatter() << "In object at " << *info->filename << " " << info->line << " (column " << info->column << ") attribute for " << i->first << " was " << *this << ", which is a " << variant_type_to_string(type_) << ", must be a " << variant_type_to_string(t));
-				
+				generate_error_2(
+					formatter() << "In object at " << *info->filename <<
+						" " << info->line << " (column " << info->column <<
+						")Attribute for " << i->first << " was " << *this <<
+						", which is a " << variant_type_to_string(type_) <<
+						", must be a " << variant_type_to_string(t),
+					formatter() << "\nIn object at " << *info->filename <<
+						" " << info->line << " (column " << info->column <<
+						")\nAttribute for " << i->first << " was " << *this <<
+						", which is a " << variant_type_to_string(type_) <<
+						", must be a " << variant_type_to_string(t));
 			}
 		}
 	} else if(last_query_map.is_map() && last_query_map.get_source_expression()) {
