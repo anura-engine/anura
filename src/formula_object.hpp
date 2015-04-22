@@ -34,6 +34,10 @@
 #include "variant.hpp"
 #include "wml_formula_callable.hpp"
 
+#ifdef USE_LUA
+#include "lua_iface.hpp"
+#endif
+
 namespace game_logic
 {
 	class FormulaClass;
@@ -106,6 +110,13 @@ namespace game_logic
 		std::vector<variant> variables_;
 
 		boost::intrusive_ptr<const FormulaClass> class_;
+
+		// for lua integration
+#if defined(USE_LUA)
+		void init_lua();
+		std::shared_ptr<lua::LuaContext> lua_ptr_;
+		std::shared_ptr<lua::CompiledChunk> lua_chunk_;
+#endif
 
 		variant tmp_value_;
 

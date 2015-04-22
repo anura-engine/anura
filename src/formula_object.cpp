@@ -46,6 +46,10 @@
 #include "variant_type.hpp"
 #include "variant_utils.hpp"
 
+#ifdef USE_LUA
+#include "lua_iface.hpp"
+#endif
+
 #if defined(_MSC_VER)
 #define strtoll _strtoi64
 #endif
@@ -490,6 +494,9 @@ std::map<std::string, std::string>& class_path_map()
 		const std::string& name() const { return name_; }
 		const variant& nameVariant() const { return name_variant_; }
 		const variant& privateData() const { return private_data_; }
+#if defined(USE_LUA)
+		const variant& luaInitScript() const { return lua_init_script_; }
+#endif
 		const std::vector<game_logic::ConstFormulaPtr>& constructor() const { return constructor_; }
 		const std::map<std::string, int>& properties() const { return properties_; }
 		const std::vector<PropertyEntry>& slots() const { return slots_; }
@@ -522,6 +529,10 @@ std::map<std::string, std::string>& class_path_map()
 		std::vector<boost::intrusive_ptr<const FormulaClass> > bases_;
 
 		variant nested_classes_;
+
+#if defined(USE_LUA)
+		variant lua_init_script_;
+#endif
 
 		int nstate_slots_;
 	};
@@ -616,6 +627,10 @@ std::map<std::string, std::string>& class_path_map()
 
 			constructor_.push_back(game_logic::Formula::createOptionalFormula(node["constructor"], nullptr, class_def));
 		}
+
+#if defined(USE_LUA)
+		lua_init_script_ = node["lua"];
+#endif
 
 		unit_test_ = node["test"];
 	}
@@ -1191,6 +1206,11 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 			}
 		}
 
+#if defined(USE_LUA)
+		init_lua();
+#endif
+
+
 		setAddr(write_id());
 	}
 
@@ -1305,6 +1325,10 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 				}
 			}
 		}
+
+#if defined(USE_LUA)
+		init_lua();
+#endif
 
 		setAddr(write_id());
 	}
@@ -1566,6 +1590,19 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 			inputs->push_back(FormulaInput(entry.name, type));
 		}
 	}
+
+#if defined(USE_LUA)
+	void FormulaObject::init_lua()
+	{
+		if (class_->luaInitScript().is_string())
+		{
+			lua_ptr_.reset(new lua::LuaContext());
+			lua_ptr_->setSelfCallable(*this);
+			lua_chunk_.reset(lua_ptr_->compileChunk(class_->name(), class_->luaInitScript().as_string()));
+			lua_chunk_->run(lua_ptr_->getContextPtr());
+		}
+	}
+#endif
 
 	bool formula_class_valid(const std::string& type)
 	{
