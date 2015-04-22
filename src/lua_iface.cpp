@@ -56,17 +56,6 @@ namespace lua
 		const char* const lib_functions_str = "anura.lib";
 	}
 
-	LuaContext& get_global_lua_instance()
-	{
-		static LuaContext res;
-		return res;
-	}
-
-	LuaContext& LuaContext::getInstance()
-	{
-		return get_global_lua_instance();
-	}
-
 	void LuaContext::setSelfCallable(game_logic::FormulaCallable& callable)
 	{
 		using namespace game_logic;

@@ -88,8 +88,6 @@ namespace lua
 		explicit LuaContext(game_logic::FormulaCallable& callable);
 		virtual ~LuaContext();
 
-		static LuaContext& getInstance();
-
 		std::shared_ptr<lua_State>& context() { return state_; }
 		lua_State* getContextPtr() { return state_.get(); }
 
