@@ -131,7 +131,7 @@ namespace lua
 				case variant::VARIANT_TYPE_LIST: {
 					lua_newtable(L);								// (-0,+1,-)
 					for(int n = 0; n != value.num_elements(); ++n) {
-						lua_pushnumber(L, n);						// (-0,+1,-)
+						lua_pushnumber(L, n+1);						// (-0,+1,-)
 						variant_to_lua_value(L, value[n]);			// (-0,+1,e)
 						lua_settable(L,-3);							// (-2,+0,e)
 					}
