@@ -54,6 +54,8 @@ namespace lua
 		const char* const function_str = "anura.function";
 		const char* const callable_str = "anura.callable";
 		const char* const lib_functions_str = "anura.lib";
+
+		const char* const error_handler_fcn_reg_key = "error_handler";
 	}
 
 	void LuaContext::setSelfCallable(game_logic::FormulaCallable& callable)
@@ -82,11 +84,16 @@ namespace lua
 			setSelfCallable(*callable);
 		}
 
-		if (luaL_loadbuffer(getContextPtr(), str.c_str(), str.size(), name.c_str()) || lua_pcall(getContextPtr(), 0, 0, 0))
+		lua_State * L = getContextPtr();
+
+		lua_pushstring(L, error_handler_fcn_reg_key);
+		lua_rawget(L, LUA_REGISTRYINDEX);
+
+		if (luaL_loadbuffer(L, str.c_str(), str.size(), name.c_str()) || lua_pcall(L, 0, 0, -2))
 		{
-			const char* a = lua_tostring(getContextPtr(), -1);
+			const char* a = lua_tostring(L, -1);
 			LOG_DEBUG(a);
-			lua_pop(getContextPtr(), 1);
+			lua_pop(L, 1);
 			return true;
 		}
 		return false;
@@ -518,28 +525,38 @@ namespace lua
 		// initialize Lua
 		state_.reset(luaL_newstate(), [](lua_State* L) { lua_close(L); });
 
+		lua_State * L = getContextPtr();
+
 		// load various Lua libraries
-		luaopen_base(getContextPtr());
-		luaopen_string(getContextPtr());
-		luaopen_table(getContextPtr());
-		luaopen_math(getContextPtr());
-		luaopen_io(getContextPtr());
-		luaopen_debug(getContextPtr());
-		luaL_openlibs(getContextPtr());
+		luaopen_base(L);
+		luaopen_string(L);
+		luaopen_table(L);
+		luaopen_math(L);
+		luaopen_io(L);
+		luaopen_debug(L);
+		luaL_openlibs(L);
 
-		luaL_newmetatable(getContextPtr(), function_str);
-		luaL_setfuncs(getContextPtr(), gFFLFunctions, 0);	
+		// load the debug traceback function to registry, to be used as error handler
+		lua_pushstring(L, error_handler_fcn_reg_key);
+		lua_getglobal(L, "debug");
+		lua_getfield(L, -1, "traceback");
+		lua_remove(L, -2);
+		lua_rawset(L, LUA_REGISTRYINDEX);
+		lua_pop(L, 1);
 
-		luaL_newmetatable(getContextPtr(), callable_str);
-		luaL_setfuncs(getContextPtr(), gCallableFunctions, 0);
+		luaL_newmetatable(L, function_str);
+		luaL_setfuncs(L, gFFLFunctions, 0);	
 
-		luaL_newmetatable(getContextPtr(), callable_function_str);
-		luaL_setfuncs(getContextPtr(), gFFLCallableFunctions, 0);
+		luaL_newmetatable(L, callable_str);
+		luaL_setfuncs(L, gCallableFunctions, 0);
 
-		luaL_newmetatable(getContextPtr(), lib_functions_str);
-		luaL_setfuncs(getContextPtr(), gLibMetaFunctions, 0);
+		luaL_newmetatable(L, callable_function_str);
+		luaL_setfuncs(L, gFFLCallableFunctions, 0);
 
-		push_anura_table(getContextPtr());
+		luaL_newmetatable(L, lib_functions_str);
+		luaL_setfuncs(L, gLibMetaFunctions, 0);
+
+		push_anura_table(L);
 
 		/*dostring(
 			"local lvl = Anura.level()\n"
@@ -627,8 +644,12 @@ namespace lua
 
 	bool CompiledChunk::run(lua_State* L) const 
 	{
+		// Load the error handler for pcall
+		lua_pushstring(L, error_handler_fcn_reg_key);
+		lua_rawget(L, LUA_REGISTRYINDEX);
+
 		chunks_it_ = chunks_.begin();
-		if(lua_load(L, chunk_reader, reinterpret_cast<void*>(const_cast<CompiledChunk*>(this)), nullptr, nullptr) || lua_pcall(L, 0, 0, 0)) {
+		if(lua_load(L, chunk_reader, reinterpret_cast<void*>(const_cast<CompiledChunk*>(this)), nullptr, nullptr) || lua_pcall(L, 0, 0, -2)) {
 			const char* a = lua_tostring(L, -1);
 			LOG_DEBUG(a);
 			lua_pop(L, 1);
@@ -668,15 +689,21 @@ namespace lua
 
 	variant LuaFunctionReference::call()
 	{
+		// load error handler for pcall
+		lua_pushstring(L_, error_handler_fcn_reg_key);
+		lua_rawget(L_, LUA_REGISTRYINDEX);
+		int error_handler_index = lua_gettop(L_);
+
 		lua_rawgeti(L_, LUA_REGISTRYINDEX, ref_);
 		// XXX: decide how arguments will get passed in and push them onto the lua stack here.
 		int nargs = 0;
-		if(lua_pcall(L_, nargs, LUA_MULTRET, 0) != LUA_OK) {				// (-(nargs + 1), +(nresults|1),-)
+		if(lua_pcall(L_, nargs, LUA_MULTRET, error_handler_index) != LUA_OK) {				// (-(nargs + 1), +(nresults|1),-)
 			const char* a = lua_tostring(L_, -1);
 			LOG_DEBUG(a);
-			lua_pop(L_, 1);
+			lua_settop(L_, 0);
 			return variant();
 		}
+		lua_remove(L_, error_handler_index);
 		int nresults = lua_gettop(L_);
 		// Return multiple results as a list.
 		if(nresults > 1) {
