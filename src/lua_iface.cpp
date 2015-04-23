@@ -92,7 +92,8 @@ namespace lua
 		if (luaL_loadbuffer(L, str.c_str(), str.size(), name.c_str()) || lua_pcall(L, 0, 0, -2))
 		{
 			const char* a = lua_tostring(L, -1);
-			LOG_DEBUG(a);
+			//LOG_DEBUG(a);
+			ASSERT_LOG(false, "Lua: " << a);
 			lua_pop(L, 1);
 			return true;
 		}
@@ -651,7 +652,8 @@ namespace lua
 		chunks_it_ = chunks_.begin();
 		if(lua_load(L, chunk_reader, reinterpret_cast<void*>(const_cast<CompiledChunk*>(this)), nullptr, nullptr) || lua_pcall(L, 0, 0, -2)) {
 			const char* a = lua_tostring(L, -1);
-			LOG_DEBUG(a);
+			//LOG_DEBUG(a);
+			ASSERT_LOG(false, "Lua: " << a);
 			lua_pop(L, 1);
 			return true;
 		}
@@ -699,7 +701,8 @@ namespace lua
 		int nargs = 0;
 		if(lua_pcall(L_, nargs, LUA_MULTRET, error_handler_index) != LUA_OK) {				// (-(nargs + 1), +(nresults|1),-)
 			const char* a = lua_tostring(L_, -1);
-			LOG_DEBUG(a);
+			//LOG_DEBUG(a);
+			ASSERT_LOG(false, "Lua: " << a);
 			lua_settop(L_, 0);
 			return variant();
 		}
