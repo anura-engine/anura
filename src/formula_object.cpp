@@ -1568,7 +1568,7 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 
 			++index;
 
-			ASSERT_LOG(entry.get_type->match(value), "OBJECT OF CLASS TYPE " << class_->name() << " HAS INVALID PROPERTY " << entry.name << ": " << value.write_json() << " EXPECTED " << entry.get_type->str());
+			ASSERT_LOG(entry.get_type->match(value), "OBJECT OF CLASS TYPE " << class_->name() << " HAS INVALID PROPERTY " << entry.name << ": " << value.write_json() << " EXPECTED " << entry.get_type->str() << " GIVEN TYPE " << variant::variant_type_to_string(value.type()));
 		}
 	#endif
 	}
