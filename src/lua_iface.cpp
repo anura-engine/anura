@@ -61,21 +61,23 @@ namespace lua
 	void LuaContext::setSelfCallable(game_logic::FormulaCallable& callable)
 	{
 		using namespace game_logic;
+		lua_State * L = getContextPtr();
+
 		// Gets the global "Anura" table
-		lua_getglobal(getContextPtr(), anura_str);			// (-0,+1,e)
+		lua_getglobal(L, anura_str);			// (-0,+1,e)
 
 		// Create a new holder for a fomula callable for the given callable
-		FormulaCallable** a = static_cast<FormulaCallable**>(lua_newuserdata(getContextPtr(), sizeof(FormulaCallable*))); //(-0,+1,e)
+		FormulaCallable** a = static_cast<FormulaCallable**>(lua_newuserdata(L, sizeof(FormulaCallable*))); //(-0,+1,e)
 		*a = &callable;
 		intrusive_ptr_add_ref(*a);
 
 		// Set metatable for the callable
-		luaL_getmetatable(getContextPtr(), callable_str);	// (-0,+1,e)
-		lua_setmetatable(getContextPtr(), -2);			// (-1,+0,e)
+		luaL_getmetatable(L, callable_str);	// (-0,+1,e)
+		lua_setmetatable(L, -2);			// (-1,+0,e)
 
 		// Set the me Anura["me"] = callable
-		lua_setfield(getContextPtr(), -2, "me");			// (-1,+0,e)
-		lua_pop(getContextPtr(),1);						// (-n(1),+0,-)
+		lua_setfield(L, -2, "me");			// (-1,+0,e)
+		lua_pop(L, 1);						// (-n(1),+0,-)
 	}
 
 	bool LuaContext::dostring(const std::string&name, const std::string&str, game_logic::FormulaCallable* callable)
