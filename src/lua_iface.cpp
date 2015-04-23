@@ -218,7 +218,7 @@ namespace lua
 				case LUA_TTHREAD:
 				case LUA_TLIGHTUSERDATA:
 				default:
-					luaL_error(L, "Unsupported type to convert on stack: %d", t);
+					luaL_error(L, "Unsupported type to convert on stack: %s", lua_typename(L,t));
 			}
 			return variant();
 		}
