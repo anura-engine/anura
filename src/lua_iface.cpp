@@ -273,10 +273,13 @@ namespace lua
 					return variant(&temp);
 				}
 				case LUA_TUSERDATA:
+					if (game_logic::FormulaCallable** callable_ptr_ptr = static_cast<game_logic::FormulaCallable**>(luaL_testudata(L, ndx, callable_str))) {
+						return variant(*callable_ptr_ptr);
+					}
 				case LUA_TTHREAD:
 				case LUA_TLIGHTUSERDATA:
 				default:
-					luaL_error(L, "Unsupported type to convert on stack: %s", lua_typename(L,t));
+					luaL_error(L, "Unsupported type to convert on stack: %s", (t == LUA_TUSERDATA ? "userdata (not a formula callable)" : lua_typename(L,t)));
 			}
 			return variant();
 		}
