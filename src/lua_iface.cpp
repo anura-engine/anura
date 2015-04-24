@@ -235,16 +235,35 @@ namespace lua
 			for(int n = 2; n <= nargs; ++n) {
 				args.push_back(ExpressionPtr(new VariantExpression(lua_value_to_variant(L, n))));
 			}
-			auto& player = Level::current().player()->getEntity();
-			auto value = symbols.createFunction(fn->name, args, player.getDefinition());
-			if(value == nullptr) {
-				luaL_error(L, "Function not found: %s", fn->name);
-			}
-			auto ret = value->evaluate(player);
-			if(ret.is_callable()) {
-				player.executeCommand(ret);
+
+			if (auto * player_ptr = Level::current().player()) {
+				auto& player = player_ptr->getEntity();
+				auto value = symbols.createFunction(fn->name, args, player.getDefinition());
+				if(value == nullptr) {
+					luaL_error(L, "Function not found: %s", fn->name);
+				}
+				auto ret = value->evaluate(player);
+				if(ret.is_callable()) {
+					player.executeCommand(ret);
+				} else {
+					return variant_to_lua_value(L, ret);
+				}
+				return 0;
 			} else {
-				return variant_to_lua_value(L, ret);
+				/*if(auto fcn = symbols.getFormulaFunction(fn->name)) {
+					auto expr = fcn->generateFunctionExpression(args);
+
+					MapFormulaCallable blank(nullptr);
+					auto ret = expr->evaluate(blank);
+					return variant_to_lua_value(L, ret);*/
+				auto value = symbols.createFunction(fn->name, args, nullptr);
+				if (value == nullptr) {
+					luaL_error(L, "[%s, %d] Function not found: %s", __FILE__, __LINE__, fn->name);
+				} else {
+					MapFormulaCallable blank(nullptr);
+					auto ret = value->evaluate(blank);
+					return variant_to_lua_value(L, ret);
+				}
 			}
 			return 0;
 		}
