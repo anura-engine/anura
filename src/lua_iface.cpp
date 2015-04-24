@@ -46,6 +46,9 @@
 
 namespace lua
 {
+	using game_logic::FormulaCallable;
+	using game_logic::FormulaCallablePtr;
+
 	namespace 
 	{
 		const char* const anura_str = "Anura";
@@ -67,13 +70,9 @@ namespace lua
 		lua_getglobal(L, anura_str);			// (-0,+1,e)
 
 		// Create a new holder for a fomula callable for the given callable
-		FormulaCallable** a = static_cast<FormulaCallable**>(lua_newuserdata(L, sizeof(FormulaCallable*))); //(-0,+1,e)
-		*a = &callable;
-		intrusive_ptr_add_ref(*a);
-
-		// Set metatable for the callable
-		luaL_getmetatable(L, callable_str);	// (-0,+1,e)
-		lua_setmetatable(L, -2);			// (-1,+0,e)
+		auto a = static_cast<FormulaCallablePtr*>(lua_newuserdata(L, sizeof(FormulaCallablePtr))); //(-0,+1,e)
+		luaL_setmetatable(L, callable_str);
+		new (a) FormulaCallablePtr(& callable);
 
 		// Set the me Anura["me"] = callable
 		lua_setfield(L, -2, "me");			// (-1,+0,e)
@@ -182,12 +181,10 @@ namespace lua
 				}
 				case variant::VARIANT_TYPE_CALLABLE: {
 					using namespace game_logic;
-					FormulaCallable** a = static_cast<FormulaCallable**>(lua_newuserdata(L, sizeof(FormulaCallable*))); //(-0,+1,e)
-					*a = const_cast<FormulaCallable*>(value.as_callable());
-					intrusive_ptr_add_ref(*a);
+					auto a = static_cast<FormulaCallablePtr*>(lua_newuserdata(L, sizeof(FormulaCallablePtr))); //(-0,+1,e)
+					luaL_setmetatable(L, callable_str);
+					new (a) FormulaCallablePtr(const_cast<FormulaCallable*>(value.as_callable()));
 
-					luaL_getmetatable(L, callable_str);	// (-0,+1,e)
-					lua_setmetatable(L, -2);			// (-1,+0,e)
 					return 1;
 				}
 				case variant::VARIANT_TYPE_FUNCTION: {
@@ -273,8 +270,8 @@ namespace lua
 					return variant(&temp);
 				}
 				case LUA_TUSERDATA:
-					if (game_logic::FormulaCallable** callable_ptr_ptr = static_cast<game_logic::FormulaCallable**>(luaL_testudata(L, ndx, callable_str))) {
-						return variant(*callable_ptr_ptr);
+					if (auto callable_ptr_ptr = static_cast<FormulaCallablePtr*>(luaL_testudata(L, ndx, callable_str))) {
+						return variant(callable_ptr_ptr->get());
 					}
 				case LUA_TTHREAD:
 				case LUA_TLIGHTUSERDATA:
@@ -335,19 +332,24 @@ namespace lua
 			return 0;
 		}
 
-		static int remove_callable_reference(lua_State* L)
+		static int gc_callable(lua_State* L)
 		{
-			using namespace game_logic;
-			FormulaCallable* callable = *static_cast<FormulaCallable**>(lua_touserdata(L, 1));	// (-0,+0,-)
-			luaL_argcheck(L, callable != nullptr, 1, "'callable' was null");
-			intrusive_ptr_release(callable);
+			auto d = static_cast< FormulaCallablePtr *> (luaL_testudata(L, 1, callable_str));
+
+			if (!d) {
+				LOG_DEBUG("gc_callable called on an object of type \"" << lua_typename(L, lua_type(L, 1)) << "\" which is not a callable.");
+				lua_pushstring(L, "gc_callable did not find a callable to destroy, garbage collection failure");
+				lua_error(L);
+			} else {
+				d->~FormulaCallablePtr();
+			}
 			return 0;
 		}
 
 		static int get_callable_index(lua_State* L)
 		{
 			using namespace game_logic;
-			FormulaCallable* callable = *static_cast<FormulaCallable**>(luaL_checkudata(L, 1, callable_str));	// (-0,+0,-)
+			auto callable = *static_cast<FormulaCallablePtr*>(luaL_checkudata(L, 1, callable_str));	// (-0,+0,-)
 			const char *name = lua_tostring(L, 2);						// (-0,+0,e)
 			variant value = callable->queryValue(name);
 			if(!value.is_null()) {
@@ -365,7 +367,7 @@ namespace lua
 		{
 			// stack -- table, key, value
 			using namespace game_logic;
-			FormulaCallable* callable = *static_cast<FormulaCallable**>(luaL_checkudata(L, 1, callable_str));	// (-0,+0,-)
+			auto callable = *static_cast<FormulaCallablePtr*>(luaL_checkudata(L, 1, callable_str));	// (-0,+0,-)
 			const char *name = lua_tostring(L, 2);						// (-0,+0,e)
 			variant value = lua_value_to_variant(L, 3);
 			callable->mutateValue(name, value);
@@ -376,7 +378,7 @@ namespace lua
 		{
 			using namespace game_logic;
 			std::string res;
-			FormulaCallable* callable = *static_cast<FormulaCallable**>(luaL_checkudata(L, 1, callable_str));	// (-0,+0,-)
+			auto callable = *static_cast<FormulaCallablePtr*>(luaL_checkudata(L, 1, callable_str));	// (-0,+0,-)
 			std::vector<FormulaInput> inputs = callable->inputs();
 			for(auto inp : inputs) {
 				std::stringstream ss;
@@ -411,7 +413,7 @@ namespace lua
 			for(int n = 3; n <= nargs; ++n) {
 				args.push_back(ExpressionPtr(new VariantExpression(lua_value_to_variant(L, n))));
 			}
-			FormulaCallable* callable = *static_cast<FormulaCallable**>(luaL_checkudata(L, 2, callable_str));	// (-0,+0,-)
+			auto callable = *static_cast<FormulaCallablePtr*>(luaL_checkudata(L, 2, callable_str));	// (-0,+0,-)
 
 			auto& symbols = get_formula_functions_symbol_table();
 			auto value = symbols.createFunction(fn->name, args, nullptr);
@@ -507,7 +509,7 @@ namespace lua
 			{"__index", get_callable_index},
 			{"__newindex", set_callable_index},
 			{"__tostring", serialize_callable},
-			{"__gc", remove_callable_reference},
+			{"__gc", gc_callable},
 			{nullptr, nullptr},
 		};
 
@@ -515,12 +517,9 @@ namespace lua
 		{
 			Level& lvl = Level::current();
 
-			Level** a = static_cast<Level**>(lua_newuserdata(L, sizeof(Level*))); //(-0,+1,e)
-			*a = &lvl;
-			intrusive_ptr_add_ref(&lvl);
-
-			luaL_getmetatable(L, callable_str);		// (-0,+1,e)
-			lua_setmetatable(L, -2);			// (-1,+0,e)
+			auto a = static_cast<FormulaCallablePtr*>(lua_newuserdata(L, sizeof(FormulaCallablePtr))); //(-0,+1,e)
+			luaL_setmetatable(L, callable_str);		// (-0,+1,e)
+			new (a) FormulaCallablePtr(&lvl);
 			return 1;
 		}
 		
