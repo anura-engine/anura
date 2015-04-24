@@ -214,6 +214,9 @@ namespace lua
 					 return variant(new LuaFunctionReference(L, ref));
 					break;
 				}
+				case LUA_TNIL: {
+					return variant();
+				}
 				case LUA_TTABLE:
 					break;
 				case LUA_TUSERDATA:
