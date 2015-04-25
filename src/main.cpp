@@ -853,7 +853,12 @@ int main(int argcount, char* argvec[])
 
 	auto canvas = Canvas::getInstance();
 
-	ShaderProgram::loadFromVariant(json::parse_from_file("data/shaders.cfg"));
+	try {
+		ShaderProgram::loadFromVariant(json::parse_from_file("data/shaders.cfg"));
+	} catch(const json::ParseError& e) {
+		LOG_ERROR("ERROR PARSING: " << e.errorMessage());
+		return 1;
+	}
 
 	// Set the image loading filter function, so that files are found in the correct place.
 	Surface::setFileFilter(FileFilterType::LOAD, [](const std::string& s){ return module::map_file("images/" + s); });
