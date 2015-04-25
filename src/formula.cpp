@@ -1980,7 +1980,7 @@ namespace game_logic
 					if(static_cast<unsigned>(slot) < results_cache_.size() && results_cache_[slot].is_null() == false) {
 						return results_cache_[slot];
 					} else {
-						variant result = info_->entries[slot]->evaluate(*base_);
+						variant result = info_->entries[slot]->evaluate(*this);
 						if(results_cache_.size() <= static_cast<unsigned>(slot)) {
 							results_cache_.resize(slot+1);
 						}
@@ -2014,6 +2014,24 @@ namespace game_logic
 			}
 	
 		private:
+			ExpressionPtr optimize() const {
+
+				WhereExpression* base_where = dynamic_cast<WhereExpression*>(body_.get());
+				if(base_where == NULL) {
+					return ExpressionPtr();
+				}
+
+				WhereVariablesInfo& base_info = *base_where->info_;
+
+				WhereVariablesInfoPtr res(new WhereVariablesInfo(*info_));
+				res->callable_where_def = base_info.callable_where_def;
+
+				res->names.insert(res->names.end(), base_info.names.begin(), base_info.names.end());
+				res->entries.insert(res->entries.end(), base_info.entries.begin(), base_info.entries.end());
+
+				return ExpressionPtr(new WhereExpression(base_where->body_, res));
+			}
+
 			variant_type_ptr getVariantType() const {
 				return body_->queryVariantType();
 			}
