@@ -44,9 +44,17 @@ namespace game_logic
 	variant get_constant(const std::string& id)
 	{
 		if(id == "SCREEN_WIDTH") {
-			return variant(KRE::WindowManager::getMainWindow()->width());
+			if(KRE::WindowManager::getMainWindow()) {
+				return variant(KRE::WindowManager::getMainWindow()->width());
+			} else {
+				return variant(1024);
+			}
 		} else if(id == "SCREEN_HEIGHT") {
-			return variant(KRE::WindowManager::getMainWindow()->height());
+			if(KRE::WindowManager::getMainWindow()) {
+				return variant(KRE::WindowManager::getMainWindow()->height());
+			} else {
+				return variant(768);
+			}
 		} else if(id == "TOUCH_SCREEN") {
 #if defined(MOBILE_BUILD)
 			return variant::from_bool(true);
