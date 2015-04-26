@@ -1417,7 +1417,7 @@ public:
 
 		const std::vector<variant_type_ptr>& arg_types = v.function_arg_types();
 		for(int n = 0; n != arg_types.size(); ++n) {
-			if(arg_types[n]->is_equal(*args_[n]) == false) {
+			if(variant_types_compatible(arg_types[n], args_[n]) == false) {
 				return false;
 			}
 		}
