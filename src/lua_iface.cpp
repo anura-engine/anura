@@ -773,12 +773,7 @@ namespace lua
 		luaL_unref(L_, LUA_REGISTRYINDEX, ref_);
 	}
 
-	variant LuaFunctionReference::getValue(const std::string& key) const
-	{
-		return variant();
-	}
-
-	variant LuaFunctionReference::call()
+	variant LuaFunctionReference::call() const
 	{/*
 		std::cerr << "::call()\n";
 		dump_stack(L_);
@@ -818,12 +813,23 @@ namespace lua
 		}
 		return variant();
 	}
+
+	BEGIN_DEFINE_CALLABLE_NOBASE(LuaFunctionReference)
+	BEGIN_DEFINE_FN(execute, "( ) -> any")
+		return obj.call();
+	END_DEFINE_FN
+	END_DEFINE_CALLABLE(LuaFunctionReference)
+
 }
 
 UNIT_TEST(lua_test)
 {
 	lua::LuaContext ctx;
 }
+
+/*UNIT_TEST(lua_callable_ffl_types) {
+	CHECK_EQ (variant_types_compatible(LuaFunctionReference))	
+}*/
 
 UNIT_TEST(lua_to_ffl_conversions) {
 

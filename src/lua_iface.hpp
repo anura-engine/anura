@@ -69,11 +69,12 @@ namespace lua
 		LuaFunctionReference(lua_State* L, int ref);
 		virtual ~LuaFunctionReference();
 
-		virtual variant getValue(const std::string& key) const;
-		virtual variant call();
+		virtual variant call() const;
 	private:
 		lua_State* L_; 
 		int ref_;
+
+		DECLARE_CALLABLE(LuaFunctionReference);
 
 		LuaFunctionReference();
 		LuaFunctionReference(const LuaFunctionReference&);
