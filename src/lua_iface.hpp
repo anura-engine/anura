@@ -31,6 +31,8 @@
 #include "formula_callable.hpp"
 #include "formula_callable_definition.hpp"
 
+namespace game_logic { class FormulaObject; }
+
 namespace lua
 {
 	class CompiledChunk
@@ -67,12 +69,13 @@ namespace lua
 	{
 	public:
 		LuaContext();
-		explicit LuaContext(game_logic::FormulaCallable& callable);
+		explicit LuaContext(game_logic::FormulaObject&);
 		virtual ~LuaContext();
 
 		std::shared_ptr<lua_State>& context() { return state_; }
 		lua_State* getContextPtr() { return state_.get(); }
 
+		void setSelfObject(game_logic::FormulaObject&);
 		void setSelfCallable(game_logic::FormulaCallable& callable);
 
 		bool execute(const variant& value, game_logic::FormulaCallable* callable=nullptr);
@@ -89,6 +92,7 @@ namespace lua
 		std::shared_ptr<lua_State> state_;
 
 		LuaContext(const LuaContext&);
+
 	};
 
 	typedef boost::intrusive_ptr<LuaContext> LuaContextPtr;

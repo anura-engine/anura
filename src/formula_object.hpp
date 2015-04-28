@@ -83,6 +83,8 @@ namespace game_logic
 		void surrenderReferences(GarbageCollector* collector) override;
 		std::string debugObjectName() const override;
 
+		variant_type_ptr getPropertySetType(const std::string& key) const;
+
 #if defined(USE_LUA)
 		const boost::intrusive_ptr<lua::LuaContext> & get_lua_context() const {
 			return lua_ptr_;
@@ -129,6 +131,8 @@ namespace game_logic
 		//if this is non-zero, then private_data_ will be exposed via getValue.
 		mutable int private_data_;
 	};
+
+	typedef boost::intrusive_ptr<FormulaObject> FormulaObjectPtr;
 
 	bool formula_class_valid(const std::string& type);
 

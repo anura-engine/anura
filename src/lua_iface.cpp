@@ -57,6 +57,7 @@ namespace lua
 		const char* const function_str = "anura.function";
 		const char* const callable_str = "anura.callable";
 		const char* const lib_functions_str = "anura.lib";
+		const char* const object_str = "anura.object";
 
 		const char* const error_handler_fcn_reg_key = "error_handler";
 	}
@@ -73,6 +74,24 @@ namespace lua
 		auto a = static_cast<FormulaCallablePtr*>(lua_newuserdata(L, sizeof(FormulaCallablePtr))); //(-0,+1,e)
 		luaL_setmetatable(L, callable_str);
 		new (a) FormulaCallablePtr(& callable);
+
+		// Set the me Anura["me"] = callable
+		lua_setfield(L, -2, "me");			// (-1,+0,e)
+		lua_pop(L, 1);						// (-n(1),+0,-)
+	}
+
+	void LuaContext::setSelfObject(game_logic::FormulaObject & object)
+	{
+		using namespace game_logic;
+		lua_State * L = getContextPtr();
+
+		// Gets the global "Anura" table
+		lua_getglobal(L, anura_str);			// (-0,+1,e)
+
+		// Create a new holder for a fomula callable for the given callable
+		auto a = static_cast<FormulaObjectPtr*>(lua_newuserdata(L, sizeof(FormulaObjectPtr))); //(-0,+1,e)
+		luaL_setmetatable(L, object_str);
+		new (a) FormulaCallablePtr(& object);
 
 		// Set the me Anura["me"] = callable
 		lua_setfield(L, -2, "me");			// (-1,+0,e)
@@ -518,6 +537,71 @@ namespace lua
 			return 1;
 		}
 
+		static int get_object_index(lua_State* L)
+		{
+			// takes table, key on stack, returns result
+			using namespace game_logic;
+			auto object = *static_cast<FormulaObjectPtr*>(luaL_checkudata(L, 1, object_str));
+			const char * name = lua_tostring(L, 2);
+			variant value = object->queryValue(name);
+			return variant_to_lua_value(L, value);
+		}
+
+		static int set_object_index(lua_State* L)
+		{
+			// stack -- table, key, value
+			using namespace game_logic;
+			auto object = *static_cast<FormulaObjectPtr*>(luaL_checkudata(L, 1, object_str));
+			const char *name = lua_tostring(L, 2);
+			if (!name) {
+				luaL_argerror(L, 2, "expected: string");
+			}
+			std::string idx = name;
+			variant value = lua_value_to_variant(L, 3, object->getPropertySetType(idx));
+			object->mutateValue(name, value);
+			return 0;
+		}
+
+		static int serialize_object(lua_State* L)
+		{
+			using namespace game_logic;
+			std::string res;
+			auto object = *static_cast<FormulaObjectPtr*>(luaL_checkudata(L, 1, object_str));	// (-0,+0,-)
+			std::vector<FormulaInput> inputs = object->inputs();
+			for(auto inp : inputs) {
+				std::stringstream ss;
+				static const char* const access[] = {
+					"ro",
+					"wo",
+					"rw",
+				};
+				if(inp.access != FORMULA_ACCESS_TYPE::READ_ONLY
+					&& inp.access != FORMULA_ACCESS_TYPE::WRITE_ONLY
+					&& inp.access != FORMULA_ACCESS_TYPE::READ_WRITE) {
+					luaL_error(L, "Unrecognised access mode: ", inp.access);
+				}
+				ss << inp.name << "(" << access[static_cast<int>(inp.access)] << ") : " << object->queryValue(inp.name) << std::endl;
+				res += ss.str();
+			}
+			lua_pushstring(L, res.c_str());			// (-0,+1,-)
+			return 1;
+		}
+
+		static int gc_object(lua_State* L)
+		{
+			using namespace game_logic;
+			auto d = static_cast< FormulaObjectPtr *> (luaL_testudata(L, 1, object_str));
+
+			if (!d) {
+				LOG_DEBUG("gc_object called on an item of type \"" << lua_typename(L, lua_type(L, 1)) << "\" which is not an object.");
+				lua_pushstring(L, "gc_object did not find an object to destroy, garbage collection failure");
+				lua_error(L);
+			} else {
+				d->~FormulaObjectPtr();
+			}
+			return 0;
+		}
+
 		const luaL_Reg gFFLFunctions[] = {
 			{"__call", call_function},
 			{"__gc", gc_function},
@@ -542,6 +626,14 @@ namespace lua
 			{"__newindex", set_callable_index},
 			{"__tostring", serialize_callable},
 			{"__gc", gc_callable},
+			{nullptr, nullptr},
+		};
+
+		const luaL_Reg gObjectFunctions[] = {
+			{"__index", get_object_index},
+			{"__newindex", set_object_index},
+			{"__tostring", serialize_object},
+			{"__gc", gc_object},
 			{nullptr, nullptr},
 		};
 
@@ -626,10 +718,10 @@ namespace lua
 		init();
 	}
 
-	LuaContext::LuaContext(game_logic::FormulaCallable& callable)
+	LuaContext::LuaContext(game_logic::FormulaObject& object)
 	{
 		init();
-		setSelfCallable(callable);
+		setSelfObject(object);
 	}
 
 	LuaContext::~LuaContext()
@@ -666,6 +758,9 @@ namespace lua
 
 		luaL_newmetatable(L, callable_str);
 		luaL_setfuncs(L, gCallableFunctions, 0);
+
+		luaL_newmetatable(L, object_str);
+		luaL_setfuncs(L, gObjectFunctions, 0);
 
 		luaL_newmetatable(L, callable_function_str);
 		luaL_setfuncs(L, gFFLCallableFunctions, 0);

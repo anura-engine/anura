@@ -1532,6 +1532,14 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 		}
 	}
 
+	variant_type_ptr FormulaObject::getPropertySetType(const std::string & key) const
+	{
+		std::map<std::string, int>::const_iterator itor = class_->properties().find(key);
+		ASSERT_LOG(itor != class_->properties().end(), "UNKNOWN PROPERTY ACCESS " << key << " IN CLASS " << class_->name());
+
+		return class_->slots()[itor->second].set_type;
+	}
+
 	void FormulaObject::validate() const
 	{
 	#ifndef NO_FFL_TYPE_SAFETY_CHECKS
@@ -1596,8 +1604,7 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 	{
 		if (class_->luaInitScript().is_string())
 		{
-			lua_ptr_.reset(new lua::LuaContext());
-			lua_ptr_->setSelfCallable(*this);
+			lua_ptr_.reset(new lua::LuaContext(*this));
 			lua_chunk_.reset(lua_ptr_->compileChunk(class_->name(), class_->luaInitScript().as_string()));
 			lua_chunk_->run(lua_ptr_->getContextPtr());
 		}
