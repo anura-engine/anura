@@ -104,6 +104,7 @@ namespace lua
 		virtual ~LuaFunctionReference();
 
 		virtual variant call() const;
+		virtual variant call(const variant & args) const;
 	private:
 		LuaContextPtr L_;
 		int ref_;

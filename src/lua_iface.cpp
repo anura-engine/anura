@@ -907,6 +907,12 @@ namespace lua
 
 	variant LuaFunctionReference::call() const
 	{
+		std::vector<variant> foo; //make an empty list variant
+		return call(variant(&foo));
+	}
+
+	variant LuaFunctionReference::call(const variant & args) const
+	{
 		lua_State* L = L_->getContextPtr();
 		/*
 		std::cerr << "::call()\n";
@@ -920,37 +926,60 @@ namespace lua
 		lua_rawget(L, LUA_REGISTRYINDEX);
 		int error_handler_index = lua_gettop(L);
 
+		// load the function itself from the registry
 		lua_rawgeti(L, LUA_REGISTRYINDEX, ref_);
-		// XXX: decide how arguments will get passed in and push them onto the lua stack here.
-		int nargs = 0;
-		if(lua_pcall(L, nargs, LUA_MULTRET, error_handler_index) != LUA_OK) {				// (-(nargs + 1), +(nresults|1),-)
+		
+		// load the arguments to the function call
+		auto args_vec = args.as_list();
+		for (size_t i = 0; i < args_vec.size(); ++i) {
+			variant_to_lua_value(L, args_vec[i]);
+		}
+		int nargs = args_vec.size();
+
+		// call the function in a protected context
+		int err_code = lua_pcall(L, nargs, LUA_MULTRET, error_handler_index);
+		if(err_code != LUA_OK) {				// (-(nargs + 1), +(nresults|1),-)
 			const char* a = lua_tostring(L, -1);
 			//LOG_DEBUG(a);
-			ASSERT_LOG(false, "Lua: " << a);
+			
+			std::string error_class = "an unknown type of error";
+			switch(err_code) {
+			case LUA_ERRRUN:
+				error_class = "a runtime error";
+				break;
+			case LUA_ERRMEM:
+				error_class = "a memory allocation error";
+				break;
+			case LUA_ERRERR:
+				error_class = "an error in the error handler function";
+				break;
+			}
+			
+			ASSERT_LOG(false, "Lua error (" << error_class << "): " << a);
+			lua_remove(L, error_handler_index);
 			lua_settop(L, top);
 			return variant();
 		}
+		// remove the error handler
 		lua_remove(L, error_handler_index);
-		int nresults = lua_gettop(L);
-		// Return multiple results as a list.
-		if(nresults > 1) {
-			std::vector<variant> v;
-			for(int n = 1; n < nresults; ++n) {
-				v.push_back(lua_value_to_variant(L, n));
-			}
-			lua_settop(L, top);
-			return variant(&v);
-		} else if(nresults == 1) {
-			variant ret(lua_value_to_variant(L, 1));
-			lua_settop(L, top);
-			return ret;
+
+		// Count results based on what the top was when we entered this function
+		int nresults = lua_gettop(L) - top;
+
+		// Return results as a list.
+		std::vector<variant> v;
+		for(int n = 1; n <= nresults; ++n) {
+			v.push_back(lua_value_to_variant(L, n + top));
 		}
-		return variant();
+
+		// Restore the top (popping the lua results we just converted to anura).
+		lua_settop(L, top);
+		return variant(&v);
 	}
 
 	BEGIN_DEFINE_CALLABLE_NOBASE(LuaFunctionReference)
-	BEGIN_DEFINE_FN(execute, "( ) -> any")
-		return obj.call();
+	BEGIN_DEFINE_FN(execute, "( [ any ] ) -> [any]")
+		return obj.call(FN_ARG(0));
 	END_DEFINE_FN
 	END_DEFINE_CALLABLE(LuaFunctionReference)
 
