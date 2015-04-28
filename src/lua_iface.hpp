@@ -63,26 +63,7 @@ namespace lua
 	};
 	typedef boost::intrusive_ptr<LuaCompiled> LuaCompiledPtr;
 
-	class LuaFunctionReference : public game_logic::FormulaCallable
-	{
-	public:
-		LuaFunctionReference(lua_State* L, int ref);
-		virtual ~LuaFunctionReference();
-
-		virtual variant call() const;
-	private:
-		lua_State* L_; 
-		int ref_;
-
-		DECLARE_CALLABLE(LuaFunctionReference);
-
-		LuaFunctionReference();
-		LuaFunctionReference(const LuaFunctionReference&);
-	};
-
-	typedef boost::intrusive_ptr<LuaFunctionReference> LuaFunctionReferencePtr;
-
-	class LuaContext
+	class LuaContext : public reference_counted_object
 	{
 	public:
 		LuaContext();
@@ -109,6 +90,27 @@ namespace lua
 
 		LuaContext(const LuaContext&);
 	};
+
+	typedef boost::intrusive_ptr<LuaContext> LuaContextPtr;
+
+	class LuaFunctionReference : public game_logic::FormulaCallable
+	{
+	public:
+		LuaFunctionReference(lua_State* L, int ref);
+		virtual ~LuaFunctionReference();
+
+		virtual variant call() const;
+	private:
+		LuaContextPtr L_;
+		int ref_;
+
+		DECLARE_CALLABLE(LuaFunctionReference);
+
+		LuaFunctionReference();
+		LuaFunctionReference(const LuaFunctionReference&);
+	};
+
+	typedef boost::intrusive_ptr<LuaFunctionReference> LuaFunctionReferencePtr;
 }
 
 #endif

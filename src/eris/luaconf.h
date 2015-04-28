@@ -551,8 +551,8 @@
 ** without modifying the main part of the file.
 */
 
-#define WESNOTH_KERNEL_OFFSET sizeof(void*)
-#define LUAI_EXTRASPACE WESNOTH_KERNEL_OFFSET
+#define ANURA_OFFSET sizeof(void*)
+#define LUAI_EXTRASPACE ANURA_OFFSET
 
 #endif
 

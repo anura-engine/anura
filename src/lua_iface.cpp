@@ -567,6 +567,10 @@ namespace lua
 			luaL_setfuncs(L, anura_functions, 0);		// (-nup(0),+0,e)
 			lua_setglobal(L, anura_str);					// (-1,+0,e)
 		}
+
+		// Getter which takes a lua_State and recovers the pointer to its C++ owner from the lua EXTRA_SPACE region.
+		// (The owner object stores its 'this' pointer there at construction time).
+		LuaContext*& get_lua_context(lua_State* L) { return *reinterpret_cast<LuaContext**>(reinterpret_cast<char*>(L) - ANURA_OFFSET); }
 	}
 
 	bool LuaContext::execute(const variant& value, game_logic::FormulaCallable* callable)
@@ -606,6 +610,7 @@ namespace lua
 		state_.reset(luaL_newstate(), [](lua_State* L) { lua_close(L); });
 
 		lua_State * L = getContextPtr();
+		get_lua_context(L) = this;
 
 		// load various Lua libraries
 		luaopen_base(L);
@@ -764,51 +769,53 @@ namespace lua
 	END_DEFINE_CALLABLE(LuaCompiled)
 
 	LuaFunctionReference::LuaFunctionReference(lua_State* L, int ref)
-		: ref_(ref), L_(L)
+		: ref_(ref), L_(get_lua_context(L))
 	{
 	}
 
 	LuaFunctionReference::~LuaFunctionReference()
 	{
-		luaL_unref(L_, LUA_REGISTRYINDEX, ref_);
+		luaL_unref(L_->getContextPtr(), LUA_REGISTRYINDEX, ref_);
 	}
 
 	variant LuaFunctionReference::call() const
-	{/*
+	{
+		lua_State* L = L_->getContextPtr();
+		/*
 		std::cerr << "::call()\n";
 		dump_stack(L_);
 		print_traceback(L_);*/
-		int top = lua_gettop(L_);
+		int top = lua_gettop(L);
 		//ASSERT_LOG(top==0, "lua functon reference tried to evaluate when top is not 0");
 
 		// load error handler for pcall
-		lua_pushstring(L_, error_handler_fcn_reg_key);
-		lua_rawget(L_, LUA_REGISTRYINDEX);
-		int error_handler_index = lua_gettop(L_);
+		lua_pushstring(L, error_handler_fcn_reg_key);
+		lua_rawget(L, LUA_REGISTRYINDEX);
+		int error_handler_index = lua_gettop(L);
 
-		lua_rawgeti(L_, LUA_REGISTRYINDEX, ref_);
+		lua_rawgeti(L, LUA_REGISTRYINDEX, ref_);
 		// XXX: decide how arguments will get passed in and push them onto the lua stack here.
 		int nargs = 0;
-		if(lua_pcall(L_, nargs, LUA_MULTRET, error_handler_index) != LUA_OK) {				// (-(nargs + 1), +(nresults|1),-)
-			const char* a = lua_tostring(L_, -1);
+		if(lua_pcall(L, nargs, LUA_MULTRET, error_handler_index) != LUA_OK) {				// (-(nargs + 1), +(nresults|1),-)
+			const char* a = lua_tostring(L, -1);
 			//LOG_DEBUG(a);
 			ASSERT_LOG(false, "Lua: " << a);
-			lua_settop(L_, top);
+			lua_settop(L, top);
 			return variant();
 		}
-		lua_remove(L_, error_handler_index);
-		int nresults = lua_gettop(L_);
+		lua_remove(L, error_handler_index);
+		int nresults = lua_gettop(L);
 		// Return multiple results as a list.
 		if(nresults > 1) {
 			std::vector<variant> v;
 			for(int n = 1; n < nresults; ++n) {
-				v.push_back(lua_value_to_variant(L_, n));
+				v.push_back(lua_value_to_variant(L, n));
 			}
-			lua_settop(L_, top);
+			lua_settop(L, top);
 			return variant(&v);
 		} else if(nresults == 1) {
-			variant ret(lua_value_to_variant(L_, 1));
-			lua_settop(L_, top);
+			variant ret(lua_value_to_variant(L, 1));
+			lua_settop(L, top);
 			return ret;
 		}
 		return variant();
