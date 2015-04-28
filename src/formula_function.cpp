@@ -2943,7 +2943,7 @@ FUNCTION_DEF_IMPL
 			ASSERT_LOG(callable != nullptr, "Argument to CompileLua was not a formula callable");
 			game_logic::FormulaObject * object = dynamic_cast<game_logic::FormulaObject*>(callable);
 			ASSERT_LOG(object != nullptr, "Argument to CompileLua was not a formula object");
-			std::shared_ptr<lua::LuaContext> ctx = object->get_lua_context();		
+			boost::intrusive_ptr<lua::LuaContext> ctx = object->get_lua_context();
 			ASSERT_LOG(ctx, "Argument to CompileLua was not a formula object with a lua context. (Check class definition?)");
 			std::string name = args()[1]->evaluate(variables).as_string();
 			std::string script = args()[2]->evaluate(variables).as_string();

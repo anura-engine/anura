@@ -790,7 +790,7 @@ namespace lua
 		ASSERT_LOG(callable != nullptr, "Argument to LuaCompiled::execute was not a formula callable");
 		game_logic::FormulaObject * object = dynamic_cast<game_logic::FormulaObject*>(callable);
 		ASSERT_LOG(object != nullptr, "Argument to LuaCompiled::execute was not a formula object");
-		std::shared_ptr<lua::LuaContext> ctx = object->get_lua_context();		
+		boost::intrusive_ptr<lua::LuaContext> ctx = object->get_lua_context();
 		ASSERT_LOG(ctx, "Argument to LuaCompiled::execute was not a formula object with a lua context. (Check class definition?)");
 		obj.run(ctx->getContextPtr());
 		//return lua_value_to_variant(ctx.getContextPtr());

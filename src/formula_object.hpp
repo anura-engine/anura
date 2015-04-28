@@ -84,7 +84,7 @@ namespace game_logic
 		std::string debugObjectName() const override;
 
 #if defined(USE_LUA)
-		const std::shared_ptr<lua::LuaContext> & get_lua_context() const {
+		const boost::intrusive_ptr<lua::LuaContext> & get_lua_context() const {
 			return lua_ptr_;
 		}
 #endif
@@ -120,7 +120,7 @@ namespace game_logic
 		// for lua integration
 #if defined(USE_LUA)
 		void init_lua();
-		std::shared_ptr<lua::LuaContext> lua_ptr_;
+		boost::intrusive_ptr<lua::LuaContext> lua_ptr_;
 		std::shared_ptr<lua::CompiledChunk> lua_chunk_;
 #endif
 
