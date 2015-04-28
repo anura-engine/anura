@@ -212,7 +212,7 @@ namespace lua
 			char* name;
 		};
 
-		static variant lua_value_to_variant(lua_State* L, int ndx) //, variant::TYPE desired_type = VARIANT_TYPE_INVALID)
+		static variant lua_value_to_variant(lua_State* L, int ndx, variant_type_ptr desired_type = nullptr)
 		{
 			static int recursion_preventer = 0;
 			if (recursion_preventer > 20) {
@@ -250,6 +250,38 @@ namespace lua
 					return variant();
 				}
 				case LUA_TTABLE: {
+					// If we specifically desire a list, then convert only the array part of the lua table to a list, and pass on type info.
+					if (desired_type && desired_type->is_list_of()) {
+						std::vector<variant> temp;
+
+						for (int i = 1; ; ++i) {
+							lua_rawgeti(L, ndx, i);
+							if (lua_isnil(L, -1)) {
+								lua_pop(L, 1);
+								break;
+							}
+							recursion_preventer++;
+							temp.push_back(lua_value_to_variant(L, -1, desired_type->is_list_of()));
+							recursion_preventer--;
+
+							lua_pop(L, 1);
+						}
+
+						return variant(&temp);
+					}
+
+					// By default we will return a map. Check if the map has desired key / value types (might be tables also)
+					variant_type_ptr key_type;
+					variant_type_ptr value_type;
+
+					if (desired_type) {
+						auto p = desired_type->is_map_of();
+						if (p.first && p.second) {
+							key_type = p.first;
+							value_type = p.second;
+						}
+					}
+
 					std::map<variant, variant> temp;
 					int start_top = lua_gettop(L);
 
@@ -259,8 +291,8 @@ namespace lua
 					while (lua_next(L, -2)) {
 
 						recursion_preventer++;
-						variant key = lua_value_to_variant(L, -2);
-						temp[key] = lua_value_to_variant(L, -1);
+						variant key = lua_value_to_variant(L, -2, key_type);
+						temp[key] = lua_value_to_variant(L, -1, value_type);
 						recursion_preventer--;
 
 						lua_pop(L, 1);
@@ -878,6 +910,21 @@ UNIT_TEST(lua_to_ffl_conversions) {
 		CHECK_EQ (lua_gettop(L), 1);
 		variant result = lua::lua_value_to_variant(L, 1);
 		CHECK_EQ (result, game_logic::Formula(variant("{ 'a' : 1, 'b' : 1.5, 'c': false }")).execute());
+		lua_pop(L, 1);
+		CHECK_EQ (lua_gettop(L), 0);
+	}
+
+	{
+		lua_newtable(L);
+		lua_pushstring(L, "foo");
+		lua_rawseti(L, -2, 1);
+		lua_pushstring(L, "bar");
+		lua_rawseti(L, -2, 2);
+		CHECK_EQ (lua_gettop(L), 1);
+		variant result = lua::lua_value_to_variant(L, 1, parse_variant_type(variant("[string]")));
+		CHECK_EQ (result, game_logic::Formula(variant("['foo', 'bar']")).execute());
+		result = lua::lua_value_to_variant(L, 1, parse_variant_type(variant("{int -> string}")));
+		CHECK_EQ (result, game_logic::Formula(variant("{ 1 : 'foo', 2 : 'bar'}")).execute());
 		lua_pop(L, 1);
 		CHECK_EQ (lua_gettop(L), 0);
 	}
