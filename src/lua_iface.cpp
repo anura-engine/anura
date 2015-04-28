@@ -996,9 +996,8 @@ UNIT_TEST(lua_test)
 
 UNIT_TEST(lua_to_ffl_conversions) {
 
-	lua::LuaContext ctx;
-
-	lua_State * L = ctx.getContextPtr();
+	lua::LuaContextPtr test_context = new lua::LuaContext();
+	lua_State * L = test_context->getContextPtr();
 
 	lua_settop(L, 0);
 
@@ -1051,6 +1050,29 @@ UNIT_TEST(lua_to_ffl_conversions) {
 		CHECK_EQ (result, game_logic::Formula(variant("{ 1 : 'foo', 2 : 'bar'}")).execute());
 		lua_pop(L, 1);
 		CHECK_EQ (lua_gettop(L), 0);
+	}
+	
+	{
+		int err_code = luaL_loadstring(L, "return function(x) return x + 1 end");
+		CHECK_EQ(err_code, LUA_OK);
+		err_code = lua_pcall(L, 0, 1, 0);
+		CHECK_EQ(err_code, LUA_OK);
+		CHECK_EQ(lua_typename(L, lua_type(L, 1)), std::string("function"));
+
+		variant func = lua::lua_value_to_variant(L, 1);
+		game_logic::FormulaCallable* callable = const_cast<game_logic::FormulaCallable*>(func.as_callable());
+		CHECK_EQ(callable != nullptr, true);
+
+		variant fn = callable->queryValue("execute");
+
+		std::vector<variant> input;
+		input.push_back(game_logic::Formula(variant("[5]")).execute());
+
+		variant output = fn(input);
+		CHECK_EQ(output, game_logic::Formula(variant("[6]")).execute());
+
+		lua_pop(L,1);
+		CHECK_EQ(lua_gettop(L), 0);
 	}
 }
 
