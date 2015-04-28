@@ -82,6 +82,12 @@ namespace game_logic
 
 		void surrenderReferences(GarbageCollector* collector) override;
 		std::string debugObjectName() const override;
+
+#if defined(USE_LUA)
+		const std::shared_ptr<lua::LuaContext> & get_lua_context() const {
+			return lua_ptr_;
+		}
+#endif
 	private:
 		//construct with type and constructor parameters.
 		//Don't call directly, use create() instead.

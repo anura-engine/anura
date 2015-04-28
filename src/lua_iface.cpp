@@ -749,17 +749,19 @@ namespace lua
 
 	BEGIN_DEFINE_CALLABLE_NOBASE(LuaCompiled)
 	BEGIN_DEFINE_FN(execute, "(object) ->any")
-		lua::LuaContext ctx;
 		game_logic::FormulaCallable* callable = const_cast<game_logic::FormulaCallable*>(FN_ARG(0).as_callable());
-		ctx.setSelfCallable(*callable);
-		obj.run(ctx.getContextPtr());
+		ASSERT_LOG(callable != nullptr, "Argument to LuaCompiled::execute was not a formula callable");
+		game_logic::FormulaObject * object = dynamic_cast<game_logic::FormulaObject*>(callable);
+		ASSERT_LOG(object != nullptr, "Argument to LuaCompiled::execute was not a formula object");
+		std::shared_ptr<lua::LuaContext> ctx = object->get_lua_context();		
+		ASSERT_LOG(ctx, "Argument to LuaCompiled::execute was not a formula object with a lua context. (Check class definition?)");
+		obj.run(ctx->getContextPtr());
 		//return lua_value_to_variant(ctx.getContextPtr());
 		return variant();
 	END_DEFINE_FN
 	DEFINE_FIELD(dummy, "int")
 		return variant(0);
 	END_DEFINE_CALLABLE(LuaCompiled)
-
 
 	LuaFunctionReference::LuaFunctionReference(lua_State* L, int ref)
 		: ref_(ref), L_(L)
