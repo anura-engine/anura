@@ -42,6 +42,7 @@
 #include "level.hpp"
 #include "module.hpp"
 #include "playable_custom_object.hpp"
+#include "variant_type.hpp"
 #include "unit_test.hpp"
 
 namespace lua
@@ -896,7 +897,7 @@ namespace lua
 	END_DEFINE_CALLABLE(LuaCompiled)
 
 	LuaFunctionReference::LuaFunctionReference(lua_State* L, int ref)
-		: ref_(ref), L_(get_lua_context(L))
+		: ref_(ref), L_(get_lua_context(L)), target_return_type_()
 	{
 	}
 
@@ -966,20 +967,37 @@ namespace lua
 		// Count results based on what the top was when we entered this function
 		int nresults = lua_gettop(L) - top;
 
-		// Return results as a list.
-		std::vector<variant> v;
-		for(int n = 1; n <= nresults; ++n) {
-			v.push_back(lua_value_to_variant(L, n + top));
+		variant return_value;
+
+		if (nresults > 1) {
+			// Return results as a list.
+			std::vector<variant> v;
+			for(int n = 1; n <= nresults; ++n) {
+				v.push_back(lua_value_to_variant(L, n + top));
+			}
+			return_value = variant(&v);
+		} else if (nresults == 1) {
+			// If there was only one return value, try to convert it to our target return type.
+			// (We don't try to sort through what it means if there are multiple return values.)
+			return_value = lua_value_to_variant(L, 1 + top, target_return_type_);
 		}
 
 		// Restore the top (popping the lua results we just converted to anura).
 		lua_settop(L, top);
-		return variant(&v);
+		return return_value;
+	}
+
+	void LuaFunctionReference::set_return_type(const variant_type_ptr & t) const {
+		target_return_type_ = t;
 	}
 
 	BEGIN_DEFINE_CALLABLE_NOBASE(LuaFunctionReference)
 	BEGIN_DEFINE_FN(execute, "( [ any ] ) -> [any]")
 		return obj.call(FN_ARG(0));
+	END_DEFINE_FN
+	BEGIN_DEFINE_FN(set_return_type, "(string) -> bool")
+		obj.set_return_type(parse_variant_type(FN_ARG(0)));
+		return variant(true);
 	END_DEFINE_FN
 	END_DEFINE_CALLABLE(LuaFunctionReference)
 
@@ -1069,7 +1087,70 @@ UNIT_TEST(lua_to_ffl_conversions) {
 		input.push_back(game_logic::Formula(variant("[5]")).execute());
 
 		variant output = fn(input);
-		CHECK_EQ(output, game_logic::Formula(variant("[6]")).execute());
+		CHECK_EQ(output, game_logic::Formula(variant("6")).execute());
+
+		lua_pop(L,1);
+		CHECK_EQ(lua_gettop(L), 0);
+	}
+
+	{
+		int err_code = luaL_loadstring(L, "return function(x) return {{x, x + 1}, {x * x, x * x * x}} end");
+		CHECK_EQ(err_code, LUA_OK);
+		err_code = lua_pcall(L, 0, 1, 0);
+		CHECK_EQ(err_code, LUA_OK);
+		CHECK_EQ(lua_typename(L, lua_type(L, 1)), std::string("function"));
+
+		variant func = lua::lua_value_to_variant(L, 1);
+		game_logic::FormulaCallable* callable = const_cast<game_logic::FormulaCallable*>(func.as_callable());
+		CHECK_EQ(callable != nullptr, true);
+
+		variant exec_fn = callable->queryValue("execute");
+		std::vector<variant> input;
+		input.push_back(game_logic::Formula(variant("[5]")).execute());		
+		variant output = exec_fn(input);
+		CHECK_EQ(output, game_logic::Formula(variant("{ 1: {1 : 5, 2 : 6}, 2: {1: 25, 2: 125}}")).execute());
+
+
+
+		variant set_fn = callable->queryValue("set_return_type");
+		input.clear();
+		input.push_back(variant("[[int,int]]"));
+		output = set_fn(input);
+		CHECK_EQ(output, variant(true));
+
+		input.clear();
+		input.push_back(game_logic::Formula(variant("[5]")).execute());
+
+		output = exec_fn(input);
+		CHECK_EQ(output, game_logic::Formula(variant("[[5,6], [25, 125]]")).execute());
+
+
+
+		input.clear();
+		input.push_back(variant("{ int -> [int,int] }"));
+		output = set_fn(input);
+		CHECK_EQ(output, variant(true));
+
+		input.clear();
+		input.push_back(game_logic::Formula(variant("[5]")).execute());
+
+		output = exec_fn(input);
+		CHECK_EQ(output, game_logic::Formula(variant("{ 1: [5,6], 2: [25, 125] }")).execute());
+
+
+
+
+		input.clear();
+		input.push_back(variant("[{ int -> int }]"));
+		output = set_fn(input);
+		CHECK_EQ(output, variant(true));
+
+		input.clear();
+		input.push_back(game_logic::Formula(variant("[5]")).execute());
+
+		output = exec_fn(input);
+		CHECK_EQ(output, game_logic::Formula(variant("[{ 1: 5, 2: 6}, {1 : 25, 2: 125} ]")).execute());
+
 
 		lua_pop(L,1);
 		CHECK_EQ(lua_gettop(L), 0);

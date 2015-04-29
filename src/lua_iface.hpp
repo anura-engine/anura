@@ -105,9 +105,11 @@ namespace lua
 
 		virtual variant call() const;
 		virtual variant call(const variant & args) const;
+		void set_return_type(const variant_type_ptr &) const;
 	private:
 		LuaContextPtr L_;
 		int ref_;
+		mutable variant_type_ptr target_return_type_;
 
 		DECLARE_CALLABLE(LuaFunctionReference);
 
