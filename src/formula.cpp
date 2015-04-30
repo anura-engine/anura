@@ -1287,16 +1287,80 @@ namespace game_logic
 
 			ConstFormulaCallableDefinitionPtr getModifiedDefinitionBasedOnResult(bool result, ConstFormulaCallableDefinitionPtr current_def, variant_type_ptr expression_is_this_type) const {
 
-				std::string key_name;
-				if(right_def_ && left_->isIdentifier(&key_name)) {
-					ConstFormulaCallableDefinitionPtr new_right_def = right_->queryModifiedDefinitionBasedOnResult(result, right_def_, expression_is_this_type);
-					const int slot = current_def->getSlot(key_name);
-					if(new_right_def && slot >= 0) {
-						return modify_formula_callable_definition(current_def, slot, variant_type_ptr(), new_right_def.get());
-					}
+				std::vector<const DotExpression*> expr;
+				if(isIdentifierChain(&expr) == false) {
+					return ConstFormulaCallableDefinitionPtr();
 				}
 
-				return ConstFormulaCallableDefinitionPtr();
+				//This is the top of an identifier chain, which is right-associative.
+
+				ConstFormulaCallableDefinitionPtr def;
+				while(expr.empty() == false) {
+					if(!expr.back()->right_def_) {
+						return ConstFormulaCallableDefinitionPtr();
+					}
+
+					ConstFormulaCallableDefinitionPtr new_right_def = def;
+					if(!new_right_def) {
+						new_right_def = expr.back()->right_->queryModifiedDefinitionBasedOnResult(result, expr.back()->right_def_, expression_is_this_type);
+					}
+
+					auto last_expr = expr.back();
+
+					expr.pop_back();
+
+					std::string key_name;
+
+					ConstFormulaCallableDefinitionPtr context_def = current_def;
+					if(expr.empty() == false) {
+						context_def = expr.back()->right_def_;
+						if(!context_def) {
+							return ConstFormulaCallableDefinitionPtr();
+						}
+
+						if(!expr.back()->right_->isIdentifier(&key_name)) {
+							return ConstFormulaCallableDefinitionPtr();
+						}
+					} else {
+						if(!last_expr->left_->isIdentifier(&key_name)) {
+							return ConstFormulaCallableDefinitionPtr();
+						}
+					}
+
+					const int slot = context_def->getSlot(key_name);
+
+					def = modify_formula_callable_definition(context_def, slot, variant_type_ptr(), new_right_def.get());
+				}
+
+				return def;
+			}
+
+			//function which tells you if this is the top of an identifier chain -- i.e. an expression in
+			//the form a.b.c.d which is held using right-associativity. Gives you the list
+			//of individual expressions.
+			bool isIdentifierChain(std::vector<const DotExpression*>* expressions) const {
+
+				std::string id;
+				if(!right_->isIdentifier(&id)) {
+					return false;
+				}
+
+				if(left_->isIdentifier(&id)) {
+					expressions->push_back(this);
+					return true;
+				}
+
+				const DotExpression* left_dot = dynamic_cast<const DotExpression*>(left_.get());
+				if(!left_dot) {
+					return false;
+				}
+
+				if(left_dot->isIdentifierChain(expressions)) {
+					expressions->push_back(this);
+					return true;
+				}
+
+				return false;
 			}
 
 			std::vector<ConstExpressionPtr> getChildren() const {
