@@ -49,6 +49,8 @@ namespace lua
 {
 	using game_logic::FormulaCallable;
 	using game_logic::FormulaCallablePtr;
+	using game_logic::FormulaObject;
+	using game_logic::FormulaObjectPtr;
 
 	namespace 
 	{
@@ -111,9 +113,8 @@ namespace lua
 
 	}
 
-	void LuaContext::setSelfCallable(game_logic::FormulaCallable& callable)
+	void LuaContext::setSelfCallable(FormulaCallable& callable)
 	{
-		using namespace game_logic;
 		lua_State * L = getContextPtr();
 
 		// Gets the global "Anura" table
@@ -129,9 +130,8 @@ namespace lua
 		lua_pop(L, 1);						// (-n(1),+0,-)
 	}
 
-	void LuaContext::setSelfObject(game_logic::FormulaObject & object)
+	void LuaContext::setSelfObject(FormulaObject & object)
 	{
-		using namespace game_logic;
 		lua_State * L = getContextPtr();
 
 		// Gets the global "Anura" table
@@ -249,7 +249,6 @@ namespace lua
 					break;
 				}
 				case variant::VARIANT_TYPE_CALLABLE: {
-					using namespace game_logic;
 					FormulaCallable * callable = const_cast<FormulaCallable*>(value.as_callable());
 
 					// If it's actually a formula object, make it one of those since its nicer (we get better type conversion)
@@ -266,7 +265,6 @@ namespace lua
 					return 1;
 				}
 				case variant::VARIANT_TYPE_FUNCTION: {
-					using namespace game_logic;
 					//(-0,+1,e)
 					ffl_variant_lib_userdata* ud = static_cast<ffl_variant_lib_userdata*>(lua_newuserdata(L, sizeof(ffl_variant_lib_userdata)));
 					ud->value = value;
@@ -458,7 +456,6 @@ namespace lua
 
 		static int get_callable_index(lua_State* L)
 		{
-			using namespace game_logic;
 			auto callable = *static_cast<FormulaCallablePtr*>(luaL_checkudata(L, 1, callable_str));	// (-0,+0,-)
 			const char *name = lua_tostring(L, 2);						// (-0,+0,e)
 			variant value = callable->queryValue(name);
@@ -476,7 +473,6 @@ namespace lua
 		static int set_callable_index(lua_State* L)
 		{
 			// stack -- table, key, value
-			using namespace game_logic;
 			auto callable = *static_cast<FormulaCallablePtr*>(luaL_checkudata(L, 1, callable_str));	// (-0,+0,-)
 			const char *name = lua_tostring(L, 2);						// (-0,+0,e)
 			variant value = lua_value_to_variant(L, 3);
@@ -561,7 +557,6 @@ namespace lua
 
 		static int call_variant_function(lua_State* L)
 		{
-			using namespace game_logic;
 			ffl_variant_lib_userdata* ud = static_cast<ffl_variant_lib_userdata*>(luaL_checkudata(L,1,lib_functions_str)); // (-0,+0,-)
 			std::vector<variant> args;
 			int nargs = lua_gettop(L);
@@ -599,7 +594,6 @@ namespace lua
 		static int get_object_index(lua_State* L)
 		{
 			// takes table, key on stack, returns result
-			using namespace game_logic;
 			auto object = *static_cast<FormulaObjectPtr*>(luaL_checkudata(L, 1, object_str));
 			const char * name = lua_tostring(L, 2);
 			variant value = object->queryValue(name);
@@ -609,7 +603,6 @@ namespace lua
 		static int set_object_index(lua_State* L)
 		{
 			// stack -- table, key, value
-			using namespace game_logic;
 			auto object = *static_cast<FormulaObjectPtr*>(luaL_checkudata(L, 1, object_str));
 			const char *name = lua_tostring(L, 2);
 			if (!name) {
@@ -648,7 +641,6 @@ namespace lua
 
 		static int gc_object(lua_State* L)
 		{
-			using namespace game_logic;
 			auto d = static_cast< FormulaObjectPtr *> (luaL_testudata(L, 1, object_str));
 
 			if (!d) {
