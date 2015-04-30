@@ -495,7 +495,9 @@ std::map<std::string, std::string>& class_path_map()
 		const variant& nameVariant() const { return name_variant_; }
 		const variant& privateData() const { return private_data_; }
 #if defined(USE_LUA)
-		const variant& luaInitScript() const { return lua_init_script_; }
+		bool has_lua() const { return !lua_node_.is_null(); }
+		const variant & getLuaNode() const { return lua_node_; }
+		const std::shared_ptr<lua::CompiledChunk> & getLuaInit( lua::LuaContext & ) const ;
 #endif
 		const std::vector<game_logic::ConstFormulaPtr>& constructor() const { return constructor_; }
 		const std::map<std::string, int>& properties() const { return properties_; }
@@ -531,7 +533,9 @@ std::map<std::string, std::string>& class_path_map()
 		variant nested_classes_;
 
 #if defined(USE_LUA)
-		variant lua_init_script_;
+		// For lua integration
+		variant lua_node_;
+		mutable std::shared_ptr<lua::CompiledChunk> lua_compiled_;
 #endif
 
 		int nstate_slots_;
@@ -629,8 +633,8 @@ std::map<std::string, std::string>& class_path_map()
 		}
 
 #if defined(USE_LUA)
-		if (node.has_key("lua") && node["lua"].has_key("init")) {
-			lua_init_script_ = node["lua"]["init"];
+		if(node.has_key("lua")) {
+			lua_node_ = node["lua"];
 		}
 #endif
 
@@ -739,6 +743,17 @@ std::map<std::string, std::string>& class_path_map()
 			c->run_unit_tests();
 		}
 	}
+
+	const std::shared_ptr<lua::CompiledChunk> & FormulaClass::getLuaInit(lua::LuaContext & ctx) const {
+		if (lua_compiled_) {
+			return lua_compiled_;
+		}
+		if (lua_node_.has_key("init")) {
+			lua_compiled_.reset(ctx.compileChunk(lua_node_.has_key("debug_name") ? lua_node_["debug_name"].as_string() : name(), lua_node_["init"].as_string()));
+		}
+		return lua_compiled_;
+	}
+
 
 	namespace
 	{
@@ -1604,11 +1619,13 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 #if defined(USE_LUA)
 	void FormulaObject::init_lua()
 	{
-		if (class_->luaInitScript().is_string())
+		if (class_->has_lua())
 		{
-			lua_ptr_.reset(new lua::LuaContext(*this));
-			lua_chunk_.reset(lua_ptr_->compileChunk(class_->name(), class_->luaInitScript().as_string()));
-			lua_chunk_->run(lua_ptr_->getContextPtr());
+			lua_ptr_.reset(new lua::LuaContext(*this)); // sets self object implicitly
+
+			if (auto init_script = class_->getLuaInit(*lua_ptr_)) {
+				init_script->run(lua_ptr_->getContextPtr());
+			}
 		}
 	}
 #endif

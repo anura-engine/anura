@@ -423,7 +423,7 @@ CustomObject::CustomObject(variant node)
 #endif
 
 #if defined(USE_LUA)
-	if(!type_->getLuaSource().empty()) {
+	if(type_->has_lua()) {
 		lua_ptr_.reset(new lua::LuaContext());
 	}
 #endif
@@ -588,7 +588,7 @@ CustomObject::CustomObject(const std::string& type, int x, int y, bool face_righ
 	next_animation_formula_ = type_->nextAnimationFormula();
 
 #if defined(USE_LUA)
-	if(!type_->getLuaSource().empty()) {
+	if(type_->has_lua()) {
 		lua_ptr_.reset(new lua::LuaContext());
 	}
 #endif
@@ -696,7 +696,7 @@ CustomObject::CustomObject(const CustomObject& o)
 	setMouseOverArea(o.getMouseOverArea());
 	
 #if defined(USE_LUA)
-	if(!type_->getLuaSource().empty()) {
+	if(type_->has_lua()) {
 		lua_ptr_.reset(new lua::LuaContext());
 	}
 #endif
@@ -787,8 +787,9 @@ void CustomObject::init_lua()
 {
 	if(lua_ptr_) {
 		lua_ptr_->setSelfCallable(*this);
-		lua_chunk_.reset(lua_ptr_->compileChunk(type_->id(), type_->getLuaSource()));
-		lua_chunk_->run(lua_ptr_->getContextPtr());
+		if (auto init_script = type_->getLuaInit(*lua_ptr_)) {
+			init_script->run(lua_ptr_->getContextPtr());
+		}
 	}
 }
 #endif
@@ -5780,10 +5781,10 @@ void CustomObject::updateType(ConstCustomObjectTypePtr old_type,
 	}
 
 #if defined(USE_LUA)
-	if(!type_->getLuaSource().empty()) {
+	if(type_->has_lua()) {
 	//	lua_ptr_.reset(new lua::lua_context());
+		init_lua();
 	}
-	init_lua();
 #endif
 
 	handleEvent("type_updated");

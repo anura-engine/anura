@@ -123,7 +123,6 @@ namespace game_logic
 #if defined(USE_LUA)
 		void init_lua();
 		boost::intrusive_ptr<lua::LuaContext> lua_ptr_;
-		std::shared_ptr<lua::CompiledChunk> lua_chunk_;
 #endif
 
 		variant tmp_value_;
