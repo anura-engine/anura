@@ -381,6 +381,9 @@ namespace lua
 					if (auto callable_ptr_ptr = static_cast<FormulaCallablePtr*>(luaL_testudata(L, ndx, callable_str))) {
 						return variant(callable_ptr_ptr->get());
 					}
+					if (auto object_ptr_ptr = static_cast<FormulaObjectPtr*>(luaL_testudata(L, ndx, object_str))) {
+						return variant(object_ptr_ptr->get());
+					}
 				case LUA_TTHREAD:
 				case LUA_TLIGHTUSERDATA:
 				default:
