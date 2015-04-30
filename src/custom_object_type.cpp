@@ -1618,7 +1618,7 @@ const std::shared_ptr<lua::CompiledChunk> & CustomObjectType::getLuaInit(lua::Lu
 		return lua_compiled_;
 	}
 	if (lua_node_.has_key("init")) {
-		lua_compiled_.reset(ctx.compileChunk(lua_node_.has_key("debug_name") ? lua_node_["debug_name"].as_string() : id(), lua_node_["init"].as_string()));
+		lua_compiled_.reset(ctx.compileChunk(lua_node_.has_key("debug_name") ? lua_node_["debug_name"].as_string() : ("custom object " + id() + " lua"), lua_node_["init"].as_string()));
 	}
 	return lua_compiled_;
 }

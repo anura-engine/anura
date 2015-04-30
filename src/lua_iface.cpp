@@ -827,33 +827,76 @@ namespace lua
 			}
 			return &it[0];
 		}
+
+		void handle_load_error(lua_State * L, int err_code) {
+			if (err_code != LUA_OK) {
+				const char* a = lua_tostring(L, -1);
+
+				std::string error_class = "an unknown type of error";
+				switch(err_code) {
+				case LUA_ERRSYNTAX:
+					error_class = "a syntax error";
+					break;
+				case LUA_ERRMEM:
+					error_class = "a memory allocation error";
+					break;
+				case LUA_ERRGCMM:
+					error_class = "an error while running the garbage collector";
+					break;
+				}
+
+				// LOG_DEBUG(a);
+				ASSERT_LOG(false, "Lua error (" << error_class << "): " << a);
+				lua_pop(L, 1);
+			}
+		}
 	}
 
-	LuaCompiledPtr LuaContext::compile(const std::string& name, const std::string& str)
+	LuaCompiledPtr LuaContext::compile(const std::string& nam, const std::string& str)
 	{
+		lua_State * L = getContextPtr();
+
+		std::string name = "@" + nam; // if the name does not begin "@" then lua will represent it as [string "name"] in the debugging output
+
+		int err_code = luaL_loadbuffer(L, str.c_str(), str.size(), name.c_str());		// (-0,+1,-)
+		if (err_code != LUA_OK) {
+			handle_load_error(L, err_code);
+			return nullptr;
+		}
+
 		LuaCompiled* chunk = new LuaCompiled();
-		luaL_loadbuffer(getContextPtr(), str.c_str(), str.size(), name.c_str());		// (-0,+1,-)
 #if LUA_VERSION_NUM == 502
-		lua_dump(getContextPtr(), chunk_writer, reinterpret_cast<void*>(chunk));		// (-0,+0,-)
+		lua_dump(L, chunk_writer, reinterpret_cast<void*>(chunk));		// (-0,+0,-)
 #elif LUA_VERSION_NUM == 503
-		lua_dump(getContextPtr(), chunk_writer, reinterpret_cast<void*>(chunk), 0);		// (-0,+0,-)
+		lua_dump(L, chunk_writer, reinterpret_cast<void*>(chunk), 0);		// (-0,+0,-)
 #endif
-		lua_pop(getContextPtr(), 1);													// (-n(1),+0,-)
+		lua_pop(L, 1);													// (-n(1),+0,-)
 		chunk->addChunk(0, 0);
+		chunk->setName(name);
 		return LuaCompiledPtr(chunk);
 	}
 
-	CompiledChunk* LuaContext::compileChunk(const std::string& name, const std::string& str)
+	CompiledChunk* LuaContext::compileChunk(const std::string& nam, const std::string& str)
 	{
+		lua_State * L = getContextPtr();
+		
+		std::string name = "@" + nam; // if the name does not begin "@" then lua will represent it as [string "name"] in the debugging output
+
+		int err_code = luaL_loadbuffer(L, str.c_str(), str.size(), name.c_str());		// (-0,+1,-)
+		if (err_code != LUA_OK) {
+			handle_load_error(L, err_code);
+			return nullptr;
+		}
+
 		CompiledChunk* chunk = new CompiledChunk();
-		luaL_loadbuffer(getContextPtr(), str.c_str(), str.size(), name.c_str());		// (-0,+1,-)
 #if LUA_VERSION_NUM == 502
-		lua_dump(getContextPtr(), chunk_writer, reinterpret_cast<void*>(chunk));		// (-0,+0,-)
+		lua_dump(L, chunk_writer, reinterpret_cast<void*>(chunk));		// (-0,+0,-)
 #elif LUA_VERSION_NUM == 503
-		lua_dump(getContextPtr(), chunk_writer, reinterpret_cast<void*>(chunk), 0);		// (-0,+0,-)
+		lua_dump(L, chunk_writer, reinterpret_cast<void*>(chunk), 0);		// (-0,+0,-)
 #endif
-		lua_pop(getContextPtr(), 1);													// (-n(1),+0,-)
+		lua_pop(L, 1);													// (-n(1),+0,-)
 		chunk->addChunk(0, 0);
+		chunk->setName(name);
 		return chunk;
 	}
 
@@ -866,14 +909,18 @@ namespace lua
 	{
 	}
 
-	bool CompiledChunk::run(lua_State* L) const 
+	void CompiledChunk::setName(const std::string & name) {
+		chunk_name_ = name;
+	}
+
+	bool CompiledChunk::run(lua_State* L) const
 	{
 		// Load the error handler for pcall
 		lua_pushstring(L, error_handler_fcn_reg_key);
 		lua_rawget(L, LUA_REGISTRYINDEX);
 
 		chunks_it_ = chunks_.begin();
-		if(lua_load(L, chunk_reader, reinterpret_cast<void*>(const_cast<CompiledChunk*>(this)), nullptr, nullptr) || lua_pcall(L, 0, 0, -2)) {
+		if(lua_load(L, chunk_reader, reinterpret_cast<void*>(const_cast<CompiledChunk*>(this)), chunk_name_.c_str(), nullptr) || lua_pcall(L, 0, 0, -2)) {
 			const char* a = lua_tostring(L, -1);
 			//LOG_DEBUG(a);
 			if (a) {

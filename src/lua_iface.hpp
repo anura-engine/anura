@@ -49,10 +49,13 @@ namespace lua
 		bool run(lua_State* L) const;
 		const std::vector<char>& current() const { return *chunks_it_; }
 		void next() { ++chunks_it_; }
+		void setName(const std::string &);
 	private:
 		typedef std::vector<std::vector<char>> chunk_list_type;
 		chunk_list_type chunks_;
 		mutable chunk_list_type::const_iterator chunks_it_;
+
+		std::string chunk_name_;
 	};
 
 	class LuaCompiled : public game_logic::FormulaCallable, public CompiledChunk
