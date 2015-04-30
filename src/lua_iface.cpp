@@ -201,9 +201,18 @@ namespace lua
 				}
 				case variant::VARIANT_TYPE_CALLABLE: {
 					using namespace game_logic;
-					auto a = static_cast<FormulaCallablePtr*>(lua_newuserdata(L, sizeof(FormulaCallablePtr))); //(-0,+1,e)
-					luaL_setmetatable(L, callable_str);
-					new (a) FormulaCallablePtr(const_cast<FormulaCallable*>(value.as_callable()));
+					FormulaCallable * callable = const_cast<FormulaCallable*>(value.as_callable());
+
+					// If it's actually a formula object, make it one of those since its nicer (we get better type conversion)
+					if (FormulaObject * obj = dynamic_cast<FormulaObject*>(callable)) {
+						auto a = static_cast<FormulaObjectPtr*>(lua_newuserdata(L, sizeof(FormulaObjectPtr))); //(-0,+1,e)
+						luaL_setmetatable(L, object_str);
+						new (a) FormulaObjectPtr(obj);
+					} else {
+						auto a = static_cast<FormulaCallablePtr*>(lua_newuserdata(L, sizeof(FormulaCallablePtr))); //(-0,+1,e)
+						luaL_setmetatable(L, callable_str);
+						new (a) FormulaCallablePtr(const_cast<FormulaCallable*>(value.as_callable()));
+					}
 
 					return 1;
 				}
