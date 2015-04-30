@@ -61,6 +61,54 @@ namespace lua
 		const char* const object_str = "anura.object";
 
 		const char* const error_handler_fcn_reg_key = "error_handler";
+
+		// Two functions to interpret the error codes that lua can give when loading or executing lua, and report the errors
+		void handle_load_error(lua_State * L, int err_code) {
+			if (err_code != LUA_OK) {
+				const char* a = lua_tostring(L, -1);
+
+				std::string error_class = "an unknown type of error";
+				switch(err_code) {
+				case LUA_ERRSYNTAX:
+					error_class = "a syntax error";
+					break;
+				case LUA_ERRMEM:
+					error_class = "a memory allocation error";
+					break;
+				case LUA_ERRGCMM:
+					error_class = "an error while running the garbage collector";
+					break;
+				}
+
+				// LOG_DEBUG(a);
+				ASSERT_LOG(false, "Lua error (" << error_class << "): " << (a ? a : "(null string)"));
+				lua_pop(L, 1);
+			}
+		}
+
+		void handle_pcall_error(lua_State * L, int err_code) {
+			if(err_code != LUA_OK) {
+				const char* a = lua_tostring(L, -1);
+
+				std::string error_class = "an unknown type of error";
+				switch(err_code) {
+				case LUA_ERRRUN:
+					error_class = "a runtime error";
+					break;
+				case LUA_ERRMEM:
+					error_class = "a memory allocation error";
+					break;
+				case LUA_ERRERR:
+					error_class = "an error in the error handler function";
+					break;
+				}
+
+				//LOG_DEBUG(a);
+				ASSERT_LOG(false, "Lua error (" << error_class << "): " << (a ? a : "(null string)"));
+				lua_pop(L, 1);
+			}
+		}
+
 	}
 
 	void LuaContext::setSelfCallable(game_logic::FormulaCallable& callable)
@@ -110,14 +158,15 @@ namespace lua
 		lua_pushstring(L, error_handler_fcn_reg_key);
 		lua_rawget(L, LUA_REGISTRYINDEX);
 
-		if (luaL_loadbuffer(L, str.c_str(), str.size(), name.c_str()) || lua_pcall(L, 0, 0, -2))
-		{
-			const char* a = lua_tostring(L, -1);
-			//LOG_DEBUG(a);
-			ASSERT_LOG(false, "Lua: " << a);
-			lua_pop(L, 1);
+		if (int err_code = luaL_loadbuffer(L, str.c_str(), str.size(), name.c_str())) {
+			handle_load_error(L, err_code);
 			return true;
 		}
+		if (int err_code = lua_pcall(L, 0, 0, -2)) {
+			handle_pcall_error(L, err_code);
+			return true;
+		}
+		lua_pop(L, 1); // pop the error handler
 		return false;
 	}
 
@@ -827,29 +876,6 @@ namespace lua
 			}
 			return &it[0];
 		}
-
-		void handle_load_error(lua_State * L, int err_code) {
-			if (err_code != LUA_OK) {
-				const char* a = lua_tostring(L, -1);
-
-				std::string error_class = "an unknown type of error";
-				switch(err_code) {
-				case LUA_ERRSYNTAX:
-					error_class = "a syntax error";
-					break;
-				case LUA_ERRMEM:
-					error_class = "a memory allocation error";
-					break;
-				case LUA_ERRGCMM:
-					error_class = "an error while running the garbage collector";
-					break;
-				}
-
-				// LOG_DEBUG(a);
-				ASSERT_LOG(false, "Lua error (" << error_class << "): " << a);
-				lua_pop(L, 1);
-			}
-		}
 	}
 
 	LuaCompiledPtr LuaContext::compile(const std::string& nam, const std::string& str)
@@ -920,15 +946,15 @@ namespace lua
 		lua_rawget(L, LUA_REGISTRYINDEX);
 
 		chunks_it_ = chunks_.begin();
-		if(lua_load(L, chunk_reader, reinterpret_cast<void*>(const_cast<CompiledChunk*>(this)), chunk_name_.c_str(), nullptr) || lua_pcall(L, 0, 0, -2)) {
-			const char* a = lua_tostring(L, -1);
-			//LOG_DEBUG(a);
-			if (a) {
-				ASSERT_LOG(false, "Lua: " << a);
-			} else {
-				ASSERT_LOG(false, "Lua: (null string)");
-			}
-			lua_pop(L, 2); // remove error message and error handler
+		if(int err_code = lua_load(L, chunk_reader, reinterpret_cast<void*>(const_cast<CompiledChunk*>(this)), chunk_name_.c_str(), nullptr)) {
+			handle_load_error(L, err_code);
+			lua_pop(L, 1); // remove the error handler
+			return true;
+		}
+		
+		if (int err_code = lua_pcall(L, 0, 0, -2)) {
+			handle_pcall_error(L, err_code);
+			lua_pop(L, 1); // remove the error handler
 			return true;
 		}
 
@@ -996,23 +1022,7 @@ namespace lua
 		// call the function in a protected context
 		int err_code = lua_pcall(L, nargs, LUA_MULTRET, error_handler_index);
 		if(err_code != LUA_OK) {				// (-(nargs + 1), +(nresults|1),-)
-			const char* a = lua_tostring(L, -1);
-			//LOG_DEBUG(a);
-			
-			std::string error_class = "an unknown type of error";
-			switch(err_code) {
-			case LUA_ERRRUN:
-				error_class = "a runtime error";
-				break;
-			case LUA_ERRMEM:
-				error_class = "a memory allocation error";
-				break;
-			case LUA_ERRERR:
-				error_class = "an error in the error handler function";
-				break;
-			}
-			
-			ASSERT_LOG(false, "Lua error (" << error_class << "): " << a);
+			handle_pcall_error(L, err_code);
 			lua_remove(L, error_handler_index);
 			lua_settop(L, top);
 			return variant();
