@@ -1556,8 +1556,8 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 #endif
 
 #if defined(USE_LUA)
-	if(node.has_key("lua")) {
-		lua_source_ = node["lua"].as_string();
+	if(node.has_key("lua") && node["lua"].has_key("init")) {
+		lua_source_ = node["lua"]["init"].as_string();
 	}
 #endif
 

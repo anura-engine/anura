@@ -629,7 +629,9 @@ std::map<std::string, std::string>& class_path_map()
 		}
 
 #if defined(USE_LUA)
-		lua_init_script_ = node["lua"];
+		if (node.has_key("lua") && node["lua"].has_key("init")) {
+			lua_init_script_ = node["lua"]["init"];
+		}
 #endif
 
 		unit_test_ = node["test"];
