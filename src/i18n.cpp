@@ -75,6 +75,30 @@ namespace
 	map hashmap;
 
 	std::string locale;
+
+	//handle the contents of an mo file
+	void process_mo_contents(const std::string & content) {
+		size_t size = content.size();
+		if (size < sizeof(mo_header))
+			return;
+		mo_header* header = (mo_header*) content.c_str();
+		if (header->magic != 0x950412de ||
+			header->version != 0 ||
+			header->o_offset + 8*header->number > size ||
+			header->t_offset + 8*header->number > size)
+			return;
+		mo_entry* original = (mo_entry*) (content.c_str() + header->o_offset);
+		mo_entry* translated = (mo_entry*) (content.c_str() + header->t_offset);
+
+		for (unsigned i = 0; i < header->number; ++i) {
+			if (original[i].offset + original[i].length > size ||
+				translated[i].offset + translated[i].length > size)
+				return;
+			const std::string msgid = content.substr(original[i].offset, original[i].length);
+			const std::string msgstr = content.substr(translated[i].offset, translated[i].length);
+			hashmap[msgid] = msgstr;
+		}
+	}
 }
 
 namespace i18n 
@@ -135,28 +159,8 @@ namespace i18n
 			locale = locale.substr(0, found);
 			filename = "./locale/" + locale + "/LC_MESSAGES/frogatto.mo";
 		}
-		if (!sys::file_exists(module::map_file(filename)))
-			return;
-		const std::string content = sys::read_file(module::map_file(filename));
-		size_t size = content.size();
-		if (size < sizeof(mo_header))
-			return;
-		mo_header* header = (mo_header*) content.c_str();
-		if (header->magic != 0x950412de ||
-			header->version != 0 ||
-			header->o_offset + 8*header->number > size ||
-			header->t_offset + 8*header->number > size)
-			return;
-		mo_entry* original = (mo_entry*) (content.c_str() + header->o_offset);
-		mo_entry* translated = (mo_entry*) (content.c_str() + header->t_offset);
-
-		for (unsigned i = 0; i < header->number; ++i) {
-			if (original[i].offset + original[i].length > size ||
-				translated[i].offset + translated[i].length > size)
-				return;
-			const std::string msgid = content.substr(original[i].offset, original[i].length);
-			const std::string msgstr = content.substr(translated[i].offset, translated[i].length);
-			hashmap[msgid] = msgstr;
+		if (sys::file_exists(module::map_file(filename))) {
+			process_mo_contents(sys::read_file(module::map_file(filename)));
 		}
 	}
 
