@@ -788,7 +788,7 @@ void CustomObject::init_lua()
 	if(lua_ptr_) {
 		lua_ptr_->setSelfCallable(*this);
 		if (auto init_script = type_->getLuaInit(*lua_ptr_)) {
-			init_script->run(lua_ptr_->getContextPtr());
+			init_script->run(*lua_ptr_);
 		}
 	}
 }

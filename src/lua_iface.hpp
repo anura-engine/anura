@@ -35,6 +35,8 @@ namespace game_logic { class FormulaObject; }
 
 namespace lua
 {
+	class LuaContext;
+
 	class CompiledChunk
 	{
 	public:
@@ -46,7 +48,7 @@ namespace lua
 			const char* pp = static_cast<const char*>(p);
 			chunks_.push_back(std::vector<char>(pp,pp+sz));
 		}
-		bool run(lua_State* L) const;
+		bool run(const LuaContext &) const;
 		const std::vector<char>& current() const { return *chunks_it_; }
 		void next() { ++chunks_it_; }
 		void setName(const std::string &);
@@ -75,8 +77,7 @@ namespace lua
 		explicit LuaContext(game_logic::FormulaObject&);
 		virtual ~LuaContext();
 
-		std::shared_ptr<lua_State>& context() { return state_; }
-		lua_State* getContextPtr() { return state_.get(); }
+		lua_State* getState() const { return state_; }
 
 		void setSelfObject(game_logic::FormulaObject&);
 		void setSelfCallable(game_logic::FormulaCallable& callable);
@@ -92,7 +93,7 @@ namespace lua
 	private:
 		void init();
 
-		std::shared_ptr<lua_State> state_;
+		lua_State * state_;
 
 		LuaContext(const LuaContext&);
 

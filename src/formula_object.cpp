@@ -1624,7 +1624,7 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 			lua_ptr_.reset(new lua::LuaContext(*this)); // sets self object implicitly
 
 			if (auto init_script = class_->getLuaInit(*lua_ptr_)) {
-				init_script->run(lua_ptr_->getContextPtr());
+				init_script->run(*lua_ptr_);
 			}
 		}
 	}

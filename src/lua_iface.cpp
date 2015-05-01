@@ -115,7 +115,7 @@ namespace lua
 
 	void LuaContext::setSelfCallable(FormulaCallable& callable)
 	{
-		lua_State * L = getContextPtr();
+		lua_State * L = getState();
 
 		// Gets the global "Anura" table
 		lua_getglobal(L, anura_str);			// (-0,+1,e)
@@ -132,7 +132,7 @@ namespace lua
 
 	void LuaContext::setSelfObject(FormulaObject & object)
 	{
-		lua_State * L = getContextPtr();
+		lua_State * L = getState();
 
 		// Gets the global "Anura" table
 		lua_getglobal(L, anura_str);			// (-0,+1,e)
@@ -153,7 +153,7 @@ namespace lua
 			setSelfCallable(*callable);
 		}
 
-		lua_State * L = getContextPtr();
+		lua_State * L = getState();
 
 		lua_pushstring(L, error_handler_fcn_reg_key);
 		lua_rawget(L, LUA_REGISTRYINDEX);
@@ -762,17 +762,19 @@ namespace lua
 		} else {
 			LuaCompiledPtr compiled = value.try_convert<LuaCompiled>();
 			ASSERT_LOG(compiled != nullptr, "FATAL: object given couldn't be converted to type 'lua_compiled'");
-			res = compiled->run(getContextPtr());
+			res = compiled->run(*this);
 		}
 		return res;
 	}
 
 	LuaContext::LuaContext()
+		: state_(luaL_newstate())
 	{
 		init();
 	}
 
 	LuaContext::LuaContext(game_logic::FormulaObject& object)
+		: state_(luaL_newstate())
 	{
 		init();
 		setSelfObject(object);
@@ -780,14 +782,12 @@ namespace lua
 
 	LuaContext::~LuaContext()
 	{
+		lua_close(state_);
 	}
 
 	void LuaContext::init()
 	{
-		// initialize Lua
-		state_.reset(luaL_newstate(), [](lua_State* L) { lua_close(L); });
-
-		lua_State * L = getContextPtr();
+		lua_State * L = getState();
 		get_lua_context(L) = this;
 
 		// load various Lua libraries
@@ -875,7 +875,7 @@ namespace lua
 
 	LuaCompiledPtr LuaContext::compile(const std::string& nam, const std::string& str)
 	{
-		lua_State * L = getContextPtr();
+		lua_State * L = getState();
 
 		std::string name = "@" + nam; // if the name does not begin "@" then lua will represent it as [string "name"] in the debugging output
 
@@ -899,7 +899,7 @@ namespace lua
 
 	CompiledChunk* LuaContext::compileChunk(const std::string& nam, const std::string& str)
 	{
-		lua_State * L = getContextPtr();
+		lua_State * L = getState();
 		
 		std::string name = "@" + nam; // if the name does not begin "@" then lua will represent it as [string "name"] in the debugging output
 
@@ -934,8 +934,9 @@ namespace lua
 		chunk_name_ = name;
 	}
 
-	bool CompiledChunk::run(lua_State* L) const
+	bool CompiledChunk::run(const LuaContext & L_) const
 	{
+		lua_State * L = L_.getState();
 		// Load the error handler for pcall
 		lua_pushstring(L, error_handler_fcn_reg_key);
 		lua_rawget(L, LUA_REGISTRYINDEX);
@@ -965,8 +966,8 @@ namespace lua
 		ASSERT_LOG(object != nullptr, "Argument to LuaCompiled::execute was not a formula object");
 		boost::intrusive_ptr<lua::LuaContext> ctx = object->get_lua_context();
 		ASSERT_LOG(ctx, "Argument to LuaCompiled::execute was not a formula object with a lua context. (Check class definition?)");
-		obj.run(ctx->getContextPtr());
-		//return lua_value_to_variant(ctx.getContextPtr());
+		obj.run(*ctx);
+		//return lua_value_to_variant(ctx.getState());
 		return variant();
 	END_DEFINE_FN
 	DEFINE_FIELD(dummy, "int")
@@ -980,7 +981,7 @@ namespace lua
 
 	LuaFunctionReference::~LuaFunctionReference()
 	{
-		luaL_unref(L_->getContextPtr(), LUA_REGISTRYINDEX, ref_);
+		luaL_unref(L_->getState(), LUA_REGISTRYINDEX, ref_);
 	}
 
 	variant LuaFunctionReference::call() const
@@ -991,7 +992,7 @@ namespace lua
 
 	variant LuaFunctionReference::call(const variant & args) const
 	{
-		lua_State* L = L_->getContextPtr();
+		lua_State* L = L_->getState();
 		/*
 		std::cerr << "::call()\n";
 		dump_stack(L_);
@@ -1076,7 +1077,7 @@ UNIT_TEST(lua_test)
 UNIT_TEST(lua_to_ffl_conversions) {
 
 	lua::LuaContextPtr test_context = new lua::LuaContext();
-	lua_State * L = test_context->getContextPtr();
+	lua_State * L = test_context->getState();
 
 	lua_settop(L, 0);
 
