@@ -1292,7 +1292,9 @@ namespace game_logic
 					return ConstFormulaCallableDefinitionPtr();
 				}
 
-				//This is the top of an identifier chain, which is right-associative.
+				//This expressoin is the top of an identifier chain -- i.e. expression of the form a.b.c.d
+				//where a, b, c, and d are all plain identifiers. They are stored with right-associativity
+				//meaning this expression is the last expression in the chain.
 
 				ConstFormulaCallableDefinitionPtr def;
 				while(expr.empty() == false) {

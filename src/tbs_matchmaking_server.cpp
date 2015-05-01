@@ -117,6 +117,9 @@ public:
 		create_account_fn_ = controller_->queryValue("create_account");
 		ASSERT_LOG(create_account_fn_.is_function(), "Could not find create_account in matchmaking_server class");
 
+		read_account_fn_ = controller_->queryValue("read_account");
+		ASSERT_LOG(read_account_fn_.is_function(), "Could not find read_account in matchmaking_server class");
+
 		handle_request_fn_ = controller_->queryValue("handle_request");
 		ASSERT_LOG(handle_request_fn_.is_function(), "Could not find handle_request in matchmaking_server class");
 
@@ -330,7 +333,6 @@ public:
 				std::string passwd = doc["passwd"].as_string();
 				const bool remember = doc["remember"].as_bool(false);
 				db_client_->get("user:" + user, [=](variant user_info) {
-					fprintf(stderr, "ZZZ: DB GET: %s\n", user_info.write_json().c_str());
 					if(user_info.is_null() == false) {
 						variant_builder response;
 						response.add("type", "registration_fail");
@@ -343,12 +345,15 @@ public:
 					variant_builder new_user_info;
 					new_user_info.add("user", user_full);
 					new_user_info.add("passwd", passwd);
+					new_user_info.add("info_version", variant(0));
 					new_user_info.add("info", account_info);
+
+					variant new_user_info_variant = new_user_info.build();
 
 					//put the new user in the database. Note that we use
 					//PUT_REPLACE so that if there is a race for two users
 					//to register the same name only one will succeed.
-					db_client_->put("user:" + user, new_user_info.build(),
+					db_client_->put("user:" + user, new_user_info_variant,
 					[=]() {
 						const int session_id = g_session_id_gen++;
 						SessionInfo& info = sessions_[session_id];
@@ -356,10 +361,13 @@ public:
 						info.user_id = user;
 						info.last_contact = this->time_ms_;
 
+						this->account_info_[user] = new_user_info_variant;
+
 						variant_builder response;
 						response.add("type", "registration_success");
 						response.add("session_id", variant(session_id));
 						response.add("username", variant(user));
+						response.add("info_version", variant(0));
 						response.add("info", account_info);
 
 						if(remember) {
@@ -411,6 +419,10 @@ public:
 
 					}
 
+					repair_account(&user_info);
+
+					this->account_info_[user] = user_info;
+
 					const int session_id = g_session_id_gen++;
 					SessionInfo& info = sessions_[session_id];
 					info.session_id = session_id;
@@ -420,6 +432,7 @@ public:
 					response.add("type", "login_success");
 					response.add("session_id", variant(session_id));
 					response.add("username", variant(info.user_id));
+					response.add("info_version", user_info["info_version"].as_int(0));
 					response.add("info", user_info["info"]);
 
 					if(remember) {
@@ -456,6 +469,9 @@ public:
 							return;
 						}
 
+						repair_account(&user_info);
+						this->account_info_[username] = user_info;
+
 						const int session_id = g_session_id_gen++;
 						SessionInfo& info = sessions_[session_id];
 						info.session_id = session_id;
@@ -467,6 +483,7 @@ public:
 						response.add("cookie", variant(cookie));
 						response.add("username", variant(info.user_id));
 						response.add("info", user_info["info"]);
+						response.add("info_version", user_info["info_version"].as_int(0));
 						send_response(socket, response.build());
 					});
 				});
@@ -581,7 +598,6 @@ public:
 			} else if(request_type == "request_updates") {
 
 				int session_id = doc["session_id"].as_int(request_session_id);
-
 				auto itor = sessions_.find(session_id);
 				if(itor == sessions_.end()) {
 					fprintf(stderr, "Error: Unknown session: %d\n", session_id);
@@ -592,6 +608,16 @@ public:
 					}
 
 					itor->second.last_contact = time_ms_;
+
+					const int has_version = doc["info_version"].as_int(-1);
+					bool send_new_version = false;
+					if(has_version != -1) {
+						auto account_itor = account_info_.find(itor->second.user_id);
+						if(account_itor != account_info_.end() && account_itor->second["info_version"].as_int(0) != has_version) {
+							send_new_version = true;
+						}
+					}
+
 					if(itor->second.game_details != "" && !itor->second.game_pending) {
 						send_msg(socket, "text/json", itor->second.game_details, "");
 						itor->second.game_details = "";
@@ -657,14 +683,32 @@ public:
 				}
 				send_msg(socket, "text/json", response.write_json(), "");
 			} else {
-				std::vector<variant> args;
-				args.push_back(variant(this));
-				args.push_back(doc);
-				variant cmd = handle_request_fn_(args);
-				executeCommand(cmd);
+				int session_id = doc["session_id"].as_int(request_session_id);
+				auto itor = sessions_.find(session_id);
+				if(itor == sessions_.end()) {
+					fprintf(stderr, "Error: Unknown session: %d\n", session_id);
+					send_msg(socket, "text/json", "{ type: \"error\", message: \"unknown session\" }", "");
+				} else {
 
-				send_msg(socket, "text/json", current_response_.write_json(), "");
-				current_response_ = variant();
+					auto account_itor = account_info_.find(itor->second.user_id);
+
+					if(account_itor == account_info_.end()) {
+						fprintf(stderr, "Error: Unknown user: %s / %d\n", itor->second.user_id.c_str(), (int)account_info_.size());
+						send_msg(socket, "text/json", "{ type: \"error\", message: \"unknown user\" }", "");
+					} else {
+						std::vector<variant> args;
+						args.push_back(variant(this));
+						args.push_back(doc);
+						args.push_back(variant(itor->second.user_id));
+						args.push_back(account_itor->second["info"]);
+
+						variant cmd = handle_request_fn_(args);
+						executeCommand(cmd);
+
+						send_msg(socket, "text/json", current_response_.write_json(), "");
+						current_response_ = variant();
+					}
+				}
 			}
 
 		} catch(validation_failure_exception& error) {
@@ -959,17 +1003,42 @@ private:
 	std::deque<int> available_ports_;
 	std::map<int, ProcessInfo> servers_;
 
+	std::map<std::string, variant> account_info_;
+
+	void repair_account(variant* input) const {
+		variant info = (*input)["info"];
+		std::vector<variant> args;
+		args.push_back(info);
+		input->add_attr_mutation(variant("info"), read_account_fn_(args));
+	}
+
 	//stats
 	int terminated_servers_;
 
 	boost::intrusive_ptr<game_logic::FormulaObject> controller_;
 	variant create_account_fn_;
+	variant read_account_fn_;
 	variant handle_request_fn_;
 	variant matchmake_fn_;
 
 	variant current_response_;
 
 	DECLARE_CALLABLE(matchmaking_server);
+};
+
+class write_account_command : public game_logic::CommandCallable
+{
+	DbClient& db_client_;
+	std::string account_;
+	variant value_;
+public:
+	write_account_command(DbClient& db_client, const std::string& account, const variant& value)
+	  : db_client_(db_client), account_(account), value_(value)
+	{}
+
+	void execute(game_logic::FormulaCallable& obj) const override {
+		db_client_.put("user:" + account_, value_, [](){}, [](){});
+	}
 };
 
 BEGIN_DEFINE_CALLABLE_NOBASE(matchmaking_server)
@@ -979,6 +1048,22 @@ DEFINE_SET_FIELD
 	obj.current_response_ = value;
 DEFINE_FIELD(db_client, "builtin db_client")
 	return variant(obj.db_client_.get());
+BEGIN_DEFINE_FN(get_account_info, "(string) ->map")
+	const std::string& key = FN_ARG(0).as_string();
+
+	auto itor = obj.account_info_.find(key);
+	ASSERT_LOG(itor != obj.account_info_.end(), "Could not find user account: " << key);
+
+	return itor->second["info"];
+END_DEFINE_FN
+BEGIN_DEFINE_FN(write_account, "(string) ->commands")
+	const std::string& key = FN_ARG(0).as_string();
+
+	auto itor = obj.account_info_.find(key);
+	ASSERT_LOG(itor != obj.account_info_.end(), "Could not find user account: " << key);
+
+	return variant(new write_account_command(*obj.db_client_, key, itor->second));
+END_DEFINE_FN
 END_DEFINE_CALLABLE(matchmaking_server)
 
 void matchmaking_server::executeCommand(variant cmd)
