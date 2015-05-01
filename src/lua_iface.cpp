@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -395,7 +395,7 @@ namespace lua
 							luaL_error(L, "Unsupported type to convert on stack: userdata (unknown kind)");
 						}
 					} else {
-						luaL_error(L, "Unsupported type to convert on stack: %s", lua_typename(L, t));					
+						luaL_error(L, "Unsupported type to convert on stack: %s", lua_typename(L, t));
 					}
 			}
 			return variant();
@@ -454,14 +454,12 @@ namespace lua
 
 		static int gc_callable(lua_State* L)
 		{
-			auto d = static_cast< FormulaCallablePtr *> (luaL_testudata(L, 1, callable_str));
-
-			if (!d) {
+			if (auto d = static_cast< FormulaCallablePtr *> (luaL_testudata(L, 1, callable_str))) {
+				d->~FormulaCallablePtr();
+			} else {
 				LOG_DEBUG("gc_callable called on an object of type \"" << lua_typename(L, lua_type(L, 1)) << "\" which is not a callable.");
 				lua_pushstring(L, "gc_callable did not find a callable to destroy, garbage collection failure");
 				lua_error(L);
-			} else {
-				d->~FormulaCallablePtr();
 			}
 			return 0;
 		}
@@ -475,7 +473,7 @@ namespace lua
 				return variant_to_lua_value(L, value);
 			}
 			ffl_function_userdata* fn = static_cast<ffl_function_userdata*>(lua_newuserdata(L, sizeof(ffl_function_userdata))); //(-0,+1,e)
-			fn->name = new char[strlen(name)+1];			
+			fn->name = new char[strlen(name)+1];
 			strcpy(fn->name, name);
 			luaL_getmetatable(L, callable_function_str);		// (-0,+1,e)
 			lua_setmetatable(L, -2);					// (-1,+0,e)
@@ -594,7 +592,7 @@ namespace lua
 			const char *name = lua_tostring(L, 2);
 			// (-1,+0,-)
 			lua_pop(L,1);
-			
+
 			if(ud->value.is_callable()) {
 				ud->value = ud->value.as_callable()->queryValue(name);
 			} else {
@@ -653,14 +651,12 @@ namespace lua
 
 		static int gc_object(lua_State* L)
 		{
-			auto d = static_cast< FormulaObjectPtr *> (luaL_testudata(L, 1, object_str));
-
-			if (!d) {
+			if (auto d = static_cast< FormulaObjectPtr *> (luaL_testudata(L, 1, object_str))) {
+				d->~FormulaObjectPtr();
+			} else {
 				LOG_DEBUG("gc_object called on an item of type \"" << lua_typename(L, lua_type(L, 1)) << "\" which is not an object.");
 				lua_pushstring(L, "gc_object did not find an object to destroy, garbage collection failure");
 				lua_error(L);
-			} else {
-				d->~FormulaObjectPtr();
 			}
 			return 0;
 		}
@@ -709,13 +705,13 @@ namespace lua
 			new (a) FormulaCallablePtr(&lvl);
 			return 1;
 		}
-		
+
 		static int get_lib(lua_State* L)
 		{
 			//(-0,+1,e)
 			ffl_variant_lib_userdata* ud = static_cast<ffl_variant_lib_userdata*>(lua_newuserdata(L, sizeof(ffl_variant_lib_userdata)));
 			ud->value = variant(game_logic::get_library_object().get());
-			
+
 			luaL_getmetatable(L, lib_functions_str);	// (-0,+1,e)
 			lua_setmetatable(L, -2);					// (-1,+0,e)
 			return 1;
@@ -726,13 +722,13 @@ namespace lua
 			const char *name = lua_tostring(L, 2);						// (-0,+0,e)
 
 			ffl_function_userdata* fn = static_cast<ffl_function_userdata*>(lua_newuserdata(L, sizeof(ffl_function_userdata))); //(-0,+1,e)
-			fn->name = new char[strlen(name)+1];			
+			fn->name = new char[strlen(name)+1];
 			strcpy(fn->name, name);
 			luaL_getmetatable(L, function_str);		// (-0,+1,e)
 			lua_setmetatable(L, -2);					// (-1,+0,e)
 			return 1;
 		}
-		
+
 		static const struct luaL_Reg anura_functions [] = {
 			{"level", get_level},
 			{"lib", get_lib},
@@ -854,32 +850,6 @@ namespace lua
 		push_anura_table(L);
 
 		lua_settop(L, 0);
-
-		/*dostring(
-			"local lvl = Anura.level()\n"
-			"print(lvl.id, lvl.music_volume, lvl.in_editor)\n"
-			"Anura.debug('abcd')\n"
-			"Anura.eval('debug(map(range(10),value))')\n"
-			"local camera = lvl.camera\n"
-			"print('Camera speed: ' .. camera.speed)\n"
-			"for n = 1, 10 do\n"
-			"  camera.speed = n\n"
-			"  print('Camera speed: ' .. camera.speed)\n"
-			"end\n"
-			"lvl.player:debug_rect(lvl.player.mid_x-50, lvl.player.mid_y-50, 100, 100)\n"
-			//"for i,v in ipairs(lvl.active_chars) do\n"
-			//"for i,v in ipairs(Anura.eval('range(10)')) do\n"
-			"local mm = Anura.eval('{q(a):1,q(b):2}')\n"
-			//"print(mm.a)\n"
-			"for i,v in pairs(mm) do\n"
-			"  print(i, v)\n"
-			"end\n"
-		);*/
-
-		/*dostring("local me = Anura.me\n"
-			"print(me.speed)",
-			level::current().camera().get()
-		);*/
 	}
 
 	namespace 
@@ -929,7 +899,7 @@ namespace lua
 	CompiledChunk* LuaContext::compileChunk(const std::string& nam, const std::string& str)
 	{
 		lua_State * L = getState();
-		
+
 		std::string name = "@" + nam; // if the name does not begin "@" then lua will represent it as [string "name"] in the debugging output
 
 		int err_code = luaL_loadbuffer(L, str.c_str(), str.size(), name.c_str());		// (-0,+1,-)
@@ -976,7 +946,7 @@ namespace lua
 			lua_pop(L, 1); // remove the error handler
 			return true;
 		}
-		
+
 		if (int err_code = lua_pcall(L, 0, 0, -2)) {
 			handle_pcall_error(L, err_code);
 			lua_pop(L, 1); // remove the error handler
@@ -1022,12 +992,7 @@ namespace lua
 	variant LuaFunctionReference::call(const variant & args) const
 	{
 		lua_State* L = L_->getState();
-		/*
-		std::cerr << "::call()\n";
-		dump_stack(L_);
-		print_traceback(L_);*/
 		int top = lua_gettop(L);
-		//ASSERT_LOG(top==0, "lua functon reference tried to evaluate when top is not 0");
 
 		// load error handler for pcall
 		lua_pushstring(L, error_handler_fcn_reg_key);
@@ -1036,7 +1001,7 @@ namespace lua
 
 		// load the function itself from the registry
 		lua_rawgeti(L, LUA_REGISTRYINDEX, ref_);
-		
+
 		// load the arguments to the function call
 		auto args_vec = args.as_list();
 		for (size_t i = 0; i < args_vec.size(); ++i) {
@@ -1046,7 +1011,7 @@ namespace lua
 
 		// call the function in a protected context
 		int err_code = lua_pcall(L, nargs, LUA_MULTRET, error_handler_index);
-		if(err_code != LUA_OK) {				// (-(nargs + 1), +(nresults|1),-)
+		if(err_code != LUA_OK) {
 			handle_pcall_error(L, err_code);
 			lua_remove(L, error_handler_index);
 			lua_settop(L, top);
@@ -1100,7 +1065,7 @@ UNIT_TEST(lua_test)
 }
 
 /*UNIT_TEST(lua_callable_ffl_types) {
-	CHECK_EQ (variant_types_compatible(LuaFunctionReference))	
+	CHECK_EQ (variant_types_compatible(LuaFunctionReference))
 }*/
 
 UNIT_TEST(lua_to_ffl_conversions) {
@@ -1162,7 +1127,7 @@ UNIT_TEST(lua_to_ffl_conversions) {
 		lua_pop(L, 1);
 		CHECK_EQ (lua_gettop(L), 0);
 	}
-	
+
 	{
 		int err_code = luaL_loadstring(L, "return function(x) return x + 1 end");
 		CHECK_EQ(err_code, LUA_OK);
@@ -1199,7 +1164,7 @@ UNIT_TEST(lua_to_ffl_conversions) {
 
 		variant exec_fn = callable->queryValue("execute");
 		std::vector<variant> input;
-		input.push_back(Formula(variant("[5]")).execute());		
+		input.push_back(Formula(variant("[5]")).execute());
 		variant output = exec_fn(input);
 		CHECK_EQ(output, Formula(variant("{ 1: {1 : 5, 2 : 6}, 2: {1: 25, 2: 125}}")).execute());
 
