@@ -111,6 +111,27 @@ namespace lua
 			}
 		}
 
+		// Describe the type of the lua value. If it's a table / userdata, report string description of the metatable also.
+		std::string describe_lua_value(lua_State *L, int ndx) {
+			int t = lua_type(L, ndx);
+			const char * n = lua_typename(L, t);
+			assert(n);
+			std::string ret = n;
+			if (t == LUA_TUSERDATA || t == LUA_TTABLE) {
+				lua_getmetatable(L, ndx);
+				if (!lua_isnil(L, -1)) {
+					if (lua_isstring(L, -1)) {
+						ret += " (";
+						ret += lua_tostring(L, -1);
+						ret += ")";
+					} else {
+						ret += " (unknown kind)";
+					}
+				}
+				lua_pop(L, 1);
+			}
+			return ret;
+		}
 	}
 
 	void LuaContext::setSelfCallable(FormulaCallable& callable)
@@ -186,7 +207,7 @@ namespace lua
 		static void dump_stack(lua_State * L) {
 			std::cerr << "Stack contents:\n***\n";
 			for (int i = 1; i <= lua_gettop(L); ++i) {
-				std::cerr << "[" << i << "]: " << lua_typename(L, lua_type(L, i));
+				std::cerr << "[" << i << "]: " << describe_lua_value(L, i);
 				if (const char * foo = lua_tostring(L, i)) {
 					std::cerr << " \"" << foo << "\"\n";
 				}
@@ -387,16 +408,7 @@ namespace lua
 				case LUA_TTHREAD:
 				case LUA_TLIGHTUSERDATA:
 				default:
-					if (t == LUA_TUSERDATA) {
-						lua_getmetatable(L, ndx);
-						if (lua_isstring(L, -1)) {
-							luaL_error(L, "Unsupported type to convert on stack: userdata (%s)", lua_tostring(L, -1));
-						} else {
-							luaL_error(L, "Unsupported type to convert on stack: userdata (unknown kind)");
-						}
-					} else {
-						luaL_error(L, "Unsupported type to convert on stack: %s", lua_typename(L, t));
-					}
+					luaL_error(L, "Unsupported type to convert on stack: %s", describe_lua_value(L, ndx).c_str());
 			}
 			return variant();
 		}
@@ -457,7 +469,7 @@ namespace lua
 			if (auto d = static_cast< FormulaCallablePtr *> (luaL_testudata(L, 1, callable_str))) {
 				d->~FormulaCallablePtr();
 			} else {
-				LOG_DEBUG("gc_callable called on an object of type \"" << lua_typename(L, lua_type(L, 1)) << "\" which is not a callable.");
+				LOG_DEBUG("gc_callable called on an item \"" << describe_lua_value(L, 1) << "\" which is not a callable.");
 				lua_pushstring(L, "gc_callable did not find a callable to destroy, garbage collection failure");
 				lua_error(L);
 			}
@@ -654,7 +666,7 @@ namespace lua
 			if (auto d = static_cast< FormulaObjectPtr *> (luaL_testudata(L, 1, object_str))) {
 				d->~FormulaObjectPtr();
 			} else {
-				LOG_DEBUG("gc_object called on an item of type \"" << lua_typename(L, lua_type(L, 1)) << "\" which is not an object.");
+				LOG_DEBUG("gc_object called on an item \"" << describe_lua_value(L, 1) << "\" which is not an object.");
 				lua_pushstring(L, "gc_object did not find an object to destroy, garbage collection failure");
 				lua_error(L);
 			}
