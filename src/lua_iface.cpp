@@ -1104,16 +1104,18 @@ UNIT_TEST(lua_test)
 }*/
 
 UNIT_TEST(lua_to_ffl_conversions) {
+	using namespace game_logic;
+	using namespace lua;
 
-	lua::LuaContextPtr test_context = new lua::LuaContext();
+	LuaContextPtr test_context = new LuaContext();
 	lua_State * L = test_context->getState();
 
 	lua_settop(L, 0);
 
 	{
 		lua_pushstring(L, "foo");
-		variant result = lua::lua_value_to_variant(L, 1);
-		CHECK_EQ (result, game_logic::Formula(variant("\"foo\"")).execute());
+		variant result = lua_value_to_variant(L, 1);
+		CHECK_EQ (result, Formula(variant("\"foo\"")).execute());
 		lua_pop(L, 1);
 		CHECK_EQ (lua_gettop(L), 0);
 	}
@@ -1125,8 +1127,8 @@ UNIT_TEST(lua_to_ffl_conversions) {
 		lua_pushstring(L, "bar");
 		lua_setfield(L, -2, "b");
 		CHECK_EQ (lua_gettop(L), 1);
-		variant result = lua::lua_value_to_variant(L, 1);
-		CHECK_EQ (result, game_logic::Formula(variant("{ 'a' : 'foo', 'b' : 'bar' }")).execute());
+		variant result = lua_value_to_variant(L, 1);
+		CHECK_EQ (result, Formula(variant("{ 'a' : 'foo', 'b' : 'bar' }")).execute());
 		lua_pop(L, 1);
 		CHECK_EQ (lua_gettop(L), 0);
 	}
@@ -1140,8 +1142,8 @@ UNIT_TEST(lua_to_ffl_conversions) {
 		lua_pushboolean(L, false);
 		lua_setfield(L, -2, "c");
 		CHECK_EQ (lua_gettop(L), 1);
-		variant result = lua::lua_value_to_variant(L, 1);
-		CHECK_EQ (result, game_logic::Formula(variant("{ 'a' : 1, 'b' : 1.5, 'c': false }")).execute());
+		variant result = lua_value_to_variant(L, 1);
+		CHECK_EQ (result, Formula(variant("{ 'a' : 1, 'b' : 1.5, 'c': false }")).execute());
 		lua_pop(L, 1);
 		CHECK_EQ (lua_gettop(L), 0);
 	}
@@ -1153,10 +1155,10 @@ UNIT_TEST(lua_to_ffl_conversions) {
 		lua_pushstring(L, "bar");
 		lua_rawseti(L, -2, 2);
 		CHECK_EQ (lua_gettop(L), 1);
-		variant result = lua::lua_value_to_variant(L, 1, parse_variant_type(variant("[string]")));
-		CHECK_EQ (result, game_logic::Formula(variant("['foo', 'bar']")).execute());
-		result = lua::lua_value_to_variant(L, 1, parse_variant_type(variant("{int -> string}")));
-		CHECK_EQ (result, game_logic::Formula(variant("{ 1 : 'foo', 2 : 'bar'}")).execute());
+		variant result = lua_value_to_variant(L, 1, parse_variant_type(variant("[string]")));
+		CHECK_EQ (result, Formula(variant("['foo', 'bar']")).execute());
+		result = lua_value_to_variant(L, 1, parse_variant_type(variant("{int -> string}")));
+		CHECK_EQ (result, Formula(variant("{ 1 : 'foo', 2 : 'bar'}")).execute());
 		lua_pop(L, 1);
 		CHECK_EQ (lua_gettop(L), 0);
 	}
@@ -1168,17 +1170,17 @@ UNIT_TEST(lua_to_ffl_conversions) {
 		CHECK_EQ(err_code, LUA_OK);
 		CHECK_EQ(lua_typename(L, lua_type(L, 1)), std::string("function"));
 
-		variant func = lua::lua_value_to_variant(L, 1);
-		game_logic::FormulaCallable* callable = const_cast<game_logic::FormulaCallable*>(func.as_callable());
+		variant func = lua_value_to_variant(L, 1);
+		FormulaCallable* callable = const_cast<FormulaCallable*>(func.as_callable());
 		CHECK_EQ(callable != nullptr, true);
 
 		variant fn = callable->queryValue("execute");
 
 		std::vector<variant> input;
-		input.push_back(game_logic::Formula(variant("[5]")).execute());
+		input.push_back(Formula(variant("[5]")).execute());
 
 		variant output = fn(input);
-		CHECK_EQ(output, game_logic::Formula(variant("6")).execute());
+		CHECK_EQ(output, Formula(variant("6")).execute());
 
 		lua_pop(L,1);
 		CHECK_EQ(lua_gettop(L), 0);
@@ -1191,15 +1193,15 @@ UNIT_TEST(lua_to_ffl_conversions) {
 		CHECK_EQ(err_code, LUA_OK);
 		CHECK_EQ(lua_typename(L, lua_type(L, 1)), std::string("function"));
 
-		variant func = lua::lua_value_to_variant(L, 1);
-		game_logic::FormulaCallable* callable = const_cast<game_logic::FormulaCallable*>(func.as_callable());
+		variant func = lua_value_to_variant(L, 1);
+		FormulaCallable* callable = const_cast<FormulaCallable*>(func.as_callable());
 		CHECK_EQ(callable != nullptr, true);
 
 		variant exec_fn = callable->queryValue("execute");
 		std::vector<variant> input;
-		input.push_back(game_logic::Formula(variant("[5]")).execute());		
+		input.push_back(Formula(variant("[5]")).execute());		
 		variant output = exec_fn(input);
-		CHECK_EQ(output, game_logic::Formula(variant("{ 1: {1 : 5, 2 : 6}, 2: {1: 25, 2: 125}}")).execute());
+		CHECK_EQ(output, Formula(variant("{ 1: {1 : 5, 2 : 6}, 2: {1: 25, 2: 125}}")).execute());
 
 
 
@@ -1210,10 +1212,10 @@ UNIT_TEST(lua_to_ffl_conversions) {
 		CHECK_EQ(output, variant(true));
 
 		input.clear();
-		input.push_back(game_logic::Formula(variant("[5]")).execute());
+		input.push_back(Formula(variant("[5]")).execute());
 
 		output = exec_fn(input);
-		CHECK_EQ(output, game_logic::Formula(variant("[[5,6], [25, 125]]")).execute());
+		CHECK_EQ(output, Formula(variant("[[5,6], [25, 125]]")).execute());
 
 
 
@@ -1223,10 +1225,10 @@ UNIT_TEST(lua_to_ffl_conversions) {
 		CHECK_EQ(output, variant(true));
 
 		input.clear();
-		input.push_back(game_logic::Formula(variant("[5]")).execute());
+		input.push_back(Formula(variant("[5]")).execute());
 
 		output = exec_fn(input);
-		CHECK_EQ(output, game_logic::Formula(variant("{ 1: [5,6], 2: [25, 125] }")).execute());
+		CHECK_EQ(output, Formula(variant("{ 1: [5,6], 2: [25, 125] }")).execute());
 
 
 
@@ -1237,10 +1239,10 @@ UNIT_TEST(lua_to_ffl_conversions) {
 		CHECK_EQ(output, variant(true));
 
 		input.clear();
-		input.push_back(game_logic::Formula(variant("[5]")).execute());
+		input.push_back(Formula(variant("[5]")).execute());
 
 		output = exec_fn(input);
-		CHECK_EQ(output, game_logic::Formula(variant("[{ 1: 5, 2: 6}, {1 : 25, 2: 125} ]")).execute());
+		CHECK_EQ(output, Formula(variant("[{ 1: 5, 2: 6}, {1 : 25, 2: 125} ]")).execute());
 
 
 		lua_pop(L,1);
