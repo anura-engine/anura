@@ -204,6 +204,17 @@ namespace
 				}
 			}
 		}
+		
+		// Make sure to store the very last message also
+		if (current_item == PO_MSGSTR) {
+			std::string id = msgid.str(), str = msgstr.str();
+			auto p = hashmap.insert(make_pair(id, str));
+			if (str != p.first->second) {
+				LOG_DEBUG("i18n: Overwriting a translation of string \"" << id << "\":");
+				LOG_DEBUG("i18n: Changing \"" << p.first->second << "\" to \"" << str << "\"");
+				p.first->second = str;
+			}
+		}
 	}
 }
 
