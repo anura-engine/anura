@@ -387,7 +387,16 @@ namespace lua
 				case LUA_TTHREAD:
 				case LUA_TLIGHTUSERDATA:
 				default:
-					luaL_error(L, "Unsupported type to convert on stack: %s", (t == LUA_TUSERDATA ? "userdata (not a formula callable)" : lua_typename(L,t)));
+					if (t == LUA_TUSERDATA) {
+						lua_getmetatable(L, ndx);
+						if (lua_isstring(L, -1)) {
+							luaL_error(L, "Unsupported type to convert on stack: userdata (%s)", lua_tostring(L, -1));
+						} else {
+							luaL_error(L, "Unsupported type to convert on stack: userdata (unknown kind)");
+						}
+					} else {
+						luaL_error(L, "Unsupported type to convert on stack: %s", lua_typename(L, t));					
+					}
 			}
 			return variant();
 		}
@@ -808,19 +817,39 @@ namespace lua
 		lua_pop(L, 1);
 
 		luaL_newmetatable(L, function_str);
-		luaL_setfuncs(L, gFFLFunctions, 0);	
+		luaL_setfuncs(L, gFFLFunctions, 0);
+		lua_pushliteral(L, "__metatable");
+		lua_pushliteral(L, "FFL function");
+		lua_rawset(L, -3);
+		lua_pop(L, 1);
 
 		luaL_newmetatable(L, callable_str);
 		luaL_setfuncs(L, gCallableFunctions, 0);
+		lua_pushliteral(L, "__metatable");
+		lua_pushliteral(L, "FFL callable");
+		lua_rawset(L, -3);
+		lua_pop(L, 1);
 
 		luaL_newmetatable(L, object_str);
 		luaL_setfuncs(L, gObjectFunctions, 0);
+		lua_pushliteral(L, "__metatable");
+		lua_pushliteral(L, "FFL object");
+		lua_rawset(L, -3);
+		lua_pop(L, 1);
 
 		luaL_newmetatable(L, callable_function_str);
 		luaL_setfuncs(L, gFFLCallableFunctions, 0);
+		lua_pushliteral(L, "__metatable");
+		lua_pushliteral(L, "FFL callable function");
+		lua_rawset(L, -3);
+		lua_pop(L, 1);
 
 		luaL_newmetatable(L, lib_functions_str);
 		luaL_setfuncs(L, gLibMetaFunctions, 0);
+		lua_pushliteral(L, "__metatable");
+		lua_pushliteral(L, "FFL library function");
+		lua_rawset(L, -3);
+		lua_pop(L, 1);
 
 		push_anura_table(L);
 
