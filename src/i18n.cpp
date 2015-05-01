@@ -77,6 +77,15 @@ namespace
 
 	std::string locale;
 
+	void store_message(const std::string & msgid, const std::string & msgstr) {
+		auto p = hashmap.insert(make_pair(msgid, msgstr));
+		if (!p.second && msgstr != p.first->second) {
+			LOG_DEBUG("i18n: Overwriting a translation of string \"" << msgid << "\":");
+			LOG_DEBUG("i18n: Changing \"" << p.first->second << "\" to \"" << msgstr << "\"");
+			p.first->second = msgstr;
+		}
+	}
+
 	//handle the contents of an mo file
 	void process_mo_contents(const std::string & content) {
 		size_t size = content.size();
@@ -98,12 +107,7 @@ namespace
 			const std::string msgid = content.substr(original[i].offset, original[i].length);
 			const std::string msgstr = content.substr(translated[i].offset, translated[i].length);
 
-			auto p = hashmap.insert(make_pair(msgid, msgstr));
-			if (!p.second && msgstr != p.first->second) {
-				LOG_DEBUG("i18n: Overwriting a translation of string \"" << msgid << "\":");
-				LOG_DEBUG("i18n: Changing \"" << p.first->second << "\" to \"" << msgstr << "\"");
-				p.first->second = msgstr;
-			}
+			store_message(msgid, msgstr);
 		}
 	}
 
@@ -169,13 +173,7 @@ namespace
 				if (line.size() > 6 && line.substr(0,6) == "msgid ") {
 					// This is the start of a new item, so store the previous item (if there was a previous item)
 					if (current_item != PO_NONE) {
-						std::string id = msgid.str(), str = msgstr.str();
-						auto p = hashmap.insert(make_pair(id, str));
-						if (str != p.first->second) {
-							LOG_DEBUG("i18n: Overwriting a translation of string \"" << id << "\":");
-							LOG_DEBUG("i18n: Changing \"" << p.first->second << "\" to \"" << str << "\"");
-							p.first->second = str;
-						}
+						store_message(msgid.str(), msgstr.str());
 						msgid.str("");
 						msgstr.str("");
 					}
@@ -207,13 +205,7 @@ namespace
 		
 		// Make sure to store the very last message also
 		if (current_item == PO_MSGSTR) {
-			std::string id = msgid.str(), str = msgstr.str();
-			auto p = hashmap.insert(make_pair(id, str));
-			if (str != p.first->second) {
-				LOG_DEBUG("i18n: Overwriting a translation of string \"" << id << "\":");
-				LOG_DEBUG("i18n: Changing \"" << p.first->second << "\" to \"" << str << "\"");
-				p.first->second = str;
-			}
+			store_message(msgid.str(), msgstr.str());
 		}
 	}
 }
