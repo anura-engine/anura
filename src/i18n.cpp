@@ -137,15 +137,30 @@ namespace
 					post_string = true;
 				} else if (*it == '\\') {
 					it++;
+					if (it == str.end()) {
+						LOG_ERROR("i18n: po string terminated unexpectedly after escape character: \n<<" << str << ">>");
+						return;
+					}
 					char c = *it;
 					switch (c) {
 						case 'n': {
 							ss << '\n';
 							break;
 						}
-						default:
+						case 't': {
+							ss << '\t';
+							break;
+						}
+						case '\'':
+						case '\"':
+						case '\\': {
 							ss << c;
 							break;
+						}
+						default: {
+							LOG_ERROR("i18n: po string contained unrecognized escape sequence: \"\\" << c << "\": \n<<" << str << ">>");
+							break;
+						}
 					}
 				} else {
 					ss << *it;
@@ -202,7 +217,7 @@ namespace
 				}
 			}
 		}
-		
+
 		// Make sure to store the very last message also
 		if (current_item == PO_MSGSTR) {
 			store_message(msgid.str(), msgstr.str());
@@ -217,7 +232,7 @@ namespace i18n
 		//do not attempt to translate empty strings ("") since that returns metadata
 		if (msgid.empty())
 			return msgid;
-		map::iterator it = hashmap.find (msgid); 
+		map::iterator it = hashmap.find (msgid);
 		if (it != hashmap.end())
 			return it->second;
 		//if no translated string was found, return the original
