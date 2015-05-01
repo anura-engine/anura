@@ -30,6 +30,7 @@
 #include "asserts.hpp"
 #include "filesystem.hpp"
 #include "i18n.hpp"
+#include "logger.hpp"
 #include "module.hpp"
 #include "preferences.hpp"
 
@@ -96,7 +97,13 @@ namespace
 				return;
 			const std::string msgid = content.substr(original[i].offset, original[i].length);
 			const std::string msgstr = content.substr(translated[i].offset, translated[i].length);
-			hashmap[msgid] = msgstr;
+
+			auto p = hashmap.insert(make_pair(msgid, msgstr));
+			if (p.second) {
+				LOG_DEBUG("i18n: Overwriting a translation of string \"" << msgid << "\":");
+				LOG_DEBUG("i18n: Changing \"" << p.first->second << "\" to \"" << msgstr << "\"");
+				p.first->second = msgstr;
+			}
 		}
 	}
 }
@@ -146,21 +153,46 @@ namespace i18n
 		}
 		if (locale.size() < 2)
 			return;
-	
-		std::string filename = "./locale/" + locale + "/LC_MESSAGES/frogatto.mo";
+
+		std::vector<std::string> files;
+		std::string dirname = "./locale/" + locale + "/LC_MESSAGES/";
 		found = locale.find("@");
-		if (!sys::file_exists(module::map_file(filename)) && found != std::string::npos) {
+
+		module::get_files_in_dir(dirname, &files);
+		if (!files.size() && found != std::string::npos) {
 			locale = locale.substr(0, found);
-			filename = "./locale/" + locale + "/LC_MESSAGES/frogatto.mo";
+			dirname = "./locale/" + locale + "/LC_MESSAGES/";
+			module::get_files_in_dir(dirname, &files);
 		}
 		//strip the country code, e.g. "de_DE" --> "de"
 		found = locale.find("_");
-		if (!sys::file_exists(module::map_file(filename)) && found != std::string::npos) {
+		if (!files.size() && found != std::string::npos) {
 			locale = locale.substr(0, found);
-			filename = "./locale/" + locale + "/LC_MESSAGES/frogatto.mo";
+			dirname = "./locale/" + locale + "/LC_MESSAGES/";
+			module::get_files_in_dir(dirname, &files);
 		}
-		if (sys::file_exists(module::map_file(filename))) {
-			process_mo_contents(sys::read_file(module::map_file(filename)));
+
+		bool loaded_something = false;
+
+		for(auto & file : files) {
+			try {
+				std::string extension = file.substr(file.find_last_of('.'));
+				std::string path = dirname + file;
+				ASSERT_LOG(sys::file_exists(module::map_file(path)), "confused... file does not exist which was found earlier: " << file);
+				if (extension == ".mo") {
+					LOG_DEBUG("loading translations from mo file: " << path);
+					process_mo_contents(sys::read_file(module::map_file(path)));
+					loaded_something = true;
+				} else {
+					LOG_DEBUG("skipping translations file: " << path);
+				}
+			} catch (std::out_of_range &) {
+				ASSERT_LOG(false, "bad file: " + file);
+			}
+		}
+
+		if (!loaded_something) {
+			LOG_WARN("did not find any translation files. \n locale = " << locale << "\n dirname = " << dirname);
 		}
 	}
 
