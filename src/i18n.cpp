@@ -297,37 +297,41 @@ namespace i18n
 		std::vector<std::string> files;
 		std::string dirname;
 
-		for (; locale.size() >= 2 && files.size() == 0; locale = tweak_locale(locale)) {
+		for (; locale.size() >= 2; locale = tweak_locale(locale)) {
 			dirname = mo_dir(locale);
 			module::get_files_in_dir(dirname, &files);
-		}
 
-		bool loaded_something = false;
+			if (files.size()) {
+				bool loaded_something = false;
+				for(auto & file : files) {
+					std::string extension;
+					try {
+						extension = file.substr(file.find_last_of('.'));
+					} catch (std::out_of_range &) {}
 
-		for(auto & file : files) {
-			std::string extension;
-			try {
-				extension = file.substr(file.find_last_of('.'));
-			} catch (std::out_of_range &) {}
-
-			std::string path = dirname + file;
-			ASSERT_LOG(sys::file_exists(module::map_file(path)), "confused... file does not exist which was found earlier: " << path);
-			if (extension == ".mo") {
-				LOG_DEBUG("loading translations from mo file: " << path);
-				process_mo_contents(sys::read_file(module::map_file(path)));
-				loaded_something = true;
-			} else if (extension == ".po") {
-				LOG_DEBUG("loading translations from po file: " << path);
-				process_po_contents(sys::read_file(module::map_file(path)));
-				loaded_something = true;
-			} else {
-				LOG_DEBUG("skipping translations file: " << path);
+					std::string path = dirname + file;
+					ASSERT_LOG(sys::file_exists(module::map_file(path)), "confused... file does not exist which was found earlier: " << path);
+					if (extension == ".mo") {
+						LOG_DEBUG("loading translations from mo file: " << path);
+						process_mo_contents(sys::read_file(module::map_file(path)));
+						loaded_something = true;
+					} else if (extension == ".po") {
+						LOG_DEBUG("loading translations from po file: " << path);
+						process_po_contents(sys::read_file(module::map_file(path)));
+						loaded_something = true;
+					} else {
+						LOG_DEBUG("skipping translations file: " << path);
+					}
+				}
+				if (loaded_something) {
+					return ;
+				} else {
+					LOG_DEBUG("did not find any mo or po files in dir " << dirname);
+				}
 			}
 		}
 
-		if (!loaded_something) {
-			LOG_WARN("did not find any translation files. \n locale = " << locale << "\n dirname = " << dirname);
-		}
+		LOG_WARN("did not find any translation files. locale = " << locale << " , dirname = " << dirname);
 	}
 
 	bool load_extra_po(const std::string & module_dir) {
@@ -341,7 +345,7 @@ namespace i18n
 				return true;
 			}
 		}
-		LOG_DEBUG("could not find translatons in " << module_dir << " associated to locale " << locale);
+		LOG_DEBUG("could not find translations in " << module_dir << " associated to locale " << locale);
 
 		return false;
 	}
