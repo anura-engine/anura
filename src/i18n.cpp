@@ -33,6 +33,7 @@
 #include "logger.hpp"
 #include "module.hpp"
 #include "preferences.hpp"
+#include "unit_test.hpp"
 
 #ifdef __APPLE__
 #include <CoreFoundation/CoreFoundation.h>
@@ -423,5 +424,51 @@ namespace i18n
 		} else {
 			i18n::setLocale(locale);
 		}
+	}
+
+	UNIT_TEST(po_parse)
+	{
+		std::string doc = "\
+#foo\n\
+#bar\n\
+#baz\n\
+msgid \"asdf\"\n\
+msgstr \"jkl;\"\n\
+\n\
+\n\
+#foo\n\
+msgid \"foo\"\n\
+msgstr \"bar\"\n\
+\n\
+msgid \"tmnt\"\n\
+msgstr \"teenage\"\n\
+\"mutant\"\n\
+\"ninja\"\n\
+\"turtles\"\n\
+msgid \"a man\\n\"\n\
+\"a plan\\n\"\n\
+\"a canal\"\n\
+msgstr \"panama\"";
+
+		hashmap.clear();
+		process_po_contents(doc);
+
+		map answer;
+		answer["asdf"] = "jkl;";
+		answer["foo"] = "bar";
+		answer["tmnt"] = "teenagemutantninjaturtles";
+		answer["a man\na plan\na canal"] = "panama";
+
+		for (auto & v : answer) {
+			CHECK_EQ (tr(v.first), v.second);
+		}
+
+		for (auto & v : hashmap) {
+			auto it = answer.find(v.first);
+			CHECK_EQ (it != answer.end(), true);
+			CHECK_EQ (it->second, v.second);
+		}
+
+		hashmap.clear();
 	}
 }
