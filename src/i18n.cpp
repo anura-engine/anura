@@ -186,18 +186,17 @@ namespace
 		for (std::string line; std::getline(ss, line); ) {
 			if (line.size() > 0 && line[0] != '#') {
 				if (line.size() >= 6 && line.substr(0,6) == "msgid ") {
-					// This is the start of a new item, so store the previous item (if there was a previous item)
-					if (current_item != PO_NONE) {
+					if (current_item == PO_MSGID) {
+						LOG_DEBUG("i18n: ignoring a MSGID which had no MSGSTR: " << msgid.str());
+					} else if (current_item == PO_MSGSTR) { // This is the start of a new item, so store the previous item
 						store_message(msgid.str(), msgstr.str());
-						msgid.str("");
-						msgstr.str("");
 					}
+					msgid.str("");
+					msgstr.str("");
 					parse_quoted_string(msgid, line.substr(6));
 					current_item = PO_MSGID;
 				} else if (line.size() >= 7 && line.substr(0,7) == "msgstr ") {
-					if (current_item == PO_NONE) {
-						LOG_ERROR("i18n: in po file, found a msgstr with no earlier msgid:\n<<" << line << ">>");
-					}
+					ASSERT_LOG(current_item == PO_MSGID, "i18n: in po file, found a msgstr with no earlier msgid:\n<<" << line << ">>");
 
 					parse_quoted_string(msgstr, line.substr(7));
 					current_item = PO_MSGSTR;
@@ -221,6 +220,8 @@ namespace
 		// Make sure to store the very last message also
 		if (current_item == PO_MSGSTR) {
 			store_message(msgid.str(), msgstr.str());
+		} else if (current_item == PO_MSGID) {
+			LOG_DEBUG("i18n: ignoring a MSGID which had no MSGSTR: " << msgid.str());
 		}
 	}
 }
