@@ -259,6 +259,12 @@ namespace i18n
 			|| (locale[0] == 'k'  && locale[1] == 'o');
 	}
 
+	namespace {
+		std::string mo_dir(const std::string & locale_str) {
+			return "./locale/" + locale_str + "/LC_MESSAGES/";
+		}
+	}
+
 	void load_translations()
 	{
 		hashmap.clear();
@@ -272,43 +278,43 @@ namespace i18n
 			return;
 
 		std::vector<std::string> files;
-		std::string dirname = "./locale/" + locale + "/LC_MESSAGES/";
-		found = locale.find("@");
-
+		std::string dirname = mo_dir(locale);
 		module::get_files_in_dir(dirname, &files);
+
+		found = locale.find("@");
 		if (!files.size() && found != std::string::npos) {
 			locale = locale.substr(0, found);
-			dirname = "./locale/" + locale + "/LC_MESSAGES/";
+			dirname = mo_dir(locale);
 			module::get_files_in_dir(dirname, &files);
 		}
 		//strip the country code, e.g. "de_DE" --> "de"
 		found = locale.find("_");
 		if (!files.size() && found != std::string::npos) {
 			locale = locale.substr(0, found);
-			dirname = "./locale/" + locale + "/LC_MESSAGES/";
+			dirname = mo_dir(locale);
 			module::get_files_in_dir(dirname, &files);
 		}
 
 		bool loaded_something = false;
 
 		for(auto & file : files) {
+			std::string extension;
 			try {
-				std::string extension = file.substr(file.find_last_of('.'));
-				std::string path = dirname + file;
-				ASSERT_LOG(sys::file_exists(module::map_file(path)), "confused... file does not exist which was found earlier: " << file);
-				if (extension == ".mo") {
-					LOG_DEBUG("loading translations from mo file: " << path);
-					process_mo_contents(sys::read_file(module::map_file(path)));
-					loaded_something = true;
-				} else if (extension == ".po") {
-					LOG_DEBUG("loading translations from po file: " << path);
-					process_po_contents(sys::read_file(module::map_file(path)));
-					loaded_something = true;
-				} else {
-					LOG_DEBUG("skipping translations file: " << path);
-				}
-			} catch (std::out_of_range &) {
-				ASSERT_LOG(false, "bad file: " + file);
+				extension = file.substr(file.find_last_of('.'));
+			} catch (std::out_of_range &) {}
+
+			std::string path = dirname + file;
+			ASSERT_LOG(sys::file_exists(module::map_file(path)), "confused... file does not exist which was found earlier: " << path);
+			if (extension == ".mo") {
+				LOG_DEBUG("loading translations from mo file: " << path);
+				process_mo_contents(sys::read_file(module::map_file(path)));
+				loaded_something = true;
+			} else if (extension == ".po") {
+				LOG_DEBUG("loading translations from po file: " << path);
+				process_po_contents(sys::read_file(module::map_file(path)));
+				loaded_something = true;
+			} else {
+				LOG_DEBUG("skipping translations file: " << path);
 			}
 		}
 
