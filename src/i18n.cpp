@@ -297,8 +297,8 @@ namespace i18n
 		std::vector<std::string> files;
 		std::string dirname;
 
-		for (; locale.size() >= 2; locale = tweak_locale(locale)) {
-			dirname = mo_dir(locale);
+		for (std::string loc = locale; loc.size() >= 2; loc = tweak_locale(loc)) {
+			dirname = mo_dir(loc);
 			module::get_files_in_dir(dirname, &files);
 
 			if (files.size()) {
