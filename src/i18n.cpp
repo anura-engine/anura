@@ -263,34 +263,41 @@ namespace i18n
 		std::string mo_dir(const std::string & locale_str) {
 			return "./locale/" + locale_str + "/LC_MESSAGES/";
 		}
+
+		//strip the charset part of the country and language code,
+		//e.g. "pt_BR.UTF8" --> "pt_BR"
+		void trim_locale_charset() {
+			size_t found = locale.find(".");
+			if (found != std::string::npos) {
+				locale = locale.substr(0, found);
+			}
+		}
+
+		// Try to adjust the locale for cases when we failed to find a match
+		std::string tweak_locale(std::string locale) {
+			size_t found = locale.find("@");
+			if (found != std::string::npos) {
+				return locale.substr(0, found);
+			}
+
+			found = locale.find("_");
+			if (found != std::string::npos) {
+				return locale.substr(0, found);
+			}
+			return "";
+		}
 	}
 
 	void load_translations()
 	{
 		hashmap.clear();
-		//strip the charset part of the country and language code,
-		//e.g. "pt_BR.UTF8" --> "pt_BR"
-		size_t found = locale.find(".");
-		if (found != std::string::npos) {
-			locale = locale.substr(0, found);
-		}
-		if (locale.size() < 2)
-			return;
+
+		trim_locale_charset();
 
 		std::vector<std::string> files;
-		std::string dirname = mo_dir(locale);
-		module::get_files_in_dir(dirname, &files);
+		std::string dirname;
 
-		found = locale.find("@");
-		if (!files.size() && found != std::string::npos) {
-			locale = locale.substr(0, found);
-			dirname = mo_dir(locale);
-			module::get_files_in_dir(dirname, &files);
-		}
-		//strip the country code, e.g. "de_DE" --> "de"
-		found = locale.find("_");
-		if (!files.size() && found != std::string::npos) {
-			locale = locale.substr(0, found);
+		for (; locale.size() >= 2 && files.size() == 0; locale = tweak_locale(locale)) {
 			dirname = mo_dir(locale);
 			module::get_files_in_dir(dirname, &files);
 		}
@@ -321,6 +328,22 @@ namespace i18n
 		if (!loaded_something) {
 			LOG_WARN("did not find any translation files. \n locale = " << locale << "\n dirname = " << dirname);
 		}
+	}
+
+	bool load_extra_po(const std::string & module_dir) {
+		trim_locale_charset();
+
+		for (std::string loc = locale; loc.size() >= 2; loc = tweak_locale(loc)) {
+			std::string path = module_dir + loc + ".po";
+			if (sys::file_exists(module::map_file(path))) {
+				LOG_DEBUG("loading translations from po file: " << path);
+				process_po_contents(sys::read_file(module::map_file(path)));
+				return true;
+			}
+		}
+		LOG_DEBUG("could not find translatons in " << module_dir << " associated to locale " << locale);
+
+		return false;
 	}
 
 	void setLocale(const std::string& l)
