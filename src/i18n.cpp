@@ -194,10 +194,17 @@ namespace
 		for (std::string line; std::getline(ss, line); ) {
 			if (line.size() > 0 && line[0] != '#') {
 				if (line.size() >= 6 && line.substr(0,6) == "msgid ") {
-					if (current_item == PO_MSGID) {
-						LOG_DEBUG("i18n: ignoring a MSGID which had no MSGSTR: " << msgid.str());
-					} else if (current_item == PO_MSGSTR) { // This is the start of a new item, so store the previous item
-						store_message(msgid.str(), msgstr.str());
+					switch(current_item) {
+						case PO_MSGID: {
+							LOG_DEBUG("i18n: ignoring a MSGID which had no MSGSTR: " << msgid.str());
+							break;
+						}
+						case PO_MSGSTR: { // This is the start of a new item, so store the previous item
+							store_message(msgid.str(), msgstr.str());
+							break;
+						}
+						case PO_NONE:
+							break;
 					}
 					msgid.str("");
 					msgstr.str("");
@@ -230,12 +237,19 @@ namespace
 		}
 
 		// Make sure to store the very last message also
-		if (current_item == PO_MSGSTR) {
-			store_message(msgid.str(), msgstr.str());
-		} else if (current_item == PO_MSGID) {
-			LOG_DEBUG("i18n: ignoring a MSGID which had no MSGSTR: " << msgid.str());
-		} else if (current_item == PO_NONE) {
-			LOG_DEBUG("i18n: parsed a po file which had no content");
+		switch(current_item) {
+			case PO_MSGSTR: {
+				store_message(msgid.str(), msgstr.str());
+				break;
+			}
+			case PO_MSGID: {
+				LOG_DEBUG("i18n: ignoring a MSGID which had no MSGSTR: " << msgid.str());
+				break;
+			}
+			case PO_NONE: {
+				LOG_WARN("i18n: parsed a po file which had no content");
+				break;
+			}
 		}
 	}
 }
