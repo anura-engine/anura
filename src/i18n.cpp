@@ -116,7 +116,7 @@ namespace
 	// this function should push to the stream the contents that were quoted,
 	// and ideally flag errors... and handle utf-8 appropriately...
 	void parse_quoted_string(std::stringstream & ss, const std::string & str) {
-		static std::string whitespace = " \t\n\r";
+		static const std::string whitespace = " \t\n\r";
 
 		bool pre_string = true;
 		bool post_string = false;
@@ -185,7 +185,7 @@ namespace
 
 		for (std::string line; std::getline(ss, line); ) {
 			if (line.size() > 0 && line[0] != '#') {
-				if (line.size() > 6 && line.substr(0,6) == "msgid ") {
+				if (line.size() >= 6 && line.substr(0,6) == "msgid ") {
 					// This is the start of a new item, so store the previous item (if there was a previous item)
 					if (current_item != PO_NONE) {
 						store_message(msgid.str(), msgstr.str());
@@ -194,7 +194,7 @@ namespace
 					}
 					parse_quoted_string(msgid, line.substr(6));
 					current_item = PO_MSGID;
-				} else if (line.size() > 7 && line.substr(0,7) == "msgstr ") {
+				} else if (line.size() >= 7 && line.substr(0,7) == "msgstr ") {
 					if (current_item == PO_NONE) {
 						LOG_ERROR("i18n: in po file, found a msgstr with no earlier msgid:\n<<" << line << ">>");
 					}
