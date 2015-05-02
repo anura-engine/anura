@@ -132,23 +132,17 @@ namespace
 		for (std::string::const_iterator it = str.begin(); it != str.end(); it++) {
 			if (pre_string || post_string) {
 				if (*it == '\"') {
-					if (post_string) {
-						LOG_ERROR("i18n: Only one quoted string is allowed on a line of po file: \n<<" << str << ">>");
-						return;
-					}
+					ASSERT_LOG(!post_string, "i18n: Only one quoted string is allowed on a line of po file: \n<<" << str << ">>");
 					pre_string = false;
-				} else if (!is_po_whitespace(*it)) {
-					LOG_ERROR("i18n: Unexpected characters in po file where only whitespace is expected: \'" << *it << "\':\n<<" << str << ">>");
+				} else {
+					ASSERT_LOG(is_po_whitespace(*it), "i18n: Unexpected characters in po file where only whitespace is expected: \'" << *it << "\':\n<<" << str << ">>");
 				}
 			} else {
 				if (*it == '\"') {
 					post_string = true;
 				} else if (*it == '\\') {
 					it++;
-					if (it == str.end()) {
-						LOG_ERROR("i18n: po string terminated unexpectedly after escape character: \n<<" << str << ">>");
-						return;
-					}
+					ASSERT_LOG(it != str.end(), "i18n: po string terminated unexpectedly after escape character: \n<<" << str << ">>");
 					char c = *it;
 					switch (c) {
 						case 'n': {
@@ -166,8 +160,7 @@ namespace
 							break;
 						}
 						default: {
-							LOG_ERROR("i18n: po string contained unrecognized escape sequence: \"\\" << c << "\": \n<<" << str << ">>");
-							break;
+							ASSERT_LOG(false, "i18n: po string contained unrecognized escape sequence: \"\\" << c << "\": \n<<" << str << ">>");
 						}
 					}
 				} else {
@@ -175,9 +168,7 @@ namespace
 				}
 			}
 		}
-		if (!pre_string && !post_string) {
-			LOG_ERROR("i18n: unterminated quoted string in po file:\n<<" << str << ">>");
-		}
+		ASSERT_LOG(pre_string || post_string, "i18n: unterminated quoted string in po file:\n<<" << str << ">>");
 	}
 
 	enum po_item { PO_NONE, PO_MSGID, PO_MSGSTR };
