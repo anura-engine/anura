@@ -471,4 +471,44 @@ msgstr \"panama\"";
 
 		hashmap.clear();
 	}
+
+	UNIT_TEST(locale_processing)
+	{
+		{
+			std::string loc = "ar";
+			const char * expected [] = { "ar", nullptr };
+			for (const char ** ptr = expected; *ptr != nullptr; ptr++) {
+				CHECK_EQ(loc, *ptr);
+				loc = tweak_locale(loc);
+			}
+			CHECK_EQ(loc, "");
+		}
+		{
+			std::string loc = "be_BY";
+			const char * expected [] = { "be_BY", "be", nullptr };
+			for (const char ** ptr = expected; *ptr != nullptr; ptr++) {
+				CHECK_EQ(loc, *ptr);
+				loc = tweak_locale(loc);
+			}
+			CHECK_EQ(loc, "");
+		}
+		{
+			std::string loc = "sr@latin";
+			const char * expected [] = { "sr@latin" , "sr", nullptr };
+			for (const char ** ptr = expected; *ptr != nullptr; ptr++) {
+				CHECK_EQ(loc, *ptr);
+				loc = tweak_locale(loc);
+			}
+			CHECK_EQ(loc, "");
+		}
+		{
+			std::string loc = "sr_RS@latin";
+			const char * expected [] = { "sr_RS@latin" , "sr_RS", "sr", nullptr };
+			for (const char ** ptr = expected; *ptr != nullptr; ptr++) {
+				CHECK_EQ(loc, *ptr);
+				loc = tweak_locale(loc);
+			}
+			CHECK_EQ(loc, "");
+		}
+	}
 }
