@@ -112,12 +112,19 @@ namespace
 		}
 	}
 
+	///////////////
+	// PO PARSER //
+	///////////////
+
+	bool is_po_whitespace(char c) {
+		static const std::string po_whitespace = " \t\n\r";
+		return (po_whitespace.find(c) != std::string::npos);
+	}
+
 	// On input a string free of newline, expected to be wrapped in quotes,
-	// with possible leading or trailing whitespace, and escaped characters (?),
-	// this function should push to the stream the contents that were quoted,
-	// and ideally flag errors... and handle utf-8 appropriately...
+	// with possible leading or trailing whitespace and escaped characters,
+	// push to the stream the contents that were quoted. assumes utf-8.
 	void parse_quoted_string(std::stringstream & ss, const std::string & str) {
-		static const std::string whitespace = " \t\n\r";
 
 		bool pre_string = true;
 		bool post_string = false;
@@ -130,7 +137,7 @@ namespace
 						return;
 					}
 					pre_string = false;
-				} else if (whitespace.find(*it) == std::string::npos) {
+				} else if (!is_po_whitespace(*it)) {
 					LOG_ERROR("i18n: Unexpected characters in po file where only whitespace is expected: \'" << *it << "\':\n<<" << str << ">>");
 				}
 			} else {
@@ -211,8 +218,12 @@ namespace
 							parse_quoted_string(msgstr, line);
 							break;
 						}
-						default:
+						case PO_NONE: {
+							for (const char c : line) {
+								ASSERT_LOG(is_po_whitespace(c), "i18n: in po file, the first non-whitespace non-comment line should begin 'msgid ': \n<<" << line << ">>");
+							}
 							break;
+						}
 					}
 				}
 			}
@@ -223,6 +234,8 @@ namespace
 			store_message(msgid.str(), msgstr.str());
 		} else if (current_item == PO_MSGID) {
 			LOG_DEBUG("i18n: ignoring a MSGID which had no MSGSTR: " << msgid.str());
+		} else if (current_item == PO_NONE) {
+			LOG_DEBUG("i18n: parsed a po file which had no content");
 		}
 	}
 }
