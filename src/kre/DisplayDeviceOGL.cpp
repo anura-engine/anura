@@ -322,7 +322,7 @@ namespace KRE
 
 		if(shader->getColorUniform() != ShaderProgram::INVALID_UNIFORM) {
 			if(r->isColorSet()) {
-				shader->setUniformValue(shader->getColorUniform(), r->getColor().asFloatVector());
+				shader->setUniformValue(shader->getColorUniform(), (r->getColor()*ColorScope::getCurrentColor()).asFloatVector());
 			} else {
 				shader->setUniformValue(shader->getColorUniform(), ColorScope::getCurrentColor().asFloatVector());
 			}
