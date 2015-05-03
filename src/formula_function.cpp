@@ -333,19 +333,19 @@ namespace game_logic
 			int max_entries_;
 		};
 
-		class date_time : public game_logic::FormulaCallable {
+		class DateTime : public game_logic::FormulaCallable {
 		public:
-			date_time(time_t unix, const tm* tm) : unix_(unix), tm_(*tm)
+			DateTime(time_t unix, const tm* tm) : unix_(unix), tm_(*tm)
 			{}
 			
 		private:
-			DECLARE_CALLABLE(date_time);
+			DECLARE_CALLABLE(DateTime);
 
 			time_t unix_;
 			tm tm_;
 		};
 
-		BEGIN_DEFINE_CALLABLE_NOBASE(date_time)
+		BEGIN_DEFINE_CALLABLE_NOBASE(DateTime)
 		DEFINE_FIELD(unix, "int")
 			return variant(static_cast<int>(obj.unix_));
 		DEFINE_FIELD(second, "int")
@@ -377,13 +377,13 @@ namespace game_logic
 			};
 			return variant(weekday);
 
-		END_DEFINE_CALLABLE(date_time)
+		END_DEFINE_CALLABLE(DateTime)
 
 		FUNCTION_DEF(time, 0, 0, "time() -> date_time: returns the current real time")
 			Formula::failIfStaticContext();
 			time_t t = time(NULL);
 			tm* ltime = localtime(&t);
-			return variant(new date_time(t, ltime));
+			return variant(new DateTime(t, ltime));
 		RETURN_TYPE("builtin date_time")
 		END_FUNCTION_DEF(time)
 
