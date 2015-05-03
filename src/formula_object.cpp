@@ -46,6 +46,10 @@
 #include "variant_type.hpp"
 #include "variant_utils.hpp"
 
+#ifdef USE_LUA
+#include "lua_iface.hpp"
+#endif
+
 #if defined(_MSC_VER)
 #define strtoll _strtoi64
 #endif
@@ -490,6 +494,11 @@ std::map<std::string, std::string>& class_path_map()
 		const std::string& name() const { return name_; }
 		const variant& nameVariant() const { return name_variant_; }
 		const variant& privateData() const { return private_data_; }
+#if defined(USE_LUA)
+		bool has_lua() const { return !lua_node_.is_null(); }
+		const variant & getLuaNode() const { return lua_node_; }
+		const std::shared_ptr<lua::CompiledChunk> & getLuaInit( lua::LuaContext & ) const ;
+#endif
 		const std::vector<game_logic::ConstFormulaPtr>& constructor() const { return constructor_; }
 		const std::map<std::string, int>& properties() const { return properties_; }
 		const std::vector<PropertyEntry>& slots() const { return slots_; }
@@ -522,6 +531,12 @@ std::map<std::string, std::string>& class_path_map()
 		std::vector<boost::intrusive_ptr<const FormulaClass> > bases_;
 
 		variant nested_classes_;
+
+#if defined(USE_LUA)
+		// For lua integration
+		variant lua_node_;
+		mutable std::shared_ptr<lua::CompiledChunk> lua_compiled_;
+#endif
 
 		int nstate_slots_;
 	};
@@ -616,6 +631,12 @@ std::map<std::string, std::string>& class_path_map()
 
 			constructor_.push_back(game_logic::Formula::createOptionalFormula(node["constructor"], nullptr, class_def));
 		}
+
+#if defined(USE_LUA)
+		if(node.has_key("lua")) {
+			lua_node_ = node["lua"];
+		}
+#endif
 
 		unit_test_ = node["test"];
 	}
@@ -722,6 +743,17 @@ std::map<std::string, std::string>& class_path_map()
 			c->run_unit_tests();
 		}
 	}
+
+	const std::shared_ptr<lua::CompiledChunk> & FormulaClass::getLuaInit(lua::LuaContext & ctx) const {
+		if (lua_compiled_) {
+			return lua_compiled_;
+		}
+		if (lua_node_.has_key("init")) {
+			lua_compiled_.reset(ctx.compileChunk(lua_node_.has_key("debug_name") ? lua_node_["debug_name"].as_string() : ("class " + name() + " lua"), lua_node_["init"].as_string()));
+		}
+		return lua_compiled_;
+	}
+
 
 	namespace
 	{
@@ -1191,6 +1223,11 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 			}
 		}
 
+#if defined(USE_LUA)
+		init_lua();
+#endif
+
+
 		setAddr(write_id());
 	}
 
@@ -1305,6 +1342,10 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 				}
 			}
 		}
+
+#if defined(USE_LUA)
+		init_lua();
+#endif
 
 		setAddr(write_id());
 	}
@@ -1508,6 +1549,14 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 		}
 	}
 
+	variant_type_ptr FormulaObject::getPropertySetType(const std::string & key) const
+	{
+		std::map<std::string, int>::const_iterator itor = class_->properties().find(key);
+		ASSERT_LOG(itor != class_->properties().end(), "UNKNOWN PROPERTY ACCESS " << key << " IN CLASS " << class_->name());
+
+		return class_->slots()[itor->second].set_type;
+	}
+
 	void FormulaObject::validate() const
 	{
 	#ifndef NO_FFL_TYPE_SAFETY_CHECKS
@@ -1544,7 +1593,7 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 
 			++index;
 
-			ASSERT_LOG(entry.get_type->match(value), "OBJECT OF CLASS TYPE " << class_->name() << " HAS INVALID PROPERTY " << entry.name << ": " << value.write_json() << " EXPECTED " << entry.get_type->str());
+			ASSERT_LOG(entry.get_type->match(value), "OBJECT OF CLASS TYPE " << class_->name() << " HAS INVALID PROPERTY " << entry.name << ": " << value.write_json() << " EXPECTED " << entry.get_type->str() << " GIVEN TYPE " << variant::variant_type_to_string(value.type()));
 		}
 	#endif
 	}
@@ -1566,6 +1615,20 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 			inputs->push_back(FormulaInput(entry.name, type));
 		}
 	}
+
+#if defined(USE_LUA)
+	void FormulaObject::init_lua()
+	{
+		if (class_->has_lua())
+		{
+			lua_ptr_.reset(new lua::LuaContext(*this)); // sets self object implicitly
+
+			if (auto init_script = class_->getLuaInit(*lua_ptr_)) {
+				init_script->run(*lua_ptr_);
+			}
+		}
+	}
+#endif
 
 	bool formula_class_valid(const std::string& type)
 	{

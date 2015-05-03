@@ -267,8 +267,11 @@ public:
 
 	bool isShadow() const { return is_shadow_; }
 
-	const std::string& getLuaSource() const { return lua_source_; }
-	void setLuaSource(const std::string& ls) { lua_source_ = ls; }
+#if defined(USE_LUA)
+	bool has_lua() const { return !lua_node_.is_null(); }
+	const variant & getLuaNode() const { return lua_node_; }
+	const std::shared_ptr<lua::CompiledChunk> & getLuaInit( lua::LuaContext & ) const ;
+#endif
 
 	graphics::AnuraShaderPtr getShader() const { return shader_; }
 	const std::vector<graphics::AnuraShaderPtr>& getEffectsShaders() const { return effects_shaders_; }
@@ -403,8 +406,11 @@ private:
 	//components.
 	bool is_shadow_;
 
+#ifdef USE_LUA
 	// For lua integration
-	std::string lua_source_;
+	variant lua_node_;
+	mutable std::shared_ptr<lua::CompiledChunk> lua_compiled_;
+#endif
 
 	graphics::AnuraShaderPtr shader_;
 	std::vector<graphics::AnuraShaderPtr> effects_shaders_;	
