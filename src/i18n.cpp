@@ -205,6 +205,8 @@ namespace
 	enum po_item { PO_NONE, PO_MSGID, PO_MSGSTR };
 
 	void process_po_contents(const std::string & content) {
+		static const std::string MSGID = "msgid ";
+		static const std::string MSGSTR = "msgstr ";
 
 		std::stringstream msgid;
 		std::stringstream msgstr;
@@ -221,7 +223,7 @@ namespace
 			// line_start, line_end, line_size should be const for the rest of the loop
 			// (the above should be equivalent to using std::getline)
 			if (line_size > 0 && *line_start != '#') {
-				if (line_size >= 6 && std::string(line_start, line_start + 6) == "msgid ") {
+				if (line_size >= MSGID.size() && std::equal(line_start, line_start + MSGID.size(), MSGID.begin())) {
 					switch(current_item) {
 						case PO_MSGID: {
 							LOG_DEBUG("i18n: ignoring a MSGID which had no MSGSTR: " << msgid.str());
@@ -236,12 +238,12 @@ namespace
 					}
 					msgid.str("");
 					msgstr.str("");
-					parse_quoted_string(msgid, line_start + 6, line_end);
+					parse_quoted_string(msgid, line_start + MSGID.size(), line_end);
 					current_item = PO_MSGID;
-				} else if (line_size >= 7 && std::string(line_start, line_start + 7) == "msgstr ") {
+				} else if (line_size >= MSGSTR.size() && std::equal(line_start, line_start + MSGSTR.size(), MSGSTR.begin())) {
 					ASSERT_LOG(current_item == PO_MSGID, "i18n: in po file, found a msgstr with no earlier msgid:\n<<" << std::string(line_start, line_end) << ">>");
 
-					parse_quoted_string(msgstr, line_start + 7, line_end);
+					parse_quoted_string(msgstr, line_start + MSGSTR.size(), line_end);
 					current_item = PO_MSGSTR;
 				} else {
 					switch (current_item) {
