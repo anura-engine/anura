@@ -132,25 +132,26 @@ namespace
 	// On input a string free of newline, expected to be wrapped in quotes,
 	// with possible leading or trailing whitespace and escaped characters,
 	// push to the stream the contents that were quoted. assumes utf-8.
-	void parse_quoted_string(std::stringstream & ss, const std::string & str) {
+	typedef std::string::const_iterator str_it;
+	void parse_quoted_string(std::stringstream & ss, const str_it & begin, const str_it & end) {
 
 		bool pre_string = true;
 		bool post_string = false;
 
-		for (std::string::const_iterator it = str.begin(); it != str.end(); it++) {
+		for (str_it it = begin; it != end; it++) {
 			if (pre_string || post_string) {
 				if (*it == '\"') {
-					ASSERT_LOG(!post_string, "i18n: Only one quoted string is allowed on a line of po file: \n<<" << str << ">>");
+					ASSERT_LOG(!post_string, "i18n: Only one quoted string is allowed on a line of po file: \n<<" << std::string(begin, end) << ">>");
 					pre_string = false;
 				} else {
-					ASSERT_LOG(is_po_whitespace(*it), "i18n: Unexpected characters in po file where only whitespace is expected: \'" << *it << "\':\n<<" << str << ">>");
+					ASSERT_LOG(is_po_whitespace(*it), "i18n: Unexpected characters in po file where only whitespace is expected: \'" << *it << "\':\n<<" << std::string(begin, end) << ">>");
 				}
 			} else {
 				if (*it == '\"') {
 					post_string = true;
 				} else if (*it == '\\') {
 					it++;
-					ASSERT_LOG(it != str.end(), "i18n: po string terminated unexpectedly after escape character: \n<<" << str << ">>");
+					ASSERT_LOG(it != end, "i18n: po string terminated unexpectedly after escape character: \n<<" << std::string(begin, end) << ">>");
 					char c = *it;
 					switch (c) {
 						case 'n': {
@@ -172,7 +173,7 @@ namespace
 							break;
 						}
 						default: {
-							ASSERT_LOG(false, "i18n: po string contained unrecognized escape sequence: \"\\" << c << "\": \n<<" << str << ">>");
+							ASSERT_LOG(false, "i18n: po string contained unrecognized escape sequence: \"\\" << c << "\": \n<<" << std::string(begin, end) << ">>");
 						}
 					}
 				} else {
@@ -180,7 +181,7 @@ namespace
 				}
 			}
 		}
-		ASSERT_LOG(pre_string || post_string, "i18n: unterminated quoted string in po file:\n<<" << str << ">>");
+		ASSERT_LOG(pre_string || post_string, "i18n: unterminated quoted string in po file:\n<<" << std::string(begin, end) << ">>");
 	}
 
 	// A helper which stores a message for the po parser
@@ -229,21 +230,21 @@ namespace
 					}
 					msgid.str("");
 					msgstr.str("");
-					parse_quoted_string(msgid, line.substr(6));
+					parse_quoted_string(msgid, line.begin() + 6, line.end());
 					current_item = PO_MSGID;
 				} else if (line.size() >= 7 && line.substr(0,7) == "msgstr ") {
 					ASSERT_LOG(current_item == PO_MSGID, "i18n: in po file, found a msgstr with no earlier msgid:\n<<" << line << ">>");
 
-					parse_quoted_string(msgstr, line.substr(7));
+					parse_quoted_string(msgstr, line.begin() + 7, line.end());
 					current_item = PO_MSGSTR;
 				} else {
 					switch (current_item) {
 						case PO_MSGID: {
-							parse_quoted_string(msgid, line);
+							parse_quoted_string(msgid, line.begin(), line.end());
 							break;
 						}
 						case PO_MSGSTR: {
-							parse_quoted_string(msgstr, line);
+							parse_quoted_string(msgstr, line.begin(), line.end());
 							break;
 						}
 						case PO_NONE: {
