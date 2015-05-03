@@ -205,17 +205,23 @@ namespace
 	enum po_item { PO_NONE, PO_MSGID, PO_MSGSTR };
 
 	void process_po_contents(const std::string & content) {
-		std::stringstream ss;
-		ss.str(content);
 
 		std::stringstream msgid;
 		std::stringstream msgstr;
 
 		po_item current_item = PO_NONE;
 
-		for (std::string line; std::getline(ss, line); ) {
-			if (line.size() > 0 && line[0] != '#') {
-				if (line.size() >= 6 && line.substr(0,6) == "msgid ") {
+		str_it line_end = content.begin();
+		for (str_it line_start = content.begin(); line_start != content.end(); line_start = (line_end == content.end() ? line_end : ++line_end)) {
+			size_t line_size = 0;
+			while ((line_end != content.end()) && (*line_end != '\n')) {
+				++line_end;
+				++line_size;
+			}
+			// line_start, line_end, line_size should be const for the rest of the loop
+			// (the above should be equivalent to using std::getline)
+			if (line_size > 0 && *line_start != '#') {
+				if (line_size >= 6 && std::string(line_start, line_start + 6) == "msgid ") {
 					switch(current_item) {
 						case PO_MSGID: {
 							LOG_DEBUG("i18n: ignoring a MSGID which had no MSGSTR: " << msgid.str());
@@ -230,26 +236,26 @@ namespace
 					}
 					msgid.str("");
 					msgstr.str("");
-					parse_quoted_string(msgid, line.begin() + 6, line.end());
+					parse_quoted_string(msgid, line_start + 6, line_end);
 					current_item = PO_MSGID;
-				} else if (line.size() >= 7 && line.substr(0,7) == "msgstr ") {
-					ASSERT_LOG(current_item == PO_MSGID, "i18n: in po file, found a msgstr with no earlier msgid:\n<<" << line << ">>");
+				} else if (line_size >= 7 && std::string(line_start, line_start + 7) == "msgstr ") {
+					ASSERT_LOG(current_item == PO_MSGID, "i18n: in po file, found a msgstr with no earlier msgid:\n<<" << std::string(line_start, line_end) << ">>");
 
-					parse_quoted_string(msgstr, line.begin() + 7, line.end());
+					parse_quoted_string(msgstr, line_start + 7, line_end);
 					current_item = PO_MSGSTR;
 				} else {
 					switch (current_item) {
 						case PO_MSGID: {
-							parse_quoted_string(msgid, line.begin(), line.end());
+							parse_quoted_string(msgid, line_start, line_end);
 							break;
 						}
 						case PO_MSGSTR: {
-							parse_quoted_string(msgstr, line.begin(), line.end());
+							parse_quoted_string(msgstr, line_start, line_end);
 							break;
 						}
 						case PO_NONE: {
-							for (const char c : line) {
-								ASSERT_LOG(is_po_whitespace(c), "i18n: in po file, the first non-whitespace non-comment line should begin 'msgid ': \n<<" << line << ">>");
+							for (str_it it = line_start; it != line_end; ++it) {
+								ASSERT_LOG(is_po_whitespace(*it), "i18n: in po file, the first non-whitespace non-comment line should begin 'msgid ': \n<<" << std::string(line_start, line_end) << ">>");
 							}
 							break;
 						}
