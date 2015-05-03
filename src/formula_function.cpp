@@ -333,6 +333,60 @@ namespace game_logic
 			int max_entries_;
 		};
 
+		class date_time : public game_logic::FormulaCallable {
+		public:
+			date_time(time_t unix, const tm* tm) : unix_(unix), tm_(*tm)
+			{}
+			
+		private:
+			DECLARE_CALLABLE(date_time);
+
+			time_t unix_;
+			tm tm_;
+		};
+
+		BEGIN_DEFINE_CALLABLE_NOBASE(date_time)
+		DEFINE_FIELD(unix, "int")
+			return variant(static_cast<int>(obj.unix_));
+		DEFINE_FIELD(second, "int")
+			return variant(obj.tm_.tm_sec);
+		DEFINE_FIELD(minute, "int")
+			return variant(obj.tm_.tm_min);
+		DEFINE_FIELD(hour, "int")
+			return variant(obj.tm_.tm_hour);
+		DEFINE_FIELD(day, "int")
+			return variant(obj.tm_.tm_mday);
+		DEFINE_FIELD(yday, "int")
+			return variant(obj.tm_.tm_yday);
+		DEFINE_FIELD(month, "int")
+			return variant(obj.tm_.tm_mon + 1);
+		DEFINE_FIELD(year, "int")
+			return variant(obj.tm_.tm_year + 1900);
+		DEFINE_FIELD(is_dst, "bool")
+			return variant::from_bool(bool(obj.tm_.tm_isdst));
+		DEFINE_FIELD(weekday, "string")
+			std::string weekday;
+			switch(obj.tm_.tm_wday) {
+				case 0: weekday = "Sunday"; break;
+				case 1: weekday = "Monday"; break;
+				case 2: weekday = "Tuesday"; break;
+				case 3: weekday = "Wednesday"; break;
+				case 4: weekday = "Thursday"; break;
+				case 5: weekday = "Friday"; break;
+				case 6: weekday = "Saturday"; break;
+			};
+			return variant(weekday);
+
+		END_DEFINE_CALLABLE(date_time)
+
+		FUNCTION_DEF(time, 0, 0, "time() -> date_time: returns the current real time")
+			Formula::failIfStaticContext();
+			time_t t = time(NULL);
+			tm* ltime = localtime(&t);
+			return variant(new date_time(t, ltime));
+		RETURN_TYPE("builtin date_time")
+		END_FUNCTION_DEF(time)
+
 		FUNCTION_DEF(overload, 1, -1, "overload(fn...): makes an overload of functions")
 			std::vector<variant> functions;
 			for(ExpressionPtr expression : args()) {

@@ -133,39 +133,6 @@ namespace
 	RETURN_TYPE("int")
 	END_FUNCTION_DEF(set_language)
 
-	FUNCTION_DEF(time, 0, 0, "time() -> timestamp: returns the current real time")
-		Formula::failIfStaticContext();
-		game_logic::MapFormulaCallable* time_(new game_logic::MapFormulaCallable);
-	
-			time_t t1;
-			time(&t1);
-			time_->add("unix", variant(static_cast<int>(t1)));
-		
-			tm *time = localtime(&t1);
-			time_->add("second",	variant(time->tm_sec));
-			time_->add("minute",	variant(time->tm_min));
-			time_->add("hour", 		variant(time->tm_hour));
-			time_->add("day", 		variant(time->tm_mday));
-			time_->add("month", 	variant(time->tm_mon + 1));
-			time_->add("year", 		variant(time->tm_year + 1900));
-			time_->add("daylight savings time", 	variant(time->tm_isdst));
-		
-			std::string weekday = "";
-			switch(time->tm_wday) {
-				case 0: weekday = "Sunday"; break;
-				case 1: weekday = "Monday"; break;
-				case 2: weekday = "Tuesday"; break;
-				case 3: weekday = "Wednesday"; break;
-				case 4: weekday = "Thursday"; break;
-				case 5: weekday = "Friday"; break;
-				case 6: weekday = "Saturday"; break;
-			};
-			time_->add("weekday", variant(weekday));
-		
-		return variant(time_);
-	RETURN_TYPE("map")
-	END_FUNCTION_DEF(time)
-
 	FUNCTION_DEF(translate, 1, 1, "translate(str): returns the translated version of the given string")
 		return variant(i18n::tr(args()[0]->evaluate(variables).as_string()));
 

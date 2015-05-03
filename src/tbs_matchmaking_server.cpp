@@ -123,6 +123,9 @@ public:
 		handle_request_fn_ = controller_->queryValue("handle_request");
 		ASSERT_LOG(handle_request_fn_.is_function(), "Could not find handle_request in matchmaking_server class");
 
+		process_account_fn_ = controller_->queryValue("process_account");
+		ASSERT_LOG(process_account_fn_.is_function(), "Could not find process_account in matchmaking_server class");
+
 		matchmake_fn_ = controller_->queryValue("matchmake");
 		ASSERT_LOG(matchmake_fn_.is_function(), "Could not find matchmake function in matchmaking_server class");
 
@@ -279,6 +282,27 @@ public:
 					sessions_.erase(itor++);
 				} else {
 					++itor;
+				}
+			}
+
+			for(auto i = sessions_.begin(); i != sessions_.end(); ++i) {
+				SessionInfo& session = i->second;
+
+				auto account_itor = account_info_.find(session.user_id);
+				if(account_itor == account_info_.end()) {
+					continue;
+				}
+
+				if(++session.send_process_counter >= 60) {
+					session.send_process_counter = 0;
+
+					std::vector<variant> args;
+					args.push_back(variant(this));
+					args.push_back(variant(session.user_id));
+					args.push_back(account_itor->second["info"]);
+
+					variant cmd = process_account_fn_(args);
+					executeCommand(cmd);
 				}
 			}
 		}
@@ -615,10 +639,18 @@ public:
 						auto account_itor = account_info_.find(itor->second.user_id);
 						if(account_itor != account_info_.end() && account_itor->second["info_version"].as_int(0) != has_version) {
 							send_new_version = true;
+
+							variant_builder doc;
+							doc.add("type", "account_info");
+							doc.add("info", account_itor->second["info"]);
+							doc.add("info_version", account_itor->second["info_version"]);
+							send_msg(socket, "text/json", doc.build().write_json(), "");
 						}
 					}
 
-					if(itor->second.game_details != "" && !itor->second.game_pending) {
+					if(send_new_version) {
+						//nothing, already done above
+					} else if(itor->second.game_details != "" && !itor->second.game_pending) {
 						send_msg(socket, "text/json", itor->second.game_details, "");
 						itor->second.game_details = "";
 					} else {
@@ -946,7 +978,7 @@ private:
 	DbClientPtr db_client_;
 
 	struct SessionInfo {
-		SessionInfo() : game_pending(0), game_port(0), queued_for_game(false), sent_heartbeat(false), messages_this_time_segment(0), time_segment(0), flood_mute_expires(0) {}
+		SessionInfo() : game_pending(0), game_port(0), queued_for_game(false), sent_heartbeat(false), send_process_counter(60), messages_this_time_segment(0), time_segment(0), flood_mute_expires(0) {}
 		int session_id;
 		std::string user_id;
 		std::string game_details;
@@ -958,6 +990,8 @@ private:
 		bool queued_for_game;
 		variant game_type_info;
 		bool sent_heartbeat;
+
+		int send_process_counter;
 
 		std::vector<variant> chat_messages;
 
@@ -1018,6 +1052,7 @@ private:
 	boost::intrusive_ptr<game_logic::FormulaObject> controller_;
 	variant create_account_fn_;
 	variant read_account_fn_;
+	variant process_account_fn_;
 	variant handle_request_fn_;
 	variant matchmake_fn_;
 
@@ -1030,13 +1065,19 @@ class write_account_command : public game_logic::CommandCallable
 {
 	DbClient& db_client_;
 	std::string account_;
-	variant value_;
+	mutable variant value_;
+	bool silent_;
 public:
-	write_account_command(DbClient& db_client, const std::string& account, const variant& value)
-	  : db_client_(db_client), account_(account), value_(value)
+	write_account_command(DbClient& db_client, const std::string& account, const variant& value, bool silent)
+	  : db_client_(db_client), account_(account), value_(value), silent_(silent)
 	{}
 
 	void execute(game_logic::FormulaCallable& obj) const override {
+		if(silent_ == false) {
+			static const variant VersionVar("info_version");
+			const int cur_version = value_[VersionVar].as_int(0);
+			value_.add_attr_mutation(VersionVar, variant(cur_version+1));
+		}
 		db_client_.put("user:" + account_, value_, [](){}, [](){});
 	}
 };
@@ -1056,13 +1097,24 @@ BEGIN_DEFINE_FN(get_account_info, "(string) ->map")
 
 	return itor->second["info"];
 END_DEFINE_FN
-BEGIN_DEFINE_FN(write_account, "(string) ->commands")
+BEGIN_DEFINE_FN(write_account, "(string, [string]|null) ->commands")
 	const std::string& key = FN_ARG(0).as_string();
+
+	bool silent_update = false;
+
+	variant flags = FN_ARG(1);
+	if(flags.is_list()) {
+		for(int i = 0; i != flags.num_elements(); ++i) {
+			if(flags[i].as_string() == "silent") {
+				silent_update = true;
+			}
+		}
+	}
 
 	auto itor = obj.account_info_.find(key);
 	ASSERT_LOG(itor != obj.account_info_.end(), "Could not find user account: " << key);
 
-	return variant(new write_account_command(*obj.db_client_, key, itor->second));
+	return variant(new write_account_command(*obj.db_client_, key, itor->second, silent_update));
 END_DEFINE_FN
 END_DEFINE_CALLABLE(matchmaking_server)
 
