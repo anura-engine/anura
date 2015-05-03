@@ -210,8 +210,9 @@ namespace lua
 					break;
 				}
 				case LUA_TFUNCTION: {
-					 int ref = luaL_ref(L, LUA_REGISTRYINDEX);
-					 return variant(new LuaFunctionReference(L, ref));
+					lua_pushvalue(L, ndx);
+					int ref = luaL_ref(L, LUA_REGISTRYINDEX);
+					return variant(new LuaFunctionReference(L, ref));
 					break;
 				}
 				case LUA_TNIL: {
@@ -223,7 +224,8 @@ namespace lua
 				case LUA_TTHREAD:
 				case LUA_TLIGHTUSERDATA:
 				default:
-					luaL_error(L, "Unsupported type to convert on stack: %s", lua_typename(L,t));
+					fprintf(stderr, "Unsupported type to convert on stack: %s", lua_typename(L,t));
+					//luaL_error(L, "Unsupported type to convert on stack: %s", lua_typename(L,t));
 			}
 			return variant();
 		}
@@ -583,6 +585,8 @@ namespace lua
 
 		push_anura_table(L);
 
+		lua_settop(L, 0);
+
 		/*dostring(
 			"local lvl = Anura.level()\n"
 			"print(lvl.id, lvl.music_volume, lvl.in_editor)\n"
@@ -677,10 +681,16 @@ namespace lua
 		if(lua_load(L, chunk_reader, reinterpret_cast<void*>(const_cast<CompiledChunk*>(this)), nullptr, nullptr) || lua_pcall(L, 0, 0, -2)) {
 			const char* a = lua_tostring(L, -1);
 			//LOG_DEBUG(a);
-			ASSERT_LOG(false, "Lua: " << a);
-			lua_pop(L, 1);
+			if (a) {
+				ASSERT_LOG(false, "Lua: " << a);
+			} else {
+				ASSERT_LOG(false, "Lua: (null string)");
+			}
+			lua_pop(L, 2); // remove error message and error handler
 			return true;
 		}
+
+		lua_pop(L,1); // remove error handler
 		return false;
 	}
 
@@ -715,6 +725,9 @@ namespace lua
 
 	variant LuaFunctionReference::call()
 	{
+		int top = lua_gettop(L_);
+		//ASSERT_LOG(top==0, "lua functon reference tried to evaluate when top is not 0");
+
 		// load error handler for pcall
 		lua_pushstring(L_, error_handler_fcn_reg_key);
 		lua_rawget(L_, LUA_REGISTRYINDEX);
@@ -727,7 +740,7 @@ namespace lua
 			const char* a = lua_tostring(L_, -1);
 			//LOG_DEBUG(a);
 			ASSERT_LOG(false, "Lua: " << a);
-			lua_settop(L_, 0);
+			lua_settop(L_, top);
 			return variant();
 		}
 		lua_remove(L_, error_handler_index);
@@ -738,9 +751,12 @@ namespace lua
 			for(int n = 1; n < nresults; ++n) {
 				v.push_back(lua_value_to_variant(L_, n));
 			}
+			lua_settop(L_, top);
 			return variant(&v);
 		} else if(nresults == 1) {
-			return variant(lua_value_to_variant(L_, 1));
+			variant ret(lua_value_to_variant(L_, 1));
+			lua_settop(L_, top);
+			return ret;
 		}
 		return variant();
 	}
