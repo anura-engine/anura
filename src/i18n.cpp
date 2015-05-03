@@ -133,7 +133,7 @@ namespace
 	// with possible leading or trailing whitespace and escaped characters,
 	// push to the stream the contents that were quoted. assumes utf-8.
 	typedef std::string::const_iterator str_it;
-	void parse_quoted_string(std::stringstream & ss, const str_it & begin, const str_it & end) {
+	void parse_quoted_string(std::string & ss, const str_it & begin, const str_it & end) {
 
 		bool pre_string = true;
 		bool post_string = false;
@@ -155,21 +155,21 @@ namespace
 					char c = *it;
 					switch (c) {
 						case 'n': {
-							ss << '\n';
+							ss += '\n';
 							break;
 						}
 						case 't': {
-							ss << '\t';
+							ss += '\t';
 							break;
 						}
 						case '0': {
-							ss.write("\0", 1);
-							return;
+							ss += '\0';
+							return; // can just return after null character is pushed, we are going to truncate here anyways.
 						}
 						case '\'':
 						case '\"':
 						case '\\': {
-							ss << c;
+							ss += c;
 							break;
 						}
 						default: {
@@ -177,7 +177,7 @@ namespace
 						}
 					}
 				} else {
-					ss << *it;
+					ss += *it;
 				}
 			}
 		}
@@ -208,8 +208,8 @@ namespace
 		static const std::string MSGID = "msgid ";
 		static const std::string MSGSTR = "msgstr ";
 
-		std::stringstream msgid;
-		std::stringstream msgstr;
+		std::string msgid;
+		std::string msgstr;
 
 		po_item current_item = PO_NONE;
 
@@ -226,23 +226,25 @@ namespace
 				if (line_size >= MSGID.size() && std::equal(line_start, line_start + MSGID.size(), MSGID.begin())) {
 					switch(current_item) {
 						case PO_MSGID: {
-							LOG_DEBUG("i18n: ignoring a MSGID which had no MSGSTR: " << msgid.str());
+							LOG_DEBUG("i18n: ignoring a MSGID which had no MSGSTR: \n<<" << msgid << ">>");
 							break;
 						}
 						case PO_MSGSTR: { // This is the start of a new item, so store the previous item
-							store_message_helper_po(msgid.str(), msgstr.str());
+							store_message_helper_po(msgid, msgstr);
 							break;
 						}
 						case PO_NONE:
 							break;
 					}
-					msgid.str("");
-					msgstr.str("");
+					msgid = "";
+					msgstr = "";
+					msgid.reserve(line_size);
 					parse_quoted_string(msgid, line_start + MSGID.size(), line_end);
 					current_item = PO_MSGID;
 				} else if (line_size >= MSGSTR.size() && std::equal(line_start, line_start + MSGSTR.size(), MSGSTR.begin())) {
 					ASSERT_LOG(current_item == PO_MSGID, "i18n: in po file, found a msgstr with no earlier msgid:\n<<" << std::string(line_start, line_end) << ">>");
 
+					msgstr.reserve(line_size);
 					parse_quoted_string(msgstr, line_start + MSGSTR.size(), line_end);
 					current_item = PO_MSGSTR;
 				} else {
@@ -269,11 +271,11 @@ namespace
 		// Make sure to store the very last message also
 		switch(current_item) {
 			case PO_MSGSTR: {
-				store_message_helper_po(msgid.str(), msgstr.str());
+				store_message_helper_po(msgid, msgstr);
 				break;
 			}
 			case PO_MSGID: {
-				LOG_DEBUG("i18n: ignoring a MSGID which had no MSGSTR: " << msgid.str());
+				LOG_DEBUG("i18n: ignoring a MSGID which had no MSGSTR: \n<<" << msgid << ">>");
 				break;
 			}
 			case PO_NONE: {
