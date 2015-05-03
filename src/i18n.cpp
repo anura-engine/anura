@@ -486,6 +486,35 @@ namespace i18n
 	// UNIT TESTS //
 	////////////////
 
+	namespace {
+		void CHECK_CATALOG(const map & answer) {
+			for (auto & v : answer) {
+				CHECK_EQ (tr(v.first), v.second);
+			}
+
+			for (auto & v : hashmap) {
+				auto it = answer.find(v.first);
+				CHECK_EQ (it != answer.end(), true);
+				CHECK_EQ (it->second, v.second);
+			}
+
+			hashmap.clear();
+		}
+
+		void CHECK_FOR_PO_PARSE_ERROR(const std::string & doc) {
+			try {
+				const assert_recover_scope scope(SilenceAsserts);
+				hashmap.clear();
+
+				process_po_contents(doc);
+			} catch (validation_failure_exception &) {
+				hashmap.clear();
+				return;
+			}
+			ASSERT_LOG(false, "failure was expected when parsing: \n***\n" << doc << "\n***\n");
+		}
+	}
+
 	UNIT_TEST(po_parse_1)
 	{
 		hashmap.clear();
@@ -517,17 +546,7 @@ msgstr \"panama\"");
 		answer["tmnt"] = "teenagemutantninjaturtles";
 		answer["a man\na plan\na canal"] = "panama";
 
-		for (auto & v : answer) {
-			CHECK_EQ (tr(v.first), v.second);
-		}
-
-		for (auto & v : hashmap) {
-			auto it = answer.find(v.first);
-			CHECK_EQ (it != answer.end(), true);
-			CHECK_EQ (it->second, v.second);
-		}
-
-		hashmap.clear();
+		CHECK_CATALOG(answer);
 	}
 
 	UNIT_TEST(po_parse_2)
@@ -552,17 +571,7 @@ msgid \"ignore me!\"");
 		answer["he said \"she said.\""] = "by the \"sea shore\"?";
 		answer["say what?"] = "come again?";
 
-		for (auto & v : answer) {
-			CHECK_EQ (tr(v.first), v.second);
-		}
-
-		for (auto & v : hashmap) {
-			auto it = answer.find(v.first);
-			CHECK_EQ (it != answer.end(), true);
-			CHECK_EQ (it->second, v.second);
-		}
-
-		hashmap.clear();
+		CHECK_CATALOG(answer);
 	}
 
 	UNIT_TEST(po_parse_3)
@@ -581,25 +590,12 @@ msgstr \"\\0\"\n\
 		answer["veni vidi vici"] = "i came, i saw, i conquered";
 		answer["the sound of a tree falls"] = "";
 
-		for (auto & v : answer) {
-			CHECK_EQ (tr(v.first), v.second);
-		}
-
-		for (auto & v : hashmap) {
-			auto it = answer.find(v.first);
-			CHECK_EQ (it != answer.end(), true);
-			CHECK_EQ (it->second, v.second);
-		}
-
-		hashmap.clear();
+		CHECK_CATALOG(answer);
 	}
 
 	UNIT_TEST(po_parse_error_reporting_1)
 	{
-		try {
-			const assert_recover_scope scope(SilenceAsserts);
-			hashmap.clear();
-			process_po_contents("\
+		CHECK_FOR_PO_PARSE_ERROR("\
 #foo\n\
 #bar\n\
 #baz\n\
@@ -610,19 +606,11 @@ msgstr \"jkl;\n\
 #foo\n\
 msgid \"foo\"\n\
 msgstr \"bar\"");
-		} catch (validation_failure_exception &) {
-			hashmap.clear();
-			return;
-		}
-		ASSERT_LOG(false, "failure was expected");
 	}
 
 	UNIT_TEST(po_parse_error_reporting_2)
 	{
-		try {
-			const assert_recover_scope scope(SilenceAsserts);
-			hashmap.clear();
-			process_po_contents("\
+		CHECK_FOR_PO_PARSE_ERROR("\
 #foo\n\
 #bar\n\
 #baz\n\
@@ -633,19 +621,11 @@ msgstr \"jkl;\"\n\
 #foo\n\
 msgid \"foo\"\n\
 msgstr \"bar\"");
-		} catch (validation_failure_exception &) {
-			hashmap.clear();
-			return;
-		}
-		ASSERT_LOG(false, "failure was expected");
 	}
 
 	UNIT_TEST(po_parse_error_reporting_3)
 	{
-		try {
-			const assert_recover_scope scope(SilenceAsserts);
-			hashmap.clear();
-			process_po_contents("\
+		CHECK_FOR_PO_PARSE_ERROR("\
 \n\
 #bar\n\
 #baz\n\
@@ -655,19 +635,11 @@ msgstr \"jkl;\"\n\
 #foo\n\
 msgid \"foo\"\n\
 msgstr \"bar\"");
-		} catch (validation_failure_exception &) {
-			hashmap.clear();
-			return;
-		}
-		ASSERT_LOG(false, "failure was expected");
 	}
 
 	UNIT_TEST(po_parse_error_reporting_4)
 	{
-		try {
-			const assert_recover_scope scope(SilenceAsserts);
-			hashmap.clear();
-			process_po_contents("\
+		CHECK_FOR_PO_PARSE_ERROR("\
    \n\
 #bar\n\
 #baz\n\
@@ -678,19 +650,11 @@ msgstr \"jkl;\"\n\
 #foo\n\
 msgid \"foo\"\n\
 msgstr \"bar\"");
-		} catch (validation_failure_exception &) {
-			hashmap.clear();
-			return;
-		}
-		ASSERT_LOG(false, "failure was expected");
 	}
 
 	UNIT_TEST(po_parse_error_reporting_5)
 	{
-		try {
-			const assert_recover_scope scope(SilenceAsserts);
-			hashmap.clear();
-			process_po_contents("\
+		CHECK_FOR_PO_PARSE_ERROR("\
 \r\n\
 #bar\n\
 #baz\n\
@@ -701,30 +665,17 @@ msgtr \"jkl;\"\n\
 #foo\n\
 msgid \"foo\"\n\
 msgstr \"bar\"");
-		} catch (validation_failure_exception &) {
-			hashmap.clear();
-			return;
-		}
-		ASSERT_LOG(false, "failure was expected");
 	}
 
 	UNIT_TEST(po_parse_error_reporting_6)
 	{
-		try {
-			const assert_recover_scope scope(SilenceAsserts);
-			hashmap.clear();
-			process_po_contents("\
+		CHECK_FOR_PO_PARSE_ERROR("\
 msgid \"asdf\"\n\
 msgstr \"jkl;\"\n\
 \n\
 \n\
 msgid \"foo\"\"bar\"\n\
 msgstr \"baz\"");
-		} catch (validation_failure_exception &) {
-			hashmap.clear();
-			return;
-		}
-		ASSERT_LOG(false, "failure was expected");
 	}
 
 	namespace {
