@@ -33,6 +33,7 @@
 #include "logger.hpp"
 #include "module.hpp"
 #include "preferences.hpp"
+#include "unit_test.hpp"
 
 #ifdef __APPLE__
 #include <CoreFoundation/CoreFoundation.h>
@@ -116,7 +117,7 @@ namespace
 	// this function should push to the stream the contents that were quoted,
 	// and ideally flag errors... and handle utf-8 appropriately...
 	void parse_quoted_string(std::stringstream & ss, const std::string & str) {
-		static std::string whitespace = " \t\n\r";
+		static const std::string whitespace = " \t\n\r";
 
 		bool pre_string = true;
 		bool post_string = false;
@@ -137,15 +138,30 @@ namespace
 					post_string = true;
 				} else if (*it == '\\') {
 					it++;
+					if (it == str.end()) {
+						LOG_ERROR("i18n: po string terminated unexpectedly after escape character: \n<<" << str << ">>");
+						return;
+					}
 					char c = *it;
 					switch (c) {
 						case 'n': {
 							ss << '\n';
 							break;
 						}
-						default:
+						case 't': {
+							ss << '\t';
+							break;
+						}
+						case '\'':
+						case '\"':
+						case '\\': {
 							ss << c;
 							break;
+						}
+						default: {
+							LOG_ERROR("i18n: po string contained unrecognized escape sequence: \"\\" << c << "\": \n<<" << str << ">>");
+							break;
+						}
 					}
 				} else {
 					ss << *it;
@@ -170,19 +186,18 @@ namespace
 
 		for (std::string line; std::getline(ss, line); ) {
 			if (line.size() > 0 && line[0] != '#') {
-				if (line.size() > 6 && line.substr(0,6) == "msgid ") {
-					// This is the start of a new item, so store the previous item (if there was a previous item)
-					if (current_item != PO_NONE) {
+				if (line.size() >= 6 && line.substr(0,6) == "msgid ") {
+					if (current_item == PO_MSGID) {
+						LOG_DEBUG("i18n: ignoring a MSGID which had no MSGSTR: " << msgid.str());
+					} else if (current_item == PO_MSGSTR) { // This is the start of a new item, so store the previous item
 						store_message(msgid.str(), msgstr.str());
-						msgid.str("");
-						msgstr.str("");
 					}
+					msgid.str("");
+					msgstr.str("");
 					parse_quoted_string(msgid, line.substr(6));
 					current_item = PO_MSGID;
-				} else if (line.size() > 7 && line.substr(0,7) == "msgstr ") {
-					if (current_item == PO_NONE) {
-						LOG_ERROR("i18n: in po file, found a msgstr with no earlier msgid:\n<<" << line << ">>");
-					}
+				} else if (line.size() >= 7 && line.substr(0,7) == "msgstr ") {
+					ASSERT_LOG(current_item == PO_MSGID, "i18n: in po file, found a msgstr with no earlier msgid:\n<<" << line << ">>");
 
 					parse_quoted_string(msgstr, line.substr(7));
 					current_item = PO_MSGSTR;
@@ -202,10 +217,12 @@ namespace
 				}
 			}
 		}
-		
+
 		// Make sure to store the very last message also
 		if (current_item == PO_MSGSTR) {
 			store_message(msgid.str(), msgstr.str());
+		} else if (current_item == PO_MSGID) {
+			LOG_DEBUG("i18n: ignoring a MSGID which had no MSGSTR: " << msgid.str());
 		}
 	}
 }
@@ -217,7 +234,7 @@ namespace i18n
 		//do not attempt to translate empty strings ("") since that returns metadata
 		if (msgid.empty())
 			return msgid;
-		map::iterator it = hashmap.find (msgid); 
+		map::iterator it = hashmap.find (msgid);
 		if (it != hashmap.end())
 			return it->second;
 		//if no translated string was found, return the original
@@ -244,62 +261,95 @@ namespace i18n
 			|| (locale[0] == 'k'  && locale[1] == 'o');
 	}
 
-	void load_translations()
-	{
-		hashmap.clear();
+	namespace {
+		std::string mo_dir(const std::string & locale_str) {
+			return "./locale/" + locale_str + "/LC_MESSAGES/";
+		}
+
 		//strip the charset part of the country and language code,
 		//e.g. "pt_BR.UTF8" --> "pt_BR"
-		size_t found = locale.find(".");
-		if (found != std::string::npos) {
-			locale = locale.substr(0, found);
-		}
-		if (locale.size() < 2)
-			return;
-
-		std::vector<std::string> files;
-		std::string dirname = "./locale/" + locale + "/LC_MESSAGES/";
-		found = locale.find("@");
-
-		module::get_files_in_dir(dirname, &files);
-		if (!files.size() && found != std::string::npos) {
-			locale = locale.substr(0, found);
-			dirname = "./locale/" + locale + "/LC_MESSAGES/";
-			module::get_files_in_dir(dirname, &files);
-		}
-		//strip the country code, e.g. "de_DE" --> "de"
-		found = locale.find("_");
-		if (!files.size() && found != std::string::npos) {
-			locale = locale.substr(0, found);
-			dirname = "./locale/" + locale + "/LC_MESSAGES/";
-			module::get_files_in_dir(dirname, &files);
-		}
-
-		bool loaded_something = false;
-
-		for(auto & file : files) {
-			try {
-				std::string extension = file.substr(file.find_last_of('.'));
-				std::string path = dirname + file;
-				ASSERT_LOG(sys::file_exists(module::map_file(path)), "confused... file does not exist which was found earlier: " << file);
-				if (extension == ".mo") {
-					LOG_DEBUG("loading translations from mo file: " << path);
-					process_mo_contents(sys::read_file(module::map_file(path)));
-					loaded_something = true;
-				} else if (extension == ".po") {
-					LOG_DEBUG("loading translations from po file: " << path);
-					process_po_contents(sys::read_file(module::map_file(path)));
-					loaded_something = true;
-				} else {
-					LOG_DEBUG("skipping translations file: " << path);
-				}
-			} catch (std::out_of_range &) {
-				ASSERT_LOG(false, "bad file: " + file);
+		void trim_locale_charset() {
+			size_t found = locale.find(".");
+			if (found != std::string::npos) {
+				locale = locale.substr(0, found);
 			}
 		}
 
-		if (!loaded_something) {
-			LOG_WARN("did not find any translation files. \n locale = " << locale << "\n dirname = " << dirname);
+		// Try to adjust the locale for cases when we failed to find a match
+		std::string tweak_locale(std::string locale) {
+			size_t found = locale.find("@");
+			if (found != std::string::npos) {
+				return locale.substr(0, found);
+			}
+
+			found = locale.find("_");
+			if (found != std::string::npos) {
+				return locale.substr(0, found);
+			}
+			return "";
 		}
+	}
+
+	void load_translations()
+	{
+		hashmap.clear();
+
+		trim_locale_charset();
+
+		std::vector<std::string> files;
+		std::string dirname;
+
+		for (std::string loc = locale; loc.size() >= 2; loc = tweak_locale(loc)) {
+			dirname = mo_dir(loc);
+			module::get_files_in_dir(dirname, &files);
+
+			if (files.size()) {
+				bool loaded_something = false;
+				for(auto & file : files) {
+					std::string extension;
+					try {
+						extension = file.substr(file.find_last_of('.'));
+					} catch (std::out_of_range &) {}
+
+					std::string path = dirname + file;
+					ASSERT_LOG(sys::file_exists(module::map_file(path)), "confused... file does not exist which was found earlier: " << path);
+					if (extension == ".mo") {
+						LOG_DEBUG("loading translations from mo file: " << path);
+						process_mo_contents(sys::read_file(module::map_file(path)));
+						loaded_something = true;
+					} else if (extension == ".po") {
+						LOG_DEBUG("loading translations from po file: " << path);
+						process_po_contents(sys::read_file(module::map_file(path)));
+						loaded_something = true;
+					} else {
+						LOG_DEBUG("skipping translations file: " << path);
+					}
+				}
+				if (loaded_something) {
+					return ;
+				} else {
+					LOG_DEBUG("did not find any mo or po files in dir " << dirname);
+				}
+			}
+		}
+
+		LOG_WARN("did not find any translation files. locale = " << locale << " , dirname = " << dirname);
+	}
+
+	bool load_extra_po(const std::string & module_dir) {
+		trim_locale_charset();
+
+		for (std::string loc = locale; loc.size() >= 2; loc = tweak_locale(loc)) {
+			std::string path = module_dir + loc + ".po";
+			if (sys::file_exists(module::map_file(path))) {
+				LOG_DEBUG("loading translations from po file: " << path);
+				process_po_contents(sys::read_file(module::map_file(path)));
+				return true;
+			}
+		}
+		LOG_DEBUG("could not find translations in " << module_dir << " associated to locale " << locale);
+
+		return false;
 	}
 
 	void setLocale(const std::string& l)
@@ -373,6 +423,92 @@ namespace i18n
 			i18n::use_system_locale();
 		} else {
 			i18n::setLocale(locale);
+		}
+	}
+
+	UNIT_TEST(po_parse)
+	{
+		std::string doc = "\
+#foo\n\
+#bar\n\
+#baz\n\
+msgid \"asdf\"\n\
+msgstr \"jkl;\"\n\
+\n\
+\n\
+#foo\n\
+msgid \"foo\"\n\
+msgstr \"bar\"\n\
+\n\
+msgid \"tmnt\"\n\
+msgstr \"teenage\"\n\
+\"mutant\"\n\
+\"ninja\"\n\
+\"turtles\"\n\
+msgid \"a man\\n\"\n\
+\"a plan\\n\"\n\
+\"a canal\"\n\
+msgstr \"panama\"";
+
+		hashmap.clear();
+		process_po_contents(doc);
+
+		map answer;
+		answer["asdf"] = "jkl;";
+		answer["foo"] = "bar";
+		answer["tmnt"] = "teenagemutantninjaturtles";
+		answer["a man\na plan\na canal"] = "panama";
+
+		for (auto & v : answer) {
+			CHECK_EQ (tr(v.first), v.second);
+		}
+
+		for (auto & v : hashmap) {
+			auto it = answer.find(v.first);
+			CHECK_EQ (it != answer.end(), true);
+			CHECK_EQ (it->second, v.second);
+		}
+
+		hashmap.clear();
+	}
+
+	UNIT_TEST(locale_processing)
+	{
+		{
+			std::string loc = "ar";
+			const char * expected [] = { "ar", nullptr };
+			for (const char ** ptr = expected; *ptr != nullptr; ptr++) {
+				CHECK_EQ(loc, *ptr);
+				loc = tweak_locale(loc);
+			}
+			CHECK_EQ(loc, "");
+		}
+		{
+			std::string loc = "be_BY";
+			const char * expected [] = { "be_BY", "be", nullptr };
+			for (const char ** ptr = expected; *ptr != nullptr; ptr++) {
+				CHECK_EQ(loc, *ptr);
+				loc = tweak_locale(loc);
+			}
+			CHECK_EQ(loc, "");
+		}
+		{
+			std::string loc = "sr@latin";
+			const char * expected [] = { "sr@latin" , "sr", nullptr };
+			for (const char ** ptr = expected; *ptr != nullptr; ptr++) {
+				CHECK_EQ(loc, *ptr);
+				loc = tweak_locale(loc);
+			}
+			CHECK_EQ(loc, "");
+		}
+		{
+			std::string loc = "sr_RS@latin";
+			const char * expected [] = { "sr_RS@latin" , "sr_RS", "sr", nullptr };
+			for (const char ** ptr = expected; *ptr != nullptr; ptr++) {
+				CHECK_EQ(loc, *ptr);
+				loc = tweak_locale(loc);
+			}
+			CHECK_EQ(loc, "");
 		}
 	}
 }

@@ -34,5 +34,9 @@ namespace i18n
 	void use_system_locale();
 	void setLocale(const std::string& l);
 	void load_translations();
+	bool load_extra_po(const std::string& module_dir); 	// search in given module dir for a file named '%locale.po'
+								// where %locale is the current locale,
+								// read it and add it to current dictionary.
+								// returns true if it succeeds in finding a file.
 	bool is_locale_cjk();
 }
