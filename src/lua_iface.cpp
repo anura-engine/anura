@@ -115,6 +115,32 @@ namespace lua
 			variant value;
 		};
 
+		static void dump_stack(lua_State * L) {
+			std::cerr << "Stack contents:\n***\n";
+			for (int i = 1; i <= lua_gettop(L); ++i) {
+				std::cerr << "[" << i << "]: " << lua_typename(L, lua_type(L, i));
+				if (const char * foo = lua_tostring(L, i)) {
+					std::cerr << " \"" << foo << "\"\n";
+				}
+				std::cerr << std::endl;
+			}
+			std::cerr << "***\n";
+		}
+
+		static void print_traceback(lua_State * L) {
+			int top = lua_gettop(L);
+			lua_getglobal(L,"debug");
+			lua_getfield(L, -1, "traceback");
+			lua_call(L, 0, 0);
+			if (const char * bt = lua_tostring(L, -1)) {
+				std::cerr << bt << std::endl;
+			} else {
+				std::cerr << "<no lua stack backtrace>\n";
+			}
+			lua_pop(L, 1);
+			ASSERT_LOG(top == lua_gettop(L), "printing traceback corrupted stack");
+		}
+
 		static int variant_to_lua_value(lua_State* L, const variant& value)
 		{
 			switch(value.type()) {
@@ -189,8 +215,16 @@ namespace lua
 			char* name;
 		};
 
-		static variant lua_value_to_variant(lua_State* L, int ndx)
+		static variant lua_value_to_variant(lua_State* L, int ndx) //, variant::TYPE desired_type = VARIANT_TYPE_INVALID)
 		{
+			static int recursion_preventer = 0;
+			if (recursion_preventer > 20) {
+				std::cerr << "Preventing recursion in lua_value_to_variant:\n";
+				dump_stack(L);
+				print_traceback(L);
+				return variant();
+			}
+
 #ifdef _MSC_VER
 			using namespace boost::math;
 #endif
@@ -218,14 +252,31 @@ namespace lua
 				case LUA_TNIL: {
 					return variant();
 				}
-				case LUA_TTABLE:
-					break;
+				case LUA_TTABLE: {
+					std::map<variant, variant> temp;
+					int start_top = lua_gettop(L);
+
+					lua_pushvalue(L, ndx); //copy the item so we can iterate over it
+					lua_pushnil(L);
+
+					while (lua_next(L, -2)) {
+
+						recursion_preventer++;
+						variant key = lua_value_to_variant(L, -2);
+						temp[key] = lua_value_to_variant(L, -1);
+						recursion_preventer--;
+
+						lua_pop(L, 1);
+					}
+					lua_pop(L, 1);
+					ASSERT_LOG(start_top = lua_gettop(L), "TOP MISMATCH");
+					return variant(&temp);
+				}
 				case LUA_TUSERDATA:
 				case LUA_TTHREAD:
 				case LUA_TLIGHTUSERDATA:
 				default:
-					fprintf(stderr, "Unsupported type to convert on stack: %s", lua_typename(L,t));
-					//luaL_error(L, "Unsupported type to convert on stack: %s", lua_typename(L,t));
+					luaL_error(L, "Unsupported type to convert on stack: %s", lua_typename(L,t));
 			}
 			return variant();
 		}
@@ -724,7 +775,10 @@ namespace lua
 	}
 
 	variant LuaFunctionReference::call()
-	{
+	{/*
+		std::cerr << "::call()\n";
+		dump_stack(L_);
+		print_traceback(L_);*/
 		int top = lua_gettop(L_);
 		//ASSERT_LOG(top==0, "lua functon reference tried to evaluate when top is not 0");
 
@@ -766,5 +820,51 @@ UNIT_TEST(lua_test)
 {
 	lua::LuaContext ctx;
 }
+
+UNIT_TEST(lua_to_ffl_conversions) {
+
+	lua::LuaContext ctx;
+
+	lua_State * L = ctx.getContextPtr();
+
+	lua_settop(L, 0);
+
+	{
+		lua_pushstring(L, "foo");
+		variant result = lua::lua_value_to_variant(L, 1);
+		CHECK_EQ (result, game_logic::Formula(variant("\"foo\"")).execute());
+		lua_pop(L, 1);
+		CHECK_EQ (lua_gettop(L), 0);
+	}
+
+	{
+		lua_newtable(L);
+		lua_pushstring(L, "foo");
+		lua_setfield(L, -2, "a");
+		lua_pushstring(L, "bar");
+		lua_setfield(L, -2, "b");
+		CHECK_EQ (lua_gettop(L), 1);
+		variant result = lua::lua_value_to_variant(L, 1);
+		CHECK_EQ (result, game_logic::Formula(variant("{ 'a' : 'foo', 'b' : 'bar' }")).execute());
+		lua_pop(L, 1);
+		CHECK_EQ (lua_gettop(L), 0);
+	}
+
+	{
+		lua_newtable(L);
+		lua_pushinteger(L, 1);
+		lua_setfield(L, -2, "a");
+		lua_pushnumber(L, 1.5);
+		lua_setfield(L, -2, "b");
+		lua_pushboolean(L, false);
+		lua_setfield(L, -2, "c");
+		CHECK_EQ (lua_gettop(L), 1);
+		variant result = lua::lua_value_to_variant(L, 1);
+		CHECK_EQ (result, game_logic::Formula(variant("{ 'a' : 1, 'b' : 1.5, 'c': false }")).execute());
+		lua_pop(L, 1);
+		CHECK_EQ (lua_gettop(L), 0);
+	}
+}
+
 
 #endif
