@@ -668,16 +668,17 @@ msgstr \"baz\"");
 		ASSERT_LOG(false, "failure was expected");
 	}
 
-
-#define TEST_LOCALE_PROCESSING \
-do { \
-loc = trim_locale_charset(loc); \
-for (const char ** ptr = expected; *ptr != nullptr; ptr++) { \
-	CHECK_EQ(loc, *ptr); \
-	loc = tweak_locale(loc); \
-} \
-CHECK_EQ(loc, ""); \
-} while(0)
+	namespace {
+		void TEST_LOCALE_PROCESSING(std::string loc, const char ** const expected)
+		{
+			loc = trim_locale_charset(loc);
+			for (const char ** ptr = expected; *ptr != nullptr; ptr++) {
+				CHECK_EQ(loc, *ptr);
+				loc = tweak_locale(loc);
+			}
+			CHECK_EQ(loc, "");
+		}
+	}
 
 	UNIT_TEST(locale_processing)
 	{
@@ -685,31 +686,31 @@ CHECK_EQ(loc, ""); \
 			std::string loc = "ar";
 			const char * expected [] = { "ar", nullptr };
 
-			TEST_LOCALE_PROCESSING;
+			TEST_LOCALE_PROCESSING(loc, expected);
 		}
 		{
 			std::string loc = "be_BY";
 			const char * expected [] = { "be_BY", "be", nullptr };
 
-			TEST_LOCALE_PROCESSING;
+			TEST_LOCALE_PROCESSING(loc, expected);
 		}
 		{
 			std::string loc = "sr@latin";
 			const char * expected [] = { "sr@latin" , "sr", nullptr };
 
-			TEST_LOCALE_PROCESSING;
+			TEST_LOCALE_PROCESSING(loc, expected);
 		}
 		{
 			std::string loc = "sr_RS@latin";
 			const char * expected [] = { "sr_RS@latin" , "sr_RS", "sr", nullptr };
 
-			TEST_LOCALE_PROCESSING;
+			TEST_LOCALE_PROCESSING(loc, expected);
 		}
 		{
 			std::string loc = "sr_RS.UTF-8@latin";
 			const char * expected [] = { "sr_RS@latin" , "sr_RS", "sr", nullptr };
 
-			TEST_LOCALE_PROCESSING;
+			TEST_LOCALE_PROCESSING(loc, expected);
 		}
 	}
 }
