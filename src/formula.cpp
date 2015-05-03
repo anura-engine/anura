@@ -2415,9 +2415,9 @@ namespace game_logic
 				precedence_map["asserting"] = ++n;
 				precedence_map["::"] = ++n;
 				precedence_map["<-"] = ++n;
-				precedence_map["not"] = ++n;
 				precedence_map["or"]    = ++n;
 				precedence_map["and"]   = ++n;
+				precedence_map["not"] = ++n;
 				precedence_map["in"] = ++n;
 				precedence_map["is"] = ++n;
 				precedence_map["="]     = ++n;
