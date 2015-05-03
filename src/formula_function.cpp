@@ -2991,6 +2991,25 @@ FUNCTION_DEF_IMPL
 			return variant_type::get_type(variant::VARIANT_TYPE_INT);
 		END_FUNCTION_DEF(index)
 
+#if defined(USE_LUA)
+		FUNCTION_DEF(CompileLua, 3, 3, "CompileLua(object, string, string) Compiles a lua script against a lua-enabled object. Returns the compiled script as an object with an execute method. The second argument is the 'name' of the script as will appear in lua debugging output (normally a filename). The third argument is the script.")
+			game_logic::FormulaCallable* callable = const_cast<game_logic::FormulaCallable*>(args()[0]->evaluate(variables).as_callable());
+			ASSERT_LOG(callable != nullptr, "Argument to CompileLua was not a formula callable");
+			game_logic::FormulaObject * object = dynamic_cast<game_logic::FormulaObject*>(callable);
+			ASSERT_LOG(object != nullptr, "Argument to CompileLua was not a formula object");
+			boost::intrusive_ptr<lua::LuaContext> ctx = object->get_lua_context();
+			ASSERT_LOG(ctx, "Argument to CompileLua was not a formula object with a lua context. (Check class definition?)");
+			std::string name = args()[1]->evaluate(variables).as_string();
+			std::string script = args()[2]->evaluate(variables).as_string();
+			lua::LuaCompiledPtr result = ctx->compile(name, script);
+			return variant(result.get());
+		FUNCTION_ARGS_DEF
+			ARG_TYPE("object")
+			ARG_TYPE("string")
+			ARG_TYPE("string")
+		END_FUNCTION_DEF(CompileLua)
+#endif
+
 		namespace 
 		{
 			void evaluate_expr_for_benchmark(const FormulaExpression* expr, const FormulaCallable* variables, int ntimes)

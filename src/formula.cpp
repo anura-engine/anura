@@ -252,27 +252,6 @@ namespace game_logic
 	namespace 
 	{
 		#if defined(USE_LUA)
-		class LuaExpression : public FormulaExpression {
-		public:
-			explicit LuaExpression(const variant& lua_code) 
-				: code_(lua_code)
-			{
-			}
-
-			variant execute(const FormulaCallable& /*variables*/) const {
-				return variant(new FnCommandCallableArg([=](FormulaCallable* callable) {
-					lua::LuaContext context;
-					context.execute(this->code_, callable);
-				}));
-			}
-
-		private:
-			variant_type_ptr getVariantType() const {
-				return variant_type::get_commands();
-			}
-			variant code_;
-		};
-
 		class LuaFnExpression : public FormulaExpression {
 		public:
 			explicit LuaFnExpression(lua::LuaFunctionReference* fn_ref) 
@@ -3594,7 +3573,9 @@ FormulaPtr Formula::createOptionalFormula(const variant& val, FunctionSymbolTabl
 	if(lang == FORMULA_LANGUAGE::FFL) {
 		return FormulaPtr(new Formula(val, symbols, callableDefinition));
 	} else {
-		return FormulaPtr(new Formula(val, FORMULA_LANGUAGE::LUA));
+		assert(false);
+		return FormulaPtr();
+		//return FormulaPtr(new Formula(val, FORMULA_LANGUAGE::LUA));
 	}
 }
 
@@ -3717,15 +3698,6 @@ Formula::Formula(const variant& val, FunctionSymbolTable* symbols, ConstFormulaC
 
 #ifndef NO_EDITOR
 	all_formulae().insert(this);
-#endif
-}
-
-Formula::Formula(const variant& lua_fn, FORMULA_LANGUAGE lang)
-{
-#if defined(USE_LUA)
-	lua::LuaFunctionReference* fn_ref = lua_fn.try_convert<lua::LuaFunctionReference>();
-	ASSERT_LOG(fn_ref != nullptr, "FATAL: Couldn't convert function reference to the correct type.");
-	expr_.reset(new LuaFnExpression(fn_ref));
 #endif
 }
 

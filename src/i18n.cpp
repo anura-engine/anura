@@ -112,12 +112,19 @@ namespace
 		}
 	}
 
+	///////////////
+	// PO PARSER //
+	///////////////
+
+	bool is_po_whitespace(char c) {
+		static const std::string po_whitespace = " \t\n\r";
+		return (po_whitespace.find(c) != std::string::npos);
+	}
+
 	// On input a string free of newline, expected to be wrapped in quotes,
-	// with possible leading or trailing whitespace, and escaped characters (?),
-	// this function should push to the stream the contents that were quoted,
-	// and ideally flag errors... and handle utf-8 appropriately...
+	// with possible leading or trailing whitespace and escaped characters,
+	// push to the stream the contents that were quoted. assumes utf-8.
 	void parse_quoted_string(std::stringstream & ss, const std::string & str) {
-		static const std::string whitespace = " \t\n\r";
 
 		bool pre_string = true;
 		bool post_string = false;
@@ -125,23 +132,17 @@ namespace
 		for (std::string::const_iterator it = str.begin(); it != str.end(); it++) {
 			if (pre_string || post_string) {
 				if (*it == '\"') {
-					if (post_string) {
-						LOG_ERROR("i18n: Only one quoted string is allowed on a line of po file: \n<<" << str << ">>");
-						return;
-					}
+					ASSERT_LOG(!post_string, "i18n: Only one quoted string is allowed on a line of po file: \n<<" << str << ">>");
 					pre_string = false;
-				} else if (whitespace.find(*it) == std::string::npos) {
-					LOG_ERROR("i18n: Unexpected characters in po file where only whitespace is expected: \'" << *it << "\':\n<<" << str << ">>");
+				} else {
+					ASSERT_LOG(is_po_whitespace(*it), "i18n: Unexpected characters in po file where only whitespace is expected: \'" << *it << "\':\n<<" << str << ">>");
 				}
 			} else {
 				if (*it == '\"') {
 					post_string = true;
 				} else if (*it == '\\') {
 					it++;
-					if (it == str.end()) {
-						LOG_ERROR("i18n: po string terminated unexpectedly after escape character: \n<<" << str << ">>");
-						return;
-					}
+					ASSERT_LOG(it != str.end(), "i18n: po string terminated unexpectedly after escape character: \n<<" << str << ">>");
 					char c = *it;
 					switch (c) {
 						case 'n': {
@@ -159,8 +160,7 @@ namespace
 							break;
 						}
 						default: {
-							LOG_ERROR("i18n: po string contained unrecognized escape sequence: \"\\" << c << "\": \n<<" << str << ">>");
-							break;
+							ASSERT_LOG(false, "i18n: po string contained unrecognized escape sequence: \"\\" << c << "\": \n<<" << str << ">>");
 						}
 					}
 				} else {
@@ -168,9 +168,7 @@ namespace
 				}
 			}
 		}
-		if (!pre_string && !post_string) {
-			LOG_ERROR("i18n: unterminated quoted string in po file:\n<<" << str << ">>");
-		}
+		ASSERT_LOG(pre_string || post_string, "i18n: unterminated quoted string in po file:\n<<" << str << ">>");
 	}
 
 	enum po_item { PO_NONE, PO_MSGID, PO_MSGSTR };
@@ -187,10 +185,17 @@ namespace
 		for (std::string line; std::getline(ss, line); ) {
 			if (line.size() > 0 && line[0] != '#') {
 				if (line.size() >= 6 && line.substr(0,6) == "msgid ") {
-					if (current_item == PO_MSGID) {
-						LOG_DEBUG("i18n: ignoring a MSGID which had no MSGSTR: " << msgid.str());
-					} else if (current_item == PO_MSGSTR) { // This is the start of a new item, so store the previous item
-						store_message(msgid.str(), msgstr.str());
+					switch(current_item) {
+						case PO_MSGID: {
+							LOG_DEBUG("i18n: ignoring a MSGID which had no MSGSTR: " << msgid.str());
+							break;
+						}
+						case PO_MSGSTR: { // This is the start of a new item, so store the previous item
+							store_message(msgid.str(), msgstr.str());
+							break;
+						}
+						case PO_NONE:
+							break;
 					}
 					msgid.str("");
 					msgstr.str("");
@@ -211,21 +216,38 @@ namespace
 							parse_quoted_string(msgstr, line);
 							break;
 						}
-						default:
+						case PO_NONE: {
+							for (const char c : line) {
+								ASSERT_LOG(is_po_whitespace(c), "i18n: in po file, the first non-whitespace non-comment line should begin 'msgid ': \n<<" << line << ">>");
+							}
 							break;
+						}
 					}
 				}
 			}
 		}
 
 		// Make sure to store the very last message also
-		if (current_item == PO_MSGSTR) {
-			store_message(msgid.str(), msgstr.str());
-		} else if (current_item == PO_MSGID) {
-			LOG_DEBUG("i18n: ignoring a MSGID which had no MSGSTR: " << msgid.str());
+		switch(current_item) {
+			case PO_MSGSTR: {
+				store_message(msgid.str(), msgstr.str());
+				break;
+			}
+			case PO_MSGID: {
+				LOG_DEBUG("i18n: ignoring a MSGID which had no MSGSTR: " << msgid.str());
+				break;
+			}
+			case PO_NONE: {
+				LOG_WARN("i18n: parsed a po file which had no content");
+				break;
+			}
 		}
 	}
 }
+
+	///////////////
+	// INTERFACE //
+	///////////////
 
 namespace i18n
 {
@@ -267,16 +289,23 @@ namespace i18n
 		}
 
 		//strip the charset part of the country and language code,
+		//leave the script code if there is one
 		//e.g. "pt_BR.UTF8" --> "pt_BR"
-		void trim_locale_charset() {
+		//     "sr_RS.UTF-8@latin" --> "sr_RS@latin"
+		std::string trim_locale_charset(const std::string & locale) {
 			size_t found = locale.find(".");
 			if (found != std::string::npos) {
-				locale = locale.substr(0, found);
+				size_t found2 = locale.substr(found).find('@');
+				if (found2 != std::string::npos) {
+					return locale.substr(0, found) + locale.substr(found).substr(found2);
+				}
+				return locale.substr(0, found);
 			}
+			return locale;
 		}
 
 		// Try to adjust the locale for cases when we failed to find a match
-		std::string tweak_locale(std::string locale) {
+		std::string tweak_locale(const std::string & locale) {
 			size_t found = locale.find("@");
 			if (found != std::string::npos) {
 				return locale.substr(0, found);
@@ -294,12 +323,10 @@ namespace i18n
 	{
 		hashmap.clear();
 
-		trim_locale_charset();
-
 		std::vector<std::string> files;
 		std::string dirname;
 
-		for (std::string loc = locale; loc.size() >= 2; loc = tweak_locale(loc)) {
+		for (std::string loc = trim_locale_charset(locale); loc.size() >= 2; loc = tweak_locale(loc)) {
 			dirname = mo_dir(loc);
 			module::get_files_in_dir(dirname, &files);
 
@@ -337,9 +364,7 @@ namespace i18n
 	}
 
 	bool load_extra_po(const std::string & module_dir) {
-		trim_locale_charset();
-
-		for (std::string loc = locale; loc.size() >= 2; loc = tweak_locale(loc)) {
+		for (std::string loc = trim_locale_charset(locale); loc.size() >= 2; loc = tweak_locale(loc)) {
 			std::string path = module_dir + loc + ".po";
 			if (sys::file_exists(module::map_file(path))) {
 				LOG_DEBUG("loading translations from po file: " << path);
@@ -426,9 +451,15 @@ namespace i18n
 		}
 	}
 
-	UNIT_TEST(po_parse)
+
+	////////////////
+	// UNIT TESTS //
+	////////////////
+
+	UNIT_TEST(po_parse_1)
 	{
-		std::string doc = "\
+		hashmap.clear();
+		process_po_contents("\
 #foo\n\
 #bar\n\
 #baz\n\
@@ -448,10 +479,7 @@ msgstr \"teenage\"\n\
 msgid \"a man\\n\"\n\
 \"a plan\\n\"\n\
 \"a canal\"\n\
-msgstr \"panama\"";
-
-		hashmap.clear();
-		process_po_contents(doc);
+msgstr \"panama\"");
 
 		map answer;
 		answer["asdf"] = "jkl;";
@@ -472,43 +500,217 @@ msgstr \"panama\"";
 		hashmap.clear();
 	}
 
+	UNIT_TEST(po_parse_2)
+	{
+		hashmap.clear();
+		process_po_contents("\
+\t\t\n\
+msgid \"he said \\\"she said.\\\"\"\n\
+msgstr \"by the \\\"sea shore\\\"?\"\n\
+\n\
+\n\
+#msgid blahlbahlbah\n\
+msgid \"say what?\"\n\
+# msgstr noooo\n\
+    \n\
+msgstr \"come again?\"\n\
+\n\
+\n\
+msgid \"ignore me!\"");
+
+		map answer;
+		answer["he said \"she said.\""] = "by the \"sea shore\"?";
+		answer["say what?"] = "come again?";
+
+		for (auto & v : answer) {
+			CHECK_EQ (tr(v.first), v.second);
+		}
+
+		for (auto & v : hashmap) {
+			auto it = answer.find(v.first);
+			CHECK_EQ (it != answer.end(), true);
+			CHECK_EQ (it->second, v.second);
+		}
+
+		hashmap.clear();
+	}
+
+	UNIT_TEST(po_parse_error_reporting_1)
+	{
+		try {
+			const assert_recover_scope scope(SilenceAsserts);
+			hashmap.clear();
+			process_po_contents("\
+#foo\n\
+#bar\n\
+#baz\n\
+msgid \"asdf\"\n\
+msgstr \"jkl;\n\
+\n\
+\n\
+#foo\n\
+msgid \"foo\"\n\
+msgstr \"bar\"");
+		} catch (validation_failure_exception &) {
+			hashmap.clear();
+			return;
+		}
+		ASSERT_LOG(false, "failure was expected");
+	}
+
+	UNIT_TEST(po_parse_error_reporting_2)
+	{
+		try {
+			const assert_recover_scope scope(SilenceAsserts);
+			hashmap.clear();
+			process_po_contents("\
+#foo\n\
+#bar\n\
+#baz\n\
+msgi \"asdf\"\n\
+msgstr \"jkl;\"\n\
+\n\
+\n\
+#foo\n\
+msgid \"foo\"\n\
+msgstr \"bar\"");
+		} catch (validation_failure_exception &) {
+			hashmap.clear();
+			return;
+		}
+		ASSERT_LOG(false, "failure was expected");
+	}
+
+	UNIT_TEST(po_parse_error_reporting_3)
+	{
+		try {
+			const assert_recover_scope scope(SilenceAsserts);
+			hashmap.clear();
+			process_po_contents("\
+\n\
+#bar\n\
+#baz\n\
+msgstr \"jkl;\"\n\
+\n\
+\n\
+#foo\n\
+msgid \"foo\"\n\
+msgstr \"bar\"");
+		} catch (validation_failure_exception &) {
+			hashmap.clear();
+			return;
+		}
+		ASSERT_LOG(false, "failure was expected");
+	}
+
+	UNIT_TEST(po_parse_error_reporting_4)
+	{
+		try {
+			const assert_recover_scope scope(SilenceAsserts);
+			hashmap.clear();
+			process_po_contents("\
+   \n\
+#bar\n\
+#baz\n\
+msgid \"asdf\"\"\n\
+msgstr \"jkl;\"\n\
+\n\
+\n\
+#foo\n\
+msgid \"foo\"\n\
+msgstr \"bar\"");
+		} catch (validation_failure_exception &) {
+			hashmap.clear();
+			return;
+		}
+		ASSERT_LOG(false, "failure was expected");
+	}
+
+	UNIT_TEST(po_parse_error_reporting_5)
+	{
+		try {
+			const assert_recover_scope scope(SilenceAsserts);
+			hashmap.clear();
+			process_po_contents("\
+\r\n\
+#bar\n\
+#baz\n\
+msgid \"asdf\"\n\
+msgtr \"jkl;\"\n\
+\n\
+\n\
+#foo\n\
+msgid \"foo\"\n\
+msgstr \"bar\"");
+		} catch (validation_failure_exception &) {
+			hashmap.clear();
+			return;
+		}
+		ASSERT_LOG(false, "failure was expected");
+	}
+
+	UNIT_TEST(po_parse_error_reporting_6)
+	{
+		try {
+			const assert_recover_scope scope(SilenceAsserts);
+			hashmap.clear();
+			process_po_contents("\
+msgid \"asdf\"\n\
+msgstr \"jkl;\"\n\
+\n\
+\n\
+msgid \"foo\"\"bar\"\n\
+msgstr \"baz\"");
+		} catch (validation_failure_exception &) {
+			hashmap.clear();
+			return;
+		}
+		ASSERT_LOG(false, "failure was expected");
+	}
+
+	namespace {
+		void TEST_LOCALE_PROCESSING(std::string loc, const char ** const expected)
+		{
+			loc = trim_locale_charset(loc);
+			for (const char ** ptr = expected; *ptr != nullptr; ptr++) {
+				CHECK_EQ(loc, *ptr);
+				loc = tweak_locale(loc);
+			}
+			CHECK_EQ(loc, "");
+		}
+	}
+
 	UNIT_TEST(locale_processing)
 	{
 		{
 			std::string loc = "ar";
 			const char * expected [] = { "ar", nullptr };
-			for (const char ** ptr = expected; *ptr != nullptr; ptr++) {
-				CHECK_EQ(loc, *ptr);
-				loc = tweak_locale(loc);
-			}
-			CHECK_EQ(loc, "");
+
+			TEST_LOCALE_PROCESSING(loc, expected);
 		}
 		{
 			std::string loc = "be_BY";
 			const char * expected [] = { "be_BY", "be", nullptr };
-			for (const char ** ptr = expected; *ptr != nullptr; ptr++) {
-				CHECK_EQ(loc, *ptr);
-				loc = tweak_locale(loc);
-			}
-			CHECK_EQ(loc, "");
+
+			TEST_LOCALE_PROCESSING(loc, expected);
 		}
 		{
 			std::string loc = "sr@latin";
 			const char * expected [] = { "sr@latin" , "sr", nullptr };
-			for (const char ** ptr = expected; *ptr != nullptr; ptr++) {
-				CHECK_EQ(loc, *ptr);
-				loc = tweak_locale(loc);
-			}
-			CHECK_EQ(loc, "");
+
+			TEST_LOCALE_PROCESSING(loc, expected);
 		}
 		{
 			std::string loc = "sr_RS@latin";
 			const char * expected [] = { "sr_RS@latin" , "sr_RS", "sr", nullptr };
-			for (const char ** ptr = expected; *ptr != nullptr; ptr++) {
-				CHECK_EQ(loc, *ptr);
-				loc = tweak_locale(loc);
-			}
-			CHECK_EQ(loc, "");
+
+			TEST_LOCALE_PROCESSING(loc, expected);
+		}
+		{
+			std::string loc = "sr_RS.UTF-8@latin";
+			const char * expected [] = { "sr_RS@latin" , "sr_RS", "sr", nullptr };
+
+			TEST_LOCALE_PROCESSING(loc, expected);
 		}
 	}
 }
