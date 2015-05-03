@@ -245,6 +245,10 @@ namespace
 	}
 }
 
+	///////////////
+	// INTERFACE //
+	///////////////
+
 namespace i18n
 {
 	const std::string& tr(const std::string& msgid)
@@ -447,9 +451,15 @@ namespace i18n
 		}
 	}
 
-	UNIT_TEST(po_parse)
+
+	////////////////
+	// UNIT TESTS //
+	////////////////
+
+	UNIT_TEST(po_parse_1)
 	{
-		std::string doc = "\
+		hashmap.clear();
+		process_po_contents("\
 #foo\n\
 #bar\n\
 #baz\n\
@@ -469,10 +479,7 @@ msgstr \"teenage\"\n\
 msgid \"a man\\n\"\n\
 \"a plan\\n\"\n\
 \"a canal\"\n\
-msgstr \"panama\"";
-
-		hashmap.clear();
-		process_po_contents(doc);
+msgstr \"panama\"");
 
 		map answer;
 		answer["asdf"] = "jkl;";
@@ -492,6 +499,175 @@ msgstr \"panama\"";
 
 		hashmap.clear();
 	}
+
+	UNIT_TEST(po_parse_2)
+	{
+		hashmap.clear();
+		process_po_contents("\
+\t\t\n\
+msgid \"he said \\\"she said.\\\"\"\n\
+msgstr \"by the \\\"sea shore\\\"?\"\n\
+\n\
+\n\
+#msgid blahlbahlbah\n\
+msgid \"say what?\"\n\
+# msgstr noooo\n\
+    \n\
+msgstr \"come again?\"\n\
+\n\
+\n\
+msgid \"ignore me!\"");
+
+		map answer;
+		answer["he said \"she said.\""] = "by the \"sea shore\"?";
+		answer["say what?"] = "come again?";
+
+		for (auto & v : answer) {
+			CHECK_EQ (tr(v.first), v.second);
+		}
+
+		for (auto & v : hashmap) {
+			auto it = answer.find(v.first);
+			CHECK_EQ (it != answer.end(), true);
+			CHECK_EQ (it->second, v.second);
+		}
+
+		hashmap.clear();
+	}
+
+	UNIT_TEST(po_parse_error_reporting_1)
+	{
+		try {
+			const assert_recover_scope scope(SilenceAsserts);
+			hashmap.clear();
+			process_po_contents("\
+#foo\n\
+#bar\n\
+#baz\n\
+msgid \"asdf\"\n\
+msgstr \"jkl;\n\
+\n\
+\n\
+#foo\n\
+msgid \"foo\"\n\
+msgstr \"bar\"");
+		} catch (validation_failure_exception &) {
+			hashmap.clear();
+			return;
+		}
+		ASSERT_LOG(false, "failure was expected");
+	}
+
+	UNIT_TEST(po_parse_error_reporting_2)
+	{
+		try {
+			const assert_recover_scope scope(SilenceAsserts);
+			hashmap.clear();
+			process_po_contents("\
+#foo\n\
+#bar\n\
+#baz\n\
+msgi \"asdf\"\n\
+msgstr \"jkl;\"\n\
+\n\
+\n\
+#foo\n\
+msgid \"foo\"\n\
+msgstr \"bar\"");
+		} catch (validation_failure_exception &) {
+			hashmap.clear();
+			return;
+		}
+		ASSERT_LOG(false, "failure was expected");
+	}
+
+	UNIT_TEST(po_parse_error_reporting_3)
+	{
+		try {
+			const assert_recover_scope scope(SilenceAsserts);
+			hashmap.clear();
+			process_po_contents("\
+\n\
+#bar\n\
+#baz\n\
+msgstr \"jkl;\"\n\
+\n\
+\n\
+#foo\n\
+msgid \"foo\"\n\
+msgstr \"bar\"");
+		} catch (validation_failure_exception &) {
+			hashmap.clear();
+			return;
+		}
+		ASSERT_LOG(false, "failure was expected");
+	}
+
+	UNIT_TEST(po_parse_error_reporting_4)
+	{
+		try {
+			const assert_recover_scope scope(SilenceAsserts);
+			hashmap.clear();
+			process_po_contents("\
+   \n\
+#bar\n\
+#baz\n\
+msgid \"asdf\"\"\n\
+msgstr \"jkl;\"\n\
+\n\
+\n\
+#foo\n\
+msgid \"foo\"\n\
+msgstr \"bar\"");
+		} catch (validation_failure_exception &) {
+			hashmap.clear();
+			return;
+		}
+		ASSERT_LOG(false, "failure was expected");
+	}
+
+	UNIT_TEST(po_parse_error_reporting_5)
+	{
+		try {
+			const assert_recover_scope scope(SilenceAsserts);
+			hashmap.clear();
+			process_po_contents("\
+\r\n\
+#bar\n\
+#baz\n\
+msgid \"asdf\"\n\
+msgtr \"jkl;\"\n\
+\n\
+\n\
+#foo\n\
+msgid \"foo\"\n\
+msgstr \"bar\"");
+		} catch (validation_failure_exception &) {
+			hashmap.clear();
+			return;
+		}
+		ASSERT_LOG(false, "failure was expected");
+	}
+
+	UNIT_TEST(po_parse_error_reporting_6)
+	{
+		try {
+			const assert_recover_scope scope(SilenceAsserts);
+			hashmap.clear();
+			process_po_contents("\
+msgid \"asdf\"\n\
+msgstr \"jkl;\"\n\
+\n\
+\n\
+msgid \"foo\"\"bar\"\n\
+msgstr \"baz\"");
+		} catch (validation_failure_exception &) {
+			hashmap.clear();
+			return;
+		}
+		ASSERT_LOG(false, "failure was expected");
+	}
+
 
 #define TEST_LOCALE_PROCESSING \
 do { \
