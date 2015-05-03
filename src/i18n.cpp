@@ -55,6 +55,29 @@
 
 namespace
 {
+	////////////////////
+	// IMPLEMENTATION //
+	////////////////////
+
+	//hashmap to map original to translated strings
+	typedef std::unordered_map<std::string, std::string> map;
+	map hashmap;
+
+	std::string locale;
+
+	void store_message(const std::string & msgid, const std::string & msgstr) {
+		auto p = hashmap.insert(make_pair(msgid, msgstr));
+		if (!p.second && msgstr != p.first->second) {
+			LOG_DEBUG("i18n: Overwriting a translation of string \"" << msgid << "\":");
+			LOG_DEBUG("i18n: Changing \"" << p.first->second << "\" to \"" << msgstr << "\"");
+			p.first->second = msgstr;
+		}
+	}
+
+	///////////////
+	// MO PARSER //
+	///////////////
+
 	//header structure of the MO file format, as described on
 	//http://www.gnu.org/software/hello/manual/gettext/MO-Files.html
 	struct mo_header {
@@ -71,21 +94,6 @@ namespace
 		uint32_t length;
 		uint32_t offset;
 	};
-
-	//hashmap to map original to translated strings
-	typedef std::unordered_map<std::string, std::string> map;
-	map hashmap;
-
-	std::string locale;
-
-	void store_message(const std::string & msgid, const std::string & msgstr) {
-		auto p = hashmap.insert(make_pair(msgid, msgstr));
-		if (!p.second && msgstr != p.first->second) {
-			LOG_DEBUG("i18n: Overwriting a translation of string \"" << msgid << "\":");
-			LOG_DEBUG("i18n: Changing \"" << p.first->second << "\" to \"" << msgstr << "\"");
-			p.first->second = msgstr;
-		}
-	}
 
 	//handle the contents of an mo file
 	void process_mo_contents(const std::string & content) {
@@ -153,6 +161,10 @@ namespace
 							ss << '\t';
 							break;
 						}
+						case '0': {
+							ss.write("\0", 1);
+							return;
+						}
 						case '\'':
 						case '\"':
 						case '\\': {
@@ -169,6 +181,24 @@ namespace
 			}
 		}
 		ASSERT_LOG(pre_string || post_string, "i18n: unterminated quoted string in po file:\n<<" << str << ">>");
+	}
+
+	// A helper which stores a message for the po parser
+	// Skips empty strings -- as a compatibility issue these should not be stored in the catalog, and left untranslated.
+	// (this is a compatability issue for the other gettext tools, and the pot generator which marks all string initially `msgstr ""`)
+	// Stops the message string at embedded null character -- this allows translator to mark empty string "" as the translation,
+	// using `msgstr "\0"`
+	// We don't want embedded nulls in the translation dictionary anyways.
+	void store_message_helper_po(const std::string & msgid, const std::string & msgstr)
+	{
+		if (msgstr.size()) {
+			size_t embedded_null = msgstr.find_first_of((char) 0);
+			if (embedded_null != std::string::npos) {
+				store_message(msgid, msgstr.substr(0, embedded_null));
+			} else {
+				store_message(msgid, msgstr);
+			}
+		}
 	}
 
 	enum po_item { PO_NONE, PO_MSGID, PO_MSGSTR };
@@ -191,7 +221,7 @@ namespace
 							break;
 						}
 						case PO_MSGSTR: { // This is the start of a new item, so store the previous item
-							store_message(msgid.str(), msgstr.str());
+							store_message_helper_po(msgid.str(), msgstr.str());
 							break;
 						}
 						case PO_NONE:
@@ -230,7 +260,7 @@ namespace
 		// Make sure to store the very last message also
 		switch(current_item) {
 			case PO_MSGSTR: {
-				store_message(msgid.str(), msgstr.str());
+				store_message_helper_po(msgid.str(), msgstr.str());
 				break;
 			}
 			case PO_MSGID: {
@@ -521,6 +551,35 @@ msgid \"ignore me!\"");
 		map answer;
 		answer["he said \"she said.\""] = "by the \"sea shore\"?";
 		answer["say what?"] = "come again?";
+
+		for (auto & v : answer) {
+			CHECK_EQ (tr(v.first), v.second);
+		}
+
+		for (auto & v : hashmap) {
+			auto it = answer.find(v.first);
+			CHECK_EQ (it != answer.end(), true);
+			CHECK_EQ (it->second, v.second);
+		}
+
+		hashmap.clear();
+	}
+
+	UNIT_TEST(po_parse_3)
+	{
+		hashmap.clear();
+		process_po_contents("\
+msgid \"veni vidi vici\"\n\
+msgstr \"i came, i saw, i conquered\"\n\
+msgid \"a tree falls\"\n\
+msgstr \"\"\n\
+msgid \"the sound of a tree falls\"\n\
+msgstr \"\\0\"\n\
+");
+
+		map answer;
+		answer["veni vidi vici"] = "i came, i saw, i conquered";
+		answer["the sound of a tree falls"] = "";
 
 		for (auto & v : answer) {
 			CHECK_EQ (tr(v.first), v.second);
