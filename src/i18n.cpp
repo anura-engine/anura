@@ -286,15 +286,16 @@ namespace i18n
 
 		//strip the charset part of the country and language code,
 		//e.g. "pt_BR.UTF8" --> "pt_BR"
-		void trim_locale_charset() {
+		std::string trim_locale_charset(const std::string & locale) {
 			size_t found = locale.find(".");
 			if (found != std::string::npos) {
-				locale = locale.substr(0, found);
+				return locale.substr(0, found);
 			}
+			return locale;
 		}
 
 		// Try to adjust the locale for cases when we failed to find a match
-		std::string tweak_locale(std::string locale) {
+		std::string tweak_locale(const std::string & locale) {
 			size_t found = locale.find("@");
 			if (found != std::string::npos) {
 				return locale.substr(0, found);
@@ -312,12 +313,10 @@ namespace i18n
 	{
 		hashmap.clear();
 
-		trim_locale_charset();
-
 		std::vector<std::string> files;
 		std::string dirname;
 
-		for (std::string loc = locale; loc.size() >= 2; loc = tweak_locale(loc)) {
+		for (std::string loc = trim_locale_charset(locale); loc.size() >= 2; loc = tweak_locale(loc)) {
 			dirname = mo_dir(loc);
 			module::get_files_in_dir(dirname, &files);
 
@@ -355,9 +354,7 @@ namespace i18n
 	}
 
 	bool load_extra_po(const std::string & module_dir) {
-		trim_locale_charset();
-
-		for (std::string loc = locale; loc.size() >= 2; loc = tweak_locale(loc)) {
+		for (std::string loc = trim_locale_charset(locale); loc.size() >= 2; loc = tweak_locale(loc)) {
 			std::string path = module_dir + loc + ".po";
 			if (sys::file_exists(module::map_file(path))) {
 				LOG_DEBUG("loading translations from po file: " << path);
@@ -490,43 +487,41 @@ msgstr \"panama\"";
 		hashmap.clear();
 	}
 
+#define TEST_LOCALE_PROCESSING \
+do { \
+loc = trim_locale_charset(loc); \
+for (const char ** ptr = expected; *ptr != nullptr; ptr++) { \
+	CHECK_EQ(loc, *ptr); \
+	loc = tweak_locale(loc); \
+} \
+CHECK_EQ(loc, ""); \
+} while(0)
+
 	UNIT_TEST(locale_processing)
 	{
 		{
 			std::string loc = "ar";
 			const char * expected [] = { "ar", nullptr };
-			for (const char ** ptr = expected; *ptr != nullptr; ptr++) {
-				CHECK_EQ(loc, *ptr);
-				loc = tweak_locale(loc);
-			}
-			CHECK_EQ(loc, "");
+
+			TEST_LOCALE_PROCESSING;
 		}
 		{
 			std::string loc = "be_BY";
 			const char * expected [] = { "be_BY", "be", nullptr };
-			for (const char ** ptr = expected; *ptr != nullptr; ptr++) {
-				CHECK_EQ(loc, *ptr);
-				loc = tweak_locale(loc);
-			}
-			CHECK_EQ(loc, "");
+
+			TEST_LOCALE_PROCESSING;
 		}
 		{
 			std::string loc = "sr@latin";
 			const char * expected [] = { "sr@latin" , "sr", nullptr };
-			for (const char ** ptr = expected; *ptr != nullptr; ptr++) {
-				CHECK_EQ(loc, *ptr);
-				loc = tweak_locale(loc);
-			}
-			CHECK_EQ(loc, "");
+
+			TEST_LOCALE_PROCESSING;
 		}
 		{
 			std::string loc = "sr_RS@latin";
 			const char * expected [] = { "sr_RS@latin" , "sr_RS", "sr", nullptr };
-			for (const char ** ptr = expected; *ptr != nullptr; ptr++) {
-				CHECK_EQ(loc, *ptr);
-				loc = tweak_locale(loc);
-			}
-			CHECK_EQ(loc, "");
+
+			TEST_LOCALE_PROCESSING;
 		}
 	}
 }
