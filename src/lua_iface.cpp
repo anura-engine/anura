@@ -1271,4 +1271,15 @@ COMMAND_LINE_UTILITY(luac)
 {
 	ALTERNATE_MAIN<lua_standalone_compiler_main>("luac", args);
 }
+
+COMMAND_LINE_UTILITY(test_persist)
+{
+	ALTERNATE_MAIN<lua_test_persist_main>("persist", args);
+}
+
+COMMAND_LINE_UTILITY(test_unpersist)
+{
+	ALTERNATE_MAIN<lua_test_unpersist_main>("unpersist", args);
+}
+
 #endif
