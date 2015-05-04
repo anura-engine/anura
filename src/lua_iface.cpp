@@ -32,6 +32,7 @@
 
 #include "eris/lauxlib.h"
 #include "eris/lualib.h"
+#include "eris/lua_utilities.h"
 
 #include "custom_object.hpp"
 #include "custom_object_functions.hpp"
@@ -1227,5 +1228,47 @@ UNIT_TEST(lua_to_ffl_conversions) {
 	}
 }
 
+/////////////////////////////////////////////////////////////////////
+// Standard Lua utilities packaged as anura command line utilities //
+/////////////////////////////////////////////////////////////////////
 
+template<int alt_main(int, char * [])>
+int ALTERNATE_MAIN(const std::string & prog_name, const std::vector<std::string> & args)
+{
+	char ** argv = (char**) malloc((sizeof(char*)) * (args.size() + 2));
+
+	argv[0] = (char *) malloc (sizeof(char) * prog_name.size());
+	strcpy(argv[0], prog_name.c_str());
+	size_t idx = 1;
+	for (const std::string & str : args) {
+		argv[idx] = (char *) malloc(sizeof(char) * str.size());
+		strcpy(argv[idx], str.c_str());
+		idx++;
+	}
+	argv[idx] = nullptr;
+
+/*	std::cerr << "arguments to " << prog_name << ":\n";
+	for (size_t i = 0; argv[i] != nullptr; ++i) {
+		std::cerr << '[' << i << "] \"" << argv[i] << "\"\n";
+	}*/
+
+	int ret_code = alt_main(args.size() + 1, argv);
+	
+/*	std::cerr << "arguments to " << prog_name << ":\n";
+	for (size_t i = 0; argv[i] != nullptr; ++i) {
+		std::cerr << '[' << i << "] \"" << argv[i] << "\"\n";
+	}*/
+
+	return ret_code;
+}
+
+COMMAND_LINE_UTILITY(lua)
+{
+	ALTERNATE_MAIN<lua_standalone_interpreter_main>("lua", args);
+}
+
+COMMAND_LINE_UTILITY(luac)
+{
+	ALTERNATE_MAIN<lua_standalone_compiler_main>("luac", args);
+}
 #endif
