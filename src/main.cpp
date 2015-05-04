@@ -496,7 +496,13 @@ int main(int argcount, char* argvec[])
 	preferences::load_preferences();
 
 	// load difficulty settings after module, before rest of args.
-	difficulty::manager();
+	try {
+		difficulty::manager();
+	} catch (json::ParseError & e) {
+		if (!unit_tests_only) {
+			ASSERT_LOG(false, "JSON parse error: " << e.errorMessage());
+		}
+	}
 
 	for(size_t n = 0; n < argv.size(); ++n) {
 		const size_t argc = argv.size();
