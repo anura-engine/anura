@@ -70,6 +70,9 @@ static int LUAF_onerror(lua_State *L)
 	return 0;
 }
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 int lua_test_persist_main(int argc, char** argv)
 {
 	if (argc < 2) {
@@ -97,3 +100,6 @@ int lua_test_persist_main(int argc, char** argv)
 
 	return 0;
 }
+#ifdef __cplusplus
+}
+#endif
