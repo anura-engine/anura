@@ -293,7 +293,7 @@ public:
 					continue;
 				}
 
-				if(++session.send_process_counter >= 60) {
+				if(++session.send_process_counter >= 1) {
 					session.send_process_counter = 0;
 
 					std::vector<variant> args;
@@ -1097,16 +1097,18 @@ BEGIN_DEFINE_FN(get_account_info, "(string) ->map")
 
 	return itor->second["info"];
 END_DEFINE_FN
-BEGIN_DEFINE_FN(write_account, "(string, [string]|null) ->commands")
+BEGIN_DEFINE_FN(write_account, "(string, [string]|null=null) ->commands")
 	const std::string& key = FN_ARG(0).as_string();
 
 	bool silent_update = false;
 
-	variant flags = FN_ARG(1);
-	if(flags.is_list()) {
-		for(int i = 0; i != flags.num_elements(); ++i) {
-			if(flags[i].as_string() == "silent") {
-				silent_update = true;
+	if(NUM_FN_ARGS >= 2) {
+		variant flags = FN_ARG(1);
+		if(flags.is_list()) {
+			for(int i = 0; i != flags.num_elements(); ++i) {
+				if(flags[i].as_string() == "silent") {
+					silent_update = true;
+				}
 			}
 		}
 	}
