@@ -25,7 +25,7 @@ local usertests = rawget(_G, "_U")
 
 if usertests then
   -- tests for sissies ;)  Avoid problems
-  _soft = true
+  --_soft = true
   _port = true
   _no32 = true
   _nomsg = true
