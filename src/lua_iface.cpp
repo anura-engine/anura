@@ -1213,6 +1213,31 @@ UNIT_TEST(lua_to_ffl_conversions) {
 	}
 }
 
+UNIT_TEST(lua_with_ffl_objects) {
+	using namespace game_logic;
+
+	formula_class_unit_test_helper helper;
+	helper.add_class_defn("foo", Formula(variant("\
+{\
+	properties: {\
+		a : { type: \"string\", default: \"a\"},\
+	},\
+}")).execute());
+
+	variant instance = Formula(variant("construct(\"foo\")")).execute();
+	CHECK_EQ(instance.as_callable()->queryValue("a"), variant("a"));
+
+	instance = Formula(variant("construct(\"foo\", {a: \"b\"})")).execute();
+	CHECK_EQ(instance.as_callable()->queryValue("a"), variant("b"));
+
+	variant instance_copy = FormulaObject::deepClone(instance);
+
+	CHECK_EQ(instance, instance);
+	CHECK_EQ(instance_copy != instance, true);
+
+	CHECK_EQ(instance_copy.as_callable()->queryValue("a"), variant("b"));
+}
+
 /////////////////////////////////////////////////////////////////////
 // Standard Lua utilities packaged as anura command line utilities //
 /////////////////////////////////////////////////////////////////////
