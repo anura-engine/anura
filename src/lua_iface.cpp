@@ -1177,50 +1177,35 @@ UNIT_TEST(lua_to_ffl_conversions) {
 
 		variant exec_fn = callable->queryValue("execute");
 		std::vector<variant> input;
+
 		input.push_back(Formula(variant("[5]")).execute());
-		variant output = exec_fn(input);
-		CHECK_EQ(output, Formula(variant("{ 1: {1 : 5, 2 : 6}, 2: {1: 25, 2: 125}}")).execute());
+		CHECK_EQ(exec_fn(input), Formula(variant("{ 1: {1 : 5, 2 : 6}, 2: {1: 25, 2: 125}}")).execute());
 
 
 
 		variant set_fn = callable->queryValue("set_return_type");
-		input.clear();
-		input.push_back(variant("[[int,int]]"));
-		output = set_fn(input);
-		CHECK_EQ(output, variant(true));
+		input.back() = variant("[[int,int]]");
+		CHECK_EQ(set_fn(input), variant(true));
 
-		input.clear();
-		input.push_back(Formula(variant("[5]")).execute());
-
-		output = exec_fn(input);
-		CHECK_EQ(output, Formula(variant("[[5,6], [25, 125]]")).execute());
+		input.back() = Formula(variant("[5]")).execute();
+		CHECK_EQ(exec_fn(input), Formula(variant("[[5,6], [25, 125]]")).execute());
 
 
 
-		input.clear();
-		input.push_back(variant("{ int -> [int,int] }"));
-		output = set_fn(input);
-		CHECK_EQ(output, variant(true));
+		input.back() = variant("{ int -> [int,int] }");
+		CHECK_EQ(set_fn(input), variant(true));
 
-		input.clear();
-		input.push_back(Formula(variant("[5]")).execute());
-
-		output = exec_fn(input);
-		CHECK_EQ(output, Formula(variant("{ 1: [5,6], 2: [25, 125] }")).execute());
+		input.back() = Formula(variant("[5]")).execute();
+		CHECK_EQ(exec_fn(input), Formula(variant("{ 1: [5,6], 2: [25, 125] }")).execute());
 
 
 
 
-		input.clear();
-		input.push_back(variant("[{ int -> int }]"));
-		output = set_fn(input);
-		CHECK_EQ(output, variant(true));
+		input.back() = variant("[{ int -> int }]");
+		CHECK_EQ(set_fn(input), variant(true));
 
-		input.clear();
-		input.push_back(Formula(variant("[5]")).execute());
-
-		output = exec_fn(input);
-		CHECK_EQ(output, Formula(variant("[{ 1: 5, 2: 6}, {1 : 25, 2: 125} ]")).execute());
+		input.back() = Formula(variant("[5]")).execute();
+		CHECK_EQ(exec_fn(input), Formula(variant("[{ 1: 5, 2: 6}, {1 : 25, 2: 125} ]")).execute());
 
 
 		lua_pop(L,1);
