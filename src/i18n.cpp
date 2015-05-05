@@ -55,6 +55,29 @@
 
 namespace
 {
+	////////////////////
+	// IMPLEMENTATION //
+	////////////////////
+
+	//hashmap to map original to translated strings
+	typedef std::unordered_map<std::string, std::string> map;
+	map hashmap;
+
+	std::string locale;
+
+	void store_message(const std::string & msgid, const std::string & msgstr) {
+		auto p = hashmap.insert(make_pair(msgid, msgstr));
+		if (!p.second && msgstr != p.first->second) {
+			LOG_DEBUG("i18n: Overwriting a translation of string \"" << msgid << "\":");
+			LOG_DEBUG("i18n: Changing \"" << p.first->second << "\" to \"" << msgstr << "\"");
+			p.first->second = msgstr;
+		}
+	}
+
+	///////////////
+	// MO PARSER //
+	///////////////
+
 	//header structure of the MO file format, as described on
 	//http://www.gnu.org/software/hello/manual/gettext/MO-Files.html
 	struct mo_header {
@@ -71,21 +94,6 @@ namespace
 		uint32_t length;
 		uint32_t offset;
 	};
-
-	//hashmap to map original to translated strings
-	typedef std::unordered_map<std::string, std::string> map;
-	map hashmap;
-
-	std::string locale;
-
-	void store_message(const std::string & msgid, const std::string & msgstr) {
-		auto p = hashmap.insert(make_pair(msgid, msgstr));
-		if (!p.second && msgstr != p.first->second) {
-			LOG_DEBUG("i18n: Overwriting a translation of string \"" << msgid << "\":");
-			LOG_DEBUG("i18n: Changing \"" << p.first->second << "\" to \"" << msgstr << "\"");
-			p.first->second = msgstr;
-		}
-	}
 
 	//handle the contents of an mo file
 	void process_mo_contents(const std::string & content) {
@@ -124,101 +132,134 @@ namespace
 	// On input a string free of newline, expected to be wrapped in quotes,
 	// with possible leading or trailing whitespace and escaped characters,
 	// push to the stream the contents that were quoted. assumes utf-8.
-	void parse_quoted_string(std::stringstream & ss, const std::string & str) {
+	typedef std::string::const_iterator str_it;
+	void parse_quoted_string(std::string & ss, const str_it & begin, const str_it & end) {
 
 		bool pre_string = true;
 		bool post_string = false;
 
-		for (std::string::const_iterator it = str.begin(); it != str.end(); it++) {
+		for (str_it it = begin; it != end; it++) {
 			if (pre_string || post_string) {
 				if (*it == '\"') {
-					ASSERT_LOG(!post_string, "i18n: Only one quoted string is allowed on a line of po file: \n<<" << str << ">>");
+					ASSERT_LOG(!post_string, "i18n: Only one quoted string is allowed on a line of po file: \n<<" << std::string(begin, end) << ">>");
 					pre_string = false;
 				} else {
-					ASSERT_LOG(is_po_whitespace(*it), "i18n: Unexpected characters in po file where only whitespace is expected: \'" << *it << "\':\n<<" << str << ">>");
+					ASSERT_LOG(is_po_whitespace(*it), "i18n: Unexpected characters in po file where only whitespace is expected: \'" << *it << "\':\n<<" << std::string(begin, end) << ">>");
 				}
 			} else {
 				if (*it == '\"') {
 					post_string = true;
 				} else if (*it == '\\') {
 					it++;
-					ASSERT_LOG(it != str.end(), "i18n: po string terminated unexpectedly after escape character: \n<<" << str << ">>");
+					ASSERT_LOG(it != end, "i18n: po string terminated unexpectedly after escape character: \n<<" << std::string(begin, end) << ">>");
 					char c = *it;
 					switch (c) {
 						case 'n': {
-							ss << '\n';
+							ss += '\n';
 							break;
 						}
 						case 't': {
-							ss << '\t';
+							ss += '\t';
 							break;
+						}
+						case '0': {
+							ss += '\0';
+							return; // can just return after null character is pushed, we are going to truncate here anyways.
 						}
 						case '\'':
 						case '\"':
 						case '\\': {
-							ss << c;
+							ss += c;
 							break;
 						}
 						default: {
-							ASSERT_LOG(false, "i18n: po string contained unrecognized escape sequence: \"\\" << c << "\": \n<<" << str << ">>");
+							ASSERT_LOG(false, "i18n: po string contained unrecognized escape sequence: \"\\" << c << "\": \n<<" << std::string(begin, end) << ">>");
 						}
 					}
 				} else {
-					ss << *it;
+					ss += *it;
 				}
 			}
 		}
-		ASSERT_LOG(pre_string || post_string, "i18n: unterminated quoted string in po file:\n<<" << str << ">>");
+		ASSERT_LOG(pre_string || post_string, "i18n: unterminated quoted string in po file:\n<<" << std::string(begin, end) << ">>");
+	}
+
+	// A helper which stores a message for the po parser
+	// Skips empty strings -- as a compatibility issue these should not be stored in the catalog, and left untranslated.
+	// (this is a compatability issue for the other gettext tools, and the pot generator which marks all string initially `msgstr ""`)
+	// Stops the message string at embedded null character -- this allows translator to mark empty string "" as the translation,
+	// using `msgstr "\0"`
+	// We don't want embedded nulls in the translation dictionary anyways.
+	void store_message_helper_po(const std::string & msgid, const std::string & msgstr)
+	{
+		if (msgstr.size()) {
+			size_t embedded_null = msgstr.find_first_of((char) 0);
+			if (embedded_null != std::string::npos) {
+				store_message(msgid, msgstr.substr(0, embedded_null));
+			} else {
+				store_message(msgid, msgstr);
+			}
+		}
 	}
 
 	enum po_item { PO_NONE, PO_MSGID, PO_MSGSTR };
 
 	void process_po_contents(const std::string & content) {
-		std::stringstream ss;
-		ss.str(content);
+		static const std::string MSGID = "msgid ";
+		static const std::string MSGSTR = "msgstr ";
 
-		std::stringstream msgid;
-		std::stringstream msgstr;
+		std::string msgid;
+		std::string msgstr;
 
 		po_item current_item = PO_NONE;
 
-		for (std::string line; std::getline(ss, line); ) {
-			if (line.size() > 0 && line[0] != '#') {
-				if (line.size() >= 6 && line.substr(0,6) == "msgid ") {
+		str_it line_end = content.begin();
+		for (str_it line_start = content.begin(); line_start != content.end(); line_start = (line_end == content.end() ? line_end : ++line_end)) {
+			size_t line_size = 0;
+			while ((line_end != content.end()) && (*line_end != '\n')) {
+				++line_end;
+				++line_size;
+			}
+			// line_start, line_end, line_size should be const for the rest of the loop
+			// (the above should be equivalent to using std::getline)
+			if (line_size > 0 && *line_start != '#') {
+				if (line_size >= MSGID.size() && std::equal(line_start, line_start + MSGID.size(), MSGID.begin())) {
 					switch(current_item) {
 						case PO_MSGID: {
-							LOG_DEBUG("i18n: ignoring a MSGID which had no MSGSTR: " << msgid.str());
+							LOG_DEBUG("i18n: ignoring a MSGID which had no MSGSTR: \n<<" << msgid << ">>");
 							break;
 						}
 						case PO_MSGSTR: { // This is the start of a new item, so store the previous item
-							store_message(msgid.str(), msgstr.str());
+							store_message_helper_po(msgid, msgstr);
 							break;
 						}
 						case PO_NONE:
 							break;
 					}
-					msgid.str("");
-					msgstr.str("");
-					parse_quoted_string(msgid, line.substr(6));
+					msgid = "";
+					msgstr = "";
+					msgid.reserve(line_size);
+					parse_quoted_string(msgid, line_start + MSGID.size(), line_end);
 					current_item = PO_MSGID;
-				} else if (line.size() >= 7 && line.substr(0,7) == "msgstr ") {
-					ASSERT_LOG(current_item == PO_MSGID, "i18n: in po file, found a msgstr with no earlier msgid:\n<<" << line << ">>");
+				} else if (line_size >= MSGSTR.size() && std::equal(line_start, line_start + MSGSTR.size(), MSGSTR.begin())) {
+					ASSERT_LOG(current_item == PO_MSGID, "i18n: in po file, found a msgstr with no earlier msgid:\n<<" << std::string(line_start, line_end) << ">>");
 
-					parse_quoted_string(msgstr, line.substr(7));
+					msgstr.reserve(line_size);
+					parse_quoted_string(msgstr, line_start + MSGSTR.size(), line_end);
 					current_item = PO_MSGSTR;
 				} else {
 					switch (current_item) {
 						case PO_MSGID: {
-							parse_quoted_string(msgid, line);
+							parse_quoted_string(msgid, line_start, line_end);
 							break;
 						}
 						case PO_MSGSTR: {
-							parse_quoted_string(msgstr, line);
+							parse_quoted_string(msgstr, line_start, line_end);
 							break;
 						}
 						case PO_NONE: {
-							for (const char c : line) {
-								ASSERT_LOG(is_po_whitespace(c), "i18n: in po file, the first non-whitespace non-comment line should begin 'msgid ': \n<<" << line << ">>");
+							for (str_it it = line_start; it != line_end; ++it) {
+								ASSERT_LOG(is_po_whitespace(*it), "i18n: in po file, the first non-whitespace non-comment line should begin 'msgid ': \n<<" << std::string(line_start, line_end) << ">>");
 							}
 							break;
 						}
@@ -230,11 +271,11 @@ namespace
 		// Make sure to store the very last message also
 		switch(current_item) {
 			case PO_MSGSTR: {
-				store_message(msgid.str(), msgstr.str());
+				store_message_helper_po(msgid, msgstr);
 				break;
 			}
 			case PO_MSGID: {
-				LOG_DEBUG("i18n: ignoring a MSGID which had no MSGSTR: " << msgid.str());
+				LOG_DEBUG("i18n: ignoring a MSGID which had no MSGSTR: \n<<" << msgid << ">>");
 				break;
 			}
 			case PO_NONE: {
@@ -456,6 +497,35 @@ namespace i18n
 	// UNIT TESTS //
 	////////////////
 
+	namespace {
+		void CHECK_CATALOG(const map & answer) {
+			for (auto & v : answer) {
+				CHECK_EQ (tr(v.first), v.second);
+			}
+
+			for (auto & v : hashmap) {
+				auto it = answer.find(v.first);
+				CHECK_EQ (it != answer.end(), true);
+				CHECK_EQ (it->second, v.second);
+			}
+
+			hashmap.clear();
+		}
+
+		void CHECK_FOR_PO_PARSE_ERROR(const std::string & doc) {
+			try {
+				const assert_recover_scope scope(SilenceAsserts);
+				hashmap.clear();
+
+				process_po_contents(doc);
+			} catch (validation_failure_exception &) {
+				hashmap.clear();
+				return;
+			}
+			ASSERT_LOG(false, "failure was expected when parsing: \n***\n" << doc << "\n***\n");
+		}
+	}
+
 	UNIT_TEST(po_parse_1)
 	{
 		hashmap.clear();
@@ -487,17 +557,7 @@ msgstr \"panama\"");
 		answer["tmnt"] = "teenagemutantninjaturtles";
 		answer["a man\na plan\na canal"] = "panama";
 
-		for (auto & v : answer) {
-			CHECK_EQ (tr(v.first), v.second);
-		}
-
-		for (auto & v : hashmap) {
-			auto it = answer.find(v.first);
-			CHECK_EQ (it != answer.end(), true);
-			CHECK_EQ (it->second, v.second);
-		}
-
-		hashmap.clear();
+		CHECK_CATALOG(answer);
 	}
 
 	UNIT_TEST(po_parse_2)
@@ -522,25 +582,31 @@ msgid \"ignore me!\"");
 		answer["he said \"she said.\""] = "by the \"sea shore\"?";
 		answer["say what?"] = "come again?";
 
-		for (auto & v : answer) {
-			CHECK_EQ (tr(v.first), v.second);
-		}
+		CHECK_CATALOG(answer);
+	}
 
-		for (auto & v : hashmap) {
-			auto it = answer.find(v.first);
-			CHECK_EQ (it != answer.end(), true);
-			CHECK_EQ (it->second, v.second);
-		}
-
+	UNIT_TEST(po_parse_3)
+	{
 		hashmap.clear();
+		process_po_contents("\
+msgid \"veni vidi vici\"\n\
+msgstr \"i came, i saw, i conquered\"\n\
+msgid \"a tree falls\"\n\
+msgstr \"\"\n\
+msgid \"the sound of a tree falls\"\n\
+msgstr \"\\0\"\n\
+");
+
+		map answer;
+		answer["veni vidi vici"] = "i came, i saw, i conquered";
+		answer["the sound of a tree falls"] = "";
+
+		CHECK_CATALOG(answer);
 	}
 
 	UNIT_TEST(po_parse_error_reporting_1)
 	{
-		try {
-			const assert_recover_scope scope(SilenceAsserts);
-			hashmap.clear();
-			process_po_contents("\
+		CHECK_FOR_PO_PARSE_ERROR("\
 #foo\n\
 #bar\n\
 #baz\n\
@@ -551,19 +617,11 @@ msgstr \"jkl;\n\
 #foo\n\
 msgid \"foo\"\n\
 msgstr \"bar\"");
-		} catch (validation_failure_exception &) {
-			hashmap.clear();
-			return;
-		}
-		ASSERT_LOG(false, "failure was expected");
 	}
 
 	UNIT_TEST(po_parse_error_reporting_2)
 	{
-		try {
-			const assert_recover_scope scope(SilenceAsserts);
-			hashmap.clear();
-			process_po_contents("\
+		CHECK_FOR_PO_PARSE_ERROR("\
 #foo\n\
 #bar\n\
 #baz\n\
@@ -574,19 +632,11 @@ msgstr \"jkl;\"\n\
 #foo\n\
 msgid \"foo\"\n\
 msgstr \"bar\"");
-		} catch (validation_failure_exception &) {
-			hashmap.clear();
-			return;
-		}
-		ASSERT_LOG(false, "failure was expected");
 	}
 
 	UNIT_TEST(po_parse_error_reporting_3)
 	{
-		try {
-			const assert_recover_scope scope(SilenceAsserts);
-			hashmap.clear();
-			process_po_contents("\
+		CHECK_FOR_PO_PARSE_ERROR("\
 \n\
 #bar\n\
 #baz\n\
@@ -596,19 +646,11 @@ msgstr \"jkl;\"\n\
 #foo\n\
 msgid \"foo\"\n\
 msgstr \"bar\"");
-		} catch (validation_failure_exception &) {
-			hashmap.clear();
-			return;
-		}
-		ASSERT_LOG(false, "failure was expected");
 	}
 
 	UNIT_TEST(po_parse_error_reporting_4)
 	{
-		try {
-			const assert_recover_scope scope(SilenceAsserts);
-			hashmap.clear();
-			process_po_contents("\
+		CHECK_FOR_PO_PARSE_ERROR("\
    \n\
 #bar\n\
 #baz\n\
@@ -619,19 +661,11 @@ msgstr \"jkl;\"\n\
 #foo\n\
 msgid \"foo\"\n\
 msgstr \"bar\"");
-		} catch (validation_failure_exception &) {
-			hashmap.clear();
-			return;
-		}
-		ASSERT_LOG(false, "failure was expected");
 	}
 
 	UNIT_TEST(po_parse_error_reporting_5)
 	{
-		try {
-			const assert_recover_scope scope(SilenceAsserts);
-			hashmap.clear();
-			process_po_contents("\
+		CHECK_FOR_PO_PARSE_ERROR("\
 \r\n\
 #bar\n\
 #baz\n\
@@ -642,30 +676,17 @@ msgtr \"jkl;\"\n\
 #foo\n\
 msgid \"foo\"\n\
 msgstr \"bar\"");
-		} catch (validation_failure_exception &) {
-			hashmap.clear();
-			return;
-		}
-		ASSERT_LOG(false, "failure was expected");
 	}
 
 	UNIT_TEST(po_parse_error_reporting_6)
 	{
-		try {
-			const assert_recover_scope scope(SilenceAsserts);
-			hashmap.clear();
-			process_po_contents("\
+		CHECK_FOR_PO_PARSE_ERROR("\
 msgid \"asdf\"\n\
 msgstr \"jkl;\"\n\
 \n\
 \n\
 msgid \"foo\"\"bar\"\n\
 msgstr \"baz\"");
-		} catch (validation_failure_exception &) {
-			hashmap.clear();
-			return;
-		}
-		ASSERT_LOG(false, "failure was expected");
 	}
 
 	namespace {

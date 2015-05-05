@@ -49,9 +49,13 @@
     <ClCompile Include="..\..\src\eris\ltable.cpp" />
     <ClCompile Include="..\..\src\eris\ltablib.cpp" />
     <ClCompile Include="..\..\src\eris\ltm.cpp" />
+    <ClCompile Include="..\..\src\eris\lua.cpp" />
+    <ClCompile Include="..\..\src\eris\luac.cpp" />
     <ClCompile Include="..\..\src\eris\lundump.cpp" />
     <ClCompile Include="..\..\src\eris\lvm.cpp" />
     <ClCompile Include="..\..\src\eris\lzio.cpp" />
+    <ClCompile Include="..\..\src\eris\test_persist.cpp" />
+    <ClCompile Include="..\..\src\eris\test_unpersist.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\eris\eris.h" />
@@ -77,6 +81,7 @@
     <ClInclude Include="..\..\src\eris\lua.hpp" />
     <ClInclude Include="..\..\src\eris\luaconf.h" />
     <ClInclude Include="..\..\src\eris\lualib.h" />
+    <ClInclude Include="..\..\src\eris\lua_utilities.h" />
     <ClInclude Include="..\..\src\eris\lundump.h" />
     <ClInclude Include="..\..\src\eris\lvm.h" />
     <ClInclude Include="..\..\src\eris\lzio.h" />

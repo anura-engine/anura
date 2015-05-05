@@ -44,12 +44,14 @@
 		638CC73B1AF6057700C7A106 /* ltable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 638CC70D1AF6057700C7A106 /* ltable.cpp */; };
 		638CC73C1AF6057700C7A106 /* ltablib.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 638CC70F1AF6057700C7A106 /* ltablib.cpp */; };
 		638CC73D1AF6057700C7A106 /* ltm.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 638CC7101AF6057700C7A106 /* ltm.cpp */; };
-		638CC73E1AF6057700C7A106 /* lua.cpp.foo in Resources */ = {isa = PBXBuildFile; fileRef = 638CC7121AF6057700C7A106 /* lua.cpp.foo */; };
-		638CC73F1AF6057700C7A106 /* luac.cpp.foo in Resources */ = {isa = PBXBuildFile; fileRef = 638CC7151AF6057700C7A106 /* luac.cpp.foo */; };
 		638CC7401AF6057700C7A106 /* lundump.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 638CC7181AF6057700C7A106 /* lundump.cpp */; };
 		638CC7411AF6057700C7A106 /* lvm.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 638CC71A1AF6057700C7A106 /* lvm.cpp */; };
 		638CC7421AF6057700C7A106 /* lzio.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 638CC71C1AF6057700C7A106 /* lzio.cpp */; };
 		638CC7431AF6057700C7A106 /* SConscript in Resources */ = {isa = PBXBuildFile; fileRef = 638CC71E1AF6057700C7A106 /* SConscript */; };
+		638CC7491AF75D3400C7A106 /* lua.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 638CC7451AF75D3400C7A106 /* lua.cpp */; };
+		638CC74A1AF75D3400C7A106 /* luac.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 638CC7461AF75D3400C7A106 /* luac.cpp */; };
+		638CC74B1AF75D3400C7A106 /* test_persist.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 638CC7471AF75D3400C7A106 /* test_persist.cpp */; };
+		638CC74C1AF75D3400C7A106 /* test_unpersist.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 638CC7481AF75D3400C7A106 /* test_unpersist.cpp */; };
 		639B53731AC20D5A00ECC4F8 /* AttributeSet.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 639B52EF1AC20D5900ECC4F8 /* AttributeSet.cpp */; };
 		639B53741AC20D5A00ECC4F8 /* AttributeSetOGL.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 639B52F11AC20D5900ECC4F8 /* AttributeSetOGL.cpp */; };
 		639B53751AC20D5A00ECC4F8 /* Blend.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 639B52F31AC20D5900ECC4F8 /* Blend.cpp */; };
@@ -503,10 +505,8 @@
 		638CC70F1AF6057700C7A106 /* ltablib.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ltablib.cpp; sourceTree = "<group>"; };
 		638CC7101AF6057700C7A106 /* ltm.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ltm.cpp; sourceTree = "<group>"; };
 		638CC7111AF6057700C7A106 /* ltm.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ltm.h; sourceTree = "<group>"; };
-		638CC7121AF6057700C7A106 /* lua.cpp.foo */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = lua.cpp.foo; sourceTree = "<group>"; };
 		638CC7131AF6057700C7A106 /* lua.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = lua.h; sourceTree = "<group>"; };
 		638CC7141AF6057700C7A106 /* lua.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = lua.hpp; sourceTree = "<group>"; };
-		638CC7151AF6057700C7A106 /* luac.cpp.foo */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = luac.cpp.foo; sourceTree = "<group>"; };
 		638CC7161AF6057700C7A106 /* luaconf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = luaconf.h; sourceTree = "<group>"; };
 		638CC7171AF6057700C7A106 /* lualib.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = lualib.h; sourceTree = "<group>"; };
 		638CC7181AF6057700C7A106 /* lundump.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = lundump.cpp; sourceTree = "<group>"; };
@@ -516,6 +516,11 @@
 		638CC71C1AF6057700C7A106 /* lzio.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = lzio.cpp; sourceTree = "<group>"; };
 		638CC71D1AF6057700C7A106 /* lzio.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = lzio.h; sourceTree = "<group>"; };
 		638CC71E1AF6057700C7A106 /* SConscript */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = SConscript; sourceTree = "<group>"; };
+		638CC7441AF75D3400C7A106 /* lua_utilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = lua_utilities.h; sourceTree = "<group>"; };
+		638CC7451AF75D3400C7A106 /* lua.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = lua.cpp; sourceTree = "<group>"; };
+		638CC7461AF75D3400C7A106 /* luac.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = luac.cpp; sourceTree = "<group>"; };
+		638CC7471AF75D3400C7A106 /* test_persist.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = test_persist.cpp; sourceTree = "<group>"; };
+		638CC7481AF75D3400C7A106 /* test_unpersist.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = test_unpersist.cpp; sourceTree = "<group>"; };
 		639B52EF1AC20D5900ECC4F8 /* AttributeSet.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AttributeSet.cpp; sourceTree = "<group>"; };
 		639B52F01AC20D5900ECC4F8 /* AttributeSet.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = AttributeSet.hpp; sourceTree = "<group>"; };
 		639B52F11AC20D5900ECC4F8 /* AttributeSetOGL.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AttributeSetOGL.cpp; sourceTree = "<group>"; };
@@ -1249,6 +1254,11 @@
 		638CC6DF1AF6057700C7A106 /* eris */ = {
 			isa = PBXGroup;
 			children = (
+				638CC7441AF75D3400C7A106 /* lua_utilities.h */,
+				638CC7451AF75D3400C7A106 /* lua.cpp */,
+				638CC7461AF75D3400C7A106 /* luac.cpp */,
+				638CC7471AF75D3400C7A106 /* test_persist.cpp */,
+				638CC7481AF75D3400C7A106 /* test_unpersist.cpp */,
 				638CC6E01AF6057700C7A106 /* eris.cpp */,
 				638CC6E11AF6057700C7A106 /* eris.h */,
 				638CC6E21AF6057700C7A106 /* FILEFORMAT */,
@@ -1299,10 +1309,8 @@
 				638CC70F1AF6057700C7A106 /* ltablib.cpp */,
 				638CC7101AF6057700C7A106 /* ltm.cpp */,
 				638CC7111AF6057700C7A106 /* ltm.h */,
-				638CC7121AF6057700C7A106 /* lua.cpp.foo */,
 				638CC7131AF6057700C7A106 /* lua.h */,
 				638CC7141AF6057700C7A106 /* lua.hpp */,
-				638CC7151AF6057700C7A106 /* luac.cpp.foo */,
 				638CC7161AF6057700C7A106 /* luaconf.h */,
 				638CC7171AF6057700C7A106 /* lualib.h */,
 				638CC7181AF6057700C7A106 /* lundump.cpp */,
@@ -2217,8 +2225,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				638CC73F1AF6057700C7A106 /* luac.cpp.foo in Resources */,
-				638CC73E1AF6057700C7A106 /* lua.cpp.foo in Resources */,
 				638CC7431AF6057700C7A106 /* SConscript in Resources */,
 				C02751C417FD4A1A00173646 /* master-config.cfg in Resources */,
 				638CC7201AF6057700C7A106 /* FILEFORMAT in Resources */,
@@ -2319,6 +2325,7 @@
 				639B53A11AC20D5A00ECC4F8 /* TexPack.cpp in Sources */,
 				638CC7351AF6057700C7A106 /* lopcodes.cpp in Sources */,
 				639B54351AC20D7600ECC4F8 /* b2Body.cpp in Sources */,
+				638CC74C1AF75D3400C7A106 /* test_unpersist.cpp in Sources */,
 				C010C75F160AFD4D006E7D90 /* custom_object_functions.cpp in Sources */,
 				C010C760160AFD4D006E7D90 /* custom_object_type.cpp in Sources */,
 				C010C761160AFD4D006E7D90 /* debug_console.cpp in Sources */,
@@ -2373,6 +2380,7 @@
 				639B537C1AC20D5A00ECC4F8 /* ClipScope.cpp in Sources */,
 				639B53811AC20D5A00ECC4F8 /* DisplayDeviceOGL.cpp in Sources */,
 				639B539E1AC20D5A00ECC4F8 /* StencilScopeOGL.cpp in Sources */,
+				638CC74B1AF75D3400C7A106 /* test_persist.cpp in Sources */,
 				639B538B1AC20D5A00ECC4F8 /* ModelMatrixScope.cpp in Sources */,
 				C010C77E160AFD4D006E7D90 /* formula_function_registry.cpp in Sources */,
 				C0B87BD4166725A700D66B15 /* formula_object.cpp in Sources */,
@@ -2574,6 +2582,7 @@
 				C090E8E6178795EC00E6FC5A /* color_picker.cpp in Sources */,
 				C090E8EB1787962600E6FC5A /* isochunk.cpp in Sources */,
 				C090E8EC1787962600E6FC5A /* isoworld.cpp in Sources */,
+				638CC74A1AF75D3400C7A106 /* luac.cpp in Sources */,
 				639B537A1AC20D5A00ECC4F8 /* Canvas.cpp in Sources */,
 				638CC73D1AF6057700C7A106 /* ltm.cpp in Sources */,
 				C090E8F31787967200E6FC5A /* voxel_animation.cpp in Sources */,
@@ -2598,6 +2607,7 @@
 				C091851D1797BEB600F415C0 /* voxel_object_type.cpp in Sources */,
 				C093F3AB17A470F600D433AA /* user_voxel_object.cpp in Sources */,
 				639B54851AC2183B00ECC4F8 /* screen_handling.cpp in Sources */,
+				638CC7491AF75D3400C7A106 /* lua.cpp in Sources */,
 				639B54311AC20D7600ECC4F8 /* b2StackAllocator.cpp in Sources */,
 				639B53A01AC20D5A00ECC4F8 /* SurfaceSDL.cpp in Sources */,
 				638CC72E1AF6057700C7A106 /* linit.cpp in Sources */,
