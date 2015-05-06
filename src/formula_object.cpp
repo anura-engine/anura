@@ -205,6 +205,8 @@ std::map<std::string, std::string>& class_path_map()
 
 		std::map<std::string, variant> class_node_map;
 
+		std::map<std::string, variant> unit_test_class_node_map;
+
 		void load_class_node(const std::string& type, const variant& node)
 		{
 			class_node_map[type] = node;
@@ -239,6 +241,13 @@ std::map<std::string, std::string>& class_path_map()
 				return i->second;
 			}
 
+			if (unit_test_class_node_map.size()) {
+				i = unit_test_class_node_map.find(type);
+				if (i != unit_test_class_node_map.end()) {
+					return i->second;
+				}
+			}
+
 			if(std::find(type.begin(), type.end(), '.') != type.end()) {
 				std::vector<std::string> v = util::split(type, '.');
 				load_class_nodes(v.front());
@@ -247,6 +256,7 @@ std::map<std::string, std::string>& class_path_map()
 			}
 
 			i = class_node_map.find(type);
+
 			ASSERT_LOG(i != class_node_map.end(), "COULD NOT FIND CLASS: " << type);
 			return i->second;
 		}
@@ -1682,14 +1692,6 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 		FormulaCallablePtr g_library_obj;
 	}
 
-	FormulaClassManager::FormulaClassManager()
-	{
-	}
-
-	FormulaClassManager::~FormulaClassManager()
-	{
-	}
-
 	FormulaCallableDefinitionPtr get_library_definition()
 	{
 		if(!g_library_definition) {
@@ -1780,4 +1782,19 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 
 		return g_library_obj;
 	}
+
+#if defined(USE_LUA)
+	formula_class_unit_test_helper::formula_class_unit_test_helper()
+	{
+		ASSERT_LOG(unit_test_class_node_map.size() == 0, "Tried to construct multiple helpers?");
+	}
+	formula_class_unit_test_helper::~formula_class_unit_test_helper()
+	{
+		unit_test_class_node_map.clear();
+	}
+	void formula_class_unit_test_helper::add_class_defn(const std::string & name, const variant & node) {
+		unit_test_class_node_map[name] = node;
+	}
+#endif
+
 }

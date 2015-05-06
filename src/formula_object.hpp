@@ -135,13 +135,16 @@ namespace game_logic
 
 	bool formula_class_valid(const std::string& type);
 
-	struct FormulaClassManager 
-	{
-		FormulaClassManager();
-		~FormulaClassManager();
-	};
-
-
 	FormulaCallableDefinitionPtr get_library_definition();
 	FormulaCallablePtr get_library_object();
+
+#if defined(USE_LUA)
+	class formula_class_unit_test_helper {
+	public:
+		formula_class_unit_test_helper();
+		~formula_class_unit_test_helper();
+		void add_class_defn(const std::string & name, const variant & node);
+		//friend void TEST_lua_in_ffl_objects();
+	};
+#endif
 }

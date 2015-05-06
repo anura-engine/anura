@@ -30,6 +30,8 @@
 #include <boost/math/special_functions/round.hpp>
 #endif
 
+#include "eris/lua.h"
+#include "eris/eris.h"
 #include "eris/lauxlib.h"
 #include "eris/lualib.h"
 #include "eris/lua_utilities.h"
@@ -53,8 +55,29 @@ namespace lua
 	using game_logic::FormulaObject;
 	using game_logic::FormulaObjectPtr;
 
-	namespace 
+	namespace
 	{
+		class assert_stack_neutral {
+		private:
+			lua_State * L_;
+			int stack_;
+			std::string file_;
+			int line_;
+		public:
+			assert_stack_neutral(lua_State *L, const char * file, int line)
+				: L_(L)
+				, stack_(lua_gettop(L))
+				, file_(file)
+				, line_(line)
+			{}
+			~assert_stack_neutral()
+			{
+				ASSERT_LOG(stack_ == lua_gettop(L_), "lua stack corruption detected: start " << stack_ << " end " << lua_gettop(L_) << "  [" << file_ << ":" << line_ << "]");
+			}
+		};
+		#define TOKEN_PASTE(x, y) x ## y
+		#define ASSERT_STACK_NEUTRAL(L) assert_stack_neutral TOKEN_PASTE(anonymous_variable_, __LINE__) (L, __FILE__, __LINE__)
+
 		const char* const anura_str = "Anura";
 		const char* const anura_meta_str = "anura.meta";
 		const char* const callable_function_str = "anura.callable.function";
@@ -64,6 +87,63 @@ namespace lua
 		const char* const object_str = "anura.object";
 
 		const char* const error_handler_fcn_reg_key = "error_handler";
+
+		const char* const me_key = "me";
+		const char* const persist_key = "persist";
+		const char* const unpersist_key = "unpersist";
+
+		void dump_stack (lua_State * L);
+		void load_libs(lua_State * L) {
+			ASSERT_STACK_NEUTRAL(L);
+			static const luaL_Reg loadedlibs[] = {
+				{"_G", luaopen_base},
+//				{LUA_LOADLIBNAME, luaopen_package},
+//				{LUA_COLIBNAME, luaopen_coroutine},
+				{LUA_TABLIBNAME, luaopen_table},
+//				{LUA_IOLIBNAME, luaopen_io},
+//				{LUA_OSLIBNAME, luaopen_os},
+//				{LUA_STRLIBNAME, luaopen_string},
+//				{LUA_BITLIBNAME, luaopen_bit32},
+//				{LUA_MATHLIBNAME, luaopen_math},
+				{LUA_DBLIBNAME, luaopen_debug},
+//				{LUA_ERISLIBNAME, luaopen_eris},
+				{NULL, NULL}
+			};
+
+			lua_pushstring(L, persist_key);
+			lua_rawget(L, LUA_REGISTRYINDEX);
+			if (lua_isnil(L, -1)) {
+				lua_pop(L, 1);
+				lua_newtable(L);
+				lua_pushstring(L, persist_key);
+				lua_pushvalue(L, -2);
+				lua_rawset(L, LUA_REGISTRYINDEX);
+			}
+			ASSERT_LOG(lua_gettop(L) == 1, "stack is bad");				// persist
+
+			lua_pushstring(L, unpersist_key);
+			lua_rawget(L, LUA_REGISTRYINDEX);
+			if (lua_isnil(L, -1)) {
+				lua_pop(L, 1);
+				lua_newtable(L);
+				lua_pushstring(L, unpersist_key);
+				lua_pushvalue(L, -2);
+				lua_rawset(L, LUA_REGISTRYINDEX);
+			}
+			ASSERT_LOG(lua_gettop(L) == 2, "stack is bad");				// persist unpersist
+
+			const luaL_Reg *lib;
+			/* call open functions from 'loadedlibs' and set results to global table */
+			for (lib = loadedlibs; lib->func; lib++) {
+				luaL_requiref(L, lib->name, lib->func, 1);			// persist unpersist lib
+				lua_pushstring(L, lib->name);					// persist unpersist lib name
+				lua_pushvalue(L, -1);						// persist unpersist lib name name
+				lua_pushvalue(L, -3); 						// persist unpersist lib name name lib
+				lua_settable(L, -5); //assign it to the unpersist table		// persist unpersist lib name
+				lua_settable(L, -4); //assign it to the persistent table	// persist unpersist
+			}
+			lua_pop(L, 2);
+		}
 
 		// Two functions to interpret the error codes that lua can give when loading or executing lua, and report the errors
 		void handle_load_error(lua_State * L, int err_code) {
@@ -114,24 +194,104 @@ namespace lua
 
 		// Describe the type of the lua value. If it's a table / userdata, report string description of the metatable also.
 		std::string describe_lua_value(lua_State *L, int ndx) {
+			ASSERT_STACK_NEUTRAL(L);
 			int t = lua_type(L, ndx);
 			const char * n = lua_typename(L, t);
 			assert(n);
 			std::string ret = n;
 			if (t == LUA_TUSERDATA || t == LUA_TTABLE) {
-				lua_getmetatable(L, ndx);
-				if (!lua_isnil(L, -1)) {
-					if (lua_isstring(L, -1)) {
-						ret += " (";
-						ret += lua_tostring(L, -1);
-						ret += ")";
-					} else {
-						ret += " (unknown kind)";
+				if (lua_getmetatable(L, ndx)) { // returns 0 if there is no metatable
+					if (!lua_isnil(L, -1)) {
+						if (lua_isstring(L, -1)) {
+							ret += " (";
+							ret += lua_tostring(L, -1);
+							ret += ")";
+						} else {
+							ret += " (unknown kind)";
+						}
 					}
+					lua_pop(L, 1);
 				}
-				lua_pop(L, 1);
+			} else if (t == LUA_TSTRING) {
+				ret += " \"";
+				ret += lua_tostring(L, ndx);
+				ret += "\"";
 			}
 			return ret;
+		}
+
+		void dump_stack(lua_State * L) {
+			ASSERT_STACK_NEUTRAL(L);
+
+			std::cerr << "Stack contents:\n***\n";
+			for (int i = 1; i <= lua_gettop(L); ++i) {
+				std::cerr << "[" << i << "]: " << describe_lua_value(L, i);
+				if (const char * foo = lua_tostring(L, i)) {
+					std::cerr << " \"" << foo << "\"\n";
+				}
+				std::cerr << std::endl;
+			}
+			std::cerr << "***\n";
+		}
+
+		void print_traceback(lua_State * L) {
+			ASSERT_STACK_NEUTRAL(L);
+
+			lua_getglobal(L,"debug");
+			lua_getfield(L, -1, "traceback");
+			lua_call(L, 0, 0);
+			if (const char * bt = lua_tostring(L, -1)) {
+				std::cerr << bt << std::endl;
+			} else {
+				std::cerr << "<no lua stack backtrace>\n";
+			}
+			lua_pop(L, 1);
+		}
+
+		std::string full_dump(lua_State * L, size_t indent = 0) {
+			ASSERT_STACK_NEUTRAL(L);
+//			std::cerr << "+ top: " << lua_gettop(L) << std::endl;
+			if (lua_istable(L, -1)) {
+				if (indent > 6) {
+					return "table (too deep)\n";
+				}
+				std::string result = "table:\n";
+				result += std::string(indent, '\t') + "{\n";
+
+//				std::cerr << "top: " << lua_gettop(L) << std::endl;
+
+				lua_pushnil(L);
+				while(lua_next(L, -2)) {
+					{
+					ASSERT_STACK_NEUTRAL(L);
+
+					result += std::string(indent + 1, '\t');
+
+					lua_pushvalue(L, -2);
+					result += full_dump(L, indent + 1);
+					lua_pop(L, 1);
+
+					if (lua_istable(L, -2)) {
+						result += std::string(indent + 1, '\t');
+					}
+					result += " -> ";
+
+					result += full_dump(L, indent + 1);
+
+					if (!lua_istable(L, -1)) {
+						result += "\n";
+					}
+					}
+					lua_pop(L, 1);
+				}
+				//lua_pop(L, 1);
+//				std::cerr << "- top: " << lua_gettop(L) << std::endl;
+				result += std::string(indent, '\t') + "}\n";
+				return result;
+			} else {
+//				std::cerr << "% top: " << lua_gettop(L) << std::endl;
+				return describe_lua_value(L, -1);
+			}
 		}
 	}
 
@@ -157,16 +317,48 @@ namespace lua
 		lua_State * L = getState();
 
 		// Gets the global "Anura" table
-		lua_getglobal(L, anura_str);			// (-0,+1,e)
+		lua_getglobal(L, anura_str);			// Anura
+		ASSERT_LOG(lua_istable(L, -1), "Anura table is missing");
 
 		// Create a new holder for a fomula callable for the given callable
-		auto a = static_cast<FormulaObjectPtr*>(lua_newuserdata(L, sizeof(FormulaObjectPtr))); //(-0,+1,e)
+		auto a = static_cast<FormulaObjectPtr*>(lua_newuserdata(L, sizeof(FormulaObjectPtr))); // Anura, me
 		luaL_setmetatable(L, object_str);
-		new (a) FormulaCallablePtr(& object);
+		new (a) FormulaCallablePtr(& object); 		// Anura, me
+		lua_pushstring(L, "me");			// Anura, me, "me"
+		lua_pushvalue(L, -2);				// Anura, me, "me", me
+		lua_rawset(L, LUA_REGISTRYINDEX);		// Anura, me
 
 		// Set the me Anura["me"] = callable
-		lua_setfield(L, -2, "me");			// (-1,+0,e)
-		lua_pop(L, 1);						// (-n(1),+0,-)
+		lua_setfield(L, -2, "me");			// Anura
+		lua_pop(L, 1);					//
+	}
+
+	std::string LuaContext::persist()
+	{
+		// First assemble the persistent table.
+		lua_State * L = getState();
+
+		int top = lua_gettop(L);
+
+		lua_newtable(L);					// persist
+		lua_pushstring(L, me_key);				// persist "me"
+		lua_rawget(L, LUA_REGISTRYINDEX);			// persist me/nil
+		if (lua_isnil(L, -1)) {
+			lua_pop(L, 1);					// persist
+		} else {
+			lua_pushstring(L, me_key);			// persist me "me"
+			lua_rawset(L, -3);				// persist
+		}
+
+		lua_getglobal(L, "_G");					// persist _G
+		eris_persist(L, -2, -1);				// string (if succeeded)
+
+		const char * str = lua_tostring(L, -1);
+		ASSERT_LOG(str, "eris_persist returned a null string");
+		std::string ret = str;
+		lua_pop(L, 3);
+		return ret;
+//		return "";
 	}
 
 	bool LuaContext::dostring(const std::string&name, const std::string&str, game_logic::FormulaCallable* callable)
@@ -204,32 +396,6 @@ namespace lua
 		{
 			variant value;
 		};
-
-		static void dump_stack(lua_State * L) {
-			std::cerr << "Stack contents:\n***\n";
-			for (int i = 1; i <= lua_gettop(L); ++i) {
-				std::cerr << "[" << i << "]: " << describe_lua_value(L, i);
-				if (const char * foo = lua_tostring(L, i)) {
-					std::cerr << " \"" << foo << "\"\n";
-				}
-				std::cerr << std::endl;
-			}
-			std::cerr << "***\n";
-		}
-
-		static void print_traceback(lua_State * L) {
-			int top = lua_gettop(L);
-			lua_getglobal(L,"debug");
-			lua_getfield(L, -1, "traceback");
-			lua_call(L, 0, 0);
-			if (const char * bt = lua_tostring(L, -1)) {
-				std::cerr << bt << std::endl;
-			} else {
-				std::cerr << "<no lua stack backtrace>\n";
-			}
-			lua_pop(L, 1);
-			ASSERT_LOG(top == lua_gettop(L), "printing traceback corrupted stack");
-		}
 
 		static int variant_to_lua_value(lua_State* L, const variant& value)
 		{
@@ -312,6 +478,8 @@ namespace lua
 
 		static variant lua_value_to_variant(lua_State* L, int ndx, variant_type_ptr desired_type = nullptr)
 		{
+			ASSERT_STACK_NEUTRAL(L);
+
 			static int recursion_preventer = 0;
 			if (recursion_preventer > 20) {
 				std::cerr << "Preventing recursion in lua_value_to_variant:\n";
@@ -381,7 +549,6 @@ namespace lua
 					}
 
 					std::map<variant, variant> temp;
-					int start_top = lua_gettop(L);
 
 					lua_pushvalue(L, ndx); //copy the item so we can iterate over it
 					lua_pushnil(L);
@@ -396,7 +563,6 @@ namespace lua
 						lua_pop(L, 1);
 					}
 					lua_pop(L, 1);
-					ASSERT_LOG(start_top = lua_gettop(L), "TOP MISMATCH");
 					return variant(&temp);
 				}
 				case LUA_TUSERDATA:
@@ -503,7 +669,7 @@ namespace lua
 			return 0;
 		}
 
-		static int serialize_callable(lua_State* L) 
+		static int serialize_callable(lua_State* L)
 		{
 			using namespace game_logic;
 			std::string res;
@@ -516,7 +682,7 @@ namespace lua
 					"wo",
 					"rw",
 				};
-				if(inp.access != FORMULA_ACCESS_TYPE::READ_ONLY 
+				if(inp.access != FORMULA_ACCESS_TYPE::READ_ONLY
 					&& inp.access != FORMULA_ACCESS_TYPE::WRITE_ONLY
 					&& inp.access != FORMULA_ACCESS_TYPE::READ_WRITE) {
 					luaL_error(L, "Unrecognised access mode: ", inp.access);
@@ -709,7 +875,7 @@ namespace lua
 			{nullptr, nullptr},
 		};
 
-		static int get_level(lua_State* L) 
+		static int get_level(lua_State* L)
 		{
 			Level& lvl = Level::current();
 
@@ -730,7 +896,7 @@ namespace lua
 			return 1;
 		}
 
-		static int anura_table_index(lua_State* L) 
+		static int anura_table_index(lua_State* L)
 		{
 			const char *name = lua_tostring(L, 2);						// (-0,+0,e)
 
@@ -748,7 +914,7 @@ namespace lua
 			{nullptr, nullptr},
 		};
 
-		static void push_anura_table(lua_State* L) 
+		static void push_anura_table(lua_State* L)
 		{
 			lua_getglobal(L, anura_str);					// (-0,+1,e)
 			if (lua_isnil(L, -1)) {						// (-0,+0,e)
@@ -808,19 +974,18 @@ namespace lua
 		lua_State * L = getState();
 		get_lua_context(L) = this;
 
+		ASSERT_STACK_NEUTRAL(L);
+
 		// load various Lua libraries
-		luaopen_base(L);
-		luaopen_string(L);
-		luaopen_table(L);
-		luaopen_math(L);
-		luaopen_io(L);
-		luaopen_debug(L);
-		luaL_openlibs(L);
+		load_libs(L);
+		//luaL_openlibs(L);
 
 		// load the debug traceback function to registry, to be used as error handler
 		lua_pushstring(L, error_handler_fcn_reg_key);
 		lua_getglobal(L, "debug");
+		ASSERT_LOG(!lua_isnil(L, -1), "unexpected nil");
 		lua_getfield(L, -1, "traceback");
+		ASSERT_LOG(!lua_isnil(L, -1), "unexpected nil");
 		lua_remove(L, -2);
 		lua_rawset(L, LUA_REGISTRYINDEX);
 		lua_pop(L, 1);
@@ -860,12 +1025,13 @@ namespace lua
 		lua_rawset(L, -3);
 		lua_pop(L, 1);
 
+//		std::cerr << "pushing anura table\n";
 		push_anura_table(L);
 
 		lua_settop(L, 0);
 	}
 
-	namespace 
+	namespace
 	{
 		int chunk_writer(lua_State *L, const void* p, size_t sz, void* ud)
 		{
@@ -888,6 +1054,8 @@ namespace lua
 	LuaCompiledPtr LuaContext::compile(const std::string& nam, const std::string& str)
 	{
 		lua_State * L = getState();
+
+		ASSERT_STACK_NEUTRAL(L);
 
 		std::string name = "@" + nam; // if the name does not begin "@" then lua will represent it as [string "name"] in the debugging output
 
@@ -912,6 +1080,8 @@ namespace lua
 	CompiledChunk* LuaContext::compileChunk(const std::string& nam, const std::string& str)
 	{
 		lua_State * L = getState();
+
+		ASSERT_STACK_NEUTRAL(L);
 
 		std::string name = "@" + nam; // if the name does not begin "@" then lua will represent it as [string "name"] in the debugging output
 
@@ -949,6 +1119,9 @@ namespace lua
 	bool CompiledChunk::run(const LuaContext & L_) const
 	{
 		lua_State * L = L_.getState();
+
+		ASSERT_STACK_NEUTRAL(L);
+
 		// Load the error handler for pcall
 		lua_pushstring(L, error_handler_fcn_reg_key);
 		lua_rawget(L, LUA_REGISTRYINDEX);
@@ -1005,6 +1178,9 @@ namespace lua
 	variant LuaFunctionReference::call(const variant & args) const
 	{
 		lua_State* L = L_->getState();
+
+		ASSERT_STACK_NEUTRAL(L);
+
 		int top = lua_gettop(L);
 
 		// load error handler for pcall
@@ -1074,7 +1250,8 @@ namespace lua
 
 UNIT_TEST(lua_test)
 {
-	lua::LuaContext ctx;
+	using namespace lua;
+	LuaContextPtr ctx = new LuaContext();
 }
 
 /*UNIT_TEST(lua_callable_ffl_types) {
@@ -1091,14 +1268,17 @@ UNIT_TEST(lua_to_ffl_conversions) {
 	lua_settop(L, 0);
 
 	{
+		ASSERT_STACK_NEUTRAL(L);
+
 		lua_pushstring(L, "foo");
 		variant result = lua_value_to_variant(L, 1);
 		CHECK_EQ (result, Formula(variant("\"foo\"")).execute());
 		lua_pop(L, 1);
-		CHECK_EQ (lua_gettop(L), 0);
 	}
 
 	{
+		ASSERT_STACK_NEUTRAL(L);
+
 		lua_newtable(L);
 		lua_pushstring(L, "foo");
 		lua_setfield(L, -2, "a");
@@ -1108,10 +1288,11 @@ UNIT_TEST(lua_to_ffl_conversions) {
 		variant result = lua_value_to_variant(L, 1);
 		CHECK_EQ (result, Formula(variant("{ 'a' : 'foo', 'b' : 'bar' }")).execute());
 		lua_pop(L, 1);
-		CHECK_EQ (lua_gettop(L), 0);
 	}
 
 	{
+		ASSERT_STACK_NEUTRAL(L);
+
 		lua_newtable(L);
 		lua_pushinteger(L, 1);
 		lua_setfield(L, -2, "a");
@@ -1123,10 +1304,11 @@ UNIT_TEST(lua_to_ffl_conversions) {
 		variant result = lua_value_to_variant(L, 1);
 		CHECK_EQ (result, Formula(variant("{ 'a' : 1, 'b' : 1.5, 'c': false }")).execute());
 		lua_pop(L, 1);
-		CHECK_EQ (lua_gettop(L), 0);
 	}
 
 	{
+		ASSERT_STACK_NEUTRAL(L);
+
 		lua_newtable(L);
 		lua_pushstring(L, "foo");
 		lua_rawseti(L, -2, 1);
@@ -1138,10 +1320,11 @@ UNIT_TEST(lua_to_ffl_conversions) {
 		result = lua_value_to_variant(L, 1, parse_variant_type(variant("{int -> string}")));
 		CHECK_EQ (result, Formula(variant("{ 1 : 'foo', 2 : 'bar'}")).execute());
 		lua_pop(L, 1);
-		CHECK_EQ (lua_gettop(L), 0);
 	}
 
 	{
+		ASSERT_STACK_NEUTRAL(L);
+
 		int err_code = luaL_loadstring(L, "return function(x) return x + 1 end");
 		CHECK_EQ(err_code, LUA_OK);
 		err_code = lua_pcall(L, 0, 1, 0);
@@ -1161,10 +1344,11 @@ UNIT_TEST(lua_to_ffl_conversions) {
 		CHECK_EQ(output, Formula(variant("6")).execute());
 
 		lua_pop(L,1);
-		CHECK_EQ(lua_gettop(L), 0);
 	}
 
 	{
+		ASSERT_STACK_NEUTRAL(L);
+
 		int err_code = luaL_loadstring(L, "return function(x) return {{x, x + 1}, {x * x, x * x * x}} end");
 		CHECK_EQ(err_code, LUA_OK);
 		err_code = lua_pcall(L, 0, 1, 0);
@@ -1177,55 +1361,181 @@ UNIT_TEST(lua_to_ffl_conversions) {
 
 		variant exec_fn = callable->queryValue("execute");
 		std::vector<variant> input;
+
 		input.push_back(Formula(variant("[5]")).execute());
-		variant output = exec_fn(input);
-		CHECK_EQ(output, Formula(variant("{ 1: {1 : 5, 2 : 6}, 2: {1: 25, 2: 125}}")).execute());
+		CHECK_EQ(exec_fn(input), Formula(variant("{ 1: {1 : 5, 2 : 6}, 2: {1: 25, 2: 125}}")).execute());
 
 
 
 		variant set_fn = callable->queryValue("set_return_type");
-		input.clear();
-		input.push_back(variant("[[int,int]]"));
-		output = set_fn(input);
-		CHECK_EQ(output, variant(true));
+		input.back() = variant("[[int,int]]");
+		CHECK_EQ(set_fn(input), variant(true));
 
-		input.clear();
-		input.push_back(Formula(variant("[5]")).execute());
-
-		output = exec_fn(input);
-		CHECK_EQ(output, Formula(variant("[[5,6], [25, 125]]")).execute());
+		input.back() = Formula(variant("[5]")).execute();
+		CHECK_EQ(exec_fn(input), Formula(variant("[[5,6], [25, 125]]")).execute());
 
 
 
-		input.clear();
-		input.push_back(variant("{ int -> [int,int] }"));
-		output = set_fn(input);
-		CHECK_EQ(output, variant(true));
+		input.back() = variant("{ int -> [int,int] }");
+		CHECK_EQ(set_fn(input), variant(true));
 
-		input.clear();
-		input.push_back(Formula(variant("[5]")).execute());
-
-		output = exec_fn(input);
-		CHECK_EQ(output, Formula(variant("{ 1: [5,6], 2: [25, 125] }")).execute());
+		input.back() = Formula(variant("[5]")).execute();
+		CHECK_EQ(exec_fn(input), Formula(variant("{ 1: [5,6], 2: [25, 125] }")).execute());
 
 
 
 
-		input.clear();
-		input.push_back(variant("[{ int -> int }]"));
-		output = set_fn(input);
-		CHECK_EQ(output, variant(true));
+		input.back() = variant("[{ int -> int }]");
+		CHECK_EQ(set_fn(input), variant(true));
 
-		input.clear();
-		input.push_back(Formula(variant("[5]")).execute());
-
-		output = exec_fn(input);
-		CHECK_EQ(output, Formula(variant("[{ 1: 5, 2: 6}, {1 : 25, 2: 125} ]")).execute());
+		input.back() = Formula(variant("[5]")).execute();
+		CHECK_EQ(exec_fn(input), Formula(variant("[{ 1: 5, 2: 6}, {1 : 25, 2: 125} ]")).execute());
 
 
 		lua_pop(L,1);
-		CHECK_EQ(lua_gettop(L), 0);
 	}
+}
+
+UNIT_TEST(lua_persist) {
+	using namespace lua;
+//	lua::LuaContextPtr ctxt = new lua::LuaContext();
+//	std::string p = ctxt->persist();
+//	std::cerr << "lua_persist\n";
+
+	lua_State * L = luaL_newstate();
+
+	std::string persist_string;
+
+	{
+		ASSERT_STACK_NEUTRAL(L);
+
+		{
+			ASSERT_STACK_NEUTRAL(L);
+
+			lua_pushboolean(L, true);
+			eris_set_setting(L, "path", -1);
+			lua_pop(L, 1);
+		}
+
+		load_libs(L);
+	//	luaL_openlibs(L);
+
+		//std::cerr << lua_gettop(L) << std::endl;
+		lua_settop(L, 0);
+
+		lua_pushstring(L, persist_key); 		// persist_key
+		lua_rawget(L, LUA_REGISTRYINDEX);  		// persist
+
+		//std::cerr << " *** PERSIST TABLE:\n";
+		//std::cerr << full_dump(L, 0) << std::endl;
+		//std::cerr << " ***\n";
+
+		if (lua_isnil(L, -1)) {
+			lua_pop(L, 1);
+			lua_newtable(L);
+		}
+
+		{
+			int top = lua_gettop(L);
+
+			lua_getglobal(L, "_G"); 		// persist _G
+			//lua_newtable(L);			// persist target
+
+			lua_pushinteger(L, 1);
+			lua_setglobal(L, "a");
+			//lua_pushstring(L, "a");
+			//lua_settable(L, -3);			// persist target
+
+			eris_persist(L, -2, -1);			// string (if succeeded)
+			//std::cerr << "After persist" << std::endl;
+
+			CHECK_EQ(lua_gettop(L), top + 2);
+		}
+
+		const char * str = lua_tostring(L, -1);
+		ASSERT_LOG(str, "eris_persist returned a null string");
+		persist_string = str;
+		//std::cerr << "eris_persist gave a string: \n<<<\n" << str << "\n>>>\n";
+		lua_pop(L, 3);
+
+	}
+	lua_close(L);
+/*
+	L = luaL_newstate();
+	{
+		ASSERT_STACK_NEUTRAL(L);
+
+		{
+			ASSERT_STACK_NEUTRAL(L);
+
+			lua_pushboolean(L, true);
+			eris_set_setting(L, "path", -1);
+			lua_pop(L, 1);
+		}
+
+		load_libs(L);
+	//	luaL_openlibs(L);
+
+		lua_pushstring(L, unpersist_key); 		// unpersist_key
+		lua_rawget(L, LUA_REGISTRYINDEX);  		// unpersist
+		if (lua_isnil(L, -1)) {
+			lua_pop(L, 1);
+			lua_newtable(L);
+		}
+
+		std::cerr << " *** UNPERSIST TABLE:\n";
+		std::cerr << full_dump(L, 0) << std::endl;
+		std::cerr << " ***\n";
+
+		lua_pushstring(L, persist_string.c_str());	// unpersist serial
+		eris_unpersist(L, 1, 2);			// unpersist serial old_G
+
+		CHECK_EQ(lua_gettop(L), 3);
+
+		lua_getfield(L, -1, "a");			// unpersist serial old_G old_G.a
+		ASSERT_LOG(lua_isnumber(L, -1), "expected a number found a " << lua_typename(L, lua_type(L, -1)));
+		CHECK_EQ(lua_tointeger(L, -1), 1);
+		lua_pop(L, 4);
+	}
+	lua_close(L);*/
+}
+
+UNIT_TEST(lua_with_ffl_objects) {
+	using namespace game_logic;
+
+	formula_class_unit_test_helper helper;
+	helper.add_class_defn("foo", Formula(variant("\
+{\
+	properties: {\
+		a : { type: \"string\", default: \"a\"},\
+	},\
+}")).execute());
+
+	variant instance = Formula(variant("construct(\"foo\")")).execute();
+	CHECK_EQ(instance.as_callable()->queryValue("a"), variant("a"));
+
+	instance = Formula(variant("construct(\"foo\", {a: \"b\"})")).execute();
+	CHECK_EQ(instance.as_callable()->queryValue("a"), variant("b"));
+
+	variant instance_copy = FormulaObject::deepClone(instance);
+
+	CHECK_EQ(instance, instance);
+	CHECK_EQ(instance_copy != instance, true);
+
+	CHECK_EQ(instance_copy.as_callable()->queryValue("a"), variant("b"));
+
+	helper.add_class_defn("foo_lua", Formula(variant("\
+{\
+	properties: {\
+		a : { type: \"string\", default: \"a\"},\
+	},\
+	lua: {\
+		init: \"Anura.me.a = \'c\' \"\
+	}\
+}")).execute());
+
+	variant i = Formula(variant("construct(\"foo_lua\")")).execute();
+	CHECK_EQ(i.as_callable()->queryValue("a"), variant("c"));
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -1235,29 +1545,31 @@ UNIT_TEST(lua_to_ffl_conversions) {
 template<int alt_main(int, char * [])>
 int ALTERNATE_MAIN(const std::string & prog_name, const std::vector<std::string> & args)
 {
-	char ** argv = (char**) malloc((sizeof(char*)) * (args.size() + 2));
+	char ** argv = (char**) malloc(sizeof(char*) * (args.size() + 2));
 
-	argv[0] = (char *) malloc (sizeof(char) * prog_name.size());
+	argv[0] = (char *) malloc (sizeof(char) * (prog_name.size() + 1));
 	strcpy(argv[0], prog_name.c_str());
 	size_t idx = 1;
 	for (const std::string & str : args) {
-		argv[idx] = (char *) malloc(sizeof(char) * str.size());
+		argv[idx] = (char *) malloc(sizeof(char) * (str.size() + 1));
 		strcpy(argv[idx], str.c_str());
 		idx++;
 	}
 	argv[idx] = nullptr;
 
-/*	std::cerr << "arguments to " << prog_name << ":\n";
+	std::stringstream info;
+	info << "passing command-line arguments to utility \"" << prog_name << "\":\n";
 	for (size_t i = 0; argv[i] != nullptr; ++i) {
-		std::cerr << '[' << i << "] \"" << argv[i] << "\"\n";
-	}*/
+		info << '[' << i << "] \"" << argv[i] << "\"\n";
+	}
+	LOG_INFO(info.str());
 
 	int ret_code = alt_main(args.size() + 1, argv);
-	
-/*	std::cerr << "arguments to " << prog_name << ":\n";
+
 	for (size_t i = 0; argv[i] != nullptr; ++i) {
-		std::cerr << '[' << i << "] \"" << argv[i] << "\"\n";
-	}*/
+		free (argv[i]);
+	}
+	free (argv);
 
 	return ret_code;
 }
