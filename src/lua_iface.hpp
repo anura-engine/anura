@@ -90,6 +90,8 @@ namespace lua
 		LuaCompiledPtr compile(const std::string& name, const std::string& str);
 
 		CompiledChunk* compileChunk(const std::string& name, const std::string& str);
+
+		std::string persist();
 	private:
 		void init();
 

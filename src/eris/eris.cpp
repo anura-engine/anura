@@ -2689,8 +2689,10 @@ eris_undump(lua_State *L, lua_Reader reader, void *ud) {            /* perms? */
 /** ======================================================================== */
 
 LUA_API void
-eris_persist(lua_State *L, int perms, int value) {                    /* ...? */
+eris_persist(lua_State *L, int per, int val) {                        /* ...? */
   eris_checkstack(L, 3);
+  int perms = lua_absindex(L, per);
+  int value = lua_absindex(L, val);
   lua_pushcfunction(L, l_persist);                           /* ... l_persist */
   lua_pushvalue(L, perms);                             /* ... l_persist perms */
   lua_pushvalue(L, value);                     /* ... l_persist perms rootobj */
@@ -2698,8 +2700,10 @@ eris_persist(lua_State *L, int perms, int value) {                    /* ...? */
 }
 
 LUA_API void
-eris_unpersist(lua_State *L, int perms, int value) {                   /* ... */
+eris_unpersist(lua_State *L, int per, int val) {                       /* ... */
   eris_checkstack(L, 3);
+  int perms = lua_absindex(L, per);
+  int value = lua_absindex(L, val);
   lua_pushcfunction(L, l_unpersist);                       /* ... l_unpersist */
   lua_pushvalue(L, perms);                           /* ... l_unpersist perms */
   lua_pushvalue(L, value);                       /* ... l_unpersist perms str */
@@ -2715,8 +2719,9 @@ eris_get_setting(lua_State *L, const char *name) {                     /* ... */
 }
 
 LUA_API void
-eris_set_setting(lua_State *L, const char *name, int value) {          /* ... */
+eris_set_setting(lua_State *L, const char *name, int val) {            /* ... */
   eris_checkstack(L, 3);
+  int value = lua_absindex(L, val);
   lua_pushcfunction(L, l_settings);                         /* ... l_settings */
   lua_pushstring(L, name);                             /* ... l_settings name */
   lua_pushvalue(L, value);                       /* ... l_settings name value */
