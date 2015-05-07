@@ -2350,6 +2350,10 @@ std::string variant::to_debug_string(std::vector<const game_logic::FormulaCallab
 			s << *i;
 		}
 		s << ")";
+
+		if(fn_->fn) {
+			s << fn_->fn->str();
+		}
 		break;
 	}
 	case VARIANT_TYPE_GENERIC_FUNCTION: {

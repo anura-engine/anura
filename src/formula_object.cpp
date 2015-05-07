@@ -1341,15 +1341,17 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 		*/
 		}
 
-		if(data.is_map() && data["property_overrides"].is_list()) {
-			const variant overrides = data["property_overrides"];
-			property_overrides_.reserve(overrides.num_elements());
-			for(int n = 0; n != overrides.num_elements(); ++n) {
-				if(overrides[n].is_null()) {
-					property_overrides_.push_back(FormulaPtr());
-				} else {
-					property_overrides_.push_back(FormulaPtr(new Formula(overrides[n])));
+		if(data.is_map() && data["property_overrides"].is_map()) {
+			for(const std::pair<const variant,variant>& p : data["property_overrides"].as_map()) {
+				const std::string& key = p.first.as_string();
+				std::map<std::string, int>::const_iterator itor = class_->properties().find(key);
+				ASSERT_LOG(itor != class_->properties().end(), "UNKNOWN PROPERTY ACCESS " << key << " IN CLASS " << class_->name() << "\nFORMULA LOCATION: " << get_call_stack());
+
+				if(property_overrides_.size() <= itor->second) {
+					property_overrides_.resize(itor->second+1);
 				}
+
+				property_overrides_[itor->second] = FormulaPtr(new Formula(p.second));
 			}
 		}
 
@@ -1389,14 +1391,16 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 		result[variant("state")] = variant(&state);
 
 		if(property_overrides_.empty() == false) {
-			std::vector<variant> properties;
-			for(const FormulaPtr& f : property_overrides_) {
-				if(f) {
-					properties.push_back(variant(f->str()));
-				} else {
-					properties.push_back(variant());
+			std::map<variant,variant> properties;
+			for(int n = 0; n < property_overrides_.size(); ++n) {
+				if(!property_overrides_[n]) {
+					continue;
 				}
+
+				const PropertyEntry& entry = class_->slots()[n];
+				properties[entry.name_variant] = variant(property_overrides_[n]->str());
 			}
+
 			result[variant("property_overrides")] = variant(&properties);
 		}
 
