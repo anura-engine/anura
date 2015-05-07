@@ -46,6 +46,10 @@
 #include "variant_type.hpp"
 #include "variant_utils.hpp"
 
+#ifdef USE_LUA
+#include "lua_iface.hpp"
+#endif
+
 #if defined(_MSC_VER)
 #define strtoll _strtoi64
 #endif
@@ -201,6 +205,8 @@ std::map<std::string, std::string>& class_path_map()
 
 		std::map<std::string, variant> class_node_map;
 
+		std::map<std::string, variant> unit_test_class_node_map;
+
 		void load_class_node(const std::string& type, const variant& node)
 		{
 			class_node_map[type] = node;
@@ -235,6 +241,13 @@ std::map<std::string, std::string>& class_path_map()
 				return i->second;
 			}
 
+			if (unit_test_class_node_map.size()) {
+				i = unit_test_class_node_map.find(type);
+				if (i != unit_test_class_node_map.end()) {
+					return i->second;
+				}
+			}
+
 			if(std::find(type.begin(), type.end(), '.') != type.end()) {
 				std::vector<std::string> v = util::split(type, '.');
 				load_class_nodes(v.front());
@@ -243,6 +256,7 @@ std::map<std::string, std::string>& class_path_map()
 			}
 
 			i = class_node_map.find(type);
+
 			ASSERT_LOG(i != class_node_map.end(), "COULD NOT FIND CLASS: " << type);
 			return i->second;
 		}
@@ -490,6 +504,11 @@ std::map<std::string, std::string>& class_path_map()
 		const std::string& name() const { return name_; }
 		const variant& nameVariant() const { return name_variant_; }
 		const variant& privateData() const { return private_data_; }
+#if defined(USE_LUA)
+		bool has_lua() const { return !lua_node_.is_null(); }
+		const variant & getLuaNode() const { return lua_node_; }
+		const std::shared_ptr<lua::CompiledChunk> & getLuaInit( lua::LuaContext & ) const ;
+#endif
 		const std::vector<game_logic::ConstFormulaPtr>& constructor() const { return constructor_; }
 		const std::map<std::string, int>& properties() const { return properties_; }
 		const std::vector<PropertyEntry>& slots() const { return slots_; }
@@ -522,6 +541,12 @@ std::map<std::string, std::string>& class_path_map()
 		std::vector<boost::intrusive_ptr<const FormulaClass> > bases_;
 
 		variant nested_classes_;
+
+#if defined(USE_LUA)
+		// For lua integration
+		variant lua_node_;
+		mutable std::shared_ptr<lua::CompiledChunk> lua_compiled_;
+#endif
 
 		int nstate_slots_;
 	};
@@ -616,6 +641,12 @@ std::map<std::string, std::string>& class_path_map()
 
 			constructor_.push_back(game_logic::Formula::createOptionalFormula(node["constructor"], nullptr, class_def));
 		}
+
+#if defined(USE_LUA)
+		if(node.has_key("lua")) {
+			lua_node_ = node["lua"];
+		}
+#endif
 
 		unit_test_ = node["test"];
 	}
@@ -722,6 +753,17 @@ std::map<std::string, std::string>& class_path_map()
 			c->run_unit_tests();
 		}
 	}
+
+	const std::shared_ptr<lua::CompiledChunk> & FormulaClass::getLuaInit(lua::LuaContext & ctx) const {
+		if (lua_compiled_) {
+			return lua_compiled_;
+		}
+		if (lua_node_.has_key("init")) {
+			lua_compiled_.reset(ctx.compileChunk(lua_node_.has_key("debug_name") ? lua_node_["debug_name"].as_string() : ("class " + name() + " lua"), lua_node_["init"].as_string()));
+		}
+		return lua_compiled_;
+	}
+
 
 	namespace
 	{
@@ -1191,6 +1233,11 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 			}
 		}
 
+#if defined(USE_LUA)
+		init_lua();
+#endif
+
+
 		setAddr(write_id());
 	}
 
@@ -1294,17 +1341,23 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 		*/
 		}
 
-		if(data.is_map() && data["property_overrides"].is_list()) {
-			const variant overrides = data["property_overrides"];
-			property_overrides_.reserve(overrides.num_elements());
-			for(int n = 0; n != overrides.num_elements(); ++n) {
-				if(overrides[n].is_null()) {
-					property_overrides_.push_back(FormulaPtr());
-				} else {
-					property_overrides_.push_back(FormulaPtr(new Formula(overrides[n])));
+		if(data.is_map() && data["property_overrides"].is_map()) {
+			for(const std::pair<const variant,variant>& p : data["property_overrides"].as_map()) {
+				const std::string& key = p.first.as_string();
+				std::map<std::string, int>::const_iterator itor = class_->properties().find(key);
+				ASSERT_LOG(itor != class_->properties().end(), "UNKNOWN PROPERTY ACCESS " << key << " IN CLASS " << class_->name() << "\nFORMULA LOCATION: " << get_call_stack());
+
+				if(property_overrides_.size() <= itor->second) {
+					property_overrides_.resize(itor->second+1);
 				}
+
+				property_overrides_[itor->second] = FormulaPtr(new Formula(p.second));
 			}
 		}
+
+#if defined(USE_LUA)
+		init_lua();
+#endif
 
 		setAddr(write_id());
 	}
@@ -1338,14 +1391,16 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 		result[variant("state")] = variant(&state);
 
 		if(property_overrides_.empty() == false) {
-			std::vector<variant> properties;
-			for(const FormulaPtr& f : property_overrides_) {
-				if(f) {
-					properties.push_back(variant(f->str()));
-				} else {
-					properties.push_back(variant());
+			std::map<variant,variant> properties;
+			for(int n = 0; n < property_overrides_.size(); ++n) {
+				if(!property_overrides_[n]) {
+					continue;
 				}
+
+				const PropertyEntry& entry = class_->slots()[n];
+				properties[entry.name_variant] = variant(property_overrides_[n]->str());
 			}
+
 			result[variant("property_overrides")] = variant(&properties);
 		}
 
@@ -1508,6 +1563,14 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 		}
 	}
 
+	variant_type_ptr FormulaObject::getPropertySetType(const std::string & key) const
+	{
+		std::map<std::string, int>::const_iterator itor = class_->properties().find(key);
+		ASSERT_LOG(itor != class_->properties().end(), "UNKNOWN PROPERTY ACCESS " << key << " IN CLASS " << class_->name());
+
+		return class_->slots()[itor->second].set_type;
+	}
+
 	void FormulaObject::validate() const
 	{
 	#ifndef NO_FFL_TYPE_SAFETY_CHECKS
@@ -1544,7 +1607,7 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 
 			++index;
 
-			ASSERT_LOG(entry.get_type->match(value), "OBJECT OF CLASS TYPE " << class_->name() << " HAS INVALID PROPERTY " << entry.name << ": " << value.write_json() << " EXPECTED " << entry.get_type->str());
+			ASSERT_LOG(entry.get_type->match(value), "OBJECT OF CLASS TYPE " << class_->name() << " HAS INVALID PROPERTY " << entry.name << ": " << value.write_json() << " EXPECTED " << entry.get_type->str() << " GIVEN TYPE " << variant::variant_type_to_string(value.type()));
 		}
 	#endif
 	}
@@ -1566,6 +1629,20 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 			inputs->push_back(FormulaInput(entry.name, type));
 		}
 	}
+
+#if defined(USE_LUA)
+	void FormulaObject::init_lua()
+	{
+		if (class_->has_lua())
+		{
+			lua_ptr_.reset(new lua::LuaContext(*this)); // sets self object implicitly
+
+			if (auto init_script = class_->getLuaInit(*lua_ptr_)) {
+				init_script->run(*lua_ptr_);
+			}
+		}
+	}
+#endif
 
 	bool formula_class_valid(const std::string& type)
 	{
@@ -1617,14 +1694,6 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 	{
 		FormulaCallableDefinitionPtr g_library_definition;
 		FormulaCallablePtr g_library_obj;
-	}
-
-	FormulaClassManager::FormulaClassManager()
-	{
-	}
-
-	FormulaClassManager::~FormulaClassManager()
-	{
 	}
 
 	FormulaCallableDefinitionPtr get_library_definition()
@@ -1717,4 +1786,19 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 
 		return g_library_obj;
 	}
+
+#if defined(USE_LUA)
+	formula_class_unit_test_helper::formula_class_unit_test_helper()
+	{
+		ASSERT_LOG(unit_test_class_node_map.size() == 0, "Tried to construct multiple helpers?");
+	}
+	formula_class_unit_test_helper::~formula_class_unit_test_helper()
+	{
+		unit_test_class_node_map.clear();
+	}
+	void formula_class_unit_test_helper::add_class_defn(const std::string & name, const variant & node) {
+		unit_test_class_node_map[name] = node;
+	}
+#endif
+
 }

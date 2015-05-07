@@ -496,7 +496,13 @@ int main(int argcount, char* argvec[])
 	preferences::load_preferences();
 
 	// load difficulty settings after module, before rest of args.
-	difficulty::manager();
+	try {
+		difficulty::manager();
+	} catch (json::ParseError & e) {
+		if (!unit_tests_only) {
+			ASSERT_LOG(false, "JSON parse error: " << e.errorMessage());
+		}
+	}
 
 	for(size_t n = 0; n < argv.size(); ++n) {
 		const size_t argc = argv.size();
@@ -853,7 +859,12 @@ int main(int argcount, char* argvec[])
 
 	auto canvas = Canvas::getInstance();
 
-	ShaderProgram::loadFromVariant(json::parse_from_file("data/shaders.cfg"));
+	try {
+		ShaderProgram::loadFromVariant(json::parse_from_file("data/shaders.cfg"));
+	} catch(const json::ParseError& e) {
+		LOG_ERROR("ERROR PARSING: " << e.errorMessage());
+		return 1;
+	}
 
 	// Set the image loading filter function, so that files are found in the correct place.
 	Surface::setFileFilter(FileFilterType::LOAD, [](const std::string& s){ return module::map_file("images/" + s); });

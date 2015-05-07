@@ -24,7 +24,9 @@
 #include <boost/algorithm/string/replace.hpp>
 
 #include "asserts.hpp"
+#include "compress.hpp"
 #include "http_client.hpp"
+#include "string_utils.hpp"
 
 http_client::http_client(const std::string& host, const std::string& port, int session, boost::asio::io_service* service)
   : session_id_(session),
@@ -136,6 +138,7 @@ void http_client::handle_connect(const boost::system::error_code& error, connect
 		   "Accept: */*\r\n"
 	       "User-Agent: Frogatto 1.0\r\n"
 		   "Content-Type: text/plain\r\n"
+		   "Accept-Encoding: deflate\r\n"
 		   "Connection: close\r\n";
 	
 	if(session_id_ != -1) {
@@ -187,6 +190,37 @@ void http_client::handle_send(connection_ptr conn, const boost::system::error_co
 	}
 }
 
+namespace http
+{
+	std::map<std::string, std::string> parse_http_headers(std::string& str)
+	{
+		str.erase(std::remove(str.begin(), str.end(), '\r'), str.end());
+
+		std::map<std::string, std::string> env;
+		std::vector<std::string> lines = util::split(str, '\n');
+		for(const std::string& line : lines) {
+			if(line.empty()) {
+				break;
+			}
+
+			std::string::const_iterator colon = std::find(line.begin(), line.end(), ':');
+			if(colon == line.end() || colon+1 == line.end()) {
+				continue;
+			}
+
+			std::string key(line.begin(), colon);
+			const std::string value(colon+2, line.end());
+
+			std::transform(key.begin(), key.end(), key.begin(), tolower);
+			env[key] = value;
+		}
+
+		return env;
+	}
+}
+
+
+
 void http_client::handle_receive(connection_ptr conn, const boost::system::error_code& e, size_t nbytes)
 {
 	if(e) {
@@ -214,7 +248,7 @@ void http_client::handle_receive(connection_ptr conn, const boost::system::error
 	}
 
 	conn->response.insert(conn->response.end(), &conn->buf[0], &conn->buf[0] + nbytes);
-	if(conn->expected_len == -1) {
+	if(conn->headers.empty()) {
 		int header_term_len = 2;
 		const char* end_headers = strstr(conn->response.c_str(), "\n\n");
 		const char* end_headers2 = strstr(conn->response.c_str(), "\r\n\r\n");
@@ -223,27 +257,22 @@ void http_client::handle_receive(connection_ptr conn, const boost::system::error
 			header_term_len = 4;
 		}
 		if(end_headers) {
-			const char* content_length = strstr(conn->response.c_str(), "Content-Length:");
-			if(!content_length) {
-				content_length = strstr(conn->response.c_str(), "Content-length:");
-			}
+			std::string header_str(conn->response.c_str(), end_headers);
 
-			if(!content_length) {
-				content_length = strstr(conn->response.c_str(), "content-length:");
-			}
+			static const std::string content_length_str("content-length");
 
-			if(content_length) {
-				content_length += strlen("content-length:");
-				const int payload_len = strtol(content_length, nullptr, 10);
-				if(payload_len > 0) {
-					conn->expected_len = static_cast<int>((end_headers - conn->response.c_str()) + payload_len + header_term_len);
-				}
+			conn->headers = http::parse_http_headers(header_str);
+
+			auto itor = conn->headers.find(content_length_str);
+			if(itor != conn->headers.end()) {
+				const int payload_len = atoi(conn->headers[content_length_str].c_str());
+				conn->expected_len = static_cast<int>((end_headers - conn->response.c_str()) + payload_len + header_term_len);
 			}
 		}
 	}
 
 	if(conn->expected_len != -1 && conn->response.size() >= static_cast<unsigned>(conn->expected_len)) {
-		ASSERT_LOG(conn->expected_len == conn->response.size(), "UNEXPECTED RESPONSE SIZE " << conn->expected_len << " VS " << conn->response << " " << conn->response.size());
+		ASSERT_LOG(conn->expected_len == conn->response.size(), "UNEXPECTED RESPONSE SIZE " << conn->expected_len << " VS " << conn->response.size() << ": " << conn->response);
 
 		//We have the full response now -- handle it.
 		const char* end_headers = strstr(conn->response.c_str(), "\n\n");
@@ -253,11 +282,28 @@ void http_client::handle_receive(connection_ptr conn, const boost::system::error
 			end_headers = end_headers2;
 			header_term_len = 4;
 		}
+
 		ASSERT_LOG(end_headers, "COULD NOT FIND END OF HEADERS IN MESSAGE: " << conn->response);
 		//LOG_DEBUG("HEADERS: (((" << std::string(conn->response.c_str(), end_headers) << ")))");
 		--in_flight_;
 		const char* payload = end_headers + header_term_len;
-		conn->handler(std::string(payload, conn->response.c_str() + conn->response.size()));
+
+		std::string payload_str(payload, conn->response.c_str() + conn->response.size());
+
+		static const std::string encoding_str("content-encoding");
+		auto encoding_itor = conn->headers.find(encoding_str);
+		if(encoding_itor != conn->headers.end()) {
+			std::string encoding = encoding_itor->second;
+			std::transform(encoding.begin(), encoding.end(), encoding.begin(), tolower);
+			if(encoding == "deflate") {
+				std::vector<char> data(payload_str.begin(), payload_str.end());
+				auto v = zip::decompress(data);
+				std::string(v.begin(), v.end()).swap(payload_str);
+			} else {
+				ASSERT_LOG(encoding == "identity", "Unsupported HTTP encoding: " << encoding);
+			}
+		}
+		conn->handler(payload_str);
 	} else {
 		if(conn->expected_len != -1 && conn->progress_handler) {
 			conn->progress_handler(conn->response.size(), conn->expected_len, true);

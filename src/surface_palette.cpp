@@ -175,9 +175,9 @@ namespace graphics
 
 	KRE::TexturePtr get_palette_texture(const std::string& name, const variant& node, const std::vector<int>& palette)
 	{
-		if(palette.empty()) {
-			return KRE::Texture::createTexture(node);
-		}
+		//if(palette.empty()) {
+		//	return KRE::Texture::createTexture(node);
+		//}
 		ASSERT_LOG(!name.empty(), "palettes are set but image is empty.");
 		auto it = get_palette_texture_cache().find(name);
 		KRE::TexturePtr tex = nullptr;
@@ -202,7 +202,7 @@ namespace graphics
 		if(!palette_str.empty()) {
 			LOG_DEBUG("Adding palettes: " << palette_str << " at: " << " to texture id: " << tex->id() << ", '" << name << "'");
 		} else {
-			LOG_DEBUG("Return texture for '" << name << "', id=" << tex->id() << " has_palette: " << (tex->isPaletteized() ? "yes" : "no"));
+			LOG_DEBUG("Return texture for '" << name << "', id=" << tex->id() << " has_palette: " << (tex->isPaletteized() ? "yes" : "no") << ", internal_palette_id: " << tex->getPalette(0) << ", src: " << tex->getSourceRect());
 		}
 		return tex;
 	}

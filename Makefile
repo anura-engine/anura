@@ -41,7 +41,7 @@ ifeq "$(GCC_GTEQ_490)" "1"
 BASE_CXXFLAGS += -fdiagnostics-color=auto -fsanitize=undefined
 endif
 else ifneq (,$(findstring clang, `$(CXX)`))
-BASE_CXXFLAGS += -Qunused-arguments -Wno-unknown-warning-option -Wno-deprecated-register
+BASE_CXXFLAGS += -Qunused-arguments -Wno-unknown-warning-option -Wno-deprecated-register -Wno-parentheses-equality -Wno-pointer-bool-conversion
 endif
 
 SDL2_CONFIG?=sdl2-config
@@ -51,7 +51,8 @@ ifneq ($(USE_SDL2),yes)
 $(error SDL2 not found, SDL-1.2 is no longer supported)
 endif
 
-USE_LUA?=$(shell pkg-config --exists lua5.2 && echo yes)
+BASE_CXXFLAGS += -DUSE_LUA
+#USE_LUA := yes # ?=$(shell pkg-config --exists lua5.2 && echo yes)
 
 TARBALL := /var/www/anura/anura-$(shell date +"%Y%m%d-%H%M").tar.bz2
 
@@ -98,7 +99,7 @@ ifeq ($(USE_SVG),yes)
 	LIBS += $(shell pkg-config --libs cairo)
 endif
 
-MODULES   := kre svg Box2D tiled
+MODULES   := kre svg Box2D tiled eris
 SRC_DIR   := $(addprefix src/,$(MODULES)) src
 BUILD_DIR := $(addprefix build/,$(MODULES)) build
 

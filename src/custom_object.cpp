@@ -423,7 +423,7 @@ CustomObject::CustomObject(variant node)
 #endif
 
 #if defined(USE_LUA)
-	if(!type_->getLuaSource().empty()) {
+	if(type_->has_lua()) {
 		lua_ptr_.reset(new lua::LuaContext());
 	}
 #endif
@@ -588,7 +588,7 @@ CustomObject::CustomObject(const std::string& type, int x, int y, bool face_righ
 	next_animation_formula_ = type_->nextAnimationFormula();
 
 #if defined(USE_LUA)
-	if(!type_->getLuaSource().empty()) {
+	if(type_->has_lua()) {
 		lua_ptr_.reset(new lua::LuaContext());
 	}
 #endif
@@ -696,7 +696,7 @@ CustomObject::CustomObject(const CustomObject& o)
 	setMouseOverArea(o.getMouseOverArea());
 	
 #if defined(USE_LUA)
-	if(!type_->getLuaSource().empty()) {
+	if(type_->has_lua()) {
 		lua_ptr_.reset(new lua::LuaContext());
 	}
 #endif
@@ -787,8 +787,9 @@ void CustomObject::init_lua()
 {
 	if(lua_ptr_) {
 		lua_ptr_->setSelfCallable(*this);
-		lua_chunk_.reset(lua_ptr_->compileChunk(type_->id(), type_->getLuaSource()));
-		lua_chunk_->run(lua_ptr_->getContextPtr());
+		if (auto init_script = type_->getLuaInit(*lua_ptr_)) {
+			init_script->run(*lua_ptr_);
+		}
 	}
 }
 #endif
@@ -1180,7 +1181,7 @@ void CustomObject::drawLater(int xx, int yy) const
 		offs_y = yy;
 	}
 	KRE::Canvas::CameraScope cam_scope(graphics::GameScreen::get().getCurrentCamera());
-	KRE::Canvas::ModelManager model_matrix(x()+offs_x, y()+offs_y);
+	KRE::ModelManager2D model_matrix(x()+offs_x, y()+offs_y);
 	for(const gui::WidgetPtr& w : widgets_) {
 		if(w->zorder() >= widget_zorder_draw_later_threshold) {
 			w->draw(0, 0, rotate_z_.as_float32(), draw_scale_ ? draw_scale_->as_float32() : 1);
@@ -1384,11 +1385,12 @@ void CustomObject::draw(int xx, int yy) const
 	}
 
 	{
+		KRE::ModelManager2D mm(xx, yy);
 		KRE::Canvas::CameraScope cam_scope(graphics::GameScreen::get().getCurrentCamera());
 		for(const gui::WidgetPtr& w : widgets_) {
 			if(w->zorder() < widget_zorder_draw_later_threshold) {
 				if(w->drawWithObjectShader() == false) {
-					w->draw(x()&~1, y()&~1, rotate_z_.as_float32(), draw_scale_ ? draw_scale_->as_float32() : 0);
+					w->draw(x(), y(), rotate_z_.as_float32(), draw_scale_ ? draw_scale_->as_float32() : 0);
 				}
 			}
 		}
@@ -5433,9 +5435,20 @@ void CustomObject::surrenderReferences(GarbageCollector* collector)
 		collector->surrenderPtr(&w, "WIDGET");
 	}
 
+	collector->surrenderPtr(&vars_, "VARS");
+	collector->surrenderPtr(&tmp_vars_, "TMP_VARS");
+	collector->surrenderPtr(&tags_, "TAGS");
+
 	collector->surrenderPtr(&last_hit_by_, "LAST_HIT_BY");
 	collector->surrenderPtr(&standing_on_, "STANDING_ON");
 	collector->surrenderPtr(&parent_, "PARENT");
+
+	collector->surrenderPtr(&shader_, "SHADER");
+	for(graphics::AnuraShaderPtr& shader : effects_shaders_) {
+		collector->surrenderPtr(&shader, "EFFECTS_SHADER");
+	}
+
+	Entity::surrenderReferences(collector);
 }
 
 std::string CustomObject::debugObjectName() const
@@ -5768,10 +5781,10 @@ void CustomObject::updateType(ConstCustomObjectTypePtr old_type,
 	}
 
 #if defined(USE_LUA)
-	if(!type_->getLuaSource().empty()) {
+	if(type_->has_lua()) {
 	//	lua_ptr_.reset(new lua::lua_context());
+		init_lua();
 	}
-	init_lua();
 #endif
 
 	handleEvent("type_updated");

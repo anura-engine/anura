@@ -1557,7 +1557,7 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 
 #if defined(USE_LUA)
 	if(node.has_key("lua")) {
-		lua_source_ = node["lua"].as_string();
+		lua_node_ = node["lua"];
 	}
 #endif
 
@@ -1611,6 +1611,16 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 
 CustomObjectType::~CustomObjectType()
 {
+}
+
+const std::shared_ptr<lua::CompiledChunk> & CustomObjectType::getLuaInit(lua::LuaContext & ctx) const {
+	if (lua_compiled_) {
+		return lua_compiled_;
+	}
+	if (lua_node_.has_key("init")) {
+		lua_compiled_.reset(ctx.compileChunk(lua_node_.has_key("debug_name") ? lua_node_["debug_name"].as_string() : ("custom object " + id() + " lua"), lua_node_["init"].as_string()));
+	}
+	return lua_compiled_;
 }
 
 namespace 

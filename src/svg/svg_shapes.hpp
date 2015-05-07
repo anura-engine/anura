@@ -139,7 +139,7 @@ namespace KRE
 		class text : public shape
 		{
 		public:
-			text(element* doc, const boost::property_tree::ptree& pt);
+			text(element* doc, const boost::property_tree::ptree& pt, bool is_tspan=false);
 			virtual ~text();
 		private:
 			void render_text(render_context& ctx) const;
@@ -157,6 +157,7 @@ namespace KRE
 				SPACING_AND_GLYPHS,
 			};
 			LengthAdjust adjust_;
+			bool is_tspan_;
 		};
 	}
 }

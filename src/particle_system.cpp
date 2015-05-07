@@ -430,6 +430,7 @@ namespace
 
 		// XXXX This needs to be moved somewhere else. Maybe we should store Entity then do in preRender(...) ?
 		if(particles_.empty()) {
+			attrib_->clear();
 			return;
 		}
 		auto pp = particles_.begin();

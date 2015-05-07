@@ -361,8 +361,8 @@ namespace gui
 	void Widget::draw(int xt, int yt, float rotate, float scale) const
 	{
 		using namespace KRE;
-		if(visible_) {
-			Canvas::ModelManager mm(xt, yt, rotate, scale);
+		if(visible_) {			 
+			ModelManager2D mm(xt, yt, rotate, scale);
 			Canvas::ColorManager cm(draw_color_);
 			if(frame_set_ != nullptr) {
 				frame_set_->blit(x() - getPadWidth() - frame_set_->cornerHeight(),

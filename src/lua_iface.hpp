@@ -26,13 +26,17 @@
 #if defined(USE_LUA)
 
 #include <memory>
-#include <lua.hpp>
+#include "eris/lua.h"
 
 #include "formula_callable.hpp"
 #include "formula_callable_definition.hpp"
 
+namespace game_logic { class FormulaObject; }
+
 namespace lua
 {
+	class LuaContext;
+
 	class CompiledChunk
 	{
 	public:
@@ -44,13 +48,16 @@ namespace lua
 			const char* pp = static_cast<const char*>(p);
 			chunks_.push_back(std::vector<char>(pp,pp+sz));
 		}
-		bool run(lua_State* L) const;
+		bool run(const LuaContext &) const;
 		const std::vector<char>& current() const { return *chunks_it_; }
 		void next() { ++chunks_it_; }
+		void setName(const std::string &);
 	private:
 		typedef std::vector<std::vector<char>> chunk_list_type;
 		chunk_list_type chunks_;
 		mutable chunk_list_type::const_iterator chunks_it_;
+
+		std::string chunk_name_;
 	};
 
 	class LuaCompiled : public game_logic::FormulaCallable, public CompiledChunk
@@ -63,36 +70,16 @@ namespace lua
 	};
 	typedef boost::intrusive_ptr<LuaCompiled> LuaCompiledPtr;
 
-	class LuaFunctionReference : public game_logic::FormulaCallable
-	{
-	public:
-		LuaFunctionReference(lua_State* L, int ref);
-		virtual ~LuaFunctionReference();
-
-		virtual variant getValue(const std::string& key) const;
-		virtual variant call();
-	private:
-		lua_State* L_; 
-		int ref_;
-
-		LuaFunctionReference();
-		LuaFunctionReference(const LuaFunctionReference&);
-	};
-
-	typedef boost::intrusive_ptr<LuaFunctionReference> LuaFunctionReferencePtr;
-
-	class LuaContext
+	class LuaContext : public reference_counted_object
 	{
 	public:
 		LuaContext();
-		explicit LuaContext(game_logic::FormulaCallable& callable);
+		explicit LuaContext(game_logic::FormulaObject&);
 		virtual ~LuaContext();
 
-		static LuaContext& getInstance();
+		lua_State* getState() const { return state_; }
 
-		std::shared_ptr<lua_State>& context() { return state_; }
-		lua_State* getContextPtr() { return state_.get(); }
-
+		void setSelfObject(game_logic::FormulaObject&);
 		void setSelfCallable(game_logic::FormulaCallable& callable);
 
 		bool execute(const variant& value, game_logic::FormulaCallable* callable=nullptr);
@@ -103,13 +90,40 @@ namespace lua
 		LuaCompiledPtr compile(const std::string& name, const std::string& str);
 
 		CompiledChunk* compileChunk(const std::string& name, const std::string& str);
+
+		std::string persist();
 	private:
 		void init();
 
-		std::shared_ptr<lua_State> state_;
+		lua_State * state_;
 
 		LuaContext(const LuaContext&);
+
 	};
+
+	typedef boost::intrusive_ptr<LuaContext> LuaContextPtr;
+
+	class LuaFunctionReference : public game_logic::FormulaCallable
+	{
+	public:
+		LuaFunctionReference(lua_State* L, int ref);
+		virtual ~LuaFunctionReference();
+
+		virtual variant call() const;
+		virtual variant call(const variant & args) const;
+		void set_return_type(const variant_type_ptr &) const;
+	private:
+		LuaContextPtr L_;
+		int ref_;
+		mutable variant_type_ptr target_return_type_;
+
+		DECLARE_CALLABLE(LuaFunctionReference);
+
+		LuaFunctionReference();
+		LuaFunctionReference(const LuaFunctionReference&);
+	};
+
+	typedef boost::intrusive_ptr<LuaFunctionReference> LuaFunctionReferencePtr;
 }
 
 #endif

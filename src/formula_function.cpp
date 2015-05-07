@@ -333,6 +333,60 @@ namespace game_logic
 			int max_entries_;
 		};
 
+		class DateTime : public game_logic::FormulaCallable {
+		public:
+			DateTime(time_t unix, const tm* tm) : unix_(unix), tm_(*tm)
+			{}
+			
+		private:
+			DECLARE_CALLABLE(DateTime);
+
+			time_t unix_;
+			tm tm_;
+		};
+
+		BEGIN_DEFINE_CALLABLE_NOBASE(DateTime)
+		DEFINE_FIELD(unix, "int")
+			return variant(static_cast<int>(obj.unix_));
+		DEFINE_FIELD(second, "int")
+			return variant(obj.tm_.tm_sec);
+		DEFINE_FIELD(minute, "int")
+			return variant(obj.tm_.tm_min);
+		DEFINE_FIELD(hour, "int")
+			return variant(obj.tm_.tm_hour);
+		DEFINE_FIELD(day, "int")
+			return variant(obj.tm_.tm_mday);
+		DEFINE_FIELD(yday, "int")
+			return variant(obj.tm_.tm_yday);
+		DEFINE_FIELD(month, "int")
+			return variant(obj.tm_.tm_mon + 1);
+		DEFINE_FIELD(year, "int")
+			return variant(obj.tm_.tm_year + 1900);
+		DEFINE_FIELD(is_dst, "bool")
+			return variant::from_bool(bool(obj.tm_.tm_isdst));
+		DEFINE_FIELD(weekday, "string")
+			std::string weekday;
+			switch(obj.tm_.tm_wday) {
+				case 0: weekday = "Sunday"; break;
+				case 1: weekday = "Monday"; break;
+				case 2: weekday = "Tuesday"; break;
+				case 3: weekday = "Wednesday"; break;
+				case 4: weekday = "Thursday"; break;
+				case 5: weekday = "Friday"; break;
+				case 6: weekday = "Saturday"; break;
+			};
+			return variant(weekday);
+
+		END_DEFINE_CALLABLE(DateTime)
+
+		FUNCTION_DEF(time, 0, 0, "time() -> date_time: returns the current real time")
+			Formula::failIfStaticContext();
+			time_t t = time(NULL);
+			tm* ltime = localtime(&t);
+			return variant(new DateTime(t, ltime));
+		RETURN_TYPE("builtin date_time")
+		END_FUNCTION_DEF(time)
+
 		FUNCTION_DEF(overload, 1, -1, "overload(fn...): makes an overload of functions")
 			std::vector<variant> functions;
 			for(ExpressionPtr expression : args()) {
@@ -2937,6 +2991,25 @@ FUNCTION_DEF_IMPL
 			return variant_type::get_type(variant::VARIANT_TYPE_INT);
 		END_FUNCTION_DEF(index)
 
+#if defined(USE_LUA)
+		FUNCTION_DEF(CompileLua, 3, 3, "CompileLua(object, string, string) Compiles a lua script against a lua-enabled object. Returns the compiled script as an object with an execute method. The second argument is the 'name' of the script as will appear in lua debugging output (normally a filename). The third argument is the script.")
+			game_logic::FormulaCallable* callable = const_cast<game_logic::FormulaCallable*>(args()[0]->evaluate(variables).as_callable());
+			ASSERT_LOG(callable != nullptr, "Argument to CompileLua was not a formula callable");
+			game_logic::FormulaObject * object = dynamic_cast<game_logic::FormulaObject*>(callable);
+			ASSERT_LOG(object != nullptr, "Argument to CompileLua was not a formula object");
+			boost::intrusive_ptr<lua::LuaContext> ctx = object->get_lua_context();
+			ASSERT_LOG(ctx, "Argument to CompileLua was not a formula object with a lua context. (Check class definition?)");
+			std::string name = args()[1]->evaluate(variables).as_string();
+			std::string script = args()[2]->evaluate(variables).as_string();
+			lua::LuaCompiledPtr result = ctx->compile(name, script);
+			return variant(result.get());
+		FUNCTION_ARGS_DEF
+			ARG_TYPE("object")
+			ARG_TYPE("string")
+			ARG_TYPE("string")
+		END_FUNCTION_DEF(CompileLua)
+#endif
+
 		namespace 
 		{
 			void evaluate_expr_for_benchmark(const FormulaExpression* expr, const FormulaCallable* variables, int ntimes)
@@ -3368,10 +3441,12 @@ FUNCTION_DEF_IMPL
 				}
 			}
 
+
+		protected:
 			void surrenderReferences(GarbageCollector* collector) {
-				collector->surrenderVariant(&variant_attr_);
-				collector->surrenderVariant(&val_);
-				collector->surrenderVariant(&target_);
+				collector->surrenderVariant(&target_, "TARGET");
+				collector->surrenderVariant(&val_, "VALUE");
+				collector->surrenderVariant(&variant_attr_, "VARIANT_ATTR");
 			}
 		private:
 			mutable variant target_;
@@ -3402,6 +3477,12 @@ FUNCTION_DEF_IMPL
 					ob.mutateValue(attr_, ob.queryValue(attr_) + val_);
 				}
 			}
+		protected:
+			void surrenderReferences(GarbageCollector* collector) {
+				collector->surrenderVariant(&target_, "TARGET");
+				collector->surrenderVariant(&val_, "VALUE");
+				collector->surrenderVariant(&variant_attr_, "VARIANT_ATTR");
+			}
 		private:
 			mutable variant target_;
 			std::string attr_;
@@ -3422,6 +3503,11 @@ FUNCTION_DEF_IMPL
 
 			void setValue(const variant& value) { value_ = value; }
 
+		protected:
+			void surrenderReferences(GarbageCollector* collector) {
+				collector->surrenderVariant(&value_, "VALUE");
+			}
+
 		private:
 			int slot_;
 			variant value_;
@@ -3441,6 +3527,12 @@ FUNCTION_DEF_IMPL
 			}
 
 			void setValue(const variant& value) { value_ = value; }
+
+		protected:
+			void surrenderReferences(GarbageCollector* collector) {
+				collector->surrenderPtr(&target_, "TARGET");
+				collector->surrenderVariant(&value_, "VALUE");
+			}
 
 		private:
 			game_logic::FormulaCallablePtr target_;
@@ -3463,6 +3555,12 @@ FUNCTION_DEF_IMPL
 
 			void setValue(const variant& value) { value_ = value; }
 
+		protected:
+			void surrenderReferences(GarbageCollector* collector) {
+				collector->surrenderPtr(&target_, "TARGET");
+				collector->surrenderVariant(&value_, "VALUE");
+			}
+
 		private:
 			game_logic::FormulaCallablePtr target_;
 			int slot_;
@@ -3481,6 +3579,11 @@ FUNCTION_DEF_IMPL
 			}
 
 			void setValue(const variant& value) { value_ = value; }
+
+		protected:
+			void surrenderReferences(GarbageCollector* collector) {
+				collector->surrenderVariant(&value_, "VALUE");
+			}
 
 		private:
 			int slot_;
@@ -4604,6 +4707,21 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 	FUNCTION_ARGS_DEF
 		ARG_TYPE("string");
 	END_FUNCTION_DEF(trigger_debug_garbage_collection)
+
+	FUNCTION_DEF(debug_object_info, 1, 1, "debug_object_info(string) -> give info about the object at the given address")
+		std::string obj = args()[0]->evaluate(variables).as_string();
+		const intptr_t addr_id = static_cast<intptr_t>(strtoll(obj.c_str(), nullptr, 16));
+		void* ptr = reinterpret_cast<void*>(addr_id);
+		GarbageCollectible* obj_ptr = GarbageCollectible::debugGetObject(ptr);
+		if(obj_ptr == nullptr) {
+			return variant("(Invalid object)");
+		} else {
+			return variant(obj_ptr->debugObjectSpew());
+		}
+	FUNCTION_ARGS_DEF
+		ARG_TYPE("string");
+	END_FUNCTION_DEF(debug_object_info)
+
 
 	class debug_dump_textures_command : public game_logic::CommandCallable
 	{

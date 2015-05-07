@@ -56,13 +56,13 @@ namespace KRE
 		  model_changed_(false),
 		  window_(WindowManager::getMainWindow()),
 		  size_change_key_(-1),
-		  mvp_()
+		  pv_()
 	{
 		width_ = getWindow()->width();
 		height_ = getWindow()->height();			
 		LOG_DEBUG("canvas dimensions set to: " << width_ << " x " << height_);
 		auto wnd = window_.lock();
-		mvp_ = glm::ortho(0.0f, static_cast<float>(width_), static_cast<float>(height_), 0.0f);
+		pv_ = glm::ortho(0.0f, static_cast<float>(width_), static_cast<float>(height_), 0.0f);
 		if(wnd) {
 			size_change_key_ = wnd->registerSizeChangeObserver([this](int w, int h) {
 				this->setDimensions(w, h);
@@ -74,7 +74,7 @@ namespace KRE
 	{
 		width_ = w;
 		height_ = h;
-		mvp_ = glm::ortho(0.0f, static_cast<float>(width_), static_cast<float>(height_), 0.0f);
+		pv_ = glm::ortho(0.0f, static_cast<float>(width_), static_cast<float>(height_), 0.0f);
 		handleDimensionsChanged();
 		LOG_DEBUG("canvas dimensions set to: " << width_ << " x " << height_);
 	}
@@ -146,166 +146,5 @@ namespace KRE
 				});	
 			}
 		}
-	}
-
-	glm::mat4 Canvas::getModelMatrix() const 
-	{
-		if(model_changed_) {
-			model_changed_ = false;
-			
-			model_matrix_ = glm::mat4(1.0f);
-			if(!get_translation_stack().empty()) {
-				auto& top = get_translation_stack().top();
-				model_matrix_ = glm::translate(model_matrix_, glm::vec3(top, 0.0f));
-			}
-
-			if(!get_rotation_stack().empty()) {
-				model_matrix_ = glm::rotate(model_matrix_, get_rotation_stack().top(), glm::vec3(0.0f, 0.0f, 1.0f));
-			}
-
-			if(!get_scale_stack().empty()) {
-				auto& top = get_scale_stack().top();
-				model_matrix_ = glm::scale(model_matrix_, glm::vec3(top, 1.0f));
-			}
-		}
-		if(is_global_model_matrix_valid()) {
-			return get_global_model_matrix() * model_matrix_;
-		}
-		return model_matrix_;
-	}
-
-	glm::vec2 Canvas::getCurrentTranslation()
-	{
-		if(get_translation_stack().empty()) {
-			return glm::vec2();
-		}
-		return get_translation_stack().top();
-	}
-
-	float Canvas::getCurrentRotation()
-	{
-		if(get_rotation_stack().empty()) {
-			return 0;
-		}
-		return get_rotation_stack().top();
-	}
-
-	glm::vec2 Canvas::getCurrentScale()
-	{
-		if(get_scale_stack().empty()) {
-			return glm::vec2(1.0f,1.0f);
-		}
-		return get_scale_stack().top();
-	}
-						 
-	Canvas::ModelManager::ModelManager()
-		: canvas_(KRE::Canvas::getInstance())
-	{
-	}
-
-	Canvas::ModelManager::ModelManager(int tx, int ty, float angle, float scale)
-		: canvas_(KRE::Canvas::getInstance())
-	{
-		if(get_translation_stack().empty()) {
-			get_translation_stack().emplace(static_cast<float>(tx), static_cast<float>(ty));
-		} else {
-			auto top = get_translation_stack().top();
-			get_translation_stack().emplace(static_cast<float>(tx) + top.x, static_cast<float>(ty) + top.y);
-		}
-
-		if(get_rotation_stack().empty()) {
-			get_rotation_stack().emplace(angle);
-		} else {
-			auto top = get_rotation_stack().top();
-			get_rotation_stack().emplace(angle + top);
-		}
-
-		if(get_scale_stack().empty()) {
-			get_scale_stack().emplace(scale, scale);
-		} else {
-			auto top = get_scale_stack().top();
-			get_scale_stack().emplace(scale * top.x, scale * top.y);
-		}
-		canvas_->model_changed_ = true;
-	}
-
-	Canvas::ModelManager::~ModelManager() 
-	{
-		if(!get_translation_stack().empty()) {
-			get_translation_stack().pop();
-			canvas_->model_changed_ = true;
-		}
-		if(!get_rotation_stack().empty()) {
-			get_rotation_stack().pop();
-			canvas_->model_changed_ = true;
-		}
-		if(!get_scale_stack().empty()) {
-			get_scale_stack().pop();
-			canvas_->model_changed_ = true;
-		}
-	}
-
-	void Canvas::ModelManager::setIdentity()
-	{
-		if(!get_translation_stack().empty()) {
-			auto& top = get_translation_stack().top();
-			top.x = top.y = 0.0f;
-			canvas_->model_changed_ = true;
-		}
-		if(!get_rotation_stack().empty()) {
-			get_rotation_stack().top() = 0.0f;
-			canvas_->model_changed_ = true;
-		}
-		if(!get_scale_stack().empty()) {
-			auto& top = get_scale_stack().top();
-			top.x = top.y = 1.0f;
-			canvas_->model_changed_ = true;
-		}
-	}
-
-	void Canvas::ModelManager::translate(int tx, int ty)
-	{
-		if(get_translation_stack().empty()) {
-			get_translation_stack().emplace(static_cast<float>(tx), static_cast<float>(ty));
-		} else {
-			auto& top = get_translation_stack().top();
-			top.x += static_cast<float>(tx);
-			top.y += static_cast<float>(ty);
-		}
-		canvas_->model_changed_ = true;
-	}
-
-	void Canvas::ModelManager::rotate(float angle)
-	{
-		if(get_rotation_stack().empty()) {
-			get_rotation_stack().emplace(angle);
-		} else {
-			get_rotation_stack().top() += angle;
-		}
-		canvas_->model_changed_ = true;
-	}
-
-	void Canvas::ModelManager::scale(float sx, float sy)
-	{
-		if(get_scale_stack().empty()) {
-			get_scale_stack().emplace(sx, sy);
-		} else {
-			auto& top = get_scale_stack().top();
-			top.x += sx;
-			top.y += sy;
-		}
-		canvas_->model_changed_ = true;
-	}
-
-	void Canvas::ModelManager::scale(float s)
-	{
-		if(get_scale_stack().empty()) {
-			get_scale_stack().emplace(s, s);
-		} else {
-			auto& top = get_scale_stack().top();
-			top.x *= s;
-			top.y *= s;
-		}
-		canvas_->model_changed_ = true;
 	}
 }

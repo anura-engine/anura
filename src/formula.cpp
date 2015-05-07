@@ -252,27 +252,6 @@ namespace game_logic
 	namespace 
 	{
 		#if defined(USE_LUA)
-		class LuaExpression : public FormulaExpression {
-		public:
-			explicit LuaExpression(const variant& lua_code) 
-				: code_(lua_code)
-			{
-			}
-
-			variant execute(const FormulaCallable& /*variables*/) const {
-				return variant(new FnCommandCallableArg([=](FormulaCallable* callable) {
-					lua::LuaContext context;
-					context.execute(this->code_, callable);
-				}));
-			}
-
-		private:
-			variant_type_ptr getVariantType() const {
-				return variant_type::get_commands();
-			}
-			variant code_;
-		};
-
 		class LuaFnExpression : public FormulaExpression {
 		public:
 			explicit LuaFnExpression(lua::LuaFunctionReference* fn_ref) 
@@ -1287,16 +1266,82 @@ namespace game_logic
 
 			ConstFormulaCallableDefinitionPtr getModifiedDefinitionBasedOnResult(bool result, ConstFormulaCallableDefinitionPtr current_def, variant_type_ptr expression_is_this_type) const {
 
-				std::string key_name;
-				if(right_def_ && left_->isIdentifier(&key_name)) {
-					ConstFormulaCallableDefinitionPtr new_right_def = right_->queryModifiedDefinitionBasedOnResult(result, right_def_, expression_is_this_type);
-					const int slot = current_def->getSlot(key_name);
-					if(new_right_def && slot >= 0) {
-						return modify_formula_callable_definition(current_def, slot, variant_type_ptr(), new_right_def.get());
-					}
+				std::vector<const DotExpression*> expr;
+				if(isIdentifierChain(&expr) == false) {
+					return ConstFormulaCallableDefinitionPtr();
 				}
 
-				return ConstFormulaCallableDefinitionPtr();
+				//This expressoin is the top of an identifier chain -- i.e. expression of the form a.b.c.d
+				//where a, b, c, and d are all plain identifiers. They are stored with right-associativity
+				//meaning this expression is the last expression in the chain.
+
+				ConstFormulaCallableDefinitionPtr def;
+				while(expr.empty() == false) {
+					if(!expr.back()->right_def_) {
+						return ConstFormulaCallableDefinitionPtr();
+					}
+
+					ConstFormulaCallableDefinitionPtr new_right_def = def;
+					if(!new_right_def) {
+						new_right_def = expr.back()->right_->queryModifiedDefinitionBasedOnResult(result, expr.back()->right_def_, expression_is_this_type);
+					}
+
+					auto last_expr = expr.back();
+
+					expr.pop_back();
+
+					std::string key_name;
+
+					ConstFormulaCallableDefinitionPtr context_def = current_def;
+					if(expr.empty() == false) {
+						context_def = expr.back()->right_def_;
+						if(!context_def) {
+							return ConstFormulaCallableDefinitionPtr();
+						}
+
+						if(!expr.back()->right_->isIdentifier(&key_name)) {
+							return ConstFormulaCallableDefinitionPtr();
+						}
+					} else {
+						if(!last_expr->left_->isIdentifier(&key_name)) {
+							return ConstFormulaCallableDefinitionPtr();
+						}
+					}
+
+					const int slot = context_def->getSlot(key_name);
+
+					def = modify_formula_callable_definition(context_def, slot, variant_type_ptr(), new_right_def.get());
+				}
+
+				return def;
+			}
+
+			//function which tells you if this is the top of an identifier chain -- i.e. an expression in
+			//the form a.b.c.d which is held using right-associativity. Gives you the list
+			//of individual expressions.
+			bool isIdentifierChain(std::vector<const DotExpression*>* expressions) const {
+
+				std::string id;
+				if(!right_->isIdentifier(&id)) {
+					return false;
+				}
+
+				if(left_->isIdentifier(&id)) {
+					expressions->push_back(this);
+					return true;
+				}
+
+				const DotExpression* left_dot = dynamic_cast<const DotExpression*>(left_.get());
+				if(!left_dot) {
+					return false;
+				}
+
+				if(left_dot->isIdentifierChain(expressions)) {
+					expressions->push_back(this);
+					return true;
+				}
+
+				return false;
 			}
 
 			std::vector<ConstExpressionPtr> getChildren() const {
@@ -1980,7 +2025,7 @@ namespace game_logic
 					if(static_cast<unsigned>(slot) < results_cache_.size() && results_cache_[slot].is_null() == false) {
 						return results_cache_[slot];
 					} else {
-						variant result = info_->entries[slot]->evaluate(*base_);
+						variant result = info_->entries[slot]->evaluate(*this);
 						if(results_cache_.size() <= static_cast<unsigned>(slot)) {
 							results_cache_.resize(slot+1);
 						}
@@ -2014,6 +2059,24 @@ namespace game_logic
 			}
 	
 		private:
+			ExpressionPtr optimize() const {
+
+				WhereExpression* base_where = dynamic_cast<WhereExpression*>(body_.get());
+				if(base_where == NULL) {
+					return ExpressionPtr();
+				}
+
+				WhereVariablesInfo& base_info = *base_where->info_;
+
+				WhereVariablesInfoPtr res(new WhereVariablesInfo(*info_));
+				res->callable_where_def = base_info.callable_where_def;
+
+				res->names.insert(res->names.end(), base_info.names.begin(), base_info.names.end());
+				res->entries.insert(res->entries.end(), base_info.entries.begin(), base_info.entries.end());
+
+				return ExpressionPtr(new WhereExpression(base_where->body_, res));
+			}
+
 			variant_type_ptr getVariantType() const {
 				return body_->queryVariantType();
 			}
@@ -2331,9 +2394,9 @@ namespace game_logic
 				precedence_map["asserting"] = ++n;
 				precedence_map["::"] = ++n;
 				precedence_map["<-"] = ++n;
-				precedence_map["not"] = ++n;
 				precedence_map["or"]    = ++n;
 				precedence_map["and"]   = ++n;
+				precedence_map["not"] = ++n;
 				precedence_map["in"] = ++n;
 				precedence_map["is"] = ++n;
 				precedence_map["="]     = ++n;
@@ -2575,7 +2638,7 @@ namespace game_logic
 					++parens;
 				} else if(i1->type == FFL_TOKEN_TYPE::RPARENS || i1->type == FFL_TOKEN_TYPE::RSQUARE || i1->type == FFL_TOKEN_TYPE::RBRACKET) {
 					--parens;
-				} else if((i1->type == FFL_TOKEN_TYPE::POINTER || i1->type == FFL_TOKEN_TYPE::COLON) && !parens ) {
+				} else if(i1->type == FFL_TOKEN_TYPE::COLON && !parens ) {
 					if (!check_pointer) {
 						check_pointer = true;
 
@@ -3510,7 +3573,9 @@ FormulaPtr Formula::createOptionalFormula(const variant& val, FunctionSymbolTabl
 	if(lang == FORMULA_LANGUAGE::FFL) {
 		return FormulaPtr(new Formula(val, symbols, callableDefinition));
 	} else {
-		return FormulaPtr(new Formula(val, FORMULA_LANGUAGE::LUA));
+		assert(false);
+		return FormulaPtr();
+		//return FormulaPtr(new Formula(val, FORMULA_LANGUAGE::LUA));
 	}
 }
 
@@ -3633,15 +3698,6 @@ Formula::Formula(const variant& val, FunctionSymbolTable* symbols, ConstFormulaC
 
 #ifndef NO_EDITOR
 	all_formulae().insert(this);
-#endif
-}
-
-Formula::Formula(const variant& lua_fn, FORMULA_LANGUAGE lang)
-{
-#if defined(USE_LUA)
-	lua::LuaFunctionReference* fn_ref = lua_fn.try_convert<lua::LuaFunctionReference>();
-	ASSERT_LOG(fn_ref != nullptr, "FATAL: Couldn't convert function reference to the correct type.");
-	expr_.reset(new LuaFnExpression(fn_ref));
 #endif
 }
 

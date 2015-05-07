@@ -327,7 +327,9 @@ namespace preferences
 				result += " ";
 			}
 
-			result += i->second.helpstring;
+			if(i->second.helpstring) {
+				result += i->second.helpstring;
+			}
 			result += "\n";
 			return_value += result;
 		}

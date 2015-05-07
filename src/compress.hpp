@@ -23,6 +23,7 @@
 
 #pragma once
 
+#include <string>
 #include <vector>
 
 #include "base64.hpp"
@@ -37,6 +38,10 @@ namespace zip
 	{
 		const char* msg;
 	};
+
+	//these are slower. Prefer the vector<char> versions.
+	std::string compress(const std::string& data, int compression_level=-1);
+	std::string decompress(const std::string& data);
 
 	std::vector<char> compress(const std::vector<char>& data, int compression_level=-1);
 	std::vector<char> decompress(const std::vector<char>& data);
