@@ -1113,7 +1113,7 @@ namespace game_logic
 	
 		END_FUNCTION_DEF(mix)
 
-		FUNCTION_DEF(keys, 1, 1, "keys(map) -> list: gives the keys for a map")
+		FUNCTION_DEF(keys, 1, 1, "keys(map|custom_obj|level) -> list: gives the keys for a map")
 			const variant map = args()[0]->evaluate(variables);
 			if(map.is_callable()) {
 				std::vector<variant> v;
@@ -1128,7 +1128,7 @@ namespace game_logic
 			return map.getKeys();
 
 		FUNCTION_ARGS_DEF
-			ARG_TYPE("map|object");
+			ARG_TYPE("map|object|level");
 		FUNCTION_TYPE_DEF
 			return variant_type::get_list(args()[0]->queryVariantType()->is_map_of().first);
 		END_FUNCTION_DEF(keys)
