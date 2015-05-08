@@ -141,6 +141,8 @@ namespace module
 		int nfiles_written() const { return nfiles_written_; }
 
 		void set_install_image(bool value) { install_image_ = value; }
+
+		bool is_new_install() const { return is_new_install_; }
 	private:
 		enum OPERATION_TYPE { OPERATION_NONE, OPERATION_INSTALL, OPERATION_PREPARE_INSTALL, OPERATION_GET_STATUS, OPERATION_GET_ICONS, OPERATION_RATE };
 		OPERATION_TYPE operation_;
@@ -160,6 +162,8 @@ namespace module
 		//a response that is ready for installation. Only used when operation_ is
 		//OPERATION_PREPARE_INSTALL
 		std::string pending_response_;
+
+		bool is_new_install_;
 
 		void on_response(std::string response);
 		void on_error(std::string response);

@@ -76,7 +76,7 @@ namespace
 	};
 }
 
-auto_update_window::auto_update_window() : window_(), nframes_(0), start_time_(SDL_GetTicks()), percent_(0.0)
+auto_update_window::auto_update_window() : window_(), nframes_(0), start_time_(SDL_GetTicks()), percent_(0.0), is_new_install_(false)
 {
 }
 
@@ -94,10 +94,15 @@ void auto_update_window::set_message(const std::string& str)
 	message_ = str;
 }
 
+void auto_update_window::set_error_message(const std::string& str)
+{
+	error_message_ = str;
+}
+
 void auto_update_window::process()
 {
 	++nframes_;
-	if(window_ == nullptr && SDL_GetTicks() - start_time_ > 2000) {
+	if(window_ == nullptr && (SDL_GetTicks() - start_time_ > 2000 || is_new_install_)) {
 		manager_.reset(new SDL::SDL());
 
 		variant_builder hints;
@@ -174,6 +179,13 @@ void auto_update_window::draw() const
 	if(message_surf != nullptr) {
 		canvas->blitTexture(message_surf, 0, window_->width()/2 - message_surf->width()/2, 40 + window_->height()/2 - message_surf->height()/2);
 	}
+
+	if(error_message_ != "") {
+		KRE::TexturePtr message_surf(render_updater_text(error_message_, KRE::Color(255, 64, 64)));
+		if(message_surf != nullptr) {
+			canvas->blitTexture(message_surf, 0, window_->width()/2 - message_surf->width()/2, 80 + window_->height()/2 - message_surf->height()/2);
+		}
+	}
 	
 	progress_animation& anim = progress_animation::get();
 	auto anim_tex = anim.tex();
@@ -185,10 +197,9 @@ void auto_update_window::draw() const
 	window_->swap();
 }
 
-COMMAND_LINE_UTILITY(update_launcher)
+namespace {
+bool do_auto_update(std::deque<std::string> argv, auto_update_window& update_window, std::string& error_msg)
 {
-	std::deque<std::string> argv(args.begin(), args.end());
-
 #ifdef _MSC_VER
 	std::string anura_exe = "anura.exe";
 #else
@@ -253,9 +264,22 @@ COMMAND_LINE_UTILITY(update_launcher)
 
 	variant_builder update_info;
 
+
 	if(update_anura || update_module) {
 		boost::intrusive_ptr<module::client> cl, anura_cl;
-		
+
+		bool is_new_install = false;
+
+#define HANDLE_ERROR(msg) \
+			LOG_ERROR(msg); \
+		if(is_new_install) { \
+			std::ostringstream s; \
+			s << msg; \
+			error_msg = s.str(); \
+			return false; \
+		}
+			
+
 		if(update_module) {
 			cl.reset(new module::client);
 			const bool res = cl->install_module(module::get_module_name(), force);
@@ -263,6 +287,9 @@ COMMAND_LINE_UTILITY(update_launcher)
 				cl.reset();
 			} else {
 				update_info.add("attempt_module", true);
+				if(cl->is_new_install()) {
+					is_new_install = true;
+				}
 			}
 		}
 
@@ -274,7 +301,16 @@ COMMAND_LINE_UTILITY(update_launcher)
 				anura_cl.reset();
 			} else {
 				update_info.add("attempt_anura", true);
+				if(anura_cl->is_new_install()) {
+					is_new_install = true;
+				}
 			}
+		}
+
+		fprintf(stderr, "is_new_install = %d\n", (int)is_new_install);
+
+		if(is_new_install) {
+			timeout_ms *= 10;
 		}
 
 		int nbytes_transferred = 0, nbytes_anura_transferred = 0;
@@ -285,7 +321,10 @@ COMMAND_LINE_UTILITY(update_launcher)
 		int nupdate_cycle = 0;
 
 		if(cl || anura_cl) {
-		auto_update_window update_window;
+		update_window.set_error_message(error_msg);
+		if(is_new_install) {
+			update_window.set_is_new_install();
+		}
 		while(cl || anura_cl) {
 			update_window.process();
 
@@ -322,12 +361,16 @@ COMMAND_LINE_UTILITY(update_launcher)
 
 			const int time_taken = profile::get_tick_time() - start_time;
 			if(time_taken > timeout_ms) {
-				LOG_ERROR("Timed out updating module. Canceling. " << time_taken << "ms vs " << timeout_ms << "ms");
+				HANDLE_ERROR("Timed out updating module. Canceling. " << time_taken << "ms vs " << timeout_ms << "ms");
 				break;
 			}
 
 			char msg[1024];
-			sprintf(msg, "Updating Game. Transferred %.02f/%.02fMB", float(nbytes_obtained/(1024.0*1024.0)), float(nbytes_needed/(1024.0*1024.0)));
+			if(nbytes_needed == 0) {
+				sprintf(msg, "Updating Game. Contacting server...");
+			} else {
+				sprintf(msg, "Updating Game. Transferred %.02f/%.02fMB", float(nbytes_obtained/(1024.0*1024.0)), float(nbytes_needed/(1024.0*1024.0)));
+			}
 
 			update_window.set_message(msg);
 
@@ -338,6 +381,10 @@ COMMAND_LINE_UTILITY(update_launcher)
 			SDL_Event event;
 			while(SDL_PollEvent(&event)) {
 				if(event.type == SDL_QUIT) {
+					if(is_new_install) {
+						return true;
+					}
+
 					cl.reset();
 					anura_cl.reset();
 					break;
@@ -348,7 +395,7 @@ COMMAND_LINE_UTILITY(update_launcher)
 			while(static_cast<int>(profile::get_tick_time()) < target_end && (cl || anura_cl)) {
 				if(cl && !cl->process()) {
 					if(cl->error().empty() == false) {
-						LOG_ERROR("Error while updating module: " << cl->error().c_str());
+						HANDLE_ERROR("Error while updating module: " << cl->error().c_str());
 						update_info.add("module_error", variant(cl->error()));
 					} else {
 						update_info.add("complete_module", true);
@@ -358,7 +405,7 @@ COMMAND_LINE_UTILITY(update_launcher)
 
 				if(anura_cl && !anura_cl->process()) {
 					if(anura_cl->error().empty() == false) {
-						LOG_ERROR("Error while updating anura: " << anura_cl->error().c_str());
+						HANDLE_ERROR("Error while updating anura: " << anura_cl->error().c_str());
 						update_info.add("anura_error", variant(anura_cl->error()));
 					} else {
 						update_info.add("complete_anura", true);
@@ -413,4 +460,16 @@ COMMAND_LINE_UTILITY(update_launcher)
 
 	ASSERT_LOG(has_file, "Could not execute " << anura_exe << " from " << working_dir << ". The file does not exist. Try re-running the update process.");
 	ASSERT_LOG(false, "Could not execute " << anura_exe << " from " << working_dir << ". The file exists and appears to be executable.");
+
+	return false;
+}
+}
+
+COMMAND_LINE_UTILITY(update_launcher)
+{
+	auto_update_window update_window;
+	std::string error_msg;
+	std::deque<std::string> argv(args.begin(), args.end());
+	while(!do_auto_update(argv, update_window, error_msg)) {
+	}
 }

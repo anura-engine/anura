@@ -951,7 +951,8 @@ COMMAND_LINE_UTILITY(generate_manifest)
 					   nbytes_transferred_(0),
 					   nbytes_total_(0),
 					   nfiles_written_(0),
-					   install_image_(false)
+					   install_image_(false),
+					   is_new_install_(true)
 	{
 	}
 
@@ -1015,6 +1016,8 @@ const char* InstallImagePath = ".";
 			if(!current_path.empty() && !force && sys::file_exists(current_path + "/manifest.cfg")) {
 				request.add("manifest", json::parse(sys::read_file(current_path + "/manifest.cfg")));
 			}
+
+			is_new_install_ = false;
 		}
 
 		LOG_INFO("Requesting module '" << module_id << "'");
@@ -1101,7 +1104,8 @@ const char* InstallImagePath = ".";
 		try {
 			variant doc = json::parse(response, json::JSON_PARSE_OPTIONS::NO_PREPROCESSOR);
 			if(doc[variant("status")] != variant("ok")) {
-				data_["error"] = doc[variant("message")];
+				on_error(doc[variant("status")].as_string());
+
 				LOG_ERROR("SET ERROR: " << doc.write_json());
 			} else if(operation_ == OPERATION_INSTALL) {
 
