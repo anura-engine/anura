@@ -2211,7 +2211,7 @@ FUNCTION_DEF_IMPL
 		class map_callable : public FormulaCallable {
 			public:
 				explicit map_callable(const FormulaCallable& backup)
-				: backup_(&backup)
+				: backup_(&backup), index_(0)
 				{}
 
 				void setValue_name(const std::string& name) { value_name_ = name; }

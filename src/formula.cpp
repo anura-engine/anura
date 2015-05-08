@@ -2217,7 +2217,7 @@ namespace game_logic
 
 		class AssertExpression : public FormulaExpression {
 		public:
-			AssertExpression(ExpressionPtr body, const std::vector<ExpressionPtr> asserts, ExpressionPtr debug_expr)
+			AssertExpression(ExpressionPtr body, const std::vector<ExpressionPtr>& asserts, ExpressionPtr debug_expr)
 			  : FormulaExpression("_assert"), body_(body), asserts_(asserts), debug_(debug_expr)
 			{
 			}

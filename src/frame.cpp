@@ -168,6 +168,9 @@ Frame::Frame(variant node)
 	                rect(node["platform_x"].as_int(),
 	                     node["platform_y"].as_int(),
 	                     node["platform_w"].as_int(), 1)),
+	 platform_x_(0),
+	 platform_y_(0),
+	 platform_w_(0),
 	 img_rect_(node.has_key("rect") ? rect(node["rect"]) :
 	           rect(node["x"].as_int(),
 	                node["y"].as_int(),

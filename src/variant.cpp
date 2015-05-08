@@ -342,7 +342,7 @@ private:
 struct variant_fn : public GarbageCollectible {
 	variant::debug_info info;
 
-	variant_fn()
+	variant_fn() : base_slot(0)
 	{}
 
 	void surrenderReferences(GarbageCollector* collector) override {
@@ -366,7 +366,7 @@ struct variant_fn : public GarbageCollectible {
 struct variant_generic_fn : public GarbageCollectible {
 	variant::debug_info info;
 
-	variant_generic_fn()
+	variant_generic_fn() : base_slot(0)
 	{}
 
 	void surrenderReferences(GarbageCollector* collector) override {
@@ -817,7 +817,7 @@ const variant& variant::operator[](size_t n) const
 	return list_->begin[n];
 }
 
-const variant& variant::operator[](const variant v) const
+const variant& variant::operator[](const variant& v) const
 {
 	if(type_ == VARIANT_TYPE_CALLABLE) {
 		assert(v.as_int() == 0);

@@ -2930,7 +2930,7 @@ RETURN_TYPE("bool")
 		const std::vector<variant> widgets_;
 		//const FormulaCallablePtr callable_;
 	public:
-		set_widgets_command(EntityPtr target, const std::vector<variant> widgets/*, const FormulaCallablePtr callable*/)
+		set_widgets_command(EntityPtr target, const std::vector<variant>& widgets/*, const FormulaCallablePtr callable*/)
 		  : target_(target), widgets_(widgets)//, callable_(callable)
 		{}
 

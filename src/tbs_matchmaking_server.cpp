@@ -978,7 +978,7 @@ private:
 	DbClientPtr db_client_;
 
 	struct SessionInfo {
-		SessionInfo() : game_pending(0), game_port(0), queued_for_game(false), sent_heartbeat(false), send_process_counter(60), messages_this_time_segment(0), time_segment(0), flood_mute_expires(0) {}
+		SessionInfo() : session_id(-1), last_contact(-1), game_pending(0), game_port(0), queued_for_game(false), sent_heartbeat(false), send_process_counter(60), messages_this_time_segment(0), time_segment(0), flood_mute_expires(0) {}
 		int session_id;
 		std::string user_id;
 		std::string game_details;

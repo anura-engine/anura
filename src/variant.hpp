@@ -159,7 +159,7 @@ public:
 	const variant& operator=(const variant& v);
 
 	const variant& operator[](size_t n) const;
-	const variant& operator[](const variant v) const;
+	const variant& operator[](const variant& v) const;
 	const variant& operator[](const std::string& key) const;
 	int num_elements() const;
 

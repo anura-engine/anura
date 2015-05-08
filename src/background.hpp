@@ -64,7 +64,7 @@ private:
 	point offset_;
 
 	struct Layer : public KRE::SceneObject {
-		Layer() : KRE::SceneObject("Background::Layer") {}
+		Layer() : KRE::SceneObject("Background::Layer"), xscale(0), yscale_top(0), yscale_bot(0), xspeed(0), xpad(0), scale(0), xoffset(0), yoffset(0), y1(0), y2(0), foreground(false), blend(false), notile(false), tile_upwards(false), tile_downwards(false) {}
 		std::string image;
 		std::string image_formula;
 		mutable KRE::TexturePtr texture;

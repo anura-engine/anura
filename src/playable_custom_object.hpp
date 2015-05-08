@@ -89,8 +89,6 @@ private:
 
 	int can_interact_;
 	
-	bool reverse_ab_;
-
 	std::unique_ptr<controls::local_controls_lock> control_lock_;
 
 	void operator=(const PlayableCustomObject&);

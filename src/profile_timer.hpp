@@ -29,7 +29,7 @@ namespace profile
 		double elapsedTime;
 		const char* name;
 
-		manager(const char* const str) : name(str)
+		manager(const char* const str) : elapsedTime(0.0), name(str)
 		{
 			frequency = SDL_GetPerformanceFrequency();
 			t1 = SDL_GetPerformanceCounter();
