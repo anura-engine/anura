@@ -1499,6 +1499,15 @@ namespace game_logic
 					return fallback_->queryValueBySlot(slot - 2);
 				}
 
+				void setValue(const std::string& key, const variant& value) override {
+					const_cast<FormulaCallable*>(fallback_)->mutateValue(key, value);
+				}
+
+				void setValueBySlot(int slot, const variant& value) override {
+					ASSERT_LOG(slot >= 2, "Illegal attempt to set comparator values");
+					const_cast<FormulaCallable*>(fallback_)->mutateValueBySlot(slot-2, value);
+				}
+
 				void getInputs(std::vector<FormulaInput>* inputs) const {
 					fallback_->getInputs(inputs);
 				}
@@ -2261,6 +2270,15 @@ FUNCTION_DEF_IMPL
 					}
 				}
 
+				void setValue(const std::string& key, const variant& value) override {
+					const_cast<FormulaCallable*>(backup_.get())->mutateValue(key, value);
+				}
+
+				void setValueBySlot(int slot, const variant& value) override {
+					ASSERT_LOG(slot >= NUM_MAP_CALLABLE_SLOTS, "Illegal variable mutation");
+					const_cast<FormulaCallable*>(backup_.get())->mutateValueBySlot(slot-NUM_MAP_CALLABLE_SLOTS, value);
+				}
+
 				const ConstFormulaCallablePtr backup_;
 				variant key_;
 				variant value_;
@@ -2618,6 +2636,14 @@ FUNCTION_DEF_IMPL
 					return backup_.queryValueBySlot(slot);
 				}
 
+				void setValue(const std::string& key, const variant& value) override {
+					const_cast<FormulaCallable&>(backup_).mutateValue(key, value);
+				}
+
+				void setValueBySlot(int slot, const variant& value) override {
+					const_cast<FormulaCallable&>(backup_).mutateValueBySlot(slot, value);
+				}
+
 				const FormulaCallable& backup_;
 				variant value_, index_;
 			};
@@ -2739,6 +2765,9 @@ FUNCTION_DEF_IMPL
 						boost::intrusive_ptr<map_callable> callable(new map_callable(variables));
 						int index = 0;
 						for(const variant_pair& p : items.as_map()) {
+							if(callable->refcount() > 1) {
+								callable.reset(new map_callable(variables));
+							}
 							callable->set(p.first, p.second, index);
 							const variant val = args().back()->evaluate(*callable);
 							vars.push_back(val);
@@ -2756,6 +2785,9 @@ FUNCTION_DEF_IMPL
 					} else {
 						boost::intrusive_ptr<map_callable> callable(new map_callable(variables));
 						for(int n = 0; n != items.num_elements(); ++n) {
+							if(callable->refcount() > 1) {
+								callable.reset(new map_callable(variables));
+							}
 							callable->set(items[n], n);
 							const variant val = args().back()->evaluate(*callable);
 							vars.push_back(val);
@@ -3593,7 +3625,7 @@ FUNCTION_DEF_IMPL
 		class set_function : public FunctionExpression {
 		public:
 			set_function(const args_list& args, ConstFormulaCallableDefinitionPtr callable_def)
-			  : FunctionExpression("set", args, 2, 3), me_slot_(-1), slot_(-1) {
+			  : FunctionExpression("set", args, 2, 3), slot_(-1) {
 				if(args.size() == 2) {
 					variant literal;
 					args[0]->isLiteral(literal);
@@ -3604,14 +3636,9 @@ FUNCTION_DEF_IMPL
 					}
 
 					if(!key_.empty() && callable_def) {
-						me_slot_ = callable_def->getSlot("me");
-						if(me_slot_ != -1 && callable_def->getEntry(me_slot_)->type_definition) {
-							slot_ = callable_def->getEntry(me_slot_)->type_definition->getSlot(key_);
-						} else {
-							slot_ = callable_def->getSlot(key_);
-							if(slot_ != -1) {
-								cmd_ = boost::intrusive_ptr<set_by_slot_command>(new set_by_slot_command(slot_, variant()));
-							}
+						slot_ = callable_def->getSlot(key_);
+						if(slot_ != -1) {
+							cmd_ = boost::intrusive_ptr<set_by_slot_command>(new set_by_slot_command(slot_, variant()));
 						}
 					}
 
@@ -3619,23 +3646,9 @@ FUNCTION_DEF_IMPL
 			}
 		private:
 			variant execute(const FormulaCallable& variables) const {
-				if(me_slot_ != -1) {
-					variant target = variables.queryValueBySlot(me_slot_);
-					if(slot_ != -1) {
-						return variant(new set_target_by_slot_command(target, slot_, args()[1]->evaluate(variables)));
-					} else if(!key_.empty()) {
-						return variant(new set_command(target, key_, variant(), args()[1]->evaluate(variables)));
-					}
-				} else if(slot_ != -1) {
-					if(cmd_->refcount() == 1) {
-						cmd_->setValue(args()[1]->evaluate(variables));
-						cmd_->setExpression(this);
-						return variant(cmd_.get());
-					}
-
-					cmd_ = boost::intrusive_ptr<set_by_slot_command>(new set_by_slot_command(slot_, args()[1]->evaluate(variables)));
-					cmd_->setExpression(this);
-					return variant(cmd_.get());
+				if(slot_ != -1) {
+					variant target(&variables);
+					return variant(new set_target_by_slot_command(target, slot_, args()[1]->evaluate(variables)));
 				}
 
 				if(!key_.empty()) {
@@ -3686,14 +3699,14 @@ FUNCTION_DEF_IMPL
 			}
 
 			std::string key_;
-			int me_slot_, slot_;
+			int slot_;
 			mutable boost::intrusive_ptr<set_by_slot_command> cmd_;
 		};
 
 		class add_function : public FunctionExpression {
 		public:
 			add_function(const args_list& args, ConstFormulaCallableDefinitionPtr callable_def)
-			  : FunctionExpression("add", args, 2, 3), me_slot_(-1), slot_(-1) {
+			  : FunctionExpression("add", args, 2, 3), slot_(-1) {
 				if(args.size() == 2) {
 					variant literal;
 					args[0]->isLiteral(literal);
@@ -3704,37 +3717,18 @@ FUNCTION_DEF_IMPL
 					}
 
 					if(!key_.empty() && callable_def) {
-						me_slot_ = callable_def->getSlot("me");
-						if(me_slot_ != -1 && callable_def->getEntry(me_slot_)->type_definition) {
-							slot_ = callable_def->getEntry(me_slot_)->type_definition->getSlot(key_);
-						} else {
-							slot_ = callable_def->getSlot(key_);
-							if(slot_ != -1) {
-								cmd_ = boost::intrusive_ptr<add_by_slot_command>(new add_by_slot_command(slot_, variant()));
-							}
+						slot_ = callable_def->getSlot(key_);
+						if(slot_ != -1) {
+							cmd_ = boost::intrusive_ptr<add_by_slot_command>(new add_by_slot_command(slot_, variant()));
 						}
 					}
 				}
 			}
 		private:
 			variant execute(const FormulaCallable& variables) const {
-				if(me_slot_ != -1) {
-					variant target = variables.queryValueBySlot(me_slot_);
-					if(slot_ != -1) {
-						return variant(new add_target_by_slot_command(target, slot_, args()[1]->evaluate(variables)));
-					} else if(!key_.empty()) {
-						return variant(new add_command(target, key_, variant(), args()[1]->evaluate(variables)));
-					}
-				} else if(slot_ != -1) {
-					if(cmd_->refcount() == 1) {
-						cmd_->setValue(args()[1]->evaluate(variables));
-						cmd_->setExpression(this);
-						return variant(cmd_.get());
-					}
-
-					cmd_ = boost::intrusive_ptr<add_by_slot_command>(new add_by_slot_command(slot_, args()[1]->evaluate(variables)));
-					cmd_->setExpression(this);
-					return variant(cmd_.get());
+				if(slot_ != -1) {
+					variant target(&variables);
+					return variant(new add_target_by_slot_command(target, slot_, args()[1]->evaluate(variables)));
 				}
 
 				if(!key_.empty()) {
@@ -3785,7 +3779,7 @@ FUNCTION_DEF_IMPL
 			}
 
 			std::string key_;
-			int me_slot_, slot_;
+			int slot_;
 			mutable boost::intrusive_ptr<add_by_slot_command> cmd_;
 		};
 
@@ -4749,35 +4743,6 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 
 		return variant(new debug_dump_textures_command(path, name));
 	END_FUNCTION_DEF(debug_dump_textures)
-
-	class mod_object_callable : public FormulaCallable {
-	public:
-		explicit mod_object_callable(boost::intrusive_ptr<FormulaObject> obj) : obj_(obj), v_(obj.get())
-		{}
-
-	private:
-		variant getValue(const std::string& key) const {
-			if(key == "object") {
-				return v_;
-			} else {
-				ASSERT_LOG(false, "Unknown key: " << key);
-			}
-
-			return variant();
-		}
-
-		variant getValueBySlot(int slot) const {
-			if(slot == 0) {
-				return v_;
-			}
-
-			ASSERT_LOG(false, "Unknown key: " << slot);
-			return variant();
-		}
-
-		boost::intrusive_ptr<FormulaObject> obj_;
-		variant v_;
-	};
 
 	FUNCTION_DEF(inspect_object, 1, 1, "inspect_object(object obj) -> map: outputs an object's properties")
 		variant obj = args()[0]->evaluate(variables);

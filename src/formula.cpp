@@ -2019,6 +2019,15 @@ namespace game_logic
 	
 			mutable std::vector<variant> results_cache_;
 
+			void setValueBySlot(int slot, const variant& value) override {
+				ASSERT_LOG(slot < info_->base_slot, "Illegal set on immutable where variables " << slot);
+				const_cast<FormulaCallable*>(base_.get())->mutateValueBySlot(slot, value);
+			}
+
+			void setValue(const std::string& key, const variant& value) override {
+				const_cast<FormulaCallable*>(base_.get())->mutateValue(key, value);
+			}
+
 			variant getValueBySlot(int slot) const {
 				if(slot >= info_->base_slot) {
 					slot -= info_->base_slot;
@@ -2093,6 +2102,107 @@ namespace game_logic
 				std::vector<ConstExpressionPtr> result;
 				result.push_back(body_);
 				result.insert(result.end(), info_->entries.begin(), info_->entries.end());
+				return result;
+			}
+		};
+
+		class CommandSequence : public CommandCallable {
+			variant cmd_;
+			ExpressionPtr right_;
+			ConstFormulaCallablePtr variables_;
+		public:
+			CommandSequence(const variant& cmd, ExpressionPtr right_expr, ConstFormulaCallablePtr variables)
+			  : cmd_(cmd), right_(right_expr), variables_(variables)
+			{}
+
+			void execute(game_logic::FormulaCallable& ob) const {
+				ob.executeCommand(cmd_);
+				const variant right_cmd = right_->evaluate(*variables_);
+				ob.executeCommand(right_cmd);
+			}
+		private:
+		};
+
+		class CommandSequenceExpression : public FormulaExpression {
+			ExpressionPtr left_, right_;
+		public:
+			CommandSequenceExpression(ExpressionPtr left, ExpressionPtr right)
+			  : left_(left), right_(right)
+			{}
+
+			variant_type_ptr getVariantType() const {
+				return variant_type::get_commands();
+			}
+
+			void staticErrorAnalysis() const {
+				if(left_) {
+					variant_type_ptr left_type = left_->queryVariantType();
+					ASSERT_LOG(variant_types_compatible(variant_type::get_commands(), left_type), "Expression to the left of ; must be of commands type, is of type " << left_type->to_string() << " " << debugPinpointLocation());
+				}
+
+				variant_type_ptr right_type = right_->queryVariantType();
+				ASSERT_LOG(variant_types_compatible(variant_type::get_commands(), right_type), "Expression to the right of ; must be of commands type, is of type " << right_type->to_string() << " " << debugPinpointLocation());
+			}
+
+			variant execute(const FormulaCallable& variables) const {
+
+				Formula::failIfStaticContext();
+
+				variant cmd;
+				if(left_) {
+					cmd = left_->evaluate(variables);
+				}
+				auto res = (new CommandSequence(cmd, right_, ConstFormulaCallablePtr(&variables)));
+				return variant(res);
+			}
+
+			std::vector<ConstExpressionPtr> getChildren() const {
+				std::vector<ConstExpressionPtr> result;
+				if(left_) {
+					result.push_back(left_);
+				}
+				result.push_back(right_);
+				return result;
+			}
+
+		};
+
+		class LetExpression : public FormulaExpression {
+			std::vector<std::string> names_;
+			std::string identifier_;
+			int slot_;
+
+			ExpressionPtr let_expr_;
+			ExpressionPtr right_expr_;
+
+		public:
+
+			LetExpression(const std::string& identifier, int slot, ExpressionPtr let_expr, ExpressionPtr right_expr)
+			   : identifier_(identifier), slot_(slot), let_expr_(let_expr), right_expr_(right_expr)
+			{
+				names_.push_back(identifier);
+			}
+
+			variant_type_ptr getVariantType() const {
+				return right_expr_->queryVariantType();
+			}
+
+			variant execute(const FormulaCallable& variables) const {
+				const variant value = let_expr_->evaluate(variables);
+
+				boost::intrusive_ptr<MutableSlotFormulaCallable> callable(new MutableSlotFormulaCallable);
+				callable->setFallback(&variables);
+				callable->setBaseSlot(slot_);
+				callable->setNames(&names_);
+				callable->add(value);
+
+				return right_expr_->evaluate(*callable);
+			}
+
+			std::vector<ConstExpressionPtr> getChildren() const {
+				std::vector<ConstExpressionPtr> result;
+				result.push_back(let_expr_);
+				result.push_back(right_expr_);
 				return result;
 			}
 		};
@@ -2389,6 +2499,7 @@ namespace game_logic
 			static std::map<std::string,int> precedence_map;
 			if(precedence_map.empty()) {
 				int n = 0;
+				precedence_map[";"] = ++n;
 				precedence_map["->"] = ++n;
 				precedence_map["where"] = ++n;
 				precedence_map["asserting"] = ++n;
@@ -2934,7 +3045,7 @@ static std::string debugSubexpressionTypes(ConstFormulaPtr & fml)
 			variant_type_ptr result_type;
 			parse_function_args(formula_str, i1, i2, &args, &types, &variant_types, &default_args, &result_type);
 			const Token* const beg = i1;
-			while((i1 != i2) && (i1->type != FFL_TOKEN_TYPE::SEMICOLON)) {
+			while((i1 != i2) && (i1->type != FFL_TOKEN_TYPE::SEMICOLON || formula_name.empty())) {
 				++i1;
 			}
 			const std::string function_str = std::string(beg->begin, (i1-1)->end);
@@ -3120,7 +3231,7 @@ static std::string debugSubexpressionTypes(ConstFormulaPtr & fml)
 			int parens = 0;
 			const Token* op = nullptr;
 			const Token* fn_call = nullptr;
-	
+
 			for(const Token* i = i1; i != i2; ++i) {
 				if(fn_call && i+1 == i2 && i->type != FFL_TOKEN_TYPE::RPARENS) {
 					fn_call = nullptr;
@@ -3141,11 +3252,16 @@ static std::string debugSubexpressionTypes(ConstFormulaPtr & fml)
 					if(parens == 0 && i+1 != i2) {
 						fn_call = nullptr;
 					}
-				} else if(parens == 0 && (i->type == FFL_TOKEN_TYPE::OPERATOR || i->type == FFL_TOKEN_TYPE::LEFT_POINTER || (i->type == FFL_TOKEN_TYPE::LDUBANGLE && (i2-1)->type == FFL_TOKEN_TYPE::RDUBANGLE))) {
+				} else if(parens == 0 && (i->type == FFL_TOKEN_TYPE::OPERATOR || i->type == FFL_TOKEN_TYPE::SEMICOLON || i->type == FFL_TOKEN_TYPE::LEFT_POINTER || (i->type == FFL_TOKEN_TYPE::LDUBANGLE && (i2-1)->type == FFL_TOKEN_TYPE::RDUBANGLE))) {
 					if(op == nullptr || operator_precedence(*op) >= operator_precedence(*i)) {
 						if(i != i1 && i->end - i->begin == 3 && std::equal(i->begin, i->end, "not")) {
 							//The not operator is always unary and can only
 							//appear at the start of an expression.
+							continue;
+						}
+
+						if(op != nullptr && op->type == FFL_TOKEN_TYPE::SEMICOLON && op->type == i->type) {
+							//semi-colons are left associative.
 							continue;
 						}
 
@@ -3414,6 +3530,58 @@ static std::string debugSubexpressionTypes(ConstFormulaPtr & fml)
 			if(fn_call && (op == nullptr ||
 			   operator_precedence(*op) >= operator_precedence(*fn_call))) {
 				op = fn_call;
+			}
+
+			if(op->type == FFL_TOKEN_TYPE::SEMICOLON) {
+
+				if(i1->type == FFL_TOKEN_TYPE::KEYWORD && std::string(i1->begin, i1->end) == "let") {
+
+					++i1;
+					ASSERT_LOG(i1 < op && i1+1 < op, "Expected tokens after let before ;\n" << pinpoint_location(formula_str, op->begin, op->end));
+
+					variant_type_ptr type;
+
+					if(i1->type != FFL_TOKEN_TYPE::IDENTIFIER || std::string((i1+1)->begin, (i1+1)->end) != "=") {
+						type = parse_variant_type(formula_str, i1, op);
+					}
+
+					ASSERT_LOG(i1->type == FFL_TOKEN_TYPE::IDENTIFIER && std::string((i1+1)->begin, (i1+1)->end) == "=", "Expected identifier and assignment after let\n" << pinpoint_location(formula_str, i1->begin, i1->end));
+
+					std::string identifier(i1->begin, i1->end);
+
+					i1 += 2;
+					ExpressionPtr let_expr(parse_expression(formula_str, i1, op, symbols, callable_def, can_optimize));
+
+					variant_type_ptr expr_type = let_expr->queryVariantType();
+					if(!type) {
+						type = expr_type;
+					}
+
+					ASSERT_LOG(variant_types_compatible(type, expr_type), "Cannot convert " << expr_type->to_string() << " to variable type " << type->to_string() << "\n" << pinpoint_location(formula_str, i1->begin, i1->end));
+
+
+					const int new_slot = callable_def->getNumSlots();
+
+					FormulaCallableDefinitionPtr new_def = execute_command_callable_definition(&identifier, &identifier+1, callable_def, &type);
+					new_def->setStrict(callable_def && callable_def->isStrict());
+
+					ExpressionPtr right(parse_expression(formula_str, op+1,i2,symbols, new_def, can_optimize));
+
+					return ExpressionPtr(new LetExpression(identifier, new_slot, let_expr, right));
+
+				} else {
+
+					ExpressionPtr left;
+					
+					std::vector<ExpressionPtr> list;
+					if(i1 != op) {
+						left = ExpressionPtr(parse_expression(formula_str, i1, op, symbols, callable_def, can_optimize));
+						list.push_back(left);
+					}
+					ExpressionPtr right(parse_expression(formula_str, op+1,i2,symbols, callable_def, can_optimize));
+						list.push_back(right);
+					return ExpressionPtr(new CommandSequenceExpression(left, right));
+				}
 			}
 	
 			if(op == i1) {

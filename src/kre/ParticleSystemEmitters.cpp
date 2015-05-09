@@ -41,7 +41,8 @@ namespace KRE
 				  circle_radius_(Parameter::factory(node["circle_radius"])),
 				  circle_step_(node["circle_step"].as_float(0.1f)), 
 				  circle_angle_(node["circle_angle"].as_float(0)), 
-				  circle_random_(node["emit_random"].as_bool(true))
+				  circle_random_(node["emit_random"].as_bool(true)),
+				  use_x_(false), use_y_(false), use_z_(false)
 			{
 			}
 		protected:
