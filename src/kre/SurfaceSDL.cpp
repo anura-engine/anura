@@ -657,8 +657,6 @@ namespace KRE
 		auto surf = std::make_shared<SurfaceSDL>(s);
 		surf->setFlags(flags);
 		// format means don't convert the surface from the loaded format.
-        
-        std::cerr << "Created SDL Surface from file: " << filename << "\n"; //TODO:  we put this in because when SDLPixelFormat chokes on loading a file, it's impossible to know what file failed.  This is a dirty fix to at least be able to tell that by seeing the "last file attempted" so DDR can keep developing OPP.  Please see if we can restructure things slightly so that if there's an assert inside SDLPixelFormat::extractRGBA, we can output the actual filename.
 		if(fmt != PixelFormat::PF::PIXELFORMAT_UNKNOWN) {
 			return surf->convert(fmt, fn)->runGlobalAlphaFilter();
 		}
