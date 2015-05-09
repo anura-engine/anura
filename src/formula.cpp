@@ -364,18 +364,24 @@ namespace game_logic
 
 				std::vector<variant> result;
 
-				boost::intrusive_ptr<SlotFormulaCallable> callable(new SlotFormulaCallable);
-				callable->setFallback(&variables);
-				callable->setBaseSlot(base_slot_);
-				callable->reserve(generator_names_.size());
 				std::vector<variant*> args;
-				for(const std::string& arg : generator_names_) {
-					callable->add(variant());
-					args.push_back(&callable->backDirectAccess());
-				}
+
+				boost::intrusive_ptr<SlotFormulaCallable> callable;
 
 				std::vector<int> indexes(lists.size());
 				for(;;) {
+
+					if(!callable) {
+						callable.reset(new SlotFormulaCallable);
+						callable->setFallback(&variables);
+						callable->setBaseSlot(base_slot_);
+						callable->reserve(generator_names_.size());
+						for(const std::string& arg : generator_names_) {
+							callable->add(variant());
+							args.push_back(&callable->backDirectAccess());
+						}
+					}
+
 					for(int n = 0; n != indexes.size(); ++n) {
 						*args[n] = lists[n][indexes[n]];
 					}
