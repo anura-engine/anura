@@ -31,6 +31,7 @@
 #include "SDL_image.h"
 
 #include "asserts.hpp"
+#include "formatter.hpp"
 #include "SurfaceSDL.hpp"
 
 enum {
@@ -134,8 +135,7 @@ namespace KRE
 		auto filter = Surface::getFileFilter(FileFilterType::LOAD);
 		auto surface_ = IMG_Load(filter(filename).c_str());
 		if(surface_ == nullptr) {
-			LOG_ERROR("Failed to load image file: '" << filename << "' : " << IMG_GetError());
-			throw ImageLoadError();
+			throw ImageLoadError(formatter() << "Failed to load image file: '" << filename << "' : " << IMG_GetError());
 		}
 		auto pf = std::make_shared<SDLPixelFormat>(surface_->format->format);
 		setPixelFormat(PixelFormatPtr(pf));
@@ -651,16 +651,19 @@ namespace KRE
 		auto filter = Surface::getFileFilter(FileFilterType::LOAD);
 		auto s = IMG_Load(filter(filename).c_str());
 		if(s == nullptr) {
-			LOG_ERROR("Failed to load image file: '" << filename << "' : " << IMG_GetError());
-			throw ImageLoadError();
+			throw ImageLoadError(formatter() << "Failed to load image file: '" << filename << "' : " << IMG_GetError());
 		}
-		auto surf = std::make_shared<SurfaceSDL>(s);
-		surf->setFlags(flags);
-		// format means don't convert the surface from the loaded format.
-		if(fmt != PixelFormat::PF::PIXELFORMAT_UNKNOWN) {
-			return surf->convert(fmt, fn)->runGlobalAlphaFilter();
+		try {
+			auto surf = std::make_shared<SurfaceSDL>(s);
+			surf->setFlags(flags);
+			// format means don't convert the surface from the loaded format.
+			if(fmt != PixelFormat::PF::PIXELFORMAT_UNKNOWN) {
+				return surf->convert(fmt, fn)->runGlobalAlphaFilter();
+			}
+			return surf->runGlobalAlphaFilter();
+		} catch(ImageLoadError& e) {
+			throw ImageLoadError(formatter() << "Failed to load image file: '" << filename << "' : " << e.what());
 		}
-		return surf->runGlobalAlphaFilter();
 	}
 
 	void SDLPixelFormat::extractRGBA(const void* pixels, int ndx, int& red, int& green, int& blue, int& alpha)
@@ -672,9 +675,13 @@ namespace KRE
 		alpha = 255;
 		switch(fmt) {
             case PixelFormat::PF::PIXELFORMAT_INDEX1LSB: {
-				ASSERT_LOG(pf_->palette != nullptr, "Index type has no palette.");
+				if(pf_->palette == nullptr) {
+					throw ImageLoadError("Index type has no palette.");
+				}
 				uint8_t px = *static_cast<const uint8_t*>(pixels) & (1 << ndx) >> ndx;
-				ASSERT_LOG(px < pf_->palette->ncolors, "Index into palette invalid. " << px << " >= " << pf_->palette->ncolors);
+				if(px >= pf_->palette->ncolors) {
+					throw ImageLoadError(formatter() << "Index into palette invalid. " << px << " >= " << pf_->palette->ncolors);
+				}
 				auto color = pf_->palette->colors[px];
 				red = color.r;
 				green = color.g;
@@ -683,9 +690,13 @@ namespace KRE
 				break;
 			}
             case PixelFormat::PF::PIXELFORMAT_INDEX1MSB: {
-				ASSERT_LOG(pf_->palette != nullptr, "Index type has no palette.");
+				if(pf_->palette == nullptr) {
+					throw ImageLoadError("Index type has no palette.");
+				}
 				uint8_t px = (*static_cast<const uint8_t*>(pixels) & (1 << (7-ndx))) >> (7-ndx);
-				ASSERT_LOG(px < pf_->palette->ncolors, "Index into palette invalid. " << px << " >= " << pf_->palette->ncolors);
+				if(px >= pf_->palette->ncolors) {
+					throw ImageLoadError(formatter() << "Index into palette invalid. " << px << " >= " << pf_->palette->ncolors);
+				}
 				auto color = pf_->palette->colors[px];
 				red = color.r;
 				green = color.g;
@@ -694,9 +705,13 @@ namespace KRE
 				break;
 			}
             case PixelFormat::PF::PIXELFORMAT_INDEX4LSB: {
-				ASSERT_LOG(pf_->palette != nullptr, "Index type has no palette.");
+				if(pf_->palette == nullptr) {
+					throw ImageLoadError("Index type has no palette.");
+				}
 				uint8_t px = (*static_cast<const uint8_t*>(pixels) & (0xf << ndx)) >> ndx;
-				ASSERT_LOG(px < pf_->palette->ncolors, "Index into palette invalid. " << px << " >= " << pf_->palette->ncolors);
+				if(px >= pf_->palette->ncolors) {
+					throw ImageLoadError(formatter() << "Index into palette invalid. " << px << " >= " << pf_->palette->ncolors);
+				}
 				auto color = pf_->palette->colors[px];
 				red = color.r;
 				green = color.g;
@@ -705,9 +720,13 @@ namespace KRE
 				break;
 			}
 			case PixelFormat::PF::PIXELFORMAT_INDEX4MSB: {
-				ASSERT_LOG(pf_->palette != nullptr, "Index type has no palette.");
+				if(pf_->palette == nullptr) {
+					throw ImageLoadError("Index type has no palette.");
+				}
 				uint8_t px = (*static_cast<const uint8_t*>(pixels) & (0xf << (4-ndx))) >> (4-ndx);
-				ASSERT_LOG(px < pf_->palette->ncolors, "Index into palette invalid. " << px << " >= " << pf_->palette->ncolors);
+				if(px >= pf_->palette->ncolors) {
+					throw ImageLoadError(formatter() << "Index into palette invalid. " << px << " >= " << pf_->palette->ncolors);
+				}
 				auto color = pf_->palette->colors[px];
 				red = color.r;
 				green = color.g;
@@ -717,9 +736,13 @@ namespace KRE
 			}
             case PixelFormat::PF::PIXELFORMAT_INDEX8: {
 				auto palette = pf_->palette;
-				ASSERT_LOG(palette != nullptr, "Index type has no palette.");
+				if(palette == nullptr) {
+					throw ImageLoadError("Index type has no palette.");
+				}
 				uint8_t px = *static_cast<const uint8_t*>(pixels);
-				ASSERT_LOG(px < palette->ncolors, "Index into palette invalid. " << px << " >= " << palette->ncolors);
+				if(px >= pf_->palette->ncolors) {
+					throw ImageLoadError(formatter() << "Index into palette invalid. " << px << " >= " << pf_->palette->ncolors);
+				}
 				auto color = palette->colors[px];
 				red = color.r;
 				green = color.g;
@@ -791,7 +814,7 @@ namespace KRE
             case PixelFormat::PF::PIXELFORMAT_UYVY:
             case PixelFormat::PF::PIXELFORMAT_YVYU:				
 			default:
-				ASSERT_LOG(false, "unsupported pixel format value for conversion.");
+				throw ImageLoadError("unsupported pixel format value for conversion.");
 		}
 	}
 
@@ -848,7 +871,7 @@ namespace KRE
             case PixelFormat::PF::PIXELFORMAT_INDEX4LSB:
             case PixelFormat::PF::PIXELFORMAT_INDEX4MSB:
             case PixelFormat::PF::PIXELFORMAT_INDEX8:
-				ASSERT_LOG(false, "converting format to an indexed type not supported.");
+				throw ImageLoadError("converting format to an indexed type not supported.");
 				break;
             case PixelFormat::PF::PIXELFORMAT_YV12:
             case PixelFormat::PF::PIXELFORMAT_IYUV:
@@ -856,23 +879,29 @@ namespace KRE
             case PixelFormat::PF::PIXELFORMAT_UYVY:
             case PixelFormat::PF::PIXELFORMAT_YVYU:				
 			default:
-				ASSERT_LOG(false, "unsupported pixel format value for conversion.");
+				throw ImageLoadError("unsupported pixel format value for conversion.");
 		}
 	}
 
 	SurfacePtr SurfaceSDL::handleConvert(PixelFormat::PF fmt, SurfaceConvertFn convert)
 	{
-		ASSERT_LOG(fmt != PixelFormat::PF::PIXELFORMAT_UNKNOWN, "unknown pixel format to convert to.");
+		if(fmt == PixelFormat::PF::PIXELFORMAT_UNKNOWN) { 
+			throw ImageLoadError("unknown pixel format to convert to.");
+		}
 		if(convert == nullptr) {
 			SDL_PixelFormat* pf = SDL_AllocFormat(get_sdl_pixel_format(fmt));
-			ASSERT_LOG(pf != nullptr, "error allocating pixel format: " << SDL_GetError());
+			if(pf == nullptr) {
+				throw ImageLoadError(formatter() << "error allocating pixel format: " << SDL_GetError());
+			}
 			auto surface = new SurfaceSDL(SDL_ConvertSurface(surface_, pf, 0));
 			SDL_FreeFormat(pf);
 			return SurfacePtr(surface);
 		}
 
 		// Create a destination surface
-		ASSERT_LOG(PixelFormat::isIndexedFormat(fmt) == false, "Indexed format can't be handled right now for conversion.");
+		if(PixelFormat::isIndexedFormat(fmt)) {
+			throw ImageLoadError("Indexed format can't be handled right now for conversion.");
+		}
 		auto dst = std::make_shared<SurfaceSDL>(width(), height(), fmt);
 		int dst_size = dst->rowPitch() * dst->height();
 		void* dst_pixels = new uint8_t[dst_size];
