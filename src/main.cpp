@@ -463,10 +463,22 @@ int main(int argcount, char* argvec[])
 		}
 		if(arg_name == "--module") {
 			preferences::set_preferences_path_from_module(arg_value);
-			if(load_module(arg_value, &argv) != 0) {
+
+			bool update_launcher = false;
+			for(size_t n = 0; n < argv.size(); ++n) {
+				if(argv[n] == "--utility=update_launcher") {
+					module::set_core_module_name(arg_value);
+					update_launcher = true;
+					break;
+				}
+			}
+
+			//don't load the actual module if we're in the update launcher.
+			if(!update_launcher && load_module(arg_value, &argv) != 0) {
 				bool auto_update = false;
+
 				for(size_t n = 0; n < argv.size(); ++n) {
-					if(argv[n] == "--auto-update-module" || argv[n] == "--utility=update_launcher") {
+					if(argv[n] == "--auto-update-module") {
 						auto_update = true;
 						break;
 					}
