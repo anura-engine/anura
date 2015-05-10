@@ -419,6 +419,10 @@ bool do_auto_update(std::deque<std::string> argv, auto_update_window& update_win
 
 	std::string update_info_str = "--auto-update-status=" + update_info.build().write_json(false, variant::JSON_COMPLIANT);
 
+	//Windows seems to mess with double-quotes in arguments so avoid using them,
+	//use single quotes instead.
+	std::replace(update_info_str.begin(), update_info_str.end(), '"', '\'');
+
 	const std::string working_dir = preferences::dlc_path() + "/" + real_anura;
 	LOG_INFO("CHANGE DIRECTORY: " << working_dir);
 	const int res = chdir(working_dir.c_str());
