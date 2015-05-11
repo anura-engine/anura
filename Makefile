@@ -41,7 +41,7 @@ ifeq "$(GCC_GTEQ_490)" "1"
 BASE_CXXFLAGS += -fdiagnostics-color=auto -fsanitize=undefined
 endif
 else ifneq (,$(findstring clang, `$(CXX)`))
-BASE_CXXFLAGS += -Qunused-arguments -Wno-unknown-warning-option -Wno-deprecated-register -Wno-parentheses-equality -Wno-pointer-bool-conversion
+BASE_CXXFLAGS += -Qunused-arguments -Wno-unknown-warning-option -Wno-deprecated-register -Wno-parentheses-equality -Wno-pointer-bool-conversion -Wno-logical-op-parentheses
 endif
 
 SDL2_CONFIG?=sdl2-config
