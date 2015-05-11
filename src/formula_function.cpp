@@ -4808,9 +4808,14 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 	END_FUNCTION_DEF(DrawPrimitive)
 
 	FUNCTION_DEF(auto_update_status, 0, 0, "auto_update_info(): get info on auto update status")
-		if(g_auto_update_status.empty() == false) {
-			return json::parse(g_auto_update_status);
+		if(sys::file_exists("./auto-update-status.json")) {
+			try {
+				return json::parse(sys::read_file("./auto-update-status.json"));
+			} catch(...) {
+				LOG_ERROR("Could not read auto-update-status.json");
+			}
 		}
+
 		return g_auto_update_info;
 	FUNCTION_ARGS_DEF
 	RETURN_TYPE("map")

@@ -417,17 +417,17 @@ bool do_auto_update(std::deque<std::string> argv, auto_update_window& update_win
 		}
 	}
 
-	std::string update_info_str = "--auto-update-status=" + update_info.build().write_json(false, variant::JSON_COMPLIANT);
-
 	const std::string working_dir = preferences::dlc_path() + "/" + real_anura;
 	LOG_INFO("CHANGE DIRECTORY: " << working_dir);
 	const int res = chdir(working_dir.c_str());
 	ASSERT_LOG(res == 0, "Could not change directory to game working directory: " << working_dir);
 
+	//write the file in the directory we are executing in to tell anura
+	//what the auto-update status is.
+	sys::write_file("./auto-update-status.json", update_info.build().write_json(false, variant::JSON_COMPLIANT));
+
 	std::vector<char*> anura_args;
 	anura_args.push_back(const_cast<char*>(anura_exe.c_str()));
-
-	anura_args.push_back(const_cast<char*>(update_info_str.c_str()));
 
 	for(const std::string& a : argv) {
 		anura_args.push_back(const_cast<char*>(a.c_str()));
