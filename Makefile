@@ -24,6 +24,7 @@
 #
 
 OPTIMIZE?=yes
+USE_LUA?=yes
 CCACHE?=ccache
 USE_CCACHE?=$(shell which $(CCACHE) 2>&1 > /dev/null && echo yes)
 ifneq ($(USE_CCACHE),yes)
@@ -34,6 +35,10 @@ ifeq ($(OPTIMIZE),yes)
 BASE_CXXFLAGS += -O2
 endif
 
+ifneq ($(USE_LUA), yes)
+USE_LUA=
+endif
+
 ifeq ($(CXX), g++)
 GCC_GTEQ_490 := $(shell expr `$(CXX) -dumpversion | sed -e 's/\.\([0-9][0-9]\)/\1/g' -e 's/\.\([0-9]\)/0\1/g' -e 's/^[0-9]\{3,4\}$$/&00/'` \>= 40900)
 BASE_CXXFLAGS += -Wno-literal-suffix
@@ -41,7 +46,10 @@ ifeq "$(GCC_GTEQ_490)" "1"
 BASE_CXXFLAGS += -fdiagnostics-color=auto -fsanitize=undefined
 endif
 else ifneq (,$(findstring clang, `$(CXX)`))
-BASE_CXXFLAGS += -Qunused-arguments -Wno-unknown-warning-option -Wno-deprecated-register -Wno-parentheses-equality -Wno-pointer-bool-conversion -Wno-logical-op-parentheses
+BASE_CXXFLAGS += -Qunused-arguments -Wno-unknown-warning-option -Wno-deprecated-register
+ifeq ($(USE_LUA), yes)
+BASE_CXXFLAGS += -Wno-pointer-bool-conversion -Wno-parentheses-equality
+endif
 endif
 
 SDL2_CONFIG?=sdl2-config
@@ -51,8 +59,10 @@ ifneq ($(USE_SDL2),yes)
 $(error SDL2 not found, SDL-1.2 is no longer supported)
 endif
 
+ifeq ($(USE_LUA), yes)
 BASE_CXXFLAGS += -DUSE_LUA
 #USE_LUA := yes # ?=$(shell pkg-config --exists lua5.2 && echo yes)
+endif
 
 TARBALL := /var/www/anura/anura-$(shell date +"%Y%m%d-%H%M").tar.bz2
 
@@ -99,7 +109,11 @@ ifeq ($(USE_SVG),yes)
 	LIBS += $(shell pkg-config --libs cairo)
 endif
 
-MODULES   := kre svg Box2D tiled eris
+MODULES   := kre svg Box2D tiled 
+ifeq ($(USE_LUA),yes)
+MODULES += eris
+endif
+
 SRC_DIR   := $(addprefix src/,$(MODULES)) src
 BUILD_DIR := $(addprefix build/,$(MODULES)) build
 
