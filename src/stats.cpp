@@ -80,7 +80,7 @@ namespace stats
 
 		void send_stats(std::map<std::string, std::vector<variant>>& queue) 
 		{
-			if(queue.empty() || !checksum::is_verified() && !g_force_send_stats) {
+			if(queue.empty() || (!checksum::is_verified() && !g_force_send_stats)) {
 				return;
 			}
 

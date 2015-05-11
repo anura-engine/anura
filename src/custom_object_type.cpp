@@ -1613,6 +1613,7 @@ CustomObjectType::~CustomObjectType()
 {
 }
 
+#ifdef USE_LUA
 const std::shared_ptr<lua::CompiledChunk> & CustomObjectType::getLuaInit(lua::LuaContext & ctx) const {
 	if (lua_compiled_) {
 		return lua_compiled_;
@@ -1622,6 +1623,7 @@ const std::shared_ptr<lua::CompiledChunk> & CustomObjectType::getLuaInit(lua::Lu
 	}
 	return lua_compiled_;
 }
+#endif
 
 namespace 
 {
