@@ -363,7 +363,7 @@ namespace game_logic
 		DEFINE_FIELD(year, "int")
 			return variant(obj.tm_.tm_year + 1900);
 		DEFINE_FIELD(is_dst, "bool")
-			return variant::from_bool(bool(obj.tm_.tm_isdst));
+			return variant::from_bool(obj.tm_.tm_isdst != 0);
 		DEFINE_FIELD(weekday, "string")
 			std::string weekday;
 			switch(obj.tm_.tm_wday) {
@@ -528,8 +528,8 @@ namespace game_logic
 
 			private:
 				variant execute(const FormulaCallable& variables) const {
-					const auto nargs = args().size();
-					for(auto n = 0; n < nargs-1; n += 2) {
+					const int nargs = static_cast<int>(args().size());
+					for(int n = 0; n < nargs-1; n += 2) {
 						const bool result = args()[n]->evaluate(variables).as_bool();
 						if(result) {
 							return args()[n+1]->evaluate(variables);
@@ -547,8 +547,8 @@ namespace game_logic
 				variant_type_ptr getVariantType() const {
 					std::vector<variant_type_ptr> types;
 					types.push_back(args()[1]->queryVariantType());
-					const auto nargs = args().size();
-					for(auto n = 1; n < nargs; n += 2) {
+					const int nargs = static_cast<int>(args().size());
+					for(int n = 1; n < nargs; n += 2) {
 						types.push_back(args()[n]->queryVariantType());
 					}
 
@@ -4994,8 +4994,8 @@ UNIT_TEST(map_function) {
 }
 
 UNIT_TEST(filter_function) {
-	CHECK_EQ(game_logic::Formula(variant("filter([2,3,4], value\%2 = 0)")).execute(), game_logic::Formula(variant("[2,4]")).execute());
-	CHECK_EQ(game_logic::Formula(variant("filter({'a': 2, 'b': 3, 'c': 4}, value\%2 = 0)")).execute(), game_logic::Formula(variant("{'a': 2, 'c': 4}")).execute());
+	CHECK_EQ(game_logic::Formula(variant("filter([2,3,4], value%2 = 0)")).execute(), game_logic::Formula(variant("[2,4]")).execute());
+	CHECK_EQ(game_logic::Formula(variant("filter({'a': 2, 'b': 3, 'c': 4}, value%2 = 0)")).execute(), game_logic::Formula(variant("{'a': 2, 'c': 4}")).execute());
 	CHECK_EQ(game_logic::Formula(variant("filter({'a': 2, 'b': 3, 'c': 4}, key='a' or key='c')")).execute(), game_logic::Formula(variant("{'a': 2, 'c': 4}")).execute());
 }
 
