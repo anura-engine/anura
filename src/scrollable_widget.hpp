@@ -53,7 +53,7 @@ namespace gui
 		bool handleEvent(const SDL_Event& event, bool claimed) override;
 	private:
 		DECLARE_CALLABLE(ScrollableWidget)
-		void onSetYscroll(int old_yscroll, int new_yscroll);
+		virtual void onSetYscroll(int old_yscroll, int new_yscroll);
 
 		int yscroll_;
 		int virtual_height_;
