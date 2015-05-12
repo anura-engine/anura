@@ -130,7 +130,7 @@ namespace game_logic
 			}
 
 			slot -= baseSlot();
-			ASSERT_LOG(slot < getValues().size(), "Unknown slot: " << slot);
+			ASSERT_LOG(slot >= 0 && slot < static_cast<int>(getValues().size()), "Unknown slot: " << slot);
 
 			setValueInternal(slot, value);
 		}

@@ -71,6 +71,7 @@ namespace gui
 
 	void ScrollableWidget::setYscroll(int yscroll)
 	{
+		LOG_DEBUG("setYscroll: " << yscroll);
 		const int old = yscroll_;
 		yscroll_ = yscroll;
 		onSetYscroll(old, yscroll);
@@ -116,7 +117,7 @@ namespace gui
 			scrollbar_->setRange(virtual_height_, height());
 			scrollbar_->setWindowPos(yscroll_);
 			scrollbar_->setLoc(x() + width(), y());
-			scrollbar_->setDim(10, height());
+			scrollbar_->setDim(0, height());
 		} else {
 			scrollbar_.reset();
 		}
@@ -133,7 +134,7 @@ namespace gui
 	bool ScrollableWidget::handleEvent(const SDL_Event& event, bool claimed)
 	{
 		if(scrollbar_) {
-			return scrollbar_->processEvent(getPos(), event, claimed);
+			return scrollbar_->processEvent(point(getPos().x-x(), getPos().y-y()), event, claimed);
 		}
 
 		return claimed;
