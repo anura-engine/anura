@@ -4993,6 +4993,12 @@ UNIT_TEST(map_function) {
 
 }
 
+UNIT_TEST(filter_function) {
+	CHECK_EQ(game_logic::Formula(variant("filter([2,3,4], value\%2 = 0)")).execute(), game_logic::Formula(variant("[2,4]")).execute());
+	CHECK_EQ(game_logic::Formula(variant("filter({'a': 2, 'b': 3, 'c': 4}, value\%2 = 0)")).execute(), game_logic::Formula(variant("{'a': 2, 'c': 4}")).execute());
+	CHECK_EQ(game_logic::Formula(variant("filter({'a': 2, 'b': 3, 'c': 4}, key='a' or key='c')")).execute(), game_logic::Formula(variant("{'a': 2, 'c': 4}")).execute());
+}
+
 UNIT_TEST(where_scope_function) {
 	CHECK(game_logic::Formula(variant("{'val': num} where num = 5")).execute() == game_logic::Formula(variant("{'val': 5}")).execute(), "map where test failed");
 	CHECK(game_logic::Formula(variant("'five: ${five}' where five = 5")).execute() == game_logic::Formula(variant("'five: 5'")).execute(), "string where test failed");
