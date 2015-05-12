@@ -259,7 +259,7 @@ namespace KRE
 		
 			std::vector<double> parameters;
 
-			TransformType type;
+			boost::optional<TransformType> type;
 
 			boost::char_separator<char> seperators(" \n\t\r,", "()");
 			boost::tokenizer<boost::char_separator<char>> tok(s, seperators);
@@ -285,7 +285,8 @@ namespace KRE
 					}
 				} else if(state == STATE_NUMBER) {
 					if(*it == ")") {
-						switch(type) {
+						ASSERT_LOG(type, "svg transform type was not initialized");
+						switch(*type) {
 							case TransformType::MATRIX: {
 								matrix_transform* mtrf = new matrix_transform(parameters);
 								results.emplace_back(mtrf);

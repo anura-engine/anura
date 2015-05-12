@@ -1099,6 +1099,10 @@ deltax, deltay (can all be estimates).
 Performance suffers if they are wrong; better to make nsites,
 deltax, and deltay too big than too small.  (?) */
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+// XXX check about this? ^
+
 bool VoronoiDiagramGenerator::voronoi(int triangulate)
 {
 	struct Site *newsite, *bot, *top, *temp, *p;
@@ -1218,6 +1222,7 @@ bool VoronoiDiagramGenerator::voronoi(int triangulate)
 	return true;
 }
 
+#pragma GCC diagnostic pop
 
 int scomp(const void *p1,const void *p2)
 {

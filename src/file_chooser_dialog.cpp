@@ -57,7 +57,7 @@ namespace sys
 	{
 		std::string abs_path;
 		// A path is absolute if it starts with / (linux)
-		// on windows a path is absolute if it starts with \\, x:\, \
+		// on windows a path is absolute if it starts with \\, x:\, \,
 		//boost::regex regexp(re_absolute_path);
 		//bool path_is_absolute = boost::regex_match(path, boost::regex(re_absolute_path));
 		//std::cerr << "set_default_path: path(" << path << ") is " << (path_is_absolute ? "absolute" : "relative") << std::endl;

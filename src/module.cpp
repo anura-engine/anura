@@ -49,7 +49,7 @@ namespace module
 	namespace 
 	{
 		// The base files are referred to as core.
-		module::modules core = {"core", "core", "core", ""};
+		module::modules core = {"core", "core", "core", {""}};
 
 		std::vector<module::modules>& loaded_paths() {
 			static std::vector<module::modules> result(1, core);

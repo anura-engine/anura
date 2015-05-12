@@ -28,6 +28,8 @@
 #include "string_utils.hpp"
 #include "unit_test.hpp"
 
+#pragma GCC diagnostic ignored "-Wchar-subscripts"
+
 namespace formula_tokenizer
 {
 	namespace 
