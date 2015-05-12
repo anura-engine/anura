@@ -203,8 +203,8 @@ namespace gui
 
 			claimed = claimMouseEvents();
 
-			const int ex = e.x - getPos().x;
-			const int ey = e.y - getPos().y;
+			const int ex = e.x - getPos().x + x();
+			const int ey = e.y - getPos().y + y();
 
 			if(ey < up_arrow_->y() + up_arrow_->height()) {
 				//on up arrow
@@ -233,7 +233,7 @@ namespace gui
 				drag_anchor_y_ = ey;
 			}
 
-			LOG_INFO("HANDLE: " << handle_->y() << ", " << handle_->height());
+			//LOG_INFO("HANDLE: " << handle_->y() << ", " << handle_->height());
 
 			clipWindowPosition();
 
