@@ -36,6 +36,7 @@ namespace KRE
 	namespace SVG 
 	{
 		enum class TransformType {
+			ERROR,
 			MATRIX,
 			TRANSLATE,
 			SCALE,
