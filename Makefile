@@ -39,9 +39,11 @@ ifneq ($(USE_LUA), yes)
 USE_LUA=
 endif
 
+BASE_CXXFLAGS += -Wall -Werror
+
 ifeq ($(CXX), g++)
 GCC_GTEQ_490 := $(shell expr `$(CXX) -dumpversion | sed -e 's/\.\([0-9][0-9]\)/\1/g' -e 's/\.\([0-9]\)/0\1/g' -e 's/^[0-9]\{3,4\}$$/&00/'` \>= 40900)
-BASE_CXXFLAGS += -Wno-literal-suffix
+BASE_CXXFLAGS += -Wno-literal-suffix -Wno-sign-compare
 ifeq "$(GCC_GTEQ_490)" "1"
 BASE_CXXFLAGS += -fdiagnostics-color=auto -fsanitize=undefined
 endif
@@ -68,9 +70,9 @@ TARBALL := /var/www/anura/anura-$(shell date +"%Y%m%d-%H%M").tar.bz2
 
 # Initial compiler options, used before CXXFLAGS and CPPFLAGS. -rdynamic -Wno-literal-suffix
 BASE_CXXFLAGS += -std=c++0x -g -fno-inline-functions \
-	-fthreadsafe-statics -Wnon-virtual-dtor -Werror \
-	-Wignored-qualifiers -Wformat -Wswitch -Wreturn-type \
-	-Wno-narrowing
+	-fthreadsafe-statics \
+	-Wno-narrowing -Wno-reorder -Wno-unused \
+	-Wno-unknown-pragmas -Wno-overloaded-virtual
 
 LDFLAGS?=-rdynamic
 

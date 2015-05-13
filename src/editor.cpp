@@ -96,6 +96,9 @@ extern int g_tile_size;
 using std::placeholders::_1;
 using std::placeholders::_2;
 
+#pragma GCC diagnostic ignored "-Wmissing-braces"
+// XXX: fix this in the code?
+
 namespace 
 {
 	//keep a map of editors so that when we edit a level and then later

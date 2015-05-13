@@ -340,6 +340,7 @@ namespace KRE
 			case BLEND_MODE_BLEND:	sdl_bm = SDL_BLENDMODE_BLEND; break;
 			case BLEND_MODE_ADD:	sdl_bm = SDL_BLENDMODE_ADD; break;
 			case BLEND_MODE_MODULATE:	sdl_bm = SDL_BLENDMODE_MOD; break;
+			default: ASSERT_LOG(false, "Surface::BlendMode had no known SDL counterpart: " << bm);
 		}
 		SDL_SetSurfaceBlendMode(surface_, sdl_bm);
 	}
@@ -372,7 +373,7 @@ namespace KRE
 		{
 			v = v - ((v >> 1) & 0x55555555);
 			v = (v & 0x33333333) + ((v >> 2) & 0x33333333);
-			return uint8_t(((v + (v >> 4) & 0xF0F0F0F) * 0x1010101) >> 24);
+			return uint8_t((((v + (v >> 4)) & 0xF0F0F0F) * 0x1010101) >> 24);
 		}
 	}
 

@@ -39,7 +39,7 @@ namespace KRE
 //		: add_rgba_()
 	{
 		mul_rgba_[0] = mul_rgba_[1] = mul_rgba_[2] = mul_rgba_[3] = 1.0f;
-		add_rgba_[0] = add_rgba_[2] = add_rgba_[2] = add_rgba_[3] = 0.0f;
+		add_rgba_[0] = add_rgba_[1] = add_rgba_[2] = add_rgba_[3] = 0.0f;
 	}
 
 	ColorTransform::ColorTransform(const Color& color)
