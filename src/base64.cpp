@@ -25,6 +25,8 @@
 #include "base64.hpp"
 #include "unit_test.hpp"
 
+#pragma GCC diagnostic ignored "-Wchar-subscripts"
+
 namespace base64 
 {
 	namespace 

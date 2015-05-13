@@ -266,7 +266,7 @@ variant interpolate_variants(variant a, variant b, float ratiof)
 			++ib;
 		}
 
-		ASSERT_LOG(ia == am.end() & ib == bm.end(), "Trying to interpolate invalid maps: " << a.write_json() << " vs " << b.write_json());
+		ASSERT_LOG(ia == am.end() && ib == bm.end(), "Trying to interpolate invalid maps: " << a.write_json() << " vs " << b.write_json());
 		return variant(&res);
 	}
 	ASSERT_LOG(false, "Trying to interpolate invalid variant values: " << a.write_json() << " vs " << b.write_json());

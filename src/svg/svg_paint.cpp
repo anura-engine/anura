@@ -96,7 +96,9 @@ namespace KRE
 					}
 					ASSERT_LOG(count < 3, "Too many numbers in color value");
 					cv[count] = col_val;
+					count++;
 				}
+				ASSERT_LOG(count == 3, "Too few numbers in rgb color value");
 				color_value_ = Color(cv[0],cv[1],cv[2]);
 			} else if(s.length() > 4 && s.substr(0, 4) == "url(") {
 				auto st_it = std::find(s.begin(), s.end(), '(');

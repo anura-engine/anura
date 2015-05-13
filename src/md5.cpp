@@ -25,6 +25,8 @@
 
 #include "unit_test.hpp"
 
+#pragma GCC diagnostic ignored "-Wstrict-aliasing"
+
 namespace md5 {
 
 std::string sum(const std::string& data)
