@@ -253,7 +253,7 @@ namespace gui
 			}
 
 			if(dragging_handle_) {
-				const int ey = e.y - getPos().y;
+				const int ey = e.y - getPos().y + y();
 				const int handle_height = height() - up_arrow_->height() - down_arrow_->height();
 				const int move = ey - drag_anchor_y_;
 				const int window_move = (move*range_)/handle_height;
