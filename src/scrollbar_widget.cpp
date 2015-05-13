@@ -69,9 +69,24 @@ namespace gui
 		  drag_start_(0), 
 		  drag_anchor_y_(0)
 	{
-		handler_ = std::bind(&ScrollBarWidget::handlerDelegate, this, std::placeholders::_1);
 		ASSERT_LOG(getEnvironment() != 0, "You must specify a callable environment");
 		ffl_handler_ = getEnvironment()->createFormula(v["on_scroll"]);
+
+		const variant on_scroll_value = v["on_scroll"];
+		if(on_scroll_value.is_function()) {
+			ASSERT_LOG(on_scroll_value.min_function_arguments() == 0, "on_scroll ScrollBarWidget function should take 0 arguments: " << v.debug_location());
+			static const variant fml("fn()");
+			ffl_handler_.reset(new game_logic::Formula(fml));
+
+			game_logic::MapFormulaCallable* callable = new game_logic::MapFormulaCallable;
+			callable->add("fn", on_scroll_value);
+
+			handler_arg_.reset(callable);
+		} else {
+			ffl_handler_ = getEnvironment()->createFormula(on_scroll_value);
+		}
+
+		handler_ = std::bind(&ScrollBarWidget::handlerDelegate, this, std::placeholders::_1);
 	
 		up_arrow_ = v.has_key("up_arrow") ? widget_factory::create(v["up_arrow"], e) : new GuiSectionWidget(UpArrow);
 		down_arrow_ = v.has_key("down_arrow") ? widget_factory::create(v["down_arrow"], e) : new GuiSectionWidget(DownArrow);
@@ -84,18 +99,31 @@ namespace gui
 			ASSERT_EQ(range.size(), 2);
 			setRange(range[0], range[1]);
 		}
+
+		// we need to handle these.
+		if(v.has_key("h")) {
+			setDim(0, v["h"].as_int());
+		}
+		if(v.has_key("height")) {
+			setDim(0, v["height"].as_int());
+		}
 	}
 
 	void ScrollBarWidget::handlerDelegate(int yscroll)
 	{
 		using namespace game_logic;
-		if(getEnvironment()) {
+		if(handler_arg_) {
+			MapFormulaCallablePtr callable(new MapFormulaCallable(handler_arg_.get()));
+			callable->add("yscroll", variant(yscroll));
+			variant value = ffl_handler_->execute(*handler_arg_);
+			getEnvironment()->executeCommand(value);
+		} else if(getEnvironment()) {
 			MapFormulaCallablePtr callable(new MapFormulaCallable(getEnvironment()));
 			callable->add("yscroll", variant(yscroll));
-			variant value = ffl_handler_->execute(*callable);
-			getEnvironment()->createFormula(value);
+			variant value = ffl_handler_->execute(*getEnvironment());
+			getEnvironment()->executeCommand(value);
 		} else {
-			LOG_INFO("ScrollBarWidget::handler_delegate() called without environment!");
+			LOG_ERROR("ScrollBarWidget::handlerDelegate() called without environment!");
 		}
 	}
 
