@@ -331,6 +331,10 @@ namespace KRE
 								results.emplace_back(sxtrf);
 								break;
 							}
+
+							case TransformType::ERROR:
+								assert(false);
+								break;
 						}
 						state = STATE_TYPE;					
 					} else {
