@@ -333,8 +333,12 @@ void process_log_level(const std::string& argstr)
 extern int g_tile_scale;
 extern int g_tile_size;
 
+std::string g_anura_exe_name;
+
 int main(int argcount, char* argvec[])
 {
+	g_anura_exe_name = argvec[0];
+
 	SDL_LogSetPriority(SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_INFO);
 
 	{

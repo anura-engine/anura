@@ -37,6 +37,8 @@
 #include "variant_utils.hpp"
 #include "wml_formula_callable.hpp"
 
+extern std::string g_anura_exe_name;
+
 namespace tbs
 {
 	using std::placeholders::_1;
@@ -90,7 +92,7 @@ boost::interprocess::named_semaphore* g_termination_semaphore;
 std::string g_termination_semaphore_name;
 
 #if defined(_MSC_VER)
-const std::string shared_sem_name = "Local\\anura_local_process_semaphore";
+const std::string shared_sem_name = "anura_tbs_sem";
 HANDLE child_process;
 HANDLE child_thread;
 HANDLE child_stderr;
@@ -291,7 +293,7 @@ void terminate_utility_process()
 			args.push_back("--port");
 			args.push_back(formatter() << g_local_server_port);
 
-			create_utility_process("./anura", args);
+			create_utility_process(g_anura_exe_name, args);
 
 			while(started_server == false && is_utility_process_running()) {
 				if(startup_semaphore->try_wait()) {

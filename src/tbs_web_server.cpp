@@ -47,7 +47,7 @@ namespace {
 	boost::interprocess::named_semaphore* g_termination_semaphore;
 
 #if defined(_MSC_VER)
-	const std::string shared_sem_name = "Local\\anura_local_process_semaphore";
+	const std::string shared_sem_name = "anura_tbs_sem";
 #else
 	const std::string shared_sem_name = "/anura_tbs_sem";
 #endif
@@ -92,6 +92,9 @@ namespace tbs
 
 	void web_server::handlePost(socket_ptr socket, variant doc, const http::environment& env)
 	{
+#if defined(_MSC_VER)
+		socket->socket.set_option(boost::asio::ip::tcp::no_delay(true));
+#endif
 		int session_id = -1;
 		std::map<std::string, std::string>::const_iterator i = env.find("cookie");
 		if(i != env.end()) {
@@ -156,7 +159,7 @@ namespace tbs
 	void web_server::heartbeat(const boost::system::error_code& error)
 	{
 		if(g_termination_semaphore && g_termination_semaphore->try_wait()) {
-			throw tbs::exit_exception();
+			exit(0);
 		}
 
 		if(error == boost::asio::error::operation_aborted) {

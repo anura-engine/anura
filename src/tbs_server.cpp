@@ -234,8 +234,8 @@ namespace tbs
 
 	void server::heartbeat_internal(int send_heartbeat, std::map<int, client_info>& clients)
 	{
-		if(g_exit_server) {
-			throw tbs::exit_exception();
+		if (g_exit_server) {
+			exit(0);
 		}
 
 		std::vector<std::pair<socket_ptr, std::string> > messages;
