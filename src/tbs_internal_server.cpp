@@ -120,9 +120,10 @@ bool create_utility_process(const std::string& app, const std::vector<std::strin
 	for(size_t n = 0; n != argv.size(); ++n) {
 		command_line_params += argv[n] + " ";
 	}
-	child_args = boost::shared_ptr<char>(new char[command_line_params.size()+1]);
-	memset(child_args.get(), 0, command_line_params.size()+1);
-	memcpy(child_args.get(), &command_line_params[0], command_line_params.size());
+	std::vector<char> child_args;
+	child_args.resize(command_line_params.size()+1);
+	memset(&child_args[0], 0, command_line_params.size()+1);
+	memcpy(&child_args[0], &command_line_params[0], command_line_params.size());
 
 	STARTUPINFOA siStartupInfo; 
 	PROCESS_INFORMATION piProcessInfo;
@@ -142,7 +143,7 @@ bool create_utility_process(const std::string& app, const std::vector<std::strin
 	siStartupInfo.hStdInput = GetStdHandle(STD_INPUT_HANDLE);
 	siStartupInfo.dwFlags = STARTF_USESTDHANDLES;
 	std::cerr << "CREATE CHILD PROCESS: " << app_name_and_path << std::endl;
-	ASSERT_LOG(CreateProcessA(app_name_and_path.c_str(), child_args.get(), NULL, NULL, true, CREATE_DEFAULT_ERROR_MODE, 0, 0, &siStartupInfo, &piProcessInfo),
+	ASSERT_LOG(CreateProcessA(app_name_and_path.c_str(), &child_args[0], NULL, NULL, true, CREATE_DEFAULT_ERROR_MODE, 0, 0, &siStartupInfo, &piProcessInfo),
 		"Unable to create child process for utility: " << GetLastError());
 	child_process = piProcessInfo.hProcess;
 	child_thread = piProcessInfo.hThread;
@@ -217,6 +218,10 @@ void terminate_utility_process()
 	CloseHandle(child_stderr);
 	CloseHandle(child_stdout);
 #else
+	if(!g_child_pid) {
+		return;
+	}
+	
 	// .. close child or whatever.
 	int status;
 	if(waitpid(g_child_pid, &status, 0) != g_child_pid) {
@@ -317,7 +322,7 @@ void terminate_utility_process()
 
 	internal_server_manager::~internal_server_manager()
 	{
-		if(g_termination_semaphore && g_child_pid) {
+		if(g_termination_semaphore) {
 			terminate_utility_process();
 		}
 
