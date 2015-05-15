@@ -23,6 +23,7 @@
 
 #include <algorithm>
 #include <boost/algorithm/string/replace.hpp>
+#include <boost/interprocess/sync/named_semaphore.hpp>
 #include <iostream>
 
 #include "asserts.hpp"
@@ -31,6 +32,7 @@
 #include "formula_object.hpp"
 #include "json_parser.hpp"
 #include "module.hpp"
+#include "preferences.hpp"
 #include "string_utils.hpp"
 #include "tbs_bot.hpp"
 #include "tbs_server.hpp"
@@ -40,6 +42,21 @@
 #include "variant.hpp"
 #include "variant_utils.hpp"
 
+namespace {
+	PREF_STRING(tbs_server_semaphore, "", "");
+	boost::interprocess::named_semaphore* g_termination_semaphore;
+
+#if defined(_MSC_VER)
+	const std::string shared_sem_name = "Local\\anura_local_process_semaphore";
+#else
+	const std::string shared_sem_name = "/anura_tbs_sem";
+#endif
+
+	std::string get_semaphore_name(std::string id) {
+		return shared_sem_name + id + g_tbs_server_semaphore;
+	}
+}
+
 namespace tbs 
 {
 	namespace 
@@ -47,6 +64,9 @@ namespace tbs
 		boost::asio::io_service* g_service;
 		int g_listening_port = -1;
 		web_server* web_server_instance = nullptr;
+
+
+
 	}
 
 	std::string global_debug_str;
@@ -135,6 +155,10 @@ namespace tbs
 
 	void web_server::heartbeat(const boost::system::error_code& error)
 	{
+		if(g_termination_semaphore && g_termination_semaphore->try_wait()) {
+			throw tbs::exit_exception();
+		}
+
 		if(error == boost::asio::error::operation_aborted) {
 			LOG_INFO("tbs_webserver::heartbeat cancelled");
 			return;
@@ -253,7 +277,6 @@ COMMAND_LINE_UTILITY(tbs_server) {
 	if(!config.is_null()) {
 		tbs::server_base::game_info_ptr result = s.create_game(config["game"]);
 		ASSERT_LOG(result, "Passed in config game is invalid");
-		result->quit_server_on_exit = true;
 
 		tbs::g_game_server_http_client_to_matchmaking_server = new http_client(config["matchmaking_host"].as_string(), formatter() << config["matchmaking_port"].as_int());
 		http_client& client = *tbs::g_game_server_http_client_to_matchmaking_server;
@@ -289,6 +312,13 @@ COMMAND_LINE_UTILITY(tbs_server) {
 		}
 
 		LOG_INFO("Started server, reported game availability");
+	}
+
+	if(g_tbs_server_semaphore.empty() == false) {
+		g_termination_semaphore = new boost::interprocess::named_semaphore(boost::interprocess::open_only_t(), get_semaphore_name("term").c_str());
+
+		boost::interprocess::named_semaphore startup_semaphore(boost::interprocess::open_only_t(), get_semaphore_name("start").c_str());
+		startup_semaphore.post();
 	}
 
 	std::vector<boost::intrusive_ptr<tbs::bot> > bots;

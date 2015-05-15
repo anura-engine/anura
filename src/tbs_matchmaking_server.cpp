@@ -866,6 +866,7 @@ private:
 			args.push_back(cmd);
 			args.push_back("--module=" + module::get_module_name());
 			args.push_back("--no-tbs-server");
+			args.push_back("--quit-server-after-game");
 			args.push_back("--utility=tbs_server");
 			args.push_back("--port");
 			args.push_back(formatter() << new_port);
