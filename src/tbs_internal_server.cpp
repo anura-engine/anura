@@ -33,6 +33,7 @@
 #include "asserts.hpp"
 #include "formatter.hpp"
 #include "json_parser.hpp"
+#include "module.hpp"
 #include "tbs_internal_server.hpp"
 #include "variant_utils.hpp"
 #include "wml_formula_callable.hpp"
@@ -285,7 +286,7 @@ void terminate_utility_process()
 			g_local_server_port = 4096 + rand()%20000;
 
 			std::vector<std::string> args;
-			args.push_back("--module=citadel");
+			args.push_back(formatter() << "--module=" << module::get_module_name());
 			args.push_back("--no-tbs-server");
 			args.push_back("--quit-server-after-game");
 			args.push_back(formatter() << "--tbs-server-semaphore=" << sem_id);
