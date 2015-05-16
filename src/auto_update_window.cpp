@@ -206,6 +206,7 @@ bool do_auto_update(std::deque<std::string> argv, auto_update_window& update_win
 	std::string anura_exe = "./anura";
 #endif
 
+	std::string subdir;
 	std::string real_anura;
 	bool update_anura = true;
 	bool update_module = true;
@@ -253,6 +254,8 @@ bool do_auto_update(std::deque<std::string> argv, auto_update_window& update_win
 		} else if(arg_name == "--anura-exe" || arg_name == "--anura_exe") {
 			ASSERT_LOG(arg_value.empty() == false, "--anura-exe requires a value giving the name of the anura executable to use");
 			anura_exe = arg_value;
+		} else if(arg_name == "--subdir") {
+			subdir = arg_value;
 		} else if(arg_name == "--force") {
 			force = true;
 		} else {
@@ -417,7 +420,7 @@ bool do_auto_update(std::deque<std::string> argv, auto_update_window& update_win
 		}
 	}
 
-	const std::string working_dir = preferences::dlc_path() + "/" + real_anura;
+	const std::string working_dir = preferences::dlc_path() + "/" + real_anura + subdir;
 	LOG_INFO("CHANGE DIRECTORY: " << working_dir);
 	const int res = chdir(working_dir.c_str());
 	ASSERT_LOG(res == 0, "Could not change directory to game working directory: " << working_dir);
