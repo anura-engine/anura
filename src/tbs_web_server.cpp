@@ -329,7 +329,7 @@ COMMAND_LINE_UTILITY(tbs_server) {
 		try {
 			const assert_recover_scope assert_scope;
 			for(const std::string& id : bot_id) {
-				bots.push_back(boost::intrusive_ptr<tbs::bot>(new tbs::bot(io_service, "localhost", formatter() << port, json::parse_from_file("data/tbs_test/" + id + ".cfg"))));
+				bots.push_back(boost::intrusive_ptr<tbs::bot>(new tbs::bot(io_service, "127.0.0.1", formatter() << port, json::parse_from_file("data/tbs_test/" + id + ".cfg"))));
 			}
 		} catch(validation_failure_exception& e) {
 			std::map<variant,variant> m;
