@@ -232,7 +232,7 @@ namespace
 
 		const int port = session == -1 ? tbs::spawn_server_on_localhost() : tbs::get_server_on_localhost();
 
-		tbs::client* result = new tbs::client("localhost", formatter() << port, session);
+		tbs::client* result = new tbs::client("127.0.0.1", formatter() << port, session);
 		return variant(result);
 
 		//return variant(new tbs::internal_client(session));
