@@ -155,10 +155,14 @@ bool create_utility_process(const std::string& app, const std::vector<std::strin
 	// everyone else version using fork()
 	//...
 	g_child_pid = fork();
+	fprintf(stderr, "fork() result: %d\n", g_child_pid);
 	if(g_child_pid == 0) {
+		fprintf(stderr, "fork in child...\n");
 		FILE* fout = std::freopen("stdout_server.txt","w", stdout);
 		FILE* ferr = std::freopen("stderr_server.txt","w", stderr);
 		std::cerr.sync_with_stdio(true);
+
+		fprintf(stderr, "redir stderr\n");
 
 		std::vector<char*> args;
 		args.push_back(const_cast<char*>(app.c_str()));
@@ -166,6 +170,12 @@ bool create_utility_process(const std::string& app, const std::vector<std::strin
 			args.push_back(const_cast<char*>(a.c_str()));
 		}
 		args.push_back(NULL);
+
+		fprintf(stderr, "calling exec(");
+		for(int i = 0; args[i]; ++i) {
+			fprintf(stderr, "%s, ", args[i]);
+		}
+		fprintf(stderr, ")\n");
 		execv(app.c_str(), &args[0]);
 
 		const char* error = NULL;
@@ -282,6 +292,7 @@ void terminate_utility_process()
 				fprintf(stderr, "TRYING TO CREATE SEMAPHORE: %s %s\n", g_termination_semaphore_name.c_str(), startup_semaphore_name.c_str());
 				g_termination_semaphore = new boost::interprocess::named_semaphore(boost::interprocess::create_only_t(), g_termination_semaphore_name.c_str(), 0);
 				startup_semaphore = new boost::interprocess::named_semaphore(boost::interprocess::create_only_t(), startup_semaphore_name.c_str(), 0);
+				fprintf(stderr, "CREATED SEMAPHORES...\n");
 			} catch(boost::interprocess::interprocess_exception& e) {
 				fprintf(stderr, "ERROR: %s\n", e.what());
 				delete g_termination_semaphore;
@@ -307,13 +318,19 @@ void terminate_utility_process()
 			args.push_back("--port");
 			args.push_back(formatter() << g_local_server_port);
 
+			fprintf(stderr, "CALLING CREATE UTILITY PROCESS...\n");
+
 			create_utility_process(g_anura_exe_name, args);
+
+			fprintf(stderr, "CALLED CREATE UTILITY PROESS. WAITING FOR SERVER TO START...\n");
 
 			while(started_server == false && is_utility_process_running()) {
 				if(startup_semaphore->try_wait()) {
 					started_server = true;
 				}
 			}
+
+			fprintf(stderr, "DONE WAITING FOR SERVER...\n");
 
 			if(!started_server) {
 				LOG_ERROR("Failed to start server process attempt " << (attempt+1) << "\nSERVER OUTPUT: " << sys::read_file("stderr_server.txt") << "\n--END OUTPUT--\n");
