@@ -301,6 +301,10 @@ void terminate_utility_process()
 					started_server = true;
 				}
 			}
+
+			if(!started_server) {
+				LOG_ERROR("Failed to start server process attempt " << (attempt+1) << "\nSERVER OUTPUT: " << sys::read_file("stderr_server.txt") << "\n--END OUTPUT--\n");
+			}
 		}
 
 		ASSERT_LOG(started_server, "Could not start server process");
