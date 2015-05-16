@@ -28,6 +28,7 @@
 #if !defined(_MSC_VER)
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <errno.h>
 #endif
 
 #include "asserts.hpp"
@@ -166,6 +167,18 @@ bool create_utility_process(const std::string& app, const std::vector<std::strin
 		}
 		args.push_back(NULL);
 		execv(app.c_str(), &args[0]);
+
+		const char* error = NULL;
+		switch(errno) {
+		case E2BIG: error = "E2BIG"; break;
+		case EACCES: error = "EACCES"; break;
+		case EFAULT: error = "EFAULT"; break;
+		case EIO: error = "EIO"; break;
+		case ENOENT: error = "ENOENT"; break;
+		default:
+			error = "Unk"; break;
+		}
+		ASSERT_LOG(false, "execv FAILED: " << error);
 	}
 	ASSERT_LOG(g_child_pid >= 0, "Unable to fork process: " << errno);
 
