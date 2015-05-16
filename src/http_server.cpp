@@ -355,6 +355,8 @@ public:
 		send_msg(socket, "text/json", "{ \"type\": \"ok\" }", "");
 	}
 	void handleGet(socket_ptr socket, const std::string& url, const std::map<std::string, std::string>& args) {
+		fprintf(stderr, "HANDLE GET: %d\n", SDL_GetTicks());
+		send_msg(socket, "text/json", "{ \"type\": \"ok\" }", "");
 	}
 
 private:
