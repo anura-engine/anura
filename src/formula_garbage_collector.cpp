@@ -3,6 +3,8 @@
 #include <map>
 #include <vector>
 
+#include <SDL.h>
+
 #include "asserts.hpp"
 #include "formula_garbage_collector.hpp"
 #include "logger.hpp"
@@ -14,10 +16,45 @@
 namespace {
 	GarbageCollectible* g_head;
 	int g_count;
+	int g_threads;
+	SDL_mutex* g_gc_mutex;
+
+	struct LockGC {
+		LockGC() {
+			if(g_gc_mutex) {
+				SDL_mutexP(g_gc_mutex);
+			}
+		}
+
+		~LockGC() {
+			if(g_gc_mutex) {
+				SDL_mutexV(g_gc_mutex);
+			}
+		}
+	};
+}
+
+void GarbageCollectible::incrementWorkerThreads()
+{
+	++g_threads;
+
+	if(g_gc_mutex == nullptr) {
+		g_gc_mutex = SDL_CreateMutex();
+	}
+}
+
+void GarbageCollectible::decrementWorkerThreads()
+{
+	--g_threads;
+	if(g_threads == 0) {
+		SDL_DestroyMutex(g_gc_mutex);
+		g_gc_mutex = nullptr;
+	}
 }
 
 GarbageCollectible* GarbageCollectible::debugGetObject(void* ptr)
 {
+	LockGC lock;
 	for(GarbageCollectible* p = g_head; p != nullptr; p = p->next_) {
 		if(p == ptr) {
 			return p;
@@ -27,13 +64,17 @@ GarbageCollectible* GarbageCollectible::debugGetObject(void* ptr)
 	return NULL;
 }
 
-GarbageCollectible::GarbageCollectible() : reference_counted_object(), next_(g_head), prev_(nullptr)
+GarbageCollectible::GarbageCollectible() : reference_counted_object(), prev_(nullptr)
 {
+	LockGC lock;
+	next_ = g_head;
 	insertAtHead();
 }
 
-GarbageCollectible::GarbageCollectible(const GarbageCollectible& o) : reference_counted_object(o), next_(g_head), prev_(nullptr)
+GarbageCollectible::GarbageCollectible(const GarbageCollectible& o) : reference_counted_object(o), prev_(nullptr)
 {
+	LockGC lock;
+	next_ = g_head;
 	insertAtHead();
 }
 
@@ -54,6 +95,8 @@ GarbageCollectible& GarbageCollectible::operator=(const GarbageCollectible& o)
 
 GarbageCollectible::~GarbageCollectible()
 {
+	LockGC lock;
+
 	--g_count;
 	if(prev_ != nullptr) {
 		prev_->next_ = next_;
@@ -173,6 +216,8 @@ void GarbageCollectorImpl::restoreReferences(GarbageCollectible* item)
 
 void GarbageCollectorImpl::collect()
 {
+	LockGC lock;
+
 	LOG_INFO("Beginning garbage collection of " << g_count << " items");
 	profile::timer timer;
 
@@ -349,6 +394,7 @@ void GarbageCollectorAnalyzer::surrenderPtrInternal(boost::intrusive_ptr<Garbage
 
 void GarbageCollectorAnalyzer::run(const char* fname)
 {
+	LockGC lock;
 	FILE* out = fopen(fname, "w");
 	graph_ = Graph(g_count+1);
 

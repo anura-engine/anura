@@ -10,6 +10,8 @@ class GarbageCollector;
 class GarbageCollectible : public reference_counted_object
 {
 public:
+	static void incrementWorkerThreads();
+	static void decrementWorkerThreads();
 	static GarbageCollectible* debugGetObject(void* ptr);
 	GarbageCollectible();
 	GarbageCollectible(const GarbageCollectible& o);

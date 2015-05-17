@@ -25,6 +25,7 @@
 #include <memory>
 #include <vector>
 
+#include "formula_garbage_collector.hpp"
 #include "logger.hpp"
 #include "thread.hpp"
 
@@ -52,10 +53,16 @@ namespace threading
 		}
 	}
 
-	thread::thread(const std::string& name, std::function<void()> fn) 
+	thread::thread(const std::string& name, std::function<void()> fn, int flags) 
 		: fn_(fn), 
-		thread_(SDL_CreateThread(call_boost_function, name.c_str(), new std::function<void()>(fn_)))
-	{}
+		thread_(nullptr),
+		allocates_collectible_objects_((flags&THREAD_ALLOCATES_COLLECTIBLE_OBJECTS) != 0)
+	{
+		if(allocates_collectible_objects_) {
+			GarbageCollectible::incrementWorkerThreads();
+		}
+		thread_ = SDL_CreateThread(call_boost_function, name.c_str(), new std::function<void()>(fn_));
+	}
 
 	thread::~thread()
 	{
@@ -67,6 +74,10 @@ namespace threading
 		if(thread_ != nullptr) {
 			SDL_WaitThread(thread_,nullptr);
 			thread_ = nullptr;
+
+			if(allocates_collectible_objects_) {
+				GarbageCollectible::decrementWorkerThreads();
+			}
 		}
 	}
 
