@@ -905,7 +905,7 @@ void Level::start_rebuild_tiles_in_background(const std::vector<int>& layers)
 
 	static threading::mutex* sync = new threading::mutex;
 
-	info.rebuild_tile_thread = new threading::thread("rebuild_tiles", std::bind(build_tiles_thread_function, &info, worker_tile_maps, *sync));
+	info.rebuild_tile_thread = new threading::thread("rebuild_tiles", std::bind(build_tiles_thread_function, &info, worker_tile_maps, *sync), threading::THREAD_ALLOCATES_COLLECTIBLE_OBJECTS);
 }
 
 void Level::freeze_rebuild_tiles_in_background()

@@ -73,6 +73,7 @@
 #include "speech_dialog.hpp"
 #include "stats.hpp"
 #include "string_utils.hpp"
+#include "tbs_internal_server.hpp"
 #include "thread.hpp"
 #include "unit_test.hpp"
 #include "preferences.hpp"
@@ -223,10 +224,18 @@ namespace
 	END_FUNCTION_DEF(set_clipboard_text)
 
 	#if !defined(__native_client__)
+
 	FUNCTION_DEF(tbs_internal_client, 0, 1, "tbs_internal_client(session=-1): creates a client object to the local in-memory tbs server")
+		Formula::failIfStaticContext();
 
 		const int session = args().size() >= 1 ? args()[0]->evaluate(variables).as_int() : -1;
-		return variant(new tbs::internal_client(session));
+
+		const int port = session == -1 ? tbs::spawn_server_on_localhost() : tbs::get_server_on_localhost();
+
+		tbs::client* result = new tbs::client("127.0.0.1", formatter() << port, session);
+		return variant(result);
+
+		//return variant(new tbs::internal_client(session));
 
 	FUNCTION_ARGS_DEF
 		ARG_TYPE("int")
@@ -234,6 +243,8 @@ namespace
 	END_FUNCTION_DEF(tbs_internal_client)
 
 	FUNCTION_DEF(tbs_client, 2, 3, "tbs_client(host, port, session=-1): creates a client object to the tbs server")
+		Formula::failIfStaticContext();
+
 		const std::string host = args()[0]->evaluate(variables).as_string();
 		variant port_var = args()[1]->evaluate(variables);
 		std::string port;

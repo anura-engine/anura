@@ -40,6 +40,8 @@ namespace threading
 		~manager();
 	};
 
+	enum { THREAD_ALLOCATES_COLLECTIBLE_OBJECTS = 1 };
+
 	// Threading object.
 	//
 	// This class defines threading objects. One such object represents a
@@ -57,7 +59,7 @@ namespace threading
 		// \param data passed to f
 		//
 		// \pre f != nullptr
-		explicit thread(const std::string& name, std::function<void()> f);
+		explicit thread(const std::string& name, std::function<void()> f, int flags=0);
 
 		// Destroy the thread object. This is done by waiting on the
 		// thread with the join() operation, thus blocking until the
@@ -78,6 +80,7 @@ namespace threading
 
 		std::function<void ()> fn_;
 		SDL_Thread* thread_;
+		bool allocates_collectible_objects_;
 	};
 
 	inline unsigned get_current_thread_id() { return SDL_ThreadID(); }

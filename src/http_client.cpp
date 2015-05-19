@@ -27,6 +27,7 @@
 #include "compress.hpp"
 #include "http_client.hpp"
 #include "string_utils.hpp"
+#include "unit_test.hpp"
 
 http_client::http_client(const std::string& host, const std::string& port, int session, boost::asio::io_service* service)
   : session_id_(session),
@@ -322,3 +323,20 @@ BEGIN_DEFINE_CALLABLE_NOBASE(http_client)
 	DEFINE_FIELD(in_flight, "int")
 		return variant(obj.in_flight_);
 END_DEFINE_CALLABLE(http_client)
+
+namespace {
+bool g_done_test_http_client = false;
+}
+
+COMMAND_LINE_UTILITY(test_http_client) {
+	http_client* client = new http_client("localhost", "23456");
+	client->send_request("POST /server", "{}",
+	  [](std::string response) { fprintf(stderr, "RESPONSE %d: %s\n", SDL_GetTicks(), response.c_str()); g_done_test_http_client = true; },
+	  [](std::string error) { fprintf(stderr, "ERROR IN RESPONSE\n"); },
+	  [](size_t a, size_t b, bool c) { fprintf(stderr, "PROGRESS...\n"); }
+	);
+
+	while(!g_done_test_http_client) {
+		client->process();
+	}
+}

@@ -2749,6 +2749,7 @@
 					"-Wno-constexpr-not-const",
 					"-Wno-backslash-newline-escape",
 					"-Wno-extern-c-compat",
+					"-Wno-deprecated-declarations",
 				);
 				WRAPPER_EXTENSION = app;
 			};
@@ -2805,6 +2806,7 @@
 					"-Wno-constexpr-not-const",
 					"-Wno-backslash-newline-escape",
 					"-Wno-extern-c-compat",
+					"-Wno-deprecated-declarations",
 				);
 				WRAPPER_EXTENSION = app;
 			};
