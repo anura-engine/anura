@@ -110,12 +110,12 @@ namespace
 		int x2 = std::numeric_limits<int>::min();
 		int y2 = std::numeric_limits<int>::min();
 		if(ox >= s->width() || oy >= s->height()) {
-			return rect::from_coordinates(ox,oy,ox+1,oy+1);
+			return rect(ox,oy,2,2);
 		}
 		const rect r(0, 0, s->width(), s->height());
 
 		if(is_pixel_alpha(s, point(ox, oy))) {
-			return rect::from_coordinates(ox,oy,ox+1,oy+1);
+			return rect(ox,oy,2,2);
 		}
 
 		typedef pathfinding::GraphNode<point, int> graph_node;
