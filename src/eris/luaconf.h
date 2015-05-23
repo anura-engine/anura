@@ -12,11 +12,19 @@
 #include <stddef.h>
 
 /*
- * Wesnoth definitions for compatibility
+ * Definitions for compatibility
  */
 #define LUA_COMPAT_MODULE
 
 #define LUA_COMPAT_ALL
+
+/*
+ * If we aren't on windows, we should define USE_POSIX which will
+ * silence a warning on linux machines.
+ */
+#ifndef _WIN32
+#define LUA_USE_POSIX
+#endif
 
 /*
 ** ==================================================================
