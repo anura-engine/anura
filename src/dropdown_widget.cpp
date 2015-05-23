@@ -353,28 +353,26 @@ namespace gui
 
 	bool DropdownWidget::handleEvent(const SDL_Event& event, bool claimed)
 	{
-		SDL_Event ev = event;
-
 		if(claimed) {
 			return claimed;
 		}
 
 		if(type_ == DropdownType::COMBOBOX && editor_) {
-			if(editor_->processEvent(getPos(), ev, claimed)) {
+			if(editor_->processEvent(getPos(), event, claimed)) {
 				return true;
 			}
 		}
 
 		if(dropdown_menu_ && dropdown_menu_->visible()) {
-			if(dropdown_menu_->processEvent(getPos(), ev, claimed)) {
+			if(dropdown_menu_->processEvent(getPos(), event, claimed)) {
 				return true;
 			}
 		}
 
 		if(hasFocus() && dropdown_menu_) {
 			if(event.type == SDL_KEYDOWN 
-				&& (ev.key.keysym.sym == controls::get_keycode(controls::CONTROL_ATTACK) 
-				|| ev.key.keysym.sym == controls::get_keycode(controls::CONTROL_JUMP))) {
+				&& (event.key.keysym.sym == controls::get_keycode(controls::CONTROL_ATTACK) 
+				|| event.key.keysym.sym == controls::get_keycode(controls::CONTROL_JUMP))) {
 				claimed = true;
 				dropdown_menu_->setVisible(!dropdown_menu_->visible());
 			}
