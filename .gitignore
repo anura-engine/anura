@@ -72,3 +72,11 @@ project.xcworkspace
 sdk/
 build-x64/
 build-Win32/
+
+#   IDEs metadata documents.
+#   clion.sh - JetBrains' CLion. Metadata directory.
+.idea/
+#   kdevelop - KDevelop 4. Metadata directory.
+.kdev4/
+#   kdevelop - KDevelop 4. Project file.
+*.kdev4
