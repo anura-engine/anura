@@ -130,9 +130,26 @@ namespace graphics
 			return face;
 		}
 
+namespace {
+	class surface_cache_man {
+	public:
+		surface_cache_man() {}
+		~surface_cache_man() {
+			for ( auto & v : cache_) {
+				cairo_surface_destroy(v.second);
+			}
+		}
+		cairo_surface_t *& operator[](const std::string & name) {
+			return cache_[name];
+		}
+	private:
+		std::map<std::string, cairo_surface_t*> cache_;
+	};
+}
+
 		cairo_surface_t* get_cairo_image(const std::string& image)
 		{
-			static std::map<std::string, cairo_surface_t*> cache;
+			static surface_cache_man cache;
 
 			cairo_surface_t*& result = cache[image];
 			if(result == nullptr) {
