@@ -4263,6 +4263,11 @@ UNIT_TEST(formula_typeof) {
 	TYPEOF_TEST("static_typeof(if(1d6 = 5, 5))", "int|null");
 	TYPEOF_TEST("static_typeof(if(1d6 = 2, 5, 8))", "int");
 	TYPEOF_TEST("static_typeof(if(1d6 = 2, 'abc', 2))", "string|int");
+	TYPEOF_TEST("static_typeof(def(obj dummy_gui_object c, [obj dummy_gui_object] s) -> [obj dummy_gui_object]	\
+			 if (c.parent and (c.parent is obj dummy_gui_object) and (c.parent not in s), 	\
+				recurse(c.parent, s + [c.parent]), 				\
+				s 								\
+			))", "function(obj dummy_gui_object,[obj dummy_gui_object]) -> [obj dummy_gui_object]");
 #undef TYPEOF_TEST
 }
 
