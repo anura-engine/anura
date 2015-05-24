@@ -227,7 +227,6 @@ bool do_auto_update(std::deque<std::string> argv, auto_update_window& update_win
 		}
 
 		if(arg_name == "--timeout") {
-			ASSERT_LOG(arg_value.empty(), "Unrecognized argument: " << arg);
 			timeout_ms = atoi(arg_value.c_str());
 		} else if(arg_name == "--args") {
 			ASSERT_LOG(arg_value.empty(), "Unrecognized argument: " << arg);
