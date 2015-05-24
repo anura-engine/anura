@@ -26,8 +26,11 @@
 #include "asserts.hpp"
 #include "compress.hpp"
 #include "http_client.hpp"
+#include "preferences.hpp"
 #include "string_utils.hpp"
 #include "unit_test.hpp"
+
+PREF_INT(http_fake_lag, 0, "fake lag to add to http requests");
 
 http_client::http_client(const std::string& host, const std::string& port, int session, boost::asio::io_service* service)
   : session_id_(session),
@@ -152,7 +155,11 @@ void http_client::handle_connect(const boost::system::error_code& error, connect
 
 	conn->request = msg.str();
 
-	write_connection_data(conn);
+	if(g_http_fake_lag > 0) {
+		connections_waiting_on_fake_lag_.push_back(std::pair<int,connection_ptr>(SDL_GetTicks()+g_http_fake_lag, conn));
+	} else {
+		write_connection_data(conn);
+	}
 }
 
 void http_client::write_connection_data(connection_ptr conn)
@@ -315,6 +322,11 @@ void http_client::handle_receive(connection_ptr conn, const boost::system::error
 
 void http_client::process()
 {
+	while(connections_waiting_on_fake_lag_.empty() == false && connections_waiting_on_fake_lag_.front().first < SDL_GetTicks()) {
+		write_connection_data(connections_waiting_on_fake_lag_.front().second);
+		connections_waiting_on_fake_lag_.erase(connections_waiting_on_fake_lag_.begin());
+	}
+
 	io_service_.poll();
 	io_service_.reset();
 }
