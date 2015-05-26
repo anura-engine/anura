@@ -23,10 +23,14 @@
 
 #pragma once
 
+#include <memory>
+
 #include "ClipScope.hpp"
 
 namespace KRE
 {
+	class StencilScopeOGL;
+
 	class ClipScopeOGL : public ClipScope
 	{
 	public:
@@ -36,6 +40,7 @@ namespace KRE
 		void apply() const override;
 		void clear() const override;
 	private:
+		mutable std::unique_ptr<StencilScopeOGL> scope_;
 		DISALLOW_COPY_ASSIGN_AND_DEFAULT(ClipScopeOGL);
 	};
 }

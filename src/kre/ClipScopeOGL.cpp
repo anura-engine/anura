@@ -41,15 +41,17 @@ namespace KRE
 
 	void ClipScopeOGL::apply() const 
 	{
+		{
+		glEnable(GL_STENCIL_TEST);
 		StencilScopeOGL stencil_scope(StencilSettings(true, 
 			StencilFace::FRONT_AND_BACK, 
-			StencilFunc::NEVER, 
-			0xff,
+			StencilFunc::ALWAYS, 
+			0x01,
 			0x01,
 			0x01,
 			StencilOperation::REPLACE,
-			StencilOperation::KEEP,
-			StencilOperation::KEEP)); 
+			StencilOperation::REPLACE,
+			StencilOperation::REPLACE)); 
 		
 		glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
 		glClear(GL_STENCIL_BUFFER_BIT);
@@ -66,14 +68,29 @@ namespace KRE
 		glm::mat4 mvp = /*mvp_ **/ model;
 		static OpenGL::ShaderProgramPtr shader = OpenGL::ShaderProgram::factory("simple");
 		shader->makeActive();
-		shader->setUniformValue(shader->getMvpUniform(), glm::value_ptr(mvp));
+
+		//TODO: this doesn't seem to work, gives a really strange mvp
+		//which makes clipping not work. Look at this at some point.
+		//shader->setUniformValue(shader->getMvpUniform(), glm::value_ptr(mvp));
 		shader->setUniformValue(shader->getColorUniform(), Color::colorWhite().asFloatVector());
 
 		glEnableVertexAttribArray(shader->getVertexAttribute());
 		glVertexAttribPointer(shader->getVertexAttribute(), 2, GL_FLOAT, GL_FALSE, 0, varray);
 		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
 		glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+
+		}
+
+		scope_.reset(new StencilScopeOGL(StencilSettings(true, 
+			StencilFace::FRONT_AND_BACK, 
+			StencilFunc::EQUAL, 
+			0x01,
+			0x01,
+			0x0,
+			StencilOperation::KEEP,
+			StencilOperation::KEEP,
+			StencilOperation::KEEP
+		)));
 	}
 
 	void ClipScopeOGL::clear() const 
