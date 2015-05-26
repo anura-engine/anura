@@ -1107,6 +1107,7 @@ const char* InstallImagePath = ".";
 
 	void client::on_response(std::string response)
 	{
+		LOG_INFO("module client response received. Mode = " << static_cast<int>(operation_));
 		try {
 			variant doc = json::parse(response, json::JSON_PARSE_OPTIONS::NO_PREPROCESSOR);
 			if(doc[variant("status")] != variant("ok")) {
@@ -1176,6 +1177,8 @@ const char* InstallImagePath = ".";
 	void client::perform_install(const std::string& response)
 	{
 		variant doc;
+
+		LOG_INFO("Performing module install");
 
 		try {
 			doc = json::parse(response, json::JSON_PARSE_OPTIONS::NO_PREPROCESSOR);
