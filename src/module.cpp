@@ -890,6 +890,12 @@ COMMAND_LINE_UTILITY(generate_manifest)
 				for(auto p : our_manifest.as_map()) {
 					if(their_manifest.has_key(p.first) && their_manifest[p.first]["md5"] == p.second["md5"]) {
 						keys_to_delete.push_back(p.first);
+						LOG_INFO("File " << p.first.as_string() << " is unchanged, not uploading");
+					} else if(their_manifest.has_key(p.first) == false) {
+						LOG_INFO("File " << p.first.as_string() << " is new, uploading " << p.second["size"].as_int());
+					} else {
+						LOG_INFO("File " << p.first.as_string() << " has changed, uploading " << p.second["size"].as_int());
+
 					}
 				}
 
