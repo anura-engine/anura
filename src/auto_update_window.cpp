@@ -1,14 +1,6 @@
 #include <assert.h>
 #include <sstream>
 
-#ifdef _MSC_VER
-#include <direct.h>
-#define chdir _chdir
-#define execv _execv
-#else
-#include <unistd.h>
-#endif
-
 #include "auto_update_window.hpp"
 #include "filesystem.hpp"
 #include "json_parser.hpp"
@@ -22,6 +14,14 @@
 #include "Canvas.hpp"
 #include "Font.hpp"
 #include "Texture.hpp"
+
+#ifdef _MSC_VER
+#include <direct.h>
+#define chdir _chdir
+#define execv _execv
+#else
+#include <unistd.h>
+#endif
 
 namespace 
 {
