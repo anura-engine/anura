@@ -611,6 +611,10 @@ namespace tbs
 				msg.add("pid", static_cast<int>(getpid()));
 #endif
 
+				if(value.is_map()) {
+					msg.add("info", value);
+				}
+
 				bool complete = false;
 
 				client.send_request("POST /server", msg.build().write_json(),

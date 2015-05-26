@@ -129,6 +129,9 @@ public:
 		handle_request_fn_ = controller_->queryValue("handle_request");
 		ASSERT_LOG(handle_request_fn_.is_function(), "Could not find handle_request in matchmaking_server class");
 
+		handle_game_over_message_fn_ = controller_->queryValue("handle_game_over_message");
+		ASSERT_LOG(handle_game_over_message_fn_.is_function(), "Could not find handle_game_over_message in matchmaking_server class");
+
 		process_account_fn_ = controller_->queryValue("process_account");
 		ASSERT_LOG(process_account_fn_.is_function(), "Could not find process_account in matchmaking_server class");
 
@@ -706,6 +709,16 @@ public:
 			} else if(request_type == "server_finished_game") {
 				auto itor = servers_.find(doc["pid"].as_int());
 				if(itor != servers_.end()) {
+					variant info = doc["info"];
+					if(info.is_map()) {
+						std::vector<variant> args;
+						args.push_back(variant(this));
+						args.push_back(info);
+
+						variant cmd = handle_game_over_message_fn_(args);
+						executeCommand(cmd);
+					}
+
 					available_ports_.push_back(itor->second.port);
 					servers_.erase(itor);
 
@@ -1159,6 +1172,7 @@ private:
 	variant read_account_fn_;
 	variant process_account_fn_;
 	variant handle_request_fn_;
+	variant handle_game_over_message_fn_;
 	variant matchmake_fn_;
 
 	variant current_response_;
