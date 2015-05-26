@@ -506,6 +506,14 @@ bool LevelRunner::handle_mouse_events(const SDL_Event &event)
 					}
 				}
 
+				rect clip_area;
+				if(e->getClipArea(&clip_area)) {
+					point p(x,y);
+					if(pointInRect(p, clip_area) == false) {
+						continue;
+					}
+				}
+
 				if(event_type == SDL_MOUSEBUTTONDOWN) {
 					e->setMouseButtons(e->getMouseButtons() | SDL_BUTTON(event_button_button));
 				} else if(event_type == SDL_MOUSEMOTION) {
