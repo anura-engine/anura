@@ -241,11 +241,14 @@ public:
 	gui::WidgetPtr getWidgetById(const std::string& id);
 	gui::ConstWidgetPtr getWidgetById(const std::string& id) const;
 	std::vector<variant> getVariantWidgetList() const;
-	bool getClipArea(rect* clip_area) {
-		if(clip_area_ && clip_area) {
+	bool getClipArea(rect* clip_area) const override {
+		if(clip_area_.get() != nullptr && clip_area) {
 			*clip_area = *clip_area_.get();
 			return true;
+		} else if(clip_area_.get() != nullptr) {
+			return true;
 		}
+
 		return false;
 	}
 
