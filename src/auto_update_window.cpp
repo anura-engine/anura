@@ -272,13 +272,19 @@ bool do_auto_update(std::deque<std::string> argv, auto_update_window& update_win
 
 		bool is_new_install = false;
 
+		bool has_error = false;
+
 #define HANDLE_ERROR(msg) \
 			LOG_ERROR(msg); \
 		if(is_new_install) { \
 			std::ostringstream s; \
 			s << msg; \
 			error_msg = s.str(); \
-			return false; \
+			bool newer = strstr(error_msg.c_str(), "newer") != nullptr; \
+			if(!newer) { has_error = true; } \
+			if(!newer && (!cl || !anura_cl)) { \
+				return false; \
+			} \
 		}
 			
 
@@ -364,6 +370,9 @@ bool do_auto_update(std::deque<std::string> argv, auto_update_window& update_win
 			const int time_taken = profile::get_tick_time() - start_time;
 			if(time_taken > timeout_ms) {
 				HANDLE_ERROR("Timed out updating module. Canceling. " << time_taken << "ms vs " << timeout_ms << "ms");
+				if(is_new_install) {
+					return false;
+				}
 				break;
 			}
 
@@ -416,6 +425,11 @@ bool do_auto_update(std::deque<std::string> argv, auto_update_window& update_win
 				}
 			}
 		}
+
+		if(has_error && is_new_install) {
+			return false;
+		}
+
 		}
 	}
 
