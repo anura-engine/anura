@@ -263,7 +263,7 @@ void ModuleWebServer::handlePost(socket_ptr socket, variant doc, const http::env
 			static const variant MD5Variant("md5");
 			for(auto p : manifest.as_map()) {
 				const int size = p.second[SizeVariant].as_int();
-				if(size >= 65536) {
+				if(size >= 8192) {
 					const std::string data = zip::compress(p.second[DataVariant].as_string());
 					sys::write_file(data_path_ + "/chunks/" + p.second[MD5Variant].as_string(), data);
 
