@@ -1113,7 +1113,7 @@ static const int ModuleProtocolVersion = 1;
 
 	void client::on_chunk_response(variant node, boost::shared_ptr<http_client> client, std::string response)
 	{
-		fprintf(stderr, "GET CHUNK\n");
+		nbytes_transferred_ += node["size"].as_int();
 		node.add_attr_mutation(variant("data"), variant(response));
 
 		chunk_clients_.erase(std::remove(chunk_clients_.begin(), chunk_clients_.end(), client), chunk_clients_.end());
@@ -1243,6 +1243,7 @@ static const int ModuleProtocolVersion = 1;
 		variant manifest = doc["module"]["manifest"];
 		for(auto p : manifest.as_map()) {
 			if(p.second["data"].is_null()) {
+				nbytes_total_ += p.second["size"].as_int();
 				chunks_to_get_.push_back(p.second);
 			}
 		}
