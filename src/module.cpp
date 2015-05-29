@@ -1006,7 +1006,7 @@ static const int ModuleProtocolVersion = 1;
 		variant_builder request;
 		request.add("type", "download_module");
 		request.add("module_id", module_id);
-		//request.add("protocol_version", ModuleProtocolVersion);
+		request.add("protocol_version", ModuleProtocolVersion);
 
 		std::string version_str;
 		std::string current_path = install_image_ ? InstallImagePath : make_base_module_path(module_id);
