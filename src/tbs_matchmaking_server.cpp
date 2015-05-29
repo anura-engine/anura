@@ -936,9 +936,13 @@ private:
 				session_info.game_pending = time_ms_;
 				session_info.queued_for_game = false;
 
+				auto account_info_itor = account_info_.find(session_info.user_id);
+				ASSERT_LOG(account_info_itor != account_info_.end(), "Could not find user's account info: " << session_info.user_id);
+
 				variant_builder user;
 				user.add("user", session_info.user_id);
 				user.add("session_id", session_info.session_id);
+				user.add("account_info", account_info_itor->second["info"]);
 				users.push_back(user.build());
 
 				user_info_[session_info.user_id].game_session = session_info.session_id;
