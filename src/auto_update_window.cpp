@@ -276,7 +276,7 @@ bool do_auto_update(std::deque<std::string> argv, auto_update_window& update_win
 
 #define HANDLE_ERROR(msg) \
 			LOG_ERROR(msg); \
-		if(is_new_install) { \
+		if(is_new_install || (cl && cl->out_of_date()) || (anura_cl && anura_cl->out_of_date())) { \
 			std::ostringstream s; \
 			s << msg; \
 			error_msg = s.str(); \
@@ -487,5 +487,6 @@ COMMAND_LINE_UTILITY(update_launcher)
 	std::string error_msg;
 	std::deque<std::string> argv(args.begin(), args.end());
 	while(!do_auto_update(argv, update_window, error_msg)) {
+		SDL_Delay(2000);
 	}
 }

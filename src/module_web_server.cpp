@@ -32,6 +32,7 @@
 
 #include "asserts.hpp"
 #include "base64.hpp"
+#include "compress.hpp"
 #include "filesystem.hpp"
 #include "formatter.hpp"
 #include "json_parser.hpp"
@@ -72,6 +73,22 @@ void ModuleWebServer::heartbeat()
 	timer_.async_wait(std::bind(&ModuleWebServer::heartbeat, this));
 }
 
+namespace {
+
+void add_chunks_to_manifest(const std::string& data_path, variant manifest)
+{
+	for(auto p : manifest.as_map()) {
+		if(p.second["data"].is_null()) {
+			std::string chunk_id = p.second["md5"].as_string();
+			std::string data = zip::decompress(sys::read_file(data_path + "/chunks/" + chunk_id));
+			p.second.add_attr_mutation(variant("data"), variant(data));
+		}
+	}
+}
+
+static const int ModuleProtocolVersion = 1;
+}
+
 void ModuleWebServer::handlePost(socket_ptr socket, variant doc, const http::environment& env)
 {
 	std::map<variant,variant> response;
@@ -79,6 +96,14 @@ void ModuleWebServer::handlePost(socket_ptr socket, variant doc, const http::env
 		const std::string msg_type = doc["type"].as_string();
 		if(msg_type == "download_module") {
 			const std::string module_id = doc["module_id"].as_string();
+
+			variant proto_version = doc["protocol_version"];
+			bool require_back_compat = false;
+			if(proto_version.is_null() || proto_version.as_int() < ModuleProtocolVersion) {
+				require_back_compat = true;
+				//send_msg(socket, "text/json", "{ status: \"need_to_download_new_installer\", out_of_date: true, message: \"Your version of the\nArgentum Age installer is out of date.\nIt needs to be downloaded and installed again.\" }", "");
+				//return;
+			}
 
 			if(data_.has_key(module_id) == false) {
 				send_msg(socket, "text/json", "{ status: \"no_such_module\" }", "");
@@ -138,6 +163,15 @@ void ModuleWebServer::handlePost(socket_ptr socket, variant doc, const http::env
 							our_manifest.remove_attr_mutation(match);
 						}
 
+						if(require_back_compat) {
+							add_chunks_to_manifest(data_path_, our_manifest);
+						}
+
+						contents = module.write_json();
+					} else if(require_back_compat) {
+						variant module = json::parse(contents);
+						variant manifest = module["manifest"];
+						add_chunks_to_manifest(data_path_, manifest);
 						contents = module.write_json();
 					}
 
@@ -157,6 +191,17 @@ void ModuleWebServer::handlePost(socket_ptr socket, variant doc, const http::env
 				response[variant("message")] = variant("No such module");
 			}
 
+		} else if(msg_type == "download_chunk") {
+			const std::string chunk_id = doc["chunk_id"].as_string();
+
+			std::string data = sys::read_file(data_path_ + "/chunks/" + chunk_id);
+			if(data.empty()) {
+				send_msg(socket, "text/json", "{ status: \"no_such_chunk\" }", "");
+				return;
+			}
+
+			send_msg(socket, "application/octet-stream", data, "Content-Encoding: deflate");
+			return;
 		} else if(msg_type == "prepare_upload_module") {
 			const std::string module_id = doc["module_id"].as_string();
 			ASSERT_LOG(std::count_if(module_id.begin(), module_id.end(), isalnum) + std::count(module_id.begin(), module_id.end(), '_') == module_id.size(), "ILLEGAL MODULE ID");
@@ -209,6 +254,20 @@ void ModuleWebServer::handlePost(socket_ptr socket, variant doc, const http::env
 					if(!new_manifest.has_key(p.first) && !std::count(deletions.begin(), deletions.end(), p.first)) {
 						new_manifest.add_attr_mutation(p.first, p.second);
 					}
+				}
+			}
+
+			variant manifest = module_node["manifest"];
+			static const variant SizeVariant("size");
+			static const variant DataVariant("data");
+			static const variant MD5Variant("md5");
+			for(auto p : manifest.as_map()) {
+				const int size = p.second[SizeVariant].as_int();
+				if(size >= 65536) {
+					const std::string data = zip::compress(p.second[DataVariant].as_string());
+					sys::write_file(data_path_ + "/chunks/" + p.second[MD5Variant].as_string(), data);
+
+					p.second.remove_attr_mutation(DataVariant);
 				}
 			}
 
