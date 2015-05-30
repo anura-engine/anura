@@ -86,7 +86,7 @@ namespace KRE
 			StencilFunc::EQUAL, 
 			0x01,
 			0x01,
-			0x0,
+			0xff,
 			StencilOperation::KEEP,
 			StencilOperation::KEEP,
 			StencilOperation::KEEP

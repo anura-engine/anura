@@ -212,7 +212,8 @@ namespace gui
 		ScrollableWidget::handleDraw();
 
 		using namespace KRE;
-		ClipScope::Manager clip_scope(rect(x(),y(),width(),height()));
+		//commented out until clipping is fixed
+		//ClipScope::Manager clip_scope(rect(x(),y(),width(),height()));
 
 		for(const std::vector<WidgetPtr>& v : children_) {
 			for(const WidgetPtr& widget : v) {
