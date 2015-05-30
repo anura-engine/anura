@@ -130,11 +130,11 @@ public:
 		std::string help;
 
 		const EntityPtr& preview_object() const;
-		const std::shared_ptr<const Frame>& preview_frame() const;
+		const boost::intrusive_ptr<const Frame>& preview_frame() const;
 	
 	private:
 		mutable EntityPtr preview_object_;
-		mutable std::shared_ptr<const Frame> preview_frame_;
+		mutable boost::intrusive_ptr<const Frame> preview_frame_;
 		variant frame_info_;
 	};
 
