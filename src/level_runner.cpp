@@ -103,7 +103,7 @@ namespace
 	struct upload_screenshot_info 
 	{
 		upload_screenshot_info() 
-			: error(false), done(false)
+			: error(false), done(false), client(new http_client("www.theargentlark.com", "80"))
 		{}
 		void finished(std::string response, bool is_error) {
 			LOG_INFO("Finished(" << is_error << ", " << response << ")");
@@ -114,20 +114,21 @@ namespace
 		std::string result;
 		bool error;
 		bool done;
+
+		boost::intrusive_ptr<http_client> client;
 	};
 
 	void upload_screenshot(std::string file, std::shared_ptr<upload_screenshot_info> info)
 	{
 		// XXX we should read the server address from some sort of configuration file.
 		using std::placeholders::_1;
-		http_client client("www.theargentlark.com", "80");
-		client.send_request("POST /cgi-bin/upload-screenshot.pl?module=" + module::get_module_name(), 
+		info->client->send_request("POST /cgi-bin/upload-screenshot.pl?module=" + module::get_module_name(), 
 			base64::b64encode(sys::read_file(file)), 
 			std::bind(&upload_screenshot_info::finished, info.get(), _1, false),
 			std::bind(&upload_screenshot_info::finished, info.get(), _1, true),
 			[](size_t,size_t,bool){});
 		while(!info->done) {
-			client.process();
+			info->client->process();
 		}
 	}
 
