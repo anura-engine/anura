@@ -264,10 +264,14 @@ void ModuleWebServer::handlePost(socket_ptr socket, variant doc, const http::env
 			for(auto p : manifest.as_map()) {
 				const int size = p.second[SizeVariant].as_int();
 				if(size >= 8192) {
-					const std::string data = zip::compress(p.second[DataVariant].as_string());
-					sys::write_file(data_path_ + "/chunks/" + p.second[MD5Variant].as_string(), data);
+					if(p.second[DataVariant].is_string()) {
+						const std::string data = zip::compress(p.second[DataVariant].as_string());
+						sys::write_file(data_path_ + "/chunks/" + p.second[MD5Variant].as_string(), data);
 
-					p.second.remove_attr_mutation(DataVariant);
+						p.second.remove_attr_mutation(DataVariant);
+					} else {
+						ASSERT_LOG(sys::file_exists(data_path_ + "/chunks/" + p.second[MD5Variant].as_string()), "Object has no file: " << p.second[MD5Variant].as_string());
+					}
 				}
 			}
 
