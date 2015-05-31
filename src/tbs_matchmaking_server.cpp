@@ -138,6 +138,9 @@ public:
 		matchmake_fn_ = controller_->queryValue("matchmake");
 		ASSERT_LOG(matchmake_fn_.is_function(), "Could not find matchmake function in matchmaking_server class");
 
+		admin_account_fn_ = controller_->queryValue("admin_account");
+		ASSERT_LOG(admin_account_fn_.is_function(), "Could not find admin_account in matchmaking_server class");
+
 		db_client_ = DbClient::create();
 
 
@@ -795,6 +798,31 @@ public:
 
 	void handleAdminPost(socket_ptr socket, variant doc)
 	{
+		if(doc["msg"].is_map()) {
+			std::string user = doc["msg"]["user"].as_string();
+			db_client_->get("user:" + user, [=](variant user_info) {
+				if(user_info.is_null()) {
+					return;
+				}
+
+				repair_account(&user_info);
+
+				std::vector<variant> v;
+				v.push_back(variant(this));
+				v.push_back(user_info["info"]);
+				v.push_back(doc["msg"]);
+				variant cmd = admin_account_fn_(v);
+				executeCommand(cmd);
+
+				auto itor = account_info_.find(user);
+				if(itor != account_info_.end()) {
+					itor->second = user_info;
+				}
+			});
+
+			return;
+		}
+
 #if !defined(_MSC_VER)
 		if(child_admin_process_ != -1) {
 			int status = 0;
@@ -1178,6 +1206,7 @@ private:
 	variant handle_request_fn_;
 	variant handle_game_over_message_fn_;
 	variant matchmake_fn_;
+	variant admin_account_fn_;
 
 	variant current_response_;
 

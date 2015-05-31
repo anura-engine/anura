@@ -637,7 +637,7 @@ namespace json
 			cache[key] = result;
 			return result;
 		} catch(ParseError& e) {
-			//std::cerr << e.errorMessage() << "\n";
+			std::cerr << e.errorMessage() << "\n";
 			e.fname = fname;
 			throw(e);
 		}
