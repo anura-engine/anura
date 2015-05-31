@@ -809,6 +809,7 @@ public:
 
 				std::vector<variant> v;
 				v.push_back(variant(this));
+				v.push_back(variant(user));
 				v.push_back(user_info["info"]);
 				v.push_back(doc["msg"]);
 				variant cmd = admin_account_fn_(v);
