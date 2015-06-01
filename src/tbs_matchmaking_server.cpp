@@ -807,6 +807,8 @@ public:
 
 				repair_account(&user_info);
 
+				account_info_[user] = user_info;
+
 				std::vector<variant> v;
 				v.push_back(variant(this));
 				v.push_back(variant(user));
@@ -814,11 +816,6 @@ public:
 				v.push_back(doc["msg"]);
 				variant cmd = admin_account_fn_(v);
 				executeCommand(cmd);
-
-				auto itor = account_info_.find(user);
-				if(itor != account_info_.end()) {
-					itor->second = user_info;
-				}
 			});
 
 			return;
