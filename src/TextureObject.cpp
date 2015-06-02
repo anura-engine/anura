@@ -44,6 +44,15 @@ DEFINE_FIELD(binding_point, "int")
 DEFINE_SET_FIELD
 	obj.binding_point_ = value.as_int();
 
+BEGIN_DEFINE_FN(bind, "() ->commands")
+	boost::intrusive_ptr<const TextureObject> ptr(&obj);
+	return variant(new game_logic::FnCommandCallable([ptr]() {
+		auto t = ptr->texture();
+		ASSERT_LOG(t, "Could not get texture");
+		t->bind();
+	}));
+END_DEFINE_FN
+
 BEGIN_DEFINE_FN(save, "(string) ->commands")
 	using namespace game_logic;
 	using namespace KRE;
