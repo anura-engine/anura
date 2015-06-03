@@ -905,7 +905,7 @@ void Level::start_rebuild_tiles_in_background(const std::vector<int>& layers)
 
 	static threading::mutex* sync = new threading::mutex;
 
-	info.rebuild_tile_thread = new threading::thread("rebuild_tiles", std::bind(build_tiles_thread_function, &info, worker_tile_maps, *sync));
+	info.rebuild_tile_thread = new threading::thread("rebuild_tiles", std::bind(build_tiles_thread_function, &info, worker_tile_maps, *sync), threading::THREAD_ALLOCATES_COLLECTIBLE_OBJECTS);
 }
 
 void Level::freeze_rebuild_tiles_in_background()
@@ -1694,7 +1694,7 @@ void Level::prepare_tiles_for_drawing()
 		const int npoints = LevelObject::calculateTileCorners(tiles_[n].object->isOpaque() ? &vertices_ot[tiles_[n].zorder].first : &vertices_ot[tiles_[n].zorder].second, tiles_[n]);
 		if(npoints > 0) {
 			if(*tiles_[n].object->texture() != *blit_cache_info_ptr->getTexture()) {
-				ASSERT_LOG(false, "Will not deal with multiple textures per level per zorder -- is a stupid case to have to handle. level '" 
+				ASSERT_LOG(false, "Multiple tile textures per level per zorder are unsupported. level: '" 
 					<< this->id() << "' zorder: " << tiles_[n].zorder
 					<< " ; " << tiles_[n].object->texture()->isPaletteized() << " " << blit_cache_info_ptr->getTexture()->isPaletteized());
 			}

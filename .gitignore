@@ -46,6 +46,7 @@ lua.lib
 
 # random stuff
 .DS_Store
+db.json
 *~
 *.kate-swp
 *.sublime-workspace

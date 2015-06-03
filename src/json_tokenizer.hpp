@@ -33,7 +33,7 @@ namespace json
 
 	struct Token 
 	{
-		Token() : translate(false) {}
+		Token() : type(TYPE::NUM_TYPES), begin(0), end(0), translate(false) {}
 		enum class TYPE { 
 			NUMBER, 
 			STRING, 

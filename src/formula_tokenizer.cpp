@@ -28,6 +28,8 @@
 #include "string_utils.hpp"
 #include "unit_test.hpp"
 
+#pragma GCC diagnostic ignored "-Wchar-subscripts"
+
 namespace formula_tokenizer
 {
 	namespace 
@@ -277,7 +279,7 @@ namespace formula_tokenizer
 
 			t.end = i1;
 
-			static const std::string Keywords[] = { "functions", "def", "null", "true", "false", "base", "recursive" };
+			static const std::string Keywords[] = { "functions", "def", "let", "null", "true", "false", "base", "recursive" };
 			for(const std::string& str : Keywords) {
 				if(str.size() == (t.end - t.begin) && std::equal(str.begin(), str.end(), t.begin)) {
 					t.type = FFL_TOKEN_TYPE::KEYWORD;

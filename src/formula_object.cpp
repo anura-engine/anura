@@ -754,6 +754,7 @@ std::map<std::string, std::string>& class_path_map()
 		}
 	}
 
+#ifdef USE_LUA
 	const std::shared_ptr<lua::CompiledChunk> & FormulaClass::getLuaInit(lua::LuaContext & ctx) const {
 		if (lua_compiled_) {
 			return lua_compiled_;
@@ -763,7 +764,7 @@ std::map<std::string, std::string>& class_path_map()
 		}
 		return lua_compiled_;
 	}
-
+#endif
 
 	namespace
 	{

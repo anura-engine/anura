@@ -27,6 +27,8 @@
 #include <deque>
 #include <iostream>
 
+#include <SDL.h>
+
 #if !defined(_MSC_VER)
 #include <sys/time.h>
 #endif
@@ -288,8 +290,10 @@ namespace http
 		std::string compressed_buf;
 		std::string compress_header;
 		const std::string* msg_ptr = &msg_ref;
-		if(socket->supports_deflate && msg_ref.size() > 1024) {
+		if(socket->supports_deflate && msg_ref.size() > 1024 && (header_parms.empty() || strstr(header_parms.c_str(), "Content-Encoding") == nullptr)) {
+			const int nbefore = SDL_GetTicks();
 			compressed_buf = zip::compress(msg_ref);
+			fprintf(stderr, "COMPRESSED: %d -> %d in %dms\n", (int)msg_ref.size(), (int)compressed_buf.size(), SDL_GetTicks() - nbefore);
 			msg_ptr = &compressed_buf;
 
 			compress_header = "Content-Encoding: deflate\r\n"; 
@@ -340,4 +344,33 @@ namespace http
 	{
 		return json::parse(msg, json::JSON_PARSE_OPTIONS::NO_PREPROCESSOR);
 	}
+}
+
+namespace {
+using namespace http;
+class test_web_server : public http::web_server {
+public:
+	test_web_server(boost::asio::io_service& io_service) : web_server(io_service) {}
+	void handlePost(socket_ptr socket, variant doc, const environment& env) {
+		fprintf(stderr, "HANDLE POST: %d\n", SDL_GetTicks());
+
+		send_msg(socket, "text/json", "{ \"type\": \"ok\" }", "");
+	}
+	void handleGet(socket_ptr socket, const std::string& url, const std::map<std::string, std::string>& args) {
+		fprintf(stderr, "HANDLE GET: %d\n", SDL_GetTicks());
+		send_msg(socket, "text/json", "{ \"type\": \"ok\" }", "");
+	}
+
+private:
+};
+}
+
+COMMAND_LINE_UTILITY(test_http_server) {
+	using namespace http;
+
+	boost::asio::io_service io_service;
+	test_web_server server(io_service);
+
+
+	io_service.run();
 }

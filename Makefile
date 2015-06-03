@@ -24,24 +24,39 @@
 #
 
 OPTIMIZE?=yes
+USE_LUA?=yes
 CCACHE?=ccache
 USE_CCACHE?=$(shell which $(CCACHE) 2>&1 > /dev/null && echo yes)
 ifneq ($(USE_CCACHE),yes)
 CCACHE=
 endif
 
+SANITIZE_ADDRESS?=
+ifneq ($(SANITIZE_ADDRESS), yes)
+SANITIZE_ADDRESS=
+endif
+
 ifeq ($(OPTIMIZE),yes)
 BASE_CXXFLAGS += -O2
 endif
 
-ifeq ($(CXX), g++)
+ifneq ($(USE_LUA), yes)
+USE_LUA=
+endif
+
+BASE_CXXFLAGS += -Wall -Werror
+
+ifneq (,$(findstring clang, `$(CXX)`))
+BASE_CXXFLAGS += -Qunused-arguments -Wno-unknown-warning-option -Wno-deprecated-register
+ifeq ($(USE_LUA), yes)
+BASE_CXXFLAGS += -Wno-pointer-bool-conversion -Wno-parentheses-equality
+endif
+else ifneq (, $(findstring g++, `$(CXX)`))
 GCC_GTEQ_490 := $(shell expr `$(CXX) -dumpversion | sed -e 's/\.\([0-9][0-9]\)/\1/g' -e 's/\.\([0-9]\)/0\1/g' -e 's/^[0-9]\{3,4\}$$/&00/'` \>= 40900)
-BASE_CXXFLAGS += -Wno-literal-suffix
+BASE_CXXFLAGS += -Wno-literal-suffix -Wno-sign-compare
 ifeq "$(GCC_GTEQ_490)" "1"
 BASE_CXXFLAGS += -fdiagnostics-color=auto -fsanitize=undefined
 endif
-else ifneq (,$(findstring clang, `$(CXX)`))
-BASE_CXXFLAGS += -Qunused-arguments -Wno-unknown-warning-option -Wno-deprecated-register -Wno-parentheses-equality -Wno-pointer-bool-conversion
 endif
 
 SDL2_CONFIG?=sdl2-config
@@ -51,18 +66,26 @@ ifneq ($(USE_SDL2),yes)
 $(error SDL2 not found, SDL-1.2 is no longer supported)
 endif
 
+ifeq ($(USE_LUA), yes)
 BASE_CXXFLAGS += -DUSE_LUA
 #USE_LUA := yes # ?=$(shell pkg-config --exists lua5.2 && echo yes)
+endif
 
 TARBALL := /var/www/anura/anura-$(shell date +"%Y%m%d-%H%M").tar.bz2
 
 # Initial compiler options, used before CXXFLAGS and CPPFLAGS. -rdynamic -Wno-literal-suffix
 BASE_CXXFLAGS += -std=c++0x -g -fno-inline-functions \
-	-fthreadsafe-statics -Wnon-virtual-dtor -Werror \
-	-Wignored-qualifiers -Wformat -Wswitch -Wreturn-type \
-	-Wno-narrowing
+	-fthreadsafe-statics \
+	-Wno-narrowing -Wno-reorder -Wno-unused \
+	-Wno-unknown-pragmas -Wno-overloaded-virtual
 
 LDFLAGS?=-rdynamic
+
+# Check for sanitize-address option
+ifeq ($(SANITIZE_ADDRESS), yes)
+BASE_CXXFLAGS += -g3 -fsanitize=address
+LDFLAGS += -fsanitize=address
+endif
 
 # Compiler include options, used after CXXFLAGS and CPPFLAGS.
 INC := -isystem external/include $(shell pkg-config --cflags x11 sdl2 glew SDL2_image SDL2_ttf libpng zlib freetype2 cairo)
@@ -99,7 +122,11 @@ ifeq ($(USE_SVG),yes)
 	LIBS += $(shell pkg-config --libs cairo)
 endif
 
-MODULES   := kre svg Box2D tiled eris
+MODULES   := kre svg Box2D tiled 
+ifeq ($(USE_LUA),yes)
+MODULES += eris
+endif
+
 SRC_DIR   := $(addprefix src/,$(MODULES)) src
 BUILD_DIR := $(addprefix build/,$(MODULES)) build
 

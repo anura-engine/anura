@@ -69,11 +69,11 @@ namespace
 			const int nframes_per_row = node["frames_per_row"].as_int(-1);
 			const int pad = node["pad"].as_int();
 
-			Frame frame_obj(node);
+			boost::intrusive_ptr<Frame> frame_obj(new Frame(node));
 
 			int row = 0, col = 0;
 			for(int n = 0; n != nframes; ++n) {
-				const Frame::FrameInfo& info = frame_obj.frameLayout()[n];
+				const Frame::FrameInfo& info = frame_obj->frameLayout()[n];
 				const rect& area = info.area;
 
 				frame_area a;

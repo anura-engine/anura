@@ -94,7 +94,8 @@ namespace
 			const variant scope(callable);
 			callable->add("value", current_value);
 			callable->add("sample", msg);
-			return value_->execute(*callable);
+			variant result = value_->execute(*callable);
+			return result;
 		} else {
 			if(current_value.is_int() || current_value.is_null()) {
 				return variant(current_value.as_int()+1);
@@ -394,7 +395,12 @@ void process_stats(const variant& doc)
 				for(int i = (info.is_global() ? 0 : 2); i != 4; ++i) {
 					table_set* ts = all_ts[i];
 					table& tb = ts->tables[info.name()];
+
 					variant& val = tb[key];
+					if(val.is_null()) {
+						val = info.init_value();
+					}
+
 					val = info.calculate_value(msg, val);
 				}
 			}

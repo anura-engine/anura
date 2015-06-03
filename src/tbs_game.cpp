@@ -381,7 +381,7 @@ namespace tbs
 		queue_message(result.build(), nplayer);
 	}
 
-	game::player::player() : confirmed_state_id(-1), state_id_sent(-1), allow_deltas(true)
+	game::player::player() : side(-1), is_human(true), confirmed_state_id(-1), state_id_sent(-1), allow_deltas(true)
 	{
 	}
 
@@ -402,7 +402,7 @@ namespace tbs
 
 		handleEvent("add_bot", map_into_callable(info).get());
 
-	//	boost::intrusive_ptr<bot> new_bot(new bot(*web_server::service(), "localhost", formatter() << web_server::port(), info));
+	//	boost::intrusive_ptr<bot> new_bot(new bot(*web_server::service(), "127.0.0.1", formatter() << web_server::port(), info));
 	//	bots_.push_back(new_bot);
 	}
 
@@ -581,10 +581,10 @@ namespace tbs
 				if(value[n].is_callable() && value[n].try_convert<tbs::bot>()) {
 					obj.bots_.push_back(boost::intrusive_ptr<tbs::bot>(value[n].try_convert<tbs::bot>()));
 				} else if(preferences::internal_tbs_server()) {
-					boost::intrusive_ptr<bot> new_bot(new bot(tbs::internal_server::get_io_service(), "localhost", "23456", value[n]));
+					boost::intrusive_ptr<bot> new_bot(new bot(tbs::internal_server::get_io_service(), "127.0.0.1", "23456", value[n]));
 					obj.bots_.push_back(new_bot);
 				} else {
-					boost::intrusive_ptr<bot> new_bot(new bot(*web_server::service(), "localhost", formatter() << web_server::port(), value[n]));
+					boost::intrusive_ptr<bot> new_bot(new bot(*web_server::service(), "127.0.0.1", formatter() << web_server::port(), value[n]));
 					obj.bots_.push_back(new_bot);
 				}
 			}
@@ -610,6 +610,10 @@ namespace tbs
 #else
 				msg.add("pid", static_cast<int>(getpid()));
 #endif
+
+				if(value.is_map()) {
+					msg.add("info", value);
+				}
 
 				bool complete = false;
 

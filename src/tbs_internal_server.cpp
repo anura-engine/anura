@@ -23,11 +23,23 @@
 
 #include <SDL.h>
 
+#include <boost/interprocess/sync/named_semaphore.hpp>
+
+#if !defined(_MSC_VER)
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <errno.h>
+#endif
+
 #include "asserts.hpp"
+#include "formatter.hpp"
 #include "json_parser.hpp"
+#include "module.hpp"
 #include "tbs_internal_server.hpp"
 #include "variant_utils.hpp"
 #include "wml_formula_callable.hpp"
+
+extern std::string g_anura_exe_name;
 
 namespace tbs
 {
@@ -77,15 +89,261 @@ namespace tbs
 		server_ptr->handle_process();
 	}
 
+boost::interprocess::named_semaphore* g_termination_semaphore;
+
+std::string g_termination_semaphore_name;
+
+#if defined(_MSC_VER)
+const std::string shared_sem_name = "anura_tbs_sem";
+HANDLE child_process;
+HANDLE child_thread;
+HANDLE child_stderr;
+HANDLE child_stdout;
+#else
+const std::string shared_sem_name = "/anura_tbs_sem";
+pid_t g_child_pid;
+#endif
+
+std::string get_semaphore_name(std::string id, int sem_id) {
+	return formatter() << shared_sem_name << id << sem_id;
+}
+
+bool create_utility_process(const std::string& app, const std::vector<std::string>& argv)
+{
+
+#if defined(_MSC_VER)
+	char app_np[MAX_PATH];
+	// Grab the full path name
+	DWORD chararacters_copied = GetModuleFileNameA(NULL, app_np,  MAX_PATH);
+	ASSERT_LOG(chararacters_copied > 0, "Failed to get module name: " << GetLastError());
+	std::string app_name_and_path(app_np, chararacters_copied);
+
+	// windows version
+	std::string command_line_params;
+	command_line_params += app_name_and_path + " ";
+	for(size_t n = 0; n != argv.size(); ++n) {
+		command_line_params += argv[n] + " ";
+	}
+	std::vector<char> child_args;
+	child_args.resize(command_line_params.size()+1);
+	memset(&child_args[0], 0, command_line_params.size()+1);
+	memcpy(&child_args[0], &command_line_params[0], command_line_params.size());
+
+	STARTUPINFOA siStartupInfo; 
+	PROCESS_INFORMATION piProcessInfo;
+	SECURITY_ATTRIBUTES saFileSecurityAttributes;
+	memset(&siStartupInfo, 0, sizeof(siStartupInfo));
+	memset(&piProcessInfo, 0, sizeof(piProcessInfo));
+	siStartupInfo.cb = sizeof(siStartupInfo);
+	saFileSecurityAttributes.nLength = sizeof(saFileSecurityAttributes);
+	saFileSecurityAttributes.lpSecurityDescriptor = NULL;
+	saFileSecurityAttributes.bInheritHandle = true;
+	child_stderr = siStartupInfo.hStdError = CreateFileA("stderr_server.txt", GENERIC_WRITE, FILE_SHARE_READ|FILE_SHARE_WRITE, &saFileSecurityAttributes, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+	ASSERT_LOG(siStartupInfo.hStdError != INVALID_HANDLE_VALUE, 
+		"Unable to open stderr_server.txt for child process.");
+	child_stdout = siStartupInfo.hStdOutput = CreateFileA("stdout_server.txt", GENERIC_WRITE, FILE_SHARE_READ|FILE_SHARE_WRITE, &saFileSecurityAttributes, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+	ASSERT_LOG(siStartupInfo.hStdOutput != INVALID_HANDLE_VALUE, 
+		"Unable to open stdout_server.txt for child process.");
+	siStartupInfo.hStdInput = GetStdHandle(STD_INPUT_HANDLE);
+	siStartupInfo.dwFlags = STARTF_USESTDHANDLES;
+	std::cerr << "CREATE CHILD PROCESS: " << app_name_and_path << std::endl;
+	ASSERT_LOG(CreateProcessA(app_name_and_path.c_str(), &child_args[0], NULL, NULL, true, CREATE_DEFAULT_ERROR_MODE, 0, 0, &siStartupInfo, &piProcessInfo),
+		"Unable to create child process for utility: " << GetLastError());
+	child_process = piProcessInfo.hProcess;
+	child_thread = piProcessInfo.hThread;
+#else
+	// everyone else version using fork()
+	//...
+	g_child_pid = fork();
+	if(g_child_pid == 0) {
+		FILE* fout = std::freopen("stdout_server.txt","w", stdout);
+		FILE* ferr = std::freopen("stderr_server.txt","w", stderr);
+		std::cerr.sync_with_stdio(true);
+
+		std::vector<char*> args;
+		args.push_back(const_cast<char*>(app.c_str()));
+		for(const std::string& a : argv) {
+			args.push_back(const_cast<char*>(a.c_str()));
+		}
+		args.push_back(NULL);
+
+		execv(app.c_str(), &args[0]);
+
+		const char* error = NULL;
+		switch(errno) {
+		case E2BIG: error = "E2BIG"; break;
+		case EACCES: error = "EACCES"; break;
+		case EFAULT: error = "EFAULT"; break;
+		case EIO: error = "EIO"; break;
+		case ENOENT: error = "ENOENT"; break;
+		default:
+			error = "Unk"; break;
+		}
+		ASSERT_LOG(false, "execv FAILED: " << error);
+	}
+	ASSERT_LOG(g_child_pid >= 0, "Unable to fork process: " << errno);
+
+#endif
+	// Create a semaphore to signal termination.
+#if defined(_MSC_VER)
+	return false;
+#else
+	return g_child_pid == 0;
+#endif
+}
+
+bool is_utility_process_running()
+{
+	if(!g_termination_semaphore) {
+		return false;
+	}
+
+#if defined(_MSC_VER)
+	if(WaitForSingleObject(child_process, 0) == WAIT_TIMEOUT) {
+		return true;
+	}
+	CloseHandle(child_process);
+	CloseHandle(child_thread);
+	CloseHandle(child_stderr);
+	CloseHandle(child_stdout);
+
+	child_process = 0;
+#else
+	int status;
+	if(waitpid(g_child_pid, &status, WNOHANG) != g_child_pid) {
+		return true;
+	}
+
+	g_child_pid = 0;
+#endif
+
+	return false;
+}
+
+void terminate_utility_process()
+{
+	if(!g_termination_semaphore) {
+		return;
+	}
+
+	g_termination_semaphore->post();
+
+#if defined(_MSC_VER)
+	WaitForSingleObject(child_process, INFINITE);
+	CloseHandle(child_process);
+	CloseHandle(child_thread);
+	CloseHandle(child_stderr);
+	CloseHandle(child_stdout);
+#else
+	if(!g_child_pid) {
+		return;
+	}
+	
+	// .. close child or whatever.
+	int status;
+	if(waitpid(g_child_pid, &status, 0) != g_child_pid) {
+		std::cerr << "Error waiting for child process to finish: " << errno << std::endl;
+	}
+
+	g_child_pid = 0;
+#endif
+
+	boost::interprocess::named_semaphore::remove(g_termination_semaphore_name.c_str());
+
+	delete g_termination_semaphore;
+	g_termination_semaphore = NULL;
+}
+
+	namespace {
+		int g_local_server_port;
+
+	}
+
+	int get_server_on_localhost() {
+		return g_local_server_port;
+	}
+
+	int spawn_server_on_localhost() {
+
+		terminate_utility_process();
+
+		delete g_termination_semaphore;
+		g_termination_semaphore = NULL;
+
+		boost::interprocess::named_semaphore* startup_semaphore = NULL;
+		std::string startup_semaphore_name;
+
+
+		int sem_id = 0;
+		for(int i = 0; i != 64; ++i) {
+			sem_id = rand()%65536;
+			try {
+				g_termination_semaphore_name = get_semaphore_name("term", sem_id);
+				startup_semaphore_name = get_semaphore_name("start", sem_id);
+				g_termination_semaphore = new boost::interprocess::named_semaphore(boost::interprocess::create_only_t(), g_termination_semaphore_name.c_str(), 0);
+				startup_semaphore = new boost::interprocess::named_semaphore(boost::interprocess::create_only_t(), startup_semaphore_name.c_str(), 0);
+			} catch(boost::interprocess::interprocess_exception& e) {
+				delete g_termination_semaphore;
+				g_termination_semaphore = NULL;
+				continue;
+			}
+
+			break;
+		}
+
+		ASSERT_LOG(startup_semaphore, "Could not create semaphore");
+
+		bool started_server = false;
+		for(int attempt = 0; attempt != 4 && started_server == false; ++attempt) {
+			g_local_server_port = 4096 + rand()%20000;
+
+			std::vector<std::string> args;
+			args.push_back(formatter() << "--module=" << module::get_module_name());
+			args.push_back("--no-tbs-server");
+			args.push_back("--quit-server-after-game");
+			args.push_back(formatter() << "--tbs-server-semaphore=" << sem_id);
+			args.push_back("--utility=tbs_server");
+			args.push_back("--port");
+			args.push_back(formatter() << g_local_server_port);
+
+			create_utility_process(g_anura_exe_name, args);
+
+			while(started_server == false && is_utility_process_running()) {
+				if(startup_semaphore->try_wait()) {
+					started_server = true;
+				}
+			}
+
+			if(!started_server) {
+				LOG_ERROR("Failed to start server process attempt " << (attempt+1) << "\nSERVER OUTPUT: " << sys::read_file("stderr_server.txt") << "\n--END OUTPUT--\n");
+			}
+		}
+
+		ASSERT_LOG(started_server, "Could not start server process");
+
+		delete startup_semaphore;
+		startup_semaphore = NULL;
+
+		boost::interprocess::named_semaphore::remove(startup_semaphore_name.c_str());
+
+		return g_local_server_port;
+	}
+
+
 	internal_server_manager::internal_server_manager(bool use_internal_server)
 	{
 		if(use_internal_server) {
 			server_ptr = internal_server_ptr(new internal_server);
+
 		}
 	}
 
 	internal_server_manager::~internal_server_manager()
 	{
+		if(g_termination_semaphore) {
+			terminate_utility_process();
+		}
+
 		server_ptr.reset();
 	}
 

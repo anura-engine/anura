@@ -524,7 +524,7 @@ namespace gui
 			}
 		}
 
-		KRE::ModelManager2D mm(x(), y(), getRotation(), getScale());
+		//KRE::ModelManager2D mm(x(), y(), getRotation(), getScale());
 		ScrollableWidget::handleDraw();
 	}
 

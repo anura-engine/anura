@@ -38,6 +38,14 @@ namespace tbs
 		~internal_server_manager();
 	};
 
+
+	//create a server in an external process and return the port
+	int spawn_server_on_localhost();
+
+	//if there is a server in an external process available return
+	//the port, otherwise return 0.
+	int get_server_on_localhost();
+
 	class internal_server : public server_base
 	{
 	public:

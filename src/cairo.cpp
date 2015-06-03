@@ -130,9 +130,26 @@ namespace graphics
 			return face;
 		}
 
+namespace {
+	class surface_cache_man {
+	public:
+		surface_cache_man() {}
+		~surface_cache_man() {
+			for ( auto & v : cache_) {
+				cairo_surface_destroy(v.second);
+			}
+		}
+		cairo_surface_t *& operator[](const std::string & name) {
+			return cache_[name];
+		}
+	private:
+		std::map<std::string, cairo_surface_t*> cache_;
+	};
+}
+
 		cairo_surface_t* get_cairo_image(const std::string& image)
 		{
-			static std::map<std::string, cairo_surface_t*> cache;
+			static surface_cache_man cache;
 
 			cairo_surface_t*& result = cache[image];
 			if(result == nullptr) {
@@ -1217,6 +1234,8 @@ END_CAIRO_FN
 
 	BEGIN_CAIRO_FN(paint_image, "(string, [decimal,decimal]|null=null)")
 		cairo_surface_t* surface = get_cairo_image(args[0].as_string());
+		cairo_status_t status = cairo_status(context.get());
+		ASSERT_LOG(status == 0, "SVG rendering error painting " << args[0].as_string() << ": " << cairo_status_to_string(status));
 		double translate_x = 0, translate_y = 0;
 		if(args.size() > 1) {
 			variant pos = args[1];
@@ -1226,10 +1245,13 @@ END_CAIRO_FN
 			}
 		}
 		cairo_set_source_surface(context.get(), surface, translate_x, translate_y);
+		status = cairo_status(context.get());
+		ASSERT_LOG(status == 0, "SVG rendering error painting " << args[0].as_string() << ": " << cairo_status_to_string(status));
 		cairo_paint(context.get());
 
-		cairo_status_t status = cairo_status(context.get());
+		status = cairo_status(context.get());
 		ASSERT_LOG(status == 0, "SVG rendering error painting " << args[0].as_string() << ": " << cairo_status_to_string(status));
+
 	END_CAIRO_FN
 
 	BEGIN_CAIRO_FN(push_group, "()")
@@ -1578,4 +1600,9 @@ COMMAND_LINE_UTILITY(test_xml)
 	boost::property_tree::xml_parser::read_xml(s, ptree, boost::property_tree::xml_parser::no_concat_text);
 
 	handle_node(ptree, 0);
+}
+
+COMMAND_LINE_UTILITY(cairo_version)
+{
+	LOG_INFO ("Cairo version: " << cairo_version_string());
 }

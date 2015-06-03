@@ -59,6 +59,11 @@
 using namespace tbs;
 
 namespace {
+
+struct RestartServerException {
+	std::vector<char*> argv;
+};
+
 static int g_session_id_gen = 8000000;
 
 const variant& get_server_info_file()
@@ -111,7 +116,8 @@ public:
 	    io_service_(io_service), port_(port),
 		timer_(io_service), db_timer_(io_service),
 		time_ms_(0), send_at_time_ms_(1000), terminated_servers_(0),
-		controller_(game_logic::FormulaObject::create("matchmaking_server"))
+		controller_(game_logic::FormulaObject::create("matchmaking_server")),
+		child_admin_process_(-1)
 	{
 
 		create_account_fn_ = controller_->queryValue("create_account");
@@ -123,11 +129,17 @@ public:
 		handle_request_fn_ = controller_->queryValue("handle_request");
 		ASSERT_LOG(handle_request_fn_.is_function(), "Could not find handle_request in matchmaking_server class");
 
+		handle_game_over_message_fn_ = controller_->queryValue("handle_game_over_message");
+		ASSERT_LOG(handle_game_over_message_fn_.is_function(), "Could not find handle_game_over_message in matchmaking_server class");
+
 		process_account_fn_ = controller_->queryValue("process_account");
 		ASSERT_LOG(process_account_fn_.is_function(), "Could not find process_account in matchmaking_server class");
 
 		matchmake_fn_ = controller_->queryValue("matchmake");
 		ASSERT_LOG(matchmake_fn_.is_function(), "Could not find matchmake function in matchmaking_server class");
+
+		admin_account_fn_ = controller_->queryValue("admin_account");
+		ASSERT_LOG(admin_account_fn_.is_function(), "Could not find admin_account in matchmaking_server class");
 
 		db_client_ = DbClient::create();
 
@@ -170,6 +182,8 @@ public:
 				default: fprintf(stderr, "waitpid() returns unknown error: %d\n", errno); break;
 				}
 			}
+		} else if(pid == child_admin_process_) {
+			child_admin_process_ = -1;
 		} else if(pid > 0) {
 			auto itor = servers_.find(pid);
 			if(itor != servers_.end()) {
@@ -698,6 +712,16 @@ public:
 			} else if(request_type == "server_finished_game") {
 				auto itor = servers_.find(doc["pid"].as_int());
 				if(itor != servers_.end()) {
+					variant info = doc["info"];
+					if(info.is_map()) {
+						std::vector<variant> args;
+						args.push_back(variant(this));
+						args.push_back(info);
+
+						variant cmd = handle_game_over_message_fn_(args);
+						executeCommand(cmd);
+					}
+
 					available_ports_.push_back(itor->second.port);
 					servers_.erase(itor);
 
@@ -714,6 +738,29 @@ public:
 					response.add_attr(variant("session_id"), variant(session_id));
 				}
 				send_msg(socket, "text/json", response.write_json(), "");
+			} else if(request_type == "admin_operation") {
+				int session_id = doc["session_id"].as_int(request_session_id);
+				auto itor = sessions_.find(session_id);
+				if(itor == sessions_.end()) {
+					fprintf(stderr, "Error: Unknown session: %d\n", session_id);
+					send_msg(socket, "text/json", "{ type: \"error\", message: \"unknown session\" }", "");
+				} else {
+					const SessionInfo& session = itor->second;
+					auto account_itor = account_info_.find(session.user_id);
+					if(account_itor == account_info_.end()) {
+						fprintf(stderr, "Error: Unknown account: %s\n", session.user_id.c_str());
+						send_msg(socket, "text/json", "{ type: \"error\", message: \"unknown account\" }", "");
+					} else {
+						variant privileged = account_itor->second["info"]["privileged"];
+						if(!privileged.is_bool() || privileged.as_bool() != true) {
+							fprintf(stderr, "Error: Unrivileged account account: %s\n", session.user_id.c_str());
+							send_msg(socket, "text/json", "{ type: \"error\", message: \"account does not have admin privileges\" }", "");
+						} else {
+							handleAdminPost(socket, doc);
+						}
+					}
+
+				}
 			} else {
 				int session_id = doc["session_id"].as_int(request_session_id);
 				auto itor = sessions_.find(session_id);
@@ -749,10 +796,111 @@ public:
 		}
 	}
 
+	void handleAdminPost(socket_ptr socket, variant doc)
+	{
+		if(doc["msg"].is_map()) {
+			std::string user = doc["msg"]["user"].as_string();
+			db_client_->get("user:" + user, [=](variant user_info) {
+				if(user_info.is_null()) {
+					return;
+				}
+
+				repair_account(&user_info);
+
+				account_info_[user] = user_info;
+
+				std::vector<variant> v;
+				v.push_back(variant(this));
+				v.push_back(variant(user));
+				v.push_back(user_info["info"]);
+				v.push_back(doc["msg"]);
+				variant cmd = admin_account_fn_(v);
+				executeCommand(cmd);
+			});
+
+			return;
+		}
+
+#if !defined(_MSC_VER)
+		if(child_admin_process_ != -1) {
+			int status = 0;
+			const int res = waitpid(child_admin_process_, &status, WNOHANG);
+			fprintf(stderr, "FORK: waitpid -> %d\n", res);
+			if(res != child_admin_process_) {
+				fprintf(stderr, "FORK: BUSY\n");
+				send_msg(socket, "text/json", "{ type: \"admin_busy\" }", "");
+				return;
+			}
+
+			fprintf(stderr, "FORK: TERM PROC\n");
+
+			child_admin_process_ = -1;
+		}
+
+		if(doc["get_command_output"].as_bool(false)) {
+			fprintf(stderr, "FORK: get_command_output\n");
+			variant_builder msg;
+			msg.add("type", "admin_message");
+			msg.add("complete", variant::from_bool(true));
+			msg.add("message", sys::read_file("stdout_admin.txt"));
+
+			send_msg(socket, "text/json", msg.build().write_json(), "");
+			return;
+		}
+
+		const std::string script = doc["script"].as_string();
+		bool valid_name = true;
+		for(char c : script) {
+			if(!isalnum(c)) {
+				valid_name = false;
+				break;
+			}
+		}
+
+		if(!valid_name) {
+			return;
+		}
+
+		const bool replace_process = doc["replace_process"].as_bool(false);
+
+		const std::string command = "./server-admin-" + script + ".sh";
+
+		std::vector<char*> argv;
+		argv.push_back(strdup(command.c_str()));
+		argv.push_back(nullptr);
+
+		if(replace_process) {
+			RestartServerException e;
+			e.argv = argv;
+			throw e;
+		} else {
+			const pid_t pid = fork();
+			ASSERT_LOG(pid >= 0, "Could not fork process");
+
+			if(pid == 0) {
+				//FILE* fout = std::freopen("stdout_admin.txt","w", stdout);
+				//FILE* ferr = std::freopen("stderr_admin.txt","w", stderr);
+				//std::cerr.sync_with_stdio(true);
+
+				execv(argv[0], &argv[0]);
+
+				fprintf(stderr, "FORK: FAILED TO START COMMAND: %s\n", argv[0]);
+				_exit(-1);
+			}
+
+			child_admin_process_ = static_cast<int>(pid);
+
+			variant_builder msg;
+			msg.add("type", "admin_message");
+			msg.add("message", "Executing...");
+			send_msg(socket, "text/json", msg.build().write_json(), "");
+		}
+
+#endif
+	}
+
 	void handleGet(socket_ptr socket, const std::string& url, const std::map<std::string, std::string>& args)
 	{
-		fprintf(stderr, "HANDLE GET: %s\n", url.c_str());
-
 		if(url == "/tbs_monitor") {
 			send_msg(socket, "text/json", build_status().write_json(), "");
 		}
@@ -814,9 +962,13 @@ private:
 				session_info.game_pending = time_ms_;
 				session_info.queued_for_game = false;
 
+				auto account_info_itor = account_info_.find(session_info.user_id);
+				ASSERT_LOG(account_info_itor != account_info_.end(), "Could not find user's account info: " << session_info.user_id);
+
 				variant_builder user;
 				user.add("user", session_info.user_id);
 				user.add("session_id", session_info.session_id);
+				user.add("account_info", account_info_itor->second["info"]);
 				users.push_back(user.build());
 
 				user_info_[session_info.user_id].game_session = session_info.session_id;
@@ -866,22 +1018,18 @@ private:
 			args.push_back(cmd);
 			args.push_back("--module=" + module::get_module_name());
 			args.push_back("--no-tbs-server");
+			args.push_back("--quit-server-after-game");
 			args.push_back("--utility=tbs_server");
 			args.push_back("--port");
 			args.push_back(formatter() << new_port);
 			args.push_back("--config");
 			args.push_back(fname);
 
-			fprintf(stderr, "EXECUTING:");
-
 			std::vector<char*> cstr_argv;
 			for(std::string& s : args) {
 				s.push_back('\0');
 				cstr_argv.push_back(&s[0]);
-				fprintf(stderr, " %s", cstr_argv.back());
 			}
-
-			fprintf(stderr, "\n");
 
 			cstr_argv.push_back(NULL);
 
@@ -978,7 +1126,7 @@ private:
 	DbClientPtr db_client_;
 
 	struct SessionInfo {
-		SessionInfo() : game_pending(0), game_port(0), queued_for_game(false), sent_heartbeat(false), send_process_counter(60), messages_this_time_segment(0), time_segment(0), flood_mute_expires(0) {}
+		SessionInfo() : session_id(-1), last_contact(-1), game_pending(0), game_port(0), queued_for_game(false), sent_heartbeat(false), send_process_counter(60), messages_this_time_segment(0), time_segment(0), flood_mute_expires(0) {}
 		int session_id;
 		std::string user_id;
 		std::string game_details;
@@ -1054,9 +1202,13 @@ private:
 	variant read_account_fn_;
 	variant process_account_fn_;
 	variant handle_request_fn_;
+	variant handle_game_over_message_fn_;
 	variant matchmake_fn_;
+	variant admin_account_fn_;
 
 	variant current_response_;
+
+	int child_admin_process_;
 
 	DECLARE_CALLABLE(matchmaking_server);
 };
@@ -1169,9 +1321,16 @@ COMMAND_LINE_UTILITY(tbs_matchmaking_server) {
 		}
 	}
 
-	boost::asio::io_service io_service;
-	boost::intrusive_ptr<matchmaking_server> server(new matchmaking_server(io_service, port));
-	io_service.run();
+	try {
+		boost::asio::io_service io_service;
+		boost::intrusive_ptr<matchmaking_server> server(new matchmaking_server(io_service, port));
+		io_service.run();
+	} catch(const RestartServerException& e) {
+#if !defined(_MSC_VER)
+		execv(e.argv[0], &e.argv[0]);
+		ASSERT_LOG(false, "execv failed when restarting server: " << e.argv[0] << ": " << errno);
+#endif
+	}
 }
 
 COMMAND_LINE_UTILITY(db_script) {

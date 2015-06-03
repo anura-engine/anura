@@ -32,10 +32,15 @@
 #include "formatter.hpp"
 #include "module.hpp"
 #include "json_parser.hpp"
+#include "preferences.hpp"
 #include "tbs_server.hpp"
 #include "string_utils.hpp"
 #include "utils.hpp"
 #include "variant_utils.hpp"
+
+namespace {
+	PREF_BOOL(quit_server_after_game, false, "");
+}
 
 namespace tbs 
 {
@@ -47,6 +52,7 @@ namespace tbs
 
 	namespace 
 	{
+
 		int time_between_heartbeats()
 		{
 			return g_tbs_server_delay_ms * g_tbs_server_heartbeat_freq;
@@ -55,14 +61,14 @@ namespace tbs
 		bool g_exit_server = false;
 	}
 
-	server::game_info::game_info(const variant& value) : nlast_touch(-1), quit_server_on_exit(false)
+	server::game_info::game_info(const variant& value) : nlast_touch(-1)
 	{
 		game_state = game::create(value);
 	}
 
 	server::game_info::~game_info()
 	{
-		if(quit_server_on_exit) {
+		if(g_quit_server_after_game) {
 			g_exit_server = true;
 		}
 
@@ -228,8 +234,8 @@ namespace tbs
 
 	void server::heartbeat_internal(int send_heartbeat, std::map<int, client_info>& clients)
 	{
-		if(g_exit_server) {
-			throw tbs::exit_exception();
+		if (g_exit_server) {
+			exit(0);
 		}
 
 		std::vector<std::pair<socket_ptr, std::string> > messages;

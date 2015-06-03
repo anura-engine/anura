@@ -371,7 +371,7 @@ private:
 struct variant_fn : public GarbageCollectible {
 	variant::debug_info info;
 
-	variant_fn()
+	variant_fn() : base_slot(0)
 	{}
 
 	void surrenderReferences(GarbageCollector* collector) override {
@@ -395,7 +395,7 @@ struct variant_fn : public GarbageCollectible {
 struct variant_generic_fn : public GarbageCollectible {
 	variant::debug_info info;
 
-	variant_generic_fn()
+	variant_generic_fn() : base_slot(0)
 	{}
 
 	void surrenderReferences(GarbageCollector* collector) override {
@@ -846,7 +846,7 @@ const variant& variant::operator[](size_t n) const
 	return list_->begin[n];
 }
 
-const variant& variant::operator[](const variant v) const
+const variant& variant::operator[](const variant& v) const
 {
 	if(type_ == VARIANT_TYPE_CALLABLE) {
 		assert(v.as_int() == 0);
@@ -1821,7 +1821,7 @@ bool variant::operator==(const variant& v) const
 {
 	if(type_ != v.type_) {
 		if(type_ == VARIANT_TYPE_DECIMAL || v.type_ == VARIANT_TYPE_DECIMAL) {
-			if((!is_numeric() && !is_null()) || (!v.is_numeric() && !v.is_null())) {
+			if(!is_numeric() || !v.is_numeric()) {
 				return false;
 			}
 
@@ -2751,10 +2751,12 @@ UNIT_TEST(variant_decimal)
 {
 	variant d(9876000, variant::DECIMAL_VARIANT);
 	variant d2(4000, variant::DECIMAL_VARIANT);
+	variant zero_decimal(0, variant::DECIMAL_VARIANT);
 	CHECK_EQ(d.as_decimal().value(), 9876000);
 	CHECK_EQ(d.as_int(), 9);
 	CHECK_EQ(d.string_cast(), "9.876");
 	CHECK_EQ((d + d2).as_decimal().value(), 9880000);
+	CHECK_NE(zero_decimal, variant());
 }
 
 BENCHMARK(variant_assign)

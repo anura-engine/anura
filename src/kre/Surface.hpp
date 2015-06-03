@@ -36,8 +36,10 @@
 
 namespace KRE
 {
-	struct ImageLoadError
+	struct ImageLoadError : public std::runtime_error
 	{
+		ImageLoadError(const std::string& str) : std::runtime_error(str) {}
+		ImageLoadError(const char* str) : std::runtime_error(str) {}
 	};
 
 	enum class SurfaceFlags {

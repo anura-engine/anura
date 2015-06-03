@@ -68,7 +68,7 @@ namespace uri
 
             // port
             if((hostEnd != uriEnd) && ((&*(hostEnd))[0] == ':')) { // we have a port
-                hostEnd++;
+                ++hostEnd;
                 iterator_t portEnd = (pathStart != uriEnd) ? pathStart : queryStart;
                 result.port_ = std::string(hostEnd, portEnd);
             } else {

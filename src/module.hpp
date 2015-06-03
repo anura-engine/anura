@@ -23,6 +23,8 @@
 
 #pragma once
 
+#include <boost/shared_ptr.hpp>
+
 #include "filesystem.hpp"
 #include "formula_callable.hpp"
 #include "variant.hpp"
@@ -120,10 +122,6 @@ namespace module
 		//doesn't install it yet.
 		void prepare_install_module(const std::string& module_name, bool force=false);
 
-		//completes installation of a module after previously calling
-		//prepare_install_module(). pre-condition: module_prepared() returns true
-		void complete_install_module();
-
 		//returns true iff we called prepare_install_module() previously and now
 		//the module is fully downloaded and ready to install.
 		bool module_prepared() const;
@@ -134,6 +132,7 @@ namespace module
 		void get_status();
 		bool process();
 		const std::string& error() const { return error_; }
+		bool out_of_date() const { return out_of_date_; }
 		variant getValue(const std::string& key) const;
 
 		int nbytes_transferred() const { return nbytes_transferred_; }
@@ -141,11 +140,15 @@ namespace module
 		int nfiles_written() const { return nfiles_written_; }
 
 		void set_install_image(bool value) { install_image_ = value; }
+
+		bool is_new_install() const { return is_new_install_; }
 	private:
-		enum OPERATION_TYPE { OPERATION_NONE, OPERATION_INSTALL, OPERATION_PREPARE_INSTALL, OPERATION_GET_STATUS, OPERATION_GET_ICONS, OPERATION_RATE };
+		enum OPERATION_TYPE { OPERATION_NONE, OPERATION_INSTALL, OPERATION_PREPARE_INSTALL, OPERATION_GET_CHUNKS, OPERATION_GET_STATUS, OPERATION_GET_ICONS, OPERATION_RATE };
 		OPERATION_TYPE operation_;
 		std::string module_id_;
 		std::string error_;
+		std::string host_, port_;
+		bool out_of_date_;
 		std::unique_ptr<class http_client> client_;
 
 		std::map<std::string, variant> data_;
@@ -161,10 +164,19 @@ namespace module
 		//OPERATION_PREPARE_INSTALL
 		std::string pending_response_;
 
+		bool is_new_install_;
+
 		void on_response(std::string response);
 		void on_error(std::string response);
 		void on_progress(int sent, int total, bool uploaded);
 
 		void perform_install(const std::string& response);
+		void perform_install_from_doc(variant doc);
+
+		variant doc_pending_chunks_;
+		std::vector<variant> chunks_to_get_;
+		std::vector<boost::shared_ptr<class http_client> > chunk_clients_;
+
+		void on_chunk_response(variant node, boost::shared_ptr<class http_client> client, std::string response);
 	};
 }

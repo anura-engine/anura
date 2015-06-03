@@ -795,8 +795,8 @@ CustomObjectTypePtr CustomObjectType::recreate(const std::string& id,
 
 	} catch(json::ParseError& e) {
 		ASSERT_LOG(false, "Error parsing FML for custom object '" << id << "' in '" << path_itor->second << "': '" << e.errorMessage() << "'");
-	} catch(KRE::ImageLoadError&) {
-		ASSERT_LOG(false, "Error loading object '" << id << "': could not load needed image");
+	} catch(KRE::ImageLoadError& e) {
+		ASSERT_LOG(false, "Error loading object '" << id << "': could not load needed image: " << e.what());
 	}
 	// We never get here, but this stops a compiler warning.
 	return CustomObjectTypePtr();
@@ -1613,6 +1613,7 @@ CustomObjectType::~CustomObjectType()
 {
 }
 
+#ifdef USE_LUA
 const std::shared_ptr<lua::CompiledChunk> & CustomObjectType::getLuaInit(lua::LuaContext & ctx) const {
 	if (lua_compiled_) {
 		return lua_compiled_;
@@ -1622,6 +1623,7 @@ const std::shared_ptr<lua::CompiledChunk> & CustomObjectType::getLuaInit(lua::Lu
 	}
 	return lua_compiled_;
 }
+#endif
 
 namespace 
 {

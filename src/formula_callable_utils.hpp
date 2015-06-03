@@ -33,6 +33,7 @@
 
 namespace game_logic
 {
+
 	class SlotFormulaCallable : public FormulaCallable
 	{
 	public:
@@ -73,6 +74,19 @@ namespace game_logic
 			return values_[slot];
 		}
 
+		void setValueBySlot(int slot, const variant& value) override {
+			if(slot < base_slot_) {
+				const_cast<FormulaCallable*>(fallback_.get())->mutateValueBySlot(slot, value);
+				return;
+			}
+
+			ASSERT_LOG(false, "Trying to set value in non-mutable type");
+		}
+
+		void setValue(const std::string& key, const variant& value) override {
+			const_cast<FormulaCallable*>(fallback_.get())->mutateValue(key, value);
+		}
+
 		void clear() {
 			value_names_ = 0;
 			values_.clear();
@@ -89,6 +103,13 @@ namespace game_logic
 				collector->surrenderVariant(&v);
 			}
 		}
+	
+	protected:
+		int baseSlot() const { return base_slot_; }
+		const std::vector<variant>& getValues() const { return values_; }
+		void setValueInternal(int slot, const variant& value) { values_[slot] = value; }
+
+		const std::vector<std::string>* getValueNames() const { return value_names_; }
 
 	private:
 		const std::vector<std::string>* value_names_;
@@ -97,4 +118,40 @@ namespace game_logic
 
 		int base_slot_;
 	};
+
+	class MutableSlotFormulaCallable : public SlotFormulaCallable
+	{
+	public:
+
+		void setValueBySlot(int slot, const variant& value) override {
+			if(slot < baseSlot()) {
+				SlotFormulaCallable::setValueBySlot(slot, value);
+				return;
+			}
+
+			slot -= baseSlot();
+			ASSERT_LOG(slot >= 0 && slot < static_cast<int>(getValues().size()), "Unknown slot: " << slot);
+
+			setValueInternal(slot, value);
+		}
+
+		void setValue(const std::string& key, const variant& value) override {
+
+			auto names = getValueNames();
+			if(names) {
+				int slot = 0;
+				for(const std::string& name : *names) {
+					if(name == key) {
+						setValueInternal(slot, value);
+						return;
+					}
+
+					++slot;
+				}
+			}
+
+			SlotFormulaCallable::setValue(key, value);
+		}
+	};
+
 }

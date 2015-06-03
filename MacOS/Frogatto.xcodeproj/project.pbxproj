@@ -2721,7 +2721,6 @@
 				OTHER_CFLAGS = (
 					"-DUSE_LUA",
 					"-DUSE_SVG",
-					"-DLUA_USE_MKSTEMP",
 				);
 				OTHER_CPLUSPLUSFLAGS = (
 					"$(OTHER_CFLAGS)",
@@ -2749,6 +2748,7 @@
 					"-Wno-constexpr-not-const",
 					"-Wno-backslash-newline-escape",
 					"-Wno-extern-c-compat",
+					"-Wno-deprecated-declarations",
 				);
 				WRAPPER_EXTENSION = app;
 			};
@@ -2788,7 +2788,6 @@
 				OTHER_CFLAGS = (
 					"-DUSE_LUA",
 					"-DUSE_SVG",
-					"-DLUA_USE_MKSTEMP",
 				);
 				OTHER_CPLUSPLUSFLAGS = "$(OTHER_CFLAGS)";
 				OTHER_LDFLAGS = (
@@ -2805,6 +2804,7 @@
 					"-Wno-constexpr-not-const",
 					"-Wno-backslash-newline-escape",
 					"-Wno-extern-c-compat",
+					"-Wno-deprecated-declarations",
 				);
 				WRAPPER_EXTENSION = app;
 			};

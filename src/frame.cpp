@@ -168,6 +168,9 @@ Frame::Frame(variant node)
 	                rect(node["platform_x"].as_int(),
 	                     node["platform_y"].as_int(),
 	                     node["platform_w"].as_int(), 1)),
+	 platform_x_(0),
+	 platform_y_(0),
+	 platform_w_(0),
 	 img_rect_(node.has_key("rect") ? rect(node["rect"]) :
 	           rect(node["x"].as_int(),
 	                node["y"].as_int(),
@@ -218,7 +221,11 @@ Frame::Frame(variant node)
 
 	if(node.has_key("fbo")) {
 		blit_target_.setTexture(node["fbo"].convert_to<TextureObject>()->texture());
-		blit_target_.setBlendMode(KRE::BlendModeConstants::BM_ONE, KRE::BlendModeConstants::BM_ONE_MINUS_SRC_ALPHA);
+		if(node.has_key("blend")) {
+			blit_target_.setBlendMode(KRE::BlendMode(node["blend"]));
+		} else {
+			blit_target_.setBlendMode(KRE::BlendModeConstants::BM_SRC_ALPHA, KRE::BlendModeConstants::BM_ONE_MINUS_SRC_ALPHA);
+		}
 	} else if(node.has_key("image")) {
 		blit_target_.setTexture(graphics::get_palette_texture(image_, node["image"], palettes_recognized_));
 	}

@@ -96,6 +96,9 @@ extern int g_tile_size;
 using std::placeholders::_1;
 using std::placeholders::_2;
 
+#pragma GCC diagnostic ignored "-Wmissing-braces"
+// XXX: fix this in the code?
+
 namespace 
 {
 	//keep a map of editors so that when we edit a level and then later
@@ -743,7 +746,7 @@ const EntityPtr& editor::enemy_type::preview_object() const
 	return preview_object_;
 }
 
-const std::shared_ptr<const Frame>& editor::enemy_type::preview_frame() const
+const boost::intrusive_ptr<const Frame>& editor::enemy_type::preview_frame() const
 {
 	if(!preview_frame_) {
 		if(frame_info_.is_map() && !preview_object_) {

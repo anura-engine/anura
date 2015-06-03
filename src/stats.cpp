@@ -55,6 +55,10 @@ namespace stats
 
 	namespace 
 	{
+		PREF_BOOL(force_send_stats, false, "");
+		PREF_STRING(stats_server, "theargentlark.com", "");
+		PREF_STRING(stats_port, "5000", "");
+
 		variant program_args;
 		std::map<std::string, std::vector<variant>> write_queue;
 
@@ -76,7 +80,7 @@ namespace stats
 
 		void send_stats(std::map<std::string, std::vector<variant>>& queue) 
 		{
-			if(queue.empty() || !checksum::is_verified()) {
+			if(queue.empty() || (!checksum::is_verified() && !g_force_send_stats)) {
 				return;
 			}
 
@@ -91,6 +95,8 @@ namespace stats
 			if(checksum::is_verified()) {
 				attr[variant("signature")] = variant(checksum::game_signature());
 				attr[variant("build_description")] = variant(checksum::build_description());
+			} else {
+				attr[variant("signature")] = variant("UNSIGNED");
 			}
 
 			std::vector<variant> level_vec;
@@ -147,7 +153,7 @@ namespace stats
 
 				bool done = false;
 				for(int n = 0; n != queue.size(); ++n) {
-					http_client client("theargentlark.com", "5000");
+					http_client client(g_stats_server, g_stats_port);
 					client.send_request("POST /cgi-bin/" + queue[n].first, 
 						queue[n].second, 
 						std::bind(finish_upload, _1, &done),

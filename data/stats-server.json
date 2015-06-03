@@ -1,4 +1,28 @@
 {
+	"citadel": [
+		{
+			"name": "crash",
+			"tables": [
+				{
+					"global_scope": true,
+					"key": "[build_description, program_args, msg, level]",
+					"name": "all_crashes"
+				},
+			]
+		},
+
+		{
+			"name": "start_scenario",
+			"tables": [
+				{
+					"global_scope": true,
+					"key": "[location, scenario]",
+					"name": "scenario_starts"
+				},
+			],
+		}
+	],
+
 	"frogatto": [
 		{
 			"name": "move",
@@ -44,6 +68,7 @@
 				}
 			]
 		},
+
 		{
 			"name": "crash",
 			"tables": [
@@ -59,6 +84,7 @@
 				}
 			]
 		},
+
 		{
 			"name": "load",
 			"tables": [
@@ -69,7 +95,7 @@
 						"sum": 0
 					},
 					"name": "average_load_time",
-					"value": "{ 'nsamples' -> (value.nsamples+1), 'sum' -> value.sum + sample.time, 'mean' -> (value.sum+sample.time)/(value.nsamples+1) }",
+					"value": "{ 'nsamples': (value.nsamples+1), 'sum': value.sum + sample.time, 'mean': (value.sum+sample.time)/(value.nsamples+1) }",
 					"global_scope": false
 				},
 				{

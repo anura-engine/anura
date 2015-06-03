@@ -333,8 +333,12 @@ void process_log_level(const std::string& argstr)
 extern int g_tile_scale;
 extern int g_tile_size;
 
+std::string g_anura_exe_name;
+
 int main(int argcount, char* argvec[])
 {
+	g_anura_exe_name = argvec[0];
+
 	SDL_LogSetPriority(SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_INFO);
 
 	{
@@ -463,10 +467,22 @@ int main(int argcount, char* argvec[])
 		}
 		if(arg_name == "--module") {
 			preferences::set_preferences_path_from_module(arg_value);
-			if(load_module(arg_value, &argv) != 0) {
+
+			bool update_launcher = false;
+			for(size_t n = 0; n < argv.size(); ++n) {
+				if(argv[n] == "--utility=update_launcher") {
+					module::set_core_module_name(arg_value);
+					update_launcher = true;
+					break;
+				}
+			}
+
+			//don't load the actual module if we're in the update launcher.
+			if(!update_launcher && load_module(arg_value, &argv) != 0) {
 				bool auto_update = false;
+
 				for(size_t n = 0; n < argv.size(); ++n) {
-					if(argv[n] == "--auto-update-module" || argv[n] == "--utility=update_launcher") {
+					if(argv[n] == "--auto-update-module") {
 						auto_update = true;
 						break;
 					}

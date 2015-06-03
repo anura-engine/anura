@@ -148,6 +148,11 @@ namespace game_logic
 	class FormulaCallableWithBackup : public FormulaCallable {
 		const FormulaCallable& main_;
 		const FormulaCallable& backup_;
+
+		void setValueBySlot(int slot, const variant& value) {
+			const_cast<FormulaCallable&>(backup_).mutateValueBySlot(slot, value);
+		}
+
 		variant getValueBySlot(int slot) const {
 			return backup_.queryValueBySlot(slot);
 		}
@@ -180,6 +185,10 @@ namespace game_logic
 			}
 
 			return var;
+		}
+
+		void setValueBySlot(int slot, const variant& value) {
+			const_cast<FormulaCallable&>(backup_).mutateValueBySlot(slot, value);
 		}
 
 		variant getValueBySlot(int slot) const {
@@ -228,6 +237,10 @@ namespace game_logic
 
 		variant getValueBySlot(int slot) const {
 			return fallback_->queryValueBySlot(slot);
+		}
+
+		void setValueBySlot(int slot, const variant& value) override {
+			const_cast<FormulaCallable*>(fallback_)->mutateValueBySlot(slot, value);
 		}
 
 		virtual void visitValues(FormulaCallableVisitor& visitor);

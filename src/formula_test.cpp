@@ -43,30 +43,33 @@ namespace
 		}
 	};
 	class MockParty : public FormulaCallable {
+	public:
+		MockParty() : c_(new MockChar) {
+			for(int i = 0; i != 3; ++i) {
+				i_.push_back(boost::intrusive_ptr<MapFormulaCallable>(new MapFormulaCallable));
+			}
+		}
+	private:
 		variant getValue(const std::string& key) const {
-			c_.add_ref();
-			i_[0].add_ref();
-			i_[1].add_ref();
-			i_[2].add_ref();
 			if(key == "members") {
-				i_[0].add("strength",variant(12));
-				i_[1].add("strength",variant(16));
-				i_[2].add("strength",variant(14));
+				i_[0]->add("strength",variant(12));
+				i_[1]->add("strength",variant(16));
+				i_[2]->add("strength",variant(14));
 				std::vector<variant> members;
 				for(int n = 0; n != 3; ++n) {
-					members.push_back(variant(&i_[n]));
+					members.push_back(variant(i_[n].get()));
 				}
 
 				return variant(&members);
 			} else if(key == "char") {
-				return variant(&c_);
+				return variant(c_.get());
 			} else {
 				return variant(0);
 			}
 		}
 
-		MockChar c_;
-		mutable MapFormulaCallable i_[3];
+		boost::intrusive_ptr<MockChar> c_;
+		std::vector<boost::intrusive_ptr<MapFormulaCallable> > i_;
 
 	};
 }

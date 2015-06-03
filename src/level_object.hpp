@@ -36,7 +36,7 @@
 
 struct LevelTile 
 {
-	LevelTile() : object(nullptr), draw_disabled(false) {}
+	LevelTile() : x(0), y(0), layer_from(0), zorder(0), object(nullptr), face_right(false), draw_disabled(false) {}
 	bool isSolid(int x, int y) const;
 	int x, y;
 	int layer_from; //which zorder layer causes this tile to be built?

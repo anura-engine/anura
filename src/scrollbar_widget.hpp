@@ -61,7 +61,8 @@ namespace gui
 		int drag_start_;
 		int drag_anchor_y_;
 
-		game_logic::FormulaPtr ffl_handler_;
+		variant on_scroll_fn_;
+
 		void handlerDelegate(int);
 	};
 
