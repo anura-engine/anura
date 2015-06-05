@@ -110,6 +110,7 @@ PREF_INT(matchmaking_heartbeat_ms, 50, "Frequency of matchmaking heartbeats");
 class matchmaking_server : public game_logic::FormulaCallable, public http::web_server
 
 {
+	struct SessionInfo;
 public:
 	matchmaking_server(boost::asio::io_service& io_service, int port)
 	  : http::web_server(io_service, port),
@@ -140,6 +141,9 @@ public:
 
 		admin_account_fn_ = controller_->queryValue("admin_account");
 		ASSERT_LOG(admin_account_fn_.is_function(), "Could not find admin_account in matchmaking_server class");
+
+		user_account_fn_ = controller_->queryValue("user_account");
+		ASSERT_LOG(user_account_fn_.is_function(), "Could not find user_account in matchmaking_server class");
 
 		db_client_ = DbClient::create();
 
@@ -738,6 +742,17 @@ public:
 					response.add_attr(variant("session_id"), variant(session_id));
 				}
 				send_msg(socket, "text/json", response.write_json(), "");
+			} else if(request_type == "user_operation") {
+				int session_id = doc["session_id"].as_int(request_session_id);
+				auto itor = sessions_.find(session_id);
+				if(itor == sessions_.end()) {
+					fprintf(stderr, "Error: Unknown session: %d\n", session_id);
+					send_msg(socket, "text/json", "{ type: \"error\", message: \"unknown session\" }", "");
+				} else {
+					handleUserPost(socket, doc, itor->second);
+
+				}
+
 			} else if(request_type == "admin_operation") {
 				int session_id = doc["session_id"].as_int(request_session_id);
 				auto itor = sessions_.find(session_id);
@@ -793,6 +808,24 @@ public:
 		} catch(validation_failure_exception& error) {
 			fprintf(stderr, "ERROR HANDLING POST: %s\n", error.msg.c_str());
 			disconnect(socket);
+		}
+	}
+
+	void handleUserPost(socket_ptr socket, variant doc, const SessionInfo& session)
+	{
+		auto account_itor = account_info_.find(session.user_id);
+		if(account_itor == account_info_.end()) {
+			fprintf(stderr, "Error: Unknown account: %s\n", session.user_id.c_str());
+			send_msg(socket, "text/json", "{ type: \"error\", message: \"unknown account\" }", "");
+		} else {
+
+			std::vector<variant> v;
+			v.push_back(variant(this));
+			v.push_back(variant(session.user_id));
+			v.push_back(account_itor->second["info"]);
+			v.push_back(doc);
+			variant cmd = user_account_fn_(v);
+			executeCommand(cmd);
 		}
 	}
 
@@ -1205,6 +1238,7 @@ private:
 	variant handle_game_over_message_fn_;
 	variant matchmake_fn_;
 	variant admin_account_fn_;
+	variant user_account_fn_;
 
 	variant current_response_;
 
