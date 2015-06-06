@@ -141,8 +141,15 @@ void report_assert_msg_2(const std::string& m, const std::string& window_m)
 		}
 
 		stats::record(variant(&obj), Level::getCurrentPtr()->id());
-		stats::flush_and_quit();
+	} else {
+		std::map<variant, variant> obj;
+		obj[variant("type")] = variant("crash");
+		obj[variant("msg")] = variant(m);
+		obj[variant("editor")] = variant(false);
+		stats::record(variant(&obj), "nolevel");
 	}
+
+	stats::flush_and_quit();
 
 #if defined(__ANDROID__)
 	__android_log_print(ANDROID_LOG_INFO, "Frogatto", m.c_str());
