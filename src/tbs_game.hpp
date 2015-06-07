@@ -23,6 +23,7 @@
 
 #pragma once
 
+#include <boost/scoped_ptr.hpp>
 #include <boost/intrusive_ptr.hpp>
 #include <deque>
 #include <set>
@@ -38,6 +39,8 @@ namespace tbs
 {
 	struct game_type;
 
+	class GameType;
+
 	class game : public game_logic::FormulaCallable
 	{
 	public:
@@ -52,8 +55,6 @@ namespace tbs
 		static game* current();
 
 		explicit game(const game_type& type);
-		explicit game(const variant& v);
-		game(const std::string& game_type, const variant& doc);
 		virtual ~game();
 
 		void cancel_game();
@@ -134,6 +135,7 @@ namespace tbs
 		virtual ai_player* create_ai() const { return nullptr; }
 
 		const game_type& type_;
+		boost::scoped_ptr<GameType> game_type_;
 
 		int game_id_;
 
@@ -160,13 +162,10 @@ namespace tbs
 
 		std::vector<std::shared_ptr<ai_player> > ai_;
 
-		variant doc_;
-
 		game_logic::FormulaCallable* backup_callable_;
 
 		std::vector<boost::intrusive_ptr<tbs::bot> > bots_;
 
-		void handleEvent(const std::string& name, game_logic::FormulaCallable* variables=nullptr);
 		void executeCommand(variant cmd);
 
 		mutable DbClientPtr db_client_;

@@ -983,7 +983,7 @@ private:
 			std::string fname_out = formatter() << "/tmp/anura.out." << match_sessions.front();
 
 			variant_builder game;
-			game.add("game_type", "citadel");
+			game.add("game_type", module::get_module_name());
 
 			variant game_info;
 

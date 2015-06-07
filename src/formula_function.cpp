@@ -4515,6 +4515,8 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 		Formula::failIfStaticContext();
 		::srand(static_cast<unsigned>(::time(nullptr)));
 		return variant();
+	FUNCTION_TYPE_DEF
+		return variant_type::get_type(variant::VARIANT_TYPE_NULL);
 	END_FUNCTION_DEF(seed_rng)
 
 	FUNCTION_DEF(lower, 1, 1, "lower(s) -> string: lowercase version of string")
