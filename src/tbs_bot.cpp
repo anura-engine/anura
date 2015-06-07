@@ -140,9 +140,9 @@ private:
 
 	void bot::handle_response(const std::string& type, game_logic::FormulaCallablePtr callable)
 	{
-	if(has_quit_) {
-		return;
-	}
+		if(has_quit_) {
+			return;
+		}
 		LOG_INFO("BOT: @" << profile::get_tick_time() << " GOT RESPONSE: " << type);
 		if(on_create_) {
 			executeCommand(on_create_->execute(*this));

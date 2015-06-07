@@ -316,7 +316,7 @@ namespace tbs
 		queue_message(result.build(), nplayer);
 	}
 
-	game::player::player() : side(-1), is_human(true), confirmed_state_id(-1), state_id_sent(-1), allow_deltas(true)
+	game::player::player() : side(-1), is_human(true), confirmed_state_id(-1), state_id_sent(-1), allow_deltas(false)
 	{
 	}
 
