@@ -99,68 +99,8 @@ namespace tbs
 		variant create_fn_, restart_fn_, add_bot_fn_, message_fn_, player_disconnected_fn_, transform_fn_, get_state_fn_;
 		variant process_fn_;
 	};
-	
-	struct game_type 
-	{
-		game_type() 
-		{
-		}
-
-		explicit game_type(const variant& value)
-		{
-			variant functions_var = value["functions"];
-			if(functions_var.is_string()) {
-				functions.reset(new game_logic::FunctionSymbolTable);
-				game_logic::Formula f(functions_var, functions.get());
-			}
-
-			variant handlers_var = value["handlers"];
-			if(handlers_var.is_map()) {
-				for(const variant& key : handlers_var.getKeys().as_list()) {
-					handlers[key.as_string()] = game_logic::Formula::createOptionalFormula(handlers_var[key], functions.get());
-				}
-			}
-		}
-
-		std::string name;
-		std::shared_ptr<game_logic::FunctionSymbolTable> functions;
-		std::map<std::string, game_logic::ConstFormulaPtr> handlers;
-	};
-
-	std::map<std::string, game_type> generate_game_types() 
-	{
-		LOG_INFO("GENERATE GAME TYPES");
-
-		std::map<std::string, game_type> result;
-
-		std::vector<std::string> files;
-		module::get_files_in_dir("data/tbs", &files);
-		for(const std::string& fname : files) {
-			if(fname.size() > 4 && std::string(fname.end()-4,fname.end()) == ".cfg") {
-				std::string type(fname.begin(), fname.end()-4);
-				boost::algorithm::to_lower(type);
-				result[type] = game_type(json::parse_from_file("data/tbs/" + fname));
-				result[type].name = type;
-				LOG_INFO("LOADED TBS GAME TYPE: " << type);
-			}
-		}
-		LOG_INFO("DONE GENERATE GAME TYPES");
-
-		return result;
-	}
-
-	std::map<std::string, game_type>& all_types() 
-	{
-		static std::map<std::string, game_type> types = generate_game_types();
-		return types;
-	}
 
 	extern std::string global_debug_str;
-
-	void game::reload_game_types()
-	{
-		all_types() = generate_game_types();
-	}
 
 	namespace {
 	game* current_game = nullptr;
@@ -210,27 +150,14 @@ namespace tbs
 
 	boost::intrusive_ptr<game> game::create(const variant& v)
 	{
-		const variant type_var = v["game_type"];
-		if(!type_var.is_string()) {
-			return nullptr;
-		}
-
-		std::string type = type_var.as_string();
-		boost::algorithm::to_lower(type);
-		std::map<std::string, game_type>::const_iterator type_itor = all_types().find(type);
-		if(type_itor == all_types().end()) {
-			return nullptr;
-		}
-
-		boost::intrusive_ptr<game> result(new game(type_itor->second));
+		boost::intrusive_ptr<game> result(new game);
 		variant cmd = result->game_type_->create(v);
 		result->executeCommand(cmd);
 		return result;
 	}
 
-	game::game(const game_type& type)
-	  : type_(type), 
-	    game_type_(new GameType(variant(this))),
+	game::game()
+	  : game_type_(new GameType(variant(this))),
 	    game_id_(generate_game_id()),
 	    started_(false), state_(STATE_SETUP), state_id_(0), cycle_(0), tick_rate_(50),
 		backup_callable_(nullptr)
@@ -259,7 +186,7 @@ namespace tbs
 		variant_builder result;
 		result.add("id", game_id_);
 		result.add("type", "game");
-		result.add("game_type", variant(type_.name));
+		result.add("game_type", module::get_module_name());
 		result.add("started", variant::from_bool(started_));
 		result.add("state_id", state_id_);
 

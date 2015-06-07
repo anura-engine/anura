@@ -37,8 +37,6 @@
 
 namespace tbs 
 {
-	struct game_type;
-
 	class GameType;
 
 	class game : public game_logic::FormulaCallable
@@ -50,11 +48,10 @@ namespace tbs
 			std::string msg;
 		};
 
-		static void reload_game_types();
 		static boost::intrusive_ptr<game> create(const variant& v);
 		static game* current();
 
-		explicit game(const game_type& type);
+		explicit game();
 		virtual ~game();
 
 		void cancel_game();
@@ -134,7 +131,6 @@ namespace tbs
 
 		virtual ai_player* create_ai() const { return nullptr; }
 
-		const game_type& type_;
 		boost::scoped_ptr<GameType> game_type_;
 
 		int game_id_;
