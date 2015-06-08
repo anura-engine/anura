@@ -44,6 +44,7 @@
 #include "formatter.hpp"
 #include "formula_profiler.hpp"
 #include "json_parser.hpp"
+#include "hex_map.hpp"
 #include "level.hpp"
 #include "level_object.hpp"
 #include "level_runner.hpp"
@@ -386,6 +387,10 @@ Level::Level(const std::string& level_cfg, variant node)
 
 	if(std::adjacent_find(tiles_.rbegin(), tiles_.rend(), level_tile_zorder_pos_comparer()) != tiles_.rend()) {
 		std::sort(tiles_.begin(), tiles_.end(), level_tile_zorder_pos_comparer());
+	}
+
+	if(node.has_key("hex_map")) {
+		hex_map_ = hex::HexMap::factory(node["hex_map"]);
 	}
 
 	if(node.has_key("palettes")) {
@@ -3640,6 +3645,11 @@ DEFINE_FIELD(show_builtin_settings_dialog, "bool")
 	return variant::from_bool(obj.show_builtin_settings_);
 DEFINE_SET_FIELD
 	obj.show_builtin_settings_ = value.as_bool();
+
+// XXX todo finish this off.
+DEFINE_FIELD(hex_map, "null") // builtin hex_map
+	return variant();
+//DEFINE_SET_FIELD_TYPE("null|builtin hex_map|map")
 
 END_DEFINE_CALLABLE(Level)
 

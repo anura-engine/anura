@@ -122,7 +122,7 @@ ifeq ($(USE_SVG),yes)
 	LIBS += $(shell pkg-config --libs cairo)
 endif
 
-MODULES   := kre svg Box2D tiled 
+MODULES   := kre svg Box2D tiled hex
 ifeq ($(USE_LUA),yes)
 MODULES += eris
 endif

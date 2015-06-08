@@ -1,0 +1,80 @@
+/*
+	Copyright (C) 2014-2015 by Kristina Simpson <sweet.kristas@gmail.com>
+	
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
+
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
+
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
+*/
+
+#pragma once
+
+#include <vector>
+
+#include "geometry.hpp"
+#include "hex_fwd.hpp"
+#include "hex_logical_tiles.hpp"
+#include "hex_object.hpp"
+#include "variant.hpp"
+
+namespace hex 
+{
+	class HexMap : public std::enable_shared_from_this<HexMap>
+	{
+	public:
+		HexMap() : zorder_(-1000) {}
+		explicit HexMap(const variant& n);
+		int getZorder() const { return zorder_; }
+		void setZorder(int zorder) { zorder_ = zorder; }
+
+		int x() const { return map_->x(); }
+		int y() const { return map_->y(); }
+
+		size_t width() const { return map_->width(); }
+		size_t height() const { return map_->height(); }
+		size_t size() const { return map_->width() * map_->height(); }
+		void build();
+		virtual void draw(const rect& r, const point& cam) const;
+		variant write() const;
+
+		bool setTile(int x, int y, const std::string& tile);
+
+		std::vector<const HexObject*> getSurroundingTiles(int x, int y) const;
+		const HexObject* getHexTile(direction d, int x, int y) const;
+		const HexObject* getTileAt(int x, int y) const;
+		const HexObject* getTileFromPixelPos(int x, int y) const;
+		static point getTilePosFromPixelPos(int x, int y);
+		static point getPixelPosFromTilePos(int x, int y);
+		static point getPixelPosFromTilePos(const point& p);
+
+		static point getLocInDir(int x, int y, direction d);
+		static point getLocInDir(int x, int y, const std::string& s);
+
+		// this is a convenience function.
+		logical::MapPtr getLogicalMap() { return map_; }
+		
+		static HexMapPtr factory(const variant& n);
+	private:
+		logical::MapPtr map_;
+		int zorder_;
+		int border_;
+		std::vector<HexObject> tiles_;
+
+		HexMap(const HexMap&);
+		void operator=(const HexMap&);
+	};
+}

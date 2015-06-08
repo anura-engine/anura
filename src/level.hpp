@@ -43,6 +43,7 @@
 #include "formula.hpp"
 #include "formula_callable.hpp"
 #include "formula_callable_definition_fwd.hpp"
+#include "hex_fwd.hpp"
 #include "LayerBlitInfo.hpp"
 #include "level_object.hpp"
 #include "level_solid_map.hpp"
@@ -632,6 +633,8 @@ private:
 	bool have_render_to_texture_;
 
 	void surrenderReferences(GarbageCollector* gc) override;
+
+	hex::HexMapPtr hex_map_;
 };
 
 bool entity_in_current_level(const Entity* e);

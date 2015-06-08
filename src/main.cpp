@@ -60,6 +60,7 @@
 #include "framed_gui_element.hpp"
 #include "graphical_font.hpp"
 #include "gui_section.hpp"
+#include "hex_tile.hpp"
 #include "i18n.hpp"
 #include "input.hpp"
 #include "joystick.hpp"
@@ -935,6 +936,14 @@ int main(int argcount, char* argvec[])
 #if defined(USE_BOX2D)
 	box2d::manager b2d_manager;
 #endif
+
+	try {
+		hex::loader(json::parse_from_file("data/hex_tiles.cfg"));
+	} catch(json::ParseError& pe) {
+		LOG_INFO(pe.message);
+	} catch(KRE::ImageLoadError& ile) {
+		ASSERT_LOG(false, ile.what());
+	}
 
 	const load_level_manager load_manager;
 
