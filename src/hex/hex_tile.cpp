@@ -28,7 +28,7 @@
 #include "hex_object.hpp"
 #include "hex_tile.hpp"
 #include "variant_utils.hpp"
-#include "texture.hpp"
+#include "Texture.hpp"
 
 namespace hex 
 {
