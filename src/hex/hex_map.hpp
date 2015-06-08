@@ -37,6 +37,7 @@ namespace hex
 	{
 	public:
 		HexMap() : zorder_(-1000) {}
+		virtual ~HexMap() {}
 		explicit HexMap(const variant& n);
 		int getZorder() const { return zorder_; }
 		void setZorder(int zorder) { zorder_ = zorder; }
