@@ -275,5 +275,7 @@ namespace hex
 	BEGIN_DEFINE_CALLABLE_NOBASE(HexMap)
 		DEFINE_FIELD(zorder, "int")
 			return variant(obj.zorder_);
+		DEFINE_FIELD(logical, "builtin logical_map")
+			return variant(obj.map_.get());
 	END_DEFINE_CALLABLE(HexMap)
 }
