@@ -923,6 +923,18 @@ void editor::toggle_facing()
 	if(character_dialog_) {
 		character_dialog_->init();
 	}
+
+	begin_command_group();
+	for(const EntityPtr& e : lvl_->editor_selection()) {
+		for(LevelPtr lvl : levels_) {
+			EntityPtr obj = lvl->get_entity_by_label(e->label());
+			if(obj) {
+				executeCommand(std::bind(&editor::toggle_object_facing, this, lvl, obj, false),
+							   std::bind(&editor::toggle_object_facing,this, lvl, obj, false));
+			}
+		}
+	}
+	end_command_group();
 }
 
 void editor::toggle_isUpsideDown()
@@ -931,6 +943,18 @@ void editor::toggle_isUpsideDown()
 	if(character_dialog_) {
 		character_dialog_->init();
 	}
+
+	begin_command_group();
+	for(const EntityPtr& e : lvl_->editor_selection()) {
+		for(LevelPtr lvl : levels_) {
+			EntityPtr obj = lvl->get_entity_by_label(e->label());
+			if(obj) {
+				executeCommand(std::bind(&editor::toggle_object_facing, this, lvl, obj, true),
+							   std::bind(&editor::toggle_object_facing,this, lvl, obj, true));
+			}
+		}
+	}
+	end_command_group();
 }
 
 void editor::duplicate_selected_objects()
@@ -2693,6 +2717,16 @@ void editor::move_object(LevelPtr lvl, EntityPtr e, int new_x, int new_y)
 {
 	CurrentLevelScope scope(lvl.get());
 	lvl->relocate_object(e, new_x, new_y);
+}
+
+void editor::toggle_object_facing(LevelPtr lvl, EntityPtr e, bool upside_down)
+{
+	CurrentLevelScope scope(lvl.get());
+	if(upside_down) {
+		e->setUpsideDown(!e->isUpsideDown());
+	} else {
+		e->setFacingRight(!e->isFacingRight());
+	}
 }
 
 const std::vector<editor::tileset>& editor::all_tilesets() const
