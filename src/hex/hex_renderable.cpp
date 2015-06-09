@@ -23,6 +23,7 @@
 
 #include <set>
 
+#include "hex_object.hpp"
 #include "hex_renderable.hpp"
 #include "hex_tile.hpp"
 
@@ -60,32 +61,42 @@ namespace hex
 		layers_.clear();
 		clearObjects();
 
-		std::map<std::string, std::vector<const HexObject*>> sorted_map;
+		std::map<std::string, MapRenderParams> sorted_map;
 
 		for(auto& t : tiles) {
-			auto& vec = sorted_map[t.tile()->id()];
-			vec.emplace_back(&t);			
+			MapRenderParams& param = sorted_map[t.tile()->id()];
+			param.tiles.emplace_back(&t);
+			param.map_layer = std::make_shared<MapLayer>();
 		}
 
-		size_t base_order = 1 << 30;
-		for(auto& map_layer : sorted_map) {
-			if(map_layer.second.empty()) {
+		size_t base_order = 0;
+		for(auto& layer : sorted_map) {
+			if(layer.second.tiles.empty()) {
 				continue;
 			}
-			auto new_layer = std::make_shared<MapLayer>();
-			int height = map_layer.second.front()->tile()->getHeight();
+
+			auto& new_layer = layer.second.map_layer;
+			int height = layer.second.tiles.front()->tile()->getHeight() << 9;
 			new_layer->setOrder(base_order + height);
-			new_layer->setTexture(map_layer.second.front()->tile()->getTexture());
+			new_layer->setTexture(layer.second.tiles.front()->tile()->getTexture());
 			++base_order;
-
-			std::vector<KRE::vertex_texcoord> coords;
-			for(auto hex_obj : map_layer.second) {
-				hex_obj->render(&coords);
+		
+			for(auto hex_obj : layer.second.tiles) {
+				hex_obj->render(&layer.second.coords);
 			}
-			new_layer->updateAttributes(&coords);
+		}
 
+		for(auto& layer : sorted_map) {
+			for(auto hex_obj : layer.second.tiles) {
+				hex_obj->renderAdjacent(&sorted_map);
+			}
+		}
+
+		for(auto& layer : sorted_map) {
+			auto& new_layer = layer.second.map_layer;
 			layers_.emplace_back(new_layer);
 			attachObject(new_layer);
+			new_layer->updateAttributes(&layer.second.coords);
 		}
 	}
 

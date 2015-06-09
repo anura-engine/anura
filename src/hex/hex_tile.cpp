@@ -149,7 +149,7 @@ namespace hex
 				const int index = dir_str - Directions;
 				ASSERT_LOG(index < 6, "Unrecognized direction string: " << p.first << " " << p.first.to_debug_string());
 
-				dirmap = dirmap | (1 << index);
+				dirmap |= (1 << index);
 			}
 
 			AdjacencyPattern& pattern = adjacency_patterns_[dirmap];
@@ -194,7 +194,7 @@ namespace hex
 	void TileType::renderInternal(int x, int y, int index, std::vector<KRE::vertex_texcoord>* coords) const
 	{
 		const point p(HexMap::getPixelPosFromTilePos(x, y));
-		const rect area = sheet_->getArea(sheet_indexes_[index]);
+		const rect area = sheet_->getArea(index);
 		const KRE::TexturePtr& tex = sheet_->getTexture();
 		rectf uv = tex->getTextureCoords(0, area);
 
@@ -223,8 +223,7 @@ namespace hex
 		if(sheet_indexes_.size() > 1) {
 			index = random_hash(x, y) % sheet_indexes_.size();
 		}
-		
-		renderInternal(x, y, index, coords);
+		renderInternal(x, y, sheet_indexes_[index], coords);
 	}
 
 	void TileType::renderAdjacent(int x, int y, std::vector<KRE::vertex_texcoord>* coords, unsigned char adjmap) const
@@ -236,36 +235,6 @@ namespace hex
 		}
 	}
 
-	/*void TileType::draw(int x, int y, const point& cam) const
-	{
-		if(sheet_indexes_.empty()) {
-			return;
-		}
-
-		int index = 0;
-
-		if(sheet_indexes_.size() > 1) {
-			index = random_hash(x, y)%sheet_indexes_.size();
-		}
-
-		point p(HexMap::getPixelPosFromTilePos(x, y));
-		rect area = sheet_->getArea(sheet_indexes_[index]);
-	
-		//sheet_->getTexture().blit(area, rect(p.x - cam.x, p.y - cam.y, area.w(), area.h()));
-	}
-
-	void TileType::drawAdjacent(int x, int y, const point& cam, unsigned char adjmap) const
-	{
-		const AdjacencyPattern& pattern = adjacency_patterns_[adjmap];
-		assert(pattern.init);
-		for(int index : pattern.sheet_indexes) {
-			point p(HexMap::getPixelPosFromTilePos(x, y));
-			rect area = sheet_->getArea(index);
-	
-			//sheet_->getTexture().blit(area, rect(p.x - cam.x, p.y - cam.y, area.w(), area.h()));
-		}
-	}*/
-
 	void TileType::calculateAdjacencyPattern(unsigned char adjmap)
 	{
 		if(adjacency_patterns_[adjmap].init) {
@@ -275,8 +244,8 @@ namespace hex
 		int best = -1;
 		for(int dir = 0; dir < 6; ++dir) {
 			unsigned char mask = 1 << dir;
-			if(adjmap&mask) {
-				unsigned char newmap = adjmap&(~mask);
+			if(adjmap & mask) {
+				unsigned char newmap = adjmap & ~mask;
 				if(newmap != 0) {
 					calculateAdjacencyPattern(newmap);
 
@@ -291,7 +260,7 @@ namespace hex
 			adjacency_patterns_[adjmap].sheet_indexes.insert(adjacency_patterns_[adjmap].sheet_indexes.end(), adjacency_patterns_[best].sheet_indexes.begin(), adjacency_patterns_[best].sheet_indexes.end());
 			adjacency_patterns_[adjmap].depth = adjacency_patterns_[best].depth + 1;
 
-			best = adjmap&(~best);
+			best = adjmap & ~best;
 			calculateAdjacencyPattern(best);
 			adjacency_patterns_[adjmap].sheet_indexes.insert(adjacency_patterns_[adjmap].sheet_indexes.end(), adjacency_patterns_[best].sheet_indexes.begin(), adjacency_patterns_[best].sheet_indexes.end());
 			if(adjacency_patterns_[best].depth + 1 > adjacency_patterns_[adjmap].depth) {

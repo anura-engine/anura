@@ -66,7 +66,9 @@ namespace hex
 		for(auto& t : p->tiles_) {
 			t.initNeighbors();
 		}
-
+		for(auto& obj : p->tiles_) {
+			obj.setNeighborsChanged();
+		}
 		return p;
 	}
 
@@ -80,6 +82,10 @@ namespace hex
 	{
 		if(changed_) {
 			changed_ = false;
+			for(auto& obj : tiles_) {
+				obj.setNeighborsChanged();
+			}
+
 			if(renderable_) {
 				renderable_->update(width(), height(), tiles_);
 			}

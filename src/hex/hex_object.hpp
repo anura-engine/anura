@@ -28,6 +28,7 @@
 
 #include "hex_fwd.hpp"
 #include "hex_map.hpp"
+#include "hex_renderable.hpp"
 #include "hex_tile.hpp"
 #include "variant.hpp"
 
@@ -55,6 +56,7 @@ namespace hex
 		void setNeighborsChanged();
 
 		void render(std::vector<KRE::vertex_texcoord>* coords) const;
+		void renderAdjacent(std::map<std::string, MapRenderParams>* coords) const;
 	private:
 		// map coordinates.
 		int x_;
