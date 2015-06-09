@@ -266,11 +266,9 @@ CustomObject::CustomObject(variant node)
 	}
 
 	if(node.has_key("draw_area")) {
-		if(node["draw_area"].is_string()) {
-			draw_area_.reset(new rect(json::parse(node["draw_area"].as_string())));
-		} else {
-			draw_area_.reset(new rect(node["draw_area"]));
-		}
+		variant draw_area = node["draw_area"];
+		ASSERT_LOG(draw_area.is_list() || draw_area.is_map(), "draw_area must be a list or map " << draw_area.debug_location());
+		draw_area_.reset(new rect(draw_area));
 	}
 
 	if(node.has_key("draw_scale")) {
