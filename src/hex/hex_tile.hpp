@@ -79,9 +79,12 @@ namespace hex
 		KRE::TexturePtr getTexture() const { return sheet_ != nullptr ? sheet_->getTexture() : nullptr; }
 
 		void render(int x, int y, std::vector<KRE::vertex_texcoord>* coords) const;
+		void renderAdjacent(int x, int y, std::vector<KRE::vertex_texcoord>* coords, unsigned char adjmap) const;
 	private:
 		logical::TilePtr tile_;
 		TileSheetPtr sheet_;
+
+		void renderInternal(int x, int y, int index, std::vector<KRE::vertex_texcoord>* coords) const;
 
 		std::vector<int> sheet_indexes_;
 

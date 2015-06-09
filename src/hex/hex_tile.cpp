@@ -191,18 +191,8 @@ namespace hex
 		}
 	}
 
-	void TileType::render(int x, int y, std::vector<KRE::vertex_texcoord>* coords) const
+	void TileType::renderInternal(int x, int y, int index, std::vector<KRE::vertex_texcoord>* coords) const
 	{
-		if(sheet_indexes_.empty()) {
-			return;
-		}
-
-		int index = 0;
-
-		if(sheet_indexes_.size() > 1) {
-			index = random_hash(x, y) % sheet_indexes_.size();
-		}
-
 		const point p(HexMap::getPixelPosFromTilePos(x, y));
 		const rect area = sheet_->getArea(sheet_indexes_[index]);
 		const KRE::TexturePtr& tex = sheet_->getTexture();
@@ -220,6 +210,30 @@ namespace hex
 		coords->emplace_back(glm::vec2(vx2, vy2), glm::vec2(uv.x2(), uv.y2()));
 		coords->emplace_back(glm::vec2(vx1, vy1), glm::vec2(uv.x1(), uv.y1()));
 		coords->emplace_back(glm::vec2(vx1, vy2), glm::vec2(uv.x1(), uv.y2()));
+	}
+
+	void TileType::render(int x, int y, std::vector<KRE::vertex_texcoord>* coords) const
+	{
+		if(sheet_indexes_.empty()) {
+			return;
+		}
+
+		int index = 0;
+
+		if(sheet_indexes_.size() > 1) {
+			index = random_hash(x, y) % sheet_indexes_.size();
+		}
+		
+		renderInternal(x, y, index, coords);
+	}
+
+	void TileType::renderAdjacent(int x, int y, std::vector<KRE::vertex_texcoord>* coords, unsigned char adjmap) const
+	{
+		const AdjacencyPattern& pattern = adjacency_patterns_[adjmap];
+		assert(pattern.init);
+		for(int index : pattern.sheet_indexes) {
+			renderInternal(x, y, index, coords);
+		}
 	}
 
 	/*void TileType::draw(int x, int y, const point& cam) const

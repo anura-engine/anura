@@ -75,6 +75,9 @@ namespace hex
 		//for(const NeighborType& neighbor : neighbors_) {
 		//	neighbor.type->drawAdjacent(x_, y_, cam, neighbor.dirmap);
 		//}
+		for(const NeighborType& neighbor : neighbors_) {
+			tile_->renderAdjacent(x_, y_, coords, neighbor.dirmap);
+		}
 	}
 
 	void HexObject::setNeighborsChanged()
