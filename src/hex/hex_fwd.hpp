@@ -36,8 +36,8 @@ namespace hex
 	class TileSheet;
 	class TileType;
 
+	typedef boost::intrusive_ptr<HexMap> HexMapPtr;
 	typedef std::shared_ptr<HexObject> HexObjectPtr;
-	typedef std::shared_ptr<HexMap> HexMapPtr;
 	typedef std::shared_ptr<const TileSheet> TileSheetPtr;
 	typedef std::shared_ptr<TileType> TileTypePtr;
 }

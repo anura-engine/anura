@@ -43,27 +43,27 @@ namespace hex
 		class Tile
 		{
 		public:
-			explicit Tile(const std::string& id, const std::string& name, float cost, float height);
+			explicit Tile(const std::string& id, const std::string& name, float cost, int height);
 			const std::string& name() const { return name_; }
 			const std::string& id() const { return id_; }
 			float getCost() const { return cost_; }
-			float getHeight() const { return height_; }
+			int getHeight() const { return height_; }
 			static TilePtr factory(const std::string& name);
 		private:
 			std::string name_;
 			std::string id_;
-			float height_;
+			int height_;
 			float cost_;
 		};
 	
-		class Map
+		class LogicalMap : public game_logic::FormulaCallable
 		{
 		public:
 			typedef std::vector<TilePtr>::iterator iterator;
 			typedef std::vector<TilePtr>::const_iterator const_iterator;
 
-			explicit Map(const variant& n);
-			MapPtr clone();
+			explicit LogicalMap(const variant& n);
+			LogicalMapPtr clone();
 
 			int x() const { return x_; }
 			int y() const { return y_; }
@@ -86,15 +86,21 @@ namespace hex
 			ConstTilePtr getTileAt(const point& p) const;
 			point getCoordinatesInDir(direction d, int x, int y) const;
 
-			static MapPtr factory(const variant& v);
+			void surrenderReferences(GarbageCollector* collector);
+
+			static LogicalMapPtr factory(const variant& v);
 		private:
+			DECLARE_CALLABLE(Map);
+
 			int x_;
 			int y_;
 			int width_;
 			int height_;
 
 			std::vector<TilePtr> tiles_;
-			Map(const Map&);
+			LogicalMap(const LogicalMap&);
+			LogicalMap() = delete;
+			void operator=(const LogicalMap&) = delete;
 		};
 
 		void loader(const variant& v);

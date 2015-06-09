@@ -107,7 +107,7 @@ namespace lua
 //				{LUA_MATHLIBNAME, luaopen_math},
 				{LUA_DBLIBNAME, luaopen_debug},
 //				{LUA_ERISLIBNAME, luaopen_eris},
-				{NULL, NULL}
+				{nullptr, nullptr}
 			};
 
 			lua_pushstring(L, persist_key);

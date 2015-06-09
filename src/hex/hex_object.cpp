@@ -31,7 +31,7 @@
 
 namespace hex 
 {
-	HexObject::HexObject(const std::string& type, int x, int y, HexMapPtr owner) 
+	HexObject::HexObject(const std::string& type, int x, int y, const HexMap* owner) 
 		: owner_map_(owner), 
 		  x_(x), 
 		  y_(y), 
@@ -43,9 +43,8 @@ namespace hex
 
 	const HexObject* HexObject::getTileInDir(enum direction d) const
 	{
-		auto owner = owner_map_.lock();
-		ASSERT_LOG(owner != nullptr, "owner_map_ was null");
-		return owner->getHexTile(d, x_, y_);
+		ASSERT_LOG(owner_map_ != nullptr, "owner_map_ was null");
+		return owner_map_->getHexTile(d, x_, y_);
 	}
 
 	const HexObject* HexObject::getTileInDir(const std::string& s) const
@@ -66,18 +65,16 @@ namespace hex
 		return nullptr;
 	}
 
-	void HexObject::draw(const point& cam) const
+	void HexObject::render(std::vector<KRE::vertex_texcoord>* coords) const
 	{
-		// Draw base tile.
-		if(tile_ == NULL) {
+		if(tile_ == nullptr) {
 			return;
 		}
-
-		tile_->draw(x_, y_, cam);
-
-		for(const NeighborType& neighbor : neighbors_) {
-			neighbor.type->drawAdjacent(x_, y_, cam, neighbor.dirmap);
-		}
+		tile_->render(x_, y_, coords);
+		// XXX this needs to be dealt with seperately.
+		//for(const NeighborType& neighbor : neighbors_) {
+		//	neighbor.type->drawAdjacent(x_, y_, cam, neighbor.dirmap);
+		//}
 	}
 
 	void HexObject::setNeighborsChanged()
@@ -91,8 +88,8 @@ namespace hex
 	{
 		for(int n = 0; n < 6; ++n) {
 			const HexObject* obj = getTileInDir(static_cast<direction>(n));
-			if(obj && obj->tile() && obj->tile()->height() > tile()->height()) {
-				NeighborType* neighbor = NULL;
+			if(obj && obj->tile() && obj->tile()->getHeight() > tile()->getHeight()) {
+				NeighborType* neighbor = nullptr;
 				for(NeighborType& candidate : neighbors_) {
 					neighbor = &candidate;
 				}

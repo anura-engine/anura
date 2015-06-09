@@ -36,7 +36,7 @@ namespace hex
 	class HexObject 
 	{
 	public:
-		HexObject(const std::string& type, int x, int y, HexMapPtr owner);
+		HexObject(const std::string& type, int x, int y, const HexMap* owner);
 
 		void draw(const point& cam) const;
 	
@@ -53,6 +53,8 @@ namespace hex
 
 		void initNeighbors();
 		void setNeighborsChanged();
+
+		void render(std::vector<KRE::vertex_texcoord>* coords) const;
 	private:
 		// map coordinates.
 		int x_;
@@ -71,6 +73,6 @@ namespace hex
 		// String representing the base type of this tile.
 		std::string type_;
 		// raw pointer to the map that owns this.
-		std::weak_ptr<const HexMap> owner_map_;
+		const HexMap* owner_map_;
 	};
 }

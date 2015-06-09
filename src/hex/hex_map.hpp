@@ -29,11 +29,12 @@
 #include "hex_fwd.hpp"
 #include "hex_logical_tiles.hpp"
 #include "hex_object.hpp"
+#include "hex_renderable_fwd.hpp"
 #include "variant.hpp"
 
 namespace hex 
 {
-	class HexMap : public std::enable_shared_from_this<HexMap>
+	class HexMap : public game_logic::FormulaCallable
 	{
 	public:
 		HexMap() : zorder_(-1000) {}
@@ -49,8 +50,9 @@ namespace hex
 		size_t height() const { return map_->height(); }
 		size_t size() const { return map_->width() * map_->height(); }
 		void build();
-		virtual void draw(const rect& r, const point& cam) const;
 		variant write() const;
+
+		void process();
 
 		bool setTile(int x, int y, const std::string& tile);
 
@@ -65,15 +67,24 @@ namespace hex
 		static point getLocInDir(int x, int y, direction d);
 		static point getLocInDir(int x, int y, const std::string& s);
 
+		void setRenderable(MapNodePtr renderable) { renderable_ = renderable; changed_ = true; }
+
 		// this is a convenience function.
-		logical::MapPtr getLogicalMap() { return map_; }
-		
+		logical::LogicalMapPtr getLogicalMap() { return map_; }
+
+		void surrenderReferences(GarbageCollector* collector);
+
 		static HexMapPtr factory(const variant& n);
 	private:
-		logical::MapPtr map_;
+		DECLARE_CALLABLE(HexMap);
+
+		logical::LogicalMapPtr map_;
 		int zorder_;
 		int border_;
 		std::vector<HexObject> tiles_;
+		bool changed_;
+
+		MapNodePtr renderable_;
 
 		HexMap(const HexMap&);
 		void operator=(const HexMap&);

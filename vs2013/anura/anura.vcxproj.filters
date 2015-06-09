@@ -1017,6 +1017,9 @@
     <ClInclude Include="..\..\src\hex\hex_renderable.hpp">
       <Filter>Header Files\hex</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\hex\hex_renderable_fwd.hpp">
+      <Filter>Header Files\hex</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\src\kre\geometry.inl">

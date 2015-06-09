@@ -96,7 +96,9 @@ extern int g_tile_size;
 using std::placeholders::_1;
 using std::placeholders::_2;
 
+#ifndef _MSC_VER
 #pragma GCC diagnostic ignored "-Wmissing-braces"
+#endif
 // XXX: fix this in the code?
 
 namespace 

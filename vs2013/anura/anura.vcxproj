@@ -120,6 +120,7 @@
     <ClInclude Include="..\..\src\hex\hex_object.hpp" />
     <ClInclude Include="..\..\src\hex\hex_pathfinding.hpp" />
     <ClInclude Include="..\..\src\hex\hex_renderable.hpp" />
+    <ClInclude Include="..\..\src\hex\hex_renderable_fwd.hpp" />
     <ClInclude Include="..\..\src\hex\hex_tile.hpp" />
     <ClInclude Include="..\..\src\http_client.hpp" />
     <ClInclude Include="..\..\src\http_server.hpp" />

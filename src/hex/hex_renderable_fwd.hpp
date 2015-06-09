@@ -23,39 +23,10 @@
 
 #pragma once
 
-#include "AttributeSet.hpp"
-#include "SceneNode.hpp"
-#include "SceneObject.hpp"
-
-#include "hex_object.hpp"
-#include "hex_renderable_fwd.hpp"
-
 namespace hex
 {
-	class MapNode : public KRE::SceneNode
-	{
-	public:
-		explicit MapNode(std::weak_ptr<KRE::SceneGraph> sg, const variant& node);
-		void update(int width, int height, const std::vector<HexObject>& tiles);
-		static MapNodePtr create(std::weak_ptr<KRE::SceneGraph> sg, const variant& node);
-	private:
-		void notifyNodeAttached(std::weak_ptr<SceneNode> parent);
-
-		std::vector<MapLayerPtr> layers_;
-		bool changed_;
-
-		MapNode() = delete;
-		MapNode(const MapNode&) = delete;
-		void operator=(const MapNode&) = delete;
-	};
-	
-	class MapLayer : public KRE::SceneObject
-	{
-	public:
-		MapLayer();
-		void preRender(const KRE::WindowPtr& wnd);
-		void updateAttributes(std::vector<KRE::vertex_texcoord>* attrs);
-	private:
-		std::shared_ptr<KRE::Attribute<KRE::vertex_texcoord>> attr_;
-	};
+	class MapNode;
+	typedef std::shared_ptr<MapNode> MapNodePtr;
+	class MapLayer;
+	typedef std::shared_ptr<MapLayer> MapLayerPtr;
 }

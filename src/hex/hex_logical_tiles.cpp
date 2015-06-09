@@ -48,13 +48,13 @@ namespace hex
 			for(auto& p : tiles.as_map()) {
 				std::string id = p.first.as_string();
 				float cost = p.second["cost"].as_float(1.0f);
-				float height = p.second["height"].as_float(1.0f);
+				int height = p.second["height"].as_int32(1000);
 				std::string name = p.second["name"].as_string();
 				get_loaded_tiles()[id] = std::make_shared<Tile>(id, name, cost, height);
 			}
 		}
 
-		Tile::Tile(const std::string& id, const std::string& name, float cost, float height) 
+		Tile::Tile(const std::string& id, const std::string& name, float cost, int height) 
 			: name_(name),
 			  id_(id), 
 			  cost_(cost), 
@@ -69,12 +69,12 @@ namespace hex
 			return it->second;
 		}
 
-		MapPtr Map::factory(const variant& n)
+		LogicalMapPtr LogicalMap::factory(const variant& n)
 		{
-			return std::make_shared<Map>(n);
+			return new LogicalMap(n);
 		}
 
-		Map::Map(const variant& n)
+		LogicalMap::LogicalMap(const variant& n)
 			: x_(n["x"].as_int32(0)),
 		      y_(n["y"].as_int32(0)),
 			  width_(n["width"].as_int32()), 
@@ -87,7 +87,7 @@ namespace hex
 			height_ = tiles_.size() / width_;
 		}
 
-		Map::Map(const Map& m)
+		LogicalMap::LogicalMap(const LogicalMap& m)
 			: x_(m.x_),
 			  y_(m.y_),
 			  width_(m.width_),
@@ -98,7 +98,7 @@ namespace hex
 			// internal server and here then we need to clone all the elements in m.tiles_.
 		}
 
-		ConstTilePtr Map::getHexTile(direction d, int xx, int yy) const
+		ConstTilePtr LogicalMap::getHexTile(direction d, int xx, int yy) const
 		{
 			int ox = xx;
 			int oy = yy;
@@ -133,7 +133,7 @@ namespace hex
 			return tiles_[index];
 		}
 
-		point Map::getCoordinatesInDir(direction d, int xx, int yy) const
+		point LogicalMap::getCoordinatesInDir(direction d, int xx, int yy) const
 		{
 			int ox = xx;
 			int oy = yy;
@@ -165,7 +165,7 @@ namespace hex
 			return point(xx, yy) + point(x(), y());
 		}
 
-		std::vector<ConstTilePtr> Map::getSurroundingTiles(int x, int y) const
+		std::vector<ConstTilePtr> LogicalMap::getSurroundingTiles(int x, int y) const
 		{
 			std::vector<ConstTilePtr> res;
 			for(auto dir : { NORTH, NORTH_EAST, SOUTH_EAST, SOUTH, SOUTH_WEST, NORTH_WEST }) {
@@ -177,7 +177,7 @@ namespace hex
 			return res;
 		}
 
-		std::vector<point> Map::getSurroundingPositions(int xx, int yy) const
+		std::vector<point> LogicalMap::getSurroundingPositions(int xx, int yy) const
 		{
 			std::vector<point> res;
 			for(auto dir : { NORTH, NORTH_EAST, SOUTH_EAST, SOUTH, SOUTH_WEST, NORTH_WEST }) {
@@ -189,12 +189,12 @@ namespace hex
 			return res;
 		}
 
-		std::vector<point> Map::getSurroundingPositions(const point& p) const
+		std::vector<point> LogicalMap::getSurroundingPositions(const point& p) const
 		{
 			return getSurroundingPositions(p.x, p.y);
 		}
 
-		ConstTilePtr Map::getTileAt(int xx, int yy) const
+		ConstTilePtr LogicalMap::getTileAt(int xx, int yy) const
 		{
 			xx -= x();
 			yy -= y();
@@ -207,14 +207,14 @@ namespace hex
 			return tiles_[index];
 		}
 
-		ConstTilePtr Map::getTileAt(const point& p) const
+		ConstTilePtr LogicalMap::getTileAt(const point& p) const
 		{
 			return getTileAt(p.x, p.y);
 		}
 
-		MapPtr Map::clone()
+		LogicalMapPtr LogicalMap::clone()
 		{
-			return MapPtr(new Map(*this));
+			return LogicalMapPtr(new LogicalMap(*this));
 		}
 
 		std::tuple<int,int,int> oddq_to_cube_coords(const point& p)
@@ -301,5 +301,16 @@ namespace hex
 				return 0.0f;
 			}
 		}
+
+		void LogicalMap::surrenderReferences(GarbageCollector* collector)
+		{
+		}
+
+		BEGIN_DEFINE_CALLABLE_NOBASE(LogicalMap)
+			DEFINE_FIELD(width, "int")
+				return variant(obj.width());
+			DEFINE_FIELD(height, "int")
+				return variant(obj.height());
+		END_DEFINE_CALLABLE(LogicalMap)
 	}
 }

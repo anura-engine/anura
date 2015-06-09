@@ -30,6 +30,7 @@
 #include "hex_logical_tiles.hpp"
 #include "variant.hpp"
 
+#include "SceneUtil.hpp"
 #include "Texture.hpp"
 
 namespace hex 
@@ -68,18 +69,16 @@ namespace hex
 
 		float getCost() const { return tile_->getCost(); }
 
-		void draw(int x, int y, const point& cam) const;
-
-		//The lowest bit of adjmap indicates if this tile type occurs to the north
-		//of the target tile, the next lowest for the north-east and so forth.
-		void drawAdjacent(int x, int y, const point& cam, unsigned char adjmap) const;
-
-		float height() const { return tile_->getHeight(); }
+		int getHeight() const { return tile_->getHeight(); }
 
 		variant write() const;
 		void calculateAdjacencyPattern(unsigned char adjmap);
 
 		static TileTypePtr factory(const std::string& name);
+
+		KRE::TexturePtr getTexture() const { return sheet_ != nullptr ? sheet_->getTexture() : nullptr; }
+
+		void render(int x, int y, std::vector<KRE::vertex_texcoord>* coords) const;
 	private:
 		logical::TilePtr tile_;
 		TileSheetPtr sheet_;

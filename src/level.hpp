@@ -32,6 +32,7 @@
 #include <vector>
 
 #include "ColorTransform.hpp"
+#include "SceneFwd.hpp"
 #include "geometry.hpp"
 
 #include "anura_shader.hpp"
@@ -44,6 +45,7 @@
 #include "formula_callable.hpp"
 #include "formula_callable_definition_fwd.hpp"
 #include "hex_fwd.hpp"
+#include "hex_renderable_fwd.hpp"
 #include "LayerBlitInfo.hpp"
 #include "level_object.hpp"
 #include "level_solid_map.hpp"
@@ -387,6 +389,7 @@ public:
 
 	bool show_builtin_settingsDialog() const { return show_builtin_settings_; }
 
+	KRE::SceneGraphPtr getSceneGraph() const { return scene_graph_; }
 private:
 	DECLARE_CALLABLE(Level);
 
@@ -634,7 +637,12 @@ private:
 
 	void surrenderReferences(GarbageCollector* gc) override;
 
+	KRE::SceneGraphPtr scene_graph_;
+	KRE::RenderManagerPtr rmanager_;
+	int last_process_time_;
+
 	hex::HexMapPtr hex_map_;
+	hex::MapNodePtr hex_renderable_;
 };
 
 bool entity_in_current_level(const Entity* e);

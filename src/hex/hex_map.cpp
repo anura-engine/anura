@@ -28,6 +28,7 @@
 #include "asserts.hpp"
 #include "hex_map.hpp"
 #include "hex_object.hpp"
+#include "hex_renderable.hpp"
 #include "hex_tile.hpp"
 #include "variant.hpp"
 #include "variant_utils.hpp"
@@ -40,44 +41,49 @@ namespace hex
 		: map_(),
 		  zorder_(value["zorder"].as_int32(-1000)),
 		  border_(value["border"].as_int32(0)),
-		  tiles_()
+		  tiles_(),
+		  changed_(false),
+		  renderable_(nullptr)
 	{
 	}
 
 	HexMapPtr HexMap::factory(const variant& n)
 	{
-		HexMapPtr p = std::make_shared<HexMap>(n);
+		HexMapPtr p = HexMapPtr(new HexMap(n));
 		
 		// create the logical version of the map.
-		p->map_ = hex::logical::Map::factory(n);
+		p->map_ = hex::logical::LogicalMap::factory(n);
 
 		int index = 0;
 		p->tiles_.reserve(p->map_->size());
 		for(auto& t : *p->map_) {
 			const int x = index % p->map_->width();
 			const int y = index / p->map_->width();
-			p->tiles_.emplace_back(t->id(), x, y, p);
+			p->tiles_.emplace_back(t->id(), x, y, p.get());
 			++index;
 		}
 		
 		for(auto& t : p->tiles_) {
 			t.initNeighbors();
 		}
-		return p;
-	}
 
-	void HexMap::draw(const rect& r, const point& cam) const
-	{
-		for(auto& t : tiles_) {
-			t.draw(cam);
-		}
-		// Need to draw border here -- as applicable.
+		return p;
 	}
 
 	variant HexMap::write() const
 	{
 		ASSERT_LOG(false, "XXX writeme hex_map::write()");
 		return variant();
+	}
+
+	void HexMap::process()
+	{
+		if(changed_) {
+			changed_ = false;
+			if(renderable_) {
+				renderable_->update(width(), height(), tiles_);
+			}
+		}
 	}
 
 	std::vector<const HexObject*> HexMap::getSurroundingTiles(int x, int y) const
@@ -209,7 +215,7 @@ namespace hex
 		const int index = yy * map_->width() + xx;
 		assert(index >= 0 && index < static_cast<int>(tiles_.size()));
 
-		tiles_[index] = HexObject(tile, xx, yy, shared_from_this());
+		tiles_[index] = HexObject(tile, xx, yy, this);
 		for(auto t : tiles_) {
 			t.setNeighborsChanged();
 		}
@@ -260,4 +266,14 @@ namespace hex
 		ASSERT_LOG(false, "Unreognised direction " << s);
 		return point();
 	}
+
+	void HexMap::surrenderReferences(GarbageCollector* collector)
+	{
+		collector->surrenderPtr(&map_);
+	}
+
+	BEGIN_DEFINE_CALLABLE_NOBASE(HexMap)
+		DEFINE_FIELD(zorder, "int")
+			return variant(obj.zorder_);
+	END_DEFINE_CALLABLE(HexMap)
 }

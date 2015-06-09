@@ -27,6 +27,8 @@
 #include <vector>
 
 #include "geometry.hpp"
+#include "formula_callable.hpp"
+#include "formula_callable_definition.hpp"
 
 namespace hex
 {
@@ -37,8 +39,8 @@ namespace hex
 		class Tile;
 		typedef std::shared_ptr<Tile> TilePtr;
 		typedef std::shared_ptr<const Tile> ConstTilePtr;
-		class Map;
-		typedef std::shared_ptr<Map> MapPtr;
+		class LogicalMap;
+		typedef boost::intrusive_ptr<LogicalMap> LogicalMapPtr;
 	}
 
 	struct MoveCost
