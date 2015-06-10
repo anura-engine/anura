@@ -56,7 +56,7 @@ namespace hex
 		void setNeighborsChanged();
 
 		void render(std::vector<KRE::vertex_texcoord>* coords) const;
-		void renderAdjacent(std::map<std::string, MapRenderParams>* coords) const;
+		void renderAdjacent(std::vector<MapRenderParams>* coords) const;
 	private:
 		// map coordinates.
 		int x_;

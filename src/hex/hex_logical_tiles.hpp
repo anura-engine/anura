@@ -43,17 +43,21 @@ namespace hex
 		class Tile
 		{
 		public:
-			explicit Tile(const std::string& id, const std::string& name, float cost, int height);
+			explicit Tile(const std::string& id, const std::string& name, float cost, int height, int tile_id);
 			const std::string& name() const { return name_; }
 			const std::string& id() const { return id_; }
+			int tile_id() const { return tile_id_; }
 			float getCost() const { return cost_; }
 			int getHeight() const { return height_; }
 			static TilePtr factory(const std::string& name);
+			static const std::map<std::string, TilePtr>& getLoadedTiles();
+			static int getMaxTileId();
 		private:
 			std::string name_;
 			std::string id_;
 			int height_;
 			float cost_;
+			int tile_id_;
 		};
 	
 		class LogicalMap : public game_logic::FormulaCallable

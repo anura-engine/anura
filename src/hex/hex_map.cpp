@@ -30,6 +30,7 @@
 #include "hex_object.hpp"
 #include "hex_renderable.hpp"
 #include "hex_tile.hpp"
+#include "profile_timer.hpp"
 #include "variant.hpp"
 #include "variant_utils.hpp"
 
@@ -87,6 +88,7 @@ namespace hex
 			}
 
 			if(renderable_) {
+				profile::manager pman("MapNode::update");
 				renderable_->update(width(), height(), tiles_);
 			}
 		}
