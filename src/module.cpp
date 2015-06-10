@@ -343,7 +343,12 @@ namespace module
 		std::string pretty_name = name;
 		std::string abbrev = name;
 		std::string fname = make_base_module_path(name) + "module.cfg";
-		variant v = json::parse_from_file(fname);
+		variant v;
+		try {
+			v = json::parse_from_file(fname);
+		} catch(json::ParseError& e) {
+			ASSERT_LOG(false, "Error parsing file: " << e.errorMessage());
+		}
 		std::string def_font = "FreeSans";
 		std::string def_font_cjk = "unifont";
 		auto speech_dialog_bg_color = std::make_shared<KRE::Color>(85, 53, 53, 255);
@@ -352,8 +357,12 @@ namespace module
 		const std::string constants_path = make_base_module_path(name) + "data/constants.cfg";
 		if(sys::file_exists(constants_path)) {
 			const std::string contents = sys::read_file(constants_path);
-			variant v = json::parse(contents, json::JSON_PARSE_OPTIONS::NO_PREPROCESSOR);
-			new game_logic::ConstantsLoader(v);
+			try {
+				variant v = json::parse(contents, json::JSON_PARSE_OPTIONS::NO_PREPROCESSOR);
+				new game_logic::ConstantsLoader(v);
+			} catch(json::ParseError& e) {
+				ASSERT_LOG(false, "Error parsing file: " << e.errorMessage());
+			}
 		}
 
 		if(v.is_map()) {
