@@ -154,6 +154,7 @@ Frame::Frame(variant node)
 	 leave_event_id_(get_object_event_id("leave_" + id_ + "_anim")),
 	 processEvent_id_(get_object_event_id("process_" + id_)),
 	 solid_(SolidInfo::create(node)),
+	 platform_(SolidInfo::createPlatform(node)),
      collide_rect_(node.has_key("collide") ? rect(node["collide"]) :
 	               rect(node["collide_x"].as_int(),
                         node["collide_y"].as_int(),

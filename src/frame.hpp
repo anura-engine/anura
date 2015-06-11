@@ -89,6 +89,7 @@ public:
 
 	void setImageAsSolid();
 	ConstSolidInfoPtr solid() const { return solid_; }
+	ConstSolidInfoPtr platform() const { return platform_; }
 	int collideX() const { return static_cast<int>(collide_rect_.x()*scale_); }
 	int collideY() const { return static_cast<int>(collide_rect_.y()*scale_); }
 	int collideW() const { return static_cast<int>(collide_rect_.w()*scale_); }
@@ -160,7 +161,7 @@ private:
 
 	//ID's used to signal events that occur on this animation.
 	int enter_event_id_, end_event_id_, leave_event_id_, processEvent_id_;
-	ConstSolidInfoPtr solid_;
+	ConstSolidInfoPtr solid_, platform_;
 	rect collide_rect_;
 	rect hit_rect_;
 	rect img_rect_;

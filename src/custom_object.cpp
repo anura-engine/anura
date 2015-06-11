@@ -2475,6 +2475,12 @@ ConstSolidInfoPtr CustomObject::calculatePlatform() const
 		return ConstSolidInfoPtr();
 	}
 
+	const Frame& f = getCurrentFrame();
+	if(f.platform()) {
+		return f.platform();
+	}
+
+
 	return type_->platform();
 }
 
