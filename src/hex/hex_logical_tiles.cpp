@@ -38,11 +38,15 @@ namespace hex
 				static tile_mapping_t res;
 				return res;
 			}
+
+			int max_tile_id = 0;
 		}
 
 		void loader(const variant& n)
 		{
 			get_loaded_tiles().clear();
+
+			int tile_id = 0;
 
 			auto& tiles = n["tiles"];
 			for(auto& p : tiles.as_map()) {
@@ -50,16 +54,28 @@ namespace hex
 				float cost = p.second["cost"].as_float(1.0f);
 				int height = p.second["height"].as_int32(1000);
 				std::string name = p.second["name"].as_string();
-				get_loaded_tiles()[id] = std::make_shared<Tile>(id, name, cost, height);
+				get_loaded_tiles()[id] = std::make_shared<Tile>(id, name, cost, height, tile_id++);
 			}
+			max_tile_id = tile_id;
 		}
 
-		Tile::Tile(const std::string& id, const std::string& name, float cost, int height) 
+		Tile::Tile(const std::string& id, const std::string& name, float cost, int height, int tile_id) 
 			: name_(name),
 			  id_(id), 
 			  cost_(cost), 
-			  height_(height)
+			  height_(height),
+			  tile_id_(tile_id)
 		{
+		}
+
+		const std::map<std::string, TilePtr>& Tile::getLoadedTiles()
+		{
+			return get_loaded_tiles();
+		}
+
+		int Tile::getMaxTileId()
+		{
+			return max_tile_id;
 		}
 
 		TilePtr Tile::factory(const std::string& name)

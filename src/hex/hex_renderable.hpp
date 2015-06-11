@@ -27,7 +27,7 @@
 #include "SceneNode.hpp"
 #include "SceneObject.hpp"
 
-#include "hex_object.hpp"
+#include "hex_fwd.hpp"
 #include "hex_renderable_fwd.hpp"
 
 namespace hex
@@ -57,5 +57,13 @@ namespace hex
 		void updateAttributes(std::vector<KRE::vertex_texcoord>* attrs);
 	private:
 		std::shared_ptr<KRE::Attribute<KRE::vertex_texcoord>> attr_;
+	};
+
+	struct MapRenderParams
+	{
+		MapRenderParams() : map_layer(nullptr), coords(), tiles() {}
+		std::shared_ptr<MapLayer> map_layer;
+		std::vector<KRE::vertex_texcoord> coords;
+		std::vector<const HexObject*> tiles;
 	};
 }

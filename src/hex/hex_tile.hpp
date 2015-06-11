@@ -63,6 +63,8 @@ namespace hex
 
 		const std::string& id() const { return tile_->id(); }
 
+		int tile_id() const { return tile_->tile_id(); }
+
 		const EditorInfo& getEditorInfo() const { return editor_info_; } 
 
 		const std::vector<int>& getSheetIndexes() const { return sheet_indexes_; }

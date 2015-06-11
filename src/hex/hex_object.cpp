@@ -71,12 +71,12 @@ namespace hex
 			return;
 		}
 		tile_->render(x_, y_, coords);
-		// XXX this needs to be dealt with seperately.
-		//for(const NeighborType& neighbor : neighbors_) {
-		//	neighbor.type->drawAdjacent(x_, y_, cam, neighbor.dirmap);
-		//}
+	}
+
+	void HexObject::renderAdjacent(std::vector<MapRenderParams>* coords) const
+	{
 		for(const NeighborType& neighbor : neighbors_) {
-			tile_->renderAdjacent(x_, y_, coords, neighbor.dirmap);
+			neighbor.type->renderAdjacent(x_, y_, &(*coords)[neighbor.type->tile_id()].coords, neighbor.dirmap);
 		}
 	}
 
@@ -97,18 +97,14 @@ namespace hex
 					neighbor = &candidate;
 				}
 
-				if(!neighbor) {
+				if(neighbor == nullptr) {
 					neighbors_.push_back(NeighborType());
 					neighbor = &neighbors_.back();
 					neighbor->type = obj->tile();
 				}
 
-				neighbor->dirmap = neighbor->dirmap | (1 << n);
+				neighbor->dirmap |= (1 << n);
 			}
-		}
-
-		for (auto& neighbor : neighbors_) {
-			neighbor.type->calculateAdjacencyPattern(neighbor.dirmap);
 		}
 	}
 }
