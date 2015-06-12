@@ -73,10 +73,10 @@ namespace hex
 		tile_->render(x_, y_, coords);
 	}
 
-	void HexObject::renderAdjacent(std::map<std::string, MapRenderParams>* coords) const
+	void HexObject::renderAdjacent(std::vector<MapRenderParams>* coords) const
 	{
 		for(const NeighborType& neighbor : neighbors_) {
-			neighbor.type->renderAdjacent(x_, y_, &(*coords)[neighbor.type->id()].coords, neighbor.dirmap);
+			neighbor.type->renderAdjacent(x_, y_, &(*coords)[neighbor.type->tile_id()].coords, neighbor.dirmap);
 		}
 	}
 

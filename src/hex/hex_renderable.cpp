@@ -23,6 +23,7 @@
 
 #include <set>
 
+#include "hex_logical_tiles.hpp"
 #include "hex_object.hpp"
 #include "hex_renderable.hpp"
 #include "hex_tile.hpp"
@@ -61,42 +62,51 @@ namespace hex
 		layers_.clear();
 		clearObjects();
 
-		std::map<std::string, MapRenderParams> sorted_map;
+		int max_tile_id = logical::Tile::getMaxTileId();
+
+		std::vector<MapRenderParams> sorted_map;
+		sorted_map.resize(max_tile_id);
 
 		for(auto& t : tiles) {
-			MapRenderParams& param = sorted_map[t.tile()->id()];
+			MapRenderParams& param = sorted_map[t.tile()->tile_id()];
 			param.tiles.emplace_back(&t);
 			param.map_layer = std::make_shared<MapLayer>();
 		}
 
 		size_t base_order = 0;
 		for(auto& layer : sorted_map) {
-			if(layer.second.tiles.empty()) {
+			if(layer.tiles.empty() || layer.map_layer == nullptr) {
 				continue;
 			}
 
-			auto& new_layer = layer.second.map_layer;
-			int height = layer.second.tiles.front()->tile()->getHeight() << 9;
+			auto& new_layer = layer.map_layer;
+			int height = layer.tiles.front()->tile()->getHeight() << 9;
 			new_layer->setOrder(base_order + height);
-			new_layer->setTexture(layer.second.tiles.front()->tile()->getTexture());
+			new_layer->setTexture(layer.tiles.front()->tile()->getTexture());
 			++base_order;
 		
-			for(auto hex_obj : layer.second.tiles) {
-				hex_obj->render(&layer.second.coords);
+			for(auto hex_obj : layer.tiles) {
+				hex_obj->render(&layer.coords);
 			}
 		}
 
 		for(auto& layer : sorted_map) {
-			for(auto hex_obj : layer.second.tiles) {
+			if(layer.map_layer == nullptr) {
+				continue;
+			}
+			for(auto hex_obj : layer.tiles) {
 				hex_obj->renderAdjacent(&sorted_map);
 			}
 		}
 
 		for(auto& layer : sorted_map) {
-			auto& new_layer = layer.second.map_layer;
+			if(layer.map_layer == nullptr) {
+				continue;
+			}
+			auto& new_layer = layer.map_layer;
 			layers_.emplace_back(new_layer);
 			attachObject(new_layer);
-			new_layer->updateAttributes(&layer.second.coords);
+			new_layer->updateAttributes(&layer.coords);
 		}
 	}
 

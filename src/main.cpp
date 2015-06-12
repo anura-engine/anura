@@ -809,6 +809,8 @@ int main(int argcount, char* argvec[])
 	sys::FilesystemManager fs_manager;
 #endif // NO_EDITOR
 
+	const stats::Manager stats_manager;
+
 	const tbs::internal_server_manager internal_server_manager_scope(preferences::internal_tbs_server());
 
 	if(utility_program.empty() == false 
@@ -928,7 +930,6 @@ int main(int argcount, char* argvec[])
 		orig_level_cfg = level_cfg;
 	}
 
-	const stats::Manager stats_manager;
 #ifndef NO_EDITOR
 	const ExternalTextEditor::Manager editor_manager;
 #endif // NO_EDITOR
