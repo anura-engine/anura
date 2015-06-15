@@ -177,3 +177,11 @@ frogatto module. Telling that would mean everything worked OK.
 
 Build was successful, you could continue now, f.i., downloading Frogatto to
 ANURA_DIR/modules/frogatto, if you just want to run Frogatto.
+
+
+Building on Debian Jessie
+-------------------------
+
+Include SDL2 like this:
+
+    $ CXXFLAGS=-I/usr/include/SDL2/ make -j $JOBS
