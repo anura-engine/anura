@@ -359,10 +359,6 @@ namespace
 		spawn_buildup_ = nspawn%1000;
 		nspawn /= 1000;
 
-		if(nspawn == 0) {
-			return;
-		}
-
 		generation new_gen;
 		new_gen.members = nspawn;
 		new_gen.created_at = cycle_;
