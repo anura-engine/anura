@@ -123,7 +123,7 @@ std::vector<std::string> get_known_levels()
 	std::vector<std::string> files;
 	std::map<std::string, std::string> file_map;
 	std::map<std::string, std::string>::iterator it;
-	module::get_unique_filenames_under_dir("data/levels/", &file_map);
+	module::get_unique_filenames_under_dir("data/level/", &file_map);
 	for(it = file_map.begin(); it != file_map.end(); ) {
 		if(not_cfg_file(it->first)) {
 			file_map.erase(it++);
