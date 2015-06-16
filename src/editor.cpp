@@ -35,6 +35,7 @@
 #endif
 
 #include "Canvas.hpp"
+#include "ColorScope.hpp"
 #include "Effects.hpp"
 #include "Font.hpp"
 #include "ModelMatrixScope.hpp"
@@ -3101,10 +3102,8 @@ void editor::draw_gui() const
 
 		e.setPos(x, y);
 		if(place_entity_in_level(*lvl_, e)) {
-			//KRE::ModelManager2D model(-xpos_, EDITOR_MENUBAR_HEIGHT-ypos_, 0, 1.0f/zoom_);
 			graphics::GameScreen::Manager screen_manager(KRE::WindowManager::getMainWindow());
-			KRE::ModelManager2D model(-xpos_, -ypos_, 0, 1.0f/zoom_);
-			KRE::Canvas::ColorManager cm(KRE::Color(1.0f, 1.0f, 1.0f, 0.5f));
+			KRE::ColorScope cm(KRE::Color(1.0f, 1.0f, 1.0f, 0.5f));
 			all_characters()[cur_object_].preview_frame()->draw(nullptr, e.x(), e.y(), face_right_, upside_down_);
 		}
 	}
