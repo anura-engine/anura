@@ -1234,11 +1234,10 @@ void CustomObject::draw(int xx, int yy) const
 		driver_->draw(xx, yy);
 	}
 
-	KRE::Color current_color = KRE::Color::colorWhite();
+	std::unique_ptr<KRE::ColorScope> color_scope;
 	if(draw_color_) {
-		current_color = draw_color_->toColor();
+		color_scope.reset(new KRE::ColorScope(draw_color_->toColor()));
 	}
-	KRE::ColorScope color_scope(current_color);
 
 	const int draw_x = x()/* - xx*/;
 	const int draw_y = y()/* - yy*/;
