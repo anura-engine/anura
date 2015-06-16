@@ -697,14 +697,14 @@ void Frame::draw(graphics::AnuraShaderPtr shader, int x, int y, bool face_right,
 	y += static_cast<int>(info->y_adjust * scale_);
 	int w = static_cast<int>(info->area.w() * scale_);
 	int h = static_cast<int>(info->area.h() * scale_);
-	if(x & preferences::xypos_draw_mask) {
-		--w;
-	}
-	if(h & preferences::xypos_draw_mask) {
-		--h;
-	}
-	x &= preferences::xypos_draw_mask;
-	y &= preferences::xypos_draw_mask;
+	//if(x & preferences::xypos_draw_mask) {
+	//	--w;
+	//}
+	//if(h & preferences::xypos_draw_mask) {
+	//	--h;
+	//}
+	//x &= preferences::xypos_draw_mask;
+	//y &= preferences::xypos_draw_mask;
 
 	if(shader) {
 		shader->setSpriteArea(blit_target_.getTexture()->getSourceRectNormalised());
@@ -735,8 +735,8 @@ void Frame::draw(graphics::AnuraShaderPtr shader, int x, int y, bool face_right,
 	y += static_cast<int>(info->y_adjust * scale_);
 	const int w = static_cast<int>(info->area.w() * scale_);
 	const int h = static_cast<int>(info->area.h() * scale_);
-	x &= preferences::xypos_draw_mask;
-	y &= preferences::xypos_draw_mask;
+	//x &= preferences::xypos_draw_mask;
+	//y &= preferences::xypos_draw_mask;
 
 	//adjust x,y to accomodate scaling so that we scale from the center.
 	//const int width_delta = static_cast<int>(img_rect_.w() * scale_ * scale - img_rect_.w() * scale_);
