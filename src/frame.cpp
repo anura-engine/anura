@@ -23,6 +23,7 @@
 #include <assert.h>
 
 #include <algorithm>
+#include <array>
 #include <iostream>
 
 #include <boost/lexical_cast.hpp>
@@ -803,25 +804,27 @@ void Frame::draw(graphics::AnuraShaderPtr shader, int x, int y, const rect& area
 
 void Frame::drawCustom(graphics::AnuraShaderPtr shader, int x, int y, const std::vector<CustomPoint>& points, const rect* area, bool face_right, bool upside_down, int time, float rotation) const
 {
+	KRE::Blittable blit;
+	blit.setTexture(blit_target_.getTexture()->clone());
 	rect old_src_rect = blit_target_.getTexture()->getSourceRect();
 
 	const FrameInfo* info = nullptr;
 	getRectInTexture(time, info);
-	rectf r = blit_target_.getTexture()->getSourceRectNormalised();
+	rectf rf = blit_target_.getTexture()->getSourceRectNormalised();
 
-	x += static_cast<int>(info->x_adjust * scale_);
+	std::array<float, 4> r = { rf.x1(), rf.y1(), rf.x2(), rf.y2() };
+
+	x += static_cast<int>((face_right ? info->x_adjust : info->x2_adjust) * scale_);
 	y += static_cast<int>(info->y_adjust * scale_);
 	int w = static_cast<int>(info->area.w() * scale_);
 	int h = static_cast<int>(info->area.h() * scale_);
 
-	if(w < 0) {
-		r = rectf::from_coordinates(r.x2(), r.y(), r.x(), r.y2());
-		w *= -1;
+	if(!face_right) {
+		std::swap(r[0], r[2]);
 	}
 
-	if(h < 0) {
-		r = rectf::from_coordinates(r.x(), r.y2(), r.x2(), r.y());
-		h *= -1;
+	if(upside_down) {
+		std::swap(r[1], r[3]);
 	}
 
 	if(area != nullptr) {
@@ -830,30 +833,26 @@ void Frame::drawCustom(graphics::AnuraShaderPtr shader, int x, int y, const std:
 		const int w_adjust = area->w() - img_rect_.w();
 		const int h_adjust = area->h() - img_rect_.h();
 
-		r = rectf::from_coordinates(r.x() + blit_target_.getTexture()->translateCoordW(0, x_adjust),
-			r.y() + blit_target_.getTexture()->translateCoordH(0, y_adjust),
-			r.x2() + blit_target_.getTexture()->translateCoordW(0, x_adjust + w_adjust),
-			r.y2() + blit_target_.getTexture()->translateCoordH(0, y_adjust + h_adjust));
+		r[0] += blit_target_.getTexture()->translateCoordW(0, x_adjust);
+		r[1] += blit_target_.getTexture()->translateCoordH(0, y_adjust);
+		r[2] += blit_target_.getTexture()->translateCoordW(0, x_adjust + w_adjust);
+		r[3] += blit_target_.getTexture()->translateCoordH(0, y_adjust + h_adjust);
 
 		w += static_cast<int>(w_adjust * scale_);
 		h += static_cast<int>(h_adjust * scale_);
 	}
 
 	std::vector<KRE::vertex_texcoord> queue;
-	KRE::Blittable blit;
 
 	const float center_x = x + static_cast<float>(w)/2.0f;
 	const float center_y = y + static_cast<float>(h)/2.0f;
 
-	blit.setTexture(blit_target_.getTexture());
-	blit.setMirrorHoriz(upside_down);
-	blit.setMirrorVert(!face_right);
 	blit.setPosition(center_x, center_y);
 	blit.setRotation(rotation, z_axis);
 
 	if(shader) {
-		shader->setSpriteArea(blit_target_.getTexture()->getSourceRectNormalised());
-		blit_target_.setShader(shader->getShader());
+		shader->setSpriteArea(blit.getTexture()->getSourceRectNormalised());
+		blit.setShader(shader->getShader());
 	}
 
 	for(const CustomPoint& p : points) {
@@ -873,26 +872,26 @@ void Frame::drawCustom(graphics::AnuraShaderPtr shader, int x, int y, const std:
 		float u, v;
 		switch(side) {
 		case 0:
-			u =r.x() + r.w() * f;
-			v = r.y();
-			xpos = static_cast<float>(x) + static_cast<float>(w)*f;
+			u = r[0] + (r[2] - r[0]) * f;
+			v = r[1];
+			xpos = static_cast<float>(x) + static_cast<float>(w) * f;
 			ypos = static_cast<float>(y);
 			break;
 		case 2:
-			u = r.x2() - r.w() * f;
-			v = r.y2();
+			u = r[2] - (r[2] - r[0]) * f;
+			v = r[3];
 			xpos = static_cast<float>(x + w) - static_cast<float>(w) * f;
 			ypos = static_cast<float>(y + h);
 			break;
 		case 1:
-			u = r.x2();
-			v = r.y() + r.h() * f;
+			u = r[2];
+			v = r[1] + (r[3] - r[1]) * f;
 			xpos = static_cast<float>(x + w);
 			ypos = static_cast<float>(y) + static_cast<float>(h) * f;
 			break;
 		case 3:
-			u = r.x();
-			v = r.y2() - r.h() * f;
+			u = r[0];
+			v = r[3] - (r[3] - r[1]) * f;
 			xpos = static_cast<float>(x);
 			ypos = static_cast<float>(y + h) - static_cast<float>(h) * f;
 			break;
@@ -910,7 +909,6 @@ void Frame::drawCustom(graphics::AnuraShaderPtr shader, int x, int y, const std:
 	ASSERT_LOG(queue.size() > 2, "ILLEGAL CUSTOM BLIT: " << queue.size());
 
 	auto wnd = KRE::WindowManager::getMainWindow();
-	blit.getAttributeSet().back()->setCount(queue.size());
 	blit.update(&queue);
 	wnd->render(&blit);
 	blit_target_.getTexture()->setSourceRect(0, old_src_rect);
@@ -924,21 +922,21 @@ void Frame::drawCustom(graphics::AnuraShaderPtr shader, int x, int y, const floa
 
 	const FrameInfo* info = nullptr;
 	getRectInTexture(time, info);
-	rectf r = blit_target_.getTexture()->getSourceRectNormalised();
+	rectf rf = blit_target_.getTexture()->getSourceRectNormalised();
+
+	std::array<float, 4> r = { rf.x1(), rf.y1(), rf.x2(), rf.y2() };
 	
 	x += static_cast<int>((face_right ? info->x_adjust : info->x2_adjust) * scale_);
 	y += static_cast<int>(info->y_adjust * scale_);
 	int w = static_cast<int>(info->area.w() * scale_);
 	int h = static_cast<int>(info->area.h() * scale_);
 
-	if(w < 0) {
-		r = rectf::from_coordinates(r.x2(), r.y(), r.x(), r.y2());
-		w *= -1;
+	if(!face_right) {
+		std::swap(r[0], r[2]);
 	}
 
-	if(h < 0) {
-		r = rectf::from_coordinates(r.x(), r.y2(), r.x2(), r.y());
-		h *= -1;
+	if(upside_down) {
+		std::swap(r[1], r[3]);
 	}
 
 	std::vector<KRE::vertex_texcoord> queue;
@@ -951,7 +949,7 @@ void Frame::drawCustom(graphics::AnuraShaderPtr shader, int x, int y, const floa
 	const float center_y = y + static_cast<float>(h)/2.0f;
 
 	for(int n = 0; n < nelements; ++n) {
-		queue.emplace_back(glm::vec2(x + w*xy[0], y + h*xy[1]), glm::vec2(r.x() + r.w() * uv[0], r.y() + r.h() * uv[1]));
+		queue.emplace_back(glm::vec2(x + w*xy[0], y + h*xy[1]), glm::vec2(r[0] + (r[2] - r[0]) * uv[0], r[1] + (r[3] - r[1]) * uv[1]));
 		xy += 2;
 		uv += 2;
 	}
@@ -960,13 +958,11 @@ void Frame::drawCustom(graphics::AnuraShaderPtr shader, int x, int y, const floa
 	blit.update(&queue);
 	if(shader) {
 		shader->setDrawArea(rect(x, y, w, h));
-		shader->setSpriteArea(r);
+		shader->setSpriteArea(rectf::from_coordinates(r[0], r[1], r[2], r[3]));
 		shader->setCycle(cycle);
 		blit.setShader(shader->getShader());
 	}
 
-	blit.setMirrorHoriz(upside_down);
-	blit.setMirrorVert(!face_right);
 	auto wnd = KRE::WindowManager::getMainWindow();
 	wnd->render(&blit);
 
