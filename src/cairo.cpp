@@ -183,8 +183,8 @@ namespace {
 	}
 
 	cairo_context::cairo_context(int w, int h)
-	  : width_(w+1 & ~1), 
-	    height_(h+1 & ~1), 
+	  : width_((w+1) & ~1), 
+	    height_((h+1) & ~1), 
 		temp_pattern_(nullptr)
 	{
 		surface_ = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width_, height_);
@@ -231,8 +231,8 @@ namespace {
 
 	void cairo_context::render_svg(const std::string& fname, int w, int h)
 	{
-		w = w+1 & ~1;
-		h = h+1 & ~1;
+		w = (w+1) & ~1;
+		h = (h+1) & ~1;
 		cairo_status_t status = cairo_status(cairo_);
 		ASSERT_LOG(status == 0, "SVG rendering error rendering " << fname << ": " << cairo_status_to_string(status));
 
