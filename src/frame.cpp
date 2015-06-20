@@ -197,7 +197,7 @@ Frame::Frame(variant node)
 	 damage_(node["damage"].as_int()),
 	 sounds_(node["sound"].is_list() ? node["sound"].as_list_string() : util::split(node["sound"].as_string_default())),
 	 force_no_alpha_(node["force_no_alpha"].as_bool(false)),
-	 no_remove_alpha_borders_(node["no_remove_alpha_borders"].as_bool(false)),
+	 no_remove_alpha_borders_(node["no_remove_alpha_borders"].as_bool(node.has_key("fbo"))),
 	 collision_areas_inside_frame_(true),
 	 current_palette_(-1), 
 	 blit_target_(node)
