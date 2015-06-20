@@ -202,6 +202,21 @@ void ModuleWebServer::handlePost(socket_ptr socket, variant doc, const http::env
 
 			send_msg(socket, "application/octet-stream", data, "Content-Encoding: deflate");
 			return;
+		} else if(msg_type == "query_module_version") {
+			const std::string module_id = doc["module_id"].as_string();
+			ASSERT_LOG(std::count_if(module_id.begin(), module_id.end(), isalnum) + std::count(module_id.begin(), module_id.end(), '_') == module_id.size(), "ILLEGAL MODULE ID");
+
+			variant result;
+			const std::string module_path = data_path_ + module_id + ".cfg";
+			if(sys::file_exists(module_path)) {
+				std::string contents = sys::read_file(module_path);
+				variant module = json::parse(contents);
+				result = module["version"];
+			}
+
+			response[variant("status")] = variant("ok");
+			response[variant("version")] = result;
+
 		} else if(msg_type == "prepare_upload_module") {
 			const std::string module_id = doc["module_id"].as_string();
 			ASSERT_LOG(std::count_if(module_id.begin(), module_id.end(), isalnum) + std::count(module_id.begin(), module_id.end(), '_') == module_id.size(), "ILLEGAL MODULE ID");
