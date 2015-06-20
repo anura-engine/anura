@@ -576,7 +576,7 @@ namespace module
 	}
 	}
 
-	variant build_package(const std::string& id, bool increment_version, std::string path)
+	variant build_package(const std::string& id, bool increment_version, variant version_override, std::string path)
 	{
 		std::vector<std::string> files;
 		if(path == "") {
@@ -592,7 +592,12 @@ namespace module
 		}
 
 		if(increment_version) {
-			std::vector<int> version = config["version"].as_list_int();
+			std::vector<int> version;
+			if(version_override.is_list()) {
+				version = version_override.as_list_int();
+			} else {
+				version = config["version"].as_list_int();
+			}
 			ASSERT_LOG(version.empty() == false, "Illegal version");
 			version.back()++;
 			config.add_attr(variant("version"), vector_to_variant(version));
@@ -735,7 +740,7 @@ COMMAND_LINE_UTILITY(generate_manifest)
 		path_override = arguments.back();
 	}
 
-	variant package = build_package(module_id, false, path_override);
+	variant package = build_package(module_id, false, variant(), path_override);
 
 	variant manifest = package["manifest"];
 	ASSERT_LOG(manifest.is_map(), "Could not find manifest");
@@ -847,7 +852,36 @@ COMMAND_LINE_UTILITY(generate_manifest)
 
 		ASSERT_LOG(module_id.empty() == false, "MUST SPECIFY MODULE ID");
 
-		variant package = build_package(module_id, increment_version, path_override);
+		variant version_on_server;
+
+		if(increment_version) {
+			std::map<variant,variant> attr;
+			attr[variant("type")] = variant("query_module_version");
+			attr[variant("module_id")] = variant(module_id);
+			const std::string msg = variant(&attr).write_json();
+			std::string response;
+			bool done = false;
+			bool error = false;
+
+			http_client client(server, port);
+			client.send_request("POST /upload_module", msg, 
+								std::bind(finish_upload, _1, &done, &response),
+								std::bind(error_upload, _1, &error),
+								std::bind(upload_progress, _1, _2, _3));
+			while(!done) {
+				client.process();
+				ASSERT_LOG(!error, "Error in upload");
+			}
+
+			variant response_doc(json::parse(response));
+			if(response_doc["status"].as_string() != "ok") {
+				ASSERT_LOG(false, "Error in querying module version " << response);
+			}
+
+			version_on_server = response_doc["version"];
+		}
+
+		variant package = build_package(module_id, increment_version, version_on_server, path_override);
 		std::map<variant,variant> attr;
 
 		attr[variant("type")] = variant("prepare_upload_module");
