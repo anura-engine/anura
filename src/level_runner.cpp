@@ -75,6 +75,8 @@
 #include "variant_utils.hpp"
 #include "globals.h"
 
+extern std::map<std::string, variant> g_user_info_registry;
+
 namespace 
 {
 	PREF_BOOL(allow_debug_console_clicking, true, "Allow clicking on objects in the debug console to select them");
@@ -122,7 +124,11 @@ namespace
 	{
 		// XXX we should read the server address from some sort of configuration file.
 		using std::placeholders::_1;
-		info->client->send_request("POST /cgi-bin/upload-screenshot.pl?module=" + module::get_module_name(), 
+		std::string user_parm;
+		if(g_user_info_registry["user"].is_string()) {
+			user_parm = "&user=" + g_user_info_registry["user"].as_string();
+		}
+		info->client->send_request("POST /cgi-bin/upload-screenshot.pl?module=" + module::get_module_name() + user_parm, 
 			base64::b64encode(sys::read_file(file)), 
 			std::bind(&upload_screenshot_info::finished, info.get(), _1, false),
 			std::bind(&upload_screenshot_info::finished, info.get(), _1, true),
