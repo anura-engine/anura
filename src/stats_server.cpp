@@ -388,14 +388,16 @@ void process_stats(const variant& doc)
 			const msg_type_info& msg_info = message_type_index[module_str][type_str];
 
 			if(type_str == "crash") {
+				variant m = msg;
+#ifdef LINUX
 				time_t t = time(nullptr);
 				tm* ltime = localtime(&t);
 
 				char tbuf[512];
 				sprintf(tbuf, "%04d/%02d/%02d %02d:%02d:%02d", ltime->tm_year + 1900, ltime->tm_mon + 1, ltime->tm_mday, ltime->tm_hour, ltime->tm_min, ltime->tm_sec);
 
-				variant m = msg;
 				m.add_attr(variant("timestamp"), variant(std::string(tbuf)));
+#endif
 				g_crashes.push_back(m);
 			}
 
