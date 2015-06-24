@@ -64,11 +64,16 @@ assert_edit_and_continue_fn_scope::~assert_edit_and_continue_fn_scope()
 	g_edit_and_continue_fn = fn_;
 }
 
+extern std::map<std::string, variant> g_user_info_registry;
+
 void report_assert_msg(const std::string& m)
 {
 	if(Level::getCurrentPtr()) {
 		LOG_INFO("ATTEMPTING TO SEND CRASH REPORT...");
 		std::map<variant,variant> obj;
+		for(auto p : g_user_info_registry) {
+			obj[variant(p.first)] = p.second;
+		}
 		obj[variant("type")] = variant("crash");
 		obj[variant("msg")] = variant(m);
 #ifndef NO_EDITOR

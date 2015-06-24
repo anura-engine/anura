@@ -95,6 +95,11 @@ void web_server::handleGet(socket_ptr socket,
 
 		send_msg(socket, "text/json", variant(&m).write_json(true, variant::JSON_COMPLIANT), "");
 		return;
+	} else if(it != args.end() && it->second == "crashes") {
+		variant crashes = get_crashes();
+		send_msg(socket, "text/json", crashes.write_json(true, variant::JSON_COMPLIANT), "");
+		return;
+
 	}
 
 	variant value = get_stats(args.count("version") ? args.find("version")->second : "", 

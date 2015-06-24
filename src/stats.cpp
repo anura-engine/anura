@@ -56,7 +56,7 @@ namespace stats
 	namespace 
 	{
 		PREF_BOOL(force_send_stats, false, "");
-		PREF_STRING(stats_server, "theargentlark.com", "");
+		PREF_STRING(stats_server, "localhost", "");
 		PREF_STRING(stats_port, "5000", "");
 
 		variant program_args;

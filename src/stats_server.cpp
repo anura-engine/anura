@@ -303,8 +303,18 @@ variant write_stats()
 	return write_data_table();
 }
 
+std::vector<variant> g_crashes;
+
+variant get_crashes()
+{
+	std::vector<variant> res = g_crashes;
+	std::reverse(res.begin(), res.end());
+	return variant(&res);
+}
+
 void process_stats(const variant& doc)
 {
+
 	if(!doc["signature"].is_string()) {
 		return;
 	}
@@ -376,6 +386,18 @@ void process_stats(const variant& doc)
 			
 			const std::string& type_str = type.as_string();
 			const msg_type_info& msg_info = message_type_index[module_str][type_str];
+
+			if(type_str == "crash") {
+				time_t t = time(nullptr);
+				tm* ltime = localtime(&t);
+
+				char tbuf[512];
+				sprintf(tbuf, "%04d/%02d/%02d %02d:%02d:%02d", ltime->tm_year + 1900, ltime->tm_mon + 1, ltime->tm_mday, ltime->tm_hour, ltime->tm_min, ltime->tm_sec);
+
+				variant m = msg;
+				m.add_attr(variant("timestamp"), variant(std::string(tbuf)));
+				g_crashes.push_back(m);
+			}
 
 			table_set* all_ts[4];
 

@@ -36,4 +36,6 @@ variant write_stats();
 
 void process_stats(const variant& doc);
 
+variant get_crashes();
+
 variant get_stats(const std::string& version, const std::string& module, const std::string& module_version, const std::string& lvl);
