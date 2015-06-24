@@ -24,6 +24,8 @@
 #include <math.h>
 #include <climits>
 
+#include <boost/algorithm/string/replace.hpp>
+
 #include "CameraObject.hpp"
 #include "Canvas.hpp"
 #include "Font.hpp"
@@ -1318,6 +1320,20 @@ bool LevelRunner::play_cycle()
 						lvl_node = lvl_node.add_attr(variant("music"), variant(sound::current_music()));
 					}
 					sys::write_file(preferences::save_file_path(), lvl_node.write_json(true));
+				} else if(key == SDLK_l && (mod&KMOD_CTRL) && !editor_) {
+					LOG_INFO("LOADING...");
+
+					std::string level_dest = preferences::save_file_path();
+
+					if(sys::file_exists(level_dest)) {
+						boost::replace_first(level_dest, preferences::user_data_path(), "");
+						Level::portal p;
+						p.level_dest = level_dest;
+						p.dest_starting_pos = true;
+						p.saved_game = true;
+						p.transition = "instant";
+						lvl_->force_enter_portal(p);
+					}
 				} else if(key == SDLK_s && (mod&KMOD_ALT)) {
 					const std::string fname = KRE::WindowManager::getMainWindow()->saveFrameBuffer("screenshot.png");
 					if(!fname.empty()) {
