@@ -99,6 +99,9 @@ private:
 	std::string host_;
 
 	int in_flight_;
+	int send_request_at_;
+
+	std::vector<std::pair<int,connection_ptr> > connections_waiting_on_fake_lag_;
 
 	std::vector<connection_ptr> connections_waiting_on_dns_;
 };

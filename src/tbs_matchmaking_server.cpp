@@ -110,6 +110,7 @@ PREF_INT(matchmaking_heartbeat_ms, 50, "Frequency of matchmaking heartbeats");
 class matchmaking_server : public game_logic::FormulaCallable, public http::web_server
 
 {
+	struct SessionInfo;
 public:
 	matchmaking_server(boost::asio::io_service& io_service, int port)
 	  : http::web_server(io_service, port),
@@ -129,11 +130,20 @@ public:
 		handle_request_fn_ = controller_->queryValue("handle_request");
 		ASSERT_LOG(handle_request_fn_.is_function(), "Could not find handle_request in matchmaking_server class");
 
+		handle_game_over_message_fn_ = controller_->queryValue("handle_game_over_message");
+		ASSERT_LOG(handle_game_over_message_fn_.is_function(), "Could not find handle_game_over_message in matchmaking_server class");
+
 		process_account_fn_ = controller_->queryValue("process_account");
 		ASSERT_LOG(process_account_fn_.is_function(), "Could not find process_account in matchmaking_server class");
 
 		matchmake_fn_ = controller_->queryValue("matchmake");
 		ASSERT_LOG(matchmake_fn_.is_function(), "Could not find matchmake function in matchmaking_server class");
+
+		admin_account_fn_ = controller_->queryValue("admin_account");
+		ASSERT_LOG(admin_account_fn_.is_function(), "Could not find admin_account in matchmaking_server class");
+
+		user_account_fn_ = controller_->queryValue("user_account");
+		ASSERT_LOG(user_account_fn_.is_function(), "Could not find user_account in matchmaking_server class");
 
 		db_client_ = DbClient::create();
 
@@ -706,6 +716,16 @@ public:
 			} else if(request_type == "server_finished_game") {
 				auto itor = servers_.find(doc["pid"].as_int());
 				if(itor != servers_.end()) {
+					variant info = doc["info"];
+					if(info.is_map()) {
+						std::vector<variant> args;
+						args.push_back(variant(this));
+						args.push_back(info);
+
+						variant cmd = handle_game_over_message_fn_(args);
+						executeCommand(cmd);
+					}
+
 					available_ports_.push_back(itor->second.port);
 					servers_.erase(itor);
 
@@ -722,6 +742,17 @@ public:
 					response.add_attr(variant("session_id"), variant(session_id));
 				}
 				send_msg(socket, "text/json", response.write_json(), "");
+			} else if(request_type == "user_operation") {
+				int session_id = doc["session_id"].as_int(request_session_id);
+				auto itor = sessions_.find(session_id);
+				if(itor == sessions_.end()) {
+					fprintf(stderr, "Error: Unknown session: %d\n", session_id);
+					send_msg(socket, "text/json", "{ type: \"error\", message: \"unknown session\" }", "");
+				} else {
+					handleUserPost(socket, doc, itor->second);
+
+				}
+
 			} else if(request_type == "admin_operation") {
 				int session_id = doc["session_id"].as_int(request_session_id);
 				auto itor = sessions_.find(session_id);
@@ -780,8 +811,49 @@ public:
 		}
 	}
 
+	void handleUserPost(socket_ptr socket, variant doc, const SessionInfo& session)
+	{
+		auto account_itor = account_info_.find(session.user_id);
+		if(account_itor == account_info_.end()) {
+			fprintf(stderr, "Error: Unknown account: %s\n", session.user_id.c_str());
+			send_msg(socket, "text/json", "{ type: \"error\", message: \"unknown account\" }", "");
+		} else {
+
+			std::vector<variant> v;
+			v.push_back(variant(this));
+			v.push_back(variant(session.user_id));
+			v.push_back(account_itor->second["info"]);
+			v.push_back(doc);
+			variant cmd = user_account_fn_(v);
+			executeCommand(cmd);
+		}
+	}
+
 	void handleAdminPost(socket_ptr socket, variant doc)
 	{
+		if(doc["msg"].is_map()) {
+			std::string user = doc["msg"]["user"].as_string();
+			db_client_->get("user:" + user, [=](variant user_info) {
+				if(user_info.is_null()) {
+					return;
+				}
+
+				repair_account(&user_info);
+
+				account_info_[user] = user_info;
+
+				std::vector<variant> v;
+				v.push_back(variant(this));
+				v.push_back(variant(user));
+				v.push_back(user_info["info"]);
+				v.push_back(doc["msg"]);
+				variant cmd = admin_account_fn_(v);
+				executeCommand(cmd);
+			});
+
+			return;
+		}
+
 #if !defined(_MSC_VER)
 		if(child_admin_process_ != -1) {
 			int status = 0;
@@ -911,7 +983,7 @@ private:
 			std::string fname_out = formatter() << "/tmp/anura.out." << match_sessions.front();
 
 			variant_builder game;
-			game.add("game_type", "citadel");
+			game.add("game_type", module::get_module_name());
 
 			variant game_info;
 
@@ -923,9 +995,13 @@ private:
 				session_info.game_pending = time_ms_;
 				session_info.queued_for_game = false;
 
+				auto account_info_itor = account_info_.find(session_info.user_id);
+				ASSERT_LOG(account_info_itor != account_info_.end(), "Could not find user's account info: " << session_info.user_id);
+
 				variant_builder user;
 				user.add("user", session_info.user_id);
 				user.add("session_id", session_info.session_id);
+				user.add("account_info", account_info_itor->second["info"]);
 				users.push_back(user.build());
 
 				user_info_[session_info.user_id].game_session = session_info.session_id;
@@ -1159,7 +1235,10 @@ private:
 	variant read_account_fn_;
 	variant process_account_fn_;
 	variant handle_request_fn_;
+	variant handle_game_over_message_fn_;
 	variant matchmake_fn_;
+	variant admin_account_fn_;
+	variant user_account_fn_;
 
 	variant current_response_;
 

@@ -46,6 +46,7 @@ namespace KRE
 		void attachCamera(const CameraPtr& obj);
 		void attachObject(const SceneObjectPtr& obj);
 		void removeObject(const SceneObjectPtr& obj);
+		void clearObjects() { objects_.clear(); }
 		void attachRenderTarget(const RenderTargetPtr& obj);
 		const CameraPtr& getCamera() const { return camera_; }
 		const LightPtrList& getLights() const { return lights_; }

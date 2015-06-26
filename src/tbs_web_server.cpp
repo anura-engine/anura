@@ -216,7 +216,6 @@ namespace
 	void on_code_modified()
 	{
 		LOG_INFO("code modified");
-		tbs::game::reload_game_types();
 		game_logic::FormulaObject::reloadClasses();
 		throw code_modified_exception();
 	}

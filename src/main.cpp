@@ -60,6 +60,7 @@
 #include "framed_gui_element.hpp"
 #include "graphical_font.hpp"
 #include "gui_section.hpp"
+#include "hex_tile.hpp"
 #include "i18n.hpp"
 #include "input.hpp"
 #include "joystick.hpp"
@@ -223,112 +224,133 @@ namespace
 		   preferences::get_registered_helpstring();
 	}
 
-}
+	int load_module(const std::string& mod, std::vector<std::string>* argv)
+	{
+		module::set_core_module_name(mod);
 
+		variant mod_info = module::get(mod);
+		if(mod_info.is_null()) {
+			return -1;
+		}
+		module::reload(mod);
+		if(mod_info["arguments"].is_list()) {
+			const std::vector<std::string>& arguments = mod_info["arguments"].as_list_string();
+			auto insertion_point = argv->size();
+			for(std::vector<std::string>::size_type i = 0; i != argv->size(); ++i) {
+				const char* utility_arg = "--module=";
+				if(std::equal(utility_arg, utility_arg+strlen(utility_arg), (*argv)[i].c_str())) {
+					insertion_point = i+1;
+					break;
+				}
+			}
 
-int load_module(const std::string& mod, std::vector<std::string>* argv)
-{
-	module::set_core_module_name(mod);
-
-	variant mod_info = module::get(mod);
-	if(mod_info.is_null()) {
-		return -1;
+			argv->insert(argv->begin() + insertion_point, arguments.begin(), arguments.end());
+		}	
+		return 0;
 	}
-	module::reload(mod);
-	if(mod_info["arguments"].is_list()) {
-		const std::vector<std::string>& arguments = mod_info["arguments"].as_list_string();
-		auto insertion_point = argv->size();
-		for(std::vector<std::string>::size_type i = 0; i != argv->size(); ++i) {
-			const char* utility_arg = "--module=";
-			if(std::equal(utility_arg, utility_arg+strlen(utility_arg), (*argv)[i].c_str())) {
-				insertion_point = i+1;
-				break;
+
+
+	void set_alpha_masks()
+	{
+		LOG_INFO("Setting Alpha Masks:");
+		using namespace KRE;
+		std::vector<Color> alpha_colors;
+
+		auto surf = Surface::create("alpha-colors.png");
+		surf->iterateOverSurface([&alpha_colors](int x, int y, int r, int g, int b, int a) {
+			alpha_colors.emplace_back(r, g, b);
+			LOG_INFO("Added alpha color: (" << r << "," << g << "," << b << ")");	
+		});
+
+		Surface::setAlphaFilter([=](int r, int g, int b) {
+			for(auto& c : alpha_colors) {
+				if(c.ri() == r && c.gi() == g && c.bi() == b) {
+					return true;
+				}
+			}
+			return false;
+		});
+	}
+
+
+	void auto_select_resolution(const KRE::WindowPtr& wm, int *width, int *height)
+	{
+		ASSERT_LOG(width != nullptr, "width is null.");
+		ASSERT_LOG(height != nullptr, "height is null.");
+
+		auto mode = wm->getDisplaySize();
+		auto best_mode = mode;
+		
+		const float MinReduction = 0.9f;
+		for(auto& candidate_mode : wm->getWindowModes([](const KRE::WindowMode&){ return true; })) {
+			if(candidate_mode.width < mode.width && candidate_mode.height < mode.width
+				&& candidate_mode.width < mode.width * MinReduction
+				&& candidate_mode.height < mode.height * MinReduction
+				&& ((candidate_mode.width >= best_mode.width
+				&& candidate_mode.height >= best_mode.height)
+				|| (best_mode.width == mode.width && best_mode.height == mode.height))) {
+				LOG_INFO("BETTER MODE IS " << candidate_mode.width << "x" << candidate_mode.height);
+				best_mode = candidate_mode;
+			} else {
+				LOG_INFO("REJECTED MODE IS " << candidate_mode.width << "x" << candidate_mode.height);
 			}
 		}
 
-		argv->insert(argv->begin() + insertion_point, arguments.begin(), arguments.end());
-	}	
-	return 0;
-}
+		if(best_mode.width < g_min_window_width || best_mode.height < g_min_window_height) {
+			best_mode.width = g_min_window_width;
+			best_mode.height = g_min_window_height;
+		}
 
+		*width = best_mode.width;
+		*height = best_mode.height;
+	}
 
-void set_alpha_masks()
-{
-	LOG_INFO("Setting Alpha Masks:");
-	using namespace KRE;
-	std::vector<Color> alpha_colors;
-
-	auto surf = Surface::create("alpha-colors.png");
-	surf->iterateOverSurface([&alpha_colors](int x, int y, int r, int g, int b, int a) {
-		alpha_colors.emplace_back(r, g, b);
-		LOG_INFO("Added alpha color: (" << r << "," << g << "," << b << ")");	
-	});
-
-	Surface::setAlphaFilter([=](int r, int g, int b) {
-		for(auto& c : alpha_colors) {
-			if(c.ri() == r && c.gi() == g && c.bi() == b) {
-				return true;
+	void process_log_level(const std::string& argstr)
+	{
+		SDL_LogPriority log_priority = SDL_LOG_PRIORITY_INFO;
+		std::string::size_type pos = argstr.find('=');
+		if(pos != std::string::npos) {
+			std::string level = argstr.substr(pos+1);
+			if(level == "verbose") {
+				log_priority = SDL_LOG_PRIORITY_INFO;
+			} else if(level == "debug") {
+				log_priority = SDL_LOG_PRIORITY_DEBUG;
+			} else if(level == "info") {
+				log_priority = SDL_LOG_PRIORITY_INFO;
+			} else if(level == "warn") {
+				log_priority = SDL_LOG_PRIORITY_WARN;
+			} else if(level == "error") {
+				log_priority = SDL_LOG_PRIORITY_ERROR;
+			} else if(level == "critical") {
+				log_priority = SDL_LOG_PRIORITY_CRITICAL;
 			}
 		}
-		return false;
-	});
-}
+		SDL_LogSetPriority(SDL_LOG_CATEGORY_APPLICATION, log_priority);
+	}
 
+	std::string g_log_filename;
+	FILE* g_log_file;
 
-void auto_select_resolution(const KRE::WindowPtr& wm, int *width, int *height)
-{
-	ASSERT_LOG(width != nullptr, "width is null.");
-	ASSERT_LOG(height != nullptr, "height is null.");
-
-	auto mode = wm->getDisplaySize();
-	auto best_mode = mode;
-	
-	const float MinReduction = 0.9f;
-	for(auto& candidate_mode : wm->getWindowModes([](const KRE::WindowMode&){ return true; })) {
-		if(candidate_mode.width < mode.width && candidate_mode.height < mode.width
-			&& candidate_mode.width < mode.width * MinReduction
-			&& candidate_mode.height < mode.height * MinReduction
-			&& ((candidate_mode.width >= best_mode.width
-			&& candidate_mode.height >= best_mode.height)
-			|| (best_mode.width == mode.width && best_mode.height == mode.height))) {
-			LOG_INFO("BETTER MODE IS " << candidate_mode.width << "x" << candidate_mode.height);
-			best_mode = candidate_mode;
-		} else {
-			LOG_INFO("REJECTED MODE IS " << candidate_mode.width << "x" << candidate_mode.height);
+	void log_data(void* userdata, int category, SDL_LogPriority priority, const char* message)
+	{
+		if(g_log_file) {
+			fprintf(g_log_file, "%s\n", message);
+			fflush(g_log_file);
 		}
 	}
 
-	if(best_mode.width < g_min_window_width || best_mode.height < g_min_window_height) {
-		best_mode.width = g_min_window_width;
-		best_mode.height = g_min_window_height;
-	}
-
-	*width = best_mode.width;
-	*height = best_mode.height;
-}
-
-void process_log_level(const std::string& argstr)
-{
-	SDL_LogPriority log_priority = SDL_LOG_PRIORITY_INFO;
-	std::string::size_type pos = argstr.find('=');
-	if(pos != std::string::npos) {
-		std::string level = argstr.substr(pos+1);
-		if(level == "verbose") {
-			log_priority = SDL_LOG_PRIORITY_INFO;
-		} else if(level == "debug") {
-			log_priority = SDL_LOG_PRIORITY_DEBUG;
-		} else if(level == "info") {
-			log_priority = SDL_LOG_PRIORITY_INFO;
-		} else if(level == "warn") {
-			log_priority = SDL_LOG_PRIORITY_WARN;
-		} else if(level == "error") {
-			log_priority = SDL_LOG_PRIORITY_ERROR;
-		} else if(level == "critical") {
-			log_priority = SDL_LOG_PRIORITY_CRITICAL;
+	void set_log_file(const std::string& fname)
+	{
+		if(g_log_file) {
+			fclose(g_log_file);
 		}
+
+		g_log_file = fopen(fname.c_str(), "w");
+
+		SDL_LogSetOutputFunction(log_data, nullptr);
 	}
-	SDL_LogSetPriority(SDL_LOG_CATEGORY_APPLICATION, log_priority);
-}
+
+} //namespace
 
 extern int g_tile_scale;
 extern int g_tile_size;
@@ -345,8 +367,10 @@ int main(int argcount, char* argvec[])
 		std::vector<std::string> args;
 		for(int i = 0; i != argcount; ++i) {
 			std::string argstr(argvec[i]);
-			if(argstr.substr(0,11) == "--log-level") {
+			if(argstr.substr(0,12) == "--log-level=") {
 				process_log_level(argstr);
+			} else if(argstr.substr(0,11) == "--log-file=") {
+				set_log_file(argstr.substr(11));
 			} else {
 				args.emplace_back(argstr);
 			}
@@ -565,7 +589,7 @@ int main(int argcount, char* argvec[])
 					test_names.reset(new std::vector<std::string> (util::split(arg_value)));
 				}
 			}
-		} else if(arg.substr(0, 11) == "--log-level") {
+		} else if(arg.substr(0, 12) == "--log-level=" || arg.substr(0, 11) == "--log-file=") {
 			// ignore
 		} else if(arg_name == "--level") {
 			override_level_cfg = arg_value;
@@ -808,6 +832,8 @@ int main(int argcount, char* argvec[])
 	sys::FilesystemManager fs_manager;
 #endif // NO_EDITOR
 
+	const stats::Manager stats_manager;
+
 	const tbs::internal_server_manager internal_server_manager_scope(preferences::internal_tbs_server());
 
 	if(utility_program.empty() == false 
@@ -927,7 +953,6 @@ int main(int argcount, char* argvec[])
 		orig_level_cfg = level_cfg;
 	}
 
-	const stats::Manager stats_manager;
 #ifndef NO_EDITOR
 	const ExternalTextEditor::Manager editor_manager;
 #endif // NO_EDITOR
@@ -935,6 +960,14 @@ int main(int argcount, char* argvec[])
 #if defined(USE_BOX2D)
 	box2d::manager b2d_manager;
 #endif
+
+	try {
+		hex::loader(json::parse_from_file("data/hex_tiles.cfg"));
+	} catch(json::ParseError& pe) {
+		LOG_INFO(pe.message);
+	} catch(KRE::ImageLoadError& ile) {
+		ASSERT_LOG(false, ile.what());
+	}
 
 	const load_level_manager load_manager;
 
@@ -1063,5 +1096,6 @@ int main(int argcount, char* argvec[])
 		LOG_ERROR("Illegal object: " << (void*)(*loading.begin())->as_callable_loading());
 		ASSERT_LOG(false, "Unresolved unserialized objects: " << loading.size());
 	}
+
 	return 0;
 }

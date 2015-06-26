@@ -637,7 +637,9 @@ namespace json
 			cache[key] = result;
 			return result;
 		} catch(ParseError& e) {
-			//std::cerr << e.errorMessage() << "\n";
+			// Removed the completely asinine practice of emitting they parser error message.
+			// If you want to output it, then you should be catching the exception elsewhere
+			// and outputting it there.
 			e.fname = fname;
 			throw(e);
 		}

@@ -78,13 +78,17 @@ variant load_level_wml(const std::string& lvl)
 
 variant load_level_wml_nowait(const std::string& lvl)
 {
-	if(lvl == "autosave.cfg") {
-		return json::parse_from_file(preferences::auto_save_file_path());
-	} else if(lvl.size() >= 7 && lvl.substr(0,4) == "save" && lvl.substr(lvl.size()-4) == ".cfg") {
-		preferences::set_save_slot(lvl);
-		return json::parse_from_file(preferences::save_file_path());
+	try {
+		if(lvl == "autosave.cfg") {
+			return json::parse_from_file(preferences::auto_save_file_path());
+		} else if(lvl.size() >= 7 && lvl.substr(0,4) == "save" && lvl.substr(lvl.size()-4) == ".cfg") {
+			preferences::set_save_slot(lvl);
+			return json::parse_from_file(preferences::save_file_path());
+		}
+		return json::parse_from_file(get_level_path(lvl));
+	} catch(json::ParseError& e) {
+		ASSERT_LOG(false, e.errorMessage());
 	}
-	return json::parse_from_file(get_level_path(lvl));
 }
 
 load_level_manager::load_level_manager()
@@ -119,7 +123,7 @@ std::vector<std::string> get_known_levels()
 	std::vector<std::string> files;
 	std::map<std::string, std::string> file_map;
 	std::map<std::string, std::string>::iterator it;
-	module::get_unique_filenames_under_dir("data/levels/", &file_map);
+	module::get_unique_filenames_under_dir("data/level/", &file_map);
 	for(it = file_map.begin(); it != file_map.end(); ) {
 		if(not_cfg_file(it->first)) {
 			file_map.erase(it++);

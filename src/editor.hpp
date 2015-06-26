@@ -130,11 +130,11 @@ public:
 		std::string help;
 
 		const EntityPtr& preview_object() const;
-		const std::shared_ptr<const Frame>& preview_frame() const;
+		const boost::intrusive_ptr<const Frame>& preview_frame() const;
 	
 	private:
 		mutable EntityPtr preview_object_;
-		mutable std::shared_ptr<const Frame> preview_frame_;
+		mutable boost::intrusive_ptr<const Frame> preview_frame_;
 		variant frame_info_;
 	};
 
@@ -282,6 +282,7 @@ private:
 	void execute_shift_object(EntityPtr e, int dx, int dy);
 
 	void move_object(LevelPtr lvl, EntityPtr e, int delta_x, int delta_y);
+	void toggle_object_facing(LevelPtr lvl, EntityPtr e, bool upside_down=false);
 
 	bool editing_objects() const { return tool_ == TOOL_ADD_OBJECT || tool_ == TOOL_SELECT_OBJECT; }
 	bool editing_tiles() const { return !editing_objects(); }

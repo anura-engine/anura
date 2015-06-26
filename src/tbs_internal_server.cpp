@@ -299,6 +299,8 @@ void terminate_utility_process()
 
 			std::vector<std::string> args;
 			args.push_back(formatter() << "--module=" << module::get_module_name());
+			args.push_back("--log-file=server-log.txt");
+			args.push_back("--log-level=debug");
 			args.push_back("--no-tbs-server");
 			args.push_back("--quit-server-after-game");
 			args.push_back(formatter() << "--tbs-server-semaphore=" << sem_id);

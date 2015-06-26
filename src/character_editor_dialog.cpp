@@ -96,7 +96,7 @@ namespace editor_dialogs
 			const std::string search_string = find_edit_->text();
 
 			GridPtr grid(new Grid(3));
-			grid->setMaxHeight(height() - 50);
+			grid->setMaxHeight(height()-100);
 			int index = 0;
 			for(const editor::enemy_type& c : editor_.all_characters()) {
 				bool matches = c.category == category;

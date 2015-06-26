@@ -31,6 +31,11 @@ ifneq ($(USE_CCACHE),yes)
 CCACHE=
 endif
 
+SANITIZE_ADDRESS?=
+ifneq ($(SANITIZE_ADDRESS), yes)
+SANITIZE_ADDRESS=
+endif
+
 ifeq ($(OPTIMIZE),yes)
 BASE_CXXFLAGS += -O2
 endif
@@ -41,16 +46,16 @@ endif
 
 BASE_CXXFLAGS += -Wall -Werror
 
-ifeq ($(CXX), g++)
+ifneq (,$(findstring clang, `$(CXX)`))
+BASE_CXXFLAGS += -Qunused-arguments -Wno-unknown-warning-option -Wno-deprecated-register
+ifeq ($(USE_LUA), yes)
+BASE_CXXFLAGS += -Wno-pointer-bool-conversion -Wno-parentheses-equality
+endif
+else ifneq (, $(findstring g++, `$(CXX)`))
 GCC_GTEQ_490 := $(shell expr `$(CXX) -dumpversion | sed -e 's/\.\([0-9][0-9]\)/\1/g' -e 's/\.\([0-9]\)/0\1/g' -e 's/^[0-9]\{3,4\}$$/&00/'` \>= 40900)
 BASE_CXXFLAGS += -Wno-literal-suffix -Wno-sign-compare
 ifeq "$(GCC_GTEQ_490)" "1"
 BASE_CXXFLAGS += -fdiagnostics-color=auto -fsanitize=undefined
-endif
-else ifneq (,$(findstring clang, `$(CXX)`))
-BASE_CXXFLAGS += -Qunused-arguments -Wno-unknown-warning-option -Wno-deprecated-register
-ifeq ($(USE_LUA), yes)
-BASE_CXXFLAGS += -Wno-pointer-bool-conversion -Wno-parentheses-equality
 endif
 endif
 
@@ -75,6 +80,12 @@ BASE_CXXFLAGS += -std=c++0x -g -fno-inline-functions \
 	-Wno-unknown-pragmas -Wno-overloaded-virtual
 
 LDFLAGS?=-rdynamic
+
+# Check for sanitize-address option
+ifeq ($(SANITIZE_ADDRESS), yes)
+BASE_CXXFLAGS += -g3 -fsanitize=address
+LDFLAGS += -fsanitize=address
+endif
 
 # Compiler include options, used after CXXFLAGS and CPPFLAGS.
 INC := -isystem external/include $(shell pkg-config --cflags x11 sdl2 glew SDL2_image SDL2_ttf libpng zlib freetype2 cairo)
@@ -111,7 +122,7 @@ ifeq ($(USE_SVG),yes)
 	LIBS += $(shell pkg-config --libs cairo)
 endif
 
-MODULES   := kre svg Box2D tiled 
+MODULES   := kre svg Box2D tiled hex
 ifeq ($(USE_LUA),yes)
 MODULES += eris
 endif

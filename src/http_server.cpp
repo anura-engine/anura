@@ -290,8 +290,10 @@ namespace http
 		std::string compressed_buf;
 		std::string compress_header;
 		const std::string* msg_ptr = &msg_ref;
-		if(socket->supports_deflate && msg_ref.size() > 1024) {
+		if(socket->supports_deflate && msg_ref.size() > 1024 && (header_parms.empty() || strstr(header_parms.c_str(), "Content-Encoding") == nullptr)) {
+			const int nbefore = SDL_GetTicks();
 			compressed_buf = zip::compress(msg_ref);
+			fprintf(stderr, "COMPRESSED: %d -> %d in %dms\n", (int)msg_ref.size(), (int)compressed_buf.size(), SDL_GetTicks() - nbefore);
 			msg_ptr = &compressed_buf;
 
 			compress_header = "Content-Encoding: deflate\r\n"; 

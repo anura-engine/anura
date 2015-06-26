@@ -21,9 +21,11 @@
 	   distribution.
 */
 
+#include "custom_object.hpp"
 #include "image_widget.hpp"
 #include "input.hpp"
 #include "scrollbar_widget.hpp"
+#include "variant_type.hpp"
 #include "widget_factory.hpp"
 
 namespace gui 
@@ -60,7 +62,7 @@ namespace gui
 
 	ScrollBarWidget::ScrollBarWidget(const variant& v, game_logic::FormulaCallable* e)
 		: Widget(v,e),
-		  window_pos_(0), 
+		  window_pos_(v["position"].as_int(0)), 
 		  window_size_(0), 
 		  range_(0),
 		  step_(0), 
@@ -70,20 +72,20 @@ namespace gui
 		  drag_anchor_y_(0)
 	{
 		ASSERT_LOG(getEnvironment() != 0, "You must specify a callable environment");
-		ffl_handler_ = getEnvironment()->createFormula(v["on_scroll"]);
+		variant on_scroll_var = v["on_scroll"];
 
-		const variant on_scroll_value = v["on_scroll"];
-		if(on_scroll_value.is_function()) {
-			ASSERT_LOG(on_scroll_value.min_function_arguments() == 0, "on_scroll ScrollBarWidget function should take 0 arguments: " << v.debug_location());
-			static const variant fml("fn()");
-			ffl_handler_.reset(new game_logic::Formula(fml));
+		on_scroll_fn_ = v["on_scroll"];
+		ASSERT_LOG(on_scroll_fn_.is_null() || (on_scroll_fn_.is_function() && on_scroll_fn_.min_function_arguments() == 2), "on_scroll value in scrollbar widget should be a function that takes two arguments");
+		if(on_scroll_fn_.is_function()) {
+			variant_type_ptr type = get_variant_type_from_value(on_scroll_fn_);
+			std::vector<variant_type_ptr> args;
+			variant_type_ptr return_type;
+			int min_args = 0;
+			const bool is_fn = type->is_function(&args, &return_type, &min_args);
+			ASSERT_LOG(is_fn, "on_scroll value in scrollbar widget should be a function");
+			variant v(e);
 
-			game_logic::MapFormulaCallable* callable = new game_logic::MapFormulaCallable;
-			callable->add("fn", on_scroll_value);
-
-			handler_arg_.reset(callable);
-		} else {
-			ffl_handler_ = getEnvironment()->createFormula(on_scroll_value);
+			ASSERT_LOG(args[0]->match(v), "on_scroll for scrollbar widget takes incorrect object type as argument");
 		}
 
 		handler_ = std::bind(&ScrollBarWidget::handlerDelegate, this, std::placeholders::_1);
@@ -107,24 +109,23 @@ namespace gui
 		if(v.has_key("height")) {
 			setDim(0, v["height"].as_int());
 		}
+
+		clipWindowPosition();
 	}
 
 	void ScrollBarWidget::handlerDelegate(int yscroll)
 	{
 		using namespace game_logic;
-		if(handler_arg_) {
-			MapFormulaCallablePtr callable(new MapFormulaCallable(handler_arg_.get()));
-			callable->add("yscroll", variant(yscroll));
-			variant value = ffl_handler_->execute(*handler_arg_);
-			getEnvironment()->executeCommand(value);
-		} else if(getEnvironment()) {
-			MapFormulaCallablePtr callable(new MapFormulaCallable(getEnvironment()));
-			callable->add("yscroll", variant(yscroll));
-			variant value = ffl_handler_->execute(*getEnvironment());
-			getEnvironment()->executeCommand(value);
-		} else {
-			LOG_ERROR("ScrollBarWidget::handlerDelegate() called without environment!");
+		if(on_scroll_fn_.is_null() || dynamic_cast<const CustomObject*>(getEnvironment()) == nullptr) {
+			return;
 		}
+
+		std::vector<variant> args;
+		args.push_back(variant(getEnvironment()));
+		args.push_back(variant(yscroll));
+
+		variant cmd = on_scroll_fn_(args);
+		getEnvironment()->executeCommand(cmd);
 	}
 
 	void ScrollBarWidget::setRange(int total_height, int window_height)
@@ -351,7 +352,7 @@ namespace gui
 
 		DEFINE_FIELD(on_scroll, "null")
 			return variant();
-		DEFINE_SET_FIELD_TYPE("string|function")
-			obj.ffl_handler_ = obj.getEnvironment()->createFormula(value);
+		DEFINE_SET_FIELD_TYPE("null|function")
+			obj.on_scroll_fn_ = value;
 	END_DEFINE_CALLABLE(ScrollBarWidget)
 }

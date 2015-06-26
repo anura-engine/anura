@@ -78,10 +78,10 @@ void Water::init()
 	waterline_->addAttributeDesc(AttributeDesc(AttrType::POSITION, 2, AttrFormat::FLOAT, false, sizeof(vertex_color), offsetof(vertex_color, vertex)));
 	waterline_->addAttributeDesc(AttributeDesc(AttrType::COLOR, 4, AttrFormat::UNSIGNED_BYTE, true, sizeof(vertex_color), offsetof(vertex_color, color)));
 	ab->addAttribute(AttributeBasePtr(waterline_));
-	ab->setDrawMode(DrawMode::TRIANGLE_STRIP);
+	ab->setDrawMode(DrawMode::TRIANGLES);
 	/// Set appropriate blend equation/functions on each of these attribute sets
 	if(DisplayDevice::checkForFeature(DisplayDeviceCapabilties::BLEND_EQUATION_SEPERATE)) {
-		ab->setBlendEquation(BlendEquation(BlendEquationConstants::BE_REVERSE_SUBTRACT));
+		//ab->setBlendEquation(BlendEquation(BlendEquationConstants::BE_REVERSE_SUBTRACT));
 	}
 	ab->setBlendMode(BlendModeConstants::BM_ONE, BlendModeConstants::BM_ONE);
 	addAttributeSet(ab);
@@ -158,12 +158,20 @@ void Water::addWave(const point& p, double xvelocity, double height, double leng
 
 void Water::preRender(const KRE::WindowPtr& wm) const
 {
+	std::vector<KRE::vertex_color> water_rect;
+	std::vector<KRE::vertex_color> line1;
+	std::vector<KRE::vertex_color> line2;
+
 	for(const area& a : areas_) {
-		drawArea(a);
+		drawArea(a, &water_rect, &line1, &line2);
 	}
+
+	waterline_->update(&water_rect);
+	line1_->update(&line1);
+	line2_->update(&line2);
 }
 
-bool Water::drawArea(const Water::area& a) const
+bool Water::drawArea(const Water::area& a, std::vector<KRE::vertex_color>* water_rect, std::vector<KRE::vertex_color>* line1, std::vector<KRE::vertex_color>* line2) const
 {
 	const KRE::Color waterline_color(250, 240, 205, 255);
 	const KRE::Color shallowwater_color(0, 51, 61, 140);
@@ -180,49 +188,27 @@ bool Water::drawArea(const Water::area& a) const
 		water_color.setBlue((max_color - water_color.b())/8.0f);
 	}
 
-	float vertices[] = {
-		waterline_rect.x(), waterline_rect.y(), //shallow water colored
-		waterline_rect.x() + waterline_rect.w(), waterline_rect.y(),
-		
-		waterline_rect.x(), waterline_rect.y() + std::min(100.0f, underwater_rect.h()), //deep water colored
-		waterline_rect.x() + waterline_rect.w(), waterline_rect.y() + std::min(100.0f, underwater_rect.h()),
-		waterline_rect.x(), underwater_rect.y() + underwater_rect.h(),
-		waterline_rect.x() + waterline_rect.w(), underwater_rect.y() + underwater_rect.h()
-	};
-
-	std::vector<KRE::vertex_color> water_rect;
-	glm::u8vec4 col(water_color.r_int(),water_color.g_int(),water_color.b_int(),water_color.a_int());
-	water_rect.emplace_back(glm::vec2(waterline_rect.x(), waterline_rect.y()), col);
-	water_rect.emplace_back(glm::vec2(waterline_rect.x() + waterline_rect.w(), waterline_rect.y()), col);
-	water_rect.emplace_back(glm::vec2(waterline_rect.x(), waterline_rect.y() + std::min(100.0f, underwater_rect.h())), col);
-	water_rect.emplace_back(glm::vec2(waterline_rect.x() + waterline_rect.w(), waterline_rect.y() + std::min(100.0f, underwater_rect.h())), col);
-	water_rect.emplace_back(glm::vec2(waterline_rect.x(), underwater_rect.y() + underwater_rect.h()), col);
-	water_rect.emplace_back(glm::vec2(waterline_rect.x() + waterline_rect.w(), underwater_rect.y() + underwater_rect.h()), col);
-	getAttributeSet()[0]->setCount(water_rect.size());
-	waterline_->update(&water_rect);
+	water_rect->emplace_back(glm::vec2(waterline_rect.x(), waterline_rect.y()), water_color.as_u8vec4());
+	water_rect->emplace_back(glm::vec2(waterline_rect.x2(), waterline_rect.y()), water_color.as_u8vec4());
+	water_rect->emplace_back(glm::vec2(waterline_rect.x(), waterline_rect.y() + underwater_rect.h()), water_color.as_u8vec4());
+	water_rect->emplace_back(glm::vec2(waterline_rect.x2(), waterline_rect.y() + underwater_rect.h()), water_color.as_u8vec4());
+	water_rect->emplace_back(glm::vec2(waterline_rect.x(), underwater_rect.y2()), water_color.as_u8vec4());
+	water_rect->emplace_back(glm::vec2(waterline_rect.x2(), underwater_rect.y2()), water_color.as_u8vec4());
 
 	// XXX set line width uniform to 2.0
 
-	typedef std::pair<int, int> Segment;
-
 	const int EndSegmentSize = 20;
 
-	for(const Segment& seg : a.surface_segments_) {
-		std::vector<KRE::vertex_color> line1;
-		line1.emplace_back(glm::vec2(static_cast<float>(seg.first - EndSegmentSize), waterline_rect.y()), glm::u8vec4(255, 255, 255, 0));
-		line1.emplace_back(glm::vec2(static_cast<float>(seg.first), waterline_rect.y()), glm::u8vec4(255, 255, 255, 255));
-		line1.emplace_back(glm::vec2(static_cast<float>(seg.second), waterline_rect.y()), glm::u8vec4(255, 255, 255, 255));
-		line1.emplace_back(glm::vec2(static_cast<float>(seg.second + EndSegmentSize), waterline_rect.y()), glm::u8vec4(255, 255, 255, 0));
-		getAttributeSet()[1]->setCount(line1.size());
-		line1_->update(&line1);
+	for(auto& seg : a.surface_segments_) {
+		line1->emplace_back(glm::vec2(static_cast<float>(seg.first - EndSegmentSize), waterline_rect.y()), glm::u8vec4(255, 255, 255, 0));
+		line1->emplace_back(glm::vec2(static_cast<float>(seg.first), waterline_rect.y()), glm::u8vec4(255, 255, 255, 255));
+		line1->emplace_back(glm::vec2(static_cast<float>(seg.second), waterline_rect.y()), glm::u8vec4(255, 255, 255, 255));
+		line1->emplace_back(glm::vec2(static_cast<float>(seg.second + EndSegmentSize), waterline_rect.y()), glm::u8vec4(255, 255, 255, 0));
 
-		std::vector<KRE::vertex_color> line2;
-		line2.emplace_back(glm::vec2(static_cast<float>(seg.first - EndSegmentSize), waterline_rect.y()+2.0f), glm::u8vec4(0, 230, 200, 0));
-		line2.emplace_back(glm::vec2(static_cast<float>(seg.first), waterline_rect.y()+2.0f), glm::u8vec4(0, 230, 200, 128));
-		line2.emplace_back(glm::vec2(static_cast<float>(seg.second), waterline_rect.y()+2.0f), glm::u8vec4(0, 230, 200, 128));
-		line2.emplace_back(glm::vec2(static_cast<float>(seg.second + EndSegmentSize), waterline_rect.y()+2.0f), glm::u8vec4(0, 230, 200, 0));
-		getAttributeSet()[2]->setCount(line2.size());
-		line2_->update(&line2);
+		line2->emplace_back(glm::vec2(static_cast<float>(seg.first - EndSegmentSize), waterline_rect.y()+2.0f), glm::u8vec4(0, 230, 200, 0));
+		line2->emplace_back(glm::vec2(static_cast<float>(seg.first), waterline_rect.y()+2.0f), glm::u8vec4(0, 230, 200, 128));
+		line2->emplace_back(glm::vec2(static_cast<float>(seg.second), waterline_rect.y()+2.0f), glm::u8vec4(0, 230, 200, 128));
+		line2->emplace_back(glm::vec2(static_cast<float>(seg.second + EndSegmentSize), waterline_rect.y()+2.0f), glm::u8vec4(0, 230, 200, 0));
 	}
 
 	return true;

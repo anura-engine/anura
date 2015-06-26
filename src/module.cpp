@@ -48,6 +48,9 @@ namespace module
 
 	namespace 
 	{
+		PREF_STRING(module_server, "theargentlark.com", "server to use to get modules from");
+		PREF_STRING(module_port, "23455", "server port to get modules from");
+
 		// The base files are referred to as core.
 		module::modules core = {"core", "core", "core", {""}};
 
@@ -340,7 +343,12 @@ namespace module
 		std::string pretty_name = name;
 		std::string abbrev = name;
 		std::string fname = make_base_module_path(name) + "module.cfg";
-		variant v = json::parse_from_file(fname);
+		variant v;
+		try {
+			v = json::parse_from_file(fname);
+		} catch(json::ParseError& e) {
+			ASSERT_LOG(false, "Error parsing file: " << e.errorMessage());
+		}
 		std::string def_font = "FreeSans";
 		std::string def_font_cjk = "unifont";
 		auto speech_dialog_bg_color = std::make_shared<KRE::Color>(85, 53, 53, 255);
@@ -349,8 +357,12 @@ namespace module
 		const std::string constants_path = make_base_module_path(name) + "data/constants.cfg";
 		if(sys::file_exists(constants_path)) {
 			const std::string contents = sys::read_file(constants_path);
-			variant v = json::parse(contents, json::JSON_PARSE_OPTIONS::NO_PREPROCESSOR);
-			new game_logic::ConstantsLoader(v);
+			try {
+				variant v = json::parse(contents, json::JSON_PARSE_OPTIONS::NO_PREPROCESSOR);
+				new game_logic::ConstantsLoader(v);
+			} catch(json::ParseError& e) {
+				ASSERT_LOG(false, "Error parsing file: " << e.errorMessage());
+			}
 		}
 
 		if(v.is_map()) {
@@ -564,7 +576,7 @@ namespace module
 	}
 	}
 
-	variant build_package(const std::string& id, bool increment_version, std::string path)
+	variant build_package(const std::string& id, bool increment_version, variant version_override, std::string path)
 	{
 		std::vector<std::string> files;
 		if(path == "") {
@@ -580,7 +592,12 @@ namespace module
 		}
 
 		if(increment_version) {
-			std::vector<int> version = config["version"].as_list_int();
+			std::vector<int> version;
+			if(version_override.is_list()) {
+				version = version_override.as_list_int();
+			} else {
+				version = config["version"].as_list_int();
+			}
 			ASSERT_LOG(version.empty() == false, "Illegal version");
 			version.back()++;
 			config.add_attr(variant("version"), vector_to_variant(version));
@@ -723,7 +740,7 @@ COMMAND_LINE_UTILITY(generate_manifest)
 		path_override = arguments.back();
 	}
 
-	variant package = build_package(module_id, false, path_override);
+	variant package = build_package(module_id, false, variant(), path_override);
 
 	variant manifest = package["manifest"];
 	ASSERT_LOG(manifest.is_map(), "Could not find manifest");
@@ -737,8 +754,8 @@ COMMAND_LINE_UTILITY(generate_manifest)
 
 	COMMAND_LINE_UTILITY(replicate_module)
 	{
-		std::string server = "theargentlark.com";
-		std::string port = "23455";
+		std::string server = g_module_server;
+		std::string port = g_module_port;
 
 		std::string src_module, dst_module;
 
@@ -800,8 +817,8 @@ COMMAND_LINE_UTILITY(generate_manifest)
 		std::string path_override;
 		std::string module_id;
 		std::string module_id_override;
-		std::string server = "theargentlark.com";
-		std::string port = "23455";
+		std::string server = g_module_server;
+		std::string port = g_module_port;
 		bool increment_version = false;
 
 		std::deque<std::string> arguments(args.begin(), args.end());
@@ -835,7 +852,36 @@ COMMAND_LINE_UTILITY(generate_manifest)
 
 		ASSERT_LOG(module_id.empty() == false, "MUST SPECIFY MODULE ID");
 
-		variant package = build_package(module_id, increment_version, path_override);
+		variant version_on_server;
+
+		if(increment_version) {
+			std::map<variant,variant> attr;
+			attr[variant("type")] = variant("query_module_version");
+			attr[variant("module_id")] = variant(module_id);
+			const std::string msg = variant(&attr).write_json();
+			std::string response;
+			bool done = false;
+			bool error = false;
+
+			http_client client(server, port);
+			client.send_request("POST /upload_module", msg, 
+								std::bind(finish_upload, _1, &done, &response),
+								std::bind(error_upload, _1, &error),
+								std::bind(upload_progress, _1, _2, _3));
+			while(!done) {
+				client.process();
+				ASSERT_LOG(!error, "Error in upload");
+			}
+
+			variant response_doc(json::parse(response));
+			if(response_doc["status"].as_string() != "ok") {
+				ASSERT_LOG(false, "Error in querying module version " << response);
+			}
+
+			version_on_server = response_doc["version"];
+		}
+
+		variant package = build_package(module_id, increment_version, version_on_server, path_override);
 		std::map<variant,variant> attr;
 
 		attr[variant("type")] = variant("prepare_upload_module");
@@ -890,6 +936,12 @@ COMMAND_LINE_UTILITY(generate_manifest)
 				for(auto p : our_manifest.as_map()) {
 					if(their_manifest.has_key(p.first) && their_manifest[p.first]["md5"] == p.second["md5"]) {
 						keys_to_delete.push_back(p.first);
+						LOG_INFO("File " << p.first.as_string() << " is unchanged, not uploading");
+					} else if(their_manifest.has_key(p.first) == false) {
+						LOG_INFO("File " << p.first.as_string() << " is new, uploading " << p.second["size"].as_int());
+					} else {
+						LOG_INFO("File " << p.first.as_string() << " has changed, uploading " << p.second["size"].as_int());
+
 					}
 				}
 
@@ -947,7 +999,9 @@ COMMAND_LINE_UTILITY(generate_manifest)
 	}
 
 	client::client() : operation_(client::OPERATION_NONE),
-					   client_(new http_client("theargentlark.com", "23455")),
+	                   host_(g_module_server), port_(g_module_port),
+					   out_of_date_(false),
+					   client_(new http_client(host_, port_)),
 					   nbytes_transferred_(0),
 					   nbytes_total_(0),
 					   nfiles_written_(0),
@@ -957,7 +1011,9 @@ COMMAND_LINE_UTILITY(generate_manifest)
 	}
 
 	client::client(const std::string& host, const std::string& port)
-	  : operation_(client::OPERATION_NONE), client_(new http_client(host, port)),
+	  : operation_(client::OPERATION_NONE),
+	    host_(host), port_(port), out_of_date_(false),
+	    client_(new http_client(host, port)),
 		nbytes_transferred_(0), nbytes_total_(0),
 		nfiles_written_(0), install_image_(false)
 	{
@@ -967,14 +1023,6 @@ COMMAND_LINE_UTILITY(generate_manifest)
 	{
 		install_module(module_id, force);
 		operation_ = OPERATION_PREPARE_INSTALL;
-	}
-
-	void client::complete_install_module()
-	{
-		ASSERT_LOG(module_prepared(), "Called complete_install_module() when module_prepared() not true");
-		operation_ = OPERATION_NONE;
-		perform_install(pending_response_);
-		pending_response_ = "";
 	}
 
 	bool client::module_prepared() const
@@ -988,6 +1036,8 @@ const char* InstallImagePath = "../../";
 #else
 const char* InstallImagePath = ".";
 #endif
+
+static const int ModuleProtocolVersion = 1;
 }
 
 	bool client::install_module(const std::string& module_id, bool force)
@@ -999,6 +1049,7 @@ const char* InstallImagePath = ".";
 		variant_builder request;
 		request.add("type", "download_module");
 		request.add("module_id", module_id);
+		request.add("protocol_version", ModuleProtocolVersion);
 
 		std::string version_str;
 		std::string current_path = install_image_ ? InstallImagePath : make_base_module_path(module_id);
@@ -1066,6 +1117,10 @@ const char* InstallImagePath = ".";
 		}
 
 		client_->process();
+		std::vector<boost::shared_ptr<http_client> > chunk_clients = chunk_clients_;
+		for(auto c : chunk_clients) {
+			c->process();
+		}
 
 		if(operation_ == OPERATION_NONE) {
 			return false;
@@ -1099,11 +1154,51 @@ const char* InstallImagePath = ".";
 		} 
 	}
 
+	void client::on_chunk_response(variant node, boost::shared_ptr<http_client> client, std::string response)
+	{
+		nbytes_transferred_ += node["size"].as_int();
+		node.add_attr_mutation(variant("data"), variant(response));
+
+		chunk_clients_.erase(std::remove(chunk_clients_.begin(), chunk_clients_.end(), client), chunk_clients_.end());
+		if(chunks_to_get_.empty()) {
+			if(chunk_clients_.empty()) {
+				perform_install_from_doc(doc_pending_chunks_);
+				doc_pending_chunks_ = variant();
+				operation_ = OPERATION_NONE;
+			}
+		} else {
+			boost::shared_ptr<http_client> new_client(new http_client(host_, port_));
+			variant chunk = chunks_to_get_.back();
+			chunks_to_get_.pop_back();
+
+			variant_builder request;
+			request.add("type", "download_chunk");
+			request.add("chunk_id", chunk["md5"]);
+
+			new_client->send_request("POST /download_chunk?chunk_id=" + chunk["md5"].as_string(), request.build().write_json(), 
+						  std::bind(&client::on_chunk_response, this, chunk, new_client, _1),
+						  std::bind(&client::on_error, this, _1),
+						  [](size_t a, size_t b, bool c) {}
+			);
+
+			chunk_clients_.push_back(new_client);
+		}
+	}
+
 	void client::on_response(std::string response)
 	{
+		LOG_INFO("module client response received. Mode = " << static_cast<int>(operation_));
+
 		try {
 			variant doc = json::parse(response, json::JSON_PARSE_OPTIONS::NO_PREPROCESSOR);
 			if(doc[variant("status")] != variant("ok")) {
+				if(doc[variant("out_of_date")].as_bool(false)) {
+					on_error(doc[variant("message")].as_string());
+					out_of_date_ = true;
+					operation_ = OPERATION_NONE;
+					return;
+				}
+
 				on_error(doc[variant("status")].as_string());
 
 				LOG_ERROR("SET ERROR: " << doc.write_json());
@@ -1112,6 +1207,7 @@ const char* InstallImagePath = ".";
 				operation_ = OPERATION_NONE;
 
 				perform_install(response);
+				return;
 
 			} else if(operation_ == OPERATION_PREPARE_INSTALL) {
 				pending_response_ = response;
@@ -1171,6 +1267,8 @@ const char* InstallImagePath = ".";
 	{
 		variant doc;
 
+		LOG_INFO("Performing module install");
+
 		try {
 			doc = json::parse(response, json::JSON_PARSE_OPTIONS::NO_PREPROCESSOR);
 		} catch(json::ParseError& e) {
@@ -1185,6 +1283,45 @@ const char* InstallImagePath = ".";
 
 		ASSERT_LOG(doc["status"].as_string() == "ok", "COULD NOT DOWNLOAD MODULE: " << doc["message"]);
 
+		variant manifest = doc["module"]["manifest"];
+		for(auto p : manifest.as_map()) {
+			if(p.second["data"].is_null()) {
+				nbytes_total_ += p.second["size"].as_int();
+				chunks_to_get_.push_back(p.second);
+			}
+		}
+
+		LOG_INFO("Getting chunks: " << chunks_to_get_.size());
+
+
+		if(chunks_to_get_.empty() == false) {
+			doc_pending_chunks_ = doc;
+
+			while(chunk_clients_.size() < 8 && chunks_to_get_.empty() == false) {
+				variant chunk = chunks_to_get_.back();
+				chunks_to_get_.pop_back();
+
+				variant_builder request;
+				request.add("type", "download_chunk");
+				request.add("chunk_id", chunk["md5"]);
+
+				boost::shared_ptr<http_client> client(new http_client(host_, port_));
+				client->send_request("POST /download_chunk?chunk_id=" + chunk["md5"].as_string(), request.build().write_json(), 
+							  std::bind(&client::on_chunk_response, this, chunk, client, _1),
+							  std::bind(&client::on_error, this, _1),
+							  [](size_t a, size_t b, bool c) {}
+				);
+				chunk_clients_.push_back(client);
+			}
+
+			operation_ = OPERATION_GET_CHUNKS;
+		} else {
+			perform_install_from_doc(doc);
+		}
+	}
+
+	void client::perform_install_from_doc(variant doc)
+	{
 		variant module_data = doc["module"];
 
 		if(module_data.has_key("delete")) {
@@ -1326,6 +1463,7 @@ const char* InstallImagePath = ".";
 
 	void client::on_error(std::string response)
 	{
+		LOG_INFO("client error: " << response);
 		error_ = response;
 		data_["error"] = variant(response);
 		operation_ = OPERATION_NONE;
@@ -1345,8 +1483,8 @@ const char* InstallImagePath = ".";
 	{
 
 		std::string module_id;
-		std::string server = "theargentlark.com";
-		std::string port = "23455";
+		std::string server = g_module_server;
+		std::string port = g_module_port;
 		bool force = false;
 
 		std::deque<std::string> arguments(args.begin(), args.end());
@@ -1389,8 +1527,8 @@ const char* InstallImagePath = ".";
 	{
 		std::string module_id;
 
-		std::string server = "theargentlark.com";
-		std::string port = "23455";
+		std::string server = g_module_server;
+		std::string port = g_module_port;
 
 		std::deque<std::string> arguments(args.begin(), args.end());
 		while(!arguments.empty()) {
@@ -1440,8 +1578,8 @@ const char* InstallImagePath = ".";
 
 	COMMAND_LINE_UTILITY(list_modules)
 	{
-		std::string server = "theargentlark.com";
-		std::string port = "23455";
+		std::string server = g_module_server;
+		std::string port = g_module_port;
 
 		std::deque<std::string> arguments(args.begin(), args.end());
 		while(!arguments.empty()) {

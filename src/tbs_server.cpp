@@ -270,68 +270,37 @@ namespace tbs
 
 		for(int i = 0; i != messages.size(); ++i) {
 			send_msg(messages[i].first, messages[i].second);
-	}
+		}
 
-	if(get_num_heartbeat()%10 == 0) {
-		for(auto g : games()) {
-			for(int n = 0; n < static_cast<int>(g->clients.size()) && n < static_cast<int>(g->game_state->players().size()); ++n) {
-				const int session_id = g->clients[n];
-				int time_since_last_contact = 0;
-				if(sessions_to_waiting_connections_.count(session_id) == 0) {
-					time_since_last_contact = get_ms_since_last_contact(session_id);
-				}
-
-				const int DisconnectTimeoutMS = 5000;
-
-				const bool disconnected = time_since_last_contact > DisconnectTimeoutMS;
-				const bool recorded_as_disconnected = g->clients_disconnected.count(session_id) == 1;
-				if(disconnected != recorded_as_disconnected) {
-					if(disconnected) {
-						g->clients_disconnected.insert(session_id);
-						g->game_state->player_disconnect(n);
-					} else {
-						g->clients_disconnected.erase(session_id);
-						g->game_state->player_reconnect(n);
+		if(!g_quit_server_after_game && get_num_heartbeat()%10 == 0) {
+			for(auto g : games()) {
+				for(int n = 0; n < static_cast<int>(g->clients.size()) && n < static_cast<int>(g->game_state->players().size()); ++n) {
+					const int session_id = g->clients[n];
+					int time_since_last_contact = 0;
+					if(sessions_to_waiting_connections_.count(session_id) == 0) {
+						time_since_last_contact = get_ms_since_last_contact(session_id);
 					}
 
-				}
+					const int DisconnectTimeoutMS = 5000;
 
-				if(disconnected) {
-					g->game_state->player_disconnected_for(n, time_since_last_contact - DisconnectTimeoutMS);
-				}
-			}
-		}
-	}
+					const bool disconnected = time_since_last_contact > DisconnectTimeoutMS;
+					const bool recorded_as_disconnected = g->clients_disconnected.count(session_id) == 1;
+					if(disconnected != recorded_as_disconnected) {
+						if(disconnected) {
+							g->clients_disconnected.insert(session_id);
+							g->game_state->player_disconnect(n);
+						} else {
+							g->clients_disconnected.erase(session_id);
+							g->game_state->player_reconnect(n);
+						}
 
-	if(get_num_heartbeat()%10 == 0) {
-		for(auto g : games()) {
-			for(int n = 0; n < static_cast<int>(g->clients.size()) && n < static_cast<int>(g->game_state->players().size()); ++n) {
-				const int session_id = g->clients[n];
-				int time_since_last_contact = 0;
-				if(sessions_to_waiting_connections_.count(session_id) == 0) {
-					time_since_last_contact = get_ms_since_last_contact(session_id);
-				}
-
-				const int DisconnectTimeoutMS = 5000;
-
-				const bool disconnected = time_since_last_contact > DisconnectTimeoutMS;
-				const bool recorded_as_disconnected = g->clients_disconnected.count(session_id) == 1;
-				if(disconnected != recorded_as_disconnected) {
-					if(disconnected) {
-						g->clients_disconnected.insert(session_id);
-						g->game_state->player_disconnect(n);
-					} else {
-						g->clients_disconnected.erase(session_id);
-						g->game_state->player_reconnect(n);
 					}
 
-				}
-
-				if(disconnected) {
-					g->game_state->player_disconnected_for(n, time_since_last_contact - DisconnectTimeoutMS);
+					if(disconnected) {
+						g->game_state->player_disconnected_for(n, time_since_last_contact - DisconnectTimeoutMS);
+					}
 				}
 			}
-		}
 		}
 	}
 }

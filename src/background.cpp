@@ -104,10 +104,14 @@ std::shared_ptr<Background> Background::get(const std::string& name, int palette
 
 	std::shared_ptr<Background>& obj = cache[id];
 	if(!obj) {
-		const std::string fname = "data/backgrounds/" + name + ".cfg";
-		obj.reset(new Background(json::parse_from_file(fname), palette_id));
-		obj->id_ = name;
-		obj->file_ = module::map_file(fname);
+		try {
+			const std::string fname = "data/backgrounds/" + name + ".cfg";
+			obj.reset(new Background(json::parse_from_file(fname), palette_id));
+			obj->id_ = name;
+			obj->file_ = module::map_file(fname);
+		} catch(json::ParseError& e) {
+			LOG_ERROR("Error parsing file: " << e.errorMessage());
+		}
 	}
 
 	return obj;

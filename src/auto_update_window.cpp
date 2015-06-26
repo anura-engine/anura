@@ -1,14 +1,6 @@
 #include <assert.h>
 #include <sstream>
 
-#ifdef _MSC_VER
-#include <direct.h>
-#define chdir _chdir
-#define execv _execv
-#else
-#include <unistd.h>
-#endif
-
 #include "auto_update_window.hpp"
 #include "filesystem.hpp"
 #include "json_parser.hpp"
@@ -22,6 +14,14 @@
 #include "Canvas.hpp"
 #include "Font.hpp"
 #include "Texture.hpp"
+
+#ifdef _MSC_VER
+#include <direct.h>
+#define chdir _chdir
+#define execv _execv
+#else
+#include <unistd.h>
+#endif
 
 namespace 
 {
@@ -227,7 +227,6 @@ bool do_auto_update(std::deque<std::string> argv, auto_update_window& update_win
 		}
 
 		if(arg_name == "--timeout") {
-			ASSERT_LOG(arg_value.empty(), "Unrecognized argument: " << arg);
 			timeout_ms = atoi(arg_value.c_str());
 		} else if(arg_name == "--args") {
 			ASSERT_LOG(arg_value.empty(), "Unrecognized argument: " << arg);
@@ -273,13 +272,19 @@ bool do_auto_update(std::deque<std::string> argv, auto_update_window& update_win
 
 		bool is_new_install = false;
 
+		bool has_error = false;
+
 #define HANDLE_ERROR(msg) \
 			LOG_ERROR(msg); \
-		if(is_new_install) { \
+		if(is_new_install || (cl && cl->out_of_date()) || (anura_cl && anura_cl->out_of_date())) { \
 			std::ostringstream s; \
 			s << msg; \
 			error_msg = s.str(); \
-			return false; \
+			bool newer = strstr(error_msg.c_str(), "newer") != nullptr; \
+			if(!newer) { has_error = true; } \
+			if(!newer && (!cl || !anura_cl)) { \
+				return false; \
+			} \
 		}
 			
 
@@ -365,6 +370,9 @@ bool do_auto_update(std::deque<std::string> argv, auto_update_window& update_win
 			const int time_taken = profile::get_tick_time() - start_time;
 			if(time_taken > timeout_ms) {
 				HANDLE_ERROR("Timed out updating module. Canceling. " << time_taken << "ms vs " << timeout_ms << "ms");
+				if(is_new_install) {
+					return false;
+				}
 				break;
 			}
 
@@ -417,6 +425,11 @@ bool do_auto_update(std::deque<std::string> argv, auto_update_window& update_win
 				}
 			}
 		}
+
+		if(has_error && is_new_install) {
+			return false;
+		}
+
 		}
 	}
 
@@ -474,5 +487,6 @@ COMMAND_LINE_UTILITY(update_launcher)
 	std::string error_msg;
 	std::deque<std::string> argv(args.begin(), args.end());
 	while(!do_auto_update(argv, update_window, error_msg)) {
+		SDL_Delay(2000);
 	}
 }
