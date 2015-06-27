@@ -363,25 +363,27 @@ namespace KRE
 
 	void SurfaceSDL::setBlendMode(Surface::BlendMode bm) 
 	{
-		SDL_BlendMode sdl_bm;
+		SDL_BlendMode sdl_bm = SDL_BLENDMODE_NONE;
 		switch(bm) {
 			case BLEND_MODE_NONE:	sdl_bm = SDL_BLENDMODE_NONE; break;
 			case BLEND_MODE_BLEND:	sdl_bm = SDL_BLENDMODE_BLEND; break;
 			case BLEND_MODE_ADD:	sdl_bm = SDL_BLENDMODE_ADD; break;
 			case BLEND_MODE_MODULATE:	sdl_bm = SDL_BLENDMODE_MOD; break;
+			default: break;
 		}
 		SDL_SetSurfaceBlendMode(surface_, sdl_bm);
 	}
 
 	Surface::BlendMode SurfaceSDL::getBlendMode() const 
 	{
-		SDL_BlendMode sdl_bm;
+		SDL_BlendMode sdl_bm = SDL_BLENDMODE_NONE;
 		SDL_GetSurfaceBlendMode(surface_, &sdl_bm);
 		switch(sdl_bm) {
 		case SDL_BLENDMODE_NONE:	return BLEND_MODE_NONE;
 		case SDL_BLENDMODE_BLEND:	return BLEND_MODE_BLEND;
 		case SDL_BLENDMODE_ADD:		return BLEND_MODE_ADD;
 		case SDL_BLENDMODE_MOD:		return BLEND_MODE_MODULATE;
+		default: break;
 		}
 		ASSERT_LOG(false, "Unrecognised SDL blend mode: " << sdl_bm);
 		return BLEND_MODE_NONE;
@@ -672,6 +674,7 @@ namespace KRE
 			case SDL_PIXELFORMAT_UYVY:	        return PF::PIXELFORMAT_UYVY;
 			case SDL_PIXELFORMAT_YVYU:	        return PF::PIXELFORMAT_YVYU;
 			case SDL_PIXELFORMAT_R8:			return PF::PIXELFORMAT_R8;
+			default: break;
 		}
 		return PF::PIXELFORMAT_UNKNOWN;
 	}
