@@ -37,5 +37,6 @@ namespace KRE
 		DISALLOW_COPY_ASSIGN_AND_DEFAULT(StencilScopeOGL);
 		void applySettings(const StencilSettings& settings);
 		void handleUpdatedMask() override;
+		void handleUpdatedSettings() override;
 	};
 }

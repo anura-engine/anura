@@ -101,4 +101,7 @@ namespace KRE
 		StencilOperation dpfail_;
 		StencilOperation dppass_;
 	};
+
+	const StencilSettings& get_stencil_mask_settings();
+	const StencilSettings& get_stencil_keep_settings();
 }
