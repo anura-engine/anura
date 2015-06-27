@@ -42,6 +42,8 @@ namespace KRE
 		  rotation_(1.0f, 0.0f, 0.0f, 0.0f),
 		  scale_(1.0f),
 		  shader_(ShaderProgram::getSystemDefault()),
+		  stencil_settings_(false, StencilFace::FRONT_AND_BACK, StencilFunc::EQUAL, 0x01, 0x01, 0xff, StencilOperation::KEEP, StencilOperation::KEEP, StencilOperation::KEEP),
+		  stencil_mask_(nullptr),
 		  enabled_(true),
 		  ignore_global_model_(false),
 		  derived_position_(0.0f),
@@ -56,6 +58,8 @@ namespace KRE
 		  rotation_(1.0f, 0.0f, 0.0f, 0.0f),
 		  scale_(1.0f),
 		  shader_(ShaderProgram::getSystemDefault()),
+		  stencil_settings_(false, StencilFace::FRONT_AND_BACK, StencilFunc::EQUAL, 0x01, 0x01, 0xff, StencilOperation::KEEP, StencilOperation::KEEP, StencilOperation::KEEP),
+		  stencil_mask_(nullptr),
 		  enabled_(true),
 		  ignore_global_model_(false),
 		  derived_position_(0.0f),
@@ -70,6 +74,8 @@ namespace KRE
 		  rotation_(1.0f, 0.0f, 0.0f, 0.0f),
 		  scale_(1.0f),
 		  shader_(ShaderProgram::getSystemDefault()),
+		  stencil_settings_(false, StencilFace::FRONT_AND_BACK, StencilFunc::EQUAL, 0x01, 0x01, 0xff, StencilOperation::KEEP, StencilOperation::KEEP, StencilOperation::KEEP),
+		  stencil_mask_(nullptr),
 		  enabled_(true),
 		  ignore_global_model_(false),
 		  derived_position_(0.0f),
@@ -153,13 +159,9 @@ namespace KRE
 			setColor(KRE::Color(node["color"]));
 		}
 		if(node.has_key("texture")) {
-			if(node["texture"].is_string() && (node["texture"].as_string() != "fbo" && node["texture"].as_string() != "svg")) {
-				texture_ = Texture::createTexture(node["texture"]);
-			}
+			texture_ = Texture::createTexture(node["texture"]);
 		} else if(node.has_key("image")) {
-			if(node["image"].is_string() && (node["image"].as_string() != "fbo" && node["image"].as_string() != "svg")) {
-				texture_ = Texture::createTexture(node["image"]);			
-			}
+			texture_ = Texture::createTexture(node["image"]);			
 		}
 		if(node.has_key("depth_check")) {
 			setDepthEnable(node["depth_check"].as_bool());
@@ -281,6 +283,12 @@ namespace KRE
 		//for(auto& ub : uniforms_) {
 		//	shader_->configureUniforms(ub);
 		//}
+	}
+
+	void Renderable::setClipSettings(const StencilSettings& settings, RenderablePtr mask)
+	{
+		stencil_settings_ = settings;
+		stencil_mask_  = mask;
 	}
 
 	//void Renderable::clearUniformSets()

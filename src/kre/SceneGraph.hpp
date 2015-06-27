@@ -35,6 +35,7 @@ namespace KRE
 	public:
 		SceneGraph(const std::string& name);
 		~SceneGraph();
+		void removeNode(std::weak_ptr<SceneNode> parent, SceneNodePtr node);
 		void attachNode(std::weak_ptr<SceneNode> parent, SceneNodePtr node);
 		static SceneGraphPtr create(const std::string& name);
 		SceneNodePtr createNode(const std::string& node_type=std::string(), const variant& node=variant());

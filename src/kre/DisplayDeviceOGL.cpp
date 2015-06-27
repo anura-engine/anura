@@ -106,6 +106,16 @@ namespace KRE
 			ASSERT_LOG(false, "Unrecognised value for index type.");
 			return GL_NONE;
 		}
+
+		static const StencilSettings keep_stencil_settings(true,
+			StencilFace::FRONT_AND_BACK, 
+			StencilFunc::EQUAL, 
+			0xff,
+			0x01,
+			0x00,
+			StencilOperation::KEEP,
+			StencilOperation::KEEP,
+			StencilOperation::KEEP);
 	}
 
 	DisplayDeviceOpenGL::DisplayDeviceOpenGL(WindowPtr wnd)
@@ -259,11 +269,39 @@ namespace KRE
 		return old_cam;
 	}
 
+	CameraPtr DisplayDeviceOpenGL::getDefaultCamera() const
+	{
+		return get_default_camera();
+	}
+
 	void DisplayDeviceOpenGL::render(const Renderable* r) const
 	{
 		if(!r->isEnabled()) {
 			// Renderable item not enabled then early return.
 			return;
+		}
+
+		StencilScopePtr stencil_scope;
+		if(r->hasClipSettings()) {
+			ModelManager2D mm(r->getPosition().x, r->getPosition().y);
+			auto clip_shape = r->getStencilMask();
+			bool cam_set = false;
+			if(clip_shape->getCamera() == nullptr && r->getCamera() != nullptr) {
+				cam_set = true;
+				clip_shape->setCamera(r->getCamera());
+			}
+			stencil_scope.reset(new StencilScopeOGL(r->getStencilSettings()));
+			glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+			glDepthMask(GL_FALSE);
+			glClear(GL_STENCIL_BUFFER_BIT);
+			render(clip_shape.get());
+			stencil_scope->applyNewSettings(keep_stencil_settings);
+			glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+			glDepthMask(GL_TRUE);
+
+			if(cam_set) {
+				clip_shape->setCamera(nullptr);
+			}
 		}
 
 		auto shader = r->getShader();
@@ -293,12 +331,15 @@ namespace KRE
 			}
 		}
 
-		glm::mat4 pvmat(1.0f);
+		glm::mat4 pmat(1.0f);
+		glm::mat4 vmat(1.0f);
 		if(r->getCamera()) {
 			// set camera here.
-			pvmat = r->getCamera()->getProjectionMat() * r->getCamera()->getViewMat();
+			pmat = r->getCamera()->getProjectionMat();
+			vmat = r->getCamera()->getViewMat();
 		} else if(get_default_camera() != nullptr) {
-			pvmat = get_default_camera()->getProjectionMat() * get_default_camera()->getViewMat();
+			pmat = get_default_camera()->getProjectionMat();
+			vmat = get_default_camera()->getViewMat();
 		}
 
 		if(use_lighting) {
@@ -311,18 +352,33 @@ namespace KRE
 			r->getRenderTarget()->apply();
 		}
 
-		if(shader->getMvpUniform() != ShaderProgram::INVALID_UNIFORM) {
+		if(shader->getPUniform() != ShaderProgram::INVALID_UNIFORM) {
+			shader->setUniformValue(shader->getPUniform(), glm::value_ptr(pmat));
+		}
+
+		if(shader->getMvUniform() != ShaderProgram::INVALID_UNIFORM) {
+			glm::mat4 mvmat = vmat;
 			if(is_global_model_matrix_valid() && !r->ignoreGlobalModelMatrix()) {
-				pvmat = pvmat * get_global_model_matrix() * r->getModelMatrix();
+				mvmat *= get_global_model_matrix() * r->getModelMatrix();
 			} else {
-				pvmat *= r->getModelMatrix();
+				mvmat *= r->getModelMatrix();
+			}
+			shader->setUniformValue(shader->getMvUniform(), glm::value_ptr(mvmat));
+		}
+
+		if(shader->getMvpUniform() != ShaderProgram::INVALID_UNIFORM) {
+			glm::mat4 pvmat(1.0f);
+			if(is_global_model_matrix_valid() && !r->ignoreGlobalModelMatrix()) {
+				pvmat = pmat * vmat * get_global_model_matrix() * r->getModelMatrix();
+			} else {
+				pvmat = pmat * vmat * r->getModelMatrix();
 			}
 			shader->setUniformValue(shader->getMvpUniform(), glm::value_ptr(pvmat));
 		}
 
 		if(shader->getColorUniform() != ShaderProgram::INVALID_UNIFORM) {
 			if(r->isColorSet()) {
-				shader->setUniformValue(shader->getColorUniform(), (r->getColor()*ColorScope::getCurrentColor()).asFloatVector());
+				shader->setUniformValue(shader->getColorUniform(), r->getColor().asFloatVector());
 			} else {
 				shader->setUniformValue(shader->getColorUniform(), ColorScope::getCurrentColor().asFloatVector());
 			}
@@ -333,7 +389,7 @@ namespace KRE
 		// XXX we should make this either or with setting the mvp/color uniforms above.
 		auto uniform_draw_fn = shader->getUniformDrawFunction();
 		if(uniform_draw_fn) {
-			uniform_draw_fn();
+			uniform_draw_fn(shader);
 		}
 
 		// Loop through uniform render variables and set them.
@@ -493,22 +549,19 @@ namespace KRE
 	void DisplayDeviceOpenGL::setViewPort(int x, int y, int width, int height)
 	{
 		rect new_vp(x, y, width, height);
-		if(get_current_viewport() != new_vp) {
+		if(get_current_viewport() != new_vp && width != 0 && height != 0) {
 			get_current_viewport() = new_vp;
-			//LOG_DEBUG("Viewport changed to: " << x << "," << y << "," << width << "," << height);
-			// N.B. glViewPort has the origin in the bottom-left corner. Hence the modification
-			// to the y value.
-			auto wnd = getParentWindow();
-			glViewport(x, wnd->height() - (y + height), width, height);
+			// N.B. glViewPort has the origin in the bottom-left corner. 
+			glViewport(x, y, width, height);
 		}
 	}
 
 	void DisplayDeviceOpenGL::setViewPort(const rect& vp)
 	{
-		if(get_current_viewport() != vp) {
+		if(get_current_viewport() != vp && vp.w() != 0 && vp.h() != 0) {
 			get_current_viewport() = vp;
-			auto wnd = getParentWindow();
-			glViewport(vp.x(), wnd->height() - vp.y2(), vp.w(), vp.h());
+			// N.B. glViewPort has the origin in the bottom-left corner. 
+			glViewport(vp.x(), vp.y(), vp.w(), vp.h());
 		}
 	}
 
@@ -550,6 +603,14 @@ namespace KRE
 	ShaderProgramPtr DisplayDeviceOpenGL::getShaderProgram(const variant& node)
 	{
 		return OpenGL::ShaderProgram::factory(node);
+	}
+
+	ShaderProgramPtr DisplayDeviceOpenGL::createShader(const std::string& name, 
+		const std::vector<ShaderData>& shader_data, 
+		const std::vector<ActiveMapping>& uniform_map,
+		const std::vector<ActiveMapping>& attribute_map)
+	{
+		return OpenGL::ShaderProgram::createShader(name, shader_data, uniform_map, attribute_map);
 	}
 
 	// XXX Need a way to deal with blits with Camera/Lighting.
@@ -698,6 +759,11 @@ namespace KRE
 		}
 		// XXX Add more effects here as and if needed.
 		return EffectPtr();
+	}
+
+	ShaderProgramPtr DisplayDeviceOpenGL::createGaussianShader(int radius) 
+	{
+		return OpenGL::ShaderProgram::createGaussianShader(radius);
 	}
 }
 
