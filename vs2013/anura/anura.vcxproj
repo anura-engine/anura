@@ -285,6 +285,7 @@
     <ClInclude Include="..\..\src\surface_cache.hpp" />
     <ClInclude Include="..\..\src\surface_palette.hpp" />
     <ClInclude Include="..\..\src\surface_utils.hpp" />
+    <ClInclude Include="..\..\src\svg\easy_svg.hpp" />
     <ClInclude Include="..\..\src\svg\svg_attribs.hpp" />
     <ClInclude Include="..\..\src\svg\svg_container.hpp" />
     <ClInclude Include="..\..\src\svg\svg_element.hpp" />
@@ -609,6 +610,7 @@
     <ClCompile Include="..\..\src\surface_cache.cpp" />
     <ClCompile Include="..\..\src\surface_palette.cpp" />
     <ClCompile Include="..\..\src\surface_utils.cpp" />
+    <ClCompile Include="..\..\src\svg\easy_svg.cpp" />
     <ClCompile Include="..\..\src\svg\svg_attribs.cpp" />
     <ClCompile Include="..\..\src\svg\svg_container.cpp" />
     <ClCompile Include="..\..\src\svg\svg_element.cpp" />

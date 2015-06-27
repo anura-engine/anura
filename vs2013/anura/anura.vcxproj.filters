@@ -1119,6 +1119,9 @@
     <ClInclude Include="..\..\src\xhtml\xhtml_text_node.hpp">
       <Filter>Header Files\xhtml</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\svg\easy_svg.hpp">
+      <Filter>Header Files\svg</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\src\kre\geometry.inl">
@@ -2070,6 +2073,9 @@
     </ClCompile>
     <ClCompile Include="..\..\src\xhtml\xhtml_text_node.cpp">
       <Filter>Source Files\xhtml</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\svg\easy_svg.cpp">
+      <Filter>Source Files\svg</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

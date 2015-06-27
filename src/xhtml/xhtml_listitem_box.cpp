@@ -21,7 +21,9 @@
 	   distribution.
 */
 
-#include <Blittable.hpp>
+#include <iomanip>
+
+#include "Blittable.hpp"
 
 #include "to_roman.hpp"
 #include "utf8_to_codepoint.hpp"

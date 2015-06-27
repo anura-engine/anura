@@ -282,7 +282,7 @@ void terminate_utility_process()
 				startup_semaphore_name = get_semaphore_name("start", sem_id);
 				g_termination_semaphore = new boost::interprocess::named_semaphore(boost::interprocess::create_only_t(), g_termination_semaphore_name.c_str(), 0);
 				startup_semaphore = new boost::interprocess::named_semaphore(boost::interprocess::create_only_t(), startup_semaphore_name.c_str(), 0);
-			} catch(boost::interprocess::interprocess_exception& e) {
+			} catch(boost::interprocess::interprocess_exception&) {
 				delete g_termination_semaphore;
 				g_termination_semaphore = NULL;
 				continue;

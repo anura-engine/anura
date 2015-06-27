@@ -60,7 +60,7 @@ namespace hex
 	void MapNode::update(int width, int height, const std::vector<HexObject>& tiles)
 	{
 		layers_.clear();
-		clearObjects();
+		clear();
 
 		int max_tile_id = logical::Tile::getMaxTileId();
 
