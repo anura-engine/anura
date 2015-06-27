@@ -346,6 +346,37 @@
     <ClInclude Include="..\..\src\widget_fwd.hpp" />
     <ClInclude Include="..\..\src\widget_settings_dialog.hpp" />
     <ClInclude Include="..\..\src\wml_formula_callable.hpp" />
+    <ClInclude Include="..\..\src\xhtml\css_lexer.hpp" />
+    <ClInclude Include="..\..\src\xhtml\css_parser.hpp" />
+    <ClInclude Include="..\..\src\xhtml\css_properties.hpp" />
+    <ClInclude Include="..\..\src\xhtml\css_selector.hpp" />
+    <ClInclude Include="..\..\src\xhtml\css_styles.hpp" />
+    <ClInclude Include="..\..\src\xhtml\css_stylesheet.hpp" />
+    <ClInclude Include="..\..\src\xhtml\css_transition.hpp" />
+    <ClInclude Include="..\..\src\xhtml\display_list.hpp" />
+    <ClInclude Include="..\..\src\xhtml\solid_renderable.hpp" />
+    <ClInclude Include="..\..\src\xhtml\to_roman.hpp" />
+    <ClInclude Include="..\..\src\xhtml\xhtml.hpp" />
+    <ClInclude Include="..\..\src\xhtml\xhtml_absolute_box.hpp" />
+    <ClInclude Include="..\..\src\xhtml\xhtml_background_info.hpp" />
+    <ClInclude Include="..\..\src\xhtml\xhtml_block_box.hpp" />
+    <ClInclude Include="..\..\src\xhtml\xhtml_border_info.hpp" />
+    <ClInclude Include="..\..\src\xhtml\xhtml_box.hpp" />
+    <ClInclude Include="..\..\src\xhtml\xhtml_element.hpp" />
+    <ClInclude Include="..\..\src\xhtml\xhtml_element_id.hpp" />
+    <ClInclude Include="..\..\src\xhtml\xhtml_fwd.hpp" />
+    <ClInclude Include="..\..\src\xhtml\xhtml_inline_block_box.hpp" />
+    <ClInclude Include="..\..\src\xhtml\xhtml_inline_element_box.hpp" />
+    <ClInclude Include="..\..\src\xhtml\xhtml_layout_engine.hpp" />
+    <ClInclude Include="..\..\src\xhtml\xhtml_line_box.hpp" />
+    <ClInclude Include="..\..\src\xhtml\xhtml_listitem_box.hpp" />
+    <ClInclude Include="..\..\src\xhtml\xhtml_node.hpp" />
+    <ClInclude Include="..\..\src\xhtml\xhtml_parser.hpp" />
+    <ClInclude Include="..\..\src\xhtml\xhtml_render_ctx.hpp" />
+    <ClInclude Include="..\..\src\xhtml\xhtml_root_box.hpp" />
+    <ClInclude Include="..\..\src\xhtml\xhtml_style_tree.hpp" />
+    <ClInclude Include="..\..\src\xhtml\xhtml_text_box.hpp" />
+    <ClInclude Include="..\..\src\xhtml\xhtml_text_node.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\src\custom_object.inc" />
@@ -638,6 +669,34 @@
     <ClCompile Include="..\..\src\widget_factory.cpp" />
     <ClCompile Include="..\..\src\widget_settings_dialog.cpp" />
     <ClCompile Include="..\..\src\wml_formula_callable.cpp" />
+    <ClCompile Include="..\..\src\xhtml\css_lexer.cpp" />
+    <ClCompile Include="..\..\src\xhtml\css_parser.cpp" />
+    <ClCompile Include="..\..\src\xhtml\css_properties.cpp" />
+    <ClCompile Include="..\..\src\xhtml\css_selector.cpp" />
+    <ClCompile Include="..\..\src\xhtml\css_styles.cpp" />
+    <ClCompile Include="..\..\src\xhtml\css_stylesheet.cpp" />
+    <ClCompile Include="..\..\src\xhtml\css_transition.cpp" />
+    <ClCompile Include="..\..\src\xhtml\display_list.cpp" />
+    <ClCompile Include="..\..\src\xhtml\solid_renderable.cpp" />
+    <ClCompile Include="..\..\src\xhtml\to_roman.cpp" />
+    <ClCompile Include="..\..\src\xhtml\xhtml_absolute_box.cpp" />
+    <ClCompile Include="..\..\src\xhtml\xhtml_background_info.cpp" />
+    <ClCompile Include="..\..\src\xhtml\xhtml_block_box.cpp" />
+    <ClCompile Include="..\..\src\xhtml\xhtml_border_info.cpp" />
+    <ClCompile Include="..\..\src\xhtml\xhtml_box.cpp" />
+    <ClCompile Include="..\..\src\xhtml\xhtml_element.cpp" />
+    <ClCompile Include="..\..\src\xhtml\xhtml_inline_block_box.cpp" />
+    <ClCompile Include="..\..\src\xhtml\xhtml_inline_element_box.cpp" />
+    <ClCompile Include="..\..\src\xhtml\xhtml_layout_engine.cpp" />
+    <ClCompile Include="..\..\src\xhtml\xhtml_line_box.cpp" />
+    <ClCompile Include="..\..\src\xhtml\xhtml_listitem_box.cpp" />
+    <ClCompile Include="..\..\src\xhtml\xhtml_node.cpp" />
+    <ClCompile Include="..\..\src\xhtml\xhtml_parser.cpp" />
+    <ClCompile Include="..\..\src\xhtml\xhtml_render_ctx.cpp" />
+    <ClCompile Include="..\..\src\xhtml\xhtml_root_box.cpp" />
+    <ClCompile Include="..\..\src\xhtml\xhtml_style_tree.cpp" />
+    <ClCompile Include="..\..\src\xhtml\xhtml_text_box.cpp" />
+    <ClCompile Include="..\..\src\xhtml\xhtml_text_node.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\Box2D\$(Configuration)\$(Platform)\Box2D.lib" />
@@ -727,7 +786,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;_USE_MATH_DEFINES;HAVE_M_PI;USE_BOX2D;USE_LUA;USE_LIBVPX;USE_SVG;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;_WIN32_WINNT=0x0600;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..\src;..\..\src\kre;..\..\src\svg;..\..\src\hex;..\..\src\tiled;..\..\src\lua;..\..\Box2D;..\..\external\include;..\..\external\include\SDL;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\src;..\..\src\kre;..\..\src\svg;..\..\src\hex;..\..\src\xhtml;..\..\src\tiled;..\..\src\lua;..\..\Box2D;..\..\external\include;..\..\external\include\SDL;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
