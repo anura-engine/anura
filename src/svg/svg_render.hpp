@@ -27,7 +27,7 @@
 #include <stack>
 
 #include "asserts.hpp"
-#include "ft_iface.hpp"
+#include "FontFreetype.hpp"
 #include "Color.hpp"
 
 namespace KRE
@@ -48,12 +48,12 @@ namespace KRE
 			void pop_font_size() { size_.pop(); }
 			double top_font_size() { return size_.top(); }
 
-			void push_font_face(FT_Face face) { face_.push(face); }
+			void push_font_face(FontHandlePtr face) { face_.push(face); }
 			void pop_font_face() { face_.pop(); }
-			FT_Face top_font_face() { return face_.top(); }
+			FontHandlePtr top_font_face() { return face_.top(); }
 		private:
 			std::stack<double> size_;
-			std::stack<FT_Face> face_;
+			std::stack<FontHandlePtr> face_;
 		};
 
 		class render_context

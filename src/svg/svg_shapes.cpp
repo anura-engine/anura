@@ -78,6 +78,95 @@ namespace KRE
 				}
 				return res;
 			}
+
+			void elliptic_arc(cairo_t* ctx, double x2, double y2, double rx, double ry, double x_axis_rotation=0, bool large_arc_flag=false, bool sweep_flag=true)
+			{
+				double x1, y1;
+				cairo_get_current_point(ctx, &x1, &y1);
+
+				// calculate some ellipse stuff
+				// a is the length of the major axis
+				// b is the length of the minor axis
+				double a = rx;
+				double b = ry;
+
+				// start and end points in the same location is equivalent to not drawing the arc.
+				if(std::abs(x1-x2) < DBL_EPSILON && std::abs(y1-y2) < DBL_EPSILON) {
+					return;
+				}
+			
+				const double r1 = (x1-x2)/2.0;
+				const double r2 = (y1-y2)/2.0;
+
+				const double cosp = cos(x_axis_rotation);
+				const double sinp = sin(x_axis_rotation);
+
+				const double x1_prime = cosp*r1 + sinp*r2;
+				const double y1_prime = -sinp * r1 + cosp*r2;
+
+				double gamma = (x1_prime*x1_prime)/(a*a) + (y1_prime*y1_prime)/(b*b);
+				if (gamma > 1) {
+					a *= sqrt(gamma);
+					b *= sqrt(gamma);
+				}
+
+				const double denom1 = a*a*y1_prime*y1_prime+b*b*x1_prime*x1_prime;
+				if(std::abs(denom1) < DBL_EPSILON) {
+					return;
+				}
+				const double root = std::sqrt(std::abs(a*a*b*b/denom1-1));
+				double xc_prime = root * a * y1_prime / b;
+				double yc_prime = -root * b * x1_prime / a;
+
+				if((large_arc_flag && sweep_flag) || (!large_arc_flag && !sweep_flag)) {
+					xc_prime = -1 * xc_prime;
+					yc_prime = -1 * yc_prime;
+				}
+
+				const double xc = cosp * xc_prime - sinp * yc_prime + (x1+x2)/2.0;
+				const double yc = sinp * xc_prime + cosp * yc_prime + (y1+y2)/2.0;
+
+				const double k1 = (x1_prime - xc_prime)/a;
+				const double k2 = (y1_prime - yc_prime)/b;
+				const double k3 = (-x1_prime - xc_prime)/a;
+				const double k4 = (-y1_prime - yc_prime)/b;
+
+				const double k5 = sqrt(fabs(k1*k1 + k2*k2));
+				if(std::abs(k5) < DBL_EPSILON) { 
+					return;
+				}
+
+				const double t1 = (k2 < 0 ? -1 : 1) * std::acos(clamp(k1/k5, -1.0, 1.0));	// theta_1
+
+				const double k7 = std::sqrt(fabs((k1*k1 + k2*k2)*(k3*k3 + k4*k4)));
+				if(std::abs(k7) < DBL_EPSILON) {
+					return;
+				}
+
+				const double theta_delta = (k1*k4 - k3*k2 < 0 ? -1 : 1) * acos(clamp((k1*k3 + k2*k4)/k7, -1.0, 1.0));
+				const double t2 = theta_delta > 0 && !sweep_flag ? theta_delta-2.0*M_PI : theta_delta < 0 && sweep_flag ? theta_delta+2.0*M_PI : theta_delta;
+
+				const int n_segs = int(std::ceil(std::abs(t2/(M_PI*0.5+0.001))));
+				for(int i = 0; i < n_segs; i++) {
+					const double th0 = t1 + i * t2 / n_segs;
+					const double th1 = t1 + (i + 1) * t2 / n_segs;
+					const double th_half = 0.5 * (th1 - th0);
+					const double t = (8.0 / 3.0) * std::sin(th_half * 0.5) * std::sin(th_half * 0.5) / std::sin(th_half);
+					const double x1 = a*(std::cos(th0) - t * std::sin(th0));
+					const double y1 = b*(std::sin(th0) + t * std::cos(th0));
+					const double x3 = a*std::cos(th1);
+					const double y3 = b*std::sin(th1);
+					const double x2 = x3 + a*(t * std::sin(th1));
+					const double y2 = y3 + b*(-t * std::cos(th1));
+					cairo_curve_to(ctx, 
+						xc + cosp*x1 - sinp*y1, 
+						yc + sinp*x1 + cosp*y1, 
+						xc + cosp*x2 - sinp*y2, 
+						yc + sinp*x2 + cosp*y2, 
+						xc + cosp*x3 - sinp*y3, 
+						yc + sinp*x3 + cosp*y3);
+				}
+			}
 		}
 
 		shape::shape(element* doc, const ptree& pt)
@@ -304,15 +393,42 @@ namespace KRE
 
 		void rectangle::render_rectangle(render_context& ctx) const
 		{
-			ASSERT_LOG(is_rounded_ == false, "XXX we don't support rounded rectangles -- yet");
+			//ASSERT_LOG(is_rounded_ == false, "XXX we don't support rounded rectangles -- yet");
 			double x = x_.value_in_specified_units(svg_length::SVG_LENGTHTYPE_NUMBER);
 			double y = y_.value_in_specified_units(svg_length::SVG_LENGTHTYPE_NUMBER);
-			//double rx = rx_.value_in_specified_units(svg_length::SVG_LENGTHTYPE_NUMBER);
-			//double ry = ry_.value_in_specified_units(svg_length::SVG_LENGTHTYPE_NUMBER);
+			double rx = rx_.value_in_specified_units(svg_length::SVG_LENGTHTYPE_NUMBER);
+			double ry = ry_.value_in_specified_units(svg_length::SVG_LENGTHTYPE_NUMBER);
 			double w  = width_.value_in_specified_units(svg_length::SVG_LENGTHTYPE_NUMBER);
 			double h  = height_.value_in_specified_units(svg_length::SVG_LENGTHTYPE_NUMBER);
 
-			cairo_rectangle(ctx.cairo(), x, y, w, h);
+			if(is_rounded_) {
+				if(rx > w/2.0) {
+					rx = w/2.0;
+				}
+				if(ry > h/2.0) {
+					ry = h/2.0;
+				}
+				if(rx < 0) {
+					rx = 0;
+				}
+				if(ry < 0) {
+					ry = 0;
+				}
+				
+				cairo_new_path(ctx.cairo());
+				cairo_move_to(ctx.cairo(), x + rx, y);
+				cairo_line_to(ctx.cairo(), x + w - rx, y);
+				elliptic_arc(ctx.cairo(), x + w, y + ry, rx, ry);
+				cairo_line_to(ctx.cairo(), x + w, y + h - ry);
+				elliptic_arc(ctx.cairo(), x + w - rx, y + h, rx, ry);
+				cairo_line_to(ctx.cairo(), x + rx, y + h);
+				elliptic_arc(ctx.cairo(), x, y + h - ry, rx, ry);
+				cairo_line_to(ctx.cairo(), x, y + ry);
+				elliptic_arc(ctx.cairo(), x + rx, y, rx, ry);
+				cairo_close_path(ctx.cairo());
+			} else {
+				cairo_rectangle(ctx.cairo(), x, y, w, h);
+			}
 		}
 
 		void rectangle::handle_render(render_context& ctx) const 
@@ -434,8 +550,8 @@ namespace KRE
 			// XXX apply list of rotations as well.
 
 			std::vector<cairo_glyph_t> glyphs;
-			FT_Face face = ctx.fa().top_font_face();
-			auto glyph_indicies = FT::get_glyphs_from_string(face, text_);
+			auto face = ctx.fa().top_font_face();
+			std::vector<unsigned> glyph_indicies = face->getGlyphs(text_);
 			double x = x1_.size() > 0 ? x1_[0].value_in_specified_units(svg_length::LengthUnit::SVG_LENGTHTYPE_NUMBER) : is_tspan_ ? ctx.get_text_x() : 0;
 			double y = y1_.size() > 0 ? y1_[0].value_in_specified_units(svg_length::LengthUnit::SVG_LENGTHTYPE_NUMBER) : is_tspan_ ? ctx.get_text_y() : 0;
 			const double letter_spacing = ctx.letter_spacing_top();
