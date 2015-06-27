@@ -198,7 +198,8 @@ CustomObject::CustomObject(variant node)
 	currently_handling_die_event_(0),
 	use_absolute_screen_coordinates_(node["use_absolute_screen_coordinates"].as_bool(type_->useAbsoluteScreenCoordinates())),
 	paused_(false),
-	particles_()
+	particles_(),
+	document_(nullptr)
 {
 
 	vars_->setObjectName(getDebugDescription());
@@ -459,6 +460,10 @@ CustomObject::CustomObject(variant node)
 		}
 	}
 
+	if(node.has_key("xhtml")) {
+		document_.reset(new xhtml::DocumentObject(node));
+	}
+
 	createParticles(type_->getParticleSystemDesc());
 
 	const variant property_data_node = node["property_data"];
@@ -531,7 +536,8 @@ CustomObject::CustomObject(const std::string& type, int x, int y, bool face_righ
 	currently_handling_die_event_(0),
 	use_absolute_screen_coordinates_(type_->useAbsoluteScreenCoordinates()),
 	paused_(false),
-	particles_()
+	particles_(),
+	document_(type_->getDocument())
 {
 	properties_requiring_dynamic_initialization_ = type_->getPropertiesRequiringDynamicInitialization();
 	properties_requiring_dynamic_initialization_.insert(properties_requiring_dynamic_initialization_.end(), type_->getPropertiesRequiringInitialization().begin(), type_->getPropertiesRequiringInitialization().end());
@@ -673,7 +679,8 @@ CustomObject::CustomObject(const CustomObject& o)
 	//and re-seating references is difficult.
 	//widgets_(o.widgets_),
 	paused_(o.paused_),
-	particles_(o.particles_)
+	particles_(o.particles_),
+	document_(o.document_)
 {
 	vars_->setObjectName(getDebugDescription());
 	tmp_vars_->setObjectName(getDebugDescription());
@@ -1381,7 +1388,13 @@ void CustomObject::draw(int xx, int yy) const
 		}
 	}
 
-	{
+	if(document_) {
+		KRE::ModelManager2D mm(xx, yy);
+		KRE::Canvas::CameraScope cam_scope(graphics::GameScreen::get().getCurrentCamera());
+		document_->draw(wnd);
+	}
+
+	if(!widgets_.empty()) {
 		KRE::ModelManager2D mm(xx, yy);
 		KRE::Canvas::CameraScope cam_scope(graphics::GameScreen::get().getCurrentCamera());
 		for(const gui::WidgetPtr& w : widgets_) {
@@ -2255,6 +2268,10 @@ void CustomObject::process(Level& lvl)
 			setMouseOverEntity();
 			setMouseoverTriggerCycle(std::numeric_limits<int>::max());
 		}
+	}
+
+	if(document_) {
+		document_->process();
 	}
 
 	for(const gui::WidgetPtr& w : widgets_) {
@@ -5451,6 +5468,8 @@ void CustomObject::surrenderReferences(GarbageCollector* collector)
 		collector->surrenderPtr(&shader, "EFFECTS_SHADER");
 	}
 
+	collector->surrenderPtr(&document_, "XHTML_DOCUMENT");
+
 	Entity::surrenderReferences(collector);
 }
 
@@ -5845,6 +5864,10 @@ bool CustomObject::handle_sdl_event(const SDL_Event& event, bool claimed)
 		//	ev.button.y -= adjusted_draw_position_.y;
 		//}
 	//}
+
+	if(document_ &&  !claimed) {
+		claimed |= document_->handleEvents(event);
+	}
 
 	widget_list w = widgets_;
 	widget_list::const_reverse_iterator ritor = w.rbegin();

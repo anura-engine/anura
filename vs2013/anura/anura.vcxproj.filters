@@ -1122,6 +1122,15 @@
     <ClInclude Include="..\..\src\svg\easy_svg.hpp">
       <Filter>Header Files\svg</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\ffl_dom.hpp">
+      <Filter>Header Files\xhtml</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\FontFreetype.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\Gradients.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\src\kre\geometry.inl">
@@ -2076,6 +2085,15 @@
     </ClCompile>
     <ClCompile Include="..\..\src\svg\easy_svg.cpp">
       <Filter>Source Files\svg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ffl_dom.cpp">
+      <Filter>Source Files\xhtml</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\FontFreetype.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\Gradients.cpp">
+      <Filter>Source Files\kre</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

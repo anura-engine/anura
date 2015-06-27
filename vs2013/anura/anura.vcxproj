@@ -80,6 +80,7 @@
     <ClInclude Include="..\..\src\entity.hpp" />
     <ClInclude Include="..\..\src\entity_fwd.hpp" />
     <ClInclude Include="..\..\src\external_text_editor.hpp" />
+    <ClInclude Include="..\..\src\ffl_dom.hpp" />
     <ClInclude Include="..\..\src\ffl_weak_ptr.hpp" />
     <ClInclude Include="..\..\src\filesystem.hpp" />
     <ClInclude Include="..\..\src\file_chooser_dialog.hpp" />
@@ -159,9 +160,11 @@
     <ClInclude Include="..\..\src\kre\EffectsOGL.hpp" />
     <ClInclude Include="..\..\src\kre\FboOGL.hpp" />
     <ClInclude Include="..\..\src\kre\Font.hpp" />
+    <ClInclude Include="..\..\src\kre\FontFreetype.hpp" />
     <ClInclude Include="..\..\src\kre\FontSDL.hpp" />
     <ClInclude Include="..\..\src\kre\Frustum.hpp" />
     <ClInclude Include="..\..\src\kre\geometry.hpp" />
+    <ClInclude Include="..\..\src\kre\Gradients.hpp" />
     <ClInclude Include="..\..\src\kre\LightObject.hpp" />
     <ClInclude Include="..\..\src\kre\ModelMatrixScope.hpp" />
     <ClInclude Include="..\..\src\kre\ParticleSystem.hpp" />
@@ -439,6 +442,7 @@
     <ClCompile Include="..\..\src\editor_variable_info.cpp" />
     <ClCompile Include="..\..\src\entity.cpp" />
     <ClCompile Include="..\..\src\external_text_editor.cpp" />
+    <ClCompile Include="..\..\src\ffl_dom.cpp" />
     <ClCompile Include="..\..\src\ffl_weak_ptr.cpp" />
     <ClCompile Include="..\..\src\filesystem-android.cpp" />
     <ClCompile Include="..\..\src\filesystem.cpp" />
@@ -507,8 +511,10 @@
     <ClCompile Include="..\..\src\kre\EffectsOGL.cpp" />
     <ClCompile Include="..\..\src\kre\FboOGL.cpp" />
     <ClCompile Include="..\..\src\kre\Font.cpp" />
+    <ClCompile Include="..\..\src\kre\FontFreetype.cpp" />
     <ClCompile Include="..\..\src\kre\FontSDL.cpp" />
     <ClCompile Include="..\..\src\kre\Frustum.cpp" />
+    <ClCompile Include="..\..\src\kre\Gradients.cpp" />
     <ClCompile Include="..\..\src\kre\LightObject.cpp" />
     <ClCompile Include="..\..\src\kre\ModelMatrixScope.cpp" />
     <ClCompile Include="..\..\src\kre\ParticleSystem.cpp" />
