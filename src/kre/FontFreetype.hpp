@@ -95,7 +95,7 @@ namespace KRE
 	class FontHandle
 	{
 	public:
-		FontHandle(const std::string& fnt_name, const std::string& fnt_path, float size, const Color& color);
+		FontHandle(const std::string& fnt_name, const std::string& fnt_path, float size, const Color& color, bool init_texture);
 		~FontHandle();
 		float getFontSize();
 		float getFontXHeight();
@@ -122,7 +122,7 @@ namespace KRE
 	class FontDriver
 	{
 	public:
-		static FontHandlePtr getFontHandle(const std::vector<std::string>& font_list, float size, const Color& color=Color::colorWhite());
+		static FontHandlePtr getFontHandle(const std::vector<std::string>& font_list, float size, const Color& color=Color::colorWhite(), bool init_texture=true);
 		static void setAvailableFonts(const font_path_cache& font_map);
 		//static TexturePtr renderText(const std::string& text, ...);
 	private:

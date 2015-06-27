@@ -242,7 +242,7 @@ namespace KRE
 				default: break;
 			}
 
-			auto face = KRE::FontDriver::getFontHandle(family_, static_cast<float>(size));
+			auto face = FontDriver::getFontHandle(family_, static_cast<float>(size), Color::colorWhite(), false);
 			ctx.fa().push_font_face(face);
 			auto ff = cairo_ft_font_face_create_for_ft_face(reinterpret_cast<FT_Face>(face->getRawFontHandle()), 0);
 			cairo_set_font_face(ctx.cairo(), ff);

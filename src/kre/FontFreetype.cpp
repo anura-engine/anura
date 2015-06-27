@@ -164,7 +164,7 @@ namespace KRE
 		get_font_path_cache() = font_map;
 	}
 
-	FontHandlePtr FontDriver::getFontHandle(const std::vector<std::string>& font_list, float size, const Color& color)
+	FontHandlePtr FontDriver::getFontHandle(const std::vector<std::string>& font_list, float size, const Color& color, bool init_texture)
 	{
 		std::string selected_font;
 		std::string font_path;
@@ -214,7 +214,7 @@ namespace KRE
 		if(it != get_font_cache().end()) {
 			return it->second;
 		}
-		auto fh = std::make_shared<FontHandle>(selected_font, font_path, size, color);
+		auto fh = std::make_shared<FontHandle>(selected_font, font_path, size, color, init_texture);
 		get_font_cache()[CacheKey(font_path, size)] = fh;
 		return fh;
 	}
@@ -222,7 +222,7 @@ namespace KRE
 	class FontHandle::Impl
 	{
 	public:
-		Impl(const std::string& fnt_name, const std::string& fnt_path, float size, const Color& color)
+		Impl(const std::string& fnt_name, const std::string& fnt_path, float size, const Color& color, bool init_texture)
 			: fnt_(fnt_name),
 			  fnt_path_(fnt_path),
 			  size_(size),
@@ -265,13 +265,15 @@ namespace KRE
 			FT_Load_Glyph(face_, glyph_index, font_load_flags_);
 			x_height_ = face_->glyph->metrics.height / 64.0f;
 
-			// This is an empirical fudge that just adds all the glyphs in the
-			// font to the texture on the caveat that they will fit.
-			float px_sz = size / 72.0f * default_dpi;
-			if((surface_width / px_sz) * (surface_height / px_sz) > face_->num_glyphs) {
-				addAllGlyphsToTexture();
-			} else {
-				addGlyphsToTexture(get_common_glyphs());
+			if(init_texture) {
+				// This is an empirical fudge that just adds all the glyphs in the
+				// font to the texture on the caveat that they will fit.
+				float px_sz = size / 72.0f * default_dpi;
+				if((surface_width / px_sz) * (surface_height / px_sz) > face_->num_glyphs) {
+					addAllGlyphsToTexture();
+				} else {
+					addGlyphsToTexture(get_common_glyphs());
+				}
 			}
 		}
 		~Impl() 
@@ -568,8 +570,8 @@ namespace KRE
 		friend class FontHandle;
 	};
 	
-	FontHandle::FontHandle(const std::string& fnt_name, const std::string& fnt_path, float size, const Color& color)
-		: impl_(new Impl(fnt_name, fnt_path, size, color))
+	FontHandle::FontHandle(const std::string& fnt_name, const std::string& fnt_path, float size, const Color& color, bool init_texture)
+		: impl_(new Impl(fnt_name, fnt_path, size, color, init_texture))
 	{
 	}
 
