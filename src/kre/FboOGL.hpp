@@ -23,6 +23,7 @@
 
 #pragma once
 
+#include <array>
 #include <vector>
 #include "AttributeSet.hpp"
 #include "RenderTarget.hpp"
@@ -55,11 +56,10 @@ namespace KRE
 		std::shared_ptr<GLuint> depth_stencil_buffer_id_;
 		std::shared_ptr<GLuint> framebuffer_id_;
 		std::shared_ptr<GLuint> sample_framebuffer_id_;
-		std::shared_ptr<std::vector<GLuint>> render_buffer_id_;
+		std::shared_ptr<std::vector<GLuint>> renderbuffer_id_;
 
 		int tex_width_;
 		int tex_height_;
-		mutable GLint viewport_[4];
 		mutable bool applied_;
 
 		FboOpenGL();
