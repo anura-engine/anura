@@ -100,8 +100,8 @@ namespace KRE
 
 	void FboOpenGL::handleCreate()
 	{
-		GLenum depth_stencil_internal_format;
-		GLenum ds_attachment;
+		GLenum depth_stencil_internal_format = GL_NONE;
+		GLenum ds_attachment = GL_NONE;
 		getDSInfo(ds_attachment, depth_stencil_internal_format);
 
 		//tex_width_ = next_power_of_two(width());
