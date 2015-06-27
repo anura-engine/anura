@@ -77,6 +77,7 @@ namespace KRE
 		{
 		public:
 			ShaderProgram(const std::string& name, const ShaderDef& va, const ShaderDef& fs, const variant& node);
+			ShaderProgram(const std::string& name, const std::vector<ShaderData>& shader_data, const std::vector<ActiveMapping>& uniform_map, const std::vector<ActiveMapping>& attribute_map);
 			virtual ~ShaderProgram();
 			void init(const std::string& name, const ShaderDef& vs, const ShaderDef& fs);
 			std::string name() const { return name_; }
@@ -114,6 +115,11 @@ namespace KRE
 			static ShaderProgramPtr defaultSystemShader();
 			static void loadShadersFromVariant(const variant& node);
 			static ShaderProgramPtr getProgramFromVariant(const variant& node);
+			static ShaderProgramPtr createShader(const std::string& name, 
+				const std::vector<ShaderData>& shader_data, 
+				const std::vector<ActiveMapping>& uniform_map,
+				const std::vector<ActiveMapping>& attribute_map);
+			static ShaderProgramPtr createGaussianShader(int radius);
 
 			int getColorUniform() const override { return u_color_; }
 			int getLineWidthUniform() const override { return u_line_width_; }
