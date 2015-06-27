@@ -257,7 +257,7 @@ namespace xhtml
 		point offs = offset;
 		offs += point(dimensions_.content_.x, dimensions_.content_.y);
 
-		if(node_ != nullptr && node_->getPosition() == Position::RELATIVE) {
+		if(node_ != nullptr && node_->getPosition() == Position::RELATIVE_POS) {
 			if(getStyleNode()->getLeft()->isAuto()) {
 				if(!getStyleNode()->getRight()->isAuto()) {
 					offs.x -= getStyleNode()->getRight()->getLength().compute(getParent()->getWidth());

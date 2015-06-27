@@ -29,6 +29,7 @@
 #include "css_parser.hpp"
 #include "easy_svg.hpp"
 #include "xhtml_element.hpp"
+#include "xhtml_script_interface.hpp"
 
 #include "Blittable.hpp"
 #include "Font.hpp"
@@ -120,6 +121,28 @@ namespace xhtml
 		struct ScriptElement : public Element
 		{
 			explicit ScriptElement(ElementId id, const std::string& name, WeakDocumentPtr owner) : Element(id, name, owner) {}
+			bool ignoreForLayout() const override { return true; }
+			void init() override {
+				auto src = getAttribute("src");
+				auto type = getAttribute("type");
+				if(type == nullptr) {
+					LOG_ERROR("No 'type' attribute specified on 'script' element. This is a required attribute.");
+					return;
+				}
+				auto handler = Document::findScriptHandler(type->getValue());
+				if(handler != nullptr) {
+					if(src != nullptr && !src->getValue().empty()) {
+						// load script from file and process here.
+						handler->runScriptFile(src->getValue());
+					}
+					for(auto& child : getChildren()) {
+						if(child->id() == NodeId::TEXT) {
+							// Parse script nodes here.
+							handler->runScript(src->getValue());
+						}
+					}
+				}
+			}
 		};
 		ElementRegistrar<ScriptElement> script_element(ElementId::SCRIPT, "script");
 

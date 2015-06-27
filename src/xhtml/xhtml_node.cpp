@@ -32,7 +32,8 @@
 
 namespace xhtml
 {
-	namespace {
+	namespace 
+	{
 		struct DocumentImpl : public Document 
 		{
 			DocumentImpl(css::StyleSheetPtr ss) : Document(ss) {}
@@ -47,6 +48,13 @@ namespace xhtml
 		{
 			AttributeImpl(const std::string& name, const std::string& value, WeakDocumentPtr owner) : Attribute(name, value, owner) {}
 		};
+
+		typedef std::map<std::string, ScriptPtr> script_map_t;
+		script_map_t& get_script_map()
+		{
+			static script_map_t res;
+			return res;
+		}
 	}
 
 	Node::Node(NodeId id, WeakDocumentPtr owner)
@@ -431,6 +439,20 @@ namespace xhtml
 	DocumentPtr Document::create(css::StyleSheetPtr ss)
 	{
 		return std::make_shared<DocumentImpl>(ss);
+	}
+
+	void Document::registerScriptHandler(const std::string& type, std::function<ScriptPtr()> fn)
+	{
+		get_script_map()[type] = fn();
+	}
+
+	ScriptPtr Document::findScriptHandler(const std::string& type)
+	{
+		auto it = get_script_map().find(type);
+		if(it == get_script_map().end()) {
+			return nullptr;
+		}
+		return it->second;
 	}
 
 	DocumentFragment::DocumentFragment(WeakDocumentPtr owner)

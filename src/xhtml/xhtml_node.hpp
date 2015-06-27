@@ -176,6 +176,10 @@ namespace xhtml
 		void triggerLayout() { trigger_layout_ = true; }
 		bool needsLayout() const { return trigger_layout_; }
 		void layoutComplete() override { trigger_layout_ = false; }
+
+		// type is expected to be a content type i.e. "text/javascript"
+		static void registerScriptHandler(const std::string& type, std::function<ScriptPtr()> fn);
+		static ScriptPtr findScriptHandler(const std::string& type);
 	protected:
 		Document(css::StyleSheetPtr ss);
 		css::StyleSheetPtr style_sheet_;
@@ -203,5 +207,15 @@ namespace xhtml
 	private:
 		std::string name_;
 		std::string value_;
+	};
+
+	template<typename T>
+	struct ScriptHandlerRegistrar
+	{
+		ScriptHandlerRegistrar(const std::string& type)
+		{
+			// register the class factory function 
+			Document::registerScriptHandler(type, []() -> ScriptPtr { return std::make_shared<T>(); });
+		}
 	};
 }

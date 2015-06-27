@@ -126,7 +126,7 @@ namespace css
 		} else if(units == "ex") {
 			units_ = LengthUnits::EX;
 		} else if(units == "in") {
-			units_ = LengthUnits::IN;
+			units_ = LengthUnits::INCHES;
 		} else if(units == "cm") {
 			units_ = LengthUnits::CM;
 		} else if(units == "mm") {
@@ -166,7 +166,7 @@ namespace css
 			case LengthUnits::EX:
 				res = static_cast<xhtml::FixedPoint>(ctx.getFontHandle()->getFontXHeight() / 72.0f * (value_ * dpi));
 				break;
-			case LengthUnits::IN:
+			case LengthUnits::INCHES:
 				res = value_ * dpi;
 				break;
 			case LengthUnits::CM:

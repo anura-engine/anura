@@ -1592,7 +1592,7 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 	}
 
 	if(node.has_key("xhtml")) {
-		document_.reset(new xhtml::DocumentObject(node));
+		document_.reset(new xhtml::DocumentObject(node, nullptr));
 	}
 
 	if(base_type) {

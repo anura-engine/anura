@@ -378,6 +378,7 @@
     <ClInclude Include="..\..\src\xhtml\xhtml_parser.hpp" />
     <ClInclude Include="..\..\src\xhtml\xhtml_render_ctx.hpp" />
     <ClInclude Include="..\..\src\xhtml\xhtml_root_box.hpp" />
+    <ClInclude Include="..\..\src\xhtml\xhtml_script_interface.hpp" />
     <ClInclude Include="..\..\src\xhtml\xhtml_style_tree.hpp" />
     <ClInclude Include="..\..\src\xhtml\xhtml_text_box.hpp" />
     <ClInclude Include="..\..\src\xhtml\xhtml_text_node.hpp" />
@@ -702,6 +703,7 @@
     <ClCompile Include="..\..\src\xhtml\xhtml_parser.cpp" />
     <ClCompile Include="..\..\src\xhtml\xhtml_render_ctx.cpp" />
     <ClCompile Include="..\..\src\xhtml\xhtml_root_box.cpp" />
+    <ClCompile Include="..\..\src\xhtml\xhtml_script_interface.cpp" />
     <ClCompile Include="..\..\src\xhtml\xhtml_style_tree.cpp" />
     <ClCompile Include="..\..\src\xhtml\xhtml_text_box.cpp" />
     <ClCompile Include="..\..\src\xhtml\xhtml_text_node.cpp" />

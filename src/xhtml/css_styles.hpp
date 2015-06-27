@@ -168,7 +168,7 @@ namespace css
 
 	enum class CssColorParam {
 		NONE,
-		TRANSPARENT,
+		CSS_TRANSPARENT,
 		VALUE,
 		CURRENT,		// use current foreground color
 	};
@@ -329,7 +329,7 @@ namespace css
 		void setColor(const KRE::Color& color);
 		CssColorParam getParam() const { return param_; }
 		const KRE::ColorPtr& getColor() const { return color_; }	
-		bool isTransparent() const { return param_ == CssColorParam::TRANSPARENT; }
+		bool isTransparent() const { return param_ == CssColorParam::CSS_TRANSPARENT; }
 		bool isNone() const { return param_ == CssColorParam::NONE; }
 		bool isValue() const { return param_ == CssColorParam::VALUE; }
 		KRE::ColorPtr compute() const;
@@ -343,13 +343,13 @@ namespace css
 		NUMBER,		// Plain old number
 		EM,			// Computed value of the font-size property
 		EX,			// Computed height of lowercase 'x'
-		IN,			// Inches
+		INCHES,		// Inches
 		CM,			// Centimeters
 		MM,			// Millimeters
 		PT,			// Point size, equal to 1/72 of an inch
 		PC,			// Picas. 1 pica = 12pt
 		PX,			// Pixels. 1px = 0.75pt
-		PERCENT		// percent value
+		PERCENT,	// percent value
 	};
 	
 	class Length : public Style
@@ -679,8 +679,8 @@ namespace css
 
 	enum class Position {
 		STATIC,
-		RELATIVE,
-		ABSOLUTE,
+		RELATIVE_POS,
+		ABSOLUTE_POS,
 		FIXED,
 	};
 

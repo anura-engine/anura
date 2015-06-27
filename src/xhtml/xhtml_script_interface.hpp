@@ -23,47 +23,18 @@
 
 #pragma once
 
-#include "RenderFwd.hpp"
-#include "SceneFwd.hpp"
-#include "WindowManagerFwd.hpp"
-
-#include "formula_callable.hpp"
-#include "formula_callable_definition.hpp"
-
 #include "xhtml.hpp"
 
 namespace xhtml
 {
-	class DocumentObject : public game_logic::FormulaCallable
+	class Script : public std::enable_shared_from_this<Script>
 	{
 	public:
-		DocumentObject(const variant& v, game_logic::FormulaCallable* environment);
-		variant write();
-
-		void draw(const KRE::WindowPtr& wnd) const;
-		void process();
-		bool handleEvents(const SDL_Event& e);
-
-		void surrenderReferences(GarbageCollector* collector);
-
-		void setEnvironment(game_logic::FormulaCallable* environment) { environment_ = environment; }
+		Script();
+		virtual ~Script() {}
+		virtual void runScriptFile(const std::string& filename) = 0;
+		virtual void runScript(const std::string& script) = 0;
+		void addEventHandler(const std::string& evtname, const std::string& script); // this needs to have some sort of element reference.
 	private:
-		DECLARE_CALLABLE(DocumentObject);
-
-		game_logic::FormulaCallable* environment_;
-
-		KRE::SceneGraphPtr scene_;
-		KRE::SceneNodePtr root_;
-		KRE::RenderManagerPtr rmanager_;
-		int last_process_time_;
-		
-		xhtml::DocumentPtr doc_;
-		xhtml::StyleNodePtr style_tree_;
-		xhtml::DisplayListPtr display_list_;
-
-		std::string doc_name_;
-		std::string ss_name_;
 	};
-	
-	typedef boost::intrusive_ptr<DocumentObject> DocumentObjectPtr;
 }

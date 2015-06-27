@@ -95,6 +95,8 @@
 #include "SceneNode.hpp"
 #include "WindowManager.hpp"
 
+#include "xhtml_render_ctx.hpp"
+
 #if defined(__APPLE__)
     #include "TargetConditionals.h"
     #if TARGET_OS_MAC
@@ -935,8 +937,11 @@ int main(int argcount, char* argvec[])
 		font_paths2[module::get_id(fp.first)] = fp.second;
 	}
 	KRE::Font::setAvailableFonts(font_paths2);
+	KRE::FontDriver::setAvailableFonts(font_paths2);
 	font_paths.clear();
 	font_paths2.clear();
+
+	xhtml::RenderContextManager rcm;
 
 	i18n::init ();
 	LOG_DEBUG("After i18n::init()");

@@ -135,7 +135,7 @@ namespace xhtml
 					continue;
 				}
 
-				if(position == Position::ABSOLUTE) {
+				if(position == Position::ABSOLUTE_POS) {
 					// absolute positioned elements are taken out of the normal document flow
 					parent->addAbsoluteElement(*this, parent->getDimensions(), std::make_shared<AbsoluteBox>(parent, child));
 				} else if(position == Position::FIXED) {

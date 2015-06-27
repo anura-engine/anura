@@ -461,7 +461,10 @@ CustomObject::CustomObject(variant node)
 	}
 
 	if(node.has_key("xhtml")) {
-		document_.reset(new xhtml::DocumentObject(node));
+		document_.reset(new xhtml::DocumentObject(node, this));
+	} else {
+		document_ = type_->getDocument();
+		document_->setEnvironment(this);
 	}
 
 	createParticles(type_->getParticleSystemDesc());
@@ -537,7 +540,7 @@ CustomObject::CustomObject(const std::string& type, int x, int y, bool face_righ
 	use_absolute_screen_coordinates_(type_->useAbsoluteScreenCoordinates()),
 	paused_(false),
 	particles_(),
-	document_(type_->getDocument())
+	document_(nullptr)
 {
 	properties_requiring_dynamic_initialization_ = type_->getPropertiesRequiringDynamicInitialization();
 	properties_requiring_dynamic_initialization_.insert(properties_requiring_dynamic_initialization_.end(), type_->getPropertiesRequiringInitialization().begin(), type_->getPropertiesRequiringInitialization().end());
@@ -564,6 +567,11 @@ CustomObject::CustomObject(const std::string& type, int x, int y, bool face_righ
 	}
 	for(auto eff : type_->getEffectsShaders()) {
 		effects_shaders_.emplace_back(new graphics::AnuraShader(*eff));
+	}
+
+	if(type_->getDocument() != nullptr) {
+		document_ = type_->getDocument();
+		document_->setEnvironment(this);
 	}
 
 #ifdef USE_BOX2D
@@ -712,6 +720,8 @@ CustomObject::CustomObject(const CustomObject& o)
 	for(auto eff : o.effects_shaders_) {
 		effects_shaders_.emplace_back(new graphics::AnuraShader(*eff));
 	}
+
+	document_->setEnvironment(this);
 }
 
 CustomObject::~CustomObject()
@@ -1389,8 +1399,8 @@ void CustomObject::draw(int xx, int yy) const
 	}
 
 	if(document_) {
-		KRE::ModelManager2D mm(xx, yy);
-		KRE::Canvas::CameraScope cam_scope(graphics::GameScreen::get().getCurrentCamera());
+		//KRE::ModelManager2D mm(xx, yy);
+		//KRE::Canvas::CameraScope cam_scope(graphics::GameScreen::get().getCurrentCamera());
 		document_->draw(wnd);
 	}
 

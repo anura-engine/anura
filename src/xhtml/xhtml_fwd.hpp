@@ -76,4 +76,7 @@ namespace xhtml
 
 	class StyleNode;
 	typedef std::shared_ptr<StyleNode> StyleNodePtr;
+
+	class Script;
+	typedef std::shared_ptr<Script> ScriptPtr;
 }

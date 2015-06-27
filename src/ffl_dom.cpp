@@ -49,8 +49,9 @@ namespace xhtml
 	}
 
 	using namespace KRE;
-	DocumentObject::DocumentObject(const variant& v)
-		: scene_(SceneGraph::create("xhtml::DocumentObject")),
+	DocumentObject::DocumentObject(const variant& v, game_logic::FormulaCallable* environment)
+		: environment_(environment), 
+		  scene_(SceneGraph::create("xhtml::DocumentObject")),
 		  root_(scene_->getRootNode()),
 		  rmanager_(),
 		  last_process_time_(-1),
@@ -74,7 +75,7 @@ namespace xhtml
 		}
 
 		auto user_agent_style_sheet = std::make_shared<css::StyleSheet>();
-		css::Parser::parse(user_agent_style_sheet, module::map_file(ss_name_));
+		css::Parser::parse(user_agent_style_sheet, sys::read_file(module::map_file(ss_name_)));
 
 		auto doc_frag = xhtml::parse_from_file(doc_name_);
 		doc_ = Document::create(user_agent_style_sheet);
@@ -83,10 +84,14 @@ namespace xhtml
 		// whitespace can only be processed after applying styles.
 		doc_->processWhitespace();
 
-		style_tree_ = xhtml::StyleNode::createStyleTree(doc_);
-		
-		DisplayListPtr display_list = std::make_shared<DisplayList>(scene_);
-		root_->attachNode(display_list);
+		display_list_ = std::make_shared<DisplayList>(scene_);
+		root_->attachNode(display_list_);
+		doc_->triggerLayout();
+
+		/*doc_->preOrderTraversal([](xhtml::NodePtr n) {
+			LOG_DEBUG(n->toString());
+			return true;
+		});*/
 	}
 	
 	variant DocumentObject::write()
@@ -121,7 +126,11 @@ namespace xhtml
 
 			{
 				profile::manager pman("update style tree");
-				style_tree_->updateStyles();
+				if(style_tree_ == nullptr) {
+					style_tree_ = xhtml::StyleNode::createStyleTree(doc_);
+				} else {
+					style_tree_->updateStyles();
+				}
 			}
 
 			xhtml::RootBoxPtr layout = nullptr;
