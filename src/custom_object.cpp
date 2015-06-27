@@ -464,9 +464,11 @@ CustomObject::CustomObject(variant node)
 	if(node.has_key("xhtml")) {
 		document_.reset(new xhtml::DocumentObject(node));
 		document_->init(this);
-	} else {
+	} else {		
 		document_ = type_->getDocument();
-		document_->init(this);
+		if(document_ != nullptr) {
+			document_->init(this);
+		}
 	}
 
 	createParticles(type_->getParticleSystemDesc());
@@ -573,7 +575,9 @@ CustomObject::CustomObject(const std::string& type, int x, int y, bool face_righ
 
 	if(type_->getDocument() != nullptr) {
 		document_ = type_->getDocument();
-		document_->init(this);
+		if(document_ != nullptr) {
+			document_->init(this);
+		}
 	}
 
 #ifdef USE_BOX2D
