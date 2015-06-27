@@ -1134,6 +1134,9 @@
     <ClInclude Include="..\..\src\xhtml\xhtml_script_interface.hpp">
       <Filter>Header Files\xhtml</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\ffl_dom_fwd.hpp">
+      <Filter>Header Files\xhtml</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\src\kre\geometry.inl">

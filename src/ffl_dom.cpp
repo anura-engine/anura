@@ -21,6 +21,7 @@
 	   distribution.
 */
 
+#include "ModelMatrixScope.hpp"
 #include "SceneGraph.hpp"
 #include "SceneNode.hpp"
 #include "RenderManager.hpp"
@@ -34,8 +35,10 @@
 #include "xhtml_style_tree.hpp"
 #include "xhtml_node.hpp"
 #include "xhtml_render_ctx.hpp"
+#include "xhtml_script_interface.hpp"
 
 #include "ffl_dom.hpp"
+#include "formula.hpp"
 #include "module.hpp"
 #include "profile_timer.hpp"
 #include "screen_handling.hpp"
@@ -46,11 +49,33 @@ namespace xhtml
 	namespace
 	{
 		const std::string default_user_agent_style_sheet = "data/user_agent.css";
+
+		class FFLScript : public Script
+		{
+		public:
+			FFLScript(DocumentObject* docobj) : document_object_(docobj) {}
+			void runScriptFile(const std::string& filename) 
+			{
+			}
+			void runScript(const std::string& script) 
+			{
+				game_logic::FormulaPtr handler = document_object_->getEnvironment()->createFormula(variant(script));
+				if(document_object_->getEnvironment()) {
+					variant value = handler->execute(*document_object_->getEnvironment());
+					document_object_->getEnvironment()->executeCommand(value);
+				} else {
+					LOG_ERROR("FFLScript::runScript() called without environment!");
+				}
+			}
+		private:
+			DocumentObject* document_object_;
+			
+		};
 	}
 
 	using namespace KRE;
-	DocumentObject::DocumentObject(const variant& v, game_logic::FormulaCallable* environment)
-		: environment_(environment), 
+	DocumentObject::DocumentObject(const variant& v)
+		: environment_(nullptr), 
 		  scene_(SceneGraph::create("xhtml::DocumentObject")),
 		  root_(scene_->getRootNode()),
 		  rmanager_(),
@@ -59,7 +84,8 @@ namespace xhtml
 		  style_tree_(nullptr),
 		  display_list_(nullptr),
 		  doc_name_(),
-		  ss_name_()
+		  ss_name_(),
+		  layout_size_()
 	{
 		ASSERT_LOG(v.has_key("xhtml") && v["xhtml"].is_string(), "No xhtml document was specified.");
 		doc_name_ = module::map_file(v["xhtml"].as_string());
@@ -74,6 +100,26 @@ namespace xhtml
 			ss_name_ = v["style_sheet"].as_string();
 		}
 
+		if(v.has_key("layout_size")) {
+			layout_size_ = rect(v["layout_size"]);
+		} else {
+			auto& gs = graphics::GameScreen::get();			
+			layout_size_ = rect(0, 0, gs.getWidth(), gs.getHeight());
+		}
+	}
+
+	void DocumentObject::init(game_logic::FormulaCallable* environment)
+	{
+		environment_ = environment;
+		ASSERT_LOG(environment_ != nullptr, "DocumentObject::init called without a valid environment");
+
+		ScriptHandlerRegistrar ffl_reg1("text/ffl", [this]() ->ScriptPtr {
+			return std::make_shared<FFLScript>(this);
+		});
+		ScriptHandlerRegistrar ffl_reg2("application/ffl", [this]() ->ScriptPtr {
+			return std::make_shared<FFLScript>(this);
+		});
+
 		auto user_agent_style_sheet = std::make_shared<css::StyleSheet>();
 		css::Parser::parse(user_agent_style_sheet, sys::read_file(module::map_file(ss_name_)));
 
@@ -85,8 +131,7 @@ namespace xhtml
 		doc_->processWhitespace();
 
 		display_list_ = std::make_shared<DisplayList>(scene_);
-		root_->attachNode(display_list_);
-		doc_->triggerLayout();
+		root_->attachNode(display_list_);		
 
 		/*doc_->preOrderTraversal([](xhtml::NodePtr n) {
 			LOG_DEBUG(n->toString());
@@ -106,6 +151,7 @@ namespace xhtml
 
 	void DocumentObject::draw(const KRE::WindowPtr& wnd) const
 	{
+		ModelManager2D mm(layout_size_.x(), layout_size_.y());
 		scene_->renderScene(rmanager_);
 		rmanager_->render(wnd);
 	}
@@ -136,8 +182,7 @@ namespace xhtml
 			xhtml::RootBoxPtr layout = nullptr;
 			{
 			profile::manager pman("layout");
-			auto& gs = graphics::GameScreen::get();
-			layout = xhtml::Box::createLayout(style_tree_, gs.getWidth(), gs.getHeight());
+			layout = xhtml::Box::createLayout(style_tree_, layout_size_.w(), layout_size_.h());
 			}
 
 			{
@@ -159,15 +204,17 @@ namespace xhtml
 		last_process_time_ = current_time;
 	}
 	
-	bool DocumentObject::handleEvents(const SDL_Event& e)
+	bool DocumentObject::handleEvents(const point& p, const SDL_Event& e)
 	{
+		const int adj_x = e.type == (SDL_MOUSEMOTION ? e.motion.x : e.button.x) - p.x - layout_size_.x();
+		const int adj_y = e.type == (SDL_MOUSEMOTION ? e.motion.y : e.button.y) - p.y - layout_size_.y();
 		bool claimed = false;
 		if(e.type == SDL_MOUSEMOTION) {
-			claimed = doc_->handleMouseMotion(false, e.motion.x, e.motion.y);
+			claimed = doc_->handleMouseMotion(false, adj_x, adj_y);
 		} else if(e.type == SDL_MOUSEBUTTONDOWN) {
-			claimed = doc_->handleMouseButtonDown(false, e.button.x, e.button.y, e.button.button);
+			claimed = doc_->handleMouseButtonDown(false, adj_x, adj_y, e.button.button);
 		} else if(e.type == SDL_MOUSEBUTTONUP) {
-			claimed = doc_->handleMouseButtonUp(false, e.button.x, e.button.y, e.button.button);
+			claimed = doc_->handleMouseButtonUp(false, adj_x, adj_y, e.button.button);
 		}
 
 		return claimed;
@@ -180,5 +227,28 @@ namespace xhtml
 	BEGIN_DEFINE_CALLABLE_NOBASE(DocumentObject)
 		DEFINE_FIELD(dummy, "null")
 			return variant();
+		
+		DEFINE_FIELD(width, "int")
+			return variant(obj.layout_size_.w());
+		DEFINE_SET_FIELD
+			obj.layout_size_.set_w(value.as_int());
+			obj.doc_->triggerLayout();
+		
+		DEFINE_FIELD(height, "int")
+			return variant(obj.layout_size_.h());
+		DEFINE_SET_FIELD
+			obj.layout_size_.set_h(value.as_int());
+			obj.doc_->triggerLayout();
+		
+		DEFINE_FIELD(wh, "[int,int]")
+			std::vector<variant> v;
+			v.emplace_back(obj.layout_size_.w());
+			v.emplace_back(obj.layout_size_.h());
+			return variant(&v);
+		DEFINE_SET_FIELD
+			obj.layout_size_.set_w(value[0].as_int());
+			obj.layout_size_.set_h(value[1].as_int());
+			obj.doc_->triggerLayout();
+			
 	END_DEFINE_CALLABLE(DocumentObject)
 }

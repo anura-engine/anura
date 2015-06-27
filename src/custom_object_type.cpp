@@ -32,6 +32,7 @@
 #include "custom_object_functions.hpp"
 #include "custom_object_type.hpp"
 #include "filesystem.hpp"
+#include "ffl_dom.hpp"
 #include "formula.hpp"
 #include "formula_constants.hpp"
 #include "json_parser.hpp"
@@ -1531,7 +1532,7 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 
 	for(const PropertyEntry& entry  : slot_properties_) {
 		if(entry.storage_slot >= 0) {
-			if(variable_properties_.size() < entry.storage_slot+1) {
+			if(static_cast<int>(variable_properties_.size()) < entry.storage_slot+1) {
 				variable_properties_.resize(entry.storage_slot+1);
 			}
 
@@ -1592,7 +1593,7 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 	}
 
 	if(node.has_key("xhtml")) {
-		document_.reset(new xhtml::DocumentObject(node, nullptr));
+		document_.reset(new xhtml::DocumentObject(node));
 	}
 
 	if(base_type) {

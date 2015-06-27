@@ -53,6 +53,7 @@
 #include "difficulty.hpp"
 #include "draw_primitive.hpp"
 #include "draw_scene.hpp"
+#include "ffl_dom.hpp"
 #include "formatter.hpp"
 #include "formula_callable.hpp"
 #include "formula_callable_visitor.hpp"
@@ -461,10 +462,11 @@ CustomObject::CustomObject(variant node)
 	}
 
 	if(node.has_key("xhtml")) {
-		document_.reset(new xhtml::DocumentObject(node, this));
+		document_.reset(new xhtml::DocumentObject(node));
+		document_->init(this);
 	} else {
 		document_ = type_->getDocument();
-		document_->setEnvironment(this);
+		document_->init(this);
 	}
 
 	createParticles(type_->getParticleSystemDesc());
@@ -571,7 +573,7 @@ CustomObject::CustomObject(const std::string& type, int x, int y, bool face_righ
 
 	if(type_->getDocument() != nullptr) {
 		document_ = type_->getDocument();
-		document_->setEnvironment(this);
+		document_->init(this);
 	}
 
 #ifdef USE_BOX2D
@@ -688,7 +690,7 @@ CustomObject::CustomObject(const CustomObject& o)
 	//widgets_(o.widgets_),
 	paused_(o.paused_),
 	particles_(o.particles_),
-	document_(o.document_)
+	document_(nullptr)
 {
 	vars_->setObjectName(getDebugDescription());
 	tmp_vars_->setObjectName(getDebugDescription());
@@ -721,7 +723,10 @@ CustomObject::CustomObject(const CustomObject& o)
 		effects_shaders_.emplace_back(new graphics::AnuraShader(*eff));
 	}
 
-	document_->setEnvironment(this);
+	if(o.document_) {
+		document_.reset(new xhtml::DocumentObject(*o.document_));
+		document_->init(this);
+	}
 }
 
 CustomObject::~CustomObject()
@@ -1399,7 +1404,7 @@ void CustomObject::draw(int xx, int yy) const
 	}
 
 	if(document_) {
-		//KRE::ModelManager2D mm(xx, yy);
+		KRE::ModelManager2D mm(xx + x(), yy + y());
 		//KRE::Canvas::CameraScope cam_scope(graphics::GameScreen::get().getCurrentCamera());
 		document_->draw(wnd);
 	}
@@ -3106,6 +3111,10 @@ variant CustomObject::getValueBySlot(int slot) const
 		return variant(&v);
 	}
 
+	case CUSTOM_OBJECT_DOCUMENT: {
+		return variant(document_.get());
+	}
+
 	case CUSTOM_OBJECT_ACTIVATION_AREA: {
 		if(activation_area_.get() != nullptr) {
 			std::vector<variant> v(4);
@@ -3571,6 +3580,9 @@ void CustomObject::setValue(const std::string& key, const variant& value)
 			effects_shaders_.emplace_back(graphics::AnuraShaderPtr(value.try_convert<graphics::AnuraShader>()));
 			ASSERT_LOG(effects_shaders_.size() > 0, "Couldn't convert type to shader");
 		}
+	} else if(key == "document") {
+		document_.reset(new xhtml::DocumentObject(value));
+		document_->init(this);
 	} else if(key == "particles") {
 		createParticles(value);
 	} else if(key == "draw_area") {
@@ -4215,6 +4227,12 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 				effects_shaders_.emplace_back(new graphics::AnuraShader(value[n]["name"].as_string(), value["name"]));
 			}
 		}
+		break;
+	}
+
+	case CUSTOM_OBJECT_DOCUMENT: {
+		document_.reset(new xhtml::DocumentObject(value));
+		document_->init(this);
 		break;
 	}
 
@@ -5857,8 +5875,9 @@ void CustomObject::removeWidget(gui::WidgetPtr w)
 bool CustomObject::handle_sdl_event(const SDL_Event& event, bool claimed)
 {
 	//SDL_Event ev(event);
-	int tx = x() + (use_absolute_screen_coordinates_ ? adjusted_draw_position_.x : 0);
-	int ty = y() + (use_absolute_screen_coordinates_ ? adjusted_draw_position_.y : 0);
+	const int tx = x() + (use_absolute_screen_coordinates_ ? adjusted_draw_position_.x : 0);
+	const int ty = y() + (use_absolute_screen_coordinates_ ? adjusted_draw_position_.y : 0);
+	point p(tx, ty);
 	//if(event.type == SDL_MOUSEMOTION) {
 		//ev.motion.x -= x();
 		//ev.motion.y -= y();
@@ -5876,13 +5895,13 @@ bool CustomObject::handle_sdl_event(const SDL_Event& event, bool claimed)
 	//}
 
 	if(document_ &&  !claimed) {
-		claimed |= document_->handleEvents(event);
+		claimed |= document_->handleEvents(p, event);
 	}
 
 	widget_list w = widgets_;
 	widget_list::const_reverse_iterator ritor = w.rbegin();
 	while(ritor != w.rend()) {
-		claimed |= (*ritor++)->processEvent(point(tx, ty), event, claimed);
+		claimed |= (*ritor++)->processEvent(p, event, claimed);
 	}
 	return claimed;
 }

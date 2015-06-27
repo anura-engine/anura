@@ -32,21 +32,28 @@
 
 #include "xhtml.hpp"
 
+#include "ffl_dom_fwd.hpp"
+
 namespace xhtml
 {
 	class DocumentObject : public game_logic::FormulaCallable
 	{
 	public:
-		DocumentObject(const variant& v, game_logic::FormulaCallable* environment);
+		DocumentObject(const variant& v);
 		variant write();
+
+		void init(game_logic::FormulaCallable* environment);
 
 		void draw(const KRE::WindowPtr& wnd) const;
 		void process();
-		bool handleEvents(const SDL_Event& e);
+		bool handleEvents(const point& p, const SDL_Event& e);
 
 		void surrenderReferences(GarbageCollector* collector);
 
 		void setEnvironment(game_logic::FormulaCallable* environment) { environment_ = environment; }
+		game_logic::FormulaCallable* getEnvironment() const { return environment_; }
+
+		void setLayoutSize(const rect& r) { layout_size_ = r; }
 	private:
 		DECLARE_CALLABLE(DocumentObject);
 
@@ -63,6 +70,8 @@ namespace xhtml
 
 		std::string doc_name_;
 		std::string ss_name_;
+
+		rect layout_size_;
 	};
 	
 	typedef boost::intrusive_ptr<DocumentObject> DocumentObjectPtr;

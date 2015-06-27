@@ -209,13 +209,12 @@ namespace xhtml
 		std::string value_;
 	};
 
-	template<typename T>
 	struct ScriptHandlerRegistrar
 	{
-		ScriptHandlerRegistrar(const std::string& type)
+		ScriptHandlerRegistrar(const std::string& type, std::function<ScriptPtr()> create_fn)
 		{
 			// register the class factory function 
-			Document::registerScriptHandler(type, []() -> ScriptPtr { return std::make_shared<T>(); });
+			Document::registerScriptHandler(type, create_fn);
 		}
 	};
 }

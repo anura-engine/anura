@@ -34,7 +34,7 @@
 #include "draw_primitive_fwd.hpp"
 #include "draw_scene.hpp"
 #include "entity.hpp"
-#include "ffl_dom.hpp"
+#include "ffl_dom_fwd.hpp"
 #include "formula.hpp"
 #include "formula_callable.hpp"
 #include "formula_callable_visitor.hpp"

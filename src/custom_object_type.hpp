@@ -29,7 +29,7 @@
 #include "anura_shader.hpp"
 #include "custom_object_callable.hpp"
 #include "editor_variable_info.hpp"
-#include "ffl_dom.hpp"
+#include "ffl_dom_fwd.hpp"
 #include "formula.hpp"
 #include "formula_callable.hpp"
 #include "formula_function.hpp"

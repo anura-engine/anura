@@ -81,6 +81,7 @@
     <ClInclude Include="..\..\src\entity_fwd.hpp" />
     <ClInclude Include="..\..\src\external_text_editor.hpp" />
     <ClInclude Include="..\..\src\ffl_dom.hpp" />
+    <ClInclude Include="..\..\src\ffl_dom_fwd.hpp" />
     <ClInclude Include="..\..\src\ffl_weak_ptr.hpp" />
     <ClInclude Include="..\..\src\filesystem.hpp" />
     <ClInclude Include="..\..\src\file_chooser_dialog.hpp" />
