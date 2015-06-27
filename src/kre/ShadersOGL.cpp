@@ -1454,8 +1454,6 @@ namespace KRE
 			}
 			const std::string fs_name = shader_name + "_fs";
 
-			blur_vs;
-
 			std::stringstream fs;
 			fs	<< "#version 120\n"
 				<< "uniform sampler2D u_tex_map;\n"

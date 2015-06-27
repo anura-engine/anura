@@ -16,6 +16,39 @@
 		6357A6E71B258B1C00793D60 /* hex_pathfinding.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6357A6DE1B258B1C00793D60 /* hex_pathfinding.cpp */; };
 		6357A6E81B258B1C00793D60 /* hex_renderable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6357A6E01B258B1C00793D60 /* hex_renderable.cpp */; };
 		6357A6E91B258B1C00793D60 /* hex_tile.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6357A6E21B258B1C00793D60 /* hex_tile.cpp */; };
+		6357A72A1B3F116900793D60 /* ffl_dom.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6357A6EA1B3F116900793D60 /* ffl_dom.cpp */; };
+		6357A72B1B3F116900793D60 /* css_lexer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6357A6ED1B3F116900793D60 /* css_lexer.cpp */; };
+		6357A72C1B3F116900793D60 /* css_parser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6357A6EF1B3F116900793D60 /* css_parser.cpp */; };
+		6357A72D1B3F116900793D60 /* css_properties.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6357A6F11B3F116900793D60 /* css_properties.cpp */; };
+		6357A72E1B3F116900793D60 /* css_selector.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6357A6F31B3F116900793D60 /* css_selector.cpp */; };
+		6357A72F1B3F116900793D60 /* css_styles.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6357A6F51B3F116900793D60 /* css_styles.cpp */; };
+		6357A7301B3F116900793D60 /* css_stylesheet.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6357A6F71B3F116900793D60 /* css_stylesheet.cpp */; };
+		6357A7311B3F116900793D60 /* css_transition.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6357A6F91B3F116900793D60 /* css_transition.cpp */; };
+		6357A7321B3F116900793D60 /* display_list.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6357A6FB1B3F116900793D60 /* display_list.cpp */; };
+		6357A7331B3F116900793D60 /* solid_renderable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6357A6FD1B3F116900793D60 /* solid_renderable.cpp */; };
+		6357A7341B3F116900793D60 /* to_roman.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6357A6FF1B3F116900793D60 /* to_roman.cpp */; };
+		6357A7351B3F116900793D60 /* xhtml_absolute_box.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6357A7021B3F116900793D60 /* xhtml_absolute_box.cpp */; };
+		6357A7361B3F116900793D60 /* xhtml_background_info.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6357A7041B3F116900793D60 /* xhtml_background_info.cpp */; };
+		6357A7371B3F116900793D60 /* xhtml_block_box.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6357A7061B3F116900793D60 /* xhtml_block_box.cpp */; };
+		6357A7381B3F116900793D60 /* xhtml_border_info.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6357A7081B3F116900793D60 /* xhtml_border_info.cpp */; };
+		6357A7391B3F116900793D60 /* xhtml_box.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6357A70A1B3F116900793D60 /* xhtml_box.cpp */; };
+		6357A73A1B3F116900793D60 /* xhtml_element.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6357A70C1B3F116900793D60 /* xhtml_element.cpp */; };
+		6357A73B1B3F116900793D60 /* xhtml_inline_block_box.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6357A7101B3F116900793D60 /* xhtml_inline_block_box.cpp */; };
+		6357A73C1B3F116900793D60 /* xhtml_inline_element_box.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6357A7121B3F116900793D60 /* xhtml_inline_element_box.cpp */; };
+		6357A73D1B3F116900793D60 /* xhtml_layout_engine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6357A7141B3F116900793D60 /* xhtml_layout_engine.cpp */; };
+		6357A73E1B3F116900793D60 /* xhtml_line_box.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6357A7161B3F116900793D60 /* xhtml_line_box.cpp */; };
+		6357A73F1B3F116900793D60 /* xhtml_listitem_box.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6357A7181B3F116900793D60 /* xhtml_listitem_box.cpp */; };
+		6357A7401B3F116900793D60 /* xhtml_node.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6357A71A1B3F116900793D60 /* xhtml_node.cpp */; };
+		6357A7411B3F116900793D60 /* xhtml_parser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6357A71C1B3F116900793D60 /* xhtml_parser.cpp */; };
+		6357A7421B3F116900793D60 /* xhtml_render_ctx.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6357A71E1B3F116900793D60 /* xhtml_render_ctx.cpp */; };
+		6357A7431B3F116900793D60 /* xhtml_root_box.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6357A7201B3F116900793D60 /* xhtml_root_box.cpp */; };
+		6357A7441B3F116900793D60 /* xhtml_script_interface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6357A7221B3F116900793D60 /* xhtml_script_interface.cpp */; };
+		6357A7451B3F116900793D60 /* xhtml_style_tree.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6357A7241B3F116900793D60 /* xhtml_style_tree.cpp */; };
+		6357A7461B3F116900793D60 /* xhtml_text_box.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6357A7261B3F116900793D60 /* xhtml_text_box.cpp */; };
+		6357A7471B3F116900793D60 /* xhtml_text_node.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6357A7281B3F116900793D60 /* xhtml_text_node.cpp */; };
+		6357A74C1B3F13B400793D60 /* FontFreetype.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6357A7481B3F13B400793D60 /* FontFreetype.cpp */; };
+		6357A74D1B3F13B400793D60 /* Gradients.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6357A74A1B3F13B400793D60 /* Gradients.cpp */; };
+		6357A7501B3F13E200793D60 /* easy_svg.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6357A74E1B3F13E200793D60 /* easy_svg.cpp */; };
 		63855D6F1AD27E7100C58F6B /* particle_system_proxy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 63855D6D1AD27E7100C58F6B /* particle_system_proxy.cpp */; };
 		63855D751AD78F0700C58F6B /* tiled.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 63855D711AD78F0700C58F6B /* tiled.cpp */; };
 		63855D761AD78F0700C58F6B /* tmx_reader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 63855D731AD78F0700C58F6B /* tmx_reader.cpp */; };
@@ -469,6 +502,75 @@
 		6357A6E11B258B1C00793D60 /* hex_renderable.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = hex_renderable.hpp; sourceTree = "<group>"; };
 		6357A6E21B258B1C00793D60 /* hex_tile.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = hex_tile.cpp; sourceTree = "<group>"; };
 		6357A6E31B258B1C00793D60 /* hex_tile.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = hex_tile.hpp; sourceTree = "<group>"; };
+		6357A6EA1B3F116900793D60 /* ffl_dom.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ffl_dom.cpp; sourceTree = "<group>"; };
+		6357A6EB1B3F116900793D60 /* ffl_dom.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = ffl_dom.hpp; sourceTree = "<group>"; };
+		6357A6ED1B3F116900793D60 /* css_lexer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = css_lexer.cpp; sourceTree = "<group>"; };
+		6357A6EE1B3F116900793D60 /* css_lexer.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = css_lexer.hpp; sourceTree = "<group>"; };
+		6357A6EF1B3F116900793D60 /* css_parser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = css_parser.cpp; sourceTree = "<group>"; };
+		6357A6F01B3F116900793D60 /* css_parser.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = css_parser.hpp; sourceTree = "<group>"; };
+		6357A6F11B3F116900793D60 /* css_properties.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = css_properties.cpp; sourceTree = "<group>"; };
+		6357A6F21B3F116900793D60 /* css_properties.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = css_properties.hpp; sourceTree = "<group>"; };
+		6357A6F31B3F116900793D60 /* css_selector.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = css_selector.cpp; sourceTree = "<group>"; };
+		6357A6F41B3F116900793D60 /* css_selector.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = css_selector.hpp; sourceTree = "<group>"; };
+		6357A6F51B3F116900793D60 /* css_styles.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = css_styles.cpp; sourceTree = "<group>"; };
+		6357A6F61B3F116900793D60 /* css_styles.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = css_styles.hpp; sourceTree = "<group>"; };
+		6357A6F71B3F116900793D60 /* css_stylesheet.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = css_stylesheet.cpp; sourceTree = "<group>"; };
+		6357A6F81B3F116900793D60 /* css_stylesheet.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = css_stylesheet.hpp; sourceTree = "<group>"; };
+		6357A6F91B3F116900793D60 /* css_transition.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = css_transition.cpp; sourceTree = "<group>"; };
+		6357A6FA1B3F116900793D60 /* css_transition.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = css_transition.hpp; sourceTree = "<group>"; };
+		6357A6FB1B3F116900793D60 /* display_list.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = display_list.cpp; sourceTree = "<group>"; };
+		6357A6FC1B3F116900793D60 /* display_list.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = display_list.hpp; sourceTree = "<group>"; };
+		6357A6FD1B3F116900793D60 /* solid_renderable.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = solid_renderable.cpp; sourceTree = "<group>"; };
+		6357A6FE1B3F116900793D60 /* solid_renderable.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = solid_renderable.hpp; sourceTree = "<group>"; };
+		6357A6FF1B3F116900793D60 /* to_roman.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = to_roman.cpp; sourceTree = "<group>"; };
+		6357A7001B3F116900793D60 /* to_roman.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = to_roman.hpp; sourceTree = "<group>"; };
+		6357A7011B3F116900793D60 /* xhtml.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = xhtml.hpp; sourceTree = "<group>"; };
+		6357A7021B3F116900793D60 /* xhtml_absolute_box.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = xhtml_absolute_box.cpp; sourceTree = "<group>"; };
+		6357A7031B3F116900793D60 /* xhtml_absolute_box.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = xhtml_absolute_box.hpp; sourceTree = "<group>"; };
+		6357A7041B3F116900793D60 /* xhtml_background_info.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = xhtml_background_info.cpp; sourceTree = "<group>"; };
+		6357A7051B3F116900793D60 /* xhtml_background_info.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = xhtml_background_info.hpp; sourceTree = "<group>"; };
+		6357A7061B3F116900793D60 /* xhtml_block_box.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = xhtml_block_box.cpp; sourceTree = "<group>"; };
+		6357A7071B3F116900793D60 /* xhtml_block_box.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = xhtml_block_box.hpp; sourceTree = "<group>"; };
+		6357A7081B3F116900793D60 /* xhtml_border_info.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = xhtml_border_info.cpp; sourceTree = "<group>"; };
+		6357A7091B3F116900793D60 /* xhtml_border_info.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = xhtml_border_info.hpp; sourceTree = "<group>"; };
+		6357A70A1B3F116900793D60 /* xhtml_box.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = xhtml_box.cpp; sourceTree = "<group>"; };
+		6357A70B1B3F116900793D60 /* xhtml_box.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = xhtml_box.hpp; sourceTree = "<group>"; };
+		6357A70C1B3F116900793D60 /* xhtml_element.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = xhtml_element.cpp; sourceTree = "<group>"; };
+		6357A70D1B3F116900793D60 /* xhtml_element.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = xhtml_element.hpp; sourceTree = "<group>"; };
+		6357A70E1B3F116900793D60 /* xhtml_element_id.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = xhtml_element_id.hpp; sourceTree = "<group>"; };
+		6357A70F1B3F116900793D60 /* xhtml_fwd.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = xhtml_fwd.hpp; sourceTree = "<group>"; };
+		6357A7101B3F116900793D60 /* xhtml_inline_block_box.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = xhtml_inline_block_box.cpp; sourceTree = "<group>"; };
+		6357A7111B3F116900793D60 /* xhtml_inline_block_box.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = xhtml_inline_block_box.hpp; sourceTree = "<group>"; };
+		6357A7121B3F116900793D60 /* xhtml_inline_element_box.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = xhtml_inline_element_box.cpp; sourceTree = "<group>"; };
+		6357A7131B3F116900793D60 /* xhtml_inline_element_box.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = xhtml_inline_element_box.hpp; sourceTree = "<group>"; };
+		6357A7141B3F116900793D60 /* xhtml_layout_engine.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = xhtml_layout_engine.cpp; sourceTree = "<group>"; };
+		6357A7151B3F116900793D60 /* xhtml_layout_engine.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = xhtml_layout_engine.hpp; sourceTree = "<group>"; };
+		6357A7161B3F116900793D60 /* xhtml_line_box.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = xhtml_line_box.cpp; sourceTree = "<group>"; };
+		6357A7171B3F116900793D60 /* xhtml_line_box.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = xhtml_line_box.hpp; sourceTree = "<group>"; };
+		6357A7181B3F116900793D60 /* xhtml_listitem_box.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = xhtml_listitem_box.cpp; sourceTree = "<group>"; };
+		6357A7191B3F116900793D60 /* xhtml_listitem_box.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = xhtml_listitem_box.hpp; sourceTree = "<group>"; };
+		6357A71A1B3F116900793D60 /* xhtml_node.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = xhtml_node.cpp; sourceTree = "<group>"; };
+		6357A71B1B3F116900793D60 /* xhtml_node.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = xhtml_node.hpp; sourceTree = "<group>"; };
+		6357A71C1B3F116900793D60 /* xhtml_parser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = xhtml_parser.cpp; sourceTree = "<group>"; };
+		6357A71D1B3F116900793D60 /* xhtml_parser.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = xhtml_parser.hpp; sourceTree = "<group>"; };
+		6357A71E1B3F116900793D60 /* xhtml_render_ctx.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = xhtml_render_ctx.cpp; sourceTree = "<group>"; };
+		6357A71F1B3F116900793D60 /* xhtml_render_ctx.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = xhtml_render_ctx.hpp; sourceTree = "<group>"; };
+		6357A7201B3F116900793D60 /* xhtml_root_box.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = xhtml_root_box.cpp; sourceTree = "<group>"; };
+		6357A7211B3F116900793D60 /* xhtml_root_box.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = xhtml_root_box.hpp; sourceTree = "<group>"; };
+		6357A7221B3F116900793D60 /* xhtml_script_interface.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = xhtml_script_interface.cpp; sourceTree = "<group>"; };
+		6357A7231B3F116900793D60 /* xhtml_script_interface.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = xhtml_script_interface.hpp; sourceTree = "<group>"; };
+		6357A7241B3F116900793D60 /* xhtml_style_tree.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = xhtml_style_tree.cpp; sourceTree = "<group>"; };
+		6357A7251B3F116900793D60 /* xhtml_style_tree.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = xhtml_style_tree.hpp; sourceTree = "<group>"; };
+		6357A7261B3F116900793D60 /* xhtml_text_box.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = xhtml_text_box.cpp; sourceTree = "<group>"; };
+		6357A7271B3F116900793D60 /* xhtml_text_box.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = xhtml_text_box.hpp; sourceTree = "<group>"; };
+		6357A7281B3F116900793D60 /* xhtml_text_node.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = xhtml_text_node.cpp; sourceTree = "<group>"; };
+		6357A7291B3F116900793D60 /* xhtml_text_node.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = xhtml_text_node.hpp; sourceTree = "<group>"; };
+		6357A7481B3F13B400793D60 /* FontFreetype.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FontFreetype.cpp; sourceTree = "<group>"; };
+		6357A7491B3F13B400793D60 /* FontFreetype.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = FontFreetype.hpp; sourceTree = "<group>"; };
+		6357A74A1B3F13B400793D60 /* Gradients.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Gradients.cpp; sourceTree = "<group>"; };
+		6357A74B1B3F13B400793D60 /* Gradients.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Gradients.hpp; sourceTree = "<group>"; };
+		6357A74E1B3F13E200793D60 /* easy_svg.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = easy_svg.cpp; path = svg/easy_svg.cpp; sourceTree = "<group>"; };
+		6357A74F1B3F13E200793D60 /* easy_svg.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = easy_svg.hpp; path = svg/easy_svg.hpp; sourceTree = "<group>"; };
 		63855D6D1AD27E7100C58F6B /* particle_system_proxy.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = particle_system_proxy.cpp; sourceTree = "<group>"; };
 		63855D6E1AD27E7100C58F6B /* particle_system_proxy.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = particle_system_proxy.hpp; sourceTree = "<group>"; };
 		63855D711AD78F0700C58F6B /* tiled.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = tiled.cpp; sourceTree = "<group>"; };
@@ -1281,6 +1383,74 @@
 			path = hex;
 			sourceTree = "<group>";
 		};
+		6357A6EC1B3F116900793D60 /* xhtml */ = {
+			isa = PBXGroup;
+			children = (
+				6357A6ED1B3F116900793D60 /* css_lexer.cpp */,
+				6357A6EE1B3F116900793D60 /* css_lexer.hpp */,
+				6357A6EF1B3F116900793D60 /* css_parser.cpp */,
+				6357A6F01B3F116900793D60 /* css_parser.hpp */,
+				6357A6F11B3F116900793D60 /* css_properties.cpp */,
+				6357A6F21B3F116900793D60 /* css_properties.hpp */,
+				6357A6F31B3F116900793D60 /* css_selector.cpp */,
+				6357A6F41B3F116900793D60 /* css_selector.hpp */,
+				6357A6F51B3F116900793D60 /* css_styles.cpp */,
+				6357A6F61B3F116900793D60 /* css_styles.hpp */,
+				6357A6F71B3F116900793D60 /* css_stylesheet.cpp */,
+				6357A6F81B3F116900793D60 /* css_stylesheet.hpp */,
+				6357A6F91B3F116900793D60 /* css_transition.cpp */,
+				6357A6FA1B3F116900793D60 /* css_transition.hpp */,
+				6357A6FB1B3F116900793D60 /* display_list.cpp */,
+				6357A6FC1B3F116900793D60 /* display_list.hpp */,
+				6357A6FD1B3F116900793D60 /* solid_renderable.cpp */,
+				6357A6FE1B3F116900793D60 /* solid_renderable.hpp */,
+				6357A6FF1B3F116900793D60 /* to_roman.cpp */,
+				6357A7001B3F116900793D60 /* to_roman.hpp */,
+				6357A7011B3F116900793D60 /* xhtml.hpp */,
+				6357A7021B3F116900793D60 /* xhtml_absolute_box.cpp */,
+				6357A7031B3F116900793D60 /* xhtml_absolute_box.hpp */,
+				6357A7041B3F116900793D60 /* xhtml_background_info.cpp */,
+				6357A7051B3F116900793D60 /* xhtml_background_info.hpp */,
+				6357A7061B3F116900793D60 /* xhtml_block_box.cpp */,
+				6357A7071B3F116900793D60 /* xhtml_block_box.hpp */,
+				6357A7081B3F116900793D60 /* xhtml_border_info.cpp */,
+				6357A7091B3F116900793D60 /* xhtml_border_info.hpp */,
+				6357A70A1B3F116900793D60 /* xhtml_box.cpp */,
+				6357A70B1B3F116900793D60 /* xhtml_box.hpp */,
+				6357A70C1B3F116900793D60 /* xhtml_element.cpp */,
+				6357A70D1B3F116900793D60 /* xhtml_element.hpp */,
+				6357A70E1B3F116900793D60 /* xhtml_element_id.hpp */,
+				6357A70F1B3F116900793D60 /* xhtml_fwd.hpp */,
+				6357A7101B3F116900793D60 /* xhtml_inline_block_box.cpp */,
+				6357A7111B3F116900793D60 /* xhtml_inline_block_box.hpp */,
+				6357A7121B3F116900793D60 /* xhtml_inline_element_box.cpp */,
+				6357A7131B3F116900793D60 /* xhtml_inline_element_box.hpp */,
+				6357A7141B3F116900793D60 /* xhtml_layout_engine.cpp */,
+				6357A7151B3F116900793D60 /* xhtml_layout_engine.hpp */,
+				6357A7161B3F116900793D60 /* xhtml_line_box.cpp */,
+				6357A7171B3F116900793D60 /* xhtml_line_box.hpp */,
+				6357A7181B3F116900793D60 /* xhtml_listitem_box.cpp */,
+				6357A7191B3F116900793D60 /* xhtml_listitem_box.hpp */,
+				6357A71A1B3F116900793D60 /* xhtml_node.cpp */,
+				6357A71B1B3F116900793D60 /* xhtml_node.hpp */,
+				6357A71C1B3F116900793D60 /* xhtml_parser.cpp */,
+				6357A71D1B3F116900793D60 /* xhtml_parser.hpp */,
+				6357A71E1B3F116900793D60 /* xhtml_render_ctx.cpp */,
+				6357A71F1B3F116900793D60 /* xhtml_render_ctx.hpp */,
+				6357A7201B3F116900793D60 /* xhtml_root_box.cpp */,
+				6357A7211B3F116900793D60 /* xhtml_root_box.hpp */,
+				6357A7221B3F116900793D60 /* xhtml_script_interface.cpp */,
+				6357A7231B3F116900793D60 /* xhtml_script_interface.hpp */,
+				6357A7241B3F116900793D60 /* xhtml_style_tree.cpp */,
+				6357A7251B3F116900793D60 /* xhtml_style_tree.hpp */,
+				6357A7261B3F116900793D60 /* xhtml_text_box.cpp */,
+				6357A7271B3F116900793D60 /* xhtml_text_box.hpp */,
+				6357A7281B3F116900793D60 /* xhtml_text_node.cpp */,
+				6357A7291B3F116900793D60 /* xhtml_text_node.hpp */,
+			);
+			path = xhtml;
+			sourceTree = "<group>";
+		};
 		63855D701AD78F0700C58F6B /* tiled */ = {
 			isa = PBXGroup;
 			children = (
@@ -1368,6 +1538,10 @@
 		639B52EE1AC20D5900ECC4F8 /* kre */ = {
 			isa = PBXGroup;
 			children = (
+				6357A7481B3F13B400793D60 /* FontFreetype.cpp */,
+				6357A7491B3F13B400793D60 /* FontFreetype.hpp */,
+				6357A74A1B3F13B400793D60 /* Gradients.cpp */,
+				6357A74B1B3F13B400793D60 /* Gradients.hpp */,
 				639B52EF1AC20D5900ECC4F8 /* AttributeSet.cpp */,
 				639B52F01AC20D5900ECC4F8 /* AttributeSet.hpp */,
 				639B52F11AC20D5900ECC4F8 /* AttributeSetOGL.cpp */,
@@ -1743,6 +1917,9 @@
 		C010C5BC160AFD4C006E7D90 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				6357A6EA1B3F116900793D60 /* ffl_dom.cpp */,
+				6357A6EB1B3F116900793D60 /* ffl_dom.hpp */,
+				6357A6EC1B3F116900793D60 /* xhtml */,
 				6357A6D51B258B1C00793D60 /* hex */,
 				638CC6DF1AF6057700C7A106 /* eris */,
 				63855D701AD78F0700C58F6B /* tiled */,
@@ -2157,6 +2334,8 @@
 		C07A47AD19444C1000F1190E /* svg */ = {
 			isa = PBXGroup;
 			children = (
+				6357A74E1B3F13E200793D60 /* easy_svg.cpp */,
+				6357A74F1B3F13E200793D60 /* easy_svg.hpp */,
 				C07A47B419444C2000F1190E /* svg_attribs.cpp */,
 				C07A47B519444C2000F1190E /* svg_attribs.hpp */,
 				C07A47B619444C2000F1190E /* svg_container.cpp */,
@@ -2308,6 +2487,7 @@
 				639B54801AC2183B00ECC4F8 /* ParticleSystemWidget.cpp in Sources */,
 				C08602481A06E51A00B860FA /* auto_update_window.cpp in Sources */,
 				C00160CF16A2A8A7001DAEB9 /* http_server.cpp in Sources */,
+				6357A7301B3F116900793D60 /* css_stylesheet.cpp in Sources */,
 				638CC7381AF6057700C7A106 /* lstate.cpp in Sources */,
 				C0DDFDC6163F7FF800F727DD /* sys.cpp in Sources */,
 				639B53741AC20D5A00ECC4F8 /* AttributeSetOGL.cpp in Sources */,
@@ -2339,10 +2519,12 @@
 				C08F30571818E80B005BDCDB /* lua_iface.cpp in Sources */,
 				638CC7311AF6057700C7A106 /* lmathlib.cpp in Sources */,
 				638CC7361AF6057700C7A106 /* loslib.cpp in Sources */,
+				6357A74C1B3F13B400793D60 /* FontFreetype.cpp in Sources */,
 				638CC72A1AF6057700C7A106 /* ldo.cpp in Sources */,
 				C010C74C160AFD4D006E7D90 /* button.cpp in Sources */,
 				C010C74D160AFD4D006E7D90 /* character_editor_dialog.cpp in Sources */,
 				C010C74E160AFD4D006E7D90 /* checkbox.cpp in Sources */,
+				6357A72E1B3F116900793D60 /* css_selector.cpp in Sources */,
 				639B538D1AC20D5A00ECC4F8 /* ParticleSystemAffectors.cpp in Sources */,
 				C010C74F160AFD4D006E7D90 /* checksum.cpp in Sources */,
 				C010C750160AFD4D006E7D90 /* clipboard.cpp in Sources */,
@@ -2356,10 +2538,12 @@
 				C07A47D619444C2000F1190E /* svg_parse.cpp in Sources */,
 				C010C759160AFD4D006E7D90 /* controls.cpp in Sources */,
 				C010C75A160AFD4D006E7D90 /* controls_dialog.cpp in Sources */,
+				6357A7311B3F116900793D60 /* css_transition.cpp in Sources */,
 				6357A6E71B258B1C00793D60 /* hex_pathfinding.cpp in Sources */,
 				638CC7221AF6057700C7A106 /* lauxlib.cpp in Sources */,
 				639B54411AC20D7600ECC4F8 /* b2ChainAndCircleContact.cpp in Sources */,
 				C0AECE0718E541A200CD3161 /* db_client.cpp in Sources */,
+				6357A72B1B3F116900793D60 /* css_lexer.cpp in Sources */,
 				638CC7211AF6057700C7A106 /* lapi.cpp in Sources */,
 				C010C75B160AFD4D006E7D90 /* current_generator.cpp in Sources */,
 				C010C75C160AFD4D006E7D90 /* custom_object.cpp in Sources */,
@@ -2387,6 +2571,7 @@
 				639B54471AC20D7600ECC4F8 /* b2Contact.cpp in Sources */,
 				C010C767160AFD4D006E7D90 /* draw_scene.cpp in Sources */,
 				C010C768160AFD4D006E7D90 /* draw_tile.cpp in Sources */,
+				6357A7381B3F116900793D60 /* xhtml_border_info.cpp in Sources */,
 				639B538A1AC20D5A00ECC4F8 /* LightObject.cpp in Sources */,
 				639B54251AC20D7600ECC4F8 /* b2EdgeShape.cpp in Sources */,
 				C010C769160AFD4D006E7D90 /* dropdown_widget.cpp in Sources */,
@@ -2400,6 +2585,7 @@
 				C010C76E160AFD4D006E7D90 /* editor_level_properties_dialog.cpp in Sources */,
 				C010C76F160AFD4D006E7D90 /* editor_module_properties_dialog.cpp in Sources */,
 				638CC7371AF6057700C7A106 /* lparser.cpp in Sources */,
+				6357A7441B3F116900793D60 /* xhtml_script_interface.cpp in Sources */,
 				C010C770160AFD4D006E7D90 /* editor_stats_dialog.cpp in Sources */,
 				639B547F1AC2183B00ECC4F8 /* normal_map.cpp in Sources */,
 				C010C771160AFD4D006E7D90 /* editor_variable_info.cpp in Sources */,
@@ -2436,12 +2622,15 @@
 				C010C780160AFD4D006E7D90 /* formula_test.cpp in Sources */,
 				C010C781160AFD4D006E7D90 /* formula_tokenizer.cpp in Sources */,
 				C010C782160AFD4D006E7D90 /* formula_variable_storage.cpp in Sources */,
+				6357A7471B3F116900793D60 /* xhtml_text_node.cpp in Sources */,
 				C010C783160AFD4D006E7D90 /* frame.cpp in Sources */,
 				C010C784160AFD4D006E7D90 /* framed_gui_element.cpp in Sources */,
+				6357A7431B3F116900793D60 /* xhtml_root_box.cpp in Sources */,
 				638CC7271AF6057700C7A106 /* lctype.cpp in Sources */,
 				C010C786160AFD4D006E7D90 /* game_registry.cpp in Sources */,
 				639B54291AC20D7600ECC4F8 /* b2BlockAllocator.cpp in Sources */,
 				C010C789160AFD4D006E7D90 /* globals.cpp in Sources */,
+				6357A72A1B3F116900793D60 /* ffl_dom.cpp in Sources */,
 				639B544D1AC20D7600ECC4F8 /* b2EdgeAndPolygonContact.cpp in Sources */,
 				639B53971AC20D5A00ECC4F8 /* SceneObject.cpp in Sources */,
 				C010C78A160AFD4D006E7D90 /* graphical_font.cpp in Sources */,
@@ -2452,6 +2641,7 @@
 				639B54651AC20D7600ECC4F8 /* b2RopeJoint.cpp in Sources */,
 				C010C78C160AFD4D006E7D90 /* grid_widget.cpp in Sources */,
 				C010C78D160AFD4D006E7D90 /* group_property_editor_dialog.cpp in Sources */,
+				6357A7411B3F116900793D60 /* xhtml_parser.cpp in Sources */,
 				639B53A81AC20D5A00ECC4F8 /* VGraph.cpp in Sources */,
 				639B54611AC20D7600ECC4F8 /* b2PulleyJoint.cpp in Sources */,
 				639B54191AC20D7600ECC4F8 /* b2Collision.cpp in Sources */,
@@ -2464,11 +2654,13 @@
 				C010C796160AFD4D006E7D90 /* i18n.cpp in Sources */,
 				639B539C1AC20D5A00ECC4F8 /* ShadersOGL.cpp in Sources */,
 				C010C797160AFD4D006E7D90 /* image_widget.cpp in Sources */,
+				6357A7451B3F116900793D60 /* xhtml_style_tree.cpp in Sources */,
 				C010C79D160AFD4D006E7D90 /* joystick.cpp in Sources */,
 				C010C79F160AFD4D006E7D90 /* json_tokenizer.cpp in Sources */,
 				C010C79E160AFD4D006E7D90 /* json_parser.cpp in Sources */,
 				639B54821AC2183B00ECC4F8 /* poly_line_widget.cpp in Sources */,
 				639B54331AC20D7600ECC4F8 /* b2Timer.cpp in Sources */,
+				6357A7401B3F116900793D60 /* xhtml_node.cpp in Sources */,
 				C010C7A1160AFD4D006E7D90 /* key_button.cpp in Sources */,
 				C010C7A2160AFD4D006E7D90 /* label.cpp in Sources */,
 				639B54531AC20D7600ECC4F8 /* b2DistanceJoint.cpp in Sources */,
@@ -2481,6 +2673,7 @@
 				639B54671AC20D7600ECC4F8 /* b2WeldJoint.cpp in Sources */,
 				639B54111AC20D7600ECC4F8 /* b2BroadPhase.cpp in Sources */,
 				639B539A1AC20D5A00ECC4F8 /* ScissorOGL.cpp in Sources */,
+				6357A73E1B3F116900793D60 /* xhtml_line_box.cpp in Sources */,
 				C07A47D219444C2000F1190E /* svg_container.cpp in Sources */,
 				C010C7A5160AFD4D006E7D90 /* level_object.cpp in Sources */,
 				639B53881AC20D5A00ECC4F8 /* Frustum.cpp in Sources */,
@@ -2522,6 +2715,7 @@
 				C07A47D519444C2000F1190E /* svg_paint.cpp in Sources */,
 				639B541D1AC20D7600ECC4F8 /* b2DynamicTree.cpp in Sources */,
 				C010C7C1160AFD4D006E7D90 /* property_editor_dialog.cpp in Sources */,
+				6357A7461B3F116900793D60 /* xhtml_text_box.cpp in Sources */,
 				6357A6E41B258B1C00793D60 /* hex_logical_tiles.cpp in Sources */,
 				C010C7C2160AFD4D006E7D90 /* random.cpp in Sources */,
 				C010C7C5160AFD4D006E7D90 /* rectangle_rotator.cpp in Sources */,
@@ -2564,6 +2758,8 @@
 				638CC7291AF6057700C7A106 /* ldebug.cpp in Sources */,
 				C010C7EA160AFD4E006E7D90 /* tooltip.cpp in Sources */,
 				639B54391AC20D7600ECC4F8 /* b2Fixture.cpp in Sources */,
+				6357A72C1B3F116900793D60 /* css_parser.cpp in Sources */,
+				6357A7501B3F13E200793D60 /* easy_svg.cpp in Sources */,
 				639B53831AC20D5A00ECC4F8 /* DisplayDeviceSDL.cpp in Sources */,
 				639B53731AC20D5A00ECC4F8 /* AttributeSet.cpp in Sources */,
 				C010C7EB160AFD4E006E7D90 /* translate.cpp in Sources */,
@@ -2571,6 +2767,7 @@
 				639B543F1AC20D7600ECC4F8 /* b2WorldCallbacks.cpp in Sources */,
 				C010C7EC160AFD4E006E7D90 /* tree_view_widget.cpp in Sources */,
 				C010C7ED160AFD4E006E7D90 /* unit_test.cpp in Sources */,
+				6357A73A1B3F116900793D60 /* xhtml_element.cpp in Sources */,
 				639B53A51AC20D5A00ECC4F8 /* UniformBuffer.cpp in Sources */,
 				639B545B1AC20D7600ECC4F8 /* b2MotorJoint.cpp in Sources */,
 				639B54211AC20D7600ECC4F8 /* b2ChainShape.cpp in Sources */,
@@ -2578,12 +2775,15 @@
 				C010C7EF160AFD4E006E7D90 /* utility_query.cpp in Sources */,
 				C010C7F0160AFD4E006E7D90 /* utility_render_level.cpp in Sources */,
 				639B541B1AC20D7600ECC4F8 /* b2Distance.cpp in Sources */,
+				6357A7321B3F116900793D60 /* display_list.cpp in Sources */,
 				C010C7F1160AFD4E006E7D90 /* utils.cpp in Sources */,
 				634991D11AC794D300E1259F /* formula_garbage_collector.cpp in Sources */,
 				C010C7F2160AFD4E006E7D90 /* variant.cpp in Sources */,
 				C010C7F3160AFD4E006E7D90 /* variant_callable.cpp in Sources */,
 				C010C7F4160AFD4E006E7D90 /* variant_utils.cpp in Sources */,
+				6357A72F1B3F116900793D60 /* css_styles.cpp in Sources */,
 				C010C7F6160AFD4E006E7D90 /* water.cpp in Sources */,
+				6357A7361B3F116900793D60 /* xhtml_background_info.cpp in Sources */,
 				639B547C1AC2183B00ECC4F8 /* ColorTransform.cpp in Sources */,
 				C010C7F7160AFD4E006E7D90 /* water_particle_system.cpp in Sources */,
 				638CC72F1AF6057700C7A106 /* liolib.cpp in Sources */,
@@ -2594,6 +2794,7 @@
 				C010C7FA160AFD4E006E7D90 /* widget_factory.cpp in Sources */,
 				C010C7FC160AFD4E006E7D90 /* wml_formula_callable.cpp in Sources */,
 				C00160C716A29908001DAEB9 /* tbs_bot.cpp in Sources */,
+				6357A7351B3F116900793D60 /* xhtml_absolute_box.cpp in Sources */,
 				C00160D116AF2E00001DAEB9 /* load_level_nothread.cpp in Sources */,
 				C026F59B16C23629000482A1 /* b2d_ffl.cpp in Sources */,
 				C026F59D16C23649000482A1 /* rich_text_label.cpp in Sources */,
@@ -2607,9 +2808,13 @@
 				639B541F1AC20D7600ECC4F8 /* b2TimeOfImpact.cpp in Sources */,
 				638CC7251AF6057700C7A106 /* lcode.cpp in Sources */,
 				C0D6EB6E16DB25C000B5ABCA /* tbs_server_base.cpp in Sources */,
+				6357A73D1B3F116900793D60 /* xhtml_layout_engine.cpp in Sources */,
 				639B54811AC2183B00ECC4F8 /* play_vpx.cpp in Sources */,
+				6357A73B1B3F116900793D60 /* xhtml_inline_block_box.cpp in Sources */,
 				C0D6EB7116DB25D700B5ABCA /* bar_widget.cpp in Sources */,
 				C02ACCAC16FD5F05006274BC /* variant_type.cpp in Sources */,
+				6357A7341B3F116900793D60 /* to_roman.cpp in Sources */,
+				6357A7371B3F116900793D60 /* xhtml_block_box.cpp in Sources */,
 				639B54171AC20D7600ECC4F8 /* b2CollidePolygon.cpp in Sources */,
 				C02751BB17FD417100173646 /* video_selections.cpp in Sources */,
 				C06FF3F11740B9F000377772 /* formula_visualize_widget.cpp in Sources */,
@@ -2621,12 +2826,15 @@
 				C08C43EF174C6D8900A46B15 /* formula_callable.cpp in Sources */,
 				C0A1595A19F0F888009C25B3 /* ffl_weak_ptr.cpp in Sources */,
 				639B53851AC20D5A00ECC4F8 /* FboOGL.cpp in Sources */,
+				6357A72D1B3F116900793D60 /* css_properties.cpp in Sources */,
 				C0917B1117533AA7004307B0 /* formula_interface.cpp in Sources */,
 				C07A47D719444C2000F1190E /* svg_path_parse.cpp in Sources */,
 				639B539D1AC20D5A00ECC4F8 /* StencilScope.cpp in Sources */,
+				6357A73F1B3F116900793D60 /* xhtml_listitem_box.cpp in Sources */,
 				C0917B19176700BD004307B0 /* simplex_noise.cpp in Sources */,
 				639B545D1AC20D7600ECC4F8 /* b2MouseJoint.cpp in Sources */,
 				C07A47DB19444C2000F1190E /* svg_utils.cpp in Sources */,
+				6357A73C1B3F116900793D60 /* xhtml_inline_element_box.cpp in Sources */,
 				C090E8E6178795EC00E6FC5A /* color_picker.cpp in Sources */,
 				C090E8EB1787962600E6FC5A /* isochunk.cpp in Sources */,
 				C090E8EC1787962600E6FC5A /* isoworld.cpp in Sources */,
@@ -2637,6 +2845,7 @@
 				639B54371AC20D7600ECC4F8 /* b2ContactManager.cpp in Sources */,
 				C07A47D919444C2000F1190E /* svg_style.cpp in Sources */,
 				639B54591AC20D7600ECC4F8 /* b2Joint.cpp in Sources */,
+				6357A7391B3F116900793D60 /* xhtml_box.cpp in Sources */,
 				C090E8F41787967200E6FC5A /* voxel_model.cpp in Sources */,
 				C07A47D319444C2000F1190E /* svg_element.cpp in Sources */,
 				C08DF5B3178BC1CA006E061D /* voxel_object_functions.cpp in Sources */,
@@ -2648,8 +2857,11 @@
 				C07A47DE1944595400F1190E /* ft_iface.cpp in Sources */,
 				639B54271AC20D7600ECC4F8 /* b2PolygonShape.cpp in Sources */,
 				C09185191797BE9B00F415C0 /* widget_editor.cpp in Sources */,
+				6357A7331B3F116900793D60 /* solid_renderable.cpp in Sources */,
 				638CC7231AF6057700C7A106 /* lbaselib.cpp in Sources */,
+				6357A74D1B3F13B400793D60 /* Gradients.cpp in Sources */,
 				C091851A1797BE9B00F415C0 /* widget_settings_dialog.cpp in Sources */,
+				6357A7421B3F116900793D60 /* xhtml_render_ctx.cpp in Sources */,
 				638CC7281AF6057700C7A106 /* ldblib.cpp in Sources */,
 				639B53A91AC20D5A00ECC4F8 /* VGraphCairo.cpp in Sources */,
 				C091851D1797BEB600F415C0 /* voxel_object_type.cpp in Sources */,

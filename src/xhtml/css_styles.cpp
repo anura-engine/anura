@@ -259,7 +259,7 @@ namespace css
 	bool FontWeight::isEqual(const StylePtr& a) const
 	{
 		auto p = std::dynamic_pointer_cast<FontWeight>(a);
-		return is_relative_ == p->is_relative_ ? is_relative_ ? relative_ == p->relative_ : weight_ == weight_ : false;
+		return is_relative_ == p->is_relative_ ? is_relative_ ? relative_ == p->relative_ : weight_ == p->weight_ : false;
 	}
 
 	BackgroundPosition::BackgroundPosition() 

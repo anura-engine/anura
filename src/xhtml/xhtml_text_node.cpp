@@ -21,7 +21,7 @@
 	   distribution.
 */
 
-#include <boost/locale.hpp>
+//#include <boost/locale.hpp>
 
 #include "asserts.hpp"
 #include "profile_timer.hpp"
@@ -120,7 +120,7 @@ namespace xhtml
 					} else {
 						if(first_letter) {
 							first_letter = false;
-							transformed_text += boost::locale::to_upper(utils::codepoint_to_utf8(cp));
+							transformed_text += /*boost::locale::to_upper*/(utils::codepoint_to_utf8(cp));
 						} else {
 							transformed_text += utils::codepoint_to_utf8(cp);
 						}
@@ -129,10 +129,10 @@ namespace xhtml
 				break;
 			}
 			case css::TextTransform::UPPERCASE:
-				transformed_text = boost::locale::to_upper(text_);
+				transformed_text = /*boost::locale::to_upper*/(text_);
 				break;
 			case css::TextTransform::LOWERCASE:
-				transformed_text = boost::locale::to_lower(text_);
+				transformed_text = /*boost::locale::to_lower*/(text_);
 				break;
 			case css::TextTransform::NONE:
 			default: break;
