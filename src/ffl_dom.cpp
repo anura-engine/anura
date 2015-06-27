@@ -206,8 +206,8 @@ namespace xhtml
 	
 	bool DocumentObject::handleEvents(const point& p, const SDL_Event& e)
 	{
-		const int adj_x = e.type == (SDL_MOUSEMOTION ? e.motion.x : e.button.x) - p.x - layout_size_.x();
-		const int adj_y = e.type == (SDL_MOUSEMOTION ? e.motion.y : e.button.y) - p.y - layout_size_.y();
+		const int adj_x = (e.type == SDL_MOUSEMOTION ? e.motion.x : e.button.x) - p.x - layout_size_.x();
+		const int adj_y = (e.type == SDL_MOUSEMOTION ? e.motion.y : e.button.y) - p.y - layout_size_.y();
 		bool claimed = false;
 		if(e.type == SDL_MOUSEMOTION) {
 			claimed = doc_->handleMouseMotion(false, adj_x, adj_y);
