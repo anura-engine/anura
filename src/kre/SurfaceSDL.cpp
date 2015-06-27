@@ -31,6 +31,7 @@
 #include "SDL_image.h"
 
 #include "asserts.hpp"
+#include "formatter.hpp"
 #include "SurfaceSDL.hpp"
 
 enum {
@@ -689,13 +690,18 @@ namespace KRE
 			LOG_ERROR(ss.str());
 			throw ImageLoadError(ss.str());
 		}
-		auto surf = std::make_shared<SurfaceSDL>(s);
-		surf->setFlags(flags);
-		// format means don't convert the surface from the loaded format.
-		if(fmt != PixelFormat::PF::PIXELFORMAT_UNKNOWN) {
-			return surf->convert(fmt, fn)->runGlobalAlphaFilter();
+		try {
+			auto surf = std::make_shared<SurfaceSDL>(s);
+			surf->setFlags(flags);
+			// format means don't convert the surface from the loaded format.
+			if(fmt != PixelFormat::PF::PIXELFORMAT_UNKNOWN) {
+				return surf->convert(fmt, fn)->runGlobalAlphaFilter();
+			}
+			return surf->runGlobalAlphaFilter();
+		} catch(ImageLoadError& e) {
+			throw ImageLoadError(formatter() << "Failed to load image file: '" << filename << "' : " << e.what());
 		}
-		return surf->runGlobalAlphaFilter();
+		return nullptr;
 	}
 
 	void SDLPixelFormat::extractRGBA(const void* pixels, int ndx, int& red, int& green, int& blue, int& alpha)

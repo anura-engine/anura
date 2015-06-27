@@ -159,9 +159,13 @@ namespace KRE
 			setColor(KRE::Color(node["color"]));
 		}
 		if(node.has_key("texture")) {
-			texture_ = Texture::createTexture(node["texture"]);
+			if(node["texture"].is_string() && (node["texture"].as_string() != "fbo" && node["texture"].as_string() != "svg")) {
+				texture_ = Texture::createTexture(node["texture"]);
+			}
 		} else if(node.has_key("image")) {
-			texture_ = Texture::createTexture(node["image"]);			
+			if(node["image"].is_string() && (node["image"].as_string() != "fbo" && node["image"].as_string() != "svg")) {
+				texture_ = Texture::createTexture(node["image"]);
+			}
 		}
 		if(node.has_key("depth_check")) {
 			setDepthEnable(node["depth_check"].as_bool());
