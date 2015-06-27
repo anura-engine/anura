@@ -121,7 +121,6 @@ namespace KRE
 			auto surface = std::get<0>(create_fn_tuple)(filename, fmt, flags, convert);
 			surface->name_ = filename;
 			get_surface_cache()[filename] = surface;
-			LOG_DEBUG("Add file: " << filename << " to surface cache. Count: " << get_surface_cache().size());
 			surface->init();
 			return surface;
 		} 

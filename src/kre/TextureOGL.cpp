@@ -126,11 +126,11 @@ namespace KRE
 
 	OpenGLTexture::~OpenGLTexture()
 	{
-		int n = 0;
-		for(auto& td : texture_data_) {
-			LOG_DEBUG("Release TexturePtr(" << n << "): id: " << *td.id << ", use_count: " << td.id.use_count());
-			++n;
-		}
+		//int n = 0;
+		//for(auto& td : texture_data_) {
+		//	LOG_DEBUG("Release TexturePtr(" << n << "): id: " << *td.id << ", use_count: " << td.id.use_count());
+		//	++n;
+		//}
 	}
 
 	void OpenGLTexture::update(int n, int x, int width, void* pixels)
@@ -429,8 +429,13 @@ namespace KRE
 					for(auto& color : palette) {
 						texture_data_[n].palette.emplace_back(color.asRGBA());	
 					}
-					ASSERT_LOG(false, "Need to create a palette surface for 8-bit native index formats. Or translate to RGBA.");
+					//ASSERT_LOG(false, "Need to create a palette surface for 8-bit native index formats. Or translate to RGBA.");
 				}
+				td.format = GL_RED;
+				td.internal_format = GL_RGBA;
+				td.type = GL_UNSIGNED_BYTE;
+				break;
+			case PixelFormat::PF::PIXELFORMAT_R8:
 				td.format = GL_RED;
 				td.internal_format = GL_RGBA;
 				td.type = GL_UNSIGNED_BYTE;
