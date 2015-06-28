@@ -360,6 +360,10 @@ namespace xhtml
 
 	bool Node::handleMouseButtonUp(bool* trigger, const point& p)
 	{
+		if(getScriptHandler() && hasActiveHandler(EventHandlerId::MOUSE_UP)) {
+			getScriptHandler()->runEventHandler(shared_from_this(), EventHandlerId::MOUSE_UP);
+		}
+
 		if(!handleMouseButtonUpInt(trigger, p)) {
 			return false;
 		}
@@ -369,6 +373,9 @@ namespace xhtml
 
 	bool Node::handleMouseButtonDown(bool* trigger, const point& p)
 	{
+		if(getScriptHandler() && hasActiveHandler(EventHandlerId::MOUSE_DOWN)) {
+			getScriptHandler()->runEventHandler(shared_from_this(), EventHandlerId::MOUSE_DOWN);
+		}
 
 		if(!handleMouseButtonDownInt(trigger, p)) {
 			return false;
