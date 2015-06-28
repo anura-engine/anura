@@ -27,6 +27,40 @@
 
 namespace xhtml
 {
+	enum class EventHandlerId {
+		CLICK,
+		DBL_CLICK,
+		MOUSE_DOWN,
+		MOUSE_UP,
+		MOUSE_MOVE,
+		MOUSE_ENTER,
+		MOUSE_LEAVE,
+		MOUSE_OVER,
+		MOUSE_OUT,
+		KEY_PRESS,
+		KEY_UP,
+		KEY_DOWN,
+		LOAD,
+		UNLOAD,
+		RESIZE,
+		WHEEL,
+		//BLUR,
+		//SCROLL,
+		//FOCUS,
+		//FOCUSIN,
+		//FOCUSOUT,
+		//SELECT,
+		//ERROR,
+		//COMPOSITIONSTART,
+		//COMPOSITIONUPDATE,
+		//COMPOSITIONEND,
+		//ABORT,
+		//BEFOREINPUT,
+		//INPUT,
+
+		MAX_EVENT_HANDLERS,
+	};
+
 	class Script : public std::enable_shared_from_this<Script>
 	{
 	public:
@@ -34,7 +68,9 @@ namespace xhtml
 		virtual ~Script() {}
 		virtual void runScriptFile(const std::string& filename) = 0;
 		virtual void runScript(const std::string& script) = 0;
-		void addEventHandler(const std::string& evtname, const std::string& script); // this needs to have some sort of element reference.
+		virtual void preProcess(const NodePtr& element, EventHandlerId evtname, const std::string& script) = 0;
+		void addEventHandler(const NodePtr& element, EventHandlerId evtname, const std::string& script);
+		virtual void runEventHandler(const NodePtr& element, EventHandlerId evtname) = 0;
 	private:
 	};
 }

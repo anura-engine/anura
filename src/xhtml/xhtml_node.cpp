@@ -27,6 +27,7 @@
 #include "css_parser.hpp"
 #include "xhtml_text_node.hpp"
 #include "xhtml_render_ctx.hpp"
+#include "xhtml_script_interface.hpp"
 
 #include "filesystem.hpp"
 
@@ -55,6 +56,44 @@ namespace xhtml
 			static script_map_t res;
 			return res;
 		}
+
+		const std::map<std::string, EventHandlerId>& get_event_handlers() 
+		{
+			static std::map<std::string, EventHandlerId> res;
+			if(res.empty()) {
+				res["onclick"] = EventHandlerId::CLICK;
+				res["ondblclick"] = EventHandlerId::DBL_CLICK;
+				res["onmousedown"] = EventHandlerId::MOUSE_DOWN;
+				res["onmouseup"] = EventHandlerId::MOUSE_UP;
+				res["onmousemove"] = EventHandlerId::MOUSE_MOVE;
+				res["onmouseenter"] = EventHandlerId::MOUSE_ENTER;
+				res["onmouseleave"] = EventHandlerId::MOUSE_LEAVE;
+				res["onmouseover"] = EventHandlerId::MOUSE_OVER;
+				res["onmouseout"] = EventHandlerId::MOUSE_OUT;
+				res["onkeypress"] = EventHandlerId::KEY_PRESS;
+				res["onkeyup"] = EventHandlerId::KEY_UP;
+				res["onkeydown"] = EventHandlerId::KEY_DOWN;
+				res["onload"] = EventHandlerId::LOAD;
+				res["onunload"] = EventHandlerId::UNLOAD;
+				res["onresize"] = EventHandlerId::RESIZE;
+				res["onwheel"] = EventHandlerId::WHEEL;
+				//res["onblur"] = EventHandlerId::BLUR;
+				//res["onscroll"] = EventHandlerId::SCROLL;
+				//res["onfocus"] = EventHandlerId::FOCUS;
+				//res["onfocusin"] = EventHandlerId::FOCUSIN;
+				//res["onfocusout"] = EventHandlerId::FOCUSOUT;
+				//res["onselect"] = EventHandlerId::SELECT;
+				//res["onerror"] = EventHandlerId::ERROR;
+				//res["oncompositionstart"] = EventHandlerId::COMPOSITIONSTART;
+				//res["oncompositionupdate"] = EventHandlerId::COMPOSITIONUPDATE;
+				//res["oncompositionend"] = EventHandlerId::COMPOSITIONEND;
+				//res["onabort"] = EventHandlerId::ABORT;
+				//res["onbeforeinput"] = EventHandlerId::BEFOREINPUT;
+				//res["oninput"] = EventHandlerId::INPUT;
+				
+			}
+			return res;
+		}
 	}
 
 	Node::Node(NodeId id, WeakDocumentPtr owner)
@@ -69,14 +108,31 @@ namespace xhtml
 		  pclass_(css::PseudoClass::NONE),
 		  active_pclass_(css::PseudoClass::NONE),
 		  active_rect_(),
-		  dimensions_()
+		  dimensions_(),
+		  script_handler_(nullptr),
+		  active_handlers_()
 	{
+		active_handlers_.resize(static_cast<int>(EventHandlerId::MAX_EVENT_HANDLERS));
 	}
 
 	Node::~Node()
 	{
 	}
 	
+	void Node::setActiveHandler(EventHandlerId id)
+	{
+		int index = static_cast<int>(id);
+		ASSERT_LOG(index < static_cast<int>(active_handlers_.size()), "index exceeds bounds.");
+		active_handlers_[index] = true;
+	}
+
+	bool Node::hasActiveHandler(EventHandlerId id)
+	{
+		int index = static_cast<int>(id);
+		ASSERT_LOG(index < static_cast<int>(active_handlers_.size()), "index exceeds bounds.");
+		return active_handlers_[index];
+	}
+
 	void Node::addChild(NodePtr child)
 	{		
 		if(child->id() == NodeId::DOCUMENT_FRAGMENT) {
@@ -283,6 +339,25 @@ namespace xhtml
 		}
 	}
 
+	void Node::processScriptAttributes()
+	{
+		if(id() == NodeId::ELEMENT) {
+			auto handler = Document::findScriptHandler();
+			script_handler_ = handler;
+			if(handler != nullptr) {
+				for(auto& attr : getAttributes()) {
+					auto it = get_event_handlers().find(attr.first);
+					if(it != get_event_handlers().end()) {
+						handler->addEventHandler(shared_from_this(), it->second, attr.second->getValue());
+					}
+				}
+			}
+		}
+		for(auto& c : children_) {
+			c->processScriptAttributes();
+		}
+	}
+
 	bool Node::handleMouseButtonUp(bool* trigger, const point& p)
 	{
 		if(!handleMouseButtonUpInt(trigger, p)) {
@@ -294,6 +369,7 @@ namespace xhtml
 
 	bool Node::handleMouseButtonDown(bool* trigger, const point& p)
 	{
+
 		if(!handleMouseButtonDownInt(trigger, p)) {
 			return false;
 		}
@@ -303,6 +379,10 @@ namespace xhtml
 
 	bool Node::handleMouseMotion(bool* trigger, const point& p)
 	{
+		if(getScriptHandler() && hasActiveHandler(EventHandlerId::MOUSE_MOVE)) {
+			getScriptHandler()->runEventHandler(shared_from_this(), EventHandlerId::MOUSE_MOVE);
+		}
+
 		if(!handleMouseMotionInt(trigger, p)) {
 			return false;
 		}
@@ -324,7 +404,7 @@ namespace xhtml
 	}
 
 	bool Document::handleMouseMotion(bool claimed, int x, int y)
-	{		
+	{
 		bool trigger = false;
 		point p(x, y);
 		claimed = !preOrderTraversal([&trigger, &p](NodePtr node) {
@@ -448,6 +528,12 @@ namespace xhtml
 
 	ScriptPtr Document::findScriptHandler(const std::string& type)
 	{
+		if(type.empty()) {
+			if(get_script_map().empty()) {
+				return nullptr;
+			}
+			return get_script_map().begin()->second;
+		}
 		auto it = get_script_map().find(type);
 		if(it == get_script_map().end()) {
 			return nullptr;

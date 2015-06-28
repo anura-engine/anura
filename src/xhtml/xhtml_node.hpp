@@ -34,6 +34,7 @@
 #include "css_transition.hpp"
 #include "xhtml.hpp"
 #include "xhtml_element_id.hpp"
+#include "xhtml_script_interface.hpp"
 
 namespace xhtml
 {
@@ -118,6 +119,7 @@ namespace xhtml
 		// This sets the rectangle that should be active for mouse presses.
 		void setActiveRect(const rect& r) { active_rect_ = r; }
 		const rect& getActiveRect() const { return active_rect_; }
+		void processScriptAttributes();
 		virtual void layoutComplete() {}
 
 		bool handleMouseMotion(bool* trigger, const point& p);
@@ -135,6 +137,11 @@ namespace xhtml
 		virtual bool isReplaced() const { return false; }
 		virtual bool ignoreForLayout() const { return false; }
 		virtual const std::string& getTag() const { static const std::string tag("none"); return tag; }
+
+		void setScriptHandler(const ScriptPtr& script_handler);
+		ScriptPtr getScriptHandler() const { return script_handler_; }
+		void setActiveHandler(EventHandlerId id);
+		bool hasActiveHandler(EventHandlerId id);
 	protected:
 		std::string nodeToString() const;
 	private:
@@ -159,6 +166,9 @@ namespace xhtml
 		rect active_rect_;
 
 		rect dimensions_;
+
+		ScriptPtr script_handler_;
+		std::vector<bool> active_handlers_;
 	};
 
 	class Document : public Node
@@ -179,7 +189,7 @@ namespace xhtml
 
 		// type is expected to be a content type i.e. "text/javascript"
 		static void registerScriptHandler(const std::string& type, std::function<ScriptPtr()> fn);
-		static ScriptPtr findScriptHandler(const std::string& type);
+		static ScriptPtr findScriptHandler(const std::string& type=std::string());
 	protected:
 		Document(css::StyleSheetPtr ss);
 		css::StyleSheetPtr style_sheet_;

@@ -31,11 +31,25 @@
 #include "formula_callable_definition.hpp"
 
 #include "xhtml.hpp"
+#include "xhtml_script_interface.hpp"
 
 #include "ffl_dom_fwd.hpp"
 
 namespace xhtml
 {
+	class ElementObject : public game_logic::FormulaCallable
+	{
+	public:
+		ElementObject(const NodePtr& element);
+		void setHandler(EventHandlerId evtname, const game_logic::FormulaPtr& handler);
+		void runHandler(EventHandlerId evtname, game_logic::FormulaCallable* environment);
+	private:
+		DECLARE_CALLABLE(ElementObject);
+		NodePtr element_;
+		std::vector<game_logic::FormulaPtr> handlers_;
+	};
+	typedef boost::intrusive_ptr<ElementObject> ElementObjectPtr;
+
 	class DocumentObject : public game_logic::FormulaCallable
 	{
 	public:
@@ -54,6 +68,9 @@ namespace xhtml
 		game_logic::FormulaCallable* getEnvironment() const { return environment_; }
 
 		void setLayoutSize(const rect& r) { layout_size_ = r; }
+
+		ElementObjectPtr getElementById(const std::string& element_id) const;
+		ElementObjectPtr getElementByNode(const NodePtr& node) const;
 	private:
 		DECLARE_CALLABLE(DocumentObject);
 
@@ -72,6 +89,8 @@ namespace xhtml
 		std::string ss_name_;
 
 		rect layout_size_;
+
+		mutable std::map<NodePtr, ElementObjectPtr> element_cache_;
 	};
 	
 	typedef boost::intrusive_ptr<DocumentObject> DocumentObjectPtr;

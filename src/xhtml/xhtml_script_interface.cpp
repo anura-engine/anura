@@ -29,4 +29,10 @@ namespace xhtml
 	Script::Script()
 	{
 	}
+
+	void Script::addEventHandler(const NodePtr& element, EventHandlerId evtname, const std::string& script)
+	{
+		preProcess(element, evtname, script);
+		element->setActiveHandler(evtname);
+	}
 }

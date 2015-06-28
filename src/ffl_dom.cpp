@@ -54,15 +54,32 @@ namespace xhtml
 		{
 		public:
 			FFLScript(DocumentObject* docobj) : document_object_(docobj) {}
-			void runScriptFile(const std::string& filename) 
+			void runScriptFile(const std::string& filename) override
 			{
 			}
-			void runScript(const std::string& script) 
+			void runScript(const std::string& script)  override
 			{
 				game_logic::FormulaPtr handler = document_object_->getEnvironment()->createFormula(variant(script));
 				if(document_object_->getEnvironment()) {
 					variant value = handler->execute(*document_object_->getEnvironment());
 					document_object_->getEnvironment()->executeCommand(value);
+				} else {
+					LOG_ERROR("FFLScript::runScript() called without environment!");
+				}
+			}
+			void preProcess(const NodePtr& element, EventHandlerId evtname, const std::string& script) override
+			{
+				ElementObjectPtr eo = document_object_->getElementByNode(element);
+				ASSERT_LOG(eo != nullptr, "Bad juju. ElementObjectPtr == nullptr");
+				game_logic::FormulaPtr handler = document_object_->getEnvironment()->createFormula(variant(script));
+				eo->setHandler(evtname, handler);
+			}
+			void runEventHandler(const NodePtr& element, EventHandlerId evtname) override
+			{
+				ElementObjectPtr eo = document_object_->getElementByNode(element);
+				ASSERT_LOG(eo != nullptr, "Bad juju. ElementObjectPtr == nullptr");
+				if(document_object_->getEnvironment()) {
+					eo->runHandler(evtname, document_object_->getEnvironment());
 				} else {
 					LOG_ERROR("FFLScript::runScript() called without environment!");
 				}
@@ -129,6 +146,7 @@ namespace xhtml
 		doc_->processStyles();
 		// whitespace can only be processed after applying styles.
 		doc_->processWhitespace();
+		doc_->processScriptAttributes();
 
 		display_list_ = std::make_shared<DisplayList>(scene_);
 		root_->attachNode(display_list_);		
@@ -220,14 +238,39 @@ namespace xhtml
 		return claimed;
 	}
 
+	ElementObjectPtr DocumentObject::getElementById(const std::string& element_id) const
+	{
+		NodePtr element = doc_->getElementById(element_id);
+		if(element != nullptr) {
+			ElementObjectPtr& eo = element_cache_[element];
+			if(eo == nullptr) {
+				eo.reset(new ElementObject(element));
+			}
+			return eo;
+		} 
+		return nullptr;
+	}
+
+	ElementObjectPtr DocumentObject::getElementByNode(const NodePtr& element) const
+	{
+		ASSERT_LOG(element != nullptr, "DocumentObject::getElementByNode passed in element was null.");
+		ElementObjectPtr& eo = element_cache_[element];
+		if(eo == nullptr) {
+			eo.reset(new ElementObject(element));
+		}
+		return eo;
+	}
+
 	void DocumentObject::surrenderReferences(GarbageCollector* collector)
 	{
+
+		for(auto& ele : element_cache_) {
+			collector->surrenderPtr(&ele.second, "XHTML::ELEMENT_OBJECT");
+		}
 	}
 
 	BEGIN_DEFINE_CALLABLE_NOBASE(DocumentObject)
-		DEFINE_FIELD(dummy, "null")
-			return variant();
-		
+	
 		DEFINE_FIELD(width, "int")
 			return variant(obj.layout_size_.w());
 		DEFINE_SET_FIELD
@@ -250,5 +293,50 @@ namespace xhtml
 			obj.layout_size_.set_h(value[1].as_int());
 			obj.doc_->triggerLayout();
 			
+		BEGIN_DEFINE_FN(getElementById, "(string) ->builtin element_object|null")
+			const std::string element_id = FN_ARG(0).as_string();
+			ElementObjectPtr eo = obj.getElementById(element_id);
+			if(eo == nullptr) {
+				return variant();
+			}
+			return variant(eo.get());
+		END_DEFINE_FN
+		
 	END_DEFINE_CALLABLE(DocumentObject)
+
+
+	// ElementObject
+	ElementObject::ElementObject(const NodePtr& element)
+		: element_(element),
+		  handlers_()
+	{
+		ASSERT_LOG(element_ != nullptr && element_->id() == NodeId::ELEMENT, "Tried to construct an ElementObject, without a valid Node.");
+		handlers_.resize(static_cast<int>(EventHandlerId::MAX_EVENT_HANDLERS));
+	}
+
+	void ElementObject::setHandler(EventHandlerId evtname, const game_logic::FormulaPtr& handler)
+	{
+		int index = static_cast<int>(evtname);
+		ASSERT_LOG(index < static_cast<int>(handlers_.size()), "Handler index exceeds bounds. " << index << " >= " << static_cast<int>(handlers_.size()));
+		handlers_[index] = handler;
+	}
+
+	void ElementObject::runHandler(EventHandlerId evtname, game_logic::FormulaCallable* environment)
+	{
+		int index = static_cast<int>(evtname);
+		ASSERT_LOG(index < static_cast<int>(handlers_.size()), "Handler index exceeds bounds. " << index << " >= " << static_cast<int>(handlers_.size()));
+		auto& handler = handlers_[index];
+		if(handler != nullptr) {
+			// XXX add parameters as needed.
+			variant value = handler->execute(*environment);
+			environment->executeCommand(value);
+		}
+	}
+
+	BEGIN_DEFINE_CALLABLE_NOBASE(ElementObject)
+		
+		DEFINE_FIELD(dummy, "null")
+			return variant();
+
+	END_DEFINE_CALLABLE(ElementObject)
 }
