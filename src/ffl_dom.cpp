@@ -390,7 +390,7 @@ namespace xhtml
 			}
 		}
 		callable->add("screenX", variant(mx));
-		callable->add("screenY", variant(mx));
+		callable->add("screenY", variant(my));
 		//callable->add("clientX", variant(adj_x));
 		//callable->add("clientY", variant(adj_y));
 		//callable->add("button", variant(button));
