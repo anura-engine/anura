@@ -140,7 +140,7 @@ namespace xhtml
 
 		void setScriptHandler(const ScriptPtr& script_handler);
 		ScriptPtr getScriptHandler() const { return script_handler_; }
-		void setActiveHandler(EventHandlerId id);
+		void setActiveHandler(EventHandlerId id, bool active=true);
 		bool hasActiveHandler(EventHandlerId id);
 	protected:
 		std::string nodeToString() const;
@@ -169,6 +169,8 @@ namespace xhtml
 
 		ScriptPtr script_handler_;
 		std::vector<bool> active_handlers_;
+
+		bool mouse_entered_;
 	};
 
 	class Document : public Node

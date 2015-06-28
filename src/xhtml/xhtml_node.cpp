@@ -61,15 +61,15 @@ namespace xhtml
 		{
 			static std::map<std::string, EventHandlerId> res;
 			if(res.empty()) {
-				res["onclick"] = EventHandlerId::CLICK;
-				res["ondblclick"] = EventHandlerId::DBL_CLICK;
+				//res["onclick"] = EventHandlerId::CLICK;
+				//res["ondblclick"] = EventHandlerId::DBL_CLICK;
 				res["onmousedown"] = EventHandlerId::MOUSE_DOWN;
 				res["onmouseup"] = EventHandlerId::MOUSE_UP;
 				res["onmousemove"] = EventHandlerId::MOUSE_MOVE;
 				res["onmouseenter"] = EventHandlerId::MOUSE_ENTER;
 				res["onmouseleave"] = EventHandlerId::MOUSE_LEAVE;
-				res["onmouseover"] = EventHandlerId::MOUSE_OVER;
-				res["onmouseout"] = EventHandlerId::MOUSE_OUT;
+				//res["onmouseover"] = EventHandlerId::MOUSE_OVER;
+				//res["onmouseout"] = EventHandlerId::MOUSE_OUT;
 				res["onkeypress"] = EventHandlerId::KEY_PRESS;
 				res["onkeyup"] = EventHandlerId::KEY_UP;
 				res["onkeydown"] = EventHandlerId::KEY_DOWN;
@@ -119,11 +119,11 @@ namespace xhtml
 	{
 	}
 	
-	void Node::setActiveHandler(EventHandlerId id)
+	void Node::setActiveHandler(EventHandlerId id, bool active)
 	{
 		int index = static_cast<int>(id);
 		ASSERT_LOG(index < static_cast<int>(active_handlers_.size()), "index exceeds bounds.");
-		active_handlers_[index] = true;
+		active_handlers_[index] = active;
 	}
 
 	bool Node::hasActiveHandler(EventHandlerId id)
@@ -379,6 +379,20 @@ namespace xhtml
 
 	bool Node::handleMouseMotion(bool* trigger, const point& p)
 	{
+		if(!active_rect_.empty()) {
+			if(geometry::pointInRect(p, active_rect_)) {
+				if(mouse_entered_ == false && getScriptHandler() && hasActiveHandler(EventHandlerId::MOUSE_ENTER)) {
+					getScriptHandler()->runEventHandler(shared_from_this(), EventHandlerId::MOUSE_ENTER);
+				}
+				mouse_entered_ = true;
+			} else {
+				if(mouse_entered_ == true && getScriptHandler() && hasActiveHandler(EventHandlerId::MOUSE_LEAVE)) {
+					getScriptHandler()->runEventHandler(shared_from_this(), EventHandlerId::MOUSE_LEAVE);
+				}
+				mouse_entered_ = false;
+			}
+		}
+
 		if(getScriptHandler() && hasActiveHandler(EventHandlerId::MOUSE_MOVE)) {
 			getScriptHandler()->runEventHandler(shared_from_this(), EventHandlerId::MOUSE_MOVE);
 		}
@@ -390,7 +404,7 @@ namespace xhtml
 		if(!hover || active_rect_.empty()) {
 			return true;
 		}
-		if(geometry::pointInRect(p, active_rect_)) {
+		if(mouse_entered_) {
 			if((active_pclass_ & css::PseudoClass::HOVER) != css::PseudoClass::HOVER) {
 				active_pclass_ = active_pclass_ | css::PseudoClass::HOVER;
 				*trigger = true;

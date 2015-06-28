@@ -28,15 +28,15 @@
 namespace xhtml
 {
 	enum class EventHandlerId {
-		CLICK,
-		DBL_CLICK,
+		//CLICK,
+		//DBL_CLICK,
 		MOUSE_DOWN,
 		MOUSE_UP,
 		MOUSE_MOVE,
 		MOUSE_ENTER,
 		MOUSE_LEAVE,
-		MOUSE_OVER,
-		MOUSE_OUT,
+		//MOUSE_OVER,
+		//MOUSE_OUT,
 		KEY_PRESS,
 		KEY_UP,
 		KEY_DOWN,
