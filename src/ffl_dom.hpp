@@ -42,7 +42,12 @@ namespace xhtml
 	public:
 		ElementObject(const NodePtr& element);
 		void setHandler(EventHandlerId evtname, const game_logic::FormulaPtr& handler);
-		void runHandler(EventHandlerId evtname, game_logic::FormulaCallable* environment);
+		void runHandler(EventHandlerId evtname, game_logic::FormulaCallable* environment, const variant& params);
+		game_logic::MapFormulaCallablePtr createMouseEventCallable(game_logic::FormulaCallable* environment, const variant& params);
+		game_logic::MapFormulaCallablePtr createWheelEventCallable(game_logic::FormulaCallable* environment, const variant& params);
+		game_logic::MapFormulaCallablePtr createKeyEventCallable(game_logic::FormulaCallable* environment, const variant& params);
+		static bool isMouseEvent(EventHandlerId evtname);
+		static bool isKeyEvent(EventHandlerId evtname);
 	private:
 		DECLARE_CALLABLE(ElementObject);
 		NodePtr element_;

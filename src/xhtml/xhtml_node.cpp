@@ -358,10 +358,18 @@ namespace xhtml
 		}
 	}
 
-	bool Node::handleMouseButtonUp(bool* trigger, const point& p)
+	bool Node::handleMouseButtonUp(bool* trigger, const point& p, unsigned button)
 	{
-		if(getScriptHandler() && hasActiveHandler(EventHandlerId::MOUSE_UP)) {
-			getScriptHandler()->runEventHandler(shared_from_this(), EventHandlerId::MOUSE_UP);
+		if(!active_rect_.empty()) {
+			if(geometry::pointInRect(p, active_rect_)) {
+				if(getScriptHandler() && hasActiveHandler(EventHandlerId::MOUSE_UP)) {
+					std::map<variant, variant> m;
+					m[variant("clientX")] = variant(p.x);
+					m[variant("clientY")] = variant(p.y);
+					m[variant("button")] = variant(button - 1);
+					getScriptHandler()->runEventHandler(shared_from_this(), EventHandlerId::MOUSE_UP, variant(&m));
+				}
+			}
 		}
 
 		if(!handleMouseButtonUpInt(trigger, p)) {
@@ -371,10 +379,18 @@ namespace xhtml
 		return true;
 	}
 
-	bool Node::handleMouseButtonDown(bool* trigger, const point& p)
+	bool Node::handleMouseButtonDown(bool* trigger, const point& p, unsigned button)
 	{
-		if(getScriptHandler() && hasActiveHandler(EventHandlerId::MOUSE_DOWN)) {
-			getScriptHandler()->runEventHandler(shared_from_this(), EventHandlerId::MOUSE_DOWN);
+		if(!active_rect_.empty()) {
+			if(geometry::pointInRect(p, active_rect_)) {
+				if(getScriptHandler() && hasActiveHandler(EventHandlerId::MOUSE_DOWN)) {
+					std::map<variant, variant> m;
+					m[variant("clientX")] = variant(p.x);
+					m[variant("clientY")] = variant(p.y);
+					m[variant("button")] = variant(button - 1);
+					getScriptHandler()->runEventHandler(shared_from_this(), EventHandlerId::MOUSE_DOWN, variant(&m));
+				}
+			}
 		}
 
 		if(!handleMouseButtonDownInt(trigger, p)) {
@@ -389,19 +405,28 @@ namespace xhtml
 		if(!active_rect_.empty()) {
 			if(geometry::pointInRect(p, active_rect_)) {
 				if(mouse_entered_ == false && getScriptHandler() && hasActiveHandler(EventHandlerId::MOUSE_ENTER)) {
-					getScriptHandler()->runEventHandler(shared_from_this(), EventHandlerId::MOUSE_ENTER);
+					std::map<variant, variant> m;
+					m[variant("clientX")] = variant(p.x);
+					m[variant("clientY")] = variant(p.y);
+					getScriptHandler()->runEventHandler(shared_from_this(), EventHandlerId::MOUSE_ENTER, variant(&m));
 				}
 				mouse_entered_ = true;
 			} else {
 				if(mouse_entered_ == true && getScriptHandler() && hasActiveHandler(EventHandlerId::MOUSE_LEAVE)) {
-					getScriptHandler()->runEventHandler(shared_from_this(), EventHandlerId::MOUSE_LEAVE);
+					std::map<variant, variant> m;
+					m[variant("clientX")] = variant(p.x);
+					m[variant("clientY")] = variant(p.y);
+					getScriptHandler()->runEventHandler(shared_from_this(), EventHandlerId::MOUSE_LEAVE, variant(&m));
 				}
 				mouse_entered_ = false;
 			}
-		}
 
-		if(getScriptHandler() && hasActiveHandler(EventHandlerId::MOUSE_MOVE)) {
-			getScriptHandler()->runEventHandler(shared_from_this(), EventHandlerId::MOUSE_MOVE);
+			if(getScriptHandler() && hasActiveHandler(EventHandlerId::MOUSE_MOVE)) {
+				std::map<variant, variant> m;
+				m[variant("clientX")] = variant(p.x);
+				m[variant("clientY")] = variant(p.y);
+				getScriptHandler()->runEventHandler(shared_from_this(), EventHandlerId::MOUSE_MOVE, variant(&m));
+			}
 		}
 
 		if(!handleMouseMotionInt(trigger, p)) {
@@ -440,8 +465,8 @@ namespace xhtml
 	{
 		bool trigger = false;
 		point p(x, y);
-		claimed = !preOrderTraversal([&trigger, &p](NodePtr node) {
-			node->handleMouseButtonDown(&trigger, p);
+		claimed = !preOrderTraversal([&trigger, &p, button](NodePtr node) {
+			node->handleMouseButtonDown(&trigger, p, button);
 			return true;
 		});
 		trigger_layout_ |= trigger;
@@ -452,8 +477,8 @@ namespace xhtml
 	{
 		bool trigger = false;
 		point p(x, y);
-		claimed = !preOrderTraversal([&trigger, &p](NodePtr node) {
-			node->handleMouseButtonUp(&trigger, p);
+		claimed = !preOrderTraversal([&trigger, &p, button](NodePtr node) {
+			node->handleMouseButtonUp(&trigger, p, button);
 			return true;
 		});
 		trigger_layout_ |= trigger;

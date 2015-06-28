@@ -74,19 +74,18 @@ namespace xhtml
 				game_logic::FormulaPtr handler = document_object_->getEnvironment()->createFormula(variant(script));
 				eo->setHandler(evtname, handler);
 			}
-			void runEventHandler(const NodePtr& element, EventHandlerId evtname) override
+			void runEventHandler(const NodePtr& element, EventHandlerId evtname, const variant& params) override
 			{
 				ElementObjectPtr eo = document_object_->getElementByNode(element);
 				ASSERT_LOG(eo != nullptr, "Bad juju. ElementObjectPtr == nullptr");
 				if(document_object_->getEnvironment()) {
-					eo->runHandler(evtname, document_object_->getEnvironment());
+					eo->runHandler(evtname, document_object_->getEnvironment(), params);
 				} else {
 					LOG_ERROR("FFLScript::runScript() called without environment!");
 				}
 			}
 		private:
-			DocumentObject* document_object_;
-			
+			DocumentObject* document_object_;			
 		};
 	}
 
@@ -321,16 +320,127 @@ namespace xhtml
 		handlers_[index] = handler;
 	}
 
-	void ElementObject::runHandler(EventHandlerId evtname, game_logic::FormulaCallable* environment)
+	void ElementObject::runHandler(EventHandlerId evtname, game_logic::FormulaCallable* environment, const variant& params)
 	{
 		int index = static_cast<int>(evtname);
 		ASSERT_LOG(index < static_cast<int>(handlers_.size()), "Handler index exceeds bounds. " << index << " >= " << static_cast<int>(handlers_.size()));
 		auto& handler = handlers_[index];
 		if(handler != nullptr) {
 			// XXX add parameters as needed.
-			variant value = handler->execute(*environment);
+			game_logic::MapFormulaCallablePtr callable = nullptr;
+			if(ElementObject::isMouseEvent(evtname)) {
+				callable = createMouseEventCallable(environment, params);
+			} else if(ElementObject::isKeyEvent(evtname)) {
+				callable = createKeyEventCallable(environment, params);
+			}
+			variant value = handler->execute(callable != nullptr ? *callable : *environment);
 			environment->executeCommand(value);
 		}
+	}
+
+	bool ElementObject::isKeyEvent(EventHandlerId evtname)
+	{
+		if(evtname == EventHandlerId::KEY_DOWN
+			|| evtname == EventHandlerId::KEY_PRESS
+			|| evtname == EventHandlerId::KEY_UP) {
+			return true;
+		}
+		return false;
+	}
+
+	bool ElementObject::isMouseEvent(EventHandlerId evtname)
+	{
+		if(evtname == EventHandlerId::MOUSE_DOWN
+			|| evtname == EventHandlerId::MOUSE_UP
+			|| evtname == EventHandlerId::MOUSE_MOVE
+			|| evtname == EventHandlerId::MOUSE_ENTER
+			//|| evtname == EventHandlerId::CLICK
+			//|| evtname == EventHandlerId::DBL_CLICK
+			//|| evtname == EventHandlerId::MOUSE_OVER
+			//|| evtname == EventHandlerId::MOUSE_OUT
+			|| evtname == EventHandlerId::MOUSE_LEAVE) {
+			return true;
+		}
+		return false;
+	}
+
+	game_logic::MapFormulaCallablePtr ElementObject::createMouseEventCallable(game_logic::FormulaCallable* environment, const variant& params)
+	{
+		// MouseEvent
+		// screenX (long)
+		// screenY (long)
+		// clientX (long)
+		// clientY (long)
+		// ctrlKey (boolean)
+		// shiftKey (boolean)
+		// altKey (boolean)
+		// metaKey (boolean)
+		// button (short) (0 - primary(left), 1 - auxillary(middle), 2 - secondary(right)) -- indicates which button changed state
+		// EventTarget? (relatedTarget)
+		// buttons (unsigned short) (bitmask of buttons (1 << button)) -- indicates which buttons are active
+
+		using namespace game_logic;
+		int mx, my;
+		Uint32 buttons = SDL_GetMouseState(&mx, &my);
+		SDL_Keymod key_state = SDL_GetModState();
+		MapFormulaCallablePtr callable = MapFormulaCallablePtr(new MapFormulaCallable(environment));
+		if(params.is_map()) {
+			for(auto& p : params.as_map()) {
+				callable->add(p.first.as_string(), p.second);
+			}
+		}
+		callable->add("screenX", variant(mx));
+		callable->add("screenY", variant(mx));
+		//callable->add("clientX", variant(adj_x));
+		//callable->add("clientY", variant(adj_y));
+		//callable->add("button", variant(button));
+		// conveniently SDL2 uses the same definition as the DOM for button bit positions.
+		callable->add("buttons", variant(buttons));
+		callable->add("ctrlKey", variant::from_bool(key_state & KMOD_CTRL ? true : false));
+		callable->add("shiftKey", variant::from_bool(key_state & KMOD_SHIFT ? true : false));
+		callable->add("altKey", variant::from_bool(key_state & KMOD_ALT ? true : false));
+		callable->add("metaKey", variant::from_bool(key_state & KMOD_GUI ? true : false));
+		return callable;
+	}
+
+	game_logic::MapFormulaCallablePtr ElementObject::createWheelEventCallable(game_logic::FormulaCallable* environment, const variant& params)
+	{
+		// WheelEvent
+		// const unsigned long DOM_DELTA_PIXEL = 0x00;
+		// const unsigned long DOM_DELTA_LINE = 0x01;
+		// const unsigned long DOM_DELTA_PAGE = 0x02;
+		// readonly    attribute double        deltaX;
+		// readonly    attribute double        deltaY;
+		// readonly    attribute double        deltaZ;
+		// readonly    attribute unsigned long deltaMode;
+		using namespace game_logic;
+		if(params.is_map()) {
+			MapFormulaCallablePtr callable = MapFormulaCallablePtr(new MapFormulaCallable(environment));
+			for(auto& p : params.as_map()) {
+				callable->add(p.first.as_string(), p.second);
+			}
+			// XXX just making this up.
+			callable->add("deltaMode", variant(0));
+			return callable;
+		}
+		return nullptr;
+	}
+
+	game_logic::MapFormulaCallablePtr ElementObject::createKeyEventCallable(game_logic::FormulaCallable* environment, const variant& params)
+	{
+		using namespace game_logic;
+		SDL_Keymod key_state = SDL_GetModState();
+		MapFormulaCallablePtr callable = MapFormulaCallablePtr(new MapFormulaCallable(environment));
+		if(params.is_map()) {
+			for(auto& p : params.as_map()) {
+				callable->add(p.first.as_string(), p.second);
+			}
+		}
+		callable->add("ctrlKey", variant::from_bool(key_state & KMOD_CTRL ? true : false));
+		callable->add("shiftKey", variant::from_bool(key_state & KMOD_SHIFT ? true : false));
+		callable->add("altKey", variant::from_bool(key_state & KMOD_ALT ? true : false));
+		callable->add("metaKey", variant::from_bool(key_state & KMOD_GUI ? true : false));
+		return callable;
 	}
 
 	BEGIN_DEFINE_CALLABLE_NOBASE(ElementObject)

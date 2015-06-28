@@ -24,6 +24,7 @@
 #pragma once
 
 #include "xhtml.hpp"
+#include "variant.hpp"
 
 namespace xhtml
 {
@@ -70,7 +71,7 @@ namespace xhtml
 		virtual void runScript(const std::string& script) = 0;
 		virtual void preProcess(const NodePtr& element, EventHandlerId evtname, const std::string& script) = 0;
 		void addEventHandler(const NodePtr& element, EventHandlerId evtname, const std::string& script);
-		virtual void runEventHandler(const NodePtr& element, EventHandlerId evtname) = 0;
+		virtual void runEventHandler(const NodePtr& element, EventHandlerId evtname, const variant& params) = 0;
 	private:
 	};
 }

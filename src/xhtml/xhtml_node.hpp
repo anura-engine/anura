@@ -123,8 +123,8 @@ namespace xhtml
 		virtual void layoutComplete() {}
 
 		bool handleMouseMotion(bool* trigger, const point& p);
-		bool handleMouseButtonUp(bool* trigger, const point& p);
-		bool handleMouseButtonDown(bool* trigger, const point& p);
+		bool handleMouseButtonUp(bool* trigger, const point& p, unsigned button);
+		bool handleMouseButtonDown(bool* trigger, const point& p, unsigned button);
 
 		void clearProperties() { properties_.clear(); }
 		void inheritProperties();
