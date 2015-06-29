@@ -336,12 +336,20 @@ namespace xhtml
 			return;
 		}
 
+		bool force_layout = false;
+		bool force_render = false;
+
 		switch(p) {
 			case Property::BACKGROUND_COLOR:
 				*background_color_ = *sp->asType<CssColor>()->compute();
 				break;
 			case Property::COLOR:
-				*color_ = *sp->asType<CssColor>()->compute();
+				//if(color_ == nullptr) {
+				//	color_ = std::make_shared<KRE::Color>();
+				//}
+				//*color_ = *sp->asType<CssColor>()->compute();
+				color_ = std::make_shared<KRE::Color>(*sp->asType<CssColor>()->compute());
+				force_render = true;
 				break;
 			case Property::BORDER_TOP_COLOR:
 				*border_color_[0] = *sp->asType<CssColor>()->compute();
@@ -503,9 +511,9 @@ namespace xhtml
 		ASSERT_LOG(node != nullptr, "No node associated with this style node.");
 		DocumentPtr doc = node->getOwnerDoc();
 		//ASSERT_LOG(doc != nullptr, "No owner document found.");
-		if(doc!= nullptr && sp->requiresLayout(p)) {
+		if(doc!= nullptr && (sp->requiresLayout(p) || force_layout)) {
 			doc->triggerLayout();
-		} else if(doc!= nullptr && sp->requiresRender(p)) {
+		} else if(doc!= nullptr && (sp->requiresRender(p) || force_render)) {
 			doc->triggerRender();
 		}
 	}

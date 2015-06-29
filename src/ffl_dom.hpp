@@ -52,7 +52,7 @@ namespace xhtml
 	{
 	public:
 		ElementObject(const NodePtr& element);
-		void setHandler(EventHandlerId evtname, const game_logic::FormulaPtr& handler);
+		//void setHandler(EventHandlerId evtname, const game_logic::FormulaPtr& handler);
 		void runHandler(EventHandlerId evtname, game_logic::FormulaCallable* environment, const variant& params);
 		game_logic::MapFormulaCallablePtr createMouseEventCallable(game_logic::FormulaCallable* environment, const variant& params);
 		game_logic::MapFormulaCallablePtr createWheelEventCallable(game_logic::FormulaCallable* environment, const variant& params);
@@ -60,10 +60,12 @@ namespace xhtml
 		static bool isMouseEvent(EventHandlerId evtname);
 		static bool isKeyEvent(EventHandlerId evtname);
 		void surrenderReferences(GarbageCollector* collector);
+		void setScript(EventHandlerId evtname, const variant& script);
+		variant getScript(EventHandlerId evtname) const;
 	private:
 		DECLARE_CALLABLE(ElementObject);
 		NodePtr element_;
-		std::vector<game_logic::FormulaPtr> handlers_;
+		std::vector<variant> handlers_;
 		StyleObjectPtr styles_;
 	};
 	typedef boost::intrusive_ptr<ElementObject> ElementObjectPtr;

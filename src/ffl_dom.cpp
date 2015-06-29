@@ -71,13 +71,13 @@ namespace xhtml
 			{
 				ElementObjectPtr eo = document_object_->getElementByNode(element);
 				ASSERT_LOG(eo != nullptr, "Bad juju. ElementObjectPtr == nullptr");
-				game_logic::FormulaPtr handler = document_object_->getEnvironment()->createFormula(variant(script));
-				eo->setHandler(evtname, handler);
+				eo->setScript(evtname, variant(script));
 			}
 			void runEventHandler(const NodePtr& element, EventHandlerId evtname, const variant& params) override
 			{
 				ElementObjectPtr eo = document_object_->getElementByNode(element);
-				ASSERT_LOG(eo != nullptr, "Bad juju. ElementObjectPtr == nullptr");
+				ASSERT_LOG(eo != nullptr, "Bad juju. ElementObjectPtr == nullptr");				
+
 				if(document_object_->getEnvironment()) {
 					eo->runHandler(evtname, document_object_->getEnvironment(), params);
 				} else {
@@ -85,7 +85,7 @@ namespace xhtml
 				}
 			}
 		private:
-			DocumentObject* document_object_;			
+			DocumentObject* document_object_;		
 		};
 	}
 
@@ -145,15 +145,14 @@ namespace xhtml
 		doc_->processStyles();
 		// whitespace can only be processed after applying styles.
 		doc_->processWhitespace();
-		doc_->processScriptAttributes();
 
 		display_list_ = std::make_shared<DisplayList>(scene_);
 		root_->attachNode(display_list_);		
 
-		/*doc_->preOrderTraversal([](xhtml::NodePtr n) {
-			LOG_DEBUG(n->toString());
-			return true;
-		});*/
+		//doc_->preOrderTraversal([](xhtml::NodePtr n) {
+		//	LOG_DEBUG(n->toString());
+		//	return true;
+		//});
 	}
 	
 	variant DocumentObject::write()
@@ -192,6 +191,7 @@ namespace xhtml
 				profile::manager pman("update style tree");
 				if(style_tree_ == nullptr) {
 					style_tree_ = xhtml::StyleNode::createStyleTree(doc_);
+					doc_->processScriptAttributes();
 				} else {
 					style_tree_->updateStyles();
 				}
@@ -314,32 +314,52 @@ namespace xhtml
 	ElementObject::ElementObject(const NodePtr& element)
 		: element_(element),
 		  handlers_(),
-		  styles_(new StyleObject(element_->getStylePointer()))
+		  styles_(nullptr)
 	{
 		ASSERT_LOG(element_ != nullptr && element_->id() == NodeId::ELEMENT, "Tried to construct an ElementObject, without a valid Node.");
 		handlers_.resize(static_cast<int>(EventHandlerId::MAX_EVENT_HANDLERS));
+
+		auto id_attr = element_->getAttribute("id");
+		ASSERT_LOG(element_->getStylePointer() != nullptr, "Element Style ptr was null: " << element_->toString());
+		styles_.reset(new StyleObject(element_->getStylePointer()));
 	}
 
-	void ElementObject::setHandler(EventHandlerId evtname, const game_logic::FormulaPtr& handler)
+	/*void ElementObject::setHandler(EventHandlerId evtname, const game_logic::FormulaPtr& handler)
 	{
 		int index = static_cast<int>(evtname);
 		ASSERT_LOG(index < static_cast<int>(handlers_.size()), "Handler index exceeds bounds. " << index << " >= " << static_cast<int>(handlers_.size()));
 		handlers_[index] = handler;
+	}*/
+
+	void ElementObject::setScript(EventHandlerId evtname, const variant& script)
+	{
+		int index = static_cast<int>(evtname);
+		ASSERT_LOG(index < static_cast<int>(handlers_.size()), "Handler index exceeds bounds. " << index << " >= " << static_cast<int>(handlers_.size()));
+		handlers_[index] = script;
+	}
+
+	variant ElementObject::getScript(EventHandlerId evtname) const
+	{
+		int index = static_cast<int>(evtname);
+		ASSERT_LOG(index < static_cast<int>(handlers_.size()), "Handler index exceeds bounds. " << index << " >= " << static_cast<int>(handlers_.size()));
+		return handlers_[index];
 	}
 
 	void ElementObject::runHandler(EventHandlerId evtname, game_logic::FormulaCallable* environment, const variant& params)
 	{
 		int index = static_cast<int>(evtname);
 		ASSERT_LOG(index < static_cast<int>(handlers_.size()), "Handler index exceeds bounds. " << index << " >= " << static_cast<int>(handlers_.size()));
-		auto& handler = handlers_[index];
-		if(handler != nullptr) {
-			// XXX add parameters as needed.
+		auto& script = handlers_[index];
+		if(!script.is_null()) {
+			game_logic::FormulaPtr handler = environment->createFormula(script);
+
 			game_logic::MapFormulaCallablePtr callable = nullptr;
 			if(ElementObject::isMouseEvent(evtname)) {
 				callable = createMouseEventCallable(environment, params);
 			} else if(ElementObject::isKeyEvent(evtname)) {
 				callable = createKeyEventCallable(environment, params);
 			}
+			
 			variant value = handler->execute(callable != nullptr ? *callable : *environment);
 			environment->executeCommand(value);
 		}
