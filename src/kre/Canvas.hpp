@@ -141,7 +141,7 @@ namespace KRE
 		WindowPtr getWindow() const;
 		void setWindow(WindowPtr wnd);
 
-		const glm::mat4& getPVMatrix() const { return camera_->getProjectionMat() * camera_->getViewMat(); }
+		const glm::mat4& getPVMatrix() const { return pv_; }
 
 		const CameraPtr& getCamera() const { return camera_; }
 	protected:
@@ -156,8 +156,8 @@ namespace KRE
 		mutable bool model_changed_;
 		std::weak_ptr<Window> window_;
 		int size_change_key_;
-		glm::mat4 pv_;
 		CameraPtr camera_;
+		glm::mat4 pv_;
 	};
 
 	// Helper function to generate a color wheel between the given hue values.
