@@ -440,7 +440,7 @@ namespace gui
 		auto canvas = KRE::Canvas::getInstance();
 		{
 			//commented out until clipping is fixed.
-			//KRE::ClipScope::Manager clip_scope(rect(x() & ~1, y() & ~1, width(), height()));
+			KRE::ClipScope::Manager clip_scope(rect(x() & ~1, y() & ~1, width(), height()), canvas->getCamera());
 
 			if(show_background_) {
 				canvas->drawSolidRect(rect(x(), y(), width(), height()), bg_color_ ? *bg_color_ : KRE::Color(50, 50, 50));

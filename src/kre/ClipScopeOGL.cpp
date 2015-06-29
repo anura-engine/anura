@@ -45,7 +45,7 @@ namespace KRE
 		stencil_scope_.reset();
 	}
 
-	void ClipScopeOGL::apply() const 
+	void ClipScopeOGL::apply(const CameraPtr& cam) const 
 	{
 		stencil_scope_.reset(new StencilScopeOGL(get_stencil_mask_settings()));
 
@@ -59,12 +59,15 @@ namespace KRE
 			area().x(), area().y2(),
 			area().x2(), area().y2(),
 		};
+		
+		CameraPtr clip_cam = cam;
+		if(cam == nullptr) {
+			clip_cam = DisplayDevice::getCurrent()->getDefaultCamera();
+		}
 
-		auto cam = DisplayDevice::getCurrent()->getDefaultCamera();
-
-		glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3((area().x()+area().x2())/2.0f,(area().y()+area().y2())/2.0f,0.0f)) 
-			* glm::translate(glm::mat4(1.0f), glm::vec3(-(area().x()+area().y())/2.0f,-(area().y()+area().y())/2.0f,0.0f));
-		glm::mat4 mvp = cam->getProjectionMat() * cam->getViewMat() * get_global_model_matrix() * model;
+		//glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3((area().x()+area().x2())/2.0f,(area().y()+area().y2())/2.0f,0.0f)) 
+		//	* glm::translate(glm::mat4(1.0f), glm::vec3(-(area().x()+area().y())/2.0f,-(area().y()+area().y())/2.0f,0.0f));
+		glm::mat4 mvp = clip_cam->getProjectionMat() * clip_cam->getViewMat() * get_global_model_matrix() /** model*/;
 		
 		static OpenGL::ShaderProgramPtr shader = OpenGL::ShaderProgram::factory("simple");
 		shader->makeActive();

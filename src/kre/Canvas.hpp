@@ -119,16 +119,16 @@ namespace KRE
 		{
 			CameraScope(CameraPtr cam) 
 				: canvas_(Canvas::getInstance()), 
-				saved_pvmat_(canvas_->pv_)
+				  saved_cam_(canvas_->camera_)
 			{
-				canvas_->pv_ = cam->getProjectionMat() * cam->getViewMat();
+				canvas_->camera_ = cam;
 			}
 			~CameraScope()
 			{
-				canvas_->pv_ = saved_pvmat_;
+				canvas_->camera_ = saved_cam_;
 			}
 			CanvasPtr canvas_;
-			glm::mat4 saved_pvmat_;
+			CameraPtr saved_cam_;
 		};
 
 		const Color getColor() const {
@@ -141,7 +141,9 @@ namespace KRE
 		WindowPtr getWindow() const;
 		void setWindow(WindowPtr wnd);
 
-		const glm::mat4& getPVMatrix() const { return pv_; }
+		const glm::mat4& getPVMatrix() const { return camera_->getProjectionMat() * camera_->getViewMat(); }
+
+		const CameraPtr& getCamera() const { return camera_; }
 	protected:
 		Canvas();
 	private:
@@ -155,6 +157,7 @@ namespace KRE
 		std::weak_ptr<Window> window_;
 		int size_change_key_;
 		glm::mat4 pv_;
+		CameraPtr camera_;
 	};
 
 	// Helper function to generate a color wheel between the given hue values.

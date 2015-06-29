@@ -25,6 +25,7 @@
 
 #include <memory>
 #include "geometry.hpp"
+#include "CameraObject.hpp"
 #include "DisplayDeviceFwd.hpp"
 #include "Util.hpp"
 
@@ -36,13 +37,13 @@ namespace KRE
 		virtual ~ClipScope();
 		static ClipScopePtr create(const rect& r);
 
-		virtual void apply() const = 0;
+		virtual void apply(const CameraPtr& cam) const = 0;
 		virtual void clear() const = 0;
 
 		struct Manager
 		{
-			Manager(const rect& r) : cs(ClipScope::create(r)) {
-				cs->apply();
+			Manager(const rect& r, const CameraPtr& cam=nullptr) : cs(ClipScope::create(r)) {
+				cs->apply(cam);
 			}
 			~Manager() {
 				cs->clear();

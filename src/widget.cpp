@@ -372,7 +372,7 @@ namespace gui
 			}
 
 			if(clip_area_) {
-				auto cs = ClipScope::create(*clip_area_);
+				ClipScope::Manager clip_scope(*clip_area_, Canvas::getInstance()->getCamera());
 				handleDraw();
 			} else {
 				handleDraw();
