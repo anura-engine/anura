@@ -37,6 +37,7 @@ namespace css
 	{
 	public:
 		static void parse(StyleSheetPtr ss, const std::string& str);
+		static StylePtr parseSingleDeclaration(const std::string& str);
 		static PropertyList parseDeclarationList(const std::string& str);
 
 		const StyleSheetPtr& getStyleSheet() const { return style_sheet_; }

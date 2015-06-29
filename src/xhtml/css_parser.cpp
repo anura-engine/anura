@@ -367,6 +367,17 @@ namespace css
 		return DeclarationParser::parseTokens(p.parseBraceBlock());
 	}
 
+	StylePtr Parser::parseSingleDeclaration(const std::string& str)
+	{
+		css::Tokenizer tokens(str);
+		Parser p(nullptr, tokens.getTokens());
+		auto plist = DeclarationParser::parseTokens(p.parseBraceBlock());
+		if(plist.empty()) {
+			return nullptr;
+		}
+		return plist.begin()->second.style;
+	}
+
 	TokenPtr Parser::parseComponentValue()
 	{
 		if(currentTokenType() == TokenId::LBRACE) {

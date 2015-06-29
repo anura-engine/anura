@@ -306,7 +306,7 @@ namespace css
 		// border-image-outset
 		// border-image-stretch
 	}
-
+	
 	PropertyList::PropertyList()
 		: properties_()
 	{
@@ -430,6 +430,16 @@ namespace css
 			}
 			++index;
 		}
+	}
+
+	Property get_property_by_name(const std::string& name)
+	{
+		auto prop_it = get_property_table().find(name);
+		if(prop_it == get_property_table().end()) {
+			LOG_ERROR("Not adding property '" << name << "' since we have no mapping for it.");
+			return Property::MAX_PROPERTIES;
+		}
+		return prop_it->second.value;
 	}
 
 	const std::string& get_property_name(Property p)

@@ -63,6 +63,7 @@ namespace css
 		iterator end() { return properties_.end(); }
 		const_iterator begin() const { return properties_.cbegin(); }
 		const_iterator end() const { return properties_.cend(); }
+		bool empty() const { return properties_.empty(); }
 		void markTransitions();
 	private:
 		std::map<Property, PropertyStyle> properties_;
@@ -193,4 +194,5 @@ namespace css
 
 	const std::string& get_property_name(Property p);
 	const PropertyInfo& get_default_property_info(Property p);
+	Property get_property_by_name(const std::string& name);
 }

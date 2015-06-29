@@ -119,6 +119,9 @@ namespace xhtml
 		css::CssBorderImageRepeat getBorderImageRepeatVert() const { return border_image_repeat_vert_; }
 		css::BackgroundClip getBackgroundClip() const { return background_clip_; }
 
+		// set properties. may trigger re-layout
+		void setPropertyFromString(css::Property p, const std::string& value);
+
 		void updateStyles();
 		void inheritProperties(const StyleNodePtr& new_styles);
 	private:

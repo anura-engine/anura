@@ -21,6 +21,7 @@
 	   distribution.
 */
 
+#include "css_parser.hpp"
 #include "xhtml_render_ctx.hpp"
 #include "xhtml_style_tree.hpp"
 
@@ -114,6 +115,7 @@ namespace xhtml
 			rcm.reset(new RenderContext::Manager(node->getProperties()));
 		}
 		StyleNodePtr style_child = std::make_shared<StyleNode>(node);
+		node->setStylePointer(style_child);
 		if(is_element || is_text) {
 			style_child->processStyles(true);
 		}
@@ -313,6 +315,199 @@ namespace xhtml
 		border_image_repeat_horiz_ = bir->image_repeat_horiz_;
 		border_image_repeat_vert_ = bir->image_repeat_vert_;
 		background_clip_ = ctx.getComputedValue(Property::BACKGROUND_CLIP)->getEnum<BackgroundClip>();
+	}
+
+	void StyleNode::setPropertyFromString(css::Property p, const std::string& value)
+	{
+		StylePtr sp = nullptr;
+		try {
+			css::PropertyParser pp;
+			css::Tokenizer toks(value);
+			pp.parse(get_property_name(p), toks.getTokens().begin(), toks.getTokens().end());
+			auto plist = pp.getPropertyList();
+			if(!plist.empty()) {
+				sp = plist.begin()->second.style;
+			}
+		} catch(css::ParserError& e) {
+			LOG_ERROR("Unable to parse value '" << value << "' to set to property: " << get_property_name(p) << "; " << e.what());
+		}
+		if(sp == nullptr) {
+			LOG_ERROR("Unable to parse value '" << value << "' to set to property: " << get_property_name(p));
+			return;
+		}
+
+		switch(p) {
+			case Property::BACKGROUND_COLOR:
+				*background_color_ = *sp->asType<CssColor>()->compute();
+				break;
+			case Property::COLOR:
+				*color_ = *sp->asType<CssColor>()->compute();
+				break;
+			case Property::BORDER_TOP_COLOR:
+				*border_color_[0] = *sp->asType<CssColor>()->compute();
+				break;
+			case Property::BORDER_LEFT_COLOR:
+				*border_color_[1] = *sp->asType<CssColor>()->compute();
+				break;
+			case Property::BORDER_BOTTOM_COLOR:
+				*border_color_[2] = *sp->asType<CssColor>()->compute();
+				break;
+			case Property::BORDER_RIGHT_COLOR:
+				*border_color_[3] = *sp->asType<CssColor>()->compute();
+				break;
+			case Property::OUTLINE_COLOR:
+				*outline_color_ = *sp->asType<CssColor>()->compute();
+				break;
+			case Property::BACKGROUND_IMAGE:
+				*background_image_ = *sp->asType<ImageSource>();
+				break;
+			case Property::BACKGROUND_ATTACHMENT:
+				background_attachment_ = sp->getEnum<BackgroundAttachment>();
+				break;
+			case Property::BACKGROUND_POSITION: {
+				auto bp = sp->asType<BackgroundPosition>();
+				background_position_[0] = bp->getTop();
+				background_position_[1] = bp->getLeft();
+				break;
+			}
+			case Property::BACKGROUND_REPEAT:
+				background_repeat_ = sp->getEnum<BackgroundRepeat>();
+				break;
+			case Property::BORDER_TOP_STYLE:
+				border_style_[0] = sp->getEnum<BorderStyle>();
+				break;
+			case Property::BORDER_LEFT_STYLE:
+				border_style_[1] = sp->getEnum<BorderStyle>();
+				break;
+			case Property::BORDER_BOTTOM_STYLE:
+				border_style_[2] = sp->getEnum<BorderStyle>();
+				break;
+			case Property::BORDER_RIGHT_STYLE:
+				border_style_[3] = sp->getEnum<BorderStyle>();
+				break;
+			case Property::BORDER_TOP_WIDTH:
+				*border_width_[0] = *sp->asType<Length>();
+				break;
+			case Property::BORDER_LEFT_WIDTH:
+				*border_width_[1] = *sp->asType<Length>();
+				break;
+			case Property::BORDER_BOTTOM_WIDTH:
+				*border_width_[2] = *sp->asType<Length>();
+				break;
+			case Property::BORDER_RIGHT_WIDTH:
+				*border_width_[3] = *sp->asType<Length>();
+				break;
+			case Property::TOP:
+				tlbr_[0] = sp->asType<Width>();
+				break;
+			case Property::LEFT:
+				tlbr_[1] = sp->asType<Width>();
+				break;
+			case Property::BOTTOM:
+				tlbr_[2] = sp->asType<Width>();
+				break;
+			case Property::RIGHT:
+				tlbr_[3] = sp->asType<Width>();
+				break;
+			case Property::CLEAR:
+				clear_ = sp->getEnum<Clear>();
+				break;
+			case Property::CLIP:
+				*clip_ = *sp->asType<Clip>();
+				break;
+			case Property::CONTENT:
+				*content_ = *sp->asType<Content>();
+				break;
+			case Property::WIDTH:
+				*width_height_[0] = *sp->asType<Width>();
+				break;
+			case Property::HEIGHT:
+				*width_height_[1] = *sp->asType<Width>();
+				break;
+			case Property::COUNTER_INCREMENT:
+			case Property::COUNTER_RESET:
+			case Property::CURSOR:
+			case Property::DIRECTION:
+			case Property::DISPLAY:
+			case Property::EMPTY_CELLS:
+			case Property::FLOAT:
+			case Property::FONT_FAMILY:
+			case Property::FONT_SIZE:
+			case Property::FONT_STYLE:
+			case Property::FONT_VARIANT:
+			case Property::FONT_WEIGHT:
+			case Property::LETTER_SPACING:
+			case Property::LINE_HEIGHT:
+			case Property::LIST_STYLE_IMAGE:
+			case Property::LIST_STYLE_POSITION:
+			case Property::LIST_STYLE_TYPE:
+			case Property::MARGIN_TOP:
+			case Property::MARGIN_LEFT:
+			case Property::MARGIN_BOTTOM:
+			case Property::MARGIN_RIGHT:
+			case Property::MAX_HEIGHT:
+			case Property::MAX_WIDTH:
+			case Property::MIN_HEIGHT:
+			case Property::MIN_WIDTH:
+			case Property::OUTLINE_STYLE:
+			case Property::OUTLINE_WIDTH:
+			case Property::CSS_OVERFLOW:
+			case Property::PADDING_TOP:
+			case Property::PADDING_LEFT:
+			case Property::PADDING_RIGHT:
+			case Property::PADDING_BOTTOM:
+			case Property::POSITION:
+			case Property::QUOTES:
+			case Property::TABLE_LAYOUT:
+			case Property::TEXT_ALIGN:
+			case Property::TEXT_DECORATION:
+			case Property::TEXT_INDENT:
+			case Property::TEXT_TRANSFORM:
+			case Property::UNICODE_BIDI:
+			case Property::VERTICAL_ALIGN:
+			case Property::VISIBILITY:
+			case Property::WHITE_SPACE:
+			case Property::WORD_SPACING:
+			case Property::Z_INDEX:
+			case Property::BOX_SHADOW:
+			case Property::TEXT_SHADOW:
+			case Property::TRANSITION_PROPERTY:
+			case Property::TRANSITION_DURATION:
+			case Property::TRANSITION_TIMING_FUNCTION:
+			case Property::TRANSITION_DELAY:
+			case Property::BORDER_TOP_LEFT_RADIUS:
+			case Property::BORDER_TOP_RIGHT_RADIUS:
+			case Property::BORDER_BOTTOM_LEFT_RADIUS:
+			case Property::BORDER_BOTTOM_RIGHT_RADIUS:
+			case Property::BORDER_SPACING:
+			case Property::OPACITY:
+			case Property::BORDER_IMAGE_SOURCE:
+			case Property::BORDER_IMAGE_SLICE:
+			case Property::BORDER_IMAGE_WIDTH:
+			case Property::BORDER_IMAGE_OUTSET:
+			case Property::BORDER_IMAGE_REPEAT:
+			case Property::BACKGROUND_CLIP:
+				LOG_ERROR("implement me");
+				break;
+			case Property::WIDOWS:
+			case Property::ORPHANS:
+			case Property::CAPTION_SIDE:
+			case Property::BORDER_COLLAPSE:
+				break;
+			default: 
+				ASSERT_LOG(false, "Unrecognised property value: " << static_cast<int>(p));
+				break;
+		}
+
+		NodePtr node = node_.lock();
+		ASSERT_LOG(node != nullptr, "No node associated with this style node.");
+		DocumentPtr doc = node->getOwnerDoc();
+		//ASSERT_LOG(doc != nullptr, "No owner document found.");
+		if(doc!= nullptr && sp->requiresLayout(p)) {
+			doc->triggerLayout();
+		} else if(doc!= nullptr && sp->requiresRender(p)) {
+			doc->triggerRender();
+		}
 	}
 
 	void StyleNode::inheritProperties(const StyleNodePtr& new_styles)

@@ -81,7 +81,8 @@ namespace xhtml
 		explicit Node(NodeId id, WeakDocumentPtr owner);
 		virtual ~Node();
 		NodeId id() const { return id_; }
-		void addChild(NodePtr child);
+		void setOwner(const DocumentPtr& owner) { owner_document_ = owner; }
+		void addChild(NodePtr child, const DocumentPtr& owner=nullptr);
 		void removeChild(NodePtr child);
 		void addAttribute(AttributePtr a);
 		// Called after children and attributes have been added.
@@ -90,6 +91,8 @@ namespace xhtml
 		NodePtr getRight() const { return right_.lock(); }
 		NodePtr getParent() const { return parent_.lock(); }
 		void setParent(WeakNodePtr p) { parent_ = p; }
+		void setStylePointer(const StyleNodePtr& style) { style_node_ = style; }
+		StyleNodePtr getStylePointer() const { return style_node_.lock(); }
 		DocumentPtr getOwnerDoc() const { return owner_document_.lock(); }
 		virtual std::string toString() const = 0;
 		const AttributeMap& getAttributes() const { return attributes_; }
@@ -171,6 +174,9 @@ namespace xhtml
 		std::vector<bool> active_handlers_;
 
 		bool mouse_entered_;
+
+		// back reference to the tree node holding computer values for us.
+		WeakStyleNodePtr style_node_;
 	};
 
 	class Document : public Node
@@ -186,8 +192,11 @@ namespace xhtml
 		bool handleMouseButtonUp(bool claimed, int x, int y, unsigned button);
 
 		void triggerLayout() { trigger_layout_ = true; }
+		void triggerRender() { trigger_render_ = true; }
 		bool needsLayout() const { return trigger_layout_; }
-		void layoutComplete() override { trigger_layout_ = false; }
+		bool needsRender() const { return trigger_render_; }
+		void layoutComplete() override { trigger_render_ = false; trigger_layout_ = false; }
+		void renderComplete() { trigger_render_ = false;  }
 
 		// type is expected to be a content type i.e. "text/javascript"
 		static void registerScriptHandler(const std::string& type, std::function<ScriptPtr()> fn);
@@ -196,6 +205,7 @@ namespace xhtml
 		Document(css::StyleSheetPtr ss);
 		css::StyleSheetPtr style_sheet_;
 		bool trigger_layout_;
+		bool trigger_render_;
 	};
 
 	class DocumentFragment : public Node

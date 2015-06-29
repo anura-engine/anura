@@ -37,6 +37,17 @@
 
 namespace xhtml
 {
+	class StyleObject : public game_logic::FormulaCallable
+	{
+	public:
+		StyleObject(const StyleNodePtr& styles);
+		void surrenderReferences(GarbageCollector* collector);
+	private:
+		DECLARE_CALLABLE(StyleObject);
+		StyleNodePtr style_node_;
+	};
+	typedef boost::intrusive_ptr<StyleObject> StyleObjectPtr;
+
 	class ElementObject : public game_logic::FormulaCallable
 	{
 	public:
@@ -48,10 +59,12 @@ namespace xhtml
 		game_logic::MapFormulaCallablePtr createKeyEventCallable(game_logic::FormulaCallable* environment, const variant& params);
 		static bool isMouseEvent(EventHandlerId evtname);
 		static bool isKeyEvent(EventHandlerId evtname);
+		void surrenderReferences(GarbageCollector* collector);
 	private:
 		DECLARE_CALLABLE(ElementObject);
 		NodePtr element_;
 		std::vector<game_logic::FormulaPtr> handlers_;
+		StyleObjectPtr styles_;
 	};
 	typedef boost::intrusive_ptr<ElementObject> ElementObjectPtr;
 

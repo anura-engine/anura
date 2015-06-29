@@ -251,6 +251,7 @@ namespace css
 		StepChangePoint getStepChangePoint() const { return poc_; }
 		const glm::vec2& getP1() const { return p1_; }
 		const glm::vec2& getP2() const { return p2_; }
+		std::string toString() const;
 	private:
 		CssTransitionTimingFunction ttfn_;
 		int nintervals_;
@@ -307,6 +308,12 @@ namespace css
 		void addTransition(float duration, const TimingFunction& ttfn, float delay) { transitions_.emplace_back(duration, ttfn, delay); }
 		bool hasTransition() const { return !transitions_.empty(); }
 		const std::vector<StyleTransition>& getTransitions() const { return transitions_; }
+		// converts the style value back to it's string representation, such that it would be parseable.
+		virtual std::string toString(Property p) const;
+
+		// requiresLayout implies both layout and render. requiresRender means only render.
+		virtual bool requiresLayout(Property p) const;
+		virtual bool requiresRender(Property p) const;
 	private:
 		virtual bool isEqual(const StylePtr& style) const;
 		StyleId id_;
@@ -333,6 +340,9 @@ namespace css
 		bool isNone() const { return param_ == CssColorParam::NONE; }
 		bool isValue() const { return param_ == CssColorParam::VALUE; }
 		KRE::ColorPtr compute() const;
+		std::string toString(Property p) const override;
+		bool requiresLayout(Property p) const override { return false; }
+		bool requiresRender(Property p) const override { return false; }
 	private:
 		bool isEqual(const StylePtr& style) const override;
 		CssColorParam param_;
@@ -367,6 +377,7 @@ namespace css
 		bool operator==(const Length& a) const;
 		xhtml::FixedPoint getValue() const { return value_; }
 		LengthUnits getUnits() const { return units_; }
+		std::string toString(Property p) const override;
 	private:
 		bool isEqual(const StylePtr& style) const override;
 		xhtml::FixedPoint value_;
@@ -422,6 +433,7 @@ namespace css
 		bool operator==(const Width& a) const {
 			return is_auto_ != a.is_auto_ ? false : is_auto_ ? true : width_ == a.width_;
 		}
+		std::string toString(Property p) const override;
 	private:
 		bool is_auto_;
 		Length width_;
@@ -464,6 +476,7 @@ namespace css
 		void setURI(const std::string& uri) { uri_ = uri; is_none_ = false; }
 		bool isEqual(const StylePtr& style) const override;
 		KRE::TexturePtr getTexture(xhtml::FixedPoint width, xhtml::FixedPoint height) override;
+		std::string toString(Property p) const override;
 	private:
 		bool is_none_;
 		std::string uri_;
@@ -486,6 +499,7 @@ namespace css
 		const std::vector<ColorStop>& getColorStops() const { return color_stops_; }
 		bool isEqual(const StylePtr& style) const override;
 		KRE::TexturePtr getTexture(xhtml::FixedPoint width, xhtml::FixedPoint height) override;
+		std::string toString(Property p) const override;
 	private:
 		float angle_;	// in degrees
 		std::vector<ColorStop> color_stops_;
@@ -499,6 +513,7 @@ namespace css
 		explicit FontFamily(const std::vector<std::string>& fonts) : Style(StyleId::FONT_FAMILY), fonts_(fonts) {}
 		bool isEqual(const StylePtr& style) const override;
 		const std::vector<std::string>& getFontList() const { return fonts_; }
+		std::string toString(Property p) const override;
 	private:
 		std::vector<std::string> fonts_;
 	};
@@ -572,6 +587,7 @@ namespace css
 		}
 		xhtml::FixedPoint compute(xhtml::FixedPoint parent_fs, int dpi) const;
 		bool isEqual(const StylePtr& style) const override;
+		std::string toString(Property p) const override;
 	private:
 		bool is_absolute_;
 		FontSizeAbsolute absolute_;
@@ -641,6 +657,7 @@ namespace css
 		void setWeight(int fw) { is_relative_ = false; weight_ = fw; }
 		int compute(int fw) const;
 		bool isEqual(const StylePtr& style) const override;
+		std::string toString(Property p) const override;
 	private:
 		bool is_relative_;
 		int weight_;
@@ -701,6 +718,7 @@ namespace css
 		const Length& getLeft() const { return left_; }
 		const Length& getTop() const { return top_; }
 		bool isEqual(const StylePtr& style) const override;
+		std::string toString(Property p) const override;
 	private:
 		Length left_;
 		Length top_;
@@ -758,6 +776,7 @@ namespace css
 			auto_ = false; 
 		}
 		bool isEqual(const StylePtr& style) const override;
+		std::string toString(Property p) const override;
 	private:
 		bool auto_;
 		xhtml::Rect rect_;
@@ -783,6 +802,7 @@ namespace css
 		explicit ContentType(CssContentType type, const std::string& name);
 		explicit ContentType(ListStyleType lst, const std::string& name);
 		explicit ContentType(ListStyleType lst, const std::string& name, const std::string& sep);
+		std::string toString() const;
 	private:
 		CssContentType type_;
 		std::string str_;
@@ -801,6 +821,7 @@ namespace css
 		explicit Content(const std::vector<ContentType>& content) : Style(StyleId::CONTENT), content_(content) {}
 		void setContent(const std::vector<ContentType>& content) { content_ = content; }
 		bool isEqual(const StylePtr& style) const override;
+		std::string toString(Property p) const override;
 	private:
 		std::vector<ContentType> content_;
 	};
@@ -814,6 +835,7 @@ namespace css
 		explicit Counter(const std::vector<std::pair<std::string,int>>& counters) : Style(StyleId::COUNTERS), counters_(counters) {}
 		const std::vector<std::pair<std::string,int>>& getCounters() const { return counters_; }
 		bool isEqual(const StylePtr& style) const override;
+		std::string toString(Property p) const override;
 	private:
 		std::vector<std::pair<std::string,int>> counters_;
 	};
@@ -848,6 +870,7 @@ namespace css
 		void setURI(const std::vector<ImageSourcePtr>& uris) { uris_ = uris; }
 		void setCursor(CssCursor c) { cursor_ = c; }
 		bool isEqual(const StylePtr& style) const override;
+		std::string toString(Property p) const override;
 	private:
 		std::vector<std::shared_ptr<ImageSource>> uris_;
 		CssCursor cursor_;
@@ -878,6 +901,8 @@ namespace css
 			return quotes_.back();
 		};
 		bool isEqual(const StylePtr& style) const override;
+		std::string toString(Property p) const override;
+		bool requiresLayout(Property p) const override { return false; }
 	private:
 		std::vector<quote_pair> quotes_;
 	};
@@ -921,6 +946,8 @@ namespace css
 		const Length& getLength() const { return len_; }
 		CssVerticalAlign getAlign() const { return va_; }
 		bool isEqual(const StylePtr& style) const override;
+		std::string toString(Property p) const override;
+		bool requiresLayout(Property p) const override { return false; }
 	private:
 		CssVerticalAlign va_;
 		Length len_;
@@ -942,6 +969,7 @@ namespace css
 		bool isAuto() const { return auto_; }
 		int getIndex() const { return index_; }
 		bool isEqual(const StylePtr& style) const override;
+		std::string toString(Property p) const override;
 	private:
 		bool auto_;
 		int index_;
@@ -976,6 +1004,7 @@ namespace css
 		void setShadows(const std::vector<BoxShadow>& shadows) { shadows_ = shadows; }
 		const std::vector<BoxShadow>& getShadows() const { return shadows_; }
 		bool isEqual(const StylePtr& style) const override;
+		std::string toString(Property p) const override;
 	private:
 		std::vector<BoxShadow> shadows_;
 	};
@@ -995,6 +1024,7 @@ namespace css
 		CssBorderImageRepeat image_repeat_horiz_;
 		CssBorderImageRepeat image_repeat_vert_;
 		bool isEqual(const StylePtr& style) const override;
+		std::string toString(Property p) const override;
 	};
 
 	class WidthList : public Style
@@ -1011,6 +1041,7 @@ namespace css
 		const Width& getBottom() const { return widths_[2]; }
 		const Width& getRight() const { return widths_[3]; }
 		bool isEqual(const StylePtr& style) const override;
+		std::string toString(Property p) const override;
 	private:
 		std::array<Width,4> widths_;
 	};
@@ -1025,6 +1056,7 @@ namespace css
 		void setWidths(const std::vector<Width>& widths);
 		const std::array<Width,4>& getWidths() const { return slices_; }
 		bool isEqual(const StylePtr& style) const override;
+		std::string toString(Property p) const override;
 	private:
 		std::array<Width,4> slices_;
 		bool fill_;
@@ -1039,6 +1071,7 @@ namespace css
 		const Length& getHoriz() const { return horiz_; }
 		const Length& getVert() const { return vert_; }
 		bool isEqual(const StylePtr& style) const override;
+		std::string toString(Property p) const override;
 	private:
 		Length horiz_;
 		Length vert_;
@@ -1058,6 +1091,7 @@ namespace css
 		explicit TransitionProperties(const std::vector<Property>& p) : Style(StyleId::TRANSITION_PROPERTIES), properties_(p) {}
 		const std::vector<Property>& getProperties() { return properties_; }
 		bool isEqual(const StylePtr& style) const override;
+		std::string toString(Property p) const override;
 	private:
 		std::vector<Property> properties_;
 	};
@@ -1071,6 +1105,7 @@ namespace css
 		explicit TransitionTiming(const std::vector<float>& timings) : Style(StyleId::TRANSITION_TIMING), timings_(timings) {}
 		const std::vector<float>& getTiming() const { return timings_; }
 		bool isEqual(const StylePtr& style) const override;
+		std::string toString(Property p) const override;
 	private:
 		std::vector<float> timings_;
 	};
@@ -1083,6 +1118,7 @@ namespace css
 		explicit TransitionTimingFunctions(const std::vector<TimingFunction>& ttfns) : Style(StyleId::TRANSITION_TIMING_FUNCTION), ttfns_(ttfns) {}
 		const std::vector<TimingFunction>& getTimingFunctions() { return ttfns_; }
 		bool isEqual(const StylePtr& style) const override;
+		std::string toString(Property p) const override;
 	private:
 		std::vector<TimingFunction> ttfns_;
 	};
@@ -1112,6 +1148,7 @@ namespace css
 		TextShadowStyle() : Style(StyleId::TEXT_SHADOW), shadows_() {}
 		explicit TextShadowStyle(const std::vector<TextShadow>& shadows) : Style(StyleId::TEXT_SHADOW), shadows_(shadows) {}
 		const std::vector<TextShadow>& getShadows() const { return shadows_; }
+		std::string toString(Property p) const override;
 	private:
 		std::vector<TextShadow> shadows_;
 	};

@@ -133,7 +133,7 @@ namespace xhtml
 		return active_handlers_[index];
 	}
 
-	void Node::addChild(NodePtr child)
+	void Node::addChild(NodePtr child, const DocumentPtr& owner)
 	{		
 		if(child->id() == NodeId::DOCUMENT_FRAGMENT) {
 			// we add the children of a document fragment rather than the node itself.
@@ -141,6 +141,7 @@ namespace xhtml
 				children_ = child->children_;
 				for(auto& c : children_) {
 					c->setParent(shared_from_this());
+					c->setOwner(owner);
 				}
 			} else {
 				if(!child->children_.empty()) {
@@ -148,6 +149,7 @@ namespace xhtml
 					child->children_.front()->left_ = children_.back();
 					for(auto& c : child->children_) {
 						c->setParent(shared_from_this());
+						c->setOwner(owner);
 					}
 					children_.insert(children_.end(), child->children_.begin(), child->children_.end());
 				}
@@ -160,6 +162,7 @@ namespace xhtml
 			}
 			children_.emplace_back(child);
 			child->setParent(shared_from_this());
+			child->setOwner(owner);
 		}
 	}
 

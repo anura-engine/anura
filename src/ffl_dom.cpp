@@ -141,7 +141,7 @@ namespace xhtml
 
 		auto doc_frag = xhtml::parse_from_file(doc_name_);
 		doc_ = Document::create(user_agent_style_sheet);
-		doc_->addChild(doc_frag);
+		doc_->addChild(doc_frag, doc_);
 		doc_->processStyles();
 		// whitespace can only be processed after applying styles.
 		doc_->processWhitespace();
@@ -175,6 +175,7 @@ namespace xhtml
 	
 	void DocumentObject::process()
 	{
+		static xhtml::RootBoxPtr layout = nullptr;
 		if(doc_->needsLayout()) {
 			LOG_DEBUG("Triggered layout!");
 
@@ -196,7 +197,6 @@ namespace xhtml
 				}
 			}
 
-			xhtml::RootBoxPtr layout = nullptr;
 			{
 			profile::manager pman("layout");
 			layout = xhtml::Box::createLayout(style_tree_, layout_size_.w(), layout_size_.h());
@@ -206,7 +206,13 @@ namespace xhtml
 			profile::manager pman_render("render");
 			layout->render(display_list_, point());
 			}
+		} else if(doc_->needsRender() && layout != nullptr) {
+			profile::manager pman_render("render");
+			layout->render(display_list_, point());
+			// XXX shoud internalise this
+			doc_->renderComplete();
 		}
+
 
 		float delta_time = 0.0f;
 		if(last_process_time_ == -1) {
@@ -307,7 +313,8 @@ namespace xhtml
 	// ElementObject
 	ElementObject::ElementObject(const NodePtr& element)
 		: element_(element),
-		  handlers_()
+		  handlers_(),
+		  styles_(new StyleObject(element_->getStylePointer()))
 	{
 		ASSERT_LOG(element_ != nullptr && element_->id() == NodeId::ELEMENT, "Tried to construct an ElementObject, without a valid Node.");
 		handlers_.resize(static_cast<int>(EventHandlerId::MAX_EVENT_HANDLERS));
@@ -443,10 +450,59 @@ namespace xhtml
 		return callable;
 	}
 
+	void ElementObject::surrenderReferences(GarbageCollector* collector)
+	{
+		collector->surrenderPtr(&styles_, "XHTML::STYLE_OBJECT");
+	}
+
 	BEGIN_DEFINE_CALLABLE_NOBASE(ElementObject)
 		
-		DEFINE_FIELD(dummy, "null")
-			return variant();
+		DEFINE_FIELD(style, "builtin style_object|null")
+			if(obj.styles_ == nullptr) {
+				return variant();
+			}
+			return variant(obj.styles_.get());
 
 	END_DEFINE_CALLABLE(ElementObject)
+
+	StyleObject::StyleObject(const StyleNodePtr& styles)
+		: style_node_(styles)
+	{
+	}
+
+	void StyleObject::surrenderReferences(GarbageCollector* collector)
+	{
+	}
+
+	BEGIN_DEFINE_CALLABLE_NOBASE(StyleObject)
+
+		DEFINE_FIELD(color, "string")
+			std::stringstream ss; 
+			ss << *obj.style_node_->getColor();
+			return variant(ss.str());
+		DEFINE_SET_FIELD
+			obj.style_node_->setPropertyFromString(css::Property::COLOR, value.as_string());
+
+		DEFINE_FIELD(backgroundColor, "string")
+			std::stringstream ss; 
+			ss << *obj.style_node_->getBackgroundColor();
+			return variant(ss.str());
+		DEFINE_SET_FIELD
+			obj.style_node_->setPropertyFromString(css::Property::BACKGROUND_COLOR, value.as_string());
+
+		DEFINE_FIELD(width, "string")
+			std::stringstream ss; 
+			ss << obj.style_node_->getWidth()->toString(css::Property::WIDTH);
+			return variant(ss.str());
+		DEFINE_SET_FIELD
+			obj.style_node_->setPropertyFromString(css::Property::WIDTH, value.as_string());
+
+		DEFINE_FIELD(height, "string")
+			std::stringstream ss; 
+			ss << obj.style_node_->getHeight()->toString(css::Property::HEIGHT);
+			return variant(ss.str());
+		DEFINE_SET_FIELD
+			obj.style_node_->setPropertyFromString(css::Property::HEIGHT, value.as_string());
+
+	END_DEFINE_CALLABLE(StyleObject)
 }
