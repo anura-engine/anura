@@ -119,6 +119,31 @@ namespace xhtml
 		css::CssBorderImageRepeat getBorderImageRepeatVert() const { return border_image_repeat_vert_; }
 		css::BackgroundClip getBackgroundClip() const { return background_clip_; }
 
+		const css::StylePtr& getBackgroundAttachmentStyle() const { return background_attachment_style_; }
+		const css::StylePtr& getBackgroundRepeatStyle() const { return background_repeat_style_; }
+		const css::StylePtr& getBorderTopStyle() const { return border_style_style_[0]; }
+		const css::StylePtr& getBorderBottomStyle() const { return border_style_style_[2]; }
+		const css::StylePtr& getBorderLeftStyle() const { return border_style_style_[1]; }
+		const css::StylePtr& getBorderRightStyle() const { return border_style_style_[3]; }
+		const css::StylePtr& getClearStyle() const { return clear_style_; }
+		const css::StylePtr& getDirectionStyle() const { return direction_style_; }
+		const css::StylePtr& getFloatStyle() const { return float_style_; }
+		const css::StylePtr& getListStylePositionStyle() const { return list_style_position_style_; }
+		const css::StylePtr& getListStyleTypeStyle() const { return list_style_type_style_; }
+		const css::StylePtr& getOutlineStyleStyle() const { return outline_style_style_; }
+		const css::StylePtr& getOverflowStyle() const { return overflow_style_; }
+		const css::StylePtr& getTextAlignStyle() const { return text_align_style_; }
+		const css::StylePtr& getTextDecorationStyle() const { return text_decoration_style_; }
+		const css::StylePtr& getTextTransformStyle() const { return text_transform_style_; }
+		const css::StylePtr& getUnicodeBidiStyle() const { return unicode_bidi_style_; }
+		const css::StylePtr& getVisibilityStyle() const { return visibility_style_; }
+		const css::StylePtr& getWhitespaceStyle() const { return white_space_style_; }
+		const css::StylePtr& getBorderImageSliceStyle() const { return border_image_slice_style_; }
+		const css::StylePtr& getBorderImageRepeatStyle() const { return border_image_repeat_style_; }
+		const css::StylePtr& getBackgroundClipStyle() const { return background_clip_style_; }
+		const css::StylePtr& getDisplayStyle() const { return display_style_; }
+		const css::StylePtr& getPositionStyle() const { return position_style_; }
+
 		// set properties. may trigger re-layout
 		void setPropertyFromString(css::Property p, const std::string& value);
 
@@ -133,24 +158,29 @@ namespace xhtml
 		float acc_;
 
 		//BACKGROUND_ATTACHMENT
+		css::StylePtr background_attachment_style_;
 		css::BackgroundAttachment background_attachment_;
 		//BACKGROUND_COLOR
 		KRE::ColorPtr background_color_;
 		//BACKGROUND_IMAGE
 		std::shared_ptr<css::ImageSource> background_image_;
 		//BACKGROUND_POSITION -- stored as top/left
+		css::StylePtr background_position_style_;
 		std::array<css::Length, 2> background_position_;
 		//BACKGROUND_REPEAT
+		css::StylePtr background_repeat_style_;
 		css::BackgroundRepeat background_repeat_;
 		//BORDER_TOP_COLOR / BORDER_LEFT_COLOR / BORDER_BOTTOM_COLOR / BORDER_RIGHT_COLOR
 		std::array<KRE::ColorPtr, 4> border_color_;
 		//BORDER_TOP_STYLE / BORDER_LEFT_STYLE / BORDER_BOTTOM_STYLE / BORDER_RIGHT_STYLE
+		std::array<css::StylePtr, 4> border_style_style_;
 		std::array<css::BorderStyle, 4> border_style_;
 		//BORDER_TOP_WIDTH / BORDER_LEFT_WIDTH / BORDER_BOTTOM_WIDTH / BORDER_RIGHT_WIDTH
 		std::array<std::shared_ptr<css::Length>, 4> border_width_;
 		//TOP / LEFT / BOTTOM / RIGHT
 		std::array<std::shared_ptr<css::Width>, 4> tlbr_;
 		//CLEAR
+		css::StylePtr clear_style_;
 		css::Clear clear_;
 		//CLIP
 		std::shared_ptr<css::Clip> clip_;
@@ -165,10 +195,13 @@ namespace xhtml
 		//CURSOR
 		std::shared_ptr<css::Cursor> cursor_;
 		//DIRECTION
+		css::StylePtr direction_style_;
 		css::Direction direction_;
 		//DISPLAY
+		css::StylePtr display_style_;
 		css::Display display_;
 		//FLOAT
+		css::StylePtr float_style_;
 		css::Float float_;
 		//FONT_FAMILY / FONT_SIZE / FONT_STYLE / FONT_VARIANT / FONT_WEIGHT
 		KRE::FontHandlePtr font_handle_;
@@ -181,8 +214,10 @@ namespace xhtml
 		//LIST_STYLE_IMAGE
 		std::shared_ptr<css::ImageSource> list_style_image_;
 		//LIST_STYLE_POSITION
+		css::StylePtr list_style_position_style_;
 		css::ListStylePosition list_style_position_;
 		//LIST_STYLE_TYPE
+		css::StylePtr list_style_type_style_;
 		css::ListStyleType list_style_type_;
 		//MARGIN_TOP / MARGIN_LEFT / MARGIN_BOTTOM / MARGIN_RIGHT
 		std::array<std::shared_ptr<css::Width>, 4> margin_;
@@ -193,32 +228,41 @@ namespace xhtml
 		//OUTLINE_COLOR
 		KRE::ColorPtr outline_color_;
 		//OUTLINE_STYLE
+		css::StylePtr outline_style_style_;
 		css::BorderStyle outline_style_;
 		//OUTLINE_WIDTH
 		std::shared_ptr<css::Length> outline_width_;
 		//CSS_OVERFLOW
+		css::StylePtr overflow_style_;
 		css::Overflow overflow_;
 		//PADDING_TOP/PADDING_LEFT/PADDING_RIGHT/PADDING_BOTTOM
 		std::array<std::shared_ptr<css::Length>, 4> padding_;
 		//POSITION
+		css::StylePtr position_style_;
 		css::Position position_;
 		//QUOTES
 		std::shared_ptr<css::Quotes> quotes_;
 		//TEXT_ALIGN
+		css::StylePtr text_align_style_;
 		css::TextAlign text_align_;
 		//TEXT_DECORATION
+		css::StylePtr text_decoration_style_;
 		css::TextDecoration text_decoration_;
 		//TEXT_INDENT
 		std::shared_ptr<css::Width> text_indent_;
 		//TEXT_TRANSFORM
+		css::StylePtr text_transform_style_;
 		css::TextTransform text_transform_;
 		//UNICODE_BIDI
+		css::StylePtr unicode_bidi_style_;
 		css::UnicodeBidi unicode_bidi_;
 		//VERTICAL_ALIGN
 		std::shared_ptr<css::VerticalAlign> vertical_align_;
 		//VISIBILITY
+		css::StylePtr visibility_style_;
 		css::Visibility visibility_;
 		//WHITE_SPACE
+		css::StylePtr white_space_style_;
 		css::Whitespace white_space_;
 		//WORD_SPACING
 		std::shared_ptr<css::Length> word_spacing_;
@@ -248,10 +292,12 @@ namespace xhtml
 		//BORDER_TOP_LEFT_RADIUS / BORDER_TOP_RIGHT_RADIUS / BORDER_BOTTOM_RIGHT_RADIUS / BORDER_BOTTOM_LEFT_RADIUS
 		std::array<std::shared_ptr<css::BorderRadius>, 4> border_radius_;
 		//OPACITY
+		css::StylePtr opacity_style_;
 		float opacity_;
 		//BORDER_IMAGE_SOURCE
 		std::shared_ptr<css::ImageSource> border_image_;
 		//BORDER_IMAGE_SLICE
+		css::StylePtr border_image_slice_style_;
 		bool border_image_fill_;
 		std::array<css::Width, 4> border_image_slice_;
 		//BORDER_IMAGE_WIDTH
@@ -259,9 +305,11 @@ namespace xhtml
 		//BORDER_IMAGE_OUTSET
 		std::array<css::Width, 4> border_image_outset_;
 		//BORDER_IMAGE_REPEAT
+		css::StylePtr border_image_repeat_style_;
 		css::CssBorderImageRepeat border_image_repeat_horiz_;
 		css::CssBorderImageRepeat border_image_repeat_vert_;
 		//BACKGROUND_CLIP
+		css::StylePtr background_clip_style_;
 		css::BackgroundClip background_clip_;
 	};
 }

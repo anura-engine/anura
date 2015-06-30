@@ -211,24 +211,32 @@ namespace xhtml
 	void StyleNode::processStyles(bool created)
 	{
 		RenderContext& ctx = RenderContext::get();
-		background_attachment_ = ctx.getComputedValue(Property::BACKGROUND_ATTACHMENT)->getEnum<BackgroundAttachment>();
+
+		background_attachment_style_ = ctx.getComputedValue(Property::BACKGROUND_ATTACHMENT);
+		background_attachment_ = background_attachment_style_->getEnum<BackgroundAttachment>();
 		
 		processColor(created, Property::BACKGROUND_COLOR, background_color_);
 		
 		auto back_img = ctx.getComputedValue(Property::BACKGROUND_IMAGE);
 		background_image_ = back_img != nullptr ? back_img->asType<ImageSource>() : nullptr;
-		auto bp = ctx.getComputedValue(Property::BACKGROUND_POSITION)->asType<BackgroundPosition>();
+		background_position_style_ = ctx.getComputedValue(Property::BACKGROUND_POSITION);
+		auto bp = background_position_style_->asType<BackgroundPosition>();
 		background_position_[0] = bp->getTop();
 		background_position_[1] = bp->getLeft();
-		background_repeat_ = ctx.getComputedValue(Property::BACKGROUND_REPEAT)->getEnum<BackgroundRepeat>();
+		background_repeat_style_ = ctx.getComputedValue(Property::BACKGROUND_REPEAT);
+		background_repeat_ = background_repeat_style_->getEnum<BackgroundRepeat>();
 		processColor(created, Property::BORDER_TOP_COLOR, border_color_[0]);
 		processColor(created, Property::BORDER_LEFT_COLOR, border_color_[1]);
 		processColor(created, Property::BORDER_BOTTOM_COLOR, border_color_[2]);
 		processColor(created, Property::BORDER_RIGHT_COLOR, border_color_[3]);
-		border_style_[0] = ctx.getComputedValue(Property::BORDER_TOP_STYLE)->getEnum<BorderStyle>();
-		border_style_[1] = ctx.getComputedValue(Property::BORDER_LEFT_STYLE)->getEnum<BorderStyle>();
-		border_style_[2] = ctx.getComputedValue(Property::BORDER_BOTTOM_STYLE)->getEnum<BorderStyle>();
-		border_style_[3] = ctx.getComputedValue(Property::BORDER_RIGHT_STYLE)->getEnum<BorderStyle>();
+		border_style_style_[0] = ctx.getComputedValue(Property::BORDER_TOP_STYLE);
+		border_style_[0] = border_style_style_[0]->getEnum<BorderStyle>();
+		border_style_style_[1] = ctx.getComputedValue(Property::BORDER_TOP_STYLE);
+		border_style_[1] = border_style_style_[1]->getEnum<BorderStyle>();
+		border_style_style_[2] = ctx.getComputedValue(Property::BORDER_TOP_STYLE);
+		border_style_[2] = border_style_style_[2]->getEnum<BorderStyle>();
+		border_style_style_[3] = ctx.getComputedValue(Property::BORDER_TOP_STYLE);
+		border_style_[3] = border_style_style_[3]->getEnum<BorderStyle>();
 		border_width_[0] = ctx.getComputedValue(Property::BORDER_TOP_WIDTH)->asType<Length>();
 		border_width_[1] = ctx.getComputedValue(Property::BORDER_LEFT_WIDTH)->asType<Length>();
 		border_width_[2] = ctx.getComputedValue(Property::BORDER_BOTTOM_WIDTH)->asType<Length>();
@@ -237,7 +245,8 @@ namespace xhtml
 		tlbr_[1] = ctx.getComputedValue(Property::LEFT)->asType<Width>();
 		tlbr_[2] = ctx.getComputedValue(Property::BOTTOM)->asType<Width>();
 		tlbr_[3] = ctx.getComputedValue(Property::RIGHT)->asType<Width>();
-		clear_ = ctx.getComputedValue(Property::CLEAR)->getEnum<Clear>();
+		clear_style_ = ctx.getComputedValue(Property::CLEAR);
+		clear_ = clear_style_->getEnum<Clear>();
 		clip_ = ctx.getComputedValue(Property::CLIP)->asType<Clip>();
 
 		processColor(created, Property::COLOR, color_);
@@ -246,9 +255,12 @@ namespace xhtml
 		counter_increment_ = ctx.getComputedValue(Property::COUNTER_INCREMENT)->asType<Counter>();
 		counter_reset_ = ctx.getComputedValue(Property::COUNTER_RESET)->asType<Counter>();
 		cursor_ = ctx.getComputedValue(Property::CURSOR)->asType<Cursor>();
-		direction_ = ctx.getComputedValue(Property::DIRECTION)->getEnum<Direction>();
-		display_ = ctx.getComputedValue(Property::DISPLAY)->getEnum<Display>();
-		float_ = ctx.getComputedValue(Property::FLOAT)->getEnum<Float>();
+		direction_style_ = ctx.getComputedValue(Property::DIRECTION);
+		direction_ = direction_style_->getEnum<Direction>();
+		display_style_ = ctx.getComputedValue(Property::DISPLAY);
+		display_ = display_style_->getEnum<Display>();
+		float_style_ = ctx.getComputedValue(Property::FLOAT);
+		float_ = float_style_->getEnum<Float>();
 		font_handle_ = RenderContext::get().getFontHandle();
 		width_height_[0] = ctx.getComputedValue(Property::WIDTH)->asType<Width>();
 		width_height_[1] = ctx.getComputedValue(Property::HEIGHT)->asType<Width>();
@@ -256,8 +268,10 @@ namespace xhtml
 		line_height_ = ctx.getComputedValue(Property::LINE_HEIGHT)->asType<Length>();
 		auto list_img = ctx.getComputedValue(Property::LIST_STYLE_IMAGE);
 		list_style_image_ = list_img != nullptr ? list_img->asType<ImageSource>() : nullptr;
-		list_style_position_ = ctx.getComputedValue(Property::LIST_STYLE_POSITION)->getEnum<ListStylePosition>();
-		list_style_type_ = ctx.getComputedValue(Property::LIST_STYLE_TYPE)->getEnum<ListStyleType>();
+		list_style_position_style_ = ctx.getComputedValue(Property::LIST_STYLE_POSITION);
+		list_style_position_ = list_style_position_style_->getEnum<ListStylePosition>();
+		list_style_type_style_ = ctx.getComputedValue(Property::LIST_STYLE_TYPE);
+		list_style_type_ = list_style_type_style_->getEnum<ListStyleType>();
 		margin_[0] = ctx.getComputedValue(Property::MARGIN_TOP)->asType<Width>();
 		margin_[1] = ctx.getComputedValue(Property::MARGIN_LEFT)->asType<Width>();
 		margin_[2] = ctx.getComputedValue(Property::MARGIN_BOTTOM)->asType<Width>();
@@ -269,22 +283,31 @@ namespace xhtml
 		
 		processColor(created, Property::OUTLINE_COLOR, outline_color_);
 		
-		outline_style_ = ctx.getComputedValue(Property::OUTLINE_STYLE)->getEnum<BorderStyle>();
+		outline_style_style_ = ctx.getComputedValue(Property::OUTLINE_STYLE);
+		outline_style_ = outline_style_style_->getEnum<BorderStyle>();
 		outline_width_ = ctx.getComputedValue(Property::OUTLINE_WIDTH)->asType<Length>();
-		overflow_ = ctx.getComputedValue(Property::CSS_OVERFLOW)->getEnum<Overflow>();
+		overflow_style_ = ctx.getComputedValue(Property::CSS_OVERFLOW);
+		overflow_ = overflow_style_->getEnum<Overflow>();
 		padding_[0] = ctx.getComputedValue(Property::PADDING_TOP)->asType<Length>();
 		padding_[1] = ctx.getComputedValue(Property::PADDING_LEFT)->asType<Length>();
 		padding_[2] = ctx.getComputedValue(Property::PADDING_BOTTOM)->asType<Length>();
 		padding_[3] = ctx.getComputedValue(Property::PADDING_RIGHT)->asType<Length>();
-		position_ = ctx.getComputedValue(Property::POSITION)->getEnum<Position>();
+		position_style_ = ctx.getComputedValue(Property::POSITION);
+		position_ = position_style_->getEnum<Position>();
 		quotes_ = ctx.getComputedValue(Property::QUOTES)->asType<Quotes>();
-		text_align_ = ctx.getComputedValue(Property::TEXT_ALIGN)->getEnum<TextAlign>();
-		text_decoration_ = ctx.getComputedValue(Property::TEXT_DECORATION)->getEnum<TextDecoration>();
+		text_align_style_ = ctx.getComputedValue(Property::TEXT_ALIGN);
+		text_align_ = text_align_style_->getEnum<TextAlign>();
+		text_decoration_style_ = ctx.getComputedValue(Property::TEXT_DECORATION);
+		text_decoration_ = text_decoration_style_->getEnum<TextDecoration>();
 		text_indent_ = ctx.getComputedValue(Property::TEXT_INDENT)->asType<Width>();
-		text_transform_ = ctx.getComputedValue(Property::TEXT_TRANSFORM)->getEnum<TextTransform>();
-		unicode_bidi_ = ctx.getComputedValue(Property::UNICODE_BIDI)->getEnum<UnicodeBidi>();
-		visibility_ = ctx.getComputedValue(Property::VISIBILITY)->getEnum<Visibility>();
-		white_space_ = ctx.getComputedValue(Property::WHITE_SPACE)->getEnum<Whitespace>();
+		text_transform_style_ = ctx.getComputedValue(Property::TEXT_TRANSFORM);
+		text_transform_ = text_transform_style_->getEnum<TextTransform>();
+		unicode_bidi_style_ = ctx.getComputedValue(Property::UNICODE_BIDI);
+		unicode_bidi_ = unicode_bidi_style_->getEnum<UnicodeBidi>();
+		visibility_style_ = ctx.getComputedValue(Property::VISIBILITY);
+		visibility_ = visibility_style_->getEnum<Visibility>();
+		white_space_style_ = ctx.getComputedValue(Property::WHITE_SPACE);
+		white_space_ = white_space_style_->getEnum<Whitespace>();
 		vertical_align_ = ctx.getComputedValue(Property::VERTICAL_ALIGN)->asType<VerticalAlign>();
 		word_spacing_ = ctx.getComputedValue(Property::WORD_SPACING)->asType<Length>();
 		zindex_ = ctx.getComputedValue(Property::Z_INDEX)->asType<Zindex>();
@@ -303,18 +326,22 @@ namespace xhtml
 		border_radius_[1] = ctx.getComputedValue(Property::BORDER_TOP_RIGHT_RADIUS)->asType<BorderRadius>();
 		border_radius_[2] = ctx.getComputedValue(Property::BORDER_BOTTOM_RIGHT_RADIUS)->asType<BorderRadius>();
 		border_radius_[3] = ctx.getComputedValue(Property::BORDER_BOTTOM_LEFT_RADIUS)->asType<BorderRadius>();
-		opacity_ = ctx.getComputedValue(Property::OPACITY)->asType<Length>()->compute() / 65536.0f;
+		opacity_style_ = ctx.getComputedValue(Property::OPACITY);
+		opacity_ = opacity_style_->asType<Length>()->compute() / 65536.0f;
 		auto bord_img = ctx.getComputedValue(Property::BORDER_IMAGE_SOURCE);
 		border_image_ = bord_img != nullptr ? bord_img->asType<ImageSource>() : nullptr;
-		auto bis = ctx.getComputedValue(Property::BORDER_IMAGE_SLICE)->asType<BorderImageSlice>();
+		border_image_slice_style_ = ctx.getComputedValue(Property::BORDER_IMAGE_SLICE);
+		auto bis = border_image_slice_style_->asType<BorderImageSlice>();
 		border_image_fill_ = bis->isFilled();
 		border_image_slice_ = bis->getWidths();
 		border_image_width_ = ctx.getComputedValue(Property::BORDER_IMAGE_WIDTH)->asType<WidthList>()->getWidths();
 		border_image_outset_ = ctx.getComputedValue(Property::BORDER_IMAGE_OUTSET)->asType<WidthList>()->getWidths();
-		auto bir = ctx.getComputedValue(Property::BORDER_IMAGE_REPEAT)->asType<BorderImageRepeat>();
+		border_image_repeat_style_ = ctx.getComputedValue(Property::BORDER_IMAGE_REPEAT);
+		auto bir = border_image_repeat_style_->asType<BorderImageRepeat>();
 		border_image_repeat_horiz_ = bir->image_repeat_horiz_;
 		border_image_repeat_vert_ = bir->image_repeat_vert_;
-		background_clip_ = ctx.getComputedValue(Property::BACKGROUND_CLIP)->getEnum<BackgroundClip>();
+		background_clip_style_ = ctx.getComputedValue(Property::BACKGROUND_CLIP);
+		background_clip_ = background_clip_style_->getEnum<BackgroundClip>();
 	}
 
 	void StyleNode::setPropertyFromString(css::Property p, const std::string& value)
@@ -349,6 +376,7 @@ namespace xhtml
 				//}
 				//*color_ = *sp->asType<CssColor>()->compute();
 				color_ = std::make_shared<KRE::Color>(*sp->asType<CssColor>()->compute());
+				//LOG_INFO("style: color ptr: " << color_.get() << ", StyleNode: " << this);
 				force_render = true;
 				break;
 			case Property::BORDER_TOP_COLOR:
@@ -379,7 +407,9 @@ namespace xhtml
 				break;
 			}
 			case Property::BACKGROUND_REPEAT:
-				background_repeat_ = sp->getEnum<BackgroundRepeat>();
+				*background_repeat_style_ = *sp;
+				background_repeat_ = background_repeat_style_->getEnum<BackgroundRepeat>();
+				force_render = true;
 				break;
 			case Property::BORDER_TOP_STYLE:
 				border_style_[0] = sp->getEnum<BorderStyle>();
@@ -392,6 +422,9 @@ namespace xhtml
 				break;
 			case Property::BORDER_RIGHT_STYLE:
 				border_style_[3] = sp->getEnum<BorderStyle>();
+				break;
+			case Property::OUTLINE_STYLE:
+				outline_style_ = sp->getEnum<BorderStyle>();
 				break;
 			case Property::BORDER_TOP_WIDTH:
 				*border_width_[0] = *sp->asType<Length>();
@@ -432,20 +465,36 @@ namespace xhtml
 			case Property::HEIGHT:
 				*width_height_[1] = *sp->asType<Width>();
 				break;
+			case Property::DISPLAY:
+				display_ = sp->getEnum<Display>();
+				break;
+			case Property::POSITION:
+				position_ = sp->getEnum<Position>();
+				break;
+			case Property::DIRECTION:
+				direction_ = sp->getEnum<Direction>();
+				break;
+			case Property::FLOAT:
+				float_ = sp->getEnum<Float>();
+				break;
+			case Property::CSS_OVERFLOW:
+				overflow_ = sp->getEnum<Overflow>();
+				break;
+			case Property::LINE_HEIGHT:
+				*line_height_ = *sp->asType<Length>();
+				break;
+			case Property::BACKGROUND_CLIP:
+				background_clip_ = sp->getEnum<BackgroundClip>();
+				break;
 			case Property::COUNTER_INCREMENT:
 			case Property::COUNTER_RESET:
 			case Property::CURSOR:
-			case Property::DIRECTION:
-			case Property::DISPLAY:
-			case Property::EMPTY_CELLS:
-			case Property::FLOAT:
 			case Property::FONT_FAMILY:
 			case Property::FONT_SIZE:
 			case Property::FONT_STYLE:
 			case Property::FONT_VARIANT:
 			case Property::FONT_WEIGHT:
 			case Property::LETTER_SPACING:
-			case Property::LINE_HEIGHT:
 			case Property::LIST_STYLE_IMAGE:
 			case Property::LIST_STYLE_POSITION:
 			case Property::LIST_STYLE_TYPE:
@@ -457,14 +506,11 @@ namespace xhtml
 			case Property::MAX_WIDTH:
 			case Property::MIN_HEIGHT:
 			case Property::MIN_WIDTH:
-			case Property::OUTLINE_STYLE:
 			case Property::OUTLINE_WIDTH:
-			case Property::CSS_OVERFLOW:
 			case Property::PADDING_TOP:
 			case Property::PADDING_LEFT:
 			case Property::PADDING_RIGHT:
 			case Property::PADDING_BOTTOM:
-			case Property::POSITION:
 			case Property::QUOTES:
 			case Property::TABLE_LAYOUT:
 			case Property::TEXT_ALIGN:
@@ -494,9 +540,9 @@ namespace xhtml
 			case Property::BORDER_IMAGE_WIDTH:
 			case Property::BORDER_IMAGE_OUTSET:
 			case Property::BORDER_IMAGE_REPEAT:
-			case Property::BACKGROUND_CLIP:
 				LOG_ERROR("implement me");
 				break;
+			case Property::EMPTY_CELLS:
 			case Property::WIDOWS:
 			case Property::ORPHANS:
 			case Property::CAPTION_SIDE:
@@ -510,10 +556,12 @@ namespace xhtml
 		NodePtr node = node_.lock();
 		ASSERT_LOG(node != nullptr, "No node associated with this style node.");
 		DocumentPtr doc = node->getOwnerDoc();
-		//ASSERT_LOG(doc != nullptr, "No owner document found.");
+		ASSERT_LOG(doc != nullptr, "No owner document found.");
 		if(doc!= nullptr && (sp->requiresLayout(p) || force_layout)) {
+			//LOG_ERROR("Layout triggered from style.");
 			doc->triggerLayout();
 		} else if(doc!= nullptr && (sp->requiresRender(p) || force_render)) {
+			//LOG_ERROR("Render triggered from style.");
 			doc->triggerRender();
 		}
 	}

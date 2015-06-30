@@ -288,6 +288,7 @@ namespace xhtml
 		//handleRenderTextDecoration -- underlines, then overlines
 
 		fontr->setColorPointer(getStyleNode()->getColor());
+		//LOG_INFO("text: color ptr: " << getStyleNode()->getColor().get() << ", StyleNode: " << getStyleNode().get());
 		fontr->setPosition(offset.x / LayoutEngine::getFixedPointScaleFloat(), offset.y / LayoutEngine::getFixedPointScaleFloat());
 		display_list->addRenderable(fontr);
 
