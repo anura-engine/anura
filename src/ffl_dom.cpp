@@ -21,6 +21,8 @@
 	   distribution.
 */
 
+#include <boost/algorithm/string.hpp>
+
 #include "ModelMatrixScope.hpp"
 #include "SceneGraph.hpp"
 #include "SceneNode.hpp"
@@ -87,6 +89,13 @@ namespace xhtml
 		private:
 			DocumentObject* document_object_;		
 		};
+
+		std::vector<std::string> split_string(const std::string& s) 
+		{
+			std::vector<std::string> res;
+			boost::split(res, s, boost::is_any_of(" \n\r\t\f"), boost::token_compress_on);
+			return res;
+		}
 	}
 
 	using namespace KRE;
@@ -139,8 +148,8 @@ namespace xhtml
 		auto user_agent_style_sheet = std::make_shared<css::StyleSheet>();
 		css::Parser::parse(user_agent_style_sheet, sys::read_file(module::map_file(ss_name_)));
 
-		auto doc_frag = xhtml::parse_from_file(doc_name_);
 		doc_ = Document::create(user_agent_style_sheet);
+		auto doc_frag = xhtml::parse_from_file(doc_name_, doc_);
 		doc_->addChild(doc_frag, doc_);
 		doc_->processStyles();
 		// whitespace can only be processed after applying styles.
@@ -149,10 +158,15 @@ namespace xhtml
 		display_list_ = std::make_shared<DisplayList>(scene_);
 		root_->attachNode(display_list_);		
 
-		//doc_->preOrderTraversal([](xhtml::NodePtr n) {
-		//	LOG_DEBUG(n->toString());
-		//	return true;
-		//});
+		/*
+		doc_->preOrderTraversal([](xhtml::NodePtr n) {
+			std::stringstream ss;
+			ss << n.get() << ", tag: " << n->getTag() << ", owner: " << n->getOwnerDoc().get();
+			LOG_DEBUG(ss.str());
+			//LOG_DEBUG(n->toString());
+			return true;
+		});
+		*/
 	}
 	
 	variant DocumentObject::write()
@@ -208,6 +222,7 @@ namespace xhtml
 			}
 		} else if(doc_->needsRender() && layout != nullptr) {
 			profile::manager pman_render("render");
+			display_list_->clear();
 			layout->render(display_list_, point());
 			// XXX shoud internalise this
 			doc_->renderComplete();
@@ -266,6 +281,88 @@ namespace xhtml
 		return eo;
 	}
 
+	std::vector<ElementObjectPtr> DocumentObject::getElementsByTagName(const std::string& element_tag) const
+	{
+		std::vector<ElementObjectPtr> vec;
+		auto& ec = element_cache_;
+		doc_->preOrderTraversal([&vec, &ec, element_tag](NodePtr n) {
+			if(n->id() == NodeId::ELEMENT && n->hasTag(element_tag)) {
+				ElementObjectPtr& eo = ec[n];
+				if(eo == nullptr) {
+					eo.reset(new ElementObject(n));
+				}
+				vec.emplace_back(eo);
+			}
+			return true;
+		});
+		return vec;
+	}
+
+	std::vector<ElementObjectPtr> DocumentObject::getElementsByClassName(const std::string& class_name) const
+	{
+		std::vector<ElementObjectPtr> vec;
+		auto& ec = element_cache_;
+
+		std::vector<std::string> class_strs = split_string(class_name);
+
+		doc_->preOrderTraversal([&vec, &ec, &class_strs](NodePtr n) {
+			auto attr = n->getAttribute("class");
+			if(attr != nullptr) {
+				std::vector<std::string> attr_class_strs = split_string(attr->getValue());
+				bool matched = true;
+				for(auto& cname : class_strs) {
+					bool matched_this = false;
+					for(auto& acs : attr_class_strs) {
+						if(acs == cname) {
+							matched_this = true;
+						}
+					}
+					if(!matched_this) {
+						matched = false;
+					}
+				}
+				if(matched) {
+					ElementObjectPtr& eo = ec[n];
+					if(eo == nullptr) {
+						eo.reset(new ElementObject(n));
+					}
+					vec.emplace_back(eo);
+				}
+			}
+			return true;
+		});
+		return vec;
+	}
+
+	std::vector<ElementObjectPtr> DocumentObject::querySelectorAll(const std::string& selector) const
+	{
+		std::vector<ElementObjectPtr> vec;
+		auto& ec = element_cache_;
+
+		css::Tokenizer tokens(selector);
+		auto selectors = css::Selector::parseTokens(tokens.getTokens());
+
+		doc_->preOrderTraversal([&vec, &ec, &selectors](NodePtr n) {
+			bool matched = false;
+
+			for(auto& select : selectors) {
+				if(select->match(n)) {
+					matched = true;
+				}
+			}
+
+			if(matched) {
+				ElementObjectPtr& eo = ec[n];
+				if(eo == nullptr) {
+					eo.reset(new ElementObject(n));
+				}
+				vec.emplace_back(eo);
+			}
+			return true;
+		});
+		return vec;
+	}
+
 	void DocumentObject::surrenderReferences(GarbageCollector* collector)
 	{
 
@@ -297,7 +394,26 @@ namespace xhtml
 			obj.layout_size_.set_w(value[0].as_int());
 			obj.layout_size_.set_h(value[1].as_int());
 			obj.doc_->triggerLayout();
-			
+
+		DEFINE_FIELD(x, "int")
+			return variant(obj.layout_size_.x());
+		DEFINE_SET_FIELD
+			obj.layout_size_.set_x(value.as_int());
+		
+		DEFINE_FIELD(y, "int")
+			return variant(obj.layout_size_.y());
+		DEFINE_SET_FIELD
+			obj.layout_size_.set_y(value.as_int());
+		
+		DEFINE_FIELD(xy, "[int,int]")
+			std::vector<variant> v;
+			v.emplace_back(obj.layout_size_.x());
+			v.emplace_back(obj.layout_size_.y());
+			return variant(&v);
+		DEFINE_SET_FIELD
+			obj.layout_size_.set_x(value[0].as_int());
+			obj.layout_size_.set_y(value[1].as_int());
+
 		BEGIN_DEFINE_FN(getElementById, "(string) ->builtin element_object|null")
 			const std::string element_id = FN_ARG(0).as_string();
 			ElementObjectPtr eo = obj.getElementById(element_id);
@@ -305,6 +421,36 @@ namespace xhtml
 				return variant();
 			}
 			return variant(eo.get());
+		END_DEFINE_FN
+
+		BEGIN_DEFINE_FN(getElementsByTagName, "(string) ->[builtin element_object]")
+			const std::string element_tag = FN_ARG(0).as_string();
+			auto el_vec = obj.getElementsByTagName(element_tag);
+			std::vector<variant> v;
+			for(auto& el : el_vec) {
+				v.emplace_back(el.get());
+			}
+			return variant(&v);
+		END_DEFINE_FN
+
+		BEGIN_DEFINE_FN(getElementsByClassName, "(string) ->[builtin element_object]")
+			const std::string class_name = FN_ARG(0).as_string();
+			auto el_vec = obj.getElementsByClassName(class_name);
+			std::vector<variant> v;
+			for(auto& el : el_vec) {
+				v.emplace_back(el.get());
+			}
+			return variant(&v);
+		END_DEFINE_FN
+
+		BEGIN_DEFINE_FN(querySelectorAll, "(string) ->[builtin element_object]")
+			const std::string selector_string = FN_ARG(0).as_string();
+			auto el_vec = obj.querySelectorAll(selector_string);
+			std::vector<variant> v;
+			for(auto& el : el_vec) {
+				v.emplace_back(el.get());
+			}
+			return variant(&v);
 		END_DEFINE_FN
 		
 	END_DEFINE_CALLABLE(DocumentObject)
@@ -477,11 +623,45 @@ namespace xhtml
 
 	BEGIN_DEFINE_CALLABLE_NOBASE(ElementObject)
 		
+		DEFINE_FIELD(tagName, "string")
+			return variant(obj.element_->getTag());
+
 		DEFINE_FIELD(style, "builtin style_object|null")
 			if(obj.styles_ == nullptr) {
 				return variant();
 			}
 			return variant(obj.styles_.get());
+
+		DEFINE_FIELD(attributes, "{ string -> string }")
+			std::map<variant, variant> res;
+			for(auto& a : obj.element_->getAttributes()) {
+				res[variant(a.first)] = variant(a.second->getValue());
+			}
+			return variant(&res);
+
+		BEGIN_DEFINE_FN(getAttribute, "(string) ->string|null")
+			const std::string attr_name = FN_ARG(0).as_string();
+			auto attr = obj.element_->getAttribute(attr_name);
+			if(attr == nullptr) {
+				return variant();
+			}
+			return variant(attr->getValue());
+		END_DEFINE_FN
+
+		BEGIN_DEFINE_FN(hasAttribute, "(string) ->bool")
+			const std::string attr_name = FN_ARG(0).as_string();
+			return variant::from_bool(obj.element_->getAttribute(attr_name) != nullptr);
+		END_DEFINE_FN
+
+		BEGIN_DEFINE_FN(setAttribute, "(string, string) ->commands")
+			const std::string attr_name = FN_ARG(0).as_string();
+			const std::string attr_value = FN_ARG(1).as_string();
+
+			boost::intrusive_ptr<const ElementObject> ptr(&obj);
+			return variant(new game_logic::FnCommandCallable([ptr, attr_name, attr_value]() {
+				ptr->element_->setAttribute(attr_name, attr_value);
+			}));
+		END_DEFINE_FN
 
 	END_DEFINE_CALLABLE(ElementObject)
 
@@ -523,6 +703,21 @@ namespace xhtml
 			return variant(ss.str());
 		DEFINE_SET_FIELD
 			obj.style_node_->setPropertyFromString(css::Property::HEIGHT, value.as_string());
+
+		DEFINE_FIELD(position, "string")
+			return variant(obj.style_node_->getPositionStyle()->toString(css::Property::POSITION));
+		DEFINE_SET_FIELD
+			obj.style_node_->setPropertyFromString(css::Property::POSITION, value.as_string());
+
+		DEFINE_FIELD(display, "string")
+			return variant(obj.style_node_->getDisplayStyle()->toString(css::Property::DISPLAY));
+		DEFINE_SET_FIELD
+			obj.style_node_->setPropertyFromString(css::Property::DISPLAY, value.as_string());
+
+		DEFINE_FIELD(backgroundRepeat, "string")
+			return variant(obj.style_node_->getBackgroundRepeatStyle()->toString(css::Property::BACKGROUND_REPEAT));
+		DEFINE_SET_FIELD
+			obj.style_node_->setPropertyFromString(css::Property::BACKGROUND_REPEAT, value.as_string());
 
 	END_DEFINE_CALLABLE(StyleObject)
 }

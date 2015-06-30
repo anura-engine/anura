@@ -141,7 +141,6 @@ namespace xhtml
 				children_ = child->children_;
 				for(auto& c : children_) {
 					c->setParent(shared_from_this());
-					c->setOwner(owner);
 				}
 			} else {
 				if(!child->children_.empty()) {
@@ -149,7 +148,6 @@ namespace xhtml
 					child->children_.front()->left_ = children_.back();
 					for(auto& c : child->children_) {
 						c->setParent(shared_from_this());
-						c->setOwner(owner);
 					}
 					children_.insert(children_.end(), child->children_.begin(), child->children_.end());
 				}
@@ -162,7 +160,6 @@ namespace xhtml
 			}
 			children_.emplace_back(child);
 			child->setParent(shared_from_this());
-			child->setOwner(owner);
 		}
 	}
 
@@ -238,6 +235,11 @@ namespace xhtml
 	{
 		auto it = attributes_.find(name);
 		return it != attributes_.end() ? it->second : nullptr;
+	}
+
+	void Node::setAttribute(const std::string& name, const std::string& value)
+	{
+		attributes_[name] = Attribute::create(name, value, getOwnerDoc());
 	}
 
 	std::string Node::nodeToString() const

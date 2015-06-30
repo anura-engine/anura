@@ -106,6 +106,7 @@ namespace xhtml
 		virtual bool hasTag(const std::string& tag) const { return false; }
 		virtual bool hasTag(ElementId tag) const { return false; }
 		AttributePtr getAttribute(const std::string& name);
+		void setAttribute(const std::string& name, const std::string& value);
 		virtual const std::string& getValue() const;
 		void normalize();
 		void mergeProperties(const css::Specificity& specificity, const css::PropertyList& plist);

@@ -91,6 +91,9 @@ namespace xhtml
 
 		ElementObjectPtr getElementById(const std::string& element_id) const;
 		ElementObjectPtr getElementByNode(const NodePtr& node) const;
+		std::vector<ElementObjectPtr> getElementsByTagName(const std::string& element_tag) const;
+		std::vector<ElementObjectPtr> getElementsByClassName(const std::string& class_name) const;
+		std::vector<ElementObjectPtr> querySelectorAll(const std::string& selector) const;
 	private:
 		DECLARE_CALLABLE(DocumentObject);
 
