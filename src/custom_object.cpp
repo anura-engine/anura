@@ -1243,7 +1243,7 @@ void CustomObject::draw(int xx, int yy) const
 
 	KRE::StencilScopePtr stencil_scope;
 	if(clip_area_) {
-		clip_scope.reset(new KRE::ClipScope::Manager(*clip_area_));
+		clip_scope.reset(new KRE::ClipScope::Manager(*clip_area_ + point(x(), y())));
 	} else if(type_->isShadow()) {
 		stencil_scope = KRE::StencilScope::create(KRE::StencilSettings(true, 
 			KRE::StencilFace::FRONT_AND_BACK, 
