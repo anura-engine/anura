@@ -83,18 +83,18 @@ namespace xhtml
 				}
 			}
 		}
-		NodePtr createNode() {
+		NodePtr createNode(const DocumentPtr& owner_doc) {
 			NodePtr node;
 			if(name_ == XmlText) {
-				node = Text::create(value_);
+				node = Text::create(value_, owner_doc);
 			} else {
-				node = Element::create(name_);
+				node = Element::create(name_, owner_doc);
 			}
 			for(auto& a : attributes_) {
 				node->addAttribute(a.second->createAttribute());
 			}
 			for(auto& c : children_) {
-				node->addChild(c->createNode());
+				node->addChild(c->createNode(owner_doc));
 			}
 			node->init();
 			return node;
@@ -106,7 +106,7 @@ namespace xhtml
 		std::map<std::string, ParserAttributePtr> attributes_;
 	};
 
-	DocumentFragmentPtr parse_from_file(const std::string& filename)
+	DocumentFragmentPtr parse_from_file(const std::string& filename, const DocumentPtr& owner_doc)
 	{
 		std::vector<ParserNodePtr> nodes;
 		try {
@@ -120,12 +120,12 @@ namespace xhtml
 		}
 		auto frag = DocumentFragment::create();
 		for(auto& pn : nodes) {
-			frag->addChild(pn->createNode());
+			frag->addChild(pn->createNode(owner_doc), owner_doc);
 		}
 		return frag;
 	}
 
-	DocumentFragmentPtr parse_from_string(const std::string& str)
+	DocumentFragmentPtr parse_from_string(const std::string& str, const DocumentPtr& owner_doc)
 	{
 		if(str.empty()) {
 			LOG_ERROR("parse_from_string No string data to parse.");
@@ -144,7 +144,7 @@ namespace xhtml
 		}
 		auto frag = DocumentFragment::create();
 		for(auto& pn : nodes) {
-			frag->addChild(pn->createNode());
+			frag->addChild(pn->createNode(owner_doc), owner_doc);
 		}		
 		return frag;
 	}
@@ -152,7 +152,7 @@ namespace xhtml
 
 UNIT_TEST(xhtml_node_tests)
 {
-	auto frag = xhtml::parse_from_string("<em> \n \n \n <![CDATA[this is some text!!!!]]> \n \n \n</em>");
+	auto frag = xhtml::parse_from_string("<em> \n \n \n <![CDATA[this is some text!!!!]]> \n \n \n</em>", nullptr);
 	LOG_DEBUG("children in fragment: " << frag->getChildren().size());
 	frag->normalize();
 	LOG_DEBUG("children in fragment (after normalize): " << frag->getChildren().size());

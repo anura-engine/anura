@@ -29,6 +29,6 @@
 
 namespace xhtml
 {
-	DocumentFragmentPtr parse_from_file(const std::string& filename);
-	DocumentFragmentPtr parse_from_string(const std::string& str);
+	DocumentFragmentPtr parse_from_file(const std::string& filename, const DocumentPtr& owner_doc);
+	DocumentFragmentPtr parse_from_string(const std::string& str, const DocumentPtr& owner_doc);
 }

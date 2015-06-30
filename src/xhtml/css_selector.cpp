@@ -667,7 +667,7 @@ bool check_selector(const std::string& selector, const std::string& string_to_ma
 	//	LOG_DEBUG(s->toString());
 	//}
 
-	xhtml::DocumentFragmentPtr doc = xhtml::parse_from_string(string_to_match);
+	xhtml::DocumentFragmentPtr doc = xhtml::parse_from_string(string_to_match, nullptr);
 	bool successful_match = false;
 	for(auto& s : selectors) {
 		doc->preOrderTraversal([&successful_match, s](xhtml::NodePtr e) {
