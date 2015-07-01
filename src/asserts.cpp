@@ -128,6 +128,9 @@ void report_assert_msg_2(const std::string& m, const std::string& window_m)
 	if(Level::getCurrentPtr()) {
 		LOG_INFO("ATTEMPTING TO SEND CRASH REPORT...");
 		std::map<variant,variant> obj;
+		for(auto p : g_user_info_registry) {
+			obj[variant(p.first)] = p.second;
+		}
 		obj[variant("type")] = variant("crash");
 		obj[variant("msg")] = variant(m);
 #ifndef NO_EDITOR
