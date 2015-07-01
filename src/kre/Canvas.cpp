@@ -64,6 +64,7 @@ namespace KRE
 		LOG_DEBUG("canvas dimensions set to: " << width_ << " x " << height_);
 		auto wnd = window_.lock();
 		camera_ = Camera::createInstance("canvas_camera", 0, width_, 0, height_);
+		camera_->setOrthoWindow(0, width_, 0, height_);
 		pv_ = camera_->getProjectionMat() * camera_->getViewMat();
 		if(wnd) {
 			size_change_key_ = wnd->registerSizeChangeObserver([this](int w, int h) {
