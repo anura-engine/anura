@@ -244,7 +244,7 @@ public:
 	std::vector<variant> getVariantWidgetList() const;
 	bool getClipArea(rect* clip_area) const override {
 		if(clip_area_.get() != nullptr && clip_area) {
-			*clip_area = *clip_area_.get();
+			*clip_area = *clip_area_.get() + point(x(), y());
 			return true;
 		} else if(clip_area_.get() != nullptr) {
 			return true;
