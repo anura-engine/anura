@@ -352,12 +352,26 @@ namespace debug_console
 		}
 
 		ffl.erase(ffl.begin(), ffl.begin() + Prompt.size());
+
+		if(ffl.empty() == false && ffl[0] == '!') {
+			std::string prefix(ffl.begin()+1, ffl.end());
+			for(auto i = history_.rbegin(); i != history_.rend(); ++i) {
+				if(i->size() >= prefix.size() && std::equal(prefix.begin(), prefix.end(), i->begin())) {
+					std::string text = text_editor_->text();
+					text.erase(text.end() - ffl.size() - 1, text.end());
+					ffl = *i;
+					text_editor_->setText(text + ffl);
+					break;
+				}
+			}
+		}
+
 		text_editor_->setText(text_editor_->text() + "\n" + Prompt);
 		text_editor_->setCursor(static_cast<int>(text_editor_->getData().size())-1, Prompt.size());
-		if(!ffl.empty()) {
+		if(ffl.empty() == false) {
 			history_.push_back(ffl);
-			if(history_.size() > 128) {
-				history_.erase(history_.begin(), history_.begin() + history_.size()-96);
+			if(history_.size() > 512) {
+				history_.erase(history_.begin(), history_.begin() + history_.size()-384);
 			}
 			history_pos_ = static_cast<int>(history_.size());
 			sys::write_file(console_history_path(), vector_to_variant(history_).write_json());

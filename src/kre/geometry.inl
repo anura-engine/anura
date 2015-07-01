@@ -161,7 +161,7 @@ namespace geometry
 	template<typename T, typename D> inline
 	Rect<T> operator*(const Rect<T>& lhs, const Rect<D>& rhs)
 	{
-		return Rect<T>::FromCoordinates(static_cast<T>(lhs.x()*rhs.x()), 
+		return Rect<T>::fromCoordinates(static_cast<T>(lhs.x()*rhs.x()), 
 			static_cast<T>(lhs.y()*rhs.y()), 
 			static_cast<T>(lhs.x2()*rhs.x2()), 
 			static_cast<T>(lhs.y2()*rhs.y2()));
@@ -170,7 +170,7 @@ namespace geometry
 	template<typename T, typename D> inline
 	Rect<D> operator/(const Rect<T>& lhs, D scalar)
 	{
-		return Rect<D>::FromCoordinates(static_cast<D>(lhs.x1()/scalar), 
+		return Rect<D>::fromCoordinates(static_cast<D>(lhs.x1()/scalar), 
 			static_cast<D>(lhs.y1()/scalar), 
 			static_cast<D>(lhs.x2()/scalar), 
 			static_cast<D>(lhs.y2()/scalar));
@@ -223,13 +223,13 @@ namespace geometry
 
 		switch(num_items) {
 			case 2:
-				*this = Rect<T>::FromCoordinates(items[0], items[1], T(1), T(1));
+				*this = Rect<T>::fromCoordinates(items[0], items[1], T(1), T(1));
 				break;
 			case 3:
-				*this = Rect<T>::FromCoordinates(items[0], items[1], items[2], T(1));
+				*this = Rect<T>::fromCoordinates(items[0], items[1], items[2], T(1));
 				break;
 			case 4:
-				*this = Rect<T>::FromCoordinates(items[0], items[1], items[2], items[3]);
+				*this = Rect<T>::fromCoordinates(items[0], items[1], items[2], items[3]);
 				break;
 			default:
 				*this = Rect<T>();

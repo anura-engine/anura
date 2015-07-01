@@ -161,7 +161,7 @@ namespace KRE
 		}
 		if(node.has_key("mipmaps")) {
 			ASSERT_LOG(node["mipmaps"].is_int(), "'mipmaps' not an integer type, found: " << node["mipmaps"].to_debug_string());
-			tp->mipmaps = int(node["mipmaps"].as_int());
+			tp->mipmaps = node["mipmaps"].as_int32();
 		}
 		if(node.has_key("lod_bias")) {
 			ASSERT_LOG(node["lod_bias"].is_numeric(), "'lod_bias' not a numeric type, found: " << node["lod_bias"].to_debug_string());
@@ -169,7 +169,7 @@ namespace KRE
 		}
 		if(node.has_key("max_anisotropy")) {
 			ASSERT_LOG(node["max_anisotropy"].is_int(), "'max_anisotropy' not an integer type, found: " << node["max_anisotropy"].to_debug_string());
-			tp->max_anisotropy = int(node["max_anisotropy"].as_int());
+			tp->max_anisotropy = node["max_anisotropy"].as_int32();
 		}
 		if(node.has_key("filtering")) {
 			if(node["filtering"].is_string()) {
@@ -351,11 +351,24 @@ namespace KRE
 				tp.filtering[0] = min;
 				tp.filtering[1] = max;
 				tp.filtering[2] = mip;
+				// If you enable bilinear/trilinear/aniso filtering on an image then it must have mipmaps.
+				if((min != Texture::Filtering::LINEAR || min != Texture::Filtering::ANISOTROPIC
+					|| max == Texture::Filtering::LINEAR || max == Texture::Filtering::ANISOTROPIC
+					|| mip == Texture::Filtering::LINEAR) && tp.mipmaps == 0) {
+					tp.mipmaps = 2;
+				}
 			}
 		} else {
 			texture_params_[n].filtering[0] = min;
 			texture_params_[n].filtering[1] = max;
 			texture_params_[n].filtering[2] = mip;
+
+			// If you enable bilinear/trilinear/aniso filtering on an image then it must have mipmaps.
+			if((min != Texture::Filtering::LINEAR || min != Texture::Filtering::ANISOTROPIC
+				|| max == Texture::Filtering::LINEAR || max == Texture::Filtering::ANISOTROPIC
+				|| mip == Texture::Filtering::LINEAR) && texture_params_[n].mipmaps == 0) {
+				texture_params_[n].mipmaps = 2;
+			}
 		}
 		init(n);
 	}

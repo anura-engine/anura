@@ -54,68 +54,53 @@ namespace game_logic
 namespace tbs 
 {
 	extern http_client* g_game_server_http_client_to_matchmaking_server;
-	
-	struct game_type 
+
+	class GameType
 	{
-		game_type() 
-		{
-		}
+	public:
+		explicit GameType(variant game_ref) {
+			std::map<variant,variant> m;
+			m[variant("_game")] = game_ref;
+			obj_ = game_logic::FormulaObject::create("tbs_game", variant(&m));
+#define DEFINE_INTERFACE_FN(name, type) \
+			name##_fn_ = obj_->queryValue(#name); \
+			ASSERT_LOG(parse_variant_type(variant("function" type))->match(name##_fn_), "In tbs_game class, member '" << #name << "' must have type function" << type << " but has type " << get_variant_type_from_value(name##_fn_)->to_string());
 
-		explicit game_type(const variant& value)
-		{
-			variant functions_var = value["functions"];
-			if(functions_var.is_string()) {
-				functions.reset(new game_logic::FunctionSymbolTable);
-				game_logic::Formula f(functions_var, functions.get());
+			DEFINE_INTERFACE_FN(create, "(map)->commands");
+			DEFINE_INTERFACE_FN(restart, "()->commands");
+			DEFINE_INTERFACE_FN(message, "(map,int)->commands");
+			DEFINE_INTERFACE_FN(add_bot, "(int,string,any,any)->commands");
+			DEFINE_INTERFACE_FN(player_disconnected, "()->commands");
+			DEFINE_INTERFACE_FN(transform, "(object,int)->commands");
+			DEFINE_INTERFACE_FN(get_state, "()->object");
+
+			if(obj_->queryValue("process").is_null() == false) {
+				DEFINE_INTERFACE_FN(process, "()->commands");
+
 			}
 
-			variant handlers_var = value["handlers"];
-			if(handlers_var.is_map()) {
-				for(const variant& key : handlers_var.getKeys().as_list()) {
-					handlers[key.as_string()] = game_logic::Formula::createOptionalFormula(handlers_var[key], functions.get());
-				}
-			}
 		}
 
-		std::string name;
-		std::shared_ptr<game_logic::FunctionSymbolTable> functions;
-		std::map<std::string, game_logic::ConstFormulaPtr> handlers;
+		variant create(variant msg) { std::vector<variant> v; v.push_back(msg); return create_fn_(v); }
+		variant restart() { std::vector<variant> v; return restart_fn_(v); }
+		variant message(variant msg, int nplayer) { std::vector<variant> v; v.push_back(msg); v.push_back(variant(nplayer)); return message_fn_(v); }
+		variant add_bot(int session_id, const std::string& bot_type, variant args, variant bot_args) {std::vector<variant> v; v.push_back(variant(session_id)); v.push_back(variant(bot_type)); v.push_back(args); v.push_back(bot_args); return add_bot_fn_(v); }
+		variant player_disconnected() { std::vector<variant> v; return player_disconnected_fn_(v); }
+		variant transform(variant msg, int nplayer) { std::vector<variant> v; v.push_back(msg); v.push_back(variant(nplayer)); return transform_fn_(v); }
+		variant get_state() { std::vector<variant> v; return get_state_fn_(v); }
+
+		variant process() { if(process_fn_.is_null() == false) { std::vector<variant> v; return process_fn_(v); } return variant(); }
+
+		boost::intrusive_ptr<game_logic::FormulaObject>& object() { return obj_; }
+
+	private:
+		boost::intrusive_ptr<game_logic::FormulaObject> obj_;
+
+		variant create_fn_, restart_fn_, add_bot_fn_, message_fn_, player_disconnected_fn_, transform_fn_, get_state_fn_;
+		variant process_fn_;
 	};
 
-	std::map<std::string, game_type> generate_game_types() 
-	{
-		LOG_INFO("GENERATE GAME TYPES");
-
-		std::map<std::string, game_type> result;
-
-		std::vector<std::string> files;
-		module::get_files_in_dir("data/tbs", &files);
-		for(const std::string& fname : files) {
-			if(fname.size() > 4 && std::string(fname.end()-4,fname.end()) == ".cfg") {
-				std::string type(fname.begin(), fname.end()-4);
-				boost::algorithm::to_lower(type);
-				result[type] = game_type(json::parse_from_file("data/tbs/" + fname));
-				result[type].name = type;
-				LOG_INFO("LOADED TBS GAME TYPE: " << type);
-			}
-		}
-		LOG_INFO("DONE GENERATE GAME TYPES");
-
-		return result;
-	}
-
-	std::map<std::string, game_type>& all_types() 
-	{
-		static std::map<std::string, game_type> types = generate_game_types();
-		return types;
-	}
-
 	extern std::string global_debug_str;
-
-	void game::reload_game_types()
-	{
-		all_types() = generate_game_types();
-	}
 
 	namespace {
 	game* current_game = nullptr;
@@ -165,62 +150,18 @@ namespace tbs
 
 	boost::intrusive_ptr<game> game::create(const variant& v)
 	{
-		const variant type_var = v["game_type"];
-		if(!type_var.is_string()) {
-			return nullptr;
-		}
-
-		std::string type = type_var.as_string();
-		boost::algorithm::to_lower(type);
-		std::map<std::string, game_type>::const_iterator type_itor = all_types().find(type);
-		if(type_itor == all_types().end()) {
-			return nullptr;
-		}
-
-		boost::intrusive_ptr<game> result(new game(type_itor->second));
-		game_logic::MapFormulaCallablePtr vars(new game_logic::MapFormulaCallable);
-		vars->add("msg", v);
-		result->handleEvent("create", vars.get());
+		boost::intrusive_ptr<game> result(new game);
+		variant cmd = result->game_type_->create(v);
+		result->executeCommand(cmd);
 		return result;
 	}
 
-	game::game(const game_type& type)
-	  : type_(type), 
+	game::game()
+	  : game_type_(new GameType(variant(this))),
 	    game_id_(generate_game_id()),
 	    started_(false), state_(STATE_SETUP), state_id_(0), cycle_(0), tick_rate_(50),
 		backup_callable_(nullptr)
 	{
-	}
-
-	game::game(const variant& value)
-	  : type_(all_types()[string_tolower(value["type"].as_string())]),
-		game_id_(generate_game_id()),
-		started_(value["started"].as_bool(false)),
-		state_(STATE_SETUP),
-		state_id_(0),
-		cycle_(value["cycle"].as_int(0)),
-		tick_rate_(value["tick_rate"].as_int(50)),
-		backup_callable_(nullptr)
-	{
-	}
-
-	game::game(const std::string& game_type, const variant& doc)
-	  : type_(all_types()[game_type]),
-		game_id_(doc["id"].as_int()),
-		started_(doc["started"].as_bool()),
-		state_(started_ ? STATE_PLAYING : STATE_SETUP),
-		state_id_(doc["state_id"].as_int()),
-		cycle_(doc["cycle"].as_int(0)),
-		tick_rate_(doc["tick_rate"].as_int(50)),
-		backup_callable_(nullptr),
-		doc_(doc["state"])
-	{
-		log_ = util::split(doc["log"].as_string(), '\n');
-
-		variant players_val = doc["players"];
-		for(int n = 0; n != players_val.num_elements(); ++n) {
-			add_player(players_val[n].as_string());
-		}
 	}
 
 	game::~game()
@@ -232,7 +173,6 @@ namespace tbs
 	{
 		players_.clear();
 		outgoing_messages_.clear();
-		doc_ = variant();
 		ai_.clear();
 		bots_.clear();
 		backup_callable_ = nullptr;
@@ -246,7 +186,7 @@ namespace tbs
 		variant_builder result;
 		result.add("id", game_id_);
 		result.add("type", "game");
-		result.add("game_type", variant(type_.name));
+		result.add("game_type", module::get_module_name());
 		result.add("started", variant::from_bool(started_));
 		result.add("state_id", state_id_);
 
@@ -284,17 +224,11 @@ namespace tbs
 
 		variant state_doc;
 
-		if(type_.handlers.count("transform")) {
-			variant msg = FormulaObject::deepClone(doc_);
-			game_logic::MapFormulaCallablePtr vars(new game_logic::MapFormulaCallable);
-			vars->add("message", msg);
-			vars->add("nplayer", variant(nplayer < 0 ? 0 : nplayer));
-			const_cast<game*>(this)->handleEvent("transform", vars.get());
+		variant msg = FormulaObject::deepClone(variant(game_type_->get_state()));
+		variant cmd = game_type_->transform(msg, nplayer < 0 ? 0 : nplayer);
+		const_cast<game*>(this)->executeCommand(cmd);
 
-			state_doc = msg;
-		} else {
-			state_doc = FormulaObject::deepClone(doc_);
-		}
+		state_doc = msg;
 
 		if(send_delta) {
 			result.add("delta", FormulaObject::generateDiff(players_[nplayer].state_sent, state_doc));
@@ -331,7 +265,8 @@ namespace tbs
 
 		state_ = STATE_PLAYING;
 		started_ = true;
-		handleEvent("start");
+
+		executeCommand(game_type_->restart());
 
 		send_game_state();
 
@@ -381,7 +316,7 @@ namespace tbs
 		queue_message(result.build(), nplayer);
 	}
 
-	game::player::player() : side(-1), is_human(true), confirmed_state_id(-1), state_id_sent(-1), allow_deltas(true)
+	game::player::player() : side(-1), is_human(true), confirmed_state_id(-1), state_id_sent(-1), allow_deltas(false)
 	{
 	}
 
@@ -400,7 +335,9 @@ namespace tbs
 		players_.back().side = static_cast<int>(players_.size() - 1);
 		players_.back().is_human = false;
 
-		handleEvent("add_bot", map_into_callable(info).get());
+		executeCommand(game_type_->add_bot(info["session_id"].as_int(), info["bot_type"].as_string(), info["args"], info["bot_args"]));
+
+		//handleEvent("add_bot", map_into_callable(info).get());
 
 	//	boost::intrusive_ptr<bot> new_bot(new bot(*web_server::service(), "127.0.0.1", formatter() << web_server::port(), info));
 	//	bots_.push_back(new_bot);
@@ -498,8 +435,9 @@ namespace tbs
 
 		if(started_) {
 			const int starting_state_id = state_id_;
-			static const std::string ProcessStr = "process";
-			handleEvent(ProcessStr);
+
+			executeCommand(game_type_->process());
+
 			++cycle_;
 
 			if(state_id_ != starting_state_id) {
@@ -530,20 +468,6 @@ namespace tbs
 		DEFINE_FIELD(game, "builtin game")
 			return variant(&obj_instance);
 		
-		DEFINE_FIELD(doc, "any")
-			return obj.doc_;
-		DEFINE_SET_FIELD
-			obj.doc_ = value;
-
-		DEFINE_FIELD(event, "null")
-			return variant();
-		DEFINE_SET_FIELD_TYPE("string|map")
-			if(value.is_string()) {
-				obj.handleEvent(value.as_string());
-			} else if(value.is_map()) {
-				obj.handleEvent(value["event"].as_string(), map_into_callable(value["arg"]).get());
-			}
-
 #ifdef USE_DB_CLIENT
 		DEFINE_FIELD(db_client, "builtin db_client")
 			if(obj.db_client_.get() == NULL) {
@@ -647,7 +571,7 @@ namespace tbs
 			start_game();
 			return;
 		} else if(type == "request_updates") {
-			if(msg.has_key("state_id") && !doc_.is_null()) {
+			if(msg.has_key("state_id")) {
 				if(nplayer >= 0 && nplayer < static_cast<int>(players_.size()) && msg.has_key("allow_deltas")) {
 					players_[nplayer].allow_deltas = msg["allow_deltas"].as_bool();
 				}
@@ -698,7 +622,8 @@ namespace tbs
 		auto start_time = profile::get_tick_time();
 		vars->add("message", msg);
 		vars->add("player", variant(nplayer));
-		handleEvent("message", vars.get());
+
+		executeCommand(game_type_->message(msg, nplayer));
 
 		const auto time_taken = profile::get_tick_time() - start_time;
 
@@ -735,19 +660,6 @@ namespace tbs
 				}
 			}
 		};
-	}
-
-	void game::handleEvent(const std::string& name, game_logic::FormulaCallable* variables)
-	{
-		const backup_callable_scope backup_scope(&backup_callable_, variables);
-
-		std::map<std::string, game_logic::ConstFormulaPtr>::const_iterator itor = type_.handlers.find(name);
-		if(itor == type_.handlers.end() || !itor->second) {
-			return;
-		}
-
-		variant v = itor->second->execute(*this);
-		executeCommand(v);
 	}
 
 	void game::executeCommand(variant cmd)
@@ -803,14 +715,14 @@ namespace tbs
 	{
 		if(time_ms >= 60000 && std::find(players_disconnected_.begin(), players_disconnected_.end(), nplayer) == players_disconnected_.end()) {
 			players_disconnected_.push_back(nplayer);
-			handleEvent("player_disconnected");
+			executeCommand(game_type_->player_disconnected());
 			send_game_state();
 		}
 	}
 
 	void game::surrenderReferences(GarbageCollector* collector)
 	{
-		collector->surrenderVariant(&doc_, "doc");
+		collector->surrenderPtr(&game_type_->object(), "object");
 		for(boost::intrusive_ptr<tbs::bot>& bot : bots_) {
 			collector->surrenderPtr(&bot, "bot");
 		}

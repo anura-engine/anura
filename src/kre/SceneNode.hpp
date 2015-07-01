@@ -23,8 +23,9 @@
 
 #pragma once
 
-#include <unordered_map>
+#include <functional>
 #include <set>
+#include <unordered_map>
 #include <vector>
 
 #include "RenderFwd.hpp"
@@ -42,6 +43,7 @@ namespace KRE
 		explicit SceneNode(std::weak_ptr<SceneGraph> sg, const variant& node);
 		virtual ~SceneNode();
 		void attachNode(const SceneNodePtr& node);
+		void removeNode(const SceneNodePtr& node);
 		void attachLight(size_t ref, const LightPtr& obj);
 		void attachCamera(const CameraPtr& obj);
 		void attachObject(const SceneObjectPtr& obj);
@@ -72,6 +74,8 @@ namespace KRE
 		const glm::vec3& getScale() const { return scale_; }
 
 		glm::mat4 getModelMatrix() const;
+
+		void clear() { objects_.clear(); }
 
 		static void registerObjectType(const std::string& type, ObjectTypeFunction fn);
 	private:

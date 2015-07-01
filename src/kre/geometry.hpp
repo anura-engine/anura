@@ -90,7 +90,7 @@ namespace geometry
 			bottom_right_ = p2;
 		}
 
-	    static Rect<T> FromCoordinates(T x1, T y1, T x2, T y2)
+	    static Rect<T> fromCoordinates(T x1, T y1, T x2, T y2)
 		{
 			if(x1 > x2+1) {
 				std::swap(x1, x2);
@@ -103,19 +103,19 @@ namespace geometry
 		}
 
 		static Rect<T> from_coordinates(T x1, T y1, T x2, T y2) {
-			return FromCoordinates(x1,y1,x2,y2);
+			return fromCoordinates(x1,y1,x2,y2);
 		}
 
 		void from_vector(const std::vector<T>& v) {
 			switch(v.size()) {
 				case 2:
-					*this = Rect<T>::FromCoordinates(v[0], v[1], v[0], v[1]);
+					*this = Rect<T>::fromCoordinates(v[0], v[1], v[0], v[1]);
 					break;
 				case 3:
-					*this = Rect<T>::FromCoordinates(v[0], v[1], v[2], v[1]);
+					*this = Rect<T>::fromCoordinates(v[0], v[1], v[2], v[1]);
 					break;
 				case 4:
-					*this = Rect<T>::FromCoordinates(v[0], v[1], v[2], v[3]);
+					*this = Rect<T>::fromCoordinates(v[0], v[1], v[2], v[3]);
 					break;
 				default:
 					*this = Rect<T>();
@@ -142,8 +142,8 @@ namespace geometry
 		T mid_x() const { return (x1() + x2())/static_cast<T>(2); }
 		T mid_y() const { return (y1() + y2())/static_cast<T>(2); }
 
-		void set_x(const T& new_x) { top_left_.x = new_x; }
-		void set_y(const T& new_y) { top_left_.y = new_y; }
+		void set_x(const T& new_x) { top_left_.x = new_x; bottom_right_.x += new_x; }
+		void set_y(const T& new_y) { top_left_.y = new_y; bottom_right_.y += new_y; }
 		void set_w(const T& new_w) { bottom_right_.x = top_left_.x + new_w; }
 		void set_h(const T& new_h) { bottom_right_.y = top_left_.y + new_h; }
 
@@ -198,18 +198,43 @@ namespace geometry
 		Point<T> bottom_right_;
 	};
 
-		template<> inline
-		Rect<float> Rect<float>::FromCoordinates(float x1, float y1, float x2, float y2)
-		{
-			if(x1 > x2) {
-				std::swap(x1, x2);
-			}
-
-			if(y1 > y2) {
-				std::swap(y1, y2);
-			}
-	    return Rect<float>(x1, y1, x2 - x1, y2 - y1);
+	template<> inline
+	Rect<float> Rect<float>::fromCoordinates(float x1, float y1, float x2, float y2)
+	{
+		if(x1 > x2) {
+			std::swap(x1, x2);
 		}
+
+		if(y1 > y2) {
+			std::swap(y1, y2);
+		}
+		return Rect<float>(x1, y1, x2 - x1, y2 - y1);
+	}
+
+	template<> inline
+	Rect<float> Rect<float>::from_coordinates(float x1, float y1, float x2, float y2)
+	{
+		return Rect<float>::fromCoordinates(x1, y1, x2, y2);
+	}
+
+	template<> inline
+	Rect<double> Rect<double>::fromCoordinates(double x1, double y1, double x2, double y2)
+	{
+		if(x1 > x2) {
+			std::swap(x1, x2);
+		}
+
+		if(y1 > y2) {
+			std::swap(y1, y2);
+		}
+		return Rect<double>(x1, y1, x2 - x1, y2 - y1);
+	}
+
+	template<> inline
+	Rect<double> Rect<double>::from_coordinates(double x1, double y1, double x2, double y2)
+	{
+		return Rect<double>::fromCoordinates(x1, y1, x2, y2);
+	}
 
 	template<typename T> inline
 	bool operator<(const Rect<T>& a, const Rect<T>& b);
@@ -239,7 +264,7 @@ namespace geometry
 			if(v.has_key("x")) {
 				*this = Rect<int>(v["x"].as_int32(),v["y"].as_int32(),v["w"].as_int32(),v["h"].as_int32());
 			} else {
-				*this = Rect<int>::FromCoordinates(v["x1"].as_int32(),v["y1"].as_int32(),v["x2"].as_int32(),v["y2"].as_int32());
+				*this = Rect<int>::fromCoordinates(v["x1"].as_int32(),v["y1"].as_int32(),v["x2"].as_int32(),v["y2"].as_int32());
 			}
 		} else {
 			ASSERT_LOG(false, "Creating a rect from a variant must be list or map");
@@ -263,7 +288,7 @@ namespace geometry
 			if(v.has_key("x")) {
 				*this = Rect<float>(v["x"].as_float(),v["y"].as_float(),v["w"].as_float(),v["h"].as_float());
 			} else {
-				*this = Rect<float>::FromCoordinates(v["x1"].as_float(),v["y1"].as_float(),v["x2"].as_float(),v["y2"].as_float());
+				*this = Rect<float>::fromCoordinates(v["x1"].as_float(),v["y1"].as_float(),v["x2"].as_float(),v["y2"].as_float());
 			}
 		} else {
 			ASSERT_LOG(false, "Creating a rect from a variant must be list or map");

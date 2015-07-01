@@ -29,6 +29,7 @@
 #include "anura_shader.hpp"
 #include "custom_object_callable.hpp"
 #include "editor_variable_info.hpp"
+#include "ffl_dom_fwd.hpp"
 #include "formula.hpp"
 #include "formula_callable.hpp"
 #include "formula_function.hpp"
@@ -276,6 +277,8 @@ public:
 	graphics::AnuraShaderPtr getShader() const { return shader_; }
 	const std::vector<graphics::AnuraShaderPtr>& getEffectsShaders() const { return effects_shaders_; }
 
+	xhtml::DocumentObjectPtr getDocument() const { return document_; }
+
 	variant getParticleSystemDesc() const { return particle_system_desc_; }
 private:
 	void initSubObjects(variant node, const CustomObjectType* old_type);
@@ -416,5 +419,7 @@ private:
 	std::vector<graphics::AnuraShaderPtr> effects_shaders_;	
 
 	variant particle_system_desc_;	
+
+	xhtml::DocumentObjectPtr document_;
 };
 

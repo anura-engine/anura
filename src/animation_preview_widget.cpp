@@ -436,7 +436,7 @@ namespace gui
 		KRE::TexturePtr image_texture = Texture::createTexture(obj_["image"].as_string() /* no_filter -- default is a strip spritesheet annotations filter */);
 
 		if(image_texture) {
-			auto cs = KRE::ClipScope::create(image_area);
+			KRE::ClipScope::Manager clip_scope(image_area, canvas->getCamera());
 
 			const bool view_locked = mouse_buttons && locked_focus_.w()*locked_focus_.h();
 

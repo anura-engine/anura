@@ -39,20 +39,18 @@ namespace KRE
 
 		GLenum convert_face(StencilFace face)
 		{
-			switch(face)
-			{
-			case StencilFace::FRONT:			return GL_FRONT;
-			case StencilFace::BACK:				return GL_BACK;
-			case StencilFace::FRONT_AND_BACK:	return GL_FRONT_AND_BACK;
-			default: break;
+			switch(face) {
+				case StencilFace::FRONT:			return GL_FRONT;
+				case StencilFace::BACK:				return GL_BACK;
+				case StencilFace::FRONT_AND_BACK:	return GL_FRONT_AND_BACK;
+				default: break;
 			}
 			return GL_FRONT;
 		}
 
 		GLenum convert_stencil_op(StencilOperation op)
 		{
-			switch(op)
-			{
+			switch(op) {
 				case StencilOperation::KEEP:			return GL_KEEP;
 				case StencilOperation::ZERO:			return GL_ZERO;
 				case StencilOperation::REPLACE:			return GL_REPLACE;
@@ -68,8 +66,7 @@ namespace KRE
 
 		GLenum convert_func(StencilFunc func)
 		{
-			switch(func)
-			{
+			switch(func) {
 				case StencilFunc::NEVER:					return GL_NEVER;
 				case StencilFunc::LESS:						return GL_LESS;
 				case StencilFunc::LESS_THAN_OR_EQUAL:		return GL_LEQUAL;
@@ -106,15 +103,22 @@ namespace KRE
 	{
 		if(settings.enabled()) {
 			glEnable(GL_STENCIL_TEST);
-			glStencilOpSeparate(convert_face(settings.face()), 
-				convert_stencil_op(settings.sfail()),
-				convert_stencil_op(settings.dpfail()),
-				convert_stencil_op(settings.dppass()));
-			glStencilFuncSeparate(convert_face(settings.face()), 
-				convert_func(settings.func()),
-				settings.ref(),
-				settings.ref_mask());
-			glStencilMaskSeparate(convert_face(settings.face()), settings.mask());
+			if(settings.face() == StencilFace::FRONT_AND_BACK) {
+				glStencilOp(convert_stencil_op(settings.sfail()), convert_stencil_op(settings.dpfail()), convert_stencil_op(settings.dppass()));
+				glStencilFunc(convert_func(settings.func()), settings.ref(), settings.ref_mask());
+				glStencilMask(settings.mask());
+			} else {
+				glStencilOpSeparate(convert_face(settings.face()), 
+					convert_stencil_op(settings.sfail()),
+					convert_stencil_op(settings.dpfail()),
+					convert_stencil_op(settings.dppass()));
+				glStencilFuncSeparate(convert_face(settings.face()), 
+					convert_func(settings.func()),
+					settings.ref(),
+					settings.ref_mask());
+					glStencilMask(settings.mask());
+				glStencilMaskSeparate(convert_face(settings.face()), settings.mask());
+			}
 		} else {
 			glDisable(GL_STENCIL_TEST);
 			glStencilMask(0);
@@ -124,7 +128,17 @@ namespace KRE
 	void StencilScopeOGL::handleUpdatedMask()
 	{
 		if(getSettings().enabled()) {
-			glStencilMaskSeparate(convert_face(getSettings().face()), getSettings().mask());
+			if(getSettings().face() == StencilFace::FRONT_AND_BACK) {
+				glStencilMask(getSettings().mask());
+			} else {
+				glStencilMaskSeparate(convert_face(getSettings().face()), getSettings().mask());
+			}
 		}
+	}
+
+	void StencilScopeOGL::handleUpdatedSettings()
+	{
+		get_stencil_stack().top() = getSettings();
+		applySettings(getSettings());
 	}
 }

@@ -55,6 +55,19 @@ namespace KRE
 		return *graph_.begin();
 	}
 
+	void SceneGraph::removeNode(std::weak_ptr<SceneNode> parent, SceneNodePtr node) 
+	{
+		the::tree<SceneNodePtr>::pre_iterator it = graph_.begin();
+		for(; it != graph_.end(); ++it) {
+			if(*it == node) {
+				graph_.erase(it);
+				//node->notifyNodeRemoved(parent);
+				return;
+			}
+		}
+		ASSERT_LOG(false, "node not found when removing a child node");
+	}
+
 	void SceneGraph::attachNode(std::weak_ptr<SceneNode> parent, SceneNodePtr node) 
 	{
 		if(parent.lock() == nullptr) {

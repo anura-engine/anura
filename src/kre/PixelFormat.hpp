@@ -114,6 +114,7 @@ namespace KRE
 			PIXELFORMAT_YUY2,
 			PIXELFORMAT_UYVY,
 			PIXELFORMAT_YVYU,
+			PIXELFORMAT_R8,
 		};
 		virtual PF getFormat() const = 0;
 

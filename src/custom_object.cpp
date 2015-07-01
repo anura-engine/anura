@@ -53,6 +53,7 @@
 #include "difficulty.hpp"
 #include "draw_primitive.hpp"
 #include "draw_scene.hpp"
+#include "ffl_dom.hpp"
 #include "formatter.hpp"
 #include "formula_callable.hpp"
 #include "formula_callable_visitor.hpp"
@@ -198,7 +199,8 @@ CustomObject::CustomObject(variant node)
 	currently_handling_die_event_(0),
 	use_absolute_screen_coordinates_(node["use_absolute_screen_coordinates"].as_bool(type_->useAbsoluteScreenCoordinates())),
 	paused_(false),
-	particles_()
+	particles_(),
+	document_(nullptr)
 {
 
 	vars_->setObjectName(getDebugDescription());
@@ -266,11 +268,9 @@ CustomObject::CustomObject(variant node)
 	}
 
 	if(node.has_key("draw_area")) {
-		if(node["draw_area"].is_string()) {
-			draw_area_.reset(new rect(json::parse(node["draw_area"].as_string())));
-		} else {
-			draw_area_.reset(new rect(node["draw_area"]));
-		}
+		variant draw_area = node["draw_area"];
+		ASSERT_LOG(draw_area.is_list() || draw_area.is_map(), "draw_area must be a list or map " << draw_area.debug_location());
+		draw_area_.reset(new rect(draw_area));
 	}
 
 	if(node.has_key("draw_scale")) {
@@ -461,6 +461,16 @@ CustomObject::CustomObject(variant node)
 		}
 	}
 
+	if(node.has_key("xhtml")) {
+		document_.reset(new xhtml::DocumentObject(node));
+		document_->init(this);
+	} else {		
+		document_ = type_->getDocument();
+		if(document_ != nullptr) {
+			document_->init(this);
+		}
+	}
+
 	createParticles(type_->getParticleSystemDesc());
 
 	const variant property_data_node = node["property_data"];
@@ -533,7 +543,8 @@ CustomObject::CustomObject(const std::string& type, int x, int y, bool face_righ
 	currently_handling_die_event_(0),
 	use_absolute_screen_coordinates_(type_->useAbsoluteScreenCoordinates()),
 	paused_(false),
-	particles_()
+	particles_(),
+	document_(nullptr)
 {
 	properties_requiring_dynamic_initialization_ = type_->getPropertiesRequiringDynamicInitialization();
 	properties_requiring_dynamic_initialization_.insert(properties_requiring_dynamic_initialization_.end(), type_->getPropertiesRequiringInitialization().begin(), type_->getPropertiesRequiringInitialization().end());
@@ -560,6 +571,13 @@ CustomObject::CustomObject(const std::string& type, int x, int y, bool face_righ
 	}
 	for(auto eff : type_->getEffectsShaders()) {
 		effects_shaders_.emplace_back(new graphics::AnuraShader(*eff));
+	}
+
+	if(type_->getDocument() != nullptr) {
+		document_ = type_->getDocument();
+		if(document_ != nullptr) {
+			document_->init(this);
+		}
 	}
 
 #ifdef USE_BOX2D
@@ -675,7 +693,8 @@ CustomObject::CustomObject(const CustomObject& o)
 	//and re-seating references is difficult.
 	//widgets_(o.widgets_),
 	paused_(o.paused_),
-	particles_(o.particles_)
+	particles_(o.particles_),
+	document_(nullptr)
 {
 	vars_->setObjectName(getDebugDescription());
 	tmp_vars_->setObjectName(getDebugDescription());
@@ -706,6 +725,11 @@ CustomObject::CustomObject(const CustomObject& o)
 	}
 	for(auto eff : o.effects_shaders_) {
 		effects_shaders_.emplace_back(new graphics::AnuraShader(*eff));
+	}
+
+	if(o.document_) {
+		document_.reset(new xhtml::DocumentObject(*o.document_));
+		document_->init(this);
 	}
 }
 
@@ -1219,7 +1243,7 @@ void CustomObject::draw(int xx, int yy) const
 
 	KRE::StencilScopePtr stencil_scope;
 	if(clip_area_) {
-		clip_scope.reset(new KRE::ClipScope::Manager(*clip_area_));
+		clip_scope.reset(new KRE::ClipScope::Manager(*clip_area_ + point(x(), y())));
 	} else if(type_->isShadow()) {
 		stencil_scope = KRE::StencilScope::create(KRE::StencilSettings(true, 
 			KRE::StencilFace::FRONT_AND_BACK, 
@@ -1236,11 +1260,10 @@ void CustomObject::draw(int xx, int yy) const
 		driver_->draw(xx, yy);
 	}
 
-	KRE::Color current_color = KRE::Color::colorWhite();
+	std::unique_ptr<KRE::ColorScope> color_scope;
 	if(draw_color_) {
-		current_color = draw_color_->toColor();
+		color_scope.reset(new KRE::ColorScope(draw_color_->toColor()));
 	}
-	KRE::ColorScope color_scope(current_color);
 
 	const int draw_x = x()/* - xx*/;
 	const int draw_y = y()/* - yy*/;
@@ -1384,7 +1407,13 @@ void CustomObject::draw(int xx, int yy) const
 		}
 	}
 
-	{
+	if(document_) {
+		KRE::ModelManager2D mm(xx + x(), yy + y());
+		//KRE::Canvas::CameraScope cam_scope(graphics::GameScreen::get().getCurrentCamera());
+		document_->draw(wnd);
+	}
+
+	if(!widgets_.empty()) {
 		KRE::ModelManager2D mm(xx, yy);
 		KRE::Canvas::CameraScope cam_scope(graphics::GameScreen::get().getCurrentCamera());
 		for(const gui::WidgetPtr& w : widgets_) {
@@ -2260,6 +2289,10 @@ void CustomObject::process(Level& lvl)
 		}
 	}
 
+	if(document_) {
+		document_->process();
+	}
+
 	for(const gui::WidgetPtr& w : widgets_) {
 		w->process();
 	}
@@ -2476,6 +2509,12 @@ ConstSolidInfoPtr CustomObject::calculatePlatform() const
 		//defaulting to the type.
 		return ConstSolidInfoPtr();
 	}
+
+	const Frame& f = getCurrentFrame();
+	if(f.platform()) {
+		return f.platform();
+	}
+
 
 	return type_->platform();
 }
@@ -3076,6 +3115,10 @@ variant CustomObject::getValueBySlot(int slot) const
 		return variant(&v);
 	}
 
+	case CUSTOM_OBJECT_DOCUMENT: {
+		return variant(document_.get());
+	}
+
 	case CUSTOM_OBJECT_ACTIVATION_AREA: {
 		if(activation_area_.get() != nullptr) {
 			std::vector<variant> v(4);
@@ -3541,6 +3584,9 @@ void CustomObject::setValue(const std::string& key, const variant& value)
 			effects_shaders_.emplace_back(graphics::AnuraShaderPtr(value.try_convert<graphics::AnuraShader>()));
 			ASSERT_LOG(effects_shaders_.size() > 0, "Couldn't convert type to shader");
 		}
+	} else if(key == "document") {
+		document_.reset(new xhtml::DocumentObject(value));
+		document_->init(this);
 	} else if(key == "particles") {
 		createParticles(value);
 	} else if(key == "draw_area") {
@@ -4185,6 +4231,12 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 				effects_shaders_.emplace_back(new graphics::AnuraShader(value[n]["name"].as_string(), value["name"]));
 			}
 		}
+		break;
+	}
+
+	case CUSTOM_OBJECT_DOCUMENT: {
+		document_.reset(new xhtml::DocumentObject(value));
+		document_->init(this);
 		break;
 	}
 
@@ -5448,6 +5500,8 @@ void CustomObject::surrenderReferences(GarbageCollector* collector)
 		collector->surrenderPtr(&shader, "EFFECTS_SHADER");
 	}
 
+	collector->surrenderPtr(&document_, "XHTML_DOCUMENT");
+
 	Entity::surrenderReferences(collector);
 }
 
@@ -5825,8 +5879,9 @@ void CustomObject::removeWidget(gui::WidgetPtr w)
 bool CustomObject::handle_sdl_event(const SDL_Event& event, bool claimed)
 {
 	//SDL_Event ev(event);
-	int tx = x() + (use_absolute_screen_coordinates_ ? adjusted_draw_position_.x : 0);
-	int ty = y() + (use_absolute_screen_coordinates_ ? adjusted_draw_position_.y : 0);
+	const int tx = x() + (use_absolute_screen_coordinates_ ? adjusted_draw_position_.x : 0);
+	const int ty = y() + (use_absolute_screen_coordinates_ ? adjusted_draw_position_.y : 0);
+	point p(tx, ty);
 	//if(event.type == SDL_MOUSEMOTION) {
 		//ev.motion.x -= x();
 		//ev.motion.y -= y();
@@ -5843,10 +5898,14 @@ bool CustomObject::handle_sdl_event(const SDL_Event& event, bool claimed)
 		//}
 	//}
 
+	if(document_ &&  !claimed) {
+		claimed |= document_->handleEvents(p, event);
+	}
+
 	widget_list w = widgets_;
 	widget_list::const_reverse_iterator ritor = w.rbegin();
 	while(ritor != w.rend()) {
-		claimed |= (*ritor++)->processEvent(point(tx, ty), event, claimed);
+		claimed |= (*ritor++)->processEvent(p, event, claimed);
 	}
 	return claimed;
 }

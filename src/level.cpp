@@ -30,8 +30,11 @@
 #include "ColorScope.hpp"
 #include "Font.hpp"
 #include "ModelMatrixScope.hpp"
+#include "RenderManager.hpp"
 #include "RenderTarget.hpp"
 #include "StencilScope.hpp"
+#include "SceneGraph.hpp"
+#include "SceneNode.hpp"
 #include "WindowManager.hpp"
 
 #include "asserts.hpp"
@@ -44,6 +47,8 @@
 #include "formatter.hpp"
 #include "formula_profiler.hpp"
 #include "json_parser.hpp"
+#include "hex_map.hpp"
+#include "hex_renderable.hpp"
 #include "level.hpp"
 #include "level_object.hpp"
 #include "level_runner.hpp"
@@ -208,11 +213,20 @@ Level::Level(const std::string& level_cfg, variant node)
 	  mouselook_inverted_(false),
 	  allow_touch_controls_(true),
 	  show_builtin_settings_(false),
-	  have_render_to_texture_(false)
+	  have_render_to_texture_(false),
+	  scene_graph_(nullptr),
+	  last_process_time_(profile::get_tick_time()),
+	  hex_map_(nullptr)
 {
 #ifndef NO_EDITOR
 	get_all_levels_set().insert(this);
 #endif
+
+	scene_graph_ = KRE::SceneGraph::create("level");
+	KRE::SceneNodePtr sg_root = scene_graph_->getRootNode();
+	sg_root->setNodeName("root_node");
+	rmanager_ = KRE::RenderManager::getInstance();
+	rmanager_->addQueue(0, "Level::opaques");
 
 	if(KRE::DisplayDevice::checkForFeature(KRE::DisplayDeviceCapabilties::RENDER_TO_TEXTURE)) {
 		have_render_to_texture_ = true;
@@ -386,6 +400,14 @@ Level::Level(const std::string& level_cfg, variant node)
 
 	if(std::adjacent_find(tiles_.rbegin(), tiles_.rend(), level_tile_zorder_pos_comparer()) != tiles_.rend()) {
 		std::sort(tiles_.begin(), tiles_.end(), level_tile_zorder_pos_comparer());
+	}
+
+	if(node.has_key("hex_map")) {
+		ASSERT_LOG(scene_graph_ != nullptr, "Couldn't instantiate a HexMap object, scenegraph was nullptr");
+		hex_map_ = hex::HexMap::factory(node["hex_map"]);
+		hex_renderable_ = std::dynamic_pointer_cast<hex::MapNode>(scene_graph_->createNode("hex_map"));
+		hex_map_->setRenderable(hex_renderable_);
+		scene_graph_->getRootNode()->attachNode(hex_renderable_);
 	}
 
 	if(node.has_key("palettes")) {
@@ -986,7 +1008,7 @@ void Level::complete_rebuild_tiles_in_background()
 	} else {
 		for(int layer : info.rebuild_tile_layers_worker_buffer) {
 			using namespace std::placeholders;
-			tiles_.erase(std::remove_if(tiles_.begin(), tiles_.end(), std::bind(level_tile_from_layer, _1, layer)), tiles_.end());
+			tiles_.erase(std::remove_if(tiles_.begin(), tiles_.end(), std::bind(level_tile_from_layer, std::placeholders::_1, layer)), tiles_.end());
 		}
 	}
 
@@ -1893,6 +1915,11 @@ void Level::draw(int x, int y, int w, int h) const
 		const int begin_alpha_test = get_named_zorder("anura_begin_shadow_casting");
 		const int end_alpha_test = get_named_zorder("shadows");
 
+		if(scene_graph_ != nullptr) {
+			scene_graph_->renderScene(rmanager_);
+			rmanager_->render(KRE::WindowManager::getMainWindow());
+		}
+
 		std::set<int>::const_iterator layer = layers_.begin();
 
 		for(; layer != layers_.end(); ++layer) {
@@ -2246,6 +2273,16 @@ void Level::draw_background(int x, int y, int rotation) const
 void Level::process()
 {
 	formula_profiler::Instrument instrumentation("LEVEL_PROCESS");
+
+	if(hex_map_) {
+		hex_map_->process();
+	}
+	if(scene_graph_ != nullptr) {
+		auto current_time = profile::get_tick_time();
+		const float delta_time = (current_time - last_process_time_) / 1000.0f;
+		scene_graph_->process(delta_time);
+		last_process_time_ = current_time;
+	}
 
 	const int LevelPreloadFrequency = 500; //10 seconds
 	//see if we have levels to pre-load. Load one periodically.
@@ -3640,6 +3677,10 @@ DEFINE_FIELD(show_builtin_settings_dialog, "bool")
 	return variant::from_bool(obj.show_builtin_settings_);
 DEFINE_SET_FIELD
 	obj.show_builtin_settings_ = value.as_bool();
+
+DEFINE_FIELD(hex_map, "null|builtin hex_map") // builtin hex_map
+	return variant(obj.hex_map_.get());
+//DEFINE_SET_FIELD_TYPE("null|builtin logical_map|hex_map|map")
 
 END_DEFINE_CALLABLE(Level)
 

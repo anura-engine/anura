@@ -48,7 +48,32 @@ namespace KRE
 		ShaderAttributeError(const char* what) : std::runtime_error(what) {}
 	};
 	
-	typedef std::function<void()> UniformSetFn;
+	typedef std::function<void(ShaderProgramPtr shader)> UniformSetFn;
+
+	enum class ProgramType {
+		VERTEX,
+		FRAGMENT,
+		GEOMETRY,
+		TESSELATION_EVALUATION,
+		TESSELATION_CONTROL,
+		COMPUTE,
+	};
+
+	struct ShaderData
+	{
+		ShaderData() : type(ProgramType::VERTEX), shader_data() {}
+		explicit ShaderData(ProgramType t, const std::string& data) : type(t), shader_data(data) {}
+		ProgramType type;
+		std::string shader_data;
+	};
+
+	struct ActiveMapping
+	{
+		ActiveMapping() : alt_name(), name() {}
+		explicit ActiveMapping(const std::string& a, const std::string& n) : alt_name(a), name(n) {}
+		std::string alt_name;
+		std::string name;
+	};
 
 	class ShaderProgram
 	{
@@ -110,11 +135,18 @@ namespace KRE
 		//! loads the internal store of shader programs from the given data.
 		static void loadFromVariant(const variant& node);
 
+		static ShaderProgramPtr createShader(const std::string& name, 
+			const std::vector<ShaderData>& shader_data, 
+			const std::vector<ActiveMapping>& uniform_map = std::vector<ActiveMapping>(),
+			const std::vector<ActiveMapping>& attribute_map = std::vector<ActiveMapping>());
+
 		variant getShaderVariant() { return node_; }
 
 		virtual ShaderProgramPtr clone() = 0;
 
 		const std::string& getName() const { return name_; }
+
+		static ShaderProgramPtr createGaussianShader(int radius);
 	private:
 		ShaderProgram();
 
@@ -122,4 +154,6 @@ namespace KRE
 		std::string name_;
 		variant node_;
 	};
+
+	std::vector<float> generate_gaussian(float sigma, int radius = 4);
 }

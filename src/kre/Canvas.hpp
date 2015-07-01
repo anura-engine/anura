@@ -119,16 +119,16 @@ namespace KRE
 		{
 			CameraScope(CameraPtr cam) 
 				: canvas_(Canvas::getInstance()), 
-				saved_pvmat_(canvas_->pv_)
+				  saved_cam_(canvas_->camera_)
 			{
-				canvas_->pv_ = cam->getProjectionMat() * cam->getViewMat();
+				canvas_->camera_ = cam;
 			}
 			~CameraScope()
 			{
-				canvas_->pv_ = saved_pvmat_;
+				canvas_->camera_ = saved_cam_;
 			}
 			CanvasPtr canvas_;
-			glm::mat4 saved_pvmat_;
+			CameraPtr saved_cam_;
 		};
 
 		const Color getColor() const {
@@ -142,6 +142,8 @@ namespace KRE
 		void setWindow(WindowPtr wnd);
 
 		const glm::mat4& getPVMatrix() const { return pv_; }
+
+		const CameraPtr& getCamera() const { return camera_; }
 	protected:
 		Canvas();
 	private:
@@ -154,6 +156,7 @@ namespace KRE
 		mutable bool model_changed_;
 		std::weak_ptr<Window> window_;
 		int size_change_key_;
+		CameraPtr camera_;
 		glm::mat4 pv_;
 	};
 

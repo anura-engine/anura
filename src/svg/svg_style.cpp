@@ -223,38 +223,30 @@ namespace KRE
 
 		void font_attribs::apply(render_context& ctx) const
 		{
-			bool font_set = false;
-			for(auto& family : family_) {
-				FT_Face face = FT::get_font_face(family);
-				if(face) {
-					auto ff = cairo_ft_font_face_create_for_ft_face(face, 0);
-					cairo_set_font_face(ctx.cairo(), ff);
-
-					ctx.fa().push_font_face(face);
-					font_set = true;
-					break;
-				}
-			}
-			ASSERT_LOG(font_set == true, "Couldn't set requested font.");
 			double size = 0;
-			switch(size_)
-			{
-			case FontSize::UNSET:		/* do nothing */ break;
-			case FontSize::INHERIT:		/* do nothing */ break;
-			case FontSize::XX_SMALL:	size = 6.9; break;
-			case FontSize::X_SMALL:		size = 8.3; break;
-			case FontSize::SMALL:		size = 10; break;
-			case FontSize::MEDIUM:		size = 12; break;
-			case FontSize::LARGE:		size = 14.4; break;
-			case FontSize::X_LARGE:		size = 17.3; break;
-			case FontSize::XX_LARGE:	size = 20.7; break;
-			case FontSize::LARGER:		size = ctx.fa().top_font_size() * 1.2; break;
-			case FontSize::SMALLER:		size = ctx.fa().top_font_size() / 1.2; break;
-			case FontSize::VALUE:
-				size = size_value_.value_in_specified_units(svg_length::SVG_LENGTHTYPE_NUMBER);
-				break;
-			default: break;
+			switch(size_) {
+				case FontSize::UNSET:		/* do nothing */ break;
+				case FontSize::INHERIT:		/* do nothing */ break;
+				case FontSize::XX_SMALL:	size = 6.9; break;
+				case FontSize::X_SMALL:		size = 8.3; break;
+				case FontSize::SMALL:		size = 10; break;
+				case FontSize::MEDIUM:		size = 12; break;
+				case FontSize::LARGE:		size = 14.4; break;
+				case FontSize::X_LARGE:		size = 17.3; break;
+				case FontSize::XX_LARGE:	size = 20.7; break;
+				case FontSize::LARGER:		size = ctx.fa().top_font_size() * 1.2; break;
+				case FontSize::SMALLER:		size = ctx.fa().top_font_size() / 1.2; break;
+				case FontSize::VALUE:
+					size = size_value_.value_in_specified_units(svg_length::SVG_LENGTHTYPE_NUMBER);
+					break;
+				default: break;
 			}
+
+			auto face = FontDriver::getFontHandle(family_, static_cast<float>(size), Color::colorWhite(), false);
+			ctx.fa().push_font_face(face);
+			auto ff = cairo_ft_font_face_create_for_ft_face(reinterpret_cast<FT_Face>(face->getRawFontHandle()), 0);
+			cairo_set_font_face(ctx.cairo(), ff);
+
 			if(size > 0) {
 				ctx.fa().push_font_size(size);
 				cairo_set_font_size(ctx.cairo(), size);

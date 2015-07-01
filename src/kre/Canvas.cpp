@@ -56,13 +56,15 @@ namespace KRE
 		  model_changed_(false),
 		  window_(WindowManager::getMainWindow()),
 		  size_change_key_(-1),
-		  pv_()
+		  camera_(nullptr),
+		  pv_(1.0f)
 	{
 		width_ = getWindow()->width();
 		height_ = getWindow()->height();			
 		LOG_DEBUG("canvas dimensions set to: " << width_ << " x " << height_);
 		auto wnd = window_.lock();
-		pv_ = glm::ortho(0.0f, static_cast<float>(width_), static_cast<float>(height_), 0.0f);
+		camera_ = Camera::createInstance("canvas_camera", 0, width_, 0, height_);
+		pv_ = camera_->getProjectionMat() * camera_->getViewMat();
 		if(wnd) {
 			size_change_key_ = wnd->registerSizeChangeObserver([this](int w, int h) {
 				this->setDimensions(w, h);
@@ -74,7 +76,8 @@ namespace KRE
 	{
 		width_ = w;
 		height_ = h;
-		pv_ = glm::ortho(0.0f, static_cast<float>(width_), static_cast<float>(height_), 0.0f);
+		camera_->setOrthoWindow(0, width_, 0, height_);
+		pv_ = camera_->getProjectionMat() * camera_->getViewMat();
 		handleDimensionsChanged();
 		LOG_DEBUG("canvas dimensions set to: " << width_ << " x " << height_);
 	}

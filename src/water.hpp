@@ -92,7 +92,7 @@ private:
 
 	static void initAreaSurfaceSegments(const Level& lvl, area& a);
 
-	bool drawArea(const area& a) const;
+	bool drawArea(const area& a, std::vector<KRE::vertex_color>* wr, std::vector<KRE::vertex_color>* l1, std::vector<KRE::vertex_color>* l2) const;
 
 	int zorder_;
 

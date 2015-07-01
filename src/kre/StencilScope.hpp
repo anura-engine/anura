@@ -34,6 +34,7 @@ namespace KRE
 	{
 	public:
 		virtual ~StencilScope();
+		void applyNewSettings(const StencilSettings& settings) { settings_ = settings; handleUpdatedSettings(); }
 		void updateMask(unsigned mask) { settings_.setMask(mask); handleUpdatedMask();} 
 		const StencilSettings& getSettings() { return settings_; }
 		static StencilScopePtr create(const StencilSettings& settings);
@@ -41,6 +42,7 @@ namespace KRE
 		StencilScope(const StencilSettings& settings);
 	private:
 		virtual void handleUpdatedMask() = 0;
+		virtual void handleUpdatedSettings() = 0;
 
 		DISALLOW_COPY_AND_ASSIGN(StencilScope);
 		StencilSettings settings_;

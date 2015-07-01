@@ -142,6 +142,11 @@ namespace KRE
 		getParentGraph()->attachNode(shared_from_this(), node);
 	}
 
+	void SceneNode::removeNode(const SceneNodePtr& node)
+	{
+		getParentGraph()->removeNode(shared_from_this(), node);
+	}
+
 	void SceneNode::attachObject(const SceneObjectPtr& obj)
 	{
 		objects_.emplace(obj);

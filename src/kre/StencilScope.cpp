@@ -26,6 +26,33 @@
 
 namespace KRE
 {
+	const StencilSettings& get_stencil_mask_settings() 
+	{
+		static const KRE::StencilSettings ss(true, 
+			KRE::StencilFace::FRONT_AND_BACK, 
+			KRE::StencilFunc::NOT_EQUAL, 
+			0xff, 0x00, 0xff, 
+			KRE::StencilOperation::INCREMENT, 
+			KRE::StencilOperation::KEEP, 
+			KRE::StencilOperation::KEEP);
+		return ss;
+	}
+
+	const StencilSettings& get_stencil_keep_settings()
+	{
+		static const StencilSettings keep_stencil_settings(true,
+			StencilFace::FRONT_AND_BACK, 
+			StencilFunc::EQUAL, 
+			0xff,
+			0x01,
+			0x00,
+			StencilOperation::KEEP,
+			StencilOperation::KEEP,
+			StencilOperation::KEEP);
+		return keep_stencil_settings;
+	};
+
+
 	StencilScope::StencilScope(const StencilSettings& settings)
 		: settings_(settings)
 	{

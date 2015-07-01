@@ -34,6 +34,7 @@
 #include "draw_primitive_fwd.hpp"
 #include "draw_scene.hpp"
 #include "entity.hpp"
+#include "ffl_dom_fwd.hpp"
 #include "formula.hpp"
 #include "formula_callable.hpp"
 #include "formula_callable_visitor.hpp"
@@ -281,6 +282,8 @@ public:
 	bool hasOwnDraw() const { return true; }
 
 	void createParticles(const variant& node);
+
+	xhtml::DocumentObjectPtr getDocument() const { return document_; }
 protected:
 	//components of per-cycle process() that can be done even on
 	//static objects.
@@ -549,4 +552,6 @@ private:
 
 	// new particles systems
 	graphics::ParticleSystemProxyPtr particles_;
+
+	xhtml::DocumentObjectPtr document_;
 };

@@ -49,6 +49,7 @@ namespace KRE
 
 		// Lets us set a default camera if nothing else is configured.
 		CameraPtr setDefaultCamera(const CameraPtr& cam) override;
+		CameraPtr getDefaultCamera() const override;
 
 		CanvasPtr getCanvas() override;
 		ClipScopePtr createClipScope(const rect& r) override;
@@ -63,6 +64,11 @@ namespace KRE
 		ShaderProgramPtr getShaderProgram(const std::string& name) override;
 		ShaderProgramPtr getShaderProgram(const variant& node) override;
 		ShaderProgramPtr getDefaultShader() override;
+		ShaderProgramPtr createShader(const std::string& name, 
+			const std::vector<ShaderData>& shader_data, 
+			const std::vector<ActiveMapping>& uniform_map,
+			const std::vector<ActiveMapping>& attribute_map) override;
+		ShaderProgramPtr createGaussianShader(int radius) override;
 
 		BlendEquationImplBasePtr getBlendEquationImpl() override;
 

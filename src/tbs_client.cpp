@@ -88,8 +88,9 @@ namespace tbs
 			variant v = game_logic::deserialize_doc_with_objects(msg);
 
 			if(use_local_cache_ && v["type"].as_string() == "game") {
-				local_game_cache_ = new tbs::game(v["game_type"].as_string(), v);
-				local_game_cache_holder_.reset(local_game_cache_);
+				//local cache currently disabled.
+				//local_game_cache_ = new tbs::game(v["game_type"].as_string(), v);
+				//local_game_cache_holder_.reset(local_game_cache_);
 
 				local_nplayer_= v["nplayer"].as_int();
 				LOG_INFO("LOCAL: UPDATE CACHE: " << local_game_cache_->state_id());

@@ -32,6 +32,7 @@
 #include "custom_object_functions.hpp"
 #include "custom_object_type.hpp"
 #include "filesystem.hpp"
+#include "ffl_dom.hpp"
 #include "formula.hpp"
 #include "formula_constants.hpp"
 #include "json_parser.hpp"
@@ -1162,7 +1163,8 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 	mouseover_delay_(node["mouseover_delay"].as_int(0)),
 	is_strict_((!g_suppress_strict_mode && node["is_strict"].as_bool(custom_object_strict_mode)) || g_force_strict_mode),
 	is_shadow_(node["is_shadow"].as_bool(false)),
-	particle_system_desc_(node["particles"])
+	particle_system_desc_(node["particles"]),
+	document_(nullptr)
 {
 	if(g_player_type_str.is_null() == false) {
 		//if a playable object type has been set, register what the type of
@@ -1530,7 +1532,7 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 
 	for(const PropertyEntry& entry  : slot_properties_) {
 		if(entry.storage_slot >= 0) {
-			if(variable_properties_.size() < entry.storage_slot+1) {
+			if(static_cast<int>(variable_properties_.size()) < entry.storage_slot+1) {
 				variable_properties_.resize(entry.storage_slot+1);
 			}
 
@@ -1588,6 +1590,10 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 		} else if(node["effects"].is_map()) {
 			effects_shaders_.emplace_back(new graphics::AnuraShader(node["effects"]["name"].as_string(), node["effects"]));
 		}
+	}
+
+	if(node.has_key("xhtml")) {
+		document_.reset(new xhtml::DocumentObject(node));
 	}
 
 	if(base_type) {

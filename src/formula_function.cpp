@@ -85,6 +85,8 @@ using boost::math::atanh;
 PREF_STRING(auto_update_status, "", "");
 extern variant g_auto_update_info;
 
+std::map<std::string, variant> g_user_info_registry;
+
 namespace 
 {
 	const std::string FunctionModule = "core";
@@ -386,6 +388,15 @@ namespace game_logic
 			return variant(new DateTime(t, ltime));
 		RETURN_TYPE("builtin date_time")
 		END_FUNCTION_DEF(time)
+
+		FUNCTION_DEF(set_user_info, 2, 2, "set_user_info(string, any): sets some user info used in stats collection")
+			std::string key = args()[0]->evaluate(variables).as_string();
+			variant value = args()[1]->evaluate(variables);
+
+			return variant(new FnCommandCallable([=]() { g_user_info_registry[key] = value; }));
+			
+		RETURN_TYPE("commands")
+		END_FUNCTION_DEF(set_user_info)
 
 		FUNCTION_DEF(overload, 1, -1, "overload(fn...): makes an overload of functions")
 			std::vector<variant> functions;
@@ -4515,6 +4526,8 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 		Formula::failIfStaticContext();
 		::srand(static_cast<unsigned>(::time(nullptr)));
 		return variant();
+	FUNCTION_TYPE_DEF
+		return variant_type::get_type(variant::VARIANT_TYPE_NULL);
 	END_FUNCTION_DEF(seed_rng)
 
 	FUNCTION_DEF(lower, 1, 1, "lower(s) -> string: lowercase version of string")

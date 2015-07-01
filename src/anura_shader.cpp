@@ -500,7 +500,7 @@ namespace graphics
 			}
 		} else {
 			game_logic::CommandCallable* cmd = var.try_convert<game_logic::CommandCallable>();
-			if(cmd != NULL) {
+			if(cmd != nullptr) {
 				cmd->runCommand(*this);
 			}
 		}

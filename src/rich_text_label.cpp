@@ -23,6 +23,7 @@
 
 #include <algorithm>
 
+#include "Canvas.hpp"
 #include "ClipScope.hpp"
 
 #include "label.hpp"
@@ -213,7 +214,7 @@ namespace gui
 
 		using namespace KRE;
 		//commented out until clipping is fixed
-		//ClipScope::Manager clip_scope(rect(x(),y(),width(),height()));
+		ClipScope::Manager clip_scope(rect(x(),y(),width(),height()), Canvas::getInstance()->getCamera());
 
 		for(const std::vector<WidgetPtr>& v : children_) {
 			for(const WidgetPtr& widget : v) {
