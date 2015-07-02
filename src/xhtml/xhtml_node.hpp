@@ -46,6 +46,20 @@ namespace xhtml
 		TEXT,
 	};
 
+	struct Keystate
+	{
+		// true if pressed, false if released
+		bool pressed;
+		// true if is repeat key.
+		bool repeat;
+		// keyboard scan code
+		int scancode;
+		// unicode sysmbol
+		char32_t symbol;
+		// control key modifiers
+		unsigned short modifiers;
+	};
+
 	typedef std::map<std::string, AttributePtr> AttributeMap;
 	typedef std::vector<NodePtr> NodeList;
 
@@ -106,7 +120,6 @@ namespace xhtml
 		virtual bool hasTag(const std::string& tag) const { return false; }
 		virtual bool hasTag(ElementId tag) const { return false; }
 		AttributePtr getAttribute(const std::string& name);
-		void setAttribute(const std::string& name, const std::string& value);
 		virtual const std::string& getValue() const;
 		void normalize();
 		void mergeProperties(const css::Specificity& specificity, const css::PropertyList& plist);
@@ -125,6 +138,8 @@ namespace xhtml
 		const rect& getActiveRect() const { return active_rect_; }
 		void processScriptAttributes();
 		virtual void layoutComplete() {}
+
+		virtual void process(float dt) {}
 
 		bool handleMouseMotion(bool* trigger, const point& p);
 		bool handleMouseButtonUp(bool* trigger, const point& p, unsigned button);

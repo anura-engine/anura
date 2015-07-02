@@ -160,7 +160,8 @@ namespace xhtml
 		const int kernel_radius = 7;
 
 		for(auto shadow : shadows_) {
-			if(std::abs(shadow.blur) < FLT_EPSILON) {
+			if(std::abs(shadow.blur) < FLT_EPSILON || 
+				!KRE::DisplayDevice::checkForFeature(KRE::DisplayDeviceCapabilties::RENDER_TO_TEXTURE)) {
 				// no blur
 				KRE::FontRenderablePtr shadow_font(new KRE::FontRenderable(*fontr));
 				shadow_font->setPosition(shadow.x_offset + offset.x / LayoutEngine::getFixedPointScaleFloat(), 
@@ -171,8 +172,9 @@ namespace xhtml
 				using namespace KRE;
 				// more complex case where we need to blur, so we render the text to a 
 				// RenderTarget, then render that to another render target with a blur filter.
-				const float width = w + (kernel_radius) * 2.0f;
-				const float height = h + (kernel_radius) * 2.0f;
+				const float extra_border = (kernel_radius) * 2.0f + 20.0f;
+				const float width = w + extra_border * 2.0f;
+				const float height = h + extra_border * 2.0f;
 
 				const int iwidth = static_cast<int>(std::round(width));
 				const int iheight = static_cast<int>(std::round(height));
@@ -185,7 +187,8 @@ namespace xhtml
 
 				CameraPtr rt_cam = std::make_shared<Camera>("ortho_blur", 0, iwidth, 0, iheight);
 				KRE::FontRenderablePtr shadow_font(new KRE::FontRenderable(*fontr));
-				shadow_font->setPosition(kernel_radius, getBaselineOffset() / LayoutEngine::getFixedPointScale());
+				const float xheight = getStyleNode()->getFont()->getFontXHeight() / LayoutEngine::getFixedPointScaleFloat();
+				shadow_font->setPosition(extra_border, extra_border + xheight);
 				shadow_font->setCamera(rt_cam);
 				shadow_font->setColor(shadow.color != nullptr ? *shadow.color : *getStyleNode()->getColor());
 				int u_ignore_alpha = shadow_font->getShader()->getUniform("ignore_alpha");
@@ -230,8 +233,8 @@ namespace xhtml
 					shader->setUniformValue(blur_tho, 1.0f / (iheight - 1.0f));
 				});
 
-				rt_blur_v->setPosition(shadow.x_offset + offset.x / LayoutEngine::getFixedPointScaleFloat() - kernel_radius, 
-					shadow.y_offset + (offset.y + getStyleNode()->getFont()->getDescender()) / LayoutEngine::getFixedPointScaleFloat() - h - kernel_radius);
+				rt_blur_v->setPosition(shadow.x_offset + offset.x / LayoutEngine::getFixedPointScaleFloat() - extra_border, 
+					shadow.y_offset + (offset.y) / LayoutEngine::getFixedPointScaleFloat() - xheight - extra_border);
 				display_list->addRenderable(rt_blur_v);
 				// XXX isnstead of adding all the textures here, we should add them to an array, then
 				// render them all to an FBO so we only have one final texture.
@@ -288,7 +291,6 @@ namespace xhtml
 		//handleRenderTextDecoration -- underlines, then overlines
 
 		fontr->setColorPointer(getStyleNode()->getColor());
-		//LOG_INFO("text: color ptr: " << getStyleNode()->getColor().get() << ", StyleNode: " << getStyleNode().get());
 		fontr->setPosition(offset.x / LayoutEngine::getFixedPointScaleFloat(), offset.y / LayoutEngine::getFixedPointScaleFloat());
 		display_list->addRenderable(fontr);
 
