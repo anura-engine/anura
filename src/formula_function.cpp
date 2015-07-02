@@ -4530,6 +4530,14 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 		return variant_type::get_type(variant::VARIANT_TYPE_NULL);
 	END_FUNCTION_DEF(seed_rng)
 
+	FUNCTION_DEF(deep_copy, 1, 1, "deep_copy(any) ->any")
+		return deep_copy_variant(args()[0]->evaluate(variables));
+	FUNCTION_ARGS_DEF
+		ARG_TYPE("any");
+	FUNCTION_TYPE_DEF
+		return args()[0]->queryVariantType();
+	END_FUNCTION_DEF(deep_copy)
+
 	FUNCTION_DEF(lower, 1, 1, "lower(s) -> string: lowercase version of string")
 		std::string s = args()[0]->evaluate(variables).as_string();
 		boost::algorithm::to_lower(s);
