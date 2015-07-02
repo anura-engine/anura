@@ -44,26 +44,6 @@ namespace KRE
 		FontError2(const std::string& str) : std::runtime_error(str) {}
 	};
 
-	struct GlyphInfo
-	{
-		// X co-ordinate of top-left corner of glyph in texture.
-		unsigned short tex_x;
-		// Y co-ordinate of top-left corner of glyph in texture.
-		unsigned short tex_y;
-		// Width of glyph in texture.
-		unsigned short width;
-		// Height of glyph in texture.
-		unsigned short height;
-		// X advance (i.e. distance to start of next glyph on X axis)
-		long advance_x;
-		// Y advance (i.e. distance to start of next glyph on Y axis)
-		long advance_y;
-		// X offset to top of glyph from origin
-		long bearing_x;
-		// Y offset to top of glyph from origin
-		long bearing_y;
-	};
-
 	struct font_coord
 	{
 		font_coord(const glm::vec2& v, const glm::vec2& t) : vtx(v), tc(t) {}
@@ -95,7 +75,8 @@ namespace KRE
 	class FontHandle
 	{
 	public:
-		FontHandle(const std::string& fnt_name, const std::string& fnt_path, float size, const Color& color, bool init_texture);
+		class Impl;
+		FontHandle(std::unique_ptr<Impl>&& impl, const std::string& fnt_name, const std::string& fnt_path, float size, const Color& color, bool init_texture);
 		~FontHandle();
 		float getFontSize();
 		float getFontXHeight();
@@ -110,22 +91,33 @@ namespace KRE
 		const std::vector<point>& getGlyphPath(const std::string& text);
 		int calculateCharAdvance(char32_t cp);
 		int getScaleFactor() const { return 65536; }
-		const GlyphInfo& getGlyphInfo(char32_t cp);
 		std::vector<unsigned> getGlyphs(const std::string& text);
 		void* getRawFontHandle();
 	private:
-		class Impl;
 		std::unique_ptr<Impl> impl_;
 	};
 	typedef std::shared_ptr<FontHandle> FontHandlePtr;
 
+	typedef std::function<std::unique_ptr<FontHandle::Impl>(const std::string&, const std::string&, float , const Color&, bool)> font_impl_creation_fn;
+
 	class FontDriver
 	{
 	public:
-		static FontHandlePtr getFontHandle(const std::vector<std::string>& font_list, float size, const Color& color=Color::colorWhite(), bool init_texture=true);
+		static void setFontProvider(const std::string& name);
+		static void registerFontProvider(const std::string& name, font_impl_creation_fn create_fn);
+		static FontHandlePtr getFontHandle(const std::vector<std::string>& font_list, float size, const Color& color=Color::colorWhite(), bool init_texture=true, const std::string& driver=std::string());
 		static void setAvailableFonts(const font_path_cache& font_map);
 		//static TexturePtr renderText(const std::string& text, ...);
+		static const std::vector<char32_t>& getCommonGlyphs();
 	private:
 		FontDriver();
+	};
+
+	struct FontDriverRegistrar
+	{
+		explicit FontDriverRegistrar(const std::string& name, font_impl_creation_fn create_fn) 
+		{
+			FontDriver::registerFontProvider(name, create_fn);
+		}
 	};
 }
