@@ -117,6 +117,7 @@ CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_DRAW_AREA,                          "dr
 CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_SCALE,                              "scale", "decimal" )
 CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_ACTIVATION_AREA,                    "activation_area", "null|[int|decimal]" )
 CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_CLIPAREA,                           "clip_area", "null|[int]" )
+CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_CLIPAREA_ABSOLUTE,                           "clip_area_absolute", "bool" )
 CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_ALWAYS_ACTIVE,                      "always_active", "bool" )
 CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_ACTIVATION_BORDER,                  "activation_border", "int/int|decimal" )
 CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_FALL_THROUGH_PLATFORMS,             "fall_through_platforms", "any" )
