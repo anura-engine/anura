@@ -191,6 +191,10 @@ namespace xhtml
 		attributes_[a->getName()] = a;
 	}
 
+	void Node::setAttribute(const std::string& name, const std::string& value)
+	{
+		attributes_[name] = Attribute::create(name, value, getOwnerDoc());
+	}	
 	bool Node::preOrderTraversal(std::function<bool(NodePtr)> fn)
 	{
 		// Visit node, visit children.

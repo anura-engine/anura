@@ -99,6 +99,7 @@ namespace xhtml
 		void addChild(NodePtr child, const DocumentPtr& owner=nullptr);
 		void removeChild(NodePtr child);
 		void addAttribute(AttributePtr a);
+		void setAttribute(const std::string& name, const std::string& value);
 		// Called after children and attributes have been added.
 		virtual void init() {}
 		NodePtr getLeft() const { return left_.lock(); }
