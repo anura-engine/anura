@@ -65,9 +65,7 @@ namespace KRE
 			clip_cam = DisplayDevice::getCurrent()->getDefaultCamera();
 		}
 
-		//glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3((area().x()+area().x2())/2.0f,(area().y()+area().y2())/2.0f,0.0f)) 
-		//	* glm::translate(glm::mat4(1.0f), glm::vec3(-(area().x()+area().y())/2.0f,-(area().y()+area().y())/2.0f,0.0f));
-		glm::mat4 mvp = clip_cam->getProjectionMat() * clip_cam->getViewMat() * get_global_model_matrix() /** model*/;
+		glm::mat4 mvp = clip_cam->getProjectionMat() * clip_cam->getViewMat() * get_global_model_matrix();
 		
 		static OpenGL::ShaderProgramPtr shader = OpenGL::ShaderProgram::factory("simple");
 		shader->makeActive();

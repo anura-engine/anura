@@ -23,42 +23,12 @@
 
 #pragma once
 
-#include "css_properties.hpp"
-#include "FontDriver.hpp"
+#include "Surface.hpp"
 
-namespace xhtml
+namespace KRE
 {
-	struct RenderContextManager
-	{
-		RenderContextManager();
-		~RenderContextManager();
-	};
+	// N.B. Operates only an array of alpha values 0-255.
+	void pixels_alpha_blur(void* pixels, int w, int h, int stride, float blur);
 
-	class RenderContext
-	{
-	public:
-		// Returns the render context instance.
-		static RenderContext& get();
-		
-		struct Manager
-		{
-			explicit Manager(const css::PropertyList& plist);
-			~Manager();
-			std::vector<int> update_list;
-			bool pushed_font_change_;
-		};
-
-		int getDPI() const { return dpi_scale_; }
-		void setDPI(int dpi) { dpi_scale_ = dpi; }
-
-		const css::StylePtr& getComputedValue(css::Property p) const;
-
-		std::vector<css::StylePtr> getCurrentStyles() const;
-
-		// We need special case handling for the font.
-		KRE::FontHandlePtr getFontHandle() const;
-	private:
-		RenderContext();
-		int dpi_scale_;
-	};
+	void surface_alpha_blur(const SurfacePtr& surface, float blur);
 }

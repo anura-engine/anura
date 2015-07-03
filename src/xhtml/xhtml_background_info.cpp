@@ -377,7 +377,8 @@ namespace xhtml
 				const float spread_width = static_cast<float>(box_width) + 2 * ssr;
 				const float spread_height = static_cast<float>(box_height) + 2 * ssr;
 
-				if(std::abs(shadow.blur_radius) < FLT_EPSILON) {
+				if(std::abs(shadow.blur_radius) < FLT_EPSILON 
+					|| !KRE::DisplayDevice::checkForFeature(KRE::DisplayDeviceCapabilties::RENDER_TO_TEXTURE)) {
 					rectf box_size(0, 0, spread_width, spread_height);
 					SolidRenderablePtr box = std::make_shared<SolidRenderable>(box_size, shadow.color);
 					if(clip_shape != nullptr) {

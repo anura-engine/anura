@@ -27,7 +27,7 @@
 #include <string>
 #include <vector>
 
-#include "FontFreetype.hpp"
+#include "FontDriver.hpp"
 #include "svg_fwd.hpp"
 #include "svg_length.hpp"
 #include "svg_paint.hpp"

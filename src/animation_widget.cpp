@@ -84,6 +84,16 @@ namespace gui
 	{
 		init();
 	}
+	
+	void AnimationWidget::surrenderReferences(GarbageCollector* collector)
+	{
+		collector->surrenderPtr(&label_, "ANIMATION_WIDGET:LABEL");
+		collector->surrenderPtr(&frame_, "ANIMATION_WIDGET:FRAME");
+		
+		for(auto& n : nodes_) {
+			collector->surrenderVariant(&n, "ANIMATION_WIDGET:NODE");
+		}
+	}
 
 	void AnimationWidget::init()
 	{

@@ -123,6 +123,16 @@ namespace KRE
 		return handleClone();
 	}
 
+	std::vector<uint8_t> RenderTarget::readPixels() const
+	{
+		return handleReadPixels();
+	}
+
+	SurfacePtr RenderTarget::readToSurface(SurfacePtr s) const
+	{
+		return handleReadToSurface(s);
+	}
+
 	variant RenderTarget::write()
 	{
 		variant_builder res;
