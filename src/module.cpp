@@ -614,6 +614,11 @@ namespace module
 		get_files_in_module(path, files, exclude_paths);
 		std::map<variant, variant> file_attr;
 		for(const std::string& file : files) {
+			if(std::find(file.begin(), file.end(), ' ') != file.end()) {
+				LOG_INFO("Ignoring file with invalid path: " << file);
+				continue;
+			}
+
 			LOG_INFO("processing " << file << "...");
 			std::string fname(file.begin() + path.size() + 1, file.end());
 			std::map<variant, variant> attr;
@@ -1612,5 +1617,70 @@ static const int ModuleProtocolVersion = 1;
 
 		LOG_INFO("RESPONSE:\n" << response);
 	}
+
+	COMMAND_LINE_UTILITY(get_module_version)
+	{
+		std::string server = g_module_server;
+		std::string port = g_module_port;
+		std::deque<std::string> arguments(args.begin(), args.end());
+
+		ASSERT_LOG(arguments.size() == 1, "Usage: <module>");
+
+		std::map<variant,variant> attr;
+		attr[variant("type")] = variant("query_module_version");
+		attr[variant("module_id")] = variant(args[0]);
+
+		std::string msg = variant(&attr).write_json();
+
+		bool done = false;
+
+		std::string response;
+
+		http_client client(server, port);
+		client.send_request("POST /query_module_version", msg, 
+							std::bind(finish_upload, _1, &done, &response),
+							std::bind(error_upload, _1, &done),
+							std::bind(upload_progress, _1, _2, _3));
+
+		while(!done) {
+			client.process();
+		}
+
+		printf("Response: %s\n", response.c_str());
+	}
+
+	COMMAND_LINE_UTILITY(set_module_label)
+	{
+		std::string server = g_module_server;
+		std::string port = g_module_port;
+		std::deque<std::string> arguments(args.begin(), args.end());
+
+		ASSERT_LOG(arguments.size() == 3, "Usage: <module> <label> <version>");
+
+		std::map<variant,variant> attr;
+		attr[variant("type")] = variant("set_module_label");
+		attr[variant("module_id")] = variant(args[0]);
+		attr[variant("label")] = variant(args[1]);
+		attr[variant("version")] = json::parse(args[2]);
+
+		std::string msg = variant(&attr).write_json();
+
+		bool done = false;
+
+		std::string response;
+
+		http_client client(server, port);
+		client.send_request("POST /set_module_label", msg, 
+							std::bind(finish_upload, _1, &done, &response),
+							std::bind(error_upload, _1, &done),
+							std::bind(upload_progress, _1, _2, _3));
+
+		while(!done) {
+			client.process();
+		}
+
+		printf("Response: %s\n", response.c_str());
+	}
+
 }
 

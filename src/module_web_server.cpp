@@ -97,6 +97,11 @@ void ModuleWebServer::handlePost(socket_ptr socket, variant doc, const http::env
 		if(msg_type == "download_module") {
 			const std::string module_id = doc["module_id"].as_string();
 
+			std::string label = "default";
+			if(doc.has_key("label")) {
+				label = doc["label"].as_string();
+			}
+
 			variant proto_version = doc["protocol_version"];
 			bool require_back_compat = false;
 			if(proto_version.is_null() || proto_version.as_int() < ModuleProtocolVersion) {
@@ -110,18 +115,35 @@ void ModuleWebServer::handlePost(socket_ptr socket, variant doc, const http::env
 				return;
 			}
 
-			variant server_version = data_[module_id]["version"];
+			variant latest_version = data_[module_id]["version"];
+
+			variant server_version = latest_version;
+			variant server_labels = data_[module_id]["labels"];
+
+			if(server_labels.is_map() && server_labels.has_key(label)) {
+				server_version = server_labels[label];
+			}
+
 			ASSERT_LOG(server_version.is_list(), "Invalid version for module " << module_id << ": " << server_version.write_json());
 
 			if(doc.has_key("current_version")) {
 				variant current_version = doc["current_version"];
-				if(server_version <= current_version) {
+				if(server_version == current_version) {
 					send_msg(socket, "text/json", "{ status: \"no_newer_module\" }", "");
 					return;
 				}
 			}
 
-			const std::string module_path = data_path_ + module_id + ".cfg";
+			std::string module_path = data_path_ + module_id + ".cfg";
+			if(server_version != latest_version) {
+				module_path += "-history/version";
+				for(variant v : server_version.as_list()) {
+					module_path += "-" + v.write_json();
+				}
+
+				module_path += ".cfg";
+			}
+
 			if(sys::file_exists(module_path)) {
 				std::string response = "{\nstatus: \"ok\",\nversion: " + server_version.write_json() + ",\nmodule: ";
 				{
@@ -207,15 +229,60 @@ void ModuleWebServer::handlePost(socket_ptr socket, variant doc, const http::env
 			ASSERT_LOG(std::count_if(module_id.begin(), module_id.end(), isalnum) + std::count(module_id.begin(), module_id.end(), '_') == module_id.size(), "ILLEGAL MODULE ID");
 
 			variant result;
+			variant history;
 			const std::string module_path = data_path_ + module_id + ".cfg";
 			if(sys::file_exists(module_path)) {
 				std::string contents = sys::read_file(module_path);
 				variant module = json::parse(contents);
 				result = module["version"];
+				history = module["history"];
 			}
 
 			response[variant("status")] = variant("ok");
 			response[variant("version")] = result;
+			response[variant("history")] = history;
+
+			if(data_.has_key(module_id)) {
+				response[variant("labels")] = data_[module_id]["labels"];
+			}
+
+		} else if(msg_type == "set_module_label") {
+			const std::string module_id = doc["module_id"].as_string();
+			ASSERT_LOG(std::count_if(module_id.begin(), module_id.end(), isalnum) + std::count(module_id.begin(), module_id.end(), '_') == module_id.size(), "ILLEGAL MODULE ID");
+
+			const std::string label = doc["label"].as_string();
+			variant version = doc["version"];
+			const std::string module_path = data_path_ + module_id + ".cfg";
+			ASSERT_LOG(sys::file_exists(module_path), "No such module");
+			std::string contents = sys::read_file(module_path);
+			variant module = json::parse(contents);
+
+			ASSERT_LOG(module["history"].is_list(), "No module history");
+
+			std::vector<variant> history = module["history"].as_list();
+
+			if(std::find(history.begin(), history.end(), version) == history.end() && module["version"] != version) {
+				send_msg(socket, "text/json", "{ status: \"no_such_version\" }", "");
+				return;
+			}
+
+			std::map<variant,variant> cur_labels;
+
+			variant server_labels = data_[module_id]["labels"];
+			if(server_labels.is_map()) {
+				cur_labels = server_labels.as_map();
+			}
+
+			cur_labels[variant(label)] = version;
+
+			variant info = data_[module_id];
+
+			info.add_attr_mutation(variant("labels"), variant(&cur_labels));
+
+			data_.add_attr_mutation(variant(module_id), info);
+
+			send_msg(socket, "text/json", "{ status: \"updated_label\" }", "");
+			return;
 
 		} else if(msg_type == "prepare_upload_module") {
 			const std::string module_id = doc["module_id"].as_string();
@@ -256,6 +323,12 @@ void ModuleWebServer::handlePost(socket_ptr socket, variant doc, const http::env
 
 			const std::string module_path = data_path_ + module_id + ".cfg";
 
+			sys::get_dir(module_path + "-history");
+
+			variant old_version;
+
+			std::vector<variant> historical_versions;
+
 			if(sys::file_exists(module_path)) {
 				std::vector<variant> deletions;
 				if(doc.has_key("delete")) {
@@ -263,6 +336,26 @@ void ModuleWebServer::handlePost(socket_ptr socket, variant doc, const http::env
 				}
 
 				variant current_module = json::parse(sys::read_file(module_path));
+
+				std::string old_version_path;
+				old_version = current_module["version"];
+				if(old_version.is_list()) {
+					for(int n = 0; n != old_version.num_elements(); ++n) {
+						old_version_path += "-" + old_version[n].write_json();
+					}
+				}
+
+				sys::copy_file(module_path, module_path + "-history/version" + old_version_path + ".cfg");
+
+				variant historical_versions_var = current_module["history"];
+				if(historical_versions_var.is_list()) {
+					historical_versions = historical_versions_var.as_list();
+				}
+
+				if(old_version.is_list()) {
+					historical_versions.push_back(old_version);
+				}
+
 				variant new_manifest = module_node["manifest"];
 				variant old_manifest = current_module["manifest"];
 				for(auto p : old_manifest.as_map()) {
@@ -271,6 +364,15 @@ void ModuleWebServer::handlePost(socket_ptr socket, variant doc, const http::env
 					}
 				}
 			}
+
+			module_node.add_attr_mutation(variant("history"), variant(&historical_versions));
+
+			time_t t = time(nullptr);
+			tm* ltime = localtime(&t);
+			char tbuf[512];
+			sprintf(tbuf, "%04d/%02d/%02d %02d:%02d:%02d", ltime->tm_year + 1900, ltime->tm_mon + 1, ltime->tm_mday, ltime->tm_hour, ltime->tm_min, ltime->tm_sec);
+			module_node.add_attr_mutation(variant("timestamp"), variant(std::string(tbuf)));
+
 
 			variant manifest = module_node["manifest"];
 			static const variant SizeVariant("size");
