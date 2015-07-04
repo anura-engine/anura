@@ -111,6 +111,8 @@ namespace tbs
 		void player_reconnect(int nplayer);
 		void player_disconnected_for(int nplayer, int time_ms);
 
+		void observer_connect(int nclient);
+
 	protected:
 		void start_game();
 		virtual void send_game_state(int nplayer=-1, int processing_ms=-1);
