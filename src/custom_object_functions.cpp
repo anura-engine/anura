@@ -646,18 +646,20 @@ namespace
 		{
 		public:
 			explicit music_command(const std::string& name, const bool loops)
-			: name_(name), loops_(loops)
+			: name_(name), loops_(loops), queued_(false)
 			{}
 			virtual void execute(Level& lvl, Entity& ob) const {
 				if(loops_){
-					sound::play_music(name_);
+					sound::play_music(name_, queued_);
 				}else{
 					sound::play_music_interrupt(name_);
 				}
 			}
+			void setQueued() { queued_ = true; }
 		private:
 			std::string name_;
 			bool loops_;
+			bool queued_;
 		};
 
 	FUNCTION_DEF(music, 1, 1, "music(string id): plays the music file given by 'id' in a loop")
@@ -670,6 +672,18 @@ namespace
 		ARG_TYPE("string")
 	RETURN_TYPE("commands")
 	END_FUNCTION_DEF(music)
+
+	FUNCTION_DEF(music_queue, 1, 1, "music_queue(string id): plays the music file given by 'id' in a loop after the current music is done.")
+		music_command* cmd = (new music_command(
+										 args()[0]->evaluate(variables).as_string(),
+										 true));
+		cmd->setQueued();
+		cmd->setExpression(this);
+		return variant(cmd);
+	FUNCTION_ARGS_DEF
+		ARG_TYPE("string")
+	RETURN_TYPE("commands")
+	END_FUNCTION_DEF(music_queue)
 
 	FUNCTION_DEF(music_onetime, 1, 1, "music_onetime(string id): plays the music file given by 'id' once")
 		music_command* cmd = (new music_command(

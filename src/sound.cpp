@@ -755,7 +755,7 @@ namespace sound
 		module::get_unique_filenames_under_dir(MUSIC_DIR_NAME, &get_music_paths());
 	}
 
-	void play_music(const std::string& file)
+	void play_music(const std::string& file, bool queue)
 	{
 		if(preferences::no_sound() || preferences::no_music() || !sound_ok) {
 			return;
@@ -786,7 +786,10 @@ namespace sound
 	#if !TARGET_IPHONE_SIMULATOR && !TARGET_OS_IPHONE
 		if(current_mix_music) {
 			next_music() = file;
-			Mix_FadeOutMusic(500);
+
+			if(!queue) {
+				Mix_FadeOutMusic(500);
+			}
 			return;
 		}
 
