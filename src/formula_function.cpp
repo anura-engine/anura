@@ -58,6 +58,7 @@
 #include "lua_iface.hpp"
 #include "md5.hpp"
 #include "module.hpp"
+#include "random.hpp"
 #include "rectangle_rotator.hpp"
 #include "string_utils.hpp"
 #include "unit_test.hpp"
@@ -2726,18 +2727,18 @@ FUNCTION_DEF_IMPL
 				return variant();
 			}
 
+			if(args().size() == 1) {
+				return items[rng::generate()%items.num_elements()];
+			}
+
 			int max_index = -1;
 			variant max_value;
 			boost::intrusive_ptr<map_callable> callable(new map_callable(variables));
 			for(int n = 0; n != items.num_elements(); ++n) {
 				variant val;
 		
-				if(args().size() >= 2) {
-					callable->set(items[n], n);
-					val = args().back()->evaluate(*callable);
-				} else {
-					val = variant(rand());
-				}
+				callable->set(items[n], n);
+				val = args().back()->evaluate(*callable);
 
 				if(n == 0 || val > max_value) {
 					max_index = n;
