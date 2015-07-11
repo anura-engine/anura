@@ -2014,6 +2014,7 @@ void Level::draw(int x, int y, int w, int h) const
 		if(background_) {
 			background_->drawForeground(start_x, start_y, 0.0f, cycle());
 		}
+
 	}
 
 	calculateLighting(start_x, start_y, start_w, start_h);
@@ -2142,7 +2143,7 @@ void Level::calculateLighting(int x, int y, int w, int h) const
 	auto wnd = KRE::WindowManager::getMainWindow();
 
 	//find all the lights in the level
-	static std::vector<const Light*> lights;
+	static std::vector<Light*> lights;
 	lights.clear();
 	for(const EntityPtr& c : active_chars_) {
 		for(const auto& lt : c->lights()) {
@@ -2150,23 +2151,27 @@ void Level::calculateLighting(int x, int y, int w, int h) const
 		}
 	}
 
-	auto rt = KRE::RenderTarget::create(w, h);
+	auto rt = KRE::RenderTarget::create(wnd->width(), wnd->height());
 
 	{
 		KRE::BlendModeScope blend_scope(KRE::BlendModeConstants::BM_ONE, KRE::BlendModeConstants::BM_ONE);
-		rect screen_area(x, y, w, h);
+		//rect screen_area(x, y, w, h);
 		
-		KRE::RenderTarget::RenderScope scope(rt);
+		rt->setClearColor(dark_color_.applyBlack());
+		KRE::RenderTarget::RenderScope scope(rt, rect(0, 0, wnd->width(), wnd->height()));
 
-		wnd->setClearColor(dark_color_.applyBlack());
-		wnd->clear(KRE::ClearFlags::COLOR);
+		rt->clear();
 
 		KRE::ColorScope color_scope(dark_color_.applyBlack());
 		for(auto& lt : lights) {
+			lt->preRender(wnd);
 			wnd->render(lt);
 		}
 	}
 
+	KRE::BlendModeScope blend_scope(KRE::BlendModeConstants::BM_ONE_MINUS_SRC_ALPHA, KRE::BlendModeConstants::BM_SRC_ALPHA);
+	rt->setPosition(x, y);
+	rt->preRender(wnd);
 	wnd->render(rt.get());
 }
 
