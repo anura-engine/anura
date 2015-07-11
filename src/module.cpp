@@ -997,7 +997,7 @@ COMMAND_LINE_UTILITY(generate_manifest)
 				}
 			}
 
-			static const char* AllowedChars = "(){}[]";
+			static const char* AllowedChars = "(){}[]+";
 
 			return str.empty() == false && (isalnum(str[0]) || strchr(AllowedChars, str[0])) && std::count_if(str.begin(), str.end(), valid_path_chars) == str.size();
 		}
