@@ -1426,7 +1426,7 @@ END_CAIRO_FN
 		return variant(&result);
 	END_DEFINE_FN
 
-	BEGIN_DEFINE_FN(text_extents, "(string, decimal, string) -> { width: decimal, height: decimal }")
+	BEGIN_DEFINE_FN(text_extents, "(string, decimal, string) -> { width: decimal, height: decimal, x_bearing: decimal, y_bearing: decimal }")
 		static cairo_context& context = *new cairo_context(8,8);
 
 		FT_Face face = get_ft_font(FN_ARG(0).as_string());
@@ -1438,12 +1438,14 @@ END_CAIRO_FN
 		std::string text = FN_ARG(2).as_string();
 		std::vector<std::string> lines = util::split(text, '\n');
 
-		double width = 0.0, height = 0.0;
+		double width = 0.0, height = 0.0, x_bearing = 0.0, y_bearing = 0.0;
 
 		for(const std::string& line : lines) {
 			cairo_text_extents_t extents;
 			cairo_text_extents(context.get(), line.c_str(), &extents);
 			height += extents.height;
+			x_bearing = extents.x_bearing;
+			y_bearing = extents.y_bearing;
 			if(extents.x_advance > width) {
 				width = extents.x_advance;
 			}
@@ -1452,6 +1454,8 @@ END_CAIRO_FN
 		std::map<variant,variant> result;
 		result[variant("width")] = variant(width);
 		result[variant("height")] = variant(height);
+		result[variant("x_bearing")] = variant(x_bearing);
+		result[variant("y_bearing")] = variant(y_bearing);
 		return variant(&result);
 	END_DEFINE_FN
 

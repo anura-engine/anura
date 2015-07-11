@@ -242,16 +242,7 @@ public:
 	gui::WidgetPtr getWidgetById(const std::string& id);
 	gui::ConstWidgetPtr getWidgetById(const std::string& id) const;
 	std::vector<variant> getVariantWidgetList() const;
-	bool getClipArea(rect* clip_area) const override {
-		if(clip_area_.get() != nullptr && clip_area) {
-			*clip_area = *clip_area_.get();
-			return true;
-		} else if(clip_area_.get() != nullptr) {
-			return true;
-		}
-
-		return false;
-	}
+	bool getClipArea(rect* clip_area) const override;
 
 	struct AnimatedMovement {
 		std::string name;
@@ -453,6 +444,7 @@ private:
 
 	std::shared_ptr<decimal> draw_scale_;
 	std::shared_ptr<rect> draw_area_, activation_area_, clip_area_;
+	bool clip_area_absolute_;
 	int activation_border_;
 	
 	bool can_interact_with_;

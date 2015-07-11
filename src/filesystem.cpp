@@ -509,7 +509,7 @@ namespace sys
 		stat(path.c_str(), &buf);
 		chmod(path.c_str(), buf.st_mode|S_IXUSR);
 #else
-		boost::filesystem::permissions(path, boost::filesystem::owner_exe);
+		boost::filesystem::permissions(path, boost::filesystem::status(path).permissions() | boost::filesystem::owner_exe);
 #endif
 	}
 }

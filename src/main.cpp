@@ -897,11 +897,15 @@ int main(int argcount, char* argvec[])
 		: main_wnd->height();
 
 	wm.createWindow(main_wnd);
+	
+	auto canvas = Canvas::getInstance();
+	LOG_INFO("canvas size: " << canvas->width() << "x" << canvas->height());
+	
+	//WindowManager::getMainWindow()->setWindowSize(main_wnd->width(), main_wnd->height());
+
 	graphics::GameScreen::get().setDimensions(main_wnd->width(), main_wnd->height());
 	graphics::GameScreen::get().setVirtualDimensions(vw, vh);
 	//main_wnd->setWindowIcon(module::map_file("images/window-icon.png"));
-
-	auto canvas = Canvas::getInstance();
 
 	try {
 		ShaderProgram::loadFromVariant(json::parse_from_file("data/shaders.cfg"));

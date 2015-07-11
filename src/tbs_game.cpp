@@ -390,6 +390,12 @@ namespace tbs
 		return -1;
 	}
 
+	void game::observer_connect(int nclient)
+	{
+		queue_message(write(-1));
+		outgoing_messages_.back().recipients.push_back(nclient);
+	}
+
 	void game::send_game_state(int nplayer, int processing_ms)
 	{
 		LOG_DEBUG("SEND GAME STATE: " << nplayer);

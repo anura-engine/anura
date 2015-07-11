@@ -41,11 +41,13 @@ namespace gui
 		AnimationWidget(const AnimationWidget& a);
 
 		void setSequencePlayCount(int count) { max_sequence_plays_ = count; }
-
+	
 		WidgetPtr clone() const override;
+	protected:
+		void surrenderReferences(GarbageCollector* collector) override;
 	private:
 		DECLARE_CALLABLE(AnimationWidget);
-
+		
 		void handleDraw() const override;
 		void handleProcess() override;
 		void init();
@@ -55,7 +57,7 @@ namespace gui
 		std::vector<variant> nodes_;
 
 		LabelPtr label_;
-		std::unique_ptr<Frame> frame_;
+		FramePtr frame_;
 		int cycle_;
 		int play_sequence_count_;
 		// Number of times to repeat play each animation sequence.

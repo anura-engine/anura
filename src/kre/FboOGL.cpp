@@ -342,4 +342,38 @@ namespace KRE
 			}
 		}
 	}
+
+	std::vector<uint8_t> FboOpenGL::handleReadPixels() const
+	{
+		const int stride = tex_width_ * 4; // 4 bytes per pixel, which is the format we're requesting.
+
+		std::vector<uint8_t> pixels;
+		pixels.resize(stride * tex_height_);
+
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, *framebuffer_id_);
+		glReadPixels(0, 0, tex_width_, tex_height_, GL_RGBA, GL_UNSIGNED_BYTE, pixels.data());
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, get_fbo_stack().top().id);
+
+		// copies rows bottom to top.
+		std::vector<uint8_t> res;
+		res.resize(stride * tex_height_);
+		std::vector<uint8_t>::iterator cp_data = res.begin();
+		for(auto it = pixels.begin() + (tex_height_-1)*stride; it != pixels.begin(); it -= stride) {
+			std::copy(it, it + stride, cp_data);
+			cp_data += stride;
+		}
+		return res;
+	}
+
+	SurfacePtr FboOpenGL::handleReadToSurface(SurfacePtr s) const
+	{
+		//if(s == nullptr) {
+			s = Surface::create(tex_width_, tex_height_, PixelFormat::PF::PIXELFORMAT_ABGR8888);
+		//}
+
+		auto pixels = handleReadPixels();
+		s->writePixels(pixels.data(), pixels.size());
+
+		return s;
+	}
 }

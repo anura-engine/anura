@@ -5,7 +5,7 @@ dl, dt, fieldset, form,
 frame, frameset,
 h1, h2, h3, h4,
 h5, h6, 
-ol, p, ul, 
+ol, p, ul, object,
 dir, hr, menu, pre   { display: block; unicode-bidi: embed }
 li              { display: list-item }
 head            { display: none }

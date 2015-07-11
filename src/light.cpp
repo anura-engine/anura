@@ -103,9 +103,9 @@ void CircleLight::init()
 
 void CircleLight::preRender(const KRE::WindowPtr& wnd)
 {
-	if(getColor() != last_color_) {
+	//if(getColor() != last_color_) {
 		updateVertices();
-	}
+	//}
 }
 
 void CircleLight::updateVertices()
@@ -131,7 +131,7 @@ void CircleLight::updateVertices()
 		const float ypos = y + radius_*y_angles[n];
 		varray.emplace_back(xpos,ypos);
 	}
-	varray.emplace_back(varray[1]);
+	varray.push_back(varray[1]);
 	fan_->update(&varray);
 
 	std::vector<KRE::vertex_color> vc_array;
@@ -147,8 +147,9 @@ void CircleLight::updateVertices()
 		vc_array.emplace_back(glm::vec2(xpos, ypos), col1);
 		vc_array.emplace_back(glm::vec2(xpos2, ypos2), col2);
 	}
-	vc_array.emplace_back(vc_array[1]);
-	vc_array.emplace_back(vc_array[2]);
+	vc_array.push_back(vc_array[0]);
+	vc_array.push_back(vc_array[1]);
+	//vc_array.push_back(vc_array[2]);
 	sq_->update(&vc_array);
 
 	last_color_ = getColor();

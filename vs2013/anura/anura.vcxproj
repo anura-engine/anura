@@ -161,7 +161,8 @@
     <ClInclude Include="..\..\src\kre\EffectsOGL.hpp" />
     <ClInclude Include="..\..\src\kre\FboOGL.hpp" />
     <ClInclude Include="..\..\src\kre\Font.hpp" />
-    <ClInclude Include="..\..\src\kre\FontFreetype.hpp" />
+    <ClInclude Include="..\..\src\kre\FontDriver.hpp" />
+    <ClInclude Include="..\..\src\kre\FontImpl.hpp" />
     <ClInclude Include="..\..\src\kre\FontSDL.hpp" />
     <ClInclude Include="..\..\src\kre\Frustum.hpp" />
     <ClInclude Include="..\..\src\kre\geometry.hpp" />
@@ -198,6 +199,7 @@
     <ClInclude Include="..\..\src\kre\StencilScopeOGL.hpp" />
     <ClInclude Include="..\..\src\kre\StencilSettings.hpp" />
     <ClInclude Include="..\..\src\kre\Surface.hpp" />
+    <ClInclude Include="..\..\src\kre\SurfaceBlur.hpp" />
     <ClInclude Include="..\..\src\kre\SurfaceSDL.hpp" />
     <ClInclude Include="..\..\src\kre\TexPack.hpp" />
     <ClInclude Include="..\..\src\kre\Texture.hpp" />
@@ -513,8 +515,10 @@
     <ClCompile Include="..\..\src\kre\EffectsOGL.cpp" />
     <ClCompile Include="..\..\src\kre\FboOGL.cpp" />
     <ClCompile Include="..\..\src\kre\Font.cpp" />
+    <ClCompile Include="..\..\src\kre\FontDriver.cpp" />
     <ClCompile Include="..\..\src\kre\FontFreetype.cpp" />
     <ClCompile Include="..\..\src\kre\FontSDL.cpp" />
+    <ClCompile Include="..\..\src\kre\FontSTB.cpp" />
     <ClCompile Include="..\..\src\kre\Frustum.cpp" />
     <ClCompile Include="..\..\src\kre\Gradients.cpp" />
     <ClCompile Include="..\..\src\kre\LightObject.cpp" />
@@ -539,6 +543,7 @@
     <ClCompile Include="..\..\src\kre\StencilScope.cpp" />
     <ClCompile Include="..\..\src\kre\StencilScopeOGL.cpp" />
     <ClCompile Include="..\..\src\kre\Surface.cpp" />
+    <ClCompile Include="..\..\src\kre\SurfaceBlur.cpp" />
     <ClCompile Include="..\..\src\kre\SurfaceSDL.cpp" />
     <ClCompile Include="..\..\src\kre\TexPack.cpp" />
     <ClCompile Include="..\..\src\kre\Texture.cpp" />

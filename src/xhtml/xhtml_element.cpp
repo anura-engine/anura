@@ -39,6 +39,14 @@ namespace xhtml
 {
 	namespace 
 	{
+		// used for registering/finding object handlers.
+		typedef std::map<std::string, object_create_fn> object_create_type;
+		object_create_type& get_object_creators()
+		{
+			static object_create_type res;
+			return res;
+		}
+
 		// Used to track what custom element value we should next allocate.
 		int custom_element_counter = -1;
 
@@ -228,8 +236,57 @@ namespace xhtml
 
 		struct ObjectElement : public Element
 		{
-			explicit ObjectElement(ElementId id, const std::string& name, WeakDocumentPtr owner) : Element(id, name, owner) {}
+			explicit ObjectElement(ElementId id, const std::string& name, WeakDocumentPtr owner) 
+				: Element(id, name, owner), 
+				obj_(nullptr) 
+			{
+			}
 			bool isReplaced() const override { return true; }
+			void init() override
+			{
+				// we use the type attribute to determine what the object is.
+				auto attr_type = getAttribute("type");
+				if(attr_type == nullptr) {
+					// XXX we should process any children objects etc
+					LOG_ERROR("No 'type' attribute found on 'object' element. Unable to determine how to interpret the object.");
+					return;
+				}
+				auto it = get_object_creators().find(attr_type->getValue());
+				if(it == get_object_creators().end()) {
+					// XXX we should process any children objects etc
+					LOG_ERROR("No handler found for object with content-type of '" << attr_type->getValue() << "'");
+					return;
+				}
+				// Create the object -- well proxy to the object.
+				obj_ = it->second(getAttributes());
+
+				if(obj_ == nullptr) {
+					// XXX we should process any children objects etc
+					LOG_WARN("Object of type '" << attr_type->getValue() << "' not created.");
+					return;
+				}
+
+				rect r(0, 0, obj_->width(), obj_->height());
+				setDimensions(r);
+
+				for(auto& c : getChildren()) {
+					// XXX supress children from being shown.
+				}
+			}
+			void process(float dt) override
+			{
+				if(obj_) {
+					obj_->process(dt);
+				}
+			}
+			KRE::SceneObjectPtr getRenderable()
+			{
+				if(obj_) {
+					return obj_->getRenderable();
+				}
+				return nullptr;
+			}
+			ObjectProxyPtr obj_;
 		};
 		ElementRegistrar<ObjectElement> object_element(ElementId::OBJECT, "object");
 
@@ -859,7 +916,6 @@ namespace xhtml
 			explicit VariableElement(ElementId id, const std::string& name, WeakDocumentPtr owner) : Element(id, name, owner) {}
 		};
 		ElementRegistrar<VariableElement> var_element(ElementId::VAR, "var");
-
 	}
 
 	Element::Element(ElementId id, const std::string& name, WeakDocumentPtr owner)
@@ -895,6 +951,11 @@ namespace xhtml
 		return ss.str();
 	}
 
+	void Element::registerObjectHandler(const std::string& content_type, object_create_fn fn)
+	{
+		get_object_creators()[content_type] = fn;
+	}
+
 	const std::string& element_id_to_string(ElementId id)
 	{
 		auto it = get_id_registry().find(id);
@@ -925,4 +986,90 @@ namespace xhtml
 		return it->second.id;
 	}
 
+	// Object Proxy constructor
+	ObjectProxy::ObjectProxy(const AttributeMap& attributes)
+		: width_(300),
+		  height_(300),
+		  dimensions_fixed_(false)
+	{
+		auto attr_w = attributes.find("width");
+		if(attr_w != attributes.end()) {
+			const std::string& ws = attr_w->second->getValue();
+			try {
+				width_ = boost::lexical_cast<int>(ws);
+				dimensions_fixed_ = true;
+			} catch(boost::bad_lexical_cast&) {
+				LOG_ERROR("Unable to convert object width value '" << ws << "' to integer.");
+			}
+		}
+		auto attr_h = attributes.find("height");
+		if(attr_h != attributes.end()) {
+			const std::string& hs = attr_h->second->getValue();
+			try {
+				height_ = boost::lexical_cast<int>(hs);
+				dimensions_fixed_ = true;
+			} catch(boost::bad_lexical_cast&) {
+				LOG_ERROR("Unable to convert object width value '" << hs << "' to integer.");
+			}
+		}
+	}
+
+	void ObjectProxy::setDimensions(int w, int h)
+	{
+		width_ = w;
+		height_ = h;
+	}
+
+
+	// Register some object handlers for images.
+	class ImageObject : public ObjectProxy
+	{
+	public:
+		explicit ImageObject(const AttributeMap& am) 
+			: ObjectProxy(am),
+			  tex_(nullptr)
+		{
+			auto attr_data = am.find("data");
+			if(attr_data != am.end()) {
+				tex_ = KRE::Texture::createTexture(attr_data->second->getValue());
+			} else {
+				auto attr_clsid = am.find("classid");
+				if(attr_clsid != am.end()) {
+					tex_ = KRE::Texture::createTexture(attr_clsid->second->getValue());
+				} else {
+					LOG_ERROR("No data or clasid tag for ImageObject");
+				}
+			}
+			if(tex_ != nullptr && !areDimensionsFixed()) {
+				setDimensions(tex_->width(), tex_->height());
+			}
+		}
+		KRE::SceneObjectPtr getRenderable() override
+		{
+			if(tex_ != nullptr) {
+				auto b = std::make_shared<KRE::Blittable>(tex_);
+				b->setDrawRect(getDimensions());
+				return b;
+			}
+			return nullptr;
+		}
+	private:
+		KRE::TexturePtr tex_;
+	};
+
+	ObjectProxyRegistrar obj_png("image/png", [](const AttributeMap& attributes){
+		return std::make_shared<ImageObject>(attributes);
+	});
+	ObjectProxyRegistrar obj_jpeg("image/jpeg", [](const AttributeMap& attributes){
+		return std::make_shared<ImageObject>(attributes);
+	});
+	ObjectProxyRegistrar obj_jpg("image/jpg", [](const AttributeMap& attributes){
+		return std::make_shared<ImageObject>(attributes);
+	});
+	ObjectProxyRegistrar obj_gif("image/gif", [](const AttributeMap& attributes){
+		return std::make_shared<ImageObject>(attributes);
+	});
+	//ObjectProxyRegistrar obj_svg("image/svg", [](const AttributeMap& attributes){
+	//	return std::make_shared<ImageObject>(attributes);
+	//});
 }

@@ -235,12 +235,18 @@ namespace xhtml
 		const css::TextAlign ta = getParent()->getStyleNode()->getTextAlign();
 
 		// computer&set children X offsets
-		for(auto& child : getChildren()) {
+		auto last_child = getChildren().cend()-1;
+		for(auto it = getChildren().cbegin(); it != getChildren().cend(); ++it) {
+			auto& child = *it;
 			FixedPoint child_x = child->getLeft();
 			switch(ta) {
 				case css::TextAlign::RIGHT:		child_x = containing_width - child->getWidth(); break;
-				case css::TextAlign::CENTER:		child_x = (containing_width - child->getWidth() - child_x) / 2; break;
-				case css::TextAlign::JUSTIFY:	child->justify(containing_width); break;
+				case css::TextAlign::CENTER:	child_x = (containing_width - child->getWidth() - child_x) / 2; break;
+				case css::TextAlign::JUSTIFY:	
+					if(it != last_child) {
+						child->justify(containing_width); 
+					}
+					break;
 				case css::TextAlign::NORMAL:	
 					if(getParent()->getStyleNode()->getDirection() == css::Direction::RTL) {
 						child_x = containing_width - child->getWidth();
