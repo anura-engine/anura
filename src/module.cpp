@@ -1011,7 +1011,8 @@ COMMAND_LINE_UTILITY(generate_manifest)
 					   nbytes_total_(0),
 					   nfiles_written_(0),
 					   install_image_(false),
-					   is_new_install_(true)
+					   is_new_install_(true),
+					   nchunk_errors_(0)
 	{
 	}
 
@@ -1020,7 +1021,8 @@ COMMAND_LINE_UTILITY(generate_manifest)
 	    host_(host), port_(port), out_of_date_(false),
 	    client_(new http_client(host, port)),
 		nbytes_transferred_(0), nbytes_total_(0),
-		nfiles_written_(0), install_image_(false)
+		nfiles_written_(0), install_image_(false),
+		nchunk_errors_(0)
 	{
 	}
 
@@ -1082,9 +1084,11 @@ static const int ModuleProtocolVersion = 1;
 
 		std::string response;
 
-		client_->send_request("POST /download_module?module_id=" + module_id + version_str, request.build().write_json(), 
+		const std::string url = "POST /download_module?module_id=" + module_id + version_str;
+		const std::string doc = request.build().write_json();
+		client_->send_request(url, doc, 
 							  std::bind(&client::on_response, this, _1),
-							  std::bind(&client::on_error, this, _1),
+							  std::bind(&client::on_error, this, _1, url, doc),
 							  std::bind(&client::on_progress, this, _1, _2, _3));
 		return true;
 	}
@@ -1099,9 +1103,11 @@ static const int ModuleProtocolVersion = 1;
 			m[variant("review")] = variant(review);
 		}
 		operation_ = OPERATION_RATE;
-		client_->send_request("POST /rate_module", variant(&m).write_json(),
+		const std::string url = "POST /rate_module";
+		const std::string doc = variant(&m).write_json();
+		client_->send_request(url, doc,
 							  std::bind(&client::on_response, this, _1),
-							  std::bind(&client::on_error, this, _1),
+							  std::bind(&client::on_error, this, _1, url, doc),
 							  std::bind(&client::on_progress, this, _1, _2, _3));
 	}
 
@@ -1109,9 +1115,11 @@ static const int ModuleProtocolVersion = 1;
 	{
 		data_.clear();
 		operation_ = OPERATION_GET_STATUS;
-		client_->send_request("GET /get_summary", "",
+		const std::string url = "GET /get_summary";
+		const std::string doc = "";
+		client_->send_request(url, doc,
 							  std::bind(&client::on_response, this, _1),
-							  std::bind(&client::on_error, this, _1),
+							  std::bind(&client::on_error, this, _1, url, doc),
 							  std::bind(&client::on_progress, this, _1, _2, _3));
 	}
 
@@ -1180,10 +1188,34 @@ static const int ModuleProtocolVersion = 1;
 			request.add("type", "download_chunk");
 			request.add("chunk_id", chunk["md5"]);
 
-			new_client->send_request("POST /download_chunk?chunk_id=" + chunk["md5"].as_string(), request.build().write_json(), 
+			const std::string url = "POST /download_chunk?chunk_id=" + chunk["md5"].as_string();
+			const std::string doc = request.build().write_json();
+			new_client->send_request(url, doc,
 						  std::bind(&client::on_chunk_response, this, chunk, new_client, _1),
-						  std::bind(&client::on_error, this, _1),
+						  std::bind(&client::on_chunk_error, this, _1, url, doc, chunk, new_client),
 						  [](size_t a, size_t b, bool c) {}
+			);
+
+			chunk_clients_.push_back(new_client);
+		}
+	}
+
+	void client::on_chunk_error(std::string response, std::string url, std::string doc, variant chunk, boost::shared_ptr<http_client> client)
+	{
+		chunk_clients_.erase(std::remove(chunk_clients_.begin(), chunk_clients_.end(), client), chunk_clients_.end());
+		++nchunk_errors_;
+		if (nchunk_errors_ > 16)
+		{
+			on_error(response, url, doc);
+		}
+		else
+		{
+			boost::shared_ptr<http_client> new_client(new http_client(host_, port_));
+
+			new_client->send_request(url, doc,
+				std::bind(&client::on_chunk_response, this, chunk, new_client, _1),
+				std::bind(&client::on_chunk_error, this, _1, url, doc, chunk, new_client),
+				[](size_t a, size_t b, bool c) {}
 			);
 
 			chunk_clients_.push_back(new_client);
@@ -1198,13 +1230,13 @@ static const int ModuleProtocolVersion = 1;
 			variant doc = json::parse(response, json::JSON_PARSE_OPTIONS::NO_PREPROCESSOR);
 			if(doc[variant("status")] != variant("ok")) {
 				if(doc[variant("out_of_date")].as_bool(false)) {
-					on_error(doc[variant("message")].as_string());
+					on_error(doc[variant("message")].as_string(), "", "");
 					out_of_date_ = true;
 					operation_ = OPERATION_NONE;
 					return;
 				}
 
-				on_error(doc[variant("status")].as_string());
+				on_error(doc[variant("status")].as_string(), "", "");
 
 				LOG_ERROR("SET ERROR: " << doc.write_json());
 			} else if(operation_ == OPERATION_INSTALL) {
@@ -1239,9 +1271,11 @@ static const int ModuleProtocolVersion = 1;
 					request[variant("type")] = variant("query_globs");
 					request[variant("keys")] = variant(&needed_icons);
 					operation_ = OPERATION_GET_ICONS;
-					client_->send_request("POST /query_globs", variant(&request).write_json(),
+					const std::string url = "POST /query_globs";
+					const std::string doc = variant(&request).write_json();
+					client_->send_request(url, doc,
 							  std::bind(&client::on_response, this, _1),
-							  std::bind(&client::on_error, this, _1),
+							  std::bind(&client::on_error, this, _1, url, doc),
 							  std::bind(&client::on_progress, this, _1, _2, _3));
 					return;
 				}
@@ -1311,9 +1345,11 @@ static const int ModuleProtocolVersion = 1;
 				request.add("chunk_id", chunk["md5"]);
 
 				boost::shared_ptr<http_client> client(new http_client(host_, port_));
-				client->send_request("POST /download_chunk?chunk_id=" + chunk["md5"].as_string(), request.build().write_json(), 
+				const std::string url = "POST /download_chunk?chunk_id=" + chunk["md5"].as_string();
+				const std::string doc = request.build().write_json();
+				client->send_request(url, doc, 
 							  std::bind(&client::on_chunk_response, this, chunk, client, _1),
-							  std::bind(&client::on_error, this, _1),
+							  std::bind(&client::on_chunk_error, this, _1, url, doc, chunk, client),
 							  [](size_t a, size_t b, bool c) {}
 				);
 				chunk_clients_.push_back(client);
@@ -1466,9 +1502,9 @@ static const int ModuleProtocolVersion = 1;
 		}
 	}
 
-	void client::on_error(std::string response)
+	void client::on_error(std::string response, std::string url, std::string doc)
 	{
-		LOG_INFO("client error: " << response);
+		LOG_INFO("client error: " << response << " (" << url << ")");
 		error_ = response;
 		data_["error"] = variant(response);
 		operation_ = OPERATION_NONE;
