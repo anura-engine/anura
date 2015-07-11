@@ -174,6 +174,7 @@ unittests: anura
 tarball: unittests
 	@strip anura
 	@tar --transform='s,^,anura/,g' -cjf $(TARBALL) anura data/ images/
+	@cp $(TARBALL) /var/www/anura/anura-latest-linux.tar.bz2
 
 $(foreach bdir,$(BUILD_DIR),$(eval $(call cc-command,$(bdir))))
 
