@@ -985,7 +985,8 @@ COMMAND_LINE_UTILITY(generate_manifest)
 	{
 		bool valid_path_chars(char c)
 		{
-			return isalnum(c) || c == '.' || c == '/' || c == '_' || c == '-';
+			static const char* AllowedChars = "(){}[]+./_-";
+			return isalnum(c) || strchr(AllowedChars, c);
 		}
 
 		bool is_module_path_valid(const std::string& str)
