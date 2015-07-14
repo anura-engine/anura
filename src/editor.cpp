@@ -1245,7 +1245,7 @@ void editor::process()
 
 	int mousex, mousey;
 	const unsigned int buttons = input::sdl_get_mouse_state(&mousex, &mousey) & mouse_buttons_down_;
-	mousey -= EDITOR_MENUBAR_HEIGHT;
+	//mousey -= EDITOR_MENUBAR_HEIGHT;
 
 	if(buttons == 0) {
 		drawing_rect_ = false;
@@ -1384,9 +1384,9 @@ void editor::process()
 	//if we're drawing with a pencil see if we add a new tile
 	if(tool() == TOOL_PENCIL && dragging_ && buttons) {
 		const int xpos = xpos_ + mousex*zoom_;
-		const int ypos = ypos_ + mousey*zoom_;
+		const int ypos = ypos_ + mousey*zoom_ - EDITOR_MENUBAR_HEIGHT;
 		const int last_xpos = xpos_ + last_mousex*zoom_;
-		const int last_ypos = ypos_ + last_mousey*zoom_;
+		const int last_ypos = ypos_ + last_mousey*zoom_ - EDITOR_MENUBAR_HEIGHT;
 
 		pencil_motion(last_xpos, last_ypos, xpos, ypos, buttons&SDL_BUTTON(SDL_BUTTON_LEFT));
 	}
@@ -1792,7 +1792,7 @@ void editor::handle_object_dragging(int mousex, int mousey)
 
 	const bool ctrl_pressed = (SDL_GetModState()&(KMOD_LCTRL|KMOD_RCTRL)) != 0;
 	const int dx = xpos_ + mousex*zoom_ - anchorx_;
-	const int dy = ypos_ + mousey*zoom_ - anchory_;
+	const int dy = ypos_ + mousey*zoom_ - anchory_ - EDITOR_MENUBAR_HEIGHT;
 	const int xpos = selected_entity_startx_ + dx;
 	const int ypos = selected_entity_starty_ + dy;
 
@@ -1847,10 +1847,10 @@ void editor::handle_object_dragging(int mousex, int mousey)
 void editor::handleDrawingRect(int mousex, int mousey)
 {
 	const unsigned int buttons = input::sdl_get_mouse_state(&mousex, &mousey);
-	mousey -= EDITOR_MENUBAR_HEIGHT;
+	//mousey -= EDITOR_MENUBAR_HEIGHT;
 
 	const int xpos = xpos_ + mousex*zoom_;
-	const int ypos = ypos_ + mousey*zoom_;
+	const int ypos = ypos_ + mousey*zoom_ - EDITOR_MENUBAR_HEIGHT;
 
 	int x1 = xpos;
 	int x2 = anchorx_;
@@ -1900,10 +1900,10 @@ void editor::handleMouseButtonDown(const SDL_MouseButtonEvent& event)
 	const bool alt_pressed = (SDL_GetModState()&KMOD_ALT) != 0;
 	int mousex, mousey;
 	const unsigned int buttons = input::sdl_get_mouse_state(&mousex, &mousey);
-	mousey -= EDITOR_MENUBAR_HEIGHT;
+	//mousey -= EDITOR_MENUBAR_HEIGHT;
 
 	anchorx_ = xpos_ + mousex*zoom_;
-	anchory_ = ypos_ + mousey*zoom_;
+	anchory_ = ypos_ + mousey*zoom_ - EDITOR_MENUBAR_HEIGHT;
 	if(event.button == SDL_BUTTON_MIDDLE && !alt_pressed) {
 		return;
 	}
@@ -2137,7 +2137,7 @@ void editor::handleMouseButtonDown(const SDL_MouseButtonEvent& event)
 
 	if(tool() == TOOL_ADD_OBJECT && event.button == SDL_BUTTON_LEFT && !lvl_->editor_highlight()) {
 		const int xpos = anchorx_ - all_characters()[cur_object_].preview_object()->getCurrentFrame().width()/2;
-		const int ypos = anchory_ - all_characters()[cur_object_].preview_object()->getCurrentFrame().height()/2;
+		const int ypos = anchory_ - all_characters()[cur_object_].preview_object()->getCurrentFrame().height()/2 + EDITOR_MENUBAR_HEIGHT;
 		variant_builder node;
 		node.merge_object(all_characters()[cur_object_].node);
 		node.set("x", (ctrl_pressed ? xpos : round_tile_size(xpos)));
@@ -2224,10 +2224,10 @@ void editor::handleMouseButtonUp(const SDL_MouseButtonEvent& event)
 {
 	int mousex, mousey;
 	input::sdl_get_mouse_state(&mousex, &mousey);
-	mousey -= EDITOR_MENUBAR_HEIGHT;
+	//mousey -= EDITOR_MENUBAR_HEIGHT;
 			
 	const int xpos = xpos_ + mousex*zoom_;
-	const int ypos = ypos_ + mousey*zoom_;
+	const int ypos = ypos_ + mousey*zoom_ - EDITOR_MENUBAR_HEIGHT;
 
 	if(g_variable_editing) {
 		if(property_dialog_ && property_dialog_->getEntity()) {
@@ -2271,7 +2271,7 @@ void editor::handleMouseButtonUp(const SDL_MouseButtonEvent& event)
 	if(editing_tiles()) {
 		if(dragging_) {
 			const int selectx = xpos_ + mousex*zoom_;
-			const int selecty = ypos_ + mousey*zoom_;
+			const int selecty = ypos_ + mousey*zoom_ - EDITOR_MENUBAR_HEIGHT;
 
 			//dragging selection
 			int diffx = (selectx - anchorx_)/TileSize;
@@ -3038,26 +3038,6 @@ void editor::zoomOut()
 	}
 }
 
-/*void editor::draw() const
-{
-	auto wnd = KRE::WindowManager::getMainWindow();
-	wnd->setClearColor(KRE::Color(0,0,0,0));
-	wnd->clear(KRE::ClearFlags::COLOR);
-
-	if(zoom_ == 1) {
-		//backgrounds only draw nicely at the regular zoom level for now.
-		lvl_->draw_background(xpos_, ypos_, 0);
-	}
-
-	lvl_->draw(xpos_, ypos_, wnd->width()*zoom_, wnd->height()*zoom_);
-	
-	draw_gui();
-
-	debug_console::draw();
-
-	wnd->swap();
-}*/
-
 void editor::draw_gui() const
 {
 	auto canvas = KRE::Canvas::getInstance();
@@ -3066,7 +3046,7 @@ void editor::draw_gui() const
 	const bool ctrl_pressed = (SDL_GetModState()&(KMOD_LCTRL|KMOD_RCTRL)) != 0;
 	int mousex, mousey;
 	input::sdl_get_mouse_state(&mousex, &mousey);
-	mousey -= EDITOR_MENUBAR_HEIGHT;
+	//mousey -= EDITOR_MENUBAR_HEIGHT;
 	const int selectx = xpos_ + mousex*zoom_;
 	const int selecty = ypos_ + mousey*zoom_;
 
@@ -3193,9 +3173,6 @@ void editor::draw_gui() const
 //		stats::draw_stats(stats_);
 	}
 
-	// Clear the current applied model
-	mm.reset();
-
 	if(dragging_ && g_current_draw_tiles.empty() == false) {
 		std::vector<glm::vec2> varray;
 
@@ -3211,6 +3188,9 @@ void editor::draw_gui() const
 		}
 		canvas->drawLines(varray, 1.0f, KRE::Color(255, 255, 255, 128));
 	}
+
+	// Clear the current applied model
+	mm.reset();
 
 	//draw the difficulties of segments.
 	if(lvl_->segment_width() > 0 || lvl_->segment_height() > 0) {
@@ -3242,7 +3222,7 @@ void editor::draw_gui() const
 			carray.emplace_back(255, 255, 255, 64);
 			carray.emplace_back(255, 255, 255, 32);
 		}
-		for(int y = EDITOR_MENUBAR_HEIGHT - TileSize - (ypos_/zoom_)%TileSize; y < h; y += (BaseTileSize*g_tile_scale)/zoom_) {
+		for(int y = /*EDITOR_MENUBAR_HEIGHT*/ - TileSize - (ypos_/zoom_)%TileSize; y < h; y += (BaseTileSize*g_tile_scale)/zoom_) {
 			varray.emplace_back(0, y);
 			varray.emplace_back(w, y);
 			carray.emplace_back(255, 255, 255, 32);
