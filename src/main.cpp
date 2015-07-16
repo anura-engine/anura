@@ -844,16 +844,20 @@ int main(int argcount, char* argvec[])
 		return 0;
 	}
 
-	if(!skip_tests) {
-		if (test_names) {
-			if (!test::run_tests(test_names.get())) {
-				return -1;
-			}
-		} else {
-			if (!test::run_tests()) {
-				return -1;
+	try {
+		if(!skip_tests) {
+			if (test_names) {
+				if (!test::run_tests(test_names.get())) {
+					return -1;
+				}
+			} else {
+				if (!test::run_tests()) {
+					return -1;
+				}
 			}
 		}
+	} catch(json::ParseError& error) {
+		ASSERT_LOG(false, "Error parsing JSON when running starting validation: " << error.errorMessage());
 	}
 
 	if(unit_tests_only) {
