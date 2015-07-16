@@ -106,7 +106,7 @@ private:
 			on_create_.reset();
 		}
 
-		if(((!client_ && !preferences::internal_tbs_server()) || (!internal_client_ && preferences::internal_tbs_server())) && response_.size() < script_.size()) {
+		if((((!client_ || client_->num_requests_in_flight() == 0) && !preferences::internal_tbs_server()) || (!internal_client_ && preferences::internal_tbs_server())) && response_.size() < script_.size()) {
 			variant script = script_[response_.size()];
 			//LOG_DEBUG("BOT: SEND @" << profile::get_tick_time() << " Sending response " << response_.size() << "/" << script_.size() << ": " << internal_client_.get() << " " << script.write_json());
 			variant send = script["send"];
@@ -125,7 +125,9 @@ private:
 				internal_client_.reset(new internal_client(session_id));
 				internal_client_->send_request(send, session_id, callable, std::bind(&bot::handle_response, this, std::placeholders::_1, callable));
 			} else {
-				client_.reset(new client(host_, port_, session_id, &service_));
+				if(!client_) {
+					client_.reset(new client(host_, port_, session_id, &service_));
+				}
 				client_->set_use_local_cache(false);
 				client_->send_request(send, callable, std::bind(&bot::handle_response, this, std::placeholders::_1, callable));
 			}
@@ -165,7 +167,6 @@ private:
 
 		} else if(msg.is_map() && msg["type"] == variant("bye")) {
 			has_quit_ = true;
-			client_.reset();
 			internal_client_.reset();
 			return;
 		} else {
@@ -206,7 +207,6 @@ private:
 		m[variant("validations")] = variant(&validations);
 
 		response_.push_back(variant(&m));
-		client_.reset();
 		internal_client_.reset();
 
 		//tbs::web_server::set_debug_state(generate_report());

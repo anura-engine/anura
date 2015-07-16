@@ -40,21 +40,43 @@ http_client::http_client(const std::string& host, const std::string& port, int s
     resolver_(io_service_),
 	host_(host),
 	resolver_query_(host.c_str(), port.c_str()),
-	in_flight_(0)
+	in_flight_(0),
+	allow_keepalive_(false)
 {
+}
+
+http_client::~http_client()
+{
+}
+
+void http_client::set_allow_keepalive()
+{
+	allow_keepalive_ = true;
 }
 
 void http_client::send_request(const std::string& method_path, const std::string& request, std::function<void(std::string)> handler, std::function<void(std::string)> error_handler, std::function<void(size_t,size_t,bool)> progress_handler)
 {
 	++in_flight_;
-	connection_ptr conn(new Connection(io_service_));
+	
+	bool already_connected = false;
+	connection_ptr conn;
+	if(usable_connections_.empty() == false) {
+		conn.reset(new Connection(usable_connections_.front()));
+		usable_connections_.pop_front();
+		already_connected = true;
+	} else {
+		conn.reset(new Connection(io_service_));
+	}
+
 	conn->method_path = method_path;
 	conn->request = request;
 	conn->handler = handler;
 	conn->error_handler = error_handler;
 	conn->progress_handler = progress_handler;
 
-	if(resolution_state_ == RESOLUTION_NOT_STARTED) {
+	if(already_connected) {
+		send_connection_request(conn);
+	} else if(resolution_state_ == RESOLUTION_NOT_STARTED) {
 		resolution_state_ = RESOLUTION_IN_PROGRESS;
 
 		resolver_.async_resolve(resolver_query_,
@@ -89,12 +111,12 @@ void http_client::async_connect(connection_ptr conn)
 {
 
 #if BOOST_VERSION >= 104700
-		boost::asio::async_connect(conn->socket, 
+		boost::asio::async_connect(*conn->socket, 
 			endpoint_iterator_,
 			std::bind(&http_client::handle_connect, this,
 				std::placeholders::_1, conn, endpoint_iterator_));
 #else
-		conn->socket.async_connect(*endpoint_iterator_,
+		conn->socket->async_connect(*endpoint_iterator_,
 			std::bind(&http_client::handle_connect, this,
 				std::placeholders::_1, conn, endpoint_iterator_));
 #endif
@@ -120,7 +142,7 @@ void http_client::handle_connect(const boost::system::error_code& error, connect
 		return;
 	}
 #if defined(_MSC_VER)
-	conn->socket.set_option(boost::asio::ip::tcp::no_delay(true));
+	conn->socket->set_option(boost::asio::ip::tcp::no_delay(true));
 #endif
 
 	//we've connected okay, mark DNS resolution as good.
@@ -135,6 +157,11 @@ void http_client::handle_connect(const boost::system::error_code& error, connect
 		connections_waiting_on_dns_.clear();
 	}
 
+	send_connection_request(conn);
+}
+
+void http_client::send_connection_request(connection_ptr conn)
+{
 	//do async write.
 	std::ostringstream msg;
 	msg << conn->method_path << " HTTP/1.1\r\n"
@@ -168,7 +195,7 @@ void http_client::write_connection_data(connection_ptr conn)
 	const auto nbytes = std::min<size_t>(bytes_to_send, 1024*64);
 
 	const std::shared_ptr<std::string> msg(new std::string(conn->request.begin() + conn->nbytes_sent, conn->request.begin() + conn->nbytes_sent + nbytes));
-	boost::asio::async_write(conn->socket, boost::asio::buffer(*msg),
+	boost::asio::async_write(*conn->socket, boost::asio::buffer(*msg),
 	      std::bind(&http_client::handle_send, this, conn, std::placeholders::_1, std::placeholders::_2, msg));
 
 }
@@ -194,7 +221,7 @@ void http_client::handle_send(connection_ptr conn, const boost::system::error_co
 	if(static_cast<unsigned>(conn->nbytes_sent) < conn->request.size()) {
 		write_connection_data(conn);
 	} else {
-		conn->socket.async_read_some(boost::asio::buffer(conn->buf), std::bind(&http_client::handle_receive, this, conn, std::placeholders::_1, std::placeholders::_2));
+		conn->socket->async_read_some(boost::asio::buffer(conn->buf), std::bind(&http_client::handle_receive, this, conn, std::placeholders::_1, std::placeholders::_2));
 	}
 }
 
@@ -245,6 +272,10 @@ void http_client::handle_receive(connection_ptr conn, const boost::system::error
 			if(end_headers) {
 				LOG_ERROR("HEADERS: (((" << std::string(conn->response.c_str(), end_headers) << ")))");
 				conn->handler(std::string(end_headers+2));
+
+				if(allow_keepalive_) {
+					usable_connections_.push_back(conn->socket);
+				}
 				return;
 			}
 		}
@@ -312,11 +343,12 @@ void http_client::handle_receive(connection_ptr conn, const boost::system::error
 			}
 		}
 		conn->handler(payload_str);
+		usable_connections_.push_back(conn->socket);
 	} else {
 		if(conn->expected_len != -1 && conn->progress_handler) {
 			conn->progress_handler(conn->response.size(), conn->expected_len, true);
 		}
-		conn->socket.async_read_some(boost::asio::buffer(conn->buf), std::bind(&http_client::handle_receive, this, conn, std::placeholders::_1, std::placeholders::_2));
+		conn->socket->async_read_some(boost::asio::buffer(conn->buf), std::bind(&http_client::handle_receive, this, conn, std::placeholders::_1, std::placeholders::_2));
 	}
 }
 

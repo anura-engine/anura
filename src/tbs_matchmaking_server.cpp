@@ -443,7 +443,6 @@ public:
 				if(doc.has_key("impersonate")) {
 					std::string override_pass = sys::read_file("./impersonation-pass");
 					override_pass.erase(std::remove(override_pass.begin(), override_pass.end(), '\n'), override_pass.end());
-					fprintf(stderr, "Impersonation attempt: %s vs %s\n", override_pass.c_str(), doc["impersonate"].as_string().c_str());
 					if(override_pass != "" && override_pass == doc["impersonate"].as_string()) {
 						impersonate = true;
 					}

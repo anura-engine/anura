@@ -27,6 +27,7 @@
 #include <boost/array.hpp>
 #include <boost/asio.hpp>
 
+#include <deque>
 #include <string>
 #include <vector>
 
@@ -44,12 +45,17 @@ class http_client : public game_logic::FormulaCallable
 {
 public:
 	http_client(const std::string& host, const std::string& port, int session=-1, boost::asio::io_service* service=nullptr);
+	~http_client();
 	void send_request(const std::string& method_path,
 	                  const std::string& request,
 					  std::function<void(std::string)> handler,
 					  std::function<void(std::string)> error_handler,
 					  std::function<void(size_t,size_t,bool)> progress_handler);
 	virtual void process();
+
+	void set_allow_keepalive();
+
+	int num_requests_in_flight() const { return in_flight_; }
 
 private:
 	DECLARE_CALLABLE(http_client)
@@ -59,9 +65,11 @@ private:
 	boost::asio::io_service& io_service_;
 
 	struct Connection {
-		explicit Connection(boost::asio::io_service& serv) : socket(serv), nbytes_sent(0), expected_len(-1)
+		explicit Connection(boost::asio::io_service& serv) : socket(new tcp::socket(serv)), nbytes_sent(0), expected_len(-1)
 		{}
-		tcp::socket socket;
+		explicit Connection(std::shared_ptr<tcp::socket> sock) : socket(sock), nbytes_sent(0), expected_len(-1)
+		{}
+		std::shared_ptr<tcp::socket> socket;
 		std::string method_path;
 		std::string request, response;
 		size_t nbytes_sent;
@@ -76,6 +84,10 @@ private:
 	};
 
 	typedef std::shared_ptr<Connection> connection_ptr;
+
+	std::deque<std::shared_ptr<tcp::socket> > usable_connections_;
+
+	void send_connection_request(connection_ptr conne);
 
 	void handle_resolve(const boost::system::error_code& err, tcp::resolver::iterator endpoint_iterator, connection_ptr conn);
 	void handle_connect(const boost::system::error_code& error, connection_ptr conn, tcp::resolver::iterator resolve_itor);
@@ -104,4 +116,6 @@ private:
 	std::vector<std::pair<int,connection_ptr> > connections_waiting_on_fake_lag_;
 
 	std::vector<connection_ptr> connections_waiting_on_dns_;
+
+	bool allow_keepalive_;
 };

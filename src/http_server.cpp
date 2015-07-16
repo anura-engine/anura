@@ -85,6 +85,11 @@ namespace http
 		start_accept();
 	}
 
+	void web_server::keepalive_socket(socket_ptr socket)
+	{
+		start_receive(socket);
+	}
+
 	void web_server::start_receive(socket_ptr socket, receive_buf_ptr recv_buf)
 	{
 		if(!recv_buf) {
@@ -269,8 +274,10 @@ namespace http
 
 	void web_server::handle_send(socket_ptr socket, const boost::system::error_code& e, size_t nbytes, size_t max_bytes, std::shared_ptr<std::string> buf)
 	{
-		if(nbytes == max_bytes || e) {
+		if(e) {
 			disconnect(socket);
+		} else if(nbytes == max_bytes) {
+			keepalive_socket(socket);
 		}
 	}
 
@@ -293,7 +300,6 @@ namespace http
 		if(socket->supports_deflate && msg_ref.size() > 1024 && (header_parms.empty() || strstr(header_parms.c_str(), "Content-Encoding") == nullptr)) {
 			const int nbefore = SDL_GetTicks();
 			compressed_buf = zip::compress(msg_ref);
-			fprintf(stderr, "COMPRESSED: %d -> %d in %dms\n", (int)msg_ref.size(), (int)compressed_buf.size(), SDL_GetTicks() - nbefore);
 			msg_ptr = &compressed_buf;
 
 			compress_header = "Content-Encoding: deflate\r\n"; 
@@ -352,12 +358,10 @@ class test_web_server : public http::web_server {
 public:
 	test_web_server(boost::asio::io_service& io_service) : web_server(io_service) {}
 	void handlePost(socket_ptr socket, variant doc, const environment& env) {
-		fprintf(stderr, "HANDLE POST: %d\n", SDL_GetTicks());
 
 		send_msg(socket, "text/json", "{ \"type\": \"ok\" }", "");
 	}
 	void handleGet(socket_ptr socket, const std::string& url, const std::map<std::string, std::string>& args) {
-		fprintf(stderr, "HANDLE GET: %d\n", SDL_GetTicks());
 		send_msg(socket, "text/json", "{ \"type\": \"ok\" }", "");
 	}
 
