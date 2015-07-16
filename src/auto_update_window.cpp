@@ -1,6 +1,8 @@
 #include <assert.h>
 #include <sstream>
 
+#include <boost/filesystem/operations.hpp>
+
 #include "auto_update_window.hpp"
 #include "filesystem.hpp"
 #include "json_parser.hpp"
@@ -486,7 +488,11 @@ COMMAND_LINE_UTILITY(update_launcher)
 	auto_update_window update_window;
 	std::string error_msg;
 	std::deque<std::string> argv(args.begin(), args.end());
-	while(!do_auto_update(argv, update_window, error_msg)) {
-		SDL_Delay(2000);
+	try {
+		while(!do_auto_update(argv, update_window, error_msg)) {
+			SDL_Delay(2000);
+		}
+	} catch(boost::filesystem::filesystem_error& e) {
+		ASSERT_LOG(false, "File Error: " << e.what());
 	}
 }
