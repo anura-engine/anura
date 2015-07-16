@@ -54,7 +54,7 @@ void http_client::set_allow_keepalive()
 	allow_keepalive_ = true;
 }
 
-void http_client::send_request(const std::string& method_path, const std::string& request, std::function<void(std::string)> handler, std::function<void(std::string)> error_handler, std::function<void(size_t,size_t,bool)> progress_handler)
+void http_client::send_request(std::string method_path, std::string request, std::function<void(std::string)> handler, std::function<void(std::string)> error_handler, std::function<void(size_t,size_t,bool)> progress_handler)
 {
 	++in_flight_;
 	
@@ -64,6 +64,11 @@ void http_client::send_request(const std::string& method_path, const std::string
 		conn.reset(new Connection(usable_connections_.front()));
 		usable_connections_.pop_front();
 		already_connected = true;
+
+		//because this is an existing connection it might have a problem.
+		//if it does we should just retry on a different connection
+		//rather than report an error.
+		conn->retry_fn = std::bind(&http_client::send_request, this, method_path, request, handler, error_handler, progress_handler);
 	} else {
 		conn.reset(new Connection(io_service_));
 	}
@@ -205,7 +210,9 @@ void http_client::handle_send(connection_ptr conn, const boost::system::error_co
 
 	if(e) {
 		--in_flight_;
-		if(conn->error_handler) {
+		if(conn->retry_fn) {
+			conn->retry_fn();
+		} else if(conn->error_handler) {
 			conn->error_handler("ERROR SENDING DATA");
 		}
 
@@ -260,6 +267,11 @@ void http_client::handle_receive(connection_ptr conn, const boost::system::error
 {
 	if(e) {
 		--in_flight_;
+		if(conn->retry_fn) {
+			conn->retry_fn();
+			return;
+		}
+
 		LOG_ERROR("ERROR IN HTTP RECEIVE: (" << e.value() << "(" << e.message() << "), " << conn->response << ")");
 		if(e.value() == boost::system::errc::no_such_file_or_directory) {
 			LOG_ERROR("Error no such file or directory");

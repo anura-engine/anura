@@ -46,8 +46,8 @@ class http_client : public game_logic::FormulaCallable
 public:
 	http_client(const std::string& host, const std::string& port, int session=-1, boost::asio::io_service* service=nullptr);
 	~http_client();
-	void send_request(const std::string& method_path,
-	                  const std::string& request,
+	void send_request(std::string method_path,
+	                  std::string request,
 					  std::function<void(std::string)> handler,
 					  std::function<void(std::string)> error_handler,
 					  std::function<void(size_t,size_t,bool)> progress_handler);
@@ -81,6 +81,8 @@ private:
 		boost::array<char, 65536> buf;
 		
 		int expected_len;
+
+		std::function<void()> retry_fn;
 	};
 
 	typedef std::shared_ptr<Connection> connection_ptr;
