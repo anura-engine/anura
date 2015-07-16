@@ -53,7 +53,7 @@ namespace game_logic
 
 namespace tbs 
 {
-	extern http_client* g_game_server_http_client_to_matchmaking_server;
+	extern boost::intrusive_ptr<http_client> g_game_server_http_client_to_matchmaking_server;
 
 	class GameType
 	{
@@ -531,7 +531,7 @@ namespace tbs
 		DEFINE_SET_FIELD_TYPE("any")
 			std::cout << "WINNER: " << value.write_json() << std::endl;
 
-			if(g_game_server_http_client_to_matchmaking_server != NULL) {
+			if(g_game_server_http_client_to_matchmaking_server.get() != nullptr) {
 				http_client& client = *g_game_server_http_client_to_matchmaking_server;
 				variant_builder msg;
 				msg.add("type", "server_finished_game");
