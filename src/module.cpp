@@ -23,6 +23,8 @@
 
 #include <deque>
 
+#include <boost/filesystem/operations.hpp>
+
 #include "asserts.hpp"
 #include "base64.hpp"
 #include "compress.hpp"
@@ -1370,7 +1372,16 @@ static const int ModuleProtocolVersion = 1;
 			for(variant path : module_data["delete"].as_list()) {
 				const std::string path_str = preferences::dlc_path() + "/" + module_id_ + "/" + path.as_string();
 				LOG_INFO("DELETING FILE: " << path_str);
-				sys::remove_file(path_str);
+
+				try {
+					if(!sys::is_file_writable(path_str)) {
+						sys::set_file_writable(path_str);
+					}
+
+					sys::remove_file(path_str);
+				} catch(boost::filesystem::filesystem_error& e) {
+					LOG_ERROR("FAILED TO DELETE FILE: " << path_str);
+				}
 			}
 		}
 
@@ -1433,7 +1444,22 @@ static const int ModuleProtocolVersion = 1;
 
 			std::string contents(data.begin(), data.end());
 			ASSERT_LOG(variant(md5::sum(contents)) == info["md5"], "md5 sum for " << path.as_string() << " does not match");
-			sys::write_file(path_str, contents);
+
+			try {
+				sys::write_file(path_str, contents);
+			} catch(boost::filesystem::filesystem_error& e) {
+				bool fixed = false;
+				try {
+					if(!sys::is_file_writable(path_str)) {
+						sys::set_file_writable(path_str);
+						sys::write_file(path_str, contents);
+						fixed = true;
+					}
+				} catch(boost::filesystem::filesystem_error& e) {
+				}
+
+				ASSERT_LOG(fixed, "Could not write file: " << path_str);
+			}
 
 			if(info["exe"].as_bool(false)) {
 				sys::set_file_executable(path_str);
