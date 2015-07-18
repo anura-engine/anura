@@ -42,6 +42,8 @@
 
 #include <boost/lexical_cast.hpp>
 
+#include "FontDriver.hpp"
+
 #include "asserts.hpp"
 #include "auto_update_window.hpp"
 #include "background_task_pool.hpp"
@@ -944,6 +946,7 @@ int main(int argcount, char* argvec[])
 	for(auto& fp : font_paths) {
 		font_paths2[module::get_id(fp.first)] = fp.second;
 	}
+	KRE::FontDriver::setFontProvider("freetype");
 	KRE::Font::setAvailableFonts(font_paths2);
 	KRE::FontDriver::setAvailableFonts(font_paths2);
 	font_paths.clear();
