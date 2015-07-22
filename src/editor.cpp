@@ -931,7 +931,7 @@ void editor::toggle_facing()
 			EntityPtr obj = lvl->get_entity_by_label(e->label());
 			if(obj) {
 				executeCommand(std::bind(&editor::toggle_object_facing, this, lvl, obj, false),
-							   std::bind(&editor::toggle_object_facing,this, lvl, obj, false));
+				               std::bind(&editor::toggle_object_facing, this, lvl, obj, false));
 			}
 		}
 	}
@@ -951,7 +951,48 @@ void editor::toggle_isUpsideDown()
 			EntityPtr obj = lvl->get_entity_by_label(e->label());
 			if(obj) {
 				executeCommand(std::bind(&editor::toggle_object_facing, this, lvl, obj, true),
-							   std::bind(&editor::toggle_object_facing,this, lvl, obj, true));
+				               std::bind(&editor::toggle_object_facing, this, lvl, obj, true));
+			}
+		}
+	}
+	end_command_group();
+}
+
+void editor::change_rotation()
+{
+	const float radians_to_degrees = 57.29577951308232087f;
+	
+	const bool ctrl_pressed = (SDL_GetModState()&(KMOD_LCTRL|KMOD_RCTRL)) != 0;
+	
+	int mousex, mousey;
+	const unsigned int buttons = input::sdl_get_mouse_state(&mousex, &mousey);
+	mousex = xpos_ + mousex*zoom_;
+	mousey = ypos_ + mousey*zoom_ - EDITOR_MENUBAR_HEIGHT;
+	
+	if(character_dialog_) {
+		character_dialog_->init();
+	}
+
+	begin_command_group();
+	for(const EntityPtr& e : lvl_->editor_selection()) {
+		const int selx = e->x() + e->getCurrentFrame().width()/2; //This might not work correctly, I can't tell because the editor is so distorted.
+		const int sely = e->y() + e->getCurrentFrame().height()/2;
+		float newAngle = atan2(mousey-sely, mousex-selx)*radians_to_degrees;
+		
+		if(!ctrl_pressed) {
+			const float snapStep = 360/16;
+			newAngle = round(newAngle/snapStep)*snapStep;
+		}
+		
+		if((int) e->getRotateZ().as_float()*1000 == (int) newAngle*1000) { //Compare as integers so free rotation doesn't always result in a falsehood here; some loss of granularity.
+			continue; //this doesn't prevent some sort of long rebuild from running if nothing passes
+		} 
+		
+		for(LevelPtr lvl : levels_) {
+			EntityPtr obj = lvl->get_entity_by_label(e->label());
+			if(obj) {
+				executeCommand(std::bind(&editor::change_object_rotation, this, lvl, obj, newAngle),
+				               std::bind(&editor::change_object_rotation, this, lvl, obj, e->getRotateZ().as_float())); //subsequent undo steps should not stack
 			}
 		}
 	}
@@ -1197,7 +1238,9 @@ bool editor::handleEvent(const SDL_Event& event, bool swallowed)
 		}
 
 		return false;
-
+	case SDL_MOUSEMOTION:
+		// handle_tracking_to_mouse(); //Can't call here; freezes the display while the rotate button (g) is held. Currently called in level_runner.cpp.
+		break;
 	default:
 		break;
 	}
@@ -1719,6 +1762,7 @@ void editor::handleKeyPress(const SDL_KeyboardEvent& key)
 			}
 		}
 	}
+
 }
 
 void editor::handle_scrolling()
@@ -1754,6 +1798,19 @@ void editor::handle_scrolling()
 			ypos_ += FastScrollSpeed;
 		}
 	}
+}
+
+void editor::handle_tracking_to_mouse()
+{
+	if(code_dialog_ && code_dialog_->hasKeyboardFocus()) {
+		return;
+	}
+	const Uint8* keystate = SDL_GetKeyboardState(nullptr);
+	
+	if(keystate[SDL_GetScancodeFromKey(SDLK_g)]) { //typed g, not literal g key
+		change_rotation();
+	}
+	
 }
 
 void editor::reset_playing_level(bool keep_player)
@@ -2728,6 +2785,12 @@ void editor::toggle_object_facing(LevelPtr lvl, EntityPtr e, bool upside_down)
 	} else {
 		e->setFacingRight(!e->isFacingRight());
 	}
+}
+
+
+void editor::change_object_rotation(LevelPtr lvl, EntityPtr e, float rotation)
+{
+	e->setRotateZ(rotation);
 }
 
 const std::vector<editor::tileset>& editor::all_tilesets() const

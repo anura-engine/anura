@@ -42,6 +42,7 @@ Entity::Entity(variant node)
 	last_move_x_(0), last_move_y_(0),
 	face_right_(node["face_right"].as_bool(true)),
 	upside_down_(node["upside_down"].as_bool(false)),
+	rotate_z_(0),
 	group_(node["group"].as_int(-1)),
     id_(-1), respawn_(node["respawn"].as_bool(true)),
 	solid_dimensions_(0), collide_dimensions_(0),
@@ -176,6 +177,11 @@ void Entity::setFacingRight(bool facing)
 void Entity::setUpsideDown(bool facing)
 {
 	upside_down_ = facing;
+}
+
+void Entity::setRotateZ(float new_rotate_z)
+{
+	rotate_z_ = variant(new_rotate_z).as_decimal();
 }
 
 void Entity::calculateSolidRect()

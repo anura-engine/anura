@@ -155,6 +155,11 @@ public:
 	bool isUpsideDown() const { return upside_down_; }
 	virtual void setUpsideDown(bool facing);
 
+	decimal rotate_z_;
+	virtual decimal getRotateZ() const { return rotate_z_; }
+	
+	virtual void setRotateZ(float new_rotate_z);
+
 	int getFaceDir() const { return isFacingRight() ? 1 : -1; }
 
 	virtual bool isBodyHarmful() const { return true; }

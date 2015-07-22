@@ -376,6 +376,11 @@ private:
 	virtual int currentRotation() const override;
 
 	decimal rotate_z_;
+	decimal getRotateZ() const { return getValueBySlot(CUSTOM_OBJECT_ROTATE).as_decimal(); };
+	
+	void setRotateZ(float new_rotate_z) {
+		setValueBySlot(CUSTOM_OBJECT_ROTATE, variant(new_rotate_z));
+	}
 
     void setMidX(int new_mid_x) {
         const int current_x = x() + getCurrentFrame().width()/2;
