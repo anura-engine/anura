@@ -203,6 +203,7 @@ public:
 	void toggle_facing();
 	
 	//rotate with the mouse
+	void set_rotate_reference();
 	void change_rotation();
 
 	void toggle_isUpsideDown();

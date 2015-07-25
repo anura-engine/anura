@@ -958,7 +958,9 @@ void editor::toggle_isUpsideDown()
 	end_command_group();
 }
 
-void editor::change_rotation()
+//First, note the current angle of the mouse from the object. Then, when the rotation changes, calculate the difference.
+float rotation_reference_degrees = 0; //ideally, this would be an array for each object being rotated. Right now, it uses the last object selected and calculates an absolute rotation from the group from it. However, it would be more useful if each object was rotated by the degrees rotated. (This should work the same way as rotation does in Blender3D.) In addition, it would be nice if we could calculate the midpoint of all objects selected and rotate around *that*, instead of just the last object selected.
+void editor::set_rotate_reference()
 {
 	const float radians_to_degrees = 57.29577951308232087f;
 	
@@ -973,25 +975,51 @@ void editor::change_rotation()
 		character_dialog_->init();
 	}
 
-	begin_command_group();
+	
 	for(const EntityPtr& e : lvl_->editor_selection()) {
 		const int selx = e->x() + e->getCurrentFrame().width()/2; //This might not work correctly, I can't tell because the editor is so distorted.
 		const int sely = e->y() + e->getCurrentFrame().height()/2;
-		float newAngle = atan2(mousey-sely, mousex-selx)*radians_to_degrees;
-		
-		if(!ctrl_pressed) {
-			const float snapStep = 360/16;
-			newAngle = round(newAngle/snapStep)*snapStep;
-		}
-		
-		if((int) e->getRotateZ().as_float()*1000 == (int) newAngle*1000) { //Compare as integers so free rotation doesn't always result in a falsehood here; some loss of granularity.
+		rotation_reference_degrees = atan2(mousey-sely, mousex-selx)*radians_to_degrees - e->getRotateZ().as_float();
+	}
+}
+
+void editor::change_rotation()
+{
+	const float radians_to_degrees = 57.29577951308232087f;
+	
+	const bool ctrl_pressed = (SDL_GetModState()&(KMOD_LCTRL|KMOD_RCTRL)) != 0;
+	
+	int mousex, mousey;
+	const unsigned int buttons = input::sdl_get_mouse_state(&mousex, &mousey);
+	mousex = xpos_ + mousex*zoom_;
+	mousey = ypos_ + mousey*zoom_ - EDITOR_MENUBAR_HEIGHT;
+	
+	if(character_dialog_) {
+		character_dialog_->init();
+	}
+	
+	float new_angle = 0;
+	for(const EntityPtr& e : lvl_->editor_selection()) {
+		const int selx = e->x() + e->getCurrentFrame().width()/2; //This might not work correctly, I can't tell because the editor is so distorted.
+		const int sely = e->y() + e->getCurrentFrame().height()/2;
+		new_angle = atan2(mousey-sely, mousex-selx)*radians_to_degrees - rotation_reference_degrees;
+	}
+	
+	if(!ctrl_pressed) {
+		const float snap_step = 360.0/16;
+		new_angle = round(new_angle/snap_step)*snap_step;
+	}
+
+	begin_command_group();
+	for(const EntityPtr& e : lvl_->editor_selection()) {
+		if((int) e->getRotateZ().as_float()*1000 == (int) new_angle*1000) { //Compare as integers so free rotation doesn't always result in a falsehood here; some loss of granularity.
 			continue; //this doesn't prevent some sort of long rebuild from running if nothing passes
-		} 
+		}
 		
 		for(LevelPtr lvl : levels_) {
 			EntityPtr obj = lvl->get_entity_by_label(e->label());
 			if(obj) {
-				executeCommand(std::bind(&editor::change_object_rotation, this, lvl, obj, newAngle),
+				executeCommand(std::bind(&editor::change_object_rotation, this, lvl, obj, new_angle),
 				               std::bind(&editor::change_object_rotation, this, lvl, obj, e->getRotateZ().as_float())); //subsequent undo steps should not stack
 			}
 		}
@@ -1807,8 +1835,16 @@ void editor::handle_tracking_to_mouse()
 	}
 	const Uint8* keystate = SDL_GetKeyboardState(nullptr);
 	
+	static bool rotateReferenceSet = false;
 	if(keystate[SDL_GetScancodeFromKey(SDLK_g)]) { //typed g, not literal g key
-		change_rotation();
+		if(!rotateReferenceSet) {
+			set_rotate_reference();
+			rotateReferenceSet = true;
+		} else {
+			change_rotation();
+		}
+	} else {
+		rotateReferenceSet = false;
 	}
 	
 }
