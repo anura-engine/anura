@@ -157,8 +157,10 @@ public:
 
 	decimal rotate_z_;
 	virtual decimal getRotateZ() const { return rotate_z_; }
-	
 	virtual void setRotateZ(float new_rotate_z);
+	
+	virtual decimal getDrawScale() const { return decimal(1.0); };
+	virtual void setDrawScale(float new_scale);
 
 	int getFaceDir() const { return isFacingRight() ? 1 : -1; }
 

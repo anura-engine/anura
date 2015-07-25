@@ -184,6 +184,11 @@ void Entity::setRotateZ(float new_rotate_z)
 	rotate_z_ = variant(new_rotate_z).as_decimal();
 }
 
+void Entity::setDrawScale(float new_scale)
+{
+	//Why is this function is needed here? What does it do?
+}
+
 void Entity::calculateSolidRect()
 {
 	const Frame& f = getCurrentFrame();

@@ -448,6 +448,12 @@ private:
 	std::shared_ptr<KRE::ColorTransform> draw_color_;
 
 	std::shared_ptr<decimal> draw_scale_;
+	decimal getDrawScale() const { return getValueBySlot(CUSTOM_OBJECT_SCALE).as_decimal(); };
+	
+	void setDrawScale(float new_scale) {
+		setValueBySlot(CUSTOM_OBJECT_SCALE, variant(new_scale));
+	}
+	
 	std::shared_ptr<rect> draw_area_, activation_area_, clip_area_;
 	bool clip_area_absolute_;
 	int activation_border_;

@@ -964,8 +964,6 @@ void editor::set_rotate_reference()
 {
 	const float radians_to_degrees = 57.29577951308232087f;
 	
-	const bool ctrl_pressed = (SDL_GetModState()&(KMOD_LCTRL|KMOD_RCTRL)) != 0;
-	
 	int mousex, mousey;
 	const unsigned int buttons = input::sdl_get_mouse_state(&mousex, &mousey);
 	mousex = xpos_ + mousex*zoom_;
@@ -975,7 +973,6 @@ void editor::set_rotate_reference()
 		character_dialog_->init();
 	}
 
-	
 	for(const EntityPtr& e : lvl_->editor_selection()) {
 		const int selx = e->x() + e->getCurrentFrame().width()/2; //This might not work correctly, I can't tell because the editor is so distorted.
 		const int sely = e->y() + e->getCurrentFrame().height()/2;
@@ -1014,7 +1011,7 @@ void editor::change_rotation()
 
 	begin_command_group();
 	for(const EntityPtr& e : lvl_->editor_selection()) {
-		if((int) e->getRotateZ().as_float()*1000 == (int) new_angle*1000) { //Compare as integers so free rotation doesn't always result in a falsehood here; some loss of granularity.
+		if((int) (e->getRotateZ().as_float()*1000) == (int) (new_angle*1000)) { //Compare as integers so free rotation doesn't always result in a falsehood here; some loss of granularity.
 			continue; //this doesn't prevent some sort of long rebuild from running if nothing passes
 		}
 		
@@ -1023,6 +1020,79 @@ void editor::change_rotation()
 			if(obj) {
 				executeCommand(std::bind(&editor::change_object_rotation, this, lvl, obj, new_angle),
 				               std::bind(&editor::change_object_rotation, this, lvl, obj, e->getRotateZ().as_float())); //subsequent undo steps should not stack
+			}
+		}
+	}
+	end_command_group();
+}
+
+//Note the difference between the object's scale and the mouse distance from the object's point of origin. Use this to recompute the object's scale as the mouse position changes.
+float scale_reference_ratio = 0; 
+void editor::set_scale_reference()
+{
+	int mousex, mousey;
+	const unsigned int buttons = input::sdl_get_mouse_state(&mousex, &mousey);
+	mousex = xpos_ + mousex*zoom_;
+	mousey = ypos_ + mousey*zoom_ - EDITOR_MENUBAR_HEIGHT;
+	
+	if(character_dialog_) {
+		character_dialog_->init();
+	}
+
+	for(const EntityPtr& e : lvl_->editor_selection()) {
+		const int selx = e->x() + e->getCurrentFrame().width()/2; //This might not work correctly, I can't tell because the editor is so distorted.
+		const int sely = e->y() + e->getCurrentFrame().height()/2;
+		scale_reference_ratio = e->getDrawScale().as_float() / sqrt(pow(mousey-sely, 2) + pow(mousex-selx, 2)); //Doesn't handle negative scales yet; for now flip and invert can be used to mimic it. This feature should work like in Blender 3D, "If the mouse pointer crosses from the original side of the pivot point to the opposite side, the scale will continue in the negative direction, making the object/data appear flipped (mirrored)." (http://wiki.blender.org/index.php/Doc:2.4/Manual/3D_interaction/Transformations/Basics/Scale)
+	}
+}
+
+void editor::change_scale()
+{
+	const bool ctrl_pressed = (SDL_GetModState()&(KMOD_LCTRL|KMOD_RCTRL)) != 0;
+	
+	int mousex, mousey;
+	const unsigned int buttons = input::sdl_get_mouse_state(&mousex, &mousey);
+	mousex = xpos_ + mousex*zoom_;
+	mousey = ypos_ + mousey*zoom_ - EDITOR_MENUBAR_HEIGHT;
+	
+	if(character_dialog_) {
+		character_dialog_->init();
+	}
+
+	float new_scale = 0;
+	for(const EntityPtr& e : lvl_->editor_selection()) {
+		const int selx = e->x() + e->getCurrentFrame().width()/2; //This might not work correctly, I can't tell because the editor is so distorted.
+		const int sely = e->y() + e->getCurrentFrame().height()/2;
+		new_scale = scale_reference_ratio * sqrt(pow(mousey-sely, 2) + pow(mousex-selx, 2)); //Doesn't handle negative scales yet; for now flip and invert can be used to mimic it. This feature should work like in Blender 3D, "If the mouse pointer crosses from the original side of the pivot point to the opposite side, the scale will continue in the negative direction, making the object/data appear flipped (mirrored)." (http://wiki.blender.org/index.php/Doc:2.4/Manual/3D_interaction/Transformations/Basics/Scale)
+	}
+	
+	if(!ctrl_pressed) {
+		if(new_scale >= 1) {
+			new_scale = round(new_scale);
+		} else {
+			LOG_INFO("1: " << new_scale);
+			new_scale = 1.0/round(1.0/new_scale);
+			LOG_INFO("2: " << new_scale << ", s1 " << 1.0/new_scale);
+		}
+	}
+	
+	//Keep the object from disappearing completely, because it's not recoverable then.
+	const float editor_min_scale = 0.1;
+	if(new_scale < editor_min_scale) {
+		new_scale = editor_min_scale;
+	}
+	
+	begin_command_group();
+	for(const EntityPtr& e : lvl_->editor_selection()) {
+		if((int) (e->getDrawScale().as_float()*1000) == (int) (new_scale*1000)) { //Compare as integers so free rotation doesn't always result in a falsehood here; some loss of granularity.
+			continue; //this doesn't prevent some sort of long rebuild from running if nothing passes
+		}
+		
+		for(LevelPtr lvl : levels_) {
+			EntityPtr obj = lvl->get_entity_by_label(e->label());
+			if(obj) {
+				executeCommand(std::bind(&editor::change_object_scale, this, lvl, obj, new_scale),
+				               std::bind(&editor::change_object_scale, this, lvl, obj, e->getDrawScale().as_float())); //subsequent undo steps should not stack
 			}
 		}
 	}
@@ -1837,6 +1907,7 @@ void editor::handle_tracking_to_mouse()
 	}
 	const Uint8* keystate = SDL_GetKeyboardState(nullptr);
 	
+	//The keys here, g and m, were chosen at random because all the sensible ones were used for other stuff.
 	static bool rotateReferenceSet = false;
 	if(keystate[SDL_GetScancodeFromKey(SDLK_g)]) { //typed g, not literal g key
 		if(!rotateReferenceSet) {
@@ -1849,6 +1920,17 @@ void editor::handle_tracking_to_mouse()
 		rotateReferenceSet = false;
 	}
 	
+	static bool scaleReferenceSet = false;
+	if(keystate[SDL_GetScancodeFromKey(SDLK_m)]) {
+		if(!scaleReferenceSet) {
+			set_scale_reference();
+			scaleReferenceSet = true;
+		} else {
+			change_scale();
+		}
+	} else {
+		scaleReferenceSet = false;
+	}
 }
 
 void editor::reset_playing_level(bool keep_player)
@@ -2825,10 +2907,14 @@ void editor::toggle_object_facing(LevelPtr lvl, EntityPtr e, bool upside_down)
 	}
 }
 
-
 void editor::change_object_rotation(LevelPtr lvl, EntityPtr e, float rotation)
 {
 	e->setRotateZ(rotation);
+}
+
+void editor::change_object_scale(LevelPtr lvl, EntityPtr e, float scale)
+{
+	e->setDrawScale(scale);
 }
 
 const std::vector<editor::tileset>& editor::all_tilesets() const

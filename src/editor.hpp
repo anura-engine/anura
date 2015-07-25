@@ -202,9 +202,11 @@ public:
 	//switch the current facing.
 	void toggle_facing();
 	
-	//rotate with the mouse
+	//rotate & scale with the mouse
 	void set_rotate_reference();
 	void change_rotation();
+	void set_scale_reference();
+	void change_scale();
 
 	void toggle_isUpsideDown();
 
@@ -289,6 +291,7 @@ private:
 	void move_object(LevelPtr lvl, EntityPtr e, int delta_x, int delta_y);
 	void toggle_object_facing(LevelPtr lvl, EntityPtr e, bool upside_down=false);
 	void change_object_rotation(LevelPtr lvl, EntityPtr e, float rotation);
+	void change_object_scale(LevelPtr lvl, EntityPtr e, float scale);
 
 	bool editing_objects() const { return tool_ == TOOL_ADD_OBJECT || tool_ == TOOL_SELECT_OBJECT; }
 	bool editing_tiles() const { return !editing_objects(); }
