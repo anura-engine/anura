@@ -1009,6 +1009,8 @@ void editor::change_rotation()
 		const float snap_step = 360.0/16;
 		new_angle = round(new_angle/snap_step)*snap_step;
 	}
+	
+	new_angle = fmod(new_angle, 360); //360 = 0, but only 0 = don't serialize the value in the level file
 
 	begin_command_group();
 	for(const EntityPtr& e : lvl_->editor_selection()) {

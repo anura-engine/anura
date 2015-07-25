@@ -376,9 +376,9 @@ private:
 	virtual int currentRotation() const override;
 
 	decimal rotate_z_;
-	decimal getRotateZ() const { return getValueBySlot(CUSTOM_OBJECT_ROTATE).as_decimal(); };
+	decimal getRotateZ() const override { return getValueBySlot(CUSTOM_OBJECT_ROTATE).as_decimal(); };
 	
-	void setRotateZ(float new_rotate_z) {
+	void setRotateZ(float new_rotate_z) override {
 		setValueBySlot(CUSTOM_OBJECT_ROTATE, variant(new_rotate_z));
 	}
 
