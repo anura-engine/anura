@@ -2587,7 +2587,7 @@ FUNCTION_DEF_IMPL
 					}
 				}
 
-				ASSERT_LOG(false, "Failed to find expected item. List has: " << items.write_json());
+				ASSERT_LOG(false, "Failed to find expected item. List has: " << items.write_json() << " " << debugPinpointLocation());
 			}
 
 			variant_type_ptr getVariantType() const {
