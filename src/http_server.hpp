@@ -49,6 +49,8 @@ namespace http
 		explicit web_server(boost::asio::io_service& io_service, int port=23456);
 		virtual ~web_server();
 
+		void keepalive_socket(socket_ptr socket);
+
 		static void disconnect_socket(socket_ptr socket);
 
 	protected:

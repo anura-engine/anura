@@ -645,25 +645,28 @@ namespace
 	class music_command : public EntityCommandCallable
 		{
 		public:
-			explicit music_command(const std::string& name, const bool loops)
-			: name_(name), loops_(loops)
+			explicit music_command(const std::string& name, const bool loops, int fade_time)
+			: name_(name), loops_(loops), queued_(false), fade_time_(fade_time)
 			{}
 			virtual void execute(Level& lvl, Entity& ob) const {
 				if(loops_){
-					sound::play_music(name_);
+					sound::play_music(name_, queued_, fade_time_);
 				}else{
 					sound::play_music_interrupt(name_);
 				}
 			}
+			void setQueued() { queued_ = true; }
 		private:
 			std::string name_;
 			bool loops_;
+			bool queued_;
+			int fade_time_;
 		};
 
 	FUNCTION_DEF(music, 1, 1, "music(string id): plays the music file given by 'id' in a loop")
 		music_command* cmd = (new music_command(
 										 args()[0]->evaluate(variables).as_string(),
-										 true));
+										 true, 500));
 		cmd->setExpression(this);
 		return variant(cmd);
 	FUNCTION_ARGS_DEF
@@ -671,10 +674,27 @@ namespace
 	RETURN_TYPE("commands")
 	END_FUNCTION_DEF(music)
 
+	FUNCTION_DEF(music_queue, 1, 2, "music_queue(string id, int fade_time=500): plays the music file given by 'id' in a loop after the current music is done.")
+		int fade_time = 500;
+		if(args().size() >= 2) {
+			fade_time = args()[1]->evaluate(variables).as_int();
+		}
+		music_command* cmd = (new music_command(
+										 args()[0]->evaluate(variables).as_string(),
+										 true, fade_time));
+		cmd->setQueued();
+		cmd->setExpression(this);
+		return variant(cmd);
+	FUNCTION_ARGS_DEF
+		ARG_TYPE("string")
+		ARG_TYPE("int")
+	RETURN_TYPE("commands")
+	END_FUNCTION_DEF(music_queue)
+
 	FUNCTION_DEF(music_onetime, 1, 1, "music_onetime(string id): plays the music file given by 'id' once")
 		music_command* cmd = (new music_command(
 										 args()[0]->evaluate(variables).as_string(),
-										 false));
+										 false, 500));
 		cmd->setExpression(this);
 		return variant(cmd);
 	FUNCTION_ARGS_DEF

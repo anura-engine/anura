@@ -34,26 +34,10 @@ namespace KRE
 		static FontRegistrar<FontSDL> font_sdl_register("SDL");
 
 		typedef std::map<std::pair<std::string, int>, TTF_Font*> FontMap;
-
-		class FontMapMan {
-		public:
-			FontMapMan(){}
-			~FontMapMan() {
-				for (auto & v : table_) {
-					TTF_CloseFont(v.second);
-				}
-			}
-			FontMap & get() {
-				return table_;
-			}
-		private:
-			FontMap table_;
-		};
-
 		FontMap& get_font_table()
 		{
-			static FontMapMan res;
-			return res.get();
+			static FontMap res;
+			return res;
 		}
 
 		SDL_Color to_SDL_Color(const Color& c)

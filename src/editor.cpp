@@ -931,7 +931,7 @@ void editor::toggle_facing()
 			EntityPtr obj = lvl->get_entity_by_label(e->label());
 			if(obj) {
 				executeCommand(std::bind(&editor::toggle_object_facing, this, lvl, obj, false),
-							   std::bind(&editor::toggle_object_facing,this, lvl, obj, false));
+				               std::bind(&editor::toggle_object_facing, this, lvl, obj, false));
 			}
 		}
 	}
@@ -951,7 +951,148 @@ void editor::toggle_isUpsideDown()
 			EntityPtr obj = lvl->get_entity_by_label(e->label());
 			if(obj) {
 				executeCommand(std::bind(&editor::toggle_object_facing, this, lvl, obj, true),
-							   std::bind(&editor::toggle_object_facing,this, lvl, obj, true));
+				               std::bind(&editor::toggle_object_facing, this, lvl, obj, true));
+			}
+		}
+	}
+	end_command_group();
+}
+
+//First, note the current angle of the mouse from the object. Then, when the rotation changes, calculate the difference.
+float rotation_reference_degrees = 0; //ideally, this would be an array for each object being rotated. Right now, it uses the last object selected and calculates an absolute rotation from the group from it. However, it would be more useful if each object was rotated by the degrees rotated. (This should work the same way as rotation does in Blender3D.) In addition, it would be nice if we could calculate the midpoint of all objects selected and rotate around *that*, instead of just the last object selected.
+void editor::set_rotate_reference()
+{
+	const float radians_to_degrees = 57.29577951308232087f;
+	
+	int mousex, mousey;
+	const unsigned int buttons = input::sdl_get_mouse_state(&mousex, &mousey);
+	mousex = xpos_ + mousex*zoom_;
+	mousey = ypos_ + mousey*zoom_ - EDITOR_MENUBAR_HEIGHT;
+	
+	if(character_dialog_) {
+		character_dialog_->init();
+	}
+
+	for(const EntityPtr& e : lvl_->editor_selection()) {
+		const int selx = e->x() + e->getCurrentFrame().width()/2; //This might not work correctly, I can't tell because the editor is so distorted.
+		const int sely = e->y() + e->getCurrentFrame().height()/2;
+		rotation_reference_degrees = atan2(mousey-sely, mousex-selx)*radians_to_degrees - e->getRotateZ().as_float();
+	}
+}
+
+void editor::change_rotation()
+{
+	const float radians_to_degrees = 57.29577951308232087f;
+	
+	const bool ctrl_pressed = (SDL_GetModState()&(KMOD_LCTRL|KMOD_RCTRL)) != 0;
+	
+	int mousex, mousey;
+	const unsigned int buttons = input::sdl_get_mouse_state(&mousex, &mousey);
+	mousex = xpos_ + mousex*zoom_;
+	mousey = ypos_ + mousey*zoom_ - EDITOR_MENUBAR_HEIGHT;
+	
+	if(character_dialog_) {
+		character_dialog_->init();
+	}
+	
+	float new_angle = 0;
+	for(const EntityPtr& e : lvl_->editor_selection()) {
+		const int selx = e->x() + e->getCurrentFrame().width()/2; //This might not work correctly, I can't tell because the editor is so distorted.
+		const int sely = e->y() + e->getCurrentFrame().height()/2;
+		new_angle = atan2(mousey-sely, mousex-selx)*radians_to_degrees - rotation_reference_degrees;
+	}
+	
+	if(!ctrl_pressed) {
+		const float snap_step = 360.0/16;
+		new_angle = round(new_angle/snap_step)*snap_step;
+	}
+	
+	new_angle = fmod(new_angle, 360); //360 = 0, but only 0 = don't serialize the value in the level file
+
+	begin_command_group();
+	for(const EntityPtr& e : lvl_->editor_selection()) {
+		if((int) (e->getRotateZ().as_float()*1000) == (int) (new_angle*1000)) { //Compare as integers so free rotation doesn't always result in a falsehood here; some loss of granularity.
+			continue; //this doesn't prevent some sort of long rebuild from running if nothing passes
+		}
+		
+		for(LevelPtr lvl : levels_) {
+			EntityPtr obj = lvl->get_entity_by_label(e->label());
+			if(obj) {
+				executeCommand(std::bind(&editor::change_object_rotation, this, lvl, obj, new_angle),
+				               std::bind(&editor::change_object_rotation, this, lvl, obj, e->getRotateZ().as_float())); //subsequent undo steps should not stack
+			}
+		}
+	}
+	end_command_group();
+}
+
+//Note the difference between the object's scale and the mouse distance from the object's point of origin. Use this to recompute the object's scale as the mouse position changes.
+float scale_reference_ratio = 0; 
+void editor::set_scale_reference()
+{
+	int mousex, mousey;
+	const unsigned int buttons = input::sdl_get_mouse_state(&mousex, &mousey);
+	mousex = xpos_ + mousex*zoom_;
+	mousey = ypos_ + mousey*zoom_ - EDITOR_MENUBAR_HEIGHT;
+	
+	if(character_dialog_) {
+		character_dialog_->init();
+	}
+
+	for(const EntityPtr& e : lvl_->editor_selection()) {
+		const int selx = e->x() + e->getCurrentFrame().width()/2; //This might not work correctly, I can't tell because the editor is so distorted.
+		const int sely = e->y() + e->getCurrentFrame().height()/2;
+		scale_reference_ratio = e->getDrawScale().as_float() / sqrt(pow(mousey-sely, 2) + pow(mousex-selx, 2)); //Doesn't handle negative scales yet; for now flip and invert can be used to mimic it. This feature should work like in Blender 3D, "If the mouse pointer crosses from the original side of the pivot point to the opposite side, the scale will continue in the negative direction, making the object/data appear flipped (mirrored)." (http://wiki.blender.org/index.php/Doc:2.4/Manual/3D_interaction/Transformations/Basics/Scale)
+	}
+}
+
+void editor::change_scale()
+{
+	const bool ctrl_pressed = (SDL_GetModState()&(KMOD_LCTRL|KMOD_RCTRL)) != 0;
+	
+	int mousex, mousey;
+	const unsigned int buttons = input::sdl_get_mouse_state(&mousex, &mousey);
+	mousex = xpos_ + mousex*zoom_;
+	mousey = ypos_ + mousey*zoom_ - EDITOR_MENUBAR_HEIGHT;
+	
+	if(character_dialog_) {
+		character_dialog_->init();
+	}
+
+	float new_scale = 0;
+	for(const EntityPtr& e : lvl_->editor_selection()) {
+		const int selx = e->x() + e->getCurrentFrame().width()/2; //This might not work correctly, I can't tell because the editor is so distorted.
+		const int sely = e->y() + e->getCurrentFrame().height()/2;
+		new_scale = scale_reference_ratio * sqrt(pow(mousey-sely, 2) + pow(mousex-selx, 2)); //Doesn't handle negative scales yet; for now flip and invert can be used to mimic it. This feature should work like in Blender 3D, "If the mouse pointer crosses from the original side of the pivot point to the opposite side, the scale will continue in the negative direction, making the object/data appear flipped (mirrored)." (http://wiki.blender.org/index.php/Doc:2.4/Manual/3D_interaction/Transformations/Basics/Scale)
+	}
+	
+	if(!ctrl_pressed) {
+		if(new_scale >= 1) {
+			new_scale = round(new_scale);
+		} else {
+			LOG_INFO("1: " << new_scale);
+			new_scale = 1.0/round(1.0/new_scale);
+			LOG_INFO("2: " << new_scale << ", s1 " << 1.0/new_scale);
+		}
+	}
+	
+	//Keep the object from disappearing completely, because it's not recoverable then.
+	const float editor_min_scale = 0.1;
+	if(new_scale < editor_min_scale) {
+		new_scale = editor_min_scale;
+	}
+	
+	begin_command_group();
+	for(const EntityPtr& e : lvl_->editor_selection()) {
+		if((int) (e->getDrawScale().as_float()*1000) == (int) (new_scale*1000)) { //Compare as integers so free rotation doesn't always result in a falsehood here; some loss of granularity.
+			continue; //this doesn't prevent some sort of long rebuild from running if nothing passes
+		}
+		
+		for(LevelPtr lvl : levels_) {
+			EntityPtr obj = lvl->get_entity_by_label(e->label());
+			if(obj) {
+				executeCommand(std::bind(&editor::change_object_scale, this, lvl, obj, new_scale),
+				               std::bind(&editor::change_object_scale, this, lvl, obj, e->getDrawScale().as_float())); //subsequent undo steps should not stack
 			}
 		}
 	}
@@ -1197,7 +1338,9 @@ bool editor::handleEvent(const SDL_Event& event, bool swallowed)
 		}
 
 		return false;
-
+	case SDL_MOUSEMOTION:
+		// handle_tracking_to_mouse(); //Can't call here; freezes the display while the rotate button (g) is held. Currently called in level_runner.cpp.
+		break;
 	default:
 		break;
 	}
@@ -1245,7 +1388,7 @@ void editor::process()
 
 	int mousex, mousey;
 	const unsigned int buttons = input::sdl_get_mouse_state(&mousex, &mousey) & mouse_buttons_down_;
-	mousey -= EDITOR_MENUBAR_HEIGHT;
+	//mousey -= EDITOR_MENUBAR_HEIGHT;
 
 	if(buttons == 0) {
 		drawing_rect_ = false;
@@ -1384,9 +1527,9 @@ void editor::process()
 	//if we're drawing with a pencil see if we add a new tile
 	if(tool() == TOOL_PENCIL && dragging_ && buttons) {
 		const int xpos = xpos_ + mousex*zoom_;
-		const int ypos = ypos_ + mousey*zoom_;
+		const int ypos = ypos_ + mousey*zoom_ - EDITOR_MENUBAR_HEIGHT;
 		const int last_xpos = xpos_ + last_mousex*zoom_;
-		const int last_ypos = ypos_ + last_mousey*zoom_;
+		const int last_ypos = ypos_ + last_mousey*zoom_ - EDITOR_MENUBAR_HEIGHT;
 
 		pencil_motion(last_xpos, last_ypos, xpos, ypos, buttons&SDL_BUTTON(SDL_BUTTON_LEFT));
 	}
@@ -1719,6 +1862,7 @@ void editor::handleKeyPress(const SDL_KeyboardEvent& key)
 			}
 		}
 	}
+
 }
 
 void editor::handle_scrolling()
@@ -1753,6 +1897,39 @@ void editor::handle_scrolling()
 		if(keystate[SDL_SCANCODE_KP_0]) {
 			ypos_ += FastScrollSpeed;
 		}
+	}
+}
+
+void editor::handle_tracking_to_mouse()
+{
+	if(code_dialog_ && code_dialog_->hasKeyboardFocus()) {
+		return;
+	}
+	const Uint8* keystate = SDL_GetKeyboardState(nullptr);
+	
+	//The keys here, g and m, were chosen at random because all the sensible ones were used for other stuff.
+	static bool rotateReferenceSet = false;
+	if(keystate[SDL_GetScancodeFromKey(SDLK_g)]) { //typed g, not literal g key
+		if(!rotateReferenceSet) {
+			set_rotate_reference();
+			rotateReferenceSet = true;
+		} else {
+			change_rotation();
+		}
+	} else {
+		rotateReferenceSet = false;
+	}
+	
+	static bool scaleReferenceSet = false;
+	if(keystate[SDL_GetScancodeFromKey(SDLK_m)]) {
+		if(!scaleReferenceSet) {
+			set_scale_reference();
+			scaleReferenceSet = true;
+		} else {
+			change_scale();
+		}
+	} else {
+		scaleReferenceSet = false;
 	}
 }
 
@@ -1792,7 +1969,7 @@ void editor::handle_object_dragging(int mousex, int mousey)
 
 	const bool ctrl_pressed = (SDL_GetModState()&(KMOD_LCTRL|KMOD_RCTRL)) != 0;
 	const int dx = xpos_ + mousex*zoom_ - anchorx_;
-	const int dy = ypos_ + mousey*zoom_ - anchory_;
+	const int dy = ypos_ + mousey*zoom_ - anchory_ - EDITOR_MENUBAR_HEIGHT;
 	const int xpos = selected_entity_startx_ + dx;
 	const int ypos = selected_entity_starty_ + dy;
 
@@ -1847,10 +2024,10 @@ void editor::handle_object_dragging(int mousex, int mousey)
 void editor::handleDrawingRect(int mousex, int mousey)
 {
 	const unsigned int buttons = input::sdl_get_mouse_state(&mousex, &mousey);
-	mousey -= EDITOR_MENUBAR_HEIGHT;
+	//mousey -= EDITOR_MENUBAR_HEIGHT;
 
 	const int xpos = xpos_ + mousex*zoom_;
-	const int ypos = ypos_ + mousey*zoom_;
+	const int ypos = ypos_ + mousey*zoom_ - EDITOR_MENUBAR_HEIGHT;
 
 	int x1 = xpos;
 	int x2 = anchorx_;
@@ -1900,10 +2077,10 @@ void editor::handleMouseButtonDown(const SDL_MouseButtonEvent& event)
 	const bool alt_pressed = (SDL_GetModState()&KMOD_ALT) != 0;
 	int mousex, mousey;
 	const unsigned int buttons = input::sdl_get_mouse_state(&mousex, &mousey);
-	mousey -= EDITOR_MENUBAR_HEIGHT;
+	//mousey -= EDITOR_MENUBAR_HEIGHT;
 
 	anchorx_ = xpos_ + mousex*zoom_;
-	anchory_ = ypos_ + mousey*zoom_;
+	anchory_ = ypos_ + mousey*zoom_ - EDITOR_MENUBAR_HEIGHT;
 	if(event.button == SDL_BUTTON_MIDDLE && !alt_pressed) {
 		return;
 	}
@@ -2137,7 +2314,7 @@ void editor::handleMouseButtonDown(const SDL_MouseButtonEvent& event)
 
 	if(tool() == TOOL_ADD_OBJECT && event.button == SDL_BUTTON_LEFT && !lvl_->editor_highlight()) {
 		const int xpos = anchorx_ - all_characters()[cur_object_].preview_object()->getCurrentFrame().width()/2;
-		const int ypos = anchory_ - all_characters()[cur_object_].preview_object()->getCurrentFrame().height()/2;
+		const int ypos = anchory_ - all_characters()[cur_object_].preview_object()->getCurrentFrame().height()/2 + EDITOR_MENUBAR_HEIGHT;
 		variant_builder node;
 		node.merge_object(all_characters()[cur_object_].node);
 		node.set("x", (ctrl_pressed ? xpos : round_tile_size(xpos)));
@@ -2224,10 +2401,10 @@ void editor::handleMouseButtonUp(const SDL_MouseButtonEvent& event)
 {
 	int mousex, mousey;
 	input::sdl_get_mouse_state(&mousex, &mousey);
-	mousey -= EDITOR_MENUBAR_HEIGHT;
+	//mousey -= EDITOR_MENUBAR_HEIGHT;
 			
 	const int xpos = xpos_ + mousex*zoom_;
-	const int ypos = ypos_ + mousey*zoom_;
+	const int ypos = ypos_ + mousey*zoom_ - EDITOR_MENUBAR_HEIGHT;
 
 	if(g_variable_editing) {
 		if(property_dialog_ && property_dialog_->getEntity()) {
@@ -2271,7 +2448,7 @@ void editor::handleMouseButtonUp(const SDL_MouseButtonEvent& event)
 	if(editing_tiles()) {
 		if(dragging_) {
 			const int selectx = xpos_ + mousex*zoom_;
-			const int selecty = ypos_ + mousey*zoom_;
+			const int selecty = ypos_ + mousey*zoom_ - EDITOR_MENUBAR_HEIGHT;
 
 			//dragging selection
 			int diffx = (selectx - anchorx_)/TileSize;
@@ -2730,6 +2907,16 @@ void editor::toggle_object_facing(LevelPtr lvl, EntityPtr e, bool upside_down)
 	}
 }
 
+void editor::change_object_rotation(LevelPtr lvl, EntityPtr e, float rotation)
+{
+	e->setRotateZ(rotation);
+}
+
+void editor::change_object_scale(LevelPtr lvl, EntityPtr e, float scale)
+{
+	e->setDrawScale(scale);
+}
+
 const std::vector<editor::tileset>& editor::all_tilesets() const
 {
 	return tilesets;
@@ -3038,26 +3225,6 @@ void editor::zoomOut()
 	}
 }
 
-/*void editor::draw() const
-{
-	auto wnd = KRE::WindowManager::getMainWindow();
-	wnd->setClearColor(KRE::Color(0,0,0,0));
-	wnd->clear(KRE::ClearFlags::COLOR);
-
-	if(zoom_ == 1) {
-		//backgrounds only draw nicely at the regular zoom level for now.
-		lvl_->draw_background(xpos_, ypos_, 0);
-	}
-
-	lvl_->draw(xpos_, ypos_, wnd->width()*zoom_, wnd->height()*zoom_);
-	
-	draw_gui();
-
-	debug_console::draw();
-
-	wnd->swap();
-}*/
-
 void editor::draw_gui() const
 {
 	auto canvas = KRE::Canvas::getInstance();
@@ -3066,7 +3233,7 @@ void editor::draw_gui() const
 	const bool ctrl_pressed = (SDL_GetModState()&(KMOD_LCTRL|KMOD_RCTRL)) != 0;
 	int mousex, mousey;
 	input::sdl_get_mouse_state(&mousex, &mousey);
-	mousey -= EDITOR_MENUBAR_HEIGHT;
+	//mousey -= EDITOR_MENUBAR_HEIGHT;
 	const int selectx = xpos_ + mousex*zoom_;
 	const int selecty = ypos_ + mousey*zoom_;
 
@@ -3193,9 +3360,6 @@ void editor::draw_gui() const
 //		stats::draw_stats(stats_);
 	}
 
-	// Clear the current applied model
-	mm.reset();
-
 	if(dragging_ && g_current_draw_tiles.empty() == false) {
 		std::vector<glm::vec2> varray;
 
@@ -3211,6 +3375,9 @@ void editor::draw_gui() const
 		}
 		canvas->drawLines(varray, 1.0f, KRE::Color(255, 255, 255, 128));
 	}
+
+	// Clear the current applied model
+	mm.reset();
 
 	//draw the difficulties of segments.
 	if(lvl_->segment_width() > 0 || lvl_->segment_height() > 0) {
@@ -3242,7 +3409,7 @@ void editor::draw_gui() const
 			carray.emplace_back(255, 255, 255, 64);
 			carray.emplace_back(255, 255, 255, 32);
 		}
-		for(int y = EDITOR_MENUBAR_HEIGHT - TileSize - (ypos_/zoom_)%TileSize; y < h; y += (BaseTileSize*g_tile_scale)/zoom_) {
+		for(int y = /*EDITOR_MENUBAR_HEIGHT*/ - TileSize - (ypos_/zoom_)%TileSize; y < h; y += (BaseTileSize*g_tile_scale)/zoom_) {
 			varray.emplace_back(0, y);
 			varray.emplace_back(w, y);
 			carray.emplace_back(255, 255, 255, 32);

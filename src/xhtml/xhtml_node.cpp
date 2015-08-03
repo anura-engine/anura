@@ -191,6 +191,10 @@ namespace xhtml
 		attributes_[a->getName()] = a;
 	}
 
+	void Node::setAttribute(const std::string& name, const std::string& value)
+	{
+		attributes_[name] = Attribute::create(name, value, getOwnerDoc());
+	}	
 	bool Node::preOrderTraversal(std::function<bool(NodePtr)> fn)
 	{
 		// Visit node, visit children.
@@ -235,11 +239,6 @@ namespace xhtml
 	{
 		auto it = attributes_.find(name);
 		return it != attributes_.end() ? it->second : nullptr;
-	}
-
-	void Node::setAttribute(const std::string& name, const std::string& value)
-	{
-		attributes_[name] = Attribute::create(name, value, getOwnerDoc());
 	}
 
 	std::string Node::nodeToString() const
@@ -371,7 +370,7 @@ namespace xhtml
 					std::map<variant, variant> m;
 					m[variant("clientX")] = variant(p.x);
 					m[variant("clientY")] = variant(p.y);
-					m[variant("button")] = variant(button - 1);
+					m[variant("button")] = variant(static_cast<int>(button - 1));
 					getScriptHandler()->runEventHandler(shared_from_this(), EventHandlerId::MOUSE_UP, variant(&m));
 				}
 			}
@@ -392,7 +391,7 @@ namespace xhtml
 					std::map<variant, variant> m;
 					m[variant("clientX")] = variant(p.x);
 					m[variant("clientY")] = variant(p.y);
-					m[variant("button")] = variant(button - 1);
+					m[variant("button")] = variant(static_cast<int>(button - 1));
 					getScriptHandler()->runEventHandler(shared_from_this(), EventHandlerId::MOUSE_DOWN, variant(&m));
 				}
 			}

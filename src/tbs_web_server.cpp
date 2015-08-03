@@ -206,7 +206,7 @@ namespace tbs
 		disconnect(socket);
 	}
 
-	http_client* g_game_server_http_client_to_matchmaking_server;
+	boost::intrusive_ptr<http_client> g_game_server_http_client_to_matchmaking_server;
 }
 
 namespace 
@@ -276,11 +276,13 @@ COMMAND_LINE_UTILITY(tbs_server) {
 	tbs::server s(io_service);
 	tbs::web_server ws(s, io_service, port);
 
+	s.set_http_server(&ws);
+
 	if(!config.is_null()) {
 		tbs::server_base::game_info_ptr result = s.create_game(config["game"]);
 		ASSERT_LOG(result, "Passed in config game is invalid");
 
-		tbs::g_game_server_http_client_to_matchmaking_server = new http_client(config["matchmaking_host"].as_string(), formatter() << config["matchmaking_port"].as_int());
+		tbs::g_game_server_http_client_to_matchmaking_server.reset(new http_client(config["matchmaking_host"].as_string(), formatter() << config["matchmaking_port"].as_int()));
 		http_client& client = *tbs::g_game_server_http_client_to_matchmaking_server;
 
 		variant_builder msg;

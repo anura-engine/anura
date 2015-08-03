@@ -161,7 +161,13 @@ namespace xhtml
 
 	void StyleNode::process(float dt)
 	{
+		auto node = getNode();
+		if(node) {
+			node->process(dt);
+		}
+
 		acc_ += dt;
+
 		// process any transitions.
 		for(auto& tx : transitions_) {
 			//LOG_DEBUG("A " << tx->toString() << ", acc: " << acc_ << " " << intptr_t(tx.get()));

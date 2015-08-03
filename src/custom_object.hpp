@@ -242,16 +242,7 @@ public:
 	gui::WidgetPtr getWidgetById(const std::string& id);
 	gui::ConstWidgetPtr getWidgetById(const std::string& id) const;
 	std::vector<variant> getVariantWidgetList() const;
-	bool getClipArea(rect* clip_area) const override {
-		if(clip_area_.get() != nullptr && clip_area) {
-			*clip_area = *clip_area_.get();
-			return true;
-		} else if(clip_area_.get() != nullptr) {
-			return true;
-		}
-
-		return false;
-	}
+	bool getClipArea(rect* clip_area) const override;
 
 	struct AnimatedMovement {
 		std::string name;
@@ -385,6 +376,11 @@ private:
 	virtual int currentRotation() const override;
 
 	decimal rotate_z_;
+	decimal getRotateZ() const override { return getValueBySlot(CUSTOM_OBJECT_ROTATE).as_decimal(); };
+	
+	void setRotateZ(float new_rotate_z) override {
+		setValueBySlot(CUSTOM_OBJECT_ROTATE, variant(new_rotate_z));
+	}
 
     void setMidX(int new_mid_x) {
         const int current_x = x() + getCurrentFrame().width()/2;
@@ -452,7 +448,14 @@ private:
 	std::shared_ptr<KRE::ColorTransform> draw_color_;
 
 	std::shared_ptr<decimal> draw_scale_;
+	decimal getDrawScale() const { return getValueBySlot(CUSTOM_OBJECT_SCALE).as_decimal(); };
+	
+	void setDrawScale(float new_scale) {
+		setValueBySlot(CUSTOM_OBJECT_SCALE, variant(new_scale));
+	}
+	
 	std::shared_ptr<rect> draw_area_, activation_area_, clip_area_;
+	bool clip_area_absolute_;
 	int activation_border_;
 	
 	bool can_interact_with_;

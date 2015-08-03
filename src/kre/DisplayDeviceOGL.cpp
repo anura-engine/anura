@@ -154,6 +154,7 @@ namespace KRE
 				extensions_.emplace(ext);
 			}
 		} else {
+            glGetError();
 			std::string exts(reinterpret_cast<const char*>(glGetString(GL_EXTENSIONS)));
 			if(glGetError() == GL_NONE) {
 				for(auto& ext : Util::split(exts, " ")) {

@@ -191,6 +191,7 @@ CustomObject::CustomObject(variant node)
 	can_interact_with_(false), fall_through_platforms_(0),
 	always_active_(node["always_active"].as_bool(false)),
 	activation_border_(node["activation_border"].as_int(type_->getActivationBorder())),
+	clip_area_absolute_(node["clip_area_absolute"].as_bool(false)),
 	last_cycle_active_(0),
 	parent_pivot_(node["pivot"].as_string_default()),
 	parent_prev_x_(std::numeric_limits<int>::min()), parent_prev_y_(std::numeric_limits<int>::min()), parent_prev_facing_(true),
@@ -535,6 +536,7 @@ CustomObject::CustomObject(const std::string& type, int x, int y, bool face_righ
 	created_(false), loaded_(false), fall_through_platforms_(0),
 	always_active_(false),
 	activation_border_(type_->getActivationBorder()),
+	clip_area_absolute_(false),
 	last_cycle_active_(0),
 	parent_prev_x_(std::numeric_limits<int>::min()), parent_prev_y_(std::numeric_limits<int>::min()), parent_prev_facing_(true),
     relative_x_(0), relative_y_(0),
@@ -668,6 +670,7 @@ CustomObject::CustomObject(const CustomObject& o)
 	activation_area_(o.activation_area_ ? new rect(*o.activation_area_) : nullptr),
 	clip_area_(o.clip_area_ ? new rect(*o.clip_area_) : nullptr),
 	activation_border_(o.activation_border_),
+	clip_area_absolute_(o.clip_area_absolute_),
 	can_interact_with_(o.can_interact_with_),
 	particle_systems_(o.particle_systems_),
 	text_(o.text_),
@@ -861,6 +864,10 @@ variant CustomObject::write() const
 
 	if(activation_border_ != type_->getActivationBorder()) {
 		res.add("activation_border", activation_border_);
+	}
+
+	if(clip_area_absolute_) {
+		res.add("clip_area_absolute", true);
 	}
 	
 	if(position_schedule_.get() != nullptr) {
@@ -1243,7 +1250,11 @@ void CustomObject::draw(int xx, int yy) const
 
 	KRE::StencilScopePtr stencil_scope;
 	if(clip_area_) {
-		clip_scope.reset(new KRE::ClipScope::Manager(*clip_area_ + point(x(), y())));
+		if(clip_area_absolute_) {
+			clip_scope.reset(new KRE::ClipScope::Manager(*clip_area_));
+		} else {
+			clip_scope.reset(new KRE::ClipScope::Manager(*clip_area_ + point(x(), y())));
+		}
 	} else if(type_->isShadow()) {
 		stencil_scope = KRE::StencilScope::create(KRE::StencilSettings(true, 
 			KRE::StencilFace::FRONT_AND_BACK, 
@@ -3145,6 +3156,10 @@ variant CustomObject::getValueBySlot(int slot) const
 		}
 	}
 
+	case CUSTOM_OBJECT_CLIPAREA_ABSOLUTE: {
+		return variant::from_bool(clip_area_absolute_);
+	}
+
 	case CUSTOM_OBJECT_VARIATIONS: {
 		std::vector<variant> result;
 		for(const std::string& s : current_variation_) {
@@ -4281,6 +4296,10 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 			clip_area_.reset();
 		}
 
+		break;
+
+	case CUSTOM_OBJECT_CLIPAREA_ABSOLUTE:
+		clip_area_absolute_ = value.as_bool();
 		break;
 
 	case CUSTOM_OBJECT_ALWAYS_ACTIVE:
@@ -5851,6 +5870,22 @@ std::vector<variant> CustomObject::getVariantWidgetList() const
 		v.emplace_back(variant(it->get()));
 	}
 	return v;
+}
+
+bool CustomObject::getClipArea(rect* clip_area) const
+{
+	if(clip_area_.get() != nullptr && clip_area) {
+		if(clip_area_absolute_) {
+			*clip_area = *clip_area_.get();
+		} else {
+			*clip_area = *clip_area_.get() + point(x(), y());
+		}
+		return true;
+	} else if(clip_area_.get() != nullptr) {
+		return true;
+	}
+
+	return false;
 }
 
 void CustomObject::addWidget(const gui::WidgetPtr& w)

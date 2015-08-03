@@ -81,7 +81,7 @@ namespace tbs
 	{}
 
 	server::server(boost::asio::io_service& io_service)
-	  : server_base(io_service)
+	  : server_base(io_service), web_server_(nullptr)
 	{
 	}
 
@@ -211,12 +211,8 @@ namespace tbs
 		disconnect(socket);
 	}
 
-	std::vector<socket_ptr> debug_disconnected_store;
-
 	void server::disconnect(socket_ptr socket)
 	{
-		debug_disconnected_store.push_back(socket);
-
 		std::map<socket_ptr, socket_info>::iterator itor = connections_.find(socket);
 		if(itor != connections_.end()) {
 			std::map<int, socket_ptr>::iterator sessions_itor = sessions_to_waiting_connections_.find(itor->second.session_id);
@@ -229,7 +225,11 @@ namespace tbs
 
 		waiting_connections_.erase(socket);
 
-		socket->socket.close();
+		if(web_server_) {
+			web_server_->keepalive_socket(socket);
+		} else {
+			socket->socket.close();
+		}
 	}
 
 	void server::heartbeat_internal(int send_heartbeat, std::map<int, client_info>& clients)

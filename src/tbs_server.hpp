@@ -43,6 +43,8 @@ namespace tbs
 		void adopt_ajax_socket(socket_ptr socket, int session_id, const variant& msg);
 
 		static variant get_server_info();
+
+		void set_http_server(http::web_server* server) { web_server_ = server; }
 	private:
 		void close_ajax(socket_ptr socket, client_info& cli_info);
 
@@ -62,5 +64,7 @@ namespace tbs
 		std::map<socket_ptr, std::string> waiting_connections_;
 
 		std::map<socket_ptr, socket_info> connections_;
+
+		http::web_server* web_server_;
 	};
 }

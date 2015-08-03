@@ -51,6 +51,8 @@ namespace haptic
 	}
 }
 
+PREF_BOOL(start_rumble, true, "Controls whether we do a haptic device rumble effect on initialisation.");
+
 namespace joystick 
 {
 	namespace 
@@ -105,7 +107,7 @@ namespace joystick
 					haptic::haptic_devices.erase(n);
 				}
 				// buzz the device when we start.
-				if(SDL_HapticRumblePlay(haptic, 0.5, 1000) != 0) {
+				if(g_start_rumble && SDL_HapticRumblePlay(haptic, 0.5, 1000) != 0) {
 					LOG_WARN("Failed to play a simple rumble effect");
 					haptic::haptic_devices.erase(n);
 				}

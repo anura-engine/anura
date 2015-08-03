@@ -78,7 +78,7 @@ namespace sound
 	// a handle to the sound effect.
 	int play_looped(const std::string& file, const void* object=0, float volume=1.0f, float fade_in_time_=0.0f);
 
-	void play_music(const std::string& file);
+	void play_music(const std::string& file, bool queue=false, int fade_time=500);
 	void play_music_interrupt(const std::string& file);
 
 	const std::string& current_music();

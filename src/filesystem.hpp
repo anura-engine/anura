@@ -84,6 +84,9 @@ namespace sys
 
 	bool is_safe_write_path(const std::string& path, std::string* error=nullptr);
 
+	bool is_file_writable(const std::string& path);
+	void set_file_writable(const std::string& path);
+
 	bool is_file_executable(const std::string& path);
 	void set_file_executable(const std::string& path);
 }

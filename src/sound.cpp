@@ -85,9 +85,16 @@ namespace sound
 			return name;
 		}
 
-		std::string& next_music() {
-			static std::string name;
-			return name;
+		struct ScheduledMusicItem {
+			ScheduledMusicItem() : fade_time(500)
+			{}
+			std::string name;
+			int fade_time;
+		};
+
+		ScheduledMusicItem& next_music() {
+			static ScheduledMusicItem item;
+			return item;
 		}
 
 #if !TARGET_IPHONE_SIMULATOR && !TARGET_OS_IPHONE
@@ -106,10 +113,10 @@ namespace sound
 #else
 			playing_music = false;
 #endif
-			if(next_music().empty() == false) {
-				play_music(next_music());
+			if(next_music().name.empty() == false) {
+				play_music(next_music().name, false, next_music().fade_time);
 			}
-			next_music().clear();
+			next_music().name.clear();
 		}
 
 		//record which channels sounds are playing on, in case we
@@ -406,7 +413,7 @@ namespace sound
 
 	#if !TARGET_IPHONE_SIMULATOR && !TARGET_OS_IPHONE
 		Mix_HookMusicFinished(nullptr);
-		next_music().clear();
+		next_music().name.clear();
 		Mix_CloseAudio();
 	#else
 		iphone_kill_music();
@@ -755,7 +762,7 @@ namespace sound
 		module::get_unique_filenames_under_dir(MUSIC_DIR_NAME, &get_music_paths());
 	}
 
-	void play_music(const std::string& file)
+	void play_music(const std::string& file, bool queue, int fade_time)
 	{
 		if(preferences::no_sound() || preferences::no_music() || !sound_ok) {
 			return;
@@ -785,8 +792,12 @@ namespace sound
 
 	#if !TARGET_IPHONE_SIMULATOR && !TARGET_OS_IPHONE
 		if(current_mix_music) {
-			next_music() = file;
-			Mix_FadeOutMusic(500);
+			next_music().name = file;
+			next_music().fade_time = fade_time;
+
+			if(!queue) {
+				Mix_FadeOutMusic(fade_time);
+			}
 			return;
 		}
 
@@ -804,12 +815,17 @@ namespace sound
 		track_music_volume = music_index[file].volume;
 		update_music_volume();
 
-		Mix_FadeInMusic(current_mix_music, -1, 500);
+		if(fade_time > 0) {
+			Mix_FadeInMusic(current_mix_music, -1, fade_time);
+		} else {
+			Mix_PlayMusic(current_mix_music, -1);
+		}
 	#else
 		if (playing_music)
 		{
-			next_music() = file;
-			iphone_fade_out_music(350);
+			next_music().name = file;
+			next_music().fade_time = fade_time;
+			iphone_fade_out_music(fade_time);
 			return;
 		}
 
@@ -833,12 +849,12 @@ namespace sound
 			return;
 		}
 
-		if(next_music().empty() == false) {
-			current_music_name() = next_music();
-			next_music().clear();
+		if(next_music().name.empty() == false) {
+			current_music_name() = next_music().name;
+			next_music().name.clear();
 		}
 	
-		next_music() = current_music_name();
+		next_music().name = current_music_name();
 	
 		std::string song_file = file;
     

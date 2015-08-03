@@ -213,6 +213,9 @@
 		63D6F4DB1AC68F38002250CC /* libboost_date_time.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 63D6F4D71AC68F38002250CC /* libboost_date_time.dylib */; };
 		63D6F4DD1AC68F38002250CC /* libboost_iostreams.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 63D6F4D91AC68F38002250CC /* libboost_iostreams.dylib */; };
 		63D6F4DE1AC68F38002250CC /* libboost_system.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 63D6F4DA1AC68F38002250CC /* libboost_system.dylib */; };
+		63E3EC371B452D55002F8294 /* FontDriver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 63E3EC2F1B452D55002F8294 /* FontDriver.cpp */; };
+		63E3EC381B452D55002F8294 /* FontSTB.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 63E3EC321B452D55002F8294 /* FontSTB.cpp */; };
+		63E3EC391B452D55002F8294 /* SurfaceBlur.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 63E3EC351B452D55002F8294 /* SurfaceBlur.cpp */; };
 		C00160C716A29908001DAEB9 /* tbs_bot.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C00160C516A29908001DAEB9 /* tbs_bot.cpp */; };
 		C00160CD16A2991D001DAEB9 /* tbs_server.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C00160C916A2991D001DAEB9 /* tbs_server.cpp */; };
 		C00160CE16A2991D001DAEB9 /* tbs_web_server.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C00160CB16A2991D001DAEB9 /* tbs_web_server.cpp */; };
@@ -885,6 +888,14 @@
 		63D6F4D71AC68F38002250CC /* libboost_date_time.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libboost_date_time.dylib; sourceTree = "<group>"; };
 		63D6F4D91AC68F38002250CC /* libboost_iostreams.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libboost_iostreams.dylib; sourceTree = "<group>"; };
 		63D6F4DA1AC68F38002250CC /* libboost_system.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libboost_system.dylib; sourceTree = "<group>"; };
+		63E3EC2F1B452D55002F8294 /* FontDriver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FontDriver.cpp; sourceTree = "<group>"; };
+		63E3EC301B452D55002F8294 /* FontDriver.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = FontDriver.hpp; sourceTree = "<group>"; };
+		63E3EC311B452D55002F8294 /* FontImpl.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = FontImpl.hpp; sourceTree = "<group>"; };
+		63E3EC321B452D55002F8294 /* FontSTB.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FontSTB.cpp; sourceTree = "<group>"; };
+		63E3EC331B452D55002F8294 /* stb_rect_pack.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stb_rect_pack.h; sourceTree = "<group>"; };
+		63E3EC341B452D55002F8294 /* stb_truetype.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stb_truetype.h; sourceTree = "<group>"; };
+		63E3EC351B452D55002F8294 /* SurfaceBlur.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SurfaceBlur.cpp; sourceTree = "<group>"; };
+		63E3EC361B452D55002F8294 /* SurfaceBlur.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = SurfaceBlur.hpp; sourceTree = "<group>"; };
 		C00160C516A29908001DAEB9 /* tbs_bot.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = tbs_bot.cpp; sourceTree = "<group>"; };
 		C00160C616A29908001DAEB9 /* tbs_bot.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = tbs_bot.hpp; sourceTree = "<group>"; };
 		C00160C916A2991D001DAEB9 /* tbs_server.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = tbs_server.cpp; sourceTree = "<group>"; };
@@ -1538,6 +1549,14 @@
 		639B52EE1AC20D5900ECC4F8 /* kre */ = {
 			isa = PBXGroup;
 			children = (
+				63E3EC2F1B452D55002F8294 /* FontDriver.cpp */,
+				63E3EC301B452D55002F8294 /* FontDriver.hpp */,
+				63E3EC311B452D55002F8294 /* FontImpl.hpp */,
+				63E3EC321B452D55002F8294 /* FontSTB.cpp */,
+				63E3EC331B452D55002F8294 /* stb_rect_pack.h */,
+				63E3EC341B452D55002F8294 /* stb_truetype.h */,
+				63E3EC351B452D55002F8294 /* SurfaceBlur.cpp */,
+				63E3EC361B452D55002F8294 /* SurfaceBlur.hpp */,
 				6357A7481B3F13B400793D60 /* FontFreetype.cpp */,
 				6357A7491B3F13B400793D60 /* FontFreetype.hpp */,
 				6357A74A1B3F13B400793D60 /* Gradients.cpp */,
@@ -2701,6 +2720,7 @@
 				63855D761AD78F0700C58F6B /* tmx_reader.cpp in Sources */,
 				639B53751AC20D5A00ECC4F8 /* Blend.cpp in Sources */,
 				C010C7B9160AFD4D006E7D90 /* pathfinding.cpp in Sources */,
+				63E3EC371B452D55002F8294 /* FontDriver.cpp in Sources */,
 				C010C7BA160AFD4D006E7D90 /* pause_game_dialog.cpp in Sources */,
 				C010C7BB160AFD4D006E7D90 /* playable_custom_object.cpp in Sources */,
 				C010C7BC160AFD4D006E7D90 /* player_info.cpp in Sources */,
@@ -2772,6 +2792,7 @@
 				639B545B1AC20D7600ECC4F8 /* b2MotorJoint.cpp in Sources */,
 				639B54211AC20D7600ECC4F8 /* b2ChainShape.cpp in Sources */,
 				C010C7EE160AFD4E006E7D90 /* utility_object_compiler.cpp in Sources */,
+				63E3EC391B452D55002F8294 /* SurfaceBlur.cpp in Sources */,
 				C010C7EF160AFD4E006E7D90 /* utility_query.cpp in Sources */,
 				C010C7F0160AFD4E006E7D90 /* utility_render_level.cpp in Sources */,
 				639B541B1AC20D7600ECC4F8 /* b2Distance.cpp in Sources */,
@@ -2842,6 +2863,7 @@
 				639B537A1AC20D5A00ECC4F8 /* Canvas.cpp in Sources */,
 				638CC73D1AF6057700C7A106 /* ltm.cpp in Sources */,
 				C090E8F31787967200E6FC5A /* voxel_animation.cpp in Sources */,
+				63E3EC381B452D55002F8294 /* FontSTB.cpp in Sources */,
 				639B54371AC20D7600ECC4F8 /* b2ContactManager.cpp in Sources */,
 				C07A47D919444C2000F1190E /* svg_style.cpp in Sources */,
 				639B54591AC20D7600ECC4F8 /* b2Joint.cpp in Sources */,

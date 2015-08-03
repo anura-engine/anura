@@ -1125,9 +1125,6 @@
     <ClInclude Include="..\..\src\ffl_dom.hpp">
       <Filter>Header Files\xhtml</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\kre\FontFreetype.hpp">
-      <Filter>Header Files\kre</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\kre\Gradients.hpp">
       <Filter>Header Files\kre</Filter>
     </ClInclude>
@@ -1136,6 +1133,15 @@
     </ClInclude>
     <ClInclude Include="..\..\src\ffl_dom_fwd.hpp">
       <Filter>Header Files\xhtml</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\FontDriver.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\FontImpl.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\SurfaceBlur.hpp">
+      <Filter>Header Files\kre</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -2103,6 +2109,15 @@
     </ClCompile>
     <ClCompile Include="..\..\src\xhtml\xhtml_script_interface.cpp">
       <Filter>Source Files\xhtml</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\FontDriver.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\FontSTB.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\SurfaceBlur.cpp">
+      <Filter>Source Files\kre</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

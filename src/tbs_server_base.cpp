@@ -186,6 +186,8 @@ namespace tbs
 
 			g->clients.push_back(session_id);
 
+			g->game_state->observer_connect(g->clients.size()-1);
+
 			send_fn(json::parse(formatter() << "{ \"type\": \"observing_game\" }"));
 
 			return;

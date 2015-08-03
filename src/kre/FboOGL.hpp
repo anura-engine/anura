@@ -51,6 +51,8 @@ namespace KRE
 		void handleUnapply() const override;
 		void handleClear() const override;
 		RenderTargetPtr handleClone() override;
+		std::vector<uint8_t> handleReadPixels() const override;
+		SurfacePtr handleReadToSurface(SurfacePtr s) const override;
 		void getDSInfo(GLenum& ds_attachment, GLenum& depth_stencil_internal_format);
 		bool uses_ext_;
 		std::shared_ptr<GLuint> depth_stencil_buffer_id_;

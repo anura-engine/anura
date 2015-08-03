@@ -167,8 +167,11 @@ namespace module
 		bool is_new_install_;
 
 		void on_response(std::string response);
-		void on_error(std::string response);
+		void on_error(std::string response, std::string url, std::string request);
 		void on_progress(int sent, int total, bool uploaded);
+
+		void on_chunk_error(std::string response, std::string url, std::string request, variant chunk, boost::shared_ptr<class http_client> client);
+		int nchunk_errors_;
 
 		void perform_install(const std::string& response);
 		void perform_install_from_doc(variant doc);

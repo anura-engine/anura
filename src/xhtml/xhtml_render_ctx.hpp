@@ -24,7 +24,7 @@
 #pragma once
 
 #include "css_properties.hpp"
-#include "FontFreetype.hpp"
+#include "FontDriver.hpp"
 
 namespace xhtml
 {

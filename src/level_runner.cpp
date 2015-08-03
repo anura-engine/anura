@@ -1469,6 +1469,12 @@ bool LevelRunner::play_cycle()
 	const int start_draw = profile::get_tick_time();
 	if(start_draw < desired_end_time || nskip_draw_ >= MaxSkips) {
 		bool should_draw = true;
+
+#ifndef NO_EDITOR		
+		if(editor_) {
+			editor_->handle_tracking_to_mouse(); //This call should be moved to editor.cpp, but it freezes the display there. (Even here, framerate is terrible.)
+		}
+#endif
 		
 		if(editor_ && paused) {
 #ifndef NO_EDITOR

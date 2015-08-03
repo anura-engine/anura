@@ -58,6 +58,7 @@
 #include "lua_iface.hpp"
 #include "md5.hpp"
 #include "module.hpp"
+#include "random.hpp"
 #include "rectangle_rotator.hpp"
 #include "string_utils.hpp"
 #include "unit_test.hpp"
@@ -2586,7 +2587,7 @@ FUNCTION_DEF_IMPL
 					}
 				}
 
-				ASSERT_LOG(false, "Failed to find expected item. List has: " << items.write_json());
+				ASSERT_LOG(false, "Failed to find expected item. List has: " << items.write_json() << " " << debugPinpointLocation());
 			}
 
 			variant_type_ptr getVariantType() const {
@@ -2726,18 +2727,18 @@ FUNCTION_DEF_IMPL
 				return variant();
 			}
 
+			if(args().size() == 1) {
+				return items[rng::generate()%items.num_elements()];
+			}
+
 			int max_index = -1;
 			variant max_value;
 			boost::intrusive_ptr<map_callable> callable(new map_callable(variables));
 			for(int n = 0; n != items.num_elements(); ++n) {
 				variant val;
 		
-				if(args().size() >= 2) {
-					callable->set(items[n], n);
-					val = args().back()->evaluate(*callable);
-				} else {
-					val = variant(rand());
-				}
+				callable->set(items[n], n);
+				val = args().back()->evaluate(*callable);
 
 				if(n == 0 || val > max_value) {
 					max_index = n;
@@ -4529,6 +4530,14 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 	FUNCTION_TYPE_DEF
 		return variant_type::get_type(variant::VARIANT_TYPE_NULL);
 	END_FUNCTION_DEF(seed_rng)
+
+	FUNCTION_DEF(deep_copy, 1, 1, "deep_copy(any) ->any")
+		return deep_copy_variant(args()[0]->evaluate(variables));
+	FUNCTION_ARGS_DEF
+		ARG_TYPE("any");
+	FUNCTION_TYPE_DEF
+		return args()[0]->queryVariantType();
+	END_FUNCTION_DEF(deep_copy)
 
 	FUNCTION_DEF(lower, 1, 1, "lower(s) -> string: lowercase version of string")
 		std::string s = args()[0]->evaluate(variables).as_string();

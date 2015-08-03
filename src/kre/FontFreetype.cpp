@@ -30,40 +30,24 @@
 #include <unordered_map>
 
 #include "formatter.hpp"
-#include "FontFreetype.hpp"
+#include "FontDriver.hpp"
 #include "utf8_to_codepoint.hpp"
 
 #include "DisplayDevice.hpp"
+#include "FontImpl.hpp"
 #include "SceneObject.hpp"
 #include "Shaders.hpp"
 
 namespace KRE
 {
+	class FreetypeImpl;
+
 	namespace
 	{
 		const int default_dpi = 96;
 		const int surface_width = 2048;
 		const int surface_height = 2048;
 
-		font_path_cache& get_font_path_cache()
-		{
-			static font_path_cache res;
-			return res;
-		}
-
-		font_path_cache& generic_font_lookup()
-		{
-			static font_path_cache res;
-			if(res.empty()) {
-				// XXX ideally we read this from a config file.
-				res["serif"] = "FreeSerif.ttf";
-				res["sans-serif"] = "FreeSans.ttf";
-				res["cursive"] = "Allura-Regular.ttf";
-				res["fantasy"] = "TradeWinds-Regular.ttf";
-				res["monospace"] = "SourceCodePro-Regular.ttf";
-			}
-			return res;
-		}
 
 		FT_Library& get_ft_library()
 		{
@@ -74,170 +58,41 @@ namespace KRE
 			}
 			return library;
 		}
-
-		struct CacheKey
-		{
-			CacheKey(const std::string& fn, float sz) : font_name(fn), size(sz) {}
-			std::string font_name;
-			float size;
-			bool operator<(const CacheKey& other) const {
-				return font_name == other.font_name ? size < other.size : font_name < other.font_name;
-			}
-		};
-
-		typedef std::map<CacheKey, FontHandlePtr> font_cache;
-		font_cache& get_font_cache()
-		{
-			static font_cache res;
-			return res;
-		}
-
-		// Returns a list of what we consider 'common' codepoints
-		// these generally consist of the 7-bit ASCII characters.
-		// and the unicode replacement character 0xfffd
-		std::vector<char32_t>& get_common_glyphs()
-		{
-			static std::vector<char32_t> res;
-			if(res.empty()) {
-				// replace character.
-				res.emplace_back(0xfffd);
-				for(char32_t n = 0x21; n < 0x7f; ++n) {
-					res.emplace_back(n);
-				}
-			}
-			return res;
-		}
 	}
 
-	FontRenderable::FontRenderable() 
-		: SceneObject("font-renderable")
+	struct GlyphInfo
 	{
-		ShaderProgramPtr shader = ShaderProgram::getProgram("font_shader");
-		setShader(shader);
-		auto as = DisplayDevice::createAttributeSet();
-		attribs_.reset(new Attribute<font_coord>(AccessFreqHint::DYNAMIC, AccessTypeHint::DRAW));
-		attribs_->addAttributeDesc(AttributeDesc(AttrType::POSITION, 2, AttrFormat::FLOAT, false, sizeof(font_coord), offsetof(font_coord, vtx)));
-		attribs_->addAttributeDesc(AttributeDesc(AttrType::TEXTURE,  2, AttrFormat::FLOAT, false, sizeof(font_coord), offsetof(font_coord, tc)));
-		as->addAttribute(AttributeBasePtr(attribs_));
-		as->setDrawMode(DrawMode::TRIANGLES);
-		as->clearblendState();
-		as->clearBlendMode();
+		// X co-ordinate of top-left corner of glyph in texture.
+		unsigned short tex_x;
+		// Y co-ordinate of top-left corner of glyph in texture.
+		unsigned short tex_y;
+		// Width of glyph in texture.
+		unsigned short width;
+		// Height of glyph in texture.
+		unsigned short height;
+		// X advance (i.e. distance to start of next glyph on X axis)
+		long advance_x;
+		// Y advance (i.e. distance to start of next glyph on Y axis)
+		long advance_y;
+		// X offset to top of glyph from origin
+		long bearing_x;
+		// Y offset to top of glyph from origin
+		long bearing_y;
+	};
 
-		addAttributeSet(as);
-
-		int u_ignore_alpha = shader->getUniform("ignore_alpha");
-		shader->setUniformDrawFunction([u_ignore_alpha](ShaderProgramPtr shader) {
-			shader->setUniformValue(u_ignore_alpha, 0);
-		});				
-	}
-
-	void FontRenderable::preRender(const WindowPtr& wnd)
-	{
-		//ASSERT_LOG(color_ != nullptr, "Color pointer was null.");
-		if(color_ != nullptr) {
-			setColor(*color_);
-		}
-	}
-
-	void FontRenderable::setColorPointer(const ColorPtr& color) 
-	{
-		ASSERT_LOG(color != nullptr, "Font color was null.");
-		color_ = color;
-	}
-
-	void FontRenderable::update(std::vector<font_coord>* queue)
-	{
-		attribs_->update(queue, attribs_->end());
-	}
-
-	void FontRenderable::clear()
-	{
-		attribs_->clear();
-	}
-
-	FontDriver::FontDriver()
-	{
-	}
-
-	void FontDriver::setAvailableFonts(const font_path_cache& font_map)
-	{
-		get_font_path_cache() = font_map;
-	}
-
-	FontHandlePtr FontDriver::getFontHandle(const std::vector<std::string>& font_list, float size, const Color& color, bool init_texture)
-	{
-		std::string selected_font;
-		std::string font_path;
-		for(auto& fnt : font_list) {
-			auto it = get_font_path_cache().find(fnt);
-			if(it != get_font_path_cache().end()) {
-				selected_font = it->first;
-				font_path = it->second;
-				break;
-			} else {
-				it = get_font_path_cache().find(fnt + ".ttf");
-				if(it != get_font_path_cache().end()) {
-					selected_font = it->first;
-					font_path = it->second;
-					break;
-				} else {
-					it = get_font_path_cache().find(fnt + ".otf");
-					if(it != get_font_path_cache().end()) {
-						selected_font = it->first;
-						font_path = it->second;
-						break;
-					} else {
-						it = generic_font_lookup().find(fnt);
-						if(it != generic_font_lookup().end()) {
-							it = get_font_path_cache().find(it->second);
-							if(it != get_font_path_cache().end()) {
-								selected_font = it->first;
-								font_path = it->second;
-								break;
-							}
-						}
-					}
-				}
-			}
-		}
-
-		if(font_path.empty()) {
-			std::ostringstream ss;
-			ss << "Unable to find a font to match in the given list:";
-			for(auto& fnt : font_list) {
-				ss << " " << fnt;
-			}
-			throw FontError2(ss.str());
-		}
-
-		auto it = get_font_cache().find(CacheKey(font_path, size));
-		if(it != get_font_cache().end()) {
-			return it->second;
-		}
-		auto fh = std::make_shared<FontHandle>(selected_font, font_path, size, color, init_texture);
-		get_font_cache()[CacheKey(font_path, size)] = fh;
-		return fh;
-	}
-
-	class FontHandle::Impl
+	class FreetypeImpl : public FontHandle::Impl
 	{
 	public:
-		Impl(const std::string& fnt_name, const std::string& fnt_path, float size, const Color& color, bool init_texture)
-			: fnt_(fnt_name),
-			  fnt_path_(fnt_path),
-			  size_(size),
-			  color_(color),
+		FreetypeImpl(const std::string& fnt_name, const std::string& fnt_path, float size, const Color& color, bool init_texture)
+			: FontHandle::Impl(fnt_name, fnt_path, size, color, init_texture),
 			  face_(nullptr),
-			  has_kerning_(false),
-			  x_height_(0),
+			  font_load_flags_(FT_LOAD_RENDER | FT_LOAD_FORCE_AUTOHINT),
 			  font_texture_(),
 			  next_font_x_(0),
 			  next_font_y_(0),
 			  last_line_height_(0),
-			  glyph_info_(),
 			  all_glyphs_added_(false),
-			  font_load_flags_(FT_LOAD_RENDER | FT_LOAD_FORCE_AUTOHINT),
-			  glyph_path_cache_()
+			  glyph_info_()
 		{
 			// XXX starting off with a basic way of rendering glyphs.
 			// It'd be better to render all the glyphs to a texture,
@@ -272,22 +127,22 @@ namespace KRE
 				if((surface_width / px_sz) * (surface_height / px_sz) > face_->num_glyphs) {
 					addAllGlyphsToTexture();
 				} else {
-					addGlyphsToTexture(get_common_glyphs());
+					addGlyphsToTexture(FontDriver::getCommonGlyphs());
 				}
 			}
 		}
-		~Impl() 
+		~FreetypeImpl() 
 		{
 			if(face_) {
 				FT_Done_Face(face_);
 				face_ = nullptr;
 			}
 		}
-		FT_Pos getDescender() 
+		int getDescender() override
 		{
 			return face_->size->metrics.descender * (65536/64);
 		}
-		void getBoundingBox(const std::string& str, long* w, long* h) 
+		void getBoundingBox(const std::string& str, long* w, long* h) override
 		{
 			FT_GlyphSlot slot = face_->glyph;
 			FT_UInt previous_glyph = 0;
@@ -313,7 +168,7 @@ namespace KRE
 			*h = (pen.y - slot->linearHoriAdvance + slot->metrics.height*65536L);
 		}
 
-		std::vector<unsigned> getGlyphs(const std::string& text)
+		std::vector<unsigned> getGlyphs(const std::string& text) override
 		{
 			std::vector<unsigned> res;
 			for(auto cp : utils::utf8_to_codepoint(text)) {
@@ -322,7 +177,7 @@ namespace KRE
 			return res;
 		}
 
-		const std::vector<point>& getGlyphPath(const std::string& text)
+		const std::vector<point>& getGlyphPath(const std::string& text) override
 		{
 			auto it = glyph_path_cache_.find(text);
 			if(it != glyph_path_cache_.end()) {
@@ -372,7 +227,7 @@ namespace KRE
 		// text is a utf-8 string, path is expected to have at least has many data points as there
 		// are codepoints in the string. path should be in units consist with FT_Pos
 		// N.B. the origin of the Renderable object created is the baseline of the font
-		FontRenderablePtr createRenderableFromPath(FontRenderablePtr font_renderable, const std::string& text, const std::vector<point>& path)
+		FontRenderablePtr createRenderableFromPath(FontRenderablePtr font_renderable, const std::string& text, const std::vector<point>& path) override
 		{
 			auto cp_string = utils::utf8_to_codepoint(text);
 			int glyphs_in_text = 0;
@@ -439,7 +294,18 @@ namespace KRE
 			return font_renderable;
 		}
 
-		long calculateCharAdvance(char32_t cp)
+		const GlyphInfo& getGlyphInfo(char32_t cp)
+		{
+			auto it = glyph_info_.find(cp);
+			if(it != glyph_info_.end()) {
+				return it->second;
+			}
+			static GlyphInfo res;
+			memset(&res, 0, sizeof(GlyphInfo));
+			return res;
+		}
+
+		long calculateCharAdvance(char32_t cp) override
 		{
 			FT_Error error;
 			FT_GlyphSlot slot = face_->glyph;
@@ -454,13 +320,17 @@ namespace KRE
 		void addAllGlyphsToTexture()
 		{
 			std::vector<char32_t> glyphs;
-			for(int n = 0; n != face_->num_glyphs; ++n) {
+			FT_UInt ndx;
+			char32_t cp = FT_Get_First_Char(face_, &ndx);
+			while(ndx != 0) {
+				glyphs.emplace_back(cp);
+				cp = FT_Get_Next_Char(face_, cp, &ndx);
 			}
 			addGlyphsToTexture(glyphs);
 			all_glyphs_added_ = true;
 		}
 
-		void addGlyphsToTexture(const std::vector<char32_t>& glyphs) 
+		void addGlyphsToTexture(const std::vector<char32_t>& glyphs) override 
 		{
 			/*const FT_Matrix shear = { // xx xy || yx yy
 				1 << 16, static_cast<int>(13566.0f/size_),
@@ -539,118 +409,25 @@ namespace KRE
 				next_font_x_ += gi.width;
 			}
 		}
-		const GlyphInfo& getGlyphInfo(char32_t cp)
+		void* getRawFontHandle()
 		{
-			auto it = glyph_info_.find(cp);
-			if(it != glyph_info_.end()) {
-				return it->second;
-			}
-			static GlyphInfo res;
-			memset(&res, 0, sizeof(GlyphInfo));
-			return res;
+			return face_;
 		}
 	private:
-		std::string fnt_;
-		std::string fnt_path_;
-		float size_;
-		Color color_;
 		FT_Face face_;
-		bool has_kerning_;
-		float x_height_;
+		int font_load_flags_;
 		TexturePtr font_texture_;
 		int next_font_x_;
 		int next_font_y_;
 		unsigned short last_line_height_;
+		bool all_glyphs_added_;
 		// XXX see what is practically faster using a sorted list and binary search
 		// or this map. Also a vector would have better locality.
 		std::map<char32_t, GlyphInfo> glyph_info_;
-		bool all_glyphs_added_;
-		int font_load_flags_;
-		std::map<std::string, std::vector<point>> glyph_path_cache_;
-		friend class FontHandle;
 	};
-	
-	FontHandle::FontHandle(const std::string& fnt_name, const std::string& fnt_path, float size, const Color& color, bool init_texture)
-		: impl_(new Impl(fnt_name, fnt_path, size, color, init_texture))
-	{
-	}
 
-	FontHandle::~FontHandle()
-	{
-	}
 
-	float FontHandle::getFontSize()
-	{
-		return impl_->size_;
-	}
-
-	float FontHandle::getFontXHeight()
-	{
-		// XXX
-		return impl_->x_height_;
-	}
-
-	const std::string& FontHandle::getFontName()
-	{
-		return impl_->fnt_;
-	}
-
-	const std::string& FontHandle::getFontPath()
-	{
-		return impl_->fnt_path_;
-	}
-
-	const std::string& FontHandle::getFontFamily()
-	{
-		// XXX
-		return impl_->fnt_;
-	}
-
-	void FontHandle::renderText()
-	{
-	}
-
-	void FontHandle::getFontMetrics()
-	{
-	}
-
-	int FontHandle::getDescender() 
-	{
-		return impl_->getDescender();
-	}
-
-	const std::vector<point>& FontHandle::getGlyphPath(const std::string& text)
-	{
-		return impl_->getGlyphPath(text);
-	}
-
-	rect FontHandle::getBoundingBox(const std::string& text)
-	{
-		return rect();
-	}
-
-	FontRenderablePtr FontHandle::createRenderableFromPath(FontRenderablePtr r, const std::string& text, const std::vector<point>& path)
-	{
-		return impl_->createRenderableFromPath(r, text, path);
-	}
-
-	int FontHandle::calculateCharAdvance(char32_t cp)
-	{
-		return impl_->calculateCharAdvance(cp);
-	}
-	
-	const GlyphInfo& FontHandle::getGlyphInfo(char32_t cp)
-	{
-		return impl_->getGlyphInfo(cp);
-	}
-
-	std::vector<unsigned> FontHandle::getGlyphs(const std::string& text)
-	{
-		return impl_->getGlyphs(text);
-	}
-
-	void* FontHandle::getRawFontHandle()
-	{
-		return impl_->face_;
-	}
+		FontDriverRegistrar freeytype_font_impl("freetype", [](const std::string& fnt_name, const std::string& fnt_path, float size, const Color& color, bool init_texture){ 
+			return std::unique_ptr<FreetypeImpl>(new FreetypeImpl(fnt_name, fnt_path, size, color, init_texture));
+		});
 }

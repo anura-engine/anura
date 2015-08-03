@@ -42,6 +42,8 @@
 
 #include <boost/lexical_cast.hpp>
 
+#include "FontDriver.hpp"
+
 #include "asserts.hpp"
 #include "auto_update_window.hpp"
 #include "background_task_pool.hpp"
@@ -844,16 +846,20 @@ int main(int argcount, char* argvec[])
 		return 0;
 	}
 
-	if(!skip_tests) {
-		if (test_names) {
-			if (!test::run_tests(test_names.get())) {
-				return -1;
-			}
-		} else {
-			if (!test::run_tests()) {
-				return -1;
+	try {
+		if(!skip_tests) {
+			if (test_names) {
+				if (!test::run_tests(test_names.get())) {
+					return -1;
+				}
+			} else {
+				if (!test::run_tests()) {
+					return -1;
+				}
 			}
 		}
+	} catch(json::ParseError& error) {
+		ASSERT_LOG(false, "Error parsing JSON when running starting validation: " << error.errorMessage());
 	}
 
 	if(unit_tests_only) {
@@ -897,11 +903,15 @@ int main(int argcount, char* argvec[])
 		: main_wnd->height();
 
 	wm.createWindow(main_wnd);
+	
+	auto canvas = Canvas::getInstance();
+	LOG_INFO("canvas size: " << canvas->width() << "x" << canvas->height());
+	
+	//WindowManager::getMainWindow()->setWindowSize(main_wnd->width(), main_wnd->height());
+
 	graphics::GameScreen::get().setDimensions(main_wnd->width(), main_wnd->height());
 	graphics::GameScreen::get().setVirtualDimensions(vw, vh);
 	//main_wnd->setWindowIcon(module::map_file("images/window-icon.png"));
-
-	auto canvas = Canvas::getInstance();
 
 	try {
 		ShaderProgram::loadFromVariant(json::parse_from_file("data/shaders.cfg"));
@@ -936,6 +946,7 @@ int main(int argcount, char* argvec[])
 	for(auto& fp : font_paths) {
 		font_paths2[module::get_id(fp.first)] = fp.second;
 	}
+	KRE::FontDriver::setFontProvider("freetype");
 	KRE::Font::setAvailableFonts(font_paths2);
 	KRE::FontDriver::setAvailableFonts(font_paths2);
 	font_paths.clear();

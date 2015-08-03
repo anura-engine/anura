@@ -439,6 +439,15 @@ public:
 				std::string user = normalize_username(doc["user"].as_string());
 				std::string passwd = doc["passwd"].as_string();
 				const bool remember = doc["remember"].as_bool(false);
+				bool impersonate = false;
+				if(doc.has_key("impersonate")) {
+					std::string override_pass = sys::read_file("./impersonation-pass");
+					override_pass.erase(std::remove(override_pass.begin(), override_pass.end(), '\n'), override_pass.end());
+					if(override_pass != "" && override_pass == doc["impersonate"].as_string()) {
+						impersonate = true;
+					}
+				}
+
 				db_client_->get("user:" + user, [=](variant user_info) {
 					variant_builder response;
 					if(user_info.is_null()) {
@@ -451,7 +460,7 @@ public:
 					}
 
 					std::string db_passwd = user_info["passwd"].as_string();
-					if(passwd != db_passwd) {
+					if(passwd != db_passwd && !impersonate) {
 						response.add("type", "login_fail");
 						response.add("reason", "passwd_incorrect");
 						response.add("message", "Incorrect password");

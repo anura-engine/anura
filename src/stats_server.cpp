@@ -396,7 +396,7 @@ void process_stats(const variant& doc)
 				char tbuf[512];
 				sprintf(tbuf, "%04d/%02d/%02d %02d:%02d:%02d", ltime->tm_year + 1900, ltime->tm_mon + 1, ltime->tm_mday, ltime->tm_hour, ltime->tm_min, ltime->tm_sec);
 
-				m.add_attr(variant("timestamp"), variant(std::string(tbuf)));
+				m.add_attr_mutation(variant("timestamp"), variant(std::string(tbuf)));
 #endif
 				g_crashes.push_back(m);
 			}

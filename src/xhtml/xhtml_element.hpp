@@ -34,6 +34,35 @@
 
 namespace xhtml
 {
+	class ObjectProxy : public std::enable_shared_from_this<ObjectProxy>
+	{
+	public:
+		explicit ObjectProxy(const AttributeMap& attributes);
+		virtual ~ObjectProxy() {}
+		virtual void init() {}
+		virtual void process(float dt) {}
+		virtual KRE::SceneObjectPtr getRenderable() = 0;
+		int width() const { return width_; }
+		int height () const { return height_; }
+		void setDimensions(int w, int h);
+		rect getDimensions() { return rect(0, 0, width_, height_); }
+		bool areDimensionsFixed() const { return dimensions_fixed_; }
+
+		virtual bool mouseButtonUp(const point& p, int button, unsigned button_state, unsigned short ctrl_key_state) { return false; }
+		virtual bool mouseButtonDown(const point& p, int button, unsigned button_state, unsigned short ctrl_key_state) { return false; }
+		virtual bool mouseMove(const point& p, unsigned button_state, unsigned ctrl_key_state) { return false; }
+		virtual bool keyDown(const point& p, const Keystate& keysym, bool pressed, bool repeat) { return false; }
+		virtual bool keyUp(const point& p, const Keystate& keysym, bool pressed, bool repeat) { return false; }
+	private:
+		int width_;
+		int height_;
+		bool dimensions_fixed_;
+	};
+
+	typedef std::shared_ptr<ObjectProxy> ObjectProxyPtr;
+
+	typedef std::function<ObjectProxyPtr(const AttributeMap& attributes)> object_create_fn;
+
 	// XXX should cache class, id, xml:id, lang, dir in the class structure.
 	class Element : public Node
 	{
@@ -46,6 +75,8 @@ namespace xhtml
 		const std::string& getName() const { return name_; }
 		bool hasTag(const std::string& tag) const { return tag == name_; }
 		bool hasTag(ElementId tag) const { return tag == tag_; }
+
+		static void registerObjectHandler(const std::string& content_type, object_create_fn fn);
 	protected:
 		explicit Element(ElementId id, const std::string& name, WeakDocumentPtr owner);
 		std::string name_;
@@ -53,4 +84,12 @@ namespace xhtml
 	};
 
 	void add_custom_element(const std::string& e);
+
+	struct ObjectProxyRegistrar
+	{
+		explicit ObjectProxyRegistrar(const std::string& type, object_create_fn fn)
+		{
+			Element::registerObjectHandler(type, fn);
+		}
+	};
 }
