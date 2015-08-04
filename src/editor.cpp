@@ -1009,7 +1009,6 @@ void editor::change_rotation()
 	
 	new_angle = fmod(new_angle, 360); //360 = 0, but only 0 = don't serialize the value in the level file
 
-	begin_command_group();
 	for(const EntityPtr& e : lvl_->editor_selection()) {
 		if((int) (e->getRotateZ().as_float()*1000) == (int) (new_angle*1000)) { //Compare as integers so free rotation doesn't always result in a falsehood here; some loss of granularity.
 			continue; //this doesn't prevent some sort of long rebuild from running if nothing passes
@@ -1023,7 +1022,6 @@ void editor::change_rotation()
 			}
 		}
 	}
-	end_command_group();
 }
 
 //Note the difference between the object's scale and the mouse distance from the object's point of origin. Use this to recompute the object's scale as the mouse position changes.
@@ -1070,9 +1068,7 @@ void editor::change_scale()
 		if(new_scale >= 1) {
 			new_scale = round(new_scale);
 		} else {
-			LOG_INFO("1: " << new_scale);
 			new_scale = 1.0/round(1.0/new_scale);
-			LOG_INFO("2: " << new_scale << ", s1 " << 1.0/new_scale);
 		}
 	}
 	
@@ -1082,7 +1078,6 @@ void editor::change_scale()
 		new_scale = editor_min_scale;
 	}
 	
-	begin_command_group();
 	for(const EntityPtr& e : lvl_->editor_selection()) {
 		if((int) (e->getDrawScale().as_float()*1000) == (int) (new_scale*1000)) { //Compare as integers so free rotation doesn't always result in a falsehood here; some loss of granularity.
 			continue; //this doesn't prevent some sort of long rebuild from running if nothing passes
@@ -1096,7 +1091,6 @@ void editor::change_scale()
 			}
 		}
 	}
-	end_command_group();
 }
 
 void editor::duplicate_selected_objects()
@@ -1913,11 +1907,15 @@ void editor::handle_tracking_to_mouse()
 		if(!rotateReferenceSet) {
 			set_rotate_reference();
 			rotateReferenceSet = true;
+			begin_command_group();
 		} else {
 			change_rotation();
 		}
 	} else {
-		rotateReferenceSet = false;
+		if(rotateReferenceSet) {
+			rotateReferenceSet = false;
+			end_command_group();
+		}
 	}
 	
 	static bool scaleReferenceSet = false;
@@ -1925,11 +1923,15 @@ void editor::handle_tracking_to_mouse()
 		if(!scaleReferenceSet) {
 			set_scale_reference();
 			scaleReferenceSet = true;
+			begin_command_group();
 		} else {
 			change_scale();
 		}
 	} else {
-		scaleReferenceSet = false;
+		if(scaleReferenceSet) {
+			scaleReferenceSet = false;
+			end_command_group();
+		}
 	}
 }
 
