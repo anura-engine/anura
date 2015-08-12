@@ -57,6 +57,8 @@ namespace gui
 		WidgetPtr up_arrow_, down_arrow_, handle_, handle_bot_, handle_top_, background_;
 		int window_pos_, window_size_, range_, step_, arrow_step_;
 
+		bool focus_override_;
+
 		bool dragging_handle_;
 		int drag_start_;
 		int drag_anchor_y_;

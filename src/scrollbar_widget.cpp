@@ -53,6 +53,7 @@ namespace gui
 		  range_(0), 
 		  step_(0), 
 		  arrow_step_(0),
+		  focus_override_(false),
 		  dragging_handle_(false),
 		  drag_start_(0), 
 		  drag_anchor_y_(0)
@@ -66,7 +67,8 @@ namespace gui
 		  window_size_(0), 
 		  range_(0),
 		  step_(0), 
-		  arrow_step_(0),
+		  arrow_step_(v["step_size"].as_int(16)),
+		  focus_override_(v["focus_override"].as_bool(false)),
 		  dragging_handle_(false), 
 		  drag_start_(0), 
 		  drag_anchor_y_(0)
@@ -203,14 +205,14 @@ namespace gui
 		if(event.type == SDL_MOUSEWHEEL) {
 			int mx, my;
 			input::sdl_get_mouse_state(&mx, &my);
-			if(!inWidget(mx, my)) {
+			if(!inWidget(mx, my) && !focus_override_) {
 				return claimed;
 			}
 
 			const int start_pos = window_pos_;
 			if(event.wheel.y > 0) {
 				window_pos_ -= arrow_step_;
-			} else {
+			} else if(event.wheel.y < 0) {
 				window_pos_ += arrow_step_;
 			}
 
@@ -354,5 +356,9 @@ namespace gui
 			return variant();
 		DEFINE_SET_FIELD_TYPE("null|function")
 			obj.on_scroll_fn_ = value;
+		DEFINE_FIELD(focus_override, "bool")
+			return variant::from_bool(obj.focus_override_);
+		DEFINE_SET_FIELD_TYPE("bool")
+			obj.focus_override_ = value.as_bool();
 	END_DEFINE_CALLABLE(ScrollBarWidget)
 }
