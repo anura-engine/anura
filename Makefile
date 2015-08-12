@@ -137,16 +137,11 @@ INCLUDES  := $(addprefix -I,$(SRC_DIR))
 
 vpath %.cpp $(SRC_DIR)
 
+CPPFLAGS += -MMD -MP
 define cc-command
 $1/%.o: %.cpp
 	@echo "Building:" $$<
 	@$(CCACHE) $(CXX) $(BASE_CXXFLAGS) $(CXXFLAGS) $(CPPFLAGS) $(INC) $(INCLUDES) -c -o $$@ $$<
-	@$(CXX) $(BASE_CXXFLAGS) $(CXXFLAGS) $(CPPFLAGS) $(INC) $(INCLUDES) -MM $$< > $$@.d
-	@mv -f $$@.d $$@.d.tmp
-	@sed -e 's|.*:|$$@:|' < $$@.d.tmp > $$@.d
-	@sed -e 's/.*://' -e 's/\\$$$$//' < $$@.d.tmp | fmt -1 | \
-		sed -e 's/^ *//' -e 's/$$$$/:/' >> $$@.d
-	@rm -f $$@.d.tmp
 endef
 
 .PHONY: all checkdirs clean
@@ -180,4 +175,3 @@ $(foreach bdir,$(BUILD_DIR),$(eval $(call cc-command,$(bdir))))
 
 # pull in dependency info for *existing* .o files
 -include $(OBJ:.o=.o.d)
-
