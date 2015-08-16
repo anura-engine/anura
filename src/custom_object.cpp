@@ -2737,10 +2737,8 @@ void CustomObject::addAnimatedMovement(variant attr_var, variant options)
 
 	for(int cycle = 0; cycle != ncycles; ++cycle) {
 		float ratio = 1.0;
-		if(cycle < ncycles-1) {
-			ratio = static_cast<float>(cycle)/static_cast<float>(ncycles-1);
-			ratio = static_cast<float>(easing_fn(ratio));
-		}
+		ratio = static_cast<float>(cycle)/static_cast<float>(ncycles-1);
+		ratio = static_cast<float>(easing_fn(ratio));
 		for(int n = 0; n != slots.size(); ++n) {
 			values.emplace_back(interpolate_variants(begin_values[n], end_values[n], ratio));
 		}
