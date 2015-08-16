@@ -196,6 +196,9 @@ namespace {
 		cairo_font_options_set_hint_metrics(options, CAIRO_HINT_METRICS_OFF);
 		cairo_set_font_options(cairo_, options);
 		cairo_font_options_destroy(options);
+
+		cairo_status_t status = cairo_status(cairo_);
+		ASSERT_LOG(status == 0, "SVG rendering error creating cairo context " << w << "x" << h << ": " << cairo_status_to_string(status));
 	}
 
 	cairo_context::~cairo_context()
@@ -234,7 +237,7 @@ namespace {
 		w = (w+1) & ~1;
 		h = (h+1) & ~1;
 		cairo_status_t status = cairo_status(cairo_);
-		ASSERT_LOG(status == 0, "SVG rendering error rendering " << fname << ": " << cairo_status_to_string(status));
+		ASSERT_LOG(status == 0, "SVG rendering error rendering " << w << "x" << h << ": " << fname << ": " << cairo_status_to_string(status));
 
 		std::shared_ptr<KRE::SVG::parse> handle;
 		static std::map<std::string, std::shared_ptr<KRE::SVG::parse>> cache;
@@ -254,7 +257,7 @@ namespace {
 		handle->render(ctx);
 
 		status = cairo_status(cairo_);
-		ASSERT_LOG(status == 0, "SVG rendering error rendering " << fname << ": " << cairo_status_to_string(status));
+		ASSERT_LOG(status == 0, "SVG rendering error rendering " << w << "x" << h << ": " << fname << ": " << cairo_status_to_string(status));
 	}
 
 	void cairo_context::write_png(const std::string& fname) 
