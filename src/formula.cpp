@@ -1689,19 +1689,6 @@ namespace {
 			ExpressionPtr left_, right_;
 		};
 
-		class NullExpression : public FormulaExpression {
-		public:
-			explicit NullExpression() : FormulaExpression("_null") {}
-		private:
-			variant execute(const FormulaCallable& /*variables*/) const {
-				return variant();
-			}
-
-			variant_type_ptr getVariantType() const {
-				return variant_type::get_type(variant::VARIANT_TYPE_NULL);
-			}
-		};
-
 		class OperatorExpression : public FormulaExpression {
 		public:
 			OperatorExpression(const std::string& op, ExpressionPtr left,
@@ -3503,7 +3490,7 @@ static std::string debugSubexpressionTypes(ConstFormulaPtr & fml)
 						if(std::string(i1->begin,i1->end) == "functions") {
 							return ExpressionPtr(new FunctionListExpression(symbols));
 						} else if(std::string(i1->begin,i1->end) == "null") {
-							return ExpressionPtr(new NullExpression());
+							return ExpressionPtr(new VariantExpression(variant()));
 						} else if(std::string(i1->begin,i1->end) == "true") {
 							return ExpressionPtr(new VariantExpression(variant::from_bool(true)));
 						} else if(std::string(i1->begin,i1->end) == "false") {
@@ -3924,7 +3911,7 @@ Formula::Formula(const variant& val, FunctionSymbolTable* symbols, ConstFormulaC
 			}
 		}
 	} else {
-		expr_ = ExpressionPtr(new NullExpression());
+		expr_ = ExpressionPtr(new VariantExpression(variant()));
 	}	
 
 	str_.add_formula_using_this(this);
