@@ -1878,21 +1878,4 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 	}
 #endif
 
-	class test_class_base : public FormulaCallable
-	{
-	public:
-	private:
-		DECLARE_CALLABLE(test_class_base);
-	};
-
-	BEGIN_DEFINE_CALLABLE_NOBASE(test_class_base)
-		DEFINE_FIELD(testtest, "int")
-			return variant(5);
-	END_DEFINE_CALLABLE(test_class_base)
-
-	DEFINE_CALLABLE_CONSTRUCTOR(test_class_base, arg)
-		return FormulaCallablePtr(new test_class_base);
-	END_DEFINE_CALLABLE_CONSTRUCTOR(test_class_base)
-
-
 }
