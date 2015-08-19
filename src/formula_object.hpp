@@ -98,12 +98,12 @@ namespace game_logic
 
 		variant serializeToWml() const;
 
-		variant getValue(const std::string& key) const;
-		variant getValueBySlot(int slot) const;
-		void setValue(const std::string& key, const variant& value);
-		void setValueBySlot(int slot, const variant& value);
+		variant getValue(const std::string& key) const override;
+		variant getValueBySlot(int slot) const override;
+		void setValue(const std::string& key, const variant& value) override;
+		void setValueBySlot(int slot, const variant& value) override;
 
-		void getInputs(std::vector<FormulaInput>* inputs) const;
+		void getInputs(std::vector<FormulaInput>* inputs) const override;
 
 		boost::uuids::uuid id_;
 
@@ -111,6 +111,7 @@ namespace game_logic
 		bool orphaned_;
 
 		boost::intrusive_ptr<FormulaObject> previous_;
+		boost::intrusive_ptr<game_logic::FormulaCallable> builtin_base_;
 
 		//overrides of the class's read-only properties.
 		std::vector<FormulaPtr> property_overrides_;

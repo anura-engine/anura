@@ -307,6 +307,8 @@ std::map<std::string, std::string>& class_path_map()
 					}
 				}
 
+				ASSERT_LOG(var["bases"].is_null() || var["base_type"].is_null(), "MULTIPLE INHERITANT NOT YET SUPPORTED");
+
 				std::vector<variant> nodes;
 				nodes.push_back(var);
 				while(nodes.back()["bases"].is_list() && nodes.back()["bases"].num_elements() > 0) {
@@ -320,6 +322,22 @@ std::map<std::string, std::string>& class_path_map()
 				}
 
 				std::reverse(nodes.begin(), nodes.end());
+
+				variant base_builtin = nodes.back()["base_type"];
+				if(base_builtin.is_string()) {
+					std::string builtin = base_builtin.as_string();
+					auto ctor = game_logic::get_callable_constructor(builtin);
+					ASSERT_LOG(ctor, "Base type does not have a constructor: " << builtin);
+
+					auto base = game_logic::get_formula_callable_definition(builtin);
+
+					for(int n = 0; n < base->getNumSlots(); ++n) {
+						const Entry* e = base->getEntry(n);
+						properties_[e->id] = static_cast<int>(slots_.size());
+						slots_.push_back(*e);
+
+					}
+				}
 
 				for(const variant& node : nodes) {
 					variant properties = node["properties"];
@@ -500,6 +518,10 @@ std::map<std::string, std::string>& class_path_map()
 	{
 	public:
 		FormulaClass(const std::string& class_name, const variant& node);
+		const std::function<FormulaCallablePtr(variant)>& getBuiltinCtor() const { return builtin_ctor_; }
+		int getBuiltinSlots() const { return builtin_slots_; }
+		const ConstFormulaCallableDefinitionPtr& getBuiltinDef() const { return builtin_def_; }
+
 		void setName(const std::string& name);
 		const std::string& name() const { return name_; }
 		const variant& nameVariant() const { return name_variant_; }
@@ -524,6 +546,11 @@ std::map<std::string, std::string>& class_path_map()
 
 	private:
 		void build_nested_classes(variant obj);
+
+		std::function<FormulaCallablePtr(variant)> builtin_ctor_;
+		ConstFormulaCallableDefinitionPtr builtin_def_;
+		int builtin_slots_;
+
 		std::string name_;
 		variant name_variant_;
 		variant private_data_;
@@ -573,8 +600,15 @@ std::map<std::string, std::string>& class_path_map()
 	}
 
 	FormulaClass::FormulaClass(const std::string& class_name, const variant& node)
-	  : name_(class_name), nstate_slots_(0)
+	  : builtin_slots_(0), name_(class_name), nstate_slots_(0)
 	{
+		if(node["base_type"].is_string()) {
+			std::string builtin = node["base_type"].as_string();
+			builtin_ctor_ = game_logic::get_callable_constructor(builtin);
+			builtin_def_ = game_logic::get_formula_callable_definition(builtin);
+			builtin_slots_ = builtin_def_->getNumSlots();
+		}
+
 		variant bases_v = node["bases"];
 		if(bases_v.is_null() == false) {
 			for(int n = 0; n != bases_v.num_elements(); ++n) {
@@ -595,6 +629,9 @@ std::map<std::string, std::string>& class_path_map()
 			slots_ = base->slots();
 			properties_ = base->properties();
 			nstate_slots_ = base->nstate_slots_;
+			builtin_ctor_ = base->builtin_ctor_;
+			builtin_def_ = base->builtin_def_;
+			builtin_slots_ = base->builtin_slots_;
 		}
 
 		variant properties = node["properties"];
@@ -1223,6 +1260,10 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 	  : id_(generate_uuid()), new_in_update_(true), orphaned_(false),
 		class_(get_class(type)), private_data_(-1)
 	{
+		if(class_->getBuiltinCtor()) {
+			builtin_base_ = class_->getBuiltinCtor()(args);
+		}
+
 		variables_.resize(class_->getNstateSlots());
 		for(const PropertyEntry& slot : class_->slots()) {
 			if(slot.variable_slot != -1) {
@@ -1312,6 +1353,10 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 	  : id_(data["id"].is_string() ? read_uuid(data["id"].as_string()) : generate_uuid()), new_in_update_(true), orphaned_(false),
 		class_(get_class(data["@class"].as_string())), private_data_(-1)
 	{
+		if(class_->getBuiltinCtor()) {
+			builtin_base_ = class_->getBuiltinCtor()(data);
+		}
+
 		variables_.resize(class_->getNstateSlots());
 
 		if(data.is_map() && data["state"].is_map()) {
@@ -1433,6 +1478,14 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 			return variant(get_library_object().get());
 		}
 
+		auto def = class_->getBuiltinDef();
+		if(def) {
+			const int slot = def->getSlot(key);
+			if(slot >= 0) {
+				return builtin_base_->queryValueBySlot(slot);
+			}
+		}
+
 		std::map<std::string, int>::const_iterator itor = class_->properties().find(key);
 		ASSERT_LOG(itor != class_->properties().end(), "UNKNOWN PROPERTY ACCESS " << key << " IN CLASS " << class_->name() << "\nFORMULA LOCATION: " << get_call_stack());
 
@@ -1473,6 +1526,12 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 
 		slot -= NUM_BASE_FIELDS;
 
+		if(slot < class_->getBuiltinSlots()) {
+			return builtin_base_->queryValueBySlot(slot);
+		}
+
+		slot -= class_->getBuiltinSlots();
+
 		ASSERT_LOG(slot >= 0 && static_cast<unsigned>(slot) < class_->slots().size(), "ILLEGAL VALUE QUERY TO FORMULA OBJECT: " << slot << " IN " << class_->name());
 
 
@@ -1499,10 +1558,19 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 			return;
 		}
 
+		auto def = class_->getBuiltinDef();
+		if(def) {
+			const int slot = def->getSlot(key);
+			if(slot >= 0) {
+				builtin_base_->mutateValueBySlot(slot, value);
+				return;
+			}
+		}
+
 		std::map<std::string, int>::const_iterator itor = class_->properties().find(key);
 		ASSERT_LOG(itor != class_->properties().end(), "UNKNOWN PROPERTY ACCESS " << key << " IN CLASS " << class_->name());
 
-		setValueBySlot(itor->second+NUM_BASE_FIELDS, value);
+		setValueBySlot(itor->second+class_->getBuiltinSlots()+NUM_BASE_FIELDS, value);
 		return;
 	}
 
@@ -1520,6 +1588,14 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 		}
 
 		slot -= NUM_BASE_FIELDS;
+
+		if(slot < class_->getBuiltinSlots()) {
+			builtin_base_->mutateValueBySlot(slot, value);
+			return;
+		}
+
+		slot -= class_->getBuiltinSlots();
+
 		ASSERT_LOG(slot >= 0 && static_cast<unsigned>(slot) < class_->slots().size(), "ILLEGAL VALUE SET TO FORMULA OBJECT: " << slot << " IN " << class_->name());
 
 		const PropertyEntry& entry = class_->slots()[slot];
@@ -1801,5 +1877,22 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 		unit_test_class_node_map[name] = node;
 	}
 #endif
+
+	class test_class_base : public FormulaCallable
+	{
+	public:
+	private:
+		DECLARE_CALLABLE(test_class_base);
+	};
+
+	BEGIN_DEFINE_CALLABLE_NOBASE(test_class_base)
+		DEFINE_FIELD(testtest, "int")
+			return variant(5);
+	END_DEFINE_CALLABLE(test_class_base)
+
+	DEFINE_CALLABLE_CONSTRUCTOR(test_class_base, arg)
+		return FormulaCallablePtr(new test_class_base);
+	END_DEFINE_CALLABLE_CONSTRUCTOR(test_class_base)
+
 
 }

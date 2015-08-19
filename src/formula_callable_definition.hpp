@@ -115,6 +115,9 @@ namespace game_logic
 
 	int add_callable_definition_init(void(*fn)());
 	void init_callable_definitions();
+
+	int register_formula_callable_constructor(std::string id, std::function<FormulaCallablePtr(variant)> fn);
+	std::function<FormulaCallablePtr(variant)> get_callable_constructor(const std::string& id);
 }
 
 typedef std::function<variant(const game_logic::FormulaCallable&)> GetterFn;
@@ -126,6 +129,13 @@ struct CallablePropertyEntry {
 	GetterFn get;
 	SetterFn set;
 };
+
+#define DEFINE_CALLABLE_CONSTRUCTOR(classname, arg) \
+FormulaCallablePtr do_construct_ffl_##classname(variant arg) {
+
+#define END_DEFINE_CALLABLE_CONSTRUCTOR(classname) \
+} \
+const int g_dummy_ffl_construct_var_##classname = register_formula_callable_constructor(#classname, do_construct_ffl_##classname);
 
 #define DECLARE_CALLABLE(classname) \
 public: \
