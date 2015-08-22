@@ -551,9 +551,9 @@ namespace KRE
 					versioned_code << "#version " << n << "\n" << code;
 					const bool result = compile(versioned_code.str());
 					if(result) {
-						std::stringstream err_msg;
-						err_msg << " (Adding '#version " << n << "' to the top of this shader will make it work).";
-						working_version_str = err_msg.str();
+						LOG_WARN("Auto-added '#version " << n << "' to the top of " << name_ << " shader to make it work.");
+						compiled_ok = true;
+						break;
 					}
 				}
 			}
