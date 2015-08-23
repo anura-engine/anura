@@ -207,8 +207,7 @@ namespace pathfinding
 	variant a_star_search(WeightedDirectedGraphPtr wg, 
 		const variant src_node, 
 		const variant dst_node, 
-		game_logic::ExpressionPtr heuristic, 
-		game_logic::MapFormulaCallablePtr callable);
+		variant heuristic_fn);
 
 	variant a_star_find_path(LevelPtr lvl, const point& src, 
 		const point& dst, 
