@@ -1879,21 +1879,29 @@ FUNCTION_DEF_IMPL
 				ASSERT_LOG(dg, "Directed graph given is not of the correct type. " /*<< variant::variant_type_to_string(graph.type())*/);
 				pathfinding::edge_weights w;
  
-				boost::intrusive_ptr<variant_comparator> callable(new variant_comparator(args()[1], variables));
+ 				variant cmp(args()[1]->evaluate(variables));
+				fprintf(stderr, "ZZZ: FUNCTION: %s -> %d\n", args()[1]->str().c_str(), cmp.max_function_arguments());
+				std::vector<variant> fn_args;
+				fn_args.push_back(variant());
+				fn_args.push_back(variant());
  
 				for(auto edges = dg->getEdges()->begin();
 						edges != dg->getEdges()->end();
 						edges++) {
+						fn_args[0] = edges->first;
 						for(auto e2 : edges->second) {
-								variant v = callable->eval(edges->first, e2);
-								if(v.is_null() == false) {
-										w[pathfinding::graph_edge(edges->first, e2)] = v.as_decimal();
-								}
+
+							fn_args[1] = e2;
+							variant v = cmp(fn_args);
+							if(v.is_null() == false) {
+									w[pathfinding::graph_edge(edges->first, e2)] = v.as_decimal();
+							}
 						}
 				}
 				return variant(new pathfinding::WeightedDirectedGraph(dg, &w));
 		FUNCTION_ARGS_DEF
 				ARG_TYPE("builtin directed_graph")
+				ARG_TYPE("function")
 				RETURN_TYPE("builtin weighted_directed_graph")
 		END_FUNCTION_DEF(weighted_graph)
 

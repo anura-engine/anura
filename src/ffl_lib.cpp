@@ -25,6 +25,16 @@ BEGIN_DEFINE_CALLABLE_NOBASE(StandardMathLib)
 		variant v = FN_ARG(0);
 		return v^variant(2);
 	END_DEFINE_FN
+
+	BEGIN_DEFINE_FN(ease_in_out_cubic, "(decimal) ->decimal")
+		decimal t = FN_ARG(0).as_decimal() * 2;
+		if(t < 1) {
+			return variant(t*t*t / 2);
+		} else {
+			t -= 2;
+			return variant((t*t*t + 2) / 2);
+		}
+	END_DEFINE_FN
 END_DEFINE_CALLABLE(StandardMathLib)
 
 DEFINE_CALLABLE_CONSTRUCTOR(StandardMathLib, arg)
