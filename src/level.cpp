@@ -3529,11 +3529,11 @@ DEFINE_FIELD(camera_position, "[int, int, int, int]")
 	pos.push_back(variant(wnd->width()));
 	pos.push_back(variant(wnd->height()));
 	return variant(&pos);
-DEFINE_SET_FIELD_TYPE("[int,int]")
+DEFINE_SET_FIELD_TYPE("[decimal,decimal]")
 
 	ASSERT_EQ(value.num_elements(), 2);
-	last_draw_position().x_pos = last_draw_position().x = value[0].as_int()*100;
-	last_draw_position().y_pos = last_draw_position().y = value[1].as_int()*100;
+	last_draw_position().x_pos = last_draw_position().x = (value[0].as_decimal()*100).as_int();
+	last_draw_position().y_pos = last_draw_position().y = (value[1].as_decimal()*100).as_int();
 
 DEFINE_FIELD(camera_target, "[int,int]")
 	std::vector<variant> pos;
