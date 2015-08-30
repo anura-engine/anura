@@ -2774,7 +2774,15 @@ namespace {
 				}
 
 				if(function_name != nullptr && *function_name == "if" && n >= 1) {
-					ConstFormulaCallableDefinitionPtr new_def = res->front()->queryModifiedDefinitionBasedOnResult(n == 1, callable_def);
+					ConstFormulaCallableDefinitionPtr new_def = callable_def;
+
+					for(int m = 0; m < n; m += 2) {
+						if(!new_def) {
+							new_def = callable_def;
+						}
+						new_def = (*res)[m]->queryModifiedDefinitionBasedOnResult(m+1 == n, new_def);
+					}
+
 					if(new_def) {
 						callable_def = new_def;
 					}
