@@ -712,11 +712,19 @@ namespace {
 					if(element == "font") {
 						if(attr == "size") {
 							ASSERT_LOG(value.empty() == false, "Invalid font size");
-							const int num_value = atoi(value.c_str());
-							if(value[0] == '+' || value[0] == '-') {
-								stack.back().font_size += num_value;
+
+							bool is_percent = false;
+							std::string valstr = value;
+							if(valstr.size() > 2 && valstr[valstr.size()-1] == '%') {
+								is_percent = true;
+								valstr.resize(valstr.size()-1);
+							}
+
+							const int num_value = atoi(valstr.c_str());
+							if(valstr[0] == '+' || valstr[0] == '-') {
+								stack.back().font_size += is_percent ? (stack.back().font_size*num_value)/100 : num_value;
 							} else {
-								stack.back().font_size = num_value;
+								stack.back().font_size = is_percent ? (stack.back().font_size*num_value)/100 : num_value;
 							}
 
 						} else if(attr == "weight") {
