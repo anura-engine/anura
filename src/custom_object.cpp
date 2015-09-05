@@ -2736,11 +2736,8 @@ void CustomObject::addAnimatedMovement(variant attr_var, variant options)
 	values.reserve(slots.size()*ncycles);
 
 	for(int cycle = 0; cycle != ncycles; ++cycle) {
-		float ratio = 1.0;
-		if(cycle < ncycles-1) {
-			ratio = static_cast<float>(cycle)/static_cast<float>(ncycles-1);
-			ratio = static_cast<float>(easing_fn(ratio));
-		}
+		float ratio = ncycles <= 1 ? 1.0 : static_cast<float>(cycle)/static_cast<float>(ncycles-1);
+		ratio = static_cast<float>(easing_fn(ratio));
 		for(int n = 0; n != slots.size(); ++n) {
 			values.emplace_back(interpolate_variants(begin_values[n], end_values[n], ratio));
 		}
@@ -3330,7 +3327,6 @@ variant CustomObject::getValueBySlot(int slot) const
 	case CUSTOM_OBJECT_PLAYER_CTRL_TILT:
 	case CUSTOM_OBJECT_PLAYER_CTRL_X:
 	case CUSTOM_OBJECT_PLAYER_CTRL_Y:
-	case CUSTOM_OBJECT_PLAYER_CTRL_REVERSE_AB:
 	case CUSTOM_OBJECT_PLAYER_CONTROL_SCHEME:
 	case CUSTOM_OBJECT_PLAYER_VERTICAL_LOOK:
 	case CUSTOM_OBJECT_PLAYER_CONTROL_LOCK:
@@ -4731,7 +4727,6 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 		case CUSTOM_OBJECT_PLAYER_CTRL_TILT:
 		case CUSTOM_OBJECT_PLAYER_CTRL_X:
 		case CUSTOM_OBJECT_PLAYER_CTRL_Y:
-		case CUSTOM_OBJECT_PLAYER_CTRL_REVERSE_AB:
 		case CUSTOM_OBJECT_PLAYER_CONTROL_SCHEME:
 		case CUSTOM_OBJECT_PLAYER_VERTICAL_LOOK:
 		case CUSTOM_OBJECT_PLAYER_CONTROL_LOCK:

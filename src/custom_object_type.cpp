@@ -1139,7 +1139,7 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 	static_object_(node["static_object"].as_bool(use_image_for_collisions_)),
 	collides_with_level_(node["collides_with_level"].as_bool(true)),
 	has_feet_(node["has_feet"].as_bool(true) && static_object_ == false),
-	adjust_feet_on_animation_change_(node["adjust_feet_on_animationChange"].as_bool(true)),
+	adjust_feet_on_animation_change_(node["adjust_feet_on_animation_change"].as_bool(true)),
 	teleport_offset_x_(node["teleport_offset_x"].as_int()),
 	teleport_offset_y_(node["teleport_offset_y"].as_int()),
 	no_move_to_standing_(node["no_move_to_standing"].as_bool()),

@@ -85,18 +85,26 @@ namespace pathfinding
 		return obj.dg_->getValue("edge_map");
 	END_DEFINE_CALLABLE(WeightedDirectedGraph)
 
+	namespace {
+		template<typename T>
+		struct DerefPointerMore {
+			bool operator()(const T& a, const T& b) const {
+				return *b < *a;
+			}
+		};
+	}
+
 	variant a_star_search(WeightedDirectedGraphPtr wg, 
 		const variant src_node, 
 		const variant dst_node, 
-		game_logic::ExpressionPtr heuristic, 
-		game_logic::MapFormulaCallablePtr callable)
+		variant heuristic_fn)
 	{
 		typedef GraphNode<variant, decimal>::GraphNodePtr gnp;
-		std::priority_queue<gnp, std::vector<gnp>> open_list;
+		std::priority_queue<gnp, std::vector<gnp>, DerefPointerMore<gnp>> open_list;
 		std::vector<variant> path;
-		variant& a = callable->addDirectAccess("a");
-		variant& b = callable->addDirectAccess("b");
-		b = dst_node;
+		std::vector<variant> heuristic_arg(2);
+		variant& a = heuristic_arg[0];
+		heuristic_arg[1] = dst_node;
 
 		if(src_node == dst_node) {
 			return variant(&path);
@@ -106,7 +114,7 @@ namespace pathfinding
 		try {
 			a = src_node;
 			gnp current = wg->getGraphNode(src_node);
-			current->setCost(decimal::from_int(0), heuristic->evaluate(*callable).as_decimal());
+			current->setCost(decimal::from_int(0), heuristic_fn(heuristic_arg).as_decimal());
 			current->setOnOpenList(true);
 			open_list.push(current);
 
@@ -136,6 +144,7 @@ namespace pathfinding
 				} else {
 					// Push lowest f node to the closed list so we don't consider it anymore.
 					current->setOnClosedList(true);
+
 					for(const variant& e : wg->getEdgesFromNode(current->getNodeValue())) {
 						GraphNode<variant, decimal>::GraphNodePtr neighbour_node = wg->getGraphNode(e);
 						decimal g_cost(current->G() + wg->getWeight(current->getNodeValue(), e));
@@ -148,7 +157,7 @@ namespace pathfinding
 							// not on open or closed lists.
 							a = e;
 							neighbour_node->setParent(current);
-							neighbour_node->setCost(g_cost, heuristic->evaluate(*callable).as_decimal());
+							neighbour_node->setCost(g_cost, heuristic_fn(heuristic_arg).as_decimal());
 							neighbour_node->setOnOpenList(true);
 							open_list.push(neighbour_node);
 						}
@@ -233,12 +242,6 @@ namespace pathfinding
 		if(pt.y > r.y2()) {pt.y = r.y2();}
 	}
 
-	template<typename N, typename T>
-	bool graph_node_cmp(const typename GraphNode<N,T>::GraphNodePtr& lhs, 
-		const typename GraphNode<N,T>::GraphNodePtr& rhs) {
-		return lhs->F() < rhs->F();
-	}
-
 	variant a_star_find_path(LevelPtr lvl,
 		const point& src_pt1, 
 		const point& dst_pt1, 
@@ -249,8 +252,8 @@ namespace pathfinding
 		const int tile_size_y) 
 	{
 		typedef GraphNode<point, double>::GraphNodePtr gnp;
+		std::priority_queue<gnp, std::vector<gnp>, DerefPointerMore<gnp>> open_list;
 		std::vector<variant> path;
-		std::priority_queue<gnp> open_list;
 		typedef std::map<point, gnp> graph_node_list;
 		graph_node_list node_list;
 		point src_pt(src_pt1), dst_pt(dst_pt1);
@@ -363,7 +366,7 @@ namespace pathfinding
 		decimal max_cost ) {
 		typedef GraphNode<variant, decimal>::GraphNodePtr gnp;
 		std::vector<variant> reachable;
-		std::priority_queue<gnp> open_list;
+		std::priority_queue<gnp, std::vector<gnp>, DerefPointerMore<gnp>> open_list;
 
 		bool searching = true;
 		try {
@@ -417,10 +420,10 @@ UNIT_TEST(directed_graph_function) {
 }
 
 UNIT_TEST(weighted_graph_function) {
-	CHECK_EQ(game_logic::Formula(variant("weighted_graph(directed_graph(map(range(4), [value/2,value%2]), null), 10).vertices")).execute(), game_logic::Formula(variant("[[0,0],[0,1],[1,0],[1,1]]")).execute());
+	CHECK_EQ(game_logic::Formula(variant("weighted_graph(directed_graph(map(range(4), [value/2,value%2]), null), def(any a, any b) ->decimal 10).vertices")).execute(), game_logic::Formula(variant("[[0,0],[0,1],[1,0],[1,1]]")).execute());
 }
 
 UNIT_TEST(cost_path_search_function) {
-	CHECK_EQ(game_logic::Formula(variant("sort(path_cost_search(weighted_graph(directed_graph(map(range(9), [value/3,value%3]), filter(links(v), inside_bounds(value))), distance(a,b)), [1,1], 1)) where links = def(v) [[v[0]-1,v[1]], [v[0]+1,v[1]], [v[0],v[1]-1], [v[0],v[1]+1],[v[0]-1,v[1]-1],[v[0]-1,v[1]+1],[v[0]+1,v[1]-1],[v[0]+1,v[1]+1]], inside_bounds = def(v) v[0]>=0 and v[1]>=0 and v[0]<3 and v[1]<3, distance=def(a,b)sqrt((a[0]-b[0])^2+(a[1]-b[1])^2)")).execute(), 
+	CHECK_EQ(game_logic::Formula(variant("sort(path_cost_search(weighted_graph(directed_graph(map(range(9), [value/3,value%3]), filter(links(v), inside_bounds(value))), def(any a, any b)->decimal sqrt((a[0]-b[0])^2+(a[1]-b[1])^2)), [1,1], 1)) where links = def(v) [[v[0]-1,v[1]], [v[0]+1,v[1]], [v[0],v[1]-1], [v[0],v[1]+1],[v[0]-1,v[1]-1],[v[0]-1,v[1]+1],[v[0]+1,v[1]-1],[v[0]+1,v[1]+1]], inside_bounds = def(v) v[0]>=0 and v[1]>=0 and v[0]<3 and v[1]<3")).execute(), 
 		game_logic::Formula(variant("sort([[1,1], [1,0], [2,1], [1,2], [0,1]])")).execute());
 }

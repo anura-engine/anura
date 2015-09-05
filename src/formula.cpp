@@ -1689,19 +1689,6 @@ namespace {
 			ExpressionPtr left_, right_;
 		};
 
-		class NullExpression : public FormulaExpression {
-		public:
-			explicit NullExpression() : FormulaExpression("_null") {}
-		private:
-			variant execute(const FormulaCallable& /*variables*/) const {
-				return variant();
-			}
-
-			variant_type_ptr getVariantType() const {
-				return variant_type::get_type(variant::VARIANT_TYPE_NULL);
-			}
-		};
-
 		class OperatorExpression : public FormulaExpression {
 		public:
 			OperatorExpression(const std::string& op, ExpressionPtr left,
@@ -2759,15 +2746,12 @@ namespace {
 				}
 
 				if(function_name != nullptr &&
-				   ((n == 1 && (*function_name == "sort" || *function_name == "fold" ||
-							   *function_name == "weighted_graph")) ||
+				   ((n == 1 && (*function_name == "sort" || *function_name == "fold")) ||
 					(n == 2 &&  *function_name == "zip"))) {
 					variant_type_ptr sequence_type = (*res)[0]->queryVariantType();
 					variant_type_ptr value_type = sequence_type->is_list_of();
 					if(!value_type && *function_name == "zip") {
 						value_type = sequence_type->is_map_of().second;
-					} else if(*function_name == "weighted_graph") {
-						value_type = variant_type::get_any();
 					}
 
 					callable_def = get_variant_comparator_definition(callable_def, value_type);
@@ -2790,7 +2774,15 @@ namespace {
 				}
 
 				if(function_name != nullptr && *function_name == "if" && n >= 1) {
-					ConstFormulaCallableDefinitionPtr new_def = res->front()->queryModifiedDefinitionBasedOnResult(n == 1, callable_def);
+					ConstFormulaCallableDefinitionPtr new_def = callable_def;
+
+					for(int m = 0; m < n; m += 2) {
+						if(!new_def) {
+							new_def = callable_def;
+						}
+						new_def = (*res)[m]->queryModifiedDefinitionBasedOnResult(m+1 == n, new_def);
+					}
+
 					if(new_def) {
 						callable_def = new_def;
 					}
@@ -3503,7 +3495,7 @@ static std::string debugSubexpressionTypes(ConstFormulaPtr & fml)
 						if(std::string(i1->begin,i1->end) == "functions") {
 							return ExpressionPtr(new FunctionListExpression(symbols));
 						} else if(std::string(i1->begin,i1->end) == "null") {
-							return ExpressionPtr(new NullExpression());
+							return ExpressionPtr(new VariantExpression(variant()));
 						} else if(std::string(i1->begin,i1->end) == "true") {
 							return ExpressionPtr(new VariantExpression(variant::from_bool(true)));
 						} else if(std::string(i1->begin,i1->end) == "false") {
@@ -3924,7 +3916,7 @@ Formula::Formula(const variant& val, FunctionSymbolTable* symbols, ConstFormulaC
 			}
 		}
 	} else {
-		expr_ = ExpressionPtr(new NullExpression());
+		expr_ = ExpressionPtr(new VariantExpression(variant()));
 	}	
 
 	str_.add_formula_using_this(this);

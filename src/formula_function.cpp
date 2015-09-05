@@ -1855,7 +1855,14 @@ FUNCTION_DEF_IMPL
 			variant& a = callable->addDirectAccess("v");
 			for(variant v : vertices.as_list()) {
 				a = v;
-				edges[v] = args()[1]->evaluate(*callable).as_list();
+				variant res = args()[1]->evaluate(*callable);
+				if(res.is_function()) {
+					std::vector<variant> args;
+					args.push_back(v);
+					edges[v] = res(args).as_list();
+				} else {
+					edges[v] = res.as_list();
+				}
 				vertex_list.push_back(v);
 			}
 			pathfinding::DirectedGraph* dg = new pathfinding::DirectedGraph(&vertex_list, &edges);
@@ -1872,21 +1879,29 @@ FUNCTION_DEF_IMPL
 				ASSERT_LOG(dg, "Directed graph given is not of the correct type. " /*<< variant::variant_type_to_string(graph.type())*/);
 				pathfinding::edge_weights w;
  
-				boost::intrusive_ptr<variant_comparator> callable(new variant_comparator(args()[1], variables));
+ 				variant cmp(args()[1]->evaluate(variables));
+				fprintf(stderr, "ZZZ: FUNCTION: %s -> %d\n", args()[1]->str().c_str(), cmp.max_function_arguments());
+				std::vector<variant> fn_args;
+				fn_args.push_back(variant());
+				fn_args.push_back(variant());
  
 				for(auto edges = dg->getEdges()->begin();
 						edges != dg->getEdges()->end();
 						edges++) {
+						fn_args[0] = edges->first;
 						for(auto e2 : edges->second) {
-								variant v = callable->eval(edges->first, e2);
-								if(v.is_null() == false) {
-										w[pathfinding::graph_edge(edges->first, e2)] = v.as_decimal();
-								}
+
+							fn_args[1] = e2;
+							variant v = cmp(fn_args);
+							if(v.is_null() == false) {
+									w[pathfinding::graph_edge(edges->first, e2)] = v.as_decimal();
+							}
 						}
 				}
 				return variant(new pathfinding::WeightedDirectedGraph(dg, &w));
 		FUNCTION_ARGS_DEF
 				ARG_TYPE("builtin directed_graph")
+				ARG_TYPE("function")
 				RETURN_TYPE("builtin weighted_directed_graph")
 		END_FUNCTION_DEF(weighted_graph)
 
@@ -1896,14 +1911,13 @@ FUNCTION_DEF_IMPL
 			ASSERT_LOG(wg, "Weighted graph given is not of the correct type.");
 			variant src_node = args()[1]->evaluate(variables);
 			variant dst_node = args()[2]->evaluate(variables);
-			ExpressionPtr heuristic = args()[3];
-			boost::intrusive_ptr<MapFormulaCallable> callable(new MapFormulaCallable(&variables));
-			return pathfinding::a_star_search(wg, src_node, dst_node, heuristic, callable);
+			variant heuristic_fn = args()[3]->evaluate(variables);
+			return pathfinding::a_star_search(wg, src_node, dst_node, heuristic_fn);
 		FUNCTION_ARGS_DEF
 			ARG_TYPE("builtin weighted_directed_graph")
 			ARG_TYPE("any")
 			ARG_TYPE("any")
-			ARG_TYPE("any")
+			ARG_TYPE("function")
 			RETURN_TYPE("list")
 		END_FUNCTION_DEF(a_star_search)
 

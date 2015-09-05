@@ -1794,6 +1794,20 @@ variant variant::operator%(const variant& v) const
 
 variant variant::operator^(const variant& v) const
 {
+	//for the common case of exponentiation by a positive integer,
+	//we use our own fixed-point impl. Otherwise we just use the
+	//system pow(). TODO: eventually we want to always use fixed-point.
+	if(v.type_ == VARIANT_TYPE_INT && v.as_int() >= 1) {
+		int num = v.as_int();
+		variant result = *this;
+		while(num > 1) {
+			result = result * *this;
+			--num;
+		}
+
+		return result;
+	}
+
 	if( type_ == VARIANT_TYPE_DECIMAL || v.type_ == VARIANT_TYPE_DECIMAL ) {
 		double res = pow( as_decimal().value()/double(VARIANT_DECIMAL_PRECISION),
 		                v.as_decimal().value()/double(VARIANT_DECIMAL_PRECISION));		

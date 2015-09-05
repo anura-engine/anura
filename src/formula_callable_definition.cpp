@@ -364,6 +364,30 @@ namespace game_logic
 
 		callable_init_routines().clear();
 	}
+
+	namespace
+	{
+		std::map<std::string, std::function<FormulaCallablePtr(variant)>>& g_callableConstructors() {
+			static std::map<std::string, std::function<FormulaCallablePtr(variant)>> instance;
+			return instance;
+		}
+	}
+
+	int register_formula_callable_constructor(std::string id, std::function<FormulaCallablePtr(variant)> fn)
+	{
+		g_callableConstructors()[modify_class_id(id)] = fn;
+		return g_callableConstructors().size();
+	}
+
+	std::function<FormulaCallablePtr(variant)> get_callable_constructor(const std::string& id)
+	{
+		auto itor = g_callableConstructors().find(id);
+		if(itor != g_callableConstructors().end()) {
+			return itor->second;
+		} else {
+			return std::function<FormulaCallablePtr(variant)>();
+		}
+	}
 }
 
 COMMAND_LINE_UTILITY(document_builtins)
