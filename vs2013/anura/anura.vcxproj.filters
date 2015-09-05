@@ -2119,6 +2119,9 @@
     <ClCompile Include="..\..\src\kre\SurfaceBlur.cpp">
       <Filter>Source Files\kre</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\ffl_lib.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\Box2D\$(Configuration)\$(Platform)\Box2D.lib" />
