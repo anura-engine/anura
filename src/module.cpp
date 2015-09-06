@@ -554,6 +554,10 @@ namespace module
 		std::vector<std::string> files, dirs;
 		sys::get_files_in_dir(dir, &files, &dirs);
 		for(const std::string& d : dirs) {
+			if(d == "" || d[0] == '.') {
+				continue;
+			}
+
 			get_files_in_module(dir + "/" + d, res, exclude_paths);
 		}
 
