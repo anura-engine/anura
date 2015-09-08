@@ -2516,6 +2516,16 @@ namespace {
 					return false;
 				}
 			}
+
+			bool canReduceToVariant(variant& v) const {
+				if(subs_.empty()) {
+					v = variant(str_);
+					return true;
+				} else {
+					return false;
+				}
+			}
+			
 		private:
 			variant execute(const FormulaCallable& variables) const {
 				if(subs_.empty()) {
