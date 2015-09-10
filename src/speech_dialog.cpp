@@ -131,7 +131,7 @@ bool SpeechDialog::keyPress(const SDL_Event& event)
 			}
 		}
 		return false;
-	} else if (event.type != SDL_KEYDOWN && event.type != SDL_MOUSEBUTTONDOWN) {
+	} else if ((event.type != SDL_KEYDOWN && event.type != SDL_MOUSEBUTTONDOWN) || (event.type == SDL_KEYDOWN && event.key.repeat)) {
 		return false; // only keydown and mousebuttondown should be handled by the rest of the function
 	}
 
