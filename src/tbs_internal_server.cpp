@@ -321,7 +321,7 @@ void terminate_utility_process()
 			}
 		}
 
-		ASSERT_LOG(started_server, "Could not start server process");
+		ASSERT_LOG(started_server, "Could not start server process. Server output: " << sys::read_file("stderr_server.txt") << " -- server log: " << sys::read_file("server-log.txt"));
 
 		delete startup_semaphore;
 		startup_semaphore = NULL;
