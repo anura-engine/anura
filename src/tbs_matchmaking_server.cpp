@@ -408,7 +408,7 @@ public:
 						variant_builder response;
 						response.add("type", "registration_success");
 						response.add("session_id", variant(session_id));
-						response.add("username", variant(user));
+						response.add("username", variant(user_full));
 						response.add("info_version", variant(0));
 						response.add("info", account_info);
 
@@ -436,7 +436,8 @@ public:
 				
 
 			} else if(request_type == "login") {
-				std::string user = normalize_username(doc["user"].as_string());
+				std::string given_user = doc["user"].as_string();
+				std::string user = normalize_username(given_user);
 				std::string passwd = doc["passwd"].as_string();
 				const bool remember = doc["remember"].as_bool(false);
 				bool impersonate = false;
@@ -482,7 +483,7 @@ public:
 
 					response.add("type", "login_success");
 					response.add("session_id", variant(session_id));
-					response.add("username", variant(info.user_id));
+					response.add("username", given_user);
 					response.add("info_version", user_info["info_version"].as_int(0));
 					response.add("info", user_info["info"]);
 
@@ -510,7 +511,7 @@ public:
 						return;
 					}
 
-					std::string username = user_info["user"].as_string();
+					std::string username = normalize_username(user_info["user"].as_string());
 
 					db_client_->get("user:" + username, [=](variant user_info) {
 						variant_builder response;
@@ -532,7 +533,7 @@ public:
 						response.add("type", "login_success");
 						response.add("session_id", variant(session_id));
 						response.add("cookie", variant(cookie));
-						response.add("username", variant(info.user_id));
+						response.add("username", user_info["user"]);
 						response.add("info", user_info["info"]);
 						response.add("info_version", user_info["info_version"].as_int(0));
 						send_response(socket, response.build());
