@@ -855,7 +855,7 @@ COMMAND_LINE_UTILITY(generate_manifest)
 				module_id_override = arguments.front();
 				arguments.pop_front();
 			} else {
-				ASSERT_LOG(module_id.empty(), "UNRECOGNIZED ARGUMENT: " << module_id);
+				ASSERT_LOG(module_id.empty(), "UNRECOGNIZED ARGUMENT: " << arg);
 				module_id = arg;
 				ASSERT_LOG(std::count_if(module_id.begin(), module_id.end(), isalnum) + std::count(module_id.begin(), module_id.end(), '_') == module_id.size(), "ILLEGAL ARGUMENT: " << module_id);
 			}

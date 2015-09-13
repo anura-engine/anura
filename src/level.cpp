@@ -1775,10 +1775,6 @@ namespace
 {
 	void draw_entity(const Entity& obj, int x, int y, bool editor) 
 	{
-		if(obj.useAbsoluteScreenCoordinates()) {
-			return;
-		}
-
 		const std::pair<int,int>* scroll_speed = obj.parallaxScaleMillis();
 
 		int diffx = 0;
@@ -1829,19 +1825,6 @@ void Level::drawLater(int x, int y, int w, int h) const
 		draw_entity_later(*e, x, y, editor_);
 	}
 }
-
-void Level::draw_absolutely_positioned_objects() const
-{
-	if(shader_) {
-		ASSERT_LOG(false, "apply shader_ here");
-	}
-	for(auto e : active_chars_) {
-		if(e->useAbsoluteScreenCoordinates()) {
-			e->draw(0, 0);
-		}
-	}
-}
-
 
 void Level::draw(int x, int y, int w, int h) const
 {
