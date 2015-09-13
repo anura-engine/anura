@@ -2040,42 +2040,24 @@ void Level::frameBufferEnterZorder(int zorder) const
 	}
 
 	if(shaders != active_fb_shaders_) {		
+
+		bool need_flush_to_screen = true, need_new_virtual_area = true;
+
 		if(active_fb_shaders_.empty()) {
+			need_flush_to_screen = false;
+		} else if(shaders.empty()) {
+			need_new_virtual_area = false;
+		}
+
+		if(need_flush_to_screen) {
+			flushFrameBufferShadersToScreen();
+		}
+
+		if(need_new_virtual_area) {
 			auto& gs = graphics::GameScreen::get();
 			rt_->renderToThis(gs.getVirtualArea());
 			rt_->setClearColor(KRE::Color(0,0,0,0));
 			rt_->clear();
-		} else if(shaders.empty()) {
-			//now there are no shaders, flush all to the screen and proceed with
-			//rendering to the screen.
-			flushFrameBufferShadersToScreen();
-		} else {
-			bool add_shaders = false;
-			std::vector<graphics::AnuraShader>::size_type count = 0;
-			for(auto& s : shaders) {
-				count = active_fb_shaders_.size() - std::count(active_fb_shaders_.begin(), active_fb_shaders_.end(), s);
-				if(std::count(active_fb_shaders_.begin(), active_fb_shaders_.end(), s) == 0) {
-					add_shaders = true;
-					break;
-				}
-			}
-
-			if(add_shaders) {
-				//LOG_DEBUG("Added " << count << " at zorder: " << zorder);
-				//this works if we're adding and removing shaders.)
-				auto& gs = graphics::GameScreen::get();
-				rt_->renderToThis(gs.getVirtualArea());
-				rt_->setClearColor(KRE::Color(0,0,0,0));
-				rt_->clear();
-			} else {
-				//LOG_DEBUG("Removed " << (active_fb_shaders_.size() - shaders.size()) << " shaders at zorder: " << zorder);
-				//we must just be removing shaders.
-				for(auto& s : active_fb_shaders_) {
-					if(std::count(shaders.begin(), shaders.end(), s) == 0) {
-						applyShaderToFrameBufferTexture(s, false);
-					}
-				}
-			}
 		}
 
 		active_fb_shaders_ = shaders;
