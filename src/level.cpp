@@ -1826,6 +1826,10 @@ void Level::drawLater(int x, int y, int w, int h) const
 	}
 }
 
+//The amount the drawing goes outside of the actual camera position.
+//Used for adjustments with absolute screen position.
+int g_camera_extend_x, g_camera_extend_y;
+
 void Level::draw(int x, int y, int w, int h) const
 {
 	auto wnd = KRE::WindowManager::getMainWindow();
@@ -1840,6 +1844,9 @@ void Level::draw(int x, int y, int w, int h) const
 	const int start_h = h;
 
 	const int ticks = profile::get_tick_time();
+
+	g_camera_extend_x = widest_tile_;
+	g_camera_extend_y = highest_tile_;
 	
 	x -= widest_tile_;
 	y -= highest_tile_;

@@ -1218,6 +1218,8 @@ void CustomObject::drawLater(int xx, int yy) const
 	}
 }
 
+extern int g_camera_extend_x, g_camera_extend_y;
+
 void CustomObject::draw(int xx, int yy) const
 {
 	if(frame_ == nullptr) {
@@ -1227,7 +1229,7 @@ void CustomObject::draw(int xx, int yy) const
 
 	std::unique_ptr<KRE::ModelManager2D> model_scope;
 	if(use_absolute_screen_coordinates_) {
-		model_scope = std::unique_ptr<KRE::ModelManager2D>(new KRE::ModelManager2D(last_draw_position().x/100, last_draw_position().y/100));
+		model_scope = std::unique_ptr<KRE::ModelManager2D>(new KRE::ModelManager2D(xx + g_camera_extend_x, yy + g_camera_extend_y));
 	}
 
 	for(const EntityPtr& attached : attachedObjects()) {

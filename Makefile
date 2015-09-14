@@ -25,6 +25,7 @@
 
 OPTIMIZE?=yes
 USE_LUA?=yes
+USE_BOX2D?=yes
 CCACHE?=ccache
 USE_CCACHE?=$(shell which $(CCACHE) 2>&1 > /dev/null && echo yes)
 ifneq ($(USE_CCACHE),yes)
