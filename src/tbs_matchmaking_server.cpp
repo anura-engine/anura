@@ -145,6 +145,8 @@ public:
 		user_account_fn_ = controller_->queryValue("user_account");
 		ASSERT_LOG(user_account_fn_.is_function(), "Could not find user_account in matchmaking_server class");
 
+		handle_anon_request_fn_ = controller_->queryValue("handle_anon_request");
+
 		db_client_ = DbClient::create();
 
 
@@ -356,7 +358,18 @@ public:
 			assert_recover_scope recover_scope;
 			std::string request_type = doc["type"].as_string();
 
-			if(request_type == "register") {
+			if(request_type == "anon_request") {
+
+				if(handle_anon_request_fn_.is_function()) {
+					std::vector<variant> args;
+					args.push_back(variant(this));
+					args.push_back(doc);
+					send_response(socket, handle_anon_request_fn_(args));
+				} else {
+					send_response(socket, variant());
+				}
+				return;
+			} else if(request_type == "register") {
 				std::string user = normalize_username(doc["user"].as_string());
 				if(!username_valid(user)) {
 					variant_builder response;
@@ -946,6 +959,17 @@ public:
 	{
 		if(url == "/tbs_monitor") {
 			send_msg(socket, "text/json", build_status().write_json(), "");
+		} else if(url == "/query" && handle_anon_request_fn_.is_function()) {
+			std::map<variant,variant> a;
+			for(auto p : args) {
+				a[variant(p.first)] = variant(p.second);
+			}
+
+			std::vector<variant> fn_args;
+			fn_args.push_back(variant(this));
+			fn_args.push_back(variant(&a));
+			send_response(socket, handle_anon_request_fn_(fn_args));
+			return;
 		}
 	}
 
@@ -1249,6 +1273,7 @@ private:
 	variant matchmake_fn_;
 	variant admin_account_fn_;
 	variant user_account_fn_;
+	variant handle_anon_request_fn_;
 
 	variant current_response_;
 
