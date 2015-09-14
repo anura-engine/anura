@@ -1227,7 +1227,7 @@ void CustomObject::draw(int xx, int yy) const
 
 	std::unique_ptr<KRE::ModelManager2D> model_scope;
 	if(use_absolute_screen_coordinates_) {
-		model_scope = std::unique_ptr<KRE::ModelManager2D>(new KRE::ModelManager2D(xx, yy));
+		model_scope = std::unique_ptr<KRE::ModelManager2D>(new KRE::ModelManager2D(last_draw_position().x/100, last_draw_position().y/100));
 	}
 
 	for(const EntityPtr& attached : attachedObjects()) {
