@@ -21,10 +21,13 @@
 	   distribution.
 */
 
+#include <deque>
+
 #include "db_client.hpp"
 #include "filesystem.hpp"
 #include "json_parser.hpp"
 #include "preferences.hpp"
+#include "unit_test.hpp"
 
 PREF_STRING(db_json_file, "", "The file to output database content to when using a file to simulate a database");
 
@@ -144,7 +147,6 @@ DbClientPtr DbClient::create()
 
 #include "json_parser.hpp"
 #include "preferences.hpp"
-#include "unit_test.hpp"
 
 #include <libcouchbase/couchbase.h>
 
@@ -372,8 +374,8 @@ void remove_callback(lcb_t instance, const void* cookie, lcb_error_t error, cons
 		}
 
 		delete info;
-		}
 	}
+}
 
 	void timer_callback(lcb_timer_t timer, lcb_t instance, const void* cookie)
 	{
@@ -404,3 +406,21 @@ DbClientPtr DbClient::create()
 }
 
 #endif //USE_DBCLIENT
+
+COMMAND_LINE_UTILITY(query_db)
+{
+	DbClientPtr client = DbClient::create();
+	std::deque<std::string> arguments(args.begin(), args.end());
+	while(!arguments.empty()) {
+		const std::string arg = arguments.front();
+		arguments.pop_front();
+
+		std::string result;
+		client->get(arg, [&result](variant value) { result = value.write_json(); });
+		while(result.empty()) {
+			client->process();
+		}
+
+		printf("%s\n", result.c_str());
+	}
+}
