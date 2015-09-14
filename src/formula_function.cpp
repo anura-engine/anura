@@ -399,6 +399,12 @@ namespace game_logic
 		RETURN_TYPE("commands")
 		END_FUNCTION_DEF(set_user_info)
 
+		FUNCTION_DEF(current_level, 0, 0, "current_level(): return the current level the game is in")
+			Formula::failIfStaticContext();
+			return variant(&Level::current());
+		RETURN_TYPE("builtin level")
+		END_FUNCTION_DEF(current_level)
+
 		FUNCTION_DEF(overload, 1, -1, "overload(fn...): makes an overload of functions")
 			std::vector<variant> functions;
 			for(ExpressionPtr expression : args()) {

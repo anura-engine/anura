@@ -1206,8 +1206,6 @@ void CustomObject::drawLater(int xx, int yy) const
 	int offs_x = 0;
 	int offs_y = 0;
 	if(use_absolute_screen_coordinates_) {
-		adjusted_draw_position_.x = xx;
-		adjusted_draw_position_.y = yy;
 		offs_x = xx;
 		offs_y = yy;
 	}
@@ -1220,6 +1218,8 @@ void CustomObject::drawLater(int xx, int yy) const
 	}
 }
 
+extern int g_camera_extend_x, g_camera_extend_y;
+
 void CustomObject::draw(int xx, int yy) const
 {
 	if(frame_ == nullptr) {
@@ -1229,9 +1229,7 @@ void CustomObject::draw(int xx, int yy) const
 
 	std::unique_ptr<KRE::ModelManager2D> model_scope;
 	if(use_absolute_screen_coordinates_) {
-		model_scope = std::unique_ptr<KRE::ModelManager2D>(new KRE::ModelManager2D(xx, yy));
-		adjusted_draw_position_.x = xx;
-		adjusted_draw_position_.y = yy;
+		model_scope = std::unique_ptr<KRE::ModelManager2D>(new KRE::ModelManager2D(xx + g_camera_extend_x, yy + g_camera_extend_y));
 	}
 
 	for(const EntityPtr& attached : attachedObjects()) {
@@ -5908,25 +5906,7 @@ void CustomObject::removeWidget(gui::WidgetPtr w)
 
 bool CustomObject::handle_sdl_event(const SDL_Event& event, bool claimed)
 {
-	//SDL_Event ev(event);
-	const int tx = x() + (use_absolute_screen_coordinates_ ? adjusted_draw_position_.x : 0);
-	const int ty = y() + (use_absolute_screen_coordinates_ ? adjusted_draw_position_.y : 0);
-	point p(tx, ty);
-	//if(event.type == SDL_MOUSEMOTION) {
-		//ev.motion.x -= x();
-		//ev.motion.y -= y();
-		//if(use_absolute_screen_coordinates_) {
-		//	ev.motion.x -= adjusted_draw_position_.x;
-		//	ev.motion.y -= adjusted_draw_position_.y;
-		//}
-	//} else if(event.type == SDL_MOUSEBUTTONDOWN || event.type == SDL_MOUSEBUTTONUP) {
-		//ev.button.x -= x();
-		//ev.button.y -= y();
-		//if(use_absolute_screen_coordinates_) {
-		//	ev.button.x -= adjusted_draw_position_.x;
-		//	ev.button.y -= adjusted_draw_position_.y;
-		//}
-	//}
+	point p(x(), y());
 
 	if(document_ &&  !claimed) {
 		claimed |= document_->handleEvents(p, event);

@@ -554,6 +554,10 @@ namespace module
 		std::vector<std::string> files, dirs;
 		sys::get_files_in_dir(dir, &files, &dirs);
 		for(const std::string& d : dirs) {
+			if(d == "" || d[0] == '.') {
+				continue;
+			}
+
 			get_files_in_module(dir + "/" + d, res, exclude_paths);
 		}
 
@@ -851,7 +855,7 @@ COMMAND_LINE_UTILITY(generate_manifest)
 				module_id_override = arguments.front();
 				arguments.pop_front();
 			} else {
-				ASSERT_LOG(module_id.empty(), "UNRECOGNIZED ARGUMENT: " << module_id);
+				ASSERT_LOG(module_id.empty(), "UNRECOGNIZED ARGUMENT: " << arg);
 				module_id = arg;
 				ASSERT_LOG(std::count_if(module_id.begin(), module_id.end(), isalnum) + std::count(module_id.begin(), module_id.end(), '_') == module_id.size(), "ILLEGAL ARGUMENT: " << module_id);
 			}
@@ -987,7 +991,7 @@ COMMAND_LINE_UTILITY(generate_manifest)
 	{
 		bool valid_path_chars(char c)
 		{
-			static const char* AllowedChars = "(){}[]+./_-";
+			static const char* AllowedChars = "(){}[]+./_-@";
 			return isalnum(c) || strchr(AllowedChars, c);
 		}
 
@@ -1000,7 +1004,7 @@ COMMAND_LINE_UTILITY(generate_manifest)
 				}
 			}
 
-			static const char* AllowedChars = "(){}[]+";
+			static const char* AllowedChars = "(){}[]+@";
 
 			return str.empty() == false && (isalnum(str[0]) || strchr(AllowedChars, str[0])) && std::count_if(str.begin(), str.end(), valid_path_chars) == str.size();
 		}

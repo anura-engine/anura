@@ -237,7 +237,13 @@ variant interpolate_variants(variant a, variant b, float ratiof)
 		decimal ratio(ratiof);
 		decimal inv_ratio = decimal::from_int(1) - ratio;
 
-		return variant(a.as_decimal()*inv_ratio + b.as_decimal()*ratio);
+		variant result(a.as_decimal()*inv_ratio + b.as_decimal()*ratio);
+
+		if(a.is_int() && b.is_int()) {
+			return variant(result.as_int());
+		} else {
+			return result;
+		}
 	}
 
 	if(a.is_list() && b.is_list()) {

@@ -288,7 +288,7 @@ private:
 	std::string code_button_text_;
 public:
 	explicit editor_menu_dialog(editor& e)
-	  : gui::Dialog(0, 0, e.xres() ? e.xres() : 1200, EDITOR_MENUBAR_HEIGHT), 
+	  : gui::Dialog(0, 0, e.xres() ? e.xres() : 1200, 40 /*FIXME: SHOULD BE EDITOR_MENUBAR_HEIGHT INSTEAD OF HARD-CODED VALUE. FIX THIS WHEN WE GET EDITOR_MENUBAR_HEIGHT WORKING PROPERLY EVERYWHERE*/), 
 	  editor_(e)
 	{
 		setClearBgAmount(255);

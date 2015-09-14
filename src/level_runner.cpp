@@ -518,6 +518,9 @@ bool LevelRunner::handle_mouse_events(const SDL_Event &event)
 				rect clip_area;
 				if(e->getClipArea(&clip_area)) {
 					point p(x,y);
+					if(e->useAbsoluteScreenCoordinates()) {
+						p = point(mx,my);
+					}
 					if(pointInRect(p, clip_area) == false) {
 						continue;
 					}

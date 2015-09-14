@@ -447,6 +447,7 @@
     <ClCompile Include="..\..\src\entity.cpp" />
     <ClCompile Include="..\..\src\external_text_editor.cpp" />
     <ClCompile Include="..\..\src\ffl_dom.cpp" />
+    <ClCompile Include="..\..\src\ffl_lib.cpp" />
     <ClCompile Include="..\..\src\ffl_weak_ptr.cpp" />
     <ClCompile Include="..\..\src\filesystem-android.cpp" />
     <ClCompile Include="..\..\src\filesystem.cpp" />
@@ -854,7 +855,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;_USE_MATH_DEFINES;HAVE_M_PI;USE_BOX2D;USE_LUA;USE_LIBVPX;USE_SVG;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;_WIN32_WINNT=0x0600;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..\src;..\..\src\kre;..\..\src\svg;..\..\src\hex;..\..\src\lua;..\..\Box2D;..\..\external\include;..\..\external\include\SDL;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\src;..\..\src\kre;..\..\src\svg;..\..\src\hex;..\..\src\xhtml;..\..\src\lua;..\..\Box2D;..\..\external\include;..\..\external\include\SDL;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
