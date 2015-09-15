@@ -708,6 +708,7 @@ void Frame::draw(graphics::AnuraShaderPtr shader, int x, int y, bool face_right,
 	//y &= preferences::xypos_draw_mask;
 
 	if(shader) {
+		shader->setDrawArea(rect(x, y, w, h));
 		shader->setSpriteArea(blit_target_.getTexture()->getSourceRectNormalised());
 		blit_target_.setShader(shader->getShader());
 	}
@@ -746,6 +747,7 @@ void Frame::draw(graphics::AnuraShaderPtr shader, int x, int y, bool face_right,
 	//y -= height_delta/2;
 
 	if(shader) {
+		shader->setDrawArea(rect(x, y, w, h));
 		shader->setSpriteArea(blit_target_.getTexture()->getSourceRectNormalised());
 		blit_target_.setShader(shader->getShader());
 	}
@@ -783,6 +785,7 @@ void Frame::draw(graphics::AnuraShaderPtr shader, int x, int y, const rect& area
 	const rect src_rect = blit_target_.getTexture()->getSourceRect();
 
 	if(shader) {
+		shader->setDrawArea(rect(x, y, w, h));
 		shader->setSpriteArea(blit_target_.getTexture()->getSourceRectNormalised());
 		blit_target_.setShader(shader->getShader());
 	}
@@ -851,6 +854,7 @@ void Frame::drawCustom(graphics::AnuraShaderPtr shader, int x, int y, const std:
 	blit.setRotation(rotation, z_axis);
 
 	if(shader) {
+		shader->setDrawArea(rect(x, y, w, h));
 		shader->setSpriteArea(blit.getTexture()->getSourceRectNormalised());
 		blit.setShader(shader->getShader());
 	}

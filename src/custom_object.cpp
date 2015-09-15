@@ -2715,16 +2715,16 @@ void CustomObject::addAnimatedMovement(variant attr_var, variant options)
 
 	const int ncycles = options["duration"].as_int(10);
 
-	std::function<double(double)> easing_fn;
+	std::function<decimal(decimal)> easing_fn;
 	variant easing_var = options["easing"];
 	if(easing_var.is_function()) {
-		easing_fn = [=](double x) { std::vector<variant> args; args.emplace_back(variant(decimal(x))); return easing_var(args).as_decimal().as_float(); };
+		easing_fn = [=](decimal x) { std::vector<variant> args; args.emplace_back(variant(decimal(x))); return easing_var(args).as_decimal(); };
 	} else {
-		const std::string& easing = easing_var.as_string_default("swing");
+		const std::string& easing = easing_var.as_string_default("linear");
 		if(easing == "linear") {
-			easing_fn = [](double x) { return x; };
+			easing_fn = [](decimal x) { return x; };
 		} else if(easing == "swing") {
-			easing_fn = [](double x) { return 0.5*(1 - cos(x*3.14)); };
+			easing_fn = [](decimal x) { return decimal(0.5*(1 - cos(x.as_float()*3.14))); };
 		} else {
 			ASSERT_LOG(false, "Unknown easing: " << easing);
 		}
@@ -2734,8 +2734,8 @@ void CustomObject::addAnimatedMovement(variant attr_var, variant options)
 	values.reserve(slots.size()*ncycles);
 
 	for(int cycle = 0; cycle != ncycles; ++cycle) {
-		float ratio = ncycles <= 1 ? 1.0 : static_cast<float>(cycle)/static_cast<float>(ncycles-1);
-		ratio = static_cast<float>(easing_fn(ratio));
+		decimal ratio = ncycles <= 1 ? decimal(1) : decimal(cycle)/decimal(ncycles-1);
+		ratio = easing_fn(ratio);
 		for(int n = 0; n != slots.size(); ++n) {
 			values.emplace_back(interpolate_variants(begin_values[n], end_values[n], ratio));
 		}
