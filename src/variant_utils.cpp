@@ -87,7 +87,7 @@ glm::vec4 variant_to_vec4(const variant& v)
 	result[0] = v[0].as_float();
 	result[1] = v[1].as_float();
 	result[2] = v[2].as_float();
-	result[3] = v[2].as_float();
+	result[3] = v[3].as_float();
 	return result;
 }
 
