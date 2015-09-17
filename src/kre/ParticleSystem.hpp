@@ -223,6 +223,10 @@ namespace KRE
 
 			void getActivateParticleSystem(const std::string& name);
 			std::vector<ParticleSystemPtr>& getActiveParticleSystems() { return active_particle_systems_; }
+			const std::vector<ParticleSystemPtr>& getAllParticleSystems() const { return particle_systems_; }
+			const std::vector<TechniquePtr>& getTechniques() const { return techniques_; }
+			const std::vector<EmitterPtr>& getEmitters() const { return emitters_; }
+			const std::vector<AffectorPtr>& getAffectors() const { return affectors_; }
 
 			ParticleSystemPtr cloneParticleSystem(const std::string& name);
 			TechniquePtr cloneTechnique(const std::string& name);
