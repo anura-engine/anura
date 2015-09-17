@@ -33,17 +33,17 @@
 
 namespace graphics
 {
-	class ParticleSystemProxy : public game_logic::FormulaCallable
+	class ParticleSystemContainerProxy : public game_logic::FormulaCallable
 	{
 	public:
-		ParticleSystemProxy(const variant& node);
+		ParticleSystemContainerProxy(const variant& node);
 
 		void draw(const KRE::WindowPtr& wnd) const;
 		void process();
 
 		void surrenderReferences(GarbageCollector* collector);
 	private:
-		DECLARE_CALLABLE(ParticleSystemProxy);
+		DECLARE_CALLABLE(ParticleSystemContainerProxy);
 
 		KRE::Particles::ParticleSystemContainerPtr particle_system_container_;
 		KRE::SceneGraphPtr scene_;
@@ -54,6 +54,6 @@ namespace graphics
 		bool running_;
 	};
 
-	typedef boost::intrusive_ptr<ParticleSystemProxy> ParticleSystemProxyPtr; 
+	typedef boost::intrusive_ptr<ParticleSystemContainerProxy> ParticleSystemContainerProxyPtr; 
 }
 
