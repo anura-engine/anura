@@ -826,7 +826,7 @@ void CustomObject::createParticles(const variant& node)
 	if(node.is_null()) {
 		particles_.reset();
 	} else {
-		particles_.reset(new graphics::ParticleSystemProxy(node));
+		particles_.reset(new graphics::ParticleSystemContainerProxy(node));
 	}
 }
 

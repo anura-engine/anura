@@ -1148,11 +1148,20 @@ namespace
 		variant instantiation_commands_;
 	};
 
-	FUNCTION_DEF(spawn, 4, 6, "spawn(string type_id, int midpoint_x, int midpoint_y, (optional) properties map, (optional) list of commands cmd): will create a new object of type given by type_id with the given midpoint and facing. Immediately after creation the object will have any commands given by cmd executed on it. The child object will have the spawned event sent to it, and the parent object will have the child_spawned event sent to it.")
+	FUNCTION_DEF(spawn, 4, 6, "spawn(custom_obj|string type_id, int midpoint_x, int midpoint_y, (optional) properties map, (optional) list of commands cmd): will create a new object of type given by type_id with the given midpoint and facing. Immediately after creation the object will have any commands given by cmd executed on it. The child object will have the spawned event sent to it, and the parent object will have the child_spawned event sent to it.")
 
 		Formula::failIfStaticContext();
 
-		const std::string type = EVAL_ARG(0).as_string();
+		variant obj_type = EVAL_ARG(0);
+
+		boost::intrusive_ptr<CustomObject> prototype;
+		std::string type;
+		if(obj_type.is_string()) {
+			type = obj_type.as_string();
+		} else {
+			prototype.reset(obj_type.convert_to<CustomObject>());
+		}
+
 		const int x = EVAL_ARG(1).as_int();
 		const int y = EVAL_ARG(2).as_int();
 
@@ -1164,11 +1173,17 @@ namespace
 			facing = arg3.as_int() > 0;
 		}
 
-		boost::intrusive_ptr<CustomObject> obj(new CustomObject(type, x, y, facing));
-		obj->setPos(obj->x() - obj->getCurrentFrame().width() / 2 , obj->y() - obj->getCurrentFrame().height() / 2);
+		boost::intrusive_ptr<CustomObject> obj;
+		if(prototype) {
+			obj.reset(new CustomObject(*prototype));
+			obj->setPos(x - obj->getCurrentFrame().width() / 2 , y - obj->getCurrentFrame().height() / 2);
+		} else {
+			obj.reset(new CustomObject(type, x, y, facing));
+			obj->setPos(obj->x() - obj->getCurrentFrame().width() / 2 , obj->y() - obj->getCurrentFrame().height() / 2);
+		}
 
 		if(arg3.is_map()) {
-			ConstCustomObjectTypePtr type_ptr = CustomObjectType::getOrDie(type);
+			ConstCustomObjectTypePtr type_ptr = obj->getType();
 
 			variant last_key;
 
@@ -1210,17 +1225,28 @@ namespace
 		return variant(cmd);
 	FUNCTION_ARGS_DEF
 		//ASSERT_LOG(false, "spawn() not supported in strict mode " << debugPinpointLocation());
-		ARG_TYPE("string")
+		ARG_TYPE("custom_obj|string")
 		ARG_TYPE("int|decimal")
 		ARG_TYPE("int|decimal")
 		ARG_TYPE("int|map")
 		ARG_TYPE("commands")
 
+		std::string type_str;
+
 		variant v;
 		if(args()[0]->canReduceToVariant(v) && v.is_string()) {
-			game_logic::FormulaCallableDefinitionPtr type_def = CustomObjectType::getDefinition(v.as_string());
+			type_str = v.as_string();
+		} else {
+			variant_type_ptr type = args()[0]->queryVariantType();
+			if(type && type->is_custom_object()) {
+				type_str = *type->is_custom_object();
+			}
+		}
+
+		if(type_str.empty() == false) {
+			game_logic::FormulaCallableDefinitionPtr type_def = CustomObjectType::getDefinition(type_str);
 			const CustomObjectCallable* type = dynamic_cast<const CustomObjectCallable*>(type_def.get());
-			ASSERT_LOG(type, "Illegal object type: " << v.as_string() << " " << debugPinpointLocation());
+			ASSERT_LOG(type, "Illegal object type: " << type_str << " " << debugPinpointLocation());
 
 			if(args().size() > 3) {
 				variant_type_ptr map_type = args()[3]->queryVariantType();
@@ -1230,20 +1256,20 @@ namespace
 				if(props) {
 					for(int slot : type->slots_requiring_initialization()) {
 						const std::string& prop_id = type->getEntry(slot)->id;
-						ASSERT_LOG(props->count(variant(prop_id)), "Must initialize " << v.as_string() << "." << prop_id << " " << debugPinpointLocation());
+						ASSERT_LOG(props->count(variant(prop_id)), "Must initialize " << type_str << "." << prop_id << " " << debugPinpointLocation());
 					}
 
 					for(std::map<variant,variant_type_ptr>::const_iterator itor = props->begin(); itor != props->end(); ++itor) {
 						const int slot = type->getSlot(itor->first.as_string());
-						ASSERT_LOG(slot >= 0, "Unknown property " << v.as_string() << "." << itor->first.as_string() << " " << debugPinpointLocation());
+						ASSERT_LOG(slot >= 0, "Unknown property " << type_str << "." << itor->first.as_string() << " " << debugPinpointLocation());
 
 						const FormulaCallableDefinition::Entry& entry = *type->getEntry(slot);
-						ASSERT_LOG(variant_types_compatible(entry.getWriteType(), itor->second), "Initializing property " << v.as_string() << "." << itor->first.as_string() << " with type " << itor->second->to_string() << " when " << entry.getWriteType()->to_string() << " is expected " << debugPinpointLocation());
+						ASSERT_LOG(variant_types_compatible(entry.getWriteType(), itor->second), "Initializing property " << type_str << "." << itor->first.as_string() << " with type " << itor->second->to_string() << " when " << entry.getWriteType()->to_string() << " is expected " << debugPinpointLocation());
 					}
 				}
 			}
 
-			ASSERT_LOG(type->slots_requiring_initialization().empty() || (args().size() > 3 && args()[3]->queryVariantType()->is_map_of().first), "Illegal spawn of " << v.as_string() << " property " << type->getEntry(type->slots_requiring_initialization()[0])->id << " requires initialization " << debugPinpointLocation());
+			ASSERT_LOG(type->slots_requiring_initialization().empty() || (args().size() > 3 && args()[3]->queryVariantType()->is_map_of().first), "Illegal spawn of " << type_str << " property " << type->getEntry(type->slots_requiring_initialization()[0])->id << " requires initialization " << debugPinpointLocation());
 		}
 	RETURN_TYPE("commands")
 	END_FUNCTION_DEF(spawn)
@@ -1290,7 +1316,17 @@ namespace
 	FUNCTION_DEF(object, 1, 5, "object(string type_id, int midpoint_x, int midpoint_y, (optional) map properties) -> object: constructs and returns a new object. Note that the difference between this and spawn is that spawn returns a command to actually place the object in the Level. object only creates the object and returns it. It may be stored for later use.")
 
 		Formula::failIfStaticContext();
-		const std::string type = args()[0]->evaluate(variables).as_string();
+
+		variant obj_type = EVAL_ARG(0);
+
+		boost::intrusive_ptr<CustomObject> prototype;
+		std::string type;
+		if(obj_type.is_string()) {
+			type = obj_type.as_string();
+		} else {
+			prototype.reset(obj_type.convert_to<CustomObject>());
+		}
+
 		boost::intrusive_ptr<CustomObject> obj;
 
 		variant properties;
@@ -1306,12 +1342,21 @@ namespace
 			if(!properties.is_map()) {
 				face_right = properties.as_int() > 0;
 			}
-			obj.reset(new CustomObject(type, x, y, face_right));
+
+			if(prototype) {
+				obj.reset(new CustomObject(*prototype));
+			} else {
+				obj.reset(new CustomObject(type, x, y, face_right));
+			}
 		} else {
 			const int x = 0;
 			const int y = 0;
 			const bool face_right = true;
-			obj.reset(new CustomObject(type, x, y, face_right));
+			if(prototype) {
+				obj.reset(new CustomObject(*prototype));
+			} else {
+				obj.reset(new CustomObject(type, x, y, face_right));
+			}
 		}
 		
 		//adjust so the object's x/y is its midpoint.
@@ -1323,7 +1368,7 @@ namespace
 		}
 
 		if(properties.is_map()) {
-			ConstCustomObjectTypePtr type_ptr = CustomObjectType::getOrDie(type);
+			ConstCustomObjectTypePtr type_ptr = obj->getType();
 			variant last_key;
 			variant keys = properties.getKeys();
 			for(int n = 0; n != keys.num_elements(); ++n) {
@@ -1343,17 +1388,28 @@ namespace
 
 		return variant(obj.get());
 	FUNCTION_ARGS_DEF
-		ARG_TYPE("string")
+		ARG_TYPE("custom_obj|string")
 		ARG_TYPE("int|decimal")
 		ARG_TYPE("int|decimal")
 		ARG_TYPE("int|map")
 		ARG_TYPE("map")
 
+		std::string type_str;
+
 		variant v;
 		if(args()[0]->canReduceToVariant(v) && v.is_string()) {
-			game_logic::FormulaCallableDefinitionPtr type_def = CustomObjectType::getDefinition(v.as_string());
+			type_str = v.as_string();
+		} else {
+			variant_type_ptr type = args()[0]->queryVariantType();
+			if(type && type->is_custom_object()) {
+				type_str = *type->is_custom_object();
+			}
+		}
+
+		if(type_str.empty() == false) {
+			game_logic::FormulaCallableDefinitionPtr type_def = CustomObjectType::getDefinition(type_str);
 			const CustomObjectCallable* type = dynamic_cast<const CustomObjectCallable*>(type_def.get());
-			ASSERT_LOG(type, "Illegal object type: " << v.as_string() << " " << debugPinpointLocation());
+			ASSERT_LOG(type, "Illegal object type: " << type_str << " " << debugPinpointLocation());
 
 			if(args().size() > 4) {
 				variant_type_ptr map_type = args()[4]->queryVariantType();
@@ -1363,15 +1419,15 @@ namespace
 				if(props) {
 					for(int slot : type->slots_requiring_initialization()) {
 						const std::string& prop_id = type->getEntry(slot)->id;
-						ASSERT_LOG(props->count(variant(prop_id)), "Must initialize " << v.as_string() << "." << prop_id << " " << debugPinpointLocation());
+						ASSERT_LOG(props->count(variant(prop_id)), "Must initialize " << type_str << "." << prop_id << " " << debugPinpointLocation());
 					}
 
 					for(std::map<variant,variant_type_ptr>::const_iterator itor = props->begin(); itor != props->end(); ++itor) {
 						const int slot = type->getSlot(itor->first.as_string());
-						ASSERT_LOG(slot >= 0, "Unknown property " << v.as_string() << "." << itor->first.as_string() << " " << debugPinpointLocation());
+						ASSERT_LOG(slot >= 0, "Unknown property " << type_str << "." << itor->first.as_string() << " " << debugPinpointLocation());
 
 						const FormulaCallableDefinition::Entry& entry = *type->getEntry(slot);
-						ASSERT_LOG(variant_types_compatible(entry.getWriteType(), itor->second), "Initializing property " << v.as_string() << "." << itor->first.as_string() << " with type " << itor->second->to_string() << " when " << entry.getWriteType()->to_string() << " is expected " << debugPinpointLocation());
+						ASSERT_LOG(variant_types_compatible(entry.getWriteType(), itor->second), "Initializing property " << type_str << "." << itor->first.as_string() << " with type " << itor->second->to_string() << " when " << entry.getWriteType()->to_string() << " is expected " << debugPinpointLocation());
 					}
 				}
 			}
@@ -1382,6 +1438,11 @@ namespace
 		variant v;
 		if(args()[0]->canReduceToVariant(v) && v.is_string()) {
 			return variant_type::get_custom_object(v.as_string());
+		} else {
+			variant_type_ptr type = args()[0]->queryVariantType();
+			if(type && type->is_custom_object()) {
+				return variant_type::get_custom_object(*type->is_custom_object());
+			}
 		}
 
 		return parse_variant_type(variant("custom_obj"));

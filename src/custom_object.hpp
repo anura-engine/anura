@@ -68,6 +68,8 @@ public:
 	CustomObject(const CustomObject& o);
 	virtual ~CustomObject();
 
+	ConstCustomObjectTypePtr getType() const { return type_; }
+
 	void validate_properties();
 
 	bool isA(const std::string& type) const;
@@ -554,7 +556,7 @@ private:
 	std::vector<graphics::AnuraShaderPtr> effects_shaders_;
 
 	// new particles systems
-	graphics::ParticleSystemProxyPtr particles_;
+	graphics::ParticleSystemContainerProxyPtr particles_;
 
 	xhtml::DocumentObjectPtr document_;
 };
