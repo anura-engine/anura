@@ -72,7 +72,7 @@ namespace hex
 		// this is a convenience function.
 		logical::LogicalMapPtr getLogicalMap() { return map_; }
 
-		void surrenderReferences(GarbageCollector* collector);
+		void surrenderReferences(GarbageCollector* collector) override;
 
 		static HexMapPtr factory(const variant& n);
 	private:

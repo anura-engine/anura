@@ -67,16 +67,16 @@ namespace gui
 		void setDrawBackgroundFn(std::function<void()> fn) { draw_background_fn_ = fn; }
 		void setUpscaleFrame(bool upscale=true) { upscale_frame_ = upscale; }
 
-		virtual bool hasFocus() const;
+		virtual bool hasFocus() const override;
 		void setProcessHook(std::function<void()> fn) { on_process_ = fn; }
 		static void draw_last_scene();
-		virtual WidgetPtr getWidgetById(const std::string& id);
-		virtual ConstWidgetPtr getWidgetById(const std::string& id) const;
+		virtual WidgetPtr getWidgetById(const std::string& id) override;
+		virtual ConstWidgetPtr getWidgetById(const std::string& id) const override;
 
 		void prepareDraw();
 		void completeDraw();
 
-		std::vector<WidgetPtr> getChildren() const;
+		std::vector<WidgetPtr> getChildren() const override;
 
 		//add standardized okay/cancel buttons in the bottom right corner.
 		void addOkAndCancelButtons();

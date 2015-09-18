@@ -58,13 +58,13 @@ namespace KRE
 	public:
 		HardwareAttributeImpl(AttributeBase* parent) : HardwareAttribute(parent), value_(0) {}
 		virtual ~HardwareAttributeImpl() {}
-		void update(const void* value, ptrdiff_t offset, size_t size) {
+		void update(const void* value, ptrdiff_t offset, size_t size) override {
 			if(offset == 0) {
 				value_ = reinterpret_cast<intptr_t>(value);
 			}
 		}
-		void bind() {}
-		void unbind() {}
+		void bind() override {}
+		void unbind() override {}
 		intptr_t value() override { return value_; }
 		HardwareAttributePtr create(AttributeBase* parent) override {
 			return std::make_shared<HardwareAttributeImpl>(parent);

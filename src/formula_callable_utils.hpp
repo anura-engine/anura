@@ -48,7 +48,7 @@ namespace game_logic
 		variant& backDirectAccess() { return values_.back(); }
 		void reserve(size_t n) { values_.reserve(n); }
 
-		variant getValue(const std::string& key) const {
+		variant getValue(const std::string& key) const override {
 			if(value_names_) {
 				for(int n = 0; n != value_names_->size(); ++n) {
 					if((*value_names_)[n] == key) {
@@ -64,7 +64,7 @@ namespace game_logic
 			return variant();
 		}
 
-		variant getValueBySlot(int slot) const {
+		variant getValueBySlot(int slot) const override {
 			if(slot < base_slot_) {
 				return fallback_->queryValueBySlot(slot);
 			}

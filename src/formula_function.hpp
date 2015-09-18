@@ -158,7 +158,7 @@ namespace game_logic
 
 		virtual void setDebugInfo(const variant& parent_formula,
 									std::string::const_iterator begin_str,
-									std::string::const_iterator end_str);
+									std::string::const_iterator end_str) override;
 
 	protected:
 		const std::string& name() const { return name_; }

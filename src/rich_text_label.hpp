@@ -35,7 +35,7 @@ namespace gui
 	public:
 		RichTextLabel(const variant& v, game_logic::FormulaCallable* e);
 
-		std::vector<WidgetPtr> getChildren() const;
+		std::vector<WidgetPtr> getChildren() const override;
 
 		WidgetPtr clone() const override;
 	private:

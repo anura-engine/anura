@@ -2080,7 +2080,7 @@ namespace {
 				const_cast<FormulaCallable*>(base_.get())->mutateValue(key, value);
 			}
 
-			variant getValueBySlot(int slot) const {
+			variant getValueBySlot(int slot) const override {
 				if(slot >= info_->base_slot) {
 					slot -= info_->base_slot;
 					if(static_cast<unsigned>(slot) < results_cache_.size() && results_cache_[slot].is_null() == false) {
@@ -2099,7 +2099,7 @@ namespace {
 				return base_->queryValueBySlot(slot);
 			}
 	
-			variant getValue(const std::string& key) const {
+			variant getValue(const std::string& key) const override {
 				const variant result = base_->queryValue(key);
 				if(result.is_null()) {
 					std::vector<std::string>::const_iterator i = std::find(info_->names.begin(), info_->names.end(), key);

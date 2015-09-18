@@ -127,7 +127,7 @@ namespace KRE
 			void internalCreate(Particle& p, float t) override {
 				// XXX todo
 			}
-			virtual EmitterPtr clone() {
+			virtual EmitterPtr clone() override {
 				return std::make_shared<LineEmitter>(*this);
 			}
 		private:

@@ -235,7 +235,7 @@ namespace game_logic
 	private:
 		//MapFormulaCallable(const MapFormulaCallable&);
 
-		variant getValueBySlot(int slot) const {
+		variant getValueBySlot(int slot) const override {
 			return fallback_->queryValueBySlot(slot);
 		}
 
@@ -243,11 +243,11 @@ namespace game_logic
 			const_cast<FormulaCallable*>(fallback_)->mutateValueBySlot(slot, value);
 		}
 
-		virtual void visitValues(FormulaCallableVisitor& visitor);
+		virtual void visitValues(FormulaCallableVisitor& visitor) override;
 
-		variant getValue(const std::string& key) const;
-		void getInputs(std::vector<FormulaInput>* inputs) const;
-		void setValue(const std::string& key, const variant& value);
+		variant getValue(const std::string& key) const override;
+		void getInputs(std::vector<FormulaInput>* inputs) const override;
+		void setValue(const std::string& key, const variant& value) override;
 		std::map<std::string,variant> values_;
 		const FormulaCallable* fallback_;
 	};

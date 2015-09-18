@@ -41,7 +41,7 @@ namespace xhtml
 	{
 	public:
 		StyleObject(const StyleNodePtr& styles);
-		void surrenderReferences(GarbageCollector* collector);
+		void surrenderReferences(GarbageCollector* collector) override;
 	private:
 		DECLARE_CALLABLE(StyleObject);
 		StyleNodePtr style_node_;
@@ -59,7 +59,7 @@ namespace xhtml
 		game_logic::MapFormulaCallablePtr createKeyEventCallable(game_logic::FormulaCallable* environment, const variant& params);
 		static bool isMouseEvent(EventHandlerId evtname);
 		static bool isKeyEvent(EventHandlerId evtname);
-		void surrenderReferences(GarbageCollector* collector);
+		void surrenderReferences(GarbageCollector* collector) override;
 		void setScript(EventHandlerId evtname, const variant& script);
 		variant getScript(EventHandlerId evtname) const;
 	private:
@@ -82,7 +82,7 @@ namespace xhtml
 		void process();
 		bool handleEvents(const point& p, const SDL_Event& e);
 
-		void surrenderReferences(GarbageCollector* collector);
+		void surrenderReferences(GarbageCollector* collector) override;
 
 		void setEnvironment(game_logic::FormulaCallable* environment) { environment_ = environment; }
 		game_logic::FormulaCallable* getEnvironment() const { return environment_; }

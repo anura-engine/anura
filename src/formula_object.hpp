@@ -96,7 +96,7 @@ namespace game_logic
 		explicit FormulaObject(const std::string& type, variant args=variant());
 		void callConstructors(variant args);
 
-		variant serializeToWml() const;
+		variant serializeToWml() const override;
 
 		variant getValue(const std::string& key) const override;
 		variant getValueBySlot(int slot) const override;

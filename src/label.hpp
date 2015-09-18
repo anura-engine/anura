@@ -55,7 +55,7 @@ namespace gui
 		void setFont(const std::string& font);
 		void setText(const std::string& text);
 		void setFixedWidth(bool fixed_width);
-		virtual void setDim(int x, int y);
+		virtual void setDim(int x, int y) override;
 		std::string font() const { return font_; }
 		int size() { return size_; }
 		std::string text() { return text_; }
@@ -71,8 +71,8 @@ namespace gui
 		void setTexture(KRE::TexturePtr t);
 
 		virtual bool handleEvent(const SDL_Event& event, bool claimed) override;
-		virtual variant handleWrite();
-		virtual WidgetSettingsDialog* settingsDialog(int x, int y, int w, int h);
+		virtual variant handleWrite() override;
+		virtual WidgetSettingsDialog* settingsDialog(int x, int y, int w, int h) override;
 
 	private:
 		DECLARE_CALLABLE(Label);
@@ -110,7 +110,7 @@ namespace gui
 		int getMaxProgress() { return stages_; }
 		WidgetPtr clone() const override;
 	protected:
-		virtual void recalculateTexture();
+		virtual void recalculateTexture() override;
 	private:
 		DECLARE_CALLABLE(DialogLabel);
 
