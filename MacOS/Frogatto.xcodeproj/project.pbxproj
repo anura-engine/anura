@@ -2436,7 +2436,7 @@
 		C010C564160AFAD9006E7D90 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0610;
+				LastUpgradeCheck = 0700;
 				ORGANIZATIONNAME = "Richard Kettering";
 			};
 			buildConfigurationList = C010C567160AFAD9006E7D90 /* Build configuration list for PBXProject "Frogatto" */;
@@ -2932,6 +2932,7 @@
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_DYNAMIC_NO_PIC = YES;
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
@@ -3024,6 +3025,7 @@
 					"-rpath",
 					"@executable_path/../Frameworks",
 				);
+				PRODUCT_BUNDLE_IDENTIFIER = "com.frogatto.frogatto-mac";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				USER_HEADER_SEARCH_PATHS = "../external/include ../src";
 				WARNING_CFLAGS = (
@@ -3080,6 +3082,7 @@
 					"-rpath",
 					"@executable_path/../Frameworks",
 				);
+				PRODUCT_BUNDLE_IDENTIFIER = "com.frogatto.frogatto-mac";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				USER_HEADER_SEARCH_PATHS = "../external/include ../src";
 				WARNING_CFLAGS = (
