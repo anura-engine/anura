@@ -169,7 +169,6 @@ namespace KRE
 				float ff_time = float(node["fast_forward"]["time"].as_float());
 				float ff_interval = float(node["fast_forward"]["interval"].as_float());
 				fast_forward_.reset(new std::pair<float,float>(ff_time, ff_interval));
-				fprintf(stderr, "ZZZ: fast forward: %f %f\n", ff_time, ff_interval);
 			}
 
 			if(node.has_key("scale_velocity")) {
