@@ -423,9 +423,11 @@ namespace KRE
 		void Technique::handleEmitProcess(float t)
 		{
 			// run objects
-			for(auto e : active_emitters_) {
+			std::vector<EmitterPtr> active_emitters = active_emitters_;
+			for(auto e : active_emitters) {
 				e->emitProcess(t);
 			}
+
 			for(auto a : active_affectors_) {
 				a->emitProcess(t);
 			}
@@ -433,6 +435,10 @@ namespace KRE
 			// Decrement the ttl on particles
 			for(auto& p : active_particles_) {
 				p.current.time_to_live -= t;
+			}
+
+			for(auto& e : active_emitters_) {
+				e->current.time_to_live -= t;
 			}
 
 			// Kill end-of-life particles

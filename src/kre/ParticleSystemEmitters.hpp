@@ -59,6 +59,7 @@ namespace KRE
 			virtual void handleDraw(const WindowPtr& wnd) const override;
 			void handleEnable() override;
 			void visualEmitProcess(float t);
+			void emitterEmitProcess(float t);
 			std::weak_ptr<Technique> technique_;
 
 			// These are generation parameters.

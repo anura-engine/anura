@@ -195,7 +195,7 @@ namespace KRE
 		{
 			init_physics_parameters(initial);
 			init_physics_parameters(current);
-			initial.time_to_live = current.time_to_live = 3;
+			initial.time_to_live = current.time_to_live = 100000000.0;
 			initial.velocity = current.velocity = 0;
 
 			if(node.has_key("emission_rate")) {
@@ -378,6 +378,7 @@ namespace KRE
 					enable(false);
 				}
 			}
+
 			//LOG_DEBUG(name() << " emits " << cnt << " particles, " << particles_remaining_ << " remain. active_particles=" << particles.size() << ", t=" << getTechnique()->getParticleSystem()->getElapsedTime());
 
 			// XXX: techincally this shouldn't be needed as we reserve the default quota upon initialising
@@ -398,6 +399,35 @@ namespace KRE
 				internalCreate(*it, t);
 			}
 			setParticleStartingValues(start, particles.end());
+		}
+
+		void Emitter::emitterEmitProcess(float t)
+		{
+			auto tq = getTechnique();
+			std::vector<EmitterPtr>& emitters = tq->getActiveEmitters();
+
+			int cnt = getEmittedParticleCountPerCycle(t);
+			if(duration_) {
+				particles_remaining_ -= cnt;
+				if(particles_remaining_ <= 0) {
+					enable(false);
+				}
+			}
+
+			if(cnt <= 0) {
+				return;
+			}
+
+			auto container = getParentContainer();
+
+			for(int i = 0; i < cnt; ++i) {
+				EmitterPtr spawned_child = container->cloneEmitter(emits_name_);	
+				spawned_child->init(getTechnique());
+				initParticle(*spawned_child, t);
+				internalCreate(*spawned_child, t);
+				memcpy(&spawned_child->current, &spawned_child->initial, sizeof(spawned_child->current));
+				tq->getActiveEmitters().push_back(spawned_child);
+			}
 		}
 
 		void Emitter::handleEnable()
@@ -427,7 +457,7 @@ namespace KRE
 			if(isEnabled()) {
 				switch(emits_type_) {
 				case EmitsType::VISUAL:		visualEmitProcess(t); break;
-				case EmitsType::EMITTER:	// XXX writeme
+				case EmitsType::EMITTER:	emitterEmitProcess(t); break;
 				case EmitsType::AFFECTOR:	// XXX writeme
 				case EmitsType::TECHNIQUE:	// XXX writeme
 				case EmitsType::SYSTEM:		// XXX writeme
@@ -508,7 +538,7 @@ namespace KRE
 				p.initial.orientation = current.orientation;
 			}
 			p.initial.direction = getInitialDirection();
-			//std::cerr << "initial direction: " << p.initial.direction << "\n";
+			//std::cerr << "initial direction: " << p.initial.direction << " vel = " << p.initial.velocity << "\n";
 			p.emitted_by = this;
 		}
 
@@ -535,7 +565,7 @@ namespace KRE
 		glm::vec3 Emitter::getInitialDirection() const
 		{
 			float angle = generateAngle();
-			//std::cerr << "angle:" << angle;
+			//std::cerr << "angle:" << angle << "\n";
 			if(angle != 0) {
 				return create_deviating_vector(angle, initial.direction);
 			}
