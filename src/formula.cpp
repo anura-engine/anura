@@ -827,9 +827,9 @@ namespace {
 							suggested_match = "\nMaybe you meant '" + *candidate_match + "'?\n";
 						}
 						if(callable_def_->getTypeName() != nullptr) {
-							STRICT_ERROR("Unknown symbol '" << id_ << "' in " << *callable_def_->getTypeName() << " " << debugPinpointLocation() << suggested_match << "\nKnown symbols: " << known << "\n");
+							STRICT_ERROR("Unknown symbol '" << id_ << "' in " << *callable_def_->getTypeName() << " " << debugPinpointLocation() << suggested_match << "\nKnown symbols:\n" << known << "\n");
 						} else {
-							STRICT_ERROR("Unknown identifier '" << id_ << "' " << debugPinpointLocation() << suggested_match << "\nIdentifiers that are valid in this scope: " << known << "\n");
+							STRICT_ERROR("Unknown identifier '" << id_ << "' " << debugPinpointLocation() << suggested_match << "\nIdentifiers that are valid in this scope:\n" << known << "\n");
 						}
 					} else if(callable_def_) {
 						std::string type_name = "unk";
