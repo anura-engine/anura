@@ -194,6 +194,8 @@ namespace KRE
 
 			static ParticleSystemPtr factory(std::weak_ptr<ParticleSystemContainer> parent, const variant& node);
 			ParticleSystemPtr clone() const;
+
+			void fastForward();
 		private:
 			void init(const variant& node);
 			void notifyNodeAttached(std::weak_ptr<SceneNode> parent) override;

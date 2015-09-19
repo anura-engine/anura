@@ -50,6 +50,10 @@ namespace graphics
 
 		particle_system_container_ = Particles::ParticleSystemContainer::create(scene_, node);
 		root_->attachNode(particle_system_container_);
+
+		for(auto p : particle_system_container_->getActiveParticleSystems()) {
+			p->fastForward();
+		}
 	}
 
 	void ParticleSystemContainerProxy::draw(const WindowPtr& wnd) const

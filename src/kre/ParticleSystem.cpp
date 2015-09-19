@@ -169,6 +169,7 @@ namespace KRE
 				float ff_time = float(node["fast_forward"]["time"].as_float());
 				float ff_interval = float(node["fast_forward"]["interval"].as_float());
 				fast_forward_.reset(new std::pair<float,float>(ff_time, ff_interval));
+				fprintf(stderr, "ZZZ: fast forward: %f %f\n", ff_time, ff_interval);
 			}
 
 			if(node.has_key("scale_velocity")) {
@@ -208,7 +209,10 @@ namespace KRE
 					tq->setParent(get_this_ptr());
 				}
 			}
+		}
 
+		void ParticleSystem::fastForward()
+		{
 			if(fast_forward_) {
 				for(float t = 0; t < fast_forward_->first; t += fast_forward_->second) {
 					update(fast_forward_->second);
