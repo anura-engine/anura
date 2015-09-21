@@ -41,7 +41,7 @@ namespace graphics
 		void draw(const KRE::WindowPtr& wnd) const;
 		void process();
 
-		void surrenderReferences(GarbageCollector* collector);
+		void surrenderReferences(GarbageCollector* collector) override;
 	private:
 		DECLARE_CALLABLE(ParticleSystemContainerProxy);
 

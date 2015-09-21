@@ -220,7 +220,7 @@ namespace xhtml
 				}
 			}
 			bool isReplaced() const override { return true; }
-			KRE::SceneObjectPtr getRenderable()
+			KRE::SceneObjectPtr getRenderable() override
 			{
 				if(tex_ != nullptr) {
 					auto b = std::make_shared<KRE::Blittable>(tex_);
@@ -279,7 +279,7 @@ namespace xhtml
 					obj_->process(dt);
 				}
 			}
-			KRE::SceneObjectPtr getRenderable()
+			KRE::SceneObjectPtr getRenderable() override
 			{
 				if(obj_) {
 					return obj_->getRenderable();
@@ -452,7 +452,7 @@ namespace xhtml
 				return true; 
 			}
 			bool isReplaced() const override { return true; }
-			KRE::SceneObjectPtr getRenderable()
+			KRE::SceneObjectPtr getRenderable() override
 			{
 				switch(type_) {
 					case InputElementType::CHECKBOX: {
@@ -539,7 +539,7 @@ namespace xhtml
 				}
 			}
 			bool isReplaced() const override { return true; }
-			KRE::SceneObjectPtr getRenderable()
+			KRE::SceneObjectPtr getRenderable() override
 			{
 				if(tex_ != nullptr) {
 					return std::make_shared<KRE::Blittable>(tex_);

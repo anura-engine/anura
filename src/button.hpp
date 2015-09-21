@@ -55,33 +55,33 @@ namespace gui
 		Button(WidgetPtr label, std::function<void ()> onclick, BUTTON_STYLE button_style = BUTTON_STYLE_NORMAL, BUTTON_RESOLUTION buttonResolution = BUTTON_SIZE_NORMAL_RESOLUTION);
 		Button(const variant& v, game_logic::FormulaCallable* e);
 		void setColorScheme(const variant& v);
-		virtual WidgetPtr getWidgetById(const std::string& id);
-		virtual ConstWidgetPtr getWidgetById(const std::string& id) const;
+		virtual WidgetPtr getWidgetById(const std::string& id) override;
+		virtual ConstWidgetPtr getWidgetById(const std::string& id) const override;
 		void setClickHandler(std::function<void ()> click_fun) { onclick_ = click_fun; }
 
 		void setHPadding(int hpad);
 		void setVPadding(int vpad);
 
-		virtual void setFocus(bool f=true);
+		virtual void setFocus(bool f=true) override;
 
-		virtual void doExecute();
+		virtual void doExecute() override;
 
 		BUTTON_RESOLUTION buttonResolution() const { return button_resolution_; }
 
-		std::vector<WidgetPtr> getChildren() const;
+		std::vector<WidgetPtr> getChildren() const override;
 
 		virtual WidgetPtr clone() const override;
 	protected:
 		void setLabel(WidgetPtr label);
 		virtual void handleProcess() override;
-		virtual variant handleWrite();
-		virtual WidgetSettingsDialog* settingsDialog(int x, int y, int w, int h);
+		virtual variant handleWrite() override;
+		virtual WidgetSettingsDialog* settingsDialog(int x, int y, int w, int h) override;
 
 		void surrenderReferences(GarbageCollector* collector) override;
 
 	private:
 		DECLARE_CALLABLE(Button);
-		virtual void visitValues(game_logic::FormulaCallableVisitor& visitor);
+		virtual void visitValues(game_logic::FormulaCallableVisitor& visitor) override;
 
 		void setup();
 

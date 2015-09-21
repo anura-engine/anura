@@ -91,8 +91,8 @@ public:
 	//in the main thread.
 	void finishLoading();
 
-	virtual game_logic::FormulaPtr createFormula(const variant& v);
-	bool executeCommand(const variant& var);
+	virtual game_logic::FormulaPtr createFormula(const variant& v) override;
+	bool executeCommand(const variant& var) override;
 
 	//function which sets which player we're controlling on this machine.
 	void setMultiplayerSlot(int slot);

@@ -55,12 +55,12 @@ namespace game_logic
 		void surrenderReferences(GarbageCollector* collector) override;
 
 	private:
-		variant getValue(const std::string& key) const;
-		variant getValueBySlot(int slot) const;
-		void setValue(const std::string& key, const variant& value);
-		void setValueBySlot(int slot, const variant& value);
+		variant getValue(const std::string& key) const override;
+		variant getValueBySlot(int slot) const override;
+		void setValue(const std::string& key, const variant& value) override;
+		void setValueBySlot(int slot, const variant& value) override;
 
-		void getInputs(std::vector<FormulaInput>* inputs) const;
+		void getInputs(std::vector<FormulaInput>* inputs) const override;
 
 		std::string debug_object_name_;
 	

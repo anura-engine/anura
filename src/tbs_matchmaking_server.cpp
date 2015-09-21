@@ -332,7 +332,7 @@ public:
 	}
 
 
-	void handlePost(socket_ptr socket, variant doc, const http::environment& env)
+	void handlePost(socket_ptr socket, variant doc, const http::environment& env) override
 	{
 		int request_session_id = -1;
 		std::map<std::string, std::string>::const_iterator i = env.find("cookie");
@@ -955,7 +955,7 @@ public:
 #endif
 	}
 
-	void handleGet(socket_ptr socket, const std::string& url, const std::map<std::string, std::string>& args)
+	void handleGet(socket_ptr socket, const std::string& url, const std::map<std::string, std::string>& args) override
 	{
 		if(url == "/tbs_monitor") {
 			send_msg(socket, "text/json", build_status().write_json(), "");

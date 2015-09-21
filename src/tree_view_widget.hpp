@@ -54,11 +54,11 @@ namespace gui
 			highlight_color_ = col;
 		}
 		variant getTree() const { return tree_; }
-		virtual WidgetPtr getWidgetById(const std::string& id);
-		virtual ConstWidgetPtr getWidgetById(const std::string& id) const;
+		virtual WidgetPtr getWidgetById(const std::string& id) override;
+		virtual ConstWidgetPtr getWidgetById(const std::string& id) const override;
 		virtual WidgetPtr clone() const override;
 	protected:
-		void onSetYscroll(int old_value, int value);
+		void onSetYscroll(int old_value, int value) override;
 		virtual void init();
 		virtual void onSelect(Uint8 button, int selection);
 
@@ -122,9 +122,9 @@ namespace gui
 		void externalEditorSave(variant* v, const variant &new_value);
 		WidgetPtr clone() const override;
 	protected:
-		virtual void init();
-		virtual void onSelect(Uint8 button, int selection);
-		virtual void onTraverseElement(const variant& key, variant* parent, variant* value, int row);
+		virtual void init() override;
+		virtual void onSelect(Uint8 button, int selection) override;
+		virtual void onTraverseElement(const variant& key, variant* parent, variant* value, int row) override;
 	private:
 		DECLARE_CALLABLE(TreeEditorWidget)
 

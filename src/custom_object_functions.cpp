@@ -2316,7 +2316,7 @@ RETURN_TYPE("bool")
 		  : target_(target), event_(event), callable_(callable)
 		{}
 
-		virtual void execute(Level& lvl, Entity& ob) const {
+		virtual void execute(Level& lvl, Entity& ob) const override {
 			ASSERT_LOG(event_depth < 1000, "INFINITE (or too deep?) RECURSION FOR EVENT " << event_);
 			event_depth_scope scope;
 			Entity* e = target_ ? target_.get() : &ob;
@@ -2561,7 +2561,7 @@ RETURN_TYPE("bool")
 		explicit remove_object_command(EntityPtr e) : e_(e)
 		{}
 
-		virtual void execute(Level& lvl, Entity& ob) const {
+		virtual void execute(Level& lvl, Entity& ob) const override {
 			lvl.remove_character(e_);
 		}
 
@@ -2698,7 +2698,7 @@ RETURN_TYPE("bool")
 		schedule_command(int cycles, variant cmd) : cycles_(cycles), cmd_(cmd)
 		{}
 
-		virtual void execute(Level& lvl, Entity& ob) const {
+		virtual void execute(Level& lvl, Entity& ob) const override {
 			ob.addScheduledCommand(cycles_, cmd_);
 		}
 

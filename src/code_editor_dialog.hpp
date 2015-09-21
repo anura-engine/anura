@@ -67,7 +67,7 @@ private:
 	void init_files_grid();
 
 	bool handleEvent(const SDL_Event& event, bool claimed) override;
-	void handleDrawChildren() const;
+	void handleDrawChildren() const override;
 
 	void changeFontSize(int amount);
 

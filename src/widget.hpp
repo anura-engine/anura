@@ -172,12 +172,12 @@ namespace gui
 
 		virtual void handleDraw() const = 0;
 
-		void surrenderReferences(GarbageCollector* collector);
+		void surrenderReferences(GarbageCollector* collector) override;
 
 	private:
 		DECLARE_CALLABLE(Widget);
 		
-		virtual void visitValues(game_logic::FormulaCallableVisitor& visitor) {}
+		virtual void visitValues(game_logic::FormulaCallableVisitor& visitor) override {}
 		virtual void handleColorChanged() {}
 
 		int x_, y_;

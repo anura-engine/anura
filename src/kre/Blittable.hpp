@@ -74,7 +74,7 @@ namespace KRE
 		void setChanged() const { changed_ = true; }
 	private:
 		void init();
-		virtual void onTextureChanged() { changed_ = true; }
+		virtual void onTextureChanged() override { changed_ = true; }
 
 		std::shared_ptr<Attribute<vertex_texcoord>> attribs_;
 		rectf draw_rect_;

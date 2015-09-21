@@ -300,7 +300,7 @@ namespace {
 			fn_(context, args_);
 		}
 
-		bool isCairoOp() const { return true; }
+		bool isCairoOp() const override { return true; }
 	private:
 		DECLARE_CALLABLE(cairo_op);
 	
