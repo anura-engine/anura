@@ -3885,7 +3885,7 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 		static std::map<std::string, variant> cache2;
 		return cache2;
 	}
-		}
+}
 
 		PREF_BOOL(write_backed_maps, false, "Write to backed maps such as used in Citadel's evolutionary system");
 
@@ -4084,8 +4084,9 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 				Formula::failIfStaticContext();
 			}
 
-			std::string docname = args()[0]->evaluate(variables).as_string();
-			ASSERT_LOG(docname.empty() == false, "DOCUMENT NAME GIVEN TO get_document() IS EMPTY");
+			variant base_docname_var = args()[0]->evaluate(variables);
+			const std::string& base_docname = base_docname_var.as_string();
+			ASSERT_LOG(base_docname.empty() == false, "DOCUMENT NAME GIVEN TO get_document() IS EMPTY");
 
 			bool allow_failure = false;
 			bool prefs_directory = false;
@@ -4104,10 +4105,12 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 				}
 			}
 
-			auto itor = get_doc_cache(prefs_directory).find(docname);
+			auto itor = get_doc_cache(prefs_directory).find(base_docname);
 			if(itor != get_doc_cache(prefs_directory).end()) {
 				return itor->second;
 			}
+
+			std::string docname = base_docname;
 
 			ASSERT_LOG(std::adjacent_find(docname.begin(), docname.end(), consecutive_periods) == docname.end(), "DOCUMENT NAME CONTAINS ADJACENT PERIODS " << docname);
 
