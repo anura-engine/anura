@@ -202,7 +202,7 @@ namespace
 			thread_.reset(new threading::thread("vi_editor_thread", std::bind(&ViEditor::runThread, this)));
 		}
 
-		void shutdown()
+		void shutdown() override
 		{
 			{
 				threading::lock l(mutex_);
@@ -212,7 +212,7 @@ namespace
 			thread_.reset();
 		}
 
-		void loadFile(const std::string& fname_input)
+		void loadFile(const std::string& fname_input) override
 		{
 			const std::string fname = normalize_fname(fname_input);
 

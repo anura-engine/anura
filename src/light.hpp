@@ -56,9 +56,9 @@ class CircleLight : public Light
 public:
 	CircleLight(const CustomObject& obj, variant node);
 	CircleLight(const CustomObject& obj, int radius);
-	variant write() const;
-	void process();
-	bool onScreen(const rect& screen_area) const;
+	variant write() const override;
+	void process() override;
+	bool onScreen(const rect& screen_area) const override;
 	void preRender(const KRE::WindowPtr& wnd) override;
 private:
 	DECLARE_CALLABLE(CircleLight);

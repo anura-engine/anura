@@ -35,7 +35,7 @@ namespace KRE
 
 		// Blit's a texture from co-ordinates given in src to the screen co-ordinates dst
 		virtual void blitTexture(const TexturePtr& tex, const rect& src, float rotation, const rect& dst, const Color& color, CanvasBlitFlags flags) const override;
-		virtual void blitTexture(const TexturePtr& tex, const std::vector<vertex_texcoord>& vtc, float rotation, const Color& color);
+		virtual void blitTexture(const TexturePtr& tex, const std::vector<vertex_texcoord>& vtc, float rotation, const Color& color) override;
 		// Blit a texture to the given co-ordinates on the display. Assumes the whole texture is being used.
 		void blitTexture(const TexturePtr& tex, float rotation, const rect& dst, const Color& color) const;
 		void blitTexture(const TexturePtr& tex, float rotation, int x, int y, const Color& color) const;

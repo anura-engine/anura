@@ -1497,7 +1497,7 @@ namespace game_logic
 				ExpressionPtr expr_;
 				const FormulaCallable* fallback_;
 				mutable variant a_, b_;
-				variant getValue(const std::string& key) const {
+				variant getValue(const std::string& key) const override {
 					if(key == "a") {
 						return a_;
 					} else if(key == "b") {
@@ -1507,7 +1507,7 @@ namespace game_logic
 					}
 				}
 
-				variant getValueBySlot(int slot) const {
+				variant getValueBySlot(int slot) const override {
 					if(slot == 0) {
 						return a_;
 					} else if(slot == 1) {
@@ -1526,7 +1526,7 @@ namespace game_logic
 					const_cast<FormulaCallable*>(fallback_)->mutateValueBySlot(slot-2, value);
 				}
 
-				void getInputs(std::vector<FormulaInput>* inputs) const {
+				void getInputs(std::vector<FormulaInput>* inputs) const override {
 					fallback_->getInputs(inputs);
 				}
 			public:
@@ -1559,7 +1559,7 @@ namespace game_logic
 					}
 				}
 
-				int getSlot(const std::string& key) const {
+				int getSlot(const std::string& key) const override {
 					if(key == "a") { return 0; }
 					if(key == "b") { return 1; }
 
@@ -1607,11 +1607,11 @@ namespace game_logic
 					return nullptr;
 				}
 
-				int getNumSlots() const {
+				int getNumSlots() const override {
 					return 2 + (base_ ? base_->getNumSlots() : 0);
 				}
 
-				int getSubsetSlotBase(const FormulaCallableDefinition* subset) const
+				int getSubsetSlotBase(const FormulaCallableDefinition* subset) const override
 				{
 					if(!base_) {
 						return -1;
@@ -2270,7 +2270,7 @@ FUNCTION_DEF_IMPL
 					index_ = i;
 				}
 			private:
-				variant getValue(const std::string& key) const {
+				variant getValue(const std::string& key) const override {
 					if((value_name_.empty() && key == "value") ||
 					   (!value_name_.empty() && key == value_name_)) {
 						return value_;
@@ -2285,7 +2285,7 @@ FUNCTION_DEF_IMPL
 					}
 				}
 
-				variant getValueBySlot(int slot) const {
+				variant getValueBySlot(int slot) const override {
 					ASSERT_LOG(slot >= 0, "BAD SLOT VALUE: " << slot);
 					if(slot < NUM_MAP_CALLABLE_SLOTS) {
 						switch(slot) {
@@ -2654,7 +2654,7 @@ FUNCTION_DEF_IMPL
 					index_ = i;
 				}
 			private:
-				variant getValue(const std::string& key) const {
+				variant getValue(const std::string& key) const override {
 					if(key == "v") {
 						return value_;
 					} else if(key == "i") {
@@ -2664,7 +2664,7 @@ FUNCTION_DEF_IMPL
 					}
 				}
 
-				variant getValueBySlot(int slot) const {
+				variant getValueBySlot(int slot) const override {
 					return backup_.queryValueBySlot(slot);
 				}
 

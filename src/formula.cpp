@@ -827,9 +827,9 @@ namespace {
 							suggested_match = "\nMaybe you meant '" + *candidate_match + "'?\n";
 						}
 						if(callable_def_->getTypeName() != nullptr) {
-							STRICT_ERROR("Unknown symbol '" << id_ << "' in " << *callable_def_->getTypeName() << " " << debugPinpointLocation() << suggested_match << "\nKnown symbols: " << known << "\n");
+							STRICT_ERROR("Unknown symbol '" << id_ << "' in " << *callable_def_->getTypeName() << " " << debugPinpointLocation() << suggested_match << "\nKnown symbols:\n" << known << "\n");
 						} else {
-							STRICT_ERROR("Unknown identifier '" << id_ << "' " << debugPinpointLocation() << suggested_match << "\nIdentifiers that are valid in this scope: " << known << "\n");
+							STRICT_ERROR("Unknown identifier '" << id_ << "' " << debugPinpointLocation() << suggested_match << "\nIdentifiers that are valid in this scope:\n" << known << "\n");
 						}
 					} else if(callable_def_) {
 						std::string type_name = "unk";
@@ -2080,7 +2080,7 @@ namespace {
 				const_cast<FormulaCallable*>(base_.get())->mutateValue(key, value);
 			}
 
-			variant getValueBySlot(int slot) const {
+			variant getValueBySlot(int slot) const override {
 				if(slot >= info_->base_slot) {
 					slot -= info_->base_slot;
 					if(static_cast<unsigned>(slot) < results_cache_.size() && results_cache_[slot].is_null() == false) {
@@ -2099,7 +2099,7 @@ namespace {
 				return base_->queryValueBySlot(slot);
 			}
 	
-			variant getValue(const std::string& key) const {
+			variant getValue(const std::string& key) const override {
 				const variant result = base_->queryValue(key);
 				if(result.is_null()) {
 					std::vector<std::string>::const_iterator i = std::find(info_->names.begin(), info_->names.end(), key);

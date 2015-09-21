@@ -124,7 +124,7 @@ namespace tbs
 
 		void set_message(const std::string& msg);
 
-		void surrenderReferences(GarbageCollector* collector);
+		void surrenderReferences(GarbageCollector* collector) override;
 
 	private:
 		DECLARE_CALLABLE(game)

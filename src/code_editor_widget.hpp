@@ -61,8 +61,8 @@ namespace gui
 		virtual void handleDraw() const override;
 		virtual bool handleEvent(const SDL_Event& event, bool claimed) override;
 		void selectToken(const std::string& row, size_t& begin_row, size_t& end_row, size_t& begin_col, size_t& end_col) override;
-		void onChange();
-		void onMoveCursor(bool auto_shift=false);
+		void onChange() override;
+		void onMoveCursor(bool auto_shift=false) override;
 		KRE::Color getCharacterColor(int row, int col) const;
 
 		std::vector<std::vector<KRE::Color>> colors_;

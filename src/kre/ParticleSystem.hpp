@@ -245,7 +245,7 @@ namespace KRE
 			std::vector<EmitterPtr> cloneEmitters();
 			std::vector<AffectorPtr> cloneAffectors();
 
-			void process(float delta_time);
+			void process(float delta_time) override;
 
 			static ParticleSystemContainerPtr create(std::weak_ptr<SceneGraph> sg, const variant& node);
 		private:

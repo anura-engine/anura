@@ -66,7 +66,7 @@ namespace graphics
 
 		int zorder() const { return zorder_; }
 
-		void surrenderReferences(GarbageCollector* collector);
+		void surrenderReferences(GarbageCollector* collector) override;
 	private:
 		DECLARE_CALLABLE(AnuraShader);
 		AnuraShader& operator=(const AnuraShader&) = delete;
@@ -87,7 +87,7 @@ namespace graphics
 			void setShader(AnuraShaderPtr program) { program_ = program; }
 			void executeOnDraw();
 
-			void surrenderReferences(GarbageCollector* collector);
+			void surrenderReferences(GarbageCollector* collector) override;
 			void clearCommands() { uniform_commands_.clear(); }
 		private:
 			virtual variant getValue(const std::string& key) const override;
@@ -103,7 +103,7 @@ namespace graphics
 			void setShader(AnuraShaderPtr program) { program_ = program; }
 			void executeOnDraw();
 
-			void surrenderReferences(GarbageCollector* collector);
+			void surrenderReferences(GarbageCollector* collector) override;
 			void clearCommands() { attribute_commands_.clear(); }
 		private:
 			virtual variant getValue(const std::string& key) const override;

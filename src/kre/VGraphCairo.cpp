@@ -283,7 +283,7 @@ namespace KRE
 			}
 
 			//virtual void GlyphPath(const std::vector<Glyph>& g);
-			void TextPath(const std::string& s) {
+			void TextPath(const std::string& s) override {
 				path_instructions_.emplace_back(new TextPathInstruction(s));
 			}
 

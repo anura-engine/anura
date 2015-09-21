@@ -35,8 +35,8 @@ namespace gui
 		ScrollableWidget(const variant& v, game_logic::FormulaCallable* e);
 		ScrollableWidget(const ScrollableWidget& s);
 		void setYscroll(int yscroll);
-		void setDim(int w, int h);
-		void setLoc(int x, int y);
+		void setDim(int w, int h) override;
+		void setLoc(int x, int y) override;
 
 		virtual WidgetPtr clone() const override;
 	protected:

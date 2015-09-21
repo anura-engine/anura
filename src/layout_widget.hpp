@@ -39,20 +39,20 @@ namespace gui
 		LayoutWidget(const variant& v, game_logic::FormulaCallable* e);
 		virtual ~LayoutWidget();
 
-		std::vector<WidgetPtr> getChildren() const;
+		std::vector<WidgetPtr> getChildren() const override;
 
 		void reflowChildren();
 
 		WidgetPtr clone() const override;
 	protected:
-		variant handleWrite();
-		void recalcLoc();
+		variant handleWrite() override;
+		void recalcLoc() override;
 		void handleDraw() const override;
 		bool handleEvent(const SDL_Event& event, bool claimed) override;
 	private:
 		DECLARE_CALLABLE(LayoutWidget);
 
-		void visitValues(game_logic::FormulaCallableVisitor& visitor);
+		void visitValues(game_logic::FormulaCallableVisitor& visitor) override;
 
 		LayoutType layout_type_;
 

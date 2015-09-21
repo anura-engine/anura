@@ -239,7 +239,7 @@ namespace xhtml
 	public:
 		static AttributePtr create(const std::string& name, const std::string& value, WeakDocumentPtr owner=WeakDocumentPtr());
 		const std::string& getName() const { return name_; }
-		const std::string& getValue() const { return value_; }
+		const std::string& getValue() const override { return value_; }
 		std::string toString() const override;
 	protected:
 		explicit Attribute(const std::string& name, const std::string& value, WeakDocumentPtr owner);
