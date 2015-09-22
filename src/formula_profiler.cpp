@@ -78,7 +78,6 @@ namespace formula_profiler
 		if(profiler_on) {
 			struct timeval end_tv;
 			gettimeofday(&end_tv, nullptr);
-			const int time_us = (end_tv.tv_sec - tv_.tv_sec)*1000000 + (end_tv.tv_usec - tv_.tv_usec);
 			InstrumentationRecord& r = g_instrumentation[id_];
 			r.time_us += (end_tv.tv_sec - tv_.tv_sec)*1000000 + (end_tv.tv_usec - tv_.tv_usec);
 			r.nsamples++;
