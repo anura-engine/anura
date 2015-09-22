@@ -3015,7 +3015,6 @@ FUNCTION_DEF_IMPL
 		END_FUNCTION_DEF(get_files_in_dir)
 
 		FUNCTION_DEF(dialog, 2, 2, "dialog(obj, template): Creates a dialog given an object to operate on and a template for the dialog.")
-			bool modal = args().size() == 3 && args()[2]->evaluate(variables).as_bool(); 
 			variant environment = args()[0]->evaluate(variables);
 			variant dlg_template = args()[1]->evaluate(variables);
 			FormulaCallable* e = environment.try_convert<FormulaCallable>();
@@ -4960,8 +4959,6 @@ FUNCTION_DEF(solid_grid, 5, 9, "solid_grid(level, int x, int y, int w, int h, in
 
 	int stride_x = args().size() > 5 ? args()[5]->evaluate(variables).as_int() : 1;
 	int stride_y = args().size() > 6 ? args()[6]->evaluate(variables).as_int() : 1;
-	int stride_w = args().size() > 7 ? args()[7]->evaluate(variables).as_int() : 1;
-	int stride_h = args().size() > 8 ? args()[8]->evaluate(variables).as_int() : 1;
 
 	std::vector<variant> res;
 	res.reserve(w*h);
