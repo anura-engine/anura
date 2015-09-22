@@ -31,8 +31,9 @@
 #include "cairo.hpp"
 #endif
 
-#include "WindowManager.hpp"
 #include "ColorTransform.hpp"
+#include "RenderTarget.hpp"
+#include "WindowManager.hpp"
 
 #include "achievements.hpp"
 #include "asserts.hpp"
@@ -146,8 +147,53 @@ namespace
 	RETURN_TYPE("string")
 	END_FUNCTION_DEF(translate)
 
+	boost::intrusive_ptr<TextureObject> render_fbo(const rect& area, const std::vector<EntityPtr> objects)
+	{
+		const controls::control_backup_scope ctrl_backup;
+
+		auto rt = KRE::RenderTarget::create(area.w(), area.h());
+		{
+			KRE::RenderTarget::RenderScope scope(rt);
+
+			LevelPtr lvl(new Level("empty.cfg"));
+			for(const EntityPtr& e : objects) {
+				lvl->add_character(e);
+				lvl->add_draw_character(e);
+			}
+
+			lvl->set_boundaries(area);
+			screen_position pos;
+			pos.x = area.x()*100;
+			pos.y = area.y()*100;
+			{
+				//preferences::screen_dimension_override_scope dim_scope(area.w(), area.h(), area.w(), area.h());
+				lvl->process();
+				lvl->process_draw();
+				for(const EntityPtr& e : objects) {
+					lvl->add_draw_character(e);
+				}
+				render_scene(*lvl, pos);
+			}
+		}
+		return boost::intrusive_ptr<TextureObject>(new TextureObject(rt->getTexture()));
+	}
+
 	FUNCTION_DEF(texture, 2, 3, "texture(objects, rect, bool half_size=false): render a texture")
-		// XXX FIXME
+		// XXX FIX half_size implementation.
+		variant objects = args()[0]->evaluate(variables);
+		variant area = args()[1]->evaluate(variables);
+
+		ASSERT_LOG(objects.is_list(), "MUST PROVIDE A LIST OF OBJECTS TO RENDER");
+		ASSERT_LOG(area.is_list() && area.num_elements() == 4, "MUST PROVIDE AN AREA TO texture");
+	
+		std::vector<EntityPtr> obj;
+		for(int n = 0; n != objects.num_elements(); ++n) {
+			obj.push_back(objects[n].convert_to<Entity>());
+		}
+
+		const rect r(area);
+		auto t = render_fbo(r, obj);
+		return variant(t.get());
 	/*
 		variant objects = args()[0]->evaluate(variables);
 		variant area = args()[1]->evaluate(variables);
