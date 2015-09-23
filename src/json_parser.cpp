@@ -278,9 +278,6 @@ namespace json
 
 			std::set<std::string>::const_iterator filename_itor = filename_registry.insert(fname).first;
 
-
-			const std::string* filename = &*filename_itor;
-
 			variant::debug_info debug_info;
 			debug_info.filename = &*filename_itor;
 			debug_info.line = 1;
