@@ -178,6 +178,17 @@ namespace
 		return boost::intrusive_ptr<TextureObject>(new TextureObject(rt->getTexture()));
 	}
 
+	FUNCTION_DEF(get_texture, 1, 1, "get_texture(string): loads a texture")
+		game_logic::Formula::failIfStaticContext();
+		return variant(new TextureObject(KRE::Texture::createTexture(EVAL_ARG(0).as_string())));
+
+	FUNCTION_ARGS_DEF
+		ARG_TYPE("string")
+	RETURN_TYPE("builtin texture_object")
+
+	END_FUNCTION_DEF(get_texture)
+
+
 	FUNCTION_DEF(texture, 2, 3, "texture(objects, rect, bool half_size=false): render a texture")
 		// XXX FIX half_size implementation.
 		variant objects = args()[0]->evaluate(variables);
@@ -231,7 +242,7 @@ namespace
 		ARG_TYPE("[object]")
 		ARG_TYPE("[int]")
 		ARG_TYPE("bool")
-	RETURN_TYPE("object")
+	RETURN_TYPE("builtin texture_object")
 
 	END_FUNCTION_DEF(texture)
 
