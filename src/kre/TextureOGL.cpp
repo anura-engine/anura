@@ -823,16 +823,16 @@ namespace KRE
 			LOG_ERROR("Unable to read pixels from texture, error was: " << ok);
 			return nullptr;
 		}
-		std::vector<uint8_t> data;
-		data.resize(new_data.size());
-		uint8_t* cp_data = data.data();
+		//std::vector<uint8_t> data;
+		//data.resize(new_data.size());
+		//uint8_t* cp_data = data.data();
 		
-		for(auto it = new_data.begin() + (h-1)*stride; it != new_data.begin(); it -= stride) {
-			std::copy(it, it + stride, cp_data);
-			cp_data += stride;
-		}
+		//for(auto it = new_data.begin() + (h-1)*stride; it != new_data.begin(); it -= stride) {
+		//	std::copy(it, it + stride, cp_data);
+		//	cp_data += stride;
+		//}
 
-		return Surface::create(actualWidth(), actualHeight(), 32, stride, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000, data.data());
+		return Surface::create(actualWidth(), actualHeight(), 32, stride, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000, new_data.data());
 	}
 }
 
