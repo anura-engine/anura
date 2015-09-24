@@ -821,7 +821,7 @@ namespace KRE
 		GLenum ok = glGetError();
 		if(ok != GL_NONE) {
 			LOG_ERROR("Unable to read pixels from texture, error was: " << ok);
-			return false;
+			return nullptr;
 		}
 		std::vector<uint8_t> data;
 		data.resize(new_data.size());
