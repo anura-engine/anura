@@ -180,7 +180,7 @@ namespace
 
 	FUNCTION_DEF(get_texture, 1, 1, "get_texture(string): loads a texture")
 		game_logic::Formula::failIfStaticContext();
-		return variant(new TextureObject(KRE::Texture::createTexture(EVAL_ARG(0).as_string())));
+		return variant(new TextureObject(KRE::Texture::createTexture(EVAL_ARG(0))));
 
 	FUNCTION_ARGS_DEF
 		ARG_TYPE("string")
