@@ -800,5 +800,39 @@ namespace KRE
 	{
 		get_id_cache().clear();
 	}
+
+	SurfacePtr OpenGLTexture::extractTextureToSurface(int n) const
+	{
+		auto& td = texture_data_[n];
+		std::vector<uint8_t> new_data;
+		
+		const int stride = actualWidth() * 4;
+		const int h = actualHeight();
+
+		new_data.resize(h * stride);
+		std::fill(new_data.begin(), new_data.end(), 0xcd);
+		glBindTexture(GetGLTextureType(getType(n)), *td.id);
+		get_current_bound_texture() = *td.id;
+		glGetTexImage(GetGLTextureType(getType(n)), 
+			0,
+			GL_BGRA,
+			GL_UNSIGNED_INT_8_8_8_8_REV,
+			new_data.data());
+		GLenum ok = glGetError();
+		if(ok != GL_NONE) {
+			LOG_ERROR("Unable to read pixels from texture, error was: " << ok);
+			return nullptr;
+		}
+		std::vector<uint8_t> data;
+		data.resize(new_data.size());
+		uint8_t* cp_data = data.data();
+		
+		for(auto it = new_data.begin() + (h-1)*stride; it != new_data.begin(); it -= stride) {
+			std::copy(it, it + stride, cp_data);
+			cp_data += stride;
+		}
+
+		return Surface::create(actualWidth(), actualHeight(), 32, stride, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000, data.data());
+	}
 }
 

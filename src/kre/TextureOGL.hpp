@@ -48,6 +48,8 @@ namespace KRE
 		void updateYUV(int x, int y, int width, int height, const std::vector<int>& stride, const void* pixels) override;
 		void update(int n, int x, int y, int z, int width, int height, int depth, void* pixels) override;
 
+		SurfacePtr extractTextureToSurface(int n) const override;
+
 		const unsigned char* colorAt(int x, int y) const override;
 
 		TexturePtr clone() override;
