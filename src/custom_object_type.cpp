@@ -874,7 +874,7 @@ std::map<std::string,CustomObjectType::EditorSummary> CustomObjectType::getEdito
 
 		if(info.is_null()) {
 			std::vector<std::string> proto_paths;
-			variant node = mergePrototype(json::parse_from_file(*path), &proto_paths);
+			variant node = mergePrototype(json::parse_from_file_or_die(*path), &proto_paths);
 			std::map<variant,variant> summary;
 			summary[variant("mod")] = variant(mod_time);
 			std::vector<variant> proto_paths_v;
@@ -891,7 +891,7 @@ std::map<std::string,CustomObjectType::EditorSummary> CustomObjectType::getEdito
 			} else if(anim_var.is_map()) {
 				summary[variant("animation")] = anim_var;
 			} else {
-				summary[variant("animation")] = json::parse_from_file("data/default-animation.cfg");
+				summary[variant("animation")] = json::parse_from_file_or_die("data/default-animation.cfg");
 			}
 
 			if(node["editor_info"].is_map()) {
@@ -1256,7 +1256,7 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 
 	variant anim_list = node["animation"];
 	if(anim_list.is_null() || anim_list.num_elements() == 0) {
-		anim_list = json::parse_from_file("data/default-animation.cfg");
+		anim_list = json::parse_from_file_or_die("data/default-animation.cfg");
 	}
 
 	for(variant anim : anim_list.as_list()) {
@@ -1836,7 +1836,7 @@ UTILITY(object_definition)
 		
 		const std::string* fname = CustomObjectType::getObjectPath(baseobj + ".cfg");
 
-		variant json = json::parse_from_file(*fname);
+		variant json = json::parse_from_file_or_die(*fname);
 		if(dot != arg.end()) {
 			std::string subtype(dot+1, arg.end());
 			variant items = json[variant("object_type")];

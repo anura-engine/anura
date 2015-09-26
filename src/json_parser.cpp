@@ -645,6 +645,15 @@ namespace json
 		}
 	}
 
+	variant parse_from_file_or_die(const std::string& fname, JSON_PARSE_OPTIONS options)
+	{
+		try {
+			return parse_from_file(fname, options);
+		} catch(json::ParseError& e) {
+			ASSERT_LOG(false, e.errorMessage());
+		}
+	}
+
 	bool file_exists_and_is_valid(const std::string& fname)
 	{
 		try {
