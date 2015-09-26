@@ -26,6 +26,8 @@
 #include <deque>
 #include <iostream>
 
+#include "SDL.h"
+
 #if !defined(_MSC_VER)
 #include <sys/time.h>
 #endif
@@ -145,6 +147,8 @@ void ModuleWebServer::handlePost(socket_ptr socket, variant doc, const http::env
 			}
 
 			if(sys::file_exists(module_path)) {
+				const int start_time = SDL_GetTicks();
+
 				std::string response = "{\nstatus: \"ok\",\nversion: " + server_version.write_json() + ",\nmodule: ";
 				{
 					std::string contents = sys::read_file(module_path);
@@ -207,6 +211,8 @@ void ModuleWebServer::handlePost(socket_ptr socket, variant doc, const http::env
 				if(summary.is_map()) {
 					summary.add_attr_mutation(variant("num_downloads"), variant(summary["num_downloads"].as_int() + 1));
 				}
+
+				LOG_INFO("Calculated diff to send in " << SDL_GetTicks() - start_time << "ms");
 				return;
 
 			} else {
