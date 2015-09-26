@@ -855,7 +855,7 @@ public:
 		}
 
 		for(const auto& t : types_) {
-			if(t->is_specific_map()) {
+			if(!t->is_specific_map()) {
 				return nullptr;
 			}
 		}
