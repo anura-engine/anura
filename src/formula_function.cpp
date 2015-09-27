@@ -4726,6 +4726,8 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 
 	FUNCTION_DEF(trigger_garbage_collection, 0, 0, "trigger_garbage_collection(): trigger an FFL garbage collection")
 		return variant(new gc_command);
+	FUNCTION_ARGS_DEF
+	RETURN_TYPE("commands")
 	END_FUNCTION_DEF(trigger_garbage_collection)
 
 	class debug_gc_command : public game_logic::CommandCallable
