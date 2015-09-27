@@ -108,7 +108,9 @@ namespace
 	{
 		upload_screenshot_info() 
 			: error(false), done(false), client(new http_client("www.theargentlark.com", "80"))
-		{}
+		{
+			client->set_timeout_and_retry();
+		}
 		void finished(std::string response, bool is_error) {
 			LOG_INFO("Finished(" << is_error << ", " << response << ")");
 			result = response;
