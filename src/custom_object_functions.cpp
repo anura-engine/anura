@@ -315,6 +315,8 @@ namespace
 			port = formatter() << port_var.as_int();
 		}
 
+		bool retry_on_timeout = false;
+
 		std::string id;
 
 		int session = -1;
@@ -325,16 +327,20 @@ namespace
 			} else {
 				session = options["session"].as_int(-1);
 				id = options["id"].as_string_default("");
+				retry_on_timeout = options["retry_on_timeout"].as_bool(false);
 			}
 		}
 		tbs::client* result = new tbs::client(host, port, session);
+		if(retry_on_timeout) {
+			result->set_timeout_and_retry();
+		}
 		result->setId(id);
 		return variant(result);
 
 	FUNCTION_ARGS_DEF
 		ARG_TYPE("string")
 		ARG_TYPE("string|int")
-		ARG_TYPE("int|{session: int|null, id: string|null}")
+		ARG_TYPE("int|{session: int|null, id: string|null, retry_on_timeout: bool|null}")
 	RETURN_TYPE("object")
 	END_FUNCTION_DEF(tbs_client)
 

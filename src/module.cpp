@@ -814,6 +814,7 @@ COMMAND_LINE_UTILITY(generate_manifest)
 
 		while(!done) {
 			client.process();
+			SDL_Delay(20);
 			ASSERT_LOG(!error, "Error in upload");
 		}
 
@@ -881,6 +882,7 @@ COMMAND_LINE_UTILITY(generate_manifest)
 								std::bind(upload_progress, _1, _2, _3));
 			while(!done) {
 				client.process();
+				SDL_Delay(20);
 				ASSERT_LOG(!error, "Error in upload");
 			}
 
@@ -918,6 +920,7 @@ COMMAND_LINE_UTILITY(generate_manifest)
 			while(!done) {
 				client.process();
 				ASSERT_LOG(!error, "Error in upload");
+				SDL_Delay(20);
 			}
 
 			variant response_doc(json::parse(response));
@@ -984,6 +987,7 @@ COMMAND_LINE_UTILITY(generate_manifest)
 
 		while(!done) {
 			client.process();
+			SDL_Delay(20);
 		}
 	}
 
@@ -1021,6 +1025,7 @@ COMMAND_LINE_UTILITY(generate_manifest)
 					   is_new_install_(true),
 					   nchunk_errors_(0)
 	{
+		client_->set_timeout_and_retry();
 	}
 
 	client::client(const std::string& host, const std::string& port)
@@ -1031,6 +1036,7 @@ COMMAND_LINE_UTILITY(generate_manifest)
 		nfiles_written_(0), install_image_(false),
 		nchunk_errors_(0)
 	{
+		client_->set_timeout_and_retry();
 	}
 
 	void client::prepare_install_module(const std::string& module_id, bool force)
@@ -1188,6 +1194,8 @@ static const int ModuleProtocolVersion = 1;
 			}
 		} else {
 			boost::shared_ptr<http_client> new_client(new http_client(host_, port_));
+			new_client->set_timeout_and_retry();
+
 			variant chunk = chunks_to_get_.back();
 			chunks_to_get_.pop_back();
 
@@ -1218,6 +1226,7 @@ static const int ModuleProtocolVersion = 1;
 		else
 		{
 			boost::shared_ptr<http_client> new_client(new http_client(host_, port_));
+			new_client->set_timeout_and_retry();
 
 			new_client->send_request(url, doc,
 				std::bind(&client::on_chunk_response, this, chunk, new_client, _1),
@@ -1352,6 +1361,8 @@ static const int ModuleProtocolVersion = 1;
 				request.add("chunk_id", chunk["md5"]);
 
 				boost::shared_ptr<http_client> client(new http_client(host_, port_));
+				client->set_timeout_and_retry();
+
 				const std::string url = "POST /download_chunk?chunk_id=" + chunk["md5"].as_string();
 				const std::string doc = request.build().write_json();
 				client->send_request(url, doc, 
@@ -1645,6 +1656,7 @@ static const int ModuleProtocolVersion = 1;
 
 		while(!done) {
 			client.process();
+			SDL_Delay(20);
 		}
 	}
 
@@ -1680,6 +1692,7 @@ static const int ModuleProtocolVersion = 1;
 
 		while(!done) {
 			client.process();
+			SDL_Delay(20);
 		}
 
 		LOG_INFO("RESPONSE:\n" << response);
@@ -1711,6 +1724,7 @@ static const int ModuleProtocolVersion = 1;
 
 		while(!done) {
 			client.process();
+			SDL_Delay(20);
 		}
 
 		printf("Response: %s\n", response.c_str());
@@ -1744,6 +1758,7 @@ static const int ModuleProtocolVersion = 1;
 
 		while(!done) {
 			client.process();
+			SDL_Delay(20);
 		}
 
 		printf("Response: %s\n", response.c_str());

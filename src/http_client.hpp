@@ -50,25 +50,29 @@ public:
 	                  std::string request,
 					  std::function<void(std::string)> handler,
 					  std::function<void(std::string)> error_handler,
-					  std::function<void(size_t,size_t,bool)> progress_handler);
+					  std::function<void(size_t,size_t,bool)> progress_handler,
+					  int num_retries=0, int attempt_num=1);
 	virtual void process();
 
 	void set_allow_keepalive();
 
 	int num_requests_in_flight() const { return in_flight_; }
 
+	void set_timeout_and_retry(bool value=true) { timeout_and_retry_ = value; }
+
 private:
 	DECLARE_CALLABLE(http_client)
 	int session_id_;
 
 	std::shared_ptr<boost::asio::io_service> io_service_buf_;
-	boost::asio::io_service& io_service_;
+	boost::asio::io_service* io_service_;
 
 	struct Connection {
-		explicit Connection(boost::asio::io_service& serv) : socket(new tcp::socket(serv)), nbytes_sent(0), expected_len(-1)
+		explicit Connection(boost::asio::io_service& serv) : socket(new tcp::socket(serv)), nbytes_sent(0), expected_len(-1), retry_on_error(0), timeout_deadline(-1), timeout_period(-1), timeout_nbytes_needed(-1), aborted(false)
 		{}
-		explicit Connection(std::shared_ptr<tcp::socket> sock) : socket(sock), nbytes_sent(0), expected_len(-1)
+		explicit Connection(std::shared_ptr<tcp::socket> sock) : socket(sock), nbytes_sent(0), expected_len(-1), retry_on_error(0), timeout_deadline(-1), timeout_period(-1), timeout_nbytes_needed(-1), aborted(false)
 		{}
+		~Connection();
 		std::shared_ptr<tcp::socket> socket;
 		std::string method_path;
 		std::string request, response;
@@ -83,6 +87,11 @@ private:
 		int expected_len;
 
 		std::function<void()> retry_fn;
+		int retry_on_error;
+
+		int timeout_deadline, timeout_period;
+		size_t timeout_nbytes_needed;
+		bool aborted;
 	};
 
 	typedef std::shared_ptr<Connection> connection_ptr;
@@ -107,10 +116,10 @@ private:
 	
 	RESOLUTION_STATE resolution_state_;
 
-	tcp::resolver resolver_;
-	tcp::resolver::query resolver_query_;
+	std::shared_ptr<tcp::resolver> resolver_;
+	std::shared_ptr<tcp::resolver::query> resolver_query_;
 	tcp::resolver::iterator endpoint_iterator_;
-	std::string host_;
+	std::string host_, port_;
 
 	int in_flight_;
 	int send_request_at_;
@@ -120,4 +129,7 @@ private:
 	std::vector<connection_ptr> connections_waiting_on_dns_;
 
 	bool allow_keepalive_;
+	bool timeout_and_retry_;
+
+	std::vector<std::weak_ptr<Connection> > connections_monitor_timeout_;
 };

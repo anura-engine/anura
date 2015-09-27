@@ -560,15 +560,15 @@ bool do_auto_update(std::deque<std::string> argv, auto_update_window& update_win
 
 COMMAND_LINE_UTILITY(update_launcher)
 {
-	int timeout_ms = 100000;
+	int timeout_ms = 10000000;
 
 	auto_update_window update_window;
 	std::string error_msg;
 	std::deque<std::string> argv(args.begin(), args.end());
 	try {
 		while(!do_auto_update(argv, update_window, error_msg, timeout_ms)) {
-			if(timeout_ms < 1000000) {
-				timeout_ms = 1000000;
+			if(timeout_ms < 10000000) {
+				timeout_ms = 10000000;
 			}
 		}
 	} catch(boost::filesystem::filesystem_error& e) {
