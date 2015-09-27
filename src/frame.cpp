@@ -1099,4 +1099,8 @@ BEGIN_DEFINE_CALLABLE_NOBASE(Frame)
 		return obj.variantId();
 	DEFINE_FIELD(image, "string")
 		return variant(obj.getImageName());
+	DEFINE_FIELD(duration, "int")
+		return variant(obj.frame_time_);
+	DEFINE_FIELD(total_animation_time, "int")
+		return variant(obj.duration());
 END_DEFINE_CALLABLE(Frame)

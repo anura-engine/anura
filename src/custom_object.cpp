@@ -2909,6 +2909,7 @@ variant CustomObject::getValueBySlot(int slot) const
 	case CUSTOM_OBJECT_FRAME_IN_ANIMATION: return variant(getCurrentFrame().frameNumber(time_in_frame_));
 	case CUSTOM_OBJECT_LEVEL:             return variant(&Level::current());
 	case CUSTOM_OBJECT_ANIMATION:         return frame_->variantId();
+	case CUSTOM_OBJECT_ANIMATION_OBJ:     return variant(frame_.get());
 	case CUSTOM_OBJECT_ANIMATION_MAP:     return frame_->write();
 	case CUSTOM_OBJECT_AVAILABLE_ANIMATIONS: return type_->getAvailableFrames();
 	case CUSTOM_OBJECT_HITPOINTS:         return variant(hitpoints_);
@@ -3835,6 +3836,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 		time_in_frame_delta_ = value.as_int();
 		break;
 	case CUSTOM_OBJECT_ANIMATION:
+	case CUSTOM_OBJECT_ANIMATION_OBJ:
 		if(value.is_string()) {
 			setFrame(value.as_string());
 		} else if(value.is_map()) {
