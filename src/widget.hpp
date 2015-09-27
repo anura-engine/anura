@@ -111,7 +111,7 @@ namespace gui
 		std::string frameSetName() const { return frame_set_name_; }
 
 		int getAlpha() const { return display_alpha_; }
-		void setAlpha(int a=256) { display_alpha_ = a; }
+		virtual void setAlpha(int a=256);
 
 		int getPadWidth() const { return pad_w_; }
 		int getPadHeight() const { return pad_h_; }

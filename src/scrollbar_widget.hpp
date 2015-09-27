@@ -45,6 +45,8 @@ namespace gui
 	private:
 		DECLARE_CALLABLE(ScrollBarWidget)
 
+		void setAlpha(int a=256) override;
+
 		void handleDraw() const override;
 		bool handleEvent(const SDL_Event& event, bool claimed) override;
 

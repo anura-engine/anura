@@ -59,6 +59,7 @@ namespace gui
 		  drag_anchor_y_(0)
 	{
 		setEnvironment();
+		setAlpha(getAlpha());
 	}
 
 	ScrollBarWidget::ScrollBarWidget(const variant& v, game_logic::FormulaCallable* e)
@@ -113,6 +114,7 @@ namespace gui
 		}
 
 		clipWindowPosition();
+		setAlpha(getAlpha());
 	}
 
 	void ScrollBarWidget::handlerDelegate(int yscroll)
@@ -305,6 +307,17 @@ namespace gui
 	WidgetPtr ScrollBarWidget::clone() const
 	{
 		return WidgetPtr(new ScrollBarWidget(*this));
+	}
+
+	void ScrollBarWidget::setAlpha(int a)
+	{
+		Widget::setAlpha(a);
+		up_arrow_->setAlpha(a);
+		down_arrow_->setAlpha(a);
+		background_->setAlpha(a);
+		handle_->setAlpha(a);
+		handle_bot_->setAlpha(a);
+		handle_top_->setAlpha(a);
 	}
 
 	BEGIN_DEFINE_CALLABLE(ScrollBarWidget, Widget)

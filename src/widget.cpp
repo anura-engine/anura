@@ -443,6 +443,12 @@ namespace gui
 		return nullptr;
 	}
 
+	void Widget::setAlpha(int a)
+	{
+		display_alpha_ = a;
+		draw_color_.setAlpha(a);
+	}
+
 	void Widget::surrenderReferences(GarbageCollector* collector)
 	{
 	}
