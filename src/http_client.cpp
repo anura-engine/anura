@@ -62,17 +62,10 @@ void http_client::set_allow_keepalive()
 
 void http_client::send_request(std::string method_path, std::string request, std::function<void(std::string)> handler, std::function<void(std::string)> error_handler, std::function<void(size_t,size_t,bool)> progress_handler, int num_retries, int attempt_num)
 {
-	if(in_flight_ == 0 && attempt_num%5 == 0) {
-		//we are having trouble connecting, reset our dns.
-		if(io_service_buf_) {
-			io_service_buf_.reset(new boost::asio::io_service);
-			io_service_ = io_service_buf_.get();
-		}
-
-		resolver_.reset(new tcp::resolver(*io_service_));
-		resolver_query_.reset(new tcp::resolver::query(host_.c_str(), port_.c_str()));
-		resolution_state_ = RESOLUTION_NOT_STARTED,
-		endpoint_iterator_ = tcp::resolver::iterator();
+	if(in_flight_ == 0 && attempt_num > 6) {
+		LOG_INFO("HTTP client failing to receive data after " << attempt_num << " tries, timed out.\n");
+		error_handler("timeout");
+		return;
 	}
 
 	++in_flight_;
@@ -352,7 +345,7 @@ void http_client::handle_receive(connection_ptr conn, const boost::system::error
 		return;
 	}
 
-	LOG_INFO("Received http data: " << nbytes << " bytes, expecting " << conn->expected_len << "\n");
+	//LOG_INFO("Received http data: " << nbytes << " bytes, expecting " << conn->expected_len << "\n");
 
 	conn->response.insert(conn->response.end(), &conn->buf[0], &conn->buf[0] + nbytes);
 	if(conn->headers.empty()) {
@@ -381,7 +374,7 @@ void http_client::handle_receive(connection_ptr conn, const boost::system::error
 	if(conn->expected_len != -1 && conn->response.size() >= static_cast<unsigned>(conn->expected_len)) {
 		ASSERT_LOG(conn->expected_len == conn->response.size(), "UNEXPECTED RESPONSE SIZE " << conn->expected_len << " VS " << conn->response.size() << ": " << conn->response);
 
-		LOG_INFO("Received full http response\n");
+		//LOG_INFO("Received full http response\n");
 
 		//We have the full response now -- handle it.
 		const char* end_headers = strstr(conn->response.c_str(), "\n\n");
@@ -447,6 +440,7 @@ void http_client::process()
 		if(conn->timeout_deadline >= 0 && SDL_GetTicks() > conn->timeout_deadline) {
 			const size_t nbytes = conn->nbytes_sent + conn->response.size();
 			if(nbytes < conn->timeout_nbytes_needed) {
+				LOG_INFO("HTTP client timed out, resetting connection\n");
 				conn->aborted = true;
 				conn->socket->close();
 				--in_flight_;

@@ -807,6 +807,7 @@ COMMAND_LINE_UTILITY(generate_manifest)
 		std::string response;
 
 		http_client client(server, port);
+		client.set_timeout_and_retry();
 		client.send_request("POST /replicate_module", msg, 
 							std::bind(finish_upload, _1, &done, &response),
 							std::bind(error_upload, _1, &error),
@@ -876,6 +877,7 @@ COMMAND_LINE_UTILITY(generate_manifest)
 			bool error = false;
 
 			http_client client(server, port);
+			client.set_timeout_and_retry();
 			client.send_request("POST /upload_module", msg, 
 								std::bind(finish_upload, _1, &done, &response),
 								std::bind(error_upload, _1, &error),
@@ -912,6 +914,7 @@ COMMAND_LINE_UTILITY(generate_manifest)
 			bool error = false;
 
 			http_client client(server, port);
+			client.set_timeout_and_retry();
 			client.send_request("POST /upload_module", msg, 
 								std::bind(finish_upload, _1, &done, &response),
 								std::bind(error_upload, _1, &error),
@@ -980,6 +983,7 @@ COMMAND_LINE_UTILITY(generate_manifest)
 		std::string* response = nullptr;
 
 		http_client client(server, port);
+		client.set_timeout_and_retry();
 		client.send_request("POST /upload_module", msg, 
 							std::bind(finish_upload, _1, &done, response),
 							std::bind(error_upload, _1, &done),
@@ -1219,7 +1223,7 @@ static const int ModuleProtocolVersion = 1;
 	{
 		chunk_clients_.erase(std::remove(chunk_clients_.begin(), chunk_clients_.end(), client), chunk_clients_.end());
 		++nchunk_errors_;
-		if (nchunk_errors_ > 16)
+		if (nchunk_errors_ > 128)
 		{
 			on_error(response, url, doc);
 		}
