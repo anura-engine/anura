@@ -120,7 +120,7 @@ bool create_utility_process(const std::string& app, const std::vector<std::strin
 
 	// windows version
 	std::string command_line_params;
-	command_line_params += app_name_and_path + " ";
+	command_line_params += "\"" + app_name_and_path + "\" ";
 	for(size_t n = 0; n != argv.size(); ++n) {
 		command_line_params += argv[n] + " ";
 	}
@@ -321,7 +321,7 @@ void terminate_utility_process()
 			}
 		}
 
-		ASSERT_LOG(started_server, "Could not start server process");
+		ASSERT_LOG(started_server, "Could not start server process. Server output: " << sys::read_file("stderr_server.txt") << " -- server log: " << sys::read_file("server-log.txt"));
 
 		delete startup_semaphore;
 		startup_semaphore = NULL;

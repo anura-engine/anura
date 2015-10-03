@@ -91,8 +91,8 @@ public:
 	//in the main thread.
 	void finishLoading();
 
-	virtual game_logic::FormulaPtr createFormula(const variant& v);
-	bool executeCommand(const variant& var);
+	virtual game_logic::FormulaPtr createFormula(const variant& v) override;
+	bool executeCommand(const variant& var) override;
 
 	//function which sets which player we're controlling on this machine.
 	void setMultiplayerSlot(int slot);
@@ -110,7 +110,6 @@ public:
 	variant write() const;
 	void draw(int x, int y, int w, int h) const;
 	void drawLater(int x, int y, int w, int h) const;
-	void draw_absolutely_positioned_objects() const;
 	void draw_status() const;
 	void draw_debug_solid(int x, int y, int w, int h) const;
 	void draw_background(int x, int y, int rotation) const;

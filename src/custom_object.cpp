@@ -826,7 +826,7 @@ void CustomObject::createParticles(const variant& node)
 	if(node.is_null()) {
 		particles_.reset();
 	} else {
-		particles_.reset(new graphics::ParticleSystemProxy(node));
+		particles_.reset(new graphics::ParticleSystemContainerProxy(node));
 	}
 }
 
@@ -1206,8 +1206,6 @@ void CustomObject::drawLater(int xx, int yy) const
 	int offs_x = 0;
 	int offs_y = 0;
 	if(use_absolute_screen_coordinates_) {
-		adjusted_draw_position_.x = xx;
-		adjusted_draw_position_.y = yy;
 		offs_x = xx;
 		offs_y = yy;
 	}
@@ -1220,6 +1218,8 @@ void CustomObject::drawLater(int xx, int yy) const
 	}
 }
 
+extern int g_camera_extend_x, g_camera_extend_y;
+
 void CustomObject::draw(int xx, int yy) const
 {
 	if(frame_ == nullptr) {
@@ -1229,9 +1229,7 @@ void CustomObject::draw(int xx, int yy) const
 
 	std::unique_ptr<KRE::ModelManager2D> model_scope;
 	if(use_absolute_screen_coordinates_) {
-		model_scope = std::unique_ptr<KRE::ModelManager2D>(new KRE::ModelManager2D(xx, yy));
-		adjusted_draw_position_.x = xx;
-		adjusted_draw_position_.y = yy;
+		model_scope = std::unique_ptr<KRE::ModelManager2D>(new KRE::ModelManager2D(xx + g_camera_extend_x, yy + g_camera_extend_y));
 	}
 
 	for(const EntityPtr& attached : attachedObjects()) {
@@ -2717,16 +2715,16 @@ void CustomObject::addAnimatedMovement(variant attr_var, variant options)
 
 	const int ncycles = options["duration"].as_int(10);
 
-	std::function<double(double)> easing_fn;
+	std::function<decimal(decimal)> easing_fn;
 	variant easing_var = options["easing"];
 	if(easing_var.is_function()) {
-		easing_fn = [=](double x) { std::vector<variant> args; args.emplace_back(variant(decimal(x))); return easing_var(args).as_decimal().as_float(); };
+		easing_fn = [=](decimal x) { std::vector<variant> args; args.emplace_back(variant(decimal(x))); return easing_var(args).as_decimal(); };
 	} else {
-		const std::string& easing = easing_var.as_string_default("swing");
+		const std::string& easing = easing_var.as_string_default("linear");
 		if(easing == "linear") {
-			easing_fn = [](double x) { return x; };
+			easing_fn = [](decimal x) { return x; };
 		} else if(easing == "swing") {
-			easing_fn = [](double x) { return 0.5*(1 - cos(x*3.14)); };
+			easing_fn = [](decimal x) { return decimal(0.5*(1 - cos(x.as_float()*3.14))); };
 		} else {
 			ASSERT_LOG(false, "Unknown easing: " << easing);
 		}
@@ -2736,8 +2734,8 @@ void CustomObject::addAnimatedMovement(variant attr_var, variant options)
 	values.reserve(slots.size()*ncycles);
 
 	for(int cycle = 0; cycle != ncycles; ++cycle) {
-		float ratio = ncycles <= 1 ? 1.0 : static_cast<float>(cycle)/static_cast<float>(ncycles-1);
-		ratio = static_cast<float>(easing_fn(ratio));
+		decimal ratio = ncycles <= 1 ? decimal(1) : decimal(cycle)/decimal(ncycles-1);
+		ratio = easing_fn(ratio);
 		for(int n = 0; n != slots.size(); ++n) {
 			values.emplace_back(interpolate_variants(begin_values[n], end_values[n], ratio));
 		}
@@ -2911,6 +2909,7 @@ variant CustomObject::getValueBySlot(int slot) const
 	case CUSTOM_OBJECT_FRAME_IN_ANIMATION: return variant(getCurrentFrame().frameNumber(time_in_frame_));
 	case CUSTOM_OBJECT_LEVEL:             return variant(&Level::current());
 	case CUSTOM_OBJECT_ANIMATION:         return frame_->variantId();
+	case CUSTOM_OBJECT_ANIMATION_OBJ:     return variant(frame_.get());
 	case CUSTOM_OBJECT_ANIMATION_MAP:     return frame_->write();
 	case CUSTOM_OBJECT_AVAILABLE_ANIMATIONS: return type_->getAvailableFrames();
 	case CUSTOM_OBJECT_HITPOINTS:         return variant(hitpoints_);
@@ -3837,6 +3836,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 		time_in_frame_delta_ = value.as_int();
 		break;
 	case CUSTOM_OBJECT_ANIMATION:
+	case CUSTOM_OBJECT_ANIMATION_OBJ:
 		if(value.is_string()) {
 			setFrame(value.as_string());
 		} else if(value.is_map()) {
@@ -5908,25 +5908,7 @@ void CustomObject::removeWidget(gui::WidgetPtr w)
 
 bool CustomObject::handle_sdl_event(const SDL_Event& event, bool claimed)
 {
-	//SDL_Event ev(event);
-	const int tx = x() + (use_absolute_screen_coordinates_ ? adjusted_draw_position_.x : 0);
-	const int ty = y() + (use_absolute_screen_coordinates_ ? adjusted_draw_position_.y : 0);
-	point p(tx, ty);
-	//if(event.type == SDL_MOUSEMOTION) {
-		//ev.motion.x -= x();
-		//ev.motion.y -= y();
-		//if(use_absolute_screen_coordinates_) {
-		//	ev.motion.x -= adjusted_draw_position_.x;
-		//	ev.motion.y -= adjusted_draw_position_.y;
-		//}
-	//} else if(event.type == SDL_MOUSEBUTTONDOWN || event.type == SDL_MOUSEBUTTONUP) {
-		//ev.button.x -= x();
-		//ev.button.y -= y();
-		//if(use_absolute_screen_coordinates_) {
-		//	ev.button.x -= adjusted_draw_position_.x;
-		//	ev.button.y -= adjusted_draw_position_.y;
-		//}
-	//}
+	point p(x(), y());
 
 	if(document_ &&  !claimed) {
 		claimed |= document_->handleEvents(p, event);

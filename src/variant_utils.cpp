@@ -87,7 +87,7 @@ glm::vec4 variant_to_vec4(const variant& v)
 	result[0] = v[0].as_float();
 	result[1] = v[1].as_float();
 	result[2] = v[2].as_float();
-	result[3] = v[2].as_float();
+	result[3] = v[3].as_float();
 	return result;
 }
 
@@ -231,13 +231,18 @@ variant deep_copy_variant(variant v)
 	}
 }
 
-variant interpolate_variants(variant a, variant b, float ratiof)
+variant interpolate_variants(variant a, variant b, decimal ratio)
 {
 	if(a.is_numeric() && b.is_numeric()) {
-		decimal ratio(ratiof);
 		decimal inv_ratio = decimal::from_int(1) - ratio;
 
-		return variant(a.as_decimal()*inv_ratio + b.as_decimal()*ratio);
+		variant result(a.as_decimal()*inv_ratio + b.as_decimal()*ratio);
+
+		if(a.is_int() && b.is_int()) {
+			return variant(result.as_int());
+		} else {
+			return result;
+		}
 	}
 
 	if(a.is_list() && b.is_list()) {
@@ -245,7 +250,7 @@ variant interpolate_variants(variant a, variant b, float ratiof)
 		std::vector<variant> v;
 		v.resize(a.num_elements());
 		for(int n = 0; n != a.num_elements(); ++n) {
-			v[n] = interpolate_variants(a[n], b[n], ratiof);
+			v[n] = interpolate_variants(a[n], b[n], ratio);
 		}
 
 		return variant(&v);
@@ -261,7 +266,7 @@ variant interpolate_variants(variant a, variant b, float ratiof)
 		auto ib = bm.begin();
 		while(ia != am.end() && ib != bm.end()) {
 			ASSERT_LOG(ia->first == ib->first, "Trying to interpolate invalid maps: " << a.write_json() << " vs " << b.write_json());
-			res[ia->first] = interpolate_variants(ia->second, ib->second, ratiof);
+			res[ia->first] = interpolate_variants(ia->second, ib->second, ratio);
 			++ia;
 			++ib;
 		}
@@ -270,6 +275,11 @@ variant interpolate_variants(variant a, variant b, float ratiof)
 		return variant(&res);
 	}
 	ASSERT_LOG(false, "Trying to interpolate invalid variant values: " << a.write_json() << " vs " << b.write_json());
+}
+
+variant interpolate_variants(variant a, variant b, float ratiof)
+{
+	return interpolate_variants(a, b, decimal(ratiof));
 }
 
 variant_builder& variant_builder::add_value(const std::string& name, const variant& val)

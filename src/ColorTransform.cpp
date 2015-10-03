@@ -69,11 +69,7 @@ namespace KRE
 				const variant& a = v["add"];
 				for(int n = 0; n != 4; ++n) {
 					if(n < a.num_elements()) {
-						if(a.is_int()) {
-							add_rgba_[n] = a[n].as_int() / 255.0f;
-						} else {
-							add_rgba_[n] = a[n].as_float();
-						}
+						add_rgba_[n] = a[n].as_float();
 					}
 				}
 			}
@@ -81,11 +77,7 @@ namespace KRE
 				const variant& m = v["mul"];
 				for(int n = 0; n != 4; ++n) {
 					if(n < m.num_elements()) {
-						if(m.is_int()) {
-							add_rgba_[n] = m[n].as_int() / 255.0f;
-						} else {
-							add_rgba_[n] = m[n].as_float();
-						}
+						mul_rgba_[n] = m[n].as_float();
 					}
 				}
 			}

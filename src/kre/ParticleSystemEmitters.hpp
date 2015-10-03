@@ -53,12 +53,13 @@ namespace KRE
 			static EmitterPtr factory(std::weak_ptr<ParticleSystemContainer> parent, const variant& node);
 		protected:
 			virtual void internalCreate(Particle& p, float t) = 0;
-			virtual bool durationExpired() { return can_be_deleted_; }
+			virtual bool durationExpired() override { return can_be_deleted_; }
 		private:
 			virtual void handleEmitProcess(float t) override;
 			virtual void handleDraw(const WindowPtr& wnd) const override;
 			void handleEnable() override;
 			void visualEmitProcess(float t);
+			void emitterEmitProcess(float t);
 			std::weak_ptr<Technique> technique_;
 
 			// These are generation parameters.

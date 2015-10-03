@@ -34,8 +34,8 @@ namespace gui
 		explicit ScrollBarWidget(const variant& v, game_logic::FormulaCallable* e);
 
 		void setRange(int total_height, int window_height);
-		void setLoc(int x, int y);
-		void setDim(int w, int h);
+		void setLoc(int x, int y) override;
+		void setDim(int w, int h) override;
 		void setWindowPos(int pos) { window_pos_ = pos; }
 		void setStep(int step) { step_ = step; }
 		void setArrowStep(int step) { arrow_step_ = step; }
@@ -44,6 +44,8 @@ namespace gui
 		WidgetPtr clone() const override;
 	private:
 		DECLARE_CALLABLE(ScrollBarWidget)
+
+		void setAlpha(int a=256) override;
 
 		void handleDraw() const override;
 		bool handleEvent(const SDL_Event& event, bool claimed) override;

@@ -300,7 +300,7 @@ namespace {
 			fn_(context, args_);
 		}
 
-		bool isCairoOp() const { return true; }
+		bool isCairoOp() const override { return true; }
 	private:
 		DECLARE_CALLABLE(cairo_op);
 	
@@ -417,10 +417,12 @@ namespace {
 		v.convert_to<cairo_op>()->execute(context);
 	}
 
-	variant layout_text_impl(const TextMarkupFragment* f1, const TextMarkupFragment* f2, float width)
+	variant layout_text_impl(const TextMarkupFragment* f1, const TextMarkupFragment* f2, float width, float width_delta=0.0)
 	{
 
 		cairo_context context(8, 8);
+
+		float original_width = width;
 
 		float xpos = 0;
 		float ypos = 0;
@@ -466,6 +468,7 @@ namespace {
 				if(!first_line) {
 					xpos = 0;
 					ypos += line_height;
+					width += width_delta*line_height;
 					line_height = min_line_height;
 
 					output.push_back(LineOfText());
@@ -494,6 +497,7 @@ namespace {
 
 						xpos = 0;
 						ypos += line_height;
+						width += width_delta*line_height;
 						line_height = min_line_height;
 
 						output.push_back(LineOfText());
@@ -528,6 +532,7 @@ namespace {
 						if(xpos > 0 && xpos + advance > width) {
 							xpos = 0;
 							ypos += line_height;
+							width += width_delta*line_height;
 							line_height = min_line_height;
 
 							output.push_back(LineOfText());
@@ -555,6 +560,8 @@ namespace {
 		if(output.empty() == false && output.back().fragments.empty()) {
 			output.pop_back();
 		}
+
+		width = original_width;
 
 		std::vector<variant> result;
 
@@ -669,6 +676,8 @@ namespace {
 
 				result.push_back(variant(res));
 			}
+
+			width += width_delta*line_height;
 		}
 
 		return variant(&result);
@@ -1330,9 +1339,13 @@ END_CAIRO_FN
 
 	END_CAIRO_FN
 
-	BEGIN_DEFINE_FN(markup_text, "(string, decimal) ->[builtin cairo_text_fragment]")
+	BEGIN_DEFINE_FN(markup_text, "(string, decimal, decimal=0.0) ->[builtin cairo_text_fragment]")
 		const std::string markup = "<root>" + FN_ARG(0).as_string() + "</root>";
 		float width = FN_ARG(1).as_float();
+		float width_delta = 0.0;
+		if(NUM_FN_ARGS > 2) {
+			width_delta = FN_ARG(2).as_float();
+		}
 
 		std::istringstream s(markup);
 		boost::property_tree::ptree ptree;
@@ -1371,7 +1384,7 @@ END_CAIRO_FN
 		parse_text_markup_impl(stack, fragments, ptree, get_font_fn, "");
 
 		if(fragments.empty() == false) {
-			return layout_text_impl(&fragments[0], &fragments[0] + fragments.size(), width);
+			return layout_text_impl(&fragments[0], &fragments[0] + fragments.size(), width, width_delta);
 		} else {
 			std::vector<variant> result;
 			return variant(&result);

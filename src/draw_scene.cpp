@@ -429,8 +429,6 @@ void render_scene(Level& lvl, const screen_position& pos)
 		lvl.drawLater(xscroll, yscroll, draw_width, draw_height);
 	}
 
-	lvl.draw_absolutely_positioned_objects();
-
 	for(std::vector<screen_flash>::iterator i = flashes().begin();
 	    i != flashes().end(); ) {
 		const KRE::Color& tint = i->color.toColor();

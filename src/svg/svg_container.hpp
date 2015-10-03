@@ -48,7 +48,7 @@ namespace KRE
 			void render_children(render_context& ctx) const;
 			void clip_render_children(render_context& ctx) const;
 		private:
-			virtual void handle_resolve();
+			virtual void handle_resolve() override;
 			virtual void handle_render(render_context& ctx) const override;
 			virtual void handle_clip_render(render_context& ctx) const override;
 			element_ptr handle_find_child(const std::string& id) const override;

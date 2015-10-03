@@ -399,6 +399,12 @@ namespace game_logic
 		RETURN_TYPE("commands")
 		END_FUNCTION_DEF(set_user_info)
 
+		FUNCTION_DEF(current_level, 0, 0, "current_level(): return the current level the game is in")
+			Formula::failIfStaticContext();
+			return variant(&Level::current());
+		RETURN_TYPE("builtin level")
+		END_FUNCTION_DEF(current_level)
+
 		FUNCTION_DEF(overload, 1, -1, "overload(fn...): makes an overload of functions")
 			std::vector<variant> functions;
 			for(ExpressionPtr expression : args()) {
@@ -1491,7 +1497,7 @@ namespace game_logic
 				ExpressionPtr expr_;
 				const FormulaCallable* fallback_;
 				mutable variant a_, b_;
-				variant getValue(const std::string& key) const {
+				variant getValue(const std::string& key) const override {
 					if(key == "a") {
 						return a_;
 					} else if(key == "b") {
@@ -1501,7 +1507,7 @@ namespace game_logic
 					}
 				}
 
-				variant getValueBySlot(int slot) const {
+				variant getValueBySlot(int slot) const override {
 					if(slot == 0) {
 						return a_;
 					} else if(slot == 1) {
@@ -1520,7 +1526,7 @@ namespace game_logic
 					const_cast<FormulaCallable*>(fallback_)->mutateValueBySlot(slot-2, value);
 				}
 
-				void getInputs(std::vector<FormulaInput>* inputs) const {
+				void getInputs(std::vector<FormulaInput>* inputs) const override {
 					fallback_->getInputs(inputs);
 				}
 			public:
@@ -1553,7 +1559,7 @@ namespace game_logic
 					}
 				}
 
-				int getSlot(const std::string& key) const {
+				int getSlot(const std::string& key) const override {
 					if(key == "a") { return 0; }
 					if(key == "b") { return 1; }
 
@@ -1601,11 +1607,11 @@ namespace game_logic
 					return nullptr;
 				}
 
-				int getNumSlots() const {
+				int getNumSlots() const override {
 					return 2 + (base_ ? base_->getNumSlots() : 0);
 				}
 
-				int getSubsetSlotBase(const FormulaCallableDefinition* subset) const
+				int getSubsetSlotBase(const FormulaCallableDefinition* subset) const override
 				{
 					if(!base_) {
 						return -1;
@@ -2264,7 +2270,7 @@ FUNCTION_DEF_IMPL
 					index_ = i;
 				}
 			private:
-				variant getValue(const std::string& key) const {
+				variant getValue(const std::string& key) const override {
 					if((value_name_.empty() && key == "value") ||
 					   (!value_name_.empty() && key == value_name_)) {
 						return value_;
@@ -2279,7 +2285,7 @@ FUNCTION_DEF_IMPL
 					}
 				}
 
-				variant getValueBySlot(int slot) const {
+				variant getValueBySlot(int slot) const override {
 					ASSERT_LOG(slot >= 0, "BAD SLOT VALUE: " << slot);
 					if(slot < NUM_MAP_CALLABLE_SLOTS) {
 						switch(slot) {
@@ -2648,7 +2654,7 @@ FUNCTION_DEF_IMPL
 					index_ = i;
 				}
 			private:
-				variant getValue(const std::string& key) const {
+				variant getValue(const std::string& key) const override {
 					if(key == "v") {
 						return value_;
 					} else if(key == "i") {
@@ -2658,7 +2664,7 @@ FUNCTION_DEF_IMPL
 					}
 				}
 
-				variant getValueBySlot(int slot) const {
+				variant getValueBySlot(int slot) const override {
 					return backup_.queryValueBySlot(slot);
 				}
 
@@ -3879,7 +3885,7 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 		static std::map<std::string, variant> cache2;
 		return cache2;
 	}
-		}
+}
 
 		PREF_BOOL(write_backed_maps, false, "Write to backed maps such as used in Citadel's evolutionary system");
 
@@ -4078,8 +4084,9 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 				Formula::failIfStaticContext();
 			}
 
-			std::string docname = args()[0]->evaluate(variables).as_string();
-			ASSERT_LOG(docname.empty() == false, "DOCUMENT NAME GIVEN TO get_document() IS EMPTY");
+			variant base_docname_var = args()[0]->evaluate(variables);
+			const std::string& base_docname = base_docname_var.as_string();
+			ASSERT_LOG(base_docname.empty() == false, "DOCUMENT NAME GIVEN TO get_document() IS EMPTY");
 
 			bool allow_failure = false;
 			bool prefs_directory = false;
@@ -4098,10 +4105,12 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 				}
 			}
 
-			auto itor = get_doc_cache(prefs_directory).find(docname);
+			auto itor = get_doc_cache(prefs_directory).find(base_docname);
 			if(itor != get_doc_cache(prefs_directory).end()) {
 				return itor->second;
 			}
+
+			std::string docname = base_docname;
 
 			ASSERT_LOG(std::adjacent_find(docname.begin(), docname.end(), consecutive_periods) == docname.end(), "DOCUMENT NAME CONTAINS ADJACENT PERIODS " << docname);
 
@@ -4717,6 +4726,8 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 
 	FUNCTION_DEF(trigger_garbage_collection, 0, 0, "trigger_garbage_collection(): trigger an FFL garbage collection")
 		return variant(new gc_command);
+	FUNCTION_ARGS_DEF
+	RETURN_TYPE("commands")
 	END_FUNCTION_DEF(trigger_garbage_collection)
 
 	class debug_gc_command : public game_logic::CommandCallable

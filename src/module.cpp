@@ -554,6 +554,10 @@ namespace module
 		std::vector<std::string> files, dirs;
 		sys::get_files_in_dir(dir, &files, &dirs);
 		for(const std::string& d : dirs) {
+			if(d == "" || d[0] == '.') {
+				continue;
+			}
+
 			get_files_in_module(dir + "/" + d, res, exclude_paths);
 		}
 
@@ -803,6 +807,7 @@ COMMAND_LINE_UTILITY(generate_manifest)
 		std::string response;
 
 		http_client client(server, port);
+		client.set_timeout_and_retry();
 		client.send_request("POST /replicate_module", msg, 
 							std::bind(finish_upload, _1, &done, &response),
 							std::bind(error_upload, _1, &error),
@@ -810,6 +815,7 @@ COMMAND_LINE_UTILITY(generate_manifest)
 
 		while(!done) {
 			client.process();
+			SDL_Delay(20);
 			ASSERT_LOG(!error, "Error in upload");
 		}
 
@@ -851,7 +857,7 @@ COMMAND_LINE_UTILITY(generate_manifest)
 				module_id_override = arguments.front();
 				arguments.pop_front();
 			} else {
-				ASSERT_LOG(module_id.empty(), "UNRECOGNIZED ARGUMENT: " << module_id);
+				ASSERT_LOG(module_id.empty(), "UNRECOGNIZED ARGUMENT: " << arg);
 				module_id = arg;
 				ASSERT_LOG(std::count_if(module_id.begin(), module_id.end(), isalnum) + std::count(module_id.begin(), module_id.end(), '_') == module_id.size(), "ILLEGAL ARGUMENT: " << module_id);
 			}
@@ -871,12 +877,14 @@ COMMAND_LINE_UTILITY(generate_manifest)
 			bool error = false;
 
 			http_client client(server, port);
+			client.set_timeout_and_retry();
 			client.send_request("POST /upload_module", msg, 
 								std::bind(finish_upload, _1, &done, &response),
 								std::bind(error_upload, _1, &error),
 								std::bind(upload_progress, _1, _2, _3));
 			while(!done) {
 				client.process();
+				SDL_Delay(20);
 				ASSERT_LOG(!error, "Error in upload");
 			}
 
@@ -906,6 +914,7 @@ COMMAND_LINE_UTILITY(generate_manifest)
 			bool error = false;
 
 			http_client client(server, port);
+			client.set_timeout_and_retry();
 			client.send_request("POST /upload_module", msg, 
 								std::bind(finish_upload, _1, &done, &response),
 								std::bind(error_upload, _1, &error),
@@ -914,6 +923,7 @@ COMMAND_LINE_UTILITY(generate_manifest)
 			while(!done) {
 				client.process();
 				ASSERT_LOG(!error, "Error in upload");
+				SDL_Delay(20);
 			}
 
 			variant response_doc(json::parse(response));
@@ -973,6 +983,7 @@ COMMAND_LINE_UTILITY(generate_manifest)
 		std::string* response = nullptr;
 
 		http_client client(server, port);
+		client.set_timeout_and_retry();
 		client.send_request("POST /upload_module", msg, 
 							std::bind(finish_upload, _1, &done, response),
 							std::bind(error_upload, _1, &done),
@@ -980,6 +991,7 @@ COMMAND_LINE_UTILITY(generate_manifest)
 
 		while(!done) {
 			client.process();
+			SDL_Delay(20);
 		}
 	}
 
@@ -987,7 +999,7 @@ COMMAND_LINE_UTILITY(generate_manifest)
 	{
 		bool valid_path_chars(char c)
 		{
-			static const char* AllowedChars = "(){}[]+./_-";
+			static const char* AllowedChars = "(){}[]+./_-@";
 			return isalnum(c) || strchr(AllowedChars, c);
 		}
 
@@ -1000,7 +1012,7 @@ COMMAND_LINE_UTILITY(generate_manifest)
 				}
 			}
 
-			static const char* AllowedChars = "(){}[]+";
+			static const char* AllowedChars = "(){}[]+@";
 
 			return str.empty() == false && (isalnum(str[0]) || strchr(AllowedChars, str[0])) && std::count_if(str.begin(), str.end(), valid_path_chars) == str.size();
 		}
@@ -1017,6 +1029,7 @@ COMMAND_LINE_UTILITY(generate_manifest)
 					   is_new_install_(true),
 					   nchunk_errors_(0)
 	{
+		client_->set_timeout_and_retry();
 	}
 
 	client::client(const std::string& host, const std::string& port)
@@ -1027,6 +1040,7 @@ COMMAND_LINE_UTILITY(generate_manifest)
 		nfiles_written_(0), install_image_(false),
 		nchunk_errors_(0)
 	{
+		client_->set_timeout_and_retry();
 	}
 
 	void client::prepare_install_module(const std::string& module_id, bool force)
@@ -1184,6 +1198,8 @@ static const int ModuleProtocolVersion = 1;
 			}
 		} else {
 			boost::shared_ptr<http_client> new_client(new http_client(host_, port_));
+			new_client->set_timeout_and_retry();
+
 			variant chunk = chunks_to_get_.back();
 			chunks_to_get_.pop_back();
 
@@ -1207,13 +1223,14 @@ static const int ModuleProtocolVersion = 1;
 	{
 		chunk_clients_.erase(std::remove(chunk_clients_.begin(), chunk_clients_.end(), client), chunk_clients_.end());
 		++nchunk_errors_;
-		if (nchunk_errors_ > 16)
+		if (nchunk_errors_ > 128)
 		{
 			on_error(response, url, doc);
 		}
 		else
 		{
 			boost::shared_ptr<http_client> new_client(new http_client(host_, port_));
+			new_client->set_timeout_and_retry();
 
 			new_client->send_request(url, doc,
 				std::bind(&client::on_chunk_response, this, chunk, new_client, _1),
@@ -1348,6 +1365,8 @@ static const int ModuleProtocolVersion = 1;
 				request.add("chunk_id", chunk["md5"]);
 
 				boost::shared_ptr<http_client> client(new http_client(host_, port_));
+				client->set_timeout_and_retry();
+
 				const std::string url = "POST /download_chunk?chunk_id=" + chunk["md5"].as_string();
 				const std::string doc = request.build().write_json();
 				client->send_request(url, doc, 
@@ -1641,6 +1660,7 @@ static const int ModuleProtocolVersion = 1;
 
 		while(!done) {
 			client.process();
+			SDL_Delay(20);
 		}
 	}
 
@@ -1676,6 +1696,7 @@ static const int ModuleProtocolVersion = 1;
 
 		while(!done) {
 			client.process();
+			SDL_Delay(20);
 		}
 
 		LOG_INFO("RESPONSE:\n" << response);
@@ -1707,6 +1728,7 @@ static const int ModuleProtocolVersion = 1;
 
 		while(!done) {
 			client.process();
+			SDL_Delay(20);
 		}
 
 		printf("Response: %s\n", response.c_str());
@@ -1740,6 +1762,7 @@ static const int ModuleProtocolVersion = 1;
 
 		while(!done) {
 			client.process();
+			SDL_Delay(20);
 		}
 
 		printf("Response: %s\n", response.c_str());

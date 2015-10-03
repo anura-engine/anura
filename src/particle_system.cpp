@@ -694,7 +694,7 @@ namespace
 			getShader()->setUniformValue(u_is_circular_, true);
 		}
 		
-		void process(const Entity& e) {
+		void process(const Entity& e) override {
 			particle_generation_ += generation_rate_millis_;
 			
 			particles_.erase(std::remove_if(particles_.begin(), particles_.end(), particle_destroyed), particles_.end());
@@ -789,7 +789,7 @@ namespace
 			// XXX we need to set a uniform with the point size
 		}
 
-		void draw(const KRE::WindowPtr& wm, const rect& area, const Entity& e) const {
+		void draw(const KRE::WindowPtr& wm, const rect& area, const Entity& e) const override {
 			if(particles_.empty()) {
 				return;
 			}

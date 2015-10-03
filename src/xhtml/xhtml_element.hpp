@@ -73,8 +73,8 @@ namespace xhtml
 		ElementId getElementId() const { return tag_; }
 		const std::string& getTag() const override { return name_; }
 		const std::string& getName() const { return name_; }
-		bool hasTag(const std::string& tag) const { return tag == name_; }
-		bool hasTag(ElementId tag) const { return tag == tag_; }
+		bool hasTag(const std::string& tag) const override { return tag == name_; }
+		bool hasTag(ElementId tag) const override { return tag == tag_; }
 
 		static void registerObjectHandler(const std::string& content_type, object_create_fn fn);
 	protected:

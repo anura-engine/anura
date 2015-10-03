@@ -104,6 +104,8 @@ namespace KRE
 		static void rebuildAll();
 		static void clearTextures();
 
+		virtual SurfacePtr extractTextureToSurface(int n = 0) const = 0;
+
 		static TexturePtr createTexture(const variant& node);
 		static TexturePtr createTexture(const std::string& filename, TextureType type=TextureType::TEXTURE_2D, int mipmap_levels=0);
 		static TexturePtr createTexture(const std::string& filename, const variant& node);

@@ -90,7 +90,7 @@ namespace hex
 			ConstTilePtr getTileAt(const point& p) const;
 			point getCoordinatesInDir(direction d, int x, int y) const;
 
-			void surrenderReferences(GarbageCollector* collector);
+			void surrenderReferences(GarbageCollector* collector) override;
 
 			static LogicalMapPtr factory(const variant& v);
 		private:

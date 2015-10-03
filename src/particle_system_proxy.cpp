@@ -24,6 +24,7 @@
 #include "particle_system_proxy.hpp"
 #include "profile_timer.hpp"
 
+#include "formula_callable.hpp"
 #include "ParticleSystem.hpp"
 #include "SceneGraph.hpp"
 #include "SceneNode.hpp"
@@ -34,8 +35,8 @@ namespace graphics
 {
 	using namespace KRE;
 
-	ParticleSystemProxy::ParticleSystemProxy(const variant& node)
-		: scene_(SceneGraph::create("ParticleSystemProxy")),
+	ParticleSystemContainerProxy::ParticleSystemContainerProxy(const variant& node)
+		: scene_(SceneGraph::create("ParticleSystemContainerProxy")),
 		  root_(scene_->getRootNode()),
 		  rmanager_(),
 		  particle_system_container_(),
@@ -49,9 +50,13 @@ namespace graphics
 
 		particle_system_container_ = Particles::ParticleSystemContainer::create(scene_, node);
 		root_->attachNode(particle_system_container_);
+
+		for(auto p : particle_system_container_->getActiveParticleSystems()) {
+			p->fastForward();
+		}
 	}
 
-	void ParticleSystemProxy::draw(const WindowPtr& wnd) const
+	void ParticleSystemContainerProxy::draw(const WindowPtr& wnd) const
 	{
 		if(running_) {
 			scene_->renderScene(rmanager_);
@@ -59,7 +64,7 @@ namespace graphics
 		}
 	}
 
-	void ParticleSystemProxy::process()
+	void ParticleSystemContainerProxy::process()
 	{
 		if(!running_) {
 			last_process_time_ = profile::get_tick_time();
@@ -76,16 +81,121 @@ namespace graphics
 		last_process_time_ = current_time;
 	}
 
-	void ParticleSystemProxy::surrenderReferences(GarbageCollector* collector)
+	void ParticleSystemContainerProxy::surrenderReferences(GarbageCollector* collector)
 	{
 		
 	}
 
-	BEGIN_DEFINE_CALLABLE_NOBASE(ParticleSystemProxy)
+	class ParticleSystemProxy : public game_logic::FormulaCallable
+	{
+	public:
+		explicit ParticleSystemProxy(KRE::Particles::ParticleSystemPtr obj) : obj_(obj)
+		{}
+	private:
+		DECLARE_CALLABLE(ParticleSystemProxy);
+		KRE::Particles::ParticleSystemPtr obj_;
+	};
+
+	class ParticleTechniqueProxy : public game_logic::FormulaCallable
+	{
+	public:
+		explicit ParticleTechniqueProxy(KRE::Particles::TechniquePtr obj) : obj_(obj)
+		{}
+	private:
+		DECLARE_CALLABLE(ParticleTechniqueProxy);
+		KRE::Particles::TechniquePtr obj_;
+	};
+
+	class ParticleEmitterProxy : public game_logic::FormulaCallable
+	{
+	public:
+		explicit ParticleEmitterProxy(KRE::Particles::EmitterPtr obj) : obj_(obj)
+		{}
+	private:
+		DECLARE_CALLABLE(ParticleEmitterProxy);
+		KRE::Particles::EmitterPtr obj_;
+	};
+
+	class ParticleAffectorProxy : public game_logic::FormulaCallable
+	{
+	public:
+		explicit ParticleAffectorProxy(KRE::Particles::AffectorPtr obj) : obj_(obj)
+		{}
+	private:
+		DECLARE_CALLABLE(ParticleAffectorProxy);
+		KRE::Particles::AffectorPtr obj_;
+	};
+
+	BEGIN_DEFINE_CALLABLE_NOBASE(ParticleSystemContainerProxy)
 		DEFINE_FIELD(running, "bool")
 			return variant::from_bool(obj.running_);
 		DEFINE_SET_FIELD
 			obj.running_ = value.as_bool();
+		DEFINE_FIELD(systems, "[builtin particle_system_proxy]")
+
+			auto v = obj.particle_system_container_->getActiveParticleSystems();
+			std::vector<variant> result;
+			result.reserve(v.size());
+			for(auto p : v) {
+				result.push_back(variant(new ParticleSystemProxy(p)));
+			}
+
+			return variant(&result);
+
+		DEFINE_FIELD(techniques, "[builtin particle_technique_proxy]")
+
+			auto v = obj.particle_system_container_->getTechniques();
+			std::vector<variant> result;
+			result.reserve(v.size());
+			for(auto p : v) {
+				result.push_back(variant(new ParticleTechniqueProxy(p)));
+			}
+
+			return variant(&result);
+
+		DEFINE_FIELD(emitters, "[builtin particle_emitter_proxy]")
+
+			auto v = obj.particle_system_container_->getEmitters();
+			std::vector<variant> result;
+			result.reserve(v.size());
+			for(auto p : v) {
+				result.push_back(variant(new ParticleEmitterProxy(p)));
+			}
+
+			return variant(&result);
+
+		DEFINE_FIELD(affectors, "[builtin particle_affector_proxy]")
+
+			auto v = obj.particle_system_container_->getAffectors();
+			std::vector<variant> result;
+			result.reserve(v.size());
+			for(auto p : v) {
+				result.push_back(variant(new ParticleAffectorProxy(p)));
+			}
+
+			return variant(&result);
+
+
+	END_DEFINE_CALLABLE(ParticleSystemContainerProxy)
+
+	BEGIN_DEFINE_CALLABLE_NOBASE(ParticleSystemProxy)
+	BEGIN_DEFINE_FN(add_technique, "(map) ->commands")
+		variant arg = FN_ARG(0);
+		return variant(new game_logic::FnCommandCallable([=]() {
+			obj.obj_->addTechnique(KRE::Particles::TechniquePtr(new KRE::Particles::Technique(obj.obj_->getParentContainer(), arg)));
+		}));
+	END_DEFINE_FN
 	END_DEFINE_CALLABLE(ParticleSystemProxy)
+
+	BEGIN_DEFINE_CALLABLE_NOBASE(ParticleTechniqueProxy)
+	END_DEFINE_CALLABLE(ParticleTechniqueProxy)
+
+
+	BEGIN_DEFINE_CALLABLE_NOBASE(ParticleEmitterProxy)
+	END_DEFINE_CALLABLE(ParticleEmitterProxy)
+
+	BEGIN_DEFINE_CALLABLE_NOBASE(ParticleAffectorProxy)
+	END_DEFINE_CALLABLE(ParticleAffectorProxy)
+
 }
 

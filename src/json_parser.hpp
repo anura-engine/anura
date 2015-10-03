@@ -34,6 +34,7 @@ namespace json
 	enum class JSON_PARSE_OPTIONS { NO_PREPROCESSOR, USE_PREPROCESSOR };
 	variant parse(const std::string& doc, JSON_PARSE_OPTIONS options=JSON_PARSE_OPTIONS::USE_PREPROCESSOR);
 	variant parse_from_file(const std::string& fname, JSON_PARSE_OPTIONS options=JSON_PARSE_OPTIONS::USE_PREPROCESSOR);
+	variant parse_from_file_or_die(const std::string& fname, JSON_PARSE_OPTIONS options=JSON_PARSE_OPTIONS::USE_PREPROCESSOR);
 	bool file_exists_and_is_valid(const std::string& fname);
 
 	struct ParseError 

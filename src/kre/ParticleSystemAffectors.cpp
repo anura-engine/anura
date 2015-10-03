@@ -38,7 +38,7 @@ namespace KRE
 		public:
 			explicit TimeColorAffector(std::weak_ptr<ParticleSystemContainer> parent, const variant& node);
 		protected:
-			virtual void internalApply(Particle& p, float t);
+			virtual void internalApply(Particle& p, float t) override;
 			AffectorPtr clone() const override {
 				return std::make_shared<TimeColorAffector>(*this);
 			}
@@ -61,7 +61,7 @@ namespace KRE
 		public:
 			explicit JetAffector(std::weak_ptr<ParticleSystemContainer> parent, const variant& node);
 		protected:
-			virtual void internalApply(Particle& p, float t);
+			virtual void internalApply(Particle& p, float t) override;
 			AffectorPtr clone() const override {
 				return std::make_shared<JetAffector>(*this);
 			}
@@ -88,7 +88,7 @@ namespace KRE
 		public:
 			explicit ScaleAffector(std::weak_ptr<ParticleSystemContainer> parent, const variant& node);
 		protected:
-			virtual void internalApply(Particle& p, float t);
+			virtual void internalApply(Particle& p, float t) override;
 			AffectorPtr clone() const override {
 				return std::make_shared<ScaleAffector>(*this);
 			}
@@ -122,7 +122,7 @@ namespace KRE
 		public:
 			explicit GravityAffector(std::weak_ptr<ParticleSystemContainer> parent, const variant& node);
 		protected:
-			virtual void internalApply(Particle& p, float t);
+			virtual void internalApply(Particle& p, float t) override;
 			AffectorPtr clone() const override {
 				return std::make_shared<GravityAffector>(*this);
 			}
@@ -386,7 +386,7 @@ namespace KRE
 				handle_apply(getTechnique()->getActiveParticles(), t);
 				handle_apply(getTechnique()->getActiveEmitters(), t);
 			}
-			AffectorPtr clone() const {
+			AffectorPtr clone() const override {
 				return std::make_shared<RandomiserAffector>(*this);
 			}
 		private:
@@ -456,7 +456,7 @@ namespace KRE
 					p.current.direction = (p.current.direction + force_vector_)/2.0f;
 				}
 			}
-			AffectorPtr clone() const {
+			AffectorPtr clone() const override {
 				return std::make_shared<SineForceAffector>(*this);
 			}
 		private:

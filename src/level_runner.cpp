@@ -108,7 +108,9 @@ namespace
 	{
 		upload_screenshot_info() 
 			: error(false), done(false), client(new http_client("www.theargentlark.com", "80"))
-		{}
+		{
+			client->set_timeout_and_retry();
+		}
 		void finished(std::string response, bool is_error) {
 			LOG_INFO("Finished(" << is_error << ", " << response << ")");
 			result = response;
@@ -1365,7 +1367,6 @@ bool LevelRunner::play_cycle()
 					} else {
 						LOG_DEBUG("Enter windowed mode");
 						wnd->setFullscreenMode(KRE::FullScreenMode::WINDOWED);
-						wnd->setWindowSize(graphics::GameScreen::get().getWidth(), graphics::GameScreen::get().getHeight());
 					}
 				} else if(key == SDLK_F3) {
 					LOG_DEBUG("F3 pressed");

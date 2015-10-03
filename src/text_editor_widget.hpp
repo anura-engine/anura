@@ -46,7 +46,7 @@ namespace gui
 		void setFontSize(int font_size);
 		void changeFontSize(int amount);
 
-		virtual void setDim(int w, int h);
+		virtual void setDim(int w, int h) override;
 
 		void undo();
 		void redo();
@@ -80,8 +80,8 @@ namespace gui
 		void setOnEscHandler(std::function<void()> fn) { on_escape_ = fn; }
 		void setOnChangeFocusHandler(std::function<void(bool)> fn) { on_change_focus_ = fn; }
 
-		bool hasFocus() const { return has_focus_; }
-		void setFocus(bool value);
+		bool hasFocus() const override { return has_focus_; }
+		void setFocus(bool value) override;
 
 		size_t cursorRow() const { return cursor_.row; }
 		size_t cursorCol() const { return cursor_.col; }
@@ -143,7 +143,7 @@ namespace gui
 
 		size_t findEquivalentCol(size_t old_col, size_t old_row, size_t new_row) const;
 
-		void onSetYscroll(int old_pos, int new_pos);
+		void onSetYscroll(int old_pos, int new_pos) override;
 
 		void refreshScrollbar();
 

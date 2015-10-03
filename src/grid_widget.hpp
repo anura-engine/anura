@@ -45,7 +45,7 @@ namespace gui
 			show_background_ = val;
 			return *this;
 		}
-		virtual void setDim(int w, int h);
+		virtual void setDim(int w, int h) override;
 		void addRow(const std::vector<WidgetPtr>& widgets);
 
 		void setBgColor(const KRE::Color& col);
@@ -77,15 +77,15 @@ namespace gui
 
 		void setMaxHeight(int amount) { max_height_ = amount; }
 
-		void onSetYscroll(int old_value, int value);
+		void onSetYscroll(int old_value, int value) override;
 
 		void allowDrawHighlight(bool val=true) { allow_highlight_ = val; }
 
-		bool hasFocus() const;
-		virtual WidgetPtr getWidgetById(const std::string& id);
-		virtual ConstWidgetPtr getWidgetById(const std::string& id) const;
+		bool hasFocus() const override;
+		virtual WidgetPtr getWidgetById(const std::string& id) override;
+		virtual ConstWidgetPtr getWidgetById(const std::string& id) const override;
 
-		virtual std::vector<WidgetPtr> getChildren() const;
+		virtual std::vector<WidgetPtr> getChildren() const override;
 		
 		WidgetPtr clone() const override;
 	protected:
@@ -101,7 +101,7 @@ namespace gui
 		int getRowAt(int x, int y) const;
 		void recalculateDimensions();
 
-		void visitValues(game_logic::FormulaCallableVisitor& visitor);
+		void visitValues(game_logic::FormulaCallableVisitor& visitor) override;
 
 		int getNRows() const { return static_cast<int>(cells_.size())/ncols_; }
 		int ncols_;

@@ -105,33 +105,42 @@ void auto_update_window::process()
 {
 	++nframes_;
 	if(window_ == nullptr && (SDL_GetTicks() - start_time_ > 2000 || is_new_install_)) {
-		manager_.reset(new SDL::SDL());
-
-		variant_builder hints;
-		hints.add("renderer", "opengl");
-		hints.add("title", "Anura auto-update");
-		hints.add("clear_color", "black");
-
-		KRE::WindowManager wm("SDL");
-		window_ = wm.createWindow(800, 600, hints.build());
-
-		using namespace KRE;
-
-		// Set the default font to use for rendering. This can of course be overridden when rendering the
-		// text to a texture.
-		Font::setDefaultFont(module::get_default_font() == "bitmap" 
-			? "FreeMono" 
-			: module::get_default_font());
-		std::map<std::string,std::string> font_paths;
-		std::map<std::string,std::string> font_paths2;
-		module::get_unique_filenames_under_dir("data/fonts/", &font_paths);
-		for(auto& fp : font_paths) {
-			font_paths2[module::get_id(fp.first)] = fp.second;
-		}
-		KRE::Font::setAvailableFonts(font_paths2);
-		font_paths.clear();
-		font_paths2.clear();
+		create_window();
 	}
+}
+
+void auto_update_window::create_window()
+{
+	if(window_ != nullptr) {
+		return;
+	}
+
+	manager_.reset(new SDL::SDL());
+
+	variant_builder hints;
+	hints.add("renderer", "opengl");
+	hints.add("title", "Anura auto-update");
+	hints.add("clear_color", "black");
+
+	KRE::WindowManager wm("SDL");
+	window_ = wm.createWindow(800, 600, hints.build());
+
+	using namespace KRE;
+
+	// Set the default font to use for rendering. This can of course be overridden when rendering the
+	// text to a texture.
+	Font::setDefaultFont(module::get_default_font() == "bitmap" 
+		? "FreeMono" 
+		: module::get_default_font());
+	std::map<std::string,std::string> font_paths;
+	std::map<std::string,std::string> font_paths2;
+	module::get_unique_filenames_under_dir("data/fonts/", &font_paths);
+	for(auto& fp : font_paths) {
+		font_paths2[module::get_id(fp.first)] = fp.second;
+	}
+	KRE::Font::setAvailableFonts(font_paths2);
+	font_paths.clear();
+	font_paths2.clear();
 }
 
 void auto_update_window::draw() const
@@ -199,8 +208,74 @@ void auto_update_window::draw() const
 	window_->swap();
 }
 
+bool auto_update_window::proceed_or_retry_dialog(const std::string& msg)
+{
+	create_window();
+
+	static const KRE::Color normal_button_color(0,140,114,255);
+	static const KRE::Color depressed_button_color(168,64,30,255);
+	static const KRE::Color text_button_color(158,216,166,255);
+
+	for(;;) {
+		auto canvas = KRE::Canvas::getInstance();
+
+		window_->clear(KRE::ClearFlags::COLOR);
+
+		int mx, my;
+		SDL_GetMouseState(&mx, &my);
+
+		point mouse_pos(mx, my);
+
+		const rect proceed_button_area(window_->width()/2 - 200, window_->height()/2 + 100, 100, 40);
+		const rect retry_button_area(window_->width()/2 + 100, window_->height()/2 + 100, 100, 40);
+
+		const bool mouseover_proceed = pointInRect(mouse_pos, proceed_button_area);
+		const bool mouseover_retry = pointInRect(mouse_pos, retry_button_area);
+
+		canvas->drawSolidRect(proceed_button_area, mouseover_proceed ? depressed_button_color : normal_button_color);
+		canvas->drawSolidRect(retry_button_area, mouseover_retry ? depressed_button_color : normal_button_color);
+
+		KRE::TexturePtr proceed_text_texture = KRE::Font::getInstance()->renderText("Proceed", KRE::Color(0,0,0,255), 16, true, KRE::Font::get_default_monospace_font());
+		KRE::TexturePtr retry_text_texture = KRE::Font::getInstance()->renderText("Retry", KRE::Color(0,0,0,255), 16, true, KRE::Font::get_default_monospace_font());
+		canvas->blitTexture(proceed_text_texture, 0, (proceed_button_area.x() + proceed_button_area.x2() - proceed_text_texture->width())/2, (proceed_button_area.y() + proceed_button_area.y2() - proceed_text_texture->height())/2);
+		canvas->blitTexture(retry_text_texture, 0, (retry_button_area.x() + retry_button_area.x2() - retry_text_texture->width())/2, (retry_button_area.y() + retry_button_area.y2() - retry_text_texture->height())/2);
+
+		KRE::TexturePtr message_texture = KRE::Font::getInstance()->renderText("Failed to update the game. Retry or proceed without updating?", KRE::Color(255,255,255,255), 16, true, KRE::Font::get_default_monospace_font());
+		canvas->blitTexture(message_texture, 0, (window_->width() - message_texture->width())/2, window_->height()/2);
+
+		message_texture = KRE::Font::getInstance()->renderText(msg, KRE::Color(255,0,0,255), 16, true, KRE::Font::get_default_monospace_font());
+		canvas->blitTexture(message_texture, 0, (window_->width() - message_texture->width())/2, window_->height()/2 + 40);
+
+		window_->swap();
+
+		SDL_PumpEvents();
+		SDL_Delay(20);
+
+		SDL_Event event;
+		while(SDL_PollEvent(&event)) {
+			switch(event.type) {
+			case SDL_QUIT:
+				SDL_Quit();
+				exit(0);
+				break;
+			case SDL_MOUSEBUTTONDOWN:
+			case SDL_MOUSEBUTTONUP:
+				if(mouseover_proceed) {
+					return true;
+				} else if(mouseover_retry) {
+					return false;
+				}
+
+				break;
+			}
+		}
+	}
+
+	return true;
+}
+
 namespace {
-bool do_auto_update(std::deque<std::string> argv, auto_update_window& update_window, std::string& error_msg)
+bool do_auto_update(std::deque<std::string> argv, auto_update_window& update_window, std::string& error_msg, int timeout_ms)
 {
 #ifdef _MSC_VER
 	std::string anura_exe = "anura.exe";
@@ -213,8 +288,6 @@ bool do_auto_update(std::deque<std::string> argv, auto_update_window& update_win
 	bool update_anura = true;
 	bool update_module = true;
 	bool force = false;
-
-	int timeout_ms = 10000;
 
 	while(!argv.empty()) {
 		std::string arg = argv.front();
@@ -277,15 +350,17 @@ bool do_auto_update(std::deque<std::string> argv, auto_update_window& update_win
 		bool has_error = false;
 
 #define HANDLE_ERROR(msg) \
+		{ \
 			LOG_ERROR(msg); \
-		if(is_new_install || (cl && cl->out_of_date()) || (anura_cl && anura_cl->out_of_date())) { \
 			std::ostringstream s; \
 			s << msg; \
 			error_msg = s.str(); \
 			bool newer = strstr(error_msg.c_str(), "newer") != nullptr; \
 			if(!newer) { has_error = true; } \
 			if(!newer && (!cl || !anura_cl)) { \
-				return false; \
+				if(is_new_install || update_window.proceed_or_retry_dialog(error_msg) == false) { \
+					 return false; \
+				} \
 			} \
 		}
 			
@@ -428,7 +503,7 @@ bool do_auto_update(std::deque<std::string> argv, auto_update_window& update_win
 			}
 		}
 
-		if(has_error && is_new_install) {
+		if(has_error && (is_new_install || update_window.proceed_or_retry_dialog(error_msg) == false)) {
 			return false;
 		}
 
@@ -485,12 +560,16 @@ bool do_auto_update(std::deque<std::string> argv, auto_update_window& update_win
 
 COMMAND_LINE_UTILITY(update_launcher)
 {
+	int timeout_ms = 10000000;
+
 	auto_update_window update_window;
 	std::string error_msg;
 	std::deque<std::string> argv(args.begin(), args.end());
 	try {
-		while(!do_auto_update(argv, update_window, error_msg)) {
-			SDL_Delay(2000);
+		while(!do_auto_update(argv, update_window, error_msg, timeout_ms)) {
+			if(timeout_ms < 10000000) {
+				timeout_ms = 10000000;
+			}
 		}
 	} catch(boost::filesystem::filesystem_error& e) {
 		ASSERT_LOG(false, "File Error: " << e.what());

@@ -18,7 +18,11 @@ public:
 	void process();
 	void draw() const;
 	void set_is_new_install() { is_new_install_ = true; }
+
+	bool proceed_or_retry_dialog(const std::string& msg);
 private:
+	void create_window();
+
 	KRE::WindowPtr window_;
 	SDL::SDL_ptr manager_;
 	int nframes_;

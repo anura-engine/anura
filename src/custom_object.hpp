@@ -68,32 +68,34 @@ public:
 	CustomObject(const CustomObject& o);
 	virtual ~CustomObject();
 
-	void validate_properties();
+	ConstCustomObjectTypePtr getType() const { return type_; }
+
+	void validate_properties() override;
 
 	bool isA(const std::string& type) const;
 
 	//finishLoading(): called when a level finishes loading all objects,
 	//and allows us to do any final setup such as finding our parent.
-	void finishLoading(Level* lvl);
-	virtual variant write() const;
-	virtual void draw(int xx, int yy) const;
-	virtual void drawLater(int x, int y) const;
-	virtual void drawGroup() const;
-	virtual void process(Level& lvl);
+	void finishLoading(Level* lvl) override;
+	virtual variant write() const override;
+	virtual void draw(int xx, int yy) const override;
+	virtual void drawLater(int x, int y) const override;
+	virtual void drawGroup() const override;
+	virtual void process(Level& lvl) override;
 	virtual void construct();
-	virtual bool createObject();
+	virtual bool createObject() override;
 	void setLevel(Level& lvl) { }
 
 	void checkInitialized();
 
-	int parallaxScaleMillisX() const {
+	int parallaxScaleMillisX() const override {
 		if(parallax_scale_millis_ == nullptr){
 			return type_->parallaxScaleMillisX();
 		}else{
 			return parallax_scale_millis_->first;
 		}
 	}
-	int parallaxScaleMillisY() const {
+	int parallaxScaleMillisY() const override {
 		if(parallax_scale_millis_ == nullptr){
 			return type_->parallaxScaleMillisY();
 		}else{
@@ -101,129 +103,129 @@ public:
 		}
 	}
 	
-	virtual int zorder() const;
-	virtual int zSubOrder() const;
+	virtual int zorder() const override;
+	virtual int zSubOrder() const override;
 
-	virtual int velocityX() const;
-	virtual int velocityY() const;
-	virtual int mass() const { return type_->mass(); }
+	virtual int velocityX() const override;
+	virtual int velocityY() const override;
+	virtual int mass() const override { return type_->mass(); }
 
-	int getTeleportOffsetX() const { return type_->getTeleportOffsetX(); }
-	int getTeleportOffsetY() const { return type_->getTeleportOffsetY(); }
-	bool hasNoMoveToStanding() const { return type_->hasNoMoveToStanding(); };
-	bool hasReverseGlobalVerticalZordering() const { return type_->hasReverseGlobalVerticalZordering(); };
+	int getTeleportOffsetX() const override { return type_->getTeleportOffsetX(); }
+	int getTeleportOffsetY() const override { return type_->getTeleportOffsetY(); }
+	bool hasNoMoveToStanding() const override { return type_->hasNoMoveToStanding(); };
+	bool hasReverseGlobalVerticalZordering() const override { return type_->hasReverseGlobalVerticalZordering(); };
 
-	bool hasFeet() const;
-	
-	virtual bool isStandable(int x, int y, int* friction=nullptr, int* traction=nullptr, int* adjust_y=nullptr) const;
+	bool hasFeet() const override;
 
-	virtual bool destroyed() const;
-	virtual bool pointCollides(int x, int y) const;
-	virtual bool rectCollides(const rect& r) const;
+	virtual bool isStandable(int x, int y, int* friction=nullptr, int* traction=nullptr, int* adjust_y=nullptr) const override;
 
-	virtual const Frame& getCurrentFrame() const { return *frame_; }
+	virtual bool destroyed() const override;
+	virtual bool pointCollides(int x, int y) const override;
+	virtual bool rectCollides(const rect& r) const override;
+
+	virtual const Frame& getCurrentFrame() const override { return *frame_; }
 
 	void setFrame(const std::string& name);
 	void setFrame(const Frame& new_frame);
 
-	virtual rect getDrawRect() const;
+	virtual rect getDrawRect() const override;
 
 	//bare setting of the frame without adjusting position/checking solidity
 	//etc etc.
 	void setFrameNoAdjustments(const std::string& name);
 	void setFrameNoAdjustments(const Frame& new_frame);
 	void die();
-	void dieWithNoEvent();
-	virtual bool isActive(const rect& screen_area) const;
-	bool diesOnInactive() const;
-	bool isAlwaysActive() const;
-	bool moveToStanding(Level& lvl, int max_displace=10000);
+	void dieWithNoEvent() override;
+	virtual bool isActive(const rect& screen_area) const override;
+	bool diesOnInactive() const override;
+	bool isAlwaysActive() const override;
+	bool moveToStanding(Level& lvl, int max_displace=10000) override;
 
-	bool isBodyHarmful() const;
-	bool isBodyPassthrough() const;
+	bool isBodyHarmful() const override;
+	bool isBodyPassthrough() const override;
 
-	int getTimeInFrame() const { return time_in_frame_; }
+	int getTimeInFrame() const override{ return time_in_frame_; }
 
-	FormulaCallable* vars() { return vars_.get(); }
-	const FormulaCallable* vars() const { return vars_.get(); }
+	FormulaCallable* vars() override { return vars_.get(); }
+	const FormulaCallable* vars() const override { return vars_.get(); }
 
 	int cycle() const { return cycle_; }
 
-	int getSurfaceFriction() const;
-	int getSurfaceTraction() const;
+	int getSurfaceFriction() const override;
+	int getSurfaceTraction() const override;
 
 	variant getChild(const std::string& key) const {
 		return type_->getChild(key);
 	}
 
-	const Frame& getIconFrame() const;
+	const Frame& getIconFrame() const override;
 
-	virtual EntityPtr clone() const;
-	virtual EntityPtr backup() const;
+	virtual EntityPtr clone() const override;
+	virtual EntityPtr backup() const override;
 
-	game_logic::ConstFormulaPtr getEventHandler(int key) const;
-	void setEventHandler(int, game_logic::ConstFormulaPtr f);
+	game_logic::ConstFormulaPtr getEventHandler(int key) const override;
+	void setEventHandler(int, game_logic::ConstFormulaPtr f) override;
 
-	bool canInteractWith() const;
+	bool canInteractWith() const override;
 
-	std::string getDebugDescription() const;
+	std::string getDebugDescription() const override;
 
-	void mapEntities(const std::map<EntityPtr, EntityPtr>& m);
-	void cleanup_references();
+	void mapEntities(const std::map<EntityPtr, EntityPtr>& m) override;
+	void cleanup_references() override;
 
 	void addParticleSystem(const std::string& key, const std::string& type);
 	void removeParticleSystem(const std::string& key);
 
-	virtual int getHitpoints() const { return hitpoints_; }
+	virtual int getHitpoints() const override { return hitpoints_; }
 
 	void setText(const std::string& text, const std::string& font, int size, int align);
 
-	virtual bool boardableVehicle() const;
+	virtual bool boardableVehicle() const override;
 
-	virtual void boarded(Level& lvl, const EntityPtr& player);
-	virtual void unboarded(Level& lvl);
+	virtual void boarded(Level& lvl, const EntityPtr& player) override;
+	virtual void unboarded(Level& lvl) override;
 
-	virtual void boardVehicle();
-	virtual void unboardVehicle();
+	virtual void boardVehicle() override;
+	virtual void unboardVehicle() override;
 
 	void set_driver_position();
 
-	virtual bool useAbsoluteScreenCoordinates() const { return use_absolute_screen_coordinates_; }
+	virtual bool useAbsoluteScreenCoordinates() const override { return use_absolute_screen_coordinates_; }
 
-	virtual int getCurrentAnimationId() const { return current_animation_id_; }
+	virtual int getCurrentAnimationId() const override { return current_animation_id_; }
 
 	virtual bool handle_sdl_event(const SDL_Event& event, bool claimed);
 #ifndef NO_EDITOR
 	virtual ConstEditorEntityInfoPtr getEditorInfo() const override;
 #endif // !NO_EDITOR
 
-	virtual bool handleEvent(const std::string& event, const FormulaCallable* context=nullptr);
-	virtual bool handleEvent(int event, const FormulaCallable* context=nullptr);
-	virtual bool handleEventDelay(int event, const FormulaCallable* context=nullptr);
+	virtual bool handleEvent(const std::string& event, const FormulaCallable* context=nullptr) override;
+	virtual bool handleEvent(int event, const FormulaCallable* context=nullptr) override;
+	virtual bool handleEventDelay(int event, const FormulaCallable* context=nullptr) override;
 
-	virtual void resolveDelayedEvents();
+	virtual void resolveDelayedEvents() override;
 
-	virtual bool serializable() const;
+	virtual bool serializable() const override;
 
 	void set_blur(const BlurInfo* blur);
-	void setSoundVolume(const int volume);
-	void setZSubOrder(const int zsub_order) {zsub_order_ = zsub_order;}
+	void setSoundVolume(const int volume) override;
+	void setZSubOrder(const int zsub_order) override {zsub_order_ = zsub_order;}
 	
-	bool executeCommand(const variant& var);
+	bool executeCommand(const variant& var) override;
 
-	virtual game_logic::FormulaPtr createFormula(const variant& v);
+	virtual game_logic::FormulaPtr createFormula(const variant& v) override;
 
-	bool allowLevelCollisions() const;
+	bool allowLevelCollisions() const override;
 
 	//statistic on how many FFL events are handled every second.
 	static int events_handled_per_second;
 
-	const std::vector<LightPtr>& lights() const { return lights_; }
-	void swapLights(std::vector<LightPtr>& lights) { lights_.swap(lights); }
+	const std::vector<LightPtr>& lights() const override { return lights_; }
+	void swapLights(std::vector<LightPtr>& lights) override { lights_.swap(lights); }
 
-	void shiftPosition(int x, int y);
+	void shiftPosition(int x, int y) override;
 
-	bool appearsAtDifficulty(int difficulty) const;
+	bool appearsAtDifficulty(int difficulty) const override;
 
 	int getMinDifficulty() const { return min_difficulty_; }
 	int getMaxDifficulty() const { return max_difficulty_; }
@@ -233,7 +235,7 @@ public:
 	void updateType(ConstCustomObjectTypePtr old_type,
 	                 ConstCustomObjectTypePtr new_type);
 
-	bool isMouseEventSwallowed() const {return swallow_mouse_event_;}
+	bool isMouseEventSwallowed() const override {return swallow_mouse_event_;}
 	void resetMouseEvent() {swallow_mouse_event_ = false;}
 	void addWidget(const gui::WidgetPtr& w);
 	void addWidgets(std::vector<gui::WidgetPtr>* widgets);
@@ -280,11 +282,11 @@ protected:
 	//static objects.
 	void staticProcess(Level& lvl);
 
-	virtual void control(const Level& lvl);
-	variant getValue(const std::string& key) const;
-	variant getValueBySlot(int slot) const;
-	void setValue(const std::string& key, const variant& value);
-	void setValueBySlot(int slot, const variant& value);
+	virtual void control(const Level& lvl) override;
+	variant getValue(const std::string& key) const override;
+	variant getValueBySlot(int slot) const override;
+	void setValue(const std::string& key, const variant& value) override;
+	void setValueBySlot(int slot, const variant& value) override;
 
 	virtual variant getPlayerValueBySlot(int slot) const;
 	virtual void setPlayerValueBySlot(int slot, const variant& value);
@@ -297,35 +299,35 @@ protected:
 		return was_underwater_;
 	}
 
-	const std::pair<int,int>* parallaxScaleMillis() const { return parallax_scale_millis_.get(); }
+	const std::pair<int,int>* parallaxScaleMillis() const override { return parallax_scale_millis_.get(); }
 
 	enum class STANDING_STATUS { NOT_STANDING, BACK_FOOT, FRONT_FOOT };
 	STANDING_STATUS isStanding(const Level& lvl, CollisionInfo* info=nullptr) const;
 
 	void setParent(EntityPtr e, const std::string& pivot_point);
 
-	virtual int parentDepth(bool* has_human_parent=nullptr, int cur_depth=0) const;
+	virtual int parentDepth(bool* has_human_parent=nullptr, int cur_depth=0) const override;
 
-	virtual bool editorForceStanding() const;
+	virtual bool editorForceStanding() const override;
 
-	virtual game_logic::ConstFormulaCallableDefinitionPtr getDefinition() const;
+	virtual game_logic::ConstFormulaCallableDefinitionPtr getDefinition() const override;
 
-	EntityPtr standingOn() const { return standing_on_; }
-	virtual void addToLevel();
+	EntityPtr standingOn() const override { return standing_on_; }
+	virtual void addToLevel() override;
 
-	virtual rect platformRectAt(int xpos) const;
-	virtual int platformSlopeAt(int xpos) const;
+	virtual rect platformRectAt(int xpos) const override;
+	virtual int platformSlopeAt(int xpos) const override;
 
-	virtual bool isSolidPlatform() const;
+	virtual bool isSolidPlatform() const override;
 
-	virtual void beingRemoved();
-	virtual void beingAdded();
+	virtual void beingRemoved() override;
+	virtual void beingAdded() override;
 
 	//set up an animation schedule. values.size() should be a multiple of
 	//slots.size().
 
 protected:
-	void surrenderReferences(GarbageCollector* collector);
+	void surrenderReferences(GarbageCollector* collector) override;
 
 private:
 	void initProperties();
@@ -351,10 +353,10 @@ private:
 
 	void processFrame();
 
-	ConstSolidInfoPtr calculateSolid() const;
-	ConstSolidInfoPtr calculatePlatform() const;
+	ConstSolidInfoPtr calculateSolid() const override;
+	ConstSolidInfoPtr calculatePlatform() const override;
 
-	virtual void getInputs(std::vector<game_logic::FormulaInput>* inputs) const;
+	virtual void getInputs(std::vector<game_logic::FormulaInput>* inputs) const override;
 
 	int slopeStandingOn(int range) const;
 
@@ -448,9 +450,9 @@ private:
 	std::shared_ptr<KRE::ColorTransform> draw_color_;
 
 	std::shared_ptr<decimal> draw_scale_;
-	decimal getDrawScale() const { return getValueBySlot(CUSTOM_OBJECT_SCALE).as_decimal(); };
+	decimal getDrawScale() const override { return getValueBySlot(CUSTOM_OBJECT_SCALE).as_decimal(); };
 	
-	void setDrawScale(float new_scale) {
+	void setDrawScale(float new_scale) override {
 		setValueBySlot(CUSTOM_OBJECT_SCALE, variant(new_scale));
 	}
 	
@@ -554,7 +556,7 @@ private:
 	std::vector<graphics::AnuraShaderPtr> effects_shaders_;
 
 	// new particles systems
-	graphics::ParticleSystemProxyPtr particles_;
+	graphics::ParticleSystemContainerProxyPtr particles_;
 
 	xhtml::DocumentObjectPtr document_;
 };

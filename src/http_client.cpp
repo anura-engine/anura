@@ -35,17 +35,23 @@ PREF_INT(http_fake_lag, 0, "fake lag to add to http requests");
 http_client::http_client(const std::string& host, const std::string& port, int session, boost::asio::io_service* service)
   : session_id_(session),
     io_service_buf_(service ? nullptr : new boost::asio::io_service),
-	io_service_(service ? *service : *io_service_buf_),
+	io_service_(service ? service : io_service_buf_.get()),
 	resolution_state_(RESOLUTION_NOT_STARTED),
-    resolver_(io_service_),
+    resolver_(new tcp::resolver(*io_service_)),
 	host_(host),
-	resolver_query_(host.c_str(), port.c_str()),
+	port_(port),
+	resolver_query_(new tcp::resolver::query(host.c_str(), port.c_str())),
 	in_flight_(0),
-	allow_keepalive_(false)
+	allow_keepalive_(false),
+	timeout_and_retry_(false)
 {
 }
 
 http_client::~http_client()
+{
+}
+
+http_client::Connection::~Connection()
 {
 }
 
@@ -54,8 +60,14 @@ void http_client::set_allow_keepalive()
 	allow_keepalive_ = true;
 }
 
-void http_client::send_request(std::string method_path, std::string request, std::function<void(std::string)> handler, std::function<void(std::string)> error_handler, std::function<void(size_t,size_t,bool)> progress_handler)
+void http_client::send_request(std::string method_path, std::string request, std::function<void(std::string)> handler, std::function<void(std::string)> error_handler, std::function<void(size_t,size_t,bool)> progress_handler, int num_retries, int attempt_num)
 {
+	if(in_flight_ == 0 && attempt_num > 6) {
+		LOG_INFO("HTTP client failing to receive data after " << attempt_num << " tries, timed out.\n");
+		error_handler("timeout");
+		return;
+	}
+
 	++in_flight_;
 	
 	bool already_connected = false;
@@ -68,9 +80,14 @@ void http_client::send_request(std::string method_path, std::string request, std
 		//because this is an existing connection it might have a problem.
 		//if it does we should just retry on a different connection
 		//rather than report an error.
-		conn->retry_fn = std::bind(&http_client::send_request, this, method_path, request, handler, error_handler, progress_handler);
+		conn->retry_fn = std::bind(&http_client::send_request, this, method_path, request, handler, error_handler, progress_handler, num_retries, attempt_num+1);
+		conn->retry_on_error = num_retries+1;
 	} else {
-		conn.reset(new Connection(io_service_));
+		conn.reset(new Connection(*io_service_));
+		conn->retry_on_error = num_retries;
+		if(num_retries || timeout_and_retry_) {
+			conn->retry_fn = std::bind(&http_client::send_request, this, method_path, request, handler, error_handler, progress_handler, num_retries-1, attempt_num+1);
+		}
 	}
 
 	conn->method_path = method_path;
@@ -79,12 +96,19 @@ void http_client::send_request(std::string method_path, std::string request, std
 	conn->error_handler = error_handler;
 	conn->progress_handler = progress_handler;
 
+	if(timeout_and_retry_) {
+		connections_monitor_timeout_.push_back(std::weak_ptr<Connection>(conn));
+		conn->timeout_period = 2000*(attempt_num > 5 ? 5 : attempt_num);
+		conn->timeout_deadline = SDL_GetTicks() + conn->timeout_period;
+		conn->timeout_nbytes_needed = 1024*16;
+	}
+
 	if(already_connected) {
 		send_connection_request(conn);
 	} else if(resolution_state_ == RESOLUTION_NOT_STARTED) {
 		resolution_state_ = RESOLUTION_IN_PROGRESS;
 
-		resolver_.async_resolve(resolver_query_,
+		resolver_->async_resolve(*resolver_query_,
 			std::bind(&http_client::handle_resolve, this,
 				std::placeholders::_1,
 				std::placeholders::_2,
@@ -99,6 +123,10 @@ void http_client::send_request(std::string method_path, std::string request, std
 
 void http_client::handle_resolve(const boost::system::error_code& error, tcp::resolver::iterator endpoint_iterator, connection_ptr conn)
 {
+	if(conn->aborted) {
+		return;
+	}
+
 	if(!error)
 	{
 		endpoint_iterator_ = endpoint_iterator;
@@ -114,6 +142,9 @@ void http_client::handle_resolve(const boost::system::error_code& error, tcp::re
 
 void http_client::async_connect(connection_ptr conn)
 {
+	if(conn->aborted) {
+		return;
+	}
 
 #if BOOST_VERSION >= 104700
 		boost::asio::async_connect(*conn->socket, 
@@ -129,6 +160,10 @@ void http_client::async_connect(connection_ptr conn)
 
 void http_client::handle_connect(const boost::system::error_code& error, connection_ptr conn, tcp::resolver::iterator resolve_itor)
 {
+	if(conn->aborted) {
+		return;
+	}
+
 	if(error) {
 		LOG_WARN("HANDLE_CONNECT_ERROR: " << error);
 		if(endpoint_iterator_ == resolve_itor) {
@@ -167,6 +202,10 @@ void http_client::handle_connect(const boost::system::error_code& error, connect
 
 void http_client::send_connection_request(connection_ptr conn)
 {
+	if(conn->aborted) {
+		return;
+	}
+
 	//do async write.
 	std::ostringstream msg;
 	msg << conn->method_path << " HTTP/1.1\r\n"
@@ -207,10 +246,13 @@ void http_client::write_connection_data(connection_ptr conn)
 
 void http_client::handle_send(connection_ptr conn, const boost::system::error_code& e, size_t nbytes, std::shared_ptr<std::string> buf_ptr)
 {
+	if(conn->aborted) {
+		return;
+	}
 
 	if(e) {
 		--in_flight_;
-		if(conn->retry_fn) {
+		if(conn->retry_fn && conn->retry_on_error > 0) {
 			conn->retry_fn();
 		} else if(conn->error_handler) {
 			conn->error_handler("ERROR SENDING DATA");
@@ -265,9 +307,13 @@ namespace http
 
 void http_client::handle_receive(connection_ptr conn, const boost::system::error_code& e, size_t nbytes)
 {
+	if(conn->aborted) {
+		return;
+	}
+	
 	if(e) {
 		--in_flight_;
-		if(conn->retry_fn) {
+		if(conn->retry_fn && conn->retry_on_error) {
 			conn->retry_fn();
 			return;
 		}
@@ -284,6 +330,7 @@ void http_client::handle_receive(connection_ptr conn, const boost::system::error
 			if(end_headers) {
 				LOG_ERROR("HEADERS: (((" << std::string(conn->response.c_str(), end_headers) << ")))");
 				conn->handler(std::string(end_headers+2));
+				conn->aborted = true;
 
 				if(allow_keepalive_) {
 					usable_connections_.push_back(conn->socket);
@@ -297,6 +344,8 @@ void http_client::handle_receive(connection_ptr conn, const boost::system::error
 
 		return;
 	}
+
+	//LOG_INFO("Received http data: " << nbytes << " bytes, expecting " << conn->expected_len << "\n");
 
 	conn->response.insert(conn->response.end(), &conn->buf[0], &conn->buf[0] + nbytes);
 	if(conn->headers.empty()) {
@@ -324,6 +373,8 @@ void http_client::handle_receive(connection_ptr conn, const boost::system::error
 
 	if(conn->expected_len != -1 && conn->response.size() >= static_cast<unsigned>(conn->expected_len)) {
 		ASSERT_LOG(conn->expected_len == conn->response.size(), "UNEXPECTED RESPONSE SIZE " << conn->expected_len << " VS " << conn->response.size() << ": " << conn->response);
+
+		//LOG_INFO("Received full http response\n");
 
 		//We have the full response now -- handle it.
 		const char* end_headers = strstr(conn->response.c_str(), "\n\n");
@@ -354,6 +405,7 @@ void http_client::handle_receive(connection_ptr conn, const boost::system::error
 				ASSERT_LOG(encoding == "identity", "Unsupported HTTP encoding: " << encoding);
 			}
 		}
+		conn->aborted = true;
 		conn->handler(payload_str);
 		usable_connections_.push_back(conn->socket);
 	} else {
@@ -371,8 +423,38 @@ void http_client::process()
 		connections_waiting_on_fake_lag_.erase(connections_waiting_on_fake_lag_.begin());
 	}
 
-	io_service_.poll();
-	io_service_.reset();
+	connections_monitor_timeout_.erase(std::remove_if(connections_monitor_timeout_.begin(), connections_monitor_timeout_.end(), [](const std::weak_ptr<Connection>& ptr) { return ptr.lock().get() == nullptr || ptr.lock()->aborted; }), connections_monitor_timeout_.end());
+
+	std::vector<connection_ptr> connections_to_monitor;
+	
+	for(auto& p : connections_monitor_timeout_) {
+		auto conn = p.lock();
+		if(!conn || !conn->retry_fn || conn->aborted) {
+			continue;
+		}
+
+		connections_to_monitor.push_back(conn);
+	}
+
+	for(auto conn : connections_to_monitor) {
+		if(conn->timeout_deadline >= 0 && SDL_GetTicks() > conn->timeout_deadline) {
+			const size_t nbytes = conn->nbytes_sent + conn->response.size();
+			if(nbytes < conn->timeout_nbytes_needed) {
+				LOG_INFO("HTTP client timed out, resetting connection\n");
+				conn->aborted = true;
+				conn->socket->close();
+				--in_flight_;
+				conn->retry_fn();
+			}
+			else {
+				conn->timeout_deadline = SDL_GetTicks() + conn->timeout_period;
+				conn->timeout_nbytes_needed = nbytes + 1024*16;
+			}
+		}
+	}
+
+	io_service_->poll();
+	io_service_->reset();
 }
 
 BEGIN_DEFINE_CALLABLE_NOBASE(http_client)
