@@ -46,7 +46,7 @@ namespace graphics
 	GameScreen& GameScreen::get()
 	{
 		static GameScreen res;
-		KRE::WindowManager::getMainWindow()->registerSizeChangeObserver(std::bind(&GameScreen::windowSizeUpdated, &res, std::placeholders::_1, std::placeholders::_2));
+		static int handle = KRE::WindowManager::getMainWindow()->registerSizeChangeObserver(std::bind(&GameScreen::windowSizeUpdated, &res, std::placeholders::_1, std::placeholders::_2));
 		return res;
 	}
 
