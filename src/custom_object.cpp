@@ -69,6 +69,7 @@
 #include "playable_custom_object.hpp"
 #include "preferences.hpp"
 #include "profile_timer.hpp"
+#include "rectangle_rotator.hpp"
 #include "screen_handling.hpp"
 #include "string_utils.hpp"
 #include "variant.hpp"
@@ -4868,6 +4869,7 @@ bool CustomObject::isActive(const rect& screen_area) const
 
 	if(activation_area_) {
 		return rects_intersect(*activation_area_, screen_area);
+		//Can we wrap activation area in a call to rotated_scaled_rect_bounds(*activation_area_, rotate_z_.as_float32(), draw_scale_->as_float32());
 	}
 
 	if(text_) {
