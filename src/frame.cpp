@@ -1103,4 +1103,8 @@ BEGIN_DEFINE_CALLABLE_NOBASE(Frame)
 		return variant(obj.frame_time_);
 	DEFINE_FIELD(total_animation_time, "int")
 		return variant(obj.duration());
+	DEFINE_FIELD(width, "int")
+		return variant(obj.width());
+	DEFINE_FIELD(height, "int")
+		return variant(obj.height());
 END_DEFINE_CALLABLE(Frame)

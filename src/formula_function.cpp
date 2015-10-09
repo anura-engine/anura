@@ -1886,7 +1886,6 @@ FUNCTION_DEF_IMPL
 				pathfinding::edge_weights w;
  
  				variant cmp(args()[1]->evaluate(variables));
-				fprintf(stderr, "ZZZ: FUNCTION: %s -> %d\n", args()[1]->str().c_str(), cmp.max_function_arguments());
 				std::vector<variant> fn_args;
 				fn_args.push_back(variant());
 				fn_args.push_back(variant());
@@ -3089,6 +3088,15 @@ FUNCTION_DEF_IMPL
 			return variant(test::run_benchmark("benchmark", std::bind(evaluate_expr_for_benchmark, args()[0].get(), &variables, _1)));
 		END_FUNCTION_DEF(benchmark)
 
+		FUNCTION_DEF(benchmark_once, 1, 1, "benchmark_once(expr): Executes expr once and returns a string giving the timing")
+			const int start_time = SDL_GetTicks();
+			args()[0]->evaluate(variables);
+			const int end_time = SDL_GetTicks();
+			std::ostringstream results;
+			results << "Ran expression in " << (end_time - start_time) << "ms";
+			return variant(results.str());
+		END_FUNCTION_DEF(benchmark_once)
+
 		FUNCTION_DEF(compress, 1, 2, "compress(string, (optional) compression_level): Compress the given string object")
 			int compression_level = -1;
 			if(args().size() > 1) {
@@ -4079,7 +4087,7 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 			RETURN_TYPE("commands")
 		END_FUNCTION_DEF(write_document)
 
-		FUNCTION_DEF(get_document, 1, 2, "get_document(string filename, [enum {'null_on_failure', 'user_preferences_dir'}] flags): return reference to the given JSON document. flags can contain 'null_on_failure' and 'user_preferences_dir'")
+		FUNCTION_DEF(get_document, 1, 2, "get_document(string filename, [enum {'null_on_failure', 'user_preferences_dir', 'uncached'}] flags): return reference to the given JSON document. flags can contain 'null_on_failure' and 'user_preferences_dir'")
 			if(args().size() != 1) {
 				Formula::failIfStaticContext();
 			}
@@ -4090,6 +4098,7 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 
 			bool allow_failure = false;
 			bool prefs_directory = false;
+			bool use_cache = true;
 
 			if(args().size() > 1) {
 				const variant flags = args()[1]->evaluate(variables);
@@ -4099,15 +4108,19 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 						allow_failure = true;
 					} else if(flag == "user_preferences_dir") {
 						prefs_directory = true;
+					} else if(flag == "uncached") {
+						use_cache = false;
 					} else {
 						ASSERT_LOG(false, "illegal flag given to get_document: " << flag);
 					}
 				}
 			}
 
-			auto itor = get_doc_cache(prefs_directory).find(base_docname);
-			if(itor != get_doc_cache(prefs_directory).end()) {
-				return itor->second;
+			if(use_cache) {
+				auto itor = get_doc_cache(prefs_directory).find(base_docname);
+				if(itor != get_doc_cache(prefs_directory).end()) {
+					return itor->second;
+				}
 			}
 
 			std::string docname = base_docname;
@@ -4124,11 +4137,15 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 
 			try {
 				variant result = game_logic::deserialize_file_with_objects(docname);
-				get_doc_cache(prefs_directory)[docname] = result;
+				if(use_cache) {
+					get_doc_cache(prefs_directory)[docname] = result;
+				}
 				return result;
 			} catch(json::ParseError& e) {
 				if(allow_failure) {
-					get_doc_cache(prefs_directory)[docname] = variant();
+					if(use_cache) {
+						get_doc_cache(prefs_directory)[docname] = variant();
+					}
 					return variant();
 				}
 

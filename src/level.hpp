@@ -152,7 +152,7 @@ public:
 	void remove_character(EntityPtr e);
 	std::vector<EntityPtr> get_characters_in_rect(const rect& r, int screen_xpos, int screen_ypos) const;
 	std::vector<EntityPtr> get_characters_at_point(int x, int y, int screen_xpos, int screen_ypos) const;
-	EntityPtr get_next_character_at_point(int x, int y, int screen_xpos, int screen_ypos) const;
+	EntityPtr get_next_character_at_point(int x, int y, int screen_xpos, int screen_ypos, const void* currently_selected=nullptr) const;
 	const PlayerInfo* player() const { return player_ ? player_->getPlayerInfo() : nullptr; }
 	PlayerInfo* player() { return player_ ? player_->getPlayerInfo() : nullptr; }
 	std::vector<EntityPtr>& players() { return players_; }

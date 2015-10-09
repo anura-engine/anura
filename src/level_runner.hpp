@@ -43,6 +43,9 @@ struct multiplayer_exception {
 class editor;
 class EditorResolutionManager;
 
+void addProcessFunction(std::function<void()> fn, void* tag);
+void removeProcessFunction(void* tag);
+
 class LevelRunner 
 {
 public:

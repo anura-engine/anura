@@ -3035,7 +3035,7 @@ namespace
 	}
 }
 
-EntityPtr Level::get_next_character_at_point(int x, int y, int screen_xpos, int screen_ypos) const
+EntityPtr Level::get_next_character_at_point(int x, int y, int screen_xpos, int screen_ypos, const void* currently_selected) const
 {
 	std::vector<EntityPtr> v = get_characters_at_point(x, y, screen_xpos, screen_ypos);
 	if(v.empty()) {
@@ -3044,11 +3044,15 @@ EntityPtr Level::get_next_character_at_point(int x, int y, int screen_xpos, int 
 
 	std::sort(v.begin(), v.end(), compare_entities_by_spawned);
 
-	if(editor_selection_.empty()) {
+	if(currently_selected == nullptr && editor_selection_.empty() == false) {
+		currently_selected = editor_selection_.back().get();
+	}
+
+	if(currently_selected == nullptr) {
 		return v.front();
 	}
 
-	std::vector<EntityPtr>::iterator itor = std::find(v.begin(), v.end(), editor_selection_.back());
+	std::vector<EntityPtr>::iterator itor = std::find(v.begin(), v.end(), currently_selected);
 	if(itor == v.end()) {
 		return v.front();
 	}

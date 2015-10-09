@@ -81,6 +81,8 @@ extern std::map<std::string, variant> g_user_info_registry;
 
 namespace 
 {
+	std::vector<std::pair<std::function<void()>,void*>> process_functions;
+
 	PREF_BOOL(allow_debug_console_clicking, true, "Allow clicking on objects in the debug console to select them");
 	PREF_BOOL(reload_modified_objects, false, "Reload object definitions when their file is modified on disk");
 	PREF_INT(mouse_drag_threshold, 1000, "Threshold for how much motion can take place in a mouse drag");
@@ -302,6 +304,16 @@ namespace
 			}
 		}
 	}
+}
+
+void addProcessFunction(std::function<void()> fn, void* tag)
+{
+	process_functions.push_back(std::pair<std::function<void()>,void*>(fn, tag));
+}
+
+void removeProcessFunction(void* tag)
+{
+	process_functions.erase(std::remove_if(process_functions.begin(), process_functions.end(), [&tag](const std::pair<std::function<void()>,void*>& p) { return p.second == tag; }), process_functions.end());
 }
 
 void begin_skipping_game() 
@@ -821,6 +833,10 @@ bool LevelRunner::play_cycle()
 {
 	auto wnd = KRE::WindowManager::getMainWindow();
 	static SettingsDialog settingsDialog;
+
+	for(auto& p : process_functions) {
+		p.first();
+	}
 
 	const preferences::alt_frame_time_scope alt_frame_time_scoper(preferences::has_alt_frame_time() && SDL_GetModState()&KMOD_ALT);
 	if(controls::first_invalid_cycle() >= 0) {
@@ -1385,7 +1401,7 @@ bool LevelRunner::play_cycle()
 				if(console_.get() && (g_allow_debug_console_clicking || ctrl_pressed)) {
 					int mousex, mousey;
 					input::sdl_get_mouse_state(&mousex, &mousey);
-					EntityPtr selected = lvl_->get_next_character_at_point(last_draw_position().x/100 + mousex, last_draw_position().y/100 + mousey, last_draw_position().x/100, last_draw_position().y/100);
+					EntityPtr selected = lvl_->get_next_character_at_point(last_draw_position().x/100 + mousex, last_draw_position().y/100 + mousey, last_draw_position().x/100, last_draw_position().y/100, console_->getFocus().get());
 					if(selected) {
 						lvl_->set_editor_highlight(selected);
 						console_->setFocus(selected);

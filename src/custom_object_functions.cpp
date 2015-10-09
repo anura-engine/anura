@@ -31,6 +31,7 @@
 #include "cairo.hpp"
 #endif
 
+#include "code_editor_dialog.hpp"
 #include "ColorTransform.hpp"
 #include "RenderTarget.hpp"
 #include "WindowManager.hpp"
@@ -178,12 +179,12 @@ namespace
 		return boost::intrusive_ptr<TextureObject>(new TextureObject(rt->getTexture()));
 	}
 
-	FUNCTION_DEF(get_texture, 1, 1, "get_texture(string): loads a texture")
+	FUNCTION_DEF(get_texture, 1, 1, "get_texture(string|map): loads a texture")
 		game_logic::Formula::failIfStaticContext();
 		return variant(new TextureObject(KRE::Texture::createTexture(EVAL_ARG(0))));
 
 	FUNCTION_ARGS_DEF
-		ARG_TYPE("string")
+		ARG_TYPE("string|map")
 	RETURN_TYPE("builtin texture_object")
 
 	END_FUNCTION_DEF(get_texture)
@@ -3249,6 +3250,13 @@ RETURN_TYPE("bool")
 		ARG_TYPE("int")
 	RETURN_TYPE("commands")
 	END_FUNCTION_DEF(cosmic_shift)
+
+	FUNCTION_DEF(create_animation, 1, 1, "create_animation(map): creates an animation object from the given data")
+		return variant(new Frame(EVAL_ARG(0)));
+	FUNCTION_ARGS_DEF
+		ARG_TYPE("map")
+	RETURN_TYPE("builtin frame")
+	END_FUNCTION_DEF(create_animation)
 
 	#if !defined(NO_MODULES)
 

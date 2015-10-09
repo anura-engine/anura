@@ -11,7 +11,7 @@ public:
 
 	T* get() const { return reinterpret_cast<T*>(get_obj()); }
 
-	explicit weak_ptr(const weak_ptr<T>& p) : weak_ptr_base(p.get()) {
+	weak_ptr(const weak_ptr<T>& p) : weak_ptr_base(p.get()) {
 	}
 
 	const weak_ptr<T>& operator=(const weak_ptr<T>& p) {

@@ -807,7 +807,6 @@ COMMAND_LINE_UTILITY(generate_manifest)
 		std::string response;
 
 		http_client client(server, port);
-		client.set_timeout_and_retry();
 		client.send_request("POST /replicate_module", msg, 
 							std::bind(finish_upload, _1, &done, &response),
 							std::bind(error_upload, _1, &error),
@@ -877,7 +876,6 @@ COMMAND_LINE_UTILITY(generate_manifest)
 			bool error = false;
 
 			http_client client(server, port);
-			client.set_timeout_and_retry();
 			client.send_request("POST /upload_module", msg, 
 								std::bind(finish_upload, _1, &done, &response),
 								std::bind(error_upload, _1, &error),
@@ -914,7 +912,6 @@ COMMAND_LINE_UTILITY(generate_manifest)
 			bool error = false;
 
 			http_client client(server, port);
-			client.set_timeout_and_retry();
 			client.send_request("POST /upload_module", msg, 
 								std::bind(finish_upload, _1, &done, &response),
 								std::bind(error_upload, _1, &error),
@@ -983,7 +980,6 @@ COMMAND_LINE_UTILITY(generate_manifest)
 		std::string* response = nullptr;
 
 		http_client client(server, port);
-		client.set_timeout_and_retry();
 		client.send_request("POST /upload_module", msg, 
 							std::bind(finish_upload, _1, &done, response),
 							std::bind(error_upload, _1, &done),
