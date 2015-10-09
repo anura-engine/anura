@@ -55,6 +55,7 @@ namespace debug_console
 		void addMessage(const std::string& msg);
 
 		void setFocus(game_logic::FormulaCallablePtr e);
+		game_logic::FormulaCallablePtr getFocus() const { return focus_; }
 	private:
 		ConsoleDialog(const ConsoleDialog&);
 		void init();
