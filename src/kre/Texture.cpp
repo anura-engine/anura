@@ -62,21 +62,38 @@ namespace KRE
 				initFromVariant(texture_params_.begin() + n, node[n]);
 			}
 		} else {
+			SurfaceFlags flags = SurfaceFlags::NONE;
+
+			if(node.is_map()) {
+				variant flags_list = node["surface_flags"];
+				if(flags_list.is_list()) {
+					for(const std::string& f : flags_list.as_list_string()) {
+						if(f == "NO_CACHE") {
+							flags = flags | SurfaceFlags::NO_CACHE;
+						} else if(f == "NO_ALPHA_FILTER") {
+							flags = flags | SurfaceFlags::NO_ALPHA_FILTER;
+						} else {
+							ASSERT_LOG(false, "Illegal surface flag: " << f);
+						}
+					}
+				}
+			}
+
 			if(surfaces.size() == 0 && node.is_string()) {
 				texture_params_.resize(1);
-				texture_params_[0].surface = Surface::create(node.as_string());
+				texture_params_[0].surface = Surface::create(node.as_string(), static_cast<SurfaceFlags>(flags));
 				texture_params_[0].surface_width = texture_params_[0].surface->width();
 				texture_params_[0].surface_height = texture_params_[0].surface->height();
 			} else if(surfaces.size() == 0 && node.has_key("image") && node["image"].is_string()) {
 				texture_params_.resize(1);
-				texture_params_[0].surface = Surface::create(node["image"].as_string());
+				texture_params_[0].surface = Surface::create(node["image"].as_string(), flags);
 				texture_params_[0].surface_width = texture_params_[0].surface->width();
 				texture_params_[0].surface_height = texture_params_[0].surface->height();
 			} else if(surfaces.size() == 0 && node.has_key("images") && node["images"].is_list()) {
 				texture_params_.resize(node["images"].num_elements());
 				int n = 0;
 				for(auto s : node["images"].as_list_string()) {
-					texture_params_[n].surface = Surface::create(s);
+					texture_params_[n].surface = Surface::create(s, flags);
 					texture_params_[n].surface_width = texture_params_[n].surface->width();
 					texture_params_[n].surface_height = texture_params_[n].surface->height();
 				}
