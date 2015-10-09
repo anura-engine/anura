@@ -127,6 +127,8 @@ namespace
 	PREF_INT(min_window_width, 1024, "Minimum window width when auto-determining window size");
 	PREF_INT(min_window_height, 768, "Minimum window height when auto-determining window size");
 
+	PREF_BOOL(disable_global_alpha_filter, false, "Disables using alpha-colors.png to denote some special colors as 'alpha colors'");
+
 
 #if defined(_MSC_VER)
 	const std::string anura_exe_name = "anura.exe";
@@ -924,7 +926,9 @@ int main(int argcount, char* argvec[])
 	Surface::setFileFilter(FileFilterType::LOAD, [](const std::string& s){ return module::map_file("images/" + s); });
 	Surface::setFileFilter(FileFilterType::SAVE, [](const std::string& s){ return std::string(preferences::user_data_path()) + s; });
 
-	set_alpha_masks();
+	if(g_disable_global_alpha_filter == false) {
+		set_alpha_masks();
+	}
 
 	//SceneGraphPtr scene = SceneGraph::create("root");
 	//SceneNodePtr root = scene->getRootNode();
