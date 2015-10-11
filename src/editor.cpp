@@ -1458,6 +1458,7 @@ void editor::process()
 			}
 		}
 	} else if(object_mode && !buttons) {
+
 		//remove ghost objects and re-add them. This guarantees ghost
 		//objects always remain at the end of the level ordering.
 		remove_ghost_objects();
