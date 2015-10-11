@@ -1462,7 +1462,7 @@ void editor::process()
 		//remove ghost objects and re-add them. This guarantees ghost
 		//objects always remain at the end of the level ordering.
 		remove_ghost_objects();
-		EntityPtr c = lvl_->get_next_character_at_point(xpos_ + mousex*zoom_, ypos_ + mousey*zoom_, xpos_, ypos_);
+		EntityPtr c = lvl_->get_next_character_at_point(xpos_ + mousex*zoom_, ypos_ + mousey*zoom_, xpos_, ypos_, nullptr);
 		for(const EntityPtr& ghost : ghost_objects_) {
 			lvl_->add_character(ghost);
 		}
