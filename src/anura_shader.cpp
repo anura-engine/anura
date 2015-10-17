@@ -288,7 +288,8 @@ namespace graphics
 	{
 		shader_ = o.shader_->clone();
 		renderable_.clearAttributes();
-		draw_formulas_.clear();
+		draw_formulas_ = o.draw_formulas_;
+		create_formulas_ = o.create_formulas_;
 		draw_commands_.clear();
 		create_formulas_.clear();
 		create_commands_.clear();
@@ -335,7 +336,7 @@ namespace graphics
 
 		// Set the draw commands here if required from shader_->getShaderVariant()
 		game_logic::FormulaCallable* e = this;
-		if(shader_node.has_key("draw")) {
+		if(draw_formulas_.empty() && shader_node.has_key("draw")) {
 			const variant& d = shader_node["draw"];
 			if(d.is_list()) {
 				for(int n = 0; n < d.num_elements(); ++n) {
@@ -351,7 +352,7 @@ namespace graphics
 			}
 		}
 	
-		if(shader_node.has_key("create")) {
+		if(create_formulas_.empty() && shader_node.has_key("create")) {
 			const variant& c = shader_node["create"];
 			if(c.is_list()) {
 				for(int n = 0; n < c.num_elements(); ++n) {
