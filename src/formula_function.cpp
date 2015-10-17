@@ -3097,6 +3097,21 @@ FUNCTION_DEF_IMPL
 			return variant(results.str());
 		END_FUNCTION_DEF(benchmark_once)
 
+		FUNCTION_DEF(instrument, 2, 2, "instrument(string, expr): Executes expr and outputs debug instrumentation on the time it took with the given string")
+			const int begin = SDL_GetTicks();
+			variant result = args()[1]->evaluate(variables);
+			const int end = SDL_GetTicks();
+			std::cerr << "Instrument: " << args()[0]->evaluate(variables).as_string() << ": " << (end - begin) << "ms\n";
+			return result;
+
+		FUNCTION_ARGS_DEF
+			ARG_TYPE("string");
+			ARG_TYPE("any");
+		FUNCTION_TYPE_DEF
+			return args()[1]->queryVariantType();
+		END_FUNCTION_DEF(instrument)
+		
+
 		FUNCTION_DEF(compress, 1, 2, "compress(string, (optional) compression_level): Compress the given string object")
 			int compression_level = -1;
 			if(args().size() > 1) {

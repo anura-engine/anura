@@ -1172,6 +1172,41 @@ namespace
 	RETURN_TYPE("commands")
 	END_FUNCTION_DEF(execute)
 
+	class execute_on_command_instrumented : public EntityCommandCallable
+	{
+		EntityPtr e_;
+		std::string id_;
+		int time_;
+		variant cmd_;
+	public:
+		execute_on_command_instrumented(EntityPtr e, std::string id, int t, variant cmd) : e_(e), id_(id), time_(t), cmd_(cmd)
+		{}
+
+		virtual void execute(Level& lvl, Entity& ob) const {
+			const int a = SDL_GetTicks();
+			e_->executeCommand(cmd_);
+			const int b = SDL_GetTicks();
+
+			std::cerr << "Instrumented command: " << id_ << " ffl: " << time_ << "ms cmd: " << (b - a) << "ms\n";
+		}
+	};
+
+	FUNCTION_DEF(execute_instrumented, 3, 3, "execute(object context, string id, command cmd): executes the given commands and instruments the time taken")
+		EntityPtr e(args()[0]->evaluate(variables).convert_to<Entity>());
+		std::string id = args()[1]->evaluate(variables).as_string();
+		const int a = SDL_GetTicks();
+		variant command = args()[2]->evaluate(variables);
+		const int b = SDL_GetTicks();
+		execute_on_command_instrumented* cmd = (new execute_on_command_instrumented(e, id, b - a, command));
+		cmd->setExpression(this);
+		return variant(cmd);
+	FUNCTION_ARGS_DEF
+		ARG_TYPE("object")
+		ARG_TYPE("string")
+		ARG_TYPE("commands")
+	RETURN_TYPE("commands")
+	END_FUNCTION_DEF(execute_instrumented)
+
 	class spawn_command : public EntityCommandCallable
 	{
 	public:
@@ -1982,6 +2017,14 @@ RETURN_TYPE("bool")
 		ARG_TYPE("int")
 	RETURN_TYPE("[object]")
 	END_FUNCTION_DEF(get_objects_at_point)
+
+	FUNCTION_DEF(toggle_pause, 0, 0, "toggle_pause()")
+		Formula::failIfStaticContext();
+		return variant(new FnCommandCallable([=]() {
+			LevelRunner::getCurrent()->toggle_pause();
+		}));
+	RETURN_TYPE("commands")
+	END_FUNCTION_DEF(toggle_pause)
 	
 	
 	FUNCTION_DEF(scroll_to, 1, 1, "scroll_to(object target): scrolls the screen to the target object")
@@ -2620,32 +2663,47 @@ RETURN_TYPE("bool")
 	END_FUNCTION_DEF(add_object)
 
 	class remove_object_command : public EntityCommandCallable {
-		EntityPtr e_;
+		variant e_;
+
+		void remove(Level& lvl, variant v) const {
+			if(v.is_list()) {
+				for(const variant& item : v.as_list()) {
+					remove(lvl, item);
+				}
+			} else {
+				EntityPtr e = v.try_convert<Entity>();
+				if(e) {
+					lvl.remove_character(e);
+				}
+			}
+		}
 	public:
-		explicit remove_object_command(EntityPtr e) : e_(e)
+		explicit remove_object_command(variant e) : e_(e)
 		{}
 
 		virtual void execute(Level& lvl, Entity& ob) const override {
-			lvl.remove_character(e_);
+			remove(lvl, e_);
 		}
 
 		void surrenderReferences(GarbageCollector* collector) override {
-			collector->surrenderPtr(&e_);
+			collector->surrenderVariant(&e_);
 		}
 	};
 
 	FUNCTION_DEF(remove_object, 1, 1, "remove_object(object): removes the given object from the Level. If there are no references to the object stored, then the object will immediately be destroyed. However it is possible to keep a reference to the object and even insert it back into the Level later using add_object()")
 
-		EntityPtr e(args()[0]->evaluate(variables).try_convert<Entity>());
-		if(e) {
-			remove_object_command* cmd = (new remove_object_command(e));
+		variant arg = args()[0]->evaluate(variables);
+		if(arg.is_null() == false) {
+			remove_object_command* cmd = (new remove_object_command(arg));
 			cmd->setExpression(this);
 			return variant(cmd);
 		} else {
 			return variant();
 		}
+
+		return variant();
 	FUNCTION_ARGS_DEF
-		ARG_TYPE("null|object")
+		ARG_TYPE("null|object|[object]")
 	RETURN_TYPE("commands")
 	END_FUNCTION_DEF(remove_object)
 
