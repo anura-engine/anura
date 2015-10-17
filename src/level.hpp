@@ -631,7 +631,7 @@ private:
 
 	mutable std::map<int, std::shared_ptr<LayerBlitInfo>> blit_cache_;
 
-	KRE::RenderTargetPtr rt_;
+	mutable KRE::RenderTargetPtr rt_, backup_rt_;
 	bool have_render_to_texture_;
 
 	void surrenderReferences(GarbageCollector* gc) override;

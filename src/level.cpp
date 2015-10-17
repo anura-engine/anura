@@ -2082,6 +2082,16 @@ void Level::applyShaderToFrameBufferTexture(graphics::AnuraShaderPtr shader, boo
 {
 	if(render_to_screen) {
 		rt_->renderToPrevious();
+	} else {
+		rt_->renderToPrevious();
+		auto& gs = graphics::GameScreen::get();
+
+		if(!backup_rt_) {
+			backup_rt_ = KRE::RenderTarget::create(gs.getWidth(), gs.getHeight());
+		}
+		backup_rt_->renderToThis(gs.getVirtualArea());
+		backup_rt_->setClearColor(KRE::Color(0,0,0,0));
+		backup_rt_->clear();
 	}
 
 	KRE::ModelManager2D model_scope;
@@ -2097,6 +2107,10 @@ void Level::applyShaderToFrameBufferTexture(graphics::AnuraShaderPtr shader, boo
 	}
 	rt_->preRender(wnd);
 	wnd->render(rt_.get());
+
+	if(!render_to_screen) {
+		std::swap(rt_, backup_rt_);
+	}
 }
 
 void Level::shadersUpdated()
