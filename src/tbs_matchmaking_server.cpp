@@ -555,6 +555,39 @@ public:
 			} else if(request_type == "get_server_info") {
 				static const std::string server_info = get_server_info_file().write_json();
 				send_msg(socket, "text/json", server_info, "");
+			} else if(request_type == "reset_passwd") {
+				const int session_id = doc["session_id"].as_int(request_session_id);
+				if(sessions_.count(session_id) == 0) {
+					variant_builder response;
+					response.add("type", "fail");
+					response.add("reason", "bad_session");
+					response.add("message", "Invalid session ID");
+					send_response(socket, response.build());
+					return;
+				}
+
+				std::string passwd = doc["passwd"].as_string();
+
+				SessionInfo& info = sessions_[session_id];
+				db_client_->get("user:" + info.user_id, [=](variant user_info) {
+					user_info.add_attr_mutation(variant("passwd"), variant(passwd));
+					db_client_->put("user:" + info.user_id, user_info,
+					[=]() {
+						variant_builder response;
+						response.add("type", "password_reset");
+						response.add("message", "Your password has been reset.");
+						send_response(socket, response.build());
+					}, 
+					[=]() {
+						variant_builder response;
+						response.add("type", "reset_failed");
+						response.add("reason", "db_error");
+						response.add("message", "There was an error with resetting the password. Please try again.");
+						send_response(socket, response.build());
+					},
+					DbClient::PUT_REPLACE);
+				});
+
 			} else if(request_type == "delete_account") {
 				const int session_id = doc["session_id"].as_int(request_session_id);
 
