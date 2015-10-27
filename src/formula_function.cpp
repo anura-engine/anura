@@ -329,6 +329,14 @@ namespace game_logic
 			}
 		private:
 			variant getValue(const std::string& key) const {
+				if(key == "enumerate") {
+					std::vector<variant> result;
+					for(auto p : cache_) {
+						result.push_back(p.second);
+					}
+
+					return variant(&result);
+				}
 				return variant();
 			}
 
@@ -1448,10 +1456,25 @@ namespace game_logic
 		END_FUNCTION_DEF(ceil)
 
 
-		FUNCTION_DEF(regex_replace, 3, 3, "regex_replace(string, string, string) -> string: Unknown.")
+		FUNCTION_DEF(regex_replace, 3, 4, "regex_replace(string, string, string, [string] flags=[]) -> string: Unknown.")
+
+			int flags = 0;
+
+			if(args().size() > 3) {
+				std::vector<variant> items = args()[3]->evaluate(variables).as_list();
+				for(variant arg : items) {
+					if(arg.as_string() == "icase") {
+						flags = flags | boost::regex::icase;
+					} else {
+						ASSERT_LOG(false, "Unrecognized regex arg: " << arg.as_string());
+					}
+				}
+			}
+
 			const std::string str = args()[0]->evaluate(variables).as_string();
-			const boost::regex re(args()[1]->evaluate(variables).as_string());
+			const boost::regex re(args()[1]->evaluate(variables).as_string(), flags);
 			const std::string value = args()[2]->evaluate(variables).as_string();
+
 			return variant(boost::regex_replace(str, re, value));
 		FUNCTION_ARGS_DEF
 			ARG_TYPE("string");
@@ -4598,6 +4621,9 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 		std::string s = args()[0]->evaluate(variables).as_string();
 		boost::algorithm::to_lower(s);
 		return variant(s);
+	FUNCTION_ARGS_DEF
+		ARG_TYPE("string");
+		RETURN_TYPE("string");
 	END_FUNCTION_DEF(lower)
 
 	FUNCTION_DEF(rects_intersect, 2, 2, "rects_intersect([int], [int]) ->bool")
