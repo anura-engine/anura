@@ -29,6 +29,7 @@
 #include "formula_constants.hpp"
 #include "i18n.hpp"
 #include "key_button.hpp"
+#include "module.hpp"
 #include "preferences.hpp"
 #include "string_utils.hpp"
 #include "variant_utils.hpp"
@@ -112,7 +113,9 @@ namespace game_logic
 			return variant(&v);
 	} else if(id == "MODULE_OPTIONS") {
 		return preferences::get_module_settings();
-		}
+	} else if(id == "MODULE_VERSION") {
+		return variant(module::get_module_version());
+	}
 
 		for(auto i = constants_stack.rbegin(); i != constants_stack.rend(); ++i) {
 			constants_map& m = *i;

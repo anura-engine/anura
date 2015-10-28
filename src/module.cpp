@@ -367,6 +367,8 @@ namespace module
 			}
 		}
 
+		std::vector<int> module_version;
+
 		if(v.is_map()) {
 			ASSERT_LOG(v["min_engine_version"].is_null() == false, "A min_engine_version field in the module.cfg file must be specified.");
 			ASSERT_LOG(v["min_engine_version"] <= preferences::version_decimal(), "The engine version being used (" << preferences::version_decimal()
@@ -446,11 +448,16 @@ namespace module
 			if(v.has_key("player_type")) {
 				player_type = v["player_type"];
 			}
+
+			if(v.has_key("version")) {
+				module_version = v["version"].as_list_int();
+			}
 		}
 		modules m = {name, pretty_name, abbrev,
 					 {make_base_module_path(name), make_user_module_path(name)},
 				def_font, def_font_cjk, speech_dialog_bg_color};
 		m.default_preferences = v["default_preferences"];
+		m.version_ = module_version;
 		loaded_paths().insert(loaded_paths().begin(), m);
 
 		if(initial) {
