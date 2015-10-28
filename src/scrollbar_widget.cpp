@@ -300,6 +300,20 @@ namespace gui
 				setDim(width(), height());
 				handler_(window_pos_);
 			}
+		} else if(event.type == SDL_KEYDOWN) {
+			if(focus_override_ && event.key.keysym.sym == SDLK_PAGEUP) {
+				window_pos_ -= window_size_;
+				clipWindowPosition();
+				setDim(width(), height());
+				handler_(window_pos_);
+				return true;
+			} else if(focus_override_ && event.key.keysym.sym == SDLK_PAGEDOWN) {
+				window_pos_ += window_size_;
+				clipWindowPosition();
+				setDim(width(), height());
+				handler_(window_pos_);
+				return true;
+			}
 		}
 		return claimed;
 	}
