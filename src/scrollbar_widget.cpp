@@ -334,6 +334,7 @@ namespace gui
 		DEFINE_SET_FIELD
 			obj.window_pos_ = value.as_int();
 			obj.clipWindowPosition();
+			obj.setDim(obj.width(), obj.height());
 
 		DEFINE_FIELD(up_arrow, "builtin widget")
 			return variant(obj.up_arrow_.get());
