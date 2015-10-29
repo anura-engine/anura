@@ -274,6 +274,8 @@ public:
 	const std::shared_ptr<lua::CompiledChunk> & getLuaInit( lua::LuaContext & ) const ;
 #endif
 
+	bool autoAnchor() const { return auto_anchor_; }
+
 	graphics::AnuraShaderPtr getShader() const { return shader_; }
 	const std::vector<graphics::AnuraShaderPtr>& getEffectsShaders() const { return effects_shaders_; }
 
@@ -391,6 +393,10 @@ private:
 
 	//object should be hidden in the game but will show in the editor.
 	bool hidden_in_game_;
+
+	//object will have its location (its "feet") automatically chosen
+	//when spawned based on which attribute is set.
+	bool auto_anchor_;
 
 	//object is stateless, meaning that a backup of the object to restore
 	//later will not deep copy the object, just have another reference to it.

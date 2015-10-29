@@ -214,6 +214,8 @@ Level::Level(const std::string& level_cfg, variant node)
 	  allow_touch_controls_(true),
 	  show_builtin_settings_(false),
 	  have_render_to_texture_(false),
+	  render_to_texture_(false),
+	  doing_render_to_texture_(false),
 	  scene_graph_(nullptr),
 	  last_process_time_(profile::get_tick_time()),
 	  hex_map_(nullptr)
@@ -534,6 +536,14 @@ Level::~Level()
 	if(before_pause_controls_backup_) {
 		before_pause_controls_backup_->cancel();
 	}
+}
+
+void Level::setRenderToTexture(int width, int height)
+{
+	render_to_texture_ = true;
+	doing_render_to_texture_ = false;
+
+	rt_ = KRE::RenderTarget::create(width, height);
 }
 
 void Level::read_compiled_tiles(variant node, std::vector<LevelTile>::iterator& out)
@@ -2046,13 +2056,13 @@ void Level::frameBufferEnterZorder(int zorder) const
 		}
 	}
 
-	if(shaders != active_fb_shaders_) {		
+	if(shaders != active_fb_shaders_ || (render_to_texture_ && !doing_render_to_texture_)) {
 
 		bool need_flush_to_screen = true, need_new_virtual_area = true;
 
 		if(active_fb_shaders_.empty()) {
 			need_flush_to_screen = false;
-		} else if(shaders.empty()) {
+		} else if(shaders.empty() && !render_to_texture_) {
 			need_new_virtual_area = false;
 		}
 
@@ -2068,6 +2078,8 @@ void Level::frameBufferEnterZorder(int zorder) const
 		}
 
 		active_fb_shaders_ = shaders;
+
+		doing_render_to_texture_ = render_to_texture_;
 	}
 }
 
@@ -2399,11 +2411,11 @@ void Level::do_processing()
 	if(!paused_) {
 		++cycle_;
 	}
-
+/*
 	if(!player_) {
 		return;
 	}
-
+*/
 	const int ticks = profile::get_tick_time();
 	set_active_chars();
 	detect_user_collisions(*this);

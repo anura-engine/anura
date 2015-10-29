@@ -46,6 +46,8 @@ class EditorResolutionManager;
 void addProcessFunction(std::function<void()> fn, void* tag);
 void removeProcessFunction(void* tag);
 
+void addAsynchronousWorkItem(std::function<void()> fn);
+
 class LevelRunner 
 {
 public:

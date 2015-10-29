@@ -121,6 +121,8 @@ public:
 	bool rotateOnSlope() const { return rotate_on_slope_; }
 	int damage() const { return damage_; }
 
+	float scale() const { return scale_; }
+
 	const std::string* getEvent(int time_in_frame) const;
 
 	const std::vector<CollisionArea>& getCollisionAreas() const { return collision_areas_; }

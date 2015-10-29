@@ -38,6 +38,8 @@
 Entity::Entity(variant node)
   : x_(node["x"].as_int()*100),
     y_(node["y"].as_int()*100),
+	anchorx_(-1),
+	anchory_(-1),
 	prev_feet_x_(std::numeric_limits<int>::min()), prev_feet_y_(std::numeric_limits<int>::min()),
 	last_move_x_(0), last_move_y_(0),
 	face_right_(node["face_right"].as_bool(true)),
@@ -52,13 +54,21 @@ Entity::Entity(variant node)
 	mouseover_delay_(0), mouseover_trigger_cycle_(std::numeric_limits<int>::max()),
 	true_z_(false), tx_(node["x"].as_decimal().as_float()), ty_(node["y"].as_decimal().as_float()), tz_(0.0f)
 {
+	if(node.has_key("anchorx")) {
+		setAnchorX(node["anchorx"].as_decimal());
+	}
+
+	if(node.has_key("anchory")) {
+		setAnchorY(node["anchory"].as_decimal());
+	}
+
 	for(bool& b : controls_) {
 		b = false;
 	}
 }
 
 Entity::Entity(int x, int y, bool face_right)
-  : x_(x*100), y_(y*100), prev_feet_x_(std::numeric_limits<int>::min()), prev_feet_y_(std::numeric_limits<int>::min()),
+  : x_(x*100), y_(y*100), anchorx_(-1), anchory_(-1), prev_feet_x_(std::numeric_limits<int>::min()), prev_feet_y_(std::numeric_limits<int>::min()),
 	last_move_x_(0), last_move_y_(0),
     face_right_(face_right), upside_down_(false), group_(-1), id_(-1),
 	respawn_(true), solid_dimensions_(0), collide_dimensions_(0),
@@ -70,6 +80,42 @@ Entity::Entity(int x, int y, bool face_right)
 	for(bool& b : controls_) {
 		b = false;
 	}
+}
+
+void Entity::setAnchorX(decimal value)
+{
+	if(value < 0) {
+		anchorx_ = -1;
+	} else {
+		anchorx_ = (value*1000).as_int();
+	}
+}
+
+void Entity::setAnchorY(decimal value)
+{
+	if(value < 0) {
+		anchory_ = -1;
+	} else {
+		anchory_ = (value*1000).as_int();
+	}
+}
+
+decimal Entity::getAnchorX() const
+{
+	if(anchorx_ == -1) {
+		return decimal::from_int(-1);
+	}
+
+	return decimal::from_int(anchorx_)/1000;
+}
+
+decimal Entity::getAnchorY() const
+{
+	if(anchory_ == -1) {
+		return decimal::from_int(-1);
+	}
+
+	return decimal::from_int(anchory_)/1000;
 }
 
 void Entity::addToLevel()
@@ -100,6 +146,11 @@ int Entity::getFeetX() const
 		const int diff = solid_->area().x() + solid_->area().w()/2;
 		return isFacingRight() ? x() + diff : x() + getCurrentFrame().width() - diff;
 	}
+
+	if(anchorx_ != -1) {
+		return x() + (getCurrentFrame().area().w()*getCurrentFrame().scale()*anchorx_)/1000;
+	}
+
 	return isFacingRight() ? x() + getCurrentFrame().getFeetX() : x() + getCurrentFrame().width() - getCurrentFrame().getFeetX();
 }
 
@@ -107,6 +158,9 @@ int Entity::getFeetY() const
 {
 	if(solid_) {
 		return y() + solid_->area().y() + solid_->area().h();
+	}
+	if(anchory_ != -1) {
+		return y() + (getCurrentFrame().area().h()*getCurrentFrame().scale()*anchory_)/1000;
 	}
 	return y() + getCurrentFrame().getFeetY();
 }

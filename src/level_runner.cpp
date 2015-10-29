@@ -82,6 +82,9 @@ extern std::map<std::string, variant> g_user_info_registry;
 namespace 
 {
 	std::vector<std::pair<std::function<void()>,void*>> process_functions;
+	std::deque<std::function<void()>> asynchronous_work_items_;
+
+	PREF_INT(time_quota_async_work_items, 14, "Number of milliseconds allowed each frame for asynchronous/background work items to run");
 
 	PREF_BOOL(allow_debug_console_clicking, true, "Allow clicking on objects in the debug console to select them");
 	PREF_BOOL(reload_modified_objects, false, "Reload object definitions when their file is modified on disk");
@@ -314,6 +317,11 @@ void addProcessFunction(std::function<void()> fn, void* tag)
 void removeProcessFunction(void* tag)
 {
 	process_functions.erase(std::remove_if(process_functions.begin(), process_functions.end(), [&tag](const std::pair<std::function<void()>,void*>& p) { return p.second == tag; }), process_functions.end());
+}
+
+void addAsynchronousWorkItem(std::function<void()> fn)
+{
+	asynchronous_work_items_.push_back(fn);
 }
 
 void begin_skipping_game() 
@@ -836,6 +844,15 @@ bool LevelRunner::play_cycle()
 
 	for(auto& p : process_functions) {
 		p.first();
+	}
+
+	if(asynchronous_work_items_.empty() == false) {
+		const int start = SDL_GetTicks();
+		while(!asynchronous_work_items_.empty() && SDL_GetTicks() < start + g_time_quota_async_work_items) {
+			std::function<void()> fn = asynchronous_work_items_.front();
+			asynchronous_work_items_.pop_front();
+			fn();
+		}
 	}
 
 	const preferences::alt_frame_time_scope alt_frame_time_scoper(preferences::has_alt_frame_time() && SDL_GetModState()&KMOD_ALT);

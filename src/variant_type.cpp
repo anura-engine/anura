@@ -124,7 +124,7 @@ variant_type_ptr get_named_variant_type(const std::string& name)
 
 types_cfg_scope::types_cfg_scope(variant v)
 {
-	ASSERT_LOG(v.is_null() || v.is_map(), "Unrecognized types definition: " << v.debug_location());
+	ASSERT_LOG(v.is_null() || v.is_map(), "Unrecognized types definition: " << v.write_json() << " " << v.debug_location());
 	std::map<std::string, variant> symbols;
 	if(v.is_map()) {
 		for(const variant::map_pair& p : v.as_map()) {

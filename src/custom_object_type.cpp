@@ -52,6 +52,8 @@
 using game_logic::FormulaCallableDefinition;
 using game_logic::FormulaCallableDefinitionPtr;
 
+PREF_BOOL(auto_anchor_objects, false, "Auto-anchors an object based on x/mid_x/x2 based on what attributes are set when spawning them.");
+
 // XXX make this a static function in CustomObjectType
 std::map<std::string, std::string>& prototype_file_paths() 
 {
@@ -1156,6 +1158,7 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 	activation_border_(node["activation_border"].as_int(100)),
 	editor_force_standing_(node["editor_force_standing"].as_bool(false)),
 	hidden_in_game_(node["hidden_in_game"].as_bool(false)),
+	auto_anchor_(node["auto_anchor"].as_bool(g_auto_anchor_objects)),
 	stateless_(node["stateless"].as_bool(false)),
 	platform_offsets_(node["platform_offsets"].as_list_int_optional()),
 	slot_properties_base_(-1), 

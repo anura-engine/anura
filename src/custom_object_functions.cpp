@@ -152,31 +152,32 @@ namespace
 	{
 		const controls::control_backup_scope ctrl_backup;
 
-		auto rt = KRE::RenderTarget::create(area.w(), area.h());
-		{
-			KRE::RenderTarget::RenderScope scope(rt);
+		LevelPtr lvl(new Level("empty.cfg"));
+		lvl->setRenderToTexture(area.w(), area.h());
 
-			LevelPtr lvl(new Level("empty.cfg"));
-			for(const EntityPtr& e : objects) {
+		lvl->set_boundaries(area);
+		screen_position pos;
+		pos.x = area.x()*100;
+		pos.y = area.y()*100;
+		//KRE::WindowManager::getMainWindow()->setWindowSize(area.w(), area.h());
+		{
+			for(EntityPtr e : objects) {
 				lvl->add_character(e);
+				e->createObject();
+			}
+			lvl->process();
+			lvl->process_draw();
+
+			for(const EntityPtr& e : objects) {
 				lvl->add_draw_character(e);
 			}
 
-			lvl->set_boundaries(area);
-			screen_position pos;
-			pos.x = area.x()*100;
-			pos.y = area.y()*100;
-			{
-				//preferences::screen_dimension_override_scope dim_scope(area.w(), area.h(), area.w(), area.h());
-				lvl->process();
-				lvl->process_draw();
-				for(const EntityPtr& e : objects) {
-					lvl->add_draw_character(e);
-				}
-				render_scene(*lvl, pos);
-			}
+			render_scene(*lvl, pos);
 		}
-		return boost::intrusive_ptr<TextureObject>(new TextureObject(rt->getTexture()));
+
+		lvl->getRenderTarget()->unapply();
+
+		return boost::intrusive_ptr<TextureObject>(new TextureObject(lvl->getRenderTarget()->getTexture()));
 	}
 
 	FUNCTION_DEF(get_texture, 1, 1, "get_texture(string|map): loads a texture")
@@ -1284,6 +1285,39 @@ namespace
 		if(arg3.is_map()) {
 			ConstCustomObjectTypePtr type_ptr = obj->getType();
 
+			if(type_ptr->autoAnchor()) {
+				static const variant XKey("x");
+				static const variant YKey("y");
+				static const variant X2Key("x2");
+				static const variant Y2Key("y2");
+				static const variant MidXKey("mid_x");
+				static const variant MidYKey("mid_y");
+
+				if(arg3.has_key(XKey)) {
+					obj->setAnchorX(decimal::from_int(0));
+				}
+
+				if(arg3.has_key(X2Key)) {
+					obj->setAnchorX(decimal::from_int(1));
+				}
+
+				if(arg3.has_key(MidXKey)) {
+					obj->setAnchorX(decimal::from_int(1)/2);
+				}
+
+				if(arg3.has_key(YKey)) {
+					obj->setAnchorY(decimal::from_int(0));
+				}
+
+				if(arg3.has_key(Y2Key)) {
+					obj->setAnchorY(decimal::from_int(1));
+				}
+
+				if(arg3.has_key(MidYKey)) {
+					obj->setAnchorY(decimal::from_int(1)/2);
+				}
+			}
+
 			variant last_key;
 
 			variant properties = arg3;
@@ -1468,6 +1502,39 @@ namespace
 
 		if(properties.is_map()) {
 			ConstCustomObjectTypePtr type_ptr = obj->getType();
+			if(type_ptr->autoAnchor()) {
+				static const variant XKey("x");
+				static const variant YKey("y");
+				static const variant X2Key("x2");
+				static const variant Y2Key("y2");
+				static const variant MidXKey("mid_x");
+				static const variant MidYKey("mid_y");
+
+				if(properties.has_key(XKey)) {
+					obj->setAnchorX(decimal::from_int(0));
+				}
+
+				if(properties.has_key(X2Key)) {
+					obj->setAnchorX(decimal::from_int(1));
+				}
+
+				if(properties.has_key(MidXKey)) {
+					obj->setAnchorX(decimal::from_int(1)/2);
+				}
+
+				if(properties.has_key(YKey)) {
+					obj->setAnchorY(decimal::from_int(0));
+				}
+
+				if(properties.has_key(Y2Key)) {
+					obj->setAnchorY(decimal::from_int(1));
+				}
+
+				if(properties.has_key(MidYKey)) {
+					obj->setAnchorY(decimal::from_int(1)/2);
+				}
+			}
+
 			variant last_key;
 			variant keys = properties.getKeys();
 			for(int n = 0; n != keys.num_elements(); ++n) {

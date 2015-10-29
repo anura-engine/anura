@@ -42,6 +42,8 @@ CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_MID_XY,                             "mi
 CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_MIDPOINT_X,                         "midpoint_x", "int/int|decimal" )
 CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_MIDPOINT_Y,                         "midpoint_y", "int/int|decimal" )
 CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_MIDPOINT_XY,                        "midpoint_xy", "[int]" )
+CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_ANCHORX,                            "anchorx", "null|decimal" )
+CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_ANCHORY,                            "anchory", "null|decimal" )
 CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_IS_SOLID,							 "is_solid", "bool")
 CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_SOLID_RECT,                         "solid_rect", "rect_callable" )
 CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_SOLID_MID_X,                        "solid_mid_x", "int" )

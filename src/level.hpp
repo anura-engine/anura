@@ -389,6 +389,10 @@ public:
 	bool show_builtin_settingsDialog() const { return show_builtin_settings_; }
 
 	KRE::SceneGraphPtr getSceneGraph() const { return scene_graph_; }
+
+	void setRenderToTexture(int width, int height);
+	KRE::RenderTargetPtr getRenderTarget() const { return rt_; }
+
 private:
 	DECLARE_CALLABLE(Level);
 
@@ -633,6 +637,9 @@ private:
 
 	mutable KRE::RenderTargetPtr rt_, backup_rt_;
 	bool have_render_to_texture_;
+
+	bool render_to_texture_;
+	mutable bool doing_render_to_texture_;
 
 	void surrenderReferences(GarbageCollector* gc) override;
 

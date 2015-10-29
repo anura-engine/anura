@@ -321,6 +321,12 @@ public:
 
 	rect calculateCollisionRect(const Frame& f, const Frame::CollisionArea& a) const;
 
+	void setAnchorX(decimal value);
+	void setAnchorY(decimal value);
+
+	decimal getAnchorX() const;
+	decimal getAnchorY() const;
+
 protected:
 	virtual ConstSolidInfoPtr calculateSolid() const = 0;
 	virtual ConstSolidInfoPtr calculatePlatform() const = 0;
@@ -359,6 +365,9 @@ private:
 	std::string label_;
 
 	int x_, y_;
+
+	//'anchor' values -- override 'feet' values.
+	int anchorx_, anchory_;
 
 	int prev_feet_x_, prev_feet_y_;
 	int last_move_x_, last_move_y_;

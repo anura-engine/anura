@@ -939,6 +939,14 @@ variant CustomObject::write() const
 	res.add("x", x());
 	res.add("y", y());
 
+	if(getAnchorX() >= 0) {
+		res.add("anchorx", getAnchorX());
+	}
+
+	if(getAnchorY() >= 0) {
+		res.add("anchory", getAnchorY());
+	}
+
 	if(rotate_z_ != decimal()) {
 		res.add("rotate", rotate_z_);
 	}
@@ -2963,6 +2971,9 @@ variant CustomObject::getValueBySlot(int slot) const
 			variant(solidRect().h() ? solidRect().y() + solidRect().h()/2 : y() + getCurrentFrame().height()/2));
 	}
 
+	case CUSTOM_OBJECT_ANCHORX:			  { decimal res = getAnchorX(); if(res < 0) { return variant(); } else { return variant(res); } }
+	case CUSTOM_OBJECT_ANCHORY:			  { decimal res = getAnchorY(); if(res < 0) { return variant(); } else { return variant(res); } }
+
     case CUSTOM_OBJECT_IS_SOLID:		  return variant::from_bool(solid() != nullptr);
 	case CUSTOM_OBJECT_SOLID_RECT:        return variant(RectCallable::create(solidRect()));
 	case CUSTOM_OBJECT_SOLID_MID_X:       return variant(solidRect().x() + solidRect().w()/2);
@@ -4001,6 +4012,18 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 			setCentiX(start_x);
 			setCentiY(start_y);
 		}
+		break;
+	}
+
+	case CUSTOM_OBJECT_ANCHORX: {
+		decimal d = value.as_decimal(decimal::from_int(-1));
+		setAnchorX(d);
+		break;
+	}
+
+	case CUSTOM_OBJECT_ANCHORY: {
+		decimal d = value.as_decimal(decimal::from_int(-1));
+		setAnchorY(d);
 		break;
 	}
 
