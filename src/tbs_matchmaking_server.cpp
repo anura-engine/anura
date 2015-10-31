@@ -105,6 +105,17 @@ bool username_valid(const std::string& username)
 	return true;
 }
 
+std::string generate_beta_key()
+{
+	std::string result = write_uuid(generate_uuid());
+	result.resize(5);
+	for(char& c : result) {
+		c = toupper(c);
+	}
+	return result;
+}
+
+PREF_STRING(beta_keys_file, "", "File to store beta keys in (default = no beta keys)");
 PREF_INT(matchmaking_heartbeat_ms, 50, "Frequency of matchmaking heartbeats");
 
 class matchmaking_server : public game_logic::FormulaCallable, public http::web_server
@@ -120,7 +131,6 @@ public:
 		controller_(game_logic::FormulaObject::create("matchmaking_server")),
 		child_admin_process_(-1)
 	{
-
 		create_account_fn_ = controller_->queryValue("create_account");
 		ASSERT_LOG(create_account_fn_.is_function(), "Could not find create_account in matchmaking_server class");
 
@@ -158,6 +168,15 @@ public:
 
 		for(int i = 0; i != 256; ++i) {
 			available_ports_.push_back(21156+i);
+		}
+
+		if(g_beta_keys_file.empty() == false) {
+			if(sys::file_exists(g_beta_keys_file)) {
+				variant v = json::parse(sys::read_file(g_beta_keys_file));
+				for(auto p : v.as_map()) {
+					beta_key_info_[p.first.as_string()] = p.second;
+				}
+			}
 		}
 	}
 
@@ -377,6 +396,25 @@ public:
 					response.add("reason", "invalid_username");
 					response.add("message", "Not a valid username");
 					send_response(socket, response.build());
+					return;
+				}
+
+				std::string beta_key;
+				if(g_beta_keys_file.empty() == false) {
+					if(!doc["beta_key"].is_string()) {
+						variant_builder response;
+						response.add("type", "registration_fail");
+						response.add("reason", "invalid_betakey");
+						response.add("message", "Must specify a beta key");
+						send_response(socket, response.build());
+						return;
+					}
+
+					beta_key = doc["beta_key"].as_string();
+
+					for(char& c : beta_key) {
+						c = toupper(c);
+					}
 				}
 
 				std::vector<variant> args;
@@ -393,6 +431,16 @@ public:
 						response.add("type", "registration_fail");
 						response.add("reason", "username_taken");
 						response.add("message", "That username is already taken.");
+						send_response(socket, response.build());
+						return;
+					}
+
+					std::string beta_error;
+					if(g_beta_keys_file.empty() == false && !can_redeem_beta_key(beta_key, beta_error)) {
+						variant_builder response;
+						response.add("type", "registration_fail");
+						response.add("reason", "beta_key_error");
+						response.add("message", beta_error);
 						send_response(socket, response.build());
 						return;
 					}
@@ -417,6 +465,10 @@ public:
 						info.last_contact = this->time_ms_;
 
 						this->account_info_[user] = new_user_info_variant;
+
+						if(g_beta_keys_file.empty() == false) {
+							redeem_beta_key(beta_key, user_full);
+						}
 
 						variant_builder response;
 						response.add("type", "registration_success");
@@ -1003,6 +1055,19 @@ public:
 			fn_args.push_back(variant(&a));
 			send_response(socket, handle_anon_request_fn_(fn_args));
 			return;
+		} else if(url == "/generate_beta_key") {
+			std::string key = get_beta_key();
+			std::map<variant,variant> a;
+			a[variant("key")] = variant(key);
+
+			send_response(socket, variant(&a));
+		} else if(url == "/beta_key_status") {
+			std::map<variant,variant> v;
+			for(auto p : beta_key_info_) {
+				v[variant(p.first)] = p.second;
+			}
+
+			send_response(socket, variant(&v));
 		}
 	}
 
@@ -1311,6 +1376,69 @@ private:
 	variant current_response_;
 
 	int child_admin_process_;
+
+	std::map<std::string, variant> beta_key_info_;
+	std::vector<std::string> pending_beta_keys_;
+
+	void save_beta_keys()
+	{
+		std::map<variant,variant> v;
+		for(auto p : beta_key_info_) {
+			v[variant(p.first)] = p.second;
+		}
+
+		sys::write_file(g_beta_keys_file, variant(&v).write_json());
+	}
+
+	std::string get_beta_key()
+	{
+		if(pending_beta_keys_.empty() == false) {
+			std::string result = pending_beta_keys_.back();
+			pending_beta_keys_.pop_back();
+			return result;
+		}
+
+		for(int i = 0; i != 16; ++i) {
+			std::string key = generate_beta_key();
+			if(beta_key_info_.count(key)) {
+				continue;
+			}
+
+			beta_key_info_[key] = variant();
+			pending_beta_keys_.push_back(key);
+		}
+
+		if(pending_beta_keys_.empty()) {
+			return "";
+		}
+
+		save_beta_keys();
+
+		return get_beta_key();
+	}
+
+	void redeem_beta_key(const std::string& key, const std::string& username)
+	{
+		auto itor = beta_key_info_.find(key);
+		if(itor != beta_key_info_.end()) {
+			beta_key_info_[key] = variant(username);
+			save_beta_keys();
+		}
+	}
+
+	bool can_redeem_beta_key(const std::string& key, std::string& error)
+	{
+		auto itor = beta_key_info_.find(key);
+		if(itor == beta_key_info_.end()) {
+			error = "No such beta key";
+			return false;
+		} else if(itor->second.is_null() == false) {
+			error = "Key already used";
+			return false;
+		} else {
+			return true;
+		}
+	}
 
 	DECLARE_CALLABLE(matchmaking_server);
 };
