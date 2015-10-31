@@ -1387,6 +1387,10 @@ private:
 			v[variant(p.first)] = p.second;
 		}
 
+		for(auto s : pending_beta_keys_) {
+			v[variant(s)] = variant();
+		}
+
 		sys::write_file(g_beta_keys_file, variant(&v).write_json());
 	}
 
@@ -1398,7 +1402,7 @@ private:
 			return result;
 		}
 
-		for(int i = 0; i != 16; ++i) {
+		for(int i = 0; i != 8; ++i) {
 			std::string key = generate_beta_key();
 			if(beta_key_info_.count(key)) {
 				continue;
