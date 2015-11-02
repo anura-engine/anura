@@ -139,7 +139,7 @@ namespace tiled
 	void TmxReader::parseMapElement(const boost::property_tree::ptree& pt)
 	{
 		auto attributes = pt.get_child_optional("<xmlattr>");
-		ASSERT_LOG(attributes != nullptr, "map elements must have a minimum number of attributes: 'version', 'orientation', 'width', 'height', 'tilewidth', 'tileheight'");
+		ASSERT_LOG(attributes, "map elements must have a minimum number of attributes: 'version', 'orientation', 'width', 'height', 'tilewidth', 'tileheight'");
 		auto version = attributes->get_child("version").data();
 		auto orientation = attributes->get_child("orientation").data();
 		map_->setOrientation(convert_orientation(orientation));
@@ -201,7 +201,7 @@ namespace tiled
 	void TmxReader::parseTileset(const boost::property_tree::ptree& pt)
 	{
 		auto attributes = pt.get_child_optional("<xmlattr>");
-		ASSERT_LOG(attributes != nullptr, "tileset elements must have a minimum number of attributes: 'firstgid'");
+		ASSERT_LOG(attributes, "tileset elements must have a minimum number of attributes: 'firstgid'");
 		int firstgid = attributes->get<int>("firstgid");
 		TileSet ts(firstgid);
 		
