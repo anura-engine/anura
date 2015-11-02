@@ -306,6 +306,15 @@ namespace KRE
 		setChanged();
 	}
 
+	void FboOpenGL::handleSizeChange(int w, int h)
+	{
+		depth_stencil_buffer_id_.reset();
+		framebuffer_id_.reset();
+		sample_framebuffer_id_.reset();
+		renderbuffer_id_.reset();
+		handleCreate();
+	}
+
 	void FboOpenGL::handleClear() const
 	{
 		bool appl = applied_;

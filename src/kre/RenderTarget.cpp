@@ -25,6 +25,7 @@
 #include "DisplayDevice.hpp"
 #include "RenderTarget.hpp"
 #include "variant_utils.hpp"
+#include "WindowManager.hpp"
 
 namespace KRE
 {
@@ -103,6 +104,13 @@ namespace KRE
 		handleClear();
 	}
 
+	void RenderTarget::onSizeChange(int width, int height)
+	{
+		width_ = width;
+		height_ = height;
+		handleSizeChange(width, height);
+	}
+
 	void RenderTarget::setClearColor(int r, int g, int b, int a)
 	{
 		clear_color_ = Color(r,g,b,a);
@@ -166,7 +174,10 @@ namespace KRE
 		bool use_multi_sampling, 
 		unsigned multi_samples)
 	{
-		return DisplayDevice::renderTargetInstance(width, height, color_plane_count, depth, stencil, use_multi_sampling, multi_samples);
+		auto rt = DisplayDevice::renderTargetInstance(width, height, color_plane_count, depth, stencil, use_multi_sampling, multi_samples);
+		auto wnd = WindowManager::getMainWindow();
+		wnd->registerSizeChangeObserver(std::bind(&RenderTarget::onSizeChange, rt, std::placeholders::_1, std::placeholders::_2));
+		return rt;
 	}
 
 }

@@ -50,6 +50,7 @@ namespace KRE
 		void handleApply(const rect& r) const override;
 		void handleUnapply() const override;
 		void handleClear() const override;
+		void handleSizeChange(int width, int height) override;
 		RenderTargetPtr handleClone() override;
 		std::vector<uint8_t> handleReadPixels() const override;
 		SurfacePtr handleReadToSurface(SurfacePtr s) const override;
