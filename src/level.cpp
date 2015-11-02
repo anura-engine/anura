@@ -233,7 +233,7 @@ Level::Level(const std::string& level_cfg, variant node)
 	if(KRE::DisplayDevice::checkForFeature(KRE::DisplayDeviceCapabilties::RENDER_TO_TEXTURE)) {
 		have_render_to_texture_ = true;
 		auto& gs = graphics::GameScreen::get();
-		rt_ = KRE::RenderTarget::create(gs.getWidth(), gs.getHeight());
+		rt_ = KRE::RenderTarget::create(gs.getWidth(), gs.getHeight(), 1, false, true);
 		//rt_->setCamera(std::make_shared<KRE::Camera>("render_target"));
 	}
 
@@ -543,7 +543,7 @@ void Level::setRenderToTexture(int width, int height)
 	render_to_texture_ = true;
 	doing_render_to_texture_ = false;
 
-	rt_ = KRE::RenderTarget::create(width, height);
+	rt_ = KRE::RenderTarget::create(width, height, 1, false, true);
 }
 
 void Level::read_compiled_tiles(variant node, std::vector<LevelTile>::iterator& out)
@@ -2099,7 +2099,7 @@ void Level::applyShaderToFrameBufferTexture(graphics::AnuraShaderPtr shader, boo
 		auto& gs = graphics::GameScreen::get();
 
 		if(!backup_rt_) {
-			backup_rt_ = KRE::RenderTarget::create(gs.getWidth(), gs.getHeight());
+			backup_rt_ = KRE::RenderTarget::create(gs.getWidth(), gs.getHeight(), 1, false, true);
 		}
 		backup_rt_->renderToThis(gs.getVirtualArea());
 		backup_rt_->setClearColor(KRE::Color(0,0,0,0));
