@@ -192,7 +192,7 @@ namespace {
 
 		cairo_font_options_t* options = cairo_font_options_create();
 		cairo_get_font_options(cairo_, options);
-		cairo_font_options_set_hint_style(options, CAIRO_HINT_STYLE_NONE);
+		cairo_font_options_set_hint_style(options, CAIRO_HINT_STYLE_SLIGHT);
 		cairo_font_options_set_hint_metrics(options, CAIRO_HINT_METRICS_OFF);
 		cairo_set_font_options(cairo_, options);
 		cairo_font_options_destroy(options);
@@ -1448,6 +1448,27 @@ END_CAIRO_FN
 		result.push_back(variant(cairo_image_surface_get_height(surface)));
 
 		return variant(&result);
+	END_DEFINE_FN
+
+	BEGIN_DEFINE_FN(font_extents, "(string, decimal) -> {ascent: decimal, descent: decimal, height: decimal, max_x_advance: decimal, max_y_advance: decimal}")
+		static cairo_context& context = *new cairo_context(8,8);
+		FT_Face face = get_ft_font(FN_ARG(0).as_string());
+		cairo_font_face_t* cairo_face = cairo_ft_font_face_create_for_ft_face(face, 0);
+		cairo_set_font_face(context.get(), cairo_face);
+		cairo_set_font_size(context.get(), FN_ARG(1).as_decimal().as_float());
+
+		cairo_font_extents_t extents;
+		cairo_font_extents(context.get(), &extents);
+
+		std::map<variant,variant> result;
+		result[variant("ascent")] = variant(extents.ascent);
+		result[variant("descent")] = variant(extents.descent);
+		result[variant("height")] = variant(extents.height);
+		result[variant("max_x_advance")] = variant(extents.max_x_advance);
+		result[variant("max_y_advance")] = variant(extents.max_y_advance);
+
+		return variant(&result);
+
 	END_DEFINE_FN
 
 	BEGIN_DEFINE_FN(text_extents, "(string, decimal, string) -> { width: decimal, height: decimal, x_bearing: decimal, y_bearing: decimal }")

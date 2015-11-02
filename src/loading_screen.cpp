@@ -34,8 +34,11 @@
 #include "graphical_font.hpp"
 #include "i18n.hpp"
 #include "module.hpp"
+#include "preferences.hpp"
 #include "profile_timer.hpp"
 #include "variant.hpp"
+
+PREF_STRING(loading_screen_bg_color, "#000000", "Color to use for the background of the loading screen");
 
 LoadingScreen::LoadingScreen(int items) 
 	: items_(items), 
@@ -72,7 +75,7 @@ void LoadingScreen::load(variant node)
 void LoadingScreen::draw(const std::string& message)
 {
 	auto wnd = KRE::WindowManager::getMainWindow();
-	wnd->setClearColor(KRE::Color::colorBlack());
+	wnd->setClearColor(KRE::Color(g_loading_screen_bg_color));
 	wnd->clear(KRE::ClearFlags::ALL);
 
 	if(splash_) {
@@ -100,7 +103,7 @@ void LoadingScreen::drawInternal(const std::string& message)
 
 	int bg_w = background_->width();
 	int bg_h = background_->height();
-	canvas->blitTexture(background_, 0, rect(screen_w/2-bg_w, std::max(screen_h/2-bg_h, 0), bg_w*2, bg_h*2));
+//	canvas->blitTexture(background_, 0, rect(screen_w/2-bg_w, std::max(screen_h/2-bg_h, 0), bg_w*2, bg_h*2));
 	
 	int bar_origin_x = screen_w/2 - bar_width/2;
 	rect bg(screen_w/2 - bar_width/2, screen_h/2 - bar_height/2, bar_width, bar_height);
