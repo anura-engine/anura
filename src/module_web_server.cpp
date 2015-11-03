@@ -386,7 +386,7 @@ void ModuleWebServer::handlePost(socket_ptr socket, variant doc, const http::env
 			static const variant MD5Variant("md5");
 			for(auto p : manifest.as_map()) {
 				const int size = p.second[SizeVariant].as_int();
-				if(size >= 8192) {
+				if(size >= 128) {
 					if(p.second[DataVariant].is_string()) {
 						const std::string data = zip::compress(p.second[DataVariant].as_string());
 						sys::write_file(data_path_ + "/chunks/" + p.second[MD5Variant].as_string(), data);
@@ -537,13 +537,48 @@ void ModuleWebServer::handlePost(socket_ptr socket, variant doc, const http::env
 	send_msg(socket, "text/json", variant(&response).write_json(), "");
 }
 
+namespace {
+	bool consecutive_periods(char a, char b) {
+		return a == '.' && b == '.';
+	}
+}
+
 void ModuleWebServer::handleGet(socket_ptr socket, const std::string& url, const std::map<std::string, std::string>& args)
 {
+	if(std::adjacent_find(url.begin(), url.end(), consecutive_periods) != url.end()) {
+		return;
+	}
+	
 	std::map<variant,variant> response;
 	try {
+		static const std::string ModuleVersionStr = "/module_version/";
+		static const std::string ModuleDataStr = "/module_data/";
+		if(std::equal(ModuleVersionStr.begin(), ModuleVersionStr.end(), url.begin())) {
+			const std::string module_id(url.begin()+ModuleVersionStr.size(), url.end());
+
+			variant module_info = data_[module_id];
+
+			if(module_info.is_map()) {
+				variant latest_version = module_info["version"];
+				response[variant("status")] = variant("ok");
+				response[variant("version")] = latest_version;
+				send_msg(socket, "text/json", variant(&response).write_json(), "");
+				return;
+			}
+		} else if(std::equal(ModuleDataStr.begin(), ModuleDataStr.end(), url.begin())) {
+			const std::string module_id(url.begin()+ModuleDataStr.size(), url.end());
+
+			std::string module_path = data_path_ + module_id + ".cfg";
+			if(sys::file_exists(module_path)) {
+				std::string contents = sys::read_file(module_path);
+				send_msg(socket, "text/json", contents, "");
+				return;
+			}
+		}
+
 		LOG_INFO("URL: (" << url << ")");
 		response[variant("status")] = variant("error");
-		 if(url == "/get_summary") {
+		if(url == "/get_summary") {
 			response[variant("status")] = variant("ok");
 			response[variant("summary")] = data_;
 		} else if(url == "/package") {

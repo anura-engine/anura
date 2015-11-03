@@ -277,7 +277,7 @@ namespace http
 		if(e) {
 			disconnect(socket);
 		} else if(nbytes == max_bytes) {
-			LOG_INFO("COMPLETE_MSG(((" << *buf << ")))");
+			//LOG_INFO("COMPLETE_MSG(((" << *buf << ")))");
 			keepalive_socket(socket);
 		}
 	}
@@ -325,8 +325,6 @@ namespace http
 
 		std::shared_ptr<std::string> str(new std::string(buf.str()));
 		*str += msg;
-
-		LOG_INFO("SEND_MSG(((" << *str << ")))");
 
 		boost::asio::async_write(socket->socket, boost::asio::buffer(*str),
 								 std::bind(&web_server::handle_send, this, socket, std::placeholders::_1, std::placeholders::_2, str->size(), str));

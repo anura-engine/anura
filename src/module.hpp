@@ -143,8 +143,12 @@ namespace module
 
 		bool is_new_install() const { return is_new_install_; }
 	private:
-		enum OPERATION_TYPE { OPERATION_NONE, OPERATION_INSTALL, OPERATION_PREPARE_INSTALL, OPERATION_GET_CHUNKS, OPERATION_GET_STATUS, OPERATION_GET_ICONS, OPERATION_RATE };
+		
+		bool install_module_confirmed_out_of_date(const std::string& module_name);
+
+		enum OPERATION_TYPE { OPERATION_NONE, OPERATION_INSTALL, OPERATION_QUERY_VERSION_FOR_INSTALL, OPERATION_PREPARE_INSTALL, OPERATION_GET_CHUNKS, OPERATION_GET_STATUS, OPERATION_GET_ICONS, OPERATION_RATE };
 		OPERATION_TYPE operation_;
+		bool force_install_;
 		std::string module_id_;
 		std::string error_;
 		std::string host_, port_;
@@ -173,7 +177,7 @@ namespace module
 		void on_chunk_error(std::string response, std::string url, std::string request, variant chunk, boost::shared_ptr<class http_client> client);
 		int nchunk_errors_;
 
-		void perform_install(const std::string& response);
+		void perform_install(const variant& doc);
 		void perform_install_from_doc(variant doc);
 
 		variant doc_pending_chunks_;

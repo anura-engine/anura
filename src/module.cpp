@@ -1022,6 +1022,7 @@ COMMAND_LINE_UTILITY(generate_manifest)
 	}
 
 	client::client() : operation_(client::OPERATION_NONE),
+	                   force_install_(false),
 	                   host_(g_module_server), port_(g_module_port),
 					   out_of_date_(false),
 					   client_(new http_client(host_, port_)),
@@ -1037,6 +1038,7 @@ COMMAND_LINE_UTILITY(generate_manifest)
 
 	client::client(const std::string& host, const std::string& port)
 	  : operation_(client::OPERATION_NONE),
+	    force_install_(false),
 	    host_(host), port_(port), out_of_date_(false),
 	    client_(new http_client(host, port)),
 		nbytes_transferred_(0), nbytes_total_(0),
@@ -1070,15 +1072,9 @@ static const int ModuleProtocolVersion = 1;
 	bool client::install_module(const std::string& module_id, bool force)
 	{
 		data_.clear();
-		operation_ = OPERATION_INSTALL;
 		module_id_ = module_id;
+		force_install_ = force;
 
-		variant_builder request;
-		request.add("type", "download_module");
-		request.add("module_id", module_id);
-		request.add("protocol_version", ModuleProtocolVersion);
-
-		std::string version_str;
 		std::string current_path = install_image_ ? InstallImagePath : make_base_module_path(module_id);
 
 		if(!current_path.empty() && !force && sys::dir_exists(current_path + "/.git")) {
@@ -1088,27 +1084,36 @@ static const int ModuleProtocolVersion = 1;
 		}
 
 		if(!current_path.empty() && !force && sys::file_exists(current_path + "/module.cfg")) {
-			variant config = json::parse(sys::read_file(current_path + "/module.cfg"));
-			request.add("current_version", config["version"]);
-
-			if(!current_path.empty() && !force && sys::file_exists(current_path + "/manifest.cfg")) {
-				request.add("manifest", json::parse(sys::read_file(current_path + "/manifest.cfg")));
-			}
 
 			is_new_install_ = false;
+
+			LOG_INFO("Querying version of module available on server");
+			operation_ = OPERATION_QUERY_VERSION_FOR_INSTALL;
+
+			std::string doc;
+			const std::string url = "GET /module_version/" + module_id;
+			client_->send_request(url, doc, 
+							  std::bind(&client::on_response, this, _1),
+							  std::bind(&client::on_error, this, _1, url, ""),
+							  std::bind(&client::on_progress, this, _1, _2, _3));
+
+			return true;
+		} else {
+			return install_module_confirmed_out_of_date(module_id);
 		}
+	}
+
+	bool client::install_module_confirmed_out_of_date(const std::string& module_id)
+	{
+		operation_ = OPERATION_INSTALL;
+		data_.clear();
 
 		LOG_INFO("Requesting module '" << module_id << "'");
 
-		bool done = false;
-
-		std::string response;
-
-		const std::string url = "POST /download_module?module_id=" + module_id + version_str;
-		const std::string doc = request.build().write_json();
-		client_->send_request(url, doc, 
+		const std::string url = "GET /module_data/" + module_id;
+		client_->send_request(url, "", 
 							  std::bind(&client::on_response, this, _1),
-							  std::bind(&client::on_error, this, _1, url, doc),
+							  std::bind(&client::on_error, this, _1, url, ""),
 							  std::bind(&client::on_progress, this, _1, _2, _3));
 		return true;
 	}
@@ -1251,7 +1256,7 @@ static const int ModuleProtocolVersion = 1;
 
 		try {
 			variant doc = json::parse(response, json::JSON_PARSE_OPTIONS::NO_PREPROCESSOR);
-			if(doc[variant("status")] != variant("ok")) {
+			if(doc[variant("status")] != variant("ok") && doc[variant("manifest")].is_null()) {
 				if(doc[variant("out_of_date")].as_bool(false)) {
 					on_error(doc[variant("message")].as_string(), "", "");
 					out_of_date_ = true;
@@ -1262,11 +1267,25 @@ static const int ModuleProtocolVersion = 1;
 				on_error(doc[variant("status")].as_string(), "", "");
 
 				LOG_ERROR("SET ERROR: " << doc.write_json());
+			} else if(operation_ == OPERATION_QUERY_VERSION_FOR_INSTALL) {
+				variant version = doc[variant("version")];
+				std::string current_path = install_image_ ? InstallImagePath : make_base_module_path(module_id_);
+				variant config = json::parse(sys::read_file(current_path + "/module.cfg"));
+				LOG_INFO("Server has module version " << version.write_json() << " we have " << config["version"].write_json());
+				if(version == config["version"]) {
+					operation_ = OPERATION_NONE;
+					LOG_INFO("You already have the newest version of this module. Use --force to force download.");
+					return;
+				} else {
+					install_module_confirmed_out_of_date(module_id_);
+					return;
+				}
+
 			} else if(operation_ == OPERATION_INSTALL) {
 
 				operation_ = OPERATION_NONE;
 
-				perform_install(response);
+				perform_install(doc);
 				return;
 
 			} else if(operation_ == OPERATION_PREPARE_INSTALL) {
@@ -1325,32 +1344,44 @@ static const int ModuleProtocolVersion = 1;
 		operation_ = OPERATION_NONE;
 	}
 
-	void client::perform_install(const std::string& response)
+	void client::perform_install(const variant& doc_ref)
 	{
-		variant doc;
+		variant doc = doc_ref;
 
-		LOG_INFO("Performing module install");
-
-		try {
-			doc = json::parse(response, json::JSON_PARSE_OPTIONS::NO_PREPROCESSOR);
-		} catch(json::ParseError& e) {
-			sys::write_file("./download.txt", response);
-			ASSERT_LOG(false, "Failed to parse: " << e.errorMessage());
+		variant local_manifest;
+		std::string current_path = install_image_ ? InstallImagePath : make_base_module_path(module_id_);
+		if(!current_path.empty() && !force_install_ && sys::file_exists(current_path + "/module.cfg") && sys::file_exists(current_path + "/manifest.cfg")) {
+			local_manifest = json::parse(sys::read_file(current_path + "/manifest.cfg"));
+			LOG_INFO("Parsed local manifest");
 		}
 
-		if(doc["status"].as_string() == "no_newer_module") {
-			LOG_INFO("You already have the newest version of this module. Use --force to force download.");
-			return;
-		}
+		std::vector<variant> unchanged_keys;
 
-		ASSERT_LOG(doc["status"].as_string() == "ok", "COULD NOT DOWNLOAD MODULE: " << doc["message"]);
+		static const variant md5_variant("md5");
 
-		variant manifest = doc["module"]["manifest"];
+		variant manifest = doc["manifest"];
 		for(auto p : manifest.as_map()) {
-			if(p.second["data"].is_null()) {
+			if(local_manifest.is_map() && local_manifest.has_key(p.first) && local_manifest[p.first][md5_variant] == p.second[md5_variant]) {
+				unchanged_keys.push_back(p.first);
+			} else if(p.second["data"].is_null()) {
 				nbytes_total_ += p.second["size"].as_int();
 				chunks_to_get_.push_back(p.second);
 			}
+		}
+
+		if(local_manifest.is_map()) {
+			std::vector<variant> keys_to_delete;
+			for(auto p : local_manifest.as_map()) {
+				if(manifest.has_key(p.first) == false) {
+					keys_to_delete.push_back(p.first);
+				}
+			}
+
+			doc.add_attr_mutation(variant("delete"), variant(&keys_to_delete));
+		}
+
+		for(variant k : unchanged_keys) {
+			manifest.remove_attr_mutation(k);
 		}
 
 		LOG_INFO("Getting chunks: " << chunks_to_get_.size());
@@ -1388,10 +1419,8 @@ static const int ModuleProtocolVersion = 1;
 
 	void client::perform_install_from_doc(variant doc)
 	{
-		variant module_data = doc["module"];
-
-		if(module_data.has_key("delete")) {
-			for(variant path : module_data["delete"].as_list()) {
+		if(doc.has_key("delete")) {
+			for(variant path : doc["delete"].as_list()) {
 				const std::string path_str = preferences::dlc_path() + "/" + module_id_ + "/" + path.as_string();
 				LOG_INFO("DELETING FILE: " << path_str);
 
@@ -1407,7 +1436,7 @@ static const int ModuleProtocolVersion = 1;
 			}
 		}
 
-		variant manifest = module_data["manifest"];
+		variant manifest = doc["manifest"];
 		for(variant path : manifest.getKeys().as_list()) {
 			const std::string path_str = path.as_string();
 			ASSERT_LOG(is_module_path_valid(path_str), "INVALID PATH IN MODULE: " << path_str);
