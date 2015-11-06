@@ -53,7 +53,7 @@ namespace graphics
 	{
 		struct TextFragment 
 		{
-			float xpos, ypos, width, height;
+			float xpos, ypos, width, height, x_advance;
 			std::string font;
 			int font_size;
 			variant tag;
@@ -171,7 +171,7 @@ namespace {
 			TextMarkupFragment() : color(255,255,255,255) {}
 			std::string text;
 			std::string font;
-			int font_size;
+			float font_size;
 			int font_weight;
 			bool font_italic;
 			variant tag;
@@ -311,10 +311,10 @@ namespace {
 	class cairo_text_fragment : public game_logic::FormulaCallable
 	{
 	public:
-		cairo_text_fragment() : x(0), y(0), width(0), height(0), ascent(0), descent(0) {
+		cairo_text_fragment() : x(0), y(0), width(0), height(0), ascent(0), descent(0), x_advance(0) {
 		}
 		variant path, tag;
-		float x, y, width, height, ascent, descent;
+		float x, y, width, height, ascent, descent, x_advance;
 		KRE::Color color;
 	private:
 		DECLARE_CALLABLE(cairo_text_fragment);
@@ -334,6 +334,8 @@ namespace {
 			return variant(obj.width);
 		DEFINE_FIELD(height, "decimal")
 			return variant(obj.height);
+		DEFINE_FIELD(x_advance, "decimal")
+			return variant(obj.x_advance);
 		DEFINE_FIELD(ascent, "decimal")
 			return variant(obj.ascent);
 		DEFINE_FIELD(descent, "decimal")
@@ -540,7 +542,7 @@ namespace {
 						}
 					}
 
-					TextFragment fragment = { xpos, ypos, static_cast<float>(extents.width), static_cast<float>(extents.height), font, font_size, tag, item.color, std::string(i1, i2), valign, font_extents, svg };
+					TextFragment fragment = { xpos, ypos, static_cast<float>(extents.width), static_cast<float>(extents.height), static_cast<float>(extents.x_advance), font, font_size, tag, item.color, std::string(i1, i2), valign, font_extents, svg };
 					output.back().fragments.push_back(fragment);
 					output.back().fragment_width += static_cast<float>(extents.width);
 
@@ -671,6 +673,7 @@ namespace {
 				res->y = fragment.ypos + fragment_baseline - static_cast<float>(fragment.font_extents.ascent);
 				res->width = fragment.width;
 				res->height = static_cast<float>(fragment.font_extents.ascent) + static_cast<float>(fragment.font_extents.descent);
+				res->x_advance = fragment.x_advance;
 				res->ascent = static_cast<float>(fragment.font_extents.ascent);
 				res->descent = static_cast<float>(fragment.font_extents.descent);
 
@@ -698,7 +701,7 @@ namespace {
 		return get_font_fn(arg_list).as_string();
 	}
 
-	void parse_text_markup_impl(std::vector<TextMarkupFragment>& stack, std::vector<TextMarkupFragment>& output, const boost::property_tree::ptree& ptree, const variant& get_font_fn, const std::string& element)
+	void parse_text_markup_impl(std::vector<TextMarkupFragment>& stack, std::vector<TextMarkupFragment>& output, const boost::property_tree::ptree& ptree, const variant& get_font_fn, const std::string& element, double scale)
 	{
 		static const std::string XMLText = "<xmltext>";
 		static const std::string XMLAttr = "<xmlattr>";
@@ -731,9 +734,9 @@ namespace {
 
 							const int num_value = atoi(valstr.c_str());
 							if(valstr[0] == '+' || valstr[0] == '-') {
-								stack.back().font_size += is_percent ? (stack.back().font_size*num_value)/100 : num_value;
+								stack.back().font_size += is_percent ? (stack.back().font_size*num_value)/100 : num_value*scale;
 							} else {
-								stack.back().font_size = is_percent ? (stack.back().font_size*num_value)/100 : num_value;
+								stack.back().font_size = is_percent ? (stack.back().font_size*num_value)/100 : num_value*scale;
 							}
 
 						} else if(attr == "weight") {
@@ -795,7 +798,7 @@ namespace {
 				ASSERT_LOG(false, "Unrecognized markup element: " << itor->first);
 			}
 
-			parse_text_markup_impl(stack, output, itor->second, get_font_fn, itor->first);
+			parse_text_markup_impl(stack, output, itor->second, get_font_fn, itor->first, scale);
 
 			stack.resize(start_size);
 		}
@@ -1339,12 +1342,26 @@ END_CAIRO_FN
 
 	END_CAIRO_FN
 
-	BEGIN_DEFINE_FN(markup_text, "(string, decimal, decimal=0.0) ->[builtin cairo_text_fragment]")
+	BEGIN_DEFINE_FN(markup_text, "(string, decimal|{width: decimal, width_delta: null|decimal, scale: null|decimal}, decimal=0.0) ->[builtin cairo_text_fragment]")
 		const std::string markup = "<root>" + FN_ARG(0).as_string() + "</root>";
-		float width = FN_ARG(1).as_float();
+
+		variant params = FN_ARG(1);
+
+		double scale = 1.0;
+		float width = params.is_map() ? params["width"].as_float() : params.as_float();
 		float width_delta = 0.0;
 		if(NUM_FN_ARGS > 2) {
 			width_delta = FN_ARG(2).as_float();
+		}
+
+		if(params.is_map()) {
+			if(params["width_delta"].is_decimal()) {
+				width_delta = params["width_delta"].as_float();
+			}
+
+			if(params["scale"].is_decimal()) {
+				scale = params["scale"].as_float();
+			}
 		}
 
 		std::istringstream s(markup);
@@ -1363,7 +1380,7 @@ END_CAIRO_FN
 		ASSERT_LOG(get_font_fn.is_null() == false, "Could not find get() function in font lib");
 
 		std::vector<TextMarkupFragment> stack(1);
-		stack.back().font_size = 14;
+		stack.back().font_size = 14*scale;
 		stack.back().font_weight = 35;
 		stack.back().font_italic = false;
 
@@ -1381,7 +1398,7 @@ END_CAIRO_FN
 
 		std::vector<TextMarkupFragment> fragments;
 
-		parse_text_markup_impl(stack, fragments, ptree, get_font_fn, "");
+		parse_text_markup_impl(stack, fragments, ptree, get_font_fn, "", scale);
 
 		if(fragments.empty() == false) {
 			return layout_text_impl(&fragments[0], &fragments[0] + fragments.size(), width, width_delta);
