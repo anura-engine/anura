@@ -30,6 +30,7 @@
 #include "unit_test.hpp"
 
 PREF_STRING(db_json_file, "", "The file to output database content to when using a file to simulate a database");
+PREF_STRING(db_key_prefix, "", "Prefix to put before all requests for keys.");
 
 BEGIN_DEFINE_CALLABLE_NOBASE(DbClient)
 BEGIN_DEFINE_FN(read_modify_write, "(string, function(any)->any) ->commands")
@@ -115,17 +116,17 @@ namespace
 
 		void put(const std::string& key, variant doc, std::function<void()> on_done, std::function<void()> on_error, PUT_OPERATION op=PUT_SET)
 		{
-			doc_.add_attr_mutation(variant(key), doc);
+			doc_.add_attr_mutation(variant(g_db_key_prefix + key), doc);
 			dirty_ = true;
 			on_done();
 		}
 
 		void get(const std::string& key, std::function<void(variant)> on_done, int lock_seconds) {
-			on_done(doc_[key]);
+			on_done(doc_[g_db_key_prefix + key]);
 		}
 
 		void remove(const std::string& key) {
-			doc_.remove_attr_mutation(variant(key));
+			doc_.remove_attr_mutation(variant(g_db_key_prefix + key));
 			dirty_ = true;
 		}
 
@@ -219,7 +220,9 @@ void remove_callback(lcb_t instance, const void* cookie, lcb_error_t error, cons
 
 		~CouchbaseDbClient() {}
 
-		void put(const std::string& key, variant doc, std::function<void()> on_done, std::function<void()> on_error, PUT_OPERATION op) {
+		void put(const std::string& rkey, variant doc, std::function<void()> on_done, std::function<void()> on_error, PUT_OPERATION op) {
+			const std::string key = g_db_key_prefix + rkey;
+
 			std::string doc_str = doc.write_json();
 			lcb_store_cmd_t cmd;
 			memset(&cmd, 0, sizeof(cmd));
@@ -256,8 +259,10 @@ void remove_callback(lcb_t instance, const void* cookie, lcb_error_t error, cons
 			ASSERT_LOG(err == LCB_SUCCESS, "Error in store: " << lcb_strerror(nullptr, err));
 		}
 
-	virtual void remove(const std::string& key)
+	virtual void remove(const std::string& rkey)
 	{
+		const std::string key = g_db_key_prefix + rkey;
+
 		lcb_remove_cmd_t cmd;
 		memset(&cmd, 0, sizeof(cmd));
 
@@ -278,8 +283,10 @@ void remove_callback(lcb_t instance, const void* cookie, lcb_error_t error, cons
 		ASSERT_LOG(err == LCB_SUCCESS, "Error in remove: " << lcb_strerror(nullptr, err));
 	}
 
-		void get(const std::string& key, std::function<void(variant)> on_done, int lock_seconds)
+		void get(const std::string& rkey, std::function<void(variant)> on_done, int lock_seconds)
 		{
+			const std::string key = g_db_key_prefix + rkey;
+
 			lcb_get_cmd_t cmd;
 			memset(&cmd, 0, sizeof(cmd));
 			cmd.v.v0.key = key.c_str();
