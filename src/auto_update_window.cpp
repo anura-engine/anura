@@ -25,6 +25,8 @@
 #include <unistd.h>
 #endif
 
+extern std::string g_loading_screen_bg_color;
+
 namespace 
 {
 	KRE::TexturePtr render_updater_text(const std::string& str, const KRE::Color& color)
@@ -151,6 +153,7 @@ void auto_update_window::draw() const
 
 	auto canvas = KRE::Canvas::getInstance();
 
+	window_->setClearColor(KRE::Color(g_loading_screen_bg_color));
 	window_->clear(KRE::ClearFlags::COLOR);
 
 	canvas->drawSolidRect(rect(300, 290, 200, 20), KRE::Color(255, 255, 255, 255));
