@@ -96,6 +96,7 @@ namespace gui
 		WidgetPtr label_;
 		std::function<void ()> onclick_;
 		bool down_;
+		variant mouseover_handler_, mouseoff_handler_;
 		game_logic::FormulaPtr click_handler_;
 		game_logic::FormulaCallablePtr handler_arg_;
 	

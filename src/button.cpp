@@ -33,6 +33,7 @@
 #include "label.hpp"
 #include "slider.hpp"
 #include "framed_gui_element.hpp"
+#include "variant_type.hpp"
 #include "widget_settings_dialog.hpp"
 #include "widget_factory.hpp"
 
@@ -115,6 +116,12 @@ variant Button::getColorScheme()
 		} else { 
 			click_handler_ = getEnvironment()->createFormula(on_click_value);
 		}
+
+		static const variant_type_ptr HandlerType(parse_variant_type(variant("null|function()->commands")));
+		mouseover_handler_ = v["on_mouseover"];
+		mouseoff_handler_ = v["on_mouseoff"];
+		ASSERT_LOG(HandlerType->match(mouseover_handler_), "Mouseover handler is the wrong type: " << mouseover_handler_.write_json());
+		ASSERT_LOG(HandlerType->match(mouseoff_handler_), "Mouseoff handler is the wrong type: " << mouseoff_handler_.write_json());
 
 		onclick_ = std::bind(&Button::click, this);
 		button_resolution_ = v["resolution"].as_string_default("normal") == "normal" ? BUTTON_SIZE_NORMAL_RESOLUTION : BUTTON_SIZE_DOUBLE_RESOLUTION;
@@ -259,9 +266,25 @@ variant Button::getColorScheme()
 		if(event.type == SDL_MOUSEMOTION) {
 			const SDL_MouseMotionEvent& e = event.motion;
 			if(inWidget(e.x,e.y)) {
-				current_button_image_set_ = down_ ? depressed_button_image_set_ : focus_button_image_set_;
+				ConstFramedGuiElementPtr p = down_ ? depressed_button_image_set_ : focus_button_image_set_;
+				if(current_button_image_set_ != p) {
+					current_button_image_set_ = p;
+					if(mouseover_handler_.is_function()) {
+						std::vector<variant> args;
+						variant value = mouseover_handler_(args);
+						getEnvironment()->executeCommand(value);
+					}
+				}
 			} else {
-				current_button_image_set_ = normal_button_image_set_;
+				ConstFramedGuiElementPtr p = normal_button_image_set_;
+				if(current_button_image_set_ != p) {
+					current_button_image_set_ = p;
+					if(mouseoff_handler_.is_function()) {
+						std::vector<variant> args;
+						variant value = mouseoff_handler_(args);
+						getEnvironment()->executeCommand(value);
+					}
+				}
 			}
 		} else if(event.type == SDL_MOUSEBUTTONDOWN) {
 			const SDL_MouseButtonEvent& e = event.button;
