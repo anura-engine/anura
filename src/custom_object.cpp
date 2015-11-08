@@ -5095,7 +5095,7 @@ namespace
 
 bool CustomObject::handleEventInternal(int event, const FormulaCallable* context, bool executeCommands_now)
 {
-	if(paused_) {
+	if(paused_ && event != OBJECT_EVENT_BEING_REMOVED) {
 		return false;
 	}
 
