@@ -125,7 +125,7 @@ namespace preferences
 	{
 		struct RegisteredSetting 
 		{
-			RegisteredSetting() : persistent(false), int_value(nullptr), bool_value(nullptr), double_value(nullptr), string_value(nullptr), variant_value(nullptr), helpstring(nullptr)
+			RegisteredSetting() : persistent(false), has_been_set_from_persistent(false), int_value(nullptr), bool_value(nullptr), double_value(nullptr), string_value(nullptr), variant_value(nullptr), helpstring(nullptr)
 			{}
 			variant write() const {
 				if(int_value) {
@@ -156,7 +156,7 @@ namespace preferences
 					*variant_value = value;
 				}
 			}
-			bool persistent;
+			bool persistent, has_been_set_from_persistent;
 			int* int_value;
 			bool* bool_value;
 			double* double_value;
@@ -881,6 +881,7 @@ namespace preferences
 		for(std::map<std::string, RegisteredSetting>::iterator i = g_registered_settings().begin(); i != g_registered_settings().end(); ++i) {
 			if(i->second.persistent && node.has_key(i->first)) {
 				i->second.read(node[i->first]);
+				i->second.has_been_set_from_persistent = true;
 			}
 		}
 		
@@ -1125,9 +1126,19 @@ namespace preferences
 				std::string::const_iterator equal = std::find(arg.begin(), arg.end(), '=');
 				std::string base_name(arg.begin()+2,equal);
 				std::replace(base_name.begin(), base_name.end(), '-', '_');
+
+				static const std::string NoOverridePrefix("defer_archive_");
+				bool do_override = true;
+				if(base_name.size() > NoOverridePrefix.size() && std::equal(NoOverridePrefix.begin(), NoOverridePrefix.end(), base_name.begin())) {
+					do_override = false;
+					base_name.erase(base_name.begin(), base_name.begin() + NoOverridePrefix.size());
+				}
+
 				if(g_registered_settings().count(base_name)) {
 					RegisteredSetting& setting = g_registered_settings()[base_name];
-					if(setting.string_value) {
+					if(!do_override && setting.has_been_set_from_persistent) {
+						//do nothing. This was set from the archive and we don't override.
+					} else if(setting.string_value) {
 						*setting.string_value = std::string(equal+1, arg.end());
 					} else if(setting.int_value) {
 						*setting.int_value = atoi(std::string(equal+1, arg.end()).c_str());
