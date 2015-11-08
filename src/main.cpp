@@ -129,6 +129,8 @@ namespace
 
 	PREF_BOOL(disable_global_alpha_filter, false, "Disables using alpha-colors.png to denote some special colors as 'alpha colors'");
 
+	PREF_BOOL_PERSISTENT(desktop_fullscreen, false, "Sets the game window to be a fullscreen window the size of the desktop");
+
 
 #if defined(_MSC_VER)
 	const std::string anura_exe_name = "anura.exe";
@@ -887,7 +889,11 @@ int main(int argcount, char* argvec[])
     KRE::WindowPtr main_wnd = wm.allocateWindow(hints.build());
 	main_wnd->setWindowTitle(module::get_module_pretty_name());
 
-	if(preferences::auto_size_window() 
+	if(g_desktop_fullscreen) {
+		KRE::WindowMode mode = main_wnd->getDisplaySize();
+		main_wnd->setWindowSize(mode.width, mode.height);
+		main_wnd->setFullscreenMode(KRE::FullScreenMode::FULLSCREEN_WINDOWED);
+	} else if(preferences::auto_size_window() 
 		&& preferences::requested_window_width() == 0 
 		&& preferences::requested_window_height() == 0) {
 		int width = 0;
@@ -911,6 +917,7 @@ int main(int argcount, char* argvec[])
 	
 	//WindowManager::getMainWindow()->setWindowSize(main_wnd->width(), main_wnd->height());
 
+	fprintf(stderr, "ZZZ: VIRT: %d, %d\n", vw, vh);
 	graphics::GameScreen::get().setDimensions(main_wnd->width(), main_wnd->height());
 	graphics::GameScreen::get().setVirtualDimensions(vw, vh);
 	//main_wnd->setWindowIcon(module::map_file("images/window-icon.png"));
