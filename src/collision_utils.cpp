@@ -342,7 +342,7 @@ bool non_solid_entity_collides_with_level(const Level& lvl, const Entity& e)
 			if(i == f.getAlphaBuf().end() || i == f.getAlphaBuf().begin()) {
 				continue;
 			}
-			if(!*i && lvl.solid(e.x() + x, e.y() + y)) {
+			if(*i && lvl.solid(e.x() + x, e.y() + y)) {
 				return true;
 			}
 
