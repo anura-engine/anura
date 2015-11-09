@@ -168,12 +168,13 @@ namespace {
 
 		struct TextMarkupFragment
 		{
-			TextMarkupFragment() : color(255,255,255,255) {}
+			TextMarkupFragment() : nobr(false), color(255,255,255,255) {}
 			std::string text;
 			std::string font;
 			float font_size;
 			int font_weight;
 			bool font_italic;
+			bool nobr;
 			variant tag;
 			variant align, valign;
 			std::string svg;
@@ -782,6 +783,9 @@ namespace {
 				}
 
 				continue;
+			} else if(itor->first == "nobr") {
+				stack.push_back(stack.back());
+				stack.back().nobr = true;
 			} else if(itor->first == "font") {
 				stack.push_back(stack.back());
 			} else if(itor->first == "root") {
@@ -852,9 +856,16 @@ namespace {
 	END_CAIRO_FN
 
 	BEGIN_DEFINE_FN(render, "(int, int, cairo_commands, map|null=null) ->builtin texture_object")
-		const int w = FN_ARG(0).as_int();
-		const int h = FN_ARG(1).as_int();
-		ASSERT_LOG(w > 0 && h > 0, "Invalid canvas render: " << w << "x" << h);
+		int w = FN_ARG(0).as_int();
+		int h = FN_ARG(1).as_int();
+		ASSERT_LOG(w >= 0 && h >= 0 && w <= 8192 && h <= 8192, "Invalid canvas render: " << w << "x" << h);
+		if(w < 2) {
+			w = 2;
+		}
+
+		if(h < 2) {
+			h = 2;
+		}
 		cairo_context context(w, h);
 
 		variant ops = FN_ARG(2);
