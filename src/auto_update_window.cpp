@@ -26,6 +26,7 @@
 #endif
 
 extern std::string g_loading_screen_bg_color;
+PREF_STRING(auto_update_title, "Anura auto-update", "Title of the auto-update window");
 
 namespace 
 {
@@ -121,7 +122,7 @@ void auto_update_window::create_window()
 
 	variant_builder hints;
 	hints.add("renderer", "opengl");
-	hints.add("title", "Anura auto-update");
+	hints.add("title", g_auto_update_title);
 	hints.add("clear_color", "black");
 
 	KRE::WindowManager wm("SDL");
