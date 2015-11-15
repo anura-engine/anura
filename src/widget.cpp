@@ -235,6 +235,13 @@ namespace gui
 		}
 	}
 
+	void Widget::onHide()
+	{
+		if(tooltip_displayed_) {
+			gui::remove_tooltip(tooltip_);
+		}
+	}
+
 	void Widget::recalcLoc()
 	{
 		if( align_h_ == HALIGN_LEFT) {

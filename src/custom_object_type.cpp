@@ -1164,6 +1164,7 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 	slot_properties_base_(-1), 
 	use_absolute_screen_coordinates_(node["use_absolute_screen_coordinates"].as_bool(false)),
 	mouseover_delay_(node["mouseover_delay"].as_int(0)),
+	mouse_drag_threshold_(node["mouse_drag_threshold"].as_int(-1)),
 	is_strict_((!g_suppress_strict_mode && node["is_strict"].as_bool(custom_object_strict_mode)) || g_force_strict_mode),
 	is_shadow_(node["is_shadow"].as_bool(false)),
 	particle_system_desc_(node["particles"]),

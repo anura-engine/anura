@@ -2669,6 +2669,11 @@ void CustomObject::run_garbage_collection()
 void CustomObject::beingRemoved()
 {
 	handleEvent(OBJECT_EVENT_BEING_REMOVED);
+
+	for(auto w : widgets_) {
+		w->onHide();
+	}
+
 #if defined(USE_BOX2D)
 	if(body_) {
 		body_->set_active(false);
@@ -5995,6 +6000,16 @@ void CustomObject::addToLevel()
 int CustomObject::currentRotation() const
 {
 	return rotate_z_.as_int();
+}
+
+int CustomObject::mouseDragThreshold(int default_value) const
+{
+	const int v = type_->getMouseDragThreshold();
+	if(v >= 0) {
+		return v;
+	} else {
+		return default_value;
+	}
 }
 
 BENCHMARK(custom_object_spike) {

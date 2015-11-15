@@ -44,6 +44,7 @@
 #include "formula_object.hpp"
 #include "http_server.hpp"
 #include "json_parser.hpp"
+#include "md5.hpp"
 #include "module.hpp"
 #include "preferences.hpp"
 #include "string_utils.hpp"
@@ -59,6 +60,45 @@
 using namespace tbs;
 
 namespace {
+
+bool validateEmail(const std::string& email, std::string* message)
+{
+	if(std::count(email.begin(), email.end(), '@') != 1) {
+		*message = "multiple '@' characters";
+		return false;
+	}
+
+	if(email.size() > 64) {
+		*message = "Address too long";
+		return false;
+	}
+
+	for(char c : email) {
+		if(!isalnum(c) && c != '@' && c != '-' && c != '_' && c != '.') {
+			*message = "Illegal characters";
+			return false;
+		}
+	}
+
+	return true;
+}
+
+void sendEmail(std::string email_addr, std::string subject, std::string message)
+{
+#ifdef __linux__
+
+	std::ostringstream s;
+	s << "/usr/sbin/sendmail " << email_addr;
+	FILE* f = popen(s.str().c_str(), "w");
+
+	fprintf(f, "From: %s\n", subject.c_str());
+	fprintf(f, "Subject: %s\n\n", subject.c_str());
+	fprintf(f, "%s\n", message.c_str());
+	fflush(f);
+
+	fclose(f);
+#endif
+}
 
 struct RestartServerException {
 	std::vector<char*> argv;
@@ -350,6 +390,19 @@ public:
 		timer_.async_wait(boost::bind(&matchmaking_server::heartbeat, this, boost::asio::placeholders::error));
 	}
 
+#define RESPOND_ERROR(msg) { \
+					variant_builder response; \
+					response.add("type", "error"); \
+					response.add("message", msg); \
+					send_response(socket, response.build()); \
+				}
+
+#define RESPOND_MESSAGE(msg) { \
+					variant_builder response; \
+					response.add("type", "message"); \
+					response.add("message", msg); \
+					send_response(socket, response.build()); \
+				}
 
 	void handlePost(socket_ptr socket, variant doc, const http::environment& env) override
 	{
@@ -391,22 +444,14 @@ public:
 			} else if(request_type == "register") {
 				std::string user = normalize_username(doc["user"].as_string());
 				if(!username_valid(user)) {
-					variant_builder response;
-					response.add("type", "registration_fail");
-					response.add("reason", "invalid_username");
-					response.add("message", "Not a valid username");
-					send_response(socket, response.build());
+					RESPOND_ERROR("Not a valid username");
 					return;
 				}
 
 				std::string beta_key;
 				if(g_beta_keys_file.empty() == false) {
 					if(!doc["beta_key"].is_string()) {
-						variant_builder response;
-						response.add("type", "registration_fail");
-						response.add("reason", "invalid_betakey");
-						response.add("message", "Must specify a beta key");
-						send_response(socket, response.build());
+						RESPOND_ERROR("Must specify a beta key");
 						return;
 					}
 
@@ -421,27 +466,26 @@ public:
 				args.push_back(doc);
 				variant account_info = create_account_fn_(args);
 
+				std::string email_address = doc["email"].as_string_default("");
+				if(email_address.empty() == false) {
+					std::string message;
+					bool valid = validateEmail(email_address, &message);
+					RESPOND_ERROR("Invalid email address: " + message);
+				}
+
 				std::string user_full = doc["user"].as_string();
 
 				std::string passwd = doc["passwd"].as_string();
 				const bool remember = doc["remember"].as_bool(false);
 				db_client_->get("user:" + user, [=](variant user_info) {
 					if(user_info.is_null() == false) {
-						variant_builder response;
-						response.add("type", "registration_fail");
-						response.add("reason", "username_taken");
-						response.add("message", "That username is already taken.");
-						send_response(socket, response.build());
+						RESPOND_ERROR("That username is already taken");
 						return;
 					}
 
 					std::string beta_error;
 					if(g_beta_keys_file.empty() == false && !can_redeem_beta_key(beta_key, beta_error)) {
-						variant_builder response;
-						response.add("type", "registration_fail");
-						response.add("reason", "beta_key_error");
-						response.add("message", beta_error);
-						send_response(socket, response.build());
+						RESPOND_ERROR(beta_error);
 						return;
 					}
 
@@ -450,6 +494,10 @@ public:
 					new_user_info.add("passwd", passwd);
 					new_user_info.add("info_version", variant(0));
 					new_user_info.add("info", account_info);
+
+					if(std::find(email_address.begin(), email_address.end(), '@') != email_address.end()) {
+						new_user_info.add("email", email_address);
+					}
 
 					variant new_user_info_variant = new_user_info.build();
 
@@ -490,11 +538,7 @@ public:
 						send_response(socket, response.build());
 					},
 					[=]() {
-						variant_builder response;
-						response.add("type", "registration_fail");
-						response.add("reason", "db_error");
-						response.add("message", "There was an error with registering. Please try again.");
-						send_response(socket, response.build());
+						RESPOND_ERROR("There was an error with registering. Please try again.");
 					}, DbClient::PUT_ADD);
 				});
 
@@ -515,26 +559,19 @@ public:
 				}
 
 				db_client_->get("user:" + user, [=](variant user_info) {
-					variant_builder response;
 					if(user_info.is_null()) {
-						response.add("type", "login_fail");
-						response.add("reason", "user_not_found");
-						response.add("message", "That user doesn't exist");
-
-						send_response(socket, response.build());
+						RESPOND_ERROR("That user doesn't exist");
 						return;
 					}
 
 					std::string db_passwd = user_info["passwd"].as_string();
 					if(passwd != db_passwd && !impersonate) {
-						response.add("type", "login_fail");
-						response.add("reason", "passwd_incorrect");
-						response.add("message", "Incorrect password");
-
-						send_response(socket, response.build());
+						RESPOND_ERROR("Incorrect password");
 						return;
 
 					}
+
+					variant_builder response;
 
 					repair_account(&user_info);
 
@@ -604,17 +641,46 @@ public:
 						send_response(socket, response.build());
 					});
 				});
+			} else if(request_type == "recover_account") {
+				std::string given_user = doc["user"].as_string();
+				std::string user = normalize_username(given_user);
+				db_client_->get("user:" + user, [=](variant user_info) {
+					if(user_info.is_null()) {
+						RESPOND_ERROR("That user doesn't exist");
+						return;
+					}
+
+					variant email = user_info["email"];
+					if(email.is_null()) {
+						RESPOND_ERROR("There is no email address associated with this account");
+						return;
+					}
+
+					auto existing = user_id_to_recover_account_requests_.find(user);
+					if(existing != user_id_to_recover_account_requests_.end()) {
+						recover_account_requests_.erase(existing->second);
+						user_id_to_recover_account_requests_.erase(existing);
+					}
+
+					std::string request_id = write_uuid(generate_uuid());
+					request_id.resize(8);
+
+					recover_account_requests_[request_id] = user;
+					user_id_to_recover_account_requests_[user] = request_id;
+
+					std::ostringstream msg;
+					msg << "We have received a request to reset the password on your Argentum Age account. To reset your password please visit this URL: http://theargentlark.com:" << port_ << "/reset_password?user=" << user << "&id=" << request_id;
+
+					sendEmail(email.as_string(), "Reset your Argentum Age password", msg.str());
+				});
+
 			} else if(request_type == "get_server_info") {
 				static const std::string server_info = get_server_info_file().write_json();
 				send_msg(socket, "text/json", server_info, "");
 			} else if(request_type == "reset_passwd") {
 				const int session_id = doc["session_id"].as_int(request_session_id);
 				if(sessions_.count(session_id) == 0) {
-					variant_builder response;
-					response.add("type", "fail");
-					response.add("reason", "bad_session");
-					response.add("message", "Invalid session ID");
-					send_response(socket, response.build());
+					RESPOND_ERROR("Invalid session ID");
 					return;
 				}
 
@@ -625,30 +691,59 @@ public:
 					user_info.add_attr_mutation(variant("passwd"), variant(passwd));
 					db_client_->put("user:" + info.user_id, user_info,
 					[=]() {
-						variant_builder response;
-						response.add("type", "password_reset");
-						response.add("message", "Your password has been reset.");
-						send_response(socket, response.build());
+						RESPOND_MESSAGE("Your password has been reset.");
 					}, 
 					[=]() {
-						variant_builder response;
-						response.add("type", "reset_failed");
-						response.add("reason", "db_error");
-						response.add("message", "There was an error with resetting the password. Please try again.");
-						send_response(socket, response.build());
+						RESPOND_ERROR("There was an error with resetting the password. Please try again.");
 					},
 					DbClient::PUT_REPLACE);
 				});
 
-			} else if(request_type == "delete_account") {
+			} else if(request_type == "modify_account") {
 				const int session_id = doc["session_id"].as_int(request_session_id);
 
 				if(sessions_.count(session_id) == 0) {
-					variant_builder response;
-					response.add("type", "fail");
-					response.add("reason", "bad_session");
-					response.add("message", "Invalid session ID");
-					send_response(socket, response.build());
+					RESPOND_ERROR("Invalid session ID");
+					return;
+				}
+
+				SessionInfo& info = sessions_[session_id];
+
+				std::string user = info.user_id;
+
+				variant v = account_info_[user];
+				if(v.is_null()) {
+					RESPOND_ERROR("Could not find user info");
+					return;
+				}
+
+				std::string passwd = doc["passwd"].as_string();
+
+				if(passwd != v["passwd"].as_string()) {
+					RESPOND_ERROR("Invalid password");
+					return;
+				}
+
+				if(doc["email"].is_string()) {
+					const std::string email = doc["email"].as_string();
+					std::string message;
+					bool valid = validateEmail(email, &message);
+					if(!valid) {
+						RESPOND_ERROR("Invalid email: " + message);
+						return;
+					}
+				}
+
+				db_client_->put("user:" + user, v, [](){}, [](){});
+
+				RESPOND_MESSAGE("Your account has been modified");
+
+			} else if(request_type == "delete_account") {
+
+				const int session_id = doc["session_id"].as_int(request_session_id);
+
+				if(sessions_.count(session_id) == 0) {
+					RESPOND_MESSAGE("Invalid session ID");
 					return;
 				}
 
@@ -666,11 +761,7 @@ public:
 				const int session_id = doc["session_id"].as_int(request_session_id);
 
 				if(sessions_.count(session_id) == 0) {
-					variant_builder response;
-					response.add("type", "matchmaking_fail");
-					response.add("reason", "bad_session");
-					response.add("message", "Invalid session ID");
-					send_response(socket, response.build());
+					RESPOND_MESSAGE("Invalid session ID");
 					return;
 				}
 
@@ -688,11 +779,7 @@ public:
 				const int session_id = doc["session_id"].as_int(request_session_id);
 
 				if(sessions_.count(session_id) == 0) {
-					variant_builder response;
-					response.add("type", "matchmaking_fail");
-					response.add("reason", "bad_session");
-					response.add("message", "Invalid session ID");
-					send_response(socket, response.build());
+					RESPOND_MESSAGE("Invalid session ID");
 					return;
 				}
 
@@ -1068,6 +1155,33 @@ public:
 			}
 
 			send_response(socket, variant(&v));
+		} else if(url == "/reset_password") {
+			auto user = args.find("user");
+			auto id = args.find("id");
+			if(user == args.end() || id == args.end() || recover_account_requests_.count(id->second) == 0 || recover_account_requests_.find(id->second)->second != user->second) {
+				send_msg(socket, "text/plain", "Invalid or expired request", "");
+				return;
+			}
+
+			db_client_->get("user:" + user->second, [=](variant user_info) {
+				if(user_info.is_null()) {
+					send_msg(socket, "text/plain", "Invalid or expired request", "");
+					return;
+				}
+
+				std::string new_passwd = write_uuid(generate_uuid());
+				new_passwd.resize(8);
+
+
+				user_info.add_attr_mutation(variant("passwd"), variant(md5::sum(new_passwd)));
+				db_client_->put("user:" + user->second, user_info, [](){}, [](){});
+
+				send_msg(socket, "text/json", "Your account password has been reset. Your new password is " + new_passwd, "");
+
+			});
+
+			recover_account_requests_.erase(id->second);
+			user_id_to_recover_account_requests_.erase(user->second);
 		}
 	}
 
@@ -1376,6 +1490,9 @@ private:
 	variant current_response_;
 
 	int child_admin_process_;
+
+	std::map<std::string, std::string> recover_account_requests_;
+	std::map<std::string, std::string> user_id_to_recover_account_requests_;
 
 	std::map<std::string, variant> beta_key_info_;
 	std::vector<std::string> pending_beta_keys_;

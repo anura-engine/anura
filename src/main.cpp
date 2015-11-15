@@ -917,7 +917,6 @@ int main(int argcount, char* argvec[])
 	
 	//WindowManager::getMainWindow()->setWindowSize(main_wnd->width(), main_wnd->height());
 
-	fprintf(stderr, "ZZZ: VIRT: %d, %d\n", vw, vh);
 	graphics::GameScreen::get().setDimensions(main_wnd->width(), main_wnd->height());
 	graphics::GameScreen::get().setVirtualDimensions(vw, vh);
 	//main_wnd->setWindowIcon(module::map_file("images/window-icon.png"));

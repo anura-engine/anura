@@ -522,6 +522,13 @@ namespace game_logic
 			return args()[2]->queryVariantType();
 		END_FUNCTION_DEF(query_cache)
 
+		FUNCTION_DEF(game_preferences, 0, 0, "game_preferences() ->builtin game_preferences")
+			Formula::failIfStaticContext();
+			return preferences::ffl_interface();
+		FUNCTION_ARGS_DEF
+			RETURN_TYPE("builtin game_preferences");
+		END_FUNCTION_DEF(game_preferences)
+
 		FUNCTION_DEF(md5, 1, 1, "md5(string) ->string")
 			return variant(md5::sum(args()[0]->evaluate(variables).as_string()));
 		FUNCTION_ARGS_DEF

@@ -1280,4 +1280,82 @@ namespace preferences
 	void setLocale(const std::string& value) {
 		locale_ = value;
 	}
+
+	class GamePreferences : public game_logic::FormulaCallable
+	{
+	public:
+	private:
+		DECLARE_CALLABLE(GamePreferences);
+	};
+
+	BEGIN_DEFINE_CALLABLE_NOBASE(GamePreferences)
+		DEFINE_FIELD(sound_volume, "decimal")
+			return variant(sound::get_sound_volume());
+		DEFINE_SET_FIELD
+			sound::set_sound_volume(value.as_float());
+
+		DEFINE_FIELD(music_volume, "decimal")
+			return variant(sound::get_music_volume());
+		DEFINE_SET_FIELD
+			sound::set_music_volume(value.as_float());
+
+		BEGIN_DEFINE_FN(get_bool_preference_value, "(string)->bool")
+			const std::string key = FN_ARG(0).as_string();
+			auto it = g_registered_settings().find(key);
+			ASSERT_LOG(it != g_registered_settings().end(), "Unknown preference setting: " << key);
+			ASSERT_LOG(it->second.bool_value, "Preference is not a decimal: " << key);
+			return variant::from_bool(*it->second.bool_value);
+		END_DEFINE_FN
+
+		BEGIN_DEFINE_FN(get_int_preference_value, "(string)->int")
+			const std::string key = FN_ARG(0).as_string();
+			auto it = g_registered_settings().find(key);
+			ASSERT_LOG(it != g_registered_settings().end(), "Unknown preference setting: " << key);
+			ASSERT_LOG(it->second.int_value, "Preference is not a decimal: " << key);
+			return variant(*it->second.int_value);
+		END_DEFINE_FN
+
+		BEGIN_DEFINE_FN(get_decimal_preference_value, "(string)->decimal")
+			const std::string key = FN_ARG(0).as_string();
+			auto it = g_registered_settings().find(key);
+			ASSERT_LOG(it != g_registered_settings().end(), "Unknown preference setting: " << key);
+			ASSERT_LOG(it->second.double_value, "Preference is not a decimal: " << key);
+			return variant(*it->second.double_value);
+		END_DEFINE_FN
+
+		BEGIN_DEFINE_FN(set_preference_value, "(string, any)->commands")
+			const std::string key = FN_ARG(0).as_string();
+			variant val = FN_ARG(1);
+			auto it = g_registered_settings().find(key);
+			ASSERT_LOG(it != g_registered_settings().end(), "Unknown preference setting: " << key);
+
+			return variant(new game_logic::FnCommandCallable([=]() {
+				if(it->second.int_value) {
+					*it->second.int_value = val.as_int();
+				} else if(it->second.bool_value) {
+					*it->second.bool_value = val.as_bool();
+				} else if(it->second.double_value) {
+					*it->second.double_value = val.as_double();
+				} else if(it->second.string_value) {
+					*it->second.string_value = val.as_string();
+				} else if(it->second.variant_value) {
+					*it->second.variant_value = val;
+				}
+			}));
+
+		END_DEFINE_FN
+
+		BEGIN_DEFINE_FN(save_preferences, "()->commands")
+			return variant(new game_logic::FnCommandCallable([=]() {
+				save_preferences();
+			}));
+		END_DEFINE_FN
+
+	END_DEFINE_CALLABLE(GamePreferences)
+
+	variant ffl_interface()
+	{
+		static variant result(new GamePreferences);
+		return result;
+	}
 }

@@ -614,7 +614,7 @@ bool LevelRunner::handle_mouse_events(const SDL_Event &event)
 							if(object->isMouseEventSwallowed()) {
 								drag_handled = true;
 							}
-						} else if(object->getMouseButtons() & button_state && mouse_drag_count_ > DragThresholdMilliPx) {
+						} else if(object->getMouseButtons() & button_state && mouse_drag_count_ > object->mouseDragThreshold(DragThresholdMilliPx)) {
 							// start drag.
 							object->handleEvent(MouseDragStartID, callable.get());
 							object->setBeingDragged();

@@ -277,6 +277,8 @@ public:
 	void createParticles(const variant& node);
 
 	xhtml::DocumentObjectPtr getDocument() const { return document_; }
+
+	virtual int mouseDragThreshold(int default_value) const override;
 protected:
 	//components of per-cycle process() that can be done even on
 	//static objects.

@@ -215,4 +215,6 @@ namespace preferences
 
 	bool internal_tbs_server();
 	const std::set<std::string>& get_build_options();
+
+	variant ffl_interface();
 }

@@ -150,6 +150,8 @@ public:
 	int getMouseoverDelay() const { return mouseover_delay_; }
 	const rect& getMouseOverArea() const { return mouse_over_area_; }
 
+	int getMouseDragThreshold() const { return mouse_drag_threshold_; }
+
 	bool hasObjectLevelCollisions() const { return object_level_collisions_; }
 
 	int getSurfaceFriction() const { return surface_friction_; }
@@ -348,6 +350,8 @@ private:
 
 	int mouseover_delay_;
 	rect mouse_over_area_;
+
+	int mouse_drag_threshold_;
 
 	bool adjust_feet_on_animation_change_;
 

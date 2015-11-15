@@ -301,6 +301,7 @@ public:
 	uint8_t getMouseButtons() const { return mouse_button_state_; }
 	bool isBeingDragged() const { return being_dragged_; }
 	void setBeingDragged(bool val=true) { being_dragged_ = val; }
+	virtual int mouseDragThreshold(int value) const { return value; }
 	virtual bool getClipArea(rect* clipArea) const = 0;
 	void setMouseOverArea(const rect& area);
 	const rect& getMouseOverArea() const;
