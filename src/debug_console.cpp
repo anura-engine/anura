@@ -285,10 +285,13 @@ namespace debug_console
 		{
 			return std::string(preferences::user_data_path()) + "/console-history.cfg";
 		}
+
+		PREF_INT(console_width, 600, "Width of console in pixels");
+		PREF_INT(console_height, 200, "Width of console in pixels");
 	}
 
 	ConsoleDialog::ConsoleDialog(Level& lvl, game_logic::FormulaCallable& obj)
-	   : Dialog(0, KRE::WindowManager::getMainWindow()->height() - 200, 600, 200), lvl_(&lvl), focus_(&obj),
+	   : Dialog(0, KRE::WindowManager::getMainWindow()->height() - g_console_height, g_console_width, g_console_height), lvl_(&lvl), focus_(&obj),
 		 history_pos_(0)
 	{
 		if(sys::file_exists(console_history_path())) {
