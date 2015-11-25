@@ -1247,12 +1247,6 @@ void CustomObject::draw(int xx, int yy) const
 		}
 	}
 
-	for(auto& eff : effects_shaders_) {
-		if(eff->zorder() < 0 && eff->isEnabled()) {
-			eff->draw(wnd);
-		}
-	}
-
 	std::unique_ptr<KRE::ClipScope::Manager> clip_scope;
 
 	KRE::StencilScopePtr stencil_scope;
@@ -1272,6 +1266,12 @@ void CustomObject::draw(int xx, int yy) const
 			KRE::StencilOperation::KEEP,
 			KRE::StencilOperation::KEEP,
 			KRE::StencilOperation::KEEP));
+	}
+
+	for(auto& eff : effects_shaders_) {
+		if(eff->zorder() < 0 && eff->isEnabled()) {
+			eff->draw(wnd);
+		}
 	}
 
 	if(driver_) {
