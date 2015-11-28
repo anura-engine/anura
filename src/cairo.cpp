@@ -53,7 +53,7 @@ namespace graphics
 	{
 		struct TextFragment 
 		{
-			float xpos, ypos, width, height, x_advance;
+			float xpos, ypos, width, height, x_advance, y_bearing;
 			std::string font;
 			int font_size;
 			variant tag;
@@ -434,6 +434,8 @@ namespace {
 		std::vector<LineOfText> output;
 		output.push_back(LineOfText());
 
+		const TextMarkupFragment* first_item = f1;
+
 		for(; f1 != f2; ++f1) {
 			const TextMarkupFragment& item = *f1;
 
@@ -467,6 +469,22 @@ namespace {
 			}
 
 			bool first_line = true;
+
+			if(item.nobr && (first_item == f1 || !(f1-1)->nobr) && lines.size() == 1) {
+				//the start of a nobr sequence. See if we need to split
+				//to a new line.
+				int nobr_x_advance = 0;
+				for(const TextMarkupFragment* f = f1; f != f2 && f->nobr; ++f) {
+					cairo_text_extents_t extents;
+					cairo_text_extents(context.get(), f->text.c_str(), &extents);
+					nobr_x_advance += extents.x_advance;
+				}
+
+				if(xpos + nobr_x_advance > width) {
+					first_line = false;
+				}
+			}
+
 			for(const std::string& line : lines) {
 				if(!first_line) {
 					xpos = 0;
@@ -483,6 +501,10 @@ namespace {
 				std::string::const_iterator i1 = line.begin();
 				while(i1 != line.end() || svg.empty() == false) {
 					std::string::const_iterator i2 = std::find(i1, line.end(), ' ');
+					if(item.nobr) {
+						i2 = line.end();
+					}
+
 					if(i2 != line.end()) {
 						++i2;
 					}
@@ -492,10 +514,12 @@ namespace {
 					cairo_text_extents_t extents;
 					cairo_text_extents(context.get(), word.c_str(), &extents);
 
+					bool break_line = false;
+
 					if(xpos + extents.x_advance > width) {
-						while(extents.x_advance > width && i2 > i1+1) {
-							--i2;
-							cairo_text_extents(context.get(), word.c_str(), &extents);
+						if(item.nobr == false) {
+							break_line = true;
+							i2 = i1+1;
 						}
 
 						xpos = 0;
@@ -507,24 +531,26 @@ namespace {
 						output.back().align = align;
 					}
 
-					auto anchor = i2;
-					while(i2 != line.end()) {
-						i2 = std::find(i2, line.end(), ' ');
-						if(i2 != line.end()) {
-							++i2;
-						}
+					if(break_line) {
+						auto anchor = i2;
+						while(i2 != line.end()) {
+							i2 = std::find(i2, line.end(), ' ');
+							if(i2 != line.end()) {
+								++i2;
+							}
 
-						word = std::string(i1, i2);
-						cairo_text_extents_t new_extents;
-						cairo_text_extents(context.get(), word.c_str(), &new_extents);
-						if(xpos + new_extents.x_advance > width) {
-							i2 = anchor;
 							word = std::string(i1, i2);
-							break;
-						}
+							cairo_text_extents_t new_extents;
+							cairo_text_extents(context.get(), word.c_str(), &new_extents);
+							if(xpos + new_extents.x_advance > width) {
+								i2 = anchor;
+								word = std::string(i1, i2);
+								break;
+							}
 
-						anchor = i2;
-						extents = new_extents;
+							anchor = i2;
+							extents = new_extents;
+						}
 					}
 
 					if(svg.empty() == false) {
@@ -543,9 +569,11 @@ namespace {
 						}
 					}
 
-					TextFragment fragment = { xpos, ypos, static_cast<float>(extents.width), static_cast<float>(extents.height), static_cast<float>(extents.x_advance), font, font_size, tag, item.color, std::string(i1, i2), valign, font_extents, svg };
+					TextFragment fragment = { xpos, ypos, static_cast<float>(extents.width), static_cast<float>(extents.height), static_cast<float>(extents.x_advance), extents.y_bearing, font, font_size, tag, item.color, std::string(i1, i2), valign, font_extents, svg };
 					output.back().fragments.push_back(fragment);
 					output.back().fragment_width += static_cast<float>(extents.width);
+
+					fprintf(stderr, "ZZZ: fragment: (%s) -> (%s)\n", std::string(i1,i2).c_str(), tag.write_json().c_str());
 
 					if(svg.empty() == false) {
 						xpos += static_cast<float>(font_extents.height);
@@ -588,7 +616,7 @@ namespace {
 				}
 			}
 
-			const float baseline = max_ascent + (line_height-(max_ascent+max_descent))/2;
+			const float baseline = max_ascent; // + (line_height-(max_ascent+max_descent))/2;
 			const float line_top = (line_height - (max_ascent+max_descent))/2;
 			const float line_bottom = line_height - line_top;
 
@@ -633,8 +661,8 @@ namespace {
 					fn_args.push_back(variant(fragment.svg));
 					fn_args.push_back(variant(fragment.xpos));
 					fn_args.push_back(variant(fragment.ypos));
-					fn_args.push_back(variant(fragment.font_extents.height));
-					fn_args.push_back(variant(fragment.font_extents.height));
+					fn_args.push_back(variant(fragment.font_extents.ascent + fragment.font_extents.descent));
+					fn_args.push_back(variant(fragment.font_extents.ascent + fragment.font_extents.descent));
 
 					res->path = variant(new cairo_op([](cairo_context& context, const std::vector<variant>& args) {
 						cairo_translate(context.get(), args[1].as_decimal().as_float(), args[2].as_decimal().as_float());
@@ -673,7 +701,7 @@ namespace {
 				res->x = fragment.xpos + xpos_align_adjust;
 				res->y = fragment.ypos + fragment_baseline - static_cast<float>(fragment.font_extents.ascent);
 				res->width = fragment.width;
-				res->height = static_cast<float>(fragment.font_extents.ascent) + static_cast<float>(fragment.font_extents.descent);
+				res->height = line_height;
 				res->x_advance = fragment.x_advance;
 				res->ascent = static_cast<float>(fragment.font_extents.ascent);
 				res->descent = static_cast<float>(fragment.font_extents.descent);
