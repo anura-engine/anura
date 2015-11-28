@@ -573,8 +573,6 @@ namespace {
 					output.back().fragments.push_back(fragment);
 					output.back().fragment_width += static_cast<float>(extents.width);
 
-					fprintf(stderr, "ZZZ: fragment: (%s) -> (%s)\n", std::string(i1,i2).c_str(), tag.write_json().c_str());
-
 					if(svg.empty() == false) {
 						xpos += static_cast<float>(font_extents.height);
 					}
