@@ -447,7 +447,7 @@ void variant::increment_refcount()
 {
 switch(type_) {
 case VARIANT_TYPE_LIST:
-list_->add_ref();
+if(list_) list_->add_ref();
 break;
 case VARIANT_TYPE_STRING:
 ++string_->refcount;
@@ -492,7 +492,7 @@ void variant::release()
 {
 switch(type_) {
 case VARIANT_TYPE_LIST:
-list_->dec_ref();
+if(list_) list_->dec_ref();
 break;
 case VARIANT_TYPE_STRING:
 if(--string_->refcount == 0) {
@@ -570,7 +570,7 @@ void variant::setDebugInfo(const debug_info& info)
 {
 	switch(type_) {
 	case VARIANT_TYPE_LIST:
-		list_->info = info;
+		if(list_) list_->info = info;
 		break;
 	case VARIANT_TYPE_STRING:
 		string_->info = info;
@@ -587,7 +587,7 @@ const variant::debug_info* variant::get_debug_info() const
 {
 	switch(type_) {
 	case VARIANT_TYPE_LIST:
-		if(list_->info.filename) { return &list_->info; }
+		if(list_ && list_->info.filename) { return &list_->info; }
 		break;
 	case VARIANT_TYPE_STRING:
 		if(string_->info.filename) { return &string_->info; }
@@ -661,11 +661,15 @@ variant::variant(std::vector<variant>* array)
     : type_(VARIANT_TYPE_LIST)
 {
 	assert(array);
-	list_ = new variant_list;
-	list_->add_ref();
-	list_->elements.swap(*array);
-	list_->begin = list_->elements.begin();
-	list_->end = list_->elements.end();
+	if(array->empty() == false) {
+		list_ = new variant_list;
+		list_->add_ref();
+		list_->elements.swap(*array);
+		list_->begin = list_->elements.begin();
+		list_->end = list_->elements.end();
+	} else {
+		list_ = nullptr;
+	}
 }
 
 variant::variant(const char* s)
@@ -809,8 +813,7 @@ const variant& variant::operator[](size_t n) const
 	}
 
 	must_be(VARIANT_TYPE_LIST);
-	assert(list_);
-	if(n >= list_->size()) {
+	if(list_ == nullptr || n >= list_->size()) {
 		generate_error(formatter() << "invalid index of " << static_cast<int>(n) << " into " << write_json());
 	}
 
@@ -903,7 +906,9 @@ int variant::num_elements() const
 	} else if(type_ == VARIANT_TYPE_CALLABLE) {
 		return 1;
 	} else if (type_ == VARIANT_TYPE_LIST) {
-		assert(list_);
+		if(list_ == nullptr) {
+			return 0;
+		}
 		return static_cast<int>(list_->size());
 	} else if (type_ == VARIANT_TYPE_STRING) {
 		assert(string_);
@@ -932,10 +937,16 @@ variant variant::get_list_slice(int begin, int end) const
 
 	must_be(VARIANT_TYPE_LIST);
 
-	if(begin < 0 || static_cast<unsigned>(end) > list_->size()) {
+	if(begin < 0 || static_cast<unsigned>(end) > num_elements()) {
 		generate_error(formatter() << "ILLEGAL INDEX INTO LIST WHEN SLICING: " << begin << ", " << end << " / " << list_->size());
 	}
 
+	if(list_ == nullptr) {
+		return result;
+	}
+
+	result.list_ = new variant_list;
+	result.list_->add_ref();
 	result.list_->begin = list_->begin + begin;
 	result.list_->end = list_->begin + end;
 	result.list_->storage.reset(list_);
@@ -1221,7 +1232,7 @@ bool variant::as_bool() const
 	case VARIANT_TYPE_CALLABLE:
 		return callable_ != nullptr;
 	case VARIANT_TYPE_LIST:
-		return list_->size() != 0;
+		return list_ && list_->size() != 0;
 	case VARIANT_TYPE_MAP:
 		return !map_->elements.empty();
 	case VARIANT_TYPE_STRING:
@@ -1237,7 +1248,9 @@ bool variant::as_bool() const
 std::vector<variant> variant::as_list() const
 {
 	if(is_list()) {
-		if(list_->elements.empty() == false) {
+		if(list_ == nullptr) {
+			return std::vector<variant>();
+		} else if(list_->elements.empty() == false) {
 			return list_->elements;
 		} else {
 			return std::vector<variant>(list_->begin, list_->end);
@@ -1255,6 +1268,10 @@ std::vector<std::string> variant::as_list_string() const
 {
 	std::vector<std::string> result;
 	must_be(VARIANT_TYPE_LIST);
+	if(list_ == nullptr) {
+		return result;
+	}
+
 	result.reserve(list_->size());
 	for(int n = 0; n != list_->size(); ++n) {
 		list_->begin[n].must_be(VARIANT_TYPE_STRING);
@@ -1282,6 +1299,10 @@ std::vector<std::string> variant::as_list_string_optional() const
 std::vector<int> variant::as_list_int() const
 {
 	std::vector<int> result;
+	if(list_ == nullptr) {
+		return result;
+	}
+
 	must_be(VARIANT_TYPE_LIST);
 	result.reserve(list_->size());
 	for(int n = 0; n != list_->size(); ++n) {
@@ -1295,6 +1316,10 @@ std::vector<decimal> variant::as_list_decimal() const
 {
 	std::vector<decimal> result;
 	must_be(VARIANT_TYPE_LIST);
+	if(list_ == nullptr) {
+		return result;
+	}
+
 	result.reserve(list_->size());
 	for(int n = 0; n != list_->size(); ++n) {
 		result.push_back(list_->begin[n].as_decimal());
@@ -1331,6 +1356,10 @@ bool variant::is_unmodified_single_reference() const
 		}
 
 	} else if(is_list()) {
+		if(list_ == nullptr) {
+			return true;
+		}
+
 		if(list_->refcount() > 1) {
 			return false;
 		}
@@ -1414,7 +1443,7 @@ variant* variant::get_attr_mutable(variant key)
 variant* variant::get_index_mutable(int index)
 {
 	if(is_list()) {
-		if(index >= 0 && static_cast<unsigned>(index) < list_->size()) {
+		if(index >= 0 && static_cast<unsigned>(index) < num_elements()) {
 			return &list_->begin[index];
 		}
 	}
@@ -1650,7 +1679,13 @@ variant variant::operator+(const variant& v) const
 
 	if(type_ == VARIANT_TYPE_LIST) {
 		if(v.type_ == VARIANT_TYPE_LIST) {
-			const size_t new_size = list_->size() + v.list_->size();
+			if(list_ == nullptr) {
+				return v;
+			} else if(v.list_ == nullptr) {
+				return *this;
+			}
+
+			const size_t new_size = num_elements() + v.num_elements();
 
 			std::vector<variant> res;
 			res.reserve(new_size);
@@ -1720,6 +1755,10 @@ variant variant::operator*(const variant& v) const
 			ncopies *= -1;
 		}
 		std::vector<variant> res;
+		if(list_ == nullptr) {
+			return variant(&res);
+		}
+
 		res.reserve(list_->size()*ncopies);
 		for(int n = 0; n != ncopies; ++n) {
 			for(int m = 0; m != list_->size(); ++m) {
@@ -2077,7 +2116,7 @@ void variant::serializeToString(std::string& str) const
 	case VARIANT_TYPE_LIST: {
 		str += "[";
 		bool first_time = true;
-		for(size_t i=0; i < list_->size(); ++i) {
+		for(size_t i=0; list_ != nullptr && i < list_->size(); ++i) {
 			const variant& var = list_->begin[i];
 			if(!first_time) {
 				str += ",";
@@ -2157,6 +2196,10 @@ int variant::refcount() const
 
 	switch(type_) {
 	case VARIANT_TYPE_LIST:
+		if(list_ == nullptr) {
+			return 1;
+		}
+
 		return list_->refcount();
 		break;
 	case VARIANT_TYPE_STRING:
@@ -2181,6 +2224,10 @@ void variant::make_unique()
 
 	switch(type_) {
 	case VARIANT_TYPE_LIST: {
+		if(list_ == nullptr) {
+			return;
+		}
+
 		list_->dec_ref();
 		list_ = new variant_list(*list_);
 		list_->add_ref();
@@ -2238,7 +2285,7 @@ std::string variant::string_cast() const
 		return "(object)";
 	case VARIANT_TYPE_LIST: {
 		std::string res = "";
-		for(size_t i=0; i < list_->size(); ++i) {
+		for(size_t i=0; list_ && i < list_->size(); ++i) {
 			const variant& var = list_->begin[i];
 			if(!res.empty()) {
 				res += ", ";
@@ -2488,13 +2535,15 @@ void variant::write_json(std::ostream& s, write_flags flags) const
 	case VARIANT_TYPE_LIST: {
 		s << "[";
 
-		for(std::vector<variant>::const_iterator i = list_->begin;
-		    i != list_->end; ++i) {
-			if(i != list_->begin) {
-				s << ',';
+		if(list_ != nullptr) {
+			for(std::vector<variant>::const_iterator i = list_->begin;
+			    i != list_->end; ++i) {
+				if(i != list_->begin) {
+					s << ',';
+				}
+	
+				i->write_json(s, flags);
 			}
-
-			i->write_json(s, flags);
 		}
 
 		s << "]";
@@ -2631,11 +2680,13 @@ void variant::write_json_pretty(std::ostream& s, std::string indent, write_flags
 	}
 	case VARIANT_TYPE_LIST: {
 		bool found_non_scalar = false;
-		for(std::vector<variant>::const_iterator i = list_->begin;
-		    i != list_->end; ++i) {
-			if(i->is_list() || i->is_map()) {
-				found_non_scalar = true;
-				break;
+		if(list_ != nullptr) {
+			for(std::vector<variant>::const_iterator i = list_->begin;
+			    i != list_->end; ++i) {
+				if(i->is_list() || i->is_map()) {
+					found_non_scalar = true;
+					break;
+				}
 			}
 		}
 
@@ -2648,20 +2699,22 @@ void variant::write_json_pretty(std::ostream& s, std::string indent, write_flags
 		s << "[";
 
 		indent += "\t";
-		for(std::vector<variant>::const_iterator i = list_->begin;
-		    i != list_->end; ++i) {
-			if(i != list_->begin) {
-				s << ',';
+		if(list_ != nullptr) {
+			for(std::vector<variant>::const_iterator i = list_->begin;
+			    i != list_->end; ++i) {
+				if(i != list_->begin) {
+					s << ',';
+				}
+	
+				s << "\n" << indent;
+
+				i->write_json_pretty(s, indent, flags);
 			}
-
-			s << "\n" << indent;
-
-			i->write_json_pretty(s, indent, flags);
 		}
 
 		indent.resize(indent.size()-1);
 
-		if(list_->size() > 0) {
+		if(list_ && list_->size() > 0) {
 			s << "\n" << indent << "]";
 		} else {
 			s << "]";
