@@ -3237,18 +3237,30 @@ RETURN_TYPE("bool")
 	RETURN_TYPE("commands")
 	END_FUNCTION_DEF(swallow_mouse_event)
 
+	class animate_command : public EntityCommandCallable {
+		const boost::intrusive_ptr<CustomObject> target_;
+		variant attr_var_;
+		variant options_;
+		void surrenderReferences(GarbageCollector* collector) override {
+			collector->surrenderPtr(&target_, "TARGET");
+			collector->surrenderVariant(&attr_var_, "ATTR");
+			collector->surrenderVariant(&options_, "OPTIONS");
+		}
+	public:
+		animate_command(boost::intrusive_ptr<CustomObject> target, variant attr_var, variant options) : target_(target), attr_var_(attr_var), options_(options)
+		{}
+
+		virtual void execute(Level& lvl, Entity& ob) const {
+			target_->addAnimatedMovement(attr_var_, options_);
+		}
+	};
+
 	FUNCTION_DEF(animate, 3, 3, "animate(object, attributes, options)")
 		const variant obj = args()[0]->evaluate(variables);
 		const variant attr_var = args()[1]->evaluate(variables);
 		const variant options = args()[2]->evaluate(variables);
 
-		std::function<void()> fn = [=]() {
-
-			boost::intrusive_ptr<CustomObject> target = obj.convert_to<CustomObject>();
-			target->addAnimatedMovement(attr_var, options);
-		};
-
-		return variant(new FnCommandCallable(fn));
+		return variant(new animate_command(obj.convert_to<CustomObject>(), attr_var, options));
 
 	FUNCTION_ARGS_DEF
 		ARG_TYPE("custom_obj")
