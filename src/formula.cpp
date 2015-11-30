@@ -374,7 +374,6 @@ namespace game_logic
 
 					if(!callable) {
 						callable.reset(new SlotFormulaCallable);
-						callable->setDebugId("ListComprehension");
 						callable->setFallback(&variables);
 						callable->setBaseSlot(base_slot_);
 						callable->reserve(generator_names_.size());
@@ -1049,7 +1048,6 @@ namespace {
 					return v;
 				} else {
 					static boost::intrusive_ptr<SlotFormulaCallable> callable(new SlotFormulaCallable);
-					callable->setDebugId("Lambda");
 					variant v(fml_, *callable, base_slot_, type_info_);
 					return v;
 				}

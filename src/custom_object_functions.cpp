@@ -1375,7 +1375,6 @@ namespace
 			//formula callable. This relies on code in formula.cpp to look for
 			//spawn() and give a callable definition with the child.
 			boost::intrusive_ptr<SlotFormulaCallable> callable = new SlotFormulaCallable;
-			callable->setDebugId("SpawnCallable");
 			callable->setFallback(&variables);
 			callable->setBaseSlot(args()[4]->getDefinitionUsedByExpression()->getNumSlots()-1);
 
@@ -1456,7 +1455,6 @@ namespace
 			//formula callable. This relies on code in formula.cpp to look for
 			//spawn() and give a callable definition with the child.
 			boost::intrusive_ptr<SlotFormulaCallable> callable = new SlotFormulaCallable;
-			callable->setDebugId("SpawnPlayerCallable");
 			callable->setFallback(&variables);
 			callable->setBaseSlot(args()[4]->getDefinitionUsedByExpression()->getNumSlots()-1);
 
