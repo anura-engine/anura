@@ -963,7 +963,7 @@ public:
 					} else {
 						variant privileged = account_itor->second["info"]["privileged"];
 						if(!privileged.is_bool() || privileged.as_bool() != true) {
-							fprintf(stderr, "Error: Unrivileged account account: %s\n", session.user_id.c_str());
+							fprintf(stderr, "Error: Unprivileged account account: %s\n", session.user_id.c_str());
 							send_msg(socket, "text/json", "{ type: \"error\", message: \"account does not have admin privileges\" }", "");
 						} else {
 							handleAdminPost(socket, doc);
@@ -1027,7 +1027,7 @@ public:
 	void handleAdminPost(socket_ptr socket, variant doc)
 	{
 		if(doc["msg"].is_map()) {
-			std::string user = doc["msg"]["user"].as_string();
+			std::string user = normalize_username(doc["msg"]["user"].as_string());
 			db_client_->get("user:" + user, [=](variant user_info) {
 				if(user_info.is_null()) {
 					return;

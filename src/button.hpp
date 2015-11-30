@@ -98,6 +98,7 @@ namespace gui
 		bool down_;
 		variant mouseover_handler_, mouseoff_handler_;
 		game_logic::FormulaPtr click_handler_;
+		variant click_handler_fn_;
 		game_logic::FormulaCallablePtr handler_arg_;
 	
 		ConstFramedGuiElementPtr normal_button_image_set_,depressed_button_image_set_,focus_button_image_set_,current_button_image_set_;

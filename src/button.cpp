@@ -106,13 +106,7 @@ variant Button::getColorScheme()
 		const variant on_click_value = v["on_click"];
 		if(on_click_value.is_function()) {
 			ASSERT_LOG(on_click_value.min_function_arguments() == 0, "on_click button function should take 0 arguments: " << v.debug_location());
-			static const variant fml("fn()");
-			click_handler_.reset(new game_logic::Formula(fml));
-
-			game_logic::MapFormulaCallable* callable = new game_logic::MapFormulaCallable;
-			callable->add("fn", on_click_value);
-
-			handler_arg_.reset(callable);
+			click_handler_fn_ = on_click_value;
 		} else { 
 			click_handler_ = getEnvironment()->createFormula(on_click_value);
 		}
@@ -178,7 +172,11 @@ variant Button::getColorScheme()
 
 	void Button::click()
 	{
-		if(handler_arg_) {
+		if(click_handler_fn_.is_function()) {
+			std::vector<variant> args;
+			variant value = click_handler_fn_(args);
+			getEnvironment()->executeCommand(value);
+		} else if(handler_arg_) {
 			variant value = click_handler_->execute(*handler_arg_);
 			getEnvironment()->executeCommand(value);
 		} else if(getEnvironment()) {
@@ -349,6 +347,9 @@ variant Button::getColorScheme()
 		Widget::surrenderReferences(collector);
 		collector->surrenderPtr(&label_);
 		collector->surrenderPtr(&handler_arg_);
+		collector->surrenderVariant(&click_handler_fn_, "click_handler");
+		collector->surrenderVariant(&mouseover_handler_, "mouseover_handler");
+		collector->surrenderVariant(&mouseoff_handler_, "mouseoff_handler");
 	}
 
 	void Button::setHPadding(int hpad)

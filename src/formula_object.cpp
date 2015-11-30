@@ -1851,6 +1851,12 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 				return items_[slot];
 			}
 
+			void surrenderReferences(GarbageCollector* collector) {
+				for(variant& item : items_) {
+					collector->surrenderVariant(&item);
+				}
+			}
+
 			mutable std::vector<variant> items_;
 		};
 	}

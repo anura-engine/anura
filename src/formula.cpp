@@ -374,6 +374,7 @@ namespace game_logic
 
 					if(!callable) {
 						callable.reset(new SlotFormulaCallable);
+						callable->setDebugId("ListComprehension");
 						callable->setFallback(&variables);
 						callable->setBaseSlot(base_slot_);
 						callable->reserve(generator_names_.size());
@@ -587,6 +588,9 @@ namespace game_logic
 			variant list_;
 	
 			ListCallable(const ListCallable&);
+			void surrenderReferences(GarbageCollector* collector) override {
+				collector->surrenderVariant(&list_);
+			}
 		public:
 			explicit ListCallable(const variant& list) : FormulaCallable(false), list_(list)
 			{}
@@ -1045,6 +1049,7 @@ namespace {
 					return v;
 				} else {
 					static boost::intrusive_ptr<SlotFormulaCallable> callable(new SlotFormulaCallable);
+					callable->setDebugId("Lambda");
 					variant v(fml_, *callable, base_slot_, type_info_);
 					return v;
 				}
@@ -2071,6 +2076,13 @@ namespace {
 	
 			mutable std::vector<variant> results_cache_;
 
+			void surrenderReferences(GarbageCollector* collector) override {
+				collector->surrenderPtr(&base_, "base");
+				for(variant& v : results_cache_) {
+					collector->surrenderVariant(&v);
+				}
+			}
+
 			void setValueBySlot(int slot, const variant& value) override {
 				ASSERT_LOG(slot < info_->base_slot, "Illegal set on immutable where variables " << slot);
 				const_cast<FormulaCallable*>(base_.get())->mutateValueBySlot(slot, value);
@@ -2162,6 +2174,11 @@ namespace {
 			variant cmd_;
 			ExpressionPtr right_;
 			ConstFormulaCallablePtr variables_;
+
+			void surrenderReferences(GarbageCollector* collector) override {
+				collector->surrenderVariant(&cmd_, "cmd");
+				collector->surrenderPtr(&variables_, "variables");
+			}
 		public:
 			CommandSequence(const variant& cmd, ExpressionPtr right_expr, ConstFormulaCallablePtr variables)
 			  : cmd_(cmd), right_(right_expr), variables_(variables)

@@ -5547,6 +5547,19 @@ void CustomObject::surrenderReferences(GarbageCollector* collector)
 	collector->surrenderPtr(&document_, "XHTML_DOCUMENT");
 
 	Entity::surrenderReferences(collector);
+
+	for(auto move : animated_movement_) {
+		collector->surrenderVariant(&move->on_process, "ANIMATE_ON_PROCESS");
+		collector->surrenderVariant(&move->on_complete, "ANIMATE_ON_COMPLETE");
+		for(variant& v : move->animation_values) {
+			collector->surrenderVariant(&v, "ANIMATE_VALUES");
+		}
+
+		for(std::pair<variant,variant>& p : move->follow_on) {
+			collector->surrenderVariant(&p.first, "ANIMATE_FOLLOW_ON");
+			collector->surrenderVariant(&p.second, "ANIMATE_FOLLOW_ON");
+		}
+	}
 }
 
 std::string CustomObject::debugObjectName() const

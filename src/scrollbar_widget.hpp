@@ -42,6 +42,8 @@ namespace gui
 		int getWindowPos() const { return window_pos_; }
 
 		WidgetPtr clone() const override;
+
+		void surrenderReferences(GarbageCollector* collector);
 	private:
 		DECLARE_CALLABLE(ScrollBarWidget)
 

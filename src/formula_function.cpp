@@ -605,6 +605,13 @@ namespace game_logic
 				ob.executeCommand(target_(args_));
 			}
 		private:
+			void surrenderReferences(GarbageCollector* collector) {
+				collector->surrenderVariant(&target_);
+				for(variant& v : args_) {
+					collector->surrenderVariant(&v);
+				}
+			};
+
 			variant target_;
 			std::vector<variant> args_;
 		};
@@ -1574,6 +1581,11 @@ namespace game_logic
 					b_ = b;
 					return expr_->evaluate(*this);
 				}
+
+				void surrenderReferences(GarbageCollector* collector) {
+					collector->surrenderVariant(&a_);
+					collector->surrenderVariant(&b_);
+				}
 			};
 
 			class variant_comparator_definition : public FormulaCallableDefinition
@@ -2338,6 +2350,12 @@ FUNCTION_DEF_IMPL
 				void setValueBySlot(int slot, const variant& value) override {
 					ASSERT_LOG(slot >= NUM_MAP_CALLABLE_SLOTS, "Illegal variable mutation");
 					const_cast<FormulaCallable*>(backup_.get())->mutateValueBySlot(slot-NUM_MAP_CALLABLE_SLOTS, value);
+				}
+
+				void surrenderReferences(GarbageCollector* collector) {
+					collector->surrenderPtr(&backup_);
+					collector->surrenderVariant(&key_);
+					collector->surrenderVariant(&value_);
 				}
 
 				const ConstFormulaCallablePtr backup_;
@@ -3722,9 +3740,6 @@ FUNCTION_DEF_IMPL
 
 					if(!key_.empty() && callable_def) {
 						slot_ = callable_def->getSlot(key_);
-						if(slot_ != -1) {
-							cmd_ = boost::intrusive_ptr<set_by_slot_command>(new set_by_slot_command(slot_, variant()));
-						}
 					}
 
 				}
@@ -3785,7 +3800,6 @@ FUNCTION_DEF_IMPL
 
 			std::string key_;
 			int slot_;
-			mutable boost::intrusive_ptr<set_by_slot_command> cmd_;
 		};
 
 		class add_function : public FunctionExpression {
@@ -4813,6 +4827,53 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 	FUNCTION_ARGS_DEF
 		ARG_TYPE("string");
 	END_FUNCTION_DEF(trigger_debug_garbage_collection)
+
+	FUNCTION_DEF(objects_known_to_gc, 0, 0, "objects_known_to_gc()")
+		std::vector<GarbageCollectible*> all_obj;
+		GarbageCollectible::getAll(&all_obj);
+		std::vector<variant> result;
+		for(auto p : all_obj) {
+			FormulaCallable* obj = dynamic_cast<FormulaCallable*>(p);
+			if(obj) {
+				result.push_back(variant(obj));
+			}
+		}
+
+		return variant(&result);
+	FUNCTION_ARGS_DEF
+	RETURN_TYPE("[object]")
+	END_FUNCTION_DEF(objects_known_to_gc)
+
+	class GarbageCollectorForceDestroyer : public GarbageCollector
+	{
+	public:
+		void surrenderVariant(const variant* v, const char* description) {
+			*const_cast<variant*>(v) = variant();
+		}
+
+		void surrenderPtrInternal(boost::intrusive_ptr<GarbageCollectible>* ptr, const char* description) {
+			ptr->reset();
+		}
+	private:
+	};
+
+	FUNCTION_DEF(force_destroy_object_references, 1, 1, "destroy_object_references(obj)")
+		Formula::failIfStaticContext();
+
+		auto p = args()[0]->evaluate(variables).mutable_callable();
+		return variant(new FnCommandCallable([=]() {
+			if(p) {
+				GarbageCollectorForceDestroyer destroyer;
+				p->surrenderReferences(&destroyer);
+			}
+		}));
+
+		return variant();
+
+	FUNCTION_ARGS_DEF
+		ARG_TYPE("object")
+		RETURN_TYPE("command")
+	END_FUNCTION_DEF(force_destroy_object_references)
 
 	FUNCTION_DEF(debug_object_info, 1, 1, "debug_object_info(string) -> give info about the object at the given address")
 		std::string obj = args()[0]->evaluate(variables).as_string();

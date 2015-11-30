@@ -10,6 +10,7 @@ class GarbageCollector;
 class GarbageCollectible : public reference_counted_object
 {
 public:
+	static void getAll(std::vector<GarbageCollectible*>* result);
 	static void incrementWorkerThreads();
 	static void decrementWorkerThreads();
 	static GarbageCollectible* debugGetObject(void* ptr);

@@ -44,5 +44,9 @@ private:
 
 	variant create_for_list(const variant& list) const;
 
+	void surrenderReferences(GarbageCollector* collector) override {
+		collector->surrenderVariant(&value_);
+	}
+
 	variant value_;
 };

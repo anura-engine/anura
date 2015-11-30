@@ -34,6 +34,13 @@ namespace {
 	};
 }
 
+void GarbageCollectible::getAll(std::vector<GarbageCollectible*>* result)
+{
+	for(GarbageCollectible* p = g_head; p != nullptr; p = p->next_) {
+		result->push_back(p);
+	}
+}
+
 void GarbageCollectible::incrementWorkerThreads()
 {
 	++g_threads;

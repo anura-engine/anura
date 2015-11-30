@@ -334,6 +334,17 @@ namespace gui
 		handle_top_->setAlpha(a);
 	}
 
+	void ScrollBarWidget::surrenderReferences(GarbageCollector* collector)
+	{
+		collector->surrenderVariant(&on_scroll_fn_);
+		collector->surrenderPtr(&up_arrow_);
+		collector->surrenderPtr(&down_arrow_);
+		collector->surrenderPtr(&handle_);
+		collector->surrenderPtr(&handle_bot_);
+		collector->surrenderPtr(&handle_top_);
+		collector->surrenderPtr(&background_);
+	}
+
 	BEGIN_DEFINE_CALLABLE(ScrollBarWidget, Widget)
 		DEFINE_FIELD(range, "[int,int]")
 			std::vector<variant> v;

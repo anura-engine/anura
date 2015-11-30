@@ -3397,6 +3397,8 @@ DEFINE_SET_FIELD
 DEFINE_FIELD(player, "custom_obj")
 	ASSERT_LOG(obj.last_touched_player_, "No player found in level");
 	return variant(obj.last_touched_player_.get());
+DEFINE_SET_FIELD
+	obj.last_touched_player_ = obj.player_ = EntityPtr(value.convert_to<Entity>());
 DEFINE_FIELD(player_info, "object")
 	ASSERT_LOG(obj.last_touched_player_, "No player found in level");
 	return variant(obj.last_touched_player_.get());
@@ -4402,6 +4404,8 @@ void Level::surrenderReferences(GarbageCollector* gc)
 	for(std::pair<const std::string, EntityPtr>& p : chars_by_label_) {
 		gc->surrenderPtr(&p.second);
 	}
+
+	gc->surrenderVariant(&vars_, "vars");
 
 	gc->surrenderPtr(&suspended_level_, "suspended_level");
 

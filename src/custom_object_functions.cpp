@@ -49,6 +49,7 @@
 #include "draw_scene.hpp"
 #include "editor.hpp"
 #include "entity.hpp"
+#include "ffl_weak_ptr.hpp"
 #include "filesystem.hpp"
 #include "formatter.hpp"
 #include "formula_callable_definition.hpp"
@@ -347,14 +348,21 @@ namespace
 	END_FUNCTION_DEF(tbs_client)
 
 
-	void tbs_send_event(EntityPtr e, game_logic::MapFormulaCallablePtr callable, const std::string& ev)
+	void tbs_send_event(ffl::weak_ptr<Entity> e, game_logic::MapFormulaCallablePtr callable, const std::string& ev)
 	{
-		e->handleEvent(ev, callable.get());
+		Entity* entity = e.get();
+		if(entity) {
+			entity->handleEvent(ev, callable.get());
+		}
 	}
 
 	class tbs_send_command : public EntityCommandCallable
 	{
 		variant client_, msg_;
+		void surrenderReferences(GarbageCollector* collector) override {
+			collector->surrenderVariant(&client_);
+			collector->surrenderVariant(&msg_);
+		}
 	public:
 		tbs_send_command(variant client, variant msg) : client_(client), msg_(msg)
 		{}
@@ -367,9 +375,9 @@ namespace
 				tbs::internal_client* tbs_iclient = client_.try_convert<tbs::internal_client>();
 				LOG_DEBUG("XX tbs_send: " << tbs_iclient->session_id());
 				ASSERT_LOG(tbs_iclient != nullptr, "tbs_client object isn't valid.");
-				tbs_iclient->send_request(msg_, tbs_iclient->session_id(), callable, std::bind(tbs_send_event, EntityPtr(&ob), callable, _1));
+				tbs_iclient->send_request(msg_, tbs_iclient->session_id(), callable, std::bind(tbs_send_event, ffl::weak_ptr<Entity>(&ob), callable, _1));
 			} else {
-				tbs_client->send_request(msg_, callable, std::bind(tbs_send_event, EntityPtr(&ob), callable, _1));
+				tbs_client->send_request(msg_, callable, std::bind(tbs_send_event, ffl::weak_ptr<Entity>(&ob), callable, _1));
 			}
 		}
 
@@ -391,6 +399,9 @@ namespace
 	class tbs_process_command : public EntityCommandCallable
 	{
 		variant client_;
+		void surrenderReferences(GarbageCollector* collector) override {
+			collector->surrenderVariant(&client_);
+		}
 	public:
 		explicit tbs_process_command(variant client) : client_(client)
 		{}
@@ -421,6 +432,9 @@ namespace
 	class report_command : public EntityCommandCallable
 	{
 		variant v_;
+		void surrenderReferences(GarbageCollector* collector) override {
+			collector->surrenderVariant(&v_);
+		}
 	public:
 		explicit report_command(variant v) : v_(v)
 		{}
@@ -1152,6 +1166,11 @@ namespace
 	{
 		EntityPtr e_;
 		variant cmd_;
+
+		void surrenderReferences(GarbageCollector* collector) override {
+			collector->surrenderPtr(&e_);
+			collector->surrenderVariant(&cmd_);
+		}
 	public:
 		execute_on_command(EntityPtr e, variant cmd) : e_(e), cmd_(cmd)
 		{}
@@ -1179,6 +1198,11 @@ namespace
 		std::string id_;
 		int time_;
 		variant cmd_;
+
+		void surrenderReferences(GarbageCollector* collector) override {
+			collector->surrenderPtr(&e_);
+			collector->surrenderVariant(&cmd_);
+		}
 	public:
 		execute_on_command_instrumented(EntityPtr e, std::string id, int t, variant cmd) : e_(e), id_(id), time_(t), cmd_(cmd)
 		{}
@@ -1246,6 +1270,11 @@ namespace
 	private:
 		boost::intrusive_ptr<CustomObject> obj_;
 		variant instantiation_commands_;
+
+		void surrenderReferences(GarbageCollector* collector) override {
+			collector->surrenderPtr(&obj_);
+			collector->surrenderVariant(&instantiation_commands_);
+		}
 	};
 
 	FUNCTION_DEF(spawn, 4, 6, "spawn(custom_obj|string type_id, int midpoint_x, int midpoint_y, (optional) properties map, (optional) list of commands cmd): will create a new object of type given by type_id with the given midpoint and facing. Immediately after creation the object will have any commands given by cmd executed on it. The child object will have the spawned event sent to it, and the parent object will have the child_spawned event sent to it.")
@@ -1346,6 +1375,7 @@ namespace
 			//formula callable. This relies on code in formula.cpp to look for
 			//spawn() and give a callable definition with the child.
 			boost::intrusive_ptr<SlotFormulaCallable> callable = new SlotFormulaCallable;
+			callable->setDebugId("SpawnCallable");
 			callable->setFallback(&variables);
 			callable->setBaseSlot(args()[4]->getDefinitionUsedByExpression()->getNumSlots()-1);
 
@@ -1426,6 +1456,7 @@ namespace
 			//formula callable. This relies on code in formula.cpp to look for
 			//spawn() and give a callable definition with the child.
 			boost::intrusive_ptr<SlotFormulaCallable> callable = new SlotFormulaCallable;
+			callable->setDebugId("SpawnPlayerCallable");
 			callable->setFallback(&variables);
 			callable->setBaseSlot(args()[4]->getDefinitionUsedByExpression()->getNumSlots()-1);
 
@@ -2039,6 +2070,9 @@ RETURN_TYPE("bool")
 		}
 	private:
 		EntityPtr focus_;
+		void surrenderReferences(GarbageCollector* collector) override {
+			collector->surrenderPtr(&focus_);
+		}
 	};
 
 	FUNCTION_DEF(tiles_at, 2, 2, "tiles_at(x, y): gives a list of the tiles at the given x, y position")
@@ -2129,6 +2163,9 @@ RETURN_TYPE("bool")
 
 	class transient_speech_dialog_command : public CustomObjectCommandCallable {
 		EntityPtr speaker_;
+		void surrenderReferences(GarbageCollector* collector) override {
+			collector->surrenderPtr(&speaker_);
+		}
 		std::vector<std::string> text_;
 		int duration_;
 	public:
@@ -2619,6 +2656,10 @@ RETURN_TYPE("bool")
 	class resolve_solid_command : public EntityCommandCallable {
 		EntityPtr e_;
 		int xdir_, ydir_, max_cycles_;
+
+		void surrenderReferences(GarbageCollector* collector) override {
+			collector->surrenderPtr(&e_);
+		}
 	public:
 		resolve_solid_command(EntityPtr e, int xdir, int ydir, int max_cycles) : e_(e), xdir_(xdir), ydir_(ydir), max_cycles_(max_cycles)
 		{}
@@ -2684,6 +2725,10 @@ RETURN_TYPE("bool")
 
 	class add_object_command : public EntityCommandCallable {
 		EntityPtr e_;
+
+		void surrenderReferences(GarbageCollector* collector) override {
+			collector->surrenderPtr(&e_);
+		}
 	public:
 		explicit add_object_command(EntityPtr e) : e_(e)
 		{}
@@ -2796,6 +2841,10 @@ RETURN_TYPE("bool")
 		bool no_move_to_standing_;
 		std::string level_, label_, transition_;
 		EntityPtr new_playable_;
+
+		void surrenderReferences(GarbageCollector* collector) override {
+			collector->surrenderPtr(&new_playable_);
+		}
 	};
 
 	FUNCTION_DEF(suspend_level, 1, 1, "suspend_Level(string dest_Level)")
@@ -3214,6 +3263,13 @@ RETURN_TYPE("bool")
 		const EntityPtr target_;
 		const std::vector<variant> widgets_;
 		//const FormulaCallablePtr callable_;
+
+		void surrenderReferences(GarbageCollector* collector) override {
+			collector->surrenderPtr(&target_);
+			for(const variant& w : widgets_) {
+				collector->surrenderVariant(&w);
+			}
+		}
 	public:
 		set_widgets_command(EntityPtr target, const std::vector<variant>& widgets/*, const FormulaCallablePtr callable*/)
 		  : target_(target), widgets_(widgets)//, callable_(callable)
@@ -3263,6 +3319,10 @@ RETURN_TYPE("bool")
 
 	class clear_widgets_command : public EntityCommandCallable {
 		const EntityPtr target_;
+
+		void surrenderReferences(GarbageCollector* collector) override {
+			collector->surrenderPtr(&target_);
+		}
 	public:
 		clear_widgets_command(EntityPtr target) : target_(target)
 		{}

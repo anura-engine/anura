@@ -202,6 +202,10 @@ namespace game_logic
 	public:
 		FormulaVariantCallableWithBackup(const variant& var, const FormulaCallable& backup) : FormulaCallable(false), var_(var), backup_(backup)
 		{}
+
+		void surrenderReferences(GarbageCollector* collector) override {
+			collector->surrenderVariant(&var_);
+		}
 	};
 
 	class MapFormulaCallable : public FormulaCallable {
