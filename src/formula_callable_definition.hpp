@@ -229,7 +229,11 @@ void classname::init_callable_type(std::vector<CallablePropertyEntry>& fields, s
 		types.push_back(fields[n].type); \
 		set_types.push_back(fields[n].set_type); \
 	} \
-	game_logic::FormulaCallableDefinitionPtr def = game_logic::execute_command_callable_definition(&field_names[0], &field_names[0] + field_names.size(), game_logic::FormulaCallableDefinitionPtr(), &types[0]); \
+	const std::string* field_names_begin = nullptr, *field_names_end = nullptr; \
+	variant_type_ptr* types_begin = nullptr; \
+	if(!field_names.empty()) { field_names_begin = &field_names[0]; field_names_end = &field_names[0] + field_names.size(); } \
+	if(!types.empty()) { types_begin = &types[0]; } \
+	game_logic::FormulaCallableDefinitionPtr def = game_logic::execute_command_callable_definition(field_names_begin, field_names_end, game_logic::FormulaCallableDefinitionPtr(), types_begin); \
 	for(int n = 0; n != static_cast<int>(fields.size()); ++n) { \
 		if(set_types[n]) { \
 			def->getEntry(n)->write_type = set_types[n]; \
