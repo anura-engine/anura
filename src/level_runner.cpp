@@ -1758,17 +1758,23 @@ pause_scope::~pause_scope()
 	}
 }
 
+void LevelRunner::quit_game()
+{
+	//record a quit event in stats
+	if(lvl_->player()) {
+		lvl_->player()->getEntity().recordStatsMovement();
+		stats::Entry("quit").addPlayerPos();
+	}
+	
+	done = true;
+	quit_ = true;
+}
+
 void LevelRunner::handle_pause_game_result(PAUSE_GAME_RESULT result)
 {
 	if(result == PAUSE_GAME_RESULT::QUIT) {
-		//record a quit event in stats
-		if(lvl_->player()) {
-			lvl_->player()->getEntity().recordStatsMovement();
-			stats::Entry("quit").addPlayerPos();
-		}
-		
-		done = true;
-		quit_ = true;
+		quit_game();
+
 	} else if(result == PAUSE_GAME_RESULT::GO_TO_TITLESCREEN) {
 		done = true;
 		original_level_cfg_ = "titlescreen.cfg";

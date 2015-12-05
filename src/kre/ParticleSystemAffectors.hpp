@@ -45,16 +45,21 @@ namespace KRE
 			const glm::vec3& getScale() const { return scale_; }
 			bool isEmitterExcluded(const std::string& name) const;
 
+			const variant& node() const { return node_; }
+			void setNode(const variant& new_node) { node_ = new_node; init(new_node); }
+
 			static AffectorPtr factory(std::weak_ptr<ParticleSystemContainer> parent, const variant& node);
 		protected:
 			virtual void handleEmitProcess(float t);
 			virtual void internalApply(Particle& p, float t) = 0;
 		private:
+			virtual void init(const variant& node) = 0;
 			float mass_;
 			glm::vec3 position_;
 			std::vector<std::string> excluded_emitters_;
 			glm::vec3 scale_;
 			std::weak_ptr<Technique> technique_;
+			variant node_;
 			Affector();
 		};
 	}

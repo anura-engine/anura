@@ -1277,7 +1277,7 @@ namespace
 		}
 	};
 
-	FUNCTION_DEF(spawn, 4, 6, "spawn(custom_obj|string type_id, int midpoint_x, int midpoint_y, (optional) properties map, (optional) list of commands cmd): will create a new object of type given by type_id with the given midpoint and facing. Immediately after creation the object will have any commands given by cmd executed on it. The child object will have the spawned event sent to it, and the parent object will have the child_spawned event sent to it.")
+	FUNCTION_DEF(spawn, 2, 6, "spawn(custom_obj|string type_id, int midpoint_x, int midpoint_y, (optional) properties map, (optional) list of commands cmd): will create a new object of type given by type_id with the given midpoint and facing. Immediately after creation the object will have any commands given by cmd executed on it. The child object will have the spawned event sent to it, and the parent object will have the child_spawned event sent to it.")
 
 		Formula::failIfStaticContext();
 
@@ -1291,12 +1291,16 @@ namespace
 			prototype.reset(obj_type.convert_to<CustomObject>());
 		}
 
-		const int x = EVAL_ARG(1).as_int();
-		const int y = EVAL_ARG(2).as_int();
+		int x = 0, y = 0;
+
+		if(args().size() > 3) {
+			x = EVAL_ARG(1).as_int();
+			y = EVAL_ARG(2).as_int();
+		}
 
 		bool facing = true;
 
-		variant arg3 = EVAL_ARG(3);
+		variant arg3 = EVAL_ARG(args().size() > 3 ? 3 : 1);
 
 		if(!arg3.is_map()) {
 			facing = arg3.as_int() > 0;
@@ -1369,17 +1373,19 @@ namespace
 
 		obj->construct();
 
+		const int ncommands_arg = args().size() <= 3 ? 2 : 4;
+
 		variant commands;
-		if(args().size() > 4) {
+		if(args().size() > ncommands_arg) {
 			//Note that we insert the 'child' argument here, into the slot
 			//formula callable. This relies on code in formula.cpp to look for
 			//spawn() and give a callable definition with the child.
 			boost::intrusive_ptr<SlotFormulaCallable> callable = new SlotFormulaCallable;
 			callable->setFallback(&variables);
-			callable->setBaseSlot(args()[4]->getDefinitionUsedByExpression()->getNumSlots()-1);
+			callable->setBaseSlot(args()[ncommands_arg]->getDefinitionUsedByExpression()->getNumSlots()-1);
 
 			callable->add(variant(obj.get()));
-			commands = args()[4]->evaluate(*callable);
+			commands = args()[ncommands_arg]->evaluate(*callable);
 		}
 
 		spawn_command* cmd = (new spawn_command(obj, commands));
@@ -1387,11 +1393,17 @@ namespace
 		return variant(cmd);
 	FUNCTION_ARGS_DEF
 		//ASSERT_LOG(false, "spawn() not supported in strict mode " << debugPinpointLocation());
-		ARG_TYPE("custom_obj|string")
-		ARG_TYPE("int|decimal")
-		ARG_TYPE("int|decimal")
-		ARG_TYPE("int|map")
-		ARG_TYPE("commands")
+		if(args().size() <= 3) {
+			ARG_TYPE("custom_obj|string")
+			ARG_TYPE("map")
+			ARG_TYPE("commands")
+		} else {
+			ARG_TYPE("custom_obj|string")
+			ARG_TYPE("int|decimal")
+			ARG_TYPE("int|decimal")
+			ARG_TYPE("int|map")
+			ARG_TYPE("commands")
+		}
 
 		std::string type_str;
 
@@ -1410,8 +1422,9 @@ namespace
 			const CustomObjectCallable* type = dynamic_cast<const CustomObjectCallable*>(type_def.get());
 			ASSERT_LOG(type, "Illegal object type: " << type_str << " " << debugPinpointLocation());
 
-			if(args().size() > 3) {
-				variant_type_ptr map_type = args()[3]->queryVariantType();
+			const int nmap_arg = args().size() <= 3 ? 1 : 3;
+			if(args().size() > nmap_arg) {
+				variant_type_ptr map_type = args()[nmap_arg]->queryVariantType();
 				assert(map_type);
 
 				const std::map<variant, variant_type_ptr>* props = map_type->is_specific_map();
@@ -1431,7 +1444,7 @@ namespace
 				}
 			}
 
-			ASSERT_LOG(type->slots_requiring_initialization().empty() || (args().size() > 3 && args()[3]->queryVariantType()->is_map_of().first), "Illegal spawn of " << type_str << " property " << type->getEntry(type->slots_requiring_initialization()[0])->id << " requires initialization " << debugPinpointLocation());
+			ASSERT_LOG(type->slots_requiring_initialization().empty() || (args().size() > nmap_arg && args()[nmap_arg]->queryVariantType()->is_map_of().first), "Illegal spawn of " << type_str << " property " << type->getEntry(type->slots_requiring_initialization()[0])->id << " requires initialization " << debugPinpointLocation());
 		}
 	RETURN_TYPE("commands")
 	END_FUNCTION_DEF(spawn)
@@ -1493,10 +1506,10 @@ namespace
 
 		variant properties;
 	
-		if(args().size() > 1) {
-			ASSERT_LOG(args().size() >= 3, "Wrong number of arguments to object() function");
+		if(args().size() > 2) {
 			const int x = args()[1]->evaluate(variables).as_int();
 			const int y = args()[2]->evaluate(variables).as_int();
+
 			if(args().size() >= 4) {
 				properties = args()[3]->evaluate(variables);
 			}
@@ -1514,6 +1527,9 @@ namespace
 			const int x = 0;
 			const int y = 0;
 			const bool face_right = true;
+			if(args().size() > 1) {
+				properties = args()[1]->evaluate(variables);
+			}
 			if(prototype) {
 				obj.reset(new CustomObject(*prototype));
 			} else {
@@ -1583,11 +1599,16 @@ namespace
 
 		return variant(obj.get());
 	FUNCTION_ARGS_DEF
-		ARG_TYPE("custom_obj|string")
-		ARG_TYPE("int|decimal")
-		ARG_TYPE("int|decimal")
-		ARG_TYPE("int|map")
-		ARG_TYPE("map")
+		if(args().size() == 2) {
+			ARG_TYPE("custom_obj|string")
+			ARG_TYPE("map")
+		} else {
+			ARG_TYPE("custom_obj|string")
+			ARG_TYPE("int|decimal")
+			ARG_TYPE("int|decimal")
+			ARG_TYPE("int|map")
+			ARG_TYPE("map")
+		}
 
 		std::string type_str;
 
@@ -1606,8 +1627,9 @@ namespace
 			const CustomObjectCallable* type = dynamic_cast<const CustomObjectCallable*>(type_def.get());
 			ASSERT_LOG(type, "Illegal object type: " << type_str << " " << debugPinpointLocation());
 
-			if(args().size() > 4) {
-				variant_type_ptr map_type = args()[4]->queryVariantType();
+			const int nmap_arg = args().size() == 2 ? 1 : 4;
+			if(args().size() > nmap_arg) {
+				variant_type_ptr map_type = args()[nmap_arg]->queryVariantType();
 				assert(map_type);
 
 				const std::map<variant, variant_type_ptr>* props = map_type->is_specific_map();
@@ -2124,6 +2146,15 @@ RETURN_TYPE("bool")
 		}));
 	RETURN_TYPE("commands")
 	END_FUNCTION_DEF(toggle_pause)
+
+	FUNCTION_DEF(quit_to_desktop, 0, 0, "quit_to_desktop()")
+		Formula::failIfStaticContext();
+		return variant(new FnCommandCallable([=]() {
+			LevelRunner::getCurrent()->quit_game();
+		}));
+	RETURN_TYPE("commands")
+	END_FUNCTION_DEF(quit_to_desktop)
+
 	
 	
 	FUNCTION_DEF(scroll_to, 1, 1, "scroll_to(object target): scrolls the screen to the target object")

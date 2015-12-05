@@ -37,6 +37,8 @@ namespace KRE
 		{
 		public:
 			explicit TimeColorAffector(std::weak_ptr<ParticleSystemContainer> parent, const variant& node);
+
+			void init(const variant& node) override;
 		protected:
 			virtual void internalApply(Particle& p, float t) override;
 			AffectorPtr clone() const override {
@@ -60,6 +62,7 @@ namespace KRE
 		{
 		public:
 			explicit JetAffector(std::weak_ptr<ParticleSystemContainer> parent, const variant& node);
+			void init(const variant& node) override;
 		protected:
 			virtual void internalApply(Particle& p, float t) override;
 			AffectorPtr clone() const override {
@@ -83,10 +86,47 @@ namespace KRE
 		// texture_rotator
 		// velocity matching
 
+		class LinearForceAffector : public Affector
+		{
+		public:
+			explicit LinearForceAffector(std::weak_ptr<ParticleSystemContainer> parent, const variant& node)
+				: Affector(parent, node)
+			{
+				init(node);
+			}
+
+			void init(const variant& node) override
+			{
+				if(node.has_key("force")) {
+					force_ = Parameter::factory(node["force"]);
+				} else {
+					force_.reset(new FixedParameter(1.0f));
+				}
+
+				direction_ = variant_to_vec3(node["direction"]);
+			}
+
+		protected:
+			virtual void internalApply(Particle& p, float t) override {
+				float scale = t * force_->getValue(1.0f - p.current.time_to_live/p.initial.time_to_live);
+				p.current.position += direction_*scale;
+			}
+
+			AffectorPtr clone() const override {
+				return std::make_shared<LinearForceAffector>(*this);
+			}
+
+		private:
+			ParameterPtr force_;
+			glm::vec3 direction_;
+			LinearForceAffector();
+		};
+
 		class ScaleAffector : public Affector
 		{
 		public:
 			explicit ScaleAffector(std::weak_ptr<ParticleSystemContainer> parent, const variant& node);
+			void init(const variant& node) override;
 		protected:
 			virtual void internalApply(Particle& p, float t) override;
 			AffectorPtr clone() const override {
@@ -106,6 +146,7 @@ namespace KRE
 		{
 		public:
 			explicit VortexAffector(std::weak_ptr<ParticleSystemContainer> parent, const variant& node);
+			void init(const variant& node) override;
 		protected:
 			virtual void internalApply(Particle& p, float t);
 			AffectorPtr clone() const {
@@ -121,6 +162,7 @@ namespace KRE
 		{
 		public:
 			explicit GravityAffector(std::weak_ptr<ParticleSystemContainer> parent, const variant& node);
+			void init(const variant& node) override;
 		protected:
 			virtual void internalApply(Particle& p, float t) override;
 			AffectorPtr clone() const override {
@@ -138,6 +180,9 @@ namespace KRE
 				: Affector(parent, node),
 				  min_distance_(node["min_distance"].as_float(1.0f)),
 				  max_distance_(node["max_distance"].as_float(std::numeric_limits<float>::max())) {
+				init(node);
+			}
+			void init(const variant& node) override {
 			}
 		protected:
 			virtual void handleEmitProcess(float t) override {
@@ -173,8 +218,12 @@ namespace KRE
 		public:
 			explicit AlignAffector(std::weak_ptr<ParticleSystemContainer> parent, const variant& node) 
 				: Affector(parent, node), 
-				  resize_(node["resize"].as_bool(false)) 
+				  resize_(false) 
 			{
+				init(node);
+			}
+			void init(const variant& node) override {
+				resize_ = (node["resize"].as_bool(false));
 			}
 		protected:
 			virtual void internalApply(Particle& p, float t) override {
@@ -216,6 +265,9 @@ namespace KRE
 				: Affector(parent, node), 
                   average_(0.0f)
 			{
+				init(node);
+			}
+			void init(const variant& node) override {
 			}
 		protected:
 			virtual void internalApply(Particle& p, float t) override {
@@ -253,9 +305,15 @@ namespace KRE
 		public:
 			explicit BlackHoleAffector(std::weak_ptr<ParticleSystemContainer> parent, const variant& node) 
 				: Affector(parent, node), 
-				  velocity_(node["velocity"].as_float()), 
-				  acceleration_(node["acceleration"].as_float())
+				  velocity_(0.0), 
+				  acceleration_(0.0)
 			{
+				init(node);
+			}
+			void init(const variant& node) override {
+				velocity_ = (node["velocity"].as_float());
+				acceleration_ = (node["acceleration"].as_float());
+				
 			}
 		private:
 			virtual void handleEmitProcess(float t) override {
@@ -287,6 +345,11 @@ namespace KRE
 		public:
 			explicit PathFollowerAffector(std::weak_ptr<ParticleSystemContainer> parent, const variant& node) 
 				: Affector(parent, node)
+			{
+				init(node);
+			}
+
+			void init(const variant& node) override
 			{
 				ASSERT_LOG(node.has_key("path") && node["path"].is_list(),
 					"path_follower must have a 'path' attribute.");
@@ -336,9 +399,17 @@ namespace KRE
 			explicit RandomiserAffector(std::weak_ptr<ParticleSystemContainer> parent, const variant& node) 
 				: Affector(parent, node), 
 				  max_deviation_(0.0f), 
-				  time_step_(float(node["time_step"].as_float(0))), 
-				  random_direction_(node["use_direction"].as_bool(true)) 
+				  time_step_(0),
+				  random_direction_(true)
 			{
+				init(node);
+			}
+
+			void init(const variant& node) override
+			{
+				time_step_ = (float(node["time_step"].as_float(0)));
+				random_direction_ = (node["use_direction"].as_bool(true));
+
 				if(node.has_key("max_deviation_x")) {
 					max_deviation_.x = float(node["max_deviation_x"].as_float());
 				}
@@ -411,6 +482,11 @@ namespace KRE
 				  scale_vector_(0.0f),
 				  fa_(FA_ADD)
 			{
+				init(node);
+			}
+
+			void init(const variant& node) override
+			{
 				if(node.has_key("max_frequency")) {
 					max_frequency_ = float(node["max_frequency"].as_float());
 					frequency_ = max_frequency_;
@@ -478,7 +554,8 @@ namespace KRE
 			: EmitObject(parent, node), 
 			  mass_(float(node["mass_affector"].as_float(1.0f))),
 			  position_(0.0f), 
-			  scale_(1.0f)
+			  scale_(1.0f),
+			  node_(node)
 		{
 			if(node.has_key("position")) {
 				position_ = variant_to_vec3(node["position"]);
@@ -538,6 +615,8 @@ namespace KRE
 				return std::make_shared<VortexAffector>(parent, node);
 			} else if(ntype == "gravity") {
 				return std::make_shared<GravityAffector>(parent, node);
+			} else if(ntype == "linear_force") {
+				return std::make_shared<LinearForceAffector>(parent, node);
 			} else if(ntype == "scale") {
 				return std::make_shared<ScaleAffector>(parent, node);
 			} else if(ntype == "particle_follower") {
@@ -563,6 +642,11 @@ namespace KRE
 		TimeColorAffector::TimeColorAffector(std::weak_ptr<ParticleSystemContainer> parent, const variant& node)
 			: Affector(parent, node), 
 			  operation_(TimeColorAffector::COLOR_OP_SET)
+		{
+			init(node);
+		}
+
+		void TimeColorAffector::init(const variant& node)
 		{
 			std::string op;
 			if(node.has_key("color_operation")) {
@@ -670,6 +754,11 @@ namespace KRE
 		JetAffector::JetAffector(std::weak_ptr<ParticleSystemContainer> parent, const variant& node)
 			: Affector(parent, node)
 		{
+			init(node);
+		}
+
+		void JetAffector::init(const variant& node)
+		{
 			if(node.has_key("acceleration")) {
 				acceleration_ = Parameter::factory(node["acceleration"]);
 			} else {
@@ -690,6 +779,11 @@ namespace KRE
 		VortexAffector::VortexAffector(std::weak_ptr<ParticleSystemContainer> parent, const variant& node)
 			: Affector(parent, node), 
 			  rotation_axis_(0.0f, 1.0f, 0.0f)
+		{
+			init(node);
+		}
+
+		void VortexAffector::init(const variant& node)
 		{
 			if(node.has_key("rotation_speed")) {
 				rotation_speed_ = Parameter::factory(node["rotation_speed"]);
@@ -716,6 +810,11 @@ namespace KRE
 			: Affector(parent, node), 
 			  gravity_()
 		{
+			init(node);
+		}
+
+		void GravityAffector::init(const variant& node)
+		{
 			if(node.has_key("gravity")) {
 				gravity_ = Parameter::factory(node["gravity"]);
 			} else {
@@ -735,8 +834,14 @@ namespace KRE
 
 		ScaleAffector::ScaleAffector(std::weak_ptr<ParticleSystemContainer> parent, const variant& node)
 			: Affector(parent, node), 
-			  since_system_start_(node["since_system_start"].as_bool(false))
+			  since_system_start_(false)
 		{
+			init(node);
+		}
+
+		void ScaleAffector::init(const variant& node)
+		{
+			since_system_start_ = (node["since_system_start"].as_bool(false));
 			if(node.has_key("scale_x")) {
 				scale_x_ = Parameter::factory(node["scale_x"]);
 			}

@@ -26,6 +26,7 @@
 
 #include "formula_callable.hpp"
 #include "ParticleSystem.hpp"
+#include "ParticleSystemAffectors.hpp"
 #include "SceneGraph.hpp"
 #include "SceneNode.hpp"
 #include "RenderManager.hpp"
@@ -185,9 +186,42 @@ namespace graphics
 			obj.obj_->addTechnique(KRE::Particles::TechniquePtr(new KRE::Particles::Technique(obj.obj_->getParentContainer(), arg)));
 		}));
 	END_DEFINE_FN
+
+	DEFINE_FIELD(techniques, "[builtin particle_technique_proxy]")
+
+		auto v = obj.obj_->getActiveTechniques();
+		std::vector<variant> result;
+		result.reserve(v.size());
+		for(auto p : v) {
+			result.push_back(variant(new ParticleTechniqueProxy(p)));
+		}
+
+		return variant(&result);
 	END_DEFINE_CALLABLE(ParticleSystemProxy)
 
 	BEGIN_DEFINE_CALLABLE_NOBASE(ParticleTechniqueProxy)
+
+		DEFINE_FIELD(emitters, "[builtin particle_emitter_proxy]")
+
+			auto v = obj.obj_->getActiveEmitters();
+			std::vector<variant> result;
+			result.reserve(v.size());
+			for(auto p : v) {
+				result.push_back(variant(new ParticleEmitterProxy(p)));
+			}
+
+			return variant(&result);
+
+		DEFINE_FIELD(affectors, "[builtin particle_affector_proxy]")
+
+			auto v = obj.obj_->getActiveAffectors();
+			std::vector<variant> result;
+			result.reserve(v.size());
+			for(auto p : v) {
+				result.push_back(variant(new ParticleAffectorProxy(p)));
+			}
+
+			return variant(&result);
 	END_DEFINE_CALLABLE(ParticleTechniqueProxy)
 
 
@@ -195,6 +229,10 @@ namespace graphics
 	END_DEFINE_CALLABLE(ParticleEmitterProxy)
 
 	BEGIN_DEFINE_CALLABLE_NOBASE(ParticleAffectorProxy)
+		DEFINE_FIELD(node, "map")
+		return obj.obj_->node();
+	DEFINE_SET_FIELD
+		obj.obj_->setNode(value);
 	END_DEFINE_CALLABLE(ParticleAffectorProxy)
 
 }

@@ -61,6 +61,8 @@ public:
 		return nullptr;
 	}
 
+	void quit_game();
+
 	const editor* get_editor() const { return editor_; }
 
 	bool is_paused() const { return paused; }

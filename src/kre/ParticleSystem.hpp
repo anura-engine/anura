@@ -75,6 +75,7 @@ namespace KRE
 		// This structure should be POD (i.e. plain old data)
 		struct Particle
 		{
+			Particle() : emitted_by(nullptr) {}
 			PhysicsParameters current;
 			PhysicsParameters initial;
 			// Still wavering over whether this should be std::weak_ptr<Emitter>

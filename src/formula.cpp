@@ -2782,7 +2782,7 @@ namespace {
 					callable_def = get_variant_comparator_definition(callable_def, value_type);
 				}
 
-				if(function_name != nullptr && n == 4 &&
+				if(function_name != nullptr && (n == 4 || (args.size() == 3 && n == 2)) &&
 				   (*function_name == "spawn" || *function_name == "spawn_player")) {
 					//The spawn custom_object_functions take a special child
 					//argument as their last parameter.
