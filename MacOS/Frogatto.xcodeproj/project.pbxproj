@@ -3037,6 +3037,7 @@
 					"-Wno-backslash-newline-escape",
 					"-Wno-extern-c-compat",
 					"-Wno-deprecated-declarations",
+					"-Wno-inconsistent-missing-override",
 				);
 				WRAPPER_EXTENSION = app;
 			};
@@ -3094,6 +3095,7 @@
 					"-Wno-backslash-newline-escape",
 					"-Wno-extern-c-compat",
 					"-Wno-deprecated-declarations",
+					"-Wno-inconsistent-missing-override",
 				);
 				WRAPPER_EXTENSION = app;
 			};
