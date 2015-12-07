@@ -42,7 +42,8 @@ namespace KRE
 		  stencil_attachment_(stencil),
 		  multi_sampling_(use_multi_sampling),
 		  multi_samples_(multi_samples),
-		  clear_color_(0.0f, 0.0f, 0.0f, 1.0f)
+		  clear_color_(0.0f, 0.0f, 0.0f, 1.0f),
+		  size_change_observer_handle_(-1)
 	{
 	}
 
@@ -54,7 +55,8 @@ namespace KRE
 		  stencil_attachment_(false),
 		  multi_sampling_(false),
 		  multi_samples_(0),
-		  clear_color_(0.0f, 0.0f, 0.0f, 1.0f)
+		  clear_color_(0.0f, 0.0f, 0.0f, 1.0f),
+		  size_change_observer_handle_(-1)
 	{
 		ASSERT_LOG(node.is_map(), "RenderTarget definitions must be maps: " << node.to_debug_string());
 		ASSERT_LOG(node.has_key("width"), "Render target must have a 'width' attribute.");
@@ -82,6 +84,12 @@ namespace KRE
 
 	RenderTarget::~RenderTarget()
 	{
+		if(size_change_observer_handle_ != -1) {
+			auto wnd = WindowManager::getMainWindow();
+			if(wnd) {
+				wnd->unregisterSizeChangeObserver(size_change_observer_handle_);
+			}
+		}
 	}
 
 	void RenderTarget::on_create()
@@ -176,7 +184,7 @@ namespace KRE
 	{
 		auto rt = DisplayDevice::renderTargetInstance(width, height, color_plane_count, depth, stencil, use_multi_sampling, multi_samples);
 		auto wnd = WindowManager::getMainWindow();
-		wnd->registerSizeChangeObserver(std::bind(&RenderTarget::onSizeChange, rt, std::placeholders::_1, std::placeholders::_2));
+		rt->size_change_observer_handle_ = wnd->registerSizeChangeObserver(std::bind(&RenderTarget::onSizeChange, rt.get(), std::placeholders::_1, std::placeholders::_2));
 		return rt;
 	}
 

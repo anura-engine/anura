@@ -111,6 +111,8 @@ namespace KRE
 
 		Color clear_color_;
 
+		int size_change_observer_handle_;
+
 		RenderTarget();
 	};
 

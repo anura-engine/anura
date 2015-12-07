@@ -2149,7 +2149,7 @@ void Level::calculateLighting(int x, int y, int w, int h) const
 		}
 	}
 
-	auto rt = KRE::RenderTarget::create(wnd->width(), wnd->height());
+	static auto rt = KRE::RenderTarget::create(wnd->width(), wnd->height());
 
 	{
 		KRE::BlendModeScope blend_scope(KRE::BlendModeConstants::BM_ONE, KRE::BlendModeConstants::BM_ONE);
