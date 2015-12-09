@@ -148,8 +148,8 @@ namespace KRE
 			explicit VortexAffector(std::weak_ptr<ParticleSystemContainer> parent, const variant& node);
 			void init(const variant& node) override;
 		protected:
-			virtual void internalApply(Particle& p, float t);
-			AffectorPtr clone() const {
+			virtual void internalApply(Particle& p, float t) override;
+			AffectorPtr clone() const override {
 				return std::make_shared<VortexAffector>(*this);
 			}
 		private:

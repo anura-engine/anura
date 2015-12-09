@@ -178,7 +178,7 @@ namespace game_logic
 	class FormulaVariantCallableWithBackup : public FormulaCallable {
 		variant var_;
 		const FormulaCallable& backup_;
-		variant getValue(const std::string& key) const {
+		variant getValue(const std::string& key) const override {
 			variant var = var_.get_member(key);
 			if(var.is_null()) {
 				return backup_.queryValue(key);
@@ -187,15 +187,15 @@ namespace game_logic
 			return var;
 		}
 
-		void setValueBySlot(int slot, const variant& value) {
+		void setValueBySlot(int slot, const variant& value) override {
 			const_cast<FormulaCallable&>(backup_).mutateValueBySlot(slot, value);
 		}
 
-		variant getValueBySlot(int slot) const {
+		variant getValueBySlot(int slot) const override {
 			return backup_.queryValueBySlot(slot);
 		}
 
-		void getInputs(std::vector<FormulaInput>* inputs) const {
+		void getInputs(std::vector<FormulaInput>* inputs) const override {
 			backup_.getInputs(inputs);
 		}
 

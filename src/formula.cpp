@@ -594,14 +594,14 @@ namespace game_logic
 			explicit ListCallable(const variant& list) : FormulaCallable(false), list_(list)
 			{}
 	
-			void getInputs(std::vector<FormulaInput>* inputs) const {
+			void getInputs(std::vector<FormulaInput>* inputs) const override {
 				inputs->push_back(FormulaInput("size", FORMULA_ACCESS_TYPE::READ_WRITE));
 				inputs->push_back(FormulaInput("empty", FORMULA_ACCESS_TYPE::READ_WRITE));
 				inputs->push_back(FormulaInput("first", FORMULA_ACCESS_TYPE::READ_WRITE));
 				inputs->push_back(FormulaInput("last", FORMULA_ACCESS_TYPE::READ_WRITE));
 			}
 	
-			variant getValue(const std::string& key) const {
+			variant getValue(const std::string& key) const override {
 				if(key == "size") {
 					return variant(unsigned(list_.num_elements()));
 				} else if(key == "empty") {
@@ -2182,7 +2182,7 @@ namespace {
 			  : cmd_(cmd), right_(right_expr), variables_(variables)
 			{}
 
-			void execute(game_logic::FormulaCallable& ob) const {
+			void execute(game_logic::FormulaCallable& ob) const override {
 				ob.executeCommand(cmd_);
 				const variant right_cmd = right_->evaluate(*variables_);
 				ob.executeCommand(right_cmd);

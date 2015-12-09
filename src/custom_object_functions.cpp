@@ -367,7 +367,7 @@ namespace
 		tbs_send_command(variant client, variant msg) : client_(client), msg_(msg)
 		{}
 
-		virtual void execute(Level& lvl, Entity& ob) const {
+		virtual void execute(Level& lvl, Entity& ob) const override {
 			using std::placeholders::_1;
 			game_logic::MapFormulaCallablePtr callable(new game_logic::MapFormulaCallable);
 			tbs::client* tbs_client = client_.try_convert<tbs::client>();
@@ -406,7 +406,7 @@ namespace
 		explicit tbs_process_command(variant client) : client_(client)
 		{}
 
-		virtual void execute(Level& lvl, Entity& ob) const {
+		virtual void execute(Level& lvl, Entity& ob) const override{
 			tbs::client* tbs_client = client_.try_convert<tbs::client>();
 			if(tbs_client == nullptr) {
 				tbs::internal_client* iclient = client_.try_convert<tbs::internal_client>();
@@ -439,7 +439,7 @@ namespace
 		explicit report_command(variant v) : v_(v)
 		{}
 
-		virtual void execute(Level& lvl, Entity& ob) const {
+		virtual void execute(Level& lvl, Entity& ob) const override {
 			stats::record(v_);
 		}
 	};
@@ -1175,7 +1175,7 @@ namespace
 		execute_on_command(EntityPtr e, variant cmd) : e_(e), cmd_(cmd)
 		{}
 
-		virtual void execute(Level& lvl, Entity& ob) const {
+		virtual void execute(Level& lvl, Entity& ob) const override {
 			e_->executeCommand(cmd_);
 		}
 	};
@@ -1207,7 +1207,7 @@ namespace
 		execute_on_command_instrumented(EntityPtr e, std::string id, int t, variant cmd) : e_(e), id_(id), time_(t), cmd_(cmd)
 		{}
 
-		virtual void execute(Level& lvl, Entity& ob) const {
+		virtual void execute(Level& lvl, Entity& ob) const override {
 			const int a = SDL_GetTicks();
 			e_->executeCommand(cmd_);
 			const int b = SDL_GetTicks();
@@ -1238,7 +1238,7 @@ namespace
 		spawn_command(boost::intrusive_ptr<CustomObject> obj, variant instantiation_commands)
 		  : obj_(obj), instantiation_commands_(instantiation_commands)
 		{}
-		virtual void execute(Level& lvl, Entity& ob) const {
+		virtual void execute(Level& lvl, Entity& ob) const override {
 			obj_->setLevel(lvl);
 			obj_->setSpawnedBy(ob.label());
 
@@ -2080,7 +2080,7 @@ RETURN_TYPE("bool")
 	public:
 		explicit scroll_to_command(EntityPtr focus) : focus_(focus)
 		{}
-		virtual void execute(Level& lvl, CustomObject& ob) const {
+		virtual void execute(Level& lvl, CustomObject& ob) const override {
 			screen_position pos = last_draw_position();
 			for(int n = 0; n != 50; ++n) {
 				draw_scene(lvl, pos, focus_.get());
@@ -2200,7 +2200,7 @@ RETURN_TYPE("bool")
 	public:
 		transient_speech_dialog_command(EntityPtr speaker, const std::vector<std::string>& text, int duration) : speaker_(speaker), text_(text), duration_(duration)
 		{}
-		virtual void execute(Level& lvl, CustomObject& ob) const {
+		virtual void execute(Level& lvl, CustomObject& ob) const override {
 			std::shared_ptr<SpeechDialog> d(new SpeechDialog);
 			if(speaker_) {
 				d->setSpeaker(speaker_);
@@ -2693,7 +2693,7 @@ RETURN_TYPE("bool")
 		resolve_solid_command(EntityPtr e, int xdir, int ydir, int max_cycles) : e_(e), xdir_(xdir), ydir_(ydir), max_cycles_(max_cycles)
 		{}
 
-		virtual void execute(Level& lvl, Entity& ob) const {
+		virtual void execute(Level& lvl, Entity& ob) const override {
 			if(xdir_ == 0 && ydir_ == 0 && max_cycles_ == 0) {
 				if(!place_entity_in_level_with_large_displacement(lvl, ob)) {
 					CustomObject* custom_obj = dynamic_cast<CustomObject*>(&ob);
@@ -2762,7 +2762,7 @@ RETURN_TYPE("bool")
 		explicit add_object_command(EntityPtr e) : e_(e)
 		{}
 
-		virtual void execute(Level& lvl, Entity& ob) const {
+		virtual void execute(Level& lvl, Entity& ob) const override {
 			e_->setSpawnedBy(ob.label());
 			if(place_entity_in_level_with_large_displacement(lvl, *e_)) {
 				lvl.add_character(e_);
@@ -2855,7 +2855,7 @@ RETURN_TYPE("bool")
 			: level_(level), label_(label), transition_(transition), new_playable_(new_playable), no_move_to_standing_(no_move_to_standing)
 		{}
 
-		virtual void execute(Level& lvl, Entity& ob) const {
+		virtual void execute(Level& lvl, Entity& ob) const override {
 			Level::portal p;
 			p.level_dest = level_;
 			p.dest_starting_pos = true;
@@ -3281,7 +3281,7 @@ RETURN_TYPE("bool")
 		animate_command(boost::intrusive_ptr<CustomObject> target, variant attr_var, variant options) : target_(target), attr_var_(attr_var), options_(options)
 		{}
 
-		virtual void execute(Level& lvl, Entity& ob) const {
+		virtual void execute(Level& lvl, Entity& ob) const override {
 			target_->addAnimatedMovement(attr_var_, options_);
 		}
 	};
@@ -3316,7 +3316,7 @@ RETURN_TYPE("bool")
 		  : target_(target), widgets_(widgets)//, callable_(callable)
 		{}
 
-		virtual void execute(Level& lvl, Entity& ob) const {
+		virtual void execute(Level& lvl, Entity& ob) const override {
 			Entity* e = target_ ? target_.get() : &ob;
 			CustomObject* custom_obj = dynamic_cast<CustomObject*>(e);
 			std::vector<gui::WidgetPtr> w;
@@ -3368,7 +3368,7 @@ RETURN_TYPE("bool")
 		clear_widgets_command(EntityPtr target) : target_(target)
 		{}
 
-		virtual void execute(Level& lvl, Entity& ob) const {
+		virtual void execute(Level& lvl, Entity& ob) const override {
 			Entity* e = target_ ? target_.get() : &ob;
 			CustomObject* custom_obj = dynamic_cast<CustomObject*>(e);
 			custom_obj->clearWidgets();
