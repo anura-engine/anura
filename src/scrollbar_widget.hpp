@@ -43,7 +43,7 @@ namespace gui
 
 		WidgetPtr clone() const override;
 
-		void surrenderReferences(GarbageCollector* collector);
+		void surrenderReferences(GarbageCollector* collector) override;
 	private:
 		DECLARE_CALLABLE(ScrollBarWidget)
 

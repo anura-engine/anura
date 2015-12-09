@@ -1582,7 +1582,7 @@ namespace game_logic
 					return expr_->evaluate(*this);
 				}
 
-				void surrenderReferences(GarbageCollector* collector) {
+				void surrenderReferences(GarbageCollector* collector) override {
 					collector->surrenderVariant(&a_);
 					collector->surrenderVariant(&b_);
 				}
@@ -2352,7 +2352,7 @@ FUNCTION_DEF_IMPL
 					const_cast<FormulaCallable*>(backup_.get())->mutateValueBySlot(slot-NUM_MAP_CALLABLE_SLOTS, value);
 				}
 
-				void surrenderReferences(GarbageCollector* collector) {
+				void surrenderReferences(GarbageCollector* collector) override {
 					collector->surrenderPtr(&backup_);
 					collector->surrenderVariant(&key_);
 					collector->surrenderVariant(&value_);

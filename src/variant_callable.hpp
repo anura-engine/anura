@@ -39,8 +39,8 @@ public:
 private:
 	variant_callable(const variant& v);
 
-	variant getValue(const std::string& key) const;
-	void setValue(const std::string& key, const variant& value);
+	variant getValue(const std::string& key) const override;
+	void setValue(const std::string& key, const variant& value) override;
 
 	variant create_for_list(const variant& list) const;
 
