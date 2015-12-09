@@ -233,7 +233,15 @@ Level::Level(const std::string& level_cfg, variant node)
 	if(KRE::DisplayDevice::checkForFeature(KRE::DisplayDeviceCapabilties::RENDER_TO_TEXTURE)) {
 		have_render_to_texture_ = true;
 		auto& gs = graphics::GameScreen::get();
-		rt_ = KRE::RenderTarget::create(gs.getWidth(), gs.getHeight(), 1, false, true);
+
+		try {
+			const assert_recover_scope safe_scope;
+			rt_ = KRE::RenderTarget::create(gs.getWidth(), gs.getHeight(), 1, false, true);
+		} catch(validation_failure_exception& e) {
+			LOG_INFO("Could not create fbo with stencil buffer. Trying without stencil buffer");
+			rt_ = KRE::RenderTarget::create(gs.getWidth(), gs.getHeight(), 1, false, false);
+		}
+
 		//rt_->setCamera(std::make_shared<KRE::Camera>("render_target"));
 	}
 
@@ -543,7 +551,13 @@ void Level::setRenderToTexture(int width, int height)
 	render_to_texture_ = true;
 	doing_render_to_texture_ = false;
 
-	rt_ = KRE::RenderTarget::create(width, height, 1, false, true);
+		try {
+			const assert_recover_scope safe_scope;
+			rt_ = KRE::RenderTarget::create(width, height, 1, false, true);
+		} catch(validation_failure_exception& e) {
+			LOG_INFO("Could not create fbo with stencil buffer. Trying without stencil buffer");
+			rt_ = KRE::RenderTarget::create(width, height, 1, false, false);
+		}
 }
 
 void Level::read_compiled_tiles(variant node, std::vector<LevelTile>::iterator& out)
@@ -2099,7 +2113,13 @@ void Level::applyShaderToFrameBufferTexture(graphics::AnuraShaderPtr shader, boo
 		auto& gs = graphics::GameScreen::get();
 
 		if(!backup_rt_) {
-			backup_rt_ = KRE::RenderTarget::create(gs.getWidth(), gs.getHeight(), 1, false, true);
+			try {
+				const assert_recover_scope safe_scope;
+				backup_rt_ = KRE::RenderTarget::create(gs.getWidth(), gs.getHeight(), 1, false, true);
+			} catch(validation_failure_exception& e) {
+				LOG_INFO("Could not create fbo with stencil buffer. Trying without stencil buffer");
+				backup_rt_ = KRE::RenderTarget::create(gs.getWidth(), gs.getHeight(), 1, false, false);
+			}
 		}
 		backup_rt_->renderToThis(gs.getVirtualArea());
 		backup_rt_->setClearColor(KRE::Color(0,0,0,0));
