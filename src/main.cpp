@@ -130,6 +130,7 @@ namespace
 	PREF_BOOL(disable_global_alpha_filter, false, "Disables using alpha-colors.png to denote some special colors as 'alpha colors'");
 
 	PREF_BOOL_PERSISTENT(desktop_fullscreen, false, "Sets the game window to be a fullscreen window the size of the desktop");
+	PREF_BOOL(exclusive_fullscreen, false, "Makes the game use exclusive fullscreen mode");
 
 
 #if defined(_MSC_VER)
@@ -892,7 +893,7 @@ int main(int argcount, char* argvec[])
 	if(g_desktop_fullscreen) {
 		KRE::WindowMode mode = main_wnd->getDisplaySize();
 		main_wnd->setWindowSize(mode.width, mode.height);
-		main_wnd->setFullscreenMode(KRE::FullScreenMode::FULLSCREEN_WINDOWED);
+		main_wnd->setFullscreenMode(g_exclusive_fullscreen ? KRE::FullScreenMode::FULLSCREEN_EXCLUSIVE : KRE::FullScreenMode::FULLSCREEN_WINDOWED);
 	} else if(preferences::auto_size_window() 
 		&& preferences::requested_window_width() == 0 
 		&& preferences::requested_window_height() == 0) {

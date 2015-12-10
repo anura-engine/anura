@@ -37,6 +37,7 @@ namespace KRE
 	enum class FullScreenMode {
 		WINDOWED,
 		FULLSCREEN_WINDOWED,
+		FULLSCREEN_EXCLUSIVE,
 	};
 
 	struct WindowMode

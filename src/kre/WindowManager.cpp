@@ -164,10 +164,10 @@ namespace KRE
 				w = h = 0;
 				wnd_flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
 				break;
-			//case FullscreenMode::FULLSCREEN:
-			//	x = y = SDL_WINDOWPOS_UNDEFINED;
-			//	wnd_flags |= SDL_WINDOW_FULLSCREEN;
-			//	break;
+			case FullScreenMode::FULLSCREEN_EXCLUSIVE:
+				x = y = SDL_WINDOWPOS_UNDEFINED;
+				wnd_flags |= SDL_WINDOW_FULLSCREEN;
+				break;
 			}
 			window_.reset(SDL_CreateWindow(getTitle().c_str(), x, y, w, h, wnd_flags), [&](SDL_Window* wnd){
 				if(getDisplayDevice()->ID() != DisplayDevice::DISPLAY_DEVICE_SDL) {
@@ -319,7 +319,14 @@ namespace KRE
 			}
 		}
 		void changeFullscreenMode() override {
-			if(fullscreenMode() == FullScreenMode::FULLSCREEN_WINDOWED) {
+			if(fullscreenMode() == FullScreenMode::FULLSCREEN_EXCLUSIVE) {
+				nonfs_width_ = width();
+				nonfs_height_ = height();
+				if(SDL_SetWindowFullscreen(window_.get(), SDL_WINDOW_FULLSCREEN) != 0) {
+					LOG_WARN("Unable to set fullscreen mode at " << width() << " x " << height());
+					return;
+				}
+			} else if(fullscreenMode() == FullScreenMode::FULLSCREEN_WINDOWED) {
 				nonfs_width_ = width();
 				nonfs_height_ = height();
 
