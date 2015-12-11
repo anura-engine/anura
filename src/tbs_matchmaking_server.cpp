@@ -470,7 +470,10 @@ public:
 				if(email_address.empty() == false) {
 					std::string message;
 					bool valid = validateEmail(email_address, &message);
-					RESPOND_ERROR("Invalid email address: " + message);
+					if(!valid) {
+						RESPOND_ERROR("Invalid email address: " + message);
+						return;
+					}
 				}
 
 				std::string user_full = doc["user"].as_string();
