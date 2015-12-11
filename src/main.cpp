@@ -282,23 +282,24 @@ namespace
 	}
 
 
-	void auto_select_resolution(const KRE::WindowPtr& wm, int *width, int *height)
+	void auto_select_resolution(const KRE::WindowPtr& wm, int *width, int *height, bool reduce)
 	{
 		ASSERT_LOG(width != nullptr, "width is null.");
 		ASSERT_LOG(height != nullptr, "height is null.");
 
 		auto mode = wm->getDisplaySize();
 		auto best_mode = mode;
+		bool found = false;
 		
-		const float MinReduction = 0.9f;
+		const float MinReduction = reduce ? 0.9f : 2.0f;
 		for(auto& candidate_mode : wm->getWindowModes([](const KRE::WindowMode&){ return true; })) {
-			if(candidate_mode.width < mode.width && candidate_mode.height < mode.width
-				&& candidate_mode.width < mode.width * MinReduction
+			if(    candidate_mode.width < mode.width * MinReduction
 				&& candidate_mode.height < mode.height * MinReduction
 				&& ((candidate_mode.width >= best_mode.width
-				&& candidate_mode.height >= best_mode.height)
-				|| (best_mode.width == mode.width && best_mode.height == mode.height))) {
-				LOG_INFO("BETTER MODE IS " << candidate_mode.width << "x" << candidate_mode.height);
+				&& candidate_mode.height >= best_mode.height) || !found)
+				) {
+					found = true;
+					LOG_INFO("BETTER MODE IS " << candidate_mode.width << "x" << candidate_mode.height << " vs " << best_mode.width << "x" << best_mode.height);
 				best_mode = candidate_mode;
 			} else {
 				LOG_INFO("REJECTED MODE IS " << candidate_mode.width << "x" << candidate_mode.height);
@@ -891,15 +892,18 @@ int main(int argcount, char* argvec[])
 	main_wnd->setWindowTitle(module::get_module_pretty_name());
 
 	if(g_desktop_fullscreen) {
-		KRE::WindowMode mode = main_wnd->getDisplaySize();
-		main_wnd->setWindowSize(mode.width, mode.height);
+		//KRE::WindowMode mode = main_wnd->getDisplaySize();
+		int width = 0;
+		int height = 0;
+		auto_select_resolution(main_wnd, &width, &height, false);
+		main_wnd->setWindowSize(width, height);
 		main_wnd->setFullscreenMode(g_exclusive_fullscreen ? KRE::FullScreenMode::FULLSCREEN_EXCLUSIVE : KRE::FullScreenMode::FULLSCREEN_WINDOWED);
 	} else if(preferences::auto_size_window() 
 		&& preferences::requested_window_width() == 0 
 		&& preferences::requested_window_height() == 0) {
 		int width = 0;
 		int height = 0;
-		auto_select_resolution(main_wnd, &width, &height);
+		auto_select_resolution(main_wnd, &width, &height, true);
 
 		main_wnd->setWindowSize(width, height);
 	}
