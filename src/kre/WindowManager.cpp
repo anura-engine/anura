@@ -161,7 +161,7 @@ namespace KRE
 			case FullScreenMode::WINDOWED:		break;
 			case FullScreenMode::FULLSCREEN_WINDOWED:
 				x = y = SDL_WINDOWPOS_UNDEFINED;
-				w = h = 0;
+				//w = h = 0;
 				wnd_flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
 				break;
 			case FullScreenMode::FULLSCREEN_EXCLUSIVE:
