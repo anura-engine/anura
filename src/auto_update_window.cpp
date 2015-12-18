@@ -595,6 +595,12 @@ COMMAND_LINE_UTILITY(window_test)
 		fprintf(stderr, "Desktop display: %dx%d@%dhz format=%d\n", dm.w, dm.h, dm.refresh_rate, (int)dm.format);
 	}
 
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
+	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+	SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
+	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+
 	std::deque<std::string> argv(args.begin(), args.end());
 	while(argv.empty() == false) {
 		std::string a = argv.front();
@@ -609,6 +615,39 @@ COMMAND_LINE_UTILITY(window_test)
 			flags = flags | SDL_WINDOW_BORDERLESS;
 		} else if(a == "--highdpi") {
 			flags = flags | SDL_WINDOW_ALLOW_HIGHDPI;
+		} else if(a == "--gl_major") {
+			ASSERT_LOG(argv.empty() == false, "No arg specified");
+			std::string w = argv.front();
+			argv.pop_front();
+			SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, atoi(w.c_str()));
+		} else if(a == "--gl_minor") {
+			ASSERT_LOG(argv.empty() == false, "No arg specified");
+			std::string w = argv.front();
+			argv.pop_front();
+			SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, atoi(w.c_str()));
+		} else if(a == "--gl_depth") {
+			ASSERT_LOG(argv.empty() == false, "No arg specified");
+			std::string w = argv.front();
+			argv.pop_front();
+			SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, atoi(w.c_str()));
+		} else if(a == "--gl_stencil") {
+			ASSERT_LOG(argv.empty() == false, "No arg specified");
+			std::string w = argv.front();
+			argv.pop_front();
+			SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, atoi(w.c_str()));
+		} else if(a == "--gl_bpp") {
+			ASSERT_LOG(argv.empty() == false, "No arg specified");
+			std::string w = argv.front();
+			argv.pop_front();
+			SDL_GL_SetAttribute(SDL_GL_RED_SIZE, atoi(w.c_str()));
+			SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, atoi(w.c_str()));
+			SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, atoi(w.c_str()));
+			SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, atoi(w.c_str()));
+		} else if(a == "--gl_multisamplebuffers") {
+			ASSERT_LOG(argv.empty() == false, "No arg specified");
+			std::string w = argv.front();
+			argv.pop_front();
+			SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, atoi(w.c_str()));
 		} else if(a == "--width") {
 			ASSERT_LOG(argv.empty() == false, "No width specified");
 			std::string w = argv.front();

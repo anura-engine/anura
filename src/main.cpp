@@ -888,17 +888,27 @@ int main(int argcount, char* argvec[])
 	hints.add("resizeable", g_resizeable);
 	hints.add("fullscreen", preferences::get_screen_mode() == preferences::ScreenMode::FULLSCREEN_WINDOWED ? true : false);
 
-    KRE::WindowPtr main_wnd = wm.allocateWindow(hints.build());
-	main_wnd->setWindowTitle(module::get_module_pretty_name());
 
 	if(g_desktop_fullscreen) {
 		//KRE::WindowMode mode = main_wnd->getDisplaySize();
-		int width = 0;
-		int height = 0;
-		auto_select_resolution(main_wnd, &width, &height, false);
-		main_wnd->setWindowSize(width, height);
-		main_wnd->setFullscreenMode(g_exclusive_fullscreen ? KRE::FullScreenMode::FULLSCREEN_EXCLUSIVE : KRE::FullScreenMode::FULLSCREEN_WINDOWED);
-	} else if(preferences::auto_size_window() 
+
+		SDL_DisplayMode dm;
+		int res = SDL_GetDesktopDisplayMode(0, &dm);
+		ASSERT_LOG(res == 0, "Could not get desktop display mode: " << SDL_GetError());
+
+		hints.set("width", dm.w);
+		hints.set("height", dm.h);
+		hints.set("fullscreen", true);
+	}
+
+	variant built_hints = hints.build();
+	LOG_INFO("Initializing fullscreen window: " << built_hints.write_json());
+
+    KRE::WindowPtr main_wnd = wm.allocateWindow(built_hints);
+	main_wnd->setWindowTitle(module::get_module_pretty_name());
+	
+	if(!g_desktop_fullscreen &&
+	   preferences::auto_size_window() 
 		&& preferences::requested_window_width() == 0 
 		&& preferences::requested_window_height() == 0) {
 		int width = 0;
