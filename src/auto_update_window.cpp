@@ -579,3 +579,57 @@ COMMAND_LINE_UTILITY(update_launcher)
 		ASSERT_LOG(false, "File Error: " << e.what());
 	}
 }
+
+COMMAND_LINE_UTILITY(window_test)
+{
+	int flags = 0;
+	int width = 800, height = 600;
+
+	SDL_Init(SDL_INIT_VIDEO);
+
+	SDL_DisplayMode dm;
+	int res = SDL_GetDesktopDisplayMode(0, &dm);
+	if(res != 0) {
+		fprintf(stderr, "Failed to query desktop display: %s\n", SDL_GetError());
+	} else {
+		fprintf(stderr, "Desktop display: %dx%d@%dhz format=%d\n", dm.w, dm.h, dm.refresh_rate, (int)dm.format);
+	}
+
+	std::deque<std::string> argv(args.begin(), args.end());
+	while(argv.empty() == false) {
+		std::string a = argv.front();
+		argv.pop_front();
+		if(a == "--fullscreen-exclusive") {
+			flags = flags | SDL_WINDOW_FULLSCREEN;
+		} else if(a == "--fullscreen-desktop") {
+			flags = flags | SDL_WINDOW_FULLSCREEN_DESKTOP;
+		} else if(a == "--opengl") {
+			flags = flags | SDL_WINDOW_OPENGL;
+		} else if(a == "--borderless") {
+			flags = flags | SDL_WINDOW_BORDERLESS;
+		} else if(a == "--highdpi") {
+			flags = flags | SDL_WINDOW_ALLOW_HIGHDPI;
+		} else if(a == "--width") {
+			ASSERT_LOG(argv.empty() == false, "No width specified");
+			std::string w = argv.front();
+			argv.pop_front();
+			width = atoi(w.c_str());
+		} else if(a == "--height") {
+			ASSERT_LOG(argv.empty() == false, "No height specified");
+			std::string w = argv.front();
+			argv.pop_front();
+			height = atoi(w.c_str());
+		} else {
+			ASSERT_LOG(false, "Unrecognized arg: " << a);
+		}
+	}
+
+	SDL_Window* win = SDL_CreateWindow("Anura test window", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, flags);
+	if(win == nullptr) {
+		fprintf(stderr, "Could not create window: %s\n", SDL_GetError());
+		return;
+	}
+	SDL_Delay(1000);
+	SDL_DestroyWindow(win);
+	SDL_Quit();
+}
