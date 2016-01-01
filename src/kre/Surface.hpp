@@ -46,6 +46,9 @@ namespace KRE
 		NONE				= 0,
 		NO_CACHE			= 1,
 		NO_ALPHA_FILTER		= 2,
+		// If this is supplied then any rows/columns of the image that contain pure alpha pixels are stripped
+		// until we generate an image that is minimal in size.
+		STRIP_ALPHA_BORDERS = 4,
 	};
 
 	typedef std::function<void(int&,int&,int&,int&)> SurfaceConvertFn;
@@ -221,10 +224,22 @@ namespace KRE
 
 		std::shared_ptr<std::vector<bool>> getAlphaMap() { return alpha_map_; }
 		void setAlphaMap(std::shared_ptr<std::vector<bool>> am) { alpha_map_ = am; }
+
+		const std::array<int, 4>& getAlphaBorders() const { return alpha_borders_; }
+
+		static int setAlphaStripThreshold(int threshold);
+		static int getAlphaStripThreshold();
+
+		// load a group of images into a single surface, will try to enlarge the surface up
+		// to a maximum size until all images are packed. 
+		/// Returns nullptr if all the images can't be packed into a maximally sized surface.
+		static SurfacePtr packImages(const std::vector<std::string>& filenames, std::vector<rect>* outr, std::vector<std::array<int, 4>>* borders=nullptr);
 	protected:
 		Surface();
 		void setPixelFormat(PixelFormatPtr pf);
 		void setFlags(SurfaceFlags flags) { flags_ = flags; }
+		void setAlphaBorders(const std::array<int, 4>& borders) { alpha_borders_ = borders; }
+		virtual void stripAlphaBorders(int threshold = 0);
 	private:
 		virtual SurfacePtr handleConvert(PixelFormat::PF fmt, SurfaceConvertFn convert) = 0;
 		SurfaceFlags flags_;
@@ -232,5 +247,8 @@ namespace KRE
 		std::shared_ptr<std::vector<bool>> alpha_map_;
 		std::string name_;
 		unsigned id_;
+		// If STRIP_ALPHA_BORDERS was given this is the number of pixels stripped off each side.
+		// ordered left, top, right, bottom.
+		std::array<int, 4> alpha_borders_;
 	};
 }
