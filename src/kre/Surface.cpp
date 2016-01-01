@@ -240,7 +240,7 @@ namespace KRE
 			const int w = width();
 			const int h = height();
 			SurfaceLock lck(shared_from_this());
-			auto& pf = getPixelFormat();
+			auto pf = getPixelFormat();
 			uint32_t alpha_mask = pf->getAlphaMask();
 			int alpha_shift = pf->getAlphaShift();
 			threshold <<= alpha_shift;
