@@ -21,9 +21,12 @@
 	   distribution.
 */
 
+#include <future>
+#include <thread>
 #include <tuple>
 
 #include "Surface.hpp"
+#include "stb_rect_pack.h"
 
 namespace KRE
 {
@@ -48,6 +51,11 @@ namespace KRE
 			static unsigned id = 1;
 			return id++;
 		}
+
+		int alpha_strip_threshold = 20;	// 20/255 ~ 7.8%
+
+		const int max_surface_width = 4096;
+		const int max_surface_height = 4096;
 	}
 
 	Surface::Surface()
@@ -183,6 +191,9 @@ namespace KRE
 	void Surface::init()
 	{
 		createAlphaMap();
+		if(flags_ & SurfaceFlags::STRIP_ALPHA_BORDERS) {
+			stripAlphaBorders(alpha_strip_threshold);
+		}
 	}
 
 	void Surface::createAlphaMap()
@@ -221,6 +232,63 @@ namespace KRE
 			//	am[x + y * w] = a == 0 ? true : false;
 			//});
 		//}
+	}
+
+	void Surface::stripAlphaBorders(int threshold)
+	{
+		if(getPixelFormat()->hasAlphaChannel()) {
+			const int w = width();
+			const int h = height();
+			SurfaceLock lck(shared_from_this());
+			auto pf = getPixelFormat();
+			uint32_t alpha_mask = pf->getAlphaMask();
+			int alpha_shift = pf->getAlphaShift();
+			threshold <<= alpha_shift;
+			if(bytesPerPixel() == 4 && rowPitch() % 4 == 0) {
+				// Optimization for a common case. Operates ~25 faster than default case.
+				const int num_pixels = w * h;
+				// top border
+				uint32_t const* pxt = reinterpret_cast<const uint32_t*>(pixels());
+				for(int ndx = 0; ndx < num_pixels; ++ndx) {
+					if((*pxt++ & alpha_mask) > static_cast<uint32_t>(threshold)) {
+						alpha_borders_[1] = ndx / w;
+						break;
+					}
+				}
+				const uint32_t* pxb = &reinterpret_cast<const uint32_t*>(pixels())[w * h];
+				// bottom border
+				for(int ndx = num_pixels - 1; ndx >= 0; --ndx) {
+					if((*(--pxb) & alpha_mask) > static_cast<uint32_t>(threshold)) {
+						alpha_borders_[3] = h - 1 - ndx / w;
+						break;
+					}
+				}
+				// left border
+				const uint32_t* pxl = reinterpret_cast<const uint32_t*>(pixels());
+				bool finished = false;
+				for(int x = 0; x < w && !finished; ++x) {
+					for(int y = 0; y < h && !finished; ++y) {
+						if((pxl[x + y*w] & alpha_mask) > static_cast<uint32_t>(threshold)) {
+							alpha_borders_[0] = x;
+							finished = true;
+						}
+					}
+				}
+				// right border
+				const uint32_t* pxr = reinterpret_cast<const uint32_t*>(pixels());
+				finished = false;
+				for(int x = w - 1; x >= 0 && !finished; --x) {
+					for(int y = 0; y < h && !finished; ++y) {
+						if((pxr[x + y*w] & alpha_mask) > static_cast<uint32_t>(threshold)) {
+							alpha_borders_[2] = w - 1 - x;
+							finished = true;
+						}
+					}
+				}
+			} else {
+				ASSERT_LOG(false, "won't apply stripAlphaBorders to non 32-bit RGBA image");
+			}
+		}
 	}
 
 	void Surface::clearSurfaceCache()
@@ -429,5 +497,105 @@ namespace KRE
 			}
 		}
 	}
-}
 
+	int Surface::setAlphaStripThreshold(int threshold)
+	{
+		int old_thr = alpha_strip_threshold;
+		alpha_strip_threshold = threshold;
+		return old_thr;
+	}
+
+	int Surface::getAlphaStripThreshold()
+	{
+		return alpha_strip_threshold;
+	}
+
+#include "profile_timer.hpp"
+
+	SurfacePtr Surface::packImages(const std::vector<std::string>& filenames, std::vector<rect>* outr, std::vector<std::array<int, 4>>* borders)
+	{
+		profile::manager pman("fit rects");
+
+		const int max_threads = 8;
+
+		std::vector<std::future<void>> futures;
+
+		std::vector<SurfacePtr> images;
+		images.resize(filenames.size());
+		const int n_incr = images.size() / max_threads;
+		for(int n = 0; n < static_cast<int>(images.size()); n += n_incr) {
+			int n2 = n + n_incr > static_cast<int>(images.size()) ? images.size() : n + n_incr;
+			futures.push_back(std::async([&images, n, n2, &filenames]() {
+				for(int ndx = n; ndx != n2; ++ndx) {
+					images[ndx] = Surface::create(filenames[ndx], SurfaceFlags::STRIP_ALPHA_BORDERS | SurfaceFlags::NO_CACHE);
+				}
+			}));
+		}
+		for(auto& f : futures) {
+			f.get();
+		}
+
+		std::vector<stbrp_node> nodes;
+		nodes.resize(max_surface_width);
+
+		const int increment = 128;
+		int width = 256;
+		int height = 256;
+
+		int nn = 0;
+
+		std::vector<stbrp_rect> rects;
+		for(auto& img : images) {
+			stbrp_rect r;
+			r.id = rects.size();
+			r.w = img->width() - img->getAlphaBorders()[0] - img->getAlphaBorders()[2];
+			r.h = img->height() - img->getAlphaBorders()[1] - img->getAlphaBorders()[3];
+			rects.emplace_back(r);
+		}
+
+		bool packed = false;
+		while(!packed) {
+			for(auto& r : rects) {
+				r.x = r.y = r.was_packed = 0;
+			}
+			stbrp_context context;
+			stbrp_init_target(&context, width, height, nodes.data(), nodes.size());
+			stbrp_pack_rects(&context, rects.data(), rects.size());
+
+			packed = true;
+			for(auto& r : rects) {
+				if(!r.was_packed) {
+					if(nn & 1) {
+						height += increment;
+					} else {
+						width += increment;
+					}
+					++nn;
+					if(width > max_surface_width || height > max_surface_height) {
+						return nullptr;
+					}
+					packed = false;
+					break;
+				}
+			}
+			
+		}
+
+		if(borders != nullptr) {
+			borders->resize(images.size());
+		}
+		outr->resize(images.size());
+
+		auto out = Surface::create(width, height, PixelFormat::PF::PIXELFORMAT_RGBA8888);
+		for(auto& r : rects) {
+			(*outr)[r.id] = rect(r.x, r.y, r.w, r.h);
+			out->blitTo(images[r.id], 
+				rect(images[r.id]->getAlphaBorders()[0], images[r.id]->getAlphaBorders()[1], r.w, r.h), 
+				(*outr)[r.id]);
+			if(borders != nullptr) {
+				(*borders)[r.id] = images[r.id]->getAlphaBorders();
+			}
+		}
+		return out;
+	}
+}
