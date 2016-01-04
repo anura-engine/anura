@@ -169,8 +169,23 @@ public:
 		timer_(io_service), db_timer_(io_service),
 		time_ms_(0), send_at_time_ms_(1000), terminated_servers_(0),
 		controller_(game_logic::FormulaObject::create("matchmaking_server")),
+		status_doc_state_id_(1),
 		child_admin_process_(-1)
 	{
+		variant_builder status_doc;
+		status_doc.add("type", "server_state");
+		status_doc.add("state_id", variant(status_doc_state_id_));
+		status_doc.add("users", 0);
+		status_doc.add("users_queued", 0);
+		status_doc.add("games", 0);
+
+		std::vector<variant> empty_list;
+		status_doc.add("servers", variant(&empty_list));
+		status_doc.add("user_list", variant(&empty_list));
+		status_doc.add("chat", variant(&empty_list));
+
+		status_doc_ = status_doc.build();
+
 		create_account_fn_ = controller_->queryValue("create_account");
 		ASSERT_LOG(create_account_fn_.is_function(), "Could not find create_account in matchmaking_server class");
 
@@ -255,6 +270,7 @@ public:
 				//This will only happen if a server exited without reporting
 				//a game result.
 				available_ports_.push_back(itor->second.port);
+				remove_game_server(itor->second.port);
 				servers_.erase(pid);
 				++terminated_servers_;
 
@@ -268,89 +284,53 @@ public:
 		if(time_ms_ >= send_at_time_ms_ && send_at_time_ms_ != -1) {
 			send_at_time_ms_ += 1000;
 
+			update_status_doc();
+
 			const int nqueue_size = check_matchmaking_queue();
 
-			variant_builder heartbeat_message;
-			heartbeat_message.add("type", "heartbeat");
-			heartbeat_message.add("users", static_cast<int>(sessions_.size()));
-			heartbeat_message.add("users_queued", nqueue_size);
-			heartbeat_message.add("games", static_cast<int>(servers_.size()));
-
-			std::vector<variant> servers;
-			for(auto p : servers_) {
-				variant_builder server;
-				server.add("port", p.second.port);
-	
-				std::vector<variant> users;
-				for(int n = 0; n != p.second.users.num_elements(); ++n) {
-					std::map<variant,variant> m;
-					m[variant("user")] = p.second.users[n]["user"];
-					users.push_back(variant(&m));
-				}
-				server.add("users", variant(&users));
-
-				servers.push_back(server.build());
-			}
-
-			heartbeat_message.add("servers", variant(&servers));
-			std::vector<variant> user_list;
-			for(auto p : sessions_) {
-				variant_builder b;
-				b.add("id", p.second.user_id);
-
-				std::string status = p.second.status;
-				if(p.second.queued_for_game) {
-					status = "queued";
-				}
-
-				b.add("status", status);
-				user_list.push_back(b.build());
-			}
-			heartbeat_message.add("user_list", variant(&user_list));
-
-			variant heartbeat_message_value = heartbeat_message.build();
-			std::string heartbeat_msg = heartbeat_message_value.write_json();
+			variant heartbeat_message_value = status_doc_;
 
 			for(auto& p : sessions_) {
-				if(p.second.current_socket && (p.second.sent_heartbeat == false || time_ms_ - p.second.last_contact >= 3000 || p.second.chat_messages.empty() == false)) {
+				if(p.second.current_socket && (p.second.sent_heartbeat == false || time_ms_ - p.second.last_contact >= 3000 || p.second.have_state_id < status_doc_state_id_)) {
 
-					auto user_info_itor = user_info_.find(p.second.user_id);
-					static const variant GamePortVariant("game_port");
-					static const variant GameIdVariant("game_id");
-					static const variant GameSessionVariant("game_session");
-					bool added_game_details = false;
-					fprintf(stderr, "SEARCH FOR USER: %s -> %s\n", p.second.user_id.c_str(), user_info_itor != user_info_.end() ? "FOUND" : "UNFOUND");
-					if(user_info_itor != user_info_.end() && user_info_itor->second.game_pid != -1) {
-						auto game_itor = servers_.find(user_info_itor->second.game_pid);
-					fprintf(stderr, "SEARCH FOR GAME: %d -> %s\n", user_info_itor->second.game_pid, game_itor != servers_.end() ? "FOUND" : "UNFOUND");
+					variant_builder msg;
 
-						if(game_itor != servers_.end() && std::find(game_itor->second.users_list.begin(), game_itor->second.users_list.end(), p.second.user_id) != game_itor->second.users_list.end() && game_itor->second.game_id != -1) {
-							fprintf(stderr, "SEARCH FOUND SEND\n");
-							heartbeat_message_value.add_attr_mutation(GamePortVariant, variant(game_itor->second.port));
-							heartbeat_message_value.add_attr_mutation(GameIdVariant, variant(game_itor->second.game_id));
-							heartbeat_message_value.add_attr_mutation(GameSessionVariant, variant(user_info_itor->second.game_session));
-							added_game_details = true;
+					msg.add("type", "heartbeat");
+
+					if(p.second.request_server_info) {
+
+						if(p.second.have_state_id != status_doc_state_id_) {
+							variant delta = build_status_delta(p.second.have_state_id);
+							if(delta.is_null()) {
+								msg.add("server_info", status_doc_);
+							} else {
+								msg.add("server_info", delta);
+							}
+						}
+
+						auto user_info_itor = user_info_.find(p.second.user_id);
+						bool added_game_details = false;
+						fprintf(stderr, "SEARCH FOR USER: %s -> %s\n", p.second.user_id.c_str(), user_info_itor != user_info_.end() ? "FOUND" : "UNFOUND");
+						if(user_info_itor != user_info_.end() && user_info_itor->second.game_pid != -1) {
+							auto game_itor = servers_.find(user_info_itor->second.game_pid);
+						fprintf(stderr, "SEARCH FOR GAME: %d -> %s\n", user_info_itor->second.game_pid, game_itor != servers_.end() ? "FOUND" : "UNFOUND");
+
+							if(game_itor != servers_.end() && std::find(game_itor->second.users_list.begin(), game_itor->second.users_list.end(), p.second.user_id) != game_itor->second.users_list.end() && game_itor->second.game_id != -1) {
+								fprintf(stderr, "SEARCH FOUND SEND\n");
+								msg.add("game_port", game_itor->second.port);
+								msg.add("game_id", game_itor->second.game_id);
+								msg.add("game_session", user_info_itor->second.game_session);
+								added_game_details = true;
+							}
 						}
 					}
-	
-					if(p.second.chat_messages.empty() == false) {
-						heartbeat_message_value.add_attr_mutation(variant("chat_messages"), variant(&p.second.chat_messages));
-						send_msg(p.second.current_socket, "text/json", heartbeat_message_value.write_json(), "");
-						p.second.chat_messages.clear();
 
-					} else {
-						heartbeat_message_value.remove_attr_mutation(variant("chat_messages"));
-						send_msg(p.second.current_socket, "text/json", heartbeat_message_value.write_json(), "");
-					}
-
-					if(added_game_details) {
-						heartbeat_message_value.remove_attr_mutation(GamePortVariant);
-						heartbeat_message_value.remove_attr_mutation(GameIdVariant);
-					}
+					send_msg(p.second.current_socket, "text/json", msg.build().write_json(), "");
 
 					p.second.last_contact = time_ms_;
 					p.second.current_socket = socket_ptr();
 					p.second.sent_heartbeat = true;
+					p.second.have_state_id = status_doc_state_id_;
 				} else if(!p.second.current_socket && time_ms_ - p.second.last_contact >= 10000) {
 					p.second.session_id = 0;
 				}
@@ -358,6 +338,7 @@ public:
 
 			for(auto itor = sessions_.begin(); itor != sessions_.end(); ) {
 				if(itor->second.session_id == 0) {
+					remove_logged_in_user(itor->second.user_id);
 					sessions_.erase(itor++);
 				} else {
 					++itor;
@@ -509,6 +490,8 @@ public:
 					//to register the same name only one will succeed.
 					db_client_->put("user:" + user, new_user_info_variant,
 					[=]() {
+						add_logged_in_user(user);
+						
 						const int session_id = g_session_id_gen++;
 						SessionInfo& info = sessions_[session_id];
 						info.session_id = session_id;
@@ -580,6 +563,8 @@ public:
 
 					this->account_info_[user] = user_info;
 
+					add_logged_in_user(user);
+
 					const int session_id = g_session_id_gen++;
 					SessionInfo& info = sessions_[session_id];
 					info.session_id = session_id;
@@ -628,6 +613,8 @@ public:
 
 						repair_account(&user_info);
 						this->account_info_[username] = user_info;
+
+						add_logged_in_user(username);
 
 						const int session_id = g_session_id_gen++;
 						SessionInfo& info = sessions_[session_id];
@@ -758,8 +745,27 @@ public:
 				response.add("type", "account_deleted");
 				send_response(socket, response.build());
 
+				remove_logged_in_user(info.user_id);
 				sessions_.erase(session_id);
 
+			} else if(request_type == "quit_game") {
+				const int session_id = doc["session_id"].as_int(request_session_id);
+
+				if(sessions_.count(session_id) == 0) {
+					RESPOND_MESSAGE("Invalid session ID");
+					return;
+				}
+
+				SessionInfo& info = sessions_[session_id];
+
+				variant_builder response;
+				response.add("type", "quit_ack");
+				send_response(socket, response.build());
+
+				fprintf(stderr, "GOT QUIT: %s\n", info.user_id.c_str());
+				remove_logged_in_user(info.user_id);
+				sessions_.erase(session_id);
+				
 			} else if(request_type == "cancel_matchmake") {
 				const int session_id = doc["session_id"].as_int(request_session_id);
 
@@ -772,6 +778,8 @@ public:
 				info.session_id = session_id;
 				info.last_contact = time_ms_;
 				info.queued_for_game = false;
+
+				change_user_status(info.user_id, "idle");
 
 				std::map<variant,variant> response;
 				response[variant("type")] = variant("matchmaking_cancelled");
@@ -796,6 +804,8 @@ public:
 				info.last_contact = time_ms_;
 				info.queued_for_game = true;
 				info.game_type_info = doc["game_info"];
+
+				change_user_status(info.user_id, "queued");
 
 				check_matchmaking_queue();
 
@@ -826,13 +836,29 @@ public:
 
 					variant v = msg.build();
 
-					for(auto i = sessions_.begin(); i != sessions_.end(); ++i) {
-						i->second.chat_messages.push_back(v);
-					}
+					add_chat_message(v);
 
 					send_msg(socket, "text/json", "{ type: \"ack\" }", "");
 
 					schedule_send(200);
+				}
+
+			} else if(request_type == "status_change") {
+				int session_id = doc["session_id"].as_int(request_session_id);
+				auto itor = sessions_.find(session_id);
+				if(itor == sessions_.end()) {
+					fprintf(stderr, "Error: Unknown session: %d\n", session_id);
+					send_msg(socket, "text/json", "{ type: \"error\", message: \"unknown session\" }", "");
+				} else {
+					if(doc["status"].is_string()) {
+						std::string status = doc["status"].as_string();
+						if(status != itor->second.status) {
+							itor->second.status = doc["status"].as_string();
+							change_user_status(itor->second.user_id, status);
+							fprintf(stderr, "CHANGE USER STATUS: %s -> %s\n", itor->second.user_id.c_str(), status.c_str());
+						}
+					}
+					send_msg(socket, "text/json", "{ type: \"ack\" }", "");
 				}
 
 			} else if(request_type == "request_updates") {
@@ -844,8 +870,20 @@ public:
 					send_msg(socket, "text/json", "{ type: \"error\", message: \"unknown session\" }", "");
 				} else {
 					if(doc["status"].is_string()) {
-						itor->second.status = doc["status"].as_string();
+						std::string status = doc["status"].as_string();
+						if(status != itor->second.status) {
+							itor->second.status = doc["status"].as_string();
+							change_user_status(itor->second.user_id, status);
+							fprintf(stderr, "CHANGE USER STATUS: %s -> %s\n", itor->second.user_id.c_str(), status.c_str());
+						}
 					}
+
+					variant state_id_var = doc["state_id"];
+					if(state_id_var.is_int()) {
+						itor->second.have_state_id = state_id_var.as_int();
+					}
+
+					itor->second.request_server_info = doc["request_server_info"].as_bool(true);
 
 					itor->second.last_contact = time_ms_;
 
@@ -925,6 +963,7 @@ public:
 					}
 
 					available_ports_.push_back(itor->second.port);
+					remove_game_server(itor->second.port);
 					servers_.erase(itor);
 
 					++terminated_servers_;
@@ -1339,6 +1378,8 @@ private:
 				info.users = users_info;
 				info.users_list = users_list;
 
+				add_game_server(new_port, users_list);
+
 				for(const std::string& user : users_list) {
 					user_info_[user].game_pid = pid;
 				}
@@ -1408,7 +1449,7 @@ private:
 	DbClientPtr db_client_;
 
 	struct SessionInfo {
-		SessionInfo() : session_id(-1), last_contact(-1), game_pending(0), game_port(0), queued_for_game(false), sent_heartbeat(false), send_process_counter(60), messages_this_time_segment(0), time_segment(0), flood_mute_expires(0) {}
+		SessionInfo() : session_id(-1), status("idle"), last_contact(-1), game_pending(0), game_port(0), queued_for_game(false), sent_heartbeat(false), send_process_counter(60), messages_this_time_segment(0), time_segment(0), flood_mute_expires(0), have_state_id(-1), request_server_info(false) {}
 		int session_id;
 		std::string user_id;
 		std::string game_details;
@@ -1423,13 +1464,15 @@ private:
 
 		int send_process_counter;
 
-		std::vector<variant> chat_messages;
-
 		//record number of messages from this session so we can
 		//disconnect for flooding if necessary.
 		int messages_this_time_segment;
 		int time_segment;
 		int flood_mute_expires;
+
+		int have_state_id;
+
+		bool request_server_info;
 	};
 
 	std::map<int, SessionInfo> sessions_;
@@ -1491,6 +1534,252 @@ private:
 	variant handle_anon_request_fn_;
 
 	variant current_response_;
+
+	//the current list of players/servers/etc which is maintained.
+	variant status_doc_;
+	int status_doc_state_id_;
+
+	std::map<std::string, int> logged_in_user_set_;
+
+	std::deque<variant> status_doc_deltas_;
+
+	std::vector<std::string> status_doc_new_users_;
+	std::vector<std::string> status_doc_delete_users_;
+	std::map<std::string,std::string> status_doc_user_status_changes_;
+	std::vector<variant> status_doc_chat_messages_;
+
+	std::vector<variant> status_doc_new_servers_;
+	std::vector<int> status_doc_delete_servers_;
+
+	variant build_status_delta(int have_state_id)
+	{
+		const int ndeltas = status_doc_state_id_ - have_state_id;
+		if(ndeltas <= 0 || ndeltas > status_doc_deltas_.size()) {
+			return variant();
+		}
+
+		std::vector<variant> deltas(status_doc_deltas_.end() - ndeltas, status_doc_deltas_.end());
+		variant_builder v;
+		v.add("type", "delta");
+		v.add("deltas", variant(&deltas));
+		v.add("state_id", variant(status_doc_state_id_)),
+		v.add("users", status_doc_["users"]);
+		v.add("users_queued", status_doc_["users_queued"]);
+		v.add("games", status_doc_["games"]);
+		return v.build();
+	}
+
+	bool update_status_doc()
+	{
+		if(status_doc_new_users_.empty() && status_doc_delete_users_.empty() && status_doc_user_status_changes_.empty() && status_doc_chat_messages_.empty() && status_doc_new_servers_.empty() && status_doc_delete_servers_.empty()) {
+			return false;
+		}
+
+		int nusers_queued = 0;
+		for(auto itor = sessions_.begin(); itor != sessions_.end(); ++itor) {
+			if(itor->second.queued_for_game) {
+				++nusers_queued;
+			}
+		}
+
+		status_doc_.add_attr_mutation(variant("users_queued"), variant(nusers_queued));
+		
+		status_doc_.add_attr_mutation(variant("games"), variant(servers_.size()));
+
+		status_doc_state_id_++;
+		status_doc_.add_attr_mutation(variant("state_id"), variant(status_doc_state_id_));
+
+		if(status_doc_new_users_.empty() == false || status_doc_delete_users_.empty() == false) {
+			status_doc_.add_attr_mutation(variant("users"), variant(status_doc_["users"].as_int() + status_doc_new_users_.size() - status_doc_delete_users_.size()));
+
+			std::vector<variant> list = status_doc_["user_list"].as_list();
+			for(auto s : status_doc_delete_users_) {
+				for(auto i = list.begin(); i != list.end(); ++i) {
+					if((*i)["id"].as_string() == s) {
+						list.erase(i);
+						break;
+					}
+				}
+			}
+
+			for(auto u : status_doc_new_users_) {
+				variant_builder builder;
+				builder.add("id", u);
+				builder.add("status", "idle");
+				list.push_back(builder.build());
+			}
+
+			status_doc_.add_attr_mutation(variant("user_list"), variant(&list));
+		}
+
+		if(status_doc_user_status_changes_.empty() == false) {
+			variant users = status_doc_["user_list"];
+			for(int n = 0; n != users.num_elements(); ++n) {
+				const std::string& user_id = users[n]["id"].as_string();
+				auto itor = status_doc_user_status_changes_.find(user_id);
+				if(itor != status_doc_user_status_changes_.end()) {
+					variant v = users[n];
+					v.add_attr_mutation(variant("status"), variant(itor->second));
+				}
+			}
+		}
+
+		variant new_servers;
+
+		if(status_doc_new_servers_.empty() == false) {
+		 	new_servers = variant(&status_doc_new_servers_);
+			variant servers = status_doc_["servers"] + new_servers;
+			status_doc_.add_attr_mutation(variant("servers"), servers);
+		}
+
+		if(status_doc_delete_servers_.empty() == false) {
+			std::vector<variant> servers = status_doc_["servers"].as_list();
+
+			for(variant& v : servers) {
+				if(std::find(status_doc_delete_servers_.begin(), status_doc_delete_servers_.end(), v["port"].as_int()) != status_doc_delete_servers_.end()) {
+					v = variant();
+				}
+			}
+
+			servers.erase(std::remove(servers.begin(), servers.end(), variant()), servers.end());
+
+			status_doc_.add_attr_mutation(variant("servers"), variant(&servers));
+		}
+
+
+		variant chat;
+		if(status_doc_chat_messages_.empty() == false) {
+			chat = variant(&status_doc_chat_messages_);
+		}
+
+		if(chat.is_null() == false) {
+			variant new_chat = status_doc_["chat"] + chat;
+			if(new_chat.num_elements() > 24) {
+				std::vector<variant> v = new_chat.as_list();
+				v.erase(v.begin(), v.begin()+8);
+				new_chat = variant(&v);
+			}
+
+			status_doc_.add_attr_mutation(variant("chat"), new_chat);
+		}
+
+		variant_builder delta;
+		delta.add("state_id_basis", status_doc_state_id_-1);
+		delta.add("state_id", status_doc_state_id_);
+
+		if(status_doc_new_users_.empty() == false) {
+			std::vector<variant> v;
+			for(auto s : status_doc_new_users_) {
+				v.push_back(variant(s));
+			}
+
+			delta.add("new_users", variant(&v));
+		}
+
+		if(status_doc_delete_users_.empty() == false) {
+			std::vector<variant> v;
+			for(auto s : status_doc_delete_users_) {
+				v.push_back(variant(s));
+			}
+
+			delta.add("delete_users", variant(&v));
+		}
+
+		if(status_doc_user_status_changes_.empty() == false) {
+			std::map<variant,variant> m;
+			for(auto p : status_doc_user_status_changes_) {
+				variant key(p.first);
+				m[key] = variant(p.second);
+			}
+
+			delta.add("status_changes", variant(&m));
+		}
+
+		if(new_servers.is_null() == false) {
+			delta.add("new_servers", new_servers);
+		}
+
+		if(status_doc_delete_servers_.empty() == false) {
+			std::vector<variant> v;
+			v.reserve(status_doc_delete_servers_.size());
+			for(auto value : status_doc_delete_servers_) {
+				v.push_back(variant(value));
+			}
+
+			delta.add("delete_servers", variant(&v));
+		}
+
+		if(chat.is_null() == false) {
+			delta.add("chat", chat);
+		}
+
+		status_doc_deltas_.push_back(delta.build());
+		while(status_doc_deltas_.size() > 8) {
+			status_doc_deltas_.pop_front();
+		}
+
+		status_doc_new_users_.clear();
+		status_doc_delete_users_.clear();
+		status_doc_delete_servers_.clear();
+		status_doc_user_status_changes_.clear();
+
+		status_doc_.add_attr_mutation(variant("users_queued"), variant(nusers_queued));
+
+		return true;
+	}
+
+	void add_logged_in_user(const std::string& user_id)
+	{
+		if(logged_in_user_set_[user_id]++ == 0) {
+			schedule_send(500);
+			auto itor = std::find(status_doc_delete_users_.begin(), status_doc_delete_users_.end(), user_id);
+			if(itor != status_doc_delete_users_.end()) {
+				status_doc_delete_users_.erase(itor);
+			}
+			status_doc_new_users_.push_back(user_id);
+		}
+	}
+
+	void remove_logged_in_user(const std::string& user_id)
+	{
+		auto itor = logged_in_user_set_.find(user_id);
+		if(itor != logged_in_user_set_.end()) {
+			--itor->second;
+			if(itor->second <= 0) {
+				schedule_send(500);
+				logged_in_user_set_.erase(itor);
+				auto itor = std::find(status_doc_new_users_.begin(), status_doc_new_users_.end(), user_id);
+				if(itor != status_doc_new_users_.end()) {
+					status_doc_new_users_.erase(itor);
+				}
+				status_doc_delete_users_.push_back(user_id);
+			}
+		}
+	}
+
+	void add_game_server(int port, const std::vector<std::string>& users)
+	{
+		variant_builder b;
+		b.add("port", port);
+		b.add("users", vector_to_variant(users));
+		status_doc_new_servers_.push_back(b.build());
+	}
+
+	void remove_game_server(int port)
+	{
+		status_doc_delete_servers_.push_back(port);
+	}
+
+	void change_user_status(const std::string& user_id, const std::string& status)
+	{
+		status_doc_user_status_changes_[user_id] = status;
+	}
+
+	void add_chat_message(variant v)
+	{
+		status_doc_chat_messages_.push_back(v);
+	}
+
 
 	int child_admin_process_;
 
