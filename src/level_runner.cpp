@@ -742,6 +742,7 @@ void LevelRunner::start_editor()
 		editor_->setup_for_editing();
 		lvl_->set_editor();
 		lvl_->setAsCurrentLevel();
+		lvl_->player()->getEntity().handleEvent("editor_opened");
 		initHistorySlider();
 	} else {
 		//Pause the game and set the level to its original
@@ -772,6 +773,7 @@ void LevelRunner::close_editor()
 	history_trails_.clear();
 	lvl_->mutateValue("zoom", variant(1));
 	lvl_->set_editor(false);
+	lvl_->player()->getEntity().handleEvent("editor_closed");
 	paused = false;
 	show_pause_title();
 	controls::read_until(lvl_->cycle());
