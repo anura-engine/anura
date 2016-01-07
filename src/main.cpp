@@ -397,10 +397,10 @@ int main(int argcount, char* argvec[])
 	std::freopen("CON", "w", stderr);
 	std::freopen("CON", "w", stdout);
 #else
-	std::freopen("CON", "w", stderr);
-	std::freopen("CON", "w", stdout);
-//	std::freopen("stdout.txt","w",stdout);
-//	std::freopen("stderr.txt","w",stderr);
+//	std::freopen("CON", "w", stderr);
+//	std::freopen("CON", "w", stdout);
+	std::freopen("stdout.txt","w",stdout);
+	std::freopen("stderr.txt","w",stderr);
 #endif
 #endif
 #if defined(__ANDROID__)
