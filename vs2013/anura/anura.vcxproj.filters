@@ -1143,6 +1143,9 @@
     <ClInclude Include="..\..\src\kre\SurfaceBlur.hpp">
       <Filter>Header Files\kre</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\hex\hex_mask.hpp">
+      <Filter>Header Files\hex</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\src\kre\geometry.inl">
@@ -2121,6 +2124,9 @@
     </ClCompile>
     <ClCompile Include="..\..\src\ffl_lib.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\hex\hex_mask.cpp">
+      <Filter>Source Files\hex</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

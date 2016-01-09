@@ -119,6 +119,7 @@
     <ClInclude Include="..\..\src\hex\hex_logical_fwd.hpp" />
     <ClInclude Include="..\..\src\hex\hex_logical_tiles.hpp" />
     <ClInclude Include="..\..\src\hex\hex_map.hpp" />
+    <ClInclude Include="..\..\src\hex\hex_mask.hpp" />
     <ClInclude Include="..\..\src\hex\hex_object.hpp" />
     <ClInclude Include="..\..\src\hex\hex_pathfinding.hpp" />
     <ClInclude Include="..\..\src\hex\hex_renderable.hpp" />
@@ -480,6 +481,7 @@
     <ClCompile Include="..\..\src\gui_section.cpp" />
     <ClCompile Include="..\..\src\hex\hex_logical_tiles.cpp" />
     <ClCompile Include="..\..\src\hex\hex_map.cpp" />
+    <ClCompile Include="..\..\src\hex\hex_mask.cpp" />
     <ClCompile Include="..\..\src\hex\hex_object.cpp" />
     <ClCompile Include="..\..\src\hex\hex_pathfinding.cpp" />
     <ClCompile Include="..\..\src\hex\hex_renderable.cpp" />
