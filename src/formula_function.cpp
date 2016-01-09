@@ -55,6 +55,7 @@
 #include "formula_function.hpp"
 #include "formula_function_registry.hpp"
 #include "formula_object.hpp"
+#include "hex_logical_tiles.hpp"
 #include "lua_iface.hpp"
 #include "md5.hpp"
 #include "module.hpp"
@@ -479,6 +480,18 @@ namespace game_logic
 			ARG_TYPE("object|null");
 			RETURN_TYPE("string");
 		END_FUNCTION_DEF(addr)
+
+		FUNCTION_DEF(get_call_stack, 0, 0, "get_call_stack()")
+			return variant(get_call_stack());
+		FUNCTION_ARGS_DEF
+			RETURN_TYPE("string");
+		END_FUNCTION_DEF(get_call_stack)
+
+		FUNCTION_DEF(get_full_call_stack, 0, 0, "get_full_call_stack()")
+			return variant(get_full_call_stack());
+		FUNCTION_ARGS_DEF
+			RETURN_TYPE("string");
+		END_FUNCTION_DEF(get_full_call_stack)
 
 		FUNCTION_DEF(create_cache, 0, 1, "create_cache(max_entries=4096): makes an FFL cache object")
 			Formula::failIfStaticContext();
@@ -1893,6 +1906,17 @@ FUNCTION_DEF_IMPL
 			}
 			return variant();
 		END_FUNCTION_DEF(map_controls)*/
+
+		FUNCTION_DEF(hex_logical_map, 1, 1, "hex_logical_map(map) ->builtin logical_map")
+			const variant m = args()[0]->evaluate(variables);
+
+			return variant(new hex::logical::LogicalMap(m));
+			
+		FUNCTION_ARGS_DEF
+			ARG_TYPE("map")
+			RETURN_TYPE("builtin logical_map")
+		END_FUNCTION_DEF(hex_logical_map)
+	
 
 		FUNCTION_DEF(directed_graph, 2, 2, "directed_graph(list_of_vertexes, adjacent_expression) -> a directed graph")
 			variant vertices = args()[0]->evaluate(variables);

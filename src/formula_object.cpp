@@ -1782,7 +1782,13 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 			for(auto p : class_path_map()) {
 				const std::string& class_name = p.first;
 				if(std::count(classes.begin(), classes.end(), class_name) == 0) {
-					variant node = json::parse_from_file(p.second);
+					variant node;
+					try {
+						node = json::parse_from_file(p.second);
+					} catch(json::ParseError& e) {
+						ASSERT_LOG(false, "Error parsing " << p.second << ": " << e.errorMessage());
+					}
+
 					if(node["server_only"].as_bool(false) == false) {
 						classes.push_back(class_name);
 					}

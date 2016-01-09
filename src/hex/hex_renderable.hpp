@@ -39,7 +39,7 @@ namespace hex
 		void update(int width, int height, const std::vector<HexObject>& tiles);
 		static MapNodePtr create(std::weak_ptr<KRE::SceneGraph> sg, const variant& node);
 	private:
-		void notifyNodeAttached(std::weak_ptr<SceneNode> parent);
+		void notifyNodeAttached(std::weak_ptr<SceneNode> parent) override;
 
 		std::vector<MapLayerPtr> layers_;
 		bool changed_;

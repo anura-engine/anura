@@ -86,6 +86,8 @@ namespace hex
 			// Get the positions of the valid tiles surrounding the tile at (x,y)
 			std::vector<point> getSurroundingPositions(int x, int y) const;
 			std::vector<point> getSurroundingPositions(const point& p) const;
+			void getTileRing(int x, int y, int radius, std::vector<point>* res) const;
+			void getTilesInRadius(int x, int y, int radius, std::vector<point>* res) const;
 			ConstTilePtr getTileAt(int xx, int yy) const;
 			ConstTilePtr getTileAt(const point& p) const;
 			point getCoordinatesInDir(direction d, int x, int y) const;
@@ -94,7 +96,7 @@ namespace hex
 
 			static LogicalMapPtr factory(const variant& v);
 		private:
-			DECLARE_CALLABLE(Map);
+			DECLARE_CALLABLE(LogicalMap);
 
 			int x_;
 			int y_;

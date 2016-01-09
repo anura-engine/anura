@@ -23,23 +23,44 @@
 
 #pragma once
 
-#include <memory>
-#include <vector>
+#include "AttributeSet.hpp"
+#include "SceneNode.hpp"
+#include "SceneObject.hpp"
+#include "SceneObjectCallable.hpp"
 
-#include "geometry.hpp"
-#include "hex_logical_fwd.hpp"
+#include "hex_fwd.hpp"
+#include "hex_renderable_fwd.hpp"
 
-namespace hex 
+namespace hex
 {
-	class HexMap;
-	class MaskNode;
-	class HexObject;
-	class TileSheet;
-	class TileType;
+	class MaskNode : public graphics::SceneObjectCallable
+	{
+	public:
+		explicit MaskNode(const variant& node);
+		void setLocs(const std::vector<int>& locs);
 
-	typedef boost::intrusive_ptr<HexMap> HexMapPtr;
-	typedef boost::intrusive_ptr<MaskNode> MaskNodePtr;
-	typedef std::shared_ptr<HexObject> HexObjectPtr;
-	typedef std::shared_ptr<const TileSheet> TileSheetPtr;
-	typedef std::shared_ptr<TileType> TileTypePtr;
+		static MaskNodePtr create(const variant& node);
+
+		void process();
+
+		void setRenderTarget(KRE::RenderTargetPtr rt) { rt_ = rt; }
+		KRE::RenderTargetPtr getRenderTarget() const { return rt_; }
+
+	private:
+		void update();
+
+		std::string id_;
+		std::shared_ptr<KRE::Attribute<KRE::vertex_texcoord>> attr_;
+
+		std::vector<int> locs_;
+		bool changed_;
+
+		KRE::RenderTargetPtr rt_;
+
+		DECLARE_CALLABLE(MaskNode);
+
+		MaskNode() = delete;
+		MaskNode(const MaskNode&) = delete;
+		void operator=(const MaskNode&) = delete;
+	};
 }

@@ -48,6 +48,7 @@
 #include "formula_profiler.hpp"
 #include "json_parser.hpp"
 #include "hex_map.hpp"
+#include "hex_mask.hpp"
 #include "hex_renderable.hpp"
 #include "level.hpp"
 #include "level_object.hpp"
@@ -1913,6 +1914,23 @@ void Level::draw(int x, int y, int w, int h) const
 			water_zorder = water_->zorder();
 		}
 
+		for(auto mask : hex_masks_) {
+			KRE::RenderTargetPtr rt = mask->getRenderTarget();
+			if(rt.get() == nullptr) {
+				rt = KRE::RenderTarget::create(wnd->width(), wnd->height());
+				mask->setRenderTarget(rt);
+			}
+
+			{
+				KRE::RenderTarget::RenderScope scope(rt, rect(0, 0, wnd->width(), wnd->height()));
+				rt->setClearColor(KRE::Color(0,0,0,0));
+				rt->clear();
+
+				mask->preRender(wnd);
+				wnd->render(mask.get());
+			}
+		}
+
 		auto stencil = KRE::StencilScope::create(KRE::StencilSettings(true, 
 			KRE::StencilFace::FRONT_AND_BACK,
 			KRE::StencilFunc::ALWAYS,
@@ -2300,6 +2318,11 @@ void Level::process()
 	if(hex_map_) {
 		hex_map_->process();
 	}
+
+	for(auto m : hex_masks_) {
+		m->process();
+	}
+
 	if(scene_graph_ != nullptr) {
 		auto current_time = profile::get_tick_time();
 		const float delta_time = (current_time - last_process_time_) / 1000.0f;
@@ -3709,8 +3732,40 @@ DEFINE_SET_FIELD
 
 DEFINE_FIELD(hex_map, "null|builtin hex_map") // builtin hex_map
 	return variant(obj.hex_map_.get());
-//DEFINE_SET_FIELD_TYPE("null|builtin logical_map|hex_map|map")
+DEFINE_SET_FIELD_TYPE("null|map")
+	if(obj.hex_renderable_) {
+		obj.scene_graph_->getRootNode()->removeNode(obj.hex_renderable_);
+	}
 
+	if(value.is_map()) {
+		obj.hex_map_ = hex::HexMap::factory(value);
+		obj.hex_renderable_ = std::dynamic_pointer_cast<hex::MapNode>(obj.scene_graph_->createNode("hex_map"));
+		obj.hex_map_->setRenderable(obj.hex_renderable_);
+		obj.scene_graph_->getRootNode()->attachNode(obj.hex_renderable_);
+	} else {
+		obj.hex_map_.reset();
+		obj.hex_renderable_.reset();
+	}
+
+DEFINE_FIELD(hex_masks, "[builtin mask_node]")
+	std::vector<variant> result;
+	for(auto mask : obj.hex_masks_) {
+		result.push_back(variant(mask.get()));
+	}
+
+	return variant(&result);
+DEFINE_SET_FIELD_TYPE("[map|builtin mask_node]")
+	std::vector<variant> items = value.as_list();
+	obj.hex_masks_.clear();
+	for(auto v : items) {
+		if(v.is_map()) {
+			obj.hex_masks_.push_back(hex::MaskNodePtr(new hex::MaskNode(v)));
+		} else {
+			obj.hex_masks_.push_back(hex::MaskNodePtr(v.convert_to<hex::MaskNode>()));
+		}
+
+		ASSERT_LOG(obj.hex_masks_.back().get() != nullptr, "null hex mask");
+	}
 END_DEFINE_CALLABLE(Level)
 
 int Level::camera_rotation() const

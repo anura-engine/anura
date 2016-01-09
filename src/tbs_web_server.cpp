@@ -30,6 +30,7 @@
 #include "filesystem.hpp"
 #include "formatter.hpp"
 #include "formula_object.hpp"
+#include "hex/hex_logical_tiles.hpp"
 #include "json_parser.hpp"
 #include "module.hpp"
 #include "preferences.hpp"
@@ -44,6 +45,7 @@
 
 namespace {
 	PREF_STRING(tbs_server_semaphore, "", "");
+	PREF_BOOL(tbs_server_hexes, false, "Whether the tbs server should load hexes");
 	boost::interprocess::named_semaphore* g_termination_semaphore;
 
 #if defined(_MSC_VER)
@@ -223,6 +225,10 @@ namespace
 
 
 COMMAND_LINE_UTILITY(tbs_server) {
+	if(g_tbs_server_hexes) {
+		hex::logical::loader(json::parse_from_file("data/hex_tiles.cfg"));
+	}
+
 	int port = 23456;
 	std::vector<std::string> bot_id;
 	variant config;

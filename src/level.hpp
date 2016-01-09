@@ -649,6 +649,7 @@ private:
 
 	hex::HexMapPtr hex_map_;
 	hex::MapNodePtr hex_renderable_;
+	std::vector<hex::MaskNodePtr> hex_masks_;
 };
 
 bool entity_in_current_level(const Entity* e);

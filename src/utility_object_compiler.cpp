@@ -26,6 +26,10 @@
 #include <vector>
 #include <sstream>
 
+#include "kre/SurfaceSDL.hpp"
+
+#include "SDL_image.h"
+
 #include "Surface.hpp"
 
 #include "asserts.hpp"
@@ -1221,6 +1225,288 @@ COMMAND_LINE_UTILITY(build_spritesheet_from_images)
 	sheet->savePng("sheet.png");
 }
 
+COMMAND_LINE_UTILITY(make_image_wrap)
+{
+	using namespace graphics;
+	for(auto img : args) {
+		auto s = SurfaceCache::get(img);
+		{
+			// It's good practice to lock the surface before modifying pixels.
+			// Plus we assert if the surface requires locking and we don't do it.
+			KRE::SurfaceLock lck(s);
+			uint8_t* p = reinterpret_cast<uint8_t*>(s->pixelsWriteable());
+			if(s->getPixelFormat()->bytesPerPixel() != 4) {
+				LOG_INFO("File '" << img << "' is not in a 32-bit format");
+				continue;
+			}
+			if(s->width() * s->getPixelFormat()->bytesPerPixel() != s->rowPitch()) {
+				LOG_INFO("File '" << img << "' row pitch won't work with a simple loop, skipping.");
+				continue;
+			}
+
+			const int BorderWidth = 128;
+
+			for(int y = 0; y != s->height(); ++y) {
+				uint8_t* begin_line = p + y*s->rowPitch();
+				uint8_t* end_line = begin_line + s->rowPitch()-4;
+
+				int target[4];
+				for(int i = 0; i != 4; ++i) {
+					target[i] = (int(begin_line[i]) + int(end_line[i]))/2;
+				}
+
+				fprintf(stderr, "ZZZ: LINE: %d -> %d,%d,%d,%d\n", y, (int)begin_line[0], (int)begin_line[1],  (int)begin_line[2], (int)begin_line[3]);
+
+				for(int x = 0; x < BorderWidth; ++x) {
+
+					const double mix_ratio = double(x)/double(BorderWidth);
+
+					for(int i = 0; i != 3; ++i) {
+						begin_line[i] = 240;
+						end_line[i] = 240;
+					}
+
+					for(int i = 3; i != 4; ++i) {
+						begin_line[i] = int(target[i]*(1.0 - mix_ratio) + begin_line[i]*mix_ratio);
+						end_line[i] = int(target[i]*(1.0 - mix_ratio) + end_line[i]*mix_ratio);
+					}
+					
+					begin_line += 4;
+					end_line -= 4;
+				}
+			}
+		}
+		s->savePng(module::get_module_path() + "/" + img);
+	}
+}
+
+namespace {
+	struct WesnothAnim {
+		WesnothAnim() : width(0), height(0) {}
+		std::vector<std::string> images;
+		int width, height;
+		std::vector<SDL_Surface*> surfaces;
+	};
+}
+
+COMMAND_LINE_UTILITY(generate_wesnoth_spritesheet)
+{
+	using namespace graphics;
+
+	std::deque<std::string> argv(args.begin(), args.end());
+
+	std::string output;
+
+	auto itor = argv.begin();
+	while(itor != argv.end()) {
+		if(*itor == "--output") {
+			++itor;
+			output = *itor;
+			++itor;
+		} else {
+			ASSERT_LOG(itor->empty() == false && *itor->begin() != '-', "Illegal argument: " << *itor);
+			++itor;
+		}
+	}
+
+	std::string prefix = argv.front();
+	if(prefix.size() <= 4) {
+		fprintf(stderr, "Error: image too short\n");
+		return;
+	}
+
+	prefix.resize(prefix.size()-4);
+
+	for(auto img : argv) {
+		if(img.size() > prefix.size()) {
+			prefix.resize(img.size());
+		}
+
+		while(!std::equal(prefix.begin(), prefix.end(), img.begin())) {
+			prefix.resize(prefix.size()-1);
+		}
+	}
+
+	fprintf(stderr, "Using prefix: %s\n", prefix.c_str());
+
+	if(output.empty()) {
+		output = prefix;
+		while(std::find(output.begin(), output.end(), '/') != output.end()) {
+			output.erase(output.begin(), std::find(output.begin(), output.end(), '/')+1);
+		}
+	}
+
+	std::map<std::string, WesnothAnim > anims;
+
+	for(auto img : argv) {
+		std::string anim = img;
+
+		anim.resize(anim.size()-4);
+		anim.erase(anim.begin(), anim.begin() + prefix.size());
+
+		while(!anim.empty() && anim[0] == '-') {
+			anim.erase(anim.begin(), anim.begin()+1);
+		}
+
+		while(!anim.empty() && (isdigit(anim[anim.size()-1]) || anim[anim.size()-1] == '-')) {
+			anim.resize(anim.size()-1);
+		}
+
+		anims[anim].images.push_back(img);
+	}
+
+	for(auto& p : anims) {
+		std::sort(p.second.images.begin(), p.second.images.end(), [](std::string a, std::string b) {
+			a.resize(a.size()-4);
+			b.resize(b.size()-4);
+
+			const char* ap = a.c_str()+a.size() - 1;
+			const char* bp = b.c_str()+b.size() - 1;
+			while(ap != a.c_str() && isdigit(*ap)) {
+				--ap;
+			}
+
+			++ap;
+
+			while(bp != a.c_str() && isdigit(*bp)) {
+				--bp;
+			}
+
+			++bp;
+
+			const int anum = atoi(ap);
+			const int bnum = atoi(bp);
+
+			return anum < bnum;
+		});
+	}
+
+	for(auto& p : anims) {
+		fprintf(stderr, "ANIM: %s\n", p.first.c_str());
+		for(auto& s : p.second.images) {
+			SDL_Surface* surf = IMG_Load(s.c_str());
+			fprintf(stderr, "  %s -> %p\n", s.c_str(), surf);
+			ASSERT_LOG(surf, "Could not load image: " << s);
+
+			p.second.surfaces.push_back(surf);
+			if(surf->w > p.second.width) {
+				p.second.width = surf->w;
+			}
+
+			if(surf->h > p.second.height) {
+				p.second.height = surf->h;
+			}
+		}
+	}
+
+	int sheet_width = 3, sheet_height = 3;
+
+	for(auto& p : anims) {
+		sheet_height += 3 + p.second.height;
+		int new_width = 3 + (p.second.width+3)*p.second.surfaces.size();
+		if(new_width > sheet_width) {
+			sheet_width = new_width;
+		}
+	}
+
+	fprintf(stderr, "Creating sheet: %dx%d\n", sheet_width, sheet_height);
+	
+	using namespace KRE;
+	SurfacePtr sheet_surf = Surface::create(sheet_width, sheet_height, PixelFormat::PF::PIXELFORMAT_ARGB8888);
+	SDL_Surface* sheet = dynamic_cast<KRE::SurfaceSDL*>(sheet_surf.get())->get();
+
+	variant_builder node;
+	node.add("id", "unit_avatar_" + output);
+	std::vector<variant> proto;
+	proto.push_back(variant("unit_avatar"));
+	node.add("prototype", variant(&proto));
+
+	std::vector<variant> animation_nodes;
+
+	int ypos = 3;
+	for(auto& p : anims) {
+		int xpos = 3;
+
+		variant_builder anim_node;
+		std::string name = p.first;
+		if(name.empty()) {
+			name = "stand";
+		}
+
+		anim_node.add("id", name);
+		anim_node.add("scale", 1);
+		anim_node.add("image", "units/" + output + ".png");
+		anim_node.add("frames", p.second.surfaces.size());
+		std::vector<variant> sprite_rect;
+		sprite_rect.push_back(variant(xpos));
+		sprite_rect.push_back(variant(ypos));
+		sprite_rect.push_back(variant(xpos+p.second.width-1));
+		sprite_rect.push_back(variant(ypos+p.second.height-1));
+		anim_node.add("rect", variant(&sprite_rect));
+		anim_node.add("duration", 4);
+
+		for(auto s : p.second.surfaces) {
+			Uint32 alpha_rgb = SDL_MapRGB(s->format, 0x3D, 0x30, 0xF9);
+			SDL_Rect top = {xpos-1, ypos-1, p.second.width+2, 1};
+			SDL_FillRect(sheet, &top, alpha_rgb);
+
+			SDL_Rect bot = {xpos-1, ypos+p.second.height, p.second.width+2, 1};
+			SDL_FillRect(sheet, &bot, alpha_rgb);
+
+			SDL_Rect left = {xpos-1, ypos-1, 1, p.second.height+1};
+			SDL_FillRect(sheet, &left, alpha_rgb);
+			SDL_Rect right = {xpos+p.second.width, ypos-1, 1, p.second.height+1};
+			SDL_FillRect(sheet, &right, alpha_rgb);
+
+			int xadj = 0, yadj = 0;
+			if(p.second.width > s->w) {
+				xadj = (p.second.width - s->w)/2;
+			}
+
+			if(p.second.height > s->h) {
+				yadj = (p.second.height - s->h)/2;
+			}
+
+			SDL_Rect dst = {xpos+xadj, ypos+yadj, p.second.width, p.second.height};
+			SDL_BlitSurface(s, nullptr, sheet, &dst);
+			xpos += p.second.width + 3;
+		}
+
+		animation_nodes.push_back(anim_node.build());
+
+		ypos += p.second.height + 3;
+	}
+
+	node.add("animation", variant(&animation_nodes));
+
+	IMG_SavePNG(sheet, (std::string("modules/wesnoth2/images/units/") + output + ".png").c_str());
+
+	std::string data = node.build().write_json();
+	sys::write_file("modules/wesnoth2/data/objects/units/unit_avatar_" + output + ".cfg", data);
+
+/*
+	for(auto img : args) {
+
+		auto s = SurfaceCache::get(img);
+		{
+			// It's good practice to lock the surface before modifying pixels.
+			// Plus we assert if the surface requires locking and we don't do it.
+			KRE::SurfaceLock lck(s);
+			uint8_t* p = reinterpret_cast<uint8_t*>(s->pixelsWriteable());
+			if(s->getPixelFormat()->bytesPerPixel() != 4) {
+				LOG_INFO("File '" << img << "' is not in a 32-bit format");
+				continue;
+			}
+			if(s->width() * s->getPixelFormat()->bytesPerPixel() != s->rowPitch()) {
+				LOG_INFO("File '" << img << "' row pitch won't work with a simple loop, skipping.");
+				continue;
+			}
+
+		}
+		s->savePng(module::get_module_path() + "/" + img);
+	}*/
+}
+
 //this is a template utility that can be modified to provide a nice utility
 //for manipulating images.
 COMMAND_LINE_UTILITY(manipulate_image_template)
@@ -1247,7 +1533,8 @@ COMMAND_LINE_UTILITY(manipulate_image_template)
 				p += 4;
 			}
 		}
-		s->savePng(module::get_module_path() + "/images/" + img);
+		s->savePng(module::get_module_path() + "/" + img);
 	}
 }
+
 

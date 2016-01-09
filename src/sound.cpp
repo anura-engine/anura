@@ -329,6 +329,10 @@ namespace sound
 #else
 			Mix_Chunk* chunk = Mix_LoadWAV(module::map_file("sounds/" + file).c_str());
 #endif
+			if(chunk == nullptr) {
+				LOG_ERROR("Error loading sound file " << file << ": " << SDL_GetError());
+			}
+
 			{
 				threading::lock l(cache_mutex);
 				threaded_cache[file] = chunk;

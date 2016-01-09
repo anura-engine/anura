@@ -228,6 +228,10 @@ Frame::Frame(variant node)
 		} else {
 			blit_target_.setBlendMode(KRE::BlendModeConstants::BM_SRC_ALPHA, KRE::BlendModeConstants::BM_ONE_MINUS_SRC_ALPHA);
 		}
+
+		if(node.has_key("blend_equation")) {
+			blit_target_.setBlendEquation(KRE::BlendEquation(node));
+		}
 	} else if(node.has_key("image")) {
 		blit_target_.setTexture(graphics::get_palette_texture(image_, node["image"], palettes_recognized_));
 	}

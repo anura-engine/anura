@@ -210,6 +210,32 @@ namespace hex
 			return getSurroundingPositions(p.x, p.y);
 		}
 
+		void LogicalMap::getTileRing(int x, int y, int radius, std::vector<point>* res) const
+		{
+			if(radius <= 0) {
+				res->push_back(point(x, y));
+				return;
+			}
+
+			y -= radius;
+			point p = point(x,y);
+			for(auto dir : { SOUTH_EAST, SOUTH, SOUTH_WEST, NORTH_WEST, NORTH, NORTH_EAST }) {
+				for(int i = 0; i != radius; ++i) {
+					if(getTileAt(p.x,p.y).get() != nullptr) {
+						res->push_back(p);
+					}
+					p = getCoordinatesInDir(dir, p.x, p.y);
+				}
+			}
+		}
+
+		void LogicalMap::getTilesInRadius(int x, int y, int radius, std::vector<point>* res) const
+		{
+			for(int i = 0; i <= radius; ++i) {
+				getTileRing(x, y, i, res);
+			}
+		}
+
 		ConstTilePtr LogicalMap::getTileAt(int xx, int yy) const
 		{
 			xx -= x();
@@ -327,6 +353,59 @@ namespace hex
 				return variant(obj.width());
 			DEFINE_FIELD(height, "int")
 				return variant(obj.height());
+			BEGIN_DEFINE_FN(tile_at, "([int,int]) ->string")
+				variant v = FN_ARG(0);
+				int x = v[0].as_int();
+				int y = v[1].as_int();
+
+				ConstTilePtr tile = obj.getTileAt(x, y);
+				ASSERT_LOG(tile, "Illegal tile at " << x << ", " << y);
+
+				return variant(tile->id());
+				
+			END_DEFINE_FN
+			BEGIN_DEFINE_FN(adjacent_tiles, "([int,int]) ->[[int,int]]")
+				variant v = FN_ARG(0);
+				int x = v[0].as_int();
+				int y = v[1].as_int();
+
+				std::vector<point> res;
+				obj.getTileRing(x, y, 1, &res);
+
+				std::vector<variant> points;
+				points.reserve(res.size());
+				for(const point& p : res) {
+					std::vector<variant> v;
+					v.reserve(2);
+					v.push_back(variant(p.x));
+					v.push_back(variant(p.y));
+					points.push_back(variant(&v));
+				}
+
+				return variant(&points);
+			END_DEFINE_FN
+			BEGIN_DEFINE_FN(tiles_in_radius, "([int,int], int) ->[[int,int]]")
+				variant v = FN_ARG(0);
+				int x = v[0].as_int();
+				int y = v[1].as_int();
+				int radius = FN_ARG(1).as_int();
+
+				std::vector<point> res;
+				obj.getTilesInRadius(x, y, radius, &res);
+
+				std::vector<variant> points;
+				points.reserve(res.size());
+				for(const point& p : res) {
+					std::vector<variant> v;
+					v.reserve(2);
+					v.push_back(variant(p.x));
+					v.push_back(variant(p.y));
+					points.push_back(variant(&v));
+				}
+
+				return variant(&points);
+
+			END_DEFINE_FN
 		END_DEFINE_CALLABLE(LogicalMap)
 	}
 }

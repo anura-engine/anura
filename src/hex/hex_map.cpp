@@ -285,5 +285,30 @@ namespace hex
 			return variant(obj.zorder_);
 		DEFINE_FIELD(logical, "builtin logical_map")
 			return variant(obj.map_.get());
+		DEFINE_FIELD(tile_height, "int")
+			return variant(HexTileSize);
+		BEGIN_DEFINE_FN(tile_loc_from_pixel_pos, "([int,int]) ->[int,int]")
+			variant v = FN_ARG(0);
+			int x = v[0].as_int();
+			int y = v[1].as_int();
+
+			point p = HexMap::getTilePosFromPixelPos(x, y);
+			std::vector<variant> res;
+			res.push_back(variant(p.x));
+			res.push_back(variant(p.y));
+			return variant(&res);
+		END_DEFINE_FN
+		BEGIN_DEFINE_FN(tile_pixel_pos_from_loc, "([int,int]) ->[int,int]")
+			variant v = FN_ARG(0);
+			int x = v[0].as_int();
+			int y = v[1].as_int();
+
+			point p = HexMap::getPixelPosFromTilePos(x, y);
+			std::vector<variant> res;
+			res.push_back(variant(p.x));
+			res.push_back(variant(p.y));
+			return variant(&res);
+
+		END_DEFINE_FN
 	END_DEFINE_CALLABLE(HexMap)
 }
