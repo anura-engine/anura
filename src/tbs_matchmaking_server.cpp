@@ -1402,6 +1402,14 @@ private:
 		doc.add("uptime", time_ms_/1000);
 		doc.add("port", port_);
 		doc.add("terminated_servers", terminated_servers_);
+		doc.add("status_doc", status_doc_);
+
+		std::map<variant,variant> logged_in_user_set;
+		for(auto p : logged_in_user_set_) {
+			logged_in_user_set.insert(std::pair<variant,variant>(variant(p.first), variant(p.second)));
+		}
+
+		doc.add("logged_in_user_set", variant(&logged_in_user_set));
 
 		std::vector<variant> servers;
 		for(auto p : servers_) {

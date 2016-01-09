@@ -213,6 +213,7 @@
 		63D6F4DB1AC68F38002250CC /* libboost_date_time.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 63D6F4D71AC68F38002250CC /* libboost_date_time.dylib */; };
 		63D6F4DD1AC68F38002250CC /* libboost_iostreams.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 63D6F4D91AC68F38002250CC /* libboost_iostreams.dylib */; };
 		63D6F4DE1AC68F38002250CC /* libboost_system.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 63D6F4DA1AC68F38002250CC /* libboost_system.dylib */; };
+		63D8A1E51C40BDC9008B8437 /* hex_mask.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 63D8A1E41C40BDC9008B8437 /* hex_mask.cpp */; };
 		63E3EC371B452D55002F8294 /* FontDriver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 63E3EC2F1B452D55002F8294 /* FontDriver.cpp */; };
 		63E3EC381B452D55002F8294 /* FontSTB.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 63E3EC321B452D55002F8294 /* FontSTB.cpp */; };
 		63E3EC391B452D55002F8294 /* SurfaceBlur.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 63E3EC351B452D55002F8294 /* SurfaceBlur.cpp */; };
@@ -889,6 +890,7 @@
 		63D6F4D71AC68F38002250CC /* libboost_date_time.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libboost_date_time.dylib; sourceTree = "<group>"; };
 		63D6F4D91AC68F38002250CC /* libboost_iostreams.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libboost_iostreams.dylib; sourceTree = "<group>"; };
 		63D6F4DA1AC68F38002250CC /* libboost_system.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libboost_system.dylib; sourceTree = "<group>"; };
+		63D8A1E41C40BDC9008B8437 /* hex_mask.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = hex_mask.cpp; sourceTree = "<group>"; };
 		63E3EC2F1B452D55002F8294 /* FontDriver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FontDriver.cpp; sourceTree = "<group>"; };
 		63E3EC301B452D55002F8294 /* FontDriver.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = FontDriver.hpp; sourceTree = "<group>"; };
 		63E3EC311B452D55002F8294 /* FontImpl.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = FontImpl.hpp; sourceTree = "<group>"; };
@@ -1378,6 +1380,7 @@
 		6357A6D51B258B1C00793D60 /* hex */ = {
 			isa = PBXGroup;
 			children = (
+				63D8A1E41C40BDC9008B8437 /* hex_mask.cpp */,
 				6357A6D61B258B1C00793D60 /* hex_fwd.hpp */,
 				6357A6D71B258B1C00793D60 /* hex_logical_fwd.hpp */,
 				6357A6D81B258B1C00793D60 /* hex_logical_tiles.cpp */,
@@ -2522,6 +2525,7 @@
 				639B54631AC20D7600ECC4F8 /* b2RevoluteJoint.cpp in Sources */,
 				639B53981AC20D5A00ECC4F8 /* SceneParameters.cpp in Sources */,
 				638CC7411AF6057700C7A106 /* lvm.cpp in Sources */,
+				63D8A1E51C40BDC9008B8437 /* hex_mask.cpp in Sources */,
 				639B54841AC2183B00ECC4F8 /* SceneObjectCallable.cpp in Sources */,
 				C010C743160AFD4D006E7D90 /* animation_preview_widget.cpp in Sources */,
 				C010C744160AFD4D006E7D90 /* animation_widget.cpp in Sources */,
