@@ -86,6 +86,15 @@ namespace KRE
 			return;
 		}
 
+		setFromVariant(node);
+	}
+
+	Renderable::~Renderable()
+	{
+	}
+
+	void Renderable::setFromVariant(const variant& node)
+	{
 		if(node.has_key("ignore_global_model")) {
 			ignore_global_model_ = node["ignore_global_model"].as_bool(false);
 		}
@@ -95,6 +104,9 @@ namespace KRE
 		// XXX set other stuff here, tbd
 		if(node.has_key("blend")) {
 			setBlendMode(KRE::BlendMode(node["blend"]));
+		}
+		if(node.has_key("blend_enable")) {
+			setBlendState(node["blend_enable"].as_bool());
 		}
 		if(node.has_key("blend_equation")) {
 			setBlendEquation(KRE::BlendEquation(node["blend_equation"]));
@@ -177,10 +189,6 @@ namespace KRE
 		if(node.has_key("use_lighting")) {
 			enableLighting(node["use_lighting"].as_bool());
 		}
-	}
-
-	Renderable::~Renderable()
-	{
 	}
 
 	void Renderable::setDerivedModel(const glm::vec3& p, const glm::quat& r, const glm::vec3& s)

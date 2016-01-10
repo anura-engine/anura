@@ -219,7 +219,10 @@ Level::Level(const std::string& level_cfg, variant node)
 	  doing_render_to_texture_(false),
 	  scene_graph_(nullptr),
 	  last_process_time_(profile::get_tick_time()),
-	  hex_map_(nullptr)
+	  hex_map_(nullptr),
+	  hex_renderable_(nullptr),
+	  hex_masks_(),
+	  fb_render_target_()
 {
 #ifndef NO_EDITOR
 	get_all_levels_set().insert(this);
@@ -238,11 +241,18 @@ Level::Level(const std::string& level_cfg, variant node)
 		try {
 			const assert_recover_scope safe_scope;
 			rt_ = KRE::RenderTarget::create(gs.getWidth(), gs.getHeight(), 1, false, true);
-			rt_->setBlendState(false);
 		} catch(validation_failure_exception& e) {
 			LOG_INFO("Could not create fbo with stencil buffer. Trying without stencil buffer");
 			rt_ = KRE::RenderTarget::create(gs.getWidth(), gs.getHeight(), 1, false, false);
-			rt_->setBlendState(false);
+		}
+
+		if(rt_ != nullptr) {
+			if(node.has_key("fb_render_target")) {
+				fb_render_target_ = node["fb_render_target"];
+				rt_->setFromVariant(fb_render_target_);
+			} else {
+				rt_->setBlendState(false);
+			}
 		}
 
 		//rt_->setCamera(std::make_shared<KRE::Camera>("render_target"));
@@ -2137,12 +2147,16 @@ void Level::applyShaderToFrameBufferTexture(graphics::AnuraShaderPtr shader, boo
 		if(!backup_rt_) {
 			try {
 				const assert_recover_scope safe_scope;
-				backup_rt_ = KRE::RenderTarget::create(gs.getWidth(), gs.getHeight(), 1, false, true);
-				backup_rt_->setBlendState(false);
+				backup_rt_ = KRE::RenderTarget::create(gs.getWidth(), gs.getHeight(), 1, false, true);			
 			} catch(validation_failure_exception& e) {
 				LOG_INFO("Could not create fbo with stencil buffer. Trying without stencil buffer");
 				backup_rt_ = KRE::RenderTarget::create(gs.getWidth(), gs.getHeight(), 1, false, false);
+			}
+			ASSERT_LOG(backup_rt_ != nullptr, "Backup render target was null.");
+			if(fb_render_target_.is_null()) {
 				backup_rt_->setBlendState(false);
+			} else {
+				backup_rt_->setFromVariant(fb_render_target_);
 			}
 		}
 		backup_rt_->renderToThis(gs.getVirtualArea());
@@ -3772,6 +3786,20 @@ DEFINE_SET_FIELD_TYPE("[map|builtin mask_node]")
 
 		ASSERT_LOG(obj.hex_masks_.back().get() != nullptr, "null hex mask");
 	}
+
+DEFINE_FIELD(fb_render_target, "map")
+	return obj.fb_render_target_;
+DEFINE_SET_FIELD_TYPE("map")
+	if(obj.rt_ != nullptr) {
+		obj.fb_render_target_ = value;
+		if(!value.is_null()) {
+			obj.rt_->setFromVariant(obj.fb_render_target_);
+		}
+	}
+	if(obj.backup_rt_ != nullptr && !value.is_null()) {
+		obj.backup_rt_->setFromVariant(obj.fb_render_target_);
+	}
+
 END_DEFINE_CALLABLE(Level)
 
 int Level::camera_rotation() const
