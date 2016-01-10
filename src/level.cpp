@@ -238,9 +238,11 @@ Level::Level(const std::string& level_cfg, variant node)
 		try {
 			const assert_recover_scope safe_scope;
 			rt_ = KRE::RenderTarget::create(gs.getWidth(), gs.getHeight(), 1, false, true);
+			rt_->setBlendState(false);
 		} catch(validation_failure_exception& e) {
 			LOG_INFO("Could not create fbo with stencil buffer. Trying without stencil buffer");
 			rt_ = KRE::RenderTarget::create(gs.getWidth(), gs.getHeight(), 1, false, false);
+			rt_->setBlendState(false);
 		}
 
 		//rt_->setCamera(std::make_shared<KRE::Camera>("render_target"));
@@ -555,9 +557,11 @@ void Level::setRenderToTexture(int width, int height)
 		try {
 			const assert_recover_scope safe_scope;
 			rt_ = KRE::RenderTarget::create(width, height, 1, false, true);
+			rt_->setBlendState(false);
 		} catch(validation_failure_exception& e) {
 			LOG_INFO("Could not create fbo with stencil buffer. Trying without stencil buffer");
 			rt_ = KRE::RenderTarget::create(width, height, 1, false, false);
+			rt_->setBlendState(false);
 		}
 }
 
@@ -2134,9 +2138,11 @@ void Level::applyShaderToFrameBufferTexture(graphics::AnuraShaderPtr shader, boo
 			try {
 				const assert_recover_scope safe_scope;
 				backup_rt_ = KRE::RenderTarget::create(gs.getWidth(), gs.getHeight(), 1, false, true);
+				backup_rt_->setBlendState(false);
 			} catch(validation_failure_exception& e) {
 				LOG_INFO("Could not create fbo with stencil buffer. Trying without stencil buffer");
 				backup_rt_ = KRE::RenderTarget::create(gs.getWidth(), gs.getHeight(), 1, false, false);
+				backup_rt_->setBlendState(false);
 			}
 		}
 		backup_rt_->renderToThis(gs.getVirtualArea());
