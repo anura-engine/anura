@@ -108,9 +108,12 @@ void LoadingScreen::drawInternal(const std::string& message)
 	int bar_origin_x = screen_w/2 - bar_width/2;
 	rect bg(screen_w/2 - bar_width/2, screen_h/2 - bar_height/2, bar_width, bar_height);
 	canvas->drawSolidRect(bg, KRE::Color(96, 96, 96, 255));
-	float amount_done = (float)status_ / (float)items_;
-	rect bar(screen_w/2 - bar_width/2, screen_h/2 - bar_height/2, static_cast<int>(bar_width*amount_done), bar_height);
-	canvas->drawSolidRect(bar, KRE::Color::colorWhite());
+
+	if(items_ > 0) {
+		float amount_done = (float)status_ / (float)items_;
+		rect bar(screen_w/2 - bar_width/2, screen_h/2 - bar_height/2, static_cast<int>(bar_width*amount_done), bar_height);
+		canvas->drawSolidRect(bar, KRE::Color::colorWhite());
+	}
 	
 	std::string font = module::get_default_font();
 	if(font == "bitmap") {
