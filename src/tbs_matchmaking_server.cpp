@@ -1600,17 +1600,32 @@ private:
 		if(status_doc_new_users_.empty() == false || status_doc_delete_users_.empty() == false) {
 			status_doc_.add_attr_mutation(variant("users"), variant(status_doc_["users"].as_int() + status_doc_new_users_.size() - status_doc_delete_users_.size()));
 
+			static variant IdVariant("id");
+
 			std::vector<variant> list = status_doc_["user_list"].as_list();
 			for(auto s : status_doc_delete_users_) {
-				for(auto i = list.begin(); i != list.end(); ++i) {
-					if((*i)["id"].as_string() == s) {
-						list.erase(i);
-						break;
+				for(auto i = list.begin(); i != list.end(); ) {
+					if((*i)[IdVariant].as_string() == s) {
+						i = list.erase(i);
+					} else {
+						++i;
 					}
 				}
 			}
 
 			for(auto u : status_doc_new_users_) {
+				bool already_present;
+				for(auto i = list.begin(); i != list.end(); ) {
+					if((*i)[IdVariant].as_string() == u) {
+						already_present = true;
+						break;
+					}
+				}
+
+				if(already_present) {
+					continue;
+				}
+
 				variant_builder builder;
 				builder.add("id", u);
 				builder.add("status", "idle");
