@@ -30,6 +30,8 @@
 #include "tbs_server_base.hpp"
 #include "variant_utils.hpp"
 
+PREF_INT(tbs_server_timeout, 5000, "Timeout for connections to the tbs server");
+
 namespace tbs
 {
 	namespace 
@@ -396,7 +398,7 @@ namespace tbs
 	PREF_INT(tbs_server_delay_ms, 20, "");
 	PREF_INT(tbs_server_heartbeat_freq, 1, "");
 
-	int server_base::connection_timeout_ticks() const { return 5000; }
+	int server_base::connection_timeout_ticks() const { return g_tbs_server_timeout; }
 
 	void server_base::heartbeat(const boost::system::error_code& error)
 	{
@@ -431,6 +433,7 @@ namespace tbs
 		for(std::map<int,client_info>::iterator i = clients_.begin();
 		    i != clients_.end(); ) {
 			if(nheartbeat_ - i->second.last_contact > connection_timeout_ticks() && connection_timeout_ticks() > 0) {
+				LOG_INFO("TIMEOUT_QUIT: " << i->second.session_id << ": TIMEOUT: " << connection_timeout_ticks());
 				quit_games(i->first);
 				clients_.erase(i++);
 			} else {

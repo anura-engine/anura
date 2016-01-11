@@ -391,11 +391,19 @@ namespace game_logic
 
 		END_DEFINE_CALLABLE(DateTime)
 
-		FUNCTION_DEF(time, 0, 0, "time() -> date_time: returns the current real time")
+		FUNCTION_DEF(time, 0, 1, "time(int unix_time) -> date_time: returns the current real time")
 			Formula::failIfStaticContext();
-			time_t t = time(NULL);
+			time_t t;
+			
+			if(args().size() == 0) {
+				t = time(NULL);
+			} else {
+				t = args()[0]->evaluate(variables).as_int();
+			}
 			tm* ltime = localtime(&t);
 			return variant(new DateTime(t, ltime));
+		FUNCTION_ARGS_DEF
+			ARG_TYPE("int");
 		RETURN_TYPE("builtin date_time")
 		END_FUNCTION_DEF(time)
 

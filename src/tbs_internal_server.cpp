@@ -303,6 +303,7 @@ void terminate_utility_process()
 			args.push_back("--log-level=debug");
 			args.push_back("--no-tbs-server");
 			args.push_back("--quit-server-after-game");
+			args.push_back("--tbs-server-timeout=0");
 			args.push_back(formatter() << "--tbs-server-semaphore=" << sem_id);
 			args.push_back("--utility=tbs_server");
 			args.push_back("--port");
