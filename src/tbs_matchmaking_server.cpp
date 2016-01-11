@@ -1615,7 +1615,7 @@ private:
 
 			for(auto u : status_doc_new_users_) {
 				bool already_present;
-				for(auto i = list.begin(); i != list.end(); ) {
+				for(auto i = list.begin(); i != list.end(); ++i) {
 					if((*i)[IdVariant].as_string() == u) {
 						already_present = true;
 						break;
