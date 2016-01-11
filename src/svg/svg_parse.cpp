@@ -34,10 +34,6 @@
 #include "svg_path_parse.hpp"
 #include "svg_shapes.hpp"
 
-#ifndef M_PI
-#	define M_PI		3.1415926535897932384626433832795
-#endif
-
 namespace KRE
 {
 	namespace SVG
