@@ -26,6 +26,8 @@
 #include <vector>
 #include <sstream>
 
+#include <boost/filesystem.hpp>
+
 #include "kre/SurfaceSDL.hpp"
 
 #include "SDL_image.h"
@@ -1538,3 +1540,83 @@ COMMAND_LINE_UTILITY(manipulate_image_template)
 }
 
 
+COMMAND_LINE_UTILITY(generate_terrain_spritesheet)
+{
+	// argv is a list of base names to concatenate together to make a spritesheet
+	std::vector<std::string> names;
+	// base folder to use.
+	std::string base_folder;
+
+	for(auto it = args.begin(); it != args.end(); ++it) {
+		if(*it == "--base") {
+			++it;
+			ASSERT_LOG(it != args.end(), "No base folder was given, though --base was specified.");
+			base_folder = *it;
+		} else {
+			names.emplace_back(*it);
+		}
+	}
+
+	ASSERT_LOG(!base_folder.empty(), "No base folder was given. Use --base <folder> to specify.");	
+	LOG_DEBUG("Base Folder: " << base_folder);
+
+	std::vector<std::string> filenames;
+	std::vector<std::string> base_filenames;
+
+	std::vector<std::string> base_folder_files;
+	sys::get_files_in_dir(base_folder, &base_folder_files, nullptr);
+
+	using namespace boost::filesystem;
+
+	if(!names.empty()) {
+		for(const auto& f : base_folder_files) {
+			for(const auto& base_name : names) {
+				if(f.size() >= base_name.size() && f.substr(0, base_name.size()) == base_name) {
+					path p(base_folder);
+					p /= f;
+					filenames.emplace_back(p.generic_string());
+				}
+			}
+		}
+	} else {
+		// use all files in directory.
+		for(const auto& f : base_folder_files) {
+			path p(base_folder);
+			p /= f;
+			filenames.emplace_back(p.generic_string());
+			base_filenames.emplace_back(f);
+		}
+	}
+
+	using namespace KRE;
+
+	std::vector<rect> outr;
+	std::vector<std::array<int, 4>> borders;
+	auto s = Surface::packImages(filenames, &outr, &borders);
+	s->savePng("temp.png");
+
+	variant_builder res;
+	auto rect_it = outr.cbegin();
+	auto border_it = borders.cbegin();
+	for(const auto& f : base_filenames) {
+		variant_builder entry;
+		entry.add("rect", rect_it->write());
+		for(int n = 0; n != 4; ++n) {
+			entry.add("border_strip", (*border_it)[n]);
+		}
+
+		auto pos = f.rfind('.');
+		if(pos != std::string::npos) {
+			res.add(f.substr(0, pos), entry.build());
+		} else {
+			res.add(f, entry.build());
+		}
+
+		++rect_it;
+		++border_it;
+	}
+	auto v = res.build();
+	std::stringstream ss;
+	v.write_json_pretty(ss, "\t");
+	sys::write_file("temp.json", ss.str());
+}
