@@ -94,7 +94,7 @@ namespace KRE
 				case PixelFormat::PF::PIXELFORMAT_YVYU:	        return SDL_PIXELFORMAT_YVYU;
 				case PixelFormat::PF::PIXELFORMAT_R8:			return SDL_PIXELFORMAT_R8;
 				default:
-					ASSERT_LOG(false, "Unknown pixel format given");
+					ASSERT_LOG(false, "Unknown pixel format given: " << static_cast<unsigned>(fmt));
 			}
 			return SDL_PIXELFORMAT_ABGR8888;
 		}

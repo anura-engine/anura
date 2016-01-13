@@ -396,7 +396,8 @@ namespace KRE
 	{
 		auto it = get_file_filter_map().find(type);
 		if(it == get_file_filter_map().end()) {
-			return [](const std::string& s) { return s; };
+			static auto null_filter = [](const std::string& s) { return s; };
+			return null_filter;
 		}
 		return it->second;
 	}

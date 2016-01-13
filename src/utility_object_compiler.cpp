@@ -1547,11 +1547,15 @@ COMMAND_LINE_UTILITY(generate_terrain_spritesheet)
 	// base folder to use.
 	std::string base_folder;
 
+	bool keep_borders = false;
+
 	for(auto it = args.begin(); it != args.end(); ++it) {
 		if(*it == "--base") {
 			++it;
 			ASSERT_LOG(it != args.end(), "No base folder was given, though --base was specified.");
 			base_folder = *it;
+		} else if(*it == "--keep-borders") {
+			keep_borders = true;
 		} else {
 			names.emplace_back(*it);
 		}
@@ -1592,7 +1596,7 @@ COMMAND_LINE_UTILITY(generate_terrain_spritesheet)
 
 	std::vector<rect> outr;
 	std::vector<std::array<int, 4>> borders;
-	auto s = Surface::packImages(filenames, &outr, &borders);
+	auto s = Surface::packImages(filenames, &outr, keep_borders ? nullptr : &borders);
 	s->savePng("temp.png");
 
 	variant_builder res;
@@ -1601,8 +1605,10 @@ COMMAND_LINE_UTILITY(generate_terrain_spritesheet)
 	for(const auto& f : base_filenames) {
 		variant_builder entry;
 		entry.add("rect", rect_it->write());
-		for(int n = 0; n != 4; ++n) {
-			entry.add("border_strip", (*border_it)[n]);
+		if(!keep_borders && ((*border_it)[0] != 0 || (*border_it)[1] != 0 || (*border_it)[2] != 0 || (*border_it)[3] != 0)) {
+			for(int n = 0; n != 4; ++n) {
+				entry.add("border", (*border_it)[n]);
+			}
 		}
 
 		auto pos = f.rfind('.');
@@ -1613,7 +1619,9 @@ COMMAND_LINE_UTILITY(generate_terrain_spritesheet)
 		}
 
 		++rect_it;
-		++border_it;
+		if(!keep_borders) {
+			++border_it;
+		}
 	}
 	auto v = res.build();
 	std::stringstream ss;
