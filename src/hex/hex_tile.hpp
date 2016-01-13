@@ -103,5 +103,26 @@ namespace hex
 		EditorInfo editor_info_;
 	};
 
+	class ElementOverlay
+	{
+	public:
+		static ElementOverlayPtr create(const std::string& name, const std::string& image, const std::vector<variant>& alts);
+	private:
+		explicit ElementOverlay(const std::string& name, const std::string& image, const std::vector<variant>& alts);
+
+		std::string name_;
+		KRE::TexturePtr texture_;
+
+		struct Alternates {
+			rect r;
+			std::array<int, 4> border;
+		};
+		std::vector<Alternates> alternates_;
+
+		ElementOverlay(const ElementOverlay&) = delete;
+		ElementOverlay() = delete;
+		ElementOverlay& operator=(const ElementOverlay&) = delete;
+	};
+
 	void loader(const variant& n);
 }

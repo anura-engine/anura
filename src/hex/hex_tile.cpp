@@ -54,6 +54,12 @@ namespace hex
 			return tile_map;
 		}
 
+		std::map<std::string, ElementOverlayPtr>& get_overlay_map()
+		{
+			static std::map<std::string, ElementOverlayPtr> res;
+			return res;
+		}
+
 		void load_editor_tiles()
 		{
 			std::map<std::string, TileTypePtr>::const_iterator it = get_tile_type_map().begin();
@@ -91,6 +97,36 @@ namespace hex
 			get_tile_type_map()[key_str] = TileTypePtr(new TileType(key_str, p.second));
 		}
 
+		if(n.has_key("composite")) {
+			for(auto p : n["composite"].as_map()) {
+				ASSERT_LOG(p.first.is_string(), "First element of composite must be a string key. " << p.first.debug_location());
+				const std::string key = p.first.as_string();
+				ASSERT_LOG(p.second.is_map(), "Second element of composite must be a map. " << p.second.debug_location());
+				std::string image;
+				std::vector<variant> normals;
+
+				for(const auto el : p.second.as_map()) {
+					ASSERT_LOG(el.first.is_string(), "First element must be string. " << el.first.debug_location());
+					const std::string ekey = el.first.as_string();
+					if(ekey == "tile") {
+						// ignore for now, is editor image
+
+					} else if(ekey == "image") {
+						ASSERT_LOG(el.second.is_string(), "'image' attribute should have a string value. " << el.second.debug_location());
+						image = el.second.as_string();
+					} else if (ekey == "normal") {
+						// XXX This needs some reconsideration.
+						ASSERT_LOG(el.second.is_list(), "'normal' attribute should have a list value. " << el.second.debug_location());
+						normals = el.second.as_list();
+					}
+				}
+				ASSERT_LOG(!image.empty(), "No 'image' tag found.");
+
+				// Add element here for key
+				get_overlay_map()[key] = ElementOverlay::create(key, image, normals);
+			}
+		}
+
 		// get list of all tiles have non-empty "editor_info" blocks.
 		if(!get_hex_editor_tiles().empty()) {
 			get_hex_editor_tiles().clear();
@@ -111,9 +147,9 @@ namespace hex
 
 	TileSheet::TileSheet(const variant& value)
 		: texture_(KRE::Texture::createTexture(value["image"])),
-		  area_(rect(2, 2, 72, 72)), 
+		  area_(rect(0, 0, 72, 72)), 
 		  ncols_(36), 
-		  pad_(4)
+		  pad_(0)
 	{
 	}
 
@@ -277,4 +313,30 @@ namespace hex
 		ASSERT_LOG(it != get_tile_type_map().end(), "Couldn't find tile with name: " << name);
 		return it->second;
 	}
+
+	ElementOverlayPtr ElementOverlay::create(const std::string& name, const std::string& image, const std::vector<variant>& alts)
+	{
+		return ElementOverlayPtr(new ElementOverlay(name, image, alts));
+	}
+
+	ElementOverlay::ElementOverlay(const std::string& name, const std::string& image, const std::vector<variant>& alts)
+		: name_(name),
+		  texture_(KRE::Texture::createTexture(image)),
+		  alternates_()
+	{
+		alternates_.resize(alts.size());
+		auto it = alternates_.begin();
+		for(const auto& v : alts) {
+			// should consist of a series of rectangles (x1 y1 x2 y2) in the 'rect' attribute and an optional 'border' attribute.
+			ASSERT_LOG(v.has_key("rect"), "Unable to find key 'rect' while parsing the overlays");
+			it->r = rect(v["rect"]);
+			if(v.has_key("border")) {
+				ASSERT_LOG(v["border"].is_list() && v["border"].num_elements() == 4, "The 'border' attribute should be a list of 4(four) elements.");
+				for(int n = 0; n != 4; ++n) {
+					it->border[n] = v["border"][n].as_int32();
+				}
+			}
+		}
+	}
+
 }

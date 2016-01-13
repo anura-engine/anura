@@ -36,10 +36,12 @@ namespace hex
 	class HexObject;
 	class TileSheet;
 	class TileType;
+	class ElementOverlay;
 
 	typedef boost::intrusive_ptr<HexMap> HexMapPtr;
 	typedef boost::intrusive_ptr<MaskNode> MaskNodePtr;
 	typedef std::shared_ptr<HexObject> HexObjectPtr;
 	typedef std::shared_ptr<const TileSheet> TileSheetPtr;
 	typedef std::shared_ptr<TileType> TileTypePtr;
+	typedef std::shared_ptr<ElementOverlay> ElementOverlayPtr;
 }
