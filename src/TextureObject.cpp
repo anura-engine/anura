@@ -39,6 +39,12 @@ BEGIN_DEFINE_CALLABLE_NOBASE(TextureObject)
 DEFINE_FIELD(id, "int")
 	return variant(obj.texture()->id());
 
+DEFINE_FIELD(width, "int")
+	return variant(obj.texture()->surfaceWidth());
+
+DEFINE_FIELD(height, "int")
+	return variant(obj.texture()->surfaceHeight());
+
 DEFINE_FIELD(binding_point, "int")
 	return variant(obj.binding_point_);
 DEFINE_SET_FIELD
