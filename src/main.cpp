@@ -848,6 +848,10 @@ int main(int argcount, char* argvec[])
 
 	if(utility_program.empty() == false 
 		&& test::utility_needs_video(utility_program) == false) {
+#ifdef _MSC_VER
+		std::freopen("CON", "w", stderr);
+		std::freopen("CON", "w", stdout);
+#endif
 		test::run_utility(utility_program, util_args);
 		return 0;
 	}

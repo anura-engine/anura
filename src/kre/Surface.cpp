@@ -396,7 +396,8 @@ namespace KRE
 	{
 		auto it = get_file_filter_map().find(type);
 		if(it == get_file_filter_map().end()) {
-			return [](const std::string& s) { return s; };
+			static auto null_filter = [](const std::string& s) { return s; };
+			return null_filter;
 		}
 		return it->second;
 	}
@@ -518,6 +519,11 @@ namespace KRE
 
 		const int max_threads = 8;
 
+		SurfaceFlags flags = SurfaceFlags::NO_CACHE;
+		if(borders != nullptr) {
+			flags = flags | SurfaceFlags::STRIP_ALPHA_BORDERS;
+		}
+
 		std::vector<std::future<void>> futures;
 
 		std::vector<SurfacePtr> images;
@@ -525,9 +531,9 @@ namespace KRE
 		const int n_incr = images.size() / max_threads;
 		for(int n = 0; n < static_cast<int>(images.size()); n += n_incr) {
 			int n2 = n + n_incr > static_cast<int>(images.size()) ? images.size() : n + n_incr;
-			futures.push_back(std::async([&images, n, n2, &filenames]() {
+			futures.push_back(std::async([&images, n, n2, &filenames, flags]() {
 				for(int ndx = n; ndx != n2; ++ndx) {
-					images[ndx] = Surface::create(filenames[ndx], SurfaceFlags::STRIP_ALPHA_BORDERS | SurfaceFlags::NO_CACHE);
+					images[ndx] = Surface::create(filenames[ndx], flags);
 				}
 			}));
 		}
@@ -548,8 +554,12 @@ namespace KRE
 		for(auto& img : images) {
 			stbrp_rect r;
 			r.id = rects.size();
-			r.w = img->width() - img->getAlphaBorders()[0] - img->getAlphaBorders()[2];
-			r.h = img->height() - img->getAlphaBorders()[1] - img->getAlphaBorders()[3];
+			r.w = img->width();
+			r.h = img->height();
+			if(borders != nullptr) {
+				r.w -= img->getAlphaBorders()[0] + img->getAlphaBorders()[2];
+				r.h -= img->getAlphaBorders()[1] + img->getAlphaBorders()[3];
+			}
 			rects.emplace_back(r);
 		}
 
@@ -589,9 +599,11 @@ namespace KRE
 		auto out = Surface::create(width, height, PixelFormat::PF::PIXELFORMAT_RGBA8888);
 		for(auto& r : rects) {
 			(*outr)[r.id] = rect(r.x, r.y, r.w, r.h);
-			out->blitTo(images[r.id], 
-				rect(images[r.id]->getAlphaBorders()[0], images[r.id]->getAlphaBorders()[1], r.w, r.h), 
-				(*outr)[r.id]);
+			rect alpha_borders(0, 0, r.w, r.h);
+			if(borders != nullptr) {
+				alpha_borders = rect(images[r.id]->getAlphaBorders()[0], images[r.id]->getAlphaBorders()[1], r.w, r.h);
+			}
+			out->blitTo(images[r.id], alpha_borders, (*outr)[r.id]);
 			if(borders != nullptr) {
 				(*borders)[r.id] = images[r.id]->getAlphaBorders();
 			}

@@ -25,6 +25,7 @@
 
 #include "asserts.hpp"
 #include "hex_logical_tiles.hpp"
+#include "string_utils.hpp"
 
 namespace hex 
 {
@@ -39,6 +40,13 @@ namespace hex
 				return res;
 			}
 
+			typedef std::set<std::string> overlay_mapping_t;
+			overlay_mapping_t& get_loaded_overlays()
+			{
+				static overlay_mapping_t res;
+				return res;
+			}
+
 			int max_tile_id = 0;
 		}
 
@@ -48,14 +56,23 @@ namespace hex
 
 			int tile_id = 0;
 
-			auto& tiles = n["tiles"];
-			for(auto& p : tiles.as_map()) {
+			auto tiles = n["tiles"];
+			for(auto p : tiles.as_map()) {
 				std::string id = p.first.as_string();
 				float cost = p.second["cost"].as_float(1.0f);
 				int height = p.second["height"].as_int32(1000);
 				std::string name = p.second["name"].as_string();
 				get_loaded_tiles()[id] = std::make_shared<Tile>(id, name, cost, height, tile_id++);
 			}
+
+			if(n.has_key("composite")) {
+				auto composite = n["composite"];
+				for(auto p : composite.as_map()) {
+					std::string key = p.first.as_string();
+					get_loaded_overlays().emplace(key);
+				}
+			}
+
 			max_tile_id = tile_id;
 		}
 
@@ -78,11 +95,33 @@ namespace hex
 			return max_tile_id;
 		}
 
+		void Tile::setAugments(std::vector<std::string>::const_iterator beg, std::vector<std::string>::const_iterator ed)
+		{
+			augments_.resize(std::distance(beg, ed));
+			std::copy(beg, ed, augments_.begin());
+		}
+
 		TilePtr Tile::factory(const std::string& name)
 		{
-			auto it = get_loaded_tiles().find(name);
-			ASSERT_LOG(it != get_loaded_tiles().end(), "Unable to find a tile with name: " << name);
-			return it->second;
+			std::string tile_name = name;
+			// look for a pipe character which is used as a seperator for overlayed things.
+			std::vector<std::string> vec;
+			auto it = name.find("|");
+			if(it != std::string::npos) {
+				vec = util::split(name, "|");
+				ASSERT_LOG(vec.size() >= 2, "Something went wrong splitting the string " << name << " less than two elements.");
+				// Assume first element is tile name
+				tile_name = vec[0];
+			}
+
+			auto tile = get_loaded_tiles().find(tile_name);
+			ASSERT_LOG(tile != get_loaded_tiles().end(), "Unable to find a tile with name: " << tile_name);
+			if(it != std::string::npos) {
+				TilePtr new_tile = TilePtr(new Tile(*tile->second));
+				new_tile->setAugments(vec.begin() + 1, vec.end());
+				return new_tile;
+			}
+			return tile->second;
 		}
 
 		LogicalMapPtr LogicalMap::factory(const variant& n)

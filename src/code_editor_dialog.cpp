@@ -103,7 +103,7 @@ void CodeEditorDialog::init()
 	WidgetPtr find_label(Label::create("Find: ", col));
 	replace_label_ = Label::create("Replace: ", col);
 	status_label_ = Label::create("Ok", col);
-	error_label_ = Label::create("", col);
+	error_label_ = Label::create(" ", col);
 	addWidget(find_label, 42, 12, MOVE_DIRECTION::RIGHT);
 	addWidget(WidgetPtr(search_), MOVE_DIRECTION::RIGHT);
 	addWidget(replace_label_, MOVE_DIRECTION::RIGHT);
