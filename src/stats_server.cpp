@@ -33,6 +33,8 @@ namespace
 {
 	using namespace game_logic;
 
+	std::map<std::string, std::vector<variant> > g_raw_entries;
+
 	class TableInfo
 	{
 	public:
@@ -108,8 +110,10 @@ namespace
 	//the tables that are used for a single message type.
 	struct msg_type_info 
 	{
+		msg_type_info() : record_all(false) {}
 		std::string name;
 		std::vector<TableInfo> tables;
+		bool record_all;
 	};
 
 	// module id -> message id -> tables for that message.
@@ -270,6 +274,10 @@ void init_tables_for_module(const std::string& module, const variant& doc)
 		for(int m = 0; m != tables_v.num_elements(); ++m) {
 			info.tables.push_back(TableInfo(tables_v[m]));
 		}
+
+		if(v["record_all"].as_bool(false)) {
+			info.record_all = true;
+		}
 	}
 
 	module_definitions[variant(module)] = doc;
@@ -386,6 +394,9 @@ void process_stats(const variant& doc)
 			
 			const std::string& type_str = type.as_string();
 			const msg_type_info& msg_info = message_type_index[module_str][type_str];
+			if(msg_info.record_all) {
+				g_raw_entries[type_str].push_back(msg);
+			}
 
 			if(type_str == "crash") {
 				variant m = msg;
@@ -446,4 +457,9 @@ variant get_stats(const std::string& version, const std::string& module, const s
 	version_data& ver_data = data_table[key];
 	type_data_map& data = lvl.empty() ? ver_data.global_data : ver_data.level_to_data[lvl];
 	return output_type_data_map(data);
+}
+variant get_raw_stats(const std::string& type)
+{
+	std::vector<variant> v = g_raw_entries[type];
+	return variant(&v);
 }
