@@ -95,30 +95,30 @@ namespace hex
 			return max_tile_id;
 		}
 
-		void Tile::setAugments(std::vector<std::string>::const_iterator beg, std::vector<std::string>::const_iterator ed)
+		void Tile::setTags(std::vector<std::string>::const_iterator beg, std::vector<std::string>::const_iterator ed)
 		{
-			augments_.resize(std::distance(beg, ed));
-			std::copy(beg, ed, augments_.begin());
+			tags_.resize(std::distance(beg, ed));
+			std::copy(beg, ed, tags_.begin());
 		}
 
 		TilePtr Tile::factory(const std::string& name)
 		{
 			std::string tile_name = name;
 			// look for a pipe character which is used as a seperator for overlayed things.
-			std::vector<std::string> vec;
+			std::vector<std::string> tags;
 			auto it = name.find("|");
 			if(it != std::string::npos) {
-				vec = util::split(name, "|");
-				ASSERT_LOG(vec.size() >= 2, "Something went wrong splitting the string " << name << " less than two elements.");
+				tags = util::split(name, "|");
+				ASSERT_LOG(tags.size() >= 2, "Something went wrong splitting the string " << name << " less than two elements.");
 				// Assume first element is tile name
-				tile_name = vec[0];
+				tile_name = tags[0];
 			}
 
 			auto tile = get_loaded_tiles().find(tile_name);
 			ASSERT_LOG(tile != get_loaded_tiles().end(), "Unable to find a tile with name: " << tile_name);
 			if(it != std::string::npos) {
 				TilePtr new_tile = TilePtr(new Tile(*tile->second));
-				new_tile->setAugments(vec.begin() + 1, vec.end());
+				new_tile->setTags(tags.begin() + 1, tags.end());
 				return new_tile;
 			}
 			return tile->second;
