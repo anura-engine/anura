@@ -80,6 +80,13 @@ void web_server::handleGet(socket_ptr socket,
 	const std::string& url, 
 	const std::map<std::string, std::string>& args)
 {
+	std::map<std::string, std::string>::const_iterator raw_it = args.find("raw_stats");
+	if(raw_it != args.end()) {
+		variant msg = get_raw_stats(raw_it->second);
+		send_msg(socket, "text/json", msg.write_json(true, variant::JSON_COMPLIANT), "");
+		return;
+	}
+	
 	std::map<std::string, std::string>::const_iterator it = args.find("type");
 	if(it != args.end() && it->second == "status") {
 		std::map<variant,variant> m;
