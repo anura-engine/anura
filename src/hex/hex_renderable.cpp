@@ -41,6 +41,7 @@ namespace hex
 	MapNode::MapNode(std::weak_ptr<KRE::SceneGraph> sg, const variant& node)
 		: SceneNode(sg, node),
 		  layers_(),
+		  overlay_(),
 		  changed_(false)
 	{
 	}
@@ -55,6 +56,9 @@ namespace hex
 		for(auto& layer : layers_) {
 			attachObject(layer);
 		}
+		for(auto& o : overlay_) {
+			attachObject(o);
+		}
 	}
 
 	void MapNode::update(int width, int height, const std::vector<HexObject>& tiles)
@@ -68,7 +72,7 @@ namespace hex
 		sorted_map.resize(max_tile_id);
 
 		for(auto& t : tiles) {
-			MapRenderParams& param = sorted_map[t.tile()->tile_id()];
+			MapRenderParams& param = sorted_map[t.tile()->numeric_id()];
 			param.tiles.emplace_back(&t);
 			param.map_layer = std::make_shared<MapLayer>();
 		}
@@ -80,7 +84,7 @@ namespace hex
 			}
 
 			auto& new_layer = layer.map_layer;
-			int height = layer.tiles.front()->tile()->getHeight() << 9;
+			int height = layer.tiles.front()->logical_tile()->getHeight() << 9;
 			new_layer->setOrder(base_order + height);
 			new_layer->setTexture(layer.tiles.front()->tile()->getTexture());
 			++base_order;
@@ -107,6 +111,13 @@ namespace hex
 			layers_.emplace_back(new_layer);
 			attachObject(new_layer);
 			new_layer->updateAttributes(&layer.coords);
+		}
+
+		overlay_.clear();
+		for(auto& t : tiles) {
+			for(auto& tag : t.logical_tile()->getTags()) {
+				std::cerr << "TAG: " << tag << "\n";
+			}
 		}
 	}
 

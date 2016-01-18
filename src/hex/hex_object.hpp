@@ -37,7 +37,7 @@ namespace hex
 	class HexObject 
 	{
 	public:
-		HexObject(const std::string& type, int x, int y, const HexMap* owner);
+		HexObject(const logical::TilePtr& type, int x, int y, const HexMap* owner);
 
 		void draw(const point& cam) const;
 	
@@ -51,6 +51,7 @@ namespace hex
 		int y() const { return y_; }
 
 		TileTypePtr tile() const { return tile_; }
+		const logical::TilePtr& logical_tile() const { return logical_tile_; }
 
 		void initNeighbors();
 		void setNeighborsChanged();
@@ -63,6 +64,7 @@ namespace hex
 		int y_;
 
 		TileTypePtr tile_;
+		logical::TilePtr logical_tile_;
 
 		struct NeighborType {
 			NeighborType() : dirmap(0) {}

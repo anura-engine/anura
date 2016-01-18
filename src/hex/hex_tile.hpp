@@ -50,7 +50,7 @@ namespace hex
 	class TileType
 	{
 	public:
-		TileType(const std::string& id, const variant& n);
+		TileType(const std::string& tile, int num_id, const variant& n);
 		
 		struct EditorInfo {
 			std::string name;
@@ -61,29 +61,26 @@ namespace hex
 			void draw(int tx, int ty) const;
 		};
 
-		const std::string& id() const { return tile_->id(); }
+		const std::string& id() const { return tile_id_; }
 
-		int tile_id() const { return tile_->tile_id(); }
+		int numeric_id() const { return num_id_; }
 
 		const EditorInfo& getEditorInfo() const { return editor_info_; } 
 
 		const std::vector<int>& getSheetIndexes() const { return sheet_indexes_; }
 
-		float getCost() const { return tile_->getCost(); }
-
-		int getHeight() const { return tile_->getHeight(); }
-
 		variant write() const;
 		void calculateAdjacencyPattern(unsigned char adjmap);
 
-		static TileTypePtr factory(const std::string& name);
+		static TileTypePtr factory(const std::string& tile);
 
 		KRE::TexturePtr getTexture() const { return sheet_ != nullptr ? sheet_->getTexture() : nullptr; }
 
 		void render(int x, int y, std::vector<KRE::vertex_texcoord>* coords) const;
 		void renderAdjacent(int x, int y, std::vector<KRE::vertex_texcoord>* coords, unsigned char adjmap) const;
 	private:
-		logical::TilePtr tile_;
+		int num_id_;
+		std::string tile_id_;
 		TileSheetPtr sheet_;
 
 		void renderInternal(int x, int y, int index, std::vector<KRE::vertex_texcoord>* coords) const;

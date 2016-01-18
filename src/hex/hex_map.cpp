@@ -60,7 +60,7 @@ namespace hex
 		for(auto& t : *p->map_) {
 			const int x = index % p->map_->width();
 			const int y = index / p->map_->width();
-			p->tiles_.emplace_back(t->id(), x, y, p.get());
+			p->tiles_.emplace_back(t, x, y, p.get());
 			++index;
 		}
 		
@@ -223,7 +223,9 @@ namespace hex
 		const int index = yy * map_->width() + xx;
 		assert(index >= 0 && index < static_cast<int>(tiles_.size()));
 
-		tiles_[index] = HexObject(tile, xx, yy, this);
+		auto ltp = logical::Tile::getLoadedTiles().find(tile);
+		ASSERT_LOG(ltp != logical::Tile::getLoadedTiles().end(), "Couldn't find tile named " << tile);
+		tiles_[index] = HexObject(ltp->second, xx, yy, this);
 		for(auto t : tiles_) {
 			t.setNeighborsChanged();
 		}

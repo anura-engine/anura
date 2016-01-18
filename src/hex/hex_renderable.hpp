@@ -42,6 +42,7 @@ namespace hex
 		void notifyNodeAttached(std::weak_ptr<SceneNode> parent) override;
 
 		std::vector<MapLayerPtr> layers_;
+		std::vector<MapLayerPtr> overlay_;
 		bool changed_;
 
 		MapNode() = delete;
