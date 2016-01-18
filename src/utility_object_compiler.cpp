@@ -1405,7 +1405,7 @@ COMMAND_LINE_UTILITY(generate_wesnoth_spritesheet)
 
 	for(auto& p : anims) {
 		sheet_height += 3 + p.second.height;
-		int new_width = 3 + (p.second.width+3)*p.second.surfaces.size();
+		int new_width = 3 + (p.second.width+3)*static_cast<int>(p.second.surfaces.size());
 		if(new_width > sheet_width) {
 			sheet_width = new_width;
 		}
@@ -1438,7 +1438,7 @@ COMMAND_LINE_UTILITY(generate_wesnoth_spritesheet)
 		anim_node.add("id", name);
 		anim_node.add("scale", 1);
 		anim_node.add("image", "units/" + output + ".png");
-		anim_node.add("frames", p.second.surfaces.size());
+		anim_node.add("frames", static_cast<int>(p.second.surfaces.size()));
 		std::vector<variant> sprite_rect;
 		sprite_rect.push_back(variant(xpos));
 		sprite_rect.push_back(variant(ypos));
