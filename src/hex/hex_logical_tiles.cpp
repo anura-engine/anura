@@ -65,9 +65,9 @@ namespace hex
 				get_loaded_tiles()[id] = std::make_shared<Tile>(id, name, cost, height, tile_id++);
 			}
 
-			if(n.has_key("composite")) {
-				auto composite = n["composite"];
-				for(auto p : composite.as_map()) {
+			if(n.has_key("overlay")) {
+				auto overlay = n["overlay"];
+				for(auto p : overlay.as_map()) {
 					std::string key = p.first.as_string();
 					get_loaded_overlays().emplace(key);
 				}

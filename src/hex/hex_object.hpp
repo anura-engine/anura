@@ -58,6 +58,7 @@ namespace hex
 
 		void render(std::vector<KRE::vertex_texcoord>* coords) const;
 		void renderAdjacent(std::vector<MapRenderParams>* coords) const;
+		void renderOverlay(const Alternate& alternative, const KRE::TexturePtr& tex, std::vector<KRE::vertex_texcoord>* coords) const;
 	private:
 		// map coordinates.
 		int x_;

@@ -113,11 +113,24 @@ namespace hex
 			new_layer->updateAttributes(&layer.coords);
 		}
 
+		// XXX we need to do stuff here, like re-order things by tag, so that they all have common textures,
+		// also need to consider how things overlap.
+		base_order = 0x100000;
 		overlay_.clear();
 		for(auto& t : tiles) {
 			for(auto& tag : t.logical_tile()->getTags()) {
 				std::cerr << "TAG: " << tag << "\n";
+				auto ov = Overlay::getOverlay(tag);
+				auto new_layer = std::make_shared<MapLayer>();
+				new_layer->setTexture(ov->getTexture());
+				new_layer->setOrder(base_order);
+
+				std::vector<KRE::vertex_texcoord> coords;
+				t.renderOverlay(ov->getAlternative(), ov->getTexture(), &coords);
+				new_layer->updateAttributes(&coords);
+				attachObject(new_layer);
 			}
+			++base_order;
 		}
 	}
 

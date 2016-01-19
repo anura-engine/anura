@@ -83,6 +83,26 @@ namespace hex
 		}
 	}
 
+	void HexObject::renderOverlay(const Alternate& alternative, const KRE::TexturePtr& tex, std::vector<KRE::vertex_texcoord>* coords) const
+	{
+		const point p(HexMap::getPixelPosFromTilePos(x_, y_));
+		const rect& area = alternative.r;
+		rectf uv = tex->getTextureCoords(0, area);
+
+		const float vx1 = static_cast<float>(p.x - alternative.border[0]);
+		const float vy1 = static_cast<float>(p.y - alternative.border[1]);
+		const float vx2 = static_cast<float>(p.x + area.w());
+		const float vy2 = static_cast<float>(p.y + area.h());
+
+		coords->emplace_back(glm::vec2(vx1, vy1), glm::vec2(uv.x1(), uv.y1()));
+		coords->emplace_back(glm::vec2(vx2, vy1), glm::vec2(uv.x2(), uv.y1()));
+		coords->emplace_back(glm::vec2(vx2, vy2), glm::vec2(uv.x2(), uv.y2()));
+
+		coords->emplace_back(glm::vec2(vx2, vy2), glm::vec2(uv.x2(), uv.y2()));
+		coords->emplace_back(glm::vec2(vx1, vy1), glm::vec2(uv.x1(), uv.y1()));
+		coords->emplace_back(glm::vec2(vx1, vy2), glm::vec2(uv.x1(), uv.y2()));
+	}
+
 	void HexObject::setNeighborsChanged()
 	{
 		for (auto& neighbor : neighbors_) {

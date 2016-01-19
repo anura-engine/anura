@@ -100,25 +100,30 @@ namespace hex
 		EditorInfo editor_info_;
 	};
 
-	class ElementOverlay
+	struct Alternate 
+	{
+		rect r;
+		std::array<int, 4> border;
+	};
+
+	class Overlay
 	{
 	public:
-		static ElementOverlayPtr create(const std::string& name, const std::string& image, const std::vector<variant>& alts);
+		explicit Overlay(const std::string& name, const std::string& image, const std::vector<variant>& alts);
+		static OverlayPtr create(const std::string& name, const std::string& image, const std::vector<variant>& alts);
+		static OverlayPtr getOverlay(const std::string& name);
+		const Alternate& getAlternative() const;
+		KRE::TexturePtr getTexture() const { return texture_; }
 	private:
-		explicit ElementOverlay(const std::string& name, const std::string& image, const std::vector<variant>& alts);
 
 		std::string name_;
 		KRE::TexturePtr texture_;
 
-		struct Alternates {
-			rect r;
-			std::array<int, 4> border;
-		};
-		std::vector<Alternates> alternates_;
+		std::vector<Alternate> alternates_;
 
-		ElementOverlay(const ElementOverlay&) = delete;
-		ElementOverlay() = delete;
-		ElementOverlay& operator=(const ElementOverlay&) = delete;
+		Overlay(const Overlay&) = delete;
+		Overlay() = delete;
+		Overlay& operator=(const Overlay&) = delete;
 	};
 
 	void loader(const variant& n);
