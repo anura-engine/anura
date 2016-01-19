@@ -32,6 +32,8 @@
 #include "variant_utils.hpp"
 #include "Texture.hpp"
 
+#include "random.hpp"
+
 namespace hex 
 {
 	namespace
@@ -54,9 +56,9 @@ namespace hex
 			return tile_map;
 		}
 
-		std::map<std::string, ElementOverlayPtr>& get_overlay_map()
+		std::map<std::string, OverlayPtr>& get_overlay_map()
 		{
-			static std::map<std::string, ElementOverlayPtr> res;
+			static std::map<std::string, OverlayPtr> res;
 			return res;
 		}
 
@@ -92,16 +94,19 @@ namespace hex
 		if(!get_tile_type_map().empty()) {
 			get_tile_type_map().clear();
 		}
+		
+		int tile_id = 0;
+
 		for(auto p : n["tiles"].as_map()) {
 			std::string key_str = p.first.as_string();
-			get_tile_type_map()[key_str] = TileTypePtr(new TileType(key_str, p.second));
+			get_tile_type_map()[key_str] = TileTypePtr(new TileType(key_str, tile_id++, p.second));
 		}
 
-		if(n.has_key("composite")) {
-			for(auto p : n["composite"].as_map()) {
-				ASSERT_LOG(p.first.is_string(), "First element of composite must be a string key. " << p.first.debug_location());
+		if(n.has_key("overlay")) {
+			for(auto p : n["overlay"].as_map()) {
+				ASSERT_LOG(p.first.is_string(), "First element of overlay must be a string key. " << p.first.debug_location());
 				const std::string key = p.first.as_string();
-				ASSERT_LOG(p.second.is_map(), "Second element of composite must be a map. " << p.second.debug_location());
+				ASSERT_LOG(p.second.is_map(), "Second element of overlay must be a map. " << p.second.debug_location());
 				std::string image;
 				std::vector<variant> normals;
 
@@ -123,7 +128,7 @@ namespace hex
 				ASSERT_LOG(!image.empty(), "No 'image' tag found.");
 
 				// Add element here for key
-				get_overlay_map()[key] = ElementOverlay::create(key, image, normals);
+				get_overlay_map()[key] = Overlay::create(key, image, normals);
 			}
 		}
 
@@ -165,9 +170,13 @@ namespace hex
 		return result;
 	}
 
-	TileType::TileType(const std::string& id, const variant& value)
-	  : tile_(logical::Tile::factory(id)),
-	    sheet_(new TileSheet(value))
+	TileType::TileType(const std::string& tile, int num_id, const variant& value)
+	  : num_id_(num_id),
+	    tile_id_(tile),
+	    sheet_(new TileSheet(value)),
+		sheet_indexes_(),
+		adjacency_patterns_(),
+		editor_info_()
 	{
 		for (const std::string& index_str : value["sheet_pos"].as_list_string()) {
 			const int index = strtol(index_str.c_str(), nullptr, 36);
@@ -198,14 +207,14 @@ namespace hex
 			pattern.depth = 0;
 		}
 
-		ASSERT_LOG(sheet_indexes_.empty() == false, "No sheet indexes in hex tile sheet: " << id);
+		ASSERT_LOG(sheet_indexes_.empty() == false, "No sheet indexes in hex tile sheet: " << tile_id_);
 
 		if (value.has_key("editor_info")) {
-			ASSERT_LOG(value["editor_info"].is_map(), "Must have editor info map, none found in: " << tile_->id());
+			ASSERT_LOG(value["editor_info"].is_map(), "Must have editor info map, none found in: " << tile_id_);
 			editor_info_.texture = sheet_->getTexture();
 			editor_info_.name = value["editor_info"]["name"].as_string();
 			editor_info_.group = value["editor_info"]["group"].as_string();
-			editor_info_.type = id;
+			editor_info_.type = tile_id_;
 			editor_info_.image_rect = sheet_->getArea(0);
 		}
 	}
@@ -314,12 +323,12 @@ namespace hex
 		return it->second;
 	}
 
-	ElementOverlayPtr ElementOverlay::create(const std::string& name, const std::string& image, const std::vector<variant>& alts)
+	OverlayPtr Overlay::create(const std::string& name, const std::string& image, const std::vector<variant>& alts)
 	{
-		return ElementOverlayPtr(new ElementOverlay(name, image, alts));
+		return std::make_shared<Overlay>(name, image, alts);
 	}
 
-	ElementOverlay::ElementOverlay(const std::string& name, const std::string& image, const std::vector<variant>& alts)
+	Overlay::Overlay(const std::string& name, const std::string& image, const std::vector<variant>& alts)
 		: name_(name),
 		  texture_(KRE::Texture::createTexture(image)),
 		  alternates_()
@@ -339,4 +348,16 @@ namespace hex
 		}
 	}
 
+	OverlayPtr Overlay::getOverlay(const std::string& name)
+	{
+		auto it = get_overlay_map().find(name);
+		ASSERT_LOG(it != get_overlay_map().end(), "Couldn't find an overlay named '" << name << "'");
+		return it->second;
+	}
+
+	const Alternate& Overlay::getAlternative() const
+	{
+		ASSERT_LOG(!alternates_.empty(), "No alternatives found, must be at lease one.");
+		return alternates_[rng::generate() % alternates_.size()];
+	}
 }

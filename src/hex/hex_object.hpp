@@ -37,7 +37,7 @@ namespace hex
 	class HexObject 
 	{
 	public:
-		HexObject(const std::string& type, int x, int y, const HexMap* owner);
+		HexObject(const logical::TilePtr& type, int x, int y, const HexMap* owner);
 
 		void draw(const point& cam) const;
 	
@@ -51,18 +51,21 @@ namespace hex
 		int y() const { return y_; }
 
 		TileTypePtr tile() const { return tile_; }
+		const logical::TilePtr& logical_tile() const { return logical_tile_; }
 
 		void initNeighbors();
 		void setNeighborsChanged();
 
 		void render(std::vector<KRE::vertex_texcoord>* coords) const;
 		void renderAdjacent(std::vector<MapRenderParams>* coords) const;
+		void renderOverlay(const Alternate& alternative, const KRE::TexturePtr& tex, std::vector<KRE::vertex_texcoord>* coords) const;
 	private:
 		// map coordinates.
 		int x_;
 		int y_;
 
 		TileTypePtr tile_;
+		logical::TilePtr logical_tile_;
 
 		struct NeighborType {
 			NeighborType() : dirmap(0) {}

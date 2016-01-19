@@ -56,7 +56,7 @@ else ifneq (, $(findstring g++, `$(CXX)`))
 GCC_GTEQ_490 := $(shell expr `$(CXX) -dumpversion | sed -e 's/\.\([0-9][0-9]\)/\1/g' -e 's/\.\([0-9]\)/0\1/g' -e 's/^[0-9]\{3,4\}$$/&00/'` \>= 40900)
 BASE_CXXFLAGS += -Wno-literal-suffix -Wno-sign-compare
 ifeq "$(GCC_GTEQ_490)" "1"
-BASE_CXXFLAGS += -fdiagnostics-color=auto -fsanitize=undefined
+BASE_CXXFLAGS += -fdiagnostics-color=auto
 endif
 endif
 
@@ -89,7 +89,7 @@ LDFLAGS += -fsanitize=address
 endif
 
 # Compiler include options, used after CXXFLAGS and CPPFLAGS.
-INC := -isystem external/include $(shell pkg-config --cflags x11 sdl2 glew SDL2_image SDL2_ttf libpng zlib freetype2 cairo)
+INC := -isystem external/crossplatform/include $(shell pkg-config --cflags x11 sdl2 glew SDL2_image SDL2_ttf libpng zlib freetype2 cairo)
 
 ifdef STEAM_RUNTIME_ROOT
 	INC += -isystem $(STEAM_RUNTIME_ROOT)/include
@@ -98,7 +98,7 @@ endif
 # Linker library options.
 LIBS := $(shell pkg-config --libs x11 gl ) \
 	$(shell pkg-config --libs sdl2 glew SDL2_image libpng zlib freetype2 cairo) \
-	-lSDL2_ttf -lSDL2_mixer
+	-lSDL2_ttf -lSDL2_mixer -lrt
 
 # libvpx check
 USE_LIBVPX?=$(shell pkg-config --exists vpx && echo yes)
@@ -114,6 +114,8 @@ ifeq ($(USE_DB_CLIENT),yes)
     BASE_CXXFLAGS += -DUSE_DBCLIENT
     LIBS += -lcouchbase
 endif
+
+BASE_CXXFLAGS += -DUSE_ISOMAP
 
 # cairo check
 USE_SVG?=$(shell pkg-config --exists cairo && echo yes)

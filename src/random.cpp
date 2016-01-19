@@ -39,6 +39,7 @@ namespace rng
 	int generate() 
 	{
 		if(!rng_init) {
+			// using std::time to initialise a mersienne twister is a really pitiful and inadequate idea.
 			seed_from_int(static_cast<unsigned int>(std::time(NULL)));
 		}
 		return generator(state);

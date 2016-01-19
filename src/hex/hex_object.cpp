@@ -31,12 +31,15 @@
 
 namespace hex 
 {
-	HexObject::HexObject(const std::string& type, int x, int y, const HexMap* owner) 
-		: owner_map_(owner), 
-		  x_(x), 
+	HexObject::HexObject(const logical::TilePtr& tile, int x, int y, const HexMap* owner) 
+		: x_(x), 
 		  y_(y), 
-		  type_(type)
-	{
+		  tile_(nullptr),
+		  logical_tile_(tile),
+		  neighbors_(),
+		  type_(tile->id()),
+		  owner_map_(owner)
+  	{
 		tile_ = TileType::factory(type_);
 		ASSERT_LOG(tile_, "Could not find tile: " << type_);
 	}
@@ -76,8 +79,28 @@ namespace hex
 	void HexObject::renderAdjacent(std::vector<MapRenderParams>* coords) const
 	{
 		for(const NeighborType& neighbor : neighbors_) {
-			neighbor.type->renderAdjacent(x_, y_, &(*coords)[neighbor.type->tile_id()].coords, neighbor.dirmap);
+			neighbor.type->renderAdjacent(x_, y_, &(*coords)[neighbor.type->numeric_id()].coords, neighbor.dirmap);
 		}
+	}
+
+	void HexObject::renderOverlay(const Alternate& alternative, const KRE::TexturePtr& tex, std::vector<KRE::vertex_texcoord>* coords) const
+	{
+		const point p(HexMap::getPixelPosFromTilePos(x_, y_));
+		const rect& area = alternative.r;
+		rectf uv = tex->getTextureCoords(0, area);
+
+		const float vx1 = static_cast<float>(p.x - alternative.border[0]);
+		const float vy1 = static_cast<float>(p.y - alternative.border[1]);
+		const float vx2 = static_cast<float>(p.x + area.w());
+		const float vy2 = static_cast<float>(p.y + area.h());
+
+		coords->emplace_back(glm::vec2(vx1, vy1), glm::vec2(uv.x1(), uv.y1()));
+		coords->emplace_back(glm::vec2(vx2, vy1), glm::vec2(uv.x2(), uv.y1()));
+		coords->emplace_back(glm::vec2(vx2, vy2), glm::vec2(uv.x2(), uv.y2()));
+
+		coords->emplace_back(glm::vec2(vx2, vy2), glm::vec2(uv.x2(), uv.y2()));
+		coords->emplace_back(glm::vec2(vx1, vy1), glm::vec2(uv.x1(), uv.y1()));
+		coords->emplace_back(glm::vec2(vx1, vy2), glm::vec2(uv.x1(), uv.y2()));
 	}
 
 	void HexObject::setNeighborsChanged()
@@ -91,7 +114,7 @@ namespace hex
 	{
 		for(int n = 0; n < 6; ++n) {
 			const HexObject* obj = getTileInDir(static_cast<direction>(n));
-			if(obj && obj->tile() && obj->tile()->getHeight() > tile()->getHeight()) {
+			if(obj && obj->tile() && obj->logical_tile()->getHeight() > logical_tile()->getHeight()) {
 				NeighborType* neighbor = nullptr;
 				for(NeighborType& candidate : neighbors_) {
 					neighbor = &candidate;

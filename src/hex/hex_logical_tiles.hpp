@@ -49,8 +49,8 @@ namespace hex
 			int tile_id() const { return tile_id_; }
 			float getCost() const { return cost_; }
 			int getHeight() const { return height_; }
-			const std::vector<std::string>& getAugments() const { return augments_; }
-			void setAugments(std::vector<std::string>::const_iterator beg, std::vector<std::string>::const_iterator ed);
+			const std::vector<std::string>& getTags() const { return tags_; }
+			void setTags(std::vector<std::string>::const_iterator beg, std::vector<std::string>::const_iterator ed);
 			static TilePtr factory(const std::string& name);
 			static const std::map<std::string, TilePtr>& getLoadedTiles();
 			static int getMaxTileId();
@@ -60,7 +60,7 @@ namespace hex
 			int height_;
 			float cost_;
 			int tile_id_;
-			std::vector<std::string> augments_;
+			std::vector<std::string> tags_;
 		};
 	
 		class LogicalMap : public game_logic::FormulaCallable
