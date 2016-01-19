@@ -1592,13 +1592,13 @@ private:
 
 		status_doc_.add_attr_mutation(variant("users_queued"), variant(nusers_queued));
 		
-		status_doc_.add_attr_mutation(variant("games"), variant(servers_.size()));
+		status_doc_.add_attr_mutation(variant("games"), variant(static_cast<int>(servers_.size())));
 
 		status_doc_state_id_++;
 		status_doc_.add_attr_mutation(variant("state_id"), variant(status_doc_state_id_));
 
 		if(status_doc_new_users_.empty() == false || status_doc_delete_users_.empty() == false) {
-			status_doc_.add_attr_mutation(variant("users"), variant(status_doc_["users"].as_int() + status_doc_new_users_.size() - status_doc_delete_users_.size()));
+			status_doc_.add_attr_mutation(variant("users"), variant(status_doc_["users"].as_int32() + static_cast<int>(status_doc_new_users_.size()) - static_cast<int>(status_doc_delete_users_.size())));
 
 			static variant IdVariant("id");
 
