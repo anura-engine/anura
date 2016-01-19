@@ -1598,8 +1598,6 @@ private:
 		status_doc_.add_attr_mutation(variant("state_id"), variant(status_doc_state_id_));
 
 		if(status_doc_new_users_.empty() == false || status_doc_delete_users_.empty() == false) {
-			status_doc_.add_attr_mutation(variant("users"), variant(status_doc_["users"].as_int() + status_doc_new_users_.size() - status_doc_delete_users_.size()));
-
 			static variant IdVariant("id");
 
 			std::vector<variant> list = status_doc_["user_list"].as_list();
@@ -1631,6 +1629,8 @@ private:
 				builder.add("status", "idle");
 				list.push_back(builder.build());
 			}
+
+			status_doc_.add_attr_mutation(variant("users"), variant(static_cast<int>(list.size())));
 
 			status_doc_.add_attr_mutation(variant("user_list"), variant(&list));
 		}
