@@ -344,7 +344,12 @@ namespace hex
 				for(int n = 0; n != 4; ++n) {
 					it->border[n] = v["border"][n].as_int32();
 				}
+			} else {
+				for(int n = 0; n != 4; ++n) {
+					it->border[n] = 0;
+				}
 			}
+			++it;
 		}
 	}
 

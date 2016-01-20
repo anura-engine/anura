@@ -61,6 +61,17 @@ namespace hex
 		}
 	}
 
+	namespace 
+	{
+		struct OverlayHelper {
+			OverlayHelper() : x_(nullptr), obj_(nullptr), tex_(nullptr) {}
+			explicit OverlayHelper(const Alternate* x, const HexObject* obj, const KRE::TexturePtr& tex) : x_(x), obj_(obj), tex_(tex) {}
+			const Alternate* x_;
+			const HexObject* obj_;
+			KRE::TexturePtr tex_;
+		};
+	}
+
 	void MapNode::update(int width, int height, const std::vector<HexObject>& tiles)
 	{
 		layers_.clear();
@@ -113,23 +124,29 @@ namespace hex
 			new_layer->updateAttributes(&layer.coords);
 		}
 
-		// XXX we need to do stuff here, like re-order things by tag, so that they all have common textures,
-		// also need to consider how things overlap.
-		base_order = 0x100000;
-		overlay_.clear();
+		// Create a map of overlays based on the same texture.
+		std::map<unsigned int, std::vector<OverlayHelper>> overlay_map;
 		for(auto& t : tiles) {
 			for(auto& tag : t.logical_tile()->getTags()) {
-				std::cerr << "TAG: " << tag << "\n";
 				auto ov = Overlay::getOverlay(tag);
-				auto new_layer = std::make_shared<MapLayer>();
-				new_layer->setTexture(ov->getTexture());
-				new_layer->setOrder(base_order);
-
-				std::vector<KRE::vertex_texcoord> coords;
-				t.renderOverlay(ov->getAlternative(), ov->getTexture(), &coords);
-				new_layer->updateAttributes(&coords);
-				attachObject(new_layer);
+				unsigned int tex_id = ov->getTexture()->id();
+				auto it = overlay_map.find(tex_id);
+				overlay_map[tex_id].emplace_back(&ov->getAlternative(), &t, ov->getTexture());
 			}
+		}
+
+		base_order = 0x100000;
+		overlay_.clear();
+		for(const auto& om : overlay_map) {
+			auto new_layer = std::make_shared<MapLayer>();
+			new_layer->setTexture(om.second.front().tex_);
+			std::vector<KRE::vertex_texcoord> coords;
+			for(auto& ov : om.second) {
+				new_layer->setOrder(base_order);
+				ov.obj_->renderOverlay(*ov.x_, ov.tex_, &coords);
+			}
+			new_layer->updateAttributes(&coords);
+			attachObject(new_layer);
 			++base_order;
 		}
 	}
@@ -144,7 +161,7 @@ namespace hex
 		auto as = DisplayDevice::createAttributeSet(true, false, false);
 		as->setDrawMode(DrawMode::TRIANGLES);
 
-		attr_ = std::make_shared<Attribute<vertex_texcoord>>(AccessFreqHint::DYNAMIC);
+		attr_ = std::make_shared<Attribute<vertex_texcoord>>(AccessFreqHint::STATIC);
 		attr_->addAttributeDesc(AttributeDesc(AttrType::POSITION, 2, AttrFormat::FLOAT, false, sizeof(vertex_texcoord), offsetof(vertex_texcoord, vtx)));
 		attr_->addAttributeDesc(AttributeDesc(AttrType::TEXTURE, 2, AttrFormat::FLOAT, false, sizeof(vertex_texcoord), offsetof(vertex_texcoord, tc)));
 
