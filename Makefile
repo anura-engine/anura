@@ -98,7 +98,7 @@ endif
 # Linker library options.
 LIBS := $(shell pkg-config --libs x11 gl ) \
 	$(shell pkg-config --libs sdl2 glew SDL2_image libpng zlib freetype2 cairo) \
-	-lSDL2_ttf -lSDL2_mixer
+	-lSDL2_ttf -lSDL2_mixer -lrt
 
 # libvpx check
 USE_LIBVPX?=$(shell pkg-config --exists vpx && echo yes)

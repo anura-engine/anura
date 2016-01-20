@@ -885,6 +885,14 @@ namespace {
 		int w = FN_ARG(0).as_int();
 		int h = FN_ARG(1).as_int();
 		ASSERT_LOG(w >= 0 && h >= 0 && w <= 8192 && h <= 8192, "Invalid canvas render: " << w << "x" << h);
+		if(w&1) {
+			++w;
+		}
+
+		if(h&1) {
+			++h;
+		}
+
 		if(w < 2) {
 			w = 2;
 		}

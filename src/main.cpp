@@ -130,7 +130,6 @@ namespace
 	PREF_BOOL(disable_global_alpha_filter, false, "Disables using alpha-colors.png to denote some special colors as 'alpha colors'");
 
 	PREF_BOOL_PERSISTENT(desktop_fullscreen, false, "Sets the game window to be a fullscreen window the size of the desktop");
-	PREF_BOOL(exclusive_fullscreen, false, "Makes the game use exclusive fullscreen mode");
 
 
 #if defined(_MSC_VER)
