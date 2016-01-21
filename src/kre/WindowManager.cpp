@@ -153,6 +153,10 @@ namespace KRE
 				wnd_flags |= SDL_WINDOW_RESIZABLE;
 			}
 
+			if(borderless()) {
+				wnd_flags |= SDL_WINDOW_BORDERLESS;
+			}
+
 			int x = SDL_WINDOWPOS_CENTERED;
 			int y = SDL_WINDOWPOS_CENTERED;
 			int w = width();
@@ -392,6 +396,7 @@ namespace KRE
 		  use_multi_sampling_(hints["use_multisampling"].as_bool(false)),
 		  samples_(hints["samples"].as_int32(4)),
 		  is_resizeable_(hints["resizeable"].as_bool(false)),
+		  is_borderless_(hints["borderless"].as_bool(false)),
 		  fullscreen_mode_(hints["fullscreen"].as_bool(false) ? FullScreenMode::FULLSCREEN_WINDOWED : FullScreenMode::WINDOWED),
 		  title_(hints["title"].as_string_default("")),
 		  use_vsync_(hints["use_vsync"].as_bool(false)),

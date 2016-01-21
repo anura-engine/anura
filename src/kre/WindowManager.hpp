@@ -88,6 +88,7 @@ namespace KRE
 		bool useMultiSampling() const { return use_multi_sampling_; }
 		int multiSamples() const { return samples_; }
 		bool resizeable() const { return is_resizeable_; }
+		bool borderless() const { return is_borderless_; }
 		FullScreenMode fullscreenMode() const { return fullscreen_mode_; }
 		bool vSync() const { return use_vsync_; }
 
@@ -136,6 +137,7 @@ namespace KRE
 		bool use_multi_sampling_;
 		int samples_;
 		bool is_resizeable_;
+		bool is_borderless_;
 		FullScreenMode fullscreen_mode_;
 		std::string title_;
 		bool use_vsync_;

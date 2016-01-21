@@ -130,6 +130,7 @@ namespace
 	PREF_BOOL(disable_global_alpha_filter, false, "Disables using alpha-colors.png to denote some special colors as 'alpha colors'");
 
 	PREF_BOOL_PERSISTENT(desktop_fullscreen, false, "Sets the game window to be a fullscreen window the size of the desktop");
+	PREF_BOOL_PERSISTENT(desktop_fullscreen_force, false, "(Windows) forces desktop fullscreen to actually use fullscreen rather than a borderless window the size of the desktop");
 
 
 #if defined(_MSC_VER)
@@ -901,7 +902,16 @@ int main(int argcount, char* argvec[])
 
 		hints.set("width", dm.w);
 		hints.set("height", dm.h);
+#if defined(_MSC_VER)
+		if(g_desktop_fullscreen_force) {
+			hints.set("fullscreen", true);
+		} else {
+			hints.set("fullscreen", false);
+			hints.set("borderless", true);
+		}
+#else
 		hints.set("fullscreen", true);
+#endif
 	}
 
 	variant built_hints = hints.build();
