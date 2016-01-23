@@ -67,7 +67,7 @@ namespace KRE
 		camera_->setOrthoWindow(0, width_, 0, height_);
 		pv_ = camera_->getProjectionMat() * camera_->getViewMat();
 		if(wnd) {
-			size_change_key_ = wnd->registerSizeChangeObserver([this](int w, int h) {
+			size_change_key_ = wnd->registerSizeChangeObserver([this](int w, int h, int flags) {
 				this->setDimensions(w, h);
 			});
 		}
@@ -141,11 +141,11 @@ namespace KRE
 		window_ = wnd;
 		if(wnd) {
 			if(size_change_key_ >= 0) {
-				wnd->registerSizeChangeObserver(size_change_key_, [this](int w, int h) {
+				wnd->registerSizeChangeObserver(size_change_key_, [this](int w, int h, int flags) {
 					this->setDimensions(w, h);
 				});	
 			} else {
-				size_change_key_ = wnd->registerSizeChangeObserver([this](int w, int h) {
+				size_change_key_ = wnd->registerSizeChangeObserver([this](int w, int h, int flags) {
 					this->setDimensions(w, h);
 				});	
 			}

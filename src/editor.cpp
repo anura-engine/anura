@@ -1192,7 +1192,7 @@ EditorResolutionManager::EditorResolutionManager(int xres, int yres)
 
 	if(++editor_resolution_manager_count == 1) {
 		LOG_INFO("EDITOR RESOLUTION: " << editor_x_resolution << "," << editor_y_resolution);
-		KRE::WindowManager::getMainWindow()->setWindowSize(editor_x_resolution, editor_y_resolution);
+		KRE::WindowManager::getMainWindow()->setWindowSize(editor_x_resolution, editor_y_resolution, KRE::WindowSizeChangeFlags::NOTIFY_CANVAS_ONLY);
 		graphics::GameScreen::get().setLocation(0, EDITOR_MENUBAR_HEIGHT);
 	}
 }

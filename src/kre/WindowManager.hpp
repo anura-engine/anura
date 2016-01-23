@@ -52,6 +52,11 @@ namespace KRE
 		return lhs.width == rhs.width && lhs.height == rhs.height;
 	}
 
+	enum WindowSizeChangeFlags {
+		NONE = 0,
+		NOTIFY_CANVAS_ONLY = 1,
+	};
+
 	class Window : public std::enable_shared_from_this<Window>
 	{
 	public:
@@ -61,7 +66,7 @@ namespace KRE
 		virtual void createWindow() = 0;
 		virtual void destroyWindow() = 0;
 
-		bool setWindowSize(int width, int height);
+		bool setWindowSize(int width, int height, int flags=WindowSizeChangeFlags::NONE);
 		virtual bool autoWindowSize(int& width, int& height) = 0;
 		
 		bool setLogicalWindowSize(int width, int height);
@@ -117,15 +122,15 @@ namespace KRE
 		virtual std::vector<WindowMode> getWindowModes(std::function<bool(const WindowMode&)> mode_filter) const = 0;
 		virtual WindowMode getDisplaySize() const = 0;
 
-		void notifyNewWindowSize(int new_width, int new_height);
+		void notifyNewWindowSize(int new_width, int new_height, int flags=WindowSizeChangeFlags::NONE);
 
-		int registerSizeChangeObserver(std::function<void(int,int)> fn);
-		bool registerSizeChangeObserver(int key, std::function<void(int,int)> fn);
+		int registerSizeChangeObserver(std::function<void(int,int,int)> fn);
+		bool registerSizeChangeObserver(int key, std::function<void(int,int,int)> fn);
 		void unregisterSizeChangeObserver(int);
 
 		DisplayDevicePtr getDisplayDevice() const { return display_; }
 	protected:
-		void updateDimensions(int w, int h);
+		void updateDimensions(int w, int h, int flags=WindowSizeChangeFlags::NONE);
 		void setDisplayDevice(DisplayDevicePtr display) { display_ = display; }
 		mutable Color clear_color_;
 	private:
@@ -152,7 +157,7 @@ namespace KRE
 		virtual void handleSetWindowTitle() = 0;
 		virtual void handleSetViewPort() = 0;
 
-		std::map<int, std::function<void(int,int)>> dimensions_changed_observers_;
+		std::map<int, std::function<void(int,int,int)>> dimensions_changed_observers_;
 	};
 
 	class WindowManager

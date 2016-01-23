@@ -112,11 +112,13 @@ namespace KRE
 		handleClear();
 	}
 
-	void RenderTarget::onSizeChange(int width, int height)
+	void RenderTarget::onSizeChange(int width, int height, int flags)
 	{
-		width_ = width;
-		height_ = height;
-		handleSizeChange(width, height);
+		if(!(flags & WindowSizeChangeFlags::NOTIFY_CANVAS_ONLY)) {
+			width_ = width;
+			height_ = height;
+			handleSizeChange(width, height);
+		}
 	}
 
 	void RenderTarget::setClearColor(int r, int g, int b, int a)
@@ -184,7 +186,7 @@ namespace KRE
 	{
 		auto rt = DisplayDevice::renderTargetInstance(width, height, color_plane_count, depth, stencil, use_multi_sampling, multi_samples);
 		auto wnd = WindowManager::getMainWindow();
-		rt->size_change_observer_handle_ = wnd->registerSizeChangeObserver(std::bind(&RenderTarget::onSizeChange, rt.get(), std::placeholders::_1, std::placeholders::_2));
+		rt->size_change_observer_handle_ = wnd->registerSizeChangeObserver(std::bind(&RenderTarget::onSizeChange, rt.get(), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 		return rt;
 	}
 
