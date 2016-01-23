@@ -3181,7 +3181,7 @@ FUNCTION_DEF_IMPL
 			const int begin = SDL_GetTicks();
 			variant result = args()[1]->evaluate(variables);
 			const int end = SDL_GetTicks();
-			std::cerr << "Instrument: " << args()[0]->evaluate(variables).as_string() << ": " << (end - begin) << "ms\n";
+			LOG_INFO("Instrument: " << args()[0]->evaluate(variables).as_string() << ": " << (end - begin) << "ms");
 			return result;
 
 		FUNCTION_ARGS_DEF
