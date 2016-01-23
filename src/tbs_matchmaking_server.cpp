@@ -786,6 +786,106 @@ public:
 				response[variant("session_id")] = variant(session_id);
 				send_msg(socket, "text/json", variant(&response).write_json(), "");
 
+			} else if(request_type == "challenge") {
+				const int session_id = doc["session_id"].as_int(request_session_id);
+
+				if(sessions_.count(session_id) == 0) {
+					RESPOND_MESSAGE("Invalid session ID");
+					return;
+				}
+
+				SessionInfo& info = sessions_[session_id];
+				info.session_id = session_id;
+				info.last_contact = time_ms_;
+
+				std::string user = doc["user"].as_string();
+
+				fprintf(stderr, "CCC: Challenge received: vs: %s\n", user.c_str());
+
+
+				{
+					//see if the other player already made a challenge in which
+					//case we just accept it here.
+					MatchChallengePtr challenge;
+					SessionInfo& info = sessions_[session_id];
+					for(auto c : info.challenges_received) {
+						if(c->challenger == user) {
+							challenge = c;
+							break;
+						}
+					}
+
+					auto challenger_it = sessions_.end();
+					if(challenge.get() != nullptr) {
+						challenger_it = sessions_.find(challenge->challenger_session);
+						if(challenger_it != sessions_.end()) {
+							if(std::find(challenger_it->second.challenges_made.begin(), challenger_it->second.challenges_made.end(), challenge) == challenger_it->second.challenges_made.end()) {
+								//can't find the challenge, it must have been canceled.
+								challenge.reset();
+							}
+						}
+					}
+
+					if(challenger_it != sessions_.end()) {
+
+						std::map<variant,variant> response;
+						response[variant("type")] = variant("challenge_queued");
+						response[variant("session_id")] = variant(session_id);
+						send_msg(socket, "text/json", variant(&response).write_json(), "");
+
+						fprintf(stderr, "CCC: Challenge match made!\n");
+						std::vector<int> match_sessions;
+						match_sessions.push_back(challenger_it->first);
+						match_sessions.push_back(session_id);
+						begin_match(match_sessions);
+						return;
+					}
+				}
+
+				std::vector<std::map<int, SessionInfo>::iterator> opponent;
+
+				for(auto it = sessions_.begin(); it != sessions_.end(); ++it) {
+					if(it->second.user_id == user) {
+						opponent.push_back(it);
+					}
+				}
+
+				std::map<variant,variant> response;
+
+				if(opponent.empty()) {
+					response[variant("type")] = variant("challenge_failed");
+				} else {
+					response[variant("type")] = variant("challenge_queued");
+				}
+				response[variant("session_id")] = variant(session_id);
+				send_msg(socket, "text/json", variant(&response).write_json(), "");
+
+				if(opponent.empty()) {
+					return;
+				}
+
+
+				MatchChallengePtr challenge(new MatchChallenge);
+				challenge->challenger_session = session_id;
+				challenge->challenger = info.user_id;
+				challenge->challenged = user;
+				challenge->game_type_info = doc["game_type_info"];
+
+				info.challenges_made.push_back(challenge);
+
+				for(auto it : opponent) {
+					it->second.challenges_received.push_back(challenge);
+					if(it->second.current_socket) {
+						std::map<variant,variant> msg;
+						msg[variant("type")] = variant("challenge");
+						msg[variant("challenger")] = variant(info.user_id);
+						send_msg(it->second.current_socket, "text/json", variant(&msg).write_json(), "");
+						it->second.current_socket.reset();
+						challenge->received = true;
+					}
+				}
+
+
 			} else if(request_type == "matchmake") {
 				const int session_id = doc["session_id"].as_int(request_session_id);
 
@@ -908,6 +1008,19 @@ public:
 						send_msg(socket, "text/json", itor->second.game_details, "");
 						itor->second.game_details = "";
 					} else {
+
+						for(auto challenge : itor->second.challenges_received) {
+							if(challenge->received == false) {
+
+								std::map<variant,variant> msg;
+								msg[variant("type")] = variant("challenge");
+								msg[variant("challenger")] = variant(challenge->challenger);
+								send_msg(itor->second.current_socket, "text/json", variant(&msg).write_json(), "");
+								challenge->received = true;
+								return;
+							}
+						}
+
 						if(itor->second.current_socket) {
 							disconnect(itor->second.current_socket);
 						}
@@ -1231,10 +1344,6 @@ private:
 
 	int check_matchmaking_queue()
 	{
-
-#if defined(_MSC_VER)
-		return 0;
-#else
 		//build a list of queued users and then pass to our FFL matchmake() function
 		//to try to make an eligible match.
 		std::vector<int> session_ids;
@@ -1247,7 +1356,6 @@ private:
 				}
 			}
 		}
-
 
 		std::vector<variant> args;
 		args.push_back(variant(&info));
@@ -1264,7 +1372,16 @@ private:
 			match_sessions.push_back(session_ids[index]);
 		}
 
+		begin_match(match_sessions);
 
+		return static_cast<int>(session_ids.size() - match_sessions.size());
+	}
+
+	void begin_match(const std::vector<int>& match_sessions)
+	{
+#if defined(_MSC_VER)
+		return;
+#else
 		if(!available_ports_.empty()) {
 			//spawn off a server to play this game.
 			std::string fname = formatter() << "/tmp/anura_tbs_server." << match_sessions.front();
@@ -1282,6 +1399,9 @@ private:
 				SessionInfo& session_info = sessions_[i];
 				session_info.game_pending = time_ms_;
 				session_info.queued_for_game = false;
+
+				session_info.challenges_made.clear();
+				session_info.challenges_received.clear();
 
 				auto account_info_itor = account_info_.find(session_info.user_id);
 				ASSERT_LOG(account_info_itor != account_info_.end(), "Could not find user's account info: " << session_info.user_id);
@@ -1390,7 +1510,6 @@ private:
 			fprintf(stderr, "ERROR: AVAILABLE PORTS EXHAUSTED\n");
 		}
 
-		return static_cast<int>(session_ids.size() - match_sessions.size());
 #endif //!_MSC_VER
 	}
 
@@ -1456,6 +1575,16 @@ private:
 
 	DbClientPtr db_client_;
 
+	struct MatchChallenge {
+		MatchChallenge() : challenger_session(-1), received(false) {}
+		std::string challenger, challenged;
+		int challenger_session;
+		bool received;
+		variant game_type_info;
+	};
+
+	typedef std::shared_ptr<MatchChallenge> MatchChallengePtr;
+
 	struct SessionInfo {
 		SessionInfo() : session_id(-1), status("idle"), last_contact(-1), game_pending(0), game_port(0), queued_for_game(false), sent_heartbeat(false), send_process_counter(60), messages_this_time_segment(0), time_segment(0), flood_mute_expires(0), have_state_id(-1), request_server_info(false) {}
 		int session_id;
@@ -1481,6 +1610,8 @@ private:
 		int have_state_id;
 
 		bool request_server_info;
+
+		std::vector<MatchChallengePtr> challenges_made, challenges_received;
 	};
 
 	std::map<int, SessionInfo> sessions_;
