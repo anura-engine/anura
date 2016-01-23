@@ -1380,7 +1380,7 @@ private:
 	void begin_match(const std::vector<int>& match_sessions)
 	{
 #if defined(_MSC_VER)
-		return 0;
+		return;
 #else
 		if(!available_ports_.empty()) {
 			//spawn off a server to play this game.
