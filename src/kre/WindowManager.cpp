@@ -456,25 +456,25 @@ namespace KRE
 		}
 	}
 
-	bool Window::setWindowSize(int width, int height)
+	bool Window::setWindowSize(int width, int height, int flags)
 	{
 		width_ = width;
 		height_ = height;
 		bool result = handlePhysicalWindowSizeChange();
 		if(result) {
 			for(auto& observer : dimensions_changed_observers_) {
-				observer.second(width_, height_);
+				observer.second(width_, height_, flags);
 			}
 		}
 		return result;
 	}
 
-	void Window::updateDimensions(int w, int h)
+	void Window::updateDimensions(int w, int h, int flags)
 	{
 		width_ = w;
 		height_ = h;
 		for(auto& observer : dimensions_changed_observers_) {
-			observer.second(width_, height_);
+			observer.second(width_, height_, flags);
 		}
 	}
 
@@ -503,14 +503,14 @@ namespace KRE
 		handleSetClearColor();
 	}
 
-	void Window::notifyNewWindowSize(int new_width, int new_height)
+	void Window::notifyNewWindowSize(int new_width, int new_height, int flags)
 	{
 		width_ = new_width;
 		height_ = new_height;
 		handlePhysicalWindowSizeChange();
 
 		for(auto& observer : dimensions_changed_observers_) {
-			observer.second(new_width, new_height);
+			observer.second(new_width, new_height, flags);
 		}
 	}
 
@@ -536,14 +536,14 @@ namespace KRE
 		return std::string();
 	}
 
-	int Window::registerSizeChangeObserver(std::function<void(int,int)> fn)
+	int Window::registerSizeChangeObserver(std::function<void(int,int,int)> fn)
 	{
 		static int counter = 0;
 		dimensions_changed_observers_[counter] = fn;
 		return counter++;
 	}
 
-	bool Window::registerSizeChangeObserver(int key, std::function<void(int,int)> fn)
+	bool Window::registerSizeChangeObserver(int key, std::function<void(int,int,int)> fn)
 	{
 		auto it = dimensions_changed_observers_.find(key);
 		if(it == dimensions_changed_observers_.end()) {

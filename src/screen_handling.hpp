@@ -48,7 +48,7 @@ namespace graphics
 		void mapCoordsPtoV(int* x, int* y);
 		void mapCoordsVtoP(int* x, int* y);
 
-		void windowSizeUpdated(int width, int height);
+		void windowSizeUpdated(int width, int height, int flags);
 
 		void setLocation(int x, int y);
 		void setDimensions(int width, int height);

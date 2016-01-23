@@ -74,7 +74,7 @@ namespace KRE
 		std::vector<uint8_t> readPixels() const;
 		SurfacePtr readToSurface(SurfacePtr s=nullptr) const;
 
-		void onSizeChange(int width, int height);
+		void onSizeChange(int width, int height, int flags);
 
 		static RenderTargetPtr create(int width, int height, 
 			unsigned color_plane_count=1, 
