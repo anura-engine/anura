@@ -111,7 +111,8 @@ namespace tbs
 		void player_reconnect(int nplayer);
 		void player_disconnected_for(int nplayer, int time_ms);
 
-		void observer_connect(int nclient);
+		void observer_connect(int nclient, const std::string& username);
+		void observer_disconnect(const std::string& username);
 
 	protected:
 		void start_game();
@@ -167,6 +168,8 @@ namespace tbs
 		void executeCommand(variant cmd);
 
 		mutable DbClientPtr db_client_;
+
+		std::vector<std::string> observers_;
 	};
 
 	class game_context 
