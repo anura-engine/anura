@@ -375,6 +375,7 @@ public:
 					variant_builder response; \
 					response.add("type", "error"); \
 					response.add("message", msg); \
+					response.add("timestamp", static_cast<int>(time(NULL))); \
 					send_response(socket, response.build()); \
 				}
 
@@ -382,6 +383,7 @@ public:
 					variant_builder response; \
 					response.add("type", "message"); \
 					response.add("message", msg); \
+					response.add("timestamp", static_cast<int>(time(NULL))); \
 					send_response(socket, response.build()); \
 				}
 
@@ -510,6 +512,7 @@ public:
 						response.add("username", variant(user_full));
 						response.add("info_version", variant(0));
 						response.add("info", account_info);
+						response.add("timestamp", static_cast<int>(time(NULL)));
 
 						if(remember) {
 							std::string cookie = write_uuid(generate_uuid());
@@ -576,6 +579,7 @@ public:
 					response.add("username", given_user);
 					response.add("info_version", user_info["info_version"].as_int(0));
 					response.add("info", user_info["info"]);
+					response.add("timestamp", static_cast<int>(time(NULL)));
 
 					if(remember) {
 						std::string cookie = write_uuid(generate_uuid());
@@ -628,6 +632,8 @@ public:
 						response.add("username", user_info["user"]);
 						response.add("info", user_info["info"]);
 						response.add("info_version", user_info["info_version"].as_int(0));
+						response.add("timestamp", static_cast<int>(time(NULL)));
+
 						send_response(socket, response.build());
 					});
 				});
@@ -933,6 +939,8 @@ public:
 					variant_builder msg;
 					msg.add("nick", variant(info.user_id));
 					msg.add("message", message);
+
+					msg.add("timestamp", variant(static_cast<int>(time(NULL))));
 
 					variant v = msg.build();
 
@@ -1276,6 +1284,7 @@ public:
 			variant_builder msg;
 			msg.add("type", "admin_message");
 			msg.add("message", "Executing...");
+			msg.add("timestamp", static_cast<int>(time(NULL)));
 			send_msg(socket, "text/json", msg.build().write_json(), "");
 		}
 

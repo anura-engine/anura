@@ -305,6 +305,7 @@ namespace tbs
 		variant_builder result;
 		result.add("type", "error");
 		result.add("message", msg);
+		result.add("timestamp", static_cast<int>(time(NULL)));
 		queue_message(result.build(), nplayer);
 	}
 
@@ -313,6 +314,7 @@ namespace tbs
 		variant_builder result;
 		result.add("type", "message");
 		result.add("message", msg);
+		result.add("timestamp", static_cast<int>(time(NULL)));
 		queue_message(result.build(), nplayer);
 	}
 
@@ -603,6 +605,7 @@ namespace tbs
 			return;
 		} else if(type == "chat_message") {
 			variant m = msg;
+			m.add_attr_mutation(variant("timestamp"), variant(static_cast<int>(time(NULL))));
 			if(nplayer >= 0) {
 				m.add_attr_mutation(variant("nick"), variant(players_[nplayer].name));
 			} else {
