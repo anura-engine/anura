@@ -345,19 +345,25 @@ void Entity::drawDebugRects() const
 		return;
 	}
 
-	auto canvas = KRE::Canvas::getInstance();
+	auto wnd = KRE::WindowManager::getMainWindow();
 
 	const rect& body = solidRect();
 	if(body.w() > 0 && body.h() > 0) {
-		canvas->drawSolidRect(body, KRE::Color(0,0,0,0xaa));
+		RectRenderable body_rr;
+		body_rr.update(body, KRE::Color(0,0,0,0xaa));
+		wnd->render(&body_rr);
 	}
 
 	const rect& hit = getHitRect();
 	if(hit.w() > 0 && hit.h() > 0) {
-		canvas->drawSolidRect(hit, KRE::Color(255,0,0,0xaa));
+		RectRenderable hit_rr;
+		hit_rr.update(body, KRE::Color(255,0,0,0xaa));
+		wnd->render(&hit_rr);
 	}
 
-	canvas->drawSolidRect(rect(getFeetX() - 1, getFeetY() - 1, 3, 3), KRE::Color(255,255,255,0xaa));
+	RectRenderable feet_rr;
+	feet_rr.update(getFeetX() - 1, getFeetY() - 1, 3, 3, KRE::Color(255,255,255,0xaa));
+	wnd->render(&feet_rr);
 }
 
 void Entity::generateCurrent(const Entity& target, int* velocity_x, int* velocity_y) const
