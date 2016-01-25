@@ -1303,9 +1303,11 @@ END_CAIRO_FN
 	END_CAIRO_FN
 
 	BEGIN_CAIRO_FN(paint_image, "(string, [decimal,decimal]|null=null)")
+		cairo_status_t status_before = cairo_status(context.get());
+		ASSERT_LOG(status_before == 0, "rendering error before painting " << args[0].as_string() << ": " << cairo_status_to_string(status_before));
 		cairo_surface_t* surface = get_cairo_image(args[0].as_string());
 		cairo_status_t status = cairo_status(context.get());
-		ASSERT_LOG(status == 0, "SVG rendering error painting " << args[0].as_string() << ": " << cairo_status_to_string(status));
+		ASSERT_LOG(status == 0, "rendering error painting " << args[0].as_string() << ": " << cairo_status_to_string(status));
 		double translate_x = 0, translate_y = 0;
 		if(args.size() > 1) {
 			variant pos = args[1];

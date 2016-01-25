@@ -46,7 +46,7 @@ namespace graphics
 	GameScreen& GameScreen::get()
 	{
 		static GameScreen res;
-		static int handle = KRE::WindowManager::getMainWindow()->registerSizeChangeObserver(std::bind(&GameScreen::windowSizeUpdated, &res, std::placeholders::_1, std::placeholders::_2));
+		static int handle = KRE::WindowManager::getMainWindow()->registerSizeChangeObserver(std::bind(&GameScreen::windowSizeUpdated, &res, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 		return res;
 	}
 
@@ -71,10 +71,12 @@ namespace graphics
 		cam_ = std::make_shared<KRE::Camera>("gs.cam", 0, width_, 0, height_);
 	}
 
-	void GameScreen::windowSizeUpdated(int width, int height)
+	void GameScreen::windowSizeUpdated(int width, int height, int flags)
 	{
-		setDimensions(width, height);
-		setVirtualDimensions(width, height);
+		if(!(flags & KRE::WindowSizeChangeFlags::NOTIFY_CANVAS_ONLY)) {
+			setDimensions(width, height);
+			setVirtualDimensions(width, height);
+		}
 	}
 
 	void GameScreen::setVirtualDimensions(int vwidth, int vheight)

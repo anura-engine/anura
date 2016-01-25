@@ -261,11 +261,15 @@ variant PlayableCustomObject::getPlayerValueBySlot(int slot) const
 			return variant(&result);
 		}
 
+/* //currently don't exclude from widgets as we might
+   //have widgets still alive but not displayed, so
+   //comment this out until we work around that.
 		for(auto& w : get_key_handling_widgets()) {
 			if(w->hasFocus()) {
 				return variant(&result);
 			}
 		}
+		*/
 
 		int ary_length;
 		const Uint8* key_state = SDL_GetKeyboardState(&ary_length);

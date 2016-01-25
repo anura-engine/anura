@@ -188,7 +188,7 @@ namespace tbs
 
 			g->clients.push_back(session_id);
 
-			g->game_state->observer_connect(g->clients.size()-1);
+			g->game_state->observer_connect(g->clients.size()-1, user);
 
 			send_fn(json::parse(formatter() << "{ \"type\": \"observing_game\" }"));
 
@@ -291,6 +291,8 @@ namespace tbs
 					g->game_state->queue_message("{ type: 'player_quit' }");
 					g->game_state->queue_message(formatter() << "{ type: 'message', message: '" << cli_info.user << " has quit' }");
 					flush_game_messages(*g);
+				} else {
+					g->game_state->observer_disconnect(cli_info.user);
 				}
 
 				if(g->clients.empty()) {
