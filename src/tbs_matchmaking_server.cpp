@@ -1023,7 +1023,7 @@ public:
 								std::map<variant,variant> msg;
 								msg[variant("type")] = variant("challenge");
 								msg[variant("challenger")] = variant(challenge->challenger);
-								send_msg(itor->second.current_socket, "text/json", variant(&msg).write_json(), "");
+								send_msg(socket, "text/json", variant(&msg).write_json(), "");
 								challenge->received = true;
 								return;
 							}
