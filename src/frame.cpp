@@ -221,8 +221,11 @@ Frame::Frame(variant node)
 		palettes_recognized_.emplace_back(id);
 	}
 
+	KRE::TexturePtr fbo_texture;
+
 	if(node.has_key("fbo")) {
-		blit_target_.setTexture(node["fbo"].convert_to<TextureObject>()->texture());
+		fbo_texture = node["fbo"].convert_to<TextureObject>()->texture();
+		blit_target_.setTexture(fbo_texture);
 		if(node.has_key("blend")) {
 			blit_target_.setBlendMode(KRE::BlendMode(node["blend"]));
 		} else {
@@ -383,6 +386,13 @@ Frame::Frame(variant node)
 				pivots_.emplace_back(schedule);
 			}
 		}
+	}
+
+	//by default once we've used an fbo texture we clear surfaces
+	//from it as generally fbo textures don't need their surfaces
+	//anymore after that.
+	if(fbo_texture && node["clear_fbo"].as_bool(true)) {
+		fbo_texture->clearSurfaces();
 	}
 
 	// Need to do stuff with co-ordinates here I think.
@@ -563,8 +573,13 @@ void Frame::buildAlpha()
 
 			std::vector<bool>::iterator dst = alpha_.begin() + dst_index;
 
-			std::vector<bool>::const_iterator src = blit_target_.getTexture()->getFrontSurface()->getAlphaRow(xbase, ybase + y);
-			std::copy(src, src + img_rect_.w(), dst);
+			if(!blit_target_.getTexture()->getFrontSurface()) {
+				no_remove_alpha_borders_ = true;
+				std::fill(dst, dst + img_rect_.w(), false);
+			} else {
+				std::vector<bool>::const_iterator src = blit_target_.getTexture()->getFrontSurface()->getAlphaRow(xbase, ybase + y);
+				std::copy(src, src + img_rect_.w(), dst);
+			}
 		}
 
 		//now calculate if the actual frame we should be using for drawing

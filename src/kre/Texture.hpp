@@ -90,6 +90,8 @@ namespace KRE
 		int surfaceWidth(int n = 0) const { return texture_params_[n].surface_width; }
 		int surfaceHeight(int n = 0) const { return texture_params_[n].surface_height; }
 
+		virtual void clearSurfaces();
+
 		virtual void init(int n) = 0;
 		virtual void bind(int binding_point=0) = 0;
 		virtual unsigned id(int n = 0) const = 0;

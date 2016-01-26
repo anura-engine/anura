@@ -4949,6 +4949,17 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 		return variant(new debug_dump_textures_command(path, name));
 	END_FUNCTION_DEF(debug_dump_textures)
 
+	FUNCTION_DEF(build_animation, 1, 1, "build_animation(map)")
+		variant m = args()[0]->evaluate(variables);
+
+		return variant(new Frame(m));
+
+	FUNCTION_ARGS_DEF
+		ARG_TYPE("map")
+		RETURN_TYPE("builtin frame")
+	END_FUNCTION_DEF(build_animation)
+
+
 	FUNCTION_DEF(inspect_object, 1, 1, "inspect_object(object obj) -> map: outputs an object's properties")
 		variant obj = args()[0]->evaluate(variables);
 		variant_type_ptr type = get_variant_type_from_value(obj);

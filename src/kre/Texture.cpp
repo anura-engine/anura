@@ -407,6 +407,13 @@ namespace KRE
 		init(n);
 	}
 
+	void Texture::clearSurfaces()
+	{
+		for(auto& tp : texture_params_) {
+			tp.surface.reset();
+		}
+	}
+
 	void Texture::rebuildAll()
 	{
 		ASSERT_LOG(false, "Texture::rebuildAll()");

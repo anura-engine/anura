@@ -200,6 +200,7 @@ namespace KRE
 		std::string savePng(const std::string& filename) override;
 
 		SDL_Surface* get() { return surface_; }
+		const SDL_Surface* get() const { return surface_; }
 	private:
 		SurfacePtr handleConvert(PixelFormat::PF fmt, SurfaceConvertFn convert) override;
 		SurfacePtr runGlobalAlphaFilter() override;
