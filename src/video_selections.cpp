@@ -51,7 +51,8 @@ namespace
 	{
 		auto wnd = KRE::WindowManager::getMainWindow();
 		*mode_list = wnd->getWindowModes([](const KRE::WindowMode& mode){ 
-			return mode.pf->bitsPerPixel() == 24 ? true : false; 
+			//return mode.pf->bitsPerPixel() == 24 ? true : false; 
+			return true;
 		});
 		std::sort(mode_list->begin(), mode_list->end(), [](const KRE::WindowMode& lhs, const KRE::WindowMode& rhs){
 			return lhs.width == rhs.width ? lhs.height < rhs.height : lhs.width < rhs.width;
@@ -135,7 +136,7 @@ void show_video_selection_dialog()
 		map_modes_to_strings(display_modes, &display_strings);
 
 		// Video mode list.
-		DropdownWidget* mode_list = new DropdownWidget(display_strings, 220, 0);
+		DropdownWidget* mode_list = new DropdownWidget(display_strings, 260, 20);
 		mode_list->setSelection(current_mode_index);
 		mode_list->setZOrder(10);
 		mode_list->setOnSelectHandler([&selected_mode](int selection,const std::string& s){ 
@@ -143,7 +144,7 @@ void show_video_selection_dialog()
 		});
 		d.addWidget(WidgetPtr(mode_list));
 	} else {
-		d.addWidget(make_font_label(_("Unable to enumerate video modes")), padding, padding);
+		d.addWidget(make_font_label(_("Unable to enumerate video modes")));
 	}
 
 	// Fullscreen selection
@@ -152,7 +153,7 @@ void show_video_selection_dialog()
 	fs_options.emplace_back(_("Windowed mode"));
 	fs_options.emplace_back(_("Fullscreen Windowed"));
 	//fs_options.push_back("Fullscreen");
-	DropdownWidget* fs_list = new DropdownWidget(fs_options, 220, 0);
+	DropdownWidget* fs_list = new DropdownWidget(fs_options, 260, 20);
 	fs_list->setSelection(static_cast<int>(preferences::get_screen_mode()));
 	fs_list->setZOrder(9);
 	fs_list->setOnSelectHandler([&fs_mode](int selection,const std::string& s){ 
@@ -168,7 +169,7 @@ void show_video_selection_dialog()
 	vsync_options.push_back(_("No synchronisation"));
 	vsync_options.push_back(_("Synchronised to retrace"));
 	vsync_options.push_back(_("Late synchronisation"));
-	DropdownWidget* synch_list = new DropdownWidget(vsync_options, 220, 20);
+	DropdownWidget* synch_list = new DropdownWidget(vsync_options, 260, 20);
 	synch_list->setSelection(g_vsync);
 	synch_list->setZOrder(8);
 	synch_list->setOnSelectHandler([&selected_mode](int selection,const std::string& s){ 
@@ -196,8 +197,6 @@ void show_video_selection_dialog()
 		// set selected video mode here
 		if(selected_mode >= 0 && static_cast<unsigned>(selected_mode) < display_modes.size()) {
 			KRE::WindowManager::getMainWindow()->setWindowSize(display_modes[selected_mode].width, display_modes[selected_mode].height);
-			// XXX here we should scale the GameScreen dimensions as appropriate.
-			ASSERT_LOG(false, "XXX: set GameScreen dimensions here.");
 		}
 		//preferences::set_screen_mode(fs_mode);
 	}

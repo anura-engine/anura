@@ -1579,6 +1579,7 @@ COMMAND_LINE_UTILITY(generate_terrain_spritesheet)
 					path p(base_folder);
 					p /= f;
 					filenames.emplace_back(p.generic_string());
+					base_filenames.emplace_back(f);
 				}
 			}
 		}
