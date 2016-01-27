@@ -3302,9 +3302,6 @@ void Level::add_player(EntityPtr p)
 
 void Level::add_character(EntityPtr p)
 {
-	if(solid_chars_.empty() == false && p->solid()) {
-		solid_chars_.push_back(p);
-	}
 
 	ASSERT_LOG(p->label().empty() == false, "Entity has no label");
 
@@ -3312,6 +3309,8 @@ void Level::add_character(EntityPtr p)
 		EntityPtr& target = chars_by_label_[p->label()];
 		if(!target) {
 			target = p;
+		} else if(target == p) {
+			return;
 		} else {
 			while(chars_by_label_[p->label()]) {
 				p->setLabel(formatter() << p->label() << rand());
@@ -3319,6 +3318,10 @@ void Level::add_character(EntityPtr p)
 
 			chars_by_label_[p->label()] = p;
 		}
+	}
+
+	if(solid_chars_.empty() == false && p->solid()) {
+		solid_chars_.push_back(p);
 	}
 
 	if(p->isHuman()) {
@@ -4511,41 +4514,41 @@ bool Level::executeCommand(const variant& var)
 void Level::surrenderReferences(GarbageCollector* gc)
 {
 	for(std::pair<const std::string, EntityPtr>& p : chars_by_label_) {
-		gc->surrenderPtr(&p.second);
+		gc->surrenderPtr(&p.second, "chars_by_label");
 	}
 
 	gc->surrenderVariant(&vars_, "vars");
 
 	gc->surrenderPtr(&suspended_level_, "suspended_level");
 
-	gc->surrenderPtr(&editor_highlight_);
-	gc->surrenderPtr(&player_);
-	gc->surrenderPtr(&last_touched_player_);
+	gc->surrenderPtr(&editor_highlight_, "editor_high");
+	gc->surrenderPtr(&player_, "player");
+	gc->surrenderPtr(&last_touched_player_, "last_touched_player");
 	for(EntityPtr& e : chars_) {
-		gc->surrenderPtr(&e);
+		gc->surrenderPtr(&e, "chars");
 	}
 	for(EntityPtr& e : new_chars_) {
-		gc->surrenderPtr(&e);
+		gc->surrenderPtr(&e, "new_chars");
 	}
 	for(EntityPtr& e : active_chars_) {
-		gc->surrenderPtr(&e);
+		gc->surrenderPtr(&e, "active_chars");
 	}
 	for(EntityPtr& e : solid_chars_) {
-		gc->surrenderPtr(&e);
+		gc->surrenderPtr(&e, "solid_chars");
 	}
 	for(EntityPtr& e : chars_immune_from_time_freeze_) {
-		gc->surrenderPtr(&e);
+		gc->surrenderPtr(&e, "chars_immune");
 	}
 	for(EntityPtr& e : players_) {
-		gc->surrenderPtr(&e);
+		gc->surrenderPtr(&e, "players");
 	}
 	for(EntityPtr& e : editor_selection_) {
-		gc->surrenderPtr(&e);
+		gc->surrenderPtr(&e, "editor_selection");
 	}
 
 	for(entity_group& group : groups_) {
 		for(EntityPtr& e : group) {
-			gc->surrenderPtr(&e);
+			gc->surrenderPtr(&e, "groups");
 		}
 	}
 
