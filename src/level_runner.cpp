@@ -705,6 +705,8 @@ LevelRunner::LevelRunner(LevelPtr& lvl, std::string& level_cfg, std::string& ori
 	force_return_ = false;
 
 	current_second_ = time(nullptr);
+	current_max_ = 0;
+	next_max_ = 0;
 	current_fps_ = 0;
 	next_fps_ = 0;
 	current_cycles_ = 0;
@@ -841,6 +843,8 @@ void process_tbs_matchmaking_server();
 
 bool LevelRunner::play_cycle()
 {
+	const int start_cycle_time = profile::get_tick_time();
+
 	auto wnd = KRE::WindowManager::getMainWindow();
 	static SettingsDialog settingsDialog;
 
@@ -865,7 +869,7 @@ bool LevelRunner::play_cycle()
 
 	background_task_pool::pump();
 
-	performance_data current_perf(current_fps_,50,0,0,0,0,0,CustomObject::events_handled_per_second,"");
+	performance_data current_perf(current_max_,current_fps_,50,0,0,0,0,0,CustomObject::events_handled_per_second,"");
 
 	if(preferences::internal_tbs_server()) {
 		tbs::internal_server::process();
@@ -1628,7 +1632,7 @@ bool LevelRunner::play_cycle()
 	}
 #endif
 
-		performance_data perf(current_fps_, current_cycles_, current_delay_, current_draw_, current_process_, current_flip_, cycle, current_events_, profiling_summary_);
+		performance_data perf(current_max_,current_fps_, current_cycles_, current_delay_, current_draw_, current_process_, current_flip_, cycle, current_events_, profiling_summary_);
 	
 		if(!is_skipping_game() && preferences::show_fps()) {
 			draw_fps(*lvl_, perf);
@@ -1662,6 +1666,7 @@ bool LevelRunner::play_cycle()
 	const time_t this_second = time(nullptr);
 	if(this_second != current_second_) {
 		current_second_ = this_second;
+		current_max_ = next_max_;
 		current_fps_ = next_fps_;
 		current_cycles_ = next_cycles_;
 		current_delay_ = next_delay_;
@@ -1669,6 +1674,7 @@ bool LevelRunner::play_cycle()
 		current_flip_ = next_flip_;
 		current_process_ = next_process_;
 		current_events_ = CustomObject::events_handled_per_second;
+		next_max_ = 0;
 		next_fps_ = 0;
 		next_cycles_ = 0;
 		next_delay_ = 0;
@@ -1700,6 +1706,11 @@ bool LevelRunner::play_cycle()
 	}
 
 	if (!paused && g_pause_stack == 0) ++cycle;
+
+	const int end_cycle_time = profile::get_tick_time();
+	if(end_cycle_time - start_cycle_time > next_max_) {
+		next_max_ = end_cycle_time - start_cycle_time;
+	}
 
 	return !quit_;
 }

@@ -605,7 +605,7 @@ void draw_fps(const Level& lvl, const performance_data& data)
 	}
 
 	std::ostringstream s;
-	s << data.fps << "/" << data.cycles_per_second << "fps; " << (data.draw/10) << "% draw; " << (data.flip/10) << "% flip; " << (data.process/10) << "% process; " << (data.delay/10) << "% idle; " << lvl.num_active_chars() << " objects; " << data.nevents << " events";
+	s << data.fps << "/" << data.cycles_per_second << "fps; max: " << data.max_frame_time << "ms; " << (data.draw/10) << "% draw; " << (data.flip/10) << "% flip; " << (data.process/10) << "% process; " << (data.delay/10) << "% idle; " << lvl.num_active_chars() << " objects; " << data.nevents << " events";
 
 	std::ostringstream nets;
 
