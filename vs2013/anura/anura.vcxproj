@@ -274,6 +274,7 @@
     <ClInclude Include="..\..\src\SDLMain.h" />
     <ClInclude Include="..\..\src\segment_editor_dialog.hpp" />
     <ClInclude Include="..\..\src\settings_dialog.hpp" />
+    <ClInclude Include="..\..\src\shared_memory_pipe.hpp" />
     <ClInclude Include="..\..\src\simplex_noise.hpp" />
     <ClInclude Include="..\..\src\skybox.hpp" />
     <ClInclude Include="..\..\src\slider.hpp" />
@@ -315,6 +316,7 @@
     <ClInclude Include="..\..\src\tbs_game.hpp" />
     <ClInclude Include="..\..\src\tbs_internal_client.hpp" />
     <ClInclude Include="..\..\src\tbs_internal_server.hpp" />
+    <ClInclude Include="..\..\src\tbs_ipc_client.hpp" />
     <ClInclude Include="..\..\src\tbs_server.hpp" />
     <ClInclude Include="..\..\src\tbs_server_base.hpp" />
     <ClInclude Include="..\..\src\tbs_web_server.hpp" />
@@ -611,6 +613,7 @@
     <ClCompile Include="..\..\src\scrollbar_widget.cpp" />
     <ClCompile Include="..\..\src\segment_editor_dialog.cpp" />
     <ClCompile Include="..\..\src\settings_dialog.cpp" />
+    <ClCompile Include="..\..\src\shared_memory_pipe.cpp" />
     <ClCompile Include="..\..\src\simplex_noise.cpp" />
     <ClCompile Include="..\..\src\skybox.cpp" />
     <ClCompile Include="..\..\src\slider.cpp" />
@@ -646,6 +649,7 @@
     <ClCompile Include="..\..\src\tbs_game.cpp" />
     <ClCompile Include="..\..\src\tbs_internal_client.cpp" />
     <ClCompile Include="..\..\src\tbs_internal_server.cpp" />
+    <ClCompile Include="..\..\src\tbs_ipc_client.cpp" />
     <ClCompile Include="..\..\src\tbs_matchmaking_server.cpp" />
     <ClCompile Include="..\..\src\tbs_server.cpp" />
     <ClCompile Include="..\..\src\tbs_server_base.cpp" />

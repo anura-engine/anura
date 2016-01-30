@@ -1146,6 +1146,12 @@
     <ClInclude Include="..\..\src\hex\hex_mask.hpp">
       <Filter>Header Files\hex</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\shared_memory_pipe.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\tbs_ipc_client.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\src\kre\geometry.inl">
@@ -2127,6 +2133,12 @@
     </ClCompile>
     <ClCompile Include="..\..\src\hex\hex_mask.cpp">
       <Filter>Source Files\hex</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\shared_memory_pipe.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\tbs_ipc_client.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
