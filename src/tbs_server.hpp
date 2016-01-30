@@ -27,6 +27,7 @@
 #include <boost/asio.hpp>
 
 #include "http_server.hpp"
+#include "shared_memory_pipe.hpp"
 #include "tbs_server_base.hpp"
 
 namespace tbs 
@@ -45,6 +46,8 @@ namespace tbs
 		static variant get_server_info();
 
 		void set_http_server(http::web_server* server) { web_server_ = server; }
+
+		void add_ipc_client(int session_id, SharedMemoryPipePtr pipe);
 	private:
 		void close_ajax(socket_ptr socket, client_info& cli_info);
 
@@ -52,13 +55,14 @@ namespace tbs
 		void send_msg(socket_ptr socket, const char* msg);
 		void send_msg(socket_ptr socket, const std::string& msg);
 		void handle_send(socket_ptr socket, const boost::system::error_code& e, size_t nbytes, std::shared_ptr<std::string> buf, int session_id);
-		virtual void heartbeat_internal(int send_heartbeat, std::map<int, client_info>& clients);
+		virtual void heartbeat_internal(int send_heartbeat, std::map<int, client_info>& clients) override;
 
 		socket_info& get_socket_info(socket_ptr socket);
+		socket_info& get_ipc_info(int session_id);
 
 		void disconnect(socket_ptr socket);
 
-		virtual void queue_msg(int session_id, const std::string& msg, bool has_priority=false);
+		virtual void queue_msg(int session_id, const std::string& msg, bool has_priority=false) override;
 
 		std::map<int, socket_ptr> sessions_to_waiting_connections_;
 		std::map<socket_ptr, std::string> waiting_connections_;
@@ -66,5 +70,12 @@ namespace tbs
 		std::map<socket_ptr, socket_info> connections_;
 
 		http::web_server* web_server_;
+
+		struct IPCClientInfo {
+			SharedMemoryPipePtr pipe;
+			socket_info info;
+		};
+
+		std::map<int, IPCClientInfo> ipc_clients_;
 	};
 }

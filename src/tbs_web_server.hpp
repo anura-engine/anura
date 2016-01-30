@@ -34,6 +34,7 @@ namespace tbs
 	public:
 		static boost::asio::io_service* service();
 		static int port();
+		static boost::interprocess::named_semaphore* termination_semaphore();
 
 		//set the debug state that will be sent out as a web page to see what's
 		//happening in the server.

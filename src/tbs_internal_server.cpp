@@ -35,6 +35,7 @@
 #include "formatter.hpp"
 #include "json_parser.hpp"
 #include "module.hpp"
+#include "shared_memory_pipe.hpp"
 #include "tbs_internal_server.hpp"
 #include "variant_utils.hpp"
 #include "wml_formula_callable.hpp"
@@ -256,14 +257,17 @@ void terminate_utility_process()
 
 	namespace {
 		int g_local_server_port;
-
+		SharedMemoryPipePtr g_current_ipc_pipe;
 	}
 
-	int get_server_on_localhost() {
+	int get_server_on_localhost(SharedMemoryPipePtr* ipc_pipe) {
+		if(ipc_pipe != nullptr) {
+			*ipc_pipe = g_current_ipc_pipe;
+		}
 		return g_local_server_port;
 	}
 
-	int spawn_server_on_localhost() {
+	int spawn_server_on_localhost(SharedMemoryPipePtr* ipc_pipe) {
 
 		terminate_utility_process();
 
@@ -291,6 +295,20 @@ void terminate_utility_process()
 			break;
 		}
 
+		std::string pipe_name;
+		if(ipc_pipe != nullptr) {
+			for(int i = 0; i != 8 && pipe_name.empty(); ++i) {
+				pipe_name = formatter() << "anura_tbs_pipe." << rand()%65536;
+				try {
+					SharedMemoryPipeManager::createNamedPipe(pipe_name);
+					g_current_ipc_pipe.reset(new SharedMemoryPipe(pipe_name, true));
+					*ipc_pipe = g_current_ipc_pipe;
+				} catch(...) {
+					pipe_name = "";
+				}
+			}
+		}
+
 		ASSERT_LOG(startup_semaphore, "Could not create semaphore");
 
 		bool started_server = false;
@@ -299,6 +317,7 @@ void terminate_utility_process()
 
 			std::vector<std::string> args;
 			args.push_back(formatter() << "--module=" << module::get_module_name());
+			args.push_back("--tbs-server-local=true");
 			args.push_back("--log-file=server-log.txt");
 			args.push_back("--log-level=debug");
 			args.push_back("--no-tbs-server");
@@ -308,6 +327,12 @@ void terminate_utility_process()
 			args.push_back("--utility=tbs_server");
 			args.push_back("--port");
 			args.push_back(formatter() << g_local_server_port);
+
+			if(pipe_name.empty() == false) {
+				args.push_back("--sharedmem");
+				args.push_back(pipe_name);
+				args.push_back("1");
+			}
 
 			create_utility_process(g_anura_exe_name, args);
 

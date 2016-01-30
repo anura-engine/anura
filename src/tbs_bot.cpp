@@ -106,9 +106,13 @@ private:
 			on_create_.reset();
 		}
 
-		if((((!client_ || client_->num_requests_in_flight() == 0) && !preferences::internal_tbs_server()) || (!internal_client_ && preferences::internal_tbs_server())) && response_.size() < script_.size()) {
+		if(ipc_client_) {
+			ipc_client_->process();
+		}
+
+		if((((!client_ || client_->num_requests_in_flight() == 0) && !preferences::internal_tbs_server()) || ipc_client_) && response_.size() < script_.size()) {
 			variant script = script_[response_.size()];
-			//LOG_DEBUG("BOT: SEND @" << profile::get_tick_time() << " Sending response " << response_.size() << "/" << script_.size() << ": " << internal_client_.get() << " " << script.write_json());
+			//LOG_DEBUG("BOT: SEND @" << profile::get_tick_time() << " Sending response " << response_.size() << "/" << script_.size() << ": " << ipc_client_.get() << " " << script.write_json());
 			variant send = script["send"];
 			if(send.is_string()) {
 				send = game_logic::Formula(send).execute(*this);
@@ -121,9 +125,11 @@ private:
 
 			ASSERT_LOG(send.is_map(), "NO REQUEST TO SEND: " << send.write_json() << " IN " << script.write_json());
 			game_logic::MapFormulaCallablePtr callable(new game_logic::MapFormulaCallable(this));
-			if(preferences::internal_tbs_server()) {
-				internal_client_.reset(new internal_client(session_id));
-				internal_client_->send_request(send, session_id, callable, std::bind(&bot::handle_response, this, std::placeholders::_1, callable));
+			if(ipc_client_) {
+				LOG_INFO("tbs_bot send using ipc_client");
+				ipc_client_->set_callable(callable);
+				ipc_client_->set_handler(std::bind(&bot::handle_response, this, std::placeholders::_1, callable));
+				ipc_client_->send_request(send);
 			} else {
 				if(!client_) {
 					client_.reset(new client(host_, port_, session_id, &service_));
@@ -131,8 +137,6 @@ private:
 				client_->set_use_local_cache(false);
 				client_->send_request(send, callable, std::bind(&bot::handle_response, this, std::placeholders::_1, callable));
 			}
-		} else if(response_.size() >= script_.size()) {
-			LOG_INFO("BOT: NO PROCESS DUE TO " << internal_client_.get() << ", " << response_.size() << " < " << script_.size());
 		}
 
 		timer_.expires_from_now(boost::posix_time::milliseconds(g_tbs_bot_delay_ms));
@@ -145,7 +149,6 @@ private:
 		if(has_quit_) {
 			return;
 		}
-		LOG_INFO("BOT: @" << profile::get_tick_time() << " GOT RESPONSE: " << type);
 		if(on_create_) {
 			executeCommand(on_create_->execute(*this));
 			on_create_.reset();
@@ -156,6 +159,7 @@ private:
 			message_callable_ = callable;
 
 		variant msg = callable->queryValue("message");
+		//LOG_INFO("BOT: @" << profile::get_tick_time() << " GOT RESPONSE: " << type << ": " << msg.write_json());
 		if(msg.is_map() && msg["type"] == variant("player_quit")) {
 			std::map<variant,variant> quit_msg;
 			quit_msg[variant("session_id")] = variant(session_id_);
@@ -167,7 +171,7 @@ private:
 
 		} else if(msg.is_map() && msg["type"] == variant("bye")) {
 			has_quit_ = true;
-			internal_client_.reset();
+			ipc_client_.reset();
 			return;
 		} else {
 			const int ms = profile::get_tick_time();
@@ -207,7 +211,6 @@ private:
 		m[variant("validations")] = variant(&validations);
 
 		response_.push_back(variant(&m));
-		internal_client_.reset();
 
 		//tbs::web_server::set_debug_state(generate_report());
 	}
@@ -258,7 +261,7 @@ private:
 		}
 
 		collector->surrenderPtr(&client_, "client");
-		collector->surrenderPtr(&internal_client_, "internal_client");
+		collector->surrenderPtr(&ipc_client_, "ipc_client");
 
 		collector->surrenderVariant(&data_, "data");
 		collector->surrenderPtr(&message_callable_, "message_callable");

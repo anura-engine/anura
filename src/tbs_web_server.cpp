@@ -34,6 +34,7 @@
 #include "json_parser.hpp"
 #include "module.hpp"
 #include "preferences.hpp"
+#include "shared_memory_pipe.hpp"
 #include "string_utils.hpp"
 #include "tbs_bot.hpp"
 #include "tbs_server.hpp"
@@ -66,9 +67,6 @@ namespace tbs
 		boost::asio::io_service* g_service;
 		int g_listening_port = -1;
 		web_server* web_server_instance = nullptr;
-
-
-
 	}
 
 	std::string global_debug_str;
@@ -76,6 +74,7 @@ namespace tbs
 	using boost::asio::ip::tcp;
 
 	boost::asio::io_service* web_server::service() { return g_service; }
+	boost::interprocess::named_semaphore* web_server::termination_semaphore() { return g_termination_semaphore; }
 	int web_server::port() { return g_listening_port; }
 
 	web_server::web_server(server& serv, boost::asio::io_service& io_service, int port)
@@ -160,10 +159,6 @@ namespace tbs
 
 	void web_server::heartbeat(const boost::system::error_code& error)
 	{
-		if(g_termination_semaphore && g_termination_semaphore->try_wait()) {
-			exit(0);
-		}
-
 		if(error == boost::asio::error::operation_aborted) {
 			LOG_INFO("tbs_webserver::heartbeat cancelled");
 			return;
@@ -223,11 +218,19 @@ namespace
 	}
 }
 
+namespace {
+struct IPCSession {
+	std::string pipe_name;
+	int session_id;
+};
+}
 
 COMMAND_LINE_UTILITY(tbs_server) {
 	if(g_tbs_server_hexes) {
 		hex::logical::loader(json::parse_from_file("data/hex_tiles.cfg"));
 	}
+
+	std::vector<IPCSession> ipc_sessions;
 
 	int port = 23456;
 	std::vector<std::string> bot_id;
@@ -235,7 +238,18 @@ COMMAND_LINE_UTILITY(tbs_server) {
 	if(args.size() > 0) {
 		std::vector<std::string>::const_iterator it = args.begin();
 		while(it != args.end()) {
-			if(*it == "--port" || *it == "--listen-port") {
+			if(*it == "--sharedmem") {
+				it++;
+				IPCSession s;
+				if(it != args.end()) {
+					s.pipe_name = *it++;
+					if(it != args.end()) {
+						s.session_id = atoi(it->c_str());
+						ipc_sessions.push_back(s);
+						++it;
+					}
+				}
+			} else if(*it == "--port" || *it == "--listen-port") {
 				it++;
 				if(it != args.end()) {
 					port = atoi(it->c_str());
@@ -280,9 +294,19 @@ COMMAND_LINE_UTILITY(tbs_server) {
 	tbs::g_listening_port = port;
 
 	tbs::server s(io_service);
-	tbs::web_server ws(s, io_service, port);
 
-	s.set_http_server(&ws);
+	for(auto session : ipc_sessions) {
+		SharedMemoryPipePtr pipe(new SharedMemoryPipe(session.pipe_name, false));
+		s.add_ipc_client(session.session_id, pipe);
+
+		LOG_INFO("opened shared memory pipe: " << session.pipe_name << " for session " << session.session_id);
+	}
+
+	boost::shared_ptr<tbs::web_server> ws;
+	if(ipc_sessions.empty()) {
+		ws.reset(new tbs::web_server(s, io_service, port));
+		s.set_http_server(ws.get());
+	}
 
 	if(!config.is_null()) {
 		tbs::server_base::game_info_ptr result = s.create_game(config["game"]);

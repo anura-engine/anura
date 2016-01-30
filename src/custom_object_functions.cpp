@@ -67,6 +67,7 @@
 #include "player_info.hpp"
 #include "tbs_client.hpp"
 #include "tbs_internal_client.hpp"
+#include "tbs_ipc_client.hpp"
 #include "message_dialog.hpp"
 #include "playable_custom_object.hpp"
 #include "preferences.hpp"
@@ -85,6 +86,8 @@
 #include "widget_factory.hpp"
 #include "graphical_font.hpp"
 #include "user_voxel_object.hpp"
+
+PREF_BOOL(tbs_use_shared_mem, true, "Use shared memory for tbs comms");
 
 void EntityCommandCallable::setExpression(const game_logic::FormulaExpression* expr)
 {
@@ -294,10 +297,22 @@ namespace
 
 		const int session = args().size() >= 1 ? args()[0]->evaluate(variables).as_int() : -1;
 
-		const int port = session == -1 ? tbs::spawn_server_on_localhost() : tbs::get_server_on_localhost();
+		SharedMemoryPipePtr pipe;
+		SharedMemoryPipePtr* pipe_ptr = nullptr;
 
-		tbs::client* result = new tbs::client("127.0.0.1", formatter() << port, session);
-		return variant(result);
+		if(g_tbs_use_shared_mem) {
+			pipe_ptr = &pipe;
+		}
+
+		const int port = session == -1 ? tbs::spawn_server_on_localhost(pipe_ptr) : tbs::get_server_on_localhost(pipe_ptr);
+
+		if(pipe_ptr) {
+			tbs::ipc_client* result = new tbs::ipc_client(pipe);
+			return variant(result);
+		} else {
+			tbs::client* result = new tbs::client("127.0.0.1", formatter() << port, session);
+			return variant(result);
+		}
 
 		//return variant(new tbs::internal_client(session));
 
@@ -370,6 +385,14 @@ namespace
 		virtual void execute(Level& lvl, Entity& ob) const override {
 			using std::placeholders::_1;
 			game_logic::MapFormulaCallablePtr callable(new game_logic::MapFormulaCallable);
+			tbs::ipc_client* ipc_client = client_.try_convert<tbs::ipc_client>();
+			if(ipc_client != nullptr) {
+				ipc_client->set_handler(std::bind(tbs_send_event, ffl::weak_ptr<Entity>(&ob), callable, _1));
+				ipc_client->set_callable(callable);
+				ipc_client->send_request(msg_);
+				return;
+			}
+
 			tbs::client* tbs_client = client_.try_convert<tbs::client>();
 			if(tbs_client == nullptr) {
 				tbs::internal_client* tbs_iclient = client_.try_convert<tbs::internal_client>();
@@ -407,6 +430,12 @@ namespace
 		{}
 
 		virtual void execute(Level& lvl, Entity& ob) const override{
+			tbs::ipc_client* ipc_client = client_.try_convert<tbs::ipc_client>();
+			if(ipc_client != nullptr) {
+				ipc_client->process();
+				return;
+			}
+
 			tbs::client* tbs_client = client_.try_convert<tbs::client>();
 			if(tbs_client == nullptr) {
 				tbs::internal_client* iclient = client_.try_convert<tbs::internal_client>();

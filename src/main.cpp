@@ -81,6 +81,7 @@
 #include "preprocessor.hpp"
 #include "profile_timer.hpp"
 #include "screen_handling.hpp"
+#include "shared_memory_pipe.hpp"
 #include "sound.hpp"
 #include "stats.hpp"
 #include "string_utils.hpp"
@@ -843,6 +844,8 @@ int main(int argcount, char* argvec[])
 #endif // NO_EDITOR
 
 	const stats::Manager stats_manager;
+
+	const SharedMemoryPipeManager ipc_manager;
 
 	const tbs::internal_server_manager internal_server_manager_scope(preferences::internal_tbs_server());
 

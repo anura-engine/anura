@@ -39,6 +39,8 @@ namespace tbs
 {
 	class GameType;
 
+	class server_base;
+
 	class game : public game_logic::FormulaCallable
 	{
 	public:
@@ -53,6 +55,8 @@ namespace tbs
 
 		explicit game();
 		virtual ~game();
+
+		void set_server(server_base* server) { server_ = server; }
 
 		void cancel_game();
 
@@ -133,6 +137,8 @@ namespace tbs
 		virtual void setValueDefault(const std::string& key, const variant& value) override;
 
 		virtual ai_player* create_ai() const { return nullptr; }
+
+		server_base* server_;
 
 		boost::scoped_ptr<GameType> game_type_;
 

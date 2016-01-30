@@ -39,12 +39,15 @@
 #include "random.hpp"
 #include "tbs_ai_player.hpp"
 #include "tbs_internal_server.hpp"
+#include "tbs_server.hpp"
 #include "tbs_game.hpp"
 #include "tbs_web_server.hpp"
 #include "string_utils.hpp"
 #include "unit_test.hpp"
 #include "variant_utils.hpp"
 #include "wml_formula_callable.hpp"
+
+extern bool g_tbs_use_shared_mem;
 
 namespace game_logic 
 {
@@ -157,7 +160,8 @@ namespace tbs
 	}
 
 	game::game()
-	  : game_type_(new GameType(variant(this))),
+	  : server_(nullptr),
+	    game_type_(new GameType(variant(this))),
 	    game_id_(generate_game_id()),
 	    started_(false), state_(STATE_SETUP), state_id_(0), cycle_(0), tick_rate_(50),
 		backup_callable_(nullptr)
@@ -278,6 +282,8 @@ namespace tbs
 		started_ = true;
 
 		executeCommand(game_type_->restart());
+
+		LOG_INFO("ZZZ: start_game::send_game_state()\n");
 
 		send_game_state();
 
@@ -539,8 +545,22 @@ namespace tbs
 				LOG_INFO("BOT_ADD: " << value[n].write_json());
 				if(value[n].is_callable() && value[n].try_convert<tbs::bot>()) {
 					obj.bots_.push_back(boost::intrusive_ptr<tbs::bot>(value[n].try_convert<tbs::bot>()));
-				} else if(preferences::internal_tbs_server()) {
-					boost::intrusive_ptr<bot> new_bot(new bot(tbs::internal_server::get_io_service(), "127.0.0.1", "23456", value[n]));
+				} else if(g_tbs_use_shared_mem) {
+					ASSERT_LOG(obj.server_, "no server_ set");
+
+					server* s = dynamic_cast<server*>(obj.server_);
+					ASSERT_LOG(s, "Wrong type of server");
+
+					const int session_id = value[n]["session_id"].as_int();
+					auto p = SharedMemoryPipe::makeInMemoryPair();
+
+					s->add_ipc_client(session_id, p.first);
+
+					boost::intrusive_ptr<ipc_client> cli(new ipc_client(p.second));
+
+					boost::intrusive_ptr<bot> new_bot(new bot(*web_server::service(), "127.0.0.1", "23456", value[n]));
+					new_bot->set_ipc_client(cli);
+
 					obj.bots_.push_back(new_bot);
 				} else {
 					boost::intrusive_ptr<bot> new_bot(new bot(*web_server::service(), "127.0.0.1", formatter() << web_server::port(), value[n]));
@@ -603,6 +623,7 @@ namespace tbs
 		//LOG_DEBUG("HANDLE MESSAGE (((" << msg.write_json() << ")))");
 		const std::string type = msg["type"].as_string();
 		if(type == "start_game") {
+			LOG_INFO("tbs::game: received start_game");
 			start_game();
 			return;
 		} else if(type == "request_updates") {

@@ -26,6 +26,8 @@
 #include <string>
 #include <ctime>
 
+#include <boost/interprocess/sync/named_semaphore.hpp>
+
 #include "asserts.hpp"
 #include "compress.hpp"
 #include "filesystem.hpp"
@@ -34,6 +36,7 @@
 #include "json_parser.hpp"
 #include "preferences.hpp"
 #include "tbs_server.hpp"
+#include "tbs_web_server.hpp"
 #include "string_utils.hpp"
 #include "utils.hpp"
 #include "variant_utils.hpp"
@@ -104,6 +107,11 @@ namespace tbs
 		return connections_[socket];
 	}
 
+	server_base::socket_info& server::get_ipc_info(int session_id)
+	{
+		return ipc_clients_[session_id].info;
+	}
+
 	void server::close_ajax(socket_ptr socket, client_info& cli_info)
 	{
 		socket_info& info = connections_[socket];
@@ -142,6 +150,15 @@ namespace tbs
 			return;
 		}
 
+		LOG_INFO("queue_msg: " << session_id << " -> " << msg);
+
+		auto ipc_itor = ipc_clients_.find(session_id);
+		if(ipc_itor != ipc_clients_.end()) {
+			ipc_itor->second.pipe->write(msg);
+			LOG_INFO("queue to ipc: " << ipc_clients_.size());
+			return;
+		}
+
 		std::map<int, socket_ptr>::iterator itor = sessions_to_waiting_connections_.find(session_id);
 		if(itor != sessions_to_waiting_connections_.end()) {
 			const int session_id = itor->first;
@@ -153,6 +170,13 @@ namespace tbs
 		}
 
 		server_base::queue_msg(session_id, msg, has_priority);
+	}
+
+	void server::add_ipc_client(int session_id, SharedMemoryPipePtr pipe)
+	{
+		LOG_INFO("server::add_ipc_client: " << session_id);
+		IPCClientInfo& info = ipc_clients_[session_id];
+		info.pipe = pipe;
 	}
 
 	void server::send_msg(socket_ptr socket, const variant& msg)
@@ -234,8 +258,30 @@ namespace tbs
 
 	void server::heartbeat_internal(int send_heartbeat, std::map<int, client_info>& clients)
 	{
-		if (g_exit_server) {
+		if (g_exit_server || (web_server::termination_semaphore() && web_server::termination_semaphore()->try_wait())) {
 			exit(0);
+		}
+
+		for(auto i = ipc_clients_.begin(); i != ipc_clients_.end(); ++i) {
+			i->second.pipe->process();
+
+			std::vector<std::string> messages;
+			i->second.pipe->read(messages);
+
+			for(const std::string& msg : messages) {
+				LOG_INFO("read IPC message " << msg);
+				SharedMemoryPipePtr pipe = i->second.pipe;
+				variant v(json::parse(msg, json::JSON_PARSE_OPTIONS::NO_PREPROCESSOR));
+				handle_message(
+					[=](variant v) {
+						pipe->write(v.write_json());
+					},
+					[](client_info& info) {
+					},
+					std::bind(&server::get_ipc_info, this, i->first),
+					i->first, v
+				);
+			}
 		}
 
 		std::vector<std::pair<socket_ptr, std::string> > messages;

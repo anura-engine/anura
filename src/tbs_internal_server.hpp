@@ -28,6 +28,7 @@
 #include <list>
 
 #include "formula_callable.hpp"
+#include "shared_memory_pipe.hpp"
 #include "tbs_server_base.hpp"
 #include "variant.hpp"
 
@@ -40,11 +41,11 @@ namespace tbs
 
 
 	//create a server in an external process and return the port
-	int spawn_server_on_localhost();
+	int spawn_server_on_localhost(SharedMemoryPipePtr* ipc_pipe);
 
 	//if there is a server in an external process available return
 	//the port, otherwise return 0.
-	int get_server_on_localhost();
+	int get_server_on_localhost(SharedMemoryPipePtr* ipc_pipe);
 
 	class internal_server : public server_base
 	{

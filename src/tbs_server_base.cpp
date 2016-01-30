@@ -30,6 +30,7 @@
 #include "tbs_server_base.hpp"
 #include "variant_utils.hpp"
 
+PREF_BOOL(tbs_server_local, false,"Sets tbs server to be in local mode");
 PREF_INT(tbs_server_timeout, 5000, "Timeout for connections to the tbs server");
 
 namespace tbs
@@ -77,6 +78,8 @@ namespace tbs
 			return game_info_ptr();
 		}
 
+		g->game_state->set_server(this);
+
 		g->nlast_touch = nheartbeat_;
 
 		std::vector<variant> users = msg["users"].as_list();
@@ -121,7 +124,7 @@ namespace tbs
 	{
 		const std::string& type = msg["type"].as_string();
 
-		if(session_id == -1) {
+		if(session_id == -1 || g_tbs_server_local) {
 			if(type == "create_game") {
 
 				game_info_ptr g(create_game(msg));
@@ -148,7 +151,7 @@ namespace tbs
 			} else if(type == "get_server_info") {
 				send_fn(get_server_info());
 				return;
-			} else {
+			} else if(session_id == -1) {
 				std::map<variant,variant> m;
 				m[variant("type")] = variant("unknown_message");
 				m[variant("msg_type")] = variant(type);
@@ -209,7 +212,7 @@ namespace tbs
 		
 		if(socket_info_fn) {
 			socket_info& info = socket_info_fn();
-			ASSERT_EQ(info.session_id, -1);
+			ASSERT_LOG(info.session_id == -1 || g_tbs_server_local, "Invalid session: " << info.session_id << " " << cli_info.user);
 			info.nick = cli_info.user;
 			info.session_id = session_id;
 		}
