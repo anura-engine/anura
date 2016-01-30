@@ -12,6 +12,7 @@ class SharedMemoryPipeManager
 {
 public:
 	static void createNamedPipe(const std::string& name);
+	SharedMemoryPipeManager() {}
 	~SharedMemoryPipeManager();
 private:
 };
