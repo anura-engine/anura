@@ -214,6 +214,8 @@
 		63D6F4DD1AC68F38002250CC /* libboost_iostreams.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 63D6F4D91AC68F38002250CC /* libboost_iostreams.dylib */; };
 		63D6F4DE1AC68F38002250CC /* libboost_system.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 63D6F4DA1AC68F38002250CC /* libboost_system.dylib */; };
 		63D8A1E51C40BDC9008B8437 /* hex_mask.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 63D8A1E41C40BDC9008B8437 /* hex_mask.cpp */; };
+		63E092001C5CA168006170A8 /* shared_memory_pipe.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 63E091FC1C5CA168006170A8 /* shared_memory_pipe.cpp */; };
+		63E092011C5CA168006170A8 /* tbs_ipc_client.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 63E091FE1C5CA168006170A8 /* tbs_ipc_client.cpp */; };
 		63E3EC371B452D55002F8294 /* FontDriver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 63E3EC2F1B452D55002F8294 /* FontDriver.cpp */; };
 		63E3EC381B452D55002F8294 /* FontSTB.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 63E3EC321B452D55002F8294 /* FontSTB.cpp */; };
 		63E3EC391B452D55002F8294 /* SurfaceBlur.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 63E3EC351B452D55002F8294 /* SurfaceBlur.cpp */; };
@@ -891,6 +893,10 @@
 		63D6F4D91AC68F38002250CC /* libboost_iostreams.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libboost_iostreams.dylib; sourceTree = "<group>"; };
 		63D6F4DA1AC68F38002250CC /* libboost_system.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libboost_system.dylib; sourceTree = "<group>"; };
 		63D8A1E41C40BDC9008B8437 /* hex_mask.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = hex_mask.cpp; sourceTree = "<group>"; };
+		63E091FC1C5CA168006170A8 /* shared_memory_pipe.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = shared_memory_pipe.cpp; sourceTree = "<group>"; };
+		63E091FD1C5CA168006170A8 /* shared_memory_pipe.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = shared_memory_pipe.hpp; sourceTree = "<group>"; };
+		63E091FE1C5CA168006170A8 /* tbs_ipc_client.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = tbs_ipc_client.cpp; sourceTree = "<group>"; };
+		63E091FF1C5CA168006170A8 /* tbs_ipc_client.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = tbs_ipc_client.hpp; sourceTree = "<group>"; };
 		63E3EC2F1B452D55002F8294 /* FontDriver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FontDriver.cpp; sourceTree = "<group>"; };
 		63E3EC301B452D55002F8294 /* FontDriver.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = FontDriver.hpp; sourceTree = "<group>"; };
 		63E3EC311B452D55002F8294 /* FontImpl.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = FontImpl.hpp; sourceTree = "<group>"; };
@@ -1941,6 +1947,10 @@
 		C010C5BC160AFD4C006E7D90 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				63E091FC1C5CA168006170A8 /* shared_memory_pipe.cpp */,
+				63E091FD1C5CA168006170A8 /* shared_memory_pipe.hpp */,
+				63E091FE1C5CA168006170A8 /* tbs_ipc_client.cpp */,
+				63E091FF1C5CA168006170A8 /* tbs_ipc_client.hpp */,
 				6357A6EA1B3F116900793D60 /* ffl_dom.cpp */,
 				6357A6EB1B3F116900793D60 /* ffl_dom.hpp */,
 				6357A6EC1B3F116900793D60 /* xhtml */,
@@ -2657,6 +2667,7 @@
 				639B54291AC20D7600ECC4F8 /* b2BlockAllocator.cpp in Sources */,
 				C010C789160AFD4D006E7D90 /* globals.cpp in Sources */,
 				6357A72A1B3F116900793D60 /* ffl_dom.cpp in Sources */,
+				63E092011C5CA168006170A8 /* tbs_ipc_client.cpp in Sources */,
 				639B544D1AC20D7600ECC4F8 /* b2EdgeAndPolygonContact.cpp in Sources */,
 				639B53971AC20D5A00ECC4F8 /* SceneObject.cpp in Sources */,
 				C010C78A160AFD4D006E7D90 /* graphical_font.cpp in Sources */,
@@ -2891,6 +2902,7 @@
 				638CC7231AF6057700C7A106 /* lbaselib.cpp in Sources */,
 				6357A74D1B3F13B400793D60 /* Gradients.cpp in Sources */,
 				C091851A1797BE9B00F415C0 /* widget_settings_dialog.cpp in Sources */,
+				63E092001C5CA168006170A8 /* shared_memory_pipe.cpp in Sources */,
 				6357A7421B3F116900793D60 /* xhtml_render_ctx.cpp in Sources */,
 				638CC7281AF6057700C7A106 /* ldblib.cpp in Sources */,
 				639B53A91AC20D5A00ECC4F8 /* VGraphCairo.cpp in Sources */,
