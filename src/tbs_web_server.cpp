@@ -289,7 +289,6 @@ COMMAND_LINE_UTILITY(tbs_server) {
 
 	boost::asio::io_service io_service;
 
-	LOG_INFO("tbs_server(): Listening on port " << std::dec << port);
 	tbs::g_service = &io_service;
 	tbs::g_listening_port = port;
 
@@ -306,6 +305,7 @@ COMMAND_LINE_UTILITY(tbs_server) {
 	if(ipc_sessions.empty()) {
 		ws.reset(new tbs::web_server(s, io_service, port));
 		s.set_http_server(ws.get());
+		LOG_INFO("tbs_server(): Listening on port " << std::dec << port);
 	}
 
 	if(!config.is_null()) {

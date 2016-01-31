@@ -176,6 +176,9 @@ namespace tbs
 		mutable DbClientPtr db_client_;
 
 		std::vector<std::string> observers_;
+
+		variant player_waiting_on_;
+		int started_waiting_for_player_at_;
 	};
 
 	class game_context 

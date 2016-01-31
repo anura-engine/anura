@@ -150,7 +150,7 @@ namespace tbs
 			return;
 		}
 
-		LOG_INFO("queue_msg: " << session_id << " -> " << msg);
+		LOG_INFO("queue_msg: " << session_id);
 
 		auto ipc_itor = ipc_clients_.find(session_id);
 		if(ipc_itor != ipc_clients_.end()) {
@@ -269,7 +269,7 @@ namespace tbs
 			i->second.pipe->read(messages);
 
 			for(const std::string& msg : messages) {
-				LOG_INFO("read IPC message " << msg);
+				//LOG_INFO("read IPC message " << msg);
 				SharedMemoryPipePtr pipe = i->second.pipe;
 				variant v(json::parse(msg, json::JSON_PARSE_OPTIONS::NO_PREPROCESSOR));
 				handle_message(

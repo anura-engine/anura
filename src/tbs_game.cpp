@@ -48,6 +48,7 @@
 #include "wml_formula_callable.hpp"
 
 extern bool g_tbs_use_shared_mem;
+extern bool g_tbs_server_local;
 
 namespace game_logic 
 {
@@ -76,6 +77,7 @@ namespace tbs
 			DEFINE_INTERFACE_FN(player_disconnected, "()->commands");
 			DEFINE_INTERFACE_FN(transform, "(object,int)->commands");
 			DEFINE_INTERFACE_FN(get_state, "()->object");
+			DEFINE_INTERFACE_FN(player_waiting_on, "()->int|null");
 
 			if(obj_->queryValue("process").is_null() == false) {
 				DEFINE_INTERFACE_FN(process, "()->commands");
@@ -91,6 +93,7 @@ namespace tbs
 		variant player_disconnected() { std::vector<variant> v; return player_disconnected_fn_(v); }
 		variant transform(variant msg, int nplayer) { std::vector<variant> v; v.push_back(msg); v.push_back(variant(nplayer)); return transform_fn_(v); }
 		variant get_state() { std::vector<variant> v; return get_state_fn_(v); }
+		variant player_waiting_on() { std::vector<variant> v; return player_waiting_on_fn_(v); }
 
 		variant process() { if(process_fn_.is_null() == false) { std::vector<variant> v; return process_fn_(v); } return variant(); }
 
@@ -99,7 +102,7 @@ namespace tbs
 	private:
 		boost::intrusive_ptr<game_logic::FormulaObject> obj_;
 
-		variant create_fn_, restart_fn_, add_bot_fn_, message_fn_, player_disconnected_fn_, transform_fn_, get_state_fn_;
+		variant create_fn_, restart_fn_, add_bot_fn_, message_fn_, player_disconnected_fn_, transform_fn_, get_state_fn_, player_waiting_on_fn_;
 		variant process_fn_;
 	};
 
@@ -164,7 +167,8 @@ namespace tbs
 	    game_type_(new GameType(variant(this))),
 	    game_id_(generate_game_id()),
 	    started_(false), state_(STATE_SETUP), state_id_(0), cycle_(0), tick_rate_(50),
-		backup_callable_(nullptr)
+		backup_callable_(nullptr),
+		started_waiting_for_player_at_(-1)
 	{
 	}
 
@@ -445,7 +449,20 @@ namespace tbs
 
 			current_message_ = "";
 		} else if(nplayer >= 0 && static_cast<unsigned>(nplayer) < players().size()) {
+
+			if(g_tbs_server_local && players_[nplayer].confirmed_state_id == state_id_) {
+				//a local game has a guaranteed connection, so never re-send states.
+				return;
+			}
+
 			queue_message(write(nplayer, processing_ms), nplayer);
+
+
+			if(g_tbs_server_local) {
+				//a local game has a guaranteed connection, so once we send a state
+				//to a player, they have it for sure.
+				players_[nplayer].confirmed_state_id = state_id_;
+			}
 		}
 	}
 
@@ -620,7 +637,7 @@ namespace tbs
 
 	void game::handle_message(int nplayer, const variant& msg)
 	{
-		//LOG_DEBUG("HANDLE MESSAGE (((" << msg.write_json() << ")))");
+		//LOG_DEBUG("HANDLE MESSAGE " << nplayer << " (((" << msg.write_json() << ")))");
 		const std::string type = msg["type"].as_string();
 		if(type == "start_game") {
 			LOG_INFO("tbs::game: received start_game");
@@ -634,7 +651,9 @@ namespace tbs
 
 				const variant state_id = msg["state_id"];
 				if(state_id.as_int() != state_id_ && nplayer >= 0) {
-					players_[nplayer].confirmed_state_id = state_id.as_int();
+					if(!g_tbs_server_local) {
+						players_[nplayer].confirmed_state_id = state_id.as_int();
+					}
 					send_game_state(nplayer);
 				} else if(state_id.as_int() == state_id_ && nplayer >= 0 && static_cast<unsigned>(nplayer) < players_.size() && players_[nplayer].confirmed_state_id != state_id_) {
 					LOG_DEBUG("XXX: @" << profile::get_tick_time() << " player " << nplayer << " confirm sync " << state_id_);
@@ -685,6 +704,19 @@ namespace tbs
 		const auto time_taken = profile::get_tick_time() - start_time;
 
 		LOG_DEBUG("XXX: @" << profile::get_tick_time() << " HANDLED MESSAGE " << type);
+
+		variant new_player_waiting_on = game_type_->player_waiting_on();
+		if(new_player_waiting_on != player_waiting_on_) {
+			const int ticks = SDL_GetTicks();
+			if(player_waiting_on_.is_null() == false) {
+				const int elapsed = ticks - started_waiting_for_player_at_;
+				LOG_INFO("PLAYER " << player_waiting_on_.as_int() << " MOVED IN " << elapsed << "ms");
+			}
+
+			player_waiting_on_ = new_player_waiting_on;
+			started_waiting_for_player_at_ = ticks;
+		}
+
 
 		send_game_state(-1, time_taken);
 	}

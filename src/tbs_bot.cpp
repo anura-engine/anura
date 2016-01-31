@@ -65,6 +65,7 @@ private:
   		  host_(host), 
   		  port_(port), 
   		  script_(v["script"].as_list()),
+		  script_pos_(0),
   		  has_quit_(false), 
   		  timer_proxy_(nullptr),
 		  on_create_(game_logic::Formula::createOptionalFormula(v["on_create"])),
@@ -110,8 +111,8 @@ private:
 			ipc_client_->process();
 		}
 
-		if((((!client_ || client_->num_requests_in_flight() == 0) && !preferences::internal_tbs_server()) || ipc_client_) && response_.size() < script_.size()) {
-			variant script = script_[response_.size()];
+		if((((!client_ || client_->num_requests_in_flight() == 0) && !preferences::internal_tbs_server()) || ipc_client_) && script_pos_ < script_.size()) {
+			variant script = script_[script_pos_++];
 			//LOG_DEBUG("BOT: SEND @" << profile::get_tick_time() << " Sending response " << response_.size() << "/" << script_.size() << ": " << ipc_client_.get() << " " << script.write_json());
 			variant send = script["send"];
 			if(send.is_string()) {
@@ -159,7 +160,7 @@ private:
 			message_callable_ = callable;
 
 		variant msg = callable->queryValue("message");
-		//LOG_INFO("BOT: @" << profile::get_tick_time() << " GOT RESPONSE: " << type << ": " << msg.write_json());
+		LOG_INFO("BOT: @" << profile::get_tick_time() << " GOT RESPONSE: " << type << ": " << msg.write_json());
 		if(msg.is_map() && msg["type"] == variant("player_quit")) {
 			std::map<variant,variant> quit_msg;
 			quit_msg[variant("session_id")] = variant(session_id_);

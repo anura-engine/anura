@@ -63,6 +63,7 @@ class bot : public game_logic::FormulaCallable
 		std::string host_, port_;
 		std::vector<variant> script_;
 		std::vector<variant> response_;
+		int script_pos_;
 		boost::intrusive_ptr<client> client_;
 		boost::intrusive_ptr<ipc_client> ipc_client_;
 

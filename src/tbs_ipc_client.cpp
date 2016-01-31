@@ -35,7 +35,7 @@ void ipc_client::process()
 
 	BEGIN_DEFINE_CALLABLE_NOBASE(ipc_client)
 		DEFINE_FIELD(in_flight, "int")
-			return variant(1);
+			return variant(0);
 	END_DEFINE_CALLABLE(ipc_client)
 
 
