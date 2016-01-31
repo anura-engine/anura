@@ -114,7 +114,6 @@ SharedMemoryPipe::SharedMemoryPipe(const std::string& name, bool server)
 void SharedMemoryPipe::write(const std::string& msg)
 {
 	out_queue_.push_back(msg);
-	fprintf(stderr, "WRITE: QUEUE SIZE: %d\n", (int)out_queue_.size());
 	ASSERT_LE(out_queue_.back().size(), RegionSize);
 }
 

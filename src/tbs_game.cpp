@@ -451,6 +451,7 @@ namespace tbs
 		} else if(nplayer >= 0 && static_cast<unsigned>(nplayer) < players().size()) {
 
 			if(g_tbs_server_local && players_[nplayer].confirmed_state_id == state_id_) {
+				LOG_DEBUG("NOT RE-SENDING GAME STATE SINCE PLAYER ALREADY HAS GAME STATE: " << state_id_);
 				//a local game has a guaranteed connection, so never re-send states.
 				return;
 			}
@@ -458,7 +459,7 @@ namespace tbs
 			queue_message(write(nplayer, processing_ms), nplayer);
 
 
-			if(g_tbs_server_local) {
+			if(g_tbs_server_local && players_[nplayer].confirmed_state_id != -1) {
 				//a local game has a guaranteed connection, so once we send a state
 				//to a player, they have it for sure.
 				players_[nplayer].confirmed_state_id = state_id_;
@@ -651,7 +652,7 @@ namespace tbs
 
 				const variant state_id = msg["state_id"];
 				if(state_id.as_int() != state_id_ && nplayer >= 0) {
-					if(!g_tbs_server_local) {
+					if(!g_tbs_server_local || players_[nplayer].confirmed_state_id == -1) {
 						players_[nplayer].confirmed_state_id = state_id.as_int();
 					}
 					send_game_state(nplayer);
