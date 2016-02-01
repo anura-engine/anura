@@ -1520,7 +1520,7 @@ namespace {
 						end_index = s_len;
 					}
 					if(s.length() == 0) {
-						return variant();
+						return left;
 					}
 					if(end_index >= begin_index) {
 						return variant(s.substr(begin_index, end_index-begin_index));

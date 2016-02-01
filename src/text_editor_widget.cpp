@@ -1651,7 +1651,19 @@ namespace gui
 		DEFINE_FIELD(text, "string")
 			return variant(obj.text());
 		DEFINE_SET_FIELD
-			obj.setText(value.as_string());
+			std::string v = value.as_string();
+			if(v != obj.text()) {
+				obj.setText(v, true);
+			}
+
+		//text but without influencing the cursor.
+		DEFINE_FIELD(text_stable, "string")
+			return variant(obj.text());
+		DEFINE_SET_FIELD
+			std::string v = value.as_string();
+			if(v != obj.text()) {
+				obj.setText(v, false);
+			}
 		DEFINE_FIELD(begin_enter, "bool")
 			return variant::from_bool(obj.begin_enter_return_);
 		DEFINE_SET_FIELD
