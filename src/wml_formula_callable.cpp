@@ -267,7 +267,7 @@ namespace game_logic
 					v = json::parse_from_file(msg);
 				} else {
 					try {
-						v = json::parse(msg);
+						v = json::parse(msg, json::JSON_PARSE_OPTIONS::NO_PREPROCESSOR);
 					} catch(json::ParseError& e) {
 						ASSERT_LOG(false, "ERROR PROCESSING FSON: --BEGIN--" << msg << "--END-- ERROR: " << e.errorMessage());
 					}
