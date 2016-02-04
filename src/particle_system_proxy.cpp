@@ -23,10 +23,12 @@
 
 #include "particle_system_proxy.hpp"
 #include "profile_timer.hpp"
+#include "variant_utils.hpp"
 
 #include "formula_callable.hpp"
 #include "ParticleSystem.hpp"
 #include "ParticleSystemAffectors.hpp"
+#include "ParticleSystemEmitters.hpp"
 #include "SceneGraph.hpp"
 #include "SceneNode.hpp"
 #include "RenderManager.hpp"
@@ -180,6 +182,11 @@ namespace graphics
 	END_DEFINE_CALLABLE(ParticleSystemContainerProxy)
 
 	BEGIN_DEFINE_CALLABLE_NOBASE(ParticleSystemProxy)
+	DEFINE_FIELD(addr, "string")
+		char buf[64];
+		sprintf(buf, "%p", obj.obj_.get());
+		return variant(std::string(buf));
+
 	BEGIN_DEFINE_FN(add_technique, "(map) ->commands")
 		variant arg = FN_ARG(0);
 		return variant(new game_logic::FnCommandCallable([=]() {
@@ -200,36 +207,63 @@ namespace graphics
 	END_DEFINE_CALLABLE(ParticleSystemProxy)
 
 	BEGIN_DEFINE_CALLABLE_NOBASE(ParticleTechniqueProxy)
+	DEFINE_FIELD(addr, "string")
+		char buf[64];
+		sprintf(buf, "%p", obj.obj_.get());
+		return variant(std::string(buf));
+	DEFINE_FIELD(position, "[decimal,decimal,decimal]")
+		const Renderable& r = *obj.obj_;
+		const glm::vec3& v = r.getPosition();
+		return vec3_to_variant(v);
 
-		DEFINE_FIELD(emitters, "[builtin particle_emitter_proxy]")
+	DEFINE_SET_FIELD
+		Renderable& r = *obj.obj_;
+		glm::vec3 v = variant_to_vec3(value);
+		r.setPosition(v);
 
-			auto v = obj.obj_->getActiveEmitters();
-			std::vector<variant> result;
-			result.reserve(v.size());
-			for(auto p : v) {
-				result.push_back(variant(new ParticleEmitterProxy(p)));
-			}
+	DEFINE_FIELD(emitters, "[builtin particle_emitter_proxy]")
 
-			return variant(&result);
+		auto v = obj.obj_->getActiveEmitters();
+		std::vector<variant> result;
+		result.reserve(v.size());
+		for(auto p : v) {
+			result.push_back(variant(new ParticleEmitterProxy(p)));
+		}
 
-		DEFINE_FIELD(affectors, "[builtin particle_affector_proxy]")
+		return variant(&result);
 
-			auto v = obj.obj_->getActiveAffectors();
-			std::vector<variant> result;
-			result.reserve(v.size());
-			for(auto p : v) {
-				result.push_back(variant(new ParticleAffectorProxy(p)));
-			}
+	DEFINE_FIELD(affectors, "[builtin particle_affector_proxy]")
 
-			return variant(&result);
+		auto v = obj.obj_->getActiveAffectors();
+		std::vector<variant> result;
+		result.reserve(v.size());
+		for(auto p : v) {
+			result.push_back(variant(new ParticleAffectorProxy(p)));
+		}
+
+		return variant(&result);
 	END_DEFINE_CALLABLE(ParticleTechniqueProxy)
 
 
 	BEGIN_DEFINE_CALLABLE_NOBASE(ParticleEmitterProxy)
+	DEFINE_FIELD(addr, "string")
+		char buf[64];
+		sprintf(buf, "%p", obj.obj_.get());
+		return variant(std::string(buf));
+	DEFINE_FIELD(position, "[decimal,decimal,decimal]")
+		const glm::vec3& v = obj.obj_->current.position;
+		return vec3_to_variant(v);
+
+	DEFINE_SET_FIELD
+		obj.obj_->current.position = obj.obj_->initial.position = variant_to_vec3(value);
 	END_DEFINE_CALLABLE(ParticleEmitterProxy)
 
 	BEGIN_DEFINE_CALLABLE_NOBASE(ParticleAffectorProxy)
-		DEFINE_FIELD(node, "map")
+	DEFINE_FIELD(addr, "string")
+		char buf[64];
+		sprintf(buf, "%p", obj.obj_.get());
+		return variant(std::string(buf));
+	DEFINE_FIELD(node, "map")
 		return obj.obj_->node();
 	DEFINE_SET_FIELD
 		obj.obj_->setNode(value);
