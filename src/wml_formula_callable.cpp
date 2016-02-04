@@ -268,6 +268,10 @@ namespace game_logic
 				} else {
 					try {
 						v = json::parse(msg, json::JSON_PARSE_OPTIONS::NO_PREPROCESSOR);
+
+						if(v.is_map() && v.has_key(variant("serialized_objects"))) {
+							v = json::parse(msg);
+						}
 					} catch(json::ParseError& e) {
 						ASSERT_LOG(false, "ERROR PROCESSING FSON: --BEGIN--" << msg << "--END-- ERROR: " << e.errorMessage());
 					}
