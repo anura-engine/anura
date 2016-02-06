@@ -645,7 +645,9 @@ void Level::load_character(variant c)
 	}
 
 	if(chars_.back()->label().empty() == false) {
-		chars_by_label_[chars_.back()->label()] = chars_.back();
+		EntityPtr& ptr = chars_by_label_[chars_.back()->label()];
+		ASSERT_LOG(ptr.get() == nullptr, "Loading object with duplicate label: " << chars_.back()->label());
+		ptr = chars_.back();
 	}
 
 	solid_chars_.clear();
