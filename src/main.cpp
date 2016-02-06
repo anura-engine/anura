@@ -132,6 +132,7 @@ namespace
 
 	PREF_BOOL_PERSISTENT(desktop_fullscreen, false, "Sets the game window to be a fullscreen window the size of the desktop");
 	PREF_BOOL_PERSISTENT(desktop_fullscreen_force, false, "(Windows) forces desktop fullscreen to actually use fullscreen rather than a borderless window the size of the desktop");
+	PREF_BOOL(msaa, false, "Use msaa");
 
 
 #if defined(_MSC_VER)
@@ -894,6 +895,9 @@ int main(int argcount, char* argvec[])
 	hints.add("height", preferences::requested_window_height() > 0 ? preferences::requested_window_height() : 600);
 	hints.add("resizeable", g_resizeable);
 	hints.add("fullscreen", preferences::get_screen_mode() == preferences::ScreenMode::FULLSCREEN_WINDOWED ? true : false);
+	if(g_msaa) {
+		hints.add("use_multisampling", true);
+	}
 
 
 	if(g_desktop_fullscreen) {

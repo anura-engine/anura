@@ -114,6 +114,8 @@ namespace
 		static game_logic::FormulaVariableStoragePtr obj(new game_logic::FormulaVariableStorage());
 		return obj;
 	}
+
+	PREF_BOOL(draw_objects_on_even_pixel_boundaries, true, "If true will only draw objects on 2-pixel boundaries");
 }
 
 struct CustomObjectText 
@@ -1283,22 +1285,27 @@ void CustomObject::draw(int xx, int yy) const
 		color_scope.reset(new KRE::ColorScope(draw_color_->toColor()));
 	}
 
-	const int draw_x = x()/* - xx*/;
-	const int draw_y = y()/* - yy*/;
+	int draw_x = x()/* - xx*/;
+	int draw_y = y()/* - yy*/;
+
+	if(g_draw_objects_on_even_pixel_boundaries) {
+		draw_x -= draw_x%2;
+		draw_y -= draw_y%2;
+	}
 
 	if(type_->isHiddenInGame() && !Level::current().in_editor()) {
 		//pass
-	} else if(custom_draw_xy_.size() >= 6 &&
+	} else if(custom_draw_xy_.size() >= 7 &&
 	          custom_draw_xy_.size() == custom_draw_uv_.size()) {
-		frame_->drawCustom(shader_, draw_x-draw_x%2, draw_y-draw_y%2, &custom_draw_xy_[0], &custom_draw_uv_[0], static_cast<int>(custom_draw_xy_.size())/2, isFacingRight(), isUpsideDown(), time_in_frame_, rotate_z_.as_float32(), cycle_);
+		frame_->drawCustom(shader_, draw_x, draw_y, &custom_draw_xy_[0], &custom_draw_uv_[0], static_cast<int>(custom_draw_xy_.size())/2, isFacingRight(), isUpsideDown(), time_in_frame_, rotate_z_.as_float32(), cycle_);
 	} else if(custom_draw_.get() != nullptr) {
-		frame_->drawCustom(shader_, draw_x-draw_x%2, draw_y-draw_y%2, *custom_draw_, draw_area_.get(), isFacingRight(), isUpsideDown(), time_in_frame_, rotate_z_.as_float32());
+		frame_->drawCustom(shader_, draw_x, draw_y, *custom_draw_, draw_area_.get(), isFacingRight(), isUpsideDown(), time_in_frame_, rotate_z_.as_float32());
 	} else if(draw_scale_) {
-		frame_->draw(shader_, draw_x-draw_x%2, draw_y-draw_y%2, isFacingRight(), isUpsideDown(), time_in_frame_, rotate_z_.as_float32(), draw_scale_->as_float32());
+		frame_->draw(shader_, draw_x, draw_y, isFacingRight(), isUpsideDown(), time_in_frame_, rotate_z_.as_float32(), draw_scale_->as_float32());
 	} else if(!draw_area_.get()) {
-		frame_->draw(shader_, draw_x-draw_x%2, draw_y-draw_y%2, isFacingRight(), isUpsideDown(), time_in_frame_, rotate_z_.as_float32());
+		frame_->draw(shader_, draw_x, draw_y, isFacingRight(), isUpsideDown(), time_in_frame_, rotate_z_.as_float32());
 	} else {
-		frame_->draw(shader_, draw_x-draw_x%2, draw_y-draw_y%2, *draw_area_, isFacingRight(), isUpsideDown(), time_in_frame_, rotate_z_.as_float32());
+		frame_->draw(shader_, draw_x, draw_y, *draw_area_, isFacingRight(), isUpsideDown(), time_in_frame_, rotate_z_.as_float32());
 	}
 
 	if(blur_) {
@@ -1312,7 +1319,7 @@ void CustomObject::draw(int xx, int yy) const
 			while(!transform.fits_in_color()) {
 				transform = transform - transform.toColor();
 				KRE::ColorScope color_scope(transform.toColor());
-				frame_->draw(shader_, draw_x-draw_x%2, draw_y-draw_y%2, isFacingRight(), isUpsideDown(), time_in_frame_, rotate_z_.as_float32());
+				frame_->draw(shader_, draw_x, draw_y, isFacingRight(), isUpsideDown(), time_in_frame_, rotate_z_.as_float32());
 			}
 		}
 	}
