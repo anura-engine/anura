@@ -256,6 +256,11 @@ namespace graphics
 
 	DEFINE_SET_FIELD
 		obj.obj_->current.position = obj.obj_->initial.position = variant_to_vec3(value);
+	
+	DEFINE_FIELD(emission_rate, "any")
+		return variant();
+	DEFINE_SET_FIELD
+		obj.obj_->setEmissionRate(value);
 	END_DEFINE_CALLABLE(ParticleEmitterProxy)
 
 	BEGIN_DEFINE_CALLABLE_NOBASE(ParticleAffectorProxy)

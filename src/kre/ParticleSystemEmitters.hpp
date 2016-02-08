@@ -49,6 +49,8 @@ namespace KRE
 			TechniquePtr getTechnique() const;
 			void init(std::weak_ptr<Technique> tq);
 
+			void setEmissionRate(variant node);
+
 			virtual EmitterPtr clone() = 0;
 			static EmitterPtr factory(std::weak_ptr<ParticleSystemContainer> parent, const variant& node);
 		protected:

@@ -198,11 +198,8 @@ namespace KRE
 			initial.time_to_live = current.time_to_live = 100000000.0;
 			initial.velocity = current.velocity = 0;
 
-			if(node.has_key("emission_rate")) {
-				emission_rate_ = Parameter::factory(node["emission_rate"]);
-			} else {
-				emission_rate_.reset(new FixedParameter(10));
-			}
+			setEmissionRate(node["emission_rate"]);
+
 			if(node.has_key("time_to_live")) {
 				time_to_live_ = Parameter::factory(node["time_to_live"]);
 			} else {
@@ -346,6 +343,15 @@ namespace KRE
 			}
 			if(repeat_delay_) {
 				repeat_delay_remaining_ = repeat_delay_->getValue(0);
+			}
+		}
+
+		void Emitter::setEmissionRate(variant node)
+		{
+			if(node.is_null() == false) {
+				emission_rate_ = Parameter::factory(node);
+			} else {
+				emission_rate_.reset(new FixedParameter(10));
 			}
 		}
 
