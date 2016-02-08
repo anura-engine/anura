@@ -63,6 +63,11 @@ namespace {
 
 bool validateEmail(const std::string& email, std::string* message)
 {
+	if(email.size() > 64) {
+		*message = "email too long";
+		return false;
+	}
+
 	if(std::count(email.begin(), email.end(), '@') != 1) {
 		*message = "multiple '@' characters";
 		return false;
@@ -371,6 +376,14 @@ public:
 		timer_.async_wait(boost::bind(&matchmaking_server::heartbeat, this, boost::asio::placeholders::error));
 	}
 
+#define RESPOND_CUSTOM_MESSAGE(type, msg) { \
+					variant_builder response; \
+					response.add("type", type); \
+					response.add("message", msg); \
+					response.add("timestamp", static_cast<int>(time(NULL))); \
+					send_response(socket, response.build()); \
+				}
+
 #define RESPOND_ERROR(msg) { \
 					variant_builder response; \
 					response.add("type", "error"); \
@@ -530,6 +543,20 @@ public:
 						}
 
 						send_response(socket, response.build());
+
+						if(email_address.empty() == false) {
+							const std::string email_key = "email:" + email_address;
+							db_client_->get(email_key, [=](variant email_info) {
+								std::vector<variant> accounts;
+								if(email_info.is_list()) {
+									accounts = email_info.as_list();
+								}
+
+								accounts.push_back(variant(user_full));
+								db_client_->put(email_key, variant(&accounts),
+							            [](){}, [](){});
+							});
+						}
 					},
 					[=]() {
 						RESPOND_ERROR("There was an error with registering. Please try again.");
@@ -554,13 +581,13 @@ public:
 
 				db_client_->get("user:" + user, [=](variant user_info) {
 					if(user_info.is_null()) {
-						RESPOND_ERROR("That user doesn't exist");
+						RESPOND_CUSTOM_MESSAGE("login_fail", "That user doesn't exist");
 						return;
 					}
 
 					std::string db_passwd = user_info["passwd"].as_string();
 					if(passwd != db_passwd && !impersonate) {
-						RESPOND_ERROR("Incorrect password");
+						RESPOND_CUSTOM_MESSAGE("login_fail", "Incorrect password");
 						return;
 
 					}
@@ -673,6 +700,8 @@ public:
 					msg << "We have received a request to reset the password on your Argentum Age account. To reset your password please visit this URL: http://theargentlark.com:" << port_ << "/reset_password?user=" << user << "&id=" << request_id;
 
 					sendEmail(email.as_string(), "Reset your Argentum Age password", msg.str());
+
+					RESPOND_MESSAGE("You have been sent an email to reset your password!");
 				});
 
 			} else if(request_type == "get_server_info") {
