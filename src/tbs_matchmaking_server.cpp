@@ -1361,7 +1361,10 @@ public:
 				return;
 			}
 
-			db_client_->get("user:" + user->second, [=](variant user_info) {
+			std::string username = user->second;
+			std::string recovery_id = id->second;
+
+			db_client_->get("user:" + username, [=](variant user_info) {
 				if(user_info.is_null()) {
 					send_msg(socket, "text/plain", "Invalid or expired request", "");
 					return;
@@ -1372,14 +1375,14 @@ public:
 
 
 				user_info.add_attr_mutation(variant("passwd"), variant(md5::sum(new_passwd)));
-				db_client_->put("user:" + user->second, user_info, [](){}, [](){});
+				db_client_->put("user:" + username, user_info, [](){}, [](){});
 
 				send_msg(socket, "text/json", "Your account password has been reset. Your new password is " + new_passwd, "");
 
 			});
 
-			recover_account_requests_.erase(id->second);
-			user_id_to_recover_account_requests_.erase(user->second);
+			recover_account_requests_.erase(recovery_id);
+			user_id_to_recover_account_requests_.erase(username);
 		}
 	}
 
