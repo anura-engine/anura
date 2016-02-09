@@ -131,6 +131,18 @@ namespace KRE
 			CameraPtr saved_cam_;
 		};
 
+		struct ShaderScope
+		{
+			ShaderScope(ShaderProgramPtr shader) : canvas_(KRE::Canvas::getInstance()) {
+				canvas_->shader_stack_.push(shader);
+			}
+			~ShaderScope()
+			{
+				canvas_->shader_stack_.pop();
+			}
+			CanvasPtr canvas_;
+		};
+
 		const Color getColor() const {
 			if(color_stack_.empty()) {
 				return Color::colorWhite();
@@ -144,6 +156,13 @@ namespace KRE
 		const glm::mat4& getPVMatrix() const { return pv_; }
 
 		const CameraPtr& getCamera() const { return camera_; }
+
+		ShaderProgramPtr getCurrentShader() const {
+			if(shader_stack_.empty()) {
+				return ShaderProgram::getSystemDefault();
+			}
+			return shader_stack_.top();
+		}
 	protected:
 		Canvas();
 	private:
@@ -152,6 +171,7 @@ namespace KRE
 		unsigned height_;
 		virtual void handleDimensionsChanged() = 0;
 		std::stack<Color> color_stack_;
+		std::stack<ShaderProgramPtr> shader_stack_;
 		mutable glm::mat4 model_matrix_;
 		mutable bool model_changed_;
 		std::weak_ptr<Window> window_;

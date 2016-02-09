@@ -144,15 +144,17 @@ namespace KRE
 		  mix_palettes_(false)
 	{
 		palette_[0] = palette_[1] = 0;
-		texture_params_.resize(1);
-		texture_params_[0].surface = Surface::create(width, height, fmt);
-		texture_params_[0].surface_width = width;
-		texture_params_[0].surface_height = height;
-		texture_params_[0].width = width;
-		texture_params_[0].height = height;
-		texture_params_[0].depth = depth;
-		texture_params_[0].type = type;
-		internalInit(texture_params_.begin());
+		texture_params_.resize(count);
+		for(int n = 0; n != count; ++n) {
+			texture_params_[n].surface = Surface::create(width, height, fmt);
+			texture_params_[n].surface_width = width;
+			texture_params_[n].surface_height = height;
+			texture_params_[n].width = width;
+			texture_params_[n].height = height;
+			texture_params_[n].depth = depth;
+			texture_params_[n].type = type;
+			internalInit(texture_params_.begin() + n);
+		}
 	}
 
 	Texture::~Texture()

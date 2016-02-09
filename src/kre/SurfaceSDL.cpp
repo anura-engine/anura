@@ -186,6 +186,8 @@ namespace KRE
 		uint32_t rmask, gmask, bmask, amask;
 		if(format == PixelFormat::PF::PIXELFORMAT_R8) {
 			return;
+		} else if(format == PixelFormat::PF::PIXELFORMAT_YV12) {
+			return;
 		} else {
 			SDL_bool ret = SDL_PixelFormatEnumToMasks(get_sdl_pixel_format(format), &bpp, &rmask, &gmask, &bmask, &amask);
 			ASSERT_LOG(ret != SDL_FALSE, "Unable to convert pixel format to masks: " << SDL_GetError());
