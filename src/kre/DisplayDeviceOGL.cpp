@@ -483,7 +483,9 @@ namespace KRE
 
 	TexturePtr DisplayDeviceOpenGL::handleCreateTexture2D(int width, int height, PixelFormat::PF fmt)
 	{
-		return std::make_shared<OpenGLTexture>(1, width, height, 0, fmt, TextureType::TEXTURE_2D);
+		// XXX make a static function PixelFormat::isPlanar or such.
+		const int count = fmt == PixelFormat::PF::PIXELFORMAT_YV12 ? 3 : 1;
+		return std::make_shared<OpenGLTexture>(count, width, height, 0, fmt, TextureType::TEXTURE_2D);
 	}
 	
 	TexturePtr DisplayDeviceOpenGL::handleCreateTexture3D(int width, int height, int depth, PixelFormat::PF fmt)

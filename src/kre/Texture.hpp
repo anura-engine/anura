@@ -100,7 +100,7 @@ namespace KRE
 		// Less safe version for updating a multi-texture.
 		virtual void update(int n, int x, int y, int width, int height, const void* pixels) = 0;
 		virtual void update2D(int n, int x, int y, int width, int height, int stride, const void* pixels) = 0;
-		virtual void updateYUV(int x, int y, int width, int height, const std::vector<int>& stride, const void* pixels) = 0;
+		virtual void updateYUV(int x, int y, int width, int height, const std::vector<int>& stride, const std::vector<void*>& pixels) = 0;
 		virtual void update(int n, int x, int y, int z, int width, int height, int depth, void* pixels) = 0;
 
 		static void rebuildAll();

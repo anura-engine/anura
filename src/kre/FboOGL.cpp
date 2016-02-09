@@ -257,10 +257,11 @@ namespace KRE
 			// blit from multisample FBO to final FBO
 			glBindFramebuffer(GL_READ_FRAMEBUFFER, *sample_framebuffer_id_);
 			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, *framebuffer_id_);
+			glDrawBuffer(GL_BACK);
 			glBlitFramebuffer(0, 0, width(), height(), 
 				0, 0, width(), height(), 
 				GL_COLOR_BUFFER_BIT | (getDepthPlane() ? GL_DEPTH_BUFFER_BIT : 0) | (getStencilPlane() ? GL_STENCIL_BUFFER_BIT : 0), 
-				GL_LINEAR);
+				GL_NEAREST);
 			glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 		}

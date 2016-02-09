@@ -94,9 +94,13 @@ namespace KRE
 		} else {
 			mvp = getPVMatrix() * get_global_model_matrix();
 		}
-		auto shader = OpenGL::ShaderProgram::defaultSystemShader();
+		auto shader = getCurrentShader();
 		shader->makeActive();
 		shader->setUniformsForTexture(texture);
+		auto uniform_draw_fn = shader->getUniformDrawFunction();
+		if(uniform_draw_fn) {
+			uniform_draw_fn(shader);
+		}
 		shader->setUniformValue(shader->getMvpUniform(), glm::value_ptr(mvp));
 		if(color != KRE::Color::colorWhite()) {
 			shader->setUniformValue(shader->getColorUniform(), (color*getColor()).asFloatVector());
@@ -120,9 +124,13 @@ namespace KRE
 	{
 		glm::mat4 model = glm::rotate(glm::mat4(1.0f), rotation, glm::vec3(0, 0, 1.0f));
 		glm::mat4 mvp = getPVMatrix() * model * get_global_model_matrix();
-		auto shader = OpenGL::ShaderProgram::defaultSystemShader();
+		auto shader = getCurrentShader();
 		shader->makeActive();
 		shader->setUniformsForTexture(tex);
+		auto uniform_draw_fn = shader->getUniformDrawFunction();
+		if(uniform_draw_fn) {
+			uniform_draw_fn(shader);
+		}
 		shader->setUniformValue(shader->getMvpUniform(), glm::value_ptr(mvp));
 		if(color != KRE::Color::colorWhite()) {
 			shader->setUniformValue(shader->getColorUniform(), (color*getColor()).asFloatVector());

@@ -110,7 +110,7 @@ namespace KRE
 	OpenGLTexture::OpenGLTexture(int count, int width, int height, int depth, PixelFormat::PF fmt, TextureType type)
 		: Texture(count, width, height, depth, fmt, type),
 		  texture_data_(),
-		  is_yuv_planar_(false)
+		  is_yuv_planar_(fmt == PixelFormat::PF::PIXELFORMAT_YV12 ? true : false)
 	{
 		int max_tex_units = DisplayDevice::getCurrent()->queryParameteri(DisplayDeviceParameters::MAX_TEXTURE_UNITS);
 		if(max_tex_units > 0) {
@@ -185,12 +185,12 @@ namespace KRE
 	}
 
 	// Stride is the width of the image surface *in pixels*
-	void OpenGLTexture::updateYUV(int x, int y, int width, int height, const std::vector<int>& stride, const void* pixels)
+	void OpenGLTexture::updateYUV(int x, int y, int width, int height, const std::vector<int>& stride, const std::vector<void*>& pixels)
 	{
 		ASSERT_LOG(is_yuv_planar_, "updateYUV called on non YUV planar texture.");
-		int num_textures = is_yuv_planar_ ? 2 : 0;
-		for(int n = num_textures; n >= 0; --n) {
+		for(int n = 2; n >= 0; --n) {
 			auto& td = texture_data_[n];
+			glActiveTexture(GL_TEXTURE0 + n);
 			glBindTexture(GetGLTextureType(getType(n)), *td.id);
 			get_current_bound_texture() = *td.id;
 			if(static_cast<int>(stride.size()) > n) {
@@ -203,10 +203,10 @@ namespace KRE
 				case TextureType::TEXTURE_1D:
 					LOG_WARN("Running 2D texture update on 1D texture.");
 					ASSERT_LOG(is_yuv_planar_ == false, "Update of 1D Texture in YUV planar mode.");
-					glTexSubImage1D(GL_TEXTURE_1D, 0, x, width, td.format, td.type, pixels);
+					glTexSubImage1D(GL_TEXTURE_1D, 0, x, width, td.format, td.type, pixels[n]);
 					break;
 				case TextureType::TEXTURE_2D:
-					glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, n>0?width/2:width, n>0?height/2:height, td.format, td.type, pixels);
+					glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, n>0?width/2:width, n>0?height/2:height, td.format, td.type, pixels[n]);
 					break;
 				case TextureType::TEXTURE_3D:
 					ASSERT_LOG(false, "Tried to do 2D texture update on 3D texture");
@@ -593,8 +593,6 @@ namespace KRE
 				ASSERT_LOG(false, "Unrecognised pixel format");
 		}
 
-		ASSERT_LOG(is_yuv_planar_ == false, "XXX Need to fix yuv planar textures now!");
-
 		auto it = get_id_cache().find(surf->id());
 		if(it != get_id_cache().end()) {
 			auto cached_id = it->second.lock();
@@ -616,9 +614,9 @@ namespace KRE
 		glBindTexture(GetGLTextureType(getType(n)), *td.id);
 		get_current_bound_texture() = *td.id;
 
-		unsigned w = is_yuv_planar_ && n>0 ? width(n)/2 : width(n);
-		unsigned h = is_yuv_planar_ && n>0 ? height(n)/2 : height(n);
-		unsigned d = is_yuv_planar_ && n>0 ? depth(n)/2 : depth(n);
+		unsigned w = is_yuv_planar_ && n>0 ? surfaceWidth(n)/2 : surfaceWidth(n);
+		unsigned h = is_yuv_planar_ && n>0 ? surfaceHeight(n)/2 : surfaceHeight(n);
+		unsigned d = is_yuv_planar_ && n>0 ? actualDepth(n)/2 : actualDepth(n);
 
 		if(getUnpackAlignment(n) != 4) {
 			glPixelStorei(GL_UNPACK_ALIGNMENT, getUnpackAlignment(n));

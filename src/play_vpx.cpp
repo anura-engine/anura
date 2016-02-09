@@ -41,6 +41,27 @@ namespace movie
 		unsigned mem_get_le32(const std::vector<uint8_t>& mem) {
 			return (static_cast<unsigned>(mem[3]) << 24)|(static_cast<unsigned>(mem[2]) << 16)|(static_cast<unsigned>(mem[1]) << 8)|static_cast<unsigned>(mem[0]);
 		}
+
+		KRE::ShaderProgramPtr get_shader()
+		{
+			using namespace KRE;
+			static ShaderProgramPtr yuv_shader = nullptr;
+			if(yuv_shader == nullptr) {
+				yuv_shader = ShaderProgram::getProgram("yuv12")->clone();
+				ASSERT_LOG(yuv_shader != nullptr, "No YUV shader was found.");
+
+				unsigned u_tex0 = yuv_shader->getUniform("u_tex0");
+				unsigned u_tex1 = yuv_shader->getUniform("u_tex1");
+				unsigned u_tex2 = yuv_shader->getUniform("u_tex2");
+
+				yuv_shader->setUniformDrawFunction([u_tex0, u_tex1, u_tex2](ShaderProgramPtr shader){
+					shader->setUniformValue(u_tex0, 0);
+					shader->setUniformValue(u_tex1, 1);
+					shader->setUniformValue(u_tex2, 2);
+				});
+			}
+			return yuv_shader;
+		}
 	}
 
 	vpx::vpx(const std::string& file, int x, int y, int width, int height, bool loop, bool cancel_on_keypress)
@@ -118,6 +139,8 @@ namespace movie
 	{
 		ASSERT_LOG(img_ != nullptr, "img_ is null");
 		texture_ = KRE::Texture::createTexture2D(img_->d_w, img_->d_h, KRE::PixelFormat::PF::PIXELFORMAT_YV12);
+		texture_->setFiltering(0, KRE::Texture::Filtering::LINEAR, KRE::Texture::Filtering::LINEAR, KRE::Texture::Filtering::POINT);
+		texture_->setAddressModes(0, KRE::Texture::AddressMode::CLAMP, KRE::Texture::AddressMode::CLAMP, KRE::Texture::AddressMode::CLAMP);
 	}
 
 	void vpx::stop()
@@ -224,12 +247,17 @@ namespace movie
 			return;
 		}
 
-		ASSERT_LOG(false, "vpx::handleDraw() fixme");
-		//KRE::Canvas::ShaderManger sm("");
-		/*texture_->update(0, 0, img_->d_w, img_->d_h, img_->stride, static_cast<const void*>(img_->planes));
-
+		static std::vector<int> stride(4);
+		static std::vector<void*> pixels(4);
+		for(int n = 0; n != 4; n++) {
+			stride[n] = img_->stride[n];
+			pixels[n] = img_->planes[n];
+		}
+		texture_->updateYUV(0, 0, img_->d_w, img_->d_h, stride, pixels);
+		
+		KRE::ShaderProgramPtr yuv_shader = get_shader();
+		KRE::Canvas::ShaderScope sm(yuv_shader);
 		KRE::Canvas::getInstance()->blitTexture(texture_, 0, rect(0, 0, width(), height()));
-		*/
 	}
 
 	gui::WidgetPtr vpx::clone() const
