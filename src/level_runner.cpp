@@ -92,6 +92,8 @@ namespace
 
 	PREF_FLOAT(global_scale, 1.0f, "Global scale value.");
 
+	PREF_BOOL(allow_builtin_settings_dialog, true, "Allow the builtin Anura settings dialog");
+
 	LevelRunner* current_level_runner = nullptr;
 
 	class current_level_runner_scope 
@@ -1456,7 +1458,7 @@ bool LevelRunner::play_cycle()
 			}
 		}
 		
-		if(lvl_->show_builtin_settingsDialog())
+		if(lvl_->show_builtin_settingsDialog() && g_allow_builtin_settings_dialog)
 		{
 			lvl_->set_show_builtin_settingsDialog(false);
 
