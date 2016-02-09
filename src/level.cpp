@@ -2433,6 +2433,7 @@ void Level::set_active_chars()
 
 	const rect screen_area(screen_left, screen_top, screen_right - screen_left, screen_bottom - screen_top);
 	active_chars_.clear();
+	std::vector<EntityPtr> objects_to_remove;
 	for(EntityPtr& c : chars_) {
 		const bool isActive = c->isActive(screen_area) || c->useAbsoluteScreenCoordinates();
 
@@ -2446,17 +2447,14 @@ void Level::set_active_chars()
 			}
 		} else { //char is inactive
 			if(c->diesOnInactive()) {
-				if(c->label().empty() == false) {
-					c->dieWithNoEvent();
-					chars_by_label_.erase(c->label());
-				}
-				
-				c = EntityPtr(); //can't delete it while iterating over the container, so we null it for later removal
+				objects_to_remove.push_back(c);
 			}
 		}
 	}
 
-	chars_.erase(std::remove(chars_.begin(), chars_.end(), EntityPtr()), chars_.end());
+	for(auto& e : objects_to_remove) {
+		remove_character(e);
+	}
 
 	std::sort(active_chars_.begin(), active_chars_.end());
 	active_chars_.erase(std::unique(active_chars_.begin(), active_chars_.end()), active_chars_.end());
