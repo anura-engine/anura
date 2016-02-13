@@ -540,12 +540,16 @@ void Frame::buildAlphaFromFrameInfo()
 
 void Frame::buildAlpha()
 {
+	ASSERT_LOG(nframes_ < 1024, "Animation has too many frames");
 	frames_.resize(nframes_);
 	if(!blit_target_.getTexture()) {
 		return;
 	}
 
-	alpha_.resize(nframes_*img_rect_.w()*img_rect_.h(), true);
+	const size_t bufsize = nframes_*img_rect_.w()*img_rect_.h();
+	ASSERT_LOG(bufsize < size_t(8192*8192), "Animation is unreasonably large");
+
+	alpha_.resize(bufsize, true);
 
 	for(int n = 0; n < nframes_; ++n) {
 		const int current_col = (nframes_per_row_ > 0) ? (n% nframes_per_row_) : n;
