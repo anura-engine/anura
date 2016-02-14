@@ -160,9 +160,16 @@ namespace tbs
 			}
 		}
 
-		if(type == "observe_game") {
+		if(type == "connect_relay") {
+			const int relay_session = msg["relay_session"].as_int();
+			LOG_INFO("Connecting to relay: " << msg["relay_host"].as_string() << ":" << msg["relay_port"].as_string() << " session = " << relay_session);
+			connect_relay_session(msg["relay_host"].as_string(), msg["relay_port"].as_string(), relay_session);
+
+			clients_[relay_session].session_id = relay_session;
+		} else if(type == "observe_game") {
 			const int id = msg["game_id"].as_int(-1);
 			const std::string user = msg["user"].as_string();
+			LOG_INFO("trying to observe: " << user << ", " << id << " games = " << games_.size());
 
 			game_info_ptr g;
 			for(const game_info_ptr& gm : games_) {
@@ -177,7 +184,7 @@ namespace tbs
 				return;
 			}
 
-			if(clients_.count(session_id)) {
+			if(clients_.count(session_id) && clients_[session_id].user.empty() == false) {
 				send_fn(json::parse("{ \"type\": \"reuse_session_id\" }"));
 				return;
 			}
@@ -427,13 +434,15 @@ namespace tbs
 			return;
 		}
 
-		for(game_info_ptr& g : games_) {
-			if(nheartbeat_ - g->nlast_touch > 300) {
-				g = game_info_ptr();
+		if(!g_tbs_server_local) {
+			for(game_info_ptr& g : games_) {
+				if(nheartbeat_ - g->nlast_touch > 300) {
+					g = game_info_ptr();
+				}
 			}
-		}
 
-		games_.erase(std::remove(games_.begin(), games_.end(), game_info_ptr()), games_.end());
+			games_.erase(std::remove(games_.begin(), games_.end(), game_info_ptr()), games_.end());
+		}
 
 		for(std::map<int,client_info>::iterator i = clients_.begin();
 		    i != clients_.end(); ) {

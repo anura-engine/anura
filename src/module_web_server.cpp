@@ -91,7 +91,7 @@ void add_chunks_to_manifest(const std::string& data_path, variant manifest)
 static const int ModuleProtocolVersion = 1;
 }
 
-void ModuleWebServer::handlePost(socket_ptr socket, variant doc, const http::environment& env)
+void ModuleWebServer::handlePost(socket_ptr socket, variant doc, const http::environment& env, const std::string& raw_msg)
 {
 	std::map<variant,variant> response;
 	try {

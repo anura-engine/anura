@@ -343,6 +343,11 @@ public:
 
 			for(auto itor = sessions_.begin(); itor != sessions_.end(); ) {
 				if(itor->second.session_id == 0) {
+					auto i = users_to_sessions_.find(itor->second.user_id);
+					if(i != users_to_sessions_.end() && i->second == itor->first) {
+						users_to_sessions_.erase(i);
+					}
+
 					remove_logged_in_user(itor->second.user_id);
 					sessions_.erase(itor++);
 				} else {
@@ -400,7 +405,7 @@ public:
 					send_response(socket, response.build()); \
 				}
 
-	void handlePost(socket_ptr socket, variant doc, const http::environment& env) override
+	void handlePost(socket_ptr socket, variant doc, const http::environment& env, const std::string& raw_msg) override
 	{
 		int request_session_id = -1;
 		std::map<std::string, std::string>::const_iterator i = env.find("cookie");
@@ -518,6 +523,8 @@ public:
 						info.user_id = user;
 						info.last_contact = this->time_ms_;
 
+						users_to_sessions_[user] = session_id;
+
 						this->account_info_[user] = new_user_info_variant;
 
 						if(g_beta_keys_file.empty() == false) {
@@ -606,6 +613,8 @@ public:
 					info.user_id = user;
 					info.last_contact = this->time_ms_;
 
+					users_to_sessions_[user] = session_id;
+
 					response.add("type", "login_success");
 					response.add("session_id", variant(session_id));
 					response.add("username", given_user);
@@ -657,6 +666,8 @@ public:
 						info.session_id = session_id;
 						info.user_id = username;
 						info.last_contact = this->time_ms_;
+
+						users_to_sessions_[username] = session_id;
 	
 						response.add("type", "login_success");
 						response.add("session_id", variant(session_id));
@@ -803,6 +814,11 @@ public:
 				send_response(socket, response.build());
 
 				fprintf(stderr, "GOT QUIT: %s\n", info.user_id.c_str());
+				auto i = users_to_sessions_.find(info.user_id);
+				if(i != users_to_sessions_.end() && i->second == session_id) {
+					users_to_sessions_.erase(i);
+				}
+
 				remove_logged_in_user(info.user_id);
 				sessions_.erase(session_id);
 				
@@ -1003,6 +1019,79 @@ public:
 					send_msg(socket, "text/json", "{ type: \"ack\" }", "");
 				}
 
+			} else if(request_type == "request_observe") {
+				int session_id = doc["session_id"].as_int(request_session_id);
+				auto itor = sessions_.find(session_id);
+				if(itor == sessions_.end()) {
+					RESPOND_ERROR("unknown session");
+					return;
+				}
+
+				SessionInfo* target = get_session(doc["target_user"].as_string());
+				if(!target) {
+					RESPOND_ERROR(formatter() << "User " << doc["target_user"].as_string() << " is no longer online");
+					return;
+				}
+
+				variant_builder builder;
+				builder.add("type", "request_observe");
+				builder.add("requester", itor->second.user_id);
+
+				queue_message(*target, builder.build());
+
+				RESPOND_MESSAGE(formatter() << "Sent request to " << doc["target_user"].as_string() << " to observe their game");
+				
+			} else if(request_type == "allow_observe") {
+
+				static int relay_session = 100000;
+				++relay_session;
+
+				int session_id = doc["session_id"].as_int(request_session_id);
+				auto itor = sessions_.find(session_id);
+				if(itor == sessions_.end()) {
+					RESPOND_ERROR("No session");
+					return;
+				}
+
+				SessionInfo* target = get_session(doc["requester"].as_string());
+				if(target == nullptr) {
+					RESPOND_ERROR(formatter() << doc["requester"].as_string() << " is no longer online");
+					return;
+				}
+
+				{
+					LOG_INFO("SEND CONNECT RELAY");
+					variant_builder builder;
+					builder.add("type", "connect_relay_server");
+					builder.add("relay_session", relay_session);
+					send_response(socket, builder.build());
+				}
+
+				{
+					variant_builder builder;
+					builder.add("type", "grant_observe");
+					builder.add("relay_session", relay_session);
+					queue_message(*target, builder.build());
+				}
+
+			} else if(request_type == "deny_observe") {
+
+				int session_id = doc["session_id"].as_int(request_session_id);
+				auto itor = sessions_.find(session_id);
+
+				if(itor != sessions_.end()) {
+					SessionInfo* target = get_session(doc["requester"].as_string());
+					if(target) {
+						variant_builder response;
+						response.add("type", "message");
+						response.add("message", formatter() << itor->second.user_id << " has declined your request to observe their game");
+						response.add("timestamp", static_cast<int>(time(NULL)));
+						queue_message(*target, response.build());
+					}
+				}
+
+				send_msg(socket, "text/json", "{ type: \"ack\" }", "");
+
 			} else if(request_type == "request_updates") {
 
 				int session_id = doc["session_id"].as_int(request_session_id);
@@ -1011,6 +1100,8 @@ public:
 					fprintf(stderr, "Error: Unknown session: %d\n", session_id);
 					send_msg(socket, "text/json", "{ type: \"error\", message: \"unknown session\" }", "");
 				} else {
+					users_to_sessions_[itor->second.user_id] = session_id;
+
 					if(doc["status"].is_string()) {
 						std::string status = doc["status"].as_string();
 						if(status != itor->second.status) {
@@ -1061,6 +1152,12 @@ public:
 								challenge->received = true;
 								return;
 							}
+						}
+
+						if(itor->second.message_queue.empty() == false) {
+							send_msg(socket, "text/json", itor->second.message_queue.front().write_json(), "");
+							itor->second.message_queue.pop_front();
+							return;
 						}
 
 						if(itor->second.current_socket) {
@@ -1658,9 +1755,36 @@ private:
 		bool request_server_info;
 
 		std::vector<MatchChallengePtr> challenges_made, challenges_received;
+
+		std::deque<variant> message_queue;
 	};
 
 	std::map<int, SessionInfo> sessions_;
+	std::map<std::string, int> users_to_sessions_;
+
+	SessionInfo* get_session(const std::string& user_id) {
+		auto itor = users_to_sessions_.find(user_id);
+		if(itor == users_to_sessions_.end()) {
+			return nullptr;
+		}
+
+		auto res = sessions_.find(itor->second);
+		if(res == sessions_.end()) {
+			return nullptr;
+		}
+
+		return &res->second;
+	}
+
+	void queue_message(SessionInfo& session, variant msg)
+	{
+		if(session.current_socket) {
+			send_msg(session.current_socket, "text/json", msg.write_json(), "");
+			session.current_socket = socket_ptr();
+		} else {
+			session.message_queue.push_back(msg);
+		}
+	}
 
 	struct UserInfo {
 		UserInfo() : game_pid(-1), game_session(-1) {}

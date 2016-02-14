@@ -98,6 +98,8 @@ namespace tbs
 		const std::vector<game_info_ptr>& games() const { return games_; }
 
 	private:
+		virtual void connect_relay_session(const std::string& host, const std::string& port, int relay_session) {}
+
 		virtual int connection_timeout_ticks() const;
 		variant create_lobby_msg() const;
 		variant create_game_info_msg(game_info_ptr g) const;

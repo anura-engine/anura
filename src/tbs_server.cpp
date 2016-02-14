@@ -179,6 +179,14 @@ namespace tbs
 		info.pipe = pipe;
 	}
 
+	void server::connect_relay_session(const std::string& host, const std::string& port, int session_id)
+	{
+		if(web_server_) {
+			LOG_INFO("Connnect relay session: " << host << ":" << port << " session = " << session_id);
+			web_server_->connect_proxy(static_cast<uint32_t>(session_id), host, port);
+		}
+	}
+
 	void server::send_msg(socket_ptr socket, const variant& msg)
 	{
 		send_msg(socket, msg.write_json(true, variant::JSON_COMPLIANT));
@@ -318,10 +326,14 @@ namespace tbs
 			send_msg(messages[i].first, messages[i].second);
 		}
 
-		if(!g_quit_server_after_game && get_num_heartbeat()%10 == 0) {
+		if(get_num_heartbeat()%5 == 0) {
 			for(auto g : games()) {
 				for(int n = 0; n < static_cast<int>(g->clients.size()) && n < static_cast<int>(g->game_state->players().size()); ++n) {
 					const int session_id = g->clients[n];
+					if(ipc_clients_.count(session_id)) {
+						continue;
+					}
+
 					int time_since_last_contact = 0;
 					if(sessions_to_waiting_connections_.count(session_id) == 0) {
 						time_since_last_contact = get_ms_since_last_contact(session_id);

@@ -49,6 +49,8 @@ namespace tbs
 
 		void add_ipc_client(int session_id, SharedMemoryPipePtr pipe);
 	private:
+		void connect_relay_session(const std::string& host, const std::string& port, int relay_session) override;
+
 		void close_ajax(socket_ptr socket, client_info& cli_info);
 
 		void send_msg(socket_ptr socket, const variant& msg);
