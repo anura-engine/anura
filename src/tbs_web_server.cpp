@@ -303,7 +303,7 @@ COMMAND_LINE_UTILITY(tbs_server) {
 
 	boost::shared_ptr<tbs::web_server> ws;
 
-	ws.reset(new tbs::web_server(s, io_service, ipc_sessions.empty() ? 0 : port));
+	ws.reset(new tbs::web_server(s, io_service, ipc_sessions.empty() ? port : 0));
 	s.set_http_server(ws.get());
 	LOG_INFO("tbs_server(): Listening on port " << std::dec << port);
 
