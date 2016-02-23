@@ -62,6 +62,7 @@ void http_client::set_allow_keepalive()
 
 void http_client::send_request(std::string method_path, std::string request, std::function<void(std::string)> handler, std::function<void(std::string)> error_handler, std::function<void(size_t,size_t,bool)> progress_handler, int num_retries, int attempt_num)
 {
+	LOG_INFO("http_client::send_request(this = " << (void*)this << " @" << SDL_GetTicks() << " method_path = " << method_path << " request.size() = " << (int)request.size() << " num_retries = " << num_retries << " attempt_num = " << attempt_num << ")\n");
 	if(in_flight_ == 0 && attempt_num > 6) {
 		LOG_INFO("HTTP client failing to receive data after " << attempt_num << " tries, timed out.\n");
 		error_handler("timeout");
@@ -98,7 +99,7 @@ void http_client::send_request(std::string method_path, std::string request, std
 
 	if(timeout_and_retry_) {
 		connections_monitor_timeout_.push_back(std::weak_ptr<Connection>(conn));
-		conn->timeout_period = 2000*(attempt_num > 5 ? 5 : attempt_num);
+		conn->timeout_period = 2000<<(attempt_num > 5 ? 5 : attempt_num);
 		conn->timeout_deadline = SDL_GetTicks() + conn->timeout_period;
 		conn->timeout_nbytes_needed = 1024*16;
 	}
@@ -252,7 +253,10 @@ void http_client::handle_send(connection_ptr conn, const boost::system::error_co
 
 	if(e) {
 		--in_flight_;
-		if(conn->retry_fn && conn->retry_on_error > 0) {
+
+		const bool retry = conn->retry_fn && conn->retry_on_error > 0;
+		LOG_INFO("http_client::handle_send: error: " << (void*)this << " @" << SDL_GetTicks() << " retry = " << retry << "\n");
+		if(retry) {
 			conn->retry_fn();
 		} else if(conn->error_handler) {
 			conn->error_handler("ERROR SENDING DATA");
@@ -313,7 +317,9 @@ void http_client::handle_receive(connection_ptr conn, const boost::system::error
 	
 	if(e) {
 		--in_flight_;
-		if(conn->retry_fn && conn->retry_on_error) {
+		const bool retry = conn->retry_fn && conn->retry_on_error;
+		LOG_INFO("http_client::handle_receive: error: " << (void*)this << " @" << SDL_GetTicks() << " retry = " << retry << "\n");
+		if(retry) {
 			conn->retry_fn();
 			return;
 		}
@@ -405,6 +411,9 @@ void http_client::handle_receive(connection_ptr conn, const boost::system::error
 				ASSERT_LOG(encoding == "identity", "Unsupported HTTP encoding: " << encoding);
 			}
 		}
+
+		LOG_INFO("http_client::handle_recv: " << (void*)this << " @" << SDL_GetTicks() << " payload_str.size() = " << payload_str.size() << "\n");
+
 		conn->aborted = true;
 		conn->handler(payload_str);
 		usable_connections_.push_back(conn->socket);
@@ -439,8 +448,9 @@ void http_client::process()
 	for(auto conn : connections_to_monitor) {
 		if(conn->timeout_deadline >= 0 && SDL_GetTicks() > conn->timeout_deadline) {
 			const size_t nbytes = conn->nbytes_sent + conn->response.size();
+			LOG_INFO("HTTP client reached timeout: " << (void*)this << ": period = " << conn->timeout_period << " nbytes = " << (int)nbytes << " needed = " << (int)conn->timeout_nbytes_needed << " timeout = " << (nbytes < conn->timeout_nbytes_needed) << "\n");
 			if(nbytes < conn->timeout_nbytes_needed) {
-				LOG_INFO("HTTP client timed out, resetting connection\n");
+				LOG_INFO("HTTP client timed out: " << (void*)this << " resetting connection\n");
 				conn->aborted = true;
 				conn->socket->close();
 				--in_flight_;
