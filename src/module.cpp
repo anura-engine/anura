@@ -1215,6 +1215,8 @@ static const int ModuleProtocolVersion = 1;
 			request.add("type", "download_chunk");
 			request.add("chunk_id", chunk["md5"]);
 
+			LOG_INFO("Module request chunk: " << chunk["md5"].as_string() << "\n");
+
 			const std::string url = "POST /download_chunk?chunk_id=" + chunk["md5"].as_string();
 			const std::string doc = request.build().write_json();
 			new_client->send_request(url, doc,
@@ -1229,10 +1231,13 @@ static const int ModuleProtocolVersion = 1;
 
 	void client::on_chunk_error(std::string response, std::string url, std::string doc, variant chunk, boost::shared_ptr<http_client> client)
 	{
+		LOG_INFO("Chunk error: " << chunk.as_string() << " errors = " << nchunk_errors_ << "\n");
+
 		chunk_clients_.erase(std::remove(chunk_clients_.begin(), chunk_clients_.end(), client), chunk_clients_.end());
 		++nchunk_errors_;
 		if (nchunk_errors_ > 128)
 		{
+			LOG_INFO("Failed too many chunks, aborting\n");
 			on_error(response, url, doc);
 		}
 		else
