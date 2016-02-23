@@ -601,8 +601,12 @@ int main(int argcount, char* argvec[])
 					test_names.reset(new std::vector<std::string> (util::split(arg_value)));
 				}
 			}
-		} else if(arg.substr(0, 12) == "--log-level=" || arg.substr(0, 11) == "--log-file=") {
-			// ignore
+		} else if(arg.substr(0,12) == "--log-level=") {
+			//respect these log arguments here too so they can be set in
+			//master-config.cfg or module.cfg
+			process_log_level(arg);
+		} else if(arg.substr(0,11) == "--log-file=") {
+			set_log_file(arg.substr(11));
 		} else if(arg_name == "--level") {
 			override_level_cfg = arg_value;
 		} else if(arg == "--level" && n+1 < argc) {
