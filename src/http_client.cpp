@@ -40,7 +40,7 @@ http_client::http_client(const std::string& host, const std::string& port, int s
     resolver_(new tcp::resolver(*io_service_)),
 	host_(host),
 	port_(port),
-	resolver_query_(new tcp::resolver::query(host.c_str(), port.c_str())),
+	resolver_query_(new tcp::resolver::query(tcp::resolver::query::protocol_type::v4(), host.c_str(), port.c_str())),
 	in_flight_(0),
 	allow_keepalive_(false),
 	timeout_and_retry_(false)
@@ -451,6 +451,10 @@ void http_client::process()
 			LOG_INFO("HTTP client reached timeout: " << (void*)this << ": period = " << conn->timeout_period << " nbytes = " << (int)nbytes << " needed = " << (int)conn->timeout_nbytes_needed << " timeout = " << (nbytes < conn->timeout_nbytes_needed) << "\n");
 			if(nbytes < conn->timeout_nbytes_needed) {
 				LOG_INFO("HTTP client timed out: " << (void*)this << " resetting connection\n");
+				if(resolution_state_ == RESOLUTION_IN_PROGRESS) {
+					resolution_state_ = RESOLUTION_NOT_STARTED;
+				}
+
 				conn->aborted = true;
 				conn->socket->close();
 				--in_flight_;

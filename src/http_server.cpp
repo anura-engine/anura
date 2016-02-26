@@ -128,7 +128,7 @@ namespace http
 	WebServerProxyInfo::WebServerProxyInfo(web_server& server_, uint32_t session_id_, boost::asio::io_service& io_service_, const std::string& host_, const std::string& port_)
 	  : server(&server_), session_id(session_id_), host(host_), port(port_),
 	    resolver(new tcp::resolver(io_service_)),
-		resolver_query(new tcp::resolver::query(host_.c_str(), port_.c_str())),
+		resolver_query(new tcp::resolver::query(tcp::resolver::query::protocol_type::v4(), host_.c_str(), port_.c_str())),
 		socket(new web_server::SocketInfo(io_service_))
 	{
 	}
