@@ -4178,6 +4178,13 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 			RETURN_TYPE("commands")
 		END_FUNCTION_DEF(write_document)
 
+		FUNCTION_DEF(get_document_from_str, 1, 1, "get_document_from_str(string doc)")
+			return deserialize_doc_with_objects(args()[0]->evaluate(variables).as_string());
+		FUNCTION_ARGS_DEF
+			ARG_TYPE("string")
+			RETURN_TYPE("any")
+		END_FUNCTION_DEF(get_document_from_str)
+
 		FUNCTION_DEF(get_document, 1, 2, "get_document(string filename, [enum {'null_on_failure', 'user_preferences_dir', 'uncached'}] flags): return reference to the given JSON document. flags can contain 'null_on_failure' and 'user_preferences_dir'")
 			if(args().size() != 1) {
 				Formula::failIfStaticContext();

@@ -141,6 +141,10 @@ bool username_valid(const std::string& username)
 		return false;
 	}
 
+	if(username[0] == ' ' || username[username.size()-1] == ' ') {
+		return false;
+	}
+
 	for(char c : username) {
 		if(!isalnum(c) && c != '_' && c != ' ' && c != '^') {
 			return false;
@@ -175,7 +179,8 @@ public:
 		time_ms_(0), send_at_time_ms_(1000), terminated_servers_(0),
 		controller_(game_logic::FormulaObject::create("matchmaking_server")),
 		status_doc_state_id_(1),
-		child_admin_process_(-1)
+		child_admin_process_(-1),
+		gen_game_id_(0)
 	{
 		variant_builder status_doc;
 		status_doc.add("type", "server_state");
@@ -218,7 +223,9 @@ public:
 		handle_anon_request_fn_ = controller_->queryValue("handle_anon_request");
 
 		db_client_ = DbClient::create();
-
+		db_client_->get("gen_game_id", [=](variant user_info) {
+			this->gen_game_id_ = user_info.as_int(1);
+		});
 
 		db_timer_.expires_from_now(boost::posix_time::milliseconds(10));
 		db_timer_.async_wait(boost::bind(&matchmaking_server::db_process, this, boost::asio::placeholders::error));
@@ -424,6 +431,8 @@ public:
 				request_session_id = atoi(cookie_start+8);
 			}
 		}
+
+		const int session_id = doc["session_id"].as_int(request_session_id);
 
 		try {
 			fprintf(stderr, "HANDLE POST: %s\n", doc.write_json().c_str());
@@ -719,7 +728,6 @@ public:
 				static const std::string server_info = get_server_info_file().write_json();
 				send_msg(socket, "text/json", server_info, "");
 			} else if(request_type == "reset_passwd") {
-				const int session_id = doc["session_id"].as_int(request_session_id);
 				if(sessions_.count(session_id) == 0) {
 					RESPOND_ERROR("Invalid session ID");
 					return;
@@ -741,7 +749,6 @@ public:
 				});
 
 			} else if(request_type == "modify_account") {
-				const int session_id = doc["session_id"].as_int(request_session_id);
 
 				if(sessions_.count(session_id) == 0) {
 					RESPOND_ERROR("Invalid session ID");
@@ -781,7 +788,6 @@ public:
 
 			} else if(request_type == "delete_account") {
 
-				const int session_id = doc["session_id"].as_int(request_session_id);
 
 				if(sessions_.count(session_id) == 0) {
 					RESPOND_MESSAGE("Invalid session ID");
@@ -800,7 +806,6 @@ public:
 				sessions_.erase(session_id);
 
 			} else if(request_type == "quit_game") {
-				const int session_id = doc["session_id"].as_int(request_session_id);
 
 				if(sessions_.count(session_id) == 0) {
 					RESPOND_MESSAGE("Invalid session ID");
@@ -823,7 +828,6 @@ public:
 				sessions_.erase(session_id);
 				
 			} else if(request_type == "cancel_matchmake") {
-				const int session_id = doc["session_id"].as_int(request_session_id);
 
 				if(sessions_.count(session_id) == 0) {
 					RESPOND_MESSAGE("Invalid session ID");
@@ -843,7 +847,6 @@ public:
 				send_msg(socket, "text/json", variant(&response).write_json(), "");
 
 			} else if(request_type == "challenge") {
-				const int session_id = doc["session_id"].as_int(request_session_id);
 
 				if(sessions_.count(session_id) == 0) {
 					RESPOND_MESSAGE("Invalid session ID");
@@ -943,7 +946,6 @@ public:
 
 
 			} else if(request_type == "matchmake") {
-				const int session_id = doc["session_id"].as_int(request_session_id);
 
 				if(sessions_.count(session_id) == 0) {
 					RESPOND_MESSAGE("Invalid session ID");
@@ -1265,6 +1267,13 @@ public:
 					}
 
 				}
+			} else if(request_type == "get_replay") {
+				std::string game_id = doc["id"].as_string();
+
+				db_client_->get("replay:" + game_id, [=](variant user_info) {
+					user_info.add_attr_mutation(variant("type"), variant("replay"));
+					send_msg(socket, "text/json", user_info.write_json(), "");
+				});
 			} else {
 				int session_id = doc["session_id"].as_int(request_session_id);
 				auto itor = sessions_.find(session_id);
@@ -1480,6 +1489,18 @@ public:
 
 			recover_account_requests_.erase(recovery_id);
 			user_id_to_recover_account_requests_.erase(username);
+		} else if(url == "/get_replay") {
+			auto id = args.find("id");
+			if(id == args.end()) {
+				send_msg(socket, "text/plain", "Need id in arguments", "");
+				return;
+			}
+
+			std::string game_id = id->second;
+
+			db_client_->get("replay:" + game_id, [=](variant user_info) {
+				send_msg(socket, "text/json", user_info.write_json(), "");
+			});
 		}
 	}
 
@@ -1530,6 +1551,18 @@ private:
 			std::string fname = formatter() << "/tmp/anura_tbs_server." << match_sessions.front();
 			std::string fname_out = formatter() << "/tmp/anura.out." << match_sessions.front();
 
+			std::string game_id = (formatter() << gen_game_id_++);
+
+			db_client_->put("gen_game_id", variant(gen_game_id_),
+			[=]() {
+			},
+			[=]() {
+			});
+
+			variant_builder db_game_info;
+			db_game_info.add("id", game_id);
+			db_game_info.add("timestamp", static_cast<unsigned int>(time(nullptr)));
+
 			variant_builder game;
 			game.add("game_type", module::get_module_name());
 
@@ -1548,6 +1581,14 @@ private:
 
 				auto account_info_itor = account_info_.find(session_info.user_id);
 				ASSERT_LOG(account_info_itor != account_info_.end(), "Could not find user's account info: " << session_info.user_id);
+
+				std::vector<variant> recent_games_var;
+				variant recent_games = account_info_itor->second["recent_games"];
+				if(recent_games.is_list()) {
+					recent_games_var = recent_games.as_list();
+				}
+				recent_games_var.push_back(variant(game_id));
+				account_info_itor->second.add_attr_mutation(variant("recent_games"), variant(&recent_games_var));
 
 				variant_builder user;
 				user.add("user", session_info.user_id);
@@ -1575,6 +1616,14 @@ private:
 				}
 			}
 
+			db_game_info.add("players", vector_to_variant(users_list));
+
+			db_client_->put("game:" + game_id, db_game_info.build(),
+			[=]() {
+			},
+			[=]() {
+			});
+
 			variant users_info(&users);
 
 			game.add("users", users_info);
@@ -1601,6 +1650,7 @@ private:
 			std::vector<std::string> args;
 			args.push_back(cmd);
 			args.push_back("--module=" + module::get_module_name());
+			args.push_back("--tbs-server-save-replay=" + game_id);
 			args.push_back("--no-tbs-server");
 			args.push_back("--quit-server-after-game");
 			args.push_back("--utility=tbs_server");
@@ -2177,6 +2227,8 @@ private:
 			return true;
 		}
 	}
+
+	int gen_game_id_;
 
 	DECLARE_CALLABLE(matchmaking_server);
 };

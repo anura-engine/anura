@@ -1149,18 +1149,95 @@ COMMAND_LINE_UTILITY(build_spritesheet_from_images)
 	int row_width = 3;
 	int sheet_height = 3;
 
+	int hpad = -1, vpad = -1;
+
 	std::vector<int> cell_widths;
 	std::vector<int> row_heights;
 	cell_widths.push_back(0);
 	row_heights.push_back(0);
 
-	for(auto img : args) {
-		if(img == "--newrow") {
+	int images_per_row = 1024;
+
+	for(auto itor = args.begin(); itor != args.end(); ++itor) {
+		auto img = *itor;
+		if(img.size() <= 4 || !std::equal(img.end()-4,img.end(),".png")) {
+			continue;
+		}
+
+		SurfacePtr s = graphics::SurfaceCache::get(img);
+		ASSERT_LOG(s != nullptr, "No image: " << img);
+
+		const uint8_t* p = (const uint8_t*)s->pixels();
+
+		int ver_pad = 0;
+		for(int i = 0; i < s->height()/2; ++i) {
+			const uint8_t* top = p + i*4*s->width();
+			const uint8_t* bot = p + (s->height()-i-1)*4*s->width();
+
+			bool all_clear = true;
+			for(int j = 0; j < s->width(); ++j) {
+				if(top[j*4+3] || bot[j*4+3]) {
+					all_clear = false;
+					break;
+				}
+			}
+
+			if(!all_clear) {
+				break;
+			}
+
+			++ver_pad;
+		}
+
+		int hor_pad = 0;
+		for(int i = 0; i < s->width()/2; ++i) {
+			const uint8_t* left = p + i*4;
+			const uint8_t* right = p + (s->width()-i-1)*4;
+			bool all_clear = true;
+			for(int j = 0; j < s->width(); ++j) {
+				if(left[j*(s->width()*4)+3] || right[j*(s->width()*4)+3]) {
+					all_clear = false;
+					break;
+				}
+			}
+
+			if(!all_clear) {
+				break;
+			}
+
+			++hor_pad;
+		}
+
+		fprintf(stderr, "PAD: %d %d\n", hor_pad, ver_pad);
+
+		if(ver_pad < vpad || vpad == -1) {
+			vpad = ver_pad;
+		}
+
+		if(hor_pad < hpad || hpad == -1) {
+			hpad = hor_pad;
+		}
+	}
+
+	int image_num = 0;
+
+	for(auto itor = args.begin(); itor != args.end(); ++itor) {
+		auto img = *itor;
+		if(img == "--newrow" || image_num == images_per_row) {
 			surfaces.resize(surfaces.size()+1);
 			cell_widths.push_back(0);
 			row_heights.push_back(0);
 			row_width = 3;
 			sheet_height += 3;
+			image_num = 0;
+
+			if(img == "--newrow") {
+				continue;
+			}
+		} else if(img == "--row") {
+			++itor;
+			ASSERT_LOG(itor != args.end(), "row needs arg");
+			images_per_row = atoi(itor->c_str());
 			continue;
 		}
 
@@ -1168,16 +1245,21 @@ COMMAND_LINE_UTILITY(build_spritesheet_from_images)
 		ASSERT_LOG(s != nullptr, "No image: " << img);
 		surfaces.back().push_back(s);
 
-		row_width += s->width() + 3;
+		const int s_w = s->width()-hpad*2;
+		row_width += s_w + 3;
 
-		if(s->width() > cell_widths.back()) {
-			cell_widths.back() = s->width();
+		if(s_w > cell_widths.back()) {
+			cell_widths.back() = s_w;
 		}
 
-		if(s->height() > row_heights.back()) {
-			sheet_height += s->height() - row_heights.back();
-			row_heights.back() = s->height();
+		const int s_h = s->height()-vpad*2;
+
+		if(s_h > row_heights.back()) {
+			sheet_height += s_h - row_heights.back();
+			row_heights.back() = s_h;
 		}
+
+		++image_num;
 	}
 
 	int sheet_width = 0;
@@ -1197,13 +1279,17 @@ COMMAND_LINE_UTILITY(build_spritesheet_from_images)
 		int xpos = 2;
 		int max_height = 0;
 		for(auto src : row) {
-			rect blit_src(0, 0, src->width(), src->height());
-			rect blit_dst(xpos, ypos, src->width(), src->height());
+			const int src_w = src->width()-hpad*2;
+			const int src_h = src->height()-vpad*2;
+			rect blit_src(hpad, vpad, src_w, src_h);
+			rect blit_dst(xpos, ypos, src_w, src_h);
 
-			rect rect_top(xpos-1, ypos-1, src->width()+2, 1);
-			rect rect_bot(xpos-1, ypos + src->height(), src->width()+2, 1);
-			rect rect_left(xpos-1, ypos, 1, src->height());
-			rect rect_right(xpos + src->width(), ypos, 1, src->height());
+			printf("x: %d, y: %d, w: %d, h: %d,\n", 2, 2, src_w, src_h);
+
+			rect rect_top(xpos-1, ypos-1, src_w+2, 1);
+			rect rect_bot(xpos-1, ypos + src_h, src_w+2, 1);
+			rect rect_left(xpos-1, ypos, 1, src_h);
+			rect rect_right(xpos + src_w, ypos, 1, src_h);
 
 			src->setBlendMode(Surface::BlendMode::BLEND_MODE_NONE);
 			sheet->blitTo(src, blit_src, blit_dst);

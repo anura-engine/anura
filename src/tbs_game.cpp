@@ -29,6 +29,7 @@
 #include <stdio.h>
 
 #include "asserts.hpp"
+#include "db_client.hpp"
 #include "formatter.hpp"
 #include "formula.hpp"
 #include "formula_object.hpp"
@@ -49,6 +50,8 @@
 
 extern bool g_tbs_use_shared_mem;
 extern bool g_tbs_server_local;
+
+PREF_STRING(tbs_server_save_replay, "", "ID for the tbs server to save the replay as");
 
 namespace game_logic 
 {
@@ -177,8 +180,64 @@ namespace tbs
 		LOG_INFO("DESTROY GAME");
 	}
 
+	void game::verify_replay()
+	{
+		LOG_INFO("Verifying replay: " << replay_.size());
+		if(replay_.empty()) {
+			return;
+		}
+
+		variant doc = deserialize_doc_with_objects(replay_.front());
+		variant state = doc["state"];
+		boost::intrusive_ptr<FormulaObject> state_ptr = state.convert_to<FormulaObject>();
+		ASSERT_LOG(state_ptr.get() != nullptr, "No state found");
+		for(int i = 1; i < static_cast<int>(replay_.size()); ++i) {
+			variant doc = deserialize_doc_with_objects(replay_[i]);
+			variant delta = doc["delta"];
+			ASSERT_LOG(delta.is_map(), "Delta not found");
+
+			variant clone = FormulaObject::deepClone(variant(state_ptr.get()));
+			FormulaObject* obj = clone.try_convert<FormulaObject>();
+			ASSERT_LOG(obj, "Could not clone");
+
+			obj->applyDiff(delta);
+			state_ptr.reset(obj);
+		}
+	}
+
 	void game::cancel_game()
 	{
+		if(g_tbs_server_save_replay.empty() == false && replay_.empty() == false) {
+			verify_replay();
+
+			variant_builder replay_info;
+			replay_info.add("replay", vector_to_variant(replay_));
+			replay_.clear();
+
+			DbClientPtr db = DbClient::create();
+
+			db->get("game:" + g_tbs_server_save_replay, [=](variant game_info) {
+				game_info.add_attr_mutation(variant("winner"), winner_);
+				game_info.add_attr_mutation(variant("end_timestamp"), variant(static_cast<int>(time(nullptr))));
+				db->put("game:" + g_tbs_server_save_replay, game_info,
+				[=]() {
+				},
+				[=]() {
+				}
+				);
+			});
+
+			db->put("replay:" + g_tbs_server_save_replay, replay_info.build(),
+			[=]() {
+			},
+			[=]() {
+			}
+			);
+
+			db->process(10000000);
+			LOG_INFO("Posted replay to database\n");
+		}
+
 		players_.clear();
 		outgoing_messages_.clear();
 		ai_.clear();
@@ -241,13 +300,11 @@ namespace tbs
 			send_delta = true;
 		}
 
-		variant state_doc;
-
 		variant msg = FormulaObject::deepClone(variant(game_type_->get_state()));
 		variant cmd = game_type_->transform(msg, nplayer < 0 ? 0 : nplayer);
 		const_cast<game*>(this)->executeCommand(cmd);
 
-		state_doc = msg;
+		variant state_doc = msg;
 
 		if(send_delta) {
 			result.add("delta", FormulaObject::generateDiff(players_[nplayer].state_sent, state_doc));
@@ -270,6 +327,47 @@ namespace tbs
 		}
 
 		result.add("log", variant(log_str));
+
+		variant res = result.build();
+		res.add_attr(variant("serialized_objects"), serialization_scope.writeObjects(res));
+		return res;
+	}
+
+	variant game::write_replay() const
+	{
+		game_logic::wmlFormulaCallableSerializationScope serialization_scope;
+		variant_builder result;
+		result.add("id", game_id_);
+		result.add("type", "game");
+		result.add("game_type", module::get_module_name());
+		result.add("started", variant::from_bool(started_));
+		result.add("state_id", state_id_);
+		result.add("nplayer", variant(0));
+
+		std::vector<variant> players_val;
+		for(const player& p : players_) {
+			players_val.push_back(variant(p.name));
+		}
+
+		result.add("players", variant(&players_val));
+
+		if(current_message_.empty() == false) {
+			result.add("message", current_message_);
+		}
+
+		variant msg = FormulaObject::deepClone(variant(game_type_->get_state()));
+		variant cmd = game_type_->transform(msg, 0);
+		const_cast<game*>(this)->executeCommand(cmd);
+
+		variant state_doc = msg;
+
+		if(replay_last_.is_null()) {
+			result.add("state", state_doc);
+		} else {
+			result.add("delta", FormulaObject::generateDiff(replay_last_, state_doc));
+		}
+
+		replay_last_ = state_doc;
 
 		variant res = result.build();
 		res.add_attr(variant("serialized_objects"), serialization_scope.writeObjects(res));
@@ -501,6 +599,7 @@ namespace tbs
 
 			if(state_id_ != starting_state_id) {
 				send_game_state();
+				replay_.push_back(write_replay().write_json());
 			}
 		}
 	}
@@ -597,6 +696,7 @@ namespace tbs
 			return variant();
 		DEFINE_SET_FIELD_TYPE("any")
 			std::cout << "WINNER: " << value.write_json() << std::endl;
+			obj.winner_ = value;
 
 			if(g_game_server_http_client_to_matchmaking_server.get() != nullptr) {
 				http_client& client = *g_game_server_http_client_to_matchmaking_server;
@@ -718,8 +818,8 @@ namespace tbs
 			started_waiting_for_player_at_ = ticks;
 		}
 
-
 		send_game_state(-1, time_taken);
+		replay_.push_back(write_replay().write_json());
 	}
 
 	void game::setup_game()

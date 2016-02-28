@@ -179,6 +179,13 @@ namespace tbs
 
 		variant player_waiting_on_;
 		int started_waiting_for_player_at_;
+
+		std::vector<std::string> replay_;
+		mutable variant replay_last_;
+		variant winner_;
+
+		variant write_replay() const;
+		void verify_replay();
 	};
 
 	class game_context 
