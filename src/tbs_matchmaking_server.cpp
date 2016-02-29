@@ -1268,12 +1268,27 @@ public:
 
 				}
 			} else if(request_type == "get_replay") {
-				std::string game_id = doc["id"].as_string();
 
+				std::string game_id = doc["id"].as_string();
 				db_client_->get("replay:" + game_id, [=](variant user_info) {
 					user_info.add_attr_mutation(variant("type"), variant("replay"));
 					send_msg(socket, "text/json", user_info.write_json(), "");
 				});
+			} else if(request_type == "get_recent_games") {
+				if(doc["user"].is_string()) {
+					std::string user = doc["user"].as_string();
+					queryUserGameInfo(user, socket);
+					return;
+				}
+
+				std::vector<std::string> id;
+				for(int i = gen_game_id_-1; i >= 1 && i > gen_game_id_-10; --i) {
+					id.push_back(formatter() << i);
+				}
+
+				queryGameInfo(id, socket);
+				return;
+
 			} else {
 				int session_id = doc["session_id"].as_int(request_session_id);
 				auto itor = sessions_.find(session_id);
@@ -1431,10 +1446,71 @@ public:
 #endif
 	}
 
+	void queryGameInfo(const std::vector<std::string>& game_id, socket_ptr socket)
+	{
+		std::shared_ptr<int> request_count(new int(game_id.size()));
+		std::shared_ptr<std::vector<variant>> results(new std::vector<variant>(game_id.size()));
+		int index = 0;
+		for(std::string id : game_id) {
+			db_client_->get("game:" + id, [=](variant data) {
+				(*results)[index] = data;
+				--*request_count;
+
+				if(*request_count == 0) {
+					results->erase(std::remove(results->begin(), results->end(), variant()), results->end());
+					variant_builder response;
+					response.add("type", "recent_games");
+					response.add("game_info", variant(results.get()));
+					this->send_msg(socket, "text/json", response.build().write_json(), "");
+				}
+			});
+			++index;
+		}
+	}
+
+	void queryUserGameInfo(const std::string& user, socket_ptr socket)
+	{
+		db_client_->get("user:" + user, [=](variant info) {
+			if(info.is_null()) {
+				send_msg(socket, "text/json", "{ type: 'error', message: 'No such user'}", "");
+				return;
+			}
+
+			variant recent_games = info["recent_games"];
+			if(recent_games.is_list() == false || recent_games.num_elements() == 0) {
+				//no games, send empty response
+				variant_builder response;
+				std::vector<variant> v;
+				response.add("type", "recent_games");
+				response.add("game_info", variant(&v));
+				this->send_msg(socket, "text/json", response.build().write_json(), "");
+				return;
+			}
+
+			this->queryGameInfo(recent_games.as_list_string(), socket);
+		});
+	}
+
 	void handleGet(socket_ptr socket, const std::string& url, const std::map<std::string, std::string>& args) override
 	{
+		fprintf(stderr, "handleGet(%s)\n", url.c_str());
 		if(url == "/tbs_monitor") {
 			send_msg(socket, "text/json", build_status().write_json(), "");
+		} else if(url == "/recent_games") {
+
+			auto user = args.find("user");
+			if(user != args.end()) {
+				queryUserGameInfo(user->second, socket);
+				return;
+			}
+
+			std::vector<std::string> id;
+			for(int i = gen_game_id_-1; i >= 1 && i > gen_game_id_-10; --i) {
+				id.push_back(formatter() << i);
+			}
+
+			queryGameInfo(id, socket);
+			return;
 		} else if(url == "/query" && handle_anon_request_fn_.is_function()) {
 			std::map<variant,variant> a;
 			for(auto p : args) {
