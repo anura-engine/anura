@@ -271,7 +271,7 @@ COMMAND_LINE_UTILITY(tbs_server) {
 			}
 		}
 	}
-
+/*
 	const std::string MonitorDirs[] = { "data/tbs", "data/tbs_test", "data/classes" };
 	for(const std::string& dir : MonitorDirs) {
 		std::vector<std::string> files;
@@ -284,7 +284,7 @@ COMMAND_LINE_UTILITY(tbs_server) {
 			}
 		}
 	}
-
+*/
 	LOG_INFO("MONITOR URL: " << "http://localhost:" << port << "/tbs_monitor.html");
 
 	boost::asio::io_service io_service;

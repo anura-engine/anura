@@ -544,6 +544,25 @@ std::map<std::string, std::string>& class_path_map()
 		void build_nested_classes();
 		void run_unit_tests();
 
+		void update_class(FormulaClass* new_class) {
+			if(new_class == this) {
+				return;
+			}
+
+			new_class->previous_version_.reset(this);
+
+			for(int i = 0; i < slots_.size() && i < new_class->slots_.size(); ++i) {
+				if(slots_[i].name == new_class->slots_[i].name &&
+				   slots_[i].variable_slot == new_class->slots_[i].variable_slot) {
+					slots_[i] = new_class->slots_[i];
+				}
+			}
+
+			if(previous_version_) {
+				previous_version_->update_class(this);
+			}
+		}
+
 	private:
 		void build_nested_classes(variant obj);
 
@@ -568,6 +587,8 @@ std::map<std::string, std::string>& class_path_map()
 		std::vector<boost::intrusive_ptr<const FormulaClass> > bases_;
 
 		variant nested_classes_;
+
+		boost::intrusive_ptr<FormulaClass> previous_version_;
 
 #if defined(USE_LUA)
 		// For lua integration
@@ -1752,18 +1773,26 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 			}
 		}
 
+		classes_map removed_classes;
+
 		for(auto i = classes_.begin(); i != classes_.end(); )
 		{
 			const std::string& class_name = i->first;
 			std::string::const_iterator dot = std::find(class_name.begin(), class_name.end(), '.');
 			std::string base_class(class_name.begin(), dot);
 			if(base_class == name) {
+				removed_classes.insert(*i);
 				known_classes.erase(class_name);
 				backup_classes_[i->first] = i->second;
 				classes_.erase(i++);
 			} else {
 				++i;
 			}
+		}
+
+		for(auto p : removed_classes) {
+			auto new_class = get_class(p.first);
+			p.second->update_class(const_cast<FormulaClass*>(new_class.get()));
 		}
 	}
 
