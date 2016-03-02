@@ -1808,14 +1808,15 @@ namespace {
 				}
 
 				switch(op_) {
+				case OP_EQ:
+				case OP_NEQ:
+					ASSERT_LOG(variant_types_might_match(left_type, right_type) || left_type->is_type(variant::VARIANT_TYPE_NULL) || right_type->is_type(variant::VARIANT_TYPE_NULL), "Equality expression on incompatible types: " << left_type->to_string() << " compared to " << right_type->to_string() << " " << debugPinpointLocation());
 				case OP_IN:
 				case OP_NOT_IN:
-				case OP_NEQ:
 				case OP_LTE:
 				case OP_GTE:
 				case OP_GT:
 				case OP_LT:
-				case OP_EQ:
 				case OP_AND:
 				case OP_OR:
 					return;

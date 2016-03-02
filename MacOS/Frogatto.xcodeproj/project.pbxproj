@@ -216,6 +216,7 @@
 		63D8A1E51C40BDC9008B8437 /* hex_mask.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 63D8A1E41C40BDC9008B8437 /* hex_mask.cpp */; };
 		63E092001C5CA168006170A8 /* shared_memory_pipe.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 63E091FC1C5CA168006170A8 /* shared_memory_pipe.cpp */; };
 		63E092011C5CA168006170A8 /* tbs_ipc_client.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 63E091FE1C5CA168006170A8 /* tbs_ipc_client.cpp */; };
+		63E092031C6A9714006170A8 /* libvpx.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 63E092021C6A9714006170A8 /* libvpx.a */; };
 		63E3EC371B452D55002F8294 /* FontDriver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 63E3EC2F1B452D55002F8294 /* FontDriver.cpp */; };
 		63E3EC381B452D55002F8294 /* FontSTB.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 63E3EC321B452D55002F8294 /* FontSTB.cpp */; };
 		63E3EC391B452D55002F8294 /* SurfaceBlur.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 63E3EC351B452D55002F8294 /* SurfaceBlur.cpp */; };
@@ -897,6 +898,7 @@
 		63E091FD1C5CA168006170A8 /* shared_memory_pipe.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = shared_memory_pipe.hpp; sourceTree = "<group>"; };
 		63E091FE1C5CA168006170A8 /* tbs_ipc_client.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = tbs_ipc_client.cpp; sourceTree = "<group>"; };
 		63E091FF1C5CA168006170A8 /* tbs_ipc_client.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = tbs_ipc_client.hpp; sourceTree = "<group>"; };
+		63E092021C6A9714006170A8 /* libvpx.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libvpx.a; sourceTree = "<group>"; };
 		63E3EC2F1B452D55002F8294 /* FontDriver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FontDriver.cpp; sourceTree = "<group>"; };
 		63E3EC301B452D55002F8294 /* FontDriver.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = FontDriver.hpp; sourceTree = "<group>"; };
 		63E3EC311B452D55002F8294 /* FontImpl.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = FontImpl.hpp; sourceTree = "<group>"; };
@@ -1368,6 +1370,7 @@
 				C07A47A219443FC000F1190E /* libglib-2.0.0.dylib in Frameworks */,
 				C0EF2A5E16229160004CD227 /* libGLEW.1.9.0.dylib in Frameworks */,
 				C07A47AB1944487300F1190E /* libfreetype.6.dylib in Frameworks */,
+				63E092031C6A9714006170A8 /* libvpx.a in Frameworks */,
 				C0D78B5F171F215D00980007 /* libpng15.15.dylib in Frameworks */,
 				C07A47E01944696C00F1190E /* libintl.8.dylib in Frameworks */,
 				C08047DE1944884300AA7C82 /* libpng16.16.dylib in Frameworks */,
@@ -1866,6 +1869,7 @@
 		C010C562160AFAD9006E7D90 = {
 			isa = PBXGroup;
 			children = (
+				63E092021C6A9714006170A8 /* libvpx.a */,
 				C0B397F71636666C00D010E0 /* Frogatto.entitlements */,
 				C0A362461873BB65002571F3 /* music */,
 				C010C7FD160AFD82006E7D90 /* data */,
@@ -3019,11 +3023,13 @@
 					"\"$(SRCROOT)/dylibs\"",
 					"\"$(SRCROOT)/dylibs/SDL2.framework/Versions/A\"",
 					"$(PROJECT_DIR)/dylibs",
+					"$(PROJECT_DIR)",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				OTHER_CFLAGS = (
 					"-DUSE_LUA",
 					"-DUSE_SVG",
+					"-DUSE_LIBVPX",
 				);
 				OTHER_CPLUSPLUSFLAGS = (
 					"$(OTHER_CFLAGS)",
@@ -3087,11 +3093,13 @@
 					"\"$(SRCROOT)/dylibs\"",
 					"\"$(SRCROOT)/dylibs/SDL2.framework/Versions/A\"",
 					"$(PROJECT_DIR)/dylibs",
+					"$(PROJECT_DIR)",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				OTHER_CFLAGS = (
 					"-DUSE_LUA",
 					"-DUSE_SVG",
+					"-DUSE_LIBVPX",
 				);
 				OTHER_CPLUSPLUSFLAGS = "$(OTHER_CFLAGS)";
 				OTHER_LDFLAGS = (

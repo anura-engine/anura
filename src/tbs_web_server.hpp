@@ -45,7 +45,7 @@ namespace tbs
 	private:
 		web_server(const web_server&);
 
-		virtual void handlePost(socket_ptr socket, variant doc, const http::environment& env);
+		virtual void handlePost(socket_ptr socket, variant doc, const http::environment& env, const std::string& raw_msg);
 		virtual void handleGet(socket_ptr socket, const std::string& url, const std::map<std::string, std::string>& args);
 
 		void heartbeat(const boost::system::error_code& error);

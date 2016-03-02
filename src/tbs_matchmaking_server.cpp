@@ -141,6 +141,10 @@ bool username_valid(const std::string& username)
 		return false;
 	}
 
+	if(username[0] == ' ' || username[username.size()-1] == ' ') {
+		return false;
+	}
+
 	for(char c : username) {
 		if(!isalnum(c) && c != '_' && c != ' ' && c != '^') {
 			return false;
@@ -175,7 +179,8 @@ public:
 		time_ms_(0), send_at_time_ms_(1000), terminated_servers_(0),
 		controller_(game_logic::FormulaObject::create("matchmaking_server")),
 		status_doc_state_id_(1),
-		child_admin_process_(-1)
+		child_admin_process_(-1),
+		gen_game_id_(0)
 	{
 		variant_builder status_doc;
 		status_doc.add("type", "server_state");
@@ -218,7 +223,9 @@ public:
 		handle_anon_request_fn_ = controller_->queryValue("handle_anon_request");
 
 		db_client_ = DbClient::create();
-
+		db_client_->get("gen_game_id", [=](variant user_info) {
+			this->gen_game_id_ = user_info.as_int(1);
+		});
 
 		db_timer_.expires_from_now(boost::posix_time::milliseconds(10));
 		db_timer_.async_wait(boost::bind(&matchmaking_server::db_process, this, boost::asio::placeholders::error));
@@ -343,6 +350,11 @@ public:
 
 			for(auto itor = sessions_.begin(); itor != sessions_.end(); ) {
 				if(itor->second.session_id == 0) {
+					auto i = users_to_sessions_.find(itor->second.user_id);
+					if(i != users_to_sessions_.end() && i->second == itor->first) {
+						users_to_sessions_.erase(i);
+					}
+
 					remove_logged_in_user(itor->second.user_id);
 					sessions_.erase(itor++);
 				} else {
@@ -400,7 +412,7 @@ public:
 					send_response(socket, response.build()); \
 				}
 
-	void handlePost(socket_ptr socket, variant doc, const http::environment& env) override
+	void handlePost(socket_ptr socket, variant doc, const http::environment& env, const std::string& raw_msg) override
 	{
 		int request_session_id = -1;
 		std::map<std::string, std::string>::const_iterator i = env.find("cookie");
@@ -419,6 +431,8 @@ public:
 				request_session_id = atoi(cookie_start+8);
 			}
 		}
+
+		const int session_id = doc["session_id"].as_int(request_session_id);
 
 		try {
 			fprintf(stderr, "HANDLE POST: %s\n", doc.write_json().c_str());
@@ -518,6 +532,8 @@ public:
 						info.user_id = user;
 						info.last_contact = this->time_ms_;
 
+						users_to_sessions_[user] = session_id;
+
 						this->account_info_[user] = new_user_info_variant;
 
 						if(g_beta_keys_file.empty() == false) {
@@ -606,6 +622,8 @@ public:
 					info.user_id = user;
 					info.last_contact = this->time_ms_;
 
+					users_to_sessions_[user] = session_id;
+
 					response.add("type", "login_success");
 					response.add("session_id", variant(session_id));
 					response.add("username", given_user);
@@ -657,6 +675,8 @@ public:
 						info.session_id = session_id;
 						info.user_id = username;
 						info.last_contact = this->time_ms_;
+
+						users_to_sessions_[username] = session_id;
 	
 						response.add("type", "login_success");
 						response.add("session_id", variant(session_id));
@@ -708,7 +728,6 @@ public:
 				static const std::string server_info = get_server_info_file().write_json();
 				send_msg(socket, "text/json", server_info, "");
 			} else if(request_type == "reset_passwd") {
-				const int session_id = doc["session_id"].as_int(request_session_id);
 				if(sessions_.count(session_id) == 0) {
 					RESPOND_ERROR("Invalid session ID");
 					return;
@@ -730,7 +749,6 @@ public:
 				});
 
 			} else if(request_type == "modify_account") {
-				const int session_id = doc["session_id"].as_int(request_session_id);
 
 				if(sessions_.count(session_id) == 0) {
 					RESPOND_ERROR("Invalid session ID");
@@ -770,7 +788,6 @@ public:
 
 			} else if(request_type == "delete_account") {
 
-				const int session_id = doc["session_id"].as_int(request_session_id);
 
 				if(sessions_.count(session_id) == 0) {
 					RESPOND_MESSAGE("Invalid session ID");
@@ -789,7 +806,6 @@ public:
 				sessions_.erase(session_id);
 
 			} else if(request_type == "quit_game") {
-				const int session_id = doc["session_id"].as_int(request_session_id);
 
 				if(sessions_.count(session_id) == 0) {
 					RESPOND_MESSAGE("Invalid session ID");
@@ -803,11 +819,15 @@ public:
 				send_response(socket, response.build());
 
 				fprintf(stderr, "GOT QUIT: %s\n", info.user_id.c_str());
+				auto i = users_to_sessions_.find(info.user_id);
+				if(i != users_to_sessions_.end() && i->second == session_id) {
+					users_to_sessions_.erase(i);
+				}
+
 				remove_logged_in_user(info.user_id);
 				sessions_.erase(session_id);
 				
 			} else if(request_type == "cancel_matchmake") {
-				const int session_id = doc["session_id"].as_int(request_session_id);
 
 				if(sessions_.count(session_id) == 0) {
 					RESPOND_MESSAGE("Invalid session ID");
@@ -827,7 +847,6 @@ public:
 				send_msg(socket, "text/json", variant(&response).write_json(), "");
 
 			} else if(request_type == "challenge") {
-				const int session_id = doc["session_id"].as_int(request_session_id);
 
 				if(sessions_.count(session_id) == 0) {
 					RESPOND_MESSAGE("Invalid session ID");
@@ -927,7 +946,6 @@ public:
 
 
 			} else if(request_type == "matchmake") {
-				const int session_id = doc["session_id"].as_int(request_session_id);
 
 				if(sessions_.count(session_id) == 0) {
 					RESPOND_MESSAGE("Invalid session ID");
@@ -1003,6 +1021,79 @@ public:
 					send_msg(socket, "text/json", "{ type: \"ack\" }", "");
 				}
 
+			} else if(request_type == "request_observe") {
+				int session_id = doc["session_id"].as_int(request_session_id);
+				auto itor = sessions_.find(session_id);
+				if(itor == sessions_.end()) {
+					RESPOND_ERROR("unknown session");
+					return;
+				}
+
+				SessionInfo* target = get_session(doc["target_user"].as_string());
+				if(!target) {
+					RESPOND_ERROR(formatter() << "User " << doc["target_user"].as_string() << " is no longer online");
+					return;
+				}
+
+				variant_builder builder;
+				builder.add("type", "request_observe");
+				builder.add("requester", itor->second.user_id);
+
+				queue_message(*target, builder.build());
+
+				RESPOND_MESSAGE(formatter() << "Sent request to " << doc["target_user"].as_string() << " to observe their game");
+				
+			} else if(request_type == "allow_observe") {
+
+				static int relay_session = 100000;
+				++relay_session;
+
+				int session_id = doc["session_id"].as_int(request_session_id);
+				auto itor = sessions_.find(session_id);
+				if(itor == sessions_.end()) {
+					RESPOND_ERROR("No session");
+					return;
+				}
+
+				SessionInfo* target = get_session(doc["requester"].as_string());
+				if(target == nullptr) {
+					RESPOND_ERROR(formatter() << doc["requester"].as_string() << " is no longer online");
+					return;
+				}
+
+				{
+					LOG_INFO("SEND CONNECT RELAY");
+					variant_builder builder;
+					builder.add("type", "connect_relay_server");
+					builder.add("relay_session", relay_session);
+					send_response(socket, builder.build());
+				}
+
+				{
+					variant_builder builder;
+					builder.add("type", "grant_observe");
+					builder.add("relay_session", relay_session);
+					queue_message(*target, builder.build());
+				}
+
+			} else if(request_type == "deny_observe") {
+
+				int session_id = doc["session_id"].as_int(request_session_id);
+				auto itor = sessions_.find(session_id);
+
+				if(itor != sessions_.end()) {
+					SessionInfo* target = get_session(doc["requester"].as_string());
+					if(target) {
+						variant_builder response;
+						response.add("type", "message");
+						response.add("message", formatter() << itor->second.user_id << " has declined your request to observe their game");
+						response.add("timestamp", static_cast<int>(time(NULL)));
+						queue_message(*target, response.build());
+					}
+				}
+
+				send_msg(socket, "text/json", "{ type: \"ack\" }", "");
+
 			} else if(request_type == "request_updates") {
 
 				int session_id = doc["session_id"].as_int(request_session_id);
@@ -1011,6 +1102,8 @@ public:
 					fprintf(stderr, "Error: Unknown session: %d\n", session_id);
 					send_msg(socket, "text/json", "{ type: \"error\", message: \"unknown session\" }", "");
 				} else {
+					users_to_sessions_[itor->second.user_id] = session_id;
+
 					if(doc["status"].is_string()) {
 						std::string status = doc["status"].as_string();
 						if(status != itor->second.status) {
@@ -1061,6 +1154,12 @@ public:
 								challenge->received = true;
 								return;
 							}
+						}
+
+						if(itor->second.message_queue.empty() == false) {
+							send_msg(socket, "text/json", itor->second.message_queue.front().write_json(), "");
+							itor->second.message_queue.pop_front();
+							return;
 						}
 
 						if(itor->second.current_socket) {
@@ -1168,6 +1267,28 @@ public:
 					}
 
 				}
+			} else if(request_type == "get_replay") {
+
+				std::string game_id = doc["id"].as_string();
+				db_client_->get("replay:" + game_id, [=](variant user_info) {
+					user_info.add_attr_mutation(variant("type"), variant("replay"));
+					send_msg(socket, "text/json", user_info.write_json(), "");
+				});
+			} else if(request_type == "get_recent_games") {
+				if(doc["user"].is_string()) {
+					std::string user = doc["user"].as_string();
+					queryUserGameInfo(user, socket);
+					return;
+				}
+
+				std::vector<std::string> id;
+				for(int i = gen_game_id_-1; i >= 1 && i > gen_game_id_-10; --i) {
+					id.push_back(formatter() << i);
+				}
+
+				queryGameInfo(id, socket);
+				return;
+
 			} else {
 				int session_id = doc["session_id"].as_int(request_session_id);
 				auto itor = sessions_.find(session_id);
@@ -1325,10 +1446,71 @@ public:
 #endif
 	}
 
+	void queryGameInfo(const std::vector<std::string>& game_id, socket_ptr socket)
+	{
+		std::shared_ptr<int> request_count(new int(game_id.size()));
+		std::shared_ptr<std::vector<variant>> results(new std::vector<variant>(game_id.size()));
+		int index = 0;
+		for(std::string id : game_id) {
+			db_client_->get("game:" + id, [=](variant data) {
+				(*results)[index] = data;
+				--*request_count;
+
+				if(*request_count == 0) {
+					results->erase(std::remove(results->begin(), results->end(), variant()), results->end());
+					variant_builder response;
+					response.add("type", "recent_games");
+					response.add("game_info", variant(results.get()));
+					this->send_msg(socket, "text/json", response.build().write_json(), "");
+				}
+			});
+			++index;
+		}
+	}
+
+	void queryUserGameInfo(const std::string& user, socket_ptr socket)
+	{
+		db_client_->get("user:" + user, [=](variant info) {
+			if(info.is_null()) {
+				send_msg(socket, "text/json", "{ type: 'error', message: 'No such user'}", "");
+				return;
+			}
+
+			variant recent_games = info["recent_games"];
+			if(recent_games.is_list() == false || recent_games.num_elements() == 0) {
+				//no games, send empty response
+				variant_builder response;
+				std::vector<variant> v;
+				response.add("type", "recent_games");
+				response.add("game_info", variant(&v));
+				this->send_msg(socket, "text/json", response.build().write_json(), "");
+				return;
+			}
+
+			this->queryGameInfo(recent_games.as_list_string(), socket);
+		});
+	}
+
 	void handleGet(socket_ptr socket, const std::string& url, const std::map<std::string, std::string>& args) override
 	{
+		fprintf(stderr, "handleGet(%s)\n", url.c_str());
 		if(url == "/tbs_monitor") {
 			send_msg(socket, "text/json", build_status().write_json(), "");
+		} else if(url == "/recent_games") {
+
+			auto user = args.find("user");
+			if(user != args.end()) {
+				queryUserGameInfo(user->second, socket);
+				return;
+			}
+
+			std::vector<std::string> id;
+			for(int i = gen_game_id_-1; i >= 1 && i > gen_game_id_-10; --i) {
+				id.push_back(formatter() << i);
+			}
+
+			queryGameInfo(id, socket);
+			return;
 		} else if(url == "/query" && handle_anon_request_fn_.is_function()) {
 			std::map<variant,variant> a;
 			for(auto p : args) {
@@ -1383,6 +1565,18 @@ public:
 
 			recover_account_requests_.erase(recovery_id);
 			user_id_to_recover_account_requests_.erase(username);
+		} else if(url == "/get_replay") {
+			auto id = args.find("id");
+			if(id == args.end()) {
+				send_msg(socket, "text/plain", "Need id in arguments", "");
+				return;
+			}
+
+			std::string game_id = id->second;
+
+			db_client_->get("replay:" + game_id, [=](variant user_info) {
+				send_msg(socket, "text/json", user_info.write_json(), "");
+			});
 		}
 	}
 
@@ -1433,6 +1627,18 @@ private:
 			std::string fname = formatter() << "/tmp/anura_tbs_server." << match_sessions.front();
 			std::string fname_out = formatter() << "/tmp/anura.out." << match_sessions.front();
 
+			std::string game_id = (formatter() << gen_game_id_++);
+
+			db_client_->put("gen_game_id", variant(gen_game_id_),
+			[=]() {
+			},
+			[=]() {
+			});
+
+			variant_builder db_game_info;
+			db_game_info.add("id", game_id);
+			db_game_info.add("timestamp", static_cast<unsigned int>(time(nullptr)));
+
 			variant_builder game;
 			game.add("game_type", module::get_module_name());
 
@@ -1451,6 +1657,14 @@ private:
 
 				auto account_info_itor = account_info_.find(session_info.user_id);
 				ASSERT_LOG(account_info_itor != account_info_.end(), "Could not find user's account info: " << session_info.user_id);
+
+				std::vector<variant> recent_games_var;
+				variant recent_games = account_info_itor->second["recent_games"];
+				if(recent_games.is_list()) {
+					recent_games_var = recent_games.as_list();
+				}
+				recent_games_var.push_back(variant(game_id));
+				account_info_itor->second.add_attr_mutation(variant("recent_games"), variant(&recent_games_var));
 
 				variant_builder user;
 				user.add("user", session_info.user_id);
@@ -1478,6 +1692,14 @@ private:
 				}
 			}
 
+			db_game_info.add("players", vector_to_variant(users_list));
+
+			db_client_->put("game:" + game_id, db_game_info.build(),
+			[=]() {
+			},
+			[=]() {
+			});
+
 			variant users_info(&users);
 
 			game.add("users", users_info);
@@ -1504,6 +1726,7 @@ private:
 			std::vector<std::string> args;
 			args.push_back(cmd);
 			args.push_back("--module=" + module::get_module_name());
+			args.push_back("--tbs-server-save-replay=" + game_id);
 			args.push_back("--no-tbs-server");
 			args.push_back("--quit-server-after-game");
 			args.push_back("--utility=tbs_server");
@@ -1658,9 +1881,36 @@ private:
 		bool request_server_info;
 
 		std::vector<MatchChallengePtr> challenges_made, challenges_received;
+
+		std::deque<variant> message_queue;
 	};
 
 	std::map<int, SessionInfo> sessions_;
+	std::map<std::string, int> users_to_sessions_;
+
+	SessionInfo* get_session(const std::string& user_id) {
+		auto itor = users_to_sessions_.find(user_id);
+		if(itor == users_to_sessions_.end()) {
+			return nullptr;
+		}
+
+		auto res = sessions_.find(itor->second);
+		if(res == sessions_.end()) {
+			return nullptr;
+		}
+
+		return &res->second;
+	}
+
+	void queue_message(SessionInfo& session, variant msg)
+	{
+		if(session.current_socket) {
+			send_msg(session.current_socket, "text/json", msg.write_json(), "");
+			session.current_socket = socket_ptr();
+		} else {
+			session.message_queue.push_back(msg);
+		}
+	}
 
 	struct UserInfo {
 		UserInfo() : game_pid(-1), game_session(-1) {}
@@ -2053,6 +2303,8 @@ private:
 			return true;
 		}
 	}
+
+	int gen_game_id_;
 
 	DECLARE_CALLABLE(matchmaking_server);
 };

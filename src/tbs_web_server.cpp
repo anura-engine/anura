@@ -91,7 +91,7 @@ namespace tbs
 		web_server_instance = nullptr;
 	}
 
-	void web_server::handlePost(socket_ptr socket, variant doc, const http::environment& env)
+	void web_server::handlePost(socket_ptr socket, variant doc, const http::environment& env, const std::string& raw_msg)
 	{
 #if defined(_MSC_VER)
 		socket->socket.set_option(boost::asio::ip::tcp::no_delay(true));
@@ -271,7 +271,7 @@ COMMAND_LINE_UTILITY(tbs_server) {
 			}
 		}
 	}
-
+/*
 	const std::string MonitorDirs[] = { "data/tbs", "data/tbs_test", "data/classes" };
 	for(const std::string& dir : MonitorDirs) {
 		std::vector<std::string> files;
@@ -284,7 +284,7 @@ COMMAND_LINE_UTILITY(tbs_server) {
 			}
 		}
 	}
-
+*/
 	LOG_INFO("MONITOR URL: " << "http://localhost:" << port << "/tbs_monitor.html");
 
 	boost::asio::io_service io_service;
@@ -302,11 +302,10 @@ COMMAND_LINE_UTILITY(tbs_server) {
 	}
 
 	boost::shared_ptr<tbs::web_server> ws;
-	if(ipc_sessions.empty()) {
-		ws.reset(new tbs::web_server(s, io_service, port));
-		s.set_http_server(ws.get());
-		LOG_INFO("tbs_server(): Listening on port " << std::dec << port);
-	}
+
+	ws.reset(new tbs::web_server(s, io_service, ipc_sessions.empty() ? port : 0));
+	s.set_http_server(ws.get());
+	LOG_INFO("tbs_server(): Listening on port " << std::dec << port);
 
 	if(!config.is_null()) {
 		tbs::server_base::game_info_ptr result = s.create_game(config["game"]);
