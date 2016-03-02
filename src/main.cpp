@@ -36,6 +36,7 @@
 #if defined(_DEBUG)
 #pragma comment(linker, "/SUBSYSTEM:CONSOLE")
 #else
+#pragma comment(linker, "/SUBSYSTEM:CONSOLE")
 //#pragma comment(linker, "/SUBSYSTEM:WINDOWS")
 #endif
 #endif
@@ -47,6 +48,7 @@
 #include "asserts.hpp"
 #include "auto_update_window.hpp"
 #include "background_task_pool.hpp"
+#include "breakpad.hpp"
 #include "checksum.hpp"
 #include "controls.hpp"
 #include "custom_object.hpp"
@@ -375,6 +377,10 @@ int main(int argcount, char* argvec[])
 
 	SDL_LogSetPriority(SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_INFO);
 
+#ifdef USE_BREAKPAD
+	breakpad::install();
+#endif
+
 	{
 		std::vector<std::string> args;
 		for(int i = 0; i != argcount; ++i) {
@@ -401,8 +407,8 @@ int main(int argcount, char* argvec[])
 #else
 //	std::freopen("CON", "w", stderr);
 //	std::freopen("CON", "w", stdout);
-	std::freopen("stdout.txt","w",stdout);
-	std::freopen("stderr.txt","w",stderr);
+//	std::freopen("stdout.txt","w",stdout);
+//	std::freopen("stderr.txt","w",stderr);
 #endif
 #endif
 #if defined(__ANDROID__)

@@ -35,6 +35,7 @@
     <ClInclude Include="..\..\src\base64.hpp" />
     <ClInclude Include="..\..\src\blur.hpp" />
     <ClInclude Include="..\..\src\border_widget.hpp" />
+    <ClInclude Include="..\..\src\breakpad.hpp" />
     <ClInclude Include="..\..\src\button.hpp" />
     <ClInclude Include="..\..\src\cairo.hpp" />
     <ClInclude Include="..\..\src\character_editor_dialog.hpp" />
@@ -408,6 +409,7 @@
     <ClCompile Include="..\..\src\base64.cpp" />
     <ClCompile Include="..\..\src\blur.cpp" />
     <ClCompile Include="..\..\src\border_widget.cpp" />
+    <ClCompile Include="..\..\src\breakpad.cpp" />
     <ClCompile Include="..\..\src\button.cpp" />
     <ClCompile Include="..\..\src\cairo.cpp" />
     <ClCompile Include="..\..\src\character_editor_dialog.cpp" />
@@ -808,8 +810,8 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;_USE_MATH_DEFINES;HAVE_M_PI;USE_BOX2D;USE_LUA;USE_LIBVPX;USE_SVG;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;_WIN32_WINNT=0x0600;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..\src;..\..\src\kre;..\..\src\svg;..\..\src\hex;..\..\src\xhtml;..\..\src\tiled;..\..\src\lua;..\..\Box2D;..\..\external\include;..\..\external\include\SDL;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;_USE_MATH_DEFINES;HAVE_M_PI;USE_BOX2D;USE_LUA;USE_LIBVPX;USE_SVG;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;_WIN32_WINNT=0x0600;NOMINMAX;USE_BREAKPAD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\src;..\..\src\kre;..\..\src\svg;..\..\src\hex;..\..\src\xhtml;..\..\src\tiled;..\..\src\lua;..\..\Box2D;..\..\external\include;..\..\external\include\SDL;..\..\external\include\windows;..\..\external\include\windows\client\windows\handler;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

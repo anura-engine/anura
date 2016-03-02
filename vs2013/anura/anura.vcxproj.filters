@@ -1152,6 +1152,9 @@
     <ClInclude Include="..\..\src\tbs_ipc_client.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\breakpad.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\src\kre\geometry.inl">
@@ -2138,6 +2141,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\tbs_ipc_client.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\breakpad.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
