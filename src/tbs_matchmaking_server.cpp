@@ -59,6 +59,8 @@
 
 using namespace tbs;
 
+PREF_STRING(server_hostname, "theargentlark.com", "Hostname of the main tbs server");
+
 namespace {
 
 bool validateEmail(const std::string& email, std::string* message)
@@ -717,9 +719,9 @@ public:
 					user_id_to_recover_account_requests_[user] = request_id;
 
 					std::ostringstream msg;
-					msg << "We have received a request to reset the password on your Argentum Age account. To reset your password please visit this URL: http://theargentlark.com:" << port_ << "/reset_password?user=" << user << "&id=" << request_id;
+					msg << "We have received a request to reset the password on your " << module::get_module_pretty_name() << " account. To reset your password please visit this URL: http://" << g_server_hostname << ":" << port_ << "/reset_password?user=" << user << "&id=" << request_id;
 
-					sendEmail(email.as_string(), "Reset your Argentum Age password", msg.str());
+					sendEmail(email.as_string(), formatter() << "Reset your " << module::get_module_pretty_name() << " password", msg.str());
 
 					RESPOND_MESSAGE("You have been sent an email to reset your password!");
 				});
