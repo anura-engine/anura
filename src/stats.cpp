@@ -153,14 +153,18 @@ namespace stats
 
 				bool done = false;
 				for(int n = 0; n != queue.size(); ++n) {
-					http_client client(g_stats_server, g_stats_port);
-					client.send_request("POST /cgi-bin/" + queue[n].first, 
-						queue[n].second, 
-						std::bind(finish_upload, _1, &done),
-						std::bind(finish_upload, _1, &done),
-						std::bind(upload_progress, _1, _2, _3));				
-					while(!done) {
-						client.process();
+					try {
+						http_client client(g_stats_server, g_stats_port);
+						client.send_request("POST /cgi-bin/" + queue[n].first, 
+							queue[n].second, 
+							std::bind(finish_upload, _1, &done),
+							std::bind(finish_upload, _1, &done),
+							std::bind(upload_progress, _1, _2, _3));				
+						while(!done) {
+							client.process();
+						}
+					} catch(std::exception& e) {
+						LOG_ERROR("Error sending stats: " << e.what() << "\n");
 					}
 				}
 			}
