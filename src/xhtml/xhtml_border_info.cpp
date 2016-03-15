@@ -629,9 +629,6 @@ namespace xhtml
 		coords.emplace_back(glm::vec2(x2-widths_[3], y2-widths_[2]), glm::vec2(1.0f-uw2, 1.0f-vw2));
 		coords.emplace_back(glm::vec2(x2, y2-widths_[2]), glm::vec2(1.0f, 1.0f-vw2));
 
-		const float side_height = x2 - x1 - (widths_[2] + widths_[0]);
-		const float side_width = y2 - y1 - (widths_[3] + widths_[1]);
-
 		// left and right sides being shown are contingent on the top/bottom slices
 		// being less than the height of the image
 		if(slice_[0] + slice_[2] < image_->surfaceHeight()) {

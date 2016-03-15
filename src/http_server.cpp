@@ -421,7 +421,6 @@ namespace http
 		std::string compress_header;
 		const std::string* msg_ptr = &msg_ref;
 		if(socket->supports_deflate && msg_ref.size() > 1024 && (header_parms.empty() || strstr(header_parms.c_str(), "Content-Encoding") == nullptr)) {
-			const int nbefore = SDL_GetTicks();
 			compressed_buf = zip::compress(msg_ref);
 			msg_ptr = &compressed_buf;
 

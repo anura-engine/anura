@@ -191,7 +191,6 @@ UNIT_TEST(cubic_bezier)
 {
 	for(float x = 0.0f; x <= 1.0f; x += 0.1f) {
 		profile::manager pman("css::evaluate_cubic_bezier");
-		float y = css::evaluate_cubic_bezier(x, glm::vec2(0.25f, 0.1f), glm::vec2(0.25f, 1.0f));
 		//LOG_DEBUG("'ease' x: " << x << ", y: " << y);
 	}
 }

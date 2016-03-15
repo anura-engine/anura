@@ -338,8 +338,6 @@ namespace lua
 		// First assemble the persistent table.
 		lua_State * L = getState();
 
-		int top = lua_gettop(L);
-
 		lua_newtable(L);					// persist
 		lua_pushstring(L, me_key);				// persist "me"
 		lua_rawget(L, LUA_REGISTRYINDEX);			// persist me/nil
