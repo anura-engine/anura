@@ -1313,7 +1313,14 @@ bool LevelRunner::play_cycle()
 							toggle_pause();
 						}
 					}
+				} else if (event.window.event == SDL_WINDOWEVENT_MINIMIZED) {
+					LOG_INFO("SDL WINDOW EVENT MINIMIZED");
+				} else if (event.window.event == SDL_WINDOWEVENT_MAXIMIZED) {
+					LOG_INFO("SDL WINDOW EVENT MAXIMIZED");
+				} else if (event.window.event == SDL_WINDOWEVENT_RESTORED) {
+					LOG_INFO("SDL WINDOW EVENT RESTORED");
 				} else if(event.window.event == SDL_WINDOWEVENT_RESIZED) {
+					LOG_INFO("SDL WINDOW EVENT RESIZED to " << event.window.data1 << " x " << event.window.data2);
 					video_resize(event); 
 					video_resize_event(event);
 				}
