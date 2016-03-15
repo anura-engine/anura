@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
+	Copyright (C) 2013-2016 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -23,38 +23,20 @@
 
 #pragma once
 
-#include "ScopeableValue.hpp"
+#include "StencilScope.hpp"
+#include "Util.hpp"
 
 namespace KRE
 {
-	class BlendEquationImplOGL : public BlendEquationImplBase
+	class StencilScopeGLESv2 : public StencilScope
 	{
 	public:
-		BlendEquationImplOGL();
-		~BlendEquationImplOGL();
-		void apply(const BlendEquation& eqn) const override;
-		void clear(const BlendEquation& eqn) const override;
+		StencilScopeGLESv2(const StencilSettings& settings);
+		~StencilScopeGLESv2();
 	private:
-		DISALLOW_COPY_AND_ASSIGN(BlendEquationImplOGL);
+		DISALLOW_COPY_ASSIGN_AND_DEFAULT(StencilScopeGLESv2);
+		void applySettings(const StencilSettings& settings);
+		void handleUpdatedMask() override;
+		void handleUpdatedSettings() override;
 	};
-
-	struct BlendEquationScopeOGL
-	{
-		BlendEquationScopeOGL(const ScopeableValue& eqn);
-		~BlendEquationScopeOGL();
-	private:
-		bool stored_;
-	};
-
-	struct BlendModeScopeOGL
-	{
-		BlendModeScopeOGL(const ScopeableValue& bm);
-		~BlendModeScopeOGL();
-	private:
-		bool stored_;
-		bool state_stored_;
-	};
-
-	//void set_blend_mode(const BlendMode& bm);
-	//void set_blend_equation(const BlendEquation& eqn);
 }

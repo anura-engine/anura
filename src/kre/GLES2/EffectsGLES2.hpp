@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
+	Copyright (C) 2012-2016 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -23,38 +23,21 @@
 
 #pragma once
 
-#include "ScopeableValue.hpp"
+#include "Effects.hpp"
 
 namespace KRE
 {
-	class BlendEquationImplOGL : public BlendEquationImplBase
+	namespace GLESv2
 	{
-	public:
-		BlendEquationImplOGL();
-		~BlendEquationImplOGL();
-		void apply(const BlendEquation& eqn) const override;
-		void clear(const BlendEquation& eqn) const override;
-	private:
-		DISALLOW_COPY_AND_ASSIGN(BlendEquationImplOGL);
-	};
-
-	struct BlendEquationScopeOGL
-	{
-		BlendEquationScopeOGL(const ScopeableValue& eqn);
-		~BlendEquationScopeOGL();
-	private:
-		bool stored_;
-	};
-
-	struct BlendModeScopeOGL
-	{
-		BlendModeScopeOGL(const ScopeableValue& bm);
-		~BlendModeScopeOGL();
-	private:
-		bool stored_;
-		bool state_stored_;
-	};
-
-	//void set_blend_mode(const BlendMode& bm);
-	//void set_blend_equation(const BlendEquation& eqn);
+		class StippleEffect : public Effect
+		{
+		public:
+			explicit StippleEffect(const variant& node);
+			void apply() override;
+			void clear() override;
+		private:
+			int factor_;
+			unsigned pattern_;
+		};
+	}
 }

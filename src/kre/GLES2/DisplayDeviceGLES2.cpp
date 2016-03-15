@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
+	Copyright (C) 2013-2016 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -21,37 +21,36 @@
 	   distribution.
 */
 
-#pragma comment(lib, "opengl32")
-#pragma comment(lib, "glu32")
-#pragma comment(lib, "glew32")
+#pragma comment(lib, "libGLESv2")
+#pragma comment(lib, "libEGL")
 
 #include <numeric>
 
-#include <GL/glew.h>
+#include "SDL_opengles2.h"
 
 #include "asserts.hpp"
-#include "AttributeSetOGL.hpp"
-#include "BlendOGL.hpp"
+#include "AttributeSetGLES2.hpp"
+#include "BlendGLES2.hpp"
 #include "CameraObject.hpp"
 #include "ColorScope.hpp"
-#include "CanvasOGL.hpp"
-#include "ClipScopeOGL.hpp"
-#include "DisplayDeviceOGL.hpp"
-#include "EffectsOGL.hpp"
-#include "FboOGL.hpp"
+#include "CanvasGLES2.hpp"
+#include "ClipScopeGLES2.hpp"
+#include "DisplayDeviceGLES2.hpp"
+#include "EffectsGLES2.hpp"
+#include "FboGLES2.hpp"
 #include "LightObject.hpp"
 #include "ModelMatrixScope.hpp"
-#include "ScissorOGL.hpp"
-#include "ShadersOGL.hpp"
-#include "StencilScopeOGL.hpp"
-#include "TextureOGL.hpp"
+#include "ScissorGLES2.hpp"
+#include "ShadersGLES2.hpp"
+#include "StencilScopeGLES2.hpp"
+#include "TextureGLES2.hpp"
 #include "WindowManager.hpp"
 
 namespace KRE
 {
 	namespace
 	{
-		static DisplayDeviceRegistrar<DisplayDeviceOpenGL> ogl_register("opengl");
+		static DisplayDeviceRegistrar<DisplayDeviceGLESv2> glesv2_register("GLESv2");
 
 		CameraPtr& get_default_camera()
 		{
@@ -87,9 +86,7 @@ namespace KRE
 				case DrawMode::TRIANGLE_STRIP:	return GL_TRIANGLE_STRIP;
 				case DrawMode::TRIANGLE_FAN:	return GL_TRIANGLE_FAN;
 				case DrawMode::TRIANGLES:		return GL_TRIANGLES;
-				case DrawMode::QUAD_STRIP:		return GL_QUAD_STRIP;
-				case DrawMode::QUADS:			return GL_QUADS;
-				case DrawMode::POLYGON:			return GL_POLYGON;
+				case DrawMode::POLYGON:			return GL_TRIANGLE_FAN;
 			}
 			ASSERT_LOG(false, "Unrecognised value for drawing mode.");
 			return GL_NONE;
@@ -99,9 +96,9 @@ namespace KRE
 		{
 			switch(it) {
 				case IndexType::INDEX_NONE:		break;
-				case IndexType::INDEX_UCHAR:		return GL_UNSIGNED_BYTE;
-				case IndexType::INDEX_USHORT:		return GL_UNSIGNED_SHORT;
-				case IndexType::INDEX_ULONG:		return GL_UNSIGNED_INT;
+				case IndexType::INDEX_UCHAR:	return GL_UNSIGNED_BYTE;
+				case IndexType::INDEX_USHORT:	return GL_UNSIGNED_SHORT;
+				case IndexType::INDEX_ULONG:	return GL_UNSIGNED_INT;
 			}
 			ASSERT_LOG(false, "Unrecognised value for index type.");
 			return GL_NONE;
@@ -118,7 +115,7 @@ namespace KRE
 			StencilOperation::KEEP);
 	}
 
-	DisplayDeviceOpenGL::DisplayDeviceOpenGL(WindowPtr wnd)
+	DisplayDeviceGLESv2::DisplayDeviceGLESv2(WindowPtr wnd)
 		: DisplayDevice(wnd),
 		  seperate_blend_equations_(false),
 		  have_render_to_texture_(false),
@@ -130,73 +127,60 @@ namespace KRE
 	{
 	}
 
-	DisplayDeviceOpenGL::~DisplayDeviceOpenGL()
+	DisplayDeviceGLESv2::~DisplayDeviceGLESv2()
 	{
 	}
 
-	void DisplayDeviceOpenGL::init(int width, int height)
+	void DisplayDeviceGLESv2::init(int width, int height)
 	{
-		GLenum err = glewInit();
-		ASSERT_LOG(err == GLEW_OK, "Could not initialise GLEW: " << glewGetErrorString(err));
-
 		glViewport(0, 0, width, height);
 
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-		int extension_count = 0;
-		glGetIntegerv(GL_NUM_EXTENSIONS, &extension_count);
-
-		if(major_version_ >= 3) {
-			// Get extensions
-			for(int n = 0; n != extension_count; ++n) {
-				std::string ext(reinterpret_cast<const char*>(glGetStringi(GL_EXTENSIONS, n)));
+		const char* extensions = reinterpret_cast<const char*>(glGetString(GL_EXTENSIONS));
+		if(extensions != NULL && glGetError() == GL_NONE) {
+			std::string exts(extensions);
+			for(auto& ext : Util::split(exts, " ")) {
 				extensions_.emplace(ext);
 			}
 		} else {
-            glGetError();
-			std::string exts(reinterpret_cast<const char*>(glGetString(GL_EXTENSIONS)));
-			if(glGetError() == GL_NONE) {
-				for(auto& ext : Util::split(exts, " ")) {
-					extensions_.emplace(ext);
-				}
-			} else {
-				LOG_ERROR("Couldn't get the GL extension list. Extension count=" << extension_count);
-			}
+			LOG_ERROR("Couldn't get the GL extension list.");
 		}
 
 		seperate_blend_equations_ = extensions_.find("GL_EXT_blend_equation_separate") != extensions_.end();
 		have_render_to_texture_ = extensions_.find("GL_EXT_framebuffer_object") != extensions_.end();
 		npot_textures_ = extensions_.find("GL_ARB_texture_non_power_of_two") != extensions_.end();
 		hardware_uniform_buffers_ = extensions_.find("GL_ARB_uniform_buffer_object") != extensions_.end();
-		
+
+		GLenum err = GL_NONE;
 		glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &max_texture_units_);
 		if((err = glGetError()) != GL_NONE) {
 			LOG_ERROR("Failed query for GL_MAX_TEXTURE_IMAGE_UNITS: 0x" << std::hex << err);
 		}
-		glGetIntegerv(GL_MINOR_VERSION, &minor_version_);
-		glGetIntegerv(GL_MAJOR_VERSION, &major_version_);
-		if((err = glGetError()) != GL_NONE) {
-			const char* version_str = reinterpret_cast<const char*>(glGetString(GL_VERSION));
+		const char* version_str = reinterpret_cast<const char*>(glGetString(GL_VERSION));
+		if(version_str != NULL) {
 			std::stringstream ss(version_str);
 			float vers;
 			ss >> vers;
 			float integral;
 			minor_version_ = static_cast<int>(std::modf(vers, &integral) * 100.0f);
 			major_version_ = static_cast<int>(integral);
+		} else {
+			LOG_ERROR("Unable to query the version string.");
 		}
-
-		glEnable(GL_POINT_SPRITE);
 	}
 
-	void DisplayDeviceOpenGL::printDeviceInfo()
+	void DisplayDeviceGLESv2::printDeviceInfo()
 	{
 		if(minor_version_ == 0 && major_version_ == 0) {
 			// fall-back to old glGetStrings method.
 			const char* version_str = reinterpret_cast<const char*>(glGetString(GL_VERSION));
-			LOG_INFO("OpenGL version: " << version_str);
+			if(version_str != NULL) {
+				LOG_INFO("GLESv2 version: " << version_str);
+			}
 		} else {
-			LOG_INFO("OpenGL version: " << major_version_ << "." << minor_version_);
+			LOG_INFO("GLESv2 version: " << major_version_ << "." << minor_version_);
 		}
 		
 		if(max_texture_units_ > 0) {
@@ -217,10 +201,10 @@ namespace KRE
 				lines.back() += (lines.back().empty() ? "" : " ") + ext;
 			}
 		}
-		LOG_INFO("OpenGL Extensions: \n" << std::accumulate(lines.begin(), lines.end(), std::string()));
+		LOG_INFO("GLESv2 Extensions: \n" << std::accumulate(lines.begin(), lines.end(), std::string()));
 	}
 
-	int DisplayDeviceOpenGL::queryParameteri(DisplayDeviceParameters param)
+	int DisplayDeviceGLESv2::queryParameteri(DisplayDeviceParameters param)
 	{
 		switch (param)
 		{
@@ -231,51 +215,51 @@ namespace KRE
 		return -1;
 	}
 
-	void DisplayDeviceOpenGL::clearTextures()
+	void DisplayDeviceGLESv2::clearTextures()
 	{
-		OpenGLTexture::handleClearTextures();
+		TextureGLESv2::handleClearTextures();
 	}
 
-	void DisplayDeviceOpenGL::clear(ClearFlags clr)
+	void DisplayDeviceGLESv2::clear(ClearFlags clr)
 	{
 		glClear((clr & ClearFlags::COLOR ? GL_COLOR_BUFFER_BIT : 0) 
 			| (clr & ClearFlags::DEPTH ? GL_DEPTH_BUFFER_BIT : 0) 
 			| (clr & ClearFlags::STENCIL ? GL_STENCIL_BUFFER_BIT : 0));
 	}
 
-	void DisplayDeviceOpenGL::setClearColor(float r, float g, float b, float a) const
+	void DisplayDeviceGLESv2::setClearColor(float r, float g, float b, float a) const
 	{
 		glClearColor(r, g, b, a);
 	}
 
-	void DisplayDeviceOpenGL::setClearColor(const Color& color) const
+	void DisplayDeviceGLESv2::setClearColor(const Color& color) const
 	{
 		glClearColor(float(color.r()), float(color.g()), float(color.b()), float(color.a()));
 	}
 
-	void DisplayDeviceOpenGL::swap()
+	void DisplayDeviceGLESv2::swap()
 	{
 		// This is a no-action.
 	}
 
-	ShaderProgramPtr DisplayDeviceOpenGL::getDefaultShader()
+	ShaderProgramPtr DisplayDeviceGLESv2::getDefaultShader()
 	{
-		return OpenGL::ShaderProgram::defaultSystemShader();
+		return GLESv2::ShaderProgram::defaultSystemShader();
 	}
 
-	CameraPtr DisplayDeviceOpenGL::setDefaultCamera(const CameraPtr& cam)
+	CameraPtr DisplayDeviceGLESv2::setDefaultCamera(const CameraPtr& cam)
 	{
 		auto old_cam = get_default_camera();
 		get_default_camera() = cam;
 		return old_cam;
 	}
 
-	CameraPtr DisplayDeviceOpenGL::getDefaultCamera() const
+	CameraPtr DisplayDeviceGLESv2::getDefaultCamera() const
 	{
 		return get_default_camera();
 	}
 
-	void DisplayDeviceOpenGL::render(const Renderable* r) const
+	void DisplayDeviceGLESv2::render(const Renderable* r) const
 	{
 		if(!r->isEnabled()) {
 			// Renderable item not enabled then early return.
@@ -291,7 +275,7 @@ namespace KRE
 				cam_set = true;
 				clip_shape->setCamera(r->getCamera());
 			}
-			stencil_scope.reset(new StencilScopeOGL(r->getStencilSettings()));
+			stencil_scope.reset(new StencilScopeGLESv2(r->getStencilSettings()));
 			glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
 			glDepthMask(GL_FALSE);
 			glClear(GL_STENCIL_BUFFER_BIT);
@@ -308,8 +292,8 @@ namespace KRE
 		auto shader = r->getShader();
 		shader->makeActive();
 
-		BlendEquationScopeOGL be_scope(*r);
-		BlendModeScopeOGL bm_scope(*r);
+		BlendEquationScopeGLESv2 be_scope(*r);
+		BlendModeScopeGLESv2 bm_scope(*r);
 
 		// apply lighting/depth check/depth write here.
 		bool use_lighting = r->isLightingStateSet() ? r->useLighting() : false;
@@ -413,8 +397,8 @@ namespace KRE
 			GLenum draw_mode = convert_drawing_mode(as->getDrawMode());
 
 			// apply blend, if any, from attribute set.
-			BlendEquationScopeOGL be_scope(*as);
-			BlendModeScopeOGL bm_scope(*as);
+			BlendEquationScopeGLESv2 be_scope(*as);
+			BlendModeScopeGLESv2 bm_scope(*as);
 
 			if(shader->getColorUniform() != ShaderProgram::INVALID_UNIFORM && as->isColorSet()) {
 				shader->setUniformValue(shader->getColorUniform(), as->getColor().asFloatVector());
@@ -430,10 +414,12 @@ namespace KRE
 				if(as->isIndexed()) {
 					as->bindIndex();
 					// XXX as->GetIndexArray() should be as->GetIndexArray()+as->GetOffset()
-					glDrawElementsInstanced(draw_mode, static_cast<GLsizei>(as->getCount()), convert_index_type(as->getIndexType()), as->getIndexArray(), as->getInstanceCount());
+					//glDrawElementsInstanced(draw_mode, static_cast<GLsizei>(as->getCount()), convert_index_type(as->getIndexType()), as->getIndexArray(), as->getInstanceCount());
+					LOG_ERROR("TODO: emulate glDrawElementsInstanced for GLESv2");
 					as->unbindIndex();
 				} else {
-					glDrawArraysInstanced(draw_mode, static_cast<GLint>(as->getOffset()), static_cast<GLsizei>(as->getCount()), as->getInstanceCount());
+					//glDrawArraysInstanced(draw_mode, static_cast<GLint>(as->getOffset()), static_cast<GLsizei>(as->getCount()), as->getInstanceCount());
+					LOG_ERROR("TODO: emulate glDrawElementsInstanced for GLESv2");
 				}
 			} else {
 				if(as->isIndexed()) {
@@ -455,101 +441,101 @@ namespace KRE
 		}
 	}
 
-	ScissorPtr DisplayDeviceOpenGL::getScissor(const rect& r)
+	ScissorPtr DisplayDeviceGLESv2::getScissor(const rect& r)
 	{
-		auto scissor = new ScissorOGL(r);
+		auto scissor = new ScissorGLESv2(r);
 		return ScissorPtr(scissor);
 	}
 
-	TexturePtr DisplayDeviceOpenGL::handleCreateTexture(const SurfacePtr& surface, const variant& node)
+	TexturePtr DisplayDeviceGLESv2::handleCreateTexture(const SurfacePtr& surface, const variant& node)
 	{
 		std::vector<SurfacePtr> surfaces;
 		if(surface != nullptr) {
 			surfaces.emplace_back(surface);
 		}
-		return std::make_shared<OpenGLTexture>(node, surfaces);
+		return std::make_shared<TextureGLESv2>(node, surfaces);
 	}
 
-	TexturePtr DisplayDeviceOpenGL::handleCreateTexture(const SurfacePtr& surface, TextureType type, int mipmap_levels)
+	TexturePtr DisplayDeviceGLESv2::handleCreateTexture(const SurfacePtr& surface, TextureType type, int mipmap_levels)
 	{
-		std::vector<SurfacePtr> surfaces(1, surface);
-		return std::make_shared<OpenGLTexture>(surfaces, type, mipmap_levels);
+		std::vector<SurfacePtr> surfaces;
+		return std::make_shared<TextureGLESv2>(surfaces, type, mipmap_levels);
 	}
 
-	TexturePtr DisplayDeviceOpenGL::handleCreateTexture1D(int width, PixelFormat::PF fmt)
+	TexturePtr DisplayDeviceGLESv2::handleCreateTexture1D(int width, PixelFormat::PF fmt)
 	{
-		return std::make_shared<OpenGLTexture>(1, width, 0, 0, fmt, TextureType::TEXTURE_1D);
+		return std::make_shared<TextureGLESv2>(1, width, 0, 0, fmt, TextureType::TEXTURE_1D);
 	}
 
-	TexturePtr DisplayDeviceOpenGL::handleCreateTexture2D(int width, int height, PixelFormat::PF fmt)
+	TexturePtr DisplayDeviceGLESv2::handleCreateTexture2D(int width, int height, PixelFormat::PF fmt)
 	{
 		// XXX make a static function PixelFormat::isPlanar or such.
 		const int count = fmt == PixelFormat::PF::PIXELFORMAT_YV12 ? 3 : 1;
-		return std::make_shared<OpenGLTexture>(count, width, height, 0, fmt, TextureType::TEXTURE_2D);
+		return std::make_shared<TextureGLESv2>(count, width, height, 0, fmt, TextureType::TEXTURE_2D);
 	}
 	
-	TexturePtr DisplayDeviceOpenGL::handleCreateTexture3D(int width, int height, int depth, PixelFormat::PF fmt)
+	TexturePtr DisplayDeviceGLESv2::handleCreateTexture3D(int width, int height, int depth, PixelFormat::PF fmt)
 	{
-		return std::make_shared<OpenGLTexture>(1, width, height, depth, fmt, TextureType::TEXTURE_3D);
+		return std::make_shared<TextureGLESv2>(1, width, height, depth, fmt, TextureType::TEXTURE_3D);
 	}
 
-	TexturePtr DisplayDeviceOpenGL::handleCreateTextureArray(int count, int width, int height, PixelFormat::PF fmt, TextureType type)
+	TexturePtr DisplayDeviceGLESv2::handleCreateTextureArray(int count, int width, int height, PixelFormat::PF fmt, TextureType type)
 	{
-		return std::make_shared<OpenGLTexture>(count, width, height, 0, fmt, type);
+		return std::make_shared<TextureGLESv2>(count, width, height, 0, fmt, type);
 	}
 
-	TexturePtr DisplayDeviceOpenGL::handleCreateTextureArray(const std::vector<SurfacePtr>& surfaces, const variant& node)
+	TexturePtr DisplayDeviceGLESv2::handleCreateTextureArray(const std::vector<SurfacePtr>& surfaces, const variant& node)
 	{
-		return std::make_shared<OpenGLTexture>(node, surfaces);
+		return std::make_shared<TextureGLESv2>(node, surfaces);
 	}
 
-	RenderTargetPtr DisplayDeviceOpenGL::handleCreateRenderTarget(int width, int height, 
+	RenderTargetPtr DisplayDeviceGLESv2::handleCreateRenderTarget(int width, int height, 
 			int color_plane_count, 
 			bool depth, 
 			bool stencil, 
 			bool use_multi_sampling, 
 			int multi_samples)
 	{
-		return std::make_shared<FboOpenGL>(width, height, color_plane_count, depth, stencil, use_multi_sampling, multi_samples);
+		return std::make_shared<FboGLESv2>(width, height, color_plane_count, depth, stencil, use_multi_sampling, multi_samples);
 	}
 
-	RenderTargetPtr DisplayDeviceOpenGL::handleCreateRenderTarget(const variant& node)
+	RenderTargetPtr DisplayDeviceGLESv2::handleCreateRenderTarget(const variant& node)
 	{
-		return std::make_shared<FboOpenGL>(node);
+		return std::make_shared<FboGLESv2>(node);
 	}
 
-	AttributeSetPtr DisplayDeviceOpenGL::handleCreateAttributeSet(bool indexed, bool instanced)
+	AttributeSetPtr DisplayDeviceGLESv2::handleCreateAttributeSet(bool indexed, bool instanced)
 	{
-		return std::make_shared<AttributeSetOGL>(indexed, instanced);
+		return std::make_shared<AttributeSetGLESv2>(indexed, instanced);
 	}
 
-	HardwareAttributePtr DisplayDeviceOpenGL::handleCreateAttribute(AttributeBase* parent)
+	HardwareAttributePtr DisplayDeviceGLESv2::handleCreateAttribute(AttributeBase* parent)
 	{
-		return std::make_shared<HardwareAttributeOGL>(parent);
+		return std::make_shared<HardwareAttributeGLESv2>(parent);
 	}
 
-	CanvasPtr DisplayDeviceOpenGL::getCanvas()
+	CanvasPtr DisplayDeviceGLESv2::getCanvas()
 	{
-		return CanvasOGL::getInstance();
+		return CanvasGLESv2::getInstance();
 	}
 
-	ClipScopePtr DisplayDeviceOpenGL::createClipScope(const rect& r)
+	ClipScopePtr DisplayDeviceGLESv2::createClipScope(const rect& r)
 	{
-		return ClipScopePtr(new ClipScopeOGL(r));
+		return ClipScopePtr(new ClipScopeGLESv2(r));
 	}
 
-	StencilScopePtr DisplayDeviceOpenGL::createStencilScope(const StencilSettings& settings)
+	StencilScopePtr DisplayDeviceGLESv2::createStencilScope(const StencilSettings& settings)
 	{
-		auto ss = new StencilScopeOGL(settings);
+		auto ss = new StencilScopeGLESv2(settings);
 		return StencilScopePtr(ss);
 	}
 
-	BlendEquationImplBasePtr DisplayDeviceOpenGL::getBlendEquationImpl()
+	BlendEquationImplBasePtr DisplayDeviceGLESv2::getBlendEquationImpl()
 	{
-		return BlendEquationImplBasePtr(new BlendEquationImplOGL());
+		return BlendEquationImplBasePtr(new BlendEquationImplGLESv2());
 	}
 
-	void DisplayDeviceOpenGL::setViewPort(int x, int y, int width, int height)
+	void DisplayDeviceGLESv2::setViewPort(int x, int y, int width, int height)
 	{
 		rect new_vp(x, y, width, height);
 		if(get_current_viewport() != new_vp && width != 0 && height != 0) {
@@ -559,7 +545,7 @@ namespace KRE
 		}
 	}
 
-	void DisplayDeviceOpenGL::setViewPort(const rect& vp)
+	void DisplayDeviceGLESv2::setViewPort(const rect& vp)
 	{
 		if(get_current_viewport() != vp && vp.w() != 0 && vp.h() != 0) {
 			get_current_viewport() = vp;
@@ -568,12 +554,12 @@ namespace KRE
 		}
 	}
 
-	const rect& DisplayDeviceOpenGL::getViewPort() const 
+	const rect& DisplayDeviceGLESv2::getViewPort() const 
 	{
 		return get_current_viewport();
 	}
 	
-	bool DisplayDeviceOpenGL::doCheckForFeature(DisplayDeviceCapabilties cap)
+	bool DisplayDeviceGLESv2::doCheckForFeature(DisplayDeviceCapabilties cap)
 	{
 		bool ret_val = false;
 		switch(cap) {
@@ -593,31 +579,31 @@ namespace KRE
 		return ret_val;
 	}
 
-	void DisplayDeviceOpenGL::loadShadersFromVariant(const variant& node) 
+	void DisplayDeviceGLESv2::loadShadersFromVariant(const variant& node) 
 	{
-		OpenGL::ShaderProgram::loadShadersFromVariant(node);
+		GLESv2::ShaderProgram::loadShadersFromVariant(node);
 	}
 
-	ShaderProgramPtr DisplayDeviceOpenGL::getShaderProgram(const std::string& name)
+	ShaderProgramPtr DisplayDeviceGLESv2::getShaderProgram(const std::string& name)
 	{
-		return OpenGL::ShaderProgram::factory(name);
+		return GLESv2::ShaderProgram::factory(name);
 	}
 
-	ShaderProgramPtr DisplayDeviceOpenGL::getShaderProgram(const variant& node)
+	ShaderProgramPtr DisplayDeviceGLESv2::getShaderProgram(const variant& node)
 	{
-		return OpenGL::ShaderProgram::factory(node);
+		return GLESv2::ShaderProgram::factory(node);
 	}
 
-	ShaderProgramPtr DisplayDeviceOpenGL::createShader(const std::string& name, 
+	ShaderProgramPtr DisplayDeviceGLESv2::createShader(const std::string& name, 
 		const std::vector<ShaderData>& shader_data, 
 		const std::vector<ActiveMapping>& uniform_map,
 		const std::vector<ActiveMapping>& attribute_map)
 	{
-		return OpenGL::ShaderProgram::createShader(name, shader_data, uniform_map, attribute_map);
+		return GLESv2::ShaderProgram::createShader(name, shader_data, uniform_map, attribute_map);
 	}
 
 	// XXX Need a way to deal with blits with Camera/Lighting.
-	void DisplayDeviceOpenGL::doBlitTexture(const TexturePtr& tex, int dstx, int dsty, int dstw, int dsth, float rotation, int srcx, int srcy, int srcw, int srch)
+	void DisplayDeviceGLESv2::doBlitTexture(const TexturePtr& tex, int dstx, int dsty, int dstw, int dsth, float rotation, int srcx, int srcy, int srcw, int srch)
 	{
 		ASSERT_LOG(false, "DisplayDevice::doBlitTexture deprecated");
 		ASSERT_LOG(!tex, "Texture passed in was not of expected type.");
@@ -645,12 +631,12 @@ namespace KRE
 		};
 
 		// Apply blend mode from texture if there is any.
-		BlendEquationScopeOGL be_scope(*tex);
-		BlendModeScopeOGL bm_scope(*tex);
+		BlendEquationScopeGLESv2 be_scope(*tex);
+		BlendModeScopeGLESv2 bm_scope(*tex);
 
 		glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3((vx1+vx2)/2.0f,(vy1+vy2)/2.0f,0.0f)) * glm::rotate(glm::mat4(1.0f), rotation, glm::vec3(0.0f,0.0f,1.0f)) * glm::translate(glm::mat4(1.0f), glm::vec3(-(vx1+vy1)/2.0f,-(vy1+vy1)/2.0f,0.0f));
 		glm::mat4 mvp = glm::ortho(0.0f, 800.0f, 600.0f, 0.0f) * model;
-		auto shader = OpenGL::ShaderProgram::defaultSystemShader();
+		auto shader = GLESv2::ShaderProgram::defaultSystemShader();
 		shader->makeActive();
 		getDefaultShader()->setUniformsForTexture(tex);
 
@@ -674,25 +660,9 @@ namespace KRE
 		GLenum convert_read_format(ReadFormat fmt)
 		{
 			switch(fmt) {
-			case ReadFormat::DEPTH:			return GL_DEPTH_COMPONENT;
-			case ReadFormat::STENCIL:		return GL_STENCIL_INDEX;
-			case ReadFormat::DEPTH_STENCIL:	return GL_DEPTH_STENCIL;
-			case ReadFormat::RED:			return GL_RED;
-			case ReadFormat::GREEN:			return GL_GREEN;
-			case ReadFormat::BLUE:			return GL_BLUE;
-			case ReadFormat::RG:			return GL_RG;
+			case ReadFormat::ALPHA:			return GL_ALPHA;
 			case ReadFormat::RGB:			return GL_RGB;
-			case ReadFormat::BGR:			return GL_BGR;
 			case ReadFormat::RGBA:			return GL_RGBA;
-			case ReadFormat::BGRA:			return GL_BGRA;
-			case ReadFormat::RED_INT:		return GL_RED_INTEGER;
-			case ReadFormat::GREEN_INT:		return GL_GREEN_INTEGER;
-			case ReadFormat::BLUE_INT:		return GL_BLUE_INTEGER;
-			case ReadFormat::RG_INT:		return GL_RG_INTEGER;
-			case ReadFormat::RGB_INT:		return GL_RGB_INTEGER;
-			case ReadFormat::BGR_INT:		return GL_BGR_INTEGER;
-			case ReadFormat::RGBA_INT:		return GL_RGBA_INTEGER;
-			case ReadFormat::BGRA_INT:		return GL_BGRA_INTEGER;
 			default: break;
 			}
 
@@ -704,9 +674,7 @@ namespace KRE
 		{
 			switch(type) {
 			case AttrFormat::BOOL:				return GL_BOOL;
-			case AttrFormat::HALF_FLOAT:		return GL_HALF_FLOAT;
 			case AttrFormat::FLOAT:				return GL_FLOAT;
-			case AttrFormat::DOUBLE:			return GL_DOUBLE;
 			case AttrFormat::FIXED:				return GL_FIXED;
 			case AttrFormat::SHORT:				return GL_SHORT;
 			case AttrFormat::UNSIGNED_SHORT:	return GL_UNSIGNED_SHORT;
@@ -714,9 +682,6 @@ namespace KRE
 			case AttrFormat::UNSIGNED_BYTE:		return GL_UNSIGNED_BYTE;
 			case AttrFormat::INT:				return GL_INT;
 			case AttrFormat::UNSIGNED_INT:		return GL_UNSIGNED_INT;
-			case AttrFormat::INT_2_10_10_10_REV:			return GL_INT_2_10_10_10_REV;
-			case AttrFormat::UNSIGNED_INT_2_10_10_10_REV:	return GL_UNSIGNED_INT_2_10_10_10_REV;
-			case AttrFormat::UNSIGNED_INT_10F_11F_11F_REV:	return GL_UNSIGNED_INT_10F_11F_11F_REV;
 			default: break;
 			}
 			ASSERT_LOG(false, "Unrecognised AttrFormat: " << static_cast<int>(type));
@@ -724,7 +689,7 @@ namespace KRE
 		}
 	}
 
-	bool DisplayDeviceOpenGL::handleReadPixels(int x, int y, unsigned width, unsigned height, ReadFormat fmt, AttrFormat type, void* data, int stride)
+	bool DisplayDeviceGLESv2::handleReadPixels(int x, int y, unsigned width, unsigned height, ReadFormat fmt, AttrFormat type, void* data, int stride)
 	{
 		ASSERT_LOG(width > 0 && height > 0, "Width or height was negative: " << width << " x " << height);
 		LOG_DEBUG("row_pitch: " << stride);
@@ -753,20 +718,20 @@ namespace KRE
 		return true;
 	}
 
-	EffectPtr DisplayDeviceOpenGL::createEffect(const variant& node)
+	EffectPtr DisplayDeviceGLESv2::createEffect(const variant& node)
 	{
 		ASSERT_LOG(node.has_key("type") && node["type"].is_string(), "Effects must have 'type' attribute as string: " << node.to_debug_string());
 		const std::string& type = node["type"].as_string();
 		if(type == "stipple") {
-			return std::make_shared<OpenGL::StippleEffect>(node);
+			return std::make_shared<GLESv2::StippleEffect>(node);
 		}
 		// XXX Add more effects here as and if needed.
 		return EffectPtr();
 	}
 
-	ShaderProgramPtr DisplayDeviceOpenGL::createGaussianShader(int radius) 
+	ShaderProgramPtr DisplayDeviceGLESv2::createGaussianShader(int radius) 
 	{
-		return OpenGL::ShaderProgram::createGaussianShader(radius);
+		return GLESv2::ShaderProgram::createGaussianShader(radius);
 	}
 }
 

@@ -147,6 +147,38 @@ namespace KRE
 					}
 				}
 				wnd_flags |= SDL_WINDOW_OPENGL;
+			} else if(getDisplayDevice()->ID() == DisplayDevice::DISPLAY_DEVICE_OPENGLES) {
+				// We need to do extra SDL set-up for an OpenGL context.
+				// Since these parameter's need to be set-up before context
+				// creation.
+				SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
+				SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+				SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+				
+				SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+				SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
+				if(use16bpp()) {
+					SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 5);
+					SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 5);
+					SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 5);
+					SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 1);
+				} else {
+					SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
+					SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
+					SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
+					SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
+				}
+				if(useMultiSampling()) {
+					if(SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1) != 0) {
+						LOG_WARN("MSAA(" << multiSamples() << ") requested but mutlisample buffer couldn't be allocated.");
+					} else {
+						int msaa = next_pow2(multiSamples());
+						if(SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, msaa) != 0) {
+							LOG_INFO("Requested MSAA of " << msaa << " but couldn't allocate");
+						}
+					}
+				}
+				wnd_flags |= SDL_WINDOW_OPENGL;
 			}
 
 			if(resizeable()) {
@@ -195,7 +227,7 @@ namespace KRE
 			}
 
 			ASSERT_LOG(window_ != nullptr, "Failed to create window: " << SDL_GetError());
-			if(getDisplayDevice()->ID() == DisplayDevice::DISPLAY_DEVICE_OPENGL) {
+			if(getDisplayDevice()->ID() == DisplayDevice::DISPLAY_DEVICE_OPENGL ||getDisplayDevice()->ID() == DisplayDevice::DISPLAY_DEVICE_OPENGLES) {
 				context_ = SDL_GL_CreateContext(window_.get());	
 				ASSERT_LOG(context_ != nullptr, "Failed to GL Context: " << SDL_GetError());
 			}
@@ -223,7 +255,7 @@ namespace KRE
 			// This is a little bit hacky -- ideally the display device should swap buffers.
 			// But SDL provides a device independent way of doing it which is really nice.
 			// So we use that.
-			if(getDisplayDevice()->ID() == DisplayDevice::DISPLAY_DEVICE_OPENGL) {
+			if(getDisplayDevice()->ID() == DisplayDevice::DISPLAY_DEVICE_OPENGL || getDisplayDevice()->ID() == DisplayDevice::DISPLAY_DEVICE_OPENGLES) {
 				SDL_GL_SwapWindow(window_.get());
 			} else {
 				// default to delegating to the display device.

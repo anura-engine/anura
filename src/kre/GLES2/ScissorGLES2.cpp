@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
+	Copyright (C) 2013-2016 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -21,40 +21,49 @@
 	   distribution.
 */
 
-#pragma once
+#include "SDL_opengles2.h"
 
-#include "ScopeableValue.hpp"
+#include <stack>
+#include "ScissorGLES2.hpp"
 
 namespace KRE
 {
-	class BlendEquationImplOGL : public BlendEquationImplBase
+	namespace
 	{
-	public:
-		BlendEquationImplOGL();
-		~BlendEquationImplOGL();
-		void apply(const BlendEquation& eqn) const override;
-		void clear(const BlendEquation& eqn) const override;
-	private:
-		DISALLOW_COPY_AND_ASSIGN(BlendEquationImplOGL);
-	};
+		typedef std::stack<rect> scissor_stack;
+		scissor_stack& get_scissor_stack()
+		{
+			static scissor_stack res;
+			return res;
+		}
+	}
 
-	struct BlendEquationScopeOGL
+	ScissorGLESv2::ScissorGLESv2(const rect& area)
+		: Scissor(area)
 	{
-		BlendEquationScopeOGL(const ScopeableValue& eqn);
-		~BlendEquationScopeOGL();
-	private:
-		bool stored_;
-	};
+	}
 
-	struct BlendModeScopeOGL
+	ScissorGLESv2::~ScissorGLESv2()
 	{
-		BlendModeScopeOGL(const ScopeableValue& bm);
-		~BlendModeScopeOGL();
-	private:
-		bool stored_;
-		bool state_stored_;
-	};
+	}
 
-	//void set_blend_mode(const BlendMode& bm);
-	//void set_blend_equation(const BlendEquation& eqn);
+	void ScissorGLESv2::apply() 
+	{
+		if(get_scissor_stack().empty()) {
+			glEnable(GL_SCISSOR_TEST);
+		}
+		glScissor(getArea().x(), getArea().y(), getArea().w(), getArea().h());
+		get_scissor_stack().emplace(getArea());
+	}
+
+	void ScissorGLESv2::clear() 
+	{
+		get_scissor_stack().pop();
+		if(get_scissor_stack().empty()) {
+			glDisable(GL_SCISSOR_TEST);
+		} else {
+			const rect& r = get_scissor_stack().top();
+			glScissor(r.x(), r.y(), r.w(), r.h());
+		}
+	}
 }

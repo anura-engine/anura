@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
+	Copyright (C) 2013-2016 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -23,38 +23,23 @@
 
 #pragma once
 
-#include "ScopeableValue.hpp"
+#include "SDL_opengles2.h"
+
+#include "Shaders.hpp"
+#include "UniformBuffer.hpp"
 
 namespace KRE
 {
-	class BlendEquationImplOGL : public BlendEquationImplBase
+	// Implementation when we have hardware uniform buffer objects
+	class UniformHardwareGLESv2 : public UniformHardwareInterface
 	{
 	public:
-		BlendEquationImplOGL();
-		~BlendEquationImplOGL();
-		void apply(const BlendEquation& eqn) const override;
-		void clear(const BlendEquation& eqn) const override;
+		explicit UniformHardwareGLESv2(const std::string& name);
+		~UniformHardwareGLESv2();
+		void update(void* buffer, int size) override;
+		void mapToShader(ShaderProgramPtr shader);
 	private:
-		DISALLOW_COPY_AND_ASSIGN(BlendEquationImplOGL);
+		UniformHardwareGLESv2();
+		GLuint ubo_;
 	};
-
-	struct BlendEquationScopeOGL
-	{
-		BlendEquationScopeOGL(const ScopeableValue& eqn);
-		~BlendEquationScopeOGL();
-	private:
-		bool stored_;
-	};
-
-	struct BlendModeScopeOGL
-	{
-		BlendModeScopeOGL(const ScopeableValue& bm);
-		~BlendModeScopeOGL();
-	private:
-		bool stored_;
-		bool state_stored_;
-	};
-
-	//void set_blend_mode(const BlendMode& bm);
-	//void set_blend_equation(const BlendEquation& eqn);
 }

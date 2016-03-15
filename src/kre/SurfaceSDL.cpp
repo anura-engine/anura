@@ -154,13 +154,21 @@ namespace KRE
 		  palette_()
 	{
 		auto filter = Surface::getFileFilter(FileFilterType::LOAD);
-		auto surface_ = IMG_Load(filter(filename).c_str());
-		if(surface_ == nullptr) {
+		auto surf = IMG_Load(filter(filename).c_str());
+		if(surf == nullptr) {
 			LOG_ERROR("Failed to load image file: '" << filename << "' : " << IMG_GetError());
 			std::stringstream ss;
 			ss << "Failed to load image file: '" << filename << "' : " << IMG_GetError();
 			throw ImageLoadError(ss.str());
 		}
+		
+		surface_ = SDL_ConvertSurfaceFormat(surf, SDL_PIXELFORMAT_RGBA8888, 0);
+		if(surface_ == nullptr) {
+			std::stringstream ss;
+			ss << "Failed to convert image file format: '" << filename << "' : " << IMG_GetError();
+			throw ImageLoadError(ss.str());
+		}
+
 		auto pf = std::make_shared<SDLPixelFormat>(surface_->format->format);
 		setPixelFormat(PixelFormatPtr(pf));
 		createPalette();

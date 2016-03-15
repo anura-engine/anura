@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
+	Copyright (C) 2013-2016 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -21,13 +21,13 @@
 	   distribution.
 */
 
-#include <GL/glew.h>
+#include "SDL_opengles2.h"
 
 #include <stack>
 
 #include "asserts.hpp"
 #include "BlendModeScope.hpp"
-#include "BlendOGL.hpp"
+#include "BlendGLES2.hpp"
 
 namespace KRE
 {
@@ -41,12 +41,12 @@ namespace KRE
 				case BlendEquationConstants::BE_SUBTRACT:			return GL_FUNC_SUBTRACT;
 				case BlendEquationConstants::BE_REVERSE_SUBTRACT:	return GL_FUNC_REVERSE_SUBTRACT;
 				case BlendEquationConstants::BE_MIN:
-					if(GLEW_EXT_blend_minmax) {
+					if(GL_EXT_blend_minmax) {
 						return GL_MIN_EXT;
 					}
 					break;
 				case BlendEquationConstants::BE_MAX:
-					if(GLEW_EXT_blend_minmax) {
+					if(GL_EXT_blend_minmax) {
 						return GL_MAX_EXT;
 					}
 					break;
@@ -97,15 +97,15 @@ namespace KRE
 		}
 	}
 
-	BlendEquationImplOGL::BlendEquationImplOGL()
+	BlendEquationImplGLESv2::BlendEquationImplGLESv2()
 	{
 	}
 
-	BlendEquationImplOGL::~BlendEquationImplOGL()
+	BlendEquationImplGLESv2::~BlendEquationImplGLESv2()
 	{
 	}
 
-	void BlendEquationImplOGL::apply(const BlendEquation& eqn) const
+	void BlendEquationImplGLESv2::apply(const BlendEquation& eqn) const
 	{
 		if(eqn != BlendEquation()) {
 			if(get_equation_stack().empty()) {
@@ -116,7 +116,7 @@ namespace KRE
 		}
 	}
 
-	void BlendEquationImplOGL::clear(const BlendEquation& eqn) const
+	void BlendEquationImplGLESv2::clear(const BlendEquation& eqn) const
 	{
 		if(eqn != BlendEquation()) {
 			ASSERT_LOG(!get_equation_stack().empty(), "Something went badly wrong blend mode stack was empty.");
@@ -126,7 +126,7 @@ namespace KRE
 		}
 	}
 
-	BlendEquationScopeOGL::BlendEquationScopeOGL(const ScopeableValue& sv)
+	BlendEquationScopeGLESv2::BlendEquationScopeGLESv2(const ScopeableValue& sv)
 		: stored_(false)
 	{
 		const BlendEquation& eqn = sv.getBlendEquation();
@@ -137,7 +137,7 @@ namespace KRE
 		}
 	}
 
-	BlendEquationScopeOGL::~BlendEquationScopeOGL()
+	BlendEquationScopeGLESv2::~BlendEquationScopeGLESv2()
 	{
 		if(stored_) {
 			ASSERT_LOG(!get_equation_stack().empty(), "Something went badly wrong blend equation stack was empty.");
@@ -151,7 +151,7 @@ namespace KRE
 		}
 	}
 
-	BlendModeScopeOGL::BlendModeScopeOGL(const ScopeableValue& sv)
+	BlendModeScopeGLESv2::BlendModeScopeGLESv2(const ScopeableValue& sv)
 		: stored_(false),
 		  state_stored_(false)
 	{
@@ -178,7 +178,7 @@ namespace KRE
 		}
 	}
 
-	BlendModeScopeOGL::~BlendModeScopeOGL()
+	BlendModeScopeGLESv2::~BlendModeScopeGLESv2()
 	{
 		if(stored_) {
 			ASSERT_LOG(!get_blend_mode_stack().empty(), "Something went badly wrong blend mode stack was empty.");
@@ -209,14 +209,4 @@ namespace KRE
 			}
 		}
 	}
-
-	//void set_blend_mode(const BlendMode& bm)
-	//{
-	//	glBlendFunc(convert_blend_mode(bm.src()), convert_blend_mode(bm.dst()));
-	//}
-
-	//void set_blend_equation(const BlendEquation& eqn)
-	//{
-	//	glBlendEquationSeparate(convert_eqn(eqn.getRgbEquation()), convert_eqn(eqn.getAlphaEquation()));
-	//}
 }
