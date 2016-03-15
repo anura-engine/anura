@@ -107,11 +107,14 @@ namespace test
 			}
 
 			try {
-				get_test_map()[test]();
+				get_test_map().at(test)();
 				LOG_INFO("TEST " << test << " PASSED");
 				++npass;
 			} catch(FailureException&) {
 				LOG_ERROR("TEST " << test << " FAILED!!");
+				++nfail;
+			} catch(std::out_of_range&) {
+				LOG_ERROR("TEST " << test << " NOT FOUND.");
 				++nfail;
 			}
 		}
@@ -194,14 +197,22 @@ namespace test
 				const std::string arg(colon+1, benchmark.end());
 				run_command_line_benchmark(bench_name, arg);
 			} else {
-				run_benchmark(benchmark, get_benchmark_map()[benchmark]);
+				try {
+					run_benchmark(benchmark, get_benchmark_map().at(benchmark));
+				} catch (std::out_of_range &) {
+					LOG_INFO("BENCHMARK " << benchmark << " NOT FOUND.");
+				}
 			}
 		}
 	}
 
 	void run_command_line_benchmark(const std::string& benchmark_name, const std::string& arg)
 	{
-		run_benchmark(benchmark_name, std::bind(get_cl_benchmark_map()[benchmark_name], std::placeholders::_1, arg));
+		try {
+			run_benchmark(benchmark_name, std::bind(get_cl_benchmark_map().at(benchmark_name), std::placeholders::_1, arg));
+		} catch (std::out_of_range&) {
+			LOG_INFO("COMMAND-LINE BENCHMARK " << benchmark_name << " NOT FOUND.");
+		}
 	}
 
 	void run_utility(const std::string& utility_name, const std::vector<std::string>& arg)
