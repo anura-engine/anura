@@ -71,7 +71,7 @@ the following BSD license.
     
 Lua is licensed under the MIT license (http://www.lua.org/license.html)
 
-    Copyright © 1994–2015 Lua.org, PUC-Rio.
+    Copyright (c) 1994-2015 Lua.org, PUC-Rio.
 
     Permission is hereby granted, free of charge, to any person obtaining a copy of this 
     software and associated documentation files (the "Software"), to deal in the Software 

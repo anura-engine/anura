@@ -56,7 +56,7 @@ namespace utils
 				if(c & utf8_bitmask_1) {
 					if(c & utf8_bitmask_3) {
 						if(c & utf8_bitmask_4) {
-							// U = (C1 – 240) * 262,144 + (C2 – 128) * 4,096 + (C3 – 128) * 64 + C4 – 128
+							// U = (C1 - 240) * 262,144 + (C2 - 128) * 4,096 + (C3 - 128) * 64 + C4 - 128
 							codepoint = (c - 240) * 262144;
 							c = *it++;
 							codepoint += (c - 128) * 4096;
@@ -65,7 +65,7 @@ namespace utils
 							c = *it++;
 							codepoint += c - 128;
 						} else {
-							// U = (C1 – 224) * 4,096 + (C2 – 128) * 64 + C3 – 128
+							// U = (C1 - 224) * 4,096 + (C2 - 128) * 64 + C3 - 128
 							codepoint = (c - 224) * 4096;
 							c = *it++;
 							codepoint += (c - 128) * 64;
@@ -73,7 +73,7 @@ namespace utils
 							codepoint += c - 128;
 						}
 					} else {
-						// U = (C1 – 192) * 64 + C2 – 128
+						// U = (C1 - 192) * 64 + C2 - 128
 						codepoint = (c - 192) * 64;
 						c = *it++;
 						codepoint += c - 128;
