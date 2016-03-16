@@ -110,7 +110,11 @@ namespace KRE
 
 		// check for fbo support
 			// XXX we need to add some hints about what size depth and stencil buffers to use.
-			if(usesMultiSampling() && !(GL_ANGLE_framebuffer_multisample || GL_APPLE_framebuffer_multisample || GL_NV_framebuffer_multisample)) {
+#if defined(GL_ANGLE_framebuffer_multisample) || defined(GL_APPLE_framebuffer_multisample) || defined(GL_NV_framebuffer_multisample)
+			if(usesMultiSampling()) {
+#else
+			if(0) {
+#endif
 				int color_planes = getColorPlanes();
 
 				// for output texture
