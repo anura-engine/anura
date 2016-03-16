@@ -33,7 +33,8 @@ namespace KRE
 		index_type_(IndexType::INDEX_NONE),
 		instance_count_(0),
 		offset_(0),
-		count_(0)
+		count_(0),
+		enabled_(true)
 	{
 	}
 
@@ -48,7 +49,8 @@ namespace KRE
 		  index32_(as.index32_),
 		  attributes_(as.attributes_),
 		  count_(as.count_),
-		  offset_(as.offset_)
+		  offset_(as.offset_),
+		  enabled_(as.enabled_)
 	{
 		//for(auto& attr : as.attributes_) {
 		//	attributes_.emplace_back(attr->clone());

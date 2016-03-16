@@ -38,8 +38,14 @@ namespace graphics
 		static boost::intrusive_ptr<DrawPrimitive> create(const variant& v);
 		explicit DrawPrimitive(const variant& v);
 		AnuraShaderPtr getAnuraShader() const { return shader_; }
+		bool isDirty() const { return dirty_; }
+		void setDirty() { dirty_ = true; }
+		void preRender(const KRE::WindowPtr& wm) override;
+	protected:
+		virtual void reInit(const KRE::WindowPtr& wm) = 0;
 	private:
 		DECLARE_CALLABLE(DrawPrimitive);
 		AnuraShaderPtr shader_;
+		bool dirty_;
 	};
 }

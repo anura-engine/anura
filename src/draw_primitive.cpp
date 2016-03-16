@@ -43,6 +43,8 @@ namespace graphics
 		{
 		public:
 			explicit RectPrimitive(const variant& v);
+		protected:
+			void reInit(const KRE::WindowPtr& wm) override { init(); }
 		private:
 			DECLARE_CALLABLE(RectPrimitive)
 			void init();
@@ -98,6 +100,8 @@ namespace graphics
 		{
 		public:
 			explicit CirclePrimitive(const variant& v);
+		protected:
+			void reInit(const KRE::WindowPtr& wm) override { init(); }
 		private:
 			DECLARE_CALLABLE(CirclePrimitive);
 			void init();
@@ -184,6 +188,8 @@ namespace graphics
 		public:
 			explicit ArrowPrimitive(const variant& v);
 			void preRender(const KRE::WindowPtr& wnd) override;
+		protected:
+			void reInit(const KRE::WindowPtr& wm) override { init(); }
 		private:
 			DECLARE_CALLABLE(ArrowPrimitive);
 			void init();
@@ -373,26 +379,32 @@ namespace graphics
 				return obj.color_.write();
 			DEFINE_SET_FIELD_TYPE(KRE::Color::getSetFieldType())
 				obj.color_ = KRE::Color(value);
+				obj.setDirty();
 			DEFINE_FIELD(granularity, "decimal")
 				return variant(obj.granularity_);
 			DEFINE_SET_FIELD_TYPE("int|decimal")
 				obj.granularity_ = value.as_float();
+				obj.setDirty();
 			DEFINE_FIELD(arrow_head_length, "int")
 				return variant(obj.arrow_head_length_);
 			DEFINE_SET_FIELD
 				obj.arrow_head_length_ = value.as_int();
+				obj.setDirty();
 			DEFINE_FIELD(fade_in_length, "int")
 				return variant(obj.fade_in_length_);
 			DEFINE_SET_FIELD
 				obj.fade_in_length_ = value.as_int();
+				obj.setDirty();
 			DEFINE_FIELD(width_base, "decimal")
 				return variant(obj.width_base_);
 			DEFINE_SET_FIELD_TYPE("int|decimal")
 				obj.width_base_ = value.as_float();
+				obj.setDirty();
 			DEFINE_FIELD(width_head, "decimal")
 				return variant(obj.width_head_);
 			DEFINE_SET_FIELD_TYPE("int|decimal")
 				obj.width_head_ = value.as_float();
+				obj.setDirty();
 		END_DEFINE_CALLABLE(ArrowPrimitive)
 
 
@@ -431,6 +443,8 @@ namespace graphics
 		public:
 			explicit WireframeBoxPrimitive(const variant& v);
 
+		protected:
+			void reInit(const KRE::WindowPtr& wm) override { init(); }
 		private:
 			DECLARE_CALLABLE(WireframeBoxPrimitive);
 
@@ -526,17 +540,17 @@ namespace graphics
 				ASSERT_LOG(value.is_list() && value.num_elements() == 2, "'points' must be a list of two elements.");
 				obj.b1_ = variant_to_vec3(value[0]);
 				obj.b2_ = variant_to_vec3(value[1]);
-				obj.init();
+				obj.setDirty();
 			DEFINE_FIELD(point1, "[decimal,decimal,decimal]")
 				return vec3_to_variant(obj.b1_);
 			DEFINE_SET_FIELD
 				obj.b1_ = variant_to_vec3(value);
-				obj.init();
+				obj.setDirty();
 			DEFINE_FIELD(point1, "[decimal,decimal,decimal]")
 				return vec3_to_variant(obj.b2_);
 			DEFINE_SET_FIELD
 				obj.b2_ = variant_to_vec3(value);
-				obj.init();
+				obj.setDirty();
 		END_DEFINE_CALLABLE(WireframeBoxPrimitive)
 		}
 
@@ -564,6 +578,8 @@ namespace graphics
 
 			init();
 		}
+	protected:
+		void reInit(const KRE::WindowPtr& wm) override { init(); }
 	private:
 		DECLARE_CALLABLE(BoxPrimitive);
 
@@ -660,6 +676,7 @@ namespace graphics
 		DEFINE_SET_FIELD_TYPE(KRE::Color::getSetFieldType())
 			obj.color_ = KRE::Color(value);
 			obj.setColor(obj.color_);
+			obj.setDirty();
 		DEFINE_FIELD(points, "[[decimal,decimal,decimal],[decimal,decimal,decimal]]")
 			std::vector<variant> v;
 			v.push_back(vec3_to_variant(obj.b1_));
@@ -669,17 +686,17 @@ namespace graphics
 			ASSERT_LOG(value.is_list() && value.num_elements() == 2, "'points' must be a list of two elements.");
 			obj.b1_ = variant_to_vec3(value[0]);
 			obj.b2_ = variant_to_vec3(value[1]);
-			obj.init();
+			obj.setDirty();
 		DEFINE_FIELD(point1, "[decimal,decimal,decimal]")
 			return vec3_to_variant(obj.b1_);
 		DEFINE_SET_FIELD
 			obj.b1_ = variant_to_vec3(value);
-			obj.init();
+			obj.setDirty();
 		DEFINE_FIELD(point1, "[decimal,decimal,decimal]")
 			return vec3_to_variant(obj.b2_);
 		DEFINE_SET_FIELD
 			obj.b2_ = variant_to_vec3(value);
-			obj.init();
+			obj.setDirty();
 	END_DEFINE_CALLABLE(BoxPrimitive)
 
 
@@ -687,6 +704,8 @@ namespace graphics
 	{
 	public:
 		explicit LinePrimitive(const variant& node);
+	protected:
+		void reInit(const KRE::WindowPtr& wm) override { init(); }
 	private:
 		DECLARE_CALLABLE(LinePrimitive);
 		void init();
@@ -702,6 +721,10 @@ namespace graphics
 		std::vector<glm::vec2> v1array_;
 		std::vector<glm::vec2> v2array_;
 		std::vector<glm::u8vec4> carray_;
+		std::shared_ptr<KRE::Attribute<glm::vec2>> pos_;
+		std::shared_ptr<KRE::Attribute<glm::u8vec4>> col_;
+		std::shared_ptr<KRE::Attribute<glm::vec2>> ll_pos_;
+		KRE::AttributeSetPtr ll_;
 		LinePrimitive();
 		LinePrimitive(const LinePrimitive&);
 		LinePrimitive& operator=(const LinePrimitive&);
@@ -742,14 +765,42 @@ namespace graphics
 			has_stroke_ = true;
 			stroke_color_ = KRE::Color(node["stroke_color"]);
 		}
+
+		using namespace KRE;
+
+		auto ab = DisplayDevice::createAttributeSet(false, false, false);
+		ab->setDrawMode(DrawMode::TRIANGLE_STRIP);
+
+		pos_ = std::make_shared<Attribute<glm::vec2>>(AccessFreqHint::DYNAMIC, AccessTypeHint::DRAW);
+		pos_->addAttributeDesc(AttributeDesc(AttrType::POSITION, 2, AttrFormat::FLOAT, false));
+		ab->addAttribute(pos_);
+
+		col_ = std::make_shared<Attribute<glm::u8vec4>>(AccessFreqHint::DYNAMIC, AccessTypeHint::DRAW);
+		col_->addAttributeDesc(AttributeDesc(AttrType::COLOR, 4, AttrFormat::UNSIGNED_BYTE, true));
+		ab->addAttribute(col_);
+
+		addAttributeSet(ab);
+
+		ll_ = DisplayDevice::createAttributeSet(false, false, false);
+		ll_pos_ = std::make_shared<Attribute<glm::vec2>>(AccessFreqHint::DYNAMIC, KRE::AccessTypeHint::DRAW);
+		ll_pos_->addAttributeDesc(AttributeDesc(AttrType::POSITION, 2, AttrFormat::FLOAT, false));
+		ll_->addAttribute(AttributeBasePtr(ll_pos_));
+		ll_->disable();
+		ll_->setDrawMode(KRE::DrawMode::LINE_LOOP);
+		addAttributeSet(ll_);
+
 		init();
 	}
 
 	void LinePrimitive::init()
 	{
-		double theta = std::atan2(static_cast<double>(y2_-y1_),static_cast<double>(x2_-x1_));
-		double wx_half = width_/2.0 * std::sin(theta);
-		double wy_half = width_/2.0 * std::cos(theta);
+		v1array_.clear();
+		v2array_.clear();
+		carray_.clear();
+
+		const double theta = std::atan2(static_cast<double>(y2_-y1_),static_cast<double>(x2_-x1_));
+		const double wx_half = width_/2.0 * std::sin(theta);
+		const double wy_half = width_/2.0 * std::cos(theta);
 
 		v1array_.emplace_back(static_cast<float>(x1_ - wx_half), static_cast<float>(y1_ + wy_half));
 		v1array_.emplace_back(static_cast<float>(x2_ - wx_half), static_cast<float>(y2_ + wy_half));
@@ -768,59 +819,56 @@ namespace graphics
 		v2array_.emplace_back(static_cast<float>(x2_ + wx_half), static_cast<float>(y2_ - wy_half));
 		v2array_.emplace_back(static_cast<float>(x1_ + wx_half), static_cast<float>(y1_ - wy_half));
 
-		using namespace KRE;
-
-		auto ab = DisplayDevice::createAttributeSet(false, false, false);
-		ab->setDrawMode(DrawMode::TRIANGLE_STRIP);
-
-		auto pos = std::make_shared<Attribute<glm::vec2>>(AccessFreqHint::DYNAMIC, AccessTypeHint::DRAW);
-		pos->addAttributeDesc(AttributeDesc(AttrType::POSITION, 2, AttrFormat::FLOAT, false));
-		ab->addAttribute(pos);
-
-		auto col = std::make_shared<Attribute<glm::u8vec4>>(AccessFreqHint::DYNAMIC, AccessTypeHint::DRAW);
-		col->addAttributeDesc(AttributeDesc(AttrType::COLOR, 4, AttrFormat::UNSIGNED_BYTE, true));
-		ab->addAttribute(col);
-
-		addAttributeSet(ab);
-
-		pos->update(&v1array_);
-		col->update(&carray_);
+		pos_->update(&v1array_);
+		col_->update(&carray_);
 
 		if(has_stroke_) {
-			auto ll = DisplayDevice::createAttributeSet(false, false, false);
-			auto ll_pos = std::make_shared<Attribute<glm::vec2>>(AccessFreqHint::DYNAMIC, KRE::AccessTypeHint::DRAW);
-			ll_pos->addAttributeDesc(AttributeDesc(AttrType::POSITION, 2, AttrFormat::FLOAT, false));
-			ll->addAttribute(AttributeBasePtr(ll_pos));
-			ll->setColor(stroke_color_);
-			ll->setDrawMode(DrawMode::LINE_LOOP);
-			addAttributeSet(ll);
+			ll_->enable();
+			ll_->setColor(stroke_color_);
 
-			ll_pos->update(&v2array_);
+			ll_pos_->update(&v2array_);
+		} else {
+			ll_->disable();
 		}
 	}
 
 
 	BEGIN_DEFINE_CALLABLE(LinePrimitive, DrawPrimitive)
-		DEFINE_FIELD(color1, "[int,int,int,int]")
+		DEFINE_FIELD(color1, KRE::Color::getDefineFieldType())
 			return obj.color1_.write();
-		DEFINE_SET_FIELD_TYPE("[int,int,int,int]|string")
+		DEFINE_SET_FIELD_TYPE(KRE::Color::getSetFieldType())
 			obj.color1_ = KRE::Color(value);
-		DEFINE_FIELD(color2, "[int,int,int,int]")
+			obj.setDirty();
+		DEFINE_FIELD(color2, KRE::Color::getDefineFieldType())
 			return obj.color2_.write();
-		DEFINE_SET_FIELD_TYPE("[int,int,int,int]|string")
+		DEFINE_SET_FIELD_TYPE(KRE::Color::getSetFieldType())
 			obj.color2_ = KRE::Color(value);
+			obj.setDirty();
 		DEFINE_FIELD(p1, "[int,int]")
 			return point(obj.x1_, obj.y1_).write();
 		DEFINE_SET_FIELD
 			point p1(value);
 			obj.x1_ = p1.x;
 			obj.y1_ = p1.y;
+			obj.setDirty();
 		DEFINE_FIELD(p2, "[int,int]")
 			return point(obj.x2_, obj.y2_).write();
 		DEFINE_SET_FIELD
 			point p2(value);
 			obj.x2_ = p2.x;
 			obj.y2_ = p2.y;
+			obj.setDirty();
+		DEFINE_FIELD(stroke_color, KRE::Color::getDefineFieldType())
+			return obj.stroke_color_.write();
+		DEFINE_SET_FIELD_TYPE(KRE::Color::getSetFieldType())
+			obj.has_stroke_ = true;
+			obj.stroke_color_ = KRE::Color(value);
+			obj.setDirty();
+		DEFINE_FIELD(width, "decimal")
+			return variant(obj.width_);
+		DEFINE_SET_FIELD_TYPE("decimal|int")
+			obj.width_ = value.as_float();
+			obj.setDirty();
 	END_DEFINE_CALLABLE(LinePrimitive)
 
 
@@ -862,6 +910,14 @@ namespace graphics
 			setShader(shader_->getShader());
 		} else {
 			setShader(KRE::ShaderProgram::getProgram("attr_color_shader"));
+		}
+	}
+
+	void DrawPrimitive::preRender(const KRE::WindowPtr& wm) 
+	{
+		if(dirty_) {
+			dirty_ = false;
+			reInit(wm);
 		}
 	}
 

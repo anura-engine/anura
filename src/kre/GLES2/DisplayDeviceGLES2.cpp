@@ -389,6 +389,9 @@ namespace KRE
 		// Need to figure the interaction with shaders.
 		/// XXX Need to create a mapping between attributes and the index value below.
 		for(auto as : r->getAttributeSet()) {
+			if(!as->isEnabled()) {
+				continue;
+			}
 			//ASSERT_LOG(as->getCount() > 0, "No (or negative) number of vertices in attribute set. " << as->getCount());
 			if(as->getCount() <= 0) {
 				//LOG_WARN("No (or negative) number of vertices in attribute set. " << as->getCount());
