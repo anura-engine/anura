@@ -401,6 +401,12 @@ namespace game_logic
 				t = args()[0]->evaluate(variables).as_int();
 			}
 			tm* ltime = localtime(&t);
+			if(ltime == nullptr) {
+				t = time(NULL);
+				ltime = localtime(&t);
+				ASSERT_LOG(ltime != nullptr, "Could not get time()");
+				
+			}
 			return variant(new DateTime(t, ltime));
 		FUNCTION_ARGS_DEF
 			ARG_TYPE("int");
@@ -899,6 +905,39 @@ namespace game_logic
 				}
 			};
 		}
+
+	FUNCTION_DEF(set_mouse_cursor, 1, 1, "set_mouse_cursor(string cursor)")
+		std::string cursor = EVAL_ARG(0).as_string();
+		return variant(new FnCommandCallable([=]() {
+
+#define DEFINE_CURSOR(s) if(cursor == #s) { \
+	static SDL_Cursor* cursor = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_##s); \
+	SDL_SetCursor(cursor); \
+} else
+
+DEFINE_CURSOR(ARROW)
+DEFINE_CURSOR(IBEAM)
+DEFINE_CURSOR(WAIT)
+DEFINE_CURSOR(CROSSHAIR)
+DEFINE_CURSOR(WAITARROW)
+DEFINE_CURSOR(SIZENWSE)
+DEFINE_CURSOR(SIZENESW)
+DEFINE_CURSOR(SIZEWE)
+DEFINE_CURSOR(SIZENS)
+DEFINE_CURSOR(SIZEALL)
+DEFINE_CURSOR(NO)
+DEFINE_CURSOR(HAND)
+{
+	ASSERT_LOG(false, "Unknown cursor: " << cursor);
+}
+
+#undef DEFINE_CURSOR
+		}));
+
+	FUNCTION_ARGS_DEF
+		ARG_TYPE("string")
+	RETURN_TYPE("commands")
+	END_FUNCTION_DEF(set_mouse_cursor)
 
 	FUNCTION_DEF(eval_with_timeout, 2, 2, "eval_with_timeout(int time_ms, expr): evals expr, but with a timeout of time_ms. This will not pre-emptively time out, but while expr is evaluating, has_timed_out() will start evaluating to true if the timeout has elapsed.")
 
@@ -4197,6 +4236,7 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 			bool allow_failure = false;
 			bool prefs_directory = false;
 			bool use_cache = true;
+			bool straight_json = false;
 
 			if(args().size() > 1) {
 				const variant flags = args()[1]->evaluate(variables);
@@ -4208,6 +4248,8 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 						prefs_directory = true;
 					} else if(flag == "uncached") {
 						use_cache = false;
+					} else if(flag == "json") {
+						straight_json = true;
 					} else {
 						ASSERT_LOG(false, "illegal flag given to get_document: " << flag);
 					}
@@ -4234,7 +4276,13 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 			}
 
 			try {
-				variant result = game_logic::deserialize_file_with_objects(docname);
+				variant result;
+				if(straight_json) {
+					result = json::parse_from_file(docname, json::JSON_PARSE_OPTIONS::NO_PREPROCESSOR);
+				} else {
+					result = game_logic::deserialize_file_with_objects(docname);
+				}
+
 				if(use_cache) {
 					get_doc_cache(prefs_directory)[docname] = result;
 				}
