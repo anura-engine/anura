@@ -26,6 +26,7 @@
 #include <algorithm>
 #include <ctype.h>
 #include <deque>
+#include <functional>
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/bind.hpp>
 #include <iostream>
@@ -378,7 +379,7 @@ public:
 					std::vector<variant> args;
 					args.push_back(variant(this));
 					args.push_back(variant(session.user_id));
-					args.push_back(account_itor->second["info"]);
+					args.push_back(account_itor->second.account_info["info"]);
 
 					variant cmd = process_account_fn_(args);
 					executeCommand(cmd);
@@ -521,6 +522,14 @@ public:
 
 					variant new_user_info_variant = new_user_info.build();
 
+					static const variant ChatChannelsKey("chat_channels");
+					static const std::string DefaultChannel = "#talk";
+					variant channels = new_user_info_variant["info"][ChatChannelsKey];
+					if(channels[variant(DefaultChannel)].as_bool(false) == false) {
+						channels.add_attr_mutation(variant(DefaultChannel), variant::from_bool(true));
+						userJoinChannel(socket_ptr(), user_full, DefaultChannel);
+					}
+
 					//put the new user in the database. Note that we use
 					//PUT_REPLACE so that if there is a race for two users
 					//to register the same name only one will succeed.
@@ -533,10 +542,11 @@ public:
 						info.session_id = session_id;
 						info.user_id = user;
 						info.last_contact = this->time_ms_;
+						info.account_info = &getAccountInfo(user);
 
 						users_to_sessions_[user] = session_id;
 
-						this->account_info_[user] = new_user_info_variant;
+						this->account_info_[user].account_info = new_user_info_variant;
 
 						if(g_beta_keys_file.empty() == false) {
 							redeem_beta_key(beta_key, user_full);
@@ -614,7 +624,15 @@ public:
 
 					repair_account(&user_info);
 
-					this->account_info_[user] = user_info;
+					static const variant ChatChannelsKey("chat_channels");
+					static const std::string DefaultChannel = "#talk";
+					variant channels = user_info["info"][ChatChannelsKey];
+					if(channels[variant(DefaultChannel)].as_bool(false) == false) {
+						channels.add_attr_mutation(variant(DefaultChannel), variant::from_bool(true));
+						userJoinChannel(socket_ptr(), user, DefaultChannel);
+					}
+
+					this->account_info_[user].account_info = user_info;
 
 					add_logged_in_user(user);
 
@@ -623,6 +641,7 @@ public:
 					info.session_id = session_id;
 					info.user_id = user;
 					info.last_contact = this->time_ms_;
+					info.account_info = &getAccountInfo(user);
 
 					users_to_sessions_[user] = session_id;
 
@@ -644,6 +663,7 @@ public:
 					}
 
 					send_response(socket, response.build());
+
 				});
 
 			} else if(request_type == "auto_login") {
@@ -668,7 +688,16 @@ public:
 						}
 
 						repair_account(&user_info);
-						this->account_info_[username] = user_info;
+
+						static const variant ChatChannelsKey("chat_channels");
+						static const std::string DefaultChannel = "#talk";
+						variant channels = user_info["info"][ChatChannelsKey];
+						if(channels[variant(DefaultChannel)].as_bool(false) == false) {
+							channels.add_attr_mutation(variant(DefaultChannel), variant::from_bool(true));
+							userJoinChannel(socket_ptr(), username, DefaultChannel);
+						}
+
+						this->account_info_[username].account_info = user_info;
 
 						add_logged_in_user(username);
 
@@ -677,6 +706,7 @@ public:
 						info.session_id = session_id;
 						info.user_id = username;
 						info.last_contact = this->time_ms_;
+						info.account_info = &getAccountInfo(username);
 
 						users_to_sessions_[username] = session_id;
 	
@@ -761,7 +791,7 @@ public:
 
 				std::string user = info.user_id;
 
-				variant v = account_info_[user];
+				variant v = account_info_[user].account_info;
 				if(v.is_null()) {
 					RESPOND_ERROR("Could not find user info");
 					return;
@@ -986,8 +1016,8 @@ public:
 					}
 
 					std::string message = doc["message"].as_string();
-					if(message.size() > 240) {
-						message.resize(240);
+					if(message.size() > 512) {
+						message.resize(512);
 					}
 
 					variant_builder msg;
@@ -1004,6 +1034,89 @@ public:
 
 					schedule_send(200);
 				}
+
+			} else if(request_type == "join_channel") {
+
+				int session_id = doc["session_id"].as_int(request_session_id);
+				auto itor = sessions_.find(session_id);
+				if(itor == sessions_.end()) {
+					fprintf(stderr, "Error: Unknown session: %d\n", session_id);
+					send_msg(socket, "text/json", "{ type: \"error\", message: \"unknown session\" }", "");
+					return;
+				}
+
+				const std::string& channel_name = doc["channel"].as_string();
+				int count_legal = 0;
+				for(char c : channel_name) {
+					if(isalnum(c) || c == '_') {
+						++count_legal;
+					}
+				}
+
+				if(channel_name.size() < 2 || channel_name[0] != '#' || count_legal != static_cast<int>(channel_name.size())-1) {
+					send_msg(socket, "text/json", "{ type: \"error\", message: \"illegal channel name\" }", "");
+					return;
+				}
+
+				static const variant ChatChannelsKey("chat_channels");
+				auto account_itor = account_info_.find(itor->second.user_id);
+				if(account_itor != account_info_.end()) {
+					variant channels = account_itor->second.account_info["info"][ChatChannelsKey];
+					channels.add_attr_mutation(variant(channel_name), variant::from_bool(true));
+
+					db_client_->put("user:" + itor->second.user_id, account_itor->second.account_info, [](){}, [](){});
+				}
+
+				userJoinChannel(socket, itor->second.user_id, channel_name);
+
+			} else if(request_type == "leave_channel") {
+
+				int session_id = doc["session_id"].as_int(request_session_id);
+				auto itor = sessions_.find(session_id);
+				if(itor == sessions_.end()) {
+					fprintf(stderr, "Error: Unknown session: %d\n", session_id);
+					send_msg(socket, "text/json", "{ type: \"error\", message: \"unknown session\" }", "");
+					return;
+				}
+
+				const std::string& channel_name = doc["channel"].as_string();
+
+				if(channel_name.size() < 2 || channel_name[0] != '#') {
+					send_msg(socket, "text/json", "{ type: \"error\", message: \"illegal channel name\" }", "");
+					return;
+				}
+
+				static const variant ChatChannelsKey("chat_channels");
+				auto account_itor = account_info_.find(itor->second.user_id);
+				if(account_itor != account_info_.end()) {
+					variant channels = account_itor->second.account_info["info"][ChatChannelsKey];
+					channels.remove_attr_mutation(variant(channel_name));
+
+					db_client_->put("user:" + itor->second.user_id, account_itor->second.account_info, [](){}, [](){});
+				}
+
+				userLeaveChannel(itor->second.user_id, channel_name);
+
+				send_msg(socket, "text/json", "{type: \"ack\" }", "");
+			} else if(request_type == "chat_message") {
+
+				int session_id = doc["session_id"].as_int(request_session_id);
+				auto itor = sessions_.find(session_id);
+				if(itor == sessions_.end()) {
+					fprintf(stderr, "Error: Unknown session: %d\n", session_id);
+					send_msg(socket, "text/json", "{ type: \"error\", message: \"unknown session\" }", "");
+					return;
+				}
+
+				const std::string& channel_name = doc["channel"].as_string();
+
+				std::string message = doc["message"].as_string();
+				if(message.size() > 512) {
+					message.resize(512);
+				}
+
+				userSendChat(itor->second, socket, itor->second.user_id, channel_name, message);
+
 
 			} else if(request_type == "status_change") {
 				int session_id = doc["session_id"].as_int(request_session_id);
@@ -1128,13 +1241,13 @@ public:
 					bool send_new_version = false;
 					if(has_version != -1) {
 						auto account_itor = account_info_.find(itor->second.user_id);
-						if(account_itor != account_info_.end() && account_itor->second["info_version"].as_int(0) != has_version) {
+						if(account_itor != account_info_.end() && account_itor->second.account_info["info_version"].as_int(0) != has_version) {
 							send_new_version = true;
 
 							variant_builder doc;
 							doc.add("type", "account_info");
-							doc.add("info", account_itor->second["info"]);
-							doc.add("info_version", account_itor->second["info_version"]);
+							doc.add("info", account_itor->second.account_info["info"]);
+							doc.add("info_version", account_itor->second.account_info["info_version"]);
 							send_msg(socket, "text/json", doc.build().write_json(), "");
 						}
 					}
@@ -1158,9 +1271,9 @@ public:
 							}
 						}
 
-						if(itor->second.message_queue.empty() == false) {
-							send_msg(socket, "text/json", itor->second.message_queue.front().write_json(), "");
-							itor->second.message_queue.pop_front();
+						if(itor->second.message_queue().empty() == false) {
+							send_msg(socket, "text/json", itor->second.message_queue().front().write_json(), "");
+							itor->second.message_queue().pop_front();
 							return;
 						}
 
@@ -1259,7 +1372,7 @@ public:
 						fprintf(stderr, "Error: Unknown account: %s\n", session.user_id.c_str());
 						send_msg(socket, "text/json", "{ type: \"error\", message: \"unknown account\" }", "");
 					} else {
-						variant privileged = account_itor->second["info"]["privileged"];
+						variant privileged = account_itor->second.account_info["info"]["privileged"];
 						if(!privileged.is_bool() || privileged.as_bool() != true) {
 							fprintf(stderr, "Error: Unprivileged account account: %s\n", session.user_id.c_str());
 							send_msg(socket, "text/json", "{ type: \"error\", message: \"account does not have admin privileges\" }", "");
@@ -1309,7 +1422,7 @@ public:
 						args.push_back(variant(this));
 						args.push_back(doc);
 						args.push_back(variant(itor->second.user_id));
-						args.push_back(account_itor->second["info"]);
+						args.push_back(account_itor->second.account_info["info"]);
 
 						variant cmd = handle_request_fn_(args);
 						executeCommand(cmd);
@@ -1337,7 +1450,7 @@ public:
 			std::vector<variant> v;
 			v.push_back(variant(this));
 			v.push_back(variant(session.user_id));
-			v.push_back(account_itor->second["info"]);
+			v.push_back(account_itor->second.account_info["info"]);
 			v.push_back(doc);
 			variant cmd = user_account_fn_(v);
 			executeCommand(cmd);
@@ -1355,7 +1468,7 @@ public:
 
 				repair_account(&user_info);
 
-				account_info_[user] = user_info;
+				account_info_[user].account_info = user_info;
 
 				std::vector<variant> v;
 				v.push_back(variant(this));
@@ -1661,17 +1774,17 @@ private:
 				ASSERT_LOG(account_info_itor != account_info_.end(), "Could not find user's account info: " << session_info.user_id);
 
 				std::vector<variant> recent_games_var;
-				variant recent_games = account_info_itor->second["recent_games"];
+				variant recent_games = account_info_itor->second.account_info["recent_games"];
 				if(recent_games.is_list()) {
 					recent_games_var = recent_games.as_list();
 				}
 				recent_games_var.push_back(variant(game_id));
-				account_info_itor->second.add_attr_mutation(variant("recent_games"), variant(&recent_games_var));
+				account_info_itor->second.account_info.add_attr_mutation(variant("recent_games"), variant(&recent_games_var));
 
 				variant_builder user;
 				user.add("user", session_info.user_id);
 				user.add("session_id", session_info.session_id);
-				user.add("account_info", account_info_itor->second["info"]);
+				user.add("account_info", account_info_itor->second.account_info["info"]);
 				users.push_back(user.build());
 
 				user_info_[session_info.user_id].game_session = session_info.session_id;
@@ -1846,6 +1959,18 @@ private:
 
 	DbClientPtr db_client_;
 
+	struct UserAccountInfo {
+		variant account_info;
+		std::deque<variant> message_queue;
+	};
+
+	typedef std::map<std::string, UserAccountInfo> AccountInfoMap;
+	AccountInfoMap account_info_;
+
+	UserAccountInfo& getAccountInfo(const std::string& user_id) {
+		return account_info_[user_id];
+	}
+
 	struct MatchChallenge {
 		MatchChallenge() : challenger_session(-1), received(false) {}
 		std::string challenger, challenged;
@@ -1857,7 +1982,7 @@ private:
 	typedef std::shared_ptr<MatchChallenge> MatchChallengePtr;
 
 	struct SessionInfo {
-		SessionInfo() : session_id(-1), status("idle"), last_contact(-1), game_pending(0), game_port(0), queued_for_game(false), sent_heartbeat(false), send_process_counter(60), messages_this_time_segment(0), time_segment(0), flood_mute_expires(0), have_state_id(-1), request_server_info(false) {}
+		SessionInfo() : session_id(-1), status("idle"), last_contact(-1), game_pending(0), game_port(0), queued_for_game(false), sent_heartbeat(false), send_process_counter(60), messages_this_time_segment(0), time_segment(0), flood_mute_expires(0), have_state_id(-1), request_server_info(false), account_info(nullptr) {}
 		int session_id;
 		std::string user_id;
 		std::string game_details;
@@ -1884,7 +2009,9 @@ private:
 
 		std::vector<MatchChallengePtr> challenges_made, challenges_received;
 
-		std::deque<variant> message_queue;
+		UserAccountInfo* account_info;
+
+		std::deque<variant>& message_queue() { return account_info->message_queue; }
 	};
 
 	std::map<int, SessionInfo> sessions_;
@@ -1910,8 +2037,22 @@ private:
 			send_msg(session.current_socket, "text/json", msg.write_json(), "");
 			session.current_socket = socket_ptr();
 		} else {
-			session.message_queue.push_back(msg);
+			session.message_queue().push_back(msg);
 		}
+	}
+
+	void queue_message(const std::string& user, variant msg)
+	{
+		auto session_itor = users_to_sessions_.find(user);
+		if(session_itor != users_to_sessions_.end()) {
+			auto session = sessions_.find(session_itor->second);
+			if(session != sessions_.end()) {
+				queue_message(session->second, msg);
+				return;
+			}
+		}
+
+		getAccountInfo(user).message_queue.push_back(msg);
 	}
 
 	struct UserInfo {
@@ -1946,8 +2087,6 @@ private:
 
 	std::deque<int> available_ports_;
 	std::map<int, ProcessInfo> servers_;
-
-	std::map<std::string, variant> account_info_;
 
 	void repair_account(variant* input) const {
 		variant info = (*input)["info"];
@@ -2308,6 +2447,190 @@ private:
 
 	int gen_game_id_;
 
+	struct ChatChannel {
+		ChatChannel()
+		{
+			std::map<variant,variant> m;
+			users = variant(&m);
+		}
+
+		explicit ChatChannel(variant node) : name(node["name"].as_string()), users(node["users"])
+		{
+			for(auto p : users.as_map()) {
+				user_list.push_back(p.first.as_string());
+			}
+		}
+
+		variant write() const {
+			variant_builder b;
+			b.add("name", name);
+			b.add("users", users);
+			return b.build();
+		}
+
+		std::string name;
+		variant users;
+		std::vector<std::string> user_list;
+	};
+
+	std::map<std::string, ChatChannel> channels_;
+
+	void executeOnChannel(std::string channel, std::function<bool(ChatChannel&)> fn)
+	{
+		auto itor = channels_.find(channel);
+		if(itor != channels_.end()) {
+			fn(itor->second);
+			db_client_->put("channel:" + channel, itor->second.write(), [](){}, [=](){
+				LOG_ERROR("Error writing channel: " << channel);
+			});
+		} else {
+			db_client_->get("channel:" + channel, [=](variant info) {
+				ChatChannel& c = channels_[channel];
+				if(info.is_map()) {
+					c = ChatChannel(info);
+				}
+
+				fn(c);
+				db_client_->put("channel:" + channel, c.write(), [](){}, [=](){
+					LOG_ERROR("Error writing channel: " << channel);
+				});
+			});
+		}
+	}
+
+	void userJoinChannel(socket_ptr socket, std::string username, std::string channel_name)
+	{
+		executeOnChannel(channel_name, [=](ChatChannel& channel) {
+			if(std::find(channel.user_list.begin(), channel.user_list.end(), username) != channel.user_list.end()) {
+				return false;
+			}
+
+			channel.users.add_attr_mutation(variant(username), variant::from_bool(true));
+			channel.user_list.push_back(username);
+
+			variant_builder b;
+			b.add("type", "channel_join");
+			b.add("nick", username);
+			b.add("channel", channel_name);
+			b.add("timestamp", static_cast<int>(time(nullptr)));
+			variant msg = b.build();
+			for(const std::string& username : channel.user_list) {
+				queue_message(username, msg);
+			}
+
+			variant_builder response;
+			response.add("type", "channel_joined");
+			response.add("channel", channel_name);
+			response.add("users", channel.users);
+
+			if(socket) {
+				send_msg(socket, "text/json", response.build().write_json(), "");
+			} else {
+				queue_message(username, response.build());
+			}
+
+			return true;
+		});
+	}
+
+	void userLeaveChannel(std::string username, std::string channel_name)
+	{
+		executeOnChannel(channel_name, [=](ChatChannel& channel) {
+			channel.users.remove_attr_mutation(variant(username));
+
+			channel.user_list.erase(std::remove(channel.user_list.begin(), channel.user_list.end(), username), channel.user_list.end());
+
+			variant_builder b;
+			b.add("type", "channel_part");
+			b.add("nick", username);
+			b.add("channel", channel_name);
+			b.add("timestamp", static_cast<int>(time(nullptr)));
+			variant msg = b.build();
+			for(const std::string& username : channel.user_list) {
+				queue_message(username, msg);
+			}
+
+			return true;
+		});
+	}
+
+	void userSendChat(const SessionInfo& session, socket_ptr socket, std::string username, std::string recipient, std::string msg)
+	{
+		if(recipient.empty()) {
+			send_msg(socket, "text/json", "{type: \"ack\" }", "");
+			return;
+		}
+
+		const bool privileged = session.account_info->account_info["info"]["privileged"].as_bool(false);
+
+		if(recipient.empty() == false && recipient[0] == '#') {
+			executeOnChannel(recipient, [=](ChatChannel& channel) {
+
+				variant_builder b;
+				b.add("type", "chat_message");
+				b.add("nick", username);
+				b.add("channel", recipient);
+				b.add("message", msg);
+				b.add("timestamp", static_cast<int>(time(nullptr)));
+
+				if(privileged) {
+					b.add("privileged", variant::from_bool(true));
+				}
+	
+				variant msg = b.build();
+				for(const std::string& username : channel.user_list) {
+					queue_message(username, msg);
+				}
+				send_msg(socket, "text/json", "{type: \"ack\" }", "");
+
+				return false;
+			});
+
+		} else {
+			variant_builder b;
+			b.add("type", "chat_message");
+			b.add("nick", username);
+			b.add("message", msg);
+			b.add("timestamp", static_cast<int>(time(nullptr)));
+			if(privileged) {
+				b.add("privileged", variant::from_bool(true));
+			}
+
+
+			variant_builder ack;
+			ack.add("type", "chat_message");
+			ack.add("nick", username);
+			ack.add("channel", "@" + recipient);
+			ack.add("message", msg);
+			ack.add("timestamp", static_cast<int>(time(nullptr)));
+			if(privileged) {
+				ack.add("privileged", variant::from_bool(true));
+			}
+			
+			variant ack_msg = ack.build();
+			variant m = b.build();
+
+			auto itor = account_info_.find(recipient);
+			if(itor != account_info_.end()) {
+				queue_message(recipient, m);
+				send_msg(socket, "text/json", ack_msg.write_json(), "");
+			} else {
+				db_client_->get("user:" + recipient, [=](variant user_info) {
+					if(user_info.is_null()) {
+						variant_builder b;
+						b.add("type", "chat_error");
+						b.add("message", formatter() << "No such user " << recipient);
+						send_msg(socket, "text/json", b.build().write_json(), "");
+					} else {
+						account_info_[recipient].account_info = user_info;
+						queue_message(recipient, m);
+						send_msg(socket, "text/json", ack_msg.write_json(), "");
+					}
+				});
+			}
+		}
+	}
+
 	DECLARE_CALLABLE(matchmaking_server);
 };
 
@@ -2345,7 +2668,7 @@ BEGIN_DEFINE_FN(get_account_info, "(string) ->map")
 	auto itor = obj.account_info_.find(key);
 	ASSERT_LOG(itor != obj.account_info_.end(), "Could not find user account: " << key);
 
-	return itor->second["info"];
+	return itor->second.account_info["info"];
 END_DEFINE_FN
 BEGIN_DEFINE_FN(write_account, "(string, [string]|null=null) ->commands")
 	const std::string& key = FN_ARG(0).as_string();
@@ -2366,7 +2689,7 @@ BEGIN_DEFINE_FN(write_account, "(string, [string]|null=null) ->commands")
 	auto itor = obj.account_info_.find(key);
 	ASSERT_LOG(itor != obj.account_info_.end(), "Could not find user account: " << key);
 
-	return variant(new write_account_command(*obj.db_client_, key, itor->second, silent_update));
+	return variant(new write_account_command(*obj.db_client_, key, itor->second.account_info, silent_update));
 END_DEFINE_FN
 END_DEFINE_CALLABLE(matchmaking_server)
 
