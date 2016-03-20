@@ -142,6 +142,8 @@ namespace {
 		cairo_surface_t *& operator[](const std::string & name) {
 			return cache_[name];
 		}
+
+		size_t size() const { return cache_.size(); }
 	private:
 		std::map<std::string, cairo_surface_t*> cache_;
 	};
@@ -325,8 +327,14 @@ namespace {
 	BEGIN_DEFINE_CALLABLE_NOBASE(cairo_text_fragment)
 		DEFINE_FIELD(path, "builtin cairo_op")
 			return obj.path;
-		DEFINE_FIELD(tag, "any")
-			return obj.tag;
+		DEFINE_FIELD(tag, "[string]")
+			if(obj.tag.is_list()) {
+				return obj.tag;
+			} else {
+				static std::vector<variant> v;
+				static variant empty_list(&v);
+				return empty_list;
+			}
 		DEFINE_FIELD(x, "decimal")
 			return variant(obj.x);
 		DEFINE_FIELD(y, "decimal")
@@ -362,6 +370,8 @@ namespace {
 		{ "rdquo", 8221 },
 		{ "emdash", 8212 },
 		{ "amp", 38 },
+		{ "lt", 60 },
+		{ "gt", 62 },
 		{ "aelig", 230 },
 		{ "AElig", 198 },
 	};
@@ -1388,6 +1398,37 @@ END_CAIRO_FN
 		cairo_set_operator(context.get(), op);
 
 	END_CAIRO_FN
+
+	BEGIN_DEFINE_FN(escape_text, "(string) ->string")
+		std::string text = FN_ARG(0).as_string();
+
+		std::string out;
+
+		for(char c : text) {
+			if(c == '<') {
+				out += "&lt;";
+			} else if(c == '>') {
+				out += "&gt;";
+			} else {
+				out.push_back(c);
+			}
+		}
+
+		return variant(out);
+	END_DEFINE_FN
+
+	BEGIN_DEFINE_FN(is_valid_markup_text, "(string) ->bool")
+		const std::string markup = "<root>" + FN_ARG(0).as_string() + "</root>";
+		std::istringstream s(markup);
+		boost::property_tree::ptree ptree;
+		try {
+			boost::property_tree::xml_parser::read_xml(s, ptree, boost::property_tree::xml_parser::no_concat_text);
+		} catch(...) {
+			return variant::from_bool(false);
+		}
+		return variant::from_bool(true);
+
+	END_DEFINE_FN
 
 	BEGIN_DEFINE_FN(markup_text, "(string, decimal|{width: decimal, width_delta: null|decimal, scale: null|decimal}, decimal=0.0) ->[builtin cairo_text_fragment]")
 		const std::string markup = "<root>" + FN_ARG(0).as_string() + "</root>";
