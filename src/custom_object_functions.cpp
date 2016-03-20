@@ -266,18 +266,18 @@ namespace
 		std::string url = EVAL_ARG(0).as_string();
 
 		for(char& c : url) {
-			if(!isprint(c) || c >= 128 || isspace(c)) {
+			if(!isprint(c) || c < 0 || isspace(c)) {
 				c = 0;
 			}
 		}
+		
+		url.erase(std::remove(url.begin(), url.end(), 0), url.end());
 
 		static const char* prefix = "http://";
 
 		if(url.size() < strlen(prefix) || !std::equal(prefix, prefix+strlen(prefix), url.begin())) {
 			return variant();
 		}
-
-		url.erase(std::remove(url.begin(), url.end(), 0), url.end());
 
 		return variant(new FnCommandCallable([=]() {
 #if defined(__linux__) || defined(__APPLE__)
