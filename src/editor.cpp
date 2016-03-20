@@ -965,7 +965,7 @@ void editor::set_rotate_reference()
 	const float radians_to_degrees = 57.29577951308232087f;
 	
 	int mousex, mousey;
-	const unsigned int buttons = input::sdl_get_mouse_state(&mousex, &mousey);
+    input::sdl_get_mouse_state(&mousex, &mousey);
 	mousex = xpos_ + mousex*zoom_;
 	mousey = ypos_ + mousey*zoom_ - EDITOR_MENUBAR_HEIGHT;
 	
@@ -987,7 +987,7 @@ void editor::change_rotation()
 	const bool ctrl_pressed = (SDL_GetModState()&(KMOD_LCTRL|KMOD_RCTRL)) != 0;
 	
 	int mousex, mousey;
-	const unsigned int buttons = input::sdl_get_mouse_state(&mousex, &mousey);
+    input::sdl_get_mouse_state(&mousex, &mousey);
 	mousex = xpos_ + mousex*zoom_;
 	mousey = ypos_ + mousey*zoom_ - EDITOR_MENUBAR_HEIGHT;
 	
@@ -1029,7 +1029,7 @@ float scale_reference_ratio = 0;
 void editor::set_scale_reference()
 {
 	int mousex, mousey;
-	const unsigned int buttons = input::sdl_get_mouse_state(&mousex, &mousey);
+    input::sdl_get_mouse_state(&mousex, &mousey);
 	mousex = xpos_ + mousex*zoom_;
 	mousey = ypos_ + mousey*zoom_ - EDITOR_MENUBAR_HEIGHT;
 	
@@ -1049,7 +1049,7 @@ void editor::change_scale()
 	const bool ctrl_pressed = (SDL_GetModState()&(KMOD_LCTRL|KMOD_RCTRL)) != 0;
 	
 	int mousex, mousey;
-	const unsigned int buttons = input::sdl_get_mouse_state(&mousex, &mousey);
+	input::sdl_get_mouse_state(&mousex, &mousey);
 	mousex = xpos_ + mousex*zoom_;
 	mousey = ypos_ + mousey*zoom_ - EDITOR_MENUBAR_HEIGHT;
 	

@@ -346,6 +346,10 @@ namespace KRE
 
 		std::vector<AttributeBasePtr>& getAttributes() { return attributes_; }
 
+		void enable(bool e=true) { enabled_ = e; }
+		void disable() { enabled_ = false; }
+		bool isEnabled() const { return enabled_; }
+
 		virtual AttributeSetPtr clone();
 	protected:
 		const void* getIndexData() const { 
@@ -370,6 +374,7 @@ namespace KRE
 		std::vector<AttributeBasePtr> attributes_;
 		size_t count_;
 		ptrdiff_t offset_;
+		bool enabled_;
 		AttributeSet();
 	};
 }

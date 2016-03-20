@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
+	Copyright (C) 2013-2016 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -23,29 +23,20 @@
 
 #pragma once
 
-#include "SceneObject.hpp"
+#include "StencilScope.hpp"
+#include "Util.hpp"
 
-#include "anura_shader.hpp"
-#include "draw_primitive_fwd.hpp"
-#include "formula_callable.hpp"
-#include "formula_callable_definition.hpp"
-
-namespace graphics
+namespace KRE
 {
-	class DrawPrimitive : public game_logic::FormulaCallable, public KRE::SceneObject
+	class StencilScopeGLESv2 : public StencilScope
 	{
 	public:
-		static boost::intrusive_ptr<DrawPrimitive> create(const variant& v);
-		explicit DrawPrimitive(const variant& v);
-		AnuraShaderPtr getAnuraShader() const { return shader_; }
-		bool isDirty() const { return dirty_; }
-		void setDirty() { dirty_ = true; }
-		void preRender(const KRE::WindowPtr& wm) override;
-	protected:
-		virtual void reInit(const KRE::WindowPtr& wm) = 0;
+		StencilScopeGLESv2(const StencilSettings& settings);
+		~StencilScopeGLESv2();
 	private:
-		DECLARE_CALLABLE(DrawPrimitive);
-		AnuraShaderPtr shader_;
-		bool dirty_;
+		DISALLOW_COPY_ASSIGN_AND_DEFAULT(StencilScopeGLESv2);
+		void applySettings(const StencilSettings& settings);
+		void handleUpdatedMask() override;
+		void handleUpdatedSettings() override;
 	};
 }

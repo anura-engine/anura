@@ -404,7 +404,6 @@ bool do_auto_update(std::deque<std::string> argv, auto_update_window& update_win
 
 		int nbytes_transferred = 0, nbytes_anura_transferred = 0;
 		int start_time = profile::get_tick_time();
-		int original_start_time = profile::get_tick_time();
 		bool timeout = false;
 		LOG_INFO("Requesting update to module from server...");
 		int nupdate_cycle = 0;

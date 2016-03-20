@@ -3614,6 +3614,9 @@ DEFINE_FIELD(camera_target, "[int,int]")
 
 	return variant(&pos);
 	
+DEFINE_FIELD(zoom_current, "decimal")
+	return variant(last_draw_position().zoom);
+	
 
 DEFINE_FIELD(debug_properties, "[string]")
 	return vector_to_variant(obj.debug_properties_);

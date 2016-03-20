@@ -658,7 +658,7 @@ private:
     pGMI = (tGMI) GetProcAddress( hPsapi, "GetModuleInformation" );
     if ( (pEPM == nullptr) || (pGMFNE == nullptr) || (pGMBN == nullptr) || (pGMI == nullptr) )
     {
-      // we couldn´t find all functions
+      // we couldn't find all functions
       FreeLibrary(hPsapi);
       return FALSE;
     }

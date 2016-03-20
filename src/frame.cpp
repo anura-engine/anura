@@ -972,9 +972,6 @@ void Frame::drawCustom(graphics::AnuraShaderPtr shader, int x, int y, const floa
 	blit.setTexture(blit_target_.getTexture());
 	blit.setRotation(rotation, z_axis);
 
-	const float center_x = x + static_cast<float>(w)/2.0f;
-	const float center_y = y + static_cast<float>(h)/2.0f;
-
 	for(int n = 0; n < nelements; ++n) {
 		queue.emplace_back(glm::vec2(x + w*xy[0], y + h*xy[1]), glm::vec2(r[0] + (r[2] - r[0]) * uv[0], r[1] + (r[3] - r[1]) * uv[1]));
 		xy += 2;
@@ -1018,9 +1015,6 @@ void Frame::getRectInFrameNumber(int nframe, const FrameInfo*& info_result) cons
 		info.draw_rect = blit_target_.getTexture()->getSourceRectNormalised();
 		return;
 	}
-
-	const int current_col = (nframes_per_row_ > 0) ? (nframe % nframes_per_row_) : nframe ;
-	const int current_row = (nframes_per_row_ > 0) ? (nframe/nframes_per_row_) : 0 ;
 
 	blit_target_.getTexture()->setSourceRect(0, info.area);
 	info.draw_rect = blit_target_.getTexture()->getSourceRectNormalised();

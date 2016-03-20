@@ -37,6 +37,11 @@ ifneq ($(SANITIZE_ADDRESS), yes)
 SANITIZE_ADDRESS=
 endif
 
+SANITIZE_UNDEFINED?=yes
+ifneq ($(SANITIZE_UNDEFINED), yes)
+SANITIZE_UNDEFINED=
+endif
+
 ifeq ($(OPTIMIZE),yes)
 BASE_CXXFLAGS += -O2
 endif
@@ -48,6 +53,7 @@ endif
 BASE_CXXFLAGS += -Wall -Werror
 
 ifneq (,$(findstring clang, `$(CXX)`))
+SANITIZE_UNDEFINED=
 BASE_CXXFLAGS += -Qunused-arguments -Wno-unknown-warning-option -Wno-deprecated-register
 ifeq ($(USE_LUA), yes)
 BASE_CXXFLAGS += -Wno-pointer-bool-conversion -Wno-parentheses-equality
@@ -56,7 +62,9 @@ else ifneq (, $(findstring g++, `$(CXX)`))
 GCC_GTEQ_490 := $(shell expr `$(CXX) -dumpversion | sed -e 's/\.\([0-9][0-9]\)/\1/g' -e 's/\.\([0-9]\)/0\1/g' -e 's/^[0-9]\{3,4\}$$/&00/'` \>= 40900)
 BASE_CXXFLAGS += -Wno-literal-suffix -Wno-sign-compare
 ifeq "$(GCC_GTEQ_490)" "1"
-BASE_CXXFLAGS += -fdiagnostics-color=auto -fsanitize=undefined
+BASE_CXXFLAGS += -fdiagnostics-color=auto
+else
+SANITIZE_UNDEFINED=
 endif
 endif
 
@@ -88,8 +96,13 @@ BASE_CXXFLAGS += -g3 -fsanitize=address
 LDFLAGS += -fsanitize=address
 endif
 
+# Check for sanitize-undefined option
+ifeq ($(SANITIZE_UNDEFINED), yes)
+BASE_CXXFLAGS += -fsanitize=undefined
+endif
+
 # Compiler include options, used after CXXFLAGS and CPPFLAGS.
-INC := -isystem external/include $(shell pkg-config --cflags x11 sdl2 glew SDL2_image SDL2_ttf libpng zlib freetype2 cairo)
+INC := -isystem external/header-only-libs $(shell pkg-config --cflags x11 sdl2 glew SDL2_image SDL2_ttf libpng zlib freetype2 cairo)
 
 ifdef STEAM_RUNTIME_ROOT
 	INC += -isystem $(STEAM_RUNTIME_ROOT)/include
@@ -138,16 +151,11 @@ INCLUDES  := $(addprefix -I,$(SRC_DIR))
 
 vpath %.cpp $(SRC_DIR)
 
+CPPFLAGS += -MMD -MP
 define cc-command
 $1/%.o: %.cpp
 	@echo "Building:" $$<
 	@$(CCACHE) $(CXX) $(BASE_CXXFLAGS) $(CXXFLAGS) $(CPPFLAGS) $(INC) $(INCLUDES) -c -o $$@ $$<
-	@$(CXX) $(BASE_CXXFLAGS) $(CXXFLAGS) $(CPPFLAGS) $(INC) $(INCLUDES) -MM $$< > $$@.d
-	@mv -f $$@.d $$@.d.tmp
-	@sed -e 's|.*:|$$@:|' < $$@.d.tmp > $$@.d
-	@sed -e 's/.*://' -e 's/\\$$$$//' < $$@.d.tmp | fmt -1 | \
-		sed -e 's/^ *//' -e 's/$$$$/:/' >> $$@.d
-	@rm -f $$@.d.tmp
 endef
 
 .PHONY: all checkdirs clean
@@ -162,6 +170,23 @@ anura: $(OBJ)
 		$(LIBS) -lboost_regex -lboost_system -lboost_filesystem -lpthread -fthreadsafe-statics
 
 checkdirs: $(BUILD_DIR)
+	@echo -e \
+	 " OPTIMIZE            : $(OPTIMIZE)\n" \
+	  "USE_CCACHE          : $(USE_CCACHE)\n" \
+	  "CCACHE              : $(CCACHE)\n" \
+	  "SANITIZE_ADDRESS    : $(SANITIZE_ADDRESS)\n" \
+	  "SANITIZE_UNDEFINED  : $(SANITIZE_UNDEFINED)\n" \
+	  "USE_DB_CLIENT       : $(USE_DB_CLIENT)\n" \
+	  "USE_BOX2D           : $(USE_BOX2D)\n" \
+	  "USE_LIBVPX          : $(USE_LIBVPX)\n" \
+	  "USE_LUA             : $(USE_LUA)\n" \
+	  "USE_SDL2            : $(USE_SDL2)\n" \
+	  "CXX                 : $(CXX)\n" \
+	  "BASE_CXXFLAGS       : $(BASE_CXXFLAGS)\n" \
+	  "CXXFLAGS            : $(CXXFLAGS)\n" \
+	  "LDFLAGS             : $(LDFLAGS)\n" \
+	  "LIBS                : $(LIBS)"
+
 
 $(BUILD_DIR):
 	@mkdir -p $@
@@ -181,4 +206,3 @@ $(foreach bdir,$(BUILD_DIR),$(eval $(call cc-command,$(bdir))))
 
 # pull in dependency info for *existing* .o files
 -include $(OBJ:.o=.o.d)
-
