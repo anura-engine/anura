@@ -4739,7 +4739,15 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 				variant value = e.setter->execute(*this);
 				executeCommand(value);
 			} else if(e.storage_slot >= 0) {
-				get_property_data(e.storage_slot) = value;
+				variant& target = get_property_data(e.storage_slot);
+				const bool do_on_change = (e.onchange && value != target);
+				target = value;
+
+				if(do_on_change) {
+					ActivePropertyScope scope(*this, e.storage_slot, &value);
+					variant value = e.onchange->execute(*this);
+					executeCommand(value);
+				}
 				if(e.is_weak) { get_property_data(e.storage_slot).weaken(); }
 			} else {
 				ASSERT_LOG(false, "Attempt to set const property: " << getDebugDescription() << "." << e.id);
