@@ -1283,6 +1283,19 @@ bool LevelRunner::play_cycle()
 
 			{
 				const std::vector<EntityPtr> active_chars = lvl_->get_active_chars();
+
+				if(event.type == SDL_TEXTINPUT) {
+					const std::string text = event.text.text;
+
+					game_logic::MapFormulaCallable* callable(new game_logic::MapFormulaCallable);
+					variant holder(callable);
+					callable->add("text", variant(text));
+
+					for(const EntityPtr& e : active_chars) {
+						e->handleEvent(OBJECT_EVENT_TEXT_INPUT, callable);
+					}
+				}
+
 				for(const EntityPtr& e : active_chars) {
 					CustomObject* custom_obj = dynamic_cast<CustomObject*>(e.get());
 					swallowed = custom_obj->handle_sdl_event(event, swallowed);

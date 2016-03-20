@@ -85,7 +85,8 @@ namespace
 		res.push_back("drag");
 		res.push_back("drag_start");
 		res.push_back("drag_end");
-	res.push_back("mouse_wheel");
+		res.push_back("mouse_wheel");
+		res.push_back("text_input");
 
 		ASSERT_EQ(res.size(), NUM_OBJECT_BUILTIN_EVENT_IDS);
 		return res;
@@ -172,6 +173,7 @@ variant_type_ptr get_object_event_arg_type(int id)
 		EVENT_ARG(COLLIDE_SIDE, "{area: string|null, collide_with: custom_obj|null, collide_with_area: string|null}")
 		EVENT_ARG(CHANGE_ANIMATION_FAILURE, "{previous_animation: string}")
 		EVENT_ARG(COSMIC_SHIFT, "{xshift: int, yshift: int}")
+		EVENT_ARG(TEXT_INPUT, "{text: string}")
 		default: {
 			const std::string& str = get_object_event_str(id);
 			if(strstr(str.c_str(), "collide_object")) {
