@@ -262,6 +262,41 @@ namespace
 	END_FUNCTION_DEF(canvas)
 #endif
 
+	FUNCTION_DEF(open_url, 1, 1, "open_url(string url): opens a given url on the platform's web browser")
+		std::string url = EVAL_ARG(0).as_string();
+
+		for(char& c : url) {
+			if(!isprint(c) || c >= 128 || isspace(c)) {
+				c = 0;
+			}
+		}
+
+		static const char* prefix = "http://";
+
+		if(url.size() < strlen(prefix) || !std::equal(prefix, prefix+strlen(prefix), url.begin())) {
+			return variant();
+		}
+
+		url.erase(std::remove(url.begin(), url.end(), 0), url.end());
+
+		return variant(new FnCommandCallable([=]() {
+#if defined(__linux__) || defined(__APPLE__)
+			std::string cmd = "open " + url;
+#ifdef __linux__
+			cmd = "xdg-" + cmd;
+#endif
+			const int result = system(cmd.c_str());
+			if(result == -1) {
+				LOG_ERROR("Could not execute command");
+			}
+#endif
+		}));
+
+	FUNCTION_ARGS_DEF
+		ARG_TYPE("string")
+	RETURN_TYPE("commands")
+	END_FUNCTION_DEF(open_url)
+
 	FUNCTION_DEF(get_clipboard_text, 0, 0, "get_clipboard_text(): returns the text currentl in the windowing clipboard")
 		Formula::failIfStaticContext();
 		return variant(copy_from_clipboard(false));
