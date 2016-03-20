@@ -267,6 +267,7 @@ namespace tbs
 	void server::heartbeat_internal(int send_heartbeat, std::map<int, client_info>& clients)
 	{
 		if (g_exit_server || (web_server::termination_semaphore() && web_server::termination_semaphore()->try_wait())) {
+			throw tbs::exit_exception();
 			exit(0);
 		}
 
