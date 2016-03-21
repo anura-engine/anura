@@ -79,4 +79,4 @@ git pull parent master  :: pulls from dave's fork
 
 
 Get a list of all enemy descriptions:
-./anura --utility=query modules/frogatto/data/objects 'if(doc.properties and doc.properties.description, ("\n${doc.id}.cfg:\n     description: ${doc.properties.description}\n    taste: ${doc.taste}\n\n"))' 2>&1 | grep -v "\""
+./anura --utility=query modules/frogatto/data/objects 'if(doc.properties and doc.properties.description, ("\n${doc.id}.cfg:\n     description: ${doc.properties.description}\n    taste: ${doc.properties.taste}\n\n"))' 2>&1 | grep -v "\""
