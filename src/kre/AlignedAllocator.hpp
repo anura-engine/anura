@@ -23,6 +23,10 @@
 
 #pragma once
 
+#if !defined(_MSC_VER)
+#include <cstdlib>
+#endif
+
 template<std::size_t N>
 struct AlignedAllocator
 {
