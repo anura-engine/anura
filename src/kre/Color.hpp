@@ -26,9 +26,11 @@
 #include <iostream>
 #include <memory>
 #include <string>
+
 #include <glm/gtc/type_precision.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include "AlignedAllocator.hpp"
 #include "variant.hpp"
 
 namespace KRE
@@ -50,7 +52,7 @@ namespace KRE
 		DECIMAL,
 	};
 
-	class Color
+	class Color : public AlignedAllocator16
 	{
 	public:
 		Color();

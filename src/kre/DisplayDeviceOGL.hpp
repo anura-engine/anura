@@ -53,6 +53,7 @@ namespace KRE
 
 		CanvasPtr getCanvas() override;
 		ClipScopePtr createClipScope(const rect& r) override;
+		ClipShapeScopePtr createClipShapeScope(const RenderablePtr& r) override;
 		StencilScopePtr createStencilScope(const StencilSettings& settings) override;
 		ScissorPtr getScissor(const rect& r) override;
 

@@ -143,17 +143,19 @@ namespace KRE
 		  mix_ratio_(0.0f),
 		  mix_palettes_(false)
 	{
+		ASSERT_LOG(count > 0, "Insufficient number of textures specified: " << count);
 		palette_[0] = palette_[1] = 0;
 		texture_params_.resize(count);
 		for(int n = 0; n != count; ++n) {
-			texture_params_[n].surface = Surface::create(width, height, fmt);
-			texture_params_[n].surface_width = width;
-			texture_params_[n].surface_height = height;
-			texture_params_[n].width = width;
-			texture_params_[n].height = height;
-			texture_params_[n].depth = depth;
-			texture_params_[n].type = type;
-			internalInit(texture_params_.begin() + n);
+			auto& tp = texture_params_[n];
+			tp.surface = Surface::create(width, height, fmt);
+			tp.surface_width = width;
+			tp.surface_height = height;
+			tp.width = width;
+			tp.height = height;
+			tp.depth = depth;
+			tp.type = type;
+			internalInit(texture_params_.begin()+n);
 		}
 	}
 
@@ -582,6 +584,18 @@ namespace KRE
 	TexturePtr Texture::createTextureArray(const std::vector<SurfacePtr>& surfaces, const variant& node)
 	{
 		return DisplayDevice::createTextureArray(surfaces, node);
+	}
+
+	TexturePtr Texture::createFromImage(const std::string& image_data, const variant& node)
+	{
+		auto surface = Surface::create(image_data, SurfaceFlags::FROM_DATA | SurfaceFlags::NO_CACHE);
+		return DisplayDevice::createTexture(surface, node);
+	}
+
+	TexturePtr Texture::createFromImage(const std::string& image_data, TextureType type, int mipmap_levels)
+	{
+		auto surface = Surface::create(image_data, SurfaceFlags::FROM_DATA | SurfaceFlags::NO_CACHE);
+		return DisplayDevice::createTexture(surface, type, mipmap_levels);
 	}
 
 	void Texture::clearTextures()

@@ -209,14 +209,4 @@ namespace KRE
 			}
 		}
 	}
-
-	//void set_blend_mode(const BlendMode& bm)
-	//{
-	//	glBlendFunc(convert_blend_mode(bm.src()), convert_blend_mode(bm.dst()));
-	//}
-
-	//void set_blend_equation(const BlendEquation& eqn)
-	//{
-	//	glBlendEquationSeparate(convert_eqn(eqn.getRgbEquation()), convert_eqn(eqn.getAlphaEquation()));
-	//}
 }

@@ -58,4 +58,38 @@ namespace KRE
 		DISALLOW_COPY_ASSIGN_AND_DEFAULT(ClipScope);
 		rectf area_;
 	};
+
+	class ClipShapeScope
+	{
+	public:
+		virtual ~ClipShapeScope();
+		static ClipShapeScopePtr create(const RenderablePtr& r);
+
+		virtual void apply(const CameraPtr& cam) const = 0;
+		virtual void clear() const = 0;
+
+		struct Manager
+		{
+			Manager(const RenderablePtr& r, const CameraPtr& cam=nullptr) 
+				: cs(r != nullptr ? ClipShapeScope::create(r) : nullptr)
+			{
+				if(cs) {
+					cs->apply(cam);
+				}
+			}
+			~Manager() {
+				if(cs) {
+					cs->clear();
+				}
+			}
+			ClipShapeScopePtr cs;
+		};
+
+		const RenderablePtr& getRenderable() const { return r_; }
+	protected:
+		ClipShapeScope(const RenderablePtr& r);
+	private:
+		DISALLOW_COPY_ASSIGN_AND_DEFAULT(ClipShapeScope);
+		RenderablePtr r_;
+	};
 }

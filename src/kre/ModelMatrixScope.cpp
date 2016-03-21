@@ -232,4 +232,10 @@ namespace KRE
 		return get_model_matrix();
 	}
 
+	glm::mat4 set_global_model_matrix(const glm::mat4& m)
+	{
+		glm::mat4 current_matrix = get_model_matrix();
+		get_model_matrix() = m;
+		return current_matrix;
+	}
 }

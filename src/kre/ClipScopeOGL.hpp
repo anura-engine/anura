@@ -39,4 +39,17 @@ namespace KRE
 		DISALLOW_COPY_ASSIGN_AND_DEFAULT(ClipScopeOGL);
 		mutable StencilScopePtr stencil_scope_;
 	};
+
+	class ClipShapeScopeOGL : public ClipShapeScope
+	{
+	public:
+		explicit ClipShapeScopeOGL(const RenderablePtr& r);
+		virtual ~ClipShapeScopeOGL();
+
+		void apply(const CameraPtr& cam) const override;
+		void clear() const override;
+	private:
+		DISALLOW_COPY_ASSIGN_AND_DEFAULT(ClipShapeScopeOGL);
+		mutable StencilScopePtr stencil_scope_;
+	};
 }

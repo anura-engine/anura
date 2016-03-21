@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
+	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -11,7 +11,7 @@
 
 	   1. The origin of this software must not be misrepresented; you must not
 	   claim that you wrote the original software. If you use this software
-	   in a product, an acknowledgement in the product documentation would be
+	   in a product, an acknowledgment in the product documentation would be
 	   appreciated but is not required.
 
 	   2. Altered source versions must be plainly marked as such, and must not be
@@ -23,26 +23,30 @@
 
 #pragma once
 
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-
-namespace KRE
+template<std::size_t N>
+struct AlignedAllocator
 {
-	class ModelManager2D
-	{
-	public:
-		ModelManager2D();
-		explicit ModelManager2D(int tx, int ty, float angle=0.0f, float scale=1.0f);
-		explicit ModelManager2D(int tx, int ty, float angle, const glm::vec2& scale);
-		~ModelManager2D();
-		void setIdentity();
-		void translate(int tx, int ty);
-		void rotate(float angle);
-		void scale(float sx, float sy);
-		void scale(float s);
-	};
+#ifdef _MSC_VER
+		void* operator new(size_t i)
+		{
+			return _mm_malloc(i, N);
+		}
 
-	bool is_global_model_matrix_valid();
-	const glm::mat4& get_global_model_matrix();
-	glm::mat4 set_global_model_matrix(const glm::mat4& m);
-}
+		void operator delete(void* p)
+		{
+			_mm_free(p);
+		}
+#else
+		void* operator new(size_t i)
+		{
+			return aligned_alloc(N, i);
+		}
+
+		void operator delete(void* p)
+		{
+			free(p);
+		}
+#endif
+};
+
+typedef AlignedAllocator<16> AlignedAllocator16;

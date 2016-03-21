@@ -36,19 +36,12 @@ namespace KRE
 	class ColorScope
 	{
 	public:
-		// We use a list type for the stack type of scopes since iterators
-		// aren't invalidated by removing/adding elements (unless you remove the item
-		// the iterator points to -- but this is the expected case).
-		// Access to the back element and adding new elements is constant.
-		// Only erasing is linear in complexity.
-		typedef std::list<Color> color_stack_type;
-		typedef std::list<Color>::iterator iterator;
-
+		explicit ColorScope(const ColorPtr& color);
 		explicit ColorScope(const Color& color);
 		~ColorScope();
 		static const Color& getCurrentColor();
 	private:
 		DISALLOW_COPY_ASSIGN_AND_DEFAULT(ColorScope);
-		iterator it_;
+		bool pop_stack_;
 	};
 }

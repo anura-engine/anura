@@ -111,6 +111,9 @@ namespace KRE
 	class ClipScope;
 	typedef std::unique_ptr<ClipScope> ClipScopePtr;
 
+	class ClipShapeScope;
+	typedef std::unique_ptr<ClipShapeScope> ClipShapeScopePtr;
+
 	class StencilScope;
 	typedef std::unique_ptr<StencilScope> StencilScopePtr;
 

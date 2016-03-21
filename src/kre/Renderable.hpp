@@ -25,6 +25,7 @@
 
 #include <glm/gtx/quaternion.hpp>
 
+#include "AlignedAllocator.hpp"
 #include "RenderQueue.hpp"
 #include "SceneFwd.hpp"
 #include "ScopeableValue.hpp"
@@ -34,7 +35,7 @@
 
 namespace KRE
 {
-	class Renderable : public ScopeableValue
+	class Renderable : public ScopeableValue, public AlignedAllocator16
 	{
 	public:
 		explicit Renderable();

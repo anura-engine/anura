@@ -39,4 +39,18 @@ namespace KRE
 	{
 		return DisplayDevice::getCurrent()->createClipScope(r);
 	}
+
+	ClipShapeScope::ClipShapeScope(const RenderablePtr& r)
+		: r_(r)
+	{
+	}
+
+	ClipShapeScope::~ClipShapeScope()
+	{
+	}
+
+	ClipShapeScopePtr ClipShapeScope::create(const RenderablePtr& r)
+	{
+		return DisplayDevice::getCurrent()->createClipShapeScope(r);
+	}
 }
