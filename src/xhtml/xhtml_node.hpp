@@ -96,6 +96,7 @@ namespace xhtml
 		virtual ~Node();
 		NodeId id() const { return id_; }
 		void setOwner(const DocumentPtr& owner) { owner_document_ = owner; }
+		void clearChildren() { children_.clear(); }
 		void addChild(NodePtr child, const DocumentPtr& owner=nullptr);
 		void removeChild(NodePtr child);
 		void addAttribute(AttributePtr a);
@@ -125,6 +126,7 @@ namespace xhtml
 		void normalize();
 		void mergeProperties(const css::Specificity& specificity, const css::PropertyList& plist);
 		const css::PropertyList& getProperties() const { return properties_; }
+		std::string writeXHTML();
 
 		void processWhitespace();
 
@@ -137,6 +139,8 @@ namespace xhtml
 		// This sets the rectangle that should be active for mouse presses.
 		void setActiveRect(const rect& r) { active_rect_ = r; }
 		const rect& getActiveRect() const { return active_rect_; }
+		void setModelMatrix(const glm::mat4& model) { model_matrix_ = model; }
+		const glm::mat4& getModelMatrix() const { return model_matrix_; }
 		void processScriptAttributes();
 		virtual void layoutComplete() {}
 
@@ -184,6 +188,7 @@ namespace xhtml
 		css::PseudoClass pclass_;
 		css::PseudoClass active_pclass_;
 		rect active_rect_;
+		glm::mat4 model_matrix_;
 
 		rect dimensions_;
 
@@ -208,10 +213,12 @@ namespace xhtml
 		bool handleMouseButtonDown(bool claimed, int x, int y, unsigned button);
 		bool handleMouseButtonUp(bool claimed, int x, int y, unsigned button);
 
+		void rebuildTree() { trigger_rebuild_ = true; }
 		void triggerLayout() { trigger_layout_ = true; }
 		void triggerRender() { trigger_render_ = true; }
 		bool needsLayout() const { return trigger_layout_; }
 		bool needsRender() const { return trigger_render_; }
+		bool needsRebuild() const { return trigger_rebuild_; }
 		void layoutComplete() override { trigger_render_ = false; trigger_layout_ = false; }
 		void renderComplete() { trigger_render_ = false;  }
 
@@ -223,6 +230,7 @@ namespace xhtml
 		css::StyleSheetPtr style_sheet_;
 		bool trigger_layout_;
 		bool trigger_render_;
+		bool trigger_rebuild_;
 	};
 
 	class DocumentFragment : public Node

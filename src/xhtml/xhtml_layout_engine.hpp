@@ -37,7 +37,7 @@ namespace xhtml
 
 		void layoutRoot(StyleNodePtr node, BoxPtr parent, const point& container);
 		
-		std::vector<BoxPtr> layoutChildren(const std::vector<StyleNodePtr>& children, BoxPtr parent, LineBoxPtr& open_box);
+		std::vector<BoxPtr> layoutChildren(const std::vector<StyleNodePtr>& children, BoxPtr parent);
 
 		FixedPoint getDescent() const;
 
@@ -67,6 +67,10 @@ namespace xhtml
 		};
 		const FloatList& getFloatList() const;
 		void addFloat(BoxPtr float_box);
+
+		const point& getCursor() const { return cursor_; }
+		void setCursor(const point& p) { cursor_ = p; }
+		void resetCursor() { cursor_.x = cursor_.y = 0; }
 	private:
 		RootBoxPtr root_;
 		Dimensions dims_;
@@ -76,6 +80,8 @@ namespace xhtml
 		std::stack<point> offset_;
 
 		std::stack<FloatList> float_list_;
+		
+		point cursor_;
 	};
 
 }

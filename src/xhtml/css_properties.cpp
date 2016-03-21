@@ -150,6 +150,8 @@ namespace css
 				res.emplace(Property::WIDTH);
 				res.emplace(Property::WORD_SPACING);
 				res.emplace(Property::Z_INDEX);
+				res.emplace(Property::FILTER);
+				res.emplace(Property::TRANSFORM);
 			}
 			return res;
 		}
@@ -280,6 +282,10 @@ namespace css
 		PropertyRegistrar property253("transition-timing-function", Property::TRANSITION_TIMING_FUNCTION, false, TransitionTimingFunctions::create(), std::bind(&PropertyParser::parseTransitionTimingFunction, _1, "transition-timing-function", ""));
 		PropertyRegistrar property254("transition", std::bind(&PropertyParser::parseTransition, _1, "transition", ""));
 
+		PropertyRegistrar property260("filter", Property::FILTER, false, FilterStyle::create(), std::bind(&PropertyParser::parseFilters, _1, "filter", ""));
+		
+		PropertyRegistrar property270("transform", Property::TRANSFORM, false, TransformStyle::create(), std::bind(&PropertyParser::parseTransform, _1, "transform", ""));
+		PropertyRegistrar property271("transform-origin", Property::TRANSFORM_ORIGIN, false, TransformStyle::create(), std::bind(&PropertyParser::parseBackgroundPosition, _1, "transform-origin", ""));
 
 		// Compound properties -- still to be implemented.
 		// font
@@ -3199,5 +3205,220 @@ namespace css
 			shadows.emplace_back(lengths, color != nullptr ? *color : CssColor());
 		}
 		plist_.addProperty(prefix, TextShadowStyle::create(shadows));
+	}
+
+	void PropertyParser::parseFilters(const std::string& prefix, const std::string& suffix)
+	{
+		std::vector<FilterPtr> filter_list;
+		while(!isEndToken()) {
+			skipWhitespace();
+			if(isToken(TokenId::IDENT)) {
+				auto ref = (*it_)->getStringValue();
+				advance();
+				if(ref == "none") {
+					if(!filter_list.empty()) {
+						throw ParserError(formatter() << "It is an error to have 'none' appearing in a '" << prefix << "' list.");
+					}
+					plist_.addProperty(prefix, FilterStyle::create());
+					return;
+				} else {
+					throw ParserError(formatter() << "Unrecognised identifier for '" << prefix << "' property: " << ref);
+				}
+			} else if(isToken(TokenId::URL)) {
+				// XXX Not supporting URL based filter specifications at this time -- maybe in the far future?
+				LOG_ERROR("Dropping declaration for '" << prefix << "' no support uri filter");
+			} else if(isToken(TokenId::FUNCTION)) {
+				const std::string ref = (*it_)->getStringValue();
+				auto params = (*it_)->getParameters();
+				advance();
+				IteratorContext ic(*this, params);
+				if(ref == "blur") {
+					filter_list.emplace_back(std::make_shared<Filter>(CssFilterId::BLUR, parseLengthInternal(NumericParseOptions::LENGTH)));
+				} else if(ref == "brightness") {
+					filter_list.emplace_back(std::make_shared<Filter>(CssFilterId::BRIGHTNESS, parseLengthInternal(NumericParseOptions::NUMBER_OR_PERCENT)));
+				} else if(ref == "contrast") {
+					filter_list.emplace_back(std::make_shared<Filter>(CssFilterId::CONTRAST, parseLengthInternal(NumericParseOptions::NUMBER_OR_PERCENT)));
+				} else if(ref == "drop-shadow") {
+					std::vector<Length> lengths;
+					std::shared_ptr<CssColor> color = std::make_shared<CssColor>(CssColorParam::CURRENT);
+					bool inset = false;
+					while(!isEndToken()) {
+						skipWhitespace();
+						if(isToken(TokenId::DIMENSION)) {
+							xhtml::FixedPoint value = static_cast<xhtml::FixedPoint>((*it_)->getNumericValue() * fixed_point_scale);
+							lengths.emplace_back(Length(value, (*it_)->getStringValue()));
+							advance();
+						} else if(isToken(TokenId::IDENT)) {
+							std::string colval = (*it_)->getStringValue();
+							color->setColor(KRE::Color(colval));
+							advance();
+						} else {
+							parseColor2(color);
+						}
+					}
+					if(lengths.size() >= 2 && lengths.size() <= 4) {
+						filter_list.emplace_back(std::make_shared<Filter>(CssFilterId::DROP_SHADOW, BoxShadow(inset, 
+							lengths[0], 
+							lengths[1], 
+							lengths.size() < 3 ? Length() : lengths[2], 
+							lengths.size() < 4 ? Length() : lengths[3],
+							*color)));
+					} else {
+						throw ParserError(formatter() << "Unrecognised parmeters to drop-shadow function in property '" << prefix << "')");
+					}
+				} else if(ref == "grayscale") {
+					filter_list.emplace_back(std::make_shared<Filter>(CssFilterId::GRAYSCALE, parseLengthInternal(NumericParseOptions::NUMBER_OR_PERCENT)));
+				} else if(ref == "hue-rotate") {
+					if(isToken(TokenId::DIMENSION)) {
+						Angle new_angle(static_cast<float>((*it_)->getNumericValue()), (*it_)->getStringValue());
+						filter_list.emplace_back(std::make_shared<Filter>(CssFilterId::HUE_ROTATE, new_angle));
+					} else {
+						throw ParserError(formatter() << "Expected angle in degrees for rotate function, in property '" << prefix << "', found: " << (*it_)->toString());
+					}
+				} else if(ref == "invert") {
+					filter_list.emplace_back(std::make_shared<Filter>(CssFilterId::INVERT, parseLengthInternal(NumericParseOptions::NUMBER_OR_PERCENT)));
+				} else if(ref == "opacity") {
+					filter_list.emplace_back(std::make_shared<Filter>(CssFilterId::OPACITY, parseLengthInternal(NumericParseOptions::NUMBER_OR_PERCENT)));
+				} else if(ref == "sepia") {
+					filter_list.emplace_back(std::make_shared<Filter>(CssFilterId::SEPIA, parseLengthInternal(NumericParseOptions::NUMBER_OR_PERCENT)));
+				} else if(ref == "saturate") {
+					filter_list.emplace_back(std::make_shared<Filter>(CssFilterId::SATURATE, parseLengthInternal(NumericParseOptions::NUMBER_OR_PERCENT)));
+				} else {
+					throw ParserError(formatter() << "Unrecognised function for '" << prefix << "' property: " << ref);
+				}
+			} else if(isEndToken()) {
+				// do nothing
+			} else {
+				throw ParserError(formatter() << "Unrecognised value for property '" << prefix << "': "  << (*it_)->toString());
+			}
+		}
+		plist_.addProperty(prefix, FilterStyle::create(filter_list));
+	}
+	
+	void PropertyParser::parseTransform(const std::string& prefix, const std::string& suffix)
+	{
+		std::vector<Transform> transforms;
+		while(!isEndToken()) {
+			skipWhitespace();
+			if(isToken(TokenId::IDENT)) {
+				auto ref = (*it_)->getStringValue();
+				advance();
+				if(ref == "none") {
+					if(!transforms.empty()) {
+						throw ParserError(formatter() << "It is an error to have 'none' appearing in a '" << prefix << "' list.");
+					}
+					plist_.addProperty(prefix, FilterStyle::create());
+					return;
+				} else {
+					throw ParserError(formatter() << "Unrecognised identifier for '" << prefix << "' property: " << ref);
+				}
+			} else if(isToken(TokenId::FUNCTION)) {
+				const std::string ref = (*it_)->getStringValue();
+				auto params = (*it_)->getParameters();
+				advance();
+				IteratorContext ic(*this, params);
+				skipWhitespace();
+				if(ref == "matrix") {
+				} else if(ref == "translate") {
+					Length tx = parseLengthInternal(NumericParseOptions::LENGTH_OR_PERCENT);
+					Length ty;
+					skipWhitespace();
+					if(isToken(TokenId::COMMA)) {
+						advance();
+						skipWhitespace();
+						ty = parseLengthInternal(NumericParseOptions::LENGTH_OR_PERCENT);
+					}
+					transforms.emplace_back(TransformId::TRANSLATE_2D, tx, ty);
+				} else if(ref == "translateX") {
+					Length tx = parseLengthInternal(NumericParseOptions::LENGTH_OR_PERCENT);
+					transforms.emplace_back(TransformId::TRANSLATE_2D, tx, Length());
+				} else if(ref == "translateY") {
+					Length ty = parseLengthInternal(NumericParseOptions::LENGTH_OR_PERCENT);
+					transforms.emplace_back(TransformId::TRANSLATE_2D, Length(), ty);
+				} else if(ref == "scale") {
+					Length sx = parseLengthInternal(NumericParseOptions::NUMBER);
+					Length sy = sx;
+					skipWhitespace();
+					if(isToken(TokenId::COMMA)) {
+						advance();
+						skipWhitespace();
+						sy = parseLengthInternal(NumericParseOptions::NUMBER);
+					}
+					transforms.emplace_back(TransformId::SCALE_2D, sx, sy);
+				} else if(ref == "scaleX") {
+					Length sx = parseLengthInternal(NumericParseOptions::NUMBER);
+					Length sy(fixed_point_scale, false);
+					transforms.emplace_back(TransformId::SCALE_2D, sx, sy);
+				} else if(ref == "scaleY") {
+					Length sx(fixed_point_scale, false);
+					Length sy = parseLengthInternal(NumericParseOptions::NUMBER);
+					transforms.emplace_back(TransformId::SCALE_2D, sx, sy);
+				} else if(ref == "rotate") {
+					if(isToken(TokenId::DIMENSION)) {
+						std::array<Angle, 2> angles;
+						angles[0] = Angle(static_cast<float>((*it_)->getNumericValue()), (*it_)->getStringValue());
+						angles[1] = Angle();
+						transforms.emplace_back(TransformId::ROTATE_2D, angles);
+					} else if(isToken(TokenId::NUMBER)) {
+						// just going to soak this, as we only accept 0 which would be equivalent to no rotatation
+					} else {
+						throw ParserError(formatter() << "Expected angle in degrees for rotate function, in property '" << prefix << "', found: " << (*it_)->toString());
+					}
+				} else if(ref == "skew") {
+					std::array<Angle, 2> angles;
+					angles[0] = Angle();
+					angles[1] = Angle();
+					if(isToken(TokenId::DIMENSION)) {
+						angles[0] = Angle(static_cast<float>((*it_)->getNumericValue()), (*it_)->getStringValue());
+					} else if(isToken(TokenId::NUMBER)) {
+						// just going to soak this, as we only accept 0 which would be equivalent to no skew
+					} else {
+						throw ParserError(formatter() << "Expected angle in degrees for rotate function, in property '" << prefix << "', found: " << (*it_)->toString());
+					}
+					skipWhitespace();
+					if(isToken(TokenId::COMMA)) {
+						advance();
+						skipWhitespace();
+						if(isToken(TokenId::DIMENSION)) {
+							angles[1] = Angle(static_cast<float>((*it_)->getNumericValue()), (*it_)->getStringValue());
+						} else if(isToken(TokenId::NUMBER)) {
+							// just going to soak this, as we only accept 0 which would be equivalent to no skew
+						} else {
+							throw ParserError(formatter() << "Expected angle in degrees for rotate function, in property '" << prefix << "', found: " << (*it_)->toString());
+						}
+					}
+					transforms.emplace_back(TransformId::ROTATE_2D, angles);
+				} else if(ref == "skewX") {
+					if(isToken(TokenId::DIMENSION)) {
+						std::array<Angle, 2> angles;
+						angles[0] = Angle(static_cast<float>((*it_)->getNumericValue()), (*it_)->getStringValue());
+						angles[1] = Angle();
+						transforms.emplace_back(TransformId::SKEWX_2D, angles);
+					} else if(isToken(TokenId::NUMBER)) {
+						// just going to soak this, as we only accept 0 which would be equivalent to no skew
+					} else {
+						throw ParserError(formatter() << "Expected angle in degrees for rotate function, in property '" << prefix << "', found: " << (*it_)->toString());
+					}
+				} else if(ref == "skewY") {
+					if(isToken(TokenId::DIMENSION)) {
+						std::array<Angle, 2> angles;
+						angles[0] = Angle();
+						angles[1] = Angle(static_cast<float>((*it_)->getNumericValue()), (*it_)->getStringValue());
+						transforms.emplace_back(TransformId::SKEWY_2D, angles);
+					} else if(isToken(TokenId::NUMBER)) {
+						// just going to soak this, as we only accept 0 which would be equivalent to no skew
+					} else {
+						throw ParserError(formatter() << "Expected angle in degrees for rotate function, in property '" << prefix << "', found: " << (*it_)->toString());
+					}
+				} else {
+					throw ParserError(formatter() << "Unrecognised function for '" << prefix << "' property: " << ref);
+				}
+			} else if(isEndToken()) {
+				// do nothing
+			} else {
+				throw ParserError(formatter() << "Unrecognised value for property '" << prefix << "': "  << (*it_)->toString());
+			}
+		}
+		plist_.addProperty(prefix, TransformStyle::create(transforms));
 	}
 }

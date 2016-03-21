@@ -23,23 +23,38 @@
 
 #pragma once
 
-#include "xhtml_box.hpp"
+#include <functional>
+#include <future>
+#include <memory>
+#include <string>
+
+#include "uri.hpp"
 
 namespace xhtml
 {
-	class LineBox : public Box
+	class url_handler;
+	typedef std::shared_ptr<url_handler> url_handler_ptr;
+
+	class url_handler
 	{
 	public:
-		LineBox(BoxPtr parent, const point& cursor=point());
-		std::string toString() const override;
-		void reflowChildren(LayoutEngine& eng, const Dimensions& containing);
-		const point& getCursor() const { return cursor_; }
+		url_handler();
+		virtual ~url_handler();
+		std::string getResource();
+		static url_handler_ptr create(const std::string& uri);
+		typedef std::function<url_handler_ptr(const uri::uri&)> protocol_creator_fn;
+		static void registerHandler(const std::string& protocol, protocol_creator_fn creator_fn);
+	protected:
+		void createTask(std::launch policy, std::function<std::string()> fn);
 	private:
-		void handleLayout(LayoutEngine& eng, const Dimensions& containing) override;
-		void handlePreChildLayout2(LayoutEngine& eng, const Dimensions& containing) override;
-		void postParentLayout(LayoutEngine& eng, const Dimensions& containing) override;
-		void handleRender(DisplayListPtr display_list, const point& offset) const override;
-		void handleRenderBorder(DisplayListPtr display_list, const point& offset) const override;
-		point cursor_;
+		std::shared_future<std::string> future_;
+	};
+
+	struct url_handler_registrar
+	{
+		explicit url_handler_registrar(const std::string& protocol, url_handler::protocol_creator_fn creator_fn) 
+		{
+			url_handler::registerHandler(protocol, creator_fn);
+		}
 	};
 }

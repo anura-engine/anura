@@ -25,6 +25,8 @@
 
 #include <array>
 
+#include "SceneTree.hpp"
+
 #include "css_transition.hpp"
 #include "xhtml_node.hpp"
 #include "xhtml_render_ctx.hpp"
@@ -46,6 +48,9 @@ namespace xhtml
 		const std::vector<StyleNodePtr>& getChildren() const { return children_; }
 		void process(float dt);
 		void addTransitionEffect(const css::TransitionPtr& tx);
+
+		KRE::SceneTreePtr getSceneTree() const { return scene_tree_; }
+		KRE::SceneTreePtr createSceneTree(KRE::SceneTreePtr scene_parent);
 
 		css::BackgroundAttachment getBackgroundAttachment() const { return background_attachment_; }
 		const KRE::ColorPtr& getBackgroundColor() const { return background_color_; }
@@ -118,6 +123,8 @@ namespace xhtml
 		css::CssBorderImageRepeat getBorderImageRepeatHoriz() const { return border_image_repeat_horiz_; }
 		css::CssBorderImageRepeat getBorderImageRepeatVert() const { return border_image_repeat_vert_; }
 		css::BackgroundClip getBackgroundClip() const { return background_clip_; }
+		std::shared_ptr<css::FilterStyle> getFilters() const { return filters_; }
+		const std::shared_ptr<css::TransformStyle>& getTransform() const { return transform_; }
 
 		const css::StylePtr& getBackgroundAttachmentStyle() const { return background_attachment_style_; }
 		const css::StylePtr& getBackgroundRepeatStyle() const { return background_repeat_style_; }
@@ -152,10 +159,13 @@ namespace xhtml
 	private:
 		void processStyles(bool created);
 		void processColor(bool created, css::Property p, KRE::ColorPtr& color);
+		void processFilter(bool created);
+		void processTransform(bool created);
 		WeakNodePtr node_;
 		std::vector<StyleNodePtr> children_;
 		std::vector<css::TransitionPtr> transitions_;
 		float acc_;
+		KRE::SceneTreePtr scene_tree_;
 
 		//BACKGROUND_ATTACHMENT
 		css::StylePtr background_attachment_style_;
@@ -311,5 +321,9 @@ namespace xhtml
 		//BACKGROUND_CLIP
 		css::StylePtr background_clip_style_;
 		css::BackgroundClip background_clip_;
+		//FILTER
+		std::shared_ptr<css::FilterStyle> filters_;
+		//TRANSFORM
+		std::shared_ptr<css::TransformStyle> transform_;
 	};
 }

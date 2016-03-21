@@ -30,7 +30,6 @@
 #include "WindowManager.hpp"
 
 #include "css_parser.hpp"
-#include "display_list.hpp"
 #include "xhtml.hpp"
 #include "xhtml_layout_engine.hpp"
 #include "xhtml_root_box.hpp"
@@ -107,7 +106,7 @@ namespace xhtml
 		  last_process_time_(-1),
 		  doc_(nullptr),
 		  style_tree_(nullptr),
-		  display_list_(nullptr),
+		  scene_tree_(nullptr),
 		  doc_name_(),
 		  ss_name_(),
 		  layout_size_()
@@ -155,8 +154,8 @@ namespace xhtml
 		// whitespace can only be processed after applying styles.
 		doc_->processWhitespace();
 
-		display_list_ = std::make_shared<DisplayList>(scene_);
-		root_->attachNode(display_list_);		
+		//style_tree_ = xhtml::StyleNode::createStyleTree(doc_);
+		//scene_tree_ = style_tree_->getSceneTree();
 
 		/*
 		doc_->preOrderTraversal([](xhtml::NodePtr n) {
@@ -182,8 +181,12 @@ namespace xhtml
 	void DocumentObject::draw(const KRE::WindowPtr& wnd) const
 	{
 		ModelManager2D mm(layout_size_.x(), layout_size_.y());
-		scene_->renderScene(rmanager_);
-		rmanager_->render(wnd);
+		//scene_->renderScene(rmanager_);
+		//rmanager_->render(wnd);
+		if(scene_tree_ != nullptr) {
+			scene_tree_->preRender(wnd);
+			scene_tree_->render(wnd);
+		}
 	}
 	
 	void DocumentObject::process()
@@ -191,8 +194,6 @@ namespace xhtml
 		static xhtml::RootBoxPtr layout = nullptr;
 		if(doc_->needsLayout()) {
 			LOG_DEBUG("Triggered layout!");
-
-			display_list_->clear();
 
 			// XXX should we should have a re-process styles flag here.
 
@@ -205,6 +206,7 @@ namespace xhtml
 				profile::manager pman("update style tree");
 				if(style_tree_ == nullptr) {
 					style_tree_ = xhtml::StyleNode::createStyleTree(doc_);
+					scene_tree_ = style_tree_->getSceneTree();
 					doc_->processScriptAttributes();
 				} else {
 					style_tree_->updateStyles();
@@ -218,12 +220,13 @@ namespace xhtml
 
 			{
 			profile::manager pman_render("render");
-			layout->render(display_list_, point());
+			scene_tree_->clear();
+			layout->render(point());
 			}
 		} else if(doc_->needsRender() && layout != nullptr) {
 			profile::manager pman_render("render");
-			display_list_->clear();
-			layout->render(display_list_, point());
+			scene_tree_->clear();
+			layout->render(point());
 			// XXX shoud internalise this
 			doc_->renderComplete();
 		}

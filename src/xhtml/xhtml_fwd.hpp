@@ -69,9 +69,6 @@ namespace xhtml
 	typedef std::shared_ptr<RootBox> RootBoxPtr;
 	typedef std::shared_ptr<LineBox> LineBoxPtr;
 
-	class DisplayList;
-	typedef std::shared_ptr<DisplayList> DisplayListPtr;
-
 	struct Dimensions;
 
 	class StyleNode;

@@ -28,9 +28,9 @@ namespace xhtml
 {
 	using namespace css;
 
-	InlineBlockBox::InlineBlockBox(BoxPtr parent, StyleNodePtr node)
-		: Box(BoxId::INLINE_BLOCK, parent, node),
-		  multiline_(false)
+	InlineBlockBox::InlineBlockBox(const BoxPtr& parent, const StyleNodePtr& node, const RootBoxPtr& root)
+		: Box(BoxId::INLINE_BLOCK, parent, node, root),
+		  cursor_()
 	{
 	}
 
@@ -38,28 +38,41 @@ namespace xhtml
 	{
 		std::ostringstream ss;
 		ss << "InlineBlockBox: " << getDimensions().content_;
-		if(isEOL()) {
-			ss << " ; end-of-line";
-		}
 		return ss.str();
 	}
 
 	void InlineBlockBox::handleLayout(LayoutEngine& eng, const Dimensions& containing)
 	{
+		eng.setCursor(cursor_);
+
 		layoutChildren(eng);
 		layoutHeight(containing);
-
-		if(!isReplaceable()) {
-			if(getChildren().size() > 1) {
-				multiline_ = true;
-			} else if(!getChildren().empty() && getChildren().front()->id() == BoxId::LINE && getChildren().front()->getChildren().size() > 1) {
-				multiline_ = true;
-			}
-		}
 
 		if(isReplaceable()) {
 			NodePtr node = getNode();
 			node->setDimensions(rect(0, 0, getWidth() / LayoutEngine::getFixedPointScale(), getHeight() / LayoutEngine::getFixedPointScale()));
+		}
+
+		// try and fit the box at cursor, failing that we move the cursor and try again.
+		FixedPoint width_at_cursor = eng.getWidthAtPosition(eng.getCursor().y, eng.getCursor().y + getHeight() + getMBPHeight(), containing.content_.width)
+			 - eng.getCursor().x + eng.getXAtPosition(eng.getCursor().y, eng.getCursor().y + getHeight() + getMBPHeight());
+		if(getWidth() + getMBPWidth() > width_at_cursor) {
+			point p = eng.getCursor();
+			p.y += getLineHeight();
+			while(eng.hasFloatsAtPosition(p.y, p.y + getHeight() + getMBPHeight()) && getWidth() + getMBPWidth() > width_at_cursor) {
+				width_at_cursor = eng.getWidthAtPosition(p.y, p.y + getHeight() + getMBPHeight(), containing.content_.width);
+			}
+			p.x = eng.getXAtPosition(p.y, p.y + getHeight() + getMBPHeight());
+			setContentX(p.x);
+			setContentY(p.y);
+			p.y += getHeight() + getMBPHeight();
+			p.x = eng.getXAtPosition(p.y, p.y + getLineHeight());
+			eng.setCursor(p);
+		} else {
+			setContentX(eng.getCursor().x);
+			// XXX if height is greater than other objects on line we need to increase lineheight.
+			setContentY(eng.getCursor().y);
+			eng.setCursor(point(getLeft() + getWidth() + getMBPRight(), eng.getCursor().y));
 		}
 	}
 
@@ -121,6 +134,8 @@ namespace xhtml
 
 	void InlineBlockBox::handlePreChildLayout2(LayoutEngine& eng, const Dimensions& containing)
 	{
+		cursor_ = eng.getCursor();
+		eng.setCursor(point(0, 0));
 		if(!getChildren().empty() || !isReplaceable()) {
 			setContentHeight(0);
 		} else if(isReplaceable()) {
@@ -159,7 +174,7 @@ namespace xhtml
 		calculateVertMPB(containing.content_.height);
 	}
 
-	void InlineBlockBox::handleRender(DisplayListPtr display_list, const point& offset) const
+	void InlineBlockBox::handleRender(const KRE::SceneTreePtr& scene_tree, const point& offset) const
 	{
 		NodePtr node = getNode();
 		if(node != nullptr && node->isReplaced()) {
@@ -167,10 +182,7 @@ namespace xhtml
 			if(r == nullptr) {
 				LOG_ERROR("No renderable returned for repalced element: " << node->toString());
 			} else {
-				r->setPosition(glm::vec3(static_cast<float>(offset.x)/LayoutEngine::getFixedPointScaleFloat(),
-					static_cast<float>(offset.y)/LayoutEngine::getFixedPointScaleFloat(),
-					0.0f));
-				display_list->addRenderable(r);
+				scene_tree->addObject(r);
 			}
 		}
 	}

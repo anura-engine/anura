@@ -53,12 +53,12 @@ namespace xhtml
 		const char32_t marker_georgian_end = 0x10f6;
 	}
 
-	ListItemBox::ListItemBox(BoxPtr parent, StyleNodePtr node, int count)
-		: Box(BoxId::LIST_ITEM, parent, node),
+	ListItemBox::ListItemBox(const BoxPtr& parent, const StyleNodePtr& node, const RootBoxPtr& root, int count)
+		: Box(BoxId::LIST_ITEM, parent, node, root),
 		  count_(count),
 		  marker_(utils::codepoint_to_utf8(marker_disc))
 	{
-		addChild(std::make_shared<BlockBox>(parent, node));
+		addChild(std::make_shared<BlockBox>(parent, node, root));
 	}
 
 	std::string ListItemBox::toString() const 
@@ -201,7 +201,7 @@ namespace xhtml
 		setContentHeight(getHeight() + child->getHeight() + child->getMBPBottom());
 	}
 
-	void ListItemBox::handleRender(DisplayListPtr display_list, const point& offset) const 
+	void ListItemBox::handleRender(const KRE::SceneTreePtr& scene_tree, const point& offset) const 
 	{
 		// XXX should figure out if there is a cleaner way of doing this, basically we want the list marker to be offset by the 
 		// content's first child's position.
@@ -223,7 +223,7 @@ namespace xhtml
 				auto rend = std::make_shared<KRE::Blittable>(tex);
 				rend->setCentre(KRE::Blittable::Centre::BOTTOM_LEFT);
 				rend->setCentreCoords(pointf(0.0f, y / LayoutEngine::getFixedPointScaleFloat()));
-				display_list->addRenderable(rend);
+				scene_tree->addObject(rend);
 			}
 		} else {
 			auto path = fnt->getGlyphPath(marker_);
@@ -231,11 +231,11 @@ namespace xhtml
 			FixedPoint path_width = path.back().x - path.front().x + fnt->calculateCharAdvance(' ');
 
 			for(auto& p : path) {
-				new_path.emplace_back(p.x + offset.x - 5 - path_width, p.y + offset.y + y);
+				new_path.emplace_back(p.x + 5 - path_width, p.y + y);
 			}
 			auto fontr = fnt->createRenderableFromPath(nullptr, marker_, new_path);
 			fontr->setColorPointer(getStyleNode()->getColor());
-			display_list->addRenderable(fontr);
+			scene_tree->addObject(fontr);
 		}
 	}
 

@@ -28,6 +28,7 @@
 #include "asserts.hpp"
 #include "Color.hpp"
 #include "Texture.hpp"
+#include "url_handler.hpp"
 #include "xhtml_fwd.hpp"
 
 #define MAKE_FACTORY(classname)																\
@@ -155,6 +156,9 @@ namespace css
 		BORDER_IMAGE_OUTSET,
 		BORDER_IMAGE_REPEAT,
 		BACKGROUND_CLIP,
+		FILTER,
+		TRANSFORM,
+		TRANSFORM_ORIGIN,
 
 		MAX_PROPERTIES,
 	};
@@ -223,6 +227,8 @@ namespace css
 		FONT_STYLE,
 		ClEAR,
 		TEXT_SHADOW,
+		FILTER,
+		TRANSFORM,
 	};
 
 	enum class CssTransitionTimingFunction {
@@ -397,7 +403,7 @@ namespace css
 		Angle() : value_(0), units_(AngleUnits::DEGREES) {}
 		explicit Angle(float angle, AngleUnits units) : value_(angle), units_(units) {}
 		explicit Angle(float angle, const std::string& units);		
-		float getAngle(AngleUnits units=AngleUnits::DEGREES);
+		float getAngle(AngleUnits units=AngleUnits::DEGREES) const;
 	private:
 		float value_;
 		AngleUnits units_;
@@ -470,16 +476,17 @@ namespace css
 		MAKE_FACTORY(UriStyle);
 		UriStyle() : is_none_(true), uri_() {}
 		explicit UriStyle(bool none) : is_none_(none), uri_() {}
-		explicit UriStyle(const std::string uri) : is_none_(false), uri_(uri) {}
+		explicit UriStyle(const std::string uri);
 		bool isNone() const { return is_none_; }
 		const std::string& getUri() const { return uri_; }
-		void setURI(const std::string& uri) { uri_ = uri; is_none_ = false; }
+		void setURI(const std::string& uri);
 		bool isEqual(const StylePtr& style) const override;
 		KRE::TexturePtr getTexture(xhtml::FixedPoint width, xhtml::FixedPoint height) override;
 		std::string toString(Property p) const override;
 	private:
 		bool is_none_;
 		std::string uri_;
+		xhtml::url_handler_ptr handler_;
 	};
 
 	class LinearGradient : public ImageSource
@@ -1151,5 +1158,164 @@ namespace css
 		std::string toString(Property p) const override;
 	private:
 		std::vector<TextShadow> shadows_;
+	};
+
+	enum class CssFilterId {
+		BLUR,
+		BRIGHTNESS,
+		CONTRAST,
+		DROP_SHADOW,
+		GRAYSCALE,
+		HUE_ROTATE,
+		INVERT,
+		OPACITY,
+		SEPIA,
+		SATURATE,
+	};
+
+	class Filter
+	{
+	public:
+		explicit Filter(CssFilterId id);
+		explicit Filter(CssFilterId id, const Angle& a);
+		explicit Filter(CssFilterId id, const Length& len);
+		explicit Filter(CssFilterId id, const BoxShadow& ds);
+		CssFilterId id() const { return id_; }
+		std::shared_ptr<Angle> getAngle() const { return angle_; }
+		std::shared_ptr<Length> getLength() const { return value_; }
+		std::shared_ptr<BoxShadow> getShadow() const { return drop_shadow_; }
+		const std::vector<float>& getGaussian() const; 
+		int getKernelRadius() const { return kernel_radius_; }
+		std::string toString() const;
+		// is angle in radians
+		float getComputedAngle() const { return computed_angle_; }
+		float getComputedLength() const { return computed_length_; }
+		void setComputedAngle(float a) { computed_angle_ = a; }
+		void setComputedLength(float len) { computed_length_ = len; }
+		void calculateComputedValues();
+	private:
+		CssFilterId id_;
+		//UriStyle uri_;
+		float computed_angle_;
+		float computed_length_;		
+		std::shared_ptr<Angle> angle_;
+		std::shared_ptr<Length> value_;
+		std::shared_ptr<BoxShadow> drop_shadow_;
+		std::vector<float> gaussian_;
+		int kernel_radius_;
+	};
+	typedef std::shared_ptr<Filter> FilterPtr;
+
+	class FilterStyle : public Style
+	{
+	public:
+		MAKE_FACTORY(FilterStyle);
+		FilterStyle() : Style(StyleId::FILTER), filters_() {}
+		explicit FilterStyle(const std::vector<FilterPtr>& filters) : Style(StyleId::FILTER), filters_(filters) {}
+		std::string toString(Property p) const override;
+		std::vector<FilterPtr> getFilters() const { return filters_; }
+		bool requiresLayout(Property p) const override { return false; }
+		bool requiresRender(Property p) const override { return false; }
+		void addFilter(const FilterPtr& f) { filters_.emplace_back(f); }
+		void clearFilters() { filters_.clear(); }
+		void calculateComputedValues();
+	private:
+		std::vector<FilterPtr> filters_;
+	};
+
+	enum class TransformId {
+		NONE,
+		MATRIX_2D,
+		TRANSLATE_2D,
+		SCALE_2D,
+		ROTATE_2D,
+		SKEW_2D,
+		SKEWX_2D,
+		SKEWY_2D,
+		// XXX 3D functions go here.
+	};
+
+	class Transform
+	{
+	public:
+		Transform() : id_(TransformId::NONE) {}
+		explicit Transform(TransformId id, const Length& x, const Length& y)
+			: id_(id),
+			  computed_lengths_{},
+			  computed_angles_{},
+			  lengths_{},
+			  angles_{},
+			  matrix_{},
+			  modified_(false)
+		{
+			lengths_[0] = x;
+			lengths_[1] = y;
+		}
+		explicit Transform(TransformId id, const std::array<Angle, 2>& a)
+			: id_(id),
+			  computed_lengths_{},
+			  computed_angles_{},
+			  lengths_{},
+			  angles_{},
+			  matrix_{},
+			  modified_(false)
+		{
+			angles_[0] = a[0];
+			angles_[1] = a[1];
+		}
+		explicit Transform(const std::array<float, 6>& vals)
+			: id_(TransformId::MATRIX_2D),
+			  computed_lengths_{},
+			  computed_angles_{},
+			  lengths_{},
+			  angles_{},
+			  matrix_{},
+			  modified_(false)
+		{
+			for(int n = 0; n != 6; ++n) {
+				matrix_[n] = vals[n]; 
+			}
+		}
+		std::string toString() const;
+		TransformId id() const { return id_; }
+		const std::array<Length, 2>& getTranslation() const { return lengths_; }
+		const Angle& getRotation() const { return angles_[0]; }
+		const std::array<Length, 2>& getScale() const { return lengths_; }
+		const std::array<float, 6>& getMatrix() const { return matrix_; }
+		const std::array<Angle, 2> getSkew() const { return angles_; }
+		void setComputedAngle(float a, float b) { computed_angles_[0] = a; computed_angles_[1] = b; modified_ = true; }
+		void setComputedLength(float a, float b) { computed_lengths_[0] = a; computed_lengths_[1] = b; modified_ = true; }
+		const std::array<float, 2>& getComputedAngle() const { return computed_angles_; }
+		const std::array<float, 2>& getComputedLength() const { return computed_lengths_; }
+		bool isModified() const { return modified_; }
+		void clearModified() const { modified_ = false; }
+		void calculateComputedValues();
+	private:
+		TransformId id_;
+		std::array<float, 2> computed_lengths_;
+		std::array<float, 2> computed_angles_;
+		std::array<Length, 2> lengths_;
+		std::array<Angle, 2> angles_;
+		std::array<float, 6> matrix_;
+		mutable bool modified_;
+	};
+
+	class TransformStyle : public Style
+	{
+	public:
+		MAKE_FACTORY(TransformStyle);
+		TransformStyle() : Style(StyleId::TRANSFORM), transforms_(), matrix_(1.0f) {}
+		explicit TransformStyle(const std::vector<Transform>& transforms) : Style(StyleId::TRANSFORM), transforms_(transforms), matrix_(1.0f) {}
+		std::string toString(Property p) const override;
+		std::vector<Transform>& getTransforms() { return transforms_; }
+		const glm::mat4& getComputedMatrix() const;
+		bool requiresLayout(Property p) const override { return false; }
+		bool requiresRender(Property p) const override { return false; }
+		void addTransform(const Transform& trf) { transforms_.emplace_back(trf); }
+		void clearTransforms() { transforms_.clear(); }
+		void calculateComputedValues();
+	private:
+		std::vector<Transform> transforms_;
+		mutable glm::mat4 matrix_;
 	};
 }
