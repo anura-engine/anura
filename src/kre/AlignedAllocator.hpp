@@ -24,7 +24,7 @@
 #pragma once
 
 #if !defined(_MSC_VER)
-#include <cstdlib>
+#include <boost/align/aligned_alloc.hpp>
 #endif
 
 template<std::size_t N>
@@ -43,12 +43,12 @@ struct AlignedAllocator
 #else
 		void* operator new(size_t i)
 		{
-			return aligned_alloc(N, i);
+			return boost::alignment::aligned_alloc(N, i);
 		}
 
 		void operator delete(void* p)
 		{
-			free(p);
+			boost::alignment::aligned_free(p);
 		}
 #endif
 };
