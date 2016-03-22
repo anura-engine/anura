@@ -1466,6 +1466,10 @@ namespace {
 
 			variant_type_ptr getVariantType() const {
 				variant_type_ptr left_type = left_->queryVariantType();
+				if(left_type->is_type(variant::VARIANT_TYPE_STRING)) {
+					return variant_type::get_type(variant::VARIANT_TYPE_STRING);
+				}
+
 				variant_type_ptr list_element_type = left_type->is_list_of();
 				if(list_element_type) {
 					return list_element_type;
