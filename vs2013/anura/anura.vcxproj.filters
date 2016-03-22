@@ -1155,6 +1155,9 @@
     <ClInclude Include="..\..\src\xhtml\url_handler.hpp">
       <Filter>Header Files\xhtml</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\kre\AlignedAllocator.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\src\kre\geometry.inl">

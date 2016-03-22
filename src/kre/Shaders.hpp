@@ -149,7 +149,7 @@ namespace KRE
 			const std::vector<ActiveMapping>& uniform_map = std::vector<ActiveMapping>(),
 			const std::vector<ActiveMapping>& attribute_map = std::vector<ActiveMapping>());
 
-		variant getShaderVariant() { return node_; }
+		const variant& getShaderVariant() const { return node_; }
 
 		virtual ShaderProgramPtr clone() = 0;
 

@@ -140,6 +140,7 @@
     <ClInclude Include="..\..\src\json_parser.hpp" />
     <ClInclude Include="..\..\src\json_tokenizer.hpp" />
     <ClInclude Include="..\..\src\key_button.hpp" />
+    <ClInclude Include="..\..\src\kre\AlignedAllocator.hpp" />
     <ClInclude Include="..\..\src\kre\AttributeSet.hpp" />
     <ClInclude Include="..\..\src\kre\AttributeSetOGL.hpp" />
     <ClInclude Include="..\..\src\kre\Blend.hpp" />
