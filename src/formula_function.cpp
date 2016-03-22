@@ -3858,7 +3858,7 @@ FUNCTION_DEF_IMPL
 
 			void staticErrorAnalysis() const {
 				variant_type_ptr target_type = args()[0]->queryMutableType();
-				if(!target_type) {
+				if(!target_type || target_type->is_none()) {
 					ASSERT_LOG(false, "Writing to non-writeable value: " << args()[0]->queryVariantType()->to_string() << " in " << str() << " " << debugPinpointLocation() << "\n");
 					return;
 				}
@@ -3937,7 +3937,7 @@ FUNCTION_DEF_IMPL
 
 			void staticErrorAnalysis() const {
 				variant_type_ptr target_type = args()[0]->queryMutableType();
-				if(!target_type) {
+				if(!target_type || target_type->is_none()) {
 					ASSERT_LOG(false, "Writing to non-writeable value: " << args()[0]->queryVariantType()->to_string() << " in " << str() << " " << debugPinpointLocation() << "\n");
 					return;
 				}
@@ -4732,6 +4732,15 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 		ARG_TYPE("string");
 		RETURN_TYPE("string");
 	END_FUNCTION_DEF(lower)
+
+	FUNCTION_DEF(upper, 1, 1, "upper(s) -> string: lowercase version of string")
+		std::string s = args()[0]->evaluate(variables).as_string();
+		boost::algorithm::to_upper(s);
+		return variant(s);
+	FUNCTION_ARGS_DEF
+		ARG_TYPE("string");
+		RETURN_TYPE("string");
+	END_FUNCTION_DEF(upper)
 
 	FUNCTION_DEF(rects_intersect, 2, 2, "rects_intersect([int], [int]) ->bool")
 		rect a(args()[0]->evaluate(variables));
