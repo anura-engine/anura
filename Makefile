@@ -167,7 +167,7 @@ anura: $(OBJ)
 	@$(CXX) \
 		$(BASE_CXXFLAGS) $(LDFLAGS) $(CXXFLAGS) $(CPPFLAGS) \
 		$(OBJ) -o anura \
-		$(LIBS) -lboost_regex -lboost_system -lboost_filesystem -lpthread -fthreadsafe-statics
+		$(LIBS) -lboost_regex -lboost_system -lboost_filesystem -lboost_locale -lpthread -fthreadsafe-statics
 
 checkdirs: $(BUILD_DIR)
 	@echo -e \
