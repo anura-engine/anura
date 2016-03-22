@@ -44,4 +44,5 @@ namespace KRE
 
 	bool is_global_model_matrix_valid();
 	const glm::mat4& get_global_model_matrix();
+	glm::mat4 set_global_model_matrix(const glm::mat4& m);
 }

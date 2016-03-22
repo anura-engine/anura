@@ -25,11 +25,12 @@
 
 #include <GL/glew.h>
 
+#include "AlignedAllocator.hpp"
 #include "Texture.hpp"
 
 namespace KRE
 {
-	class OpenGLTexture : public Texture
+	class OpenGLTexture : public Texture, public AlignedAllocator16
 	{
 	public:
 		explicit OpenGLTexture(const variant& node, const std::vector<SurfacePtr>& surfaces);

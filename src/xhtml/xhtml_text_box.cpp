@@ -33,16 +33,13 @@
 
 namespace xhtml
 {
-	TextBox::TextBox(BoxPtr parent, StyleNodePtr node)
-		: Box(BoxId::TEXT, parent, node),
-		  line_(),
+	TextBox::TextBox(const BoxPtr& parent, const StyleNodePtr& node, const RootBoxPtr& root)
+		: Box(BoxId::TEXT, parent, node, root),
 		  txt_(std::dynamic_pointer_cast<Text>(node->getNode())),
-		  it_(),
-		  justification_(0),
+		  lines_(),
 		  shadows_()
 	{
-		ASSERT_LOG(parent->getParent() != nullptr, "Something bad happened a text box with no parent->parent valid reference.");
-		auto shadows = parent->getParent()->getStyleNode()->getTextShadow();
+		auto shadows = parent->getStyleNode()->getTextShadow();
 		if(shadows) {
 			// Process shadows in reverse order.
 			for(auto it = shadows->getShadows().crbegin(); it != shadows->getShadows().crend(); ++it) {
@@ -54,104 +51,254 @@ namespace xhtml
 				shadows_.emplace_back(xo, yo, br, color);
 			}
 		}
+		txt_->transformText(getStyleNode(), true);
 	}
 
 	std::string TextBox::toString() const
 	{
 		std::ostringstream ss;
 		ss << "TextBox: " << getDimensions().content_;
-		for(auto& word : line_->line) {
-			ss << " " << word.word;
-		}
-		if(isEOL()) {
-			ss << " ; end-of-line";
+		for(auto& line : lines_) {
+			ss  << "\n    "
+				<< (line.offset_.x / LayoutEngine::getFixedPointScaleFloat()) 
+				<< "," 
+				<< (line.offset_.y / LayoutEngine::getFixedPointScaleFloat()) 
+				<< ": ";
+			for(auto& word : line.line_->line) {
+				ss << " " << word.word;
+			}
+			ss << "\n";
 		}
 		return ss.str();
 	}
 
-	Text::iterator TextBox::reflow(LayoutEngine& eng, point& cursor, Text::iterator it)
+	point TextBox::reflowText(LayoutEngine& eng, const Dimensions& containing, const point& current_cursor)
 	{
-		it_ = it;
-		auto parent = getParent();
-		FixedPoint y1 = cursor.y + getParent()->getOffset().y;
-		FixedPoint width = eng.getWidthAtPosition(y1, y1 + getLineHeight(), parent->getWidth()) - cursor.x + eng.getXAtPosition(y1, y1 + getLineHeight());
+		// clear old data so we can re-calculate it.
+		// XXX Future note.
+		// unless the text has changed or the width of the containing box changes we shouldn't
+		// have to recalculate this.
+		lines_.clear();
 
-		ASSERT_LOG(it != txt_->end(), "Given an iterator at end of text.");
+		point cursor = current_cursor;
+
+		FixedPoint y1 = cursor.y + getOffset().y;
+		// XXX if padding left/border left applies should reduce width and move cursor position if isFirstInlineChild() is set.
+		// Simlarly the last line width should be reduced by padding right/border right.
+		FixedPoint width = eng.getWidthAtPosition(y1, y1 + getLineHeight(), containing.content_.width) - cursor.x + eng.getXAtPosition(y1, y1 + getLineHeight());
+
+		Text::iterator last_it = txt_->begin();
+		Text::iterator it = last_it;
 
 		bool done = false;
-		while(!done) {
-			LinePtr line = txt_->reflowText(it, width, getStyleNode()->getFont());
+		while(it != txt_->end()) {
+			LinePtr line = txt_->reflowText(it, width, getStyleNode());
 			if(line != nullptr && !line->line.empty()) {
 				// is the line larger than available space and are there floats present?
-				if(line->line.back().advance.back().x > width && eng.hasFloatsAtPosition(y1, y1 + getLineHeight())) {
+				FixedPoint last_x = line->line.back().advance.back().x;
+				if(last_x > width && eng.hasFloatsAtPosition(y1, y1 + getLineHeight())) {
 					cursor.y += getLineHeight();
-					y1 = cursor.y + getParent()->getOffset().y;
+					y1 = cursor.y + getOffset().y;
 					cursor.x = eng.getXAtPosition(y1, y1 + getLineHeight());
-					it = it_;
-					width = eng.getWidthAtPosition(y1, y1 + getLineHeight(), parent->getWidth());
+					it = last_it;
+					width = eng.getWidthAtPosition(y1, y1 + getLineHeight(), containing.content_.width);
 					continue;
 				}
-				line_ = line;
-			}
-			
-			done = true;
+
+				lines_.emplace_back(line, cursor);
+				lines_.back().width_ = calculateWidth(lines_.back());
+				// XXX This height needs to be modified later if we have inline elements with a different lineheight
+				lines_.back().height_ = getLineHeight();
+				cursor.x += lines_.back().width_;
+
+				if(line->is_end_line) {
+					// update the cursor for the next line
+					cursor.y += getLineHeight();
+					y1 = cursor.y + getOffset().y;
+					cursor.x = eng.getXAtPosition(y1, y1 + getLineHeight());
+				}
+			}					
 		}
 
-		if(line_ != nullptr) {
-			setContentWidth(calculateWidth());
+		int max_w = 0;
+		for(auto& line : lines_) {
+			max_w = std::max(max_w, line.width_);
+		}
+		setContentWidth(max_w);
+		
+		if(!lines_.empty()) {
+			setContentHeight(lines_.back().offset_.y + getLineHeight());
 		}
 
-		return it;
+		return cursor;
 	}
 
-	Text::iterator TextBox::end()
+	FixedPoint TextBox::calculateWidth(const LineInfo& line) const
 	{
-		return txt_->end();
-	}
-
-	FixedPoint TextBox::calculateWidth() const
-	{
-		ASSERT_LOG(line_ != nullptr, "Calculating width of TextBox with no line_ (=nullptr).");
+		ASSERT_LOG(line.line_ != nullptr, "Calculating width of TextBox with no line_ (=nullptr).");
 		FixedPoint width = 0;
-		for(auto& word : line_->line) {
+		for(auto& word : line.line_->line) {
 			width += word.advance.back().x;
 		}
-		width += line_->space_advance * line_->line.size();
+		width += line.line_->space_advance * line.line_->line.size();
 		return width;
 	}
 
 	void TextBox::handleLayout(LayoutEngine& eng, const Dimensions& containing)
 	{
 		// TextBox's have no children to deal with, by definition.	
-		//setContentWidth(calculateWidth());
-		setContentHeight(getLineHeight());
+		// XXX fix the point() to be the actual last point, say from LayoutEngine
+		point cursor = reflowText(eng, containing, eng.getCursor());
+		eng.setCursor(cursor);
 
 		calculateHorzMPB(containing.content_.width);
 		calculateVertMPB(containing.content_.height);
 	}
 
-	void TextBox::justify(FixedPoint containing_width)
+	void TextBox::setRightAlign(FixedPoint containing_width)
 	{
-		int word_count = line_->line.size() - 1;
-		if(word_count <= 2) {
-			return;
+		for(auto& line : lines_) {
+			// XXX what about case of floats?
+			line.offset_.x = containing_width - line.width_;
 		}
-		justification_ = (containing_width - calculateWidth()) / word_count;
 	}
 
-	void TextBox::handleRenderBackground(DisplayListPtr display_list, const point& offset) const
+	void TextBox::setCenterAlign(FixedPoint containing_width)
 	{
-		point offs = offset - point(0, getDimensions().content_.height);
-		Box::handleRenderBackground(display_list, offs);
+		for(auto& line : lines_) {
+			// XXX what about case of floats?
+			line.offset_.x = (containing_width - line.width_ - line.offset_.x) / 2;
+		}
 	}
 
-	void TextBox::handleRenderBorder(DisplayListPtr display_list, const point& offset) const
+	void TextBox::postParentLayout(LayoutEngine& eng, const Dimensions& containing)
 	{
-		point offs = offset - point(0, getDimensions().content_.height);
-		Box::handleRenderBorder(display_list, offs);
+		FixedPoint containing_width = containing.content_.width;
+		// perform text-align calculation.
+		const css::TextAlign ta = getStyleNode()->getTextAlign();
+		switch(ta) {
+			case css::TextAlign::RIGHT:
+				setRightAlign(containing_width);
+				break;
+			case css::TextAlign::CENTER:	
+				setCenterAlign(containing_width);
+				break;
+			case css::TextAlign::JUSTIFY:	
+					setJustify(containing_width);
+				break;
+			case css::TextAlign::NORMAL:	
+				if(getStyleNode()->getDirection() == css::Direction::RTL) {
+					setRightAlign(containing_width);
+				}
+				break;
+			case css::TextAlign::LEFT:
+			default:
+				// use default value.
+				break;
+		}
+
+		// set vertical alignment
+		auto& vertical_align = getStyleNode()->getVerticalAlign();
+		css::CssVerticalAlign va = vertical_align->getAlign();
+
+		FixedPoint baseline = getLineHeight();//static_cast<FixedPoint>((getStyleNode()->getFont()->getFontXHeight() + getStyleNode()->getFont()->getLineGap()) * LayoutEngine::getFixedPointScaleFloat()) - getStyleNode()->getFont()->getDescender();
+
+		for(auto& line : lines_) {
+			FixedPoint child_y = line.offset_.y;
+			// XXX we should implement this fully.
+			switch(va) {
+				case css::CssVerticalAlign::BASELINE:
+					// Align the baseline of the box with the baseline of the parent box. 
+					// If the box does not have a baseline, align the bottom margin edge 
+					// with the parent's baseline.
+					child_y += baseline;
+					break;
+				case css::CssVerticalAlign::MIDDLE:
+					// Align the vertical midpoint of the box with the baseline of the 
+					// parent box plus half the x-height of the parent.
+					//child_y += height / 2;
+					break;
+				case css::CssVerticalAlign::BOTTOM:
+					// Align the bottom of the aligned subtree with the bottom of the line box.
+					//child_y += getBottomOffset();
+					break;
+				case css::CssVerticalAlign::SUB:
+					// Lower the baseline of the box to the proper position for subscripts of the 
+					// parent's box. (This value has no effect on the font size of the element's text.)
+				case css::CssVerticalAlign::SUPER:
+					// Raise the baseline of the box to the proper position for superscripts of the 
+					// parent's box. (This value has no effect on the font size of the element's text.)
+				case css::CssVerticalAlign::TOP:
+					// Align the top of the aligned subtree with the top of the line box.
+				case css::CssVerticalAlign::TEXT_TOP:
+					// Align the top of the box with the top of the parent's content area
+				case css::CssVerticalAlign::TEXT_BOTTOM:
+					// Align the bottom of the box with the bottom of the parent's content area
+					break;
+				case css::CssVerticalAlign::LENGTH: {
+					// Offset align by length value. Percentages reference the line-height of the element.
+					FixedPoint len = vertical_align->getLength().compute(getLineHeight());
+					// 0 for len is the baseline.
+					child_y += baseline - len;
+				}
+				default:  break;
+			}
+
+			line.offset_.y = child_y;
+		}
 	}
 
-	void TextBox::handleRenderShadow(DisplayListPtr display_list, const point& offset, KRE::FontRenderablePtr fontr, float w, float h) const
+	void TextBox::setJustify(FixedPoint containing_width)
+	{
+		// N.B. we don't justify last line.
+		for(auto it = lines_.begin(); it != lines_.end()-1; ++it) {
+			auto& line = *it;
+			int word_count = line.line_->line.size() - 1;
+			if(word_count <= 2) {
+				return;
+			}
+			line.justification_ = (containing_width - line.width_) / word_count;
+		}
+	}
+
+	void TextBox::handleRenderBackground(const KRE::SceneTreePtr& scene_tree, const point& offset) const
+	{
+		for(auto it = lines_.begin(); it != lines_.end(); ++it) {
+			auto& line = *it;
+			Dimensions dims = getDimensions();
+			dims.content_.width = line.width_;
+			dims.content_.height = line.height_;
+			point offs = line.offset_;
+			offs.y -= line.height_;
+			getBackgroundInfo().render(scene_tree, dims, offs);
+		}
+	}
+
+	void TextBox::handleRenderBorder(const KRE::SceneTreePtr& scene_tree, const point& offset) const
+	{
+		for(auto it = lines_.begin(); it != lines_.end(); ++it) {
+			auto& line = *it;
+			Dimensions dims = getDimensions();
+			dims.content_.width = line.width_;
+			dims.content_.height = line.height_;
+			point offs = line.offset_;
+			offs.y -= line.height_;
+			if(isFirstInlineChild() && it == lines_.begin()) {
+				if(!(isLastInlineChild() && it == lines_.end()-1)) {
+					dims.border_.right = 0;
+				}
+			} else {
+				if(isLastInlineChild() && it == lines_.end()-1) {
+					dims.border_.left = 0;
+				} else {
+					dims.border_.left = dims.border_.right = 0;
+				}
+			}
+			getBorderInfo().render(scene_tree, dims, offs);
+		}
+	}
+
+	void TextBox::handleRenderShadow(const KRE::SceneTreePtr& scene_tree, KRE::FontRenderablePtr fontr, float w, float h) const
 	{
 		// make a copy of the font object.
 		//KRE::FontRenderablePtr shadow_font(new KRE::FontRenderable(*fontr));
@@ -164,10 +311,9 @@ namespace xhtml
 				!KRE::DisplayDevice::checkForFeature(KRE::DisplayDeviceCapabilties::RENDER_TO_TEXTURE)) {
 				// no blur
 				KRE::FontRenderablePtr shadow_font(new KRE::FontRenderable(*fontr));
-				shadow_font->setPosition(shadow.x_offset + offset.x / LayoutEngine::getFixedPointScaleFloat(), 
-					shadow.y_offset + offset.y / LayoutEngine::getFixedPointScaleFloat());
+				shadow_font->setPosition(shadow.x_offset, shadow.y_offset);
 				shadow_font->setColor(shadow.color != nullptr ? *shadow.color : *getStyleNode()->getColor());
-				display_list->addRenderable(shadow_font);
+				scene_tree->addObject(shadow_font);
 			} else {
 				using namespace KRE;
 				// more complex case where we need to blur, so we render the text to a 
@@ -176,8 +322,8 @@ namespace xhtml
 				const float width = w + extra_border * 2.0f;
 				const float height = h + extra_border * 2.0f;
 
-				const int iwidth = static_cast<int>(std::round(width));
-				const int iheight = static_cast<int>(std::round(height));
+				const int iwidth = getRootDimensions().content_.width / LayoutEngine::getFixedPointScale();//static_cast<int>(std::round(width));
+				const int iheight = getRootDimensions().content_.height / LayoutEngine::getFixedPointScale();//static_cast<int>(std::round(height));
 
 				auto shader_blur = ShaderProgram::createGaussianShader(kernel_radius)->clone();
 				const int blur_two = shader_blur->getUniform("texel_width_offset");
@@ -185,11 +331,11 @@ namespace xhtml
 				const int u_gaussian = shader_blur->getUniform("gaussian");
 				std::vector<float> gaussian = generate_gaussian(shadow.blur / 2.0f, kernel_radius);
 
-				CameraPtr rt_cam = std::make_shared<Camera>("ortho_blur", 0, iwidth, 0, iheight);
+				//CameraPtr rt_cam = std::make_shared<Camera>("ortho_blur", 0, iwidth, 0, iheight);
 				KRE::FontRenderablePtr shadow_font(new KRE::FontRenderable(*fontr));
 				const float xheight = getStyleNode()->getFont()->getFontXHeight() / LayoutEngine::getFixedPointScaleFloat();
 				shadow_font->setPosition(extra_border, extra_border + xheight);
-				shadow_font->setCamera(rt_cam);
+				//shadow_font->setCamera(rt_cam);
 				shadow_font->setColor(shadow.color != nullptr ? *shadow.color : *getStyleNode()->getColor());
 				int u_ignore_alpha = shadow_font->getShader()->getUniform("ignore_alpha");
 				UniformSetFn old_fn = shadow_font->getShader()->getUniformDrawFunction();
@@ -208,7 +354,7 @@ namespace xhtml
 					wnd->render(shadow_font.get());
 				}
 				shadow_font->getShader()->setUniformDrawFunction(old_fn);
-				rt_blur_h->setCamera(rt_cam);
+				//rt_blur_h->setCamera(rt_cam);
 				rt_blur_h->setShader(shader_blur);
 				shader_blur->setUniformDrawFunction([blur_two, blur_tho, iwidth, gaussian, u_gaussian](ShaderProgramPtr shader){ 
 					shader->setUniformValue(u_gaussian, &gaussian[0]);
@@ -233,9 +379,10 @@ namespace xhtml
 					shader->setUniformValue(blur_tho, 1.0f / (iheight - 1.0f));
 				});
 
-				rt_blur_v->setPosition(shadow.x_offset + offset.x / LayoutEngine::getFixedPointScaleFloat() - extra_border, 
-					shadow.y_offset + (offset.y) / LayoutEngine::getFixedPointScaleFloat() - xheight - extra_border);
-				display_list->addRenderable(rt_blur_v);
+				const float offs_x = 0;//getLeft() / LayoutEngine::getFixedPointScaleFloat();
+				const float offs_y = 0;//getTop() / LayoutEngine::getFixedPointScaleFloat();
+				rt_blur_v->setPosition(offs_x + shadow.x_offset - extra_border, offs_y + shadow.y_offset - xheight - extra_border);
+				scene_tree->addObject(rt_blur_v);
 				// XXX isnstead of adding all the textures here, we should add them to an array, then
 				// render them all to an FBO so we only have one final texture.
 				/*shadow_list.emplace_back(rt_blur_v);
@@ -265,35 +412,43 @@ namespace xhtml
 		}*/
 	}
 
-	void TextBox::handleRender(DisplayListPtr display_list, const point& offset) const
+	void TextBox::handleRender(const KRE::SceneTreePtr& scene_tree, const point& offset) const
 	{
-		ASSERT_LOG(line_ != nullptr, "TextBox has not had layout done. line_ is nullptr");
-		std::vector<point> path;
-		std::string text;
-		int dim_x = 0;
-		int dim_y = getStyleNode()->getFont()->getDescender();
-		for(auto& word : line_->line) {
-			for(auto it = word.advance.begin(); it != word.advance.end()-1; ++it) {
-				path.emplace_back(it->x + dim_x, it->y + dim_y);
-			}
-			dim_x += word.advance.back().x + line_->space_advance + justification_;
-			text += word.word;
+		if(lines_.empty()) {
+			return;
 		}
 
-		auto& ctx = RenderContext::get();
-		auto fontr = getStyleNode()->getFont()->createRenderableFromPath(nullptr, text, path);
+		//handleRenderTextDecoration -- underlines, then overlines
+		KRE::FontRenderablePtr fontr = nullptr;
+		for(auto& line : lines_) {
+			std::vector<point> path;
+			std::string text;
+			int dim_x = line.offset_.x;
+			int dim_y = getStyleNode()->getFont()->getDescender() + line.offset_.y;
+			for(auto& word : line.line_->line) {
+				for(auto it = word.advance.begin(); it != word.advance.end()-1; ++it) {
+					path.emplace_back(it->x + dim_x, it->y + dim_y);
+				}
+				dim_x += word.advance.back().x + line.line_->space_advance + line.justification_;
+				text += word.word;
+			}
+
+			if(!text.empty()) {
+				fontr = getStyleNode()->getFont()->createRenderableFromPath(nullptr, text, path);
+fontr->setColorPointer(getStyleNode()->getColor());
+scene_tree->addObject(fontr);
+			}
+		}
 
 		if(!shadows_.empty()) {
-			float w = fontr->getWidth() + (line_->space_advance + justification_) * line_->line.size() / LayoutEngine::getFixedPointScaleFloat();
-			float h = static_cast<float>(fontr->getHeight());
-			handleRenderShadow(display_list, offset, fontr, w, h);
+			ASSERT_LOG(false, "FIXME: handle text shadows");
+			//float w = fontr->getWidth() + (line.line_->space_advance + line.justification_) * line.line_->line.size() / LayoutEngine::getFixedPointScaleFloat();
+			//float h = static_cast<float>(fontr->getHeight());
+			//handleRenderShadow(scene_tree, fontr, w, h);
 		}
-		//handleRenderTextDecoration -- underlines, then overlines
 
-		fontr->setColorPointer(getStyleNode()->getColor());
-		fontr->setPosition(offset.x / LayoutEngine::getFixedPointScaleFloat(), offset.y / LayoutEngine::getFixedPointScaleFloat());
-		display_list->addRenderable(fontr);
-
+//		fontr->setColorPointer(getStyleNode()->getColor());
+//		scene_tree->addObject(fontr);
 		//handleRenderEmphasis -- text-emphasis
 		//handleRenderTextDecoration -- line-through
 	}

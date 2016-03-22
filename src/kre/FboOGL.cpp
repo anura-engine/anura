@@ -230,6 +230,13 @@ namespace KRE
 				if(depth_stencil_buffer_id_) {
 					glFramebufferRenderbuffer(GL_FRAMEBUFFER, ds_attachment, GL_RENDERBUFFER, *depth_stencil_buffer_id_);
 				}
+				if(color_planes > 1) {
+					std::vector<GLenum> bufs;
+					for(int n = 0; n != color_planes; ++n) {
+						bufs.emplace_back(GL_COLOR_ATTACHMENT0 + n);
+					}
+					glDrawBuffers(color_planes, bufs.data());
+				}
 				GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 				ASSERT_LOG(status != GL_FRAMEBUFFER_UNSUPPORTED, "Framebuffer not supported error.");
 				ASSERT_LOG(status == GL_FRAMEBUFFER_COMPLETE, "Framebuffer completion status not indicated: " << status);

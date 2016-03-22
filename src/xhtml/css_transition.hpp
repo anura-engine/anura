@@ -36,7 +36,7 @@ namespace css
 	public:
 		explicit Transition(const TimingFunction& fn, float duration, float delay);
 		virtual ~Transition() {}
-		void start(float t) { start_time_ = t + delay_; started_ = true; }
+		void start(float t) { start_time_ = t + delay_; started_ = true; onStart(); }
 		void stop() { stopped_ = true; }
 		void process(float t);
 		bool isStarted() const { return started_ && !stopped_; }
@@ -53,6 +53,7 @@ namespace css
 
 		virtual std::string handleToString() const = 0;
 		virtual void handleProcess(float dt, float outp) = 0;
+		virtual void onStart() {}
 		Transition() = delete;
 		Transition(const Transition&) = delete;
 		void operator=(const Transition&) = delete;
@@ -76,5 +77,39 @@ namespace css
 		KRE::ColorPtr mix_color_;
 	};
 
+	class FilterTransition : public Transition
+	{
+	public:
+		MAKE_FACTORY(FilterTransition);
+		explicit FilterTransition(const TimingFunction& fn, float duration, float delay);
+		void setStartFilter(const std::shared_ptr<FilterStyle>& start);
+		void setEndFilter(const std::shared_ptr<FilterStyle>& end) { end_ = end; }
+		std::shared_ptr<FilterStyle> getFilter() const { return mix_filter_; }
+	private:
+		std::string handleToString() const override;
+		void handleProcess(float dt, float outp) override;
+		std::shared_ptr<FilterStyle> start_;
+		std::shared_ptr<FilterStyle> end_;
+		std::shared_ptr<FilterStyle> mix_filter_;
+	};
+
+	class TransformTransition : public Transition
+	{
+	public:
+		MAKE_FACTORY(TransformTransition);
+		explicit TransformTransition(const TimingFunction& fn, float duration, float delay);
+		void setStart(const std::shared_ptr<TransformStyle>& start);
+		void setEnd(const std::shared_ptr<TransformStyle>& end) { end_ = end; }
+		std::shared_ptr<TransformStyle> getTransform() const { return mix_; }
+	private:
+		std::string handleToString() const override;
+		void handleProcess(float dt, float outp) override;
+		std::shared_ptr<TransformStyle> start_;
+		std::shared_ptr<TransformStyle> end_;
+		std::shared_ptr<TransformStyle> mix_;
+	};
+
 	typedef std::shared_ptr<ColorTransition> ColorTransitionPtr;
+	typedef std::shared_ptr<FilterTransition> FilterTransitionPtr;
+	typedef std::shared_ptr<TransformTransition> TransformTransitionPtr;
 }

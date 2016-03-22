@@ -134,6 +134,7 @@ namespace xhtml
 				if(!pinfo.inherited) {
 					update_list.emplace_back(n);
 					get_stack_array()[n].emplace(pinfo.obj);
+					// XXX get_stack_array()[n]->calculateComputedValues();
 					if(is_font_property(p)) {
 						pushed_font_change_ = true;
 					}
@@ -143,6 +144,7 @@ namespace xhtml
 				if(style != get_stack_array()[n].top()) {
 					update_list.emplace_back(n);				
 					get_stack_array()[n].emplace(style);
+					// XXX get_stack_array()[n]->calculateComputedValues();
 					if(is_font_property(p)) {
 						pushed_font_change_ = true;
 					}

@@ -27,6 +27,7 @@
 #include <random>
 #include <sstream>
 #include <glm/glm.hpp>
+#include <glm/vec4.hpp>
 
 #include "asserts.hpp"
 #include "AttributeSet.hpp"
@@ -40,7 +41,7 @@ namespace KRE
 {
 	namespace Particles
 	{
-		typedef glm::detail::tvec4<unsigned char> color_vector;
+		typedef glm::tvec4<unsigned char> color_vector;
 
 		struct vertex_texture_color3
 		{

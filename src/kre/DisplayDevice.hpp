@@ -138,6 +138,7 @@ namespace KRE
 		virtual CanvasPtr getCanvas() = 0;
 
 		virtual ClipScopePtr createClipScope(const rect& r) = 0;
+		virtual ClipShapeScopePtr createClipShapeScope(const RenderablePtr& r) = 0;
 		virtual StencilScopePtr createStencilScope(const StencilSettings& settings) = 0;
 
 		virtual ScissorPtr getScissor(const rect& r) = 0;

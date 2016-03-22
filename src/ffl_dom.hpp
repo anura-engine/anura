@@ -32,6 +32,7 @@
 
 #include "xhtml.hpp"
 #include "xhtml_script_interface.hpp"
+#include "SceneTree.hpp"
 
 #include "ffl_dom_fwd.hpp"
 
@@ -106,7 +107,7 @@ namespace xhtml
 		
 		xhtml::DocumentPtr doc_;
 		xhtml::StyleNodePtr style_tree_;
-		xhtml::DisplayListPtr display_list_;
+		KRE::SceneTreePtr scene_tree_;
 
 		std::string doc_name_;
 		std::string ss_name_;

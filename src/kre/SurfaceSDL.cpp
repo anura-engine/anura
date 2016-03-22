@@ -704,8 +704,13 @@ namespace KRE
 
 	SurfacePtr SurfaceSDL::createFromFile(const std::string& filename, PixelFormat::PF fmt, SurfaceFlags flags, SurfaceConvertFn fn)
 	{
-		auto filter = Surface::getFileFilter(FileFilterType::LOAD);
-		auto s = IMG_Load(filter(filename).c_str());
+		SDL_Surface* s = nullptr;
+		if(flags & SurfaceFlags::FROM_DATA) {
+			s = IMG_Load_RW(SDL_RWFromConstMem(filename.c_str(), static_cast<int>(filename.size())), 0);
+		} else {
+			auto filter = Surface::getFileFilter(FileFilterType::LOAD);
+			s = IMG_Load(filter(filename).c_str());
+		}
 		if(s == nullptr) {
 			std::stringstream ss;
 			ss << "Failed to load image file: '" << filename << "' : " << IMG_GetError();

@@ -244,8 +244,8 @@ namespace KRE
 				color_ = variant_to_vec4(node["colour"]);
 			}
 			if(node.has_key("start_colour_range") && node.has_key("end_colour_range")) {
-				glm::detail::tvec4<unsigned char> start;
-				glm::detail::tvec4<unsigned char> end;
+				glm::tvec4<unsigned char> start;
+				glm::tvec4<unsigned char> end;
 				ASSERT_LOG(node["start_colour_range"].is_list() && node["start_colour_range"].num_elements() == 4,
 					"'start_colour_range' should be a list of 4 elements.");
 				start.r = node["start_colour_range"][0].as_int32();
@@ -581,7 +581,7 @@ namespace KRE
 		color_vector Emitter::getColor() const
 		{
 			if(color_range_) {
-				return glm::detail::tvec4<unsigned char>(
+				return glm::tvec4<unsigned char>(
 					get_random_float(color_range_->first.r,color_range_->second.r),
 					get_random_float(color_range_->first.g,color_range_->second.g),
 					get_random_float(color_range_->first.b,color_range_->second.b),

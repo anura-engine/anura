@@ -29,8 +29,8 @@ namespace xhtml
 	// This encapsulates a replaced inline element, non-replaced inline elements are
 	// dealt with elsewhere
 
-	InlineElementBox::InlineElementBox(BoxPtr parent, StyleNodePtr node)
-		: Box(BoxId::INLINE_ELEMENT, parent, node)
+	InlineElementBox::InlineElementBox(const BoxPtr& parent, const StyleNodePtr& node, const RootBoxPtr& root)
+		: Box(BoxId::INLINE_ELEMENT, parent, node, root)
 	{
 	}
 
@@ -69,14 +69,13 @@ namespace xhtml
 		return ss.str();
 	}
 
-	void InlineElementBox::handleRender(DisplayListPtr display_list, const point& offset) const
+	void InlineElementBox::handleRender(const KRE::SceneTreePtr& scene_tree, const point& offset) const
 	{
 		auto node = getNode();
 		if(node != nullptr) {
 			auto r = node->getRenderable();
 			if(r != nullptr) {
-				r->setPosition(glm::vec3(offset.x/LayoutEngine::getFixedPointScaleFloat(), offset.y/LayoutEngine::getFixedPointScaleFloat(), 0.0f));
-				display_list->addRenderable(r);
+				scene_tree->addObject(r);
 			}
 		}
 	}

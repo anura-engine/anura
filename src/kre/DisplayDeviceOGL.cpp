@@ -409,7 +409,7 @@ namespace KRE
 				continue;
 			}
 			//ASSERT_LOG(as->getCount() > 0, "No (or negative) number of vertices in attribute set. " << as->getCount());
-			if(as->getCount() <= 0) {
+			if((!as->isMultiDrawEnabled() && as->getCount() <= 0) || (as->isMultiDrawEnabled() && as->getMultiDrawCount() <= 0)) {
 				//LOG_WARN("No (or negative) number of vertices in attribute set. " << as->getCount());
 				continue;
 			}
@@ -445,7 +445,11 @@ namespace KRE
 					glDrawElements(draw_mode, static_cast<GLsizei>(as->getCount()), convert_index_type(as->getIndexType()), as->getIndexArray());
 					as->unbindIndex();
 				} else {
-					glDrawArrays(draw_mode, static_cast<GLint>(as->getOffset()), static_cast<GLsizei>(as->getCount()));
+					if(as->isMultiDrawEnabled()) {
+						glMultiDrawArrays(draw_mode, as->getMultiOffsetArray().data(), as->getMultiCountArray().data(), as->getMultiDrawCount());
+					} else {
+						glDrawArrays(draw_mode, static_cast<GLint>(as->getOffset()), static_cast<GLsizei>(as->getCount()));
+					}
 				}
 			}
 
@@ -539,6 +543,11 @@ namespace KRE
 	ClipScopePtr DisplayDeviceOpenGL::createClipScope(const rect& r)
 	{
 		return ClipScopePtr(new ClipScopeOGL(r));
+	}
+
+	ClipShapeScopePtr DisplayDeviceOpenGL::createClipShapeScope(const RenderablePtr& r)
+	{
+		return ClipShapeScopePtr(new ClipShapeScopeOGL(r));
 	}
 
 	StencilScopePtr DisplayDeviceOpenGL::createStencilScope(const StencilSettings& settings)

@@ -30,11 +30,11 @@ namespace xhtml
 	class BlockBox : public Box
 	{
 	public:
-		explicit BlockBox(BoxPtr parent, StyleNodePtr node);
+		explicit BlockBox(const BoxPtr& parent, const StyleNodePtr& node, const RootBoxPtr& root);
 		virtual std::string toString() const override;
 	protected:
 		virtual void handleLayout(LayoutEngine& eng, const Dimensions& containing) override;
-		virtual void handleRender(DisplayListPtr display_list, const point& offset) const override;
+		virtual void handleRender(const KRE::SceneTreePtr& scene_tree, const point& offset) const override;
 	private:
 		void handlePreChildLayout(LayoutEngine& eng, const Dimensions& containing) override;
 		// Called after every child has been laid out.

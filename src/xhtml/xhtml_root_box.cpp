@@ -28,8 +28,8 @@ namespace xhtml
 {
 	using namespace css;
 
-	RootBox::RootBox(BoxPtr parent, StyleNodePtr node)
-		: BlockBox(parent, node),
+	RootBox::RootBox(const BoxPtr& parent, const StyleNodePtr& node)
+		: BlockBox(parent, node, nullptr),
 		  fixed_boxes_()
 	{
 	}
@@ -62,11 +62,11 @@ namespace xhtml
 		layoutFixed(eng, containing);
 	}
 
-	void RootBox::handleEndRender(DisplayListPtr display_list, const point& offset) const
+	void RootBox::handleEndRender(const KRE::SceneTreePtr& scene_tree, const point& offset) const
 	{
 		// render fixed boxes.
 		for(auto& fix : fixed_boxes_) {
-			fix->render(display_list, point(0, 0));
+			fix->render(point(0, 0));
 		}
 	}
 

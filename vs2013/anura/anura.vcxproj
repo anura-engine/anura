@@ -140,6 +140,7 @@
     <ClInclude Include="..\..\src\json_parser.hpp" />
     <ClInclude Include="..\..\src\json_tokenizer.hpp" />
     <ClInclude Include="..\..\src\key_button.hpp" />
+    <ClInclude Include="..\..\src\kre\AlignedAllocator.hpp" />
     <ClInclude Include="..\..\src\kre\AttributeSet.hpp" />
     <ClInclude Include="..\..\src\kre\AttributeSetOGL.hpp" />
     <ClInclude Include="..\..\src\kre\Blend.hpp" />
@@ -188,6 +189,7 @@
     <ClInclude Include="..\..\src\kre\SceneNode.hpp" />
     <ClInclude Include="..\..\src\kre\SceneObject.hpp" />
     <ClInclude Include="..\..\src\kre\SceneParameters.hpp" />
+    <ClInclude Include="..\..\src\kre\SceneTree.hpp" />
     <ClInclude Include="..\..\src\kre\SceneUtil.hpp" />
     <ClInclude Include="..\..\src\kre\Scissor.hpp" />
     <ClInclude Include="..\..\src\kre\ScissorOGL.hpp" />
@@ -364,9 +366,9 @@
     <ClInclude Include="..\..\src\xhtml\css_styles.hpp" />
     <ClInclude Include="..\..\src\xhtml\css_stylesheet.hpp" />
     <ClInclude Include="..\..\src\xhtml\css_transition.hpp" />
-    <ClInclude Include="..\..\src\xhtml\display_list.hpp" />
     <ClInclude Include="..\..\src\xhtml\solid_renderable.hpp" />
     <ClInclude Include="..\..\src\xhtml\to_roman.hpp" />
+    <ClInclude Include="..\..\src\xhtml\url_handler.hpp" />
     <ClInclude Include="..\..\src\xhtml\xhtml.hpp" />
     <ClInclude Include="..\..\src\xhtml\xhtml_absolute_box.hpp" />
     <ClInclude Include="..\..\src\xhtml\xhtml_background_info.hpp" />
@@ -379,7 +381,6 @@
     <ClInclude Include="..\..\src\xhtml\xhtml_inline_block_box.hpp" />
     <ClInclude Include="..\..\src\xhtml\xhtml_inline_element_box.hpp" />
     <ClInclude Include="..\..\src\xhtml\xhtml_layout_engine.hpp" />
-    <ClInclude Include="..\..\src\xhtml\xhtml_line_box.hpp" />
     <ClInclude Include="..\..\src\xhtml\xhtml_listitem_box.hpp" />
     <ClInclude Include="..\..\src\xhtml\xhtml_node.hpp" />
     <ClInclude Include="..\..\src\xhtml\xhtml_parser.hpp" />
@@ -543,6 +544,7 @@
     <ClCompile Include="..\..\src\kre\SceneNode.cpp" />
     <ClCompile Include="..\..\src\kre\SceneObject.cpp" />
     <ClCompile Include="..\..\src\kre\SceneParameters.cpp" />
+    <ClCompile Include="..\..\src\kre\SceneTree.cpp" />
     <ClCompile Include="..\..\src\kre\Scissor.cpp" />
     <ClCompile Include="..\..\src\kre\ScissorOGL.cpp" />
     <ClCompile Include="..\..\src\kre\Shaders.cpp" />
@@ -700,9 +702,9 @@
     <ClCompile Include="..\..\src\xhtml\css_styles.cpp" />
     <ClCompile Include="..\..\src\xhtml\css_stylesheet.cpp" />
     <ClCompile Include="..\..\src\xhtml\css_transition.cpp" />
-    <ClCompile Include="..\..\src\xhtml\display_list.cpp" />
     <ClCompile Include="..\..\src\xhtml\solid_renderable.cpp" />
     <ClCompile Include="..\..\src\xhtml\to_roman.cpp" />
+    <ClCompile Include="..\..\src\xhtml\url_handler.cpp" />
     <ClCompile Include="..\..\src\xhtml\xhtml_absolute_box.cpp" />
     <ClCompile Include="..\..\src\xhtml\xhtml_background_info.cpp" />
     <ClCompile Include="..\..\src\xhtml\xhtml_block_box.cpp" />
@@ -712,7 +714,6 @@
     <ClCompile Include="..\..\src\xhtml\xhtml_inline_block_box.cpp" />
     <ClCompile Include="..\..\src\xhtml\xhtml_inline_element_box.cpp" />
     <ClCompile Include="..\..\src\xhtml\xhtml_layout_engine.cpp" />
-    <ClCompile Include="..\..\src\xhtml\xhtml_line_box.cpp" />
     <ClCompile Include="..\..\src\xhtml\xhtml_listitem_box.cpp" />
     <ClCompile Include="..\..\src\xhtml\xhtml_node.cpp" />
     <ClCompile Include="..\..\src\xhtml\xhtml_parser.cpp" />

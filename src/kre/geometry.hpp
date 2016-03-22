@@ -188,6 +188,21 @@ namespace geometry
 			bottom_right_.x -= p.x;
 			bottom_right_.y -= p.y;
 		}
+		void expand(const Point<T>& p) {
+			top_left_.x -= p.x;
+			top_left_.y -= p.y;
+			bottom_right_.x += p.x;
+			bottom_right_.y += p.y;
+		}
+		void contract(const Point<T>& p) {
+			expand(Point<T>(-p.x, -p.y));
+		}
+		void expand(T v) {
+			top_left_.x -= v;
+			top_left_.y -= v;
+			bottom_right_.x += v;
+			bottom_right_.y += v;
+		}
 
 		template<typename F>
 		Rect<F> as_type() const {

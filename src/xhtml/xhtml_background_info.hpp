@@ -46,10 +46,10 @@ namespace xhtml
 	{
 	public:
 		explicit BackgroundInfo(const StyleNodePtr& styles);
-		void render(DisplayListPtr display_list, const point& offset, const Dimensions& dims) const;
+		void render(const KRE::SceneTreePtr& scene_tree, const Dimensions& dims, const point& offset) const;
 		void init(const Dimensions& dims);
 	private:
-		void renderBoxShadow(DisplayListPtr display_list, const point& offset, const Dimensions& dims, KRE::RenderablePtr clip_shape) const;
+		void renderBoxShadow(const KRE::SceneTreePtr& scene_tree, const Dimensions& dims, KRE::RenderablePtr clip_shape) const;
 
 		StyleNodePtr styles_;
 		KRE::TexturePtr texture_;

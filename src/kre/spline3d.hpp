@@ -10,14 +10,14 @@ namespace geometry
     {
     public:
         spline3d() : recalc_(true) {}
-        spline3d(const std::vector<glm::detail::tvec3<T>>& cps) 
+        spline3d(const std::vector<glm::tvec3<T>>& cps) 
             : points_(cps), 
               recalc_(false), 
 			  coeffs_(T(2), T(-3), T(0), T(1), T(-2), T(3), T(0), T(0), T(1), T(-2), T(1), T(0), T(1), T(-1), T(0), T(0))
         {
             recalculate_tangents();
         }
-        void add_point(const glm::detail::tvec3<T>& pt) 
+        void add_point(const glm::tvec3<T>& pt) 
         {
             points_.emplace_back(pt);
             if(recalc_) {
@@ -51,7 +51,7 @@ namespace geometry
                 }
             }
         }
-        glm::detail::tvec3<T> interpolate(T x)
+        glm::tvec3<T> interpolate(T x)
         {
 			assert(!points_.empty());
             const T seg = x * (points_.size()-1);
@@ -68,25 +68,25 @@ namespace geometry
             return points_.size();
         }
     private:
-        glm::detail::tvec3<T> interpolate(unsigned seg, T x)
+        glm::tvec3<T> interpolate(unsigned seg, T x)
         {
             if(x == T(0)) {
                 return points_[seg];
             } else if(x == T(1)) {
                 return points_[seg+1];
             }
-            glm::detail::tvec4<T> powers(x*x*x, x*x, x, T(1));
-			glm::detail::tmat4x4<T> m(points_[seg].x, points_[seg+1].x, tangents_[seg].x, tangents_[seg+1].x,
+            glm::tvec4<T> powers(x*x*x, x*x, x, T(1));
+			glm::tmat4x4<T> m(points_[seg].x, points_[seg+1].x, tangents_[seg].x, tangents_[seg+1].x,
 				points_[seg].y, points_[seg+1].y, tangents_[seg].y, tangents_[seg+1].y,
 				points_[seg].z, points_[seg+1].z, tangents_[seg].z, tangents_[seg+1].z,
 				T(1), T(1), T(1), T(1));
 			auto ret = powers * coeffs_ * m;
-            return glm::detail::tvec3<T>(ret.x, ret.y, ret.z);
+            return glm::tvec3<T>(ret.x, ret.y, ret.z);
         }
         
         bool recalc_;
-        const glm::detail::tmat4x4<T> coeffs_;
-        std::vector<glm::detail::tvec3<T>> points_;
-        std::vector<glm::detail::tvec3<T>> tangents_;
+        const glm::tmat4x4<T> coeffs_;
+        std::vector<glm::tvec3<T>> points_;
+        std::vector<glm::tvec3<T>> tangents_;
     };
 }

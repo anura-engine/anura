@@ -113,6 +113,8 @@ namespace KRE
 		static TexturePtr createTexture(const std::string& filename, const variant& node);
 		static TexturePtr createTexture(const SurfacePtr& surface, const variant& node);
 		static TexturePtr createTexture(const SurfacePtr& surface);
+		static TexturePtr createFromImage(const std::string& image_data, const variant& node);
+		static TexturePtr createFromImage(const std::string& image_data, TextureType type=TextureType::TEXTURE_2D, int mipmap_levels=0);
 		
 		static TexturePtr createTexture1D(int width, PixelFormat::PF fmt);
 		static TexturePtr createTexture2D(int width, int height, PixelFormat::PF fmt);

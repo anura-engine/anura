@@ -49,6 +49,10 @@ namespace KRE
 		// If this is supplied then any rows/columns of the image that contain pure alpha pixels are stripped
 		// until we generate an image that is minimal in size.
 		STRIP_ALPHA_BORDERS = 4,
+
+		// Special internal code to indicate that we are not loading from a file, but the image data is inside
+		// the passed in string.
+		FROM_DATA			= 128,
 	};
 
 	typedef std::function<void(int&,int&,int&,int&)> SurfaceConvertFn;

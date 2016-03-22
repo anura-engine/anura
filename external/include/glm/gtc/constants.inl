@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////////
 /// OpenGL Mathematics (glm.g-truc.net)
 ///
-/// Copyright (c) 2005 - 2013 G-Truc Creation (www.g-truc.net)
+/// Copyright (c) 2005 - 2015 G-Truc Creation (www.g-truc.net)
 /// Permission is hereby granted, free of charge, to any person obtaining a copy
 /// of this software and associated documentation files (the "Software"), to deal
 /// in the Software without restriction, including without limitation the rights
@@ -12,6 +12,10 @@
 /// The above copyright notice and this permission notice shall be included in
 /// all copies or substantial portions of the Software.
 /// 
+/// Restrictions:
+///		By making use of the Software for military purposes, you choose to make
+///		a Bunny unhappy.
+/// 
 /// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 /// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 /// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,11 +24,13 @@
 /// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 /// THE SOFTWARE.
 ///
-/// @ref gtx_constants
-/// @file glm/gtx/constants.inl
-/// @date 2011-10-14 / 2012-01-25
+/// @ref gtc_constants
+/// @file glm/gtc/constants.inl
+/// @date 2011-10-14 / 2014-10-25
 /// @author Christophe Riccio
 ///////////////////////////////////////////////////////////////////////////////////
+
+#include <limits>
 
 namespace glm
 {
@@ -32,12 +38,6 @@ namespace glm
 	GLM_FUNC_QUALIFIER genType epsilon()
 	{
 		return std::numeric_limits<genType>::epsilon();
-	}
-
-	template <>
-	GLM_FUNC_QUALIFIER half epsilon()
-	{
-		return half(1.19209290e-007);
 	}
 
 	template <typename genType>
@@ -59,6 +59,12 @@ namespace glm
 	}
 
 	template <typename genType>
+	GLM_FUNC_QUALIFIER genType two_pi()
+	{
+		return genType(6.28318530717958647692528676655900576);
+	}
+
+	template <typename genType>
 	GLM_FUNC_QUALIFIER genType root_pi()
 	{
 		return genType(1.772453850905516027);
@@ -68,6 +74,12 @@ namespace glm
 	GLM_FUNC_QUALIFIER genType half_pi()
 	{
 		return genType(1.57079632679489661923132169163975144);
+	}
+
+	template <typename genType>
+	GLM_FUNC_QUALIFIER genType three_over_two_pi()
+	{
+		return genType(4.71238898038468985769396507491925432);           
 	}
 
 	template <typename genType>
@@ -83,9 +95,21 @@ namespace glm
 	}
 
 	template <typename genType>
+	GLM_FUNC_QUALIFIER genType one_over_two_pi()
+	{
+		return genType(0.159154943091895335768883763372514362);
+	}
+
+	template <typename genType>
 	GLM_FUNC_QUALIFIER genType two_over_pi()
 	{
 		return genType(0.636619772367581343075535053490057448);
+	}
+
+	template <typename genType>
+	GLM_FUNC_QUALIFIER genType four_over_pi()
+	{
+		return genType(1.273239544735162686151070106980114898);
 	}
 
 	template <typename genType>

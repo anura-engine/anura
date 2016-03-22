@@ -106,6 +106,15 @@ namespace KRE
 		virtual void setUniformValue(int uid, const void*) const = 0;
 		virtual void setUniformFromVariant(int uid, const variant& value) const = 0;
 
+		// These are for setting the values for attributes that aren't enabled.
+		virtual void setAttributeValue(int aid, const int) const = 0;
+		virtual void setAttributeValue(int aid, const float) const = 0;
+		virtual void setAttributeValue(int aid, const float*) const = 0;
+		virtual void setAttributeValue(int aid, const int*) const = 0;
+		virtual void setAttributeValue(int aid, const void*) const = 0;
+		virtual void setAttributeValue(int aid, const unsigned char*) const = 0;
+		virtual void setAttributeFromVariant(int uid, const variant& value) const = 0;
+
 		virtual void configureActives(AttributeSetPtr attrset) = 0;
 		virtual void configureAttribute(AttributeBasePtr attr) = 0;
 		virtual void configureUniforms(UniformBufferBase& uniforms) = 0;
@@ -140,7 +149,7 @@ namespace KRE
 			const std::vector<ActiveMapping>& uniform_map = std::vector<ActiveMapping>(),
 			const std::vector<ActiveMapping>& attribute_map = std::vector<ActiveMapping>());
 
-		variant getShaderVariant() { return node_; }
+		const variant& getShaderVariant() const { return node_; }
 
 		virtual ShaderProgramPtr clone() = 0;
 

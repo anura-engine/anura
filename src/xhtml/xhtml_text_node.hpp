@@ -41,8 +41,8 @@ namespace xhtml
 		void addText(const std::string& txt) { text_ += txt; }
 		iterator begin() { return line_.line.begin(); }
 		iterator end() { return line_.line.end(); }
-		LinePtr reflowText(iterator& start, FixedPoint maximum_line_width, KRE::FontHandlePtr fh);
-		void transformText(bool non_zero_width);
+		LinePtr reflowText(iterator& start, FixedPoint maximum_line_width, const StyleNodePtr& style_node);
+		void transformText(const StyleNodePtr& style_node, bool non_zero_width);
 	protected:
 		explicit Text(const std::string& txt, WeakDocumentPtr owner);
 		std::string toString() const override;

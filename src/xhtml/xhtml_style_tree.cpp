@@ -34,6 +34,7 @@ namespace xhtml
 		  children_(),
 		  transitions_(),
 		  acc_(0.0f),
+		  scene_tree_(nullptr),
 		  background_attachment_(BackgroundAttachment::SCROLL),
 		  background_color_(nullptr),
 		  background_image_(nullptr),
@@ -102,7 +103,9 @@ namespace xhtml
 		  border_image_outset_{},
 		  border_image_repeat_horiz_(CssBorderImageRepeat::REPEAT),
 		  border_image_repeat_vert_(CssBorderImageRepeat::REPEAT),
-		  background_clip_(BackgroundClip::BORDER_BOX)
+		  background_clip_(BackgroundClip::BORDER_BOX),
+		  filters_(nullptr),
+		  transform_(nullptr)
 	{
 	}
 
@@ -211,6 +214,43 @@ namespace xhtml
 			}
 		} else {
 			color = new_color;
+		}
+	}
+
+	void StyleNode::processFilter(bool created)
+	{
+		RenderContext& ctx = RenderContext::get();
+		std::shared_ptr<FilterStyle> new_filters = ctx.getComputedValue(Property::FILTER)->asType<FilterStyle>();
+		// XXX
+		new_filters->calculateComputedValues();
+		if(new_filters->hasTransition() && !created) {
+			for(auto& tx : new_filters->getTransitions()) {
+				FilterTransitionPtr ft = FilterTransition::create(tx.ttfn, tx.duration, tx.delay);
+				ft->setStartFilter(filters_);
+				ft->setEndFilter(new_filters);
+				addTransitionEffect(ft);
+				filters_ = ft->getFilter();
+			}
+		} else {
+			filters_ = new_filters;
+		}
+	}
+
+	void StyleNode::processTransform(bool created)
+	{
+		RenderContext& ctx = RenderContext::get();
+		std::shared_ptr<TransformStyle> new_transform = ctx.getComputedValue(Property::TRANSFORM)->asType<TransformStyle>();
+		new_transform->calculateComputedValues();
+		if(new_transform->hasTransition() && !created) {
+			for(auto& tx : new_transform->getTransitions()) {
+				TransformTransitionPtr ttp = TransformTransition::create(tx.ttfn, tx.duration, tx.delay);
+				ttp->setStart(transform_);
+				ttp->setEnd(new_transform);
+				addTransitionEffect(ttp);
+				transform_ = ttp->getTransform();
+			}
+		} else {
+			transform_ = new_transform;
 		}
 	}
 
@@ -348,6 +388,10 @@ namespace xhtml
 		border_image_repeat_vert_ = bir->image_repeat_vert_;
 		background_clip_style_ = ctx.getComputedValue(Property::BACKGROUND_CLIP);
 		background_clip_ = background_clip_style_->getEnum<BackgroundClip>();
+
+		processFilter(created);
+
+		processTransform(created);
 	}
 
 	void StyleNode::setPropertyFromString(css::Property p, const std::string& value)
@@ -491,6 +535,9 @@ namespace xhtml
 				break;
 			case Property::BACKGROUND_CLIP:
 				background_clip_ = sp->getEnum<BackgroundClip>();
+				break;
+			case Property::FILTER:
+				*filters_ = *sp->asType<FilterStyle>();
 				break;
 			case Property::COUNTER_INCREMENT:
 			case Property::COUNTER_RESET:
@@ -642,7 +689,18 @@ namespace xhtml
 		border_image_outset_ = new_styles->border_image_outset_; 
 		border_image_repeat_horiz_ = new_styles->border_image_repeat_horiz_; 
 		border_image_repeat_vert_ = new_styles->border_image_repeat_vert_; 
-		background_clip_ = new_styles->background_clip_; 
+		background_clip_ = new_styles->background_clip_;
+		filters_ = new_styles->filters_;
+	}
+
+	 KRE::SceneTreePtr StyleNode::createSceneTree(KRE::SceneTreePtr scene_parent)
+	{
+		scene_tree_ = KRE::SceneTree::create(scene_parent);
+		for(auto& child : getChildren()) {
+			KRE::SceneTreePtr ptr = child->createSceneTree(scene_tree_);
+			scene_tree_->addChild(ptr);
+		}
+		return scene_tree_;
 	}
 
 	StyleNodePtr StyleNode::createStyleTree(const DocumentPtr& doc)
@@ -651,6 +709,8 @@ namespace xhtml
 		for(auto& child : doc->getChildren()) {
 			root->parseNode(root, child);
 		}
+		// create a scene tree based on the style tree.
+		root->createSceneTree(nullptr);
 		return root;
 	}
 }

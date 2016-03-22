@@ -28,8 +28,8 @@ namespace xhtml
 {
 	using namespace css;
 
-	AbsoluteBox::AbsoluteBox(BoxPtr parent, StyleNodePtr node)
-		: Box(BoxId::ABSOLUTE, parent, node),
+	AbsoluteBox::AbsoluteBox(const BoxPtr& parent, const StyleNodePtr& node, const RootBoxPtr& root)
+		: Box(BoxId::ABSOLUTE, parent, node, root),
 		  container_()
 	{
 	}
@@ -43,6 +43,8 @@ namespace xhtml
 
 	void AbsoluteBox::handlePreChildLayout(LayoutEngine& eng, const Dimensions& containing)
 	{
+		eng.setCursor(point());
+
 		Rect container = containing.content_;
 
 		// Find the first ancestor with non-static position
@@ -118,7 +120,7 @@ namespace xhtml
 		setContentHeight(height - getMBPHeight());
 	}
 
-	void AbsoluteBox::handleRender(DisplayListPtr display_list, const point& offset) const
+	void AbsoluteBox::handleRender(const KRE::SceneTreePtr& scene_tree, const point& offset) const
 	{
 		// XXX
 	}

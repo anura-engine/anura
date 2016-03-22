@@ -96,6 +96,14 @@ namespace KRE
 			void setUniformValue(int uid, const GLint*) const override;
 			void setUniformValue(int uid, const void*) const override;
 
+			void setAttributeValue(int aid, const int) const override;
+			void setAttributeValue(int aid, const float) const override;
+			void setAttributeValue(int aid, const float*) const override;
+			void setAttributeValue(int aid, const int*) const override;
+			void setAttributeValue(int aid, const void*) const override;
+			void setAttributeValue(int aid, const unsigned char*) const override;
+			void setAttributeFromVariant(int uid, const variant& value) const override;
+
 			void setUniformFromVariant(int uid, const variant& value) const override;
 
 			void makeActive() override;

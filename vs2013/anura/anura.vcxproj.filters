@@ -1047,9 +1047,6 @@
     <ClInclude Include="..\..\src\xhtml\css_transition.hpp">
       <Filter>Header Files\xhtml</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\xhtml\display_list.hpp">
-      <Filter>Header Files\xhtml</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\xhtml\solid_renderable.hpp">
       <Filter>Header Files\xhtml</Filter>
     </ClInclude>
@@ -1090,9 +1087,6 @@
       <Filter>Header Files\xhtml</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\xhtml\xhtml_layout_engine.hpp">
-      <Filter>Header Files\xhtml</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\xhtml\xhtml_line_box.hpp">
       <Filter>Header Files\xhtml</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\xhtml\xhtml_listitem_box.hpp">
@@ -1154,6 +1148,15 @@
     </ClInclude>
     <ClInclude Include="..\..\src\breakpad.hpp">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\SceneTree.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\xhtml\url_handler.hpp">
+      <Filter>Header Files\xhtml</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\AlignedAllocator.hpp">
+      <Filter>Header Files\kre</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -2044,9 +2047,6 @@
     <ClCompile Include="..\..\src\xhtml\css_transition.cpp">
       <Filter>Source Files\xhtml</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\xhtml\display_list.cpp">
-      <Filter>Source Files\xhtml</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\xhtml\solid_renderable.cpp">
       <Filter>Source Files\xhtml</Filter>
     </ClCompile>
@@ -2078,9 +2078,6 @@
       <Filter>Source Files\xhtml</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\xhtml\xhtml_layout_engine.cpp">
-      <Filter>Source Files\xhtml</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\xhtml\xhtml_line_box.cpp">
       <Filter>Source Files\xhtml</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\xhtml\xhtml_listitem_box.cpp">
@@ -2145,6 +2142,12 @@
     </ClCompile>
     <ClCompile Include="..\..\src\breakpad.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\SceneTree.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\xhtml\url_handler.cpp">
+      <Filter>Source Files\xhtml</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

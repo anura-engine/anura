@@ -108,9 +108,12 @@ namespace xhtml
 		  pclass_(css::PseudoClass::NONE),
 		  active_pclass_(css::PseudoClass::NONE),
 		  active_rect_(),
+		  model_matrix_(1.0f),
 		  dimensions_(),
 		  script_handler_(nullptr),
-		  active_handlers_()
+		  active_handlers_(),
+		  mouse_entered_(false),
+		  style_node_()
 	{
 		active_handlers_.resize(static_cast<int>(EventHandlerId::MAX_EVENT_HANDLERS));
 	}
@@ -362,8 +365,10 @@ namespace xhtml
 		}
 	}
 
-	bool Node::handleMouseButtonUp(bool* trigger, const point& p, unsigned button)
+	bool Node::handleMouseButtonUp(bool* trigger, const point& mp, unsigned button)
 	{
+		auto pos = model_matrix_ * glm::vec4(static_cast<float>(mp.x), static_cast<float>(mp.y), 0.0f, 1.0f);
+		point p(static_cast<int>(pos.x), static_cast<int>(pos.y));
 		if(!active_rect_.empty()) {
 			if(geometry::pointInRect(p, active_rect_)) {
 				if(getScriptHandler() && hasActiveHandler(EventHandlerId::MOUSE_UP)) {
@@ -383,8 +388,10 @@ namespace xhtml
 		return true;
 	}
 
-	bool Node::handleMouseButtonDown(bool* trigger, const point& p, unsigned button)
+	bool Node::handleMouseButtonDown(bool* trigger, const point& mp, unsigned button)
 	{
+		auto pos = model_matrix_ * glm::vec4(static_cast<float>(mp.x), static_cast<float>(mp.y), 0.0f, 1.0f);
+		point p(static_cast<int>(pos.x), static_cast<int>(pos.y));
 		if(!active_rect_.empty()) {
 			if(geometry::pointInRect(p, active_rect_)) {
 				if(getScriptHandler() && hasActiveHandler(EventHandlerId::MOUSE_DOWN)) {
@@ -404,8 +411,11 @@ namespace xhtml
 		return true;
 	}
 
-	bool Node::handleMouseMotion(bool* trigger, const point& p)
+	bool Node::handleMouseMotion(bool* trigger, const point& mp)
 	{
+		auto pos = model_matrix_ * glm::vec4(static_cast<float>(mp.x), static_cast<float>(mp.y), 0.0f, 1.0f);
+		point p(static_cast<int>(pos.x), static_cast<int>(pos.y));
+		//LOG_DEBUG("mp: " << mp << ", p: " << p << ", ar: " <<  active_rect_);
 		if(!active_rect_.empty()) {
 			if(geometry::pointInRect(p, active_rect_)) {
 				if(mouse_entered_ == false && getScriptHandler() && hasActiveHandler(EventHandlerId::MOUSE_ENTER)) {
@@ -453,9 +463,39 @@ namespace xhtml
 		return true;
 	}
 
+	std::string Node::writeXHTML()
+	{
+		std::ostringstream ss;
+		for(auto& child : children_) {
+			switch(child->id()) {
+				case NodeId::DOCUMENT: break;
+				case NodeId::ATTRIBUTE: break;
+				case NodeId::DOCUMENT_FRAGMENT: break;
+				case NodeId::ELEMENT: {
+					ss << "<" << child->getTag();
+					for(auto& attr : attributes_) {
+						ss << " \"" << attr.first << "\"=\"" << attr.second << "\"";
+					}
+					std::string child_xml = child->writeXHTML();
+					if(child_xml.empty()) {
+						ss << "/>";
+					} else {
+						ss << ">" << child_xml << "</" << child->getTag() << ">";
+					}
+					break;
+				}
+				case NodeId::TEXT:
+					ss << child->getValue();
+					break;
+				default: break;
+			}
+		}
+		return ss.str();
+	}
+
 	bool Document::handleMouseMotion(bool claimed, int x, int y)
 	{
-		bool trigger = false;
+		bool trigger = false;		
 		point p(x, y);
 		claimed = !preOrderTraversal([&trigger, &p](NodePtr node) {
 			node->handleMouseMotion(&trigger, p);
@@ -493,7 +533,9 @@ namespace xhtml
 	Document::Document(css::StyleSheetPtr ss)
 		: Node(NodeId::DOCUMENT, WeakDocumentPtr()),
 		  style_sheet_(ss == nullptr ? std::make_shared<css::StyleSheet>() : ss),
-		  trigger_layout_(true)
+		  trigger_layout_(true),
+		  trigger_render_(false),
+		  trigger_rebuild_(false)
 	{
 	}
 
