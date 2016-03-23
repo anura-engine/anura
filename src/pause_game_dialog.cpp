@@ -181,7 +181,7 @@ PAUSE_GAME_RESULT show_pause_game_dialog()
 	ASSERT_LOG(t2 != nullptr, "Couldn't create sound label widget.");
 	ASSERT_LOG(resume_label != nullptr, "Couldn't create resume label widget.");
 	ASSERT_LOG(controls_label != nullptr, "Couldn't create controls label widget.");
-	ASSERT_LOG(language_label != nullptr, "Couldn't create language label widget.");
+	ASSERT_LOG(!show_language || language_label != nullptr, "Couldn't create language label widget.");
 	ASSERT_LOG(video_select_label != nullptr, "Couldn't create video select label widget.");
 	ASSERT_LOG(return_label != nullptr, "Couldn't create return label widget.");
 	ASSERT_LOG(exit_label != nullptr, "Couldn't create exit label widget.");
@@ -214,7 +214,6 @@ PAUSE_GAME_RESULT show_pause_game_dialog()
 							
 	ButtonPtr b1(new Button(resume_label, std::bind(end_dialog, &dd, &result, PAUSE_GAME_RESULT::CONTINUE), BUTTON_STYLE_NORMAL, buttonResolution));
 	ButtonPtr b2(new Button(controls_label, show_controls_dialog, BUTTON_STYLE_NORMAL, buttonResolution));
-	ButtonPtr language_button(new Button(language_label, show_language_dialog, BUTTON_STYLE_NORMAL, buttonResolution));
 	ButtonPtr b3(new Button(return_label, std::bind(end_dialog, &dd, &result, PAUSE_GAME_RESULT::GO_TO_TITLESCREEN), BUTTON_STYLE_NORMAL, buttonResolution));
 	ButtonPtr b4(new Button(exit_label, std::bind(end_dialog, &dd, &result, PAUSE_GAME_RESULT::QUIT), BUTTON_STYLE_DEFAULT, buttonResolution));
 	ButtonPtr b_video(new Button(video_select_label, show_video_selection_dialog, BUTTON_STYLE_NORMAL, buttonResolution));
@@ -223,9 +222,14 @@ PAUSE_GAME_RESULT show_pause_game_dialog()
 	b2->setDim(button_width, button_height);
 	b3->setDim(button_width, button_height);
 	b4->setDim(button_width, button_height);
-	language_button->setDim(button_width, button_height);
 	b_video->setDim(button_width, button_height);
 	
+	ButtonPtr language_button = nullptr;
+	if(show_language) {
+		language_button = new Button(language_label, show_language_dialog, BUTTON_STYLE_NORMAL, buttonResolution);
+		language_button->setDim(button_width, button_height);
+	}
+
 	dd.setPadding(padding-12);
 	dd.addWidget(t1, padding*2, padding*2);
 	dd.setPadding(padding+12);
