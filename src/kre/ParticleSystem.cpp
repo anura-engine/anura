@@ -136,10 +136,10 @@ namespace KRE
 			if(up == glm::vec3(0.0f)) {
 				up_up = perpendicular(v);
 			}
-			glm::quat q = glm::angleAxis(get_random_float(0.0f,360.0f), v);
+			glm::quat q = glm::angleAxis(get_random_float(0.0f, static_cast<float>(2.0 * M_PI)), v);
 			up_up = q * up_up;
 
-			q = glm::angleAxis(angle, up_up);
+			q = glm::angleAxis(glm::radians(angle), up_up);
 			return q * v;
 		}
 

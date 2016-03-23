@@ -152,7 +152,7 @@ namespace KRE
 
 	void SceneTree::setRotation(float angle, const glm::vec3& axis) 
 	{
-		rotation_ = glm::angleAxis(angle, axis);
+		rotation_ = glm::angleAxis(glm::radians(angle), axis);
 		model_changed_ = true;
 	}
 

@@ -1762,7 +1762,7 @@ namespace css
 					// glm needs angle in radians.
 					//const float angle = trf.getRotation().getAngle(AngleUnits::DEGREES);
 					const float angle = trf.getComputedAngle()[0];
-					matrix_ = glm::rotate(matrix_, angle, glm::vec3(0.0f, 0.0f, 1.0f));
+					matrix_ = glm::rotate(matrix_, glm::radians(angle), glm::vec3(0.0f, 0.0f, 1.0f));
 					break;
 				}
 				case TransformId::SKEW_2D: {

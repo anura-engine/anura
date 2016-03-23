@@ -215,7 +215,7 @@ namespace KRE
 
 	void Renderable::setRotation(float angle, const glm::vec3& axis) 
 	{
-		rotation_ = glm::angleAxis(angle, axis);
+		rotation_ = glm::angleAxis(glm::radians(angle), axis);
 	}
 
 	void Renderable::setRotation(const glm::quat& rot) 

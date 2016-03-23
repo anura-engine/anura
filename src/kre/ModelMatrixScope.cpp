@@ -92,10 +92,10 @@ namespace KRE
 		}
 
 		if(get_rotation_stack().empty()) {
-			get_rotation_stack().emplace(angle);
+			get_rotation_stack().emplace(glm::radians(angle));
 		} else {
 			auto top = get_rotation_stack().top();
-			get_rotation_stack().emplace(angle + top);
+			get_rotation_stack().emplace(glm::radians(angle) + top);
 		}
 
 		if(get_scale_stack().empty()) {
@@ -117,10 +117,10 @@ namespace KRE
 		}
 
 		if(get_rotation_stack().empty()) {
-			get_rotation_stack().emplace(angle);
+			get_rotation_stack().emplace(glm::radians(angle));
 		} else {
 			auto top = get_rotation_stack().top();
-			get_rotation_stack().emplace(angle + top);
+			get_rotation_stack().emplace(glm::radians(angle) + top);
 		}
 
 		if(get_scale_stack().empty()) {
@@ -172,9 +172,9 @@ namespace KRE
 	void ModelManager2D::rotate(float angle)
 	{
 		if(get_rotation_stack().empty()) {
-			get_rotation_stack().emplace(angle);
+			get_rotation_stack().emplace(glm::radians(angle));
 		} else {
-			get_rotation_stack().top() += angle;
+			get_rotation_stack().top() += glm::radians(angle);
 		}
 		model_matrix_changed = true;
 	}

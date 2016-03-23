@@ -541,7 +541,7 @@ namespace KRE
 				projection_ = glm::ortho(float(ortho_left_), float(ortho_right_), float(ortho_bottom_), float(ortho_top_));
 			}
 		} else {
-			projection_ = glm::perspective(getFov(), aspect_, getNearClip(), getFarClip());
+			projection_ = glm::perspective(glm::radians(getFov()), aspect_, getNearClip(), getFarClip());
 		}
 		if(frustum_) {
 			frustum_->updateMatrices(projection_, view_);

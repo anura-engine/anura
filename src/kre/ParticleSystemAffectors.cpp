@@ -798,11 +798,9 @@ namespace KRE
 		void VortexAffector::internalApply(Particle& p, float t)
 		{
 			glm::vec3 local = p.current.position - getPosition();
-			//p.current.position = position() + glm::rotate(rotation_axis_, local);
 			float spd = rotation_speed_->getValue(getTechnique()->getParticleSystem()->getElapsedTime());
-			glm::quat rotation = glm::angleAxis(spd, rotation_axis_);
+			glm::quat rotation = glm::angleAxis(glm::radians(spd), rotation_axis_);
 			p.current.position = getPosition() + rotation * local;
-			//p.current.direction = glm::rotate(rotation_axis_, p.current.direction);
 			p.current.direction = rotation * p.current.direction;
 		}
 
