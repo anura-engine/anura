@@ -696,7 +696,7 @@ namespace KRE
 					// special case for font-shader to work around amd bug.
 					std::string font_shader_vertex_shader;
 					variant node;
-					if(GLEW_ARB_explicit_attrib_location) {
+					if(GLEW_ARB_explicit_attrib_location && glewIsSupported("GL_VERSION_3_2")) {
 						font_shader_vertex_shader = font_shader_vs_layout;
 					} else {
 						font_shader_vertex_shader = font_shader_vs;
