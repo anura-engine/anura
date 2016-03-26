@@ -540,6 +540,7 @@ CustomObject::CustomObject(const std::string& type, int x, int y, bool face_righ
 	always_active_(false),
 	activation_border_(type_->getActivationBorder()),
 	clip_area_absolute_(false),
+	can_interact_with_(false),
 	last_cycle_active_(0),
 	parent_prev_x_(std::numeric_limits<int>::min()), parent_prev_y_(std::numeric_limits<int>::min()), parent_prev_facing_(true),
     relative_x_(0), relative_y_(0),
