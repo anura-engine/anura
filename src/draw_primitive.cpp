@@ -899,7 +899,7 @@ namespace graphics
 	}
 
 	DrawPrimitive::DrawPrimitive(const variant& node)
-		: SceneObject(node)
+		: SceneObject(node), dirty_(true)
 	{
 		if(node.has_key("shader")) {
 			if(node["shader"].is_string()) {
