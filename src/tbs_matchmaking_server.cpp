@@ -27,6 +27,7 @@
 #include <ctype.h>
 #include <deque>
 #include <functional>
+#include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/bind.hpp>
 #include <iostream>
@@ -527,7 +528,7 @@ public:
 					variant channels = new_user_info_variant["info"][ChatChannelsKey];
 					if(channels[variant(DefaultChannel)].as_bool(false) == false) {
 						channels.add_attr_mutation(variant(DefaultChannel), variant::from_bool(true));
-						userJoinChannel(socket_ptr(), user_full, DefaultChannel);
+						userJoinChannel(socket_ptr(), user, DefaultChannel);
 					}
 
 					//put the new user in the database. Note that we use
@@ -1035,6 +1036,30 @@ public:
 					schedule_send(200);
 				}
 
+			} else if(request_type == "channel_topic") {
+				int session_id = doc["session_id"].as_int(request_session_id);
+				auto itor = sessions_.find(session_id);
+				if(itor == sessions_.end()) {
+					fprintf(stderr, "Error: Unknown session: %d\n", session_id);
+					send_msg(socket, "text/json", "{ type: \"error\", message: \"unknown session\" }", "");
+					return;
+				}
+
+				const std::string& channel_name = doc["channel"].as_string();
+				int count_legal = 0;
+				for(char c : channel_name) {
+					if(isalnum(c) || c == '_') {
+						++count_legal;
+					}
+				}
+
+				if(channel_name.size() < 2 || channel_name[0] != '#' || count_legal != static_cast<int>(channel_name.size())-1) {
+					send_msg(socket, "text/json", "{ type: \"chat_error\", message: \"illegal channel name\" }", "");
+					return;
+				}
+
+				userSetChannelTopic(socket, itor->second.user_id, channel_name, doc["topic"].as_string());
+
 			} else if(request_type == "join_channel") {
 
 				int session_id = doc["session_id"].as_int(request_session_id);
@@ -1054,7 +1079,7 @@ public:
 				}
 
 				if(channel_name.size() < 2 || channel_name[0] != '#' || count_legal != static_cast<int>(channel_name.size())-1) {
-					send_msg(socket, "text/json", "{ type: \"error\", message: \"illegal channel name\" }", "");
+					send_msg(socket, "text/json", "{ type: \"chat_error\", message: \"illegal channel name\" }", "");
 					return;
 				}
 
@@ -1062,6 +1087,11 @@ public:
 				auto account_itor = account_info_.find(itor->second.user_id);
 				if(account_itor != account_info_.end()) {
 					variant channels = account_itor->second.account_info["info"][ChatChannelsKey];
+					if(channels.as_map().size() > 8) {
+						send_msg(socket, "text/json", "{ type: \"chat_error\", message: \"You are in too many channels\" }", "");
+						return;
+					}
+
 					channels.add_attr_mutation(variant(channel_name), variant::from_bool(true));
 
 					db_client_->put("user:" + itor->second.user_id, account_itor->second.account_info, [](){}, [](){});
@@ -1272,8 +1302,26 @@ public:
 						}
 
 						if(itor->second.message_queue().empty() == false) {
-							send_msg(socket, "text/json", itor->second.message_queue().front().write_json(), "");
-							itor->second.message_queue().pop_front();
+							std::string s;
+							
+							if(itor->second.message_queue().size() == 1) {
+								s = itor->second.message_queue().front();
+							} else {
+								s = "{ __message_bundle: true, __messages: [";
+
+								for(size_t i = 0; i < static_cast<int>(itor->second.message_queue().size()); ++i) {
+									s += itor->second.message_queue()[i];
+									if(i+1 != itor->second.message_queue().size()) {
+										s += ",";
+									}
+								}
+
+								s += "]}";
+							}
+
+							itor->second.message_queue().clear();
+
+							send_msg(socket, "text/json", s, "");
 							return;
 						}
 
@@ -1961,7 +2009,7 @@ private:
 
 	struct UserAccountInfo {
 		variant account_info;
-		std::deque<variant> message_queue;
+		std::vector<std::string> message_queue;
 	};
 
 	typedef std::map<std::string, UserAccountInfo> AccountInfoMap;
@@ -2011,7 +2059,7 @@ private:
 
 		UserAccountInfo* account_info;
 
-		std::deque<variant>& message_queue() { return account_info->message_queue; }
+		std::vector<std::string>& message_queue() { return account_info->message_queue; }
 	};
 
 	std::map<int, SessionInfo> sessions_;
@@ -2031,17 +2079,27 @@ private:
 		return &res->second;
 	}
 
-	void queue_message(SessionInfo& session, variant msg)
+	void queue_message(SessionInfo& session, const variant& msg)
+	{
+		queue_message(session, msg.write_json());
+	}
+
+	void queue_message(SessionInfo& session, const std::string& msg)
 	{
 		if(session.current_socket) {
-			send_msg(session.current_socket, "text/json", msg.write_json(), "");
+			send_msg(session.current_socket, "text/json", msg, "");
 			session.current_socket = socket_ptr();
 		} else {
 			session.message_queue().push_back(msg);
 		}
 	}
 
-	void queue_message(const std::string& user, variant msg)
+	void queue_message(const std::string& user, const variant& msg)
+	{
+		queue_message(user, msg.write_json());
+	}
+
+	void queue_message(const std::string& user, const std::string& msg)
 	{
 		auto session_itor = users_to_sessions_.find(user);
 		if(session_itor != users_to_sessions_.end()) {
@@ -2454,7 +2512,7 @@ private:
 			users = variant(&m);
 		}
 
-		explicit ChatChannel(variant node) : name(node["name"].as_string()), users(node["users"])
+		explicit ChatChannel(variant node) : name(node["name"].as_string()), users(node["users"]), topic(node["topic"]), ops(node["ops"])
 		{
 			for(auto p : users.as_map()) {
 				user_list.push_back(p.first.as_string());
@@ -2465,11 +2523,15 @@ private:
 			variant_builder b;
 			b.add("name", name);
 			b.add("users", users);
+			b.add("ops", ops);
+			b.add("topic", topic);
 			return b.build();
 		}
 
 		std::string name;
+		variant topic;
 		variant users;
+		variant ops;
 		std::vector<std::string> user_list;
 	};
 
@@ -2498,11 +2560,58 @@ private:
 		}
 	}
 
+	void userSetChannelTopic(socket_ptr socket, std::string username, std::string channel_name, std::string topic)
+	{
+		if(topic.size() > 128) {
+			topic.resize(128);
+		}
+		boost::algorithm::to_lower(username);
+		boost::algorithm::to_lower(channel_name);
+		executeOnChannel(channel_name, [=](ChatChannel& channel) {
+			std::vector<variant> channel_ops;
+			if(channel.ops.is_list()) {
+				channel_ops = channel.ops.as_list();
+			}
+			if(std::count(channel_ops.begin(), channel_ops.end(), variant(username)) == 0) {
+				variant_builder b;
+				b.add("type", "chat_error");
+				b.add("message", formatter() << "You are not an op in " << channel_name);
+				send_msg(socket, "text/json", b.build().write_json(), "");
+				return false;
+			}
+
+			channel.topic = variant(topic);
+
+			variant_builder b;
+			b.add("type", "channel_topic");
+			b.add("channel", channel_name);
+			b.add("topic", channel.topic);
+			std::string msg = b.build().write_json();
+			for(const std::string& user : channel.user_list) {
+				if(username != user) {
+					queue_message(user, msg);
+				}
+			}
+
+			send_msg(socket, "text/json", msg, "");
+			return true;
+		});
+	}
+
 	void userJoinChannel(socket_ptr socket, std::string username, std::string channel_name)
 	{
+		boost::algorithm::to_lower(username);
+		boost::algorithm::to_lower(channel_name);
+
 		executeOnChannel(channel_name, [=](ChatChannel& channel) {
 			if(std::find(channel.user_list.begin(), channel.user_list.end(), username) != channel.user_list.end()) {
 				return false;
+			}
+
+			if(channel.ops.is_null() || channel.ops.as_list().empty()) {
+				std::vector<variant> v;
+				v.push_back(variant(username));
+				channel.ops = variant(&v);
 			}
 
 			channel.users.add_attr_mutation(variant(username), variant::from_bool(true));
@@ -2513,7 +2622,7 @@ private:
 			b.add("nick", username);
 			b.add("channel", channel_name);
 			b.add("timestamp", static_cast<int>(time(nullptr)));
-			variant msg = b.build();
+			std::string msg = b.build().write_json();
 			for(const std::string& username : channel.user_list) {
 				queue_message(username, msg);
 			}
@@ -2522,6 +2631,7 @@ private:
 			response.add("type", "channel_joined");
 			response.add("channel", channel_name);
 			response.add("users", channel.users);
+			response.add("topic", channel.topic);
 
 			if(socket) {
 				send_msg(socket, "text/json", response.build().write_json(), "");
@@ -2535,6 +2645,9 @@ private:
 
 	void userLeaveChannel(std::string username, std::string channel_name)
 	{
+		boost::algorithm::to_lower(username);
+		boost::algorithm::to_lower(channel_name);
+
 		executeOnChannel(channel_name, [=](ChatChannel& channel) {
 			channel.users.remove_attr_mutation(variant(username));
 
@@ -2545,7 +2658,7 @@ private:
 			b.add("nick", username);
 			b.add("channel", channel_name);
 			b.add("timestamp", static_cast<int>(time(nullptr)));
-			variant msg = b.build();
+			std::string msg = b.build().write_json();
 			for(const std::string& username : channel.user_list) {
 				queue_message(username, msg);
 			}
@@ -2560,6 +2673,9 @@ private:
 			send_msg(socket, "text/json", "{type: \"ack\" }", "");
 			return;
 		}
+
+		boost::algorithm::to_lower(username);
+		boost::algorithm::to_lower(recipient);
 
 		const bool privileged = session.account_info->account_info["info"]["privileged"].as_bool(false);
 
@@ -2577,7 +2693,7 @@ private:
 					b.add("privileged", variant::from_bool(true));
 				}
 	
-				variant msg = b.build();
+				std::string msg = b.build().write_json();
 				for(const std::string& username : channel.user_list) {
 					queue_message(username, msg);
 				}
@@ -2608,7 +2724,7 @@ private:
 			}
 			
 			variant ack_msg = ack.build();
-			variant m = b.build();
+			std::string m = b.build().write_json();
 
 			auto itor = account_info_.find(recipient);
 			if(itor != account_info_.end()) {

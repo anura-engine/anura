@@ -52,6 +52,8 @@ namespace tbs
 		void error_handler(const std::string& err);
 		variant getValue(const std::string& key) const;
 
+		void handle_message(variant node);
+
 		std::string connection_id_;
 
 		bool use_local_cache_;

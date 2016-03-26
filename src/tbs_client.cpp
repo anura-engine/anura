@@ -97,10 +97,22 @@ namespace tbs
 				v = game_logic::deserialize_doc_with_objects(msg);
 			}
 
-			callable_->add("message", v);
-
-			handler_(connection_id_ + "message_received");
+			handle_message(v);
 		}
+	}
+
+	void client::handle_message(variant v)
+	{
+		if(v.is_map() && v["__message_bundle"].as_bool(false)) {
+			for(variant msg : v["__messages"].as_list()) {
+				handle_message(msg);
+			}
+			return;
+		}
+
+		callable_->add("message", v);
+
+		handler_(connection_id_ + "message_received");
 	}
 
 	void client::error_handler(const std::string& err)
