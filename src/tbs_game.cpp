@@ -79,6 +79,7 @@ namespace tbs
 			DEFINE_INTERFACE_FN(add_bot, "(int,string,any,any)->commands");
 			DEFINE_INTERFACE_FN(player_disconnected, "()->commands");
 			DEFINE_INTERFACE_FN(transform, "(object,int)->commands");
+			DEFINE_INTERFACE_FN(restore_state, "(object)->commands");
 			DEFINE_INTERFACE_FN(get_state, "()->object");
 			DEFINE_INTERFACE_FN(player_waiting_on, "()->int|null");
 
@@ -95,6 +96,7 @@ namespace tbs
 		variant add_bot(int session_id, const std::string& bot_type, variant args, variant bot_args) {std::vector<variant> v; v.push_back(variant(session_id)); v.push_back(variant(bot_type)); v.push_back(args); v.push_back(bot_args); return add_bot_fn_(v); }
 		variant player_disconnected() { std::vector<variant> v; return player_disconnected_fn_(v); }
 		variant transform(variant msg, int nplayer) { std::vector<variant> v; v.push_back(msg); v.push_back(variant(nplayer)); return transform_fn_(v); }
+		variant restore_state(variant state) { std::vector<variant> v; v.push_back(state); return restore_state_fn_(v); }
 		variant get_state() { std::vector<variant> v; return get_state_fn_(v); }
 		variant player_waiting_on() { std::vector<variant> v; return player_waiting_on_fn_(v); }
 
@@ -105,7 +107,7 @@ namespace tbs
 	private:
 		boost::intrusive_ptr<game_logic::FormulaObject> obj_;
 
-		variant create_fn_, restart_fn_, add_bot_fn_, message_fn_, player_disconnected_fn_, transform_fn_, get_state_fn_, player_waiting_on_fn_;
+		variant create_fn_, restart_fn_, add_bot_fn_, message_fn_, player_disconnected_fn_, transform_fn_, get_state_fn_, restore_state_fn_, player_waiting_on_fn_;
 		variant process_fn_;
 	};
 
@@ -372,6 +374,47 @@ namespace tbs
 		variant res = result.build();
 		res.add_attr(variant("serialized_objects"), serialization_scope.writeObjects(res));
 		return res;
+	}
+
+	void game::restore_replay(int state_id) const
+	{
+		if(replay_.empty()) {
+			return;
+		}
+
+		fprintf(stderr, "RESTORE REPLAY: %d\n", state_id);
+
+		variant doc = deserialize_doc_with_objects(replay_.front());
+		variant state = doc["state"];
+		boost::intrusive_ptr<FormulaObject> state_ptr = state.convert_to<FormulaObject>();
+
+		if(doc["state_id"].as_int() >= state_id) {
+			game_type_->restore_state(variant(state_ptr.get()));
+			return;
+		}
+
+		ASSERT_LOG(state_ptr.get() != nullptr, "No state found");
+		for(int i = 1; i < static_cast<int>(replay_.size()); ++i) {
+			variant doc = deserialize_doc_with_objects(replay_[i]);
+			variant delta = doc["delta"];
+			ASSERT_LOG(delta.is_map(), "Delta not found");
+
+			variant clone = FormulaObject::deepClone(variant(state_ptr.get()));
+			FormulaObject* obj = clone.try_convert<FormulaObject>();
+			ASSERT_LOG(obj, "Could not clone");
+
+			obj->applyDiff(delta);
+			state_ptr.reset(obj);
+
+			fprintf(stderr, "CONSIDER state_id = %d vs %d\n", doc["state_id"].as_int(), state_id);
+
+			if(doc["state_id"].as_int() >= state_id) {
+				fprintf(stderr, "RESTORE STATE\n");
+				variant cmd = game_type_->restore_state(variant(state_ptr.get()));
+				const_cast<game*>(this)->executeCommand(cmd);
+				return;
+			}
+		}
 	}
 
 	void game::start_game()
@@ -744,6 +787,13 @@ namespace tbs
 			LOG_INFO("tbs::game: received start_game");
 			start_game();
 			return;
+		} else if(type == "restore_state") {
+			const auto start_time = profile::get_tick_time();
+			restore_replay(msg["state_id"].as_int());
+			++state_id_;
+			const auto time_taken = profile::get_tick_time() - start_time;
+			send_game_state(-1, time_taken);
+			replay_.push_back(write_replay().write_json());
 		} else if(type == "request_updates") {
 			if(msg.has_key("state_id")) {
 				if(nplayer >= 0 && nplayer < static_cast<int>(players_.size()) && msg.has_key("allow_deltas")) {

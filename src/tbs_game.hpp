@@ -185,6 +185,7 @@ namespace tbs
 		variant winner_;
 
 		variant write_replay() const;
+		void restore_replay(int state_id) const;
 		void verify_replay();
 	};
 
