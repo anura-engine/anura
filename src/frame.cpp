@@ -549,7 +549,11 @@ void Frame::buildAlpha()
 	const size_t bufsize = nframes_*img_rect_.w()*img_rect_.h();
 	ASSERT_LOG(bufsize < size_t(8192*8192), "Animation is unreasonably large");
 
-	alpha_.resize(bufsize, true);
+	if(force_no_alpha_) {
+		alpha_.resize(bufsize, false);
+	} else {
+		alpha_.resize(bufsize, true);
+	}
 
 	for(int n = 0; n < nframes_; ++n) {
 		const int current_col = (nframes_per_row_ > 0) ? (n% nframes_per_row_) : n;
@@ -571,7 +575,7 @@ void Frame::buildAlpha()
 			continue;
 		}*/
 
-		for(int y = 0; y != img_rect_.h(); ++y) {
+		for(int y = 0; y != img_rect_.h() && !force_no_alpha_; ++y) {
 			const int dst_index = y*img_rect_.w()*nframes_ + n*img_rect_.w();
 			ASSERT_INDEX_INTO_VECTOR(dst_index, alpha_);
 
@@ -591,7 +595,7 @@ void Frame::buildAlpha()
 		auto& f = frames_[n];
 		f.area = rect(xbase, ybase, img_rect_.w(), img_rect_.h());
 
-		if(no_remove_alpha_borders_) {
+		if(no_remove_alpha_borders_ || force_no_alpha_) {
 			continue;
 		}
 		
@@ -665,13 +669,6 @@ void Frame::buildAlpha()
 		f.area = rect(xbase + left, ybase + top, right - left, bot - top);
 		ASSERT_EQ(f.area.w() + f.x_adjust + f.x2_adjust, img_rect_.w());
 		ASSERT_EQ(f.area.h() + f.y_adjust + f.y2_adjust, img_rect_.h());
-	}
-
-	if(force_no_alpha_) {
-		const auto nsize = alpha_.size();
-		alpha_.clear();
-		alpha_.resize(nsize, false);
-		return;
 	}
 }
 
