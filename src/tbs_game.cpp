@@ -376,13 +376,38 @@ namespace tbs
 		return res;
 	}
 
+	void game::save_state(const std::string& fname)
+	{
+		std::vector<variant> v;
+		for(auto r : replay_) {
+			v.push_back(variant(r));
+		}
+
+		sys::write_file(fname, variant(&v).write_json());
+	}
+
+	void game::load_state(const std::string& fname)
+	{
+		std::string s = sys::read_file(fname);
+		if(s.empty()) {
+			LOG_INFO("load_state failed: " << fname);
+			return;
+		}
+
+		variant v = json::parse(s, json::JSON_PARSE_OPTIONS::NO_PREPROCESSOR);
+		replay_ = v.as_list_string();
+
+		restore_replay(INT_MAX);
+		for(player& p : players_) {
+			p.allow_deltas = false;
+		}
+	}
+
 	void game::restore_replay(int state_id) const
 	{
 		if(replay_.empty()) {
 			return;
 		}
-
-		fprintf(stderr, "RESTORE REPLAY: %d\n", state_id);
 
 		variant doc = deserialize_doc_with_objects(replay_.front());
 		variant state = doc["state"];
@@ -406,10 +431,7 @@ namespace tbs
 			obj->applyDiff(delta);
 			state_ptr.reset(obj);
 
-			fprintf(stderr, "CONSIDER state_id = %d vs %d\n", doc["state_id"].as_int(), state_id);
-
-			if(doc["state_id"].as_int() >= state_id) {
-				fprintf(stderr, "RESTORE STATE\n");
+			if(doc["state_id"].as_int() >= state_id || i == static_cast<int>(replay_.size())-1) {
 				variant cmd = game_type_->restore_state(variant(state_ptr.get()));
 				const_cast<game*>(this)->executeCommand(cmd);
 				return;
@@ -427,8 +449,6 @@ namespace tbs
 		started_ = true;
 
 		executeCommand(game_type_->restart());
-
-		LOG_INFO("ZZZ: start_game::send_game_state()\n");
 
 		send_game_state();
 
@@ -781,7 +801,7 @@ namespace tbs
 
 	void game::handle_message(int nplayer, const variant& msg)
 	{
-		//LOG_DEBUG("HANDLE MESSAGE " << nplayer << " (((" << msg.write_json() << ")))");
+		LOG_INFO("HANDLE MESSAGE " << nplayer << " (((" << msg.write_json() << ")))");
 		const std::string type = msg["type"].as_string();
 		if(type == "start_game") {
 			LOG_INFO("tbs::game: received start_game");
@@ -794,6 +814,11 @@ namespace tbs
 			const auto time_taken = profile::get_tick_time() - start_time;
 			send_game_state(-1, time_taken);
 			replay_.push_back(write_replay().write_json());
+		} else if(type == "save_state") {
+			save_state("./server-save.cfg");
+		} else if(type == "load_state") {
+			load_state("./server-save.cfg");
+			++state_id_;
 		} else if(type == "request_updates") {
 			if(msg.has_key("state_id")) {
 				if(nplayer >= 0 && nplayer < static_cast<int>(players_.size()) && msg.has_key("allow_deltas")) {

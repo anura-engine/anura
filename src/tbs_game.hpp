@@ -184,6 +184,9 @@ namespace tbs
 		mutable variant replay_last_;
 		variant winner_;
 
+		void save_state(const std::string& fname);
+		void load_state(const std::string& fname);
+
 		variant write_replay() const;
 		void restore_replay(int state_id) const;
 		void verify_replay();
