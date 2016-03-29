@@ -250,10 +250,20 @@ namespace
 			const std::vector<std::string>& arguments = mod_info["arguments"].as_list_string();
 			auto insertion_point = argv->size();
 			for(std::vector<std::string>::size_type i = 0; i != argv->size(); ++i) {
-				const char* utility_arg = "--module=";
-				if(std::equal(utility_arg, utility_arg+strlen(utility_arg), (*argv)[i].c_str())) {
+				const char* module_arg = "--module=";
+				if(std::equal(module_arg, module_arg+strlen(module_arg), (*argv)[i].c_str())) {
 					insertion_point = i+1;
 					break;
+				}
+			}
+
+			if(insertion_point == argv->size()) {
+				for(std::vector<std::string>::size_type i = 0; i != argv->size(); ++i) {
+					const char* utility_arg = "--utility=";
+					if(std::equal(utility_arg, utility_arg+strlen(utility_arg), (*argv)[i].c_str())) {
+						insertion_point = i;
+						break;
+					}
 				}
 			}
 
