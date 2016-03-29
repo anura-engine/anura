@@ -1192,12 +1192,14 @@ COMMAND_LINE_UTILITY(build_spritesheet_from_images)
 {
 	using namespace KRE;
 
+	std::deque<std::string> argv(args.begin(), args.end());
+
 	std::vector<std::vector<SurfacePtr>> surfaces;
 	surfaces.resize(surfaces.size()+1);
 
 	int scale = 100;
-	for(auto itor = args.begin(); itor != args.end(); ++itor) {
-		if(*itor == "--scale" && itor+1 != args.end()) {
+	for(auto itor = argv.begin(); itor != argv.end(); ++itor) {
+		if(*itor == "--scale" && itor+1 != argv.end()) {
 			++itor;
 			scale = atoi(itor->c_str());
 			break;
@@ -1213,10 +1215,35 @@ COMMAND_LINE_UTILITY(build_spritesheet_from_images)
 	std::vector<int> row_heights;
 	cell_widths.push_back(0);
 	row_heights.push_back(0);
+	
+	for(auto itor = argv.begin(); itor != argv.end(); ) {
+		auto path = *itor;
+		if(path.empty() == false && path[0] != '-' && sys::is_directory(path)) {
+			const int index = itor - argv.begin();
+
+			std::vector<std::string> files;
+			sys::get_files_in_dir(path, &files);
+
+			std::vector<std::string> png;
+			for(auto s : files) {
+				if(s.size() > 4 && std::equal(s.end()-4,s.end(),".png")) {
+					png.push_back(path + "/" + s);
+				}
+			}
+
+			argv.erase(argv.begin() + index);
+			argv.insert(argv.begin() + index, png.begin(), png.end());
+
+			itor = argv.begin() + index;
+			
+		} else {
+			++itor;
+		}
+	}
 
 	int images_per_row = 1024;
 
-	for(auto itor = args.begin(); itor != args.end(); ++itor) {
+	for(auto itor = argv.begin(); itor != argv.end(); ++itor) {
 		auto img = *itor;
 		if(img.size() <= 4 || !std::equal(img.end()-4,img.end(),".png")) {
 			continue;
@@ -1301,7 +1328,7 @@ COMMAND_LINE_UTILITY(build_spritesheet_from_images)
 
 	int image_num = 0;
 
-	for(auto itor = args.begin(); itor != args.end(); ++itor) {
+	for(auto itor = argv.begin(); itor != argv.end(); ++itor) {
 		auto img = *itor;
 		if(img == "--newrow" || image_num == images_per_row) {
 			surfaces.resize(surfaces.size()+1);
@@ -1316,7 +1343,7 @@ COMMAND_LINE_UTILITY(build_spritesheet_from_images)
 			}
 		} else if(img == "--row") {
 			++itor;
-			ASSERT_LOG(itor != args.end(), "row needs arg");
+			ASSERT_LOG(itor != argv.end(), "row needs arg");
 			images_per_row = atoi(itor->c_str());
 			continue;
 		} else if(img == "--scale") {
