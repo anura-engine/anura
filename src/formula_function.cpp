@@ -2798,25 +2798,6 @@ FUNCTION_DEF_IMPL
 				variant value_, index_;
 			};
 
-		FUNCTION_DEF(transform, 2, 2, "transform(list,ffl): calls the ffl for each item on the given list, returning a list of the results. Inside the transform v is the value of the list item and i is the index. e.g. transform([1,2,3], v+2) = [3,4,5] and transform([1,2,3], i) = [0,1,2]")
-			std::vector<variant> vars;
-			const variant items = args()[0]->evaluate(variables);
-
-			vars.reserve(items.num_elements());
-
-			transform_callable* callable = new transform_callable(variables);
-			variant v(callable);
-
-			const int nitems = items.num_elements();
-			for(size_t n = 0; n != nitems; ++n) {
-				callable->set(items[n], variant(unsigned(n)));
-				const variant val = args().back()->evaluate(*callable);
-				vars.push_back(val);
-			}
-
-			return variant(&vars);
-		END_FUNCTION_DEF(transform)
-
 		namespace 
 		{
 			void visit_objects(variant v, std::vector<variant>& res) {
