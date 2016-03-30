@@ -46,6 +46,7 @@
 #include "frame.hpp"
 #include "json_parser.hpp"
 #include "module.hpp"
+#include "preferences.hpp"
 #include "string_utils.hpp"
 #include "surface_cache.hpp"
 #include "surface_utils.hpp"
@@ -1147,6 +1148,8 @@ COMMAND_LINE_UTILITY(bake_spritesheet)
 
 namespace {
 
+PREF_STRING(convert_path, "/usr/bin/convert", "Path to ImageMagick convert command");
+
 KRE::SurfacePtr getAndScaleImage(const std::string& img, int scale)
 {
 	using namespace KRE;
@@ -1157,7 +1160,7 @@ KRE::SurfacePtr getAndScaleImage(const std::string& img, int scale)
 	} else {
 		std::string scale_str = (formatter() << scale << "%");
 		std::vector<std::string> args;
-		args.push_back("convert");
+		args.push_back(g_convert_path);
 		args.push_back(img);
 		args.push_back("-resize");
 		args.push_back(scale_str);
@@ -1173,7 +1176,7 @@ KRE::SurfacePtr getAndScaleImage(const std::string& img, int scale)
 			}
 
 			argv.push_back(nullptr);
-			execv("/usr/bin/convert", &argv[0]);
+			execv(g_convert_path.c_str(), &argv[0]);
 			ASSERT_LOG(false, "Execv failed");
 		} else {
 			int status = 0;
