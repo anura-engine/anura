@@ -2576,7 +2576,7 @@ namespace {
 		};
 
 		using namespace formula_tokenizer;
-		int operator_precedence(const Token& t)
+		int operator_precedence(const Token& t, const variant& formula_str)
 		{
 			static std::map<std::string,int> precedence_map;
 			if(precedence_map.empty()) {
@@ -2614,7 +2614,7 @@ namespace {
 				precedence_map["."]     = n;
 			}
 	
-			ASSERT_LOG(precedence_map.count(std::string(t.begin,t.end)), "Unknown precedence for '" << std::string(t.begin,t.end) << "'");
+			ASSERT_LOG(precedence_map.count(std::string(t.begin,t.end)), "Unknown precedence for '" << std::string(t.begin,t.end) << "': " << pinpoint_location(formula_str, t.begin, t.end));
 			return precedence_map[std::string(t.begin,t.end)];
 		}
 
@@ -3327,7 +3327,7 @@ static std::string debugSubexpressionTypes(ConstFormulaPtr & fml)
 				if(i->type == FFL_TOKEN_TYPE::LPARENS || i->type == FFL_TOKEN_TYPE::LSQUARE || i->type == FFL_TOKEN_TYPE::LBRACKET) {
 					if(i->type == FFL_TOKEN_TYPE::LPARENS && parens == 0 && i != i1) {
 						fn_call = i;
-					} else if(i->type == FFL_TOKEN_TYPE::LSQUARE && parens == 0 && i != i1 && (i-1)->type != FFL_TOKEN_TYPE::OPERATOR && (op == nullptr || operator_precedence(*op) >= operator_precedence(*i))) {
+					} else if(i->type == FFL_TOKEN_TYPE::LSQUARE && parens == 0 && i != i1 && (i-1)->type != FFL_TOKEN_TYPE::OPERATOR && (op == nullptr || operator_precedence(*op, formula_str) >= operator_precedence(*i, formula_str))) {
 						//the square bracket itself is an operator
 						op = i;
 					}
@@ -3340,7 +3340,7 @@ static std::string debugSubexpressionTypes(ConstFormulaPtr & fml)
 						fn_call = nullptr;
 					}
 				} else if(parens == 0 && (i->type == FFL_TOKEN_TYPE::OPERATOR || i->type == FFL_TOKEN_TYPE::SEMICOLON || i->type == FFL_TOKEN_TYPE::LEFT_POINTER || (i->type == FFL_TOKEN_TYPE::LDUBANGLE && (i2-1)->type == FFL_TOKEN_TYPE::RDUBANGLE))) {
-					if(op == nullptr || operator_precedence(*op) >= operator_precedence(*i)) {
+					if(op == nullptr || operator_precedence(*op, formula_str) >= operator_precedence(*i, formula_str)) {
 						if(i != i1 && i->end - i->begin == 3 && std::equal(i->begin, i->end, "not")) {
 							//The not operator is always unary and can only
 							//appear at the start of an expression.
@@ -3615,7 +3615,7 @@ static std::string debugSubexpressionTypes(ConstFormulaPtr & fml)
 			}
 	
 			if(fn_call && (op == nullptr ||
-			   operator_precedence(*op) >= operator_precedence(*fn_call))) {
+			   operator_precedence(*op, formula_str) >= operator_precedence(*fn_call, formula_str))) {
 				op = fn_call;
 			}
 

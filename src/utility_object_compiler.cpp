@@ -21,6 +21,11 @@
 	   distribution.
 */
 
+#ifdef __linux__
+#include <sys/types.h>
+#include <sys/wait.h>
+#endif
+
 #include <deque>
 #include <map>
 #include <vector>
@@ -37,9 +42,11 @@
 #include "asserts.hpp"
 #include "custom_object_type.hpp"
 #include "filesystem.hpp"
+#include "formatter.hpp"
 #include "frame.hpp"
 #include "json_parser.hpp"
 #include "module.hpp"
+#include "preferences.hpp"
 #include "string_utils.hpp"
 #include "surface_cache.hpp"
 #include "surface_utils.hpp"
@@ -1139,44 +1146,124 @@ COMMAND_LINE_UTILITY(bake_spritesheet)
 	}
 }
 
+namespace {
+
+PREF_STRING(convert_path, "/usr/bin/convert", "Path to ImageMagick convert command");
+
+KRE::SurfacePtr getAndScaleImage(const std::string& img, int scale)
+{
+	using namespace KRE;
+#ifdef __linux__
+	if(scale == 100) {
+		SurfacePtr s = graphics::SurfaceCache::get(img);
+		return s;
+	} else {
+		std::string scale_str = (formatter() << scale << "%");
+		std::vector<std::string> args;
+		args.push_back(g_convert_path);
+		args.push_back(img);
+		args.push_back("-resize");
+		args.push_back(scale_str);
+		args.push_back("./tmp.png");
+
+		const pid_t pid = fork();
+
+		ASSERT_LOG(pid >= 0, "fork failed: " << pid << " " << errno);
+		if(pid == 0) {
+			std::vector<char*> argv;
+			for(const std::string& s : args) {
+				argv.push_back(const_cast<char*>(s.c_str()));
+			}
+
+			argv.push_back(nullptr);
+			execv(g_convert_path.c_str(), &argv[0]);
+			ASSERT_LOG(false, "Execv failed");
+		} else {
+			int status = 0;
+			const pid_t res = waitpid(pid, &status, 0);
+		}
+
+		return Surface::create("./tmp.png", KRE::SurfaceFlags::NO_CACHE);
+	}
+#else
+	return graphics::SurfaceCache::get(img);
+#endif
+}
+}
+
 COMMAND_LINE_UTILITY(build_spritesheet_from_images)
 {
 	using namespace KRE;
 
+	std::deque<std::string> argv(args.begin(), args.end());
+
 	std::vector<std::vector<SurfacePtr>> surfaces;
 	surfaces.resize(surfaces.size()+1);
+
+	int scale = 100;
+	for(auto itor = argv.begin(); itor != argv.end(); ++itor) {
+		if(*itor == "--scale" && itor+1 != argv.end()) {
+			++itor;
+			scale = atoi(itor->c_str());
+			break;
+		}
+	}
 
 	int row_width = 3;
 	int sheet_height = 3;
 
-	int hpad = -1, vpad = -1;
+	int hpad = -1, tpad = -1, bpad = -1;
 
 	std::vector<int> cell_widths;
 	std::vector<int> row_heights;
 	cell_widths.push_back(0);
 	row_heights.push_back(0);
+	
+	for(auto itor = argv.begin(); itor != argv.end(); ) {
+		auto path = *itor;
+		if(path.empty() == false && path[0] != '-' && sys::is_directory(path)) {
+			const int index = itor - argv.begin();
+
+			std::vector<std::string> files;
+			sys::get_files_in_dir(path, &files);
+
+			std::vector<std::string> png;
+			for(auto s : files) {
+				if(s.size() > 4 && std::equal(s.end()-4,s.end(),".png")) {
+					png.push_back(path + "/" + s);
+				}
+			}
+
+			argv.erase(argv.begin() + index);
+			argv.insert(argv.begin() + index, png.begin(), png.end());
+
+			itor = argv.begin() + index;
+			
+		} else {
+			++itor;
+		}
+	}
 
 	int images_per_row = 1024;
 
-	for(auto itor = args.begin(); itor != args.end(); ++itor) {
+	for(auto itor = argv.begin(); itor != argv.end(); ++itor) {
 		auto img = *itor;
 		if(img.size() <= 4 || !std::equal(img.end()-4,img.end(),".png")) {
 			continue;
 		}
 
-		SurfacePtr s = graphics::SurfaceCache::get(img);
+		SurfacePtr s = getAndScaleImage(img, scale);
 		ASSERT_LOG(s != nullptr, "No image: " << img);
 
 		const uint8_t* p = (const uint8_t*)s->pixels();
 
-		int ver_pad = 0;
+		int top_pad = 0;
 		for(int i = 0; i < s->height()/2; ++i) {
 			const uint8_t* top = p + i*4*s->width();
-			const uint8_t* bot = p + (s->height()-i-1)*4*s->width();
 
 			bool all_clear = true;
 			for(int j = 0; j < s->width(); ++j) {
-				if(top[j*4+3] || bot[j*4+3]) {
+				if(top[j*4+3]) {
 					all_clear = false;
 					break;
 				}
@@ -1186,7 +1273,26 @@ COMMAND_LINE_UTILITY(build_spritesheet_from_images)
 				break;
 			}
 
-			++ver_pad;
+			++top_pad;
+		}
+
+		int bot_pad = 0;
+		for(int i = 0; i < s->height()/2; ++i) {
+			const uint8_t* bot = p + (s->height()-i-1)*4*s->width();
+
+			bool all_clear = true;
+			for(int j = 0; j < s->width(); ++j) {
+				if(bot[j*4+3]) {
+					all_clear = false;
+					break;
+				}
+			}
+
+			if(!all_clear) {
+				break;
+			}
+
+			++bot_pad;
 		}
 
 		int hor_pad = 0;
@@ -1208,10 +1314,14 @@ COMMAND_LINE_UTILITY(build_spritesheet_from_images)
 			++hor_pad;
 		}
 
-		fprintf(stderr, "PAD: %d %d\n", hor_pad, ver_pad);
+		fprintf(stderr, "PAD: %d %d/%d\n", hor_pad, top_pad, bot_pad);
 
-		if(ver_pad < vpad || vpad == -1) {
-			vpad = ver_pad;
+		if(bot_pad < bpad || bpad == -1) {
+			bpad = bot_pad;
+		}
+
+		if(top_pad < tpad || tpad == -1) {
+			tpad = top_pad;
 		}
 
 		if(hor_pad < hpad || hpad == -1) {
@@ -1221,7 +1331,7 @@ COMMAND_LINE_UTILITY(build_spritesheet_from_images)
 
 	int image_num = 0;
 
-	for(auto itor = args.begin(); itor != args.end(); ++itor) {
+	for(auto itor = argv.begin(); itor != argv.end(); ++itor) {
 		auto img = *itor;
 		if(img == "--newrow" || image_num == images_per_row) {
 			surfaces.resize(surfaces.size()+1);
@@ -1236,12 +1346,15 @@ COMMAND_LINE_UTILITY(build_spritesheet_from_images)
 			}
 		} else if(img == "--row") {
 			++itor;
-			ASSERT_LOG(itor != args.end(), "row needs arg");
+			ASSERT_LOG(itor != argv.end(), "row needs arg");
 			images_per_row = atoi(itor->c_str());
+			continue;
+		} else if(img == "--scale") {
+			++itor;
 			continue;
 		}
 
-		SurfacePtr s = graphics::SurfaceCache::get(img);
+		SurfacePtr s = getAndScaleImage(img, scale);
 		ASSERT_LOG(s != nullptr, "No image: " << img);
 		surfaces.back().push_back(s);
 
@@ -1252,7 +1365,7 @@ COMMAND_LINE_UTILITY(build_spritesheet_from_images)
 			cell_widths.back() = s_w;
 		}
 
-		const int s_h = s->height()-vpad*2;
+		const int s_h = s->height()-tpad-bpad;
 
 		if(s_h > row_heights.back()) {
 			sheet_height += s_h - row_heights.back();
@@ -1280,8 +1393,8 @@ COMMAND_LINE_UTILITY(build_spritesheet_from_images)
 		int max_height = 0;
 		for(auto src : row) {
 			const int src_w = src->width()-hpad*2;
-			const int src_h = src->height()-vpad*2;
-			rect blit_src(hpad, vpad, src_w, src_h);
+			const int src_h = src->height()-tpad-bpad;
+			rect blit_src(hpad, tpad, src_w, src_h);
 			rect blit_dst(xpos, ypos, src_w, src_h);
 
 			printf("x: %d, y: %d, w: %d, h: %d,\n", 2, 2, src_w, src_h);
