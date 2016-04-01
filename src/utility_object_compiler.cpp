@@ -34,6 +34,7 @@
 #include <boost/filesystem.hpp>
 
 #include "kre/SurfaceSDL.hpp"
+#include "kre/SurfaceScale.hpp"
 
 #include "SDL_image.h"
 
@@ -1158,32 +1159,8 @@ KRE::SurfacePtr getAndScaleImage(const std::string& img, int scale)
 		SurfacePtr s = graphics::SurfaceCache::get(img);
 		return s;
 	} else {
-		std::string scale_str = (formatter() << scale << "%");
-		std::vector<std::string> args;
-		args.push_back(g_convert_path);
-		args.push_back(img);
-		args.push_back("-resize");
-		args.push_back(scale_str);
-		args.push_back("./tmp.png");
-
-		const pid_t pid = fork();
-
-		ASSERT_LOG(pid >= 0, "fork failed: " << pid << " " << errno);
-		if(pid == 0) {
-			std::vector<char*> argv;
-			for(const std::string& s : args) {
-				argv.push_back(const_cast<char*>(s.c_str()));
-			}
-
-			argv.push_back(nullptr);
-			execv(g_convert_path.c_str(), &argv[0]);
-			ASSERT_LOG(false, "Execv failed");
-		} else {
-			int status = 0;
-			const pid_t res = waitpid(pid, &status, 0);
-		}
-
-		return Surface::create("./tmp.png", KRE::SurfaceFlags::NO_CACHE);
+		SurfacePtr s = graphics::SurfaceCache::get(img);
+		return KRE::scale::bicubic(s, scale);
 	}
 #else
 	return graphics::SurfaceCache::get(img);
