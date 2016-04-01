@@ -204,6 +204,7 @@
     <ClInclude Include="..\..\src\kre\StencilSettings.hpp" />
     <ClInclude Include="..\..\src\kre\Surface.hpp" />
     <ClInclude Include="..\..\src\kre\SurfaceBlur.hpp" />
+    <ClInclude Include="..\..\src\kre\SurfaceScale.hpp" />
     <ClInclude Include="..\..\src\kre\SurfaceSDL.hpp" />
     <ClInclude Include="..\..\src\kre\TexPack.hpp" />
     <ClInclude Include="..\..\src\kre\Texture.hpp" />
@@ -553,6 +554,7 @@
     <ClCompile Include="..\..\src\kre\StencilScopeOGL.cpp" />
     <ClCompile Include="..\..\src\kre\Surface.cpp" />
     <ClCompile Include="..\..\src\kre\SurfaceBlur.cpp" />
+    <ClCompile Include="..\..\src\kre\SurfaceScale.cpp" />
     <ClCompile Include="..\..\src\kre\SurfaceSDL.cpp" />
     <ClCompile Include="..\..\src\kre\TexPack.cpp" />
     <ClCompile Include="..\..\src\kre\Texture.cpp" />

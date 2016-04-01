@@ -1158,6 +1158,9 @@
     <ClInclude Include="..\..\src\kre\AlignedAllocator.hpp">
       <Filter>Header Files\kre</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\kre\SurfaceScale.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\src\kre\geometry.inl">
@@ -2148,6 +2151,9 @@
     </ClCompile>
     <ClCompile Include="..\..\src\xhtml\url_handler.cpp">
       <Filter>Source Files\xhtml</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\SurfaceScale.cpp">
+      <Filter>Source Files\kre</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
