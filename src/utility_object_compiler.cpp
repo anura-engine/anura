@@ -1154,7 +1154,6 @@ PREF_STRING(convert_path, "/usr/bin/convert", "Path to ImageMagick convert comma
 KRE::SurfacePtr getAndScaleImage(const std::string& img, int scale)
 {
 	using namespace KRE;
-#ifdef __linux__
 	if(scale == 100) {
 		SurfacePtr s = graphics::SurfaceCache::get(img);
 		return s;
@@ -1162,9 +1161,6 @@ KRE::SurfacePtr getAndScaleImage(const std::string& img, int scale)
 		SurfacePtr s = graphics::SurfaceCache::get(img);
 		return KRE::scale::bicubic(s, scale);
 	}
-#else
-	return graphics::SurfaceCache::get(img);
-#endif
 }
 }
 
