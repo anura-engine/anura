@@ -1217,6 +1217,14 @@ bool LevelRunner::play_cycle()
 	joystick::update();
 	bool should_pause = false;
 
+	static bool pause_next = false;
+	if(pause_next) {
+		paused = true;
+		pause_next = false;
+		show_pause_title();
+		controls::read_until(lvl_->cycle());
+	}
+
 	static int joystick_pause_lockout = 0;
 	if(joystick_pause_lockout) {
 		--joystick_pause_lockout;
@@ -1410,7 +1418,7 @@ bool LevelRunner::play_cycle()
 					}
 				} else if(key == SDLK_m && mod & KMOD_CTRL) {
 					sound::mute(!sound::muted()); //toggle sound
-				} else if(key == SDLK_p && mod & KMOD_CTRL) {
+				} else if((key == SDLK_p || (key == SDLK_n && paused)) && mod & KMOD_CTRL) {
 					paused = !paused;
 #ifndef NO_EDITOR
 					initHistorySlider();
@@ -1419,6 +1427,11 @@ bool LevelRunner::play_cycle()
 					if(!paused) {
 						controls::read_until(lvl_->cycle());
 					}
+
+					if(key == SDLK_n) {
+						pause_next = true;
+					}
+					
 				} else if(key == SDLK_f && mod & KMOD_CTRL && !preferences::no_fullscreen_ever()) {
 					LOG_DEBUG("ctrl-f pushed");
 					// XXX this changes if editor is active.
