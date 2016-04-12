@@ -903,7 +903,7 @@ bool LevelRunner::play_cycle()
 	}
 
 	static bool pumped_file_mods = false;
-	if(editor_ || console_ || pumped_file_mods) {
+	if(editor_ || console_ || pumped_file_mods || g_reload_modified_objects) {
 		sys::pump_file_modifications();
 		pumped_file_mods = true;
 	}

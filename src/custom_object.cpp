@@ -170,10 +170,10 @@ CustomObject::CustomObject(variant node)
 	frame_name_(node.has_key("current_frame") ? node["current_frame"].as_string() : "normal"),
 	time_in_frame_(node["time_in_frame"].as_int(0)),
 	time_in_frame_delta_(node["time_in_frame_delta"].as_int(1)),
-	velocity_x_(node["velocity_x"].as_int(0)),
-	velocity_y_(node["velocity_y"].as_int(0)),
-	accel_x_(node["accel_x"].as_int()),
-	accel_y_(node["accel_y"].as_int()),
+	velocity_x_(node["velocity_x"].as_decimal(decimal(0))),
+	velocity_y_(node["velocity_y"].as_decimal(decimal(0))),
+	accel_x_(node["accel_x"].as_decimal()),
+	accel_y_(node["accel_y"].as_decimal()),
 	gravity_shift_(node["gravity_shift"].as_int(0)),
 	rotate_z_(node["rotate"].as_decimal()), zorder_(node["zorder"].as_int(type_->zorder())),
 	zsub_order_(node["zsub_order"].as_int(type_->zSubOrder())),
@@ -954,10 +954,10 @@ variant CustomObject::write() const
 		res.add("rotate", rotate_z_);
 	}
 
-    if(velocity_x_ != 0) {
+    if(velocity_x_ != decimal(0)) {
         res.add("velocity_x", velocity_x_);
     }
-    if(velocity_y_ != 0) {
+    if(velocity_y_ != decimal(0)) {
         res.add("velocity_y", velocity_y_);
     }
 	
@@ -1615,7 +1615,7 @@ void CustomObject::process(Level& lvl)
 	
 	previous_y_ = y();
 	if(started_standing && velocity_y_ > 0) {
-		velocity_y_ = 0;
+		velocity_y_ = decimal(0);
 	}
 
 	const int start_x = x();
@@ -1825,14 +1825,20 @@ void CustomObject::process(Level& lvl)
 	}
 
 	if(type_->isAffectedByCurrents()) {
-		lvl.getCurrent(*this, &velocity_x_, &velocity_y_);
+		int velocity_x = velocity_x_.as_int();
+		int velocity_y = velocity_y_.as_int();
+		lvl.getCurrent(*this, &velocity_x, &velocity_y);
+		const int diff_x = velocity_x - velocity_x_.as_int();
+		const int diff_y = velocity_y - velocity_y_.as_int();
+		velocity_x_ += diff_x;
+		velocity_y_ += diff_y;
 	}
 
 	bool collide = false;
 
 	//calculate velocity which takes into account velocity of the object we're standing on.
-	int effective_velocity_x = velocity_x_;
-	int effective_velocity_y = velocity_y_;
+	int effective_velocity_x = velocity_x_.as_int();
+	int effective_velocity_y = velocity_y_.as_int();
 
 	if(effective_velocity_y > 0 && (standing_on_ || started_standing)) {
 		effective_velocity_y = 0;
@@ -2252,7 +2258,7 @@ void CustomObject::process(Level& lvl)
 		//we are standing on a new object. Adjust our velocity relative to
 		//the object we're standing on
 		velocity_x_ -= stand_info.collide_with->getLastMoveX()*100 + stand_info.collide_with->getPlatformMotionX();
-		velocity_y_ = 0;
+		velocity_y_ = decimal(0);
 
 		game_logic::MapFormulaCallable* callable(new game_logic::MapFormulaCallable(this));
 		callable->add("jumped_on_by", variant(this));
@@ -2392,12 +2398,12 @@ int CustomObject::zSubOrder() const
 
 int CustomObject::velocityX() const
 {
-	return velocity_x_;
+	return velocity_x_.as_int();
 }
 
 int CustomObject::velocityY() const
 {
-	return velocity_y_;
+	return velocity_y_.as_int();
 }
 
 int CustomObject::getSurfaceFriction() const
@@ -2864,25 +2870,23 @@ namespace
 		{}
 	};
 
-	decimal calculate_velocity_magnitude(int velocity_x, int velocity_y)
+	decimal calculate_velocity_magnitude(decimal velocity_x, decimal velocity_y)
 	{
-		const int64_t xval = velocity_x;
-		const int64_t yval = velocity_y;
-		int64_t value = xval*xval + yval*yval;
-		value = int64_t(sqrt(double(value)));
+		decimal val = velocity_x*velocity_x + velocity_y*velocity_y;
+		double value = sqrt(val.as_float());
 		decimal result(decimal::from_int(static_cast<int>(value)));
 		result /= 1000;
 		return result;
 	}
 
 	static const double radians_to_degrees = 57.29577951308232087;
-	decimal calculate_velocity_angle(int velocity_x, int velocity_y)
+	decimal calculate_velocity_angle(decimal velocity_x, decimal velocity_y)
 	{
-		if(velocity_y == 0 && velocity_x == 0) {
+		if(velocity_y.as_int() == 0 && velocity_x.as_int() == 0) {
 			return decimal::from_int(0);
 		}
 
-		const double theta = atan2(double(velocity_y), double(velocity_x));
+		const double theta = atan2(velocity_y.as_float(), velocity_x.as_float());
 		return decimal(theta*radians_to_degrees);
 	}
 
@@ -3554,13 +3558,13 @@ void CustomObject::setValue(const std::string& key, const variant& value)
 			hitpoints_ = type_->getHitpoints() + max_hitpoints_;
 		}
 	} else if(key == "velocity_x") {
-		velocity_x_ = value.as_int();
+		velocity_x_ = value.as_decimal();
 	} else if(key == "velocity_y") {
-		velocity_y_ = value.as_int();
+		velocity_y_ = value.as_decimal();
 	} else if(key == "accel_x") {
-		accel_x_ = value.as_int();
+		accel_x_ = value.as_decimal();
 	} else if(key == "accel_y") {
-		accel_y_ = value.as_int();
+		accel_y_ = value.as_decimal();
 	} else if(key == "rotate" || key == "rotate_z") {
 		rotate_z_ = value.as_decimal();
 	} else if(key == "red") {
@@ -4147,17 +4151,17 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 		break;
 
 	case CUSTOM_OBJECT_VELOCITY_X:
-		velocity_x_ = value.as_int();
+		velocity_x_ = value.as_decimal();
 		break;
 	
 	case CUSTOM_OBJECT_VELOCITY_Y:
-		velocity_y_ = value.as_int();
+		velocity_y_ = value.as_decimal();
 		break;
 	
 	case CUSTOM_OBJECT_VELOCITY_XY: {
 		ASSERT_LOG(value.is_list() && value.num_elements() == 2, "set velocity_xy value of object to a value in incorrect format ([x,y] expected): " << value.to_debug_string());
-		velocity_x_ = value[0].as_int();
-		velocity_y_ = value[1].as_int();
+		velocity_x_ = value[0].as_decimal();
+		velocity_y_ = value[1].as_decimal();
 		break;
 	}
 
@@ -4169,22 +4173,22 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 		const decimal magnitude = calculate_velocity_magnitude(velocity_x_, velocity_y_);
 		const decimal xval = magnitude*decimal(cos(radians));
 		const decimal yval = magnitude*decimal(sin(radians));
-		velocity_x_ = (xval*1000).as_int();
-		velocity_y_ = (yval*1000).as_int();
+		velocity_x_ = (xval*1000);
+		velocity_y_ = (yval*1000);
 		break;
 	}
 	case CUSTOM_OBJECT_ACCEL_X:
-		accel_x_ = value.as_int();
+		accel_x_ = value.as_decimal();
 		break;
 
 	case CUSTOM_OBJECT_ACCEL_Y:
-		accel_y_ = value.as_int();
+		accel_y_ = value.as_decimal();
 		break;
 
 	case CUSTOM_OBJECT_ACCEL_XY: {
 		ASSERT_LOG(value.is_list() && value.num_elements() == 2, "set accel_xy value of object to a value in incorrect format ([x,y] expected): " << value.to_debug_string());
-		accel_x_ = value[0].as_int();
-		accel_y_ = value[1].as_int();
+		accel_x_ = value[0].as_decimal();
+		accel_y_ = value[1].as_decimal();
 		break;
 	}
 
@@ -4853,19 +4857,19 @@ void CustomObject::setFrameNoAdjustments(const Frame& new_frame)
 	frame_name_ = new_frame.id();
 	time_in_frame_ = 0;
 	if(frame_->velocityX() != std::numeric_limits<int>::min()) {
-		velocity_x_ = frame_->velocityX() * (isFacingRight() ? 1 : -1);
+		velocity_x_ = decimal::from_int(frame_->velocityX() * (isFacingRight() ? 1 : -1));
 	}
 
 	if(frame_->velocityY() != std::numeric_limits<int>::min()) {
-		velocity_y_ = frame_->velocityY();
+		velocity_y_ = decimal::from_int(frame_->velocityY());
 	}
 
 	if(frame_->accelX() != std::numeric_limits<int>::min()) {
-		accel_x_ = frame_->accelX();
+		accel_x_ = decimal::from_int(frame_->accelX());
 	}
 	
 	if(frame_->accelY() != std::numeric_limits<int>::min()) {
-		accel_y_ = frame_->accelY();
+		accel_y_ = decimal::from_int(frame_->accelY());
 	}
 
 	calculateSolidRect();

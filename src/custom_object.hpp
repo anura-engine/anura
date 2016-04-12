@@ -373,8 +373,8 @@ private:
 	int time_in_frame_;
 	int time_in_frame_delta_;
 
-	int velocity_x_, velocity_y_;
-	int accel_x_, accel_y_;
+	decimal velocity_x_, velocity_y_;
+	decimal accel_x_, accel_y_;
 	int gravity_shift_;
 
 	virtual int currentRotation() const override;

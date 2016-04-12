@@ -21,6 +21,8 @@
 	   distribution.
 */
 
+#include <glm/gtx/intersect.hpp>
+
 #include <boost/lexical_cast.hpp>
 #include <boost/uuid/sha1.hpp>
 #include <boost/algorithm/string.hpp>
@@ -344,6 +346,59 @@ namespace game_logic
 			mutable std::map<variant, variant> cache_;
 			int max_entries_;
 		};
+
+		class Geometry : public game_logic::FormulaCallable {
+		public:
+			Geometry() {}
+		private:
+			DECLARE_CALLABLE(Geometry);
+		};
+
+		BEGIN_DEFINE_CALLABLE_NOBASE(Geometry)
+
+		BEGIN_DEFINE_FN(line_segment_intersection, "(decimal,decimal,decimal,decimal,decimal,decimal,decimal,decimal)->[decimal,decimal]|null")
+			const decimal a_x1 = FN_ARG(0).as_decimal();
+			const decimal a_y1 = FN_ARG(1).as_decimal();
+			const decimal a_x2 = FN_ARG(2).as_decimal();
+			const decimal a_y2 = FN_ARG(3).as_decimal();
+			const decimal b_x1 = FN_ARG(4).as_decimal();
+			const decimal b_y1 = FN_ARG(5).as_decimal();
+			const decimal b_x2 = FN_ARG(6).as_decimal();
+			const decimal b_y2 = FN_ARG(7).as_decimal();
+
+			decimal d = (a_x1-a_x2)*(b_y1-b_y2) - (a_y1-a_y2)*(b_x1-b_x2);
+			if(d == decimal::from_int(0)) {
+				return variant();
+			}
+
+			decimal xi = ((b_x1-b_x2)*(a_x1*a_y2-a_y1*a_x2)-(a_x1-a_x2)*(b_x1*b_y2-b_y1*b_x2))/d;
+			decimal yi = ((b_y1-b_y2)*(a_x1*a_y2-a_y1*a_x2)-(a_y1-a_y2)*(b_x1*b_y2-b_y1*b_x2))/d;
+
+			if(xi < std::min(a_x1,a_x2) || xi > std::max(a_x1,a_x2)) {
+				return variant();
+			}
+
+			if(xi < std::min(b_x1,b_x2) || xi > std::max(b_x1,b_x2)) {
+				return variant();
+			}
+
+			std::vector<variant> v;
+			v.push_back(variant(xi));
+			v.push_back(variant(yi));
+			return variant(&v);
+
+		END_DEFINE_FN
+
+		END_DEFINE_CALLABLE(Geometry)
+
+		FUNCTION_DEF(geometry_api, 0, 1, "geometry_api()")
+			static Geometry* geo = new Geometry;
+			static variant holder(geo);
+			return holder;
+		FUNCTION_ARGS_DEF
+		RETURN_TYPE("builtin geometry")
+		END_FUNCTION_DEF(geometry_api)
+
 
 		class DateTime : public game_logic::FormulaCallable {
 		public:
