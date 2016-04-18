@@ -189,6 +189,8 @@ Level::Level(const std::string& level_cfg, variant node)
 	: id_(level_cfg),
 	  x_resolution_(0), 
 	  y_resolution_(0),
+	  absolute_object_adjust_x_(0),
+	  absolute_object_adjust_y_(0),
 	  set_screen_resolution_on_entry_(false),
 	  highlight_layer_(std::numeric_limits<int>::min()),
 	  num_compiled_tiles_(0),
@@ -3084,9 +3086,9 @@ std::vector<EntityPtr> Level::get_characters_in_rect(const rect& r, int screen_x
 		CustomObject* obj = dynamic_cast<CustomObject*>(c.get());
 
 		const int xP = c->getMidpoint().x + ((c->parallaxScaleMillisX() - 1000)*screen_xpos)/1000 
-			+ (obj->useAbsoluteScreenCoordinates() ? screen_xpos : 0);
+			+ (obj->useAbsoluteScreenCoordinates() ? screen_xpos + absolute_object_adjust_x() : 0);
 		const int yP = c->getMidpoint().y + ((c->parallaxScaleMillisY() - 1000)*screen_ypos)/1000 
-			+ (obj->useAbsoluteScreenCoordinates() ? screen_ypos : 0);
+			+ (obj->useAbsoluteScreenCoordinates() ? screen_ypos + absolute_object_adjust_y() : 0);
 		if(pointInRect(point(xP, yP), r)) {
 			res.push_back(c);
 		}
@@ -3104,9 +3106,9 @@ std::vector<EntityPtr> Level::get_characters_at_point(int x, int y, int screen_x
 		}
 
 		const int xP = x + ((1000 - (c->parallaxScaleMillisX()))* screen_xpos )/1000
-			- (c->useAbsoluteScreenCoordinates() ? screen_xpos : 0);
+			- (c->useAbsoluteScreenCoordinates() ? screen_xpos + absolute_object_adjust_x() : 0);
 		const int yP = y + ((1000 - (c->parallaxScaleMillisY()))* screen_ypos )/1000
-			- (c->useAbsoluteScreenCoordinates() ? screen_ypos : 0);
+			- (c->useAbsoluteScreenCoordinates() ? screen_ypos + absolute_object_adjust_y() : 0);
 
 		if(!c->isAlpha(xP, yP)) {
 			result.push_back(c);
@@ -3805,6 +3807,16 @@ DEFINE_SET_FIELD_TYPE("map")
 	if(obj.backup_rt_ != nullptr && !value.is_null()) {
 		obj.backup_rt_->setFromVariant(obj.fb_render_target_);
 	}
+
+DEFINE_FIELD(absolute_object_adjust_x, "int")
+	return variant(obj.absolute_object_adjust_x_);
+DEFINE_SET_FIELD_TYPE("int")
+	obj.absolute_object_adjust_x_ = value.as_int();
+
+DEFINE_FIELD(absolute_object_adjust_y, "int")
+	return variant(obj.absolute_object_adjust_y_);
+DEFINE_SET_FIELD_TYPE("int")
+	obj.absolute_object_adjust_y_ = value.as_int();
 
 END_DEFINE_CALLABLE(Level)
 

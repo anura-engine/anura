@@ -1218,8 +1218,8 @@ void CustomObject::drawLater(int xx, int yy) const
 	int offs_x = 0;
 	int offs_y = 0;
 	if(use_absolute_screen_coordinates_) {
-		offs_x = xx;
-		offs_y = yy;
+		offs_x = xx + Level::current().absolute_object_adjust_x();
+		offs_y = yy + Level::current().absolute_object_adjust_y();
 	}
 	KRE::Canvas::CameraScope cam_scope(graphics::GameScreen::get().getCurrentCamera());
 	KRE::ModelManager2D model_matrix(x()+offs_x, y()+offs_y);
@@ -1241,7 +1241,7 @@ void CustomObject::draw(int xx, int yy) const
 
 	std::unique_ptr<KRE::ModelManager2D> model_scope;
 	if(use_absolute_screen_coordinates_) {
-		model_scope = std::unique_ptr<KRE::ModelManager2D>(new KRE::ModelManager2D(xx + g_camera_extend_x, yy + g_camera_extend_y));
+		model_scope = std::unique_ptr<KRE::ModelManager2D>(new KRE::ModelManager2D(xx + g_camera_extend_x + Level::current().absolute_object_adjust_x(), yy + g_camera_extend_y + Level::current().absolute_object_adjust_y()));
 	}
 
 	for(const EntityPtr& attached : attachedObjects()) {

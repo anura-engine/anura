@@ -532,7 +532,7 @@ bool LevelRunner::handle_mouse_events(const SDL_Event &event)
 				if(m_area.w() != 0) {
 					point p(x,y);
 					if(e->useAbsoluteScreenCoordinates()) {
-						p = point(mx,my);
+						p = point(mx + lvl_->absolute_object_adjust_x(),my + lvl_->absolute_object_adjust_y());
 					}
 					if(pointInRect(p, m_area) == false) {
 						continue;
@@ -543,7 +543,7 @@ bool LevelRunner::handle_mouse_events(const SDL_Event &event)
 				if(e->getClipArea(&clip_area)) {
 					point p(x,y);
 					if(e->useAbsoluteScreenCoordinates()) {
-						p = point(mx,my);
+						p = point(mx + lvl_->absolute_object_adjust_x(),my + lvl_->absolute_object_adjust_y());
 					}
 					if(pointInRect(p, clip_area) == false) {
 						continue;
@@ -647,7 +647,7 @@ bool LevelRunner::handle_mouse_events(const SDL_Event &event)
 					bool has_m_area = m_area.w() != 0;
 					point p(x,y);
 					if(e->useAbsoluteScreenCoordinates()) {
-						p = point(mx,my);
+						p = point(mx + lvl_->absolute_object_adjust_x(),my + lvl_->absolute_object_adjust_y());
 					}
 
 					if(mouse_in.find(e) == mouse_in.end()) {

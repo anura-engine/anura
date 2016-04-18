@@ -372,6 +372,9 @@ public:
 	int x_resolution() const { return x_resolution_; }
 	int y_resolution() const { return y_resolution_; }
 
+	int absolute_object_adjust_x() const { return absolute_object_adjust_x_; }
+	int absolute_object_adjust_y() const { return absolute_object_adjust_y_; }
+
 	void launch_new_module(const std::string& module_id, game_logic::ConstFormulaCallablePtr callable = nullptr);
 
 	typedef std::vector<LevelTile>::const_iterator TileItor;
@@ -431,6 +434,8 @@ private:
 
 	//preferred screen dimensions to play the level on.
 	int x_resolution_, y_resolution_;
+
+	int absolute_object_adjust_x_, absolute_object_adjust_y_;
 
 	bool set_screen_resolution_on_entry_;
 
