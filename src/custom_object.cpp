@@ -4592,6 +4592,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 
 	case CUSTOM_OBJECT_PAUSED: {
 		paused_ = value.as_bool();
+		handleEvent("paused");
 		break;
 	}
 

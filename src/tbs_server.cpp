@@ -75,9 +75,9 @@ namespace tbs
 			g_exit_server = true;
 		}
 
-	if(game_state) {
-		game_state->cancel_game();
-	}
+		if(game_state) {
+			game_state->cancel_game();
+		}
 	}
 
 	server::client_info::client_info() : nplayer(0), last_contact(0)

@@ -2386,7 +2386,7 @@ namespace {
 	
 			variant execute(const FormulaCallable& variables) const {
 				const variant result = expression_->evaluate(variables);
-				ASSERT_LOG(type_->match(result), "TYPE MIS-MATCH: EXPECTED " << type_->to_string() << " BUT FOUND " << result.write_json() << " OF TYPE '" << get_variant_type_from_value(result)->to_string() << "' AT " << debugPinpointLocation());
+				ASSERT_LOG(type_->match(result), "TYPE MIS-MATCH: EXPECTED " << type_->to_string() << " BUT FOUND " << result.write_json() << " OF TYPE '" << get_variant_type_from_value(result)->to_string() << "' " << type_->mismatch_reason(result) << " AT " << debugPinpointLocation());
 				return result;
 			}
 

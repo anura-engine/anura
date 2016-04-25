@@ -81,6 +81,8 @@ public:
 	virtual ~variant_type();
 	virtual bool match(const variant& v) const = 0;
 
+	virtual std::string mismatch_reason(const variant& v) const { return ""; }
+
 	//decay from enum.
 	virtual variant_type_ptr base_type_no_enum() const { return variant_type_ptr(this); }
 

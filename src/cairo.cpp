@@ -430,7 +430,7 @@ namespace {
 		v.convert_to<cairo_op>()->execute(context);
 	}
 
-	variant layout_text_impl(const TextMarkupFragment* f1, const TextMarkupFragment* f2, float width, float width_delta=0.0)
+	variant layout_text_impl(const TextMarkupFragment* f1, const TextMarkupFragment* f2, float width, float width_delta=0.0, float scale_line_heights=1.0)
 	{
 
 		cairo_context context(8, 8);
@@ -498,8 +498,8 @@ namespace {
 			for(const std::string& line : lines) {
 				if(!first_line) {
 					xpos = 0;
-					ypos += line_height;
-					width += width_delta*line_height;
+					ypos += line_height*scale_line_heights;
+					width += width_delta*line_height*scale_line_heights;
 					line_height = min_line_height;
 
 					output.push_back(LineOfText());
@@ -533,8 +533,8 @@ namespace {
 						}
 
 						xpos = 0;
-						ypos += line_height;
-						width += width_delta*line_height;
+						ypos += line_height*scale_line_heights;
+						width += width_delta*line_height*scale_line_heights;
 						line_height = min_line_height;
 
 						output.push_back(LineOfText());
@@ -570,8 +570,8 @@ namespace {
 
 						if(xpos > 0 && xpos + advance > width) {
 							xpos = 0;
-							ypos += line_height;
-							width += width_delta*line_height;
+							ypos += line_height*scale_line_heights;
+							width += width_delta*line_height*scale_line_heights;
 							line_height = min_line_height;
 
 							output.push_back(LineOfText());
@@ -709,7 +709,7 @@ namespace {
 				res->x = fragment.xpos + xpos_align_adjust;
 				res->y = fragment.ypos + fragment_baseline - static_cast<float>(fragment.font_extents.ascent);
 				res->width = fragment.width;
-				res->height = line_height;
+				res->height = line_height*scale_line_heights;
 				res->x_advance = fragment.x_advance;
 				res->ascent = static_cast<float>(fragment.font_extents.ascent);
 				res->descent = static_cast<float>(fragment.font_extents.descent);
@@ -717,7 +717,7 @@ namespace {
 				result.push_back(variant(res));
 			}
 
-			width += width_delta*line_height;
+			width += width_delta*line_height*scale_line_heights;
 		}
 
 		return variant(&result);
@@ -1430,11 +1430,13 @@ END_CAIRO_FN
 
 	END_DEFINE_FN
 
-	BEGIN_DEFINE_FN(markup_text, "(string, decimal|{width: decimal, width_delta: null|decimal, scale: null|decimal}, decimal=0.0) ->[builtin cairo_text_fragment]")
+	BEGIN_DEFINE_FN(markup_text, "(string, decimal|{width: decimal, width_delta: null|decimal, scale: null|decimal, scale_line_heights: null|decimal}, decimal=0.0) ->[builtin cairo_text_fragment]")
 		const std::string markup = "<root>" + FN_ARG(0).as_string() + "</root>";
 
 		variant params = FN_ARG(1);
 
+
+		float scale_line_heights = 1.0;
 		double scale = 1.0;
 		float width = params.is_map() ? params["width"].as_float() : params.as_float();
 		float width_delta = 0.0;
@@ -1449,6 +1451,10 @@ END_CAIRO_FN
 
 			if(params["scale"].is_decimal()) {
 				scale = params["scale"].as_float();
+			}
+			
+			if(params["scale_line_heights"].is_decimal()) {
+				scale_line_heights = params["scale_line_heights"].as_float();
 			}
 		}
 
@@ -1489,7 +1495,7 @@ END_CAIRO_FN
 		parse_text_markup_impl(stack, fragments, ptree, get_font_fn, "", scale);
 
 		if(fragments.empty() == false) {
-			return layout_text_impl(&fragments[0], &fragments[0] + fragments.size(), width, width_delta);
+			return layout_text_impl(&fragments[0], &fragments[0] + fragments.size(), width, width_delta, scale_line_heights);
 		} else {
 			std::vector<variant> result;
 			return variant(&result);

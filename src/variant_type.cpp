@@ -1226,6 +1226,37 @@ public:
 		return true;
 	}
 
+	std::string mismatch_reason(const variant& v) const
+	{
+		if(!v.is_map()) {
+			return "Type is not a map";
+		}
+
+		std::ostringstream s;
+
+		for(const variant::map_pair& p : v.as_map()) {
+			std::map<variant, variant_type_ptr>::const_iterator itor = type_map_.find(p.first);
+			if(itor == type_map_.end()) {
+				s << "Key " << p.first << " not in type";
+				return s.str();
+			}
+
+			if(!itor->second->match(p.second)) {
+				s << "Value for " << p.first << " does not match";
+				return s.str();
+			}
+		}
+
+		for(const variant& k : must_have_keys_) {
+			if(v.as_map().count(k) == 0) {
+				s << "Key " << k.write_json() << " required but not found";
+				return s.str();
+			}
+		}
+
+		return "";
+	}
+
 	bool is_equal(const variant_type& o) const {
 		const variant_type_specific_map* other = dynamic_cast<const variant_type_specific_map*>(&o);
 		if(!other) {
