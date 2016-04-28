@@ -52,6 +52,7 @@ extern bool g_tbs_use_shared_mem;
 extern bool g_tbs_server_local;
 
 PREF_STRING(tbs_server_save_replay, "", "ID for the tbs server to save the replay as");
+PREF_STRING(tbs_server_save_replay_file, "", "File for the tbs server to save the replay to");
 
 namespace game_logic 
 {
@@ -173,7 +174,8 @@ namespace tbs
 	    game_id_(generate_game_id()),
 	    started_(false), state_(STATE_SETUP), state_id_(0), cycle_(0), tick_rate_(50),
 		backup_callable_(nullptr),
-		started_waiting_for_player_at_(-1)
+		started_waiting_for_player_at_(-1),
+		start_timestamp_(static_cast<int>(time(nullptr)))
 	{
 	}
 
@@ -209,6 +211,12 @@ namespace tbs
 
 	void game::cancel_game()
 	{
+		std::vector<variant> player_info;
+		for(auto& p : players_) {
+			player_info.push_back(p.info);
+		}
+
+		variant player_info_var(&player_info);
 		if(g_tbs_server_save_replay.empty() == false && replay_.empty() == false) {
 			verify_replay();
 
@@ -221,6 +229,7 @@ namespace tbs
 			db->get("game:" + g_tbs_server_save_replay, [=](variant game_info) {
 				game_info.add_attr_mutation(variant("winner"), winner_);
 				game_info.add_attr_mutation(variant("end_timestamp"), variant(static_cast<int>(time(nullptr))));
+				game_info.add_attr_mutation(variant("player_info"), player_info_var);
 				db->put("game:" + g_tbs_server_save_replay, game_info,
 				[=]() {
 				},
@@ -238,6 +247,38 @@ namespace tbs
 
 			db->process(10000000);
 			LOG_INFO("Posted replay to database\n");
+		}
+
+		if(g_tbs_server_save_replay_file.empty() == false) {
+			verify_replay();
+			std::vector<variant> v;
+			try {
+				variant items = json::parse(sys::read_file(g_tbs_server_save_replay_file), json::JSON_PARSE_OPTIONS::NO_PREPROCESSOR);
+				if(items.is_list()) {
+					v = items.as_list();
+				}
+			} catch(...) {
+			}
+
+			std::vector<variant> players_val;
+			for(const player& p : players_) {
+				players_val.push_back(variant(p.name));
+			}
+
+
+			variant replay = vector_to_variant(replay_);
+			variant_builder b;
+			b.add("players", variant(&players_val));
+			b.add("player_info", player_info_var);
+			b.add("replay", replay);
+			b.add("timestamp", start_timestamp_);
+			b.add("end_timestamp", static_cast<int>(time(NULL)));
+			b.add("winner", winner_);
+			v.push_back(b.build());
+			if(v.size() > 10) {
+				v.erase(v.begin(), v.end()-10);
+			}
+			sys::write_file(g_tbs_server_save_replay_file, variant(&v).write_json());
 		}
 
 		players_.clear();
@@ -447,6 +488,7 @@ namespace tbs
 
 		state_ = STATE_PLAYING;
 		started_ = true;
+		start_timestamp_ = static_cast<int>(time(nullptr));
 
 		executeCommand(game_type_->restart());
 
@@ -754,6 +796,16 @@ namespace tbs
 				result.push_back(variant(n));
 			}
 			return variant(&result);
+
+		BEGIN_DEFINE_FN(set_player_info, "(int, any)->commands")
+			const int nplayer = FN_ARG(0).as_int();
+			const variant info = FN_ARG(1);
+			ASSERT_LOG(nplayer >= 0 && nplayer < obj.players_.size(), "Illegal player index: " << nplayer);
+			const game* g = &obj;
+			return variant(new game_logic::FnCommandCallable([=]() {
+				const_cast<game*>(g)->players_[nplayer].info = info;
+			}));
+		END_DEFINE_FN
 
 		DEFINE_FIELD(winner, "null")
 			return variant();

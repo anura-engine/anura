@@ -85,13 +85,15 @@ namespace tbs
 		struct player {
 			player();
 			std::string name;
+			variant info;
 			int side;
 			bool is_human;
 			int confirmed_state_id;
 
-		mutable variant state_sent;
-		mutable int state_id_sent;
-		bool allow_deltas;
+			mutable variant state_sent;
+			mutable int state_id_sent;
+			bool allow_deltas;
+
 		};
 
 		int get_player_index(const std::string& nick) const;
@@ -183,6 +185,8 @@ namespace tbs
 		std::vector<std::string> replay_;
 		mutable variant replay_last_;
 		variant winner_;
+
+		int start_timestamp_;
 
 		void save_state(const std::string& fname);
 		void load_state(const std::string& fname);

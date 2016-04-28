@@ -35,6 +35,7 @@
 #include "formatter.hpp"
 #include "json_parser.hpp"
 #include "module.hpp"
+#include "preferences.hpp"
 #include "shared_memory_pipe.hpp"
 #include "tbs_internal_server.hpp"
 #include "variant_utils.hpp"
@@ -317,6 +318,7 @@ void terminate_utility_process()
 
 			std::vector<std::string> args;
 			args.push_back(formatter() << "--module=" << module::get_module_name());
+			args.push_back(formatter() << "--tbs-server-save-replay-file=" << preferences::user_data_path() << "/local-replays.cfg");
 			args.push_back("--tbs-server-local=true");
 			args.push_back("--log-file=server-log.txt");
 			args.push_back("--log-level=debug");
