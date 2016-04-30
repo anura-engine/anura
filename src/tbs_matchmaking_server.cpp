@@ -1439,7 +1439,7 @@ public:
 				});
 			} else if(request_type == "get_recent_games") {
 				if(doc["user"].is_string()) {
-					std::string user = doc["user"].as_string();
+					std::string user = normalize_username(doc["user"].as_string());
 					queryUserGameInfo(user, socket);
 					return;
 				}
@@ -1635,7 +1635,7 @@ public:
 	{
 		db_client_->get("user:" + user, [=](variant info) {
 			if(info.is_null()) {
-				send_msg(socket, "text/json", "{ type: 'error', message: 'No such user'}", "");
+				send_msg(socket, "text/json", "{ type: 'error', message: 'No such user: " + user + "'}", "");
 				return;
 			}
 
