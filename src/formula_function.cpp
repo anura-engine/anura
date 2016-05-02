@@ -5275,6 +5275,55 @@ FUNCTION_ARGS_DEF
 END_FUNCTION_DEF
 */
 
+
+FUNCTION_DEF(format, 1, 2, "format(string, [int|decimal]): Put the numbers in the list into the string. The fractional component of the number will be rounded to the nearest available digit. Example: format('#{01}/#{02}/#{1998}', [20, 5, 2015]) → '20/05/2015'; format('#{1}/#{2}/#{98}', [20, 5, 2015]) → '20/5/2015'; format(#{0.00}, [0.1]) → '0.10'.")
+	std::string input_str = args()[0]->evaluate(variables).as_string();
+	std::vector<variant> values = args()[1]->evaluate(variables).as_list();
+	std::string output_str(""); output_str.reserve(input_str.size());
+	std::string format_fragment(""); format_fragment.reserve(10);
+	
+	int char_at = 0;
+	int value_at = 0;
+	while (char_at < input_str.size()) {
+		if(input_str[char_at] == '#' && input_str[char_at+1] == '{') {
+			char_at+=2;
+			
+			while (char_at < input_str.size() && input_str[char_at] != '}') {
+				format_fragment += input_str[char_at];
+				char_at++;
+			}
+			char_at++;
+			
+			LOG_INFO("fragment is: " << format_fragment);
+			
+			int decimal_place = format_fragment.find('.');
+			if(decimal_place == -1) {
+				if(format_fragment.front() == '0') {
+					output_str += (boost::format("%|0" + std::to_string(format_fragment.length()) + "|") % values[value_at++]).str();
+				} else {
+					output_str += (boost::format("%|" + std::to_string(format_fragment.length()) + "|") % values[value_at++]).str();
+				}
+			} else {
+				output_str += "(decimal)";
+				//TODO: Decimal support.
+			}
+			
+			format_fragment.clear();
+		} else {
+			output_str += input_str[char_at];
+			char_at++;
+		}
+	}
+	
+	return variant(output_str);
+FUNCTION_ARGS_DEF
+	ARG_TYPE("string");
+	ARG_TYPE("list");
+RETURN_TYPE("string")
+END_FUNCTION_DEF(format)
+
+
+
 UNIT_TEST(modulo_operation) {
 	CHECK(game_logic::Formula(variant("mod(-5, 20)")).execute() == game_logic::Formula(variant("15")).execute(), "test failed");
 	CHECK(game_logic::Formula(variant("mod(-25, 20)")).execute() == game_logic::Formula(variant("15")).execute(), "test failed");
@@ -5315,6 +5364,11 @@ UNIT_TEST(filter_function) {
 UNIT_TEST(where_scope_function) {
 	CHECK(game_logic::Formula(variant("{'val': num} where num = 5")).execute() == game_logic::Formula(variant("{'val': 5}")).execute(), "map where test failed");
 	CHECK(game_logic::Formula(variant("'five: ${five}' where five = 5")).execute() == game_logic::Formula(variant("'five: 5'")).execute(), "string where test failed");
+}
+
+UNIT_TEST(format) {
+	CHECK_EQ(game_logic::Formula(variant("format('Hello, #{003}.', [7])")).execute(), game_logic::Formula(variant("'Hello, 007.'")).execute());
+	CHECK_EQ(game_logic::Formula(variant("format('Hello, #{3}.', [7])")).execute(), game_logic::Formula(variant("'Hello, 7.'")).execute());
 }
 
 BENCHMARK(map_function) {
