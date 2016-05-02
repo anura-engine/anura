@@ -5295,18 +5295,24 @@ FUNCTION_DEF(format, 1, 2, "format(string, [int|decimal]): Put the numbers in th
 			char_at++;
 			
 			LOG_INFO("fragment is: " << format_fragment);
+			LOG_INFO("value is: " << values[value_at]);
 			
 			int decimal_place = format_fragment.find('.');
+			std::string format_str = "";
 			if(decimal_place == -1) {
 				if(format_fragment.front() == '0') {
-					output_str += (boost::format("%|0" + std::to_string(format_fragment.length()) + "|") % values[value_at++]).str();
+					format_str += "%|0" + std::to_string(format_fragment.length()) + ".0|";
 				} else {
-					output_str += (boost::format("%|" + std::to_string(format_fragment.length()) + "|") % values[value_at++]).str();
+					format_str += "%|.0|";
 				}
 			} else {
+				format_str += "%||";
 				output_str += "(decimal)";
 				//TODO: Decimal support.
 			}
+			LOG_INFO("FORMAT STR: " << format_str);
+			LOG_INFO("OUTPUT: " << boost::format(format_str) % values[value_at]);
+			output_str += (boost::format(format_str) % values[value_at++]).str();
 			
 			format_fragment.clear();
 		} else {
@@ -5367,8 +5373,13 @@ UNIT_TEST(where_scope_function) {
 }
 
 UNIT_TEST(format) {
+	//Integer tests:
 	CHECK_EQ(game_logic::Formula(variant("format('Hello, #{003}.', [7])")).execute(), game_logic::Formula(variant("'Hello, 007.'")).execute());
+	CHECK_EQ(game_logic::Formula(variant("format('Hello, #{03}.', [7])")).execute(), game_logic::Formula(variant("'Hello, 07.'")).execute());
 	CHECK_EQ(game_logic::Formula(variant("format('Hello, #{3}.', [7])")).execute(), game_logic::Formula(variant("'Hello, 7.'")).execute());
+	CHECK_EQ(game_logic::Formula(variant("format('Hello, #{03}.', [700])")).execute(), game_logic::Formula(variant("'Hello, 700.'")).execute());
+	//CHECK_EQ(game_logic::Formula(variant("format('Hello, #{003}.', [7.05])")).execute(), game_logic::Formula(variant("'Hello, 007.'")).execute());
+	//CHECK_EQ(game_logic::Formula(variant("format('Hello, #{003}.', [7.95])")).execute(), game_logic::Formula(variant("'Hello, 008.'")).execute());
 }
 
 BENCHMARK(map_function) {
