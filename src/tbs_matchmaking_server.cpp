@@ -200,6 +200,11 @@ public:
 
 		status_doc_ = status_doc.build();
 
+		variant status_keys = controller_->queryValue("status_keys");
+		if(status_keys.is_list()) {
+			status_keys_ = status_keys.as_list();
+		}
+
 		create_account_fn_ = controller_->queryValue("create_account");
 		ASSERT_LOG(create_account_fn_.is_function(), "Could not find create_account in matchmaking_server class");
 
@@ -2203,6 +2208,8 @@ private:
 		return v.build();
 	}
 
+	std::vector<variant> status_keys_;
+
 	bool update_status_doc()
 	{
 		if(status_doc_new_users_.empty() && status_doc_delete_users_.empty() && status_doc_user_status_changes_.empty() && status_doc_chat_messages_.empty() && status_doc_new_servers_.empty() && status_doc_delete_servers_.empty()) {
@@ -2222,6 +2229,8 @@ private:
 
 		status_doc_state_id_++;
 		status_doc_.add_attr_mutation(variant("state_id"), variant(status_doc_state_id_));
+
+		std::vector<variant> new_users_delta;
 
 		if(status_doc_new_users_.empty() == false || status_doc_delete_users_.empty() == false) {
 
@@ -2254,7 +2263,21 @@ private:
 				variant_builder builder;
 				builder.add("id", u);
 				builder.add("status", "idle");
-				list.push_back(builder.build());
+
+				auto& info = getAccountInfo(u);
+				if(info.account_info.is_map()) {
+					variant details = info.account_info["info"];
+					if(details.is_map()) {
+						for(const variant& key : status_keys_) {
+							builder.add(key.as_string(), details[key]);
+						}
+					}
+				}
+
+				variant new_user_doc = builder.build();
+
+				list.push_back(new_user_doc);
+				new_users_delta.push_back(new_user_doc);
 			}
 
 			status_doc_.add_attr_mutation(variant("users"), variant(static_cast<int>(list.size())));
@@ -2317,13 +2340,8 @@ private:
 		delta.add("state_id_basis", status_doc_state_id_-1);
 		delta.add("state_id", status_doc_state_id_);
 
-		if(status_doc_new_users_.empty() == false) {
-			std::vector<variant> v;
-			for(auto s : status_doc_new_users_) {
-				v.push_back(variant(s));
-			}
-
-			delta.add("new_users", variant(&v));
+		if(new_users_delta.empty() == false) {
+			delta.add("new_users", variant(&new_users_delta));
 		}
 
 		if(status_doc_delete_users_.empty() == false) {
