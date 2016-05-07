@@ -2184,7 +2184,7 @@ private:
 
 	std::vector<std::string> status_doc_new_users_;
 	std::vector<std::string> status_doc_delete_users_;
-	std::map<std::string,std::string> status_doc_user_status_changes_;
+	std::map<std::string,std::map<variant,variant> > status_doc_user_status_changes_;
 	std::vector<variant> status_doc_chat_messages_;
 
 	std::vector<variant> status_doc_new_servers_;
@@ -2292,7 +2292,9 @@ private:
 				auto itor = status_doc_user_status_changes_.find(user_id);
 				if(itor != status_doc_user_status_changes_.end()) {
 					variant v = users[n];
-					v.add_attr_mutation(variant("status"), variant(itor->second));
+					for(auto i = itor->second.begin(); i != itor->second.end(); ++i) {
+						v.add_attr_mutation(i->first, i->second);
+					}
 				}
 			}
 		}
@@ -2357,7 +2359,7 @@ private:
 			std::map<variant,variant> m;
 			for(auto p : status_doc_user_status_changes_) {
 				variant key(p.first);
-				m[key] = variant(p.second);
+				m[key] = variant(&p.second);
 			}
 
 			delta.add("status_changes", variant(&m));
@@ -2440,9 +2442,27 @@ private:
 
 	void change_user_status(const std::string& user_id, const std::string& status)
 	{
-		status_doc_user_status_changes_[user_id] = status;
+		static const variant StatusVariant("status");
+		status_doc_user_status_changes_[user_id][StatusVariant] = variant(status);
 	}
 
+public:
+	void update_user_status(const std::string& user_id)
+	{
+		auto& m = status_doc_user_status_changes_[user_id];
+		auto& info = getAccountInfo(user_id);
+		if(info.account_info.is_map()) {
+			variant details = info.account_info["info"];
+			if(details.is_map()) {
+				for(const variant& key : status_keys_) {
+					m[key] = details[key];
+				}
+			}
+		}
+
+	}
+
+private:
 	void add_chat_message(variant v)
 	{
 		status_doc_chat_messages_.push_back(v);
@@ -2770,13 +2790,14 @@ private:
 
 class write_account_command : public game_logic::CommandCallable
 {
+	matchmaking_server& server_;
 	DbClient& db_client_;
 	std::string account_;
 	mutable variant value_;
 	bool silent_;
 public:
-	write_account_command(DbClient& db_client, const std::string& account, const variant& value, bool silent)
-	  : db_client_(db_client), account_(account), value_(value), silent_(silent)
+	write_account_command(matchmaking_server& server, DbClient& db_client, const std::string& account, const variant& value, bool silent)
+	  : server_(server), db_client_(db_client), account_(account), value_(value), silent_(silent)
 	{}
 
 	void execute(game_logic::FormulaCallable& obj) const override {
@@ -2785,6 +2806,8 @@ public:
 			const int cur_version = value_[VersionVar].as_int(0);
 			value_.add_attr_mutation(VersionVar, variant(cur_version+1));
 		}
+
+		server_.update_user_status(account_);
 		db_client_.put("user:" + account_, value_, [](){}, [](){});
 	}
 };
@@ -2823,7 +2846,7 @@ BEGIN_DEFINE_FN(write_account, "(string, [string]|null=null) ->commands")
 	auto itor = obj.account_info_.find(key);
 	ASSERT_LOG(itor != obj.account_info_.end(), "Could not find user account: " << key);
 
-	return variant(new write_account_command(*obj.db_client_, key, itor->second.account_info, silent_update));
+	return variant(new write_account_command(const_cast<matchmaking_server&>(obj), *obj.db_client_, key, itor->second.account_info, silent_update));
 END_DEFINE_FN
 END_DEFINE_CALLABLE(matchmaking_server)
 
