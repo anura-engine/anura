@@ -1644,7 +1644,14 @@ public:
 				return;
 			}
 
-			variant recent_games = info["recent_games"];
+			variant user_info = info["info"];
+
+			variant recent_games;
+			
+			if(user_info.is_map()) {
+				recent_games = user_info["recent_games"];
+			}
+
 			if(recent_games.is_list() == false || recent_games.num_elements() == 0) {
 				//no games, send empty response
 				variant_builder response;
@@ -1826,13 +1833,19 @@ private:
 				auto account_info_itor = account_info_.find(session_info.user_id);
 				ASSERT_LOG(account_info_itor != account_info_.end(), "Could not find user's account info: " << session_info.user_id);
 
+				variant account_user_info = account_info_itor->second.account_info["info"];
+
+				ASSERT_LOG(account_user_info.is_map(), "Account user info not a map");
+
 				std::vector<variant> recent_games_var;
-				variant recent_games = account_info_itor->second.account_info["recent_games"];
+				variant recent_games = account_user_info["recent_games"];
 				if(recent_games.is_list()) {
 					recent_games_var = recent_games.as_list();
 				}
 				recent_games_var.push_back(variant(game_id));
-				account_info_itor->second.account_info.add_attr_mutation(variant("recent_games"), variant(&recent_games_var));
+				account_user_info.add_attr_mutation(variant("recent_games"), variant(&recent_games_var));
+
+				db_client_->put("user:" + session_info.user_id, account_info_itor->second.account_info, [](){}, [](){});
 
 				variant_builder user;
 				user.add("user", session_info.user_id);
