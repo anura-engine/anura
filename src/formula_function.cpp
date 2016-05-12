@@ -87,6 +87,7 @@ using boost::math::atanh;
 #endif
 
 PREF_STRING(auto_update_status, "", "");
+PREF_INT(fake_time_adjust, 0, "Adjusts the time known to the game by the specified number of seconds.");
 extern variant g_auto_update_info;
 
 std::map<std::string, variant> g_user_info_registry;
@@ -451,13 +452,13 @@ namespace game_logic
 			time_t t;
 			
 			if(args().size() == 0) {
-				t = time(NULL);
+				t = time(nullptr) + g_fake_time_adjust;
 			} else {
 				t = args()[0]->evaluate(variables).as_int();
 			}
 			tm* ltime = localtime(&t);
 			if(ltime == nullptr) {
-				t = time(NULL);
+				t = time(nullptr) + g_fake_time_adjust;
 				ltime = localtime(&t);
 				ASSERT_LOG(ltime != nullptr, "Could not get time()");
 				
@@ -3264,6 +3265,42 @@ FUNCTION_DEF_IMPL
 		FUNCTION_TYPE_DEF
 			return args()[1]->queryVariantType();
 		END_FUNCTION_DEF(instrument)
+
+		class instrument_command : public game_logic::CommandCallable
+		{
+		public:
+			instrument_command(const std::string& name, variant cmd)
+			  : name_(name), cmd_(cmd)
+			{}
+			virtual void execute(game_logic::FormulaCallable& ob) const {
+				const int begin = SDL_GetTicks();
+				ob.executeCommand(cmd_);
+				const int end = SDL_GetTicks();
+				LOG_INFO("Instrument Command: " << name_ << ": " << (end - begin) << "ms");
+			}
+		private:
+			void surrenderReferences(GarbageCollector* collector) {
+				collector->surrenderVariant(&cmd_);
+			};
+
+			std::string name_;
+			variant cmd_;
+		};
+	
+		FUNCTION_DEF(instrument_command, 2, 2, "instrument_command(string, expr): Executes expr and outputs debug instrumentation on the time it took with the given string")
+			std::string name = args()[0]->evaluate(variables).as_string();
+			const int begin = SDL_GetTicks();
+			variant result = args()[1]->evaluate(variables);
+			const int end = SDL_GetTicks();
+			LOG_INFO("Instrument: " << name << ": " << (end - begin) << "ms");
+			return variant(new instrument_command(name, result));
+
+		FUNCTION_ARGS_DEF
+			ARG_TYPE("string");
+			ARG_TYPE("any");
+		FUNCTION_TYPE_DEF
+			return variant_type::get_commands();
+		END_FUNCTION_DEF(instrument_command)
 		
 
 		FUNCTION_DEF(compress, 1, 2, "compress(string, (optional) compression_level): Compress the given string object")
