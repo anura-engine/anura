@@ -32,6 +32,7 @@
 #endif
 
 #include "asserts.hpp"
+#include "background_task_pool.hpp"
 #include "formatter.hpp"
 #include "json_parser.hpp"
 #include "module.hpp"
@@ -222,38 +223,79 @@ bool is_utility_process_running()
 	return false;
 }
 
-void terminate_utility_process()
+void terminate_utility_process(bool* complete=nullptr)
 {
 	if(!g_termination_semaphore) {
+		if(complete) {
+			*complete = true;
+		}
 		return;
 	}
 
 	g_termination_semaphore->post();
 
 #if defined(_MSC_VER)
-	WaitForSingleObject(child_process, INFINITE);
-	CloseHandle(child_process);
-	CloseHandle(child_thread);
-	CloseHandle(child_stderr);
-	CloseHandle(child_stdout);
+	HANDLE local_child_process = child_process;
+	HANDLE local_child_thread = child_thread;
+	HANDLE local_child_stderr = child_stderr;
+	HANDLE local_child_stdout = child_stdout;
+	std::string named_semaphore = g_termination_semaphore_name;
+	boost::interprocess::named_semaphore* sem = g_termination_semaphore;
+	
+	background_task_pool::submit([=]() {
+		WaitForSingleObject(local_child_process, INFINITE);
+		CloseHandle(local_child_process);
+		CloseHandle(local_child_thread);
+		CloseHandle(local_child_stderr);
+		CloseHandle(local_child_stdout);
+		if(complete) {
+			*complete = true;
+		}
+
+		boost::interprocess::named_semaphore::remove(named_semaphore.c_str());
+		delete sem;
+	}, 
+
+	[=]() {
+		if(complete != nullptr) {
+			*complete = true;
+		}
+	});
+
 #else
 	if(!g_child_pid) {
+		if(complete) {
+			*complete = true;
+		}
 		return;
 	}
-	
-	// .. close child or whatever.
-	int status;
-	if(waitpid(g_child_pid, &status, 0) != g_child_pid) {
-		std::cerr << "Error waiting for child process to finish: " << errno << std::endl;
-	}
+
+	pid_t child_pid = g_child_pid;
+	std::string named_semaphore = g_termination_semaphore_name;
+	boost::interprocess::named_semaphore* sem = g_termination_semaphore;
+
+	background_task_pool::submit([=]() {
+		int status;
+		if(waitpid(child_pid, &status, 0) != child_pid) {
+			std::cerr << "Error waiting for child process to finish: " << errno << std::endl;
+		} else {
+			LOG_INFO("Child process " << child_pid << " reaped");
+		}
+
+		boost::interprocess::named_semaphore::remove(named_semaphore.c_str());
+		delete sem;
+	},
+
+	[=]() {
+		if(complete != nullptr) {
+			*complete = true;
+		}
+	});
 
 	g_child_pid = 0;
 #endif
 
-	boost::interprocess::named_semaphore::remove(g_termination_semaphore_name.c_str());
-
-	delete g_termination_semaphore;
-	g_termination_semaphore = NULL;
+	g_termination_semaphore = nullptr;
 }
 
 	namespace {
@@ -270,7 +312,7 @@ void terminate_utility_process()
 
 	int spawn_server_on_localhost(SharedMemoryPipePtr* ipc_pipe) {
 
-		terminate_utility_process();
+		terminate_utility_process(nullptr);
 
 		delete g_termination_semaphore;
 		g_termination_semaphore = NULL;
@@ -371,7 +413,12 @@ void terminate_utility_process()
 	internal_server_manager::~internal_server_manager()
 	{
 		if(g_termination_semaphore) {
-			terminate_utility_process();
+			bool complete = false;
+			terminate_utility_process(&complete);
+			while(!complete) {
+				background_task_pool::pump();
+				SDL_Delay(1);
+			}
 		}
 
 		server_ptr.reset();
