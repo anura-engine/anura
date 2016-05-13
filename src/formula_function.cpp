@@ -5297,9 +5297,6 @@ FUNCTION_DEF(format, 1, 2, "format(string, [int|decimal]): Put the numbers in th
 			}
 			char_at++;
 			
-			LOG_INFO("fragment is: " << format_fragment);
-			LOG_INFO("value is: " << values[value_at]);
-			
 			int decimal_place = format_fragment.find('.');
 			
 			std::stringstream ss1; 
@@ -5311,7 +5308,9 @@ FUNCTION_DEF(format, 1, 2, "format(string, [int|decimal]): Put the numbers in th
 			format_str += ss1.str();
 			
 			int width = std::atoi(format_fragment.c_str());
-			ASSERT_LOG(width <= 100, "Number width probably shouldn't be greater than 100. (In Anura, numbers only get about 20 digits wide.) " << format_fragment << " in " << input_str);
+			ASSERT_LOG(width <= 100, "Number width probably shouldn't be greater than 100. (In Anura, numbers only get about 20 digits wide.) #{" << format_fragment << "} in " << input_str);
+			ASSERT_LOG(width > 0, "Number width must be greater than 0. #{" << format_fragment << "} in " << input_str);
+				
 			
 			if(format_str.length() < width) {
 				format_str.insert(0, width - format_str.length(), '0');
@@ -5323,14 +5322,17 @@ FUNCTION_DEF(format, 1, 2, "format(string, [int|decimal]): Put the numbers in th
 				format_str.clear();
 				
 				int width = std::atoi(format_fragment.c_str() + decimal_place + 1);
-				ASSERT_LOG(width <= 100, "Number width probably shouldn't be greater than 100. (In Anura, numbers only get about 20 digits wide.) " << format_fragment << " in " << input_str);
-				
-				LOG_INFO("DECWIDTH: " << width);
+				ASSERT_LOG(width <= 100, "Number decimal width probably shouldn't be greater than 100. (In Anura, numbers only get about 20 digits wide.) #{" << format_fragment << "} in " << input_str);
+				ASSERT_LOG(width > 0, "Number decimal width must be greater than 0. #{" << format_fragment << "} in " << input_str);
 				
 				std::stringstream ss2;
 				ss2 << ( round(values[value_at].as_float() * pow(10,width)) / pow(10,width) 
 					- floor(values[value_at].as_float()) );
-				format_str += ss2.str().substr(2,20); //Remove the leading 0. from the representation.
+				if(ss2.str().find('.') == 1) {
+					format_str += ss2.str().substr(2,20); //Remove the leading 0. from the representation.
+				} else {
+					format_str += '0';
+				}
 				
 				output_str += '.';
 				output_str += format_str;
