@@ -5336,6 +5336,7 @@ FUNCTION_DEF(format, 1, 2, "format(string, [int|decimal]): Put the numbers in th
 				output_str += format_str;
 			}
 			
+			value_at++;
 		} else {
 			output_str += input_str[char_at];
 			char_at++;
