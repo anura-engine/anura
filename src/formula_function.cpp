@@ -5276,7 +5276,7 @@ END_FUNCTION_DEF
 */
 
 
-FUNCTION_DEF(format, 1, 2, "format(string, [int|decimal]): Put the numbers in the list into the string. The fractional component of the number will be rounded to the nearest available digit. Example: format('#{01}/#{02}/#{1998}', [20, 5, 2015]) → '20/05/2015'; format('#{1}/#{2}/#{98}', [20, 5, 2015]) → '20/5/2015'; format(#{0.00}, [0.1]) → '0.10'.")
+FUNCTION_DEF(format, 1, 2, "format(string, [int|decimal]): Put the numbers in the list into the string. The fractional component of the number will be rounded to the nearest available digit. Example: format('#{2}/#{2}/#{4}', [20, 5, 2015]) → '20/05/2015'; format('#{2}/#{2}/#{2}', [20, 5, 2015]) → '20/5/2015'; format(#{0.2}, [0.1]) → '0.10'.")
 	std::string input_str = args()[0]->evaluate(variables).as_string();
 	std::vector<variant> values = args()[1]->evaluate(variables).as_list();
 	std::string output_str(""); output_str.reserve(input_str.size());
