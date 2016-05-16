@@ -5404,7 +5404,7 @@ UNIT_TEST(format) {
 	CHECK_EQ(game_logic::Formula(variant("format('Hello, #{3}.', [7.4])")).execute(), game_logic::Formula(variant("'Hello, 007.'")).execute());
 	CHECK_EQ(game_logic::Formula(variant("format('Hello, #{3}.', [7.5])")).execute(), game_logic::Formula(variant("'Hello, 008.'")).execute());
 	
-	//CHECK_EQ(game_logic::Formula(variant("format('Hello, #{1.2}.', [7])")).execute(), game_logic::Formula(variant("'Hello, 7.0.'")).execute());
+	CHECK_EQ(game_logic::Formula(variant("format('Hello, #{1.2}.', [7])")).execute(), game_logic::Formula(variant("'Hello, 7.0.'")).execute());
 	CHECK_EQ(game_logic::Formula(variant("format('Hello, #{1.2}.', [7.4])")).execute(), game_logic::Formula(variant("'Hello, 7.4.'")).execute());
 	CHECK_EQ(game_logic::Formula(variant("format('Hello, #{1.2}.', [7.44])")).execute(), game_logic::Formula(variant("'Hello, 7.44.'")).execute());
 	CHECK_EQ(game_logic::Formula(variant("format('Hello, #{1.2}.', [7.46])")).execute(), game_logic::Formula(variant("'Hello, 7.46.'")).execute()); //7.45 rounds down, probably a floating-point imprecision thing.
@@ -5413,8 +5413,8 @@ UNIT_TEST(format) {
 	CHECK_EQ(game_logic::Formula(variant("format('Hello, #{1.1}.', [7.46])")).execute(), game_logic::Formula(variant("'Hello, 7.5.'")).execute());
 	CHECK_EQ(game_logic::Formula(variant("format('Hello, #{2.2}.', [7.4])")).execute(), game_logic::Formula(variant("'Hello, 07.4.'")).execute());
 	
-	//CHECK_EQ(game_logic::Formula(variant("format('Check, #{2.2}, #{3}.', [1,23, 4.56])")).execute(), game_logic::Formula(variant("'Check, 1.23, 4.'")).execute());
-	//CHECK_EQ(game_logic::Formula(variant("format('Check, #{2.2}, #{${decimals}}.', [1,23, 4.56]) where decimals = 3")).execute(), game_logic::Formula(variant("'Check, 1.23, 4.'")).execute());
+	CHECK_EQ(game_logic::Formula(variant("format('Check, #{2.2}, #{3}.', [1.23, 4.56])")).execute(), game_logic::Formula(variant("'Check, 01.23, 005.'")).execute());
+	CHECK_EQ(game_logic::Formula(variant("format('Check, #{2.2}, #{${decimals}}.', [1.23, 4.56]) where decimals = 3")).execute(), game_logic::Formula(variant("'Check, 01.23, 005.'")).execute());
 }
 
 BENCHMARK(map_function) {
