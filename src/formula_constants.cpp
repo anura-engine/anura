@@ -125,6 +125,8 @@ namespace game_logic
 			}
 		}
 
+		ASSERT_LOG(false, "Unknown constant accessed: " << id);
+
 		return variant();
 	}
 

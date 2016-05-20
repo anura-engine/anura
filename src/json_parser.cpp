@@ -440,16 +440,6 @@ namespace json
 								CHECK_PARSE(false, "Preprocessor error: " + s, t.begin - doc.c_str());
 							}
 
-							if(t.type == Token::TYPE::IDENTIFIER) {
-								const variant constant = game_logic::get_constant(s);
-								if(constant.is_null() == false) {
-									v = constant;
-								} else if(stack.back().type != VAL_TYPE::OBJ &&
-										  std::count_if(s.begin(), s.end(), util::c_isupper) + std::count(s.begin(), s.end(), '_') == s.size()) {
-									CHECK_PARSE(false, "Preprocessor error: symbol not found: " + s, t.begin - doc.c_str());
-								}
-							}
-
 							const std::string CallStr = "@call";
 							if(stack.back().type == VAL_TYPE::OBJ && s == "@call") {
 								stack.back().is_call = true;
