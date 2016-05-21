@@ -186,7 +186,9 @@ namespace
 
 	FUNCTION_DEF(get_texture, 1, 1, "get_texture(string|map): loads a texture")
 		game_logic::Formula::failIfStaticContext();
-		return variant(new TextureObject(KRE::Texture::createTexture(EVAL_ARG(0))));
+		variant arg = EVAL_ARG(0);
+		PROFILE_INSTRUMENT(get_texture, (arg.is_map() ? arg["image"].write_json() : arg.write_json()));
+		return variant(new TextureObject(KRE::Texture::createTexture(arg)));
 
 	FUNCTION_ARGS_DEF
 		ARG_TYPE("string|map")

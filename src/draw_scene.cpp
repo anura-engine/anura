@@ -360,7 +360,6 @@ void render_scene(Level& lvl, const screen_position& pos)
 {
 	auto wnd = KRE::WindowManager::getMainWindow();
 	auto canvas = KRE::Canvas::getInstance();
-	formula_profiler::Instrument instrumentation("DRAW");
 
 	auto& gs = graphics::GameScreen::get();
 	const int screen_width = gs.getWidth();

@@ -41,6 +41,7 @@
 #include "cairo.hpp"
 #include "filesystem.hpp"
 #include "formula_object.hpp"
+#include "formula_profiler.hpp"
 #include "module.hpp"
 #include "string_utils.hpp"
 #include "TextureObject.hpp"
@@ -892,6 +893,8 @@ namespace {
 	END_CAIRO_FN
 
 	BEGIN_DEFINE_FN(render, "(int, int, cairo_commands, map|null=null) ->builtin texture_object")
+		formula_profiler::Instrument instrument("CAIRO_RENDER");
+
 		int w = FN_ARG(0).as_int();
 		int h = FN_ARG(1).as_int();
 		ASSERT_LOG(w >= 0 && h >= 0 && w <= 8192 && h <= 8192, "Invalid canvas render: " << w << "x" << h);

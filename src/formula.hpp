@@ -100,7 +100,7 @@ namespace game_logic
 		variant execute() const;
 		bool evaluatesToConstant(variant& result) const;
 		std::string str() const { return str_.as_string(); }
-		variant strVal() const { return str_; }
+		const variant& strVal() const { return str_; }
 
 		std::string outputDebugInfo() const;
 

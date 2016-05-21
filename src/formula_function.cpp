@@ -57,6 +57,7 @@
 #include "formula_function.hpp"
 #include "formula_function_registry.hpp"
 #include "formula_object.hpp"
+#include "formula_profiler.hpp"
 #include "hex_logical_tiles.hpp"
 #include "lua_iface.hpp"
 #include "md5.hpp"
@@ -3253,10 +3254,15 @@ FUNCTION_DEF_IMPL
 		END_FUNCTION_DEF(benchmark_once)
 
 		FUNCTION_DEF(instrument, 2, 2, "instrument(string, expr): Executes expr and outputs debug instrumentation on the time it took with the given string")
+			variant name = args()[0]->evaluate(variables);
 			const int begin = SDL_GetTicks();
-			variant result = args()[1]->evaluate(variables);
+			variant result;
+			{
+			formula_profiler::Instrument instrument(name.as_string().c_str());
+			result = args()[1]->evaluate(variables);
+			}
 			const int end = SDL_GetTicks();
-			LOG_INFO("Instrument: " << args()[0]->evaluate(variables).as_string() << ": " << (end - begin) << "ms");
+			LOG_INFO("Instrument: " << name.as_string() << ": " << (end - begin) << "ms");
 			return result;
 
 		FUNCTION_ARGS_DEF
@@ -3269,30 +3275,37 @@ FUNCTION_DEF_IMPL
 		class instrument_command : public game_logic::CommandCallable
 		{
 		public:
-			instrument_command(const std::string& name, variant cmd)
+			instrument_command(variant name, variant cmd)
 			  : name_(name), cmd_(cmd)
 			{}
 			virtual void execute(game_logic::FormulaCallable& ob) const {
 				const int begin = SDL_GetTicks();
+				{
+				formula_profiler::Instrument instrument(name_.as_string().c_str());
 				ob.executeCommand(cmd_);
+				}
 				const int end = SDL_GetTicks();
-				LOG_INFO("Instrument Command: " << name_ << ": " << (end - begin) << "ms");
+				LOG_INFO("Instrument Command: " << name_.as_string() << ": " << (end - begin) << "ms");
 			}
 		private:
 			void surrenderReferences(GarbageCollector* collector) {
 				collector->surrenderVariant(&cmd_);
 			};
 
-			std::string name_;
+			variant name_;
 			variant cmd_;
 		};
 	
 		FUNCTION_DEF(instrument_command, 2, 2, "instrument_command(string, expr): Executes expr and outputs debug instrumentation on the time it took with the given string")
-			std::string name = args()[0]->evaluate(variables).as_string();
+			variant name = args()[0]->evaluate(variables);
 			const int begin = SDL_GetTicks();
-			variant result = args()[1]->evaluate(variables);
+			variant result;
+			{
+			formula_profiler::Instrument instrument(name.as_string().c_str());
+			result = args()[1]->evaluate(variables);
+			}
 			const int end = SDL_GetTicks();
-			LOG_INFO("Instrument: " << name << ": " << (end - begin) << "ms");
+			LOG_INFO("Instrument: " << name.as_string() << ": " << (end - begin) << "ms");
 			return variant(new instrument_command(name, result));
 
 		FUNCTION_ARGS_DEF
@@ -3301,6 +3314,17 @@ FUNCTION_DEF_IMPL
 		FUNCTION_TYPE_DEF
 			return variant_type::get_commands();
 		END_FUNCTION_DEF(instrument_command)
+
+		FUNCTION_DEF(start_profiling, 0, 0, "start_profiling()")
+			Formula::failIfStaticContext();
+
+			if(formula_profiler::Manager::get()) {
+				formula_profiler::Manager::get()->init("profile.dat");
+			}
+
+			return variant();
+
+		END_FUNCTION_DEF(start_profiling)
 		
 
 		FUNCTION_DEF(compress, 1, 2, "compress(string, (optional) compression_level): Compress the given string object")

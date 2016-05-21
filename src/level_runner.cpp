@@ -845,6 +845,8 @@ void process_tbs_matchmaking_server();
 
 bool LevelRunner::play_cycle()
 {
+	formula_profiler::pump();
+
 	const int start_cycle_time = profile::get_tick_time();
 
 	auto wnd = KRE::WindowManager::getMainWindow();
@@ -1245,6 +1247,8 @@ bool LevelRunner::play_cycle()
 				swallowed = console_->processEvent(point(), event, swallowed);
 			}
 
+			swallowed = formula_profiler::handle_sdl_event(event, swallowed);
+
 			if(history_slider_ && paused) {
 				swallowed = history_slider_->processEvent(point(), event, swallowed) || swallowed;
 				swallowed = history_button_->processEvent(point(), event, false) || swallowed;
@@ -1606,6 +1610,7 @@ bool LevelRunner::play_cycle()
 		lvl_->process_draw();
 
 		if(should_draw) {
+			formula_profiler::Instrument instrument("DRAW");
 			wnd->setClearColor(KRE::Color(0, 0, 0, 0));
 			wnd->clear(KRE::ClearFlags::ALL);
 #ifndef NO_EDITOR
@@ -1655,6 +1660,9 @@ bool LevelRunner::play_cycle()
 			if(console_) {
 				console_->draw();
 			}
+
+			formula_profiler::Instrument instrument_profiler("DRAW_PROFILE");
+			formula_profiler::draw();
 #endif
 		}
 
@@ -1721,13 +1729,12 @@ bool LevelRunner::play_cycle()
 		profiling_summary_ = formula_profiler::get_profile_summary();
 	}
 
-	formula_profiler::pump();
-
 	const int raw_wait_time = desired_end_time - profile::get_tick_time();
 	const int wait_time = std::max<int>(1, desired_end_time - profile::get_tick_time());
 	next_delay_ += wait_time;
 	current_perf.delay = wait_time;
 	if (wait_time != 1 && !is_skipping_game()) {
+		formula_profiler::Instrument instrument("SLEEP");
 		profile::delay(wait_time);
 	}
 
