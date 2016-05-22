@@ -288,6 +288,7 @@ namespace debug_console
 
 		PREF_INT(console_width, 600, "Width of console in pixels");
 		PREF_INT(console_height, 200, "Width of console in pixels");
+		PREF_INT(console_font_size, 14, "Font size of console text");
 	}
 
 	ConsoleDialog::ConsoleDialog(Level& lvl, game_logic::FormulaCallable& obj)
@@ -326,6 +327,7 @@ namespace debug_console
 
 		text_editor_->setText(Prompt);
 		text_editor_->setCursor(0, static_cast<int>(Prompt.size()));
+		text_editor_->setFontSize(g_console_font_size);
 	}
 
 	void ConsoleDialog::onMoveCursor()
