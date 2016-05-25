@@ -7,6 +7,7 @@
 
 #include "asserts.hpp"
 #include "formula_garbage_collector.hpp"
+#include "formula_profiler.hpp"
 #include "logger.hpp"
 #include "profile_timer.hpp"
 
@@ -488,6 +489,7 @@ void GarbageCollectorAnalyzer::run(const char* fname)
 
 void runGarbageCollection()
 {
+	formula_profiler::Instrument instrument("GC");
 	GarbageCollectorImpl gc;
 	gc.collect();
 }
