@@ -94,6 +94,8 @@ namespace
 
 	PREF_BOOL(allow_builtin_settings_dialog, true, "Allow the builtin Anura settings dialog");
 
+	PREF_INT(max_frame_skips, 3, "Maximum frames to skip due to performance");
+
 	LevelRunner* current_level_runner = nullptr;
 
 	class current_level_runner_scope 
@@ -1546,10 +1548,8 @@ bool LevelRunner::play_cycle()
 		return true;
 	}
 
-	const int MaxSkips = 3;
-
 	const int start_draw = profile::get_tick_time();
-	if(start_draw < desired_end_time || nskip_draw_ >= MaxSkips) {
+	if(start_draw < desired_end_time || nskip_draw_ >= g_max_frame_skips) {
 		bool should_draw = true;
 
 #ifndef NO_EDITOR		
