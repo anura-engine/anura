@@ -4280,7 +4280,21 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 			return variant_type::get_type(variant::VARIANT_TYPE_CALLABLE);
 		END_FUNCTION_DEF(file_backed_map)
 
-		FUNCTION_DEF(write_document, 2, 2, "write_document(string filename, doc): writes 'doc' to the given filename")
+		FUNCTION_DEF(write_document, 2, 3, "write_document(string filename, doc, [enum {'game_dir'}]): writes 'doc' to the given filename")
+			bool prefs_directory = true;
+
+			if(args().size() > 2) {
+				const variant flags = args()[2]->evaluate(variables);
+				for(int n = 0; n != flags.num_elements(); ++n) {
+					const std::string& flag = flags[n].as_string();
+					if(flag == "game_dir") {
+						prefs_directory = false;
+					} else {
+						ASSERT_LOG(false, "Illegal flag to write_document: " << flag);
+					}
+				}
+			}
+
 			Formula::failIfStaticContext();
 			std::string docname = args()[0]->evaluate(variables).as_string();
 			variant doc = args()[1]->evaluate(variables);
@@ -4302,14 +4316,19 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 			}
 
 			return variant(new FnCommandCallableArg([=](FormulaCallable* callable) {
-				get_doc_cache(true)[docname] = doc;
+				get_doc_cache(prefs_directory)[docname] = doc;
 
 				std::string real_docname = preferences::user_data_path() + docname;
+				if(prefs_directory == false) {
+					real_docname = module::map_file(docname);
+				}
+
 				sys::write_file(real_docname, game_logic::serialize_doc_with_objects(doc).write_json());
 			}));
 		FUNCTION_ARGS_DEF
 			ARG_TYPE("string");
 			ARG_TYPE("any");
+			ARG_TYPE("null|list");
 			RETURN_TYPE("commands")
 		END_FUNCTION_DEF(write_document)
 
