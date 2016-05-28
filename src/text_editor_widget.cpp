@@ -1331,12 +1331,12 @@ namespace gui
 
 	void TextEditorWidget::onPageUp()
 	{
-		size_t leap = nrows_ - 1;
+		int leap = static_cast<int>(nrows_) - 1;
 		while(scroll_pos_ > 0 && leap > 0) {
 			--scroll_pos_;
 			--leap;
 
-			for(size_t n = text_[scroll_pos_].size() - ncols_; n > 0; n -= ncols_) {
+			for(int n = static_cast<int>(text_[scroll_pos_].size() - ncols_); n > 0; n -= static_cast<int>(ncols_)) {
 				--leap;
 			}
 		}
@@ -1346,12 +1346,12 @@ namespace gui
 
 	void TextEditorWidget::onPageDown()
 	{
-		size_t leap = nrows_ - 1;
+		int leap = static_cast<int>(nrows_ - 1);
 		while(scroll_pos_ < text_.size()-2 && leap > 0) {
 			++scroll_pos_;
 			--leap;
 
-			for(size_t n = text_[scroll_pos_].size() - ncols_; n > 0; n -= ncols_) {
+			for(int n = static_cast<int>(text_[scroll_pos_].size() - ncols_); n > 0; n -= static_cast<int>(ncols_)) {
 				--leap;
 			}
 		}
