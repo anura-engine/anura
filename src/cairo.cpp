@@ -224,7 +224,23 @@ namespace {
 	KRE::TexturePtr cairo_context::write(const variant& node) const
 	{
 		auto surf = KRE::Surface::create(width_, height_, KRE::PixelFormat::PF::PIXELFORMAT_ARGB8888);
-		surf->writePixels(cairo_image_surface_get_data(surface_), cairo_image_surface_get_stride(surface_) * height_);
+		std::vector<unsigned char> bytes;
+		bytes.resize(cairo_image_surface_get_stride(surface_) * height_);
+		memcpy(&bytes[0], cairo_image_surface_get_data(surface_), bytes.size());
+
+		for(size_t n = 0; n < bytes.size(); n += 4) {
+			int alpha = bytes[n+3];
+			if(alpha > 0 && alpha < 255) {
+				bytes[n+0] = (int(bytes[n+0])*255)/alpha;
+				bytes[n+1] = (int(bytes[n+1])*255)/alpha;
+				bytes[n+2] = (int(bytes[n+2])*255)/alpha;
+			}
+		}
+
+		if(bytes.empty() == false) {
+			surf->writePixels(&bytes[0], bytes.size());
+		}
+
 		surf->createAlphaMap();
 		return KRE::Texture::createTexture(surf, node);
 		//tex->update2D(0, 0, 0, width_, height_, cairo_image_surface_get_stride(surface_), cairo_image_surface_get_data(surface_));
@@ -919,6 +935,31 @@ namespace {
 		execute_cairo_ops(context, ops);
 
 		return variant(new TextureObject(context.write(NUM_FN_ARGS > 3 ? FN_ARG(3) : variant())));
+	END_DEFINE_FN
+
+	BEGIN_DEFINE_FN(render_async, "(int, int, cairo_commands, map|null=null) ->builtin texture_object")
+		int w = FN_ARG(0).as_int();
+		int h = FN_ARG(1).as_int();
+		ASSERT_LOG(w >= 0 && h >= 0 && w <= 8192 && h <= 8192, "Invalid canvas render: " << w << "x" << h);
+		if(w&1) {
+			++w;
+		}
+
+		if(h&1) {
+			++h;
+		}
+
+		if(w < 2) {
+			w = 2;
+		}
+
+		if(h < 2) {
+			h = 2;
+		}
+		auto surf = KRE::Surface::create(w, h, KRE::PixelFormat::PF::PIXELFORMAT_ARGB8888);
+		surf->createAlphaMap();
+		return variant(new TextureObject(KRE::Texture::createTexture(surf, NUM_FN_ARGS > 3 ? FN_ARG(3) : variant())));
+
 	END_DEFINE_FN
 
 	BEGIN_CAIRO_FN(new_path, "()")
