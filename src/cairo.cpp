@@ -66,6 +66,7 @@ namespace graphics
 			cairo_font_extents_t font_extents;
 
 			std::string svg;
+			std::string img;
 		};
 
 		struct LineOfText 
@@ -171,7 +172,7 @@ namespace {
 
 		struct TextMarkupFragment
 		{
-			TextMarkupFragment() : nobr(false), color(255,255,255,255) {}
+			TextMarkupFragment() : nobr(false), color(255,255,255,255), img_w(-1), img_h(-1) {}
 			std::string text;
 			std::string font;
 			float font_size;
@@ -181,6 +182,9 @@ namespace {
 			variant tag;
 			variant align, valign;
 			std::string svg;
+
+			std::string img;
+			int img_w, img_h;
 
 			KRE::Color color;
 		};
@@ -473,6 +477,7 @@ namespace {
 			const variant& align = item.align;
 			const variant& valign = item.valign;
 			std::string svg = item.svg;
+			std::string img = item.img;
 
 
 			FT_Face face = get_ft_font(font);
@@ -526,7 +531,7 @@ namespace {
 				first_line = false;
 
 				std::string::const_iterator i1 = line.begin();
-				while(i1 != line.end() || svg.empty() == false) {
+				while(i1 != line.end() || svg.empty() == false || img.empty() == false) {
 					std::string::const_iterator i2 = std::find(i1, line.end(), ' ');
 					if(item.nobr) {
 						i2 = line.end();
@@ -580,6 +585,8 @@ namespace {
 						}
 					}
 
+					int img_w = item.img_w, img_h = item.img_h;
+
 					if(svg.empty() == false) {
 						//advance the text position along to account
 						//for the svg icon, wrapping to next line if necessary
@@ -594,17 +601,67 @@ namespace {
 							output.push_back(LineOfText());
 							output.back().align = align;
 						}
+					} else if(img.empty() == false) {
+
+						if(img_w == -1 || img_h == -1) {
+							cairo_surface_t* surface = get_cairo_image(item.img);
+							cairo_status_t status = cairo_status(context.get());
+							ASSERT_LOG(status == 0, "rendering error painting " << item.img << ": " << cairo_status_to_string(status));
+
+							float w = cairo_image_surface_get_width(surface);
+							float h = cairo_image_surface_get_height(surface);
+
+							float ratio = 1.0;
+
+							if(img_w != -1) {
+								ratio = img_w/w;
+							} else if(img_h != -2) {
+								ratio = img_h/h;
+							}
+
+							if(img_w == -1) {
+								img_w = static_cast<int>(w*ratio);
+							}
+
+							if(img_h == -1) {
+								img_h = static_cast<int>(h*ratio);
+							}
+
+						}
+
+						extents.width = img_w;
+						extents.height = img_h;
+						extents.y_bearing = img_h;
+
+						float advance = static_cast<float>(img_w);
+
+						if(xpos > 0 && xpos + advance > width) {
+							xpos = 0;
+							ypos += line_height*scale_line_heights;
+							width += width_delta*line_height*scale_line_heights;
+							line_height = min_line_height;
+
+							output.push_back(LineOfText());
+							output.back().align = align;
+						}
+
+						if(img_h > line_height) {
+							line_height = static_cast<float>(img_h);
+						}
 					}
 
-					TextFragment fragment = { xpos, ypos, static_cast<float>(extents.width), static_cast<float>(extents.height), static_cast<float>(extents.x_advance), extents.y_bearing, font, font_size, tag, item.color, std::string(i1, i2), valign, font_extents, svg };
+					TextFragment fragment = { xpos, ypos, static_cast<float>(extents.width), static_cast<float>(extents.height), static_cast<float>(extents.x_advance), extents.y_bearing, font, font_size, tag, item.color, std::string(i1, i2), valign, font_extents, svg, img };
 					output.back().fragments.push_back(fragment);
 					output.back().fragment_width += static_cast<float>(extents.width);
 
 					if(svg.empty() == false) {
 						xpos += static_cast<float>(font_extents.height);
+					} else if(img.empty() == false) {
+						xpos += static_cast<float>(img_w);
 					}
 				
 					svg = "";
+					img = "";
 
 					xpos += static_cast<float>(extents.x_advance);
 
@@ -630,6 +687,10 @@ namespace {
 			for(const TextFragment& fragment : line.fragments) {
 				if(fragment.font_extents.height > line_height) {
 					line_height = static_cast<float>(fragment.font_extents.height);
+				}
+
+				if(fragment.height > line_height) {
+					line_height = fragment.height;
 				}
 
 				if(fragment.font_extents.ascent > max_ascent) {
@@ -680,7 +741,40 @@ namespace {
 				res->tag = fragment.tag;
 				res->color = fragment.color;
 
-				if(fragment.svg.empty() == false) {
+				if(fragment.img.empty() == false) {
+					std::vector<variant> fn_args;
+					fn_args.push_back(variant(fragment.img));
+					fn_args.push_back(variant(fragment.xpos));
+					fn_args.push_back(variant(fragment.ypos));
+					fn_args.push_back(variant(fragment.width));
+					fn_args.push_back(variant(fragment.height));
+					res->path = variant(new cairo_op([](cairo_context& context, const std::vector<variant>& args) {
+						cairo_save(context.get());
+
+						cairo_translate(context.get(), args[1].as_decimal().as_float(), args[2].as_decimal().as_float());
+
+						cairo_surface_t* surface = get_cairo_image(args[0].as_string());
+						cairo_status_t status = cairo_status(context.get());
+						ASSERT_LOG(status == 0, "rendering error painting " << args[0].as_string() << ": " << cairo_status_to_string(status));
+
+						float img_w = cairo_image_surface_get_width(surface);
+						float img_h = cairo_image_surface_get_height(surface);
+						cairo_scale(context.get(), args[3].as_decimal().as_float()/img_w, args[4].as_decimal().as_float()/img_h);
+
+						cairo_set_source_surface(context.get(), surface, 0.0, 0.0);
+
+						status = cairo_status(context.get());
+						ASSERT_LOG(status == 0, "SVG rendering error painting " << args[0].as_string() << ": " << cairo_status_to_string(status));
+						cairo_paint(context.get());
+
+						status = cairo_status(context.get());
+						ASSERT_LOG(status == 0, "SVG rendering error painting " << args[0].as_string() << ": " << cairo_status_to_string(status));
+
+						cairo_restore(context.get());
+
+					}, fn_args));
+
+				} else if(fragment.svg.empty() == false) {
 
 					std::vector<variant> fn_args;
 					fn_args.push_back(variant(fragment.svg));
@@ -772,6 +866,10 @@ namespace {
 
 				continue;
 			} else if(itor->first == XMLAttr) {
+				if(element == "img") {
+					output.push_back(stack.back());
+				}
+
 				for(auto a = itor->second.begin(); a != itor->second.end(); ++a) {
 					const std::string& attr = a->first;
 					const std::string& value = a->second.data();
@@ -819,10 +917,16 @@ namespace {
 						}
 
 					} else if(element == "img") {
-						if(attr == "src") {
-							output.push_back(stack.back());
+						if(attr == "src" && value.size() > 4 && std::equal(value.end()-4,value.end(),".png")) {
+							output.back().text = "";
+							output.back().img = value;
+						} else if(attr == "src") {
 							output.back().text = "";
 							output.back().svg = value;
+						} else if(attr == "width") {
+							output.back().img_w = static_cast<int>(atoi(value.c_str())*scale);
+						} else if(attr == "height") {
+							output.back().img_h = static_cast<int>(atoi(value.c_str())*scale);
 						} else {
 							ASSERT_LOG(false, "Unrecognized attribute in text markup " << element << "." << attr);
 						}
