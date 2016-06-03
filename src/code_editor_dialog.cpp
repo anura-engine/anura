@@ -122,7 +122,7 @@ void CodeEditorDialog::init()
 
 	addWidget(WidgetPtr(increase_font), MOVE_DIRECTION::RIGHT);
 	addWidget(WidgetPtr(decrease_font), MOVE_DIRECTION::RIGHT);
-	addWidget(editor_, find_label->x(), find_label->y() + save_button->height() + 2);
+	addWidget(editor_, find_label->x(), find_label->y() + save_button->height() + save_button->y() + 2);
 	if(optional_error_text_area_) {
 		addWidget(optional_error_text_area_);
 	}
