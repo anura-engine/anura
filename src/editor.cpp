@@ -804,7 +804,7 @@ editor* editor::get_editor(const char* level_cfg)
 // This returns the area for the ENTIRE code editor, including the area with buttons.
 rect editor::get_code_editor_rect()
 {
-	return rect(KRE::WindowManager::getMainWindow()->width() - 620, 30, 620, KRE::WindowManager::getMainWindow()->height() - 30);
+	return rect(KRE::WindowManager::getMainWindow()->width() - 620, 30, 620, KRE::WindowManager::getMainWindow()->height() - 60);
 }
 
 std::string editor::last_edited_level()

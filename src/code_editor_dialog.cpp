@@ -88,9 +88,11 @@ void CodeEditorDialog::init()
 	}
 
 	Button* save_button      = new Button("Save", std::bind(&CodeEditorDialog::save, this));
-	Button* find_next_button = new Button("Find next...", std::bind(&CodeEditorDialog::on_find_next, this));
-	Button* increase_font    = new Button("+", std::bind(&CodeEditorDialog::changeFontSize, this, 1));
-	Button* decrease_font    = new Button("-", std::bind(&CodeEditorDialog::changeFontSize, this, -1));
+	Button* undo_button      = new Button("Undo", std::bind(&CodeEditorDialog::undo, this));
+	Button* redo_button      = new Button("Redo", std::bind(&CodeEditorDialog::redo, this));
+	Button* increase_font    = new Button("Increase font size", std::bind(&CodeEditorDialog::changeFontSize, this, 1));
+	Button* decrease_font    = new Button("Decrease font size", std::bind(&CodeEditorDialog::changeFontSize, this, -1));
+	Button* find_next_button = new Button("Find next", std::bind(&CodeEditorDialog::on_find_next, this));
 
 	save_button_.reset(save_button);
 
@@ -106,6 +108,7 @@ void CodeEditorDialog::init()
 	replace_ = new TextEditorWidget(120);
 	const KRE::Color col = KRE::Color::colorWhite();
 
+	WidgetPtr change_font_label(Label::create("Change font size:", col));
 	WidgetPtr find_label(Label::create("Find: ", col));
 	replace_label_ = Label::create("Replace: ", col);
 	status_label_ = Label::create(" ", col);
@@ -122,6 +125,9 @@ void CodeEditorDialog::init()
 		addWidget(WidgetPtr(abort_button), MOVE_DIRECTION::RIGHT);
 	}
 
+
+	addWidget(WidgetPtr(undo_button), MOVE_DIRECTION::RIGHT);
+	addWidget(WidgetPtr(redo_button), MOVE_DIRECTION::RIGHT);
 	addWidget(WidgetPtr(increase_font), MOVE_DIRECTION::RIGHT);
 	addWidget(WidgetPtr(decrease_font), MOVE_DIRECTION::RIGHT);
 
@@ -143,6 +149,7 @@ void CodeEditorDialog::init()
 
 	replace_label_->setVisible(false);
 	replace_->setVisible(false);
+//	find_next_button->setVisible(false);
 
 	if(fname_.empty() == false && fname_[0] == '@') {
 		save_button->setVisible(false);
@@ -427,6 +434,20 @@ void CodeEditorDialog::handleDrawChildren() const
 	}
 }
 
+void CodeEditorDialog::undo()
+{
+	if(editor_) {
+		editor_->undo();
+	}
+}
+
+void CodeEditorDialog::redo()
+{
+	if(editor_) {
+		editor_->redo();
+	}
+}
+
 void CodeEditorDialog::changeFontSize(int amount)
 {
 	if(editor_) {
@@ -558,6 +579,8 @@ void CodeEditorDialog::process()
 	const bool show_replace = editor_->hasSearchMatches();
 	replace_label_->setVisible(show_replace);
 	replace_->setVisible(show_replace);
+// TODO: Make this work
+//	find_next_button->setVisible(show_replace);
 
 	const int cursor_pos = static_cast<int>(editor_->rowColToTextPos(editor_->cursorRow(), editor_->cursorCol()));
 	const std::string& text = editor_->currentText();

@@ -69,6 +69,8 @@ private:
 	bool handleEvent(const SDL_Event& event, bool claimed) override;
 	void handleDrawChildren() const override;
 
+	void undo();
+	void redo();
 	void changeFontSize(int amount);
 
 	void setAnimationRect(rect r);
