@@ -49,7 +49,6 @@ lua.lib
 db.json
 stderr_server.txt
 stdout_server.txt
-master-config.cfg
 *~
 *.kate-swp
 *.sublime-workspace
@@ -68,6 +67,7 @@ compiled/
 modules/*
 !modules/icons
 !modules/lib_2d
+./master-config.cfg
 
 MacOS/include
 MacOS/lib
