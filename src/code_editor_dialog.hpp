@@ -104,6 +104,7 @@ private:
 
 	void on_search_changed();
 	void on_search_enter();
+	void on_find_next();
 	void on_replace_enter();
 
 	void on_code_changed();

@@ -83,9 +83,10 @@ void CodeEditorDialog::init()
 		editor_.reset(new CodeEditorWidget(width() - 40, height() - (60 + (optional_error_text_area_ ? 170 : 0))));
 	}
 
-	Button* save_button = new Button("Save", std::bind(&CodeEditorDialog::save, this));
-	Button* increase_font = new Button("+", std::bind(&CodeEditorDialog::changeFontSize, this, 1));
-	Button* decrease_font = new Button("-", std::bind(&CodeEditorDialog::changeFontSize, this, -1));
+	Button* save_button      = new Button("Save", std::bind(&CodeEditorDialog::save, this));
+	Button* find_next_button = new Button("Find next...", std::bind(&CodeEditorDialog::on_find_next, this));
+	Button* increase_font    = new Button("+", std::bind(&CodeEditorDialog::changeFontSize, this, 1));
+	Button* decrease_font    = new Button("-", std::bind(&CodeEditorDialog::changeFontSize, this, -1));
 
 	save_button_.reset(save_button);
 
@@ -102,12 +103,14 @@ void CodeEditorDialog::init()
 	const KRE::Color col = KRE::Color::colorWhite();
 	WidgetPtr find_label(Label::create("Find: ", col));
 	replace_label_ = Label::create("Replace: ", col);
-	status_label_ = Label::create("Ok", col);
-	error_label_ = Label::create(" ", col);
+	status_label_ = Label::create(" ", col);
+	error_label_ = Label::create("Ok", col);
+	error_label_->setTooltip("No errors detected");
 	addWidget(find_label, 42, 12, MOVE_DIRECTION::RIGHT);
 	addWidget(WidgetPtr(search_), MOVE_DIRECTION::RIGHT);
 	addWidget(replace_label_, MOVE_DIRECTION::RIGHT);
 	addWidget(WidgetPtr(replace_), MOVE_DIRECTION::RIGHT);
+	addWidget(WidgetPtr(find_next_button), MOVE_DIRECTION::DOWN); // 'DOWN' here moves the *next* button down
 	addWidget(WidgetPtr(save_button), MOVE_DIRECTION::RIGHT);
 
 	if(have_close_buttons_) {
@@ -504,7 +507,7 @@ void CodeEditorDialog::process()
 				CustomObjectType::setFileContents(fname_, editor_->text());
 			}
 			error_label_->setText("Ok");
-			error_label_->setTooltip("");
+			error_label_->setTooltip("No errors detected");
 
 			if(optional_error_text_area_) {
 				optional_error_text_area_->setText("No errors");
@@ -831,6 +834,11 @@ void CodeEditorDialog::on_search_enter()
 	search_->setFocus(false);
 	replace_->setFocus(false);
 	editor_->setFocus(true);
+}
+
+void CodeEditorDialog::on_find_next()
+{
+	editor_->nextSearchMatch();
 }
 
 void CodeEditorDialog::on_replace_enter()

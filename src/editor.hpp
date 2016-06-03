@@ -78,6 +78,7 @@ public:
 	};
 
 	static editor* get_editor(const char* level_cfg);
+	rect   get_code_editor_rect();
 	static std::string last_edited_level();
 
 	static int sidebar_width();

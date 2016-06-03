@@ -801,6 +801,12 @@ editor* editor::get_editor(const char* level_cfg)
 	return e;
 }
 
+// This returns the area for the ENTIRE code editor, including the area with buttons.
+rect editor::get_code_editor_rect()
+{
+	return rect(KRE::WindowManager::getMainWindow()->width() - 620, 30, 620, KRE::WindowManager::getMainWindow()->height() - 30);
+}
+
 std::string editor::last_edited_level()
 {
 	return g_last_edited_level();
@@ -3752,7 +3758,6 @@ void editor::edit_module_properties()
 	}
 }
 
-
 void editor::create_new_object()
 {
 	auto wnd = KRE::WindowManager::getMainWindow();
@@ -3801,7 +3806,7 @@ void editor::edit_shaders()
 	if(code_dialog_) {
 		code_dialog_.reset();
 	} else {
-		code_dialog_.reset(new CodeEditorDialog(rect(KRE::WindowManager::getMainWindow()->width() - 620, 30, 620, KRE::WindowManager::getMainWindow()->height() - 30)));
+		code_dialog_.reset(new CodeEditorDialog(get_code_editor_rect()));
 		code_dialog_->load_file(path);
 	}
 }
@@ -3813,7 +3818,7 @@ void editor::edit_level_code()
 		external_code_editor_->loadFile(path);
 	}
 	
-	code_dialog_.reset(new CodeEditorDialog(rect(KRE::WindowManager::getMainWindow()->width() - 620, 30, 620, KRE::WindowManager::getMainWindow()->height() - 30)));
+	code_dialog_.reset(new CodeEditorDialog(get_code_editor_rect()));
 	code_dialog_->load_file(path);
 }
 
@@ -3932,7 +3937,7 @@ void editor::toggle_code()
 	if(code_dialog_) {
 		code_dialog_.reset();
 	} else {
-		code_dialog_.reset(new CodeEditorDialog(rect(KRE::WindowManager::getMainWindow()->width() - 620, 30, 620, KRE::WindowManager::getMainWindow()->height() - 30)));
+		code_dialog_.reset(new CodeEditorDialog(get_code_editor_rect()));
 		set_code_file();
 	}
 }
