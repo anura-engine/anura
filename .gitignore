@@ -67,7 +67,6 @@ compiled/
 modules/*
 !modules/icons
 !modules/lib_2d
-./master-config.cfg
 
 MacOS/include
 MacOS/lib
