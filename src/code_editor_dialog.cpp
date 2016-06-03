@@ -79,6 +79,10 @@ void CodeEditorDialog::init()
 
 	using namespace gui;
 
+	const int EDITOR_BUTTONS_X = 42;
+	const int EDITOR_BUTTONS_Y = 12;
+	const int Y_SPACING        = 4;
+
 	if(!editor_) {
 		editor_.reset(new CodeEditorWidget(width() - 40, height() - (60 + (optional_error_text_area_ ? 170 : 0))));
 	}
@@ -101,17 +105,15 @@ void CodeEditorDialog::init()
 	search_ = new TextEditorWidget(120);
 	replace_ = new TextEditorWidget(120);
 	const KRE::Color col = KRE::Color::colorWhite();
+
 	WidgetPtr find_label(Label::create("Find: ", col));
 	replace_label_ = Label::create("Replace: ", col);
 	status_label_ = Label::create(" ", col);
 	error_label_ = Label::create("Ok", col);
 	error_label_->setTooltip("No errors detected");
-	addWidget(find_label, 42, 12, MOVE_DIRECTION::RIGHT);
-	addWidget(WidgetPtr(search_), MOVE_DIRECTION::RIGHT);
-	addWidget(replace_label_, MOVE_DIRECTION::RIGHT);
-	addWidget(WidgetPtr(replace_), MOVE_DIRECTION::RIGHT);
-	addWidget(WidgetPtr(find_next_button), MOVE_DIRECTION::DOWN); // 'DOWN' here moves the *next* button down
-	addWidget(WidgetPtr(save_button), MOVE_DIRECTION::RIGHT);
+
+	// Saving and fonts
+	addWidget(WidgetPtr(save_button), EDITOR_BUTTONS_X, EDITOR_BUTTONS_Y, MOVE_DIRECTION::RIGHT);
 
 	if(have_close_buttons_) {
 		Button* save_and_close_button = new Button("Save+Close", std::bind(&CodeEditorDialog::save_and_close, this));
@@ -122,7 +124,16 @@ void CodeEditorDialog::init()
 
 	addWidget(WidgetPtr(increase_font), MOVE_DIRECTION::RIGHT);
 	addWidget(WidgetPtr(decrease_font), MOVE_DIRECTION::RIGHT);
-	addWidget(editor_, find_label->x(), find_label->y() + save_button->height() + save_button->y() + 2);
+
+	// Search and replace
+	// TODO: Make the next line figure out its Y position based on the previous row.
+	addWidget(find_label, EDITOR_BUTTONS_X, save_button->y() + save_button->height() + Y_SPACING, MOVE_DIRECTION::RIGHT);
+	addWidget(WidgetPtr(search_), MOVE_DIRECTION::RIGHT);
+	addWidget(replace_label_, MOVE_DIRECTION::RIGHT);
+	addWidget(WidgetPtr(replace_), MOVE_DIRECTION::RIGHT);
+	addWidget(WidgetPtr(find_next_button), MOVE_DIRECTION::RIGHT);
+
+	addWidget(editor_, find_label->x(), search_->y() + search_->height() + Y_SPACING);
 	if(optional_error_text_area_) {
 		addWidget(optional_error_text_area_);
 	}
