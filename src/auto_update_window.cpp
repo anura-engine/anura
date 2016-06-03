@@ -32,7 +32,7 @@ namespace
 {
 	KRE::TexturePtr render_updater_text(const std::string& str, const KRE::Color& color)
 	{
-		return KRE::Font::getInstance()->renderText(str, color, 16, true, KRE::Font::get_default_monospace_font());
+		return KRE::Font::getInstance()->renderText(str, color, 16, true, KRE::Font::getDefaultFont());
 	}
 
 	class progress_animation
@@ -132,18 +132,10 @@ void auto_update_window::create_window()
 
 	// Set the default font to use for rendering. This can of course be overridden when rendering the
 	// text to a texture.
-	Font::setDefaultFont(module::get_default_font() == "bitmap" 
-		? "FreeMono" 
-		: module::get_default_font());
+	Font::setDefaultFont("default");
 	std::map<std::string,std::string> font_paths;
-	std::map<std::string,std::string> font_paths2;
-	module::get_unique_filenames_under_dir("data/fonts/", &font_paths);
-	for(auto& fp : font_paths) {
-		font_paths2[module::get_id(fp.first)] = fp.second;
-	}
-	KRE::Font::setAvailableFonts(font_paths2);
-	font_paths.clear();
-	font_paths2.clear();
+	font_paths["default"] = "update/font.otf";
+	KRE::Font::setAvailableFonts(font_paths);
 }
 
 void auto_update_window::draw() const
@@ -157,10 +149,9 @@ void auto_update_window::draw() const
 	window_->setClearColor(KRE::Color(g_loading_screen_bg_color));
 	window_->clear(KRE::ClearFlags::COLOR);
 
-	canvas->drawSolidRect(rect(300, 290, 200, 20), KRE::Color(255, 255, 255, 255));
-	canvas->drawSolidRect(rect(303, 292, 194, 16), KRE::Color(0, 0, 0, 255));
-	const rect filled_area(303, 292, static_cast<int>(194.0f*percent_), 16);
-	canvas->drawSolidRect(filled_area, KRE::Color(255, 255, 255, 255));
+	canvas->drawSolidRect(rect(300, 390, 200, 4), KRE::Color(255, 255, 255, 196));
+	const rect filled_area(300, 390, static_cast<int>(200.0f*percent_), 4);
+	canvas->drawSolidRect(filled_area, KRE::Color(0, 255, 255, 255));
 
 	const int bar_point = filled_area.x2();
 
@@ -168,37 +159,23 @@ void auto_update_window::draw() const
 	std::ostringstream percent_stream;
 	percent_stream << percent << "%";
 
-	KRE::TexturePtr percent_surf_white(render_updater_text(percent_stream.str(), KRE::Color(255, 255, 255)));
-	KRE::TexturePtr percent_surf_black(render_updater_text(percent_stream.str(), KRE::Color(0, 0, 0)));
+	KRE::TexturePtr percent_surf(render_updater_text(percent_stream.str(), KRE::Color(255, 255, 255)));
 
-	if(percent_surf_white != nullptr) {
-		canvas->blitTexture(percent_surf_white, 0, 
-			(window_->width() - percent_surf_white->width()) / 2, 
-			(window_->height() - percent_surf_white->height()) / 2);
-	}
-
-	if(percent_surf_black != nullptr) {
-		rect dest((window_->width() - percent_surf_black->width()) / 2, 
-			(window_->height() - percent_surf_black->height()) / 2,
-			percent_surf_black->width(),
-			percent_surf_black->height());
-		if(bar_point > dest.x()) {
-			if(bar_point < dest.x2()) {
-				dest.set_w(bar_point - dest.x());
-			}
-			canvas->blitTexture(percent_surf_black, 0, dest);
-		}
+	if(percent_surf != nullptr) {
+		canvas->blitTexture(percent_surf, 0, 
+			(window_->width() - percent_surf->width()) / 2, 
+			(window_->height() - percent_surf->height()) / 2 + 80);
 	}
 
 	KRE::TexturePtr message_surf(render_updater_text(message_, KRE::Color(255, 255, 255)));
 	if(message_surf != nullptr) {
-		canvas->blitTexture(message_surf, 0, window_->width()/2 - message_surf->width()/2, 40 + window_->height()/2 - message_surf->height()/2);
+		canvas->blitTexture(message_surf, 0, window_->width()/2 - message_surf->width()/2, 140 + window_->height()/2 - message_surf->height()/2);
 	}
 
 	if(error_message_ != "") {
 		KRE::TexturePtr message_surf(render_updater_text(error_message_, KRE::Color(255, 64, 64)));
 		if(message_surf != nullptr) {
-			canvas->blitTexture(message_surf, 0, window_->width()/2 - message_surf->width()/2, 80 + window_->height()/2 - message_surf->height()/2);
+			canvas->blitTexture(message_surf, 0, window_->width()/2 - message_surf->width()/2, 180 + window_->height()/2 - message_surf->height()/2);
 		}
 	}
 	
@@ -206,7 +183,7 @@ void auto_update_window::draw() const
 	auto anim_tex = anim.tex();
 	if(anim_tex != nullptr) {
 		rect src = anim.calculate_rect(nframes_);
-		rect dest(window_->width()/2 - src.w()/2, window_->height()/2 - src.h()*2, src.w(), src.h());
+		rect dest(window_->width()/2 - src.w()/2, window_->height()/2 - src.h(), src.w(), src.h());
 		canvas->blitTexture(anim_tex, src, 0, dest);
 	}
 	window_->swap();
@@ -239,15 +216,15 @@ bool auto_update_window::proceed_or_retry_dialog(const std::string& msg)
 		canvas->drawSolidRect(proceed_button_area, mouseover_proceed ? depressed_button_color : normal_button_color);
 		canvas->drawSolidRect(retry_button_area, mouseover_retry ? depressed_button_color : normal_button_color);
 
-		KRE::TexturePtr proceed_text_texture = KRE::Font::getInstance()->renderText("Proceed", KRE::Color(0,0,0,255), 16, true, KRE::Font::get_default_monospace_font());
-		KRE::TexturePtr retry_text_texture = KRE::Font::getInstance()->renderText("Retry", KRE::Color(0,0,0,255), 16, true, KRE::Font::get_default_monospace_font());
+		KRE::TexturePtr proceed_text_texture = KRE::Font::getInstance()->renderText("Proceed", KRE::Color(0,0,0,255), 16, true, KRE::Font::getDefaultFont());
+		KRE::TexturePtr retry_text_texture = KRE::Font::getInstance()->renderText("Retry", KRE::Color(0,0,0,255), 16, true, KRE::Font::getDefaultFont());
 		canvas->blitTexture(proceed_text_texture, 0, (proceed_button_area.x() + proceed_button_area.x2() - proceed_text_texture->width())/2, (proceed_button_area.y() + proceed_button_area.y2() - proceed_text_texture->height())/2);
 		canvas->blitTexture(retry_text_texture, 0, (retry_button_area.x() + retry_button_area.x2() - retry_text_texture->width())/2, (retry_button_area.y() + retry_button_area.y2() - retry_text_texture->height())/2);
 
-		KRE::TexturePtr message_texture = KRE::Font::getInstance()->renderText("Failed to update the game. Retry or proceed without updating?", KRE::Color(255,255,255,255), 16, true, KRE::Font::get_default_monospace_font());
+		KRE::TexturePtr message_texture = KRE::Font::getInstance()->renderText("Failed to update the game. Retry or proceed without updating?", KRE::Color(255,255,255,255), 16, true, KRE::Font::getDefaultFont());
 		canvas->blitTexture(message_texture, 0, (window_->width() - message_texture->width())/2, window_->height()/2);
 
-		message_texture = KRE::Font::getInstance()->renderText(msg, KRE::Color(255,0,0,255), 16, true, KRE::Font::get_default_monospace_font());
+		message_texture = KRE::Font::getInstance()->renderText(msg, KRE::Color(255,0,0,255), 16, true, KRE::Font::getDefaultFont());
 		canvas->blitTexture(message_texture, 0, (window_->width() - message_texture->width())/2, window_->height()/2 + 40);
 
 		window_->swap();
