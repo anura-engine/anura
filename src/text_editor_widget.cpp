@@ -1009,16 +1009,32 @@ namespace gui
 					if(cursor_.col > static_cast<int>(text_[cursor_.row].size())) {
 						cursor_.col = static_cast<int>(text_[cursor_.row].size());
 					}
-
+/*
 					if(cursor_.row == 0 && cursor_.col == 0) {
 						break;
 					}
-
-                    if(cursor_.col == 1) {
-                        cursor_.col = 0;
-                    } else {
-                        --cursor_.col;
-                    }
+*/
+					// Are we at the start of the line?
+					if(cursor_.col == 0)
+					{
+						// Are we at the start of the file?
+						if(cursor_.row == 0)
+						{
+							// Do nothing; we're at the very top-left of the file
+							break;
+						}
+						else
+						{
+							// Move up and to the end
+							--cursor_.row;
+							cursor_.col = static_cast<int>(text_[cursor_.row].size());
+						}
+					}
+					else
+					{
+						// Just move to the left
+						--cursor_.col;
+					}
 
 					onMoveCursor();
 				}
