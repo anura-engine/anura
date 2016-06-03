@@ -282,8 +282,13 @@ namespace
 		}
 
 		return variant(new FnCommandCallable([=]() {
-#if defined(__linux__) || defined(__APPLE__)
-			std::string cmd = "open " + url;
+#if defined(WIN32) || defined(WIN64)
+			const std::string open_str = "start";
+#else
+			const std::string open_str = "open";
+#endif
+
+			std::string cmd = open_str + " " + url;
 #ifdef __linux__
 			cmd = "xdg-" + cmd;
 #endif
@@ -291,7 +296,6 @@ namespace
 			if(result == -1) {
 				LOG_ERROR("Could not execute command");
 			}
-#endif
 		}));
 
 	FUNCTION_ARGS_DEF
