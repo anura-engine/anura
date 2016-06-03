@@ -1009,11 +1009,7 @@ namespace gui
 					if(cursor_.col > static_cast<int>(text_[cursor_.row].size())) {
 						cursor_.col = static_cast<int>(text_[cursor_.row].size());
 					}
-/*
-					if(cursor_.row == 0 && cursor_.col == 0) {
-						break;
-					}
-*/
+
 					// Are we at the start of the line?
 					if(cursor_.col == 0)
 					{
