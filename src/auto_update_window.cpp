@@ -4,6 +4,8 @@
 #include <boost/filesystem/operations.hpp>
 
 #include "auto_update_window.hpp"
+#include "base64.hpp"
+#include "compress.hpp"
 #include "filesystem.hpp"
 #include "json_parser.hpp"
 #include "module.hpp"
@@ -30,9 +32,9 @@ PREF_STRING(auto_update_title, "Anura auto-update", "Title of the auto-update wi
 
 namespace 
 {
-	KRE::TexturePtr render_updater_text(const std::string& str, const KRE::Color& color)
+	KRE::TexturePtr render_updater_text(const std::string& str, const KRE::Color& color, int size=24)
 	{
-		return KRE::Font::getInstance()->renderText(str, color, 16, true, KRE::Font::getDefaultFont());
+		return KRE::Font::getInstance()->renderText(str, color, size, true, KRE::Font::getDefaultFont());
 	}
 
 	class progress_animation
@@ -89,6 +91,27 @@ auto_update_window::~auto_update_window()
 {
 }
 
+void auto_update_window::load_background_texture()
+{
+	if(module_path_.empty() == false) {
+		if(sys::file_exists(module_path_ + "update-bg.jpg")) {
+			sys::copy_file(module_path_ + "update-bg.jpg", "./update/update-bg.jpg");
+		}
+	}
+
+	load_background_texture("./update/update-bg.jpg");
+}
+
+void auto_update_window::load_background_texture(const std::string& path)
+{
+
+	try {
+		assert_recover_scope guard;
+		bg_texture_ = KRE::Texture::createTexture(path);
+	} catch(...) {
+	}
+}
+
 void auto_update_window::set_progress(float percent)
 {
 	percent_ = percent;
@@ -136,6 +159,8 @@ void auto_update_window::create_window()
 	std::map<std::string,std::string> font_paths;
 	font_paths["default"] = "update/font.otf";
 	KRE::Font::setAvailableFonts(font_paths);
+
+	load_background_texture();
 }
 
 void auto_update_window::draw() const
@@ -149,9 +174,18 @@ void auto_update_window::draw() const
 	window_->setClearColor(KRE::Color(g_loading_screen_bg_color));
 	window_->clear(KRE::ClearFlags::COLOR);
 
-	canvas->drawSolidRect(rect(300, 390, 200, 4), KRE::Color(255, 255, 255, 196));
-	const rect filled_area(300, 390, static_cast<int>(200.0f*percent_), 4);
+	if(bg_texture_) {
+		canvas->blitTexture(bg_texture_, 0, 0, 0);
+	}
+
+	canvas->drawSolidRect(rect(window_->width()/4, 240*2, window_->width()/2, 10), KRE::Color(255, 255, 255, 220));
+	const rect filled_area(window_->width()/4, 240*2, int((window_->width()/2)*percent_), 10);
 	canvas->drawSolidRect(filled_area, KRE::Color(0, 255, 255, 255));
+
+	KRE::TexturePtr aa_text_surf(render_updater_text("Argentum Age", KRE::Color(255, 255, 255), 48));
+	if(aa_text_surf) {
+		canvas->blitTexture(aa_text_surf, 0, window_->width()/2 - aa_text_surf->width()/2, 300);
+	}
 
 	const int bar_point = filled_area.x2();
 
@@ -163,13 +197,12 @@ void auto_update_window::draw() const
 
 	if(percent_surf != nullptr) {
 		canvas->blitTexture(percent_surf, 0, 
-			(window_->width() - percent_surf->width()) / 2, 
-			(window_->height() - percent_surf->height()) / 2 + 80);
+			(window_->width() - percent_surf->width()) / 2, 220*2);
 	}
 
 	KRE::TexturePtr message_surf(render_updater_text(message_, KRE::Color(255, 255, 255)));
 	if(message_surf != nullptr) {
-		canvas->blitTexture(message_surf, 0, window_->width()/2 - message_surf->width()/2, 140 + window_->height()/2 - message_surf->height()/2);
+		canvas->blitTexture(message_surf, 0, window_->width()/2 - message_surf->width()/2, 250*2);
 	}
 
 	if(error_message_ != "") {
@@ -216,15 +249,15 @@ bool auto_update_window::proceed_or_retry_dialog(const std::string& msg)
 		canvas->drawSolidRect(proceed_button_area, mouseover_proceed ? depressed_button_color : normal_button_color);
 		canvas->drawSolidRect(retry_button_area, mouseover_retry ? depressed_button_color : normal_button_color);
 
-		KRE::TexturePtr proceed_text_texture = KRE::Font::getInstance()->renderText("Proceed", KRE::Color(0,0,0,255), 16, true, KRE::Font::getDefaultFont());
-		KRE::TexturePtr retry_text_texture = KRE::Font::getInstance()->renderText("Retry", KRE::Color(0,0,0,255), 16, true, KRE::Font::getDefaultFont());
+		KRE::TexturePtr proceed_text_texture = KRE::Font::getInstance()->renderText("Proceed", KRE::Color(0,0,0,255), 24, true, KRE::Font::getDefaultFont());
+		KRE::TexturePtr retry_text_texture = KRE::Font::getInstance()->renderText("Retry", KRE::Color(0,0,0,255), 24, true, KRE::Font::getDefaultFont());
 		canvas->blitTexture(proceed_text_texture, 0, (proceed_button_area.x() + proceed_button_area.x2() - proceed_text_texture->width())/2, (proceed_button_area.y() + proceed_button_area.y2() - proceed_text_texture->height())/2);
 		canvas->blitTexture(retry_text_texture, 0, (retry_button_area.x() + retry_button_area.x2() - retry_text_texture->width())/2, (retry_button_area.y() + retry_button_area.y2() - retry_text_texture->height())/2);
 
-		KRE::TexturePtr message_texture = KRE::Font::getInstance()->renderText("Failed to update the game. Retry or proceed without updating?", KRE::Color(255,255,255,255), 16, true, KRE::Font::getDefaultFont());
+		KRE::TexturePtr message_texture = KRE::Font::getInstance()->renderText("Failed to update the game. Retry or proceed without updating?", KRE::Color(255,255,255,255), 24, true, KRE::Font::getDefaultFont());
 		canvas->blitTexture(message_texture, 0, (window_->width() - message_texture->width())/2, window_->height()/2);
 
-		message_texture = KRE::Font::getInstance()->renderText(msg, KRE::Color(255,0,0,255), 16, true, KRE::Font::getDefaultFont());
+		message_texture = KRE::Font::getInstance()->renderText(msg, KRE::Color(255,0,0,255), 24, true, KRE::Font::getDefaultFont());
 		canvas->blitTexture(message_texture, 0, (window_->width() - message_texture->width())/2, window_->height()/2 + 40);
 
 		window_->swap();
@@ -256,6 +289,44 @@ bool auto_update_window::proceed_or_retry_dialog(const std::string& msg)
 }
 
 namespace {
+
+class module_updater_client : public module::client
+{
+public:
+	explicit module_updater_client(auto_update_window& w) : window_(w)
+	{}
+private:
+	auto_update_window& window_;
+	variant md5_;
+	virtual bool isHighPriorityChunk(const variant& chunk_id, variant& chunk) override {
+		static const std::string update_bg("update-bg.jpg");
+		if(chunk_id.is_string() && chunk_id.as_string() == update_bg) {
+			md5_ = chunk["md5"];
+			return true;
+		}
+		return false;
+	}
+	virtual void onChunkReceived(variant& chunk) override {
+		if(md5_.is_string() && md5_.as_string() == chunk["md5"].as_string()) {
+			try {
+				std::string data_str = chunk["data"].as_string();
+				std::vector<char> data_buf;
+				data_buf.insert(data_buf.begin(), data_str.begin(), data_str.end());
+
+				const int data_size = chunk["size"].as_int();
+
+				std::vector<char> data = zip::decompress_known_size(base64::b64decode(data_buf), data_size);
+				std::string contents(data.begin(), data.end());
+
+				sys::write_file("./update/update-bg.jpg", contents);
+				window_.set_module_path("");
+				window_.load_background_texture("update/update-bg.jpg");
+			} catch(...) {
+			}
+		}
+	}
+};
+
 bool do_auto_update(std::deque<std::string> argv, auto_update_window& update_window, std::string& error_msg, int timeout_ms)
 {
 #ifdef _MSC_VER
@@ -347,7 +418,7 @@ bool do_auto_update(std::deque<std::string> argv, auto_update_window& update_win
 			
 
 		if(update_module) {
-			cl.reset(new module::client);
+			cl.reset(new module_updater_client(update_window));
 			const bool res = cl->install_module(module::get_module_name(), force);
 			if(!res) {
 				cl.reset();
@@ -356,6 +427,8 @@ bool do_auto_update(std::deque<std::string> argv, auto_update_window& update_win
 				if(cl->is_new_install()) {
 					is_new_install = true;
 				}
+
+				update_window.set_module_path(cl->module_path());
 			}
 		}
 
@@ -372,8 +445,6 @@ bool do_auto_update(std::deque<std::string> argv, auto_update_window& update_win
 				}
 			}
 		}
-
-		fprintf(stderr, "is_new_install = %d\n", (int)is_new_install);
 
 		if(is_new_install) {
 			timeout_ms *= 10;
