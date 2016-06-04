@@ -41,6 +41,7 @@ namespace gui
 {
 	class code_editor_widget;
 	class TextEditorWidget;
+	class Button;
 }
 
 class CodeEditorDialog : public gui::Dialog
@@ -93,6 +94,8 @@ private:
 	gui::CodeEditorWidgetPtr editor_;
 	gui::TextEditorWidgetPtr search_;
 	gui::TextEditorWidgetPtr replace_;
+
+	gui::Button* find_next_button_;
 
 	gui::TextEditorWidgetPtr optional_error_text_area_;
 

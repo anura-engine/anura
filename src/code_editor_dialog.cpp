@@ -92,8 +92,8 @@ void CodeEditorDialog::init()
 	Button* redo_button      = new Button("Redo", std::bind(&CodeEditorDialog::redo, this));
 	Button* increase_font    = new Button("Increase font size", std::bind(&CodeEditorDialog::changeFontSize, this, 1));
 	Button* decrease_font    = new Button("Decrease font size", std::bind(&CodeEditorDialog::changeFontSize, this, -1));
-	Button* find_next_button = new Button("Find next", std::bind(&CodeEditorDialog::on_find_next, this));
-
+	
+	find_next_button_ = new Button("Find next", std::bind(&CodeEditorDialog::on_find_next, this));
 	save_button_.reset(save_button);
 
 	using std::placeholders::_1;
@@ -132,12 +132,11 @@ void CodeEditorDialog::init()
 	addWidget(WidgetPtr(decrease_font), MOVE_DIRECTION::RIGHT);
 
 	// Search and replace
-	// TODO: Make the next line figure out its Y position based on the previous row.
 	addWidget(find_label, EDITOR_BUTTONS_X, save_button->y() + save_button->height() + Y_SPACING, MOVE_DIRECTION::RIGHT);
 	addWidget(WidgetPtr(search_), MOVE_DIRECTION::RIGHT);
 	addWidget(replace_label_, MOVE_DIRECTION::RIGHT);
 	addWidget(WidgetPtr(replace_), MOVE_DIRECTION::RIGHT);
-	addWidget(WidgetPtr(find_next_button), MOVE_DIRECTION::RIGHT);
+	addWidget(WidgetPtr(find_next_button_), MOVE_DIRECTION::RIGHT);
 
 	addWidget(editor_, find_label->x(), search_->y() + search_->height() + Y_SPACING);
 	if(optional_error_text_area_) {
@@ -149,7 +148,7 @@ void CodeEditorDialog::init()
 
 	replace_label_->setVisible(false);
 	replace_->setVisible(false);
-//	find_next_button->setVisible(false);
+	find_next_button_->setVisible(false);
 
 	if(fname_.empty() == false && fname_[0] == '@') {
 		save_button->setVisible(false);
@@ -579,8 +578,7 @@ void CodeEditorDialog::process()
 	const bool show_replace = editor_->hasSearchMatches();
 	replace_label_->setVisible(show_replace);
 	replace_->setVisible(show_replace);
-// TODO: Make this work
-//	find_next_button->setVisible(show_replace);
+	find_next_button_->setVisible(show_replace);
 
 	const int cursor_pos = static_cast<int>(editor_->rowColToTextPos(editor_->cursorRow(), editor_->cursorCol()));
 	const std::string& text = editor_->currentText();
