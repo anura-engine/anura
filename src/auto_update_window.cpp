@@ -412,7 +412,7 @@ bool do_auto_update(std::deque<std::string> argv, auto_update_window& update_win
 				variant one_time_args = overrides["arguments"];
 				if(one_time_args.is_list()) {
 					for(auto s : one_time_args.as_list_string()) {
-						argv.push_back(s);
+						argv.push_front(s);
 					}
 				}
 			}
