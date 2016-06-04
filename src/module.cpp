@@ -1476,7 +1476,7 @@ static const int ModuleProtocolVersion = 1;
 
 		for(variant path : manifest.getKeys().as_list()) {
 			variant info = manifest[path];
-		std::string path_str = (install_image_ ? InstallImagePath : module_path() + module_id_) + "/" + path.as_string();
+			std::string path_str = (install_image_ ? InstallImagePath : module_path()) + "/" + path.as_string();
 
 			if(install_image_ && sys::file_exists(path_str)) {
 				//try removing the file, and failing that, move it.
