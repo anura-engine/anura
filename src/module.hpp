@@ -61,6 +61,7 @@ namespace module
 		variant default_preferences;
 	};
 
+
 	typedef std::map<std::string, std::string> module_file_map;
 	typedef std::pair<std::string, std::string> module_file_pair;
 	typedef std::map<std::string, std::string>::const_iterator module_file_map_iterator;
@@ -117,6 +118,10 @@ namespace module
 	public:
 		client();
 		client(const std::string& host, const std::string& port);
+		virtual ~client();
+
+		virtual bool isHighPriorityChunk(const variant& chunk_id, variant& chunk) { return false; }
+		virtual void onChunkReceived(variant& chunk) {}
 
 		//function which downloads a module and has it ready to install but
 		//doesn't install it yet.
@@ -142,6 +147,8 @@ namespace module
 		void set_install_image(bool value) { install_image_ = value; }
 
 		bool is_new_install() const { return is_new_install_; }
+
+		std::string module_path() const;
 	private:
 		
 		bool install_module_confirmed_out_of_date(const std::string& module_name);

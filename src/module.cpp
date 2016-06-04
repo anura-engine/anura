@@ -1048,6 +1048,10 @@ COMMAND_LINE_UTILITY(generate_manifest)
 		client_->set_timeout_and_retry();
 	}
 
+	client::~client()
+	{
+	}
+
 	void client::prepare_install_module(const std::string& module_id, bool force)
 	{
 		install_module(module_id, force);
@@ -1116,6 +1120,12 @@ static const int ModuleProtocolVersion = 1;
 							  std::bind(&client::on_error, this, _1, url, ""),
 							  std::bind(&client::on_progress, this, _1, _2, _3));
 		return true;
+	}
+
+	std::string client::module_path() const
+	{
+		const std::string path_str = preferences::dlc_path() + "/" + module_id_ + "/";
+		return path_str;
 	}
 
 	void client::rate_module(const std::string& module_id, int rating, const std::string& review)
@@ -1196,6 +1206,8 @@ static const int ModuleProtocolVersion = 1;
 	{
 		nbytes_transferred_ += node["size"].as_int();
 		node.add_attr_mutation(variant("data"), variant(response));
+
+		onChunkReceived(node);
 
 		chunk_clients_.erase(std::remove(chunk_clients_.begin(), chunk_clients_.end(), client), chunk_clients_.end());
 		if(chunks_to_get_.empty()) {
@@ -1364,14 +1376,25 @@ static const int ModuleProtocolVersion = 1;
 
 		static const variant md5_variant("md5");
 
+		std::vector<variant> high_priority_chunks;
+
 		variant manifest = doc["manifest"];
 		for(auto p : manifest.as_map()) {
 			if(local_manifest.is_map() && local_manifest.has_key(p.first) && local_manifest[p.first][md5_variant] == p.second[md5_variant]) {
 				unchanged_keys.push_back(p.first);
 			} else if(p.second["data"].is_null()) {
 				nbytes_total_ += p.second["size"].as_int();
-				chunks_to_get_.push_back(p.second);
+
+				if(isHighPriorityChunk(p.first, p.second)) {
+					high_priority_chunks.push_back(p.second);
+				} else {
+					chunks_to_get_.push_back(p.second);
+				}
 			}
+		}
+
+		for(auto v : high_priority_chunks) {
+			chunks_to_get_.push_back(v);
 		}
 
 		if(local_manifest.is_map()) {
@@ -1426,7 +1449,7 @@ static const int ModuleProtocolVersion = 1;
 	{
 		if(doc.has_key("delete")) {
 			for(variant path : doc["delete"].as_list()) {
-				const std::string path_str = preferences::dlc_path() + "/" + module_id_ + "/" + path.as_string();
+				const std::string path_str = module_path() + "/" + path.as_string();
 				LOG_INFO("DELETING FILE: " << path_str);
 
 				try {
@@ -1453,7 +1476,7 @@ static const int ModuleProtocolVersion = 1;
 
 		for(variant path : manifest.getKeys().as_list()) {
 			variant info = manifest[path];
-		std::string path_str = (install_image_ ? InstallImagePath : preferences::dlc_path() + "/" + module_id_) + "/" + path.as_string();
+			std::string path_str = (install_image_ ? InstallImagePath : module_path()) + "/" + path.as_string();
 
 			if(install_image_ && sys::file_exists(path_str)) {
 				//try removing the file, and failing that, move it.
