@@ -28,6 +28,7 @@
 #endif
 
 extern std::string g_loading_screen_bg_color;
+PREF_STRING(auto_update_game_name, "Anura", "Title shown on the auto update window");
 PREF_STRING(auto_update_title, "Anura auto-update", "Title of the auto-update window");
 
 namespace 
@@ -182,7 +183,7 @@ void auto_update_window::draw() const
 	const rect filled_area(window_->width()/4, 240*2, int((window_->width()/2)*percent_), 10);
 	canvas->drawSolidRect(filled_area, KRE::Color(0, 255, 255, 255));
 
-	KRE::TexturePtr aa_text_surf(render_updater_text("Argentum Age", KRE::Color(255, 255, 255), 48));
+	KRE::TexturePtr aa_text_surf(render_updater_text(g_auto_update_game_name, KRE::Color(255, 255, 255), 48));
 	if(aa_text_surf) {
 		canvas->blitTexture(aa_text_surf, 0, window_->width()/2 - aa_text_surf->width()/2, 300);
 	}
