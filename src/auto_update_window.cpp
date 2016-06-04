@@ -152,6 +152,8 @@ void auto_update_window::create_window()
 	KRE::WindowManager wm("SDL");
 	window_ = wm.createWindow(800, 600, hints.build());
 
+	window_->setWindowIcon("update/window-icon.png");
+
 	using namespace KRE;
 
 	// Set the default font to use for rendering. This can of course be overridden when rendering the
