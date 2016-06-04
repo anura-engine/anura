@@ -33,8 +33,47 @@ PREF_STRING(auto_update_title, "Anura auto-update", "Title of the auto-update wi
 
 namespace 
 {
-	KRE::TexturePtr render_updater_text(const std::string& str, const KRE::Color& color, int size=24)
+	variant get_update_config(const std::string& name)
 	{
+		static std::map<std::string,variant> attr;
+		static bool init = false;
+		if(!init) {
+			init = true;
+			try {
+				if(sys::file_exists("./update/update.cfg")) {
+					variant cfg = json::parse(sys::read_file("./update/update.cfg"), json::JSON_PARSE_OPTIONS::NO_PREPROCESSOR);
+
+					if(cfg.is_map()) {
+						for(auto p : cfg.as_map()) {
+							if(p.first.is_string()) {
+								attr[p.first.as_string()] = p.second;
+							}
+						}
+					}
+				}
+			} catch(...) {
+			}
+		}
+
+		return attr[name];
+	}
+
+	KRE::Color get_update_color(const std::string& name, std::string default_val)
+	{
+		variant v = get_update_config(name);
+		if(v.is_null()) {
+			return KRE::Color(default_val);
+		}
+
+		return KRE::Color(v);
+	}
+
+	KRE::TexturePtr render_updater_text(const std::string& str, const KRE::Color& color, int size=-1)
+	{
+		if(size < 0) {
+			size = get_update_config("font_size").as_int(24);
+		}
+
 		return KRE::Font::getInstance()->renderText(str, color, size, true, KRE::Font::getDefaultFont());
 	}
 
@@ -146,11 +185,11 @@ void auto_update_window::create_window()
 
 	variant_builder hints;
 	hints.add("renderer", "opengl");
-	hints.add("title", g_auto_update_title);
+	hints.add("title", get_update_config("window_title").as_string_default(g_auto_update_title.c_str()));
 	hints.add("clear_color", "black");
 
 	KRE::WindowManager wm("SDL");
-	window_ = wm.createWindow(800, 600, hints.build());
+	window_ = wm.createWindow(get_update_config("window_width").as_int(800), get_update_config("window_height").as_int(600), hints.build());
 
 	window_->setWindowIcon("update/window-icon.png");
 
@@ -174,20 +213,22 @@ void auto_update_window::draw() const
 
 	auto canvas = KRE::Canvas::getInstance();
 
-	window_->setClearColor(KRE::Color(g_loading_screen_bg_color));
+	window_->setClearColor(get_update_color("background_color", "black"));
 	window_->clear(KRE::ClearFlags::COLOR);
 
 	if(bg_texture_) {
 		canvas->blitTexture(bg_texture_, 0, 0, 0);
 	}
 
-	canvas->drawSolidRect(rect(window_->width()/4, 240*2, window_->width()/2, 10), KRE::Color(255, 255, 255, 220));
-	const rect filled_area(window_->width()/4, 240*2, int((window_->width()/2)*percent_), 10);
-	canvas->drawSolidRect(filled_area, KRE::Color(0, 255, 255, 255));
+	const int bar_width = get_update_config("bar_width").as_int(400);
 
-	KRE::TexturePtr aa_text_surf(render_updater_text(g_auto_update_game_name, KRE::Color(255, 255, 255), 48));
+	canvas->drawSolidRect(rect(window_->width()/2 - bar_width/2, get_update_config("bar_ypos").as_int(480), bar_width, get_update_config("bar_height").as_int(10)), get_update_color("bar_empty_color", "white"));
+	const rect filled_area(window_->width()/2 - bar_width/2, get_update_config("bar_ypos").as_int(480), int(bar_width*percent_), get_update_config("bar_height").as_int(10));
+	canvas->drawSolidRect(filled_area, get_update_color("bar_filled_color", "cyan"));
+
+	KRE::TexturePtr aa_text_surf(render_updater_text(get_update_config("title_text").as_string_default(g_auto_update_game_name.c_str()), get_update_color("title_text_color", "white"), get_update_config("title_font_size").as_int(48)));
 	if(aa_text_surf) {
-		canvas->blitTexture(aa_text_surf, 0, window_->width()/2 - aa_text_surf->width()/2, 300);
+		canvas->blitTexture(aa_text_surf, 0, window_->width()/2 - aa_text_surf->width()/2, get_update_config("title_ypos").as_int(300));
 	}
 
 	const int bar_point = filled_area.x2();
@@ -196,22 +237,22 @@ void auto_update_window::draw() const
 	std::ostringstream percent_stream;
 	percent_stream << percent << "%";
 
-	KRE::TexturePtr percent_surf(render_updater_text(percent_stream.str(), KRE::Color(255, 255, 255)));
+	KRE::TexturePtr percent_surf(render_updater_text(percent_stream.str(), get_update_color("percent_text_color", "white"), get_update_config("percent_font_size").as_int(24)));
 
 	if(percent_surf != nullptr) {
 		canvas->blitTexture(percent_surf, 0, 
-			(window_->width() - percent_surf->width()) / 2, 220*2);
+			(window_->width() - percent_surf->width()) / 2, get_update_config("percent_ypos").as_int(440));
 	}
 
-	KRE::TexturePtr message_surf(render_updater_text(message_, KRE::Color(255, 255, 255)));
+	KRE::TexturePtr message_surf(render_updater_text(message_, KRE::Color(get_update_config("message_text_color").as_string_default("white")), 20));
 	if(message_surf != nullptr) {
-		canvas->blitTexture(message_surf, 0, window_->width()/2 - message_surf->width()/2, 250*2);
+		canvas->blitTexture(message_surf, 0, window_->width()/2 - message_surf->width()/2, get_update_config("message_ypos").as_int(500));
 	}
 
 	if(error_message_ != "") {
-		KRE::TexturePtr message_surf(render_updater_text(error_message_, KRE::Color(255, 64, 64)));
+		KRE::TexturePtr message_surf(render_updater_text(error_message_, get_update_color("error_text_color", "red")));
 		if(message_surf != nullptr) {
-			canvas->blitTexture(message_surf, 0, window_->width()/2 - message_surf->width()/2, 180 + window_->height()/2 - message_surf->height()/2);
+			canvas->blitTexture(message_surf, 0, window_->width()/2 - message_surf->width()/2, get_update_config("error_ypos").as_int(540));
 		}
 	}
 	
@@ -300,17 +341,32 @@ public:
 	{}
 private:
 	auto_update_window& window_;
-	variant md5_;
+	std::map<std::string, std::string> update_chunks_;
 	virtual bool isHighPriorityChunk(const variant& chunk_id, variant& chunk) override {
-		static const std::string update_bg("update-bg.jpg");
-		if(chunk_id.is_string() && chunk_id.as_string() == update_bg) {
-			md5_ = chunk["md5"];
+		if(!chunk_id.is_string()) {
+			return false;
+		}
+
+		fprintf(stderr, "CHUNK: %s -> %s\n",chunk_id.as_string().c_str(), chunk["md5"].as_string().c_str());
+
+		std::string id = chunk_id.as_string();
+		if(std::equal(id.begin(), id.begin()+7, "update/") == false) {
+			return false;
+		}
+
+		update_chunks_[chunk["md5"].as_string()] = id;
+		return true;
+
+		static const std::string update_bg("update/update-bg.jpg");
+		if(id == update_bg) {
 			return true;
 		}
 		return false;
 	}
+
 	virtual void onChunkReceived(variant& chunk) override {
-		if(md5_.is_string() && md5_.as_string() == chunk["md5"].as_string()) {
+		auto itor = update_chunks_.find(chunk["md5"].as_string());
+		if(itor != update_chunks_.end()) {
 			try {
 				std::string data_str = chunk["data"].as_string();
 				std::vector<char> data_buf;
@@ -321,9 +377,14 @@ private:
 				std::vector<char> data = zip::decompress_known_size(base64::b64decode(data_buf), data_size);
 				std::string contents(data.begin(), data.end());
 
-				sys::write_file("./update/update-bg.jpg", contents);
-				window_.set_module_path("");
-				window_.load_background_texture("update/update-bg.jpg");
+				fprintf(stderr, "WRITE FILE: %s\n", itor->second.c_str());
+
+				sys::write_file(itor->second, contents);
+
+				if(itor->second == "update/update-bg.jpg") {
+					window_.set_module_path("");
+					window_.load_background_texture("update/update-bg.jpg");
+				}
 			} catch(...) {
 			}
 		}
@@ -343,6 +404,21 @@ bool do_auto_update(std::deque<std::string> argv, auto_update_window& update_win
 	bool update_anura = true;
 	bool update_module = true;
 	bool force = false;
+
+	if(sys::file_exists("./update/overrides.cfg")) {
+		try {
+			variant overrides = json::parse(sys::read_file("./update/overrides.cfg"), json::JSON_PARSE_OPTIONS::NO_PREPROCESSOR);
+			if(overrides.is_map()) {
+				variant one_time_args = overrides["arguments"];
+				if(one_time_args.is_list()) {
+					for(auto s : one_time_args.as_list_string()) {
+						argv.push_back(s);
+					}
+				}
+			}
+		} catch(...) {
+		}
+	}
 
 	while(!argv.empty()) {
 		std::string arg = argv.front();
@@ -395,7 +471,6 @@ bool do_auto_update(std::deque<std::string> argv, auto_update_window& update_win
 	ASSERT_LOG(real_anura != "", "Must provide a --anura argument with the name of the anura module to use");
 
 	variant_builder update_info;
-
 
 	if(update_anura || update_module) {
 		boost::intrusive_ptr<module::client> cl, anura_cl;
@@ -509,9 +584,9 @@ bool do_auto_update(std::deque<std::string> argv, auto_update_window& update_win
 
 			char msg[1024];
 			if(nbytes_needed == 0) {
-				sprintf(msg, "Updating Game. Contacting server...");
+				sprintf(msg, "%s", get_update_config("message_text_contacting").as_string_default("Updating Game. Contacting server...").c_str());
 			} else {
-				sprintf(msg, "Updating Game. Transferred %.02f/%.02fMB", float(nbytes_obtained/(1024.0*1024.0)), float(nbytes_needed/(1024.0*1024.0)));
+				sprintf(msg, "%s%0.2f/%0.2f%s", get_update_config("message_text_prefix").as_string_default("Updating Game. Transferred ").c_str(), float(nbytes_obtained/(1024.0*1024.0)), float(nbytes_needed/(1024.0*1024.0)), get_update_config("message_text_postfix").as_string_default("MB").c_str());
 			}
 
 			update_window.set_message(msg);
@@ -561,6 +636,17 @@ bool do_auto_update(std::deque<std::string> argv, auto_update_window& update_win
 			return false;
 		}
 
+		}
+	}
+
+	if(sys::file_exists("./update/overrides.cfg")) {
+		try {
+			variant overrides = json::parse_from_file("./update/overrides.cfg", json::JSON_PARSE_OPTIONS::NO_PREPROCESSOR);
+			if(overrides.is_map()) {
+				overrides.remove_attr_mutation(variant("arguments"));
+				sys::write_file("./update/overrides.cfg", overrides.write_json());
+			}
+		} catch(...) {
 		}
 	}
 
