@@ -67,6 +67,7 @@ namespace gui
 
 		void setSearch(const std::string& term);
 		void nextSearchMatch();
+		void prevSearchMatch();
 		bool hasSearchMatches() const { return search_matches_.empty() == false; }
 
 		void replace(const std::string& replace_with);
@@ -140,6 +141,9 @@ namespace gui
 
 		void onPageUp();
 		void onPageDown();
+
+		void searchForward();
+		void searchBackward();
 
 		size_t findEquivalentCol(size_t old_col, size_t old_row, size_t new_row) const;
 

@@ -1563,35 +1563,81 @@ namespace gui
 		}
 	}
 
+	// This runs every time the search string is updated.
 	void TextEditorWidget::setSearch(const std::string& term)
 	{
 		search_ = term;
 		calculateSearchMatches();
-		if(search_matches_.empty()) {
-			return;
-		}
 
-		std::vector<std::pair<Loc, Loc> >::const_iterator search_itor =
-		   std::lower_bound(search_matches_.begin(), search_matches_.end(),
-							std::pair<Loc,Loc>(cursor_, cursor_));
-		if(search_itor == search_matches_.end()) {
-			search_itor = search_matches_.begin();
-		}
-
-		select_ = cursor_ = search_itor->first;
-
-		onMoveCursor();
+		searchForward();
 	}
 
+	// This advances until the first match below the cursor, if one exists. It
+	// won't advance the cursor unless it needs to.
+	void TextEditorWidget::searchForward()
+	{
+		if(!search_matches_.empty()) {
+			// The std::pair<Loc, Loc> represents the beginning and the end
+			// of the match.
+			std::vector<std::pair<Loc, Loc> >::const_iterator search_itor =
+				std::lower_bound(search_matches_.begin(), search_matches_.end(),
+								 std::pair<Loc,Loc>(cursor_, cursor_));
+
+			// Loop around to the top if at the end.
+			if(search_itor == search_matches_.end()) {
+				search_itor = search_matches_.begin();
+			}
+
+			// Move the cursor to the match, and select it.
+			select_ = cursor_ = search_itor->first;
+
+			onMoveCursor();
+		} // end if(!search_matches_.empty())
+	}
+
+	// This advances until the first match below the cursor, if one exists. It
+	// won't advance the cursor unless it needs to.
+	void TextEditorWidget::searchBackward()
+	{
+		if(!search_matches_.empty()) {
+			std::vector<std::pair<Loc, Loc> >::const_iterator search_itor;
+			
+			search_itor = std::upper_bound(search_matches_.begin(),
+										   search_matches_.end(),
+										   std::pair<Loc,Loc>(cursor_, cursor_));
+
+			if(search_itor == search_matches_.begin()) {
+				search_itor = search_matches_.end();
+			}
+
+			select_ = cursor_ = search_itor->first;
+
+			onMoveCursor();
+		} // end if(!search_matches_.empty())
+	}
+
+	// This function is run when "Find next" is clicked. Unlike
+	// searchForward(), this one will try to find a match other than the
+	// currently highlighted one.
 	void TextEditorWidget::nextSearchMatch()
 	{
-		if(search_matches_.empty()) {
-			return;
-		}
+		if(!search_matches_.empty()) {
+			cursor_.col++;
+			select_ = cursor_;
+			searchForward();
+		} // end if(!search_matches_.empty()) 
+	}
 
-		cursor_.col++;
-		select_ = cursor_;
-		setSearch(search_);
+	// This function searches in reverse. Note that it is like
+	// nextSearchMatch(), in that it attempts to find a new match, rather
+	// than the current one.
+	void TextEditorWidget::prevSearchMatch()
+	{
+		if(!search_matches_.empty()) {
+			cursor_.col--;
+			select_ = cursor_;
+			searchBackward();
+		}
 	}
 
 	void TextEditorWidget::calculateSearchMatches()
