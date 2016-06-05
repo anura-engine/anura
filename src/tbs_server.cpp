@@ -273,7 +273,9 @@ namespace tbs
 
 		for(auto i = ipc_clients_.begin(); i != ipc_clients_.end(); ++i) {
 			i->second.pipe->process();
+		}
 
+		for(auto i = ipc_clients_.begin(); i != ipc_clients_.end(); ++i) {
 			std::vector<std::string> messages;
 			i->second.pipe->read(messages);
 
