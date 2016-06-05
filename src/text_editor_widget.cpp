@@ -1579,9 +1579,11 @@ namespace gui
 		if(!search_matches_.empty()) {
 			// The std::pair<Loc, Loc> represents the beginning and the end
 			// of the match.
-			std::vector<std::pair<Loc, Loc> >::const_iterator search_itor =
-				std::lower_bound(search_matches_.begin(), search_matches_.end(),
-								 std::pair<Loc,Loc>(cursor_, cursor_));
+			std::vector<std::pair<Loc, Loc> >::const_iterator search_itor;
+			
+			// Jump to the next match.
+			search_itor = std::lower_bound(search_matches_.begin(), search_matches_.end(),
+								 		   std::pair<Loc,Loc>(cursor_, cursor_));
 
 			// Loop around to the top if at the end.
 			if(search_itor == search_matches_.end()) {
@@ -1595,25 +1597,28 @@ namespace gui
 		} // end if(!search_matches_.empty())
 	}
 
+	// TODO: Finish this function!
 	// This advances until the first match below the cursor, if one exists. It
 	// won't advance the cursor unless it needs to.
 	void TextEditorWidget::searchBackward()
 	{
-		if(!search_matches_.empty()) {
+		/*if(!search_matches_.empty()) {
 			std::vector<std::pair<Loc, Loc> >::const_iterator search_itor;
 			
-			search_itor = std::upper_bound(search_matches_.begin(),
-										   search_matches_.end(),
-										   std::pair<Loc,Loc>(cursor_, cursor_));
-
+			// First, we want to find where the 
+			
 			if(search_itor == search_matches_.begin()) {
 				search_itor = search_matches_.end();
+			}
+			else
+			{
+				
 			}
 
 			select_ = cursor_ = search_itor->first;
 
 			onMoveCursor();
-		} // end if(!search_matches_.empty())
+		} // end if(!search_matches_.empty())*/
 	}
 
 	// This function is run when "Find next" is clicked. Unlike

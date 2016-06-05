@@ -870,7 +870,7 @@ void CodeEditorDialog::on_search_enter()
 
 void CodeEditorDialog::on_find_next()
 {
-	editor_->prevSearchMatch();
+	editor_->nextSearchMatch();
 	search_->setFocus(false);
 	replace_->setFocus(false);
 	editor_->setFocus(true);
