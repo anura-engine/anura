@@ -116,12 +116,23 @@ namespace
 
 		void put(const std::string& key, variant doc, std::function<void()> on_done, std::function<void()> on_error, PUT_OPERATION op=PUT_SET)
 		{
+			if(op == PUT_APPEND) {
+				variant existing = doc_[variant(g_db_key_prefix + key)];
+				std::vector<variant> val;
+				if(existing.is_list()) {
+					val = existing.as_list();
+				}
+
+				val.push_back(doc);
+				doc = variant(&val);
+			}
+
 			doc_.add_attr_mutation(variant(g_db_key_prefix + key), doc);
 			dirty_ = true;
 			on_done();
 		}
 
-		void get(const std::string& key, std::function<void(variant)> on_done, int lock_seconds) {
+		void get(const std::string& key, std::function<void(variant)> on_done, int lock_seconds, GET_OPERATION op) {
 			on_done(doc_[g_db_key_prefix + key]);
 		}
 
@@ -182,6 +193,8 @@ void remove_callback(lcb_t instance, const void* cookie, lcb_error_t error, cons
 	};
 
 	struct GetInfo {
+		GetInfo() : is_list(DbClient::GET_NORMAL) {}
+		DbClient::GET_OPERATION is_list;
 		std::function<void(variant)> on_done;
 	};
 
@@ -228,6 +241,10 @@ void remove_callback(lcb_t instance, const void* cookie, lcb_error_t error, cons
 			memset(&cmd, 0, sizeof(cmd));
 
 			switch(op) {
+				case PUT_APPEND:
+					cmd.v.v0.operation = LCB_APPEND;
+					doc_str += ",";
+					break;
 				case PUT_ADD:
 					cmd.v.v0.operation = LCB_ADD;
 					break;
@@ -283,7 +300,7 @@ void remove_callback(lcb_t instance, const void* cookie, lcb_error_t error, cons
 		ASSERT_LOG(err == LCB_SUCCESS, "Error in remove: " << lcb_strerror(nullptr, err));
 	}
 
-		void get(const std::string& rkey, std::function<void(variant)> on_done, int lock_seconds)
+		void get(const std::string& rkey, std::function<void(variant)> on_done, int lock_seconds, GET_OPERATION op)
 		{
 			const std::string key = g_db_key_prefix + rkey;
 
@@ -304,6 +321,7 @@ void remove_callback(lcb_t instance, const void* cookie, lcb_error_t error, cons
 			commands[0] = &cmd;
 
 			GetInfo* cookie = new GetInfo;
+			cookie->op = op;
 			cookie->on_done = [=](variant v) { --*poutstanding; on_done(v); };
 
 			lcb_error_t err = lcb_get(instance_, cookie, 1, commands);
@@ -358,12 +376,20 @@ void remove_callback(lcb_t instance, const void* cookie, lcb_error_t error, cons
 	{
 		ASSERT_LOG(err == LCB_SUCCESS || err == LCB_KEY_ENOENT, "Error in get callback: " << lcb_strerror(nullptr, err));
 		if(cookie) {
+			const GetInfo* info = reinterpret_cast<const GetInfo*>(cookie);
 			variant v;
 			if(err == LCB_SUCCESS) {
-				std::string doc(reinterpret_cast<const char*>(item->v.v0.bytes),reinterpret_cast<const char*>( item->v.v0.bytes) + item->v.v0.nbytes);
+				std::string doc;
+				if(info->op == GET_LIST) {
+					doc = "[";
+				}
+				doc.append(reinterpret_cast<const char*>(item->v.v0.bytes),reinterpret_cast<const char*>( item->v.v0.bytes) + item->v.v0.nbytes);
+				if(info->op == GET_LIST) {
+					doc += "]";
+				}
+
 				v = json::parse(doc);
 			}
-			const GetInfo* info = reinterpret_cast<const GetInfo*>(cookie);
 			if(info->on_done) {
 				info->on_done(v);
 			}

@@ -58,7 +58,8 @@ public:
 	// Returns true iff there are still outstanding operations.
 	virtual bool process(int timeout_us=0) = 0;
 
-	enum PUT_OPERATION { PUT_SET, PUT_ADD, PUT_REPLACE };
+	enum PUT_OPERATION { PUT_SET, PUT_ADD, PUT_REPLACE, PUT_APPEND };
+	enum GET_OPERATION { GET_NORMAL, GET_LIST };
 
 	// Function to put the given document into the database with the
 	// associated key. Will call on_done when it completes or on_error if it
@@ -67,7 +68,7 @@ public:
 
 	// Function to get the given document from the database. Will call on_done
 	// with the document on completion (null if no document is found).
-	virtual void get(const std::string& key, std::function<void(variant)> on_done, int lock_seconds=0) = 0;
+	virtual void get(const std::string& key, std::function<void(variant)> on_done, int lock_seconds=0, GET_OPERATION op=GET_NORMAL) = 0;
 
 	virtual void remove(const std::string& key) = 0;
 
