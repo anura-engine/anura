@@ -193,8 +193,8 @@ void remove_callback(lcb_t instance, const void* cookie, lcb_error_t error, cons
 	};
 
 	struct GetInfo {
-		GetInfo() : is_list(DbClient::GET_NORMAL) {}
-		DbClient::GET_OPERATION is_list;
+		GetInfo() : op(DbClient::GET_NORMAL) {}
+		DbClient::GET_OPERATION op;
 		std::function<void(variant)> on_done;
 	};
 
@@ -380,11 +380,11 @@ void remove_callback(lcb_t instance, const void* cookie, lcb_error_t error, cons
 			variant v;
 			if(err == LCB_SUCCESS) {
 				std::string doc;
-				if(info->op == GET_LIST) {
+				if(info->op == DbClient::GET_LIST) {
 					doc = "[";
 				}
 				doc.append(reinterpret_cast<const char*>(item->v.v0.bytes),reinterpret_cast<const char*>( item->v.v0.bytes) + item->v.v0.nbytes);
-				if(info->op == GET_LIST) {
+				if(info->op == DbClient::GET_LIST) {
 					doc += "]";
 				}
 
