@@ -240,7 +240,12 @@ void remove_callback(lcb_t instance, const void* cookie, lcb_error_t error, cons
 		void put(const std::string& rkey, variant doc, std::function<void()> on_done, std::function<void()> on_error, PUT_OPERATION op) {
 			const std::string key = g_db_key_prefix + rkey;
 
-			std::string doc_str = doc.write_json();
+			std::string doc_str;
+			if(op == PUT_APPEND) {
+				doc_str += ",";
+			}
+
+			doc_str += doc.write_json();
 			lcb_store_cmd_t cmd;
 			memset(&cmd, 0, sizeof(cmd));
 
@@ -249,7 +254,6 @@ void remove_callback(lcb_t instance, const void* cookie, lcb_error_t error, cons
 			switch(op) {
 				case PUT_APPEND:
 					cmd.v.v0.operation = LCB_APPEND;
-					doc_str += ",";
 					cookie->retry_client = this;
 					cookie->retry_key = rkey;
 					cookie->retry_doc = doc;
@@ -401,6 +405,7 @@ void remove_callback(lcb_t instance, const void* cookie, lcb_error_t error, cons
 					doc += "]";
 				}
 
+				fprintf(stderr, "ZZZ: (((%s)))\n", doc.c_str());
 				v = json::parse(doc);
 			}
 			if(info->on_done) {
@@ -468,5 +473,19 @@ COMMAND_LINE_UTILITY(query_db)
 		}
 
 		printf("%s\n", result.c_str());
+	}
+}
+
+COMMAND_LINE_UTILITY(delete_from_db)
+{
+	DbClientPtr client = DbClient::create();
+	std::deque<std::string> arguments(args.begin(), args.end());
+	while(!arguments.empty()) {
+		const std::string arg = arguments.front();
+		arguments.pop_front();
+
+		client->remove(arg);
+		while(client->process()) {
+		}
 	}
 }
