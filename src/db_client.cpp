@@ -188,6 +188,10 @@ void remove_callback(lcb_t instance, const void* cookie, lcb_error_t error, cons
 	void timer_callback(lcb_timer_t timer, lcb_t instance, const void* cookie);
 
 	struct PutInfo {
+		PutInfo() : retry_client(nullptr) {}
+		DbClient* retry_client;
+		std::string retry_key;
+		variant retry_doc;
 		std::function<void()> on_done;
 		std::function<void()> on_error;
 	};
@@ -240,10 +244,15 @@ void remove_callback(lcb_t instance, const void* cookie, lcb_error_t error, cons
 			lcb_store_cmd_t cmd;
 			memset(&cmd, 0, sizeof(cmd));
 
+			PutInfo* cookie = new PutInfo;
+
 			switch(op) {
 				case PUT_APPEND:
 					cmd.v.v0.operation = LCB_APPEND;
 					doc_str += ",";
+					cookie->retry_client = this;
+					cookie->retry_key = rkey;
+					cookie->retry_doc = doc;
 					break;
 				case PUT_ADD:
 					cmd.v.v0.operation = LCB_ADD;
@@ -268,7 +277,6 @@ void remove_callback(lcb_t instance, const void* cookie, lcb_error_t error, cons
 			++outstanding_requests_;
 			int* poutstanding = &outstanding_requests_;
 
-			PutInfo* cookie = new PutInfo;
 			cookie->on_done = [=]() { --*poutstanding; on_done(); };
 			cookie->on_error = [=]() { --*poutstanding; on_error(); };
 
@@ -359,10 +367,15 @@ void remove_callback(lcb_t instance, const void* cookie, lcb_error_t error, cons
 			}
 		}
 
+		const PutInfo* info = reinterpret_cast<const PutInfo*>(cookie);
+		if(err != LCB_SUCCESS && info && info->retry_client != nullptr) {
+			info->retry_client->put(info->retry_key, info->retry_doc, info->on_done, info->on_error, DbClient::PUT_ADD);
+			return;
+		}
+
 		ASSERT_LOG(err == LCB_SUCCESS, "Error in store callback: " << lcb_strerror(nullptr, err));
 	
 		if(cookie) {
-			const PutInfo* info = reinterpret_cast<const PutInfo*>(cookie);
 			if(info->on_done) {
 				info->on_done();
 			}
