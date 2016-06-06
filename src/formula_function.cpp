@@ -5397,13 +5397,17 @@ END_FUNCTION_DEF
 */
 
 
-FUNCTION_DEF(format, 1, 2, "format(string, [int|decimal]): Put the numbers in the list into the string. The fractional component of the number will be rounded to the nearest available digit. Example: format('#{2}/#{2}/#{4}', [20, 5, 2015]) → '20/05/2015'; format('#{2}/#{2}/#{2}', [20, 5, 2015]) → '20/5/2015'; format(#{0.2}, [0.1]) → '0.10'.")
+FUNCTION_DEF(format, 1, 2, "format(string, [int|decimal]): Put the numbers in the list into the string. The fractional component of the number will be rounded to the nearest available digit. Example: format('#{01}/#{02}/#{2004}', [20, 5, 2015]) → '20/05/2015'; format('#{02}/#{02}/#{02}', [20, 5, 2015]) → '20/5/2015'; format(#{0.20}, [0.1]) → '0.10'; format(#{0.02}, [0.1]) → '0.1'.")
 	std::string input_str = args()[0]->evaluate(variables).as_string();
+	//If we can't have the magic string formatting, return early.
+	if(input_str.size() < 2) { return args()[0]->evaluate(variables); }
+	
 	std::vector<variant> values = args()[1]->evaluate(variables).as_list();
 	std::string output_str(""); output_str.reserve(input_str.size());
 	std::string format_fragment("");
 	std::string format_str("");
 	
+	//Step through the string until we find the magic string - eg, the "#{" of "#{12.34}".
 	int char_at = 0;
 	int value_at = 0;
 	while (char_at < input_str.size()) {
@@ -5428,7 +5432,7 @@ FUNCTION_DEF(format, 1, 2, "format(string, [int|decimal]): Put the numbers in th
 			}
 			format_str += ss1.str();
 			
-			int width = std::atoi(format_fragment.c_str());
+			int width = decimal_place >= 0 ? decimal_place : format_fragment.length();
 			ASSERT_LOG(width <= 100, "Number width probably shouldn't be greater than 100. (In Anura, numbers only get about 20 digits wide.) #{" << format_fragment << "} in " << input_str);
 			ASSERT_LOG(width > 0, "Number width must be greater than 0. #{" << format_fragment << "} in " << input_str);
 				
@@ -5439,13 +5443,15 @@ FUNCTION_DEF(format, 1, 2, "format(string, [int|decimal]): Put the numbers in th
 			
 			output_str += format_str;
 			
+			//Process the decimal component, if needed.
 			if(decimal_place >= 0) {
 				format_str.clear();
 				
-				int width = std::atoi(format_fragment.c_str() + decimal_place + 1);
+				int width = format_fragment.length() - decimal_place - 1;
 				ASSERT_LOG(width <= 100, "Number decimal width probably shouldn't be greater than 100. (In Anura, numbers only get about 20 digits wide.) #{" << format_fragment << "} in " << input_str);
 				ASSERT_LOG(width > 0, "Number decimal width must be greater than 0. #{" << format_fragment << "} in " << input_str);
 				
+				//Round the decimal component, if it needs to be truncated. This is actually somewhat inaccurate due to floating-point approximations, so tends to go either way.
 				std::stringstream ss2;
 				ss2 << ( round(values[value_at].as_float() * pow(10,width)) / pow(10,width) 
 					- floor(values[value_at].as_float()) );
@@ -5453,6 +5459,13 @@ FUNCTION_DEF(format, 1, 2, "format(string, [int|decimal]): Put the numbers in th
 					format_str += ss2.str().substr(2,20); //Remove the leading 0. from the representation.
 				} else {
 					format_str += '0';
+				}
+				
+				//Pad decimal with zeros, iff the format string has a trailing 0.
+				if(format_fragment[format_fragment.length()-1] == '0') {
+					while (format_str.length() < width) {
+						format_str += '0';
+					}
 				}
 				
 				output_str += '.';
@@ -5518,24 +5531,27 @@ UNIT_TEST(where_scope_function) {
 }
 
 UNIT_TEST(format) {
-	CHECK_EQ(game_logic::Formula(variant("format('Hello, #{2}.', [7])")).execute(), game_logic::Formula(variant("'Hello, 07.'")).execute());
-	CHECK_EQ(game_logic::Formula(variant("format('Hello, #{3}.', [7])")).execute(), game_logic::Formula(variant("'Hello, 007.'")).execute());
-	CHECK_EQ(game_logic::Formula(variant("format('Hello, #{2}.', [700])")).execute(), game_logic::Formula(variant("'Hello, 700.'")).execute());
-	CHECK_EQ(game_logic::Formula(variant("format('Hello, #{3}.', [700])")).execute(), game_logic::Formula(variant("'Hello, 700.'")).execute());
-	CHECK_EQ(game_logic::Formula(variant("format('Hello, #{3}.', [7.4])")).execute(), game_logic::Formula(variant("'Hello, 007.'")).execute());
-	CHECK_EQ(game_logic::Formula(variant("format('Hello, #{3}.', [7.5])")).execute(), game_logic::Formula(variant("'Hello, 008.'")).execute());
+	CHECK_EQ(game_logic::Formula(variant("format('Hello, #{70}.', [7])")).execute(), game_logic::Formula(variant("'Hello, 07.'")).execute());
+	CHECK_EQ(game_logic::Formula(variant("format('Hello, #{700}.', [7])")).execute(), game_logic::Formula(variant("'Hello, 007.'")).execute());
+	CHECK_EQ(game_logic::Formula(variant("format('Hello, #{70}.', [700])")).execute(), game_logic::Formula(variant("'Hello, 700.'")).execute());
+	CHECK_EQ(game_logic::Formula(variant("format('Hello, #{700}.', [700])")).execute(), game_logic::Formula(variant("'Hello, 700.'")).execute());
+	CHECK_EQ(game_logic::Formula(variant("format('Hello, #{700}.', [7.4])")).execute(), game_logic::Formula(variant("'Hello, 007.'")).execute());
+	CHECK_EQ(game_logic::Formula(variant("format('Hello, #{700}.', [7.5])")).execute(), game_logic::Formula(variant("'Hello, 008.'")).execute());
 	
-	CHECK_EQ(game_logic::Formula(variant("format('Hello, #{1.2}.', [7])")).execute(), game_logic::Formula(variant("'Hello, 7.0.'")).execute());
-	CHECK_EQ(game_logic::Formula(variant("format('Hello, #{1.2}.', [7.4])")).execute(), game_logic::Formula(variant("'Hello, 7.4.'")).execute());
-	CHECK_EQ(game_logic::Formula(variant("format('Hello, #{1.2}.', [7.44])")).execute(), game_logic::Formula(variant("'Hello, 7.44.'")).execute());
-	CHECK_EQ(game_logic::Formula(variant("format('Hello, #{1.2}.', [7.46])")).execute(), game_logic::Formula(variant("'Hello, 7.46.'")).execute()); //7.45 rounds down, probably a floating-point imprecision thing.
-	CHECK_EQ(game_logic::Formula(variant("format('Hello, #{1.2}.', [7.446])")).execute(), game_logic::Formula(variant("'Hello, 7.45.'")).execute());
-	CHECK_EQ(game_logic::Formula(variant("format('Hello, #{1.1}.', [7.44])")).execute(), game_logic::Formula(variant("'Hello, 7.4.'")).execute());
-	CHECK_EQ(game_logic::Formula(variant("format('Hello, #{1.1}.', [7.46])")).execute(), game_logic::Formula(variant("'Hello, 7.5.'")).execute());
-	CHECK_EQ(game_logic::Formula(variant("format('Hello, #{2.2}.', [7.4])")).execute(), game_logic::Formula(variant("'Hello, 07.4.'")).execute());
+	CHECK_EQ(game_logic::Formula(variant("format('Hello, #{7.0}.', [7])")).execute(), game_logic::Formula(variant("'Hello, 7.0.'")).execute());
+	CHECK_EQ(game_logic::Formula(variant("format('Hello, #{7.7}.', [7])")).execute(), game_logic::Formula(variant("'Hello, 7.0.'")).execute());
+	CHECK_EQ(game_logic::Formula(variant("format('Hello, #{7.7}.', [7.4])")).execute(), game_logic::Formula(variant("'Hello, 7.4.'")).execute());
+	CHECK_EQ(game_logic::Formula(variant("format('Hello, #{7.07}.', [7.4])")).execute(), game_logic::Formula(variant("'Hello, 7.4.'")).execute());
+	CHECK_EQ(game_logic::Formula(variant("format('Hello, #{7.07}.', [7.44])")).execute(), game_logic::Formula(variant("'Hello, 7.44.'")).execute());
+	CHECK_EQ(game_logic::Formula(variant("format('Hello, #{7.07}.', [7.46])")).execute(), game_logic::Formula(variant("'Hello, 7.46.'")).execute()); //7.45 rounds down, probably a floating-point imprecision thing.
+	CHECK_EQ(game_logic::Formula(variant("format('Hello, #{7.07}.', [7.446])")).execute(), game_logic::Formula(variant("'Hello, 7.45.'")).execute());
+	CHECK_EQ(game_logic::Formula(variant("format('Hello, #{7.7}.', [7.44])")).execute(), game_logic::Formula(variant("'Hello, 7.4.'")).execute());
+	CHECK_EQ(game_logic::Formula(variant("format('Hello, #{7.7}.', [7.46])")).execute(), game_logic::Formula(variant("'Hello, 7.5.'")).execute());
+	CHECK_EQ(game_logic::Formula(variant("format('Hello, #{70.7}.', [7.4])")).execute(), game_logic::Formula(variant("'Hello, 07.4.'")).execute());
+	CHECK_EQ(game_logic::Formula(variant("format('Hello, #{7.700}.', [7.46])")).execute(), game_logic::Formula(variant("'Hello, 7.460.'")).execute());
 	
-	CHECK_EQ(game_logic::Formula(variant("format('Check, #{2.2}, #{3}.', [1.23, 4.56])")).execute(), game_logic::Formula(variant("'Check, 01.23, 005.'")).execute());
-	CHECK_EQ(game_logic::Formula(variant("format('Check, #{2.2}, #{${decimals}}.', [1.23, 4.56]) where decimals = 3")).execute(), game_logic::Formula(variant("'Check, 01.23, 005.'")).execute());
+	CHECK_EQ(game_logic::Formula(variant("format('Check, #{07.07}, #{007}.', [1.23, 4.56])")).execute(), game_logic::Formula(variant("'Check, 01.23, 005.'")).execute());
+	CHECK_EQ(game_logic::Formula(variant("format('Check, #{07.07}, #{${decimals}}.', [1.23, 4.56]) where decimals = '003'")).execute(), game_logic::Formula(variant("'Check, 01.23, 005.'")).execute());
 }
 
 BENCHMARK(map_function) {

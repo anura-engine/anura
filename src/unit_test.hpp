@@ -54,9 +54,9 @@ namespace test
 	std::string run_benchmark(const std::string& name, BenchmarkTest fn);
 }
 
-#define CHECK(cond, msg) do { if(!(cond)) { std::ostringstream _s; _s << __SHORT_FORM_OF_FILE__ << ":" << __LINE__ << ": TEST CHECK FAILED: " << #cond << ": " << msg << "\n"; log_internal(SDL_LOG_PRIORITY_CRITICAL, _s.str()); throw test::FailureException(); } } while(0)
+#define CHECK(cond, msg) do { if(!(cond)) { std::ostringstream _s; _s << __SHORT_FORM_OF_FILE__ << ":" << __LINE__ << ": TEST CHECK FAILED:\nCONDITION:\n\t→ " << #cond << ":\nRESULTS:\n\t" << msg; log_internal(SDL_LOG_PRIORITY_CRITICAL, _s.str()); throw test::FailureException(); } } while(0)
 
-#define CHECK_CMP(a, b, cmp) CHECK((a) cmp (b), #a << ": " << (a) << "; " << #b << ": " << (b))
+#define CHECK_CMP(a, b, cmp) CHECK((a) cmp (b), #a << ":\n\t→ " << (a) << ";\n\t" << #b << ":\n\t→ " << (b))
 
 #define CHECK_EQ(a, b) CHECK_CMP(a, b, ==)
 #define CHECK_NE(a, b) CHECK_CMP(a, b, !=)
