@@ -405,7 +405,6 @@ void remove_callback(lcb_t instance, const void* cookie, lcb_error_t error, cons
 					doc += "]";
 				}
 
-				fprintf(stderr, "ZZZ: (((%s)))\n", doc.c_str());
 				v = json::parse(doc);
 			}
 			if(info->on_done) {
