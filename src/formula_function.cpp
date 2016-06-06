@@ -77,6 +77,8 @@
 #include "variant_utils.hpp"
 #include "voxel_model.hpp"
 
+#include "kre/Texture.hpp"
+
 #include <boost/regex.hpp>
 #if defined(_MSC_VER) && _MSC_VER < 1800
 #include <boost/math/special_functions/asinh.hpp>
@@ -3253,6 +3255,18 @@ FUNCTION_DEF_IMPL
 			return variant(results.str());
 		END_FUNCTION_DEF(benchmark_once)
 
+		FUNCTION_DEF(eval_with_lag, 2, 2, "eval_with_lag")
+			Formula::failIfStaticContext();
+			SDL_Delay(args()[0]->evaluate(variables).as_int());
+			return args()[1]->evaluate(variables);
+		FUNCTION_ARGS_DEF
+			ARG_TYPE("int");
+			ARG_TYPE("any");
+		FUNCTION_TYPE_DEF
+			return args()[1]->queryVariantType();
+		END_FUNCTION_DEF(eval_with_lag)
+
+
 		FUNCTION_DEF(instrument, 2, 2, "instrument(string, expr): Executes expr and outputs debug instrumentation on the time it took with the given string")
 			variant name = args()[0]->evaluate(variables);
 			const int begin = SDL_GetTicks();
@@ -5003,6 +5017,33 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 		ASSERT_LOG(type.get() != nullptr, "nullptr VALUE RETURNED FROM TYPE QUERY");
 		return variant(type->base_type_no_enum()->to_string());
 	END_FUNCTION_DEF(static_typeof)
+
+	FUNCTION_DEF(all_textures, 0, 0, "all_textures()")
+		auto s = KRE::Texture::getAllTextures();
+		std::vector<KRE::Texture*> seen_textures;
+		std::vector<variant> v;
+		for(auto t : s) {
+			bool already_seen = false;
+			for(auto seen_tex : seen_textures) {
+				if(*t == *seen_tex) {
+					already_seen = true;
+					break;
+				}
+			}
+
+			if(already_seen) {
+				continue;
+			}
+
+			seen_textures.push_back(t);
+			v.push_back(variant(new TextureObject(t->shared_from_this())));
+		}
+
+		return variant(&v);
+
+	FUNCTION_TYPE_DEF
+		return variant_type::get_list(variant_type::get_type(variant::VARIANT_TYPE_CALLABLE));
+	END_FUNCTION_DEF(all_textures)
 
 	class gc_command : public game_logic::CommandCallable
 	{

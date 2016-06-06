@@ -42,9 +42,11 @@ namespace KRE
 	// unpack image height
 	// unpack skip rows, skip pixels
 
-	class Texture : public ScopeableValue
+	class Texture : public ScopeableValue, public std::enable_shared_from_this<Texture>
 	{
 	public:
+		static const std::set<Texture*>& getAllTextures();
+
 		enum class AddressMode {
 			WRAP,
 			CLAMP,
@@ -239,6 +241,7 @@ namespace KRE
 
 		// Helper function to extract all the image names out of a node and return them.
 		static std::vector<std::string> findImageNames(const variant& node);
+
 	protected:
 		explicit Texture(const variant& node, const std::vector<SurfacePtr>& surfaces);
 		explicit Texture(const std::vector<SurfacePtr>& surfaces,
@@ -250,6 +253,7 @@ namespace KRE
 			int depth,
 			PixelFormat::PF fmt, 
 			TextureType type);
+		Texture(const Texture& other);
 		void addSurface(SurfacePtr surf);
 		void replaceSurface(int n, SurfacePtr surf);
 	private:

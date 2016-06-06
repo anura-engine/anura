@@ -37,6 +37,14 @@ using std::round;
 
 namespace KRE
 {
+	namespace {
+		std::set<Texture*> g_all_textures;
+	}
+
+	const std::set<Texture*>& Texture::getAllTextures() {
+		return g_all_textures;
+	}
+
 	Texture::Texture(const variant& node, const std::vector<SurfacePtr>& surfaces)
 		: is_paletteized_(false),
 		  mix_ratio_(0.0f),
@@ -113,6 +121,8 @@ namespace KRE
 				initFromVariant(tp, node);
 			}
 		}
+
+		g_all_textures.insert(this);
 	}
 
 	Texture::Texture(const std::vector<SurfacePtr>& surfaces, TextureType type, int mipmap_levels)
@@ -131,6 +141,7 @@ namespace KRE
 			texture_params_.back().mipmaps = mipmap_levels;
 			internalInit(texture_params_.begin() + (texture_params_.size() - 1));
 		}
+		g_all_textures.insert(this);
 	}
 
 	Texture::Texture(int count, 
@@ -157,10 +168,23 @@ namespace KRE
 			tp.type = type;
 			internalInit(texture_params_.begin()+n);
 		}
+		g_all_textures.insert(this);
+	}
+
+	Texture::Texture(const Texture& o)
+	  : texture_params_(o.texture_params_),
+		is_paletteized_(o.is_paletteized_),
+		mix_ratio_(o.mix_ratio_),
+		mix_palettes_(o.mix_palettes_),
+		palette_row_map_(o.palette_row_map_)
+	{
+		memcpy(palette_, o.palette_, sizeof(palette_));
+		g_all_textures.insert(this);
 	}
 
 	Texture::~Texture()
 	{
+		g_all_textures.erase(this);
 	}
 
 	void Texture::initFromVariant(texture_params_iterator tp, const variant& node)
