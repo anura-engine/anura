@@ -397,7 +397,7 @@ public:
 		time_t cur_time = time(nullptr);
 		if(cur_time >= next_stats_write_) {
 			write_stats(cur_time);
-			next_stats_write_ = cur_time + 5;
+			next_stats_write_ = cur_time + 300;
 		}
 
 		timer_.expires_from_now(boost::posix_time::milliseconds(g_matchmaking_heartbeat_ms));
