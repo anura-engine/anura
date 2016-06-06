@@ -1390,6 +1390,9 @@ static const int ModuleProtocolVersion = 1;
 				} else {
 					chunks_to_get_.push_back(p.second);
 				}
+			} else {
+				isHighPriorityChunk(p.first, p.second);
+				onChunkReceived(p.second);
 			}
 		}
 
