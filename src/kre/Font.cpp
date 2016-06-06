@@ -210,7 +210,7 @@ namespace KRE
 			ss << "Paths were: ";
 			if(get_font_path_cache().size() > 0) {
 				for(auto& fp : get_font_path_cache()) {
-					ss << fp.second << "\n";
+					ss << fp.first << " -> " << fp.second << "\n";
 				}
 			} else {
 				ss << "<empty>";
