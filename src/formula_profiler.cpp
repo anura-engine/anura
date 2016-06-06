@@ -63,8 +63,8 @@ void init_call_stack(int min_size);
 
 namespace {
 
-PREF_STRING(profile_widget_area, "[20,200,800,200]", "Area of the profile widget");
-PREF_STRING(profile_widget_details_area, "[20,420,800,400]", "Area of the profile widget");
+PREF_STRING(profile_widget_area, "[20,20,1000,200]", "Area of the profile widget");
+PREF_STRING(profile_widget_details_area, "[20,240,1000,400]", "Area of the profile widget");
 
 uint64_t g_first_second;
 
