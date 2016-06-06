@@ -184,6 +184,7 @@ public:
 		controller_(game_logic::FormulaObject::create("matchmaking_server")),
 		status_doc_state_id_(1),
 		child_admin_process_(-1),
+		next_stats_write_(time(nullptr)),
 		gen_game_id_(0)
 	{
 		variant_builder status_doc;
@@ -393,8 +394,36 @@ public:
 			}
 		}
 
+		time_t cur_time = time(nullptr);
+		if(cur_time >= next_stats_write_) {
+			write_stats(cur_time);
+			next_stats_write_ = cur_time + 5;
+		}
+
 		timer_.expires_from_now(boost::posix_time::milliseconds(g_matchmaking_heartbeat_ms));
 		timer_.async_wait(boost::bind(&matchmaking_server::heartbeat, this, boost::asio::placeholders::error));
+	}
+
+	void write_stats(time_t cur_time)
+	{
+		variant_builder doc;
+		doc.add("timestamp", static_cast<int>(cur_time));
+		doc.add("num_users", users_to_sessions_.size());
+		doc.add("games", servers_.size());
+
+		variant v = doc.build();
+
+		tm* ltime = localtime(&cur_time);
+
+		const int year = ltime->tm_year + 1900;
+		const int month = ltime->tm_mon + 1;
+		const int mday = ltime->tm_mday;
+
+		LOG_INFO("Logging server_stats: " << year << ":" << month << ":" << mday);
+
+		std::string key = formatter() << "server_stats:" << year << ":" << month << ":" << mday;
+
+		db_client_->put(key.c_str(), v, [](){}, [](){}, DbClient::PUT_APPEND);
 	}
 
 #define RESPOND_CUSTOM_MESSAGE(type, msg) { \
@@ -1710,6 +1739,21 @@ public:
 			}
 
 			send_response(socket, variant(&v));
+		} else if(url == "/server_stats") {
+			auto date_itor = args.find("date");
+			if(date_itor == args.end()) {
+				RESPOND_ERROR("Must specify a date");
+				return;
+			}
+
+			const std::string date = date_itor->second;
+
+			db_client_->get("server_stats:" + date, [=](variant data) {
+				variant_builder doc;
+				doc.add("data", data);
+				send_msg(socket, "text/json", doc.build().write_json(), "");
+			}, 0, DbClient::GET_LIST);
+
 		} else if(url == "/reset_password") {
 			auto user = args.find("user");
 			auto id = args.find("id");
@@ -2483,6 +2527,8 @@ private:
 
 
 	int child_admin_process_;
+
+	int next_stats_write_;
 
 	std::map<std::string, std::string> recover_account_requests_;
 	std::map<std::string, std::string> user_id_to_recover_account_requests_;
