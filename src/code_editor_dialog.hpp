@@ -41,6 +41,7 @@ namespace gui
 {
 	class code_editor_widget;
 	class TextEditorWidget;
+	class Button;
 }
 
 class CodeEditorDialog : public gui::Dialog
@@ -69,6 +70,8 @@ private:
 	bool handleEvent(const SDL_Event& event, bool claimed) override;
 	void handleDrawChildren() const override;
 
+	void undo();
+	void redo();
 	void changeFontSize(int amount);
 
 	void setAnimationRect(rect r);
@@ -92,6 +95,8 @@ private:
 	gui::TextEditorWidgetPtr search_;
 	gui::TextEditorWidgetPtr replace_;
 
+	gui::Button* find_next_button_;
+
 	gui::TextEditorWidgetPtr optional_error_text_area_;
 
 	gui::LabelPtr replace_label_, status_label_, error_label_;
@@ -104,6 +109,7 @@ private:
 
 	void on_search_changed();
 	void on_search_enter();
+	void on_find_next();
 	void on_replace_enter();
 
 	void on_code_changed();

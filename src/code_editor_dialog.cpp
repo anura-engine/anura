@@ -79,14 +79,21 @@ void CodeEditorDialog::init()
 
 	using namespace gui;
 
+	const int EDITOR_BUTTONS_X = 42;
+	const int EDITOR_BUTTONS_Y = 12;
+	const int Y_SPACING        = 4;
+
 	if(!editor_) {
 		editor_.reset(new CodeEditorWidget(width() - 40, height() - (60 + (optional_error_text_area_ ? 170 : 0))));
 	}
 
-	Button* save_button = new Button("Save", std::bind(&CodeEditorDialog::save, this));
-	Button* increase_font = new Button("+", std::bind(&CodeEditorDialog::changeFontSize, this, 1));
-	Button* decrease_font = new Button("-", std::bind(&CodeEditorDialog::changeFontSize, this, -1));
-
+	Button* save_button      = new Button("Save", std::bind(&CodeEditorDialog::save, this));
+	Button* undo_button      = new Button("Undo", std::bind(&CodeEditorDialog::undo, this));
+	Button* redo_button      = new Button("Redo", std::bind(&CodeEditorDialog::redo, this));
+	Button* increase_font    = new Button("Increase font size", std::bind(&CodeEditorDialog::changeFontSize, this, 1));
+	Button* decrease_font    = new Button("Decrease font size", std::bind(&CodeEditorDialog::changeFontSize, this, -1));
+	
+	find_next_button_ = new Button("Find next", std::bind(&CodeEditorDialog::on_find_next, this));
 	save_button_.reset(save_button);
 
 	using std::placeholders::_1;
@@ -100,15 +107,16 @@ void CodeEditorDialog::init()
 	search_ = new TextEditorWidget(120);
 	replace_ = new TextEditorWidget(120);
 	const KRE::Color col = KRE::Color::colorWhite();
+
+	WidgetPtr change_font_label(Label::create("Change font size:", col));
 	WidgetPtr find_label(Label::create("Find: ", col));
 	replace_label_ = Label::create("Replace: ", col);
-	status_label_ = Label::create("Ok", col);
-	error_label_ = Label::create(" ", col);
-	addWidget(find_label, 42, 12, MOVE_DIRECTION::RIGHT);
-	addWidget(WidgetPtr(search_), MOVE_DIRECTION::RIGHT);
-	addWidget(replace_label_, MOVE_DIRECTION::RIGHT);
-	addWidget(WidgetPtr(replace_), MOVE_DIRECTION::RIGHT);
-	addWidget(WidgetPtr(save_button), MOVE_DIRECTION::RIGHT);
+	status_label_ = Label::create(" ", col);
+	error_label_ = Label::create("Ok", col);
+	error_label_->setTooltip("No errors detected");
+
+	// Saving and fonts
+	addWidget(WidgetPtr(save_button), EDITOR_BUTTONS_X, EDITOR_BUTTONS_Y, MOVE_DIRECTION::RIGHT);
 
 	if(have_close_buttons_) {
 		Button* save_and_close_button = new Button("Save+Close", std::bind(&CodeEditorDialog::save_and_close, this));
@@ -117,9 +125,20 @@ void CodeEditorDialog::init()
 		addWidget(WidgetPtr(abort_button), MOVE_DIRECTION::RIGHT);
 	}
 
+
+	addWidget(WidgetPtr(undo_button), MOVE_DIRECTION::RIGHT);
+	addWidget(WidgetPtr(redo_button), MOVE_DIRECTION::RIGHT);
 	addWidget(WidgetPtr(increase_font), MOVE_DIRECTION::RIGHT);
 	addWidget(WidgetPtr(decrease_font), MOVE_DIRECTION::RIGHT);
-	addWidget(editor_, find_label->x(), find_label->y() + save_button->height() + 2);
+
+	// Search and replace
+	addWidget(find_label, EDITOR_BUTTONS_X, save_button->y() + save_button->height() + Y_SPACING, MOVE_DIRECTION::RIGHT);
+	addWidget(WidgetPtr(search_), MOVE_DIRECTION::RIGHT);
+	addWidget(replace_label_, MOVE_DIRECTION::RIGHT);
+	addWidget(WidgetPtr(replace_), MOVE_DIRECTION::RIGHT);
+	addWidget(WidgetPtr(find_next_button_), MOVE_DIRECTION::RIGHT);
+
+	addWidget(editor_, find_label->x(), search_->y() + search_->height() + Y_SPACING);
 	if(optional_error_text_area_) {
 		addWidget(optional_error_text_area_);
 	}
@@ -129,6 +148,7 @@ void CodeEditorDialog::init()
 
 	replace_label_->setVisible(false);
 	replace_->setVisible(false);
+	find_next_button_->setVisible(false);
 
 	if(fname_.empty() == false && fname_[0] == '@') {
 		save_button->setVisible(false);
@@ -413,6 +433,20 @@ void CodeEditorDialog::handleDrawChildren() const
 	}
 }
 
+void CodeEditorDialog::undo()
+{
+	if(editor_) {
+		editor_->undo();
+	}
+}
+
+void CodeEditorDialog::redo()
+{
+	if(editor_) {
+		editor_->redo();
+	}
+}
+
 void CodeEditorDialog::changeFontSize(int amount)
 {
 	if(editor_) {
@@ -504,7 +538,7 @@ void CodeEditorDialog::process()
 				CustomObjectType::setFileContents(fname_, editor_->text());
 			}
 			error_label_->setText("Ok");
-			error_label_->setTooltip("");
+			error_label_->setTooltip("No errors detected");
 
 			if(optional_error_text_area_) {
 				optional_error_text_area_->setText("No errors");
@@ -544,6 +578,7 @@ void CodeEditorDialog::process()
 	const bool show_replace = editor_->hasSearchMatches();
 	replace_label_->setVisible(show_replace);
 	replace_->setVisible(show_replace);
+	find_next_button_->setVisible(show_replace);
 
 	const int cursor_pos = static_cast<int>(editor_->rowColToTextPos(editor_->cursorRow(), editor_->cursorCol()));
 	const std::string& text = editor_->currentText();
@@ -828,6 +863,14 @@ void CodeEditorDialog::on_search_changed()
 
 void CodeEditorDialog::on_search_enter()
 {
+	search_->setFocus(false);
+	replace_->setFocus(false);
+	editor_->setFocus(true);
+}
+
+void CodeEditorDialog::on_find_next()
+{
+	editor_->nextSearchMatch();
 	search_->setFocus(false);
 	replace_->setFocus(false);
 	editor_->setFocus(true);
