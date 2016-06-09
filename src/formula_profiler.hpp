@@ -101,7 +101,7 @@ namespace formula_profiler
 		~Instrument();
 	private:
 		const char* id_;
-		struct timeval tv_;
+		uint64_t t_;
 	};
 
 	void dump_instrumentation();
@@ -131,7 +131,9 @@ namespace formula_profiler
 		explicit Manager(const char* output_file);
 		~Manager();
 
+		bool is_profiling() const;
 		void init(const char* output_file);
+		void halt();
 	};
 
 	void end_profiling();

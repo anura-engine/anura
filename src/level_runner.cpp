@@ -1448,6 +1448,14 @@ bool LevelRunner::play_cycle()
 						LOG_DEBUG("Enter windowed mode");
 						wnd->setFullscreenMode(KRE::FullScreenMode::WINDOWED);
 					}
+				} else if(key == SDLK_F7) {
+					if(formula_profiler::Manager::get()) {
+						if(formula_profiler::Manager::get()->is_profiling()) {
+							formula_profiler::Manager::get()->halt();
+						} else {
+							formula_profiler::Manager::get()->init("profile.dat");
+						}
+					}
 				} else if(key == SDLK_F3) {
 					LOG_DEBUG("F3 pressed");
 					preferences::set_show_fps(!preferences::show_fps());

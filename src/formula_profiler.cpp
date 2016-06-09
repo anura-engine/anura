@@ -51,6 +51,7 @@
 #include "level_runner.hpp"
 #include "object_events.hpp"
 #include "preferences.hpp"
+#include "unit_test.hpp"
 #include "variant.hpp"
 #include "widget.hpp"
 
@@ -66,10 +67,15 @@ namespace {
 PREF_STRING(profile_widget_area, "[20,20,1000,200]", "Area of the profile widget");
 PREF_STRING(profile_widget_details_area, "[20,240,1000,400]", "Area of the profile widget");
 
-uint64_t g_first_second;
+uint64_t g_begin_tsc;
 
-uint64_t tv_to_us(const timeval& tv) {
-	return uint64_t((tv.tv_sec - g_first_second)*1000000LL) + uint64_t(tv.tv_usec);
+uint64_t tsc_to_ns(uint64_t t) {
+	static uint64_t freq = SDL_GetPerformanceFrequency();
+
+	t -= g_begin_tsc;
+	t *= 1000000000;
+	t /= freq;
+	return t;
 }
 
 using namespace gui;
@@ -223,7 +229,7 @@ public:
 
 	TexturePtr calculateNodeText(const InstrumentationNode* node) const {
 
-		std::string text = formatter() << (node->id ? node->id : "Frame") << ": " << (node->end_time - node->begin_time) << "us";
+		std::string text = formatter() << (node->id ? node->id : "Frame") << ": " << (node->end_time - node->begin_time)/1000 << "us";
 
 		auto info = node->info.get_debug_info();
 		if(info) {
@@ -358,7 +364,7 @@ public:
 
 			uint64_t elapsed = f.end_time - f.begin_time;
 
-			const int bar_height = elapsed/us_per_pixel;
+			const int bar_height = elapsed/(us_per_pixel*1000);
 
 			rect area(x() + (i-begin_frame)*barWidth(), y() + height() - bar_height, barWidth(), bar_height);
 			renderables[0].addRect(area);
@@ -383,7 +389,7 @@ public:
 				const uint64_t begin_pos = node->begin_time - f.begin_time;
 				const uint64_t len = node->end_time - node->begin_time;
 
-				rect area(x() + (i-begin_frame)*barWidth(), y() + height() - (begin_pos+len)/us_per_pixel, barWidth(), len/us_per_pixel);
+				rect area(x() + (i-begin_frame)*barWidth(), y() + height() - (begin_pos+len)/(us_per_pixel*1000), barWidth(), len/(us_per_pixel*1000));
 
 				renderable->addRect(area);
 			}
@@ -425,7 +431,7 @@ public:
 			}
 		}
 
-		std::string text = (formatter() << "Frame " << nframe << ": " << (node->end_time - node->begin_time) << "us: " << draw_time << "us draw; " << process_time << "us process");
+		std::string text = (formatter() << "Frame " << nframe << ": " << (node->end_time - node->begin_time)/1000 << "us: " << draw_time/1000 << "us draw; " << process_time/1000 << "us process");
 		return Font::getInstance()->renderText(text, white_color_, 12, true, Font::get_default_monospace_font());
 	}
 
@@ -503,23 +509,20 @@ public:
 		InstrumentationNode* last_frame = instrumentation_stack_.back();
 		instrumentation_stack_.pop_back();
 
-		struct timeval tv;
-		gettimeofday(&tv, nullptr);
-
-		uint64_t t = tv_to_us(tv);
+		uint64_t t = SDL_GetPerformanceCounter();
 
 		if(last_frame) {
 			frames_.push_back(last_frame);
-			last_frame->end_time = t;
+			last_frame->end_time = tsc_to_ns(t);
 		}
 
 		InstrumentationNode* new_frame = new InstrumentationNode;
-		new_frame->begin_time = t;
+		new_frame->begin_time = tsc_to_ns(t);
 
 		instrumentation_stack_.push_back(new_frame);
 	}
 
-	void beginInstrument(const char* id, const timeval& tv, const variant& info)
+	void beginInstrument(const char* id, uint64_t t, const variant& info)
 	{
 		ASSERT_LOG(instrumentation_stack_.empty() == false, "No instrumentation stack: " << id);
 
@@ -527,18 +530,16 @@ public:
 			return;
 		}
 
-		uint64_t t = tv_to_us(tv);
-
 		InstrumentationNode* node = new InstrumentationNode;
 		node->id = id;
-		node->begin_time = t;
+		node->begin_time = tsc_to_ns(t);
 		node->info = info;
 
 		instrumentation_stack_.back()->records.push_back(node);
 		instrumentation_stack_.push_back(node);
 	}
 
-	void endInstrument(const char* id, const timeval& tv)
+	void endInstrument(const char* id, uint64_t t)
 	{
 		if(instrumentation_stack_.back() == nullptr) {
 			return;
@@ -547,7 +548,7 @@ public:
 		ASSERT_LOG(instrumentation_stack_.empty() == false, "No instrumentation stack: " << id);
 		ASSERT_LOG(instrumentation_stack_.back()->id == id, "Instrumentation stack mismatch: " << id << " vs " << instrumentation_stack_.back()->id);
 
-		instrumentation_stack_.back()->end_time = tv_to_us(tv);
+		instrumentation_stack_.back()->end_time = tsc_to_ns(t);
 		instrumentation_stack_.pop_back();
 		ASSERT_LOG(instrumentation_stack_.empty() == false, "No instrumentation stack: " << id);
 	}
@@ -564,9 +565,9 @@ namespace formula_profiler
 	{
 		struct InstrumentationRecord 
 		{
-			InstrumentationRecord() : time_us(0), nsamples(0)
+			InstrumentationRecord() : time_ns(0), nsamples(0)
 			{}
-			int time_us, nsamples;
+			uint64_t time_ns, nsamples;
 		};
 
 		std::map<const char*, InstrumentationRecord> g_instrumentation;
@@ -579,9 +580,9 @@ namespace formula_profiler
 	Instrument::Instrument(const char* id, const game_logic::Formula* formula) : id_(id)
 	{
 		if(profiler_on) {
-			gettimeofday(&tv_, nullptr);
+			t_ = SDL_GetPerformanceCounter();
 			if(g_profiler_widget) {
-				g_profiler_widget->beginInstrument(id, tv_, formula ? formula->strVal() : variant());
+				g_profiler_widget->beginInstrument(id, t_, formula ? formula->strVal() : variant());
 			}
 		}
 	}
@@ -590,9 +591,8 @@ namespace formula_profiler
 	{
 		if(profiler_on) {
 			id_ = id;
-			gettimeofday(&tv_, nullptr);
 			if(g_profiler_widget) {
-				g_profiler_widget->beginInstrument(id, tv_, info);
+				g_profiler_widget->beginInstrument(id, SDL_GetPerformanceCounter(), info);
 			}
 		}
 	}
@@ -600,13 +600,12 @@ namespace formula_profiler
 	Instrument::~Instrument()
 	{
 		if(profiler_on) {
-			struct timeval end_tv;
-			gettimeofday(&end_tv, nullptr);
+			uint64_t end_t = SDL_GetPerformanceCounter();
 			InstrumentationRecord& r = g_instrumentation[id_];
-			r.time_us += (end_tv.tv_sec - tv_.tv_sec)*1000000 + (end_tv.tv_usec - tv_.tv_usec);
+			r.time_ns += tsc_to_ns(end_t - t_);
 			r.nsamples++;
 			if(g_profiler_widget) {
-				g_profiler_widget->endInstrument(id_, end_tv);
+				g_profiler_widget->endInstrument(id_, end_t);
 			}
 		}
 	}
@@ -625,8 +624,8 @@ namespace formula_profiler
 				std::ostringstream ss;
 				ss << "FRAME INSTRUMENTATION TOTAL TIME: " << time_us << "us. INSTRUMENTS: ";
 				for(std::map<const char*,InstrumentationRecord>::const_iterator i = g_instrumentation.begin(); i != g_instrumentation.end(); ++i) {
-					const int percent = (i->second.time_us*100)/time_us;
-					ss << i->first << ": " << i->second.time_us << "us (" << percent << "%) in " << i->second.nsamples << " calls; ";
+					const int percent = (i->second.time_ns/10)/time_us;
+					ss << i->first << ": " << i->second.time_ns/1000 << "us (" << percent << "%) in " << i->second.nsamples << " calls; ";
 				}
 				LOG_INFO(ss.str());
 			}
@@ -735,6 +734,11 @@ namespace formula_profiler
 		return manager_instance;
 	}
 
+	bool Manager::is_profiling() const
+	{
+		return profiler_on;
+	}
+
 	void Manager::init(const char* output_file)
 	{
 		if(output_file && profiler_on == false) {
@@ -747,10 +751,8 @@ namespace formula_profiler
 			profiler_on = true;
 			output_fname = output_file;
 
-			if(g_first_second == 0) {
-				struct timeval tv;
-				gettimeofday(&tv, nullptr);
-				g_first_second = tv.tv_sec;
+			if(g_begin_tsc == 0) {
+				g_begin_tsc = SDL_GetPerformanceCounter();
 			}
 
 			init_call_stack(65536);
@@ -775,18 +777,13 @@ namespace formula_profiler
 		}
 	}
 
-	Manager::~Manager()
+	void Manager::halt()
 	{
-		end_profiling();
-
-		delete g_profiler_widget;
-		g_profiler_widget = nullptr;
-	}
-
-	void end_profiling()
-	{
-		LOG_INFO("END PROFILING: " << (int)profiler_on);
 		if(profiler_on) {
+			profiler_on = false;
+			delete g_profiler_widget;
+			g_profiler_widget = nullptr;
+
 #if defined(_MSC_VER) || MOBILE_BUILD
 			SDL_RemoveTimer(sdl_profile_timer);
 #else
@@ -794,6 +791,19 @@ namespace formula_profiler
 			memset(&timer, 0, sizeof(timer));
 			setitimer(ITIMER_PROF, &timer, 0);
 #endif
+		}
+	}
+
+	Manager::~Manager()
+	{
+		end_profiling();
+	}
+
+	void end_profiling()
+	{
+		LOG_INFO("END PROFILING: " << (int)profiler_on);
+		if(profiler_on) {
+			Manager::get()->halt();
 
 			std::map<std::string, int> samples_map;
 
@@ -971,6 +981,13 @@ namespace formula_profiler
 		handler_disabled = false;
 
 		return s.str();
+	}
+
+	BENCHMARK(profiler_instrument) {
+		Manager::get()->init("profile.dat");
+		BENCHMARK_LOOP {
+			Instrument instrument("blah");
+		}
 	}
 
 }
