@@ -290,7 +290,7 @@ class ProfilerWidget : public Widget
 	bool paused_;
 	int selected_frame_;
 
-	FrameDetailsWidget* details_;
+	boost::intrusive_ptr<FrameDetailsWidget> details_;
 
 	TexturePtr draw_text_, process_text_, sleep_text_;
 
@@ -298,7 +298,7 @@ class ProfilerWidget : public Widget
 
 public:
 	ProfilerWidget() :
-	  gray_color_("gray"), yellow_color_("yellow"), green_color_("green"), blue_color_("lightblue"), red_color_("red"), white_color_("white"), paused_(false), selected_frame_(-1), details_(nullptr) {
+	  gray_color_("gray"), yellow_color_("yellow"), green_color_("green"), blue_color_("lightblue"), red_color_("red"), white_color_("white"), paused_(false), selected_frame_(-1) {
 
 		variant area = game_logic::Formula(variant(g_profile_widget_area)).execute();
 		std::vector<int> area_int = area.as_list_int();
@@ -481,8 +481,7 @@ public:
 	}
 
 	void selectFrame(int nframe) {
-		delete details_;
-		details_ = new FrameDetailsWidget(frames_[selected_frame_]);
+		details_.reset(new FrameDetailsWidget(frames_[selected_frame_]));
 	}
 
 	WidgetPtr clone() const override {
@@ -497,10 +496,7 @@ public:
 			return;
 		}
 
-		if(details_) {
-			delete details_;
-			details_ = nullptr;
-		}
+		details_.reset();
 
 		paused_ = false;
 
@@ -554,7 +550,7 @@ public:
 	}
 };
 
-ProfilerWidget* g_profiler_widget;
+boost::intrusive_ptr<ProfilerWidget> g_profiler_widget;
 
 }
 
@@ -773,7 +769,7 @@ namespace formula_profiler
 			setitimer(ITIMER_PROF, &timer, 0);
 #endif
 
-			g_profiler_widget = new ProfilerWidget;
+			g_profiler_widget.reset(new ProfilerWidget);
 		}
 	}
 
@@ -781,8 +777,7 @@ namespace formula_profiler
 	{
 		if(profiler_on) {
 			profiler_on = false;
-			delete g_profiler_widget;
-			g_profiler_widget = nullptr;
+			g_profiler_widget.reset();
 
 #if defined(_MSC_VER) || MOBILE_BUILD
 			SDL_RemoveTimer(sdl_profile_timer);
@@ -910,7 +905,7 @@ namespace formula_profiler
 
 		++nframes_profiled;
 
-		if(g_profiler_widget != nullptr) {
+		if(g_profiler_widget) {
 			g_profiler_widget->process();
 			g_profiler_widget->newFrame();
 		}
@@ -918,14 +913,14 @@ namespace formula_profiler
 
 	void draw()
 	{
-		if(g_profiler_widget != nullptr) {
+		if(g_profiler_widget) {
 			g_profiler_widget->draw();
 		}
 	}
 
 	bool handle_sdl_event(const SDL_Event& event, bool claimed)
 	{
-		if(g_profiler_widget != nullptr) {
+		if(g_profiler_widget) {
 			return g_profiler_widget->processEvent(point(), event, claimed);
 		}
 		return false;
