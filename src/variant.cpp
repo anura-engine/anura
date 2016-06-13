@@ -2482,7 +2482,7 @@ std::string variant::to_debug_string(std::vector<const game_logic::FormulaCallab
 	return s.str();
 }
 
-std::string variant::write_json(bool pretty, write_flags flags) const
+std::string variant::write_json(bool pretty, unsigned int flags) const
 {
 	std::ostringstream s;
 	if(pretty) {
@@ -2493,7 +2493,7 @@ std::string variant::write_json(bool pretty, write_flags flags) const
 	return s.str();
 }
 
-void variant::write_json(std::ostream& s, write_flags flags) const
+void variant::write_json(std::ostream& s, unsigned int flags) const
 {
 	switch(type_) {
 	case VARIANT_TYPE_NULL: {
@@ -2554,7 +2554,7 @@ void variant::write_json(std::ostream& s, write_flags flags) const
 		const char delim = string_->translated_from.empty() ? '"' : '~';
 		if(std::count(str.begin(), str.end(), '\\') 
 			|| std::count(str.begin(), str.end(), delim) 
-			|| (flags == JSON_COMPLIANT && std::count(str.begin(), str.end(), '\n'))) {
+			|| ((flags&JSON_COMPLIANT) && std::count(str.begin(), str.end(), '\n'))) {
 			//escape the string
 			s << delim;
 			for(std::string::const_iterator i = str.begin(); i != str.end(); ++i) {
@@ -2562,7 +2562,7 @@ void variant::write_json(std::ostream& s, write_flags flags) const
 					s << '\\';
 				}
 
-				if(flags == JSON_COMPLIANT && *i == '\n') {
+				if((flags&JSON_COMPLIANT) && *i == '\n') {
 					s << "\\n";
 				} else {
 					s << *i;
@@ -2649,7 +2649,7 @@ void variant::write_function(std::ostream& s) const
 	}
 }
 
-void variant::write_json_pretty(std::ostream& s, std::string indent, write_flags flags) const
+void variant::write_json_pretty(std::ostream& s, std::string indent, unsigned int flags) const
 {
 	switch(type_) {
 	case VARIANT_TYPE_MAP: {
@@ -2690,7 +2690,8 @@ void variant::write_json_pretty(std::ostream& s, std::string indent, write_flags
 			}
 		}
 
-		if(!found_non_scalar) {
+		const bool expanded = list_ && list_->begin != list_->end && (flags&EXPANDED_LISTS);
+		if(!found_non_scalar && !expanded) {
 			write_json(s, flags);
 			return;
 		}

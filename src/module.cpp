@@ -614,7 +614,7 @@ namespace module
 			ASSERT_LOG(version.empty() == false, "Illegal version");
 			version.back()++;
 			config.add_attr(variant("version"), vector_to_variant(version));
-			sys::write_file(path + "/module.cfg", config.write_json());
+			sys::write_file(path + "/module.cfg", config.write_json(true, variant::EXPANDED_LISTS));
 		}
 
 		std::vector<std::string> exclude_paths;

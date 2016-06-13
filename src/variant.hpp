@@ -323,12 +323,13 @@ public:
 
 	enum write_flags
 	{
-		FSON_MODE,
-		JSON_COMPLIANT,
+		FSON_MODE = 0,
+		JSON_COMPLIANT = 1,
+		EXPANDED_LISTS = 2,
 	};
-	std::string write_json(bool pretty=true, write_flags flags=FSON_MODE) const;
-	void write_json(std::ostream& s, write_flags flags=FSON_MODE) const;
-	void write_json_pretty(std::ostream& s, std::string indent, write_flags flags=FSON_MODE) const;
+	std::string write_json(bool pretty=true, unsigned int flags=FSON_MODE) const;
+	void write_json(std::ostream& s, unsigned int flags=FSON_MODE) const;
+	void write_json_pretty(std::ostream& s, std::string indent, unsigned int flags=FSON_MODE) const;
 
 	enum TYPE { VARIANT_TYPE_NULL, VARIANT_TYPE_BOOL, VARIANT_TYPE_INT, VARIANT_TYPE_DECIMAL, VARIANT_TYPE_CALLABLE, VARIANT_TYPE_CALLABLE_LOADING, VARIANT_TYPE_LIST, VARIANT_TYPE_STRING, VARIANT_TYPE_MAP, VARIANT_TYPE_FUNCTION, VARIANT_TYPE_GENERIC_FUNCTION, VARIANT_TYPE_MULTI_FUNCTION, VARIANT_TYPE_DELAYED, VARIANT_TYPE_WEAK, VARIANT_TYPE_INVALID };
 	TYPE type() const { return type_; }
