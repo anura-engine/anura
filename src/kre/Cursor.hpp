@@ -40,7 +40,8 @@ namespace KRE
 	};
 	typedef std::unique_ptr<Cursor> CursorPtr;
 
-	bool initialise_cursors(const variant& node);
+	bool are_cursors_initialized();
+	bool initialize_cursors(const variant& node);
 	void set_cursor(const std::string& name);
 }
 

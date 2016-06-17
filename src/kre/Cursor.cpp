@@ -68,7 +68,12 @@ namespace KRE
 		}
 	}
 
-	bool initialise_cursors(const variant& node)
+	bool are_cursors_initialized()
+	{
+		return g_init;
+	}
+
+	bool initialize_cursors(const variant& node)
 	{
 		if(g_init == true) {
 			get_cursors().clear();
