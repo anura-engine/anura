@@ -199,6 +199,8 @@ namespace KRE
 
 		std::string savePng(const std::string& filename) override;
 
+		CursorPtr createCursorFromSurface(int hot_x, int hot_y) override;
+
 		SDL_Surface* get() { return surface_; }
 		const SDL_Surface* get() const { return surface_; }
 	private:
