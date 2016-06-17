@@ -34,5 +34,8 @@ namespace KRE
 		SurfacePtr nearest_neighbour(const SurfacePtr& input_surf, const int scale);
 		SurfacePtr bilinear(const SurfacePtr& input_surf, const int scale);
 		SurfacePtr bicubic(const SurfacePtr& input_surf, const int scale);
+
+		// 2x scaling
+		SurfacePtr epx(const SurfacePtr& input_surf);
 	}
 }
