@@ -39,6 +39,7 @@
 #include "preferences.hpp"
 #include "shared_memory_pipe.hpp"
 #include "tbs_internal_server.hpp"
+#include "uuid.hpp"
 #include "variant_utils.hpp"
 #include "wml_formula_callable.hpp"
 
@@ -340,8 +341,10 @@ void terminate_utility_process(bool* complete=nullptr)
 
 		std::string pipe_name;
 		if(ipc_pipe != nullptr) {
-			for(int i = 0; i != 64 && pipe_name.empty(); ++i) {
-				pipe_name = formatter() << "anura_tbs_pipe." << rand()%65536;
+			for(int i = 0; i != 4 && pipe_name.empty(); ++i) {
+				std::string uuid_str = write_uuid(generate_uuid());
+				uuid_str.resize(16);
+				pipe_name = formatter() << "anura_tbs." << uuid_str;
 				try {
 					SharedMemoryPipeManager::createNamedPipe(pipe_name);
 					g_current_ipc_pipe.reset(new SharedMemoryPipe(pipe_name, true));
