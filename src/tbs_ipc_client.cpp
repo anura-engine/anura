@@ -1,3 +1,4 @@
+#include "asserts.hpp"
 #include "formula_callable.hpp"
 #include "tbs_ipc_client.hpp"
 #include "wml_formula_callable.hpp"
@@ -7,16 +8,19 @@ namespace tbs
 
 ipc_client::ipc_client(SharedMemoryPipePtr pipe) : pipe_(pipe)
 {
+	ASSERT_LOG(pipe_.get() != nullptr, "Invalid pipe passed to ipc_client");	
 }
 
 void ipc_client::send_request(variant request)
 {
+	ASSERT_LOG(pipe_.get() != nullptr, "Invalid pipe in ipc_client");	
 	pipe_->write(request.write_json());
 	pipe_->process();
 }
 
 void ipc_client::process()
 {
+	ASSERT_LOG(pipe_.get() != nullptr, "Invalid pipe in ipc_client");	
 	pipe_->process();
 
 	if(!callable_) {
