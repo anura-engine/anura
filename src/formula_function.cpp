@@ -77,8 +77,8 @@
 #include "variant_utils.hpp"
 #include "voxel_model.hpp"
 
-#include "kre/Texture.hpp"
-#include "kre/SurfaceSDL.hpp"
+#include "Texture.hpp"
+#include "Cursor.hpp"
 
 #include <boost/regex.hpp>
 #if defined(_MSC_VER) && _MSC_VER < 1800
@@ -969,55 +969,13 @@ namespace game_logic
 	FUNCTION_DEF(set_mouse_cursor, 1, 1, "set_mouse_cursor(string cursor)")
 		std::string cursor = EVAL_ARG(0).as_string();
 		return variant(new FnCommandCallable([=]() {
-			static bool init_custom_cursors = false;
-			static std::map<std::string, SDL_Cursor*> s_cursors;
-			if(!init_custom_cursors) {
-				init_custom_cursors = true;
+			if(!KRE::are_cursors_initialized()) {
 				if(sys::file_exists(module::map_file("data/cursors.cfg"))) {
 					variant data = json::parse_from_file("data/cursors.cfg");
-					for(auto p : data.as_map()) {
-						const std::string name = p.first.as_string();
-						const std::string img = p.second["image"].as_string();
-						const int hot_x = p.second["hot_x"].as_int();
-						const int hot_y = p.second["hot_y"].as_int();
-
-						KRE::SurfacePtr s = KRE::Surface::create(img);
-						KRE::SurfaceSDL* sdl_surf = dynamic_cast<KRE::SurfaceSDL*>(s.get());
-						ASSERT_LOG(sdl_surf, "Need to implement conversion to SDL surface for cursor support");
-						SDL_Cursor* cursor = SDL_CreateColorCursor(sdl_surf->get(), hot_x, hot_y);
-						s_cursors[name] = cursor;
-					}
+					KRE::initialize_cursors(data);
 				}
 			}
-
-			auto itor = s_cursors.find(cursor);
-			if(itor != s_cursors.end()) {
-				SDL_SetCursor(itor->second);
-				return;
-			}
-
-#define DEFINE_CURSOR(s) if(cursor == #s) { \
-	static SDL_Cursor* cursor = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_##s); \
-	SDL_SetCursor(cursor); \
-} else
-
-DEFINE_CURSOR(ARROW)
-DEFINE_CURSOR(IBEAM)
-DEFINE_CURSOR(WAIT)
-DEFINE_CURSOR(CROSSHAIR)
-DEFINE_CURSOR(WAITARROW)
-DEFINE_CURSOR(SIZENWSE)
-DEFINE_CURSOR(SIZENESW)
-DEFINE_CURSOR(SIZEWE)
-DEFINE_CURSOR(SIZENS)
-DEFINE_CURSOR(SIZEALL)
-DEFINE_CURSOR(NO)
-DEFINE_CURSOR(HAND)
-{
-	ASSERT_LOG(false, "Unknown cursor: " << cursor);
-}
-
-#undef DEFINE_CURSOR
+			KRE::set_cursor(cursor);
 		}));
 
 	FUNCTION_ARGS_DEF

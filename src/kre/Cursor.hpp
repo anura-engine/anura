@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2016 by Kristina Simpson <sweet.kristas@gmail.com>
+	Copyright (C) 2013-2016 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -11,7 +11,7 @@
 
 	   1. The origin of this software must not be misrepresented; you must not
 	   claim that you wrote the original software. If you use this software
-	   in a product, an acknowledgment in the product documentation would be
+	   in a product, an acknowledgement in the product documentation would be
 	   appreciated but is not required.
 
 	   2. Altered source versions must be plainly marked as such, and must not be
@@ -23,19 +23,25 @@
 
 #pragma once
 
-#include "Surface.hpp"
+#include <iostream>
+#include <memory>
+#include <string>
 
-// Simple routines for doing scaling of surfaces. N.B. This is software scaling and not optimized for speed
-// i.e. only suitable for offline use.
+#include "AlignedAllocator.hpp"
+#include "variant.hpp"
+
 namespace KRE
 {
-	namespace scale
+	struct Cursor
 	{
-		SurfacePtr nearest_neighbour(const SurfacePtr& input_surf, const int scale);
-		SurfacePtr bilinear(const SurfacePtr& input_surf, const int scale);
-		SurfacePtr bicubic(const SurfacePtr& input_surf, const int scale);
+			Cursor() {}
+			virtual ~Cursor() {}
+			virtual void setCursor() = 0;
+	};
+	typedef std::unique_ptr<Cursor> CursorPtr;
 
-		// 2x scaling
-		SurfacePtr epx(const SurfacePtr& input_surf);
-	}
+	bool are_cursors_initialized();
+	bool initialize_cursors(const variant& node);
+	void set_cursor(const std::string& name);
 }
+

@@ -1147,21 +1147,30 @@ COMMAND_LINE_UTILITY(bake_spritesheet)
 	}
 }
 
-namespace {
-
-PREF_STRING(convert_path, "/usr/bin/convert", "Path to ImageMagick convert command");
-
-KRE::SurfacePtr getAndScaleImage(const std::string& img, int scale)
+namespace 
 {
-	using namespace KRE;
-	if(scale == 100) {
-		SurfacePtr s = graphics::SurfaceCache::get(img);
-		return s;
-	} else {
-		SurfacePtr s = graphics::SurfaceCache::get(img);
-		return KRE::scale::bicubic(s, scale);
+	KRE::SurfacePtr getAndScaleImage(const std::string& img, const std::string& algo, int scale)
+	{
+		using namespace KRE;
+		if(scale == 100) {
+			SurfacePtr s = graphics::SurfaceCache::get(img);
+			return s;
+		} else {
+			SurfacePtr s = graphics::SurfaceCache::get(img);
+			if(algo == "bicubic") {
+				return KRE::scale::bicubic(s, scale);
+			} else if(algo == "bilinear") {
+				return KRE::scale::bilinear(s, scale);
+			} else if(algo == "nearest") {
+				return KRE::scale::nearest_neighbour(s, scale);
+			} else if(algo == "epx") {
+				return KRE::scale::epx(s);
+			} else {
+				ASSERT_LOG(false, "Unrecognised image algorithm '" << algo << "'.");
+				return nullptr;
+			}
+		}
 	}
-}
 }
 
 COMMAND_LINE_UTILITY(build_spritesheet_from_images)
@@ -1174,11 +1183,17 @@ COMMAND_LINE_UTILITY(build_spritesheet_from_images)
 	surfaces.resize(surfaces.size()+1);
 
 	int scale = 100;
+	std::string algo = "bicubic";
+	std::deque<std::string> image_files;
 	for(auto itor = argv.begin(); itor != argv.end(); ++itor) {
 		if(*itor == "--scale" && itor+1 != argv.end()) {
 			++itor;
 			scale = atoi(itor->c_str());
-			break;
+		} else if(*itor == "--alg" && itor+1 != argv.end()) {
+			++itor;
+			algo = *itor;
+		} else {
+			image_files.emplace_back(*itor);
 		}
 	}
 
@@ -1192,10 +1207,10 @@ COMMAND_LINE_UTILITY(build_spritesheet_from_images)
 	cell_widths.push_back(0);
 	row_heights.push_back(0);
 	
-	for(auto itor = argv.begin(); itor != argv.end(); ) {
+	for(auto itor = image_files.begin(); itor != image_files.end(); ) {
 		auto path = *itor;
 		if(path.empty() == false && path[0] != '-' && sys::is_directory(path)) {
-			const int index = itor - argv.begin();
+			const int index = itor - image_files.begin();
 
 			std::vector<std::string> files;
 			sys::get_files_in_dir(path, &files);
@@ -1207,10 +1222,10 @@ COMMAND_LINE_UTILITY(build_spritesheet_from_images)
 				}
 			}
 
-			argv.erase(argv.begin() + index);
-			argv.insert(argv.begin() + index, png.begin(), png.end());
+			image_files.erase(image_files.begin() + index);
+			image_files.insert(image_files.begin() + index, png.begin(), png.end());
 
-			itor = argv.begin() + index;
+			itor = image_files.begin() + index;
 			
 		} else {
 			++itor;
@@ -1219,13 +1234,13 @@ COMMAND_LINE_UTILITY(build_spritesheet_from_images)
 
 	int images_per_row = 1024;
 
-	for(auto itor = argv.begin(); itor != argv.end(); ++itor) {
+	for(auto itor = image_files.begin(); itor != image_files.end(); ++itor) {
 		auto img = *itor;
 		if(img.size() <= 4 || !std::equal(img.end()-4,img.end(),".png")) {
 			continue;
 		}
 
-		SurfacePtr s = getAndScaleImage(img, scale);
+		SurfacePtr s = getAndScaleImage(img, algo, scale);
 		ASSERT_LOG(s != nullptr, "No image: " << img);
 
 		const uint8_t* p = (const uint8_t*)s->pixels();
@@ -1304,7 +1319,7 @@ COMMAND_LINE_UTILITY(build_spritesheet_from_images)
 
 	int image_num = 0;
 
-	for(auto itor = argv.begin(); itor != argv.end(); ++itor) {
+	for(auto itor = image_files.begin(); itor != image_files.end(); ++itor) {
 		auto img = *itor;
 		if(img == "--newrow" || image_num == images_per_row) {
 			surfaces.resize(surfaces.size()+1);
@@ -1319,15 +1334,18 @@ COMMAND_LINE_UTILITY(build_spritesheet_from_images)
 			}
 		} else if(img == "--row") {
 			++itor;
-			ASSERT_LOG(itor != argv.end(), "row needs arg");
+			ASSERT_LOG(itor != image_files.end(), "row needs arg");
 			images_per_row = atoi(itor->c_str());
 			continue;
 		} else if(img == "--scale") {
 			++itor;
 			continue;
+		} else if(img == "--alg") {
+			++itor;
+			continue;
 		}
 
-		SurfacePtr s = getAndScaleImage(img, scale);
+		SurfacePtr s = getAndScaleImage(img, algo, scale);
 		ASSERT_LOG(s != nullptr, "No image: " << img);
 		surfaces.back().push_back(s);
 

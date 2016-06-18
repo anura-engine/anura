@@ -245,5 +245,70 @@ namespace KRE
 
 			return Surface::create(new_image_width, new_image_height, 32, 4*new_image_width, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000, new_pixels.get());
 		}
+
+		SurfacePtr epx(const SurfacePtr& input_surf)
+		{
+			SurfacePtr inp = check_input(input_surf, 200);
+
+			const int old_image_width = inp->width();
+			const int old_image_height = inp->height();
+			double ratio_x = 0.5;
+			double ratio_y = ratio_x;
+			const int new_image_width = static_cast<int>(inp->width() / ratio_x);
+			const int new_image_height = static_cast<int>(inp->height() / ratio_y);
+
+			ratio_x = (inp->width()-1.0) / new_image_width;
+			ratio_y = (inp->height()-1.0) / new_image_height;
+
+			ASSERT_LOG(new_image_width > 0 && new_image_height > 0, "New image size would be less than 0 pixels: " << new_image_width << "x" << new_image_height);
+
+			std::unique_ptr<uint32_t[]> new_pixels(new uint32_t[new_image_width * new_image_height]);
+			const uint32_t* old_pixels = static_cast<const uint32_t*>(inp->pixels());
+
+			for(int y = 0; y != new_image_height; y += 2) {
+				for(int x = 0; x != new_image_width; x += 2) {
+					const int px = static_cast<int>(ratio_x * x);
+					const int py = static_cast<int>(ratio_y * y);
+					const int pix_index = py * old_image_width + px;
+
+					const uint32_t P = old_pixels[CLAMP_XY(px+1-1, py+1-1 ,old_image_width, old_image_height)];
+
+					const uint32_t A = old_pixels[CLAMP_XY(px+1-1, py+0-1 ,old_image_width, old_image_height)];
+					const uint32_t B = old_pixels[CLAMP_XY(px+2-1, py+1-1 ,old_image_width, old_image_height)];
+					const uint32_t C = old_pixels[CLAMP_XY(px+0-1, py+1-1 ,old_image_width, old_image_height)];
+					const uint32_t D = old_pixels[CLAMP_XY(px+1-1, py+2-1 ,old_image_width, old_image_height)];
+
+					/*
+						  A    --\ 1 2
+						C P B  --/ 3 4
+						  D
+						1=P; 2=P; 3=P; 4=P;
+						IF C==A AND C!=D AND A!=B => 1=A
+						IF A==B AND A!=C AND B!=D => 2=B
+						IF B==D AND B!=A AND D!=C => 4=D
+						IF D==C AND D!=B AND C!=A => 3=C
+					*/
+					uint32_t outp[4] = { P, P, P, P };
+					if(C == A && C != D && A != B) {
+						outp[0] = A;
+					}
+					if(A == B && A != C && B != D) {
+						outp[1] = B;
+					}
+					if(B == D && B != A && D != C) {
+						outp[3] = D;
+					}
+					if(D == C && D != B && C != A) {
+						outp[2] = C;
+					}
+					new_pixels[y * new_image_width + x]		  = outp[0];
+					new_pixels[y * new_image_width + x + 1]   = outp[1];
+					new_pixels[(y+1) * new_image_width + x]   = outp[2];
+					new_pixels[(y+1) * new_image_width + x+1] = outp[3];
+				}
+			}
+
+			return Surface::create(new_image_width, new_image_height, 32, 4*new_image_width, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000, new_pixels.get());
+		}
 	}
 }

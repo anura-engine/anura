@@ -31,6 +31,7 @@
 #include <unordered_map>
 
 #include "geometry.hpp"
+#include "Cursor.hpp"
 #include "PixelFormat.hpp"
 #include "WindowManagerFwd.hpp"
 
@@ -230,6 +231,8 @@ namespace KRE
 		void setAlphaMap(std::shared_ptr<std::vector<bool>> am) { alpha_map_ = am; }
 
 		const std::array<int, 4>& getAlphaBorders() const { return alpha_borders_; }
+
+		virtual CursorPtr createCursorFromSurface(int hot_x, int hot_y) = 0;
 
 		static int setAlphaStripThreshold(int threshold);
 		static int getAlphaStripThreshold();
