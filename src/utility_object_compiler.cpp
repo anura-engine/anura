@@ -1467,9 +1467,43 @@ COMMAND_LINE_UTILITY(generate_wesnoth_spritesheet)
 {
 	using namespace graphics;
 
-	std::deque<std::string> argv(args.begin(), args.end());
-
 	std::string output;
+
+	std::string obj_type = "unit_avatar";
+	std::string obj_dir = "units";
+
+	std::deque<std::string> argv;
+	
+	for(auto s : args) {
+		if(s == "--effect") {
+			obj_type = "halo_effect";
+			obj_dir = "effects";
+		} else if(s[s.size()-1] == '*') {
+			s.resize(s.size()-1);
+			std::string dir = s;
+			while(dir.empty() == false && dir[dir.size()-1] != '/') {
+				dir.resize(dir.size()-1);
+			}
+
+			if(dir.empty()) {
+				dir = ".";
+			}
+
+			std::vector<std::string> files;
+			sys::get_files_in_dir(dir, &files);
+
+			std::string prefix(s.begin()+dir.size(), s.end());
+
+			for(std::string f : files) {
+				if(f.size() >= prefix.size() && std::equal(f.begin(), f.begin()+prefix.size(), prefix.begin())) {
+					std::string path = dir + f;
+					argv.push_back(path);
+				}
+			}
+		} else {
+			argv.push_back(s);
+		}
+	}
 
 	auto itor = argv.begin();
 	while(itor != argv.end()) {
@@ -1508,6 +1542,8 @@ COMMAND_LINE_UTILITY(generate_wesnoth_spritesheet)
 		while(std::find(output.begin(), output.end(), '/') != output.end()) {
 			output.erase(output.begin(), std::find(output.begin(), output.end(), '/')+1);
 		}
+
+		std::replace(output.begin(), output.end(), '-', '_');
 	}
 
 	std::map<std::string, WesnothAnim > anims;
@@ -1590,9 +1626,9 @@ COMMAND_LINE_UTILITY(generate_wesnoth_spritesheet)
 	SDL_Surface* sheet = dynamic_cast<KRE::SurfaceSDL*>(sheet_surf.get())->get();
 
 	variant_builder node;
-	node.add("id", "unit_avatar_" + output);
+	node.add("id", obj_type + "_" + output);
 	std::vector<variant> proto;
-	proto.push_back(variant("unit_avatar"));
+	proto.push_back(variant(obj_type));
 	node.add("prototype", variant(&proto));
 
 	std::vector<variant> animation_nodes;
@@ -1609,7 +1645,7 @@ COMMAND_LINE_UTILITY(generate_wesnoth_spritesheet)
 
 		anim_node.add("id", name);
 		anim_node.add("scale", 1);
-		anim_node.add("image", "units/" + output + ".png");
+		anim_node.add("image", obj_dir + "/" + output + ".png");
 		anim_node.add("frames", static_cast<int>(p.second.surfaces.size()));
 		std::vector<variant> sprite_rect;
 		sprite_rect.push_back(variant(xpos));
@@ -1642,6 +1678,7 @@ COMMAND_LINE_UTILITY(generate_wesnoth_spritesheet)
 			}
 
 			SDL_Rect dst = {xpos+xadj, ypos+yadj, p.second.width, p.second.height};
+			SDL_SetSurfaceBlendMode(s, SDL_BLENDMODE_NONE);
 			SDL_BlitSurface(s, nullptr, sheet, &dst);
 			xpos += p.second.width + 3;
 		}
@@ -1653,10 +1690,10 @@ COMMAND_LINE_UTILITY(generate_wesnoth_spritesheet)
 
 	node.add("animation", variant(&animation_nodes));
 
-	IMG_SavePNG(sheet, (std::string("modules/wesnoth2/images/units/") + output + ".png").c_str());
+	IMG_SavePNG(sheet, (std::string("modules/wesnoth2/images/" + obj_dir + "/") + output + ".png").c_str());
 
 	std::string data = node.build().write_json();
-	sys::write_file("modules/wesnoth2/data/objects/units/unit_avatar_" + output + ".cfg", data);
+	sys::write_file("modules/wesnoth2/data/objects/" + obj_dir + "/" + obj_type + "_" + output + ".cfg", data);
 
 /*
 	for(auto img : args) {
