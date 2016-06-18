@@ -340,7 +340,7 @@ void terminate_utility_process(bool* complete=nullptr)
 
 		std::string pipe_name;
 		if(ipc_pipe != nullptr) {
-			for(int i = 0; i != 8 && pipe_name.empty(); ++i) {
+			for(int i = 0; i != 64 && pipe_name.empty(); ++i) {
 				pipe_name = formatter() << "anura_tbs_pipe." << rand()%65536;
 				try {
 					SharedMemoryPipeManager::createNamedPipe(pipe_name);
@@ -350,6 +350,8 @@ void terminate_utility_process(bool* complete=nullptr)
 					pipe_name = "";
 				}
 			}
+
+			ASSERT_LOG(*ipc_pipe, "Could not create named pipe after 64 attempts");
 		}
 
 		ASSERT_LOG(startup_semaphore, "Could not create semaphore");
@@ -366,6 +368,7 @@ void terminate_utility_process(bool* complete=nullptr)
 			args.push_back("--log-level=debug");
 			args.push_back("--no-tbs-server");
 			args.push_back("--quit-server-after-game");
+			args.push_back("--quit-server-on-parent-exit");
 			args.push_back("--tbs-server-timeout=0");
 			args.push_back(formatter() << "--tbs-server-semaphore=" << sem_id);
 			args.push_back("--utility=tbs_server");

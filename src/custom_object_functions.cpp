@@ -348,6 +348,7 @@ namespace
 		const int port = session == -1 ? tbs::spawn_server_on_localhost(pipe_ptr) : tbs::get_server_on_localhost(pipe_ptr);
 
 		if(pipe_ptr) {
+			ASSERT_LOG(pipe.get() != nullptr, "Could not initialize ipc pipe");
 			tbs::ipc_client* result = new tbs::ipc_client(pipe);
 			return variant(result);
 		} else {

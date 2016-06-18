@@ -43,6 +43,7 @@
 
 namespace {
 	PREF_BOOL(quit_server_after_game, false, "");
+	PREF_BOOL(quit_server_on_parent_exit, false, "");
 }
 
 namespace tbs 
@@ -266,6 +267,10 @@ namespace tbs
 
 	void server::heartbeat_internal(int send_heartbeat, std::map<int, client_info>& clients)
 	{
+		if(g_quit_server_on_parent_exit && getppid() == 1) {
+			g_exit_server = true;
+		}
+
 		if (g_exit_server || (web_server::termination_semaphore() && web_server::termination_semaphore()->try_wait())) {
 			throw tbs::exit_exception();
 			exit(0);
