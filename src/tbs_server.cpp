@@ -267,9 +267,11 @@ namespace tbs
 
 	void server::heartbeat_internal(int send_heartbeat, std::map<int, client_info>& clients)
 	{
+#if defined(__linux__) || defined(__APPLE__)
 		if(g_quit_server_on_parent_exit && getppid() == 1) {
 			g_exit_server = true;
 		}
+#endif
 
 		if (g_exit_server || (web_server::termination_semaphore() && web_server::termination_semaphore()->try_wait())) {
 			throw tbs::exit_exception();
