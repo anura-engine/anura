@@ -93,6 +93,11 @@ public:
 
 	typedef std::vector<game_logic::ConstFormulaPtr> event_handler_map;
 
+	void initEventHandler(const std::string& event,
+	                      const variant& value,
+	                      event_handler_map& handlers,
+						  game_logic::FunctionSymbolTable* symbols=0,
+						  const event_handler_map* base_handlers=nullptr) const;
 	void initEventHandlers(variant node,
 	                         event_handler_map& handlers,
 							 game_logic::FunctionSymbolTable* symbols=0,

@@ -5919,7 +5919,7 @@ void CustomObject::updateType(ConstCustomObjectTypePtr old_type,
 	}
 #endif
 
-	handleEvent("type_updated");
+	handleEvent(OBJECT_EVENT_TYPE_UPDATED);
 }
 
 std::vector<variant> CustomObject::getVariantWidgetList() const

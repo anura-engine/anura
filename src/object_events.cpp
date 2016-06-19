@@ -87,6 +87,8 @@ namespace
 		res.push_back("drag_end");
 		res.push_back("mouse_wheel");
 		res.push_back("text_input");
+		res.push_back("type_updated");
+		res.push_back("message_received");
 
 		ASSERT_EQ(res.size(), NUM_OBJECT_BUILTIN_EVENT_IDS);
 		return res;
@@ -111,6 +113,12 @@ namespace
 		static std::map<std::string, int> event_ids = create_object_event_ids();
 		return event_ids;
 	}
+}
+
+const std::vector<std::string>& builtin_object_event_names()
+{
+	static const std::vector<std::string> event_names = create_object_event_names();
+	return event_names;
 }
 
 const std::string& get_object_event_str(int id)

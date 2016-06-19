@@ -283,6 +283,24 @@ namespace
 			result[variant("editor_info")].add_attr(variant("var"), vars);
 		}
 
+		variant proto_events = prototype_node["events"];
+		variant node_events = node["events"];
+
+		if(proto_events.is_null() == false && node_events.is_null() == false) {
+			std::map<variant,variant> items = node_events.as_map();
+			for(auto p : proto_events.as_map()) {
+				auto itor = items.find(p.first);
+				if(itor == items.end()) {
+					items.insert(p);
+				} else {
+					variant key(variant(prototype_node["id"].as_string() + "_PROTO_" + p.first.as_string()));
+					items.insert(std::pair<variant,variant>(key, p.second));
+				}
+			}
+
+			result[variant("events")] = variant(&items);
+		}
+
 		variant proto_properties = prototype_node["properties"];
 		variant node_properties = node["properties"];
 
@@ -1054,6 +1072,28 @@ int CustomObjectType::numObjectReloads()
 	return g_numObjectReloads;
 }
 
+void CustomObjectType::initEventHandler(const std::string& event, const variant& value,
+                                             event_handler_map& handlers,
+											 game_logic::FunctionSymbolTable* symbols,
+											 const event_handler_map* base_handlers) const
+{
+	const int event_id = get_object_event_id(event);
+	if(handlers.size() <= static_cast<unsigned>(event_id)) {
+		handlers.resize(event_id+1);
+	}
+
+	if(base_handlers && base_handlers->size() > static_cast<unsigned>(event_id) && (*base_handlers)[event_id] && (*base_handlers)[event_id]->str() == value.as_string()) {
+		handlers[event_id] = (*base_handlers)[event_id];
+	} else {
+		std::unique_ptr<CustomObjectCallableModifyScope> modify_scope;
+		const variant_type_ptr arg_type = get_object_event_arg_type(get_object_event_id_maybe_proto(event));
+		if(arg_type) {
+			modify_scope.reset(new CustomObjectCallableModifyScope(*callable_definition_, CUSTOM_OBJECT_ARG, arg_type));
+		}
+		handlers[event_id] = game_logic::Formula::createOptionalFormula(value, symbols, callable_definition_);
+	}
+}
+
 void CustomObjectType::initEventHandlers(variant node,
                                              event_handler_map& handlers,
 											 game_logic::FunctionSymbolTable* symbols,
@@ -1066,25 +1106,29 @@ void CustomObjectType::initEventHandlers(variant node,
 		symbols = &get_custom_object_functions_symbol_table();
 	}
 
+	variant events_node = node["events"];
+
+	if(events_node.is_null() == false) {
+		for(const variant_pair& value : events_node.as_map()) {
+			std::string event = value.first.as_string();
+			if(event.empty() == false && event[0] == '+') {
+				event.erase(event.begin());
+			} else {
+				ASSERT_LOG(std::count(builtin_object_event_names().begin(), builtin_object_event_names().end(), event) > 0,
+				           "In object " << node["id"].as_string() << " event " << event << " is unknown. Use + in front of an event name to define a custom event name.");
+			}
+
+			initEventHandler(event, value.second, handlers, symbols, base_handlers);
+		}
+
+	}
+
 	for(const variant_pair& value : node.as_map()) {
 		const std::string& key = value.first.as_string();
 		if(key.size() > 3 && std::equal(key.begin(), key.begin() + 3, "on_")) {
+			ASSERT_LOG(events_node.is_null(), "Object " << node["id"].as_string() << " has an events node but also has " << key << ". Cannot mix old and new-style events");
 			const std::string event(key.begin() + 3, key.end());
-			const int event_id = get_object_event_id(event);
-			if(handlers.size() <= static_cast<unsigned>(event_id)) {
-				handlers.resize(event_id+1);
-			}
-
-			if(base_handlers && base_handlers->size() > static_cast<unsigned>(event_id) && (*base_handlers)[event_id] && (*base_handlers)[event_id]->str() == value.second.as_string()) {
-				handlers[event_id] = (*base_handlers)[event_id];
-			} else {
-				std::unique_ptr<CustomObjectCallableModifyScope> modify_scope;
-				const variant_type_ptr arg_type = get_object_event_arg_type(get_object_event_id_maybe_proto(event));
-				if(arg_type) {
-					modify_scope.reset(new CustomObjectCallableModifyScope(*callable_definition_, CUSTOM_OBJECT_ARG, arg_type));
-				}
-				handlers[event_id] = game_logic::Formula::createOptionalFormula(value.second, symbols, callable_definition_);
-			}
+			initEventHandler(event, value.second, handlers, symbols, base_handlers);
 		}
 	}
 }
