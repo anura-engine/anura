@@ -1161,6 +1161,9 @@
     <ClInclude Include="..\..\src\kre\SurfaceScale.hpp">
       <Filter>Header Files\kre</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\kre\Cursor.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\src\kre\geometry.inl">
@@ -2153,6 +2156,9 @@
       <Filter>Source Files\xhtml</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\kre\SurfaceScale.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\Cursor.cpp">
       <Filter>Source Files\kre</Filter>
     </ClCompile>
   </ItemGroup>

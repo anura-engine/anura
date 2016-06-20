@@ -37,8 +37,8 @@ namespace hex
 	namespace logical
 	{
 		class Tile;
-		typedef std::shared_ptr<Tile> TilePtr;
-		typedef std::shared_ptr<const Tile> ConstTilePtr;
+		typedef boost::intrusive_ptr<Tile> TilePtr;
+		typedef boost::intrusive_ptr<const Tile> ConstTilePtr;
 		class LogicalMap;
 		typedef boost::intrusive_ptr<LogicalMap> LogicalMapPtr;
 	}
