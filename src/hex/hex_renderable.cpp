@@ -32,9 +32,16 @@
 #include "SceneGraph.hpp"
 #include "WindowManager.hpp"
 
+#include "random.hpp"
+
 namespace hex
 {
 	using namespace KRE;
+
+	namespace 
+	{
+		rng::Seed hex_tile_seed;
+	}
 
 	SceneNodeRegistrar<MapNode> psc_register("hex_map");
 
@@ -126,6 +133,7 @@ namespace hex
 
 		// Create a map of overlays based on the same texture.
 		std::map<unsigned int, std::vector<OverlayHelper>> overlay_map;
+		rng::set_seed(hex_tile_seed);
 		for(auto& t : tiles) {
 			for(auto& tag : t.logical_tile()->getTags()) {
 				auto ov = Overlay::getOverlay(tag);
