@@ -131,6 +131,8 @@ namespace hex
 				return variant(obj.getHeight());
 			DEFINE_FIELD(name, "string")
 				return variant(obj.name());
+			DEFINE_FIELD(id, "string")
+				return variant(obj.id());
 			DEFINE_FIELD(tags, "[string]")
 				std::vector<variant> tags;
 				for(auto& s : obj.tags_) {
@@ -456,7 +458,7 @@ namespace hex
 				}
 				obj.changed_ = true;
 
-			BEGIN_DEFINE_FN(tile_at, "([int,int]) ->string")
+			BEGIN_DEFINE_FN(tile_at, "([int,int]) ->builtin tile")
 				variant v = FN_ARG(0);
 				int x = v[0].as_int();
 				int y = v[1].as_int();
@@ -464,7 +466,7 @@ namespace hex
 				ConstTilePtr tile = obj.getTileAt(x, y);
 				ASSERT_LOG(tile, "Illegal tile at " << x << ", " << y);
 
-				return variant(tile->id());				
+				return variant(tile.get());				
 			END_DEFINE_FN
 
 			BEGIN_DEFINE_FN(adjacent_tiles, "([int,int]) ->[[int,int]]")
