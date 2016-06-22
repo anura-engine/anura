@@ -391,6 +391,12 @@ namespace pathfinding
 						if(g_cost < neighbour_node->G()) {
 							neighbour_node->G(g_cost);
 							neighbour_node->setParent(current);
+
+							if(neighbour_node->isOnClosedList() && g_cost <= max_cost) {
+								neighbour_node->setOnClosedList(false);
+								neighbour_node->setOnOpenList(true);
+								open_list.push(neighbour_node);
+							}
 						}
 					} else {
 						// not on open or closed lists.
