@@ -1823,7 +1823,7 @@ COMMAND_LINE_UTILITY(generate_terrain_spritesheet)
 	using namespace KRE;
 
 	std::vector<rect> outr;
-	std::vector<std::array<int, 4>> borders;
+	std::vector<std::array<int, 4>> borders;	
 	auto s = Surface::packImages(filenames, &outr, keep_borders ? nullptr : &borders);
 	s->savePng("temp.png");
 
@@ -1837,6 +1837,25 @@ COMMAND_LINE_UTILITY(generate_terrain_spritesheet)
 			for(int n = 0; n != 4; ++n) {
 				entry.add("border", (*border_it)[n]);
 			}
+		}
+		if(keep_borders) {
+			const int yp = rect_it->y1()/rect_it->h();
+			const int xp = rect_it->x1()/rect_it->w();
+			char yc = '0';
+			char xc = '0';
+			if(yp < 10) {
+				yc = yp + '0';
+			} else {
+				yc = yp + 'A' - 10;
+			}
+			if(xp < 10) {
+				xc = xp + '0';
+			} else {
+				xc = xp + 'A' - 10;
+			}
+			std::stringstream sheet_pos;
+			sheet_pos << yc << xc;
+			entry.add("sheet_pos", sheet_pos.str());
 		}
 
 		auto pos = f.rfind('.');
