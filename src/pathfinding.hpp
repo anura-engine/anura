@@ -85,8 +85,8 @@ namespace pathfinding
 		T F() const {return f_;}
 		T G() const {return g_;}
 		T H() const {return h_;}
-		void G(T g) {f_ += g - g_; g = g_;}
-		void H(T h) {f_ += h - h_; h = h_;}
+		void G(T g) {f_ += g - g_; g_ = g;}
+		void H(T h) {f_ += h - h_; h_ = h;}
 		void setCost(T g, T h) {
 			g_ = g;
 			h_ = h;

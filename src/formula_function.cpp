@@ -2631,6 +2631,40 @@ FUNCTION_DEF_IMPL
 				return variant_type::get_type(variant::VARIANT_TYPE_LIST);
 			}
 		END_FUNCTION_DEF(unique)
+
+		FUNCTION_DEF(binary_search, 2, 2, "binary_search(list, item) ->bool: returns true iff item is in the list. List must be sorted.")
+			variant v = args()[0]->evaluate(variables);
+			variant item = args()[1]->evaluate(variables);
+			size_t a = 0, b = v.num_elements();
+			size_t iterations = 0;
+			
+			while(a < b) {
+				size_t mid = (a + b) / 2;
+				const variant& value = v[mid];
+				if(item < value) {
+					b = mid;
+				} else if(value < item) {
+					if(a == mid) {
+						break;
+					}
+
+					a = mid;
+				} else {
+					return variant::from_bool(true);
+				}
+
+				ASSERT_LOG(iterations <= v.num_elements(), "Illegal binary search: " << v.write_json() << " item: " << item.write_json());
+				++iterations;
+			}
+
+			return variant::from_bool(false);
+			
+		FUNCTION_ARGS_DEF
+			ARG_TYPE("list");
+			ARG_TYPE("any");
+		FUNCTION_TYPE_DEF
+			return variant_type::get_type(variant::VARIANT_TYPE_BOOL);
+		END_FUNCTION_DEF(binary_search)
 	
 		FUNCTION_DEF(mapping, -1, -1, "mapping(x): Turns the args passed in into a map. The first arg is a key, the second a value, the third a key, the fourth a value and so on and so forth.")
 			MapFormulaCallable* callable = new MapFormulaCallable;
@@ -5513,6 +5547,14 @@ UNIT_TEST(filter_function) {
 UNIT_TEST(where_scope_function) {
 	CHECK(game_logic::Formula(variant("{'val': num} where num = 5")).execute() == game_logic::Formula(variant("{'val': 5}")).execute(), "map where test failed");
 	CHECK(game_logic::Formula(variant("'five: ${five}' where five = 5")).execute() == game_logic::Formula(variant("'five: 5'")).execute(), "string where test failed");
+}
+
+UNIT_TEST(binary_search_function) {
+	CHECK(game_logic::Formula(variant("binary_search([3,4,7,9,10,24,50], 9)")).execute() == variant::from_bool(true), "binary_search failed");
+	CHECK(game_logic::Formula(variant("binary_search([3,4,7,9,10,24,50], 3)")).execute() == variant::from_bool(true), "binary_search failed");
+	CHECK(game_logic::Formula(variant("binary_search([3,4,7,9,10,24,50], 50)")).execute() == variant::from_bool(true), "binary_search failed");
+	CHECK(game_logic::Formula(variant("binary_search([3,4,7,9,10,24,50], 5)")).execute() == variant::from_bool(false), "binary_search failed");
+	CHECK(game_logic::Formula(variant("binary_search([3,4,7,9,10,24,50], 51)")).execute() == variant::from_bool(false), "binary_search failed");
 }
 
 UNIT_TEST(format) {

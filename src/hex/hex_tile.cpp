@@ -84,7 +84,6 @@ namespace hex
 				++it;
 			}
 		}
-
 	}
 
 	void loader(const variant& n)
@@ -363,6 +362,7 @@ namespace hex
 	const Alternate& Overlay::getAlternative() const
 	{
 		ASSERT_LOG(!alternates_.empty(), "No alternatives found, must be at lease one.");
-		return alternates_[rng::generate() % alternates_.size()];
+		const auto& alt = alternates_[rng::generate() % alternates_.size()];
+		return alt;
 	}
 }

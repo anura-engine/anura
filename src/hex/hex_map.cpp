@@ -54,23 +54,38 @@ namespace hex
 		
 		// create the logical version of the map.
 		p->map_ = hex::logical::LogicalMap::factory(n);
-
-		int index = 0;
-		p->tiles_.reserve(p->map_->size());
-		for(auto& t : *p->map_) {
-			const int x = index % p->map_->width();
-			const int y = index / p->map_->width();
-			p->tiles_.emplace_back(t, x, y, p.get());
-			++index;
-		}
-		
-		for(auto& t : p->tiles_) {
-			t.initNeighbors();
-		}
+		p->build();
 		for(auto& obj : p->tiles_) {
 			obj.setNeighborsChanged();
 		}
 		return p;
+	}
+
+	void HexMap::build()
+	{
+		profile::manager pman("HexMap::build");
+		int index = 0;
+		const auto& tiles_changed = map_->getTilesChanged();
+		if(tiles_changed.empty() || tiles_changed.size() == tiles_.size()) {
+			tiles_.clear();
+			tiles_.reserve(map_->size());
+			for(auto& t : *map_) {
+				const int x = index % map_->width();
+				const int y = index / map_->width();
+				tiles_.emplace_back(t, x, y, this);
+				++index;
+			}
+		} else {
+			for(auto& t : tiles_changed) {
+				const int index = t.y * map_->width() + t.x;
+				tiles_[index] = HexObject(map_->getTileAt(t.x, t.y), t.x, t.y, this);
+			}
+		}		
+
+		for(auto& t : tiles_) {
+			t.initNeighbors();
+		}
+		map_->clearChangeFlag();
 	}
 
 	variant HexMap::write() const
@@ -81,6 +96,11 @@ namespace hex
 
 	void HexMap::process()
 	{
+		if(map_->isChanged()) {
+			changed_ = true;
+			build();
+		}
+
 		if(changed_) {
 			changed_ = false;
 			for(auto& obj : tiles_) {
@@ -287,6 +307,10 @@ namespace hex
 			return variant(obj.zorder_);
 		DEFINE_FIELD(logical, "builtin logical_map")
 			return variant(obj.map_.get());
+		DEFINE_FIELD(changed, "bool")
+			return variant::from_bool(obj.changed_);
+		DEFINE_SET_FIELD
+			obj.changed_ = value.as_bool();
 		DEFINE_FIELD(tile_height, "int")
 			return variant(HexTileSize);
 		BEGIN_DEFINE_FN(tile_loc_from_pixel_pos, "([int,int]) ->[int,int]")
@@ -310,7 +334,6 @@ namespace hex
 			res.push_back(variant(p.x));
 			res.push_back(variant(p.y));
 			return variant(&res);
-
 		END_DEFINE_FN
 	END_DEFINE_CALLABLE(HexMap)
 }

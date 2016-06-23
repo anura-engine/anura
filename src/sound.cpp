@@ -679,8 +679,10 @@ namespace sound
 					channels_to_sounds_playing[n].fade_in_time = 0.0f;
 					channels_to_sounds_playing[n].time_cnt = 0.0f;
 				}
+                channels_to_sounds_playing[n].volume = volume/128.0;
 				Mix_Volume(n, static_cast<int>(sfx_volume*volume));
 	#else
+                channels_to_sounds_playing[n].volume = volume/128.0;
 				mixer.channels[n].volume = sfx_volume*volume;
 	#endif
 			} //else, we just do nothing

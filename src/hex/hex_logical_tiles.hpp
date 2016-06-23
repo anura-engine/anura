@@ -40,7 +40,7 @@ namespace hex
 		std::vector<point> line(const point& p1, const point& p2);
 		float rotation_between(const point& p1, const point& p2);
 
-		class Tile
+		class Tile : public game_logic::FormulaCallable
 		{
 		public:
 			explicit Tile(const std::string& id, const std::string& name, float cost, int height, int tile_id);
@@ -55,6 +55,8 @@ namespace hex
 			static const std::map<std::string, TilePtr>& getLoadedTiles();
 			static int getMaxTileId();
 		private:
+			DECLARE_CALLABLE(Tile);
+
 			std::string name_;
 			std::string id_;
 			int height_;
@@ -92,8 +94,15 @@ namespace hex
 			void getTileRing(int x, int y, int radius, std::vector<point>* res) const;
 			void getTilesInRadius(int x, int y, int radius, std::vector<point>* res) const;
 			ConstTilePtr getTileAt(int xx, int yy) const;
+			TilePtr getTileAt(int xx, int yy);
 			ConstTilePtr getTileAt(const point& p) const;
 			point getCoordinatesInDir(direction d, int x, int y) const;
+
+			bool isChanged() const { return changed_; }
+			void clearChangeFlag() { changed_ = false; tiles_changed_.clear();}
+			void setChanged() { changed_ = true; }
+
+			const std::vector<point>& getTilesChanged() const { return tiles_changed_; }
 
 			void surrenderReferences(GarbageCollector* collector) override;
 
@@ -101,12 +110,14 @@ namespace hex
 		private:
 			DECLARE_CALLABLE(LogicalMap);
 
+			bool changed_;
 			int x_;
 			int y_;
 			int width_;
 			int height_;
-
 			std::vector<TilePtr> tiles_;
+			std::vector<point> tiles_changed_;
+
 			LogicalMap(const LogicalMap&);
 			LogicalMap() = delete;
 			void operator=(const LogicalMap&) = delete;

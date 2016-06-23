@@ -62,7 +62,7 @@ namespace hex
 				float cost = p.second["cost"].as_float(1.0f);
 				int height = p.second["height"].as_int32(1000);
 				std::string name = p.second["name"].as_string();
-				get_loaded_tiles()[id] = std::make_shared<Tile>(id, name, cost, height, tile_id++);
+				get_loaded_tiles()[id] = TilePtr(new Tile(id, name, cost, height, tile_id++));
 			}
 
 			if(n.has_key("overlay")) {
@@ -124,13 +124,31 @@ namespace hex
 			return tile->second;
 		}
 
+		BEGIN_DEFINE_CALLABLE_NOBASE(Tile)
+			DEFINE_FIELD(cost, "decimal")
+				return variant(obj.getCost());
+			DEFINE_FIELD(height, "int")
+				return variant(obj.getHeight());
+			DEFINE_FIELD(name, "string")
+				return variant(obj.name());
+			DEFINE_FIELD(id, "string")
+				return variant(obj.id());
+			DEFINE_FIELD(tags, "[string]")
+				std::vector<variant> tags;
+				for(auto& s : obj.tags_) {
+					tags.emplace_back(s);
+				}
+				return variant(&tags);
+		END_DEFINE_CALLABLE(Tile)
+
 		LogicalMapPtr LogicalMap::factory(const variant& n)
 		{
 			return new LogicalMap(n);
 		}
 
 		LogicalMap::LogicalMap(const variant& n)
-			: x_(n["x"].as_int32(0)),
+			: changed_(true),
+			  x_(n["x"].as_int32(0)),
 		      y_(n["y"].as_int32(0)),
 			  width_(n["width"].as_int32()), 
 			  height_(0)
@@ -143,7 +161,8 @@ namespace hex
 		}
 
 		LogicalMap::LogicalMap(const LogicalMap& m)
-			: x_(m.x_),
+			: changed_(true),
+			  x_(m.x_),
 			  y_(m.y_),
 			  width_(m.width_),
 			  height_(m.height_),
@@ -275,6 +294,19 @@ namespace hex
 			}
 		}
 
+		TilePtr LogicalMap::getTileAt(int xx, int yy)
+		{
+			xx -= x();
+			yy -= y();
+			if (xx < 0 || yy < 0 || yy >= height() || xx >= width()) {
+				return nullptr;
+			}
+
+			const int index = yy * width() + xx;
+			ASSERT_LOG(index >= 0 && index < static_cast<int>(tiles_.size()), "");
+			return tiles_[index];
+		}
+
 		ConstTilePtr LogicalMap::getTileAt(int xx, int yy) const
 		{
 			xx -= x();
@@ -385,6 +417,9 @@ namespace hex
 
 		void LogicalMap::surrenderReferences(GarbageCollector* collector)
 		{
+			for(auto& t : tiles_) {
+				collector->surrenderPtr(&t, "HEX::LOGICALMAP::TILE");
+			}
 		}
 
 		BEGIN_DEFINE_CALLABLE_NOBASE(LogicalMap)
@@ -392,7 +427,38 @@ namespace hex
 				return variant(obj.width());
 			DEFINE_FIELD(height, "int")
 				return variant(obj.height());
-			BEGIN_DEFINE_FN(tile_at, "([int,int]) ->string")
+
+			DEFINE_FIELD(changed, "bool")
+				return variant::from_bool(obj.isChanged());
+			DEFINE_SET_FIELD
+				if(value.as_bool() == true) {
+					obj.setChanged();
+				} else {
+					obj.clearChangeFlag();
+				}
+
+			DEFINE_FIELD(tiles, "[[builtin tile]]")
+				std::vector<variant> rows;
+				std::vector<variant> cols;
+
+				int w = 0;
+				for(auto& t : obj.tiles_) {
+					cols.emplace_back(t.get());
+					if(++w >= obj.width()) {
+						rows.emplace_back(&cols);
+					}
+				}				
+				return variant(&rows);
+			DEFINE_SET_FIELD
+				std::vector<variant> rows = value.as_list();
+				obj.height_ = rows.size();
+				obj.tiles_.clear();
+				for(auto& col : rows) {
+					//obj.tiles_.emplace_back(col.as_callable());
+				}
+				obj.changed_ = true;
+
+			BEGIN_DEFINE_FN(tile_at, "([int,int]) ->builtin tile")
 				variant v = FN_ARG(0);
 				int x = v[0].as_int();
 				int y = v[1].as_int();
@@ -400,9 +466,9 @@ namespace hex
 				ConstTilePtr tile = obj.getTileAt(x, y);
 				ASSERT_LOG(tile, "Illegal tile at " << x << ", " << y);
 
-				return variant(tile->id());
-				
+				return variant(tile.get());				
 			END_DEFINE_FN
+
 			BEGIN_DEFINE_FN(adjacent_tiles, "([int,int]) ->[[int,int]]")
 				variant v = FN_ARG(0);
 				int x = v[0].as_int();
@@ -416,18 +482,24 @@ namespace hex
 				for(const point& p : res) {
 					std::vector<variant> v;
 					v.reserve(2);
-					v.push_back(variant(p.x));
-					v.push_back(variant(p.y));
-					points.push_back(variant(&v));
+					v.emplace_back(p.x);
+					v.emplace_back(p.y);
+					points.emplace_back(&v);
 				}
 
 				return variant(&points);
 			END_DEFINE_FN
+
+			BEGIN_DEFINE_FN(create_tile, "(string) ->builtin tile")
+				auto tile = Tile::factory(FN_ARG(0).as_string());
+				return variant(tile.get());
+			END_DEFINE_FN
+			
 			BEGIN_DEFINE_FN(tiles_in_radius, "([int,int], int) ->[[int,int]]")
 				variant v = FN_ARG(0);
-				int x = v[0].as_int();
-				int y = v[1].as_int();
-				int radius = FN_ARG(1).as_int();
+				const int x = v[0].as_int();
+				const int y = v[1].as_int();
+				const int radius = FN_ARG(1).as_int();
 
 				std::vector<point> res;
 				obj.getTilesInRadius(x, y, radius, &res);
@@ -437,13 +509,32 @@ namespace hex
 				for(const point& p : res) {
 					std::vector<variant> v;
 					v.reserve(2);
-					v.push_back(variant(p.x));
-					v.push_back(variant(p.y));
-					points.push_back(variant(&v));
+					v.emplace_back(p.x);
+					v.emplace_back(p.y);
+					points.emplace_back(&v);
 				}
-
 				return variant(&points);
+			END_DEFINE_FN
 
+			BEGIN_DEFINE_FN(set_tile_at, "([int,int], string) ->commands")
+				variant v = FN_ARG(0);
+				const int x = v[0].as_int();
+				const int y = v[1].as_int();
+				std::string name = FN_ARG(1).as_string();
+				auto tile = Tile::factory(name);
+
+				// Ugly const_cast so that we can modify the map in FnCommandCallable.
+				// We also convert to an intrusive_ptr so that the lifetime is extended
+				// While the lambda is still live.
+				boost::intrusive_ptr<LogicalMap> map_ref = &const_cast<LogicalMap&>(obj);
+				
+				const int index = y * obj.width() + x;
+				ASSERT_LOG(index >= 0 && index < static_cast<int>(obj.tiles_.size()), "Index out of bounds." << index << " >= " << obj.tiles_.size());
+				return variant(new game_logic::FnCommandCallable([=]() {					
+					map_ref->setChanged();
+					map_ref->tiles_changed_.emplace_back(point(x,y));
+					map_ref->tiles_[index] = tile;
+				}));
 			END_DEFINE_FN
 		END_DEFINE_CALLABLE(LogicalMap)
 	}
