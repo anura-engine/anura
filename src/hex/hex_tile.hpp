@@ -35,6 +35,24 @@
 
 namespace hex 
 {
+	class HexEditorInfo;
+	typedef boost::intrusive_ptr<HexEditorInfo> HexEditorInfoPtr;
+
+	class HexEditorInfo : public game_logic::FormulaCallable
+	{
+		public:
+			HexEditorInfo();
+			explicit HexEditorInfo(const std::string& name, const std::string& type, const std::string& group, const KRE::TexturePtr& image, const rect& r);
+			static std::vector<variant> getHexEditorInfo();
+		private:
+			DECLARE_CALLABLE(EditorInfo);
+			std::string name_;
+			std::string type_;
+			KRE::TexturePtr image_;
+			std::string group_;
+			rect image_rect_;
+	};
+
 	class TileSheet
 	{
 	public:
@@ -52,20 +70,9 @@ namespace hex
 	public:
 		TileType(const std::string& tile, int num_id, const variant& n);
 		
-		struct EditorInfo {
-			std::string name;
-			std::string type;
-			KRE::TexturePtr texture;
-			std::string group;
-			rect image_rect;
-			void draw(int tx, int ty) const;
-		};
-
 		const std::string& id() const { return tile_id_; }
 
 		int numeric_id() const { return num_id_; }
-
-		const EditorInfo& getEditorInfo() const { return editor_info_; } 
 
 		const std::vector<int>& getSheetIndexes() const { return sheet_indexes_; }
 
@@ -96,8 +103,6 @@ namespace hex
 		};
 
 		AdjacencyPattern adjacency_patterns_[64];
-
-		EditorInfo editor_info_;
 	};
 
 	struct Alternate 

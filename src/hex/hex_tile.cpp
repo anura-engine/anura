@@ -31,6 +31,7 @@
 #include "hex_tile.hpp"
 #include "variant_utils.hpp"
 #include "Texture.hpp"
+#include "TextureObject.hpp"
 
 #include "random.hpp"
 
@@ -44,45 +45,17 @@ namespace hex
 			return tile_map;
 		}
 
-		std::vector<TileTypePtr>& get_hex_editor_tiles()
+		typedef std::map<std::string, HexEditorInfoPtr> editor_info_map;
+		editor_info_map& get_editor_tiles()
 		{
-			static std::vector<TileTypePtr> tiles;
-			return tiles;
-		}
-
-		std::map<std::string, TileTypePtr>& get_editor_hex_tile_map()
-		{
-			static std::map<std::string, TileTypePtr> tile_map;
-			return tile_map;
+			static editor_info_map res;
+			return res;
 		}
 
 		std::map<std::string, OverlayPtr>& get_overlay_map()
 		{
 			static std::map<std::string, OverlayPtr> res;
 			return res;
-		}
-
-		void load_editor_tiles()
-		{
-			std::map<std::string, TileTypePtr>::const_iterator it = get_tile_type_map().begin();
-			while(it != get_tile_type_map().end()) {
-				if(it->second->getEditorInfo().name.empty() == false 
-					&& it->second->getEditorInfo().type.empty() == false) {
-					get_hex_editor_tiles().push_back(it->second);
-				}
-				++it;
-			}
-		}
-
-		void load_hex_editor_tiles()
-		{
-			std::map<std::string, TileTypePtr>::const_iterator it = get_tile_type_map().begin();
-			while(it != get_tile_type_map().end()) {
-				if(it->second->getEditorInfo().type.empty() == false) {
-					get_editor_hex_tile_map()[it->second->getEditorInfo().type] = it->second;
-				}
-				++it;
-			}
 		}
 	}
 
@@ -130,23 +103,6 @@ namespace hex
 				get_overlay_map()[key] = Overlay::create(key, image, normals);
 			}
 		}
-
-		// get list of all tiles have non-empty "editor_info" blocks.
-		if(!get_hex_editor_tiles().empty()) {
-			get_hex_editor_tiles().clear();
-		}
-		load_editor_tiles();
-
-		if(!get_editor_hex_tile_map().empty()) {
-			get_editor_hex_tile_map().clear();
-		}
-		load_hex_editor_tiles();
-	}
-
-	void TileType::EditorInfo::draw(int x, int y) const
-	{
-		point p(HexMap::getPixelPosFromTilePos(x,y));
-		// XXX todo.
 	}
 
 	TileSheet::TileSheet(const variant& value)
@@ -174,8 +130,7 @@ namespace hex
 	    tile_id_(tile),
 	    sheet_(new TileSheet(value)),
 		sheet_indexes_(),
-		adjacency_patterns_(),
-		editor_info_()
+		adjacency_patterns_()
 	{
 		for (const std::string& index_str : value["sheet_pos"].as_list_string()) {
 			const int index = strtol(index_str.c_str(), nullptr, 36);
@@ -210,11 +165,18 @@ namespace hex
 
 		if (value.has_key("editor_info")) {
 			ASSERT_LOG(value["editor_info"].is_map(), "Must have editor info map, none found in: " << tile_id_);
-			editor_info_.texture = sheet_->getTexture();
-			editor_info_.name = value["editor_info"]["name"].as_string();
-			editor_info_.group = value["editor_info"]["group"].as_string();
-			editor_info_.type = tile_id_;
-			editor_info_.image_rect = sheet_->getArea(0);
+			std::string name  = value["editor_info"]["name"].as_string();
+			std::string group = value["editor_info"]["group"].as_string();
+			std::string sheet_pos = value["editor_info"]["sheet_pos"].as_string();
+			if(!sheet_pos.empty()) {
+				const int index = strtol(sheet_pos.c_str(), nullptr, 36);
+				const int row = index / 36;
+				const int col = index % 36;
+				const rect image_rect(col * 72, row * 72, 72, 72);
+
+				auto& editor_info = get_editor_tiles();
+				editor_info[tile_id_] = HexEditorInfoPtr(new HexEditorInfo(name, tile_id_, group, sheet_->getTexture(), image_rect));
+			}
 		}
 	}
 
@@ -365,4 +327,46 @@ namespace hex
 		const auto& alt = alternates_[rng::generate() % alternates_.size()];
 		return alt;
 	}
+
+
+	HexEditorInfo::HexEditorInfo()
+		: name_(),
+		  type_(),
+		  image_(),
+		  group_(),
+		  image_rect_()
+	{
+	}
+
+	HexEditorInfo::HexEditorInfo(const std::string& name, const std::string& type, const std::string& group, const KRE::TexturePtr& image, const rect& r)
+		: name_(name),
+		  type_(type),
+		  image_(image),
+		  group_(group),
+		  image_rect_(r)
+	{
+	}
+
+	std::vector<variant> HexEditorInfo::getHexEditorInfo()
+	{
+		std::vector<variant> res;
+		auto& editor_info = get_editor_tiles();
+		for(const auto& ei : editor_info) {
+			res.emplace_back(ei.second.get());
+		}
+		return res;
+	}
+
+	BEGIN_DEFINE_CALLABLE_NOBASE(HexEditorInfo)
+		DEFINE_FIELD(name, "string")
+			return variant(obj.name_);
+		DEFINE_FIELD(type, "string")
+			return variant(obj.type_);
+		DEFINE_FIELD(group, "string")
+			return variant(obj.group_);
+		DEFINE_FIELD(image_rect, "[int,int,int,int]")
+			return obj.image_rect_.write();
+		DEFINE_FIELD(image, "builtin texture_object")
+			return variant(new TextureObject(obj.image_));
+	END_DEFINE_CALLABLE(HexEditorInfo)
 }
