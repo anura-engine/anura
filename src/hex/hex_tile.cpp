@@ -168,6 +168,7 @@ namespace hex
 			std::string name  = value["editor_info"]["name"].as_string();
 			std::string group = value["editor_info"]["group"].as_string();
 			std::string sheet_pos = value["editor_info"]["sheet_pos"].as_string();
+			std::string image_file = KRE::Texture::findImageNames(value["image"]).front();
 			if(!sheet_pos.empty()) {
 				const int index = strtol(sheet_pos.c_str(), nullptr, 36);
 				const int row = index / 36;
@@ -175,7 +176,7 @@ namespace hex
 				const rect image_rect(col * 72, row * 72, 72, 72);
 
 				auto& editor_info = get_editor_tiles();
-				editor_info[tile_id_] = HexEditorInfoPtr(new HexEditorInfo(name, tile_id_, group, sheet_->getTexture(), image_rect));
+				editor_info[tile_id_] = HexEditorInfoPtr(new HexEditorInfo(name, tile_id_, group, sheet_->getTexture(), image_file, image_rect));
 			}
 		}
 	}
@@ -334,15 +335,17 @@ namespace hex
 		  type_(),
 		  image_(),
 		  group_(),
+		  image_file_(),
 		  image_rect_()
 	{
 	}
 
-	HexEditorInfo::HexEditorInfo(const std::string& name, const std::string& type, const std::string& group, const KRE::TexturePtr& image, const rect& r)
+	HexEditorInfo::HexEditorInfo(const std::string& name, const std::string& type, const std::string& group, const KRE::TexturePtr& image, const std::string& image_file, const rect& r)
 		: name_(name),
 		  type_(type),
 		  image_(image),
 		  group_(group),
+		  image_file_(image_file),
 		  image_rect_(r)
 	{
 	}
@@ -366,6 +369,8 @@ namespace hex
 			return variant(obj.group_);
 		DEFINE_FIELD(image_rect, "[int,int,int,int]")
 			return obj.image_rect_.write();
+		DEFINE_FIELD(image_file, "string")
+			return variant(obj.image_file_);
 		DEFINE_FIELD(image, "builtin texture_object")
 			return variant(new TextureObject(obj.image_));
 	END_DEFINE_CALLABLE(HexEditorInfo)

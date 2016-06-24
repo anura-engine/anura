@@ -42,12 +42,13 @@ namespace hex
 	{
 		public:
 			HexEditorInfo();
-			explicit HexEditorInfo(const std::string& name, const std::string& type, const std::string& group, const KRE::TexturePtr& image, const rect& r);
+			explicit HexEditorInfo(const std::string& name, const std::string& type, const std::string& group, const KRE::TexturePtr& image, const std::string& image_file, const rect& r);
 			static std::vector<variant> getHexEditorInfo();
 		private:
-			DECLARE_CALLABLE(EditorInfo);
+			DECLARE_CALLABLE(HexEditorInfo);
 			std::string name_;
 			std::string type_;
+			std::string image_file_;
 			KRE::TexturePtr image_;
 			std::string group_;
 			rect image_rect_;
