@@ -146,10 +146,11 @@ public: \
 	virtual std::string getObjectId() const override { return game_logic::modify_class_id(#classname); } \
 public: \
 	static void init_callable_type(std::vector<CallablePropertyEntry>& v, std::map<std::string, int>& properties); \
-private:
+	enum { classname##_DECLARE_CALLABLE_does_not_match_name_of_class = 0 }; \
+private: 
 
 #define BEGIN_DEFINE_CALLABLE_NOBASE(classname) \
-int classname##_num_base_slots = 0; \
+int classname##_num_base_slots = classname::classname##_DECLARE_CALLABLE_does_not_match_name_of_class; \
 const char* classname##_base_str_name = ""; \
 std::vector<CallablePropertyEntry> classname##_fields; \
 std::map<std::string, int> classname##_properties; \
@@ -158,7 +159,7 @@ void classname::init_callable_type(std::vector<CallablePropertyEntry>& fields, s
 	{ {
 
 #define BEGIN_DEFINE_CALLABLE(classname, base_type) \
-int classname##_num_base_slots = 0; \
+int classname##_num_base_slots = classname::classname##_DECLARE_CALLABLE_does_not_match_name_of_class; \
 const char* classname##_base_str_name = #base_type; \
 std::vector<CallablePropertyEntry> classname##_fields; \
 std::map<std::string, int> classname##_properties; \

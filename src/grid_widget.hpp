@@ -96,7 +96,7 @@ namespace gui
 		void surrenderReferences(GarbageCollector* collector) override;
 
 	private:
-		DECLARE_CALLABLE(grid);
+		DECLARE_CALLABLE(Grid);
 
 		int getRowAt(int x, int y) const;
 		void recalculateDimensions();
