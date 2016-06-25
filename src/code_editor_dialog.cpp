@@ -63,6 +63,8 @@ namespace game_logic
 void invalidate_class_definition(const std::string& class_name);
 }
 
+PREF_INT(code_editor_error_area, 300, "");
+
 std::set<Level*>& get_all_levels_set();
 
 CodeEditorDialog::CodeEditorDialog(const rect& r)
@@ -84,7 +86,7 @@ void CodeEditorDialog::init()
 	const int Y_SPACING        = 4;
 
 	if(!editor_) {
-		editor_.reset(new CodeEditorWidget(width() - 40, height() - (60 + (optional_error_text_area_ ? 170 : 0))));
+		editor_.reset(new CodeEditorWidget(width() - 40, height() - (60 + (optional_error_text_area_ ? g_code_editor_error_area : 0))));
 	}
 
 	Button* save_button      = new Button("Save", std::bind(&CodeEditorDialog::save, this));
@@ -168,14 +170,14 @@ void CodeEditorDialog::init()
 void CodeEditorDialog::add_optional_error_text_area(const std::string& text)
 {
 	using namespace gui;
-	optional_error_text_area_.reset(new TextEditorWidget(width() - 40, 160));
+	optional_error_text_area_.reset(new TextEditorWidget(width() - 40, g_code_editor_error_area-10));
 	optional_error_text_area_->setText(text);
 	for(KnownFile& f : files_) {
-		f.editor->setDim(width() - 40, height() - (60 + (optional_error_text_area_ ? 170 : 0)));
+		f.editor->setDim(width() - 40, height() - (60 + (optional_error_text_area_ ? g_code_editor_error_area : 0)));
 	}
 
 	if(editor_) {
-		editor_->setDim(width() - 40, height() - (60 + (optional_error_text_area_ ? 170 : 0)));
+		editor_->setDim(width() - 40, height() - (60 + (optional_error_text_area_ ? g_code_editor_error_area : 0)));
 	}
 }
 
@@ -263,7 +265,7 @@ void CodeEditorDialog::load_file(std::string fname, bool focus, std::function<vo
 		if(fn) {
 			f.op_fn = *fn;
 		}
-		f.editor.reset(new CodeEditorWidget(width() - 40, height() - (60 + (optional_error_text_area_ ? 170 : 0))));
+		f.editor.reset(new CodeEditorWidget(width() - 40, height() - (60 + (optional_error_text_area_ ? g_code_editor_error_area : 0))));
 		std::string text = json::get_file_contents(fname);
 		try {
 			file_contents_set_ = true;
@@ -805,7 +807,7 @@ void CodeEditorDialog::change_width(int amount)
 
 
 	for(KnownFile& f : files_) {
-		f.editor->setDim(width() - 40, height() - (60 + (optional_error_text_area_ ? 170 : 0)));
+		f.editor->setDim(width() - 40, height() - (60 + (optional_error_text_area_ ? g_code_editor_error_area : 0)));
 	}
 	init();
 }
@@ -831,7 +833,7 @@ void CodeEditorDialog::on_drag(int dx, int dy)
 
 
 	for(KnownFile& f : files_) {
-		f.editor->setDim(width() - 40, height() - (60 + (optional_error_text_area_ ? 170 : 0)));
+		f.editor->setDim(width() - 40, height() - (60 + (optional_error_text_area_ ? g_code_editor_error_area : 0)));
 	}
 	//init();
 }
@@ -1101,6 +1103,14 @@ void edit_and_continue_fn(const std::string& filename, const std::string& error,
 	}
 	d->showModal();
 
+	SDL_Event event;
+	while(input::sdl_poll_event(&event)) {
+		switch(event.type) {
+		case SDL_QUIT:
+			_exit(0);
+		}
+	}
+
 	if(d->cancelled() || d->has_error()) {
 		_exit(0);
 	}
@@ -1178,6 +1188,7 @@ void edit_and_continue_assert(const std::string& msg, std::function<void()> fn)
 			switch(event.type) {
 				case SDL_QUIT: {
 					quit = true;
+					_exit(0);
 					break;
 				}
 			}
