@@ -838,6 +838,7 @@ COMMAND_LINE_UTILITY(generate_manifest)
 		std::string module_id_override;
 		std::string server = g_module_server;
 		std::string port = g_module_port;
+		std::string upload_passcode;
 		bool increment_version = false;
 
 		std::deque<std::string> arguments(args.begin(), args.end());
@@ -862,6 +863,11 @@ COMMAND_LINE_UTILITY(generate_manifest)
 				ASSERT_LOG(arguments.empty() == false, "NEED ARGUMENT AFTER " << arg);
 				module_id_override = arguments.front();
 				arguments.pop_front();
+			} else if(arg == "--passcode") {
+				ASSERT_LOG(arguments.empty() == false, "NEED ARGUMENT AFTER " << arg);
+				upload_passcode = arguments.front();
+				arguments.pop_front();
+
 			} else {
 				ASSERT_LOG(module_id.empty(), "UNRECOGNIZED ARGUMENT: " << arg);
 				module_id = arg;
@@ -906,6 +912,10 @@ COMMAND_LINE_UTILITY(generate_manifest)
 
 		attr[variant("type")] = variant("prepare_upload_module");
 		attr[variant("module_id")] = variant(module_id);
+
+		if(upload_passcode.empty() == false) {
+			attr[variant("passcode")] = variant(upload_passcode);
+		}
 
 		if(module_id_override != "") {
 			attr[variant("module_id")] = variant(module_id_override);
