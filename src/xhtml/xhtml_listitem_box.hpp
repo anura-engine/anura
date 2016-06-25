@@ -34,6 +34,7 @@ namespace xhtml
 		std::string toString() const override;
 	private:
 		void handlePreChildLayout(LayoutEngine& eng, const Dimensions& containing) override;
+		void handlePreChildLayout3(LayoutEngine& eng, const Dimensions& containing) override;
 		void handleLayout(LayoutEngine& eng, const Dimensions& containing) override;
 		void handlePostChildLayout(LayoutEngine& eng, BoxPtr child) override;
 		void handleRender(const KRE::SceneTreePtr& scene_tree, const point& offset) const override;

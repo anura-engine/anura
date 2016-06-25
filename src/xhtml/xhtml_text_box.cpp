@@ -28,6 +28,7 @@
 #include "WindowManager.hpp"
 
 #include "xhtml_layout_engine.hpp"
+#include "xhtml_line_box.hpp"
 #include "xhtml_text_box.hpp"
 #include "xhtml_text_node.hpp"
 
@@ -35,8 +36,7 @@ namespace xhtml
 {
 	TextBox::TextBox(const BoxPtr& parent, const StyleNodePtr& node, const RootBoxPtr& root)
 		: Box(BoxId::TEXT, parent, node, root),
-		  txt_(std::dynamic_pointer_cast<Text>(node->getNode())),
-		  lines_(),
+		  line_(),
 		  shadows_()
 	{
 		auto shadows = parent->getStyleNode()->getTextShadow();
@@ -51,86 +51,99 @@ namespace xhtml
 				shadows_.emplace_back(xo, yo, br, color);
 			}
 		}
-		txt_->transformText(getStyleNode(), true);
 	}
 
 	std::string TextBox::toString() const
 	{
 		std::ostringstream ss;
-		ss << "TextBox: " << getDimensions().content_;
-		for(auto& line : lines_) {
-			ss  << "\n    "
-				<< (line.offset_.x / LayoutEngine::getFixedPointScaleFloat()) 
-				<< "," 
-				<< (line.offset_.y / LayoutEngine::getFixedPointScaleFloat()) 
-				<< ": ";
-			for(auto& word : line.line_->line) {
-				ss << " " << word.word;
-			}
-			ss << "\n";
+		ss << "TextBox: " << getDimensions().content_ << " : " << getDimensions().margin_;
+		ss  << "\n    "
+			<< (line_.offset_.x / LayoutEngine::getFixedPointScaleFloat()) 
+			<< "," 
+			<< (line_.offset_.y / LayoutEngine::getFixedPointScaleFloat()) 
+			<< ": ";
+		for(auto& word : line_.line_->line) {
+			ss << " " << word.word;
 		}
+		if(line_.line_->is_end_line) {
+			ss << " : EOL";
+		}
+		ss << "\n";
 		return ss.str();
 	}
 
-	point TextBox::reflowText(LayoutEngine& eng, const Dimensions& containing, const point& current_cursor)
+	std::vector<LineBoxPtr> TextBox::reflowText(const std::vector<TextHolder>& th, const BoxPtr& parent, const RootBoxPtr& root, LayoutEngine& eng, const Dimensions& containing)
 	{
-		// clear old data so we can re-calculate it.
-		// XXX Future note.
-		// unless the text has changed or the width of the containing box changes we shouldn't
-		// have to recalculate this.
-		lines_.clear();
+		std::vector<LineBoxPtr> lines;
+		LineBoxPtr open_line(nullptr);
 
-		point cursor = current_cursor;
+		point cursor = eng.getCursor();
 
-		FixedPoint y1 = cursor.y + getOffset().y;
+		FixedPoint y1 = cursor.y + parent->getOffset().y;
+
+		FixedPoint line_height = parent->getLineHeight();
+
 		// XXX if padding left/border left applies should reduce width and move cursor position if isFirstInlineChild() is set.
 		// Simlarly the last line width should be reduced by padding right/border right.
-		FixedPoint width = eng.getWidthAtPosition(y1, y1 + getLineHeight(), containing.content_.width) - cursor.x + eng.getXAtPosition(y1, y1 + getLineHeight());
+		FixedPoint width = eng.getWidthAtPosition(y1, y1 + line_height, containing.content_.width)/* - cursor.x*/ + eng.getXAtPosition(y1, y1 + line_height);
+		LOG_INFO("width: " << width << "; cursor: " << cursor.x << "," << cursor.y << "; y1: " << y1);
 
-		Text::iterator last_it = txt_->begin();
-		Text::iterator it = last_it;
 
-		bool done = false;
-		while(it != txt_->end()) {
-			LinePtr line = txt_->reflowText(it, width, getStyleNode());
-			if(line != nullptr && !line->line.empty()) {
-				// is the line larger than available space and are there floats present?
-				FixedPoint last_x = line->line.back().advance.back().x;
-				if(last_x > width && eng.hasFloatsAtPosition(y1, y1 + getLineHeight())) {
-					cursor.y += getLineHeight();
-					y1 = cursor.y + getOffset().y;
-					cursor.x = eng.getXAtPosition(y1, y1 + getLineHeight());
-					it = last_it;
-					width = eng.getWidthAtPosition(y1, y1 + getLineHeight(), containing.content_.width);
-					continue;
-				}
+		for(auto& text_data : th) {
+			Text::iterator last_it = text_data.txt->begin();
+			Text::iterator it = last_it;
 
-				lines_.emplace_back(line, cursor);
-				lines_.back().width_ = calculateWidth(lines_.back());
-				// XXX This height needs to be modified later if we have inline elements with a different lineheight
-				lines_.back().height_ = getLineHeight();
-				cursor.x += lines_.back().width_;
+			while(it != text_data.txt->end()) {
+				LinePtr line = text_data.txt->reflowText(it, width - cursor.x, text_data.styles);
+				if(line != nullptr) {
+					if(!line->line.empty()) {
+						// is the line larger than available space and are there floats present?
+						FixedPoint last_x = line->line.back().advance.back().x;
+						if(last_x > width && eng.hasFloatsAtPosition(y1, y1 + line_height)) {
+							std::cerr << "XXXX\n";
+							cursor.y += line_height;
+							y1 = cursor.y + parent->getOffset().y;
+							cursor.x = eng.getXAtPosition(y1, y1 + line_height);
+							it = last_it;
+							width = eng.getWidthAtPosition(y1, y1 + line_height, containing.content_.width) + eng.getXAtPosition(y1, y1 + line_height);
+							continue;
+						}
 
-				if(line->is_end_line) {
-					// update the cursor for the next line
-					cursor.y += getLineHeight();
-					y1 = cursor.y + getOffset().y;
-					cursor.x = eng.getXAtPosition(y1, y1 + getLineHeight());
-				}
-			}					
+						if(open_line == nullptr) {
+							open_line = std::make_shared<LineBox>(parent, text_data.styles, root);
+							lines.emplace_back(open_line);
+						}
+						TextBoxPtr text_box = std::make_shared<TextBox>(open_line, text_data.styles, root);
+						text_box->line_.line_ = line;
+						text_box->line_.width_ = text_box->calculateWidth(text_box->line_);
+						line_height = text_box->getLineHeight();
+						if(open_line->getLineHeight() < line_height) {
+							open_line->setLineHeight(line_height);
+						}
+						text_box->line_.height_ = line_height;
+						text_box->line_.offset_.y = cursor.y;
+						text_box->line_.offset_.x = cursor.x;
+						cursor.x += text_box->line_.width_;
+						open_line->addChild(text_box);
+					}
+
+					if(line->is_end_line) {
+						// update the cursor for the next line
+						cursor.y += line_height;
+						y1 = cursor.y + parent->getOffset().y;
+						cursor.x = eng.getXAtPosition(y1, y1 + line_height);
+
+						width = eng.getWidthAtPosition(y1, y1 + line_height, containing.content_.width) /*- cursor.x*/ + eng.getXAtPosition(y1, y1 + line_height);
+
+						open_line.reset();
+					}
+				}					
+			}
 		}
 
-		int max_w = 0;
-		for(auto& line : lines_) {
-			max_w = std::max(max_w, line.width_);
-		}
-		setContentWidth(max_w);
+		eng.setCursor(cursor);
 		
-		if(!lines_.empty()) {
-			setContentHeight(lines_.back().offset_.y + getLineHeight());
-		}
-
-		return cursor;
+		return lines;
 	}
 
 	FixedPoint TextBox::calculateWidth(const LineInfo& line) const
@@ -146,29 +159,29 @@ namespace xhtml
 
 	void TextBox::handleLayout(LayoutEngine& eng, const Dimensions& containing)
 	{
-		// TextBox's have no children to deal with, by definition.	
-		// XXX fix the point() to be the actual last point, say from LayoutEngine
-		point cursor = reflowText(eng, containing, eng.getCursor());
-		eng.setCursor(cursor);
-
 		calculateHorzMPB(containing.content_.width);
 		calculateVertMPB(containing.content_.height);
+
+		setContentX(line_.offset_.x);
+		setContentY(line_.offset_.y + getParent()->getLineHeight());
+		line_.offset_.x = 0;
+		line_.offset_.y = 0;
+		//line_.offset_.y = getParent()->getLineHeight();
+
+		setContentWidth(line_.width_);
+		setContentHeight(line_.height_);
 	}
 
 	void TextBox::setRightAlign(FixedPoint containing_width)
 	{
-		for(auto& line : lines_) {
-			// XXX what about case of floats?
-			line.offset_.x = containing_width - line.width_;
-		}
+		// XXX what about case of floats?
+		line_.offset_.x = containing_width - line_.width_;
 	}
 
 	void TextBox::setCenterAlign(FixedPoint containing_width)
 	{
-		for(auto& line : lines_) {
-			// XXX what about case of floats?
-			line.offset_.x = (containing_width - line.width_ - line.offset_.x) / 2;
-		}
+		// XXX what about case of floats?
+		line_.offset_.x = (containing_width - line_.width_ - line_.offset_.x) / 2;
 	}
 
 	void TextBox::postParentLayout(LayoutEngine& eng, const Dimensions& containing)
@@ -177,16 +190,16 @@ namespace xhtml
 		// perform text-align calculation.
 		const css::TextAlign ta = getStyleNode()->getTextAlign();
 		switch(ta) {
-			case css::TextAlign::RIGHT:
+		case css::TextAlign::RIGHT:
 				setRightAlign(containing_width);
 				break;
-			case css::TextAlign::CENTER:	
+			case css::TextAlign::CENTER:
 				setCenterAlign(containing_width);
 				break;
-			case css::TextAlign::JUSTIFY:	
+			case css::TextAlign::JUSTIFY:
 					setJustify(containing_width);
 				break;
-			case css::TextAlign::NORMAL:	
+			case css::TextAlign::NORMAL:
 				if(getStyleNode()->getDirection() == css::Direction::RTL) {
 					setRightAlign(containing_width);
 				}
@@ -203,99 +216,93 @@ namespace xhtml
 
 		FixedPoint baseline = getLineHeight();//static_cast<FixedPoint>((getStyleNode()->getFont()->getFontXHeight() + getStyleNode()->getFont()->getLineGap()) * LayoutEngine::getFixedPointScaleFloat()) - getStyleNode()->getFont()->getDescender();
 
-		for(auto& line : lines_) {
-			FixedPoint child_y = line.offset_.y;
-			// XXX we should implement this fully.
-			switch(va) {
-				case css::CssVerticalAlign::BASELINE:
-					// Align the baseline of the box with the baseline of the parent box. 
-					// If the box does not have a baseline, align the bottom margin edge 
-					// with the parent's baseline.
-					child_y += baseline;
-					break;
-				case css::CssVerticalAlign::MIDDLE:
-					// Align the vertical midpoint of the box with the baseline of the 
-					// parent box plus half the x-height of the parent.
-					//child_y += height / 2;
-					break;
-				case css::CssVerticalAlign::BOTTOM:
-					// Align the bottom of the aligned subtree with the bottom of the line box.
-					//child_y += getBottomOffset();
-					break;
-				case css::CssVerticalAlign::SUB:
-					// Lower the baseline of the box to the proper position for subscripts of the 
-					// parent's box. (This value has no effect on the font size of the element's text.)
-				case css::CssVerticalAlign::SUPER:
-					// Raise the baseline of the box to the proper position for superscripts of the 
-					// parent's box. (This value has no effect on the font size of the element's text.)
-				case css::CssVerticalAlign::TOP:
-					// Align the top of the aligned subtree with the top of the line box.
-				case css::CssVerticalAlign::TEXT_TOP:
-					// Align the top of the box with the top of the parent's content area
-				case css::CssVerticalAlign::TEXT_BOTTOM:
-					// Align the bottom of the box with the bottom of the parent's content area
-					break;
-				case css::CssVerticalAlign::LENGTH: {
-					// Offset align by length value. Percentages reference the line-height of the element.
-					FixedPoint len = vertical_align->getLength().compute(getLineHeight());
-					// 0 for len is the baseline.
-					child_y += baseline - len;
-				}
-				default:  break;
+		FixedPoint child_y = line_.offset_.y;
+		// XXX we should implement this fully.
+		switch(va) {
+			case css::CssVerticalAlign::BASELINE:
+				// Align the baseline of the box with the baseline of the parent box. 
+				// If the box does not have a baseline, align the bottom margin edge 
+				// with the parent's baseline.
+				child_y += baseline;
+				break;
+			case css::CssVerticalAlign::MIDDLE:
+				// Align the vertical midpoint of the box with the baseline of the 
+				// parent box plus half the x-height of the parent.
+				child_y += getParent()->getLineHeight()/2 + getParent()->getBaselineOffset();
+				break;
+			case css::CssVerticalAlign::BOTTOM:
+				// Align the bottom of the aligned subtree with the bottom of the line box.
+				child_y += getBottomOffset();
+				break;
+			case css::CssVerticalAlign::SUB:
+				// Lower the baseline of the box to the proper position for subscripts of the 
+				// parent's box. (This value has no effect on the font size of the element's text.)
+			case css::CssVerticalAlign::SUPER:
+				// Raise the baseline of the box to the proper position for superscripts of the 
+				// parent's box. (This value has no effect on the font size of the element's text.)
+			case css::CssVerticalAlign::TOP:
+				// Align the top of the aligned subtree with the top of the line box.
+			case css::CssVerticalAlign::TEXT_TOP:
+				// Align the top of the box with the top of the parent's content area
+			case css::CssVerticalAlign::TEXT_BOTTOM:
+				// Align the bottom of the box with the bottom of the parent's content area
+				break;
+			case css::CssVerticalAlign::LENGTH: {
+				// Offset align by length value. Percentages reference the line-height of the element.
+				FixedPoint len = vertical_align->getLength().compute(getLineHeight());
+				// 0 for len is the baseline.
+				child_y += baseline - len;
 			}
-
-			line.offset_.y = child_y;
+			default:  break;
 		}
+
+		//@@ disabled for testing.
+		//line_.offset_.y = child_y;
 	}
 
 	void TextBox::setJustify(FixedPoint containing_width)
 	{
 		// N.B. we don't justify last line.
-		for(auto it = lines_.begin(); it != lines_.end()-1; ++it) {
+		/*for(auto it = lines_.begin(); it != lines_.end()-1; ++it) {
 			auto& line = *it;
 			int word_count = line.line_->line.size() - 1;
 			if(word_count <= 2) {
 				return;
 			}
 			line.justification_ = (containing_width - line.width_) / word_count;
-		}
+		}*/
 	}
 
 	void TextBox::handleRenderBackground(const KRE::SceneTreePtr& scene_tree, const point& offset) const
 	{
-		for(auto it = lines_.begin(); it != lines_.end(); ++it) {
-			auto& line = *it;
-			Dimensions dims = getDimensions();
-			dims.content_.width = line.width_;
-			dims.content_.height = line.height_;
-			point offs = line.offset_;
-			offs.y -= line.height_;
-			getBackgroundInfo().render(scene_tree, dims, offs);
-		}
+		//Dimensions dims = getDimensions();
+		//dims.content_.width = line_.width_;
+		//dims.content_.height = line_.height_;
+		//point offs = line_.offset_;
+		//offs.y -= line_.height_;
+		//getBackgroundInfo().render(scene_tree, dims, offs);
+		getBackgroundInfo().render(scene_tree, getDimensions(), offset - point{ 0, getParent()->getLineHeight()});
 	}
 
 	void TextBox::handleRenderBorder(const KRE::SceneTreePtr& scene_tree, const point& offset) const
 	{
-		for(auto it = lines_.begin(); it != lines_.end(); ++it) {
-			auto& line = *it;
-			Dimensions dims = getDimensions();
-			dims.content_.width = line.width_;
-			dims.content_.height = line.height_;
-			point offs = line.offset_;
-			offs.y -= line.height_;
-			if(isFirstInlineChild() && it == lines_.begin()) {
-				if(!(isLastInlineChild() && it == lines_.end()-1)) {
-					dims.border_.right = 0;
-				}
-			} else {
-				if(isLastInlineChild() && it == lines_.end()-1) {
-					dims.border_.left = 0;
-				} else {
-					dims.border_.left = dims.border_.right = 0;
-				}
+		const Dimensions dims = getDimensions();
+		//dims.content_.width = line_.width_;
+		//dims.content_.height = line_.height_;
+		//point offs = line_.offset_;
+		//offs.y -= line_.height_;
+		/*XXX if(isFirstInlineChild() && it == lines_.begin()) {
+			if(!(isLastInlineChild() && it == lines_.end()-1)) {
+				dims.border_.right = 0;
 			}
-			getBorderInfo().render(scene_tree, dims, offs);
-		}
+		} else {
+			if(isLastInlineChild() && it == lines_.end()-1) {
+				dims.border_.left = 0;
+			} else {
+				dims.border_.left = dims.border_.right = 0;
+			}
+		}*/
+		getBorderInfo().render(scene_tree, dims, offset - point{ 0, getParent()->getLineHeight()});
 	}
 
 	void TextBox::handleRenderShadow(const KRE::SceneTreePtr& scene_tree, KRE::FontRenderablePtr fontr, float w, float h) const
@@ -414,30 +421,24 @@ namespace xhtml
 
 	void TextBox::handleRender(const KRE::SceneTreePtr& scene_tree, const point& offset) const
 	{
-		if(lines_.empty()) {
-			return;
-		}
-
 		//handleRenderTextDecoration -- underlines, then overlines
 		KRE::FontRenderablePtr fontr = nullptr;
-		for(auto& line : lines_) {
-			std::vector<point> path;
-			std::string text;
-			int dim_x = line.offset_.x;
-			int dim_y = getStyleNode()->getFont()->getDescender() + line.offset_.y;
-			for(auto& word : line.line_->line) {
-				for(auto it = word.advance.begin(); it != word.advance.end()-1; ++it) {
-					path.emplace_back(it->x + dim_x, it->y + dim_y);
-				}
-				dim_x += word.advance.back().x + line.line_->space_advance + line.justification_;
-				text += word.word;
+		std::vector<point> path;
+		std::string text;
+		int dim_x = offset.x + line_.offset_.x;
+		int dim_y = offset.y + getStyleNode()->getFont()->getDescender() + line_.offset_.y;
+		for(auto& word : line_.line_->line) {
+			for(auto it = word.advance.begin(); it != word.advance.end()-1; ++it) {
+				path.emplace_back(it->x + dim_x, it->y + dim_y);
 			}
+			dim_x += word.advance.back().x + line_.line_->space_advance + line_.justification_;
+			text += word.word;
+		}
 
-			if(!text.empty()) {
-				fontr = getStyleNode()->getFont()->createRenderableFromPath(nullptr, text, path);
-fontr->setColorPointer(getStyleNode()->getColor());
-scene_tree->addObject(fontr);
-			}
+		if(!text.empty()) {
+			fontr = getStyleNode()->getFont()->createRenderableFromPath(nullptr, text, path);
+			fontr->setColorPointer(getStyleNode()->getColor());
+			scene_tree->addObject(fontr);
 		}
 
 		if(!shadows_.empty()) {

@@ -27,6 +27,7 @@
 
 #include "geometry.hpp"
 
+#include "scrollable.hpp"
 #include "xhtml.hpp"
 #include "xhtml_background_info.hpp"
 #include "xhtml_border_info.hpp"
@@ -45,6 +46,12 @@ namespace xhtml
 		FixedPoint bottom;
 	};
 
+	inline std::ostream& operator<<(std::ostream& os, const EdgeSize& p)
+	{
+		os << "(" << p.left << "," << p.top << "," << p.right << "," << p.bottom << ")";
+		return os;
+	}
+
 	struct Dimensions
 	{
 		Rect content_;
@@ -56,6 +63,8 @@ namespace xhtml
 	enum class BoxId {
 		BLOCK,
 		TEXT,
+		LINE,
+		LINE_CONTAINER,
 		INLINE_BLOCK,
 		INLINE_ELEMENT,
 		ABSOLUTE,
@@ -190,6 +199,7 @@ namespace xhtml
 		virtual FixedPoint getBottomOffset() const { return dimensions_.content_.height; }
 
 		FixedPoint getLineHeight() const { return line_height_; }
+		void setLineHeight(FixedPoint lh) { line_height_ = lh; }
 
 		bool isReplaceable() const { return is_replaceable_; }
 
@@ -210,6 +220,7 @@ namespace xhtml
 		const BackgroundInfo& getBackgroundInfo() const { return background_info_; }
 	private:
 		virtual void handleLayout(LayoutEngine& eng, const Dimensions& containing) = 0;
+		virtual void handlePreChildLayout3(LayoutEngine& eng, const Dimensions& containing) {}
 		virtual void handlePreChildLayout2(LayoutEngine& eng, const Dimensions& containing) {}
 		virtual void handlePreChildLayout(LayoutEngine& eng, const Dimensions& containing) {}
 		virtual void handlePostChildLayout(LayoutEngine& eng, BoxPtr child) {}
@@ -238,6 +249,8 @@ namespace xhtml
 
 		bool is_first_inline_child_;
 		bool is_last_inline_child_;
+
+		mutable scrollable::ScrollbarPtr scrollbar_;
 	};
 
 	std::ostream& operator<<(std::ostream& os, const Rect& r);

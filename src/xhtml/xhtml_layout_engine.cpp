@@ -26,6 +26,7 @@
 #include "xhtml_block_box.hpp"
 #include "xhtml_inline_block_box.hpp"
 #include "xhtml_inline_element_box.hpp"
+#include "xhtml_line_box.hpp"
 #include "xhtml_listitem_box.hpp"
 #include "xhtml_root_box.hpp"
 #include "xhtml_text_box.hpp"
@@ -81,7 +82,8 @@ namespace xhtml
 		  list_item_counter_(),
 		  offset_(),
 		  float_list_(),
-		  cursor_()
+		  cursor_(),
+		  open_line_box_(nullptr)
 	{
 		list_item_counter_.emplace(0);
 		offset_.emplace(point());
@@ -167,6 +169,7 @@ namespace xhtml
 							break;
 						case Display::INLINE: {
 							if(node->isReplaced()) {
+								open_line_box_.reset();
 								// replaced elements should generate a box.
 								// XXX should these go into open_box?
 								res.emplace_back(std::make_shared<InlineElementBox>(parent, child, root_));
@@ -209,14 +212,17 @@ namespace xhtml
 							break;
 						}
 						case Display::BLOCK: {
+							open_line_box_.reset();
 							res.emplace_back(std::make_shared<BlockBox>(parent, child, root_));
 							break;
 						}
 						case Display::INLINE_BLOCK: {
+							open_line_box_.reset();
 							res.emplace_back(std::make_shared<InlineBlockBox>(parent, child, root_));
 							break;
 						}
 						case Display::LIST_ITEM: {
+							open_line_box_.reset();
 							res.emplace_back(std::make_shared<ListItemBox>(parent, child, root_, list_item_counter_.top()));
 							break;
 						}
@@ -230,6 +236,7 @@ namespace xhtml
 						case Display::TABLE_COLUMN:
 						case Display::TABLE_CELL:
 						case Display::TABLE_CAPTION:
+							open_line_box_.reset();
 							ASSERT_LOG(false, "FIXME: LayoutEngine::formatNode(): " << display_string(display));
 							break;
 						default:
@@ -238,7 +245,11 @@ namespace xhtml
 					}
 				}
 			} else if(node->id() == NodeId::TEXT) {
-				res.emplace_back(std::make_shared<TextBox>(parent, child, root_));
+				if(open_line_box_ == nullptr) {
+					open_line_box_ = std::make_shared<LineBoxContainer>(parent, child, root_);
+					res.emplace_back(open_line_box_);
+				}
+				open_line_box_->transform(std::dynamic_pointer_cast<Text>(node), child);
 			} else {
 				ASSERT_LOG(false, "Unhandled node id, only elements and text can be used in layout: " << static_cast<int>(node->id()));
 			}

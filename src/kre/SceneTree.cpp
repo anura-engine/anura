@@ -102,7 +102,8 @@ namespace KRE
 	}
 
 	SceneTree::SceneTree(const SceneTreePtr& parent)
-		: parent_(parent),
+		: root_(),
+		  parent_(parent),
 		  children_(),
 		  objects_(),
 		  scopeable_(),
@@ -122,7 +123,13 @@ namespace KRE
 
 	SceneTreePtr SceneTree::create(SceneTreePtr parent)
 	{
-		return std::make_shared<SceneTreeImpl>(parent);
+		auto st = std::make_shared<SceneTreeImpl>(parent);
+		if(parent == nullptr) {
+			st->root_ = st->shared_from_this();
+		} else {
+			st->root_ = parent->root_;
+		}
+		return st;
 	}
 
 	void SceneTree::removeObject(const SceneObjectPtr& obj)
@@ -146,7 +153,7 @@ namespace KRE
 
 	void SceneTree::setPosition(int x, int y, int z) 
 	{
-		position_ = glm::vec3(float(x), float(y), float(z));
+		position_ = glm::vec3(static_cast<float>(x), static_cast<float>(y), static_cast<float>(z));
 		model_changed_ = true;
 	}
 
@@ -223,9 +230,6 @@ namespace KRE
 			m = glm::toMat4(rotation_) * m;
 			cached_model_matrix_ = glm::translate(m, position_);
 		}
-		// use cached_model_matrix_ as current global matrix.
-		// XXX add a scope for the global model matrix.
-		GlobalModelScope gms(get_global_model_matrix() * cached_model_matrix_);
 
 		{
 			CameraScope cs(camera_);
@@ -239,6 +243,9 @@ namespace KRE
 			// render all the objects and children into a render target if one exists.
 			// which is why we introduce a new scope
 			{
+				// use cached_model_matrix_ as current global matrix.
+				GlobalModelScope gms(get_global_model_matrix() * cached_model_matrix_);
+
 				auto rt = !render_targets_.empty() ? render_targets_.front() : nullptr;
 				RenderTarget::RenderScope rs(rt, rect(0, 0, rt ? rt->width() : 0, rt ? rt->height() : 0));
 

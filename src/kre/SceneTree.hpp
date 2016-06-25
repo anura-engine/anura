@@ -45,6 +45,7 @@ namespace KRE
 	public:
 		virtual ~SceneTree() {}
 		SceneTreePtr getParent() const { return parent_.lock(); }
+		SceneTreePtr getRoot() const { return root_.lock(); }
 
 		void addObject(const SceneObjectPtr& obj) { objects_.emplace_back(obj); }
 		void clearObjects() { objects_.clear(); }
@@ -89,6 +90,7 @@ namespace KRE
 		explicit SceneTree(const SceneTreePtr& parent);
 	private:
 
+		WeakSceneTreePtr root_;
 		WeakSceneTreePtr parent_;
 		std::vector<SceneTreePtr> children_;
 		std::vector<SceneObjectPtr> objects_;

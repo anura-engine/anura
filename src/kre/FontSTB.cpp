@@ -229,7 +229,7 @@ namespace KRE
 				const float x1 = static_cast<float>(pt.x) / 65536.0f + b->xoff;
 				const float y1 = static_cast<float>(pt.y) / 65536.0f + b->yoff;
 				const float x2 = x1 + b->xoff2 - b->xoff;
-				const float y2 = static_cast<float>(pt.y) / 65536.0f + b->yoff2;
+				const float y2 = y1 + b->yoff2 - b->yoff;
 				coords.emplace_back(glm::vec2(x1, y2), glm::vec2(u1, v2));
 				coords.emplace_back(glm::vec2(x1, y1), glm::vec2(u1, v1));
 				coords.emplace_back(glm::vec2(x2, y1), glm::vec2(u2, v1));

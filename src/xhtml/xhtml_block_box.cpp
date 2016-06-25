@@ -203,6 +203,7 @@ namespace xhtml
 		// XXX we should add collapsible margins to children here.
 		child_height_ = 0;
 		FixedPoint width = 0;
+
 		for(auto& child : getChildren()) {
 			if(!child->isFloat()) {
 				child_height_ = std::max(child_height_, child->getHeight() + child->getTop() + child->getMBPBottom());

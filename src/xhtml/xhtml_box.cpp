@@ -27,6 +27,7 @@
 #include "WindowManager.hpp"
 
 #include "solid_renderable.hpp"
+#include "rect_renderable.hpp"
 
 #include "xhtml_absolute_box.hpp"
 #include "xhtml_block_box.hpp"
@@ -69,7 +70,8 @@ namespace xhtml
 		  line_height_(0),
 		  is_replaceable_(false),
 		  is_first_inline_child_(false),
-		  is_last_inline_child_(false)
+		  is_last_inline_child_(false),
+		  scrollbar_(nullptr)
 	{
 		if(getNode() != nullptr && getNode()->id() == NodeId::ELEMENT) {
 			is_replaceable_ = getNode()->isReplaced();
@@ -184,6 +186,7 @@ namespace xhtml
 
 		for(auto& child : boxes_) {
 			if(child->isFloat()) {
+				handlePreChildLayout3(eng, containing);
 				child->layout(eng, dimensions_);
 				eng.addFloat(child);
 			}
@@ -196,11 +199,11 @@ namespace xhtml
 			eng.setCursor(p);
 		}
 
-
 		handlePreChildLayout2(eng, containing);
 
 		for(auto& child : boxes_) {
 			if(!child->isFloat()) {
+				handlePreChildLayout3(eng, containing);
 				child->layout(eng, dimensions_);
 				handlePostChildLayout(eng, child);
 			}
@@ -223,6 +226,14 @@ namespace xhtml
 			p.x = eng.getXAtPosition(p.y, p.y + getLineHeight());
 			eng.setCursor(p);
 		}
+
+		// Stuff dealing with scrollbars
+		//auto ovf = getStyleNode()->getOverflow();
+		//if(ovf == Overflow::SCROLL || ovf == Overflow::AUTO) {
+		//	scrollbar_ = std::make_shared<scrollable::Scrollbar>(scrollable::Scrollbar::Direction::VERTICAL, [](int x){}, rect(0, 0, 20, 20));
+		//}
+
+		eng.closeLineBox();
 	}
 
 	void Box::calculateVertMPB(FixedPoint containing_height)
@@ -264,10 +275,7 @@ namespace xhtml
 	void Box::render(const point& offset) const
 	{
 		point offs = point(dimensions_.content_.x, dimensions_.content_.y);
-		if(id() == BoxId::TEXT) {
-			offs.x = offs.y = 0;
-		} 
-
+		
 		if(node_ != nullptr && node_->getPosition() == Position::RELATIVE_POS) {
 			if(getStyleNode()->getLeft()->isAuto()) {
 				if(!getStyleNode()->getRight()->isAuto()) {
@@ -303,7 +311,11 @@ namespace xhtml
 		KRE::SceneTreePtr scene_tree = nullptr;
 		if(node_ != nullptr) {
 			scene_tree = node_->getSceneTree();
-			scene_tree->setPosition(offs.x / LayoutEngine::getFixedPointScaleFloat(), offs.y / LayoutEngine::getFixedPointScaleFloat());
+			if(id_ != BoxId::TEXT) {
+				scene_tree->setPosition(offs.x / LayoutEngine::getFixedPointScaleFloat(), offs.y / LayoutEngine::getFixedPointScaleFloat());
+			}
+			//offs.x = 0;
+			//offs.y = 0;
 
 			// XXX needs a modifer for transform origin.
 			auto transform = node_->getTransform();
@@ -351,12 +363,19 @@ namespace xhtml
 		auto node = getNode();
 		if(node != nullptr) {
 			auto& dims = getDimensions();
+
 			offs += offset;
 			const int x = (offs.x - dims.padding_.left - dims.border_.left) / LayoutEngine::getFixedPointScale();
 			const int y = (offs.y - dims.padding_.top - dims.border_.top) / LayoutEngine::getFixedPointScale();
 			const int w = (dims.content_.width + dims.padding_.left + dims.padding_.right + dims.border_.left + dims.border_.right) / LayoutEngine::getFixedPointScale();
 			const int h = (dims.content_.height + dims.padding_.top + dims.padding_.bottom + dims.border_.top + dims.border_.bottom) / LayoutEngine::getFixedPointScale();
 			node->setActiveRect(rect(x, y, w, h));
+
+			//scrollbar_->setLocation(x+w-20, y);
+			//scrollbar_->setDimensions(20, h);
+			//if(scene_tree != nullptr) {
+			//	scene_tree->addObject(scrollbar_);
+			//}
 		}
 	}
 
@@ -394,20 +413,23 @@ namespace xhtml
 		// with all the changes that implies.
 		//const int w = (getMBPWidth() + getWidth()) / LayoutEngine::getFixedPointScale();
 		//const int h = (getMBPHeight() + getHeight()) / LayoutEngine::getFixedPointScale();
-		const int w = getRootDimensions().content_.width / LayoutEngine::getFixedPointScale();
-		const int h = getRootDimensions().content_.height / LayoutEngine::getFixedPointScale();
+		//const int w = getRootDimensions().content_.width / LayoutEngine::getFixedPointScale();
+		//const int h = getRootDimensions().content_.height / LayoutEngine::getFixedPointScale();
+		auto wnd = WindowManager::getMainWindow();
+		const int w = wnd->width();
+		const int h = wnd->height();
 
-		const int x = offset.x / LayoutEngine::getFixedPointScale();
-		const int y = offset.y / LayoutEngine::getFixedPointScale();
+		//const int x = offset.x / LayoutEngine::getFixedPointScale();
+		//const int y = offset.y / LayoutEngine::getFixedPointScale();
 		
 		auto filters = node->getFilters()->getFilters();
 
-		if(!filters.empty()) {
+		//if(!filters.empty()) {
 			// Need to render the scene at full-size into the render buffer.
 			//auto camera = Camera::createInstance("SceneTree:Camera", 0, w, 0, h);
 			//camera->setOrthoWindow(0, w, 0, h);
 			//scene_tree->setCamera(camera);
-		}
+		//}
 
 		for(auto& filter : filters) {
 			auto filter_shader = ShaderProgram::getProgram("filter_shader")->clone();

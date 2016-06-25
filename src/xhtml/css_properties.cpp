@@ -38,7 +38,7 @@ namespace css
 		const xhtml::FixedPoint border_width_medium = 4 * fixed_point_scale;
 		const xhtml::FixedPoint border_width_thick = 10 * fixed_point_scale;
 
-		const xhtml::FixedPoint line_height_scale = (115 * fixed_point_scale) / 100;
+		const xhtml::FixedPoint line_height_scale = (120 * fixed_point_scale) / 100;
 
 		const xhtml::FixedPoint default_font_size = 12 * fixed_point_scale;
 

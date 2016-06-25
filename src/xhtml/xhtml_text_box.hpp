@@ -28,10 +28,12 @@
 
 namespace xhtml
 {
+	struct TextHolder;
+
 	struct LineInfo 
 	{
-		LineInfo() : line_(nullptr), offset_(), justification_(0), width_(0) {}
-		explicit LineInfo(const LinePtr& line, const point& offset=point()) : line_(line), offset_(offset), justification_(0), width_(0) {}
+		LineInfo() : line_(nullptr), offset_(), justification_(0), width_(0), height_(0) {}
+		explicit LineInfo(const LinePtr& line, const point& offset=point()) : line_(line), offset_(offset), justification_(0), width_(0), height_(0) {}
 		LinePtr line_;
 		point offset_;
 		FixedPoint justification_;
@@ -44,10 +46,9 @@ namespace xhtml
 	public:
 		TextBox(const BoxPtr& parent, const StyleNodePtr& node, const RootBoxPtr& root);
 		std::string toString() const override;
-		const std::vector<LineInfo>& getLines() const { return lines_; }
-		TextPtr getText() const { return txt_; }
+		const LineInfo& getLine() const { return line_; }
+		static std::vector<LineBoxPtr> reflowText(const std::vector<TextHolder>& th, const BoxPtr& parent, const RootBoxPtr& root, LayoutEngine& eng, const Dimensions& containing);
 	private:
-		point reflowText(LayoutEngine& eng, const Dimensions& containing, const point& cursor);
 		void handleLayout(LayoutEngine& eng, const Dimensions& containing) override;
 		void postParentLayout(LayoutEngine& eng, const Dimensions& containing) override;
 		void handleRender(const KRE::SceneTreePtr& scene_tree, const point& offset) const override;
@@ -60,8 +61,7 @@ namespace xhtml
 		void setRightAlign(FixedPoint containing_width);
 		void setCenterAlign(FixedPoint containing_width);
 
-		TextPtr txt_;
-		std::vector<LineInfo> lines_;
+		LineInfo line_;
 
 		// for text shadows
 		struct Shadow {

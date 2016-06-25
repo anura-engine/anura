@@ -64,10 +64,12 @@ namespace xhtml
 	class Box;
 	class RootBox;
 	class LineBox;
+	class TextBox;
 	typedef std::shared_ptr<Box> BoxPtr;
 	typedef std::shared_ptr<const Box> ConstBoxPtr;
 	typedef std::shared_ptr<RootBox> RootBoxPtr;
 	typedef std::shared_ptr<LineBox> LineBoxPtr;
+	typedef std::shared_ptr<TextBox> TextBoxPtr;
 
 	struct Dimensions;
 
