@@ -147,7 +147,7 @@ CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_MOUSEOVER_DELAY,                    "mo
 CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_MOUSEOVER_AREA,                     "mouseover_area", "[int]" )
 CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_PARTICLE_SYSTEMS,                   "particle_systems", "{ string -> object }" )
 CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_PARTICLES,                          "particles", "null|particle_system_container_proxy/map|[map]|null" )
-CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_DOCUMENT,							 "document", "null|document_object/map|document_object|null")
+CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_DOCUMENT,							 "document", "null|document_object/map|document_object|string|null")
 CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_ANIMATED_MOVEMENTS,                 "animated_movements", "[string]" )
 CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_CTRL_USER_OUTPUT,                   "ctrl_user_output", "any" )
 CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_CTRL_UP,                            "ctrl_up", "bool" )

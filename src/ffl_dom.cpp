@@ -111,8 +111,15 @@ namespace xhtml
 		  ss_name_(),
 		  layout_size_()
 	{
-		ASSERT_LOG(v.has_key("xhtml") && v["xhtml"].is_string(), "No xhtml document was specified.");
-		doc_name_ = module::map_file(v["xhtml"].as_string());
+		if(v.is_map() && v.has_key("xhtml") && v["xhtml"].is_string()) {
+			doc_name_ = module::map_file(v["xhtml"].as_string());
+		} else if(v.is_string()) {
+			doc_name_ = module::map_file(v.as_string());
+			// XXX should test if file exists if not then set the name to a fake document name
+			// and try loading contents directly from the string.
+		} else {
+			ASSERT_LOG(false, "No xhtml document was specified.");
+		}
 
 		root_->setNodeName("xhtml_root_node");
 
