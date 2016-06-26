@@ -146,7 +146,7 @@ BUILD_DIR := $(addprefix build/,$(MODULES)) build
 
 SRC       := $(foreach sdir,$(SRC_DIR),$(wildcard $(sdir)/*.cpp))
 OBJ       := $(patsubst src/%.cpp,./build/%.o,$(SRC))
-DEPS      := $(patsubst src/%.cpp,./build/%.o.d,$(SRC))
+DEPS      := $(patsubst src/%.cpp,./build/%.d,$(SRC))
 INCLUDES  := $(addprefix -I,$(SRC_DIR))
 
 vpath %.cpp $(SRC_DIR)
@@ -155,7 +155,7 @@ CPPFLAGS += -MMD -MP
 define cc-command
 $1/%.o: %.cpp
 	@echo "Building:" $$<
-	@$(CCACHE) $(CXX) $(BASE_CXXFLAGS) $(CXXFLAGS) $(CPPFLAGS) $(INC) $(INCLUDES) -c -o $$@ $$<
+	@$(CCACHE) $(CXX) $(CPPFLAGS) $(BASE_CXXFLAGS) $(CXXFLAGS) $(INC) $(INCLUDES) -MF $$@.d -c -o $$@ $$<
 endef
 
 .PHONY: all checkdirs clean
@@ -170,8 +170,8 @@ anura: $(OBJ)
 		$(LIBS) -lboost_regex -lboost_system -lboost_filesystem -lboost_locale -licui18n -licuuc -licudata -lpthread -fthreadsafe-statics
 
 checkdirs: $(BUILD_DIR)
-	@echo -e \
-	 " OPTIMIZE            : $(OPTIMIZE)\n" \
+	@echo \
+	  " OPTIMIZE            : $(OPTIMIZE)\n" \
 	  "USE_CCACHE          : $(USE_CCACHE)\n" \
 	  "CCACHE              : $(CCACHE)\n" \
 	  "SANITIZE_ADDRESS    : $(SANITIZE_ADDRESS)\n" \
