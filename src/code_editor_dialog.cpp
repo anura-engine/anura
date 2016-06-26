@@ -463,6 +463,8 @@ void CodeEditorDialog::process()
 	using std::placeholders::_1;
 	using std::placeholders::_2;
 
+	sys::pump_file_modifications();
+
 	if(invalidated_ && profile::get_tick_time() > invalidated_ + 200) {
 		try {
 			CustomObject::resetCurrentDebugError();
@@ -1088,6 +1090,12 @@ void edit_and_continue_fn(const std::string& filename, const std::string& error,
 	d->set_close_buttons();
 	d->init();
 	d->load_file(filename, true, &fn);
+
+	std::string real_filename = module::map_file(filename);
+
+	std::function<void()> reload_dialog_fn = std::bind(&CodeEditorDialog::close, d.get());
+	const int file_mod_handle = sys::notify_on_file_modification(real_filename, reload_dialog_fn);
+
 	const bool result = d->jump_to_error(error);
 	if(!result) {
 		const char* fname = strstr(error.c_str(), "\nAt ");
@@ -1102,6 +1110,8 @@ void edit_and_continue_fn(const std::string& filename, const std::string& error,
 		}
 	}
 	d->showModal();
+
+	sys::remove_notify_on_file_modification(file_mod_handle);
 
 	SDL_Event event;
 	while(input::sdl_poll_event(&event)) {
