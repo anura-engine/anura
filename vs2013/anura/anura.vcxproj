@@ -368,6 +368,7 @@
     <ClInclude Include="..\..\src\xhtml\css_styles.hpp" />
     <ClInclude Include="..\..\src\xhtml\css_stylesheet.hpp" />
     <ClInclude Include="..\..\src\xhtml\css_transition.hpp" />
+    <ClInclude Include="..\..\src\xhtml\scrollable.hpp" />
     <ClInclude Include="..\..\src\xhtml\solid_renderable.hpp" />
     <ClInclude Include="..\..\src\xhtml\to_roman.hpp" />
     <ClInclude Include="..\..\src\xhtml\url_handler.hpp" />
@@ -383,6 +384,7 @@
     <ClInclude Include="..\..\src\xhtml\xhtml_inline_block_box.hpp" />
     <ClInclude Include="..\..\src\xhtml\xhtml_inline_element_box.hpp" />
     <ClInclude Include="..\..\src\xhtml\xhtml_layout_engine.hpp" />
+    <ClInclude Include="..\..\src\xhtml\xhtml_line_box.hpp" />
     <ClInclude Include="..\..\src\xhtml\xhtml_listitem_box.hpp" />
     <ClInclude Include="..\..\src\xhtml\xhtml_node.hpp" />
     <ClInclude Include="..\..\src\xhtml\xhtml_parser.hpp" />
@@ -706,6 +708,7 @@
     <ClCompile Include="..\..\src\xhtml\css_styles.cpp" />
     <ClCompile Include="..\..\src\xhtml\css_stylesheet.cpp" />
     <ClCompile Include="..\..\src\xhtml\css_transition.cpp" />
+    <ClCompile Include="..\..\src\xhtml\scrollable.cpp" />
     <ClCompile Include="..\..\src\xhtml\solid_renderable.cpp" />
     <ClCompile Include="..\..\src\xhtml\to_roman.cpp" />
     <ClCompile Include="..\..\src\xhtml\url_handler.cpp" />
@@ -718,6 +721,7 @@
     <ClCompile Include="..\..\src\xhtml\xhtml_inline_block_box.cpp" />
     <ClCompile Include="..\..\src\xhtml\xhtml_inline_element_box.cpp" />
     <ClCompile Include="..\..\src\xhtml\xhtml_layout_engine.cpp" />
+    <ClCompile Include="..\..\src\xhtml\xhtml_line_box.cpp" />
     <ClCompile Include="..\..\src\xhtml\xhtml_listitem_box.cpp" />
     <ClCompile Include="..\..\src\xhtml\xhtml_node.cpp" />
     <ClCompile Include="..\..\src\xhtml\xhtml_parser.cpp" />

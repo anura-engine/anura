@@ -1164,6 +1164,12 @@
     <ClInclude Include="..\..\src\kre\Cursor.hpp">
       <Filter>Header Files\kre</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\xhtml\scrollable.hpp">
+      <Filter>Header Files\xhtml</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\xhtml\xhtml_line_box.hpp">
+      <Filter>Header Files\xhtml</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\src\kre\geometry.inl">
@@ -2160,6 +2166,12 @@
     </ClCompile>
     <ClCompile Include="..\..\src\kre\Cursor.cpp">
       <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\xhtml\scrollable.cpp">
+      <Filter>Source Files\xhtml</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\xhtml\xhtml_line_box.cpp">
+      <Filter>Source Files\xhtml</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
