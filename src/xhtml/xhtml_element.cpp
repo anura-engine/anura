@@ -146,7 +146,7 @@ namespace xhtml
 					for(auto& child : getChildren()) {
 						if(child->id() == NodeId::TEXT) {
 							// Parse script nodes here.
-							handler->runScript(src->getValue());
+							handler->runScript(child->getValue());
 						}
 					}
 				}
