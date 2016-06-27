@@ -188,11 +188,17 @@ namespace xhtml
 			}
 			void init() override {
 				if(!dims_set_) {
+					// These are non-standard attributes.
+					auto attr_x = getAttribute("x");
+					auto attr_y = getAttribute("y");
+
 					auto attr_w = getAttribute("width");
 					auto attr_h = getAttribute("height");
 					auto attr_src = getAttribute("src");
 					auto attr_alt = getAttribute("alt");
 					rect r;
+					int src_x = 0;
+					int src_y = 0;
 					if(attr_src != nullptr && !attr_src->getValue().empty()) {
 						tex_ = KRE::Texture::createTexture(attr_src->getValue());
 						r = rect(0, 0, tex_->width(), tex_->height());
@@ -215,6 +221,24 @@ namespace xhtml
 							LOG_ERROR("Unable to convert 'img' tag 'height' attribute to number: " << attr_h->getValue());
 						}
 					}
+
+					if(attr_x != nullptr) {
+						try {
+							src_x = boost::lexical_cast<int>(attr_x->getValue());
+						} catch(boost::bad_lexical_cast&) {
+							LOG_ERROR("Unable to convert 'img' tag 'x' attribute to number: " << attr_x->getValue());
+						}
+					}
+					if(attr_y != nullptr) {
+						try {
+							src_y = boost::lexical_cast<int>(attr_y->getValue());
+						} catch(boost::bad_lexical_cast&) {
+							LOG_ERROR("Unable to convert 'img' tag 'y' attribute to number: " << attr_y->getValue());
+						}
+					}
+
+					tex_->setSourceRect(0, rect(src_x, src_y, r.w(), r.h()));
+
 					dims_set_ = true;
 					setDimensions(r);
 				}
@@ -1037,7 +1061,7 @@ namespace xhtml
 				if(attr_clsid != am.end()) {
 					tex_ = KRE::Texture::createTexture(attr_clsid->second->getValue());
 				} else {
-					LOG_ERROR("No data or clasid tag for ImageObject");
+					LOG_ERROR("No data or classid tag for ImageObject");
 				}
 			}
 			if(tex_ != nullptr && !areDimensionsFixed()) {
