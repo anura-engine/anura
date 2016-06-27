@@ -25,11 +25,15 @@
 
 #include "asserts.hpp"
 #include "css_parser.hpp"
+#include "xhtml_box.hpp"
 #include "xhtml_text_node.hpp"
 #include "xhtml_render_ctx.hpp"
+#include "xhtml_root_box.hpp"
 #include "xhtml_script_interface.hpp"
+#include "xhtml_style_tree.hpp"
 
 #include "filesystem.hpp"
+#include "profile_timer.hpp"
 
 namespace xhtml
 {
@@ -493,6 +497,23 @@ namespace xhtml
 		return ss.str();
 	}
 
+	void Node::setInnerXHTML(const std::string& s)
+	{
+		auto owner = owner_document_.lock();
+		ASSERT_LOG(owner != nullptr, "Unable to lock owner document.");
+		children_.clear();
+		// Pre-check if the string is just plain text (i.e. no markup).
+		DocumentFragmentPtr frag = nullptr;
+		if(s.find('<') != std::string::npos && s.find('>') != std::string::npos) {
+			frag = parse_from_string(s, owner);
+		} else {
+			frag = DocumentFragment::create();
+			frag->addChild(Text::create(s, owner), owner);
+		}
+		addChild(frag, owner);
+		owner->rebuildTree();
+	}
+
 	bool Document::handleMouseMotion(bool claimed, int x, int y)
 	{
 		bool trigger = false;		
@@ -594,6 +615,56 @@ namespace xhtml
 			}
 			return true;
 		});
+	}
+
+	bool Document::process(StyleNodePtr& style_tree, int w, int h)
+	{
+		RootBoxPtr layout = nullptr;
+		bool changed = false;
+
+		if(needsRebuild()) {
+			LOG_DEBUG("Rebuild layout!");
+			style_tree.reset();
+			trigger_rebuild_ = false;
+			triggerLayout();
+		}
+
+		if(needsLayout()) {
+			LOG_DEBUG("Triggered layout!");
+
+			// XXX should we should have a re-process styles flag here.
+			{
+				profile::manager pman("apply styles");
+				processStyleRules();
+			}
+
+			{
+				profile::manager pman("update style tree");
+				if(style_tree == nullptr) {
+					style_tree = StyleNode::createStyleTree(std::static_pointer_cast<Document>(shared_from_this()));
+					processScriptAttributes();
+				} else {
+					style_tree->updateStyles();
+				}
+			}
+
+			{
+				profile::manager pman("layout");
+				layout = Box::createLayout(style_tree, w, h);
+			}
+
+			triggerRender();
+			trigger_layout_ = false;
+		}
+
+		if(needsRender() && layout != nullptr) {
+			profile::manager pman_render("render");
+			layout->render(point());
+			trigger_render_ = false;
+			changed = true;
+		}
+
+		return changed;
 	}
 
 	void Node::mergeProperties(const css::Specificity& specificity, const css::PropertyList& plist)

@@ -127,6 +127,7 @@ namespace xhtml
 		void mergeProperties(const css::Specificity& specificity, const css::PropertyList& plist);
 		const css::PropertyList& getProperties() const { return properties_; }
 		std::string writeXHTML();
+		void setInnerXHTML(const std::string& s);
 
 		void processWhitespace();
 
@@ -219,8 +220,11 @@ namespace xhtml
 		bool needsLayout() const { return trigger_layout_; }
 		bool needsRender() const { return trigger_render_; }
 		bool needsRebuild() const { return trigger_rebuild_; }
-		void layoutComplete() override { trigger_render_ = false; trigger_layout_ = false; }
+		void layoutComplete() override { trigger_layout_ = false; }
 		void renderComplete() { trigger_render_ = false;  }
+		void rebuildComplete() { trigger_rebuild_ = false; }
+
+		bool process(StyleNodePtr& style_tree, int w, int h);
 
 		// type is expected to be a content type i.e. "text/javascript"
 		static void registerScriptHandler(const std::string& type, std::function<ScriptPtr()> fn);
