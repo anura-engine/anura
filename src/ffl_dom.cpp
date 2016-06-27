@@ -31,6 +31,7 @@
 
 #include "css_parser.hpp"
 #include "xhtml.hpp"
+#include "xhtml_element.hpp"
 #include "xhtml_layout_engine.hpp"
 #include "xhtml_root_box.hpp"
 #include "xhtml_style_tree.hpp"
@@ -38,8 +39,11 @@
 #include "xhtml_render_ctx.hpp"
 #include "xhtml_script_interface.hpp"
 
+#include "custom_object.hpp"
 #include "ffl_dom.hpp"
 #include "formula.hpp"
+#include "json_parser.hpp"
+#include "level.hpp"
 #include "module.hpp"
 #include "profile_timer.hpp"
 #include "screen_handling.hpp"
@@ -95,6 +99,84 @@ namespace xhtml
 			boost::split(res, s, boost::is_any_of(" \n\r\t\f"), boost::token_compress_on);
 			return res;
 		}
+
+		class EntityObject : public ObjectProxy
+		{
+		public:
+			EntityObject(const AttributeMap& am) 
+				: ObjectProxy(am),
+				  entity_(),
+				  handle_process_on_entity_(true),
+				  commands_handler_()
+			{
+				auto attr_data = am.find("data");
+				std::string obj_str;
+				if(attr_data != am.end()) {
+					obj_str = attr_data->second->getValue();
+				} else {
+					auto attr_clsid = am.find("classid");
+					if(attr_clsid != am.end()) {
+						obj_str = attr_clsid->second->getValue();
+					} else {
+						LOG_ERROR("No data or clasid tag for ImageObject");
+					}
+				}
+
+				const variant v = json::parse(obj_str);
+
+				handle_process_on_entity_ = v["handle_process"].as_bool(false);
+				if(v["object"].is_string()) {
+					// type name, has obj_x, obj_y, facing			
+					entity_ = EntityPtr(new CustomObject(v["object"].as_string(), v["obj_x"].as_int(0), v["obj_y"].as_int(0), v["facing"].as_int(1) > 0 ? true : false));
+					entity_->finishLoading(NULL);
+				} else if(v["object"].is_map()) {
+					entity_ = EntityPtr(new CustomObject(v["object"]));
+					entity_->finishLoading(NULL);
+				} else {
+					entity_ = v["object"].try_convert<Entity>();
+					ASSERT_LOG(entity_ != NULL, "Couldn't convert 'object' attribue to an entity");
+					entity_->finishLoading(NULL);
+					entity_->validate_properties();
+				}
+				if(v.has_key("properties")) {
+					ASSERT_LOG(v["properties"].is_map(), "properties field must be a map");
+					const variant& properties = v["properties"];
+					variant keys = properties.getKeys();
+					for(int n = 0; n != keys.num_elements(); ++n) {
+						variant value = properties[keys[n]];
+						entity_->mutateValue(keys[n].as_string(), value);
+					}
+				}
+				if(v.has_key("commands")) {
+					commands_handler_ = entity_->createFormula(v["commands"]);
+					using namespace game_logic;
+					MapFormulaCallablePtr callable = MapFormulaCallablePtr(new MapFormulaCallable(entity_.get()));
+					variant value = commands_handler_->execute(*callable);
+					entity_->executeCommand(value);
+				}
+			}
+			KRE::SceneObjectPtr getRenderable() override
+			{
+				return nullptr;
+			}
+			void process(float dt) override
+			{
+				if(entity_ && handle_process_on_entity_) {
+					CustomObject* obj = static_cast<CustomObject*>(entity_.get());
+					obj->process(Level::current());
+				}
+			}
+			// XXX should probably handle and pass mouse and keyboard events here.
+		private:
+			EntityPtr entity_;
+			bool handle_process_on_entity_;
+			game_logic::FormulaPtr commands_handler_;
+		};
+
+		ObjectProxyRegistrar obj_png("application/x.entity", [](const AttributeMap& attributes){
+			return std::make_shared<EntityObject>(attributes);
+		});
+
 	}
 
 	using namespace KRE;
@@ -198,46 +280,10 @@ namespace xhtml
 	
 	void DocumentObject::process()
 	{
-		static xhtml::RootBoxPtr layout = nullptr;
-		if(doc_->needsLayout()) {
-			LOG_DEBUG("Triggered layout!");
-
-			// XXX should we should have a re-process styles flag here.
-
-			{
-			profile::manager pman("apply styles");
-			doc_->processStyleRules();
-			}
-
-			{
-				profile::manager pman("update style tree");
-				if(style_tree_ == nullptr) {
-					style_tree_ = xhtml::StyleNode::createStyleTree(doc_);
-					scene_tree_ = style_tree_->getSceneTree();
-					doc_->processScriptAttributes();
-				} else {
-					style_tree_->updateStyles();
-				}
-			}
-
-			{
-			profile::manager pman("layout");
-			layout = xhtml::Box::createLayout(style_tree_, layout_size_.w(), layout_size_.h());
-			}
-
-			{
-			profile::manager pman_render("render");
-			scene_tree_->clear();
-			layout->render(point());
-			}
-		} else if(doc_->needsRender() && layout != nullptr) {
-			profile::manager pman_render("render");
-			scene_tree_->clear();
-			layout->render(point());
-			// XXX shoud internalise this
-			doc_->renderComplete();
+		if(doc_->process(style_tree_, layout_size_.w(), layout_size_.h())) {
+			ASSERT_LOG(style_tree_ != nullptr, "Style tree was null.");
+			scene_tree_ = style_tree_->getSceneTree();
 		}
-
 
 		float delta_time = 0.0f;
 		if(last_process_time_ == -1) {
@@ -648,6 +694,11 @@ namespace xhtml
 				res[variant(a.first)] = variant(a.second->getValue());
 			}
 			return variant(&res);
+
+		DEFINE_FIELD(innerHTML, "string")
+			return variant(obj.element_->writeXHTML());
+		DEFINE_SET_FIELD
+			obj.element_->setInnerXHTML(value.as_string());
 
 		BEGIN_DEFINE_FN(getAttribute, "(string) ->string|null")
 			const std::string attr_name = FN_ARG(0).as_string();
