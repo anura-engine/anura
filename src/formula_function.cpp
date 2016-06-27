@@ -59,6 +59,7 @@
 #include "formula_object.hpp"
 #include "formula_profiler.hpp"
 #include "hex_logical_tiles.hpp"
+#include "hex_tile.hpp"
 #include "lua_iface.hpp"
 #include "md5.hpp"
 #include "module.hpp"
@@ -1997,6 +1998,13 @@ FUNCTION_DEF_IMPL
 			}
 			return variant();
 		END_FUNCTION_DEF(map_controls)*/
+
+		FUNCTION_DEF(get_hex_editor_info, 0, 0, "get_hex_editor_info() ->[builtin hex_editor_info]")
+			auto ei = hex::HexEditorInfo::getHexEditorInfo();
+			return variant(&ei);
+		FUNCTION_ARGS_DEF
+			RETURN_TYPE("[builtin hex_editor_info]")
+		END_FUNCTION_DEF(get_hex_editor_info)
 
 		FUNCTION_DEF(hex_logical_map, 1, 1, "hex_logical_map(map) ->builtin logical_map")
 			const variant m = args()[0]->evaluate(variables);
