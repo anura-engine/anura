@@ -26,6 +26,8 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/uuid/sha1.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/exception/diagnostic_information.hpp>
+#include <boost/exception_ptr.hpp>
 #include <iomanip>
 #include <iostream>
 #include <iomanip>
@@ -5505,6 +5507,34 @@ FUNCTION_ARGS_DEF
 RETURN_TYPE("string")
 END_FUNCTION_DEF(format)
 
+FUNCTION_DEF(sprintf, 1, -1, "sprintf(string, ...): Format the string using standard printf formatting.")
+	std::string input_str = args()[0]->evaluate(variables).as_string();
+
+	try {
+		boost::format f(input_str);
+
+		for(int i = 1; i < static_cast<int>(args().size()); ++i) {
+			variant v = args()[i]->evaluate(variables);
+			if(v.is_decimal()) {
+				f % v.as_decimal().as_float();
+			} else if(v.is_int()) {
+				f % v.as_int();
+			} else if(v.is_string()) {
+				f % v.as_string();
+			} else {
+				f % v.write_json();
+			}
+		}
+
+		std::string res = formatter() << f;
+		return variant(res);
+	} catch(boost::exception& e) {
+		ASSERT_LOG(false, "Error when formatting string: " << boost::diagnostic_information(e) << "\n" << debugPinpointLocation());
+	}
+FUNCTION_ARGS_DEF
+	ARG_TYPE("string");
+RETURN_TYPE("string")
+END_FUNCTION_DEF(sprintf)
 
 
 UNIT_TEST(modulo_operation) {
