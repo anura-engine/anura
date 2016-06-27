@@ -191,7 +191,8 @@ namespace xhtml
 		  scene_tree_(nullptr),
 		  doc_name_(),
 		  ss_name_(),
-		  layout_size_()
+		  layout_size_(),
+		  do_onload_(true)
 	{
 		if(v.is_map() && v.has_key("xhtml") && v["xhtml"].is_string()) {
 			doc_name_ = module::map_file(v["xhtml"].as_string());
@@ -283,6 +284,15 @@ namespace xhtml
 		if(doc_->process(style_tree_, layout_size_.w(), layout_size_.h())) {
 			ASSERT_LOG(style_tree_ != nullptr, "Style tree was null.");
 			scene_tree_ = style_tree_->getSceneTree();
+		}
+		if(do_onload_) {
+			do_onload_ = false;
+			if(environment_ != nullptr) {
+				auto* obj = dynamic_cast<CustomObject*>(environment_);
+				if(obj != nullptr) {
+					obj->handleEvent("onload");
+				}
+			}
 		}
 
 		float delta_time = 0.0f;

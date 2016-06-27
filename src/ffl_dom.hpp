@@ -113,6 +113,7 @@ namespace xhtml
 		std::string ss_name_;
 
 		rect layout_size_;
+		bool do_onload_;
 
 		mutable std::map<NodePtr, ElementObjectPtr> element_cache_;
 	};
