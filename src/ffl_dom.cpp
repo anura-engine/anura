@@ -313,12 +313,14 @@ namespace xhtml
 		const int adj_x = (e.type == SDL_MOUSEMOTION ? e.motion.x : e.button.x) - p.x - layout_size_.x();
 		const int adj_y = (e.type == SDL_MOUSEMOTION ? e.motion.y : e.button.y) - p.y - layout_size_.y();
 		bool claimed = false;
-		if(e.type == SDL_MOUSEMOTION) {
-			claimed = doc_->handleMouseMotion(false, adj_x, adj_y);
-		} else if(e.type == SDL_MOUSEBUTTONDOWN) {
-			claimed = doc_->handleMouseButtonDown(false, adj_x, adj_y, e.button.button);
-		} else if(e.type == SDL_MOUSEBUTTONUP) {
-			claimed = doc_->handleMouseButtonUp(false, adj_x, adj_y, e.button.button);
+		if(adj_x >= 0 && adj_y >= 0) {
+			if(e.type == SDL_MOUSEMOTION) {
+				claimed = doc_->handleMouseMotion(false, adj_x, adj_y);
+			} else if(e.type == SDL_MOUSEBUTTONDOWN) {
+				claimed = doc_->handleMouseButtonDown(false, adj_x, adj_y, e.button.button);
+			} else if(e.type == SDL_MOUSEBUTTONUP) {
+				claimed = doc_->handleMouseButtonUp(false, adj_x, adj_y, e.button.button);
+			}
 		}
 
 		return claimed;
@@ -531,6 +533,12 @@ namespace xhtml
 				v.emplace_back(el.get());
 			}
 			return variant(&v);
+		END_DEFINE_FN
+
+		BEGIN_DEFINE_FN(rebuildTree, "() ->commands")
+			return variant(new game_logic::FnCommandCallable([=]() {
+				obj.doc_->rebuildTree();
+			}));
 		END_DEFINE_FN
 		
 	END_DEFINE_CALLABLE(DocumentObject)

@@ -641,7 +641,7 @@ namespace xhtml
 		bool changed = false;
 
 		if(needsRebuild()) {
-			LOG_DEBUG("Rebuild layout!");
+			LOG_INFO("Rebuild layout!");
 			style_tree.reset();
 			trigger_rebuild_ = false;
 			triggerLayout();
