@@ -389,6 +389,21 @@ namespace xhtml
 			return false;
 		}
 		// XXX
+		bool focus = hasPseudoClass(css::PseudoClass::FOCUS);
+		if(!focus || active_rect_.empty()) {
+			return true;
+		}
+		if(mouse_entered_) {
+			if((active_pclass_ & css::PseudoClass::FOCUS) != css::PseudoClass::FOCUS) {
+				active_pclass_ = active_pclass_ | css::PseudoClass::FOCUS;
+				*trigger = true;
+			}
+			return true;
+		} else if((active_pclass_ & css::PseudoClass::FOCUS) == css::PseudoClass::FOCUS) {
+			active_pclass_ = active_pclass_ & ~css::PseudoClass::FOCUS;
+			*trigger = true;
+		}
+
 		return true;
 	}
 
@@ -411,6 +426,7 @@ namespace xhtml
 		if(!handleMouseButtonDownInt(trigger, p)) {
 			return false;
 		}
+
 		// XXX
 		return true;
 	}

@@ -224,6 +224,7 @@ namespace xhtml
 		virtual void handlePreChildLayout2(LayoutEngine& eng, const Dimensions& containing) {}
 		virtual void handlePreChildLayout(LayoutEngine& eng, const Dimensions& containing) {}
 		virtual void handlePostChildLayout(LayoutEngine& eng, BoxPtr child) {}
+		virtual void handlePostFloatChildLayout(LayoutEngine& eng, BoxPtr child) {}
 		virtual void postParentLayout(LayoutEngine& eng, const Dimensions& containing) {}
 		virtual void handleRender(const KRE::SceneTreePtr& scene_tree, const point& offset) const = 0;
 		virtual void handleEndRender(const KRE::SceneTreePtr& scene_tree, const point& offset) const {}
