@@ -81,6 +81,11 @@ namespace xhtml
 			}
 			setContentX(left);
 			setContentY(top);
+
+		} else {
+			for(auto& child : getChildren()) {
+				setContentHeight(child->getTop() + child->getHeight() + child->getMBPBottom());
+			}
 		}
 	}
 
@@ -133,7 +138,13 @@ namespace xhtml
 	void BlockBox::handlePostChildLayout(LayoutEngine& eng, BoxPtr child)
 	{
 		// Called after every child is laid out.
+		//std::cerr << "t: " << (child->getTop()/65536.f) << ", h: " << (child->getHeight()/65536.f) << ", mbp-b: " << (child->getMBPBottom()/65536.f) << "\n";
 		setContentHeight(child->getTop() + child->getHeight() + child->getMBPBottom());
+	}
+
+	void BlockBox::handlePostFloatChildLayout(LayoutEngine& eng, BoxPtr child)
+	{
+		//handlePostChildLayout(eng, child);
 	}
 
 	void BlockBox::layoutWidth(const Dimensions& containing)
