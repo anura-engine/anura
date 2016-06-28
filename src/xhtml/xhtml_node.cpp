@@ -396,11 +396,13 @@ namespace xhtml
 		if(mouse_entered_) {
 			if((active_pclass_ & css::PseudoClass::FOCUS) != css::PseudoClass::FOCUS) {
 				active_pclass_ = active_pclass_ | css::PseudoClass::FOCUS;
+				getOwnerDoc()->setActiveElement(shared_from_this());
 				*trigger = true;
 			}
 			return true;
 		} else if((active_pclass_ & css::PseudoClass::FOCUS) == css::PseudoClass::FOCUS) {
 			active_pclass_ = active_pclass_ & ~css::PseudoClass::FOCUS;
+			getOwnerDoc()->setActiveElement(nullptr);
 			*trigger = true;
 		}
 

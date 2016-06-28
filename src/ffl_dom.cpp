@@ -324,6 +324,19 @@ namespace xhtml
 		return claimed;
 	}
 
+	ElementObjectPtr DocumentObject::getActiveElement() const
+	{
+		auto element = doc_->getActiveElement();
+		if(element != nullptr) {
+			ElementObjectPtr& eo = element_cache_[element];
+			if(eo == nullptr) {
+				eo.reset(new ElementObject(element));
+			}
+			return eo;
+		} 
+		return nullptr;
+	}
+
 	ElementObjectPtr DocumentObject::getElementById(const std::string& element_id) const
 	{
 		NodePtr element = doc_->getElementById(element_id);
@@ -480,14 +493,15 @@ namespace xhtml
 			obj.layout_size_.set_x(value[0].as_int());
 			obj.layout_size_.set_y(value[1].as_int());
 
+		DEFINE_FIELD(activeElement, "builtin element_object|null")
+			ElementObjectPtr eo = obj.getActiveElement();
+			return eo == nullptr ? variant() : variant(eo.get());
+
 		BEGIN_DEFINE_FN(getElementById, "(string) ->builtin element_object|null")
 			const std::string element_id = FN_ARG(0).as_string();
 			ElementObjectPtr eo = obj.getElementById(element_id);
-			if(eo == nullptr) {
-				return variant();
-			}
-			return variant(eo.get());
-		END_DEFINE_FN
+			return eo == nullptr ? variant() : variant(eo.get());
+			END_DEFINE_FN
 
 		BEGIN_DEFINE_FN(getElementsByTagName, "(string) ->[builtin element_object]")
 			const std::string element_tag = FN_ARG(0).as_string();
