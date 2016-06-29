@@ -224,6 +224,9 @@ namespace xhtml
 		void renderComplete() { trigger_render_ = false;  }
 		void rebuildComplete() { trigger_rebuild_ = false; }
 
+		NodePtr getActiveElement() const { return active_element_.lock(); }
+		void setActiveElement(const NodePtr& el) { active_element_ = el; }
+
 		bool process(StyleNodePtr& style_tree, int w, int h);
 
 		// type is expected to be a content type i.e. "text/javascript"
@@ -235,6 +238,8 @@ namespace xhtml
 		bool trigger_layout_;
 		bool trigger_render_;
 		bool trigger_rebuild_;
+
+		WeakNodePtr active_element_;
 	};
 
 	class DocumentFragment : public Node

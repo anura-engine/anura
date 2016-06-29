@@ -191,7 +191,8 @@ namespace xhtml
 		  scene_tree_(nullptr),
 		  doc_name_(),
 		  ss_name_(),
-		  layout_size_()
+		  layout_size_(),
+		  do_onload_(true)
 	{
 		if(v.is_map() && v.has_key("xhtml") && v["xhtml"].is_string()) {
 			doc_name_ = module::map_file(v["xhtml"].as_string());
@@ -284,6 +285,15 @@ namespace xhtml
 			ASSERT_LOG(style_tree_ != nullptr, "Style tree was null.");
 			scene_tree_ = style_tree_->getSceneTree();
 		}
+		if(do_onload_) {
+			do_onload_ = false;
+			if(environment_ != nullptr) {
+				auto* obj = dynamic_cast<CustomObject*>(environment_);
+				if(obj != nullptr) {
+					obj->handleEvent("onload");
+				}
+			}
+		}
 
 		float delta_time = 0.0f;
 		if(last_process_time_ == -1) {
@@ -303,15 +313,30 @@ namespace xhtml
 		const int adj_x = (e.type == SDL_MOUSEMOTION ? e.motion.x : e.button.x) - p.x - layout_size_.x();
 		const int adj_y = (e.type == SDL_MOUSEMOTION ? e.motion.y : e.button.y) - p.y - layout_size_.y();
 		bool claimed = false;
-		if(e.type == SDL_MOUSEMOTION) {
-			claimed = doc_->handleMouseMotion(false, adj_x, adj_y);
-		} else if(e.type == SDL_MOUSEBUTTONDOWN) {
-			claimed = doc_->handleMouseButtonDown(false, adj_x, adj_y, e.button.button);
-		} else if(e.type == SDL_MOUSEBUTTONUP) {
-			claimed = doc_->handleMouseButtonUp(false, adj_x, adj_y, e.button.button);
+		if(adj_x >= 0 && adj_y >= 0) {
+			if(e.type == SDL_MOUSEMOTION) {
+				claimed = doc_->handleMouseMotion(false, adj_x, adj_y);
+			} else if(e.type == SDL_MOUSEBUTTONDOWN) {
+				claimed = doc_->handleMouseButtonDown(false, adj_x, adj_y, e.button.button);
+			} else if(e.type == SDL_MOUSEBUTTONUP) {
+				claimed = doc_->handleMouseButtonUp(false, adj_x, adj_y, e.button.button);
+			}
 		}
 
 		return claimed;
+	}
+
+	ElementObjectPtr DocumentObject::getActiveElement() const
+	{
+		auto element = doc_->getActiveElement();
+		if(element != nullptr) {
+			ElementObjectPtr& eo = element_cache_[element];
+			if(eo == nullptr) {
+				eo.reset(new ElementObject(element));
+			}
+			return eo;
+		} 
+		return nullptr;
 	}
 
 	ElementObjectPtr DocumentObject::getElementById(const std::string& element_id) const
@@ -470,14 +495,15 @@ namespace xhtml
 			obj.layout_size_.set_x(value[0].as_int());
 			obj.layout_size_.set_y(value[1].as_int());
 
+		DEFINE_FIELD(activeElement, "builtin element_object|null")
+			ElementObjectPtr eo = obj.getActiveElement();
+			return eo == nullptr ? variant() : variant(eo.get());
+
 		BEGIN_DEFINE_FN(getElementById, "(string) ->builtin element_object|null")
 			const std::string element_id = FN_ARG(0).as_string();
 			ElementObjectPtr eo = obj.getElementById(element_id);
-			if(eo == nullptr) {
-				return variant();
-			}
-			return variant(eo.get());
-		END_DEFINE_FN
+			return eo == nullptr ? variant() : variant(eo.get());
+			END_DEFINE_FN
 
 		BEGIN_DEFINE_FN(getElementsByTagName, "(string) ->[builtin element_object]")
 			const std::string element_tag = FN_ARG(0).as_string();
@@ -507,6 +533,12 @@ namespace xhtml
 				v.emplace_back(el.get());
 			}
 			return variant(&v);
+		END_DEFINE_FN
+
+		BEGIN_DEFINE_FN(rebuildTree, "() ->commands")
+			return variant(new game_logic::FnCommandCallable([=]() {
+				obj.doc_->rebuildTree();
+			}));
 		END_DEFINE_FN
 		
 	END_DEFINE_CALLABLE(DocumentObject)

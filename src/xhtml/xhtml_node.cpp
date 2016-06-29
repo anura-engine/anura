@@ -389,6 +389,23 @@ namespace xhtml
 			return false;
 		}
 		// XXX
+		bool focus = hasPseudoClass(css::PseudoClass::FOCUS);
+		if(!focus || active_rect_.empty()) {
+			return true;
+		}
+		if(mouse_entered_) {
+			if((active_pclass_ & css::PseudoClass::FOCUS) != css::PseudoClass::FOCUS) {
+				active_pclass_ = active_pclass_ | css::PseudoClass::FOCUS;
+				getOwnerDoc()->setActiveElement(shared_from_this());
+				*trigger = true;
+			}
+			return true;
+		} else if((active_pclass_ & css::PseudoClass::FOCUS) == css::PseudoClass::FOCUS) {
+			active_pclass_ = active_pclass_ & ~css::PseudoClass::FOCUS;
+			getOwnerDoc()->setActiveElement(nullptr);
+			*trigger = true;
+		}
+
 		return true;
 	}
 
@@ -411,6 +428,7 @@ namespace xhtml
 		if(!handleMouseButtonDownInt(trigger, p)) {
 			return false;
 		}
+
 		// XXX
 		return true;
 	}
@@ -623,7 +641,7 @@ namespace xhtml
 		bool changed = false;
 
 		if(needsRebuild()) {
-			LOG_DEBUG("Rebuild layout!");
+			LOG_INFO("Rebuild layout!");
 			style_tree.reset();
 			trigger_rebuild_ = false;
 			triggerLayout();

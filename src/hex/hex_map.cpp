@@ -313,9 +313,6 @@ namespace hex
 			obj.changed_ = value.as_bool();
 		DEFINE_FIELD(tile_height, "int")
 			return variant(HexTileSize);
-		DEFINE_FIELD(editor_info, "[builtin hex_editor_info]")
-			auto ei = HexEditorInfo::getHexEditorInfo();
-			return variant(&ei);
 		BEGIN_DEFINE_FN(tile_loc_from_pixel_pos, "([int,int]) ->[int,int]")
 			variant v = FN_ARG(0);
 			int x = v[0].as_int();

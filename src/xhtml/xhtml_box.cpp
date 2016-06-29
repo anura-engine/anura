@@ -188,6 +188,7 @@ namespace xhtml
 			if(child->isFloat()) {
 				handlePreChildLayout3(eng, containing);
 				child->layout(eng, dimensions_);
+				handlePostFloatChildLayout(eng, child);
 				eng.addFloat(child);
 			}
 		}
