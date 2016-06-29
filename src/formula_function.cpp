@@ -3216,14 +3216,22 @@ FUNCTION_DEF_IMPL
 				v = dlg_template;
 			}
 			return variant(new gui::Dialog(v, e));
+		FUNCTION_ARGS_DEF
+			ARG_TYPE("object");
+			ARG_TYPE("map|string");
+		FUNCTION_TYPE_DEF
+			return variant_type::get_builtin("dialog");
 		END_FUNCTION_DEF(dialog)
 
-		FUNCTION_DEF(show_modal, 1, 1, "showModal(dialog): Displays a modal dialog on the screen.")
+		FUNCTION_DEF(show_modal, 1, 1, "show_modal(dialog): Displays a modal dialog on the screen.")
 			variant graph = args()[0]->evaluate(variables);
 			gui::DialogPtr dialog = boost::intrusive_ptr<gui::Dialog>(graph.try_convert<gui::Dialog>());
 			ASSERT_LOG(dialog, "Dialog given is not of the correct type.");
 			dialog->showModal();
 			return variant::from_bool(dialog->cancelled() == false);
+		FUNCTION_ARGS_DEF
+			ARG_TYPE("builtin dialog");
+		RETURN_TYPE("bool")
 		END_FUNCTION_DEF(show_modal)
 
 		FUNCTION_DEF(index, 2, 2, "index(list, value) -> index of value in list: Returns the index of the value in the list or -1 if value wasn't found in the list.")
