@@ -137,8 +137,12 @@ namespace gui
 				filters_.push_back(filter_pair(v["filters"][n][0].as_string(), v["filters"][n][1].as_string()));
 			}
 		}
-		relative_path_ = sys::get_absolute_path(preferences::user_data_path());
-		setDefaultPath(preferences::user_data_path());
+		std::string def_path = preferences::user_data_path();
+		if(v.has_key("default_path") && v["default_path"].is_string()) {
+			def_path = v["default_path"].as_string();
+		}
+		relative_path_ = sys::get_absolute_path(def_path);
+		setDefaultPath(def_path);
 
 		editor_ = new TextEditorWidget(400, 32);
 		editor_->setFontSize(16);
