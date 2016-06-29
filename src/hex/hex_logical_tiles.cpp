@@ -26,6 +26,7 @@
 #include "asserts.hpp"
 #include "hex_logical_tiles.hpp"
 #include "string_utils.hpp"
+#include "variant_utils.hpp"
 
 namespace hex 
 {
@@ -170,6 +171,24 @@ namespace hex
 		{
 			// XX if we ever have a case where we need to modify tiles differently between the
 			// internal server and here then we need to clone all the elements in m.tiles_.
+		}
+
+		variant LogicalMap::write() const
+		{
+			variant_builder res;
+			res.add("x", x_);
+			res.add("y", y_);
+			res.add("width", width_);
+			for(const auto& t : tiles_) {
+				std::stringstream ss;
+				ss << t->id();
+				for(const auto& tag : t->getTags()) {
+					ss << "|" << tag;
+				}
+				res.add("tiles", ss.str());
+			}
+
+			return res.build();
 		}
 
 		ConstTilePtr LogicalMap::getHexTile(direction d, int xx, int yy) const

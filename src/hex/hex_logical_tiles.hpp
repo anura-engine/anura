@@ -107,6 +107,8 @@ namespace hex
 			void surrenderReferences(GarbageCollector* collector) override;
 
 			static LogicalMapPtr factory(const variant& v);
+
+			variant write() const;
 		private:
 			DECLARE_CALLABLE(LogicalMap);
 
