@@ -183,7 +183,8 @@ private:
 			"Open...", "ctrl+o", std::bind(&editor_menu_dialog::open_level, this),
 			"Save", "ctrl+s", std::bind(&editor::save_level, &editor_),
 			"Save As...", "", std::bind(&editor_menu_dialog::save_level_as, this),
-			"Create New Module...", "", std::bind(&editor::create_new_module, &editor_),
+// This doesn't really work. Use --create-module utility instead.
+//			"Create New Module...", "", std::bind(&editor::create_new_module, &editor_),
 			"Edit Module Properties...", "", std::bind(&editor::edit_module_properties, &editor_),
 			"Create New Object...", "", std::bind(&editor::create_new_object, &editor_),
 			"Exit", "<esc>", std::bind(&editor::quit, &editor_),
