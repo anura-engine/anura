@@ -139,7 +139,7 @@ namespace hex
 				auto ov = Overlay::getOverlay(tag);
 				unsigned int tex_id = ov->getTexture()->id();
 				auto it = overlay_map.find(tex_id);
-				overlay_map[tex_id].emplace_back(&ov->getAlternative(), &t, ov->getTexture());
+				overlay_map[tex_id].emplace_back(&ov->getAlternative("normal"), &t, ov->getTexture());
 			}
 		}
 
