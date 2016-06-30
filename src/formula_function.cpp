@@ -2009,6 +2009,13 @@ FUNCTION_DEF_IMPL
 			RETURN_TYPE("[builtin hex_editor_info]")
 		END_FUNCTION_DEF(get_hex_editor_info)
 
+		FUNCTION_DEF(get_hex_overlay_info, 0, 0, "get_hex_overlay_info() ->[builtin overlay]")
+			auto oi = hex::Overlay::getOverlayInfo();
+			return variant(&oi);
+		FUNCTION_ARGS_DEF
+			RETURN_TYPE("[builtin overlay]")
+		END_FUNCTION_DEF(get_hex_overlay_info)
+
 		FUNCTION_DEF(hex_logical_map, 1, 1, "hex_logical_map(map) ->builtin logical_map")
 			const variant m = args()[0]->evaluate(variables);
 

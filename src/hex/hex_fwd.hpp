@@ -43,5 +43,5 @@ namespace hex
 	typedef std::shared_ptr<HexObject> HexObjectPtr;
 	typedef std::shared_ptr<const TileSheet> TileSheetPtr;
 	typedef std::shared_ptr<TileType> TileTypePtr;
-	typedef std::shared_ptr<Overlay> OverlayPtr;
+	typedef boost::intrusive_ptr<Overlay> OverlayPtr;
 }

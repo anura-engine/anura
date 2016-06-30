@@ -34,6 +34,7 @@
 #include "TextureObject.hpp"
 
 #include "random.hpp"
+#include "variant_utils.hpp"
 
 namespace hex 
 {
@@ -287,11 +288,12 @@ namespace hex
 
 	OverlayPtr Overlay::create(const std::string& name, const std::string& image, const std::vector<variant>& alts)
 	{
-		return std::make_shared<Overlay>(name, image, alts);
+		return OverlayPtr(new Overlay(name, image, alts));
 	}
 
 	Overlay::Overlay(const std::string& name, const std::string& image, const std::vector<variant>& alts)
 		: name_(name),
+		  image_name_(image),
 		  texture_(KRE::Texture::createTexture(image)),
 		  alternates_()
 	{
@@ -329,6 +331,32 @@ namespace hex
 		return alt;
 	}
 
+	std::vector<variant> Overlay::getOverlayInfo()
+	{
+		std::vector<variant> res;
+		for(const auto& o : get_overlay_map()) {
+			res.emplace_back(o.second.get());
+		}
+		return res;
+	}
+
+	BEGIN_DEFINE_CALLABLE_NOBASE(Overlay)
+		DEFINE_FIELD(name, "string")
+			return variant(obj.name_);
+		DEFINE_FIELD(image_file, "string")
+			return variant(obj.image_name_);
+		DEFINE_FIELD(alternates, "[{rect:[int,int,int,int], border:[int,int,int,int]}]")
+			std::vector<variant> alt_list;
+			for(const auto& alt : obj.alternates_) {
+				variant_builder res;
+				res.add("rect", alt.r.write());
+				for(const auto& border : alt.border) {
+					res.add("border", border);
+				}
+				alt_list.emplace_back(res.build());
+			}
+			return variant(&alt_list);
+	END_DEFINE_CALLABLE(Overlay)
 
 	HexEditorInfo::HexEditorInfo()
 		: name_(),
