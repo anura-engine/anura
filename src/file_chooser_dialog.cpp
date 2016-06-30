@@ -36,7 +36,9 @@
 #include "dialog.hpp"
 #include "dropdown_widget.hpp"
 #include "file_chooser_dialog.hpp"
+#include "graphical_font_label.hpp"
 #include "grid_widget.hpp"
+#include "i18n.hpp"
 #include "input.hpp"
 #include "label.hpp"
 #include "module.hpp"
@@ -101,11 +103,18 @@ namespace gui
 {
 	FileChooserDialog::FileChooserDialog(int x, int y, int w, int h, const filter_list& filters, bool dir_only, const std::string& default_path)
 		: Dialog(x,y,w,h), 
-		filters_(filters), 
-		file_open_dialog_(true), 
-		filter_selection_(0), 
-		dir_only_(dir_only), 
-		use_relative_paths_(false)
+		  abs_default_path_(),
+		  current_path_(),
+		  relative_path_(),
+		  file_name_(),
+		  filters_(filters), 
+		  filter_selection_(0), 
+		  file_open_dialog_(true), 
+		  editor_(),
+		  context_menu_(),
+		  filter_widget_(),
+		  dir_only_(dir_only), 
+		  use_relative_paths_(false)
 	{
 		if(filters_.empty()) {
 			filters_.push_back(filter_pair("All files", ".*"));
@@ -125,9 +134,18 @@ namespace gui
 
 	FileChooserDialog::FileChooserDialog(variant v, game_logic::FormulaCallable* e)
 		: Dialog(v, e), 
-		filter_selection_(0), 
-		file_open_dialog_(v["open_dialog"].as_bool(true)), 
-		use_relative_paths_(v["use_relative_paths"].as_bool(false))
+		  abs_default_path_(),
+		  current_path_(),
+		  relative_path_(),
+		  file_name_(),
+ 		  filters_(),
+		  filter_selection_(0), 
+		  file_open_dialog_(v["open_dialog"].as_bool(true)), 
+		  editor_(),
+		  context_menu_(),
+		  filter_widget_(),
+		  dir_only_(false),
+		  use_relative_paths_(v["use_relative_paths"].as_bool(false))
 	{
 		if(v.has_key("filters")) {
 			ASSERT_LOG(v["filters"].is_list(), "Expected filters parameter to be a list");
@@ -141,12 +159,72 @@ namespace gui
 		if(v.has_key("default_path") && v["default_path"].is_string()) {
 			def_path = v["default_path"].as_string();
 		}
-		relative_path_ = sys::get_absolute_path(def_path);
+		relative_path_ = sys::get_absolute_path(sys::get_cwd());
 		setDefaultPath(def_path);
 
 		editor_ = new TextEditorWidget(400, 32);
 		editor_->setFontSize(16);
-		//file_text->setOnChangeHandler(std::bind(&file_chooser_dialog::change_text_attribute, this, change_entry, attr));
+		editor_->setOnChangeHandler([this](){
+			this->file_name_ = this->editor_->text();
+		});
+
+		std::function<WidgetPtr(const std::string&)> make_font_label;
+		if(module::get_default_font() == "bitmap") {
+			make_font_label = [](const std::string& label){
+				return WidgetPtr(new GraphicalFontLabel(label, "door_label", 2));
+			};
+		} else {
+			make_font_label = [](const std::string& label){
+				return WidgetPtr(new Label(label, 16, module::get_default_font()));
+			};
+		}
+
+		setCloseHook([this, make_font_label](bool cancelled) {
+			if(this->use_relative_paths_) {
+				std::string rel_path = sys::compute_relative_path(relative_path_, current_path_);
+				if(!rel_path.empty()) {
+					file_name_ = rel_path + '/' + file_name_;
+				}
+			} else {
+				file_name_ = current_path_ + '/' + file_name_;
+			}
+
+			if(!file_open_dialog_ && sys::file_exists(file_name_)) {
+				const int button_width = 150;
+				const int button_height = 40;
+				const int padding = 20;
+
+				WidgetPtr l_msg1 = new Label(_("File already exists."), 16, module::get_default_font());
+				WidgetPtr l_msg2 = new Label(_("Overwrite Y/N?"), 16, module::get_default_font());
+
+				const int ww = std::max(l_msg1->width(), button_width * 2) + 100;
+				const int hh = l_msg1->height() + l_msg2->height() + button_height + 100;
+				const int xx = x() + (width() - ww) / 2;
+				const int yy = y() + (height() - hh) / 2;
+
+				DialogPtr d = DialogPtr(new Dialog(xx, yy, ww, hh));
+				WidgetPtr b_okay = new Button(make_font_label(_("OK")), [&d](){ 
+					d->close();
+				});
+				WidgetPtr b_cancel = new Button(make_font_label(_("Cancel")), [&d](){ 
+					d->cancel();
+				});
+				b_okay->setDim(button_width, button_height);
+				b_cancel->setDim(button_width, button_height);
+
+				d->addWidget(l_msg1, (ww - l_msg1->width()) / 2, padding);
+				d->addWidget(l_msg2, (ww - l_msg2->width()) / 2, padding*2 + l_msg2->height());
+				d->addWidget(b_okay, 20, d->height() - button_height - 20);
+				d->addWidget(b_cancel, d->width() - button_width - 20, d->height() - button_height - 20);
+
+				d->showModal();
+				if(d->cancelled() == true) {
+					return true;
+				}
+			}
+			return false; // false to closed, true to remain open.
+		});
+
 		editor_->setOnEnterHandler(std::bind(&FileChooserDialog::textEnter, this, editor_));
 		editor_->setOnTabHandler(std::bind(&FileChooserDialog::textEnter, this, editor_));
 		init();
@@ -236,7 +314,7 @@ namespace gui
 			for(const std::string& file : files) {
 				boost::regex re(filters_[filter_selection_].second, boost::regex_constants::icase);
 				if(boost::regex_match(file, re)) {
-					filtered_file_list.push_back(file);
+					filtered_file_list.emplace_back(file);
 					g->addCol(WidgetPtr(new Label(file, KRE::Color::colorWhite())));
 				}
 			}
@@ -286,6 +364,7 @@ namespace gui
 		}
 		if(d[index] == ".."){
 			upButton();
+			return;
 		}
 		current_path_ = current_path_ + "/" + d[index];
 		if(dir_only_) {
@@ -437,7 +516,7 @@ namespace gui
 		if(index < 0 || size_t(index) >= f.size()) {
 			return;
 		}
-		file_name_ = current_path_ + "/" + f[index];
+		file_name_ = f[index];
 		editor_->setText(f[index]);
 		init();
 	}
