@@ -79,6 +79,7 @@
 #include "uuid.hpp"
 #include "variant_utils.hpp"
 #include "voxel_model.hpp"
+#include "widget_factory.hpp"
 
 #include "Texture.hpp"
 #include "Cursor.hpp"
@@ -3215,7 +3216,8 @@ FUNCTION_DEF_IMPL
 			} else {
 				v = dlg_template;
 			}
-			return variant(new gui::Dialog(v, e));
+			auto d = widget_factory::create(v, e);
+			return variant(d.get());
 		FUNCTION_ARGS_DEF
 			ARG_TYPE("object");
 			ARG_TYPE("map|string");
@@ -3230,7 +3232,7 @@ FUNCTION_DEF_IMPL
 			dialog->showModal();
 			return variant::from_bool(dialog->cancelled() == false);
 		FUNCTION_ARGS_DEF
-			ARG_TYPE("builtin dialog");
+			ARG_TYPE("builtin dialog|builtin file_chooser_dialog");
 		RETURN_TYPE("bool")
 		END_FUNCTION_DEF(show_modal)
 
