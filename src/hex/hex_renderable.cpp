@@ -136,10 +136,17 @@ namespace hex
 		rng::set_seed(hex_tile_seed);
 		for(auto& t : tiles) {
 			for(auto& tag : t.logical_tile()->getTags()) {
-				auto ov = Overlay::getOverlay(tag);
+				std::string tag_name = tag;
+				std::string tag_sub = "default";
+				auto pos = tag.find('^');
+				if(pos != std::string::npos) {
+					tag_name = tag.substr(0, pos);
+					tag_sub = tag.substr(pos + 1);
+				}
+				auto ov = Overlay::getOverlay(tag_name);
 				unsigned int tex_id = ov->getTexture()->id();
 				auto it = overlay_map.find(tex_id);
-				overlay_map[tex_id].emplace_back(&ov->getAlternative("normal"), &t, ov->getTexture());
+				overlay_map[tex_id].emplace_back(&ov->getAlternative(tag_sub), &t, ov->getTexture());
 			}
 		}
 

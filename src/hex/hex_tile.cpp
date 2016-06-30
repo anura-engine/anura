@@ -326,10 +326,10 @@ namespace hex
 	}
 
 	const Alternate& Overlay::getAlternative(const std::string& type) const
-	{
+	{		
 		ASSERT_LOG(!alternates_.empty(), "No alternatives found, must be at least one.");
-		auto it = alternates_.find(type);
-		ASSERT_LOG(it != alternates_.end(), "Unknown alternate '" << type << "'");
+		auto it = alternates_.find(type.empty() ? "default" : type);
+		ASSERT_LOG(it != alternates_.end(), "Unknown alternate '" << (type.empty() ? "default" : type) << "'");
 		const auto& alt = it->second[rng::generate() % alternates_.size()];
 		return alt;
 	}

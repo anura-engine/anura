@@ -118,7 +118,7 @@ namespace hex
 		explicit Overlay(const std::string& name, const std::string& image, const std::map<std::string, std::vector<variant>>& alts);
 		static OverlayPtr create(const std::string& name, const std::string& image, std::map<std::string, std::vector<variant>>& alts);
 		static OverlayPtr getOverlay(const std::string& name);
-		const Alternate& getAlternative(const std::string& type) const;
+		const Alternate& getAlternative(const std::string& type = std::string()) const;
 		KRE::TexturePtr getTexture() const { return texture_; }
 		static std::vector<variant> getOverlayInfo();
 	private:
