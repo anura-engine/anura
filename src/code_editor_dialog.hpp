@@ -55,7 +55,6 @@ public:
 	void load_file(std::string fname, bool focus=true, std::function<void()>* fn=nullptr);
 
 	bool hasKeyboardFocus() const;
-	void clearKeyboardFocus();
 
 	void process();
 

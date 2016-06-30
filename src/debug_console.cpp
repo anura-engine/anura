@@ -328,13 +328,6 @@ namespace debug_console
 		text_editor_->setText(Prompt);
 		text_editor_->setCursor(0, static_cast<int>(Prompt.size()));
 		text_editor_->setFontSize(g_console_font_size);
-
-/*
-		if(gui::Dialog::CodeEditorDialog::hasKeyboardFocus)
-		{
-			gui::Dialog::CodeEditorDialog::clearKeyboardFocus();
-		}
-		*/
 	}
 
 	void ConsoleDialog::onMoveCursor()

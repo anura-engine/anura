@@ -354,13 +354,6 @@ bool CodeEditorDialog::hasKeyboardFocus() const
 	return editor_->hasFocus() || search_->hasFocus() || replace_->hasFocus();
 }
 
-void CodeEditorDialog::clearKeyboardFocus()
-{
-	editor_->setFocus(false);
-	search_->setFocus(false);
-	replace_->setFocus(false);
-}
-
 bool CodeEditorDialog::handleEvent(const SDL_Event& event, bool claimed)
 {
 	if(animation_preview_) {
