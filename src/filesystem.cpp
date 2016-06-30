@@ -573,4 +573,9 @@ namespace sys
 		boost::filesystem::permissions(path, boost::filesystem::status(path).permissions() | boost::filesystem::owner_write);
 #endif
 	}
+
+	std::string get_cwd()
+	{
+		return boost::filesystem::current_path().generic_string();
+	}
 }
