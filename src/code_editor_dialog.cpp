@@ -1139,7 +1139,7 @@ void edit_and_continue_assert(const std::string& msg, std::function<void()> fn)
 	std::vector<CallStackEntry> reverse_stack = stack;
 	std::reverse(reverse_stack.begin(), reverse_stack.end());
 	if(stack.empty() || !Level::getCurrentPtr()) {
-		return;
+		assert(false);
 	}
 
 	auto wnd = KRE::WindowManager::getMainWindow();
