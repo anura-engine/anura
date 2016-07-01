@@ -34,6 +34,7 @@
 #include "TextureObject.hpp"
 
 #include "random.hpp"
+#include "variant_utils.hpp"
 
 namespace hex 
 {
@@ -80,21 +81,18 @@ namespace hex
 				const std::string key = p.first.as_string();
 				ASSERT_LOG(p.second.is_map(), "Second element of overlay must be a map. " << p.second.debug_location());
 				std::string image;
-				std::vector<variant> normals;
+				std::map<std::string, std::vector<variant>> normals;
 
 				for(const auto el : p.second.as_map()) {
 					ASSERT_LOG(el.first.is_string(), "First element must be string. " << el.first.debug_location());
 					const std::string ekey = el.first.as_string();
-					if(ekey == "tile") {
-						// ignore for now, is editor image
-
-					} else if(ekey == "image") {
+					if(ekey == "image") {
 						ASSERT_LOG(el.second.is_string(), "'image' attribute should have a string value. " << el.second.debug_location());
 						image = el.second.as_string();
-					} else if (ekey == "normal") {
-						// XXX This needs some reconsideration.
-						ASSERT_LOG(el.second.is_list(), "'normal' attribute should have a list value. " << el.second.debug_location());
-						normals = el.second.as_list();
+					} else {
+						const std::string name = el.first.as_string();
+						ASSERT_LOG(el.second.is_list(), "'" << name << "' attribute should have a list value. " << el.second.debug_location());
+						normals[name] = el.second.as_list();
 					}
 				}
 				ASSERT_LOG(!image.empty(), "No 'image' tag found.");
@@ -285,33 +283,38 @@ namespace hex
 		return it->second;
 	}
 
-	OverlayPtr Overlay::create(const std::string& name, const std::string& image, const std::vector<variant>& alts)
+	OverlayPtr Overlay::create(const std::string& name, const std::string& image, std::map<std::string, std::vector<variant>>& alts)
 	{
-		return std::make_shared<Overlay>(name, image, alts);
+		return OverlayPtr(new Overlay(name, image, alts));
 	}
 
-	Overlay::Overlay(const std::string& name, const std::string& image, const std::vector<variant>& alts)
+	Overlay::Overlay(const std::string& name, const std::string& image, const std::map<std::string, std::vector<variant>>& alts)
 		: name_(name),
+		  image_name_(image),
 		  texture_(KRE::Texture::createTexture(image)),
 		  alternates_()
 	{
-		alternates_.resize(alts.size());
-		auto it = alternates_.begin();
-		for(const auto& v : alts) {
-			// should consist of a series of rectangles (x1 y1 x2 y2) in the 'rect' attribute and an optional 'border' attribute.
-			ASSERT_LOG(v.has_key("rect"), "Unable to find key 'rect' while parsing the overlays");
-			it->r = rect(v["rect"]);
-			if(v.has_key("border")) {
-				ASSERT_LOG(v["border"].is_list() && v["border"].num_elements() == 4, "The 'border' attribute should be a list of 4(four) elements.");
-				for(int n = 0; n != 4; ++n) {
-					it->border[n] = v["border"][n].as_int32();
+		for(const auto& alternate : alts) {
+			std::vector<Alternate> a;
+			a.resize(alternate.second.size());
+			auto it = a.begin();
+			for(const auto& v : alternate.second) {
+				// should consist of a series of rectangles (x1 y1 x2 y2) in the 'rect' attribute and an optional 'border' attribute.
+				ASSERT_LOG(v.has_key("rect"), "Unable to find key 'rect' while parsing the overlays");
+				it->r = rect(v["rect"]);
+				if(v.has_key("border")) {
+					ASSERT_LOG(v["border"].is_list() && v["border"].num_elements() == 4, "The 'border' attribute should be a list of 4(four) elements.");
+					for(int n = 0; n != 4; ++n) {
+						it->border[n] = v["border"][n].as_int32();
+					}
+				} else {
+					for(int n = 0; n != 4; ++n) {
+						it->border[n] = 0;
+					}
 				}
-			} else {
-				for(int n = 0; n != 4; ++n) {
-					it->border[n] = 0;
-				}
+				++it;
 			}
-			++it;
+			alternates_[alternate.first] = a;
 		}
 	}
 
@@ -322,13 +325,45 @@ namespace hex
 		return it->second;
 	}
 
-	const Alternate& Overlay::getAlternative() const
-	{
-		ASSERT_LOG(!alternates_.empty(), "No alternatives found, must be at lease one.");
-		const auto& alt = alternates_[rng::generate() % alternates_.size()];
+	const Alternate& Overlay::getAlternative(const std::string& type) const
+	{		
+		ASSERT_LOG(!alternates_.empty(), "No alternatives found, must be at least one.");
+		auto it = alternates_.find(type.empty() ? "default" : type);
+		ASSERT_LOG(it != alternates_.end(), "Unknown alternate '" << (type.empty() ? "default" : type) << "'");
+		const auto& alt = it->second[rng::generate() % alternates_.size()];
 		return alt;
 	}
 
+	std::vector<variant> Overlay::getOverlayInfo()
+	{
+		std::vector<variant> res;
+		for(const auto& o : get_overlay_map()) {
+			res.emplace_back(o.second.get());
+		}
+		return res;
+	}
+
+	BEGIN_DEFINE_CALLABLE_NOBASE(Overlay)
+		DEFINE_FIELD(name, "string")
+			return variant(obj.name_);
+		DEFINE_FIELD(image_file, "string")
+			return variant(obj.image_name_);
+		DEFINE_FIELD(alternates, "{string -> [{string -> [int,int,int,int]}]}")
+			std::map<variant, variant> alt_map;
+			for(const auto& alt : obj.alternates_) {
+				std::vector<variant> alt_list;
+				for(const auto& altlst : alt.second) {
+					variant_builder res;
+					res.add("rect", altlst.r.write());
+					for(const auto& border : altlst.border) {
+						res.add("border", border);
+					}
+					alt_list.emplace_back(res.build());
+				}
+				alt_map[variant(alt.first)] = variant(&alt_list);
+			}
+			return variant(&alt_map);
+	END_DEFINE_CALLABLE(Overlay)
 
 	HexEditorInfo::HexEditorInfo()
 		: name_(),

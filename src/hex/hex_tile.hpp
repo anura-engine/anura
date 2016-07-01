@@ -112,20 +112,23 @@ namespace hex
 		std::array<int, 4> border;
 	};
 
-	class Overlay
+	class Overlay : public game_logic::FormulaCallable
 	{
 	public:
-		explicit Overlay(const std::string& name, const std::string& image, const std::vector<variant>& alts);
-		static OverlayPtr create(const std::string& name, const std::string& image, const std::vector<variant>& alts);
+		explicit Overlay(const std::string& name, const std::string& image, const std::map<std::string, std::vector<variant>>& alts);
+		static OverlayPtr create(const std::string& name, const std::string& image, std::map<std::string, std::vector<variant>>& alts);
 		static OverlayPtr getOverlay(const std::string& name);
-		const Alternate& getAlternative() const;
+		const Alternate& getAlternative(const std::string& type = std::string()) const;
 		KRE::TexturePtr getTexture() const { return texture_; }
+		static std::vector<variant> getOverlayInfo();
 	private:
+		DECLARE_CALLABLE(Overlay);
 
 		std::string name_;
+		std::string image_name_;
 		KRE::TexturePtr texture_;
 
-		std::vector<Alternate> alternates_;
+		std::map<std::string, std::vector<Alternate>> alternates_;
 
 		Overlay(const Overlay&) = delete;
 		Overlay() = delete;

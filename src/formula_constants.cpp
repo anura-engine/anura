@@ -115,6 +115,8 @@ namespace game_logic
 		return preferences::get_module_settings();
 	} else if(id == "MODULE_VERSION") {
 		return variant(module::get_module_version());
+	} else if(id == "MODULE_PATH") {
+		return variant(module::get_module_path());
 	}
 
 		for(auto i = constants_stack.rbegin(); i != constants_stack.rend(); ++i) {

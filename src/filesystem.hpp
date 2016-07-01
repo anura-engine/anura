@@ -90,4 +90,6 @@ namespace sys
 
 	bool is_file_executable(const std::string& path);
 	void set_file_executable(const std::string& path);
+
+	std::string get_cwd();
 }

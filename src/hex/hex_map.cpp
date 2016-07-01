@@ -90,8 +90,12 @@ namespace hex
 
 	variant HexMap::write() const
 	{
-		ASSERT_LOG(false, "XXX writeme hex_map::write()");
-		return variant();
+		auto v = map_->write();
+		v.add_attr(variant("zorder"), variant(zorder_));
+		if(border_ != 0) {
+			v.add_attr(variant("border"), variant(border_));
+		}
+		return v;
 	}
 
 	void HexMap::process()
@@ -313,6 +317,9 @@ namespace hex
 			obj.changed_ = value.as_bool();
 		DEFINE_FIELD(tile_height, "int")
 			return variant(HexTileSize);
+		BEGIN_DEFINE_FN(write, "() -> map")
+			return obj.write();
+		END_DEFINE_FN
 		BEGIN_DEFINE_FN(tile_loc_from_pixel_pos, "([int,int]) ->[int,int]")
 			variant v = FN_ARG(0);
 			int x = v[0].as_int();

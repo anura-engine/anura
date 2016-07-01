@@ -79,6 +79,7 @@
 #include "uuid.hpp"
 #include "variant_utils.hpp"
 #include "voxel_model.hpp"
+#include "widget_factory.hpp"
 
 #include "Texture.hpp"
 #include "Cursor.hpp"
@@ -2008,6 +2009,13 @@ FUNCTION_DEF_IMPL
 			RETURN_TYPE("[builtin hex_editor_info]")
 		END_FUNCTION_DEF(get_hex_editor_info)
 
+		FUNCTION_DEF(get_hex_overlay_info, 0, 0, "get_hex_overlay_info() ->[builtin overlay]")
+			auto oi = hex::Overlay::getOverlayInfo();
+			return variant(&oi);
+		FUNCTION_ARGS_DEF
+			RETURN_TYPE("[builtin overlay]")
+		END_FUNCTION_DEF(get_hex_overlay_info)
+
 		FUNCTION_DEF(hex_logical_map, 1, 1, "hex_logical_map(map) ->builtin logical_map")
 			const variant m = args()[0]->evaluate(variables);
 
@@ -3215,15 +3223,24 @@ FUNCTION_DEF_IMPL
 			} else {
 				v = dlg_template;
 			}
-			return variant(new gui::Dialog(v, e));
+			auto d = widget_factory::create(v, e);
+			return variant(d.get());
+		FUNCTION_ARGS_DEF
+			ARG_TYPE("object");
+			ARG_TYPE("map|string");
+		FUNCTION_TYPE_DEF
+			return variant_type::get_builtin("dialog");
 		END_FUNCTION_DEF(dialog)
 
-		FUNCTION_DEF(show_modal, 1, 1, "showModal(dialog): Displays a modal dialog on the screen.")
+		FUNCTION_DEF(show_modal, 1, 1, "show_modal(dialog): Displays a modal dialog on the screen.")
 			variant graph = args()[0]->evaluate(variables);
 			gui::DialogPtr dialog = boost::intrusive_ptr<gui::Dialog>(graph.try_convert<gui::Dialog>());
 			ASSERT_LOG(dialog, "Dialog given is not of the correct type.");
 			dialog->showModal();
 			return variant::from_bool(dialog->cancelled() == false);
+		FUNCTION_ARGS_DEF
+			ARG_TYPE("builtin dialog|builtin file_chooser_dialog");
+		RETURN_TYPE("bool")
 		END_FUNCTION_DEF(show_modal)
 
 		FUNCTION_DEF(index, 2, 2, "index(list, value) -> index of value in list: Returns the index of the value in the list or -1 if value wasn't found in the list.")
