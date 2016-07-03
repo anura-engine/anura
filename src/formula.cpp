@@ -2765,7 +2765,12 @@ namespace {
 						variant_type_ptr key_type, value_type;
 
 						variant_type_ptr sequence_type = (*res)[0]->queryVariantType();
-						value_type = sequence_type->is_list_of();
+						if(sequence_type->is_type(variant::VARIANT_TYPE_STRING)) {
+							value_type = variant_type::get_type(variant::VARIANT_TYPE_STRING);
+						} else {
+							value_type = sequence_type->is_list_of();
+						}
+
 						if(!value_type) {
 							key_type = sequence_type->is_map_of().first;
 							value_type = sequence_type->is_map_of().second;
