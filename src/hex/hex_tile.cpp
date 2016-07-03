@@ -58,6 +58,28 @@ namespace hex
 			static std::map<std::string, OverlayPtr> res;
 			return res;
 		}
+
+		void parse_editor_info(const variant& value, const std::string& id, const KRE::TexturePtr& tex, const std::string& image_file, const rect& default_rect)
+		{
+			ASSERT_LOG(value.is_map(), "Must have editor info map, none found in: " << id);
+			std::string name  = value["name"].as_string();
+			std::string group = value["group"].as_string();
+			rect image_rect = default_rect;
+			if(value.has_key("sheet_pos")) {
+				std::string sheet_pos = value["sheet_pos"].as_string();
+				if(!sheet_pos.empty()) {
+					const int index = strtol(sheet_pos.c_str(), nullptr, 36);
+					const int row = index / 36;
+					const int col = index % 36;
+					image_rect = rect(col * 72, row * 72, 72, 72);
+				}
+			} else if(value.has_key("rect")) {
+				image_rect = rect(value["rect"]);
+			}
+			auto& editor_info = get_editor_tiles();
+			editor_info[id] = HexEditorInfoPtr(new HexEditorInfo(name, id, group, tex, image_file, image_rect));
+		}
+
 	}
 
 	void loader(const variant& n)
@@ -89,6 +111,8 @@ namespace hex
 					if(ekey == "image") {
 						ASSERT_LOG(el.second.is_string(), "'image' attribute should have a string value. " << el.second.debug_location());
 						image = el.second.as_string();
+					} else if(ekey == "editor_info") {
+						// skip
 					} else {
 						const std::string name = el.first.as_string();
 						ASSERT_LOG(el.second.is_list(), "'" << name << "' attribute should have a list value. " << el.second.debug_location());
@@ -127,55 +151,59 @@ namespace hex
 	  : num_id_(num_id),
 	    tile_id_(tile),
 	    sheet_(new TileSheet(value)),
-		sheet_indexes_(),
+		sheet_area_(),
 		adjacency_patterns_()
 	{
-		for (const std::string& index_str : value["sheet_pos"].as_list_string()) {
-			const int index = strtol(index_str.c_str(), nullptr, 36);
-			sheet_indexes_.push_back(index);
+		if(value.has_key("sheet_pos")) {
+			for (const std::string& index_str : value["sheet_pos"].as_list_string()) {
+				const int index = strtol(index_str.c_str(), nullptr, 36);				
+				sheet_area_.emplace_back(sheet_->getArea(index));
+			}
+		} else if(value.has_key("rect")) {
+			for(const auto& v : value["rect"].as_list()) {
+				sheet_area_.emplace_back(rect(v));
+			}
+		} else {
+			ASSERT_LOG(false, "Tile definition needs either 'sheet_pos' or 'rect' attribute.");
 		}
 
 		for (auto p : value["adjacent"].as_map()) {
-			unsigned char dirmap = 0;
+			unsigned short dirmap = 0;
 			std::vector<std::string> dir;
 			std::string adj = p.first.as_string();
 			boost::split(dir, adj, boost::is_any_of(","));
 			for(auto d : dir) {
-				static const std::string Directions[] = { "n", "ne", "se", "s", "sw", "nw" };
-				const std::string* dir_str = std::find(Directions, Directions+6, d);
+				static const std::string Directions[] = { "n", "n-ne", "ne", "ne-se", "nw", "nw-n", "s", "s-sw", "se", "se-s", "sw", "sw-nw" };
+				const std::string* dir_str = std::find(Directions, Directions+12, d);
 				const int index = dir_str - Directions;
-				ASSERT_LOG(index < 6, "Unrecognized direction string: " << p.first << " " << p.first.to_debug_string());
+				ASSERT_LOG(index < 12, "Unrecognized direction string: " << p.first << " " << p.first.to_debug_string());
 
 				dirmap |= (1 << index);
 			}
 
 			AdjacencyPattern& pattern = adjacency_patterns_[dirmap];
-			for(const std::string& index_str : p.second.as_list_string()) {
-				const int index = strtol(index_str.c_str(), nullptr, 36);
-				pattern.sheet_indexes.push_back(index);
+			const auto plist = p.second.as_list();
+			ASSERT_LOG(!plist.empty(), "No adjency tiles defined.");
+			for(const auto& ndx : plist) {
+				if(ndx.is_string()) {
+					const std::string index_str = ndx.as_string();
+					const int index = strtol(index_str.c_str(), nullptr, 36);
+					pattern.sheet_areas.emplace_back(sheet_->getArea(index));
+				} else {
+					const rect r{ ndx };
+					pattern.sheet_areas.emplace_back(r);
+				}
 			}
 
 			pattern.init = true;
 			pattern.depth = 0;
 		}
 
-		ASSERT_LOG(sheet_indexes_.empty() == false, "No sheet indexes in hex tile sheet: " << tile_id_);
+		ASSERT_LOG(sheet_area_.empty() == false, "No sheet areas defined in the hex tile sheet: " << tile_id_);
 
 		if (value.has_key("editor_info")) {
-			ASSERT_LOG(value["editor_info"].is_map(), "Must have editor info map, none found in: " << tile_id_);
-			std::string name  = value["editor_info"]["name"].as_string();
-			std::string group = value["editor_info"]["group"].as_string();
-			std::string sheet_pos = value["editor_info"]["sheet_pos"].as_string();
 			std::string image_file = KRE::Texture::findImageNames(value["image"]).front();
-			if(!sheet_pos.empty()) {
-				const int index = strtol(sheet_pos.c_str(), nullptr, 36);
-				const int row = index / 36;
-				const int col = index % 36;
-				const rect image_rect(col * 72, row * 72, 72, 72);
-
-				auto& editor_info = get_editor_tiles();
-				editor_info[tile_id_] = HexEditorInfoPtr(new HexEditorInfo(name, tile_id_, group, sheet_->getTexture(), image_file, image_rect));
-			}
+			parse_editor_info(value["editor_info"], tile_id_, sheet_->getTexture(), image_file, sheet_area_.front());
 		}
 	}
 
@@ -196,12 +224,11 @@ namespace hex
 		}
 	}
 
-	void TileType::renderInternal(int x, int y, int index, std::vector<KRE::vertex_texcoord>* coords) const
+	void TileType::renderInternal(int x, int y, const rect& area, std::vector<KRE::vertex_texcoord>* coords) const
 	{
 		const point p(HexMap::getPixelPosFromTilePos(x, y));
-		const rect area = sheet_->getArea(index);
 		const KRE::TexturePtr& tex = sheet_->getTexture();
-		rectf uv = tex->getTextureCoords(0, area);
+		const rectf uv = tex->getTextureCoords(0, area);
 
 		const float vx1 = static_cast<float>(p.x);
 		const float vy1 = static_cast<float>(p.y);
@@ -219,28 +246,28 @@ namespace hex
 
 	void TileType::render(int x, int y, std::vector<KRE::vertex_texcoord>* coords) const
 	{
-		if(sheet_indexes_.empty()) {
+		if(sheet_area_.empty()) {
 			return;
 		}
 
 		int index = 0;
 
-		if(sheet_indexes_.size() > 1) {
-			index = random_hash(x, y) % sheet_indexes_.size();
+		if(sheet_area_.size() > 1) {
+			index = random_hash(x, y) % sheet_area_.size();
 		}
-		renderInternal(x, y, sheet_indexes_[index], coords);
+		renderInternal(x, y, sheet_area_[index], coords);
 	}
 
-	void TileType::renderAdjacent(int x, int y, std::vector<KRE::vertex_texcoord>* coords, unsigned char adjmap) const
+	void TileType::renderAdjacent(int x, int y, std::vector<KRE::vertex_texcoord>* coords, unsigned short adjmap) const
 	{
 		const AdjacencyPattern& pattern = adjacency_patterns_[adjmap];
 		assert(pattern.init);
-		for(int index : pattern.sheet_indexes) {
-			renderInternal(x, y, index, coords);
+		for(auto& area : pattern.sheet_areas) {
+			renderInternal(x, y, area, coords);
 		}
 	}
 
-	void TileType::calculateAdjacencyPattern(unsigned char adjmap)
+	void TileType::calculateAdjacencyPattern(unsigned short adjmap)
 	{
 		if(adjacency_patterns_[adjmap].init) {
 			return;
@@ -248,9 +275,9 @@ namespace hex
 
 		int best = -1;
 		for(int dir = 0; dir < 6; ++dir) {
-			unsigned char mask = 1 << dir;
+			unsigned short mask = 1 << dir;
 			if(adjmap & mask) {
-				unsigned char newmap = adjmap & ~mask;
+				unsigned short newmap = adjmap & ~mask;
 				if(newmap != 0) {
 					calculateAdjacencyPattern(newmap);
 
@@ -262,12 +289,12 @@ namespace hex
 		}
 
 		if(best != -1) {
-			adjacency_patterns_[adjmap].sheet_indexes.insert(adjacency_patterns_[adjmap].sheet_indexes.end(), adjacency_patterns_[best].sheet_indexes.begin(), adjacency_patterns_[best].sheet_indexes.end());
+			adjacency_patterns_[adjmap].sheet_areas.insert(adjacency_patterns_[adjmap].sheet_areas.end(), adjacency_patterns_[best].sheet_areas.begin(), adjacency_patterns_[best].sheet_areas.end());
 			adjacency_patterns_[adjmap].depth = adjacency_patterns_[best].depth + 1;
 
 			best = adjmap & ~best;
 			calculateAdjacencyPattern(best);
-			adjacency_patterns_[adjmap].sheet_indexes.insert(adjacency_patterns_[adjmap].sheet_indexes.end(), adjacency_patterns_[best].sheet_indexes.begin(), adjacency_patterns_[best].sheet_indexes.end());
+			adjacency_patterns_[adjmap].sheet_areas.insert(adjacency_patterns_[adjmap].sheet_areas.end(), adjacency_patterns_[best].sheet_areas.begin(), adjacency_patterns_[best].sheet_areas.end());
 			if(adjacency_patterns_[best].depth + 1 > adjacency_patterns_[adjmap].depth) {
 				adjacency_patterns_[adjmap].depth = adjacency_patterns_[best].depth + 1;
 			}

@@ -75,35 +75,33 @@ namespace hex
 
 		int numeric_id() const { return num_id_; }
 
-		const std::vector<int>& getSheetIndexes() const { return sheet_indexes_; }
-
 		variant write() const;
-		void calculateAdjacencyPattern(unsigned char adjmap);
+		void calculateAdjacencyPattern(unsigned short adjmap);
 
 		static TileTypePtr factory(const std::string& tile);
 
 		KRE::TexturePtr getTexture() const { return sheet_ != nullptr ? sheet_->getTexture() : nullptr; }
 
 		void render(int x, int y, std::vector<KRE::vertex_texcoord>* coords) const;
-		void renderAdjacent(int x, int y, std::vector<KRE::vertex_texcoord>* coords, unsigned char adjmap) const;
+		void renderAdjacent(int x, int y, std::vector<KRE::vertex_texcoord>* coords, unsigned short adjmap) const;
 	private:
 		int num_id_;
 		std::string tile_id_;
 		TileSheetPtr sheet_;
 
-		void renderInternal(int x, int y, int index, std::vector<KRE::vertex_texcoord>* coords) const;
+		void renderInternal(int x, int y, const rect& area, std::vector<KRE::vertex_texcoord>* coords) const;
 
-		std::vector<int> sheet_indexes_;
+		std::vector<rect> sheet_area_;
 
 		struct AdjacencyPattern {
 			AdjacencyPattern() : init(false), depth(0)
 			{}
 			bool init;
 			int depth;
-			std::vector<int> sheet_indexes;
+			std::vector<rect> sheet_areas;
 		};
 
-		AdjacencyPattern adjacency_patterns_[64];
+		AdjacencyPattern adjacency_patterns_[1 << 12];
 	};
 
 	struct Alternate 
