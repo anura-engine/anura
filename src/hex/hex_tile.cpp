@@ -173,12 +173,15 @@ namespace hex
 			std::string adj = p.first.as_string();
 			boost::split(dir, adj, boost::is_any_of(","));
 			for(auto d : dir) {
-				static const std::string Directions[] = { "n", "n-ne", "ne", "ne-se", "se", "se-s", "s", "s-sw", "sw", "sw-nw", "nw", "nw-n" };
+				static const std::string Directions[] = { "n", "ne", "se", "s", "sw", "nw" };
 				const std::string* dir_str = std::find(Directions, Directions+12, d);
 				const int index = dir_str - Directions;
-				ASSERT_LOG(index < 12, "Unrecognized direction string: " << p.first << " " << p.first.to_debug_string());
-
-				dirmap |= (1 << index);
+				if(index >= 6) {
+					LOG_WARN("skipped direction string '" << p.first << "' " << p.first.to_debug_string());
+				//ASSERT_LOG(index < 6, "Unrecognized direction string: " << p.first << " " << p.first.to_debug_string());
+				} else {
+					dirmap |= (1 << index);
+				}
 			}
 
 			AdjacencyPattern& pattern = adjacency_patterns_[dirmap];
