@@ -173,7 +173,7 @@ namespace hex
 			std::string adj = p.first.as_string();
 			boost::split(dir, adj, boost::is_any_of(","));
 			for(auto d : dir) {
-				static const std::string Directions[] = { "n", "n-ne", "ne", "ne-se", "nw", "nw-n", "s", "s-sw", "se", "se-s", "sw", "sw-nw" };
+				static const std::string Directions[] = { "n", "n-ne", "ne", "ne-se", "se", "se-s", "s", "s-sw", "sw", "sw-nw", "nw", "nw-n" };
 				const std::string* dir_str = std::find(Directions, Directions+12, d);
 				const int index = dir_str - Directions;
 				ASSERT_LOG(index < 12, "Unrecognized direction string: " << p.first << " " << p.first.to_debug_string());
