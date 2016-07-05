@@ -174,7 +174,7 @@ namespace hex
 			boost::split(dir, adj, boost::is_any_of(","));
 			for(auto d : dir) {
 				static const std::string Directions[] = { "n", "ne", "se", "s", "sw", "nw" };
-				const std::string* dir_str = std::find(Directions, Directions+12, d);
+				const std::string* dir_str = std::find(Directions, Directions+6, d);
 				const int index = dir_str - Directions;
 				if(index >= 6) {
 					LOG_WARN("skipped direction string '" << p.first << "' " << p.first.to_debug_string());
