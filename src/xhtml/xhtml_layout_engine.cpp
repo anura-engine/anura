@@ -169,10 +169,15 @@ namespace xhtml
 							break;
 						case Display::INLINE: {
 							if(node->isReplaced()) {
-								open_line_box_.reset();
 								// replaced elements should generate a box.
-								// XXX should these go into open_box?
-								res.emplace_back(std::make_shared<InlineElementBox>(parent, child, root_));
+								// XXX should these go into open_box? -- yes yes they should
+								if(open_line_box_ == nullptr) {
+									open_line_box_ = std::make_shared<LineBoxContainer>(parent, child, root_);
+									res.emplace_back(open_line_box_);
+								}
+								auto element_box = std::make_shared<InlineElementBox>(parent, child, root_);
+								open_line_box_->addBoxForLayout(element_box, child);
+								//res.emplace_back(std::make_shared<InlineElementBox>(parent, child, root_));
 							} else {
 								// find first and last text children
 								std::vector<StyleNodePtr>::const_iterator first_text_child = child->getChildren().end();

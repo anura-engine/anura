@@ -28,12 +28,14 @@
 
 namespace xhtml
 {
-	struct TextHolder 
+	struct TextHolder
 	{
 		TextHolder() : txt(nullptr), styles(nullptr) {}
-		explicit TextHolder(const TextPtr& t, const StyleNodePtr& s) : txt(t), styles(s) {}
+		explicit TextHolder(const TextPtr& t, const StyleNodePtr& s) : txt(t), styles(s), box(nullptr) {}
+		explicit TextHolder(const BoxPtr& b, const StyleNodePtr& s) : txt(nullptr), styles(s), box(b) {}
 		TextPtr txt;
 		StyleNodePtr styles;
+		BoxPtr box;
 	};
 
 	// This class acts as a container for LineBox's and TextBox's so that we can generate them during layout, but
@@ -44,6 +46,7 @@ namespace xhtml
 		LineBoxContainer(const BoxPtr& parent, const StyleNodePtr& node, const RootBoxPtr& root);
 		std::string toString() const override;
 		void transform(TextPtr txt, StyleNodePtr styles);
+		void addBoxForLayout(const BoxPtr& box, const StyleNodePtr& s) { text_data_.emplace_back(box, s); }
 	private:
 		void handlePreChildLayout(LayoutEngine& eng, const Dimensions& containing) override;
 		void handleLayout(LayoutEngine& eng, const Dimensions& containing) override;
@@ -59,7 +62,7 @@ namespace xhtml
 	{
 	public:
 		LineBox(const BoxPtr& parent, const StyleNodePtr& node, const RootBoxPtr& root);
-		std::string toString() const override;		
+		std::string toString() const override;
 		static std::vector<LineBoxPtr> reflowText(const BoxPtr& parent, const RootBoxPtr& root, const std::vector<TextHolder>& tex_data, LayoutEngine& eng, const Dimensions& containing);
 	private:
 		void handleLayout(LayoutEngine& eng, const Dimensions& containing) override;
