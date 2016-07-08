@@ -791,8 +791,8 @@ namespace {
 					fn_args.push_back(variant(fragment.svg));
 					fn_args.push_back(variant(fragment.xpos));
 					fn_args.push_back(variant(fragment.ypos));
-					fn_args.push_back(variant(fragment.height));
-					fn_args.push_back(variant(fragment.height));
+					fn_args.push_back(variant(fragment.font_extents.ascent + fragment.font_extents.descent));
+					fn_args.push_back(variant(fragment.font_extents.ascent + fragment.font_extents.descent));
 
 					res->path = variant(new cairo_op([](cairo_context& context, const std::vector<variant>& args) {
 						cairo_translate(context.get(), args[1].as_decimal().as_float(), args[2].as_decimal().as_float());
@@ -830,8 +830,18 @@ namespace {
 
 				res->x = fragment.xpos + xpos_align_adjust;
 				res->y = fragment.ypos + fragment_baseline - static_cast<float>(fragment.font_extents.ascent);
+
 				res->width = fragment.width;
 				res->height = line_height*scale_line_heights;
+				if(fragment.svg.empty() == false) {
+					const float dim = fragment.font_extents.ascent + fragment.font_extents.descent;
+					if(dim > res->width) {
+						res->width = dim;
+					}
+					if(dim > res->height) {
+						res->height = dim;
+					}
+				}
 				res->x_advance = fragment.x_advance;
 				res->ascent = static_cast<float>(fragment.font_extents.ascent);
 				res->descent = static_cast<float>(fragment.font_extents.descent);
