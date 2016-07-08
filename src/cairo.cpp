@@ -791,8 +791,8 @@ namespace {
 					fn_args.push_back(variant(fragment.svg));
 					fn_args.push_back(variant(fragment.xpos));
 					fn_args.push_back(variant(fragment.ypos));
-					fn_args.push_back(variant(fragment.font_extents.ascent + fragment.font_extents.descent));
-					fn_args.push_back(variant(fragment.font_extents.ascent + fragment.font_extents.descent));
+					fn_args.push_back(variant(fragment.height));
+					fn_args.push_back(variant(fragment.height));
 
 					res->path = variant(new cairo_op([](cairo_context& context, const std::vector<variant>& args) {
 						cairo_translate(context.get(), args[1].as_decimal().as_float(), args[2].as_decimal().as_float());
