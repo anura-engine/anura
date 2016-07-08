@@ -280,12 +280,16 @@ namespace {
 
 		KRE::SVG::render_context ctx(cairo_, w, h);
 
+		
 		double red = 0, green = 0, blue = 0, alpha = 0;
 		status = cairo_pattern_get_rgba(cairo_get_source(cairo_), &red, &green, &blue, &alpha);
 		if(status == CAIRO_STATUS_SUCCESS) {
 			ctx.set_color_multiply(KRE::Color(static_cast<float>(red), static_cast<float>(green), static_cast<float>(blue), static_cast<float>(alpha)));
 		}
+
+		cairo_save(cairo_);
 		handle->render(ctx);
+		cairo_restore(cairo_);
 
 		status = cairo_status(cairo_);
 		ASSERT_LOG(status == 0, "SVG rendering error rendering " << w << "x" << h << ": " << fname << ": " << cairo_status_to_string(status));
