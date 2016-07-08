@@ -212,6 +212,7 @@ namespace xhtml
 		void setLastInlineChild() { is_last_inline_child_ = true; }
 		bool isFirstInlineChild() const { return is_first_inline_child_; }
 		bool isLastInlineChild() const { return is_last_inline_child_; }
+
 	protected:
 		void clearChildren() { boxes_.clear(); } 
 		virtual void handleRenderBackground(const KRE::SceneTreePtr& scene_tree, const point& offset) const;

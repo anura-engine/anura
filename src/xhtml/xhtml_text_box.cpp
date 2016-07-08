@@ -88,53 +88,91 @@ namespace xhtml
 		FixedPoint width = eng.getWidthAtPosition(y1, y1 + line_height, containing.content_.width)/* - cursor.x*/ + eng.getXAtPosition(y1, y1 + line_height);
 
 		for(auto& text_data : th) {
-			Text::iterator last_it = text_data.txt->begin();
-			Text::iterator it = last_it;
+			if(text_data.txt != nullptr) {
+				Text::iterator last_it = text_data.txt->begin();
+				Text::iterator it = last_it;
 
-			while(it != text_data.txt->end()) {
-				LinePtr line = text_data.txt->reflowText(it, width - cursor.x, text_data.styles);
-				if(line != nullptr) {
-					if(!line->line.empty()) {
-						// is the line larger than available space and are there floats present?
-						FixedPoint last_x = line->line.back().advance.back().x;
-						if(last_x > width && eng.hasFloatsAtPosition(y1, y1 + line_height)) {
+				while(it != text_data.txt->end()) {
+					LinePtr line = text_data.txt->reflowText(it, width - cursor.x, text_data.styles);
+					if(line != nullptr) {
+						if(!line->line.empty()) {
+							// is the line larger than available space and are there floats present?
+							FixedPoint last_x = line->line.back().advance.back().x;
+							if(last_x > width && eng.hasFloatsAtPosition(y1, y1 + line_height)) {
+								cursor.y += line_height;
+								y1 = cursor.y + parent->getOffset().y;
+								cursor.x = eng.getXAtPosition(y1, y1 + line_height);
+								it = last_it;
+								width = eng.getWidthAtPosition(y1, y1 + line_height, containing.content_.width) + eng.getXAtPosition(y1, y1 + line_height);
+								continue;
+							}
+
+							if(open_line == nullptr) {
+								open_line = std::make_shared<LineBox>(parent, text_data.styles, root);
+								lines.emplace_back(open_line);
+							}
+							TextBoxPtr text_box = std::make_shared<TextBox>(open_line, text_data.styles, root);
+							text_box->line_.line_ = line;
+							text_box->line_.width_ = text_box->calculateWidth(text_box->line_);
+							line_height = text_box->getLineHeight();
+							if(open_line->getLineHeight() < line_height) {
+								open_line->setLineHeight(line_height);
+							}
+							text_box->line_.height_ = line_height;
+							text_box->line_.offset_.y = cursor.y;
+							text_box->line_.offset_.x = cursor.x;
+							cursor.x += text_box->line_.width_;
+							open_line->addChild(text_box);
+						}
+
+						if(line->is_end_line) {
+							// update the cursor for the next line
 							cursor.y += line_height;
 							y1 = cursor.y + parent->getOffset().y;
 							cursor.x = eng.getXAtPosition(y1, y1 + line_height);
-							it = last_it;
-							width = eng.getWidthAtPosition(y1, y1 + line_height, containing.content_.width) + eng.getXAtPosition(y1, y1 + line_height);
-							continue;
-						}
 
-						if(open_line == nullptr) {
-							open_line = std::make_shared<LineBox>(parent, text_data.styles, root);
-							lines.emplace_back(open_line);
+							width = eng.getWidthAtPosition(y1, y1 + line_height, containing.content_.width) /*- cursor.x*/ + eng.getXAtPosition(y1, y1 + line_height);
+
+							open_line.reset();
 						}
-						TextBoxPtr text_box = std::make_shared<TextBox>(open_line, text_data.styles, root);
-						text_box->line_.line_ = line;
-						text_box->line_.width_ = text_box->calculateWidth(text_box->line_);
-						line_height = text_box->getLineHeight();
-						if(open_line->getLineHeight() < line_height) {
-							open_line->setLineHeight(line_height);
-						}
-						text_box->line_.height_ = line_height;
-						text_box->line_.offset_.y = cursor.y;
-						text_box->line_.offset_.x = cursor.x;
-						cursor.x += text_box->line_.width_;
-						open_line->addChild(text_box);
+					}					
+				}
+			} else {
+				// is a box to insert inline with text.
+				auto& box = text_data.box;
+				box->layout(eng, containing);
+
+				// try and fit the box at cursor, failing that we move the cursor and try again.
+				FixedPoint width_at_cursor = eng.getWidthAtPosition(cursor.y, cursor.y + box->getHeight() + box->getMBPHeight(), containing.content_.width)
+					- cursor.x + eng.getXAtPosition(cursor.y, cursor.y + box->getHeight() + box->getMBPHeight());
+				if(box->getWidth() + box->getMBPWidth() > width_at_cursor) {
+					cursor.y += std::max(line_height, box->getHeight() + box->getMBPHeight());
+					while(eng.hasFloatsAtPosition(cursor.y, cursor.y + box->getHeight() + box->getMBPHeight()) && box->getWidth() +box-> getMBPWidth() > width_at_cursor) {
+						width_at_cursor = eng.getWidthAtPosition(cursor.y, cursor.y + box->getHeight() + box->getMBPHeight(), containing.content_.width);
 					}
+					cursor.x = eng.getXAtPosition(cursor.y, cursor.y + box->getHeight() + box->getMBPHeight());
+					box->setContentX(cursor.x);
+					box->setContentY(cursor.y);
+					//cursor.y += box->getHeight() + box->getMBPHeight();
+					cursor.x = eng.getXAtPosition(cursor.y, cursor.y + line_height);
 
-					if(line->is_end_line) {
-						// update the cursor for the next line
-						cursor.y += line_height;
-						y1 = cursor.y + parent->getOffset().y;
-						cursor.x = eng.getXAtPosition(y1, y1 + line_height);
+					open_line.reset();
+				} else {
+					box->setContentX(cursor.x);
+					// XXX if height is greater than other objects on line we need to increase lineheight.
+					box->setContentY(cursor.y);
+					cursor.x = box->getLeft() + box->getWidth() + box->getMBPRight();
+				}
 
-						width = eng.getWidthAtPosition(y1, y1 + line_height, containing.content_.width) /*- cursor.x*/ + eng.getXAtPosition(y1, y1 + line_height);
-
-						open_line.reset();
-					}
-				}					
+				if(open_line == nullptr) {
+					open_line = std::make_shared<LineBox>(parent, text_data.styles, root);
+					lines.emplace_back(open_line);
+				}
+				open_line->addChild(box);
+				if(open_line->getLineHeight() < box->getHeight() + box->getMBPHeight()) {
+					open_line->setLineHeight(box->getHeight() + box->getMBPHeight());
+					line_height = box->getHeight() + box->getMBPHeight();
+				}
 			}
 		}
 

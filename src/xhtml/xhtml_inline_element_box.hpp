@@ -35,6 +35,8 @@ namespace xhtml
 	private:
 		void handleLayout(LayoutEngine& eng, const Dimensions& containing) override;
 		void handleRender(const KRE::SceneTreePtr& scene_tree, const point& offset) const override;
+		void layoutWidth(const Dimensions& containing);
+		void handlePreChildLayout(LayoutEngine& eng, const Dimensions& containing) override;
 	};
 
 }

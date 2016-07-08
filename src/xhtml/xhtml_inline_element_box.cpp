@@ -62,6 +62,47 @@ namespace xhtml
 		// or width of the largest rectangle that has a 2:1 ratio.
 	}
 
+	void InlineElementBox::layoutWidth(const Dimensions& containing)
+	{
+		RenderContext& ctx = RenderContext::get();
+		const FixedPoint containing_width = containing.content_.width;
+
+		auto css_width = getStyleNode()->getWidth();
+		FixedPoint width = 0;
+		if(!css_width->isAuto()) {
+			width = css_width->getLength().compute(containing_width);
+			setContentWidth(width);
+		}
+
+		calculateHorzMPB(containing_width);
+		auto css_margin_left = getStyleNode()->getMargin()[static_cast<int>(css::Side::LEFT)];
+		auto css_margin_right = getStyleNode()->getMargin()[static_cast<int>(css::Side::RIGHT)];
+
+		FixedPoint total = getMBPWidth() + width;
+
+		if(!css_width->isAuto() && total > containing.content_.width) {
+			if(css_margin_left->isAuto()) {
+				setMarginLeft(0);
+			}
+			if(css_margin_right->isAuto()) {
+				setMarginRight(0);
+			}
+		}
+
+		// If negative is overflow.
+		FixedPoint underflow = containing.content_.width - total;
+
+		if(css_width->isAuto()) {
+			setContentWidth(underflow);
+		}
+	}
+
+	void InlineElementBox::handlePreChildLayout(LayoutEngine& eng, const Dimensions& containing)
+	{
+		layoutWidth(containing);
+		calculateVertMPB(containing.content_.height);
+	}
+
 	std::string InlineElementBox::toString() const
 	{
 		std::ostringstream ss;
