@@ -36,6 +36,7 @@
 
 #include "DisplayDevice.hpp"
 #include "svg/svg_parse.hpp"
+#include "svg/svg_paint.hpp"
 
 #include "asserts.hpp"
 #include "cairo.hpp"
@@ -278,6 +279,12 @@ namespace {
 		}
 
 		KRE::SVG::render_context ctx(cairo_, w, h);
+
+		double red = 0, green = 0, blue = 0, alpha = 0;
+		status = cairo_pattern_get_rgba(cairo_get_source(cairo_), &red, &green, &blue, &alpha);
+		if(status == CAIRO_STATUS_SUCCESS) {
+			ctx.set_color_multiply(KRE::Color(static_cast<float>(red), static_cast<float>(green), static_cast<float>(blue), static_cast<float>(alpha)));
+		}
 		handle->render(ctx);
 
 		status = cairo_status(cairo_);
