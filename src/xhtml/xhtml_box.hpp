@@ -26,6 +26,7 @@
 #include "xhtml_fwd.hpp"
 
 #include "geometry.hpp"
+#include "SceneTree.hpp"
 
 #include "scrollable.hpp"
 #include "xhtml.hpp"
@@ -96,6 +97,7 @@ namespace xhtml
 		StyleNodePtr getStyleNode() const { return node_; }
 		NodePtr getNode() const { return node_ != nullptr ? node_->getNode() : nullptr; }
 		BoxPtr getParent() const { return parent_.lock(); }
+		KRE::SceneTreePtr getSceneTree() const { return scene_tree_; }
 
 		void addChild(BoxPtr box) { boxes_.emplace_back(box); }
 		void addChildren(const std::vector<BoxPtr>& children) { boxes_.insert(boxes_.end(), children.begin(), children.end()); }
@@ -212,6 +214,9 @@ namespace xhtml
 		void setLastInlineChild() { is_last_inline_child_ = true; }
 		bool isFirstInlineChild() const { return is_first_inline_child_; }
 		bool isLastInlineChild() const { return is_last_inline_child_; }
+
+		void setParent(BoxPtr parent) { parent_ = parent; }
+		KRE::SceneTreePtr createSceneTree(KRE::SceneTreePtr scene_parent);
 	protected:
 		void clearChildren() { boxes_.clear(); } 
 		virtual void handleRenderBackground(const KRE::SceneTreePtr& scene_tree, const point& offset) const;
@@ -228,8 +233,8 @@ namespace xhtml
 		virtual void postParentLayout(LayoutEngine& eng, const Dimensions& containing) {}
 		virtual void handleRender(const KRE::SceneTreePtr& scene_tree, const point& offset) const = 0;
 		virtual void handleEndRender(const KRE::SceneTreePtr& scene_tree, const point& offset) const {}
+		virtual void handleCreateSceneTree(KRE::SceneTreePtr scene_parent) {}
 
-		void setParent(BoxPtr parent) { parent_ = parent; }
 		void init();
 
 		BoxId id_;
@@ -250,6 +255,8 @@ namespace xhtml
 
 		bool is_first_inline_child_;
 		bool is_last_inline_child_;
+
+		KRE::SceneTreePtr scene_tree_;
 
 		mutable scrollable::ScrollbarPtr scrollbar_;
 	};

@@ -71,6 +71,7 @@ namespace xhtml
 		  is_replaceable_(false),
 		  is_first_inline_child_(false),
 		  is_last_inline_child_(false),
+		  scene_tree_(nullptr),
 		  scrollbar_(nullptr)
 	{
 		if(getNode() != nullptr && getNode()->id() == NodeId::ELEMENT) {
@@ -82,12 +83,14 @@ namespace xhtml
 
 	void Box::init()
 	{
-		auto& lh = node_->getLineHeight();
-		if(lh != nullptr) {
-			if(lh->isPercent() || lh->isNumber()) {
-				line_height_ = static_cast<FixedPoint>(lh->compute() * node_->getFont()->getFontSize() * 96.0/72.0);
-			} else {
-				line_height_ = lh->compute();
+		if(node_ != nullptr) {
+			auto& lh = node_->getLineHeight();
+			if(lh != nullptr) {
+				if(lh->isPercent() || lh->isNumber()) {
+					line_height_ = static_cast<FixedPoint>(lh->compute() * node_->getFont()->getFontSize() * 96.0/72.0);
+				} else {
+					line_height_ = lh->compute();
+				}
 			}
 		}
 	}
@@ -153,6 +156,24 @@ namespace xhtml
 		auto root = getRoot();
 		ASSERT_LOG(root != nullptr, "Couldn't lock root, was null.");
 		return root->getDimensions();
+	}
+
+	KRE::SceneTreePtr Box::createSceneTree(KRE::SceneTreePtr scene_parent)
+	{
+		if(scene_parent == nullptr) {
+			scene_tree_.reset();
+		}
+		scene_tree_ = KRE::SceneTree::create(scene_parent);
+		for(auto& child : getChildren()) {
+			KRE::SceneTreePtr ptr = child->createSceneTree(scene_tree_);
+			scene_tree_->addChild(ptr);
+		}
+		for(auto& abs : absolute_boxes_) {
+			KRE::SceneTreePtr ptr = abs->createSceneTree(scene_tree_);
+			scene_tree_->addChild(ptr);
+		}
+		handleCreateSceneTree(scene_tree_);
+		return scene_tree_;
 	}
 
 	void Box::layout(LayoutEngine& eng, const Dimensions& containing)
@@ -239,37 +260,45 @@ namespace xhtml
 
 	void Box::calculateVertMPB(FixedPoint containing_height)
 	{
+		auto styles = getStyleNode();
+		if(styles == nullptr) {
+			return;
+		}
 		if(border_info_.isValid(Side::TOP)) {
-			setBorderTop(getStyleNode()->getBorderWidths()[0]->compute());
+			setBorderTop(styles->getBorderWidths()[0]->compute());
 		}
 		if(border_info_.isValid(Side::BOTTOM)) {
-			setBorderBottom(getStyleNode()->getBorderWidths()[2]->compute());
+			setBorderBottom(styles->getBorderWidths()[2]->compute());
 		}
 
-		setPaddingTop(getStyleNode()->getPadding()[0]->compute(containing_height));
-		setPaddingBottom(getStyleNode()->getPadding()[2]->compute(containing_height));
+		setPaddingTop(styles->getPadding()[0]->compute(containing_height));
+		setPaddingBottom(styles->getPadding()[2]->compute(containing_height));
 
-		setMarginTop(getStyleNode()->getMargin()[0]->getLength().compute(containing_height));
-		setMarginBottom(getStyleNode()->getMargin()[2]->getLength().compute(containing_height));
+		setMarginTop(styles->getMargin()[0]->getLength().compute(containing_height));
+		setMarginBottom(styles->getMargin()[2]->getLength().compute(containing_height));
 	}
 
 	void Box::calculateHorzMPB(FixedPoint containing_width)
 	{		
+		auto styles = getStyleNode();
+		if(styles == nullptr) {
+			return;
+		}
 		if(border_info_.isValid(Side::LEFT)) {
-			setBorderLeft(getStyleNode()->getBorderWidths()[1]->compute());
+			setBorderLeft(styles->getBorderWidths()[1]->compute());
 		}
 		if(border_info_.isValid(Side::RIGHT)) {
-			setBorderRight(getStyleNode()->getBorderWidths()[3]->compute());
+			setBorderRight(styles->getBorderWidths()[3]->compute());
 		}
 
-		setPaddingLeft(getStyleNode()->getPadding()[1]->compute(containing_width));
-		setPaddingRight(getStyleNode()->getPadding()[3]->compute(containing_width));
+		setPaddingLeft(styles->getPadding()[1]->compute(containing_width));
+		setPaddingRight(styles->getPadding()[3]->compute(containing_width));
 
-		if(!getStyleNode()->getMargin()[1]->isAuto()) {
-			setMarginLeft(getStyleNode()->getMargin()[1]->getLength().compute(containing_width));
+		if(!styles->getMargin()[1]->isAuto()) {
+			setMarginLeft(styles->getMargin()[1]->getLength().compute(containing_width));
 		}
-		if(!getStyleNode()->getMargin()[3]->isAuto()) {
-			setMarginRight(getStyleNode()->getMargin()[3]->getLength().compute(containing_width));
+		if(!styles->getMargin()[3]->isAuto()) {
+			setMarginRight(styles->getMargin()[3]->getLength().compute(containing_width));
 		}
 	}
 
@@ -309,15 +338,11 @@ namespace xhtml
 			}
 		}
 
-		KRE::SceneTreePtr scene_tree = nullptr;
-		if(node_ != nullptr) {
-			scene_tree = node_->getSceneTree();
-			if(id_ != BoxId::TEXT) {
-				scene_tree->setPosition(offs.x / LayoutEngine::getFixedPointScaleFloat(), offs.y / LayoutEngine::getFixedPointScaleFloat());
-			}
-			//offs.x = 0;
-			//offs.y = 0;
+		KRE::SceneTreePtr scene_tree = getSceneTree();
+		ASSERT_LOG(scene_tree != nullptr, "Scene tree was nullptr.");
+		scene_tree->setPosition(offs.x / LayoutEngine::getFixedPointScaleFloat(), offs.y / LayoutEngine::getFixedPointScaleFloat());
 
+		if(node_ != nullptr) {
 			// XXX needs a modifer for transform origin.
 			auto transform = node_->getTransform();
 			if(!transform->getTransforms().empty()) {
@@ -337,40 +362,40 @@ namespace xhtml
 			}
 		}
 
-		if(scene_tree != nullptr) {
-			handleRenderBackground(scene_tree, offs);
-			handleRenderBorder(scene_tree, offs);
-			handleRender(scene_tree, offs);
-			handleRenderFilters(scene_tree, offs);
-		}
+		handleRenderBackground(scene_tree, offs);
+		handleRenderBorder(scene_tree, offs);
+		handleRender(scene_tree, offs);
+		handleRenderFilters(scene_tree, offs);
+
 		for(auto& child : getChildren()) {
 			if(!child->isFloat()) {
-				child->render(offs);
+				child->render(offs + offset);
 			}
 		}
 		for(auto& child : getChildren()) {
 			if(child->isFloat()) {
-				child->render(offs);
+				child->render(offs + offset);
 			}
 		}
 		for(auto& ab : absolute_boxes_) {
 			ab->render(point(0, 0));
 		}
-		if(scene_tree != nullptr) {
-			handleEndRender(scene_tree, offs);
-		}
+
+		handleEndRender(scene_tree, offs);
 
 		// set the active rect on any parent node.
 		auto node = getNode();
 		if(node != nullptr) {
 			auto& dims = getDimensions();
 
+			//LOG_INFO("offs: " << (offs.x/65536.f) << "," << (offs.y/65536.f) << ", offset: " << (offset.x/65536.f) << "," << (offset.y/65536.f));
 			offs += offset;
 			const int x = (offs.x - dims.padding_.left - dims.border_.left) / LayoutEngine::getFixedPointScale();
 			const int y = (offs.y - dims.padding_.top - dims.border_.top) / LayoutEngine::getFixedPointScale();
 			const int w = (dims.content_.width + dims.padding_.left + dims.padding_.right + dims.border_.left + dims.border_.right) / LayoutEngine::getFixedPointScale();
 			const int h = (dims.content_.height + dims.padding_.top + dims.padding_.bottom + dims.border_.top + dims.border_.bottom) / LayoutEngine::getFixedPointScale();
 			node->setActiveRect(rect(x, y, w, h));
+			//LOG_INFO(node->toString() << ": " << toString() << ": active_rect: " << x << "," << y << "," << w << "," << h);
 
 			//scrollbar_->setLocation(x+w-20, y);
 			//scrollbar_->setDimensions(20, h);

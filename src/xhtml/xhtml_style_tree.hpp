@@ -25,8 +25,6 @@
 
 #include <array>
 
-#include "SceneTree.hpp"
-
 #include "css_transition.hpp"
 #include "xhtml_node.hpp"
 #include "xhtml_render_ctx.hpp"
@@ -48,9 +46,6 @@ namespace xhtml
 		const std::vector<StyleNodePtr>& getChildren() const { return children_; }
 		void process(float dt);
 		void addTransitionEffect(const css::TransitionPtr& tx);
-
-		KRE::SceneTreePtr getSceneTree() const { return scene_tree_; }
-		KRE::SceneTreePtr createSceneTree(KRE::SceneTreePtr scene_parent);
 
 		css::BackgroundAttachment getBackgroundAttachment() const { return background_attachment_; }
 		const KRE::ColorPtr& getBackgroundColor() const { return background_color_; }
@@ -165,7 +160,6 @@ namespace xhtml
 		std::vector<StyleNodePtr> children_;
 		std::vector<css::TransitionPtr> transitions_;
 		float acc_;
-		KRE::SceneTreePtr scene_tree_;
 
 		//BACKGROUND_ATTACHMENT
 		css::StylePtr background_attachment_style_;

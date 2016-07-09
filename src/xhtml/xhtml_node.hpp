@@ -29,6 +29,7 @@
 
 #include "geometry.hpp"
 #include "SceneFwd.hpp"
+#include "SceneTree.hpp"
 
 #include "css_stylesheet.hpp"
 #include "css_transition.hpp"
@@ -138,7 +139,9 @@ namespace xhtml
 		bool hasPsuedoClassActive(css::PseudoClass pclass) { return (active_pclass_ & pclass) != css::PseudoClass::NONE; }
 		css::PseudoClass getPseudoClass() const { return pclass_; }
 		// This sets the rectangle that should be active for mouse presses.
-		void setActiveRect(const rect& r) { active_rect_ = r; }
+		void setActiveRect(const rect& r) { 
+			active_rect_ = r; 
+		}
 		const rect& getActiveRect() const { return active_rect_; }
 		void setModelMatrix(const glm::mat4& model) { model_matrix_ = model; }
 		const glm::mat4& getModelMatrix() const { return model_matrix_; }
@@ -227,7 +230,7 @@ namespace xhtml
 		NodePtr getActiveElement() const { return active_element_.lock(); }
 		void setActiveElement(const NodePtr& el) { active_element_ = el; }
 
-		bool process(StyleNodePtr& style_tree, int w, int h);
+		KRE::SceneTreePtr process(StyleNodePtr& style_tree, int w, int h);
 
 		// type is expected to be a content type i.e. "text/javascript"
 		static void registerScriptHandler(const std::string& type, std::function<ScriptPtr()> fn);

@@ -70,6 +70,14 @@ namespace xhtml
 		}
 	}
 
+	void RootBox::handleCreateSceneTree(KRE::SceneTreePtr scene_parent)
+	{
+		for(auto& fix : fixed_boxes_) {
+			KRE::SceneTreePtr ptr = fix->createSceneTree(scene_parent);
+			scene_parent->addChild(ptr);
+		}
+	}
+
 	void RootBox::addFixed(BoxPtr fixed)
 	{
 		fixed_boxes_.emplace_back(fixed);

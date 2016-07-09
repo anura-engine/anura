@@ -37,8 +37,9 @@ namespace xhtml
 		void layoutFixed(LayoutEngine& eng, const Dimensions& containing);
 		const std::vector<BoxPtr>& getFixed() const { return fixed_boxes_; }
 	private:
-		virtual void handleLayout(LayoutEngine& eng, const Dimensions& containing) override;
+		void handleLayout(LayoutEngine& eng, const Dimensions& containing) override;
 		void handleEndRender(const KRE::SceneTreePtr& scene_tree, const point& offset) const override;
+		void handleCreateSceneTree(KRE::SceneTreePtr scene_parent) override;
 
 		std::vector<BoxPtr> fixed_boxes_;
 	};

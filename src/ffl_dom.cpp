@@ -281,9 +281,9 @@ namespace xhtml
 	
 	void DocumentObject::process()
 	{
-		if(doc_->process(style_tree_, layout_size_.w(), layout_size_.h())) {
-			ASSERT_LOG(style_tree_ != nullptr, "Style tree was null.");
-			scene_tree_ = style_tree_->getSceneTree();
+		auto st = doc_->process(style_tree_, layout_size_.w(), layout_size_.h());
+		if(st != nullptr) {
+			scene_tree_ = st;
 		}
 		if(do_onload_) {
 			do_onload_ = false;

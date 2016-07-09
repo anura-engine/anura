@@ -635,7 +635,7 @@ namespace xhtml
 		});
 	}
 
-	bool Document::process(StyleNodePtr& style_tree, int w, int h)
+	KRE::SceneTreePtr Document::process(StyleNodePtr& style_tree, int w, int h)
 	{
 		RootBoxPtr layout = nullptr;
 		bool changed = false;
@@ -677,13 +677,13 @@ namespace xhtml
 
 		if(needsRender() && layout != nullptr) {
 			profile::manager pman_render("render");
-			style_tree->getSceneTree()->clear();
+			layout->getSceneTree()->clear();
 			layout->render(point());
 			trigger_render_ = false;
 			changed = true;
 		}
 
-		return changed;
+		return layout != nullptr ? layout->getSceneTree() : nullptr;
 	}
 
 	void Node::mergeProperties(const css::Specificity& specificity, const css::PropertyList& plist)
