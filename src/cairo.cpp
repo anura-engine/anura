@@ -1155,18 +1155,25 @@ namespace {
 					  args[1].as_decimal().as_float());
 	END_CAIRO_FN
 
-BEGIN_CAIRO_FN(set_source_color, "([decimal, decimal, decimal]|[decimal,decimal,decimal,decimal])")
-	const std::vector<variant>& col = args[0].as_list();
-	float alpha = 1.0;
-	if(col.size() > 3) {
-		alpha = col[3].as_float();
+BEGIN_CAIRO_FN(set_source_color, "(string|[decimal, decimal, decimal]|[decimal,decimal,decimal,decimal])")
+
+	double color[4];
+
+	variant color_arg = args[0];
+	if(color_arg.is_string()) {
+		KRE::Color col(color_arg.as_string());
+		color[0] = col.r();
+		color[1] = col.g();
+		color[2] = col.b();
+		color[3] = col.a();
+	} else {
+		const std::vector<variant>& col = color_arg.as_list();
+		for(int n = 0; n < 4; ++n) {
+			color[n] = n < col.size() ? col[n].as_decimal().as_float() : 1.0;
+		}
 	}
 
-	cairo_set_source_rgba(context.get(),
-	                      col[0].as_decimal().as_float(),
-	                      col[1].as_decimal().as_float(),
-	                      col[2].as_decimal().as_float(),
-						  alpha);
+	cairo_set_source_rgba(context.get(), color[0], color[1], color[2], color[3]);
 END_CAIRO_FN
 
 	BEGIN_CAIRO_FN(set_source_rgba, "(decimal, decimal, decimal, decimal=1.0)")
