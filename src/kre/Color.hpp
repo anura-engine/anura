@@ -302,6 +302,8 @@ namespace KRE
 
 		// XXX We should have a ColorCallable, in a seperate file, then move these two into the ColorCallable.
 		static std::string getSetFieldType() { return "string"
+			"|[decimal,decimal,decimal,decimal]"
+			"|[decimal,decimal,decimal]"
 			"|[int,int,int,int]"
 			"|[int,int,int]"
 			"|{red:int|decimal,green:int|decimal,blue:int|decimal,alpha:int|decimal|null}"
