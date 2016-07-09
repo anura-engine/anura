@@ -45,6 +45,8 @@
 
 #include "variant_utils.hpp"
 
+PREF_INT(mixer_looped_sounds_fade_time_ms, 100, "Number of milliseconds looped sounds should fade for");
+
 namespace sound 
 {
 	namespace 
@@ -622,7 +624,7 @@ namespace sound
 			   || channels_to_sounds_playing[n].object == object) &&
 			   (channels_to_sounds_playing[n].loops != 0)) {
 	#if !TARGET_IPHONE_SIMULATOR && !TARGET_OS_IPHONE
-				Mix_HaltChannel(n);
+				Mix_FadeOutChannel(n, g_mixer_looped_sounds_fade_time_ms);
 	#else
 				sdl_stop_channel(n);
 	#endif

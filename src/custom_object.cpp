@@ -1669,6 +1669,11 @@ void CustomObject::process(Level& lvl)
 					mutateValueBySlot(move->animation_slots[n], v[n]);
 				}
 
+				if(move->on_begin.is_null() == false) {
+					executeCommand(move->on_begin);
+					move->on_begin = variant();
+				}
+
 				if(move->on_process.is_null() == false) {
 					executeCommand(move->on_process);
 				}
@@ -2774,6 +2779,7 @@ void CustomObject::addAnimatedMovement(variant attr_var, variant options)
 	movement->animation_values.swap(values);
 	movement->animation_slots.swap(slots);
 
+	movement->on_begin = options["on_begin"];
 	movement->on_process = options["on_process"];
 	movement->on_complete = options["on_complete"];
 
@@ -5568,6 +5574,7 @@ void CustomObject::surrenderReferences(GarbageCollector* collector)
 	collector->surrenderPtr(&document_, "XHTML_DOCUMENT");
 
 	for(auto move : animated_movement_) {
+		collector->surrenderVariant(&move->on_begin, "ANIMATE_ON_BEGIN");
 		collector->surrenderVariant(&move->on_process, "ANIMATE_ON_PROCESS");
 		collector->surrenderVariant(&move->on_complete, "ANIMATE_ON_COMPLETE");
 		for(variant& v : move->animation_values) {
