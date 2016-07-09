@@ -38,11 +38,14 @@ using std::round;
 namespace KRE
 {
 	namespace {
-		std::set<Texture*> g_all_textures;
+		std::set<Texture*>& allTextures() {
+			static std::set<Texture*>* value = new std::set<Texture*>;
+			return *value;
+		}
 	}
 
 	const std::set<Texture*>& Texture::getAllTextures() {
-		return g_all_textures;
+		return allTextures();
 	}
 
 	Texture::Texture(const variant& node, const std::vector<SurfacePtr>& surfaces)
@@ -122,7 +125,7 @@ namespace KRE
 			}
 		}
 
-		g_all_textures.insert(this);
+		allTextures().insert(this);
 	}
 
 	Texture::Texture(const std::vector<SurfacePtr>& surfaces, TextureType type, int mipmap_levels)
@@ -141,7 +144,7 @@ namespace KRE
 			texture_params_.back().mipmaps = mipmap_levels;
 			internalInit(texture_params_.begin() + (texture_params_.size() - 1));
 		}
-		g_all_textures.insert(this);
+		allTextures().insert(this);
 	}
 
 	Texture::Texture(int count, 
@@ -168,7 +171,7 @@ namespace KRE
 			tp.type = type;
 			internalInit(texture_params_.begin()+n);
 		}
-		g_all_textures.insert(this);
+		allTextures().insert(this);
 	}
 
 	Texture::Texture(const Texture& o)
@@ -179,12 +182,12 @@ namespace KRE
 		palette_row_map_(o.palette_row_map_)
 	{
 		memcpy(palette_, o.palette_, sizeof(palette_));
-		g_all_textures.insert(this);
+		allTextures().insert(this);
 	}
 
 	Texture::~Texture()
 	{
-		g_all_textures.erase(this);
+		allTextures().erase(this);
 	}
 
 	void Texture::initFromVariant(texture_params_iterator tp, const variant& node)
