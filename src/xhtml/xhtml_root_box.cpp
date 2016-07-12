@@ -30,6 +30,7 @@ namespace xhtml
 
 	RootBox::RootBox(const BoxPtr& parent, const StyleNodePtr& node)
 		: BlockBox(parent, node, nullptr),
+		layout_dims_(),
 		  fixed_boxes_()
 	{
 	}
@@ -57,7 +58,14 @@ namespace xhtml
 		setContentY(getMBPTop());
 
 		setContentWidth(containing.content_.width - getMBPWidth());
-		setContentHeight(containing.content_.height - getMBPHeight());
+		//setContentHeight(containing.content_.height - getMBPHeight());
+		int child_height = 0;
+		for(auto& child : getChildren()) {
+			if(!child->isFloat()) {
+				child_height = std::max(child_height, child->getTop() + child->getMBPBottom() + child->getHeight());
+			}
+		}
+		setContentHeight(child_height);
 
 		layoutFixed(eng, containing);
 	}

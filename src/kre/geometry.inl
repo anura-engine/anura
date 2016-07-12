@@ -328,12 +328,12 @@ namespace geometry
 	template<typename T> inline
 	bool pointInRect(const Point<T>& p, const Rect<T>& r)
 	{	
-		return p.x >= r.x() && p.y >= r.y() && p.x < r.x2() && p.y < r.y2();
+		return p.x >= r.x() && p.y >= r.y() && p.x <= r.x2() && p.y <= r.y2();
 	}
 	template<typename T> inline
 	bool pointInRect(const T& x, const T& y, const Rect<T>& r)
 	{	
-		return x >= r.x() && y >= r.y() && x < r.x2() && y < r.y2();
+		return x >= r.x() && y >= r.y() && x <= r.x2() && y <= r.y2();
 	}
 
 	template<typename T> inline

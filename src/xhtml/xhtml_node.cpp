@@ -369,6 +369,37 @@ namespace xhtml
 		}
 	}
 
+	void Node::setScrollbar(const scrollable::ScrollbarPtr& scrollbar)
+	{
+		ASSERT_LOG(scrollbar != nullptr, "setting a null scrollbar isn't allowed. Use removeScrollbar() instead.");	
+		if(scrollbar->getDirection() == scrollable::Scrollbar::Direction::VERTICAL) {
+			scrollbar_vert_ = scrollbar;
+		} else {
+			scrollbar_horz_ = scrollbar;
+		}
+	}
+
+	void Node::removeScrollbar(scrollable::Scrollbar::Direction d)
+	{
+		if(d == scrollable::Scrollbar::Direction::VERTICAL) {
+			scrollbar_vert_.reset();
+		} else {
+			scrollbar_horz_.reset();
+		}
+	}
+
+	bool Node::handleMouseWheel(bool* trigger, const point& p, const point& delta, int direction)
+	{
+		if(!active_rect_.empty() && geometry::pointInRect(p, active_rect_)) {
+			if(scrollbar_vert_ && delta.y != 0) {
+				scrollbar_vert_->scrollLines((direction ? -1 : 1) * delta.y);
+			} else if(scrollbar_horz_ && delta.x != 0) {
+				scrollbar_horz_->scrollLines((direction ? -1 : 1) * delta.x);
+			}
+		}
+		return false;
+	}
+
 	bool Node::handleMouseButtonUp(bool* trigger, const point& mp, unsigned button)
 	{
 		auto pos = model_matrix_ * glm::vec4(static_cast<float>(mp.x), static_cast<float>(mp.y), 0.0f, 1.0f);
@@ -447,6 +478,12 @@ namespace xhtml
 					getScriptHandler()->runEventHandler(shared_from_this(), EventHandlerId::MOUSE_ENTER, variant(&m));
 				}
 				mouse_entered_ = true;
+				if(scrollbar_vert_ != nullptr) {
+					scrollbar_vert_->triggerFadeIn();
+				}
+				if(scrollbar_horz_ != nullptr) {
+					scrollbar_horz_->triggerFadeIn();
+				}
 			} else {
 				if(mouse_entered_ == true && getScriptHandler() && hasActiveHandler(EventHandlerId::MOUSE_LEAVE)) {
 					std::map<variant, variant> m;
@@ -455,6 +492,12 @@ namespace xhtml
 					getScriptHandler()->runEventHandler(shared_from_this(), EventHandlerId::MOUSE_LEAVE, variant(&m));
 				}
 				mouse_entered_ = false;
+				if(scrollbar_vert_ != nullptr) {
+					scrollbar_vert_->triggerFadeOut();
+				}
+				if(scrollbar_horz_ != nullptr) {
+					scrollbar_horz_->triggerFadeOut();
+				}
 			}
 
 			if(getScriptHandler() && hasActiveHandler(EventHandlerId::MOUSE_MOVE)) {
@@ -534,8 +577,16 @@ namespace xhtml
 
 	bool Document::handleMouseMotion(bool claimed, int x, int y)
 	{
-		bool trigger = false;		
 		point p(x, y);
+		for(auto& evt : event_listeners_) {
+			Uint32 buttons = SDL_GetMouseState(nullptr, nullptr);
+			claimed |= evt->mouse_motion(claimed, p, SDL_GetModState());
+		}
+		if(claimed) {
+			return claimed;
+		}
+
+		bool trigger = false;		
 		claimed = !preOrderTraversal([&trigger, &p](NodePtr node) {
 			node->handleMouseMotion(&trigger, p);
 			return true;
@@ -546,8 +597,16 @@ namespace xhtml
 
 	bool Document::handleMouseButtonDown(bool claimed, int x, int y, unsigned button)
 	{
-		bool trigger = false;
 		point p(x, y);
+		for(auto& evt : event_listeners_) {
+			Uint32 buttons = SDL_GetMouseState(nullptr, nullptr);
+			claimed |= evt->mouse_button_down(claimed, p, buttons, SDL_GetModState());
+		}
+		if(claimed) {
+			return claimed;
+		}
+
+		bool trigger = false;
 		claimed = !preOrderTraversal([&trigger, &p, button](NodePtr node) {
 			node->handleMouseButtonDown(&trigger, p, button);
 			return true;
@@ -558,14 +617,59 @@ namespace xhtml
 
 	bool Document::handleMouseButtonUp(bool claimed, int x, int y, unsigned button)
 	{
-		bool trigger = false;
 		point p(x, y);
+		for(auto& evt : event_listeners_) {
+			Uint32 buttons = SDL_GetMouseState(nullptr, nullptr);
+			claimed |= evt->mouse_button_up(claimed, p, buttons, SDL_GetModState());
+		}
+		if(claimed) {
+			return claimed;
+		}
+
+		bool trigger = false;
 		claimed = !preOrderTraversal([&trigger, &p, button](NodePtr node) {
 			node->handleMouseButtonUp(&trigger, p, button);
 			return true;
-		});
+		});		
 		trigger_layout_ |= trigger;
 		return claimed;
+	}
+
+	bool Document::handleMouseWheel(bool claimed, int x, int y, int direction)
+	{
+		point delta(x, y);
+		int mx, my;
+		Uint32 buttons = SDL_GetMouseState(&mx, &my);
+		point p(mx, my);
+		for(auto& evt : event_listeners_) {
+			claimed |= evt->mouse_wheel(claimed, p, delta, direction);
+		}
+		if(claimed) {
+			return claimed;
+		}
+		
+		bool trigger = false;
+		claimed = !preOrderTraversal([&trigger, &p, &delta, direction](NodePtr node) {
+			node->handleMouseWheel(&trigger, p, delta, direction);
+			return true;
+		});		
+		trigger_layout_ |= trigger;
+		return claimed;
+	}
+
+	void Document::addEventListener(event_listener_ptr evt)
+	{
+		event_listeners_.emplace(evt);
+	}
+
+	void Document::removeEventListener(event_listener_ptr evt)
+	{
+		event_listeners_.erase(evt);
+	}
+
+	void Document::clearEventListeners(void)
+	{
+		event_listeners_.clear();
 	}
 
 	// Documents do not have an owner document.
@@ -574,7 +678,9 @@ namespace xhtml
 		  style_sheet_(ss == nullptr ? std::make_shared<css::StyleSheet>() : ss),
 		  trigger_layout_(true),
 		  trigger_render_(false),
-		  trigger_rebuild_(false)
+		  trigger_rebuild_(false),
+		  active_element_(),
+		  event_listeners_()
 	{
 	}
 
@@ -648,7 +754,8 @@ namespace xhtml
 		}
 
 		if(needsLayout()) {
-			LOG_DEBUG("Triggered layout!");
+			LOG_INFO("Triggered layout!");
+			clearEventListeners();
 
 			// XXX should we should have a re-process styles flag here.
 			{
