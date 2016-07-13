@@ -71,7 +71,7 @@ namespace scrollable
 		void triggerFadeOut();
 
 		void enableFade(float in_time=0.5, float out_time=0.5, bool in_on_mouseenter=true, bool out_on_mouseleave=false);
-		void disableFade() { fade_enabled_ = false; transition_ = 0.0; }
+		void disableFade() { fade_enabled_ = false; transition_ = 0; }
 	private:
 		bool handle_mouse_motion(bool claimed, const point& p, unsigned keymod) override;
 		bool handle_mouse_button_up(bool claimed, const point& p, unsigned buttons, unsigned keymod) override;
