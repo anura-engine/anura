@@ -3038,6 +3038,7 @@ COMMAND_LINE_UTILITY(db_convert_accounts) {
 			client->get(item.as_string(), [=](variant user_info) {
 				if(user_info.is_null()) {
 					LOG_ERROR("Could not get key for user: " << user_info.write_json());
+					return;
 				}
 
 				if(user_info["passwd"].is_null()) {
