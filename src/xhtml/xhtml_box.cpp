@@ -42,6 +42,8 @@ namespace xhtml
 
 	namespace
 	{
+		const int scrollbar_default_width = 15;
+
 		std::string fp_to_str(const FixedPoint& fp)
 		{
 			std::ostringstream ss;
@@ -68,17 +70,21 @@ namespace xhtml
 		  border_info_(node),
 		  offset_(),
 		  line_height_(0),
+		  precss_content_height_(0),
 		  is_replaceable_(false),
 		  is_first_inline_child_(false),
 		  is_last_inline_child_(false),
-		  scene_tree_(nullptr),
-		  scrollbar_(nullptr)
+		  scene_tree_(nullptr)
 	{
 		if(getNode() != nullptr && getNode()->id() == NodeId::ELEMENT) {
 			is_replaceable_ = getNode()->isReplaced();
 		}
 
 		init();
+	}
+
+	Box::~Box()
+	{
 	}
 
 	void Box::init()
@@ -108,7 +114,10 @@ namespace xhtml
 			return true;
 		});
 		node->getNode()->layoutComplete();
-		return e.getRoot();
+
+		auto root_box = e.getRoot();
+		root_box->setLayoutDimensions(containing_width, containing_height);
+		return root_box;
 	}
 
 	bool Box::ancestralTraverse(std::function<bool(const ConstBoxPtr&)> fn) const
@@ -176,8 +185,11 @@ namespace xhtml
 		return scene_tree_;
 	}
 
-	void Box::layout(LayoutEngine& eng, const Dimensions& containing)
+	void Box::layout(LayoutEngine& eng, const Dimensions& ocontaining)
 	{
+		auto containing = ocontaining;
+		auto styles = getStyleNode();
+
 		std::unique_ptr<LayoutEngine::FloatContextManager> fcm;
 		if(getParent() && getParent()->isFloat()) {
 			fcm.reset(new LayoutEngine::FloatContextManager(eng, FloatList()));
@@ -194,6 +206,14 @@ namespace xhtml
 		std::unique_ptr<RenderContext::Manager> ctx_manager;
 		if(node != nullptr) {
 			ctx_manager.reset(new RenderContext::Manager(node->getProperties()));
+		}
+
+		if(styles != nullptr) {
+			auto ovf = styles->getOverflow();
+			// this is kind of a hack, since we really want to avoid re-running layout
+			//if(ovf == Overflow::SCROLL || ovf == Overflow::AUTO) {
+				containing.content_.width -= scrollbar_default_width * LayoutEngine::getFixedPointScale();
+			//}
 		}
 
 		handlePreChildLayout(eng, containing);
@@ -249,11 +269,13 @@ namespace xhtml
 			eng.setCursor(p);
 		}
 
-		// Stuff dealing with scrollbars
-		//auto ovf = getStyleNode()->getOverflow();
-		//if(ovf == Overflow::SCROLL || ovf == Overflow::AUTO) {
-		//	scrollbar_ = std::make_shared<scrollable::Scrollbar>(scrollable::Scrollbar::Direction::VERTICAL, [](int x){}, rect(0, 0, 20, 20));
-		//}
+		precss_content_height_ = dimensions_.content_.height;
+		if(isBlockBox() && styles != nullptr) {
+			auto css_h = styles->getHeight();
+			if(!css_h->isAuto()) {
+				setContentHeight(css_h->getLength().compute(containing.content_.height));				
+			}
+		}
 
 		eng.closeLineBox();
 	}
@@ -397,11 +419,72 @@ namespace xhtml
 			node->setActiveRect(rect(x, y, w, h));
 			//LOG_INFO(node->toString() << ": " << toString() << ": active_rect: " << x << "," << y << "," << w << "," << h);
 
-			//scrollbar_->setLocation(x+w-20, y);
-			//scrollbar_->setDimensions(20, h);
-			//if(scene_tree != nullptr) {
-			//	scene_tree->addObject(scrollbar_);
-			//}
+			// Stuff dealing with scrollbars
+			auto styles = getStyleNode();
+			if(styles != nullptr) {
+				auto ovf = styles->getOverflow();
+				const FixedPoint box_height = getHeight() + getMBPHeight();
+
+				RootBoxPtr rb = getRoot();
+				point rh{std::numeric_limits<int>::max(), std::numeric_limits<int>::max()};
+				if(rb != nullptr) {
+					rh = getRoot()->getLayoutDimensions();
+				}
+				
+				scrollable::ScrollbarPtr scrollbar = node->getScrollbar(scrollable::Scrollbar::Direction::VERTICAL);
+				if(ovf == Overflow::SCROLL || (ovf == Overflow::AUTO && (precss_content_height_ > box_height || (y + h) > rh.y))) {
+					const auto scale = LayoutEngine::getFixedPointScaleFloat();
+					if(precss_content_height_ > box_height) {
+						rect r((offs.x + dims.content_.width) / LayoutEngine::getFixedPointScale() - scrollbar_default_width, offs.y / LayoutEngine::getFixedPointScale(), scrollbar_default_width, box_height / LayoutEngine::getFixedPointScale());
+						if(scrollbar == nullptr) {
+							scrollbar = std::make_shared<scrollable::Scrollbar>(scrollable::Scrollbar::Direction::VERTICAL, [scene_tree](int offs) {
+								scene_tree->offsetPosition(0, -offs);
+							}, r);
+							node->setScrollbar(scrollbar);
+						} else {
+							scrollbar->setRect(r);
+							scrollbar->setOnChange([scene_tree](int offs) {
+								scene_tree->offsetPosition(0, -offs);
+							});
+						}
+						scrollbar->setRange(0, 1 + (precss_content_height_ - box_height) / LayoutEngine::getFixedPointScale());
+						auto tmp = static_cast<int>((precss_content_height_ / scale) * (box_height / scale));
+						scrollbar->setPageSize(static_cast<int>(tmp / (precss_content_height_/LayoutEngine::getFixedPointScale())));
+					} else {
+						rect r((offs.x + dims.content_.width) / LayoutEngine::getFixedPointScale() - scrollbar_default_width, offs.y / LayoutEngine::getFixedPointScale(), scrollbar_default_width, rh.y-y);
+						if(scrollbar == nullptr) {
+							scrollbar = std::make_shared<scrollable::Scrollbar>(scrollable::Scrollbar::Direction::VERTICAL, [scene_tree](int offs) {
+								scene_tree->offsetPosition(0, -offs);
+							}, r);
+							node->setScrollbar(scrollbar);
+						} else {
+							scrollbar->setRect(r);
+							scrollbar->setOnChange([scene_tree](int offs) {
+								scene_tree->offsetPosition(0, -offs);
+							});
+						}
+						scrollbar->setRange(0, 1 + y + h - rh.y);
+						auto tmp = static_cast<int>((y+h) * rh.y);
+						scrollbar->setPageSize(static_cast<int>(tmp / (y+h)));
+
+						//LOG_INFO("r=" << r << "; range=" << scrollbar->getMin() << "," << scrollbar->getMax() << "; page size=" << (tmp/(y+h)));
+					}
+					scrollbar->setLineSize(getLineHeight() / LayoutEngine::getFixedPointScale());
+					node->getOwnerDoc()->addEventListener(scrollbar);
+					scene_tree->setClipRect(rect(x - offset.x/LayoutEngine::getFixedPointScale(), y - offset.y/LayoutEngine::getFixedPointScale(), w, h));
+
+					if(ovf == Overflow::AUTO) {
+						scrollbar->enableFade(0.2f, 0.75f, true, false);
+						scrollbar->triggerFadeOut();
+					}
+
+					auto scene_tree_root = scene_tree->getRoot();
+					ASSERT_LOG(scene_tree_root != nullptr, "SceneTree root was null.");
+					scene_tree_root->addEndObject(scrollbar);
+				} else {
+					node->removeScrollbar(scrollable::Scrollbar::Direction::VERTICAL);
+				}
+			}
 		}
 	}
 

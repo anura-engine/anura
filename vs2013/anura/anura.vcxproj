@@ -368,6 +368,7 @@
     <ClInclude Include="..\..\src\xhtml\css_styles.hpp" />
     <ClInclude Include="..\..\src\xhtml\css_stylesheet.hpp" />
     <ClInclude Include="..\..\src\xhtml\css_transition.hpp" />
+    <ClInclude Include="..\..\src\xhtml\event_listener.hpp" />
     <ClInclude Include="..\..\src\xhtml\scrollable.hpp" />
     <ClInclude Include="..\..\src\xhtml\solid_renderable.hpp" />
     <ClInclude Include="..\..\src\xhtml\to_roman.hpp" />
@@ -708,6 +709,7 @@
     <ClCompile Include="..\..\src\xhtml\css_styles.cpp" />
     <ClCompile Include="..\..\src\xhtml\css_stylesheet.cpp" />
     <ClCompile Include="..\..\src\xhtml\css_transition.cpp" />
+    <ClCompile Include="..\..\src\xhtml\event_listener.cpp" />
     <ClCompile Include="..\..\src\xhtml\scrollable.cpp" />
     <ClCompile Include="..\..\src\xhtml\solid_renderable.cpp" />
     <ClCompile Include="..\..\src\xhtml\to_roman.cpp" />

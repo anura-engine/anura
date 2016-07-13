@@ -28,7 +28,6 @@
 #include "geometry.hpp"
 #include "SceneTree.hpp"
 
-#include "scrollable.hpp"
 #include "xhtml.hpp"
 #include "xhtml_background_info.hpp"
 #include "xhtml_border_info.hpp"
@@ -85,7 +84,7 @@ namespace xhtml
 	{
 	public:
 		Box(BoxId id, const BoxPtr& parent, const StyleNodePtr& node, const RootBoxPtr& root);
-		virtual ~Box() {}
+		virtual ~Box();
 		BoxId id() const { return id_; }
 		const Dimensions& getDimensions() const { return dimensions_; }
 		const std::vector<BoxPtr>& getChildren() const { return boxes_; }
@@ -251,14 +250,15 @@ namespace xhtml
 		point offset_;
 		FixedPoint line_height_;
 
+		// The height of the content before any adjustments from CSS.
+		FixedPoint precss_content_height_;
+
 		bool is_replaceable_;
 
 		bool is_first_inline_child_;
 		bool is_last_inline_child_;
 
 		KRE::SceneTreePtr scene_tree_;
-
-		mutable scrollable::ScrollbarPtr scrollbar_;
 	};
 
 	std::ostream& operator<<(std::ostream& os, const Rect& r);

@@ -113,6 +113,7 @@ namespace KRE
 		  position_(0.0f),
 		  rotation_(1.0f, 0.0f, 0.0f, 0.0f),
 		  scale_(1.0f),
+		  offset_position_(0.0f),
 		  model_changed_(true),
 		  model_matrix_(1.0f),
 		  cached_model_matrix_(1.0f),
@@ -157,6 +158,24 @@ namespace KRE
 		model_changed_ = true;
 	}
 
+	void SceneTree::offsetPosition(const glm::vec3 & position)
+	{
+		offset_position_ = position;
+		model_changed_ = true;
+	}
+
+	void SceneTree::offsetPosition(float x, float y, float z)
+	{
+		offset_position_ = glm::vec3(x, y, z);
+		model_changed_ = true;
+	}
+
+	void SceneTree::offsetPosition(int x, int y, int z)
+	{
+		offset_position_ = glm::vec3(static_cast<float>(x), static_cast<float>(y), static_cast<float>(z));
+		model_changed_ = true;
+	}
+
 	void SceneTree::setRotation(float angle, const glm::vec3& axis) 
 	{
 		rotation_ = glm::angleAxis(glm::radians(angle), axis);
@@ -198,6 +217,10 @@ namespace KRE
 		for(auto& child : children_) {
 			child->preRender(wnd);
 		}
+
+		for(auto& obj : objects_end_) {
+			obj->preRender(wnd);
+		}
 	}
 
 	void SceneTree::clear()
@@ -211,6 +234,7 @@ namespace KRE
 		color_.reset();
 		model_changed_ = true;
 		position_ = glm::vec3(0.0f);
+		offset_position_ = glm::vec3(0.0f);
 		rotation_ = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
 		scale_ = glm::vec3(1.0f);
 
@@ -228,12 +252,18 @@ namespace KRE
 			model_changed_ = false;
 			glm::mat4 m = glm::scale(model_matrix_, scale_);
 			m = glm::toMat4(rotation_) * m;
-			cached_model_matrix_ = glm::translate(m, position_);
+			cached_model_matrix_ = glm::translate(m, position_ + offset_position_);
 		}
 
 		{
 			CameraScope cs(camera_);
 			ClipShapeScope::Manager cssm(clip_shape_, nullptr);
+
+			auto csm = std::unique_ptr<ClipScope::Manager>();
+			if(clip_rect_) {
+				csm.reset(new ClipScope::Manager(*clip_rect_, nullptr));
+			}
+
 			// blend
 			// color
 			//BlendModeScope bms(scopeable_);
@@ -255,6 +285,10 @@ namespace KRE
 
 				for(auto& child : children_) {
 					child->render(wnd);
+				}
+
+				for(auto& obj : objects_end_) {
+					wnd->render(obj.get());
 				}
 			}
 
