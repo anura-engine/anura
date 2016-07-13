@@ -101,7 +101,7 @@ namespace hex
 			std::vector<rect> sheet_areas;
 		};
 
-		AdjacencyPattern adjacency_patterns_[1 << 12];
+		AdjacencyPattern adjacency_patterns_[1 << 6];
 	};
 
 	struct Alternate 

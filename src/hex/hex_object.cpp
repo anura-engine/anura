@@ -91,8 +91,8 @@ namespace hex
 
 		const float vx1 = static_cast<float>(p.x - alternative.border[0]);
 		const float vy1 = static_cast<float>(p.y - alternative.border[1]);
-		const float vx2 = static_cast<float>(p.x + area.w());
-		const float vy2 = static_cast<float>(p.y + area.h());
+		const float vx2 = static_cast<float>(p.x + area.w() - alternative.border[0]);
+		const float vy2 = static_cast<float>(p.y + area.h() - alternative.border[1]);
 
 		coords->emplace_back(glm::vec2(vx1, vy1), glm::vec2(uv.x1(), uv.y1()));
 		coords->emplace_back(glm::vec2(vx2, vy1), glm::vec2(uv.x2(), uv.y1()));
