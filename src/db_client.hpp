@@ -46,7 +46,7 @@ public:
 	};
 
 	// Create an instance to connect to the database.
-	static DbClientPtr create();
+	static DbClientPtr create(const char* prefix_override=nullptr);
 
 	virtual ~DbClient();
 
@@ -59,7 +59,7 @@ public:
 	virtual bool process(int timeout_us=0) = 0;
 
 	enum PUT_OPERATION { PUT_SET, PUT_ADD, PUT_REPLACE, PUT_APPEND };
-	enum GET_OPERATION { GET_NORMAL, GET_LIST };
+	enum GET_OPERATION { GET_NORMAL, GET_LIST, GET_RAW };
 
 	// Function to put the given document into the database with the
 	// associated key. Will call on_done when it completes or on_error if it
@@ -71,6 +71,8 @@ public:
 	virtual void get(const std::string& key, std::function<void(variant)> on_done, int lock_seconds=0, GET_OPERATION op=GET_NORMAL) = 0;
 
 	virtual void remove(const std::string& key) = 0;
+
+	virtual void getKeysWithPrefix(const std::string& key, std::function<void(std::vector<variant>)> on_done) = 0;
 
 private:
 	DECLARE_CALLABLE(DbClient);
