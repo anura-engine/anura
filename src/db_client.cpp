@@ -155,7 +155,7 @@ namespace
 
 #ifndef USE_DBCLIENT
 
-DbClientPtr DbClient::create(const char* prefix=nullptr) 
+DbClientPtr DbClient::create(const char* prefix) 
 {
 	if(prefix == nullptr) {
 		prefix = g_db_key_prefix.c_str();
