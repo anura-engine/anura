@@ -3036,6 +3036,10 @@ COMMAND_LINE_UTILITY(db_convert_accounts) {
 	client->getKeysWithPrefix("user", [=](std::vector<variant> v) {
 		for(auto item : v) {
 			client->get(item.as_string(), [=](variant user_info) {
+				if(user_info.is_null()) {
+					LOG_ERROR("Could not get key for user: " << user_info.write_json());
+				}
+
 				if(user_info["passwd"].is_null()) {
 					return;
 				}
