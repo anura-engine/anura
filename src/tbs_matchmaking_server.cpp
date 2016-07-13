@@ -3036,6 +3036,10 @@ COMMAND_LINE_UTILITY(db_convert_accounts) {
 	client->getKeysWithPrefix("user", [=](std::vector<variant> v) {
 		for(auto item : v) {
 			client->get(item.as_string(), [=](variant user_info) {
+				if(user_info["passwd"].is_null()) {
+					return;
+				}
+
 				variant_builder registration_builder;
 				registration_builder.add("user", user_info["user"]);
 				registration_builder.add("passwd", user_info["passwd"]);
