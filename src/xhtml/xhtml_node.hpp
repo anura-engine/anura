@@ -49,6 +49,10 @@ namespace xhtml
 		TEXT,
 	};
 
+	enum DebugFlags	{
+		DISPLAY_PARSE_TREE	= (1 << 0),
+	};
+
 	struct Keystate
 	{
 		// true if pressed, false if released
@@ -254,6 +258,8 @@ namespace xhtml
 		// type is expected to be a content type i.e. "text/javascript"
 		static void registerScriptHandler(const std::string& type, std::function<ScriptPtr()> fn);
 		static ScriptPtr findScriptHandler(const std::string& type=std::string());
+
+		static void enableDebug(int flags);
 	protected:
 		Document(css::StyleSheetPtr ss);
 		css::StyleSheetPtr style_sheet_;

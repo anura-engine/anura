@@ -39,6 +39,8 @@ namespace xhtml
 {
 	namespace 
 	{
+		static bool debug_display_tree_parse = false;
+
 		struct DocumentImpl : public Document 
 		{
 			DocumentImpl(css::StyleSheetPtr ss) : Document(ss) {}
@@ -741,6 +743,11 @@ namespace xhtml
 		});
 	}
 
+	void Document::enableDebug(int flags)
+	{
+		debug_display_tree_parse = flags & DebugFlags::DISPLAY_PARSE_TREE ? true : false;
+	}
+
 	KRE::SceneTreePtr Document::process(StyleNodePtr& style_tree, int w, int h)
 	{
 		RootBoxPtr layout = nullptr;
@@ -788,6 +795,14 @@ namespace xhtml
 			layout->render(point());
 			trigger_render_ = false;
 			changed = true;
+
+			if(debug_display_tree_parse) {
+				layout->preOrderTraversal([](xhtml::BoxPtr box, int nesting) {
+					std::stringstream ss;
+					ss << std::string(nesting * 2, ' ') << box->toString();
+					LOG_INFO(ss.str());
+				}, 0);
+			}
 		}
 
 		return layout != nullptr ? layout->getSceneTree() : nullptr;
