@@ -122,10 +122,7 @@ namespace hex
 	{
 		std::vector<const HexObject*> res;
 		for(auto dir : { NORTH, NORTH_EAST, SOUTH_EAST, SOUTH, SOUTH_WEST, NORTH_WEST }) {
-			auto hp = getHexTile(dir, x, y);
-			if(hp != nullptr) {
-				res.emplace_back(hp);
-			}
+			res.emplace_back(getHexTile(dir, x, y));
 		}
 		return res;
 	}

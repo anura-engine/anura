@@ -78,9 +78,9 @@ namespace hex
 
 	void HexObject::renderAdjacent(std::vector<MapRenderParams>* coords) const
 	{
-		for(const NeighborType& neighbor : neighbors_) {
-			neighbor.type->renderAdjacent(x_, y_, &(*coords)[neighbor.type->numeric_id()].coords, neighbor.dirmap);
-		}
+		//for(const NeighborType& neighbor : neighbors_) {
+		//	neighbor.type->renderAdjacent(x_, y_, &(*coords)[neighbor.type->numeric_id()].coords, neighbor.dirmap);
+		//}
 	}
 
 	void HexObject::renderOverlay(const Alternate& alternative, const KRE::TexturePtr& tex, std::vector<KRE::vertex_texcoord>* coords) const
@@ -105,29 +105,34 @@ namespace hex
 
 	void HexObject::setNeighborsChanged()
 	{
-		for (auto& neighbor : neighbors_) {
-			neighbor.type->calculateAdjacencyPattern(neighbor.dirmap);
-		}
+		//for (auto& neighbor : neighbors_) {
+		//	neighbor.type->calculateAdjacencyPattern(neighbor.dirmap);
+		//}
 	}
 
 	void HexObject::initNeighbors()
 	{
-		for(int n = 0; n < 6; ++n) {
-			const HexObject* obj = getTileInDir(static_cast<direction>(n));
-			if(obj && obj->tile() && obj->logical_tile()->getHeight() > logical_tile()->getHeight()) {
-				NeighborType* neighbor = nullptr;
-				for(NeighborType& candidate : neighbors_) {
-					neighbor = &candidate;
-				}
-
-				if(neighbor == nullptr) {
-					neighbors_.push_back(NeighborType());
-					neighbor = &neighbors_.back();
-					neighbor->type = obj->tile();
-				}
-
-				neighbor->dirmap |= (1 << n);
-			}
+		auto surrounding = owner_map_->getSurroundingTiles(x_, y_);
+		if(tile_ != nullptr) {
+			tile_->calculateAdjacencyPattern(surrounding);
 		}
+
+		//for(int n = 0; n < 6; ++n) {
+		//	const HexObject* obj = getTileInDir(static_cast<direction>(n));
+		//	if(obj && obj->tile() && obj->logical_tile()->getHeight() > logical_tile()->getHeight()) {
+		//		NeighborType* neighbor = nullptr;
+		//		for(NeighborType& candidate : neighbors_) {
+		//			neighbor = &candidate;
+		//		}
+
+		//		if(neighbor == nullptr) {
+		//			neighbors_.push_back(NeighborType());
+		//			neighbor = &neighbors_.back();
+		//			neighbor->type = obj->tile();
+		//		}
+
+		//		neighbor->dirmap |= (1 << n);
+		//	}
+		//}
 	}
 }

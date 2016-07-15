@@ -54,54 +54,31 @@ namespace hex
 			rect image_rect_;
 	};
 
-	class TileSheet
-	{
-	public:
-		explicit TileSheet(const variant& n);
-		const KRE::TexturePtr& getTexture() const { return texture_; }
-		rect getArea(int index) const;
-	private:
-		KRE::TexturePtr texture_;
-		rect area_;
-		int nrows_, ncols_, pad_;
-	};
-
 	class TileType
 	{
 	public:
-		TileType(const std::string& tile, int num_id, const variant& n);
-		
+		TileType(const std::string& tile, int num_id) : tile_id_(tile), num_id_(num_id), tex_() {}
+		virtual ~TileType() {}
 		const std::string& id() const { return tile_id_; }
-
 		int numeric_id() const { return num_id_; }
-
 		variant write() const;
-		void calculateAdjacencyPattern(unsigned short adjmap);
+		virtual void calculateAdjacencyPattern(const std::vector<const HexObject*>& surrounds) = 0;
 
 		static TileTypePtr factory(const std::string& tile);
 
-		KRE::TexturePtr getTexture() const { return sheet_ != nullptr ? sheet_->getTexture() : nullptr; }
+		KRE::TexturePtr getTexture() const { return tex_; }
 
-		void render(int x, int y, std::vector<KRE::vertex_texcoord>* coords) const;
-		void renderAdjacent(int x, int y, std::vector<KRE::vertex_texcoord>* coords, unsigned short adjmap) const;
+		virtual void render(int x, int y, std::vector<KRE::vertex_texcoord>* coords) const = 0;
+		virtual void renderAdjacent(int x, int y, std::vector<KRE::vertex_texcoord>* coords, unsigned short adjmap) const = 0;
+	protected:
+		void setTexture(const std::string& filename);
 	private:
+		virtual variant handleWrite() const = 0;
+		virtual void renderInternal(int x, int y, const rect& area, std::vector<KRE::vertex_texcoord>* coords) const = 0;
+
 		int num_id_;
 		std::string tile_id_;
-		TileSheetPtr sheet_;
-
-		void renderInternal(int x, int y, const rect& area, std::vector<KRE::vertex_texcoord>* coords) const;
-
-		std::vector<rect> sheet_area_;
-
-		struct AdjacencyPattern {
-			AdjacencyPattern() : init(false), depth(0)
-			{}
-			bool init;
-			int depth;
-			std::vector<rect> sheet_areas;
-		};
-
-		AdjacencyPattern adjacency_patterns_[1 << 6];
+		KRE::TexturePtr tex_;
 	};
 
 	struct Alternate 
