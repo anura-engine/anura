@@ -336,7 +336,7 @@ namespace hex
 
 	void WallTileType::calculateAdjacencyPattern(const std::vector<const HexObject*>& surrounds)
 	{
-		ASSERT_LOG(surrounds.size() != 6, "Something bad happened not enough objects in the surrounds.");
+		ASSERT_LOG(surrounds.size() == 6, "Something bad happened not enough objects in the surrounds.");
 		// ordering of surrounds:
 		//	NORTH, NORTH_EAST, SOUTH_EAST, SOUTH, SOUTH_WEST, NORTH_WEST
 		int dir = 0;
