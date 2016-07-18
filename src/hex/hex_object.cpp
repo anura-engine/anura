@@ -73,7 +73,7 @@ namespace hex
 		if(tile_ == nullptr) {
 			return;
 		}
-		tile_->render(x_, y_, coords);
+		tile_->render(x_, y_, coords, adjacency_patterns_);
 	}
 
 	void HexObject::renderAdjacent(std::vector<MapRenderParams>* coords) const
@@ -112,9 +112,9 @@ namespace hex
 
 	void HexObject::initNeighbors()
 	{
-		auto surrounding = owner_map_->getSurroundingTiles(x_, y_);
 		if(tile_ != nullptr) {
-			tile_->calculateAdjacencyPattern(surrounding);
+			adjacency_patterns_.clear();
+			tile_->calculateAdjacencyPattern(x_, y_, owner_map_, &adjacency_patterns_);
 		}
 
 		//for(int n = 0; n < 6; ++n) {

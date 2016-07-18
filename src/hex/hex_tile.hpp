@@ -54,28 +54,43 @@ namespace hex
 			rect image_rect_;
 	};
 
+	struct AdjacencyPattern 
+	{
+		AdjacencyPattern(int x, int y, const rect& a) : ox(x), oy(y), area(a) {}
+		int ox;
+		int oy;
+		rect area;
+	};
+
+	enum class TileTypeId {
+		BASIC,
+		WALL,
+	};
+
 	class TileType
 	{
 	public:
-		TileType(const std::string& tile, int num_id) : tile_id_(tile), num_id_(num_id), tex_() {}
+		TileType(TileTypeId ttid, const std::string& tile, int num_id) : ttid_(ttid), tile_id_(tile), num_id_(num_id), tex_() {}
 		virtual ~TileType() {}
 		const std::string& id() const { return tile_id_; }
 		int numeric_id() const { return num_id_; }
+		TileTypeId getTileTypeId() const { return ttid_; }
 		variant write() const;
-		virtual void calculateAdjacencyPattern(const std::vector<const HexObject*>& surrounds) = 0;
+		virtual void calculateAdjacencyPattern(int x, int y, const HexMap* hmap, std::vector<AdjacencyPattern>* patterns) = 0;
 
 		static TileTypePtr factory(const std::string& tile);
 
 		KRE::TexturePtr getTexture() const { return tex_; }
 
-		virtual void render(int x, int y, std::vector<KRE::vertex_texcoord>* coords) const = 0;
-		virtual void renderAdjacent(int x, int y, std::vector<KRE::vertex_texcoord>* coords, unsigned short adjmap) const = 0;
+		virtual void render(int x, int y, std::vector<KRE::vertex_texcoord>* coords, const std::vector<AdjacencyPattern>& patterns=std::vector<AdjacencyPattern>()) const = 0;
+		virtual void renderAdjacent(int x, int y, std::vector<KRE::vertex_texcoord>* coords, const std::vector<AdjacencyPattern>& patterns=std::vector<AdjacencyPattern>()) const = 0;
 	protected:
 		void setTexture(const std::string& filename);
+		void renderInternal(int x, int y, int ox, int oy, const rect& area, std::vector<KRE::vertex_texcoord>* coords) const;
 	private:
 		virtual variant handleWrite() const = 0;
-		virtual void renderInternal(int x, int y, const rect& area, std::vector<KRE::vertex_texcoord>* coords) const = 0;
 
+		TileTypeId ttid_;
 		int num_id_;
 		std::string tile_id_;
 		KRE::TexturePtr tex_;

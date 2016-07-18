@@ -72,6 +72,8 @@ namespace hex
 
 		std::vector<NeighborType> neighbors_;
 
+		std::vector<AdjacencyPattern> adjacency_patterns_;
+
 		// String representing the base type of this tile.
 		std::string type_;
 		// raw pointer to the map that owns this.
