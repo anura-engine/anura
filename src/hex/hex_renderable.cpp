@@ -107,7 +107,9 @@ namespace hex
 			new_layer->setTexture(layer.tiles.front()->tile()->getTexture());
 			++base_order;
 		
-			for(auto hex_obj : layer.tiles) {
+			//for(auto hex_obj : layer.tiles) {
+			for(auto it = layer.tiles.rbegin(); it != layer.tiles.rend(); ++it) {
+				auto hex_obj = *it;
 				hex_obj->render(&layer.coords);
 			}
 		}

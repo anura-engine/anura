@@ -411,6 +411,28 @@ namespace hex
 			}
 		}
 
+		if(se != nullptr && se->tile()-> getTileTypeId() != getTileTypeId()) {
+			if(ne != nullptr && ne->tile()-> getTileTypeId() != getTileTypeId()) {
+				auto& cc = concave_convex_[CONVEX_R];
+				patterns->emplace_back(ox + oh[R].x + cc.borders[0], oy + oh[R].y + cc.borders[1], cc.area);
+			} else {
+				static const point pdiff = HexMap::getPixelPosFromTilePos(x, y) - HexMap::getPixelPosFromTilePos(se->x(), se->y());
+				auto& cc = concave_convex_[CONCAVE_TL];
+				patterns->emplace_back(ox + oh[TL].x - pdiff.x + cc.borders[0], oy + oh[TL].y - pdiff.y + cc.borders[1], cc.area);
+			}
+		}
+
+		if(sw != nullptr && sw->tile()-> getTileTypeId() != getTileTypeId()) {
+			if(nw != nullptr && nw->tile()-> getTileTypeId() != getTileTypeId()) {
+				auto& cc = concave_convex_[CONVEX_L];
+				patterns->emplace_back(ox + oh[L].x + cc.borders[0], oy + oh[L].y + cc.borders[1], cc.area);
+			} else {
+				static const point pdiff = HexMap::getPixelPosFromTilePos(x, y) - HexMap::getPixelPosFromTilePos(sw->x(), sw->y());
+				auto& cc = concave_convex_[CONCAVE_TR];
+				patterns->emplace_back(ox + oh[TR].x - pdiff.x + cc.borders[0], oy + oh[TR].y - pdiff.y + cc.borders[1], cc.area);
+			}
+		}
+
 		if(s != nullptr && s->tile()->getTileTypeId() != getTileTypeId()) {
 			static const point pdiff = HexMap::getPixelPosFromTilePos(x, y) - HexMap::getPixelPosFromTilePos(s->x(), s->y());
 			if(se != nullptr && se->tile()-> getTileTypeId() != getTileTypeId()) {
@@ -439,29 +461,8 @@ namespace hex
 				patterns->emplace_back(ox + oh[R].x - pdiff.x + cc.borders[0], oy + oh[R].y - pdiff.y + cc.borders[1], cc.area);
 			}
 		}
-
-		if(se != nullptr && se->tile()-> getTileTypeId() != getTileTypeId()) {
-			if(ne != nullptr && ne->tile()-> getTileTypeId() != getTileTypeId()) {
-				auto& cc = concave_convex_[CONVEX_R];
-				patterns->emplace_back(ox + oh[R].x + cc.borders[0], oy + oh[R].y + cc.borders[1], cc.area);
-			} else {
-				static const point pdiff = HexMap::getPixelPosFromTilePos(x, y) - HexMap::getPixelPosFromTilePos(se->x(), se->y());
-				auto& cc = concave_convex_[CONCAVE_TL];
-				patterns->emplace_back(ox + oh[TL].x - pdiff.x + cc.borders[0], oy + oh[TL].y - pdiff.y + cc.borders[1], cc.area);
-			}
-		}
-
-		if(sw != nullptr && sw->tile()-> getTileTypeId() != getTileTypeId()) {
-			if(nw != nullptr && nw->tile()-> getTileTypeId() != getTileTypeId()) {
-				auto& cc = concave_convex_[CONVEX_L];
-				patterns->emplace_back(ox + oh[L].x + cc.borders[0], oy + oh[L].y + cc.borders[1], cc.area);
-			} else {
-				static const point pdiff = HexMap::getPixelPosFromTilePos(x, y) - HexMap::getPixelPosFromTilePos(sw->x(), sw->y());
-				auto& cc = concave_convex_[CONCAVE_TR];
-				patterns->emplace_back(ox + oh[TR].x - pdiff.x + cc.borders[0], oy + oh[TR].y - pdiff.y + cc.borders[1], cc.area);
-			}
-		}
 	}
+
 
 	void WallTileType::render(int x, int y, std::vector<KRE::vertex_texcoord>* coords, const std::vector<AdjacencyPattern>& patterns) const
 	{
