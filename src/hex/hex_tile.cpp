@@ -443,7 +443,7 @@ namespace hex
 				patterns->emplace_back(ox + oh[TR].x - pdiff.x + cc.borders[0], oy + oh[TR].y - pdiff.y + cc.borders[1], cc.area);
 			}
 			if(sw != nullptr && sw->tile()-> getTileTypeId() != getTileTypeId()) {
-				auto& cc = concave_convex_[CONCAVE_BL];
+				auto& cc = concave_convex_[CONVEX_BL];
 				patterns->emplace_back(ox + oh[BL].x + cc.borders[0], oy + oh[BL].y + cc.borders[1], cc.area);
 			} else {
 				auto& cc = concave_convex_[CONCAVE_TL];
