@@ -212,6 +212,7 @@ public:
 	void setZSubOrder(const int zsub_order) override {zsub_order_ = zsub_order;}
 	
 	bool executeCommand(const variant& var) override;
+	bool executeCommandOrFn(const variant& var);
 
 	virtual game_logic::FormulaPtr createFormula(const variant& v) override;
 

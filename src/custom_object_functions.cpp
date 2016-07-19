@@ -3367,7 +3367,7 @@ RETURN_TYPE("bool")
 	FUNCTION_ARGS_DEF
 		ARG_TYPE("custom_obj")
 		ARG_TYPE("map")
-		ARG_TYPE("{on_begin: null|commands, on_process: null|commands, on_complete: null|commands, name: null|string, easing: null|string|function(decimal)->decimal, duration: null|int, replace_existing: bool|null}")
+		ARG_TYPE("{on_begin: null|commands|function()->commands, on_process: null|commands|function()->commands, on_complete: null|commands|function()->commands, name: null|string, easing: null|string|function(decimal)->decimal, duration: null|int, replace_existing: bool|null}")
 	RETURN_TYPE("commands")
 	END_FUNCTION_DEF(animate)
 

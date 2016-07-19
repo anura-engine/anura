@@ -1655,7 +1655,7 @@ void CustomObject::process(Level& lvl)
 
 			if(move->pos >= move->getAnimationFrames()) {
 				if(move->on_complete.is_null() == false) {
-					executeCommand(move->on_complete);
+					executeCommandOrFn(move->on_complete);
 				}
 
 				follow_ons.insert(follow_ons.end(), move->follow_on.begin(), move->follow_on.end());
@@ -1670,12 +1670,12 @@ void CustomObject::process(Level& lvl)
 				}
 
 				if(move->on_begin.is_null() == false) {
-					executeCommand(move->on_begin);
+					executeCommandOrFn(move->on_begin);
 					move->on_begin = variant();
 				}
 
 				if(move->on_process.is_null() == false) {
-					executeCommand(move->on_process);
+					executeCommandOrFn(move->on_process);
 				}
 	
 				move->pos++;
@@ -5231,6 +5231,17 @@ void CustomObject::resolveDelayedEvents()
 	}
 
 	delayed_commands_.clear();
+}
+
+bool CustomObject::executeCommandOrFn(const variant& var)
+{
+	if(var.is_function()) {
+		std::vector<variant> args;
+		variant cmd = var(args);
+		return executeCommand(cmd);
+	} else {
+		return executeCommand(var);
+	}
 }
 
 bool CustomObject::executeCommand(const variant& var)
