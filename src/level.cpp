@@ -3260,6 +3260,11 @@ void Level::add_player(EntityPtr p)
 		if(player_ != p) {
 			player_->beingRemoved();
 		}
+
+		if(player_->label().empty() == false) {
+			chars_by_label_.erase(player_->label());
+		}
+
 		chars_.erase(std::remove(chars_.begin(), chars_.end(), player_), chars_.end());
 	}
 
