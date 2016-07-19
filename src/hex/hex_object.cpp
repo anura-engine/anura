@@ -70,14 +70,17 @@ namespace hex
 
 	void HexObject::render(std::vector<KRE::vertex_texcoord>* coords) const
 	{
-		if(tile_ == nullptr) {
-			return;
+		if(tile_ != nullptr) {
+			tile_->render(x_, y_, coords);
 		}
-		tile_->render(x_, y_, coords, adjacency_patterns_);
 	}
 
 	void HexObject::renderAdjacent(std::vector<MapRenderParams>* coords) const
 	{
+		
+		if(tile_ != nullptr) {
+			tile_->renderAdjacent(x_, y_, &(*coords)[tile_->numeric_id()].coords, adjacency_patterns_);
+		}
 		//for(const NeighborType& neighbor : neighbors_) {
 		//	neighbor.type->renderAdjacent(x_, y_, &(*coords)[neighbor.type->numeric_id()].coords, neighbor.dirmap);
 		//}

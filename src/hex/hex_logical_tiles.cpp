@@ -62,7 +62,10 @@ namespace hex
 				std::string id = p.first.as_string();
 				float cost = p.second["cost"].as_float(1.0f);
 				int height = p.second["height"].as_int32(1000);
-				std::string name = p.second["name"].as_string();
+				std::string name = id;
+				if(p.second.has_key("editor_info")) {
+					name = p.second["editor_info"]["name"].as_string();
+				}
 				get_loaded_tiles()[id] = TilePtr(new Tile(id, name, cost, height, tile_id++));
 			}
 

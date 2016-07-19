@@ -82,7 +82,7 @@ namespace hex
 
 		KRE::TexturePtr getTexture() const { return tex_; }
 
-		virtual void render(int x, int y, std::vector<KRE::vertex_texcoord>* coords, const std::vector<AdjacencyPattern>& patterns=std::vector<AdjacencyPattern>()) const = 0;
+		virtual void render(int x, int y, std::vector<KRE::vertex_texcoord>* coords) const = 0;
 		virtual void renderAdjacent(int x, int y, std::vector<KRE::vertex_texcoord>* coords, const std::vector<AdjacencyPattern>& patterns=std::vector<AdjacencyPattern>()) const = 0;
 	protected:
 		void setTexture(const std::string& filename);
