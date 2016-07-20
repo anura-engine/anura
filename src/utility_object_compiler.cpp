@@ -1797,6 +1797,27 @@ COMMAND_LINE_UTILITY(manipulate_image_template)
 	}
 }
 
+COMMAND_LINE_UTILITY(format_json)
+{
+	std::string in_file;
+	std::string out_file;
+
+	for(auto it = args.begin(); it != args.end(); ++it) {
+		if(*it == "-i") {
+			++it;
+			ASSERT_LOG(it != args.end(), "No input argument was given, though -i was specified.");
+			in_file = *it;
+		} else {
+			out_file = *it;
+		}
+	}
+
+	ASSERT_LOG(!in_file.empty(), "No input file given.");
+	ASSERT_LOG(!out_file.empty(), "No output file given.");
+	variant v = json::parse_from_file(in_file);
+	sys::write_file(out_file, v.write_json());
+}
+
 
 COMMAND_LINE_UTILITY(generate_terrain_spritesheet)
 {
