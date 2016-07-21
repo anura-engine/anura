@@ -23,31 +23,51 @@ distribution.
 
 #include "event_listener.hpp"
 
-event_listener::event_listener()
+EventListener::EventListener()
 {
 }
 
-event_listener::~event_listener()
+EventListener::~EventListener()
 {
 }
 
-bool event_listener::mouse_motion(bool claimed, const point& p, unsigned keymod)
+bool EventListener::mouseMotion(bool claimed, const point& p, unsigned keymod)
 {
-	return handle_mouse_motion(claimed, p, keymod);
+	return handleMouseMotion(claimed, p, keymod);
 }
 
-bool event_listener::mouse_button_up(bool claimed, const point& p, unsigned buttons, unsigned keymod)
+bool EventListener::mouseButtonUp(bool claimed, const point& p, unsigned buttons, unsigned keymod)
 {
-	return handle_mouse_button_up(claimed, p, buttons, keymod);
+	return handleMouseButtonUp(claimed, p, buttons, keymod);
 }
 
-bool event_listener::mouse_button_down(bool claimed, const point& p, unsigned buttons, unsigned keymod)
+bool EventListener::mouseButtonDown(bool claimed, const point& p, unsigned buttons, unsigned keymod)
 {
-	return handle_mouse_button_down(claimed, p, buttons, keymod);
+	return handleMouseButtonDown(claimed, p, buttons, keymod);
 }
 
-bool event_listener::mouse_wheel(bool claimed, const point& p, const point& delta, int direction)
+bool EventListener::mouseWheel(bool claimed, const point& p, const point& delta, int direction)
 {
-	return handle_mouse_wheel(claimed, p, delta, direction);
+	return handleMouseWheel(claimed, p, delta, direction);
+}
+
+bool EventListener::keyDown(bool claimed, const SDL_Keysym& keysym, bool repeat, bool pressed)
+{
+	return handleKeyDown(claimed, keysym, repeat, pressed);
+}
+
+bool EventListener::keyUp(bool claimed, const SDL_Keysym& keysym, bool repeat, bool pressed)
+{
+	return handleKeyUp(claimed, keysym, repeat, pressed);
+}
+
+bool EventListener::textInput(bool claimed, const std::string& text)
+{
+	return handleTextInput(claimed, text);
+}
+
+bool EventListener::textEditing(bool claimed, const std::string& text, int start, int length)
+{
+	return handleTextEditing(claimed, text, start, length);
 }
 

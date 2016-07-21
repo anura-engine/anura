@@ -124,6 +124,8 @@ namespace xhtml
 		bool preOrderTraversal(std::function<bool(NodePtr)> fn);
 		// bottom-up scanning of the tree
 		bool postOrderTraversal(std::function<bool(NodePtr)> fn);
+		// XXX special case for mouse stuff, needs re-factored.
+		bool preOrderTraversalMouse(std::function<bool(NodePtr, point*)> fn, const point& p);
 		// scanning from a child node up through parents
 		bool ancestralTraverse(std::function<bool(NodePtr)> fn);
 		virtual bool hasTag(const std::string& tag) const { return false; }
@@ -249,8 +251,8 @@ namespace xhtml
 		NodePtr getActiveElement() const { return active_element_.lock(); }
 		void setActiveElement(const NodePtr& el) { active_element_ = el; }
 
-		void addEventListener(event_listener_ptr evt);
-		void removeEventListener(event_listener_ptr evt);
+		void addEventListener(EventListenerPtr evt);
+		void removeEventListener(EventListenerPtr evt);
 		void clearEventListeners(void);
 
 		KRE::SceneTreePtr process(StyleNodePtr& style_tree, int w, int h);
@@ -268,7 +270,7 @@ namespace xhtml
 		bool trigger_rebuild_;
 
 		WeakNodePtr active_element_;
-		std::set<event_listener_ptr> event_listeners_;
+		std::set<EventListenerPtr> event_listeners_;
 	};
 
 	class DocumentFragment : public Node

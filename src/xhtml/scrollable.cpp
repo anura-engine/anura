@@ -292,7 +292,7 @@ namespace scrollable
 	void Scrollbar::enableFade(float in_time, float out_time, bool in_on_mouseenter, bool out_on_mouseleave)
 	{
 		fade_enabled_ = true;
-		transition_ = 0.0;
+		transition_ = 0;
 		fade_in_time_ = in_time;
 		fade_out_time_ = out_time;
 		fade_in_on_mouseenter_ = in_on_mouseenter;
@@ -362,7 +362,7 @@ namespace scrollable
 		updateColors();
 	}
 
-	bool Scrollbar::handle_mouse_motion(bool claimed, const point& mp, unsigned keymod)
+	bool Scrollbar::handleMouseMotion(bool claimed, const point& mp, unsigned keymod)
 	{
 		point p = mp - offset_;
 		if(!claimed && geometry::pointInRect(p, loc_)) {
@@ -408,7 +408,7 @@ namespace scrollable
 		return claimed;
 	}
 
-	bool Scrollbar::handle_mouse_button_up(bool claimed, const point& mp, unsigned buttons, unsigned keymod)
+	bool Scrollbar::handleMouseButtonUp(bool claimed, const point& mp, unsigned buttons, unsigned keymod)
 	{
 		point p = mp - offset_;
 		if(!claimed && geometry::pointInRect(p, loc_)) {
@@ -422,7 +422,7 @@ namespace scrollable
 		return claimed;
 	}
 
-	bool Scrollbar::handle_mouse_button_down(bool claimed, const point & mp, unsigned buttons, unsigned keymod)
+	bool Scrollbar::handleMouseButtonDown(bool claimed, const point & mp, unsigned buttons, unsigned keymod)
 	{
 		point p = mp - offset_;
 		if(!claimed && geometry::pointInRect(p, loc_)) {
@@ -454,7 +454,7 @@ namespace scrollable
 		return claimed;
 	}
 
-	bool Scrollbar::handle_mouse_wheel(bool claimed, const point& mp, const point& delta, int direction)
+	bool Scrollbar::handleMouseWheel(bool claimed, const point& mp, const point& delta, int direction)
 	{
 		point p = mp - offset_;
 		if(!claimed && geometry::pointInRect(p, loc_)) {

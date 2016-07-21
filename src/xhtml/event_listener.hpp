@@ -29,20 +29,30 @@ distribution.
 
 #include "geometry.hpp"
 
-class event_listener
+class EventListener
 {
 public:
-	event_listener();
-	virtual ~event_listener();
-	bool mouse_motion(bool claimed, const point& p, unsigned keymod);
-	bool mouse_button_up(bool claimed, const point& p, unsigned buttons, unsigned keymod);
-	bool mouse_button_down(bool claimed, const point& p, unsigned buttons, unsigned keymod);
-	bool mouse_wheel(bool claimed, const point& p, const point& delta, int direction);
+	EventListener();
+	virtual ~EventListener();
+	bool mouseMotion(bool claimed, const point& p, unsigned keymod);
+	bool mouseButtonUp(bool claimed, const point& p, unsigned buttons, unsigned keymod);
+	bool mouseButtonDown(bool claimed, const point& p, unsigned buttons, unsigned keymod);
+	bool mouseWheel(bool claimed, const point& p, const point& delta, int direction);
+	
+	bool keyDown(bool claimed, const SDL_Keysym& keysym, bool repeat, bool pressed);
+	bool keyUp(bool claimed, const SDL_Keysym& keysym, bool repeat, bool pressed);
+	bool textInput(bool claimed, const std::string& text);
+	bool textEditing(bool claimed, const std::string& text, int start, int length);
 private:
-	virtual bool handle_mouse_motion(bool claimed, const point& p, unsigned keymod) = 0;
-	virtual bool handle_mouse_button_up(bool claimed, const point& p, unsigned buttons, unsigned keymod) = 0;
-	virtual bool handle_mouse_button_down(bool claimed, const point& p, unsigned buttons, unsigned keymod) = 0;	
-	virtual bool handle_mouse_wheel(bool claimed, const point& p, const point& delta, int direction) = 0;
+	virtual bool handleMouseMotion(bool claimed, const point& p, unsigned keymod) = 0;
+	virtual bool handleMouseButtonUp(bool claimed, const point& p, unsigned buttons, unsigned keymod) = 0;
+	virtual bool handleMouseButtonDown(bool claimed, const point& p, unsigned buttons, unsigned keymod) = 0;	
+	virtual bool handleMouseWheel(bool claimed, const point& p, const point& delta, int direction) = 0;
+	
+	virtual bool handleKeyDown(bool claimed, const SDL_Keysym& keysym, bool repeat, bool pressed) { return claimed; }
+	virtual bool handleKeyUp(bool claimed, const SDL_Keysym& keysym, bool repeat, bool pressed) { return claimed; }
+	virtual bool handleTextInput(bool claimed, const std::string& text) { return claimed; }
+	virtual bool handleTextEditing(bool claimed, const std::string& text, int start, int length) { return claimed; }
 };
 
-typedef std::shared_ptr<event_listener> event_listener_ptr;
+typedef std::shared_ptr<EventListener> EventListenerPtr;

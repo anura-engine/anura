@@ -35,7 +35,7 @@ namespace scrollable
 {
 	typedef std::function<void(int)> change_handler;
 
-	class Scrollbar : public KRE::SceneObject, public event_listener
+	class Scrollbar : public KRE::SceneObject, public EventListener
 	{
 	public:
 		enum Direction {VERTICAL, HORIZONTAL};
@@ -73,10 +73,10 @@ namespace scrollable
 		void enableFade(float in_time=0.5, float out_time=0.5, bool in_on_mouseenter=true, bool out_on_mouseleave=false);
 		void disableFade() { fade_enabled_ = false; transition_ = 0; }
 	private:
-		bool handle_mouse_motion(bool claimed, const point& p, unsigned keymod) override;
-		bool handle_mouse_button_up(bool claimed, const point& p, unsigned buttons, unsigned keymod) override;
-		bool handle_mouse_button_down(bool claimed, const point& p, unsigned buttons, unsigned keymod) override;	
-		bool handle_mouse_wheel(bool claimed, const point& p, const point& delta, int direction) override;
+		bool handleMouseMotion(bool claimed, const point& p, unsigned keymod) override;
+		bool handleMouseButtonUp(bool claimed, const point& p, unsigned buttons, unsigned keymod) override;
+		bool handleMouseButtonDown(bool claimed, const point& p, unsigned buttons, unsigned keymod) override;	
+		bool handleMouseWheel(bool claimed, const point& p, const point& delta, int direction) override;
 
 		void init();
 		void updateColors();
