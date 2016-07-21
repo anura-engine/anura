@@ -3075,6 +3075,7 @@ variant CustomObject::getValueBySlot(int slot) const
 	}
 	case CUSTOM_OBJECT_NEAR_CLIFF_EDGE:   return variant::from_bool(isStanding(Level::current()) != STANDING_STATUS::NOT_STANDING && cliff_edge_within(Level::current(), getFeetX(), getFeetY(), getFaceDir()*15));
 	case CUSTOM_OBJECT_DISTANCE_TO_CLIFF: return variant(::distance_to_cliff(Level::current(), getFeetX(), getFeetY(), getFaceDir()));
+    case CUSTOM_OBJECT_DISTANCE_TO_CLIFF_REVERSE: return variant(::distance_to_cliff(Level::current(), getFeetX(), getFeetY(), -getFaceDir()));
 	case CUSTOM_OBJECT_SLOPE_STANDING_ON: {
 		if(standing_on_ && standing_on_->platform() && !standing_on_->isSolidPlatform()) {
 			return variant(standing_on_->platformSlopeAt(getFeetX()));
