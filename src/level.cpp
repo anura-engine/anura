@@ -2393,7 +2393,7 @@ void Level::process()
 	for(auto mask : hex_masks_) {
 		KRE::RenderTargetPtr rt = mask->getRenderTarget();
 		if(rt && rt->needsRebuild()) {
-			auto& wnd = KRE::WindowManager::getMainWindow();
+			auto wnd = KRE::WindowManager::getMainWindow();
 			rt->rebuild(wnd->width(), wnd->height());
 		}
 	}
