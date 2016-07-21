@@ -44,6 +44,8 @@ namespace hex
 		  border_(value["border"].as_int32(0)),
 		  tiles_(),
 		  changed_(false),
+		  rx_(0),
+		  ry_(0),
 		  renderable_(nullptr)
 	{
 	}
@@ -115,6 +117,9 @@ namespace hex
 				profile::manager pman("MapNode::update");
 				renderable_->update(width(), height(), tiles_);
 			}
+		}
+		if(renderable_) {
+			renderable_->setPosition(rx_, ry_, 0);
 		}
 	}
 
@@ -304,6 +309,14 @@ namespace hex
 	}
 
 	BEGIN_DEFINE_CALLABLE_NOBASE(HexMap)
+		DEFINE_FIELD(x, "int")
+			return variant(obj.rx_);
+		DEFINE_SET_FIELD
+			obj.rx_ = value.as_int();
+		DEFINE_FIELD(y, "int")
+			return variant(obj.ry_);
+		DEFINE_SET_FIELD
+			obj.ry_ = value.as_int();
 		DEFINE_FIELD(zorder, "int")
 			return variant(obj.zorder_);
 		DEFINE_FIELD(logical, "builtin logical_map")
@@ -322,7 +335,7 @@ namespace hex
 			int x = v[0].as_int();
 			int y = v[1].as_int();
 
-			point p = HexMap::getTilePosFromPixelPos(x, y);
+			point p = HexMap::getTilePosFromPixelPos(x - obj.rx_, y - obj.ry_);
 			std::vector<variant> res;
 			res.push_back(variant(p.x));
 			res.push_back(variant(p.y));
@@ -335,8 +348,8 @@ namespace hex
 
 			point p = HexMap::getPixelPosFromTilePos(x, y);
 			std::vector<variant> res;
-			res.push_back(variant(p.x));
-			res.push_back(variant(p.y));
+			res.push_back(variant(p.x + obj.rx_));
+			res.push_back(variant(p.y + obj.ry_));
 			return variant(&res);
 		END_DEFINE_FN
 	END_DEFINE_CALLABLE(HexMap)
