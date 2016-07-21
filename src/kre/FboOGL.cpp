@@ -122,6 +122,7 @@ namespace KRE
 				setTexture(tex);
 				tex_width_ = tex->actualWidth();
 				tex_height_ = tex->actualHeight();
+				setDrawRect(rect(0, 0, width(), height()));
 
 				renderbuffer_id_ = std::shared_ptr<std::vector<GLuint>>(new std::vector<GLuint>, [color_planes](std::vector<GLuint>* id) {
 					glBindRenderbuffer(GL_RENDERBUFFER, 0); 
@@ -201,6 +202,7 @@ namespace KRE
 				auto tex = Texture::createTextureArray(color_planes, width(), height(), PixelFormat::PF::PIXELFORMAT_RGBA8888, TextureType::TEXTURE_2D);
 				tex->setSourceRect(-1, rect(0, 0, width(), height()));
 				setTexture(tex);
+				setDrawRect(rect(0, 0, width(), height()));
 
 				tex_width_ = tex->actualWidth();
 				tex_height_ = tex->actualHeight();
@@ -320,6 +322,7 @@ namespace KRE
 
 	void FboOpenGL::handleSizeChange(int w, int h)
 	{
+		LOG_INFO("rebuild fbo to " << w << "," << h);
 		depth_stencil_buffer_id_.reset();
 		framebuffer_id_.reset();
 		sample_framebuffer_id_.reset();

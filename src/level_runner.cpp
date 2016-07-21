@@ -1348,7 +1348,7 @@ bool LevelRunner::play_cycle()
 					LOG_INFO("SDL WINDOW EVENT RESTORED");
 				} else if(event.window.event == SDL_WINDOWEVENT_RESIZED) {
 					LOG_INFO("SDL WINDOW EVENT RESIZED to " << event.window.data1 << " x " << event.window.data2);
-					video_resize(event); 
+					//video_resize(event); 
 					video_resize_event(event);
 				}
 			break;
