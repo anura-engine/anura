@@ -154,6 +154,7 @@ namespace hex
 		};
 
 		std::vector<WallInfo> concave_convex_;
+		std::unique_ptr<rect> base_tile_rect_;
 
 		// "bl", "br", "l", "r", "tl", "tr"
 		enum WallDirections {
@@ -403,7 +404,8 @@ namespace hex
 
 	WallTileType::WallTileType(const std::string& tile, int num_id, const variant& n)
 		: TileType(TileTypeId::WALL, tile, num_id),
-		  concave_convex_()
+		  concave_convex_(),
+		  base_tile_rect_(nullptr)
 	{
 		const std::string image = n["image"].as_string();
 		setTexture(image);
@@ -445,6 +447,9 @@ namespace hex
 		}
 		if(n.has_key("editor_info")) {
 			parse_editor_info(n["editor_info"], id(), getTexture(), image, rect());
+		}
+		if(n.has_key("base")) {
+			base_tile_rect_ = std::unique_ptr<rect>(new rect(n["base"]));
 		}
 	}
 
@@ -542,6 +547,9 @@ namespace hex
 
 	void WallTileType::render(int x, int y, std::vector<KRE::vertex_texcoord>* coords) const
 	{
+		if(base_tile_rect_) {
+			renderInternal(x, y, 0, 0, *base_tile_rect_, coords);
+		}
 	}
 
 	void WallTileType::renderAdjacent(int x, int y, std::vector<KRE::vertex_texcoord>* coords, const std::vector<AdjacencyPattern>& patterns) const
