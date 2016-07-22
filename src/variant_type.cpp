@@ -80,6 +80,17 @@ std::map<std::string, variant> load_named_variant_info()
 		}
 	}
 
+	std::vector<std::string> files;
+	module::get_files_in_dir("data/types", &files);
+	for(const std::string& f : files) {
+		const std::string path = module::map_file("data/types/" + f);
+		variant node = json::parse_from_file(path);
+		for(const variant::map_pair& p : node.as_map()) {
+			ASSERT_LOG(result.count(p.first.as_string()) == 0, "Multiple definition of type " << p.first.as_string());
+			result[p.first.as_string()] = p.second;
+		}
+	}
+
 	return result;
 }
 
