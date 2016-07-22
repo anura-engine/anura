@@ -106,6 +106,7 @@ namespace
 	{
 		//find out the paths to all our files
 		module::get_unique_filenames_under_dir(object_path(), &object_file_paths());
+		module::get_unique_filenames_under_dir("data/objects", &::prototype_file_paths());
 		module::get_unique_filenames_under_dir("data/object_prototypes", &::prototype_file_paths());
 	}
 
@@ -782,8 +783,8 @@ CustomObjectTypePtr CustomObjectType::recreate(const std::string& id,
 	std::map<std::string, std::string>::const_iterator path_itor = module::find(object_file_paths(), id + ".cfg");
 	ASSERT_LOG(path_itor != object_file_paths().end(), "Could not find file for object '" << id << "'");
 
-	auto proto_path = module::find(prototype_file_paths(), id + ".cfg");
-	ASSERT_LOG(proto_path == prototype_file_paths().end(), "Object " << id << " has a prototype with the same name. Objects and prototypes must have distinct names");
+//	auto proto_path = module::find(prototype_file_paths(), id + ".cfg");
+//	ASSERT_LOG(proto_path == prototype_file_paths().end(), "Object " << id << " has a prototype with the same name. Objects and prototypes must have distinct names");
 
 	try {
 		std::vector<std::string> proto_paths;
