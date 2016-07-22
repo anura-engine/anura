@@ -219,21 +219,6 @@ namespace xhtml
 		return true;
 	}
 
-	bool Node::preOrderTraversalMouse(std::function<bool(NodePtr, point*)> fn, const point& p)
-	{
-		point np = p;
-		// Visit node, visit children.
-		if(!fn(shared_from_this(), &np)) {
-			return false;
-		}
-		for(auto& c : children_) {
-			if(!c->preOrderTraversalMouse(fn, np)) {
-				return false;
-			}
-		}
-		return true;
-	}
-
 	bool Node::postOrderTraversal(std::function<bool(NodePtr)> fn)
 	{
 		// Visit children, then this process node.
@@ -606,7 +591,7 @@ namespace xhtml
 
 		bool trigger = false;
 
-		claimed = !preOrderTraversalMouse([&trigger](NodePtr node, point* p) {
+		claimed = !preOrderTraversalParam<point>([&trigger](NodePtr node, point* p) {
 			node->handleMouseMotion(&trigger, *p);
 			auto sv = node->getScrollbar(scrollable::Scrollbar::Direction::VERTICAL);
 			if(sv) {
@@ -634,7 +619,7 @@ namespace xhtml
 		}
 
 		bool trigger = false;
-		claimed = !preOrderTraversalMouse([&trigger, button](NodePtr node, point* p) {
+		claimed = !preOrderTraversalParam<point>([&trigger, button](NodePtr node, point* p) {
 			node->handleMouseButtonDown(&trigger, *p, button);
 			auto sv = node->getScrollbar(scrollable::Scrollbar::Direction::VERTICAL);
 			if(sv) {
@@ -662,7 +647,7 @@ namespace xhtml
 		}
 
 		bool trigger = false;
-		claimed = !preOrderTraversalMouse([&trigger, button](NodePtr node, point* p) {
+		claimed = !preOrderTraversalParam<point>([&trigger, button](NodePtr node, point* p) {
 			node->handleMouseButtonUp(&trigger, *p, button);
 			auto sv = node->getScrollbar(scrollable::Scrollbar::Direction::VERTICAL);
 			if(sv) {
@@ -692,7 +677,7 @@ namespace xhtml
 		}
 		
 		bool trigger = false;
-		claimed = !preOrderTraversalMouse([&trigger, delta, direction](NodePtr node, point* p) {
+		claimed = !preOrderTraversalParam<point>([&trigger, delta, direction](NodePtr node, point* p) {
 			node->handleMouseWheel(&trigger, *p, delta, direction);
 			auto sv = node->getScrollbar(scrollable::Scrollbar::Direction::VERTICAL);
 			if(sv) {

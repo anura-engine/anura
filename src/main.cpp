@@ -1061,7 +1061,7 @@ int main(int argcount, char* argvec[])
 		FramedGuiElement::init(gui_node);
 
 		try {
-			hex::loader(json::parse_from_file("data/hex_tiles.cfg"));
+			hex::loader(json::parse_from_file("data/hex_tiles.cfg"), json::parse_from_file("data/hex_terrain_rules.cfg"));
 		} catch(json::ParseError& pe) {
 			LOG_INFO(pe.message);
 		} catch(KRE::ImageLoadError& ile) {
