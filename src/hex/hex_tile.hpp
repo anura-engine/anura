@@ -125,5 +125,5 @@ namespace hex
 		Overlay& operator=(const Overlay&) = delete;
 	};
 
-	void loader(const variant& n);
+	void loader(const variant& n, const variant& rules);
 }

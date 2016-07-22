@@ -23,6 +23,7 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/regex.hpp>
 
 #include <functional>
 
@@ -56,6 +57,43 @@ namespace hex
 		std::map<std::string, OverlayPtr>& get_overlay_map()
 		{
 			static std::map<std::string, OverlayPtr> res;
+			return res;
+		}
+
+		class TerrainRule
+		{
+		public:
+			TerrainRule(const std::vector<std::string>& from) : from_(from), to_(), type_(), except_() {}
+			void setExceptionList(const std::vector<std::string>& e) { except_ = e; } 
+			void setToList(const std::vector<std::string>& to) { to_ = to; } 
+			void setType(const std::string& type) { type_ = type; }
+			const std::string& getType() const { return type_; }
+			bool match(const std::string& f, const std::string& t) {
+				/*for(auto& from : from_) {
+					boost::regex fre(from);
+					boost::cmatch what;
+					if(boost::regex_match(f.c_str(), what, fre)) {
+						for(auto& to : to_) {
+							boost::regex tre(to);
+							if(boost::regex_match(t.c_str(), what, tre)) {
+								return true;
+							}
+						}
+					}
+				}*/
+				return false;
+			}
+		private:
+			std::vector<std::string> from_;
+			std::vector<std::string> to_;
+			std::string type_;
+			std::vector<std::string> except_;
+		};
+
+		typedef std::vector<TerrainRule> TerrainRuleList;
+		TerrainRuleList& get_terrain_rules()
+		{
+			static TerrainRuleList res;
 			return res;
 		}
 
@@ -135,7 +173,7 @@ namespace hex
 	};
 
 
-	void loader(const variant& n)
+	void loader(const variant& n, const variant& rules)
 	{
 		logical::loader(n);
 
@@ -187,6 +225,23 @@ namespace hex
 
 				// Add element here for key
 				get_overlay_map()[key] = Overlay::create(key, image, normals);
+			}
+		}
+
+		auto rule_list = rules["rules"].as_list();
+		for(auto& r : rule_list) {
+			ASSERT_LOG(r.has_key("from"), "Must have 'from' attribute in terrain rule. " << r.debug_location());
+			const auto from = r["from"].as_list_string();
+			get_terrain_rules().emplace_back(from);
+			auto& current_rule = get_terrain_rules().back();
+			if(r.has_key("to")) {
+				current_rule.setToList(r["to"].as_list_string());
+			}
+			if(r.has_key("type")) {
+				current_rule.setType(r["type"].as_string());
+			}
+			if(r.has_key("except")) {
+				current_rule.setExceptionList(r["except"].as_list_string());
 			}
 		}
 	}
@@ -319,6 +374,24 @@ namespace hex
 
 	void BasicTileType::calculateAdjacencyPattern(int x, int y, const HexMap* hmap, std::vector<AdjacencyPattern>* patterns)
 	{
+		ASSERT_LOG(hmap != nullptr, "HexMap was null.");
+		ASSERT_LOG(patterns != nullptr, "adjacency pattern list was null.");
+		auto n  = hmap->getHexTile(NORTH, x, y);
+		auto ne = hmap->getHexTile(NORTH_EAST, x, y);
+		auto se = hmap->getHexTile(SOUTH_EAST, x, y);
+		auto s  = hmap->getHexTile(SOUTH, x, y);
+		auto sw = hmap->getHexTile(SOUTH_WEST, x, y);
+		auto nw = hmap->getHexTile(NORTH_WEST, x, y);
+
+		auto& rules = get_terrain_rules();
+		for(auto& rule : rules) {
+			if(n && n->tile()) {
+				if(rule.match(id(), n->tile()->id())) {
+					auto& type = rule.getType();
+					//adjacent_[type]["n"]
+				}
+			}
+		}
 	}
 
 	TileTypePtr TileType::factory(const std::string& name)
