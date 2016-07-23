@@ -202,6 +202,8 @@ variant PlayableCustomObject::getValue(const std::string& key) const
 		return getValueBySlot(CUSTOM_OBJECT_PLAYER_UNDERWATER_CONTROLS);
 	} else if(key == "ctrl_mod_key") {
 		return getValueBySlot(CUSTOM_OBJECT_PLAYER_CTRL_MOD_KEY);
+	} else if(key == "ctrl_mod_keys") {
+		return getValueBySlot(CUSTOM_OBJECT_PLAYER_CTRL_MOD_KEYS);
 	} else if(key == "ctrl_keys") {
 		return getValueBySlot(CUSTOM_OBJECT_PLAYER_CTRL_KEYS);
 	} else if(key == "ctrl_mice") {
@@ -253,6 +255,56 @@ variant PlayableCustomObject::getPlayerValueBySlot(int slot) const
 	}
 	case CUSTOM_OBJECT_PLAYER_CTRL_MOD_KEY: {
 		return variant(SDL_GetModState());
+	}
+	case CUSTOM_OBJECT_PLAYER_CTRL_MOD_KEYS: {
+		std::vector<variant> res;
+		auto mod_keys = SDL_GetModState();
+		if(mod_keys & KMOD_LSHIFT) {
+			res.emplace_back("lshift");
+		}
+		if(mod_keys & KMOD_RSHIFT) {
+			res.emplace_back("rshift");
+		}
+		if(mod_keys & KMOD_LCTRL) {
+			res.emplace_back("lctrl");
+		}
+		if(mod_keys & KMOD_RCTRL) {
+			res.emplace_back("lctrl");
+		}
+		if(mod_keys & KMOD_LALT) {
+			res.emplace_back("lalt");
+		}
+		if(mod_keys & KMOD_RALT) {
+			res.emplace_back("ralt");
+		}
+		if(mod_keys & KMOD_LGUI) {
+			res.emplace_back("lgui");
+		}
+		if(mod_keys & KMOD_RGUI) {
+			res.emplace_back("rgui");
+		}
+		if(mod_keys & KMOD_NUM) {
+			res.emplace_back("num");
+		}
+		if(mod_keys & KMOD_CAPS) {
+			res.emplace_back("caps");
+		}
+		if(mod_keys & KMOD_MODE) {
+			res.emplace_back("mode");
+		}
+		if(mod_keys & (KMOD_LSHIFT | KMOD_RSHIFT)) {
+			res.emplace_back("shift");
+		}
+		if(mod_keys & (KMOD_LCTRL | KMOD_RCTRL)) {
+			res.emplace_back("ctrl");
+		}
+		if(mod_keys & (KMOD_LALT | KMOD_RALT)) {
+			res.emplace_back("alt");
+		}
+		if(mod_keys & (KMOD_LGUI | KMOD_RGUI)) {
+			res.emplace_back("gui");
+		}
+		return variant(&res);
 	}
 	case CUSTOM_OBJECT_PLAYER_CTRL_KEYS: {
 		std::vector<variant> result;
