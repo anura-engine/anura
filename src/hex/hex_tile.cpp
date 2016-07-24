@@ -69,6 +69,15 @@ namespace hex
 			void setType(const std::string& type) { type_ = type; }
 			const std::string& getType() const { return type_; }
 			bool match(const std::string& f, const std::string& t) {
+				for(auto& from : from_) {
+					if(from == f) {
+						for(auto& to : to_) {
+							if(t == to) {
+							return true;
+							}
+						}
+					}
+				}
 				/*for(auto& from : from_) {
 					boost::regex fre(from);
 					boost::cmatch what;
@@ -129,6 +138,7 @@ namespace hex
 	private:
 		variant handleWrite() const override { /* XXX todo */ return variant(); }
 		std::vector<rect> sheet_area_;
+		std::map<std::string, std::map<std::size_t, std::vector<rect>>> adj_map_;
 	};
 
 	class WallTileType : public TileType
@@ -270,41 +280,39 @@ namespace hex
 		setTexture(image);
 
 		/*auto adjacent = value["adjacent"].as_map();
-		for (auto& p : adjacent) {
-			unsigned short dirmap = 0;
-			std::vector<std::string> dir;
-			std::string adj = p.first.as_string();
-			boost::split(dir, adj, boost::is_any_of(","));
-			for(auto d : dir) {
-				static const std::string Directions[] = { "n", "ne", "se", "s", "sw", "nw" };
-				const std::string* dir_str = std::find(Directions, Directions+6, d);
-				const int index = dir_str - Directions;
-				if(index >= 6) {
-					LOG_WARN("skipped direction string '" << p.first << "' " << p.first.to_debug_string());
-				//ASSERT_LOG(index < 6, "Unrecognized direction string: " << p.first << " " << p.first.to_debug_string());
-				} else {
-					dirmap |= (1 << index);
+		for(auto& p : adjacent) {
+			std::size_t dirmap = 0;
+			if(p.second.is_map()) {
+				// extended definition
+				// XXX
+			} else {
+				// assume is simple direction string for key
+				const std::string key = p.first.as_string();
+				std::vector<std::string> dir;
+				boost::split(dir, key, boost::is_any_of("-"));
+				for(auto d : dir) {
+					static const std::string Directions[] = { "n", "ne", "se", "s", "sw", "nw" };
+					const std::string* dir_str = std::find(Directions, Directions+6, d);
+					ASSERT_LOG(dir_str != nullptr, "Direction unknwon: " << d);
+					const int index = dir_str - Directions;
+					dirmap |= (1 <<	index);
+				}
+
+				auto& pattern = adj_map_[dirmap];
+				const auto plist = p.second.as_list();
+				ASSERT_LOG(!plist.empty(), "No adjency tiles defined.");
+				for(const auto& ndx : plist) {
+					if(ndx.is_string()) {
+						const std::string index_str = ndx.as_string();
+						const int index = strtol(index_str.c_str(), nullptr, 36);
+						const int x = 72 * (index % 36);
+						const int y = 72 * (index / 36);
+						pattern.emplace_back(rect(x, y, 72, 72));
+					} else {
+						pattern.emplace_back(rect{ ndx });
+					}
 				}
 			}
-
-			AdjacencyPattern& pattern = adjacency_patterns_[dirmap];
-			const auto plist = p.second.as_list();
-			ASSERT_LOG(!plist.empty(), "No adjency tiles defined.");
-			for(const auto& ndx : plist) {
-				if(ndx.is_string()) {
-					const std::string index_str = ndx.as_string();
-					const int index = strtol(index_str.c_str(), nullptr, 36);
-					const int x = 72 * (index % 36);
-					const int y = 72 * (index / 36);
-					pattern.sheet_areas.emplace_back(rect(x, y, 72, 72));
-				} else {
-					const rect r{ ndx };
-					pattern.sheet_areas.emplace_back(r);
-				}
-			}
-
-			pattern.init = true;
-			pattern.depth = 0;
 		}*/
 
 		if (value.has_key("editor_info")) {

@@ -30,6 +30,7 @@
 #include "easy_svg.hpp"
 #include "xhtml_element.hpp"
 #include "xhtml_script_interface.hpp"
+#include "xslider.hpp"
 
 #include "Blittable.hpp"
 #include "Font.hpp"
@@ -384,6 +385,7 @@ namespace xhtml
 			BUTTON,
 			HIDDEN,
 			FILE,
+			RANGE,
 		};
 		struct InputElement : public Element
 		{
@@ -411,6 +413,12 @@ namespace xhtml
 							radio_tex_ = KRE::svg_texture_from_file("radiobutton.svg", width_, height_);
 							radio_checked_tex_ = KRE::svg_texture_from_file("radiobutton-checked.svg", width_, height_);
 							break;
+						case InputElementType::RANGE: {
+							if(slider_) {
+								slider_->setDimensions(r.w(), r.h());
+							}
+							break;
+						}
 						case InputElementType::TEXT:
 						case InputElementType::PASSWORD:
 						case InputElementType::SUBMIT:
@@ -420,7 +428,7 @@ namespace xhtml
 						case InputElementType::HIDDEN:
 						case InputElementType::FILE:
 						default: 
-							ASSERT_LOG(false, "Need to add getRenderable() for InputElement of type: " << static_cast<int>(type_));
+							ASSERT_LOG(false, "Need to add handleSetDimensions() for InputElement of type: " << static_cast<int>(type_));
 							break;
 					}			
 				}
@@ -430,6 +438,28 @@ namespace xhtml
 				if(attr_checked) {
 					is_checked_ = true;
 				}
+
+				bool width_set = false;
+				bool height_set = false;
+				auto attr_w = getAttribute("width");
+				auto attr_h = getAttribute("height");
+				if(attr_w != nullptr) {
+					try {
+						width_ = boost::lexical_cast<int>(attr_w->getValue());
+						width_set = true;
+					} catch(boost::bad_lexical_cast&) {
+						LOG_ERROR("Unable to convert 'img' tag 'width' attribute to number: " << attr_w->getValue());
+					}
+				}
+				if(attr_h != nullptr) {
+					try {
+						height_ = boost::lexical_cast<int>(attr_h->getValue());
+						height_set = true;
+					} catch(boost::bad_lexical_cast&) {
+						LOG_ERROR("Unable to convert 'img' tag 'height' attribute to number: " << attr_h->getValue());
+					}
+				}
+
 				auto type = getAttribute("type");
 				if(type) {
 					const std::string& value = type->getValue();
@@ -455,25 +485,78 @@ namespace xhtml
 						type_ = InputElementType::HIDDEN;
 					} else if(value == "file") {
 						type_ = InputElementType::FILE;
+					} else if(value == "range") {
+						type_ = InputElementType::RANGE;
+						if(!width_set) {
+							width_ = 200;
+						}
+						if(!height_set) {
+							height_ = 20;
+						}
+						setDimensions(rect(0, 0, width_, height_));
+						slider_ = std::make_shared<Slider>(rect(0, 0, width_, height_), [](float x){
+							LOG_INFO("slider set to: " << x);
+						});
+					} else {
+						ASSERT_LOG(false, "'input' type value was not known: " << value);
 					}
 				} else {
 					ASSERT_LOG(false, "'input' element had no type. asserting rather than using a default.");
 				}
 			}
+			void handleSetActiveRect(const rect& r) override
+			{
+				switch(type_) {
+					case InputElementType::RANGE: {
+						slider_->setLoc(r.top_left());
+						break;
+					}
+					case InputElementType::CHECKBOX:
+					case InputElementType::RADIO:
+					case InputElementType::TEXT:
+					case InputElementType::PASSWORD:
+					case InputElementType::SUBMIT:
+					case InputElementType::IMAGE:
+					case InputElementType::RESET:
+					case InputElementType::BUTTON:
+					case InputElementType::HIDDEN:
+					case InputElementType::FILE:
+					default: 
+						break;
+				}
+			}
 			bool handleMouseButtonUpInt(bool* trigger, const point& p) override
 			{ 
+				if(slider_) {
+					auto buttons = SDL_GetMouseState(nullptr, nullptr);
+					slider_->mouseButtonDown(false, p, buttons, SDL_GetModState(), geometry::pointInRect(p, getActiveRect()));
+				}
 				if(geometry::pointInRect(p, getActiveRect())) {
-					LOG_DEBUG("test1");
-					is_checked_ = !is_checked_;
+					if(type_ == InputElementType::CHECKBOX || type_ == InputElementType::RADIO) {
+						LOG_DEBUG("test1");
+						is_checked_ = !is_checked_;
+					}
 				}
 				return true; 
 			}
 			bool handleMouseButtonDownInt(bool* trigger, const point& p) override 
 			{ 
+				if(slider_) {
+					auto buttons = SDL_GetMouseState(nullptr, nullptr);
+					slider_->mouseButtonDown(false, p, buttons, SDL_GetModState(), geometry::pointInRect(p, getActiveRect()));
+				}
 				if(geometry::pointInRect(p, getActiveRect())) {
 					LOG_DEBUG("test2");
 				}
 				return true; 
+			}
+			bool handleMouseMotionInt(bool* trigger, const point& p) override
+			{
+				bool claimed = false;
+				if(slider_) {
+					claimed = slider_->mouseMotion(false, p, SDL_GetModState(), geometry::pointInRect(p, getActiveRect()));
+				}
+				return claimed;
 			}
 			bool isReplaced() const override { return true; }
 			KRE::SceneObjectPtr getRenderable() override
@@ -501,6 +584,10 @@ namespace xhtml
 							return b;
 						}
 					}
+					case InputElementType::RANGE: {
+						ASSERT_LOG(slider_ != nullptr, "No slider object was found.");
+						return slider_;
+					}
 					case InputElementType::TEXT:
 					case InputElementType::PASSWORD:
 					case InputElementType::SUBMIT:
@@ -525,6 +612,7 @@ namespace xhtml
 			KRE::TexturePtr radio_checked_tex_;
 			KRE::TexturePtr checkbox_tex_;
 			KRE::TexturePtr checkbox_checked_tex_;
+			SliderPtr slider_;
 		};
 		ElementRegistrar<InputElement> input_element(ElementId::INPUT, "input");
 
