@@ -72,22 +72,30 @@ std::map<std::string, variant> load_named_variant_info()
 {
 	std::map<std::string, variant> result = get_builtin_variant_info();
 
+	std::map<std::string, std::string> definition_file;
+
 	const std::string path = module::map_file("data/types.cfg");
 	if(sys::file_exists(path)) {
 		variant node = json::parse_from_file(path);
 		for(const variant::map_pair& p : node.as_map()) {
 			result[p.first.as_string()] = p.second;
+			definition_file[p.first.as_string()] = "data/types.cfg";
 		}
 	}
 
 	std::vector<std::string> files;
 	module::get_files_in_dir("data/types", &files);
 	for(const std::string& f : files) {
+		if(f.size() <= 4 || !std::equal(f.end()-4, f.end(), ".cfg") || f[0] == '.') {
+			continue;
+		}
+
 		const std::string path = module::map_file("data/types/" + f);
 		variant node = json::parse_from_file(path);
 		for(const variant::map_pair& p : node.as_map()) {
-			ASSERT_LOG(result.count(p.first.as_string()) == 0, "Multiple definition of type " << p.first.as_string());
+			ASSERT_LOG(result.count(p.first.as_string()) == 0, "Multiple definition of type " << p.first.as_string() << " defined in " << definition_file[p.first.as_string()] << " and " << path);
 			result[p.first.as_string()] = p.second;
+			definition_file[p.first.as_string()] = path;
 		}
 	}
 
