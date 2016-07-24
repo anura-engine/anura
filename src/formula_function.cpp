@@ -94,6 +94,8 @@ using boost::math::acosh;
 using boost::math::atanh;
 #endif
 
+PREF_BOOL(dump_to_console, true, "Send dump() to the console");
+PREF_STRING(log_console_filter, "", "");
 PREF_STRING(auto_update_status, "", "");
 PREF_INT(fake_time_adjust, 0, "Adjusts the time known to the game by the specified number of seconds.");
 extern variant g_auto_update_info;
@@ -4145,13 +4147,54 @@ FUNCTION_DEF_IMPL
 			return variant_type::get_commands();
 		END_FUNCTION_DEF(debug)
 
+		FUNCTION_DEF(log, 1, -1, "log(...): outputs arguments to stderr")
+			Formula::failIfStaticContext();
+
+			std::string str;
+			for(int n = 0; n != args().size(); ++n) {
+				if(n > 0) {
+					str += " ";
+				}
+
+				str += args()[n]->evaluate(variables).to_debug_string();
+			}
+
+			LOG_INFO("LOG: " << str);
+
+			if(g_log_console_filter.empty() == false) {
+				static const boost::regex re(g_log_console_filter);
+			 	boost::match_results<std::string::const_iterator> m;
+				if(boost::regex_match(str, m, re)) {
+					return variant(new debug_command(str));
+				}
+			}
+
+			return variant();
+			
+		FUNCTION_TYPE_DEF
+			return variant_type::get_commands();
+		END_FUNCTION_DEF(log)
+
+
 		namespace 
 		{
 			void debug_side_effect(variant v)
 			{
 				std::string s = v.to_debug_string();
 			#ifndef NO_EDITOR
-				debug_console::addMessage(s);
+				bool write_to_console = g_dump_to_console;
+
+				if(!write_to_console && g_log_console_filter.empty() == false) {
+					static const boost::regex re(g_log_console_filter);
+				 	boost::match_results<std::string::const_iterator> m;
+					if(boost::regex_match(s, m, re)) {
+						write_to_console = true;
+					}
+				}
+
+				if(write_to_console) {
+					debug_console::addMessage(s);
+				}
 			#endif
 				LOG_INFO("CONSOLE: " << s);
 			}
