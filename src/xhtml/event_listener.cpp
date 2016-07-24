@@ -31,24 +31,24 @@ EventListener::~EventListener()
 {
 }
 
-bool EventListener::mouseMotion(bool claimed, const point& p, unsigned keymod)
+bool EventListener::mouseMotion(bool claimed, const point& p, unsigned keymod, bool in_rect)
 {
-	return handleMouseMotion(claimed, p, keymod);
+	return handleMouseMotion(claimed, p, keymod, in_rect);
 }
 
-bool EventListener::mouseButtonUp(bool claimed, const point& p, unsigned buttons, unsigned keymod)
+bool EventListener::mouseButtonUp(bool claimed, const point& p, unsigned buttons, unsigned keymod, bool in_rect)
 {
-	return handleMouseButtonUp(claimed, p, buttons, keymod);
+	return handleMouseButtonUp(claimed, p, buttons, keymod, in_rect);
 }
 
-bool EventListener::mouseButtonDown(bool claimed, const point& p, unsigned buttons, unsigned keymod)
+bool EventListener::mouseButtonDown(bool claimed, const point& p, unsigned buttons, unsigned keymod, bool in_rect)
 {
-	return handleMouseButtonDown(claimed, p, buttons, keymod);
+	return handleMouseButtonDown(claimed, p, buttons, keymod, in_rect);
 }
 
-bool EventListener::mouseWheel(bool claimed, const point& p, const point& delta, int direction)
+bool EventListener::mouseWheel(bool claimed, const point& p, const point& delta, int direction, bool in_rect)
 {
-	return handleMouseWheel(claimed, p, delta, direction);
+	return handleMouseWheel(claimed, p, delta, direction, in_rect);
 }
 
 bool EventListener::keyDown(bool claimed, const SDL_Keysym& keysym, bool repeat, bool pressed)

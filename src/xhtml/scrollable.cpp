@@ -362,7 +362,7 @@ namespace scrollable
 		updateColors();
 	}
 
-	bool Scrollbar::handleMouseMotion(bool claimed, const point& mp, unsigned keymod)
+	bool Scrollbar::handleMouseMotion(bool claimed, const point& mp, unsigned keymod, bool in_rect)
 	{
 		point p = mp - offset_;
 		if(!claimed && geometry::pointInRect(p, loc_)) {
@@ -408,7 +408,7 @@ namespace scrollable
 		return claimed;
 	}
 
-	bool Scrollbar::handleMouseButtonUp(bool claimed, const point& mp, unsigned buttons, unsigned keymod)
+	bool Scrollbar::handleMouseButtonUp(bool claimed, const point& mp, unsigned buttons, unsigned keymod, bool in_rect)
 	{
 		point p = mp - offset_;
 		if(!claimed && geometry::pointInRect(p, loc_)) {
@@ -422,7 +422,7 @@ namespace scrollable
 		return claimed;
 	}
 
-	bool Scrollbar::handleMouseButtonDown(bool claimed, const point & mp, unsigned buttons, unsigned keymod)
+	bool Scrollbar::handleMouseButtonDown(bool claimed, const point & mp, unsigned buttons, unsigned keymod, bool in_rect)
 	{
 		point p = mp - offset_;
 		if(!claimed && geometry::pointInRect(p, loc_)) {
@@ -454,7 +454,7 @@ namespace scrollable
 		return claimed;
 	}
 
-	bool Scrollbar::handleMouseWheel(bool claimed, const point& mp, const point& delta, int direction)
+	bool Scrollbar::handleMouseWheel(bool claimed, const point& mp, const point& delta, int direction, bool in_rect)
 	{
 		point p = mp - offset_;
 		if(!claimed && geometry::pointInRect(p, loc_)) {

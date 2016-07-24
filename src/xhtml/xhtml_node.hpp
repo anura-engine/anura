@@ -162,6 +162,7 @@ namespace xhtml
 		// This sets the rectangle that should be active for mouse presses.
 		void setActiveRect(const rect& r) { 
 			active_rect_ = r; 
+			handleSetActiveRect(r);
 		}
 		const rect& getActiveRect() const { return active_rect_; }
 		void setModelMatrix(const glm::mat4& model) { model_matrix_ = model; }
@@ -208,6 +209,7 @@ namespace xhtml
 		virtual bool handleMouseButtonDownInt(bool* trigger, const point& p) { return true; }
 		virtual bool handleMouseWheelInt(bool* trigger, const point& p, const point& delta, int direction) { return true; }
 		virtual void handleSetDimensions(const rect& r) {}
+		virtual void handleSetActiveRect(const rect& r) {} 
 
 		NodeId id_;
 		NodeList children_;
