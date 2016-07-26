@@ -810,7 +810,7 @@ namespace tbs
 		DEFINE_FIELD(winner, "null")
 			return variant();
 		DEFINE_SET_FIELD_TYPE("any")
-			std::cout << "WINNER: " << value.write_json() << std::endl;
+			LOG_INFO("WINNER: " << value.write_json());
 			obj.winner_ = value;
 
 			if(g_game_server_http_client_to_matchmaking_server.get() != nullptr) {
