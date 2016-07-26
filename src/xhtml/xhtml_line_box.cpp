@@ -34,8 +34,13 @@ namespace xhtml
 	std::string LineBox::toString() const 
 	{
 		std::ostringstream ss;
-		ss << "LineBox: " << getDimensions().content_;
+		auto xy = getSceneTree()->getPosition();
+		ss << "LineBox: " << getDimensions().content_ << ", " << xy.x << "," << xy.y;
 		return ss.str();
+	}
+
+	void LineBox::handlePreChildLayout(LayoutEngine& eng, const Dimensions& containing)
+	{
 	}
 
 	void LineBox::handleLayout(LayoutEngine& eng, const Dimensions& containing)
@@ -100,17 +105,13 @@ namespace xhtml
 
 	void LineBoxContainer::handlePreChildLayout(LayoutEngine& eng, const Dimensions& containing)
 	{
-		ASSERT_LOG(!text_data_.empty(), "Text array was null.");
+		if(!text_data_.empty()) {
+			std::vector<LineBoxPtr> line_boxes = LineBox::reflowText(getParent(), getRoot(), text_data_, eng, containing);
 
-		std::vector<LineBoxPtr> line_boxes = LineBox::reflowText(getParent(), getRoot(), text_data_, eng, containing);
-
-		for(const auto& line_box : line_boxes) {
-			addChild(line_box);
+			for(const auto& line_box : line_boxes) {
+				addChild(line_box);
+			}
 		}
-		FixedPoint left = getMBPLeft();
-		FixedPoint top = getMBPTop() + containing.content_.height;
-		setContentX(left);
-		setContentY(top);
 	}
 
 	void LineBoxContainer::handleLayout(LayoutEngine& eng, const Dimensions& containing)
@@ -128,6 +129,9 @@ namespace xhtml
 		}
 		setContentHeight(child_height);
 		setContentWidth(width);
+
+		setContentX(0);
+		setContentY(0);
 	}
 
 	void LineBoxContainer::postParentLayout(LayoutEngine& eng, const Dimensions& containing)

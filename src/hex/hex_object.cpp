@@ -70,17 +70,20 @@ namespace hex
 
 	void HexObject::render(std::vector<KRE::vertex_texcoord>* coords) const
 	{
-		if(tile_ == nullptr) {
-			return;
+		if(tile_ != nullptr) {
+			tile_->render(x_, y_, coords);
 		}
-		tile_->render(x_, y_, coords);
 	}
 
 	void HexObject::renderAdjacent(std::vector<MapRenderParams>* coords) const
 	{
-		for(const NeighborType& neighbor : neighbors_) {
-			neighbor.type->renderAdjacent(x_, y_, &(*coords)[neighbor.type->numeric_id()].coords, neighbor.dirmap);
+		
+		if(tile_ != nullptr) {
+			tile_->renderAdjacent(x_, y_, &(*coords)[tile_->numeric_id()].coords, adjacency_patterns_);
 		}
+		//for(const NeighborType& neighbor : neighbors_) {
+		//	neighbor.type->renderAdjacent(x_, y_, &(*coords)[neighbor.type->numeric_id()].coords, neighbor.dirmap);
+		//}
 	}
 
 	void HexObject::renderOverlay(const Alternate& alternative, const KRE::TexturePtr& tex, std::vector<KRE::vertex_texcoord>* coords) const
@@ -91,8 +94,8 @@ namespace hex
 
 		const float vx1 = static_cast<float>(p.x - alternative.border[0]);
 		const float vy1 = static_cast<float>(p.y - alternative.border[1]);
-		const float vx2 = static_cast<float>(p.x + area.w());
-		const float vy2 = static_cast<float>(p.y + area.h());
+		const float vx2 = static_cast<float>(p.x + area.w() - alternative.border[0]);
+		const float vy2 = static_cast<float>(p.y + area.h() - alternative.border[1]);
 
 		coords->emplace_back(glm::vec2(vx1, vy1), glm::vec2(uv.x1(), uv.y1()));
 		coords->emplace_back(glm::vec2(vx2, vy1), glm::vec2(uv.x2(), uv.y1()));
@@ -105,29 +108,34 @@ namespace hex
 
 	void HexObject::setNeighborsChanged()
 	{
-		for (auto& neighbor : neighbors_) {
-			neighbor.type->calculateAdjacencyPattern(neighbor.dirmap);
-		}
+		//for (auto& neighbor : neighbors_) {
+		//	neighbor.type->calculateAdjacencyPattern(neighbor.dirmap);
+		//}
 	}
 
 	void HexObject::initNeighbors()
 	{
-		for(int n = 0; n < 6; ++n) {
-			const HexObject* obj = getTileInDir(static_cast<direction>(n));
-			if(obj && obj->tile() && obj->logical_tile()->getHeight() > logical_tile()->getHeight()) {
-				NeighborType* neighbor = nullptr;
-				for(NeighborType& candidate : neighbors_) {
-					neighbor = &candidate;
-				}
-
-				if(neighbor == nullptr) {
-					neighbors_.push_back(NeighborType());
-					neighbor = &neighbors_.back();
-					neighbor->type = obj->tile();
-				}
-
-				neighbor->dirmap |= (1 << n);
-			}
+		if(tile_ != nullptr) {
+			adjacency_patterns_.clear();
+			tile_->calculateAdjacencyPattern(x_, y_, owner_map_, &adjacency_patterns_);
 		}
+
+		//for(int n = 0; n < 6; ++n) {
+		//	const HexObject* obj = getTileInDir(static_cast<direction>(n));
+		//	if(obj && obj->tile() && obj->logical_tile()->getHeight() > logical_tile()->getHeight()) {
+		//		NeighborType* neighbor = nullptr;
+		//		for(NeighborType& candidate : neighbors_) {
+		//			neighbor = &candidate;
+		//		}
+
+		//		if(neighbor == nullptr) {
+		//			neighbors_.push_back(NeighborType());
+		//			neighbor = &neighbors_.back();
+		//			neighbor->type = obj->tile();
+		//		}
+
+		//		neighbor->dirmap |= (1 << n);
+		//	}
+		//}
 	}
 }

@@ -36,6 +36,7 @@
 
 #include "DisplayDevice.hpp"
 #include "svg/svg_parse.hpp"
+#include "svg/svg_paint.hpp"
 
 #include "asserts.hpp"
 #include "cairo.hpp"
@@ -278,7 +279,17 @@ namespace {
 		}
 
 		KRE::SVG::render_context ctx(cairo_, w, h);
+
+		
+		double red = 0, green = 0, blue = 0, alpha = 0;
+		status = cairo_pattern_get_rgba(cairo_get_source(cairo_), &red, &green, &blue, &alpha);
+		if(status == CAIRO_STATUS_SUCCESS) {
+			ctx.set_color_multiply(KRE::Color(static_cast<float>(red), static_cast<float>(green), static_cast<float>(blue), static_cast<float>(alpha)));
+		}
+
+		cairo_save(cairo_);
 		handle->render(ctx);
+		cairo_restore(cairo_);
 
 		status = cairo_status(cairo_);
 		ASSERT_LOG(status == 0, "SVG rendering error rendering " << w << "x" << h << ": " << fname << ": " << cairo_status_to_string(status));
@@ -819,8 +830,18 @@ namespace {
 
 				res->x = fragment.xpos + xpos_align_adjust;
 				res->y = fragment.ypos + fragment_baseline - static_cast<float>(fragment.font_extents.ascent);
+
 				res->width = fragment.width;
 				res->height = line_height*scale_line_heights;
+				if(fragment.svg.empty() == false) {
+					const float dim = fragment.font_extents.ascent + fragment.font_extents.descent;
+					if(dim > res->width) {
+						res->width = dim;
+					}
+					if(dim > res->height) {
+						res->height = dim;
+					}
+				}
 				res->x_advance = fragment.x_advance;
 				res->ascent = static_cast<float>(fragment.font_extents.ascent);
 				res->descent = static_cast<float>(fragment.font_extents.descent);
@@ -1134,19 +1155,11 @@ namespace {
 					  args[1].as_decimal().as_float());
 	END_CAIRO_FN
 
-BEGIN_CAIRO_FN(set_source_color, "([decimal, decimal, decimal]|[decimal,decimal,decimal,decimal])")
-	const std::vector<variant>& col = args[0].as_list();
-	float alpha = 1.0;
-	if(col.size() > 3) {
-		alpha = col[3].as_float();
-	}
-
-	cairo_set_source_rgba(context.get(),
-	                      col[0].as_decimal().as_float(),
-	                      col[1].as_decimal().as_float(),
-	                      col[2].as_decimal().as_float(),
-						  alpha);
-END_CAIRO_FN
+	BEGIN_CAIRO_FN(set_source_color, "(" + KRE::Color::getSetFieldType() + ")")
+   		using namespace KRE;
+    	Color color(args[0], DecodingHint::DECIMAL);
+    	cairo_set_source_rgba(context.get(), color.r(), color.g(), color.b(), color.a());
+	END_CAIRO_FN
 
 	BEGIN_CAIRO_FN(set_source_rgba, "(decimal, decimal, decimal, decimal=1.0)")
 		cairo_set_source_rgba(context.get(),

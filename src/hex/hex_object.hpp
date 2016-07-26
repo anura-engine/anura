@@ -39,9 +39,6 @@ namespace hex
 	public:
 		HexObject(const logical::TilePtr& type, int x, int y, const HexMap* owner);
 
-		void draw(const point& cam) const;
-	
-		void build();
 		const std::string& type() const { return type_; }
 
 		const HexObject* getTileInDir(enum direction d) const;
@@ -74,6 +71,8 @@ namespace hex
 		};
 
 		std::vector<NeighborType> neighbors_;
+
+		std::vector<AdjacencyPattern> adjacency_patterns_;
 
 		// String representing the base type of this tile.
 		std::string type_;

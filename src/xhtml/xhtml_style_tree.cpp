@@ -34,7 +34,6 @@ namespace xhtml
 		  children_(),
 		  transitions_(),
 		  acc_(0.0f),
-		  scene_tree_(nullptr),
 		  background_attachment_(BackgroundAttachment::SCROLL),
 		  background_color_(nullptr),
 		  background_image_(nullptr),
@@ -693,24 +692,12 @@ namespace xhtml
 		filters_ = new_styles->filters_;
 	}
 
-	 KRE::SceneTreePtr StyleNode::createSceneTree(KRE::SceneTreePtr scene_parent)
-	{
-		scene_tree_ = KRE::SceneTree::create(scene_parent);
-		for(auto& child : getChildren()) {
-			KRE::SceneTreePtr ptr = child->createSceneTree(scene_tree_);
-			scene_tree_->addChild(ptr);
-		}
-		return scene_tree_;
-	}
-
 	StyleNodePtr StyleNode::createStyleTree(const DocumentPtr& doc)
 	{
 		StyleNodePtr root = std::make_shared<StyleNode>(doc);
 		for(auto& child : doc->getChildren()) {
 			root->parseNode(root, child);
 		}
-		// create a scene tree based on the style tree.
-		root->createSceneTree(nullptr);
 		return root;
 	}
 }

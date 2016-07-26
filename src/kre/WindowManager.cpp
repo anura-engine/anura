@@ -365,7 +365,6 @@ namespace KRE
 			} else if(fullscreenMode() == FullScreenMode::FULLSCREEN_WINDOWED) {
 				nonfs_width_ = width();
 				nonfs_height_ = height();
-
 				if(SDL_SetWindowFullscreen(window_.get(), SDL_WINDOW_FULLSCREEN_DESKTOP) != 0) {
 					LOG_WARN("Unable to set windowed fullscreen mode at " << width() << " x " << height());
 					return;
@@ -642,7 +641,7 @@ namespace KRE
 	{
 		std::vector<WindowPtr> res;
 		auto it = get_window_list().begin();
-		for(auto w : get_window_list()) {
+		for(auto& w : get_window_list()) {
 			res.emplace_back(w.second.lock());
 		}
 		return res;

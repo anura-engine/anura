@@ -29,9 +29,12 @@
 
 #include "geometry.hpp"
 #include "SceneFwd.hpp"
+#include "SceneTree.hpp"
 
 #include "css_stylesheet.hpp"
 #include "css_transition.hpp"
+#include "event_listener.hpp"
+#include "scrollable.hpp"
 #include "xhtml.hpp"
 #include "xhtml_element_id.hpp"
 #include "xhtml_script_interface.hpp"
@@ -44,6 +47,10 @@ namespace xhtml
 		ATTRIBUTE,
 		DOCUMENT_FRAGMENT,
 		TEXT,
+	};
+
+	enum DebugFlags	{
+		DISPLAY_PARSE_TREE	= (1 << 0),
 	};
 
 	struct Keystate
@@ -117,6 +124,21 @@ namespace xhtml
 		bool preOrderTraversal(std::function<bool(NodePtr)> fn);
 		// bottom-up scanning of the tree
 		bool postOrderTraversal(std::function<bool(NodePtr)> fn);
+		// XXX special case for mouse stuff, needs re-factored.
+		template<typename T>
+		bool preOrderTraversalParam(std::function<bool(NodePtr, T*)> fn, const T& p) {
+			T np = p;
+			// Visit node, visit children.
+			if(!fn(shared_from_this(), &np)) {
+				return false;
+			}
+			for(auto& c : children_) {
+				if(!c->preOrderTraversalParam<T>(fn, np)) {
+					return false;
+				}
+			}
+			return true;
+		}
 		// scanning from a child node up through parents
 		bool ancestralTraverse(std::function<bool(NodePtr)> fn);
 		virtual bool hasTag(const std::string& tag) const { return false; }
@@ -138,7 +160,10 @@ namespace xhtml
 		bool hasPsuedoClassActive(css::PseudoClass pclass) { return (active_pclass_ & pclass) != css::PseudoClass::NONE; }
 		css::PseudoClass getPseudoClass() const { return pclass_; }
 		// This sets the rectangle that should be active for mouse presses.
-		void setActiveRect(const rect& r) { active_rect_ = r; }
+		void setActiveRect(const rect& r) { 
+			active_rect_ = r; 
+			handleSetActiveRect(r);
+		}
 		const rect& getActiveRect() const { return active_rect_; }
 		void setModelMatrix(const glm::mat4& model) { model_matrix_ = model; }
 		const glm::mat4& getModelMatrix() const { return model_matrix_; }
@@ -150,6 +175,7 @@ namespace xhtml
 		bool handleMouseMotion(bool* trigger, const point& p);
 		bool handleMouseButtonUp(bool* trigger, const point& p, unsigned button);
 		bool handleMouseButtonDown(bool* trigger, const point& p, unsigned button);
+		bool handleMouseWheel(bool* trigger, const point& p, const point& delta, int direction);
 
 		void clearProperties() { properties_.clear(); }
 		void inheritProperties();
@@ -167,6 +193,13 @@ namespace xhtml
 		ScriptPtr getScriptHandler() const { return script_handler_; }
 		void setActiveHandler(EventHandlerId id, bool active=true);
 		bool hasActiveHandler(EventHandlerId id);
+
+		
+		void setScrollbar(const scrollable::ScrollbarPtr& scrollbar);
+		void removeScrollbar(scrollable::Scrollbar::Direction d);
+		const scrollable::ScrollbarPtr& getScrollbar(scrollable::Scrollbar::Direction d) const {
+			return d == scrollable::Scrollbar::Direction::VERTICAL ? scrollbar_vert_ : scrollbar_horz_;
+		}
 	protected:
 		std::string nodeToString() const;
 	private:
@@ -174,7 +207,9 @@ namespace xhtml
 		virtual bool handleMouseMotionInt(bool* trigger, const point& p) { return true; }
 		virtual bool handleMouseButtonUpInt(bool* trigger, const point& p) { return true; }
 		virtual bool handleMouseButtonDownInt(bool* trigger, const point& p) { return true; }
+		virtual bool handleMouseWheelInt(bool* trigger, const point& p, const point& delta, int direction) { return true; }
 		virtual void handleSetDimensions(const rect& r) {}
+		virtual void handleSetActiveRect(const rect& r) {} 
 
 		NodeId id_;
 		NodeList children_;
@@ -198,6 +233,9 @@ namespace xhtml
 
 		bool mouse_entered_;
 
+		scrollable::ScrollbarPtr scrollbar_vert_;
+		scrollable::ScrollbarPtr scrollbar_horz_;
+
 		// back reference to the tree node holding computer values for us.
 		WeakStyleNodePtr style_node_;
 	};
@@ -213,6 +251,7 @@ namespace xhtml
 		bool handleMouseMotion(bool claimed, int x, int y);
 		bool handleMouseButtonDown(bool claimed, int x, int y, unsigned button);
 		bool handleMouseButtonUp(bool claimed, int x, int y, unsigned button);
+		bool handleMouseWheel(bool claimed, int x, int y, int direction);
 
 		void rebuildTree() { trigger_rebuild_ = true; }
 		void triggerLayout() { trigger_layout_ = true; }
@@ -227,11 +266,17 @@ namespace xhtml
 		NodePtr getActiveElement() const { return active_element_.lock(); }
 		void setActiveElement(const NodePtr& el) { active_element_ = el; }
 
-		bool process(StyleNodePtr& style_tree, int w, int h);
+		void addEventListener(EventListenerPtr evt);
+		void removeEventListener(EventListenerPtr evt);
+		void clearEventListeners(void);
+
+		KRE::SceneTreePtr process(StyleNodePtr& style_tree, int w, int h);
 
 		// type is expected to be a content type i.e. "text/javascript"
 		static void registerScriptHandler(const std::string& type, std::function<ScriptPtr()> fn);
 		static ScriptPtr findScriptHandler(const std::string& type=std::string());
+
+		static void enableDebug(int flags);
 	protected:
 		Document(css::StyleSheetPtr ss);
 		css::StyleSheetPtr style_sheet_;
@@ -240,6 +285,7 @@ namespace xhtml
 		bool trigger_rebuild_;
 
 		WeakNodePtr active_element_;
+		std::set<EventListenerPtr> event_listeners_;
 	};
 
 	class DocumentFragment : public Node

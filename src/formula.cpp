@@ -2765,7 +2765,12 @@ namespace {
 						variant_type_ptr key_type, value_type;
 
 						variant_type_ptr sequence_type = (*res)[0]->queryVariantType();
-						value_type = sequence_type->is_list_of();
+						if(sequence_type->is_type(variant::VARIANT_TYPE_STRING)) {
+							value_type = variant_type::get_type(variant::VARIANT_TYPE_STRING);
+						} else {
+							value_type = sequence_type->is_list_of();
+						}
+
 						if(!value_type) {
 							key_type = sequence_type->is_map_of().first;
 							value_type = sequence_type->is_map_of().second;
@@ -2828,6 +2833,7 @@ namespace {
 							FunctionSymbolTable* symbols,
 							ConstFormulaCallableDefinitionPtr callable_def)
 		{
+			const size_t begin_size = res->size();
 			int parens = 0;
 			bool check_pointer = false;
 			const Token* beg = i1;
@@ -2851,6 +2857,7 @@ namespace {
 						ASSERT_LOG(false, "Too many ':' operators.\n" << pinpoint_location(formula_str, i1->begin, (i2-1)->end));
 					}
 				} else if( i1->type == FFL_TOKEN_TYPE::COMMA && !parens ) {
+					ASSERT_LOG(check_pointer, "Expected ':' and found ',' instead\n" << pinpoint_location(formula_str, i1->begin, (i2-1)->end));
 					check_pointer = false;
 					res->push_back(parse_expression(formula_str, beg,i1, symbols, callable_def));
 					beg = i1+1;
@@ -2858,10 +2865,12 @@ namespace {
 		
 				++i1;
 			}
-	
+
 			if(beg != i1) {
 				res->push_back(parse_expression(formula_str, beg,i1, symbols, callable_def));
 			}
+
+			ASSERT_LOG((res->size() - begin_size)%2 == 0, "Expected : before end of map expression.\n" << pinpoint_location(formula_str, (i2-1)->end, (i2-1)->end));
 		}
 
 		void parse_where_clauses(const variant& formula_str,

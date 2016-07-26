@@ -368,6 +368,7 @@
     <ClInclude Include="..\..\src\xhtml\css_styles.hpp" />
     <ClInclude Include="..\..\src\xhtml\css_stylesheet.hpp" />
     <ClInclude Include="..\..\src\xhtml\css_transition.hpp" />
+    <ClInclude Include="..\..\src\xhtml\event_listener.hpp" />
     <ClInclude Include="..\..\src\xhtml\scrollable.hpp" />
     <ClInclude Include="..\..\src\xhtml\solid_renderable.hpp" />
     <ClInclude Include="..\..\src\xhtml\to_roman.hpp" />
@@ -394,6 +395,7 @@
     <ClInclude Include="..\..\src\xhtml\xhtml_style_tree.hpp" />
     <ClInclude Include="..\..\src\xhtml\xhtml_text_box.hpp" />
     <ClInclude Include="..\..\src\xhtml\xhtml_text_node.hpp" />
+    <ClInclude Include="..\..\src\xhtml\xslider.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\src\custom_object.inc" />
@@ -708,6 +710,7 @@
     <ClCompile Include="..\..\src\xhtml\css_styles.cpp" />
     <ClCompile Include="..\..\src\xhtml\css_stylesheet.cpp" />
     <ClCompile Include="..\..\src\xhtml\css_transition.cpp" />
+    <ClCompile Include="..\..\src\xhtml\event_listener.cpp" />
     <ClCompile Include="..\..\src\xhtml\scrollable.cpp" />
     <ClCompile Include="..\..\src\xhtml\solid_renderable.cpp" />
     <ClCompile Include="..\..\src\xhtml\to_roman.cpp" />
@@ -731,6 +734,7 @@
     <ClCompile Include="..\..\src\xhtml\xhtml_style_tree.cpp" />
     <ClCompile Include="..\..\src\xhtml\xhtml_text_box.cpp" />
     <ClCompile Include="..\..\src\xhtml\xhtml_text_node.cpp" />
+    <ClCompile Include="..\..\src\xhtml\xslider.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\Box2D\$(Configuration)\$(Platform)\Box2D.lib" />

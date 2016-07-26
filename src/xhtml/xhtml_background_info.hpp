@@ -24,6 +24,7 @@
 #pragma once
 
 #include "geometry.hpp"
+#include "SceneTree.hpp"
 #include "Texture.hpp"
 
 #include "xhtml_style_tree.hpp"

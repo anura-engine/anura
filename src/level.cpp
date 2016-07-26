@@ -2383,6 +2383,21 @@ void Level::process()
 
 	sound::process();
 	
+	auto& gs = graphics::GameScreen::get();
+	if(rt_ && rt_->needsRebuild()) {
+		rt_->rebuild(gs.getWidth(), gs.getHeight());
+	}
+	if(backup_rt_ && backup_rt_->needsRebuild()) {
+		backup_rt_->rebuild(gs.getWidth(), gs.getHeight());
+	}
+	for(auto mask : hex_masks_) {
+		KRE::RenderTargetPtr rt = mask->getRenderTarget();
+		if(rt && rt->needsRebuild()) {
+			auto wnd = KRE::WindowManager::getMainWindow();
+			rt->rebuild(wnd->width(), wnd->height());
+		}
+	}
+
 	if(shader_) {
 		shader_->process();
 	}
@@ -3260,6 +3275,11 @@ void Level::add_player(EntityPtr p)
 		if(player_ != p) {
 			player_->beingRemoved();
 		}
+
+		if(player_->label().empty() == false) {
+			chars_by_label_.erase(player_->label());
+		}
+
 		chars_.erase(std::remove(chars_.begin(), chars_.end(), player_), chars_.end());
 	}
 

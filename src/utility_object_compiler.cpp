@@ -1488,14 +1488,23 @@ COMMAND_LINE_UTILITY(generate_wesnoth_spritesheet)
 	std::string output;
 
 	std::string obj_type = "unit_avatar";
+	std::string prototype = "unit_avatar";
 	std::string obj_dir = "units";
+	std::string img_prefix = "";
+	std::string prefix_override;
 
 	std::deque<std::string> argv;
 	
 	for(auto s : args) {
 		if(s == "--effect") {
 			obj_type = "halo_effect";
+			prototype = "halo_effect";
 			obj_dir = "effects";
+		} else if(s.substr(0, 9) == "--prefix=") {
+			prefix_override = s.substr(9);
+		} else if(s.substr(0, 12) == "--unit-type=") {
+			obj_type = "unit_avatar_" + s.substr(12);
+			img_prefix = s.substr(12);
 		} else if(s[s.size()-1] == '*') {
 			s.resize(s.size()-1);
 			std::string dir = s;
@@ -1551,6 +1560,18 @@ COMMAND_LINE_UTILITY(generate_wesnoth_spritesheet)
 		while(!std::equal(prefix.begin(), prefix.end(), img.begin())) {
 			prefix.resize(prefix.size()-1);
 		}
+	}
+
+	while(prefix.empty() == false && strchr("_-", prefix[prefix.size()-1])) {
+		prefix.resize(prefix.size()-1);
+	}
+
+	if(prefix_override.empty() == false) {
+		const char* pos = strstr(prefix.c_str(), prefix_override.c_str());
+		ASSERT_LOG(pos, "--prefix is not a substring of all images");
+
+		const int index = pos - prefix.c_str();
+		prefix.resize(index + prefix_override.size());
 	}
 
 	fprintf(stderr, "Using prefix: %s\n", prefix.c_str());
@@ -1646,7 +1667,7 @@ COMMAND_LINE_UTILITY(generate_wesnoth_spritesheet)
 	variant_builder node;
 	node.add("id", obj_type + "_" + output);
 	std::vector<variant> proto;
-	proto.push_back(variant(obj_type));
+	proto.push_back(variant(prototype));
 	node.add("prototype", variant(&proto));
 
 	std::vector<variant> animation_nodes;
@@ -1661,9 +1682,19 @@ COMMAND_LINE_UTILITY(generate_wesnoth_spritesheet)
 			name = "stand";
 		}
 
+		static const std::string reversible[] = { "n", "s", "stand" };
+
+		for(int n = 0; n != sizeof(reversible)/sizeof(*reversible); ++n) {
+			if(reversible[n] == name) {
+				anim_node.add("reverse", variant::from_bool(true));
+				break;
+			}
+		}
+
 		anim_node.add("id", name);
 		anim_node.add("scale", 1);
-		anim_node.add("image", obj_dir + "/" + output + ".png");
+		anim_node.add("pad", 3);
+		anim_node.add("image", obj_dir + "/" + img_prefix + output + ".png");
 		anim_node.add("frames", static_cast<int>(p.second.surfaces.size()));
 		std::vector<variant> sprite_rect;
 		sprite_rect.push_back(variant(xpos));
@@ -1671,7 +1702,7 @@ COMMAND_LINE_UTILITY(generate_wesnoth_spritesheet)
 		sprite_rect.push_back(variant(xpos+p.second.width-1));
 		sprite_rect.push_back(variant(ypos+p.second.height-1));
 		anim_node.add("rect", variant(&sprite_rect));
-		anim_node.add("duration", 4);
+		anim_node.add("duration", 6);
 
 		for(auto s : p.second.surfaces) {
 			Uint32 alpha_rgb = SDL_MapRGB(s->format, 0x3D, 0x30, 0xF9);
@@ -1708,7 +1739,7 @@ COMMAND_LINE_UTILITY(generate_wesnoth_spritesheet)
 
 	node.add("animation", variant(&animation_nodes));
 
-	IMG_SavePNG(sheet, (std::string("modules/wesnoth2/images/" + obj_dir + "/") + output + ".png").c_str());
+	IMG_SavePNG(sheet, (std::string("modules/wesnoth2/images/" + obj_dir + "/") + img_prefix + output + ".png").c_str());
 
 	std::string data = node.build().write_json();
 	sys::write_file("modules/wesnoth2/data/objects/" + obj_dir + "/" + obj_type + "_" + output + ".cfg", data);
@@ -1764,6 +1795,27 @@ COMMAND_LINE_UTILITY(manipulate_image_template)
 		}
 		s->savePng(module::get_module_path() + "/" + img);
 	}
+}
+
+COMMAND_LINE_UTILITY(format_json)
+{
+	std::string in_file;
+	std::string out_file;
+
+	for(auto it = args.begin(); it != args.end(); ++it) {
+		if(*it == "-i") {
+			++it;
+			ASSERT_LOG(it != args.end(), "No input argument was given, though -i was specified.");
+			in_file = *it;
+		} else {
+			out_file = *it;
+		}
+	}
+
+	ASSERT_LOG(!in_file.empty(), "No input file given.");
+	ASSERT_LOG(!out_file.empty(), "No output file given.");
+	variant v = json::parse_from_file(in_file);
+	sys::write_file(out_file, v.write_json());
 }
 
 

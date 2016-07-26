@@ -1655,7 +1655,7 @@ void CustomObject::process(Level& lvl)
 
 			if(move->pos >= move->getAnimationFrames()) {
 				if(move->on_complete.is_null() == false) {
-					executeCommand(move->on_complete);
+					executeCommandOrFn(move->on_complete);
 				}
 
 				follow_ons.insert(follow_ons.end(), move->follow_on.begin(), move->follow_on.end());
@@ -1669,8 +1669,13 @@ void CustomObject::process(Level& lvl)
 					mutateValueBySlot(move->animation_slots[n], v[n]);
 				}
 
+				if(move->on_begin.is_null() == false) {
+					executeCommandOrFn(move->on_begin);
+					move->on_begin = variant();
+				}
+
 				if(move->on_process.is_null() == false) {
-					executeCommand(move->on_process);
+					executeCommandOrFn(move->on_process);
 				}
 	
 				move->pos++;
@@ -2774,6 +2779,7 @@ void CustomObject::addAnimatedMovement(variant attr_var, variant options)
 	movement->animation_values.swap(values);
 	movement->animation_slots.swap(slots);
 
+	movement->on_begin = options["on_begin"];
 	movement->on_process = options["on_process"];
 	movement->on_complete = options["on_complete"];
 
@@ -3069,6 +3075,7 @@ variant CustomObject::getValueBySlot(int slot) const
 	}
 	case CUSTOM_OBJECT_NEAR_CLIFF_EDGE:   return variant::from_bool(isStanding(Level::current()) != STANDING_STATUS::NOT_STANDING && cliff_edge_within(Level::current(), getFeetX(), getFeetY(), getFaceDir()*15));
 	case CUSTOM_OBJECT_DISTANCE_TO_CLIFF: return variant(::distance_to_cliff(Level::current(), getFeetX(), getFeetY(), getFaceDir()));
+    case CUSTOM_OBJECT_DISTANCE_TO_CLIFF_REVERSE: return variant(::distance_to_cliff(Level::current(), getFeetX(), getFeetY(), -getFaceDir()));
 	case CUSTOM_OBJECT_SLOPE_STANDING_ON: {
 		if(standing_on_ && standing_on_->platform() && !standing_on_->isSolidPlatform()) {
 			return variant(standing_on_->platformSlopeAt(getFeetX()));
@@ -3350,6 +3357,7 @@ variant CustomObject::getValueBySlot(int slot) const
 	case CUSTOM_OBJECT_PLAYER_CAN_INTERACT:
 	case CUSTOM_OBJECT_PLAYER_UNDERWATER_CONTROLS:
 	case CUSTOM_OBJECT_PLAYER_CTRL_MOD_KEY:
+	case CUSTOM_OBJECT_PLAYER_CTRL_MOD_KEYS:
 	case CUSTOM_OBJECT_PLAYER_CTRL_KEYS:
 	case CUSTOM_OBJECT_PLAYER_CTRL_MICE:
 	case CUSTOM_OBJECT_PLAYER_CTRL_TILT:
@@ -4772,6 +4780,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 		case CUSTOM_OBJECT_PLAYER_CAN_INTERACT:
 		case CUSTOM_OBJECT_PLAYER_UNDERWATER_CONTROLS:
 		case CUSTOM_OBJECT_PLAYER_CTRL_MOD_KEY:
+		case CUSTOM_OBJECT_PLAYER_CTRL_MOD_KEYS:
 		case CUSTOM_OBJECT_PLAYER_CTRL_KEYS:
 		case CUSTOM_OBJECT_PLAYER_CTRL_MICE:
 		case CUSTOM_OBJECT_PLAYER_CTRL_TILT:
@@ -5227,6 +5236,17 @@ void CustomObject::resolveDelayedEvents()
 	delayed_commands_.clear();
 }
 
+bool CustomObject::executeCommandOrFn(const variant& var)
+{
+	if(var.is_function()) {
+		std::vector<variant> args;
+		variant cmd = var(args);
+		return executeCommand(cmd);
+	} else {
+		return executeCommand(var);
+	}
+}
+
 bool CustomObject::executeCommand(const variant& var)
 {
 	bool result = true;
@@ -5568,6 +5588,7 @@ void CustomObject::surrenderReferences(GarbageCollector* collector)
 	collector->surrenderPtr(&document_, "XHTML_DOCUMENT");
 
 	for(auto move : animated_movement_) {
+		collector->surrenderVariant(&move->on_begin, "ANIMATE_ON_BEGIN");
 		collector->surrenderVariant(&move->on_process, "ANIMATE_ON_PROCESS");
 		collector->surrenderVariant(&move->on_complete, "ANIMATE_ON_COMPLETE");
 		for(variant& v : move->animation_values) {

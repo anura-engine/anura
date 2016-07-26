@@ -385,10 +385,11 @@ void video_resize(const SDL_Event &event)
 
 void LevelRunner::video_resize_event(const SDL_Event &event)
 {
+	// event.window.data1/event.window.data2 may not reflect the correct window size.
 	static const int WindowResizeEventID = get_object_event_id("window_resize");
 	game_logic::MapFormulaCallablePtr callable(new game_logic::MapFormulaCallable);
-	callable->add("width", variant(event.window.data1));
-	callable->add("height", variant(event.window.data2));
+	callable->add("width", variant(KRE::WindowManager::getMainWindow()->width()));
+	callable->add("height", variant(KRE::WindowManager::getMainWindow()->height()));
 	lvl_->player()->getEntity().handleEvent(WindowResizeEventID, callable.get());
 }
 
@@ -1348,7 +1349,7 @@ bool LevelRunner::play_cycle()
 					LOG_INFO("SDL WINDOW EVENT RESTORED");
 				} else if(event.window.event == SDL_WINDOWEVENT_RESIZED) {
 					LOG_INFO("SDL WINDOW EVENT RESIZED to " << event.window.data1 << " x " << event.window.data2);
-					video_resize(event); 
+					//video_resize(event); 
 					video_resize_event(event);
 				}
 			break;

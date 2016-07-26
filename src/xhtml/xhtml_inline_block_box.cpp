@@ -180,7 +180,7 @@ namespace xhtml
 		if(node != nullptr && node->isReplaced()) {
 			auto r = node->getRenderable();
 			if(r == nullptr) {
-				LOG_ERROR("No renderable returned for repalced element: " << node->toString());
+				LOG_ERROR("No renderable returned for replaced element: " << node->toString());
 			} else {
 				scene_tree->addObject(r);
 			}

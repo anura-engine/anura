@@ -39,6 +39,8 @@ namespace xhtml
 {
 	namespace 
 	{
+		static bool debug_display_tree_parse = false;
+
 		struct DocumentImpl : public Document 
 		{
 			DocumentImpl(css::StyleSheetPtr ss) : Document(ss) {}
@@ -201,8 +203,9 @@ namespace xhtml
 	void Node::setAttribute(const std::string& name, const std::string& value)
 	{
 		attributes_[name] = Attribute::create(name, value, getOwnerDoc());
-	}	
-	bool Node::preOrderTraversal(std::function<bool(NodePtr)> fn)
+	}
+
+	bool Node::preOrderTraversal(std::function<bool(NodePtr)> fn) 
 	{
 		// Visit node, visit children.
 		if(!fn(shared_from_this())) {
@@ -369,6 +372,37 @@ namespace xhtml
 		}
 	}
 
+	void Node::setScrollbar(const scrollable::ScrollbarPtr& scrollbar)
+	{
+		ASSERT_LOG(scrollbar != nullptr, "setting a null scrollbar isn't allowed. Use removeScrollbar() instead.");	
+		if(scrollbar->getDirection() == scrollable::Scrollbar::Direction::VERTICAL) {
+			scrollbar_vert_ = scrollbar;
+		} else {
+			scrollbar_horz_ = scrollbar;
+		}
+	}
+
+	void Node::removeScrollbar(scrollable::Scrollbar::Direction d)
+	{
+		if(d == scrollable::Scrollbar::Direction::VERTICAL) {
+			scrollbar_vert_.reset();
+		} else {
+			scrollbar_horz_.reset();
+		}
+	}
+
+	bool Node::handleMouseWheel(bool* trigger, const point& p, const point& delta, int direction)
+	{
+		if(!active_rect_.empty() && geometry::pointInRect(p, active_rect_)) {
+			if(scrollbar_vert_ && delta.y != 0) {
+				scrollbar_vert_->scrollLines((direction ? -1 : 1) * delta.y);
+			} else if(scrollbar_horz_ && delta.x != 0) {
+				scrollbar_horz_->scrollLines((direction ? -1 : 1) * delta.x);
+			}
+		}
+		return false;
+	}
+
 	bool Node::handleMouseButtonUp(bool* trigger, const point& mp, unsigned button)
 	{
 		auto pos = model_matrix_ * glm::vec4(static_cast<float>(mp.x), static_cast<float>(mp.y), 0.0f, 1.0f);
@@ -437,7 +471,7 @@ namespace xhtml
 	{
 		auto pos = model_matrix_ * glm::vec4(static_cast<float>(mp.x), static_cast<float>(mp.y), 0.0f, 1.0f);
 		point p(static_cast<int>(pos.x), static_cast<int>(pos.y));
-		//LOG_DEBUG("mp: " << mp << ", p: " << p << ", ar: " <<  active_rect_);
+		//LOG_INFO("mp: " << mp << ", p: " << p << ", ar: " <<  active_rect_ << ", pos: " << pos.x << "," << pos.y);
 		if(!active_rect_.empty()) {
 			if(geometry::pointInRect(p, active_rect_)) {
 				if(mouse_entered_ == false && getScriptHandler() && hasActiveHandler(EventHandlerId::MOUSE_ENTER)) {
@@ -447,6 +481,12 @@ namespace xhtml
 					getScriptHandler()->runEventHandler(shared_from_this(), EventHandlerId::MOUSE_ENTER, variant(&m));
 				}
 				mouse_entered_ = true;
+				if(scrollbar_vert_ != nullptr) {
+					scrollbar_vert_->triggerFadeIn();
+				}
+				if(scrollbar_horz_ != nullptr) {
+					scrollbar_horz_->triggerFadeIn();
+				}
 			} else {
 				if(mouse_entered_ == true && getScriptHandler() && hasActiveHandler(EventHandlerId::MOUSE_LEAVE)) {
 					std::map<variant, variant> m;
@@ -455,6 +495,12 @@ namespace xhtml
 					getScriptHandler()->runEventHandler(shared_from_this(), EventHandlerId::MOUSE_LEAVE, variant(&m));
 				}
 				mouse_entered_ = false;
+				if(scrollbar_vert_ != nullptr) {
+					scrollbar_vert_->triggerFadeOut();
+				}
+				if(scrollbar_horz_ != nullptr) {
+					scrollbar_horz_->triggerFadeOut();
+				}
 			}
 
 			if(getScriptHandler() && hasActiveHandler(EventHandlerId::MOUSE_MOVE)) {
@@ -534,38 +580,132 @@ namespace xhtml
 
 	bool Document::handleMouseMotion(bool claimed, int x, int y)
 	{
-		bool trigger = false;		
 		point p(x, y);
-		claimed = !preOrderTraversal([&trigger, &p](NodePtr node) {
-			node->handleMouseMotion(&trigger, p);
+		for(auto& evt : event_listeners_) {
+			Uint32 buttons = SDL_GetMouseState(nullptr, nullptr);
+			claimed |= evt->mouseMotion(claimed, p, SDL_GetModState());
+		}
+		if(claimed) {
+			return claimed;
+		}
+
+		bool trigger = false;
+
+		claimed = !preOrderTraversalParam<point>([&trigger](NodePtr node, point* p) {
+			node->handleMouseMotion(&trigger, *p);
+			auto sv = node->getScrollbar(scrollable::Scrollbar::Direction::VERTICAL);
+			if(sv) {
+				p->y += sv->getScrollPosition();
+			}
+			auto sh = node->getScrollbar(scrollable::Scrollbar::Direction::HORIZONTAL);
+			if(sh) {
+				p->x += sh->getScrollPosition();
+			}
 			return true;
-		});
+		}, p);
 		trigger_layout_ |= trigger;
 		return claimed;
 	}
 
 	bool Document::handleMouseButtonDown(bool claimed, int x, int y, unsigned button)
 	{
-		bool trigger = false;
 		point p(x, y);
-		claimed = !preOrderTraversal([&trigger, &p, button](NodePtr node) {
-			node->handleMouseButtonDown(&trigger, p, button);
+		for(auto& evt : event_listeners_) {
+			Uint32 buttons = SDL_GetMouseState(nullptr, nullptr);
+			claimed |= evt->mouseButtonDown(claimed, p, buttons, SDL_GetModState());
+		}
+		if(claimed) {
+			return claimed;
+		}
+
+		bool trigger = false;
+		claimed = !preOrderTraversalParam<point>([&trigger, button](NodePtr node, point* p) {
+			node->handleMouseButtonDown(&trigger, *p, button);
+			auto sv = node->getScrollbar(scrollable::Scrollbar::Direction::VERTICAL);
+			if(sv) {
+				p->y += sv->getScrollPosition();
+			}
+			auto sh = node->getScrollbar(scrollable::Scrollbar::Direction::HORIZONTAL);
+			if(sh) {
+				p->x += sh->getScrollPosition();
+			}
 			return true;
-		});
+		}, p);
 		trigger_layout_ |= trigger;
 		return claimed;
 	}
 
 	bool Document::handleMouseButtonUp(bool claimed, int x, int y, unsigned button)
 	{
-		bool trigger = false;
 		point p(x, y);
-		claimed = !preOrderTraversal([&trigger, &p, button](NodePtr node) {
-			node->handleMouseButtonUp(&trigger, p, button);
+		for(auto& evt : event_listeners_) {
+			Uint32 buttons = SDL_GetMouseState(nullptr, nullptr);
+			claimed |= evt->mouseButtonUp(claimed, p, buttons, SDL_GetModState());
+		}
+		if(claimed) {
+			return claimed;
+		}
+
+		bool trigger = false;
+		claimed = !preOrderTraversalParam<point>([&trigger, button](NodePtr node, point* p) {
+			node->handleMouseButtonUp(&trigger, *p, button);
+			auto sv = node->getScrollbar(scrollable::Scrollbar::Direction::VERTICAL);
+			if(sv) {
+				p->y += sv->getScrollPosition();
+			}
+			auto sh = node->getScrollbar(scrollable::Scrollbar::Direction::HORIZONTAL);
+			if(sh) {
+				p->x += sh->getScrollPosition();
+			}
 			return true;
-		});
+		}, p);
 		trigger_layout_ |= trigger;
 		return claimed;
+	}
+
+	bool Document::handleMouseWheel(bool claimed, int x, int y, int direction)
+	{
+		point delta(x, y);
+		int mx, my;
+		Uint32 buttons = SDL_GetMouseState(&mx, &my);
+		point p(mx, my);
+		for(auto& evt : event_listeners_) {
+			claimed |= evt->mouseWheel(claimed, p, delta, direction);
+		}
+		if(claimed) {
+			return claimed;
+		}
+		
+		bool trigger = false;
+		claimed = !preOrderTraversalParam<point>([&trigger, delta, direction](NodePtr node, point* p) {
+			node->handleMouseWheel(&trigger, *p, delta, direction);
+			auto sv = node->getScrollbar(scrollable::Scrollbar::Direction::VERTICAL);
+			if(sv) {
+				p->y += sv->getScrollPosition();
+			}
+			auto sh = node->getScrollbar(scrollable::Scrollbar::Direction::HORIZONTAL);
+			if(sh) {
+				p->x += sh->getScrollPosition();
+			}
+			return true;
+		}, p);
+		trigger_layout_ |= trigger;
+		return claimed;
+	}
+
+	void Document::addEventListener(EventListenerPtr evt)
+	{
+		event_listeners_.emplace(evt);
+	}
+
+	void Document::removeEventListener(EventListenerPtr evt)
+	{
+		event_listeners_.erase(evt);
+	}
+
+	void Document::clearEventListeners(void)
+	{
+		event_listeners_.clear();
 	}
 
 	// Documents do not have an owner document.
@@ -574,7 +714,9 @@ namespace xhtml
 		  style_sheet_(ss == nullptr ? std::make_shared<css::StyleSheet>() : ss),
 		  trigger_layout_(true),
 		  trigger_render_(false),
-		  trigger_rebuild_(false)
+		  trigger_rebuild_(false),
+		  active_element_(),
+		  event_listeners_()
 	{
 	}
 
@@ -635,7 +777,12 @@ namespace xhtml
 		});
 	}
 
-	bool Document::process(StyleNodePtr& style_tree, int w, int h)
+	void Document::enableDebug(int flags)
+	{
+		debug_display_tree_parse = flags & DebugFlags::DISPLAY_PARSE_TREE ? true : false;
+	}
+
+	KRE::SceneTreePtr Document::process(StyleNodePtr& style_tree, int w, int h)
 	{
 		RootBoxPtr layout = nullptr;
 		bool changed = false;
@@ -648,7 +795,8 @@ namespace xhtml
 		}
 
 		if(needsLayout()) {
-			LOG_DEBUG("Triggered layout!");
+			LOG_INFO("Triggered layout!");
+			clearEventListeners();
 
 			// XXX should we should have a re-process styles flag here.
 			{
@@ -677,12 +825,21 @@ namespace xhtml
 
 		if(needsRender() && layout != nullptr) {
 			profile::manager pman_render("render");
+			layout->getSceneTree()->clear();
 			layout->render(point());
 			trigger_render_ = false;
 			changed = true;
+
+			if(debug_display_tree_parse) {
+				layout->preOrderTraversal([](xhtml::BoxPtr box, int nesting) {
+					std::stringstream ss;
+					ss << std::string(nesting * 2, ' ') << box->toString();
+					LOG_INFO(ss.str());
+				}, 0);
+			}
 		}
 
-		return changed;
+		return layout != nullptr ? layout->getSceneTree() : nullptr;
 	}
 
 	void Node::mergeProperties(const css::Specificity& specificity, const css::PropertyList& plist)

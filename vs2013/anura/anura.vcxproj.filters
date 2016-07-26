@@ -1170,6 +1170,12 @@
     <ClInclude Include="..\..\src\xhtml\xhtml_line_box.hpp">
       <Filter>Header Files\xhtml</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\xhtml\event_listener.hpp">
+      <Filter>Header Files\xhtml</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\xhtml\xslider.hpp">
+      <Filter>Header Files\xhtml</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\src\kre\geometry.inl">
@@ -2171,6 +2177,12 @@
       <Filter>Source Files\xhtml</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\xhtml\xhtml_line_box.cpp">
+      <Filter>Source Files\xhtml</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\xhtml\event_listener.cpp">
+      <Filter>Source Files\xhtml</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\xhtml\xslider.cpp">
       <Filter>Source Files\xhtml</Filter>
     </ClCompile>
   </ItemGroup>

@@ -72,6 +72,9 @@ namespace KRE
 		void setClearColor(const Color& color);
 		const Color& getClearColor() const { return clear_color_; }
 
+		bool needsRebuild() const { return needs_rebuild_; }
+		void rebuild(int width, int height);
+
 		RenderTargetPtr clone();
 
 		// N.B. these function might be slow, not recommend for use in render pipeline.
@@ -117,6 +120,7 @@ namespace KRE
 		Color clear_color_;
 
 		int size_change_observer_handle_;
+		bool needs_rebuild_;
 
 		RenderTarget();
 	};
