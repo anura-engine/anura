@@ -42,6 +42,8 @@ namespace KRE
 		}
 		virtual ~Impl() {}
 		virtual int getDescender() = 0;
+		virtual int getBaseline() = 0;
+		virtual int getBoundingHeight() = 0;
 		virtual void getBoundingBox(const std::string& str, long* w, long* h) = 0;
 		virtual std::vector<unsigned> getGlyphs(const std::string& text) = 0;
 		virtual const std::vector<point>& getGlyphPath(const std::string& text) = 0;

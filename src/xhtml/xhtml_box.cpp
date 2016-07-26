@@ -501,7 +501,7 @@ namespace xhtml
 			const point& ld = root->getLayoutDimensions();
 			dims.content_.width = ld.x * LayoutEngine::getFixedPointScale();
 			dims.content_.height = ld.y * LayoutEngine::getFixedPointScale();
-			offs = point(-dimensions_.content_.x, -dimensions_.content_.y);
+			offs = point(-2*getMBPLeft(), -2*getMBPTop());
 		}
 		background_info_.render(scene_tree, dims, offs);
 	}

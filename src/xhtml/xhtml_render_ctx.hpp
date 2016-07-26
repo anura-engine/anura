@@ -51,6 +51,9 @@ namespace xhtml
 		int getDPI() const { return dpi_scale_; }
 		void setDPI(int dpi) { dpi_scale_ = dpi; }
 
+		const point& getViewport() const { return viewport_; }
+		void setViewport(const point& p) { viewport_ = p; }
+
 		const css::StylePtr& getComputedValue(css::Property p) const;
 
 		std::vector<css::StylePtr> getCurrentStyles() const;
@@ -60,5 +63,6 @@ namespace xhtml
 	private:
 		RenderContext();
 		int dpi_scale_;
+		point viewport_;
 	};
 }

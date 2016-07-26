@@ -111,6 +111,8 @@ namespace KRE
 		void renderText();
 		void getFontMetrics();
 		int getDescender();
+		int getBoundingHeight();
+		int getBaseline();
 		rect getBoundingBox(const std::string& text);
 		FontRenderablePtr createRenderableFromPath(FontRenderablePtr r, const std::string& text, const std::vector<point>& path);
 		ColoredFontRenderablePtr createColoredRenderableFromPath(ColoredFontRenderablePtr r, const std::string& text, const std::vector<point>& path, const std::vector<KRE::Color>& colors);
