@@ -433,6 +433,21 @@ namespace xhtml
 					}			
 				}
 			}
+
+			template<typename T> T getAttributeValue(const std::string& str, const T& default_value)
+			{
+				auto attr = getAttribute(str);
+				if(attr != nullptr) {
+					try {
+						T value = boost::lexical_cast<T>(attr->getValue());
+						return value;
+					} catch(boost::bad_lexical_cast&) {
+						LOG_ERROR("Unable to convert '" << attr->getValue() << "' to a number for attribute: " << str);
+					}
+				}
+				return default_value;
+			}
+
 			void init() override {
 				auto attr_checked = getAttribute("checked");
 				if(attr_checked) {
@@ -494,9 +509,20 @@ namespace xhtml
 							height_ = 20;
 						}
 						setDimensions(rect(0, 0, width_, height_));
-						slider_ = std::make_shared<Slider>(rect(0, 0, width_, height_), [](float x){
+						float step = getAttributeValue<float>("step", 1.0f);
+						float minr = getAttributeValue<float>("min", 0.0f);
+						float maxr = getAttributeValue<float>("max", 100.0f);
+						float value = getAttributeValue<float>("value", 0.0f);
+						auto& node_value = value_;
+						slider_ = std::make_shared<Slider>(rect(0, 0, width_, height_), [&node_value](float x){
 							LOG_INFO("slider set to: " << x);
+							std::stringstream ss;
+							ss << x;
+							node_value = ss.str();
 						});
+						slider_->setRange(minr, maxr);
+						slider_->setStep(step);
+						slider_->setHandlePosition(value);
 					} else {
 						ASSERT_LOG(false, "'input' type value was not known: " << value);
 					}
@@ -529,7 +555,7 @@ namespace xhtml
 			{ 
 				if(slider_) {
 					auto buttons = SDL_GetMouseState(nullptr, nullptr);
-					slider_->mouseButtonDown(false, p, buttons, SDL_GetModState(), geometry::pointInRect(p, getActiveRect()));
+					slider_->mouseButtonUp(false, p, buttons, SDL_GetModState(), geometry::pointInRect(p, getActiveRect()));
 				}
 				if(geometry::pointInRect(p, getActiveRect())) {
 					if(type_ == InputElementType::CHECKBOX || type_ == InputElementType::RADIO) {
@@ -602,6 +628,10 @@ namespace xhtml
 				}
 				return nullptr;
 			}
+			const std::string& getValue() const override 
+			{
+				return value_;
+			}
 		
 			InputElementType type_;
 			int width_;
@@ -613,6 +643,7 @@ namespace xhtml
 			KRE::TexturePtr checkbox_tex_;
 			KRE::TexturePtr checkbox_checked_tex_;
 			SliderPtr slider_;
+			std::string value_;
 		};
 		ElementRegistrar<InputElement> input_element(ElementId::INPUT, "input");
 

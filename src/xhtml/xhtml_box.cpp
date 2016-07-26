@@ -493,8 +493,14 @@ namespace xhtml
 		auto dims = getDimensions();
 		point offs;
 		NodePtr node = getNode();
+		// This makes the background for the body element the same size as the root
 		if(node != nullptr && node->hasTag(ElementId::BODY)) {
 			dims = getRootDimensions();
+			auto root = getRoot();
+			ASSERT_LOG(root != nullptr, "root was null.");
+			const point& ld = root->getLayoutDimensions();
+			dims.content_.width = ld.x * LayoutEngine::getFixedPointScale();
+			dims.content_.height = ld.y * LayoutEngine::getFixedPointScale();
 			offs = point(-dimensions_.content_.x, -dimensions_.content_.y);
 		}
 		background_info_.render(scene_tree, dims, offs);
@@ -506,7 +512,19 @@ namespace xhtml
 		if(id_ == BoxId::TEXT) {
 			offs = point(dimensions_.content_.x, 0);
 		}
-		border_info_.render(scene_tree, getDimensions(), offs);
+		// This makes the background for the body element the same size as the root
+		auto dims = getDimensions();
+		NodePtr node = getNode();
+		if(node != nullptr && node->hasTag(ElementId::BODY)) {
+			dims = getRootDimensions();
+			auto root = getRoot();
+			ASSERT_LOG(root != nullptr, "root was null.");
+			const point& ld = root->getLayoutDimensions();
+			dims.content_.width = ld.x * LayoutEngine::getFixedPointScale();
+			dims.content_.height = ld.y * LayoutEngine::getFixedPointScale();
+			offs = point(-dimensions_.content_.x, -dimensions_.content_.y);
+		}
+		border_info_.render(scene_tree, dims, offs);
 	}
 
 	void Box::handleRenderFilters(const KRE::SceneTreePtr& scene_tree, const point& offset) const
