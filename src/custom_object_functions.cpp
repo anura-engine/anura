@@ -1937,7 +1937,7 @@ namespace
 			//debugging so set the debug rect
 			add_debug_rect(r);
 		}
-	return variant(lvl->solid(r));
+	return variant::from_bool(lvl->solid(r));
 FUNCTION_ARGS_DEF
 	ARG_TYPE("object")
 	ARG_TYPE("int")
@@ -3240,7 +3240,7 @@ RETURN_TYPE("bool")
 	END_FUNCTION_DEF(collides)
 
 	FUNCTION_DEF(collides_with_Level, 1, 1, "collides_with_Level(object) -> boolean: returns true iff the given object collides with the Level.")
-		return variant(non_solid_entity_collides_with_level(
+		return variant::from_bool(non_solid_entity_collides_with_level(
 				   Level::current(),
 				   *args()[0]->evaluate(variables).convert_to<Entity>()));
 	FUNCTION_ARGS_DEF
