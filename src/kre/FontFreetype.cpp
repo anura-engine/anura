@@ -193,7 +193,7 @@ namespace KRE
 			*h = (pen.y - slot->linearHoriAdvance + slot->metrics.height*65536L);
 		}
 
-		int getBoundingHeight()
+		int getBoundingHeight() override
 		{
 			return bounding_height_;
 		}
