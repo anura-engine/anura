@@ -33,7 +33,9 @@
 #include "xhtml_style_tree.hpp"
 
 #include "filesystem.hpp"
+#if defined(ENABLE_PROFILING)
 #include "profile_timer.hpp"
+#endif
 
 namespace xhtml
 {
@@ -391,6 +393,11 @@ namespace xhtml
 		}
 	}
 
+	void Node::markTransitions() 
+	{ 
+		properties_.markTransitions(); 
+	}
+
 	bool Node::handleMouseWheel(bool* trigger, const point& p, const point& delta, int direction)
 	{
 		if(!active_rect_.empty() && geometry::pointInRect(p, active_rect_)) {
@@ -472,6 +479,7 @@ namespace xhtml
 		auto pos = model_matrix_ * glm::vec4(static_cast<float>(mp.x), static_cast<float>(mp.y), 0.0f, 1.0f);
 		point p(static_cast<int>(pos.x), static_cast<int>(pos.y));
 		//LOG_INFO("mp: " << mp << ", p: " << p << ", ar: " <<  active_rect_ << ", pos: " << pos.x << "," << pos.y);
+		bool mouse_left = false;
 		if(!active_rect_.empty()) {
 			if(geometry::pointInRect(p, active_rect_)) {
 				if(mouse_entered_ == false && getScriptHandler() && hasActiveHandler(EventHandlerId::MOUSE_ENTER)) {
@@ -495,6 +503,7 @@ namespace xhtml
 					getScriptHandler()->runEventHandler(shared_from_this(), EventHandlerId::MOUSE_LEAVE, variant(&m));
 				}
 				mouse_entered_ = false;
+				mouse_left = true;
 				if(scrollbar_vert_ != nullptr) {
 					scrollbar_vert_->triggerFadeOut();
 				}
@@ -524,7 +533,7 @@ namespace xhtml
 				*trigger = true;
 			}
 			return true;
-		} else if((active_pclass_ & css::PseudoClass::HOVER) == css::PseudoClass::HOVER) {
+		} else if(mouse_left && (active_pclass_ & css::PseudoClass::HOVER) == css::PseudoClass::HOVER) {
 			active_pclass_ = active_pclass_ & ~css::PseudoClass::HOVER;
 			*trigger = true;
 		}
@@ -580,7 +589,7 @@ namespace xhtml
 
 	bool Document::handleMouseMotion(bool claimed, int x, int y)
 	{
-		point p(x, y);
+		point p(x - layout_x_, y - layout_y_);
 		for(auto& evt : event_listeners_) {
 			Uint32 buttons = SDL_GetMouseState(nullptr, nullptr);
 			claimed |= evt->mouseMotion(claimed, p, SDL_GetModState());
@@ -609,7 +618,7 @@ namespace xhtml
 
 	bool Document::handleMouseButtonDown(bool claimed, int x, int y, unsigned button)
 	{
-		point p(x, y);
+		point p(x - layout_x_, y - layout_y_);
 		for(auto& evt : event_listeners_) {
 			Uint32 buttons = SDL_GetMouseState(nullptr, nullptr);
 			claimed |= evt->mouseButtonDown(claimed, p, buttons, SDL_GetModState());
@@ -637,7 +646,7 @@ namespace xhtml
 
 	bool Document::handleMouseButtonUp(bool claimed, int x, int y, unsigned button)
 	{
-		point p(x, y);
+		point p(x - layout_x_, y - layout_y_);
 		for(auto& evt : event_listeners_) {
 			Uint32 buttons = SDL_GetMouseState(nullptr, nullptr);
 			claimed |= evt->mouseButtonUp(claimed, p, buttons, SDL_GetModState());
@@ -668,7 +677,7 @@ namespace xhtml
 		point delta(x, y);
 		int mx, my;
 		Uint32 buttons = SDL_GetMouseState(&mx, &my);
-		point p(mx, my);
+		point p(mx - layout_x_, my - layout_y_);
 		for(auto& evt : event_listeners_) {
 			claimed |= evt->mouseWheel(claimed, p, delta, direction);
 		}
@@ -715,6 +724,8 @@ namespace xhtml
 		  trigger_layout_(true),
 		  trigger_render_(false),
 		  trigger_rebuild_(false),
+		  layout_x_(0),
+		  layout_y_(0),
 		  active_element_(),
 		  event_listeners_()
 	{
@@ -775,6 +786,15 @@ namespace xhtml
 			}
 			return true;
 		});
+		
+		static bool marked_transtions = false;
+		if(!marked_transtions) {
+			//marked_transtions = true;
+			preOrderTraversal([](NodePtr n) {
+				n->markTransitions();
+				return true;
+			});
+		}
 	}
 
 	void Document::enableDebug(int flags)
@@ -782,30 +802,40 @@ namespace xhtml
 		debug_display_tree_parse = flags & DebugFlags::DISPLAY_PARSE_TREE ? true : false;
 	}
 
-	KRE::SceneTreePtr Document::process(StyleNodePtr& style_tree, int w, int h)
+	KRE::SceneTreePtr Document::process(StyleNodePtr& style_tree, int x, int y, int w, int h)
 	{
 		RootBoxPtr layout = nullptr;
 		bool changed = false;
 
 		if(needsRebuild()) {
+#if defined(ENABLE_PROFILING)
 			LOG_INFO("Rebuild layout!");
+#endif
 			style_tree.reset();
 			trigger_rebuild_ = false;
 			triggerLayout();
 		}
 
 		if(needsLayout()) {
+#if defined(ENABLE_PROFILING)
 			LOG_INFO("Triggered layout!");
+#endif
+			RenderContext::get().setViewport(point(w, h));			
+			
 			clearEventListeners();
 
 			// XXX should we should have a re-process styles flag here.
 			{
+#if defined(ENABLE_PROFILING)
 				profile::manager pman("apply styles");
+#endif
 				processStyleRules();
 			}
 
 			{
+#if defined(ENABLE_PROFILING)
 				profile::manager pman("update style tree");
+#endif
 				if(style_tree == nullptr) {
 					style_tree = StyleNode::createStyleTree(std::static_pointer_cast<Document>(shared_from_this()));
 					processScriptAttributes();
@@ -815,7 +845,9 @@ namespace xhtml
 			}
 
 			{
+#if defined(ENABLE_PROFILING)
 				profile::manager pman("layout");
+#endif
 				layout = Box::createLayout(style_tree, w, h);
 			}
 
@@ -824,9 +856,15 @@ namespace xhtml
 		}
 
 		if(needsRender() && layout != nullptr) {
+#if defined(ENABLE_PROFILING)
 			profile::manager pman_render("render");
-			layout->getSceneTree()->clear();
-			layout->render(point());
+#endif
+			layout_x_ = x;
+			layout_y_ = y;
+			auto st = layout->getSceneTree();
+			st->clear();
+			layout->render(point(x, y));
+			st->setPosition(x, y);
 			trigger_render_ = false;
 			changed = true;
 

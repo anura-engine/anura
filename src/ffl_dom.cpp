@@ -281,7 +281,7 @@ namespace xhtml
 	
 	void DocumentObject::process()
 	{
-		auto st = doc_->process(style_tree_, layout_size_.w(), layout_size_.h());
+		auto st = doc_->process(style_tree_, layout_size_.x(), layout_size_.y(), layout_size_.w(), layout_size_.h());
 		if(st != nullptr) {
 			scene_tree_ = st;
 		}

@@ -325,10 +325,11 @@ namespace css
 		auto it = properties_.find(p);
 		if(it == properties_.end()) {
 			// unconditionally add new properties
+			//LOG_INFO("property-new: " << get_property_info_table()[static_cast<int>(p)].name);
 			properties_[p] = PropertyStyle(o, specificity);
 		} else {
 			// check for important flag before merging.
-			/*LOG_DEBUG("property: " << get_property_info_table()[static_cast<int>(p)].name << ", current spec: "
+			/*LOG_INFO("property: " << get_property_info_table()[static_cast<int>(p)].name << ", current spec: "
 				<< it->second.specificity[0] << "," << it->second.specificity[1] << "," << it->second.specificity[2]
 				<< ", new spec: " << specificity[0] << "," << specificity[1] << "," << specificity[2] 
 				<< ", test: " << (it->second.specificity <= specificity ? "true" : "false"));*/
@@ -373,6 +374,7 @@ namespace css
 			// no transition properties listed, just exit.
 			return;
 		}
+
 		// Find duration
 		auto dura_it = properties_.find(Property::TRANSITION_DURATION);
 		if(dura_it == properties_.end() || dura_it->second.style == nullptr) {
@@ -418,9 +420,11 @@ namespace css
 					auto pit = get_transitional_properties().find(prop.first);
 					if(pit != get_transitional_properties().end()) {
 						// is transitional
-						prop.second.style->addTransition(duration[index % duration.size()], 
-							ttfns[index % ttfns.size()],
-							delay[index % delay.size()]);
+						if(!prop.second.style->hasTransition()) {
+							prop.second.style->addTransition(duration[index % duration.size()], 
+								ttfns[index % ttfns.size()],
+								delay[index % delay.size()]);
+						}
 					}
 				}
 			} else {
@@ -430,9 +434,11 @@ namespace css
 					++index;
 					continue;
 				}
-				it->second.style->addTransition(duration[index % duration.size()], 
-					ttfns[index % ttfns.size()],
-					delay[index % delay.size()]);
+				if(!it->second.style->hasTransition()) {
+					it->second.style->addTransition(duration[index % duration.size()], 
+						ttfns[index % ttfns.size()],
+						delay[index % delay.size()]);
+				}
 			}
 			++index;
 		}
@@ -3031,6 +3037,7 @@ namespace css
 			} else {
 				throw ParserError(formatter() << "Unrecognised value for property '" << prefix << "': "  << (*it_)->toString());
 			}
+
 			skipWhitespace();
 
 			if(isToken(TokenId::DIMENSION)) {

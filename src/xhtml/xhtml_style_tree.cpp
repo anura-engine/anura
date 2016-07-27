@@ -208,12 +208,57 @@ namespace xhtml
 				ColorTransitionPtr ct = ColorTransition::create(tx.ttfn, tx.duration, tx.delay);
 				ct->setStartColor(color == nullptr ? KRE::Color::colorWhite() : *color);
 				ct->setEndColor(*new_color);
-				addTransitionEffect(ct);
-				color = ct->getColor();
+				if(!ct->isEqual()) {
+					//LOG_INFO("create color transition: " << *color << " to " << *new_color);
+					addTransitionEffect(ct);
+					color = ct->getColor();
+				}
 			}
 		} else {
 			color = new_color;
 		}
+	}
+
+	void StyleNode::processLength(bool created, Property p, std::shared_ptr<Length>& length)
+	{
+		RenderContext& ctx = RenderContext::get();
+		std::shared_ptr<Length> length_style = ctx.getComputedValue(p)->asType<Length>();
+		/*if(length_style->hasTransition() && !created) {
+			for(auto& tx : length_style->getTransitions()) {
+				LengthTransitionPtr lt = LengthTransition::create(tx.ttfn, tx.duration, tx.delay);
+				lt->setStartLength([]() { return 0; } );
+				lt->setEndLength([length_style]() { return length_style->compute(); });
+				if(!lt->isEqual()) {
+					LOG_INFO("create length transition: " << (lt->getStartLength()/65536) << " to " << (lt->getEndLength()/65536));
+					addTransitionEffect(lt);
+					// XXX
+				}
+			}
+		} else {
+			// XXX
+		}*/
+		length = length_style;
+	}
+
+	void StyleNode::processWidth(bool created, Property p, std::shared_ptr<Width>& width)
+	{
+		RenderContext& ctx = RenderContext::get();
+		std::shared_ptr<Width> width_style = ctx.getComputedValue(p)->asType<Width>();
+		/*width_style->getLength();
+		if(width_style->hasTransition() && !created) {
+			for(auto& tx : width_style->getTransitions()) {
+				WidthTransitionPtr wt = WidthTransition::create(tx.ttfn, tx.duration, tx.delay);
+				wt->setStartWidth([width]() { return width->getLength().compute(); } );
+				wt->setEndWidth([width_style]() { return width_style->getLength().compute(); });
+				if(!wt->isEqual()) {
+					LOG_INFO("create length transition: " << (wt->getStartWidth()/65536) << " to " << (wt->getEndWidth()/65536));
+					addTransitionEffect(wt);
+					// XXXwidth = wt->getWidth();					
+				}
+			}
+		} else {*/
+			width = width_style;
+		//}
 	}
 
 	void StyleNode::processFilter(bool created)
@@ -307,8 +352,10 @@ namespace xhtml
 		float_style_ = ctx.getComputedValue(Property::FLOAT);
 		float_ = float_style_->getEnum<Float>();
 		font_handle_ = RenderContext::get().getFontHandle();
-		width_height_[0] = ctx.getComputedValue(Property::WIDTH)->asType<Width>();
-		width_height_[1] = ctx.getComputedValue(Property::HEIGHT)->asType<Width>();
+
+		processWidth(created, Property::WIDTH, width_height_[0]);
+		processWidth(created, Property::HEIGHT, width_height_[1]);
+
 		letter_spacing_ = ctx.getComputedValue(Property::LETTER_SPACING)->asType<Length>();
 		line_height_ = ctx.getComputedValue(Property::LINE_HEIGHT)->asType<Length>();
 		auto list_img = ctx.getComputedValue(Property::LIST_STYLE_IMAGE);
@@ -417,15 +464,11 @@ namespace xhtml
 
 		switch(p) {
 			case Property::BACKGROUND_COLOR:
-				*background_color_ = *sp->asType<CssColor>()->compute();
+				background_color_ = std::make_shared<KRE::Color>(*sp->asType<CssColor>()->compute());
+				force_render = true;
 				break;
 			case Property::COLOR:
-				//if(color_ == nullptr) {
-				//	color_ = std::make_shared<KRE::Color>();
-				//}
-				//*color_ = *sp->asType<CssColor>()->compute();
 				color_ = std::make_shared<KRE::Color>(*sp->asType<CssColor>()->compute());
-				//LOG_INFO("style: color ptr: " << color_.get() << ", StyleNode: " << this);
 				force_render = true;
 				break;
 			case Property::BORDER_TOP_COLOR:
@@ -510,9 +553,11 @@ namespace xhtml
 				break;
 			case Property::WIDTH:
 				*width_height_[0] = *sp->asType<Width>();
+				force_render = true;
 				break;
 			case Property::HEIGHT:
 				*width_height_[1] = *sp->asType<Width>();
+				force_render = true;
 				break;
 			case Property::DISPLAY:
 				display_ = sp->getEnum<Display>();

@@ -200,6 +200,7 @@ namespace xhtml
 		const scrollable::ScrollbarPtr& getScrollbar(scrollable::Scrollbar::Direction d) const {
 			return d == scrollable::Scrollbar::Direction::VERTICAL ? scrollbar_vert_ : scrollbar_horz_;
 		}
+		void markTransitions();
 	protected:
 		std::string nodeToString() const;
 	private:
@@ -270,7 +271,7 @@ namespace xhtml
 		void removeEventListener(EventListenerPtr evt);
 		void clearEventListeners(void);
 
-		KRE::SceneTreePtr process(StyleNodePtr& style_tree, int w, int h);
+		KRE::SceneTreePtr process(StyleNodePtr& style_tree, int x, int y, int w, int h);
 
 		// type is expected to be a content type i.e. "text/javascript"
 		static void registerScriptHandler(const std::string& type, std::function<ScriptPtr()> fn);
@@ -283,6 +284,10 @@ namespace xhtml
 		bool trigger_layout_;
 		bool trigger_render_;
 		bool trigger_rebuild_;
+
+		// for mouse position adjustment.
+		int layout_x_;
+		int layout_y_;
 
 		WeakNodePtr active_element_;
 		std::set<EventListenerPtr> event_listeners_;

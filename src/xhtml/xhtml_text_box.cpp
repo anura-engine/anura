@@ -135,6 +135,9 @@ namespace xhtml
 							width = eng.getWidthAtPosition(y1, y1 + line_height, containing.content_.width) /*- cursor.x*/ + eng.getXAtPosition(y1, y1 + line_height);
 
 							open_line.reset();
+							if(line->line.empty()) {
+								++it;
+							}
 						}
 					}					
 				}

@@ -100,7 +100,6 @@ namespace xhtml
 
 		void addChild(BoxPtr box) { boxes_.emplace_back(box); }
 		void addChildren(const std::vector<BoxPtr>& children) { boxes_.insert(boxes_.end(), children.begin(), children.end()); }
-		void addAnonymousBoxes();
 
 		void setContentRect(const Rect& r) { dimensions_.content_ = r; }
 		void setContentX(FixedPoint x) { dimensions_.content_.x = x; }
