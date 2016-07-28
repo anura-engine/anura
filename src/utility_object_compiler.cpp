@@ -1877,6 +1877,7 @@ COMMAND_LINE_UTILITY(generate_terrain_spritesheet)
 	std::vector<rect> outr;
 	std::vector<std::array<int, 4>> borders;	
 	auto s = Surface::packImages(filenames, &outr, keep_borders ? nullptr : &borders);
+	ASSERT_LOG(s != nullptr, "Couldn't fit all the images into a single spritesheet.");
 	s->savePng("temp.png");
 
 	variant_builder res;

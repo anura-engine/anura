@@ -60,8 +60,11 @@ namespace KRE
 
 	Surface::Surface()
 		: flags_(SurfaceFlags::NONE),
+		  pf_(nullptr),
+		  alpha_map_(nullptr),
 		  name_(),
-		  id_(get_next_id())
+		  id_(get_next_id()),
+		  alpha_borders_{}
 	{
 	}
 
