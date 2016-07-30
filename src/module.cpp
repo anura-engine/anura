@@ -154,7 +154,9 @@ namespace module
 										std::map<std::string, std::string>* file_map,
 										MODULE_PREFIX_BEHAVIOR prefix)
 	{
-		for(const modules& p : loaded_paths()) {
+		auto paths = loaded_paths();
+		std::reverse(paths.begin(), paths.end());
+		for(const modules& p : paths) {
 			for(const std::string& base_path : p.base_path_) {
 				const std::string path = base_path + dir;
 				sys::get_unique_filenames_under_dir(path, file_map, prefix == MODULE_PREFIX ? p.abbreviation_ + ":" : "");
