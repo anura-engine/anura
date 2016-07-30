@@ -131,6 +131,8 @@ public:
 	void set_expr(const game_logic::FormulaExpression* expr);
 	const game_logic::FormulaExpression* get_expr() const;
 
+	virtual variant_type_ptr extend_type(variant_type_ptr extension) const { return variant_type_ptr(); }
+
 private:
 	virtual variant_type_ptr null_excluded() const { return variant_type_ptr(); }
 	virtual variant_type_ptr subtract(variant_type_ptr other) const { return variant_type_ptr(); }
