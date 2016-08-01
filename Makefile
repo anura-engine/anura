@@ -122,7 +122,7 @@ ifeq ($(USE_LIBVPX),yes)
 endif
 
 # couchbase check
-USE_DB_CLIENT?=no
+USE_DB_CLIENT?=yes
 ifeq ($(USE_DB_CLIENT),yes)
     BASE_CXXFLAGS += -DUSE_DBCLIENT
     LIBS += -lcouchbase
