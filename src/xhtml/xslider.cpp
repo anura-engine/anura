@@ -65,7 +65,7 @@ namespace xhtml
 	{
 		if(dragging_) {
 			dragging_ = false;
-			//SDL_CaptureMouse(SDL_FALSE);
+			SDL_CaptureMouse(SDL_FALSE);
 		}
 	}
 
@@ -141,7 +141,7 @@ namespace xhtml
 	{
 		if(dragging_) {
 			dragging_ = false;
-			//SDL_CaptureMouse(SDL_FALSE);
+			SDL_CaptureMouse(SDL_FALSE);
 			claimed = true;
 		}
 		return claimed;
@@ -158,7 +158,7 @@ namespace xhtml
 			const rect r{posx - handle_width / 2 + loc_.x(), loc_.y(), handle_width, loc_.h()};
 			if(geometry::pointInRect(p, r)) {
 				dragging_ = true;
-				//SDL_CaptureMouse(SDL_TRUE);
+				SDL_CaptureMouse(SDL_TRUE);
 			} else {
 				// handle mouse down somewhere along bar.
 				setHandlePosition(positionFromPixelPos(p.x));
