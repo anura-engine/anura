@@ -3064,6 +3064,87 @@ RETURN_TYPE("bool")
 	RETURN_TYPE("commands")
 	END_FUNCTION_DEF(schedule)
 
+	class sleep_command : public EntityCommandCallable {
+	public:
+		sleep_command(int ncycles) : ncycles_(ncycles)
+		{}
+
+		virtual void execute(Level& lvl, Entity& ob) const override {
+			if(ncycles_ <= 0) {
+				return;
+			}
+
+			auto cmd = deferCurrentCommandSequence();
+			if(cmd) {
+				ob.addScheduledCommand(ncycles_, variant(cmd.get()));
+			}
+		}
+
+		void surrenderReferences(GarbageCollector* collector) override {
+		}
+	private:
+		int ncycles_;
+	};
+
+	FUNCTION_DEF(sleep, 1, 1, "sleep(nseconds)")
+		const decimal nseconds = args()[0]->evaluate(variables).as_decimal();
+		const int ncycles = ((nseconds*1000) / preferences::frame_time_millis()).as_int();
+		sleep_command* cmd = new sleep_command(ncycles);
+		cmd->setExpression(this);
+		return variant(cmd);
+
+	FUNCTION_ARGS_DEF
+		ARG_TYPE("decimal")
+	RETURN_TYPE("commands")
+	END_FUNCTION_DEF(sleep)
+
+	class sleep_until_command : public EntityCommandCallable {
+		const boost::intrusive_ptr<FormulaExpression> expr_;
+		ConstFormulaCallablePtr variables_;
+		mutable variant cmd_;
+	public:
+		sleep_until_command(boost::intrusive_ptr<FormulaExpression> expr, const ConstFormulaCallablePtr& context) : expr_(expr), variables_(context)
+		{}
+
+		virtual void execute(Level& lvl, Entity& ob) const override {
+			if(cmd_.is_null()) {
+				auto cmd = deferCurrentCommandSequence();
+				if(!cmd) {
+					return;
+				}
+
+				cmd_ = variant(cmd.get());
+			}
+
+			if(expr_->evaluate(*variables_).as_bool()) {
+				ob.executeCommand(cmd_);
+			} else {
+				ob.addScheduledCommand(1, variant(this));
+			}
+		}
+
+		void surrenderReferences(GarbageCollector* collector) override {
+			collector->surrenderPtr(&variables_, "VARS");
+			collector->surrenderVariant(&cmd_, "CMD");
+		}
+	};
+
+	FUNCTION_DEF(sleep_until, 1, 1, "sleep(expression)")
+		const bool value = args()[0]->evaluate(variables).as_bool();
+		if(value) {
+			return variant();
+		}
+
+		const ConstFormulaCallablePtr vars(&variables);
+
+		return variant(new sleep_until_command(args()[0], vars));
+
+
+	FUNCTION_ARGS_DEF
+		ARG_TYPE("bool")
+	RETURN_TYPE("commands")
+	END_FUNCTION_DEF(sleep_until)
+
 	class add_water_command : public EntityCommandCallable
 	{
 		rect r_;
