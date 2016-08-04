@@ -2784,14 +2784,14 @@ void CustomObject::addAnimatedMovement(variant attr_var, variant options)
 	movement->on_complete = options["on_complete"];
 
 	if(options["sleep"].as_bool(false)) {
-		auto cmd = game_logic::deferCurrentCommandSequence();
-		if(cmd) {
+		variant cmd = game_logic::deferCurrentCommandSequence();
+		if(cmd.is_null() == false) {
 			if(movement->on_complete.is_null()) {
-				movement->on_complete = variant(cmd.get());
+				movement->on_complete = cmd;
 			} else {
 				std::vector<variant> v;
 				v.push_back(movement->on_complete);
-				v.push_back(variant(cmd.get()));
+				v.push_back(cmd);
 				movement->on_complete = variant(&v);
 			}
 		}

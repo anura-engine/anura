@@ -2173,16 +2173,27 @@ namespace {
 			}
 		};
 
-		std::stack<std::pair<const class CommandSequence*, bool*> > g_command_sequence_stack;
+		struct CommandSequenceEntry {
+			const class CommandSequence* first;
+			bool* second;
+			boost::intrusive_ptr<class CommandSequence> deferred;
+			CommandSequenceEntry(const class CommandSequence* seq, bool* flag) : first(seq), second(flag)
+			{}
+
+			CommandSequenceEntry() : first(nullptr), second(nullptr) {}
+
+		};
+
+		std::vector<CommandSequenceEntry> g_command_sequence_stack;
 
 		struct CommandSequenceStackScope {
 			bool deferred = false;
 			explicit CommandSequenceStackScope(const class CommandSequence* seq) {
-				g_command_sequence_stack.push(std::pair<const class CommandSequence*, bool*>(seq, &deferred));
+				g_command_sequence_stack.push_back(CommandSequenceEntry(seq, &deferred));
 			}
 
 			~CommandSequenceStackScope() {
-				g_command_sequence_stack.pop();
+				g_command_sequence_stack.pop_back();
 			}
 		};
 
@@ -2191,6 +2202,7 @@ namespace {
 			variant cmd_;
 			ExpressionPtr right_;
 			ConstFormulaCallablePtr variables_;
+			mutable int nbarrier_;
 
 			void surrenderReferences(GarbageCollector* collector) override {
 				collector->surrenderVariant(&cmd_, "cmd");
@@ -2198,35 +2210,86 @@ namespace {
 			}
 		public:
 			CommandSequence(const variant& cmd, ExpressionPtr right_expr, ConstFormulaCallablePtr variables)
-			  : cmd_(cmd), right_(right_expr), variables_(variables)
+			  : cmd_(cmd), right_(right_expr), variables_(variables), nbarrier_(0)
 			{}
 
-			void execute(game_logic::FormulaCallable& ob) const override {
-				CommandSequenceStackScope scope(this);
-				ob.executeCommand(cmd_);
+			void createBarrier() { ++nbarrier_; }
 
-				if(!scope.deferred) {
-					const variant right_cmd = right_->evaluate(*variables_);
-					ob.executeCommand(right_cmd);
+			void execute(game_logic::FormulaCallable& ob) const override {
+				if(nbarrier_ > 0) {
+					--nbarrier_;
+					return;
+				}
+
+				{
+					CommandSequenceStackScope scope(this);
+					ob.executeCommand(cmd_);
+					if(scope.deferred) {
+						return;
+					}
+				}
+
+				const variant right_cmd = right_->evaluate(*variables_);
+				ob.executeCommand(right_cmd);
+			}
+
+			boost::intrusive_ptr<CommandSequence> createDeferred() const
+			{
+				return boost::intrusive_ptr<CommandSequence>(new CommandSequence(variant(), right_, variables_));
+			}
+		};
+
+		struct MultiCommandSequenceStackScope {
+			std::vector<boost::intrusive_ptr<CommandSequence> >* stack_;
+			bool deferred_;
+			explicit MultiCommandSequenceStackScope(std::vector<boost::intrusive_ptr<CommandSequence> >* stack) : stack_(stack), deferred_(false)
+			{
+				for(auto p : *stack_) {
+					g_command_sequence_stack.push_back(CommandSequenceEntry(p.get(), &deferred_));
 				}
 			}
 
-			boost::intrusive_ptr<CommandCallable> createDeferred() const
-			{
-				return boost::intrusive_ptr<CommandCallable>(new CommandSequence(variant(), right_, variables_));
+			~MultiCommandSequenceStackScope() {
+				g_command_sequence_stack.resize(g_command_sequence_stack.size() - stack_->size());
 			}
-		private:
 		};
+
+		class DeferredCommandSequence : public CommandCallable {
+			mutable std::vector<boost::intrusive_ptr<CommandSequence> > stack_;
+		public:
+			DeferredCommandSequence() {
+				stack_.reserve(g_command_sequence_stack.size());
+				for(auto& seq : g_command_sequence_stack) {
+					*seq.second = true;
+					if(!seq.deferred) {
+						seq.deferred = seq.first->createDeferred();
+					} else {
+						seq.deferred->createBarrier();
+					}
+					stack_.push_back(seq.deferred);
+				}
+			}
+
+			void execute(game_logic::FormulaCallable& ob) const override {
+				MultiCommandSequenceStackScope scope(&stack_);
+				while(scope.deferred_ == false && stack_.empty() == false) {
+					auto seq = stack_.back();
+					stack_.pop_back();
+					g_command_sequence_stack.pop_back();
+					seq->execute(ob);
+				}
+			}
+		};
+
 	} //namespace
 
-	boost::intrusive_ptr<CommandCallable> deferCurrentCommandSequence()
+	variant deferCurrentCommandSequence()
 	{
 		if(g_command_sequence_stack.empty()) {
-			return boost::intrusive_ptr<CommandCallable>();
+			return variant();
+		} else {
+			return variant(new DeferredCommandSequence);
 		}
-
-		*g_command_sequence_stack.top().second = true;
-		return g_command_sequence_stack.top().first->createDeferred();
 	}
 
 	namespace {

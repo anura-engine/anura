@@ -299,5 +299,5 @@ namespace game_logic
 		std::function<void(FormulaCallable*)> fn_;
 	};
 
-	boost::intrusive_ptr<CommandCallable> deferCurrentCommandSequence();
+	variant deferCurrentCommandSequence();
 }

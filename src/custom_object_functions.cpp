@@ -3074,9 +3074,9 @@ RETURN_TYPE("bool")
 				return;
 			}
 
-			auto cmd = deferCurrentCommandSequence();
-			if(cmd) {
-				ob.addScheduledCommand(ncycles_, variant(cmd.get()));
+			variant cmd = deferCurrentCommandSequence();
+			if(cmd.is_null() == false) {
+				ob.addScheduledCommand(ncycles_, cmd);
 			}
 		}
 
@@ -3108,12 +3108,10 @@ RETURN_TYPE("bool")
 
 		virtual void execute(Level& lvl, Entity& ob) const override {
 			if(cmd_.is_null()) {
-				auto cmd = deferCurrentCommandSequence();
-				if(!cmd) {
+				cmd_ = deferCurrentCommandSequence();
+				if(cmd_.is_null()) {
 					return;
 				}
-
-				cmd_ = variant(cmd.get());
 			}
 
 			if(expr_->evaluate(*variables_).as_bool()) {
