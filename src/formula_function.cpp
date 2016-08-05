@@ -494,6 +494,11 @@ namespace game_logic
 		RETURN_TYPE("builtin level")
 		END_FUNCTION_DEF(current_level)
 
+		FUNCTION_DEF(cancel, 0, 0, "cancel(): cancel the current command pipeline")
+			return variant(new FnCommandCallable([=]() { deferCurrentCommandSequence(); }));
+		RETURN_TYPE("commands")
+		END_FUNCTION_DEF(cancel)
+
 		FUNCTION_DEF(overload, 1, -1, "overload(fn...): makes an overload of functions")
 			std::vector<variant> functions;
 			for(ExpressionPtr expression : args()) {
