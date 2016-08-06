@@ -294,7 +294,11 @@ namespace
 				if(itor == items.end()) {
 					items.insert(p);
 				} else {
-					variant key(variant(prototype_node["id"].as_string() + "_PROTO_" + p.first.as_string()));
+					std::string base_name = p.first.as_string();
+					if(base_name.empty() == false && base_name[0] == '+') {
+						base_name.erase(base_name.begin());
+					}
+					variant key(variant("+" + prototype_node["id"].as_string() + "_PROTO_" + base_name));
 					items.insert(std::pair<variant,variant>(key, p.second));
 				}
 			}
@@ -1127,7 +1131,7 @@ void CustomObjectType::initEventHandlers(variant node,
 	for(const variant_pair& value : node.as_map()) {
 		const std::string& key = value.first.as_string();
 		if(key.size() > 3 && std::equal(key.begin(), key.begin() + 3, "on_")) {
-			ASSERT_LOG(events_node.is_null(), "Object " << node["id"].as_string() << " has an events node but also has " << key << ". Cannot mix old and new-style events");
+			//ASSERT_LOG(events_node.is_null(), "Object " << node["id"].as_string() << " has an events node but also has " << key << ". Cannot mix old and new-style events");
 			const std::string event(key.begin() + 3, key.end());
 			initEventHandler(event, value.second, handlers, symbols, base_handlers);
 		}
