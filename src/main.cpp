@@ -977,6 +977,13 @@ int main(int argcount, char* argvec[])
 	//main_wnd->setWindowIcon(module::map_file("images/window-icon.png"));
 
 	try {
+		std::map<std::string, std::string> shader_files;
+		module::get_unique_filenames_under_dir("data/shaders/", &shader_files);
+		for(auto p : shader_files) {
+			if(p.second.size() >= 4 && std::equal(p.second.end()-4, p.second.end(), ".cfg")) {
+				ShaderProgram::loadFromVariant(json::parse_from_file(p.second));
+			}
+		}
 		ShaderProgram::loadFromVariant(json::parse_from_file("data/shaders.cfg"));
 	} catch(const json::ParseError& e) {
 		LOG_ERROR("ERROR PARSING: " << e.errorMessage());
