@@ -422,6 +422,7 @@ namespace {
 
 			auto semi = std::find(itor, s.end(), ';');
 			if(semi == s.end()) {
+				start = itor;
 				break;
 			}
 
@@ -883,6 +884,7 @@ namespace {
 				if(itor->second.data().empty() == false) {
 					output.push_back(stack.back());
 					output.back().text = parse_special_chars_internal(itor->second.data());
+					fprintf(stderr, "PARSE: (%s) -> (%s)\n", itor->second.data().c_str(), output.back().text.c_str());
 				}
 
 				continue;
