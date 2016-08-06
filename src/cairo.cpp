@@ -1488,25 +1488,15 @@ namespace {
 			}
 		}
 
-		cairo_pattern_t* pattern = cairo_pattern_create_for_surface(surface);
-		cairo_pattern_set_filter(pattern, CAIRO_FILTER_BILINEAR);
+		cairo_set_source_surface(context.get(), surface, translate_x, translate_y);
+		cairo_pattern_set_filter(cairo_get_source(context.get()), CAIRO_FILTER_BILINEAR);
 
-		cairo_matrix_t pattern_matrix;
-		cairo_pattern_get_matrix(pattern, &pattern_matrix);
-		cairo_matrix_init_translate(&pattern_matrix, translate_x, translate_y);
-		cairo_pattern_set_matrix(pattern, &pattern_matrix);
-
-		cairo_set_source(context.get(), pattern);
-
-//		cairo_set_source_surface(context.get(), surface, translate_x, translate_y);
 		status = cairo_status(context.get());
 		ASSERT_LOG(status == 0, "rendering error painting " << args[0].as_string() << ": " << cairo_status_to_string(status));
 		cairo_paint(context.get());
 
 		status = cairo_status(context.get());
 		ASSERT_LOG(status == 0, "rendering error painting " << args[0].as_string() << ": " << cairo_status_to_string(status));
-
-		cairo_pattern_destroy(pattern);
 
 	END_CAIRO_FN
 
