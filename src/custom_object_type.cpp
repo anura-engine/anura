@@ -294,12 +294,8 @@ namespace
 				if(itor == items.end()) {
 					items.insert(p);
 				} else {
-					std::string base_name = p.first.as_string();
-					if(base_name.empty() == false && base_name[0] == '+') {
-						base_name.erase(base_name.begin());
-					}
-					variant key(variant("+" + prototype_node["id"].as_string() + "_PROTO_" + base_name));
-					items.insert(std::pair<variant,variant>(key, p.second));
+					std::string appended = itor->second.as_string() + " ; " + p.second.as_string();
+					itor->second = variant(appended);
 				}
 			}
 
