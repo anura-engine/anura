@@ -4066,6 +4066,11 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 		break;
 	}
 
+	case CUSTOM_OBJECT_SOLID_RECT: {
+		ASSERT_LOG(false, "Cannot set immutable solid_rect");
+		break;
+	}
+
 	case CUSTOM_OBJECT_SOLID_MID_X: {
 		const int start_x = centiX();
 		const int solid_diff = solidRect().x() - x();
