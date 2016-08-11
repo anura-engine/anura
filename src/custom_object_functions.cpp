@@ -498,6 +498,102 @@ namespace
 		ARG_TYPE("object")
 	RETURN_TYPE("commands")
 	END_FUNCTION_DEF(tbs_process)
+
+	class tbs_blocking_process_command : public EntityCommandCallable
+	{
+	public:
+		explicit tbs_blocking_process_command(variant request) : request_(request)
+		{}
+	private:
+		virtual void execute(Level& lvl, Entity& ob) const override;
+		variant request_;
+	};
+
+	class tbs_blocking_request : public game_logic::FormulaCallable
+	{
+	public:
+		tbs_blocking_request(variant client, variant request)
+		  : client_(client),
+		    ipc_client_(client.try_convert<tbs::ipc_client>()),
+			tbs_client_(client.try_convert<tbs::client>()),
+			callable_(new game_logic::MapFormulaCallable),
+			got_response_(false)
+		{
+			if(ipc_client_ != nullptr) {
+				ipc_client_->set_handler(std::bind(&tbs_blocking_request::handle, this, std::placeholders::_1));
+				ipc_client_->set_callable(callable_);
+				ipc_client_->send_request(request);
+			} else {
+				ASSERT_LOG(tbs_client_ != nullptr, "Illegal object given to tbs_blocking_request");
+				tbs_client_->send_request(request, callable_, std::bind(&tbs_blocking_request::handle, this, std::placeholders::_1));
+			}
+		}
+
+		void process() {
+			if(ipc_client_) {
+				ipc_client_->process();
+			}
+
+			if(tbs_client_) {
+				tbs_client_->process();
+			}
+		}
+
+		bool got_response() const { return got_response_; }
+	private:
+		DECLARE_CALLABLE(tbs_blocking_request);
+
+		void handle(std::string type) {
+			variant msg = callable_->queryValue("message");
+			response_ = msg;
+			got_response_ = true;
+		}
+
+		void surrenderReferences(GarbageCollector* collector) override {
+			collector->surrenderVariant(&client_);
+			collector->surrenderPtr(&callable_);
+		}
+
+		variant client_;
+		tbs::ipc_client* ipc_client_;
+		tbs::client* tbs_client_;
+		game_logic::MapFormulaCallablePtr callable_;
+		variant response_;
+		bool got_response_;
+	};
+
+	void tbs_blocking_process_command::execute(Level& lvl, Entity& ob) const
+	{
+		tbs_blocking_request* req = request_.convert_to<tbs_blocking_request>();
+		ASSERT_LOG(req, "Illegal object given to tbs blocking process");
+		req->process();
+		if(!req->got_response()) {
+			ob.addScheduledCommand(1, variant(this));
+		}
+	}
+
+	BEGIN_DEFINE_CALLABLE_NOBASE(tbs_blocking_request)
+		BEGIN_DEFINE_FN(block, "()->commands")
+			auto cmd = new tbs_blocking_process_command(variant(&obj));
+			return variant(cmd);
+		END_DEFINE_FN
+
+		DEFINE_FIELD(response, "any")
+			return obj.response_;
+	END_DEFINE_CALLABLE(tbs_blocking_request)
+
+	FUNCTION_DEF(tbs_blocking_request, 2, 2, "tbs_blocking_request(tbs_client, request)")
+		variant client = args()[0]->evaluate(variables);
+		variant request = args()[1]->evaluate(variables);
+
+		return variant(new tbs_blocking_request(client, request));
+	FUNCTION_ARGS_DEF
+		ARG_TYPE("object")
+		ARG_TYPE("map")
+	RETURN_TYPE("builtin tbs_blocking_request")
+	END_FUNCTION_DEF(tbs_blocking_request)
+
+
 	#endif // __native_client__
 
 	class report_command : public EntityCommandCallable
