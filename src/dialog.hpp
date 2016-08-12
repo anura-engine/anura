@@ -90,6 +90,7 @@ namespace gui
 		void setClearBg(bool clear) { clear_bg_ = clear; };
 		void setClearBgAmount(int amount) { clear_bg_ = amount; }
 		int clearBg() const { return clear_bg_; };
+		void setCloseHook(std::function<bool(bool)> fn) { on_close_hook_ = fn; }
 
 		bool pumpEvents();
 
@@ -114,6 +115,7 @@ namespace gui
 	
 		std::function<void()> on_quit_;
 		std::function<void(bool)> on_close_;
+		std::function<bool(bool)> on_close_hook_;
 
 		void quitDelegate();
 		void closeDelegate(bool cancelled);

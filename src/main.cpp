@@ -983,6 +983,13 @@ int main(int argcount, char* argvec[])
 	//main_wnd->setWindowIcon(module::map_file("images/window-icon.png"));
 
 	try {
+		std::map<std::string, std::string> shader_files;
+		module::get_unique_filenames_under_dir("data/shaders/", &shader_files);
+		for(auto p : shader_files) {
+			if(p.second.size() >= 4 && std::equal(p.second.end()-4, p.second.end(), ".cfg")) {
+				ShaderProgram::loadFromVariant(json::parse_from_file(p.second));
+			}
+		}
 		ShaderProgram::loadFromVariant(json::parse_from_file("data/shaders.cfg"));
 	} catch(const json::ParseError& e) {
 		LOG_ERROR("ERROR PARSING: " << e.errorMessage());
@@ -1048,14 +1055,6 @@ int main(int argcount, char* argvec[])
 	box2d::manager b2d_manager;
 #endif
 
-	try {
-		hex::loader(json::parse_from_file("data/hex_tiles.cfg"));
-	} catch(json::ParseError& pe) {
-		LOG_INFO(pe.message);
-	} catch(KRE::ImageLoadError& ile) {
-		ASSERT_LOG(false, ile.what());
-	}
-
 	const load_level_manager load_manager;
 
 	{ //manager scope
@@ -1073,6 +1072,14 @@ int main(int argcount, char* argvec[])
 		GuiSection::init(gui_node);
 		loader.drawAndIncrement(_("Initializing GUI"));
 		FramedGuiElement::init(gui_node);
+
+		try {
+			hex::loader(json::parse_from_file("data/hex_tiles.cfg"), json::parse_from_file("data/hex_terrain_rules.cfg"));
+		} catch(json::ParseError& pe) {
+			LOG_INFO(pe.message);
+		} catch(KRE::ImageLoadError& ile) {
+			ASSERT_LOG(false, ile.what());
+		}
 
 		sound::init_music(json::parse_from_file("data/music.cfg"));
 		GraphicalFont::initForLocale(i18n::get_locale());

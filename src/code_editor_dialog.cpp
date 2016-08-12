@@ -63,6 +63,8 @@ namespace game_logic
 void invalidate_class_definition(const std::string& class_name);
 }
 
+PREF_INT(code_editor_error_area, 300, "");
+
 std::set<Level*>& get_all_levels_set();
 
 CodeEditorDialog::CodeEditorDialog(const rect& r)
@@ -84,7 +86,7 @@ void CodeEditorDialog::init()
 	const int Y_SPACING        = 4;
 
 	if(!editor_) {
-		editor_.reset(new CodeEditorWidget(width() - 40, height() - (60 + (optional_error_text_area_ ? 170 : 0))));
+		editor_.reset(new CodeEditorWidget(width() - 40, height() - (60 + (optional_error_text_area_ ? g_code_editor_error_area : 0))));
 	}
 
 	Button* save_button      = new Button("Save", std::bind(&CodeEditorDialog::save, this));
@@ -168,14 +170,14 @@ void CodeEditorDialog::init()
 void CodeEditorDialog::add_optional_error_text_area(const std::string& text)
 {
 	using namespace gui;
-	optional_error_text_area_.reset(new TextEditorWidget(width() - 40, 160));
+	optional_error_text_area_.reset(new TextEditorWidget(width() - 40, g_code_editor_error_area-10));
 	optional_error_text_area_->setText(text);
 	for(KnownFile& f : files_) {
-		f.editor->setDim(width() - 40, height() - (60 + (optional_error_text_area_ ? 170 : 0)));
+		f.editor->setDim(width() - 40, height() - (60 + (optional_error_text_area_ ? g_code_editor_error_area : 0)));
 	}
 
 	if(editor_) {
-		editor_->setDim(width() - 40, height() - (60 + (optional_error_text_area_ ? 170 : 0)));
+		editor_->setDim(width() - 40, height() - (60 + (optional_error_text_area_ ? g_code_editor_error_area : 0)));
 	}
 }
 
@@ -263,7 +265,7 @@ void CodeEditorDialog::load_file(std::string fname, bool focus, std::function<vo
 		if(fn) {
 			f.op_fn = *fn;
 		}
-		f.editor.reset(new CodeEditorWidget(width() - 40, height() - (60 + (optional_error_text_area_ ? 170 : 0))));
+		f.editor.reset(new CodeEditorWidget(width() - 40, height() - (60 + (optional_error_text_area_ ? g_code_editor_error_area : 0))));
 		std::string text = json::get_file_contents(fname);
 		try {
 			file_contents_set_ = true;
@@ -460,6 +462,8 @@ void CodeEditorDialog::process()
 
 	using std::placeholders::_1;
 	using std::placeholders::_2;
+
+	sys::pump_file_modifications();
 
 	if(invalidated_ && profile::get_tick_time() > invalidated_ + 200) {
 		try {
@@ -805,7 +809,7 @@ void CodeEditorDialog::change_width(int amount)
 
 
 	for(KnownFile& f : files_) {
-		f.editor->setDim(width() - 40, height() - (60 + (optional_error_text_area_ ? 170 : 0)));
+		f.editor->setDim(width() - 40, height() - (60 + (optional_error_text_area_ ? g_code_editor_error_area : 0)));
 	}
 	init();
 }
@@ -831,7 +835,7 @@ void CodeEditorDialog::on_drag(int dx, int dy)
 
 
 	for(KnownFile& f : files_) {
-		f.editor->setDim(width() - 40, height() - (60 + (optional_error_text_area_ ? 170 : 0)));
+		f.editor->setDim(width() - 40, height() - (60 + (optional_error_text_area_ ? g_code_editor_error_area : 0)));
 	}
 	//init();
 }
@@ -1086,6 +1090,12 @@ void edit_and_continue_fn(const std::string& filename, const std::string& error,
 	d->set_close_buttons();
 	d->init();
 	d->load_file(filename, true, &fn);
+
+	std::string real_filename = module::map_file(filename);
+
+	std::function<void()> reload_dialog_fn = std::bind(&CodeEditorDialog::close, d.get());
+	const int file_mod_handle = sys::notify_on_file_modification(real_filename, reload_dialog_fn);
+
 	const bool result = d->jump_to_error(error);
 	if(!result) {
 		const char* fname = strstr(error.c_str(), "\nAt ");
@@ -1100,6 +1110,16 @@ void edit_and_continue_fn(const std::string& filename, const std::string& error,
 		}
 	}
 	d->showModal();
+
+	sys::remove_notify_on_file_modification(file_mod_handle);
+
+	SDL_Event event;
+	while(input::sdl_poll_event(&event)) {
+		switch(event.type) {
+		case SDL_QUIT:
+			_exit(0);
+		}
+	}
 
 	if(d->cancelled() || d->has_error()) {
 		_exit(0);
@@ -1119,7 +1139,7 @@ void edit_and_continue_assert(const std::string& msg, std::function<void()> fn)
 	std::vector<CallStackEntry> reverse_stack = stack;
 	std::reverse(reverse_stack.begin(), reverse_stack.end());
 	if(stack.empty() || !Level::getCurrentPtr()) {
-		return;
+		assert(false);
 	}
 
 	auto wnd = KRE::WindowManager::getMainWindow();
@@ -1178,6 +1198,7 @@ void edit_and_continue_assert(const std::string& msg, std::function<void()> fn)
 			switch(event.type) {
 				case SDL_QUIT: {
 					quit = true;
+					_exit(0);
 					break;
 				}
 			}

@@ -79,7 +79,8 @@ namespace sys
 		~FilesystemManager();
 	};
 
-	void notify_on_file_modification(const std::string& path, std::function<void()> handler);
+	int notify_on_file_modification(const std::string& path, std::function<void()> handler);
+	void remove_notify_on_file_modification(int handle);
 	void pump_file_modifications();
 
 	bool is_safe_write_path(const std::string& path, std::string* error=nullptr);
@@ -89,4 +90,6 @@ namespace sys
 
 	bool is_file_executable(const std::string& path);
 	void set_file_executable(const std::string& path);
+
+	std::string get_cwd();
 }

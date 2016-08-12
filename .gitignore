@@ -67,6 +67,8 @@ compiled/
 modules/*
 !modules/icons
 !modules/lib_2d
+!modules/gui
+!modules/tbs
 
 MacOS/include
 MacOS/lib

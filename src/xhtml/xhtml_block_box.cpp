@@ -81,6 +81,11 @@ namespace xhtml
 			}
 			setContentX(left);
 			setContentY(top);
+
+		} else {
+			for(auto& child : getChildren()) {
+				setContentHeight(child->getTop() + child->getHeight() + child->getMBPBottom());
+			}
 		}
 	}
 
@@ -133,7 +138,13 @@ namespace xhtml
 	void BlockBox::handlePostChildLayout(LayoutEngine& eng, BoxPtr child)
 	{
 		// Called after every child is laid out.
+		//std::cerr << "t: " << (child->getTop()/65536.f) << ", h: " << (child->getHeight()/65536.f) << ", mbp-b: " << (child->getMBPBottom()/65536.f) << "\n";
 		setContentHeight(child->getTop() + child->getHeight() + child->getMBPBottom());
+	}
+
+	void BlockBox::handlePostFloatChildLayout(LayoutEngine& eng, BoxPtr child)
+	{
+		//handlePostChildLayout(eng, child);
 	}
 
 	void BlockBox::layoutWidth(const Dimensions& containing)
@@ -203,6 +214,7 @@ namespace xhtml
 		// XXX we should add collapsible margins to children here.
 		child_height_ = 0;
 		FixedPoint width = 0;
+
 		for(auto& child : getChildren()) {
 			if(!child->isFloat()) {
 				child_height_ = std::max(child_height_, child->getHeight() + child->getTop() + child->getMBPBottom());

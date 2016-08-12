@@ -106,6 +106,7 @@ namespace
 	{
 		//find out the paths to all our files
 		module::get_unique_filenames_under_dir(object_path(), &object_file_paths());
+		module::get_unique_filenames_under_dir("data/objects", &::prototype_file_paths());
 		module::get_unique_filenames_under_dir("data/object_prototypes", &::prototype_file_paths());
 	}
 
@@ -293,8 +294,8 @@ namespace
 				if(itor == items.end()) {
 					items.insert(p);
 				} else {
-					variant key(variant(prototype_node["id"].as_string() + "_PROTO_" + p.first.as_string()));
-					items.insert(std::pair<variant,variant>(key, p.second));
+					std::string appended = itor->second.as_string() + " ; " + p.second.as_string();
+					itor->second = variant(appended);
 				}
 			}
 
@@ -782,8 +783,8 @@ CustomObjectTypePtr CustomObjectType::recreate(const std::string& id,
 	std::map<std::string, std::string>::const_iterator path_itor = module::find(object_file_paths(), id + ".cfg");
 	ASSERT_LOG(path_itor != object_file_paths().end(), "Could not find file for object '" << id << "'");
 
-	auto proto_path = module::find(prototype_file_paths(), id + ".cfg");
-	ASSERT_LOG(proto_path == prototype_file_paths().end(), "Object " << id << " has a prototype with the same name. Objects and prototypes must have distinct names");
+//	auto proto_path = module::find(prototype_file_paths(), id + ".cfg");
+//	ASSERT_LOG(proto_path == prototype_file_paths().end(), "Object " << id << " has a prototype with the same name. Objects and prototypes must have distinct names");
 
 	try {
 		std::vector<std::string> proto_paths;
@@ -1126,7 +1127,7 @@ void CustomObjectType::initEventHandlers(variant node,
 	for(const variant_pair& value : node.as_map()) {
 		const std::string& key = value.first.as_string();
 		if(key.size() > 3 && std::equal(key.begin(), key.begin() + 3, "on_")) {
-			ASSERT_LOG(events_node.is_null(), "Object " << node["id"].as_string() << " has an events node but also has " << key << ". Cannot mix old and new-style events");
+			//ASSERT_LOG(events_node.is_null(), "Object " << node["id"].as_string() << " has an events node but also has " << key << ". Cannot mix old and new-style events");
 			const std::string event(key.begin() + 3, key.end());
 			initEventHandler(event, value.second, handlers, symbols, base_handlers);
 		}

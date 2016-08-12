@@ -2173,10 +2173,36 @@ namespace {
 			}
 		};
 
+		struct CommandSequenceEntry {
+			const class CommandSequence* first;
+			bool* second;
+			boost::intrusive_ptr<class CommandSequence> deferred;
+			CommandSequenceEntry(const class CommandSequence* seq, bool* flag) : first(seq), second(flag)
+			{}
+
+			CommandSequenceEntry() : first(nullptr), second(nullptr) {}
+
+		};
+
+		std::vector<CommandSequenceEntry> g_command_sequence_stack;
+
+		struct CommandSequenceStackScope {
+			bool deferred = false;
+			explicit CommandSequenceStackScope(const class CommandSequence* seq) {
+				g_command_sequence_stack.push_back(CommandSequenceEntry(seq, &deferred));
+			}
+
+			~CommandSequenceStackScope() {
+				g_command_sequence_stack.pop_back();
+			}
+		};
+
+
 		class CommandSequence : public CommandCallable {
 			variant cmd_;
 			ExpressionPtr right_;
 			ConstFormulaCallablePtr variables_;
+			mutable int nbarrier_;
 
 			void surrenderReferences(GarbageCollector* collector) override {
 				collector->surrenderVariant(&cmd_, "cmd");
@@ -2184,16 +2210,89 @@ namespace {
 			}
 		public:
 			CommandSequence(const variant& cmd, ExpressionPtr right_expr, ConstFormulaCallablePtr variables)
-			  : cmd_(cmd), right_(right_expr), variables_(variables)
+			  : cmd_(cmd), right_(right_expr), variables_(variables), nbarrier_(0)
 			{}
 
+			void createBarrier() { ++nbarrier_; }
+
 			void execute(game_logic::FormulaCallable& ob) const override {
-				ob.executeCommand(cmd_);
+				if(nbarrier_ > 0) {
+					--nbarrier_;
+					return;
+				}
+
+				{
+					CommandSequenceStackScope scope(this);
+					ob.executeCommand(cmd_);
+					if(scope.deferred) {
+						return;
+					}
+				}
+
 				const variant right_cmd = right_->evaluate(*variables_);
 				ob.executeCommand(right_cmd);
 			}
-		private:
+
+			boost::intrusive_ptr<CommandSequence> createDeferred() const
+			{
+				return boost::intrusive_ptr<CommandSequence>(new CommandSequence(variant(), right_, variables_));
+			}
 		};
+
+		struct MultiCommandSequenceStackScope {
+			std::vector<boost::intrusive_ptr<CommandSequence> >* stack_;
+			bool deferred_;
+			explicit MultiCommandSequenceStackScope(std::vector<boost::intrusive_ptr<CommandSequence> >* stack) : stack_(stack), deferred_(false)
+			{
+				for(auto p : *stack_) {
+					g_command_sequence_stack.push_back(CommandSequenceEntry(p.get(), &deferred_));
+				}
+			}
+
+			~MultiCommandSequenceStackScope() {
+				g_command_sequence_stack.resize(g_command_sequence_stack.size() - stack_->size());
+			}
+		};
+
+		class DeferredCommandSequence : public CommandCallable {
+			mutable std::vector<boost::intrusive_ptr<CommandSequence> > stack_;
+		public:
+			DeferredCommandSequence() {
+				stack_.reserve(g_command_sequence_stack.size());
+				for(auto& seq : g_command_sequence_stack) {
+					*seq.second = true;
+					if(!seq.deferred) {
+						seq.deferred = seq.first->createDeferred();
+					} else {
+						seq.deferred->createBarrier();
+					}
+					stack_.push_back(seq.deferred);
+				}
+			}
+
+			void execute(game_logic::FormulaCallable& ob) const override {
+				MultiCommandSequenceStackScope scope(&stack_);
+				while(scope.deferred_ == false && stack_.empty() == false) {
+					auto seq = stack_.back();
+					stack_.pop_back();
+					g_command_sequence_stack.pop_back();
+					seq->execute(ob);
+				}
+			}
+		};
+
+	} //namespace
+
+	variant deferCurrentCommandSequence()
+	{
+		if(g_command_sequence_stack.empty()) {
+			return variant();
+		} else {
+			return variant(new DeferredCommandSequence);
+		}
+	}
+
+	namespace {
 
 		class CommandSequenceExpression : public FormulaExpression {
 			ExpressionPtr left_, right_;
@@ -2765,7 +2864,12 @@ namespace {
 						variant_type_ptr key_type, value_type;
 
 						variant_type_ptr sequence_type = (*res)[0]->queryVariantType();
-						value_type = sequence_type->is_list_of();
+						if(sequence_type->is_type(variant::VARIANT_TYPE_STRING)) {
+							value_type = variant_type::get_type(variant::VARIANT_TYPE_STRING);
+						} else {
+							value_type = sequence_type->is_list_of();
+						}
+
 						if(!value_type) {
 							key_type = sequence_type->is_map_of().first;
 							value_type = sequence_type->is_map_of().second;
@@ -2828,6 +2932,7 @@ namespace {
 							FunctionSymbolTable* symbols,
 							ConstFormulaCallableDefinitionPtr callable_def)
 		{
+			const size_t begin_size = res->size();
 			int parens = 0;
 			bool check_pointer = false;
 			const Token* beg = i1;
@@ -2851,6 +2956,7 @@ namespace {
 						ASSERT_LOG(false, "Too many ':' operators.\n" << pinpoint_location(formula_str, i1->begin, (i2-1)->end));
 					}
 				} else if( i1->type == FFL_TOKEN_TYPE::COMMA && !parens ) {
+					ASSERT_LOG(check_pointer, "Expected ':' and found ',' instead\n" << pinpoint_location(formula_str, i1->begin, (i2-1)->end));
 					check_pointer = false;
 					res->push_back(parse_expression(formula_str, beg,i1, symbols, callable_def));
 					beg = i1+1;
@@ -2858,10 +2964,12 @@ namespace {
 		
 				++i1;
 			}
-	
+
 			if(beg != i1) {
 				res->push_back(parse_expression(formula_str, beg,i1, symbols, callable_def));
 			}
+
+			ASSERT_LOG((res->size() - begin_size)%2 == 0, "Expected : before end of map expression.\n" << pinpoint_location(formula_str, (i2-1)->end, (i2-1)->end));
 		}
 
 		void parse_where_clauses(const variant& formula_str,

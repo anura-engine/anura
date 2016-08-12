@@ -39,6 +39,7 @@ namespace xhtml
 		void handlePreChildLayout(LayoutEngine& eng, const Dimensions& containing) override;
 		// Called after every child has been laid out.
 		void handlePostChildLayout(LayoutEngine& eng, BoxPtr child) override;
+		void handlePostFloatChildLayout(LayoutEngine& eng, BoxPtr child) override;
 		void layoutWidth(const Dimensions& containing);
 		void layoutChildren(LayoutEngine& eng);
 		void layoutHeight(const Dimensions& containing);

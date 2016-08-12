@@ -415,8 +415,8 @@ namespace gui
 	void Dialog::prepareDraw()
 	{
 		if(clearBg()) {
-			KRE::WindowManager::getMainWindow()->setClearColor(KRE::Color::colorBlack());
-			KRE::WindowManager::getMainWindow()->clear(KRE::ClearFlags::COLOR | KRE::ClearFlags::DEPTH);
+			KRE::WindowManager::getMainWindow()->setClearColor(KRE::Color(0, 0, 0, clearBg()));
+			KRE::WindowManager::getMainWindow()->clear(KRE::ClearFlags::COLOR);
 		}
 	}
 
@@ -451,7 +451,7 @@ namespace gui
 	void Dialog::handleDrawChildren() const 
 	{
 		for(const WidgetPtr& w : widgets_) {
-			w->draw(x(), y());
+			w->draw(x(), y(), getRotation(), getScale());
 		}
 	}
 
@@ -466,7 +466,7 @@ namespace gui
 				if(bg_alpha_ > 0.25f) {
 					bg_alpha_ -= 0.05f;
 				}
-				canvas->blitTexture(bg_, 0.0f, rect(x(),y(),width(),height()), KRE::Color(1.0,1.0,1.0,bg_alpha_));
+				canvas->blitTexture(bg_, 0.0f, rect(x(), y(), width(), height()), KRE::Color(1.0,1.0,1.0,bg_alpha_));
 			}
 		}
 
@@ -478,9 +478,9 @@ namespace gui
 			canvas->drawSolidRect(rect(x(),y(),width(),height()), KRE::Color(0,0,0,getAlpha() >= 255 ? 204 : getAlpha()));
 			ConstFramedGuiElementPtr window(FramedGuiElement::get(background_framed_gui_element_));
 			// XXX may need to apply the alpha here?
-			window->blit(x(),y(),width(),height(), upscale_frame_);
+			window->blit(x(), y(), width(), height(), upscale_frame_);
 		}
-
+		
 		handleDrawChildren();
 	}
 
@@ -505,7 +505,11 @@ namespace gui
 	void Dialog::close() 
 	{ 
 		opened_ = false; 
-		if(on_close_) {
+		if(on_close_hook_) {
+			opened_ = on_close_hook_(cancelled_);
+		}
+
+		if(!opened_ && on_close_) {
 			on_close_(cancelled_);
 		}
 	}

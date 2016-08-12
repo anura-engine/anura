@@ -212,10 +212,10 @@ namespace xhtml
 			}
 			if(break_at_line_ && length_acc + word.advance.back().x + line_.space_advance > remaining_line_width) {
 				// Enforce a minimum of one-word per line even if it overflows.
-				if(current_line->line.empty() && !word.word.empty()) {
+				/*if(current_line->line.empty() && !word.word.empty()) {
 					current_line->line.emplace_back(word);
 					++start;
-				}
+				}*/
 
 				current_line->is_end_line = true;
 				return current_line;

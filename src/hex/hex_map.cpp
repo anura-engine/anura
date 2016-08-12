@@ -44,6 +44,8 @@ namespace hex
 		  border_(value["border"].as_int32(0)),
 		  tiles_(),
 		  changed_(false),
+		  rx_(0),
+		  ry_(0),
 		  renderable_(nullptr)
 	{
 	}
@@ -90,8 +92,12 @@ namespace hex
 
 	variant HexMap::write() const
 	{
-		ASSERT_LOG(false, "XXX writeme hex_map::write()");
-		return variant();
+		auto v = map_->write();
+		v.add_attr(variant("zorder"), variant(zorder_));
+		if(border_ != 0) {
+			v.add_attr(variant("border"), variant(border_));
+		}
+		return v;
 	}
 
 	void HexMap::process()
@@ -112,16 +118,16 @@ namespace hex
 				renderable_->update(width(), height(), tiles_);
 			}
 		}
+		if(renderable_) {
+			renderable_->setPosition(rx_, ry_, 0);
+		}
 	}
 
 	std::vector<const HexObject*> HexMap::getSurroundingTiles(int x, int y) const
 	{
 		std::vector<const HexObject*> res;
 		for(auto dir : { NORTH, NORTH_EAST, SOUTH_EAST, SOUTH, SOUTH_WEST, NORTH_WEST }) {
-			auto hp = getHexTile(dir, x, y);
-			if(hp != nullptr) {
-				res.emplace_back(hp);
-			}
+			res.emplace_back(getHexTile(dir, x, y));
 		}
 		return res;
 	}
@@ -303,6 +309,14 @@ namespace hex
 	}
 
 	BEGIN_DEFINE_CALLABLE_NOBASE(HexMap)
+		DEFINE_FIELD(x, "int")
+			return variant(obj.rx_);
+		DEFINE_SET_FIELD
+			obj.rx_ = value.as_int();
+		DEFINE_FIELD(y, "int")
+			return variant(obj.ry_);
+		DEFINE_SET_FIELD
+			obj.ry_ = value.as_int();
 		DEFINE_FIELD(zorder, "int")
 			return variant(obj.zorder_);
 		DEFINE_FIELD(logical, "builtin logical_map")
@@ -313,12 +327,15 @@ namespace hex
 			obj.changed_ = value.as_bool();
 		DEFINE_FIELD(tile_height, "int")
 			return variant(HexTileSize);
+		BEGIN_DEFINE_FN(write, "() -> map")
+			return obj.write();
+		END_DEFINE_FN
 		BEGIN_DEFINE_FN(tile_loc_from_pixel_pos, "([int,int]) ->[int,int]")
 			variant v = FN_ARG(0);
 			int x = v[0].as_int();
 			int y = v[1].as_int();
 
-			point p = HexMap::getTilePosFromPixelPos(x, y);
+			point p = HexMap::getTilePosFromPixelPos(x - obj.rx_, y - obj.ry_);
 			std::vector<variant> res;
 			res.push_back(variant(p.x));
 			res.push_back(variant(p.y));
@@ -331,8 +348,8 @@ namespace hex
 
 			point p = HexMap::getPixelPosFromTilePos(x, y);
 			std::vector<variant> res;
-			res.push_back(variant(p.x));
-			res.push_back(variant(p.y));
+			res.push_back(variant(p.x + obj.rx_));
+			res.push_back(variant(p.y + obj.ry_));
 			return variant(&res);
 		END_DEFINE_FN
 	END_DEFINE_CALLABLE(HexMap)

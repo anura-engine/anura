@@ -102,7 +102,8 @@ namespace KRE
 	}
 
 	SceneTree::SceneTree(const SceneTreePtr& parent)
-		: parent_(parent),
+		: root_(),
+		  parent_(parent),
 		  children_(),
 		  objects_(),
 		  scopeable_(),
@@ -112,6 +113,7 @@ namespace KRE
 		  position_(0.0f),
 		  rotation_(1.0f, 0.0f, 0.0f, 0.0f),
 		  scale_(1.0f),
+		  offset_position_(0.0f),
 		  model_changed_(true),
 		  model_matrix_(1.0f),
 		  cached_model_matrix_(1.0f),
@@ -122,7 +124,13 @@ namespace KRE
 
 	SceneTreePtr SceneTree::create(SceneTreePtr parent)
 	{
-		return std::make_shared<SceneTreeImpl>(parent);
+		auto st = std::make_shared<SceneTreeImpl>(parent);
+		if(parent == nullptr) {
+			st->root_ = st->shared_from_this();
+		} else {
+			st->root_ = parent->root_;
+		}
+		return st;
 	}
 
 	void SceneTree::removeObject(const SceneObjectPtr& obj)
@@ -146,7 +154,25 @@ namespace KRE
 
 	void SceneTree::setPosition(int x, int y, int z) 
 	{
-		position_ = glm::vec3(float(x), float(y), float(z));
+		position_ = glm::vec3(static_cast<float>(x), static_cast<float>(y), static_cast<float>(z));
+		model_changed_ = true;
+	}
+
+	void SceneTree::offsetPosition(const glm::vec3 & position)
+	{
+		offset_position_ = position;
+		model_changed_ = true;
+	}
+
+	void SceneTree::offsetPosition(float x, float y, float z)
+	{
+		offset_position_ = glm::vec3(x, y, z);
+		model_changed_ = true;
+	}
+
+	void SceneTree::offsetPosition(int x, int y, int z)
+	{
+		offset_position_ = glm::vec3(static_cast<float>(x), static_cast<float>(y), static_cast<float>(z));
 		model_changed_ = true;
 	}
 
@@ -191,6 +217,10 @@ namespace KRE
 		for(auto& child : children_) {
 			child->preRender(wnd);
 		}
+
+		for(auto& obj : objects_end_) {
+			obj->preRender(wnd);
+		}
 	}
 
 	void SceneTree::clear()
@@ -204,6 +234,7 @@ namespace KRE
 		color_.reset();
 		model_changed_ = true;
 		position_ = glm::vec3(0.0f);
+		offset_position_ = glm::vec3(0.0f);
 		rotation_ = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
 		scale_ = glm::vec3(1.0f);
 
@@ -221,15 +252,18 @@ namespace KRE
 			model_changed_ = false;
 			glm::mat4 m = glm::scale(model_matrix_, scale_);
 			m = glm::toMat4(rotation_) * m;
-			cached_model_matrix_ = glm::translate(m, position_);
+			cached_model_matrix_ = glm::translate(m, position_ + offset_position_);
 		}
-		// use cached_model_matrix_ as current global matrix.
-		// XXX add a scope for the global model matrix.
-		GlobalModelScope gms(get_global_model_matrix() * cached_model_matrix_);
 
 		{
 			CameraScope cs(camera_);
 			ClipShapeScope::Manager cssm(clip_shape_, nullptr);
+
+			auto csm = std::unique_ptr<ClipScope::Manager>();
+			if(clip_rect_) {
+				csm.reset(new ClipScope::Manager(*clip_rect_, nullptr));
+			}
+
 			// blend
 			// color
 			//BlendModeScope bms(scopeable_);
@@ -239,6 +273,9 @@ namespace KRE
 			// render all the objects and children into a render target if one exists.
 			// which is why we introduce a new scope
 			{
+				// use cached_model_matrix_ as current global matrix.
+				GlobalModelScope gms(get_global_model_matrix() * cached_model_matrix_);
+
 				auto rt = !render_targets_.empty() ? render_targets_.front() : nullptr;
 				RenderTarget::RenderScope rs(rt, rect(0, 0, rt ? rt->width() : 0, rt ? rt->height() : 0));
 
@@ -248,6 +285,10 @@ namespace KRE
 
 				for(auto& child : children_) {
 					child->render(wnd);
+				}
+
+				for(auto& obj : objects_end_) {
+					wnd->render(obj.get());
 				}
 			}
 

@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
+	Copyright (C) 2013-2016 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -28,4 +28,10 @@
 namespace KRE
 {
 	TexturePtr svg_texture_from_file(const std::string& file, int width, int height);
+
+	// Takes an array of SVG images and adds them to a single texture, populating a list of 
+	// texture coordinates if needed.
+	TexturePtr svgs_to_single_texture(const std::vector<std::string>& files, const std::vector<point>& wh, std::vector<rectf>* tex_coords = nullptr);
+	// Similar to the above function but assumes all the files are the same width/height
+	TexturePtr svgs_to_single_texture(const std::vector<std::string>& files, int width, int height, std::vector<rectf>* tex_coords = nullptr);
 }

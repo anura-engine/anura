@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -20,6 +20,7 @@
 	   3. This notice may not be removed or altered from any source
 	   distribution.
 */
+
 
 #include <map>
 
@@ -78,6 +79,8 @@ namespace xhtml
 					for(auto& attr : element.second) {
 						attributes_[attr.first] = std::make_shared<ParserAttribute>(attr.first, attr.second.data());
 					}
+				} else if(name_ == "script") {
+					children_.emplace_back(std::make_shared<ParserNode>(XmlText, element.second));
 				} else {
 					children_.emplace_back(std::make_shared<ParserNode>(element.first, element.second));
 				}

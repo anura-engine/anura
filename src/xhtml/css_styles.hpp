@@ -366,6 +366,10 @@ namespace css
 		PC,			// Picas. 1 pica = 12pt
 		PX,			// Pixels. 1px = 0.75pt
 		PERCENT,	// percent value
+		VW,			// 1/100th viewport width
+		VH,			// 1/100th viewport height
+		LU_VMIN,	// 1/100th minimum of viewport width and height
+		LU_VMAX,	// 1/100th maximum of viewport width and height
 	};
 	
 	class Length : public Style

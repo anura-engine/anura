@@ -49,11 +49,11 @@ namespace KRE
 		fbo_stack_type& get_fbo_stack()
 		{
 			static fbo_stack_type res;
-			if(res.empty()) {
+			//if(res.empty()) {
 				// place the default on the stack
-				WindowPtr wnd = WindowManager::getMainWindow();
-				res.emplace(default_framebuffer_id, rect(0, 0, wnd->width(), wnd->height()));
-			}
+			//	WindowPtr wnd = WindowManager::getMainWindow();
+			//	res.emplace(default_framebuffer_id, rect(0, 0, wnd->width(), wnd->height()));
+			//}
 			return res;
 		}
 	}
@@ -122,6 +122,7 @@ namespace KRE
 				setTexture(tex);
 				tex_width_ = tex->actualWidth();
 				tex_height_ = tex->actualHeight();
+				setDrawRect(rect(0, 0, width(), height()));
 
 				renderbuffer_id_ = std::shared_ptr<std::vector<GLuint>>(new std::vector<GLuint>, [color_planes](std::vector<GLuint>* id) {
 					glBindRenderbuffer(GL_RENDERBUFFER, 0); 
@@ -201,6 +202,7 @@ namespace KRE
 				auto tex = Texture::createTextureArray(color_planes, width(), height(), PixelFormat::PF::PIXELFORMAT_RGBA8888, TextureType::TEXTURE_2D);
 				tex->setSourceRect(-1, rect(0, 0, width(), height()));
 				setTexture(tex);
+				setDrawRect(rect(0, 0, width(), height()));
 
 				tex_width_ = tex->actualWidth();
 				tex_height_ = tex->actualHeight();
@@ -250,6 +252,7 @@ namespace KRE
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 		setOrder(999999);
+		setMirrorHoriz(true);
 	}
 
 	FboOpenGL::~FboOpenGL()
@@ -273,7 +276,6 @@ namespace KRE
 			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 		}
 
-		setMirrorHoriz(true);
 		Blittable::preRender(wnd);
 	}
 
@@ -289,8 +291,6 @@ namespace KRE
 		}
 
 		applied_ = true;
-
-		//glViewport(0, 0, width(), height());
 		DisplayDevice::getCurrent()->setViewPort(r);
 	}
 
@@ -304,18 +304,25 @@ namespace KRE
 		} else {
 			ASSERT_LOG(chk.id == *framebuffer_id_, "Our FBO id was not the one at the top of the stack. This should never happen if calls to apply/unapply are balanced.");
 		}
-		ASSERT_LOG(!get_fbo_stack().empty(), "FBO id stack was empty. This should never happen if calls to apply/unapply are balanced.");
+		//ASSERT_LOG(!get_fbo_stack().empty(), "FBO id stack was empty. This should never happen if calls to apply/unapply are balanced.");
 
-		auto& last = get_fbo_stack().top();
-		glBindFramebuffer(GL_FRAMEBUFFER, last.id);
-		DisplayDevice::getCurrent()->setViewPort(last.viewport);
+		if(get_fbo_stack().empty()) {
+			WindowPtr wnd = WindowManager::getMainWindow();
+			glBindFramebuffer(GL_FRAMEBUFFER, default_framebuffer_id);
+			DisplayDevice::getCurrent()->setViewPort(0, 0, wnd->width(), wnd->height());
+		} else {
+			auto& last = get_fbo_stack().top();
+			glBindFramebuffer(GL_FRAMEBUFFER, last.id);
+			DisplayDevice::getCurrent()->setViewPort(last.viewport);
+		}
 
 		applied_ = false;
-		setChanged();
+		//setChanged();
 	}
 
 	void FboOpenGL::handleSizeChange(int w, int h)
 	{
+		LOG_INFO("rebuild fbo to " << w << "," << h);
 		depth_stencil_buffer_id_.reset();
 		framebuffer_id_.reset();
 		sample_framebuffer_id_.reset();

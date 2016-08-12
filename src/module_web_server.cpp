@@ -320,6 +320,17 @@ void ModuleWebServer::handlePost(socket_ptr socket, variant doc, const http::env
 			variant lock_id = doc["lock_id"];
 			ASSERT_LOG(lock_id == variant(module_lock_ids_[module_id]), "Invalid lock on module: " << lock_id.write_json() << " vs " << module_lock_ids_[module_id]);
 
+			//basic passcode validation.
+			variant passcode = doc["passcode"];
+			std::string current_passcode = sys::read_file(data_path_ + module_id + ".pass");
+			if(current_passcode.empty() == false && (passcode.is_string() == false || passcode.as_string() != current_passcode)) {
+				ASSERT_LOG(false, "Incorrect passcode");
+			}
+
+			if(passcode.is_string() && current_passcode.empty()) {
+				sys::write_file(data_path_ + module_id + ".pass", passcode.as_string());
+			}
+
 			variant current_data = data_[variant(module_id)];
 			if(current_data.is_null() == false) {
 				const variant new_version = module_node[variant("version")];

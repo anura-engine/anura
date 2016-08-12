@@ -185,6 +185,70 @@ namespace css
 		mix_color_->setBlue(mix(outp, start_color_.b(), end_color_.b()));
 		mix_color_->setAlpha(mix(outp, start_color_.a(), end_color_.a()));
 	}
+	
+	LengthTransition::LengthTransition(const TimingFunction& fn, float duration, float delay)
+		: Transition(fn, duration, delay),
+		  start_(),
+		  end_(),
+		  mix_()
+	{
+	}
+
+	void LengthTransition::setStartLength(std::function<xhtml::FixedPoint()> fn)
+	{
+		start_ = fn();
+	}
+
+	void LengthTransition::setEndLength(std::function<xhtml::FixedPoint()> fn)
+	{
+		end_ = fn();
+	}
+
+	std::string LengthTransition::handleToString() const
+	{
+		std::stringstream ss;
+		ss << "LengthTransition: start length: " << start_
+		   << ", end length: " << end_
+		   << ", mix: " << mix_;
+		return ss.str();
+	}
+
+	void LengthTransition::handleProcess(float dt, float outp)
+	{
+		mix_ = mix(outp, start_, end_);
+	}
+
+	WidthTransition::WidthTransition(const TimingFunction& fn, float duration, float delay)
+		: Transition(fn, duration, delay),
+		  start_(),
+		  end_(),
+		  mix_()
+	{
+	}
+
+	void WidthTransition::setStartWidth(std::function<xhtml::FixedPoint()> fn)
+	{
+		start_ = fn();
+	}
+
+	void WidthTransition::setEndWidth(std::function<xhtml::FixedPoint()> fn)
+	{
+		end_ = fn();
+	}
+
+	std::string WidthTransition::handleToString() const
+	{
+		std::stringstream ss;
+		ss << "LengthTransition: start length: " << start_
+		   << ", end length: " << end_
+		   << ", mix: " << mix_;
+		return ss.str();
+	}
+
+	void WidthTransition::handleProcess(float dt, float outp)
+	{
+		mix_ = mix(outp, start_, end_);
+	}
 
 	FilterTransition::FilterTransition(const TimingFunction& fn, float duration, float delay)
 		: Transition(fn, duration, delay),
@@ -231,6 +295,7 @@ namespace css
 			if((*sit)->id() == (*eit)->id()) {
 				switch((*sit)->id()) {
 					case CssFilterId::DROP_SHADOW:
+						// XXX
 						break;
 					case CssFilterId::HUE_ROTATE:
 						(*mit)->setComputedAngle(mix(outp, (*sit)->getComputedAngle(), (*eit)->getComputedAngle()));

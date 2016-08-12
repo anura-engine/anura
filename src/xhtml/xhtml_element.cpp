@@ -30,6 +30,7 @@
 #include "easy_svg.hpp"
 #include "xhtml_element.hpp"
 #include "xhtml_script_interface.hpp"
+#include "xslider.hpp"
 
 #include "Blittable.hpp"
 #include "Font.hpp"
@@ -146,7 +147,7 @@ namespace xhtml
 					for(auto& child : getChildren()) {
 						if(child->id() == NodeId::TEXT) {
 							// Parse script nodes here.
-							handler->runScript(src->getValue());
+							handler->runScript(child->getValue());
 						}
 					}
 				}
@@ -188,11 +189,17 @@ namespace xhtml
 			}
 			void init() override {
 				if(!dims_set_) {
+					// These are non-standard attributes.
+					auto attr_x = getAttribute("x");
+					auto attr_y = getAttribute("y");
+
 					auto attr_w = getAttribute("width");
 					auto attr_h = getAttribute("height");
 					auto attr_src = getAttribute("src");
 					auto attr_alt = getAttribute("alt");
 					rect r;
+					int src_x = 0;
+					int src_y = 0;
 					if(attr_src != nullptr && !attr_src->getValue().empty()) {
 						tex_ = KRE::Texture::createTexture(attr_src->getValue());
 						r = rect(0, 0, tex_->width(), tex_->height());
@@ -215,6 +222,24 @@ namespace xhtml
 							LOG_ERROR("Unable to convert 'img' tag 'height' attribute to number: " << attr_h->getValue());
 						}
 					}
+
+					if(attr_x != nullptr) {
+						try {
+							src_x = boost::lexical_cast<int>(attr_x->getValue());
+						} catch(boost::bad_lexical_cast&) {
+							LOG_ERROR("Unable to convert 'img' tag 'x' attribute to number: " << attr_x->getValue());
+						}
+					}
+					if(attr_y != nullptr) {
+						try {
+							src_y = boost::lexical_cast<int>(attr_y->getValue());
+						} catch(boost::bad_lexical_cast&) {
+							LOG_ERROR("Unable to convert 'img' tag 'y' attribute to number: " << attr_y->getValue());
+						}
+					}
+
+					tex_->setSourceRect(0, rect(src_x, src_y, r.w(), r.h()));
+
 					dims_set_ = true;
 					setDimensions(r);
 				}
@@ -360,6 +385,7 @@ namespace xhtml
 			BUTTON,
 			HIDDEN,
 			FILE,
+			RANGE,
 		};
 		struct InputElement : public Element
 		{
@@ -387,6 +413,12 @@ namespace xhtml
 							radio_tex_ = KRE::svg_texture_from_file("radiobutton.svg", width_, height_);
 							radio_checked_tex_ = KRE::svg_texture_from_file("radiobutton-checked.svg", width_, height_);
 							break;
+						case InputElementType::RANGE: {
+							if(slider_) {
+								slider_->setDimensions(r.w(), r.h());
+							}
+							break;
+						}
 						case InputElementType::TEXT:
 						case InputElementType::PASSWORD:
 						case InputElementType::SUBMIT:
@@ -396,16 +428,53 @@ namespace xhtml
 						case InputElementType::HIDDEN:
 						case InputElementType::FILE:
 						default: 
-							ASSERT_LOG(false, "Need to add getRenderable() for InputElement of type: " << static_cast<int>(type_));
+							ASSERT_LOG(false, "Need to add handleSetDimensions() for InputElement of type: " << static_cast<int>(type_));
 							break;
 					}			
 				}
 			}
+
+			template<typename T> T getAttributeValue(const std::string& str, const T& default_value)
+			{
+				auto attr = getAttribute(str);
+				if(attr != nullptr) {
+					try {
+						T value = boost::lexical_cast<T>(attr->getValue());
+						return value;
+					} catch(boost::bad_lexical_cast&) {
+						LOG_ERROR("Unable to convert '" << attr->getValue() << "' to a number for attribute: " << str);
+					}
+				}
+				return default_value;
+			}
+
 			void init() override {
 				auto attr_checked = getAttribute("checked");
 				if(attr_checked) {
 					is_checked_ = true;
 				}
+
+				bool width_set = false;
+				bool height_set = false;
+				auto attr_w = getAttribute("width");
+				auto attr_h = getAttribute("height");
+				if(attr_w != nullptr) {
+					try {
+						width_ = boost::lexical_cast<int>(attr_w->getValue());
+						width_set = true;
+					} catch(boost::bad_lexical_cast&) {
+						LOG_ERROR("Unable to convert 'img' tag 'width' attribute to number: " << attr_w->getValue());
+					}
+				}
+				if(attr_h != nullptr) {
+					try {
+						height_ = boost::lexical_cast<int>(attr_h->getValue());
+						height_set = true;
+					} catch(boost::bad_lexical_cast&) {
+						LOG_ERROR("Unable to convert 'img' tag 'height' attribute to number: " << attr_h->getValue());
+					}
+				}
+
 				auto type = getAttribute("type");
 				if(type) {
 					const std::string& value = type->getValue();
@@ -431,25 +500,89 @@ namespace xhtml
 						type_ = InputElementType::HIDDEN;
 					} else if(value == "file") {
 						type_ = InputElementType::FILE;
+					} else if(value == "range") {
+						type_ = InputElementType::RANGE;
+						if(!width_set) {
+							width_ = 200;
+						}
+						if(!height_set) {
+							height_ = 20;
+						}
+						setDimensions(rect(0, 0, width_, height_));
+						float step = getAttributeValue<float>("step", 1.0f);
+						float minr = getAttributeValue<float>("min", 0.0f);
+						float maxr = getAttributeValue<float>("max", 100.0f);
+						float value = getAttributeValue<float>("value", 0.0f);
+						auto& node_value = value_;
+						slider_ = std::make_shared<Slider>(rect(0, 0, width_, height_), [&node_value](float x){
+							LOG_INFO("slider set to: " << x);
+							std::stringstream ss;
+							ss << x;
+							node_value = ss.str();
+						});
+						slider_->setRange(minr, maxr);
+						slider_->setStep(step);
+						slider_->setHandlePosition(value);
+					} else {
+						ASSERT_LOG(false, "'input' type value was not known: " << value);
 					}
 				} else {
 					ASSERT_LOG(false, "'input' element had no type. asserting rather than using a default.");
 				}
 			}
+			void handleSetActiveRect(const rect& r) override
+			{
+				switch(type_) {
+					case InputElementType::RANGE: {
+						slider_->setLoc(r.top_left());
+						break;
+					}
+					case InputElementType::CHECKBOX:
+					case InputElementType::RADIO:
+					case InputElementType::TEXT:
+					case InputElementType::PASSWORD:
+					case InputElementType::SUBMIT:
+					case InputElementType::IMAGE:
+					case InputElementType::RESET:
+					case InputElementType::BUTTON:
+					case InputElementType::HIDDEN:
+					case InputElementType::FILE:
+					default: 
+						break;
+				}
+			}
 			bool handleMouseButtonUpInt(bool* trigger, const point& p) override
 			{ 
+				if(slider_) {
+					auto buttons = SDL_GetMouseState(nullptr, nullptr);
+					slider_->mouseButtonUp(false, p, buttons, SDL_GetModState(), geometry::pointInRect(p, getActiveRect()));
+				}
 				if(geometry::pointInRect(p, getActiveRect())) {
-					LOG_DEBUG("test1");
-					is_checked_ = !is_checked_;
+					if(type_ == InputElementType::CHECKBOX || type_ == InputElementType::RADIO) {
+						LOG_DEBUG("test1");
+						is_checked_ = !is_checked_;
+					}
 				}
 				return true; 
 			}
 			bool handleMouseButtonDownInt(bool* trigger, const point& p) override 
 			{ 
+				if(slider_) {
+					auto buttons = SDL_GetMouseState(nullptr, nullptr);
+					slider_->mouseButtonDown(false, p, buttons, SDL_GetModState(), geometry::pointInRect(p, getActiveRect()));
+				}
 				if(geometry::pointInRect(p, getActiveRect())) {
 					LOG_DEBUG("test2");
 				}
 				return true; 
+			}
+			bool handleMouseMotionInt(bool* trigger, const point& p) override
+			{
+				bool claimed = false;
+				if(slider_) {
+					claimed = slider_->mouseMotion(false, p, SDL_GetModState(), geometry::pointInRect(p, getActiveRect()));
+				}
+				return claimed;
 			}
 			bool isReplaced() const override { return true; }
 			KRE::SceneObjectPtr getRenderable() override
@@ -477,6 +610,10 @@ namespace xhtml
 							return b;
 						}
 					}
+					case InputElementType::RANGE: {
+						ASSERT_LOG(slider_ != nullptr, "No slider object was found.");
+						return slider_;
+					}
 					case InputElementType::TEXT:
 					case InputElementType::PASSWORD:
 					case InputElementType::SUBMIT:
@@ -491,6 +628,10 @@ namespace xhtml
 				}
 				return nullptr;
 			}
+			const std::string& getValue() const override 
+			{
+				return value_;
+			}
 		
 			InputElementType type_;
 			int width_;
@@ -501,6 +642,8 @@ namespace xhtml
 			KRE::TexturePtr radio_checked_tex_;
 			KRE::TexturePtr checkbox_tex_;
 			KRE::TexturePtr checkbox_checked_tex_;
+			SliderPtr slider_;
+			std::string value_;
 		};
 		ElementRegistrar<InputElement> input_element(ElementId::INPUT, "input");
 
@@ -1037,7 +1180,7 @@ namespace xhtml
 				if(attr_clsid != am.end()) {
 					tex_ = KRE::Texture::createTexture(attr_clsid->second->getValue());
 				} else {
-					LOG_ERROR("No data or clasid tag for ImageObject");
+					LOG_ERROR("No data or classid tag for ImageObject");
 				}
 			}
 			if(tex_ != nullptr && !areDimensionsFixed()) {

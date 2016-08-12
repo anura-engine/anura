@@ -63,6 +63,7 @@ namespace KRE
 			// the drawing canvas.
 			render_context(cairo_t* cairo, unsigned width, unsigned height)
 				: cairo_(cairo),
+				  color_multiply_(1.0f, 1.0f, 1.0f, 1.0f),
 				  width_(width),
 				  height_(height),
 				  text_x_(0),
@@ -132,9 +133,13 @@ namespace KRE
 			void set_text_xy(double x, double y) { text_x_ = x; text_y_ = y; }
 			double get_text_x() { return text_x_; }
 			double get_text_y() { return text_y_; }
+
+			void set_color_multiply(const Color& col) { color_multiply_ = col; }
+			const Color& get_color_multiply() const {return color_multiply_; }
 		private:
 			cairo_t* cairo_;
 			ColorPtr current_color_;
+			Color color_multiply_;
 			std::stack<paint_ptr> fill_color_stack_;
 			std::stack<paint_ptr> stroke_color_stack_;
 			std::stack<double> opacity_stack_;

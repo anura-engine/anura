@@ -43,7 +43,8 @@ namespace KRE
 		  multi_sampling_(use_multi_sampling),
 		  multi_samples_(multi_samples),
 		  clear_color_(0.0f, 0.0f, 0.0f, 1.0f),
-		  size_change_observer_handle_(-1)
+		  size_change_observer_handle_(-1),
+		  needs_rebuild_(false)
 	{
 	}
 
@@ -56,7 +57,8 @@ namespace KRE
 		  multi_sampling_(false),
 		  multi_samples_(0),
 		  clear_color_(0.0f, 0.0f, 0.0f, 1.0f),
-		  size_change_observer_handle_(-1)
+		  size_change_observer_handle_(-1),
+		  needs_rebuild_(false)
 	{
 		ASSERT_LOG(node.is_map(), "RenderTarget definitions must be maps: " << node.to_debug_string());
 		ASSERT_LOG(node.has_key("width"), "Render target must have a 'width' attribute.");
@@ -112,12 +114,18 @@ namespace KRE
 		handleClear();
 	}
 
+	void RenderTarget::rebuild(int width, int height)
+	{
+		width_ = width;
+		height_ = height;
+		handleSizeChange(width, height);
+		needs_rebuild_ = false;
+	}
+
 	void RenderTarget::onSizeChange(int width, int height, int flags)
 	{
 		if(!(flags & WindowSizeChangeFlags::NOTIFY_CANVAS_ONLY)) {
-			width_ = width;
-			height_ = height;
-			handleSizeChange(width, height);
+			needs_rebuild_ = true;
 		}
 	}
 

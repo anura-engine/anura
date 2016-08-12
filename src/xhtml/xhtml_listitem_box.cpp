@@ -150,7 +150,7 @@ namespace xhtml
 			FixedPoint w = eng.getWidthAtPosition(y1, y1 + lh, containing.content_.width);
 			bool placed = false;
 			while(!placed) {
-				if(w >= box_w) {
+				if((w - box_w) >= 0) {//LayoutEngine::getFixedPointScale()) {
 					left = left - (getStyleNode()->getFloat() == Float::LEFT ? x : box_w);
 					top = y;
 					placed = true;
@@ -201,16 +201,15 @@ namespace xhtml
 		setContentHeight(getHeight() + child->getHeight() + child->getMBPBottom());
 	}
 
+	void ListItemBox::handlePreChildLayout3(LayoutEngine& eng, const Dimensions& containing)
+	{
+		eng.setCursor(point());
+	}
+
 	void ListItemBox::handleRender(const KRE::SceneTreePtr& scene_tree, const point& offset) const 
 	{
-		// XXX should figure out if there is a cleaner way of doing this, basically we want the list marker to be offset by the 
-		// content's first child's position.
-		auto y = getBaselineOffset();
-		if(getChildren().size() > 0) {
-			if(getChildren().front()->getChildren().size() > 0) {
-				y = getChildren().front()->getChildren().front()->getBaselineOffset();
-			}
-		}
+		// XXX should figure out if there is a cleaner way of doing this.
+		auto y = getLineHeight();
 		auto& fnt = getStyleNode()->getFont();
 
 		auto& img = getStyleNode()->getListStyleImage();

@@ -26,6 +26,7 @@
 #include "asserts.hpp"
 #include "hex_logical_tiles.hpp"
 #include "string_utils.hpp"
+#include "variant_utils.hpp"
 
 namespace hex 
 {
@@ -56,20 +57,37 @@ namespace hex
 
 			int tile_id = 0;
 
-			auto tiles = n["tiles"];
-			for(auto p : tiles.as_map()) {
+			auto tiles_map = n["tiles"].as_map();
+			for(auto& p : tiles_map) {
 				std::string id = p.first.as_string();
 				float cost = p.second["cost"].as_float(1.0f);
 				int height = p.second["height"].as_int32(1000);
-				std::string name = p.second["name"].as_string();
+				std::string name = id;
+				if(p.second.has_key("editor_info")) {
+					name = p.second["editor_info"]["name"].as_string();
+				}
 				get_loaded_tiles()[id] = TilePtr(new Tile(id, name, cost, height, tile_id++));
 			}
 
 			if(n.has_key("overlay")) {
-				auto overlay = n["overlay"];
-				for(auto p : overlay.as_map()) {
+				auto overlay = n["overlay"].as_map();
+				for(auto& p : overlay) {
 					std::string key = p.first.as_string();
 					get_loaded_overlays().emplace(key);
+				}
+			}
+
+			if(n.has_key("walls")) {
+				auto walls = n["walls"].as_map();
+				for(auto& p : walls) {
+					std::string id = p.first.as_string();
+					float cost = 9999;
+					int height = 9999;
+					std::string name = id;
+					if(p.second.has_key("editor_info")) {
+						name = p.second["editor_info"]["name"].as_string();
+					}
+					get_loaded_tiles()[id] = TilePtr(new Tile(id, name, cost, height, tile_id++));
 				}
 			}
 
@@ -172,6 +190,24 @@ namespace hex
 			// internal server and here then we need to clone all the elements in m.tiles_.
 		}
 
+		variant LogicalMap::write() const
+		{
+			variant_builder res;
+			res.add("x", x_);
+			res.add("y", y_);
+			res.add("width", width_);
+			for(const auto& t : tiles_) {
+				std::stringstream ss;
+				ss << t->id();
+				for(const auto& tag : t->getTags()) {
+					ss << "|" << tag;
+				}
+				res.add("tiles", ss.str());
+			}
+
+			return res.build();
+		}
+
 		ConstTilePtr LogicalMap::getHexTile(direction d, int xx, int yy) const
 		{
 			int ox = xx;
@@ -243,10 +279,7 @@ namespace hex
 		{
 			std::vector<ConstTilePtr> res;
 			for(auto dir : { NORTH, NORTH_EAST, SOUTH_EAST, SOUTH, SOUTH_WEST, NORTH_WEST }) {
-				auto hp = getHexTile(dir, x, y);
-				if(hp != nullptr) {
-					res.emplace_back(hp);
-				}
+				res.emplace_back(getHexTile(dir, x, y));
 			}
 			return res;
 		}

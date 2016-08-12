@@ -68,13 +68,54 @@ namespace css
 		explicit ColorTransition(const TimingFunction& fn, float duration, float delay);
 		void setStartColor(const KRE::Color& start) { start_color_ = start; *mix_color_ = start; }
 		void setEndColor(const KRE::Color& end) { end_color_ = end; }
+		const KRE::Color& getStartColor() const { return start_color_; }
+		const KRE::Color& getEndColor() const { return end_color_; }
 		const KRE::ColorPtr& getColor() const { return mix_color_; }
+		bool isEqual() const { return start_color_ == end_color_; }
 	private:
 		std::string handleToString() const override;
 		void handleProcess(float dt, float outp) override;
 		KRE::Color start_color_;
 		KRE::Color end_color_;
 		KRE::ColorPtr mix_color_;
+	};
+
+	class LengthTransition : public Transition
+	{
+	public:
+		MAKE_FACTORY(LengthTransition);
+		explicit LengthTransition(const TimingFunction& fn, float duration, float delay);
+		void setStartLength(std::function<xhtml::FixedPoint()> fn);
+		void setEndLength(std::function<xhtml::FixedPoint()> fn);
+		xhtml::FixedPoint getLength() const { return mix_; }
+		xhtml::FixedPoint getStartLength() const { return start_; }
+		xhtml::FixedPoint getEndLength() const { return end_; }
+		bool isEqual() const { return start_ == end_; }
+	private:
+		std::string handleToString() const override;
+		void handleProcess(float dt, float outp) override;
+		xhtml::FixedPoint start_;
+		xhtml::FixedPoint end_;
+		xhtml::FixedPoint mix_;
+	};
+
+	class WidthTransition : public Transition
+	{
+	public:
+		MAKE_FACTORY(WidthTransition);
+		explicit WidthTransition(const TimingFunction& fn, float duration, float delay);
+		void setStartWidth(std::function<xhtml::FixedPoint()> fn);
+		void setEndWidth(std::function<xhtml::FixedPoint()> fn);
+		xhtml::FixedPoint getWidth() const { return mix_; }
+		xhtml::FixedPoint getStartWidth() const { return start_; }
+		xhtml::FixedPoint getEndWidth() const { return end_; }
+		bool isEqual() const { return start_ == end_; }
+	private:
+		std::string handleToString() const override;
+		void handleProcess(float dt, float outp) override;
+		xhtml::FixedPoint start_;
+		xhtml::FixedPoint end_;
+		xhtml::FixedPoint mix_;
 	};
 
 	class FilterTransition : public Transition
@@ -110,6 +151,8 @@ namespace css
 	};
 
 	typedef std::shared_ptr<ColorTransition> ColorTransitionPtr;
+	typedef std::shared_ptr<LengthTransition> LengthTransitionPtr;
+	typedef std::shared_ptr<WidthTransition> WidthTransitionPtr;
 	typedef std::shared_ptr<FilterTransition> FilterTransitionPtr;
 	typedef std::shared_ptr<TransformTransition> TransformTransitionPtr;
 }

@@ -25,6 +25,7 @@
 
 #include <array>
 #include <memory>
+#include <set>
 #include <string>
 #include "geometry.hpp"
 #include "ScopeableValue.hpp"

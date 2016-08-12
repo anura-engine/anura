@@ -89,7 +89,8 @@ namespace xhtml
 		game_logic::FormulaCallable* getEnvironment() const { return environment_; }
 
 		void setLayoutSize(const rect& r) { layout_size_ = r; }
-
+		
+		ElementObjectPtr getActiveElement() const;
 		ElementObjectPtr getElementById(const std::string& element_id) const;
 		ElementObjectPtr getElementByNode(const NodePtr& node) const;
 		std::vector<ElementObjectPtr> getElementsByTagName(const std::string& element_tag) const;
@@ -113,6 +114,7 @@ namespace xhtml
 		std::string ss_name_;
 
 		rect layout_size_;
+		bool do_onload_;
 
 		mutable std::map<NodePtr, ElementObjectPtr> element_cache_;
 	};

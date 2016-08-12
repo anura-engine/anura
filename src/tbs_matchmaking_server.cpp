@@ -232,6 +232,7 @@ public:
 
 		handle_anon_request_fn_ = controller_->queryValue("handle_anon_request");
 
+		registration_db_client_ = DbClient::create("");
 		db_client_ = DbClient::create();
 		db_client_->get("gen_game_id", [=](variant user_info) {
 			this->gen_game_id_ = user_info.as_int(1);
@@ -268,6 +269,7 @@ public:
 		db_timer_.async_wait(boost::bind(&matchmaking_server::db_process, this, boost::asio::placeholders::error));
 
 		db_client_->process(1000);
+		registration_db_client_->process(1000);
 	}
 
 	void executeCommand(variant cmd);
@@ -533,7 +535,7 @@ public:
 
 				std::string passwd = doc["passwd"].as_string();
 				const bool remember = doc["remember"].as_bool(false);
-				db_client_->get("user:" + user, [=](variant user_info) {
+				registration_db_client_->get("account:" + user, [=](variant user_info) {
 					if(user_info.is_null() == false) {
 						RESPOND_ERROR("That username is already taken");
 						return;
@@ -545,15 +547,18 @@ public:
 						return;
 					}
 
-					variant_builder new_user_info;
-					new_user_info.add("user", user_full);
-					new_user_info.add("passwd", passwd);
+					variant_builder registration_info, new_user_info;
+					registration_info.add("user", user_full);
+					registration_info.add("passwd", passwd);
+
+					if(std::find(email_address.begin(), email_address.end(), '@') != email_address.end()) {
+						registration_info.add("email", email_address);
+					}
+
 					new_user_info.add("info_version", variant(0));
 					new_user_info.add("info", account_info);
 
-					if(std::find(email_address.begin(), email_address.end(), '@') != email_address.end()) {
-						new_user_info.add("email", email_address);
-					}
+					variant registration_variant = registration_info.build();
 
 					variant new_user_info_variant = new_user_info.build();
 
@@ -566,9 +571,9 @@ public:
 					}
 
 					//put the new user in the database. Note that we use
-					//PUT_REPLACE so that if there is a race for two users
+					//PUT_ADD so that if there is a race for two users
 					//to register the same name only one will succeed.
-					db_client_->put("user:" + user, new_user_info_variant,
+					registration_db_client_->put("account:" + user, registration_variant,
 					[=]() {
 						add_logged_in_user(user);
 						
@@ -578,6 +583,8 @@ public:
 						info.user_id = user;
 						info.last_contact = this->time_ms_;
 						info.account_info = &getAccountInfo(user);
+
+						db_client_->put("user:" + user, new_user_info_variant, [](){}, [](){});
 
 						users_to_sessions_[user] = session_id;
 
@@ -609,14 +616,14 @@ public:
 
 						if(email_address.empty() == false) {
 							const std::string email_key = "email:" + email_address;
-							db_client_->get(email_key, [=](variant email_info) {
+							registration_db_client_->get(email_key, [=](variant email_info) {
 								std::vector<variant> accounts;
 								if(email_info.is_list()) {
 									accounts = email_info.as_list();
 								}
 
 								accounts.push_back(variant(user_full));
-								db_client_->put(email_key, variant(&accounts),
+								registration_db_client_->put(email_key, variant(&accounts),
 							            [](){}, [](){});
 							});
 						}
@@ -642,62 +649,78 @@ public:
 					}
 				}
 
-				db_client_->get("user:" + user, [=](variant user_info) {
-					if(user_info.is_null()) {
+				registration_db_client_->get("account:" + user, [=](variant registration_info) {
+					if(registration_info.is_null()) {
 						RESPOND_CUSTOM_MESSAGE("login_fail", "That user doesn't exist");
 						return;
 					}
 
-					std::string db_passwd = user_info["passwd"].as_string();
+					std::string db_passwd = registration_info["passwd"].as_string();
 					if(passwd != db_passwd && !impersonate) {
 						RESPOND_CUSTOM_MESSAGE("login_fail", "Incorrect password");
 						return;
 
 					}
 
-					variant_builder response;
+					db_client_->get("user:" + user, [=](variant user_info) {
 
-					repair_account(&user_info);
+						if(user_info.is_null()) {
+							std::vector<variant> args;
+							args.push_back(doc);
+							variant account_info = create_account_fn_(args);
 
-					static const variant ChatChannelsKey("chat_channels");
-					static const std::string DefaultChannel = "#talk";
-					variant channels = user_info["info"][ChatChannelsKey];
-					if(channels[variant(DefaultChannel)].as_bool(false) == false) {
-						channels.add_attr_mutation(variant(DefaultChannel), variant::from_bool(true));
-						userJoinChannel(socket_ptr(), user, DefaultChannel);
-					}
+							variant_builder b;
+							b.add("info_version", variant(0));
+							b.add("info", account_info);
+							user_info = b.build();
 
-					this->account_info_[user].account_info = user_info;
+							db_client_->put("user:" + user, user_info, [](){}, [](){});
+						}
 
-					add_logged_in_user(user);
+						variant_builder response;
 
-					const int session_id = g_session_id_gen++;
-					SessionInfo& info = sessions_[session_id];
-					info.session_id = session_id;
-					info.user_id = user;
-					info.last_contact = this->time_ms_;
-					info.account_info = &getAccountInfo(user);
+						repair_account(&user_info);
 
-					users_to_sessions_[user] = session_id;
+						static const variant ChatChannelsKey("chat_channels");
+						static const std::string DefaultChannel = "#talk";
+						variant channels = user_info["info"][ChatChannelsKey];
+						if(channels[variant(DefaultChannel)].as_bool(false) == false) {
+							channels.add_attr_mutation(variant(DefaultChannel), variant::from_bool(true));
+							userJoinChannel(socket_ptr(), user, DefaultChannel);
+						}
 
-					response.add("type", "login_success");
-					response.add("session_id", variant(session_id));
-					response.add("username", given_user);
-					response.add("info_version", user_info["info_version"].as_int(0));
-					response.add("info", user_info["info"]);
-					response.add("timestamp", static_cast<int>(time(NULL)));
+						this->account_info_[user].account_info = user_info;
 
-					if(remember) {
-						std::string cookie = write_uuid(generate_uuid());
-						response.add("cookie", cookie);
+						add_logged_in_user(user);
 
-						variant_builder cookie_info;
-						cookie_info.add("user", user);
-						db_client_->put("cookie:" + cookie, cookie_info.build(),
-						                [](){}, [](){});
-					}
+						const int session_id = g_session_id_gen++;
+						SessionInfo& info = sessions_[session_id];
+						info.session_id = session_id;
+						info.user_id = user;
+						info.last_contact = this->time_ms_;
+						info.account_info = &getAccountInfo(user);
 
-					send_response(socket, response.build());
+						users_to_sessions_[user] = session_id;
+
+						response.add("type", "login_success");
+						response.add("session_id", variant(session_id));
+						response.add("username", given_user);
+						response.add("info_version", user_info["info_version"].as_int(0));
+						response.add("info", user_info["info"]);
+						response.add("timestamp", static_cast<int>(time(NULL)));
+
+						if(remember) {
+							std::string cookie = write_uuid(generate_uuid());
+							response.add("cookie", cookie);
+
+							variant_builder cookie_info;
+							cookie_info.add("user", user);
+							db_client_->put("cookie:" + cookie, cookie_info.build(),
+											[](){}, [](){});
+						}
+
+						send_response(socket, response.build());
+					});
 
 				});
 
@@ -748,7 +771,7 @@ public:
 						response.add("type", "login_success");
 						response.add("session_id", variant(session_id));
 						response.add("cookie", variant(cookie));
-						response.add("username", user_info["user"]);
+						response.add("username", variant(username));
 						response.add("info", user_info["info"]);
 						response.add("info_version", user_info["info_version"].as_int(0));
 						response.add("timestamp", static_cast<int>(time(NULL)));
@@ -759,7 +782,7 @@ public:
 			} else if(request_type == "recover_account") {
 				std::string given_user = doc["user"].as_string();
 				std::string user = normalize_username(given_user);
-				db_client_->get("user:" + user, [=](variant user_info) {
+				registration_db_client_->get("account:" + user, [=](variant user_info) {
 					if(user_info.is_null()) {
 						RESPOND_ERROR("That user doesn't exist");
 						return;
@@ -803,9 +826,9 @@ public:
 				std::string passwd = doc["passwd"].as_string();
 
 				SessionInfo& info = sessions_[session_id];
-				db_client_->get("user:" + info.user_id, [=](variant user_info) {
+				registration_db_client_->get("account:" + info.user_id, [=](variant user_info) {
 					user_info.add_attr_mutation(variant("passwd"), variant(passwd));
-					db_client_->put("user:" + info.user_id, user_info,
+					registration_db_client_->put("account:" + info.user_id, user_info,
 					[=]() {
 						RESPOND_MESSAGE("Your password has been reset.");
 					}, 
@@ -826,32 +849,34 @@ public:
 
 				std::string user = info.user_id;
 
-				variant v = account_info_[user].account_info;
-				if(v.is_null()) {
-					RESPOND_ERROR("Could not find user info");
-					return;
-				}
-
-				std::string passwd = doc["passwd"].as_string();
-
-				if(passwd != v["passwd"].as_string()) {
-					RESPOND_ERROR("Invalid password");
-					return;
-				}
-
-				if(doc["email"].is_string()) {
-					const std::string email = doc["email"].as_string();
-					std::string message;
-					bool valid = validateEmail(email, &message);
-					if(!valid) {
-						RESPOND_ERROR("Invalid email: " + message);
+				registration_db_client_->get("account:" + user, [=](variant registration_info) {
+					variant v = registration_info;
+					if(v.is_null()) {
+						RESPOND_ERROR("Could not find user info");
 						return;
 					}
-				}
 
-				db_client_->put("user:" + user, v, [](){}, [](){});
+					std::string passwd = doc["passwd"].as_string();
 
-				RESPOND_MESSAGE("Your account has been modified");
+					if(passwd != v["passwd"].as_string()) {
+						RESPOND_ERROR("Invalid password");
+						return;
+					}
+
+					if(doc["email"].is_string()) {
+						const std::string email = doc["email"].as_string();
+						std::string message;
+						bool valid = validateEmail(email, &message);
+						if(!valid) {
+							RESPOND_ERROR("Invalid email: " + message);
+							return;
+						}
+					}
+
+					registration_db_client_->put("account:" + user, v, [](){}, [](){});
+
+					RESPOND_MESSAGE("Your account has been modified");
+				});
 
 			} else if(request_type == "delete_account") {
 
@@ -2067,7 +2092,7 @@ private:
 	boost::asio::deadline_timer db_timer_;
 
 
-	DbClientPtr db_client_;
+	DbClientPtr db_client_, registration_db_client_;
 
 	struct UserAccountInfo {
 		variant account_info;
@@ -3002,4 +3027,61 @@ COMMAND_LINE_UTILITY(db_script) {
 
 	while(db->process()) {
 	}
+}
+
+COMMAND_LINE_UTILITY(db_convert_accounts) {
+	DbClientPtr client = DbClient::create();
+	DbClientPtr registration_client = DbClient::create("");
+
+	client->getKeysWithPrefix("user", [=](std::vector<variant> v) {
+		for(auto item : v) {
+			client->get(item.as_string(), [=](variant user_info) {
+				if(user_info.is_null()) {
+					LOG_ERROR("Could not get key for user: " << user_info.write_json());
+					return;
+				}
+
+				if(user_info["passwd"].is_null()) {
+					return;
+				}
+
+				variant_builder registration_builder;
+				registration_builder.add("user", user_info["user"]);
+				registration_builder.add("passwd", user_info["passwd"]);
+				if(user_info.has_key("email")) {
+					registration_builder.add("email", user_info["email"]);
+				}
+
+				std::string user = item.as_string();
+				user.erase(user.begin(), user.begin() + 5);
+
+				user_info.remove_attr_mutation(variant("user"));
+				user_info.remove_attr_mutation(variant("passwd"));
+				user_info.remove_attr_mutation(variant("email"));
+
+				std::string put_key = std::string("account:" + user);
+				variant put_value = registration_builder.build();
+				fprintf(stderr, "PUT: %s -> %s\n", put_key.c_str(), put_value.write_json().c_str());
+				registration_client->put(put_key.c_str(), put_value, [=](){
+					client->put(item.as_string().c_str(), user_info, [](){}, [](){}, DbClient::PUT_SET);
+				}, [](){}, DbClient::PUT_SET);
+			});
+		}
+	});
+
+	while(client->process()) {
+	}
+
+	while(client->process() || registration_client->process()) {
+		registration_client->process();
+	}
+
+	while(client->process() || registration_client->process()) {
+		registration_client->process();
+	}
+
+	while(client->process() || registration_client->process()) {
+		registration_client->process();
+	}
+
 }

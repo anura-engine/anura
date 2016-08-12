@@ -59,25 +59,80 @@ namespace {
 
 std::set<std::string> g_generic_variant_names;
 
-std::map<std::string, variant> get_builtin_variant_info()
+std::map<std::string, std::vector<variant> > get_builtin_variant_info()
 {
-	std::map<std::string, variant> result;
-	result["Numeric"] = variant("int|decimal");
-	result["Vec2"] = variant("[numeric,numeric]");
-	result["Vec3"] = variant("[numeric,numeric,numeric]");
+	std::map<std::string, std::vector<variant> > result;
+	result["Numeric"] = std::vector<variant>(1, variant("int|decimal"));
+	result["Vec2"] = std::vector<variant>(1, variant("[numeric,numeric]"));
+	result["Vec3"] = std::vector<variant>(1, variant("[numeric,numeric,numeric]"));
 	return result;
 }
 
-std::map<std::string, variant> load_named_variant_info()
+std::map<std::string, std::vector<variant> > load_named_variant_info()
 {
-	std::map<std::string, variant> result = get_builtin_variant_info();
+	std::map<std::string, std::vector<variant> > result = get_builtin_variant_info();
+
+	std::map<std::string, std::string> definition_file;
+
+	std::vector<std::pair<std::string, variant> > extends;
 
 	const std::string path = module::map_file("data/types.cfg");
 	if(sys::file_exists(path)) {
 		variant node = json::parse_from_file(path);
 		for(const variant::map_pair& p : node.as_map()) {
-			result[p.first.as_string()] = p.second;
+			std::string key = p.first.as_string();
+
+			auto colon = std::find(key.begin(), key.end(), ':');
+			if(colon != key.end()) {
+				std::string directive = std::string(key.begin(), colon);
+				key.erase(key.begin(), colon+1);
+
+				if(directive == "extends") {
+					extends.push_back(std::pair<std::string,variant>(key, p.second));
+				} else {
+					ASSERT_LOG(false, "Unknown type directive: " << directive << ":" << key);
+				}
+			} else {
+				result[key].push_back(p.second);
+				definition_file[key] = "data/types.cfg";
+			}
 		}
+	}
+
+	std::vector<std::string> files;
+	module::get_files_in_dir("data/types", &files);
+	for(const std::string& f : files) {
+		if(f.size() <= 4 || !std::equal(f.end()-4, f.end(), ".cfg") || f[0] == '.') {
+			continue;
+		}
+
+		const std::string path = module::map_file("data/types/" + f);
+		variant node = json::parse_from_file(path);
+		for(const variant::map_pair& p : node.as_map()) {
+			ASSERT_LOG(result.count(p.first.as_string()) == 0, "Multiple definition of type " << p.first.as_string() << " defined in " << definition_file[p.first.as_string()] << " and " << path);
+			std::string key = p.first.as_string();
+			auto colon = std::find(key.begin(), key.end(), ':');
+			if(colon != key.end()) {
+				std::string directive = std::string(key.begin(), colon);
+				key.erase(key.begin(), colon+1);
+
+				if(directive == "extends") {
+					extends.push_back(std::pair<std::string,variant>(key, p.second));
+				} else {
+					ASSERT_LOG(false, "Unknown type directive: " << directive << ":" << key);
+				}
+			} else {
+				result[key].push_back(p.second);
+				definition_file[key] = path;
+			}
+		}
+	}
+
+	for(auto p : extends) {
+		auto itor = result.find(p.first);
+		ASSERT_LOG(itor != result.end(), "Type extension when base type not found: " << p.first);
+
+		itor->second.push_back(p.second);
 	}
 
 	return result;
@@ -89,16 +144,29 @@ std::vector<std::map<std::string, variant_type_ptr> >& named_type_cache()
 	return instance;
 }
 
-std::vector<std::map<std::string, variant> >& named_type_symbols()
+std::vector<std::map<std::string, std::vector<variant> > >& named_type_symbols()
 {
-	static std::vector<std::map<std::string, variant> > instance(1, load_named_variant_info());
+	static std::vector<std::map<std::string, std::vector<variant> > > instance(1, load_named_variant_info());
 	return instance;
+}
+
+variant_type_ptr get_unified_variant_type(const std::vector<variant>& defs)
+{
+	variant_type_ptr result = parse_variant_type(defs[0]);
+
+	for(int i = 1; i < static_cast<int>(defs.size()); ++i) {
+		variant_type_ptr extension = parse_variant_type(defs[i]);
+		result = result->extend_type(extension);
+		ASSERT_LOG(result, "Could not extend variant type: " << defs[0].write_json() << " with " << defs[i].write_json());
+	}
+
+	return result;
 }
 
 variant_type_ptr get_named_variant_type(const std::string& name)
 {
 	for(auto n = named_type_cache().size(); n > 0; --n) {
-		std::map<std::string, variant>& info = named_type_symbols()[n-1];
+		std::map<std::string, std::vector<variant> > & info = named_type_symbols()[n-1];
 		std::map<std::string, variant_type_ptr>& cache = named_type_cache()[n-1];
 
 		std::map<std::string,variant_type_ptr>::const_iterator itor = cache.find(name);
@@ -106,12 +174,12 @@ variant_type_ptr get_named_variant_type(const std::string& name)
 			return itor->second;
 		}
 
-		std::map<std::string, variant>::const_iterator info_itor = info.find(name);
+		auto info_itor = info.find(name);
 		if(info_itor != info.end()) {
 			//insert into the cache a null entry to symbolize we're parsing
 			//this, to avoid infinite recursion.
 			variant_type_ptr& ptr = cache[name];
-			ptr = parse_variant_type(info_itor->second);
+			ptr = get_unified_variant_type(info_itor->second);
 			return ptr;
 		}
 	}
@@ -125,10 +193,10 @@ variant_type_ptr get_named_variant_type(const std::string& name)
 types_cfg_scope::types_cfg_scope(variant v)
 {
 	ASSERT_LOG(v.is_null() || v.is_map(), "Unrecognized types definition: " << v.write_json() << " " << v.debug_location());
-	std::map<std::string, variant> symbols;
+	std::map<std::string, std::vector<variant> > symbols;
 	if(v.is_map()) {
 		for(const variant::map_pair& p : v.as_map()) {
-			symbols[p.first.as_string()] = p.second;
+			symbols[p.first.as_string()].push_back(p.second);
 		}
 	}
 	named_type_cache().resize(named_type_cache().size()+1);
@@ -1199,6 +1267,21 @@ public:
 		}
 		def_ = game_logic::execute_command_callable_definition(&keys[0], &keys[0] + keys.size(), game_logic::ConstFormulaCallableDefinitionPtr(), &values[0]);
 		def_->setSupportsSlotLookups(false);
+	}
+
+	variant_type_ptr extend_type(variant_type_ptr extension) const {
+		auto m = extension->is_specific_map();
+		if(!m) {
+			return variant_type_ptr();
+		}
+
+		auto result = type_map_;
+
+		for(auto p : *m) {
+			result[p.first] = p.second;
+		}
+
+		return get_specific_map(result);
 	}
 
 	bool match(const variant& v) const {

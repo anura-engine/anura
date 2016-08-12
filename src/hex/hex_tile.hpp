@@ -35,69 +35,65 @@
 
 namespace hex 
 {
-	class TileSheet
+	class HexEditorInfo;
+	typedef boost::intrusive_ptr<HexEditorInfo> HexEditorInfoPtr;
+
+	class HexEditorInfo : public game_logic::FormulaCallable
 	{
-	public:
-		explicit TileSheet(const variant& n);
-		const KRE::TexturePtr& getTexture() const { return texture_; }
-		rect getArea(int index) const;
-	private:
-		KRE::TexturePtr texture_;
-		rect area_;
-		int nrows_, ncols_, pad_;
+		public:
+			HexEditorInfo();
+			explicit HexEditorInfo(const std::string& name, const std::string& type, const std::string& group, const KRE::TexturePtr& image, const std::string& image_file, const rect& r);
+			static std::vector<variant> getHexEditorInfo();
+		private:
+			DECLARE_CALLABLE(HexEditorInfo);
+			std::string name_;
+			std::string type_;
+			std::string image_file_;
+			KRE::TexturePtr image_;
+			std::string group_;
+			rect image_rect_;
+	};
+
+	struct AdjacencyPattern 
+	{
+		AdjacencyPattern(int x, int y, const rect& a) : ox(x), oy(y), area(a) {}
+		int ox;
+		int oy;
+		rect area;
+	};
+
+	enum class TileTypeId {
+		BASIC,
+		WALL,
 	};
 
 	class TileType
 	{
 	public:
-		TileType(const std::string& tile, int num_id, const variant& n);
-		
-		struct EditorInfo {
-			std::string name;
-			std::string type;
-			KRE::TexturePtr texture;
-			std::string group;
-			rect image_rect;
-			void draw(int tx, int ty) const;
-		};
-
+		TileType(TileTypeId ttid, const std::string& tile, int num_id) : ttid_(ttid), tile_id_(tile), num_id_(num_id), tex_() {}
+		virtual ~TileType() {}
 		const std::string& id() const { return tile_id_; }
-
 		int numeric_id() const { return num_id_; }
-
-		const EditorInfo& getEditorInfo() const { return editor_info_; } 
-
-		const std::vector<int>& getSheetIndexes() const { return sheet_indexes_; }
-
+		TileTypeId getTileTypeId() const { return ttid_; }
 		variant write() const;
-		void calculateAdjacencyPattern(unsigned char adjmap);
+		virtual void calculateAdjacencyPattern(int x, int y, const HexMap* hmap, std::vector<AdjacencyPattern>* patterns) = 0;
 
 		static TileTypePtr factory(const std::string& tile);
 
-		KRE::TexturePtr getTexture() const { return sheet_ != nullptr ? sheet_->getTexture() : nullptr; }
+		KRE::TexturePtr getTexture() const { return tex_; }
 
-		void render(int x, int y, std::vector<KRE::vertex_texcoord>* coords) const;
-		void renderAdjacent(int x, int y, std::vector<KRE::vertex_texcoord>* coords, unsigned char adjmap) const;
+		virtual void render(int x, int y, std::vector<KRE::vertex_texcoord>* coords) const = 0;
+		virtual void renderAdjacent(int x, int y, std::vector<KRE::vertex_texcoord>* coords, const std::vector<AdjacencyPattern>& patterns=std::vector<AdjacencyPattern>()) const = 0;
+	protected:
+		void setTexture(const std::string& filename);
+		void renderInternal(int x, int y, int ox, int oy, const rect& area, std::vector<KRE::vertex_texcoord>* coords) const;
 	private:
+		virtual variant handleWrite() const = 0;
+
+		TileTypeId ttid_;
 		int num_id_;
 		std::string tile_id_;
-		TileSheetPtr sheet_;
-
-		void renderInternal(int x, int y, int index, std::vector<KRE::vertex_texcoord>* coords) const;
-
-		std::vector<int> sheet_indexes_;
-
-		struct AdjacencyPattern {
-			AdjacencyPattern() : init(false), depth(0)
-			{}
-			bool init;
-			int depth;
-			std::vector<int> sheet_indexes;
-		};
-
-		AdjacencyPattern adjacency_patterns_[64];
-
-		EditorInfo editor_info_;
+		KRE::TexturePtr tex_;
 	};
 
 	struct Alternate 
@@ -106,25 +102,28 @@ namespace hex
 		std::array<int, 4> border;
 	};
 
-	class Overlay
+	class Overlay : public game_logic::FormulaCallable
 	{
 	public:
-		explicit Overlay(const std::string& name, const std::string& image, const std::vector<variant>& alts);
-		static OverlayPtr create(const std::string& name, const std::string& image, const std::vector<variant>& alts);
+		explicit Overlay(const std::string& name, const std::string& image, const std::map<std::string, std::vector<variant>>& alts);
+		static OverlayPtr create(const std::string& name, const std::string& image, std::map<std::string, std::vector<variant>>& alts);
 		static OverlayPtr getOverlay(const std::string& name);
-		const Alternate& getAlternative() const;
+		const Alternate& getAlternative(const std::string& type = std::string()) const;
 		KRE::TexturePtr getTexture() const { return texture_; }
+		static std::vector<variant> getOverlayInfo();
 	private:
+		DECLARE_CALLABLE(Overlay);
 
 		std::string name_;
+		std::string image_name_;
 		KRE::TexturePtr texture_;
 
-		std::vector<Alternate> alternates_;
+		std::map<std::string, std::vector<Alternate>> alternates_;
 
 		Overlay(const Overlay&) = delete;
 		Overlay() = delete;
 		Overlay& operator=(const Overlay&) = delete;
 	};
 
-	void loader(const variant& n);
+	void loader(const variant& n, const variant& rules);
 }

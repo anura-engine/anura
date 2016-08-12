@@ -27,6 +27,8 @@
 #include <memory>
 #include <vector>
 
+#include "geometry.hpp"
+
 #include "DisplayDeviceFwd.hpp"
 #include "ScopeableValue.hpp"
 #include "SceneFwd.hpp"
@@ -45,9 +47,11 @@ namespace KRE
 	public:
 		virtual ~SceneTree() {}
 		SceneTreePtr getParent() const { return parent_.lock(); }
+		SceneTreePtr getRoot() const { return root_.lock(); }
 
 		void addObject(const SceneObjectPtr& obj) { objects_.emplace_back(obj); }
-		void clearObjects() { objects_.clear(); }
+		void addEndObject(const SceneObjectPtr& obj) { objects_end_.emplace_back(obj); }
+		void clearObjects() { objects_.clear(); objects_end_.clear(); }
 		void removeObject(const SceneObjectPtr& obj);
 		void addChild(const SceneTreePtr& child) { children_.emplace_back(child); }
 
@@ -58,6 +62,10 @@ namespace KRE
 		void setPosition(float x, float y, float z=0.0f);
 		void setPosition(int x, int y, int z=0);
 		const glm::vec3& getPosition() const { return position_; }
+
+		void offsetPosition(const glm::vec3& position);
+		void offsetPosition(float x, float y, float z=0.0f);
+		void offsetPosition(int x, int y, int z=0);
 
 		void setRotation(float angle, const glm::vec3& axis);
 		void setRotation(const glm::quat& rot);
@@ -81,6 +89,13 @@ namespace KRE
 		// recursively clear objects and render targets.
 		void clear();
 
+		void setClipRect(const rect& r) { clip_rect_.reset(new rect(r)); }
+		const rect& getClipRect() const { static rect empty_rect; return clip_rect_ ? *clip_rect_ : empty_rect; }
+		void clearClipRect() { clip_rect_.reset(); }
+
+		void setClipShape(const RenderablePtr& r) { clip_shape_ = r; }
+		void clearClipShape() { clip_shape_ = nullptr; }
+
 		static SceneTreePtr create(SceneTreePtr parent);
 
 		// callback used during pre-render.
@@ -89,19 +104,26 @@ namespace KRE
 		explicit SceneTree(const SceneTreePtr& parent);
 	private:
 
+		WeakSceneTreePtr root_;
 		WeakSceneTreePtr parent_;
 		std::vector<SceneTreePtr> children_;
 		std::vector<SceneObjectPtr> objects_;
+		std::vector<SceneObjectPtr> objects_end_;
 
 		ScopeableValue scopeable_;
 		CameraPtr camera_;
 		std::vector<RenderTargetPtr> render_targets_;
 		
+		// arbitrary shape to used as for clipping.
 		RenderablePtr clip_shape_;
+		// rectangle to use for clipping.
+		std::unique_ptr<rect> clip_rect_;
 
 		glm::vec3 position_;
 		glm::quat rotation_;
 		glm::vec3 scale_;
+
+		glm::vec3 offset_position_;
 
 		mutable bool model_changed_;
 		glm::mat4 model_matrix_;

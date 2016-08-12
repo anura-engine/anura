@@ -182,7 +182,7 @@ std::map<std::string, std::string>& class_path_map()
 	if(!init) {
 		init = true;
 		std::map<std::string, std::string> items;
-		module::get_unique_filenames_under_dir("data/classes/", &items);
+		module::get_unique_filenames_under_dir("data/classes/", &items, module::MODULE_NO_PREFIX);
 		for(auto p : items) {
 			std::string key = p.first;
 			if(key.size() > 4 && std::equal(key.end()-4, key.end(), ".cfg")) {
@@ -191,9 +191,8 @@ std::map<std::string, std::string>& class_path_map()
 				continue;
 			}
 
-			auto colon = std::find(key.begin(), key.end(), ':');
-			if(colon != key.end()) {
-				key.erase(key.begin(), colon+1);
+			if(mapping.count(key) != 0) {
+				continue;
 			}
 
 			mapping[key] = p.second;
@@ -228,7 +227,7 @@ std::map<std::string, std::string>& class_path_map()
 
 			sys::notify_on_file_modification(real_path, std::bind(invalidate_class_definition, type));
 
-			const variant v = json::parse_from_file(path);
+			variant v = json::parse_from_file_or_die(path);
 			ASSERT_LOG(v.is_map(), "COULD NOT PARSE FFL CLASS: " << type);
 
 			load_class_node(type, v);

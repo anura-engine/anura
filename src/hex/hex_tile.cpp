@@ -23,6 +23,7 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/regex.hpp>
 
 #include <functional>
 
@@ -31,8 +32,10 @@
 #include "hex_tile.hpp"
 #include "variant_utils.hpp"
 #include "Texture.hpp"
+#include "TextureObject.hpp"
 
 #include "random.hpp"
+#include "variant_utils.hpp"
 
 namespace hex 
 {
@@ -44,16 +47,11 @@ namespace hex
 			return tile_map;
 		}
 
-		std::vector<TileTypePtr>& get_hex_editor_tiles()
+		typedef std::map<std::string, HexEditorInfoPtr> editor_info_map;
+		editor_info_map& get_editor_tiles()
 		{
-			static std::vector<TileTypePtr> tiles;
-			return tiles;
-		}
-
-		std::map<std::string, TileTypePtr>& get_editor_hex_tile_map()
-		{
-			static std::map<std::string, TileTypePtr> tile_map;
-			return tile_map;
+			static editor_info_map res;
+			return res;
 		}
 
 		std::map<std::string, OverlayPtr>& get_overlay_map()
@@ -62,31 +60,131 @@ namespace hex
 			return res;
 		}
 
-		void load_editor_tiles()
+		class TerrainRule
 		{
-			std::map<std::string, TileTypePtr>::const_iterator it = get_tile_type_map().begin();
-			while(it != get_tile_type_map().end()) {
-				if(it->second->getEditorInfo().name.empty() == false 
-					&& it->second->getEditorInfo().type.empty() == false) {
-					get_hex_editor_tiles().push_back(it->second);
+		public:
+			TerrainRule(const std::vector<std::string>& from) : from_(from), to_(), type_(), except_() {}
+			void setExceptionList(const std::vector<std::string>& e) { except_ = e; } 
+			void setToList(const std::vector<std::string>& to) { to_ = to; } 
+			void setType(const std::string& type) { type_ = type; }
+			const std::string& getType() const { return type_; }
+			bool match(const std::string& f, const std::string& t) {
+				for(auto& from : from_) {
+					if(from == f) {
+						for(auto& to : to_) {
+							if(t == to) {
+							return true;
+							}
+						}
+					}
 				}
-				++it;
+				/*for(auto& from : from_) {
+					boost::regex fre(from);
+					boost::cmatch what;
+					if(boost::regex_match(f.c_str(), what, fre)) {
+						for(auto& to : to_) {
+							boost::regex tre(to);
+							if(boost::regex_match(t.c_str(), what, tre)) {
+								return true;
+							}
+						}
+					}
+				}*/
+				return false;
 			}
+		private:
+			std::vector<std::string> from_;
+			std::vector<std::string> to_;
+			std::string type_;
+			std::vector<std::string> except_;
+		};
+
+		typedef std::vector<TerrainRule> TerrainRuleList;
+		TerrainRuleList& get_terrain_rules()
+		{
+			static TerrainRuleList res;
+			return res;
 		}
 
-		void load_hex_editor_tiles()
+		void parse_editor_info(const variant& value, const std::string& id, const KRE::TexturePtr& tex, const std::string& image_file, const rect& default_rect)
 		{
-			std::map<std::string, TileTypePtr>::const_iterator it = get_tile_type_map().begin();
-			while(it != get_tile_type_map().end()) {
-				if(it->second->getEditorInfo().type.empty() == false) {
-					get_editor_hex_tile_map()[it->second->getEditorInfo().type] = it->second;
+			ASSERT_LOG(value.is_map(), "Must have editor info map, none found in: " << id);
+			std::string name  = value["name"].as_string();
+			std::string group = value["group"].as_string();
+			rect image_rect = default_rect;
+			if(value.has_key("sheet_pos")) {
+				std::string sheet_pos = value["sheet_pos"].as_string();
+				if(!sheet_pos.empty()) {
+					const int index = strtol(sheet_pos.c_str(), nullptr, 36);
+					const int row = index / 36;
+					const int col = index % 36;
+					image_rect = rect(col * 72, row * 72, 72, 72);
 				}
-				++it;
+			} else if(value.has_key("rect")) {
+				image_rect = rect(value["rect"]);
 			}
+			auto& editor_info = get_editor_tiles();
+			editor_info[id] = HexEditorInfoPtr(new HexEditorInfo(name, id, group, tex, image_file, image_rect));
 		}
 	}
 
-	void loader(const variant& n)
+	class BasicTileType : public TileType
+	{
+	public:
+		BasicTileType(const std::string& tile, int num_id, const variant& n);
+		void calculateAdjacencyPattern(int x, int y, const HexMap* hmap, std::vector<AdjacencyPattern>* patterns) override;
+		void render(int x, int y, std::vector<KRE::vertex_texcoord>* coords) const override;
+		void renderAdjacent(int x, int y, std::vector<KRE::vertex_texcoord>* coords, const std::vector<AdjacencyPattern>& patterns) const override;
+	private:
+		variant handleWrite() const override { /* XXX todo */ return variant(); }
+		std::vector<rect> sheet_area_;
+		std::map<std::string, std::map<std::size_t, std::vector<rect>>> adj_map_;
+	};
+
+	class WallTileType : public TileType
+	{
+	public:
+		WallTileType(const std::string& tile, int num_id, const variant& n);
+		void calculateAdjacencyPattern(int x, int y, const HexMap* hmap, std::vector<AdjacencyPattern>* patterns) override;
+		void render(int x, int y, std::vector<KRE::vertex_texcoord>* coords) const override;
+		void renderAdjacent(int x, int y, std::vector<KRE::vertex_texcoord>* coords, const std::vector<AdjacencyPattern>& patterns) const override;
+	private:
+		variant handleWrite() const override { /* XXX todo */ return variant(); }
+
+		struct WallInfo {
+			WallInfo(const rect& a) : area(a), borders() {}
+			WallInfo(const rect& a, const std::vector<int>& b) : area(a), borders() {
+				ASSERT_LOG(b.size() == 4, "Must have 4 elements in list.");
+				for(int n = 0; n != 4; ++n) {
+					borders[n] = b[n];
+				}
+			}
+			rect area;
+			std::array<int, 4> borders;
+		};
+
+		std::vector<WallInfo> concave_convex_;
+		std::unique_ptr<rect> base_tile_rect_;
+
+		// "bl", "br", "l", "r", "tl", "tr"
+		enum WallDirections {
+			CONCAVE_BL,
+			CONVEX_BL,
+			CONCAVE_BR,
+			CONVEX_BR,
+			CONCAVE_L,
+			CONVEX_L,
+			CONCAVE_R,
+			CONVEX_R,
+			CONCAVE_TL,
+			CONVEX_TL,
+			CONCAVE_TR,
+			CONVEX_TR,
+		};
+	};
+
+
+	void loader(const variant& n, const variant& rules)
 	{
 		logical::loader(n);
 
@@ -96,32 +194,42 @@ namespace hex
 		
 		int tile_id = 0;
 
-		for(auto p : n["tiles"].as_map()) {
+		auto tiles_map = n["tiles"].as_map();
+		for(auto& p : tiles_map) {
 			std::string key_str = p.first.as_string();
-			get_tile_type_map()[key_str] = TileTypePtr(new TileType(key_str, tile_id++, p.second));
+			get_tile_type_map()[key_str] = std::make_shared<BasicTileType>(key_str, tile_id++, p.second);
+		}
+
+		if(n.has_key("walls")) {
+			auto walls_map = n["walls"].as_map();
+			for(auto& p : walls_map) {
+				std::string key_str = p.first.as_string();
+				get_tile_type_map()[key_str] = std::make_shared<WallTileType>(key_str, tile_id++, p.second);
+			}
 		}
 
 		if(n.has_key("overlay")) {
-			for(auto p : n["overlay"].as_map()) {
+			auto overlay_map = n["overlay"].as_map();
+			for(auto& p : overlay_map) {
 				ASSERT_LOG(p.first.is_string(), "First element of overlay must be a string key. " << p.first.debug_location());
 				const std::string key = p.first.as_string();
 				ASSERT_LOG(p.second.is_map(), "Second element of overlay must be a map. " << p.second.debug_location());
 				std::string image;
-				std::vector<variant> normals;
+				std::map<std::string, std::vector<variant>> normals;
 
-				for(const auto el : p.second.as_map()) {
+				auto element = p.second.as_map();
+				for(auto& el : element) {
 					ASSERT_LOG(el.first.is_string(), "First element must be string. " << el.first.debug_location());
 					const std::string ekey = el.first.as_string();
-					if(ekey == "tile") {
-						// ignore for now, is editor image
-
-					} else if(ekey == "image") {
+					if(ekey == "image") {
 						ASSERT_LOG(el.second.is_string(), "'image' attribute should have a string value. " << el.second.debug_location());
 						image = el.second.as_string();
-					} else if (ekey == "normal") {
-						// XXX This needs some reconsideration.
-						ASSERT_LOG(el.second.is_list(), "'normal' attribute should have a list value. " << el.second.debug_location());
-						normals = el.second.as_list();
+					} else if(ekey == "editor_info") {
+						// skip
+					} else {
+						const std::string name = el.first.as_string();
+						ASSERT_LOG(el.second.is_list(), "'" << name << "' attribute should have a list value. " << el.second.debug_location());
+						normals[name] = el.second.as_list();
 					}
 				}
 				ASSERT_LOG(!image.empty(), "No 'image' tag found.");
@@ -131,90 +239,84 @@ namespace hex
 			}
 		}
 
-		// get list of all tiles have non-empty "editor_info" blocks.
-		if(!get_hex_editor_tiles().empty()) {
-			get_hex_editor_tiles().clear();
-		}
-		load_editor_tiles();
-
-		if(!get_editor_hex_tile_map().empty()) {
-			get_editor_hex_tile_map().clear();
-		}
-		load_hex_editor_tiles();
-	}
-
-	void TileType::EditorInfo::draw(int x, int y) const
-	{
-		point p(HexMap::getPixelPosFromTilePos(x,y));
-		// XXX todo.
-	}
-
-	TileSheet::TileSheet(const variant& value)
-		: texture_(KRE::Texture::createTexture(value["image"])),
-		  area_(rect(0, 0, 72, 72)), 
-		  ncols_(36), 
-		  pad_(0)
-	{
-	}
-
-	rect TileSheet::getArea(int index) const
-	{
-		const int row = index/ncols_;
-		const int col = index%ncols_;
-
-		const int x = area_.x() + (area_.w()+pad_)*col;
-		const int y = area_.y() + (area_.h()+pad_)*row;
-		rect result(x, y, area_.w(), area_.h());
-
-		return result;
-	}
-
-	TileType::TileType(const std::string& tile, int num_id, const variant& value)
-	  : num_id_(num_id),
-	    tile_id_(tile),
-	    sheet_(new TileSheet(value)),
-		sheet_indexes_(),
-		adjacency_patterns_(),
-		editor_info_()
-	{
-		for (const std::string& index_str : value["sheet_pos"].as_list_string()) {
-			const int index = strtol(index_str.c_str(), nullptr, 36);
-			sheet_indexes_.push_back(index);
-		}
-
-		for (auto p : value["adjacent"].as_map()) {
-			unsigned char dirmap = 0;
-			std::vector<std::string> dir;
-			std::string adj = p.first.as_string();
-			boost::split(dir, adj, boost::is_any_of(","));
-			for(auto d : dir) {
-				static const std::string Directions[] = { "n", "ne", "se", "s", "sw", "nw" };
-				const std::string* dir_str = std::find(Directions, Directions+6, d);
-				const int index = dir_str - Directions;
-				ASSERT_LOG(index < 6, "Unrecognized direction string: " << p.first << " " << p.first.to_debug_string());
-
-				dirmap |= (1 << index);
+		auto rule_list = rules["rules"].as_list();
+		for(auto& r : rule_list) {
+			ASSERT_LOG(r.has_key("from"), "Must have 'from' attribute in terrain rule. " << r.debug_location());
+			const auto from = r["from"].as_list_string();
+			get_terrain_rules().emplace_back(from);
+			auto& current_rule = get_terrain_rules().back();
+			if(r.has_key("to")) {
+				current_rule.setToList(r["to"].as_list_string());
 			}
+			if(r.has_key("type")) {
+				current_rule.setType(r["type"].as_string());
+			}
+			if(r.has_key("except")) {
+				current_rule.setExceptionList(r["except"].as_list_string());
+			}
+		}
+	}
 
-			AdjacencyPattern& pattern = adjacency_patterns_[dirmap];
-			for(const std::string& index_str : p.second.as_list_string()) {
+	BasicTileType::BasicTileType(const std::string& tile, int num_id, const variant& value)
+	  : TileType(TileTypeId::BASIC, tile, num_id),
+		sheet_area_()
+	{
+		if(value.has_key("sheet_pos")) {
+			for (const std::string& index_str : value["sheet_pos"].as_list_string()) {
 				const int index = strtol(index_str.c_str(), nullptr, 36);
-				pattern.sheet_indexes.push_back(index);
+				const int x = 72 * (index % 36);
+				const int y = 72 * (index / 36);
+				sheet_area_.emplace_back(rect(x, y, 72, 72));
 			}
-
-			pattern.init = true;
-			pattern.depth = 0;
+		} else if(value.has_key("rect")) {
+			for(const auto& v : value["rect"].as_list()) {
+				sheet_area_.emplace_back(rect(v));
+			}
+		} else {
+			ASSERT_LOG(false, "Tile definition needs either 'sheet_pos' or 'rect' attribute.");
 		}
 
-		ASSERT_LOG(sheet_indexes_.empty() == false, "No sheet indexes in hex tile sheet: " << tile_id_);
+		const std::string image = value["image"].as_string();
+		setTexture(image);
+
+		/*auto adjacent = value["adjacent"].as_map();
+		for(auto& p : adjacent) {
+			std::size_t dirmap = 0;
+			if(p.second.is_map()) {
+				// extended definition
+				// XXX
+			} else {
+				// assume is simple direction string for key
+				const std::string key = p.first.as_string();
+				std::vector<std::string> dir;
+				boost::split(dir, key, boost::is_any_of("-"));
+				for(auto d : dir) {
+					static const std::string Directions[] = { "n", "ne", "se", "s", "sw", "nw" };
+					const std::string* dir_str = std::find(Directions, Directions+6, d);
+					ASSERT_LOG(dir_str != nullptr, "Direction unknwon: " << d);
+					const int index = dir_str - Directions;
+					dirmap |= (1 <<	index);
+				}
+
+				auto& pattern = adj_map_[dirmap];
+				const auto plist = p.second.as_list();
+				ASSERT_LOG(!plist.empty(), "No adjency tiles defined.");
+				for(const auto& ndx : plist) {
+					if(ndx.is_string()) {
+						const std::string index_str = ndx.as_string();
+						const int index = strtol(index_str.c_str(), nullptr, 36);
+						const int x = 72 * (index % 36);
+						const int y = 72 * (index / 36);
+						pattern.emplace_back(rect(x, y, 72, 72));
+					} else {
+						pattern.emplace_back(rect{ ndx });
+					}
+				}
+			}
+		}*/
 
 		if (value.has_key("editor_info")) {
-			ASSERT_LOG(value["editor_info"].is_map(), "Must have editor info map, none found in: " << tile_id_);
-			editor_info_.texture = sheet_->getTexture();
-			editor_info_.name = value["editor_info"]["name"].as_string();
-			editor_info_.group = value["editor_info"]["group"].as_string();
-			editor_info_.type = tile_id_;
-			editor_info_.image_rect = sheet_->getArea(0);
+			parse_editor_info(value["editor_info"], id(), getTexture(), image, sheet_area_.front());
 		}
 	}
 
@@ -235,12 +337,11 @@ namespace hex
 		}
 	}
 
-	void TileType::renderInternal(int x, int y, int index, std::vector<KRE::vertex_texcoord>* coords) const
+	void TileType::renderInternal(int x, int y, int ox, int oy, const rect& area, std::vector<KRE::vertex_texcoord>* coords) const
 	{
-		const point p(HexMap::getPixelPosFromTilePos(x, y));
-		const rect area = sheet_->getArea(index);
-		const KRE::TexturePtr& tex = sheet_->getTexture();
-		rectf uv = tex->getTextureCoords(0, area);
+		const point p = HexMap::getPixelPosFromTilePos(x, y) + point(ox, oy);
+		const KRE::TexturePtr& tex = getTexture();
+		const rectf uv = tex->getTextureCoords(0, area);
 
 		const float vx1 = static_cast<float>(p.x);
 		const float vy1 = static_cast<float>(p.y);
@@ -256,63 +357,50 @@ namespace hex
 		coords->emplace_back(glm::vec2(vx1, vy2), glm::vec2(uv.x1(), uv.y2()));
 	}
 
-	void TileType::render(int x, int y, std::vector<KRE::vertex_texcoord>* coords) const
+	void BasicTileType::render(int x, int y, std::vector<KRE::vertex_texcoord>* coords) const
 	{
-		if(sheet_indexes_.empty()) {
-			return;
-		}
-
 		int index = 0;
 
-		if(sheet_indexes_.size() > 1) {
-			index = random_hash(x, y) % sheet_indexes_.size();
+		if(sheet_area_.size() > 1) {
+			index = random_hash(x, y) % sheet_area_.size();
 		}
-		renderInternal(x, y, sheet_indexes_[index], coords);
+		renderInternal(x, y, 0, 0, sheet_area_[index], coords);
 	}
 
-	void TileType::renderAdjacent(int x, int y, std::vector<KRE::vertex_texcoord>* coords, unsigned char adjmap) const
+	void BasicTileType::renderAdjacent(int x, int y, std::vector<KRE::vertex_texcoord>* coords, const std::vector<AdjacencyPattern>& patterns) const
 	{
-		const AdjacencyPattern& pattern = adjacency_patterns_[adjmap];
-		assert(pattern.init);
-		for(int index : pattern.sheet_indexes) {
-			renderInternal(x, y, index, coords);
-		}
+		//const AdjacencyPattern& pattern = adjacency_patterns_[adjmap];
+		//assert(pattern.init);
+		//for(auto& area : pattern.sheet_areas) {
+		//	renderInternal(x, y, 0, 0, area, coords);
+		//}
 	}
 
-	void TileType::calculateAdjacencyPattern(unsigned char adjmap)
+	void TileType::setTexture(const std::string & filename)
 	{
-		if(adjacency_patterns_[adjmap].init) {
-			return;
-		}
+		tex_ = KRE::Texture::createTexture(filename);
+	}
 
-		int best = -1;
-		for(int dir = 0; dir < 6; ++dir) {
-			unsigned char mask = 1 << dir;
-			if(adjmap & mask) {
-				unsigned char newmap = adjmap & ~mask;
-				if(newmap != 0) {
-					calculateAdjacencyPattern(newmap);
+	void BasicTileType::calculateAdjacencyPattern(int x, int y, const HexMap* hmap, std::vector<AdjacencyPattern>* patterns)
+	{
+		ASSERT_LOG(hmap != nullptr, "HexMap was null.");
+		ASSERT_LOG(patterns != nullptr, "adjacency pattern list was null.");
+		auto n  = hmap->getHexTile(NORTH, x, y);
+		auto ne = hmap->getHexTile(NORTH_EAST, x, y);
+		auto se = hmap->getHexTile(SOUTH_EAST, x, y);
+		auto s  = hmap->getHexTile(SOUTH, x, y);
+		auto sw = hmap->getHexTile(SOUTH_WEST, x, y);
+		auto nw = hmap->getHexTile(NORTH_WEST, x, y);
 
-					if(best == -1 || adjacency_patterns_[newmap].depth < adjacency_patterns_[best].depth) {
-						best = newmap;
-					}
+		auto& rules = get_terrain_rules();
+		for(auto& rule : rules) {
+			if(n && n->tile()) {
+				if(rule.match(id(), n->tile()->id())) {
+					auto& type = rule.getType();
+					//adjacent_[type]["n"]
 				}
 			}
 		}
-
-		if(best != -1) {
-			adjacency_patterns_[adjmap].sheet_indexes.insert(adjacency_patterns_[adjmap].sheet_indexes.end(), adjacency_patterns_[best].sheet_indexes.begin(), adjacency_patterns_[best].sheet_indexes.end());
-			adjacency_patterns_[adjmap].depth = adjacency_patterns_[best].depth + 1;
-
-			best = adjmap & ~best;
-			calculateAdjacencyPattern(best);
-			adjacency_patterns_[adjmap].sheet_indexes.insert(adjacency_patterns_[adjmap].sheet_indexes.end(), adjacency_patterns_[best].sheet_indexes.begin(), adjacency_patterns_[best].sheet_indexes.end());
-			if(adjacency_patterns_[best].depth + 1 > adjacency_patterns_[adjmap].depth) {
-				adjacency_patterns_[adjmap].depth = adjacency_patterns_[best].depth + 1;
-			}
-		}
-
-		adjacency_patterns_[adjmap].init = true;
 	}
 
 	TileTypePtr TileType::factory(const std::string& name)
@@ -322,33 +410,195 @@ namespace hex
 		return it->second;
 	}
 
-	OverlayPtr Overlay::create(const std::string& name, const std::string& image, const std::vector<variant>& alts)
+	WallTileType::WallTileType(const std::string& tile, int num_id, const variant& n)
+		: TileType(TileTypeId::WALL, tile, num_id),
+		  concave_convex_(),
+		  base_tile_rect_(nullptr)
 	{
-		return std::make_shared<Overlay>(name, image, alts);
+		const std::string image = n["image"].as_string();
+		setTexture(image);
+
+		ASSERT_LOG(n.has_key("concave") && n.has_key("convex"), "Wall entries must have 'convex' and 'concave' attributes." << n.debug_location());
+		static const std::vector<std::string> tags{ "bl", "br", "l", "r", "tl", "tr" };
+		for(auto& t : tags) {
+			ASSERT_LOG(n["concave"].has_key(t), "No attribute '" << t << "' found in 'concave' section of '" << id() << "'" << n["concave"].debug_location());
+			const auto& cave = n["concave"][t];
+			if(cave.is_map() && cave.has_key("rect")) {
+				std::vector<int> borders;
+				borders.resize(4);
+				if(cave.has_key("border")) {
+					ASSERT_LOG(cave["border"].is_list() && cave["border"].num_elements() == 4, "'border' attribute must be list of 4 integers." << cave["border"].debug_location());
+					borders = cave["border"].as_list_int();
+				} else {
+					borders[0] = borders[1] = borders[2] = borders[3] = 0;
+				}
+				concave_convex_.emplace_back(rect(cave["rect"]), borders);
+			} else {
+				concave_convex_.emplace_back(rect(cave));
+			}
+
+			ASSERT_LOG(n["convex"].has_key(t), "No attribute '" << t << "' found in 'convex' section of '" << id() << "'" << n["convex"].debug_location());
+			const auto& vex = n["convex"][t];
+			if(vex.is_map() && vex.has_key("rect")) {
+				std::vector<int> borders;
+				borders.resize(4);
+				if(vex.has_key("border")) {
+					ASSERT_LOG(vex["border"].is_list() && vex["border"].num_elements() == 4, "'border' attribute must be list of 4 integers." << vex["border"].debug_location());
+					borders = vex["border"].as_list_int();
+				} else {
+					borders[0] = borders[1] = borders[2] = borders[3] = 0;
+				}
+				concave_convex_.emplace_back(rect(vex["rect"]), borders);
+			} else {
+				concave_convex_.emplace_back(rect(vex));
+			}
+		}
+		if(n.has_key("editor_info")) {
+			parse_editor_info(n["editor_info"], id(), getTexture(), image, rect());
+		}
+		if(n.has_key("base")) {
+			base_tile_rect_ = std::unique_ptr<rect>(new rect(n["base"]));
+		}
 	}
 
-	Overlay::Overlay(const std::string& name, const std::string& image, const std::vector<variant>& alts)
+	void WallTileType::calculateAdjacencyPattern(int x, int y, const HexMap* hmap, std::vector<AdjacencyPattern>* patterns)
+	{
+		ASSERT_LOG(hmap != nullptr, "HexMap was null.");
+		ASSERT_LOG(patterns != nullptr, "adjacency pattern list was null.");
+		auto n  = hmap->getHexTile(NORTH, x, y);
+		auto ne = hmap->getHexTile(NORTH_EAST, x, y);
+		auto se = hmap->getHexTile(SOUTH_EAST, x, y);
+		auto s  = hmap->getHexTile(SOUTH, x, y);
+		auto sw = hmap->getHexTile(SOUTH_WEST, x, y);
+		auto nw = hmap->getHexTile(NORTH_WEST, x, y);
+
+		static const int ox = -54;
+		static const int oy = -108;
+
+		// bl, br, l, r, tl, tr
+		static const std::vector<point> oh{ point{0,72}, point{54, 108}, point{0, 72}, point{54, 36}, point{0, 0}, point{54, 36} };
+		enum { BL, BR, L, R, TL, TR };
+
+		if(n != nullptr && n->tile()->getTileTypeId() != getTileTypeId()) {
+			static const point pdiff = HexMap::getPixelPosFromTilePos(x, y) - HexMap::getPixelPosFromTilePos(n->x(), n->y());
+			if(ne != nullptr && ne->tile()->getTileTypeId() != getTileTypeId()) {
+				auto& cc = concave_convex_[CONVEX_TR];
+				patterns->emplace_back(ox + oh[TR].x + cc.borders[0], oy + oh[TR].y + cc.borders[1], cc.area);
+			} else {
+				auto& cc = concave_convex_[CONCAVE_BR];
+				patterns->emplace_back(ox + oh[BR].x - pdiff.x + cc.borders[0], oy + oh[BR].y - pdiff.y + cc.borders[1], cc.area);
+			}
+			if(nw != nullptr && nw->tile()->getTileTypeId() != getTileTypeId()) {
+				auto& cc = concave_convex_[CONVEX_TL];
+				patterns->emplace_back(ox + oh[TL].x + cc.borders[0], oy + oh[TL].y + cc.borders[1], cc.area);
+			} else {
+				auto& cc = concave_convex_[CONCAVE_BL];
+				patterns->emplace_back(ox + oh[BL].x - pdiff.x + cc.borders[0], oy + oh[BL].y - pdiff.y + cc.borders[1], cc.area);
+			}
+		}
+
+		if(se != nullptr && se->tile()-> getTileTypeId() != getTileTypeId()) {
+			if(ne != nullptr && ne->tile()-> getTileTypeId() != getTileTypeId()) {
+				auto& cc = concave_convex_[CONVEX_R];
+				patterns->emplace_back(ox + oh[R].x + cc.borders[0], oy + oh[R].y + cc.borders[1], cc.area);
+			} else {
+				static const point pdiff = HexMap::getPixelPosFromTilePos(x, y) - HexMap::getPixelPosFromTilePos(se->x(), se->y());
+				auto& cc = concave_convex_[CONCAVE_TL];
+				patterns->emplace_back(ox + oh[TL].x - pdiff.x + cc.borders[0], oy + oh[TL].y - pdiff.y + cc.borders[1], cc.area);
+			}
+		}
+
+		if(sw != nullptr && sw->tile()-> getTileTypeId() != getTileTypeId()) {
+			if(nw != nullptr && nw->tile()-> getTileTypeId() != getTileTypeId()) {
+				auto& cc = concave_convex_[CONVEX_L];
+				patterns->emplace_back(ox + oh[L].x + cc.borders[0], oy + oh[L].y + cc.borders[1], cc.area);
+			} else {
+				static const point pdiff = HexMap::getPixelPosFromTilePos(x, y) - HexMap::getPixelPosFromTilePos(sw->x(), sw->y());
+				auto& cc = concave_convex_[CONCAVE_TR];
+				patterns->emplace_back(ox + oh[TR].x - pdiff.x + cc.borders[0], oy + oh[TR].y - pdiff.y + cc.borders[1], cc.area);
+			}
+		}
+
+		if(s != nullptr && s->tile()->getTileTypeId() == getTileTypeId()) {
+			if(se != nullptr && se->tile()-> getTileTypeId() != getTileTypeId()) {
+				static const point pdiff = HexMap::getPixelPosFromTilePos(x, y) - HexMap::getPixelPosFromTilePos(se->x(), se->y());
+				auto& cc = concave_convex_[CONCAVE_L];
+				patterns->emplace_back(ox + oh[L].x - pdiff.x + cc.borders[0], oy + oh[L].y - pdiff.y + cc.borders[1], cc.area);
+			}
+			if(sw != nullptr && sw->tile()-> getTileTypeId() != getTileTypeId()) {
+				static const point pdiff = HexMap::getPixelPosFromTilePos(x, y) - HexMap::getPixelPosFromTilePos(sw->x(), sw->y());
+				auto& cc = concave_convex_[CONCAVE_R];
+				patterns->emplace_back(ox + oh[R].x - pdiff.x + cc.borders[0], oy + oh[R].y - pdiff.y + cc.borders[1], cc.area);
+			}
+		}
+
+		if(s != nullptr && s->tile()->getTileTypeId() != getTileTypeId()) {
+			static const point pdiff = HexMap::getPixelPosFromTilePos(x, y) - HexMap::getPixelPosFromTilePos(s->x(), s->y());
+			if(se != nullptr && se->tile()-> getTileTypeId() != getTileTypeId()) {
+				auto& cc = concave_convex_[CONVEX_BR];
+				patterns->emplace_back(ox + oh[BR].x + cc.borders[0], oy + oh[BR].y + cc.borders[1], concave_convex_[CONVEX_BR].area);
+			} else {
+				auto& cc = concave_convex_[CONCAVE_TR];
+				patterns->emplace_back(ox + oh[TR].x - pdiff.x + cc.borders[0], oy + oh[TR].y - pdiff.y + cc.borders[1], cc.area);
+			}
+			if(sw != nullptr && sw->tile()-> getTileTypeId() != getTileTypeId()) {
+				auto& cc = concave_convex_[CONVEX_BL];
+				patterns->emplace_back(ox + oh[BL].x + cc.borders[0], oy + oh[BL].y + cc.borders[1], cc.area);
+			} else {
+				auto& cc = concave_convex_[CONCAVE_TL];
+				patterns->emplace_back(ox + oh[TL].x - pdiff.x + cc.borders[0], oy + oh[TL].y - pdiff.y + cc.borders[1], cc.area);
+			}
+		} 
+	
+	}
+
+
+	void WallTileType::render(int x, int y, std::vector<KRE::vertex_texcoord>* coords) const
+	{
+		if(base_tile_rect_) {
+			renderInternal(x, y, 0, 0, *base_tile_rect_, coords);
+		}
+	}
+
+	void WallTileType::renderAdjacent(int x, int y, std::vector<KRE::vertex_texcoord>* coords, const std::vector<AdjacencyPattern>& patterns) const
+	{
+		for(auto& adj : patterns) {
+			renderInternal(x, y, adj.ox, adj.oy, adj.area, coords);
+		}
+	}
+
+	OverlayPtr Overlay::create(const std::string& name, const std::string& image, std::map<std::string, std::vector<variant>>& alts)
+	{
+		return OverlayPtr(new Overlay(name, image, alts));
+	}
+
+	Overlay::Overlay(const std::string& name, const std::string& image, const std::map<std::string, std::vector<variant>>& alts)
 		: name_(name),
+		  image_name_(image),
 		  texture_(KRE::Texture::createTexture(image)),
 		  alternates_()
 	{
-		alternates_.resize(alts.size());
-		auto it = alternates_.begin();
-		for(const auto& v : alts) {
-			// should consist of a series of rectangles (x1 y1 x2 y2) in the 'rect' attribute and an optional 'border' attribute.
-			ASSERT_LOG(v.has_key("rect"), "Unable to find key 'rect' while parsing the overlays");
-			it->r = rect(v["rect"]);
-			if(v.has_key("border")) {
-				ASSERT_LOG(v["border"].is_list() && v["border"].num_elements() == 4, "The 'border' attribute should be a list of 4(four) elements.");
-				for(int n = 0; n != 4; ++n) {
-					it->border[n] = v["border"][n].as_int32();
+		for(const auto& alternate : alts) {
+			std::vector<Alternate> a;
+			a.resize(alternate.second.size());
+			auto it = a.begin();
+			for(const auto& v : alternate.second) {
+				// should consist of a series of rectangles (x1 y1 x2 y2) in the 'rect' attribute and an optional 'border' attribute.
+				ASSERT_LOG(v.has_key("rect"), "Unable to find key 'rect' while parsing the overlays");
+				it->r = rect(v["rect"]);
+				if(v.has_key("border")) {
+					ASSERT_LOG(v["border"].is_list() && v["border"].num_elements() == 4, "The 'border' attribute should be a list of 4(four) elements.");
+					for(int n = 0; n != 4; ++n) {
+						it->border[n] = v["border"][n].as_int32();
+					}
+				} else {
+					for(int n = 0; n != 4; ++n) {
+						it->border[n] = 0;
+					}
 				}
-			} else {
-				for(int n = 0; n != 4; ++n) {
-					it->border[n] = 0;
-				}
+				++it;
 			}
-			++it;
+			alternates_[alternate.first] = a;
 		}
 	}
 
@@ -359,10 +609,88 @@ namespace hex
 		return it->second;
 	}
 
-	const Alternate& Overlay::getAlternative() const
-	{
-		ASSERT_LOG(!alternates_.empty(), "No alternatives found, must be at lease one.");
-		const auto& alt = alternates_[rng::generate() % alternates_.size()];
+	const Alternate& Overlay::getAlternative(const std::string& type) const
+	{		
+		ASSERT_LOG(!alternates_.empty(), "No alternatives found, must be at least one.");
+		auto it = alternates_.find(type.empty() ? "default" : type);
+		ASSERT_LOG(it != alternates_.end(), "Unknown alternate '" << (type.empty() ? "default" : type) << "'");
+		const auto& alt = it->second[rng::generate() % it->second.size()];
 		return alt;
 	}
+
+	std::vector<variant> Overlay::getOverlayInfo()
+	{
+		std::vector<variant> res;
+		for(const auto& o : get_overlay_map()) {
+			res.emplace_back(o.second.get());
+		}
+		return res;
+	}
+
+	BEGIN_DEFINE_CALLABLE_NOBASE(Overlay)
+		DEFINE_FIELD(name, "string")
+			return variant(obj.name_);
+		DEFINE_FIELD(image_file, "string")
+			return variant(obj.image_name_);
+		DEFINE_FIELD(alternates, "{string -> [{string -> [int,int,int,int]}]}")
+			std::map<variant, variant> alt_map;
+			for(const auto& alt : obj.alternates_) {
+				std::vector<variant> alt_list;
+				for(const auto& altlst : alt.second) {
+					variant_builder res;
+					res.add("rect", altlst.r.write());
+					for(const auto& border : altlst.border) {
+						res.add("border", border);
+					}
+					alt_list.emplace_back(res.build());
+				}
+				alt_map[variant(alt.first)] = variant(&alt_list);
+			}
+			return variant(&alt_map);
+	END_DEFINE_CALLABLE(Overlay)
+
+	HexEditorInfo::HexEditorInfo()
+		: name_(),
+		  type_(),
+		  image_(),
+		  group_(),
+		  image_file_(),
+		  image_rect_()
+	{
+	}
+
+	HexEditorInfo::HexEditorInfo(const std::string& name, const std::string& type, const std::string& group, const KRE::TexturePtr& image, const std::string& image_file, const rect& r)
+		: name_(name),
+		  type_(type),
+		  image_(image),
+		  group_(group),
+		  image_file_(image_file),
+		  image_rect_(r)
+	{
+	}
+
+	std::vector<variant> HexEditorInfo::getHexEditorInfo()
+	{
+		std::vector<variant> res;
+		auto& editor_info = get_editor_tiles();
+		for(const auto& ei : editor_info) {
+			res.emplace_back(ei.second.get());
+		}
+		return res;
+	}
+
+	BEGIN_DEFINE_CALLABLE_NOBASE(HexEditorInfo)
+		DEFINE_FIELD(name, "string")
+			return variant(obj.name_);
+		DEFINE_FIELD(type, "string")
+			return variant(obj.type_);
+		DEFINE_FIELD(group, "string")
+			return variant(obj.group_);
+		DEFINE_FIELD(image_rect, "[int,int,int,int]")
+			return obj.image_rect_.write();
+		DEFINE_FIELD(image_file, "string")
+			return variant(obj.image_file_);
+		DEFINE_FIELD(image, "builtin texture_object")
+			return variant(new TextureObject(obj.image_));
+	END_DEFINE_CALLABLE(HexEditorInfo)
 }

@@ -98,8 +98,10 @@ namespace KRE
 			  next_font_y_(0),
 			  last_line_height_(0),
 			  all_glyphs_added_(false),
+			  bounding_height_(0),
 			  glyph_info_(),
-			  line_gap_(0)
+			  line_gap_(0),
+			  baseline_(0)
 		{
 			// XXX starting off with a basic way of rendering glyphs.
 			// It'd be better to render all the glyphs to a texture,
@@ -129,6 +131,10 @@ namespace KRE
 			FT_Load_Glyph(face_, glyph_index, font_load_flags_);
 			x_height_ = face_->glyph->metrics.height / 64.0f;
 
+			glyph_index = FT_Get_Char_Index(face_, 'X');
+			FT_Load_Glyph(face_, glyph_index, font_load_flags_);
+			baseline_ = face_->glyph->metrics.horiBearingY * 1024;
+
 			if(init_texture) {
 				// This is an empirical fudge that just adds all the glyphs in the
 				// font to the texture on the caveat that they will fit.
@@ -137,6 +143,12 @@ namespace KRE
 					addAllGlyphsToTexture();
 				} else {
 					addGlyphsToTexture(FontDriver::getCommonGlyphs());
+				}
+
+				for(const auto& gi : glyph_info_) {
+					if(gi.second.height > bounding_height_) {
+						bounding_height_ = gi.second.height;
+					}
 				}
 			}
 		}
@@ -150,6 +162,10 @@ namespace KRE
 		int getDescender() override
 		{
 			return face_->size->metrics.descender * (65536/64);
+		}
+		int getBaseline() override
+		{
+			return baseline_;
 		}
 		void getBoundingBox(const std::string& str, long* w, long* h) override
 		{
@@ -175,6 +191,11 @@ namespace KRE
 			// This is to ensure that the returned dimensions are tight, i.e. the final advance is replaced by the width of the character.
 			*w = (pen.x - slot->linearHoriAdvance + slot->metrics.width*65536L);
 			*h = (pen.y - slot->linearHoriAdvance + slot->metrics.height*65536L);
+		}
+
+		int getBoundingHeight() override
+		{
+			return bounding_height_;
 		}
 
 		std::vector<unsigned> getGlyphs(const std::string& text) override
@@ -439,10 +460,12 @@ namespace KRE
 		int next_font_y_;
 		unsigned short last_line_height_;
 		bool all_glyphs_added_;
+		int bounding_height_;
 		// XXX see what is practically faster using a sorted list and binary search
 		// or this map. Also a vector would have better locality.
 		std::map<char32_t, GlyphInfo> glyph_info_;
 		float line_gap_;
+		int baseline_;
 	};
 
 

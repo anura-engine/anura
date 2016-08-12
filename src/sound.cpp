@@ -45,6 +45,8 @@
 
 #include "variant_utils.hpp"
 
+PREF_INT(mixer_looped_sounds_fade_time_ms, 100, "Number of milliseconds looped sounds should fade for");
+
 namespace sound 
 {
 	namespace 
@@ -563,7 +565,7 @@ namespace sound
 				Mix_Volume(n, static_cast<int>(volume * sfx_volume * MIX_MAX_VOLUME));
 			}
 			if(snd.fade_out_time > 0.0f) {
-				if(snd.time_cnt > snd.fade_out_time) {
+				if(snd.time_cnt >= snd.fade_out_time) {
 					snd.fade_out_time = 0.0f;
 					snd.object = nullptr;
 					Mix_HaltChannel(n);
@@ -622,11 +624,17 @@ namespace sound
 			   || channels_to_sounds_playing[n].object == object) &&
 			   (channels_to_sounds_playing[n].loops != 0)) {
 	#if !TARGET_IPHONE_SIMULATOR && !TARGET_OS_IPHONE
-				Mix_HaltChannel(n);
+				if(g_mixer_looped_sounds_fade_time_ms > 0) {
+					channels_to_sounds_playing[n].fade_out_time = g_mixer_looped_sounds_fade_time_ms/1000.0f;
+					channels_to_sounds_playing[n].time_cnt = 0.0f;
+				} else {
+					Mix_HaltChannel(n);
+					channels_to_sounds_playing[n].object = nullptr;
+				}
 	#else
 				sdl_stop_channel(n);
-	#endif
 				channels_to_sounds_playing[n].object = nullptr;
+	#endif
 			} else if(channels_to_sounds_playing[n].object == object) {
 				//this sound is a looped sound, but make sure it keeps going
 				//until it ends, since this function signals that the associated

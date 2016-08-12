@@ -485,7 +485,7 @@ namespace css
 			css_rule->selectors = Selector::parseTokens(rule->getParameters());
 			css_rule->declaractions = DeclarationParser::parseTokens(rule->getValue()->getParameters());
 			// Go through the properties and mark any that need to be handled with transitions
-			css_rule->declaractions.markTransitions();
+			//css_rule->declaractions.markTransitions();
 			style_sheet_->addRule(css_rule);
 		}
 	}

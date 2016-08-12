@@ -134,6 +134,8 @@ namespace css
 			return true;
 		}
 		switch(p) {
+			case Property::COLOR:					return false;
+			case Property::BACKGROUND_COLOR:		return false;
 			case Property::BACKGROUND_ATTACHMENT:	return false;
 			case Property::BACKGROUND_REPEAT:		return false;
 			case Property::OUTLINE_STYLE:			return false;
@@ -419,6 +421,14 @@ namespace css
 			units_ = LengthUnits::PERCENT;
 			// normalize to range 0.0 -> 1.0
 			value_ = fixed_point_scale;
+		} else if(units == "vw") {
+			units_ = LengthUnits::VW;
+		} else if(units == "vh") {
+			units_ = LengthUnits::VH;
+		} else if(units == "vmin") {
+			units_ = LengthUnits::LU_VMIN;
+		} else if(units == "vmax") {
+			units_ = LengthUnits::LU_VMAX;
 		} else {
 			LOG_ERROR("unrecognised units value: '" << units << "'");
 		}
@@ -429,6 +439,7 @@ namespace css
 		auto& ctx = xhtml::RenderContext::get();
 		const int dpi = ctx.getDPI();
 		xhtml::FixedPoint res = 0;
+		const point& viewport = xhtml::RenderContext::get().getViewport();
 		switch(units_) {
 			case LengthUnits::NUMBER:
 				res = value_;
@@ -462,6 +473,18 @@ namespace css
 			case LengthUnits::PERCENT:
 				res = (value_ / fixed_point_scale) * (scale / 100);
 				break; 
+			case LengthUnits::VW:
+				res = static_cast<int>((value_ / (fixed_point_scale_float * 100.f)) * (viewport.x * fixed_point_scale_float));
+				break;
+			case LengthUnits::VH:
+				res = static_cast<int>((value_ / (fixed_point_scale_float * 100.f)) * (viewport.y * fixed_point_scale_float));
+				break;
+			case LengthUnits::LU_VMIN:
+				res = static_cast<int>((value_ / (fixed_point_scale_float * 100.f)) * (std::min(viewport.x, viewport.y) * fixed_point_scale_float));
+				break;
+			case LengthUnits::LU_VMAX:
+				res = static_cast<int>((value_ / (fixed_point_scale_float * 100.f)) * (std::max(viewport.x, viewport.y) * fixed_point_scale_float));
+				break;
 			default: 
 				ASSERT_LOG(false, "Unrecognised units value: " << static_cast<int>(units_));
 				break;

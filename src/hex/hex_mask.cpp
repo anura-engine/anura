@@ -126,6 +126,16 @@ DEFINE_FIELD(locs, "[[int,int]]")
 	}
 
 	return variant(&res);
+DEFINE_SET_FIELD
+	std::vector<int> v;
+	for(auto item : value.as_list()) {
+		for(int i : item.as_list_int()) {
+			v.push_back(i);
+		}
+	}
+
+	obj.setLocs(v);
+
 END_DEFINE_CALLABLE(MaskNode);
 
 }

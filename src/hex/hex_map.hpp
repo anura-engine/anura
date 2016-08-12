@@ -84,6 +84,9 @@ namespace hex
 		std::vector<HexObject> tiles_;
 		bool changed_;
 
+		int rx_;
+		int ry_;
+
 		MapNodePtr renderable_;
 
 		HexMap(const HexMap&);

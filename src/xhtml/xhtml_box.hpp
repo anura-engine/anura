@@ -26,6 +26,7 @@
 #include "xhtml_fwd.hpp"
 
 #include "geometry.hpp"
+#include "SceneTree.hpp"
 
 #include "xhtml.hpp"
 #include "xhtml_background_info.hpp"
@@ -45,6 +46,12 @@ namespace xhtml
 		FixedPoint bottom;
 	};
 
+	inline std::ostream& operator<<(std::ostream& os, const EdgeSize& p)
+	{
+		os << "(" << p.left << "," << p.top << "," << p.right << "," << p.bottom << ")";
+		return os;
+	}
+
 	struct Dimensions
 	{
 		Rect content_;
@@ -56,6 +63,8 @@ namespace xhtml
 	enum class BoxId {
 		BLOCK,
 		TEXT,
+		LINE,
+		LINE_CONTAINER,
 		INLINE_BLOCK,
 		INLINE_ELEMENT,
 		ABSOLUTE,
@@ -75,7 +84,7 @@ namespace xhtml
 	{
 	public:
 		Box(BoxId id, const BoxPtr& parent, const StyleNodePtr& node, const RootBoxPtr& root);
-		virtual ~Box() {}
+		virtual ~Box();
 		BoxId id() const { return id_; }
 		const Dimensions& getDimensions() const { return dimensions_; }
 		const std::vector<BoxPtr>& getChildren() const { return boxes_; }
@@ -87,10 +96,10 @@ namespace xhtml
 		StyleNodePtr getStyleNode() const { return node_; }
 		NodePtr getNode() const { return node_ != nullptr ? node_->getNode() : nullptr; }
 		BoxPtr getParent() const { return parent_.lock(); }
+		KRE::SceneTreePtr getSceneTree() const { return scene_tree_; }
 
 		void addChild(BoxPtr box) { boxes_.emplace_back(box); }
 		void addChildren(const std::vector<BoxPtr>& children) { boxes_.insert(boxes_.end(), children.begin(), children.end()); }
-		void addAnonymousBoxes();
 
 		void setContentRect(const Rect& r) { dimensions_.content_ = r; }
 		void setContentX(FixedPoint x) { dimensions_.content_.x = x; }
@@ -190,6 +199,7 @@ namespace xhtml
 		virtual FixedPoint getBottomOffset() const { return dimensions_.content_.height; }
 
 		FixedPoint getLineHeight() const { return line_height_; }
+		void setLineHeight(FixedPoint lh) { line_height_ = lh; }
 
 		bool isReplaceable() const { return is_replaceable_; }
 
@@ -202,6 +212,9 @@ namespace xhtml
 		void setLastInlineChild() { is_last_inline_child_ = true; }
 		bool isFirstInlineChild() const { return is_first_inline_child_; }
 		bool isLastInlineChild() const { return is_last_inline_child_; }
+
+		void setParent(BoxPtr parent) { parent_ = parent; }
+		KRE::SceneTreePtr createSceneTree(KRE::SceneTreePtr scene_parent);
 	protected:
 		void clearChildren() { boxes_.clear(); } 
 		virtual void handleRenderBackground(const KRE::SceneTreePtr& scene_tree, const point& offset) const;
@@ -210,14 +223,16 @@ namespace xhtml
 		const BackgroundInfo& getBackgroundInfo() const { return background_info_; }
 	private:
 		virtual void handleLayout(LayoutEngine& eng, const Dimensions& containing) = 0;
+		virtual void handlePreChildLayout3(LayoutEngine& eng, const Dimensions& containing) {}
 		virtual void handlePreChildLayout2(LayoutEngine& eng, const Dimensions& containing) {}
 		virtual void handlePreChildLayout(LayoutEngine& eng, const Dimensions& containing) {}
 		virtual void handlePostChildLayout(LayoutEngine& eng, BoxPtr child) {}
+		virtual void handlePostFloatChildLayout(LayoutEngine& eng, BoxPtr child) {}
 		virtual void postParentLayout(LayoutEngine& eng, const Dimensions& containing) {}
 		virtual void handleRender(const KRE::SceneTreePtr& scene_tree, const point& offset) const = 0;
 		virtual void handleEndRender(const KRE::SceneTreePtr& scene_tree, const point& offset) const {}
+		virtual void handleCreateSceneTree(KRE::SceneTreePtr scene_parent) {}
 
-		void setParent(BoxPtr parent) { parent_ = parent; }
 		void init();
 
 		BoxId id_;
@@ -234,10 +249,15 @@ namespace xhtml
 		point offset_;
 		FixedPoint line_height_;
 
+		// The height of the content before any adjustments from CSS.
+		FixedPoint precss_content_height_;
+
 		bool is_replaceable_;
 
 		bool is_first_inline_child_;
 		bool is_last_inline_child_;
+
+		KRE::SceneTreePtr scene_tree_;
 	};
 
 	std::ostream& operator<<(std::ostream& os, const Rect& r);

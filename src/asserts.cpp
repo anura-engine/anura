@@ -45,6 +45,8 @@
 
 namespace 
 {
+	PREF_BOOL(error_message_box, true, "Show a message dialog when an error occurs");
+
 	std::function<void()> g_edit_and_continue_fn;
 }
 
@@ -106,10 +108,12 @@ void report_assert_msg(const std::string& m)
 	__android_log_print(ANDROID_LOG_INFO, "Frogatto", m.c_str());
 #endif
 	
-	std::stringstream ss;
-	ss << "Assertion failed\n\n" << m;
-	std::string assert_str = ss.str();
-	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Assertion Failed", assert_str.c_str(), nullptr);
+	if(g_error_message_box) {
+		std::stringstream ss;
+		ss << "Assertion failed\n\n" << m;
+		std::string assert_str = ss.str();
+		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Assertion Failed", assert_str.c_str(), nullptr);
+	}
 
 
 #if defined(WIN32)

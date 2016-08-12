@@ -26,6 +26,8 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/uuid/sha1.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/exception/diagnostic_information.hpp>
+#include <boost/exception_ptr.hpp>
 #include <iomanip>
 #include <iostream>
 #include <iomanip>
@@ -59,6 +61,7 @@
 #include "formula_object.hpp"
 #include "formula_profiler.hpp"
 #include "hex_logical_tiles.hpp"
+#include "hex_tile.hpp"
 #include "lua_iface.hpp"
 #include "md5.hpp"
 #include "module.hpp"
@@ -76,6 +79,7 @@
 #include "uuid.hpp"
 #include "variant_utils.hpp"
 #include "voxel_model.hpp"
+#include "widget_factory.hpp"
 
 #include "Texture.hpp"
 #include "Cursor.hpp"
@@ -90,6 +94,8 @@ using boost::math::acosh;
 using boost::math::atanh;
 #endif
 
+PREF_BOOL(dump_to_console, true, "Send dump() to the console");
+PREF_STRING(log_console_filter, "", "");
 PREF_STRING(auto_update_status, "", "");
 PREF_INT(fake_time_adjust, 0, "Adjusts the time known to the game by the specified number of seconds.");
 extern variant g_auto_update_info;
@@ -487,6 +493,11 @@ namespace game_logic
 			return variant(&Level::current());
 		RETURN_TYPE("builtin level")
 		END_FUNCTION_DEF(current_level)
+
+		FUNCTION_DEF(cancel, 0, 0, "cancel(): cancel the current command pipeline")
+			return variant(new FnCommandCallable([=]() { deferCurrentCommandSequence(); }));
+		RETURN_TYPE("commands")
+		END_FUNCTION_DEF(cancel)
 
 		FUNCTION_DEF(overload, 1, -1, "overload(fn...): makes an overload of functions")
 			std::vector<variant> functions;
@@ -1008,15 +1019,21 @@ namespace game_logic
 		return variant_type::get_type(variant::VARIANT_TYPE_BOOL);
 	END_FUNCTION_DEF(has_timed_out)
 
+	std::string g_handle_errors_error_message;
+
+	FUNCTION_DEF(get_error_message, 0, 0, "get_error_message: called after handle_errors() to get the error message")
+		return variant(g_handle_errors_error_message);
+	FUNCTION_TYPE_DEF
+		return variant_type::get_type(variant::VARIANT_TYPE_STRING);
+	END_FUNCTION_DEF(get_error_message)
+
 		FUNCTION_DEF(handle_errors, 2, 2, "handle_errors(expr, failsafe): evaluates 'expr' and returns it. If expr has fatal errors in evaluation, return failsafe instead. 'failsafe' is an expression which receives 'error_msg' and 'context' as parameters.")
 			const assert_recover_scope recovery_scope;
 			try {
 				return args()[0]->evaluate(variables);
 			} catch(validation_failure_exception& e) {
-				boost::intrusive_ptr<MapFormulaCallable> callable(new MapFormulaCallable(&variables));
-				callable->add("context", variant(&variables));
-				callable->add("error_msg", variant(e.msg));
-				return args()[1]->evaluate(*callable);
+				g_handle_errors_error_message = e.msg;
+				return args()[1]->evaluate(variables);
 			}
 		FUNCTION_TYPE_DEF
 			return args()[0]->queryVariantType();
@@ -1997,6 +2014,20 @@ FUNCTION_DEF_IMPL
 			}
 			return variant();
 		END_FUNCTION_DEF(map_controls)*/
+
+		FUNCTION_DEF(get_hex_editor_info, 0, 0, "get_hex_editor_info() ->[builtin hex_editor_info]")
+			auto ei = hex::HexEditorInfo::getHexEditorInfo();
+			return variant(&ei);
+		FUNCTION_ARGS_DEF
+			RETURN_TYPE("[builtin hex_editor_info]")
+		END_FUNCTION_DEF(get_hex_editor_info)
+
+		FUNCTION_DEF(get_hex_overlay_info, 0, 0, "get_hex_overlay_info() ->[builtin overlay]")
+			auto oi = hex::Overlay::getOverlayInfo();
+			return variant(&oi);
+		FUNCTION_ARGS_DEF
+			RETURN_TYPE("[builtin overlay]")
+		END_FUNCTION_DEF(get_hex_overlay_info)
 
 		FUNCTION_DEF(hex_logical_map, 1, 1, "hex_logical_map(map) ->builtin logical_map")
 			const variant m = args()[0]->evaluate(variables);
@@ -3205,15 +3236,24 @@ FUNCTION_DEF_IMPL
 			} else {
 				v = dlg_template;
 			}
-			return variant(new gui::Dialog(v, e));
+			auto d = widget_factory::create(v, e);
+			return variant(d.get());
+		FUNCTION_ARGS_DEF
+			ARG_TYPE("object");
+			ARG_TYPE("map|string");
+		FUNCTION_TYPE_DEF
+			return variant_type::get_builtin("dialog");
 		END_FUNCTION_DEF(dialog)
 
-		FUNCTION_DEF(show_modal, 1, 1, "showModal(dialog): Displays a modal dialog on the screen.")
+		FUNCTION_DEF(show_modal, 1, 1, "show_modal(dialog): Displays a modal dialog on the screen.")
 			variant graph = args()[0]->evaluate(variables);
 			gui::DialogPtr dialog = boost::intrusive_ptr<gui::Dialog>(graph.try_convert<gui::Dialog>());
 			ASSERT_LOG(dialog, "Dialog given is not of the correct type.");
 			dialog->showModal();
 			return variant::from_bool(dialog->cancelled() == false);
+		FUNCTION_ARGS_DEF
+			ARG_TYPE("builtin dialog|builtin file_chooser_dialog");
+		RETURN_TYPE("bool")
 		END_FUNCTION_DEF(show_modal)
 
 		FUNCTION_DEF(index, 2, 2, "index(list, value) -> index of value in list: Returns the index of the value in the list or -1 if value wasn't found in the list.")
@@ -4118,13 +4158,54 @@ FUNCTION_DEF_IMPL
 			return variant_type::get_commands();
 		END_FUNCTION_DEF(debug)
 
+		FUNCTION_DEF(log, 1, -1, "log(...): outputs arguments to stderr")
+			Formula::failIfStaticContext();
+
+			std::string str;
+			for(int n = 0; n != args().size(); ++n) {
+				if(n > 0) {
+					str += " ";
+				}
+
+				str += args()[n]->evaluate(variables).to_debug_string();
+			}
+
+			LOG_INFO("LOG: " << str);
+
+			if(g_log_console_filter.empty() == false) {
+				static const boost::regex re(g_log_console_filter);
+			 	boost::match_results<std::string::const_iterator> m;
+				if(boost::regex_match(str, m, re)) {
+					return variant(new debug_command(str));
+				}
+			}
+
+			return variant();
+			
+		FUNCTION_TYPE_DEF
+			return variant_type::get_commands();
+		END_FUNCTION_DEF(log)
+
+
 		namespace 
 		{
 			void debug_side_effect(variant v)
 			{
 				std::string s = v.to_debug_string();
 			#ifndef NO_EDITOR
-				debug_console::addMessage(s);
+				bool write_to_console = g_dump_to_console;
+
+				if(!write_to_console && g_log_console_filter.empty() == false) {
+					static const boost::regex re(g_log_console_filter);
+				 	boost::match_results<std::string::const_iterator> m;
+					if(boost::regex_match(s, m, re)) {
+						write_to_console = true;
+					}
+				}
+
+				if(write_to_console) {
+					debug_console::addMessage(s);
+				}
 			#endif
 				LOG_INFO("CONSOLE: " << s);
 			}
@@ -5505,6 +5586,34 @@ FUNCTION_ARGS_DEF
 RETURN_TYPE("string")
 END_FUNCTION_DEF(format)
 
+FUNCTION_DEF(sprintf, 1, -1, "sprintf(string, ...): Format the string using standard printf formatting.")
+	std::string input_str = args()[0]->evaluate(variables).as_string();
+
+	try {
+		boost::format f(input_str);
+
+		for(int i = 1; i < static_cast<int>(args().size()); ++i) {
+			variant v = args()[i]->evaluate(variables);
+			if(v.is_decimal()) {
+				f % v.as_decimal().as_float();
+			} else if(v.is_int()) {
+				f % v.as_int();
+			} else if(v.is_string()) {
+				f % v.as_string();
+			} else {
+				f % v.write_json();
+			}
+		}
+
+		std::string res = formatter() << f;
+		return variant(res);
+	} catch(boost::exception& e) {
+		ASSERT_LOG(false, "Error when formatting string: " << boost::diagnostic_information(e) << "\n" << debugPinpointLocation());
+	}
+FUNCTION_ARGS_DEF
+	ARG_TYPE("string");
+RETURN_TYPE("string")
+END_FUNCTION_DEF(sprintf)
 
 
 UNIT_TEST(modulo_operation) {
