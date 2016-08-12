@@ -1019,15 +1019,21 @@ namespace game_logic
 		return variant_type::get_type(variant::VARIANT_TYPE_BOOL);
 	END_FUNCTION_DEF(has_timed_out)
 
+	std::string g_handle_errors_error_message;
+
+	FUNCTION_DEF(get_error_message, 0, 0, "get_error_message: called after handle_errors() to get the error message")
+		return variant(g_handle_errors_error_message);
+	FUNCTION_TYPE_DEF
+		return variant_type::get_type(variant::VARIANT_TYPE_STRING);
+	END_FUNCTION_DEF(get_error_message)
+
 		FUNCTION_DEF(handle_errors, 2, 2, "handle_errors(expr, failsafe): evaluates 'expr' and returns it. If expr has fatal errors in evaluation, return failsafe instead. 'failsafe' is an expression which receives 'error_msg' and 'context' as parameters.")
 			const assert_recover_scope recovery_scope;
 			try {
 				return args()[0]->evaluate(variables);
 			} catch(validation_failure_exception& e) {
-				boost::intrusive_ptr<MapFormulaCallable> callable(new MapFormulaCallable(&variables));
-				callable->add("context", variant(&variables));
-				callable->add("error_msg", variant(e.msg));
-				return args()[1]->evaluate(*callable);
+				g_handle_errors_error_message = e.msg;
+				return args()[1]->evaluate(variables);
 			}
 		FUNCTION_TYPE_DEF
 			return args()[0]->queryVariantType();
