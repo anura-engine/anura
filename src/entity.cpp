@@ -434,13 +434,13 @@ void Entity::setDistinctLabel()
 
 void Entity::setControlStatus(const std::string& key, bool value)
 {
-	static const std::string keys[] = { "up", "down", "left", "right", "attack", "jump" };
-	const std::string* k = std::find(keys, keys + controls::NUM_CONTROLS, key);
-	if(k == keys + controls::NUM_CONTROLS) {
+	static const std::vector<std::string> keys { "up", "down", "left", "right", "attack", "jump" };
+	const auto it = std::find(keys.begin(), keys.end(), key);
+	if(it == keys.end()) {
 		return;
 	}
 
-	const auto index = k - keys;
+	const auto index = it - keys.begin();
 	controls_[index] = value;
 }
 
