@@ -1318,9 +1318,9 @@ bool editor::handleEvent(const SDL_Event& event, bool swallowed)
 	case SDL_MOUSEWHEEL: {
 			int mousex, mousey;
 			input::sdl_get_mouse_state(&mousex, &mousey);
-			
-			const int xpos = xpos_ + mousex*zoom_;
-			if(xpos < editor_x_resolution-sidebar_width()) {
+
+			//const int xpos = xpos_ + mousex*zoom_;
+			if(mousex < editor_x_resolution-sidebar_width()) {
 				if(event.wheel.y < 0) {
 					zoomIn();
 				} else {
