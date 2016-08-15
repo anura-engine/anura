@@ -57,7 +57,7 @@ namespace KRE
 		get_color_stack().emplace(color);
 	}
 
-	ColorScope::~ColorScope() noexcept(false)
+	ColorScope::~ColorScope()
 	{
 		if(pop_stack_) {
 			ASSERT_LOG(get_color_stack().empty() == false, "Color stack was empty in desctructor");
