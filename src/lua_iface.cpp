@@ -70,7 +70,7 @@ namespace lua
 				, file_(file)
 				, line_(line)
 			{}
-			~assert_stack_neutral()
+			~assert_stack_neutral() noexcept(false)
 			{
 				ASSERT_LOG(stack_ == lua_gettop(L_), "lua stack corruption detected: start " << stack_ << " end " << lua_gettop(L_) << "  [" << file_ << ":" << line_ << "]");
 			}

@@ -150,7 +150,7 @@ namespace game_logic
 		constants_stack.push_back(m);
 	}
 
-	ConstantsLoader::~ConstantsLoader()
+	ConstantsLoader::~ConstantsLoader() noexcept(false)
 	{
 		ASSERT_EQ(constants_stack.empty(), false);
 		constants_stack.pop_back();
