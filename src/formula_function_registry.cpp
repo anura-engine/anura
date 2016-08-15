@@ -25,17 +25,34 @@
 #include "formula_function_registry.hpp"
 #include "unit_test.hpp"
 
-namespace 
+namespace
 {
+	typedef std::map<std::string, std::map<std::string, FunctionCreator*> > function_creators_table;
+	typedef std::map<std::string, std::vector<std::string> > helpstrings_table;
+
+	// Takes ownership of the pointers in the function creator table,
+	// deleting them at program termination to suppress valgrind false positives.
+	struct function_creator_manager {
+		function_creators_table table_;
+
+		~function_creator_manager() {
+			for(function_creators_table::value_type & v : table_) {
+				for(auto u : v.second) {
+					delete(u.second);
+				}
+			}
+		}
+	};
+
 	std::map<std::string, std::map<std::string, FunctionCreator*> >& function_creators()
 	{
-		static std::map<std::string, std::map<std::string, FunctionCreator*> > instance;
-		return instance;
+		static function_creator_manager instance;
+		return instance.table_;
 	}
 
 	std::map<std::string, std::vector<std::string> >& helpstrings()
 	{
-		static std::map<std::string, std::vector<std::string> > instance;
+		static helpstrings_table instance;
 		return instance;
 	}
 }
