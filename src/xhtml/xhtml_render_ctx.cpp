@@ -157,7 +157,7 @@ namespace xhtml
 		}
 	}
 
-	RenderContext::Manager::~Manager()
+	RenderContext::Manager::~Manager() noexcept(false)
 	{
 		for(auto n : update_list) {
 			get_stack_array()[n].pop();

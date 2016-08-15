@@ -35,7 +35,7 @@ namespace game_logic
 	{
 	public:
 		explicit ConstantsLoader(variant node);
-		~ConstantsLoader();
+		~ConstantsLoader() noexcept(false);
 
 		bool same_as_base() const { return same_as_base_; }
 
