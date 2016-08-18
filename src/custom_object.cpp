@@ -2718,6 +2718,24 @@ void CustomObject::setAnimatedSchedule(std::shared_ptr<AnimatedMovement> movemen
 
 void CustomObject::addAnimatedMovement(variant attr_var, variant options)
 {
+	if(options["sleep"].as_bool(false)) {
+		variant cmd = game_logic::deferCurrentCommandSequence();
+		if(cmd.is_null() == false) {
+			static const variant OnComplete("on_complete");
+			variant on_complete = options[OnComplete];
+			if(on_complete.is_null()) {
+				on_complete = cmd;
+			} else {
+				std::vector<variant> v;
+				v.push_back(on_complete);
+				v.push_back(cmd);
+				on_complete = variant(&v);
+			}
+
+			options = options.add_attr(OnComplete, on_complete);
+		}
+	}
+
 	const std::string& name = options["name"].as_string_default("");
 	if(options["replace_existing"].as_bool(false)) {
 		cancelAnimatedSchedule(name);
@@ -2782,20 +2800,6 @@ void CustomObject::addAnimatedMovement(variant attr_var, variant options)
 	movement->on_begin = options["on_begin"];
 	movement->on_process = options["on_process"];
 	movement->on_complete = options["on_complete"];
-
-	if(options["sleep"].as_bool(false)) {
-		variant cmd = game_logic::deferCurrentCommandSequence();
-		if(cmd.is_null() == false) {
-			if(movement->on_complete.is_null()) {
-				movement->on_complete = cmd;
-			} else {
-				std::vector<variant> v;
-				v.push_back(movement->on_complete);
-				v.push_back(cmd);
-				movement->on_complete = variant(&v);
-			}
-		}
-	}
 
 	setAnimatedSchedule(movement);
 }
