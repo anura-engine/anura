@@ -357,6 +357,8 @@ protected:
 	int getPrevFeetX() const { return prev_feet_x_; }
 	int getPrevFeetY() const { return prev_feet_y_; }
 
+	virtual bool editorOnly() const { return false; }
+
 protected:
 	void surrenderReferences(GarbageCollector* collector);
 

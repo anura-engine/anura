@@ -200,6 +200,7 @@ CustomObject::CustomObject(variant node)
 	parent_prev_x_(std::numeric_limits<int>::min()), parent_prev_y_(std::numeric_limits<int>::min()), parent_prev_facing_(true),
     relative_x_(node["relative_x"].as_int(0)), relative_y_(node["relative_y"].as_int(0)),
 	swallow_mouse_event_(false),
+	editor_only_(node["editor_only"].as_bool(false)),
 	currently_handling_die_event_(0),
 	use_absolute_screen_coordinates_(node["use_absolute_screen_coordinates"].as_bool(type_->useAbsoluteScreenCoordinates())),
 	paused_(false),
@@ -545,6 +546,7 @@ CustomObject::CustomObject(const std::string& type, int x, int y, bool face_righ
 	parent_prev_x_(std::numeric_limits<int>::min()), parent_prev_y_(std::numeric_limits<int>::min()), parent_prev_facing_(true),
     relative_x_(0), relative_y_(0),
 	swallow_mouse_event_(false),
+	editor_only_(type_->editorOnly()),
 	min_difficulty_(-1), max_difficulty_(-1),
 	currently_handling_die_event_(0),
 	use_absolute_screen_coordinates_(type_->useAbsoluteScreenCoordinates()),
@@ -695,6 +697,7 @@ CustomObject::CustomObject(const CustomObject& o)
 	custom_draw_(o.custom_draw_),
 	platform_offsets_(o.platform_offsets_),
 	swallow_mouse_event_(false),
+	editor_only_(o.editor_only_),
 	currently_handling_die_event_(0),
 	//do NOT copy widgets since they do not support deep copying
 	//and re-seating references is difficult.

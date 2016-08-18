@@ -294,8 +294,12 @@ namespace
 				if(itor == items.end()) {
 					items.insert(p);
 				} else {
+					variant orig = itor->second;
 					std::string appended = itor->second.as_string() + " ; " + p.second.as_string();
 					itor->second = variant(appended);
+					if(orig.get_debug_info()) {
+						itor->second.setDebugInfo(*orig.get_debug_info());
+					}
 				}
 			}
 
@@ -1170,6 +1174,7 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
     body_passthrough_(node["body_passthrough"].as_bool(false)),
     ignore_collide_(node["ignore_collide"].as_bool(false)),
     object_level_collisions_(node["object_level_collisions"].as_bool(false)),
+	editor_only_(node["editor_only"].as_bool(false)),
 	surface_friction_(node["surface_friction"].as_int(100)),
 	surface_traction_(node["surface_traction"].as_int(100)),
 	friction_(node["friction"].as_int()),

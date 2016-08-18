@@ -328,7 +328,7 @@ variant PlayableCustomObject::getPlayerValueBySlot(int slot) const
 
 #ifndef NO_EDITOR
 		if(LevelRunner::getCurrent()) {
-			const editor* e = LevelRunner::getCurrent()->get_editor();
+			ConstEditorPtr e = LevelRunner::getCurrent()->get_editor();
 			if(e && e->hasKeyboardFocus()) {
 				//the editor has the focus, so we tell the game there
 				//are no keys pressed.
