@@ -1544,8 +1544,7 @@ namespace game_logic
 			ARG_TYPE("int|decimal");
 			ARG_TYPE("int|decimal");
 			ARG_TYPE("int|decimal");
-		FUNCTION_TYPE_DEF
-			return variant_type::get_list(variant_type::get_type(variant::VARIANT_TYPE_DECIMAL));
+			RETURN_TYPE("[decimal,decimal]")
 		END_FUNCTION_DEF(orbit)
 
 
