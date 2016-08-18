@@ -132,7 +132,7 @@ namespace KRE
 		model_matrix_changed = true;
 	}
 
-	ModelManager2D::~ModelManager2D() 
+	ModelManager2D::~ModelManager2D() NOEXCEPT(false)
 	{
 		ASSERT_LOG(get_translation_stack().empty() == false, "Unbalanced translation stack.");
 		ASSERT_LOG(get_rotation_stack().empty() == false, "Unbalanced rotation stack.");

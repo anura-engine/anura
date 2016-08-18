@@ -38,7 +38,7 @@ namespace KRE
 	public:
 		explicit ColorScope(const ColorPtr& color);
 		explicit ColorScope(const Color& color);
-		~ColorScope();
+		~ColorScope() NOEXCEPT(false);
 		static const Color& getCurrentColor();
 	private:
 		DISALLOW_COPY_ASSIGN_AND_DEFAULT(ColorScope);
