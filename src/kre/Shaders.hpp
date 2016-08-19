@@ -125,6 +125,7 @@ namespace KRE
 		virtual int getPUniform() const = 0;
 		virtual int getMvpUniform() const = 0;
 		virtual int getTexMapUniform() const = 0;
+		virtual int getDiscardUniform() const = 0;
 
 		virtual int getColorAttribute() const = 0;
 		virtual int getVertexAttribute() const = 0;

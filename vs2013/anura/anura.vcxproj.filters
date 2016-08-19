@@ -999,33 +999,6 @@
     <ClInclude Include="..\..\src\tiled\tmx_reader.hpp">
       <Filter>Header Files\tiled</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\hex\hex_fwd.hpp">
-      <Filter>Header Files\hex</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\hex\hex_logical_fwd.hpp">
-      <Filter>Header Files\hex</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\hex\hex_logical_tiles.hpp">
-      <Filter>Header Files\hex</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\hex\hex_map.hpp">
-      <Filter>Header Files\hex</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\hex\hex_object.hpp">
-      <Filter>Header Files\hex</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\hex\hex_pathfinding.hpp">
-      <Filter>Header Files\hex</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\hex\hex_tile.hpp">
-      <Filter>Header Files\hex</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\hex\hex_renderable.hpp">
-      <Filter>Header Files\hex</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\hex\hex_renderable_fwd.hpp">
-      <Filter>Header Files\hex</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\xhtml\css_lexer.hpp">
       <Filter>Header Files\xhtml</Filter>
     </ClInclude>
@@ -1175,6 +1148,33 @@
     </ClInclude>
     <ClInclude Include="..\..\src\xhtml\xslider.hpp">
       <Filter>Header Files\xhtml</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\hex\hex_tile.hpp">
+      <Filter>Header Files\hex</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\hex\tile_rules.hpp">
+      <Filter>Header Files\hex</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\hex\hex.hpp">
+      <Filter>Header Files\hex</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\hex\hex_fwd.hpp">
+      <Filter>Header Files\hex</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\hex\hex_helper.hpp">
+      <Filter>Header Files\hex</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\hex\hex_loader.hpp">
+      <Filter>Header Files\hex</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\hex\hex_map.hpp">
+      <Filter>Header Files\hex</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\hex\hex_renderable.hpp">
+      <Filter>Header Files\hex</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\hex\hex_renderable_fwd.hpp">
+      <Filter>Header Files\hex</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -2026,24 +2026,6 @@
     <ClCompile Include="..\..\src\tiled\tmx_reader.cpp">
       <Filter>Source Files\tiled</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\hex\hex_logical_tiles.cpp">
-      <Filter>Source Files\hex</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\hex\hex_map.cpp">
-      <Filter>Source Files\hex</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\hex\hex_object.cpp">
-      <Filter>Source Files\hex</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\hex\hex_pathfinding.cpp">
-      <Filter>Source Files\hex</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\hex\hex_tile.cpp">
-      <Filter>Source Files\hex</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\hex\hex_renderable.cpp">
-      <Filter>Source Files\hex</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\xhtml\css_lexer.cpp">
       <Filter>Source Files\xhtml</Filter>
     </ClCompile>
@@ -2184,6 +2166,24 @@
     </ClCompile>
     <ClCompile Include="..\..\src\xhtml\xslider.cpp">
       <Filter>Source Files\xhtml</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\hex\hex_helper.cpp">
+      <Filter>Source Files\hex</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\hex\hex_loader.cpp">
+      <Filter>Source Files\hex</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\hex\hex_map.cpp">
+      <Filter>Source Files\hex</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\hex\hex_renderable.cpp">
+      <Filter>Source Files\hex</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\hex\hex_tile.cpp">
+      <Filter>Source Files\hex</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\hex\tile_rules.cpp">
+      <Filter>Source Files\hex</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

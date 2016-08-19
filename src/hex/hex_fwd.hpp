@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2014-2015 by Kristina Simpson <sweet.kristas@gmail.com>
+	Copyright (C) 2013-2016 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -24,25 +24,24 @@
 #pragma once
 
 #include <memory>
-#include <vector>
+#include "formula_callable_definition_fwd.hpp"
 
-#include "geometry.hpp"
-#include "hex_logical_fwd.hpp"
-
-namespace hex 
+namespace hex
 {
-	class HexMap;
-	class MaskNode;
-	class HexObject;
-	class TileSheet;
-	class TileType;
-	class Overlay;
-	struct AdjacencyPattern;
+	class HexTile;
+	typedef boost::intrusive_ptr<HexTile> HexTilePtr;
 
+	class TerrainRule;
+	typedef std::shared_ptr<TerrainRule> TerrainRulePtr;
+
+	class HexMap;
 	typedef boost::intrusive_ptr<HexMap> HexMapPtr;
+
+	class HexObject;
+	struct ImageHolder;
+
+	class MaskNode;
 	typedef boost::intrusive_ptr<MaskNode> MaskNodePtr;
-	typedef std::shared_ptr<HexObject> HexObjectPtr;
-	typedef std::shared_ptr<const TileSheet> TileSheetPtr;
-	typedef std::shared_ptr<TileType> TileTypePtr;
-	typedef boost::intrusive_ptr<Overlay> OverlayPtr;
+
+	extern const int g_hex_tile_size;
 }

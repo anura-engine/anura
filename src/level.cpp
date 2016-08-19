@@ -47,9 +47,7 @@
 #include "formatter.hpp"
 #include "formula_profiler.hpp"
 #include "json_parser.hpp"
-#include "hex_map.hpp"
-#include "hex_mask.hpp"
-#include "hex_renderable.hpp"
+#include "hex.hpp"
 #include "level.hpp"
 #include "level_object.hpp"
 #include "level_runner.hpp"
@@ -429,7 +427,7 @@ Level::Level(const std::string& level_cfg, variant node)
 
 	if(node.has_key("hex_map")) {
 		ASSERT_LOG(scene_graph_ != nullptr, "Couldn't instantiate a HexMap object, scenegraph was nullptr");
-		hex_map_ = hex::HexMap::factory(node["hex_map"]);
+		hex_map_ = hex::HexMap::create(node["hex_map"]);
 		hex_renderable_ = std::dynamic_pointer_cast<hex::MapNode>(scene_graph_->createNode("hex_map"));
 		hex_map_->setRenderable(hex_renderable_);
 		scene_graph_->getRootNode()->attachNode(hex_renderable_);
@@ -3786,7 +3784,7 @@ DEFINE_SET_FIELD_TYPE("null|map")
 	}
 
 	if(value.is_map()) {
-		obj.hex_map_ = hex::HexMap::factory(value);
+		obj.hex_map_ = hex::HexMap::create(value);
 		obj.hex_renderable_ = std::dynamic_pointer_cast<hex::MapNode>(obj.scene_graph_->createNode("hex_map"));
 		obj.hex_map_->setRenderable(obj.hex_renderable_);
 		obj.scene_graph_->getRootNode()->attachNode(obj.hex_renderable_);

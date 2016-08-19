@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2014-2015 by Kristina Simpson <sweet.kristas@gmail.com>
+	Copyright (C) 2013-2016 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -23,107 +23,62 @@
 
 #pragma once
 
-#include <vector>
-#include <map>
+#include <string>
 
 #include "hex_fwd.hpp"
-#include "hex_logical_tiles.hpp"
-#include "variant.hpp"
+#include "formula_callable.hpp"
+#include "formula_callable_definition.hpp"
 
-#include "SceneUtil.hpp"
-#include "Texture.hpp"
-
-namespace hex 
+namespace hex
 {
-	class HexEditorInfo;
-	typedef boost::intrusive_ptr<HexEditorInfo> HexEditorInfoPtr;
-
-	class HexEditorInfo : public game_logic::FormulaCallable
-	{
-		public:
-			HexEditorInfo();
-			explicit HexEditorInfo(const std::string& name, const std::string& type, const std::string& group, const KRE::TexturePtr& image, const std::string& image_file, const rect& r);
-			static std::vector<variant> getHexEditorInfo();
-		private:
-			DECLARE_CALLABLE(HexEditorInfo);
-			std::string name_;
-			std::string type_;
-			std::string image_file_;
-			KRE::TexturePtr image_;
-			std::string group_;
-			rect image_rect_;
-	};
-
-	struct AdjacencyPattern 
-	{
-		AdjacencyPattern(int x, int y, const rect& a) : ox(x), oy(y), area(a) {}
-		int ox;
-		int oy;
-		rect area;
-	};
-
-	enum class TileTypeId {
-		BASIC,
-		WALL,
-	};
-
-	class TileType
+	class HexTile : public game_logic::FormulaCallable
 	{
 	public:
-		TileType(TileTypeId ttid, const std::string& tile, int num_id) : ttid_(ttid), tile_id_(tile), num_id_(num_id), tex_() {}
-		virtual ~TileType() {}
-		const std::string& id() const { return tile_id_; }
-		int numeric_id() const { return num_id_; }
-		TileTypeId getTileTypeId() const { return ttid_; }
-		variant write() const;
-		virtual void calculateAdjacencyPattern(int x, int y, const HexMap* hmap, std::vector<AdjacencyPattern>* patterns) = 0;
+		HexTile(const std::string& str);
+		const std::string& getId() const { return id_; }
+		const std::string& geName() const { return name_; }
+		const std::string& getString() const { return str_; }
 
-		static TileTypePtr factory(const std::string& tile);
+		const std::string& getEditorGroup() const { return str_; }
+		const std::string& getEditorName() const { return str_; }
+		const std::string& getSymbolImage() const { return str_; }
+		const std::string& getIconImage() const { return str_; }
+		const std::string& getHelpTopicText() const { return str_; }
+		bool isHidden() const { return hidden_; }
+		bool canRecruitOnto() const { return recruit_onto_; }
+		bool isHelpHidden() const { return hide_help_; }
 
-		KRE::TexturePtr getTexture() const { return tex_; }
+		void setId(const std::string& id) { id_ = id; }
+		void setName(const std::string& name) { name_ = name; }
+		void setEditorGroup(const std::string& editor_group) { editor_group_ = editor_group; }
+		void setEditorName(const std::string& editor_name) { editor_name_ = editor_name; }
+		void setSymbolImage(const std::string& symbol_image) { symbol_image_ = symbol_image; }
+		void setIconImage(const std::string& icon_image) { icon_image_ = icon_image; }
+		void setHelpTopicText(const std::string& help_topic_text) { help_topic_text_ = help_topic_text; }
+		void setHidden(bool hidden=true) { hidden_ = hidden; }
+		void setRecruitable(bool recruitable=true) { recruit_onto_ = recruitable; }
+		void setHideHelp(bool hidden=true) { hide_help_ = hidden; }
+		void setSubmerge(float submerge) { submerge_ = submerge; }
 
-		virtual void render(int x, int y, std::vector<KRE::vertex_texcoord>* coords) const = 0;
-		virtual void renderAdjacent(int x, int y, std::vector<KRE::vertex_texcoord>* coords, const std::vector<AdjacencyPattern>& patterns=std::vector<AdjacencyPattern>()) const = 0;
-	protected:
-		void setTexture(const std::string& filename);
-		void renderInternal(int x, int y, int ox, int oy, const rect& area, std::vector<KRE::vertex_texcoord>* coords) const;
+		void surrenderReferences(GarbageCollector* collector) override;
+
+		static HexTilePtr create(const std::string& str);
 	private:
-		virtual variant handleWrite() const = 0;
+		DECLARE_CALLABLE(HexTile);
 
-		TileTypeId ttid_;
-		int num_id_;
-		std::string tile_id_;
-		KRE::TexturePtr tex_;
-	};
-
-	struct Alternate 
-	{
-		rect r;
-		std::array<int, 4> border;
-	};
-
-	class Overlay : public game_logic::FormulaCallable
-	{
-	public:
-		explicit Overlay(const std::string& name, const std::string& image, const std::map<std::string, std::vector<variant>>& alts);
-		static OverlayPtr create(const std::string& name, const std::string& image, std::map<std::string, std::vector<variant>>& alts);
-		static OverlayPtr getOverlay(const std::string& name);
-		const Alternate& getAlternative(const std::string& type = std::string()) const;
-		KRE::TexturePtr getTexture() const { return texture_; }
-		static std::vector<variant> getOverlayInfo();
-	private:
-		DECLARE_CALLABLE(Overlay);
-
+		std::string id_;
 		std::string name_;
-		std::string image_name_;
-		KRE::TexturePtr texture_;
-
-		std::map<std::string, std::vector<Alternate>> alternates_;
-
-		Overlay(const Overlay&) = delete;
-		Overlay() = delete;
-		Overlay& operator=(const Overlay&) = delete;
+		std::string str_;
+		std::string editor_group_;
+		std::string editor_name_;
+		// minimap image
+		std::string symbol_image_;
+		// icon image.
+		std::string icon_image_;
+		std::string help_topic_text_;
+		bool hidden_;
+		bool recruit_onto_;
+		bool hide_help_;
+		float submerge_;
 	};
-
-	void loader(const variant& n, const variant& rules);
 }

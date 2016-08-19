@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2014-2015 by Kristina Simpson <sweet.kristas@gmail.com>
+	Copyright (C) 2013-2016 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -23,36 +23,20 @@
 
 #pragma once
 
-#include <memory>
-#include <vector>
+#include "variant.hpp"
+#include "hex_fwd.hpp"
 
-#include "geometry.hpp"
-#include "formula_callable.hpp"
-#include "formula_callable_definition.hpp"
+#include "Texture.hpp"
 
 namespace hex
 {
-	enum direction { NORTH, NORTH_EAST, SOUTH_EAST, SOUTH, SOUTH_WEST, NORTH_WEST };
+	typedef std::vector<hex::TerrainRulePtr> terrain_rule_type;
 
-	namespace logical
-	{
-		class Tile;
-		typedef boost::intrusive_ptr<Tile> TilePtr;
-		typedef boost::intrusive_ptr<const Tile> ConstTilePtr;
-		class LogicalMap;
-		typedef boost::intrusive_ptr<LogicalMap> LogicalMapPtr;
-	}
+	HexTilePtr get_tile_from_type(const std::string& type_str);
+	const terrain_rule_type& get_terrain_rules();
+	KRE::TexturePtr get_terrain_texture(const std::string& filename, rect* area, std::vector<int>* borders);
+	bool terrain_info_exists(const std::string& name);
+	std::vector<variant> get_editor_info();
 
-	struct MoveCost
-	{
-		MoveCost(const point& p, float c) : loc(p), path_cost(c) {}
-		point loc;
-		float path_cost;
-	};
-	// XXX result_list might be better served as a std::set
-	typedef std::vector<MoveCost> result_list;
-
-	struct graph_t;
-	typedef std::shared_ptr<graph_t> HexGraphPtr;
-
+	void load(const std::string& base_path);
 }

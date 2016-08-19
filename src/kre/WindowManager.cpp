@@ -82,7 +82,10 @@ namespace KRE
 			  renderer_(nullptr),
 			  context_(nullptr),
 			  nonfs_width_(width),
-			  nonfs_height_(height)
+			  nonfs_height_(height),
+			  request_major_version_(2),
+			  request_minor_version_(1),
+			  profile_(ProfileValue::COMPAT)
 		{
 			if(hints.has_key("renderer")) {
 				if(hints["renderer"].is_string()) {
@@ -103,6 +106,24 @@ namespace KRE
 			} else {
 				SDL_SetHint(SDL_HINT_VIDEO_HIGHDPI_DISABLED, "1");
 			}
+
+			if(hints.has_key("version")) {
+				const int version = hints["version"].as_int32();
+				request_major_version_ = version / 100;
+				request_minor_version_ = version % 100;
+			}
+			if(hints.has_key("profile")) {
+				const std::string profile = hints["profile"].as_string();
+				if(profile == "compatibility" || profile == "compat") {
+					profile_ = ProfileValue::COMPAT;
+				} else if(profile == "core") {
+					profile_ = ProfileValue::CORE;
+				} else if(profile == "es" || profile == "ES") {
+					profile_ = ProfileValue::ES;
+				} else {
+					LOG_ERROR("Unrecognized profile setting '" << profile << "' defaulting to compatibility.");
+				}
+			}
 		}
 
 		void createWindow() override {
@@ -121,10 +142,34 @@ namespace KRE
 				// We need to do extra SDL set-up for an OpenGL context.
 				// Since these parameter's need to be set-up before context
 				// creation.
-				SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
-				SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
-				SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
-				SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
+				int err;
+				err = SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, request_major_version_);
+				if(err) {
+					LOG_ERROR("Setting major OpenGL context version to " << request_major_version_ << ": " << SDL_GetError());
+				}
+				err = SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, request_minor_version_);
+				if(err) {
+					LOG_ERROR("Setting minor OpenGL context version to " << request_minor_version_ << ": " << SDL_GetError());
+				}
+				SDL_GLprofile prof;
+				switch(profile_) {
+					case ProfileValue::COMPAT:	prof = SDL_GL_CONTEXT_PROFILE_COMPATIBILITY; break;
+					case ProfileValue::CORE:	prof = SDL_GL_CONTEXT_PROFILE_CORE; break;
+					case ProfileValue::ES:		prof = SDL_GL_CONTEXT_PROFILE_ES; break;
+					default: prof = SDL_GL_CONTEXT_PROFILE_COMPATIBILITY;
+				}
+				err = SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, prof);
+				if(err) {
+					LOG_ERROR("Setting major OpenGL profile mask to " << prof << ": " << SDL_GetError());
+				}
+				err = SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+				if(err) {
+					LOG_ERROR("Setting major OpenGL depth to 24: " << SDL_GetError());
+				}
+				err = SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
+				if(err) {
+					LOG_ERROR("Setting major OpenGL stencil size to 8: " << SDL_GetError());
+				}
 				if(use16bpp()) {
 					SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 5);
 					SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 5);
@@ -365,6 +410,7 @@ namespace KRE
 			} else if(fullscreenMode() == FullScreenMode::FULLSCREEN_WINDOWED) {
 				nonfs_width_ = width();
 				nonfs_height_ = height();
+
 				if(SDL_SetWindowFullscreen(window_.get(), SDL_WINDOW_FULLSCREEN_DESKTOP) != 0) {
 					LOG_WARN("Unable to set windowed fullscreen mode at " << width() << " x " << height());
 					return;
@@ -414,6 +460,16 @@ namespace KRE
 		int nonfs_width_;
 		// Height of the window before changing to full-screen mode
 		int nonfs_height_;
+
+		int request_major_version_;
+		int request_minor_version_;
+
+		enum class ProfileValue {
+			COMPAT,
+			CORE,
+			ES,
+		};
+		ProfileValue profile_;
 
 		SDLWindow(const SDLWindow&);
 	};

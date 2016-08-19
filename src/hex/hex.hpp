@@ -21,37 +21,10 @@
 	   distribution.
 */
 
-#include "hex_tile.hpp"
+#pragma once
 
-namespace hex
-{
-	HexTile::HexTile(const std::string& str)
-		: id_(),
-		name_(),
-		str_(str),
-		editor_group_(),
-		editor_name_(),
-		symbol_image_(),
-		icon_image_(),
-		help_topic_text_(),
-		hidden_(false),
-		recruit_onto_(false),
-		hide_help_(false),
-		submerge_(0.0f)
-	{
-	}
-
-	HexTilePtr HexTile::create(const std::string& str)
-	{
-		return HexTilePtr(new HexTile(str));
-	}
-
-	void HexTile::surrenderReferences(GarbageCollector* collector)
-	{
-	}
-
-	BEGIN_DEFINE_CALLABLE_NOBASE(HexTile)
-		DEFINE_FIELD(dummy, "int")
-			return variant(0);
-	END_DEFINE_CALLABLE(HexTile)
-}
+#include "hex_fwd.hpp"
+#include "hex_loader.hpp"
+#include "hex_map.hpp"
+#include "hex_mask.hpp"
+#include "hex_renderable.hpp"

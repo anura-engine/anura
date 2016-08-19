@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2014-2015 by Kristina Simpson <sweet.kristas@gmail.com>
+	Copyright (C) 2013-2016 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -21,336 +21,178 @@
 	   distribution.
 */
 
-#include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string.hpp>
-#include <sstream>
 
 #include "asserts.hpp"
+#include "filesystem.hpp"
 #include "hex_map.hpp"
-#include "hex_object.hpp"
-#include "hex_renderable.hpp"
 #include "hex_tile.hpp"
+#include "hex_loader.hpp"
+#include "hex_renderable.hpp"
 #include "profile_timer.hpp"
-#include "variant.hpp"
-#include "variant_utils.hpp"
+#include "tile_rules.hpp"
 
-namespace hex 
+namespace hex
 {
-	static const int HexTileSize = 72;
-
-	HexMap::HexMap(const variant& value)
-		: map_(),
-		  zorder_(value["zorder"].as_int32(-1000)),
-		  border_(value["border"].as_int32(0)),
-		  tiles_(),
+	HexMap::HexMap(const std::string& filename)
+		: tiles_(),
+		  x_(0),
+		  y_(0),
+		  width_(0),
+		  height_(0),
+		  starting_positions_(),
 		  changed_(false),
-		  rx_(0),
-		  ry_(0),
 		  renderable_(nullptr)
 	{
+		int max_x = -1;
+		// assume a old-style map.
+		int y = 0;
+		auto contents = sys::read_file(filename);
+		std::vector<std::string> lines;
+		boost::split(lines, contents, boost::is_any_of("\n\r"), boost::token_compress_on);
+		for(const auto& line : lines) {
+			int x = 0;
+			if(line.empty()) {
+				continue;
+			}
+			std::vector<std::string> types;
+			boost::split(types, line, boost::is_any_of(","), boost::token_compress_off);
+			for(const auto& type : types) {
+				std::string full_type = boost::trim_copy(type);
+				auto pos = full_type.find(' ');
+				if(pos != std::string::npos) {
+					full_type = full_type.substr(pos+1);
+				}
+				std::string type_str = full_type;
+				pos = type_str.find('^');
+				std::string mod_str;
+				if(pos != std::string::npos) {
+					mod_str = type_str.substr(pos + 1);
+					type_str = type_str.substr(0, pos);
+				}
+				pos = type_str.find(' ');
+				std::string player_pos;
+				if(pos != std::string::npos) {
+					player_pos = type_str.substr(0, pos);
+					type_str = type_str.substr(pos + 1);
+					starting_positions_.emplace_back(point(x, y), player_pos);
+					LOG_INFO("Starting position " << player_pos << ": " << x << "," << y);
+				}
+				auto tile = get_tile_from_type(type_str);
+				tiles_.emplace_back(x, y, tile, this);
+				tiles_.back().setTypeStr(full_type, type_str, mod_str);
+				++x;
+				if(x > max_x) {
+					max_x = x;
+				}
+			}
+			++y;
+		}
+		width_ = max_x;
+		height_ = y;
+		LOG_INFO("HexMap size: " << width_ << "," << height_);
 	}
 
-	HexMapPtr HexMap::factory(const variant& n)
+	HexMap::HexMap(const variant& v)
 	{
-		HexMapPtr p = HexMapPtr(new HexMap(n));
-		
-		// create the logical version of the map.
-		p->map_ = hex::logical::LogicalMap::factory(n);
-		p->build();
-		for(auto& obj : p->tiles_) {
-			obj.setNeighborsChanged();
-		}
-		return p;
+		// XXX
+	}
+
+	HexMap::~HexMap()
+	{
 	}
 
 	void HexMap::build()
 	{
-		profile::manager pman("HexMap::build");
-		int index = 0;
-		const auto& tiles_changed = map_->getTilesChanged();
-		if(tiles_changed.empty() || tiles_changed.size() == tiles_.size()) {
-			tiles_.clear();
-			tiles_.reserve(map_->size());
-			for(auto& t : *map_) {
-				const int x = index % map_->width();
-				const int y = index / map_->width();
-				tiles_.emplace_back(t, x, y, this);
-				++index;
-			}
-		} else {
-			for(auto& t : tiles_changed) {
-				const int index = t.y * map_->width() + t.x;
-				tiles_[index] = HexObject(map_->getTileAt(t.x, t.y), t.x, t.y, this);
-			}
-		}		
-
-		for(auto& t : tiles_) {
-			t.initNeighbors();
+		profile::manager pman("HexMap::build()");
+		auto& terrain_rules = hex::get_terrain_rules();
+		for(auto& tr : terrain_rules) {
+			tr->match(boost::intrusive_ptr<HexMap>(this));
 		}
-		map_->clearChangeFlag();
-	}
-
-	variant HexMap::write() const
-	{
-		auto v = map_->write();
-		v.add_attr(variant("zorder"), variant(zorder_));
-		if(border_ != 0) {
-			v.add_attr(variant("border"), variant(border_));
-		}
-		return v;
-	}
-
-	void HexMap::process()
-	{
-		if(map_->isChanged()) {
-			changed_ = true;
-			build();
-		}
-
-		if(changed_) {
-			changed_ = false;
-			for(auto& obj : tiles_) {
-				obj.setNeighborsChanged();
-			}
-
-			if(renderable_) {
-				profile::manager pman("MapNode::update");
-				renderable_->update(width(), height(), tiles_);
-			}
-		}
-		if(renderable_) {
-			renderable_->setPosition(rx_, ry_, 0);
-		}
-	}
-
-	std::vector<const HexObject*> HexMap::getSurroundingTiles(int x, int y) const
-	{
-		std::vector<const HexObject*> res;
-		for(auto dir : { NORTH, NORTH_EAST, SOUTH_EAST, SOUTH, SOUTH_WEST, NORTH_WEST }) {
-			res.emplace_back(getHexTile(dir, x, y));
-		}
-		return res;
-	}
-
-	const HexObject* HexMap::getHexTile(direction d, int x, int y) const
-	{
-		int ox = x;
-		int oy = y;
-		assert(map_->x() == 0 && map_->y() == 0);
-		x -= map_->x();
-		y -= map_->y();
-		if(d == NORTH) {
-			y -= 1;
-		} else if(d == SOUTH) {
-			y += 1;
-		} else if(d == NORTH_WEST) {
-			y -= (abs(ox)%2==0) ? 1 : 0;
-			x -= 1;
-		} else if(d == NORTH_EAST) {
-			y -= (abs(ox)%2==0) ? 1 : 0;
-			x += 1;
-		} else if(d == SOUTH_WEST) {
-			y += (abs(ox)%2) ? 1 : 0;
-			x -= 1;
-		} else if(d == SOUTH_EAST) {
-			y += (abs(ox)%2) ? 1 : 0;
-			x += 1;
-		} else {
-			ASSERT_LOG(false, "Unrecognised direction: " << d);
-		}
-		if (x < 0 || y < 0 || y >= map_->height() || x >= map_->width()) {
-			return nullptr;
-		}
-
-		const int index = y * map_->width() + x;
-		assert(index >= 0 && index < static_cast<int>(tiles_.size()));
-		return &tiles_[index];
-	}
-
-	point HexMap::getTilePosFromPixelPos(int mx, int my)
-	{
-		const int tesselation_x_size = (3 * HexTileSize) / 2;
-		const int tesselation_y_size = HexTileSize;
-		const int x_base = (mx>=0) ? mx / tesselation_x_size * 2 : mx / tesselation_x_size * 2 - 2;
-		const int x_mod  = (mx>=0) ? mx % tesselation_x_size : tesselation_x_size + (mx % tesselation_x_size);
-		const int y_base = (my>=0) ? my / tesselation_y_size : my / tesselation_y_size - 1;
-		const int y_mod  = (my>=0) ? my % tesselation_y_size : tesselation_y_size + (my % tesselation_y_size);
-		const int m = 2;
-
-		int x_modifier = 0;
-		int y_modifier = 0;
-
-		if(y_mod < tesselation_y_size / 2) {
-			if((x_mod * m + y_mod) < (HexTileSize / 2)) {
-				x_modifier = -1;
-				y_modifier = -1;
-			} else if ((x_mod * m - y_mod) < (HexTileSize * 3 / 2)) {
-				x_modifier = 0;
-				y_modifier = 0;
-			} else {
-				x_modifier = 1;
-				y_modifier = -1;
-			}
-
-		} else {
-			if((x_mod * m - (y_mod - HexTileSize / 2)) < 0) {
-				x_modifier = -1;
-				y_modifier = 0;
-			} else if((x_mod * m + (y_mod - HexTileSize / 2)) < HexTileSize * 2) {
-				x_modifier = 0;
-				y_modifier = 0;
-			} else {
-				x_modifier = 1;
-				y_modifier = 0;
-			}
-		}
-		return point(x_base + x_modifier, y_base + y_modifier);
-	}
-
-	const HexObject* HexMap::getTileFromPixelPos(int mx, int my) const
-	{
-		point p = getTilePosFromPixelPos(mx, my);
-		return getTileAt(p.x, p.y);
-	}
-
-	point HexMap::getPixelPosFromTilePos(const point& p)
-	{
-		return getPixelPosFromTilePos(p.x, p.y);
-	}
-
-	point HexMap::getPixelPosFromTilePos(int x, int y)
-	{
-		const int HexTileSizeHalf = HexTileSize/2;
-		const int HexTileSizeThreeQuarters = (HexTileSize*3)/4;
-		const int tx = x*HexTileSizeThreeQuarters;
-		const int ty = HexTileSize*y + (abs(x)%2)*HexTileSizeHalf;
-		return point(tx, ty);
 	}
 
 	const HexObject* HexMap::getTileAt(int x, int y) const
 	{
-		x -= map_->x();
-		y -= map_->y();
-		if (x < 0 || y < 0 || y >= map_->height() || x >= map_->width()) {
+		x -= x_;
+		y -= y_;
+		if (x < 0 || y < 0 || y >= height_ || x >= width_) {
 			return nullptr;
 		}
 
-		const int index = y * map_->width() + x;
+		const int index = y * width_ + x;
 		assert(index >= 0 && index < static_cast<int>(tiles_.size()));
 		return &tiles_[index];
 	}
 
-	bool HexMap::setTile(int xx, int yy, const std::string& tile)
+	const HexObject* HexMap::getTileAt(const point& p) const 
 	{
-		if(xx < 0 || yy < 0 || xx >= map_->width() || yy >= map_->height()) {
-			return false;
-		}
-
-		const int index = yy * map_->width() + xx;
-		assert(index >= 0 && index < static_cast<int>(tiles_.size()));
-
-		auto ltp = logical::Tile::getLoadedTiles().find(tile);
-		ASSERT_LOG(ltp != logical::Tile::getLoadedTiles().end(), "Couldn't find tile named " << tile);
-		tiles_[index] = HexObject(ltp->second, xx, yy, this);
-		for(auto t : tiles_) {
-			t.setNeighborsChanged();
-		}
-		return true;
+		return getTileAt(p.x, p.y);
 	}
 
-	point HexMap::getLocInDir(int x, int y, direction d)
+	HexMapPtr HexMap::create(const std::string& filename)
 	{
-		int ox = x;
-		int oy = y;
-		if(d == NORTH) {
-			y -= 1;
-		} else if(d == SOUTH) {
-			y += 1;
-		} else if(d == NORTH_WEST) {
-			y -= (abs(ox)%2==0) ? 1 : 0;
-			x -= 1;
-		} else if(d == NORTH_EAST) {
-			y -= (abs(ox)%2==0) ? 1 : 0;
-			x += 1;
-		} else if(d == SOUTH_WEST) {
-			y += (abs(ox)%2) ? 1 : 0;
-			x -= 1;
-		} else if(d == SOUTH_EAST) {
-			y += (abs(ox)%2) ? 1 : 0;
-			x += 1;
-		} else {
-			ASSERT_LOG(false, "Unrecognised direction: " << d);
-		}
-		return point(x, y);
+		return boost::intrusive_ptr<HexMap>(new HexMap(filename));
 	}
 
-	point HexMap::getLocInDir(int x, int y, const std::string& s)
+	HexMapPtr HexMap::create(const variant& v)
 	{
-		if(s == "north" || s == "n") {
-			return getLocInDir(x, y, NORTH);
-		} else if(s == "south" || s == "s") {
-			return getLocInDir(x, y, SOUTH);
-		} else if(s == "north_west" || s == "nw" || s == "northwest") {
-			return getLocInDir(x, y, NORTH_WEST);
-		} else if(s == "north_east" || s == "ne" || s == "northeast") {
-			return getLocInDir(x, y, NORTH_EAST);
-		} else if(s == "south_west" || s == "sw" || s == "southwest") {
-			return getLocInDir(x, y, SOUTH_WEST);
-		} else if(s == "south_east" || s == "se" || s == "southeast") {
-			return getLocInDir(x, y, SOUTH_EAST);
+		return boost::intrusive_ptr<HexMap>(new HexMap(v));
+	}
+
+	void HexMap::process()
+	{
+		if(changed_) {
+			changed_ = false;
+			renderable_->update(width_, height_, tiles_);
 		}
-		ASSERT_LOG(false, "Unreognised direction " << s);
-		return point();
 	}
 
 	void HexMap::surrenderReferences(GarbageCollector* collector)
 	{
-		collector->surrenderPtr(&map_);
 	}
 
 	BEGIN_DEFINE_CALLABLE_NOBASE(HexMap)
-		DEFINE_FIELD(x, "int")
-			return variant(obj.rx_);
-		DEFINE_SET_FIELD
-			obj.rx_ = value.as_int();
-		DEFINE_FIELD(y, "int")
-			return variant(obj.ry_);
-		DEFINE_SET_FIELD
-			obj.ry_ = value.as_int();
-		DEFINE_FIELD(zorder, "int")
-			return variant(obj.zorder_);
-		DEFINE_FIELD(logical, "builtin logical_map")
-			return variant(obj.map_.get());
-		DEFINE_FIELD(changed, "bool")
-			return variant::from_bool(obj.changed_);
-		DEFINE_SET_FIELD
-			obj.changed_ = value.as_bool();
-		DEFINE_FIELD(tile_height, "int")
-			return variant(HexTileSize);
-		BEGIN_DEFINE_FN(write, "() -> map")
-			return obj.write();
-		END_DEFINE_FN
-		BEGIN_DEFINE_FN(tile_loc_from_pixel_pos, "([int,int]) ->[int,int]")
-			variant v = FN_ARG(0);
-			int x = v[0].as_int();
-			int y = v[1].as_int();
-
-			point p = HexMap::getTilePosFromPixelPos(x - obj.rx_, y - obj.ry_);
-			std::vector<variant> res;
-			res.push_back(variant(p.x));
-			res.push_back(variant(p.y));
-			return variant(&res);
-		END_DEFINE_FN
-		BEGIN_DEFINE_FN(tile_pixel_pos_from_loc, "([int,int]) ->[int,int]")
-			variant v = FN_ARG(0);
-			int x = v[0].as_int();
-			int y = v[1].as_int();
-
-			point p = HexMap::getPixelPosFromTilePos(x, y);
-			std::vector<variant> res;
-			res.push_back(variant(p.x + obj.rx_));
-			res.push_back(variant(p.y + obj.ry_));
-			return variant(&res);
-		END_DEFINE_FN
+		DEFINE_FIELD(dummy, "int")
+			return variant(0);
 	END_DEFINE_CALLABLE(HexMap)
+
+	HexObject::HexObject(int x, int y, const HexTilePtr & tile, const HexMap* parent)
+		: parent_(parent),
+		  pos_(x, y),
+		  tile_(tile),
+		  type_str_(),
+		  mod_str_()
+	{
+	}
+
+	const HexObject* HexObject::getTileAt(int x, int y) const 
+	{ 
+		return parent_->getTileAt(x, y); 
+	}
+
+	const HexObject* HexObject::getTileAt(const point& p) const 
+	{
+		return parent_->getTileAt(p);
+	}
+
+	void HexObject::setTempFlags() const
+	{
+		for(const auto& f : temp_flags_) {
+			flags_.emplace(f);
+		}
+	}
+
+	void HexObject::clearImages()
+	{
+		images_.clear();
+	}
+
+	void HexObject::addImage(const ImageHolder& holder)
+	{
+		if(holder.name.empty()) {
+			return;
+		}
+		LOG_INFO("Hex" << pos_ << ": " << holder.name << "; layer: " << holder.layer << "; base: " << holder.base << "; center: " << holder.center << "; offset: " << holder.offset);
+		images_.emplace_back(holder);
+	}
 }
