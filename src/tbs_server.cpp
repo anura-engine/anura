@@ -151,8 +151,6 @@ namespace tbs
 			return;
 		}
 
-		LOG_INFO("PIPE: queue_msg: " << session_id << ": " << msg);
-
 		auto ipc_itor = ipc_clients_.find(session_id);
 		if(ipc_itor != ipc_clients_.end()) {
 			ipc_itor->second.pipe->write(msg);
@@ -293,7 +291,6 @@ namespace tbs
 				variant v(json::parse(msg, json::JSON_PARSE_OPTIONS::NO_PREPROCESSOR));
 				handle_message(
 					[=](variant v) {
-						LOG_INFO("PIPE: WRITE IPC: " << v.write_json());
 						pipe->write(v.write_json());
 					},
 					[](client_info& info) {

@@ -507,6 +507,8 @@ namespace
 	private:
 		virtual void execute(Level& lvl, Entity& ob) const override;
 		variant request_;
+
+		mutable variant deferred_pipeline_;
 	};
 
 	class tbs_blocking_request : public game_logic::FormulaCallable
@@ -568,7 +570,13 @@ namespace
 		ASSERT_LOG(req, "Illegal object given to tbs blocking process");
 		req->process();
 		if(!req->got_response()) {
+			if(deferred_pipeline_.is_null()) {
+				deferred_pipeline_ = deferCurrentCommandSequence();
+			}
+
 			ob.addScheduledCommand(1, variant(this));
+		} else {
+			ob.executeCommand(deferred_pipeline_);
 		}
 	}
 
