@@ -29,6 +29,7 @@
 
 #include "button.hpp"
 #include "debug_console.hpp"
+#include "editor.hpp"
 #include "geometry.hpp"
 #include "level.hpp"
 #include "pause_game_dialog.hpp"
@@ -63,7 +64,7 @@ public:
 
 	void quit_game();
 
-	const editor* get_editor() const { return editor_; }
+	boost::intrusive_ptr<editor> get_editor() const { return editor_; }
 
 	bool is_paused() const { return paused; }
 
@@ -117,7 +118,7 @@ private:
 
 	void show_pause_title();
 
-	editor* editor_;
+	boost::intrusive_ptr<editor> editor_;
 #ifndef NO_EDITOR
 	std::unique_ptr<EditorResolutionManager> editor_resolution_manager_;
 	gui::SliderPtr history_slider_;

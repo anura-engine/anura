@@ -137,7 +137,7 @@ namespace KRE
 		}
 	}
 
-	BlendEquationScopeOGL::~BlendEquationScopeOGL()
+	BlendEquationScopeOGL::~BlendEquationScopeOGL() NOEXCEPT(false)
 	{
 		if(stored_) {
 			ASSERT_LOG(!get_equation_stack().empty(), "Something went badly wrong blend equation stack was empty.");
@@ -178,7 +178,7 @@ namespace KRE
 		}
 	}
 
-	BlendModeScopeOGL::~BlendModeScopeOGL()
+	BlendModeScopeOGL::~BlendModeScopeOGL() NOEXCEPT(false)
 	{
 		if(stored_) {
 			ASSERT_LOG(!get_blend_mode_stack().empty(), "Something went badly wrong blend mode stack was empty.");

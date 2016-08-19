@@ -146,6 +146,7 @@ public:
 	bool isBodyHarmful() const { return body_harmful_; }
 	bool isBodyPassthrough() const { return body_passthrough_; }
 	bool hasIgnoreCollide() const { return ignore_collide_; }
+	bool editorOnly() const { return editor_only_; }
 
 #ifdef USE_BOX2D
 	box2d::body_ptr body() { return body_; }
@@ -327,6 +328,8 @@ private:
 	bool body_passthrough_;
 	bool ignore_collide_;
 	bool object_level_collisions_;
+
+	bool editor_only_;
 
 	int surface_friction_;
 	int surface_traction_;

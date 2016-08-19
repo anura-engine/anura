@@ -69,7 +69,12 @@ private:
 	int original_width_, original_height_;
 };
 
-class editor
+class editor;
+
+typedef boost::intrusive_ptr<editor> EditorPtr;
+typedef boost::intrusive_ptr<const editor> ConstEditorPtr;
+
+class editor : public game_logic::FormulaCallable
 {
 public:
 	//A manager which should be scoped around creation of editors.
@@ -77,7 +82,7 @@ public:
 		~manager();
 	};
 
-	static editor* get_editor(const char* level_cfg);
+	static EditorPtr get_editor(const char* level_cfg);
 	rect   get_code_editor_rect();
 	static std::string last_edited_level();
 
@@ -89,8 +94,8 @@ public:
 
 	void setup_for_editing();
 
-	void process();
-	bool handleEvent(const SDL_Event& event, bool swallowed);
+	virtual void process() = 0;
+	virtual bool handleEvent(const SDL_Event& event, bool swallowed) = 0;
 	void handle_scrolling();
 	void handle_tracking_to_mouse();
 
@@ -237,7 +242,7 @@ public:
 	void begin_command_group();
 	void end_command_group();
 
-	void draw_gui() const;
+	virtual void draw_gui() const = 0;
 
 	//We are currently playing a level we are editing, and we want
 	//to reset it to its initial state.
@@ -259,7 +264,7 @@ public:
 
 	bool mouselook_mode() const { return mouselook_mode_; }
 
-private:
+protected:
 	editor(const editor&);
 	void operator=(const editor&);
 
@@ -277,7 +282,6 @@ private:
 
 	void process_ghost_objects();
 	void remove_ghost_objects();
-	void draw() const;
 	void draw_selection(int xoffset, int yoffset) const;
 
 	void add_tile_rect(int x1, int y1, int x2, int y2);
@@ -392,6 +396,8 @@ private:
 	int prev_mousex_, prev_mousey_;
 
 	bool mouselook_mode_;
+
+	DECLARE_CALLABLE(editor);
 };
 
 #endif // !NO_EDITOR

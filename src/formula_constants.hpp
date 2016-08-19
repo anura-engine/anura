@@ -24,6 +24,7 @@
 #pragma once
 
 #include "variant.hpp"
+#include "Util.hpp"
 
 #include <string>
 
@@ -35,7 +36,7 @@ namespace game_logic
 	{
 	public:
 		explicit ConstantsLoader(variant node);
-		~ConstantsLoader();
+		~ConstantsLoader() NOEXCEPT(false);
 
 		bool same_as_base() const { return same_as_base_; }
 

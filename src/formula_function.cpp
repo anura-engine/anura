@@ -1544,8 +1544,7 @@ namespace game_logic
 			ARG_TYPE("int|decimal");
 			ARG_TYPE("int|decimal");
 			ARG_TYPE("int|decimal");
-		FUNCTION_TYPE_DEF
-			return variant_type::get_list(variant_type::get_type(variant::VARIANT_TYPE_DECIMAL));
+			RETURN_TYPE("[decimal,decimal]")
 		END_FUNCTION_DEF(orbit)
 
 
@@ -4788,9 +4787,21 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 
 		typedef std::map<std::string, FunctionCreator*> functions_map;
 
+		// Takes ownership of the pointers, deleting them at program termination to
+		// suppress valgrind false positives
+		struct functions_map_manager {
+			functions_map map_;
+			~functions_map_manager() {
+				for (auto & v : map_) {
+					delete(v.second);
+				}
+			}
+		};
+
 		functions_map& get_functions_map() {
 
-			static functions_map functions_table;
+			static functions_map_manager map_man;
+			functions_map & functions_table = map_man.map_;
 
 			if(functions_table.empty()) {
 		#define FUNCTION(name) functions_table[#name] = new SpecificFunctionCreator<name##_function>();

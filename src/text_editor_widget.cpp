@@ -847,6 +847,9 @@ namespace gui
 					recordOp();
 					return true;
 				}
+			} else if(event.keysym.sym == SDLK_d) {
+				setFocus(false);// Lose focus when debug console is opened
+				return false;	// Let the input fall through so the console is opened
 			} else { 
 				recordOp();
 				return false;

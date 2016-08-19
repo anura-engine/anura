@@ -43,7 +43,7 @@ namespace xhtml
 		struct Manager
 		{
 			explicit Manager(const css::PropertyList& plist);
-			~Manager();
+			~Manager() NOEXCEPT(false);
 			std::vector<int> update_list;
 			bool pushed_font_change_;
 		};

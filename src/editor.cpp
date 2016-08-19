@@ -64,6 +64,7 @@
 #include "filesystem.hpp"
 #include "formatter.hpp"
 #include "formula.hpp"
+#include "formula_callable_definition.hpp"
 #include "frame.hpp"
 #include "grid_widget.hpp"
 #include "image_widget.hpp"
@@ -104,9 +105,42 @@ using std::placeholders::_2;
 
 namespace 
 {
+	
+	class BuiltinEditor : public editor
+	{
+	public:
+		BuiltinEditor(const char* level_cfg) : editor(level_cfg)
+		{}
+
+		virtual void process() override;
+		virtual bool handleEvent(const SDL_Event& event, bool swallowed) override;
+
+		virtual void draw_gui() const override;
+
+	private:
+	};
+	
+	class CustomEditor : public editor
+	{
+	public:
+		CustomEditor(const char* level_cfg) : editor(level_cfg)
+		{}
+
+		virtual void process() override {}
+
+		virtual bool handleEvent(const SDL_Event& event, bool swallowed) override {
+			return false;
+		}
+
+		virtual void draw_gui() const override {
+		}
+
+	private:
+	};
+
 	//keep a map of editors so that when we edit a level and then later
 	//come back to it we'll save all the state we had previously
-	std::map<std::string, editor*> all_editors;
+	std::map<std::string, EditorPtr> all_editors;
 
 	//the last level we edited
 	std::string& g_last_edited_level() 
@@ -272,7 +306,7 @@ private:
 	void show_window_menu() 
 	{
 		std::vector<menu_item> res;
-		for(std::map<std::string, editor*>::const_iterator i = all_editors.begin(); i != all_editors.end(); ++i) {
+		for(std::map<std::string, EditorPtr>::const_iterator i = all_editors.begin(); i != all_editors.end(); ++i) {
 			std::string name = i->first;
 			if(name == g_last_edited_level()) {
 				name += " *";
@@ -792,11 +826,11 @@ std::shared_ptr<TileMap> editor::tileset::preview() const
 }
 
 
-editor* editor::get_editor(const char* level_cfg)
+EditorPtr editor::get_editor(const char* level_cfg)
 {
-	editor*& e = all_editors[level_cfg];
+	EditorPtr& e = all_editors[level_cfg];
 	if(!e) {
-		e = new editor(level_cfg);
+		e.reset(new BuiltinEditor(level_cfg));
 	}
 	e->done_ = false;
 	return e;
@@ -1199,7 +1233,7 @@ EditorResolutionManager::EditorResolutionManager(int xres, int yres)
 
 	if(++editor_resolution_manager_count == 1) {
 		LOG_INFO("EDITOR RESOLUTION: " << editor_x_resolution << "," << editor_y_resolution);
-		KRE::WindowManager::getMainWindow()->setWindowSize(editor_x_resolution, editor_y_resolution, KRE::WindowSizeChangeFlags::NOTIFY_CANVAS_ONLY);
+		KRE::WindowManager::getMainWindow()->setWindowSize(editor_x_resolution, editor_y_resolution); //, KRE::WindowSizeChangeFlags::NOTIFY_CANVAS_ONLY);
 		graphics::GameScreen::get().setLocation(0, EDITOR_MENUBAR_HEIGHT);
 	}
 }
@@ -1251,7 +1285,7 @@ void editor::setup_for_editing()
 	change_tool(tool_);
 }
 
-bool editor::handleEvent(const SDL_Event& event, bool swallowed)
+bool BuiltinEditor::handleEvent(const SDL_Event& event, bool swallowed)
 {
 	const bool dialog_started_with_focus = (code_dialog_ && code_dialog_->hasFocus()) || (current_dialog_ && current_dialog_->hasFocus());
 	if(code_dialog_ && code_dialog_->processEvent(point(), event, swallowed)) {
@@ -1318,9 +1352,9 @@ bool editor::handleEvent(const SDL_Event& event, bool swallowed)
 	case SDL_MOUSEWHEEL: {
 			int mousex, mousey;
 			input::sdl_get_mouse_state(&mousex, &mousey);
-			
-			const int xpos = xpos_ + mousex*zoom_;
-			if(xpos < editor_x_resolution-sidebar_width()) {
+
+			//const int xpos = xpos_ + mousex*zoom_;
+			if(mousex < editor_x_resolution-sidebar_width()) {
 				if(event.wheel.y < 0) {
 					zoomIn();
 				} else {
@@ -1349,7 +1383,7 @@ bool editor::handleEvent(const SDL_Event& event, bool swallowed)
 	return false;
 }
 
-void editor::process()
+void BuiltinEditor::process()
 {
 	if(code_dialog_) {
 		code_dialog_->process();
@@ -3235,7 +3269,7 @@ void editor::zoomOut()
 	}
 }
 
-void editor::draw_gui() const
+void BuiltinEditor::draw_gui() const
 {
 	auto canvas = KRE::Canvas::getInstance();
 	auto mm = std::unique_ptr<KRE::ModelManager2D>(new KRE::ModelManager2D(-xpos_, EDITOR_MENUBAR_HEIGHT-ypos_, 0, 1.0f/zoom_));
@@ -4041,5 +4075,9 @@ void editor::object_instance_modified_in_editor(const std::string& label)
 	  std::bind(execute_functions, undo));
 }
 
-#endif // !NO_EDITOR
+BEGIN_DEFINE_CALLABLE_NOBASE(editor)
+DEFINE_FIELD(test, "int")
+	return variant(5);
+END_DEFINE_CALLABLE(editor)
 
+#endif // !NO_EDITOR

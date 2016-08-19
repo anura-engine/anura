@@ -329,6 +329,8 @@ protected:
 	//set up an animation schedule. values.size() should be a multiple of
 	//slots.size().
 
+	bool editorOnly() const override { return editor_only_; }
+
 protected:
 	void surrenderReferences(GarbageCollector* collector) override;
 
@@ -529,6 +531,8 @@ private:
 	std::vector<int> platform_offsets_;
 
 	bool swallow_mouse_event_;
+
+	bool editor_only_;
 
 	bool handleEventInternal(int event, const FormulaCallable* context, bool executeCommands_now=true);
 	std::vector<variant> delayed_commands_;
