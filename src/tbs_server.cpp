@@ -151,7 +151,7 @@ namespace tbs
 			return;
 		}
 
-		LOG_INFO("queue_msg: " << session_id);
+		LOG_INFO("PIPE: queue_msg: " << session_id << ": " << msg);
 
 		auto ipc_itor = ipc_clients_.find(session_id);
 		if(ipc_itor != ipc_clients_.end()) {
@@ -200,6 +200,7 @@ namespace tbs
 
 	void server::send_msg(socket_ptr socket, const std::string& msg_ref)
 	{
+		LOG_INFO("DO send_msg: " << msg_ref);
 		std::string compressed_buf;
 		std::string compress_header;
 		const std::string* msg_ptr = &msg_ref;
@@ -292,6 +293,7 @@ namespace tbs
 				variant v(json::parse(msg, json::JSON_PARSE_OPTIONS::NO_PREPROCESSOR));
 				handle_message(
 					[=](variant v) {
+						LOG_INFO("PIPE: WRITE IPC: " << v.write_json());
 						pipe->write(v.write_json());
 					},
 					[](client_info& info) {

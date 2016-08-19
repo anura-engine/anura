@@ -32,6 +32,7 @@ void ipc_client::process()
 	for(const std::string& m : msg) {
 		variant v = game_logic::deserialize_doc_with_objects(m);
 
+		LOG_INFO("PIPE: READ: " << m << " -> " << v.write_json());
 		callable_->add("message", v);
 		handler_("message_received");
 	}

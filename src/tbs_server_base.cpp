@@ -135,7 +135,9 @@ namespace tbs
 				}
 
 				LOG_VERBOSE("SEND game_created");
+				LOG_INFO("PIPE: Sending game_created");
 				send_fn(json::parse(formatter() << "{ \"type\": \"game_created\", \"game_id\": " << g->game_state->game_id() << " }"));
+				LOG_INFO("PIPE: DONE Sending game_created");
 			
 				status_change();
 
