@@ -26,5 +26,7 @@ namespace tbs
 
 		game_logic::MapFormulaCallablePtr callable_;
 		std::function<void(std::string)> handler_;
+
+		int in_flight_;
 	};
 }
