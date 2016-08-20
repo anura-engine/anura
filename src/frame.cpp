@@ -980,7 +980,6 @@ void Frame::drawCustom(graphics::AnuraShaderPtr shader, int x, int y, const floa
 	if(shader) {
 		shader->setDrawArea(rect(x, y, w, h));
 		shader->setSpriteArea(rectf::from_coordinates(r[0], r[1], r[2], r[3]));
-		shader->setCycle(cycle);
 		blit.setShader(shader->getShader());
 	}
 
