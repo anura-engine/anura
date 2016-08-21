@@ -69,6 +69,7 @@ namespace formula_tokenizer
 	{
 		FFL_TOKEN_TYPE type;
 		iterator begin, end;
+		std::string str() const { return std::string(begin,end); }
 
 		bool equals(const char* s) const { return end - begin == strlen(s) && std::equal(begin, end, s); }
 	};
