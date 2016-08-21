@@ -116,6 +116,7 @@ namespace hex
 		void surrenderReferences(GarbageCollector* collector) override;
 	private:
 		DECLARE_CALLABLE(HexMap);
+		void process_type_string(int x, int y, const std::string& type);
 
 		std::vector<HexObject> tiles_;
 		int x_;

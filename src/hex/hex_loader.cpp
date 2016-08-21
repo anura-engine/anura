@@ -88,6 +88,12 @@ namespace hex
 			get_textures().emplace("terrain/" + p.first, KRE::Texture::createTexture(fname));
 		}
 
+		if(!sys::file_exists(module::map_file(base_path + "terrain.cfg"))
+			|| !sys::file_exists(module::map_file(base_path + "terrain-file-data.cfg"))
+			|| !sys::file_exists(module::map_file(base_path + "terrain-graphics.cfg"))) {
+			LOG_INFO("No hex terrain information found.");
+			return;
+		}
 		// Load hex data from files -- order of initialization is important.
 		try {
 			hex::load_tile_data(json::parse_from_file(base_path + "terrain.cfg"));

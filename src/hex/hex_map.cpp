@@ -58,29 +58,7 @@ namespace hex
 			std::vector<std::string> types;
 			boost::split(types, line, boost::is_any_of(","), boost::token_compress_off);
 			for(const auto& type : types) {
-				std::string full_type = boost::trim_copy(type);
-				auto pos = full_type.find(' ');
-				if(pos != std::string::npos) {
-					full_type = full_type.substr(pos+1);
-				}
-				std::string type_str = full_type;
-				pos = type_str.find('^');
-				std::string mod_str;
-				if(pos != std::string::npos) {
-					mod_str = type_str.substr(pos + 1);
-					type_str = type_str.substr(0, pos);
-				}
-				pos = type_str.find(' ');
-				std::string player_pos;
-				if(pos != std::string::npos) {
-					player_pos = type_str.substr(0, pos);
-					type_str = type_str.substr(pos + 1);
-					starting_positions_.emplace_back(point(x, y), player_pos);
-					LOG_INFO("Starting position " << player_pos << ": " << x << "," << y);
-				}
-				auto tile = get_tile_from_type(type_str);
-				tiles_.emplace_back(x, y, tile, this);
-				tiles_.back().setTypeStr(full_type, type_str, mod_str);
+				process_type_string(x, y, type);
 				++x;
 				if(x > max_x) {
 					max_x = x;
@@ -94,8 +72,53 @@ namespace hex
 	}
 
 	HexMap::HexMap(const variant& v)
+		: tiles_(),
+		  x_(v["x"].as_int32(0)),
+		  y_(v["y"].as_int32(0)),
+		  width_(v["width"].as_int32()),
+		  height_(0),
+		  starting_positions_(),
+		  changed_(false),
+		  renderable_(nullptr)
 	{
-		// XXX
+		ASSERT_LOG(v.has_key("tiles") && v["tiles"].is_list(), "No 'tiles' attribute in map.");
+		height_ = v["tiles"].num_elements() / width_;
+		int y = 0;
+		int x = 0;
+		for(auto tile_str : v["tiles"].as_list_string()) {
+			process_type_string(x, y, tile_str);
+			if(++x >= width_) {
+				x = 0;
+				++y;
+			}
+		}
+	}
+
+	void HexMap::process_type_string(int x, int y, const std::string& type)
+	{
+		std::string full_type = boost::trim_copy(type);
+		auto pos = full_type.find(' ');
+		if(pos != std::string::npos) {
+			full_type = full_type.substr(pos+1);
+		}
+		std::string type_str = full_type;
+		pos = type_str.find('^');
+		std::string mod_str;
+		if(pos != std::string::npos) {
+			mod_str = type_str.substr(pos + 1);
+			type_str = type_str.substr(0, pos);
+		}
+		pos = type_str.find(' ');
+		std::string player_pos;
+		if(pos != std::string::npos) {
+			player_pos = type_str.substr(0, pos);
+			type_str = type_str.substr(pos + 1);
+			starting_positions_.emplace_back(point(x, y), player_pos);
+			LOG_INFO("Starting position " << player_pos << ": " << x << "," << y);
+		}
+		auto tile = get_tile_from_type(type_str);
+		tiles_.emplace_back(x, y, tile, this);
+		tiles_.back().setTypeStr(full_type, type_str, mod_str);
 	}
 
 	HexMap::~HexMap()
