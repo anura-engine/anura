@@ -286,6 +286,7 @@ namespace graphics
 		  name_(o.name_),
 		  initialised_(false)
 	{
+		ASSERT_LOG(o.shader_ != nullptr, "No shader to copy.");
 		shader_ = o.shader_->clone();
 		renderable_.clearAttributes();
 		draw_formulas_ = o.draw_formulas_;

@@ -175,11 +175,19 @@ namespace hex
 	}
 
 	BEGIN_DEFINE_CALLABLE_NOBASE(HexMap)
-		DEFINE_FIELD(dummy, "int")
-			return variant(0);
+		BEGIN_DEFINE_FN(tile_at, "([int,int]) ->builtin hex_tile")
+			variant v = FN_ARG(0);
+			int x = v[0].as_int();
+			int y = v[1].as_int();
+
+			auto tile = obj.getTileAt(x, y);
+			ASSERT_LOG(tile, "Illegal tile at " << x << ", " << y);
+
+			return variant(tile->getTileType().get());
+			END_DEFINE_FN
 	END_DEFINE_CALLABLE(HexMap)
 
-	HexObject::HexObject(int x, int y, const HexTilePtr & tile, const HexMap* parent)
+	HexObject::HexObject(int x, int y, const HexTilePtr& tile, const HexMap* parent)
 		: parent_(parent),
 		  pos_(x, y),
 		  tile_(tile),

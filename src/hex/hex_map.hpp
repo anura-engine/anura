@@ -76,6 +76,8 @@ namespace hex
 		void clearImages();
 		void addImage(const ImageHolder& holder);
 		const std::vector<ImageHolder>& getImages() const { return images_; }
+
+		const HexTilePtr& getTileType() const { return tile_; }
 	private:
 		const HexMap* parent_;
 		point pos_;
