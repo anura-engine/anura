@@ -116,6 +116,8 @@ namespace hex
 		}
 		void process();
 		void surrenderReferences(GarbageCollector* collector) override;
+
+		variant write() const;
 	private:
 		DECLARE_CALLABLE(HexMap);
 		void process_type_string(int x, int y, const std::string& type);
@@ -133,5 +135,7 @@ namespace hex
 		std::vector<StartingPosition> starting_positions_;
 		bool changed_;
 		MapNodePtr renderable_;
+		int rx_;
+		int ry_;
 	};
 }

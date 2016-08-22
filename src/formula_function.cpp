@@ -61,6 +61,7 @@
 #include "formula_object.hpp"
 #include "formula_profiler.hpp"
 #include "hex.hpp"
+#include "hex_helper.hpp"
 #include "lua_iface.hpp"
 #include "md5.hpp"
 #include "module.hpp"
@@ -2019,6 +2020,24 @@ FUNCTION_DEF_IMPL
 		FUNCTION_ARGS_DEF
 			RETURN_TYPE("[builtin hex_tile]")
 		END_FUNCTION_DEF(get_hex_editor_info)
+
+		FUNCTION_DEF(tile_pixel_pos_from_loc, 1, 2, "tile_pixel_pos_from_loc(loc) -> [x,y]")
+			point p(args()[0]->evaluate(variables));
+			auto tp = hex::get_pixel_pos_from_tile_pos_evenq(p, hex::g_hex_tile_size);
+			return tp.write();
+			FUNCTION_ARGS_DEF
+				ARG_TYPE("[int, int]")
+			RETURN_TYPE("[int, int]")
+		END_FUNCTION_DEF(tile_pixel_pos_from_loc)
+
+		FUNCTION_DEF(tile_loc_from_pixel_pos, 1, 2, "tile_pixel_pos_from_loc(loc) -> [x,y]")
+			point p(args()[0]->evaluate(variables));
+			auto tp = hex::get_tile_pos_from_pixel_pos_evenq(p, hex::g_hex_tile_size);
+			return tp.write();
+		FUNCTION_ARGS_DEF
+			ARG_TYPE("[int, int]")
+			RETURN_TYPE("[int, int]")
+		END_FUNCTION_DEF(tile_loc_from_pixel_pos)				
 
 		FUNCTION_DEF(directed_graph, 2, 2, "directed_graph(list_of_vertexes, adjacent_expression) -> a directed graph")
 			variant vertices = args()[0]->evaluate(variables);

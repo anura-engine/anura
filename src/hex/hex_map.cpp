@@ -31,6 +31,7 @@
 #include "hex_renderable.hpp"
 #include "profile_timer.hpp"
 #include "tile_rules.hpp"
+#include "variant_utils.hpp"
 
 namespace hex
 {
@@ -41,8 +42,10 @@ namespace hex
 		  width_(0),
 		  height_(0),
 		  starting_positions_(),
-		  changed_(false),
-		  renderable_(nullptr)
+		  changed_(true),
+		  renderable_(nullptr),
+		  rx_(0),
+		  ry_(0)
 	{
 		int max_x = -1;
 		// assume a old-style map.
@@ -78,8 +81,10 @@ namespace hex
 		  width_(v["width"].as_int32()),
 		  height_(0),
 		  starting_positions_(),
-		  changed_(false),
-		  renderable_(nullptr)
+		  changed_(true),
+		  renderable_(nullptr),
+		  rx_(0),
+		  ry_(0)
 	{
 		ASSERT_LOG(v.has_key("tiles") && v["tiles"].is_list(), "No 'tiles' attribute in map.");
 		height_ = v["tiles"].num_elements() / width_;
@@ -92,6 +97,7 @@ namespace hex
 				++y;
 			}
 		}
+		LOG_INFO("HexMap size: " << width_ << "," << height_);
 	}
 
 	void HexMap::process_type_string(int x, int y, const std::string& type)
@@ -166,8 +172,24 @@ namespace hex
 	{
 		if(changed_) {
 			changed_ = false;
+			build();
 			renderable_->update(width_, height_, tiles_);
 		}
+		if(renderable_) {
+			renderable_->setPosition(rx_, ry_, 0);
+		}
+	}
+
+	variant HexMap::write() const
+	{
+		variant_builder res;
+		res.add("x", x_);
+		res.add("y", y_);
+		res.add("width", width_);
+		for(const auto& t : tiles_) {
+			res.add("tiles", t.getFullTypeString());
+		}
+		return res.build();
 	}
 
 	void HexMap::surrenderReferences(GarbageCollector* collector)
@@ -175,6 +197,22 @@ namespace hex
 	}
 
 	BEGIN_DEFINE_CALLABLE_NOBASE(HexMap)
+		DEFINE_FIELD(tile_height, "int")
+			return variant(g_hex_tile_size);
+		DEFINE_FIELD(width, "int")
+			return variant(obj.getWidth());
+		DEFINE_FIELD(height, "int")
+			return variant(obj.getHeight());
+
+		DEFINE_FIELD(x, "int")
+			return variant(obj.rx_);
+		DEFINE_SET_FIELD
+			obj.rx_ = value.as_int();
+		DEFINE_FIELD(y, "int")
+			return variant(obj.ry_);
+		DEFINE_SET_FIELD
+			obj.ry_ = value.as_int();
+
 		BEGIN_DEFINE_FN(tile_at, "([int,int]) ->builtin hex_tile")
 			variant v = FN_ARG(0);
 			int x = v[0].as_int();
@@ -184,7 +222,12 @@ namespace hex
 			ASSERT_LOG(tile, "Illegal tile at " << x << ", " << y);
 
 			return variant(tile->getTileType().get());
-			END_DEFINE_FN
+		END_DEFINE_FN
+
+		BEGIN_DEFINE_FN(write, "() -> map")
+			return obj.write();
+		END_DEFINE_FN
+
 	END_DEFINE_CALLABLE(HexMap)
 
 	HexObject::HexObject(int x, int y, const HexTilePtr& tile, const HexMap* parent)
@@ -223,7 +266,7 @@ namespace hex
 		if(holder.name.empty()) {
 			return;
 		}
-		LOG_INFO("Hex" << pos_ << ": " << holder.name << "; layer: " << holder.layer << "; base: " << holder.base << "; center: " << holder.center << "; offset: " << holder.offset);
+		//LOG_INFO("Hex" << pos_ << ": " << holder.name << "; layer: " << holder.layer << "; base: " << holder.base << "; center: " << holder.center << "; offset: " << holder.offset);
 		images_.emplace_back(holder);
 	}
 }

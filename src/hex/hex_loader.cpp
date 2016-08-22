@@ -80,12 +80,13 @@ namespace hex
 		// XXX we should make this a threaded load.
 		// Load terrain textures first
 		profile::manager pman("load_hex_textures");
-		sys::file_path_map files;
-		module::get_unique_filenames_under_dir("../images/terrain/", &files);
+		std::vector<std::string> files;
+		std::vector<std::string> dirs;
+		module::get_files_in_dir("images/terrain/", &files, &dirs);
 		for(const auto& p : files) {
-			auto pos = p.second.find("images/");
-			std::string fname = p.second.substr(pos + 7);
-			get_textures().emplace("terrain/" + p.first, KRE::Texture::createTexture(fname));
+			//auto pos = p.find("images/");
+			//std::string fname = p.substr(pos + 7);			
+			get_textures().emplace(p, KRE::Texture::createTexture("terrain/" + p));
 		}
 
 		if(!sys::file_exists(module::map_file(base_path + "terrain.cfg"))
@@ -240,8 +241,13 @@ namespace hex
 			if(borders) {
 				*borders = it->second.border;
 			}
-			auto tex_it = get_textures().find(it->second.image_name);
-			ASSERT_LOG(tex_it != get_textures().end(), "No texture found for name: " << it->second.image_name);
+			std::string fname = it->second.image_name;
+			const auto pos = it->second.image_name.rfind('/');
+			if(pos != std::string::npos) {
+				fname = it->second.image_name.substr(pos + 1);
+			}
+			auto tex_it = get_textures().find(fname);
+			ASSERT_LOG(tex_it != get_textures().end(), "No texture found for name: " << fname);
 			return tex_it->second;
 		}
 		LOG_ERROR("Unable to find file information for '" << filename << "' in the file information data.");

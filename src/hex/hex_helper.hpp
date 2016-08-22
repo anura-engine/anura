@@ -46,5 +46,6 @@ namespace hex
 	point get_pixel_pos_from_tile_pos_oddq(int x, int y, int HexTileSize);
 	point get_pixel_pos_from_tile_pos_evenq(const point& p, int HexTileSize);
 	point get_pixel_pos_from_tile_pos_evenq(int x, int y, int HexTileSize);
+	point get_tile_pos_from_pixel_pos_evenq(const point& p, int HexTileSize);
 }
 

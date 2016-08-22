@@ -115,12 +115,12 @@ namespace hex
 		layers_.clear();
 		clear();
 
-		rr_.reset(new RectRenderable);
+		/*rr_.reset(new RectRenderable);
 		const point p1 = get_pixel_pos_from_tile_pos_evenq(1, 1, g_hex_tile_size) + point(0, g_hex_tile_size / 2);
 		const point p2 = get_pixel_pos_from_tile_pos_evenq(width-2, height-2, g_hex_tile_size) + point(0, g_hex_tile_size / 2);
 		rr_->update(p1.x, p1.y, p2.x, p2.y, Color::colorWhite());
 		rr_->setOrder(999999);
-		attachObject(rr_);
+		attachObject(rr_);*/
 
 		std::map<std::pair<int,int>, std::pair<MapLayerPtr, std::vector<KRE::vertex_texcoord>>> map_layers;
 		for(auto& hex : tiles) {
