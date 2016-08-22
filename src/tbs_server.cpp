@@ -151,8 +151,6 @@ namespace tbs
 			return;
 		}
 
-		LOG_INFO("queue_msg: " << session_id);
-
 		auto ipc_itor = ipc_clients_.find(session_id);
 		if(ipc_itor != ipc_clients_.end()) {
 			ipc_itor->second.pipe->write(msg);
@@ -200,6 +198,7 @@ namespace tbs
 
 	void server::send_msg(socket_ptr socket, const std::string& msg_ref)
 	{
+		LOG_INFO("DO send_msg: " << msg_ref);
 		std::string compressed_buf;
 		std::string compress_header;
 		const std::string* msg_ptr = &msg_ref;

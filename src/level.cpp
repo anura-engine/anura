@@ -3515,7 +3515,14 @@ DEFINE_FIELD(players, "[custom_obj]")
 	}
 	return variant(&v);
 DEFINE_FIELD(in_editor, "bool")
-	return variant(obj.editor_);
+	return variant::from_bool(obj.editor_);
+DEFINE_FIELD(editor, "null|builtin editor")
+	if(LevelRunner::getCurrent()) {
+		return variant(LevelRunner::getCurrent()->get_editor().get());
+	}
+
+	return variant();
+	
 DEFINE_FIELD(zoom, "decimal")
 	return variant(obj.zoom_level_);
 DEFINE_SET_FIELD

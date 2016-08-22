@@ -1297,6 +1297,10 @@ void CustomObject::draw(int xx, int yy) const
 		draw_y -= draw_y%2;
 	}
 
+	if(shader_) {
+		shader_->setCycle(cycle_);
+	}
+
 	if(type_->isHiddenInGame() && !Level::current().in_editor()) {
 		//pass
 	} else if(custom_draw_xy_.size() >= 7 &&

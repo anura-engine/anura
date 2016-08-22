@@ -79,6 +79,8 @@
 
 extern std::map<std::string, variant> g_user_info_registry;
 
+PREF_STRING(editor_object, "", "Object to use for the editor");
+
 namespace 
 {
 	std::vector<std::pair<std::function<void()>,void*>> process_functions;
@@ -753,6 +755,12 @@ void LevelRunner::start_editor()
 		lvl_->setAsCurrentLevel();
 		lvl_->player()->getEntity().handleEvent("open_editor");
 		initHistorySlider();
+
+		if(g_editor_object.empty() == false) {
+			boost::intrusive_ptr<CustomObject> obj(new CustomObject(g_editor_object, 0, 0, 1));
+			obj->construct();
+			lvl_->add_character(obj);
+		}
 	} else {
 		//Pause the game and set the level to its original
 		//state if the user presses ctrl+e twice.

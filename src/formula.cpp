@@ -2462,7 +2462,10 @@ namespace {
 			}
 
 			void staticErrorAnalysis() const {
-				ASSERT_LOG(variant_types_compatible(type_, expression_->queryVariantType()), "Expression is not declared type. Of type " << expression_->queryVariantType()->to_string() << " when type " << type_->to_string() << " expected " << debugPinpointLocation());
+				if(variant_types_compatible(type_, expression_->queryVariantType()) == false) {
+					std::ostringstream reason;
+					ASSERT_LOG(variant_types_compatible(type_, expression_->queryVariantType(), &reason), "Expression is not declared type. Of type " << expression_->queryVariantType()->to_string() << " when type " << type_->to_string() << " expected (" << reason.str() << ") " << debugPinpointLocation());
+				}
 			}
 
 			boost::intrusive_ptr<FormulaInterfaceInstanceFactory> interface_;

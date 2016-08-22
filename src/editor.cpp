@@ -103,6 +103,8 @@ using std::placeholders::_2;
 #endif
 // XXX: fix this in the code?
 
+extern std::string g_editor_object;
+
 namespace 
 {
 	
@@ -830,7 +832,11 @@ EditorPtr editor::get_editor(const char* level_cfg)
 {
 	EditorPtr& e = all_editors[level_cfg];
 	if(!e) {
-		e.reset(new BuiltinEditor(level_cfg));
+		if(g_editor_object.empty()) {
+			e.reset(new BuiltinEditor(level_cfg));
+		} else {
+			e.reset(new CustomEditor(level_cfg));
+		}
 	}
 	e->done_ = false;
 	return e;
