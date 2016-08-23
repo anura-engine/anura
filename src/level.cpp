@@ -3089,6 +3089,7 @@ void Level::remove_character(EntityPtr e)
 	chars_.erase(std::remove(chars_.begin(), chars_.end(), e), chars_.end());
 	solid_chars_.erase(std::remove(solid_chars_.begin(), solid_chars_.end(), e), solid_chars_.end());
 	active_chars_.erase(std::remove(active_chars_.begin(), active_chars_.end(), e), active_chars_.end());
+	new_chars_.erase(std::remove(new_chars_.begin(), new_chars_.end(), e), new_chars_.end());
 }
 
 std::vector<EntityPtr> Level::get_characters_in_rect(const rect& r, int screen_xpos, int screen_ypos) const
