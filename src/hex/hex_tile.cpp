@@ -22,28 +22,46 @@
 */
 
 #include "hex_tile.hpp"
+#include "hex_loader.hpp"
 
 namespace hex
 {
-	HexTile::HexTile(const std::string& str)
+	HexTile::HexTile(const variant& value)
 		: id_(),
-		name_(),
-		str_(str),
-		editor_group_(),
-		editor_name_(),
-		symbol_image_(),
-		icon_image_(),
-		help_topic_text_(),
-		hidden_(false),
-		recruit_onto_(false),
-		hide_help_(false),
-		submerge_(0.0f)
+		  name_(),
+		  str_(value["string"].as_string()),
+		  editor_group_(value["editor_group"].as_string_default()),
+		  editor_name_(value["editor_name"].as_string_default()),
+		  editor_image_(value["editor_image"].as_string_default()),
+		  symbol_image_(value["symbol_image"].as_string_default()),
+		  icon_image_(value["icon_image"].as_string_default()),
+		  help_topic_text_(value["help_topic_text"].as_string_default()),
+		  hidden_(value["hidden"].as_bool(false)),
+		  recruit_onto_(value["recruit_onto"].as_bool(false)),
+		  hide_help_(value["hide_help"].as_bool(false)),
+		  submerge_(value["submerge"].as_float(0.0f)),
+		  image_rect_(),
+		  symbol_image_filename_()
 	{
+		//gives_income
+		//heals
+		//recruit_from
+		//unit_height_adjust
+		//mvt_alias
+
+		if(!symbol_image_.empty()) {
+			symbol_image_filename_ = get_terrain_data(symbol_image_, &image_rect_);
+		} else if(!editor_image_.empty()) {
+			symbol_image_filename_ = get_terrain_data(editor_image_, &image_rect_);
+		}
+		if(symbol_image_filename_.empty()) {
+			LOG_WARN("No image available for tile: " << (id_.empty() ? str_ : id_));
+		}
 	}
 
-	HexTilePtr HexTile::create(const std::string& str)
+	HexTilePtr HexTile::create(const variant& value)
 	{
-		return HexTilePtr(new HexTile(str));
+		return HexTilePtr(new HexTile(value));
 	}
 
 	void HexTile::surrenderReferences(GarbageCollector* collector)
@@ -51,7 +69,11 @@ namespace hex
 	}
 
 	BEGIN_DEFINE_CALLABLE_NOBASE(HexTile)
-		DEFINE_FIELD(dummy, "int")
-			return variant(0);
+		DEFINE_FIELD(image_rect, "[int,int,int,int]")
+			return obj.image_rect_.write();
+		DEFINE_FIELD(symbol_image_file, "string")
+			return variant(obj.symbol_image_filename_);
+		DEFINE_FIELD(string, "string")
+			return variant(obj.getString());
 	END_DEFINE_CALLABLE(HexTile)
 }

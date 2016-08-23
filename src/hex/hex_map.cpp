@@ -25,6 +25,7 @@
 
 #include "asserts.hpp"
 #include "filesystem.hpp"
+#include "geometry.hpp"
 #include "hex_map.hpp"
 #include "hex_tile.hpp"
 #include "hex_loader.hpp"
@@ -35,6 +36,12 @@
 
 namespace hex
 {
+	namespace 
+	{
+		const std::vector<point> even_q_odd_col{ point(0,-1), point(1,-1), point(1,0), point(0,1), point(-1,0), point(-1,-1) };
+		const std::vector<point> even_q_even_col{ point(0,-1), point(1,0), point(1,1), point(0,1), point(-1,1), point(-1,0) };
+	}
+
 	HexMap::HexMap(const std::string& filename)
 		: tiles_(),
 		  x_(0),
@@ -100,28 +107,40 @@ namespace hex
 		LOG_INFO("HexMap size: " << width_ << "," << height_);
 	}
 
-	void HexMap::process_type_string(int x, int y, const std::string& type)
+	std::string HexMap::parse_type_string(const std::string& type, std::string* full_type, std::string* type_str, std::string* mod_str) const
 	{
-		std::string full_type = boost::trim_copy(type);
-		auto pos = full_type.find(' ');
+		ASSERT_LOG(full_type != nullptr && type_str != nullptr && mod_str != nullptr, "One of the type strings was null.");
+		*full_type = boost::trim_copy(type);
+		auto pos = full_type->find(' ');
 		if(pos != std::string::npos) {
-			full_type = full_type.substr(pos+1);
+			*full_type = full_type->substr(pos+1);
 		}
-		std::string type_str = full_type;
-		pos = type_str.find('^');
-		std::string mod_str;
+		*type_str = *full_type;
+		pos = type_str->find('^');
 		if(pos != std::string::npos) {
-			mod_str = type_str.substr(pos + 1);
-			type_str = type_str.substr(0, pos);
+			*mod_str = type_str->substr(pos + 1);
+			*type_str = type_str->substr(0, pos);
 		}
-		pos = type_str.find(' ');
+		pos = type_str->find(' ');
 		std::string player_pos;
 		if(pos != std::string::npos) {
-			player_pos = type_str.substr(0, pos);
-			type_str = type_str.substr(pos + 1);
+			player_pos = type_str->substr(0, pos);
+			*type_str = type_str->substr(pos + 1);
+		}
+
+		return player_pos;
+	}
+
+	void HexMap::process_type_string(int x, int y, const std::string& type)
+	{
+		std::string full_type, type_str, mod_str;
+		std::string player_pos = parse_type_string(type, &full_type, &type_str, &mod_str);
+
+		if(!player_pos.empty()) {
 			starting_positions_.emplace_back(point(x, y), player_pos);
 			LOG_INFO("Starting position " << player_pos << ": " << x << "," << y);
 		}
+
 		auto tile = get_tile_from_type(type_str);
 		tiles_.emplace_back(x, y, tile, this);
 		tiles_.back().setTypeStr(full_type, type_str, mod_str);
@@ -131,12 +150,47 @@ namespace hex
 	{
 	}
 
+	HexObject* HexMap::getNeighbour(point hex, int direction)
+	{
+		ASSERT_LOG(direction >= 0 && direction < 6, "Direction out of bounds: " << direction);
+		int x = 0;
+		int y = 0;
+		if(hex.x & 1) {
+			x = hex.x + even_q_odd_col[direction].x;
+			y = hex.y + even_q_odd_col[direction].y;
+		} else {
+			x = hex.x + even_q_even_col[direction].x;
+			y = hex.y + even_q_even_col[direction].y;
+		}
+		int index = x + y * width_;
+		if(index >= 0 && index < static_cast<int>(tiles_.size())) {
+			return nullptr;
+		}
+		return &tiles_[index];
+	}
+
 	void HexMap::build()
 	{
 		profile::manager pman("HexMap::build()");
 		auto& terrain_rules = hex::get_terrain_rules();
 		for(auto& tr : terrain_rules) {
 			tr->match(boost::intrusive_ptr<HexMap>(this));
+		}
+	}
+
+	void HexMap::build_single(HexObject* obj)
+	{
+		profile::manager pman("HexMap::build_single()");
+		auto& terrain_rules = hex::get_terrain_rules();
+		for(auto& tr : terrain_rules) {
+			tr->match(obj);
+			for(int dir = 0; dir < 6; ++dir) {
+				auto nhex = getNeighbour(obj->getPosition(), dir);
+				if(nhex) {
+					nhex->clear();
+					tr->match(nhex);
+				}
+			}
 		}
 	}
 
@@ -172,8 +226,18 @@ namespace hex
 	{
 		if(changed_) {
 			changed_ = false;
-			build();
+
+			if(!tiles_changed_.empty()) {
+				for(auto& index : tiles_changed_) {
+					tiles_[index].clear();
+					build_single(&tiles_[index]);
+				}
+			} else {
+				build();
+			}
 			renderable_->update(width_, height_, tiles_);
+
+			tiles_changed_.clear();
 		}
 		if(renderable_) {
 			renderable_->setPosition(rx_, ry_, 0);
@@ -228,6 +292,41 @@ namespace hex
 			return obj.write();
 		END_DEFINE_FN
 
+		BEGIN_DEFINE_FN(set_tile_at, "([int,int], string) ->commands")
+			variant v = FN_ARG(0);
+			const int x = v[0].as_int();
+			const int y = v[1].as_int();
+			std::string name = FN_ARG(1).as_string();
+
+			LOG_INFO("Set tile at: " << x << "," << y << " to '" << name << "'");
+
+			std::string full_type, type_str, mod_str;
+			std::string player_pos = obj.parse_type_string(name, &full_type, &type_str, &mod_str);
+			
+			auto tile = get_tile_from_type(type_str);
+
+			const int index = y * obj.getWidth() + x;
+			ASSERT_LOG(index >= 0 && index < static_cast<int>(obj.tiles_.size()), 
+				"Index out of bounds." << index << " >= " << obj.tiles_.size());
+
+			boost::intrusive_ptr<HexMap> map_ref = &const_cast<HexMap&>(obj);
+
+			return variant(new game_logic::FnCommandCallable([=]() {
+				map_ref->setChanged();
+				map_ref->tiles_changed_.emplace_back(index);
+				map_ref->tiles_[index] = HexObject(x, y, tile, map_ref.get());
+				map_ref->tiles_[index].setTypeStr(full_type, type_str, mod_str);
+			}));
+		END_DEFINE_FN
+
+		BEGIN_DEFINE_FN(rebuild, "() -> commands")
+			boost::intrusive_ptr<HexMap> map_ref = &const_cast<HexMap&>(obj);
+			return variant(new game_logic::FnCommandCallable([=]() {
+				map_ref->setChanged();
+				map_ref->tiles_changed_.clear();
+			}));
+		END_DEFINE_FN
+
 	END_DEFINE_CALLABLE(HexMap)
 
 	HexObject::HexObject(int x, int y, const HexTilePtr& tile, const HexMap* parent)
@@ -256,9 +355,11 @@ namespace hex
 		}
 	}
 
-	void HexObject::clearImages()
+	void HexObject::clear()
 	{
 		images_.clear();
+		flags_.clear();
+		temp_flags_.clear();
 	}
 
 	void HexObject::addImage(const ImageHolder& holder)
@@ -266,7 +367,7 @@ namespace hex
 		if(holder.name.empty()) {
 			return;
 		}
-		//LOG_INFO("Hex" << pos_ << ": " << holder.name << "; layer: " << holder.layer << "; base: " << holder.base << "; center: " << holder.center << "; offset: " << holder.offset);
+		LOG_INFO("Hex" << pos_ << ": " << holder.name << "; layer: " << holder.layer << "; base: " << holder.base << "; center: " << holder.center << "; offset: " << holder.offset);
 		images_.emplace_back(holder);
 	}
 }

@@ -29,6 +29,8 @@
 
 namespace hex
 {
+	extern const int g_hex_tile_size;
+
 	std::tuple<int, int, int> oddq_to_cube_coords(const point& p);
 	std::tuple<int, int, int> evenq_to_cube_coords(const point& p);
 	void oddq_to_cube_coords(const point& p, int* x1, int* y1, int* z1);

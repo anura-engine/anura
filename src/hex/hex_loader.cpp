@@ -97,15 +97,17 @@ namespace hex
 		}
 		// Load hex data from files -- order of initialization is important.
 		try {
-			hex::load_tile_data(json::parse_from_file(base_path + "terrain.cfg"));
-		} catch(json::ParseError& e) {		
-			ASSERT_LOG(false, "Error parsing hex " << (base_path + "terrain.cfg") << " file data: " << e.errorMessage());
-		}
-		try {
 			hex::load_terrain_files(json::parse_from_file(base_path + "terrain-file-data.cfg"));
 		} catch(json::ParseError& e) {
 			ASSERT_LOG(false, "Error parsing hex " << (base_path + "terrain-file-data.cfg") << " file data: " << e.errorMessage());
 		}
+
+		try {
+			hex::load_tile_data(json::parse_from_file(base_path + "terrain.cfg"));
+		} catch(json::ParseError& e) {		
+			ASSERT_LOG(false, "Error parsing hex " << (base_path + "terrain.cfg") << " file data: " << e.errorMessage());
+		}
+
 		try {
 			hex::load_terrain_data(json::parse_from_file(base_path + "terrain-graphics.cfg"));
 		} catch(json::ParseError& e) {		
@@ -122,62 +124,11 @@ namespace hex
 		const auto& tt_data = v["terrain_type"].as_list();
 		for(const auto& tt : tt_data) {
 			ASSERT_LOG(tt.is_map(), "Expected inner items of 'terrain_type' to be maps." << tt.to_debug_string());
-			const std::string string = tt["string"].as_string();
+			auto tile = HexTile::create(tt);
 
-			auto tile = HexTile::create(string);
-
-			if(tt.has_key("editor_group")) {
-				tile->setEditorGroup(tt["editor_group"].as_string());
-			}
-			if(tt.has_key("id")) {
-				tile->setId(tt["id"].as_string());
-			}
-			if(tt.has_key("name")) {
-				tile->setName(tt["name"].as_string());
-			}
-			if(tt.has_key("editor_name")) {
-				tile->setEditorName(tt["editor_name"].as_string());
-			}
-			if(tt.has_key("submerge")) {
-				tile->setSubmerge(tt["submerge"].as_float());
-			}
-			if(tt.has_key("symbol_image")) {
-				tile->setSymbolImage(tt["symbol_image"].as_string());
-			}
-			if(tt.has_key("icon_image")) {
-				tile->setIconImage(tt["icon_image"].as_string());
-			}
-			if(tt.has_key("help_topic_text")) {
-				tile->setHelpTopicText(tt["help_topic_text"].as_string());
-			}
-			if(tt.has_key("hidden")) {
-				tile->setHidden(tt["hidden"].as_bool());
-			}
-			if(tt.has_key("recruit_onto")) {
-				tile->setRecruitable(tt["recruit_onto"].as_bool());
-			}
-			if(tt.has_key("hide_help")) {
-				tile->setHideHelp(tt["hide_help"].as_bool());
-			}
-			if(tt.has_key("gives_income")) {
-				// XXX
-			}
-			if(tt.has_key("heals")) {
-				// XXX
-			}
-			if(tt.has_key("recruit_from")) {
-				// XXX
-			}
-			if(tt.has_key("unit_height_adjust")) {
-				// XXX
-			}
-			if(tt.has_key("mvt_alias")) {
-				// XXX
-			}
-
-			auto it = get_tile_map().find(string);
-			ASSERT_LOG(it == get_tile_map().end(), "Duplicate tile string id's found: " << string);
-			get_tile_map()[string] = tile;
+			auto it = get_tile_map().find(tile->getString());
+			ASSERT_LOG(it == get_tile_map().end(), "Duplicate tile string id's found: " << tile->getString());
+			get_tile_map()[tile->getString()] = tile;
 		}
 		LOG_INFO("Loaded " << get_tile_map().size() << " hex tiles into memory.");
 	}
@@ -252,6 +203,20 @@ namespace hex
 		}
 		LOG_ERROR("Unable to find file information for '" << filename << "' in the file information data.");
 		return nullptr;
+	}
+
+	const std::string& get_terrain_data(const std::string& filename, rect* area, std::vector<int>* borders)
+	{
+		auto& fileinfo = get_file_info();
+		auto it = fileinfo.find(filename);
+		ASSERT_LOG(it != fileinfo.end(), "No terrain file information for '" << filename << "'");
+		if(area) {
+			*area = it->second.area;
+		}
+		if(borders) {
+			*borders = it->second.border;
+		}
+		return it->second.image_name;
 	}
 
 	bool terrain_info_exists(const std::string& name)

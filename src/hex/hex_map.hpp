@@ -73,11 +73,13 @@ namespace hex
 		void addTempFlag(const std::string& flag) const { temp_flags_.emplace(flag); }
 		void clearTempFlags() const { temp_flags_.clear(); }
 		void setTempFlags() const;
-		void clearImages();
+		void clear();
 		void addImage(const ImageHolder& holder);
 		const std::vector<ImageHolder>& getImages() const { return images_; }
 
 		const HexTilePtr& getTileType() const { return tile_; }
+
+		const HexMap* getParent() const { return parent_; }
 	private:
 		const HexMap* parent_;
 		point pos_;
@@ -98,6 +100,7 @@ namespace hex
 		~HexMap();
 
 		void build();
+		void build_single(HexObject*  obj);
 
 		const HexObject* getTileAt(int x, int y) const ;
 		const HexObject* getTileAt(const point& p) const ;
@@ -118,9 +121,14 @@ namespace hex
 		void surrenderReferences(GarbageCollector* collector) override;
 
 		variant write() const;
+
+		void setChanged() { changed_ = true; }
 	private:
 		DECLARE_CALLABLE(HexMap);
 		void process_type_string(int x, int y, const std::string& type);
+		std::string parse_type_string(const std::string& type, std::string* full_type, std::string* type_str, std::string* mod_str) const;
+
+		HexObject* getNeighbour(point hex, int direction);
 
 		std::vector<HexObject> tiles_;
 		int x_;
@@ -137,5 +145,6 @@ namespace hex
 		MapNodePtr renderable_;
 		int rx_;
 		int ry_;
+		std::vector<int> tiles_changed_;
 	};
 }

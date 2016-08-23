@@ -21,8 +21,11 @@
 	   distribution.
 */
 
+#include <cmath>
+
 #include "asserts.hpp"
 #include "hex_helper.hpp"
+#include "unit_test.hpp"
 
 namespace hex
 {
@@ -178,45 +181,70 @@ namespace hex
 		return point(tx, ty);
 	}
 
+	template<typename T>
+	struct Hex
+	{
+		Hex(T xo, T yo, T zo) : x(xo), y(yo), z(zo) {}
+		T x, y, z;
+	};
+
+	struct Axial
+	{
+		Axial(int qo, int ro) : q(qo), r(ro) { s = -q - r; }
+		point to_point() const { return point(q, r); }
+		int q, r, s;
+	};
+
+	Axial cube_to_axial(const Hex<int>& h)
+	{
+		return Axial(h.x, h.z);
+	}
+
+	Hex<int> cube_round(const Hex<float>& h)
+	{
+		int rx = static_cast<int>(std::round(h.x));
+		int ry = static_cast<int>(std::round(h.y));
+		int rz = static_cast<int>(std::round(h.z));
+
+		float x_diff = std::abs(rx - h.x);
+		float y_diff = std::abs(ry - h.y);
+		float z_diff = std::abs(rz - h.z);
+
+		if(x_diff > y_diff && x_diff > z_diff) {
+			rx = -ry - rz;
+		} else if(y_diff > z_diff) {
+			ry = -rx - rz;
+		} else {
+			rz = -rx - ry;
+		}
+
+		return Hex<int>(rx, ry, rz);
+	}
+
+	point cube_to_evenq(const Hex<int>& h)
+	{
+		return point(h.x, h.z + (h.x + (h.x&1)) / 2);
+	}
+	
 	point get_tile_pos_from_pixel_pos_evenq(const point& p, int HexTileSize)
 	{
-		const int mx = p.x;
-		const int my = p.y;
-		const int tesselation_x_size = (3 * HexTileSize) / 2;
-		const int tesselation_y_size = HexTileSize;
-		const int x_base = (mx>=0) ? mx / tesselation_x_size * 2 : mx / tesselation_x_size * 2 - 2;
-		const int x_mod  = (mx>=0) ? mx % tesselation_x_size : tesselation_x_size - (mx % tesselation_x_size);
-		const int y_base = (my>=0) ? my / tesselation_y_size : my / tesselation_y_size - 1;
-		const int y_mod  = (my>=0) ? my % tesselation_y_size : tesselation_y_size - (my % tesselation_y_size);
-		const int m = 2;
+		float q = (p.x * 2.0f) / (3.0f * g_hex_tile_size);
+		float r = (-p.x / 3.0f + std::sqrt(3.0f)/3.0f * p.y) / g_hex_tile_size;
 
-		int x_modifier = 0;
-		int y_modifier = 0;
-
-		if(y_mod < tesselation_y_size / 2) {
-			if((x_mod * m + y_mod) < (HexTileSize / 2)) {
-				x_modifier = -1;
-				y_modifier = -1;
-			} else if ((x_mod * m - y_mod) < (HexTileSize * 3 / 2)) {
-				x_modifier = 0;
-				y_modifier = 0;
-			} else {
-				x_modifier = 1;
-				y_modifier = -1;
-			}
-
-		} else {
-			if((x_mod * m - (y_mod - HexTileSize / 2)) < 0) {
-				x_modifier = -1;
-				y_modifier = 0;
-			} else if((x_mod * m + (y_mod - HexTileSize / 2)) < HexTileSize * 2) {
-				x_modifier = 0;
-				y_modifier = 0;
-			} else {
-				x_modifier = 1;
-				y_modifier = 0;
-			}
-		}
-		return point(x_base + x_modifier, y_base + y_modifier);
+		return cube_to_evenq(cube_round(Hex<float>(q, -q - r, r)));
 	}
+}
+
+UNIT_TEST(hexes)
+{
+	CHECK_EQ(hex::get_pixel_pos_from_tile_pos_evenq(0, 0, 72), point(0, 0));
+	CHECK_EQ(hex::get_pixel_pos_from_tile_pos_evenq(1, 0, 72), point(54, -36));
+	CHECK_EQ(hex::get_pixel_pos_from_tile_pos_evenq(0, 1, 72), point(0, 72));
+	CHECK_EQ(hex::get_pixel_pos_from_tile_pos_evenq(1, 1, 72), point(54, 36));
+
+	CHECK_EQ(hex::get_tile_pos_from_pixel_pos_evenq(point(0, 0), 72), point(0, 0));
+	CHECK_EQ(hex::get_tile_pos_from_pixel_pos_evenq(point(36, 36), 72), point(0, 0));
+	CHECK_EQ(hex::get_tile_pos_from_pixel_pos_evenq(point(36, 108), 72), point(0, 1));
+	CHECK_EQ(hex::get_tile_pos_from_pixel_pos_evenq(point(54, -36), 72), point(1, 0));
+	CHECK_EQ(hex::get_tile_pos_from_pixel_pos_evenq(point(90, 0), 72), point(1, 0));
 }

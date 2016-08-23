@@ -35,6 +35,7 @@ namespace hex
 	HexTilePtr get_tile_from_type(const std::string& type_str);
 	const terrain_rule_type& get_terrain_rules();
 	KRE::TexturePtr get_terrain_texture(const std::string& filename, rect* area, std::vector<int>* borders);
+	const std::string& get_terrain_data(const std::string& filename, rect* area=nullptr, std::vector<int>* borders=nullptr);
 	bool terrain_info_exists(const std::string& name);
 	std::vector<variant> get_editor_info();
 

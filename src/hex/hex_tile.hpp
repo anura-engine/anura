@@ -28,13 +28,14 @@
 #include "hex_fwd.hpp"
 #include "formula_callable.hpp"
 #include "formula_callable_definition.hpp"
+#include "geometry.hpp"
 
 namespace hex
 {
 	class HexTile : public game_logic::FormulaCallable
 	{
 	public:
-		HexTile(const std::string& str);
+		HexTile(const variant& value);
 		const std::string& getId() const { return id_; }
 		const std::string& geName() const { return name_; }
 		const std::string& getString() const { return str_; }
@@ -52,6 +53,7 @@ namespace hex
 		void setName(const std::string& name) { name_ = name; }
 		void setEditorGroup(const std::string& editor_group) { editor_group_ = editor_group; }
 		void setEditorName(const std::string& editor_name) { editor_name_ = editor_name; }
+		void setEditorImage(const std::string& editor_image) { editor_image_ = editor_image; }
 		void setSymbolImage(const std::string& symbol_image) { symbol_image_ = symbol_image; }
 		void setIconImage(const std::string& icon_image) { icon_image_ = icon_image; }
 		void setHelpTopicText(const std::string& help_topic_text) { help_topic_text_ = help_topic_text; }
@@ -62,7 +64,7 @@ namespace hex
 
 		void surrenderReferences(GarbageCollector* collector) override;
 
-		static HexTilePtr create(const std::string& str);
+		static HexTilePtr create(const variant& value);
 	private:
 		DECLARE_CALLABLE(HexTile);
 
@@ -71,6 +73,7 @@ namespace hex
 		std::string str_;
 		std::string editor_group_;
 		std::string editor_name_;
+		std::string editor_image_;
 		// minimap image
 		std::string symbol_image_;
 		// icon image.
@@ -80,5 +83,7 @@ namespace hex
 		bool recruit_onto_;
 		bool hide_help_;
 		float submerge_;
+		rect image_rect_;
+		std::string symbol_image_filename_;
 	};
 }

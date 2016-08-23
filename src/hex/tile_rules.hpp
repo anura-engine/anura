@@ -125,6 +125,7 @@ namespace hex
 		const std::vector<std::unique_ptr<TileImage>>& getImages() const { return image_; }
 
 		bool match(const HexMapPtr& hmap);
+		bool match(HexObject* obj);
 		void preProcessMap(const variant& tiles);
 
 		static TerrainRulePtr create(const variant& v);

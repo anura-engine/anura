@@ -34,8 +34,6 @@
 
 namespace 
 {
-	const int HexTileSize = 72;	// XXX abstract this elsewhere.
-
 	std::string rot_replace(const std::string& str, const std::vector<std::string>& rotations, int rot)
 	{
 		//if(rot == 0) {
@@ -351,8 +349,7 @@ namespace hex
 			pos_offset_.resize(max_loops);
 			if(odd_start) {
 				for(int rot = 0; rot != max_loops; ++rot) {
-					//pos_offset_[rot] = pixel_distance(center_, point(0, -1), HexTileSize) + point(18, 0);
-					pos_offset_[rot] = point(0, -HexTileSize);
+					pos_offset_[rot] = point(0, -g_hex_tile_size);
 				}
 			} else {
 				if(rotations_.empty()) {
@@ -370,20 +367,15 @@ namespace hex
 						}
 						if(rot % 2) {
 							// odd needs offsetting then 0,0 added
-							pos_offset_[rot] = pixel_distance(point(0, 1), min_coord, HexTileSize);// - point(0, 72);;
+							pos_offset_[rot] = pixel_distance(point(0, 1), min_coord, g_hex_tile_size);// - point(0, 72);;
 						} else {
 							// even just need to choose the minimum x/y tile. -- done above.
-							pos_offset_[rot] = pixel_distance(center_, min_coord, HexTileSize) + point(0, 72);
+							pos_offset_[rot] = pixel_distance(center_, min_coord, g_hex_tile_size) + point(0, g_hex_tile_size);
 						}
 					}
 				}
 			}
 		}
-
-		/*for(auto& td : tile_data_) {
-			td->center(center_, point(0, 0));
-		}
-		center_ = point(0, 0);*/
 
 		if(!td->getPosition().empty()) {
 			tile_data_.emplace_back(std::move(td));
@@ -872,6 +864,89 @@ namespace hex
 		return name;
 	}
 
+	bool TerrainRule::match(HexObject* hex)
+	{
+		const int max_loop = rotations_.empty() ? 1 : rotations_.size();
+
+		for(int rot = 0; rot != max_loop; ++rot) {
+			if(mod_position_) {
+				auto& pos = hex->getPosition();
+				if((pos.x % mod_position_->x) != 0 || (pos.y % mod_position_->y) != 0) {
+					continue;
+				}
+			}
+
+			std::vector<std::pair<HexObject*, TileRule*>> obj_to_set_flags;
+			// We expect tiles to have position data.
+			bool tile_match = true;
+
+			if(!image_.empty()) {
+				bool res = false;
+				for(const auto& img : image_) {
+					res |= img->isValidForRotation(rot);
+				}
+				if(!res) {
+					// XXX should we check for images in tile tags?
+					continue;
+				}
+			}
+
+			bool match_pos = true;
+			auto td_it = tile_data_.cbegin();
+			for(; td_it != tile_data_.cend() && match_pos; ++td_it) {
+				const auto& td = *td_it;
+				ASSERT_LOG(td->hasPosition(), "tile data doesn't have an x,y position.");
+				const auto& pos_data = td->getPosition();
+
+				for(const auto& p : pos_data) {
+					//point rot_p = sub_hex_coord(add_hex_coord(hex.getPosition(), rotate_point(rot, center_, p)), center_);
+					point rot_p = rotate_point(rot, add_hex_coord(center_, hex->getPosition()), add_hex_coord(p, hex->getPosition()));
+					auto new_obj = const_cast<HexObject*>(hex->getParent()->getTileAt(rot_p));
+					if(td->match(new_obj, this, rotations_, rot)) {
+						//match_pos = true;
+						if(new_obj) {
+							obj_to_set_flags.emplace_back(std::make_pair(new_obj, td.get()));
+						}
+					} else {
+						match_pos = false;
+						if(new_obj) {
+							new_obj->clearTempFlags();
+						}
+						break;
+					}
+				}
+			}
+			if(!match_pos) {
+				tile_match = false;
+				for(auto& obj : obj_to_set_flags) {
+					obj.first->clearTempFlags();
+				}
+				obj_to_set_flags.clear();
+			}
+
+			if(tile_match) {
+				if(probability_ != 100) {
+					auto rand_no = rng::generate() % 100;
+					if(rand_no > probability_) {
+						for(auto& obj : obj_to_set_flags) {
+							obj.first->clearTempFlags();
+						}
+						obj_to_set_flags.clear();
+						continue;
+					}
+				}
+				// XXX need to fix issues when other tiles have images that need to match a different hex
+				//tile_data_.front()->applyImage(&hex, rotations_, rot);
+				applyImage(hex, rot);
+				for(auto& obj : obj_to_set_flags) {
+					obj.first->setTempFlags();
+					obj.second->applyImage(obj.first, rot);
+				}
+			}
+		}
+		return false;
+	}
+
 	bool TerrainRule::match(const HexMapPtr& hmap)
 	{
 		if(absolute_position_) {
@@ -883,85 +958,9 @@ namespace hex
 
 		// check rotations.
 		ASSERT_LOG(rotations_.size() == 6 || rotations_.empty(), "Set of rotations not of size 6(" << rotations_.size() << ").");
-		const int max_loop = rotations_.empty() ? 1 : rotations_.size();
 
 		for(auto& hex : hmap->getTilesMutable()) {
-			for(int rot = 0; rot != max_loop; ++rot) {
-				if(mod_position_) {
-					auto& pos = hex.getPosition();
-					if((pos.x % mod_position_->x) != 0 || (pos.y % mod_position_->y) != 0) {
-						continue;
-					}
-				}
-
-				std::vector<std::pair<HexObject*, TileRule*>> obj_to_set_flags;
-				// We expect tiles to have position data.
-				bool tile_match = true;
-
-				if(!image_.empty()) {
-					bool res = false;
-					for(const auto& img : image_) {
-						res |= img->isValidForRotation(rot);
-					}
-					if(!res) {
-						// XXX should we check for images in tile tags?
-						continue;
-					}
-				}
-
-				bool match_pos = true;
-				auto td_it = tile_data_.cbegin();
-				for(; td_it != tile_data_.cend() && match_pos; ++td_it) {
-					const auto& td = *td_it;
-					ASSERT_LOG(td->hasPosition(), "tile data doesn't have an x,y position.");
-					const auto& pos_data = td->getPosition();
-
-					for(const auto& p : pos_data) {
-						//point rot_p = sub_hex_coord(add_hex_coord(hex.getPosition(), rotate_point(rot, center_, p)), center_);
-						point rot_p = rotate_point(rot, add_hex_coord(center_, hex.getPosition()), add_hex_coord(p, hex.getPosition()));
-						auto new_obj = const_cast<HexObject*>(hmap->getTileAt(rot_p));
-						if(td->match(new_obj, this, rotations_, rot)) {
-							//match_pos = true;
-							if(new_obj) {
-								obj_to_set_flags.emplace_back(std::make_pair(new_obj, td.get()));
-							}
-						} else {
-							match_pos = false;
-							if(new_obj) {
-								new_obj->clearTempFlags();
-							}
-							break;
-						}
-					}
-				}
-				if(!match_pos) {
-					tile_match = false;
-					for(auto& obj : obj_to_set_flags) {
-						obj.first->clearTempFlags();
-					}
-					obj_to_set_flags.clear();
-				}
-
-				if(tile_match) {
-					if(probability_ != 100) {
-						auto rand_no = rng::generate() % 100;
-						if(rand_no > probability_) {
-							for(auto& obj : obj_to_set_flags) {
-								obj.first->clearTempFlags();
-							}
-							obj_to_set_flags.clear();
-							continue;
-						}
-					}
-					// XXX need to fix issues when other tiles have images that need to match a different hex
-					//tile_data_.front()->applyImage(&hex, rotations_, rot);
-					applyImage(&hex, rot);
-					for(auto& obj : obj_to_set_flags) {
-						obj.first->setTempFlags();
-						obj.second->applyImage(obj.first, rot);
-					}
-				}
-			}
+			match(&hex);
 		}
 		return false;
 	}
