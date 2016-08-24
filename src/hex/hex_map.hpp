@@ -123,6 +123,7 @@ namespace hex
 		variant write() const;
 
 		void setChanged() { changed_ = true; }
+		void setChangedRebuild() { rebuild_ = true; }
 	private:
 		DECLARE_CALLABLE(HexMap);
 		void process_type_string(int x, int y, const std::string& type);
@@ -142,9 +143,10 @@ namespace hex
 		};
 		std::vector<StartingPosition> starting_positions_;
 		bool changed_;
+		bool rebuild_;
 		MapNodePtr renderable_;
 		int rx_;
 		int ry_;
-		std::vector<int> tiles_changed_;
+		std::set<int> tiles_changed_;
 	};
 }

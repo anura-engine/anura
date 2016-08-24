@@ -901,7 +901,7 @@ namespace hex
 				for(const auto& p : pos_data) {
 					//point rot_p = sub_hex_coord(add_hex_coord(hex.getPosition(), rotate_point(rot, center_, p)), center_);
 					point rot_p = rotate_point(rot, add_hex_coord(center_, hex->getPosition()), add_hex_coord(p, hex->getPosition()));
-					auto new_obj = const_cast<HexObject*>(hex->getParent()->getTileAt(rot_p));
+					auto new_obj = const_cast<HexObject*>(hex->getTileAt(rot_p));
 					if(td->match(new_obj, this, rotations_, rot)) {
 						//match_pos = true;
 						if(new_obj) {

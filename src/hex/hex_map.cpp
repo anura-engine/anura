@@ -50,6 +50,7 @@ namespace hex
 		  height_(0),
 		  starting_positions_(),
 		  changed_(true),
+		  rebuild_(true),
 		  renderable_(nullptr),
 		  rx_(0),
 		  ry_(0)
@@ -89,6 +90,7 @@ namespace hex
 		  height_(0),
 		  starting_positions_(),
 		  changed_(true),
+		  rebuild_(true),
 		  renderable_(nullptr),
 		  rx_(0),
 		  ry_(0)
@@ -172,6 +174,9 @@ namespace hex
 	void HexMap::build()
 	{
 		profile::manager pman("HexMap::build()");
+		for(auto& tile : tiles_) {
+			tile.clear();
+		}
 		auto& terrain_rules = hex::get_terrain_rules();
 		for(auto& tr : terrain_rules) {
 			tr->match(boost::intrusive_ptr<HexMap>(this));
@@ -181,16 +186,14 @@ namespace hex
 	void HexMap::build_single(HexObject* obj)
 	{
 		profile::manager pman("HexMap::build_single()");
+		std::vector<HexObject*> objs;
+		for(int i = 0; i != 6; ++i) {
+			objs.emplace_back(getNeighbour(obj->getPosition(), dir));
+			objs.back()->clear();
+		}
 		auto& terrain_rules = hex::get_terrain_rules();
 		for(auto& tr : terrain_rules) {
 			tr->match(obj);
-			for(int dir = 0; dir < 6; ++dir) {
-				auto nhex = getNeighbour(obj->getPosition(), dir);
-				if(nhex) {
-					nhex->clear();
-					tr->match(nhex);
-				}
-			}
 		}
 	}
 
@@ -224,6 +227,14 @@ namespace hex
 
 	void HexMap::process()
 	{
+		if(rebuild_) {
+			rebuild_ = false;
+			changed_ = false;
+			tiles_changed_.clear();
+			build();
+			renderable_->update(width_, height_, tiles_);
+		}
+
 		if(changed_) {
 			changed_ = false;
 
@@ -232,8 +243,6 @@ namespace hex
 					tiles_[index].clear();
 					build_single(&tiles_[index]);
 				}
-			} else {
-				build();
 			}
 			renderable_->update(width_, height_, tiles_);
 
@@ -313,7 +322,7 @@ namespace hex
 
 			return variant(new game_logic::FnCommandCallable([=]() {
 				map_ref->setChanged();
-				map_ref->tiles_changed_.emplace_back(index);
+				map_ref->tiles_changed_.emplace(index);
 				map_ref->tiles_[index] = HexObject(x, y, tile, map_ref.get());
 				map_ref->tiles_[index].setTypeStr(full_type, type_str, mod_str);
 			}));
@@ -322,8 +331,7 @@ namespace hex
 		BEGIN_DEFINE_FN(rebuild, "() -> commands")
 			boost::intrusive_ptr<HexMap> map_ref = &const_cast<HexMap&>(obj);
 			return variant(new game_logic::FnCommandCallable([=]() {
-				map_ref->setChanged();
-				map_ref->tiles_changed_.clear();
+				map_ref->setChangedRebuild();
 			}));
 		END_DEFINE_FN
 
@@ -334,17 +342,23 @@ namespace hex
 		  pos_(x, y),
 		  tile_(tile),
 		  type_str_(),
-		  mod_str_()
+		  mod_str_(),
+		  full_type_str_(),
+		  flags_(),
+		  temp_flags_(),
+		  images_()
 	{
 	}
 
 	const HexObject* HexObject::getTileAt(int x, int y) const 
 	{ 
+		ASSERT_LOG(parent_ != nullptr, "Parent HexMap was null.");
 		return parent_->getTileAt(x, y); 
 	}
 
 	const HexObject* HexObject::getTileAt(const point& p) const 
 	{
+		ASSERT_LOG(parent_ != nullptr, "Parent HexMap was null.");
 		return parent_->getTileAt(p);
 	}
 
