@@ -81,9 +81,6 @@ namespace hex
 				p.y -= (borders[1] + borders[3]) / 2;
 			}
 		}
-		// in an even-q layout the 0,0 tile is now no longer has a top-left pixel position of 0,0
-		// so we move down half a tile to compensate.
-		p.y += g_hex_tile_size / 2;
 
 		if(!borders.empty()) {
 			p.x += borders[0];

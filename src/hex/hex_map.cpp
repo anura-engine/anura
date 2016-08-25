@@ -165,7 +165,7 @@ namespace hex
 			y = hex.y + even_q_even_col[direction].y;
 		}
 		int index = x + y * width_;
-		if(index >= 0 && index < static_cast<int>(tiles_.size())) {
+		if(index < 0 || index >= static_cast<int>(tiles_.size())) {
 			return nullptr;
 		}
 		return &tiles_[index];
@@ -186,14 +186,20 @@ namespace hex
 	void HexMap::build_single(HexObject* obj)
 	{
 		profile::manager pman("HexMap::build_single()");
-		std::vector<HexObject*> objs;
-		for(int i = 0; i != 6; ++i) {
-			objs.emplace_back(getNeighbour(obj->getPosition(), dir));
-			objs.back()->clear();
+		std::vector<HexObject*> neighbours;
+		for(int dir = 0; dir != 6; ++dir) {
+			auto n = getNeighbour(obj->getPosition(), dir);
+			if(n != nullptr) {
+				neighbours.emplace_back(n);
+				n->clear();
+			}
 		}
 		auto& terrain_rules = hex::get_terrain_rules();
 		for(auto& tr : terrain_rules) {
 			tr->match(obj);
+			for(auto& n : neighbours) {
+				tr->match(n);
+			}
 		}
 	}
 

@@ -178,7 +178,9 @@ namespace hex
 		const int HexTileSizeThreeQuarters = (HexTileSize*3)/4;
 		const int tx = x*HexTileSizeThreeQuarters;
 		const int ty = HexTileSize*y - (abs(x)%2)*HexTileSizeHalf;
-		return point(tx, ty);
+		// in an even-q layout the 0,0 tile is now no longer has a top-left pixel position of 0,0
+		// so we move down half a tile to compensate.
+		return point(tx, ty + HexTileSizeHalf);
 	}
 
 	template<typename T>
@@ -226,25 +228,75 @@ namespace hex
 		return point(h.x, h.z + (h.x + (h.x&1)) / 2);
 	}
 	
-	point get_tile_pos_from_pixel_pos_evenq(const point& p, int HexTileSize)
+	point get_tile_pos_from_pixel_pos_evenq(const point& np, int HexTileSize)
 	{
-		float q = (p.x * 2.0f) / (3.0f * g_hex_tile_size);
-		float r = (-p.x / 3.0f + std::sqrt(3.0f)/3.0f * p.y) / g_hex_tile_size;
+		// in an even-q layout the 0,0 tile is now no longer has a top-left pixel position of 0,0
+		// so we move up half a tile to compensate.
+		point p{ np.x, np.y - HexTileSize / 2 };
+		const int tesselation_x_size = (3 * HexTileSize) / 2;
+		const int tesselation_y_size = HexTileSize;
+		const int x_base = p.x >= 0 ? p.x / tesselation_x_size * 2 : p.x / tesselation_x_size * 2 - 2;
+		const int x_mod  = p.x >= 0 ? p.x % tesselation_x_size : tesselation_x_size + (p.x % tesselation_x_size);
+		const int y_base = p.y >= 0 ? p.y / tesselation_y_size : p.y / tesselation_y_size - 1;
+		const int y_mod  = p.y >= 0 ? p.y % tesselation_y_size : tesselation_y_size + (p.y % tesselation_y_size);
+		const int m = 2;
 
-		return cube_to_evenq(cube_round(Hex<float>(q, -q - r, r)));
+		int x_modifier = 0;
+		int y_modifier = 0;
+
+		if(y_mod < tesselation_y_size / 2) {
+			if((x_mod * m + y_mod) < (HexTileSize / 2)) {
+				x_modifier = -1;
+				y_modifier = 0;
+			} else if ((x_mod * m - y_mod) < (HexTileSize * 3 / 2)) {
+				x_modifier = 0;
+				y_modifier = 0;
+			} else {
+				x_modifier = 1;
+				y_modifier = 0;
+			}
+
+		} else {
+			if((x_mod * m - (y_mod - HexTileSize / 2)) < 0) {
+				x_modifier = -1;
+				y_modifier = 1;
+			} else if((x_mod * m + (y_mod - HexTileSize / 2)) < HexTileSize * 2) {
+				x_modifier = 0;
+				y_modifier = 0;
+			} else {
+				x_modifier = 1;
+				y_modifier = 1;
+			}
+		}
+		return point(x_base + x_modifier, y_base + y_modifier);
 	}
 }
 
 UNIT_TEST(hexes)
 {
-	CHECK_EQ(hex::get_pixel_pos_from_tile_pos_evenq(0, 0, 72), point(0, 0));
-	CHECK_EQ(hex::get_pixel_pos_from_tile_pos_evenq(1, 0, 72), point(54, -36));
-	CHECK_EQ(hex::get_pixel_pos_from_tile_pos_evenq(0, 1, 72), point(0, 72));
-	CHECK_EQ(hex::get_pixel_pos_from_tile_pos_evenq(1, 1, 72), point(54, 36));
+	//CHECK_EQ(hex::get_pixel_pos_from_tile_pos_evenq(0, 0, 72), point(0, 0));
+	//CHECK_EQ(hex::get_pixel_pos_from_tile_pos_evenq(1, 0, 72), point(54, -36));
+	//CHECK_EQ(hex::get_pixel_pos_from_tile_pos_evenq(0, 1, 72), point(0, 72));
+	//CHECK_EQ(hex::get_pixel_pos_from_tile_pos_evenq(1, 1, 72), point(54, 36));
 
-	CHECK_EQ(hex::get_tile_pos_from_pixel_pos_evenq(point(0, 0), 72), point(0, 0));
+	CHECK_EQ(hex::get_tile_pos_from_pixel_pos_evenq(point(-54, 36), 72), point(-1, 0));
+	CHECK_EQ(hex::get_tile_pos_from_pixel_pos_evenq(point(0, 36), 72), point(-1, 0));
+
+	CHECK_EQ(hex::get_tile_pos_from_pixel_pos_evenq(point(18, 36), 72), point(0, 0));
 	CHECK_EQ(hex::get_tile_pos_from_pixel_pos_evenq(point(36, 36), 72), point(0, 0));
-	CHECK_EQ(hex::get_tile_pos_from_pixel_pos_evenq(point(36, 108), 72), point(0, 1));
-	CHECK_EQ(hex::get_tile_pos_from_pixel_pos_evenq(point(54, -36), 72), point(1, 0));
-	CHECK_EQ(hex::get_tile_pos_from_pixel_pos_evenq(point(90, 0), 72), point(1, 0));
+	CHECK_EQ(hex::get_tile_pos_from_pixel_pos_evenq(point(53, 36), 72), point(0, 0));
+
+	CHECK_EQ(hex::get_tile_pos_from_pixel_pos_evenq(point(54, 36), 72), point(1, 0));
+
+	CHECK_EQ(hex::get_tile_pos_from_pixel_pos_evenq(point(72, 72), 72), point(1, 1));
+
+	CHECK_EQ(hex::get_tile_pos_from_pixel_pos_evenq(point(-18, 72), 72), point(-1, 1));
+	CHECK_EQ(hex::get_tile_pos_from_pixel_pos_evenq(point(0, 108), 72), point(-1, 1));
+	CHECK_EQ(hex::get_tile_pos_from_pixel_pos_evenq(point(3, 99), 72), point(-1, 1));
+
+
+	//CHECK_EQ(hex::get_tile_pos_from_pixel_pos_evenq(point(36, 36), 72), point(0, 0));
+	//CHECK_EQ(hex::get_tile_pos_from_pixel_pos_evenq(point(36, 108), 72), point(0, 1));
+	//CHECK_EQ(hex::get_tile_pos_from_pixel_pos_evenq(point(54, -36), 72), point(1, 0));
+	//CHECK_EQ(hex::get_tile_pos_from_pixel_pos_evenq(point(90, 0), 72), point(1, 0));
 }
