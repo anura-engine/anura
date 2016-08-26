@@ -286,6 +286,7 @@ protected:
 	void staticProcess(Level& lvl);
 
 	virtual void control(const Level& lvl) override;
+	int getValueSlot(const std::string& key) const override;
 	variant getValue(const std::string& key) const override;
 	variant getValueBySlot(int slot) const override;
 	void setValue(const std::string& key, const variant& value) override;

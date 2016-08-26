@@ -737,6 +737,16 @@ namespace KRE
 			return it->second.location;
 		}
 
+		std::vector<std::string> ShaderProgram::getAllUniforms() const
+		{
+			std::vector<std::string> res;
+			for(auto p : uniforms_) {
+				res.push_back(p.first);
+			}
+
+			return res;
+		}
+
 		bool ShaderProgram::link(const std::vector<Shader>& shader_programs)
 		{
 			if(object_) {

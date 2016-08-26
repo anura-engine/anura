@@ -3458,6 +3458,11 @@ namespace
 	};
 }
 
+int CustomObject::getValueSlot(const std::string& key) const
+{
+	return type_->callableDefinition()->getSlot(key);
+}
+
 variant CustomObject::getValue(const std::string& key) const
 {
 	const int slot = type_->callableDefinition()->getSlot(key);
