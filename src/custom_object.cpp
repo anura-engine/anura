@@ -681,7 +681,6 @@ CustomObject::CustomObject(const CustomObject& o)
 	particle_systems_(o.particle_systems_),
 	text_(o.text_),
 	driver_(o.driver_),
-	blur_(o.blur_),
 	fall_through_platforms_(o.fall_through_platforms_),
 	always_active_(o.always_active_),
 	last_cycle_active_(0),
@@ -1314,10 +1313,6 @@ void CustomObject::draw(int xx, int yy) const
 		frame_->draw(shader_, draw_x, draw_y, isFacingRight(), isUpsideDown(), time_in_frame_, rotate_z_.as_float32());
 	} else {
 		frame_->draw(shader_, draw_x, draw_y, *draw_area_, isFacingRight(), isUpsideDown(), time_in_frame_, rotate_z_.as_float32());
-	}
-
-	if(blur_) {
-		blur_->draw();
 	}
 
 	for(auto b : blur_objects_) {
@@ -2295,13 +2290,6 @@ void CustomObject::process(Level& lvl)
 
 	if(fall_through_platforms_ > 0) {
 		--fall_through_platforms_;
-	}
-
-	if(blur_) {
-		blur_->nextFrame(start_x, start_y, x(), y(), frame_.get(), time_in_frame_, isFacingRight(), isUpsideDown(), float(start_rotate.as_float()), float(rotate_z_.as_float()));
-		if(blur_->destroyed()) {
-			blur_.reset();
-		}
 	}
 
 #if defined(USE_BOX2D)
@@ -5765,19 +5753,6 @@ void CustomObject::boardVehicle()
 
 void CustomObject::unboardVehicle()
 {
-}
-
-void CustomObject::set_blur(const BlurInfo* blur)
-{
-	if(blur) {
-		if(blur_) {
-			blur_->copySettings(*blur); 
-		} else {
-			blur_.reset(new BlurInfo(*blur));
-		}
-	} else {
-		blur_.reset();
-	}
 }
 
 void CustomObject::setSoundVolume(const int sound_volume)

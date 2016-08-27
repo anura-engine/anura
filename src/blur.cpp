@@ -28,56 +28,6 @@
 #include "frame.hpp"
 #include "variant_utils.hpp"
 
-BlurInfo::BlurInfo(float alpha, float fade, int granularity)
-  : alpha_(alpha), fade_(fade), granularity_(granularity)
-{
-}
-
-void BlurInfo::copySettings(const BlurInfo& o)
-{
-	alpha_ = o.alpha_;
-	fade_ = o.fade_;
-	granularity_ = o.granularity_;
-}
-
-void BlurInfo::nextFrame(int start_x, int start_y, int end_x, int end_y,
-                const Frame* object_frame, int time_in_frame, bool facing,
-				bool upside_down, float start_rotate, float rotate) {
-	for(BlurFrame& f : frames_) {
-		f.fade -= fade_;
-	}
-
-	while(!frames_.empty() && frames_.front().fade <= 0.0f) {
-		frames_.pop_front();
-	}
-
-	for(int n = 0; n < granularity_; ++n) {
-		BlurFrame f;
-		f.object_frame = object_frame;
-		f.x = (start_x*n + end_x*(granularity_ - n))/granularity_;
-		f.y = (start_y*n + end_y*(granularity_ - n))/granularity_;
-		f.time_in_frame = time_in_frame;
-		f.facing = facing;
-		f.upside_down = upside_down;
-		f.rotate = (start_rotate*n + rotate*(granularity_ - n))/granularity_;
-		f.fade = alpha_ + (fade_*(granularity_ - n))/granularity_;
-		frames_.push_back(f);
-	}
-}
-
-void BlurInfo::draw() const
-{
-	for(const BlurFrame& f : frames_) {
-		KRE::ColorScope color_scope(KRE::Color(1.0f, 1.0f, 1.0f, f.fade));
-		f.object_frame->draw(nullptr, static_cast<int>(f.x), static_cast<int>(f.y), f.facing, f.upside_down, f.time_in_frame, f.rotate);
-	}
-}
-
-bool BlurInfo::destroyed() const
-{
-	return granularity_ == 0 && frames_.empty();
-}
-
 namespace {
 struct ObjectTempModifier {
 	ObjectTempModifier(CustomObject* obj, const std::map<std::string,variant>& properties) : obj_(obj) {

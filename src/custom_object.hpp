@@ -207,7 +207,6 @@ public:
 
 	virtual bool serializable() const override;
 
-	void set_blur(const BlurInfo* blur);
 	void setSoundVolume(const int volume) override;
 	void setZSubOrder(const int zsub_order) override {zsub_order_ = zsub_order;}
 	
@@ -474,8 +473,6 @@ private:
 	CustomObjectTextPtr text_;
 
 	EntityPtr driver_;
-
-	std::shared_ptr<BlurInfo> blur_;
 
 	std::vector<boost::intrusive_ptr<BlurObject> > blur_objects_;
 

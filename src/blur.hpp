@@ -30,52 +30,6 @@
 
 class Frame;
 
-//class which represents the blur information for a single object.
-//a blur contains three parameters:
-// - alpha: the initial alpha value of the blurred vision of the object.
-// - fade: the rate at which the alpha fades each frame
-// - granularity: the number of copies of the object that are made
-//                every cycle.
-class BlurInfo
-{
-public:
-	BlurInfo(float alpha, float fade, int granularity);
-
-	//function to copy settings into another BlurInfo instance. This will
-	//keep our BlurFrames as they are, but copy in the alpha/fade/granularity
-	//settings and so change our blur behavior from then on.
-	void copySettings(const BlurInfo& info);
-
-	//function to progress to the next frame. We are given starting and
-	//ending position of the object, along with its drawing settings.
-	//
-	//'granularity' copies of the object's image will be made, linearly
-	//interpolated between start_x,start_y and end_x,end_y.
-	void nextFrame(int start_x, int start_y, int end_x, int end_y,
-	                const Frame* f, int time_in_frame, bool facing,
-					bool upside_down, float start_rotate, float rotate);
-
-	void draw() const;
-
-	//returns true iff our granularity is now 0 and we have no BlurFrames.
-	bool destroyed() const;
-
-private:
-	struct BlurFrame {
-		const Frame* object_frame;
-		int time_in_frame;
-		double x, y;
-		bool facing, upside_down;
-		float rotate;
-		float fade;
-	};
-
-	float alpha_;
-	float fade_;
-	int granularity_;
-	std::deque<BlurFrame> frames_;
-};
-
 class CustomObject;
 
 class BlurObject : public game_logic::FormulaCallable
