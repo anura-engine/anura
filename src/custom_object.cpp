@@ -1320,6 +1320,10 @@ void CustomObject::draw(int xx, int yy) const
 		blur_->draw();
 	}
 
+	for(auto b : blur_objects_) {
+		const_cast<BlurObject*>(b.get())->draw(xx, yy);
+	}
+
 	if(draw_color_) {
 		if(!draw_color_->fits_in_color()) {
 			KRE::BlendModeScope blend_scope(KRE::BlendModeConstants::BM_SRC_ALPHA, KRE::BlendModeConstants::BM_ONE);
@@ -2351,6 +2355,15 @@ void CustomObject::process(Level& lvl)
 		particles_->process();
 	}
 
+	for(auto& b : blur_objects_) {
+		b->process();
+		if(b->expired()) {
+			b.reset();
+		}
+	}
+
+	blur_objects_.erase(std::remove(blur_objects_.begin(), blur_objects_.end(), boost::intrusive_ptr<BlurObject>()), blur_objects_.end());
+
 	staticProcess(lvl);
 }
 
@@ -3343,6 +3356,15 @@ variant CustomObject::getValueBySlot(int slot) const
 
 	case CUSTOM_OBJECT_PARTICLES: {
 		return variant(particles_.get());	
+	}
+	
+	case CUSTOM_OBJECT_BLUR: {
+		std::vector<variant> result;
+		for(auto p : blur_objects_) {
+			result.push_back(variant(p.get()));
+		}
+
+		return variant(&result);
 	}
 
 	case CUSTOM_OBJECT_ANIMATED_MOVEMENTS: {
@@ -4771,6 +4793,22 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 
 	case CUSTOM_OBJECT_PARTICLES: {
 		createParticles(value);
+		break;
+	}
+
+	case CUSTOM_OBJECT_BLUR: {
+		blur_objects_.clear();
+		for(int n = 0; n != value.num_elements(); ++n) {
+			if(value[n].is_callable()) {
+				boost::intrusive_ptr<BlurObject> obj(value[n].try_convert<BlurObject>());
+				obj->setObject(this);
+				ASSERT_LOG(obj.get() != nullptr, "BAD OBJECT PASSED WHEN SETTING BLUR");
+				blur_objects_.emplace_back(obj);
+			} else {
+				ASSERT_LOG(false, "BAD OBJECT PASSED WHEN SETTING BLUR");
+			}
+		}
+
 		break;
 	}
 

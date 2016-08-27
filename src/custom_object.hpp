@@ -477,6 +477,8 @@ private:
 
 	std::shared_ptr<BlurInfo> blur_;
 
+	std::vector<boost::intrusive_ptr<BlurObject> > blur_objects_;
+
 	//set if we should fall through platforms. This is decremented automatically
 	//at the end of every cycle.
 	int fall_through_platforms_;

@@ -3463,6 +3463,33 @@ RETURN_TYPE("bool")
 	RETURN_TYPE("commands")
 	END_FUNCTION_DEF(blur)
 
+	FUNCTION_DEF(blur_object, 2, 2, "blur_object(properties, params)")
+		Formula::failIfStaticContext();
+		std::map<variant,variant> props = args()[0]->evaluate(variables).as_map();
+		std::map<std::string,variant> properties, end_properties;
+		for(auto p : props) {
+			properties[p.first.as_string()] = p.second;
+		}
+
+		std::map<variant,variant> options = args()[1]->evaluate(variables).as_map();
+
+		int duration = options[variant("duration")].as_int();
+		variant easing = options[variant("easing")];
+		variant anim = options[variant("animate")];
+		if(anim.is_map()) {
+			for(auto p : anim.as_map()) {
+				end_properties[p.first.as_string()] = p.second;
+			}
+		}
+
+		return variant(new BlurObject(properties, end_properties, duration, easing));
+
+	FUNCTION_ARGS_DEF
+		ARG_TYPE("{string -> any}")
+		ARG_TYPE("{duration: int, easing: null|function(decimal)->decimal, animate: null|{string -> any} }")
+	RETURN_TYPE("builtin BlurObject")
+	END_FUNCTION_DEF(blur_object)
+
 	class text_command : public CustomObjectCommandCallable {
 	public:
 		text_command(const std::string& text, const std::string& font, int size, int align)

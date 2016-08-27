@@ -25,6 +25,9 @@
 
 #include <deque>
 
+#include "formula_callable.hpp"
+#include "formula_callable_definition.hpp"
+
 class Frame;
 
 //class which represents the blur information for a single object.
@@ -71,4 +74,24 @@ private:
 	float fade_;
 	int granularity_;
 	std::deque<BlurFrame> frames_;
+};
+
+class CustomObject;
+
+class BlurObject : public game_logic::FormulaCallable
+{
+public:
+	BlurObject(const std::map<std::string,variant>& starting_properties, const std::map<std::string,variant>& ending_properties, int duration, variant easing);
+	~BlurObject();
+
+	void setObject(CustomObject* obj);
+	void draw(int x, int y);
+	void process();
+	bool expired() const;
+private:
+	boost::intrusive_ptr<CustomObject> obj_;
+	std::map<std::string,variant> start_properties_, end_properties_, cur_properties_;
+	int duration_, age_;
+	variant easing_;
+	DECLARE_CALLABLE(BlurObject);
 };
