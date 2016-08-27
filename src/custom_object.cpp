@@ -1236,6 +1236,10 @@ extern int g_camera_extend_x, g_camera_extend_y;
 
 void CustomObject::draw(int xx, int yy) const
 {
+	for(auto b : blur_objects_) {
+		const_cast<BlurObject*>(b.get())->draw(xx, yy);
+	}
+
 	if(frame_ == nullptr) {
 		return;
 	}
@@ -1313,10 +1317,6 @@ void CustomObject::draw(int xx, int yy) const
 		frame_->draw(shader_, draw_x, draw_y, isFacingRight(), isUpsideDown(), time_in_frame_, rotate_z_.as_float32());
 	} else {
 		frame_->draw(shader_, draw_x, draw_y, *draw_area_, isFacingRight(), isUpsideDown(), time_in_frame_, rotate_z_.as_float32());
-	}
-
-	for(auto b : blur_objects_) {
-		const_cast<BlurObject*>(b.get())->draw(xx, yy);
 	}
 
 	if(draw_color_) {
@@ -4330,7 +4330,11 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 	case CUSTOM_OBJECT_EFFECTS: {
 		effects_shaders_.clear();
 		for(int n = 0; n != value.num_elements(); ++n) {
-			if(value[n].is_string()) {
+			if(value[n].is_callable()) {
+				graphics::AnuraShader* shader = value[n].try_convert<graphics::AnuraShader>();
+				ASSERT_LOG(shader, "Bad object type given as shader");
+				effects_shaders_.emplace_back(shader);
+			} else if(value[n].is_string()) {
 				effects_shaders_.emplace_back(new graphics::AnuraShader(value[n].as_string()));
 			} else {
 				effects_shaders_.emplace_back(new graphics::AnuraShader(value[n]["name"].as_string(), value["name"]));
