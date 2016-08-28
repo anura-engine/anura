@@ -2877,7 +2877,7 @@ private:
 				c.add("nick", username);
 				c.add("timestamp", t);
 				if(privileged) {
-					c.add("privileged", true);
+					c.add("privileged", variant::from_bool(true));
 				}
 				channel.recent_messages.push_back(c.build());
 				if(channel.recent_messages.size() >= 96) {
