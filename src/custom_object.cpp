@@ -5826,9 +5826,11 @@ void CustomObject::setParent(EntityPtr e, const std::string& pivot_point)
 	const point pos = parent_position();
 
 	if(parent_.get() != nullptr) {
+		point my_pos = getMidpoint();
+
         const int parent_facing_sign = parent_->isFacingRight() ? 1 : -1;
-        relative_x_ = parent_facing_sign * (x() - pos.x);
-        relative_y_ = (y() - pos.y);
+        relative_x_ = parent_facing_sign * (my_pos.x - pos.x);
+        relative_y_ = (my_pos.y - pos.y);
     }
         
 	parent_prev_x_ = pos.x;
