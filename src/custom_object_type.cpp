@@ -33,6 +33,7 @@
 #include "custom_object_type.hpp"
 #include "filesystem.hpp"
 #include "ffl_dom.hpp"
+#include "formatter.hpp"
 #include "formula.hpp"
 #include "formula_constants.hpp"
 #include "json_parser.hpp"
@@ -1625,7 +1626,9 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 			variant shader_info = node["shader"];
 			if(shader_info.has_key("fragment")) {
 				if(shader_info.has_key("name") == false) {
-					shader_info = shader_info.add_attr(variant("name"), variant("shader"));
+					static int shader_num = 1;
+					shader_info = shader_info.add_attr(variant("name"), variant(formatter() << "shader" << shader_num));
+					++shader_num;
 				}
 
 				if(shader_info.has_key("vertex") == false) {
