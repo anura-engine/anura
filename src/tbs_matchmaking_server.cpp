@@ -493,7 +493,7 @@ public:
 				return;
 			} else if(request_type == "register") {
 				std::string user = normalize_username(doc["user"].as_string());
-				if(user.size() > 16) {
+				if(user.size() > 12) {
 					RESPOND_ERROR("Username may not be more than 12 characters");
 					return;
 				}
