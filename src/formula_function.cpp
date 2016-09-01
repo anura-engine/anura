@@ -1394,7 +1394,7 @@ namespace game_logic
 			return variant_type::get_type(variant::VARIANT_TYPE_DECIMAL);
 		END_FUNCTION_DEF(atan)
 
-		FUNCTION_DEF(atan2, 2, 2, "atan2(x): Standard two-param arc tangent function (to allow determining the quadrant of the resulting angle by passing in the sign value of the operands).")
+		FUNCTION_DEF(atan2, 2, 2, "atan2(x,y): Standard two-param arc tangent function (to allow determining the quadrant of the resulting angle by passing in the sign value of the operands).")
 			const float ratio1 = args()[0]->evaluate(variables).as_float();
 			const float ratio2 = args()[1]->evaluate(variables).as_float();
 			return variant(atan2(ratio1, ratio2) * radians_to_degrees);

@@ -328,6 +328,10 @@ public:
 	decimal getAnchorX() const;
 	decimal getAnchorY() const;
 
+	//Get the slot for a named attribute so we can quickly look it
+	//up using queryValueBySlot()
+	virtual int getValueSlot(const std::string& key) const = 0;
+
 protected:
 	virtual ConstSolidInfoPtr calculateSolid() const = 0;
 	virtual ConstSolidInfoPtr calculatePlatform() const = 0;

@@ -681,7 +681,6 @@ CustomObject::CustomObject(const CustomObject& o)
 	particle_systems_(o.particle_systems_),
 	text_(o.text_),
 	driver_(o.driver_),
-	blur_(o.blur_),
 	fall_through_platforms_(o.fall_through_platforms_),
 	always_active_(o.always_active_),
 	last_cycle_active_(0),
@@ -1237,6 +1236,10 @@ extern int g_camera_extend_x, g_camera_extend_y;
 
 void CustomObject::draw(int xx, int yy) const
 {
+	for(auto b : blur_objects_) {
+		const_cast<BlurObject*>(b.get())->draw(xx, yy);
+	}
+
 	if(frame_ == nullptr) {
 		return;
 	}
@@ -1314,10 +1317,6 @@ void CustomObject::draw(int xx, int yy) const
 		frame_->draw(shader_, draw_x, draw_y, isFacingRight(), isUpsideDown(), time_in_frame_, rotate_z_.as_float32());
 	} else {
 		frame_->draw(shader_, draw_x, draw_y, *draw_area_, isFacingRight(), isUpsideDown(), time_in_frame_, rotate_z_.as_float32());
-	}
-
-	if(blur_) {
-		blur_->draw();
 	}
 
 	if(draw_color_) {
@@ -2293,13 +2292,6 @@ void CustomObject::process(Level& lvl)
 		--fall_through_platforms_;
 	}
 
-	if(blur_) {
-		blur_->nextFrame(start_x, start_y, x(), y(), frame_.get(), time_in_frame_, isFacingRight(), isUpsideDown(), float(start_rotate.as_float()), float(rotate_z_.as_float()));
-		if(blur_->destroyed()) {
-			blur_.reset();
-		}
-	}
-
 #if defined(USE_BOX2D)
 	if(body_) {
 		for(b2ContactEdge* ce = body_->get_body_ptr()->GetContactList(); ce != nullptr; ce = ce->next) {
@@ -2350,6 +2342,15 @@ void CustomObject::process(Level& lvl)
 	if(particles_) {
 		particles_->process();
 	}
+
+	for(auto& b : blur_objects_) {
+		b->process();
+		if(b->expired()) {
+			b.reset();
+		}
+	}
+
+	blur_objects_.erase(std::remove(blur_objects_.begin(), blur_objects_.end(), boost::intrusive_ptr<BlurObject>()), blur_objects_.end());
 
 	staticProcess(lvl);
 }
@@ -3344,6 +3345,15 @@ variant CustomObject::getValueBySlot(int slot) const
 	case CUSTOM_OBJECT_PARTICLES: {
 		return variant(particles_.get());	
 	}
+	
+	case CUSTOM_OBJECT_BLUR: {
+		std::vector<variant> result;
+		for(auto p : blur_objects_) {
+			result.push_back(variant(p.get()));
+		}
+
+		return variant(&result);
+	}
 
 	case CUSTOM_OBJECT_ANIMATED_MOVEMENTS: {
 		std::vector<variant> result;
@@ -3456,6 +3466,11 @@ namespace
 			stack_->pop();
 		}
 	};
+}
+
+int CustomObject::getValueSlot(const std::string& key) const
+{
+	return type_->callableDefinition()->getSlot(key);
 }
 
 variant CustomObject::getValue(const std::string& key) const
@@ -4315,7 +4330,11 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 	case CUSTOM_OBJECT_EFFECTS: {
 		effects_shaders_.clear();
 		for(int n = 0; n != value.num_elements(); ++n) {
-			if(value[n].is_string()) {
+			if(value[n].is_callable()) {
+				graphics::AnuraShader* shader = value[n].try_convert<graphics::AnuraShader>();
+				ASSERT_LOG(shader, "Bad object type given as shader");
+				effects_shaders_.emplace_back(shader);
+			} else if(value[n].is_string()) {
 				effects_shaders_.emplace_back(new graphics::AnuraShader(value[n].as_string()));
 			} else {
 				effects_shaders_.emplace_back(new graphics::AnuraShader(value[n]["name"].as_string(), value["name"]));
@@ -4766,6 +4785,22 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 
 	case CUSTOM_OBJECT_PARTICLES: {
 		createParticles(value);
+		break;
+	}
+
+	case CUSTOM_OBJECT_BLUR: {
+		blur_objects_.clear();
+		for(int n = 0; n != value.num_elements(); ++n) {
+			if(value[n].is_callable()) {
+				boost::intrusive_ptr<BlurObject> obj(value[n].try_convert<BlurObject>());
+				obj->setObject(this);
+				ASSERT_LOG(obj.get() != nullptr, "BAD OBJECT PASSED WHEN SETTING BLUR");
+				blur_objects_.emplace_back(obj);
+			} else {
+				ASSERT_LOG(false, "BAD OBJECT PASSED WHEN SETTING BLUR");
+			}
+		}
+
 		break;
 	}
 
@@ -5724,19 +5759,6 @@ void CustomObject::unboardVehicle()
 {
 }
 
-void CustomObject::set_blur(const BlurInfo* blur)
-{
-	if(blur) {
-		if(blur_) {
-			blur_->copySettings(*blur); 
-		} else {
-			blur_.reset(new BlurInfo(*blur));
-		}
-	} else {
-		blur_.reset();
-	}
-}
-
 void CustomObject::setSoundVolume(const int sound_volume)
 {
 	sound::change_volume(this, sound_volume);
@@ -5804,9 +5826,11 @@ void CustomObject::setParent(EntityPtr e, const std::string& pivot_point)
 	const point pos = parent_position();
 
 	if(parent_.get() != nullptr) {
+		point my_pos = getMidpoint();
+
         const int parent_facing_sign = parent_->isFacingRight() ? 1 : -1;
-        relative_x_ = parent_facing_sign * (x() - pos.x);
-        relative_y_ = (y() - pos.y);
+        relative_x_ = parent_facing_sign * (my_pos.x - pos.x);
+        relative_y_ = (my_pos.y - pos.y);
     }
         
 	parent_prev_x_ = pos.x;

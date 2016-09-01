@@ -90,6 +90,9 @@ variant vector_to_variant(const Seq& seq) {
 
 class variant_builder {
 public:
+	variant_builder& add(const std::string& name, bool val) {
+		return add_value(name, variant::from_bool(val));
+	}
 
 	template<typename T>
 	variant_builder& add(const std::string& name, const T& val) {

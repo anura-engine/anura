@@ -493,7 +493,7 @@ public:
 				return;
 			} else if(request_type == "register") {
 				std::string user = normalize_username(doc["user"].as_string());
-				if(user.size() > 16) {
+				if(user.size() > 12) {
 					RESPOND_ERROR("Username may not be more than 12 characters");
 					return;
 				}
@@ -614,6 +614,8 @@ public:
 
 						send_response(socket, response.build());
 
+						sendChannels(user, channels);
+
 						if(email_address.empty() == false) {
 							const std::string email_key = "email:" + email_address;
 							registration_db_client_->get(email_key, [=](variant email_info) {
@@ -720,6 +722,8 @@ public:
 						}
 
 						send_response(socket, response.build());
+
+						sendChannels(user, channels);
 					});
 
 				});
@@ -777,6 +781,8 @@ public:
 						response.add("timestamp", static_cast<int>(time(NULL)));
 
 						send_response(socket, response.build());
+
+						sendChannels(username, channels);
 					});
 				});
 			} else if(request_type == "recover_account") {
@@ -2639,6 +2645,8 @@ private:
 			for(auto p : users.as_map()) {
 				user_list.push_back(p.first.as_string());
 			}
+
+			recent_messages = node["messages"].as_list();
 		}
 
 		variant write() const {
@@ -2647,7 +2655,19 @@ private:
 			b.add("users", users);
 			b.add("ops", ops);
 			b.add("topic", topic);
-			return b.build();
+			std::vector<variant> msg = recent_messages;
+			b.add("messages", variant(&msg));
+
+			last_write = b.build();
+			return last_write;
+		}
+
+		variant write_cached() const {
+			if(last_write.is_null()) {
+				return write();
+			}
+
+			return last_write;
 		}
 
 		std::string name;
@@ -2655,9 +2675,57 @@ private:
 		variant users;
 		variant ops;
 		std::vector<std::string> user_list;
+		std::vector<variant> recent_messages;
+		mutable variant last_write;
 	};
 
 	std::map<std::string, ChatChannel> channels_;
+
+	void sendChannels(std::string username, variant channels)
+	{
+		const std::map<variant,variant>& m = channels.as_map();
+		if(m.empty()) {
+			return;
+		}
+
+		auto items = new std::map<variant,variant>();
+		int* count = new int(0);
+
+		for(auto p : m) {
+			std::string ch = p.first.as_string();
+			auto itor = channels_.find(ch);
+			if(itor != channels_.end()) {
+				(*items)[variant(ch)] = itor->second.write_cached();
+			} else {
+				++*count;
+				db_client_->get("channel:" + ch, [=](variant info) {
+					if(info.is_null() == false) {
+						channels_[ch] = ChatChannel(info);
+
+						(*items)[variant(ch)] = channels_[ch].write();
+					}
+
+					if(--*count == 0) {
+						variant_builder b;
+						b.add("type", "chat_channels");
+						b.add("channels", variant(items));
+						queue_message(username, b.build()); 
+						delete count;
+						delete items;
+					}
+				});
+			}
+		}
+
+		if(*count == 0) {
+			variant_builder b;
+			b.add("type", "chat_channels");
+			b.add("channels", variant(items));
+			queue_message(username, b.build());
+			delete count;
+			delete items;
+		}
+	}
 
 	void executeOnChannel(std::string channel, std::function<bool(ChatChannel&)> fn)
 	{
@@ -2803,13 +2871,25 @@ private:
 
 		if(recipient.empty() == false && recipient[0] == '#') {
 			executeOnChannel(recipient, [=](ChatChannel& channel) {
+				int t = static_cast<int>(time(nullptr));
+				variant_builder c;
+				c.add("message", msg);
+				c.add("nick", username);
+				c.add("timestamp", t);
+				if(privileged) {
+					c.add("privileged", variant::from_bool(true));
+				}
+				channel.recent_messages.push_back(c.build());
+				if(channel.recent_messages.size() >= 96) {
+					channel.recent_messages.erase(channel.recent_messages.begin(), channel.recent_messages.begin() + 32);
+				}
 
 				variant_builder b;
 				b.add("type", "chat_message");
 				b.add("nick", username);
 				b.add("channel", recipient);
 				b.add("message", msg);
-				b.add("timestamp", static_cast<int>(time(nullptr)));
+				b.add("timestamp", t);
 
 				if(privileged) {
 					b.add("privileged", variant::from_bool(true));

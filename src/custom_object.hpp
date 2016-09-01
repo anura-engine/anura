@@ -207,7 +207,6 @@ public:
 
 	virtual bool serializable() const override;
 
-	void set_blur(const BlurInfo* blur);
 	void setSoundVolume(const int volume) override;
 	void setZSubOrder(const int zsub_order) override {zsub_order_ = zsub_order;}
 	
@@ -286,6 +285,7 @@ protected:
 	void staticProcess(Level& lvl);
 
 	virtual void control(const Level& lvl) override;
+	int getValueSlot(const std::string& key) const override;
 	variant getValue(const std::string& key) const override;
 	variant getValueBySlot(int slot) const override;
 	void setValue(const std::string& key, const variant& value) override;
@@ -474,7 +474,7 @@ private:
 
 	EntityPtr driver_;
 
-	std::shared_ptr<BlurInfo> blur_;
+	std::vector<boost::intrusive_ptr<BlurObject> > blur_objects_;
 
 	//set if we should fall through platforms. This is decremented automatically
 	//at the end of every cycle.
