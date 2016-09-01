@@ -23,10 +23,9 @@
 
 #include <set>
 
-#include "hex_logical_tiles.hpp"
+#include "hex.hpp"
+#include "hex_helper.hpp"
 #include "hex_mask.hpp"
-#include "hex_object.hpp"
-#include "hex_renderable.hpp"
 #include "hex_tile.hpp"
 
 #include "Shaders.hpp"
@@ -39,103 +38,113 @@
 
 namespace hex
 {
+	using namespace KRE;
 
-using namespace KRE;
-
-MaskNode::MaskNode(const variant& node)
-  : graphics::SceneObjectCallable(node), id_(node["id"].as_string_default("")), changed_(false)
-{
-	std::vector<int> v;
-	if(node.has_key("locs")) {
-		for(auto item : node["locs"].as_list()) {
-			for(int i : item.as_list_int()) {
-				v.push_back(i);
+	MaskNode::MaskNode(const variant& node)
+	  : graphics::SceneObjectCallable(node), 
+		id_(node["id"].as_string_default("")), 
+		attr_(nullptr),
+		locs_(),
+		changed_(false),
+		rt_(nullptr),
+		area_(),
+		uv_()
+	{
+		std::vector<point> v;
+		if(node.has_key("locs")) {
+			for(auto item : node["locs"].as_list()) {
+				v.emplace_back(item);
 			}
 		}
+
+		setLocs(&v);
+
+		setShader(KRE::ShaderProgram::getSystemDefault());
+
+		auto as = KRE::DisplayDevice::createAttributeSet(true, false, false);
+		as->setDrawMode(KRE::DrawMode::TRIANGLE_STRIP);
+
+		attr_ = std::make_shared<Attribute<vertex_texcoord>>(AccessFreqHint::DYNAMIC);
+		attr_->addAttributeDesc(AttributeDesc(AttrType::POSITION, 2, AttrFormat::FLOAT, false, sizeof(vertex_texcoord), offsetof(vertex_texcoord, vtx)));
+		attr_->addAttributeDesc(AttributeDesc(AttrType::TEXTURE, 2, AttrFormat::FLOAT, false, sizeof(vertex_texcoord), offsetof(vertex_texcoord, tc)));
+
+		as->addAttribute(attr_);
+		addAttributeSet(as);
+
+		std::vector<int> borders;
+		auto tex = get_terrain_texture("alphamask", &area_, &borders);
+		ASSERT_LOG(tex != nullptr, "No texture for value 'alphamask'.");
+		setTexture(tex);
+		uv_ = tex->getTextureCoords(0, area_);
 	}
 
-	setLocs(v);
-}
-
-MaskNodePtr MaskNode::create(const variant& node)
-{
-	return MaskNodePtr(new MaskNode(node));
-}
-
-void MaskNode::process()
-{
-	if(changed_) {
-		update();
-		changed_ = false;
-	}
-}
-
-void MaskNode::setLocs(const std::vector<int>& locs)
-{
-	locs_ = locs;
-	changed_ = true;
-}
-
-void MaskNode::update()
-{
-	clearAttributeSets();
-
-	setShader(KRE::ShaderProgram::getSystemDefault());
-
-	auto as = KRE::DisplayDevice::createAttributeSet(true, false, false);
-	as->setDrawMode(KRE::DrawMode::TRIANGLES);
-
-
-	attr_ = std::make_shared<Attribute<vertex_texcoord>>(AccessFreqHint::DYNAMIC);
-	attr_->addAttributeDesc(AttributeDesc(AttrType::POSITION, 2, AttrFormat::FLOAT, false, sizeof(vertex_texcoord), offsetof(vertex_texcoord, vtx)));
-	attr_->addAttributeDesc(AttributeDesc(AttrType::TEXTURE, 2, AttrFormat::FLOAT, false, sizeof(vertex_texcoord), offsetof(vertex_texcoord, tc)));
-
-	as->addAttribute(attr_);
-	addAttributeSet(as);
-
-	TileTypePtr mask = TileType::factory("mask");
-	ASSERT_LOG(mask.get(), "No 'mask' hex type");
-
-	setTexture(mask->getTexture());
-
-	std::vector<KRE::vertex_texcoord> coords;
-
-	for(int i = 0; i < static_cast<int>(locs_.size())-1; i += 2) {
-		mask->render(locs_[i], locs_[i+1], &coords);
+	MaskNodePtr MaskNode::create(const variant& node)
+	{
+		return MaskNodePtr(new MaskNode(node));
 	}
 
-	attr_->update(coords);
-}
-
-BEGIN_DEFINE_CALLABLE(MaskNode, graphics::SceneObjectCallable);
-DEFINE_FIELD(id, "string")
-	return variant(obj.id_);
-DEFINE_FIELD(texture, "null|builtin texture_object")
-	if(obj.rt_.get()) {
-		return variant(new TextureObject(obj.rt_->getTexture()));
-	} else {
-		return variant();
-	}
-DEFINE_FIELD(locs, "[[int,int]]")
-	std::vector<variant> res;
-	for(int i = 0; i < static_cast<int>(obj.locs_.size())-1; i += 2) {
-		std::vector<variant> v;
-		v.push_back(variant(obj.locs_[i]));
-		v.push_back(variant(obj.locs_[i+1]));
-		res.push_back(variant(&v));
-	}
-
-	return variant(&res);
-DEFINE_SET_FIELD
-	std::vector<int> v;
-	for(auto item : value.as_list()) {
-		for(int i : item.as_list_int()) {
-			v.push_back(i);
+	void MaskNode::process()
+	{
+		if(changed_) {
+			update();
+			changed_ = false;
 		}
 	}
 
-	obj.setLocs(v);
+	void MaskNode::setLocs(std::vector<point>* locs)
+	{
+		locs_.swap(*locs);
+		changed_ = true;
+	}
 
-END_DEFINE_CALLABLE(MaskNode);
+	void MaskNode::update()
+	{
+		std::vector<KRE::vertex_texcoord> coords;
 
+		for(auto it = locs_.cbegin(); it != locs_.cend(); ++it) {
+			auto& loc = *it;
+			point p = get_pixel_pos_from_tile_pos_evenq(loc, g_hex_tile_size);
+
+			if(it != locs_.cbegin()) {
+				// degenerate
+				coords.emplace_back(glm::vec2(p.x, p.y), glm::vec2(uv_.x1(), uv_.y1()));
+			}
+			coords.emplace_back(glm::vec2(p.x, p.y), glm::vec2(uv_.x1(), uv_.y1()));
+			coords.emplace_back(glm::vec2(p.x + area_.w(), p.y), glm::vec2(uv_.x2(), uv_.y1()));
+			coords.emplace_back(glm::vec2(p.x, p.y + area_.h()), glm::vec2(uv_.x1(), uv_.y2()));
+			coords.emplace_back(glm::vec2(p.x + area_.w(), p.y + area_.h()), glm::vec2(uv_.x2(), uv_.y2()));
+			if((it + 1) != locs_.cend()) {
+				// degenerate
+				coords.emplace_back(glm::vec2(p.x + area_.w(), p.y + area_.h()), glm::vec2(uv_.x2(), uv_.y2()));
+			}
+		}
+
+		getAttributeSet().back()->setCount(coords.size());
+		attr_->update(&coords);
+	}
+
+	BEGIN_DEFINE_CALLABLE(MaskNode, graphics::SceneObjectCallable);
+	DEFINE_FIELD(id, "string")
+		return variant(obj.id_);
+	DEFINE_FIELD(texture, "null|builtin texture_object")
+		if(obj.rt_.get()) {
+			return variant(new TextureObject(obj.rt_->getTexture()));
+		} else {
+			return variant();
+		}
+	DEFINE_FIELD(locs, "[[int,int]]")
+		std::vector<variant> res;
+		for(const auto& loc : obj.locs_) {
+			variant v = loc.write();
+			res.emplace_back(v);
+		}
+		return variant(&res);
+	DEFINE_SET_FIELD
+		std::vector<point> v;
+		for(auto item : value.as_list()) {
+			v.emplace_back(item);
+		}
+		obj.setLocs(&v);
+
+	END_DEFINE_CALLABLE(MaskNode);
 }

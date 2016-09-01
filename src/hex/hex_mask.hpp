@@ -37,7 +37,7 @@ namespace hex
 	{
 	public:
 		explicit MaskNode(const variant& node);
-		void setLocs(const std::vector<int>& locs);
+		void setLocs(std::vector<point>* locs);
 
 		static MaskNodePtr create(const variant& node);
 
@@ -47,17 +47,19 @@ namespace hex
 		KRE::RenderTargetPtr getRenderTarget() const { return rt_; }
 
 	private:
+		DECLARE_CALLABLE(MaskNode);
 		void update();
 
 		std::string id_;
 		std::shared_ptr<KRE::Attribute<KRE::vertex_texcoord>> attr_;
 
-		std::vector<int> locs_;
+		std::vector<point> locs_;
 		bool changed_;
 
 		KRE::RenderTargetPtr rt_;
 
-		DECLARE_CALLABLE(MaskNode);
+		rect area_;
+		rectf uv_;
 
 		MaskNode() = delete;
 		MaskNode(const MaskNode&) = delete;

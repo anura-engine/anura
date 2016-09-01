@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2014-2015 by Kristina Simpson <sweet.kristas@gmail.com>
+	Copyright (C) 2013-2016 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -23,12 +23,21 @@
 
 #pragma once
 
+#include "variant.hpp"
+#include "hex_fwd.hpp"
+
+#include "Texture.hpp"
+
 namespace hex
 {
-	class MapNode;
-	typedef std::shared_ptr<MapNode> MapNodePtr;
-	class MapLayer;
-	typedef std::shared_ptr<MapLayer> MapLayerPtr;
-	class AnimatedMapLayer;
-	typedef std::shared_ptr<AnimatedMapLayer> AnimatedMapLayerPtr;
+	typedef std::vector<hex::TerrainRulePtr> terrain_rule_type;
+
+	HexTilePtr get_tile_from_type(const std::string& type_str);
+	const terrain_rule_type& get_terrain_rules();
+	KRE::TexturePtr get_terrain_texture(const std::string& filename, rect* area, std::vector<int>* borders);
+	const std::string& get_terrain_data(const std::string& filename, rect* area=nullptr, std::vector<int>* borders=nullptr);
+	bool terrain_info_exists(const std::string& name);
+	std::vector<variant> get_editor_info();
+
+	void load(const std::string& base_path);
 }

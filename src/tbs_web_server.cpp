@@ -30,7 +30,7 @@
 #include "filesystem.hpp"
 #include "formatter.hpp"
 #include "formula_object.hpp"
-#include "hex/hex_logical_tiles.hpp"
+//#include "hex.hpp"
 #include "json_parser.hpp"
 #include "module.hpp"
 #include "preferences.hpp"
@@ -46,7 +46,7 @@
 
 namespace {
 	PREF_STRING(tbs_server_semaphore, "", "");
-	PREF_BOOL(tbs_server_hexes, false, "Whether the tbs server should load hexes");
+	//PREF_BOOL(tbs_server_hexes, false, "Whether the tbs server should load hexes");
 	boost::interprocess::named_semaphore* g_termination_semaphore;
 
 #if defined(_MSC_VER)
@@ -226,9 +226,8 @@ struct IPCSession {
 }
 
 COMMAND_LINE_UTILITY(tbs_server) {
-	if(g_tbs_server_hexes) {
-		hex::logical::loader(json::parse_from_file("data/hex_tiles.cfg"));
-	}
+	//if(g_tbs_server_hexes) {
+	//}
 
 	std::vector<IPCSession> ipc_sessions;
 

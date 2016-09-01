@@ -60,8 +60,8 @@
 #include "formula_function_registry.hpp"
 #include "formula_object.hpp"
 #include "formula_profiler.hpp"
-#include "hex_logical_tiles.hpp"
-#include "hex_tile.hpp"
+#include "hex.hpp"
+#include "hex_helper.hpp"
 #include "lua_iface.hpp"
 #include "md5.hpp"
 #include "module.hpp"
@@ -2014,30 +2014,30 @@ FUNCTION_DEF_IMPL
 			return variant();
 		END_FUNCTION_DEF(map_controls)*/
 
-		FUNCTION_DEF(get_hex_editor_info, 0, 0, "get_hex_editor_info() ->[builtin hex_editor_info]")
-			auto ei = hex::HexEditorInfo::getHexEditorInfo();
+		FUNCTION_DEF(get_hex_editor_info, 0, 0, "get_hex_editor_info() ->[builtin hex_tile]")
+			auto ei = hex::get_editor_info();
 			return variant(&ei);
 		FUNCTION_ARGS_DEF
-			RETURN_TYPE("[builtin hex_editor_info]")
+			RETURN_TYPE("[builtin hex_tile]")
 		END_FUNCTION_DEF(get_hex_editor_info)
 
-		FUNCTION_DEF(get_hex_overlay_info, 0, 0, "get_hex_overlay_info() ->[builtin overlay]")
-			auto oi = hex::Overlay::getOverlayInfo();
-			return variant(&oi);
-		FUNCTION_ARGS_DEF
-			RETURN_TYPE("[builtin overlay]")
-		END_FUNCTION_DEF(get_hex_overlay_info)
+		FUNCTION_DEF(tile_pixel_pos_from_loc, 1, 2, "tile_pixel_pos_from_loc(loc) -> [x,y]")
+			point p(args()[0]->evaluate(variables));
+			auto tp = hex::get_pixel_pos_from_tile_pos_evenq(p, hex::g_hex_tile_size);
+			return tp.write();
+			FUNCTION_ARGS_DEF
+				ARG_TYPE("[int, int]")
+			RETURN_TYPE("[int, int]")
+		END_FUNCTION_DEF(tile_pixel_pos_from_loc)
 
-		FUNCTION_DEF(hex_logical_map, 1, 1, "hex_logical_map(map) ->builtin logical_map")
-			const variant m = args()[0]->evaluate(variables);
-
-			return variant(new hex::logical::LogicalMap(m));
-			
+		FUNCTION_DEF(tile_loc_from_pixel_pos, 1, 2, "tile_pixel_pos_from_loc(loc) -> [x,y]")
+			point p(args()[0]->evaluate(variables));
+			auto tp = hex::get_tile_pos_from_pixel_pos_evenq(p, hex::g_hex_tile_size);
+			return tp.write();
 		FUNCTION_ARGS_DEF
-			ARG_TYPE("map")
-			RETURN_TYPE("builtin logical_map")
-		END_FUNCTION_DEF(hex_logical_map)
-	
+			ARG_TYPE("[int, int]")
+			RETURN_TYPE("[int, int]")
+		END_FUNCTION_DEF(tile_loc_from_pixel_pos)				
 
 		FUNCTION_DEF(directed_graph, 2, 2, "directed_graph(list_of_vertexes, adjacent_expression) -> a directed graph")
 			variant vertices = args()[0]->evaluate(variables);
