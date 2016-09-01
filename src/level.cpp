@@ -3803,7 +3803,7 @@ DEFINE_SET_FIELD_TYPE("null|map")
 DEFINE_FIELD(hex_masks, "[builtin mask_node]")
 	std::vector<variant> result;
 	for(auto mask : obj.hex_masks_) {
-		result.push_back(variant(mask.get()));
+		result.emplace_back(variant(mask.get()));
 	}
 
 	return variant(&result);
@@ -3812,9 +3812,9 @@ DEFINE_SET_FIELD_TYPE("[map|builtin mask_node]")
 	obj.hex_masks_.clear();
 	for(auto v : items) {
 		if(v.is_map()) {
-			obj.hex_masks_.push_back(hex::MaskNodePtr(new hex::MaskNode(v)));
+			obj.hex_masks_.emplace_back(hex::MaskNodePtr(new hex::MaskNode(v)));
 		} else {
-			obj.hex_masks_.push_back(hex::MaskNodePtr(v.convert_to<hex::MaskNode>()));
+			obj.hex_masks_.emplace_back(hex::MaskNodePtr(v.convert_to<hex::MaskNode>()));
 		}
 
 		ASSERT_LOG(obj.hex_masks_.back().get() != nullptr, "null hex mask");

@@ -64,7 +64,6 @@ namespace hex
 		auto as = KRE::DisplayDevice::createAttributeSet(true, false, false);
 		as->setDrawMode(KRE::DrawMode::TRIANGLE_STRIP);
 
-
 		attr_ = std::make_shared<Attribute<vertex_texcoord>>(AccessFreqHint::DYNAMIC);
 		attr_->addAttributeDesc(AttributeDesc(AttrType::POSITION, 2, AttrFormat::FLOAT, false, sizeof(vertex_texcoord), offsetof(vertex_texcoord, vtx)));
 		attr_->addAttributeDesc(AttributeDesc(AttrType::TEXTURE, 2, AttrFormat::FLOAT, false, sizeof(vertex_texcoord), offsetof(vertex_texcoord, tc)));
@@ -114,13 +113,14 @@ namespace hex
 			coords.emplace_back(glm::vec2(p.x + area_.w(), p.y), glm::vec2(uv_.x2(), uv_.y1()));
 			coords.emplace_back(glm::vec2(p.x, p.y + area_.h()), glm::vec2(uv_.x1(), uv_.y2()));
 			coords.emplace_back(glm::vec2(p.x + area_.w(), p.y + area_.h()), glm::vec2(uv_.x2(), uv_.y2()));
-			if(it + 1 != locs_.cend()) {
+			if((it + 1) != locs_.cend()) {
 				// degenerate
 				coords.emplace_back(glm::vec2(p.x + area_.w(), p.y + area_.h()), glm::vec2(uv_.x2(), uv_.y2()));
 			}
 		}
 
-		attr_->update(coords);
+		getAttributeSet().back()->setCount(coords.size());
+		attr_->update(&coords);
 	}
 
 	BEGIN_DEFINE_CALLABLE(MaskNode, graphics::SceneObjectCallable);
