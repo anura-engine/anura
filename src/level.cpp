@@ -21,6 +21,8 @@
 	   distribution.
 */
 
+#include <GL/glew.h>
+
 #include <algorithm>
 #include <iostream>
 #include <math.h>
@@ -2174,9 +2176,13 @@ void Level::applyShaderToFrameBufferTexture(graphics::AnuraShaderPtr shader, boo
 	rt_->setShader(shader->getShader());
 	shader->setDrawArea(rect(0, 0, wnd->width(), wnd->height()));
 	shader->setCycle(cycle());
+
 	if(preferences::screen_rotated()) {
 		rt_->setRotation(0, glm::vec3(0.0f, 0.0f, 1.0f));
 	}
+
+	rt_->clearBlendState();
+	KRE::BlendModeScope blend_scope(KRE::BlendModeConstants::BM_SRC_ALPHA, KRE::BlendModeConstants::BM_ONE_MINUS_SRC_ALPHA);
 	rt_->preRender(wnd);
 	wnd->render(rt_.get());
 
