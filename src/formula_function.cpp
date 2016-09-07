@@ -604,7 +604,8 @@ namespace game_logic
 		FUNCTION_DEF(query_cache, 3, 3, "query_cache(ffl_cache, key, expr): ")
 			const variant key = args()[1]->evaluate(variables);
 
-			const ffl_cache* cache = args()[0]->evaluate(variables).try_convert<ffl_cache>();
+			variant cache_variant = args()[0]->evaluate(variables);
+			const ffl_cache* cache = cache_variant.try_convert<ffl_cache>();
 			ASSERT_LOG(cache != nullptr, "ILLEGAL CACHE ARGUMENT TO query_cache");
 	
 			const variant* result = cache->get(key);

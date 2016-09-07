@@ -3036,15 +3036,9 @@ namespace {
 				static_FormulaCallable(const static_FormulaCallable&);
 			public:
 				static_FormulaCallable() : FormulaCallable(false) {
-					if(static_FormulaCallable_active) {
-						throw non_static_expression_exception();
-					}
-			
-					static_FormulaCallable_active = true;
 				}
 		
 				~static_FormulaCallable() {
-					static_FormulaCallable_active = false;
 				}
 		
 				variant getValue(const std::string& key) const {
@@ -3058,6 +3052,25 @@ namespace {
 				variant getValueBySlot(int slot) const {
 					throw non_static_expression_exception();
 				}
+			};
+
+			class StaticFormulaCallableGuard {
+				boost::intrusive_ptr<static_FormulaCallable> callable_;
+			public:
+				StaticFormulaCallableGuard() : callable_(new static_FormulaCallable) {
+					if(static_FormulaCallable_active) {
+						throw non_static_expression_exception();
+					}
+			
+					static_FormulaCallable_active = true;
+				}
+
+				~StaticFormulaCallableGuard() {
+					static_FormulaCallable_active = false;
+				}
+
+				boost::intrusive_ptr<static_FormulaCallable> callable() const { return callable_; }
+				bool callableNotCopied() const { return callable_->refcount() == 1; }
 			};
 
 			//A helper function which queries an expression and finds all the occurrences where it
@@ -3118,18 +3131,17 @@ namespace {
 				//we want to try to evaluate this expression, and see if it is static.
 				//it is static if it never reads its input, if it doesn't call the rng,
 				//and if a reference to the input itself is not stored.
+				const rng::Seed rng_seed = rng::get_seed();
+				StaticFormulaCallableGuard static_callable;
 				try {
-					const rng::Seed rng_seed = rng::get_seed();
-					FormulaCallablePtr static_callable(new static_FormulaCallable);
-
 					variant res;
 			
 					{
 						const static_context ctx;
-						res = result->staticEvaluate(*static_callable);
+						res = result->staticEvaluate(*static_callable.callable());
 					}
 
-					if(rng_seed == rng::get_seed() && static_callable->refcount() == 1) {
+					if(rng_seed == rng::get_seed() && static_callable.callableNotCopied()) {
 						//this expression is static. Reduce it to its result.
 						VariantExpression* expr = new VariantExpression(res);
 						if(result) {
@@ -3138,11 +3150,6 @@ namespace {
 
 						result.reset(expr);
 					}
-
-					//it's possible if there is a latent reference to it the
-					//static callable won't get destroyed, so make sure we
-					//mark it as inactive to allow others to be created.
-					static_FormulaCallable_active = false;
 				} catch(non_static_expression_exception&) {
 					//the expression isn't static. Not an error.
 				} catch(fatal_assert_failure_exception& e) {
