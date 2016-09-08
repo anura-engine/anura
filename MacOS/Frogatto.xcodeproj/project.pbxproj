@@ -12,10 +12,7 @@
 		634991D11AC794D300E1259F /* formula_garbage_collector.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 634991CF1AC794D300E1259F /* formula_garbage_collector.cpp */; };
 		63532D8B1D1F31950082F139 /* scrollable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 63532D871D1F31930082F139 /* scrollable.cpp */; };
 		63532D8C1D1F31950082F139 /* xhtml_line_box.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 63532D891D1F31940082F139 /* xhtml_line_box.cpp */; };
-		6357A6E41B258B1C00793D60 /* hex_logical_tiles.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6357A6D81B258B1C00793D60 /* hex_logical_tiles.cpp */; };
 		6357A6E51B258B1C00793D60 /* hex_map.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6357A6DA1B258B1C00793D60 /* hex_map.cpp */; };
-		6357A6E61B258B1C00793D60 /* hex_object.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6357A6DC1B258B1C00793D60 /* hex_object.cpp */; };
-		6357A6E71B258B1C00793D60 /* hex_pathfinding.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6357A6DE1B258B1C00793D60 /* hex_pathfinding.cpp */; };
 		6357A6E81B258B1C00793D60 /* hex_renderable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6357A6E01B258B1C00793D60 /* hex_renderable.cpp */; };
 		6357A6E91B258B1C00793D60 /* hex_tile.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6357A6E21B258B1C00793D60 /* hex_tile.cpp */; };
 		6357A72A1B3F116900793D60 /* ffl_dom.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6357A6EA1B3F116900793D60 /* ffl_dom.cpp */; };
@@ -386,6 +383,9 @@
 		C02C5D081CA23AE4006D53E3 /* libboost_locale.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = C02C5D061CA23AB3006D53E3 /* libboost_locale.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		C02C5D0B1CA252E2006D53E3 /* url_handler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C02C5D091CA252E2006D53E3 /* url_handler.cpp */; };
 		C02C5D0E1CAE5AFF006D53E3 /* SurfaceScale.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C02C5D0C1CAE5AFF006D53E3 /* SurfaceScale.cpp */; };
+		C03585B81D812A240090FC2D /* hex_helper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C03585B41D812A240090FC2D /* hex_helper.cpp */; };
+		C03585B91D812A240090FC2D /* hex_loader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C03585B61D812A240090FC2D /* hex_loader.cpp */; };
+		C03585BE1D812A5D0090FC2D /* tile_rules.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C03585BC1D812A5D0090FC2D /* tile_rules.cpp */; };
 		C0442A7B1AC7A2A400A17F91 /* libboost_iostreams.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 63D6F4D91AC68F38002250CC /* libboost_iostreams.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		C0442A7C1AC7A91C00A17F91 /* libboost_filesystem.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 631A8A0B1AC69A5D00AA55C8 /* libboost_filesystem.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		C0442A7D1AC7A91E00A17F91 /* libboost_date_time.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 63D6F4D71AC68F38002250CC /* libboost_date_time.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
@@ -510,15 +510,8 @@
 		63532D891D1F31940082F139 /* xhtml_line_box.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = xhtml_line_box.cpp; sourceTree = "<group>"; };
 		63532D8A1D1F31950082F139 /* xhtml_line_box.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = xhtml_line_box.hpp; sourceTree = "<group>"; };
 		6357A6D61B258B1C00793D60 /* hex_fwd.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = hex_fwd.hpp; sourceTree = "<group>"; };
-		6357A6D71B258B1C00793D60 /* hex_logical_fwd.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = hex_logical_fwd.hpp; sourceTree = "<group>"; };
-		6357A6D81B258B1C00793D60 /* hex_logical_tiles.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = hex_logical_tiles.cpp; sourceTree = "<group>"; };
-		6357A6D91B258B1C00793D60 /* hex_logical_tiles.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = hex_logical_tiles.hpp; sourceTree = "<group>"; };
 		6357A6DA1B258B1C00793D60 /* hex_map.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = hex_map.cpp; sourceTree = "<group>"; };
 		6357A6DB1B258B1C00793D60 /* hex_map.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = hex_map.hpp; sourceTree = "<group>"; };
-		6357A6DC1B258B1C00793D60 /* hex_object.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = hex_object.cpp; sourceTree = "<group>"; };
-		6357A6DD1B258B1C00793D60 /* hex_object.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = hex_object.hpp; sourceTree = "<group>"; };
-		6357A6DE1B258B1C00793D60 /* hex_pathfinding.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = hex_pathfinding.cpp; sourceTree = "<group>"; };
-		6357A6DF1B258B1C00793D60 /* hex_pathfinding.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = hex_pathfinding.hpp; sourceTree = "<group>"; };
 		6357A6E01B258B1C00793D60 /* hex_renderable.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = hex_renderable.cpp; sourceTree = "<group>"; };
 		6357A6E11B258B1C00793D60 /* hex_renderable.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = hex_renderable.hpp; sourceTree = "<group>"; };
 		6357A6E21B258B1C00793D60 /* hex_tile.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = hex_tile.cpp; sourceTree = "<group>"; };
@@ -1259,6 +1252,14 @@
 		C02C5D0A1CA252E2006D53E3 /* url_handler.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = url_handler.hpp; sourceTree = "<group>"; };
 		C02C5D0C1CAE5AFF006D53E3 /* SurfaceScale.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SurfaceScale.cpp; sourceTree = "<group>"; };
 		C02C5D0D1CAE5AFF006D53E3 /* SurfaceScale.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = SurfaceScale.hpp; sourceTree = "<group>"; };
+		C03585B41D812A240090FC2D /* hex_helper.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = hex_helper.cpp; sourceTree = "<group>"; };
+		C03585B51D812A240090FC2D /* hex_helper.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = hex_helper.hpp; sourceTree = "<group>"; };
+		C03585B61D812A240090FC2D /* hex_loader.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = hex_loader.cpp; sourceTree = "<group>"; };
+		C03585B71D812A240090FC2D /* hex_loader.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = hex_loader.hpp; sourceTree = "<group>"; };
+		C03585BA1D812A380090FC2D /* hex_renderable_fwd.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = hex_renderable_fwd.hpp; sourceTree = "<group>"; };
+		C03585BB1D812A4D0090FC2D /* hex_mask.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = hex_mask.hpp; sourceTree = "<group>"; };
+		C03585BC1D812A5D0090FC2D /* tile_rules.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = tile_rules.cpp; sourceTree = "<group>"; };
+		C03585BD1D812A5D0090FC2D /* tile_rules.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = tile_rules.hpp; sourceTree = "<group>"; };
 		C0406533163F790000F84F94 /* sys.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = sys.cpp; sourceTree = "<group>"; };
 		C0406534163F790000F84F94 /* sys.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = sys.hpp; sourceTree = "<group>"; };
 		C06FF3EF1740B9F000377772 /* formula_visualize_widget.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = formula_visualize_widget.cpp; sourceTree = "<group>"; };
@@ -1413,21 +1414,22 @@
 		6357A6D51B258B1C00793D60 /* hex */ = {
 			isa = PBXGroup;
 			children = (
+				C03585BB1D812A4D0090FC2D /* hex_mask.hpp */,
 				63D8A1E41C40BDC9008B8437 /* hex_mask.cpp */,
+				C03585B41D812A240090FC2D /* hex_helper.cpp */,
+				C03585B51D812A240090FC2D /* hex_helper.hpp */,
+				C03585B61D812A240090FC2D /* hex_loader.cpp */,
+				C03585B71D812A240090FC2D /* hex_loader.hpp */,
 				6357A6D61B258B1C00793D60 /* hex_fwd.hpp */,
-				6357A6D71B258B1C00793D60 /* hex_logical_fwd.hpp */,
-				6357A6D81B258B1C00793D60 /* hex_logical_tiles.cpp */,
-				6357A6D91B258B1C00793D60 /* hex_logical_tiles.hpp */,
 				6357A6DA1B258B1C00793D60 /* hex_map.cpp */,
 				6357A6DB1B258B1C00793D60 /* hex_map.hpp */,
-				6357A6DC1B258B1C00793D60 /* hex_object.cpp */,
-				6357A6DD1B258B1C00793D60 /* hex_object.hpp */,
-				6357A6DE1B258B1C00793D60 /* hex_pathfinding.cpp */,
-				6357A6DF1B258B1C00793D60 /* hex_pathfinding.hpp */,
+				C03585BA1D812A380090FC2D /* hex_renderable_fwd.hpp */,
 				6357A6E01B258B1C00793D60 /* hex_renderable.cpp */,
 				6357A6E11B258B1C00793D60 /* hex_renderable.hpp */,
 				6357A6E21B258B1C00793D60 /* hex_tile.cpp */,
 				6357A6E31B258B1C00793D60 /* hex_tile.hpp */,
+				C03585BC1D812A5D0090FC2D /* tile_rules.cpp */,
+				C03585BD1D812A5D0090FC2D /* tile_rules.hpp */,
 			);
 			path = hex;
 			sourceTree = "<group>";
@@ -2617,7 +2619,6 @@
 				C010C759160AFD4D006E7D90 /* controls.cpp in Sources */,
 				C010C75A160AFD4D006E7D90 /* controls_dialog.cpp in Sources */,
 				6357A7311B3F116900793D60 /* css_transition.cpp in Sources */,
-				6357A6E71B258B1C00793D60 /* hex_pathfinding.cpp in Sources */,
 				638CC7221AF6057700C7A106 /* lauxlib.cpp in Sources */,
 				639B54411AC20D7600ECC4F8 /* b2ChainAndCircleContact.cpp in Sources */,
 				C0AECE0718E541A200CD3161 /* db_client.cpp in Sources */,
@@ -2715,7 +2716,6 @@
 				639B53971AC20D5A00ECC4F8 /* SceneObject.cpp in Sources */,
 				C010C78A160AFD4D006E7D90 /* graphical_font.cpp in Sources */,
 				639B537F1AC20D5A00ECC4F8 /* ColorScope.cpp in Sources */,
-				6357A6E61B258B1C00793D60 /* hex_object.cpp in Sources */,
 				C010C78B160AFD4D006E7D90 /* graphical_font_label.cpp in Sources */,
 				639B53921AC20D5A00ECC4F8 /* RenderManager.cpp in Sources */,
 				639B54651AC20D7600ECC4F8 /* b2RopeJoint.cpp in Sources */,
@@ -2791,6 +2791,7 @@
 				C010C7BD160AFD4D006E7D90 /* preferences.cpp in Sources */,
 				C010C7BE160AFD4D006E7D90 /* preprocessor.cpp in Sources */,
 				639B54511AC20D7600ECC4F8 /* b2PolygonContact.cpp in Sources */,
+				C03585B91D812A240090FC2D /* hex_loader.cpp in Sources */,
 				C010C7BF160AFD4D006E7D90 /* preview_tileset_widget.cpp in Sources */,
 				639B53931AC20D5A00ECC4F8 /* RenderQueue.cpp in Sources */,
 				639B54831AC2183B00ECC4F8 /* SceneNodeCallable.cpp in Sources */,
@@ -2800,7 +2801,6 @@
 				639B541D1AC20D7600ECC4F8 /* b2DynamicTree.cpp in Sources */,
 				C010C7C1160AFD4D006E7D90 /* property_editor_dialog.cpp in Sources */,
 				6357A7461B3F116900793D60 /* xhtml_text_box.cpp in Sources */,
-				6357A6E41B258B1C00793D60 /* hex_logical_tiles.cpp in Sources */,
 				C010C7C2160AFD4D006E7D90 /* random.cpp in Sources */,
 				C010C7C5160AFD4D006E7D90 /* rectangle_rotator.cpp in Sources */,
 				C010C7C8160AFD4D006E7D90 /* scrollable_widget.cpp in Sources */,
@@ -2833,6 +2833,7 @@
 				639B53AC1AC20D5A00ECC4F8 /* WindowManager.cpp in Sources */,
 				C00160CE16A2991D001DAEB9 /* tbs_web_server.cpp in Sources */,
 				639B53791AC20D5A00ECC4F8 /* CameraObject.cpp in Sources */,
+				C03585BE1D812A5D0090FC2D /* tile_rules.cpp in Sources */,
 				C010C7E4160AFD4E006E7D90 /* text_editor_widget.cpp in Sources */,
 				639B53AB1AC20D5A00ECC4F8 /* VGraphOGLFixed.cpp in Sources */,
 				C0AD7517183494F100FAFA3D /* poly_map.cpp in Sources */,
@@ -2938,6 +2939,7 @@
 				C090E8F41787967200E6FC5A /* voxel_model.cpp in Sources */,
 				C07A47D319444C2000F1190E /* svg_element.cpp in Sources */,
 				C08DF5B3178BC1CA006E061D /* voxel_object_functions.cpp in Sources */,
+				C03585B81D812A240090FC2D /* hex_helper.cpp in Sources */,
 				638CC72D1AF6057700C7A106 /* lgc.cpp in Sources */,
 				C08DF5B4178BC1CA006E061D /* voxel_object.cpp in Sources */,
 				639B54431AC20D7600ECC4F8 /* b2ChainAndPolygonContact.cpp in Sources */,
