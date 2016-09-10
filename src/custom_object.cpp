@@ -182,7 +182,7 @@ CustomObject::CustomObject(variant node)
 	was_underwater_(false),
 	has_feet_(node["has_feet"].as_bool(type_->hasFeet())),
 	invincible_(0),
-	sound_volume_(128),
+	sound_volume_(1.0f),
 	vars_(new game_logic::FormulaVariableStorage(type_->variables())),
 	tmp_vars_(new game_logic::FormulaVariableStorage(type_->tmpVariables())),
 	active_property_(-1),
@@ -529,7 +529,7 @@ CustomObject::CustomObject(const std::string& type, int x, int y, bool face_righ
 	was_underwater_(false),
 	has_feet_(type_->hasFeet()),
 	invincible_(0),
-	sound_volume_(128),
+	sound_volume_(1.0f),
 	vars_(new game_logic::FormulaVariableStorage(type_->variables())),
 	tmp_vars_(new game_logic::FormulaVariableStorage(type_->tmpVariables())),
 	tags_(new game_logic::MapFormulaCallable(type_->tags())),
@@ -5759,7 +5759,7 @@ void CustomObject::unboardVehicle()
 {
 }
 
-void CustomObject::setSoundVolume(const int sound_volume)
+void CustomObject::setSoundVolume(float sound_volume)
 {
 	sound::change_volume(this, sound_volume);
 	sound_volume_ = sound_volume;

@@ -58,11 +58,12 @@ namespace sound
 	//stop all looped sounds associated with an object; same object as in play()
 	//intended to be called in all object's destructors
 	void stop_looped_sounds(const void* object=0);
-	void change_volume(const void* object=0, int volume=-1);
 
 	//Ways to set the sound and music volumes from the user's perspective.
 	float get_sound_volume();
 	void set_sound_volume(float volume);
+
+	void change_volume(const void* object, float volume);
 
 	float get_music_volume();
 	void set_music_volume(float volume);

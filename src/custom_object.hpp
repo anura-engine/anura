@@ -207,7 +207,7 @@ public:
 
 	virtual bool serializable() const override;
 
-	void setSoundVolume(const int volume) override;
+	void setSoundVolume(float volume) override;
 	void setZSubOrder(const int zsub_order) override {zsub_order_ = zsub_order;}
 	
 	bool executeCommand(const variant& var) override;
@@ -414,7 +414,7 @@ private:
 
 	bool use_absolute_screen_coordinates_;
 	
-	int sound_volume_;	//see sound.cpp; valid values are 0-128, note that this affects all sounds spawned by this object
+	float sound_volume_;
 
 	game_logic::ConstFormulaPtr next_animation_formula_;
 

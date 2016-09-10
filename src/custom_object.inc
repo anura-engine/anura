@@ -100,7 +100,7 @@ CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_WATER_OBJECT,                       "wa
 CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_DRIVER,                             "driver", "null|custom_obj" )
 CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_IS_HUMAN,                           "is_human", "bool" )
 CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_INVINCIBLE,                         "invincible", "int" )
-CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_SOUND_VOLUME,                       "sound_volume", "int" )
+CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_SOUND_VOLUME,                       "sound_volume", "decimal" )
 CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_DESTROYED,                          "destroyed", "bool" )
 CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_IS_STANDING_ON_PLATFORM,            "is_standing_on_platform", "null|bool|custom_obj" )
 CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_STANDING_ON,                        "standing_on", "null|custom_obj" )
