@@ -25,10 +25,13 @@
 
 #pragma comment(lib, "SDL2_mixer")
 
+#include <sys/time.h>
+
 #include <assert.h>
 
 #include <iostream>
 #include <map>
+#include <cmath>
 #include <vector>
 
 #include <vorbis/vorbisfile.h>
@@ -43,6 +46,7 @@
 #include "preferences.hpp"
 #include "sound.hpp"
 #include "thread.hpp"
+#include "utils.hpp"
 
 
 #if TARGET_IPHONE_SIMULATOR || TARGET_OS_IPHONE
@@ -63,6 +67,7 @@ namespace {
 
 //The sample rate we use for all sounds.
 const int SampleRate = 44100;
+const int NumChannels = 2;
 
 struct MusicInfo {
 	MusicInfo() : volume(1.0) {}
@@ -89,8 +94,12 @@ class MusicPlayer : public game_logic::FormulaCallable
 public:
 
 	//Should be constructed in the main thread.
-	explicit MusicPlayer(const std::string& file) : bit_stream_(0), volume_(1.0f), finished_(false),
-	                                                fadeout_time_(-1.0f), fadeout_current_(-1.0f) {
+	explicit MusicPlayer(const std::string& file, variant options)
+	   : fname_(file), bit_stream_(0), volume_(1.0f), finished_(false), fadeout_time_(-1.0f), fadeout_current_(-1.0f),
+	     loop_(options["loop"].as_bool(false)),
+		 loop_point_(options["loop_point"].as_double(0.0)),
+		 loop_from_(options["loop_from"].as_double(-1.0)),
+		 on_complete_(options["on_complete"]) {
 		auto itor = module::find(get_music_paths(), file);
 		ASSERT_LOG(itor != get_music_paths().end(), "Could not find path for file: " << file);
 		const int res = ov_fopen(itor->second.c_str(), &file_);
@@ -102,10 +111,25 @@ public:
 		if(i != g_music_index.end()) {
 			volume_ = i->second.volume;
 		}
+
+		variant pos = options["pos"];
+		if(pos.is_decimal()) {
+			int res = ov_time_seek(&file_, pos.as_double());
+			ASSERT_LOG(res == 0, "Failed to seek music: " << res);
+		}
 	}
 
 	~MusicPlayer() {
 		ov_clear(&file_);
+	}
+
+	void onComplete() {
+		executeCommand(on_complete_);
+	}
+
+	bool stopping() const {
+		threading::lock lck(mutex_);
+		return fadeout_time_ >= 0.0f;
 	}
 
 	//Tell the music to stop playing. It can fade out over some time period.
@@ -137,10 +161,6 @@ public:
 	int read(float* out, int out_nsamples) {
 		char buf[4096];
 
-		int max_needed = out_nsamples*sizeof(short)/(numChannels() == 1 ? 2 : 1);
-
-		int nread = std::min<int>(sizeof(buf), max_needed);
-
 		long nbytes;
 		
 		float fadeout_time = 0.0f;
@@ -148,7 +168,39 @@ public:
 		int nsamples;
 		{
 			threading::lock lck(mutex_);
+
+			bool force_seek = false;
+
+			if(loop_ && loop_from_ > 0.0) {
+				double cur = ov_time_tell(&file_);
+				if(cur <= loop_from_) {
+					double time_until_loop = loop_from_ - cur;
+					int samples_until_loop = static_cast<int>(time_until_loop*SampleRate);
+					if(samples_until_loop <= 0) {
+						int res = ov_time_seek(&file_, loop_point_);
+						ASSERT_LOG(res == 0, "Failed to seek music: " << res << " seek to " << loop_point_);
+					} else if(samples_until_loop < out_nsamples) {
+						out_nsamples = samples_until_loop;
+						force_seek = true;
+					}
+				}
+				
+			}
+
+			int max_needed = out_nsamples*sizeof(short)/(numChannels() == 1 ? 2 : 1);
+
+			int nread = std::min<int>(sizeof(buf), max_needed);
+
 			nbytes = ov_read(&file_, buf, nread, 0, 2, 1, &bit_stream_);
+
+			if(nbytes == 0 && loop_) {
+				int res = ov_time_seek(&file_, loop_point_);
+				ASSERT_LOG(res == 0, "Failed to seek music: " << res << " seek to " << loop_point_);
+				nbytes = ov_read(&file_, buf, nread, 0, 2, 1, &bit_stream_);
+			} else if(force_seek && nbytes == nread) {
+				int res = ov_time_seek(&file_, loop_point_);
+				ASSERT_LOG(res == 0, "Failed to seek music: " << res << " seek to " << loop_point_);
+			}
 		
 			if(nbytes <= 0) {
 				finished_ = true;
@@ -210,15 +262,15 @@ public:
 	}
 
 	//Length of the track in seconds
-	double timeLength() {
+	double timeLength() const {
 		threading::lock lck(mutex_);
-		return ov_time_total(&file_, -1);
+		return ov_time_total(const_cast<OggVorbis_File*>(&file_), -1);
 	}
 
 	//current position in the track in seconds.
-	double timeCurrent() {
+	double timeCurrent() const {
 		threading::lock lck(mutex_);
-		return ov_time_tell(&file_);
+		return ov_time_tell(const_cast<OggVorbis_File*>(&file_));
 	}
 
 	//Move the current play position. Can be called from any thread.
@@ -241,6 +293,8 @@ public:
 private:
 	DECLARE_CALLABLE(MusicPlayer);
 
+	std::string fname_;
+
 	OggVorbis_File file_;
 	vorbis_info* info_;
 	int bit_stream_;
@@ -254,17 +308,25 @@ private:
 	bool finished_;
 
 	float fadeout_time_, fadeout_current_;
+
+	bool loop_;
+
+	double loop_point_, loop_from_;
+
+	variant on_complete_;
 };
 
-
-BEGIN_DEFINE_CALLABLE_NOBASE(MusicPlayer)
-END_DEFINE_CALLABLE(MusicPlayer)
 
 //Current music being played. This will usually have one music player in it
 //but may have more if we are crossfading to different music.
 //Access is controlled by g_music_thread_mutex. Only the game thread will
 //modify this, so it can read from it without locking the mutex.
 std::vector<boost::intrusive_ptr<MusicPlayer> > g_music_players;
+
+//The current member of g_music_players which is playing and not currently being
+//faded out. This is accessed only from the game thread and is safe to access from
+//there without fear it might change at any moment.
+boost::intrusive_ptr<MusicPlayer> g_current_player;
 
 //Flag to tell the music thread to exit. Access controlled by g_music_thread_mutex.
 bool g_music_thread_exit = false;
@@ -352,6 +414,91 @@ void MusicThread()
 		SDL_Delay(20);
 	}
 }
+
+BEGIN_DEFINE_CALLABLE_NOBASE(MusicPlayer)
+DEFINE_FIELD(filename, "string")
+	return variant(obj.fname_);
+DEFINE_FIELD(loop, "bool")
+	return variant::from_bool(obj.loop_);
+DEFINE_SET_FIELD
+	threading::lock lck(obj.mutex_);
+	obj.loop_ = value.as_bool();
+
+DEFINE_FIELD(loop_point, "decimal|null")
+	if(obj.loop_point_ <= 0) {
+		return variant();
+	} else {
+		return variant(obj.loop_point_);
+	}
+DEFINE_SET_FIELD
+	threading::lock lck(obj.mutex_);
+	if(value.is_null()) {
+		obj.loop_point_ = 0;
+	} else {
+		obj.loop_point_ = value.as_double();
+	}
+
+DEFINE_FIELD(loop_from, "decimal|null")
+	if(obj.loop_from_ <= 0) {
+		return variant();
+	} else {
+		return variant(obj.loop_from_);
+	}
+DEFINE_SET_FIELD
+	threading::lock lck(obj.mutex_);
+	if(value.is_null()) {
+		obj.loop_from_ = 0;
+	} else {
+		obj.loop_from_ = value.as_double();
+	}
+
+DEFINE_FIELD(duration, "decimal")
+	return variant(obj.timeLength());
+
+DEFINE_FIELD(on_complete, "commands|function()->commands")
+	return obj.on_complete_;
+
+DEFINE_SET_FIELD
+	obj.on_complete_ = value;
+
+DEFINE_FIELD(pos, "decimal")
+	return variant(obj.timeCurrent());
+
+DEFINE_SET_FIELD
+	obj.seekTime(value.as_double());
+
+
+BEGIN_DEFINE_FN(play, "()->commands")
+	boost::intrusive_ptr<MusicPlayer> player(const_cast<MusicPlayer*>(&obj));
+	return variant(new game_logic::FnCommandCallable([=]() {
+		threading::lock lck(g_music_thread_mutex);
+		for(auto& p : g_music_players) {
+			if(player == p) {
+				return;
+			}
+		}
+
+		for(auto& p : g_music_players) {
+			if(!p->stopping()) {
+				p->stopPlaying(1.0f);
+			}
+		}
+		g_music_players.push_back(player);
+		g_current_player = player;
+	}));
+END_DEFINE_FN
+
+BEGIN_DEFINE_FN(stop, "(decimal=1.0)->commands")
+	float fade_time = 1.0f;
+	if(NUM_FN_ARGS > 0) {
+		fade_time = FN_ARG(0).as_float();
+	}
+	boost::intrusive_ptr<MusicPlayer> ptr(const_cast<MusicPlayer*>(&obj));
+	return variant(new game_logic::FnCommandCallable([=]() {
+		ptr->stopPlaying(fade_time);
+	}));
+END_DEFINE_FN
+END_DEFINE_CALLABLE(MusicPlayer)
 
 //Function to load an ogg vorbis file into a buffer. Fills 'spec' with the
 //specs of the format loaded.
@@ -462,7 +609,7 @@ void LoadWaveBlocking(const std::string& fname)
 	}
 
 	if(res_spec == nullptr) {
-		LOG_ERROR("Could not load sound: " << fname);
+		LOG_ERROR("Could not load sound: " << fname << " " << SDL_GetError());
 
 		threading::lock lck(g_wave_cache_mutex);
 		g_wave_cache[fname] = std::shared_ptr<WaveData>();
@@ -548,49 +695,221 @@ void LoaderThread()
 std::shared_ptr<threading::thread> g_loader_thread;
 std::shared_ptr<threading::thread> g_music_thread;
 
-//Base class for a sound effect filter which can perform dsp effects on sounds.
-class SoundEffectFilter : public game_logic::FormulaCallable
+class SoundSource : public game_logic::FormulaCallable
 {
 public:
-	virtual ~SoundEffectFilter() {}
+	virtual ~SoundSource() {}
 	virtual void MixData(float* output, int nsamples) = 0;
 
-	DECLARE_CALLABLE(SoundEffectFilter);
+	virtual bool finished() const = 0;
+
+	DECLARE_CALLABLE(SoundSource);
 };
 
-BEGIN_DEFINE_CALLABLE_NOBASE(SoundEffectFilter)
-END_DEFINE_CALLABLE(SoundEffectFilter)
+BEGIN_DEFINE_CALLABLE_NOBASE(SoundSource)
+END_DEFINE_CALLABLE(SoundSource)
 
-//Representation of a sound currently playing. A new instance will be created every time
-//a sound effect starts playing, so is reasonably lightweight.
-//Instances are created by the game thread but accessed from the mixing thread.
-//
-//If the underlying data isn't available when this object is created it will wait, polling
-//every frame to see if the cache has been populated every frame, and then play as soon
-//as the data is loaded.
-class PlayingSound : public SoundEffectFilter
+class SoundEffectFilter : public SoundSource
 {
 public:
-	PlayingSound(const std::string& fname, const void* obj, float volume, float fade_in) : fname_(fname), pos_(0), obj_(obj), volume_(volume), fade_in_(fade_in), looped_(false), fade_out_(-1.0f), fade_out_current_(0.0f), left_pan_(1.0f), right_pan_(1.0f)
+	explicit SoundEffectFilter() : source_(nullptr) {
+	}
+	virtual ~SoundEffectFilter() {}
+
+	void setSource(SoundSource* source) { source_ = source; }
+
+	bool finished() const {
+		return source_->finished();
+	}
+
+protected:
+	void GetData(float* output, int nsamples) {
+		if(source_ != nullptr) {
+			source_->MixData(output, nsamples);
+		}
+	}
+private:
+	DECLARE_CALLABLE(SoundEffectFilter);
+	SoundSource* source_;
+};
+
+BEGIN_DEFINE_CALLABLE(SoundEffectFilter, SoundSource)
+END_DEFINE_CALLABLE(SoundEffectFilter)
+
+class SpeedSoundEffectFilter : public SoundEffectFilter
+{
+public:
+	explicit SpeedSoundEffectFilter(variant options) : speed_(options["speed"].as_float(1.0f))
+	{}
+
+	void MixData(float* output, int nsamples)
+	{
+		threading::lock lck(mutex_);
+		int source_nsamples = int(nsamples*speed_);
+
+		if(source_nsamples <= 0) {
+			return;
+		}
+
+		std::vector<float> buf;
+		buf.resize(source_nsamples*NumChannels);
+		GetData(&buf[0], source_nsamples);
+		for(int n = 0; n != nsamples; ++n) {
+			const float point = n*speed_;
+			const int a = util::clamp<int>(static_cast<int>(floor(point)), 0, source_nsamples - 1);
+			const int b = util::clamp<int>(static_cast<int>(ceil(point)), 0, source_nsamples - 1);
+			const float ratio = n*speed_ - floor(point);
+
+			output[n*2] += util::mix<float>(buf[a*2], buf[b*2], ratio);
+			output[n*2+1] += util::mix<float>(buf[a*2+1], buf[b*2+1], ratio);
+		}
+	}
+private:
+	threading::mutex mutex_;
+	float speed_;
+	DECLARE_CALLABLE(SpeedSoundEffectFilter);
+};
+
+BEGIN_DEFINE_CALLABLE(SpeedSoundEffectFilter, SoundEffectFilter)
+DEFINE_FIELD(speed, "decimal")
+	return variant(obj.speed_);
+DEFINE_SET_FIELD
+	threading::lock lck(obj.mutex_);
+	obj.speed_ = value.as_float();
+END_DEFINE_CALLABLE(SpeedSoundEffectFilter)
+
+class BinauralDelaySoundEffectFilter : public SoundEffectFilter
+{
+public:
+	explicit BinauralDelaySoundEffectFilter(variant options) : delay_(options["delay"].as_float())
+	{}
+
+	bool finished() const {
+		threading::lock lck(mutex_);
+		return buf_.empty() && SoundEffectFilter::finished();
+	}
+
+	void MixData(float* output, int nsamples)
+	{
+		threading::lock lck(mutex_);
+
+		std::vector<float> buffer;
+		buffer.resize(nsamples*NumChannels);
+		GetData(&buffer[0], nsamples);
+
+		const bool left_channel = delay_ < 0.0f;
+
+		//output the unaffected channel
+		{
+			float* in = &buffer[0];
+			float* out = output;
+			if(left_channel) {
+				++out;
+				++in;
+			}
+
+			for(int n = 0; n != nsamples; ++n) {
+				*out += *in;
+				out += 2;
+				in += 2;
+			}
+
+		}
+
+		const int nsamples_delay = int(abs(delay_)*SampleRate);
+
+		//The delayed channel
+		{
+			float* in = &buffer[0];
+			float* out = output;
+			float* end_out = output + nsamples*NumChannels;
+			if(!left_channel) {
+				++out;
+				++in;
+			}
+
+			buf_.resize(buf_.size() + nsamples);
+			float* out_buf = &buf_[0] + buf_.size() - nsamples;
+
+			for(int n = 0; n != nsamples; ++n) {
+				*out_buf = *in;
+				in += 2;
+				out_buf++;
+			}
+
+			if(int(buf_.size()) > nsamples_delay) {
+				float* in = &buf_[0];
+				const int ncopy = std::min<int>(nsamples, int(buf_.size()) - nsamples_delay);
+				out += (nsamples - ncopy)*NumChannels;
+
+				for(int n = 0; n != ncopy; ++n) {
+					*out += *in;
+					++in;
+					out += NumChannels;
+				}
+
+				buf_.erase(buf_.begin(), buf_.begin() + ncopy);
+			}
+		}
+	}
+private:
+	threading::mutex mutex_;
+	float delay_;
+	std::vector<float> buf_;
+	DECLARE_CALLABLE(BinauralDelaySoundEffectFilter);
+};
+
+BEGIN_DEFINE_CALLABLE(BinauralDelaySoundEffectFilter, SoundEffectFilter)
+DEFINE_FIELD(delay, "decimal")
+	return variant(obj.delay_);
+END_DEFINE_CALLABLE(BinauralDelaySoundEffectFilter)
+
+class RawPlayingSound : public SoundSource
+{
+public:
+	RawPlayingSound(const std::string& fname, float volume, float fade_in) : fname_(fname), pos_(0), volume_(volume), fade_in_(fade_in), looped_(false), loop_point_(0), loop_from_(0), fade_out_(-1.0f), fade_out_current_(0.0f), left_pan_(1.0f), right_pan_(1.0f)
 	{
 		init();
 	}
 
-	virtual ~PlayingSound() {}
+	RawPlayingSound(const std::string& fname, variant options) : fname_(fname), pos_(int(options["pos"].as_double()*SampleRate)), volume_(options["volume"].as_float(1.0f)), fade_in_(options["fade_in"].as_float(0.0f)), looped_(options["loop"].as_bool(false)), loop_point_(int(options["loop_point"].as_float(0.0f)*SampleRate)), loop_from_(int(options["loop_from"].as_float(0.0f)*SampleRate)), fade_out_(-1.0f), fade_out_current_(0.0f), left_pan_(1.0f), right_pan_(1.0f)
+	{
+		variant panning = options["pan"];
+		if(panning.is_list()) {
+			left_pan_ = panning[0].as_float();
+			right_pan_ = panning[1].as_float();
+		}
 
-	void setLooped() { looped_ = true; }
+		init();
+	}
+
+	virtual ~RawPlayingSound() {}
+
+	void setLooped(bool value) { looped_ = value; }
 	bool looped() const { return looped_; }
+
+	int loopPoint() const { return loop_point_; }
+	void setLoopPoint(int value) { loop_point_ = value; }
+
+	int loopFrom() const { return loop_from_; }
+	void setLoopFrom(int value) { loop_from_ = value; }
+
+	float leftPan() const { return left_pan_; }
+	float rightPan() const { return right_pan_; }
 
 	void setPanning(float left, float right)
 	{
-		threading::lock lck(mutex_);
 		left_pan_ = left;
 		right_pan_ = right;
 	}
 
+	bool loaded() const
+	{
+		return data_.get() != nullptr;
+	}
+
 	void init()
 	{
-		threading::lock lck(mutex_);
 		if(data_) {
 			return;
 		}
@@ -602,8 +921,18 @@ public:
 		}
 	}
 
+	const std::string& fname() const { return fname_; }
+	void setFilename(const std::string& f) {
+		if(fname_ == f) {
+			return;
+		}
+
+		fname_ = f;
+		data_.reset();
+		init();
+	}
+
 	void stopPlaying(float fade_time) {
-		threading::lock lck(mutex_);
 		fade_out_ = fade_time;
 		fade_out_current_ = 0.0f;
 	}
@@ -611,46 +940,41 @@ public:
 	//Once finished(), the game thread may remove this from the list of playing sounds.
 	bool finished() const
 	{
-		threading::lock lck(mutex_);
-		return (data_.get() != nullptr && !looped_ && pos_ >= data_->nsamples()) || (fade_out_ >= 0.0f && fade_out_current_ >= fade_out_);
+		return (data_.get() != nullptr && !looped_ && pos_ >= int(data_->nsamples())) || (fade_out_ >= 0.0f && fade_out_current_ >= fade_out_);
 	}
 
 	void setVolume(float volume)
 	{
-		threading::lock lck(mutex_);
 		volume_ = volume;
 	}
 
 	//Mix data into the output buffer. Can be safely called from the mixing thread.
 	virtual void MixData(float* output, int nsamples)
 	{
-		std::shared_ptr<WaveData> data;
-		int pos;
-		float fade_out, fade_out_current;
-		float volume;
-		{
-			threading::lock lck(mutex_);
-			if(!data_ || (!looped_ && pos_ >= data_->nsamples()) || (fade_out_ >= 0.0f && fade_out_current_ >= fade_out_)) {
-				return;
-			}
-			pos = pos_;
-			pos_ += nsamples;
-			data = data_;
-
-			fade_out = fade_out_;
-			fade_out_current = fade_out_current_;
-
-			if(fade_out_ >= 0.0f) {
-				fade_out_current_ += float(std::min<int>(nsamples, data_->nsamples() - pos))/float(SampleRate);
-			}
-
-			if(looped_ && pos_ >= data_->nsamples()) {
-				pos_ = 0;
-				fade_in_ = 0.0f;
-			}
-
-			volume = volume_ * g_sfx_volume;
+		if(!data_ || nsamples <= 0 || (!looped_ && pos_ >= int(data_->nsamples())) || (fade_out_ >= 0.0f && fade_out_current_ >= fade_out_)) {
+			return;
 		}
+		int pos = pos_;
+		pos_ += nsamples;
+		std::shared_ptr<WaveData> data = data_;
+
+		float fade_out = fade_out_;
+		float fade_out_current = fade_out_current_;
+
+		int endpoint = !looped_ || loop_from_ <= 0 || loop_from_ > data_->nsamples() ? data_->nsamples() : loop_from_;
+
+		if(fade_out_ >= 0.0f) {
+			fade_out_current_ += float(std::min<int>(nsamples, endpoint - pos))/float(SampleRate);
+		}
+
+		if(looped_ && pos_ >= endpoint) {
+			pos_ = loop_point_;
+			fade_in_ = 0.0f;
+		}
+
+		float looped = looped_;
+
+		float volume = volume_ * g_sfx_volume;
 
 		if(pos < 0) {
 			nsamples += pos;
@@ -662,7 +986,7 @@ public:
 
 		int nmissed = 0;
 
-		const int navail = data->nsamples() - pos;
+		const int navail = endpoint - pos;
 		if(nsamples > navail) {
 			nmissed = nsamples - navail;
 			nsamples = navail;
@@ -685,44 +1009,263 @@ public:
 			}
 		}
 
-		if(looped_ && nmissed > 0 && data_->nsamples() > 0) {
+		if(looped && nmissed > 0 && endpoint > 0) {
 			MixData(output, nmissed);
 		}
 	}
 
-	const void* obj() const { return obj_; }
-	const std::string& fname() const { return fname_; }
-
 private:
-	DECLARE_CALLABLE(PlayingSound);
 
 	std::string fname_;
+
 	std::shared_ptr<WaveData> data_;
 
 	int pos_;
-
-	threading::mutex mutex_;
-
-	const void* obj_;
 
 	float volume_, fade_in_;
 
 	float fade_out_, fade_out_current_;
 
 	bool looped_;
+	int loop_point_, loop_from_;
 
 	float left_pan_, right_pan_;
 };
 
-BEGIN_DEFINE_CALLABLE(PlayingSound, SoundEffectFilter)
-DEFINE_FIELD(filename, "string")
-	return variant(obj.fname_);
-END_DEFINE_CALLABLE(PlayingSound)
+//Representation of a sound currently playing. A new instance will be created every time
+//a sound effect starts playing, so is reasonably lightweight.
+//Instances are created by the game thread but accessed from the mixing thread.
+//
+//If the underlying data isn't available when this object is created it will wait, polling
+//every frame to see if the cache has been populated every frame, and then play as soon
+//as the data is loaded.
+class PlayingSound : public SoundSource
+{
+public:
+	PlayingSound(const std::string& fname, const void* obj, float volume, float fade_in) : obj_(obj), source_(new RawPlayingSound(fname, volume, fade_in))
+	{
+		first_filter_ = source_;
+	}
+
+	PlayingSound(const std::string& fname, const void* obj, variant options) : obj_(obj), source_(new RawPlayingSound(fname, options))
+	{
+		first_filter_ = source_;
+
+		variant f = options["filters"];
+		if(f.is_list()) {
+			std::vector<boost::intrusive_ptr<SoundEffectFilter>> filters;
+			for(auto v : f.as_list()) {
+				auto p = v.try_convert<SoundEffectFilter>();
+				ASSERT_LOG(p, "Failed to convert to sound effect filter");
+				filters.push_back(boost::intrusive_ptr<SoundEffectFilter>(p));
+			}
+
+			setFilters(filters);
+		}
+	}
+
+	virtual ~PlayingSound() {}
+
+	void setFilename(const std::string& f) {
+		threading::lock lck(mutex_);
+		source_->setFilename(f);
+	}
+
+	void setObj(const void* obj) { obj_ = obj; }
+
+	void setLooped(bool value) { source_->setLooped(value); }
+	bool looped() const { return source_->looped(); }
+
+	int loopPoint() const { return source_->loopPoint(); }
+	void setLoopPoint(int value) {
+		threading::lock lck(mutex_);
+		source_->setLoopPoint(value);
+	}
+
+	int loopFrom() const { return source_->loopFrom(); }
+	void setLoopFrom(int value) {
+		threading::lock lck(mutex_);
+		source_->setLoopFrom(value);
+	}
+
+	float leftPan() const { return source_->leftPan(); }
+	float rightPan() const { return source_->rightPan(); }
+	void setPanning(float left, float right)
+	{
+		threading::lock lck(mutex_);
+		source_->setPanning(left, right);
+	}
+
+	void init()
+	{
+		threading::lock lck(mutex_);
+		source_->init();
+	}
+
+	void stopPlaying(float fade_time) {
+		threading::lock lck(mutex_);
+		source_->stopPlaying(fade_time);
+	}
+
+	//Once finished(), the game thread may remove this from the list of playing sounds.
+	bool finished() const
+	{
+		threading::lock lck(mutex_);
+		return first_filter_->finished();
+	}
+
+	void setVolume(float volume)
+	{
+		threading::lock lck(mutex_);
+		source_->setVolume(volume);
+	}
+
+	//Mix data into the output buffer. Can be safely called from the mixing thread.
+	virtual void MixData(float* output, int nsamples)
+	{
+		threading::lock lck(mutex_);
+		if(source_->loaded()) {
+			first_filter_->MixData(output, nsamples);
+		}
+	}
+
+	const void* obj() const { return obj_; }
+	const std::string& fname() const { return source_->fname(); }
+
+	const std::vector<boost::intrusive_ptr<SoundEffectFilter> >& getFilters() const {
+		return filters_;
+	}
+
+	void setFilters(std::vector<boost::intrusive_ptr<SoundEffectFilter> > filters) {
+		threading::lock lck(mutex_);
+		filters_ = filters;
+		for(size_t n = 0; n != filters_.size(); ++n) {
+			if(n == 0) {
+				filters_[n]->setSource(source_.get());
+			} else {
+				filters_[n]->setSource(filters_[n-1].get());
+			}
+		}
+
+		if(filters_.empty()) {
+			first_filter_ = source_;
+		} else {
+			first_filter_ = filters_.back();
+		}
+	}
+
+private:
+	DECLARE_CALLABLE(PlayingSound);
+
+	threading::mutex mutex_;
+
+	const void* obj_;
+
+	boost::intrusive_ptr<RawPlayingSound> source_;
+
+	boost::intrusive_ptr<SoundSource> first_filter_;
+
+	std::vector<boost::intrusive_ptr<SoundEffectFilter> > filters_;
+};
 
 //List of currently playing sounds. Only the game thread can modify this,
 //the mixing thread will read it.
 std::vector<boost::intrusive_ptr<PlayingSound> > g_playing_sounds;
 threading::mutex g_playing_sounds_mutex;
+
+BEGIN_DEFINE_CALLABLE(PlayingSound, SoundSource)
+DEFINE_FIELD(filename, "string")
+	return variant(obj.fname());
+DEFINE_SET_FIELD
+	obj.setFilename(value.as_string());
+DEFINE_FIELD(loop, "bool")
+	return variant::from_bool(obj.looped());
+DEFINE_SET_FIELD
+	threading::lock lck(obj.mutex_);
+	obj.setLooped(value.as_bool());
+
+DEFINE_FIELD(loop_point, "decimal|null")
+	if(obj.loopPoint() <= 0) {
+		return variant();
+	} else {
+		return variant(float(obj.loopPoint()) / float(SampleRate));
+	}
+DEFINE_SET_FIELD
+	if(value.is_null()) {
+		obj.setLoopPoint(0);
+	} else {
+		obj.setLoopPoint(int(value.as_float()*SampleRate));
+	}
+
+DEFINE_FIELD(loop_from, "decimal|null")
+	if(obj.loopFrom() <= 0) {
+		return variant();
+	} else {
+		return variant(float(obj.loopFrom()) / float(SampleRate));
+	}
+DEFINE_SET_FIELD
+	threading::lock lck(obj.mutex_);
+	if(value.is_null()) {
+		obj.setLoopFrom(0);
+	} else {
+		obj.setLoopFrom(int(value.as_float()*SampleRate));
+	}
+
+DEFINE_FIELD(pan, "[decimal,decimal]")
+	std::vector<variant> v;
+	v.push_back(variant(obj.leftPan()));
+	v.push_back(variant(obj.rightPan()));
+	return variant(&v);
+
+DEFINE_SET_FIELD
+	threading::lock lck(obj.mutex_);
+	std::vector<decimal> d = value.as_list_decimal();
+	ASSERT_LOG(d.size() == 2, "Incorrect pan arg");
+	obj.setPanning(d[0].as_float(), d[1].as_float());
+
+DEFINE_FIELD(filters, "[builtin sound_effect_filter]")
+	auto v = obj.getFilters();
+	std::vector<variant> result;
+	for(auto p : v) {
+		result.push_back(variant(p.get()));
+	}
+
+	return variant(&result);
+
+DEFINE_SET_FIELD
+	std::vector<boost::intrusive_ptr<SoundEffectFilter>> filters;
+	for(auto v : value.as_list()) {
+		auto p = v.try_convert<SoundEffectFilter>();
+		ASSERT_LOG(p, "Failed to convert to sound effect filter");
+		filters.push_back(boost::intrusive_ptr<SoundEffectFilter>(p));
+	}
+
+	obj.setFilters(filters);
+
+BEGIN_DEFINE_FN(play, "()->commands")
+	boost::intrusive_ptr<PlayingSound> ptr(const_cast<PlayingSound*>(&obj));
+	return variant(new game_logic::FnCommandCallable([=]() {
+		threading::lock lck(g_playing_sounds_mutex);
+		if(std::find(g_playing_sounds.begin(), g_playing_sounds.end(), ptr) != g_playing_sounds.end()) {
+			return;
+		} else {
+			g_playing_sounds.push_back(ptr);
+		}
+	}));
+END_DEFINE_FN
+
+BEGIN_DEFINE_FN(stop, "(decimal=0.1)->commands")
+	float fade_time = 0.1f;
+	if(NUM_FN_ARGS > 0) {
+		fade_time = FN_ARG(0).as_float();
+	}
+	boost::intrusive_ptr<PlayingSound> ptr(const_cast<PlayingSound*>(&obj));
+	return variant(new game_logic::FnCommandCallable([=]() {
+		ptr->stopPlaying(fade_time);
+	}));
+END_DEFINE_FN
+
+END_DEFINE_CALLABLE(PlayingSound)
 
 //Audio callback called periodically by SDL to populate audio data in
 //the mixing thread.
@@ -906,13 +1449,24 @@ void process()
 	//Go through the music players and removed any that are finished.
 	{
 		threading::lock lck(g_music_thread_mutex);
+		g_current_player.reset();
+		std::vector<boost::intrusive_ptr<MusicPlayer> > players = g_music_players;
+		for(boost::intrusive_ptr<MusicPlayer>& p : players) {
+			if(p->finished()) {
+				p->onComplete();
+			}
+		}
+
 		for(boost::intrusive_ptr<MusicPlayer>& p : g_music_players) {
 			if(p->finished()) {
+
 				if(p == g_music_players.back()) {
 					p->restart();
 				} else {
 					p.reset();
 				}
+			} else if(!p->stopping()) {
+				g_current_player = p;
 			}
 		}
 
@@ -1055,7 +1609,7 @@ int play_looped(const std::string& file, const void* object, float volume, float
 	}
 
 	boost::intrusive_ptr<PlayingSound> s(new PlayingSound(file, object, volume, fade_in_time));
-	s->setLooped();
+	s->setLooped(true);
 	s->setPanning(g_pan_left, g_pan_right);
 
 	threading::lock lck(g_playing_sounds_mutex);
@@ -1070,7 +1624,8 @@ void play_music(const std::string& file, bool queue, int fade_time)
 		return;
 	}
 
-	boost::intrusive_ptr<MusicPlayer> player(new MusicPlayer(file.c_str()));
+	std::map<variant,variant> options;
+	boost::intrusive_ptr<MusicPlayer> player(new MusicPlayer(file.c_str(), variant(&options)));
 
 	if(queue && g_music_players.empty() == false) {
 		g_music_queue = player;
@@ -1081,6 +1636,7 @@ void play_music(const std::string& file, bool queue, int fade_time)
 			p->stopPlaying(fade_time/60.f);
 		}
 		g_music_players.push_back(player);
+		g_current_player = player;
 	}
 }
 
@@ -1090,7 +1646,8 @@ void play_music_interrupt(const std::string& file)
 		return;
 	}
 
-	boost::intrusive_ptr<MusicPlayer> player(new MusicPlayer(file.c_str()));
+	std::map<variant,variant> options;
+	boost::intrusive_ptr<MusicPlayer> player(new MusicPlayer(file.c_str(), variant(&options)));
 
 	g_current_music = file;
 
@@ -1099,6 +1656,7 @@ void play_music_interrupt(const std::string& file)
 		p->stopPlaying(0.1f);
 	}
 	g_music_players.push_back(player);
+	g_current_player = player;
 }
 
 
@@ -1106,6 +1664,58 @@ const std::string& current_music()
 {
 	return g_current_music;
 }
+
+AudioEngine::AudioEngine(boost::intrusive_ptr<const CustomObject> obj) : obj_(obj)
+{
+}
+
+BEGIN_DEFINE_CALLABLE_NOBASE(AudioEngine)
+	BEGIN_DEFINE_FN(sound, "(string, {volume: decimal|null, pan: [decimal,decimal]|null, loop: bool|null, loop_point: decimal|null, loop_from: decimal|null, fade_in: decimal|null, pos: decimal|null, filters: null|[builtin sound_effect_filter]}|null=null) ->builtin playing_sound")
+		const std::string& name = FN_ARG(0).as_string();
+		variant options;
+		std::map<variant,variant> options_buf;
+		if(NUM_FN_ARGS > 1) {
+			options = FN_ARG(1);
+		} else {
+			options = variant(&options_buf);
+		}
+
+		return variant(new PlayingSound(name, obj.obj_.get(), options));
+	END_DEFINE_FN
+
+	BEGIN_DEFINE_FN(preload, "(string)->commands")
+		const std::string name = FN_ARG(0).as_string();
+		return variant(new game_logic::FnCommandCallable([=]() {
+			preload(name);
+		}));
+	END_DEFINE_FN
+
+	BEGIN_DEFINE_FN(music, "(string, {volume: decimal|null, loop: bool|null, loop_point: decimal|null, pos: decimal|null, loop_from: decimal|null, on_complete: null|commands|function()->commands}|null=null) ->builtin music_player")
+		const std::string& name = FN_ARG(0).as_string();
+		variant options;
+		std::map<variant,variant> options_buf;
+		if(NUM_FN_ARGS > 1) {
+			options = FN_ARG(1);
+		} else {
+			options = variant(&options_buf);
+		}
+
+		return variant(new MusicPlayer(name, options));
+
+	END_DEFINE_FN
+
+	
+	DEFINE_FIELD(current_music, "null|builtin music_player")
+		return variant(g_current_player.get());
+	
+	BEGIN_DEFINE_FN(speed_filter, "({ speed: decimal }) ->builtin sound_effect_filter")
+		return variant(new SpeedSoundEffectFilter(FN_ARG(0)));
+	END_DEFINE_FN
+
+	BEGIN_DEFINE_FN(binaural_delay_filter, "({ delay: decimal }) ->builtin sound_effect_filter")
+		return variant(new BinauralDelaySoundEffectFilter(FN_ARG(0)));
+	END_DEFINE_FN
+END_DEFINE_CALLABLE(AudioEngine)
 
 }
 

@@ -23,6 +23,9 @@
 
 #pragma once
 
+#include "custom_object.hpp"
+#include "formula_callable.hpp"
+#include "formula_callable_definition.hpp"
 #include "variant.hpp"
 
 #include <string>
@@ -83,4 +86,14 @@ namespace sound
 	void play_music_interrupt(const std::string& file);
 
 	const std::string& current_music();
+
+	class AudioEngine : public game_logic::FormulaCallable
+	{
+	public:
+		explicit AudioEngine(boost::intrusive_ptr<const CustomObject> obj);
+	private:
+		DECLARE_CALLABLE(AudioEngine);
+
+		boost::intrusive_ptr<const CustomObject> obj_;
+	};
 }

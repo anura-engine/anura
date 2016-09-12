@@ -3149,6 +3149,7 @@ variant CustomObject::getValueBySlot(int slot) const
 	case CUSTOM_OBJECT_IS_HUMAN:          return variant::from_bool(isHuman() != nullptr);
 	case CUSTOM_OBJECT_INVINCIBLE:        return variant::from_bool(invincible_ != 0);
 	case CUSTOM_OBJECT_SOUND_VOLUME:      return variant(sound_volume_);
+	case CUSTOM_OBJECT_AUDIO:		      return variant(new sound::AudioEngine(boost::intrusive_ptr<const CustomObject>(this)));
 	case CUSTOM_OBJECT_DESTROYED:         return variant::from_bool(destroyed());
 
 	case CUSTOM_OBJECT_IS_STANDING_ON_PLATFORM: {

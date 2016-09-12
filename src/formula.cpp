@@ -122,7 +122,11 @@ namespace game_logic
 			return true;
 		}
 
-		if(v.is_list()) {
+		if(v.is_function()) {
+			std::vector<variant> args;
+			variant cmd = v(args);
+			executeCommand(cmd);
+		} else if(v.is_list()) {
 			for(int n = 0; n != v.num_elements(); ++n) {
 				executeCommand(v[n]);
 			}
