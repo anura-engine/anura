@@ -48,7 +48,7 @@ T clamp(T value, T minval, T maxval)
 template<typename T, typename R>
 T mix(T a, T b, R ratio)
 {
-	R inv = 1.0 - ratio;
+	R inv = R(1.0) - ratio;
 	return a*inv + b*ratio;
 }
 
