@@ -851,7 +851,7 @@ namespace sound
 
 		void setSource(SoundSource* source) { source_ = source; }
 
-		bool finished() const {
+		bool finished() const override {
 			return source_->finished();
 		}
 
@@ -875,7 +875,7 @@ namespace sound
 		explicit SpeedSoundEffectFilter(variant options) : speed_(options["speed"].as_float(1.0f))
 		{}
 
-		void MixData(float* output, int nsamples)
+		void MixData(float* output, int nsamples) override
 		{
 			threading::lock lck(mutex_);
 			int source_nsamples = int(nsamples*speed_);
@@ -917,12 +917,12 @@ namespace sound
 		explicit BinauralDelaySoundEffectFilter(variant options) : delay_(options["delay"].as_float())
 		{}
 
-		bool finished() const {
+		bool finished() const override {
 			threading::lock lck(mutex_);
 			return buf_.empty() && SoundEffectFilter::finished();
 		}
 
-		void MixData(float* output, int nsamples)
+		void MixData(float* output, int nsamples) override
 		{
 			threading::lock lck(mutex_);
 
@@ -949,7 +949,7 @@ namespace sound
 
 			}
 
-			const int nsamples_delay = int(abs(delay_)*SampleRate);
+            const int nsamples_delay = int(std::abs<float>(delay_)*SampleRate);
 
 			//The delayed channel
 			{
@@ -1241,7 +1241,7 @@ namespace sound
 		}
 
 		//Once finished(), the game thread may remove this from the list of playing sounds.
-		bool finished() const
+		bool finished() const override
 		{
 			threading::lock lck(mutex_);
 			return first_filter_->finished();
@@ -1254,7 +1254,7 @@ namespace sound
 		}
 
 		//Mix data into the output buffer. Can be safely called from the mixing thread.
-		virtual void MixData(float* output, int nsamples)
+		virtual void MixData(float* output, int nsamples) override
 		{
 			threading::lock lck(mutex_);
 			if(source_->loaded()) {
