@@ -227,7 +227,7 @@
 		C00160D116AF2E00001DAEB9 /* load_level_nothread.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C00160D016AF2E00001DAEB9 /* load_level_nothread.cpp */; };
 		C008A2CE1804EFFE0061363A /* input.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C008A2CC1804EFFE0061363A /* input.cpp */; };
 		C010C572160AFAD9006E7D90 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C010C571160AFAD9006E7D90 /* Cocoa.framework */; };
-		C010C5B8160AFC8B006E7D90 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = C010C5B6160AFC7C006E7D90 /* libz.dylib */; };
+		C010C5B8160AFC8B006E7D90 /* libz.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = C010C5B6160AFC7C006E7D90 /* libz.1.dylib */; };
 		C010C5BB160AFD09006E7D90 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C010C5B9160AFCFF006E7D90 /* OpenGL.framework */; };
 		C010C741160AFD4D006E7D90 /* achievements.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C010C5BD160AFD4C006E7D90 /* achievements.cpp */; };
 		C010C742160AFD4D006E7D90 /* animation_creator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C010C5BF160AFD4C006E7D90 /* animation_creator.cpp */; };
@@ -938,7 +938,7 @@
 		C010C59E160AFB8F006E7D90 /* pt-BR */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "pt-BR"; path = "pt-BR.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
 		C010C59F160AFB8F006E7D90 /* SDLMain.nib */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; path = SDLMain.nib; sourceTree = "<group>"; };
 		C010C5A0160AFB8F006E7D90 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
-		C010C5B6160AFC7C006E7D90 /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = usr/lib/libz.dylib; sourceTree = SDKROOT; };
+		C010C5B6160AFC7C006E7D90 /* libz.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.1.dylib; path = /usr/lib/libz.1.dylib; sourceTree = "<absolute>"; };
 		C010C5B9160AFCFF006E7D90 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
 		C010C5BD160AFD4C006E7D90 /* achievements.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = achievements.cpp; sourceTree = "<group>"; };
 		C010C5BE160AFD4C006E7D90 /* achievements.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = achievements.hpp; sourceTree = "<group>"; };
@@ -1383,7 +1383,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				63D6F4DD1AC68F38002250CC /* libboost_iostreams.dylib in Frameworks */,
-				C010C5B8160AFC8B006E7D90 /* libz.dylib in Frameworks */,
+				C010C5B8160AFC8B006E7D90 /* libz.1.dylib in Frameworks */,
 				C010C572160AFAD9006E7D90 /* Cocoa.framework in Frameworks */,
 				C010C5BB160AFD09006E7D90 /* OpenGL.framework in Frameworks */,
 				C07A47A8194440A400F1190E /* libcairo.2.dylib in Frameworks */,
@@ -1978,7 +1978,7 @@
 				C0D78B5E171F215D00980007 /* libpng15.15.dylib */,
 				C08047DD1944884300AA7C82 /* libpng16.16.dylib */,
 				C0EF2A5D16229160004CD227 /* libGLEW.1.9.0.dylib */,
-				C010C5B6160AFC7C006E7D90 /* libz.dylib */,
+				C010C5B6160AFC7C006E7D90 /* libz.1.dylib */,
 				C08E627C17B5EC3B0097B642 /* SDL2_image.framework */,
 				C08E627D17B5EC3B0097B642 /* SDL2_mixer.framework */,
 				C08E627E17B5EC3B0097B642 /* SDL2_ttf.framework */,
