@@ -82,7 +82,7 @@ namespace sound
 
 	struct MusicInfo 
 	{
-		MusicInfo() : volume(1.0) {}
+		MusicInfo() : volume(1.0f) {}
 		float volume;
 	};
 
@@ -364,14 +364,14 @@ namespace sound
 					assert(nsamples <= out_nsamples);
 					for(int n = 0; n != nsamples; ++n) {
 						*out++ += (1.0f - fadeout_current/fadeout_time)*volume_*static_cast<float>(data[n])/SHRT_MAX;
-						fadeout_current += 1.0/float(SampleRate);
+						fadeout_current += 1.0f/float(SampleRate);
 					}
 				} else {
 					assert(nsamples*2 <= out_nsamples);
 					for(int n = 0; n != nsamples; ++n) {
 						*out++ += (1.0f - fadeout_current/fadeout_time)*volume_*static_cast<float>(data[n])/SHRT_MAX;
 						*out++ += (1.0f - fadeout_current/fadeout_time)*volume_*static_cast<float>(data[n])/SHRT_MAX;
-						fadeout_current += 1.0/float(SampleRate);
+						fadeout_current += 1.0f/float(SampleRate);
 					}
 				}
 			} else {
@@ -1094,7 +1094,7 @@ namespace sound
 			float fade_out = fade_out_;
 			float fade_out_current = fade_out_current_;
 
-			int endpoint = !looped_ || loop_from_ <= 0 || loop_from_ > data_->nsamples() ? data_->nsamples() : loop_from_;
+			int endpoint = !looped_ || loop_from_ <= 0 || loop_from_ > static_cast<int>(data_->nsamples()) ? data_->nsamples() : loop_from_;
 
 			if(fade_out_ >= 0.0f) {
 				fade_out_current_ += float(std::min<int>(nsamples, endpoint - pos))/float(SampleRate);
@@ -1129,7 +1129,7 @@ namespace sound
 
 			if(pos < fade_in_*SampleRate || fade_out >= 0.0f) {
 				for(int n = 0; n != nsamples*2; ++n) {
-					*output++ += *p++ * volume * std::min<float>(1.0f, ((pos+n*2) / (SampleRate*fade_in_))) * (1.0f - (fade_out_current + (n*0.5)/SampleRate)/fade_out);
+					*output++ += *p++ * volume * std::min<float>(1.0f, ((pos+n*2) / (SampleRate*fade_in_))) * (1.0f - (fade_out_current + (n*0.5f)/SampleRate)/fade_out);
 				}
 			} else if(left_pan_ != 1.0f || right_pan_ != 1.0f) {
 				for(int n = 0; n != nsamples; ++n) {
@@ -1354,7 +1354,7 @@ namespace sound
 		threading::lock lck(obj.mutex_);
 		std::vector<decimal> d = value.as_list_decimal();
 		ASSERT_LOG(d.size() == 2, "Incorrect pan arg");
-		obj.setPanning(d[0].as_float(), d[1].as_float());
+		obj.setPanning(d[0].as_float32(), d[1].as_float32());
 
 	DEFINE_FIELD(filters, "[builtin sound_effect_filter]")
 		auto v = obj.getFilters();
