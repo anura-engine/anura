@@ -47,6 +47,7 @@
 #include "preferences.hpp"
 #include "sound.hpp"
 #include "thread.hpp"
+#include "unit_test.hpp"
 #include "utils.hpp"
 
 
@@ -57,6 +58,7 @@
 #include "variant_utils.hpp"
 
 PREF_INT(mixer_looped_sounds_fade_time_ms, 100, "Number of milliseconds looped sounds should fade for");
+PREF_INT(audio_cache_size_mb, 30, "Audio data cache size in megabytes");
 
 
 #ifndef OLD_AUDIO_SYSTEM
@@ -684,13 +686,20 @@ namespace sound
 
 	//In memory represenation of a wave file. We always use 32-bit floats in stereo
 	struct WaveData {
-		explicit WaveData(std::vector<float>* buffer) { buf.swap(*buffer); }
-		std::vector<float> buf;
-		size_t nsamples() const { return buf.size()/2; }
+		WaveData(const std::string& filename, std::vector<short>* buf, int nchan) : fname(filename), nchannels(nchan) { buffer.swap(*buf); }
+		std::string fname;
+		std::vector<short> buffer;
+		int nchannels;
+		size_t nsamples() const { return buffer.size()/nchannels; }
+
+		size_t memoryUsage() const { return buffer.size()*sizeof(short); }
 	};
 
 	//A cache of loaded sound effects with synchronization.
-	std::map<std::string, std::shared_ptr<WaveData> > g_wave_cache;
+	typedef std::list<std::shared_ptr<WaveData>> WaveCacheLRUList;
+	WaveCacheLRUList g_wave_cache_lru;
+	std::map<std::string, WaveCacheLRUList::iterator> g_wave_cache;
+	size_t g_wave_cache_size;
 	threading::mutex g_wave_cache_mutex;
 
 	bool get_cached_wave(const std::string& fname, std::shared_ptr<WaveData>* ptr)
@@ -700,7 +709,14 @@ namespace sound
 		if(itor == g_wave_cache.end()) {
 			return false;
 		} else {
-			*ptr = itor->second;
+			if(itor->second == g_wave_cache_lru.end()) {
+				ptr->reset();
+			} else {
+				if(itor->second != g_wave_cache_lru.begin()) {
+					g_wave_cache_lru.splice(g_wave_cache_lru.begin(), g_wave_cache_lru, itor->second);
+				}
+				*ptr = *itor->second;
+			}
 			return true;
 		}
 	}
@@ -716,7 +732,7 @@ namespace sound
 	{
 		SDL_AudioSpec spec;
 		spec.freq = SampleRate;
-		spec.format = AUDIO_F32;
+		spec.format = AUDIO_S16;
 		spec.channels = 2;
 		spec.silence = 0;
 		spec.size = BUFFER_NUM_SAMPLES * sizeof(float) * spec.channels;
@@ -745,19 +761,20 @@ namespace sound
 			LOG_ERROR("Could not load sound: " << fname << " " << SDL_GetError());
 
 			threading::lock lck(g_wave_cache_mutex);
-			g_wave_cache[fname] = std::shared_ptr<WaveData>();
+			g_wave_cache[fname] = g_wave_cache_lru.end();
 		} else {
 
 			SDL_AudioCVT cvt;
+			spec.channels = res_spec->channels;
 			int res = SDL_BuildAudioCVT(&cvt, res_spec->format, res_spec->channels, res_spec->freq, spec.format, spec.channels, spec.freq);
 			ASSERT_LOG(res >= 0, "Could not convert audio: " << SDL_GetError());
 
-			std::vector<float> out_buf;
+			std::vector<short> out_buf;
 
 			if(res == 0) {
-				out_buf.resize(len/sizeof(float));
+				out_buf.resize(len/sizeof(short));
 				if(!out_buf.empty()) {
-					memcpy(&out_buf[0], buf, out_buf.size()*sizeof(float));
+					memcpy(&out_buf[0], buf, out_buf.size()*sizeof(short));
 				}
 
 			} else {
@@ -773,7 +790,7 @@ namespace sound
 				int res = SDL_ConvertAudio(&cvt);
 				ASSERT_LOG(res >= 0, "Could not convert audio: " << SDL_GetError());
 
-				out_buf.resize(cvt.len_cvt/sizeof(float));
+				out_buf.resize(cvt.len_cvt/sizeof(short));
 				memcpy(&out_buf[0], cvt.buf, cvt.len_cvt);
 			}
 
@@ -781,10 +798,41 @@ namespace sound
 				SDL_FreeWAV(buf);
 			}
 
-			std::shared_ptr<WaveData> data(new WaveData(&out_buf));
+			std::shared_ptr<WaveData> data(new WaveData(fname, &out_buf, spec.channels));
 
 			threading::lock lck(g_wave_cache_mutex);
-			g_wave_cache[fname] = data;
+			g_wave_cache_lru.push_front(data);
+			g_wave_cache[fname] = g_wave_cache_lru.begin();
+			g_wave_cache_size += data->memoryUsage();
+
+			int nlive = 0;
+			int nactive = 0;
+			for(auto& p : g_wave_cache_lru) {
+				if(p.unique() == false) {
+					nlive += p->memoryUsage();
+					++nactive;
+				}
+			}
+
+			LOG_INFO("Added wave: " << fname << " Have " << g_wave_cache_lru.size() << " items in cache, size " << (g_wave_cache_size/(1024*1024)) << "MB, " << nactive << " items live, " << (nlive/(1024*1024)) << "MB\n");
+
+			while(g_wave_cache_size >= g_audio_cache_size_mb*1024*1024) {
+				assert(!g_wave_cache_lru.empty());
+
+				for(int n = 0; n < int(g_wave_cache_lru.size()) && g_wave_cache_lru.back().unique() == false; ++n) {
+					g_wave_cache_lru.splice(g_wave_cache_lru.begin(), g_wave_cache_lru, std::prev(g_wave_cache_lru.end()));
+				}
+
+				if(g_wave_cache_lru.back().unique() == false) {
+					LOG_ERROR("Audio cache size exceeded but all " << g_wave_cache_lru.size() << " items in use cannot evict");
+					break;
+				}
+
+				g_wave_cache_size -= g_wave_cache_lru.back()->memoryUsage();
+
+				g_wave_cache.erase(g_wave_cache_lru.back()->fname);
+				g_wave_cache_lru.erase(std::prev(g_wave_cache_lru.end()));
+			}
 		}
 
 	}
@@ -868,6 +916,74 @@ namespace sound
 
 	BEGIN_DEFINE_CALLABLE(SoundEffectFilter, SoundSource)
 	END_DEFINE_CALLABLE(SoundEffectFilter)
+
+	class HighPassSoundEffectFilter : public SoundEffectFilter
+	{
+	public:
+		explicit HighPassSoundEffectFilter(float alpha) : alpha_(alpha)
+		{}
+
+		void MixData(float* output, int nsamples)
+		{
+			threading::lock lck(mutex_);
+
+			std::vector<float> input;
+			input.resize(nsamples*NumChannels);
+			GetData(&input[0], nsamples);
+
+			output[0] = input[0];
+
+			for(int n = 1; n < nsamples; ++n) {
+				output[n] = alpha_*output[n-1] + alpha_ * (input[n] - input[n-1]);
+			}
+		}
+	private:
+		threading::mutex mutex_;
+		float alpha_;
+		DECLARE_CALLABLE(HighPassSoundEffectFilter);
+	};
+
+	BEGIN_DEFINE_CALLABLE(HighPassSoundEffectFilter, SoundEffectFilter)
+	DEFINE_FIELD(alpha, "decimal")
+		return variant(obj.alpha_);
+	DEFINE_SET_FIELD
+		threading::lock lck(obj.mutex_);
+		obj.alpha_ = value.as_float();
+	END_DEFINE_CALLABLE(HighPassSoundEffectFilter)
+
+	class LowPassSoundEffectFilter : public SoundEffectFilter
+	{
+	public:
+		explicit LowPassSoundEffectFilter(float alpha) : alpha_(alpha)
+		{}
+
+		void MixData(float* output, int nsamples)
+		{
+			threading::lock lck(mutex_);
+
+			std::vector<float> input;
+			input.resize(nsamples*NumChannels);
+			GetData(&input[0], nsamples);
+
+			output[0] = input[0];
+
+			for(int n = 1; n < nsamples; ++n) {
+				output[n] = alpha_*output[n-1] + alpha_ * (input[n] - input[n-1]);
+			}
+		}
+	private:
+		threading::mutex mutex_;
+		float alpha_;
+		DECLARE_CALLABLE(LowPassSoundEffectFilter);
+	};
+
+	BEGIN_DEFINE_CALLABLE(LowPassSoundEffectFilter, SoundEffectFilter)
+	DEFINE_FIELD(alpha, "decimal")
+		return variant(obj.alpha_);
+	DEFINE_SET_FIELD
+		threading::lock lck(obj.mutex_);
+		obj.alpha_ = value.as_float();
+	END_DEFINE_CALLABLE(LowPassSoundEffectFilter)
 
 	class SpeedSoundEffectFilter : public SoundEffectFilter
 	{
@@ -1125,20 +1241,34 @@ namespace sound
 				nsamples = navail;
 			}
 
-			const float* p = &data->buf[pos*2];
+			const short* p = &data->buffer[pos*data->nchannels];
 
 			if(pos < fade_in_*SampleRate || fade_out >= 0.0f) {
-				for(int n = 0; n != nsamples*2; ++n) {
-					*output++ += *p++ * volume * std::min<float>(1.0f, ((pos+n*2) / (SampleRate*fade_in_))) * (1.0f - (fade_out_current + (n*0.5)/SampleRate)/fade_out);
+				for(int n = 0; n != nsamples; ++n) {
+					*output++ += (float(*p)/SHRT_MAX) * volume * std::min<float>(1.0f, ((pos+n*2) / (SampleRate*fade_in_))) * (1.0f - (fade_out_current + (n*0.5)/SampleRate)/fade_out);
+					if(data->nchannels > 1) {
+						++p;
+					}
+					*output++ += (float(*p)/SHRT_MAX) * volume * std::min<float>(1.0f, ((pos+n*2) / (SampleRate*fade_in_))) * (1.0f - (fade_out_current + (n*0.5)/SampleRate)/fade_out);
+					++p;
 				}
 			} else if(left_pan_ != 1.0f || right_pan_ != 1.0f) {
 				for(int n = 0; n != nsamples; ++n) {
-					*output++ += *p++ * volume * left_pan_;
-					*output++ += *p++ * volume * right_pan_;
+					*output++ += (float(*p)/SHRT_MAX) * volume * left_pan_;
+					if(data->nchannels > 1) {
+						++p;
+					}
+					*output++ += (float(*p++)/SHRT_MAX) * volume * right_pan_;
+				}
+			} else if(data->nchannels == 1) {
+				for(int n = 0; n != nsamples; ++n) {
+					*output++ += (float(*p)/SHRT_MAX) * volume;
+					*output++ += (float(*p)/SHRT_MAX) * volume;
+					++p;
 				}
 			} else {
 				for(int n = 0; n != nsamples*2; ++n) {
-					*output++ += *p++ * volume;
+					*output++ += (float(*p++)/SHRT_MAX) * volume;
 				}
 			}
 
@@ -1840,6 +1970,14 @@ BEGIN_DEFINE_CALLABLE_NOBASE(AudioEngine)
 	DEFINE_FIELD(current_music, "null|builtin music_player")
 		return variant(g_current_player.get());
 	
+	BEGIN_DEFINE_FN(low_pass_filter, "(decimal) ->builtin sound_effect_filter")
+		return variant(new LowPassSoundEffectFilter(FN_ARG(0).as_float()));
+	END_DEFINE_FN
+
+	BEGIN_DEFINE_FN(high_pass_filter, "(decimal) ->builtin sound_effect_filter")
+		return variant(new HighPassSoundEffectFilter(FN_ARG(0).as_float()));
+	END_DEFINE_FN
+	
 	BEGIN_DEFINE_FN(speed_filter, "({ speed: decimal }) ->builtin sound_effect_filter")
 		return variant(new SpeedSoundEffectFilter(FN_ARG(0)));
 	END_DEFINE_FN
@@ -1849,6 +1987,34 @@ BEGIN_DEFINE_CALLABLE_NOBASE(AudioEngine)
 	END_DEFINE_FN
 END_DEFINE_CALLABLE(AudioEngine)
 
+}
+
+//Outputs names of any wave files it fails to load.
+COMMAND_LINE_UTILITY(validate_waves)
+{
+	std::map<std::string,std::string> paths;
+	module::get_unique_filenames_under_dir("sounds/", &paths, module::MODULE_NO_PREFIX);
+	for(auto p : paths) {
+		std::string fname = module::map_file(p.second);
+
+		if(p.first.size() <= 4 || std::equal(p.first.end()-4, p.first.end(), ".wav") == false) {
+			continue;
+		}
+
+		SDL_AudioSpec spec;
+		spec.freq = 44100;
+		spec.format = AUDIO_S16;
+		spec.channels = 2;
+		spec.silence = 0;
+		spec.size = 512;
+
+		Uint8* buf = nullptr;
+		Uint32 len = 0;
+		auto res = SDL_LoadWAV(fname.c_str(), &spec, &buf, &len);
+		if(res == nullptr) {
+			printf("%s\n", fname.c_str());
+		}
+	}
 }
 
 #else
