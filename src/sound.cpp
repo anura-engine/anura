@@ -923,7 +923,7 @@ namespace sound
 		explicit HighPassSoundEffectFilter(float alpha) : alpha_(alpha)
 		{}
 
-		void MixData(float* output, int nsamples)
+		void MixData(float* output, int nsamples) override
 		{
 			threading::lock lck(mutex_);
 
@@ -957,7 +957,7 @@ namespace sound
 		explicit LowPassSoundEffectFilter(float alpha) : alpha_(alpha)
 		{}
 
-		void MixData(float* output, int nsamples)
+		void MixData(float* output, int nsamples) override
 		{
 			threading::lock lck(mutex_);
 
@@ -1198,7 +1198,7 @@ namespace sound
 		}
 
 		//Mix data into the output buffer. Can be safely called from the mixing thread.
-		virtual void MixData(float* output, int nsamples)
+		virtual void MixData(float* output, int nsamples) override
 		{
 			if(!data_ || nsamples <= 0 || (!looped_ && pos_ >= int(data_->nsamples())) || (fade_out_ >= 0.0f && fade_out_current_ >= fade_out_)) {
 				return;
