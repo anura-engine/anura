@@ -84,7 +84,7 @@ namespace sound
 
 	struct MusicInfo 
 	{
-		MusicInfo() : volume(1.0) {}
+		MusicInfo() : volume(1.0f) {}
 		float volume;
 	};
 
@@ -366,14 +366,14 @@ namespace sound
 					assert(nsamples <= out_nsamples);
 					for(int n = 0; n != nsamples; ++n) {
 						*out++ += (1.0f - fadeout_current/fadeout_time)*volume_*static_cast<float>(data[n])/SHRT_MAX;
-						fadeout_current += 1.0/float(SampleRate);
+						fadeout_current += 1.0f/float(SampleRate);
 					}
 				} else {
 					assert(nsamples*2 <= out_nsamples);
 					for(int n = 0; n != nsamples; ++n) {
 						*out++ += (1.0f - fadeout_current/fadeout_time)*volume_*static_cast<float>(data[n])/SHRT_MAX;
 						*out++ += (1.0f - fadeout_current/fadeout_time)*volume_*static_cast<float>(data[n])/SHRT_MAX;
-						fadeout_current += 1.0/float(SampleRate);
+						fadeout_current += 1.0f/float(SampleRate);
 					}
 				}
 			} else {
@@ -899,7 +899,7 @@ namespace sound
 
 		void setSource(SoundSource* source) { source_ = source; }
 
-		bool finished() const {
+		bool finished() const override {
 			return source_->finished();
 		}
 
@@ -991,7 +991,7 @@ namespace sound
 		explicit SpeedSoundEffectFilter(variant options) : speed_(options["speed"].as_float(1.0f))
 		{}
 
-		void MixData(float* output, int nsamples)
+		void MixData(float* output, int nsamples) override
 		{
 			threading::lock lck(mutex_);
 			int source_nsamples = int(nsamples*speed_);
@@ -1033,12 +1033,12 @@ namespace sound
 		explicit BinauralDelaySoundEffectFilter(variant options) : delay_(options["delay"].as_float())
 		{}
 
-		bool finished() const {
+		bool finished() const override {
 			threading::lock lck(mutex_);
 			return buf_.empty() && SoundEffectFilter::finished();
 		}
 
-		void MixData(float* output, int nsamples)
+		void MixData(float* output, int nsamples) override
 		{
 			threading::lock lck(mutex_);
 
@@ -1065,7 +1065,7 @@ namespace sound
 
 			}
 
-			const int nsamples_delay = int(abs(delay_)*SampleRate);
+            const int nsamples_delay = int(std::abs<float>(delay_)*SampleRate);
 
 			//The delayed channel
 			{
@@ -1210,7 +1210,7 @@ namespace sound
 			float fade_out = fade_out_;
 			float fade_out_current = fade_out_current_;
 
-			int endpoint = !looped_ || loop_from_ <= 0 || loop_from_ > data_->nsamples() ? data_->nsamples() : loop_from_;
+			int endpoint = !looped_ || loop_from_ <= 0 || loop_from_ > static_cast<int>(data_->nsamples()) ? data_->nsamples() : loop_from_;
 
 			if(fade_out_ >= 0.0f) {
 				fade_out_current_ += float(std::min<int>(nsamples, endpoint - pos))/float(SampleRate);
@@ -1245,11 +1245,11 @@ namespace sound
 
 			if(pos < fade_in_*SampleRate || fade_out >= 0.0f) {
 				for(int n = 0; n != nsamples; ++n) {
-					*output++ += (float(*p)/SHRT_MAX) * volume * std::min<float>(1.0f, ((pos+n*2) / (SampleRate*fade_in_))) * (1.0f - (fade_out_current + (n*0.5)/SampleRate)/fade_out);
+					*output++ += (float(*p)/SHRT_MAX) * volume * std::min<float>(1.0f, ((pos+n*2) / (SampleRate*fade_in_))) * (1.0f - (fade_out_current + (n*0.5f)/SampleRate)/fade_out);
 					if(data->nchannels > 1) {
 						++p;
 					}
-					*output++ += (float(*p)/SHRT_MAX) * volume * std::min<float>(1.0f, ((pos+n*2) / (SampleRate*fade_in_))) * (1.0f - (fade_out_current + (n*0.5)/SampleRate)/fade_out);
+					*output++ += (float(*p)/SHRT_MAX) * volume * std::min<float>(1.0f, ((pos+n*2) / (SampleRate*fade_in_))) * (1.0f - (fade_out_current + (n*0.5f)/SampleRate)/fade_out);
 					++p;
 				}
 			} else if(left_pan_ != 1.0f || right_pan_ != 1.0f) {
@@ -1371,7 +1371,7 @@ namespace sound
 		}
 
 		//Once finished(), the game thread may remove this from the list of playing sounds.
-		bool finished() const
+		bool finished() const override
 		{
 			threading::lock lck(mutex_);
 			return first_filter_->finished();
@@ -1384,7 +1384,7 @@ namespace sound
 		}
 
 		//Mix data into the output buffer. Can be safely called from the mixing thread.
-		virtual void MixData(float* output, int nsamples)
+		virtual void MixData(float* output, int nsamples) override
 		{
 			threading::lock lck(mutex_);
 			if(source_->loaded()) {
@@ -1484,7 +1484,7 @@ namespace sound
 		threading::lock lck(obj.mutex_);
 		std::vector<decimal> d = value.as_list_decimal();
 		ASSERT_LOG(d.size() == 2, "Incorrect pan arg");
-		obj.setPanning(d[0].as_float(), d[1].as_float());
+		obj.setPanning(d[0].as_float32(), d[1].as_float32());
 
 	DEFINE_FIELD(filters, "[builtin sound_effect_filter]")
 		auto v = obj.getFilters();
