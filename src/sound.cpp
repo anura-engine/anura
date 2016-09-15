@@ -816,7 +816,7 @@ namespace sound
 
 			LOG_INFO("Added wave: " << fname << " Have " << g_wave_cache_lru.size() << " items in cache, size " << (g_wave_cache_size/(1024*1024)) << "MB, " << nactive << " items live, " << (nlive/(1024*1024)) << "MB\n");
 
-			while(g_wave_cache_size >= g_audio_cache_size_mb*1024*1024) {
+			while(g_wave_cache_size >= static_cast<size_t>(g_audio_cache_size_mb*1024*1024)) {
 				assert(!g_wave_cache_lru.empty());
 
 				for(int n = 0; n < int(g_wave_cache_lru.size()) && g_wave_cache_lru.back().unique() == false; ++n) {
@@ -923,7 +923,7 @@ namespace sound
 		explicit HighPassSoundEffectFilter(float alpha) : alpha_(alpha)
 		{}
 
-		void MixData(float* output, int nsamples)
+		void MixData(float* output, int nsamples) override
 		{
 			threading::lock lck(mutex_);
 
@@ -958,7 +958,7 @@ namespace sound
 		explicit LowPassSoundEffectFilter(float alpha) : alpha_(alpha)
 		{}
 
-		void MixData(float* output, int nsamples)
+		void MixData(float* output, int nsamples) override
 		{
 			threading::lock lck(mutex_);
 
@@ -1189,7 +1189,7 @@ namespace sound
 		}
 
 		//Once finished(), the game thread may remove this from the list of playing sounds.
-		bool finished() const
+		bool finished() const override 
 		{
 			return (data_.get() != nullptr && !looped_ && pos_ >= int(data_->nsamples())) || (fade_out_ >= 0.0f && fade_out_current_ >= fade_out_);
 		}
@@ -1200,7 +1200,7 @@ namespace sound
 		}
 
 		//Mix data into the output buffer. Can be safely called from the mixing thread.
-		virtual void MixData(float* output, int nsamples)
+		virtual void MixData(float* output, int nsamples) override
 		{
 			if(!data_ || nsamples <= 0 || (!looped_ && pos_ >= int(data_->nsamples())) || (fade_out_ >= 0.0f && fade_out_current_ >= fade_out_)) {
 				return;
