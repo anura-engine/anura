@@ -932,9 +932,10 @@ namespace sound
 			GetData(&input[0], nsamples);
 
 			output[0] = input[0];
+			output[1] = input[1];
 
-			for(int n = 1; n < nsamples; ++n) {
-				output[n] = alpha_*output[n-1] + alpha_ * (input[n] - input[n-1]);
+			for(int n = 2; n < nsamples*NumChannels; ++n) {
+				output[n] = alpha_*output[n-2] + alpha_ * (input[n] - input[n-2]);
 			}
 		}
 	private:
@@ -966,9 +967,10 @@ namespace sound
 			GetData(&input[0], nsamples);
 
 			output[0] = input[0];
+			output[1] = input[1];
 
-			for(int n = 1; n < nsamples; ++n) {
-				output[n] = alpha_*output[n-1] + alpha_ * (input[n] - input[n-1]);
+			for(int n = 2; n < nsamples*NumChannels; ++n) {
+				output[n] = alpha_*output[n-2] + alpha_ * (input[n] - input[n-2]);
 			}
 		}
 	private:
