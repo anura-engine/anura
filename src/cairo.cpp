@@ -1035,6 +1035,7 @@ namespace {
 	END_CAIRO_FN
 
 	BEGIN_DEFINE_FN(render, "(int, int, cairo_commands, map|null=null) ->builtin texture_object")
+		game_logic::Formula::failIfStaticContext();
 		formula_profiler::Instrument instrument("CAIRO_RENDER");
 
 		int w = FN_ARG(0).as_int();
