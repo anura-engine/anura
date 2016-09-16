@@ -720,7 +720,8 @@ void Level::finishLoading()
 	//graphics::texture::build_textures_from_worker_threads();
 
 	if (editor_ || preferences::compiling_tiles) {
-		game_logic::set_verbatim_string_expressions (true);
+		//game_logic::set_verbatim_string_expressions (true);
+		fprintf(stderr, "ZZZ: VERBATIM_STRING\n");
 	}
 
 	std::vector<EntityPtr> objects_not_in_level;
