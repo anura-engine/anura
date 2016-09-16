@@ -328,7 +328,7 @@ namespace
 		} else if(cmd.try_convert<game_logic::CommandCallable>()) {
 			cmd.try_convert<game_logic::CommandCallable>()->runCommand(*obj.try_convert<FormulaCallable>());
 		} else if(cmd.as_bool()) {
-			LOG_INFO(cmd.write_json());
+			printf("%s\n", cmd.write_json().c_str());
 		}
 	}
 
