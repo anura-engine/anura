@@ -1315,7 +1315,16 @@ namespace game_logic
 		END_FUNCTION_DEF(wave)
 
 		FUNCTION_DEF(decimal, 1, 1, "decimal(value) -> decimal: converts the value to a decimal")
-			return variant(args()[0]->evaluate(variables).as_decimal());
+			variant v = args()[0]->evaluate(variables);
+			if(v.is_string()) {
+				try {
+					return variant(boost::lexical_cast<double>(v.as_string()));
+				} catch(...) {
+					ASSERT_LOG(false, "Could not parse string as integer: " << v.write_json());
+				}
+			}
+
+			return variant(v.as_decimal());
 		FUNCTION_TYPE_DEF
 			return variant_type::get_type(variant::VARIANT_TYPE_DECIMAL);
 		END_FUNCTION_DEF(decimal)
@@ -5427,6 +5436,85 @@ FUNCTION_TYPE_DEF
 	}
 	return variant_type::get_list(args()[0]->queryVariantType());
 END_FUNCTION_DEF(rotate_rect)
+
+namespace {
+float curve_unit_interval(float p0, float p1, float m0, float m1, float t)
+{
+    return (2.0*t*t*t - 3.0*t*t + 1.0)*p0 + (t*t*t - 2.0*t*t + t)*m0 + (-2.0*t*t*t + 3.0*t*t)*p1 + (t*t*t - t*t)*m1;
+}
+
+}
+
+FUNCTION_DEF(points_along_curve, 1, 2, "points_along_curve([[decimal,decimal]], int) -> [[decimal,decimal]]")
+	std::vector<variant> v = args()[0]->evaluate(variables).as_list();
+	std::vector<float> points;
+	std::vector<float> tangents;
+	points.reserve(v.size()*2);
+	fprintf(stderr, "TANGENTS: ");
+	for(const variant& p : v) {
+		points.push_back(p[0].as_float());
+		points.push_back(p[1].as_float());
+
+		if(p.num_elements() > 2) {
+			tangents.resize(points.size()/2);
+			tangents.back() = p[2].as_float();
+			fprintf(stderr, "%f ", p[2].as_float());
+		}
+	}
+
+	fprintf(stderr, "\n");
+
+	std::vector<variant> result;
+	if(points.size() < 4) {
+		return variant(&result);
+	}
+
+	float min_point = points[0];
+	float max_point = points[points.size()-2];
+
+	int nout = 100;
+	if(args().size() > 1) {
+		nout = args()[1]->evaluate(variables).as_int(nout);
+	}
+
+	result.reserve(nout);
+	
+	float* p = &points[0];
+
+    for(int n = 0; n != nout; ++n) {
+        float x = min_point + (float(n)/float(nout-1)) * (max_point-min_point);
+        while(x > p[2]) {
+            p += 2;
+        }
+
+		float x_dist = p[2] - p[0];
+        float t = (x - p[0])/x_dist;
+
+        float m0 = 0.0;
+        float m1 = 0.0;
+
+		const int tangent_index = (p - &points[0])/2;
+
+		if(tangent_index < tangents.size()) {
+			m0 = tangents[tangent_index];
+        }
+
+		if(tangent_index+1 < tangents.size()) {
+			m1 = tangents[tangent_index+1];
+        }
+
+        float y = curve_unit_interval(p[1], p[3], m0*x_dist, m1*x_dist, t);
+        result.push_back(variant(y));
+    }
+
+    return variant(&result);
+	
+	
+FUNCTION_ARGS_DEF
+	ARG_TYPE("[[decimal,decimal]|[decimal,decimal,decimal]|[decimal,decimal,decimal,decimal]]")
+	ARG_TYPE("int|null")
+RETURN_TYPE("[decimal]")
+END_FUNCTION_DEF(points_along_curve)
 
 FUNCTION_DEF(solid, 3, 6, "solid(level, int x, int y, (optional)int w=1, (optional) int h=1, (optional) bool debug=false) -> boolean: returns true iff the level contains solid space within the given (x,y,w,h) rectangle. If 'debug' is set, then the tested area will be displayed on-screen.")
 	Level* lvl = args()[0]->evaluate(variables).convert_to<Level>();
