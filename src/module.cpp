@@ -164,6 +164,20 @@ namespace module
 		}
 	}
 
+	void get_all_filenames_under_dir(const std::string& dir,
+										std::multimap<std::string, std::string>* file_map,
+										MODULE_PREFIX_BEHAVIOR prefix)
+	{
+		auto paths = loaded_paths();
+		std::reverse(paths.begin(), paths.end());
+		for(const modules& p : paths) {
+			for(const std::string& base_path : p.base_path_) {
+				const std::string path = base_path + dir;
+				sys::get_all_filenames_under_dir(path, file_map, prefix == MODULE_PREFIX ? p.abbreviation_ + ":" : "");
+			}
+		}
+	}
+
 	void get_files_in_dir(const std::string& dir,
 						  std::vector<std::string>* files,
 						  std::vector<std::string>* dirs)
