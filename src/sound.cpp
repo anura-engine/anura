@@ -21,8 +21,6 @@
 	   distribution.
 */
 
-// XXX It'd be nice if this was abstracted, then the iphone stuff could be hidden better.
-
 #ifdef OLD_AUDIO_SYSTEM
 #pragma comment(lib, "SDL2_mixer")
 #endif
@@ -695,6 +693,12 @@ namespace sound
 		size_t memoryUsage() const { return buffer.size()*sizeof(short); }
 	};
 
+	//set of files that are loading or loaded along with a mutex to control
+	//them. A file will not be loaded if it is included in this set since it's
+	//assumed already loaded.
+	threading::mutex g_files_loading_mutex;
+	std::set<std::string> g_files_loading;
+
 	//A cache of loaded sound effects with synchronization.
 	typedef std::list<std::shared_ptr<WaveData>> WaveCacheLRUList;
 	WaveCacheLRUList g_wave_cache_lru;
@@ -704,7 +708,7 @@ namespace sound
 
 	bool get_cached_wave(const std::string& fname, std::shared_ptr<WaveData>* ptr)
 	{
-		threading::mutex g_wave_cache_mutex;
+		threading::lock lck(g_wave_cache_mutex);
 		auto itor = g_wave_cache.find(fname);
 		if(itor == g_wave_cache.end()) {
 			return false;
@@ -830,8 +834,14 @@ namespace sound
 
 				g_wave_cache_size -= g_wave_cache_lru.back()->memoryUsage();
 
+				{
+					threading::lock lck(g_files_loading_mutex);
+					g_files_loading.erase(g_wave_cache_lru.back()->fname);
+				}
+
 				g_wave_cache.erase(g_wave_cache_lru.back()->fname);
 				g_wave_cache_lru.erase(std::prev(g_wave_cache_lru.end()));
+
 			}
 		}
 
@@ -1279,6 +1289,10 @@ namespace sound
 			}
 		}
 
+		int pos() const { return pos_; }
+
+		std::shared_ptr<WaveData> data() const { return data_; }
+
 	private:
 
 		std::string fname_;
@@ -1418,6 +1432,8 @@ namespace sound
 				first_filter_ = filters_.back();
 			}
 		}
+
+		boost::intrusive_ptr<RawPlayingSound> src() const { return source_; }
 
 	private:
 		DECLARE_CALLABLE(PlayingSound);
@@ -1739,22 +1755,21 @@ void process()
 	}
 }
 
-namespace {
-std::set<std::string> g_files_loading;
-}
-
 //Game-engine facing audio API implementation below here.
 
 //preload a sound effect in the cache.
 void preload(const std::string& fname)
 {
-	if(g_files_loading.count(fname)) {
-		return;
-	}
-
-	g_files_loading.insert(fname);
-
 	std::string file = map_filename(fname);
+
+	{
+		threading::lock lck(g_files_loading_mutex);
+		if(g_files_loading.count(file)) {
+			return;
+		}
+
+		g_files_loading.insert(file);
+	}
 
 	threading::lock lck(g_loader_thread_mutex);
 	g_loader_thread_queue.push_back(file);
@@ -1934,6 +1949,34 @@ AudioEngine::AudioEngine(boost::intrusive_ptr<const CustomObject> obj) : obj_(ob
 }
 
 BEGIN_DEFINE_CALLABLE_NOBASE(AudioEngine)
+	DEFINE_FIELD(status, "string")
+		
+		std::ostringstream s;
+		{
+			threading::lock lck(g_wave_cache_mutex);
+			threading::lock lck2(g_files_loading_mutex);
+			s << "Cached sounds: " << g_wave_cache_lru.size() << "/" << g_wave_cache.size() << " entries, " << (g_wave_cache_size/(1024*1024)) << "/" << g_audio_cache_size_mb << "MB; files loaded: " << g_files_loading.size() << "\n";
+		}
+
+		{
+			threading::lock lck(g_playing_sounds_mutex);
+			s << g_playing_sounds.size() << " sounds playing\n";
+
+			for(auto p : g_playing_sounds) {
+				s << "  " << p->fname() << ": " << (p->src()->loaded() == false ? "loading" : (p->finished() ? "finished" : ""));
+				if(p->src()->looped()) {
+					s << " (looped)";
+				}
+				if(p->src()->data()) {
+					s << " " << p->src()->pos() << "/" << p->src()->data()->nsamples();
+				}
+
+				s << "\n";
+			}
+		}
+
+		return variant(s.str());
+
 	BEGIN_DEFINE_FN(sound, "(string, {volume: decimal|null, pan: [decimal,decimal]|null, loop: bool|null, loop_point: decimal|null, loop_from: decimal|null, fade_in: decimal|null, pos: decimal|null, filters: null|[builtin sound_effect_filter]}|null=null) ->builtin playing_sound")
 		const std::string& name = FN_ARG(0).as_string();
 		variant options;
@@ -1994,8 +2037,8 @@ END_DEFINE_CALLABLE(AudioEngine)
 //Outputs names of any wave files it fails to load.
 COMMAND_LINE_UTILITY(validate_waves)
 {
-	std::map<std::string,std::string> paths;
-	module::get_unique_filenames_under_dir("sounds/", &paths, module::MODULE_NO_PREFIX);
+	std::multimap<std::string,std::string> paths;
+	module::get_all_filenames_under_dir("sounds/", &paths, module::MODULE_NO_PREFIX);
 	for(auto p : paths) {
 		std::string fname = module::map_file(p.second);
 
