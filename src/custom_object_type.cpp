@@ -36,6 +36,7 @@
 #include "formatter.hpp"
 #include "formula.hpp"
 #include "formula_constants.hpp"
+#include "formula_profiler.hpp"
 #include "json_parser.hpp"
 #include "level.hpp"
 #include "load_level.hpp"
@@ -746,6 +747,10 @@ ConstCustomObjectTypePtr CustomObjectType::get(const std::string& id)
 	//when an object starts its variation.
 	result->loadVariations();
 
+	for(auto s : result->preloadObjects()) {
+		get(s);
+	}
+
 	return result;
 }
 
@@ -780,6 +785,10 @@ namespace
 CustomObjectTypePtr CustomObjectType::recreate(const std::string& id,
                                              const CustomObjectType* old_type)
 {
+	static std::set<std::string> stable_object_id;
+	auto p = stable_object_id.insert("LOAD_OBJECT " + id);
+	formula_profiler::Instrument instrument(p.first->c_str());
+
 	if(object_file_paths().empty()) {
 		load_file_paths();
 	}
@@ -1219,6 +1228,7 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 	is_strict_((!g_suppress_strict_mode && node["is_strict"].as_bool(custom_object_strict_mode)) || g_force_strict_mode),
 	is_shadow_(node["is_shadow"].as_bool(false)),
 	particle_system_desc_(node["particles"]),
+	preload_objects_(node["preload_objects"].as_list_string_optional()),
 	document_(nullptr)
 {
 	if(g_player_type_str.is_null() == false) {

@@ -41,6 +41,7 @@
 #include "formula_function.hpp"
 #include "formula_interface.hpp"
 #include "formula_object.hpp"
+#include "formula_profiler.hpp"
 #include "formula_tokenizer.hpp"
 #include "i18n.hpp"
 #include "lua_iface.hpp"
@@ -2233,7 +2234,9 @@ namespace {
 					}
 				}
 
+				formula_profiler::Instrument instrument("CMD_EVAL");
 				const variant right_cmd = right_->evaluate(*variables_);
+				formula_profiler::Instrument instrument2("CMD_EXEC");
 				ob.executeCommand(right_cmd);
 			}
 

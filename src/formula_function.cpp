@@ -734,10 +734,10 @@ namespace game_logic
 			if(type->is_function(&fn_args, &return_type, &min_args)) {
 				const int nargs = static_cast<int>(args().size() - 1);
 				min_args = std::max<int>(0, min_args - nargs);
-				if(static_cast<int>(fn_args.size()) <= nargs) {
+				if(nargs <= static_cast<int>(fn_args.size())) {
 					fn_args.erase(fn_args.begin(), fn_args.begin() + nargs);
 				} else {
-					ASSERT_LOG(false, "bind called with too many arguments");
+					ASSERT_LOG(false, "bind called with too many arguments: " << fn_args.size() << " vs " << nargs);
 				}
 
 				return variant_type::get_function_type(fn_args, return_type, min_args);

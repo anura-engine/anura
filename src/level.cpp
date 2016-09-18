@@ -2521,6 +2521,8 @@ void Level::do_processing()
 		active_chars = chars_immune_from_time_freeze_;
 	}
 
+	{
+	formula_profiler::Instrument instrumentation("CHARS_PROCESS");
 	while(!active_chars.empty()) {
 		new_chars_.clear();
 		for(const EntityPtr& c : active_chars) {
@@ -2539,6 +2541,7 @@ void Level::do_processing()
 
 		active_chars = new_chars_;
 		active_chars_.insert(active_chars_.end(), new_chars_.begin(), new_chars_.end());
+	}
 	}
 
 	if(water_) {

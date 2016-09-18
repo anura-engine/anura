@@ -1649,18 +1649,21 @@ void CustomObject::process(Level& lvl)
 
 	std::vector<variant> scheduled_commands = popScheduledCommands();
 	for(const variant& cmd : scheduled_commands) {
+		formula_profiler::Instrument anim_instrument("SCHEDULED_CMD");
 		executeCommand(cmd);
 	}
 
 	std::vector<std::pair<variant,variant> > follow_ons;
 
 	if(!animated_movement_.empty()) {
+		formula_profiler::Instrument anim_instrument("ANIMATED_MOVEMENT");
 		std::vector<std::shared_ptr<AnimatedMovement> > movement = animated_movement_, removal;
 		for(int i = 0; i != movement.size(); ++i) {
 			auto& move = movement[i];
 
 			if(move->pos >= move->getAnimationFrames()) {
 				if(move->on_complete.is_null() == false) {
+					formula_profiler::Instrument anim_instrument("COMPLETE_ANIMATION");
 					executeCommandOrFn(move->on_complete);
 				}
 
