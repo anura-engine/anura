@@ -64,7 +64,7 @@
 #include "framed_gui_element.hpp"
 #include "graphical_font.hpp"
 #include "gui_section.hpp"
-#include "hex_tile.hpp"
+#include "hex.hpp"
 #include "i18n.hpp"
 #include "input.hpp"
 #include "joystick.hpp"
@@ -1074,9 +1074,7 @@ int main(int argcount, char* argvec[])
 		FramedGuiElement::init(gui_node);
 
 		try {
-			hex::loader(json::parse_from_file("data/hex_tiles.cfg"), json::parse_from_file("data/hex_terrain_rules.cfg"));
-		} catch(json::ParseError& pe) {
-			LOG_INFO(pe.message);
+			hex::load("data/");
 		} catch(KRE::ImageLoadError& ile) {
 			ASSERT_LOG(false, ile.what());
 		}

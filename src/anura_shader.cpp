@@ -286,6 +286,7 @@ namespace graphics
 		  name_(o.name_),
 		  initialised_(false)
 	{
+		ASSERT_LOG(o.shader_ != nullptr, "No shader to copy.");
 		shader_ = o.shader_->clone();
 		renderable_.clearAttributes();
 		draw_formulas_ = o.draw_formulas_;
@@ -410,8 +411,51 @@ namespace graphics
 			shader_->setUniformValue(u_anura_point_size_, point_size_);
 		}
 
+		int binding_point = 2;
+
 		for(auto& tex : textures_) {
 			tex->texture()->bind(tex->getBindingPoint());
+			if(tex->getBindingPoint() >= binding_point) {
+				binding_point = tex->getBindingPoint() + 1;
+			}
+		}
+
+		std::vector<KRE::Texture*> seen_textures;
+
+		for(const ObjectPropertyUniform& u : object_uniforms_) {
+			variant v = parent_->queryValueBySlot(u.slot);
+
+			if(v.is_callable()) {
+				auto p = v.try_convert<TextureObject>();
+				if(p) {
+					int point = 0;
+					for(auto t : textures_) {
+						if(p->texture() == t->texture()) {
+							point = t->getBindingPoint();
+							break;
+						}
+					}
+
+					for(int n = 0; n < static_cast<int>(seen_textures.size()); ++n) {
+						if(seen_textures[n] == p->texture().get()) {
+							point = binding_point - seen_textures.size() + n;
+							break;
+						}
+					}
+
+					if(point == 0) {
+						point = binding_point++;
+						seen_textures.push_back(p->texture().get());
+						p->texture()->bind(point);
+					}
+
+					shader_->setUniformValue(u.uniform, point);
+
+					continue;
+				}
+			}
+
+			shader_->setUniformFromVariant(u.uniform, v);
 		}
 		
 		for(auto& u : uniforms_to_set_) {
@@ -684,6 +728,27 @@ namespace graphics
 		for(auto & cf : create_formulas_) {
 			e->executeCommand(cf->execute(*e));
 		}
+
+		object_uniforms_.clear();
+
+		if(parent != nullptr) {
+			static const std::string Prefix = "u_property_";
+			auto v = shader_->getAllUniforms();
+			for(const std::string& s : v) {
+				if(s.size() > Prefix.size() && std::equal(Prefix.begin(), Prefix.end(), s.begin())) {
+					std::string prop_name(s.begin() + Prefix.size(), s.end());
+					const int slot = parent->getValueSlot(prop_name);
+					ASSERT_LOG(slot >= 0, "Unknown shader property: " << s << " for object " << parent->getDebugDescription());
+
+					ObjectPropertyUniform u;
+					u.name = prop_name;
+					u.slot = slot;
+					u.uniform = shader_->getUniformOrDie(s);
+					object_uniforms_.push_back(u);
+				}
+			}
+		}
+
 		initialised_ = true;
 	}
 

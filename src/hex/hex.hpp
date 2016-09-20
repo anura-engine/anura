@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2014-2015 by Kristina Simpson <sweet.kristas@gmail.com>
+	Copyright (C) 2013-2016 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -23,36 +23,8 @@
 
 #pragma once
 
-#include <memory>
-#include <vector>
-
-#include "geometry.hpp"
-#include "formula_callable.hpp"
-#include "formula_callable_definition.hpp"
-
-namespace hex
-{
-	enum direction { NORTH, NORTH_EAST, SOUTH_EAST, SOUTH, SOUTH_WEST, NORTH_WEST };
-
-	namespace logical
-	{
-		class Tile;
-		typedef boost::intrusive_ptr<Tile> TilePtr;
-		typedef boost::intrusive_ptr<const Tile> ConstTilePtr;
-		class LogicalMap;
-		typedef boost::intrusive_ptr<LogicalMap> LogicalMapPtr;
-	}
-
-	struct MoveCost
-	{
-		MoveCost(const point& p, float c) : loc(p), path_cost(c) {}
-		point loc;
-		float path_cost;
-	};
-	// XXX result_list might be better served as a std::set
-	typedef std::vector<MoveCost> result_list;
-
-	struct graph_t;
-	typedef std::shared_ptr<graph_t> HexGraphPtr;
-
-}
+#include "hex_fwd.hpp"
+#include "hex_loader.hpp"
+#include "hex_map.hpp"
+#include "hex_mask.hpp"
+#include "hex_renderable.hpp"

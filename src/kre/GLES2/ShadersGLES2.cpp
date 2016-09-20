@@ -614,6 +614,7 @@ namespace KRE
 			  u_palette_map_(-1),
 			  u_mix_palettes_(-1),
 			  u_mix_(-1),
+			  u_discard_(-1),
 			  enabled_attribs_()
 		{
 			init(name, vs, fs);
@@ -648,6 +649,7 @@ namespace KRE
 			  u_palette_map_(-1),
 			  u_mix_palettes_(-1),
 			  u_mix_(-1),
+			  u_discard_(-1),
 			  enabled_attribs_()
 		{
 			std::vector<Shader> shader_programs;
@@ -735,6 +737,16 @@ namespace KRE
 				return ShaderProgram::INVALID_UNIFORM;
 			}
 			return it->second.location;
+		}
+
+		std::vector<std::string> ShaderProgram::getAllUniforms() const
+		{
+			std::vector<std::string> res;
+			for(auto p : uniforms_) {
+				res.push_back(p.first);
+			}
+
+			return res;
 		}
 
 		bool ShaderProgram::link(const std::vector<Shader>& shader_programs)
@@ -1213,6 +1225,7 @@ namespace KRE
 			u_palette_map_ = getUniform("u_palette_map");
 			u_mix_palettes_ = getUniform("u_mix_palettes");
 			u_mix_ = getUniform("u_mix");
+			u_discard_ = getUniform("u_discard");
 		}
 
 		ShaderProgramPtr ShaderProgram::factory(const std::string& name)

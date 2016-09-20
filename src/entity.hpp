@@ -201,7 +201,7 @@ public:
 	virtual void boardVehicle() {}
 	virtual void unboardVehicle() {}
 
-	virtual void setSoundVolume(const int volume) = 0;
+	virtual void setSoundVolume(float volume) = 0;
 	virtual int weight() const { return 1; }
 	
 	virtual int mass() const = 0;
@@ -327,6 +327,10 @@ public:
 
 	decimal getAnchorX() const;
 	decimal getAnchorY() const;
+
+	//Get the slot for a named attribute so we can quickly look it
+	//up using queryValueBySlot()
+	virtual int getValueSlot(const std::string& key) const = 0;
 
 protected:
 	virtual ConstSolidInfoPtr calculateSolid() const = 0;

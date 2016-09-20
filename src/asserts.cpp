@@ -45,7 +45,7 @@
 
 namespace 
 {
-	PREF_BOOL(error_message_box, true, "Show a message dialog when an error occurs");
+	PREF_BOOL_PERSISTENT(error_message_box, true, "Show a message dialog when an error occurs");
 
 	std::function<void()> g_edit_and_continue_fn;
 }

@@ -207,8 +207,7 @@ public:
 
 	virtual bool serializable() const override;
 
-	void set_blur(const BlurInfo* blur);
-	void setSoundVolume(const int volume) override;
+	void setSoundVolume(float volume) override;
 	void setZSubOrder(const int zsub_order) override {zsub_order_ = zsub_order;}
 	
 	bool executeCommand(const variant& var) override;
@@ -286,6 +285,7 @@ protected:
 	void staticProcess(Level& lvl);
 
 	virtual void control(const Level& lvl) override;
+	int getValueSlot(const std::string& key) const override;
 	variant getValue(const std::string& key) const override;
 	variant getValueBySlot(int slot) const override;
 	void setValue(const std::string& key, const variant& value) override;
@@ -414,7 +414,7 @@ private:
 
 	bool use_absolute_screen_coordinates_;
 	
-	int sound_volume_;	//see sound.cpp; valid values are 0-128, note that this affects all sounds spawned by this object
+	float sound_volume_;
 
 	game_logic::ConstFormulaPtr next_animation_formula_;
 
@@ -474,7 +474,7 @@ private:
 
 	EntityPtr driver_;
 
-	std::shared_ptr<BlurInfo> blur_;
+	std::vector<boost::intrusive_ptr<BlurObject> > blur_objects_;
 
 	//set if we should fall through platforms. This is decremented automatically
 	//at the end of every cycle.

@@ -33,8 +33,10 @@
 #include "custom_object_type.hpp"
 #include "filesystem.hpp"
 #include "ffl_dom.hpp"
+#include "formatter.hpp"
 #include "formula.hpp"
 #include "formula_constants.hpp"
+#include "formula_profiler.hpp"
 #include "json_parser.hpp"
 #include "level.hpp"
 #include "load_level.hpp"
@@ -745,6 +747,10 @@ ConstCustomObjectTypePtr CustomObjectType::get(const std::string& id)
 	//when an object starts its variation.
 	result->loadVariations();
 
+	for(auto s : result->preloadObjects()) {
+		get(s);
+	}
+
 	return result;
 }
 
@@ -779,6 +785,10 @@ namespace
 CustomObjectTypePtr CustomObjectType::recreate(const std::string& id,
                                              const CustomObjectType* old_type)
 {
+	static std::set<std::string> stable_object_id;
+	auto p = stable_object_id.insert("LOAD_OBJECT " + id);
+	formula_profiler::Instrument instrument(p.first->c_str());
+
 	if(object_file_paths().empty()) {
 		load_file_paths();
 	}
@@ -1218,6 +1228,7 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 	is_strict_((!g_suppress_strict_mode && node["is_strict"].as_bool(custom_object_strict_mode)) || g_force_strict_mode),
 	is_shadow_(node["is_shadow"].as_bool(false)),
 	particle_system_desc_(node["particles"]),
+	preload_objects_(node["preload_objects"].as_list_string_optional()),
 	document_(nullptr)
 {
 	if(g_player_type_str.is_null() == false) {
@@ -1622,9 +1633,33 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 		if(node["shader"].is_string()) {
 			shader_ = graphics::AnuraShaderPtr(new graphics::AnuraShader(node["shader"].as_string()));
 		} else {
-			KRE::ShaderProgram::loadFromVariant(node["shader"]);
-			std::string shader_name = node["shader"]["name"].as_string();
-			ASSERT_LOG(!shader_name.empty(), "No name for shader found.");
+			variant shader_info = node["shader"];
+			if(shader_info.has_key("fragment")) {
+				if(shader_info.has_key("name") == false) {
+					static int shader_num = 1;
+					shader_info = shader_info.add_attr(variant("name"), variant(formatter() << "shader" << shader_num));
+					++shader_num;
+				}
+
+				if(shader_info.has_key("vertex") == false) {
+					static variant DefaultVertexShader(
+				        "uniform mat4 u_anura_mvp_matrix;\n"
+   		 			    "attribute vec4 a_anura_vertex;\n"
+  						"attribute vec2 a_anura_texcoord;\n"
+						"varying vec2 v_texcoord;\n"
+						"void main()\n"
+						"{\n"
+							"v_texcoord = a_anura_texcoord;\n"
+							"gl_Position = u_anura_mvp_matrix * a_anura_vertex;\n"
+						"}\n"
+					);
+
+					shader_info = shader_info.add_attr(variant("vertex"), DefaultVertexShader);
+				}
+			}
+			
+			KRE::ShaderProgram::loadFromVariant(shader_info);
+			std::string shader_name = shader_info["name"].as_string();
 			shader_ = graphics::AnuraShaderPtr(new graphics::AnuraShader(shader_name));
 		}
 		//LOG_DEBUG("Added shader '" << shader_->getName() << "' for CustomObjectType '" << id_ << "'");

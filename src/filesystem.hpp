@@ -49,6 +49,10 @@ namespace sys
 										file_path_map* file_map,
 										const std::string& prefix);
 
+	void get_all_filenames_under_dir(const std::string& dir,
+										std::multimap<std::string, std::string>* file_map,
+										const std::string& prefix);
+
 	//creates a dir if it doesn't exist and returns the path
 	std::string get_dir(const std::string& dir);
 	std::string get_user_data_dir();

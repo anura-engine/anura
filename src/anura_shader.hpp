@@ -124,6 +124,14 @@ namespace graphics
 		int u_anura_color_;
 		int u_anura_point_size_;
 
+		struct ObjectPropertyUniform {
+			std::string name;
+			int slot;
+			int uniform;
+		};
+
+		std::vector<ObjectPropertyUniform> object_uniforms_;
+
 		bool discard_;
 		int tex_map_;
 		glm::mat4 mvp_matrix_;

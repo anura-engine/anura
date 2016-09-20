@@ -966,11 +966,16 @@ void Frame::drawCustom(graphics::AnuraShaderPtr shader, int x, int y, const floa
 	std::vector<KRE::vertex_texcoord> queue;
 	KRE::Blittable blit;
 
-	blit.setTexture(blit_target_.getTexture());
+	float center_x = w/2.0;
+	float center_y = h/2.0;
+
+	blit_target_.setCentre(KRE::Blittable::Centre::MIDDLE);
+	blit.setPosition(x + center_x, y + center_y);
 	blit.setRotation(rotation, z_axis);
+	blit.setTexture(blit_target_.getTexture());
 
 	for(int n = 0; n < nelements; ++n) {
-		queue.emplace_back(glm::vec2(x + w*xy[0], y + h*xy[1]), glm::vec2(r[0] + (r[2] - r[0]) * uv[0], r[1] + (r[3] - r[1]) * uv[1]));
+		queue.emplace_back(glm::vec2(-center_x + w*xy[0], -center_y + h*xy[1]), glm::vec2(r[0] + (r[2] - r[0]) * uv[0], r[1] + (r[3] - r[1]) * uv[1]));
 		xy += 2;
 		uv += 2;
 	}
@@ -980,7 +985,6 @@ void Frame::drawCustom(graphics::AnuraShaderPtr shader, int x, int y, const floa
 	if(shader) {
 		shader->setDrawArea(rect(x, y, w, h));
 		shader->setSpriteArea(rectf::from_coordinates(r[0], r[1], r[2], r[3]));
-		shader->setCycle(cycle);
 		blit.setShader(shader->getShader());
 	}
 

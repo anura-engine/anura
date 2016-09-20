@@ -1814,10 +1814,117 @@ COMMAND_LINE_UTILITY(format_json)
 
 	ASSERT_LOG(!in_file.empty(), "No input file given.");
 	ASSERT_LOG(!out_file.empty(), "No output file given.");
-	variant v = json::parse_from_file(in_file);
+	variant v = json::parse_from_file_or_die(in_file);
 	sys::write_file(out_file, v.write_json());
 }
 
+
+namespace 
+{
+	void process_terrain_folder(variant_builder& res, 
+		const std::vector<std::string>& names, 
+		const std::string& file_name, 
+		const std::string& base_folder, 
+		bool keep_borders, 
+		bool add_file_name=false)
+	{
+		LOG_INFO("Process base folder: " << base_folder);
+		std::vector<std::string> filenames;
+		std::vector<std::string> base_filenames;
+
+		std::vector<std::string> base_folder_files;
+		std::vector<std::string> base_folder_dirs;
+		sys::get_files_in_dir(base_folder, &base_folder_files, &base_folder_dirs);
+		if(add_file_name) {
+			for(const auto& dir : base_folder_dirs) {
+				process_terrain_folder(res, names, file_name.empty() ? dir : file_name + '-' + dir, base_folder + '/' + dir, keep_borders, add_file_name);
+			}
+		}
+
+		using namespace boost::filesystem;
+
+		if(!names.empty()) {
+			for(const auto& f : base_folder_files) {
+				for(const auto& base_name : names) {
+					if(f.size() >= base_name.size() && f.substr(0, base_name.size()) == base_name) {
+						path p(base_folder);
+						p /= f;
+						filenames.emplace_back(p.generic_string());
+						base_filenames.emplace_back(f);
+					}
+				}
+			}
+		} else {
+			// use all files in directory.
+			for(const auto& f : base_folder_files) {
+				path p(base_folder);
+				p /= f;
+				filenames.emplace_back(p.generic_string());
+				base_filenames.emplace_back(f);
+			}
+		}
+
+		if(base_filenames.empty()) {
+			return;
+		}
+
+		using namespace KRE;
+
+		std::vector<rect> outr;
+		std::vector<std::array<int, 4>> borders;	
+		auto s = Surface::packImages(filenames, &outr, keep_borders ? nullptr : &borders);
+		ASSERT_LOG(s != nullptr, "Couldn't fit all the images into a single spritesheet.");
+		s->savePng(file_name + ".png");
+
+		auto rect_it = outr.cbegin();
+		auto border_it = borders.cbegin();
+		for(const auto& f : base_filenames) {
+			variant_builder entry;
+			entry.add("rect", rect_it->write());
+			if(!keep_borders && ((*border_it)[0] != 0 || (*border_it)[1] != 0 || (*border_it)[2] != 0 || (*border_it)[3] != 0)) {
+				for(int n = 0; n != 4; ++n) {
+					entry.add("border", (*border_it)[n]);
+				}
+			}
+			if(add_file_name) {
+				entry.add("image", file_name + ".png");
+			}
+			if(keep_borders) {
+				const int yp = rect_it->y1()/rect_it->h();
+				const int xp = rect_it->x1()/rect_it->w();
+				char yc = '0';
+				char xc = '0';
+				if(yp < 10) {
+					yc = yp + '0';
+				} else {
+					yc = yp + 'A' - 10;
+				}
+				if(xp < 10) {
+					xc = xp + '0';
+				} else {
+					xc = xp + 'A' - 10;
+				}
+				std::stringstream sheet_pos;
+				sheet_pos << yc << xc;
+				entry.add("sheet_pos", sheet_pos.str());
+			}
+
+			std::string output_f = file_name.empty() ? f : file_name + '-' + f;
+			auto pos = output_f.rfind('.');
+			if(pos != std::string::npos) {
+				res.add(output_f.substr(0, pos), entry.build());
+			} else {
+				res.add(output_f, entry.build());
+			}
+
+			++rect_it;
+			if(!keep_borders) {
+				++border_it;
+			}
+		}
+		LOG_INFO("Finished: " << base_folder);
+	}
+}
 
 COMMAND_LINE_UTILITY(generate_terrain_spritesheet)
 {
@@ -1827,6 +1934,7 @@ COMMAND_LINE_UTILITY(generate_terrain_spritesheet)
 	std::string base_folder;
 
 	bool keep_borders = false;
+	bool directory_process = false;
 
 	for(auto it = args.begin(); it != args.end(); ++it) {
 		if(*it == "--base") {
@@ -1835,6 +1943,8 @@ COMMAND_LINE_UTILITY(generate_terrain_spritesheet)
 			base_folder = *it;
 		} else if(*it == "--keep-borders") {
 			keep_borders = true;
+		} else if(*it == "-d") {
+			directory_process = true;
 		} else {
 			names.emplace_back(*it);
 		}
@@ -1843,88 +1953,16 @@ COMMAND_LINE_UTILITY(generate_terrain_spritesheet)
 	ASSERT_LOG(!base_folder.empty(), "No base folder was given. Use --base <folder> to specify.");	
 	LOG_DEBUG("Base Folder: " << base_folder);
 
-	std::vector<std::string> filenames;
-	std::vector<std::string> base_filenames;
-
-	std::vector<std::string> base_folder_files;
-	sys::get_files_in_dir(base_folder, &base_folder_files, nullptr);
-
-	using namespace boost::filesystem;
-
-	if(!names.empty()) {
-		for(const auto& f : base_folder_files) {
-			for(const auto& base_name : names) {
-				if(f.size() >= base_name.size() && f.substr(0, base_name.size()) == base_name) {
-					path p(base_folder);
-					p /= f;
-					filenames.emplace_back(p.generic_string());
-					base_filenames.emplace_back(f);
-				}
-			}
-		}
-	} else {
-		// use all files in directory.
-		for(const auto& f : base_folder_files) {
-			path p(base_folder);
-			p /= f;
-			filenames.emplace_back(p.generic_string());
-			base_filenames.emplace_back(f);
-		}
-	}
-
-	using namespace KRE;
-
-	std::vector<rect> outr;
-	std::vector<std::array<int, 4>> borders;	
-	auto s = Surface::packImages(filenames, &outr, keep_borders ? nullptr : &borders);
-	ASSERT_LOG(s != nullptr, "Couldn't fit all the images into a single spritesheet.");
-	s->savePng("temp.png");
-
 	variant_builder res;
-	auto rect_it = outr.cbegin();
-	auto border_it = borders.cbegin();
-	for(const auto& f : base_filenames) {
-		variant_builder entry;
-		entry.add("rect", rect_it->write());
-		if(!keep_borders && ((*border_it)[0] != 0 || (*border_it)[1] != 0 || (*border_it)[2] != 0 || (*border_it)[3] != 0)) {
-			for(int n = 0; n != 4; ++n) {
-				entry.add("border", (*border_it)[n]);
-			}
-		}
-		if(keep_borders) {
-			const int yp = rect_it->y1()/rect_it->h();
-			const int xp = rect_it->x1()/rect_it->w();
-			char yc = '0';
-			char xc = '0';
-			if(yp < 10) {
-				yc = yp + '0';
-			} else {
-				yc = yp + 'A' - 10;
-			}
-			if(xp < 10) {
-				xc = xp + '0';
-			} else {
-				xc = xp + 'A' - 10;
-			}
-			std::stringstream sheet_pos;
-			sheet_pos << yc << xc;
-			entry.add("sheet_pos", sheet_pos.str());
-		}
+	if(directory_process) {
+		ASSERT_LOG(sys::is_directory(base_folder), "base folder wasn't a directory.");
 
-		auto pos = f.rfind('.');
-		if(pos != std::string::npos) {
-			res.add(f.substr(0, pos), entry.build());
-		} else {
-			res.add(f, entry.build());
-		}
-
-		++rect_it;
-		if(!keep_borders) {
-			++border_it;
-		}
+		process_terrain_folder(res, names, "", base_folder, keep_borders, true);
+	} else {
+		process_terrain_folder(res, names, "temp", base_folder, keep_borders);
 	}
 	auto v = res.build();
 	std::stringstream ss;
 	v.write_json_pretty(ss, "\t");
-	sys::write_file("temp.json", ss.str());
+	sys::write_file("terrain-file-data.json", ss.str());
 }

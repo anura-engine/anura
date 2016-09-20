@@ -507,6 +507,8 @@ namespace
 	private:
 		virtual void execute(Level& lvl, Entity& ob) const override;
 		variant request_;
+
+		mutable variant deferred_pipeline_;
 	};
 
 	class tbs_blocking_request : public game_logic::FormulaCallable
@@ -568,7 +570,13 @@ namespace
 		ASSERT_LOG(req, "Illegal object given to tbs blocking process");
 		req->process();
 		if(!req->got_response()) {
+			if(deferred_pipeline_.is_null()) {
+				deferred_pipeline_ = deferCurrentCommandSequence();
+			}
+
 			ob.addScheduledCommand(1, variant(this));
+		} else {
+			ob.executeCommand(deferred_pipeline_);
 		}
 	}
 
@@ -1067,7 +1075,7 @@ namespace
 
 	class sound_volume_command : public EntityCommandCallable {
 	public:
-		explicit sound_volume_command(const int volume)
+		explicit sound_volume_command(float volume)
 		: volume_(volume)
 		{}
 		virtual void execute(Level& lvl,Entity& ob) const {
@@ -1076,16 +1084,16 @@ namespace
 		}
 	private:
 		std::string name_;
-		int volume_;
+		float volume_;
 	};
 
-	FUNCTION_DEF(sound_volume, 1, 1, "sound_volume(int volume): sets the volume of sound effects")
+	FUNCTION_DEF(sound_volume, 1, 1, "sound_volume(decimal volume): sets the volume of sound effects")
 		sound_volume_command* cmd = (new sound_volume_command(
-										 args()[0]->evaluate(variables).as_int()));
+										 args()[0]->evaluate(variables).as_decimal().as_float()));
 		cmd->setExpression(this);
 		return variant(cmd);
 	FUNCTION_ARGS_DEF
-		ARG_TYPE("int")
+		ARG_TYPE("decimal")
 	RETURN_TYPE("commands")
 	END_FUNCTION_DEF(sound_volume)
 
@@ -3423,37 +3431,32 @@ RETURN_TYPE("bool")
 	RETURN_TYPE("bool")
 	END_FUNCTION_DEF(collides_with_Level)
 
-	class blur_command : public CustomObjectCommandCallable {
-		int alpha_, fade_, granularity_;
-	public:
-		blur_command(int alpha, int fade, int granularity)
-		  : alpha_(alpha), fade_(fade), granularity_(granularity)
-		{}
-
-		virtual void execute(Level& lvl, CustomObject& ob) const {
-			if(alpha_ == 0) {
-				ob.set_blur(nullptr);
-				return;
-			}
-
-			BlurInfo blur(alpha_/1000.0f, fade_/1000.0f, granularity_);
-			ob.set_blur(&blur);
+	FUNCTION_DEF(blur_object, 2, 2, "blur_object(properties, params)")
+		Formula::failIfStaticContext();
+		std::map<variant,variant> props = args()[0]->evaluate(variables).as_map();
+		std::map<std::string,variant> properties, end_properties;
+		for(auto p : props) {
+			properties[p.first.as_string()] = p.second;
 		}
-	};
 
-	FUNCTION_DEF(blur, 0, 3, "blur(int alpha=0, int fade=10, int granularity=1): creates a motion blur for the current object.")
-		blur_command* cmd = (new blur_command(
-		  args().size() > 0 ? args()[0]->evaluate(variables).as_int() : 0,
-		  args().size() > 1 ? args()[1]->evaluate(variables).as_int() : 10,
-		  args().size() > 2 ? args()[2]->evaluate(variables).as_int() : 1));
-		cmd->setExpression(this);
-		return variant(cmd);
+		std::map<variant,variant> options = args()[1]->evaluate(variables).as_map();
+
+		int duration = options[variant("duration")].as_int();
+		variant easing = options[variant("easing")];
+		variant anim = options[variant("animate")];
+		if(anim.is_map()) {
+			for(auto p : anim.as_map()) {
+				end_properties[p.first.as_string()] = p.second;
+			}
+		}
+
+		return variant(new BlurObject(properties, end_properties, duration, easing));
+
 	FUNCTION_ARGS_DEF
-		ARG_TYPE("int")
-		ARG_TYPE("int")
-		ARG_TYPE("int")
-	RETURN_TYPE("commands")
-	END_FUNCTION_DEF(blur)
+		ARG_TYPE("{string -> any}")
+		ARG_TYPE("{duration: int, easing: null|function(decimal)->decimal, animate: null|{string -> any} }")
+	RETURN_TYPE("builtin BlurObject")
+	END_FUNCTION_DEF(blur_object)
 
 	class text_command : public CustomObjectCommandCallable {
 	public:

@@ -60,8 +60,8 @@
 #include "formula_function_registry.hpp"
 #include "formula_object.hpp"
 #include "formula_profiler.hpp"
-#include "hex_logical_tiles.hpp"
-#include "hex_tile.hpp"
+#include "hex.hpp"
+#include "hex_helper.hpp"
 #include "lua_iface.hpp"
 #include "md5.hpp"
 #include "module.hpp"
@@ -604,7 +604,8 @@ namespace game_logic
 		FUNCTION_DEF(query_cache, 3, 3, "query_cache(ffl_cache, key, expr): ")
 			const variant key = args()[1]->evaluate(variables);
 
-			const ffl_cache* cache = args()[0]->evaluate(variables).try_convert<ffl_cache>();
+			variant cache_variant = args()[0]->evaluate(variables);
+			const ffl_cache* cache = cache_variant.try_convert<ffl_cache>();
 			ASSERT_LOG(cache != nullptr, "ILLEGAL CACHE ARGUMENT TO query_cache");
 	
 			const variant* result = cache->get(key);
@@ -733,10 +734,10 @@ namespace game_logic
 			if(type->is_function(&fn_args, &return_type, &min_args)) {
 				const int nargs = static_cast<int>(args().size() - 1);
 				min_args = std::max<int>(0, min_args - nargs);
-				if(static_cast<int>(fn_args.size()) <= nargs) {
+				if(nargs <= static_cast<int>(fn_args.size())) {
 					fn_args.erase(fn_args.begin(), fn_args.begin() + nargs);
 				} else {
-					ASSERT_LOG(false, "bind called with too many arguments");
+					ASSERT_LOG(false, "bind called with too many arguments: " << fn_args.size() << " vs " << nargs);
 				}
 
 				return variant_type::get_function_type(fn_args, return_type, min_args);
@@ -1314,7 +1315,16 @@ namespace game_logic
 		END_FUNCTION_DEF(wave)
 
 		FUNCTION_DEF(decimal, 1, 1, "decimal(value) -> decimal: converts the value to a decimal")
-			return variant(args()[0]->evaluate(variables).as_decimal());
+			variant v = args()[0]->evaluate(variables);
+			if(v.is_string()) {
+				try {
+					return variant(boost::lexical_cast<double>(v.as_string()));
+				} catch(...) {
+					ASSERT_LOG(false, "Could not parse string as integer: " << v.write_json());
+				}
+			}
+
+			return variant(v.as_decimal());
 		FUNCTION_TYPE_DEF
 			return variant_type::get_type(variant::VARIANT_TYPE_DECIMAL);
 		END_FUNCTION_DEF(decimal)
@@ -1394,7 +1404,7 @@ namespace game_logic
 			return variant_type::get_type(variant::VARIANT_TYPE_DECIMAL);
 		END_FUNCTION_DEF(atan)
 
-		FUNCTION_DEF(atan2, 2, 2, "atan2(x): Standard two-param arc tangent function (to allow determining the quadrant of the resulting angle by passing in the sign value of the operands).")
+		FUNCTION_DEF(atan2, 2, 2, "atan2(x,y): Standard two-param arc tangent function (to allow determining the quadrant of the resulting angle by passing in the sign value of the operands).")
 			const float ratio1 = args()[0]->evaluate(variables).as_float();
 			const float ratio2 = args()[1]->evaluate(variables).as_float();
 			return variant(atan2(ratio1, ratio2) * radians_to_degrees);
@@ -2014,30 +2024,30 @@ FUNCTION_DEF_IMPL
 			return variant();
 		END_FUNCTION_DEF(map_controls)*/
 
-		FUNCTION_DEF(get_hex_editor_info, 0, 0, "get_hex_editor_info() ->[builtin hex_editor_info]")
-			auto ei = hex::HexEditorInfo::getHexEditorInfo();
+		FUNCTION_DEF(get_hex_editor_info, 0, 0, "get_hex_editor_info() ->[builtin hex_tile]")
+			auto ei = hex::get_editor_info();
 			return variant(&ei);
 		FUNCTION_ARGS_DEF
-			RETURN_TYPE("[builtin hex_editor_info]")
+			RETURN_TYPE("[builtin hex_tile]")
 		END_FUNCTION_DEF(get_hex_editor_info)
 
-		FUNCTION_DEF(get_hex_overlay_info, 0, 0, "get_hex_overlay_info() ->[builtin overlay]")
-			auto oi = hex::Overlay::getOverlayInfo();
-			return variant(&oi);
-		FUNCTION_ARGS_DEF
-			RETURN_TYPE("[builtin overlay]")
-		END_FUNCTION_DEF(get_hex_overlay_info)
+		FUNCTION_DEF(tile_pixel_pos_from_loc, 1, 2, "tile_pixel_pos_from_loc(loc) -> [x,y]")
+			point p(args()[0]->evaluate(variables));
+			auto tp = hex::get_pixel_pos_from_tile_pos_evenq(p, hex::g_hex_tile_size);
+			return tp.write();
+			FUNCTION_ARGS_DEF
+				ARG_TYPE("[int, int]")
+			RETURN_TYPE("[int, int]")
+		END_FUNCTION_DEF(tile_pixel_pos_from_loc)
 
-		FUNCTION_DEF(hex_logical_map, 1, 1, "hex_logical_map(map) ->builtin logical_map")
-			const variant m = args()[0]->evaluate(variables);
-
-			return variant(new hex::logical::LogicalMap(m));
-			
+		FUNCTION_DEF(tile_loc_from_pixel_pos, 1, 2, "tile_pixel_pos_from_loc(loc) -> [x,y]")
+			point p(args()[0]->evaluate(variables));
+			auto tp = hex::get_tile_pos_from_pixel_pos_evenq(p, hex::g_hex_tile_size);
+			return tp.write();
 		FUNCTION_ARGS_DEF
-			ARG_TYPE("map")
-			RETURN_TYPE("builtin logical_map")
-		END_FUNCTION_DEF(hex_logical_map)
-	
+			ARG_TYPE("[int, int]")
+			RETURN_TYPE("[int, int]")
+		END_FUNCTION_DEF(tile_loc_from_pixel_pos)				
 
 		FUNCTION_DEF(directed_graph, 2, 2, "directed_graph(list_of_vertexes, adjacent_expression) -> a directed graph")
 			variant vertices = args()[0]->evaluate(variables);
@@ -5426,6 +5436,85 @@ FUNCTION_TYPE_DEF
 	}
 	return variant_type::get_list(args()[0]->queryVariantType());
 END_FUNCTION_DEF(rotate_rect)
+
+namespace {
+float curve_unit_interval(float p0, float p1, float m0, float m1, float t)
+{
+    return (2.0*t*t*t - 3.0*t*t + 1.0)*p0 + (t*t*t - 2.0*t*t + t)*m0 + (-2.0*t*t*t + 3.0*t*t)*p1 + (t*t*t - t*t)*m1;
+}
+
+}
+
+FUNCTION_DEF(points_along_curve, 1, 2, "points_along_curve([[decimal,decimal]], int) -> [[decimal,decimal]]")
+	std::vector<variant> v = args()[0]->evaluate(variables).as_list();
+	std::vector<float> points;
+	std::vector<float> tangents;
+	points.reserve(v.size()*2);
+	fprintf(stderr, "TANGENTS: ");
+	for(const variant& p : v) {
+		points.push_back(p[0].as_float());
+		points.push_back(p[1].as_float());
+
+		if(p.num_elements() > 2) {
+			tangents.resize(points.size()/2);
+			tangents.back() = p[2].as_float();
+			fprintf(stderr, "%f ", p[2].as_float());
+		}
+	}
+
+	fprintf(stderr, "\n");
+
+	std::vector<variant> result;
+	if(points.size() < 4) {
+		return variant(&result);
+	}
+
+	float min_point = points[0];
+	float max_point = points[points.size()-2];
+
+	int nout = 100;
+	if(args().size() > 1) {
+		nout = args()[1]->evaluate(variables).as_int(nout);
+	}
+
+	result.reserve(nout);
+	
+	float* p = &points[0];
+
+    for(int n = 0; n != nout; ++n) {
+        float x = min_point + (float(n)/float(nout-1)) * (max_point-min_point);
+        while(x > p[2]) {
+            p += 2;
+        }
+
+		float x_dist = p[2] - p[0];
+        float t = (x - p[0])/x_dist;
+
+        float m0 = 0.0;
+        float m1 = 0.0;
+
+		const int tangent_index = (p - &points[0])/2;
+
+		if(tangent_index < tangents.size()) {
+			m0 = tangents[tangent_index];
+        }
+
+		if(tangent_index+1 < tangents.size()) {
+			m1 = tangents[tangent_index+1];
+        }
+
+        float y = curve_unit_interval(p[1], p[3], m0*x_dist, m1*x_dist, t);
+        result.push_back(variant(y));
+    }
+
+    return variant(&result);
+	
+	
+FUNCTION_ARGS_DEF
+	ARG_TYPE("[[decimal,decimal]|[decimal,decimal,decimal]|[decimal,decimal,decimal,decimal]]")
+	ARG_TYPE("int|null")
+RETURN_TYPE("[decimal]")
+END_FUNCTION_DEF(points_along_curve)
 
 FUNCTION_DEF(solid, 3, 6, "solid(level, int x, int y, (optional)int w=1, (optional) int h=1, (optional) bool debug=false) -> boolean: returns true iff the level contains solid space within the given (x,y,w,h) rectangle. If 'debug' is set, then the tested area will be displayed on-screen.")
 	Level* lvl = args()[0]->evaluate(variables).convert_to<Level>();

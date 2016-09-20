@@ -23,20 +23,25 @@
 
 #include <set>
 
-#include "hex_logical_tiles.hpp"
-#include "hex_object.hpp"
+#include "hex_helper.hpp"
+#include "hex_loader.hpp"
+#include "hex_map.hpp"
 #include "hex_renderable.hpp"
 #include "hex_tile.hpp"
 
 #include "Shaders.hpp"
 #include "SceneGraph.hpp"
+#include "StencilSettings.hpp"
 #include "WindowManager.hpp"
 
 #include "random.hpp"
+#include "profile_timer.hpp"
 
 namespace hex
 {
 	using namespace KRE;
+
+	const int g_hex_tile_size = 72;
 
 	namespace 
 	{
@@ -48,7 +53,6 @@ namespace hex
 	MapNode::MapNode(std::weak_ptr<KRE::SceneGraph> sg, const variant& node)
 		: SceneNode(sg, node),
 		  layers_(),
-		  overlay_(),
 		  changed_(false)
 	{
 	}
@@ -63,20 +67,44 @@ namespace hex
 		for(auto& layer : layers_) {
 			attachObject(layer);
 		}
-		for(auto& o : overlay_) {
-			attachObject(o);
-		}
+		attachObject(rr_);
 	}
 
-	namespace 
+	point calculate_position(int w, int h, const std::vector<int>& borders, const point& base, const point& center, const point& offset, const point& hex_pixel_pos)
 	{
-		struct OverlayHelper {
-			OverlayHelper() : x_(nullptr), obj_(nullptr), tex_(nullptr) {}
-			explicit OverlayHelper(const Alternate* x, const HexObject* obj, const KRE::TexturePtr& tex) : x_(x), obj_(obj), tex_(tex) {}
-			const Alternate* x_;
-			const HexObject* obj_;
-			KRE::TexturePtr tex_;
-		};
+		point p = hex_pixel_pos + offset + center; // + base;
+		if(center.x != 0 || center.y != 0) {
+			p.x -= w / 2;
+			p.y -= h / 2;
+			if(!borders.empty()) {
+				p.x -= (borders[0] + borders[2]) / 2;
+				p.y -= (borders[1] + borders[3]) / 2;
+			}
+		}
+
+		if(!borders.empty()) {
+			p.x += borders[0];
+			p.y += borders[1];
+		}
+		return p;
+	}
+
+	point add_tex_coords(std::vector<KRE::vertex_texcoord>* coords, const rectf& uv, int w, int h, const std::vector<int>& borders, const point& base, const point& center, const point& offset, const point& hex_pixel_pos)
+	{
+		point p = calculate_position(w, h, borders, base, center, offset, hex_pixel_pos);
+		const float vx1 = static_cast<float>(p.x);
+		const float vy1 = static_cast<float>(p.y);
+		const float vx2 = static_cast<float>(p.x + w);
+		const float vy2 = static_cast<float>(p.y + h);
+
+		coords->emplace_back(glm::vec2(vx1, vy1), glm::vec2(uv.x1(), uv.y1()));
+		coords->emplace_back(glm::vec2(vx2, vy1), glm::vec2(uv.x2(), uv.y1()));
+		coords->emplace_back(glm::vec2(vx2, vy2), glm::vec2(uv.x2(), uv.y2()));
+
+		coords->emplace_back(glm::vec2(vx2, vy2), glm::vec2(uv.x2(), uv.y2()));
+		coords->emplace_back(glm::vec2(vx1, vy1), glm::vec2(uv.x1(), uv.y1()));
+		coords->emplace_back(glm::vec2(vx1, vy2), glm::vec2(uv.x1(), uv.y2()));
+		return p;
 	}
 
 	void MapNode::update(int width, int height, const std::vector<HexObject>& tiles)
@@ -84,85 +112,67 @@ namespace hex
 		layers_.clear();
 		clear();
 
-		int max_tile_id = logical::Tile::getMaxTileId();
+		/*rr_.reset(new RectRenderable);
+		const point p1 = get_pixel_pos_from_tile_pos_evenq(1, 1, g_hex_tile_size) + point(0, g_hex_tile_size / 2);
+		const point p2 = get_pixel_pos_from_tile_pos_evenq(width-2, height-2, g_hex_tile_size) + point(0, g_hex_tile_size / 2);
+		rr_->update(p1.x, p1.y, p2.x, p2.y, Color::colorWhite());
+		rr_->setOrder(999999);
+		attachObject(rr_);*/
 
-		std::vector<MapRenderParams> sorted_map;
-		sorted_map.resize(max_tile_id);
-
-		for(auto& t : tiles) {
-			MapRenderParams& param = sorted_map[t.tile()->numeric_id()];
-			param.tiles.emplace_back(&t);
-			param.map_layer = std::make_shared<MapLayer>();
-		}
-
-		size_t base_order = 0;
-		for(auto& layer : sorted_map) {
-			if(layer.tiles.empty() || layer.map_layer == nullptr) {
-				continue;
-			}
-
-			auto& new_layer = layer.map_layer;
-			int height = layer.tiles.front()->logical_tile()->getHeight() << 9;
-			new_layer->setOrder(base_order + height);
-			new_layer->setTexture(layer.tiles.front()->tile()->getTexture());
-			++base_order;
-		
-			for(auto hex_obj : layer.tiles) {
-				hex_obj->render(&layer.coords);
-			}
-		}
-
-		for(auto& layer : sorted_map) {
-			if(layer.map_layer == nullptr) {
-				continue;
-			}
-			for(auto hex_obj : layer.tiles) {
-				hex_obj->renderAdjacent(&sorted_map);
-			}
-		}
-
-		for(auto& layer : sorted_map) {
-			if(layer.map_layer == nullptr) {
-				continue;
-			}
-			auto& new_layer = layer.map_layer;
-			layers_.emplace_back(new_layer);
-			attachObject(new_layer);
-			new_layer->updateAttributes(&layer.coords);
-		}
-
-		// Create a map of overlays based on the same texture.
-		std::map<unsigned int, std::vector<OverlayHelper>> overlay_map;
-		rng::set_seed(hex_tile_seed);
-		for(auto& t : tiles) {
-			for(auto& tag : t.logical_tile()->getTags()) {
-				std::string tag_name = tag;
-				std::string tag_sub = "default";
-				auto pos = tag.find('^');
-				if(pos != std::string::npos) {
-					tag_name = tag.substr(0, pos);
-					tag_sub = tag.substr(pos + 1);
+		std::map<std::pair<int,int>, std::pair<MapLayerPtr, std::vector<KRE::vertex_texcoord>>> map_layers;
+		for(auto& hex : tiles) {
+			auto images = hex.getImages();
+			for(auto& img : images) {
+				rect area;
+				std::vector<int> borders;
+				auto tex = get_terrain_texture(img.name, &area, &borders);
+				if(!img.crop.empty()) {
+					area = rect(area.x1() + img.crop.x1(), area.y1() + img.crop.y1(), img.crop.w(), img.crop.h());
 				}
-				auto ov = Overlay::getOverlay(tag_name);
-				unsigned int tex_id = ov->getTexture()->id();
-				auto it = overlay_map.find(tex_id);
-				overlay_map[tex_id].emplace_back(&ov->getAlternative(tag_sub), &t, ov->getTexture());
+				if(img.is_animated) {
+					auto& layer = map_layers[std::make_pair(img.layer,tex->id())];
+					std::shared_ptr<AnimatedMapLayer> aml = std::dynamic_pointer_cast<AnimatedMapLayer>(layer.first);
+					if(aml == nullptr) {
+						aml = std::make_shared<AnimatedMapLayer>();
+					}
+					aml->setTexture(tex);
+					aml->addAnimationSeq(img.animation_frames, get_pixel_pos_from_tile_pos_evenq(hex.getPosition(), g_hex_tile_size));
+					aml->setAnimationTiming(img.animation_timing);
+					aml->setCrop(img.crop);
+					aml->setColor(1.0f, 1.0f, 1.0f, img.opacity);
+					aml->setBCO(img.base, img.center, img.offset);
+					
+					layer.first = aml;
+				} else {
+					if(tex) {
+						auto& layer = map_layers[std::make_pair(img.layer,tex->id())];
+						if(layer.first == nullptr) {
+							layer.first.reset(new MapLayer);
+						}
+
+						layer.first->setTexture(tex);
+						add_tex_coords(&layer.second, 
+							tex->getTextureCoords(0, area), 
+							area.w(), 
+							area.h(), 
+							borders, 
+							img.base, 
+							img.center, 
+							img.offset,
+							get_pixel_pos_from_tile_pos_evenq(hex.getPosition(), 
+							g_hex_tile_size));
+						layer.first->setColor(1.0f, 1.0f, 1.0f, img.opacity);
+					}
+				}
 			}
 		}
 
-		base_order = 0x100000;
-		overlay_.clear();
-		for(const auto& om : overlay_map) {
-			auto new_layer = std::make_shared<MapLayer>();
-			new_layer->setTexture(om.second.front().tex_);
-			std::vector<KRE::vertex_texcoord> coords;
-			for(auto& ov : om.second) {
-				new_layer->setOrder(base_order);
-				ov.obj_->renderOverlay(*ov.x_, ov.tex_, &coords);
-			}
-			new_layer->updateAttributes(&coords);
-			attachObject(new_layer);
-			++base_order;
+		for(auto& layer : map_layers) {
+			layer.second.first->updateAttributes(&layer.second.second);
+			layer.second.first->setOrder(layer.first.first + layer.first.second + 1000);
+			layer.second.first->setBlendMode(BlendModeConstants::BM_ONE, BlendModeConstants::BM_ONE_MINUS_SRC_ALPHA);
+			layers_.emplace_back(layer.second.first);
+			attachObject(layer.second.first);
 		}
 	}
 
@@ -184,12 +194,103 @@ namespace hex
 		addAttributeSet(as);
 	}
 	
-	void MapLayer::preRender(const KRE::WindowPtr& wnd)
-	{
-	}
-
 	void MapLayer::updateAttributes(std::vector<KRE::vertex_texcoord>* attrs)
 	{
 		attr_->update(attrs);
+	}
+
+	AnimatedMapLayer::AnimatedMapLayer()
+		: frames_(),
+		  crop_rect_(),
+		  timing_(100),
+		  current_frame_pos_(0),
+		  mask_(nullptr),
+		  alpha_uv_()
+	{
+	}
+
+	void AnimatedMapLayer::preRender(const KRE::WindowPtr& wnd)
+	{
+		static int last_check_time = -1;
+		bool update_anim = false;
+		if(last_check_time == -1) {
+			last_check_time = profile::get_tick_time();
+			update_anim = true;
+		} else {
+			int current_tick = profile::get_tick_time();
+			if(current_tick - last_check_time >= timing_) {
+				last_check_time = current_tick;
+				update_anim = true;
+			}
+		}
+
+		if(update_anim) {
+			if(mask_ == nullptr) {
+				std::vector<int> borders;
+				rect area;
+				auto tex = get_terrain_texture("alphamask", &area, &borders);
+				alpha_uv_ = tex->getTextureCoords(0, area);
+				mask_.reset(new Blittable(tex));
+				auto shader = ShaderProgram::getSystemDefault()->clone();
+				shader->setUniformDrawFunction([](ShaderProgramPtr shader) { 
+					shader->setUniformValue(shader->getDiscardUniform(), 1);
+				});
+				mask_->setShader(shader);
+			}
+
+			std::vector<KRE::vertex_texcoord> vtx;
+			std::vector<KRE::vertex_texcoord> mask_vtx;
+			auto tex = getTexture();
+			for(auto it = frames_.cbegin(); it != frames_.cend(); ++it) {
+				const auto& f = *it;
+				const auto& pos = f.first;
+				const auto& frame = f.second;
+				rect area = frame[current_frame_pos_ % frame.size()].area;
+				if(!crop_rect_.empty()) {
+					area = rect(area.x1() + crop_rect_.x1(), area.y1() + crop_rect_.y1(), crop_rect_.w(), crop_rect_.h());
+				}
+				point p = add_tex_coords(&vtx, 
+					tex->getTextureCoords(0, area),
+					area.w(),
+					area.h(),
+					frame[current_frame_pos_ % frame.size()].borders, 
+					base_, 
+					center_, 
+					offset_,
+					pos);
+				if(it != frames_.cbegin()) {
+					mask_vtx.emplace_back(glm::vec2(p.x, p.y), glm::vec2(alpha_uv_.x1(), alpha_uv_.y1())); // degenerate
+				}
+				mask_vtx.emplace_back(glm::vec2(p.x, p.y), glm::vec2(alpha_uv_.x1(), alpha_uv_.y1()));
+				mask_vtx.emplace_back(glm::vec2(p.x + area.w(), p.y), glm::vec2(alpha_uv_.x2(), alpha_uv_.y1()));
+				mask_vtx.emplace_back(glm::vec2(p.x, p.y + area.h()), glm::vec2(alpha_uv_.x1(), alpha_uv_.y2()));
+				mask_vtx.emplace_back(glm::vec2(p.x + area.w(), p.y + area.h()), glm::vec2(alpha_uv_.x2(), alpha_uv_.y2()));
+				auto next_it = it; ++next_it;
+				if(next_it != frames_.cend()) {
+					mask_vtx.emplace_back(glm::vec2(p.x + area.w(), p.y + area.h()), glm::vec2(alpha_uv_.x2(), alpha_uv_.y2())); // degenerate
+				}
+			}
+
+			clearAttributes();
+			updateAttributes(&vtx);
+
+			mask_->update(&mask_vtx);
+			setClipSettings(get_stencil_mask_settings(), mask_);
+
+			++current_frame_pos_;
+		}
+	}
+
+	void AnimatedMapLayer::addAnimationSeq(const std::vector<std::string>& frames, const point& hex_pos)
+	{
+		std::vector<AnimFrame> new_frames;
+		new_frames.reserve(frames.size());
+		for(const auto& frame : frames) {
+			rect area;
+			std::vector<int> borders;
+			auto tex = get_terrain_texture(frame, &area, &borders);
+			new_frames.emplace_back(area, borders);
+		}
+		frames_.emplace(hex_pos, new_frames);
 	}
 }

@@ -21,6 +21,8 @@
 	   distribution.
 */
 
+#include <GL/glew.h>
+
 #include <algorithm>
 #include <iostream>
 #include <math.h>
@@ -47,9 +49,7 @@
 #include "formatter.hpp"
 #include "formula_profiler.hpp"
 #include "json_parser.hpp"
-#include "hex_map.hpp"
-#include "hex_mask.hpp"
-#include "hex_renderable.hpp"
+#include "hex.hpp"
 #include "level.hpp"
 #include "level_object.hpp"
 #include "level_runner.hpp"
@@ -429,7 +429,7 @@ Level::Level(const std::string& level_cfg, variant node)
 
 	if(node.has_key("hex_map")) {
 		ASSERT_LOG(scene_graph_ != nullptr, "Couldn't instantiate a HexMap object, scenegraph was nullptr");
-		hex_map_ = hex::HexMap::factory(node["hex_map"]);
+		hex_map_ = hex::HexMap::create(node["hex_map"]);
 		hex_renderable_ = std::dynamic_pointer_cast<hex::MapNode>(scene_graph_->createNode("hex_map"));
 		hex_map_->setRenderable(hex_renderable_);
 		scene_graph_->getRootNode()->attachNode(hex_renderable_);
@@ -720,7 +720,8 @@ void Level::finishLoading()
 	//graphics::texture::build_textures_from_worker_threads();
 
 	if (editor_ || preferences::compiling_tiles) {
-		game_logic::set_verbatim_string_expressions (true);
+		//game_logic::set_verbatim_string_expressions (true);
+		fprintf(stderr, "ZZZ: VERBATIM_STRING\n");
 	}
 
 	std::vector<EntityPtr> objects_not_in_level;
@@ -2176,9 +2177,13 @@ void Level::applyShaderToFrameBufferTexture(graphics::AnuraShaderPtr shader, boo
 	rt_->setShader(shader->getShader());
 	shader->setDrawArea(rect(0, 0, wnd->width(), wnd->height()));
 	shader->setCycle(cycle());
+
 	if(preferences::screen_rotated()) {
 		rt_->setRotation(0, glm::vec3(0.0f, 0.0f, 1.0f));
 	}
+
+	rt_->clearBlendState();
+	KRE::BlendModeScope blend_scope(KRE::BlendModeConstants::BM_SRC_ALPHA, KRE::BlendModeConstants::BM_ONE_MINUS_SRC_ALPHA);
 	rt_->preRender(wnd);
 	wnd->render(rt_.get());
 
@@ -2516,6 +2521,8 @@ void Level::do_processing()
 		active_chars = chars_immune_from_time_freeze_;
 	}
 
+	{
+	formula_profiler::Instrument instrumentation("CHARS_PROCESS");
 	while(!active_chars.empty()) {
 		new_chars_.clear();
 		for(const EntityPtr& c : active_chars) {
@@ -2534,6 +2541,7 @@ void Level::do_processing()
 
 		active_chars = new_chars_;
 		active_chars_.insert(active_chars_.end(), new_chars_.begin(), new_chars_.end());
+	}
 	}
 
 	if(water_) {
@@ -3089,6 +3097,7 @@ void Level::remove_character(EntityPtr e)
 	chars_.erase(std::remove(chars_.begin(), chars_.end(), e), chars_.end());
 	solid_chars_.erase(std::remove(solid_chars_.begin(), solid_chars_.end(), e), solid_chars_.end());
 	active_chars_.erase(std::remove(active_chars_.begin(), active_chars_.end(), e), active_chars_.end());
+	new_chars_.erase(std::remove(new_chars_.begin(), new_chars_.end(), e), new_chars_.end());
 }
 
 std::vector<EntityPtr> Level::get_characters_in_rect(const rect& r, int screen_xpos, int screen_ypos) const
@@ -3517,7 +3526,14 @@ DEFINE_FIELD(players, "[custom_obj]")
 	}
 	return variant(&v);
 DEFINE_FIELD(in_editor, "bool")
-	return variant(obj.editor_);
+	return variant::from_bool(obj.editor_);
+DEFINE_FIELD(editor, "null|builtin editor")
+	if(LevelRunner::getCurrent()) {
+		return variant(LevelRunner::getCurrent()->get_editor().get());
+	}
+
+	return variant();
+	
 DEFINE_FIELD(zoom, "decimal")
 	return variant(obj.zoom_level_);
 DEFINE_SET_FIELD
@@ -3786,7 +3802,7 @@ DEFINE_SET_FIELD_TYPE("null|map")
 	}
 
 	if(value.is_map()) {
-		obj.hex_map_ = hex::HexMap::factory(value);
+		obj.hex_map_ = hex::HexMap::create(value);
 		obj.hex_renderable_ = std::dynamic_pointer_cast<hex::MapNode>(obj.scene_graph_->createNode("hex_map"));
 		obj.hex_map_->setRenderable(obj.hex_renderable_);
 		obj.scene_graph_->getRootNode()->attachNode(obj.hex_renderable_);
@@ -3798,7 +3814,7 @@ DEFINE_SET_FIELD_TYPE("null|map")
 DEFINE_FIELD(hex_masks, "[builtin mask_node]")
 	std::vector<variant> result;
 	for(auto mask : obj.hex_masks_) {
-		result.push_back(variant(mask.get()));
+		result.emplace_back(variant(mask.get()));
 	}
 
 	return variant(&result);
@@ -3807,9 +3823,9 @@ DEFINE_SET_FIELD_TYPE("[map|builtin mask_node]")
 	obj.hex_masks_.clear();
 	for(auto v : items) {
 		if(v.is_map()) {
-			obj.hex_masks_.push_back(hex::MaskNodePtr(new hex::MaskNode(v)));
+			obj.hex_masks_.emplace_back(hex::MaskNodePtr(new hex::MaskNode(v)));
 		} else {
-			obj.hex_masks_.push_back(hex::MaskNodePtr(v.convert_to<hex::MaskNode>()));
+			obj.hex_masks_.emplace_back(hex::MaskNodePtr(v.convert_to<hex::MaskNode>()));
 		}
 
 		ASSERT_LOG(obj.hex_masks_.back().get() != nullptr, "null hex mask");

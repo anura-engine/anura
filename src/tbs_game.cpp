@@ -931,7 +931,7 @@ namespace tbs
 
 		const auto time_taken = profile::get_tick_time() - start_time;
 
-		LOG_DEBUG("XXX: @" << profile::get_tick_time() << " HANDLED MESSAGE " << type);
+		LOG_DEBUG("XXX: @" << profile::get_tick_time() << " HANDLED MESSAGE " << type << " IN " << time_taken << "ms");
 
 		variant new_player_waiting_on = game_type_->player_waiting_on();
 		if(new_player_waiting_on != player_waiting_on_) {

@@ -237,8 +237,10 @@ namespace xhtml
 							LOG_ERROR("Unable to convert 'img' tag 'y' attribute to number: " << attr_y->getValue());
 						}
 					}
-
-					tex_->setSourceRect(0, rect(src_x, src_y, r.w(), r.h()));
+					
+					if(tex_) {
+						tex_->setSourceRect(0, rect(src_x, src_y, r.w(), r.h()));
+					}
 
 					dims_set_ = true;
 					setDimensions(r);

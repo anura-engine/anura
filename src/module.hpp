@@ -84,6 +84,9 @@ namespace module
 	void get_unique_filenames_under_dir(const std::string& dir,
 										std::map<std::string, std::string>* file_map,
 										MODULE_PREFIX_BEHAVIOR prefix=MODULE_PREFIX);
+	void get_all_filenames_under_dir(const std::string& dir,
+										std::multimap<std::string, std::string>* file_map,
+										MODULE_PREFIX_BEHAVIOR prefix=MODULE_PREFIX);
 
 	void get_files_in_dir(const std::string& dir,
 						  std::vector<std::string>* files,

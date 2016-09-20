@@ -214,7 +214,7 @@ namespace KRE
 		attribs_->addAttributeDesc(AttributeDesc(AttrType::TEXTURE,  2, AttrFormat::FLOAT, false, sizeof(font_coord), offsetof(font_coord, tc)));
 		as->addAttribute(AttributeBasePtr(attribs_));
 		as->setDrawMode(DrawMode::TRIANGLES);
-		as->clearblendState();
+		as->clearBlendState();
 		as->clearBlendMode();
 
 		addAttributeSet(as);
@@ -274,7 +274,7 @@ namespace KRE
 		as->addAttribute(color_attrib_);
 
 		as->setDrawMode(DrawMode::TRIANGLES);
-		as->clearblendState();
+		as->clearBlendState();
 		as->clearBlendMode();
 
 		addAttributeSet(as);

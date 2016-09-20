@@ -41,6 +41,7 @@
 #include "formula_function.hpp"
 #include "formula_interface.hpp"
 #include "formula_object.hpp"
+#include "formula_profiler.hpp"
 #include "formula_tokenizer.hpp"
 #include "i18n.hpp"
 #include "lua_iface.hpp"
@@ -122,7 +123,11 @@ namespace game_logic
 			return true;
 		}
 
-		if(v.is_list()) {
+		if(v.is_function()) {
+			std::vector<variant> args;
+			variant cmd = v(args);
+			executeCommand(cmd);
+		} else if(v.is_list()) {
 			for(int n = 0; n != v.num_elements(); ++n) {
 				executeCommand(v[n]);
 			}
@@ -2229,7 +2234,9 @@ namespace {
 					}
 				}
 
+				formula_profiler::Instrument instrument("CMD_EVAL");
 				const variant right_cmd = right_->evaluate(*variables_);
+				formula_profiler::Instrument instrument2("CMD_EXEC");
 				ob.executeCommand(right_cmd);
 			}
 
@@ -2462,7 +2469,10 @@ namespace {
 			}
 
 			void staticErrorAnalysis() const {
-				ASSERT_LOG(variant_types_compatible(type_, expression_->queryVariantType()), "Expression is not declared type. Of type " << expression_->queryVariantType()->to_string() << " when type " << type_->to_string() << " expected " << debugPinpointLocation());
+				if(variant_types_compatible(type_, expression_->queryVariantType()) == false) {
+					std::ostringstream reason;
+					ASSERT_LOG(variant_types_compatible(type_, expression_->queryVariantType(), &reason), "Expression is not declared type. Of type " << expression_->queryVariantType()->to_string() << " when type " << type_->to_string() << " expected (" << reason.str() << ") " << debugPinpointLocation());
+				}
 			}
 
 			boost::intrusive_ptr<FormulaInterfaceInstanceFactory> interface_;
@@ -3033,15 +3043,9 @@ namespace {
 				static_FormulaCallable(const static_FormulaCallable&);
 			public:
 				static_FormulaCallable() : FormulaCallable(false) {
-					if(static_FormulaCallable_active) {
-						throw non_static_expression_exception();
-					}
-			
-					static_FormulaCallable_active = true;
 				}
 		
 				~static_FormulaCallable() {
-					static_FormulaCallable_active = false;
 				}
 		
 				variant getValue(const std::string& key) const {
@@ -3055,6 +3059,25 @@ namespace {
 				variant getValueBySlot(int slot) const {
 					throw non_static_expression_exception();
 				}
+			};
+
+			class StaticFormulaCallableGuard {
+				boost::intrusive_ptr<static_FormulaCallable> callable_;
+			public:
+				StaticFormulaCallableGuard() : callable_(new static_FormulaCallable) {
+					if(static_FormulaCallable_active) {
+						throw non_static_expression_exception();
+					}
+			
+					static_FormulaCallable_active = true;
+				}
+
+				~StaticFormulaCallableGuard() {
+					static_FormulaCallable_active = false;
+				}
+
+				boost::intrusive_ptr<static_FormulaCallable> callable() const { return callable_; }
+				bool callableNotCopied() const { return callable_->refcount() == 1; }
 			};
 
 			//A helper function which queries an expression and finds all the occurrences where it
@@ -3115,18 +3138,17 @@ namespace {
 				//we want to try to evaluate this expression, and see if it is static.
 				//it is static if it never reads its input, if it doesn't call the rng,
 				//and if a reference to the input itself is not stored.
+				const rng::Seed rng_seed = rng::get_seed();
+				StaticFormulaCallableGuard static_callable;
 				try {
-					const rng::Seed rng_seed = rng::get_seed();
-					FormulaCallablePtr static_callable(new static_FormulaCallable);
-
 					variant res;
 			
 					{
 						const static_context ctx;
-						res = result->staticEvaluate(*static_callable);
+						res = result->staticEvaluate(*static_callable.callable());
 					}
 
-					if(rng_seed == rng::get_seed() && static_callable->refcount() == 1) {
+					if(rng_seed == rng::get_seed() && static_callable.callableNotCopied()) {
 						//this expression is static. Reduce it to its result.
 						VariantExpression* expr = new VariantExpression(res);
 						if(result) {
@@ -3135,11 +3157,6 @@ namespace {
 
 						result.reset(expr);
 					}
-
-					//it's possible if there is a latent reference to it the
-					//static callable won't get destroyed, so make sure we
-					//mark it as inactive to allow others to be created.
-					static_FormulaCallable_active = false;
 				} catch(non_static_expression_exception&) {
 					//the expression isn't static. Not an error.
 				} catch(fatal_assert_failure_exception& e) {

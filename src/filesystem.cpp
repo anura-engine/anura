@@ -122,6 +122,22 @@ namespace sys
 		}
 	}
 
+	void get_all_filenames_under_dir(const std::string& dir,
+                                    std::multimap<std::string, std::string>* file_map,
+									const std::string& prefix)
+	{
+		ASSERT_LOG(file_map != nullptr, "get_unique_filenames_under_dir() passed a nullptr file_map");
+		path p(dir);
+		if(!is_directory(p)) {
+			return;
+		}
+		for(recursive_directory_iterator it = recursive_directory_iterator(p); it != recursive_directory_iterator(); ++it) {
+			if(!is_directory(it->path())) {
+				file_map->insert(std::pair<std::string,std::string>(prefix + it->path().filename().generic_string(), it->path().generic_string()));
+			}
+		}
+	}
+
 	std::string get_dir(const std::string& dir)
 	{
 		try {

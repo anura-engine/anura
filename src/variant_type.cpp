@@ -2379,7 +2379,9 @@ variant_type_ptr parse_variant_type(const variant& type)
 	ASSERT_LOG(tokens.empty() == false, "ERROR PARSING TYPE: EMPTY STRING AT " << type.debug_location());
 
 	const Token* begin = &tokens[0];
-	return parse_variant_type(type, begin, begin + tokens.size());
+	variant_type_ptr result = parse_variant_type(type, begin, begin + tokens.size());
+	ASSERT_LOG(begin == &tokens[0] + tokens.size(), "Unexpected characters after type: '" << begin->str() << ": " << type.debug_location());
+	return result;
 }
 
 variant_type_ptr

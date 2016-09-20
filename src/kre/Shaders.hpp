@@ -96,6 +96,8 @@ namespace KRE
 		virtual int getAttribute(const std::string& attr) const = 0;
 		virtual int getUniform(const std::string& attr) const = 0;
 
+		virtual std::vector<std::string> getAllUniforms() const = 0;
+
 		virtual void setUniformMapping(const std::vector<std::pair<std::string, std::string>>& mapping) = 0;
 		virtual void setAttributeMapping(const std::vector<std::pair<std::string, std::string>>& mapping) = 0;
 
@@ -125,6 +127,7 @@ namespace KRE
 		virtual int getPUniform() const = 0;
 		virtual int getMvpUniform() const = 0;
 		virtual int getTexMapUniform() const = 0;
+		virtual int getDiscardUniform() const = 0;
 
 		virtual int getColorAttribute() const = 0;
 		virtual int getVertexAttribute() const = 0;
