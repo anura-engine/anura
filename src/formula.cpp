@@ -1169,12 +1169,12 @@ namespace {
 				std::vector<variant_type_ptr> arg_types;
 				if(fn_type->is_function(&arg_types, nullptr, nullptr)) {
 					for(unsigned n = 0; n < arg_types.size() && n < args.size(); ++n) {
-						const FormulaInterface* interface = arg_types[n]->is_interface();
+						const FormulaInterface* formula_interface = arg_types[n]->is_interface();
 
 						boost::intrusive_ptr<FormulaInterfaceInstanceFactory> interface_factory;
-						if(interface) {
+						if(formula_interface) {
 							try {
-								interface_factory.reset(interface->createFactory(args[n]->queryVariantType()));
+								interface_factory.reset(formula_interface->createFactory(args[n]->queryVariantType()));
 							} catch(FormulaInterface::interface_mismatch_error& e) {
 								error_msg_ = "Could not create interface: " + e.msg;
 							}
@@ -2425,11 +2425,11 @@ namespace {
 			StaticTypeExpression(variant_type_ptr type, ExpressionPtr expr)
 			: FormulaExpression("_static_type"), type_(type), expression_(expr)
 			{
-				const FormulaInterface* interface = type->is_interface();
-				if(interface) {
+				const FormulaInterface* formula_interface = type->is_interface();
+				if(formula_interface) {
 					boost::intrusive_ptr<FormulaInterfaceInstanceFactory> interface_factory;
 					try {
-						interface_factory.reset(interface->createFactory(expr->queryVariantType()));
+						interface_factory.reset(formula_interface->createFactory(expr->queryVariantType()));
 					} catch(FormulaInterface::interface_mismatch_error& e) {
 						ASSERT_LOG(false, "Could not create interface: " << e.msg << " " << debugPinpointLocation());
 					}
