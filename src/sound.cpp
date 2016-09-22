@@ -637,11 +637,9 @@ namespace sound
 	//specs of the format loaded.
 	bool loadVorbis(const char* file, SDL_AudioSpec* spec, std::vector<char>& buf)
 	{
-		FILE* f = fopen(file, "rb");
-
 		OggVorbis_File ogg_file;
 
-		int res = vorbis().ov_open(f, &ogg_file, nullptr, 0);
+		int res = vorbis().ov_fopen(file, &ogg_file);
 		if(res != 0) {
 			return false;
 		}
