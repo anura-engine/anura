@@ -3048,7 +3048,7 @@
 					"$(PROJECT_DIR)/dylibs",
 					"$(PROJECT_DIR)",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				MACOSX_DEPLOYMENT_TARGET = 10.8;
 				OTHER_CFLAGS = (
 					"-DUSE_LUA",
 					"-DUSE_SVG",
@@ -3115,7 +3115,7 @@
 					"$(PROJECT_DIR)/dylibs",
 					"$(PROJECT_DIR)",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				MACOSX_DEPLOYMENT_TARGET = 10.8;
 				OTHER_CFLAGS = (
 					"-DUSE_LUA",
 					"-DUSE_SVG",
