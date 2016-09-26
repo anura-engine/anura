@@ -1,0 +1,3 @@
+[submodule "MacOS/libvpx"]
+	path = MacOS/libvpx
+	url = https://chromium.googlesource.com/webm/libvpx
