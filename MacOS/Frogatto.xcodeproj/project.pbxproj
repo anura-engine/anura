@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		00F81DAB1D98F88C00C4DEB4 /* libvpx.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 00F81DAA1D98F88C00C4DEB4 /* libvpx.a */; };
 		631A8A0A1AC69A0800AA55C8 /* libboost_regex.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 631A8A091AC69A0800AA55C8 /* libboost_regex.dylib */; };
 		631A8A0C1AC69A5D00AA55C8 /* libboost_filesystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 631A8A0B1AC69A5D00AA55C8 /* libboost_filesystem.dylib */; };
 		634991D11AC794D300E1259F /* formula_garbage_collector.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 634991CF1AC794D300E1259F /* formula_garbage_collector.cpp */; };
@@ -215,7 +216,6 @@
 		63DFC69B1D35A98200E0C454 /* event_listener.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 63DFC6991D35A98200E0C454 /* event_listener.cpp */; };
 		63E092001C5CA168006170A8 /* shared_memory_pipe.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 63E091FC1C5CA168006170A8 /* shared_memory_pipe.cpp */; };
 		63E092011C5CA168006170A8 /* tbs_ipc_client.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 63E091FE1C5CA168006170A8 /* tbs_ipc_client.cpp */; };
-		63E092031C6A9714006170A8 /* libvpx.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 63E092021C6A9714006170A8 /* libvpx.a */; };
 		63E3EC371B452D55002F8294 /* FontDriver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 63E3EC2F1B452D55002F8294 /* FontDriver.cpp */; };
 		63E3EC381B452D55002F8294 /* FontSTB.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 63E3EC321B452D55002F8294 /* FontSTB.cpp */; };
 		63E3EC391B452D55002F8294 /* SurfaceBlur.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 63E3EC351B452D55002F8294 /* SurfaceBlur.cpp */; };
@@ -509,6 +509,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		00F81DAA1D98F88C00C4DEB4 /* libvpx.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libvpx.a; path = libvpx/libvpx.a; sourceTree = "<group>"; };
 		631A8A091AC69A0800AA55C8 /* libboost_regex.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libboost_regex.dylib; sourceTree = "<group>"; };
 		631A8A0B1AC69A5D00AA55C8 /* libboost_filesystem.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libboost_filesystem.dylib; sourceTree = "<group>"; };
 		634991CE1AC794D300E1259F /* ColorTransform.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = ColorTransform.hpp; sourceTree = "<group>"; };
@@ -913,7 +914,6 @@
 		63E091FD1C5CA168006170A8 /* shared_memory_pipe.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = shared_memory_pipe.hpp; sourceTree = "<group>"; };
 		63E091FE1C5CA168006170A8 /* tbs_ipc_client.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = tbs_ipc_client.cpp; sourceTree = "<group>"; };
 		63E091FF1C5CA168006170A8 /* tbs_ipc_client.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = tbs_ipc_client.hpp; sourceTree = "<group>"; };
-		63E092021C6A9714006170A8 /* libvpx.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libvpx.a; sourceTree = "<group>"; };
 		63E3EC2F1B452D55002F8294 /* FontDriver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FontDriver.cpp; sourceTree = "<group>"; };
 		63E3EC301B452D55002F8294 /* FontDriver.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = FontDriver.hpp; sourceTree = "<group>"; };
 		63E3EC311B452D55002F8294 /* FontImpl.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = FontImpl.hpp; sourceTree = "<group>"; };
@@ -1407,12 +1407,12 @@
 				C07A47A219443FC000F1190E /* libglib-2.0.0.dylib in Frameworks */,
 				C0EF2A5E16229160004CD227 /* libGLEW.1.9.0.dylib in Frameworks */,
 				C07A47AB1944487300F1190E /* libfreetype.6.dylib in Frameworks */,
-				63E092031C6A9714006170A8 /* libvpx.a in Frameworks */,
 				C0D78B5F171F215D00980007 /* libpng15.15.dylib in Frameworks */,
 				C07A47E01944696C00F1190E /* libintl.8.dylib in Frameworks */,
 				C08047DE1944884300AA7C82 /* libpng16.16.dylib in Frameworks */,
 				C08E628017B5EC3B0097B642 /* SDL2_image.framework in Frameworks */,
 				C08E628117B5EC3B0097B642 /* SDL2_mixer.framework in Frameworks */,
+				00F81DAB1D98F88C00C4DEB4 /* libvpx.a in Frameworks */,
 				C08B95BC1D87E21E002CCB98 /* libogg.0.dylib in Frameworks */,
 				C08E628217B5EC3B0097B642 /* SDL2_ttf.framework in Frameworks */,
 				63D6F4DE1AC68F38002250CC /* libboost_system.dylib in Frameworks */,
@@ -1923,7 +1923,7 @@
 		C010C562160AFAD9006E7D90 = {
 			isa = PBXGroup;
 			children = (
-				63E092021C6A9714006170A8 /* libvpx.a */,
+				00F81DAA1D98F88C00C4DEB4 /* libvpx.a */,
 				C0B397F71636666C00D010E0 /* Frogatto.entitlements */,
 				C0A362461873BB65002571F3 /* music */,
 				C010C7FD160AFD82006E7D90 /* data */,
@@ -2490,9 +2490,10 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = C010C58B160AFADA006E7D90 /* Build configuration list for PBXNativeTarget "Frogatto" */;
 			buildPhases = (
+				00F81C931D98E4D100C4DEB4 /* Make libvpx */,
 				C010C569160AFAD9006E7D90 /* Sources */,
 				C010C56A160AFAD9006E7D90 /* Frameworks */,
-				C08F3054180FBD3F005BDCDB /* ShellScript */,
+				C08F3054180FBD3F005BDCDB /* Touch directories */,
 				C010C80B160B064B006E7D90 /* CopyFiles */,
 				C02751BD17FD49D700173646 /* Resources */,
 			);
@@ -2560,13 +2561,28 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		C08F3054180FBD3F005BDCDB /* ShellScript */ = {
+		00F81C931D98E4D100C4DEB4 /* Make libvpx */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputPaths = (
 			);
+			name = "Make libvpx";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "export CC=clang\n\nif [ -f libvpx/libvpx.a ]\n  then\n    exit 0\n  else\n    cd libvpx || exit 1\n    if [ -f Makefile ]\n    then\n        make clean\n        make distclean\n    fi\n    ./configure\n    make -j$(sysctl -n hw.ncpu)\nfi";
+		};
+		C08F3054180FBD3F005BDCDB /* Touch directories */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Touch directories";
 			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -3026,10 +3042,13 @@
 				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
 				CLANG_CXX_LIBRARY = "libc++";
 				COMBINE_HIDPI_IMAGES = YES;
+				COPY_PHASE_STRIP = NO;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)/dylibs\"",
 				);
+				GCC_C_LANGUAGE_STANDARD = c11;
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				HEADER_SEARCH_PATHS = (
 					.,
 					./dylibs/SDL2.framework/Headers,
@@ -3039,15 +3058,10 @@
 					"./glew-1.9.0/include",
 					"./libpng-1.5.5/",
 					"./dependency-headers/**",
+					"./libvpx/**",
 				);
 				INFOPLIST_FILE = resources/Info.plist;
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"\"$(SRCROOT)/dylibs\"",
-					"\"$(SRCROOT)/dylibs/SDL2.framework/Versions/A\"",
-					"$(PROJECT_DIR)/dylibs",
-					"$(PROJECT_DIR)",
-				);
+				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/**";
 				MACOSX_DEPLOYMENT_TARGET = 10.8;
 				OTHER_CFLAGS = (
 					"-DUSE_LUA",
@@ -3093,10 +3107,13 @@
 				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
 				CLANG_CXX_LIBRARY = "libc++";
 				COMBINE_HIDPI_IMAGES = YES;
+				COPY_PHASE_STRIP = NO;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)/dylibs\"",
 				);
+				GCC_C_LANGUAGE_STANDARD = c11;
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				HEADER_SEARCH_PATHS = (
 					.,
 					./dylibs/SDL2.framework/Headers,
@@ -3106,15 +3123,10 @@
 					"./glew-1.9.0/include",
 					"./libpng-1.5.5/",
 					"./dependency-headers/**",
+					"./libvpx/**",
 				);
 				INFOPLIST_FILE = resources/Info.plist;
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"\"$(SRCROOT)/dylibs\"",
-					"\"$(SRCROOT)/dylibs/SDL2.framework/Versions/A\"",
-					"$(PROJECT_DIR)/dylibs",
-					"$(PROJECT_DIR)",
-				);
+				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/**";
 				MACOSX_DEPLOYMENT_TARGET = 10.8;
 				OTHER_CFLAGS = (
 					"-DUSE_LUA",
