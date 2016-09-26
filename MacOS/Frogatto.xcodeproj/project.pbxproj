@@ -3028,11 +3028,6 @@
 					"$(inherited)",
 					"\"$(SRCROOT)/dylibs\"",
 				);
-				GCC_OPTIMIZATION_LEVEL = fast;
-				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = "";
-				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;
-				GCC_WARN_UNUSED_VARIABLE = NO;
 				HEADER_SEARCH_PATHS = (
 					.,
 					./dylibs/SDL2.framework/Headers,
@@ -3098,11 +3093,6 @@
 					"$(inherited)",
 					"\"$(SRCROOT)/dylibs\"",
 				);
-				GCC_OPTIMIZATION_LEVEL = fast;
-				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = "";
-				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;
-				GCC_WARN_UNUSED_VARIABLE = NO;
 				HEADER_SEARCH_PATHS = (
 					.,
 					./dylibs/SDL2.framework/Headers,
