@@ -2030,25 +2030,77 @@ namespace
 		}
 	};
 
-	FUNCTION_DEF(solid, 3, 6, "solid(Level, int x, int y, (optional)int w=1, (optional) int h=1, (optional) int debug=0) -> boolean: returns true iff the Level contains solid space within the given (x,y,w,h) rectangle. If 'debug' is set, then the tested area will be displayed on-screen.")
+	FUNCTION_DEF_CTOR(solid, 3, 6, "solid(Level, int x, int y, (optional)int w=1, (optional) int h=1, (optional) map options={}) -> boolean: returns true iff the Level contains solid space within the given (x,y,w,h) rectangle. If 'debug' is set, then the tested area will be displayed on-screen.")
+		dynamic_options_ = true;
+		static_dimensions_ = 0;
+
+		variant v;
+		if(args().size() >= 6 && args()[5]->canReduceToVariant(v)) {
+			dynamic_options_ = false;
+			if(v.is_map()) {
+				variant dim_v = v["dimensions"];
+				std::vector<std::string> flags = dim_v.as_list_string();
+				for(auto f : flags) {
+					static_dimensions_ |= (1 << get_solid_dimension_id(f));
+				}
+			}
+		}
+	FUNCTION_DEF_MEMBERS
+		bool dynamic_options_;
+		unsigned int static_dimensions_;
+	FUNCTION_DEF_IMPL
 		Level* lvl = args()[0]->evaluate(variables).convert_to<Level>();
 		const int x = args()[1]->evaluate(variables).as_int();
 		const int y = args()[2]->evaluate(variables).as_int();
 		int w = args().size() >= 4 ? args()[3]->evaluate(variables).as_int() : 1;
 		int h = args().size() >= 5 ? args()[4]->evaluate(variables).as_int() : 1;
 		rect r(x, y, w, h);
-		if(args().size() >= 6) {
-			//debugging so set the debug rect
-			add_debug_rect(r);
+		bool level_collision = lvl->solid(r);
+
+		if(level_collision) {
+			return variant::from_bool(true);
 		}
-	return variant::from_bool(lvl->solid(r));
+
+		unsigned int solid_dimensions = static_dimensions_;
+		if(dynamic_options_ && args().size() >= 6) {
+			variant v = args()[5]->evaluate(variables);
+			const std::map<variant,variant>& m = v.as_map();
+			static const variant DimensionsStr("dimensions");
+			auto dimensions_itor = m.find(DimensionsStr);
+			if(dimensions_itor != m.end()) {
+				const std::vector<std::string>& flags = dimensions_itor->second.as_list_string();
+
+				for(auto f : flags) {
+					solid_dimensions |= (1 << get_solid_dimension_id(f));
+				}
+
+			}
+		}
+
+		if(solid_dimensions == 0) {
+			return variant::from_bool(false);
+		} else {
+			const std::vector<EntityPtr>& v = lvl->get_solid_chars();
+			for(const EntityPtr& p : v) {
+				if((p->getSolidDimensions()&solid_dimensions) == 0) {
+					continue;
+				}
+
+				if(rects_intersect(r, p->solidRect())) {
+					return variant::from_bool(true);
+				}
+			}
+		}
+
+		return variant::from_bool(false);
+
 FUNCTION_ARGS_DEF
 	ARG_TYPE("object")
 	ARG_TYPE("int")
 	ARG_TYPE("int")
 	ARG_TYPE("int")
 	ARG_TYPE("int")
-	ARG_TYPE("int")
+	ARG_TYPE("{ dimensions: null|[string] }")
 RETURN_TYPE("bool")
 	END_FUNCTION_DEF(solid)
 
