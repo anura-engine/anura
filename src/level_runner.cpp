@@ -90,7 +90,7 @@ namespace
 
 	PREF_BOOL(allow_debug_console_clicking, true, "Allow clicking on objects in the debug console to select them");
 	PREF_BOOL(reload_modified_objects, false, "Reload object definitions when their file is modified on disk");
-	PREF_INT(mouse_drag_threshold, 1000, "Threshold for how much motion can take place in a mouse drag");
+	PREF_INT(mouse_drag_threshold, 5, "Threshold for how much motion can take place in a mouse drag");
 
 	PREF_FLOAT(global_scale, 1.0f, "Global scale value.");
 
@@ -466,7 +466,7 @@ bool LevelRunner::handle_mouse_events(const SDL_Event &event)
 		return false;
 	}
 
-	const int DragThresholdMilliPx = g_mouse_drag_threshold;
+	const int DragThresholdPx = g_mouse_drag_threshold;
 
 	switch(event.type)
 	{
@@ -484,7 +484,7 @@ bool LevelRunner::handle_mouse_events(const SDL_Event &event)
 		case SDL_MOUSEBUTTONUP:
 			mouse_drag_count_ = 0;
 
-		case SDL_MOUSEMOTION:
+		case SDL_MOUSEMOTION: {
 		    int x, mx = event.type == SDL_MOUSEMOTION ? event.motion.x : event.button.x;
 			int y, my = event.type == SDL_MOUSEMOTION ? event.motion.y : event.button.y;
 			int event_type = event.type;
@@ -560,6 +560,9 @@ bool LevelRunner::handle_mouse_events(const SDL_Event &event)
 				if(event_type == SDL_MOUSEBUTTONDOWN) {
 					e->setMouseButtons(e->getMouseButtons() | SDL_BUTTON(event_button_button));
 				} else if(event_type == SDL_MOUSEMOTION) {
+
+					mouse_drag_count_ += abs(event.motion.xrel) + abs(event.motion.yrel);
+
 					// handling for mouse_enter
 					if(e->isMouseOverEntity() == false) {
 						if((e->getMouseoverDelay() == 0 || static_cast<unsigned>(lvl_->cycle()) > e->getMouseoverTriggerCycle())) {
@@ -578,7 +581,7 @@ bool LevelRunner::handle_mouse_events(const SDL_Event &event)
 					handled |= e->handleEvent(basic_evt, callable.get());
 				}
 
-				if(event_type == SDL_MOUSEBUTTONUP && mouse_clicking_ && !click_handled && e->isBeingDragged() == false) {
+				if(event_type == SDL_MOUSEBUTTONUP && mouse_clicking_ && !click_handled && e->isBeingDragged() == false && mouse_drag_count_ <= DragThresholdPx) {
 					e->handleEvent(MouseClickID, callable.get());
 					if(it->isMouseEventSwallowed()) {
 						click_handled = true;
@@ -611,7 +614,6 @@ bool LevelRunner::handle_mouse_events(const SDL_Event &event)
 							}
 						}
 					} else if(event_type == SDL_MOUSEMOTION && !drag_handled) {
-						mouse_drag_count_ += abs(event.motion.xrel) + abs(event.motion.yrel);
 						// drag check.
 						if(object->isBeingDragged()) {
 							if(object->getMouseButtons() & button_state) {
@@ -623,7 +625,7 @@ bool LevelRunner::handle_mouse_events(const SDL_Event &event)
 							if(object->isMouseEventSwallowed()) {
 								drag_handled = true;
 							}
-						} else if(object->getMouseButtons() & button_state && mouse_drag_count_ > object->mouseDragThreshold(DragThresholdMilliPx)) {
+						} else if(object->getMouseButtons() & button_state && mouse_drag_count_ > object->mouseDragThreshold(DragThresholdPx)) {
 							// start drag.
 							object->handleEvent(MouseDragStartID, callable.get());
 							object->setBeingDragged();
@@ -677,12 +679,13 @@ bool LevelRunner::handle_mouse_events(const SDL_Event &event)
 				}
 			}
 
-			if(event.type == SDL_MOUSEMOTION && mouse_drag_count_ <= DragThresholdMilliPx) {
+			if(event.type == SDL_MOUSEMOTION && mouse_drag_count_ <= DragThresholdPx) {
 				break;
 			}
 
 			mouse_clicking_ = event.type == SDL_MOUSEBUTTONDOWN;
 			break;
+		} //end mouse motion event case
 	}
 	return false;
 }
