@@ -25,7 +25,7 @@
 #include <algorithm>
 #include <iostream>
 
-#if (defined(_X11) || defined(__linux__)) && !defined(__APPLE__) && !defined(__ANDROID__)
+#if (defined(_X11) || defined(__linux__)) || defined(__APPLE__) && !defined(__ANDROID__)
 #define CLIPBOARD_FUNCS_DEFINED
 
 void copy_to_clipboard(const std::string& text, const bool mouse)
@@ -156,47 +156,6 @@ std::string copy_from_clipboard(const bool)
 }
 #endif
 
-#ifdef __APPLE__
-    #include "TargetConditionals.h"
-	#include "AvailabilityMacros.h"
-
-    #if TARGET_OS_IPHONE
-        //for now, do nothing
-    #elif TARGET_OS_MAC
-        #define decimal decimal_carbon
-        #import <Cocoa/Cocoa.h>
-        #undef decimal
-        #define CLIPBOARD_FUNCS_DEFINED
-        void copy_to_clipboard(const std::string& text, const bool)
-        {
-            NSString *clipString = [NSString stringWithCString:text.c_str()
-                                                encoding:[NSString defaultCStringEncoding]];
-			NSPasteboard *pasteboard;
-			#if (MAC_OS_X_VERSION_MIN_REQUIRED > MAC_OS_X_VERSION_10_5)
-				NSInteger changeCount;
-			#else
-				[pasteboard declareTypes:[NSArray arrayWithObjects:NSStringPboardType, nil] owner:nil];
-			#endif
-			BOOL ok;
-            NSLog(@"%@",clipString);
-            
-            NSLog(@"%@", [[NSPasteboard generalPasteboard] stringForType:NSStringPboardType]);
-        }
-
-        std::string copy_from_clipboard(const bool)
-        {
-            NSPasteboard *pasteboard = [NSPasteboard generalPasteboard];
-            NSString *clipString = [pasteboard stringForType:NSStringPboardType];
-            std::string finalClipString = std::string([clipString UTF8String]);
-            return finalClipString;
-        }
-
-        bool clipboard_handleEvent(const SDL_Event& )
-        {
-            return false;
-        }
-#endif
-#endif
 
 #ifndef CLIPBOARD_FUNCS_DEFINED
 
