@@ -690,9 +690,11 @@ bool LevelRunner::handle_mouse_events(const SDL_Event &event)
 	return false;
 }
 
+extern bool g_enable_graphical_fonts;
+
 void LevelRunner::show_pause_title()
 {
-	if(!editor_) {
+	if(!editor_ && g_enable_graphical_fonts) {
 		set_scene_title("Paused\n\n\n(ctrl-p)", paused ? std::numeric_limits<int>::max() : 25);
 	}
 }

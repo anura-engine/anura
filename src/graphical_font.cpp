@@ -41,9 +41,9 @@ namespace
 		static cache_map res;
 		return res;
 	}
-
-	PREF_BOOL(enable_graphical_fonts, true, "Loads graphical fonts");
 }
+
+PREF_BOOL(enable_graphical_fonts, true, "Loads graphical fonts");
 
 void GraphicalFont::init(variant node)
 {
