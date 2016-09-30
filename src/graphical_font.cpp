@@ -41,6 +41,8 @@ namespace
 		static cache_map res;
 		return res;
 	}
+
+	PREF_BOOL(enable_graphical_fonts, true, "Loads graphical fonts");
 }
 
 void GraphicalFont::init(variant node)
@@ -188,6 +190,10 @@ rect GraphicalFont::dimensions(const std::string& text, int size) const
 // Initialize the graphical font for the given locale
 void GraphicalFont::initForLocale(const std::string& locale) 
 {
+	if(!g_enable_graphical_fonts) {
+		return;
+	}
+
 	std::string names[] = {"base_fonts", "fonts"};
 	for(auto& name : names) {
 		std::string filename = "data/" + name + "." + locale + ".cfg";

@@ -24,6 +24,7 @@
 #include <SDL.h>
 
 #include <boost/interprocess/sync/named_semaphore.hpp>
+#include <boost/exception/diagnostic_information.hpp>
 
 #if !defined(_MSC_VER)
 #include <sys/types.h>
@@ -341,6 +342,7 @@ void terminate_utility_process(bool* complete=nullptr)
 
 		std::string pipe_name;
 		if(ipc_pipe != nullptr) {
+			std::string error_msg;
 			for(int i = 0; i != 4 && pipe_name.empty(); ++i) {
 				std::string uuid_str = write_uuid(generate_uuid());
 				uuid_str.resize(16);
@@ -349,12 +351,19 @@ void terminate_utility_process(bool* complete=nullptr)
 					SharedMemoryPipeManager::createNamedPipe(pipe_name);
 					g_current_ipc_pipe.reset(new SharedMemoryPipe(pipe_name, true));
 					*ipc_pipe = g_current_ipc_pipe;
+				} catch(boost::exception& e) {
+					error_msg = diagnostic_information(e);
+					error_msg = "boost exception: " + error_msg;
+				} catch(std::exception& e) {
+					error_msg = e.what();
+					error_msg = "unknown exception: " + error_msg;
 				} catch(...) {
 					pipe_name = "";
+					error_msg = "Unknown error";
 				}
 			}
 
-			ASSERT_LOG(*ipc_pipe, "Could not create named pipe after 64 attempts");
+			ASSERT_LOG(*ipc_pipe, "Could not create named pipe after 64 attempts: " << error_msg);
 		}
 
 		ASSERT_LOG(startup_semaphore, "Could not create semaphore");
