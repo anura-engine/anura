@@ -322,7 +322,13 @@ void TileMap::load(const std::string& fname, const std::string& tile_id)
 
 	files_loaded.insert(fname);
 
-	variant node = json::parse_from_file("data/tiles/" + fname);
+	variant node;
+	
+	try {
+		node = json::parse_from_file("data/tiles/" + fname);
+	} catch(json::ParseError& e) {
+		ASSERT_LOG(false, "Error parsing data/tiles/" << fname << ": " << e.errorMessage());
+	}
 
 	palette_scope palette_setter(parse_variant_list_or_csv_string(node["palettes"]));
 
