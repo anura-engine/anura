@@ -901,7 +901,7 @@ editor::editor(const char* level_cfg)
 
 	static bool first_time = true;
 	if(first_time) {
-		variant editor_cfg = json::parse_from_file("data/editor.cfg");
+		variant editor_cfg = json::parse_from_file_or_die("data/editor.cfg");
 		const int begin = profile::get_tick_time();
 		TileMap::loadAll();
 		const int mid = profile::get_tick_time();
