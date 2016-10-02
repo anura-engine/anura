@@ -35,7 +35,7 @@
 #define THREAD_LOCAL thread_local
 #endif
 
-extern bool g_thread_read_only_variants;
+extern THREAD_LOCAL bool g_thread_read_only_variants;
 
 class reference_counted_object;
 
