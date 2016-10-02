@@ -48,7 +48,7 @@
 #include "variant_type.hpp"
 #include "wml_formula_callable.hpp"
 
-thread_local bool g_thread_read_only_variants = false;
+THREAD_LOCAL bool g_thread_read_only_variants = false;
 
 namespace 
 {

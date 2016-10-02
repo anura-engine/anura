@@ -36,6 +36,14 @@
 #include "formula_fwd.hpp"
 #include "reference_counted_object.hpp"
 
+#ifdef __APPLE__
+#define THREAD_LOCAL __thread
+#elif defined(WIN32)
+#define __declspec(thread)
+#else
+#define THREAD_LOCAL thread_local
+#endif
+
 namespace game_logic 
 {
 	class FormulaCallable;
