@@ -27,7 +27,15 @@
 
 #include "boost/intrusive_ptr.hpp"
 
-extern thread_local bool g_thread_read_only_variants;
+#ifdef __APPLE__
+#define THREAD_LOCAL __thread
+#elif defined(WIN32)
+#define __declspec(thread)
+#else
+#define THREAD_LOCAL thread_local
+#endif
+
+extern THREAD_LOCAL bool g_thread_read_only_variants;
 
 class reference_counted_object;
 
