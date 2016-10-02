@@ -485,8 +485,10 @@ namespace {
 	class TextureObjectFuture : public game_logic::FormulaCallable
 	{
 	public:
-		TextureObjectFuture(int w, int h, variant ops, variant texture_args) : context_(w, h), w_(w), h_(h), ops_(ops), finished_(false), texture_args_(texture_args)
+		TextureObjectFuture(int w, int h, variant ops, variant texture_args) : context_(w, h), w_(w), h_(h), ops_(ops), texture_args_(texture_args)
 		{
+			finished_ = false; //init here becaues for some reason MSVC++ doesn't
+			                   //have a constructor version of atomic_bool
 			TextureObjectFuture* f = this;
 			future_ = std::async(std::launch::async, [=]() {
 				timeval tv_begin, tv_end;
