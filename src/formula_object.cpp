@@ -260,8 +260,8 @@ std::map<std::string, std::string>& class_path_map()
 			return i->second;
 		}
 
-		enum CLASS_BASE_FIELDS { FIELD_PRIVATE, FIELD_VALUE, FIELD_SELF, FIELD_ME, FIELD_NEW_IN_UPDATE, FIELD_ORPHANED, FIELD_PREVIOUS, FIELD_CLASS, FIELD_LIB, FIELD_UUID, NUM_BASE_FIELDS };
-		static const std::string BaseFields[] = {"_data", "value", "self", "me", "new_in_update", "orphaned_by_update", "previous", "_class", "lib", "_uuid"};
+		enum CLASS_BASE_FIELDS { FIELD_PRIVATE, FIELD_VALUE, FIELD_SELF, FIELD_ME, FIELD_NEW_IN_UPDATE, FIELD_ORPHANED, FIELD_CLASS, FIELD_LIB, FIELD_UUID, NUM_BASE_FIELDS };
+		static const std::string BaseFields[] = {"_data", "value", "self", "me", "new_in_update", "orphaned_by_update", "_class", "lib", "_uuid"};
 
 		class FormulaClassDefinition : public FormulaCallableDefinition
 		{
@@ -288,9 +288,6 @@ std::map<std::string, std::string>& class_path_map()
 					case FIELD_NEW_IN_UPDATE:
 					case FIELD_ORPHANED:
 					slots_.back().variant_type = variant_type::get_type(variant::VARIANT_TYPE_BOOL);
-					break;
-					case FIELD_PREVIOUS:
-					slots_.back().variant_type = variant_type::get_class(class_name);
 					break;
 					case FIELD_CLASS:
 					slots_.back().variant_type = variant_type::get_type(variant::VARIANT_TYPE_STRING);
@@ -965,8 +962,6 @@ std::map<std::string, std::string>& class_path_map()
 			FormulaObject* obj = v.try_convert<FormulaObject>();
 			if(obj) {
 				dst[obj->id_] = obj;
-				obj->previous_.reset();
-				obj->previous_.reset(new FormulaObject(*obj));
 				objects.push_back(obj);
 			}});
 		visitVariants(variant(&updated), [&src,&objects](variant v) {
@@ -1017,8 +1012,6 @@ variant FormulaObject::generateDiff(variant before, variant b)
 		FormulaObject* obj = v.try_convert<FormulaObject>();
 		if(obj) {
 			dst[obj->id_] = obj;
-			obj->previous_.reset();
-			obj->previous_.reset(new FormulaObject(*obj));
 			objects.push_back(obj);
 		}});
 
@@ -1098,8 +1091,6 @@ void FormulaObject::applyDiff(variant delta)
 	visitVariants(variant(this), [&objects](variant v) {
 		FormulaObject* obj = v.try_convert<FormulaObject>();
 		if(obj) {
-			obj->previous_.reset();
-			obj->previous_.reset(new FormulaObject(*obj));
 			objects[obj->id_] = obj;
 		}});
 
@@ -1247,6 +1238,37 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 		}
 	}
 
+	void FormulaObject::deepDestroy(variant v)
+	{
+		std::set<FormulaObject*> seen;
+		deepDestroy(v, seen);
+	}
+
+	void FormulaObject::deepDestroy(variant v, std::set<FormulaObject*>& seen)
+	{
+		if(v.is_callable()) {
+			FormulaObject* obj = v.try_convert<FormulaObject>();
+			if(obj) {
+				if(seen.insert(obj).second == false) {
+					return;
+				}
+			}
+
+			for(variant& var : obj->variables_) {
+				deepDestroy(var, seen);
+				var = variant();
+			}
+		} else if(v.is_list()) {
+			for(int n = 0; n != v.num_elements(); ++n) {
+				deepDestroy(v[n], seen);
+			}
+		} else if(v.is_map()) {
+			for(auto p : v.as_map()) {
+				deepDestroy(p.second, seen);
+			}
+		}
+	}
+
 	void FormulaObject::reloadClasses()
 	{
 		classes_.clear();
@@ -1305,7 +1327,6 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 
 	void FormulaObject::surrenderReferences(GarbageCollector* collector)
 	{
-		collector->surrenderPtr(&previous_, "PREV");
 		collector->surrenderVariant(&tmp_value_, "TMP");
 
 		const std::vector<const PropertyEntry*>& entries = class_->variableSlots();
@@ -1537,7 +1558,6 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 			case FIELD_ME: return variant(this);
 			case FIELD_NEW_IN_UPDATE: return variant::from_bool(new_in_update_);
 			case FIELD_ORPHANED: return variant::from_bool(orphaned_);
-			case FIELD_PREVIOUS: if(previous_) { return variant(previous_.get()); } else { return variant(this); }
 			case FIELD_CLASS: return class_->nameVariant();
 			case FIELD_LIB: return variant(get_library_object().get());
 			case FIELD_UUID: return variant(write_uuid(id_));

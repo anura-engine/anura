@@ -86,7 +86,7 @@ namespace
 	std::vector<std::pair<std::function<void()>,void*>> process_functions;
 	std::deque<std::function<void()>> asynchronous_work_items_;
 
-	PREF_INT(time_quota_async_work_items, 14, "Number of milliseconds allowed each frame for asynchronous/background work items to run");
+	PREF_INT(time_quota_async_work_items, 10, "Number of milliseconds allowed each frame for asynchronous/background work items to run");
 
 	PREF_BOOL(allow_debug_console_clicking, true, "Allow clicking on objects in the debug console to select them");
 	PREF_BOOL(reload_modified_objects, false, "Reload object definitions when their file is modified on disk");
@@ -872,15 +872,6 @@ bool LevelRunner::play_cycle()
 
 	for(auto& p : process_functions) {
 		p.first();
-	}
-
-	if(asynchronous_work_items_.empty() == false) {
-		const int start = SDL_GetTicks();
-		while(!asynchronous_work_items_.empty() && SDL_GetTicks() < start + g_time_quota_async_work_items) {
-			std::function<void()> fn = asynchronous_work_items_.front();
-			asynchronous_work_items_.pop_front();
-			fn();
-		}
 	}
 
 	const preferences::alt_frame_time_scope alt_frame_time_scoper(preferences::has_alt_frame_time() && SDL_GetModState()&KMOD_ALT);
@@ -1754,9 +1745,25 @@ bool LevelRunner::play_cycle()
 	}
 
 	const int raw_wait_time = desired_end_time - profile::get_tick_time();
-	const int wait_time = std::max<int>(1, desired_end_time - profile::get_tick_time());
+	int wait_time = std::max<int>(1, desired_end_time - profile::get_tick_time());
+
+	static int async_work_items_starvation = 0;
+	if(asynchronous_work_items_.empty() == false) {
+		++async_work_items_starvation;
+	}
+
+	while(!asynchronous_work_items_.empty() && (wait_time >= g_time_quota_async_work_items || async_work_items_starvation > 60)) {
+		async_work_items_starvation = 0;
+		std::function<void()> fn = asynchronous_work_items_.front();
+		asynchronous_work_items_.pop_front();
+		fn();
+
+		wait_time = std::max<int>(1, desired_end_time - profile::get_tick_time());
+	}
+
 	next_delay_ += wait_time;
 	current_perf.delay = wait_time;
+
 	if (wait_time != 1 && !is_skipping_game()) {
 		formula_profiler::Instrument instrument("SLEEP");
 		profile::delay(wait_time);

@@ -62,6 +62,7 @@
 #include "formula_profiler.hpp"
 #include "hex.hpp"
 #include "hex_helper.hpp"
+#include "level_runner.hpp"
 #include "lua_iface.hpp"
 #include "md5.hpp"
 #include "module.hpp"
@@ -5168,17 +5169,23 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 
 	class gc_command : public game_logic::CommandCallable
 	{
+		int gens_;
 	public:
+		explicit gc_command(int num_gens) : gens_(num_gens) {}
 		virtual void execute(game_logic::FormulaCallable& ob) const 
 		{
 			//CustomObject::run_garbage_collection();
-			runGarbageCollection();
+			int gens = gens_;
+			addAsynchronousWorkItem([=]() { runGarbageCollection(gens); });
+			addAsynchronousWorkItem([=]() { reapGarbageCollection(); });
 		}
 	};
 
-	FUNCTION_DEF(trigger_garbage_collection, 0, 0, "trigger_garbage_collection(): trigger an FFL garbage collection")
-		return variant(new gc_command);
+	FUNCTION_DEF(trigger_garbage_collection, 0, 1, "trigger_garbage_collection(num_gens): trigger an FFL garbage collection")
+		const int num_gens = args().size() > 0 ? args()[0]->evaluate(variables).as_int() : -1;
+		return variant(new gc_command(num_gens));
 	FUNCTION_ARGS_DEF
+	ARG_TYPE("null|int")
 	RETURN_TYPE("commands")
 	END_FUNCTION_DEF(trigger_garbage_collection)
 
@@ -5355,6 +5362,37 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 	FUNCTION_TYPE_DEF
 		return args()[0]->queryVariantType();
 	END_FUNCTION_DEF(get_modified_object)
+
+	FUNCTION_DEF(eval_with_temp_modifications, 4, 4, "")
+		FormulaCallablePtr callable(args()[0]->evaluate(variables).mutable_callable());
+		ASSERT_LOG(callable.get(), "Callable invalid");
+		variant do_cmd = args()[2]->evaluate(variables);
+		variant undo_cmd = args()[3]->evaluate(variables);
+
+		callable->executeCommand(do_cmd);
+		variant result = args()[1]->evaluate(variables);
+		callable->executeCommand(undo_cmd);
+
+		return result;
+
+	FUNCTION_ARGS_DEF
+	ARG_TYPE("object")
+	ARG_TYPE("any")
+	ARG_TYPE("commands")
+	ARG_TYPE("commands")
+	FUNCTION_TYPE_DEF
+		return args()[1]->queryVariantType();
+
+	END_FUNCTION_DEF(eval_with_temp_modifications)
+
+	FUNCTION_DEF(release_object, 1, 1, "release_object(obj)")
+		Formula::failIfStaticContext();
+		variant v = args()[0]->evaluate(variables);
+		return variant(new game_logic::FnCommandCallable([=]() { FormulaObject::deepDestroy(v); }));
+	FUNCTION_ARGS_DEF
+	ARG_TYPE("any")
+	RETURN_TYPE("commands")
+	END_FUNCTION_DEF(release_object)
 
 	FUNCTION_DEF(DrawPrimitive, 1, 1, "DrawPrimitive(map): create and return a DrawPrimitive")
 		variant v = args()[0]->evaluate(variables);

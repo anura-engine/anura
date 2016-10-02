@@ -292,7 +292,7 @@ class ProfilerWidget : public Widget
 
 	boost::intrusive_ptr<FrameDetailsWidget> details_;
 
-	TexturePtr draw_text_, process_text_, sleep_text_;
+	TexturePtr draw_text_, process_text_, sleep_text_, gc_text_;
 
 	TexturePtr frame_text_;
 
@@ -312,6 +312,7 @@ public:
 		draw_text_ = Font::getInstance()->renderText("Draw", white_color_, 16, true, Font::get_default_monospace_font());
 		process_text_ = Font::getInstance()->renderText("Process", white_color_, 16, true, Font::get_default_monospace_font());
 		sleep_text_ = Font::getInstance()->renderText("Sleep", white_color_, 16, true, Font::get_default_monospace_font());
+		gc_text_ = Font::getInstance()->renderText("GC", white_color_, 16, true, Font::get_default_monospace_font());
 	}
 
 	~ProfilerWidget() {
@@ -352,12 +353,13 @@ public:
 
 		size_t begin_frame = firstDisplayedFrame();
 
-		BarGraphRenderable renderables[5];
+		BarGraphRenderable renderables[6];
 		renderables[0].setColor(gray_color_);
 		renderables[1].setColor(red_color_);
 		renderables[2].setColor(blue_color_);
 		renderables[3].setColor(yellow_color_);
-		renderables[4].setColor(white_color_);
+		renderables[4].setColor(green_color_);
+		renderables[5].setColor(white_color_);
 
 		for(size_t i = begin_frame; i < frames_.size()-1; ++i) {
 			const InstrumentationNode& f = *frames_[i];
@@ -380,10 +382,12 @@ public:
 					renderable = &renderables[2];
 				} else if(strcmp(node->id, "DRAW") == 0) {
 					renderable = &renderables[3];
+				} else if(strcmp(node->id, "GC") == 0) {
+					renderable = &renderables[4];
 				}
 
 				if(i == selected_frame_) {
-					renderable = &renderables[4];
+					renderable = &renderables[5];
 				}
 
 				const uint64_t begin_pos = node->begin_time - f.begin_time;
@@ -395,7 +399,7 @@ public:
 			}
 		}
 
-		for(int i = 1; i != 5; ++i) {
+		for(int i = 1; i != 6; ++i) {
 			auto& renderable = renderables[i];
 			if(renderable.empty() == false) {
 				renderable.prepareDraw();
@@ -413,6 +417,8 @@ public:
 		c.blitTexture(process_text_, 0, x() + 25, y() + 20, white_color_);
 		c.drawSolidRect(rect(x()+13, y()+38, 10, 10), blue_color_);
 		c.blitTexture(sleep_text_, 0, x() + 25, y() + 35, white_color_);
+		c.drawSolidRect(rect(x()+13, y()+53, 10, 10), green_color_);
+		c.blitTexture(gc_text_, 0, x() + 25, y() + 50, white_color_);
 
 		if(frame_text_.get() != nullptr) {
 			c.blitTexture(frame_text_, 0, x() + width() - 400, y() + 5, white_color_);
@@ -581,6 +587,7 @@ namespace formula_profiler
 				g_profiler_widget->beginInstrument(id, t_, formula ? formula->strVal() : variant());
 			}
 		}
+		t_ = SDL_GetPerformanceCounter();
 	}
 
 	void Instrument::init(const char* id, variant info)
@@ -598,12 +605,22 @@ namespace formula_profiler
 		if(profiler_on) {
 			uint64_t end_t = SDL_GetPerformanceCounter();
 			InstrumentationRecord& r = g_instrumentation[id_];
-			r.time_ns += tsc_to_ns(end_t - t_);
+			r.time_ns += tsc_to_ns(end_t) - tsc_to_ns(t_);
 			r.nsamples++;
 			if(g_profiler_widget) {
 				g_profiler_widget->endInstrument(id_, end_t);
 			}
 		}
+	}
+
+	uint64_t Instrument::get_ns() const
+	{
+		if(profiler_on) {
+			uint64_t end_t = SDL_GetPerformanceCounter();
+			return tsc_to_ns(end_t) - tsc_to_ns(t_);
+		}
+
+		return 0LL;
 	}
 
 	void dump_instrumentation()

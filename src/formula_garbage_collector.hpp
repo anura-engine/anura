@@ -31,6 +31,8 @@ private:
 	void insertAtHead();
 	GarbageCollectible* next_;
 	GarbageCollectible* prev_;
+
+	int tenure_;
 };
 
 class GarbageCollector
@@ -48,5 +50,6 @@ private:
 	virtual void surrenderPtrInternal(boost::intrusive_ptr<GarbageCollectible>* ptr, const char* description) = 0;
 };
 
-void runGarbageCollection();
+void runGarbageCollection(int num_gens=-1);
+void reapGarbageCollection();
 void runGarbageCollectionDebug(const char* fname);
