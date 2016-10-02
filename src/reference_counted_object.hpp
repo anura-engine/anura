@@ -30,7 +30,7 @@
 #ifdef __APPLE__
 #define THREAD_LOCAL __thread
 #elif defined(WIN32)
-#define __declspec(thread)
+#define THREAD_LOCAL __declspec(thread)
 #else
 #define THREAD_LOCAL thread_local
 #endif

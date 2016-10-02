@@ -1,5 +1,3 @@
-#include <sys/time.h>
-
 #include "asserts.hpp"
 #include "formula_callable.hpp"
 #include "formula_profiler.hpp"
@@ -44,19 +42,8 @@ void ipc_client::process()
 		variant v;
 		
 		{
-		timeval tv_begin, tv_end;
 		formula_profiler::Instrument instrumentation("IPC_DESERIALIZE");
-		const uint64_t ntaken_before = instrumentation.get_ns();
-		gettimeofday(&tv_begin, nullptr);
 		v = game_logic::deserialize_doc_with_objects(m);
-		gettimeofday(&tv_end, nullptr);
-
-		const int us = (tv_end.tv_sec - tv_begin.tv_sec)*1000000 + (tv_end.tv_usec - tv_begin.tv_usec);
-
-		const uint64_t ntaken = instrumentation.get_ns();
-		if(ntaken > 1000000LL) {
-			fprintf(stderr, "ZZZ: TOOK: %d %dms: VS %dms (((%s)))\n", (int)(ntaken_before/1000000LL), (int)(ntaken/1000000LL), us/1000, m.c_str());
-		}
 		}
 
 		callable_->add("message", v);

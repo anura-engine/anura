@@ -52,7 +52,7 @@
 #include "unit_test.hpp"
 #include "utf8_to_codepoint.hpp"
 
-extern bool THREAD_LOCAL g_thread_read_only_variants;
+extern THREAD_LOCAL bool g_thread_read_only_variants;
 
 namespace graphics
 {
