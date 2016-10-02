@@ -51,6 +51,7 @@ namespace formula_profiler
 		explicit Instrument(const char* id, const game_logic::Formula* formula=nullptr) {}
 		~Instrument() {}
 		void init(const char* id, variant info);
+		uint64_t get_ns() const { return 0; }
 	};
 
 	//should be called every cycle while the profiler is running.
@@ -99,6 +100,7 @@ namespace formula_profiler
 		explicit Instrument(const char* id, const game_logic::Formula* formula=nullptr);
 		Instrument(const char* id, variant info);
 		~Instrument();
+		uint64_t get_ns() const;
 	private:
 		const char* id_;
 		uint64_t t_;

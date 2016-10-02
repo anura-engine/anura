@@ -56,6 +56,9 @@ namespace game_logic
 
 		static variant deepClone(variant v);
 		static variant deepClone(variant v, std::map<FormulaObject*,FormulaObject*>& mapping);
+
+		static void deepDestroy(variant v);
+		static void deepDestroy(variant v, std::set<FormulaObject*>& seen);
 		
 		static variant generateDiff(variant a, variant b);
 		void applyDiff(variant delta);
@@ -110,7 +113,6 @@ namespace game_logic
 		bool new_in_update_;
 		bool orphaned_;
 
-		boost::intrusive_ptr<FormulaObject> previous_;
 		boost::intrusive_ptr<game_logic::FormulaCallable> builtin_base_;
 
 		//overrides of the class's read-only properties.

@@ -468,7 +468,7 @@ void render_scene(Level& lvl, const screen_position& pos)
 		lvl.draw_status();
 	}
 
-	if(scene_title_duration_ > 0) {
+	if(scene_title_duration_ > 0 && scene_title().empty() == false) {
 		--scene_title_duration_;
 		const ConstGraphicalFontPtr f = GraphicalFont::get("default");
 		ASSERT_LOG(f.get() != nullptr, "COULD NOT LOAD DEFAULT FONT");

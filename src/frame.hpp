@@ -198,6 +198,7 @@ private:
 	void buildAlphaFromFrameInfo();
 	void buildAlpha();
 	std::vector<bool> alpha_;
+	bool allow_wrapping_;
 	bool force_no_alpha_;
 
 	bool no_remove_alpha_borders_;

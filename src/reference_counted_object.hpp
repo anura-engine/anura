@@ -27,6 +27,8 @@
 
 #include "boost/intrusive_ptr.hpp"
 
+extern thread_local bool g_thread_read_only_variants;
+
 class reference_counted_object;
 
 class weak_ptr_base
@@ -58,17 +60,17 @@ public:
 		return *this;
 	}
 
-	void add_ref() const { ++count_; }
-	void dec_ref() const { if(--count_ == 0) { delete this; } }
-	void dec_ref_norelease() const { --count_; }
+	void add_ref() const { if(g_thread_read_only_variants) { return; } ++count_; }
+	void dec_ref() const { if(g_thread_read_only_variants) { return; } if(--count_ == 0) { delete this; } }
+	void dec_ref_norelease() const { if(g_thread_read_only_variants) { return; } --count_; }
 
 	int refcount() const { return count_; }
 
 	friend class weak_ptr_base;
 
 protected:
-	void turn_reference_counting_off() { count_ = 1000000; }
-	virtual ~reference_counted_object() { if(weak_ != nullptr) { weak_->release(); } }
+	void turn_reference_counting_off() { if(g_thread_read_only_variants) { return; } count_ = 1000000; }
+	virtual ~reference_counted_object() { if(weak_ != nullptr && !g_thread_read_only_variants) { weak_->release(); } }
 private:
 	mutable int count_;
 	mutable weak_ptr_base* weak_;

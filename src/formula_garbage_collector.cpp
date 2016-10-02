@@ -72,14 +72,14 @@ GarbageCollectible* GarbageCollectible::debugGetObject(void* ptr)
 	return NULL;
 }
 
-GarbageCollectible::GarbageCollectible() : reference_counted_object(), prev_(nullptr)
+GarbageCollectible::GarbageCollectible() : reference_counted_object(), prev_(nullptr), tenure_(0)
 {
 	LockGC lock;
 	next_ = g_head;
 	insertAtHead();
 }
 
-GarbageCollectible::GarbageCollectible(const GarbageCollectible& o) : reference_counted_object(o), prev_(nullptr)
+GarbageCollectible::GarbageCollectible(const GarbageCollectible& o) : reference_counted_object(o), prev_(nullptr), tenure_(0)
 {
 	LockGC lock;
 	next_ = g_head;
@@ -151,13 +151,19 @@ namespace {
 class GarbageCollectorImpl : public GarbageCollector
 {
 public:
+	GarbageCollectorImpl(int num_gens=-1) : gens_(num_gens)
+	{}
 
 	void surrenderVariant(const variant* v, const char* description) override;
 	void surrenderPtrInternal(boost::intrusive_ptr<GarbageCollectible>* ptr, const char* description) override;
 
 	void collect();
+	void reap();
+	void debugOutputCollected();
 
 private:
+	void accumulateAll();
+	void performCollection();
 
 	void destroyReferences(GarbageCollectible* item);
 	void restoreReferences(GarbageCollectible* item);
@@ -166,6 +172,10 @@ private:
 	std::vector<PointerPair> pointers_;
 
 	std::map<GarbageCollectible*, ObjectRecord> records_;
+
+	std::vector<GarbageCollectible*> items_, saved_;
+
+	int gens_;
 };
 
 void GarbageCollectorImpl::surrenderVariant(const variant* v, const char* description)
@@ -178,7 +188,7 @@ void GarbageCollectorImpl::surrenderVariant(const variant* v, const char* descri
 	case variant::VARIANT_TYPE_GENERIC_FUNCTION:
 	case variant::VARIANT_TYPE_MULTI_FUNCTION:
 		const_cast<variant*>(v)->release();
-		variants_.push_back(const_cast<variant*>(v));
+		variants_.emplace_back(const_cast<variant*>(v));
 		break;
 	default:
 		break;
@@ -192,7 +202,7 @@ void GarbageCollectorImpl::surrenderPtrInternal(boost::intrusive_ptr<GarbageColl
 	}
 
 	PointerPair p = { ptr, ptr->get() };
-	pointers_.push_back(p);
+	pointers_.emplace_back(p);
 	ptr->reset();
 }
 
@@ -229,18 +239,28 @@ void GarbageCollectorImpl::collect()
 	LOG_INFO("Beginning garbage collection of " << g_count << " items");
 	profile::timer timer;
 
-	std::vector<GarbageCollectible*> items, saved;
-	items.reserve(g_count);
+	accumulateAll();
+	performCollection();
 
-	int count = 0;
+	LOG_INFO("Garbage collection complete in " << static_cast<int>(timer.get_time()) << "us. Collected " << items_.size() << " objects. " << saved_.size() << " objects remaining; variants: " << variants_.size() << "; pointers: " << pointers_.size());
+}
+
+void GarbageCollectorImpl::accumulateAll()
+{
+	items_.reserve(g_count);
+
 	for(GarbageCollectible* p = g_head; p != nullptr; p = p->next_) {
 		p->add_ref();
 		ASSERT_LOG(p->refcount() > 1, "Object with bad refcount: " << p->refcount() << ": " << p->debugObjectName());
-		items.push_back(p);
-		++count;
+		if(gens_ < 0 || p->tenure_ < gens_) {
+			items_.push_back(p);
+		}
 	}
 
-	for(GarbageCollectible* p : items) {
+	pointers_.reserve(items_.size()*2);
+	variants_.reserve(items_.size()*2);
+
+	for(GarbageCollectible* p : items_) {
 		ObjectRecord& record = records_[p];
 		record.begin_variant = variants_.size();
 		record.begin_pointer = pointers_.size();
@@ -248,13 +268,16 @@ void GarbageCollectorImpl::collect()
 		record.end_variant = variants_.size();
 		record.end_pointer = pointers_.size();
 	}
+}
 
+void GarbageCollectorImpl::performCollection()
+{
 	int nlast = -1;
-	while(nlast != items.size()) {
-		nlast = items.size();
+	while(nlast != items_.size()) {
+		nlast = items_.size();
 
 		int save_count = 0;
-		for(GarbageCollectible*& item : items) {
+		for(GarbageCollectible*& item : items_) {
 			if(item->refcount() == 1) {
 				continue;
 			}
@@ -262,26 +285,58 @@ void GarbageCollectorImpl::collect()
 			++save_count;
 
 			restoreReferences(item);
-			saved.push_back(item);
+			saved_.push_back(item);
+			item->tenure_++;
 			item = nullptr;
 		}
 
-		items.erase(std::remove(items.begin(), items.end(), nullptr), items.end());
+		items_.erase(std::remove(items_.begin(), items_.end(), nullptr), items_.end());
 	}
+}
 
-	for(auto item : items) {
+void GarbageCollectorImpl::reap()
+{
+	LockGC lock;
+	profile::timer timer;
+	for(auto item : items_) {
 		destroyReferences(item);
 	}
 
-	for(auto item : items) {
+	for(auto item : items_) {
 		item->dec_ref();
 	}
 
-	for(auto item : saved) {
+	for(auto item : saved_) {
 		item->dec_ref();
 	}
+	LOG_INFO("Garbage collection reap in " << static_cast<int>(timer.get_time()) << "us.");
+}
 
-	LOG_INFO("Garbage collection complete in " << static_cast<int>(timer.get_time()) << "us. Collected " << items.size() << " objects. " << saved.size() << " objects remaining");
+void GarbageCollectorImpl::debugOutputCollected()
+{
+	LockGC lock;
+	std::map<std::string, int> m;
+
+	LOG_INFO("--DELETE REPORT--\n");
+
+	std::map<std::string, int> obj_counts;
+	for(auto item : items_) {
+		obj_counts[item->debugObjectName()]++;
+	}
+
+	std::vector<std::pair<int, std::string> > obj_counts_sorted;
+	for(auto p : obj_counts) {
+		obj_counts_sorted.push_back(std::pair<int, std::string>(p.second, p.first));
+	}
+
+	int ncount = 0;
+	std::sort(obj_counts_sorted.begin(), obj_counts_sorted.end());
+	for(auto p : obj_counts_sorted) {
+		LOG_INFO("  RELEASE: " << p.first << " x " << p.second);
+		ncount += p.first;
+	}
+
+	LOG_INFO("DELETED " << ncount << " OBJECTS");
 }
 
 namespace {
@@ -487,17 +542,33 @@ void GarbageCollectorAnalyzer::run(const char* fname)
 	fclose(out);
 }
 
-void runGarbageCollection()
+namespace {
+	std::vector<std::shared_ptr<GarbageCollectorImpl>> g_reapable_gc;
+}
+
+void runGarbageCollection(int num_gens)
 {
 	formula_profiler::Instrument instrument("GC");
-	GarbageCollectorImpl gc;
-	gc.collect();
+	std::shared_ptr<GarbageCollectorImpl> gc(new GarbageCollectorImpl(num_gens));
+	gc->collect();
+	g_reapable_gc.push_back(gc);
+}
+
+void reapGarbageCollection()
+{
+	formula_profiler::Instrument instrument("GC");
+	for(auto gc : g_reapable_gc) {
+		gc->reap();
+	}
+
+	g_reapable_gc.clear();
 }
 
 void runGarbageCollectionDebug(const char* fname)
 {
 	GarbageCollectorImpl gc;
 	gc.collect();
+	gc.reap();
 
 	GarbageCollectorAnalyzer().run(fname);
 }

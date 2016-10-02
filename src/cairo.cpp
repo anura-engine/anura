@@ -21,7 +21,10 @@
 	   distribution.
 */
 
+#include <atomic>
+#include <future>
 #include <map>
+#include <mutex>
 
 #include <string.h>
 #include <sstream>
@@ -48,6 +51,8 @@
 #include "TextureObject.hpp"
 #include "unit_test.hpp"
 #include "utf8_to_codepoint.hpp"
+
+extern bool thread_local g_thread_read_only_variants;
 
 namespace graphics
 {
@@ -88,6 +93,7 @@ namespace graphics
 
 		const std::string& get_font_path_from_name(const std::string& name)
 		{
+
 			static std::map<std::string, std::string> paths;
 			if(paths.empty()) {
 				std::map<std::string, std::string> full_paths;
@@ -114,6 +120,9 @@ namespace graphics
 			if(ttf_name.size() > 4 && std::equal(ttf_name.end()-4, ttf_name.end(), ".otf")) {
 				return get_ft_font(std::string(ttf_name.begin(), ttf_name.end()-4), index);
 			}
+
+			static std::mutex mutex;
+			std::lock_guard<std::mutex> guard(mutex);
 
 			const std::string& ttf_file = get_font_path_from_name(ttf_name.empty() ? module::get_default_font() == "bitmap" ? "FreeMono" : module::get_default_font() : ttf_name);
 			static FT_Library& library = init_freetype_library();
@@ -155,6 +164,9 @@ namespace {
 		cairo_surface_t* get_cairo_image(const std::string& image)
 		{
 			static surface_cache_man cache;
+			static std::mutex cache_mutex;
+
+			std::lock_guard<std::mutex> guard(cache_mutex);
 
 			cairo_surface_t*& result = cache[image];
 			if(result == nullptr) {
@@ -189,6 +201,7 @@ namespace {
 
 			KRE::Color color;
 		};
+
 	}
 
 	cairo_context::cairo_context(int w, int h)
@@ -265,7 +278,12 @@ namespace {
 		ASSERT_LOG(status == 0, "SVG rendering error rendering " << w << "x" << h << ": " << fname << ": " << cairo_status_to_string(status));
 
 		std::shared_ptr<KRE::SVG::parse> handle;
+
+		{
 		static std::map<std::string, std::shared_ptr<KRE::SVG::parse>> cache;
+
+		static std::mutex mutex;
+		std::lock_guard<std::mutex> guard(mutex);
 
 		auto itor = cache.find(fname);
 		if(itor == cache.end()) {
@@ -276,6 +294,7 @@ namespace {
 			cache[fname] = handle;
 		} else {
 			handle = itor->second;
+		}
 		}
 
 		KRE::SVG::render_context ctx(cairo_, w, h);
@@ -462,6 +481,59 @@ namespace {
 
 		v.convert_to<cairo_op>()->execute(context);
 	}
+
+	class TextureObjectFuture : public game_logic::FormulaCallable
+	{
+	public:
+		TextureObjectFuture(int w, int h, variant ops, variant texture_args) : context_(w, h), w_(w), h_(h), ops_(ops), finished_(false), texture_args_(texture_args)
+		{
+			TextureObjectFuture* f = this;
+			future_ = std::async(std::launch::async, [=]() {
+				timeval tv_begin, tv_end;
+				gettimeofday(&tv_begin, nullptr);
+				g_thread_read_only_variants = true;
+				execute_cairo_ops(f->context_, f->ops_);
+				f->finished_ = true;
+				gettimeofday(&tv_end, nullptr);
+				return true;
+			});
+		}
+
+		~TextureObjectFuture() {
+			future_.wait();
+		}
+
+		bool finished() const { return finished_; }
+
+		const boost::intrusive_ptr<TextureObject>& result() const {
+			if(!result_ && finished_) {
+				result_.reset(new TextureObject(context_.write(texture_args_)));
+			}
+
+			return result_;
+		}
+
+	private:
+		DECLARE_CALLABLE(TextureObjectFuture);
+		cairo_context context_;
+		int w_, h_;
+		variant ops_;
+		std::atomic_bool finished_;
+
+		variant texture_args_;
+
+		mutable boost::intrusive_ptr<TextureObject> result_;
+
+		std::future<bool> future_;
+	};
+
+	BEGIN_DEFINE_CALLABLE_NOBASE(TextureObjectFuture)
+	DEFINE_FIELD(finished, "bool")
+		return variant::from_bool(obj.finished());
+	DEFINE_FIELD(texture, "builtin texture_object")
+		
+		return variant(obj.result().get());
+	END_DEFINE_CALLABLE(TextureObjectFuture)
 
 	variant layout_text_impl(const TextMarkupFragment* f1, const TextMarkupFragment* f2, float width, float width_delta=0.0, float scale_line_heights=1.0)
 	{
@@ -1036,7 +1108,7 @@ namespace {
 
 	BEGIN_DEFINE_FN(render, "(int, int, cairo_commands, map|null=null) ->builtin texture_object")
 		game_logic::Formula::failIfStaticContext();
-		formula_profiler::Instrument instrument("CAIRO_RENDER");
+		formula_profiler::Instrument instrument("CAIRO_CALC");
 
 		int w = FN_ARG(0).as_int();
 		int h = FN_ARG(1).as_int();
@@ -1059,12 +1131,16 @@ namespace {
 		cairo_context context(w, h);
 
 		variant ops = FN_ARG(2);
+
+		formula_profiler::Instrument instrument2("CAIRO_RENDER");
 		execute_cairo_ops(context, ops);
 
 		return variant(new TextureObject(context.write(NUM_FN_ARGS > 3 ? FN_ARG(3) : variant())));
 	END_DEFINE_FN
 
-	BEGIN_DEFINE_FN(render_async, "(int, int, cairo_commands, map|null=null) ->builtin texture_object")
+	BEGIN_DEFINE_FN(render_async, "(int, int, cairo_commands, map|null=null) ->builtin texture_object_future")
+		formula_profiler::Instrument instrument("CAIRO_RENDER_ASYNC_SETUP");
+		game_logic::Formula::failIfStaticContext();
 		int w = FN_ARG(0).as_int();
 		int h = FN_ARG(1).as_int();
 		ASSERT_LOG(w >= 0 && h >= 0 && w <= 8192 && h <= 8192, "Invalid canvas render: " << w << "x" << h);
@@ -1083,9 +1159,8 @@ namespace {
 		if(h < 2) {
 			h = 2;
 		}
-		auto surf = KRE::Surface::create(w, h, KRE::PixelFormat::PF::PIXELFORMAT_ARGB8888);
-		surf->createAlphaMap();
-		return variant(new TextureObject(KRE::Texture::createTexture(surf, NUM_FN_ARGS > 3 ? FN_ARG(3) : variant())));
+
+		return variant(new TextureObjectFuture(w, h, FN_ARG(2), NUM_FN_ARGS > 3 ? FN_ARG(3) : variant())); 
 
 	END_DEFINE_FN
 

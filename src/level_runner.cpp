@@ -86,11 +86,11 @@ namespace
 	std::vector<std::pair<std::function<void()>,void*>> process_functions;
 	std::deque<std::function<void()>> asynchronous_work_items_;
 
-	PREF_INT(time_quota_async_work_items, 14, "Number of milliseconds allowed each frame for asynchronous/background work items to run");
+	PREF_INT(time_quota_async_work_items, 10, "Number of milliseconds allowed each frame for asynchronous/background work items to run");
 
 	PREF_BOOL(allow_debug_console_clicking, true, "Allow clicking on objects in the debug console to select them");
 	PREF_BOOL(reload_modified_objects, false, "Reload object definitions when their file is modified on disk");
-	PREF_INT(mouse_drag_threshold, 1000, "Threshold for how much motion can take place in a mouse drag");
+	PREF_INT(mouse_drag_threshold, 5, "Threshold for how much motion can take place in a mouse drag");
 
 	PREF_FLOAT(global_scale, 1.0f, "Global scale value.");
 
@@ -466,7 +466,7 @@ bool LevelRunner::handle_mouse_events(const SDL_Event &event)
 		return false;
 	}
 
-	const int DragThresholdMilliPx = g_mouse_drag_threshold;
+	const int DragThresholdPx = g_mouse_drag_threshold;
 
 	switch(event.type)
 	{
@@ -484,7 +484,7 @@ bool LevelRunner::handle_mouse_events(const SDL_Event &event)
 		case SDL_MOUSEBUTTONUP:
 			mouse_drag_count_ = 0;
 
-		case SDL_MOUSEMOTION:
+		case SDL_MOUSEMOTION: {
 		    int x, mx = event.type == SDL_MOUSEMOTION ? event.motion.x : event.button.x;
 			int y, my = event.type == SDL_MOUSEMOTION ? event.motion.y : event.button.y;
 			int event_type = event.type;
@@ -560,6 +560,9 @@ bool LevelRunner::handle_mouse_events(const SDL_Event &event)
 				if(event_type == SDL_MOUSEBUTTONDOWN) {
 					e->setMouseButtons(e->getMouseButtons() | SDL_BUTTON(event_button_button));
 				} else if(event_type == SDL_MOUSEMOTION) {
+
+					mouse_drag_count_ += abs(event.motion.xrel) + abs(event.motion.yrel);
+
 					// handling for mouse_enter
 					if(e->isMouseOverEntity() == false) {
 						if((e->getMouseoverDelay() == 0 || static_cast<unsigned>(lvl_->cycle()) > e->getMouseoverTriggerCycle())) {
@@ -578,7 +581,7 @@ bool LevelRunner::handle_mouse_events(const SDL_Event &event)
 					handled |= e->handleEvent(basic_evt, callable.get());
 				}
 
-				if(event_type == SDL_MOUSEBUTTONUP && mouse_clicking_ && !click_handled && e->isBeingDragged() == false) {
+				if(event_type == SDL_MOUSEBUTTONUP && mouse_clicking_ && !click_handled && e->isBeingDragged() == false && mouse_drag_count_ <= DragThresholdPx) {
 					e->handleEvent(MouseClickID, callable.get());
 					if(it->isMouseEventSwallowed()) {
 						click_handled = true;
@@ -611,7 +614,6 @@ bool LevelRunner::handle_mouse_events(const SDL_Event &event)
 							}
 						}
 					} else if(event_type == SDL_MOUSEMOTION && !drag_handled) {
-						mouse_drag_count_ += abs(event.motion.xrel) + abs(event.motion.yrel);
 						// drag check.
 						if(object->isBeingDragged()) {
 							if(object->getMouseButtons() & button_state) {
@@ -623,7 +625,7 @@ bool LevelRunner::handle_mouse_events(const SDL_Event &event)
 							if(object->isMouseEventSwallowed()) {
 								drag_handled = true;
 							}
-						} else if(object->getMouseButtons() & button_state && mouse_drag_count_ > object->mouseDragThreshold(DragThresholdMilliPx)) {
+						} else if(object->getMouseButtons() & button_state && mouse_drag_count_ > object->mouseDragThreshold(DragThresholdPx)) {
 							// start drag.
 							object->handleEvent(MouseDragStartID, callable.get());
 							object->setBeingDragged();
@@ -677,19 +679,22 @@ bool LevelRunner::handle_mouse_events(const SDL_Event &event)
 				}
 			}
 
-			if(event.type == SDL_MOUSEMOTION && mouse_drag_count_ <= DragThresholdMilliPx) {
+			if(event.type == SDL_MOUSEMOTION && mouse_drag_count_ <= DragThresholdPx) {
 				break;
 			}
 
 			mouse_clicking_ = event.type == SDL_MOUSEBUTTONDOWN;
 			break;
+		} //end mouse motion event case
 	}
 	return false;
 }
 
+extern bool g_enable_graphical_fonts;
+
 void LevelRunner::show_pause_title()
 {
-	if(!editor_) {
+	if(!editor_ && g_enable_graphical_fonts) {
 		set_scene_title("Paused\n\n\n(ctrl-p)", paused ? std::numeric_limits<int>::max() : 25);
 	}
 }
@@ -867,15 +872,6 @@ bool LevelRunner::play_cycle()
 
 	for(auto& p : process_functions) {
 		p.first();
-	}
-
-	if(asynchronous_work_items_.empty() == false) {
-		const int start = SDL_GetTicks();
-		while(!asynchronous_work_items_.empty() && SDL_GetTicks() < start + g_time_quota_async_work_items) {
-			std::function<void()> fn = asynchronous_work_items_.front();
-			asynchronous_work_items_.pop_front();
-			fn();
-		}
 	}
 
 	const preferences::alt_frame_time_scope alt_frame_time_scoper(preferences::has_alt_frame_time() && SDL_GetModState()&KMOD_ALT);
@@ -1749,9 +1745,25 @@ bool LevelRunner::play_cycle()
 	}
 
 	const int raw_wait_time = desired_end_time - profile::get_tick_time();
-	const int wait_time = std::max<int>(1, desired_end_time - profile::get_tick_time());
+	int wait_time = std::max<int>(1, desired_end_time - profile::get_tick_time());
+
+	static int async_work_items_starvation = 0;
+	if(asynchronous_work_items_.empty() == false) {
+		++async_work_items_starvation;
+	}
+
+	while(!asynchronous_work_items_.empty() && (wait_time >= g_time_quota_async_work_items || async_work_items_starvation > 60)) {
+		async_work_items_starvation = 0;
+		std::function<void()> fn = asynchronous_work_items_.front();
+		asynchronous_work_items_.pop_front();
+		fn();
+
+		wait_time = std::max<int>(1, desired_end_time - profile::get_tick_time());
+	}
+
 	next_delay_ += wait_time;
 	current_perf.delay = wait_time;
+
 	if (wait_time != 1 && !is_skipping_game()) {
 		formula_profiler::Instrument instrument("SLEEP");
 		profile::delay(wait_time);

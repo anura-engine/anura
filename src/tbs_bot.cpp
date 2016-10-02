@@ -65,6 +65,7 @@ private:
   		  host_(host), 
   		  port_(port), 
   		  script_(v["script"].as_list()),
+		  response_pos_(0),
 		  script_pos_(0),
   		  has_quit_(false), 
   		  timer_proxy_(nullptr),
@@ -161,6 +162,9 @@ private:
 
 		variant msg = callable->queryValue("message");
 		LOG_INFO("BOT: @" << profile::get_tick_time() << " GOT RESPONSE: " << type << ": " << msg.write_json());
+		runGarbageCollectionDebug("server-gc.txt");
+		//reapGarbageCollection();
+
 		if(msg.is_map() && msg["type"] == variant("player_quit")) {
 			std::map<variant,variant> quit_msg;
 			quit_msg[variant("session_id")] = variant(session_id_);
@@ -187,7 +191,7 @@ private:
 
 		ASSERT_LOG(type == "message_received", "UNRECOGNIZED RESPONSE: " << type);
 
-		variant script = script_[response_.size()];
+		variant script = script_[response_pos_];
 		std::vector<variant> validations;
 		if(script.has_key("validate")) {
 			variant validate = script["validate"];
@@ -211,7 +215,7 @@ private:
 		m[variant("message")] = callable->queryValue("message");
 		m[variant("validations")] = variant(&validations);
 
-		response_.push_back(variant(&m));
+		++response_pos_;
 
 		//tbs::web_server::set_debug_state(generate_report());
 	}
@@ -246,8 +250,6 @@ private:
 	variant bot::generate_report() const
 	{
 		std::map<variant,variant> m;
-		std::vector<variant> response = response_;
-		m[variant("response")] = variant(&response);
 		return variant(&m);
 	}
 
@@ -255,10 +257,6 @@ private:
 	{
 		for(variant& script : script_) {
 			collector->surrenderVariant(&script, "script");
-		}
-
-		for(variant& response : response_) {
-			collector->surrenderVariant(&response, "response");
 		}
 
 		collector->surrenderPtr(&client_, "client");

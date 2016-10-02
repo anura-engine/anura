@@ -637,11 +637,9 @@ namespace sound
 	//specs of the format loaded.
 	bool loadVorbis(const char* file, SDL_AudioSpec* spec, std::vector<char>& buf)
 	{
-		FILE* f = fopen(file, "rb");
-
 		OggVorbis_File ogg_file;
 
-		int res = vorbis().ov_open(f, &ogg_file, nullptr, 0);
+		int res = vorbis().ov_fopen(file, &ogg_file);
 		if(res != 0) {
 			return false;
 		}
@@ -927,10 +925,185 @@ namespace sound
 	BEGIN_DEFINE_CALLABLE(SoundEffectFilter, SoundSource)
 	END_DEFINE_CALLABLE(SoundEffectFilter)
 
-	class HighPassSoundEffectFilter : public SoundEffectFilter
+	enum BiquadFilterType {
+		bq_type_lowpass = 0,
+		bq_type_highpass,
+		bq_type_bandpass,
+		bq_type_notch,
+		bq_type_peak,
+		bq_type_lowshelf,
+		bq_type_highshelf
+	};
+
+	class Biquad {
+	public:
+		Biquad(BiquadFilterType type, variant node);
+		~Biquad();
+		void setType(BiquadFilterType type);
+		void setQ(double Q);
+		void setFc(double Fc);
+		void setPeakGain(double peakGainDB);
+		void setBiquad(BiquadFilterType type, double Fc, double Q, double peakGain);
+		float process(int nchannel, float in);
+		
+	protected:
+		void calcBiquad(void);
+
+		BiquadFilterType type_;
+		double a0, a1, a2, b1, b2;
+		double Fc, Q, peakGain;
+
+		double z1_[NumChannels], z2_[NumChannels];
+	};
+
+	inline float Biquad::process(int nchannel, float in) {
+		double out = in * a0 + z1_[nchannel];
+		z1_[nchannel] = in * a1 + z2_[nchannel] - b1 * out;
+		z2_[nchannel] = in * a2 - b2 * out;
+		return out;
+	}
+
+	Biquad::Biquad(BiquadFilterType t, variant node) {
+		setBiquad(t, node["fc"].as_double(4000.0)/SampleRate, node["q"].as_double(0.707), node["peak_gain"].as_double(1.0));
+		for(int n = 0; n != NumChannels; ++n) {
+			z1_[n] = z2_[n] = 0.0;
+		}
+	}
+
+	Biquad::~Biquad() {
+	}
+
+	void Biquad::setType(BiquadFilterType type) {
+		type_ = type;
+		calcBiquad();
+	}
+
+	void Biquad::setQ(double Q) {
+		this->Q = Q;
+		calcBiquad();
+	}
+
+	void Biquad::setFc(double Fc) {
+		this->Fc = Fc;
+		calcBiquad();
+	}
+
+	void Biquad::setPeakGain(double peakGainDB) {
+		this->peakGain = peakGainDB;
+		calcBiquad();
+	}
+		
+	void Biquad::setBiquad(BiquadFilterType type, double Fc, double Q, double peakGainDB) {
+		this->type_ = type;
+		this->Q = Q;
+		this->Fc = Fc;
+		setPeakGain(peakGainDB);
+	}
+
+	void Biquad::calcBiquad(void) {
+		double norm;
+		double V = pow(10, fabs(peakGain) / 20.0);
+		double K = tan(M_PI * Fc);
+		switch (this->type_) {
+			case bq_type_lowpass:
+				norm = 1 / (1 + K / Q + K * K);
+				a0 = K * K * norm;
+				a1 = 2 * a0;
+				a2 = a0;
+				b1 = 2 * (K * K - 1) * norm;
+				b2 = (1 - K / Q + K * K) * norm;
+				break;
+				
+			case bq_type_highpass:
+				norm = 1 / (1 + K / Q + K * K);
+				a0 = 1 * norm;
+				a1 = -2 * a0;
+				a2 = a0;
+				b1 = 2 * (K * K - 1) * norm;
+				b2 = (1 - K / Q + K * K) * norm;
+				break;
+				
+			case bq_type_bandpass:
+				norm = 1 / (1 + K / Q + K * K);
+				a0 = K / Q * norm;
+				a1 = 0;
+				a2 = -a0;
+				b1 = 2 * (K * K - 1) * norm;
+				b2 = (1 - K / Q + K * K) * norm;
+				break;
+				
+			case bq_type_notch:
+				norm = 1 / (1 + K / Q + K * K);
+				a0 = (1 + K * K) * norm;
+				a1 = 2 * (K * K - 1) * norm;
+				a2 = a0;
+				b1 = a1;
+				b2 = (1 - K / Q + K * K) * norm;
+				break;
+				
+			case bq_type_peak:
+				if (peakGain >= 0) {    // boost
+					norm = 1 / (1 + 1/Q * K + K * K);
+					a0 = (1 + V/Q * K + K * K) * norm;
+					a1 = 2 * (K * K - 1) * norm;
+					a2 = (1 - V/Q * K + K * K) * norm;
+					b1 = a1;
+					b2 = (1 - 1/Q * K + K * K) * norm;
+				}
+				else {    // cut
+					norm = 1 / (1 + V/Q * K + K * K);
+					a0 = (1 + 1/Q * K + K * K) * norm;
+					a1 = 2 * (K * K - 1) * norm;
+					a2 = (1 - 1/Q * K + K * K) * norm;
+					b1 = a1;
+					b2 = (1 - V/Q * K + K * K) * norm;
+				}
+				break;
+			case bq_type_lowshelf:
+				if (peakGain >= 0) {    // boost
+					norm = 1 / (1 + sqrt(2) * K + K * K);
+					a0 = (1 + sqrt(2*V) * K + V * K * K) * norm;
+					a1 = 2 * (V * K * K - 1) * norm;
+					a2 = (1 - sqrt(2*V) * K + V * K * K) * norm;
+					b1 = 2 * (K * K - 1) * norm;
+					b2 = (1 - sqrt(2) * K + K * K) * norm;
+				}
+				else {    // cut
+					norm = 1 / (1 + sqrt(2*V) * K + V * K * K);
+					a0 = (1 + sqrt(2) * K + K * K) * norm;
+					a1 = 2 * (K * K - 1) * norm;
+					a2 = (1 - sqrt(2) * K + K * K) * norm;
+					b1 = 2 * (V * K * K - 1) * norm;
+					b2 = (1 - sqrt(2*V) * K + V * K * K) * norm;
+				}
+				break;
+			case bq_type_highshelf:
+				if (peakGain >= 0) {    // boost
+					norm = 1 / (1 + sqrt(2) * K + K * K);
+					a0 = (V + sqrt(2*V) * K + K * K) * norm;
+					a1 = 2 * (K * K - V) * norm;
+					a2 = (V - sqrt(2*V) * K + K * K) * norm;
+					b1 = 2 * (K * K - 1) * norm;
+					b2 = (1 - sqrt(2) * K + K * K) * norm;
+				}
+				else {    // cut
+					norm = 1 / (V + sqrt(2*V) * K + K * K);
+					a0 = (1 + sqrt(2) * K + K * K) * norm;
+					a1 = 2 * (K * K - 1) * norm;
+					a2 = (1 - sqrt(2) * K + K * K) * norm;
+					b1 = 2 * (K * K - V) * norm;
+					b2 = (V - sqrt(2*V) * K + K * K) * norm;
+				}
+				break;
+		}
+		
+		return;
+	}
+
+	class BiQuadSoundEffectFilter : public SoundEffectFilter
 	{
 	public:
-		explicit HighPassSoundEffectFilter(float alpha) : alpha_(alpha)
+		BiQuadSoundEffectFilter(BiquadFilterType t, variant node) : filter_(t, node)
 		{}
 
 		void MixData(float* output, int nsamples) override
@@ -944,58 +1117,21 @@ namespace sound
 			output[0] = input[0];
 			output[1] = input[1];
 
-			for(int n = 2; n < nsamples*NumChannels; ++n) {
-				output[n] = alpha_*output[n-2] + alpha_ * (input[n] - input[n-2]);
+			const float* in = &input[0];
+
+			for(int n = 0; n < nsamples; ++n) {
+				*output++ = filter_.process(0, *in++);
+				*output++ = filter_.process(1, *in++);
 			}
 		}
 	private:
 		threading::mutex mutex_;
-		float alpha_;
-		DECLARE_CALLABLE(HighPassSoundEffectFilter);
+		Biquad filter_;
+		DECLARE_CALLABLE(BiQuadSoundEffectFilter);
 	};
 
-	BEGIN_DEFINE_CALLABLE(HighPassSoundEffectFilter, SoundEffectFilter)
-	DEFINE_FIELD(alpha, "decimal")
-		return variant(obj.alpha_);
-	DEFINE_SET_FIELD
-		threading::lock lck(obj.mutex_);
-		obj.alpha_ = value.as_float();
-	END_DEFINE_CALLABLE(HighPassSoundEffectFilter)
-
-	class LowPassSoundEffectFilter : public SoundEffectFilter
-	{
-	public:
-		explicit LowPassSoundEffectFilter(float alpha) : alpha_(alpha)
-		{}
-
-		void MixData(float* output, int nsamples) override
-		{
-			threading::lock lck(mutex_);
-
-			std::vector<float> input;
-			input.resize(nsamples*NumChannels);
-			GetData(&input[0], nsamples);
-
-			output[0] = input[0];
-			output[1] = input[1];
-
-			for(int n = 2; n < nsamples*NumChannels; ++n) {
-				output[n] = alpha_*output[n-2] + alpha_ * (input[n] - input[n-2]);
-			}
-		}
-	private:
-		threading::mutex mutex_;
-		float alpha_;
-		DECLARE_CALLABLE(LowPassSoundEffectFilter);
-	};
-
-	BEGIN_DEFINE_CALLABLE(LowPassSoundEffectFilter, SoundEffectFilter)
-	DEFINE_FIELD(alpha, "decimal")
-		return variant(obj.alpha_);
-	DEFINE_SET_FIELD
-		threading::lock lck(obj.mutex_);
-		obj.alpha_ = value.as_float();
-	END_DEFINE_CALLABLE(LowPassSoundEffectFilter)
+	BEGIN_DEFINE_CALLABLE(BiQuadSoundEffectFilter, SoundEffectFilter)
+	END_DEFINE_CALLABLE(BiQuadSoundEffectFilter)
 
 	class SpeedSoundEffectFilter : public SoundEffectFilter
 	{
@@ -2015,12 +2151,32 @@ BEGIN_DEFINE_CALLABLE_NOBASE(AudioEngine)
 	DEFINE_FIELD(current_music, "null|builtin music_player")
 		return variant(g_current_player.get());
 	
-	BEGIN_DEFINE_FN(low_pass_filter, "(decimal) ->builtin sound_effect_filter")
-		return variant(new LowPassSoundEffectFilter(FN_ARG(0).as_float()));
+	BEGIN_DEFINE_FN(low_pass_filter, "(map) ->builtin sound_effect_filter")
+		return variant(new BiQuadSoundEffectFilter(bq_type_lowpass, FN_ARG(0)));
 	END_DEFINE_FN
 
-	BEGIN_DEFINE_FN(high_pass_filter, "(decimal) ->builtin sound_effect_filter")
-		return variant(new HighPassSoundEffectFilter(FN_ARG(0).as_float()));
+	BEGIN_DEFINE_FN(high_pass_filter, "(map) ->builtin sound_effect_filter")
+		return variant(new BiQuadSoundEffectFilter(bq_type_highpass, FN_ARG(0)));
+	END_DEFINE_FN
+
+	BEGIN_DEFINE_FN(band_pass_filter, "(map) ->builtin sound_effect_filter")
+		return variant(new BiQuadSoundEffectFilter(bq_type_bandpass, FN_ARG(0)));
+	END_DEFINE_FN
+
+	BEGIN_DEFINE_FN(notch_filter, "(map) ->builtin sound_effect_filter")
+		return variant(new BiQuadSoundEffectFilter(bq_type_notch, FN_ARG(0)));
+	END_DEFINE_FN
+
+	BEGIN_DEFINE_FN(peak_filter, "(map) ->builtin sound_effect_filter")
+		return variant(new BiQuadSoundEffectFilter(bq_type_peak, FN_ARG(0)));
+	END_DEFINE_FN
+
+	BEGIN_DEFINE_FN(low_shelf_filter, "(map) ->builtin sound_effect_filter")
+		return variant(new BiQuadSoundEffectFilter(bq_type_lowshelf, FN_ARG(0)));
+	END_DEFINE_FN
+
+	BEGIN_DEFINE_FN(high_shelf_filter, "(map) ->builtin sound_effect_filter")
+		return variant(new BiQuadSoundEffectFilter(bq_type_highshelf, FN_ARG(0)));
 	END_DEFINE_FN
 	
 	BEGIN_DEFINE_FN(speed_filter, "({ speed: decimal }) ->builtin sound_effect_filter")

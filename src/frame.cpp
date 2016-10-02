@@ -196,7 +196,8 @@ Frame::Frame(variant node)
 	 rotate_on_slope_(node["rotate_on_slope"].as_bool()),
 	 damage_(node["damage"].as_int()),
 	 sounds_(node["sound"].is_list() ? node["sound"].as_list_string() : util::split(node["sound"].as_string_default())),
-	 force_no_alpha_(node["force_no_alpha"].as_bool(false)),
+	 allow_wrapping_(node["allow_wrapping"].as_bool(false)),
+	 force_no_alpha_(allow_wrapping_ || node["force_no_alpha"].as_bool(false)),
 	 no_remove_alpha_borders_(node["no_remove_alpha_borders"].as_bool(node.has_key("fbo"))),
 	 collision_areas_inside_frame_(true),
 	 current_palette_(-1), 
@@ -511,8 +512,8 @@ void Frame::buildAlphaFromFrameInfo()
 		return;
 	}
 
-	alpha_.resize(nframes_*img_rect_.w()*img_rect_.h(), true);
-	for(int n = 0; n < nframes_; ++n) {
+	alpha_.resize(nframes_*img_rect_.w()*img_rect_.h(), force_no_alpha_ ?  false : true);
+	for(int n = 0; n < nframes_ && !force_no_alpha_; ++n) {
 		const rect& area = frames_[n].area;
 		int dst_index = frames_[n].y_adjust*img_rect_.w()*nframes_ + n*img_rect_.w() + frames_[n].x_adjust;
 		for(int y = 0; y != area.h(); ++y) {
@@ -528,13 +529,6 @@ void Frame::buildAlphaFromFrameInfo()
 			
 			dst_index += img_rect_.w()*nframes_;
 		}
-	}
-
-	if(force_no_alpha_) {
-		const auto nsize = alpha_.size();
-		alpha_.clear();
-		alpha_.resize(nsize, false);
-		return;
 	}
 }
 
@@ -561,9 +555,9 @@ void Frame::buildAlpha()
 		const int xbase = img_rect_.x() + current_col*(img_rect_.w()+pad_);
 		const int ybase = img_rect_.y() + current_row*(img_rect_.h()+pad_);
 
-		if(xbase < 0 || ybase < 0 
+		if(!allow_wrapping_ && (xbase < 0 || ybase < 0 
 			|| xbase + img_rect_.w() > blit_target_.getTexture()->surfaceWidth()
-			|| ybase + img_rect_.h() > blit_target_.getTexture()->surfaceHeight()) {
+			|| ybase + img_rect_.h() > blit_target_.getTexture()->surfaceHeight())) {
 			LOG_INFO("IMAGE RECT FOR FRAME '" << id_ << "' #" << n << ": " << img_rect_.x() << " + " << current_col << " * (" << img_rect_.w() << "+" << pad_ << ") IS INVALID: " << xbase << ", " << ybase << ", " << (xbase + img_rect_.w()) << ", " << (ybase + img_rect_.h()) << " / " << blit_target_.getTexture()->surfaceWidth() << "," << blit_target_.getTexture()->surfaceHeight());
 			LOG_INFO("IMAGE_NAME: " << image_ << ", Name from texture: " << blit_target_.getTexture()->getFrontSurface()->getName());
 			throw Error();
