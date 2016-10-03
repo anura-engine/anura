@@ -1038,6 +1038,8 @@ public:
 					}
 				}
 
+				return;
+
 
 			} else if(request_type == "matchmake") {
 

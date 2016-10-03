@@ -548,6 +548,8 @@ namespace {
 
 void runGarbageCollection(int num_gens)
 {
+	reapGarbageCollection();
+
 	formula_profiler::Instrument instrument("GC");
 	std::shared_ptr<GarbageCollectorImpl> gc(new GarbageCollectorImpl(num_gens));
 	gc->collect();
@@ -556,8 +558,8 @@ void runGarbageCollection(int num_gens)
 
 void reapGarbageCollection()
 {
-	formula_profiler::Instrument instrument("GC");
 	for(auto gc : g_reapable_gc) {
+		formula_profiler::Instrument instrument("GC");
 		gc->reap();
 	}
 
@@ -566,6 +568,8 @@ void reapGarbageCollection()
 
 void runGarbageCollectionDebug(const char* fname)
 {
+	reapGarbageCollection();
+
 	GarbageCollectorImpl gc;
 	gc.collect();
 	gc.reap();
