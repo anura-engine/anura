@@ -395,6 +395,8 @@ namespace sound
 			return out - start_out;
 		}
 
+		const std::string& fname() const { return fname_; }
+
 		//Length of the track in seconds
 		double timeLength() const {
 			threading::lock lck(mutex_);
@@ -2089,6 +2091,13 @@ BEGIN_DEFINE_CALLABLE_NOBASE(AudioEngine)
 	DEFINE_FIELD(status, "string")
 		
 		std::ostringstream s;
+		{
+			threading::lock lck(g_music_thread_mutex);
+			for(auto m : g_music_players) {
+				s << "  MUSIC: " << m->fname() << ": " << m->timeCurrent() << "/" << m->timeLength() << "\n";
+			}
+		}
+
 		{
 			threading::lock lck(g_wave_cache_mutex);
 			threading::lock lck2(g_files_loading_mutex);
