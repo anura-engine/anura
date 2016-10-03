@@ -239,6 +239,7 @@ namespace sound
 			ASSERT_LOG(res == 0, "Failed to read vorbis file: " << file);
 
 			info_ = vorbis().ov_info(&file_, -1);
+			ASSERT_LOG(info_->channels == 1 || info_->channels == 2, "Ogg file " << file << " has unsupported number of channels: " << info_->channels << ". Only support mono and stereo");
 
 			auto i = g_music_index.find(file);
 			if(i != g_music_index.end()) {
