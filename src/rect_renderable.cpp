@@ -3,7 +3,7 @@
 
 #include "rect_renderable.hpp"
 
-RectRenderable::RectRenderable(bool strips)
+RectRenderable::RectRenderable(bool strips, bool blend)
 	: SceneObject("RectRenderable")
 {
 	using namespace KRE;
@@ -17,7 +17,7 @@ RectRenderable::RectRenderable(bool strips)
 	ab->setDrawMode(strips ? DrawMode::TRIANGLE_STRIP : DrawMode::POINTS);
 	addAttributeSet(ab);
 
-	ab->setBlendState(false);
+	ab->setBlendState(blend);
 }
 
 void RectRenderable::update(const rect& r, const KRE::Color& color)
