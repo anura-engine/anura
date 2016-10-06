@@ -54,7 +54,7 @@ printf qq~
 {
 #horizontal tile
 image:"$image",
-tiles:%s,
+tiles:"%s",
 %s
 pattern:"
 .* ,   ,.*  ,
@@ -67,7 +67,7 @@ printf qq~
 #horizontal tile with one tile below but not on either side
 {
 image:"$image",
-tiles:%s,
+tiles:"%s",
 %s
 pattern:"
 .* ,   ,.*  ,
@@ -80,7 +80,7 @@ printf qq~
 #horizontal tile with one tile above but not on either side
 {
 image:"$image",
-tiles:%s,
+tiles:"%s",
 %s
 pattern:"
    ,$friend,    ,
@@ -94,7 +94,7 @@ printf qq~
 {
 image:"$image",
 reverse:false,
-tiles:%s,
+tiles:"%s",
 %s
 pattern:"
 .* ,   ,.*  ,
@@ -108,7 +108,7 @@ printf qq~
 {
 image:"$image",
 reverse:false,
-tiles:%s,
+tiles:"%s",
 %s
 pattern:"
 .* ,   ,.*  ,
@@ -122,7 +122,7 @@ printf qq~
 {
 image:"$image",
 reverse:false,
-tiles:%s,
+tiles:"%s",
 %s
 pattern:"
    ,    ,$friend?,
@@ -136,7 +136,7 @@ printf qq~
 {
 image:"$image",
 reverse:false,
-tiles:%s,
+tiles:"%s",
 %s
 pattern:"
 .*,   ,    ,$friend?,.*,
@@ -153,7 +153,7 @@ printf qq~
 {
 image:"$image",
 reverse:false,
-tiles:%s,
+tiles:"%s",
 %s
 pattern:"
 $friend?,    ,   ,
@@ -167,7 +167,7 @@ printf qq~
 {
 image:"$image",
 reverse:false,
-tiles:%s,
+tiles:"%s",
 %s
 pattern:"
 .*,$friend?,   ,    ,.*,
@@ -183,7 +183,7 @@ printf qq~
 #single tile by itself
 {
 image:"$image",
-tiles:%s,
+tiles:"%s",
 %s
 pattern:"
  .*,   , .*,
@@ -196,7 +196,7 @@ printf qq~
 #top of thin platform
 {
 image:"$image",
-tiles:%s,
+tiles:"%s",
 %s
 pattern:"
  .*,   , .*,
@@ -209,7 +209,7 @@ printf qq~
 #part of thin platform
 {
 image:"$image",
-tiles:%s,
+tiles:"%s",
 $solid
 pattern:"
  .*,$friend, .*,
@@ -222,7 +222,7 @@ printf qq~
 #bottom of thin platform
 {
 image:"$image",
-tiles:%s,
+tiles:"%s",
 $solid
 pattern:"
  .*,$friend, .*,
@@ -236,7 +236,7 @@ printf qq~
 {
 image:"$image",
 reverse:false,
-tiles:%s,
+tiles:"%s",
 %s
 pattern:"
   .*,   ,$friend?,
@@ -250,7 +250,7 @@ printf qq~
 {
 image:"$image",
 reverse:false,
-tiles:%s,
+tiles:"%s",
 %s
 pattern:"
 $friend?,   ,.* ,
@@ -264,7 +264,7 @@ printf qq~
 {
 image:"$image",
 reverse:false,
-tiles:%s,
+tiles:"%s",
 %s
 pattern:"
   .*,   ,$friend?,
@@ -278,7 +278,7 @@ printf qq~
 {
 image:"$image",
 reverse:false,
-tiles:%s,
+tiles:"%s",
 %s
 pattern:"
 $friend?,   ,.*,
@@ -291,7 +291,7 @@ printf qq~
 #middle of a cross
 {
 image:"$image",
-tiles:%s,
+tiles:"%s",
 $solid
 pattern:"
    ,$friend,   ,
@@ -305,7 +305,7 @@ printf qq~
 {
 image:"$image",
 reverse:false,
-tiles:%s,
+tiles:"%s",
 $solid
 pattern:"
 $friend,$friend,   ,
@@ -319,7 +319,7 @@ printf qq~
 {
 image:"$image",
 reverse:false,
-tiles:%s,
+tiles:"%s",
 $solid
 pattern:"
    ,$friend,$friend,
@@ -332,7 +332,7 @@ printf qq~
 #corners on the top
 {
 image:"$image",
-tiles:%s,
+tiles:"%s",
 $solid
 pattern:"
    ,$friend,   ,
@@ -345,7 +345,7 @@ printf qq~
 #corners on the bottom
 {
 image:"$image",
-tiles:%s,
+tiles:"%s",
 $solid
 pattern:"
 $friend,$tilename,$friend,
@@ -359,7 +359,7 @@ printf qq~
 {
 image:"$image",
 reverse:false,
-tiles:%s,
+tiles:"%s",
 $solid
 pattern:"
    ,$friend,$friend,
@@ -373,7 +373,7 @@ printf qq~
 {
 image:"$image",
 reverse:false,
-tiles:%s,
+tiles:"%s",
 $solid
 pattern:"
 $friend,$friend,   ,
@@ -387,7 +387,7 @@ printf qq~
 {
 image:"$image",
 reverse:false,
-tiles:%s,
+tiles:"%s",
 $solid
 pattern:"
 $friend,$friend,$friend,
@@ -401,7 +401,7 @@ printf qq~
 {
 image:"$image",
 reverse:false,
-tiles:%s,
+tiles:"%s",
 $solid
 pattern:"
 $friend,$friend,$friend,
@@ -415,7 +415,7 @@ printf qq~
 {
 image:"$image",
 reverse:false,
-tiles:%s,
+tiles:"%s",
 $solid
 pattern:"
    ,$friend,$friend,
@@ -429,7 +429,7 @@ printf qq~
 {
 image:"$image",
 reverse:false,
-tiles:%s,
+tiles:"%s",
 $solid
 pattern:"
 $friend,$friend,   ,
@@ -443,7 +443,7 @@ printf qq~
 {
 image:"$image",
 reverse:false,
-tiles:%s,
+tiles:"%s",
 $solid
 pattern:"
    ,$friend,$friend,
@@ -457,7 +457,7 @@ printf qq~
 {
 image:"$image",
 reverse:false,
-tiles:%s,
+tiles:"%s",
 $solid
 pattern:"
 $friend,$friend,   ,
@@ -471,7 +471,7 @@ printf qq~
 {
 image:"$image",
 reverse:false,
-tiles:%s,
+tiles:"%s",
 $solid
 pattern:"
    ,$friend,   ,
@@ -485,7 +485,7 @@ printf qq~
 {
 image:"$image",
 reverse:false,
-tiles:%s,
+tiles:"%s",
 $solid
 pattern:"
    ,$friend,   ,
@@ -499,7 +499,7 @@ printf qq~
 {
 image:"$image",
 reverse:false,
-tiles:%s,
+tiles:"%s",
 $solid
 pattern:"
    ,$friend,$friend,
@@ -513,7 +513,7 @@ printf qq~
 {
 image:"$image",
 reverse:false,
-tiles:%s,
+tiles:"%s",
 $solid
 pattern:"
 $friend,$friend,   ,
@@ -526,7 +526,7 @@ printf qq~
 #roof
 {
 image:"$image",
-tiles:%s,
+tiles:"%s",
 $solid
 pattern:"
 .* ,$friend, .*,
@@ -540,7 +540,7 @@ printf qq~
 {
 image:"$image",
 reverse:false,
-tiles:%s,
+tiles:"%s",
 $solid
 pattern:"
 $friend?,$friend,$friend,
@@ -554,7 +554,7 @@ printf qq~
 {
 image:"$image",
 reverse:false,
-tiles:%s,
+tiles:"%s",
 $solid
 pattern:"
 $friend,$friend,$friend?,
@@ -568,7 +568,7 @@ printf qq~
 {
 image:"$image",
 reverse:false,
-tiles:%s,
+tiles:"%s",
 $solid
 pattern:"
 $friend?,$friend,   ,
@@ -582,7 +582,7 @@ printf qq~
 {
 image:"$image",
 reverse:false,
-tiles:%s,
+tiles:"%s",
 $solid
 pattern:"
    ,$friend,$friend?,
@@ -595,7 +595,7 @@ printf qq~
 #solid
 {
 image:"$image",
-tiles:%s,
+tiles:"%s",
 $solid
 pattern:"
 $friend?,$friend,$friend?,
@@ -610,7 +610,7 @@ printf qq~
 {
 image:"$image",
 reverse:false,
-tiles:%s,
+tiles:"%s",
 $solid
 pattern:"
 $friend,$friend,.* ,
@@ -625,7 +625,7 @@ printf qq~
 {
 image:"$image",
 reverse:false,
-tiles:%s,
+tiles:"%s",
 $solid
 pattern:"
 .* ,$friend,$friend,
@@ -640,7 +640,7 @@ printf qq~
 {
 image:"$image",
 reverse:false,
-tiles:%s,
+tiles:"%s",
 $solid
 pattern:"
    ,$friend,.* ,
@@ -655,7 +655,7 @@ printf qq~
 {
 image:"$image",
 reverse:false,
-tiles:%s,
+tiles:"%s",
 $solid
 pattern:"
 .* ,$friend,  ,
@@ -670,7 +670,7 @@ printf qq~
 {
 image:"$image",
 reverse:false,
-tiles:%s,
+tiles:"%s",
 $solid
 pattern:"
    ,$friend,.* ,
@@ -685,7 +685,7 @@ printf qq~
 {
 image:"$image",
 reverse:false,
-tiles:%s,
+tiles:"%s",
 $solid
 pattern:"
 .* ,$friend,   ,
@@ -699,7 +699,7 @@ printf qq~
 {
 image:"$image",
 reverse:false,
-tiles:%s,
+tiles:"%s",
 $solid
 pattern:"
 .* ,$friend,.* ,
@@ -713,7 +713,7 @@ printf qq~
 {
 image:"$image",
 reverse:false,
-tiles:%s,
+tiles:"%s",
 $solid
 pattern:"
 .* ,$friend,.* ,
@@ -727,7 +727,7 @@ printf qq~
 {
 image:"$image",
 reverse:false,
-tiles:%s,
+tiles:"%s",
 %s
 pattern:"
 .* ,   ,.* ,
@@ -741,7 +741,7 @@ printf qq~
 {
 image:"$image",
 reverse:false,
-tiles:%s,
+tiles:"%s",
 %s
 pattern:"
 .* ,   ,.* ,
@@ -754,7 +754,7 @@ printf qq~
 #ground
 {
 image:"$image",
-tiles:%s,
+tiles:"%s",
 %s
 pattern:"
 $friend?,    ,$friend?,
