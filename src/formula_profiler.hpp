@@ -66,6 +66,7 @@ namespace formula_profiler
 		explicit Manager(const char* output_file) {}
 		~Manager() {}
 		static Manager* get();
+		void init(const char* output_file, bool memory_profiler=false) {}
 	};
 
 	class SuspendScope
@@ -134,7 +135,7 @@ namespace formula_profiler
 		~Manager();
 
 		bool is_profiling() const;
-		void init(const char* output_file);
+		void init(const char* output_file, bool memory_profiler=false);
 		void halt();
 	};
 

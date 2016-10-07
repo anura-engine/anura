@@ -44,6 +44,7 @@
 #include <time.h>
 #endif
 
+#include "cairo.hpp"
 #include "custom_object_type.hpp"
 #include "filesystem.hpp"
 #include "formatter.hpp"
@@ -51,6 +52,8 @@
 #include "level_runner.hpp"
 #include "object_events.hpp"
 #include "preferences.hpp"
+#include "sound.hpp"
+#include "sys.hpp"
 #include "unit_test.hpp"
 #include "variant.hpp"
 #include "widget.hpp"
@@ -59,6 +62,7 @@
 #include "kre/Color.hpp"
 #include "kre/Font.hpp"
 #include "kre/ShadersOGL.hpp"
+#include "kre/Surface.hpp"
 
 void init_call_stack(int min_size);
 
@@ -66,6 +70,7 @@ namespace {
 
 PREF_STRING(profile_widget_area, "[20,20,1000,200]", "Area of the profile widget");
 PREF_STRING(profile_widget_details_area, "[20,240,1000,400]", "Area of the profile widget");
+PREF_INT(profile_memory_freq, 60, "Memory profiler will refresh every x cycles");
 
 uint64_t g_begin_tsc;
 
@@ -558,6 +563,321 @@ public:
 
 boost::intrusive_ptr<ProfilerWidget> g_profiler_widget;
 
+class MemoryProfilerWidget : public Widget
+{
+	Color gray_color_, yellow_color_, green_color_, blue_color_, red_color_, magenta_color_, white_color_;
+
+	bool paused_;
+	int selected_frame_;
+	int ncycles_;
+
+	TexturePtr frame_text_;
+
+	struct FrameInfo {
+		int num_surfaces, surface_usage;
+		int num_textures, texture_usage;
+		int num_objects, object_usage;
+		int num_cairo, cairo_usage;
+		int num_sound, sound_usage, max_sound;
+		int other_usage;
+		sys::MemoryConsumptionInfo mem;
+	};
+
+	std::vector<FrameInfo> frames_;
+	int highest_phys_;
+
+public:
+	MemoryProfilerWidget() :
+	  gray_color_("gray"), yellow_color_("yellow"), green_color_("green"), blue_color_("lightblue"), red_color_("red"), magenta_color_("magenta"), white_color_("white"), paused_(false), selected_frame_(-1), ncycles_(0), highest_phys_(0) {
+
+		variant area = game_logic::Formula(variant(g_profile_widget_area)).execute();
+		std::vector<int> area_int = area.as_list_int();
+		ASSERT_LOG(area_int.size() == 4, "--profile-widget-area must have four integers");
+		setLoc(area_int[0], area_int[1]);
+		setDim(area_int[2], area_int[3]);
+
+		newFrame();
+	}
+
+	~MemoryProfilerWidget() {
+	}
+
+	int barWidth() const { return 4; }
+
+	size_t firstDisplayedFrame() const {
+
+		const int max_frames = width()/barWidth();
+		size_t begin_frame = 0;
+		if(max_frames <= frames_.size()) {
+			begin_frame = frames_.size() - max_frames;
+		}
+
+		return begin_frame;
+	}
+
+	void handleDraw() const override {
+		if(frames_.empty()) {
+			return;
+		}
+
+		Canvas& c = *Canvas::getInstance();
+
+		c.drawSolidRect(rect(x(), y(), width(), height()), Color("black"));
+
+		const int max_frames = width()/barWidth();
+
+		const int us_per_pixel = 200;
+
+		size_t begin_frame = firstDisplayedFrame();
+
+		BarGraphRenderable renderables[6];
+		renderables[0].setColor(gray_color_);
+		renderables[1].setColor(red_color_);
+		renderables[2].setColor(blue_color_);
+		renderables[3].setColor(yellow_color_);
+		renderables[4].setColor(green_color_);
+		renderables[5].setColor(magenta_color_);
+
+		for(size_t i = begin_frame; i < frames_.size()-1; ++i) {
+			const FrameInfo& f = frames_[i];
+
+			const int bar_height = (double(f.mem.phys_used_kb)/double(highest_phys_))*0.7*height();
+
+			rect area(x() + (i-begin_frame)*barWidth(), y() + height() - bar_height, barWidth(), bar_height);
+			renderables[0].addRect(area);
+
+			int baseline = 0;
+
+			{
+				const int texture_height = (double(f.texture_usage)/double(highest_phys_))*0.7*height();
+				rect area(x() + (i-begin_frame)*barWidth(), y() + height() - texture_height - baseline, barWidth(), texture_height);
+				renderables[1].addRect(area);
+				baseline += texture_height;
+			}
+
+			{
+				const int surf_height = (double(f.surface_usage)/double(highest_phys_))*0.7*height();
+				rect area(x() + (i-begin_frame)*barWidth(), y() + height() - surf_height - baseline, barWidth(), surf_height);
+				renderables[2].addRect(area);
+				baseline += surf_height;
+			}
+
+			{
+				const int surf_height = (double(f.object_usage)/double(highest_phys_))*0.7*height();
+				rect area(x() + (i-begin_frame)*barWidth(), y() + height() - surf_height - baseline, barWidth(), surf_height);
+				renderables[3].addRect(area);
+				baseline += surf_height;
+			}
+
+			{
+				const int surf_height = (double(f.cairo_usage)/double(highest_phys_))*0.7*height();
+				rect area(x() + (i-begin_frame)*barWidth(), y() + height() - surf_height - baseline, barWidth(), surf_height);
+				renderables[4].addRect(area);
+				baseline += surf_height;
+			}
+
+			{
+				const int surf_height = (double(f.sound_usage)/double(highest_phys_))*0.7*height();
+				rect area(x() + (i-begin_frame)*barWidth(), y() + height() - surf_height - baseline, barWidth(), surf_height);
+				renderables[5].addRect(area);
+				baseline += surf_height;
+			}
+
+		}
+
+		for(int i = 0; i != 6; ++i) {
+			auto& renderable = renderables[i];
+			if(renderable.empty() == false) {
+				renderable.prepareDraw();
+				auto wnd = KRE::WindowManager::getMainWindow();
+				renderable.preRender(wnd);
+				wnd->render(&renderable);
+			}
+		}
+
+		if(frame_text_.get() != nullptr) {
+			c.blitTexture(frame_text_, 0, x() + 10, y() + 5, white_color_);
+
+			const FrameInfo& f = frames_[selected_frame_ > 0 ? selected_frame_ : frames_.size()-1];
+
+			int xpos = x() + 13;
+
+			auto surf_text = Font::getInstance()->renderText(formatter() << "Tex x" << f.num_textures << ": " << (f.texture_usage/1024) << "MB", white_color_, 12, false, Font::get_default_monospace_font());
+			c.drawSolidRect(rect(xpos, y()+23, 10, 10), red_color_);
+			c.blitTexture(surf_text, 0, xpos + 12, y() + 20, white_color_);
+			xpos += surf_text->width() + 25;
+
+			surf_text = Font::getInstance()->renderText(formatter() << "Surf x" << f.num_surfaces << ": " << (f.surface_usage/1024) << "MB", white_color_, 12, false, Font::get_default_monospace_font());
+			c.drawSolidRect(rect(xpos, y()+23, 10, 10), blue_color_);
+			c.blitTexture(surf_text, 0, xpos + 12, y() + 20, white_color_);
+			xpos += surf_text->width() + 25;
+
+			surf_text = Font::getInstance()->renderText(formatter() << "FFL obj x" << f.num_objects << ": " << (f.object_usage/1024) << "MB", white_color_, 12, false, Font::get_default_monospace_font());
+			c.drawSolidRect(rect(xpos, y()+23, 10, 10), yellow_color_);
+			c.blitTexture(surf_text, 0, xpos + 12, y() + 20, white_color_);
+			xpos += surf_text->width() + 25;
+
+			surf_text = Font::getInstance()->renderText(formatter() << "Cairo img x" << f.num_cairo << ": " << (f.cairo_usage/1024) << "MB", white_color_, 12, false, Font::get_default_monospace_font());
+			c.drawSolidRect(rect(xpos, y()+23, 10, 10), green_color_);
+			c.blitTexture(surf_text, 0, xpos + 12, y() + 20, white_color_);
+			xpos += surf_text->width() + 25;
+
+			xpos = x() + 13;
+
+			surf_text = Font::getInstance()->renderText(formatter() << "Sounds x" << f.num_sound << ": " << (f.sound_usage/1024) << "MB (max: " << (f.max_sound/1024) << "MB)", white_color_, 12, false, Font::get_default_monospace_font());
+			c.drawSolidRect(rect(xpos, y()+23 + 15*1, 10, 10), magenta_color_);
+			c.blitTexture(surf_text, 0, xpos + 12, y() + 20 + 15*1, white_color_);
+			xpos += surf_text->width() + 25;
+
+			surf_text = Font::getInstance()->renderText(formatter() << "Heap free: " << (f.mem.heap_free_kb/1024) << "MB", white_color_, 12, false, Font::get_default_monospace_font());
+			c.drawSolidRect(rect(xpos, y()+23 + 15*1, 10, 10), gray_color_);
+			c.blitTexture(surf_text, 0, xpos + 12, y() + 20 + 15*1, white_color_);
+			xpos += surf_text->width() + 25;
+
+			surf_text = Font::getInstance()->renderText(formatter() << "Other: " << (f.other_usage/1024) << "MB", white_color_, 12, false, Font::get_default_monospace_font());
+			c.drawSolidRect(rect(xpos, y()+23 + 15*1, 10, 10), gray_color_);
+			c.blitTexture(surf_text, 0, xpos + 12, y() + 20 + 15*1, white_color_);
+			xpos += surf_text->width() + 25;
+		}
+
+	}
+
+	TexturePtr calculateFrameText() {
+
+		if(frames_.empty()) {
+			return TexturePtr();
+		} else {
+			std::string text = (formatter() << "Peak mem usage: " << (highest_phys_/1024) << "MB; Cur mem usage: " << (frames_.back().mem.phys_used_kb/1024) << "MB; heap: " << (frames_.back().mem.heap_free_kb + frames_.back().mem.heap_used_kb)/1024 << "MB");
+			return Font::getInstance()->renderText(text, white_color_, 12, false, Font::get_default_monospace_font());
+		}
+	}
+
+	bool handleEvent(const SDL_Event& event, bool claimed) override {
+		if(paused_ == false) {
+			return false;
+		}
+
+		switch(event.type) {
+		case SDL_MOUSEWHEEL:
+			break;
+		case SDL_MOUSEMOTION: {
+			const SDL_MouseMotionEvent& motion = event.motion;
+
+			if(motion.x >= x() && motion.y >= y() && motion.x < x() + width() && motion.y < y() + height()) {
+				const int bar = firstDisplayedFrame() + (motion.x - x())/barWidth();
+				if(bar >= 0 && bar < frames_.size()) {
+					selected_frame_ = bar;
+				} else {
+					selected_frame_ = -1;
+				}
+			} else {
+				selected_frame_ = -1;
+			}
+			return claimed;
+		}
+
+		case SDL_MOUSEBUTTONDOWN: {
+			const SDL_MouseButtonEvent& e = event.button;
+			if(selected_frame_ != -1 && selected_frame_ < frames_.size() &&
+			   e.x >= x() && e.y >= y() && e.x < x() + width() && e.y < y() + height()) {
+				selectFrame(selected_frame_);
+				return true;
+			}
+
+			break;
+		}
+
+		}
+		return claimed;
+	}
+
+	void selectFrame(int nframe) {
+	}
+
+	WidgetPtr clone() const override {
+		return WidgetPtr(new MemoryProfilerWidget);
+	}
+
+	void newFrame() {
+		if(LevelRunner::getCurrent() && LevelRunner::getCurrent()->is_paused()) {
+			paused_ = true;
+			return;
+		}
+
+		paused_ = false;
+
+		if(++ncycles_ >= g_profile_memory_freq) {
+			ncycles_ = 0;
+		} else {
+			return;
+		}
+
+		frames_.resize(frames_.size()+1);
+		sys::get_memory_consumption(&frames_.back().mem);
+		if(frames_.back().mem.phys_used_kb > highest_phys_) {
+			highest_phys_ = frames_.back().mem.phys_used_kb;
+			frame_text_ = calculateFrameText();
+		}
+
+		{
+		std::set<const KRE::Surface*> surfaces = KRE::Surface::getAllSurfaces();
+
+		int surface_usage = 0;
+		int nsurfaces = 0;
+		for(auto s : surfaces) {
+			if(s->hasData()) {
+				surface_usage += (s->width()*s->height()*4)/1024;
+				++nsurfaces;
+			}
+		}
+
+		frames_.back().num_surfaces = nsurfaces;
+		frames_.back().surface_usage = surface_usage;
+		}
+
+		{
+		const std::set<Texture*>& textures = KRE::Texture::getAllTextures();
+		int usage = 0;
+		for(auto t : textures) {
+			usage += (t->width()*t->height()*4)/1024;
+		}
+
+		frames_.back().num_textures = static_cast<int>(textures.size());
+		frames_.back().texture_usage = usage;
+		}
+
+		{
+		std::vector<GarbageCollectible*> obj;
+		GarbageCollectible::getAll(&obj);
+		int usage = 0;
+		for(auto p : obj) {
+			usage += sys::get_heap_object_usable_size(p);
+		}
+
+		frames_.back().num_objects = static_cast<int>(obj.size());
+		frames_.back().object_usage = usage/1024;
+
+		}
+
+		{
+		graphics::CairoCacheStatus status = graphics::get_cairo_image_cache_status();
+		frames_.back().num_cairo = status.num_items;
+		frames_.back().cairo_usage = status.memory_usage/1024;
+		}
+
+		{
+		sound::MemoryUsageInfo status = sound::get_memory_usage_info();
+		frames_.back().num_sound = status.nsounds_cached;
+		frames_.back().sound_usage = status.cache_usage/1024;
+		frames_.back().max_sound = status.max_cache_usage/1024;
+		}
+
+		frames_.back().other_usage = frames_.back().mem.phys_used_kb - frames_.back().surface_usage - frames_.back().texture_usage - frames_.back().object_usage - frames_.back().sound_usage - frames_.back().mem.heap_free_kb;
+	}
+};
+
+boost::intrusive_ptr<MemoryProfilerWidget> g_memory_profiler_widget;
+
 }
 
 namespace formula_profiler
@@ -752,7 +1072,7 @@ namespace formula_profiler
 		return profiler_on;
 	}
 
-	void Manager::init(const char* output_file)
+	void Manager::init(const char* output_file, bool memory_profiler)
 	{
 		if(output_file && profiler_on == false) {
 			current_expression_call_stack.reserve(10000);
@@ -786,7 +1106,11 @@ namespace formula_profiler
 			setitimer(ITIMER_PROF, &timer, 0);
 #endif
 
-			g_profiler_widget.reset(new ProfilerWidget);
+			if(memory_profiler) {
+				g_memory_profiler_widget.reset(new MemoryProfilerWidget);
+			} else {
+				g_profiler_widget.reset(new ProfilerWidget);
+			}
 		}
 	}
 
@@ -795,6 +1119,7 @@ namespace formula_profiler
 		if(profiler_on) {
 			profiler_on = false;
 			g_profiler_widget.reset();
+			g_memory_profiler_widget.reset();
 
 #if defined(_MSC_VER) || MOBILE_BUILD
 			SDL_RemoveTimer(sdl_profile_timer);
@@ -922,6 +1247,11 @@ namespace formula_profiler
 
 		++nframes_profiled;
 
+		if(g_memory_profiler_widget) {
+			g_memory_profiler_widget->process();
+			g_memory_profiler_widget->newFrame();
+		}
+
 		if(g_profiler_widget) {
 			g_profiler_widget->process();
 			g_profiler_widget->newFrame();
@@ -930,6 +1260,10 @@ namespace formula_profiler
 
 	void draw()
 	{
+		if(g_memory_profiler_widget) {
+			g_memory_profiler_widget->draw();
+		}
+
 		if(g_profiler_widget) {
 			g_profiler_widget->draw();
 		}
@@ -937,6 +1271,10 @@ namespace formula_profiler
 
 	bool handle_sdl_event(const SDL_Event& event, bool claimed)
 	{
+		if(g_memory_profiler_widget) {
+			return g_memory_profiler_widget->processEvent(point(), event, claimed);
+		}
+
 		if(g_profiler_widget) {
 			return g_profiler_widget->processEvent(point(), event, claimed);
 		}

@@ -113,6 +113,7 @@ namespace KRE
 	class Surface : public std::enable_shared_from_this<Surface>
 	{
 	public:
+		static const std::set<const Surface*>& getAllSurfaces();
 		virtual ~Surface();
 		unsigned id() const { return id_; }
 		virtual const void* pixels() const = 0;

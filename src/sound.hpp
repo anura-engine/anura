@@ -96,4 +96,12 @@ namespace sound
 
 		boost::intrusive_ptr<const CustomObject> obj_;
 	};
+
+	struct MemoryUsageInfo {
+		int nsounds_cached;
+		int cache_usage;
+		int max_cache_usage;
+	};
+
+	MemoryUsageInfo get_memory_usage_info();
 }

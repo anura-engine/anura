@@ -262,8 +262,8 @@ namespace
 	};
 
 	BEGIN_DEFINE_CALLABLE_NOBASE(FilterCallable)
-		DEFINE_FIELD(tiles, "builtin tile_map")
-			return variant(&obj.m_);
+//		DEFINE_FIELD(tiles, "builtin tile_map")
+//			return variant(&obj.m_);
 		DEFINE_FIELD(x, "int")
 			return variant(obj.x_);
 		DEFINE_FIELD(y, "int")
@@ -426,7 +426,7 @@ TileMap::TileMap() : xpos_(0), ypos_(0), x_speed_(100), y_speed_(100), zorder_(0
 #endif
 
 	//turn off reference counting
-	add_ref();
+//	add_ref();
 
 	//make an entry for the empty string.
 	pattern_index_.push_back(PatternIndexEntry());
@@ -448,7 +448,7 @@ TileMap::TileMap(variant node)
 #endif
 
 	//turn off reference counting
-	add_ref();
+//	add_ref();
 
 	const std::string& unique_tiles = node["unique_tiles"].as_string_default();
 	for(const std::string& tile : util::split(unique_tiles)) {
@@ -531,7 +531,7 @@ TileMap::TileMap(const TileMap& o)
 	create_tile_map(this);
 #endif
 
-	add_ref();
+//	add_ref();
 	*this = o;
 }
 

@@ -1465,6 +1465,14 @@ bool LevelRunner::play_cycle()
 							formula_profiler::Manager::get()->init("profile.dat");
 						}
 					}
+				} else if(key == SDLK_F8) {
+					if(formula_profiler::Manager::get()) {
+						if(formula_profiler::Manager::get()->is_profiling()) {
+							formula_profiler::Manager::get()->halt();
+						} else {
+							formula_profiler::Manager::get()->init("profile.dat", true);
+						}
+					}
 				} else if(key == SDLK_F3) {
 					LOG_DEBUG("F3 pressed");
 					preferences::set_show_fps(!preferences::show_fps());

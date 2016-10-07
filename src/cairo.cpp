@@ -145,36 +145,44 @@ namespace graphics
 namespace {
 	class surface_cache_man {
 	public:
-		surface_cache_man() {}
+		surface_cache_man() : usage_(0) {}
 		~surface_cache_man() {
 			for ( auto & v : cache_) {
 				cairo_surface_destroy(v.second);
 			}
 		}
-		cairo_surface_t *& operator[](const std::string & name) {
-			return cache_[name];
+
+		cairo_surface_t* get(const std::string& image) {
+			cairo_surface_t*& result = cache_[image];
+			if(result == nullptr) {
+				result = cairo_image_surface_create_from_png(module::map_file(image).c_str());
+				ASSERT_LOG(result, "Could not load cairo image: " << image);
+
+				const int w = cairo_image_surface_get_width(result);
+				const int h = cairo_image_surface_get_height(result);
+
+				usage_ += w*h*4;
+			}
+
+			return result;
 		}
 
 		size_t size() const { return cache_.size(); }
+		size_t usage() const { return usage_; }
 	private:
 		std::map<std::string, cairo_surface_t*> cache_;
+		size_t usage_;
 	};
+
+	static surface_cache_man g_surface_cache;
+	static std::mutex g_surface_cache_mutex;
 }
 
 		cairo_surface_t* get_cairo_image(const std::string& image)
 		{
-			static surface_cache_man cache;
-			static std::mutex cache_mutex;
 
-			std::lock_guard<std::mutex> guard(cache_mutex);
-
-			cairo_surface_t*& result = cache[image];
-			if(result == nullptr) {
-				result = cairo_image_surface_create_from_png(module::map_file(image).c_str());
-				ASSERT_LOG(result, "Could not load cairo image: " << image);
-			}
-
-			return result;
+			std::lock_guard<std::mutex> guard(g_surface_cache_mutex);
+			return g_surface_cache.get(image);
 		}
 
 		cairo_context& dummy_context() 
@@ -260,7 +268,9 @@ namespace {
 		}
 
 		surf->createAlphaMap();
-		return KRE::Texture::createTexture(surf, node);
+		KRE::TexturePtr t = KRE::Texture::createTexture(surf, node);
+		t->clearSurfaces();
+		return t;
 		//tex->update2D(0, 0, 0, width_, height_, cairo_image_surface_get_stride(surface_), cairo_image_surface_get_data(surface_));
 		// Use the blend mode below to give correct for pre-multiplied alpha.
 		// If that doesn't work satisfactorily, then creating a texture with PIXELFORMAT_XRGB8888
@@ -1980,6 +1990,16 @@ namespace {
 
 			return context.write(variant());
 		}
+	}
+
+	CairoCacheStatus get_cairo_image_cache_status()
+	{
+		CairoCacheStatus status;
+
+		std::lock_guard<std::mutex> guard(g_surface_cache_mutex);
+		status.num_items = static_cast<int>(g_surface_cache.size());
+		status.memory_usage = static_cast<int>(g_surface_cache.usage());
+		return status;
 	}
 }
 
