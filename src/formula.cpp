@@ -3423,7 +3423,11 @@ static std::string debugSubexpressionTypes(ConstFormulaPtr & fml)
 		{
 			ASSERT_LOG(i1 != i2, "Empty expression in formula\n" << pinpoint_location(formula_str, (i1-1)->end));
 	
-			if(symbols && i1->type == FFL_TOKEN_TYPE::KEYWORD && std::string(i1->begin, i1->end) == "def" &&
+			if(i1->type == FFL_TOKEN_TYPE::KEYWORD && i1+1 != i2 && i1+2 == i2 && i1->str() == "enum") {
+				ASSERT_LOG((i1+1)->type == FFL_TOKEN_TYPE::IDENTIFIER, "Expected identifier after enum\n" << pinpoint_location(formula_str, i1->begin, i1->end));
+				return ExpressionPtr(new VariantExpression(variant::create_enum((i1+1)->str())));
+			}
+			else if(symbols && i1->type == FFL_TOKEN_TYPE::KEYWORD && std::string(i1->begin, i1->end) == "def" &&
 			   ((i1+1)->type == FFL_TOKEN_TYPE::IDENTIFIER || (i1+1)->type == FFL_TOKEN_TYPE::LPARENS ||
 				(i1+1)->type == FFL_TOKEN_TYPE::LDUBANGLE)) {
 
@@ -4481,6 +4485,12 @@ UNIT_TEST(edit_distance) {
 	CHECK_EQ(edit_distance_calculator("abcdefg", "abdcefg")(), 1);
 	CHECK_EQ(edit_distance_calculator("abcdefg", "abdcegf")(), 2);
 	CHECK_EQ(edit_distance_calculator("abcdefg", "bdcegf")(), 3);
+}
+
+UNIT_TEST(formula_enum) {
+	CHECK_EQ(Formula(variant("enum abc = enum abc")).execute(), variant::from_bool(true));
+	CHECK_EQ(Formula(variant("enum abc != enum abc")).execute(), variant::from_bool(false));
+	CHECK_EQ(Formula(variant("enum abc = enum d")).execute(), variant::from_bool(false));
 }
 
 BENCHMARK(formula_list_comprehension_bench) {

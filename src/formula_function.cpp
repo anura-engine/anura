@@ -4404,13 +4404,14 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 			return variant_type::get_type(variant::VARIANT_TYPE_CALLABLE);
 		END_FUNCTION_DEF(file_backed_map)
 
-		FUNCTION_DEF(write_document, 2, 3, "write_document(string filename, doc, [enum {'game_dir'}]): writes 'doc' to the given filename")
+		FUNCTION_DEF(write_document, 2, 3, "write_document(string filename, doc, [enum{game_dir}]): writes 'doc' to the given filename")
 			bool prefs_directory = true;
 
 			if(args().size() > 2) {
 				const variant flags = args()[2]->evaluate(variables);
 				for(int n = 0; n != flags.num_elements(); ++n) {
-					const std::string& flag = flags[n].as_string();
+					variant f = flags[n];
+					const std::string& flag = f.is_enum() ? f.as_enum() : f.as_string();
 					if(flag == "game_dir") {
 						prefs_directory = false;
 					} else {
@@ -4452,7 +4453,7 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 		FUNCTION_ARGS_DEF
 			ARG_TYPE("string");
 			ARG_TYPE("any");
-			ARG_TYPE("null|list");
+			ARG_TYPE("[enum{game_dir}]|[string]");
 			RETURN_TYPE("commands")
 		END_FUNCTION_DEF(write_document)
 
@@ -4463,7 +4464,7 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 			RETURN_TYPE("any")
 		END_FUNCTION_DEF(get_document_from_str)
 
-		FUNCTION_DEF(get_document, 1, 2, "get_document(string filename, [enum {'null_on_failure', 'user_preferences_dir', 'uncached'}] flags): return reference to the given JSON document. flags can contain 'null_on_failure' and 'user_preferences_dir'")
+		FUNCTION_DEF(get_document, 1, 2, "get_document(string filename, [enum{null_on_failure,user_preferences_dir,uncached,json}] flags): return reference to the given JSON document.")
 			if(args().size() != 1) {
 				Formula::failIfStaticContext();
 			}
@@ -4480,7 +4481,8 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 			if(args().size() > 1) {
 				const variant flags = args()[1]->evaluate(variables);
 				for(int n = 0; n != flags.num_elements(); ++n) {
-					const std::string& flag = flags[n].as_string();
+					variant f = flags[n];
+					const std::string& flag = f.is_enum() ? flags[n].as_enum() : flags[n].as_string();
 					if(flag == "null_on_failure") {
 						allow_failure = true;
 					} else if(flag == "user_preferences_dir") {
@@ -4539,6 +4541,7 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 			}
 		FUNCTION_ARGS_DEF
 			ARG_TYPE("string");
+			ARG_TYPE("[enum{null_on_failure,user_preferences_dir,uncached,json}]|[string]");
 		FUNCTION_TYPE_DEF
 			std::vector<variant_type_ptr> types;
 			types.push_back(variant_type::get_type(variant::VARIANT_TYPE_MAP));

@@ -117,6 +117,8 @@ public:
 	enum DECIMAL_VARIANT_TYPE { DECIMAL_VARIANT };
 
 	static variant from_bool(bool b) { variant v; v.type_ = VARIANT_TYPE_BOOL; v.bool_value_ = b; return v; }
+	static variant create_enum(const std::string& enum_id);
+	static int get_enum_index(const std::string& enum_id);
 
 	static variant create_delayed(game_logic::ConstFormulaPtr f, boost::intrusive_ptr<const game_logic::FormulaCallable> callable);
 	static void resolve_delayed();
@@ -182,6 +184,7 @@ public:
 	int& int_addr() { must_be(VARIANT_TYPE_INT); return int_value_; }
 
 	bool is_string() const { return type_ == VARIANT_TYPE_STRING; }
+	bool is_enum() const { return type_ == VARIANT_TYPE_ENUM; }
 	bool is_null() const { return type_ == VARIANT_TYPE_NULL; }
 	bool is_bool() const { return type_ == VARIANT_TYPE_BOOL; }
 	bool is_numeric() const { return is_int() || is_decimal(); }
@@ -198,6 +201,8 @@ public:
 	double as_double(double value=0) const { return as_decimal(decimal(value)).as_float(); }
 	bool as_bool(bool default_value) const;
 	bool as_bool() const;
+
+	std::string as_enum() const;
 
 	bool is_list() const { return type_ == VARIANT_TYPE_LIST; }
 	bool is_weak() const { return type_ == VARIANT_TYPE_WEAK; }
@@ -331,7 +336,7 @@ public:
 	void write_json(std::ostream& s, unsigned int flags=FSON_MODE) const;
 	void write_json_pretty(std::ostream& s, std::string indent, unsigned int flags=FSON_MODE) const;
 
-	enum TYPE { VARIANT_TYPE_NULL, VARIANT_TYPE_BOOL, VARIANT_TYPE_INT, VARIANT_TYPE_DECIMAL, VARIANT_TYPE_CALLABLE, VARIANT_TYPE_CALLABLE_LOADING, VARIANT_TYPE_LIST, VARIANT_TYPE_STRING, VARIANT_TYPE_MAP, VARIANT_TYPE_FUNCTION, VARIANT_TYPE_GENERIC_FUNCTION, VARIANT_TYPE_MULTI_FUNCTION, VARIANT_TYPE_DELAYED, VARIANT_TYPE_WEAK, VARIANT_TYPE_INVALID };
+	enum TYPE { VARIANT_TYPE_NULL, VARIANT_TYPE_BOOL, VARIANT_TYPE_INT, VARIANT_TYPE_DECIMAL, VARIANT_TYPE_CALLABLE, VARIANT_TYPE_CALLABLE_LOADING, VARIANT_TYPE_LIST, VARIANT_TYPE_STRING, VARIANT_TYPE_MAP, VARIANT_TYPE_FUNCTION, VARIANT_TYPE_GENERIC_FUNCTION, VARIANT_TYPE_MULTI_FUNCTION, VARIANT_TYPE_DELAYED, VARIANT_TYPE_WEAK, VARIANT_TYPE_ENUM, VARIANT_TYPE_INVALID };
 	TYPE type() const { return type_; }
 
 	void write_function(std::ostream& s) const;

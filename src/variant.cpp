@@ -52,7 +52,7 @@ THREAD_LOCAL bool g_thread_read_only_variants = false;
 
 namespace 
 {
-	static const std::string variant_type_str[] = {"null", "bool", "int", "decimal", "object", "object_loading", "list", "string", "map", "function", "generic_function", "multi_function", "delayed", "weak"};
+	static const std::string variant_type_str[] = {"null", "bool", "int", "decimal", "object", "object_loading", "list", "string", "map", "function", "generic_function", "multi_function", "delayed", "weak", "enum"};
 }
 
 std::string variant::variant_type_to_string(variant::TYPE type) {
@@ -68,6 +68,33 @@ variant::TYPE variant::string_to_type(const std::string& str) {
 	}
 
 	return VARIANT_TYPE_INVALID;
+}
+
+//enums
+namespace
+{
+std::map<std::string,int> g_enum_map;
+std::vector<std::string> g_enum_vector;
+}
+
+variant variant::create_enum(const std::string& enum_id)
+{
+	const int n = get_enum_index(enum_id);
+	variant res(n);
+	res.type_ = VARIANT_TYPE_ENUM;
+	return res;
+}
+
+int variant::get_enum_index(const std::string& enum_id) {
+	auto itor = g_enum_map.find(enum_id);
+	if(itor == g_enum_map.end()) {
+		const int result = static_cast<int>(g_enum_vector.size());
+		g_enum_vector.push_back(enum_id);
+		g_enum_map[enum_id] = result;
+		return result;
+	}
+
+	return itor->second;
 }
 
 namespace {
@@ -486,6 +513,7 @@ break;
 // These are not used here, add them to silence a compiler warning.
 case VARIANT_TYPE_NULL:
 case VARIANT_TYPE_INT:
+case VARIANT_TYPE_ENUM:
 case VARIANT_TYPE_BOOL:
 case VARIANT_TYPE_DECIMAL:
 case VARIANT_TYPE_INVALID:
@@ -541,6 +569,7 @@ break;
 // These are not used here, add them to silence a compiler warning.
 case VARIANT_TYPE_NULL:
 case VARIANT_TYPE_INT:
+case VARIANT_TYPE_ENUM:
 case VARIANT_TYPE_BOOL:
 case VARIANT_TYPE_DECIMAL:
 case VARIANT_TYPE_INVALID:
@@ -1254,6 +1283,12 @@ bool variant::as_bool() const
 	}
 }
 
+std::string variant::as_enum() const
+{
+	must_be(VARIANT_TYPE_ENUM);
+	return g_enum_vector[int_value_];
+}
+
 std::vector<variant> variant::as_list() const
 {
 	if(is_list()) {
@@ -1881,6 +1916,10 @@ bool variant::operator==(const variant& v) const
 		return int_value_ == v.int_value_;
 	}
 
+	case VARIANT_TYPE_ENUM: {
+		return int_value_ == v.int_value_;
+	}
+
 	case VARIANT_TYPE_DECIMAL: {
 		return decimal_value_ == v.decimal_value_;
 	}
@@ -1959,6 +1998,10 @@ bool variant::operator<=(const variant& v) const
 	}
 
 	case VARIANT_TYPE_INT: {
+		return int_value_ <= v.int_value_;
+	}
+
+	case VARIANT_TYPE_ENUM: {
 		return int_value_ <= v.int_value_;
 	}
 
@@ -2087,6 +2130,9 @@ void variant::serializeToString(std::string& str) const
 		break;
 	case VARIANT_TYPE_INT:
 		str += boost::lexical_cast<std::string>(int_value_);
+		break;
+	case VARIANT_TYPE_ENUM:
+		str += "enum " + g_enum_vector[int_value_];
 		break;
 	case VARIANT_TYPE_DECIMAL: {
 		std::ostringstream s;
@@ -2283,6 +2329,8 @@ std::string variant::string_cast() const
 		return bool_value_ ? "true" : "false";
 	case VARIANT_TYPE_INT:
 		return boost::lexical_cast<std::string>(int_value_);
+	case VARIANT_TYPE_ENUM:
+		return "enum " + g_enum_vector[int_value_];
 	case VARIANT_TYPE_DECIMAL: {
 		std::string res;
 		serializeToString(res);
@@ -2343,6 +2391,9 @@ std::string variant::to_debug_string(std::vector<const game_logic::FormulaCallab
 		break;
 	case VARIANT_TYPE_INT:
 		s << int_value_;
+		break;
+	case VARIANT_TYPE_ENUM:
+		s << "enum " << g_enum_vector[int_value_];
 		break;
 	case VARIANT_TYPE_DECIMAL:
 		s << string_cast();
@@ -2514,6 +2565,10 @@ void variant::write_json(std::ostream& s, unsigned int flags) const
 		break;
 	case VARIANT_TYPE_INT: {
 		s << as_int();
+		return;
+	}
+	case VARIANT_TYPE_ENUM: {
+		s << "\"@eval enum " << g_enum_vector[int_value_] << "\"";
 		return;
 	}
 	case VARIANT_TYPE_DECIMAL: {
