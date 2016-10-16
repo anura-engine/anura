@@ -163,8 +163,12 @@ public:
 		type_ = v.type_;
 		value_ = v.value_;
 
-		v.type_ = VARIANT_TYPE_NULL;
-		v.int_value_ = 0;
+		if(v.type_ == VARIANT_TYPE_CALLABLE_LOADING || v.type_ == VARIANT_TYPE_DELAYED) {
+			increment_refcount();
+		} else {
+			v.type_ = VARIANT_TYPE_NULL;
+			v.int_value_ = 0;
+		}
 	}
 
 	const variant& operator=(variant&& v)
@@ -177,8 +181,12 @@ public:
 			type_ = v.type_;
 			value_ = v.value_;
 
-			v.type_ = VARIANT_TYPE_NULL;
-			v.int_value_ = 0;
+			if(v.type_ == VARIANT_TYPE_CALLABLE_LOADING || v.type_ == VARIANT_TYPE_DELAYED) {
+				increment_refcount();
+			} else {
+				v.type_ = VARIANT_TYPE_NULL;
+				v.int_value_ = 0;
+			}
 		}
 
 		return *this;
@@ -187,10 +195,18 @@ public:
 	const variant& operator=(const variant& v);
 
 	void swap(variant& v) {
-		char buf[sizeof(variant)];
-		memcpy(buf, &v, sizeof(variant));
-		memcpy(&v, this, sizeof(variant));
-		memcpy(this, buf, sizeof(variant));
+		if(type_ == VARIANT_TYPE_CALLABLE_LOADING || type_ == VARIANT_TYPE_DELAYED ||
+		   v.type_ == VARIANT_TYPE_CALLABLE_LOADING || v.type_ == VARIANT_TYPE_DELAYED) {
+			variant tmp;
+			tmp = v;
+			v = *this;
+			*this = tmp;
+		} else {
+			char buf[sizeof(variant)];
+			memcpy(buf, &v, sizeof(variant));
+			memcpy(&v, this, sizeof(variant));
+			memcpy(this, buf, sizeof(variant));
+		}
 	}
 
 	const variant& operator[](size_t n) const;
