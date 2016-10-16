@@ -1176,6 +1176,12 @@
     <ClInclude Include="..\..\src\hex\hex_renderable_fwd.hpp">
       <Filter>Header Files\hex</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\formula_vm.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\formula_where.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\src\kre\geometry.inl">
@@ -2184,6 +2190,12 @@
     </ClCompile>
     <ClCompile Include="..\..\src\hex\tile_rules.cpp">
       <Filter>Source Files\hex</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\formula_vm.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\formula_internal.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
