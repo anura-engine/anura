@@ -381,6 +381,12 @@ extern int g_tile_size;
 
 std::string g_anura_exe_name;
 
+#ifdef WIN32
+//This will build with no console on Windows. Can't work out how to get
+//this working from project settings.
+#pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
+#endif
+
 int main(int argcount, char* argvec[])
 {
 	g_anura_exe_name = argvec[0];

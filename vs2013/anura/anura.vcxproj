@@ -103,6 +103,8 @@
     <ClInclude Include="..\..\src\formula_tokenizer.hpp" />
     <ClInclude Include="..\..\src\formula_variable_storage.hpp" />
     <ClInclude Include="..\..\src\formula_visualize_widget.hpp" />
+    <ClInclude Include="..\..\src\formula_vm.hpp" />
+    <ClInclude Include="..\..\src\formula_where.hpp" />
     <ClInclude Include="..\..\src\frame.hpp" />
     <ClInclude Include="..\..\src\framed_gui_element.hpp" />
     <ClInclude Include="..\..\src\ft_iface.hpp" />
@@ -473,12 +475,14 @@
     <ClCompile Include="..\..\src\formula_function_registry.cpp" />
     <ClCompile Include="..\..\src\formula_garbage_collector.cpp" />
     <ClCompile Include="..\..\src\formula_interface.cpp" />
+    <ClCompile Include="..\..\src\formula_internal.cpp" />
     <ClCompile Include="..\..\src\formula_object.cpp" />
     <ClCompile Include="..\..\src\formula_profiler.cpp" />
     <ClCompile Include="..\..\src\formula_test.cpp" />
     <ClCompile Include="..\..\src\formula_tokenizer.cpp" />
     <ClCompile Include="..\..\src\formula_variable_storage.cpp" />
     <ClCompile Include="..\..\src\formula_visualize_widget.cpp" />
+    <ClCompile Include="..\..\src\formula_vm.cpp" />
     <ClCompile Include="..\..\src\frame.cpp" />
     <ClCompile Include="..\..\src\framed_gui_element.cpp" />
     <ClCompile Include="..\..\src\ft_iface.cpp" />
