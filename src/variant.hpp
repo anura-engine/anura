@@ -31,6 +31,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <string.h>
 
 #include "decimal.hpp"
 #include "formula_fwd.hpp"
@@ -158,7 +159,39 @@ public:
 		}
 	}
 
+	variant(variant&& v) {
+		type_ = v.type_;
+		value_ = v.value_;
+
+		v.type_ = VARIANT_TYPE_NULL;
+		v.int_value_ = 0;
+	}
+
+	const variant& operator=(variant&& v)
+	{
+		if(&v != this) {
+			if(type_ > VARIANT_TYPE_INT) {
+				release();
+			}
+
+			type_ = v.type_;
+			value_ = v.value_;
+
+			v.type_ = VARIANT_TYPE_NULL;
+			v.int_value_ = 0;
+		}
+
+		return *this;
+	}
+
 	const variant& operator=(const variant& v);
+
+	void swap(variant& v) {
+		char buf[sizeof(variant)];
+		memcpy(buf, &v, sizeof(variant));
+		memcpy(&v, this, sizeof(variant));
+		memcpy(this, buf, sizeof(variant));
+	}
 
 	const variant& operator[](size_t n) const;
 	const variant& operator[](const variant& v) const;

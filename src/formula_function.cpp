@@ -1062,11 +1062,16 @@ namespace game_logic
 	RETURN_TYPE("commands")
 	END_FUNCTION_DEF(set_mouse_cursor)
 
-	FUNCTION_DEF(eval_with_timeout, 2, 2, "eval_with_timeout(int time_ms, expr): evals expr, but with a timeout of time_ms. This will not pre-emptively time out, but while expr is evaluating, has_timed_out() will start evaluating to true if the timeout has elapsed.")
+	FUNCTION_DEF_CTOR(eval_with_timeout, 2, 2, "eval_with_timeout(int time_ms, expr): evals expr, but with a timeout of time_ms. This will not pre-emptively time out, but while expr is evaluating, has_timed_out() will start evaluating to true if the timeout has elapsed.")
+	FUNCTION_DEF_MEMBERS
+	bool optimizeArgNumToVM(int narg) const {
+		return narg != 1;
+	}
+	FUNCTION_DEF_IMPL
 
 		const int time_ms = SDL_GetTicks() + EVAL_ARG(0).as_int();
 		const timeout_scope scope(time_ms);
-		return EVAL_ARG(1);
+		return args()[1]->evaluate(variables);
 
 	FUNCTION_ARGS_DEF
 		ARG_TYPE("int");

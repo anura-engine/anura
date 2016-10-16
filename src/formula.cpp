@@ -1666,8 +1666,7 @@ namespace {
 						vm.addInstruction(OP_POP_SCOPE);
 					} else if(variant_type::get_type(variant::VARIANT_TYPE_MAP)->is_compatible(left_type) && left_->str() != "arg" /*HORRIBLE HACK to exclude arg, TODO: fix arg to not mismatch object and map types*/) {
 						left_->emitVM(vm);
-						vm.addInstruction(formula_vm::OP_CONSTANT);
-						vm.addConstant(variant(right_->str()));
+						vm.addLoadConstantInstruction(variant(right_->str()));
 						vm.addInstruction(formula_vm::OP_INDEX);
 					} else {
 						left_->emitVM(vm);
@@ -4761,8 +4760,7 @@ bool Formula::evaluatesToConstant(variant& result) const
 
 void VariantExpression::emitVM(formula_vm::VirtualMachine& vm) const
 {
-	vm.addInstruction(formula_vm::OP_CONSTANT);
-	vm.addConstant(v_);
+	vm.addLoadConstantInstruction(v_);
 }
 
 ExpressionPtr createVMExpression(formula_vm::VirtualMachine vm, variant_type_ptr t, const FormulaExpression& o)

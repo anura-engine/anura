@@ -3308,7 +3308,13 @@ RETURN_TYPE("bool")
 		}
 	};
 
-	FUNCTION_DEF(sleep_until, 1, 1, "sleep(expression)")
+	FUNCTION_DEF_CTOR(sleep_until, 1, 1, "sleep(expression)")
+	FUNCTION_DEF_MEMBERS
+		bool optimizeArgNumToVM(int narg) const {
+			return false;
+		}
+	FUNCTION_DEF_IMPL
+
 		const bool value = EVAL_ARG(0).as_bool();
 		if(value) {
 			return variant();

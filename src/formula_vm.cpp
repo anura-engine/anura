@@ -1,3 +1,4 @@
+#include <limits>
 #include <sstream>
 #include <vector>
 
@@ -386,8 +387,14 @@ void VirtualMachine::executeInternal(const FormulaCallable& variables, std::vect
 			++p;
 			const size_t nitems = static_cast<size_t>(*p);
 
-			const variant left = stack[stack.size()-nitems-1];
-			std::vector<variant> args(stack.end()-nitems, stack.end());
+			const variant left = std::move(stack[stack.size()-nitems-1]);
+			std::vector<variant> args;
+			args.reserve(nitems);
+			auto i1 = stack.end()-nitems;
+			auto i2 = stack.end();
+			for(; i1 != i2; ++i1) {
+				args.push_back(std::move(*i1));
+			}
 
 			stack.resize(stack.size() - nitems);
 			stack.back() = left(args);
@@ -787,7 +794,6 @@ void VirtualMachine::executeInternal(const FormulaCallable& variables, std::vect
 
 		case OP_DUP: {
 			stack.push_back(stack.back());
-
 			break;
 		}
 
@@ -798,12 +804,12 @@ void VirtualMachine::executeInternal(const FormulaCallable& variables, std::vect
 		}
 
 		case OP_SWAP: {
-			std::swap(stack.back(), stack[stack.size()-2]);
+			stack.back().swap(stack[stack.size()-2]);
 			break;
 		}
 
 		case OP_UNDER: {
-			variant v = stack.back();
+			variant v = std::move(stack.back());
 			stack.pop_back();
 			++p;
 			stack.insert(stack.end() - *p, v);
@@ -902,6 +908,29 @@ void VirtualMachine::addInt(InstructionType i)
 
 void VirtualMachine::addLoadConstantInstruction(const variant& v)
 {
+	if(v.is_null()) {
+		addInstruction(OP_PUSH_NULL);
+		return;
+	}
+
+	if(v.is_int()) {
+		if(v == variant(0)) {
+			addInstruction(OP_PUSH_0);
+			return;
+		}
+
+		if(v == variant(1)) {
+			addInstruction(OP_PUSH_1);
+			return;
+		}
+
+		if(v.as_int() <= std::numeric_limits<InstructionType>::max() && v.as_int() >= std::numeric_limits<InstructionType>::min()) {
+			addInstruction(OP_PUSH_INT);
+			addInt(v.as_int());
+			return;
+		}
+	}
+
 	auto itor = std::find(constants_.begin(), constants_.end(), v);
 	if(itor == constants_.end()) {
 		constants_.push_back(v);
