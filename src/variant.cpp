@@ -792,6 +792,16 @@ variant::variant(const game_logic::ConstFormulaPtr& formula, const game_logic::F
 	}
 }
 
+variant variant::change_function_callable(const game_logic::FormulaCallable& callable) const
+{
+	variant res;
+	res.type_ = VARIANT_TYPE_FUNCTION;
+	res.fn_ = new variant_fn(*fn_);
+	res.fn_->add_ref();
+	res.fn_->callable = &callable;
+	return res;
+}
+
 variant::variant(std::function<variant(const game_logic::FormulaCallable&)> builtin_fn, const VariantFunctionTypeInfoPtr& type_info)
   : type_(VARIANT_TYPE_FUNCTION)
 {

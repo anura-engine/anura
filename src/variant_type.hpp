@@ -25,6 +25,8 @@
 
 #include <map>
 
+#include "ffl_weak_ptr.hpp"
+#include "formula_callable.hpp"
 #include "formula_tokenizer.hpp"
 #include "reference_counted_object.hpp"
 #include "variant.hpp"
@@ -46,9 +48,11 @@ class variant_type;
 typedef boost::intrusive_ptr<const variant_type> variant_type_ptr;
 typedef boost::intrusive_ptr<const variant_type> const_variant_type_ptr;
 
-class variant_type : public reference_counted_object
+class variant_type : public game_logic::FormulaCallable
 {
 public:
+	variant getValue(const std::string& id) const { return variant(); }
+
 	static variant_type_ptr get_none();
 	static variant_type_ptr get_any();
 	static variant_type_ptr get_commands();
@@ -121,7 +125,7 @@ public:
 
 	static bool may_be_null(variant_type_ptr type);
 
-	void set_expr(const game_logic::FormulaExpression* expr);
+	void set_expr(const game_logic::FormulaExpression* expr) const;
 	const game_logic::FormulaExpression* get_expr() const;
 
 	virtual variant_type_ptr extend_type(variant_type_ptr extension) const { return variant_type_ptr(); }
@@ -136,7 +140,7 @@ private:
 
 	mutable std::string str_;
 
-	boost::intrusive_ptr<const game_logic::FormulaExpression> expr_;
+	mutable ffl::weak_ptr<const game_logic::FormulaExpression> expr_;
 };
 
 

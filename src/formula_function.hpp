@@ -31,11 +31,17 @@
 #include <iostream>
 #include <map>
 
+#include "formula_garbage_collector.hpp"
+
 #include "formula_callable_definition_fwd.hpp"
 #include "formula_callable_utils.hpp"
 #include "formula_fwd.hpp"
 #include "variant.hpp"
 #include "variant_type.hpp"
+
+namespace formula_vm {
+	class VirtualMachine;
+}
 
 namespace game_logic
 {
@@ -53,11 +59,13 @@ namespace game_logic
 											 std::string::const_iterator end,
 											 PinpointedLoc* pos_info=0);
 
-	class FormulaExpression : public reference_counted_object 
+	class FormulaExpression : public FormulaCallable 
 	{
 	public:
+		variant getValue(const std::string& key) const { return variant(); }
+
 		explicit FormulaExpression(const char* name=nullptr);
-		virtual ~FormulaExpression() {}
+		virtual ~FormulaExpression();
 		virtual variant staticEvaluate(const FormulaCallable& variables) const {
 			return evaluate(variables);
 		}
@@ -102,18 +110,18 @@ namespace game_logic
 		virtual void setDebugInfo(const variant& parent_formula,
 									std::string::const_iterator begin_str,
 									std::string::const_iterator end_str);
+		virtual void setDebugInfo(const FormulaExpression& o);
 		bool hasDebugInfo() const;
 		std::string debugPinpointLocation(PinpointedLoc* loc=nullptr) const;
 		std::pair<int, int> debugLocInFile() const;
 
-		void setStr(const std::string& str) { str_ = str; }
-		const std::string& str() const { return str_; }
+		std::string str() const { return std::string(begin_str_, end_str_); }
 
 		variant getParentFormula() const { return parent_formula_; }
 
 		int getNTimesCalled() const { return ntimes_called_; }
 
-		variant_type_ptr queryVariantType() const { variant_type_ptr res = getVariantType(); if(res) { if(res->refcount() == 1) { const_cast<variant_type*>(res.get())->set_expr(this); } return res; } else { return variant_type::get_any(); } }
+		variant_type_ptr queryVariantType() const { variant_type_ptr res = getVariantType(); if(res) { if(res->refcount() == 1) { res.get()->set_expr(this); } return res; } else { return variant_type::get_any(); } }
 
 		variant_type_ptr queryMutableType() const { return getMutableType(); }
 
@@ -125,26 +133,36 @@ namespace game_logic
 		void setDefinitionUsedByExpression(ConstFormulaCallableDefinitionPtr def) { definition_used_ = def; }
 		ConstFormulaCallableDefinitionPtr getDefinitionUsedByExpression() const { return definition_used_; }
 
+		virtual bool canCreateVM() const { return false; }
+		virtual void emitVM(formula_vm::VirtualMachine& vm) const { assert(false); }
+
+		virtual ExpressionPtr optimizeToVM() { return ExpressionPtr(); }
+
+		void setVMDebugInfo(formula_vm::VirtualMachine& vm) const;
+
 	protected:
 		virtual variant_type_ptr getVariantType() const { return variant_type_ptr(); }
 		virtual variant_type_ptr getMutableType() const { return variant_type_ptr(); }
 		virtual variant executeMember(const FormulaCallable& variables, std::string& id, variant* variant_id) const;
-	private:
+
+		void optimizeChildToVM(ExpressionPtr& expr) { if(expr) { auto opt = expr->optimizeToVM(); if(opt.get() != nullptr) { expr = opt; } } }
+
 		virtual variant execute(const FormulaCallable& variables) const = 0;
 		virtual void staticErrorAnalysis() const {}
 		virtual ConstFormulaCallableDefinitionPtr getModifiedDefinitionBasedOnResult(bool result, ConstFormulaCallableDefinitionPtr current_def, variant_type_ptr expression_is_this_type) const { return nullptr; }
 
 		virtual std::vector<ConstExpressionPtr> getChildren() const { return std::vector<ConstExpressionPtr>(); }
+	private:
 
 		const char* name_;
 
 		variant parent_formula_;
 		std::string::const_iterator begin_str_, end_str_;
-		std::string str_;
-
-		mutable int ntimes_called_;
 
 		ConstFormulaCallableDefinitionPtr definition_used_;
+		
+		mutable int ntimes_called_;
+
 	};
 
 	class FunctionExpression : public FormulaExpression
@@ -160,18 +178,39 @@ namespace game_logic
 									std::string::const_iterator begin_str,
 									std::string::const_iterator end_str) override;
 
-	protected:
+		ExpressionPtr optimizeToVM() override;
+
+		virtual variant executeWithArgs(const FormulaCallable& variables, const variant* passed_args, int num_passed_args) const { return execute(variables); }
+
 		const std::string& name() const { return name_; }
+		const std::string& module() const { return module_; }
+		void setModule(const std::string& m) { module_ = m; }
+
+		void clearUnusedArguments();
+
+	protected:
 		const args_list& args() const { return args_; }
+		args_list& args_mutable() { return args_; }
 
 		void check_arg_type(int narg, const std::string& type) const;
+		void check_arg_type(int narg, variant_type_ptr type) const;
+
+		//When optimizing to a virtual machine asks if a specific arg number
+		//should be optimized. Normally returns true but a function might
+		//return false if it does something special with the argument
+		//and needs access to the actual expression.
+		virtual bool optimizeArgNumToVM(int narg) const {
+			return true;
+		}
+
+		virtual bool useSingletonVM() const { return true; }
 
 	private:
 		std::vector<ConstExpressionPtr> getChildren() const override {
 			return std::vector<ConstExpressionPtr>(args_.begin(), args_.end());
 		}
 
-		std::string name_;
+		std::string module_, name_;
 		args_list args_;
 		int min_args_, max_args_;
 	};
@@ -184,6 +223,7 @@ namespace game_logic
 
 		void set_formula(ConstFormulaPtr f) { formula_ = f; }
 		void set_has_closure(int base_slot) { has_closure_ = true; base_slot_ = base_slot; }
+		virtual ExpressionPtr optimizeToVM() override { return ExpressionPtr(); }
 	private:
 		boost::intrusive_ptr<SlotFormulaCallable> calculate_args_callable(const FormulaCallable& variables) const;
 		variant execute(const FormulaCallable& variables) const;
@@ -301,6 +341,9 @@ namespace game_logic
 		void setTypeOverride(variant_type_ptr type) {
 			type_override_ = type;
 		}
+
+		bool canCreateVM() const override { return true; }
+		void emitVM(formula_vm::VirtualMachine& vm) const override;
 	private:
 		variant execute(const FormulaCallable& /*variables*/) const {
 			return v_;

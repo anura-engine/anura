@@ -176,6 +176,8 @@ public:
 	variant instantiate_generic_function(const std::vector<variant_type_ptr>& args) const;
 	std::vector<std::string> generic_function_type_args() const;
 
+	variant change_function_callable(const game_logic::FormulaCallable& callable) const;
+
 	variant get_member(const std::string& str) const;
 
 	//unsafe function which is called on an integer variant and returns

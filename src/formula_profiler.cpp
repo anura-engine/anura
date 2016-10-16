@@ -935,12 +935,8 @@ namespace formula_profiler
 
 	uint64_t Instrument::get_ns() const
 	{
-		if(profiler_on) {
-			uint64_t end_t = SDL_GetPerformanceCounter();
-			return tsc_to_ns(end_t) - tsc_to_ns(t_);
-		}
-
-		return 0LL;
+		uint64_t end_t = SDL_GetPerformanceCounter();
+		return tsc_to_ns(end_t) - tsc_to_ns(t_);
 	}
 
 	void dump_instrumentation()

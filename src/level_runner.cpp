@@ -1575,6 +1575,7 @@ bool LevelRunner::play_cycle()
 
 	const int start_draw = profile::get_tick_time();
 	if(start_draw < desired_end_time || nskip_draw_ >= g_max_frame_skips) {
+		formula_profiler::Instrument instrument("DRAW");
 		bool should_draw = true;
 
 #ifndef NO_EDITOR		
@@ -1635,7 +1636,6 @@ bool LevelRunner::play_cycle()
 		lvl_->process_draw();
 
 		if(should_draw) {
-			formula_profiler::Instrument instrument("DRAW");
 			wnd->setClearColor(KRE::Color(0, 0, 0, 0));
 			wnd->clear(KRE::ClearFlags::ALL);
 #ifndef NO_EDITOR

@@ -75,6 +75,8 @@ namespace graphics
 			explicit GetMvpMatrixFunction(const args_list& args)
 			 : FunctionExpression("get_mvp_matrix", args, 0, 0)
 			{}
+
+			bool useSingletonVM() const override { return false; }
 		private:
 			variant execute(const game_logic::FormulaCallable& variables) const {
 				game_logic::Formula::failIfStaticContext();
@@ -108,6 +110,8 @@ namespace graphics
 			explicit BindTextureFunction(const args_list& args)
 			 : FunctionExpression("bind_texture", args, 1, 2)
 			{}
+
+			bool useSingletonVM() const override { return false; }
 		private:
 			variant execute(const game_logic::FormulaCallable& variables) const 
 			{
@@ -125,6 +129,8 @@ namespace graphics
 			explicit LoadTextureFunction(const args_list& args)
 			 : FunctionExpression("load_texture", args, 1, 2)
 			{}
+
+			bool useSingletonVM() const override { return false; }
 		private:
 			variant execute(const game_logic::FormulaCallable& variables) const 
 			{
@@ -155,6 +161,8 @@ namespace graphics
 			explicit BlendModeFunction(const args_list& args)
 			 : FunctionExpression("blend_mode", args, 2, 2)
 			{}
+
+			bool useSingletonVM() const override { return false; }
 		private:
 			variant execute(const game_logic::FormulaCallable& variables) const 
 			{

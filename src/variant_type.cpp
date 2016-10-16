@@ -37,7 +37,7 @@
 //#include "voxel_object.hpp"
 //#include "voxel_object_type.hpp"
 
-variant_type::variant_type()
+variant_type::variant_type() : FormulaCallable(GARBAGE_COLLECTOR_EXCLUDE)
 {
 }
 
@@ -45,9 +45,9 @@ variant_type::~variant_type()
 {
 }
 
-void variant_type::set_expr(const game_logic::FormulaExpression* expr)
+void variant_type::set_expr(const game_logic::FormulaExpression* expr) const
 {
-	expr_.reset(expr);
+	expr_ .reset(expr);
 }
 
 const game_logic::FormulaExpression* variant_type::get_expr() const
@@ -2142,7 +2142,10 @@ variant_type_ptr parse_variant_type(const variant& original_str,
 		} else if(i1->type == FFL_TOKEN_TYPE::IDENTIFIER || (i1->type == FFL_TOKEN_TYPE::KEYWORD && std::equal(i1->begin, i1->end, "null"))) {
 			ASSERT_COND(variant::string_to_type(std::string(i1->begin, i1->end)) != variant::VARIANT_TYPE_INVALID,
 			  "INVALID TOKEN WHEN PARSING TYPE: " << std::string(i1->begin, i1->end) << " AT:\n" << game_logic::pinpoint_location(original_str, i1->begin, i1->end));
-			v.push_back(variant_type_ptr(new variant_type_simple(original_str, *i1)));
+
+	  		variant::TYPE t(variant::string_to_type(std::string(i1->begin, i1->end)));
+			ASSERT_LOG(t != variant::VARIANT_TYPE_INVALID, "INVALID TYPE: " << std::string(i1->begin, i1->end) << " AT:\n" << game_logic::pinpoint_location(original_str, i1->begin, i1->end));
+			v.push_back(variant_type::get_type(t));
 			++i1;
 		} else if(i1->type == FFL_TOKEN_TYPE::LBRACKET) {
 			const Token* end = i1+1;
@@ -2459,7 +2462,16 @@ variant_type_ptr variant_type::get_cairo_commands()
 
 variant_type_ptr variant_type::get_type(variant::TYPE type)
 {
-	return variant_type_ptr(new variant_type_simple(type));
+	static std::vector<variant_type_ptr> result;
+	if(static_cast<size_t>(type) >= result.size()) {
+		result.resize(static_cast<size_t>(type)+1);
+	}
+
+	if(!result[type]) {
+		result[type].reset(new variant_type_simple(type));
+	}
+
+	return result[type];
 }
 
 variant_type_ptr variant_type::get_union(const std::vector<variant_type_ptr>& elements_input)

@@ -38,7 +38,7 @@ namespace game_logic
 {
 	struct FormulaInterfaceImpl;
 
-	class FormulaInterfaceInstanceFactory : public reference_counted_object
+	class FormulaInterfaceInstanceFactory : public FormulaCallable
 	{
 	public:
 		virtual ~FormulaInterfaceInstanceFactory();
@@ -46,6 +46,8 @@ namespace game_logic
 		virtual bool all_static_lookups() const = 0;
 		virtual variant create(const variant& v) const = 0;
 		virtual int getId() const = 0;
+
+		variant getValue(const std::string& key) const { return variant(); }
 	};
 
 	class FormulaInterface : public FormulaCallable

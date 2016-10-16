@@ -1,3 +1,5 @@
+#pragma once
+
 #include "reference_counted_object.hpp"
 
 namespace ffl
@@ -6,8 +8,12 @@ namespace ffl
 template<typename T>
 class weak_ptr : public weak_ptr_base {
 public:
-	explicit weak_ptr(T* obj=NULL) : weak_ptr_base(obj)
+	explicit weak_ptr(T* obj=nullptr) : weak_ptr_base(obj)
 	{}
+
+	void reset(T* obj=nullptr) {
+		init(obj);
+	}
 
 	T* get() const { return reinterpret_cast<T*>(get_obj()); }
 
