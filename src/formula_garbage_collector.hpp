@@ -5,6 +5,8 @@
 #include "reference_counted_object.hpp"
 #include "variant.hpp"
 
+enum GARBAGE_COLLECTOR_EXCLUDE_OPTIONS { GARBAGE_COLLECTOR_EXCLUDE };
+
 class GarbageCollector;
 
 class GarbageCollectible : public reference_counted_object
@@ -16,6 +18,7 @@ public:
 	static GarbageCollectible* debugGetObject(void* ptr);
 	GarbageCollectible();
 	GarbageCollectible(const GarbageCollectible& o);
+	explicit GarbageCollectible(GARBAGE_COLLECTOR_EXCLUDE_OPTIONS option);
 	virtual ~GarbageCollectible();
 
 	GarbageCollectible& operator=(const GarbageCollectible& o);

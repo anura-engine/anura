@@ -52,6 +52,9 @@ namespace game_logic
 		explicit FormulaCallable(bool has_self=false) : has_self_(has_self)
 		{}
 
+		explicit FormulaCallable(GARBAGE_COLLECTOR_EXCLUDE_OPTIONS options) : has_self_(false), GarbageCollectible(options)
+		{}
+
 		std::string queryId() const { return getObjectId(); }
 
 		variant queryValue(const std::string& key) const {

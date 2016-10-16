@@ -37,7 +37,7 @@
 //#include "voxel_object.hpp"
 //#include "voxel_object_type.hpp"
 
-variant_type::variant_type()
+variant_type::variant_type() : FormulaCallable(GARBAGE_COLLECTOR_EXCLUDE)
 {
 }
 
@@ -45,9 +45,9 @@ variant_type::~variant_type()
 {
 }
 
-void variant_type::set_expr(const game_logic::FormulaExpression* expr)
+void variant_type::set_expr(const game_logic::FormulaExpression* expr) const
 {
-	expr_.reset(expr);
+	expr_ .reset(expr);
 }
 
 const game_logic::FormulaExpression* variant_type::get_expr() const
@@ -267,10 +267,6 @@ public:
 		const variant_type_simple* simple_type = dynamic_cast<const variant_type_simple*>(type.get());
 		if(simple_type && simple_type->type_ == type_) {
 			return true;
-		}
-
-		if(type->is_enumerable()) {
-			return is_compatible(type->base_type_no_enum(), why);
 		}
 
 		if(type_ == variant::VARIANT_TYPE_DECIMAL) {
@@ -1675,58 +1671,22 @@ private:
 class variant_type_enum : public variant_type
 {
 public:
-	explicit variant_type_enum(const std::vector<variant_range>& values)
-	  : values_(values)
+	explicit variant_type_enum(const std::vector<std::string>& values) : values_(values)
 	{
 		std::sort(values_.begin(), values_.end());
-		for(const auto& r : values_) {
-			ASSERT_LOG(r.first.type() == r.second.type(), "Enumeration range with different types: " << r.first.write_json() << " vs " << r.second.write_json());
-		}
 	}
 
-	const std::vector<variant_range>* is_enumerable() const { return &values_; }
-
-	variant_type_ptr base_type_no_enum() const {
-		std::vector<variant_type_ptr> result;
-		for(const auto& r : values_) {
-			result.push_back(get_variant_type_from_value(r.first));
-		}
-
-		return get_union(result);
-	}
 
 	bool match(const variant& v) const {
-		for(const auto& r : values_) {
-			if(v >= r.first && v <= r.second) {
-				return true;
-			}
+		if(v.is_enum()) {
+			return std::find(values_.begin(), values_.end(), v.as_enum()) != values_.end();
 		}
 
 		return false;
 	}
 
-	bool is_numeric() const {
-		for(const auto& r : values_) {
-			if(!r.first.is_decimal() && !r.first.is_int()) {
-				return false;
-			}
-
-			if(!r.second.is_decimal() && !r.second.is_int()) {
-				return false;
-			}
-		}
-
-		return true;
-	}
-
 	bool is_type(variant::TYPE type) const {
-		for(const auto& r : values_) {
-			if(r.first.type() != type) {
-				return false;
-			}
-		}
-
-		return true;
+		return type == variant::VARIANT_TYPE_ENUM;
 	}
 
 	bool is_equal(const variant_type& o) const {
@@ -1740,56 +1700,24 @@ public:
 
 	bool is_compatible(variant_type_ptr type, std::ostringstream* why) const {
 		const variant_type_enum* other = dynamic_cast<const variant_type_enum*>(type.get());
-		if(!other) {
-			return false;
-		}
+		return other && is_subset(other->values_);
+	}
+private:
+	std::string to_string_impl() const {
+		return "enum{" + util::join(values_) + "}";
+	}
 
-		for(const auto& r : other->values_) {
-			if(!contains(r)) {
+	bool is_subset(const std::vector<std::string>& values) const {
+		for(const std::string& s : values) {
+			if(std::find(values_.begin(), values_.end(), s) == values_.end()) {
 				return false;
 			}
 		}
 
 		return true;
 	}
-private:
-	std::string to_string_impl() const {
-		std::ostringstream s;
-		s << "enum {";
-		for(const auto& r : values_) {
-			s << r.first.write_json();
-			if(r.first != r.second) {
-				s << " - " << r.second.write_json();
-			}
 
-			s << ", ";
-		}
-
-		s << "}";
-		return s.str();
-	}
-
-	variant_type_ptr null_excluded() const {
-		std::vector<variant_range> result;
-		for(auto r : values_) {
-			if(r.first.is_null() == false) {
-				result.push_back(r);
-			}
-		}
-
-		return variant_type_ptr(new variant_type_enum(result));
-	}
-
-	bool contains(const variant_range& candidate) const {
-		for(const auto& r : values_) {
-			if(r.first <= candidate.first && r.second >= candidate.second) {
-				return true;
-			}
-		}
-
-		return false;
-	}
-	std::vector<variant_range> values_;
+	std::vector<std::string> values_;
 };
 
 class variant_type_generic : public variant_type
@@ -1840,7 +1768,11 @@ bool variant_type::may_be_null(variant_type_ptr type)
 
 variant_type_ptr get_variant_type_from_value(const variant& value) {
 	using namespace game_logic;
-	if(value.try_convert<FormulaObject>()) {
+	if(value.is_enum()) {
+		std::vector<std::string> v;
+		v.push_back(value.as_enum());
+		return variant_type_ptr(new variant_type_enum(v));
+	} else if(value.try_convert<FormulaObject>()) {
 		return variant_type::get_class(value.try_convert<FormulaObject>()->getClassName());
 	} else if(value.try_convert<CustomObject>()) {
 		const CustomObject* obj = value.try_convert<CustomObject>();
@@ -1971,11 +1903,6 @@ bool variant_types_compatible(variant_type_ptr to, variant_type_ptr from, std::o
 	}
 
 	if(to->is_union()) {
-		//handle a case like string|int matching with enum { 5, 'a' }.
-		if(from->is_enumerable() && variant_types_compatible(to, from->base_type_no_enum())) {
-			return true;
-		}
-
 		for(variant_type_ptr to_type : *to->is_union()) {
 			if(variant_types_compatible(to_type, from)) {
 				return true;
@@ -2097,45 +2024,26 @@ variant_type_ptr parse_variant_type(const variant& original_str,
 
 			v.push_back(variant_type_ptr(new variant_type_interface(
 			    ConstFormulaInterfacePtr(new game_logic::FormulaInterface(types)))));
-		} else if(i1->type == FFL_TOKEN_TYPE::IDENTIFIER && i1->equals("enum") && i1+1 != i2 && (i1+1)->equals("{")) {
-			i1 += 2;
+		} else if(i1->type == FFL_TOKEN_TYPE::KEYWORD && i1->equals("enum")) {
+			++i1;
+			ASSERT_COND(i1 != i2 && i1->type == FFL_TOKEN_TYPE::LBRACKET, "Expected '{' after enum in type");
+			++i1;
+			std::vector<std::string> enums;
 
-			std::vector<variant_range> ranges;
-			while(i1 != i2 && !i1->equals("}")) {
-				variant_range range;
-				bool result = parse_variant_constant(original_str, i1, i2, allow_failure, range.first);
-				if(!result) {
-					return variant_type_ptr();
-				}
-
-				if(i1 != i2 && i1->type == formula_tokenizer::FFL_TOKEN_TYPE::ELLIPSIS && i1+1 != i2) {
-					++i1;
-					bool result = parse_variant_constant(original_str, i1, i2, allow_failure, range.second);
-					if(!result) {
-						return variant_type_ptr();
-					}
-
-					ASSERT_COND(range.first.type() == range.second.type(), "Values in enum have different type: " << game_logic::pinpoint_location(original_str, i1->end));
-				} else {
-					range.second = range.first;
-				}
-
-				ranges.push_back(range);
-
-				ASSERT_COND(i1 != i2,  "Unexpected end of enum: " << game_logic::pinpoint_location(original_str, (i1-1)->end));
-
-				ASSERT_COND(i1->equals(",") || i1->equals("}"), "Unexpected token: " << game_logic::pinpoint_location(original_str, i1->end));
-
-				if(i1->equals(",")) {
+			while(i1 != i2 && i1->type != FFL_TOKEN_TYPE::RBRACKET) {
+				ASSERT_COND(i1->type == FFL_TOKEN_TYPE::IDENTIFIER, "Expected identifier after enum in type");
+				enums.push_back(i1->str());
+				++i1;
+				ASSERT_COND(i1 != i2 && (i1->type == FFL_TOKEN_TYPE::COMMA || i1->type == FFL_TOKEN_TYPE::RBRACKET), "Unexpected token when parsing enum type");
+				if(i1->type == FFL_TOKEN_TYPE::COMMA) {
 					++i1;
 				}
 			}
-			ASSERT_COND(i1 != i2,  "Unexpected end of enum: " << game_logic::pinpoint_location(original_str, (i1-1)->end));
 
+			ASSERT_COND(i1 != i2, "Unexpected end of enum type");
+
+			v.push_back(variant_type_ptr(new variant_type_enum(enums)));
 			++i1;
-
-			v.push_back(variant_type_ptr(new variant_type_enum(ranges)));
-
 		} else if(i1->type == FFL_TOKEN_TYPE::IDENTIFIER && i1->equals("function") && i1+1 != i2 && (i1+1)->equals("(")) {
 			i1 += 2;
 
@@ -2234,7 +2142,10 @@ variant_type_ptr parse_variant_type(const variant& original_str,
 		} else if(i1->type == FFL_TOKEN_TYPE::IDENTIFIER || (i1->type == FFL_TOKEN_TYPE::KEYWORD && std::equal(i1->begin, i1->end, "null"))) {
 			ASSERT_COND(variant::string_to_type(std::string(i1->begin, i1->end)) != variant::VARIANT_TYPE_INVALID,
 			  "INVALID TOKEN WHEN PARSING TYPE: " << std::string(i1->begin, i1->end) << " AT:\n" << game_logic::pinpoint_location(original_str, i1->begin, i1->end));
-			v.push_back(variant_type_ptr(new variant_type_simple(original_str, *i1)));
+
+	  		variant::TYPE t(variant::string_to_type(std::string(i1->begin, i1->end)));
+			ASSERT_LOG(t != variant::VARIANT_TYPE_INVALID, "INVALID TYPE: " << std::string(i1->begin, i1->end) << " AT:\n" << game_logic::pinpoint_location(original_str, i1->begin, i1->end));
+			v.push_back(variant_type::get_type(t));
 			++i1;
 		} else if(i1->type == FFL_TOKEN_TYPE::LBRACKET) {
 			const Token* end = i1+1;
@@ -2551,29 +2462,16 @@ variant_type_ptr variant_type::get_cairo_commands()
 
 variant_type_ptr variant_type::get_type(variant::TYPE type)
 {
-	return variant_type_ptr(new variant_type_simple(type));
-}
-
-variant_type_ptr variant_type::get_singleton_enum(variant item)
-{
-	std::vector<variant> items;
-	items.push_back(item);
-	return get_enum(items);
-}
-
-variant_type_ptr variant_type::get_enum(const std::vector<variant>& elements)
-{
-	std::vector<variant_range> ranges;
-	for(const variant& v : elements) {
-		ranges.push_back(variant_range(v,v));
+	static std::vector<variant_type_ptr> result;
+	if(static_cast<size_t>(type) >= result.size()) {
+		result.resize(static_cast<size_t>(type)+1);
 	}
 
-	return variant_type_ptr(new variant_type_enum(ranges));
-}
+	if(!result[type]) {
+		result[type].reset(new variant_type_simple(type));
+	}
 
-variant_type_ptr variant_type::get_enum(const std::vector<variant_range>& elements)
-{
-	return variant_type_ptr(new variant_type_enum(elements));
+	return result[type];
 }
 
 variant_type_ptr variant_type::get_union(const std::vector<variant_type_ptr>& elements_input)
@@ -2603,29 +2501,6 @@ variant_type_ptr variant_type::get_union(const std::vector<variant_type_ptr>& el
 				elements.erase(elements.begin() + nitem_to_delete);
 			}
 		} while(nitem_to_delete != -1);
-	}
-
-	int num_enums = 0;
-	for(const variant_type_ptr& type : elements_input) {
-		if(type->is_enumerable()) {
-			++num_enums;
-		}
-	}
-
-	if(num_enums > 1) {
-		std::vector<variant_range> e;
-		std::vector<variant_type_ptr> out;
-		for(const variant_type_ptr& type : elements_input) {
-			auto items = type->is_enumerable();
-			if(items) {
-				e.insert(e.end(), items->begin(), items->end());
-			} else {
-				out.push_back(type);
-			}
-		}
-
-		out.push_back(get_enum(e));
-		return get_union(out);
 	}
 
 	for(variant_type_ptr el : elements) {
@@ -2798,12 +2673,8 @@ UNIT_TEST(variant_type) {
 
 	TYPES_COMPAT("[{keys: [string], sound: commands}]", "[{keys: [string,], sound: commands}, {keys: [string,], sound: commands}]");
 
-	TYPES_COMPAT("int", "enum {4, 5, 8}");
-	TYPES_COMPAT("int", "enum {-2, 0, 5, 17}");
-	TYPES_COMPAT("int|null", "enum {-2, 0, 5, 17}");
-	TYPES_COMPAT("int|null", "enum {-2, 0, 5, 17, null}");
-	TYPES_COMPAT("enum { 2, 3, 4 }", "enum { 2, 3 }");
-	TYPES_COMPAT("enum { 2..8 }", "enum { 2, 3, 4..6 }");
+	TYPES_COMPAT("enum{abc}", "enum{abc}");
+	TYPES_COMPAT("enum{abc,dee}", "enum{abc}");
 
 	TYPES_COMPAT("int|function(int)->int", "int");
 
@@ -2815,9 +2686,10 @@ UNIT_TEST(variant_type) {
 	TYPES_INCOMPAT("{int -> int}", "{string -> int}");
 	TYPES_INCOMPAT("[int]", "[int,int,decimal]");
 	TYPES_INCOMPAT("[int,int]", "[int]");
-	TYPES_INCOMPAT("enum { 2, 3 }", "enum { 2, 3, 4 }");
-	TYPES_INCOMPAT("int|null", "enum { 2, 3, 4.5 }");
-	TYPES_INCOMPAT("enum { 2..8 }", "enum { 2, 3, 4..6, 9 }");
+	TYPES_INCOMPAT("enum{abc,dec}", "enum{abc,deg}");
+	TYPES_INCOMPAT("enum{abc}", "enum{abc,dee}");
+	TYPES_INCOMPAT("enum{abc}", "enum{abcd}");
+	TYPES_INCOMPAT("enum{abc}", "int");
 	TYPES_INCOMPAT("{int -> string}", "{int|string -> string}");
 
 #undef TYPES_COMPAT	

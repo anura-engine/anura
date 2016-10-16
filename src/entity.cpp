@@ -349,21 +349,31 @@ void Entity::drawDebugRects() const
 
 	const rect& body = solidRect();
 	if(body.w() > 0 && body.h() > 0) {
-		RectRenderable body_rr;
-		body_rr.update(body, KRE::Color(0,0,0,0xaa));
+		RectRenderable body_rr(true, true);
+		body_rr.update(body, KRE::Color(255,255,255,0xaa));
 		wnd->render(&body_rr);
 	}
 
 	const rect& hit = getHitRect();
 	if(hit.w() > 0 && hit.h() > 0) {
-		RectRenderable hit_rr;
+		RectRenderable hit_rr(true, true);
 		hit_rr.update(body, KRE::Color(255,0,0,0xaa));
 		wnd->render(&hit_rr);
 	}
 
-	RectRenderable feet_rr;
+	RectRenderable feet_rr(true, true);
 	feet_rr.update(getFeetX() - 1, getFeetY() - 1, 3, 3, KRE::Color(255,255,255,0xaa));
 	wnd->render(&feet_rr);
+
+	const Frame& f = getCurrentFrame();
+	for(auto area : f.getCollisionAreas()) {
+		if(area.name == "attack") {
+			const rect r = calculateCollisionRect(f, area);
+			RectRenderable rr(true, true);
+			rr.update(r, KRE::Color(255,0,0,0xaa));
+			wnd->render(&rr);
+		}
+	}
 }
 
 void Entity::generateCurrent(const Entity& target, int* velocity_x, int* velocity_y) const

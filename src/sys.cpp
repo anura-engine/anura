@@ -26,7 +26,11 @@
 #include <mach/mach_host.h>
 #endif
 
+#include "asserts.hpp"
+#include "filesystem.hpp"
+#include "string_utils.hpp"
 #include "sys.hpp"
+#include "unit_test.hpp"
 
 namespace sys 
 {
@@ -63,4 +67,73 @@ namespace sys
 	}
 
 #endif
+
+#ifdef __linux__
+
+#include <malloc.h>
+
+	namespace {
+	bool parse_linux_status_value(const char* haystack, const char* stat_name, int* value)
+	{
+		const char* s = strstr(haystack, stat_name);
+		if(s == nullptr) {
+			return false;
+		}
+
+		while(*s && !util::c_isdigit(*s)) {
+			++s;
+		}
+
+		if(!*s) {
+			return false;
+		}
+
+		*value = atoi(s);
+		return true;
+	}
+	}
+
+	bool get_memory_consumption(MemoryConsumptionInfo* info)
+	{
+		std::string s = read_file("/proc/self/status");
+		if(parse_linux_status_value(s.c_str(), "VmSize:", &info->vm_used_kb) == false) {
+			return false;
+		}
+
+		if(parse_linux_status_value(s.c_str(), "VmRSS:", &info->phys_used_kb) == false) {
+			return false;
+		}
+
+		struct mallinfo m = mallinfo();
+
+		info->heap_free_kb = m.fordblks/1024;
+		info->heap_used_kb = m.uordblks/1024;
+
+		return true;
+	}
+
+	int get_heap_object_usable_size(void* ptr) {
+		return malloc_usable_size(ptr);
+	}
+#else
+//Add additional implementations here.
+	bool get_memory_consumption(MemoryConsumptionInfo* info)
+	{
+		return false;
+	}
+
+	int get_heap_object_usable_size(void* ptr) {
+		return 0;
+	}
+#endif
+}
+
+COMMAND_LINE_UTILITY(util_test_memory_consumption)
+{
+	sys::MemoryConsumptionInfo info;
+	const bool res = sys::get_memory_consumption(&info);
+
+	ASSERT_LOG(res, "Failed to parse memory consumption");
+
+	printf("Memory consumption: %d virt, %d phys\n", info.vm_used_kb, info.phys_used_kb);
 }

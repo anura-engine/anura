@@ -1056,6 +1056,7 @@ bool LevelRunner::play_cycle()
 
 		//trigger a garbage collection of objects now.
 		runGarbageCollection();
+		reapGarbageCollection();
 	} else if(lvl_->players().size() > 1) {
 		for(const EntityPtr& c : lvl_->players()) {
 			if(c->getHitpoints() <= 0) {
@@ -1203,6 +1204,7 @@ bool LevelRunner::play_cycle()
 
 			//garbage collect objects from the last level.
 			runGarbageCollection();
+			reapGarbageCollection();
 			CustomObject::run_garbage_collection();
 
 			if(transition == "flip") {
@@ -1463,6 +1465,14 @@ bool LevelRunner::play_cycle()
 							formula_profiler::Manager::get()->init("profile.dat");
 						}
 					}
+				} else if(key == SDLK_F8) {
+					if(formula_profiler::Manager::get()) {
+						if(formula_profiler::Manager::get()->is_profiling()) {
+							formula_profiler::Manager::get()->halt();
+						} else {
+							formula_profiler::Manager::get()->init("profile.dat", true);
+						}
+					}
 				} else if(key == SDLK_F3) {
 					LOG_DEBUG("F3 pressed");
 					preferences::set_show_fps(!preferences::show_fps());
@@ -1565,6 +1575,7 @@ bool LevelRunner::play_cycle()
 
 	const int start_draw = profile::get_tick_time();
 	if(start_draw < desired_end_time || nskip_draw_ >= g_max_frame_skips) {
+		formula_profiler::Instrument instrument("DRAW");
 		bool should_draw = true;
 
 #ifndef NO_EDITOR		
@@ -1625,7 +1636,6 @@ bool LevelRunner::play_cycle()
 		lvl_->process_draw();
 
 		if(should_draw) {
-			formula_profiler::Instrument instrument("DRAW");
 			wnd->setClearColor(KRE::Color(0, 0, 0, 0));
 			wnd->clear(KRE::ClearFlags::ALL);
 #ifndef NO_EDITOR

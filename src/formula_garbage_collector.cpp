@@ -86,6 +86,11 @@ GarbageCollectible::GarbageCollectible(const GarbageCollectible& o) : reference_
 	insertAtHead();
 }
 
+GarbageCollectible::GarbageCollectible(GARBAGE_COLLECTOR_EXCLUDE_OPTIONS options)
+  : reference_counted_object(), next_(this), prev_(nullptr), tenure_(0)
+{
+}
+
 void GarbageCollectible::insertAtHead()
 {
 	++g_count;
@@ -103,6 +108,10 @@ GarbageCollectible& GarbageCollectible::operator=(const GarbageCollectible& o)
 
 GarbageCollectible::~GarbageCollectible()
 {
+	if(next_ == this) {
+		return;
+	}
+
 	LockGC lock;
 
 	--g_count;
@@ -548,6 +557,8 @@ namespace {
 
 void runGarbageCollection(int num_gens)
 {
+	reapGarbageCollection();
+
 	formula_profiler::Instrument instrument("GC");
 	std::shared_ptr<GarbageCollectorImpl> gc(new GarbageCollectorImpl(num_gens));
 	gc->collect();
@@ -556,8 +567,8 @@ void runGarbageCollection(int num_gens)
 
 void reapGarbageCollection()
 {
-	formula_profiler::Instrument instrument("GC");
 	for(auto gc : g_reapable_gc) {
+		formula_profiler::Instrument instrument("GC");
 		gc->reap();
 	}
 
@@ -566,6 +577,8 @@ void reapGarbageCollection()
 
 void runGarbageCollectionDebug(const char* fname)
 {
+	reapGarbageCollection();
+
 	GarbageCollectorImpl gc;
 	gc.collect();
 	gc.reap();

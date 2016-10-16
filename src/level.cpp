@@ -721,7 +721,6 @@ void Level::finishLoading()
 
 	if (editor_ || preferences::compiling_tiles) {
 		//game_logic::set_verbatim_string_expressions (true);
-		fprintf(stderr, "ZZZ: VERBATIM_STRING\n");
 	}
 
 	std::vector<EntityPtr> objects_not_in_level;
@@ -2137,11 +2136,23 @@ void Level::frameBufferEnterZorder(int zorder) const
 void Level::flushFrameBufferShadersToScreen() const
 {
 	for(int n = 0; n != active_fb_shaders_.size(); ++n) {
-		applyShaderToFrameBufferTexture(active_fb_shaders_[n], n == active_fb_shaders_.size()-1);
+		KRE::RenderTargetPtr& fb = applyShaderToFrameBufferTexture(active_fb_shaders_[n], n == active_fb_shaders_.size()-1);
+
+		const FrameBufferShaderEntry* entry = nullptr;
+		for(const FrameBufferShaderEntry& e : fb_shaders_) {
+			if(e.shader == active_fb_shaders_[n]) {
+				entry = &e;
+				break;
+			}
+		}
+
+		if(entry && entry->rt.get() != nullptr) {
+			std::swap(fb, entry->rt);
+		}
 	}
 }
 
-void Level::applyShaderToFrameBufferTexture(graphics::AnuraShaderPtr shader, bool render_to_screen) const
+KRE::RenderTargetPtr& Level::applyShaderToFrameBufferTexture(graphics::AnuraShaderPtr shader, bool render_to_screen) const
 {
 	if(render_to_screen) {
 		rt_->renderToPrevious();
@@ -2189,6 +2200,9 @@ void Level::applyShaderToFrameBufferTexture(graphics::AnuraShaderPtr shader, boo
 
 	if(!render_to_screen) {
 		std::swap(rt_, backup_rt_);
+		return backup_rt_;
+	} else {
+		return rt_;
 	}
 }
 

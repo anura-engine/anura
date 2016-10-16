@@ -538,13 +538,15 @@ private:
 		int begin_zorder, end_zorder;
 		variant shader_node;
 		mutable graphics::AnuraShaderPtr shader;
+
+		mutable KRE::RenderTargetPtr rt;
 	};
 	std::vector<FrameBufferShaderEntry> fb_shaders_;
 	mutable std::vector<graphics::AnuraShaderPtr> active_fb_shaders_;
 	mutable variant fb_shaders_variant_;
 
 	void flushFrameBufferShadersToScreen() const;
-	void applyShaderToFrameBufferTexture(graphics::AnuraShaderPtr shader, bool render_to_screen) const;
+	KRE::RenderTargetPtr& applyShaderToFrameBufferTexture(graphics::AnuraShaderPtr shader, bool render_to_screen) const;
 	void frameBufferEnterZorder(int zorder) const;
 	void shadersUpdated();
 

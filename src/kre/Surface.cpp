@@ -58,6 +58,12 @@ namespace KRE
 		const int max_surface_height = 4096;
 	}
 
+	namespace {
+		std::set<const Surface*> g_all_surfaces;
+	}
+
+	const std::set<const Surface*>& Surface::getAllSurfaces() { return g_all_surfaces; }
+
 	Surface::Surface()
 		: flags_(SurfaceFlags::NONE),
 		  pf_(nullptr),
@@ -66,10 +72,12 @@ namespace KRE
 		  id_(get_next_id()),
 		  alpha_borders_{}
 	{
+		g_all_surfaces.insert(this);
 	}
 
 	Surface::~Surface()
 	{
+		g_all_surfaces.erase(this);
 	}
 
 	PixelFormatPtr Surface::getPixelFormat()

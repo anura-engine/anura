@@ -86,4 +86,11 @@ namespace graphics
 		int char_width(int size, const std::string& fn="");
 		int char_height(int size, const std::string& fn="");
 	}
+
+	struct CairoCacheStatus {
+		int num_items;
+		int memory_usage;
+	};
+
+	CairoCacheStatus get_cairo_image_cache_status();
 }

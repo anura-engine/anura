@@ -155,7 +155,7 @@ namespace KRE
 			if(surface_ == nullptr) {
 				return false;
 			}
-			return has_data_;
+			return true;
 		}
 
 		void blit(SurfacePtr src, const rect& src_rect) override;

@@ -1007,15 +1007,11 @@ public:
 					}
 				}
 
-				std::map<variant,variant> response;
-
 				if(opponent.empty()) {
-					response[variant("type")] = variant("challenge_failed");
+					RESPOND_MESSAGE("Challenging opponent failed");
 				} else {
-					response[variant("type")] = variant("challenge_queued");
+					RESPOND_MESSAGE(formatter() << "You have challenged " << user << " to a match");
 				}
-				response[variant("session_id")] = variant(session_id);
-				send_msg(socket, "text/json", variant(&response).write_json(), "");
 
 				if(opponent.empty()) {
 					return;
@@ -1041,6 +1037,8 @@ public:
 						challenge->received = true;
 					}
 				}
+
+				return;
 
 
 			} else if(request_type == "matchmake") {
