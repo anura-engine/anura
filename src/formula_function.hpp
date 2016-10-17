@@ -226,7 +226,7 @@ namespace game_logic
 		virtual ExpressionPtr optimizeToVM() override { return ExpressionPtr(); }
 	private:
 		boost::intrusive_ptr<SlotFormulaCallable> calculate_args_callable(const FormulaCallable& variables) const;
-		variant execute(const FormulaCallable& variables) const;
+		variant execute(const FormulaCallable& variables) const override;
 		ConstFormulaPtr formula_;
 		ConstFormulaPtr precondition_;
 		std::vector<std::string> arg_names_;
@@ -328,12 +328,12 @@ namespace game_logic
 		explicit VariantExpression(variant v) : FormulaExpression("_var"), v_(v)
 		{}
 
-		bool canReduceToVariant(variant& v) const {
+		bool canReduceToVariant(variant& v) const override {
 			v = v_;
 			return true;
 		}
 
-		bool isLiteral(variant& result) const {
+		bool isLiteral(variant& result) const override {
 			result = v_;
 			return true;
 		}
@@ -345,11 +345,11 @@ namespace game_logic
 		bool canCreateVM() const override { return true; }
 		void emitVM(formula_vm::VirtualMachine& vm) const override;
 	private:
-		variant execute(const FormulaCallable& /*variables*/) const {
+		variant execute(const FormulaCallable& /*variables*/) const override {
 			return v_;
 		}
 
-		virtual variant_type_ptr getVariantType() const;
+		virtual variant_type_ptr getVariantType() const override;
 	
 		variant v_;
 		variant_type_ptr type_override_;

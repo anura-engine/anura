@@ -84,10 +84,10 @@ FUNCTION_DEF_IMPL
 
 #define END_FUNCTION_DEF(name) } }; const int name##_dummy_var = register_function_creator(FunctionModule, #name, new SpecificFunctionCreator<name##_function>(FunctionModule));
 
-#define FUNCTION_ARGS_DEF } void staticErrorAnalysis() const { int num_passed_args = -1; int narg_number = 0;
+#define FUNCTION_ARGS_DEF } void staticErrorAnalysis() const override { int num_passed_args = -1; int narg_number = 0;
 #define ARG_TYPE(str) check_arg_type(narg_number++, str);
-#define FUNCTION_TYPE_DEF } variant_type_ptr getVariantType() const { int num_passed_args = -1;
-#define RETURN_TYPE(str) } variant_type_ptr getVariantType() const { return parse_variant_type(variant(str));
+#define FUNCTION_TYPE_DEF } variant_type_ptr getVariantType() const override { int num_passed_args = -1;
+#define RETURN_TYPE(str) } variant_type_ptr getVariantType() const override { return parse_variant_type(variant(str));
 #define DEFINE_RETURN_TYPE } variant_type_ptr getVariantType() const { int num_passed_args = -1;
 
 #define FUNCTION_OPTIMIZE } ExpressionPtr optimize() const {
