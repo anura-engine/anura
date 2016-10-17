@@ -837,12 +837,26 @@ public:
 
 		{
 		const std::set<Texture*>& textures = KRE::Texture::getAllTextures();
+		std::set<Texture*> unique_textures;
+		for(auto i = textures.begin(); i != textures.end(); ++i) {
+			bool already_seen = false;
+			for(auto j = textures.begin(); j != i; ++j) {
+				if((*i)->id() == (*j)->id()) {
+					already_seen = true;
+					break;
+				}
+			}
+
+			if(!already_seen) {
+				unique_textures.insert(*i);
+			}
+		}
 		int usage = 0;
-		for(auto t : textures) {
+		for(auto t : unique_textures) {
 			usage += (t->width()*t->height()*4)/1024;
 		}
 
-		frames_.back().num_textures = static_cast<int>(textures.size());
+		frames_.back().num_textures = static_cast<int>(unique_textures.size());
 		frames_.back().texture_usage = usage;
 		}
 
