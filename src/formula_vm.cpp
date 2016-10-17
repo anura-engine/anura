@@ -966,7 +966,7 @@ void VirtualMachine::addJumpToPosition(InstructionType i, int pos)
 }
 
 namespace {
-	VirtualMachine::InstructionType g_arg_instructions[] = { OP_LOOKUP, OP_JMP_IF, OP_JMP, OP_JMP_UNLESS, OP_POP_JMP_IF, OP_POP_JMP_UNLESS, OP_CALL, OP_CALL_BUILTIN, OP_LOOP_NEXT, OP_ALGO_MAP, OP_ALGO_FILTER, OP_ALGO_FIND, OP_ALGO_COMPREHENSION, OP_UNDER };
+	VirtualMachine::InstructionType g_arg_instructions[] = { OP_LOOKUP, OP_JMP_IF, OP_JMP, OP_JMP_UNLESS, OP_POP_JMP_IF, OP_POP_JMP_UNLESS, OP_CALL, OP_CALL_BUILTIN, OP_LOOP_NEXT, OP_ALGO_MAP, OP_ALGO_FILTER, OP_ALGO_FIND, OP_ALGO_COMPREHENSION, OP_UNDER, OP_PUSH_INT };
 }
 
 void VirtualMachine::append(const VirtualMachine& other)
@@ -980,7 +980,7 @@ void VirtualMachine::append(const VirtualMachine& other)
 		parent_formula_ = other.parent_formula_;
 	}
 
-	for(size_t i = 0; i != other.instructions_.size(); ++i) {
+	for(size_t i = 0; i < other.instructions_.size(); ++i) {
 		instructions_.push_back(other.instructions_[i]);
 		if(instructions_.back() == OP_CONSTANT || instructions_.back() == OP_WHERE) {
 			++i;
