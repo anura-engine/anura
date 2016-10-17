@@ -677,13 +677,19 @@ namespace sound
 
 	//In memory represenation of a wave file. We always use 32-bit floats in stereo
 	struct WaveData {
-		WaveData(const std::string& filename, std::vector<short>* buf, int nchan) : fname(filename), nchannels(nchan) { buffer.swap(*buf); }
+		WaveData(const std::string& filename, std::vector<short>* buf, int nchan) : fname(filename), buffer(new short [buf->size()]), buffer_size(buf->size()), nchannels(nchan) {
+			memcpy(buffer, &(*buf)[0], buffer_size*sizeof(short));
+		}
+		~WaveData() {
+			delete [] buffer;
+		}
 		std::string fname;
-		std::vector<short> buffer;
+		short* buffer;
+		size_t buffer_size;
 		int nchannels;
-		size_t nsamples() const { return buffer.size()/nchannels; }
+		size_t nsamples() const { return buffer_size/nchannels; }
 
-		size_t memoryUsage() const { return buffer.size()*sizeof(short); }
+		size_t memoryUsage() const { return buffer_size*sizeof(short); }
 	};
 
 	//set of files that are loading or loaded along with a mutex to control
