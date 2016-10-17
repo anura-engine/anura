@@ -88,9 +88,9 @@ FUNCTION_DEF_IMPL
 #define ARG_TYPE(str) check_arg_type(narg_number++, str);
 #define FUNCTION_TYPE_DEF } variant_type_ptr getVariantType() const override { int num_passed_args = -1;
 #define RETURN_TYPE(str) } variant_type_ptr getVariantType() const override { return parse_variant_type(variant(str));
-#define DEFINE_RETURN_TYPE } variant_type_ptr getVariantType() const { int num_passed_args = -1;
+#define DEFINE_RETURN_TYPE } variant_type_ptr getVariantType() const override { int num_passed_args = -1;
 
-#define FUNCTION_OPTIMIZE } ExpressionPtr optimize() const {
+#define FUNCTION_OPTIMIZE } ExpressionPtr optimize() const override {
 
 #define FUNCTION_VM } ExpressionPtr optimizeToVM() override { \
 	FunctionExpression::optimizeToVM(); \
