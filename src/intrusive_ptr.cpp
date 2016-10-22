@@ -1,4 +1,4 @@
-#ifdef GARBAGE_COLLECTOR_POOLED_ALLOC
+#ifdef DEBUG_GARBAGE_COLLECTOR
 
 #include <set>
 #include <vector>

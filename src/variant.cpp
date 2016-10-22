@@ -2856,7 +2856,7 @@ std::ostream& operator<<(std::ostream& os, const variant& v)
 	return os;
 }
 
-#ifdef GARBAGE_COLLECTOR_POOLED_ALLOC
+#ifdef DEBUG_GARBAGE_COLLECTOR
 std::set<variant*>& get_all_global_variants()
 {
 	static std::set<variant*>* result = new std::set<variant*>;

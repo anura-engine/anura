@@ -107,7 +107,7 @@ struct VariantFunctionTypeInfo : public reference_counted_object
 	int num_default_args() const { return static_cast<int>(default_args.size()) + num_unneeded_args; }
 };
 
-#ifdef GARBAGE_COLLECTOR_POOLED_ALLOC
+#ifdef DEBUG_GARBAGE_COLLECTOR
 void registerGlobalVariant(variant* v);
 void unregisterGlobalVariant(variant* v);
 #else

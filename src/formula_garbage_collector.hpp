@@ -31,7 +31,7 @@ public:
 	friend class GarbageCollectorImpl;
 	friend class GarbageCollectorAnalyzer;
 
-#ifdef GARBAGE_COLLECTOR_POOLED_ALLOC
+#ifdef DEBUG_GARBAGE_COLLECTOR
 	void* operator new(size_t sz);
 	void operator delete(void* ptr) noexcept;
 #endif

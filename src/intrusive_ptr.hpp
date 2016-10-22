@@ -28,7 +28,7 @@
 namespace ffl
 {
 
-#ifdef GARBAGE_COLLECTOR_POOLED_ALLOC
+#ifdef DEBUG_GARBAGE_COLLECTOR
 	void registerIntrusivePtr(void*);
 	void unregisterIntrusivePtr(void*);
 #endif
@@ -39,14 +39,14 @@ namespace ffl
 	public:
 		IntrusivePtr() : boost::intrusive_ptr<T>()
 		{
-#ifdef GARBAGE_COLLECTOR_POOLED_ALLOC
+#ifdef DEBUG_GARBAGE_COLLECTOR
 			registerIntrusivePtr(this);
 #endif
 		}
 
 		IntrusivePtr(T* p) : boost::intrusive_ptr<T>(p)
 		{
-#ifdef GARBAGE_COLLECTOR_POOLED_ALLOC
+#ifdef DEBUG_GARBAGE_COLLECTOR
 			registerIntrusivePtr(this);
 #endif
 		}
@@ -54,7 +54,7 @@ namespace ffl
 		template<typename Y>
 		IntrusivePtr(const IntrusivePtr<Y>& p) : boost::intrusive_ptr<T>(p)
 		{
-#ifdef GARBAGE_COLLECTOR_POOLED_ALLOC
+#ifdef DEBUG_GARBAGE_COLLECTOR
 			registerIntrusivePtr(this);
 #endif
 		}
@@ -62,14 +62,14 @@ namespace ffl
 		template<typename Y>
 		IntrusivePtr(const boost::intrusive_ptr<Y>& p) : boost::intrusive_ptr<T>(p)
 		{
-#ifdef GARBAGE_COLLECTOR_POOLED_ALLOC
+#ifdef DEBUG_GARBAGE_COLLECTOR
 			registerIntrusivePtr(this);
 #endif
 		}
 
 		~IntrusivePtr()
 		{
-#ifdef GARBAGE_COLLECTOR_POOLED_ALLOC
+#ifdef DEBUG_GARBAGE_COLLECTOR
 			unregisterIntrusivePtr(this);
 #endif
 		}

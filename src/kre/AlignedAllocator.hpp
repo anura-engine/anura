@@ -32,7 +32,7 @@
 template<std::size_t N>
 struct AlignedAllocator
 {
-#ifndef GARBAGE_COLLECTOR_POOLED_ALLOC
+#ifndef DEBUG_GARBAGE_COLLECTOR
 #ifdef _MSC_VER
 		void* operator new(size_t i)
 		{

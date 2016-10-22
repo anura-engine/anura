@@ -14,7 +14,7 @@
 
 #include "formula_object.hpp"
 
-#ifdef GARBAGE_COLLECTOR_POOLED_ALLOC
+#ifdef DEBUG_GARBAGE_COLLECTOR
 namespace ffl {
 std::vector<IntrusivePtr<reference_counted_object>*> getAllIntrusivePtrDebug();
 }
@@ -150,7 +150,7 @@ std::string GarbageCollectible::debugObjectSpew() const
 	return debugObjectName();
 }
 
-#ifdef GARBAGE_COLLECTOR_POOLED_ALLOC
+#ifdef DEBUG_GARBAGE_COLLECTOR
 
 const size_t GCAllocSize = 2048;
 const size_t GCNumObjects = 100000;
@@ -196,7 +196,7 @@ void GarbageCollectible::operator delete(void* ptr) noexcept
 	g_gc_alloc_free_slots.push_back(p);
 }
 
-#endif //GARBAGE_COLLECTOR_POOLED_ALLOC
+#endif //DEBUG_GARBAGE_COLLECTOR
 
 GarbageCollector::~GarbageCollector()
 {
@@ -567,7 +567,7 @@ void GarbageCollectorAnalyzer::run(const char* fname)
 		currentPtrs_.clear();
 		item->surrenderReferences(this);
 
-#ifdef GARBAGE_COLLECTOR_POOLED_ALLOC
+#ifdef DEBUG_GARBAGE_COLLECTOR
 		if((unsigned char*)item >= g_gc_begin_data_pool && (unsigned char*)item < g_gc_end_data_pool) {
 			void** p = (void**)item;
 			uint64_t* sz = (uint64_t*)item;
@@ -628,7 +628,7 @@ void GarbageCollectorAnalyzer::run(const char* fname)
 	std::sort(allVariants_.begin(), allVariants_.end());
 	std::sort(allPtrs_.begin(), allPtrs_.end());
 
-#ifdef GARBAGE_COLLECTOR_POOLED_ALLOC
+#ifdef DEBUG_GARBAGE_COLLECTOR
 	std::vector<ffl::IntrusivePtr<reference_counted_object>*> intrusives = ffl::getAllIntrusivePtrDebug();
 	std::map<void*, std::vector<ffl::IntrusivePtr<reference_counted_object>*>> intrusive_dests;
 	for(auto p : intrusives) {
