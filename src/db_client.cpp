@@ -38,7 +38,7 @@ BEGIN_DEFINE_FN(read_modify_write, "(string, function(any)->any) ->commands")
 	std::string key = FN_ARG(0).as_string();
 	variant fn = FN_ARG(1);
 	DbClient* cli = const_cast<DbClient*>(&obj);
-	variant v(new game_logic::FnCommandCallable([=]() {
+	variant v(new game_logic::FnCommandCallable("db::read_modify_write", [=]() {
 	  cli->get(key, [=](variant doc) {
 		if(doc.is_null()) {
 			return;
@@ -59,7 +59,7 @@ END_DEFINE_FN
 BEGIN_DEFINE_FN(remove, "(string) ->commands")
 	std::string key = FN_ARG(0).as_string();
 	DbClient* cli = const_cast<DbClient*>(&obj);
-	variant v(new game_logic::FnCommandCallable([=]() {
+	variant v(new game_logic::FnCommandCallable("db::remove", [=]() {
 		cli->remove(key);
 	}
 	));

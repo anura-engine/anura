@@ -24,7 +24,7 @@
 */
 #include <boost/array.hpp>
 #include <boost/shared_array.hpp>
-#include <boost/intrusive_ptr.hpp>
+#include "intrusive_ptr.hpp"
 
 #include <assert.h>
 
@@ -650,7 +650,7 @@ namespace
 		graphics::lighting_ptr lighting_;
 	};
 
-	typedef boost::intrusive_ptr<ImageWidget_lighted> ImageWidget_lighted_ptr;
+	typedef ffl::IntrusivePtr<ImageWidget_lighted> ImageWidget_lighted_ptr;
 
 	class normal_viewer : public gui::dialog
 	{
@@ -735,7 +735,7 @@ UTILITY(calculate_normal_map)
 		fname = module::map_file(arguments.front());
 	}
 
-	boost::intrusive_ptr<normal_viewer> editor(new normal_viewer(rect(0, 0, preferences::actual_screen_width(), preferences::actual_screen_height()), fname));
+	ffl::IntrusivePtr<normal_viewer> editor(new normal_viewer(rect(0, 0, preferences::actual_screen_width(), preferences::actual_screen_height()), fname));
 	editor->showModal();
 }
 

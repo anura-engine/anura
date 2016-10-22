@@ -134,7 +134,7 @@ namespace
 		bool error;
 		bool done;
 
-		boost::intrusive_ptr<http_client> client;
+		ffl::IntrusivePtr<http_client> client;
 	};
 
 	void upload_screenshot(std::string file, std::shared_ptr<upload_screenshot_info> info)
@@ -762,7 +762,7 @@ void LevelRunner::start_editor()
 		initHistorySlider();
 
 		if(g_editor_object.empty() == false) {
-			boost::intrusive_ptr<CustomObject> obj(new CustomObject(g_editor_object, 0, 0, 1));
+			ffl::IntrusivePtr<CustomObject> obj(new CustomObject(g_editor_object, 0, 0, 1));
 			obj->construct();
 			lvl_->add_character(obj);
 		}
@@ -1039,7 +1039,7 @@ bool LevelRunner::play_cycle()
 		preload_level(save->getPlayerInfo()->currentLevel());
 		transition_scene(*lvl_, last_draw_position(), true, fade_scene);
 		sound::stop_looped_sounds(nullptr);
-		boost::intrusive_ptr<Level> new_level = load_level(save->getPlayerInfo()->currentLevel());
+		ffl::IntrusivePtr<Level> new_level = load_level(save->getPlayerInfo()->currentLevel());
 
 		if(!new_level->music().empty()) {
 			sound::play_music(new_level->music());
@@ -1133,7 +1133,7 @@ bool LevelRunner::play_cycle()
 
 			sound::stop_looped_sounds(nullptr);
 
-			boost::intrusive_ptr<Level> new_level(load_level(level_cfg_));
+			ffl::IntrusivePtr<Level> new_level(load_level(level_cfg_));
 			if (!preferences::load_compiled() && !new_level->music().empty())
 				sound::play_music(new_level->music());
 
@@ -1271,7 +1271,7 @@ bool LevelRunner::play_cycle()
 
 				if(editor::last_edited_level() != lvl_->id() && editor_->confirm_quit()) {
 
-					boost::intrusive_ptr<Level> new_level = load_level(editor::last_edited_level());
+					ffl::IntrusivePtr<Level> new_level = load_level(editor::last_edited_level());
 					if(editor_) {
 						new_level->set_editor();
 					}
@@ -1963,7 +1963,7 @@ void LevelRunner::update_history_trails()
 void LevelRunner::replay_level_from_start()
 {
 	std::unique_ptr<controls::control_backup_scope> backup_ctrl_ptr(new controls::control_backup_scope);
-	boost::intrusive_ptr<Level> new_level = load_level(lvl_->id());
+	ffl::IntrusivePtr<Level> new_level = load_level(lvl_->id());
 	if(editor_) {
 		new_level->set_editor();
 	}

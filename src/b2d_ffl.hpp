@@ -26,7 +26,7 @@
 #ifdef USE_BOX2D
 
 #include <Box2D/Box2D.h>
-#include <boost/intrusive_ptr.hpp>
+#include "intrusive_ptr.hpp"
 
 #include <vector>
 #include <map>
@@ -46,14 +46,14 @@ namespace box2d
 	};
 
 	class world;
-	typedef boost::intrusive_ptr<world> world_ptr;
-	typedef boost::intrusive_ptr<const world> const_world_ptr;
+	typedef ffl::IntrusivePtr<world> world_ptr;
+	typedef ffl::IntrusivePtr<const world> const_world_ptr;
 	class body;
-	typedef boost::intrusive_ptr<body> body_ptr;
-	typedef boost::intrusive_ptr<const body> const_body_ptr;
+	typedef ffl::IntrusivePtr<body> body_ptr;
+	typedef ffl::IntrusivePtr<const body> const_body_ptr;
 	class joint;
-	typedef boost::intrusive_ptr<joint> joint_ptr;
-	typedef boost::intrusive_ptr<const joint> const_joint_ptr;
+	typedef ffl::IntrusivePtr<joint> joint_ptr;
+	typedef ffl::IntrusivePtr<const joint> const_joint_ptr;
 
 	class destruction_listener : public b2DestructionListener
 	{

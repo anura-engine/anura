@@ -259,11 +259,11 @@ namespace game_logic
 		const FormulaCallable* fallback_;
 	};
 
-	typedef boost::intrusive_ptr<FormulaCallable> FormulaCallablePtr;
-	typedef boost::intrusive_ptr<const FormulaCallable> ConstFormulaCallablePtr;
+	typedef ffl::IntrusivePtr<FormulaCallable> FormulaCallablePtr;
+	typedef ffl::IntrusivePtr<const FormulaCallable> ConstFormulaCallablePtr;
 
-	typedef boost::intrusive_ptr<MapFormulaCallable> MapFormulaCallablePtr;
-	typedef boost::intrusive_ptr<const MapFormulaCallable> ConstMapFormulaCallablePtr;
+	typedef ffl::IntrusivePtr<MapFormulaCallable> MapFormulaCallablePtr;
+	typedef ffl::IntrusivePtr<const MapFormulaCallable> ConstMapFormulaCallablePtr;
 
 	class FormulaExpression;
 
@@ -283,22 +283,27 @@ namespace game_logic
 		//these two members are a more compiler-friendly version of a
 		//intrusive_ptr<FormulaExpression>
 		const FormulaExpression* expr_;
-		boost::intrusive_ptr<const reference_counted_object> expr_holder_;
+		ffl::IntrusivePtr<const reference_counted_object> expr_holder_;
 	};
 
 	class FnCommandCallable : public CommandCallable {
 	public:
-		explicit FnCommandCallable(std::function<void()> fn);
+		FnCommandCallable(const char* name, std::function<void()> fn);
+
+		std::string debugObjectName() const override;
 	private:
 		virtual void execute(FormulaCallable& context) const;
+		const char* name_;
 		std::function<void()> fn_;
 	};
 
 	class FnCommandCallableArg : public CommandCallable {
 	public:
-		explicit FnCommandCallableArg(std::function<void(FormulaCallable*)> fn);
+		FnCommandCallableArg(const char* name, std::function<void(FormulaCallable*)> fn);
+		std::string debugObjectName() const override;
 	private:
 		virtual void execute(FormulaCallable& context) const;
+		const char* name_;
 		std::function<void(FormulaCallable*)> fn_;
 	};
 

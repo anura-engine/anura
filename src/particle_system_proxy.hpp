@@ -54,6 +54,6 @@ namespace graphics
 		bool running_;
 	};
 
-	typedef boost::intrusive_ptr<ParticleSystemContainerProxy> ParticleSystemContainerProxyPtr; 
+	typedef ffl::IntrusivePtr<ParticleSystemContainerProxy> ParticleSystemContainerProxyPtr; 
 }
 

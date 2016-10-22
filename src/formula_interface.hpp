@@ -26,7 +26,7 @@
 #include <map>
 #include <vector>
 
-#include <boost/intrusive_ptr.hpp>
+#include "intrusive_ptr.hpp"
 #include <boost/scoped_ptr.hpp>
 
 #include "formula_callable.hpp"
@@ -78,5 +78,5 @@ namespace game_logic
 	};
 }
 
-typedef boost::intrusive_ptr<game_logic::FormulaInterface> FormulaInterfacePtr;
-typedef boost::intrusive_ptr<const game_logic::FormulaInterface> ConstFormulaInterfacePtr;
+typedef ffl::IntrusivePtr<game_logic::FormulaInterface> FormulaInterfacePtr;
+typedef ffl::IntrusivePtr<const game_logic::FormulaInterface> ConstFormulaInterfacePtr;

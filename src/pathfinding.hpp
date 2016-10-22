@@ -37,7 +37,7 @@
 
 // Need to forward declare this rather than including level.hpp
 class Level;
-typedef boost::intrusive_ptr<Level> LevelPtr;
+typedef ffl::IntrusivePtr<Level> LevelPtr;
 
 namespace pathfinding 
 {
@@ -55,8 +55,8 @@ namespace pathfinding
 
 	class DirectedGraph;
 	class WeightedDirectedGraph;
-	typedef boost::intrusive_ptr<DirectedGraph> DirectedGraphPtr;
-	typedef boost::intrusive_ptr<WeightedDirectedGraph> WeightedDirectedGraphPtr;
+	typedef ffl::IntrusivePtr<DirectedGraph> DirectedGraphPtr;
+	typedef ffl::IntrusivePtr<WeightedDirectedGraph> WeightedDirectedGraphPtr;
 
 	template<typename N, typename T>
 	class GraphNode {

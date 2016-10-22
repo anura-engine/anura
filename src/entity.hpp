@@ -49,7 +49,7 @@ class Level;
 class pc_character;
 class PlayerInfo;
 
-typedef boost::intrusive_ptr<character> CharacterPtr;
+typedef ffl::IntrusivePtr<character> CharacterPtr;
 
 class Entity : public game_logic::WmlSerializableFormulaCallable
 {
@@ -312,7 +312,7 @@ public:
 
 	virtual bool useAbsoluteScreenCoordinates() const = 0;
 
-	virtual void beingRemoved() = 0;
+	virtual void beingRemoved();
 	virtual void beingAdded() = 0;
 
 	int getMouseoverDelay() const { return mouseover_delay_; }

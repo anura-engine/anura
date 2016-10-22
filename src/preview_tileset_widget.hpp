@@ -46,5 +46,5 @@ namespace gui
 		int width_, height_;
 	};
 
-	typedef boost::intrusive_ptr<PreviewTilesetWidget> PreviewTilesetWidgetPtr;
+	typedef ffl::IntrusivePtr<PreviewTilesetWidget> PreviewTilesetWidgetPtr;
 }

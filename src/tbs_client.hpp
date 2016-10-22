@@ -58,7 +58,7 @@ namespace tbs
 
 		bool use_local_cache_;
 		tbs::game* local_game_cache_;
-		boost::intrusive_ptr<game_logic::FormulaCallable> local_game_cache_holder_;
+		ffl::IntrusivePtr<game_logic::FormulaCallable> local_game_cache_holder_;
 		int local_nplayer_;
 
 		std::vector<std::string> local_responses_;

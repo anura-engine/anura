@@ -43,7 +43,7 @@ namespace haptic
 		SDL_HapticEffect effect_;
 	};
 
-	typedef boost::intrusive_ptr<HapticEffectCallable> HapticEffectCallablePtr;
+	typedef ffl::IntrusivePtr<HapticEffectCallable> HapticEffectCallablePtr;
 
 	void play(const std::string&, int iters);
 	void stop(const std::string&);

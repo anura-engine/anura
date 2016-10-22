@@ -43,7 +43,7 @@ public:
 	void process();
 	bool expired() const;
 private:
-	boost::intrusive_ptr<CustomObject> obj_;
+	ffl::IntrusivePtr<CustomObject> obj_;
 	std::map<std::string,variant> start_properties_, end_properties_, cur_properties_;
 	int duration_, age_;
 	variant easing_;

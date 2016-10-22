@@ -1,4 +1,4 @@
-#include <boost/intrusive_ptr.hpp>
+#include "intrusive_ptr.hpp"
 
 #include "http_client.hpp"
 #include "tbs_server.hpp"
@@ -299,7 +299,7 @@ COMMAND_LINE_UTILITY(test_tbs_relay_server)
 	test_web_server web_server(io_service, 23456);
 	web_server.connect_proxy(1, "localhost", "23459");
 
-	boost::intrusive_ptr<http_client> client(new http_client("localhost", "23458", 1, &io_service));
+	ffl::IntrusivePtr<http_client> client(new http_client("localhost", "23458", 1, &io_service));
 
 	int x = 0;
 	for(int count = 0; ; ++count) {

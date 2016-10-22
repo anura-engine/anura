@@ -47,7 +47,7 @@ namespace xhtml
 		DECLARE_CALLABLE(StyleObject);
 		StyleNodePtr style_node_;
 	};
-	typedef boost::intrusive_ptr<StyleObject> StyleObjectPtr;
+	typedef ffl::IntrusivePtr<StyleObject> StyleObjectPtr;
 
 	class ElementObject : public game_logic::FormulaCallable
 	{
@@ -69,7 +69,7 @@ namespace xhtml
 		std::vector<variant> handlers_;
 		StyleObjectPtr styles_;
 	};
-	typedef boost::intrusive_ptr<ElementObject> ElementObjectPtr;
+	typedef ffl::IntrusivePtr<ElementObject> ElementObjectPtr;
 
 	class DocumentObject : public game_logic::FormulaCallable
 	{
@@ -119,5 +119,5 @@ namespace xhtml
 		mutable std::map<NodePtr, ElementObjectPtr> element_cache_;
 	};
 	
-	typedef boost::intrusive_ptr<DocumentObject> DocumentObjectPtr;
+	typedef ffl::IntrusivePtr<DocumentObject> DocumentObjectPtr;
 }

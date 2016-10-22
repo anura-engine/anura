@@ -371,7 +371,7 @@ private:
 	ConstCustomObjectTypePtr type_; //the type after variations are applied
 	ConstCustomObjectTypePtr base_type_; //the type without any variation
 	std::vector<std::string> current_variation_;
-	boost::intrusive_ptr<const Frame> frame_;
+	ffl::IntrusivePtr<const Frame> frame_;
 	std::string frame_name_;
 	int time_in_frame_;
 	int time_in_frame_delta_;
@@ -474,7 +474,7 @@ private:
 
 	EntityPtr driver_;
 
-	std::vector<boost::intrusive_ptr<BlurObject> > blur_objects_;
+	std::vector<ffl::IntrusivePtr<BlurObject> > blur_objects_;
 
 	//set if we should fall through platforms. This is decremented automatically
 	//at the end of every cycle.

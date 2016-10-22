@@ -22,7 +22,7 @@
 */
 #pragma once
 
-#include <boost/intrusive_ptr.hpp>
+#include "intrusive_ptr.hpp"
 
 #include "formula_garbage_collector.hpp"
 #include "formula_callable.hpp"
@@ -41,13 +41,13 @@ namespace game_logic
 		ConstFormulaCallableDefinitionPtr callable_where_def;
 	};
 
-	typedef boost::intrusive_ptr<WhereVariablesInfo> WhereVariablesInfoPtr;
+	typedef ffl::IntrusivePtr<WhereVariablesInfo> WhereVariablesInfoPtr;
 
 	class WhereVariables : public FormulaCallable {
 	public:
 		WhereVariables(const FormulaCallable &base, WhereVariablesInfoPtr info);
 	private:
-		boost::intrusive_ptr<const FormulaCallable> base_;
+		ffl::IntrusivePtr<const FormulaCallable> base_;
 		WhereVariablesInfoPtr info_;
 
 		mutable std::vector<variant> results_cache_;

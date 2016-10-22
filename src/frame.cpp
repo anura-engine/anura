@@ -129,7 +129,7 @@ void Frame::buildPatterns(variant obj_variant)
 		// Create uncached texture from surface.
 		auto tex = KRE::Texture::createTexture(sheet);
 
-		boost::intrusive_ptr<TextureObject> tex_obj(new TextureObject(tex));
+		ffl::IntrusivePtr<TextureObject> tex_obj(new TextureObject(tex));
 
 		std::vector<variant> area;
 		area.emplace_back(variant(0));
@@ -1104,6 +1104,11 @@ point Frame::pivot(const std::string& name, int time_in_frame) const
 	}
 
 	return point(getFeetX(),getFeetY()); //default is to pivot around feet.
+}
+
+void Frame::surrenderReferences(GarbageCollector* collector)
+{
+	collector->surrenderVariant(&doc_);
 }
 
 BEGIN_DEFINE_CALLABLE_NOBASE(Frame)

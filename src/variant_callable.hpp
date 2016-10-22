@@ -27,8 +27,8 @@
 
 class variant_callable;
 
-typedef boost::intrusive_ptr<variant_callable> variant_callable_ptr;
-typedef boost::intrusive_ptr<const variant_callable> const_variant_callable_ptr;
+typedef ffl::IntrusivePtr<variant_callable> variant_callable_ptr;
+typedef ffl::IntrusivePtr<const variant_callable> const_variant_callable_ptr;
 
 class variant_callable : public game_logic::FormulaCallable
 {

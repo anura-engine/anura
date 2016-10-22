@@ -60,7 +60,7 @@ UTILITY(render_level)
 		const std::string file = files[n];
 		const std::string output = outputs[n];
 		
-		boost::intrusive_ptr<Level> lvl(new Level(file));
+		ffl::IntrusivePtr<Level> lvl(new Level(file));
 		lvl->set_editor();
 		lvl->finishLoading();
 		lvl->setAsCurrentLevel();

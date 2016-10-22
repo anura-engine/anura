@@ -43,7 +43,7 @@ namespace game_logic
 	class FormulaCallable;
 	class FormulaExpression;
 	class FunctionSymbolTable;
-	typedef boost::intrusive_ptr<FormulaExpression> ExpressionPtr;
+	typedef ffl::IntrusivePtr<FormulaExpression> ExpressionPtr;
 
 	class Formula 
 	{

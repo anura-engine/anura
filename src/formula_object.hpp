@@ -68,7 +68,7 @@ namespace game_logic
 		static void loadAllClasses();
 		static void tryLoadClass(const std::string& name);
 
-		static boost::intrusive_ptr<FormulaObject> create(const std::string& type, variant args=variant());
+		static ffl::IntrusivePtr<FormulaObject> create(const std::string& type, variant args=variant());
 
 		bool isA(const std::string& class_name) const;
 		const std::string& getClassName() const;
@@ -77,7 +77,7 @@ namespace game_logic
 		explicit FormulaObject(variant data);
 		virtual ~FormulaObject();
 
-		boost::intrusive_ptr<FormulaObject> clone() const;
+		ffl::IntrusivePtr<FormulaObject> clone() const;
 
 		void validate() const;
 
@@ -89,7 +89,7 @@ namespace game_logic
 		variant_type_ptr getPropertySetType(const std::string& key) const;
 
 #if defined(USE_LUA)
-		const boost::intrusive_ptr<lua::LuaContext> & get_lua_context() const {
+		const ffl::IntrusivePtr<lua::LuaContext> & get_lua_context() const {
 			return lua_ptr_;
 		}
 #endif
@@ -113,19 +113,19 @@ namespace game_logic
 		bool new_in_update_;
 		bool orphaned_;
 
-		boost::intrusive_ptr<game_logic::FormulaCallable> builtin_base_;
+		ffl::IntrusivePtr<game_logic::FormulaCallable> builtin_base_;
 
 		//overrides of the class's read-only properties.
 		std::vector<FormulaPtr> property_overrides_;
 
 		std::vector<variant> variables_;
 
-		boost::intrusive_ptr<const FormulaClass> class_;
+		ffl::IntrusivePtr<const FormulaClass> class_;
 
 		// for lua integration
 #if defined(USE_LUA)
 		void init_lua();
-		boost::intrusive_ptr<lua::LuaContext> lua_ptr_;
+		ffl::IntrusivePtr<lua::LuaContext> lua_ptr_;
 #endif
 
 		variant tmp_value_;
@@ -134,7 +134,7 @@ namespace game_logic
 		mutable int private_data_;
 	};
 
-	typedef boost::intrusive_ptr<FormulaObject> FormulaObjectPtr;
+	typedef ffl::IntrusivePtr<FormulaObject> FormulaObjectPtr;
 
 	bool formula_class_valid(const std::string& type);
 

@@ -61,7 +61,7 @@ namespace game_logic
 
 namespace tbs 
 {
-	extern boost::intrusive_ptr<http_client> g_game_server_http_client_to_matchmaking_server;
+	extern ffl::IntrusivePtr<http_client> g_game_server_http_client_to_matchmaking_server;
 
 	class GameType
 	{
@@ -103,10 +103,10 @@ namespace tbs
 
 		variant process() { if(process_fn_.is_null() == false) { std::vector<variant> v; return process_fn_(v); } return variant(); }
 
-		boost::intrusive_ptr<game_logic::FormulaObject>& object() { return obj_; }
+		ffl::IntrusivePtr<game_logic::FormulaObject>& object() { return obj_; }
 
 	private:
-		boost::intrusive_ptr<game_logic::FormulaObject> obj_;
+		ffl::IntrusivePtr<game_logic::FormulaObject> obj_;
 
 		variant create_fn_, restart_fn_, add_bot_fn_, message_fn_, player_disconnected_fn_, transform_fn_, get_state_fn_, restore_state_fn_, player_waiting_on_fn_;
 		variant process_fn_;
@@ -160,9 +160,9 @@ namespace tbs
 		return current_game;
 	}
 
-	boost::intrusive_ptr<game> game::create(const variant& v)
+	ffl::IntrusivePtr<game> game::create(const variant& v)
 	{
-		boost::intrusive_ptr<game> result(new game);
+		ffl::IntrusivePtr<game> result(new game);
 		variant cmd = result->game_type_->create(v);
 		result->executeCommand(cmd);
 		return result;
@@ -193,7 +193,7 @@ namespace tbs
 
 		variant doc = deserialize_doc_with_objects(replay_.front());
 		variant state = doc["state"];
-		boost::intrusive_ptr<FormulaObject> state_ptr = state.convert_to<FormulaObject>();
+		ffl::IntrusivePtr<FormulaObject> state_ptr = state.convert_to<FormulaObject>();
 		ASSERT_LOG(state_ptr.get() != nullptr, "No state found");
 		for(int i = 1; i < static_cast<int>(replay_.size()); ++i) {
 			variant doc = deserialize_doc_with_objects(replay_[i]);
@@ -452,7 +452,7 @@ namespace tbs
 
 		variant doc = deserialize_doc_with_objects(replay_.front());
 		variant state = doc["state"];
-		boost::intrusive_ptr<FormulaObject> state_ptr = state.convert_to<FormulaObject>();
+		ffl::IntrusivePtr<FormulaObject> state_ptr = state.convert_to<FormulaObject>();
 
 		if(doc["state_id"].as_int() >= state_id) {
 			game_type_->restore_state(variant(state_ptr.get()));
@@ -565,7 +565,7 @@ namespace tbs
 
 		//handleEvent("add_bot", map_into_callable(info).get());
 
-	//	boost::intrusive_ptr<bot> new_bot(new bot(*web_server::service(), "127.0.0.1", formatter() << web_server::port(), info));
+	//	ffl::IntrusivePtr<bot> new_bot(new bot(*web_server::service(), "127.0.0.1", formatter() << web_server::port(), info));
 	//	bots_.push_back(new_bot);
 	}
 
@@ -766,7 +766,7 @@ namespace tbs
 			for(unsigned n = 0; n != value.num_elements(); ++n) {
 				LOG_INFO("BOT_ADD: " << value[n].write_json());
 				if(value[n].is_callable() && value[n].try_convert<tbs::bot>()) {
-					obj.bots_.push_back(boost::intrusive_ptr<tbs::bot>(value[n].try_convert<tbs::bot>()));
+					obj.bots_.push_back(ffl::IntrusivePtr<tbs::bot>(value[n].try_convert<tbs::bot>()));
 				} else if(g_tbs_use_shared_mem) {
 					ASSERT_LOG(obj.server_, "no server_ set");
 
@@ -778,14 +778,14 @@ namespace tbs
 
 					s->add_ipc_client(session_id, p.first);
 
-					boost::intrusive_ptr<ipc_client> cli(new ipc_client(p.second));
+					ffl::IntrusivePtr<ipc_client> cli(new ipc_client(p.second));
 
-					boost::intrusive_ptr<bot> new_bot(new bot(*web_server::service(), "127.0.0.1", "23456", value[n]));
+					ffl::IntrusivePtr<bot> new_bot(new bot(*web_server::service(), "127.0.0.1", "23456", value[n]));
 					new_bot->set_ipc_client(cli);
 
 					obj.bots_.push_back(new_bot);
 				} else {
-					boost::intrusive_ptr<bot> new_bot(new bot(*web_server::service(), "127.0.0.1", formatter() << web_server::port(), value[n]));
+					ffl::IntrusivePtr<bot> new_bot(new bot(*web_server::service(), "127.0.0.1", formatter() << web_server::port(), value[n]));
 					obj.bots_.push_back(new_bot);
 				}
 			}
@@ -802,7 +802,7 @@ namespace tbs
 			const variant info = FN_ARG(1);
 			ASSERT_LOG(nplayer >= 0 && nplayer < obj.players_.size(), "Illegal player index: " << nplayer);
 			const game* g = &obj;
-			return variant(new game_logic::FnCommandCallable([=]() {
+			return variant(new game_logic::FnCommandCallable("game::set_player_info", [=]() {
 				const_cast<game*>(g)->players_[nplayer].info = info;
 			}));
 		END_DEFINE_FN
@@ -1040,7 +1040,7 @@ namespace tbs
 	void game::surrenderReferences(GarbageCollector* collector)
 	{
 		collector->surrenderPtr(&game_type_->object(), "object");
-		for(boost::intrusive_ptr<tbs::bot>& bot : bots_) {
+		for(ffl::IntrusivePtr<tbs::bot>& bot : bots_) {
 			collector->surrenderPtr(&bot, "bot");
 		}
 	}
@@ -1079,8 +1079,8 @@ COMMAND_LINE_UTILITY(tbs_bot_game)
 
 	variant start_game_request = json::parse("{type: 'start_game'}");
 
-	boost::intrusive_ptr<MapFormulaCallable> callable(new MapFormulaCallable);
-	boost::intrusive_ptr<internal_client> client(new internal_client);
+	ffl::IntrusivePtr<MapFormulaCallable> callable(new MapFormulaCallable);
+	ffl::IntrusivePtr<internal_client> client(new internal_client);
 	client->send_request(create_game_request, -1, callable, create_game_return);
 	while(!g_create_bot_game) {
 		internal_server::process();

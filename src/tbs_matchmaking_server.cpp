@@ -2247,7 +2247,7 @@ private:
 	//stats
 	int terminated_servers_;
 
-	boost::intrusive_ptr<game_logic::FormulaObject> controller_;
+	ffl::IntrusivePtr<game_logic::FormulaObject> controller_;
 	variant create_account_fn_;
 	variant read_account_fn_;
 	variant process_account_fn_;
@@ -3039,7 +3039,7 @@ void process_tbs_matchmaking_server()
 	int port = 23456;
 	if(g_internal_tbs_matchmaking_server) {
 		static boost::asio::io_service io_service;
-		static boost::intrusive_ptr<matchmaking_server> server(new matchmaking_server(io_service, port));
+		static ffl::IntrusivePtr<matchmaking_server> server(new matchmaking_server(io_service, port));
 		io_service.poll();
 	}
 }
@@ -3063,7 +3063,7 @@ COMMAND_LINE_UTILITY(tbs_matchmaking_server) {
 
 	try {
 		boost::asio::io_service io_service;
-		boost::intrusive_ptr<matchmaking_server> server(new matchmaking_server(io_service, port));
+		ffl::IntrusivePtr<matchmaking_server> server(new matchmaking_server(io_service, port));
 		io_service.run();
 	} catch(const RestartServerException& e) {
 #if !defined(_MSC_VER)
@@ -3099,7 +3099,7 @@ COMMAND_LINE_UTILITY(db_script) {
 	variant commands = f.execute(*callable);
 
 	boost::asio::io_service io_service;
-	boost::intrusive_ptr<matchmaking_server> server(new matchmaking_server(io_service, 29543));
+	ffl::IntrusivePtr<matchmaking_server> server(new matchmaking_server(io_service, 29543));
 
 	server->executeCommand(commands);
 

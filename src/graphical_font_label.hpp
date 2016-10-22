@@ -48,5 +48,5 @@ namespace gui
 		int size_;
 	};
 
-	typedef boost::intrusive_ptr<GraphicalFontLabel> GraphicalFontLabelPtr;
+	typedef ffl::IntrusivePtr<GraphicalFontLabel> GraphicalFontLabelPtr;
 }

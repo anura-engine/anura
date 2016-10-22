@@ -50,5 +50,5 @@ namespace gui
 		WidgetSettingsDialog(const WidgetSettingsDialog&);
 	};
 
-	typedef boost::intrusive_ptr<WidgetSettingsDialog> WidgetSettingsDialogPtr;
+	typedef ffl::IntrusivePtr<WidgetSettingsDialog> WidgetSettingsDialogPtr;
 }

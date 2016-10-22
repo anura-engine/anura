@@ -347,50 +347,157 @@ namespace game_logic
 			return variant(&res);
 		}
 
+		std::set<class ffl_cache*>& get_all_ffl_caches()
+		{
+			static std::set<class ffl_cache*>* caches = new std::set<class ffl_cache*>;
+			return *caches;
+		}
+
 		class ffl_cache : public FormulaCallable
 		{
 		public:
+			struct Entry {
+				Entry() : use_weak(false) {}
+				variant key;
+				variant obj;
+				ffl::weak_ptr<FormulaCallable> weak;
+				bool use_weak;
+			};
+
+			void setName(const std::string& name) { name_ = name; }
+			const std::string& getName() const { return name_; }
+
 			explicit ffl_cache(int max_entries) : max_entries_(max_entries)
-			{}
+			{
+				get_all_ffl_caches().insert(this);
+			}
+
+			~ffl_cache()
+			{
+				get_all_ffl_caches().erase(this);
+			}
+
 			const variant* get(const variant& key) const {
-				std::map<variant, variant>::const_iterator i = cache_.find(key);
+				std::map<variant, std::list<Entry>::iterator>::iterator i = cache_.find(key);
 				if(i != cache_.end()) {
-					return &i->second;
+					if(i->second->use_weak && i->second->weak.get() == nullptr) {
+						lru_.erase(i->second);
+						cache_.erase(i);
+						return nullptr;
+					} else if(i->second->use_weak) {
+						i->second->use_weak = false;
+						i->second->obj = variant(i->second->weak.get());
+						i->second->weak.reset();
+					}
+
+					lru_.splice(lru_.begin(), lru_, i->second);
+
+					const Entry& entry = *i->second;
+					return &entry.obj;
 				} else {
 					return nullptr;
 				}
 			}
 
 			void store(const variant& key, const variant& value) const {
-				if(cache_.size() == max_entries_) {
-					cache_.clear();
-				}
+				lru_.push_front(Entry());
+				lru_.front().obj = value;
+				lru_.front().key = key;
 
-				cache_[key] = value;
-			}
+				bool succeeded = cache_.insert(std::pair<variant,std::list<Entry>::iterator>(key, lru_.begin())).second;
+				ASSERT_LOG(succeeded, "Inserted into cache when there is already a valid entry: " << key.write_json());
 
-			void surrenderReferences(GarbageCollector* collector) {
-				for(std::pair<const variant, variant>& p : cache_) {
-					collector->surrenderVariant(&p.first);
-					collector->surrenderVariant(&p.second);
-				}
-			}
-		private:
-			variant getValue(const std::string& key) const {
-				if(key == "enumerate") {
-					std::vector<variant> result;
-					for(auto p : cache_) {
-						result.push_back(p.second);
+				if(cache_.size() > max_entries_) {
+					int num_delete = std::max(1, max_entries_/5);
+					int looked = 0;
+					while(num_delete > 0 && looked < static_cast<int>(cache_.size()) && !lru_.empty()) {
+						auto end = lru_.end();
+						--end;
+						Entry& entry = *end;
+						if(entry.use_weak) {
+							if(entry.weak.get() == nullptr) {
+								cache_.erase(entry.key);
+								lru_.erase(end);
+								--num_delete;
+							} else {
+								lru_.splice(lru_.begin(), lru_, end);
+							}
+						} else if( false && entry.obj.refcount() > 1) {
+							lru_.splice(lru_.begin(), lru_, end);
+						} else {
+							cache_.erase(entry.key);
+							lru_.erase(end);
+							--num_delete;
+						}
+
+						++looked;
 					}
 
-					return variant(&result);
+					if(cache_.size() > max_entries_) {
+						for(Entry& entry : lru_) {
+							if(entry.use_weak == false && entry.obj.is_callable()) {
+								entry.weak.reset(entry.obj.mutable_callable());
+								entry.obj = variant();
+								entry.use_weak = true;
+							}
+						}
+						LOG_ERROR("Failed to delete all objects from cache. " << cache_.size() << "/" << max_entries_ << " remain");
+					}
 				}
-				return variant();
 			}
 
-			mutable std::map<variant, variant> cache_;
+			void surrenderReferences(GarbageCollector* collector) override {
+				for(std::pair<const variant, std::list<Entry>::iterator>& p : cache_) {
+					collector->surrenderVariant(&p.first);
+					collector->surrenderVariant(&p.second->key);
+					collector->surrenderVariant(&p.second->obj);
+				}
+			}
+
+			std::string debugObjectName() const override {
+				std::ostringstream s;
+				s << "ffl_cache(" << name_ << ", " << lru_.size() << "/" << max_entries_ << ")";
+				return s.str();
+			}
+		private:
+			DECLARE_CALLABLE(ffl_cache);
+
+			mutable std::list<Entry> lru_;
+			mutable std::map<variant, std::list<Entry>::iterator> cache_;
+			std::string name_;
 			int max_entries_;
 		};
+
+		BEGIN_DEFINE_CALLABLE_NOBASE(ffl_cache)
+		DEFINE_FIELD(name, "string")
+			return variant(obj.name_);
+		DEFINE_FIELD(enumerate, "[any]")
+			std::vector<variant> result;
+			for(auto item : obj.lru_) {
+				result.push_back(item.obj);
+			}
+
+			return variant(&result);
+
+		DEFINE_FIELD(keys, "[any]")
+			std::vector<variant> result;
+			for(auto item : obj.lru_) {
+				result.push_back(item.key);
+			}
+
+			return variant(&result);
+		DEFINE_FIELD(num_entries, "int")
+			return variant(obj.cache_.size());
+		DEFINE_FIELD(max_entries, "int")
+			return variant(obj.max_entries_);
+		DEFINE_FIELD(all, "[builtin ffl_cache]")
+			std::vector<variant> v;
+			for(auto item : get_all_ffl_caches()) {
+				v.push_back(variant(item));
+			}
+
+			return variant(&v);
+		END_DEFINE_CALLABLE(ffl_cache)
 
 		class Geometry : public game_logic::FormulaCallable {
 		public:
@@ -517,7 +624,7 @@ namespace game_logic
 			std::string key = EVAL_ARG(0).as_string();
 			variant value = EVAL_ARG(1);
 
-			return variant(new FnCommandCallable([=]() { g_user_info_registry[key] = value; }));
+			return variant(new FnCommandCallable("set_user_info", [=]() { g_user_info_registry[key] = value; }));
 			
 		RETURN_TYPE("commands")
 		END_FUNCTION_DEF(set_user_info)
@@ -529,7 +636,7 @@ namespace game_logic
 		END_FUNCTION_DEF(current_level)
 
 		FUNCTION_DEF(cancel, 0, 0, "cancel(): cancel the current command pipeline")
-			return variant(new FnCommandCallable([=]() { deferCurrentCommandSequence(); }));
+			return variant(new FnCommandCallable("cancel", [=]() { deferCurrentCommandSequence(); }));
 		RETURN_TYPE("commands")
 		END_FUNCTION_DEF(cancel)
 
@@ -614,23 +721,43 @@ namespace game_logic
 
 		FUNCTION_DEF(create_cache, 0, 1, "create_cache(max_entries=4096): makes an FFL cache object")
 			Formula::failIfStaticContext();
+			std::string name = "";
 			int max_entries = 4096;
 			if(NUM_ARGS >= 1) {
-				max_entries = EVAL_ARG(0).as_int();
+				variant arg = EVAL_ARG(0);
+				if(arg.is_int()) {
+					max_entries = arg.as_int();
+				} else {
+					const std::map<variant,variant>& m = arg.as_map();
+					max_entries = arg[variant("size")].as_int(max_entries);
+					name = arg[variant("name")].as_string_default("");
+				}
 			}
-			return variant(new ffl_cache(max_entries));
+
+			auto cache = new ffl_cache(max_entries);
+			cache->setName(name);
+			return variant(cache);
 		FUNCTION_ARGS_DEF
-			ARG_TYPE("int");
+			ARG_TYPE("int|{size: int|null, name: string|null}");
 			RETURN_TYPE("object");
 		END_FUNCTION_DEF(create_cache)
 
-		FUNCTION_DEF(global_cache, 0, 1, "create_cache(max_entries=4096): makes an FFL cache object")
+		FUNCTION_DEF(global_cache, 0, 2, "create_cache(max_entries=4096): makes an FFL cache object")
+			std::string name = "global";
 			int max_entries = 4096;
-			if(NUM_ARGS >= 1) {
-				max_entries = EVAL_ARG(0).as_int();
+			for(int n = 0; n < NUM_ARGS; ++n) {
+				variant arg = EVAL_ARG(n);
+				if(arg.is_int()) {
+					max_entries = arg.as_int();
+				} else if(arg.is_string()) {
+					name = arg.as_string();
+				}
 			}
-			return variant(new ffl_cache(max_entries));
+			auto cache = new ffl_cache(max_entries);
+			cache->setName(name);
+			return variant(cache);
 		FUNCTION_ARGS_DEF
+			ARG_TYPE("int|string");
 			ARG_TYPE("int");
 			RETURN_TYPE("object");
 		END_FUNCTION_DEF(global_cache)
@@ -848,12 +975,12 @@ namespace game_logic
 		FUNCTION_DEF(singleton, 1, 1, "singleton(string typename): create a singleton object with the given typename")
 			variant type = EVAL_ARG(0);
 
-			static std::map<variant, boost::intrusive_ptr<FormulaObject> > cache;
+			static std::map<variant, ffl::IntrusivePtr<FormulaObject> > cache;
 			if(cache.count(type)) {
 				return variant(cache[type].get());
 			}
 
-			boost::intrusive_ptr<FormulaObject> obj(FormulaObject::create(type.as_string(), variant()));
+			ffl::IntrusivePtr<FormulaObject> obj(FormulaObject::create(type.as_string(), variant()));
 			cache[type] = obj;
 			return variant(obj.get());
 		FUNCTION_TYPE_DEF
@@ -874,7 +1001,7 @@ namespace game_logic
 				arg = EVAL_ARG(1);
 			}
 
-			boost::intrusive_ptr<FormulaObject> obj(FormulaObject::create(type.as_string(), arg));
+			ffl::IntrusivePtr<FormulaObject> obj(FormulaObject::create(type.as_string(), arg));
 			return variant(obj.get());
 		FUNCTION_TYPE_DEF
 			variant literal;
@@ -888,10 +1015,10 @@ namespace game_logic
 
 		class update_object_command : public game_logic::CommandCallable
 		{
-			boost::intrusive_ptr<FormulaObject> target_, src_;
+			ffl::IntrusivePtr<FormulaObject> target_, src_;
 		public:
-			update_object_command(boost::intrusive_ptr<FormulaObject> target,
-								  boost::intrusive_ptr<FormulaObject> src)
+			update_object_command(ffl::IntrusivePtr<FormulaObject> target,
+								  ffl::IntrusivePtr<FormulaObject> src)
 			  : target_(target), src_(src)
 			{}
 			virtual void execute(game_logic::FormulaCallable& ob) const {
@@ -901,8 +1028,8 @@ namespace game_logic
 
 		FUNCTION_DEF(update_object, 2, 2, "update_object(target_instance, src_instance)")
 
-			boost::intrusive_ptr<FormulaObject> target = EVAL_ARG(0).convert_to<FormulaObject>();
-			boost::intrusive_ptr<FormulaObject> src = EVAL_ARG(1).convert_to<FormulaObject>();
+			ffl::IntrusivePtr<FormulaObject> target = EVAL_ARG(0).convert_to<FormulaObject>();
+			ffl::IntrusivePtr<FormulaObject> src = EVAL_ARG(1).convert_to<FormulaObject>();
 			return variant(new update_object_command(target, src));
 
 		FUNCTION_TYPE_DEF
@@ -910,7 +1037,7 @@ namespace game_logic
 		END_FUNCTION_DEF(update_object)
 
 		FUNCTION_DEF(apply_delta, 2, 2, "apply_delta(instance, delta)")
-			boost::intrusive_ptr<FormulaObject> target = EVAL_ARG(0).convert_to<FormulaObject>();
+			ffl::IntrusivePtr<FormulaObject> target = EVAL_ARG(0).convert_to<FormulaObject>();
 			variant clone = FormulaObject::deepClone(variant(target.get()));
 			FormulaObject* obj = clone.try_convert<FormulaObject>();
 			obj->applyDiff(EVAL_ARG(1));
@@ -937,7 +1064,7 @@ namespace game_logic
 			Formula::failIfStaticContext();
 			variant value = EVAL_ARG(0);
 
-			return variant(new FnCommandCallableArg([=](FormulaCallable* callable) {
+			return variant(new FnCommandCallableArg("eval_lua", [=](FormulaCallable* callable) {
 				lua::LuaContext context;
 				context.execute(value, callable);
 			}));
@@ -1047,7 +1174,7 @@ namespace game_logic
 
 	FUNCTION_DEF(set_mouse_cursor, 1, 1, "set_mouse_cursor(string cursor)")
 		std::string cursor = EVAL_ARG(0).as_string();
-		return variant(new FnCommandCallable([=]() {
+		return variant(new FnCommandCallable("set_mouse_cursor", [=]() {
 			if(!KRE::are_cursors_initialized()) {
 				if(sys::file_exists(module::map_file("data/cursors.cfg"))) {
 					variant data = json::parse_from_file("data/cursors.cfg");
@@ -1958,7 +2085,7 @@ FUNCTION_DEF_IMPL
 				return list[0];
 			}
 
-			boost::intrusive_ptr<variant_comparator> callable(new variant_comparator(args()[1], variables));
+			ffl::IntrusivePtr<variant_comparator> callable(new variant_comparator(args()[1], variables));
 
 			variant a = list[0];
 			for(int n = 1; n < list.num_elements(); ++n) {
@@ -2026,7 +2153,7 @@ FUNCTION_DEF_IMPL
 			ASSERT_LOG(item1.type() == item2.type(), "zip function arguments must both be the same type.");
 			ASSERT_LOG(item1.is_list() || item1.is_map(), "zip function arguments must be either lists or maps");
 
-			boost::intrusive_ptr<variant_comparator> callable;
+			ffl::IntrusivePtr<variant_comparator> callable;
 	
 			if(NUM_ARGS > 2) {
 				callable.reset(new variant_comparator(args()[2], variables));
@@ -2179,7 +2306,7 @@ FUNCTION_DEF_IMPL
 			pathfinding::graph_edge_list edges;
 	
 			std::vector<variant> vertex_list;
-			boost::intrusive_ptr<MapFormulaCallable> callable(new MapFormulaCallable(&variables));
+			ffl::IntrusivePtr<MapFormulaCallable> callable(new MapFormulaCallable(&variables));
 			variant& a = callable->addDirectAccess("v");
 			for(variant v : vertices.as_list()) {
 				a = v;
@@ -2205,7 +2332,7 @@ FUNCTION_DEF_IMPL
 
 		FUNCTION_DEF(weighted_graph, 2, 2, "weighted_graph(directed_graph, weight_expression) -> a weighted directed graph")
 				variant graph = EVAL_ARG(0);		
-				pathfinding::DirectedGraphPtr dg = boost::intrusive_ptr<pathfinding::DirectedGraph>(graph.try_convert<pathfinding::DirectedGraph>());
+				pathfinding::DirectedGraphPtr dg = ffl::IntrusivePtr<pathfinding::DirectedGraph>(graph.try_convert<pathfinding::DirectedGraph>());
 				ASSERT_LOG(dg, "Directed graph given is not of the correct type. " /*<< variant::variant_type_to_string(graph.type())*/);
 				pathfinding::edge_weights w;
  
@@ -2325,7 +2452,7 @@ FUNCTION_DEF_IMPL
 			point src(EVAL_ARG(1).as_int(), EVAL_ARG(2).as_int());
 			point dst(EVAL_ARG(3).as_int(), EVAL_ARG(4).as_int());
 			ExpressionPtr heuristic = args()[4];
-			boost::intrusive_ptr<MapFormulaCallable> callable(new MapFormulaCallable(&variables));
+			ffl::IntrusivePtr<MapFormulaCallable> callable(new MapFormulaCallable(&variables));
 			return variant(pathfinding::a_star_find_path(lvl, src, dst, heuristic, weight_expr, callable, tile_size_x, tile_size_y));
 		END_FUNCTION_DEF(plot_path)
 
@@ -2346,7 +2473,7 @@ FUNCTION_DEF_IMPL
 			if(NUM_ARGS == 1) {
 				std::stable_sort(vars.begin(), vars.end());
 			} else {
-				boost::intrusive_ptr<variant_comparator> comparator(new variant_comparator(args()[1], variables));
+				ffl::IntrusivePtr<variant_comparator> comparator(new variant_comparator(args()[1], variables));
 				std::stable_sort(vars.begin(), vars.end(), [=](const variant& a, const variant& b) { return (*comparator)(a,b); });
 			}
 
@@ -2374,14 +2501,14 @@ FUNCTION_DEF_IMPL
 
 		FUNCTION_DEF(shuffle, 1, 1, "shuffle(list) - Returns a shuffled version of the list. Like shuffling cards.")
 			variant list = EVAL_ARG(0);
-			boost::intrusive_ptr<FloatArrayCallable> f = list.try_convert<FloatArrayCallable>();
+			ffl::IntrusivePtr<FloatArrayCallable> f = list.try_convert<FloatArrayCallable>();
 			if(f != nullptr) {
 				std::vector<float> floats(f->floats().begin(), f->floats().end());
 				myshuffle(floats.begin(), floats.end());
 				return variant(new FloatArrayCallable(&floats));
 			}
 	
-			boost::intrusive_ptr<ShortArrayCallable> s = list.try_convert<ShortArrayCallable>();
+			ffl::IntrusivePtr<ShortArrayCallable> s = list.try_convert<ShortArrayCallable>();
 			if(s != nullptr) {
 				std::vector<short> shorts(s->shorts().begin(), s->shorts().end());
 				myshuffle(shorts.begin(), shorts.end());
@@ -2582,7 +2709,7 @@ FUNCTION_DEF_IMPL
 			const variant items = split_variant_if_str(EVAL_ARG(0));
 			if(items.is_map()) {
 				int res = 0;
-				boost::intrusive_ptr<map_callable> callable(new map_callable(variables));
+				ffl::IntrusivePtr<map_callable> callable(new map_callable(variables));
 				int index = 0;
 				for(const auto& p : items.as_map()) {
 					callable->set(p.first, p.second, index);
@@ -2597,7 +2724,7 @@ FUNCTION_DEF_IMPL
 				return variant(res);
 			} else {
 				int res = 0;
-				boost::intrusive_ptr<map_callable> callable(new map_callable(variables));
+				ffl::IntrusivePtr<map_callable> callable(new map_callable(variables));
 				for(int n = 0; n != items.num_elements(); ++n) {
 					callable->set(items[n], n);
 					const variant val = args().back()->evaluate(*callable);
@@ -2651,7 +2778,7 @@ FUNCTION_DEF_IMPL
 			if(NUM_ARGS == 2) {
 
 				if(items.is_map()) {
-					boost::intrusive_ptr<map_callable> callable(new map_callable(variables));
+					ffl::IntrusivePtr<map_callable> callable(new map_callable(variables));
 					std::map<variant,variant> m;
 					int index = 0;
 					for(const variant_pair& p : items.as_map()) {
@@ -2666,7 +2793,7 @@ FUNCTION_DEF_IMPL
 
 					return variant(&m);
 				} else {
-					boost::intrusive_ptr<map_callable> callable(new map_callable(variables));
+					ffl::IntrusivePtr<map_callable> callable(new map_callable(variables));
 					for(int n = 0; n != items.num_elements(); ++n) {
 						callable->set(items[n], n);
 						const variant val = args().back()->evaluate(*callable);
@@ -2676,7 +2803,7 @@ FUNCTION_DEF_IMPL
 					}
 				}
 			} else {
-				boost::intrusive_ptr<map_callable> callable(new map_callable(variables));
+				ffl::IntrusivePtr<map_callable> callable(new map_callable(variables));
 				const std::string self = identifier_.empty() ? EVAL_ARG(1).as_string() : identifier_;
 				callable->setValue_name(self);
 
@@ -2821,7 +2948,7 @@ FUNCTION_DEF_IMPL
 			const variant items = EVAL_ARG(0);
 
 			if(NUM_ARGS == 2) {
-				boost::intrusive_ptr<map_callable> callable(new map_callable(variables));
+				ffl::IntrusivePtr<map_callable> callable(new map_callable(variables));
 				for(int n = 0; n != items.num_elements(); ++n) {
 					callable->set(items[n], n);
 					const variant val = args().back()->evaluate(*callable);
@@ -2830,7 +2957,7 @@ FUNCTION_DEF_IMPL
 					}
 				}
 			} else {
-				boost::intrusive_ptr<map_callable> callable(new map_callable(variables));
+				ffl::IntrusivePtr<map_callable> callable(new map_callable(variables));
 
 				const std::string self = identifier_.empty() ? EVAL_ARG(1).as_string() : identifier_;
 				callable->setValue_name(self);
@@ -2925,7 +3052,7 @@ FUNCTION_DEF_IMPL
 			const variant items = EVAL_ARG(0);
 
 			if(NUM_ARGS == 2) {
-				boost::intrusive_ptr<map_callable> callable(new map_callable(variables));
+				ffl::IntrusivePtr<map_callable> callable(new map_callable(variables));
 				for(int n = 0; n != items.num_elements(); ++n) {
 					callable->set(items[n], n);
 					const variant val = args().back()->evaluate(*callable);
@@ -2934,7 +3061,7 @@ FUNCTION_DEF_IMPL
 					}
 				}
 			} else {
-				boost::intrusive_ptr<map_callable> callable(new map_callable(variables));
+				ffl::IntrusivePtr<map_callable> callable(new map_callable(variables));
 
 				const std::string self = identifier_.empty() ? EVAL_ARG(1).as_string() : identifier_;
 				callable->setValue_name(self);
@@ -3074,7 +3201,7 @@ FUNCTION_DEF_IMPL
 
 			int max_index = -1;
 			variant max_value;
-			boost::intrusive_ptr<map_callable> callable(new map_callable(variables));
+			ffl::IntrusivePtr<map_callable> callable(new map_callable(variables));
 			for(int n = 0; n != items.num_elements(); ++n) {
 				variant val;
 		
@@ -3142,7 +3269,7 @@ FUNCTION_DEF_IMPL
 				if(NUM_ARGS == 2) {
 
 					if(items.is_map()) {
-						boost::intrusive_ptr<map_callable> callable(new map_callable(variables));
+						ffl::IntrusivePtr<map_callable> callable(new map_callable(variables));
 						int index = 0;
 						for(const variant_pair& p : items.as_map()) {
 							if(callable->refcount() > 1) {
@@ -3155,7 +3282,7 @@ FUNCTION_DEF_IMPL
 						}
 					} else if(items.is_string()) {
 						const std::string& s = items.as_string();
-						boost::intrusive_ptr<map_callable> callable(new map_callable(variables));
+						ffl::IntrusivePtr<map_callable> callable(new map_callable(variables));
 						for(int n = 0; n != s.length(); ++n) {
 							if(callable->refcount() > 1) {
 								callable.reset(new map_callable(variables));
@@ -3166,7 +3293,7 @@ FUNCTION_DEF_IMPL
 							vars.push_back(val);
 						}
 					} else {
-						boost::intrusive_ptr<map_callable> callable(new map_callable(variables));
+						ffl::IntrusivePtr<map_callable> callable(new map_callable(variables));
 						for(int n = 0; n != items.num_elements(); ++n) {
 							if(callable->refcount() > 1) {
 								callable.reset(new map_callable(variables));
@@ -3177,7 +3304,7 @@ FUNCTION_DEF_IMPL
 						}
 					}
 				} else {
-					boost::intrusive_ptr<map_callable> callable(new map_callable(variables));
+					ffl::IntrusivePtr<map_callable> callable(new map_callable(variables));
 					const std::string self = identifier_.empty() ? EVAL_ARG(1).as_string() : identifier_;
 					callable->setValue_name(self);
 					for(int n = 0; n != items.num_elements(); ++n) {
@@ -3390,7 +3517,7 @@ FUNCTION_DEF_IMPL
 
 		FUNCTION_DEF(show_modal, 1, 1, "show_modal(dialog): Displays a modal dialog on the screen.")
 			variant graph = EVAL_ARG(0);
-			gui::DialogPtr dialog = boost::intrusive_ptr<gui::Dialog>(graph.try_convert<gui::Dialog>());
+			gui::DialogPtr dialog = ffl::IntrusivePtr<gui::Dialog>(graph.try_convert<gui::Dialog>());
 			ASSERT_LOG(dialog, "Dialog given is not of the correct type.");
 			dialog->showModal();
 			return variant::from_bool(dialog->cancelled() == false);
@@ -3420,7 +3547,7 @@ FUNCTION_DEF_IMPL
 			ASSERT_LOG(callable != nullptr, "Argument to CompileLua was not a formula callable");
 			game_logic::FormulaObject * object = dynamic_cast<game_logic::FormulaObject*>(callable);
 			ASSERT_LOG(object != nullptr, "Argument to CompileLua was not a formula object");
-			boost::intrusive_ptr<lua::LuaContext> ctx = object->get_lua_context();
+			ffl::IntrusivePtr<lua::LuaContext> ctx = object->get_lua_context();
 			ASSERT_LOG(ctx, "Argument to CompileLua was not a formula object with a lua context. (Check class definition?)");
 			std::string name = EVAL_ARG(1).as_string();
 			std::string script = EVAL_ARG(2).as_string();
@@ -3992,7 +4119,7 @@ FUNCTION_DEF_IMPL
 				if(!key_.empty() && callable_def) {
 					slot_ = callable_def->getSlot(key_);
 					if(slot_ != -1) {
-						cmd_ = boost::intrusive_ptr<add_by_slot_command>(new add_by_slot_command(slot_, variant()));
+						cmd_ = ffl::IntrusivePtr<add_by_slot_command>(new add_by_slot_command(slot_, variant()));
 					}
 				}
 			}
@@ -4046,7 +4173,7 @@ FUNCTION_DEF_IMPL
 
 			std::string key_;
 			int slot_;
-			mutable boost::intrusive_ptr<add_by_slot_command> cmd_;
+			mutable ffl::IntrusivePtr<add_by_slot_command> cmd_;
 		};
 
 
@@ -4357,7 +4484,7 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 				ASSERT_LOG(false, "RELATIVE PATH OUTSIDE ALLOWED " << docname);
 			}
 
-			return variant(new FnCommandCallableArg([=](FormulaCallable* callable) {
+			return variant(new FnCommandCallableArg("write_document", [=](FormulaCallable* callable) {
 				get_doc_cache(prefs_directory)[docname] = doc;
 
 				std::string real_docname = preferences::user_data_path() + docname;
@@ -4561,10 +4688,10 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 		};
 	}
 
-	boost::intrusive_ptr<SlotFormulaCallable> FormulaFunctionExpression::calculate_args_callable(const FormulaCallable& variables) const
+	ffl::IntrusivePtr<SlotFormulaCallable> FormulaFunctionExpression::calculate_args_callable(const FormulaCallable& variables) const
 	{
 		if(!callable_ || callable_->refcount() != 1) {
-			callable_ = boost::intrusive_ptr<SlotFormulaCallable>(new SlotFormulaCallable);
+			callable_ = ffl::IntrusivePtr<SlotFormulaCallable>(new SlotFormulaCallable);
 			callable_->reserve(arg_names_.size());
 			callable_->setBaseSlot(base_slot_);
 		}
@@ -4573,7 +4700,7 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 
 		//we reset callable_ to nullptr during any calls so that recursive calls
 		//will work properly.
-		boost::intrusive_ptr<SlotFormulaCallable> tmp_callable(callable_);
+		ffl::IntrusivePtr<SlotFormulaCallable> tmp_callable(callable_);
 		callable_.reset(nullptr);
 
 		for(unsigned n = 0; n != arg_names_.size(); ++n) {
@@ -4600,7 +4727,7 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 			return result;
 		}
 
-		boost::intrusive_ptr<SlotFormulaCallable> tmp_callable = calculate_args_callable(variables);
+		ffl::IntrusivePtr<SlotFormulaCallable> tmp_callable = calculate_args_callable(variables);
 
 		if(precondition_) {
 			if(!precondition_->execute(*tmp_callable).as_bool()) {
@@ -4616,7 +4743,7 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 		if(!is_calculating_recursion && formula_->hasGuards() && !formula_fn_stack.empty() && formula_fn_stack.top() == this) {
 			const recursion_calculation_scope recursion_scope;
 
-			typedef boost::intrusive_ptr<FormulaCallable> call_ptr;
+			typedef ffl::IntrusivePtr<FormulaCallable> call_ptr;
 			std::vector<call_ptr> invocations;
 			invocations.push_back(tmp_callable);
 			while(formula_->guardMatches(*invocations.back()) == -1) {
@@ -5187,7 +5314,7 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 			*const_cast<variant*>(v) = variant();
 		}
 
-		void surrenderPtrInternal(boost::intrusive_ptr<GarbageCollectible>* ptr, const char* description) {
+		void surrenderPtrInternal(ffl::IntrusivePtr<GarbageCollectible>* ptr, const char* description) {
 			ptr->reset();
 		}
 	private:
@@ -5197,18 +5324,16 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 		Formula::failIfStaticContext();
 
 		auto p = EVAL_ARG(0).mutable_callable();
-		return variant(new FnCommandCallable([=]() {
+		return variant(new FnCommandCallable("force_destroy_object_references", [=]() {
 			if(p) {
 				GarbageCollectorForceDestroyer destroyer;
 				p->surrenderReferences(&destroyer);
 			}
 		}));
 
-		return variant();
-
 	FUNCTION_ARGS_DEF
 		ARG_TYPE("object")
-		RETURN_TYPE("command")
+		RETURN_TYPE("commands")
 	END_FUNCTION_DEF(force_destroy_object_references)
 
 	FUNCTION_DEF(debug_object_info, 1, 1, "debug_object_info(string) -> give info about the object at the given address")
@@ -5224,34 +5349,6 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 	FUNCTION_ARGS_DEF
 		ARG_TYPE("string");
 	END_FUNCTION_DEF(debug_object_info)
-
-
-	class debug_dump_textures_command : public game_logic::CommandCallable
-	{
-		std::string fname_, info_;
-	public:
-		debug_dump_textures_command(const std::string& fname, const std::string& info) : fname_(fname), info_(info)
-		{}
-		virtual void execute(game_logic::FormulaCallable& ob) const 
-		{
-			const std::string* info = nullptr;
-			if(info_.empty() == false) {
-				info = &info_;
-			}
-			ASSERT_LOG(false, "XXX write KRE::Texture::DebugDumpTextures(file, info)");
-			//graphics::texture::debug_dump_textures(fname_.c_str(), info);
-		}
-	};
-
-	FUNCTION_DEF(debug_dump_textures, 1, 2, "debug_dump_textures(string dir, string name=null): dump textures to the given directory")
-		std::string path = EVAL_ARG(0).as_string();
-		std::string name;
-		if(NUM_ARGS > 1) {
-			name = EVAL_ARG(1).as_string();
-		}
-
-		return variant(new debug_dump_textures_command(path, name));
-	END_FUNCTION_DEF(debug_dump_textures)
 
 	FUNCTION_DEF(build_animation, 1, 1, "build_animation(map)")
 		variant m = EVAL_ARG(0);
@@ -5301,7 +5398,7 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 	END_FUNCTION_DEF(inspect_object)
 
 	FUNCTION_DEF(get_modified_object, 2, 2, "get_modified_object(obj, commands) -> obj: yields a copy of the given object modified by the given commands")
-		boost::intrusive_ptr<FormulaObject> obj(EVAL_ARG(0).convert_to<FormulaObject>());
+		ffl::IntrusivePtr<FormulaObject> obj(EVAL_ARG(0).convert_to<FormulaObject>());
 
 		obj = FormulaObject::deepClone(variant(obj.get())).convert_to<FormulaObject>();
 
@@ -5344,7 +5441,7 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 	FUNCTION_DEF(release_object, 1, 1, "release_object(obj)")
 		Formula::failIfStaticContext();
 		variant v = EVAL_ARG(0);
-		return variant(new game_logic::FnCommandCallable([=]() { FormulaObject::deepDestroy(v); }));
+		return variant(new game_logic::FnCommandCallable("release_object", [=]() { FormulaObject::deepDestroy(v); }));
 	FUNCTION_ARGS_DEF
 	ARG_TYPE("any")
 	RETURN_TYPE("commands")

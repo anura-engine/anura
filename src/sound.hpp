@@ -90,11 +90,11 @@ namespace sound
 	class AudioEngine : public game_logic::FormulaCallable
 	{
 	public:
-		explicit AudioEngine(boost::intrusive_ptr<const CustomObject> obj);
+		explicit AudioEngine(ffl::IntrusivePtr<const CustomObject> obj);
 	private:
 		DECLARE_CALLABLE(AudioEngine);
 
-		boost::intrusive_ptr<const CustomObject> obj_;
+		ffl::IntrusivePtr<const CustomObject> obj_;
 	};
 
 	struct MemoryUsageInfo {

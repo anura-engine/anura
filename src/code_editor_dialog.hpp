@@ -127,7 +127,7 @@ private:
 
 	struct KnownFile {
 		std::string fname;
-		boost::intrusive_ptr<Frame> anim;
+		ffl::IntrusivePtr<Frame> anim;
 		gui::CodeEditorWidgetPtr editor;
 		std::function<void()> op_fn;
 	};
@@ -153,7 +153,7 @@ private:
 	std::function<void()> op_fn_;
 };
 
-typedef boost::intrusive_ptr<CodeEditorDialog> CodeEditorDialogPtr;
+typedef ffl::IntrusivePtr<CodeEditorDialog> CodeEditorDialogPtr;
 
 void edit_and_continue_class(const std::string& class_name, const std::string& error);
 void edit_and_continue_fn(const std::string& fname, const std::string& error, std::function<void()> fn);

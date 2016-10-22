@@ -57,7 +57,6 @@ namespace game_logic
 
 	int WmlSerializableFormulaCallable::registerSerializableType(const char* name, std::function<variant(variant)> ctor)
 	{
-	
 		std::string key(name);
 		type_registry()[key] = ctor;
 		return static_cast<int>(type_registry().size());

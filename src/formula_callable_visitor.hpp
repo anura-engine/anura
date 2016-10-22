@@ -62,7 +62,7 @@ namespace game_logic
 	class FormulaCallableSuspendedImpl : public FormulaCallableSuspended
 	{
 	public:
-		explicit FormulaCallableSuspendedImpl(boost::intrusive_ptr<T>* ref)
+		explicit FormulaCallableSuspendedImpl(ffl::IntrusivePtr<T>* ref)
 		  : value_(ref->get()), ref_(ref)
 		{
 		}
@@ -72,14 +72,14 @@ namespace game_logic
 		virtual void restore_ref() { if(!*ref_) { ref_->reset(dynamic_cast<T*>(const_cast<FormulaCallable*>(value_))); } }
 	private:
 		const FormulaCallable* value_;
-		boost::intrusive_ptr<T>* ref_;
+		ffl::IntrusivePtr<T>* ref_;
 	};
 
 	class FormulaCallableVisitor
 	{
 	public:
 		template<typename T>
-		void visit(boost::intrusive_ptr<T>* ref) {
+		void visit(ffl::IntrusivePtr<T>* ref) {
 			if(ref->get() == nullptr) {
 				return;
 			}

@@ -153,7 +153,7 @@ namespace
 	RETURN_TYPE("string")
 	END_FUNCTION_DEF(translate)
 
-	boost::intrusive_ptr<TextureObject> render_fbo(const rect& area, const std::vector<EntityPtr> objects)
+	ffl::IntrusivePtr<TextureObject> render_fbo(const rect& area, const std::vector<EntityPtr> objects)
 	{
 		const controls::control_backup_scope ctrl_backup;
 
@@ -182,14 +182,16 @@ namespace
 
 		lvl->getRenderTarget()->unapply();
 
-		return boost::intrusive_ptr<TextureObject>(new TextureObject(lvl->getRenderTarget()->getTexture()));
+		return ffl::IntrusivePtr<TextureObject>(new TextureObject(lvl->getRenderTarget()->getTexture()));
 	}
 
 	FUNCTION_DEF(get_texture, 1, 1, "get_texture(string|map): loads a texture")
 		game_logic::Formula::failIfStaticContext();
 		variant arg = EVAL_ARG(0);
 		PROFILE_INSTRUMENT(get_texture, (arg.is_map() ? arg["image"].write_json() : arg.write_json()));
-		return variant(new TextureObject(KRE::Texture::createTexture(arg)));
+		KRE::TexturePtr t = KRE::Texture::createTexture(arg);
+		t->clearSurfaces();
+		return variant(new TextureObject(t));
 
 	FUNCTION_ARGS_DEF
 		ARG_TYPE("string|map")
@@ -282,7 +284,7 @@ namespace
 			return variant();
 		}
 
-		return variant(new FnCommandCallable([=]() {
+		return variant(new FnCommandCallable("open_url", [=]() {
 #if defined(WIN32) || defined(WIN64)
 			const std::string open_str = "start";
 #else
@@ -510,6 +512,11 @@ namespace
 		variant request_;
 
 		mutable variant deferred_pipeline_;
+
+		void surrenderReferences(GarbageCollector* collector) override {
+			collector->surrenderVariant(&request_);
+			collector->surrenderVariant(&deferred_pipeline_);
+		}
 	};
 
 	class tbs_blocking_request : public game_logic::FormulaCallable
@@ -555,6 +562,7 @@ namespace
 		void surrenderReferences(GarbageCollector* collector) override {
 			collector->surrenderVariant(&client_);
 			collector->surrenderPtr(&callable_);
+			collector->surrenderVariant(&response_);
 		}
 
 		variant client_;
@@ -1411,7 +1419,7 @@ namespace
 	class spawn_command : public EntityCommandCallable
 	{
 	public:
-		spawn_command(boost::intrusive_ptr<CustomObject> obj, variant instantiation_commands)
+		spawn_command(ffl::IntrusivePtr<CustomObject> obj, variant instantiation_commands)
 		  : obj_(obj), instantiation_commands_(instantiation_commands)
 		{}
 		virtual void execute(Level& lvl, Entity& ob) const override {
@@ -1444,7 +1452,7 @@ namespace
 			obj_->createObject();
 		}
 	private:
-		boost::intrusive_ptr<CustomObject> obj_;
+		ffl::IntrusivePtr<CustomObject> obj_;
 		variant instantiation_commands_;
 
 		void surrenderReferences(GarbageCollector* collector) override {
@@ -1471,7 +1479,7 @@ namespace
 
 		variant obj_type = EVAL_ARG(0);
 
-		boost::intrusive_ptr<CustomObject> prototype;
+		ffl::IntrusivePtr<CustomObject> prototype;
 		std::string type;
 		if(obj_type.is_string()) {
 			type = obj_type.as_string();
@@ -1494,7 +1502,7 @@ namespace
 			facing = arg3.as_int() > 0;
 		}
 
-		boost::intrusive_ptr<CustomObject> obj;
+		ffl::IntrusivePtr<CustomObject> obj;
 		if(prototype) {
 			obj.reset(new CustomObject(*prototype));
 			obj->setPos(x - obj->getCurrentFrame().width() / 2 , y - obj->getCurrentFrame().height() / 2);
@@ -1568,7 +1576,7 @@ namespace
 			//Note that we insert the 'child' argument here, into the slot
 			//formula callable. This relies on code in formula.cpp to look for
 			//spawn() and give a callable definition with the child.
-			boost::intrusive_ptr<SlotFormulaCallable> callable = new SlotFormulaCallable;
+			ffl::IntrusivePtr<SlotFormulaCallable> callable = new SlotFormulaCallable;
 			callable->setFallback(&variables);
 			callable->setBaseSlot(base_slot_);
 
@@ -1655,7 +1663,7 @@ namespace
 		const int x = EVAL_ARG(1).as_int();
 		const int y = EVAL_ARG(2).as_int();
 		const bool facing = EVAL_ARG(3).as_int() > 0;
-		boost::intrusive_ptr<CustomObject> obj(new CustomObject(type, x, y, facing));
+		ffl::IntrusivePtr<CustomObject> obj(new CustomObject(type, x, y, facing));
 		obj.reset(new PlayableCustomObject(*obj));
 		obj->setPos(obj->x() - obj->getCurrentFrame().width() / 2 , obj->y() - obj->getCurrentFrame().height() / 2);
 		obj->construct();
@@ -1665,7 +1673,7 @@ namespace
 			//Note that we insert the 'child' argument here, into the slot
 			//formula callable. This relies on code in formula.cpp to look for
 			//spawn() and give a callable definition with the child.
-			boost::intrusive_ptr<SlotFormulaCallable> callable = new SlotFormulaCallable;
+			ffl::IntrusivePtr<SlotFormulaCallable> callable = new SlotFormulaCallable;
 			callable->setFallback(&variables);
 			callable->setBaseSlot(base_slot_);
 
@@ -1694,7 +1702,7 @@ namespace
 
 		variant obj_type = EVAL_ARG(0);
 
-		boost::intrusive_ptr<CustomObject> prototype;
+		ffl::IntrusivePtr<CustomObject> prototype;
 		std::string type;
 		if(obj_type.is_string()) {
 			type = obj_type.as_string();
@@ -1702,7 +1710,7 @@ namespace
 			prototype.reset(obj_type.convert_to<CustomObject>());
 		}
 
-		boost::intrusive_ptr<CustomObject> obj;
+		ffl::IntrusivePtr<CustomObject> obj;
 
 		variant properties;
 	
@@ -1869,7 +1877,7 @@ namespace
 	FUNCTION_DEF(object_playable, 1, 5, "object_playable(string type_id, int midpoint_x, int midpoint_y, int facing, (optional) map properties) -> object: constructs and returns a new object. Note that the difference between this and spawn is that spawn returns a command to actually place the object in the Level. object_playable only creates the playble object and returns it. It may be stored for later use.")
 		Formula::failIfStaticContext();
 		const std::string type = EVAL_ARG(0).as_string();
-		boost::intrusive_ptr<CustomObject> obj;
+		ffl::IntrusivePtr<CustomObject> obj;
 	
 		if(NUM_ARGS > 1) {
 			const int x = EVAL_ARG(1).as_int();
@@ -2393,7 +2401,7 @@ RETURN_TYPE("bool")
 
 	FUNCTION_DEF(toggle_pause, 0, 0, "toggle_pause()")
 		Formula::failIfStaticContext();
-		return variant(new FnCommandCallable([=]() {
+		return variant(new FnCommandCallable("toggle_pause", [=]() {
 			LevelRunner::getCurrent()->toggle_pause();
 		}));
 	RETURN_TYPE("commands")
@@ -2401,7 +2409,7 @@ RETURN_TYPE("bool")
 
 	FUNCTION_DEF(quit_to_desktop, 0, 0, "quit_to_desktop()")
 		Formula::failIfStaticContext();
-		return variant(new FnCommandCallable([=]() {
+		return variant(new FnCommandCallable("quit_to_desktop", [=]() {
 			LevelRunner::getCurrent()->quit_game();
 		}));
 	RETURN_TYPE("commands")
@@ -3131,13 +3139,13 @@ RETURN_TYPE("bool")
 	FUNCTION_DEF(suspend_level, 1, 1, "suspend_Level(string dest_Level)")
 		std::string dst = EVAL_ARG(0).as_string();
 
-		return variant(new FnCommandCallable([=]() {
-			boost::intrusive_ptr<Level> old_Level(&Level::current());
+		return variant(new FnCommandCallable("suspend_level", [=]() {
+			ffl::IntrusivePtr<Level> old_Level(&Level::current());
 			std::string dst_str = dst;
 
 			const controls::control_backup_scope ctrl_backup_scope(controls::CLEAR_LOCKS);
 
-			boost::intrusive_ptr<Level> pause_level(load_level(dst));
+			ffl::IntrusivePtr<Level> pause_level(load_level(dst));
 			pause_level->set_suspended_level(old_Level);
 
 			std::string return_id = Level::current().id();
@@ -3156,7 +3164,7 @@ RETURN_TYPE("bool")
 	END_FUNCTION_DEF(suspend_level)
 
 	FUNCTION_DEF(resume_level, 0, 0, "resume_level()")
-		return variant(new FnCommandCallable([=]() {
+		return variant(new FnCommandCallable("resume_level", [=]() {
 			LevelRunner::getCurrent()->force_return();
 		}));
 	FUNCTION_ARGS_DEF
@@ -3280,11 +3288,11 @@ RETURN_TYPE("bool")
 	END_FUNCTION_DEF(sleep)
 
 	class sleep_until_command : public EntityCommandCallable {
-		const boost::intrusive_ptr<FormulaExpression> expr_;
+		const ffl::IntrusivePtr<FormulaExpression> expr_;
 		ConstFormulaCallablePtr variables_;
 		mutable variant cmd_;
 	public:
-		sleep_until_command(boost::intrusive_ptr<FormulaExpression> expr, const ConstFormulaCallablePtr& context) : expr_(expr), variables_(context)
+		sleep_until_command(ffl::IntrusivePtr<FormulaExpression> expr, const ConstFormulaCallablePtr& context) : expr_(expr), variables_(context)
 		{}
 
 		virtual void execute(Level& lvl, Entity& ob) const override {
@@ -3601,7 +3609,7 @@ RETURN_TYPE("bool")
 	END_FUNCTION_DEF(swallow_mouse_event)
 
 	class animate_command : public EntityCommandCallable {
-		const boost::intrusive_ptr<CustomObject> target_;
+		const ffl::IntrusivePtr<CustomObject> target_;
 		variant attr_var_;
 		variant options_;
 		void surrenderReferences(GarbageCollector* collector) override {
@@ -3610,7 +3618,7 @@ RETURN_TYPE("bool")
 			collector->surrenderVariant(&options_, "OPTIONS");
 		}
 	public:
-		animate_command(boost::intrusive_ptr<CustomObject> target, variant attr_var, variant options) : target_(target), attr_var_(attr_var), options_(options)
+		animate_command(ffl::IntrusivePtr<CustomObject> target, variant attr_var, variant options) : target_(target), attr_var_(attr_var), options_(options)
 		{}
 
 		virtual void execute(Level& lvl, Entity& ob) const override {
@@ -3657,7 +3665,7 @@ RETURN_TYPE("bool")
 					continue;
 				}
 
-				gui::DialogPtr dialog = boost::intrusive_ptr<gui::Dialog>(v.try_convert<gui::Dialog>());
+				gui::DialogPtr dialog = ffl::IntrusivePtr<gui::Dialog>(v.try_convert<gui::Dialog>());
 				if(dialog) {
 					w.push_back(dialog);
 				} else {
@@ -3718,7 +3726,7 @@ RETURN_TYPE("bool")
 	END_FUNCTION_DEF(clear_widgets)
 
 	FUNCTION_DEF(get_widget, 2, 2, "get_widget(object obj, string id): returns the widget with the matching id for given object")
-		boost::intrusive_ptr<CustomObject> target = EVAL_ARG(0).try_convert<CustomObject>();
+		ffl::IntrusivePtr<CustomObject> target = EVAL_ARG(0).try_convert<CustomObject>();
 		std::string id = EVAL_ARG(1).as_string();
 		return variant(target->getWidgetById(id).get());
 	FUNCTION_ARGS_DEF

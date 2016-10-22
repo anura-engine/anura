@@ -189,7 +189,7 @@ namespace graphics
 
 	BEGIN_DEFINE_FN(add_technique, "(map) ->commands")
 		variant arg = FN_ARG(0);
-		return variant(new game_logic::FnCommandCallable([=]() {
+		return variant(new game_logic::FnCommandCallable("add_technique", [=]() {
 			obj.obj_->addTechnique(KRE::Particles::TechniquePtr(new KRE::Particles::Technique(obj.obj_->getParentContainer(), arg)));
 		}));
 	END_DEFINE_FN

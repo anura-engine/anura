@@ -1684,7 +1684,7 @@ static const int ModuleProtocolVersion = 1;
 			}
 		}
 
-		boost::intrusive_ptr<client> cl(new client(server, port));
+		ffl::IntrusivePtr<client> cl(new client(server, port));
 
 		cl->install_module(module_id, force);
 		int nbytes_transferred = 0;

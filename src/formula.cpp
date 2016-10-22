@@ -490,7 +490,7 @@ namespace game_logic
 
 				std::vector<variant*> args;
 
-				boost::intrusive_ptr<SlotFormulaCallable> callable(new SlotFormulaCallable);
+				ffl::IntrusivePtr<SlotFormulaCallable> callable(new SlotFormulaCallable);
 				callable->setFallback(&variables);
 				callable->setBaseSlot(base_slot_);
 				callable->reserve(generator_names_.size());
@@ -1229,7 +1229,7 @@ namespace {
 					}
 				}
 
-				static boost::intrusive_ptr<SlotFormulaCallable> callable(new SlotFormulaCallable);
+				static ffl::IntrusivePtr<SlotFormulaCallable> callable(new SlotFormulaCallable);
 				fn_ = variant(fml_, *callable, base_slot_, type_info_);
 			}
 
@@ -1240,7 +1240,7 @@ namespace {
 				if(requires_closure_) {
 					return fn_.change_function_callable(variables);
 				} else {
-					static boost::intrusive_ptr<SlotFormulaCallable> callable(new SlotFormulaCallable);
+					static ffl::IntrusivePtr<SlotFormulaCallable> callable(new SlotFormulaCallable);
 					return fn_.change_function_callable(*callable);
 				}
 			}
@@ -1367,7 +1367,7 @@ namespace {
 					for(unsigned n = 0; n < arg_types.size() && n < args.size(); ++n) {
 						const FormulaInterface* formula_interface = arg_types[n]->is_interface();
 
-						boost::intrusive_ptr<FormulaInterfaceInstanceFactory> interface_factory;
+						ffl::IntrusivePtr<FormulaInterfaceInstanceFactory> interface_factory;
 						if(formula_interface) {
 							try {
 								interface_factory.reset(formula_interface->createFactory(args[n]->queryVariantType()));
@@ -1494,7 +1494,7 @@ namespace {
 	
 			ExpressionPtr left_;
 			std::vector<ExpressionPtr> args_;
-			std::vector<boost::intrusive_ptr<FormulaInterfaceInstanceFactory> > interfaces_;
+			std::vector<ffl::IntrusivePtr<FormulaInterfaceInstanceFactory> > interfaces_;
 			std::string error_msg_;
 		};
 
@@ -2497,7 +2497,7 @@ namespace {
 		struct CommandSequenceEntry {
 			const class CommandSequence* first;
 			bool* second;
-			boost::intrusive_ptr<class CommandSequence> deferred;
+			ffl::IntrusivePtr<class CommandSequence> deferred;
 			CommandSequenceEntry(const class CommandSequence* seq, bool* flag) : first(seq), second(flag)
 			{}
 
@@ -2556,16 +2556,16 @@ namespace {
 				ob.executeCommand(right_cmd);
 			}
 
-			boost::intrusive_ptr<CommandSequence> createDeferred() const
+			ffl::IntrusivePtr<CommandSequence> createDeferred() const
 			{
-				return boost::intrusive_ptr<CommandSequence>(new CommandSequence(variant(), right_, variables_));
+				return ffl::IntrusivePtr<CommandSequence>(new CommandSequence(variant(), right_, variables_));
 			}
 		};
 
 		struct MultiCommandSequenceStackScope {
-			std::vector<boost::intrusive_ptr<CommandSequence> >* stack_;
+			std::vector<ffl::IntrusivePtr<CommandSequence> >* stack_;
 			bool deferred_;
-			explicit MultiCommandSequenceStackScope(std::vector<boost::intrusive_ptr<CommandSequence> >* stack) : stack_(stack), deferred_(false)
+			explicit MultiCommandSequenceStackScope(std::vector<ffl::IntrusivePtr<CommandSequence> >* stack) : stack_(stack), deferred_(false)
 			{
 				for(auto p : *stack_) {
 					g_command_sequence_stack.push_back(CommandSequenceEntry(p.get(), &deferred_));
@@ -2578,7 +2578,7 @@ namespace {
 		};
 
 		class DeferredCommandSequence : public CommandCallable {
-			mutable std::vector<boost::intrusive_ptr<CommandSequence> > stack_;
+			mutable std::vector<ffl::IntrusivePtr<CommandSequence> > stack_;
 		public:
 			DeferredCommandSequence() {
 				stack_.reserve(g_command_sequence_stack.size());
@@ -2600,6 +2600,12 @@ namespace {
 					stack_.pop_back();
 					g_command_sequence_stack.pop_back();
 					seq->execute(ob);
+				}
+			}
+
+			void surrenderReferences(GarbageCollector* collector) {
+				for(ffl::IntrusivePtr<CommandSequence>& p : stack_) {
+					collector->surrenderPtr(&p);
 				}
 			}
 		};
@@ -2689,7 +2695,7 @@ namespace {
 			variant execute(const FormulaCallable& variables) const {
 				const variant value = let_expr_->evaluate(variables);
 
-				boost::intrusive_ptr<MutableSlotFormulaCallable> callable(new MutableSlotFormulaCallable);
+				ffl::IntrusivePtr<MutableSlotFormulaCallable> callable(new MutableSlotFormulaCallable);
 				callable->setFallback(&variables);
 				callable->setBaseSlot(slot_);
 				callable->setNames(&names_);
@@ -2766,7 +2772,7 @@ namespace {
 			{
 				const FormulaInterface* formula_interface = type->is_interface();
 				if(formula_interface) {
-					boost::intrusive_ptr<FormulaInterfaceInstanceFactory> interface_factory;
+					ffl::IntrusivePtr<FormulaInterfaceInstanceFactory> interface_factory;
 					try {
 						interface_factory.reset(formula_interface->createFactory(expr->queryVariantType()));
 					} catch(FormulaInterface::interface_mismatch_error& e) {
@@ -2819,7 +2825,7 @@ namespace {
 				}
 			}
 
-			boost::intrusive_ptr<FormulaInterfaceInstanceFactory> interface_;
+			ffl::IntrusivePtr<FormulaInterfaceInstanceFactory> interface_;
 		};
 
 		class TypeExpression : public FormulaExpression {
@@ -3186,7 +3192,7 @@ namespace {
 						const ExpressionPtr expr = parse_expression(
 							formula_str, begin, i1, nullptr, nullptr);
 
-						boost::intrusive_ptr<MapFormulaCallable> callable(new MapFormulaCallable);
+						ffl::IntrusivePtr<MapFormulaCallable> callable(new MapFormulaCallable);
 						default_values->push_back(expr->evaluate(*callable));
 						if(variant_type_info && !variant_type_info->match(default_values->back())) {
 							ASSERT_LOG(false, "Default argument to function doesn't match type for argument " << (types->size()+1) << " arg: " << default_values->back().write_json() << " AT: " << pinpoint_location(formula_str, i1->begin, (i2-1)->end));
@@ -3480,7 +3486,7 @@ namespace {
 			};
 
 			class StaticFormulaCallableGuard {
-				boost::intrusive_ptr<static_FormulaCallable> callable_;
+				ffl::IntrusivePtr<static_FormulaCallable> callable_;
 			public:
 				StaticFormulaCallableGuard() : callable_(new static_FormulaCallable) {
 					if(static_FormulaCallable_active) {
@@ -3494,7 +3500,7 @@ namespace {
 					static_FormulaCallable_active = false;
 				}
 
-				boost::intrusive_ptr<static_FormulaCallable> callable() const { return callable_; }
+				ffl::IntrusivePtr<static_FormulaCallable> callable() const { return callable_; }
 				bool callableNotCopied() const { return callable_->refcount() == 1; }
 			};
 

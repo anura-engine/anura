@@ -43,6 +43,6 @@ variant load_level_wml(const std::string& lvl);
 variant load_level_wml_nowait(const std::string& lvl);
 
 void preload_level(const std::string& lvl);
-boost::intrusive_ptr<Level> load_level(const std::string& lvl);
+ffl::IntrusivePtr<Level> load_level(const std::string& lvl);
 
 std::vector<std::string> get_known_levels();

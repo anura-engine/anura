@@ -749,7 +749,7 @@ void VirtualMachine::executeInternal(const FormulaCallable& variables, std::vect
 
 			std::vector<variant*> args;
 
-			boost::intrusive_ptr<SlotFormulaCallable> callable(new SlotFormulaCallable);
+			ffl::IntrusivePtr<SlotFormulaCallable> callable(new SlotFormulaCallable);
 			callable->setFallback(&vars);
 			callable->setBaseSlot(base_slot);
 			callable->reserve(lists.size());
@@ -869,7 +869,7 @@ void VirtualMachine::executeInternal(const FormulaCallable& variables, std::vect
 		}
 
 		case OP_LAMBDA: {
-			static boost::intrusive_ptr<SlotFormulaCallable> callable(new SlotFormulaCallable);
+			static ffl::IntrusivePtr<SlotFormulaCallable> callable(new SlotFormulaCallable);
 			stack.back() = stack.back().change_function_callable(*callable);
 			break;
 		}

@@ -26,14 +26,14 @@
 #include <string>
 #include <functional>
 
-#include <boost/intrusive_ptr.hpp>
+#include "intrusive_ptr.hpp"
 
 #include "formula_callable.hpp"
 #include "formula_callable_definition.hpp"
 #include "variant.hpp"
 
 class DbClient;
-typedef boost::intrusive_ptr<DbClient> DbClientPtr;
+typedef ffl::IntrusivePtr<DbClient> DbClientPtr;
 
 // Class representing a client to the Anura backend database. Designed to be
 // used by server processes. Use USE_DBCLIENT to compile this functionality in.

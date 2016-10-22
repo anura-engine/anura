@@ -69,7 +69,7 @@ namespace
 			const int nframes_per_row = node["frames_per_row"].as_int(-1);
 			const int pad = node["pad"].as_int();
 
-			boost::intrusive_ptr<Frame> frame_obj(new Frame(node));
+			ffl::IntrusivePtr<Frame> frame_obj(new Frame(node));
 
 			int row = 0, col = 0;
 			for(int n = 0; n != nframes; ++n) {

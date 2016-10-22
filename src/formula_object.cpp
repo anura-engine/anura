@@ -85,7 +85,7 @@ namespace game_logic
 			}
 		};
 
-		boost::intrusive_ptr<const FormulaClass> get_class(const std::string& type);
+		ffl::IntrusivePtr<const FormulaClass> get_class(const std::string& type);
 
 		struct PropertyEntry {
 			PropertyEntry() : variable_slot(-1) {
@@ -487,10 +487,10 @@ std::map<std::string, std::string>& class_path_map()
 			FormulaClassDefinition& def_;
 		};
 
-		typedef std::map<std::string, boost::intrusive_ptr<FormulaClassDefinition> > class_definition_map;
+		typedef std::map<std::string, ffl::IntrusivePtr<FormulaClassDefinition> > class_definition_map;
 		class_definition_map class_definitions;
 
-		typedef std::map<std::string, boost::intrusive_ptr<FormulaClass> > classes_map;
+		typedef std::map<std::string, ffl::IntrusivePtr<FormulaClass> > classes_map;
 
 		bool in_unit_test = false;
 		std::vector<FormulaClass*> unit_test_queue;
@@ -580,11 +580,11 @@ std::map<std::string, std::string>& class_path_map()
 
 		variant unit_test_;
 
-		std::vector<boost::intrusive_ptr<const FormulaClass> > bases_;
+		std::vector<ffl::IntrusivePtr<const FormulaClass> > bases_;
 
 		variant nested_classes_;
 
-		boost::intrusive_ptr<FormulaClass> previous_version_;
+		ffl::IntrusivePtr<FormulaClass> previous_version_;
 
 #if defined(USE_LUA)
 		// For lua integration
@@ -636,13 +636,13 @@ std::map<std::string, std::string>& class_path_map()
 		std::map<variant, variant> m;
 		private_data_ = variant(&m);
 
-		for(boost::intrusive_ptr<const FormulaClass> base : bases_) {
+		for(ffl::IntrusivePtr<const FormulaClass> base : bases_) {
 			merge_variant_over(&private_data_, base->private_data_);
 		}
 
 		ASSERT_LOG(bases_.size() <= 1, "Multiple inheritance of classes not currently supported");
 
-		for(boost::intrusive_ptr<const FormulaClass> base : bases_) {
+		for(ffl::IntrusivePtr<const FormulaClass> base : bases_) {
 			slots_ = base->slots();
 			properties_ = base->properties();
 			nstate_slots_ = base->nstate_slots_;
@@ -739,7 +739,7 @@ std::map<std::string, std::string>& class_path_map()
 			return true;
 		}
 
-		typedef boost::intrusive_ptr<const FormulaClass> Ptr;
+		typedef ffl::IntrusivePtr<const FormulaClass> Ptr;
 		for(const Ptr& base : bases_) {
 			if(base->isA(name)) {
 				return true;
@@ -768,7 +768,7 @@ std::map<std::string, std::string>& class_path_map()
 
 		in_unit_test = true;
 
-		boost::intrusive_ptr<game_logic::MapFormulaCallable> callable(new game_logic::MapFormulaCallable);
+		ffl::IntrusivePtr<game_logic::MapFormulaCallable> callable(new game_logic::MapFormulaCallable);
 		std::map<variant,variant> attr;
 		callable->add("vars", variant(&attr));
 		callable->add("lib", variant(game_logic::get_library_object().get()));
@@ -852,22 +852,22 @@ std::map<std::string, std::string>& class_path_map()
 			}
 		}
 
-		boost::intrusive_ptr<FormulaClass> build_class(const std::string& type)
+		ffl::IntrusivePtr<FormulaClass> build_class(const std::string& type)
 		{
 			const variant v = get_class_node(type);
 
 			record_classes(type, v);
 
-			boost::intrusive_ptr<FormulaClass> result(new FormulaClass(type, v));
+			ffl::IntrusivePtr<FormulaClass> result(new FormulaClass(type, v));
 			result->setName(type);
 			return result;
 		}
 
-		boost::intrusive_ptr<const FormulaClass> get_class(const std::string& type)
+		ffl::IntrusivePtr<const FormulaClass> get_class(const std::string& type)
 		{
 			if(std::find(type.begin(), type.end(), '.') != type.end()) {
 				std::vector<std::string> v = util::split(type, '.');
-				boost::intrusive_ptr<const FormulaClass> c = get_class(v.front());
+				ffl::IntrusivePtr<const FormulaClass> c = get_class(v.front());
 				for(unsigned n = 1; n < v.size(); ++n) {
 					classes_map::const_iterator itor = c->subClasses().find(v[n]);
 					ASSERT_LOG(itor != c->subClasses().end(), "COULD NOT FIND FFL CLASS: " << type);
@@ -882,7 +882,7 @@ std::map<std::string, std::string>& class_path_map()
 				return itor->second;
 			}
 
-			boost::intrusive_ptr<FormulaClass> result;
+			ffl::IntrusivePtr<FormulaClass> result;
 	
 			if(!backup_classes_.empty() && backup_classes_.count(type)) {
 				try {
@@ -911,7 +911,7 @@ std::map<std::string, std::string>& class_path_map()
 			classes_[type] = result;
 			result->build_nested_classes();
 			result->run_unit_tests();
-			return boost::intrusive_ptr<const FormulaClass>(result.get());
+			return ffl::IntrusivePtr<const FormulaClass>(result.get());
 		}
 	}
 
@@ -956,7 +956,7 @@ std::map<std::string, std::string>& class_path_map()
 
 	void FormulaObject::update(FormulaObject& updated)
 	{
-		std::vector<boost::intrusive_ptr<FormulaObject> > objects;
+		std::vector<ffl::IntrusivePtr<FormulaObject> > objects;
 		std::map<boost::uuids::uuid, FormulaObject*> src, dst;
 		visitVariants(variant(this), [&dst,&objects](variant v) {
 			FormulaObject* obj = v.try_convert<FormulaObject>();
@@ -1005,7 +1005,7 @@ variant FormulaObject::generateDiff(variant before, variant b)
 {
 	variant a = deepClone(before);
 
-	std::vector<boost::intrusive_ptr<FormulaObject> > objects;
+	std::vector<ffl::IntrusivePtr<FormulaObject> > objects;
 
 	std::map<boost::uuids::uuid, FormulaObject*> src, dst;
 	visitVariants(b, [&dst,&objects](variant v) {
@@ -1208,7 +1208,7 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 					return variant(itor->second);
 				}
 
-				boost::intrusive_ptr<FormulaObject> duplicate = obj->clone();
+				ffl::IntrusivePtr<FormulaObject> duplicate = obj->clone();
 				mapping[obj] = duplicate.get();
 
 				for(int n = 0; n != duplicate->variables_.size(); ++n) {
@@ -1289,10 +1289,10 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 		build_class(name);
 	}
 
-	boost::intrusive_ptr<FormulaObject> FormulaObject::create(const std::string& type, variant args)
+	ffl::IntrusivePtr<FormulaObject> FormulaObject::create(const std::string& type, variant args)
 	{
 		const Formula::StrictCheckScope strict_checking;
-		boost::intrusive_ptr<FormulaObject> res(new FormulaObject(type, args));
+		ffl::IntrusivePtr<FormulaObject> res(new FormulaObject(type, args));
 		res->callConstructors(args);
 		res->validate();
 		return res;
@@ -1452,9 +1452,9 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 	FormulaObject::~FormulaObject()
 	{}
 
-	boost::intrusive_ptr<FormulaObject> FormulaObject::clone() const
+	ffl::IntrusivePtr<FormulaObject> FormulaObject::clone() const
 	{
-		boost::intrusive_ptr<FormulaObject> result(new FormulaObject(*this));
+		ffl::IntrusivePtr<FormulaObject> result(new FormulaObject(*this));
 	//result->id_ = generate_uuid();
 	//result->setAddr(result->write_id());
 

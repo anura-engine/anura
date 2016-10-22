@@ -62,19 +62,39 @@ private:
 class reference_counted_object
 {
 public:
-	reference_counted_object() : count_(0), weak_(nullptr) {}
-	reference_counted_object(const reference_counted_object& /*obj*/) : count_(0), weak_(nullptr) {}
+	reference_counted_object() : count_(0), weak_(nullptr) {
+#ifdef GARBAGE_COLLECTOR_POOLED_ALLOC
+		ptr_count_ = 0;
+		variant_count_ = 0;
+#endif
+	}
+	reference_counted_object(const reference_counted_object& /*obj*/) : count_(0), weak_(nullptr) {
+#ifdef GARBAGE_COLLECTOR_POOLED_ALLOC
+		ptr_count_ = 0;
+		variant_count_ = 0;
+#endif
+	}
 	reference_counted_object& operator=(const reference_counted_object& /*obj*/) {
 		return *this;
 	}
 
-	void add_ref() const { if(g_thread_read_only_variants) { return; } ++count_; }
-	void dec_ref() const { if(g_thread_read_only_variants) { return; } if(--count_ == 0) { delete this; } }
+	void add_reference() const { if(g_thread_read_only_variants) { return; } ++count_; }
+	void dec_reference() const { if(g_thread_read_only_variants) { return; } if(--count_ == 0) { delete this; } }
 	void dec_ref_norelease() const { if(g_thread_read_only_variants) { return; } --count_; }
 
 	int refcount() const { return count_; }
 
 	friend class weak_ptr_base;
+
+#ifdef GARBAGE_COLLECTOR_POOLED_ALLOC
+	void add_ref_ptr_debug() const { if(g_thread_read_only_variants) { return; } ++ptr_count_; }
+	void dec_ref_ptr_debug() const { if(g_thread_read_only_variants) { return; } --ptr_count_; }
+	mutable int ptr_count_;
+
+	void add_ref_variant_debug() const { if(g_thread_read_only_variants) { return; } ++variant_count_; }
+	void dec_ref_variant_debug() const { if(g_thread_read_only_variants) { return; } --variant_count_; }
+	mutable int variant_count_;
+#endif
 
 protected:
 	void turn_reference_counting_off() { if(g_thread_read_only_variants) { return; } count_ = 1000000; }
@@ -89,7 +109,7 @@ struct reference_counted_object_pin_norelease
 	reference_counted_object* obj_;
 	reference_counted_object_pin_norelease(reference_counted_object* obj) : obj_(obj)
 	{
-		obj_->add_ref();
+		obj_->add_reference();
 	}
 	~reference_counted_object_pin_norelease()
 	{
@@ -98,9 +118,33 @@ struct reference_counted_object_pin_norelease
 };
 
 inline void intrusive_ptr_add_ref(const reference_counted_object* obj) {
-	obj->add_ref();
+#ifdef GARBAGE_COLLECTOR_POOLED_ALLOC
+	obj->add_ref_ptr_debug();
+#endif
+
+	obj->add_reference();
 }
 
 inline void intrusive_ptr_release(const reference_counted_object* obj) {
-	obj->dec_ref();
+#ifdef GARBAGE_COLLECTOR_POOLED_ALLOC
+	obj->dec_ref_ptr_debug();
+#endif
+
+	obj->dec_reference();
+}
+
+inline void variant_ptr_add_ref(const reference_counted_object* obj) {
+#ifdef GARBAGE_COLLECTOR_POOLED_ALLOC
+	obj->add_ref_variant_debug();
+#endif
+
+	obj->add_reference();
+}
+
+inline void variant_ptr_release(const reference_counted_object* obj) {
+#ifdef GARBAGE_COLLECTOR_POOLED_ALLOC
+	obj->dec_ref_variant_debug();
+#endif
+
+	obj->dec_reference();
 }

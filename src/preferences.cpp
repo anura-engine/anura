@@ -226,7 +226,7 @@ namespace preferences
 
 	game_logic::FormulaCallable* get_settings_obj()
 	{
-		static boost::intrusive_ptr<game_logic::FormulaCallable> obj(new SettingsObject);
+		static ffl::IntrusivePtr<game_logic::FormulaCallable> obj(new SettingsObject);
 		return obj.get();
 	}
 
@@ -1335,7 +1335,7 @@ namespace preferences
 			auto it = g_registered_settings().find(key);
 			ASSERT_LOG(it != g_registered_settings().end(), "Unknown preference setting: " << key);
 
-			return variant(new game_logic::FnCommandCallable([=]() {
+			return variant(new game_logic::FnCommandCallable("set_preference_value", [=]() {
 				if(it->second.int_value) {
 					*it->second.int_value = val.as_int();
 				} else if(it->second.bool_value) {
@@ -1352,7 +1352,7 @@ namespace preferences
 		END_DEFINE_FN
 
 		BEGIN_DEFINE_FN(save_preferences, "()->commands")
-			return variant(new game_logic::FnCommandCallable([=]() {
+			return variant(new game_logic::FnCommandCallable("save_preferences", [=]() {
 				save_preferences();
 			}));
 		END_DEFINE_FN

@@ -786,7 +786,7 @@ const EntityPtr& editor::enemy_type::preview_object() const
 	return preview_object_;
 }
 
-const boost::intrusive_ptr<const Frame>& editor::enemy_type::preview_frame() const
+const ffl::IntrusivePtr<const Frame>& editor::enemy_type::preview_frame() const
 {
 	if(!preview_frame_) {
 		if(frame_info_.is_map() && !preview_object_) {

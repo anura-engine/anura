@@ -171,5 +171,5 @@ namespace geometry
 		PolyMap() = delete;
 	};
 
-	typedef boost::intrusive_ptr<PolyMap> PolyMapPtr;
+	typedef ffl::IntrusivePtr<PolyMap> PolyMapPtr;
 }

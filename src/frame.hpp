@@ -152,6 +152,8 @@ private:
 
 	void getRectInTexture(int time, const FrameInfo*& info) const;
 	void getRectInFrameNumber(int nframe, const FrameInfo*& info) const;
+
+	void surrenderReferences(GarbageCollector* collector) override;
 	std::string id_, image_;
 
 	//ID as a variant, useful to be able to get a variant of the ID
@@ -218,4 +220,4 @@ private:
 	mutable KRE::Blittable blit_target_;
 };
 
-typedef boost::intrusive_ptr<Frame> FramePtr;
+typedef ffl::IntrusivePtr<Frame> FramePtr;

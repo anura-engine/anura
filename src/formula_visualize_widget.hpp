@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include <boost/intrusive_ptr.hpp>
+#include "intrusive_ptr.hpp"
 
 #include <vector>
 
@@ -61,6 +61,6 @@ namespace gui
 		TextEditorWidget* editor_;
 	};
 
-	typedef boost::intrusive_ptr<FormulaVisualizeWidget> FormulaVisualizeWidgetPtr;
-	typedef boost::intrusive_ptr<const FormulaVisualizeWidget> ConstFormulaVisualizeWidgetPtr;
+	typedef ffl::IntrusivePtr<FormulaVisualizeWidget> FormulaVisualizeWidgetPtr;
+	typedef ffl::IntrusivePtr<const FormulaVisualizeWidget> ConstFormulaVisualizeWidgetPtr;
 }

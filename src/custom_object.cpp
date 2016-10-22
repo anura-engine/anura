@@ -207,7 +207,6 @@ CustomObject::CustomObject(variant node)
 	particles_(),
 	document_(nullptr)
 {
-
 	vars_->setObjectName(getDebugDescription());
 	tmp_vars_->setObjectName(getDebugDescription());
 
@@ -2353,7 +2352,7 @@ void CustomObject::process(Level& lvl)
 		}
 	}
 
-	blur_objects_.erase(std::remove(blur_objects_.begin(), blur_objects_.end(), boost::intrusive_ptr<BlurObject>()), blur_objects_.end());
+	blur_objects_.erase(std::remove(blur_objects_.begin(), blur_objects_.end(), ffl::IntrusivePtr<BlurObject>()), blur_objects_.end());
 
 	staticProcess(lvl);
 }
@@ -2698,6 +2697,10 @@ void CustomObject::run_garbage_collection()
 
 void CustomObject::beingRemoved()
 {
+	Entity::beingRemoved();
+
+	animated_movement_.clear();
+
 	handleEvent(OBJECT_EVENT_BEING_REMOVED);
 
 	for(auto w : widgets_) {
@@ -2838,7 +2841,7 @@ namespace
 	//Object that provides an FFL interface to an object's event handlers.
 	class event_handlers_callable : public FormulaCallable 
 	{
-		boost::intrusive_ptr<CustomObject> obj_;
+		ffl::IntrusivePtr<CustomObject> obj_;
 
 		variant getValue(const std::string& key) const {
 			game_logic::ConstFormulaPtr f = obj_->getEventHandler(get_object_event_id(key));
@@ -2849,7 +2852,7 @@ namespace
 			}
 		}
 		void setValue(const std::string& key, const variant& value) {
-			static boost::intrusive_ptr<CustomObjectCallable> custom_object_definition(new CustomObjectCallable);
+			static ffl::IntrusivePtr<CustomObjectCallable> custom_object_definition(new CustomObjectCallable);
 
 			game_logic::FormulaPtr f(new game_logic::Formula(value, &get_custom_object_functions_symbol_table(), custom_object_definition.get()));
 			obj_->setEventHandler(get_object_event_id(key), f);
@@ -2864,7 +2867,7 @@ namespace
 	// FFL widget interface.
 	class widgets_callable : public FormulaCallable 
 	{
-		boost::intrusive_ptr<CustomObject> obj_;
+		ffl::IntrusivePtr<CustomObject> obj_;
 
 		variant getValue(const std::string& key) const {
 			if(key == "children") {
@@ -3152,7 +3155,7 @@ variant CustomObject::getValueBySlot(int slot) const
 	case CUSTOM_OBJECT_IS_HUMAN:          return variant::from_bool(isHuman() != nullptr);
 	case CUSTOM_OBJECT_INVINCIBLE:        return variant::from_bool(invincible_ != 0);
 	case CUSTOM_OBJECT_SOUND_VOLUME:      return variant(sound_volume_);
-	case CUSTOM_OBJECT_AUDIO:		      return variant(new sound::AudioEngine(boost::intrusive_ptr<const CustomObject>(this)));
+	case CUSTOM_OBJECT_AUDIO:		      return variant(new sound::AudioEngine(ffl::IntrusivePtr<const CustomObject>(this)));
 	case CUSTOM_OBJECT_DESTROYED:         return variant::from_bool(destroyed());
 
 	case CUSTOM_OBJECT_IS_STANDING_ON_PLATFORM: {
@@ -4777,7 +4780,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 		draw_primitives_.clear();
 		for(int n = 0; n != value.num_elements(); ++n) {
 			if(value[n].is_callable()) {
-				boost::intrusive_ptr<graphics::DrawPrimitive> obj(value[n].try_convert<graphics::DrawPrimitive>());
+				ffl::IntrusivePtr<graphics::DrawPrimitive> obj(value[n].try_convert<graphics::DrawPrimitive>());
 				ASSERT_LOG(obj.get() != nullptr, "BAD OBJECT PASSED WHEN SETTING DrawPrimitives");
 				draw_primitives_.emplace_back(obj);
 			} else if(!value[n].is_null()) {
@@ -4796,7 +4799,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 		blur_objects_.clear();
 		for(int n = 0; n != value.num_elements(); ++n) {
 			if(value[n].is_callable()) {
-				boost::intrusive_ptr<BlurObject> obj(value[n].try_convert<BlurObject>());
+				ffl::IntrusivePtr<BlurObject> obj(value[n].try_convert<BlurObject>());
 				obj->setObject(this);
 				ASSERT_LOG(obj.get() != nullptr, "BAD OBJECT PASSED WHEN SETTING BLUR");
 				blur_objects_.emplace_back(obj);
@@ -5630,6 +5633,8 @@ void CustomObject::restoreGcObjectReference(gc_object_reference ref)
 
 void CustomObject::surrenderReferences(GarbageCollector* collector)
 {
+	assert(value_stack_.empty());
+
 	const std::vector<const CustomObjectType::PropertyEntry*>& entries = type_->getVariableProperties();
 	int index = 0;
 	for(variant& var : property_data_) {

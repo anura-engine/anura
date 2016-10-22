@@ -48,7 +48,7 @@ const CustomObjectCallable& CustomObjectCallable::instance()
 		return *instance_ptr;
 	}
 
-	static const boost::intrusive_ptr<const CustomObjectCallable> obj(new CustomObjectCallable(true));
+	static const ffl::IntrusivePtr<const CustomObjectCallable> obj(new CustomObjectCallable(true));
 	return *obj;
 }
 

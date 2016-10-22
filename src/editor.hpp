@@ -71,8 +71,8 @@ private:
 
 class editor;
 
-typedef boost::intrusive_ptr<editor> EditorPtr;
-typedef boost::intrusive_ptr<const editor> ConstEditorPtr;
+typedef ffl::IntrusivePtr<editor> EditorPtr;
+typedef ffl::IntrusivePtr<const editor> ConstEditorPtr;
 
 class editor : public game_logic::FormulaCallable
 {
@@ -137,11 +137,11 @@ public:
 		std::string help;
 
 		const EntityPtr& preview_object() const;
-		const boost::intrusive_ptr<const Frame>& preview_frame() const;
+		const ffl::IntrusivePtr<const Frame>& preview_frame() const;
 	
 	private:
 		mutable EntityPtr preview_object_;
-		mutable boost::intrusive_ptr<const Frame> preview_frame_;
+		mutable ffl::IntrusivePtr<const Frame> preview_frame_;
 		variant frame_info_;
 	};
 
@@ -347,15 +347,15 @@ protected:
 
 	tile_selection tile_selection_;
 
-	boost::intrusive_ptr<editor_menu_dialog> editor_menu_dialog_;
-	boost::intrusive_ptr<editor_mode_dialog> editor_mode_dialog_;
-	boost::intrusive_ptr<editor_dialogs::CharacterEditorDialog> character_dialog_;
-	boost::intrusive_ptr<editor_dialogs::EditorLayersDialog> layers_dialog_;
-	boost::intrusive_ptr<editor_dialogs::PropertyEditorDialog> property_dialog_;
-	boost::intrusive_ptr<editor_dialogs::TilesetEditorDialog> tileset_dialog_;
-	boost::intrusive_ptr<editor_dialogs::SegmentEditorDialog> segment_dialog_;
+	ffl::IntrusivePtr<editor_menu_dialog> editor_menu_dialog_;
+	ffl::IntrusivePtr<editor_mode_dialog> editor_mode_dialog_;
+	ffl::IntrusivePtr<editor_dialogs::CharacterEditorDialog> character_dialog_;
+	ffl::IntrusivePtr<editor_dialogs::EditorLayersDialog> layers_dialog_;
+	ffl::IntrusivePtr<editor_dialogs::PropertyEditorDialog> property_dialog_;
+	ffl::IntrusivePtr<editor_dialogs::TilesetEditorDialog> tileset_dialog_;
+	ffl::IntrusivePtr<editor_dialogs::SegmentEditorDialog> segment_dialog_;
 
-	boost::intrusive_ptr<CodeEditorDialog> code_dialog_;
+	ffl::IntrusivePtr<CodeEditorDialog> code_dialog_;
 
 	ExternalTextEditorPtr external_code_editor_;
 

@@ -23,9 +23,9 @@
 
 #pragma once
 
-#include <boost/intrusive_ptr.hpp>
+#include "intrusive_ptr.hpp"
 
 class Entity;
 
-typedef boost::intrusive_ptr<Entity> EntityPtr;
-typedef boost::intrusive_ptr<const Entity> ConstEntityPtr;
+typedef ffl::IntrusivePtr<Entity> EntityPtr;
+typedef ffl::IntrusivePtr<const Entity> ConstEntityPtr;

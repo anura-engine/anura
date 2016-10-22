@@ -32,9 +32,9 @@ namespace gui
 	class DialogLabel;
 	class DropdownWidget;
 
-	typedef boost::intrusive_ptr<Label> LabelPtr;
-	typedef boost::intrusive_ptr<const Label> ConstLabelPptr;
-	typedef boost::intrusive_ptr<DialogLabel> DialogLabelPtr;
+	typedef ffl::IntrusivePtr<Label> LabelPtr;
+	typedef ffl::IntrusivePtr<const Label> ConstLabelPptr;
+	typedef ffl::IntrusivePtr<DialogLabel> DialogLabelPtr;
 
 	class Label : public Widget
 	{

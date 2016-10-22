@@ -14,7 +14,7 @@
 namespace graphics
 {
 	class AnuraShader;
-	typedef boost::intrusive_ptr<AnuraShader> AnuraShaderPtr;
+	typedef ffl::IntrusivePtr<AnuraShader> AnuraShaderPtr;
 
 	class ShaderRenderable : public KRE::SceneObject
 	{
@@ -146,8 +146,8 @@ namespace graphics
 		std::vector<game_logic::FormulaPtr> draw_formulas_;
 		std::vector<game_logic::FormulaPtr> create_formulas_;
 
-		boost::intrusive_ptr<UniformCommandsCallable> uniform_commands_;
-		boost::intrusive_ptr<AttributeCommandsCallable> attribute_commands_;
+		ffl::IntrusivePtr<UniformCommandsCallable> uniform_commands_;
+		ffl::IntrusivePtr<AttributeCommandsCallable> attribute_commands_;
 
 		Entity* parent_;
 
@@ -160,7 +160,7 @@ namespace graphics
 		std::string name_;
 		
 		ShaderRenderable renderable_;
-		std::vector<boost::intrusive_ptr<TextureObject>> textures_;
+		std::vector<ffl::IntrusivePtr<TextureObject>> textures_;
 
 		bool initialised_;
 	};

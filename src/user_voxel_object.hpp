@@ -52,6 +52,6 @@ namespace voxel
 		bool created_;
 	};
 
-	typedef boost::intrusive_ptr<user_voxel_object> UserVoxelObjectPtr;
+	typedef ffl::IntrusivePtr<user_voxel_object> UserVoxelObjectPtr;
 }
 */

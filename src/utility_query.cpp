@@ -344,7 +344,7 @@ namespace
 
 		variant obj = variant_callable::create(&v);
 
-		boost::intrusive_ptr<MapFormulaCallable> map_callable(new MapFormulaCallable(obj.try_convert<FormulaCallable>()));
+		ffl::IntrusivePtr<MapFormulaCallable> map_callable(new MapFormulaCallable(obj.try_convert<FormulaCallable>()));
 		map_callable->add("doc", v);
 		map_callable->add("filename", variant(fname));
 

@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include <boost/intrusive_ptr.hpp>
+#include "intrusive_ptr.hpp"
 #include <boost/noncopyable.hpp>
 
 #include <assert.h>
@@ -46,8 +46,8 @@ namespace formula_vm {
 namespace game_logic
 {
 	class FormulaExpression;
-	typedef boost::intrusive_ptr<FormulaExpression> ExpressionPtr;
-	typedef boost::intrusive_ptr<const FormulaExpression> ConstExpressionPtr;
+	typedef ffl::IntrusivePtr<FormulaExpression> ExpressionPtr;
+	typedef ffl::IntrusivePtr<const FormulaExpression> ConstExpressionPtr;
 
 	struct PinpointedLoc 
 	{
@@ -225,7 +225,7 @@ namespace game_logic
 		void set_has_closure(int base_slot) { has_closure_ = true; base_slot_ = base_slot; }
 		virtual ExpressionPtr optimizeToVM() override { return ExpressionPtr(); }
 	private:
-		boost::intrusive_ptr<SlotFormulaCallable> calculate_args_callable(const FormulaCallable& variables) const;
+		ffl::IntrusivePtr<SlotFormulaCallable> calculate_args_callable(const FormulaCallable& variables) const;
 		variant execute(const FormulaCallable& variables) const;
 		ConstFormulaPtr formula_;
 		ConstFormulaPtr precondition_;
@@ -236,7 +236,7 @@ namespace game_logic
 		//this is the callable object that is populated with the arguments to the
 		//function. We try to reuse the same object every time the function is
 		//called rather than recreating it each time.
-		mutable boost::intrusive_ptr<SlotFormulaCallable> callable_;
+		mutable ffl::IntrusivePtr<SlotFormulaCallable> callable_;
 
 		mutable std::unique_ptr<variant> fed_result_;
 		bool has_closure_;
@@ -244,8 +244,8 @@ namespace game_logic
 
 	};
 
-	typedef boost::intrusive_ptr<FunctionExpression> FunctionExpressionPtr;
-	typedef boost::intrusive_ptr<FormulaFunctionExpression> FormulaFunctionExpressionPtr;
+	typedef ffl::IntrusivePtr<FunctionExpression> FunctionExpressionPtr;
+	typedef ffl::IntrusivePtr<FormulaFunctionExpression> FormulaFunctionExpressionPtr;
 
 	class FormulaFunction
 	{

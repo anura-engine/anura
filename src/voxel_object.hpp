@@ -120,8 +120,8 @@ namespace voxel
 		voxel_object();
 	};
 
-	typedef boost::intrusive_ptr<voxel_object> voxel_object_ptr;
-	typedef boost::intrusive_ptr<const voxel_object> const_voxel_object_ptr;
+	typedef ffl::IntrusivePtr<voxel_object> voxel_object_ptr;
+	typedef ffl::IntrusivePtr<const voxel_object> const_voxel_object_ptr;
 }
 
 namespace voxel_object_factory

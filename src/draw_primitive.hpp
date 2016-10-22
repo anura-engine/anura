@@ -35,12 +35,14 @@ namespace graphics
 	class DrawPrimitive : public game_logic::FormulaCallable, public KRE::SceneObject
 	{
 	public:
-		static boost::intrusive_ptr<DrawPrimitive> create(const variant& v);
+		static ffl::IntrusivePtr<DrawPrimitive> create(const variant& v);
 		explicit DrawPrimitive(const variant& v);
 		AnuraShaderPtr getAnuraShader() const { return shader_; }
 		bool isDirty() const { return dirty_; }
 		void setDirty() { dirty_ = true; }
 		void preRender(const KRE::WindowPtr& wm) override;
+
+		void surrenderReferences(GarbageCollector* collector) override;
 	protected:
 		virtual void reInit(const KRE::WindowPtr& wm) = 0;
 	private:

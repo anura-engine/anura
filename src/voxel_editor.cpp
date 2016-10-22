@@ -24,7 +24,7 @@
 /* XXX -- needs a re-write
 #include <boost/array.hpp>
 #include <boost/shared_array.hpp>
-#include <boost/intrusive_ptr.hpp>
+#include "intrusive_ptr.hpp"
 
 #include <assert.h>
 
@@ -183,8 +183,8 @@ private:
 
 	std::string fname_;
 
-	boost::intrusive_ptr<iso_renderer> iso_renderer_;
-	boost::intrusive_ptr<gui::ColorPicker> ColorPicker_;
+	ffl::IntrusivePtr<iso_renderer> iso_renderer_;
+	ffl::IntrusivePtr<gui::ColorPicker> ColorPicker_;
 
 	std::vector<Command> undo_, redo_;
 
@@ -330,7 +330,7 @@ private:
 	glm::ivec3 position_to_cube(int xp, int yp, glm::ivec3* facing);
 
 	void render_fbo();
-	boost::intrusive_ptr<camera_callable> camera_;
+	ffl::IntrusivePtr<camera_callable> camera_;
 	GLfloat camera_hangle_, camera_vangle_, camera_distance_;
 
 	void calculate_camera();
@@ -1896,7 +1896,7 @@ private:
 	int xdir_, ydir_, zdir_;
 	bool flipped_;
 
-	boost::intrusive_ptr<perspective_renderer> renderer_;
+	ffl::IntrusivePtr<perspective_renderer> renderer_;
 	gui::LabelPtr description_label_;
 };
 
@@ -1975,7 +1975,7 @@ voxel_editor::~voxel_editor()
 	}
 }
 
-std::vector<boost::intrusive_ptr<perspective_widget> > g_perspectives;
+std::vector<ffl::IntrusivePtr<perspective_widget> > g_perspectives;
 
 void voxel_editor::init()
 {
@@ -1993,9 +1993,9 @@ void voxel_editor::init()
 	};
 
 	if(g_perspectives.empty()) {
-		g_perspectives.push_back(boost::intrusive_ptr<perspective_widget>(new perspective_widget(perspective_areas[0], 1, 0, 0)));
-		g_perspectives.push_back(boost::intrusive_ptr<perspective_widget>(new perspective_widget(perspective_areas[1], 0, 1, 0)));
-		g_perspectives.push_back(boost::intrusive_ptr<perspective_widget>(new perspective_widget(perspective_areas[2], 0, 0, 1)));
+		g_perspectives.push_back(ffl::IntrusivePtr<perspective_widget>(new perspective_widget(perspective_areas[0], 1, 0, 0)));
+		g_perspectives.push_back(ffl::IntrusivePtr<perspective_widget>(new perspective_widget(perspective_areas[1], 0, 1, 0)));
+		g_perspectives.push_back(ffl::IntrusivePtr<perspective_widget>(new perspective_widget(perspective_areas[2], 0, 0, 1)));
 	} else {
 		for(int n = 0; n != 3; ++n) {
 			g_perspectives[n]->setLoc(perspective_areas[n].x(), perspective_areas[n].y());
@@ -2186,7 +2186,7 @@ void voxel_editor::on_change_layer_button_clicked(int nlayer)
 		context_menu->addCol("");
 	}
 
-	boost::intrusive_ptr<TextEditorWidget> editor(new TextEditorWidget(100));
+	ffl::IntrusivePtr<TextEditorWidget> editor(new TextEditorWidget(100));
 	context_menu->addCol(editor);
 	context_menu->addCol("add");
 
@@ -2372,7 +2372,7 @@ UTILITY(voxel_editor)
 		sys::write_file(fname, write_model(model).write_json());
 	}
 	
-	boost::intrusive_ptr<voxel_editor> editor(new voxel_editor(rect(0, 0, preferences::actual_screen_width(), preferences::actual_screen_height()), fname));
+	ffl::IntrusivePtr<voxel_editor> editor(new voxel_editor(rect(0, 0, preferences::actual_screen_width(), preferences::actual_screen_height()), fname));
 	editor->showModal();
 }
 

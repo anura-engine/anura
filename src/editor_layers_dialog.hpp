@@ -64,7 +64,7 @@ namespace editor_dialogs
 		void classificationSelected(int index);
 	};
 
-	typedef boost::intrusive_ptr<EditorLayersDialog> EditorLayersDialogPtr;
+	typedef ffl::IntrusivePtr<EditorLayersDialog> EditorLayersDialogPtr;
 }
 
 #endif // !NO_EDITOR

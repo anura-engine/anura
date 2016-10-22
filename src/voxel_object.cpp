@@ -222,7 +222,7 @@ namespace voxel
 		variant child_point = FN_ARG(1);
 		variant parent_point = FN_ARG(2);
 
-		boost::intrusive_ptr<voxel_model> model(model_var.convert_to<voxel_model>());
+		ffl::IntrusivePtr<voxel_model> model(model_var.convert_to<voxel_model>());
 
 		std::function<void()> fn = [=]() { obj.model_->attach_child(model, child_point.as_string(), parent_point.as_string()); };
 		return variant(new game_logic::FnCommandCallable(fn));

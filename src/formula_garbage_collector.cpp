@@ -10,9 +10,17 @@
 #include "formula_profiler.hpp"
 #include "logger.hpp"
 #include "profile_timer.hpp"
+#include "sys.hpp"
 
 #include "formula_object.hpp"
 
+#ifdef GARBAGE_COLLECTOR_POOLED_ALLOC
+namespace ffl {
+std::vector<IntrusivePtr<reference_counted_object>*> getAllIntrusivePtrDebug();
+}
+
+std::set<variant*>& get_all_global_variants();
+#endif
 	
 namespace {
 	GarbageCollectible* g_head;
@@ -142,6 +150,54 @@ std::string GarbageCollectible::debugObjectSpew() const
 	return debugObjectName();
 }
 
+#ifdef GARBAGE_COLLECTOR_POOLED_ALLOC
+
+const size_t GCAllocSize = 2048;
+const size_t GCNumObjects = 100000;
+void* g_gc_data_pool[(GCAllocSize*GCNumObjects)/sizeof(void*)];
+unsigned char* g_gc_begin_data_pool = (unsigned char*)g_gc_data_pool;
+unsigned char* g_gc_end_data_pool = g_gc_begin_data_pool + sizeof(g_gc_data_pool);
+
+std::vector<void*> g_gc_alloc_free_slots;
+unsigned char* g_gc_next_spot = g_gc_begin_data_pool;
+
+void* GarbageCollectible::operator new(size_t sz)
+{
+	if(sz > GCAllocSize-sizeof(uint64_t) || (g_gc_alloc_free_slots.empty() && g_gc_next_spot == g_gc_end_data_pool)) {
+		return malloc(sz);
+	}
+
+	void* result;
+	if(!g_gc_alloc_free_slots.empty()) {
+		result = g_gc_alloc_free_slots.back();
+		memset(result, 0, GCAllocSize);
+		g_gc_alloc_free_slots.pop_back();
+	} else {
+		result = g_gc_next_spot;
+		memset(result, 0, GCAllocSize);
+		g_gc_next_spot += GCAllocSize;
+	}
+
+	uint64_t* p = (uint64_t*)result;
+	*p = sz;
+	++p;
+	return (void*)p;
+}
+
+void GarbageCollectible::operator delete(void* ptr) noexcept
+{
+	if(ptr < g_gc_begin_data_pool || ptr >= g_gc_end_data_pool) {
+		free(ptr);
+		return;
+	}
+
+	uint64_t* p = (uint64_t*)ptr;
+	--p;
+	g_gc_alloc_free_slots.push_back(p);
+}
+
+#endif //GARBAGE_COLLECTOR_POOLED_ALLOC
+
 GarbageCollector::~GarbageCollector()
 {
 }
@@ -152,7 +208,7 @@ namespace {
 	};
 
 	struct PointerPair {
-		boost::intrusive_ptr<GarbageCollectible>* ptr;
+		ffl::IntrusivePtr<GarbageCollectible>* ptr;
 		GarbageCollectible* points_to;
 	};
 }
@@ -164,7 +220,7 @@ public:
 	{}
 
 	void surrenderVariant(const variant* v, const char* description) override;
-	void surrenderPtrInternal(boost::intrusive_ptr<GarbageCollectible>* ptr, const char* description) override;
+	void surrenderPtrInternal(ffl::IntrusivePtr<GarbageCollectible>* ptr, const char* description) override;
 
 	void collect();
 	void reap();
@@ -196,6 +252,10 @@ void GarbageCollectorImpl::surrenderVariant(const variant* v, const char* descri
 	case variant::VARIANT_TYPE_FUNCTION:
 	case variant::VARIANT_TYPE_GENERIC_FUNCTION:
 	case variant::VARIANT_TYPE_MULTI_FUNCTION:
+		if(std::binary_search(items_.begin(), items_.end(), v->get_addr()) == false) {
+			break;
+		}
+
 		const_cast<variant*>(v)->release();
 		variants_.emplace_back(const_cast<variant*>(v));
 		break;
@@ -204,9 +264,13 @@ void GarbageCollectorImpl::surrenderVariant(const variant* v, const char* descri
 	}
 }
 
-void GarbageCollectorImpl::surrenderPtrInternal(boost::intrusive_ptr<GarbageCollectible>* ptr, const char* description)
+void GarbageCollectorImpl::surrenderPtrInternal(ffl::IntrusivePtr<GarbageCollectible>* ptr, const char* description)
 {
 	if(ptr->get() == NULL) {
+		return;
+	}
+
+	if(std::binary_search(items_.begin(), items_.end(), ptr->get()) == false) {
 		return;
 	}
 
@@ -259,12 +323,14 @@ void GarbageCollectorImpl::accumulateAll()
 	items_.reserve(g_count);
 
 	for(GarbageCollectible* p = g_head; p != nullptr; p = p->next_) {
-		p->add_ref();
-		ASSERT_LOG(p->refcount() > 1, "Object with bad refcount: " << p->refcount() << ": " << p->debugObjectName());
 		if(gens_ < 0 || p->tenure_ < gens_) {
+			p->add_reference();
+			ASSERT_LOG(p->refcount() > 1, "Object with bad refcount: " << p->refcount() << ": " << p->debugObjectName());
 			items_.push_back(p);
 		}
 	}
+
+	std::sort(items_.begin(), items_.end());
 
 	pointers_.reserve(items_.size()*2);
 	variants_.reserve(items_.size()*2);
@@ -301,6 +367,10 @@ void GarbageCollectorImpl::performCollection()
 
 		items_.erase(std::remove(items_.begin(), items_.end(), nullptr), items_.end());
 	}
+
+	for(auto item : saved_) {
+		item->dec_reference();
+	}
 }
 
 void GarbageCollectorImpl::reap()
@@ -312,12 +382,9 @@ void GarbageCollectorImpl::reap()
 	}
 
 	for(auto item : items_) {
-		item->dec_ref();
+		item->dec_reference();
 	}
 
-	for(auto item : saved_) {
-		item->dec_ref();
-	}
 	LOG_INFO("Garbage collection reap in " << static_cast<int>(timer.get_time()) << "us.");
 }
 
@@ -427,13 +494,20 @@ public:
 	{}
 	void run(const char* fname);
 	void surrenderVariant(const variant* v, const char* description=nullptr) override;
-	void surrenderPtrInternal(boost::intrusive_ptr<GarbageCollectible>* ptr, const char* description) override;
+	void surrenderPtrInternal(ffl::IntrusivePtr<GarbageCollectible>* ptr, const char* description) override;
 
 private:
 	Graph graph_;
 	std::vector<GarbageCollectible*> items_;
+	std::set<GarbageCollectible*> itemsSet_;
 	std::map<const void*, int> itemIndexes_;
 	int currentIndex_;
+
+	std::vector<const variant*> currentVariants_;
+	std::vector<ffl::IntrusivePtr<GarbageCollectible>*> currentPtrs_;
+
+	std::vector<const variant*> allVariants_;
+	std::vector<ffl::IntrusivePtr<GarbageCollectible>*> allPtrs_;
 };
 
 void GarbageCollectorAnalyzer::surrenderVariant(const variant* v, const char* description)
@@ -445,6 +519,9 @@ void GarbageCollectorAnalyzer::surrenderVariant(const variant* v, const char* de
 	case variant::VARIANT_TYPE_FUNCTION:
 	case variant::VARIANT_TYPE_GENERIC_FUNCTION:
 	case variant::VARIANT_TYPE_MULTI_FUNCTION: {
+		currentVariants_.push_back(v);
+		allVariants_.push_back(v);
+
 		auto itor = itemIndexes_.find(v->get_addr());
 		if(itor != itemIndexes_.end()) {
 			graph_.addEdge(currentIndex_, itor->second, description == NULL ? std::string("(variant)") : std::string(description));
@@ -456,8 +533,11 @@ void GarbageCollectorAnalyzer::surrenderVariant(const variant* v, const char* de
 	}
 }
 
-void GarbageCollectorAnalyzer::surrenderPtrInternal(boost::intrusive_ptr<GarbageCollectible>* ptr, const char* description)
+void GarbageCollectorAnalyzer::surrenderPtrInternal(ffl::IntrusivePtr<GarbageCollectible>* ptr, const char* description)
 {
+	currentPtrs_.push_back(ptr);
+	allPtrs_.push_back(ptr);
+
 	auto itor = itemIndexes_.find(ptr->get());
 	if(itor != itemIndexes_.end()) {
 		graph_.addEdge(currentIndex_, itor->second, description == NULL ? std::string("(variant)") : std::string(description));
@@ -478,14 +558,127 @@ void GarbageCollectorAnalyzer::run(const char* fname)
 
 		itemIndexes_[p] = items_.size();
 		items_.push_back(p);
-
+		itemsSet_.insert(p);
 	}
 
 	currentIndex_ = 0;
 	for(auto item : items_) {
+		currentVariants_.clear();
+		currentPtrs_.clear();
 		item->surrenderReferences(this);
+
+#ifdef GARBAGE_COLLECTOR_POOLED_ALLOC
+		if((unsigned char*)item >= g_gc_begin_data_pool && (unsigned char*)item < g_gc_end_data_pool) {
+			void** p = (void**)item;
+			uint64_t* sz = (uint64_t*)item;
+			--sz;
+			const int usable_size = static_cast<int>(*sz);
+			for(int n = 0; n < usable_size/sizeof(void*); ++n, ++p) {
+				if(p == (void**)&item->next_ || p == (void**)&item->prev_) {
+					continue;
+				}
+
+				if(itemsSet_.count(reinterpret_cast<GarbageCollectible*>(*p)) == 0) {
+					continue;
+				}
+
+				bool found_variant = false;
+				for(const variant* v : currentVariants_) {
+					if((void*)(p) >= (void*)(v) && (void*)(p) < (void*)(v+1)) {
+						found_variant = true;
+					}
+				}
+
+				if(found_variant) {
+					continue;
+				}
+
+				for(const ffl::IntrusivePtr<GarbageCollectible>* ptr : currentPtrs_) {
+					if((void*)p >= (void*)ptr && (void*)p < (void*)(ptr+1)) {
+						found_variant = true;
+					}
+				}
+
+				if(found_variant) {
+					continue;
+				}
+
+				for(const variant* v : currentVariants_) {
+					const int offset = (const unsigned char*)v - (const unsigned char*)item;
+					fprintf(stderr, "  VARIANT OFFSET: %x - %d\n", offset, (int)sizeof(variant));
+				}
+
+				for(const ffl::IntrusivePtr<GarbageCollectible>* ptr : currentPtrs_) {
+					const int offset = (const unsigned char*)ptr - (const unsigned char*)item;
+					fprintf(stderr, "  PTR OFFSET: %d - %d\n", offset, (int)sizeof(variant));
+				}
+
+				GarbageCollectible* collectible = reinterpret_cast<GarbageCollectible*>(*p);
+
+				const int offset = n*sizeof(void*);
+
+				fprintf(stderr, "GC UNMARKED REFERENCE: [%s @%p] -> [%s @%p] OFFSET: %d/%d\n", item->debugObjectName().c_str(), item, collectible->debugObjectName().c_str(), collectible, offset, usable_size);
+			}
+		}
+#endif
+
 		++currentIndex_;
 	}
+
+	std::sort(allVariants_.begin(), allVariants_.end());
+	std::sort(allPtrs_.begin(), allPtrs_.end());
+
+#ifdef GARBAGE_COLLECTOR_POOLED_ALLOC
+	std::vector<ffl::IntrusivePtr<reference_counted_object>*> intrusives = ffl::getAllIntrusivePtrDebug();
+	std::map<void*, std::vector<ffl::IntrusivePtr<reference_counted_object>*>> intrusive_dests;
+	for(auto p : intrusives) {
+		intrusive_dests[p->get()].push_back(p);
+	}
+
+	for(auto item : items_) {
+		if(intrusive_dests.count(item)) {
+			auto& v = intrusive_dests[item];
+			for(auto p : v) {
+				if(std::binary_search(allPtrs_.begin(), allPtrs_.end(), (ffl::IntrusivePtr<GarbageCollectible>*)p)) {
+					continue;
+				}
+
+				fprintf(stderr, "GC UNKNOWN INTRUSIVE @%p -> [%s @%p]\n", p, item->debugObjectName().c_str(), item);
+			}
+		}
+	}
+
+	std::set<variant*> all_variants = get_all_global_variants();
+	std::map<void*, std::vector<variant*>> variant_dests;
+
+	for(variant* v : all_variants) {
+		if(v->is_callable()) {
+			variant_dests[(void*)v->as_callable()].push_back(v);
+		}
+	}
+
+	for(auto item : items_) {
+		if(variant_dests.count(item)) {
+			auto& v = variant_dests[item];
+			for(auto p : v) {
+				if(std::binary_search(allVariants_.begin(), allVariants_.end(), p)) {
+					continue;
+				}
+
+				fprintf(stderr, "GC UNKNOWN VARIANT @%p -> [%s @%p]\n", p, item->debugObjectName().c_str(), item);
+			}
+		}
+	}
+
+	for(auto item : items_) {
+		auto& variants = variant_dests[(void*)item];
+		auto& ptrs = intrusive_dests[(void*)item];
+		if((int)variants.size() + (int)ptrs.size() != item->refcount()) {
+			fprintf(stderr, "GC REFCOUNT DISCREPANCY: %d variants, %d pointers != %d refcount (pointers: %d; variants: %d) for %s @%p\n", (int)variants.size(), (int)ptrs.size(), item->refcount(), item->ptr_count_, item->variant_count_, item->debugObjectName().c_str(), item);
+		}
+	}
+
+#endif
 
 	std::map<std::string, int> obj_counts;
 	for(int i = 0; i != g_count; ++i) {

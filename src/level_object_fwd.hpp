@@ -23,12 +23,12 @@
 
 #pragma once
 
-#include <boost/intrusive_ptr.hpp>
+#include "intrusive_ptr.hpp"
 
 struct tile_corner;
 
 struct LevelTile;
 
 class LevelObject;
-typedef boost::intrusive_ptr<LevelObject> LevelObjectPtr;
-typedef boost::intrusive_ptr<const LevelObject> ConstLevelObjectPtr;
+typedef ffl::IntrusivePtr<LevelObject> LevelObjectPtr;
+typedef ffl::IntrusivePtr<const LevelObject> ConstLevelObjectPtr;

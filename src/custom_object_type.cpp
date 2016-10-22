@@ -1325,7 +1325,7 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 	}
 
 	for(variant anim : anim_list.as_list()) {
-		boost::intrusive_ptr<Frame> f;
+		ffl::IntrusivePtr<Frame> f;
 		try {
 			f.reset(new Frame(anim));
 		} catch(Frame::Error&) {
@@ -1842,7 +1842,7 @@ ConstCustomObjectTypePtr CustomObjectType::getVariation(const std::vector<std::s
 	if(!result) {
 		variant node = node_;
 
-		boost::intrusive_ptr<game_logic::MapFormulaCallable> callable(new game_logic::MapFormulaCallable);
+		ffl::IntrusivePtr<game_logic::MapFormulaCallable> callable(new game_logic::MapFormulaCallable);
 		callable->add("doc", variant(variant_callable::create(&node)));
 
 		for(const std::string& v : variations) {

@@ -179,7 +179,7 @@ namespace hex
 		}
 		auto& terrain_rules = hex::get_terrain_rules();
 		for(auto& tr : terrain_rules) {
-			tr->match(boost::intrusive_ptr<HexMap>(this));
+			tr->match(ffl::IntrusivePtr<HexMap>(this));
 		}
 	}
 
@@ -223,12 +223,12 @@ namespace hex
 
 	HexMapPtr HexMap::create(const std::string& filename)
 	{
-		return boost::intrusive_ptr<HexMap>(new HexMap(filename));
+		return ffl::IntrusivePtr<HexMap>(new HexMap(filename));
 	}
 
 	HexMapPtr HexMap::create(const variant& v)
 	{
-		return boost::intrusive_ptr<HexMap>(new HexMap(v));
+		return ffl::IntrusivePtr<HexMap>(new HexMap(v));
 	}
 
 	void HexMap::process()
@@ -324,9 +324,9 @@ namespace hex
 			ASSERT_LOG(index >= 0 && index < static_cast<int>(obj.tiles_.size()), 
 				"Index out of bounds." << index << " >= " << obj.tiles_.size());
 
-			boost::intrusive_ptr<HexMap> map_ref = &const_cast<HexMap&>(obj);
+			ffl::IntrusivePtr<HexMap> map_ref = &const_cast<HexMap&>(obj);
 
-			return variant(new game_logic::FnCommandCallable([=]() {
+			return variant(new game_logic::FnCommandCallable("set_tile_at", [=]() {
 				map_ref->setChanged();
 				map_ref->tiles_changed_.emplace(index);
 				map_ref->tiles_[index] = HexObject(x, y, tile, map_ref.get());
@@ -335,8 +335,8 @@ namespace hex
 		END_DEFINE_FN
 
 		BEGIN_DEFINE_FN(rebuild, "() -> commands")
-			boost::intrusive_ptr<HexMap> map_ref = &const_cast<HexMap&>(obj);
-			return variant(new game_logic::FnCommandCallable([=]() {
+			ffl::IntrusivePtr<HexMap> map_ref = &const_cast<HexMap&>(obj);
+			return variant(new game_logic::FnCommandCallable("rebuild", [=]() {
 				map_ref->setChangedRebuild();
 			}));
 		END_DEFINE_FN

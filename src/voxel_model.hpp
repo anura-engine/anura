@@ -145,8 +145,8 @@ namespace voxel
 	variant write_model(const Model& model);
 
 	class voxel_model;
-	typedef boost::intrusive_ptr<voxel_model> voxel_model_ptr;
-	typedef boost::intrusive_ptr<const voxel_model> const_voxel_model_ptr;
+	typedef ffl::IntrusivePtr<voxel_model> voxel_model_ptr;
+	typedef ffl::IntrusivePtr<const voxel_model> const_voxel_model_ptr;
 
 	class voxel_model : public game_logic::FormulaCallable
 	{

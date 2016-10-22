@@ -30,7 +30,7 @@
 
 #include <functional>
 
-#include <boost/intrusive_ptr.hpp>
+#include "intrusive_ptr.hpp"
 
 #include "formula_callable.hpp"
 #include "variant.hpp"
@@ -77,8 +77,8 @@ namespace game_logic
 
 	#define READ_SERIALIZABLE_CALLABLE(node) if(node.has_key("_addr")) { setAddr(node["_addr"].as_string()); }
 
-	typedef boost::intrusive_ptr<WmlSerializableFormulaCallable> WmlSerializableFormulaCallablePtr;
-	typedef boost::intrusive_ptr<const WmlSerializableFormulaCallable> ConstWmlSerializableFormulaCallablePtr;
+	typedef ffl::IntrusivePtr<WmlSerializableFormulaCallable> WmlSerializableFormulaCallablePtr;
+	typedef ffl::IntrusivePtr<const WmlSerializableFormulaCallable> ConstWmlSerializableFormulaCallablePtr;
 
 	class wmlFormulaCallableSerializationScope
 	{

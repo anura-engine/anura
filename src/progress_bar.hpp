@@ -63,6 +63,6 @@ namespace gui
 		ConstFramedGuiElementPtr frame_image_set_;
 	};
 
-	typedef boost::intrusive_ptr<ProgressBar> ProgressBarPtr;
-	typedef boost::intrusive_ptr<const ProgressBar> ConstProgressBarPtr;
+	typedef ffl::IntrusivePtr<ProgressBar> ProgressBarPtr;
+	typedef ffl::IntrusivePtr<const ProgressBar> ConstProgressBarPtr;
 }

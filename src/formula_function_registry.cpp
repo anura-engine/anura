@@ -28,7 +28,7 @@
 namespace
 {
 	typedef std::map<std::string, std::map<std::string, FunctionCreator*> > function_creators_table;
-	typedef std::map<std::string, std::map<std::string, boost::intrusive_ptr<game_logic::FunctionExpression> > > singleton_function_table;
+	typedef std::map<std::string, std::map<std::string, ffl::IntrusivePtr<game_logic::FunctionExpression> > > singleton_function_table;
 	typedef std::map<std::string, std::vector<std::string> > helpstrings_table;
 
 	// Takes ownership of the pointers in the function creator table,

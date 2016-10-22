@@ -449,12 +449,12 @@ namespace sound
 	//but may have more if we are crossfading to different music.
 	//Access is controlled by g_music_thread_mutex. Only the game thread will
 	//modify this, so it can read from it without locking the mutex.
-	std::vector<boost::intrusive_ptr<MusicPlayer> > g_music_players;
+	std::vector<ffl::IntrusivePtr<MusicPlayer> > g_music_players;
 
 	//The current member of g_music_players which is playing and not currently being
 	//faded out. This is accessed only from the game thread and is safe to access from
 	//there without fear it might change at any moment.
-	boost::intrusive_ptr<MusicPlayer> g_current_player;
+	ffl::IntrusivePtr<MusicPlayer> g_current_player;
 
 	//Flag to tell the music thread to exit. Access controlled by g_music_thread_mutex.
 	bool g_music_thread_exit = false;
@@ -463,7 +463,7 @@ namespace sound
 	threading::mutex g_music_thread_mutex;
 
 	//Next music track to  play. Only accessed from the game thread.
-	boost::intrusive_ptr<MusicPlayer> g_music_queue;
+	ffl::IntrusivePtr<MusicPlayer> g_music_queue;
 
 
 	//Ring buffer which music is mixed into by the music thread. The mixer thread consumes
@@ -492,7 +492,7 @@ namespace sound
 					return;
 				}
 
-				for(const boost::intrusive_ptr<MusicPlayer>& p : g_music_players) {
+				for(const ffl::IntrusivePtr<MusicPlayer>& p : g_music_players) {
 					if(p->finished() == false) {
 						players.push_back(p.get());
 					}
@@ -597,8 +597,8 @@ namespace sound
 
 
 	BEGIN_DEFINE_FN(play, "()->commands")
-		boost::intrusive_ptr<MusicPlayer> player(const_cast<MusicPlayer*>(&obj));
-		return variant(new game_logic::FnCommandCallable([=]() {
+		ffl::IntrusivePtr<MusicPlayer> player(const_cast<MusicPlayer*>(&obj));
+		return variant(new game_logic::FnCommandCallable("sound::play", [=]() {
 			threading::lock lck(g_music_thread_mutex);
 			for(auto& p : g_music_players) {
 				if(player == p) {
@@ -621,8 +621,8 @@ namespace sound
 		if(NUM_FN_ARGS > 0) {
 			fade_time = FN_ARG(0).as_float();
 		}
-		boost::intrusive_ptr<MusicPlayer> ptr(const_cast<MusicPlayer*>(&obj));
-		return variant(new game_logic::FnCommandCallable([=]() {
+		ffl::IntrusivePtr<MusicPlayer> ptr(const_cast<MusicPlayer*>(&obj));
+		return variant(new game_logic::FnCommandCallable("sound::stop", [=]() {
 			ptr->stopPlaying(fade_time);
 		}));
 	END_DEFINE_FN
@@ -1469,11 +1469,11 @@ namespace sound
 
 			variant f = options["filters"];
 			if(f.is_list()) {
-				std::vector<boost::intrusive_ptr<SoundEffectFilter>> filters;
+				std::vector<ffl::IntrusivePtr<SoundEffectFilter>> filters;
 				for(auto v : f.as_list()) {
 					auto p = v.try_convert<SoundEffectFilter>();
 					ASSERT_LOG(p, "Failed to convert to sound effect filter");
-					filters.push_back(boost::intrusive_ptr<SoundEffectFilter>(p));
+					filters.push_back(ffl::IntrusivePtr<SoundEffectFilter>(p));
 				}
 
 				setFilters(filters);
@@ -1548,11 +1548,11 @@ namespace sound
 		const void* obj() const { return obj_; }
 		const std::string& fname() const { return source_->fname(); }
 
-		const std::vector<boost::intrusive_ptr<SoundEffectFilter> >& getFilters() const {
+		const std::vector<ffl::IntrusivePtr<SoundEffectFilter> >& getFilters() const {
 			return filters_;
 		}
 
-		void setFilters(std::vector<boost::intrusive_ptr<SoundEffectFilter> > filters) {
+		void setFilters(std::vector<ffl::IntrusivePtr<SoundEffectFilter> > filters) {
 			threading::lock lck(mutex_);
 			filters_ = filters;
 			for(size_t n = 0; n != filters_.size(); ++n) {
@@ -1570,7 +1570,7 @@ namespace sound
 			}
 		}
 
-		boost::intrusive_ptr<RawPlayingSound> src() const { return source_; }
+		ffl::IntrusivePtr<RawPlayingSound> src() const { return source_; }
 
 	private:
 		DECLARE_CALLABLE(PlayingSound);
@@ -1579,16 +1579,16 @@ namespace sound
 
 		const void* obj_;
 
-		boost::intrusive_ptr<RawPlayingSound> source_;
+		ffl::IntrusivePtr<RawPlayingSound> source_;
 
-		boost::intrusive_ptr<SoundSource> first_filter_;
+		ffl::IntrusivePtr<SoundSource> first_filter_;
 
-		std::vector<boost::intrusive_ptr<SoundEffectFilter> > filters_;
+		std::vector<ffl::IntrusivePtr<SoundEffectFilter> > filters_;
 	};
 
 	//List of currently playing sounds. Only the game thread can modify this,
 	//the mixing thread will read it.
-	std::vector<boost::intrusive_ptr<PlayingSound> > g_playing_sounds;
+	std::vector<ffl::IntrusivePtr<PlayingSound> > g_playing_sounds;
 	threading::mutex g_playing_sounds_mutex;
 
 	BEGIN_DEFINE_CALLABLE(PlayingSound, SoundSource)
@@ -1651,18 +1651,18 @@ namespace sound
 		return variant(&result);
 
 	DEFINE_SET_FIELD
-		std::vector<boost::intrusive_ptr<SoundEffectFilter>> filters;
+		std::vector<ffl::IntrusivePtr<SoundEffectFilter>> filters;
 		for(auto v : value.as_list()) {
 			auto p = v.try_convert<SoundEffectFilter>();
 			ASSERT_LOG(p, "Failed to convert to sound effect filter");
-			filters.push_back(boost::intrusive_ptr<SoundEffectFilter>(p));
+			filters.push_back(ffl::IntrusivePtr<SoundEffectFilter>(p));
 		}
 
 		obj.setFilters(filters);
 
 	BEGIN_DEFINE_FN(play, "()->commands")
-		boost::intrusive_ptr<PlayingSound> ptr(const_cast<PlayingSound*>(&obj));
-		return variant(new game_logic::FnCommandCallable([=]() {
+		ffl::IntrusivePtr<PlayingSound> ptr(const_cast<PlayingSound*>(&obj));
+		return variant(new game_logic::FnCommandCallable("sound::play", [=]() {
 			threading::lock lck(g_playing_sounds_mutex);
 			if(std::find(g_playing_sounds.begin(), g_playing_sounds.end(), ptr) != g_playing_sounds.end()) {
 				return;
@@ -1677,8 +1677,8 @@ namespace sound
 		if(NUM_FN_ARGS > 0) {
 			fade_time = FN_ARG(0).as_float();
 		}
-		boost::intrusive_ptr<PlayingSound> ptr(const_cast<PlayingSound*>(&obj));
-		return variant(new game_logic::FnCommandCallable([=]() {
+		ffl::IntrusivePtr<PlayingSound> ptr(const_cast<PlayingSound*>(&obj));
+		return variant(new game_logic::FnCommandCallable("sound::stop", [=]() {
 			ptr->stopPlaying(fade_time);
 		}));
 	END_DEFINE_FN
@@ -1713,7 +1713,7 @@ namespace sound
 		//Mix all the sound effects.
 		{
 			threading::lock lck(g_playing_sounds_mutex);
-			for(const boost::intrusive_ptr<PlayingSound>& s : g_playing_sounds) {
+			for(const ffl::IntrusivePtr<PlayingSound>& s : g_playing_sounds) {
 				s->MixData(buf, nsamples/2);
 			}
 		}
@@ -1878,7 +1878,7 @@ void process()
 	//Go through the playing sounds list and remove any that are finished.
 	{
 		threading::lock lck(g_playing_sounds_mutex);
-		for(boost::intrusive_ptr<PlayingSound>& s : g_playing_sounds) {
+		for(ffl::IntrusivePtr<PlayingSound>& s : g_playing_sounds) {
 			s->init();
 
 			if(s->finished()) {
@@ -1886,21 +1886,21 @@ void process()
 			}
 		}
 
-		g_playing_sounds.erase(std::remove(g_playing_sounds.begin(), g_playing_sounds.end(), boost::intrusive_ptr<PlayingSound>()), g_playing_sounds.end());
+		g_playing_sounds.erase(std::remove(g_playing_sounds.begin(), g_playing_sounds.end(), ffl::IntrusivePtr<PlayingSound>()), g_playing_sounds.end());
 	}
 
 	//Go through the music players and removed any that are finished.
 	{
 		threading::lock lck(g_music_thread_mutex);
 		g_current_player.reset();
-		std::vector<boost::intrusive_ptr<MusicPlayer> > players = g_music_players;
-		for(boost::intrusive_ptr<MusicPlayer>& p : players) {
+		std::vector<ffl::IntrusivePtr<MusicPlayer> > players = g_music_players;
+		for(ffl::IntrusivePtr<MusicPlayer>& p : players) {
 			if(p->finished()) {
 				p->onComplete();
 			}
 		}
 
-		for(boost::intrusive_ptr<MusicPlayer>& p : g_music_players) {
+		for(ffl::IntrusivePtr<MusicPlayer>& p : g_music_players) {
 			if(p->finished()) {
 
 				if(p == g_music_players.back()) {
@@ -1913,7 +1913,7 @@ void process()
 			}
 		}
 
-		g_music_players.erase(std::remove(g_music_players.begin(), g_music_players.end(), boost::intrusive_ptr<MusicPlayer>()), g_music_players.end());
+		g_music_players.erase(std::remove(g_music_players.begin(), g_music_players.end(), ffl::IntrusivePtr<MusicPlayer>()), g_music_players.end());
 
 	}
 }
@@ -1941,7 +1941,7 @@ void preload(const std::string& fname)
 
 void change_volume(const void* object, float volume)
 {
-	for(const boost::intrusive_ptr<PlayingSound>& s : g_playing_sounds) {
+	for(const ffl::IntrusivePtr<PlayingSound>& s : g_playing_sounds) {
 		if(s->obj() == object) {
 			s->setVolume(volume);
 		}
@@ -1994,7 +1994,7 @@ void set_panning(float left, float right)
 
 void update_panning(const void* obj, const std::string& id, float left, float right)
 {
-	for(const boost::intrusive_ptr<PlayingSound>& s : g_playing_sounds) {
+	for(const ffl::IntrusivePtr<PlayingSound>& s : g_playing_sounds) {
 		if((s->obj() == obj && s->fname() == id) || id.empty()) {
 			s->setPanning(left, right);
 		}
@@ -2010,7 +2010,7 @@ void play(const std::string& file, const void* object, float volume, float fade_
 		return;
 	}
 
-	boost::intrusive_ptr<PlayingSound> s(new PlayingSound(file, object, volume, fade_in_time));
+	ffl::IntrusivePtr<PlayingSound> s(new PlayingSound(file, object, volume, fade_in_time));
 	s->setPanning(g_pan_left, g_pan_right);
 
 	threading::lock lck(g_playing_sounds_mutex);
@@ -2022,7 +2022,7 @@ void play(const std::string& file, const void* object, float volume, float fade_
 //the same as the object in play().
 void stop_sound(const std::string& file, const void* object, float fade_out_time)
 {
-	for(const boost::intrusive_ptr<PlayingSound>& s : g_playing_sounds) {
+	for(const ffl::IntrusivePtr<PlayingSound>& s : g_playing_sounds) {
 		if(s->obj() == object && s->fname() == file) {
 			s->stopPlaying(fade_out_time);
 		}
@@ -2034,7 +2034,7 @@ void stop_sound(const std::string& file, const void* object, float fade_out_time
 //intended to be called in all object's destructors
 void stop_looped_sounds(const void* object)
 {
-	for(const boost::intrusive_ptr<PlayingSound>& s : g_playing_sounds) {
+	for(const ffl::IntrusivePtr<PlayingSound>& s : g_playing_sounds) {
 		if(s->obj() == object && s->looped()) {
 			s->stopPlaying(g_mixer_looped_sounds_fade_time_ms/1000.0f);
 		}
@@ -2050,7 +2050,7 @@ int play_looped(const std::string& file, const void* object, float volume, float
 		return -1;
 	}
 
-	boost::intrusive_ptr<PlayingSound> s(new PlayingSound(file, object, volume, fade_in_time));
+	ffl::IntrusivePtr<PlayingSound> s(new PlayingSound(file, object, volume, fade_in_time));
 	s->setLooped(true);
 	s->setPanning(g_pan_left, g_pan_right);
 
@@ -2067,7 +2067,7 @@ void play_music(const std::string& file, bool queue, int fade_time)
 	}
 
 	std::map<variant,variant> options;
-	boost::intrusive_ptr<MusicPlayer> player(new MusicPlayer(file.c_str(), variant(&options)));
+	ffl::IntrusivePtr<MusicPlayer> player(new MusicPlayer(file.c_str(), variant(&options)));
 
 	if(queue && g_music_players.empty() == false) {
 		g_music_queue = player;
@@ -2089,7 +2089,7 @@ void play_music_interrupt(const std::string& file)
 	}
 
 	std::map<variant,variant> options;
-	boost::intrusive_ptr<MusicPlayer> player(new MusicPlayer(file.c_str(), variant(&options)));
+	ffl::IntrusivePtr<MusicPlayer> player(new MusicPlayer(file.c_str(), variant(&options)));
 
 	g_current_music = file;
 
@@ -2107,7 +2107,7 @@ const std::string& current_music()
 	return g_current_music;
 }
 
-AudioEngine::AudioEngine(boost::intrusive_ptr<const CustomObject> obj) : obj_(obj)
+AudioEngine::AudioEngine(ffl::IntrusivePtr<const CustomObject> obj) : obj_(obj)
 {
 }
 
@@ -2162,7 +2162,7 @@ BEGIN_DEFINE_CALLABLE_NOBASE(AudioEngine)
 
 	BEGIN_DEFINE_FN(preload, "(string)->commands")
 		const std::string name = FN_ARG(0).as_string();
-		return variant(new game_logic::FnCommandCallable([=]() {
+		return variant(new game_logic::FnCommandCallable("sound::preload", [=]() {
 			preload(name);
 		}));
 	END_DEFINE_FN

@@ -23,16 +23,16 @@
 
 #pragma once
 
-#include <boost/intrusive_ptr.hpp>
+#include "intrusive_ptr.hpp"
 
 namespace gui
 {
 	class Widget;
-	typedef boost::intrusive_ptr<Widget> WidgetPtr;
-	typedef boost::intrusive_ptr<const Widget> ConstWidgetPtr;
+	typedef ffl::IntrusivePtr<Widget> WidgetPtr;
+	typedef ffl::IntrusivePtr<const Widget> ConstWidgetPtr;
 
 	class WidgetSettingsDialog;
 	
 	class Dialog;
-	typedef boost::intrusive_ptr<Dialog> DialogPtr;
+	typedef ffl::IntrusivePtr<Dialog> DialogPtr;
 }

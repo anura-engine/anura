@@ -23,11 +23,11 @@
 
 #pragma once
 
-#include <boost/intrusive_ptr.hpp>
+#include "intrusive_ptr.hpp"
 
 namespace gui 
 {
 	class ImageWidget;
-	typedef boost::intrusive_ptr<ImageWidget> ImageWidgetPtr;
-	typedef boost::intrusive_ptr<const ImageWidget> ConstImageWidgetPtr;
+	typedef ffl::IntrusivePtr<ImageWidget> ImageWidgetPtr;
+	typedef ffl::IntrusivePtr<const ImageWidget> ConstImageWidgetPtr;
 }

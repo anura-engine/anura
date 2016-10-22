@@ -679,7 +679,7 @@ namespace editor_dialogs
 	void PropertyEditorDialog::changeEventHandler(const std::string& id, gui::LabelPtr lb, gui::TextEditorWidgetPtr text_editor)
 	{
 		assert_recover_scope_.reset(new assert_recover_scope);
-		static boost::intrusive_ptr<CustomObjectCallable> custom_object_definition(new CustomObjectCallable);
+		static ffl::IntrusivePtr<CustomObjectCallable> custom_object_definition(new CustomObjectCallable);
 
 		LOG_INFO("TRYING TO CHANGE EVENT HANDLER...");
 		const std::string text = text_editor->text();

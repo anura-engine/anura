@@ -23,14 +23,14 @@
 
 #pragma once
 
-#include <boost/intrusive_ptr.hpp>
+#include "intrusive_ptr.hpp"
 
 #include "scrollable_widget.hpp"
 
 namespace gui 
 {
 	class TextEditorWidget;
-	typedef boost::intrusive_ptr<TextEditorWidget> TextEditorWidgetPtr;
+	typedef ffl::IntrusivePtr<TextEditorWidget> TextEditorWidgetPtr;
 
 	class TextEditorWidget : public ScrollableWidget
 	{

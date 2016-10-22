@@ -94,5 +94,5 @@ private:
 	int slot_;
 };
 
-typedef boost::intrusive_ptr<CustomObjectCallable> CustomObjectCallablePtr;
-typedef boost::intrusive_ptr<const CustomObjectCallable> ConstCustomObjectCallablePtr;
+typedef ffl::IntrusivePtr<CustomObjectCallable> CustomObjectCallablePtr;
+typedef ffl::IntrusivePtr<const CustomObjectCallable> ConstCustomObjectCallablePtr;

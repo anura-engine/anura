@@ -508,7 +508,7 @@ Level::Level(const std::string& level_cfg, variant node)
 	sub_level_str_ = node["sub_levels"].as_string_default();
 	for(const std::string& sub_lvl : util::split(sub_level_str_)) {
 		sub_level_data& data = sub_levels_[sub_lvl];
-		data.lvl = boost::intrusive_ptr<Level>(new Level(sub_lvl + ".cfg"));
+		data.lvl = ffl::IntrusivePtr<Level>(new Level(sub_lvl + ".cfg"));
 		for(int layer : data.lvl->layers_) {
 			layers_.insert(layer);
 		}
@@ -3514,7 +3514,7 @@ DEFINE_FIELD(player_info, "object")
 	ASSERT_LOG(obj.last_touched_player_, "No player found in level");
 	return variant(obj.last_touched_player_.get());
 DEFINE_FIELD(in_dialog, "bool")
-	//boost::intrusive_ptr<const game_logic::FormulaCallableDefinition> def(variant_type::get_builtin("level")->getDefinition());
+	//ffl::IntrusivePtr<const game_logic::FormulaCallableDefinition> def(variant_type::get_builtin("level")->getDefinition());
 	return variant::from_bool(obj.in_dialog_);
 DEFINE_FIELD(local_player, "null|custom_obj")
 	ASSERT_LOG(obj.player_, "No player found in level");
@@ -4640,7 +4640,7 @@ UTILITY(correct_solidity)
 			continue;
 		}
 
-		boost::intrusive_ptr<Level> lvl(new Level(file));
+		ffl::IntrusivePtr<Level> lvl(new Level(file));
 		lvl->finishLoading();
 		lvl->setAsCurrentLevel();
 
@@ -4679,7 +4679,7 @@ UTILITY(compile_levels)
 
 		const std::string& file = module::get_id(i->first);
 		LOG_INFO("LOADING LEVEL '" << file << "'");
-		boost::intrusive_ptr<Level> lvl(new Level(file));
+		ffl::IntrusivePtr<Level> lvl(new Level(file));
 		lvl->finishLoading();
 		lvl->record_zorders();
 		module::write_file("data/compiled/level/" + file, lvl->write().write_json(true));
@@ -4720,7 +4720,7 @@ BENCHMARK(load_all_levels)
 	module::get_files_in_dir(preferences::level_path(), &files);
 	BENCHMARK_LOOP {
 		for(const std::string& file : files) {
-			boost::intrusive_ptr<Level> lvl(new Level(file));
+			ffl::IntrusivePtr<Level> lvl(new Level(file));
 		}
 	}
 }
@@ -4732,7 +4732,7 @@ UTILITY(load_and_save_all_levels)
 	for(auto i : files) {
 		const std::string& file = i.first;
 		LOG_INFO("LOAD_LEVEL '" << file << "'");
-		boost::intrusive_ptr<Level> lvl(new Level(file));
+		ffl::IntrusivePtr<Level> lvl(new Level(file));
 		lvl->finishLoading();
 
 		const std::string path = get_level_path(file);

@@ -35,6 +35,7 @@
 
 #include "decimal.hpp"
 #include "formula_fwd.hpp"
+#include "intrusive_ptr.hpp"
 #include "reference_counted_object.hpp"
 
 namespace game_logic 
@@ -44,8 +45,8 @@ namespace game_logic
 }
 
 class variant_type;
-typedef boost::intrusive_ptr<const variant_type> variant_type_ptr;
-typedef boost::intrusive_ptr<const variant_type> const_variant_type_ptr;
+typedef ffl::IntrusivePtr<const variant_type> variant_type_ptr;
+typedef ffl::IntrusivePtr<const variant_type> const_variant_type_ptr;
 
 struct CallStackEntry 
 {
@@ -106,7 +107,15 @@ struct VariantFunctionTypeInfo : public reference_counted_object
 	int num_default_args() const { return static_cast<int>(default_args.size()) + num_unneeded_args; }
 };
 
-typedef boost::intrusive_ptr<VariantFunctionTypeInfo> VariantFunctionTypeInfoPtr;
+#ifdef GARBAGE_COLLECTOR_POOLED_ALLOC
+void registerGlobalVariant(variant* v);
+void unregisterGlobalVariant(variant* v);
+#else
+inline void registerGlobalVariant(variant* v) {}
+inline void unregisterGlobalVariant(variant* v) {}
+#endif
+
+typedef ffl::IntrusivePtr<VariantFunctionTypeInfo> VariantFunctionTypeInfoPtr;
 
 class variant 
 {
@@ -121,18 +130,18 @@ public:
 	static variant create_enum(const std::string& enum_id);
 	static int get_enum_index(const std::string& enum_id);
 
-	static variant create_delayed(game_logic::ConstFormulaPtr f, boost::intrusive_ptr<const game_logic::FormulaCallable> callable);
+	static variant create_delayed(game_logic::ConstFormulaPtr f, ffl::IntrusivePtr<const game_logic::FormulaCallable> callable);
 	static void resolve_delayed();
 
 	static variant create_function_overload(const std::vector<variant>& fn);
 
-	variant() : type_(VARIANT_TYPE_NULL), int_value_(0) {}
-	explicit variant(int n) : type_(VARIANT_TYPE_INT), int_value_(n) {}
-	explicit variant(unsigned int n) : type_(VARIANT_TYPE_INT), int_value_(n) {}
-	explicit variant(long unsigned int n) : type_(VARIANT_TYPE_INT), int_value_(n) {}
-	explicit variant(decimal d) : type_(VARIANT_TYPE_DECIMAL), decimal_value_(d.value()) {}
-	explicit variant(double f) : type_(VARIANT_TYPE_DECIMAL), decimal_value_(decimal(f).value()) {}
-	variant(int64_t n, DECIMAL_VARIANT_TYPE) : type_(VARIANT_TYPE_DECIMAL), decimal_value_(n) {}
+	variant() : type_(VARIANT_TYPE_NULL), int_value_(0) { registerGlobalVariant(this); }
+	explicit variant(int n) : type_(VARIANT_TYPE_INT), int_value_(n) { registerGlobalVariant(this); }
+	explicit variant(unsigned int n) : type_(VARIANT_TYPE_INT), int_value_(n) { registerGlobalVariant(this); }
+	explicit variant(long unsigned int n) : type_(VARIANT_TYPE_INT), int_value_(n) { registerGlobalVariant(this); }
+	explicit variant(decimal d) : type_(VARIANT_TYPE_DECIMAL), decimal_value_(d.value()) { registerGlobalVariant(this); }
+	explicit variant(double f) : type_(VARIANT_TYPE_DECIMAL), decimal_value_(decimal(f).value()) { registerGlobalVariant(this); }
+	variant(int64_t n, DECIMAL_VARIANT_TYPE) : type_(VARIANT_TYPE_DECIMAL), decimal_value_(n) { registerGlobalVariant(this); }
 	explicit variant(const game_logic::FormulaCallable* callable);
 	explicit variant(std::vector<variant>* array);
 	explicit variant(const char* str);
@@ -149,9 +158,10 @@ public:
 
 	//only call the non-inlined release() function if we have a type
 	//that needs releasing.
-	~variant() { if(type_ > VARIANT_TYPE_INT) { release(); } }
+	~variant() { unregisterGlobalVariant(this); if(type_ > VARIANT_TYPE_INT) { release(); } }
 
 	variant(const variant& v) {
+		registerGlobalVariant(this);
 		type_ = v.type_;
 		value_ = v.value_;
 		if(type_ > VARIANT_TYPE_INT) {
@@ -160,6 +170,7 @@ public:
 	}
 
 	variant(variant&& v) {
+		registerGlobalVariant(this);
 		type_ = v.type_;
 		value_ = v.value_;
 
@@ -308,7 +319,7 @@ public:
 	variant bind_closure(const game_logic::FormulaCallable* callable);
 	variant bind_args(const std::vector<variant>& args);
 
-	void get_mutable_closure_ref(std::vector<boost::intrusive_ptr<const game_logic::FormulaCallable>*>& result);
+	void get_mutable_closure_ref(std::vector<ffl::IntrusivePtr<const game_logic::FormulaCallable>*>& result);
 
 	//precondition: is_function(). Gives the min/max arguments the function
 	//accepts.

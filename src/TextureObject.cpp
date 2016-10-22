@@ -21,7 +21,7 @@
 	   distribution.
 */
 
-#include <boost/intrusive_ptr.hpp>
+#include "intrusive_ptr.hpp"
 
 #include "filesystem.hpp"
 #include "formula.hpp"
@@ -51,8 +51,8 @@ DEFINE_SET_FIELD
 	obj.binding_point_ = value.as_int();
 
 BEGIN_DEFINE_FN(bind, "() ->commands")
-	boost::intrusive_ptr<const TextureObject> ptr(&obj);
-	return variant(new game_logic::FnCommandCallable([ptr]() {
+	ffl::IntrusivePtr<const TextureObject> ptr(&obj);
+	return variant(new game_logic::FnCommandCallable("texture::bind", [ptr]() {
 		auto t = ptr->texture();
 		ASSERT_LOG(t, "Could not get texture");
 		t->bind();
@@ -71,9 +71,9 @@ BEGIN_DEFINE_FN(save, "(string) ->commands")
 		ASSERT_LOG(false, "Illegal filename to save to: " << fname << " -- " << path_error);
 	}
 
-	boost::intrusive_ptr<const TextureObject> ptr(&obj);
+	ffl::IntrusivePtr<const TextureObject> ptr(&obj);
 
-	return variant(new FnCommandCallable([=]() {
+	return variant(new FnCommandCallable("texture::save", [=]() {
 		auto t = ptr->texture();
 		ASSERT_LOG(t, "Could not get texture");
 		//auto s = t->getFrontSurface();

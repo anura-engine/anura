@@ -502,6 +502,11 @@ const rect& Entity::getMouseOverArea() const
 	return mouse_over_area_;
 }
 
+void Entity::beingRemoved()
+{
+	scheduled_commands_.clear();
+}
+
 bool zorder_compare(const EntityPtr& a, const EntityPtr& b)
 {
 	//the reverse_global_vertical_zordering flag is set in the player object (our general repository for all major game rules et al).  It's meant to reverse vertical sorting of objects in the same zorder, depending on whether objects are being viewed from above, or below.  In frogatto proper, objects at a higher vertical position should overlap those below.  In a top-down game, the reverse is desirable.

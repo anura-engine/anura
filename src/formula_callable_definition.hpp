@@ -204,7 +204,7 @@ void classname::init_callable_type(std::vector<CallablePropertyEntry>& fields, s
 			type_info->num_unneeded_args = static_cast<int>(type_info->variant_types.size()) - min_args; \
 			type_info->arg_names.resize(type_info->variant_types.size()); \
 		} \
-		boost::intrusive_ptr<const FormulaCallable> ref(&obj_instance); \
+		ffl::IntrusivePtr<const FormulaCallable> ref(&obj_instance); \
 		return variant([=](const game_logic::FormulaCallable& args) ->variant { \
 			const this_type& obj = *dynamic_cast<const this_type*>(ref.get());
 

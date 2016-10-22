@@ -30,8 +30,8 @@
 class CustomObject;
 class Light;
 
-typedef boost::intrusive_ptr<Light> LightPtr;
-typedef boost::intrusive_ptr<const Light> ConstLightPtr;
+typedef ffl::IntrusivePtr<Light> LightPtr;
+typedef ffl::IntrusivePtr<const Light> ConstLightPtr;
 
 class Light : public graphics::SceneObjectCallable
 {

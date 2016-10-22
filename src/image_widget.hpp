@@ -75,5 +75,5 @@ namespace gui
 		int scale_;
 	};
 
-	typedef boost::intrusive_ptr<GuiSectionWidget> GuiSectionWidgetPtr;
+	typedef ffl::IntrusivePtr<GuiSectionWidget> GuiSectionWidgetPtr;
 }

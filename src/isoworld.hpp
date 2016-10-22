@@ -44,7 +44,7 @@
 namespace voxel
 {
 	class user_voxel_object;
-	typedef boost::intrusive_ptr<user_voxel_object> UserVoxelObjectPtr;
+	typedef ffl::IntrusivePtr<user_voxel_object> UserVoxelObjectPtr;
 
 	template <class T>
 	inline void hash_combine(std::size_t& seed, const T& v)
@@ -109,7 +109,7 @@ namespace voxel
 		LogicalWorld(const LogicalWorld&);
 	};
 
-	typedef boost::intrusive_ptr<LogicalWorld> LogicalWorldPtr;
+	typedef ffl::IntrusivePtr<LogicalWorld> LogicalWorldPtr;
 
 	class World : public game_logic::FormulaCallable
 	{
@@ -154,6 +154,6 @@ namespace voxel
 		void get_active_chunks();
 	};
 
-	typedef boost::intrusive_ptr<World> WorldPtr;
+	typedef ffl::IntrusivePtr<World> WorldPtr;
 }
 */

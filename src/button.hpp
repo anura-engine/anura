@@ -107,6 +107,6 @@ namespace gui
 		KRE::Color text_normal_color_, text_depressed_color_, text_focus_color_;
 	};
 
-	typedef boost::intrusive_ptr<Button> ButtonPtr;
+	typedef ffl::IntrusivePtr<Button> ButtonPtr;
 
 }

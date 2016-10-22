@@ -52,7 +52,7 @@ namespace editor_dialogs
 		gui::WidgetPtr context_menu_;
 	};
 
-	typedef boost::intrusive_ptr<EditorLevelPropertiesDialog> EditorLevelPropertiesDialogPtr;
+	typedef ffl::IntrusivePtr<EditorLevelPropertiesDialog> EditorLevelPropertiesDialogPtr;
 }
 
 #endif // !NO_EDITOR

@@ -23,11 +23,11 @@
 
 #pragma once
 
-#include <boost/intrusive_ptr.hpp>
+#include "intrusive_ptr.hpp"
 
 namespace graphics
 {
 	class DrawPrimitive;
-	typedef boost::intrusive_ptr<DrawPrimitive> DrawPrimitivePtr;
-	typedef boost::intrusive_ptr<const DrawPrimitive> ConstDrawPrimitivePtr;
+	typedef ffl::IntrusivePtr<DrawPrimitive> DrawPrimitivePtr;
+	typedef ffl::IntrusivePtr<const DrawPrimitive> ConstDrawPrimitivePtr;
 }

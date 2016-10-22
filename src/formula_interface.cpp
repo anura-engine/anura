@@ -40,7 +40,7 @@ namespace game_logic
 		class dynamic_interface_instance : public FormulaCallable
 		{
 		public:
-			dynamic_interface_instance(const variant& obj, boost::intrusive_ptr<const dynamic_bound_factory> parent);
+			dynamic_interface_instance(const variant& obj, ffl::IntrusivePtr<const dynamic_bound_factory> parent);
 			int id() const;
 		private:
 			variant getValue(const std::string& key) const;
@@ -48,14 +48,14 @@ namespace game_logic
 			void setValue(const std::string& key, const variant& value);
 			void setValueBySlot(int slot, const variant& value);
 
-			boost::intrusive_ptr<const dynamic_bound_factory> factory_;
+			ffl::IntrusivePtr<const dynamic_bound_factory> factory_;
 			variant obj_;
 		};
 
 		class static_interface_instance : public FormulaCallable
 		{
 		public:
-			static_interface_instance(const variant& obj, boost::intrusive_ptr<const static_bound_factory> parent);
+			static_interface_instance(const variant& obj, ffl::IntrusivePtr<const static_bound_factory> parent);
 			int id() const;
 		private:
 			variant getValue(const std::string& key) const;
@@ -63,8 +63,8 @@ namespace game_logic
 			void setValue(const std::string& key, const variant& value);
 			void setValueBySlot(int slot, const variant& value);
 
-			boost::intrusive_ptr<const static_bound_factory> factory_;
-			boost::intrusive_ptr<FormulaCallable> obj_;
+			ffl::IntrusivePtr<const static_bound_factory> factory_;
+			ffl::IntrusivePtr<FormulaCallable> obj_;
 		};
 
 		struct Entry {
@@ -81,7 +81,7 @@ namespace game_logic
 			{}
 			virtual bool all_static_lookups() const { return false; }
 			virtual variant create(const variant& v) const {
-				return variant(new dynamic_interface_instance(v, boost::intrusive_ptr<const dynamic_bound_factory>(this)));
+				return variant(new dynamic_interface_instance(v, ffl::IntrusivePtr<const dynamic_bound_factory>(this)));
 			}
 
 			const std::string& translate_slot(int slot) const {
@@ -116,7 +116,7 @@ namespace game_logic
 			}
 			virtual bool all_static_lookups() const { return true; }
 			virtual variant create(const variant& v) const {
-				return variant(new static_interface_instance(v, boost::intrusive_ptr<const static_bound_factory>(this)));
+				return variant(new static_interface_instance(v, ffl::IntrusivePtr<const static_bound_factory>(this)));
 			}
 
 			int translate_slot(int slot) const {
@@ -131,7 +131,7 @@ namespace game_logic
 			int id_;
 		};
 
-		dynamic_interface_instance::dynamic_interface_instance(const variant& obj, boost::intrusive_ptr<const dynamic_bound_factory> parent)
+		dynamic_interface_instance::dynamic_interface_instance(const variant& obj, ffl::IntrusivePtr<const dynamic_bound_factory> parent)
 		  : obj_(obj), factory_(parent)
 		{
 		}
@@ -170,7 +170,7 @@ namespace game_logic
 			return factory_->getId();
 		}
 
-		static_interface_instance::static_interface_instance(const variant& obj, boost::intrusive_ptr<const static_bound_factory> parent)
+		static_interface_instance::static_interface_instance(const variant& obj, ffl::IntrusivePtr<const static_bound_factory> parent)
 		  : obj_(obj.mutable_callable()), factory_(parent)
 		{
 		}
@@ -210,7 +210,7 @@ namespace game_logic
 		int id_;
 		std::vector<Entry> entries_;
 		ConstFormulaCallableDefinitionPtr def_;
-		boost::intrusive_ptr<dynamic_bound_factory> dynamic_factory_;
+		ffl::IntrusivePtr<dynamic_bound_factory> dynamic_factory_;
 	};
 
 	FormulaInterface::FormulaInterface(const std::map<std::string, variant_type_ptr>& types_map) 

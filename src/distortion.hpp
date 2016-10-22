@@ -61,7 +61,7 @@ namespace raster_effects
 		mutable int cycle_;
 	};
 
-	typedef boost::intrusive_ptr<RasterDistortion> RasterDistortionPtr;
+	typedef ffl::IntrusivePtr<RasterDistortion> RasterDistortionPtr;
 
 	class WaterDistortion : public RasterDistortion
 	{

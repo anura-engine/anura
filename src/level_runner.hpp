@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include <boost/intrusive_ptr.hpp>
+#include "intrusive_ptr.hpp"
 
 #include <string>
 
@@ -53,7 +53,7 @@ class LevelRunner
 {
 public:
 	static LevelRunner* getCurrent();
-	LevelRunner(boost::intrusive_ptr<Level>& lvl, std::string& level_cfg, std::string& original_level_cfg);
+	LevelRunner(ffl::IntrusivePtr<Level>& lvl, std::string& level_cfg, std::string& original_level_cfg);
 
 	const debug_console::ConsoleDialog* get_debug_console() const {
 #ifndef NO_EDITOR
@@ -64,7 +64,7 @@ public:
 
 	void quit_game();
 
-	boost::intrusive_ptr<editor> get_editor() const { return editor_; }
+	ffl::IntrusivePtr<editor> get_editor() const { return editor_; }
 
 	bool is_paused() const { return paused; }
 
@@ -118,7 +118,7 @@ private:
 
 	void show_pause_title();
 
-	boost::intrusive_ptr<editor> editor_;
+	ffl::IntrusivePtr<editor> editor_;
 #ifndef NO_EDITOR
 	std::unique_ptr<EditorResolutionManager> editor_resolution_manager_;
 	gui::SliderPtr history_slider_;
@@ -132,7 +132,7 @@ private:
 	void onHistoryChange(float value);
 	void update_history_trails();
 
-	boost::intrusive_ptr<debug_console::ConsoleDialog> console_;
+	ffl::IntrusivePtr<debug_console::ConsoleDialog> console_;
 #endif
 };
 

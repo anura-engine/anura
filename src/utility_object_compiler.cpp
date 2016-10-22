@@ -79,7 +79,7 @@ namespace
 			dst_image = -1;
 		}
 	    
-		boost::intrusive_ptr<Frame> anim;
+		ffl::IntrusivePtr<Frame> anim;
 		int width, height;
 
 		std::string src_image;

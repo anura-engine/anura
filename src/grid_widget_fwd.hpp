@@ -23,11 +23,11 @@
 
 #pragma once
 
-#include <boost/intrusive_ptr.hpp>
+#include "intrusive_ptr.hpp"
 
 namespace gui 
 {
 	class Grid;
-	typedef boost::intrusive_ptr<Grid> GridPtr;
-	typedef boost::intrusive_ptr<const Grid> ConstGridPtr;
+	typedef ffl::IntrusivePtr<Grid> GridPtr;
+	typedef ffl::IntrusivePtr<const Grid> ConstGridPtr;
 }

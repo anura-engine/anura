@@ -657,12 +657,12 @@ void detect_user_collisions(Level& lvl)
 	}
 
 	for(std::map<collision_key, std::vector<collision_key> >::iterator i = collision_info.begin(); i != collision_info.end(); ++i) {
-		std::vector<boost::intrusive_ptr<UserCollisionCallable> > v;
+		std::vector<ffl::IntrusivePtr<UserCollisionCallable> > v;
 		std::vector<variant> all_callables;
 		v.reserve(i->second.size());
 		int index = 0;
 		for(const collision_key& k : i->second) {
-			v.push_back(boost::intrusive_ptr<UserCollisionCallable>(new UserCollisionCallable(i->first.first, k.first, *i->first.second, *k.second, index)));
+			v.push_back(ffl::IntrusivePtr<UserCollisionCallable>(new UserCollisionCallable(i->first.first, k.first, *i->first.second, *k.second, index)));
 			all_callables.push_back(variant(v.back().get()));
 			++index;
 		}
@@ -671,13 +671,13 @@ void detect_user_collisions(Level& lvl)
 
 		collision_key key = i->first;
 
-		for(const boost::intrusive_ptr<UserCollisionCallable>& p : v) {
+		for(const ffl::IntrusivePtr<UserCollisionCallable>& p : v) {
 			p->setAllCollisions(all_callables_variant);
 			key.first->handleEventDelay(CollideObjectID, p.get());
 			key.first->handleEventDelay(get_collision_event_id(*i->first.second), p.get());
 		}
 
-		for(const boost::intrusive_ptr<UserCollisionCallable>& p : v) {
+		for(const ffl::IntrusivePtr<UserCollisionCallable>& p : v) {
 			//make sure we don't retain circular references.
 			p->setAllCollisions(variant());
 		}

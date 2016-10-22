@@ -100,7 +100,7 @@ namespace graphics
 				texture_->setBindingPoint(binding_point_);
 			}
 		private:
-			boost::intrusive_ptr<TextureObject> texture_;
+			ffl::IntrusivePtr<TextureObject> texture_;
 			int binding_point_;
 		};
 
@@ -604,6 +604,10 @@ namespace graphics
 		collector->surrenderPtr(&attribute_commands_);
 		for(std::pair<const int, variant>& p : uniforms_to_set_) {
 			collector->surrenderVariant(&p.second);
+		}
+
+		for(ffl::IntrusivePtr<TextureObject>& t : textures_) {
+			collector->surrenderPtr(&t);
 		}
 	}
 

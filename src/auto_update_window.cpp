@@ -473,7 +473,7 @@ bool do_auto_update(std::deque<std::string> argv, auto_update_window& update_win
 	variant_builder update_info;
 
 	if(update_anura || update_module) {
-		boost::intrusive_ptr<module::client> cl, anura_cl;
+		ffl::IntrusivePtr<module::client> cl, anura_cl;
 
 		bool is_new_install = false;
 

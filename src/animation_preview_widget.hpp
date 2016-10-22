@@ -113,7 +113,7 @@ namespace gui
 		AnimationPreviewWidget() = delete;
 	};
 
-	typedef boost::intrusive_ptr<AnimationPreviewWidget> AnimationPreviewWidgetPtr;
+	typedef ffl::IntrusivePtr<AnimationPreviewWidget> AnimationPreviewWidgetPtr;
 }
 
 #endif // !NO_EDITOR

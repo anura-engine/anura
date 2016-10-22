@@ -23,13 +23,13 @@
 
 #pragma once
 
-#include <boost/intrusive_ptr.hpp>
+#include "intrusive_ptr.hpp"
 
 #include "formula_callable.hpp"
 #include "geometry.hpp"
 #include "variant.hpp"
 
-typedef boost::intrusive_ptr<class CurrentGenerator> CurrentGeneratorPtr;
+typedef ffl::IntrusivePtr<class CurrentGenerator> CurrentGeneratorPtr;
 
 class CurrentGenerator : public game_logic::FormulaCallable
 {

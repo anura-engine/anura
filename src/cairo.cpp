@@ -501,12 +501,9 @@ namespace {
 			                   //have a constructor version of atomic_bool
 			TextureObjectFuture* f = this;
 			future_ = std::async(std::launch::async, [=]() {
-				timeval tv_begin, tv_end;
-				gettimeofday(&tv_begin, nullptr);
 				g_thread_read_only_variants = true;
 				execute_cairo_ops(f->context_, f->ops_);
 				f->finished_ = true;
-				gettimeofday(&tv_end, nullptr);
 				return true;
 			});
 		}
@@ -517,7 +514,7 @@ namespace {
 
 		bool finished() const { return finished_; }
 
-		const boost::intrusive_ptr<TextureObject>& result() const {
+		const ffl::IntrusivePtr<TextureObject>& result() const {
 			if(!result_ && finished_) {
 				result_.reset(new TextureObject(context_.write(texture_args_)));
 			}
@@ -534,7 +531,7 @@ namespace {
 
 		variant texture_args_;
 
-		mutable boost::intrusive_ptr<TextureObject> result_;
+		mutable ffl::IntrusivePtr<TextureObject> result_;
 
 		std::future<bool> future_;
 	};

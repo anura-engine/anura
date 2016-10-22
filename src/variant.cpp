@@ -291,15 +291,15 @@ struct variant_list : public GarbageCollectible {
 #endif
 
 	variant::debug_info info;
-	boost::intrusive_ptr<const game_logic::FormulaExpression> expression;
+	ffl::IntrusivePtr<const game_logic::FormulaExpression> expression;
 	std::vector<variant> elements;
-	boost::intrusive_ptr<variant_list> storage;
+	ffl::IntrusivePtr<variant_list> storage;
 	std::vector<variant>::iterator begin, end;
 };
 
 struct variant_string {
 	variant::debug_info info;
-	boost::intrusive_ptr<const game_logic::FormulaExpression> expression;
+	ffl::IntrusivePtr<const game_logic::FormulaExpression> expression;
 
 	variant_string() : refcount(0)
 	{}
@@ -316,7 +316,7 @@ struct variant_string {
 
 struct variant_map : public GarbageCollectible {
 	variant::debug_info info;
-	boost::intrusive_ptr<const game_logic::FormulaExpression> expression;
+	ffl::IntrusivePtr<const game_logic::FormulaExpression> expression;
 
 	variant_map() : GarbageCollectible(), modcount(0)
 	{
@@ -479,28 +479,28 @@ if(g_thread_read_only_variants) {
 }
 switch(type_) {
 case VARIANT_TYPE_LIST:
-if(list_) list_->add_ref();
+if(list_) list_->add_reference();
 break;
 case VARIANT_TYPE_STRING:
 ++string_->refcount;
 break;
 case VARIANT_TYPE_MAP:
-map_->add_ref();
+map_->add_reference();
 break;
 case VARIANT_TYPE_CALLABLE:
-intrusive_ptr_add_ref(callable_);
+variant_ptr_add_ref(callable_);
 break;
 case VARIANT_TYPE_CALLABLE_LOADING:
 callable_variants_loading.insert(this);
 break;
 case VARIANT_TYPE_FUNCTION:
-fn_->add_ref();
+fn_->add_reference();
 break;
 case VARIANT_TYPE_GENERIC_FUNCTION:
-generic_fn_->add_ref();
+generic_fn_->add_reference();
 break;
 case VARIANT_TYPE_MULTI_FUNCTION:
-multi_fn_->add_ref();
+multi_fn_->add_reference();
 break;
 case VARIANT_TYPE_DELAYED:
 delayed_variants_loading.insert(this);
@@ -529,7 +529,7 @@ if(g_thread_read_only_variants) {
 
 switch(type_) {
 case VARIANT_TYPE_LIST:
-if(list_) list_->dec_ref();
+if(list_) list_->dec_reference();
 break;
 case VARIANT_TYPE_STRING:
 if(--string_->refcount == 0) {
@@ -537,22 +537,22 @@ if(--string_->refcount == 0) {
 }
 break;
 case VARIANT_TYPE_MAP:
-map_->dec_ref();
+map_->dec_reference();
 break;
 case VARIANT_TYPE_CALLABLE:
-intrusive_ptr_release(callable_);
+variant_ptr_release(callable_);
 break;
 case VARIANT_TYPE_CALLABLE_LOADING:
 callable_variants_loading.erase(this);
 break;
 case VARIANT_TYPE_FUNCTION:
-fn_->dec_ref();
+fn_->dec_reference();
 break;
 case VARIANT_TYPE_GENERIC_FUNCTION:
-generic_fn_->dec_ref();
+generic_fn_->dec_reference();
 break;
 case VARIANT_TYPE_MULTI_FUNCTION:
-multi_fn_->dec_ref();
+multi_fn_->dec_reference();
 break;
 case VARIANT_TYPE_DELAYED:
 delayed_variants_loading.erase(this);
@@ -680,7 +680,7 @@ variant variant::create_function_overload(const std::vector<variant>& fn)
 	variant result;
 	result.type_ = VARIANT_TYPE_MULTI_FUNCTION;
 	result.multi_fn_ = new variant_multi_fn;
-	result.multi_fn_->add_ref();
+	result.multi_fn_->add_reference();
 	result.multi_fn_->functions = fn;
 	return result;
 }
@@ -693,6 +693,8 @@ variant::variant(const game_logic::FormulaCallable* callable)
 		return;
 	}
 	increment_refcount();
+
+	registerGlobalVariant(this);
 }
 
 variant::variant(std::vector<variant>* array)
@@ -701,13 +703,15 @@ variant::variant(std::vector<variant>* array)
 	assert(array);
 	if(array->empty() == false) {
 		list_ = new variant_list;
-		list_->add_ref();
+		list_->add_reference();
 		list_->elements.swap(*array);
 		list_->begin = list_->elements.begin();
 		list_->end = list_->elements.end();
 	} else {
 		list_ = nullptr;
 	}
+
+	registerGlobalVariant(this);
 }
 
 variant::variant(const char* s)
@@ -720,6 +724,8 @@ variant::variant(const char* s)
 	string_ = new variant_string;
 	string_->str = std::string(s);
 	increment_refcount();
+
+	registerGlobalVariant(this);
 }
 
 variant::variant(const std::string& str)
@@ -728,6 +734,8 @@ variant::variant(const std::string& str)
 	string_ = new variant_string;
 	string_->str = str;
 	increment_refcount();
+
+	registerGlobalVariant(this);
 }
 
 variant variant::create_translated_string(const std::string& str)
@@ -754,15 +762,17 @@ variant::variant(std::map<variant,variant>* map)
 	
 	assert(map);
 	map_ = new variant_map;
-	map_->add_ref();
+	map_->add_reference();
 	map_->elements.swap(*map);
+
+	registerGlobalVariant(this);
 }
 
 variant::variant(const variant& formula_var, const game_logic::FormulaCallable& callable, int base_slot, const VariantFunctionTypeInfoPtr& type_info, const std::vector<std::string>& generic_types, std::function<game_logic::ConstFormulaPtr(const std::vector<variant_type_ptr>&)> factory)
 	: type_(VARIANT_TYPE_GENERIC_FUNCTION)
 {
 	generic_fn_ = new variant_generic_fn;
-	generic_fn_->add_ref();
+	generic_fn_->add_reference();
 	generic_fn_->fn = formula_var;
 	generic_fn_->callable = &callable;
 	generic_fn_->base_slot = base_slot;
@@ -773,13 +783,15 @@ variant::variant(const variant& formula_var, const game_logic::FormulaCallable& 
 	if(formula_var.get_debug_info()) {
 		setDebugInfo(*formula_var.get_debug_info());
 	}
+
+	registerGlobalVariant(this);
 }
 
 variant::variant(const game_logic::ConstFormulaPtr& formula, const game_logic::FormulaCallable& callable, int base_slot, const VariantFunctionTypeInfoPtr& type_info)
   : type_(VARIANT_TYPE_FUNCTION)
 {
 	fn_ = new variant_fn;
-	fn_->add_ref();
+	fn_->add_reference();
 	fn_->fn = formula;
 	fn_->callable = &callable;
 	fn_->base_slot = base_slot;
@@ -790,6 +802,8 @@ variant::variant(const game_logic::ConstFormulaPtr& formula, const game_logic::F
 	if(formula->strVal().get_debug_info()) {
 		setDebugInfo(*formula->strVal().get_debug_info());
 	}
+
+	registerGlobalVariant(this);
 }
 
 variant variant::change_function_callable(const game_logic::FormulaCallable& callable) const
@@ -797,7 +811,7 @@ variant variant::change_function_callable(const game_logic::FormulaCallable& cal
 	variant res;
 	res.type_ = VARIANT_TYPE_FUNCTION;
 	res.fn_ = new variant_fn(*fn_);
-	res.fn_->add_ref();
+	res.fn_->add_reference();
 	res.fn_->callable = &callable;
 	return res;
 }
@@ -806,12 +820,14 @@ variant::variant(std::function<variant(const game_logic::FormulaCallable&)> buil
   : type_(VARIANT_TYPE_FUNCTION)
 {
 	fn_ = new variant_fn;
-	fn_->add_ref();
+	fn_->add_reference();
 	fn_->builtin_fn = builtin_fn;
 	fn_->base_slot = 0;
 	fn_->type = type_info;
 
 	ASSERT_EQ(fn_->type->variant_types.size(), fn_->type->arg_names.size());
+
+	registerGlobalVariant(this);
 }
 
 /*
@@ -994,7 +1010,7 @@ variant variant::get_list_slice(int begin, int end) const
 	}
 
 	result.list_ = new variant_list;
-	result.list_->add_ref();
+	result.list_->add_reference();
 	result.list_->begin = list_->begin + begin;
 	result.list_->end = list_->begin + end;
 	result.list_->storage.reset(list_);
@@ -1117,7 +1133,7 @@ variant variant::operator()(const std::vector<variant>& passed_args) const
 
 	const std::vector<variant>* args = args_buf.empty() ? &passed_args : &args_buf;
 
-	boost::intrusive_ptr<game_logic::SlotFormulaCallable> callable = new game_logic::SlotFormulaCallable;
+	ffl::IntrusivePtr<game_logic::SlotFormulaCallable> callable = new game_logic::SlotFormulaCallable;
 	if(fn_->callable) {
 		callable->setFallback(fn_->callable);
 	}
@@ -1148,7 +1164,7 @@ variant variant::operator()(const std::vector<variant>& passed_args) const
 					//auto-construct an object from a map in a function argument
 					game_logic::Formula::failIfStaticContext();
 
-					boost::intrusive_ptr<game_logic::FormulaObject> obj(game_logic::FormulaObject::create(class_name, (*args)[n]));
+					ffl::IntrusivePtr<game_logic::FormulaObject> obj(game_logic::FormulaObject::create(class_name, (*args)[n]));
 
 					args_buf = *args;
 					args = &args_buf;
@@ -1433,9 +1449,9 @@ variant variant::add_attr(variant key, variant value)
 
 	if(is_map()) {
 		if(map_->refcount() > 1) {
-			map_->dec_ref();
+			map_->dec_reference();
 			map_ = new variant_map(*map_);
-			map_->add_ref();
+			map_->add_reference();
 		}
 
 		make_unique();
@@ -1452,9 +1468,9 @@ variant variant::remove_attr(variant key)
 
 	if(is_map()) {
 		if(map_->refcount() > 1) {
-			map_->dec_ref();
+			map_->dec_reference();
 			map_ = new variant_map(*map_);
-			map_->add_ref();
+			map_->add_reference();
 		}
 
 		make_unique();
@@ -1532,7 +1548,7 @@ variant variant::bind_closure(const game_logic::FormulaCallable* callable)
 	variant result;
 	result.type_ = VARIANT_TYPE_FUNCTION;
 	result.fn_ = new variant_fn(*fn_);
-	result.fn_->add_ref();
+	result.fn_->add_reference();
 	result.fn_->callable.reset(callable);
 	return result;
 }
@@ -1547,13 +1563,13 @@ variant variant::bind_args(const std::vector<variant>& args)
 	variant result;
 	result.type_ = VARIANT_TYPE_FUNCTION;
 	result.fn_ = new variant_fn(*fn_);
-	result.fn_->add_ref();
+	result.fn_->add_reference();
 	result.fn_->bound_args.insert(result.fn_->bound_args.end(), args.begin(), args.end());
 
 	return result;
 }
 
-void variant::get_mutable_closure_ref(std::vector<boost::intrusive_ptr<const game_logic::FormulaCallable>*>& result)
+void variant::get_mutable_closure_ref(std::vector<ffl::IntrusivePtr<const game_logic::FormulaCallable>*>& result)
 {
 	if(type_ == VARIANT_TYPE_MULTI_FUNCTION) {
 		for(int n = 0; n != multi_fn_->functions.size(); ++n) {
@@ -1771,7 +1787,7 @@ variant variant::operator+(const variant& v) const
 	if(is_callable()) {
 		game_logic::FormulaObject* obj = try_convert<game_logic::FormulaObject>();
 		if(obj && v.is_map()) {
-			boost::intrusive_ptr<game_logic::FormulaObject> new_obj(obj->clone());
+			ffl::IntrusivePtr<game_logic::FormulaObject> new_obj(obj->clone());
 			const std::map<variant,variant>& m = v.as_map();
 			for(std::map<variant,variant>::const_iterator i = m.begin();
 			    i != m.end(); ++i) {
@@ -2293,9 +2309,9 @@ void variant::make_unique()
 			return;
 		}
 
-		list_->dec_ref();
+		list_->dec_reference();
 		list_ = new variant_list(*list_);
-		list_->add_ref();
+		list_->add_reference();
 		for(variant& v : list_->elements) {
 			v.make_unique();
 		}
@@ -2316,10 +2332,10 @@ void variant::make_unique()
 			m[key] = value;
 		}
 
-		map_->dec_ref();
+		map_->dec_reference();
 
 		variant_map* vm = new variant_map;
-		vm->add_ref();
+		vm->add_reference();
 		vm->info = map_->info;
 		vm->elements.swap(m);
 		map_ = vm;
@@ -2839,6 +2855,24 @@ std::ostream& operator<<(std::ostream& os, const variant& v)
 	os << v.write_json();
 	return os;
 }
+
+#ifdef GARBAGE_COLLECTOR_POOLED_ALLOC
+std::set<variant*>& get_all_global_variants()
+{
+	static std::set<variant*>* result = new std::set<variant*>;
+	return *result;
+}
+
+void registerGlobalVariant(variant* v)
+{
+	get_all_global_variants().insert(v);
+}
+
+void unregisterGlobalVariant(variant* v)
+{
+	get_all_global_variants().erase(v);
+}
+#endif
 
 UNIT_TEST(variant_decimal)
 {

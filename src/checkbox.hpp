@@ -50,5 +50,5 @@ namespace gui
 		int hpadding_;
 	};
 
-	typedef boost::intrusive_ptr<Checkbox> CheckboxPtr;
+	typedef ffl::IntrusivePtr<Checkbox> CheckboxPtr;
 }

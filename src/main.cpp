@@ -728,7 +728,7 @@ int main(int argcount, char* argvec[])
 			}
 		}
 
-		boost::intrusive_ptr<module::client> cl, anura_cl;
+		ffl::IntrusivePtr<module::client> cl, anura_cl;
 		
 		if(g_auto_update_module) {
 			cl.reset(new module::client);

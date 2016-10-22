@@ -45,8 +45,8 @@ struct types_cfg_scope
 };
 
 class variant_type;
-typedef boost::intrusive_ptr<const variant_type> variant_type_ptr;
-typedef boost::intrusive_ptr<const variant_type> const_variant_type_ptr;
+typedef ffl::IntrusivePtr<const variant_type> variant_type_ptr;
+typedef ffl::IntrusivePtr<const variant_type> const_variant_type_ptr;
 
 class variant_type : public game_logic::FormulaCallable
 {

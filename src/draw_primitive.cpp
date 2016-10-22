@@ -921,6 +921,11 @@ namespace graphics
 		}
 	}
 
+	void DrawPrimitive::surrenderReferences(GarbageCollector* collector)
+	{
+		collector->surrenderPtr(&shader_);
+	}
+
 	BEGIN_DEFINE_CALLABLE_NOBASE(DrawPrimitive)
 		// XXX placeholder
 		DEFINE_FIELD(blend, "string")

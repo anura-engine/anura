@@ -49,6 +49,8 @@
 #include "filesystem.hpp"
 #include "formatter.hpp"
 #include "formula_profiler.hpp"
+#include "formula_function.hpp"
+#include "formula_function_registry.hpp"
 #include "level_runner.hpp"
 #include "object_events.hpp"
 #include "preferences.hpp"
@@ -295,7 +297,7 @@ class ProfilerWidget : public Widget
 	bool paused_;
 	int selected_frame_;
 
-	boost::intrusive_ptr<FrameDetailsWidget> details_;
+	ffl::IntrusivePtr<FrameDetailsWidget> details_;
 
 	TexturePtr draw_text_, process_text_, sleep_text_, gc_text_;
 
@@ -561,7 +563,7 @@ public:
 	}
 };
 
-boost::intrusive_ptr<ProfilerWidget> g_profiler_widget;
+ffl::IntrusivePtr<ProfilerWidget> g_profiler_widget;
 
 class MemoryProfilerWidget : public Widget
 {
@@ -890,7 +892,7 @@ public:
 	}
 };
 
-boost::intrusive_ptr<MemoryProfilerWidget> g_memory_profiler_widget;
+ffl::IntrusivePtr<MemoryProfilerWidget> g_memory_profiler_widget;
 
 }
 
@@ -1350,6 +1352,40 @@ namespace formula_profiler
 		}
 	}
 
+	using namespace game_logic;
+
+	class ProfilerInterface : public game_logic::FormulaCallable
+	{
+	public:
+	private:
+		DECLARE_CALLABLE(ProfilerInterface);
+	};
+
+	BEGIN_DEFINE_CALLABLE_NOBASE(ProfilerInterface)
+	DEFINE_FIELD(surfaces, "[int]")
+		std::set<const KRE::Surface*> surfaces = KRE::Surface::getAllSurfaces();
+		std::vector<variant> result;
+
+		for(auto s : surfaces) {
+			if(s->hasData()) {
+				std::map<variant,variant> m;
+				m[variant("name")] = variant(s->getName());
+				m[variant("width")] = variant(s->width());
+				m[variant("height")] = variant(s->height());
+				m[variant("kb_usage")] = variant((s->width()*s->height()*4)/1024);
+				result.push_back(variant(&m));
+			}
+		}
+
+		return variant(&result);
+	END_DEFINE_CALLABLE(ProfilerInterface)
+
+	const std::string FunctionModule = "core";
+
+	FUNCTION_DEF(anura_profiler, 0, 0, "anura_profiler(): get the interface to the profiler")
+		return variant(new ProfilerInterface);
+	RETURN_TYPE("builtin profiler_interface")
+	END_FUNCTION_DEF(anura_profiler)
 }
 
 #endif

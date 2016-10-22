@@ -56,7 +56,7 @@
 #include "water.hpp"
 
 class Level;
-typedef boost::intrusive_ptr<Level> LevelPtr;
+typedef ffl::IntrusivePtr<Level> LevelPtr;
 
 class CurrentLevelScope 
 {

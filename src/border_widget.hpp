@@ -48,6 +48,6 @@ namespace gui
 		int border_size_;
 	};
 
-	typedef boost::intrusive_ptr<BorderWidget> BorderWidgetPtr;
+	typedef ffl::IntrusivePtr<BorderWidget> BorderWidgetPtr;
 
 }

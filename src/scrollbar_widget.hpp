@@ -72,6 +72,6 @@ namespace gui
 		void handlerDelegate(int);
 	};
 
-	typedef boost::intrusive_ptr<ScrollBarWidget> ScrollbarWidgetPtr;
+	typedef ffl::IntrusivePtr<ScrollBarWidget> ScrollbarWidgetPtr;
 
 }

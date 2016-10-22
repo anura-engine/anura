@@ -24,7 +24,7 @@
 #pragma once
 
 #include <boost/scoped_ptr.hpp>
-#include <boost/intrusive_ptr.hpp>
+#include "intrusive_ptr.hpp"
 #include <deque>
 #include <set>
 
@@ -50,7 +50,7 @@ namespace tbs
 			std::string msg;
 		};
 
-		static boost::intrusive_ptr<game> create(const variant& v);
+		static ffl::IntrusivePtr<game> create(const variant& v);
 		static game* current();
 
 		explicit game();
@@ -171,7 +171,7 @@ namespace tbs
 
 		game_logic::FormulaCallable* backup_callable_;
 
-		std::vector<boost::intrusive_ptr<tbs::bot> > bots_;
+		std::vector<ffl::IntrusivePtr<tbs::bot> > bots_;
 
 		void executeCommand(variant cmd);
 
@@ -205,6 +205,6 @@ namespace tbs
 		~game_context();
 	};
 
-	typedef boost::intrusive_ptr<game> game_ptr;
-	typedef boost::intrusive_ptr<const game> const_game_ptr;
+	typedef ffl::IntrusivePtr<game> game_ptr;
+	typedef ffl::IntrusivePtr<const game> const_game_ptr;
 }

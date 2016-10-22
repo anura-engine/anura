@@ -29,19 +29,19 @@
 namespace hex
 {
 	class HexTile;
-	typedef boost::intrusive_ptr<HexTile> HexTilePtr;
+	typedef ffl::IntrusivePtr<HexTile> HexTilePtr;
 
 	class TerrainRule;
 	typedef std::shared_ptr<TerrainRule> TerrainRulePtr;
 
 	class HexMap;
-	typedef boost::intrusive_ptr<HexMap> HexMapPtr;
+	typedef ffl::IntrusivePtr<HexMap> HexMapPtr;
 
 	class HexObject;
 	struct ImageHolder;
 
 	class MaskNode;
-	typedef boost::intrusive_ptr<MaskNode> MaskNodePtr;
+	typedef ffl::IntrusivePtr<MaskNode> MaskNodePtr;
 
 	extern const int g_hex_tile_size;
 }

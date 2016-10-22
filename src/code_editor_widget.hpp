@@ -94,5 +94,5 @@ namespace gui
 		bool is_formula_;
 	};
 
-	typedef boost::intrusive_ptr<CodeEditorWidget> CodeEditorWidgetPtr;
+	typedef ffl::IntrusivePtr<CodeEditorWidget> CodeEditorWidgetPtr;
 }
