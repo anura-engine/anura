@@ -368,8 +368,8 @@ void GarbageCollectorImpl::performCollection()
 		items_.erase(std::remove(items_.begin(), items_.end(), nullptr), items_.end());
 	}
 
-	for(auto item : saved_) {
-		item->dec_reference();
+	for(auto item : items_) {
+		destroyReferences(item);
 	}
 }
 
@@ -377,8 +377,9 @@ void GarbageCollectorImpl::reap()
 {
 	LockGC lock;
 	profile::timer timer;
-	for(auto item : items_) {
-		destroyReferences(item);
+
+	for(auto item : saved_) {
+		item->dec_reference();
 	}
 
 	for(auto item : items_) {
@@ -755,7 +756,8 @@ void runGarbageCollection(int num_gens)
 	formula_profiler::Instrument instrument("GC");
 	std::shared_ptr<GarbageCollectorImpl> gc(new GarbageCollectorImpl(num_gens));
 	gc->collect();
-	g_reapable_gc.push_back(gc);
+	gc->reap();
+//	g_reapable_gc.push_back(gc);
 }
 
 void reapGarbageCollection()
