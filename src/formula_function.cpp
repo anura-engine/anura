@@ -121,7 +121,10 @@ namespace
 	const std::string FunctionModule = "core";
 
 	const float radians_to_degrees = 57.29577951308232087f;
-	const std::string EmptyStr;
+	const std::string& EmptyStr() {
+		static std::string* empty_str = new std::string;
+		return *empty_str;
+	}
 
 	using namespace game_logic;
 	std::string read_identifier_expression(const FormulaExpression& expr) {
@@ -145,7 +148,7 @@ namespace game_logic
 {
 	ExpressionPtr createVMExpression(const formula_vm::VirtualMachine vm, variant_type_ptr t, const FormulaExpression& o);
 	
-	FormulaExpression::FormulaExpression(const char* name) : FormulaCallable(GARBAGE_COLLECTOR_EXCLUDE), name_(name ? name : "unknown"), begin_str_(EmptyStr.begin()), end_str_(EmptyStr.end()), ntimes_called_(0)
+	FormulaExpression::FormulaExpression(const char* name) : FormulaCallable(GARBAGE_COLLECTOR_EXCLUDE), name_(name ? name : "unknown"), begin_str_(EmptyStr().begin()), end_str_(EmptyStr().end()), ntimes_called_(0)
 	{
 	}
 
