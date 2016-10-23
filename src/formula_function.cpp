@@ -145,7 +145,7 @@ namespace game_logic
 {
 	ExpressionPtr createVMExpression(const formula_vm::VirtualMachine vm, variant_type_ptr t, const FormulaExpression& o);
 	
-	FormulaExpression::FormulaExpression(const char* name) : FormulaCallable(GARBAGE_COLLECTOR_EXCLUDE), name_(name), begin_str_(EmptyStr.begin()), end_str_(EmptyStr.end()), ntimes_called_(0)
+	FormulaExpression::FormulaExpression(const char* name) : FormulaCallable(GARBAGE_COLLECTOR_EXCLUDE), name_(name ? name : "unknown"), begin_str_(EmptyStr.begin()), end_str_(EmptyStr.end()), ntimes_called_(0)
 	{
 	}
 
@@ -4938,7 +4938,7 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 						const std::string& name,
 						const args_list& args,
 						int min_args, int max_args)
-		: name_(name), args_(args), min_args_(min_args), max_args_(max_args)
+		: FormulaExpression("fn_expr"), name_(name), args_(args), min_args_(min_args), max_args_(max_args)
 	{
 		setName(name_.c_str());
 	}
