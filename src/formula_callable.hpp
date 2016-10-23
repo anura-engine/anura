@@ -292,7 +292,7 @@ namespace game_logic
 
 		std::string debugObjectName() const override;
 	private:
-		virtual void execute(FormulaCallable& context) const;
+		virtual void execute(FormulaCallable& context) const override;
 		const char* name_;
 		std::function<void()> fn_;
 	};
@@ -302,7 +302,7 @@ namespace game_logic
 		FnCommandCallableArg(const char* name, std::function<void(FormulaCallable*)> fn);
 		std::string debugObjectName() const override;
 	private:
-		virtual void execute(FormulaCallable& context) const;
+		virtual void execute(FormulaCallable& context) const override;
 		const char* name_;
 		std::function<void(FormulaCallable*)> fn_;
 	};
