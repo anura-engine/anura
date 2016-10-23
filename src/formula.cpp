@@ -2603,7 +2603,7 @@ namespace {
 				}
 			}
 
-			void surrenderReferences(GarbageCollector* collector) {
+			void surrenderReferences(GarbageCollector* collector) override {
 				for(ffl::IntrusivePtr<CommandSequence>& p : stack_) {
 					collector->surrenderPtr(&p);
 				}
