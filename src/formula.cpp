@@ -329,14 +329,14 @@ namespace game_logic
 				vm.append(vm_);
 			}
 
-			variant executeMember(const FormulaCallable& variables, std::string& id, variant* variant_id) const {
+			variant executeMember(const FormulaCallable& variables, std::string& id, variant* variant_id) const override {
 				ASSERT_LOG(false, "executemember on VMExpression");
 			}
 
 			std::string debugOutput() const { return vm_.debugOutput(); }
 
 		private:
-			variant execute(const FormulaCallable& variables) const {
+			variant execute(const FormulaCallable& variables) const override {
 //				Formula::failIfStaticContext();
 
 				variant result = vm_.execute(variables);
@@ -817,7 +817,7 @@ namespace game_logic
 	
 			const std::string& id() const { return id_; }
 
-			bool isIdentifier(std::string* ident) const {
+			bool isIdentifier(std::string* ident) const override {
 				if(ident) {
 					*ident = id_;
 				}
@@ -825,7 +825,7 @@ namespace game_logic
 				return true;
 			}
 
-			ConstFormulaCallableDefinitionPtr getTypeDefinition() const {
+			ConstFormulaCallableDefinitionPtr getTypeDefinition() const override {
 				const FormulaCallableDefinition::Entry* def = callable_def_->getEntry(slot_);
 				ASSERT_LOG(def, "DID NOT FIND EXPECTED DEFINITION");
 				if(def->type_definition) {
@@ -847,25 +847,25 @@ namespace game_logic
 		}
 
 		private:
-			variant executeMember(const FormulaCallable& variables, std::string& id, variant* variant_id) const {
+			variant executeMember(const FormulaCallable& variables, std::string& id, variant* variant_id) const override {
 				id = id_;
 				return variables.queryValue("self");
 			}
 	
-			variant execute(const FormulaCallable& variables) const {
+			variant execute(const FormulaCallable& variables) const override {
 				Formula::failIfStaticContext();
 				return variables.queryValueBySlot(slot_);
 			}
 
-			variant_type_ptr getVariantType() const {
+			variant_type_ptr getVariantType() const override {
 				return callable_def_->getEntry(slot_)->variant_type;
 			}
 
-			variant_type_ptr getMutableType() const {
+			variant_type_ptr getMutableType() const override {
 				return callable_def_->getEntry(slot_)->getWriteType();
 			}
 
-			ConstFormulaCallableDefinitionPtr getModifiedDefinitionBasedOnResult(bool result, ConstFormulaCallableDefinitionPtr current_def, variant_type_ptr expression_is_this_type) const {
+			ConstFormulaCallableDefinitionPtr getModifiedDefinitionBasedOnResult(bool result, ConstFormulaCallableDefinitionPtr current_def, variant_type_ptr expression_is_this_type) const override {
 				variant_type_ptr current_type = getVariantType();
 				if(result && current_type) {
 					variant_type_ptr new_type;
@@ -892,7 +892,7 @@ namespace game_logic
 				return nullptr;
 			}
 
-			void staticErrorAnalysis() const {
+			void staticErrorAnalysis() const override {
 				const FormulaCallableDefinition::Entry* entry = callable_def_->getEntry(slot_);
 				ASSERT_LOG(entry != nullptr, "COULD NOT FIND DEFINITION IN SLOT CALLABLE: " << id_ << " " << debugPinpointLocation());
 				ASSERT_LOG(entry->isPrivate() == false, "Identifier " << id_ << " is private " << debugPinpointLocation());
@@ -953,7 +953,7 @@ namespace {
 	
 			const std::string& id() const { return id_; }
 
-			bool isIdentifier(std::string* ident) const {
+			bool isIdentifier(std::string* ident) const override {
 				if(ident) {
 					*ident = id_;
 				}
@@ -963,7 +963,7 @@ namespace {
 
 			void set_function(ExpressionPtr fn) { function_ = fn; }
 
-			ExpressionPtr optimize() const {
+			ExpressionPtr optimize() const override {
 				if(callable_def_) {
 					const int index = callable_def_->getSlot(id_);
 					if(index != -1) {
@@ -1015,7 +1015,7 @@ namespace {
 				return ExpressionPtr();
 			}
 
-			ConstFormulaCallableDefinitionPtr getTypeDefinition() const {
+			ConstFormulaCallableDefinitionPtr getTypeDefinition() const override {
 				if(callable_def_) {
 					const FormulaCallableDefinition::Entry* e = callable_def_->getEntry(callable_def_->getSlot(id_));
 					if(e && e->type_definition) {
@@ -1029,7 +1029,7 @@ namespace {
 			}
 
 		private:
-			ConstFormulaCallableDefinitionPtr getModifiedDefinitionBasedOnResult(bool result, ConstFormulaCallableDefinitionPtr current_def, variant_type_ptr expression_is_this_type) const {
+			ConstFormulaCallableDefinitionPtr getModifiedDefinitionBasedOnResult(bool result, ConstFormulaCallableDefinitionPtr current_def, variant_type_ptr expression_is_this_type) const override {
 				if(!callable_def_) {
 					return ConstFormulaCallableDefinitionPtr();
 				}
@@ -1061,12 +1061,12 @@ namespace {
 				return nullptr;
 			}
 
-			variant executeMember(const FormulaCallable& variables, std::string& id, variant* variant_id) const {
+			variant executeMember(const FormulaCallable& variables, std::string& id, variant* variant_id) const override {
 				id = id_;
 				return variables.queryValue("self");
 			}
 	
-			variant execute(const FormulaCallable& variables) const {
+			variant execute(const FormulaCallable& variables) const override {
 				variant result = variables.queryValue(id_);
 				if(result.is_null() && function_) {
 					return function_->evaluate(variables);
@@ -1086,7 +1086,7 @@ namespace {
 				return ExpressionPtr();
 			}
 
-			variant_type_ptr getVariantType() const {
+			variant_type_ptr getVariantType() const override {
 
 				if(callable_def_) {
 					const FormulaCallableDefinition::Entry* e = callable_def_->getEntry(callable_def_->getSlot(id_));
@@ -1101,7 +1101,7 @@ namespace {
 
 				return variant_type::get_any();
 			}
-			variant_type_ptr getMutableType() const {
+			variant_type_ptr getMutableType() const override {
 
 				if(callable_def_) {
 					const FormulaCallableDefinition::Entry* e = callable_def_->getEntry(callable_def_->getSlot(id_));
@@ -2057,7 +2057,7 @@ namespace {
 				}
 			}
 
-			ExpressionPtr optimize() const {
+			ExpressionPtr optimize() const override {
 				if(op_ == OP_AND) {
 					return ExpressionPtr(new AndOperatorExpression(left_, right_));
 				} else if(op_ == OP_OR) {
@@ -2082,7 +2082,7 @@ namespace {
 			}
 	
 		private:
-			variant execute(const FormulaCallable& variables) const {
+			variant execute(const FormulaCallable& variables) const override {
 				const variant left = left_->evaluate(variables);
 				variant right = right_->evaluate(variables);
 				switch(op_) {
@@ -2152,7 +2152,7 @@ namespace {
 				return res;
 			}
 
-			void staticErrorAnalysis() const {
+			void staticErrorAnalysis() const override {
 				variant_type_ptr left_type = left_->queryVariantType();
 				variant_type_ptr right_type = right_->queryVariantType();
 
@@ -2229,7 +2229,7 @@ namespace {
 				}
 			}
 
-			variant_type_ptr getVariantType() const {
+			variant_type_ptr getVariantType() const override {
 
 				switch(op_) {
 				case OP_IN:
@@ -2367,7 +2367,7 @@ namespace {
 
 			}
 
-			ConstFormulaCallableDefinitionPtr getModifiedDefinitionBasedOnResult(bool result, ConstFormulaCallableDefinitionPtr current_def, variant_type_ptr expression_is_this_type) const {
+			ConstFormulaCallableDefinitionPtr getModifiedDefinitionBasedOnResult(bool result, ConstFormulaCallableDefinitionPtr current_def, variant_type_ptr expression_is_this_type) const override {
 				if(expression_is_this_type) {
 					return ConstFormulaCallableDefinitionPtr();
 				}
@@ -2384,14 +2384,14 @@ namespace {
 				return ConstFormulaCallableDefinitionPtr();
 			}
 
-			std::vector<ConstExpressionPtr> getChildren() const {
+			std::vector<ConstExpressionPtr> getChildren() const override {
 				std::vector<ConstExpressionPtr> result;
 				result.push_back(left_);
 				result.push_back(right_);
 				return result;
 			}
 
-			ExpressionPtr optimizeToVM() {
+			ExpressionPtr optimizeToVM() override {
 				optimizeChildToVM(left_);
 				optimizeChildToVM(right_);
 

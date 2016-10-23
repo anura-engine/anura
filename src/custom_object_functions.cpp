@@ -1469,7 +1469,7 @@ namespace
 		}
 	FUNCTION_DEF_MEMBERS
 		int base_slot_;
-		bool optimizeArgNumToVM(int narg) const {
+		bool optimizeArgNumToVM(int narg) const override {
 			const int ncommands_arg = args().size() <= 3 ? 2 : 4;
 			return narg != ncommands_arg;
 		}
@@ -1652,7 +1652,7 @@ namespace
 		}
 	FUNCTION_DEF_MEMBERS
 		int base_slot_;
-		bool optimizeArgNumToVM(int narg) const {
+		bool optimizeArgNumToVM(int narg) const override {
 			return narg != 4;
 		}
 	FUNCTION_DEF_IMPL
@@ -3318,7 +3318,7 @@ RETURN_TYPE("bool")
 
 	FUNCTION_DEF_CTOR(sleep_until, 1, 1, "sleep(expression)")
 	FUNCTION_DEF_MEMBERS
-		bool optimizeArgNumToVM(int narg) const {
+		bool optimizeArgNumToVM(int narg) const override {
 			return false;
 		}
 	FUNCTION_DEF_IMPL

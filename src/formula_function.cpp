@@ -40,7 +40,9 @@
 #define bmround	round
 #endif
 
-#include <malloc.h>
+#ifndef __APPLE__
+    #include <malloc.h>
+#endif
 
 #include "geometry.hpp"
 
@@ -764,7 +766,7 @@ namespace game_logic
 
 		FUNCTION_DEF_CTOR(query_cache, 3, 3, "query_cache(ffl_cache, key, expr): ")
 		FUNCTION_DEF_MEMBERS
-			bool optimizeArgNumToVM(int narg) const {
+			bool optimizeArgNumToVM(int narg) const override {
 				return narg != 2;
 			}
 		FUNCTION_DEF_IMPL
@@ -1191,7 +1193,7 @@ namespace game_logic
 
 	FUNCTION_DEF_CTOR(eval_with_timeout, 2, 2, "eval_with_timeout(int time_ms, expr): evals expr, but with a timeout of time_ms. This will not pre-emptively time out, but while expr is evaluating, has_timed_out() will start evaluating to true if the timeout has elapsed.")
 	FUNCTION_DEF_MEMBERS
-	bool optimizeArgNumToVM(int narg) const {
+	bool optimizeArgNumToVM(int narg) const override {
 		return narg != 1;
 	}
 	FUNCTION_DEF_IMPL
@@ -2068,7 +2070,7 @@ FUNCTION_DEF_CTOR(fold, 2, 3, "fold(list, expr, [default]) -> value")
 
 FUNCTION_DEF_MEMBERS
 	variant default_;
-	bool optimizeArgNumToVM(int narg) const {
+	bool optimizeArgNumToVM(int narg) const override {
 		return narg != 1;
 	}
 
@@ -2143,7 +2145,7 @@ FUNCTION_DEF_IMPL
 
 		FUNCTION_DEF_CTOR(zip, 2, 3, "zip(list1, list2, expr=null) -> list")
 		FUNCTION_DEF_MEMBERS
-		bool optimizeArgNumToVM(int narg) const {
+		bool optimizeArgNumToVM(int narg) const override {
 			return narg != 2;
 		}
 		FUNCTION_DEF_IMPL
@@ -2458,7 +2460,7 @@ FUNCTION_DEF_IMPL
 
 		FUNCTION_DEF_CTOR(sort, 1, 2, "sort(list, criteria): Returns a nicely-ordered list. If you give it an optional formula such as 'a>b' it will sort it according to that. This example favours larger numbers first instead of the default of smaller numbers first.")
 		FUNCTION_DEF_MEMBERS
-			bool optimizeArgNumToVM(int narg) const {
+			bool optimizeArgNumToVM(int narg) const override {
 				return narg != 1;
 			}
 		FUNCTION_DEF_IMPL
@@ -3181,7 +3183,7 @@ FUNCTION_DEF_IMPL
 
 		FUNCTION_DEF_CTOR(choose, 1, 2, "choose(list, (optional)scoring_expr) -> value: choose an item from the list according to which scores the highest according to the scoring expression, or at random by default.")
 		FUNCTION_DEF_MEMBERS
-			bool optimizeArgNumToVM(int narg) const {
+			bool optimizeArgNumToVM(int narg) const override {
 				return narg != 1;
 			}
 		FUNCTION_DEF_IMPL
@@ -3260,7 +3262,7 @@ FUNCTION_DEF_IMPL
 		private:
 			std::string identifier_;
 
-			variant execute(const FormulaCallable& variables) const {
+			variant execute(const FormulaCallable& variables) const override {
 				std::vector<variant> vars;
 				const variant items = EVAL_ARG(0);
 
@@ -3317,7 +3319,7 @@ FUNCTION_DEF_IMPL
 				return variant(&vars);
 			}
 
-			variant_type_ptr getVariantType() const {
+			variant_type_ptr getVariantType() const override {
 				variant_type_ptr spec_type = args()[0]->queryVariantType();
 				if(spec_type->is_specific_list()) {
 					std::vector<variant_type_ptr> types;
@@ -3598,7 +3600,7 @@ FUNCTION_DEF_IMPL
 
 		FUNCTION_DEF_CTOR(instrument, 2, 2, "instrument(string, expr): Executes expr and outputs debug instrumentation on the time it took with the given string")
 		FUNCTION_DEF_MEMBERS
-			bool optimizeArgNumToVM(int narg) const {
+			bool optimizeArgNumToVM(int narg) const override {
 				return narg != 1;
 			}
 		FUNCTION_DEF_IMPL
@@ -4057,11 +4059,11 @@ FUNCTION_DEF_IMPL
 				return narg != 0;
 			}
 		private:
-			variant execute(const FormulaCallable& variables) const {
+			variant execute(const FormulaCallable& variables) const override {
 				return executeWithArgs(variables, nullptr, -1);
 			}
 			
-			variant executeWithArgs(const FormulaCallable& variables, const variant* passed_args, int num_passed_args) const {
+			variant executeWithArgs(const FormulaCallable& variables, const variant* passed_args, int num_passed_args) const override {
 				if(slot_ != -1) {
 					variant target(&variables);
 					return variant(new set_target_by_slot_command(target, slot_, EVAL_ARG(1)));
@@ -4084,11 +4086,11 @@ FUNCTION_DEF_IMPL
 				return variant(cmd);
 			}
 
-			variant_type_ptr getVariantType() const {
+			variant_type_ptr getVariantType() const override {
 				return variant_type::get_commands();
 			}
 
-			void staticErrorAnalysis() const {
+			void staticErrorAnalysis() const override {
 				variant_type_ptr target_type = args()[0]->queryMutableType();
 				if(!target_type || target_type->is_none()) {
 					ASSERT_LOG(false, "Writing to non-writeable value: " << args()[0]->queryVariantType()->to_string() << " in " << str() << " " << debugPinpointLocation() << "\n");
@@ -4128,11 +4130,11 @@ FUNCTION_DEF_IMPL
 				return narg != 0;
 			}
 		private:
-			variant execute(const FormulaCallable& variables) const {
+			variant execute(const FormulaCallable& variables) const override {
 				return executeWithArgs(variables, nullptr, -1);
 			}
 
-			variant executeWithArgs(const FormulaCallable& variables, const variant* passed_args, int num_passed_args) const {
+			variant executeWithArgs(const FormulaCallable& variables, const variant* passed_args, int num_passed_args) const override {
 				if(slot_ != -1) {
 					variant target(&variables);
 					return variant(new add_target_by_slot_command(target, slot_, EVAL_ARG(1)));
@@ -4155,11 +4157,11 @@ FUNCTION_DEF_IMPL
 				return variant(cmd);
 			}
 
-			variant_type_ptr getVariantType() const {
+			variant_type_ptr getVariantType() const override {
 				return variant_type::get_commands();
 			}
 
-			void staticErrorAnalysis() const {
+			void staticErrorAnalysis() const override {
 				variant_type_ptr target_type = args()[0]->queryMutableType();
 				if(!target_type || target_type->is_none()) {
 					ASSERT_LOG(false, "Writing to non-writeable value: " << args()[0]->queryVariantType()->to_string() << " in " << str() << " " << debugPinpointLocation() << "\n");

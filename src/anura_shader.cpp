@@ -78,7 +78,7 @@ namespace graphics
 
 			bool useSingletonVM() const override { return false; }
 		private:
-			variant execute(const game_logic::FormulaCallable& variables) const {
+			variant execute(const game_logic::FormulaCallable& variables) const override {
 				game_logic::Formula::failIfStaticContext();
 				std::vector<variant> v;
 				for(size_t n = 0; n < 16; n++) {
@@ -113,7 +113,7 @@ namespace graphics
 
 			bool useSingletonVM() const override { return false; }
 		private:
-			variant execute(const game_logic::FormulaCallable& variables) const 
+			variant execute(const game_logic::FormulaCallable& variables) const override
 			{
 				int binding_point = args().size() > 1 ? args()[1]->evaluate(variables).as_int() : 0;
 				variant tex = args()[0]->evaluate(variables);
@@ -132,7 +132,7 @@ namespace graphics
 
 			bool useSingletonVM() const override { return false; }
 		private:
-			variant execute(const game_logic::FormulaCallable& variables) const 
+			variant execute(const game_logic::FormulaCallable& variables) const override
 			{
 				game_logic::Formula::failIfStaticContext();
 				const std::string filename = module::map_file(args()[0]->evaluate(variables).as_string());
@@ -164,7 +164,7 @@ namespace graphics
 
 			bool useSingletonVM() const override { return false; }
 		private:
-			variant execute(const game_logic::FormulaCallable& variables) const 
+			variant execute(const game_logic::FormulaCallable& variables) const override
 			{
 				KRE::BlendMode bm(args()[0]->evaluate(variables));
 				return variant(new BlendModeCommand(bm));

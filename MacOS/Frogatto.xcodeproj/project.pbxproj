@@ -366,6 +366,8 @@
 		C010C7F9160AFD4E006E7D90 /* widget.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C010C739160AFD4D006E7D90 /* widget.cpp */; };
 		C010C7FA160AFD4E006E7D90 /* widget_factory.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C010C73B160AFD4D006E7D90 /* widget_factory.cpp */; };
 		C010C7FC160AFD4E006E7D90 /* wml_formula_callable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C010C73F160AFD4D006E7D90 /* wml_formula_callable.cpp */; };
+		C0127C321DB486B40095AC80 /* formula_vm.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0127C301DB486B40095AC80 /* formula_vm.cpp */; };
+		C0127C361DB486E00095AC80 /* formula_internal.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0127C341DB486E00095AC80 /* formula_internal.cpp */; };
 		C026F59B16C23629000482A1 /* b2d_ffl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C026F59A16C23629000482A1 /* b2d_ffl.cpp */; };
 		C026F59D16C23649000482A1 /* rich_text_label.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C026F59C16C23649000482A1 /* rich_text_label.cpp */; };
 		C026F5A416C74B1E000482A1 /* draw_primitive.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C026F5A216C74B1E000482A1 /* draw_primitive.cpp */; };
@@ -1242,6 +1244,11 @@
 		C010C740160AFD4D006E7D90 /* wml_formula_callable.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = wml_formula_callable.hpp; sourceTree = "<group>"; };
 		C010C7FD160AFD82006E7D90 /* data */ = {isa = PBXFileReference; lastKnownFileType = folder; name = data; path = ../data; sourceTree = "<group>"; };
 		C010C7FE160AFD82006E7D90 /* images */ = {isa = PBXFileReference; lastKnownFileType = folder; name = images; path = ../images; sourceTree = "<group>"; };
+		C0127C301DB486B40095AC80 /* formula_vm.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = formula_vm.cpp; sourceTree = "<group>"; };
+		C0127C311DB486B40095AC80 /* formula_vm.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = formula_vm.hpp; sourceTree = "<group>"; };
+		C0127C331DB486CC0095AC80 /* formula_where.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = formula_where.hpp; sourceTree = "<group>"; };
+		C0127C341DB486E00095AC80 /* formula_internal.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = formula_internal.cpp; sourceTree = "<group>"; };
+		C0127C351DB486E00095AC80 /* formula_internal.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = formula_internal.hpp; sourceTree = "<group>"; };
 		C026F59916C23612000482A1 /* b2d_ffl.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = b2d_ffl.hpp; sourceTree = "<group>"; };
 		C026F59A16C23629000482A1 /* b2d_ffl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = b2d_ffl.cpp; sourceTree = "<group>"; };
 		C026F59C16C23649000482A1 /* rich_text_label.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = rich_text_label.cpp; sourceTree = "<group>"; };
@@ -2009,6 +2016,11 @@
 		C010C5BC160AFD4C006E7D90 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				C0127C341DB486E00095AC80 /* formula_internal.cpp */,
+				C0127C351DB486E00095AC80 /* formula_internal.hpp */,
+				C0127C331DB486CC0095AC80 /* formula_where.hpp */,
+				C0127C301DB486B40095AC80 /* formula_vm.cpp */,
+				C0127C311DB486B40095AC80 /* formula_vm.hpp */,
 				63E091FC1C5CA168006170A8 /* shared_memory_pipe.cpp */,
 				63E091FD1C5CA168006170A8 /* shared_memory_pipe.hpp */,
 				63E091FE1C5CA168006170A8 /* tbs_ipc_client.cpp */,
@@ -2851,6 +2863,7 @@
 				639B53AC1AC20D5A00ECC4F8 /* WindowManager.cpp in Sources */,
 				C00160CE16A2991D001DAEB9 /* tbs_web_server.cpp in Sources */,
 				639B53791AC20D5A00ECC4F8 /* CameraObject.cpp in Sources */,
+				C0127C321DB486B40095AC80 /* formula_vm.cpp in Sources */,
 				C03585BE1D812A5D0090FC2D /* tile_rules.cpp in Sources */,
 				C010C7E4160AFD4E006E7D90 /* text_editor_widget.cpp in Sources */,
 				639B53AB1AC20D5A00ECC4F8 /* VGraphOGLFixed.cpp in Sources */,
@@ -2986,6 +2999,7 @@
 				639B53781AC20D5A00ECC4F8 /* Blittable.cpp in Sources */,
 				C091410517C9A67D0019BAB3 /* multiplayer_server.cpp in Sources */,
 				C092656017D48CF50035C0CB /* layout_widget.cpp in Sources */,
+				C0127C361DB486E00095AC80 /* formula_internal.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
