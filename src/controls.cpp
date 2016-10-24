@@ -42,6 +42,8 @@
 #include "preferences.hpp"
 #include "variant.hpp"
 
+PREF_INT(max_control_history, 1024, "Maximum number of frames to keep control history for");
+
 namespace controls 
 {
 	const char** control_names()
@@ -337,6 +339,13 @@ namespace controls
 				}
 			}
 		}
+
+		if(controls[local_player].size() >= g_max_control_history) {
+			starting_cycles += static_cast<int>(controls[local_player].size()/2);
+			for(int n = 0; n != nplayers; ++n) {
+				controls[n].resize(controls[n].size()/2);
+			}
+		}
 	}
 
 	void unread_local_controls()
@@ -616,6 +625,9 @@ namespace controls
 	void set_checksum(int cycle, int sum)
 	{
 		our_checksums[cycle] = sum;
+		while(our_checksums.size() >= 1024) {
+			our_checksums.erase(our_checksums.begin());
+		}
 	}
 
 	void debug_dump_controls()
