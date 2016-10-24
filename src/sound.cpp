@@ -1843,6 +1843,9 @@ Manager::~Manager()
 			g_loader_thread.reset();
 		}
 
+		g_music_players.clear();
+		g_current_player.reset();
+
 		SDL_CloseAudioDevice(g_audio_device);
 		g_audio_device = 0;
 	}
