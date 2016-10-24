@@ -21,7 +21,7 @@
 	   distribution.
 */
 
-#if TARGET_OS_IPHONE
+#ifdef __APPLE__
 #include <mach/mach.h>
 #include <mach/mach_host.h>
 #endif
@@ -115,6 +115,30 @@ namespace sys
 	int get_heap_object_usable_size(void* ptr) {
 		return malloc_usable_size(ptr);
 	}
+
+#elif defined(__APPLE__)
+
+	bool get_memory_consumption(MemoryConsumptionInfo* res)
+	{
+	    struct mach_task_basic_info info;
+		mach_msg_type_number_t infoCount = MACH_TASK_BASIC_INFO_COUNT;
+		if(task_info(mach_task_self(), MACH_TASK_BASIC_INFO,
+			(task_info_t)&info, &infoCount) != KERN_SUCCESS ) {
+			return false;
+		}
+
+		info->heap_free_kb = 0;
+		info->heap_used_kb = 0;
+
+		res->vm_used_kb = info.virtual_size/1024;
+		res->phys_used_kb = info.resident_size/1024;
+		return true;
+	}
+
+	int get_heap_object_usable_size(void* ptr) {
+		return 0;
+	}
+
 #else
 //Add additional implementations here.
 	bool get_memory_consumption(MemoryConsumptionInfo* info)
