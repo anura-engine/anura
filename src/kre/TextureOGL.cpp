@@ -61,6 +61,24 @@ namespace KRE
 			return res;
 		}
 
+		void check_purge_texture_id_cache()
+		{
+			static int ncheck = 0;
+			if(get_id_cache().size() > 512) {
+				if(++ncheck%512 == 0) {
+					auto it = get_id_cache().begin();
+					auto end_it = get_id_cache().end();
+					while(it != end_it) {
+						if(it->second.expired()) {
+							get_id_cache().erase(it++);
+						} else {
+							++it;
+						}
+					}
+				}
+			}
+		}
+
 		GLuint& get_current_bound_texture()
 		{
 			static GLuint res = -1;
@@ -611,6 +629,7 @@ namespace KRE
 		td.id = id_ptr;
 		if(surf) {
 			get_id_cache()[surf->id()] = id_ptr;
+			check_purge_texture_id_cache();
 		}
 
 		glBindTexture(GetGLTextureType(getType(n)), *td.id);
