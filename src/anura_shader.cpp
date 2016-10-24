@@ -461,9 +461,9 @@ namespace graphics
 
 					continue;
 				}
+			} else if(v.is_null() == false) {
+				shader_->setUniformFromVariant(u.uniform, v);
 			}
-
-			shader_->setUniformFromVariant(u.uniform, v);
 		}
 		
 		for(auto& u : uniforms_to_set_) {
