@@ -26,6 +26,12 @@
 #include <mach/mach_host.h>
 #endif
 
+
+#ifdef _MSC_VER
+#include <windows.h>
+#include <psapi.h>
+#endif
+
 #include "asserts.hpp"
 #include "filesystem.hpp"
 #include "string_utils.hpp"
@@ -132,6 +138,25 @@ namespace sys
 
 		res->vm_used_kb = info.virtual_size/1024;
 		res->phys_used_kb = info.resident_size/1024;
+		return true;
+	}
+
+	int get_heap_object_usable_size(void* ptr) {
+		return 0;
+	}
+
+#elif defined(_MSC_VER)
+
+	bool get_memory_consumption(MemoryConsumptionInfo* res)
+	{
+		PROCESS_MEMORY_COUNTERS counters;
+		GetProcessMemoryInfo(GetCurrentProcess(), &counters, sizeof(counters));
+
+		res->heap_free_kb = 0;
+		res->heap_used_kb = 0;
+
+		res->vm_used_kb = 0;
+		res->phys_used_kb = counters.WorkingSetSize/1024;
 		return true;
 	}
 
