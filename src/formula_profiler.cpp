@@ -588,9 +588,46 @@ class MemoryProfilerWidget : public Widget
 	std::vector<FrameInfo> frames_;
 	int highest_phys_;
 
+	struct FontEntry {
+		std::string str;
+		KRE::TexturePtr tex;
+		int touch;
+	};
+
+	mutable std::vector<FontEntry> text_cache_;
+
+	mutable int font_entry_touch_;
+
+	KRE::TexturePtr renderText(const std::string& text) const {
+		for(auto& entry : text_cache_) {
+			if(entry.str == text) {
+				entry.touch = font_entry_touch_;
+				++font_entry_touch_;
+				return entry.tex;
+			}
+		}
+
+		auto itor = text_cache_.begin();
+		if(text_cache_.size() < 20) {
+			text_cache_.push_back(FontEntry());
+			itor = text_cache_.end()-1;
+		} else {
+			for(auto i = text_cache_.begin(); i != text_cache_.end(); ++i) {
+				if(i->touch < itor->touch) {
+					itor = i;
+				}
+			}
+		}
+
+		itor->touch = font_entry_touch_++;
+		itor->str = text;
+		itor->tex = Font::getInstance()->renderText(text, white_color_, 12, false, Font::get_default_monospace_font());
+		return itor->tex;
+	}
+
 public:
 	MemoryProfilerWidget() :
-	  gray_color_("gray"), yellow_color_("yellow"), green_color_("green"), blue_color_("lightblue"), red_color_("red"), magenta_color_("magenta"), white_color_("white"), paused_(false), selected_frame_(-1), ncycles_(0), highest_phys_(0) {
+	  gray_color_("gray"), yellow_color_("yellow"), green_color_("green"), blue_color_("lightblue"), red_color_("red"), magenta_color_("magenta"), white_color_("white"), paused_(false), selected_frame_(-1), ncycles_(0), highest_phys_(0), font_entry_touch_(0) {
 
 		variant area = game_logic::Formula(variant(g_profile_widget_area)).execute();
 		std::vector<int> area_int = area.as_list_int();
@@ -704,39 +741,39 @@ public:
 
 			int xpos = x() + 13;
 
-			auto surf_text = Font::getInstance()->renderText(formatter() << "Tex x" << f.num_textures << ": " << (f.texture_usage/1024) << "MB", white_color_, 12, false, Font::get_default_monospace_font());
+			auto surf_text = renderText(formatter() << "Tex x" << f.num_textures << ": " << (f.texture_usage/1024) << "MB");
 			c.drawSolidRect(rect(xpos, y()+23, 10, 10), red_color_);
 			c.blitTexture(surf_text, 0, xpos + 12, y() + 20, white_color_);
 			xpos += surf_text->width() + 25;
 
-			surf_text = Font::getInstance()->renderText(formatter() << "Surf x" << f.num_surfaces << ": " << (f.surface_usage/1024) << "MB", white_color_, 12, false, Font::get_default_monospace_font());
+			surf_text = renderText(formatter() << "Surf x" << f.num_surfaces << ": " << (f.surface_usage/1024) << "MB");
 			c.drawSolidRect(rect(xpos, y()+23, 10, 10), blue_color_);
 			c.blitTexture(surf_text, 0, xpos + 12, y() + 20, white_color_);
 			xpos += surf_text->width() + 25;
 
-			surf_text = Font::getInstance()->renderText(formatter() << "FFL obj x" << f.num_objects << ": " << (f.object_usage/1024) << "MB", white_color_, 12, false, Font::get_default_monospace_font());
+			surf_text = renderText(formatter() << "FFL obj x" << f.num_objects << ": " << (f.object_usage/1024) << "MB");
 			c.drawSolidRect(rect(xpos, y()+23, 10, 10), yellow_color_);
 			c.blitTexture(surf_text, 0, xpos + 12, y() + 20, white_color_);
 			xpos += surf_text->width() + 25;
 
-			surf_text = Font::getInstance()->renderText(formatter() << "Cairo img x" << f.num_cairo << ": " << (f.cairo_usage/1024) << "MB", white_color_, 12, false, Font::get_default_monospace_font());
+			surf_text = renderText(formatter() << "Cairo img x" << f.num_cairo << ": " << (f.cairo_usage/1024) << "MB");
 			c.drawSolidRect(rect(xpos, y()+23, 10, 10), green_color_);
 			c.blitTexture(surf_text, 0, xpos + 12, y() + 20, white_color_);
 			xpos += surf_text->width() + 25;
 
 			xpos = x() + 13;
 
-			surf_text = Font::getInstance()->renderText(formatter() << "Sounds x" << f.num_sound << ": " << (f.sound_usage/1024) << "MB (max: " << (f.max_sound/1024) << "MB)", white_color_, 12, false, Font::get_default_monospace_font());
+			surf_text = renderText(formatter() << "Sounds x" << f.num_sound << ": " << (f.sound_usage/1024) << "MB (max: " << (f.max_sound/1024) << "MB)");
 			c.drawSolidRect(rect(xpos, y()+23 + 15*1, 10, 10), magenta_color_);
 			c.blitTexture(surf_text, 0, xpos + 12, y() + 20 + 15*1, white_color_);
 			xpos += surf_text->width() + 25;
 
-			surf_text = Font::getInstance()->renderText(formatter() << "Heap free: " << (f.mem.heap_free_kb/1024) << "MB", white_color_, 12, false, Font::get_default_monospace_font());
+			surf_text = renderText(formatter() << "Heap free: " << (f.mem.heap_free_kb/1024) << "MB");
 			c.drawSolidRect(rect(xpos, y()+23 + 15*1, 10, 10), gray_color_);
 			c.blitTexture(surf_text, 0, xpos + 12, y() + 20 + 15*1, white_color_);
 			xpos += surf_text->width() + 25;
 
-			surf_text = Font::getInstance()->renderText(formatter() << "Other: " << (f.other_usage/1024) << "MB", white_color_, 12, false, Font::get_default_monospace_font());
+			surf_text = renderText(formatter() << "Other: " << (f.other_usage/1024) << "MB");
 			c.drawSolidRect(rect(xpos, y()+23 + 15*1, 10, 10), gray_color_);
 			c.blitTexture(surf_text, 0, xpos + 12, y() + 20 + 15*1, white_color_);
 			xpos += surf_text->width() + 25;
@@ -1087,10 +1124,10 @@ namespace formula_profiler
 	void Manager::init(const char* output_file, bool memory_profiler)
 	{
 		if(output_file && profiler_on == false) {
+			main_thread = SDL_ThreadID();
+
 			current_expression_call_stack.reserve(10000);
 			event_call_stack_samples.resize(max_samples);
-
-			main_thread = SDL_ThreadID();
 
 			LOG_INFO("SETTING UP PROFILING: " << output_file);
 			profiler_on = true;
@@ -1102,25 +1139,25 @@ namespace formula_profiler
 
 			init_call_stack(65536);
 
-#if defined(_MSC_VER) || MOBILE_BUILD
-			// Crappy windows approximation.
-			sdl_profile_timer = SDL_AddTimer(10, sdl_timer_callback, 0);
-			if(sdl_profile_timer == 0) {
-				LOG_WARN("Couldn't create a profiling timer!");
-			}
-#else
-			signal(SIGPROF, sigprof_handler);
-
-			struct itimerval timer;
-			timer.it_interval.tv_sec = 0;
-			timer.it_interval.tv_usec = 10000;
-			timer.it_value = timer.it_interval;
-			setitimer(ITIMER_PROF, &timer, 0);
-#endif
-
 			if(memory_profiler) {
 				g_memory_profiler_widget.reset(new MemoryProfilerWidget);
 			} else {
+
+#if defined(_MSC_VER) || MOBILE_BUILD
+				// Crappy windows approximation.
+				sdl_profile_timer = SDL_AddTimer(10, sdl_timer_callback, 0);
+				if(sdl_profile_timer == 0) {
+					LOG_WARN("Couldn't create a profiling timer!");
+				}
+#else
+				signal(SIGPROF, sigprof_handler);
+
+				struct itimerval timer;
+				timer.it_interval.tv_sec = 0;
+				timer.it_interval.tv_usec = 10000;
+				timer.it_value = timer.it_interval;
+				setitimer(ITIMER_PROF, &timer, 0);
+#endif
 				g_profiler_widget.reset(new ProfilerWidget);
 			}
 		}
