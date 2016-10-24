@@ -127,8 +127,8 @@ namespace sys
 			return false;
 		}
 
-		info->heap_free_kb = 0;
-		info->heap_used_kb = 0;
+		res->heap_free_kb = 0;
+		res->heap_used_kb = 0;
 
 		res->vm_used_kb = info.virtual_size/1024;
 		res->phys_used_kb = info.resident_size/1024;
