@@ -1244,6 +1244,7 @@ COMMAND_LINE_UTILITY(build_spritesheet_from_images)
 		ASSERT_LOG(s != nullptr, "No image: " << img);
 
 		const uint8_t* p = (const uint8_t*)s->pixels();
+		const uint8_t* end_p = p + s->width()*s->height()*4;
 
 		int top_pad = 0;
 		for(int i = 0; i < s->height()/2; ++i) {
@@ -1288,7 +1289,9 @@ COMMAND_LINE_UTILITY(build_spritesheet_from_images)
 			const uint8_t* left = p + i*4;
 			const uint8_t* right = p + (s->width()-i-1)*4;
 			bool all_clear = true;
-			for(int j = 0; j < s->width(); ++j) {
+			for(int j = 0; j < s->height(); ++j) {
+				ASSERT_LOG(left + j*(s->width()*4)+3 < end_p, "Off end");
+				ASSERT_LOG(right + j*(s->width()*4)+3 < end_p, "Off end");
 				if(left[j*(s->width()*4)+3] || right[j*(s->width()*4)+3]) {
 					all_clear = false;
 					break;

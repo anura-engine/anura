@@ -275,7 +275,7 @@ namespace module
 			for(const std::string& dir : dirs) {
 				std::string fname = path + "/" + dir + "/module.cfg";
 				if(sys::file_exists(fname)) {
-					variant v = json::parse_from_file(fname);
+					variant v = json::parse_from_file_or_die(fname);
 					v.add_attr(variant("id"), variant(dir));
 					result.push_back(v);
 				}
@@ -296,7 +296,7 @@ namespace module
 			std::string fname = path + "/" + name + "/module.cfg";
 			LOG_INFO("LOOKING IN '" << fname << "': " << sys::file_exists(fname));
 			if(sys::file_exists(fname)) {
-				variant v = json::parse_from_file(fname);
+				variant v = json::parse_from_file_or_die(fname);
 				v.add_attr(variant("id"), variant(fname));
 				return v;
 			}
@@ -361,12 +361,7 @@ namespace module
 		std::string pretty_name = name;
 		std::string abbrev = name;
 		std::string fname = make_base_module_path(name) + "module.cfg";
-		variant v;
-		try {
-			v = json::parse_from_file(fname);
-		} catch(json::ParseError& e) {
-			ASSERT_LOG(false, "Error parsing file: " << e.errorMessage());
-		}
+		variant v = json::parse_from_file_or_die(fname);
 		std::string def_font = "FreeSans";
 		std::string def_font_cjk = "unifont";
 		auto speech_dialog_bg_color = std::make_shared<KRE::Color>(85, 53, 53, 255);
@@ -516,7 +511,7 @@ namespace module
 	}
 
 	void load_module_from_file(const std::string& modname, modules* mod_) {
-		variant v = json::parse_from_file("./modules/" + modname + "/module.cfg");
+		variant v = json::parse_from_file_or_die("./modules/" + modname + "/module.cfg");
 		ASSERT_LOG(mod_ != nullptr, "Invalid module pointer passed.");
 		if(v.is_map()) {
 			ASSERT_LOG(v["min_engine_version"].is_null() == false, "A min_engine_version field in the module.cfg file must be specified.");

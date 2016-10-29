@@ -2145,10 +2145,6 @@ void Level::flushFrameBufferShadersToScreen() const
 				break;
 			}
 		}
-
-		if(entry && entry->rt.get() != nullptr) {
-			std::swap(fb, entry->rt);
-		}
 	}
 }
 

@@ -36,6 +36,7 @@
 #include "formatter.hpp"
 #include "formula.hpp"
 #include "formula_constants.hpp"
+#include "formula_function_registry.hpp"
 #include "formula_profiler.hpp"
 #include "json_parser.hpp"
 #include "level.hpp"
@@ -1880,6 +1881,49 @@ void CustomObjectType::loadVariations() const
 		getVariation(std::vector<std::string>(1, v));
 	}
 }
+
+using namespace game_logic;
+
+class CustomObjectInterface : public game_logic::FormulaCallable
+{
+public:
+private:
+	DECLARE_CALLABLE(CustomObjectInterface);
+};
+
+BEGIN_DEFINE_CALLABLE_NOBASE(CustomObjectInterface)
+DEFINE_FIELD(objects, "[{name: string, refcount: int}]")
+	std::vector<variant> res;
+	for(const auto& p : cache()) {
+		variant_builder b;
+		b.add("name", p.first);
+		b.add("refcount", static_cast<int>(p.second.use_count()));
+		res.push_back(b.build());
+	}
+	return variant(&res);
+
+BEGIN_DEFINE_FN(preload, "(string) ->commands")
+	std::string str(FN_ARG(0).as_string());
+	return variant(new game_logic::FnCommandCallable("object::preload", [str]() {
+		CustomObjectType::get(str);
+	}));
+END_DEFINE_FN
+
+BEGIN_DEFINE_FN(unload, "(string) ->commands")
+	std::string str(FN_ARG(0).as_string());
+	return variant(new game_logic::FnCommandCallable("object::unload", [str]() {
+		cache().erase(str);
+	}));
+END_DEFINE_FN
+
+END_DEFINE_CALLABLE(CustomObjectInterface)
+
+const std::string FunctionModule = "core";
+
+FUNCTION_DEF(anura_objects, 0, 0, "anura_objects()")
+	return variant(new CustomObjectInterface);
+RETURN_TYPE("builtin custom_object_interface")
+END_FUNCTION_DEF(anura_objects)
 
 #include "Texture.hpp"
 
