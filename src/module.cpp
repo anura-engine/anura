@@ -1223,8 +1223,14 @@ static const int ModuleProtocolVersion = 1;
 		} 
 	}
 
-	void client::on_chunk_response(variant node, boost::shared_ptr<http_client> client, std::string response)
+	void client::on_chunk_response(std::string chunk_url, variant node, boost::shared_ptr<http_client> client, std::string response)
 	{
+		auto progress_itor = chunk_progress_.find(chunk_url);
+		if(progress_itor != chunk_progress_.end()) {
+			nbytes_transferred_ -= progress_itor->second;
+			chunk_progress_.erase(progress_itor);
+		}
+
 		nbytes_transferred_ += node["size"].as_int();
 		node.add_attr_mutation(variant("data"), variant(response));
 
@@ -1253,17 +1259,35 @@ static const int ModuleProtocolVersion = 1;
 			const std::string url = "POST /download_chunk?chunk_id=" + chunk["md5"].as_string();
 			const std::string doc = request.build().write_json();
 			new_client->send_request(url, doc,
-						  std::bind(&client::on_chunk_response, this, chunk, new_client, _1),
+						  std::bind(&client::on_chunk_response, this, url, chunk, new_client, _1),
 						  std::bind(&client::on_chunk_error, this, _1, url, doc, chunk, new_client),
-						  [](size_t a, size_t b, bool c) {}
+						  std::bind(&client::on_chunk_progress, this, url, _1, _2, _3)
 			);
 
 			chunk_clients_.push_back(new_client);
 		}
 	}
 
+	void client::on_chunk_progress(std::string chunk_url, size_t received, size_t total, bool response)
+	{
+		auto progress_itor = chunk_progress_.find(chunk_url);
+		if(progress_itor != chunk_progress_.end()) {
+			nbytes_transferred_ -= progress_itor->second;
+			chunk_progress_.erase(progress_itor);
+		}
+
+		nbytes_transferred_ += received;
+		chunk_progress_[chunk_url] = received;
+	}
+
 	void client::on_chunk_error(std::string response, std::string url, std::string doc, variant chunk, boost::shared_ptr<http_client> client)
 	{
+		auto progress_itor = chunk_progress_.find(url);
+		if(progress_itor != chunk_progress_.end()) {
+			nbytes_transferred_ -= progress_itor->second;
+			chunk_progress_.erase(progress_itor);
+		}
+
 		LOG_INFO("Chunk error: " << chunk.as_string() << " errors = " << nchunk_errors_ << "\n");
 
 		chunk_clients_.erase(std::remove(chunk_clients_.begin(), chunk_clients_.end(), client), chunk_clients_.end());
@@ -1279,9 +1303,9 @@ static const int ModuleProtocolVersion = 1;
 			new_client->set_timeout_and_retry();
 
 			new_client->send_request(url, doc,
-				std::bind(&client::on_chunk_response, this, chunk, new_client, _1),
+				std::bind(&client::on_chunk_response, this, url, chunk, new_client, _1),
 				std::bind(&client::on_chunk_error, this, _1, url, doc, chunk, new_client),
-				[](size_t a, size_t b, bool c) {}
+				std::bind(&client::on_chunk_progress, this, url, _1, _2, _3)
 			);
 
 			chunk_clients_.push_back(new_client);
@@ -1456,9 +1480,9 @@ static const int ModuleProtocolVersion = 1;
 				const std::string url = "POST /download_chunk?chunk_id=" + chunk["md5"].as_string();
 				const std::string doc = request.build().write_json();
 				client->send_request(url, doc, 
-							  std::bind(&client::on_chunk_response, this, chunk, client, _1),
+							  std::bind(&client::on_chunk_response, this, url, chunk, client, _1),
 							  std::bind(&client::on_chunk_error, this, _1, url, doc, chunk, client),
-							  [](size_t a, size_t b, bool c) {}
+							  std::bind(&client::on_chunk_progress, this, url, _1, _2, _3)
 				);
 				chunk_clients_.push_back(client);
 			}

@@ -194,6 +194,9 @@ namespace module
 		std::vector<variant> chunks_to_get_;
 		std::vector<boost::shared_ptr<class http_client> > chunk_clients_;
 
-		void on_chunk_response(variant node, boost::shared_ptr<class http_client> client, std::string response);
+		void on_chunk_response(std::string chunk_url, variant node, boost::shared_ptr<class http_client> client, std::string response);
+		void on_chunk_progress(std::string chunk_url, size_t received, size_t total, bool response);
+
+		std::map<std::string, size_t> chunk_progress_;
 	};
 }
