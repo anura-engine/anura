@@ -1259,6 +1259,41 @@ namespace {
 		cairo_set_line_width(context.get(), args[0].as_decimal().as_float());
 	END_CAIRO_FN
 
+	BEGIN_CAIRO_FN(set_line_dashes, "([decimal], decimal=0.0)")
+		std::vector<decimal> dashes = args[0].as_list_decimal();
+		double offset = args.size() > 1 ? args[1].as_decimal().as_float() : 0.0;
+
+		std::vector<double> dashes_double;
+		dashes_double.reserve(dashes.size());
+		for(decimal d : dashes) {
+			dashes_double.push_back(d.as_float());
+		}
+
+		if(dashes_double.empty()) {
+			cairo_set_dash(context.get(), nullptr, 0, 0.0);
+		} else {
+			cairo_set_dash(context.get(), &dashes_double[0], static_cast<int>(dashes_double.size()), offset);
+		}
+
+	END_CAIRO_FN
+
+	BEGIN_CAIRO_FN(set_line_cap, "(enum{butt,round,square})")
+		auto cap = CAIRO_LINE_CAP_BUTT;
+
+		std::string s = args[0].as_enum();
+
+		if(s == "butt") {
+			cap = CAIRO_LINE_CAP_BUTT;
+		} else if(s == "round") {
+			cap = CAIRO_LINE_CAP_ROUND;
+		} else if(s == "square") {
+			cap = CAIRO_LINE_CAP_SQUARE;
+		}
+		
+		cairo_set_line_cap(context.get(), cap);
+
+	END_CAIRO_FN
+
 	BEGIN_CAIRO_FN(fill, "()")
 		cairo_fill(context.get());
 	END_CAIRO_FN
