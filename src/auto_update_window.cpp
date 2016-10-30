@@ -539,6 +539,8 @@ bool do_auto_update(std::deque<std::string> argv, auto_update_window& update_win
 		if(is_new_install) {
 			update_window.set_is_new_install();
 		}
+
+		int max_nbytes_needed = 0;
 		while(cl || anura_cl) {
 			update_window.process();
 
@@ -572,6 +574,12 @@ bool do_auto_update(std::deque<std::string> argv, auto_update_window& update_win
 					nbytes_anura_transferred = transferred;
 				}
 			}
+
+			if(nbytes_needed < max_nbytes_needed) {
+				nbytes_needed = max_nbytes_needed;
+			}
+
+			max_nbytes_needed = nbytes_needed;
 
 			const int time_taken = profile::get_tick_time() - start_time;
 			if(time_taken > timeout_ms) {
