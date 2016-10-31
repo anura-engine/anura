@@ -50,6 +50,15 @@ DEFINE_FIELD(binding_point, "int")
 DEFINE_SET_FIELD
 	obj.binding_point_ = value.as_int();
 
+BEGIN_DEFINE_FN(clear_surfaces, "() ->commands")
+	ffl::IntrusivePtr<const TextureObject> ptr(&obj);
+	return variant(new game_logic::FnCommandCallable("texture::clear_surfaces", [ptr]() {
+		auto t = ptr->texture();
+		ASSERT_LOG(t, "Could not get texture");
+		t->clearSurfaces();
+	}));
+END_DEFINE_FN
+
 BEGIN_DEFINE_FN(bind, "() ->commands")
 	ffl::IntrusivePtr<const TextureObject> ptr(&obj);
 	return variant(new game_logic::FnCommandCallable("texture::bind", [ptr]() {

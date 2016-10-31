@@ -269,7 +269,6 @@ namespace {
 
 		surf->createAlphaMap();
 		KRE::TexturePtr t = KRE::Texture::createTexture(surf, node);
-		t->clearSurfaces();
 		return t;
 		//tex->update2D(0, 0, 0, width_, height_, cairo_image_surface_get_stride(surface_), cairo_image_surface_get_data(surface_));
 		// Use the blend mode below to give correct for pre-multiplied alpha.
