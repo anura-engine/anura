@@ -88,6 +88,8 @@
 #include "graphical_font.hpp"
 #include "user_voxel_object.hpp"
 
+void run_auto_updater();
+
 PREF_BOOL(tbs_use_shared_mem, true, "Use shared memory for tbs comms");
 
 void EntityCommandCallable::setExpression(const game_logic::FormulaExpression* expr)
@@ -2448,6 +2450,14 @@ RETURN_TYPE("bool")
 		}));
 	RETURN_TYPE("commands")
 	END_FUNCTION_DEF(quit_to_desktop)
+
+	FUNCTION_DEF(update_and_restart, 0, 0, "update_and_restart()")
+		Formula::failIfStaticContext();
+		return variant(new FnCommandCallable("update_and_restart", [=]() {
+			run_auto_updater();
+		}));
+	RETURN_TYPE("commands")
+	END_FUNCTION_DEF(update_and_restart)
 
 	
 	

@@ -27,9 +27,33 @@
 #include <unistd.h>
 #endif
 
+extern std::string g_anura_exe_name;
 extern std::string g_loading_screen_bg_color;
+
+PREF_STRING(auto_update_dir, "", "Directory in which the auto-updater is");
+PREF_STRING(auto_update_exe, "", "Exe of the auto-updater");
+
 PREF_STRING(auto_update_game_name, "Anura", "Title shown on the auto update window");
 PREF_STRING(auto_update_title, "Anura auto-update", "Title of the auto-update window");
+
+void run_auto_updater()
+{
+	if(g_auto_update_dir.empty() || g_auto_update_exe.empty()) {
+		return;
+	}
+
+	const int res = chdir(g_auto_update_dir.c_str());
+	if(res != 0) {
+		LOG_ERROR("Auto-update: Could not chdir " << g_auto_update_dir << ": " << res);
+		return;
+	}
+
+	std::vector<char*> anura_args;
+	anura_args.push_back(const_cast<char*>(g_anura_exe_name.c_str()));
+	anura_args.push_back(nullptr);
+
+	execv(anura_args[0], &anura_args[0]);
+}
 
 namespace 
 {
@@ -673,6 +697,12 @@ bool do_auto_update(std::deque<std::string> argv, auto_update_window& update_win
 	for(const std::string& a : argv) {
 		anura_args.push_back(const_cast<char*>(a.c_str()));
 	}
+
+	std::string cwd_arg = "--auto-update-dir=" + sys::get_cwd();
+	std::string exe_arg = "--auto-update-exe=" + g_anura_exe_name;
+
+	anura_args.push_back(const_cast<char*>(cwd_arg.c_str()));
+	anura_args.push_back(const_cast<char*>(exe_arg.c_str()));
 
 	std::string command_line;
 	for(const char* c : anura_args) {
