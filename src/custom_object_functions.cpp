@@ -1551,14 +1551,31 @@ namespace
 
 			variant properties = arg3;
 			variant keys = properties.getKeys();
+			std::vector<std::pair<int,variant> > deferred_properties;
+			const std::vector<int>& properties_with_setter = type_ptr->getPropertiesWithSetter();
 			for(int n = 0; n != keys.num_elements(); ++n) {
 				ASSERT_LOG(keys[n].is_string(), "Non-string key in spawn map: " << keys[n].write_json());
-				if(type_ptr->getLastInitializationProperty().empty() == false && type_ptr->getLastInitializationProperty() == keys[n].as_string()) {
+				const std::string& k = keys[n].as_string();
+				if(type_ptr->getLastInitializationProperty().empty() == false && type_ptr->getLastInitializationProperty() == k) {
 					last_key = keys[n];
 					continue;
 				}
+
+				const int slot = type_ptr->callableDefinition()->getSlot(k);
+				ASSERT_LOG(slot >= 0, "Could not look up key in object: " << k << " in " << type_ptr->id());
+
 				variant value = properties[keys[n]];
-				obj->mutateValue(keys[n].as_string(), value);
+
+				if(std::binary_search(properties_with_setter.begin(), properties_with_setter.end(), slot - type_ptr->getSlotPropertiesBase())) {
+					deferred_properties.push_back(std::pair<int,variant>(slot, value));
+					continue;
+				}
+
+				obj->mutateValueBySlot(slot, value);
+			}
+
+			for(const std::pair<int,variant>& p : deferred_properties) {
+				obj->mutateValueBySlot(p.first, p.second);
 			}
 
 			if(last_key.is_string()) {
@@ -1790,13 +1807,30 @@ namespace
 
 			variant last_key;
 			variant keys = properties.getKeys();
+			std::vector<std::pair<int,variant> > deferred_properties;
+			const std::vector<int>& properties_with_setter = type_ptr->getPropertiesWithSetter();
 			for(int n = 0; n != keys.num_elements(); ++n) {
 				if(type_ptr->getLastInitializationProperty().empty() == false && type_ptr->getLastInitializationProperty() == keys[n].as_string()) {
 					last_key = keys[n];
 					continue;
 				}
+
+				const std::string& k = keys[n].as_string();
+				const int slot = type_ptr->callableDefinition()->getSlot(k);
+				ASSERT_LOG(slot >= 0, "Could not look up key in object: " << k << " in " << type_ptr->id());
+
 				variant value = properties[keys[n]];
-				obj->mutateValue(keys[n].as_string(), value);
+
+				if(std::binary_search(properties_with_setter.begin(), properties_with_setter.end(), slot - type_ptr->getSlotPropertiesBase())) {
+					deferred_properties.push_back(std::pair<int,variant>(slot, value));
+					continue;
+				}
+
+				obj->mutateValueBySlot(slot, value);
+			}
+
+			for(const std::pair<int,variant>& p : deferred_properties) {
+				obj->mutateValueBySlot(p.first, p.second);
 			}
 
 			if(last_key.is_string()) {

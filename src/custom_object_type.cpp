@@ -1575,6 +1575,10 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 				properties_with_init_.push_back(entry.slot);
 			}
 
+			if(entry.setter) {
+				properties_with_setter_.push_back(entry.slot);
+			}
+
 			entry.requires_initialization = entry.storage_slot >= 0 && entry.type && !entry.type->match(entry.default_value) && !dynamic_initialization && !entry.init;
 			if(entry.requires_initialization) {
 				if(entry.setter) {

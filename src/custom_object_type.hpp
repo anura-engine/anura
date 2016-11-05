@@ -228,6 +228,7 @@ public:
 	const std::vector<PropertyEntry>& getSlotProperties() const { return slot_properties_; }
 	const std::vector<const PropertyEntry*>& getVariableProperties() const { return variable_properties_; }
 	const std::vector<int>& getPropertiesWithInit() const { return properties_with_init_; }
+	const std::vector<int>& getPropertiesWithSetter() const { return properties_with_setter_; }
 	const std::vector<int>& getPropertiesRequiringInitialization() const { return properties_requiring_initialization_; }
 	const std::vector<int>& getPropertiesRequiringDynamicInitialization() const { return properties_requiring_dynamic_initialization_; }
 
@@ -372,7 +373,7 @@ private:
 	std::map<std::string, PropertyEntry> properties_;
 	std::vector<PropertyEntry> slot_properties_;
 	std::vector<const PropertyEntry*> variable_properties_;
-	std::vector<int> properties_with_init_, properties_requiring_initialization_, properties_requiring_dynamic_initialization_;
+	std::vector<int> properties_with_init_, properties_requiring_initialization_, properties_requiring_dynamic_initialization_, properties_with_setter_;
 	std::string last_initialization_property_;
 	int slot_properties_base_;
 
