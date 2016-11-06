@@ -240,6 +240,9 @@ public:
 	virtual void mapEntities(const std::map<EntityPtr, EntityPtr>& m) {}
 	virtual void cleanup_references() {}
 
+	void addEndAnimCommand(variant cmd);
+	std::vector<variant> popEndAnimCommands();
+
 	void addScheduledCommand(int cycle, variant cmd);
 	std::vector<variant> popScheduledCommands();
 

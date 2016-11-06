@@ -1777,11 +1777,19 @@ void CustomObject::process(Level& lvl)
 	}
 
 	if(time_in_frame_ == frame_->duration()) {
-		handleEvent(frame_->endEventId());
-		handleEvent(OBJECT_EVENT_END_ANIM);
-		if(next_animation_formula_) {
-			variant var = next_animation_formula_->execute(*this);
-			setFrame(var.as_string());
+		std::vector<variant> cmd = popEndAnimCommands();
+		if(cmd.empty() == false) {
+			formula_profiler::Instrument anim_instrument("END_ANIM_CMD");
+			for(const variant& c : cmd) {
+				executeCommand(c);
+			}
+		} else {
+			handleEvent(frame_->endEventId());
+			handleEvent(OBJECT_EVENT_END_ANIM);
+			if(next_animation_formula_) {
+				variant var = next_animation_formula_->execute(*this);
+				setFrame(var.as_string());
+			}
 		}
 	}
 

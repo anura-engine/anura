@@ -3382,6 +3382,26 @@ RETURN_TYPE("bool")
 	RETURN_TYPE("commands")
 	END_FUNCTION_DEF(sleep_until)
 
+	class sleep_until_animation_finished_command : public EntityCommandCallable {
+	public:
+		sleep_until_animation_finished_command()
+		{}
+
+		virtual void execute(Level& lvl, Entity& ob) const override {
+			variant cmd = deferCurrentCommandSequence();
+			ob.addEndAnimCommand(cmd);
+		}
+
+		void surrenderReferences(GarbageCollector* collector) override {
+		}
+	};
+
+	FUNCTION_DEF(sleep_until_animation_finished, 0, 0, "sleeps until the current animation is finished.")
+		return variant(new sleep_until_animation_finished_command);
+	FUNCTION_ARGS_DEF
+	RETURN_TYPE("commands")
+	END_FUNCTION_DEF(sleep_until_animation_finished)
+
 	class add_water_command : public EntityCommandCallable
 	{
 		rect r_;

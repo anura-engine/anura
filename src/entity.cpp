@@ -387,6 +387,28 @@ void Entity::generateCurrent(const Entity& target, int* velocity_x, int* velocit
 	}
 }
 
+static const int EndAnimationScheduledCommand = -20000000;
+
+void Entity::addEndAnimCommand(variant cmd)
+{
+	scheduled_commands_.push_back(ScheduledCommand(EndAnimationScheduledCommand, cmd));
+}
+
+std::vector<variant> Entity::popEndAnimCommands()
+{
+	std::vector<variant> result;
+	auto i = scheduled_commands_.begin();
+	while(i != scheduled_commands_.end()) {
+		if(i->first == EndAnimationScheduledCommand) {
+			result.push_back(i->second);
+			i = scheduled_commands_.erase(i);
+		} else {
+			++i;
+		}
+	}
+	return result;
+}
+
 void Entity::addScheduledCommand(int cycle, variant cmd)
 {
 	scheduled_commands_.push_back(ScheduledCommand(cycle, cmd));
@@ -397,7 +419,7 @@ std::vector<variant> Entity::popScheduledCommands()
 	std::vector<variant> result;
 	std::vector<ScheduledCommand>::iterator i = scheduled_commands_.begin();
 	while(i != scheduled_commands_.end()) {
-		if(--(i->first) <= 0) {
+		if(i->first != EndAnimationScheduledCommand && --(i->first) <= 0) {
 			result.push_back(i->second);
 			i = scheduled_commands_.erase(i);
 		} else {
