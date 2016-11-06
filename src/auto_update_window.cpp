@@ -52,7 +52,7 @@ void run_auto_updater()
 	anura_args.push_back(const_cast<char*>(g_anura_exe_name.c_str()));
 	anura_args.push_back(nullptr);
 
-	LOG_INFO("Auto-update: switched to " << g_auto_update_dir << " running " << g_auto_update_exe);
+	LOG_ERROR("Auto-update: switched to " << g_auto_update_dir << " running " << g_auto_update_exe);
 
 	execv(anura_args[0], &anura_args[0]);
 }
