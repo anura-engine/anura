@@ -684,6 +684,9 @@ bool do_auto_update(std::deque<std::string> argv, auto_update_window& update_win
 		}
 	}
 
+	std::string cwd_arg = "--auto-update-dir=" + sys::get_cwd();
+	std::string exe_arg = "--auto-update-exe=" + g_anura_exe_name;
+
 	const std::string working_dir = preferences::dlc_path() + "/" + real_anura + subdir;
 	LOG_INFO("CHANGE DIRECTORY: " << working_dir);
 	const int res = chdir(working_dir.c_str());
@@ -699,9 +702,6 @@ bool do_auto_update(std::deque<std::string> argv, auto_update_window& update_win
 	for(const std::string& a : argv) {
 		anura_args.push_back(const_cast<char*>(a.c_str()));
 	}
-
-	std::string cwd_arg = "--auto-update-dir=" + sys::get_cwd();
-	std::string exe_arg = "--auto-update-exe=" + g_anura_exe_name;
 
 	anura_args.push_back(const_cast<char*>(cwd_arg.c_str()));
 	anura_args.push_back(const_cast<char*>(exe_arg.c_str()));
