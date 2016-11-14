@@ -344,7 +344,7 @@ namespace controls
 		if(controls[local_player].size() >= g_max_control_history) {
 			starting_cycles += static_cast<int>(controls[local_player].size()/2);
 			for(int n = 0; n != nplayers; ++n) {
-				controls[n].resize(controls[n].size()/2);
+				controls[n].erase(controls[n].begin(), controls[n].begin() + controls[n].size()/2);
 			}
 		}
 	}
