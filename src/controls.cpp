@@ -276,7 +276,7 @@ namespace controls
 			return 0;
 		}
 
-		return static_cast<int>(controls[local_player].size());
+		return static_cast<int>(controls[local_player].size()) + starting_cycles;
 	}
 
 	void read_local_controls()
