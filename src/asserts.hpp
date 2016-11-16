@@ -59,6 +59,7 @@ enum AssertOptions { SilenceAsserts = 1 };
 class assert_recover_scope 
 {
 	int options_;
+	int fatal_;
 public:
 	assert_recover_scope(int options=0);
 	~assert_recover_scope();

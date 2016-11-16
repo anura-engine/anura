@@ -1233,13 +1233,18 @@ namespace game_logic
 		return variant_type::get_type(variant::VARIANT_TYPE_STRING);
 	END_FUNCTION_DEF(get_error_message)
 
-		FUNCTION_DEF(handle_errors, 2, 2, "handle_errors(expr, failsafe): evaluates 'expr' and returns it. If expr has fatal errors in evaluation, return failsafe instead. 'failsafe' is an expression which receives 'error_msg' and 'context' as parameters.")
+		FUNCTION_DEF_CTOR(handle_errors, 2, 2, "handle_errors(expr, failsafe): evaluates 'expr' and returns it. If expr has fatal errors in evaluation, return failsafe instead. 'failsafe' is an expression which receives 'error_msg' and 'context' as parameters.")
+		FUNCTION_DEF_MEMBERS
+		bool optimizeArgNumToVM(int narg) const override {
+			return false;
+		}
+		FUNCTION_DEF_IMPL
 			const assert_recover_scope recovery_scope;
 			try {
-				return EVAL_ARG(0);
+				return args()[0]->evaluate(variables);
 			} catch(validation_failure_exception& e) {
 				g_handle_errors_error_message = e.msg;
-				return EVAL_ARG(1);
+				return args()[1]->evaluate(variables);
 			}
 		FUNCTION_TYPE_DEF
 			return args()[0]->queryVariantType();

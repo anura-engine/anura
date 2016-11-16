@@ -155,8 +155,9 @@ bool throw_validation_failure_on_assert()
 	return throw_validation_failure != 0 && !preferences::die_on_assert();
 }
 
-assert_recover_scope::assert_recover_scope(int options) : options_(options)
+assert_recover_scope::assert_recover_scope(int options) : options_(options), fatal_(throw_fatal)
 {
+	throw_fatal = 0;
 	if(options_&static_cast<int>(SilenceAsserts)) {
 		silence_on_assert++;
 	}
@@ -165,6 +166,7 @@ assert_recover_scope::assert_recover_scope(int options) : options_(options)
 
 assert_recover_scope::~assert_recover_scope()
 {
+	throw_fatal = fatal_;
 	if(options_&SilenceAsserts) {
 		silence_on_assert--;
 	}

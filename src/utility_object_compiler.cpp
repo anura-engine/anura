@@ -1183,6 +1183,7 @@ COMMAND_LINE_UTILITY(build_spritesheet_from_images)
 	surfaces.resize(surfaces.size()+1);
 
 	int scale = 100;
+	int alpha_threshold = 16;
 	std::string algo = "bicubic";
 	std::deque<std::string> image_files;
 	for(auto itor = argv.begin(); itor != argv.end(); ++itor) {
@@ -1192,6 +1193,9 @@ COMMAND_LINE_UTILITY(build_spritesheet_from_images)
 		} else if(*itor == "--alg" && itor+1 != argv.end()) {
 			++itor;
 			algo = *itor;
+		} else if(*itor == "--alpha") {
+			++itor;
+			alpha_threshold = atoi(itor->c_str());
 		} else {
 			image_files.emplace_back(*itor);
 		}
@@ -1247,12 +1251,12 @@ COMMAND_LINE_UTILITY(build_spritesheet_from_images)
 		const uint8_t* end_p = p + s->width()*s->height()*4;
 
 		int top_pad = 0;
-		for(int i = 0; i < s->height()/2; ++i) {
+		for(int i = 0; i < s->height(); ++i) {
 			const uint8_t* top = p + i*4*s->width();
 
 			bool all_clear = true;
 			for(int j = 0; j < s->width(); ++j) {
-				if(top[j*4+3]) {
+				if(top[j*4+3] > alpha_threshold) {
 					all_clear = false;
 					break;
 				}
@@ -1266,12 +1270,12 @@ COMMAND_LINE_UTILITY(build_spritesheet_from_images)
 		}
 
 		int bot_pad = 0;
-		for(int i = 0; i < s->height()/2; ++i) {
+		for(int i = 0; i < s->height() && top_pad+bot_pad < s->height(); ++i) {
 			const uint8_t* bot = p + (s->height()-i-1)*4*s->width();
 
 			bool all_clear = true;
 			for(int j = 0; j < s->width(); ++j) {
-				if(bot[j*4+3]) {
+				if(bot[j*4+3] > alpha_threshold) {
 					all_clear = false;
 					break;
 				}
@@ -1292,7 +1296,7 @@ COMMAND_LINE_UTILITY(build_spritesheet_from_images)
 			for(int j = 0; j < s->height(); ++j) {
 				ASSERT_LOG(left + j*(s->width()*4)+3 < end_p, "Off end");
 				ASSERT_LOG(right + j*(s->width()*4)+3 < end_p, "Off end");
-				if(left[j*(s->width()*4)+3] || right[j*(s->width()*4)+3]) {
+				if(left[j*(s->width()*4)+3] > alpha_threshold || right[j*(s->width()*4)+3] > alpha_threshold) {
 					all_clear = false;
 					break;
 				}

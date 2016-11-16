@@ -39,6 +39,16 @@ PREF_STRING(auto_update_title, "Anura auto-update", "Title of the auto-update wi
 void run_auto_updater()
 {
 	if(g_auto_update_dir.empty() || g_auto_update_exe.empty()) {
+		auto v = preferences::argv();
+		std::vector<char*> anura_args;
+		for(const std::string& s : v) {
+			anura_args.push_back(const_cast<char*>(s.c_str()));
+		}
+
+		anura_args.push_back(nullptr);
+
+		execv(anura_args[0], &anura_args[0]);
+
 		return;
 	}
 
@@ -684,8 +694,8 @@ bool do_auto_update(std::deque<std::string> argv, auto_update_window& update_win
 		}
 	}
 
-	std::string cwd_arg = "--auto-update-dir=" + sys::get_cwd();
-	std::string exe_arg = "--auto-update-exe=" + g_anura_exe_name;
+	std::string cwd_arg = "\"--auto-update-dir=" + sys::get_cwd() + "\"";
+	std::string exe_arg = "\"--auto-update-exe=" + g_anura_exe_name + "\"";
 
 	const std::string working_dir = preferences::dlc_path() + "/" + real_anura + subdir;
 	LOG_INFO("CHANGE DIRECTORY: " << working_dir);
