@@ -2862,11 +2862,18 @@ void editor::remove_tile_rect(int x1, int y1, int x2, int y2)
 
 		std::map<int, std::vector<std::string> > old_tiles;
 		lvl->getAllTilesRect(x1, y1, x2, y2, old_tiles);
+		std::vector<int> layers;
 		for(auto i : old_tiles) {
+			if(std::count(layers.begin(), layers.end(), i.first) == 0) {
+				layers.push_back(i.first);
+			}
 			undo.push_back([=](){ lvl->addTileRectVector(i.first, x1, y1, x2, y2, i.second); });
 		}
 
 		redo.push_back([=](){ lvl->clear_tile_rect(x1, y1, x2, y2); });
+
+		undo.push_back(std::bind(&Level::start_rebuild_tiles_in_background, lvl.get(), layers));
+		redo.push_back(std::bind(&Level::start_rebuild_tiles_in_background, lvl.get(), layers));
 	}
 
 	executeCommand(std::bind(execute_functions, redo), std::bind(execute_functions, undo));
