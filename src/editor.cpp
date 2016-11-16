@@ -1577,7 +1577,13 @@ void BuiltinEditor::process()
 	}
 
 	for(LevelPtr lvl : levels_) {
-		lvl->complete_rebuild_tiles_in_background();
+		try {
+			const assert_recover_scope safe_scope;
+			lvl->complete_rebuild_tiles_in_background();
+		} catch(validation_failure_exception& e) {
+			undo_command();
+			debug_console::addMessage(formatter() << "Failed to add tiles: " << e.msg);
+		}
 	}
 }
 

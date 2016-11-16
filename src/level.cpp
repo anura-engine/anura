@@ -1026,6 +1026,26 @@ void Level::setPlayerVariantType(variant type_str)
 	entry->setVariantType(g_player_type);
 }
 
+namespace {
+struct TileBackupScope {
+	std::vector<LevelTile>& level_tiles;
+	std::vector<LevelTile> tiles;
+	bool cancelled;
+	TileBackupScope(std::vector<LevelTile>& t) : level_tiles(t), tiles(t), cancelled(false) {
+	}
+
+	~TileBackupScope() {
+		if(!cancelled) {
+			level_tiles.swap(tiles);
+		}
+	}
+
+	void cancel() {
+		cancelled = true;
+	}
+};
+}
+
 void Level::complete_rebuild_tiles_in_background()
 {
 	level_tile_rebuild_info& info = tile_rebuild_map[this];
@@ -1046,6 +1066,8 @@ void Level::complete_rebuild_tiles_in_background()
 	delete info.rebuild_tile_thread;
 	info.rebuild_tile_thread = nullptr;
 
+	TileBackupScope backup(tiles_);
+
 	if(info.rebuild_tile_layers_worker_buffer.empty()) {
 		tiles_.clear();
 	} else {
@@ -1058,19 +1080,23 @@ void Level::complete_rebuild_tiles_in_background()
 	tiles_.insert(tiles_.end(), info.task_tiles.begin(), info.task_tiles.end());
 	info.task_tiles.clear();
 
-	complete_tiles_refresh();
-
 	LOG_INFO("COMPLETE TILE REBUILD: " << (profile::get_tick_time() - begin_time));
 
 	info.rebuild_tile_layers_worker_buffer.clear();
 
 	info.tile_rebuild_in_progress = false;
+
+	++g_tile_rebuild_state_id;
+
+	complete_tiles_refresh();
+
+	backup.cancel();
+
 	if(info.tile_rebuild_queued) {
 		info.tile_rebuild_queued = false;
 		start_rebuild_tiles_in_background(info.rebuild_tile_layers_buffer);
 	}
 
-	++g_tile_rebuild_state_id;
 }
 
 void Level::rebuildTiles()
