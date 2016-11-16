@@ -1581,7 +1581,9 @@ void BuiltinEditor::process()
 			const assert_recover_scope safe_scope;
 			lvl->complete_rebuild_tiles_in_background();
 		} catch(validation_failure_exception& e) {
-			undo_command();
+			if(!drawing_rect_) {
+				undo_command();
+			}
 			debug_console::addMessage(formatter() << "Failed to add tiles: " << e.msg);
 		}
 	}
