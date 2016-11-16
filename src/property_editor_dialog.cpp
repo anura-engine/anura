@@ -533,8 +533,6 @@ namespace editor_dialogs
 
 		int mousex, mousey;
 		input::sdl_get_mouse_state(&mousex, &mousey);
-		mousex -= x();
-		mousey -= y();
 
 		if(grid->height() > KRE::WindowManager::getMainWindow()->height() - mousey) {
 			mousey = KRE::WindowManager::getMainWindow()->height() - grid->height();
@@ -543,6 +541,9 @@ namespace editor_dialogs
 		if(grid->width() > KRE::WindowManager::getMainWindow()->width() - mousex) {
 			mousex = KRE::WindowManager::getMainWindow()->width() - grid->width();
 		}
+
+		mousex -= x();
+		mousey -= y();
 
 		removeWidget(context_menu_);
 		context_menu_.reset(grid);
