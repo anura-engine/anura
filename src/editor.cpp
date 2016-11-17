@@ -438,7 +438,7 @@ public:
 			empty_lvl.add_attr(variant("id"), variant(module::get_id(id)));
 			std::string nn = module::get_id(name);
 			std::string modname = module::get_module_id(name);
-			sys::write_file(module::get_module_path(modname, (preferences::editor_save_to_user_preferences() ? module::BASE_PATH_USER : module::BASE_PATH_GAME)) + nn, empty_lvl.write_json());
+			sys::write_file(module::get_module_path(modname, (preferences::editor_save_to_user_preferences() ? module::BASE_PATH_USER : module::BASE_PATH_GAME)) + "data/level/" + nn, empty_lvl.write_json());
 			load_level_paths();
 			editor_.close();
 			g_last_edited_level() = id;
