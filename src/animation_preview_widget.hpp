@@ -42,8 +42,6 @@ namespace gui
 		void init();
 		void setObject(variant obj);
 
-		void process();
-
 		void setRectHandler(std::function<void(rect)>);
 		void setPadHandler(std::function<void(int)>);
 		void setNumFramesHandler(std::function<void(int)>);
@@ -54,6 +52,7 @@ namespace gui
 	private:
 		DECLARE_CALLABLE(AnimationPreviewWidget);
 		
+		void handleProcess() override;
 		void handleDraw() const override;
 		bool handleEvent(const SDL_Event& event, bool claimed) override;
 

@@ -240,13 +240,6 @@ Frame::Frame(variant node)
 		blit_target_.setTexture(graphics::get_palette_texture(image_, node["image"], palettes_recognized_));
 	}
 
-	if(palettes_recognized_.empty() == false) {
-		palette_frames().insert(this);
-		if(current_palette_mask) {
-			setPalettes(current_palette_mask);
-		}
-	}
-
 	std::vector<std::string> hit_frames = util::split(node["hit_frames"].as_string_default());
 	for(const std::string& f : hit_frames) {
 		hit_frames_.emplace_back(boost::lexical_cast<int>(f));
@@ -396,7 +389,15 @@ Frame::Frame(variant node)
 		fbo_texture->clearSurfaces();
 	}
 
+	if(palettes_recognized_.empty() == false) {
+		palette_frames().insert(this);
+		if(current_palette_mask) {
+			setPalettes(current_palette_mask);
+		}
+	}
+
 	// Need to do stuff with co-ordinates here I think.
+
 }
 
 Frame::~Frame()
