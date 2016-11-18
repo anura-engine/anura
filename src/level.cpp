@@ -83,8 +83,8 @@
 #ifndef NO_EDITOR
 std::set<Level*>& get_all_levels_set() 
 {
-	static std::set<Level*> all;
-	return all;
+	static std::set<Level*>* all = new std::set<Level*>;
+	return *all;
 }
 #endif
 

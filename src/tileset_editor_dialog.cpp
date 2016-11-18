@@ -39,8 +39,8 @@ namespace editor_dialogs
 	namespace 
 	{
 		std::set<TilesetEditorDialog*>& all_tileset_editor_dialogs() {
-			static std::set<TilesetEditorDialog*> all;
-			return all;
+			static std::set<TilesetEditorDialog*>* all = new std::set<TilesetEditorDialog*>;
+			return *all;
 		}
 	}
 
