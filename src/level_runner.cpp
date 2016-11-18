@@ -99,6 +99,7 @@ namespace
 	PREF_INT(max_frame_skips, 3, "Maximum frames to skip due to performance");
 	
 	PREF_STRING(editor_controller, "", "Object used when the editor is started");
+	PREF_BOOL_PERSISTENT(skip_odd_frames, false, "Skips every other frame");
 
 	LevelRunner* current_level_runner = nullptr;
 
@@ -1573,8 +1574,10 @@ bool LevelRunner::play_cycle()
 		return true;
 	}
 
+	const bool skip_odd_frame = g_skip_odd_frames && nskip_draw_ == 0;
+
 	const int start_draw = profile::get_tick_time();
-	if(start_draw < desired_end_time || nskip_draw_ >= g_max_frame_skips) {
+	if(!skip_odd_frame && (start_draw < desired_end_time || nskip_draw_ >= g_max_frame_skips)) {
 		formula_profiler::Instrument instrument("DRAW");
 		bool should_draw = true;
 
