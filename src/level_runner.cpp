@@ -1251,8 +1251,33 @@ bool LevelRunner::play_cycle()
 
 	SDL_StartTextInput();
 	if(MessageDialog::get() == nullptr) {
-		SDL_Event event;
-		while(input::sdl_poll_event(&event)) {
+
+		bool have_motion_event = false;
+
+		//Poll all the events. Sometimes we can have multiple mouse motion events
+		//in one frame, but that isn't really useful, so coalesce multiple motion
+		//events into a single event.
+		std::vector<SDL_Event> events;
+		SDL_Event ev;
+		while(input::sdl_poll_event(&ev)) {
+			if(ev.type == SDL_MOUSEMOTION) {
+				if(have_motion_event) {
+					for(auto it = events.begin(); it != events.end(); ++it) {
+						if(it->type == SDL_MOUSEMOTION) {
+							ev.motion.xrel += it->motion.xrel;
+							ev.motion.yrel += it->motion.yrel;
+							events.erase(it);
+							break;
+						}
+					}
+				}
+
+				have_motion_event = true;
+			}
+			events.push_back(ev);
+		}
+
+		for(const SDL_Event& event : events) {
 			bool swallowed = false;
 #ifndef NO_EDITOR
 			if(console_) {
