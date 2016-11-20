@@ -1291,7 +1291,7 @@ public:
 					return;
 				}
 
-				SessionInfo* target = get_session(doc["target_user"].as_string());
+				SessionInfo* target = get_session(str_tolower(doc["target_user"].as_string()));
 				if(!target) {
 					RESPOND_ERROR(formatter() << "User " << doc["target_user"].as_string() << " is no longer online");
 					return;
@@ -1317,7 +1317,7 @@ public:
 					return;
 				}
 
-				SessionInfo* target = get_session(doc["requester"].as_string());
+				SessionInfo* target = get_session(str_tolower(doc["requester"].as_string()));
 				if(target == nullptr) {
 					RESPOND_ERROR(formatter() << doc["requester"].as_string() << " is no longer online");
 					return;
@@ -1344,7 +1344,7 @@ public:
 				auto itor = sessions_.find(session_id);
 
 				if(itor != sessions_.end()) {
-					SessionInfo* target = get_session(doc["requester"].as_string());
+					SessionInfo* target = get_session(str_tolower(doc["requester"].as_string()));
 					if(target) {
 						variant_builder response;
 						response.add("type", "message");
