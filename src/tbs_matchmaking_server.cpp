@@ -1009,7 +1009,7 @@ public:
 				info.session_id = session_id;
 				info.last_contact = time_ms_;
 
-				std::string user = doc["user"].as_string();
+				std::string user = str_tolower(doc["user"].as_string());
 
 				fprintf(stderr, "CCC: Challenge received: vs: %s\n", user.c_str());
 
@@ -1975,7 +1975,7 @@ private:
 				db_client_->put("user:" + session_info.user_id, account_info_itor->second.account_info, [](){}, [](){});
 
 				variant_builder user;
-				user.add("user", session_info.user_id);
+				user.add("user", get_display_name(session_info.user_id));
 				user.add("session_id", session_info.session_id);
 				user.add("account_info", account_info_itor->second.account_info["info"]);
 				users.push_back(user.build());
