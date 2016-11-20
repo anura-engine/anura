@@ -90,11 +90,14 @@ DbClient::~DbClient() {}
 
 namespace
 {
+	std::map<std::string, variant> db_client_cache;
 	class FileBackedDbClient : public DbClient
 	{
 	public:
 		explicit FileBackedDbClient(const std::string& fname, const std::string& prefix) : fname_(fname), dirty_(false), prefix_(prefix) {
-			if(sys::file_exists(fname_)) {
+			if(db_client_cache.count(fname)) {
+				doc_ = db_client_cache[fname];
+			} else if(sys::file_exists(fname_)) {
 				doc_ = json::parse(sys::read_file(fname_), json::JSON_PARSE_OPTIONS::NO_PREPROCESSOR);
 			}
 			
@@ -102,6 +105,8 @@ namespace
 				std::map<variant,variant> m;
 				doc_ = variant(&m);
 			}
+
+			db_client_cache[fname] = doc_;
 		}
 
 		~FileBackedDbClient() {

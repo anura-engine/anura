@@ -129,6 +129,26 @@ const variant& get_server_info_file()
 	return server_info;
 }
 
+bool str_equal_caseless(const std::string& a, const std::string& b) {
+	if(a.size() != b.size()) {
+		return false;
+	}
+
+	for(int n = 0; n != a.size(); ++n) {
+		if(tolower(a[n]) != tolower(b[n])) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
+std::string normalize_username_display(std::string username)
+{
+	util::strip(username);
+	return username;
+}
+
 std::string normalize_username(std::string username)
 {
 	util::strip(username);
@@ -137,6 +157,15 @@ std::string normalize_username(std::string username)
 	}
 
 	return username;
+}
+
+std::string str_tolower(std::string s)
+{
+	for(char& c : s) {
+		c = tolower(c);
+	}
+
+	return s;
 }
 
 bool username_valid(const std::string& username)
@@ -492,7 +521,8 @@ public:
 				}
 				return;
 			} else if(request_type == "register") {
-				std::string user = normalize_username(doc["user"].as_string());
+				std::string display_user = normalize_username_display(doc["user"].as_string());
+				std::string user = normalize_username(display_user);
 				if(user.size() > 12) {
 					RESPOND_ERROR("Username may not be more than 12 characters");
 					return;
@@ -516,6 +546,8 @@ public:
 						c = toupper(c);
 					}
 				}
+
+				user_display_names_[user] = display_user;
 
 				std::vector<variant> args;
 				args.push_back(doc);
@@ -639,7 +671,8 @@ public:
 
 			} else if(request_type == "login") {
 				std::string given_user = doc["user"].as_string();
-				std::string user = normalize_username(given_user);
+				std::string display_user = normalize_username_display(given_user);
+				std::string user = normalize_username(display_user);
 				std::string passwd = doc["passwd"].as_string();
 				const bool remember = doc["remember"].as_bool(false);
 				bool impersonate = false;
@@ -679,9 +712,14 @@ public:
 							db_client_->put("user:" + user, user_info, [](){}, [](){});
 						}
 
+						user_display_names_[user] = display_user;
+
 						variant_builder response;
 
 						repair_account(&user_info);
+
+						variant user_info_info = user_info["info"];
+						user_info_info.add_attr_mutation(variant("display_name"), variant(display_user));
 
 						static const variant ChatChannelsKey("chat_channels");
 						static const std::string DefaultChannel = "#talk";
@@ -751,6 +789,16 @@ public:
 
 						repair_account(&user_info);
 
+						variant display_name_var = user_info["info"]["display_name"];
+						std::string display_name;
+						if(display_name_var.is_string()) {
+							display_name = display_name_var.as_string();
+						} else {
+							display_name = username;
+						}
+
+						user_display_names_[username] = display_name;
+
 						static const variant ChatChannelsKey("chat_channels");
 						static const std::string DefaultChannel = "#talk";
 						variant channels = user_info["info"][ChatChannelsKey];
@@ -775,7 +823,7 @@ public:
 						response.add("type", "login_success");
 						response.add("session_id", variant(session_id));
 						response.add("cookie", variant(cookie));
-						response.add("username", variant(username));
+						response.add("username", variant(display_name));
 						response.add("info", user_info["info"]);
 						response.add("info_version", user_info["info_version"].as_int(0));
 						response.add("timestamp", static_cast<int>(time(NULL)));
@@ -1085,7 +1133,7 @@ public:
 					}
 
 					variant_builder msg;
-					msg.add("nick", variant(info.user_id));
+					msg.add("nick", variant(get_display_name(info.user_id)));
 					msg.add("message", message);
 
 					msg.add("timestamp", variant(static_cast<int>(time(NULL))));
@@ -2276,6 +2324,17 @@ private:
 	std::vector<variant> status_doc_new_servers_;
 	std::vector<int> status_doc_delete_servers_;
 
+	std::map<std::string, std::string> user_display_names_;
+
+	const std::string& get_display_name(const std::string& username) {
+		auto itor = user_display_names_.find(username);
+		if(itor != user_display_names_.end()) {
+			return itor->second;
+		} else {
+			return username;
+		}
+	}
+
 	variant build_status_delta(int have_state_id)
 	{
 		const int ndeltas = status_doc_state_id_ - have_state_id;
@@ -2325,7 +2384,7 @@ private:
 			std::vector<variant> list = status_doc_["user_list"].as_list();
 			for(auto s : status_doc_delete_users_) {
 				for(auto i = list.begin(); i != list.end(); ) {
-					if((*i)[IdVariant].as_string() == s) {
+					if(str_equal_caseless((*i)[IdVariant].as_string(), s)) {
 						i = list.erase(i);
 					} else {
 						++i;
@@ -2336,7 +2395,7 @@ private:
 			for(auto u : status_doc_new_users_) {
 				bool already_present = false;
 				for(auto i = list.begin(); i != list.end(); ++i) {
-					if((*i)[IdVariant].as_string() == u) {
+					if(str_equal_caseless((*i)[IdVariant].as_string(), u)) {
 						already_present = true;
 						break;
 					}
@@ -2346,8 +2405,10 @@ private:
 					continue;
 				}
 
+				auto disp = user_display_names_.find(u);
+
 				variant_builder builder;
-				builder.add("id", u);
+				builder.add("id", disp == user_display_names_.end() ? u : disp->second);
 				builder.add("status", "idle");
 
 				auto& info = getAccountInfo(u);
@@ -2375,7 +2436,7 @@ private:
 			variant users = status_doc_["user_list"];
 			for(int n = 0; n != users.num_elements(); ++n) {
 				const std::string& user_id = users[n]["id"].as_string();
-				auto itor = status_doc_user_status_changes_.find(user_id);
+				auto itor = status_doc_user_status_changes_.find(str_tolower(user_id));
 				if(itor != status_doc_user_status_changes_.end()) {
 					variant v = users[n];
 					for(auto i = itor->second.begin(); i != itor->second.end(); ++i) {
@@ -2435,7 +2496,7 @@ private:
 		if(status_doc_delete_users_.empty() == false) {
 			std::vector<variant> v;
 			for(auto s : status_doc_delete_users_) {
-				v.push_back(variant(s));
+				v.push_back(variant(get_display_name(s)));
 			}
 
 			delta.add("delete_users", variant(&v));
@@ -2529,13 +2590,13 @@ private:
 	void change_user_status(const std::string& user_id, const std::string& status)
 	{
 		static const variant StatusVariant("status");
-		status_doc_user_status_changes_[user_id][StatusVariant] = variant(status);
+		status_doc_user_status_changes_[str_tolower(user_id)][StatusVariant] = variant(status);
 	}
 
 public:
 	void update_user_status(const std::string& user_id)
 	{
-		auto& m = status_doc_user_status_changes_[user_id];
+		auto& m = status_doc_user_status_changes_[str_tolower(user_id)];
 		auto& info = getAccountInfo(user_id);
 		if(info.account_info.is_map()) {
 			variant details = info.account_info["info"];
@@ -2687,7 +2748,7 @@ private:
 		}
 
 		auto items = new std::map<variant,variant>();
-		int* count = new int(0);
+		int* count = new int(1);
 
 		for(auto p : m) {
 			std::string ch = p.first.as_string();
@@ -2715,7 +2776,7 @@ private:
 			}
 		}
 
-		if(*count == 0) {
+		if(--*count == 0) {
 			variant_builder b;
 			b.add("type", "chat_channels");
 			b.add("channels", variant(items));
@@ -2807,7 +2868,7 @@ private:
 
 			variant_builder b;
 			b.add("type", "channel_join");
-			b.add("nick", username);
+			b.add("nick", get_display_name(username));
 			b.add("channel", channel_name);
 			b.add("timestamp", static_cast<int>(time(nullptr)));
 			std::string msg = b.build().write_json();
@@ -2843,7 +2904,7 @@ private:
 
 			variant_builder b;
 			b.add("type", "channel_part");
-			b.add("nick", username);
+			b.add("nick", get_display_name(username));
 			b.add("channel", channel_name);
 			b.add("timestamp", static_cast<int>(time(nullptr)));
 			std::string msg = b.build().write_json();
@@ -2872,7 +2933,7 @@ private:
 				int t = static_cast<int>(time(nullptr));
 				variant_builder c;
 				c.add("message", msg);
-				c.add("nick", username);
+				c.add("nick", get_display_name(username));
 				c.add("timestamp", t);
 				if(privileged) {
 					c.add("privileged", variant::from_bool(true));
@@ -2884,7 +2945,7 @@ private:
 
 				variant_builder b;
 				b.add("type", "chat_message");
-				b.add("nick", username);
+				b.add("nick", get_display_name(username));
 				b.add("channel", recipient);
 				b.add("message", msg);
 				b.add("timestamp", t);
@@ -2905,7 +2966,7 @@ private:
 		} else {
 			variant_builder b;
 			b.add("type", "chat_message");
-			b.add("nick", username);
+			b.add("nick", get_display_name(username));
 			b.add("message", msg);
 			b.add("timestamp", static_cast<int>(time(nullptr)));
 			if(privileged) {
@@ -2915,7 +2976,7 @@ private:
 
 			variant_builder ack;
 			ack.add("type", "chat_message");
-			ack.add("nick", username);
+			ack.add("nick", get_display_name(username));
 			ack.add("channel", "@" + recipient);
 			ack.add("message", msg);
 			ack.add("timestamp", static_cast<int>(time(nullptr)));
