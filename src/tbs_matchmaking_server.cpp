@@ -719,7 +719,13 @@ public:
 						repair_account(&user_info);
 
 						variant user_info_info = user_info["info"];
-						user_info_info.add_attr_mutation(variant("display_name"), variant(display_user));
+
+						variant display_user_var = user_info_info["display_name"];
+
+						if(display_user_var.is_null() || display_user_var.as_string() != display_user) {
+							user_info_info.add_attr_mutation(variant("display_name"), variant(display_user));
+							db_client_->put("user:" + user, user_info, [](){}, [](){});
+						}
 
 						static const variant ChatChannelsKey("chat_channels");
 						static const std::string DefaultChannel = "#talk";
