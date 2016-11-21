@@ -3049,7 +3049,7 @@ DEFINE_SET_FIELD
 DEFINE_FIELD(db_client, "builtin db_client")
 	return variant(obj.db_client_.get());
 BEGIN_DEFINE_FN(get_account_info, "(string) ->map")
-	const std::string& key = FN_ARG(0).as_string();
+	const std::string& key = str_tolower(FN_ARG(0).as_string());
 
 	auto itor = obj.account_info_.find(key);
 	ASSERT_LOG(itor != obj.account_info_.end(), "Could not find user account: " << key);
@@ -3057,7 +3057,7 @@ BEGIN_DEFINE_FN(get_account_info, "(string) ->map")
 	return itor->second.account_info["info"];
 END_DEFINE_FN
 BEGIN_DEFINE_FN(write_account, "(string, [string]|null=null) ->commands")
-	const std::string& key = FN_ARG(0).as_string();
+	const std::string& key = str_tolower(FN_ARG(0).as_string());
 
 	bool silent_update = false;
 
