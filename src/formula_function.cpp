@@ -3581,12 +3581,22 @@ FUNCTION_DEF_IMPL
 			}
 		}
 
-		FUNCTION_DEF(benchmark, 1, 1, "benchmark(expr): Executes expr in a benchmark harness and returns a string describing its benchmark performance")
+		FUNCTION_DEF_CTOR(benchmark, 1, 1, "benchmark(expr): Executes expr in a benchmark harness and returns a string describing its benchmark performance")
+		FUNCTION_DEF_MEMBERS
+			bool optimizeArgNumToVM(int narg) const override {
+				return false;
+			}
+		FUNCTION_DEF_IMPL
 			using std::placeholders::_1;
 			return variant(test::run_benchmark("benchmark", std::bind(evaluate_expr_for_benchmark, args()[0].get(), &variables, _1)));
 		END_FUNCTION_DEF(benchmark)
 
-		FUNCTION_DEF(benchmark_once, 1, 1, "benchmark_once(expr): Executes expr once and returns a string giving the timing")
+		FUNCTION_DEF_CTOR(benchmark_once, 1, 1, "benchmark_once(expr): Executes expr once and returns a string giving the timing")
+		FUNCTION_DEF_MEMBERS
+			bool optimizeArgNumToVM(int narg) const override {
+				return false;
+			}
+		FUNCTION_DEF_IMPL
 			const int start_time = SDL_GetTicks();
 			EVAL_ARG(0);
 			const int end_time = SDL_GetTicks();
