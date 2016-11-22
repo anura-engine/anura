@@ -2228,14 +2228,15 @@ void variant::serializeToString(std::string& str) const
 			if(string_->str[0] == '~' && string_->str[string_->str.length()-1] == '~') {
 				str += string_->str;
 			} else {
-				const char* delim = "'";
 				if(strchr(string_->str.c_str(), '\'')) {
-					delim = "~";
+					str += "q(";
+					str += string_->str;
+					str += ")";
+				} else {
+					str += "'";
+					str += string_->str;
+					str += "'";
 				}
-
-				str += delim;
-				str += string_->str;
-				str += delim;
 			}
 		}
 		break;
