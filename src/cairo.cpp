@@ -883,8 +883,6 @@ namespace {
 						int h = args[4].as_decimal().as_int();
 						const cairo_matrix_saver saver(context);
 
-						cairo_set_source_rgba(context.get(), 1.0, 1.0, 1.0, 1.0);
-
 						context.render_svg(svg.as_string(), w, h);
 
 					}, fn_args));
