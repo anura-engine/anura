@@ -1288,7 +1288,7 @@ static const int ModuleProtocolVersion = 1;
 			chunk_progress_.erase(progress_itor);
 		}
 
-		LOG_INFO("Chunk error: " << chunk.as_string() << " errors = " << nchunk_errors_ << "\n");
+		LOG_INFO("Chunk error: " << chunk.write_json() << " errors = " << nchunk_errors_ << "\n");
 
 		chunk_clients_.erase(std::remove(chunk_clients_.begin(), chunk_clients_.end(), client), chunk_clients_.end());
 		++nchunk_errors_;
