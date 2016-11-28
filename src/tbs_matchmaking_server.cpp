@@ -361,7 +361,7 @@ public:
 							}
 						}
 
-						auto user_info_itor = user_info_.find(p.second.user_id);
+						auto user_info_itor = user_info_.find(str_tolower(p.second.user_id));
 						bool added_game_details = false;
 						fprintf(stderr, "SEARCH FOR USER: %s -> %s\n", p.second.user_id.c_str(), user_info_itor != user_info_.end() ? "FOUND" : "UNFOUND");
 						if(user_info_itor != user_info_.end() && user_info_itor->second.game_pid != -1) {
@@ -406,7 +406,7 @@ public:
 			for(auto i = sessions_.begin(); i != sessions_.end(); ++i) {
 				SessionInfo& session = i->second;
 
-				auto account_itor = account_info_.find(session.user_id);
+				auto account_itor = account_info_.find(str_tolower(session.user_id));
 				if(account_itor == account_info_.end()) {
 					continue;
 				}
@@ -620,7 +620,7 @@ public:
 
 						users_to_sessions_[user] = session_id;
 
-						this->account_info_[user].account_info = new_user_info_variant;
+						this->account_info_[str_tolower(user)].account_info = new_user_info_variant;
 
 						if(g_beta_keys_file.empty() == false) {
 							redeem_beta_key(beta_key, user_full);
@@ -735,7 +735,7 @@ public:
 							userJoinChannel(socket_ptr(), user, DefaultChannel);
 						}
 
-						this->account_info_[user].account_info = user_info;
+						this->account_info_[str_tolower(user)].account_info = user_info;
 
 						add_logged_in_user(user);
 
@@ -813,7 +813,7 @@ public:
 							userJoinChannel(socket_ptr(), username, DefaultChannel);
 						}
 
-						this->account_info_[username].account_info = user_info;
+						this->account_info_[str_tolower(username)].account_info = user_info;
 
 						add_logged_in_user(username);
 
@@ -1201,7 +1201,7 @@ public:
 				}
 
 				static const variant ChatChannelsKey("chat_channels");
-				auto account_itor = account_info_.find(itor->second.user_id);
+				auto account_itor = account_info_.find(str_tolower(itor->second.user_id));
 				if(account_itor != account_info_.end()) {
 					variant channels = account_itor->second.account_info["info"][ChatChannelsKey];
 					if(channels.as_map().size() > 8) {
@@ -1234,7 +1234,7 @@ public:
 				}
 
 				static const variant ChatChannelsKey("chat_channels");
-				auto account_itor = account_info_.find(itor->second.user_id);
+				auto account_itor = account_info_.find(str_tolower(itor->second.user_id));
 				if(account_itor != account_info_.end()) {
 					variant channels = account_itor->second.account_info["info"][ChatChannelsKey];
 					channels.remove_attr_mutation(variant(channel_name));
@@ -1387,7 +1387,7 @@ public:
 					const int has_version = doc["info_version"].as_int(-1);
 					bool send_new_version = false;
 					if(has_version != -1) {
-						auto account_itor = account_info_.find(itor->second.user_id);
+						auto account_itor = account_info_.find(str_tolower(itor->second.user_id));
 						if(account_itor != account_info_.end() && account_itor->second.account_info["info_version"].as_int(0) != has_version) {
 							send_new_version = true;
 
@@ -1532,7 +1532,7 @@ public:
 					send_msg(socket, "text/json", "{ type: \"error\", message: \"unknown session\" }", "");
 				} else {
 					const SessionInfo& session = itor->second;
-					auto account_itor = account_info_.find(session.user_id);
+					auto account_itor = account_info_.find(str_tolower(session.user_id));
 					if(account_itor == account_info_.end()) {
 						fprintf(stderr, "Error: Unknown account: %s\n", session.user_id.c_str());
 						send_msg(socket, "text/json", "{ type: \"error\", message: \"unknown account\" }", "");
@@ -1577,7 +1577,7 @@ public:
 					send_msg(socket, "text/json", "{ type: \"error\", message: \"unknown session\" }", "");
 				} else {
 
-					auto account_itor = account_info_.find(itor->second.user_id);
+					auto account_itor = account_info_.find(str_tolower(itor->second.user_id));
 
 					if(account_itor == account_info_.end()) {
 						fprintf(stderr, "Error: Unknown user: %s / %d\n", itor->second.user_id.c_str(), (int)account_info_.size());
@@ -1606,7 +1606,7 @@ public:
 
 	void handleUserPost(socket_ptr socket, variant doc, const SessionInfo& session)
 	{
-		auto account_itor = account_info_.find(session.user_id);
+		auto account_itor = account_info_.find(str_tolower(session.user_id));
 		if(account_itor == account_info_.end()) {
 			fprintf(stderr, "Error: Unknown account: %s\n", session.user_id.c_str());
 			send_msg(socket, "text/json", "{ type: \"error\", message: \"unknown account\" }", "");
@@ -1633,7 +1633,7 @@ public:
 
 				repair_account(&user_info);
 
-				account_info_[user].account_info = user_info;
+				account_info_[str_tolower(user)].account_info = user_info;
 
 				std::vector<variant> v;
 				v.push_back(variant(this));
@@ -1957,7 +1957,7 @@ private:
 				session_info.challenges_made.clear();
 				session_info.challenges_received.clear();
 
-				auto account_info_itor = account_info_.find(session_info.user_id);
+				auto account_info_itor = account_info_.find(str_tolower(session_info.user_id));
 				ASSERT_LOG(account_info_itor != account_info_.end(), "Could not find user's account info: " << session_info.user_id);
 
 				variant account_user_info = account_info_itor->second.account_info["info"];
@@ -1980,7 +1980,7 @@ private:
 				user.add("account_info", account_info_itor->second.account_info["info"]);
 				users.push_back(user.build());
 
-				user_info_[session_info.user_id].game_session = session_info.session_id;
+				user_info_[str_tolower(session_info.user_id)].game_session = session_info.session_id;
 
 				users_list.push_back(session_info.user_id);
 
@@ -2078,7 +2078,7 @@ private:
 				add_game_server(new_port, users_list);
 
 				for(const std::string& user : users_list) {
-					user_info_[user].game_pid = pid;
+					user_info_[str_tolower(user)].game_pid = pid;
 				}
 			}
 
@@ -2161,7 +2161,7 @@ private:
 	AccountInfoMap account_info_;
 
 	UserAccountInfo& getAccountInfo(const std::string& user_id) {
-		return account_info_[user_id];
+		return account_info_[str_tolower(user_id)];
 	}
 
 	struct MatchChallenge {
@@ -2993,7 +2993,7 @@ private:
 			variant ack_msg = ack.build();
 			std::string m = b.build().write_json();
 
-			auto itor = account_info_.find(recipient);
+			auto itor = account_info_.find(str_tolower(recipient));
 			if(itor != account_info_.end()) {
 				queue_message(recipient, m);
 				send_msg(socket, "text/json", ack_msg.write_json(), "");
@@ -3005,7 +3005,7 @@ private:
 						b.add("message", formatter() << "No such user " << recipient);
 						send_msg(socket, "text/json", b.build().write_json(), "");
 					} else {
-						account_info_[recipient].account_info = user_info;
+						account_info_[str_tolower(recipient)].account_info = user_info;
 						queue_message(recipient, m);
 						send_msg(socket, "text/json", ack_msg.write_json(), "");
 					}
@@ -3051,7 +3051,7 @@ DEFINE_FIELD(db_client, "builtin db_client")
 BEGIN_DEFINE_FN(get_account_info, "(string) ->map")
 	const std::string& key = str_tolower(FN_ARG(0).as_string());
 
-	auto itor = obj.account_info_.find(key);
+	auto itor = obj.account_info_.find(str_tolower(key));
 	ASSERT_LOG(itor != obj.account_info_.end(), "Could not find user account: " << key);
 
 	return itor->second.account_info["info"];
@@ -3072,7 +3072,7 @@ BEGIN_DEFINE_FN(write_account, "(string, [string]|null=null) ->commands")
 		}
 	}
 
-	auto itor = obj.account_info_.find(key);
+	auto itor = obj.account_info_.find(str_tolower(key));
 	ASSERT_LOG(itor != obj.account_info_.end(), "Could not find user account: " << key);
 
 	return variant(new write_account_command(const_cast<matchmaking_server&>(obj), *obj.db_client_, key, itor->second.account_info, silent_update));
