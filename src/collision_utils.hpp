@@ -78,6 +78,12 @@ enum ALLOW_PLATFORM { SOLID_ONLY, SOLID_AND_PLATFORMS };
 //function which finds it a given point can be stood on.
 bool point_standable(const Level& lvl, const Entity& e, int x, int y, CollisionInfo* info=nullptr, ALLOW_PLATFORM allow_platform=SOLID_AND_PLATFORMS);
 
+bool point_standable(const Level& lvl, const Entity& e, const std::vector<EntityPtr>& chars, int x, int y, CollisionInfo* info=nullptr, ALLOW_PLATFORM allow_platform=SOLID_AND_PLATFORMS);
+
+//Get a vector of objects that might be standable within a given area. This can be used to give to
+//subsequent calls to point_standable()
+std::vector<EntityPtr> get_potentially_standable_objects_in_area(const Level& lvl, const Entity& e, const rect& area, ALLOW_PLATFORM allow_platform=SOLID_AND_PLATFORMS);
+
 //function which finds if an Entity's solid area collides with anything, when
 //the object has just moved one pixel in the direction given by 'dir'. If
 //'dir' is MOVE_DIRECTION::NONE, then all pixels will be checked.

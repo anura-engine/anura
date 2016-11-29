@@ -2251,8 +2251,28 @@ RETURN_TYPE("bool")
 		const int dy = EVAL_ARG(5).as_int();
 		const int niterations = NUM_ARGS > 6 ? EVAL_ARG(6).as_int() : 1000;
 
+		int rect_x = x;
+		int rect_y = y;
+		int rect_w = dx*niterations;
+		int rect_h = dy*niterations;
+		if(rect_w < 0) {
+			rect_x += rect_w;
+			rect_w = -rect_w;
+		} else if(rect_w == 0) {
+			rect_w = 1;
+		}
+
+		if(rect_h < 0) {
+			rect_y += rect_h;
+			rect_h = -rect_h;
+		} else if(rect_h == 0) {
+			rect_h = 1;
+		}
+
+		std::vector<EntityPtr> entities = get_potentially_standable_objects_in_area(*lvl, *obj, rect(rect_x, rect_y, rect_w, rect_h));
+
 		for(int n = 0; n < niterations; ++n) {
-			if(point_standable(*lvl, *obj, x, y)) {
+			if(point_standable(*lvl, *obj, entities, x, y)) {
 				std::vector<variant> result;
 				result.reserve(2);
 				result.push_back(variant(x));

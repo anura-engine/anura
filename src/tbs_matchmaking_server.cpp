@@ -363,7 +363,7 @@ public:
 
 						auto user_info_itor = user_info_.find(str_tolower(p.second.user_id));
 						bool added_game_details = false;
-						fprintf(stderr, "SEARCH FOR USER: %s -> %s\n", p.second.user_id.c_str(), user_info_itor != user_info_.end() ? "FOUND" : "UNFOUND");
+						fprintf(stderr, "SEARCH FOR USER IN GAMES REGISTRY: %s -> %s\n", p.second.user_id.c_str(), user_info_itor != user_info_.end() ? "FOUND" : "UNFOUND");
 						if(user_info_itor != user_info_.end() && user_info_itor->second.game_pid != -1) {
 							auto game_itor = servers_.find(user_info_itor->second.game_pid);
 						fprintf(stderr, "SEARCH FOR GAME: %d -> %s\n", user_info_itor->second.game_pid, game_itor != servers_.end() ? "FOUND" : "UNFOUND");

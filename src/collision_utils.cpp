@@ -67,7 +67,43 @@ int get_solid_dimension_id(const std::string& key)
 	return static_cast<int>(solid_dimensions.size())-1;
 }
 
+std::vector<EntityPtr> get_potentially_standable_objects_in_area(const Level& lvl, const Entity& e, const rect& area, ALLOW_PLATFORM allow_platform)
+{
+	std::vector<EntityPtr> result;
+
+	const std::vector<EntityPtr>& chars = lvl.get_solid_chars();
+
+	for(const EntityPtr& obj : chars) {
+		if(obj.get() == &e) {
+			continue;
+		}
+
+		if((allow_platform == SOLID_AND_PLATFORMS || obj->isSolidPlatform()) && geometry::rects_intersect(obj->platformRect(), area)) {
+			result.push_back(obj);
+			continue;
+		}
+
+		if((e.getWeakSolidDimensions()&obj->getSolidDimensions()) == 0 &&
+		   (e.getSolidDimensions()&obj->getWeakSolidDimensions()) == 0) {
+			continue;
+		}
+
+		if(!geometry::rects_intersect(area, obj->solidRect())) {
+			continue;
+		}
+
+		result.push_back(obj);
+	}
+
+	return result;
+}
+
 bool point_standable(const Level& lvl, const Entity& e, int x, int y, CollisionInfo* info, ALLOW_PLATFORM allow_platform)
+{
+	return point_standable(lvl, e, lvl.get_solid_chars(), x, y, info, allow_platform);
+}
+
+bool point_standable(const Level& lvl, const Entity& e, const std::vector<EntityPtr>& chars, int x, int y, CollisionInfo* info, ALLOW_PLATFORM allow_platform)
 {
 	if((allow_platform == SOLID_AND_PLATFORMS  && lvl.standable(x, y, info ? &info->surf_info : nullptr)) ||
 	   (allow_platform != SOLID_AND_PLATFORMS  && lvl.solid(x, y, info ? &info->surf_info : nullptr))) {
@@ -82,8 +118,6 @@ bool point_standable(const Level& lvl, const Entity& e, int x, int y, CollisionI
 	}
 
 	const point pt(x, y);
-
-	const std::vector<EntityPtr>& chars = lvl.get_solid_chars();
 
 	for(std::vector<EntityPtr>::const_iterator i = chars.begin();
 	    i != chars.end(); ++i) {

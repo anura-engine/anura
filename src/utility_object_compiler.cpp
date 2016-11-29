@@ -1173,6 +1173,27 @@ namespace
 	}
 }
 
+COMMAND_LINE_UTILITY(set_png_rgb_for_alpha_zero)
+{
+	std::deque<std::string> argv(args.begin(), args.end());
+	for(auto s : argv) {
+		SDL_Surface* surf = IMG_Load(s.c_str());
+		ASSERT_LOG(surf, "Could not load image: " << s);
+
+		uint8_t* pixels = reinterpret_cast<uint8_t*>(surf->pixels);
+
+		for(int n = 0; n != surf->w*surf->h; ++n) {
+			if(pixels[3] == 0) {
+				pixels[0] = pixels[1] = pixels[2] = 0;
+				pixels[3] = 4;
+			}
+			pixels += 4;
+		}
+
+		IMG_SavePNG(surf, s.c_str());
+	}
+}
+
 COMMAND_LINE_UTILITY(build_spritesheet_from_images)
 {
 	using namespace KRE;
