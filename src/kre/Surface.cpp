@@ -59,10 +59,13 @@ namespace KRE
 	}
 
 	namespace {
-		std::set<const Surface*> g_all_surfaces;
+		std::set<const Surface*>& getAllSurfacesMutable() {
+			std::set<const Surface*>* all_surfaces = new std::set<const Surface*>;
+			return *all_surfaces;
+		}
 	}
 
-	const std::set<const Surface*>& Surface::getAllSurfaces() { return g_all_surfaces; }
+	const std::set<const Surface*>& Surface::getAllSurfaces() { return getAllSurfacesMutable(); }
 
 	Surface::Surface()
 		: flags_(SurfaceFlags::NONE),
@@ -72,12 +75,12 @@ namespace KRE
 		  id_(get_next_id()),
 		  alpha_borders_{}
 	{
-		g_all_surfaces.insert(this);
+		getAllSurfacesMutable().insert(this);
 	}
 
 	Surface::~Surface()
 	{
-		g_all_surfaces.erase(this);
+		getAllSurfacesMutable().erase(this);
 	}
 
 	PixelFormatPtr Surface::getPixelFormat()
