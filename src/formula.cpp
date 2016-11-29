@@ -1512,6 +1512,19 @@ namespace {
 				if(!left.is_callable()) {
 					if(left.is_map()) {
 						return left[variant(right_->str())];
+					} else if(left.is_list()) {
+						const std::string& s = right_->str();
+						if(s == "x" || s == "r") {
+							return left[0];
+						} else if(s == "y" || s == "g") {
+							return left[1];
+						} else if(s == "z" || s == "b") {
+							return left[2];
+						} else if(s == "a") {
+							return left[2];
+						} else {
+							return variant();
+						}
 					}
 
 					ASSERT_LOG(!left.is_null(), "CALL OF DOT OPERATOR ON nullptr VALUE: '" << left_->str() << "': " << debugPinpointLocation());
@@ -1534,10 +1547,30 @@ namespace {
 			}
 
 			variant_type_ptr getVariantType() const {
+				variant_type_ptr type = left_->queryVariantType();
+				if(type && variant_type::get_type(variant::VARIANT_TYPE_LIST)->is_compatible(type)) {
+					variant_type_ptr list_of = type->is_list_of();
+					if(list_of) {
+						return list_of;
+					} else {
+						return variant_type::get_any();
+					}
+				}
+
 				return right_->queryVariantType();
 			}
 
 			variant_type_ptr getMutableType() const {
+				variant_type_ptr type = left_->queryMutableType();
+				if(type && variant_type::get_type(variant::VARIANT_TYPE_LIST)->is_compatible(type)) {
+					variant_type_ptr list_of = type->is_list_of();
+					if(list_of) {
+						return list_of;
+					} else {
+						return variant_type::get_any();
+					}
+				}
+
 				return right_->queryMutableType();
 			}
 
@@ -1559,6 +1592,19 @@ namespace {
 			void staticErrorAnalysis() const {
 				variant_type_ptr type = left_->queryVariantType();
 				ASSERT_LOG(type, "Could not find type for left side of '.' operator: " << left_->str() << ": " << debugPinpointLocation());
+
+				if(variant_type::get_type(variant::VARIANT_TYPE_LIST)->is_compatible(type)) {
+					const std::string& s = right_->str();
+					static const std::string ListMembers[] = { "x", "y", "z", "r", "g", "b", "a" };
+					for(const std::string& item : ListMembers) {
+						if(s == item) {
+							return;
+						}
+					}
+
+					ASSERT_LOG(false, "No such member " << s << " in list: " << debugPinpointLocation());
+				}
+
 				ASSERT_LOG(variant_type::may_be_null(type) == false, "Left side of '.' operator may be null: " << left_->str() << " is " << type->to_string() << " " << debugPinpointLocation());
 				ASSERT_LOG(is_type_valid_left_side(type), "Left side of '.' is of invalid type: " << left_->str() << " is " << type->to_string() << " " << debugPinpointLocation());
 			}
@@ -1570,7 +1616,7 @@ namespace {
 					return ConstFormulaCallableDefinitionPtr();
 				}
 
-				//This expressoin is the top of an identifier chain -- i.e. expression of the form a.b.c.d
+				//This expression is the top of an identifier chain -- i.e. expression of the form a.b.c.d
 				//where a, b, c, and d are all plain identifiers. They are stored with right-associativity
 				//meaning this expression is the last expression in the chain.
 
@@ -1659,7 +1705,27 @@ namespace {
 				if(left_->canCreateVM() && right_->canCreateVM()) {
 					formula_vm::VirtualMachine vm;
 
-					if(variant_type::get_type(variant::VARIANT_TYPE_CALLABLE)->is_compatible(left_type)) {
+					if(variant_type::get_type(variant::VARIANT_TYPE_LIST)->is_compatible(left_type)) {
+						left_->emitVM(vm);
+
+						const std::string& s = right_->str();
+						if(s == "x" || s == "r") {
+							vm.addInstruction(OP_PUSH_0);
+							vm.addInstruction(OP_INDEX);
+						} else if(s == "y" || s == "g") {
+							vm.addInstruction(OP_PUSH_1);
+							vm.addInstruction(OP_INDEX);
+						} else if(s == "z" || s == "b") {
+							vm.addInstruction(OP_PUSH_INT);
+							vm.addInt(2);
+							vm.addInstruction(OP_INDEX);
+						} else if(s == "a") {
+							vm.addInstruction(OP_PUSH_INT);
+							vm.addInt(3);
+							vm.addInstruction(OP_INDEX);
+						}
+						return ExpressionPtr(new VMExpression(vm, queryVariantType(), *this));
+					} else if(variant_type::get_type(variant::VARIANT_TYPE_CALLABLE)->is_compatible(left_type)) {
 						left_->emitVM(vm);
 						vm.addInstruction(OP_PUSH_SCOPE);
 						right_->emitVM(vm);
