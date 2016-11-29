@@ -104,6 +104,7 @@ using boost::math::atanh;
 
 using namespace formula_vm;
 
+PREF_BOOL(log_instrumentation, false, "Make instrument() FFL calls log to the console as well as the F7 profiler");
 PREF_BOOL(dump_to_console, true, "Send dump() to the console");
 PREF_STRING(log_console_filter, "", "");
 PREF_STRING(auto_update_status, "", "");
@@ -3631,8 +3632,12 @@ FUNCTION_DEF_IMPL
 				result = args()[1]->evaluate(variables);
 				time_ns = instrument.get_ns();
 			}
-			double time_ms = time_ns/1000000.0;
-			LOG_INFO("Instrument: " << name.as_string() << ": " <<  time_ms << "ms");
+
+			if(g_log_instrumentation) {
+				double time_ms = time_ns/1000000.0;
+				LOG_INFO("Instrument: " << name.as_string() << ": " <<  time_ms << "ms");
+			}
+
 			return result;
 
 		FUNCTION_VM
@@ -3656,8 +3661,10 @@ FUNCTION_DEF_IMPL
 				formula_profiler::Instrument instrument(name_.as_string().c_str());
 				ob.executeCommand(cmd_);
 				}
-				const int end = SDL_GetTicks();
-				LOG_INFO("Instrument Command: " << name_.as_string() << ": " << (end - begin) << "ms");
+				if(g_log_instrumentation) {
+					const int end = SDL_GetTicks();
+					LOG_INFO("Instrument Command: " << name_.as_string() << ": " << (end - begin) << "ms");
+				}
 			}
 		private:
 			void surrenderReferences(GarbageCollector* collector) {
@@ -3676,8 +3683,10 @@ FUNCTION_DEF_IMPL
 			formula_profiler::Instrument instrument(name.as_string().c_str());
 			result = EVAL_ARG(1);
 			}
-			const int end = SDL_GetTicks();
-			LOG_INFO("Instrument: " << name.as_string() << ": " << (end - begin) << "ms");
+			if(g_log_instrumentation) {
+				const int end = SDL_GetTicks();
+				LOG_INFO("Instrument: " << name.as_string() << ": " << (end - begin) << "ms");
+			}
 			return variant(new instrument_command(name, result));
 
 		FUNCTION_ARGS_DEF
