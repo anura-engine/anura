@@ -60,7 +60,7 @@ namespace KRE
 
 	namespace {
 		std::set<const Surface*>& getAllSurfacesMutable() {
-			std::set<const Surface*>* all_surfaces = new std::set<const Surface*>;
+			static std::set<const Surface*>* all_surfaces = new std::set<const Surface*>;
 			return *all_surfaces;
 		}
 	}
