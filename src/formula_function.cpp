@@ -1530,6 +1530,33 @@ namespace game_logic
 	
 		END_FUNCTION_DEF(mix)
 
+		FUNCTION_DEF(rgb_to_hsv, 1, 1, "convert rgb to hsv")
+			variant a = EVAL_ARG(0);
+			KRE::Color c(a[0].as_float(), a[1].as_float(), a[2].as_float());
+			auto vec = c.to_hsv_vec4();
+			std::vector<variant> res;
+			res.push_back(variant(vec[0]));
+			res.push_back(variant(vec[1]));
+			res.push_back(variant(vec[2]));
+			return variant(&res);
+		FUNCTION_ARGS_DEF
+			ARG_TYPE("[decimal,decimal,decimal]");
+			RETURN_TYPE("[decimal,decimal,decimal]")
+		END_FUNCTION_DEF(rgb_to_hsv)
+
+		FUNCTION_DEF(hsv_to_rgb, 1, 1, "convert hsv to rgb")
+			variant a = EVAL_ARG(0);
+			KRE::Color c = KRE::Color::from_hsv(a[0].as_float(), a[1].as_float(), a[2].as_float());
+			std::vector<variant> res;
+			res.push_back(variant(c.r()));
+			res.push_back(variant(c.g()));
+			res.push_back(variant(c.b()));
+			return variant(&res);
+		FUNCTION_ARGS_DEF
+			ARG_TYPE("[decimal,decimal,decimal]");
+			RETURN_TYPE("[decimal,decimal,decimal]")
+		END_FUNCTION_DEF(hsv_to_rgb)
+
 		FUNCTION_DEF(keys, 1, 1, "keys(map|custom_obj|level) -> list: gives the keys for a map")
 			const variant map = EVAL_ARG(0);
 			if(map.is_callable()) {
