@@ -5211,7 +5211,10 @@ namespace
 bool CustomObject::handleEventInternal(int event, const FormulaCallable* context, bool executeCommands_now)
 {
 	if(paused_ && event != OBJECT_EVENT_BEING_REMOVED) {
-		return false;
+		static const int MouseLeaveID = get_object_event_id("mouse_leave");
+		if(event != MouseLeaveID) {
+			return false;
+		}
 	}
 
 	const DieEventScope die_scope(event, currently_handling_die_event_);
