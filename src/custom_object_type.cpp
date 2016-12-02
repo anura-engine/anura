@@ -380,12 +380,56 @@ namespace
 		return instance;
 	}
 
+	std::vector<std::pair<int,int> >& ancestry_index()
+	{
+		static std::vector<std::pair<int,int> > instance;
+		return instance;
+	}
+
+	void add_inheritance_relationship(const std::string& child, const std::string& parent)
+	{
+		object_type_inheritance()[child] = parent;
+
+		ancestry_index().clear();
+		for(auto p : object_type_inheritance()) {
+			const int child_id = CustomObjectType::getObjectTypeIndex(p.first);
+
+			std::string parent = p.second;
+			const int parent_id = CustomObjectType::getObjectTypeIndex(parent);
+			ancestry_index().push_back(std::pair<int,int>(child_id, parent_id));
+			
+			auto itor = object_type_inheritance().find(parent);
+			while(itor != object_type_inheritance().end()) {
+				parent = itor->second;
+				const int parent_id = CustomObjectType::getObjectTypeIndex(parent);
+				ancestry_index().push_back(std::pair<int,int>(child_id, parent_id));
+				itor = object_type_inheritance().find(parent);
+			}
+		}
+
+		std::sort(ancestry_index().begin(), ancestry_index().end());
+
+	}
+
 	std::map<std::string, FormulaCallableDefinitionPtr>& object_type_definitions()
 	{
 		static std::map<std::string, FormulaCallableDefinitionPtr>* instance = new std::map<std::string, FormulaCallableDefinitionPtr>;
 		return *instance;
 	}
 
+}
+
+int CustomObjectType::getObjectTypeIndex(const std::string& id)
+{
+	static std::map<std::string, int>* m = new std::map<std::string, int>();
+	auto itor = m->find(id);
+	if(itor != m->end()) {
+		return itor->second;
+	} else {
+		int result = static_cast<int>(m->size())+1;
+		(*m)[id] = result;
+		return result;
+	}
 }
 
 bool CustomObjectType::isDerivedFrom(const std::string& base, const std::string& derived)
@@ -402,6 +446,15 @@ bool CustomObjectType::isDerivedFrom(const std::string& base, const std::string&
 	assert(itor->second != derived);
 
 	return isDerivedFrom(base, itor->second);
+}
+
+bool CustomObjectType::isDerivedFrom(int base, int derived)
+{
+	if(base == derived) {
+		return true;
+	}
+
+	return std::binary_search(ancestry_index().begin(), ancestry_index().end(), std::pair<int,int>(derived, base));
 }
 
 namespace {
@@ -425,7 +478,7 @@ void init_object_definition(variant node, const std::string& id_, CustomObjectCa
 		if(properties_node.is_string()) {
 			if(prototype_derived_from != "") {
 				assert(properties_node.as_string() != prototype_derived_from);
-				object_type_inheritance()[properties_node.as_string()] = prototype_derived_from;
+				add_inheritance_relationship(properties_node.as_string(), prototype_derived_from);
 			}
 			prototype_derived_from = properties_node.as_string();
 
@@ -602,6 +655,7 @@ void init_object_definition(variant node, const std::string& id_, CustomObjectCa
 	if(prototype_derived_from != "") {
 		ASSERT_LOG(id_ != prototype_derived_from, "Object " << id_ << " derives from itself");
 		object_type_inheritance()[id_] = prototype_derived_from;
+		add_inheritance_relationship(id_, prototype_derived_from);
 	}
 
 	callable_definition_->finalizeProperties();
@@ -1173,6 +1227,7 @@ void init_level_definition();
 
 CustomObjectType::CustomObjectType(const std::string& id, variant node, const CustomObjectType* base_type, const CustomObjectType* old_type)
   : id_(id),
+    numeric_id_(getObjectTypeIndex(id)),
 	hitpoints_(node["hitpoints"].as_int(1)),
 	timerFrequency_(node["timer_frequency"].as_int(-1)),
 	zorder_(node["zorder"].as_int()),

@@ -73,6 +73,7 @@ public:
 	void validate_properties() override;
 
 	bool isA(const std::string& type) const;
+	bool isA(int type_index) const;
 
 	//finishLoading(): called when a level finishes loading all objects,
 	//and allows us to do any final setup such as finding our parent.

@@ -782,6 +782,11 @@ bool CustomObject::isA(const std::string& type) const
 	return CustomObjectType::isDerivedFrom(type, type_->id());
 }
 
+bool CustomObject::isA(int type_index) const
+{
+	return CustomObjectType::isDerivedFrom(type_index, type_->numericId());
+}
+
 void CustomObject::finishLoading(Level* lvl)
 {
 	if(parent_loading_.is_null() == false) {

@@ -65,6 +65,7 @@ public:
 
 	static game_logic::FormulaCallableDefinitionPtr getDefinition(const std::string& id);
 	static bool isDerivedFrom(const std::string& base, const std::string& derived);
+	static bool isDerivedFrom(int base, int derived);
 	static variant mergePrototype(variant node, std::vector<std::string>* proto_paths=nullptr);
 	static const std::string* getObjectPath(const std::string& id);
 	static ConstCustomObjectTypePtr get(const std::string& id);
@@ -74,6 +75,8 @@ public:
 	static void invalidateAllObjects();
 	static std::vector<ConstCustomObjectTypePtr> getAll();
 	static std::vector<std::string> getAllIds();
+
+	static int getObjectTypeIndex(const std::string& id);
 
 	//a function which returns all objects that have an editor category
 	//mapped to the category they are in.
@@ -111,6 +114,7 @@ public:
 	ConstCustomObjectCallablePtr callableDefinition() const { return callable_definition_; }
 
 	const std::string& id() const { return id_; }
+	int numericId() const { return numeric_id_; }
 	int getHitpoints() const { return hitpoints_; }
 
 	int timerFrequency() const { return timerFrequency_; }
@@ -303,6 +307,7 @@ private:
 	CustomObjectCallablePtr callable_definition_;
 
 	std::string id_;
+	int numeric_id_;
 	int hitpoints_;
 
 	int timerFrequency_;

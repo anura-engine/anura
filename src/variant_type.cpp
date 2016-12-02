@@ -508,7 +508,7 @@ private:
 class variant_type_custom_object : public variant_type
 {
 public:
-	explicit variant_type_custom_object(const std::string& type) : type_(type)
+	explicit variant_type_custom_object(const std::string& type) : type_(type), type_index_(type_ == "" ? -1 : CustomObjectType::getObjectTypeIndex(type))
 	{
 	}
 
@@ -518,7 +518,7 @@ public:
 			return false;
 		}
 
-		return type_ == "" || obj->isA(type_);
+		return type_index_ == -1 || obj->isA(type_index_);
 	}
 
 	bool is_equal(const variant_type& o) const {
@@ -560,6 +560,7 @@ public:
 	const std::string* is_custom_object() const { return &type_; }
 private:
 	std::string type_;
+	int type_index_;
 };
 
 /* XXX -- rework
