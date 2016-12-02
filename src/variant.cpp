@@ -371,7 +371,7 @@ private:
 struct variant_fn : public GarbageCollectible {
 	variant::debug_info info;
 
-	variant_fn() : base_slot(0)
+	variant_fn() : base_slot(0), needs_type_checking(false)
 	{}
 
 	void surrenderReferences(GarbageCollector* collector) override {
@@ -390,6 +390,19 @@ struct variant_fn : public GarbageCollectible {
 	std::vector<variant> bound_args;
 
 	int base_slot;
+
+	bool needs_type_checking;
+
+	void calculate_needs_type_checking()
+	{
+		needs_type_checking = false;
+		for(variant_type_ptr t : type->variant_types) {
+			if(t->is_class() || t->is_interface()) {
+				needs_type_checking = true;
+				break;
+			}
+		}
+	}
 };
 
 struct variant_generic_fn : public GarbageCollectible {
@@ -797,6 +810,8 @@ variant::variant(const game_logic::ConstFormulaPtr& formula, const game_logic::F
 	fn_->base_slot = base_slot;
 	fn_->type = type_info;
 
+	fn_->calculate_needs_type_checking();
+
 	ASSERT_EQ(fn_->type->variant_types.size(), fn_->type->arg_names.size());
 
 	if(formula->strVal().get_debug_info()) {
@@ -825,6 +840,8 @@ variant::variant(std::function<variant(const game_logic::FormulaCallable&)> buil
 	fn_->base_slot = 0;
 	fn_->type = type_info;
 
+	fn_->calculate_needs_type_checking();
+
 	ASSERT_EQ(fn_->type->variant_types.size(), fn_->type->arg_names.size());
 
 	registerGlobalVariant(this);
@@ -841,6 +858,8 @@ variant::variant(game_logic::ConstFormulaPtr fml, const std::vector<std::string>
 	fn_->callable = &callable;
 	fn_->type->default_args = default_args;
 	fn_->variant_types = variant_types;
+
+	fn_->calculate_needs_type_checking();
 
 	ASSERT_EQ(fn_->variant_types.size(), fn_->type->arg_names.size());
 
@@ -1155,6 +1174,10 @@ variant variant::operator()(const std::vector<variant>& passed_args) const
 		generate_error(formatter() << "Function passed " << args->size() << " arguments, between " <<  min_args << " and " << max_args << " expected (" << str.str() << ")");
 	}
 
+	if(fn_->needs_type_checking == false) {
+		callable->setValues(*args);
+	} else {
+
 	for(size_t n = 0; n != args->size(); ++n) {
 		if(n < fn_->type->variant_types.size() && fn_->type->variant_types[n]) {
 	//		if((*args)[n].is_map() && fn_->type->variant_types[n]->is_class(nullptr))
@@ -1192,6 +1215,7 @@ variant variant::operator()(const std::vector<variant>& passed_args) const
 
 		callable->add((*args)[n]);
 	}
+	}
 
 	for(std::vector<variant>::size_type n = args->size(); n < max_args && (n - min_args) < fn_->type->default_args.size(); ++n) {
 		callable->add(fn_->type->default_args[n - min_args]);
@@ -1207,6 +1231,15 @@ variant variant::operator()(const std::vector<variant>& passed_args) const
 	} else {
 		return fn_->builtin_fn(*callable);
 	}
+}
+
+bool variant::disassemble(std::string* result) const
+{
+	if(type_ != VARIANT_TYPE_FUNCTION || !fn_->fn) {
+		return false;
+	}
+
+	return fn_->fn->outputDisassemble(result);
 }
 
 variant variant::instantiate_generic_function(const std::vector<variant_type_ptr>& args) const

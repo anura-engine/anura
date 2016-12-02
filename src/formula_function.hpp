@@ -133,19 +133,22 @@ namespace game_logic
 		void setDefinitionUsedByExpression(ConstFormulaCallableDefinitionPtr def) { definition_used_ = def; }
 		ConstFormulaCallableDefinitionPtr getDefinitionUsedByExpression() const { return definition_used_; }
 
-		virtual bool canCreateVM() const { return false; }
-		virtual void emitVM(formula_vm::VirtualMachine& vm) const { assert(false); }
+		bool canChildrenVM() const { for(auto p : queryChildren()) { if(p && !p->canCreateVM()) return false; } return true; }
+		virtual bool canCreateVM() const { return canChildrenVM(); }
+		virtual void emitVM(formula_vm::VirtualMachine& vm) const;
 
 		virtual ExpressionPtr optimizeToVM() { return ExpressionPtr(); }
 
 		void setVMDebugInfo(formula_vm::VirtualMachine& vm) const;
+
+		virtual bool isVM() const { return false; }
 
 	protected:
 		virtual variant_type_ptr getVariantType() const { return variant_type_ptr(); }
 		virtual variant_type_ptr getMutableType() const { return variant_type_ptr(); }
 		virtual variant executeMember(const FormulaCallable& variables, std::string& id, variant* variant_id) const;
 
-		void optimizeChildToVM(ExpressionPtr& expr) { if(expr) { auto opt = expr->optimizeToVM(); if(opt.get() != nullptr) { expr = opt; } } }
+		void optimizeChildToVM(ExpressionPtr& expr);
 
 		virtual variant execute(const FormulaCallable& variables) const = 0;
 		virtual void staticErrorAnalysis() const {}
@@ -178,6 +181,7 @@ namespace game_logic
 									std::string::const_iterator begin_str,
 									std::string::const_iterator end_str) override;
 
+		bool canCreateVM() const override;
 		ExpressionPtr optimizeToVM() override;
 
 		virtual variant executeWithArgs(const FormulaCallable& variables, const variant* passed_args, int num_passed_args) const { return execute(variables); }
@@ -224,6 +228,7 @@ namespace game_logic
 		void set_formula(ConstFormulaPtr f) { formula_ = f; }
 		void set_has_closure(int base_slot) { has_closure_ = true; base_slot_ = base_slot; }
 		virtual ExpressionPtr optimizeToVM() override { return ExpressionPtr(); }
+		bool canCreateVM() const override { return false; }
 	private:
 		ffl::IntrusivePtr<SlotFormulaCallable> calculate_args_callable(const FormulaCallable& variables) const;
 		variant execute(const FormulaCallable& variables) const override;
@@ -344,7 +349,7 @@ namespace game_logic
 		}
 
 		bool canCreateVM() const override { return true; }
-		void emitVM(formula_vm::VirtualMachine& vm) const override;
+		ExpressionPtr optimizeToVM() override;
 	private:
 		variant execute(const FormulaCallable& /*variables*/) const override {
 			return v_;

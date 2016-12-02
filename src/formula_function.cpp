@@ -177,6 +177,14 @@ namespace game_logic
 		return result;
 	}
 
+	void FormulaExpression::emitVM(formula_vm::VirtualMachine& vm) const
+	{
+		for(auto p : queryChildrenRecursive()) {
+			LOG_ERROR("  Sub-expr: " << p->name() << ": ((" << p->str() << ")) -> can_vm = " << (p->canCreateVM() ? "yes" : "no") << "\n");
+		}
+		ASSERT_LOG(false, "Trying to emit VM from non-VMable expression: " << name() << " :: " << str());
+	}
+
 	void FormulaExpression::copyDebugInfoFrom(const FormulaExpression& o)
 	{
 		setDebugInfo(o.parent_formula_, o.begin_str_, o.end_str_);
@@ -335,6 +343,24 @@ namespace game_logic
 		ASSERT_LOG(false, "Trying to set illegal value: " << str() << "\n" << debugPinpointLocation());
 		return variant();
 	}
+
+	void FormulaExpression::optimizeChildToVM(ExpressionPtr& expr)
+	{
+		if(expr) {
+			bool can_vm = expr->canCreateVM();
+			auto opt = expr->optimizeToVM();
+			if(opt.get() != nullptr) {
+				ASSERT_LOG(can_vm == opt->canCreateVM(), "Expression says it cannot be made into a VM but it can: " << expr->str());
+				expr = opt;
+
+			}
+
+			if(can_vm && expr->isVM() == false) {
+				ASSERT_LOG(false, "Expressions says it can be made into a VM but it cannot: " << typeid(*expr).name() << " :: " << expr->name() << " :: " << expr->str());
+			}
+		}
+	}
+	
 
 	namespace 
 	{
@@ -841,6 +867,8 @@ namespace game_logic
 
 			return ExpressionPtr();
 
+		CAN_VM
+			return canChildrenVM();
 		FUNCTION_VM
 
 			for(ExpressionPtr& a : args_mutable()) {
@@ -1275,6 +1303,8 @@ namespace game_logic
 
 			return variant_type::get_union(types);
 
+		CAN_VM
+			return canChildrenVM();
 		FUNCTION_VM
 
 			for(ExpressionPtr& a : args_mutable()) {
@@ -1529,6 +1559,20 @@ namespace game_logic
 			return variant_type::get_type(variant::VARIANT_TYPE_DECIMAL);
 	
 		END_FUNCTION_DEF(mix)
+
+		FUNCTION_DEF(disassemble, 1, 1, "disassemble function")
+			variant arg = EVAL_ARG(0);
+			std::string result;
+			if(arg.disassemble(&result)) {
+				return variant(result);
+			}
+
+			return variant();
+		FUNCTION_ARGS_DEF
+			ARG_TYPE("function");
+			RETURN_TYPE("string|null")
+		END_FUNCTION_DEF(disassemble)
+
 
 		FUNCTION_DEF(rgb_to_hsv, 1, 1, "convert rgb to hsv")
 			variant a = EVAL_ARG(0);
@@ -2061,6 +2105,41 @@ namespace game_logic
 					return nullptr;
 				}
 
+				bool getSymbolIndexForSlot(int slot, int* index) const {
+					if(slot < 0) {
+						return false;
+					}
+
+					if(static_cast<unsigned>(slot) < entries_.size()) {
+
+						if(!hasSymbolIndexes()) {
+							return false;
+						}
+
+						*index = getBaseSymbolIndex() + slot;
+						return true;
+					}
+
+					if(base_) {
+						return base_->getSymbolIndexForSlot(slot - static_cast<int>(entries_.size()), index);
+					}
+
+					return false;
+				}
+
+				int getBaseSymbolIndex() const {
+					int result = 0;
+					if(base_) {
+						result += base_->getBaseSymbolIndex();
+					}
+
+					if(hasSymbolIndexes()) {
+						result += entries_.size();
+					}
+
+					return result;
+				}
+
 				int getNumSlots() const override {
 					return 2 + (base_ ? base_->getNumSlots() : 0);
 				}
@@ -2361,6 +2440,8 @@ FUNCTION_DEF_IMPL
 			}
 			pathfinding::DirectedGraph* dg = new pathfinding::DirectedGraph(&vertex_list, &edges);
 			return variant(dg);
+		CAN_VM
+			return false;
 		FUNCTION_VM
 			return ExpressionPtr();
 		FUNCTION_ARGS_DEF
@@ -2719,6 +2800,41 @@ FUNCTION_DEF_IMPL
 				return nullptr;
 			}
 
+			bool getSymbolIndexForSlot(int slot, int* index) const {
+				if(slot < 0) {
+					return false;
+				}
+
+				if(static_cast<unsigned>(slot) < entries_.size()) {
+
+					if(!hasSymbolIndexes()) {
+						return false;
+					}
+
+					*index = getBaseSymbolIndex() + slot;
+					return true;
+				}
+
+				if(base_) {
+					return base_->getSymbolIndexForSlot(slot - NUM_MAP_CALLABLE_SLOTS, index);
+				}
+
+				return false;
+			}
+
+			int getBaseSymbolIndex() const {
+				int result = 0;
+				if(base_) {
+					result += base_->getBaseSymbolIndex();
+				}
+
+				if(hasSymbolIndexes()) {
+					result += entries_.size();
+				}
+
+				return result;
+			}
+
 			int getNumSlots() const {
 				return NUM_MAP_CALLABLE_SLOTS + (base_ ? base_->getNumSlots() : 0);
 			}
@@ -2775,6 +2891,8 @@ FUNCTION_DEF_IMPL
 				return variant(res);
 			}
 
+		CAN_VM
+			return NUM_ARGS == 2 && canChildrenVM();
 		FUNCTION_VM
 
 			if(NUM_ARGS != 2) {
@@ -2856,6 +2974,8 @@ FUNCTION_DEF_IMPL
 			}
 
 			return variant(&vars);
+		CAN_VM
+			return NUM_ARGS == 2 && canChildrenVM();
 		FUNCTION_VM
 
 			if(NUM_ARGS != 2) {
@@ -2982,6 +3102,12 @@ FUNCTION_DEF_IMPL
 				identifier_ = read_identifier_expression(*args()[1]);
 			}
 		FUNCTION_DEF_MEMBERS
+			bool optimizeArgNumToVM(int narg) const override {
+				if(NUM_ARGS > 2 && narg == 1) {
+					return false;
+				}
+				return true;
+			}
 			std::string identifier_;
 		FUNCTION_DEF_IMPL
 			const variant items = EVAL_ARG(0);
@@ -3011,6 +3137,8 @@ FUNCTION_DEF_IMPL
 			}
 
 			return variant();
+		CAN_VM
+			return NUM_ARGS == 2 && canChildrenVM();
 		FUNCTION_VM
 
 			if(NUM_ARGS != 2) {
@@ -3115,6 +3243,8 @@ FUNCTION_DEF_IMPL
 			}
 			ASSERT_LOG(false, "Failed to find expected item. List has: " << items.write_json() << " " << debugPinpointLocation());
 
+		CAN_VM
+			return NUM_ARGS == 2 && canChildrenVM();
 		FUNCTION_VM
 
 			if(NUM_ARGS != 2) {
@@ -3268,6 +3398,10 @@ FUNCTION_DEF_IMPL
 				if(args.size() == 3) {
 					identifier_ = read_identifier_expression(*args[1]);
 				}
+			}
+
+			bool canCreateVM() const override {
+				return args().size() == 2 && canChildrenVM();
 			}
 
 			ExpressionPtr optimizeToVM() override {
@@ -3667,6 +3801,8 @@ FUNCTION_DEF_IMPL
 
 			return result;
 
+		CAN_VM
+			return false;
 		FUNCTION_VM
 			return ExpressionPtr();
 		FUNCTION_ARGS_DEF
@@ -3755,6 +3891,8 @@ FUNCTION_DEF_IMPL
 			return variant(static_cast<int>(items.num_elements()));
 			RETURN_TYPE("int");
 
+		CAN_VM
+			return canChildrenVM();
 		FUNCTION_VM
 			for(ExpressionPtr& a : args_mutable()) {
 				optimizeChildToVM(a);
@@ -5010,6 +5148,19 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 		}
 	}
 
+	bool FunctionExpression::canCreateVM() const
+	{
+		int arg_index = 0;
+		for(const ExpressionPtr& a : args()) {
+			if(optimizeArgNumToVM(arg_index) && a->canCreateVM() == false) {
+				return false;
+			}
+			++arg_index;
+		}
+
+		return true;
+	}
+
 	ExpressionPtr FunctionExpression::optimizeToVM()
 	{
 		bool can_vm = true;
@@ -5042,6 +5193,7 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 			int arg_index = 0;
 			for(ExpressionPtr& a : args_mutable()) {
 				if(optimizeArgNumToVM(arg_index)) {
+					optimizeChildToVM(a);
 					a->emitVM(vm);
 				} else {
 					vm.addInstruction(OP_PUSH_NULL);

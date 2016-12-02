@@ -46,12 +46,13 @@ variant VirtualMachine::execute(const FormulaCallable& variables) const
 {
 	std::vector<FormulaCallablePtr> variables_stack;
 	std::vector<variant> stack;
+	std::vector<variant> symbol_stack;
 	stack.reserve(8);
-	executeInternal(variables, variables_stack, stack, &instructions_[0], &instructions_[0] + instructions_.size());
+	executeInternal(variables, variables_stack, stack, symbol_stack, &instructions_[0], &instructions_[0] + instructions_.size());
 	return stack.back();
 }
 
-void VirtualMachine::executeInternal(const FormulaCallable& variables, std::vector<FormulaCallablePtr>& variables_stack, std::vector<variant>& stack, const InstructionType* p, const InstructionType* p2) const
+void VirtualMachine::executeInternal(const FormulaCallable& variables, std::vector<FormulaCallablePtr>& variables_stack, std::vector<variant>& stack, std::vector<variant>& symbol_stack, const InstructionType* p, const InstructionType* p2) const
 {
 	for(; p != p2; ++p) {
 		switch(*p) {
@@ -513,7 +514,7 @@ void VirtualMachine::executeInternal(const FormulaCallable& variables, std::vect
 						variables_stack.back().reset(callable);
 					}
 					callable->set(in, index);
-					executeInternal(variables, variables_stack, stack, p+2, p + *(p+1) + 1);
+					executeInternal(variables, variables_stack, stack, symbol_stack, p+2, p + *(p+1) + 1);
 					++index;
 				}
 
@@ -549,7 +550,7 @@ void VirtualMachine::executeInternal(const FormulaCallable& variables, std::vect
 						variables_stack.back().reset(callable);
 					}
 					callable->set(in.first, in.second, index);
-					executeInternal(variables, variables_stack, stack, p+2, p + *(p+1) + 1);
+					executeInternal(variables, variables_stack, stack, symbol_stack, p+2, p + *(p+1) + 1);
 					++index;
 				}
 
@@ -604,7 +605,7 @@ void VirtualMachine::executeInternal(const FormulaCallable& variables, std::vect
 						variables_stack.back().reset(callable);
 					}
 					callable->set(in, index);
-					executeInternal(variables, variables_stack, stack, p+2, p + *(p+1) + 1);
+					executeInternal(variables, variables_stack, stack, symbol_stack, p+2, p + *(p+1) + 1);
 
 					if(stack.back().as_bool()) {
 						res.push_back(in);
@@ -646,7 +647,7 @@ void VirtualMachine::executeInternal(const FormulaCallable& variables, std::vect
 						variables_stack.back().reset(callable);
 					}
 					callable->set(in.first, in.second, index);
-					executeInternal(variables, variables_stack, stack, p+2, p + *(p+1) + 1);
+					executeInternal(variables, variables_stack, stack, symbol_stack, p+2, p + *(p+1) + 1);
 
 					if(stack.back().as_bool()) {
 						res.insert(in);
@@ -688,7 +689,7 @@ void VirtualMachine::executeInternal(const FormulaCallable& variables, std::vect
 						variables_stack.back().reset(callable);
 					}
 					callable->set(item, index);
-					executeInternal(variables, variables_stack, stack, p+2, p + *(p+1) + 1);
+					executeInternal(variables, variables_stack, stack, symbol_stack, p+2, p + *(p+1) + 1);
 					if(stack.back().as_bool()) {
 						stack.pop_back();
 						break;
@@ -769,7 +770,7 @@ void VirtualMachine::executeInternal(const FormulaCallable& variables, std::vect
 					*args[n] = lists[n][indexes[n]];
 				}
 
-				executeInternal(variables, variables_stack, stack, p+2, p + *(p+1) + 1);
+				executeInternal(variables, variables_stack, stack, symbol_stack, p+2, p + *(p+1) + 1);
 
 				if(!incrementVec(indexes, nelements)) {
 					break;
@@ -885,6 +886,25 @@ void VirtualMachine::executeInternal(const FormulaCallable& variables, std::vect
 			stack.pop_back();
 			break;
 		}
+
+		case OP_PUSH_SYMBOL_STACK: {
+			symbol_stack.emplace_back(std::move(stack.back()));
+			stack.pop_back();
+			break;
+		}
+
+		case OP_POP_SYMBOL_STACK: {
+			symbol_stack.pop_back();
+			break;
+		}
+
+		case OP_LOOKUP_SYMBOL_STACK: {
+			++p;
+			const int index = static_cast<int>(*p);
+			ASSERT_LOG(index >= 0 && index < static_cast<int>(symbol_stack.size()), "Illegal symbol stack index: " << index << " / " << symbol_stack.size());
+			stack.push_back(symbol_stack[static_cast<int>(*p)]);
+			break;
+		}
 			
 		}
 	}
@@ -966,7 +986,7 @@ void VirtualMachine::addJumpToPosition(InstructionType i, int pos)
 }
 
 namespace {
-	VirtualMachine::InstructionType g_arg_instructions[] = { OP_LOOKUP, OP_JMP_IF, OP_JMP, OP_JMP_UNLESS, OP_POP_JMP_IF, OP_POP_JMP_UNLESS, OP_CALL, OP_CALL_BUILTIN, OP_LOOP_NEXT, OP_ALGO_MAP, OP_ALGO_FILTER, OP_ALGO_FIND, OP_ALGO_COMPREHENSION, OP_UNDER, OP_PUSH_INT };
+	VirtualMachine::InstructionType g_arg_instructions[] = { OP_LOOKUP, OP_JMP_IF, OP_JMP, OP_JMP_UNLESS, OP_POP_JMP_IF, OP_POP_JMP_UNLESS, OP_CALL, OP_CALL_BUILTIN, OP_LOOP_NEXT, OP_ALGO_MAP, OP_ALGO_FILTER, OP_ALGO_FIND, OP_ALGO_COMPREHENSION, OP_UNDER, OP_PUSH_INT, OP_LOOKUP_SYMBOL_STACK };
 }
 
 void VirtualMachine::append(const VirtualMachine& other)
@@ -1026,6 +1046,8 @@ static const std::string OpNames[] = {
 
 		  "OP_WHERE", "OP_JMP_IF", "OP_JMP_UNLESS", "OP_POP_JMP_IF", "OP_POP_JMP_UNLESS", "OP_JMP",
 		  "OP_LAMBDA", "OP_LAMBDA_WITH_CLOSURE", "OP_CREATE_INTERFACE",
+
+		  "OP_PUSH_SYMBOL_STACK", "OP_POP_SYMBOL_STACK", "OP_LOOKUP_SYMBOL_STACK",
 };
 
 std::string VirtualMachine::debugOutput(const VirtualMachine::InstructionType* instruction_ptr) const
@@ -1123,6 +1145,10 @@ std::string VirtualMachine::debugOutput(const VirtualMachine::InstructionType* i
 			s << ": " << "OP(" << static_cast<char>(op) << ")\n";
 		} else if((op-OP_INVALID) < sizeof(OpNames)/sizeof(*OpNames)) {
 			s << ": " << OpNames[(op-OP_INVALID)] << "\n";
+		} else if(op == OP_LOOKUP_SYMBOL_STACK) {
+			s << ": OP_LOOKUP_SYMBOL_STACK ";
+			++n;
+			s << static_cast<int>(instructions_[n]) << "\n";
 		} else {
 			s << ": UNKNOWN: " << op << "\n";
 		}

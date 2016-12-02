@@ -46,6 +46,7 @@ namespace game_logic
 	class WhereVariables : public FormulaCallable {
 	public:
 		WhereVariables(const FormulaCallable &base, WhereVariablesInfoPtr info);
+
 	private:
 		ffl::IntrusivePtr<const FormulaCallable> base_;
 		WhereVariablesInfoPtr info_;

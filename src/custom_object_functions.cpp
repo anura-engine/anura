@@ -1704,6 +1704,8 @@ namespace
 		cmd->setExpression(this);
 		return variant(cmd);
 
+	CAN_VM
+		return false;
 	FUNCTION_VM
 		return ExpressionPtr();
 	FUNCTION_ARGS_DEF

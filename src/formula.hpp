@@ -92,6 +92,7 @@ namespace game_logic
 		const variant& strVal() const { return str_; }
 
 		std::string outputDebugInfo() const;
+		bool outputDisassemble(std::string* result) const;
 
 		bool hasGuards() const { return base_expr_.empty() == false; }
 		int guardMatches(const FormulaCallable& variables) const;

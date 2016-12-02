@@ -92,6 +92,8 @@ FUNCTION_DEF_IMPL
 
 #define FUNCTION_OPTIMIZE } ExpressionPtr optimize() const override {
 
+#define CAN_VM } bool canCreateVM() const override {
+
 #define FUNCTION_VM } ExpressionPtr optimizeToVM() override { \
 	FunctionExpression::optimizeToVM(); \
 	for(auto& a : args()) { if(a->canCreateVM() == false) { return ExpressionPtr(); } } \

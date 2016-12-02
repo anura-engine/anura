@@ -64,6 +64,14 @@ public:
 	void pushPrivateAccess();
 	void popPrivateAccess();
 
+	bool getSymbolIndexForSlot(int slot, int* index) const {
+		return false;
+	}
+
+	int getBaseSymbolIndex() const {
+		return 0;
+	}
+
 private:
 	int getSubsetSlotBase(const FormulaCallableDefinition* subset) const { return -1; }
 	

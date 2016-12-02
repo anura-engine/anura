@@ -73,6 +73,12 @@ namespace game_logic
 
 		virtual const Entry* getDefaultEntry() const { return nullptr; }
 
+		virtual bool getSymbolIndexForSlot(int slot, int* index) const = 0;
+		virtual int getBaseSymbolIndex() const = 0;
+
+		virtual void setHasSymbolIndexes() { has_symbol_indexes_ = true; }
+		virtual bool hasSymbolIndexes() const { return has_symbol_indexes_; }
+
 		Entry* getEntryById(const std::string& key) {
 			const int slot = getSlot(key);
 			if(slot < 0) { return nullptr; } else { return getEntry(slot); }
@@ -98,6 +104,8 @@ namespace game_logic
 		bool is_strict_;
 		bool supports_slot_lookups_;
 		std::string type_name_;
+
+		bool has_symbol_indexes_;
 	};
 
 	FormulaCallableDefinitionPtr modify_formula_callable_definition(ConstFormulaCallableDefinitionPtr base_def, int slot, variant_type_ptr new_type, const FormulaCallableDefinition* new_def=nullptr);

@@ -273,6 +273,13 @@ enum OP {
 		  // ARGS: NONE
 		  OP_CREATE_INTERFACE,
 
+		  //Pushes the top item from the stack onto the symbol stack.
+		  OP_PUSH_SYMBOL_STACK,
+
+		  OP_POP_SYMBOL_STACK,
+
+		  OP_LOOKUP_SYMBOL_STACK,
+
 		  };
 
 
@@ -307,7 +314,7 @@ public:
 
 	void setDebugInfo(const variant& parent_formula, unsigned short begin, unsigned short end);
 private:
-	void executeInternal(const game_logic::FormulaCallable& variables, std::vector<game_logic::FormulaCallablePtr>& variables_stack, std::vector<variant>& stack, const InstructionType* p, const InstructionType* p2) const;
+	void executeInternal(const game_logic::FormulaCallable& variables, std::vector<game_logic::FormulaCallablePtr>& variables_stack, std::vector<variant>& stack, std::vector<variant>& symbol_stack, const InstructionType* p, const InstructionType* p2) const;
 	std::string debugPinpointLocation(const InstructionType* p, const std::vector<variant>& stack) const;
 	std::vector<InstructionType> instructions_;
 	std::vector<variant> constants_;

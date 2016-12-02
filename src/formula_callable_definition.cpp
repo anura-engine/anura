@@ -42,7 +42,7 @@ namespace game_logic
 		}
 	}
 
-	FormulaCallableDefinition::FormulaCallableDefinition() : is_strict_(false), supports_slot_lookups_(true)
+	FormulaCallableDefinition::FormulaCallableDefinition() : is_strict_(false), supports_slot_lookups_(true), has_symbol_indexes_(false)
 	{
 	}
 
@@ -115,6 +115,39 @@ namespace game_logic
 				return &entries_[slot];
 			}
 
+			bool getSymbolIndexForSlot(int slot, int* index) const {
+				if(base_ && slot < getBaseNumSlots()) {
+					return base_->getSymbolIndexForSlot(slot, index);
+				}
+
+				slot -= getBaseNumSlots();
+			
+				if(!hasSymbolIndexes()) {
+					return false;
+				}
+
+				*index = static_cast<int>(entries_.size()) - slot - 1;
+
+				if(base_) {
+					*index += base_->getBaseSymbolIndex();
+				}
+
+				return true;
+			}
+
+			int getBaseSymbolIndex() const {
+				int result = 0;
+				if(base_) {
+					result += base_->getBaseSymbolIndex();
+				}
+
+				if(hasSymbolIndexes()) {
+					result += entries_.size();
+				}
+
+				return result;
+			}
+
 			int getNumSlots() const { return getBaseNumSlots() + static_cast<int>(entries_.size()); }
 
 			int getSubsetSlotBase(const FormulaCallableDefinition* subset) const
@@ -170,6 +203,9 @@ namespace game_logic
 				: base_(base), slot_(modified_slot), mod_(modification)
 			{
 				setSupportsSlotLookups(base_->supportsSlotLookups());
+				if(base_->hasSymbolIndexes()) {
+					setHasSymbolIndexes();
+				}
 			}
 
 			int getSlot(const std::string& key) const {
@@ -202,6 +238,22 @@ namespace game_logic
 			const std::string* getTypeName() const { return base_->getTypeName(); }
 
 			bool isStrict() const { return base_->isStrict(); }
+
+			bool getSymbolIndexForSlot(int slot, int* index) const override {
+				return base_->getSymbolIndexForSlot(slot, index);
+			}
+
+			int getBaseSymbolIndex() const override {
+				return base_->getBaseSymbolIndex();
+			}
+
+			void setHasSymbolIndexes() override {
+				const_cast<FormulaCallableDefinition*>(base_.get())->setHasSymbolIndexes();
+			}
+
+			bool hasSymbolIndexes() const override {
+				return base_->hasSymbolIndexes();
+			}
 
 		private:
 			ConstFormulaCallableDefinitionPtr base_;

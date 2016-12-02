@@ -445,6 +445,14 @@ std::map<std::string, std::string>& class_path_map()
 				return static_cast<int>(slots_.size());
 			}
 
+			bool getSymbolIndexForSlot(int slot, int* index) const {
+				return false;
+			}
+
+			int getBaseSymbolIndex() const {
+				return 0;
+			}
+
 			const std::string* getTypeName() const {
 				return &type_name_;
 			}
