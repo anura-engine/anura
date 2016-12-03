@@ -595,11 +595,9 @@ public:
 					variant new_user_info_variant = new_user_info.build();
 
 					static const variant ChatChannelsKey("chat_channels");
-					static const std::string DefaultChannel = "#talk";
 					variant channels = new_user_info_variant["info"][ChatChannelsKey];
-					if(channels[variant(DefaultChannel)].as_bool(false) == false) {
-						channels.add_attr_mutation(variant(DefaultChannel), variant::from_bool(true));
-						userJoinChannel(socket_ptr(), user, DefaultChannel);
+					for(auto p : channels.as_map()) {
+						userJoinChannel(socket_ptr(), user, p.first.as_string());
 					}
 
 					//put the new user in the database. Note that we use
@@ -728,11 +726,9 @@ public:
 						}
 
 						static const variant ChatChannelsKey("chat_channels");
-						static const std::string DefaultChannel = "#talk";
 						variant channels = user_info["info"][ChatChannelsKey];
-						if(channels[variant(DefaultChannel)].as_bool(false) == false) {
-							channels.add_attr_mutation(variant(DefaultChannel), variant::from_bool(true));
-							userJoinChannel(socket_ptr(), user, DefaultChannel);
+						for(auto p : channels.as_map()) {
+							userJoinChannel(socket_ptr(), user, p.first.as_string());
 						}
 
 						this->account_info_[str_tolower(user)].account_info = user_info;
@@ -806,11 +802,9 @@ public:
 						user_display_names_[username] = display_name;
 
 						static const variant ChatChannelsKey("chat_channels");
-						static const std::string DefaultChannel = "#talk";
 						variant channels = user_info["info"][ChatChannelsKey];
-						if(channels[variant(DefaultChannel)].as_bool(false) == false) {
-							channels.add_attr_mutation(variant(DefaultChannel), variant::from_bool(true));
-							userJoinChannel(socket_ptr(), username, DefaultChannel);
+						for(auto p : channels.as_map()) {
+							userJoinChannel(socket_ptr(), username, p.first.as_string());
 						}
 
 						this->account_info_[str_tolower(username)].account_info = user_info;
