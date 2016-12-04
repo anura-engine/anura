@@ -929,11 +929,11 @@ namespace game_logic
 			bound_command(variant target, const std::vector<variant>& args)
 			  : target_(target), args_(args)
 			{}
-			virtual void execute(game_logic::FormulaCallable& ob) const {
+			virtual void execute(game_logic::FormulaCallable& ob) const override {
 				ob.executeCommand(target_(args_));
 			}
 		private:
-			void surrenderReferences(GarbageCollector* collector) {
+			void surrenderReferences(GarbageCollector* collector) override {
 				collector->surrenderVariant(&target_);
 				for(variant& v : args_) {
 					collector->surrenderVariant(&v);
@@ -1056,7 +1056,7 @@ namespace game_logic
 								  ffl::IntrusivePtr<FormulaObject> src)
 			  : target_(target), src_(src)
 			{}
-			virtual void execute(game_logic::FormulaCallable& ob) const {
+			virtual void execute(game_logic::FormulaCallable& ob) const override {
 				target_->update(*src_);
 			}
 		};
@@ -2046,7 +2046,7 @@ namespace game_logic
 					return nullptr;
 				}
 
-				bool getSymbolIndexForSlot(int slot, int* index) const {
+				bool getSymbolIndexForSlot(int slot, int* index) const override {
 					if(slot < 0) {
 						return false;
 					}
@@ -2070,7 +2070,7 @@ namespace game_logic
 					return false;
 				}
 
-				int getBaseSymbolIndex() const {
+				int getBaseSymbolIndex() const override {
 					int result = 0;
 					if(base_) {
 						result += base_->getBaseSymbolIndex();
@@ -2761,7 +2761,7 @@ FUNCTION_DEF_IMPL
 				}
 			}
 
-			int getSlot(const std::string& key) const {
+			int getSlot(const std::string& key) const override {
 				for(int n = 0; n != entries_.size(); ++n) {
 					if(entries_[n].id == key) {
 						return baseNumSlots() + n;
@@ -2775,7 +2775,7 @@ FUNCTION_DEF_IMPL
 				}
 			}
 
-			Entry* getEntry(int slot) {
+			Entry* getEntry(int slot) override {
 				if(slot < 0) {
 					return nullptr;
 				}
@@ -2793,7 +2793,7 @@ FUNCTION_DEF_IMPL
 				return &entries_[slot];
 			}
 
-			const Entry* getEntry(int slot) const {
+			const Entry* getEntry(int slot) const override {
 				if(slot < 0) {
 					return nullptr;
 				}
@@ -2811,7 +2811,7 @@ FUNCTION_DEF_IMPL
 				return &entries_[slot];
 			}
 
-			bool getSymbolIndexForSlot(int slot, int* index) const {
+			bool getSymbolIndexForSlot(int slot, int* index) const override {
 				if(slot < baseNumSlots()) {
 					return base_->getSymbolIndexForSlot(slot, index);
 				}
@@ -2831,7 +2831,7 @@ FUNCTION_DEF_IMPL
 				return false;
 			}
 
-			int getBaseSymbolIndex() const {
+			int getBaseSymbolIndex() const override {
 				int result = 0;
 				if(base_) {
 					result += base_->getBaseSymbolIndex();
@@ -2852,7 +2852,7 @@ FUNCTION_DEF_IMPL
 				return NUM_MAP_CALLABLE_SLOTS + baseNumSlots();
 			}
 
-			int getSubsetSlotBase(const FormulaCallableDefinition* subset) const
+			int getSubsetSlotBase(const FormulaCallableDefinition* subset) const override
 			{
 				if(!base_) {
 					return -1;
@@ -3873,7 +3873,7 @@ FUNCTION_DEF_IMPL
 			instrument_command(variant name, variant cmd)
 			  : name_(name), cmd_(cmd)
 			{}
-			virtual void execute(game_logic::FormulaCallable& ob) const {
+			virtual void execute(game_logic::FormulaCallable& ob) const override {
 				const int begin = SDL_GetTicks();
 				{
 				formula_profiler::Instrument instrument(name_.as_string().c_str());
@@ -3885,7 +3885,7 @@ FUNCTION_DEF_IMPL
 				}
 			}
 		private:
-			void surrenderReferences(GarbageCollector* collector) {
+			void surrenderReferences(GarbageCollector* collector) override {
 				collector->surrenderVariant(&cmd_);
 			};
 
@@ -4121,7 +4121,7 @@ FUNCTION_DEF_IMPL
 			set_command(variant target, const std::string& attr, const variant& variant_attr, variant val)
 			  : target_(target), attr_(attr), variant_attr_(variant_attr), val_(val)
 			{}
-			virtual void execute(game_logic::FormulaCallable& ob) const {
+			virtual void execute(game_logic::FormulaCallable& ob) const override {
 				if(target_.is_callable()) {
 					ASSERT_LOG(!attr_.empty(), "ILLEGAL KEY IN SET OF CALLABLE: " << val_.write_json());
 					target_.mutable_callable()->mutateValue(attr_, val_);
@@ -4139,7 +4139,7 @@ FUNCTION_DEF_IMPL
 
 
 		protected:
-			void surrenderReferences(GarbageCollector* collector) {
+			void surrenderReferences(GarbageCollector* collector) override {
 				collector->surrenderVariant(&target_, "TARGET");
 				collector->surrenderVariant(&val_, "VALUE");
 				collector->surrenderVariant(&variant_attr_, "VARIANT_ATTR");
@@ -4157,7 +4157,7 @@ FUNCTION_DEF_IMPL
 			add_command(variant target, const std::string& attr, const variant& variant_attr, variant val)
 			  : target_(target), attr_(attr), variant_attr_(variant_attr), val_(val)
 			{}
-			virtual void execute(game_logic::FormulaCallable& ob) const {
+			virtual void execute(game_logic::FormulaCallable& ob) const override {
 				if(target_.is_callable()) {
 					ASSERT_LOG(!attr_.empty(), "ILLEGAL KEY IN ADD OF CALLABLE: " << val_.write_json());
 					target_.mutable_callable()->mutateValue(attr_, target_.mutable_callable()->queryValue(attr_) + val_);
@@ -4174,7 +4174,7 @@ FUNCTION_DEF_IMPL
 				}
 			}
 		protected:
-			void surrenderReferences(GarbageCollector* collector) {
+			void surrenderReferences(GarbageCollector* collector) override {
 				collector->surrenderVariant(&target_, "TARGET");
 				collector->surrenderVariant(&val_, "VALUE");
 				collector->surrenderVariant(&variant_attr_, "VARIANT_ATTR");
@@ -4193,14 +4193,14 @@ FUNCTION_DEF_IMPL
 			  : slot_(slot), value_(value)
 			{}
 
-			virtual void execute(game_logic::FormulaCallable& obj) const {
+			virtual void execute(game_logic::FormulaCallable& obj) const override {
 				obj.mutateValueBySlot(slot_, value_);
 			}
 
 			void setValue(const variant& value) { value_ = value; }
 
 		protected:
-			void surrenderReferences(GarbageCollector* collector) {
+			void surrenderReferences(GarbageCollector* collector) override {
 				collector->surrenderVariant(&value_, "VALUE");
 			}
 
@@ -4218,14 +4218,14 @@ FUNCTION_DEF_IMPL
 				ASSERT_LOG(target_.get(), "target of set is not a callable");
 			}
 
-			virtual void execute(game_logic::FormulaCallable& obj) const {
+			virtual void execute(game_logic::FormulaCallable& obj) const override {
 				target_->mutateValueBySlot(slot_, value_);
 			}
 
 			void setValue(const variant& value) { value_ = value; }
 
 		protected:
-			void surrenderReferences(GarbageCollector* collector) {
+			void surrenderReferences(GarbageCollector* collector) override {
 				collector->surrenderPtr(&target_, "TARGET");
 				collector->surrenderVariant(&value_, "VALUE");
 			}
@@ -4245,14 +4245,14 @@ FUNCTION_DEF_IMPL
 				ASSERT_LOG(target_.get(), "target of set is not a callable");
 			}
 
-			virtual void execute(game_logic::FormulaCallable& obj) const {
+			virtual void execute(game_logic::FormulaCallable& obj) const override {
 				target_->mutateValueBySlot(slot_, target_->queryValueBySlot(slot_) + value_);
 			}
 
 			void setValue(const variant& value) { value_ = value; }
 
 		protected:
-			void surrenderReferences(GarbageCollector* collector) {
+			void surrenderReferences(GarbageCollector* collector) override {
 				collector->surrenderPtr(&target_, "TARGET");
 				collector->surrenderVariant(&value_, "VALUE");
 			}
@@ -4270,14 +4270,14 @@ FUNCTION_DEF_IMPL
 			  : slot_(slot), value_(value)
 			{}
 
-			virtual void execute(game_logic::FormulaCallable& obj) const {
+			virtual void execute(game_logic::FormulaCallable& obj) const override {
 				obj.mutateValueBySlot(slot_, obj.queryValueBySlot(slot_) + value_);
 			}
 
 			void setValue(const variant& value) { value_ = value; }
 
 		protected:
-			void surrenderReferences(GarbageCollector* collector) {
+			void surrenderReferences(GarbageCollector* collector) override {
 				collector->surrenderVariant(&value_, "VALUE");
 			}
 
@@ -4432,7 +4432,7 @@ FUNCTION_DEF_IMPL
 		public:
 			explicit debug_command(const std::string& str) : str_(str)
 			{}
-			virtual void execute(FormulaCallable& ob) const {
+			virtual void execute(FormulaCallable& ob) const override {
 		#ifndef NO_EDITOR
 				debug_console::addMessage(str_);
 		#endif
@@ -4592,7 +4592,7 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 				all_backed_maps.erase(this);
 			}
 		private:
-			variant getValue(const std::string& key) const {
+			variant getValue(const std::string& key) const override {
 				std::map<std::string, NodeInfo>::const_iterator i = map_.find(key);
 				if(i != map_.end()) {
 					i->second.last_session_reads++;
@@ -4606,7 +4606,7 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 				return new_value;
 			}
 
-			void setValue(const std::string& key, const variant& value) {
+			void setValue(const std::string& key, const variant& value) override {
 				map_[key].value = value;
 
 				write_file();
@@ -5389,7 +5389,7 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 		explicit console_output_to_screen_command(bool value) : value_(value)
 		{}
 
-		virtual void execute(game_logic::FormulaCallable& ob) const 
+		virtual void execute(game_logic::FormulaCallable& ob) const override
 		{
 			debug_console::enable_screen_output(value_);
 		}
@@ -5412,7 +5412,7 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 		explicit set_user_details_command(const std::string& username, const std::string& password) 
 			: username_(username), password_(password)
 		{}
-		virtual void execute(game_logic::FormulaCallable& ob) const 
+		virtual void execute(game_logic::FormulaCallable& ob) const override
 		{
 			preferences::set_username(username_);
 			if(password_.empty() == false) {
@@ -5454,7 +5454,7 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 		explicit set_cookie_command(const variant& cookie) 
 			: cookie_(cookie)
 		{}
-		virtual void execute(game_logic::FormulaCallable& ob) const 
+		virtual void execute(game_logic::FormulaCallable& ob) const override
 		{
 			preferences::set_cookie(cookie_);
 		}
@@ -5519,7 +5519,7 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 		int gens_;
 	public:
 		explicit gc_command(int num_gens) : gens_(num_gens) {}
-		virtual void execute(game_logic::FormulaCallable& ob) const 
+		virtual void execute(game_logic::FormulaCallable& ob) const override
 		{
 			//CustomObject::run_garbage_collection();
 			int gens = gens_;
@@ -5541,7 +5541,7 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 		std::string path_;
 	public:
 		explicit debug_gc_command(const std::string& path) : path_(path) {}
-		virtual void execute(game_logic::FormulaCallable& ob) const 
+		virtual void execute(game_logic::FormulaCallable& ob) const override
 		{
 			//CustomObject::run_garbage_collection();
 			runGarbageCollectionDebug(path_.c_str());
@@ -5574,11 +5574,11 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 	class GarbageCollectorForceDestroyer : public GarbageCollector
 	{
 	public:
-		void surrenderVariant(const variant* v, const char* description) {
+		void surrenderVariant(const variant* v, const char* description) override {
 			*const_cast<variant*>(v) = variant();
 		}
 
-		void surrenderPtrInternal(ffl::IntrusivePtr<GarbageCollectible>* ptr, const char* description) {
+		void surrenderPtrInternal(ffl::IntrusivePtr<GarbageCollectible>* ptr, const char* description) override {
 			ptr->reset();
 		}
 	private:
@@ -6187,7 +6187,7 @@ namespace game_logic
 		virtual ExpressionPtr createFunction(
 								   const std::string& fn,
 								   const std::vector<ExpressionPtr>& args,
-								   ConstFormulaCallableDefinitionPtr callable_def) const;
+								   ConstFormulaCallableDefinitionPtr callable_def) const override;
 	};
 
 	ExpressionPtr formula_FunctionSymbolTable::createFunction(

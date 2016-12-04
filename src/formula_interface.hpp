@@ -47,7 +47,7 @@ namespace game_logic
 		virtual variant create(const variant& v) const = 0;
 		virtual int getId() const = 0;
 
-		variant getValue(const std::string& key) const { return variant(); }
+		variant getValue(const std::string& key) const override { return variant(); }
 	};
 
 	class FormulaInterface : public FormulaCallable
@@ -71,7 +71,7 @@ namespace game_logic
 		std::string to_string() const;
 
 	private:
-		variant getValue(const std::string& key) const;
+		variant getValue(const std::string& key) const override;
 
 		std::map<std::string, variant_type_ptr> types_;
 		std::unique_ptr<FormulaInterfaceImpl> impl_;

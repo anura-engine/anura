@@ -72,7 +72,7 @@ namespace gui
 			}
 
 		private:
-			bool handleEvent(const SDL_Event& event, bool claimed) {
+			bool handleEvent(const SDL_Event& event, bool claimed) override {
 				if(event.type == SDL_MOUSEMOTION) {
 					const SDL_MouseMotionEvent& motion = event.motion;
 					const bool inWidget = motion.x >= x() && motion.x <= x() + width() && motion.y >= y() && motion.y <= y() + height();
@@ -94,7 +94,7 @@ namespace gui
 				return gui::Dialog::handleEvent(event, claimed);
 			}
 
-			void handleDraw() const {
+			void handleDraw() const override {
 				gui::Dialog::handleDraw();
 				auto canvas = KRE::Canvas::getInstance();
 				canvas->drawHollowRect(rect(x(), y(), width(), height()), KRE::Color::colorWhite());

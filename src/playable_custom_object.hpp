@@ -38,20 +38,20 @@ public:
 	PlayableCustomObject(const PlayableCustomObject& obj);
 	PlayableCustomObject(variant node);
 
-	virtual variant write() const;
+	virtual variant write() const override;
 
-	virtual PlayerInfo* isHuman() { return &player_info_; }
-	virtual const PlayerInfo* isHuman() const { return &player_info_; }
+	virtual PlayerInfo* isHuman() override { return &player_info_; }
+	virtual const PlayerInfo* isHuman() const override { return &player_info_; }
 
-	void saveGame();
-	EntityPtr saveCondition() const { return save_condition_; }
+	void saveGame() override;
+	EntityPtr saveCondition() const override { return save_condition_; }
 
-	virtual EntityPtr backup() const;
-	virtual EntityPtr clone() const;
+	virtual EntityPtr backup() const override;
+	virtual EntityPtr clone() const override;
 
-	virtual int verticalLook() const { return vertical_look_; }
+	virtual int verticalLook() const override { return vertical_look_; }
 
-	virtual bool isActive(const rect& screen_area) const;
+	virtual bool isActive(const rect& screen_area) const override;
 
 	bool canInteract() const { return can_interact_ != 0; }
 
@@ -61,19 +61,19 @@ public:
 	static void registerKeyboardOverrideWidget(gui::Widget* widget);
 	static void unregisterKeyboardOverrideWidget(gui::Widget* widget);
 protected:
-	void surrenderReferences(GarbageCollector* collector);
+	void surrenderReferences(GarbageCollector* collector) override;
 
 private:
 	bool onPlatform() const;
 
-	int walkUpOrDownStairs() const;
+	int walkUpOrDownStairs() const override;
 
-	virtual void process(Level& lvl);
-	variant getValue(const std::string& key) const;	
-	void setValue(const std::string& key, const variant& value);
+	virtual void process(Level& lvl) override;
+	variant getValue(const std::string& key) const override;
+	void setValue(const std::string& key, const variant& value) override;
 
-	variant getPlayerValueBySlot(int slot) const;
-	void setPlayerValueBySlot(int slot, const variant& value);
+	variant getPlayerValueBySlot(int slot) const override;
+	void setPlayerValueBySlot(int slot, const variant& value) override;
 
 	PlayerInfo player_info_;
 

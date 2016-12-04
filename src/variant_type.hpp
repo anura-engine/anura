@@ -51,7 +51,7 @@ typedef ffl::IntrusivePtr<const variant_type> const_variant_type_ptr;
 class variant_type : public game_logic::FormulaCallable
 {
 public:
-	variant getValue(const std::string& id) const { return variant(); }
+	variant getValue(const std::string& id) const override { return variant(); }
 
 	static variant_type_ptr get_none();
 	static variant_type_ptr get_any();

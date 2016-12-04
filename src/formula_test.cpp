@@ -32,7 +32,7 @@ namespace
 	using namespace game_logic;
 
 	class MockChar : public FormulaCallable {
-		variant getValue(const std::string& key) const {
+		variant getValue(const std::string& key) const override {
 			if(key == "strength") {
 				return variant(15);
 			} else if(key == "agility") {
@@ -50,7 +50,7 @@ namespace
 			}
 		}
 	private:
-		variant getValue(const std::string& key) const {
+		variant getValue(const std::string& key) const override {
 			if(key == "members") {
 				i_[0]->add("strength",variant(12));
 				i_[1]->add("strength",variant(16));

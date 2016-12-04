@@ -42,7 +42,7 @@ public:
 	explicit SpecificFunctionCreator(const std::string& module_name) : FunctionCreator(module_name)
 	{}
 	virtual ~SpecificFunctionCreator() {}
-	virtual game_logic::FunctionExpression* create(const game_logic::FunctionExpression::args_list& args) const {
+	virtual game_logic::FunctionExpression* create(const game_logic::FunctionExpression::args_list& args) const override {
 		T* result =  new T(args);
 		result->setModule(module_name);
 		return result;

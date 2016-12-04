@@ -360,12 +360,12 @@ namespace game_logic
 				: fn_ref_(fn_ref)
 			{
 			}
-			variant execute(const FormulaCallable& variables) const 
+			variant execute(const FormulaCallable& variables) const override
 			{
 				return fn_ref_->call();
 			}
 		private:
-			variant_type_ptr getVariantType() const {
+			variant_type_ptr getVariantType() const override {
 				return variant_type::get_any();
 			}
 			lua::LuaFunctionReferencePtr fn_ref_;
@@ -379,10 +379,10 @@ namespace game_logic
 			{}
 
 		private:
-			variant_type_ptr getVariantType() const {
+			variant_type_ptr getVariantType() const override {
 				return variant_type::get_list(variant_type::get_type(variant::VARIANT_TYPE_STRING));
 			}
-			variant execute(const FormulaCallable& /*variables*/) const {
+			variant execute(const FormulaCallable& /*variables*/) const override {
 				std::vector<variant> res;
 				std::vector<std::string> function_names = builtin_function_names();
 				std::vector<std::string> more_function_names = symbols_->getFunctionNames();
@@ -403,7 +403,7 @@ namespace game_logic
 			{}
 
 		private:
-			variant_type_ptr getVariantType() const {
+			variant_type_ptr getVariantType() const override {
 				std::vector<variant_type_ptr> types;
 				for(const ExpressionPtr& item : items_) {
 					variant_type_ptr new_type = item->queryVariantType();
@@ -416,7 +416,7 @@ namespace game_logic
 			//a special version of static evaluation that doesn't save a
 			//reference to the list, so that we can allow static evaluation
 			//not to be fooled.
-			variant staticEvaluate(const FormulaCallable& variables) const {
+			variant staticEvaluate(const FormulaCallable& variables) const override {
 				std::vector<variant> res;
 				res.reserve(items_.size());
 				for(std::vector<ExpressionPtr>::const_iterator i = items_.begin(); i != items_.end(); ++i) {
@@ -426,17 +426,17 @@ namespace game_logic
 				return variant(&res);
 			}
 
-			variant execute(const FormulaCallable& variables) const {
+			variant execute(const FormulaCallable& variables) const override {
 				return staticEvaluate(variables);
 			}
 
-			std::vector<ConstExpressionPtr> getChildren() const {
+			std::vector<ConstExpressionPtr> getChildren() const override {
 				return std::vector<ConstExpressionPtr>(items_.begin(), items_.end());
 			}
 
 			bool canCreateVM() const override { return canChildrenVM(); }
 
-			ExpressionPtr optimizeToVM() {
+			ExpressionPtr optimizeToVM() override {
 				bool can_vm = true;
 				for(ExpressionPtr& e : items_) {
 					optimizeChildToVM(e);
@@ -474,11 +474,11 @@ namespace game_logic
 			}
 	
 		private:
-			variant_type_ptr getVariantType() const {
+			variant_type_ptr getVariantType() const override {
 				return variant_type::get_list(expr_->queryVariantType());
 			}
 
-			variant execute(const FormulaCallable& variables) const {
+			variant execute(const FormulaCallable& variables) const override {
 				std::vector<int> nelements;
 				std::vector<variant> lists;
 				for(std::map<std::string, ExpressionPtr>::const_iterator i = generators_.begin(); i != generators_.end(); ++i) {
@@ -544,7 +544,7 @@ namespace game_logic
 				return false;
 			}
 
-			std::vector<ConstExpressionPtr> getChildren() const {
+			std::vector<ConstExpressionPtr> getChildren() const override {
 				std::vector<ConstExpressionPtr> result;
 				result.push_back(expr_);
 				for(std::map<std::string, ExpressionPtr>::const_iterator i = generators_.begin(); i != generators_.end(); ++i) {
@@ -557,7 +557,7 @@ namespace game_logic
 
 			bool canCreateVM() const override { return canChildrenVM(); }
 
-			ExpressionPtr optimizeToVM() {
+			ExpressionPtr optimizeToVM() override {
 				optimizeChildToVM(expr_);
 				bool can_vm = expr_->canCreateVM();
 				for(std::map<std::string, ExpressionPtr>::iterator i = generators_.begin(); i != generators_.end(); ++i) {
@@ -616,7 +616,7 @@ namespace game_logic
 			{}
 	
 		private:
-			variant_type_ptr getVariantType() const {
+			variant_type_ptr getVariantType() const override {
 				std::map<variant, variant_type_ptr> types;
 
 				std::vector<variant_type_ptr> key_types, value_types;
@@ -679,7 +679,7 @@ namespace game_logic
 				return variant_type::get_map(key_type, value_type);
 			}
 
-			variant execute(const FormulaCallable& variables) const {
+			variant execute(const FormulaCallable& variables) const override {
 				//since maps can be modified we want any map construction to return
 				//a brand new map.
 				Formula::failIfStaticContext();
@@ -696,14 +696,14 @@ namespace game_logic
 				return result;
 			}
 
-			std::vector<ConstExpressionPtr> getChildren() const {
+			std::vector<ConstExpressionPtr> getChildren() const override {
 				std::vector<ConstExpressionPtr> result(items_.begin(), items_.end());
 				return result;
 			}
 
 			bool canCreateVM() const override { return canChildrenVM(); }
 
-			ExpressionPtr optimizeToVM() {
+			ExpressionPtr optimizeToVM() override {
 				bool can_vm = true;
 				for(ExpressionPtr& i : items_) {
 					optimizeChildToVM(i);
@@ -743,7 +743,7 @@ namespace game_logic
 				}
 			}
 		private:
-			variant_type_ptr getVariantType() const {
+			variant_type_ptr getVariantType() const override {
 				switch(op_) {
 				case OP::NOT: return variant_type::get_type(variant::VARIANT_TYPE_BOOL);
 				case OP::SUB:
@@ -756,7 +756,7 @@ namespace game_logic
 				}
 			}
 
-			variant execute(const FormulaCallable& variables) const {
+			variant execute(const FormulaCallable& variables) const override {
 				const variant res = operand_->evaluate(variables);
 				switch(op_) {
 					case OP::NOT: 
@@ -767,7 +767,7 @@ namespace game_logic
 				}
 			}
 
-			std::vector<ConstExpressionPtr> getChildren() const {
+			std::vector<ConstExpressionPtr> getChildren() const override {
 				std::vector<ConstExpressionPtr> result;
 				result.push_back(operand_);
 				return result;
@@ -775,7 +775,7 @@ namespace game_logic
 
 			bool canCreateVM() const override { return canChildrenVM(); }
 
-			ExpressionPtr optimizeToVM() {
+			ExpressionPtr optimizeToVM() override {
 				optimizeChildToVM(operand_);
 				if(operand_->canCreateVM()) {
 					formula_vm::VirtualMachine vm;
@@ -804,11 +804,11 @@ namespace game_logic
 			}
 	
 		private:
-			variant execute(const FormulaCallable& variables) const {
+			variant execute(const FormulaCallable& variables) const override {
 				return v_;
 			}
 
-			variant_type_ptr getVariantType() const {
+			variant_type_ptr getVariantType() const override {
 				return variant_type::get_type(v_.type());
 			}
 	
@@ -1165,12 +1165,12 @@ namespace {
 			}
 
 		private:
-			variant execute(const FormulaCallable& variables) const {
+			variant execute(const FormulaCallable& variables) const override {
 				const variant left = left_->evaluate(variables);
 				return left.instantiate_generic_function(types_);
 			}
 
-			std::vector<ConstExpressionPtr> getChildren() const {
+			std::vector<ConstExpressionPtr> getChildren() const override {
 				std::vector<ConstExpressionPtr> result;
 				result.push_back(left_);
 				return result;
@@ -1178,7 +1178,7 @@ namespace {
 
 			bool canCreateVM() const override { return false; }
 
-			ExpressionPtr optimizeToVM() {
+			ExpressionPtr optimizeToVM() override {
 				optimizeChildToVM(left_);
 				return ExpressionPtr();
 			}
@@ -1206,23 +1206,23 @@ namespace {
 			}
 	
 		private:
-			variant execute(const FormulaCallable& variables) const {
+			variant execute(const FormulaCallable& variables) const override {
 				variant v(fml_, variables, base_slot_, type_info_, generic_types_, factory_);
 				return v;
 			}
 
-			variant_type_ptr getVariantType() const {
+			variant_type_ptr getVariantType() const override {
 				return variant_type::get_function_type(type_info_->variant_types, type_info_->return_type, static_cast<int>(type_info_->variant_types.size() - type_info_->default_args.size()));
 			}
 
-			std::vector<ConstExpressionPtr> getChildren() const {
+			std::vector<ConstExpressionPtr> getChildren() const override {
 				std::vector<ConstExpressionPtr> result;
 				return result;
 			}
 
 			bool canCreateVM() const override { return false; }
 
-			ExpressionPtr optimizeToVM() {
+			ExpressionPtr optimizeToVM() override {
 				return ExpressionPtr();
 			}
 
@@ -1264,7 +1264,7 @@ namespace {
 			void setNoClosure() { requires_closure_ = false; }
 	
 		private:
-			variant execute(const FormulaCallable& variables) const {
+			variant execute(const FormulaCallable& variables) const override {
 				if(requires_closure_) {
 					return fn_.change_function_callable(variables);
 				} else {
@@ -1273,11 +1273,11 @@ namespace {
 				}
 			}
 
-			variant_type_ptr getVariantType() const {
+			variant_type_ptr getVariantType() const override {
 				return variant_type::get_function_type(type_info_->variant_types, type_info_->return_type, static_cast<int>(type_info_->variant_types.size() - type_info_->default_args.size()));
 			}
 
-			std::vector<ConstExpressionPtr> getChildren() const {
+			std::vector<ConstExpressionPtr> getChildren() const override {
 				std::vector<ConstExpressionPtr> result;
 				result.push_back(fml_->expr());
 				return result;
@@ -1285,7 +1285,7 @@ namespace {
 
 			bool canCreateVM() const override { return true; }
 			
-			ExpressionPtr optimizeToVM() {
+			ExpressionPtr optimizeToVM() override {
 				formula_vm::VirtualMachine vm;
 				vm.addLoadConstantInstruction(fn_);
 				vm.addInstruction(requires_closure_ ? OP_LAMBDA_WITH_CLOSURE : OP_LAMBDA);
@@ -1411,7 +1411,7 @@ namespace {
 				}
 			}
 		private:
-			variant execute(const FormulaCallable& variables) const {
+			variant execute(const FormulaCallable& variables) const override {
 				const InfiniteRecursionProtector recurse_scope(left_);
 				const variant left = left_->evaluate(variables);
 				std::vector<variant> args;
@@ -1437,7 +1437,7 @@ namespace {
 				return left(args);
 			}
 
-			variant_type_ptr getVariantType() const {
+			variant_type_ptr getVariantType() const override {
 				std::vector<variant_type_ptr> arg_types;
 				for(const ExpressionPtr& expr : args_) {
 					arg_types.push_back(expr->queryVariantType());
@@ -1450,7 +1450,7 @@ namespace {
 				return variant_type::get_any();
 			}
 
-			void staticErrorAnalysis() const {
+			void staticErrorAnalysis() const override {
 				if(error_msg_.empty() == false) {
 					ASSERT_LOG(false, error_msg_ << " " << debugPinpointLocation());
 				}
@@ -1482,7 +1482,7 @@ namespace {
 				}
 			}
 
-			std::vector<ConstExpressionPtr> getChildren() const {
+			std::vector<ConstExpressionPtr> getChildren() const override {
 				std::vector<ConstExpressionPtr> result;
 				result.push_back(left_);
 				result.insert(result.end(), args_.begin(), args_.end());
@@ -1491,7 +1491,7 @@ namespace {
 
 			bool canCreateVM() const override { return canChildrenVM(); }
 
-			ExpressionPtr optimizeToVM() {
+			ExpressionPtr optimizeToVM() override {
 				optimizeChildToVM(left_);
 				bool can_vm = left_->canCreateVM();
 
@@ -1535,11 +1535,11 @@ namespace {
 			DotExpression(ExpressionPtr left, ExpressionPtr right, ConstFormulaCallableDefinitionPtr right_def)
 			: FormulaExpression("_dot"), left_(left), right_(right), right_def_(right_def)
 			{}
-			ConstFormulaCallableDefinitionPtr getTypeDefinition() const {
+			ConstFormulaCallableDefinitionPtr getTypeDefinition() const override {
 				return right_->getTypeDefinition();
 			}
 		private:
-			variant execute(const FormulaCallable& variables) const {
+			variant execute(const FormulaCallable& variables) const override {
 				const variant left = left_->evaluate(variables);
 				if(!left.is_callable()) {
 					if(left.is_map()) {
@@ -1568,7 +1568,7 @@ namespace {
 				return right_->evaluate(*left.as_callable());
 			}
 	
-			variant executeMember(const FormulaCallable& variables, std::string& id, variant* variant_id) const {
+			variant executeMember(const FormulaCallable& variables, std::string& id, variant* variant_id) const override {
 				variant left = left_->evaluate(variables);
 		
 				if(!right_->isIdentifier(&id)) {
@@ -1578,7 +1578,7 @@ namespace {
 				return left;
 			}
 
-			variant_type_ptr getVariantType() const {
+			variant_type_ptr getVariantType() const override {
 				variant_type_ptr type = left_->queryVariantType();
 				if(type && variant_type::get_type(variant::VARIANT_TYPE_LIST)->is_compatible(type)) {
 					variant_type_ptr list_of = type->is_list_of();
@@ -1592,7 +1592,7 @@ namespace {
 				return right_->queryVariantType();
 			}
 
-			variant_type_ptr getMutableType() const {
+			variant_type_ptr getMutableType() const override {
 				variant_type_ptr type = left_->queryMutableType();
 				if(type && variant_type::get_type(variant::VARIANT_TYPE_LIST)->is_compatible(type)) {
 					variant_type_ptr list_of = type->is_list_of();
@@ -1621,7 +1621,7 @@ namespace {
 				return variant_types_compatible(variant_type::get_type(variant::VARIANT_TYPE_CALLABLE), type) || variant_types_compatible(variant_type::get_type(variant::VARIANT_TYPE_MAP), type);
 			}
 
-			void staticErrorAnalysis() const {
+			void staticErrorAnalysis() const override {
 				variant_type_ptr type = left_->queryVariantType();
 				ASSERT_LOG(type, "Could not find type for left side of '.' operator: " << left_->str() << ": " << debugPinpointLocation());
 
@@ -1641,7 +1641,7 @@ namespace {
 				ASSERT_LOG(is_type_valid_left_side(type), "Left side of '.' is of invalid type: " << left_->str() << " is " << type->to_string() << " " << debugPinpointLocation());
 			}
 
-			ConstFormulaCallableDefinitionPtr getModifiedDefinitionBasedOnResult(bool result, ConstFormulaCallableDefinitionPtr current_def, variant_type_ptr expression_is_this_type) const {
+			ConstFormulaCallableDefinitionPtr getModifiedDefinitionBasedOnResult(bool result, ConstFormulaCallableDefinitionPtr current_def, variant_type_ptr expression_is_this_type) const override {
 
 				std::vector<const DotExpression*> expr;
 				if(isIdentifierChain(&expr) == false) {
@@ -1721,7 +1721,7 @@ namespace {
 				return false;
 			}
 
-			std::vector<ConstExpressionPtr> getChildren() const {
+			std::vector<ConstExpressionPtr> getChildren() const override {
 				std::vector<ConstExpressionPtr> result;
 				result.push_back(left_);
 				result.push_back(right_);
@@ -1730,7 +1730,7 @@ namespace {
 
 			bool canCreateVM() const override { return canChildrenVM(); }
 
-			ExpressionPtr optimizeToVM() {
+			ExpressionPtr optimizeToVM() override {
 				optimizeChildToVM(left_);
 				optimizeChildToVM(right_);
 
@@ -1793,7 +1793,7 @@ namespace {
 			{
 			}
 		private:
-			variant execute(const FormulaCallable& variables) const {
+			variant execute(const FormulaCallable& variables) const override {
 				const variant left = left_->evaluate(variables);
 				const variant key = key_->evaluate(variables);
 				if(left.is_list() || left.is_map()) {
@@ -1812,7 +1812,7 @@ namespace {
 				}
 			}
 	
-			variant executeMember(const FormulaCallable& variables, std::string& id, variant* variant_id) const {
+			variant executeMember(const FormulaCallable& variables, std::string& id, variant* variant_id) const override {
 				const variant left = left_->evaluate(variables);
 				const variant key = key_->evaluate(variables);
 
@@ -1824,7 +1824,7 @@ namespace {
 				return left;
 			}
 
-			variant_type_ptr getVariantType() const {
+			variant_type_ptr getVariantType() const override {
 				variant_type_ptr left_type = left_->queryVariantType();
 				if(left_type->is_type(variant::VARIANT_TYPE_STRING)) {
 					return variant_type::get_type(variant::VARIANT_TYPE_STRING);
@@ -1843,17 +1843,17 @@ namespace {
 				return variant_type::get_any();
 			}
 
-			variant_type_ptr getMutableType() const {
+			variant_type_ptr getMutableType() const override {
 				return queryVariantType();
 			}
 
-			void staticErrorAnalysis() const {
+			void staticErrorAnalysis() const override {
 				variant_type_ptr type = left_->queryVariantType();
 
 				ASSERT_LOG(variant_type::get_null_excluded(type) == type, "Left side of '[]' operator may be null: " << left_->str() << " is " << type->to_string() << " " << debugPinpointLocation());
 			}
 
-			std::vector<ConstExpressionPtr> getChildren() const {
+			std::vector<ConstExpressionPtr> getChildren() const override {
 				std::vector<ConstExpressionPtr> result;
 				result.push_back(left_);
 				result.push_back(key_);
@@ -1862,7 +1862,7 @@ namespace {
 
 			bool canCreateVM() const override { return canChildrenVM(); }
 
-			ExpressionPtr optimizeToVM() {
+			ExpressionPtr optimizeToVM() override {
 				optimizeChildToVM(left_);
 				optimizeChildToVM(key_);
 
@@ -1891,7 +1891,7 @@ namespace {
 			: FormulaExpression("_slice_sqbr"), left_(left), start_(start), end_(end)
 			{}
 		private:
-			variant execute(const FormulaCallable& variables) const {
+			variant execute(const FormulaCallable& variables) const override {
 				const variant left = left_->evaluate(variables);
 				int begin_index = start_ ? start_->evaluate(variables).as_int() : 0;
 				int end_index = end_ ? end_->evaluate(variables).as_int() : left.num_elements();
@@ -1940,11 +1940,11 @@ namespace {
 				}
 			}
 
-			variant_type_ptr getVariantType() const {
+			variant_type_ptr getVariantType() const override {
 				return left_->queryVariantType();
 			}
 
-			std::vector<ConstExpressionPtr> getChildren() const {
+			std::vector<ConstExpressionPtr> getChildren() const override {
 				std::vector<ConstExpressionPtr> result;
 				result.push_back(left_);
 				result.push_back(start_);
@@ -1954,7 +1954,7 @@ namespace {
 
 			bool canCreateVM() const override { return canChildrenVM(); }
 
-			ExpressionPtr optimizeToVM() {
+			ExpressionPtr optimizeToVM() override {
 				optimizeChildToVM(left_);
 				optimizeChildToVM(start_);
 				optimizeChildToVM(end_);
@@ -2006,7 +2006,7 @@ namespace {
 			}
 
 		private:
-			variant execute(const FormulaCallable& variables) const {
+			variant execute(const FormulaCallable& variables) const override {
 				variant v = left_->evaluate(variables);
 				if(!v.as_bool()) {
 					return v;
@@ -2015,12 +2015,12 @@ namespace {
 				return right_->evaluate(variables);
 			}
 
-			variant_type_ptr getVariantType() const {
+			variant_type_ptr getVariantType() const override {
 				return get_variant_type_and_or(left_, right_);
 			}
 
 			ConstFormulaCallableDefinitionPtr
-			getModifiedDefinitionBasedOnResult(bool result, ConstFormulaCallableDefinitionPtr current_def, variant_type_ptr expression_is_this_type) const {
+			getModifiedDefinitionBasedOnResult(bool result, ConstFormulaCallableDefinitionPtr current_def, variant_type_ptr expression_is_this_type) const override {
 				if(expression_is_this_type) {
 					return ConstFormulaCallableDefinitionPtr();
 				}
@@ -2045,7 +2045,7 @@ namespace {
 				return ConstFormulaCallableDefinitionPtr();
 			}
 
-			std::vector<ConstExpressionPtr> getChildren() const {
+			std::vector<ConstExpressionPtr> getChildren() const override {
 				std::vector<ConstExpressionPtr> result;
 				result.push_back(left_);
 				result.push_back(right_);
@@ -2054,7 +2054,7 @@ namespace {
 
 			bool canCreateVM() const override { return canChildrenVM(); }
 
-			ExpressionPtr optimizeToVM() {
+			ExpressionPtr optimizeToVM() override {
 				optimizeChildToVM(left_);
 				optimizeChildToVM(right_);
 
@@ -2082,7 +2082,7 @@ namespace {
 			}
 
 		private:
-			variant execute(const FormulaCallable& variables) const {
+			variant execute(const FormulaCallable& variables) const override {
 				variant v = left_->evaluate(variables);
 				if(v.as_bool()) {
 					return v;
@@ -2091,12 +2091,12 @@ namespace {
 				return right_->evaluate(variables);
 			}
 
-			variant_type_ptr getVariantType() const {
+			variant_type_ptr getVariantType() const override {
 				return get_variant_type_and_or(left_, right_, true);
 			}
 
 			ConstFormulaCallableDefinitionPtr
-			getModifiedDefinitionBasedOnResult(bool result, ConstFormulaCallableDefinitionPtr current_def, variant_type_ptr expression_is_this_type) const {
+			getModifiedDefinitionBasedOnResult(bool result, ConstFormulaCallableDefinitionPtr current_def, variant_type_ptr expression_is_this_type) const override {
 				if(expression_is_this_type) {
 					return ConstFormulaCallableDefinitionPtr();
 				}
@@ -2113,7 +2113,7 @@ namespace {
 				return ConstFormulaCallableDefinitionPtr();
 			}
 
-			std::vector<ConstExpressionPtr> getChildren() const {
+			std::vector<ConstExpressionPtr> getChildren() const override {
 				std::vector<ConstExpressionPtr> result;
 				result.push_back(left_);
 				result.push_back(right_);
@@ -2122,7 +2122,7 @@ namespace {
 
 			bool canCreateVM() const override { return canChildrenVM(); }
 
-			ExpressionPtr optimizeToVM() {
+			ExpressionPtr optimizeToVM() override {
 				optimizeChildToVM(left_);
 				optimizeChildToVM(right_);
 
@@ -2543,7 +2543,7 @@ namespace {
 			}
 	
 		private:
-			ExpressionPtr optimize() const {
+			ExpressionPtr optimize() const override {
 
 				WhereExpression* base_where = dynamic_cast<WhereExpression*>(body_.get());
 				if(base_where == NULL) {
@@ -2561,19 +2561,19 @@ namespace {
 				return ExpressionPtr(new WhereExpression(base_where->body_, res));
 			}
 
-			variant_type_ptr getVariantType() const {
+			variant_type_ptr getVariantType() const override {
 				return body_->queryVariantType();
 			}
 
 			ExpressionPtr body_;
 			WhereVariablesInfoPtr info_;
 	
-			variant execute(const FormulaCallable& variables) const {
+			variant execute(const FormulaCallable& variables) const override {
 				FormulaCallablePtr wrapped_variables(new WhereVariables(variables, info_));
 				return body_->evaluate(*wrapped_variables);
 			}
 
-			std::vector<ConstExpressionPtr> getChildren() const {
+			std::vector<ConstExpressionPtr> getChildren() const override {
 				std::vector<ConstExpressionPtr> result;
 				result.push_back(body_);
 				result.insert(result.end(), info_->entries.begin(), info_->entries.end());
@@ -2582,7 +2582,7 @@ namespace {
 
 			bool canCreateVM() const override { return canChildrenVM(); }
 
-			ExpressionPtr optimizeToVM() {
+			ExpressionPtr optimizeToVM() override {
 
 				bool can_vm = canCreateVM();
 				if(can_vm && g_strict_formula_checking && info_->callable_where_def) {
@@ -2754,11 +2754,11 @@ namespace {
 			  : left_(left), right_(right)
 			{}
 
-			variant_type_ptr getVariantType() const {
+			variant_type_ptr getVariantType() const override {
 				return variant_type::get_commands();
 			}
 
-			void staticErrorAnalysis() const {
+			void staticErrorAnalysis() const override {
 				if(left_) {
 					variant_type_ptr left_type = left_->queryVariantType();
 					ASSERT_LOG(variant_types_compatible(variant_type::get_commands(), left_type), "Expression to the left of ; must be of commands type, is of type " << left_type->to_string() << " " << debugPinpointLocation());
@@ -2768,7 +2768,7 @@ namespace {
 				ASSERT_LOG(variant_types_compatible(variant_type::get_commands(), right_type), "Expression to the right of ; must be of commands type, is of type " << right_type->to_string() << " " << debugPinpointLocation());
 			}
 
-			variant execute(const FormulaCallable& variables) const {
+			variant execute(const FormulaCallable& variables) const override {
 
 				Formula::failIfStaticContext();
 
@@ -2780,7 +2780,7 @@ namespace {
 				return variant(res);
 			}
 
-			std::vector<ConstExpressionPtr> getChildren() const {
+			std::vector<ConstExpressionPtr> getChildren() const override {
 				std::vector<ConstExpressionPtr> result;
 				if(left_) {
 					result.push_back(left_);
@@ -2791,7 +2791,7 @@ namespace {
 
 			bool canCreateVM() const override { return false; }
 
-			ExpressionPtr optimizeToVM() {
+			ExpressionPtr optimizeToVM() override {
 				optimizeChildToVM(left_);
 				optimizeChildToVM(right_);
 				return ExpressionPtr();
@@ -2814,11 +2814,11 @@ namespace {
 				names_.push_back(identifier);
 			}
 
-			variant_type_ptr getVariantType() const {
+			variant_type_ptr getVariantType() const override {
 				return right_expr_->queryVariantType();
 			}
 
-			variant execute(const FormulaCallable& variables) const {
+			variant execute(const FormulaCallable& variables) const override {
 				const variant value = let_expr_->evaluate(variables);
 
 				ffl::IntrusivePtr<MutableSlotFormulaCallable> callable(new MutableSlotFormulaCallable);
@@ -2830,7 +2830,7 @@ namespace {
 				return right_expr_->evaluate(*callable);
 			}
 
-			std::vector<ConstExpressionPtr> getChildren() const {
+			std::vector<ConstExpressionPtr> getChildren() const override {
 				std::vector<ConstExpressionPtr> result;
 				result.push_back(let_expr_);
 				result.push_back(right_expr_);
@@ -2839,7 +2839,7 @@ namespace {
 
 			bool canCreateVM() const override { return false; }
 
-			ExpressionPtr optimizeToVM() {
+			ExpressionPtr optimizeToVM() override {
 				optimizeChildToVM(let_expr_);
 				optimizeChildToVM(right_expr_);
 				return ExpressionPtr();
@@ -2854,22 +2854,22 @@ namespace {
 			}
 
 		private:
-			variant_type_ptr getVariantType() const {
+			variant_type_ptr getVariantType() const override {
 				return variant_type::get_type(variant::VARIANT_TYPE_BOOL);
 			}
 
-			variant execute(const FormulaCallable& variables) const {
+			variant execute(const FormulaCallable& variables) const override {
 				const variant value = expression_->evaluate(variables);
 				return variant::from_bool(type_->match(value));
 			}
 
-			std::vector<ConstExpressionPtr> getChildren() const {
+			std::vector<ConstExpressionPtr> getChildren() const override {
 				std::vector<ConstExpressionPtr> result;
 				result.push_back(expression_);
 				return result;
 			}
 
-			ExpressionPtr optimizeToVM() {
+			ExpressionPtr optimizeToVM() override {
 				optimizeChildToVM(expression_);
 				if(expression_->canCreateVM()) {
 					formula_vm::VirtualMachine vm;
@@ -2881,7 +2881,7 @@ namespace {
 				return ExpressionPtr();
 			}
 
-			ConstFormulaCallableDefinitionPtr getModifiedDefinitionBasedOnResult(bool result, ConstFormulaCallableDefinitionPtr current_def, variant_type_ptr expression_is_this_type) const {
+			ConstFormulaCallableDefinitionPtr getModifiedDefinitionBasedOnResult(bool result, ConstFormulaCallableDefinitionPtr current_def, variant_type_ptr expression_is_this_type) const override {
 				if(expression_is_this_type) {
 					return ConstFormulaCallableDefinitionPtr();
 				}
@@ -2912,14 +2912,14 @@ namespace {
 			}
 	
 		private:
-			variant_type_ptr getVariantType() const {
+			variant_type_ptr getVariantType() const override {
 				return type_;
 			}
 
 			variant_type_ptr type_;
 			ExpressionPtr expression_;
 	
-			variant execute(const FormulaCallable& variables) const {
+			variant execute(const FormulaCallable& variables) const override {
 				if(interface_) {
 					return interface_->create(expression_->evaluate(variables));
 				} else {
@@ -2927,7 +2927,7 @@ namespace {
 				}
 			}
 
-			std::vector<ConstExpressionPtr> getChildren() const {
+			std::vector<ConstExpressionPtr> getChildren() const override {
 				std::vector<ConstExpressionPtr> result;
 				result.push_back(expression_);
 				return result;
@@ -2935,12 +2935,12 @@ namespace {
 
 			bool canCreateVM() const override { return false; }
 
-			ExpressionPtr optimizeToVM() {
+			ExpressionPtr optimizeToVM() override {
 				optimizeChildToVM(expression_);
 				return ExpressionPtr();
 			}
 
-			ExpressionPtr optimize() const {
+			ExpressionPtr optimize() const override {
 				if(!interface_) {
 					return expression_;
 				} else {
@@ -2948,7 +2948,7 @@ namespace {
 				}
 			}
 
-			void staticErrorAnalysis() const {
+			void staticErrorAnalysis() const override {
 				if(variant_types_compatible(type_, expression_->queryVariantType()) == false) {
 					std::ostringstream reason;
 					ASSERT_LOG(variant_types_compatible(type_, expression_->queryVariantType(), &reason), "Expression is not declared type. Of type " << expression_->queryVariantType()->to_string() << " when type " << type_->to_string() << " expected (" << reason.str() << ") " << debugPinpointLocation());
@@ -2966,26 +2966,26 @@ namespace {
 			}
 	
 		private:
-			variant_type_ptr getVariantType() const {
+			variant_type_ptr getVariantType() const override {
 				return type_;
 			}
 
 			variant_type_ptr type_;
 			ExpressionPtr expression_;
 	
-			variant execute(const FormulaCallable& variables) const {
+			variant execute(const FormulaCallable& variables) const override {
 				const variant result = expression_->evaluate(variables);
 				ASSERT_LOG(type_->match(result), "TYPE MIS-MATCH: EXPECTED " << type_->to_string() << " BUT FOUND " << result.write_json() << " OF TYPE '" << get_variant_type_from_value(result)->to_string() << "' " << type_->mismatch_reason(result) << " AT " << debugPinpointLocation());
 				return result;
 			}
 
-			std::vector<ConstExpressionPtr> getChildren() const {
+			std::vector<ConstExpressionPtr> getChildren() const override {
 				std::vector<ConstExpressionPtr> result;
 				result.push_back(expression_);
 				return result;
 			}
 
-			ExpressionPtr optimizeToVM() {
+			ExpressionPtr optimizeToVM() override {
 				optimizeChildToVM(expression_);
 				if(expression_->canCreateVM()) {
 					formula_vm::VirtualMachine vm;
@@ -3020,7 +3020,7 @@ namespace {
 			ExpressionPtr body_, debug_;
 			std::vector<ExpressionPtr> asserts_;
 
-			variant execute(const FormulaCallable& variables) const {
+			variant execute(const FormulaCallable& variables) const override {
 				for(const ExpressionPtr& a : asserts_) {
 					if(!a->evaluate(variables).as_bool()) {
 						OperatorExpression* op_expr = dynamic_cast<OperatorExpression*>(a.get());
@@ -3043,18 +3043,18 @@ namespace {
 				return body_->evaluate(variables);
 			}
 
-			variant_type_ptr getVariantType() const {
+			variant_type_ptr getVariantType() const override {
 				return body_->queryVariantType();
 			}
 	
-			std::vector<ConstExpressionPtr> getChildren() const {
+			std::vector<ConstExpressionPtr> getChildren() const override {
 				std::vector<ConstExpressionPtr> result;
 				result.push_back(body_);
 				result.push_back(debug_);
 				return result;
 			}
 
-			ExpressionPtr optimizeToVM() {
+			ExpressionPtr optimizeToVM() override {
 				optimizeChildToVM(body_);
 				optimizeChildToVM(debug_);
 				bool can_vm = body_->canCreateVM() && (!debug_ || debug_->canCreateVM());
@@ -3091,17 +3091,17 @@ namespace {
 
 			bool canCreateVM() const override { return true; }
 
-			ExpressionPtr optimizeToVM() {
+			ExpressionPtr optimizeToVM() override {
 				formula_vm::VirtualMachine vm;
 				vm.addLoadConstantInstruction(i_);
 				return ExpressionPtr(new VMExpression(vm, queryVariantType(), *this));
 			}
 		private:
-			variant execute(const FormulaCallable& /*variables*/) const {
+			variant execute(const FormulaCallable& /*variables*/) const override {
 				return i_;
 			}
 
-			variant_type_ptr getVariantType() const {
+			variant_type_ptr getVariantType() const override {
 				return variant_type::get_type(variant::VARIANT_TYPE_INT);
 			}
 	
@@ -3114,17 +3114,17 @@ namespace {
 			{}
 
 			bool canCreateVM() const override { return true; }
-			ExpressionPtr optimizeToVM() {
+			ExpressionPtr optimizeToVM() override {
 				formula_vm::VirtualMachine vm;
 				vm.addLoadConstantInstruction(v_);
 				return ExpressionPtr(new VMExpression(vm, queryVariantType(), *this));
 			}
 		private:
-			variant execute(const FormulaCallable& /*variables*/) const {
+			variant execute(const FormulaCallable& /*variables*/) const override {
 				return v_;
 			}
 
-			variant_type_ptr getVariantType() const {
+			variant_type_ptr getVariantType() const override {
 				return variant_type::get_type(variant::VARIANT_TYPE_DECIMAL);
 			}
 	
@@ -3183,7 +3183,7 @@ namespace {
 				str_ = variant(str);
 			}
 
-			bool isLiteral(variant& result) const {
+			bool isLiteral(variant& result) const override {
 				if(subs_.empty()) {
 					result = str_;
 					return true;
@@ -3192,7 +3192,7 @@ namespace {
 				}
 			}
 
-			bool canReduceToVariant(variant& v) const {
+			bool canReduceToVariant(variant& v) const override {
 				if(subs_.empty()) {
 					v = variant(str_);
 					return true;
@@ -3203,7 +3203,7 @@ namespace {
 
 			bool canCreateVM() const override { return subs_.empty(); }
 
-			ExpressionPtr optimizeToVM() {
+			ExpressionPtr optimizeToVM() override {
 				if(subs_.empty()) {
 					formula_vm::VirtualMachine vm;
 					vm.addLoadConstantInstruction(str_);
@@ -3215,7 +3215,7 @@ namespace {
 			}
 			
 		private:
-			variant execute(const FormulaCallable& variables) const {
+			variant execute(const FormulaCallable& variables) const override {
 				if(subs_.empty()) {
 					return str_;
 				} else {
@@ -3230,7 +3230,7 @@ namespace {
 				}
 			}
 
-			variant_type_ptr getVariantType() const {
+			variant_type_ptr getVariantType() const override {
 				return variant_type::get_type(variant::VARIANT_TYPE_STRING);
 			}
 	
@@ -3607,7 +3607,7 @@ namespace {
 				~static_FormulaCallable() {
 				}
 		
-				variant getValue(const std::string& key) const {
+				variant getValue(const std::string& key) const override {
 					if(key == "lib") {
 						return variant(get_library_object().get());
 					}
@@ -3615,7 +3615,7 @@ namespace {
 					throw non_static_expression_exception();
 				}
 
-				variant getValueBySlot(int slot) const {
+				variant getValueBySlot(int slot) const override {
 					throw non_static_expression_exception();
 				}
 			};

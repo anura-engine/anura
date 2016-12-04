@@ -73,7 +73,7 @@ public:
 	virtual const PlayerInfo* isHuman() const { return nullptr; }
 	virtual PlayerInfo* isHuman() { return nullptr; }
 	virtual void process(Level& lvl);
-	virtual bool executeCommand(const variant& var) = 0;
+	virtual bool executeCommand(const variant& var) override = 0;
 
 	const std::string& label() const { return label_; }
 	void setLabel(const std::string& lb) { label_ = lb; }
@@ -359,7 +359,7 @@ protected:
 
 	virtual void control(const Level& lvl) = 0;
 
-	variant serializeToWml() const { return write(); }
+	variant serializeToWml() const override { return write(); }
 
 	int getPrevFeetX() const { return prev_feet_x_; }
 	int getPrevFeetY() const { return prev_feet_y_; }
@@ -367,7 +367,7 @@ protected:
 	virtual bool editorOnly() const { return false; }
 
 protected:
-	void surrenderReferences(GarbageCollector* collector);
+	void surrenderReferences(GarbageCollector* collector) override;
 
 private:
 	virtual int currentRotation() const = 0;

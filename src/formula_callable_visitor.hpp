@@ -50,9 +50,9 @@ namespace game_logic
 		{
 		}
 
-		virtual const FormulaCallable* value() const { return value_; }
-		virtual void destroy_ref() { *v_ = variant(); }
-		virtual void restore_ref() { *v_ = variant(value_); }
+		virtual const FormulaCallable* value() const override { return value_; }
+		virtual void destroy_ref() override { *v_ = variant(); }
+		virtual void restore_ref() override { *v_ = variant(value_); }
 	private:
 		const FormulaCallable* value_;
 		variant* v_;
@@ -67,9 +67,9 @@ namespace game_logic
 		{
 		}
 
-		virtual const FormulaCallable* value() const { return value_; }
-		virtual void destroy_ref() { if((*ref_)->refcount() == 1) { value_ = nullptr; } ref_->reset(); }
-		virtual void restore_ref() { if(!*ref_) { ref_->reset(dynamic_cast<T*>(const_cast<FormulaCallable*>(value_))); } }
+		virtual const FormulaCallable* value() const override { return value_; }
+		virtual void destroy_ref() override { if((*ref_)->refcount() == 1) { value_ = nullptr; } ref_->reset(); }
+		virtual void restore_ref() override { if(!*ref_) { ref_->reset(dynamic_cast<T*>(const_cast<FormulaCallable*>(value_))); } }
 	private:
 		const FormulaCallable* value_;
 		ffl::IntrusivePtr<T>* ref_;

@@ -524,7 +524,7 @@ class editor_mode_dialog : public gui::Dialog
 		}
 	}
 
-	bool handleEvent(const SDL_Event& event, bool claimed)
+	bool handleEvent(const SDL_Event& event, bool claimed) override
 	{
 		if(!claimed) {
 			const bool ctrl_pressed = (SDL_GetModState()&(KMOD_LCTRL|KMOD_RCTRL)) != 0;

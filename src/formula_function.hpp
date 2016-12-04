@@ -62,7 +62,7 @@ namespace game_logic
 	class FormulaExpression : public FormulaCallable 
 	{
 	public:
-		variant getValue(const std::string& key) const { return variant(); }
+		variant getValue(const std::string& key) const override { return variant(); }
 
 		explicit FormulaExpression(const char* name=nullptr);
 		virtual ~FormulaExpression();
@@ -316,7 +316,7 @@ namespace game_logic
 		RecursiveFunctionSymbolTable(const std::string& fn, const std::vector<std::string>& args, const std::vector<variant>& default_args, FunctionSymbolTable* backup, ConstFormulaCallableDefinitionPtr closure_definition, const std::vector<variant_type_ptr>& variant_types);
 		virtual ExpressionPtr createFunction(const std::string& fn,
 											   const std::vector<ExpressionPtr>& args,
-											   ConstFormulaCallableDefinitionPtr callable_def) const;
+											   ConstFormulaCallableDefinitionPtr callable_def) const override;
 		void resolveRecursiveCalls(ConstFormulaPtr f);
 	};
 

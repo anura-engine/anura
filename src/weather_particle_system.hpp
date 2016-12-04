@@ -57,7 +57,7 @@ public:
 	explicit WeatherParticleSystemFactory(variant node);
 	~WeatherParticleSystemFactory() {}
 	
-	ParticleSystemPtr create(const Entity& e) const;
+	ParticleSystemPtr create(const Entity& e) const override;
 	WeatherParticleSystemInfo info;
 };
 

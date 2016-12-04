@@ -152,15 +152,15 @@ namespace game_logic
 		const FormulaCallable& main_;
 		const FormulaCallable& backup_;
 
-		void setValueBySlot(int slot, const variant& value) {
+		void setValueBySlot(int slot, const variant& value) override {
 			const_cast<FormulaCallable&>(backup_).mutateValueBySlot(slot, value);
 		}
 
-		variant getValueBySlot(int slot) const {
+		variant getValueBySlot(int slot) const override {
 			return backup_.queryValueBySlot(slot);
 		}
 
-		variant getValue(const std::string& key) const {
+		variant getValue(const std::string& key) const override {
 			variant var = main_.queryValue(key);
 			if(var.is_null()) {
 				return backup_.queryValue(key);
@@ -169,7 +169,7 @@ namespace game_logic
 			return var;
 		}
 
-		void getInputs(std::vector<FormulaInput>* inputs) const {
+		void getInputs(std::vector<FormulaInput>* inputs) const override {
 			main_.getInputs(inputs);
 			backup_.getInputs(inputs);
 		}
@@ -274,11 +274,11 @@ namespace game_logic
 
 		void setExpression(const FormulaExpression* expr);
 
-		bool isCommand() const { return true; }
+		bool isCommand() const override { return true; }
 	private:
 		virtual void execute(FormulaCallable& context) const = 0;
-		variant getValue(const std::string& key) const { return variant(); }
-		void getInputs(std::vector<game_logic::FormulaInput>* inputs) const {}
+		variant getValue(const std::string& key) const override { return variant(); }
+		void getInputs(std::vector<game_logic::FormulaInput>* inputs) const override {}
 
 		//these two members are a more compiler-friendly version of a
 		//intrusive_ptr<FormulaExpression>

@@ -64,9 +64,9 @@ namespace tbs
 
 		static int requests_in_flight(int session_id);
 	protected:
-		virtual void heartbeat_internal(int send_heartbeat, std::map<int, client_info>& clients);
+		virtual void heartbeat_internal(int send_heartbeat, std::map<int, client_info>& clients) override;
 	private:
-		int connection_timeout_ticks() const;
+		int connection_timeout_ticks() const override;
 		void send_msg(const variant& resp, 
 			int session_id,
 			std::function<void(const std::string&)> handler, 
@@ -80,7 +80,7 @@ namespace tbs
 		
 		socket_info& create_socket_info(send_function send_fn);
 		void disconnect(int session_id);
-		void queue_msg(int session_id, const std::string& msg, bool has_priority);
+		void queue_msg(int session_id, const std::string& msg, bool has_priority) override;
 
 		std::list<std::pair<send_function, socket_info> > connections_;
 		std::deque<boost::tuple<send_function,variant,int> > msg_queue_;

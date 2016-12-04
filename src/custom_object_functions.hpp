@@ -48,12 +48,12 @@ public:
 
 	void setExpression(const game_logic::FormulaExpression* expr);
 
-	bool isCommand() const { return true; }
+	bool isCommand() const override { return true; }
 
 private:
 	virtual void execute(Level& lvl, Entity& ob) const = 0;
-	variant getValue(const std::string& key) const { return variant(); }
-	void getInputs(std::vector<game_logic::FormulaInput>* inputs) const {}
+	variant getValue(const std::string& key) const override { return variant(); }
+	void getInputs(std::vector<game_logic::FormulaInput>* inputs) const override {}
 
 	//these two members are used as a more compiler-friendly version of a
 	//intrusive_ptr<FormulaExpression>
@@ -69,12 +69,12 @@ public:
 
 	void setExpression(const game_logic::FormulaExpression* expr);
 
-	bool isCommand() const { return true; }
+	bool isCommand() const override { return true; }
 
 private:
 	virtual void execute(Level& lvl, CustomObject& ob) const = 0;
-	variant getValue(const std::string& key) const { return variant(); }
-	void getInputs(std::vector<game_logic::FormulaInput>* inputs) const {}
+	variant getValue(const std::string& key) const override { return variant(); }
+	void getInputs(std::vector<game_logic::FormulaInput>* inputs) const override {}
 	
 	//these two members are used as a more compiler-friendly version of a
 	//intrusive_ptr<FormulaExpression>
@@ -85,17 +85,17 @@ private:
 class SwallowObjectCommandCallable : public game_logic::FormulaCallable 
 {
 public:
-	bool isCommand() const { return true; }
+	bool isCommand() const override { return true; }
 private:
-	variant getValue(const std::string& key) const { return variant(); }
-	void getInputs(std::vector<game_logic::FormulaInput>* inputs) const {}
+	variant getValue(const std::string& key) const override { return variant(); }
+	void getInputs(std::vector<game_logic::FormulaInput>* inputs) const override {}
 };
 
 class SwallowMouseCommandCallable : public game_logic::FormulaCallable 
 {
 public:
-	bool isCommand() const { return true; }
+	bool isCommand() const override { return true; }
 private:
-	variant getValue(const std::string& key) const { return variant(); }
-	void getInputs(std::vector<game_logic::FormulaInput>* inputs) const {}
+	variant getValue(const std::string& key) const override { return variant(); }
+	void getInputs(std::vector<game_logic::FormulaInput>* inputs) const override {}
 };

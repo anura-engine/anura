@@ -321,7 +321,7 @@ namespace
 		explicit set_clipboard_text_command(const std::string& str) : str_(str)
 		{}
 
-		virtual void execute(game_logic::FormulaCallable& ob) const {
+		virtual void execute(game_logic::FormulaCallable& ob) const override {
 			copy_to_clipboard(str_, false);
 		}
 	};
@@ -681,7 +681,7 @@ namespace
 		explicit set_save_slot_command(int slot) : slot_(slot)
 		{}
 
-		virtual void execute(Level& lvl, Entity& ob) const {
+		virtual void execute(Level& lvl, Entity& ob) const override {
 			bool has_options = false;
 			std::vector<std::string> options;
 			std::string SaveFiles[] = {"save.cfg", "save2.cfg", "save3.cfg", "save4.cfg"};
@@ -735,7 +735,7 @@ namespace
 		explicit save_game_command(bool persistent) : persistent_(persistent)
 		{}
 
-		virtual void execute(Level& lvl, Entity& ob) const {
+		virtual void execute(Level& lvl, Entity& ob) const override {
 			lvl.player()->getEntity().saveGame();
 			if(persistent_) {
 				variant node = lvl.write();
@@ -789,7 +789,7 @@ namespace
 		int slot_;
 	public:
 		load_game_command(const std::string& transition, int slot) : transition_(transition), slot_(slot) {}
-		virtual void execute(Level& lvl, Entity& ob) const {
+		virtual void execute(Level& lvl, Entity& ob) const override {
 			std::string dest_file;
 
 			if(slot_ >= 0) {
@@ -899,7 +899,7 @@ namespace
 	class move_to_standing_command : public EntityCommandCallable
 	{
 	public:
-		virtual void execute(Level& lvl, Entity& ob) const {
+		virtual void execute(Level& lvl, Entity& ob) const override {
 			ob.moveToStanding(lvl);
 		}
 	};
@@ -917,7 +917,7 @@ namespace
 			explicit music_command(const std::string& name, const bool loops, int fade_time)
 			: name_(name), loops_(loops), queued_(false), fade_time_(fade_time)
 			{}
-			virtual void execute(Level& lvl, Entity& ob) const {
+			virtual void execute(Level& lvl, Entity& ob) const override {
 				if(loops_){
 					sound::play_music(name_, queued_, fade_time_);
 				}else{
@@ -977,7 +977,7 @@ namespace
 		explicit sound_command(const std::string& name, const bool loops, float volume, float fade_in_time, float stereo_left, float stereo_right)
 		  : names_(util::split(name)), loops_(loops), volume_(volume), fade_in_time_(fade_in_time), stereo_left_(stereo_left), stereo_right_(stereo_right)
 		{}
-		virtual void execute(Level& lvl, Entity& ob) const {
+		virtual void execute(Level& lvl, Entity& ob) const override {
 			sound::set_panning(stereo_left_, stereo_right_);
 			if(loops_){
 				if (names_.empty() == false){
@@ -1060,7 +1060,7 @@ namespace
 		explicit sound_pan_command(const std::string& name, float left, float right)
 		  : name_(name), left_(left), right_(right)
 		{}
-		virtual void execute(Level& lvl, Entity& ob) const {
+		virtual void execute(Level& lvl, Entity& ob) const override {
 			sound::update_panning(&ob, name_, left_, right_);
 		}
 	private:
@@ -1089,7 +1089,7 @@ namespace
 		explicit sound_volume_command(float volume)
 		: volume_(volume)
 		{}
-		virtual void execute(Level& lvl,Entity& ob) const {
+		virtual void execute(Level& lvl,Entity& ob) const override {
 			//sound::change_volume(&ob, volume_);
 			ob.setSoundVolume(volume_);
 		}
@@ -1114,7 +1114,7 @@ namespace
 		explicit stop_sound_command(const std::string& name, float fade_out_time)
 		  : name_(name), fade_out_time_(fade_out_time)
 		{}
-		virtual void execute(Level& lvl, Entity& ob) const {
+		virtual void execute(Level& lvl, Entity& ob) const override {
 			sound::stop_sound(name_, &ob, fade_out_time_);
 		}
 	private:
@@ -1140,7 +1140,7 @@ namespace
 		explicit preload_sound_command(const std::string& name)
 		  : name_(name)
 		{}
-		virtual void execute(Level& lvl, Entity& ob) const {
+		virtual void execute(Level& lvl, Entity& ob) const override {
 			sound::preload(name_);
 		}
 	private:
@@ -1173,7 +1173,7 @@ namespace
 		explicit play_haptic_effect_command(const std::string& name, int iterations)
 		  : name_(name), iterations_(iterations)
 		{}
-		virtual void execute(Level& lvl, Entity& ob) const {
+		virtual void execute(Level& lvl, Entity& ob) const override {
 			haptic::play(name_, iterations_);
 		}
 	private:
@@ -1199,7 +1199,7 @@ namespace
 		explicit stop_haptic_effect_command(const std::string& name)
 		  : name_(name)
 		{}
-		virtual void execute(Level& lvl, Entity& ob) const {
+		virtual void execute(Level& lvl, Entity& ob) const override {
 			haptic::stop(name_);
 		}
 	private:
@@ -1220,7 +1220,7 @@ namespace
 	public:
 		stop_all_haptic_effect_command()
 		{}
-		virtual void execute(Level& lvl, Entity& ob) const {
+		virtual void execute(Level& lvl, Entity& ob) const override {
 			haptic::stop_all();
 		}
 	};
@@ -1242,7 +1242,7 @@ namespace
 		  : color_(color), delta_(delta), duration_(duration)
 		{}
 
-		virtual void execute(Level& lvl, Entity& ob) const {
+		virtual void execute(Level& lvl, Entity& ob) const override {
 			screen_color_flash(color_, delta_, duration_);
 		}
 	private:
@@ -1286,7 +1286,7 @@ namespace
 		  : title_(title), duration_(duration)
 		{}
 
-		virtual void execute(Level& lvl, Entity& ob) const {
+		virtual void execute(Level& lvl, Entity& ob) const override {
 			set_scene_title(title_, duration_);
 		}
 	private:
@@ -1312,7 +1312,7 @@ namespace
 			explicit shake_screen_command(int x_offset, int y_offset, int x_velocity, int y_velocity)
 			: x_offset_(x_offset), y_offset_(y_offset), x_velocity_(x_velocity), y_velocity_(y_velocity)
 			{}
-			virtual void execute(Level& lvl, Entity& ob) const {
+			virtual void execute(Level& lvl, Entity& ob) const override {
 				screen_position& screen_pos = last_draw_position();
 			
 				screen_pos.shake_x_offset = x_offset_;
@@ -2007,7 +2007,7 @@ namespace
 		  : anim_(anim)
 		{}
 
-		virtual void execute(Level& lvl, CustomObject& ob) const {
+		virtual void execute(Level& lvl, CustomObject& ob) const override {
 			ob.setFrame(anim_);
 		}
 	private:
@@ -2026,7 +2026,7 @@ namespace
 	class die_command : public CustomObjectCommandCallable
 	{
 	public:
-		virtual void execute(Level& lvl, CustomObject& ob) const {
+		virtual void execute(Level& lvl, CustomObject& ob) const override {
 			ob.die();
 		}
 	}; 
@@ -2044,7 +2044,7 @@ namespace
 	public:
 		explicit facing_command(int facing) : facing_(facing)
 		{}
-		virtual void execute(Level& lvl, CustomObject& ob) const {
+		virtual void execute(Level& lvl, CustomObject& ob) const override {
 			ob.setFacingRight(facing_ > 0);
 		}
 	private:
@@ -2079,7 +2079,7 @@ namespace
 		  : id_(id), value_(value)
 		{}
 
-		virtual void execute(game_logic::FormulaCallable& ob) const {
+		virtual void execute(game_logic::FormulaCallable& ob) const override {
 		debug_console::add_graph_sample(id_, value_);
 		}
 	};
@@ -2096,7 +2096,7 @@ namespace
 		explicit add_debug_rect_command(const rect& r) : r_(r)
 		{}
 
-		virtual void execute(game_logic::FormulaCallable& ob) const {
+		virtual void execute(game_logic::FormulaCallable& ob) const override {
 			add_debug_rect(r_);
 		}
 	};
@@ -2325,7 +2325,7 @@ RETURN_TYPE("bool")
 		set_solid_command(const rect& r, bool is_solid) : r_(r), is_solid_(is_solid)
 		{}
 
-		virtual void execute(Level& lvl, Entity& ob) const {
+		virtual void execute(Level& lvl, Entity& ob) const override {
 			lvl.set_solid_area(r_, is_solid_);
 		}
 	};
@@ -2363,7 +2363,7 @@ RETURN_TYPE("bool")
 		explicit set_group_command(int group=-1) : group_(group)
 		{}
 
-		virtual void execute(Level& lvl, Entity& ob) const {
+		virtual void execute(Level& lvl, Entity& ob) const override {
 			int group = group_;
 			if(group < 0) {
 				if(ob.group() >= 0) {
@@ -2620,7 +2620,7 @@ RETURN_TYPE("bool")
 		  : skip_on_(skip_on)
 		{}
 
-		virtual void execute(Level& lvl, CustomObject& ob) const {
+		virtual void execute(Level& lvl, CustomObject& ob) const override {
 			skipping_dialog_sequence = skip_on_;
 			if(!skip_on_) {
 				end_skipping_game();
@@ -2647,7 +2647,7 @@ RETURN_TYPE("bool")
 		explicit speech_dialog_command(const std::vector<variant>& args, bool paused=false)
 		  : args_(args), paused_(paused)
 		{}
-		virtual void execute(Level& lvl, CustomObject& ob) const {
+		virtual void execute(Level& lvl, CustomObject& ob) const override {
 	//		pause_scope pauser;
 
 			if(!g_in_speech_dialog) {
@@ -2826,7 +2826,7 @@ RETURN_TYPE("bool")
 	class end_game_command : public CustomObjectCommandCallable
 	{
 	public:
-		virtual void execute(Level& lvl, CustomObject& ob) const {
+		virtual void execute(Level& lvl, CustomObject& ob) const override {
 			lvl.set_end_game();
 		}
 	};
@@ -2844,7 +2844,7 @@ RETURN_TYPE("bool")
 		explicit AchievementCommand(const std::string& str) : str_(str)
 		{}
 
-		virtual void execute(Level& lvl, Entity& ob) const {
+		virtual void execute(Level& lvl, Entity& ob) const override {
 			if(Achievement::attain(str_)) {
 				AchievementPtr a = Achievement::get(str_);
 				if(a) {
@@ -3432,7 +3432,7 @@ RETURN_TYPE("bool")
 		add_water_command(const rect& r, const KRE::Color& color) : r_(r), color_(color)
 		{}
 
-		virtual void execute(Level& lvl, Entity& ob) const {
+		virtual void execute(Level& lvl, Entity& ob) const override {
 			lvl.get_or_create_water().addRect(r_, color_, variant(&ob));
 		}
 	};
@@ -3468,7 +3468,7 @@ RETURN_TYPE("bool")
 		remove_water_command(const rect& r) : r_(r)
 		{}
 
-		virtual void execute(Level& lvl, Entity& ob) const {
+		virtual void execute(Level& lvl, Entity& ob) const override {
 			lvl.get_or_create_water().deleteRect(r_);
 		}
 	};
@@ -3497,7 +3497,7 @@ RETURN_TYPE("bool")
 		add_wave_command(int x, int y, int xvelocity, int height, int length, int delta_height, int delta_length) : x_(x), y_(y), xvelocity_(xvelocity), height_(height), length_(length), delta_height_(delta_height), delta_length_(delta_length)
 		{}
 
-		virtual void execute(Level& lvl, Entity& ob) const {
+		virtual void execute(Level& lvl, Entity& ob) const override {
 			Water* w = lvl.get_water();
 			if(!w) {
 				return;
@@ -3566,7 +3566,7 @@ RETURN_TYPE("bool")
 		  : id_(id), type_(type) {
 		}
 
-		virtual void execute(Level& lvl, CustomObject& ob) const {
+		virtual void execute(Level& lvl, CustomObject& ob) const override {
 			ob.addParticleSystem(id_, type_);
 		}
 	private:
@@ -3641,7 +3641,7 @@ RETURN_TYPE("bool")
 		  : text_(text), font_(font), size_(size), align_(align) {
 		}
 
-		virtual void execute(Level& lvl, CustomObject& ob) const {
+		virtual void execute(Level& lvl, CustomObject& ob) const override {
 			ob.setText(text_, font_, size_, align_);
 		}
 	private:
@@ -3845,7 +3845,7 @@ RETURN_TYPE("bool")
 		  : lvl_(lvl), x_(x), y_(y)
 		{}
 
-		virtual void execute(Level& lvl, Entity& ob) const {
+		virtual void execute(Level& lvl, Entity& ob) const override {
 			lvl.add_sub_level(lvl_, x_, y_);
 		}
 	};
@@ -3867,7 +3867,7 @@ RETURN_TYPE("bool")
 		explicit remove_Level_module_command(const std::string& lvl) : lvl_(lvl)
 		{}
 
-		virtual void execute(Level& lvl, Entity& ob) const {
+		virtual void execute(Level& lvl, Entity& ob) const override {
 			lvl.remove_sub_level(lvl_);
 		}
 	};
@@ -3888,7 +3888,7 @@ RETURN_TYPE("bool")
 		shift_Level_position_command(int xoffset, int yoffset)
 		  : xoffset_(xoffset), yoffset_(yoffset) {}
 
-		virtual void execute(Level& lvl, Entity& ob) const {
+		virtual void execute(Level& lvl, Entity& ob) const override {
 			lvl.adjust_level_offset(xoffset_, yoffset_);
 		}
 	};
@@ -3918,7 +3918,7 @@ RETURN_TYPE("bool")
 		explicit module_pump_command(module::client* cl) : client_(cl)
 		{}
 
-		virtual void execute(Level& lvl, Entity& ob) const {
+		virtual void execute(Level& lvl, Entity& ob) const override {
 			client_->process();
 		}
 	};
@@ -3930,7 +3930,7 @@ RETURN_TYPE("bool")
 		module_install_command(module::client* cl, const std::string& id) : client_(cl), id_(id)
 		{}
 
-		virtual void execute(Level& lvl, Entity& ob) const {
+		virtual void execute(Level& lvl, Entity& ob) const override {
 			client_->install_module(id_);
 		}
 	};
@@ -3941,7 +3941,7 @@ RETURN_TYPE("bool")
 		explicit module_uninstall_command(const std::string& id) : id_(id)
 		{}
 
-		virtual void execute(Level& lvl, Entity& ob) const {
+		virtual void execute(Level& lvl, Entity& ob) const override {
 			module::uninstall_downloaded_module(id_);
 		}
 	};
@@ -3996,7 +3996,7 @@ RETURN_TYPE("bool")
 		module_rate_command(module::client* cl, const std::string& id, int rating, const std::string& review) : client_(cl), id_(id), rating_(rating), review_(review)
 		{}
 
-		virtual void execute(Level& lvl, Entity& ob) const {
+		virtual void execute(Level& lvl, Entity& ob) const override {
 			client_->rate_module(id_, rating_, review_);
 		}
 	};
@@ -4032,7 +4032,7 @@ RETURN_TYPE("bool")
 			: id_(id), callable_(callable)
 		{}
 
-		virtual void execute(Level& lvl, Entity& ob) const {
+		virtual void execute(Level& lvl, Entity& ob) const override {
 			lvl.launch_new_module(id_, callable_);
 		}
 	};
@@ -4160,7 +4160,7 @@ RETURN_TYPE("bool")
 		virtual ExpressionPtr createFunction(
 								   const std::string& fn,
 								   const std::vector<ExpressionPtr>& args,
-								   ConstFormulaCallableDefinitionPtr callable_def) const;
+								   ConstFormulaCallableDefinitionPtr callable_def) const override;
 	};
 
 	ExpressionPtr CustomObjectFunctionSymbolTable::createFunction(

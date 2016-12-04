@@ -173,7 +173,7 @@ namespace preferences
 		class SettingsObject : public game_logic::FormulaCallable
 		{
 		private:
-			variant getValue(const std::string& key) const {
+			variant getValue(const std::string& key) const override {
 				if(key == "dir") {
 					std::vector<variant> result;
 					for(std::map<std::string, RegisteredSetting>::iterator itor = g_registered_settings().begin(); itor != g_registered_settings().end(); ++itor) {
@@ -201,7 +201,7 @@ namespace preferences
 				}
 			}
 
-			void setValue(const std::string& key, const variant& value) {
+			void setValue(const std::string& key, const variant& value) override {
 				std::map<std::string, RegisteredSetting>::iterator itor = g_registered_settings().find(key);
 				if(itor == g_registered_settings().end()) {
 					return;
@@ -216,7 +216,7 @@ namespace preferences
 				}
 			}
 
-			void getInputs(std::vector<game_logic::FormulaInput>* inputs) const {
+			void getInputs(std::vector<game_logic::FormulaInput>* inputs) const override {
 				for(std::map<std::string, RegisteredSetting>::iterator itor = g_registered_settings().begin(); itor != g_registered_settings().end(); ++itor) {
 					inputs->push_back(game_logic::FormulaInput(itor->first, game_logic::FORMULA_ACCESS_TYPE::READ_WRITE));
 				}

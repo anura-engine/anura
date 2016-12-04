@@ -43,10 +43,10 @@ namespace game_logic
 			dynamic_interface_instance(const variant& obj, ffl::IntrusivePtr<const dynamic_bound_factory> parent);
 			int id() const;
 		private:
-			variant getValue(const std::string& key) const;
-			variant getValueBySlot(int slot) const;
-			void setValue(const std::string& key, const variant& value);
-			void setValueBySlot(int slot, const variant& value);
+			variant getValue(const std::string& key) const override;
+			variant getValueBySlot(int slot) const override;
+			void setValue(const std::string& key, const variant& value) override;
+			void setValueBySlot(int slot, const variant& value) override;
 
 			ffl::IntrusivePtr<const dynamic_bound_factory> factory_;
 			variant obj_;
@@ -58,10 +58,10 @@ namespace game_logic
 			static_interface_instance(const variant& obj, ffl::IntrusivePtr<const static_bound_factory> parent);
 			int id() const;
 		private:
-			variant getValue(const std::string& key) const;
-			variant getValueBySlot(int slot) const;
-			void setValue(const std::string& key, const variant& value);
-			void setValueBySlot(int slot, const variant& value);
+			variant getValue(const std::string& key) const override;
+			variant getValueBySlot(int slot) const override;
+			void setValue(const std::string& key, const variant& value) override;
+			void setValueBySlot(int slot, const variant& value) override;
 
 			ffl::IntrusivePtr<const static_bound_factory> factory_;
 			ffl::IntrusivePtr<FormulaCallable> obj_;
@@ -79,8 +79,8 @@ namespace game_logic
 			dynamic_bound_factory(const std::vector<Entry>& slots, int id)
 			  : slots_(slots), id_(id)
 			{}
-			virtual bool all_static_lookups() const { return false; }
-			virtual variant create(const variant& v) const {
+			virtual bool all_static_lookups() const override { return false; }
+			virtual variant create(const variant& v) const override {
 				return variant(new dynamic_interface_instance(v, ffl::IntrusivePtr<const dynamic_bound_factory>(this)));
 			}
 
@@ -89,7 +89,7 @@ namespace game_logic
 				return slots_[slot].id;
 			}
 
-			int getId() const { return id_; }
+			int getId() const override { return id_; }
 
 		private:
 			std::vector<Entry> slots_;
@@ -114,8 +114,8 @@ namespace game_logic
 					mapping_.push_back(nslot);
 				}
 			}
-			virtual bool all_static_lookups() const { return true; }
-			virtual variant create(const variant& v) const {
+			virtual bool all_static_lookups() const override { return true; }
+			virtual variant create(const variant& v) const override {
 				return variant(new static_interface_instance(v, ffl::IntrusivePtr<const static_bound_factory>(this)));
 			}
 
@@ -124,7 +124,7 @@ namespace game_logic
 				return mapping_[slot];
 			}
 
-			int getId() const { return id_; }
+			int getId() const override { return id_; }
 		private:
 			std::vector<Entry> slots_;
 			std::vector<int> mapping_;

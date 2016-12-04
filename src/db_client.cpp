@@ -112,7 +112,7 @@ namespace
 		~FileBackedDbClient() {
 		}
 
-		bool process(int timeout_us) {
+		bool process(int timeout_us) override {
 			if(dirty_) {
 				sys::write_file(fname_, doc_.write_json());
 				dirty_ = false;
@@ -120,7 +120,7 @@ namespace
 			return false;
 		}
 
-		void put(const std::string& key, variant doc, std::function<void()> on_done, std::function<void()> on_error, PUT_OPERATION op=PUT_SET)
+		void put(const std::string& key, variant doc, std::function<void()> on_done, std::function<void()> on_error, PUT_OPERATION op=PUT_SET) override
 		{
 			if(op == PUT_APPEND) {
 				variant existing = doc_[variant(prefix_ + key)];
@@ -138,16 +138,16 @@ namespace
 			on_done();
 		}
 
-		void get(const std::string& key, std::function<void(variant)> on_done, int lock_seconds, GET_OPERATION op) {
+		void get(const std::string& key, std::function<void(variant)> on_done, int lock_seconds, GET_OPERATION op) override {
 			on_done(doc_[prefix_ + key]);
 		}
 
-		void remove(const std::string& key) {
+		void remove(const std::string& key) override {
 			doc_.remove_attr_mutation(variant(prefix_ + key));
 			dirty_ = true;
 		}
 
-		void getKeysWithPrefix(const std::string& key, std::function<void(std::vector<variant>)> on_done) {
+		void getKeysWithPrefix(const std::string& key, std::function<void(std::vector<variant>)> on_done) override {
 		}
 
 	private:
@@ -260,7 +260,7 @@ void remove_callback(lcb_t instance, const void* cookie, lcb_error_t error, cons
 
 		~CouchbaseDbClient() {}
 
-		void put(const std::string& rkey, variant doc, std::function<void()> on_done, std::function<void()> on_error, PUT_OPERATION op) {
+		void put(const std::string& rkey, variant doc, std::function<void()> on_done, std::function<void()> on_error, PUT_OPERATION op) override {
 			const std::string key = prefix_ + rkey;
 
 			std::string doc_str;
@@ -311,7 +311,7 @@ void remove_callback(lcb_t instance, const void* cookie, lcb_error_t error, cons
 			ASSERT_LOG(err == LCB_SUCCESS, "Error in store: " << lcb_strerror(nullptr, err));
 		}
 
-	virtual void remove(const std::string& rkey)
+	virtual void remove(const std::string& rkey) override
 	{
 		const std::string key = prefix_ + rkey;
 
@@ -335,7 +335,7 @@ void remove_callback(lcb_t instance, const void* cookie, lcb_error_t error, cons
 		ASSERT_LOG(err == LCB_SUCCESS, "Error in remove: " << lcb_strerror(nullptr, err));
 	}
 
-		void get(const std::string& rkey, std::function<void(variant)> on_done, int lock_seconds, GET_OPERATION op)
+		void get(const std::string& rkey, std::function<void(variant)> on_done, int lock_seconds, GET_OPERATION op) override
 		{
 			const std::string key = prefix_ + rkey;
 
@@ -363,7 +363,7 @@ void remove_callback(lcb_t instance, const void* cookie, lcb_error_t error, cons
 			ASSERT_LOG(err == LCB_SUCCESS, "Error in get: " << lcb_strerror(nullptr, err));
 		}
 
-		void getKeysWithPrefix(const std::string& key, std::function<void(std::vector<variant>)> on_done)
+		void getKeysWithPrefix(const std::string& key, std::function<void(std::vector<variant>)> on_done) override
 		{
 			CouchbaseHTTPInfo* cookie = new CouchbaseHTTPInfo;
 			cookie->callback = on_done;
@@ -387,7 +387,7 @@ void remove_callback(lcb_t instance, const void* cookie, lcb_error_t error, cons
 			++outstanding_requests_;
 		}
 
-		bool process(int timeout_us)
+		bool process(int timeout_us) override
 		{
 			if(timeout_us > 0) {
 				/*

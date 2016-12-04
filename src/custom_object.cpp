@@ -2856,7 +2856,7 @@ namespace
 	{
 		ffl::IntrusivePtr<CustomObject> obj_;
 
-		variant getValue(const std::string& key) const {
+		variant getValue(const std::string& key) const override {
 			game_logic::ConstFormulaPtr f = obj_->getEventHandler(get_object_event_id(key));
 			if(!f) {
 				return variant();
@@ -2864,7 +2864,7 @@ namespace
 				return variant(f->str());
 			}
 		}
-		void setValue(const std::string& key, const variant& value) {
+		void setValue(const std::string& key, const variant& value) override {
 			static ffl::IntrusivePtr<CustomObjectCallable> custom_object_definition(new CustomObjectCallable);
 
 			game_logic::FormulaPtr f(new game_logic::Formula(value, &get_custom_object_functions_symbol_table(), custom_object_definition.get()));
@@ -2882,14 +2882,14 @@ namespace
 	{
 		ffl::IntrusivePtr<CustomObject> obj_;
 
-		variant getValue(const std::string& key) const {
+		variant getValue(const std::string& key) const override {
 			if(key == "children") {
 				std::vector<variant> v = obj_->getVariantWidgetList();
 				return variant(&v);
 			}
 			return variant(obj_->getWidgetById(key).get());
 		}
-		void setValue(const std::string& key, const variant& value) {
+		void setValue(const std::string& key, const variant& value) override {
 			if(key == "child") {
 
 				gui::WidgetPtr new_widget = widget_factory::create(value, obj_.get());

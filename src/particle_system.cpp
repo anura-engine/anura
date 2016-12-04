@@ -201,7 +201,7 @@ namespace
 		explicit SimpleParticleSystemFactory(variant node);
 		~SimpleParticleSystemFactory() {}
 
-		ParticleSystemPtr create(const Entity& e) const;
+		ParticleSystemPtr create(const Entity& e) const override;
 
 		std::vector<ParticleAnimation> frames_;
 
@@ -829,7 +829,7 @@ namespace
 		  : info_(node)
 		{}
 
-		ParticleSystemPtr create(const Entity& e) const {
+		ParticleSystemPtr create(const Entity& e) const override {
 			return ParticleSystemPtr(new PointParticleSystem(e, info_));
 		}
 

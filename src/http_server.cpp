@@ -478,11 +478,11 @@ using namespace http;
 class test_web_server : public http::web_server {
 public:
 	test_web_server(boost::asio::io_service& io_service) : web_server(io_service) {}
-	void handlePost(socket_ptr socket, variant doc, const environment& env, const std::string& raw_msg) {
+	void handlePost(socket_ptr socket, variant doc, const environment& env, const std::string& raw_msg) override {
 
 		send_msg(socket, "text/json", "{ \"type\": \"ok\" }", "");
 	}
-	void handleGet(socket_ptr socket, const std::string& url, const std::map<std::string, std::string>& args) {
+	void handleGet(socket_ptr socket, const std::string& url, const std::map<std::string, std::string>& args) override {
 		send_msg(socket, "text/json", "{ \"type\": \"ok\" }", "");
 	}
 

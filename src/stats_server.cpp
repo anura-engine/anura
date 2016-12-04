@@ -67,7 +67,7 @@ namespace
 	{
 		class variant_callable : public FormulaCallable {
 			variant var_;
-			variant getValue(const std::string& key) const {
+			variant getValue(const std::string& key) const override {
 				return var_[variant(key)];
 			}
 		public:

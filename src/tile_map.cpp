@@ -278,7 +278,7 @@ namespace
 		{}
 
 	private:
-		variant execute(const FormulaCallable& variables) const {
+		variant execute(const FormulaCallable& variables) const override {
 			variant v = args()[0]->evaluate(variables);
 			TileMap* m = v.convert_to<TileMap>();
 			return variant(m->getTile(args()[1]->evaluate(variables).as_int(),
@@ -291,7 +291,7 @@ namespace
 	public:
 		ExpressionPtr createFunction(const std::string& fn, 
 			const std::vector<ExpressionPtr>& args, 
-			ConstFormulaCallableDefinitionPtr callable_def) const 
+			ConstFormulaCallableDefinitionPtr callable_def) const  override
 		{
 			if(fn == "tile_at") {
 				return ExpressionPtr(new TileAtFunction(args));

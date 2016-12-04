@@ -417,7 +417,7 @@ std::map<std::string, std::string>& class_path_map()
 				}
 			}
 
-			virtual int getSlot(const std::string& key) const {
+			virtual int getSlot(const std::string& key) const override {
 				std::map<std::string, int>::const_iterator itor = properties_.find(key);
 				if(itor != properties_.end()) {
 					return itor->second;
@@ -426,7 +426,7 @@ std::map<std::string, std::string>& class_path_map()
 				return -1;
 			}
 
-			virtual Entry* getEntry(int slot) {
+			virtual Entry* getEntry(int slot) override {
 				if(slot < 0 || static_cast<unsigned>(slot) >= slots_.size()) {
 					return nullptr;
 				}
@@ -434,26 +434,26 @@ std::map<std::string, std::string>& class_path_map()
 				return &slots_[slot];
 			}
 
-			virtual const Entry* getEntry(int slot) const {
+			virtual const Entry* getEntry(int slot) const override {
 				if(slot < 0 || static_cast<unsigned>(slot) >= slots_.size()) {
 					return nullptr;
 				}
 
 				return &slots_[slot];
 			}
-			virtual int getNumSlots() const {
+			virtual int getNumSlots() const override {
 				return static_cast<int>(slots_.size());
 			}
 
-			bool getSymbolIndexForSlot(int slot, int* index) const {
+			bool getSymbolIndexForSlot(int slot, int* index) const override {
 				return false;
 			}
 
-			int getBaseSymbolIndex() const {
+			int getBaseSymbolIndex() const override {
 				return 0;
 			}
 
-			const std::string* getTypeName() const {
+			const std::string* getTypeName() const override {
 				return &type_name_;
 			}
 
@@ -469,7 +469,7 @@ std::map<std::string, std::string>& class_path_map()
 				}
 			}
 
-			int getSubsetSlotBase(const FormulaCallableDefinition* subset) const
+			int getSubsetSlotBase(const FormulaCallableDefinition* subset) const override
 			{
 				return -1;
 			}
@@ -1889,14 +1889,14 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 				items_.resize(get_library_definition()->getNumSlots());
 			}
 		private:
-			variant getValue(const std::string& key) const {
+			variant getValue(const std::string& key) const override {
 				FormulaCallableDefinitionPtr def = get_library_definition();
 				const int slot = def->getSlot(key);
 				ASSERT_LOG(slot >= 0, "Unknown library: " << key << "\n" << get_full_call_stack());
 				return queryValueBySlot(slot);
 			}
 
-			variant getValueBySlot(int slot) const {
+			variant getValueBySlot(int slot) const override {
 				ASSERT_LOG(slot >= 0 && static_cast<unsigned>(slot) < items_.size(), "ILLEGAL LOOK UP IN LIBRARY: " << slot << "/" << items_.size());
 				if(items_[slot].is_null()) {
 					FormulaCallableDefinitionPtr def = get_library_definition();
@@ -1913,7 +1913,7 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 				return items_[slot];
 			}
 
-			void surrenderReferences(GarbageCollector* collector) {
+			void surrenderReferences(GarbageCollector* collector) override {
 				for(variant& item : items_) {
 					collector->surrenderVariant(&item);
 				}

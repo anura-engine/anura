@@ -67,7 +67,7 @@ namespace game_logic
 			simple_definition() : base_(nullptr)
 			{}
 
-			int getSlot(const std::string& key) const {
+			int getSlot(const std::string& key) const override {
 				int index = 0;
 				for(const Entry& e : entries_) {
 					if(e.id == key) {
@@ -87,7 +87,7 @@ namespace game_logic
 				return -1;
 			}
 
-			Entry* getEntry(int slot) {
+			Entry* getEntry(int slot) override {
 				if(base_ && slot < getBaseNumSlots()) {
 					return const_cast<FormulaCallableDefinition*>(base_.get())->getEntry(slot);
 				}
@@ -101,7 +101,7 @@ namespace game_logic
 				return &entries_[slot];
 			}
 
-			const Entry* getEntry(int slot) const {
+			const Entry* getEntry(int slot) const override {
 				if(base_ && slot < getBaseNumSlots()) {
 					return base_->getEntry(slot);
 				}
@@ -115,7 +115,7 @@ namespace game_logic
 				return &entries_[slot];
 			}
 
-			bool getSymbolIndexForSlot(int slot, int* index) const {
+			bool getSymbolIndexForSlot(int slot, int* index) const override {
 				if(base_ && slot < getBaseNumSlots()) {
 					return base_->getSymbolIndexForSlot(slot, index);
 				}
@@ -135,7 +135,7 @@ namespace game_logic
 				return true;
 			}
 
-			int getBaseSymbolIndex() const {
+			int getBaseSymbolIndex() const override {
 				int result = 0;
 				if(base_) {
 					result += base_->getBaseSymbolIndex();
@@ -148,9 +148,9 @@ namespace game_logic
 				return result;
 			}
 
-			int getNumSlots() const { return getBaseNumSlots() + static_cast<int>(entries_.size()); }
+			int getNumSlots() const override { return getBaseNumSlots() + static_cast<int>(entries_.size()); }
 
-			int getSubsetSlotBase(const FormulaCallableDefinition* subset) const
+			int getSubsetSlotBase(const FormulaCallableDefinition* subset) const override
 			{
 				if(base_) {
 					return base_->querySubsetSlotBase(subset);
@@ -186,7 +186,7 @@ namespace game_logic
 				default_entry_.reset(new Entry(e));
 			}
 
-			const Entry* getDefaultEntry() const { return default_entry_.get(); }
+			const Entry* getDefaultEntry() const override { return default_entry_.get(); }
 
 		private:
 			int getBaseNumSlots() const { return base_ ? base_->getNumSlots() : 0; }
@@ -208,11 +208,11 @@ namespace game_logic
 				}
 			}
 
-			int getSlot(const std::string& key) const {
+			int getSlot(const std::string& key) const override {
 				return base_->getSlot(key);
 			}
 
-			Entry* getEntry(int slot) {
+			Entry* getEntry(int slot) override {
 				if(slot == slot_) {
 					return &mod_;
 				}
@@ -220,7 +220,7 @@ namespace game_logic
 				return const_cast<FormulaCallableDefinition*>(base_.get())->getEntry(slot);
 			}
 
-			const Entry* getEntry(int slot) const {
+			const Entry* getEntry(int slot) const override {
 				if(slot == slot_) {
 					return &mod_;
 				}
@@ -228,16 +228,16 @@ namespace game_logic
 				return base_->getEntry(slot);
 			}
 
-			int getNumSlots() const { return base_->getNumSlots(); }
+			int getNumSlots() const override { return base_->getNumSlots(); }
 			
-			int getSubsetSlotBase(const FormulaCallableDefinition* subset) const
+			int getSubsetSlotBase(const FormulaCallableDefinition* subset) const override
 			{
 				return base_->querySubsetSlotBase(subset);
 			}
 
-			const std::string* getTypeName() const { return base_->getTypeName(); }
+			const std::string* getTypeName() const override { return base_->getTypeName(); }
 
-			bool isStrict() const { return base_->isStrict(); }
+			bool isStrict() const override { return base_->isStrict(); }
 
 			bool getSymbolIndexForSlot(int slot, int* index) const override {
 				return base_->getSymbolIndexForSlot(slot, index);

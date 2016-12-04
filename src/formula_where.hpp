@@ -34,7 +34,7 @@ namespace game_logic
 	struct WhereVariablesInfo : public FormulaCallable 
 	{
 		explicit WhereVariablesInfo(int nslot) : base_slot(nslot) {}
-		variant getValue(const std::string& key) const { return variant(); }
+		variant getValue(const std::string& key) const override { return variant(); }
 		std::vector<std::string> names;
 		std::vector<ExpressionPtr> entries;
 		int base_slot;

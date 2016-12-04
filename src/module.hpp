@@ -141,7 +141,7 @@ namespace module
 		bool process();
 		const std::string& error() const { return error_; }
 		bool out_of_date() const { return out_of_date_; }
-		variant getValue(const std::string& key) const;
+		variant getValue(const std::string& key) const override;
 
 		int nbytes_transferred() const { return nbytes_transferred_; }
 		int nbytes_total() const { return nbytes_total_; }
