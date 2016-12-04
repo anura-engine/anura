@@ -1982,73 +1982,12 @@ namespace game_logic
 
 		namespace 
 		{
-			class variant_comparator : public FormulaCallable {
-				//forbid these so they can't be passed by value.
-				variant_comparator(const variant_comparator&);
-				void operator=(const variant_comparator&);
-
-				ExpressionPtr expr_;
-				const FormulaCallable* fallback_;
-				mutable variant a_, b_;
-				variant getValue(const std::string& key) const override {
-					if(key == "a") {
-						return a_;
-					} else if(key == "b") {
-						return b_;
-					} else {
-						return fallback_->queryValue(key);
-					}
-				}
-
-				variant getValueBySlot(int slot) const override {
-					if(slot == 0) {
-						return a_;
-					} else if(slot == 1) {
-						return b_;
-					}
-
-					return fallback_->queryValueBySlot(slot - 2);
-				}
-
-				void setValue(const std::string& key, const variant& value) override {
-					const_cast<FormulaCallable*>(fallback_)->mutateValue(key, value);
-				}
-
-				void setValueBySlot(int slot, const variant& value) override {
-					ASSERT_LOG(slot >= 2, "Illegal attempt to set comparator values");
-					const_cast<FormulaCallable*>(fallback_)->mutateValueBySlot(slot-2, value);
-				}
-
-				void getInputs(std::vector<FormulaInput>* inputs) const override {
-					fallback_->getInputs(inputs);
-				}
-			public:
-				variant_comparator(const ExpressionPtr& expr, const FormulaCallable& fallback) : FormulaCallable(false), expr_(expr), fallback_(&fallback)
-				{}
-
-				bool operator()(const variant& a, const variant& b) const {
-					a_ = a;
-					b_ = b;
-					return expr_->evaluate(*this).as_bool();
-				}
-
-				variant eval(const variant& a, const variant& b) const {
-					a_ = a;
-					b_ = b;
-					return expr_->evaluate(*this);
-				}
-
-				void surrenderReferences(GarbageCollector* collector) override {
-					collector->surrenderVariant(&a_);
-					collector->surrenderVariant(&b_);
-				}
-			};
 
 			class variant_comparator_definition : public FormulaCallableDefinition
 			{
 			public:
 				variant_comparator_definition(ConstFormulaCallableDefinitionPtr base, variant_type_ptr type)
-				  : base_(base), type_(type)
+				  : base_(base), type_(type), num_slots_(numBaseSlots() + 2)
 				{
 					for(int n = 0; n != 2; ++n) {
 						const std::string name = (n == 0) ? "a" : "b";
@@ -2057,16 +1996,14 @@ namespace game_logic
 					}
 				}
 
+				int numBaseSlots() const { return base_ ? base_->getNumSlots() : 0; }
+
 				int getSlot(const std::string& key) const override {
-					if(key == "a") { return 0; }
-					if(key == "b") { return 1; }
+					if(key == "a") { return numBaseSlots() + 0; }
+					if(key == "b") { return numBaseSlots() + 1; }
 
 					if(base_) {
 						int result = base_->getSlot(key);
-						if(result >= 0) {
-							result += 2;
-						}
-
 						return result;
 					} else {
 						return -1;
@@ -2078,12 +2015,14 @@ namespace game_logic
 						return nullptr;
 					}
 
-					if(static_cast<unsigned>(slot) < entries_.size()) {
-						return &entries_[slot];
+					if(base_ && slot < numBaseSlots()) {
+						return const_cast<FormulaCallableDefinition*>(base_.get())->getEntry(slot);
 					}
 
-					if(base_) {
-						return const_cast<FormulaCallableDefinition*>(base_.get())->getEntry(slot - static_cast<int>(entries_.size()));
+					slot -= numBaseSlots();
+
+					if(static_cast<unsigned>(slot) < entries_.size()) {
+						return &entries_[slot];
 					}
 
 					return nullptr;
@@ -2094,12 +2033,14 @@ namespace game_logic
 						return nullptr;
 					}
 
-					if(static_cast<unsigned>(slot) < entries_.size()) {
-						return &entries_[slot];
+					if(base_ && slot < numBaseSlots()) {
+						return const_cast<FormulaCallableDefinition*>(base_.get())->getEntry(slot);
 					}
 
-					if(base_) {
-						return base_->getEntry(slot - static_cast<int>(entries_.size()));
+					slot -= numBaseSlots();
+
+					if(static_cast<unsigned>(slot) < entries_.size()) {
+						return &entries_[slot];
 					}
 
 					return nullptr;
@@ -2110,6 +2051,12 @@ namespace game_logic
 						return false;
 					}
 
+					if(base_ && slot < numBaseSlots()) {
+						return base_->getSymbolIndexForSlot(slot, index);
+					}
+
+					slot -= numBaseSlots();
+
 					if(static_cast<unsigned>(slot) < entries_.size()) {
 
 						if(!hasSymbolIndexes()) {
@@ -2118,10 +2065,6 @@ namespace game_logic
 
 						*index = getBaseSymbolIndex() + slot;
 						return true;
-					}
-
-					if(base_) {
-						return base_->getSymbolIndexForSlot(slot - static_cast<int>(entries_.size()), index);
 					}
 
 					return false;
@@ -2141,7 +2084,7 @@ namespace game_logic
 				}
 
 				int getNumSlots() const override {
-					return 2 + (base_ ? base_->getNumSlots() : 0);
+					return num_slots_;
 				}
 
 				int getSubsetSlotBase(const FormulaCallableDefinition* subset) const override
@@ -2155,7 +2098,7 @@ namespace game_logic
 						return -1;
 					}
 
-					return 2 + slot;
+					return slot;
 				}
 
 			private:
@@ -2163,6 +2106,75 @@ namespace game_logic
 				variant_type_ptr type_;
 
 				std::vector<Entry> entries_;
+
+				int num_slots_;
+			};
+
+			class variant_comparator : public FormulaCallable {
+				//forbid these so they can't be passed by value.
+				variant_comparator(const variant_comparator&);
+				void operator=(const variant_comparator&);
+
+				ExpressionPtr expr_;
+				const FormulaCallable* fallback_;
+				mutable variant a_, b_;
+				int num_slots_;
+				variant getValue(const std::string& key) const override {
+					if(key == "a") {
+						return a_;
+					} else if(key == "b") {
+						return b_;
+					} else {
+						return fallback_->queryValue(key);
+					}
+				}
+
+				variant getValueBySlot(int slot) const override {
+					if(slot == num_slots_-2) {
+						return a_;
+					} else if(slot == num_slots_-1) {
+						return b_;
+					}
+
+					return fallback_->queryValueBySlot(slot);
+				}
+
+				void setValue(const std::string& key, const variant& value) override {
+					const_cast<FormulaCallable*>(fallback_)->mutateValue(key, value);
+				}
+
+				void setValueBySlot(int slot, const variant& value) override {
+					const_cast<FormulaCallable*>(fallback_)->mutateValueBySlot(slot, value);
+				}
+
+				void getInputs(std::vector<FormulaInput>* inputs) const override {
+					fallback_->getInputs(inputs);
+				}
+			public:
+				variant_comparator(const ExpressionPtr& expr, const FormulaCallable& fallback) : FormulaCallable(false), expr_(expr), fallback_(&fallback), num_slots_(0)
+				{
+					auto p = expr->getDefinitionUsedByExpression();
+					if(p) {
+						num_slots_ = p->getNumSlots();
+					}
+				}
+
+				bool operator()(const variant& a, const variant& b) const {
+					a_ = a;
+					b_ = b;
+					return expr_->evaluate(*this).as_bool();
+				}
+
+				variant eval(const variant& a, const variant& b) const {
+					a_ = a;
+					b_ = b;
+					return expr_->evaluate(*this);
+				}
+
+				void surrenderReferences(GarbageCollector* collector) override {
+					collector->surrenderVariant(&a_);
+					collector->surrenderVariant(&b_);
+				}
 			};
 		}
 
@@ -2752,17 +2764,12 @@ FUNCTION_DEF_IMPL
 			int getSlot(const std::string& key) const {
 				for(int n = 0; n != entries_.size(); ++n) {
 					if(entries_[n].id == key) {
-						return n;
+						return baseNumSlots() + n;
 					}
 				}
 
 				if(base_) {
-					int result = base_->getSlot(key);
-					if(result >= 0) {
-						result += NUM_MAP_CALLABLE_SLOTS;
-					}
-
-					return result;
+					return base_->getSlot(key);
 				} else {
 					return -1;
 				}
@@ -2773,15 +2780,17 @@ FUNCTION_DEF_IMPL
 					return nullptr;
 				}
 
-				if(static_cast<unsigned>(slot) < entries_.size()) {
-					return &entries_[slot];
+				if(slot < baseNumSlots()) {
+					return const_cast<FormulaCallableDefinition*>(base_.get())->getEntry(slot);
 				}
 
-				if(base_) {
-					return const_cast<FormulaCallableDefinition*>(base_.get())->getEntry(slot - NUM_MAP_CALLABLE_SLOTS);
+				slot -= baseNumSlots();
+
+				if(slot < 0 || static_cast<unsigned>(slot) >= entries_.size()) {
+					return nullptr;
 				}
 
-				return nullptr;
+				return &entries_[slot];
 			}
 
 			const Entry* getEntry(int slot) const {
@@ -2789,21 +2798,25 @@ FUNCTION_DEF_IMPL
 					return nullptr;
 				}
 
-				if(static_cast<unsigned>(slot) < entries_.size()) {
-					return &entries_[slot];
+				if(slot < baseNumSlots()) {
+					return const_cast<FormulaCallableDefinition*>(base_.get())->getEntry(slot);
 				}
 
-				if(base_) {
-					return base_->getEntry(slot - NUM_MAP_CALLABLE_SLOTS);
+				slot -= baseNumSlots();
+
+				if(slot < 0 || static_cast<unsigned>(slot) >= entries_.size()) {
+					return nullptr;
 				}
 
-				return nullptr;
+				return &entries_[slot];
 			}
 
 			bool getSymbolIndexForSlot(int slot, int* index) const {
-				if(slot < 0) {
-					return false;
+				if(slot < baseNumSlots()) {
+					return base_->getSymbolIndexForSlot(slot, index);
 				}
+
+				slot -= baseNumSlots();
 
 				if(static_cast<unsigned>(slot) < entries_.size()) {
 
@@ -2813,10 +2826,6 @@ FUNCTION_DEF_IMPL
 
 					*index = getBaseSymbolIndex() + slot;
 					return true;
-				}
-
-				if(base_) {
-					return base_->getSymbolIndexForSlot(slot - NUM_MAP_CALLABLE_SLOTS, index);
 				}
 
 				return false;
@@ -2835,8 +2844,12 @@ FUNCTION_DEF_IMPL
 				return result;
 			}
 
-			int getNumSlots() const {
-				return NUM_MAP_CALLABLE_SLOTS + (base_ ? base_->getNumSlots() : 0);
+			int baseNumSlots() const {
+				return base_ ? base_->getNumSlots() : 0;
+			}
+
+			int getNumSlots() const override {
+				return NUM_MAP_CALLABLE_SLOTS + baseNumSlots();
 			}
 
 			int getSubsetSlotBase(const FormulaCallableDefinition* subset) const
@@ -2845,12 +2858,7 @@ FUNCTION_DEF_IMPL
 					return -1;
 				}
 
-				const int slot = base_->querySubsetSlotBase(subset);
-				if(slot == -1) {
-					return -1;
-				}
-
-				return NUM_MAP_CALLABLE_SLOTS + slot;
+				return base_->querySubsetSlotBase(subset);
 			}
 
 		private:
@@ -2860,11 +2868,18 @@ FUNCTION_DEF_IMPL
 			std::vector<Entry> entries_;
 		};
 
-		FUNCTION_DEF(count, 2, 2, "count(list, expr): Returns an integer count of how many items in the list 'expr' returns true for.")
+		FUNCTION_DEF_CTOR(count, 2, 2, "count(list, expr): Returns an integer count of how many items in the list 'expr' returns true for.")
+			if(!args().empty()) {
+				def_ = this->args().back()->getDefinitionUsedByExpression();
+			}
+		FUNCTION_DEF_MEMBERS
+			ConstFormulaCallableDefinitionPtr def_;
+		FUNCTION_DEF_IMPL
 			const variant items = split_variant_if_str(EVAL_ARG(0));
+			const int callable_num_slots = def_ ? def_->getNumSlots() : 0;
 			if(items.is_map()) {
 				int res = 0;
-				ffl::IntrusivePtr<map_callable> callable(new map_callable(variables));
+				ffl::IntrusivePtr<map_callable> callable(new map_callable(variables, callable_num_slots));
 				int index = 0;
 				for(const auto& p : items.as_map()) {
 					callable->set(p.first, p.second, index);
@@ -2879,7 +2894,7 @@ FUNCTION_DEF_IMPL
 				return variant(res);
 			} else {
 				int res = 0;
-				ffl::IntrusivePtr<map_callable> callable(new map_callable(variables));
+				ffl::IntrusivePtr<map_callable> callable(new map_callable(variables, callable_num_slots));
 				for(int n = 0; n != items.num_elements(); ++n) {
 					callable->set(items[n], n);
 					const variant val = args().back()->evaluate(*callable);
@@ -2892,10 +2907,14 @@ FUNCTION_DEF_IMPL
 			}
 
 		CAN_VM
-			return NUM_ARGS == 2 && canChildrenVM();
+			return NUM_ARGS == 2 && canChildrenVM() && args().back()->getDefinitionUsedByExpression();
 		FUNCTION_VM
 
 			if(NUM_ARGS != 2) {
+				return ExpressionPtr();
+			}
+
+			if(!def_) {
 				return ExpressionPtr();
 			}
 
@@ -2910,6 +2929,8 @@ FUNCTION_DEF_IMPL
 			}
 
 			args()[0]->emitVM(vm);
+			vm.addInstruction(OP_PUSH_INT);
+			vm.addInt(def_->getNumSlots());
 			const int jump_from = vm.addJumpSource(OP_ALGO_FILTER);
 			args()[1]->emitVM(vm);
 			vm.jumpToEnd(jump_from);
@@ -2927,15 +2948,22 @@ FUNCTION_DEF_IMPL
 			if(args().size() == 3) {
 				identifier_ = read_identifier_expression(*args()[1]);
 			}
+
+			if(!args().empty()) {
+				def_ = args().back()->getDefinitionUsedByExpression();
+			}
 		FUNCTION_DEF_MEMBERS
 			std::string identifier_;
+			ConstFormulaCallableDefinitionPtr def_;
 		FUNCTION_DEF_IMPL
 			std::vector<variant> vars;
 			const variant items = EVAL_ARG(0);
+			const int callable_base_slots = def_ ? def_->getNumSlots() : 0;
+
 			if(NUM_ARGS == 2) {
 
 				if(items.is_map()) {
-					ffl::IntrusivePtr<map_callable> callable(new map_callable(variables));
+					ffl::IntrusivePtr<map_callable> callable(new map_callable(variables, callable_base_slots));
 					std::map<variant,variant> m;
 					int index = 0;
 					for(const variant_pair& p : items.as_map()) {
@@ -2950,7 +2978,7 @@ FUNCTION_DEF_IMPL
 
 					return variant(&m);
 				} else {
-					ffl::IntrusivePtr<map_callable> callable(new map_callable(variables));
+					ffl::IntrusivePtr<map_callable> callable(new map_callable(variables, callable_base_slots));
 					for(int n = 0; n != items.num_elements(); ++n) {
 						callable->set(items[n], n);
 						const variant val = args().back()->evaluate(*callable);
@@ -2960,7 +2988,7 @@ FUNCTION_DEF_IMPL
 					}
 				}
 			} else {
-				ffl::IntrusivePtr<map_callable> callable(new map_callable(variables));
+				ffl::IntrusivePtr<map_callable> callable(new map_callable(variables, callable_base_slots));
 				const std::string self = identifier_.empty() ? EVAL_ARG(1).as_string() : identifier_;
 				callable->setValue_name(self);
 
@@ -2975,10 +3003,10 @@ FUNCTION_DEF_IMPL
 
 			return variant(&vars);
 		CAN_VM
-			return NUM_ARGS == 2 && canChildrenVM();
+			return NUM_ARGS == 2 && canChildrenVM() && args().back()->getDefinitionUsedByExpression().get() != nullptr;
 		FUNCTION_VM
 
-			if(NUM_ARGS != 2) {
+			if(NUM_ARGS != 2 || !def_) {
 				return ExpressionPtr();
 			}
 
@@ -2993,6 +3021,8 @@ FUNCTION_DEF_IMPL
 			}
 
 			args()[0]->emitVM(vm);
+			vm.addInstruction(OP_PUSH_INT);
+			vm.addInt(def_->getNumSlots());
 			const int jump_from = vm.addJumpSource(OP_ALGO_FILTER);
 			args()[1]->emitVM(vm);
 			vm.jumpToEnd(jump_from);
@@ -3001,9 +3031,8 @@ FUNCTION_DEF_IMPL
 
 		DEFINE_RETURN_TYPE
 			variant_type_ptr list_type = args()[0]->queryVariantType();
-			ConstFormulaCallableDefinitionPtr def = args()[1]->getDefinitionUsedByExpression();
-			if(def) {
-				def = args()[1]->queryModifiedDefinitionBasedOnResult(true, def);
+			if(def_) {
+				auto def = args()[1]->queryModifiedDefinitionBasedOnResult(true, def_);
 				if(def) {
 					const game_logic::FormulaCallableDefinition::Entry* value_entry = def->getEntryById("value");
 					if(value_entry != nullptr && value_entry->variant_type && list_type->is_list_of()) {
@@ -3101,6 +3130,9 @@ FUNCTION_DEF_IMPL
 			if(args().size() == 3) {
 				identifier_ = read_identifier_expression(*args()[1]);
 			}
+			if(!args().empty()) {
+				def_ = args().back()->getDefinitionUsedByExpression();
+			}
 		FUNCTION_DEF_MEMBERS
 			bool optimizeArgNumToVM(int narg) const override {
 				if(NUM_ARGS > 2 && narg == 1) {
@@ -3109,11 +3141,12 @@ FUNCTION_DEF_IMPL
 				return true;
 			}
 			std::string identifier_;
+			ConstFormulaCallableDefinitionPtr def_;
 		FUNCTION_DEF_IMPL
 			const variant items = EVAL_ARG(0);
 
 			if(NUM_ARGS == 2) {
-				ffl::IntrusivePtr<map_callable> callable(new map_callable(variables));
+				ffl::IntrusivePtr<map_callable> callable(new map_callable(variables, def_ ? def_->getNumSlots() : 0));
 				for(int n = 0; n != items.num_elements(); ++n) {
 					callable->set(items[n], n);
 					const variant val = args().back()->evaluate(*callable);
@@ -3122,7 +3155,7 @@ FUNCTION_DEF_IMPL
 					}
 				}
 			} else {
-				ffl::IntrusivePtr<map_callable> callable(new map_callable(variables));
+				ffl::IntrusivePtr<map_callable> callable(new map_callable(variables, def_ ? def_->getNumSlots() : 0));
 
 				const std::string self = identifier_.empty() ? EVAL_ARG(1).as_string() : identifier_;
 				callable->setValue_name(self);
@@ -3141,7 +3174,7 @@ FUNCTION_DEF_IMPL
 			return NUM_ARGS == 2 && canChildrenVM();
 		FUNCTION_VM
 
-			if(NUM_ARGS != 2) {
+			if(NUM_ARGS != 2 || !def_) {
 				return ExpressionPtr();
 			}
 
@@ -3156,6 +3189,8 @@ FUNCTION_DEF_IMPL
 			}
 
 			args()[0]->emitVM(vm);
+			vm.addInstruction(OP_PUSH_INT);
+			vm.addInt(def_ ? def_->getNumSlots() : 0);
 			const int jump_from = vm.addJumpSource(OP_ALGO_FIND);
 			args()[1]->emitVM(vm);
 			vm.jumpToEnd(jump_from);
@@ -3177,7 +3212,7 @@ FUNCTION_DEF_IMPL
 				}
 			}
 
-			ConstFormulaCallableDefinitionPtr def = args().back()->getDefinitionUsedByExpression();
+			ConstFormulaCallableDefinitionPtr def = def_;
 			if(def) {
 				ConstFormulaCallableDefinitionPtr modified = args().back()->queryModifiedDefinitionBasedOnResult(true, def);
 				if(modified) {
@@ -3213,13 +3248,23 @@ FUNCTION_DEF_IMPL
 			if(args().size() == 3) {
 				identifier_ = read_identifier_expression(*args()[1]);
 			}
+			if(!args().empty()) {
+				def_ = args().back()->getDefinitionUsedByExpression();
+			}
 		FUNCTION_DEF_MEMBERS
+			bool optimizeArgNumToVM(int narg) const override {
+				if(NUM_ARGS > 2 && narg == 1) {
+					return false;
+				}
+				return true;
+			}
 			std::string identifier_;
+			ConstFormulaCallableDefinitionPtr def_;
 		FUNCTION_DEF_IMPL
 			const variant items = EVAL_ARG(0);
 
 			if(NUM_ARGS == 2) {
-				ffl::IntrusivePtr<map_callable> callable(new map_callable(variables));
+				ffl::IntrusivePtr<map_callable> callable(new map_callable(variables, def_ ? def_->getNumSlots() : 0));
 				for(int n = 0; n != items.num_elements(); ++n) {
 					callable->set(items[n], n);
 					const variant val = args().back()->evaluate(*callable);
@@ -3228,7 +3273,7 @@ FUNCTION_DEF_IMPL
 					}
 				}
 			} else {
-				ffl::IntrusivePtr<map_callable> callable(new map_callable(variables));
+				ffl::IntrusivePtr<map_callable> callable(new map_callable(variables, def_ ? def_->getNumSlots() : 0));
 
 				const std::string self = identifier_.empty() ? EVAL_ARG(1).as_string() : identifier_;
 				callable->setValue_name(self);
@@ -3244,10 +3289,10 @@ FUNCTION_DEF_IMPL
 			ASSERT_LOG(false, "Failed to find expected item. List has: " << items.write_json() << " " << debugPinpointLocation());
 
 		CAN_VM
-			return NUM_ARGS == 2 && canChildrenVM();
+			return NUM_ARGS == 2 && canChildrenVM() && def_;
 		FUNCTION_VM
 
-			if(NUM_ARGS != 2) {
+			if(NUM_ARGS != 2 || !def_) {
 				return ExpressionPtr();
 			}
 
@@ -3262,6 +3307,8 @@ FUNCTION_DEF_IMPL
 			}
 
 			args()[0]->emitVM(vm);
+			vm.addInstruction(OP_PUSH_INT);
+			vm.addInt(def_ ? def_->getNumSlots() : 0);
 			const int jump_from = vm.addJumpSource(OP_ALGO_FIND);
 			args()[1]->emitVM(vm);
 			vm.jumpToEnd(jump_from);
@@ -3290,7 +3337,7 @@ FUNCTION_DEF_IMPL
 				}
 			}
 
-			ConstFormulaCallableDefinitionPtr def = args().back()->getDefinitionUsedByExpression();
+			ConstFormulaCallableDefinitionPtr def = def_;
 			if(def) {
 				ConstFormulaCallableDefinitionPtr modified = args().back()->queryModifiedDefinitionBasedOnResult(true, def);
 				if(modified) {
@@ -3349,10 +3396,14 @@ FUNCTION_DEF_IMPL
 		END_FUNCTION_DEF(visit_objects)
 
 		FUNCTION_DEF_CTOR(choose, 1, 2, "choose(list, (optional)scoring_expr) -> value: choose an item from the list according to which scores the highest according to the scoring expression, or at random by default.")
+			if(!args().empty()) {
+				def_ = args().back()->getDefinitionUsedByExpression();
+			}
 		FUNCTION_DEF_MEMBERS
 			bool optimizeArgNumToVM(int narg) const override {
 				return narg != 1;
 			}
+			ConstFormulaCallableDefinitionPtr def_;
 		FUNCTION_DEF_IMPL
 
 			if(NUM_ARGS == 1) {
@@ -3370,7 +3421,7 @@ FUNCTION_DEF_IMPL
 
 			int max_index = -1;
 			variant max_value;
-			ffl::IntrusivePtr<map_callable> callable(new map_callable(variables));
+			ffl::IntrusivePtr<map_callable> callable(new map_callable(variables, def_ ? def_->getNumSlots() : 0));
 			for(int n = 0; n != items.num_elements(); ++n) {
 				variant val;
 		
@@ -3398,14 +3449,15 @@ FUNCTION_DEF_IMPL
 				if(args.size() == 3) {
 					identifier_ = read_identifier_expression(*args[1]);
 				}
+				def_ = args.back()->getDefinitionUsedByExpression();
 			}
 
 			bool canCreateVM() const override {
-				return args().size() == 2 && canChildrenVM();
+				return args().size() == 2 && canChildrenVM() && def_.get() != nullptr;
 			}
 
 			ExpressionPtr optimizeToVM() override {
-				if(NUM_ARGS != 2) {
+				if(NUM_ARGS != 2 || !def_) {
 					return ExpressionPtr();
 				}
 
@@ -3422,6 +3474,8 @@ FUNCTION_DEF_IMPL
 				formula_vm::VirtualMachine vm;
 
 				args()[0]->emitVM(vm);
+				vm.addInstruction(OP_PUSH_INT);
+				vm.addInt(def_->getNumSlots());
 				const int jump_from = vm.addJumpSource(OP_ALGO_MAP);
 				args()[1]->emitVM(vm);
 				vm.jumpToEnd(jump_from);
@@ -3432,6 +3486,7 @@ FUNCTION_DEF_IMPL
 
 		private:
 			std::string identifier_;
+			ConstFormulaCallableDefinitionPtr def_;
 
 			variant execute(const FormulaCallable& variables) const override {
 				std::vector<variant> vars;
@@ -3442,11 +3497,11 @@ FUNCTION_DEF_IMPL
 				if(NUM_ARGS == 2) {
 
 					if(items.is_map()) {
-						ffl::IntrusivePtr<map_callable> callable(new map_callable(variables));
+						ffl::IntrusivePtr<map_callable> callable(new map_callable(variables, def_ ? def_->getNumSlots() : 0));
 						int index = 0;
 						for(const variant_pair& p : items.as_map()) {
 							if(callable->refcount() > 1) {
-								callable.reset(new map_callable(variables));
+								callable.reset(new map_callable(variables, def_ ? def_->getNumSlots() : 0));
 							}
 							callable->set(p.first, p.second, index);
 							const variant val = args().back()->evaluate(*callable);
@@ -3455,10 +3510,10 @@ FUNCTION_DEF_IMPL
 						}
 					} else if(items.is_string()) {
 						const std::string& s = items.as_string();
-						ffl::IntrusivePtr<map_callable> callable(new map_callable(variables));
+						ffl::IntrusivePtr<map_callable> callable(new map_callable(variables, def_ ? def_->getNumSlots() : 0));
 						for(int n = 0; n != s.length(); ++n) {
 							if(callable->refcount() > 1) {
-								callable.reset(new map_callable(variables));
+								callable.reset(new map_callable(variables, def_ ? def_->getNumSlots() : 0));
 							}
 							variant v(s.substr(n,1));
 							callable->set(v, n);
@@ -3466,10 +3521,10 @@ FUNCTION_DEF_IMPL
 							vars.push_back(val);
 						}
 					} else {
-						ffl::IntrusivePtr<map_callable> callable(new map_callable(variables));
+						ffl::IntrusivePtr<map_callable> callable(new map_callable(variables, def_ ? def_->getNumSlots() : 0));
 						for(int n = 0; n != items.num_elements(); ++n) {
 							if(callable->refcount() > 1) {
-								callable.reset(new map_callable(variables));
+								callable.reset(new map_callable(variables, def_ ? def_->getNumSlots() : 0));
 							}
 							callable->set(items[n], n);
 							const variant val = args().back()->evaluate(*callable);
@@ -3477,7 +3532,7 @@ FUNCTION_DEF_IMPL
 						}
 					}
 				} else {
-					ffl::IntrusivePtr<map_callable> callable(new map_callable(variables));
+					ffl::IntrusivePtr<map_callable> callable(new map_callable(variables, def_ ? def_->getNumSlots() : 0));
 					const std::string self = identifier_.empty() ? EVAL_ARG(1).as_string() : identifier_;
 					callable->setValue_name(self);
 					for(int n = 0; n != items.num_elements(); ++n) {

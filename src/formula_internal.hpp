@@ -31,10 +31,10 @@ namespace game_logic
 
 	class map_callable : public FormulaCallable {
 	public:
-		explicit map_callable(const FormulaCallable& backup);
+		map_callable(const FormulaCallable& backup, int num_slots);
 
 		//set to the first item in the given list.
-		map_callable(const FormulaCallable& backup, const variant& list);
+		map_callable(const FormulaCallable& backup, const variant& list, int num_slots);
 		void setValue_name(const std::string& name);
 
 		//load next item in the given list.
@@ -52,7 +52,7 @@ namespace game_logic
 		const ConstFormulaCallablePtr backup_;
 		variant key_;
 		variant value_;
-		int index_;
+		int index_, num_slots_;
 
 		std::string value_name_;
 	};

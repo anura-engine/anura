@@ -448,36 +448,12 @@ void VirtualMachine::executeInternal(const FormulaCallable& variables, std::vect
 			break;
 		}
 
-		case OP_LOOP_BEGIN: {
-			using namespace game_logic;
-			if(stack.back().num_elements() == 0) {
-				p += *(p+1);
-			} else {
-				const FormulaCallable& vars = variables_stack.empty() ? variables : *variables_stack.back();
-				variables_stack.push_back(new map_callable(vars, stack.back()));
-				++p;
-			}
-			break;
-		}
-
-		case OP_LOOP_NEXT: {
-			using namespace game_logic;
-			map_callable* m = static_cast<map_callable*>(variables_stack.back().get());
-			if(m->refcount() > 1) {
-				m = new map_callable(*m);
-				variables_stack.back().reset(m);
-			}
-			const bool result = m->next(stack.back());
-			if(result) {
-				p += *(p+1);
-			} else {
-				++p;
-			}
-			break;
-		}
-
 		case OP_ALGO_MAP: {
 			using namespace game_logic;
+
+			const int num_base_slots = stack.back().as_int();
+			stack.pop_back();
+
 			if(stack.back().is_string()) {
 				std::string s = stack.back().as_string();
 				std::vector<variant> v;
@@ -504,13 +480,13 @@ void VirtualMachine::executeInternal(const FormulaCallable& variables, std::vect
 				}
 
 				const FormulaCallable& vars = variables_stack.empty() ? variables : *variables_stack.back();
-				map_callable* callable = new map_callable(vars);
+				map_callable* callable = new map_callable(vars, num_base_slots);
 				variables_stack.push_back(callable);
 
 				int index = 0;
 				for(const variant& in : input) {
 					if(callable->refcount() != 1) {
-						callable = new map_callable(vars);
+						callable = new map_callable(vars, num_base_slots);
 						variables_stack.back().reset(callable);
 					}
 					callable->set(in, index);
@@ -540,13 +516,13 @@ void VirtualMachine::executeInternal(const FormulaCallable& variables, std::vect
 				}
 
 				const FormulaCallable& vars = variables_stack.empty() ? variables : *variables_stack.back();
-				map_callable* callable = new map_callable(vars);
+				map_callable* callable = new map_callable(vars, num_base_slots);
 				variables_stack.push_back(callable);
 
 				int index = 0;
 				for(const std::pair<variant,variant>& in : input) {
 					if(callable->refcount() != 1) {
-						callable = new map_callable(vars);
+						callable = new map_callable(vars, num_base_slots);
 						variables_stack.back().reset(callable);
 					}
 					callable->set(in.first, in.second, index);
@@ -578,6 +554,10 @@ void VirtualMachine::executeInternal(const FormulaCallable& variables, std::vect
 
 		case OP_ALGO_FILTER: {
 			using namespace game_logic;
+
+			const int num_base_slots = stack.back().as_int();
+			stack.pop_back();
+
 			if(stack.back().is_list()) {
 				variant back = stack.back();
 				stack.pop_back();
@@ -591,7 +571,7 @@ void VirtualMachine::executeInternal(const FormulaCallable& variables, std::vect
 				}
 
 				const FormulaCallable& vars = variables_stack.empty() ? variables : *variables_stack.back();
-				map_callable* callable = new map_callable(vars);
+				map_callable* callable = new map_callable(vars, num_base_slots);
 				variables_stack.push_back(callable);
 
 				const size_t start_stack_size = stack.size();
@@ -601,7 +581,7 @@ void VirtualMachine::executeInternal(const FormulaCallable& variables, std::vect
 				int index = 0;
 				for(const variant& in : input) {
 					if(callable->refcount() != 1) {
-						callable = new map_callable(vars);
+						callable = new map_callable(vars, num_base_slots);
 						variables_stack.back().reset(callable);
 					}
 					callable->set(in, index);
@@ -635,7 +615,7 @@ void VirtualMachine::executeInternal(const FormulaCallable& variables, std::vect
 				}
 
 				const FormulaCallable& vars = variables_stack.empty() ? variables : *variables_stack.back();
-				map_callable* callable = new map_callable(vars);
+				map_callable* callable = new map_callable(vars, num_base_slots);
 				variables_stack.push_back(callable);
 
 				std::map<variant,variant> res;
@@ -643,7 +623,7 @@ void VirtualMachine::executeInternal(const FormulaCallable& variables, std::vect
 				int index = 0;
 				for(const std::pair<variant,variant>& in : input) {
 					if(callable->refcount() != 1) {
-						callable = new map_callable(vars);
+						callable = new map_callable(vars, num_base_slots);
 						variables_stack.back().reset(callable);
 					}
 					callable->set(in.first, in.second, index);
@@ -671,6 +651,10 @@ void VirtualMachine::executeInternal(const FormulaCallable& variables, std::vect
 
 		case OP_ALGO_FIND: {
 			using namespace game_logic;
+
+			const int num_base_slots = stack.back().as_int();
+			stack.pop_back();
+
 			variant back = stack.back();
 			stack.pop_back();
 			const std::vector<variant>& items = back.as_list();
@@ -680,12 +664,12 @@ void VirtualMachine::executeInternal(const FormulaCallable& variables, std::vect
 
 			if(items.empty() == false) {
 				const FormulaCallable& vars = variables_stack.empty() ? variables : *variables_stack.back();
-				map_callable* callable = new map_callable(vars);
+				map_callable* callable = new map_callable(vars, num_base_slots);
 				variables_stack.push_back(callable);
 
 				for(const variant& item : items) {
 					if(callable->refcount() != 1) {
-						callable = new map_callable(vars);
+						callable = new map_callable(vars, num_base_slots);
 						variables_stack.back().reset(callable);
 					}
 					callable->set(item, index);
@@ -986,7 +970,7 @@ void VirtualMachine::addJumpToPosition(InstructionType i, int pos)
 }
 
 namespace {
-	VirtualMachine::InstructionType g_arg_instructions[] = { OP_LOOKUP, OP_JMP_IF, OP_JMP, OP_JMP_UNLESS, OP_POP_JMP_IF, OP_POP_JMP_UNLESS, OP_CALL, OP_CALL_BUILTIN, OP_LOOP_NEXT, OP_ALGO_MAP, OP_ALGO_FILTER, OP_ALGO_FIND, OP_ALGO_COMPREHENSION, OP_UNDER, OP_PUSH_INT, OP_LOOKUP_SYMBOL_STACK };
+	VirtualMachine::InstructionType g_arg_instructions[] = { OP_LOOKUP, OP_JMP_IF, OP_JMP, OP_JMP_UNLESS, OP_POP_JMP_IF, OP_POP_JMP_UNLESS, OP_CALL, OP_CALL_BUILTIN, OP_ALGO_MAP, OP_ALGO_FILTER, OP_ALGO_FIND, OP_ALGO_COMPREHENSION, OP_UNDER, OP_PUSH_INT, OP_LOOKUP_SYMBOL_STACK };
 }
 
 void VirtualMachine::append(const VirtualMachine& other)
@@ -1041,7 +1025,7 @@ static const std::string OpNames[] = {
 		  "OP_CALL_BUILTIN",
 		  "OP_ASSERT",
 		  "OP_PUSH_SCOPE", "OP_POP_SCOPE", "OP_BREAK", "OP_BREAK_IF",
-		  "OP_LOOP_BEGIN", "OP_LOOP_NEXT", "OP_ALGO_MAP", "OP_ALGO_FILTER", "OP_ALGO_FIND", "OP_ALGO_COMPREHENSION",
+		  "OP_ALGO_MAP", "OP_ALGO_FILTER", "OP_ALGO_FIND", "OP_ALGO_COMPREHENSION",
 		  "OP_POP", "OP_DUP", "OP_DUP2", "OP_SWAP", "OP_UNDER", "OP_PUSH_NULL", "OP_PUSH_0", "OP_PUSH_1",
 
 		  "OP_WHERE", "OP_JMP_IF", "OP_JMP_UNLESS", "OP_POP_JMP_IF", "OP_POP_JMP_UNLESS", "OP_JMP",
@@ -1113,10 +1097,6 @@ std::string VirtualMachine::debugOutput(const VirtualMachine::InstructionType* i
 			s << ": OP_WHERE ";
 			++n;
 			s << static_cast<int>(instructions_[n]) << "\n";
-		} else if(op == OP_LOOP_NEXT) {
-			s << ": OP_LOOP_NEXT ";
-			++n;
-			s << static_cast<int>(instructions_[n]) << "\n";
 		} else if(op == OP_ALGO_MAP) {
 			s << ": OP_ALGO_MAP ";
 			++n;
@@ -1135,10 +1115,6 @@ std::string VirtualMachine::debugOutput(const VirtualMachine::InstructionType* i
 			s << static_cast<int>(instructions_[n]) << "\n";
 		} else if(op == OP_UNDER) {
 			s << ": OP_UNDER ";
-			++n;
-			s << static_cast<int>(instructions_[n]) << "\n";
-		} else if(op == OP_LOOP_BEGIN) {
-			s << ": OP_LOOP_BEGIN ";
 			++n;
 			s << static_cast<int>(instructions_[n]) << "\n";
 		} else if(op < OP_INVALID) {

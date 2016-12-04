@@ -147,26 +147,10 @@ enum OP {
 		  //Breaks if the item on the stack is true. Pops the item on the stack.
 		  OP_BREAK_IF,
 
-		  //Create a value/index symbol scope ('map_callable') and push it onto
-		  //the scope stack.
-		  //
-		  // POP: 0 (PEEKS 1)
-		  // PUSH: 0
-		  // ARGS: 1
-		  OP_LOOP_BEGIN,
-
-		  //Must have a loop scope at the top of the symbol scope stack.
-		  //(Have called OP_PUSH_LOOP_SCOPE to do this). Loops to the next item
-		  //in the list that is on top of the stack.
-		  //
-		  // POP: 0 (PEEKS 1)
-		  // PUSH: 0
-		  // ARGS: 1
-		  OP_LOOP_NEXT,
-
-
 		  //Map algorithm: next n instructions maps a single item.
-		  // POP: 1
+		  //TOS: number of slots in callab,e
+		  //TOS+1: item to map over
+		  // POP: 2
 		  // PUSH: 1
 		  // ARGS: 1
 		  OP_ALGO_MAP,

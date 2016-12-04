@@ -3,12 +3,12 @@
 
 namespace game_logic
 {
-	map_callable::map_callable(const FormulaCallable& backup)
-	: backup_(&backup), index_(0)
+	map_callable::map_callable(const FormulaCallable& backup, int num_slots)
+	: backup_(&backup), index_(0), num_slots_(num_slots-NUM_MAP_CALLABLE_SLOTS)
 	{}
 
-	map_callable::map_callable(const FormulaCallable& backup, const variant& list)
-	: backup_(&backup), index_(0)
+	map_callable::map_callable(const FormulaCallable& backup, const variant& list, int num_slots)
+	: backup_(&backup), index_(0), num_slots_(num_slots-NUM_MAP_CALLABLE_SLOTS)
 	{
 		value_ = list[0];
 	}
@@ -56,8 +56,8 @@ namespace game_logic
 
 	variant map_callable::getValueBySlot(int slot) const {
 		ASSERT_LOG(slot >= 0, "BAD SLOT VALUE: " << slot);
-		if(slot < NUM_MAP_CALLABLE_SLOTS) {
-			switch(slot) {
+		if(slot >= num_slots_) {
+			switch(slot - num_slots_) {
 				case MAP_CALLABLE_VALUE: return value_;
 				case MAP_CALLABLE_INDEX: return variant(index_);
 				case MAP_CALLABLE_CONTEXT: return variant(backup_.get());
@@ -65,7 +65,7 @@ namespace game_logic
 				default: ASSERT_LOG(false, "BAD GET VALUE BY SLOT");
 			}
 		} else if(backup_) {
-			return backup_->queryValueBySlot(slot - NUM_MAP_CALLABLE_SLOTS);
+			return backup_->queryValueBySlot(slot);
 		} else {
 			ASSERT_LOG(false, "COULD NOT FIND VALUE FOR SLOT: " << slot);
 		}
@@ -76,8 +76,7 @@ namespace game_logic
 	}
 
 	void map_callable::setValueBySlot(int slot, const variant& value) {
-		ASSERT_LOG(slot >= NUM_MAP_CALLABLE_SLOTS, "Illegal variable mutation");
-		const_cast<FormulaCallable*>(backup_.get())->mutateValueBySlot(slot-NUM_MAP_CALLABLE_SLOTS, value);
+		const_cast<FormulaCallable*>(backup_.get())->mutateValueBySlot(slot, value);
 	}
 
 	void map_callable::surrenderReferences(GarbageCollector* collector) {
