@@ -551,7 +551,18 @@ bool LevelRunner::handle_mouse_events(const SDL_Event &event)
 				if(e->getClipArea(&clip_area)) {
 					point p(x,y);
 					if(e->useAbsoluteScreenCoordinates()) {
-						p = point(mx + lvl_->absolute_object_adjust_x(),my + lvl_->absolute_object_adjust_y());
+						int xadj = 0, yadj = 0;
+						auto& gs = graphics::GameScreen::get();
+						if(gs.getWidth() > lvl_->boundaries().w()) {
+							xadj = (gs.getWidth() - lvl_->boundaries().w());
+						}
+
+						if(gs.getHeight() > lvl_->boundaries().h()) {
+							yadj = (gs.getHeight() - lvl_->boundaries().h());
+						}
+
+						p = point(mx + lvl_->absolute_object_adjust_x() - xadj,my + lvl_->absolute_object_adjust_y() - yadj);
+
 					}
 					if(pointInRect(p, clip_area) == false) {
 						continue;
