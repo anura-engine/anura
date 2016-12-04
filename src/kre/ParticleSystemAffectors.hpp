@@ -40,8 +40,8 @@ namespace KRE
 			void setParentTechnique(std::weak_ptr<Technique> tq) { technique_ = tq; }
 
 			float mass() const { return mass_; }
-			const glm::vec3& getPosition() const { return position_; }
-			void setPosition(const glm::vec3& pos) { position_ = pos; }
+			const glm::vec3& getPosition() const override { return position_; }
+			void setPosition(const glm::vec3& pos) override { position_ = pos; }
 			const glm::vec3& getScale() const { return scale_; }
 			bool isEmitterExcluded(const std::string& name) const;
 
@@ -50,7 +50,7 @@ namespace KRE
 
 			static AffectorPtr factory(std::weak_ptr<ParticleSystemContainer> parent, const variant& node);
 		protected:
-			virtual void handleEmitProcess(float t);
+			virtual void handleEmitProcess(float t) override;
 			virtual void internalApply(Particle& p, float t) = 0;
 		private:
 			virtual void init(const variant& node) = 0;

@@ -46,7 +46,7 @@ namespace KRE
 			{
 			}
 		protected:
-			void internalCreate(Particle& p, float t) {
+			void internalCreate(Particle& p, float t) override {
 				float angle = 0.0f;
 				if(circle_random_) {
 					angle = get_random_float(0.0f, float(2.0 * M_PI));
@@ -58,7 +58,7 @@ namespace KRE
 				p.initial.position.x += r * sin(angle + circle_angle_);
 				p.initial.position.y += r * cos(angle + circle_angle_);
 			}
-			virtual EmitterPtr clone() {
+			virtual EmitterPtr clone() override {
 				return std::make_shared<CircleEmitter>(*this);
 			}
 		private:
@@ -90,12 +90,12 @@ namespace KRE
 				}
 			}
 		protected:
-			void internalCreate(Particle& p, float t) {
+			void internalCreate(Particle& p, float t) override {
 				p.initial.position.x += get_random_float(0.0f, box_dimensions_.x) - box_dimensions_.x/2;
 				p.initial.position.y += get_random_float(0.0f, box_dimensions_.y) - box_dimensions_.y/2;
 				p.initial.position.z += get_random_float(0.0f, box_dimensions_.z) - box_dimensions_.z/2;
 			}
-			virtual EmitterPtr clone() {
+			virtual EmitterPtr clone() override {
 				return std::make_shared<BoxEmitter>(*this);
 			}
 		private:
@@ -146,10 +146,10 @@ namespace KRE
 				: Emitter(parent, node) 
 			{}
 		protected:
-			void internalCreate(Particle& p, float t) {
+			void internalCreate(Particle& p, float t) override {
 				// intentionally does nothing.
 			}
-			virtual EmitterPtr clone() {
+			virtual EmitterPtr clone() override {
 				return std::make_shared<PointEmitter>(*this);
 			}
 		private:
@@ -164,14 +164,14 @@ namespace KRE
 				  radius_(node["radius"].as_float(1.0f)) 
 			{}
 		protected:
-			void internalCreate(Particle& p, float t) {
+			void internalCreate(Particle& p, float t) override {
 				float theta = get_random_float(0, 2.0f * static_cast<float>(M_PI));
 				float phi = acos(get_random_float(-1.0f, 1.0f));
 				p.initial.position.x += radius_ * sin(phi) * cos(theta);
 				p.initial.position.y += radius_ * sin(phi) * sin(theta);
 				p.initial.position.z += radius_ * cos(phi);
 			}
-			virtual EmitterPtr clone() {
+			virtual EmitterPtr clone() override {
 				return std::make_shared<SphereSurfaceEmitter>(*this);
 			}
 		private:

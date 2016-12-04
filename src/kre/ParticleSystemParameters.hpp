@@ -61,7 +61,7 @@ namespace KRE
 			FixedParameter(const variant& node);
 			virtual ~FixedParameter();
 
-			virtual float getValue(float t) {
+			virtual float getValue(float t) override {
 				return value_;
 			}
 		private:

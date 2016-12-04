@@ -62,7 +62,7 @@ namespace KRE
 		void setWidth(int width) { width_ = width; }
 		void setHeight(int height) { height_ = height; }
 		void setColorPointer(const ColorPtr& color);
-		void preRender(const WindowPtr& wnd);
+		void preRender(const WindowPtr& wnd) override;
 	private:
 		std::shared_ptr<Attribute<font_coord>> attribs_;
 		// intrinsic width and height when rendered, in pixels.
@@ -83,7 +83,7 @@ namespace KRE
 		void setWidth(int width) { width_ = width; }
 		void setHeight(int height) { height_ = height; }
 		void setColorPointer(const ColorPtr& color);
-		void preRender(const WindowPtr& wnd);
+		void preRender(const WindowPtr& wnd) override;
 		void updateColors(const std::vector<Color>& colors);
 		void setVerticesPerColor(int n) { vertices_per_color_ = n; }
 	private:

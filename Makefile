@@ -60,7 +60,7 @@ BASE_CXXFLAGS += -Wno-pointer-bool-conversion -Wno-parentheses-equality
 endif
 else ifneq (, $(findstring g++, `$(CXX)`))
 GCC_GTEQ_490 := $(shell expr `$(CXX) -dumpversion | sed -e 's/\.\([0-9][0-9]\)/\1/g' -e 's/\.\([0-9]\)/0\1/g' -e 's/^[0-9]\{3,4\}$$/&00/'` \>= 40900)
-BASE_CXXFLAGS += -Wno-literal-suffix -Wno-sign-compare
+BASE_CXXFLAGS += -Wno-literal-suffix -Wno-sign-compare -Wsuggest-override
 ifeq "$(GCC_GTEQ_490)" "1"
 BASE_CXXFLAGS += -fdiagnostics-color=auto
 else
