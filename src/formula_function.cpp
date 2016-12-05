@@ -356,7 +356,7 @@ namespace game_logic
 			}
 
 			if(can_vm && expr->isVM() == false) {
-				ASSERT_LOG(false, "Expressions says it can be made into a VM but it cannot: " << typeid(*expr).name() << " :: " << expr->name() << " :: " << expr->str());
+				ASSERT_LOG(false, "Expressions says it can be made into a VM but it cannot: " << expr->name() << " :: " << expr->str());
 			}
 		}
 	}
