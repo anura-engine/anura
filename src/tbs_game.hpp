@@ -188,6 +188,10 @@ namespace tbs
 
 		int start_timestamp_;
 
+		void finished_upload_state();
+		void finished_download_state(std::string data);
+		void download_state(const std::string& id);
+		void upload_state(const std::string& id);
 		void save_state(const std::string& fname);
 		void load_state(const std::string& fname);
 

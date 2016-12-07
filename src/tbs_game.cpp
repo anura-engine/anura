@@ -417,6 +417,66 @@ namespace tbs
 		return res;
 	}
 
+namespace {
+	ffl::IntrusivePtr<http_client> g_upload_state_client;
+}
+	void game::download_state(const std::string& id)
+	{
+		g_upload_state_client.reset(new http_client("www.theargentlark.com", "80"));
+		g_upload_state_client->send_request("GET /game-states/citadel/state." + id + ".json", "",
+		std::bind(&game::finished_download_state, this, std::placeholders::_1),
+		std::bind(&game::finished_upload_state, this),
+		[](size_t,size_t,bool){});
+	}
+
+	void game::upload_state(const std::string& id)
+	{
+		std::vector<variant> v;
+		for(auto r : replay_) {
+			v.push_back(variant(r));
+		}
+
+		std::string msg = variant(&v).write_json();
+
+		g_upload_state_client.reset(new http_client("www.theargentlark.com", "80"));
+		g_upload_state_client->send_request("POST /cgi-bin/upload-game-state.pl?module=" + module::get_module_name() + "&id=" + id,
+		msg,
+		std::bind(&game::finished_upload_state, this),
+		std::bind(&game::finished_upload_state, this),
+		[](size_t,size_t,bool){});
+	}
+
+	void game::finished_upload_state()
+	{
+		LOG_INFO("finished uploading state");
+		g_upload_state_client.reset();
+	}
+
+	void game::finished_download_state(std::string s)
+	{
+		LOG_INFO("finished download state: " << s);
+		try {
+			variant v = json::parse(s, json::JSON_PARSE_OPTIONS::NO_PREPROCESSOR);
+			replay_ = v.as_list_string();
+
+			restore_replay(INT_MAX);
+			for(player& p : players_) {
+				p.allow_deltas = false;
+			}
+			LOG_INFO("restored state");
+		} catch(json::ParseError& e) {
+			LOG_INFO("JSON ERROR RESTORING GAME STATE");
+		} catch(...) {
+			LOG_INFO("ERROR RESTORING GAME STATE");
+		}
+
+		++state_id_;
+
+		g_upload_state_client.reset();
+
+		send_game_state();
+	}
+
 	void game::save_state(const std::string& fname)
 	{
 		std::vector<variant> v;
@@ -695,6 +755,12 @@ namespace tbs
 			db_client_->process(100);
 		}
 
+		if(g_upload_state_client) {
+			LOG_INFO("process http");
+			ffl::IntrusivePtr<http_client> client = g_upload_state_client;
+			client->process();
+		}
+
 		if(started_) {
 			const int starting_state_id = state_id_;
 
@@ -866,6 +932,10 @@ namespace tbs
 			const auto time_taken = profile::get_tick_time() - start_time;
 			send_game_state(-1, time_taken);
 			replay_.push_back(write_replay().write_json());
+		} else if(type == "download_state") {
+			download_state(msg["id"].as_string());
+		} else if(type == "upload_state") {
+			upload_state(msg["id"].as_string());
 		} else if(type == "save_state") {
 			save_state("./server-save.cfg");
 		} else if(type == "load_state") {
