@@ -100,8 +100,8 @@ namespace game_logic
 
 	void WhereVariables::surrenderReferences(GarbageCollector* collector) {
 		collector->surrenderPtr(&base_, "base");
-		for(variant& v : results_cache_) {
-			collector->surrenderVariant(&v);
+		for(CacheEntry& v : results_cache_) {
+			collector->surrenderVariant(&v.result);
 		}
 	}
 
@@ -117,15 +117,16 @@ namespace game_logic
 	variant WhereVariables::getValueBySlot(int slot) const {
 		if(slot >= info_->base_slot) {
 			slot -= info_->base_slot;
-			if(static_cast<unsigned>(slot) < results_cache_.size() && results_cache_[slot].is_null() == false) {
-				return results_cache_[slot];
+			if(static_cast<unsigned>(slot) < results_cache_.size() && results_cache_[slot].have_result) {
+				return results_cache_[slot].result;
 			} else {
 				variant result = info_->entries[slot]->evaluate(*this);
 				if(results_cache_.size() <= static_cast<unsigned>(slot)) {
 					results_cache_.resize(slot+1);
 				}
 
-				results_cache_[slot] = result;
+				results_cache_[slot].result = result;
+				results_cache_[slot].have_result = true;
 				return result;
 			}
 		}

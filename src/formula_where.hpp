@@ -51,7 +51,15 @@ namespace game_logic
 		ffl::IntrusivePtr<const FormulaCallable> base_;
 		WhereVariablesInfoPtr info_;
 
-		mutable std::vector<variant> results_cache_;
+		struct CacheEntry {
+			CacheEntry() : have_result(false)
+			{}
+
+			variant result;
+			bool have_result;
+		};
+
+		mutable std::vector<CacheEntry> results_cache_;
 
 		void surrenderReferences(GarbageCollector* collector) override;
 		void setValueBySlot(int slot, const variant& value) override;
