@@ -3523,7 +3523,11 @@ namespace {
 						}
 						beg = i1+1;
 					} else {
-						ASSERT_LOG(false, "Too many ':' operators.\n" << pinpoint_location(formula_str, i1->begin, (i2-1)->end));
+						if((i1-1)->type == FFL_TOKEN_TYPE::IDENTIFIER || (i1-1)->type == FFL_TOKEN_TYPE::STRING_LITERAL) {
+							ASSERT_LOG(false, "Missing comma\n" << pinpoint_location(formula_str, (i1-2)->end, (i1-2)->end));
+						} else {
+							ASSERT_LOG(false, "Too many ':' operators.\n" << pinpoint_location(formula_str, i1->begin, (i2-1)->end));
+						}
 					}
 				} else if( i1->type == FFL_TOKEN_TYPE::COMMA && !parens ) {
 					ASSERT_LOG(check_pointer, "Expected ':' and found ',' instead\n" << pinpoint_location(formula_str, i1->begin, (i2-1)->end));
