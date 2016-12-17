@@ -342,6 +342,18 @@ namespace {
 		cairo_set_source(cairo_, pattern);
 	}
 
+	cairo_pattern_t* cairo_context::get_pattern_ownership(bool* get_ownership)
+	{
+		if(temp_pattern_) {
+			temp_pattern_ = nullptr;
+			*get_ownership = true;
+		} else {
+			*get_ownership = false;
+		}
+
+		return cairo_get_source(cairo_);
+	}
+
 	cairo_matrix_saver::cairo_matrix_saver(cairo_context& ctx) : ctx_(ctx)
 	{
 		cairo_save(ctx_.get());
@@ -1593,7 +1605,23 @@ namespace {
 	}
 	END_CAIRO_FN
 
-	BEGIN_CAIRO_FN(paint_image, "(string, [decimal,decimal]|null=null)")
+	BEGIN_CAIRO_FN(paint_image, "(string, [decimal,decimal]|null=null, [enum { mask }]|null=null)")
+
+		bool use_mask = false;
+		if(args.size() > 2) {
+			variant flags = args[2];
+			if(flags.is_list()) {
+				for(variant f : flags.as_list()) {
+					const std::string& str = f.as_enum();
+					if(str == "mask") {
+						use_mask = true;
+					} else {
+						ASSERT_LOG(false, "Unknown flag");
+					}
+				}
+			}
+		}
+
 		cairo_status_t status_before = cairo_status(context.get());
 		ASSERT_LOG(status_before == 0, "rendering error before painting " << args[0].as_string() << ": " << cairo_status_to_string(status_before));
 		cairo_surface_t* surface = get_cairo_image(args[0].as_string());
@@ -1608,12 +1636,27 @@ namespace {
 			}
 		}
 
+		cairo_pattern_t* old_pattern = nullptr;
+		bool own_old_pattern = false;
+		if(use_mask) {
+			old_pattern = context.get_pattern_ownership(&own_old_pattern);
+		}
+
 		cairo_set_source_surface(context.get(), surface, translate_x, translate_y);
 		cairo_pattern_set_filter(cairo_get_source(context.get()), CAIRO_FILTER_BILINEAR);
 
 		status = cairo_status(context.get());
 		ASSERT_LOG(status == 0, "rendering error painting " << args[0].as_string() << ": " << cairo_status_to_string(status));
-		cairo_paint(context.get());
+
+		if(old_pattern != nullptr) {
+			cairo_mask(context.get(), old_pattern);
+		} else {
+			cairo_paint(context.get());
+		}
+
+		if(own_old_pattern) {
+			cairo_pattern_destroy(old_pattern);
+		}
 
 		status = cairo_status(context.get());
 		ASSERT_LOG(status == 0, "rendering error painting " << args[0].as_string() << ": " << cairo_status_to_string(status));

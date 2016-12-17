@@ -50,6 +50,8 @@ namespace graphics
 
 		void set_pattern(cairo_pattern_t* pattern, bool take_ownership=true);
 
+		cairo_pattern_t* get_pattern_ownership(bool* get_ownership);
+
 		float width() const { return static_cast<float>(width_); }
 		float height() const { return static_cast<float>(height_); }
 	private:
