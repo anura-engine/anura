@@ -386,11 +386,12 @@ namespace {
 	class cairo_text_fragment : public game_logic::FormulaCallable
 	{
 	public:
-		cairo_text_fragment() : x(0), y(0), width(0), height(0), ascent(0), descent(0), x_advance(0) {
+		cairo_text_fragment() : x(0), y(0), width(0), height(0), ascent(0), descent(0), x_advance(0), has_image(false), has_text(false) {
 		}
 		variant path, tag;
 		float x, y, width, height, ascent, descent, x_advance;
 		KRE::Color color;
+		bool has_image, has_text;
 	private:
 		DECLARE_CALLABLE(cairo_text_fragment);
 
@@ -429,6 +430,10 @@ namespace {
 			result[2] = variant(obj.color.b());
 			result[3] = variant(obj.color.a());
 			return variant(&result);
+		DEFINE_FIELD(has_image, "bool")
+			return variant::from_bool(obj.has_image);
+		DEFINE_FIELD(has_text, "bool")
+			return variant::from_bool(obj.has_text);
 	END_DEFINE_CALLABLE(cairo_text_fragment)
 
 	struct MarkupEntry 
@@ -844,6 +849,8 @@ namespace {
 
 				res->tag = fragment.tag;
 				res->color = fragment.color;
+				res->has_image = fragment.svg.empty() == false || fragment.img.empty() == false;
+				res->has_text = fragment.text.empty() == false;
 
 				if(fragment.img.empty() == false) {
 					std::vector<variant> fn_args;
