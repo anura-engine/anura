@@ -57,6 +57,7 @@ namespace debug_console
 		void setFocus(game_logic::FormulaCallablePtr e);
 		game_logic::FormulaCallablePtr getFocus() const { return focus_; }
 	private:
+		std::string getEnteredCommand();
 		ConsoleDialog(const ConsoleDialog&);
 		void init();
 		bool handleEvent(const SDL_Event& event, bool claimed) override;
@@ -73,5 +74,7 @@ namespace debug_console
 		void loadHistory();
 		std::vector<std::string> history_;
 		int history_pos_;
+
+		int prompt_pos_;
 	};
 }

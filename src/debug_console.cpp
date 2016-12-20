@@ -293,7 +293,7 @@ namespace debug_console
 
 	ConsoleDialog::ConsoleDialog(Level& lvl, game_logic::FormulaCallable& obj)
 	   : Dialog(0, KRE::WindowManager::getMainWindow()->height() - g_console_height, g_console_width, g_console_height), lvl_(&lvl), focus_(&obj),
-		 history_pos_(0)
+		 history_pos_(0), prompt_pos_(0)
 	{
 		if(sys::file_exists(console_history_path())) {
 			try {
@@ -328,25 +328,23 @@ namespace debug_console
 		text_editor_->setText(Prompt);
 		text_editor_->setCursor(0, static_cast<int>(Prompt.size()));
 		text_editor_->setFontSize(g_console_font_size);
+
+		prompt_pos_ = 0;
 	}
 
 	void ConsoleDialog::onMoveCursor()
 	{
-		if(static_cast<unsigned>(text_editor_->cursorRow()) < text_editor_->getData().size()-1) {
-			text_editor_->setCursor(static_cast<int>(text_editor_->getData().size())-1, text_editor_->cursorCol());
+		if(static_cast<unsigned>(text_editor_->cursorRow()) < prompt_pos_) {
+			text_editor_->setCursor(prompt_pos_, text_editor_->cursorCol());
 		}
 
-		if(static_cast<unsigned>(text_editor_->cursorCol()) < Prompt.size() && text_editor_->getData().back().size() >= Prompt.size()) {
-			text_editor_->setCursor(static_cast<int>(text_editor_->getData().size())-1, Prompt.size());
+		if(text_editor_->cursorRow() == prompt_pos_ && static_cast<unsigned>(text_editor_->cursorCol()) < Prompt.size() && text_editor_->getData()[prompt_pos_].size() >= Prompt.size()) {
+			text_editor_->setCursor(prompt_pos_, Prompt.size());
 		}
 	}
 
-	bool ConsoleDialog::onBeginEnter()
+	std::string ConsoleDialog::getEnteredCommand()
 	{
-		if(lvl_->editor_selection().empty() == false) {
-			focus_ = lvl_->editor_selection().front();
-		}
-
 		std::vector<std::string> data = text_editor_->getData();
 
 		std::string ffl(text_editor_->getData().back());
@@ -370,9 +368,24 @@ namespace debug_console
 				}
 			}
 		}
+		return ffl;
+	}
+
+	bool ConsoleDialog::onBeginEnter()
+	{
+		if(SDL_GetModState()&KMOD_SHIFT) {
+			return true;
+		}
+
+		if(lvl_->editor_selection().empty() == false) {
+			focus_ = lvl_->editor_selection().front();
+		}
+
+		std::string ffl = getEnteredCommand();
 
 		text_editor_->setText(text_editor_->text() + "\n" + Prompt);
 		text_editor_->setCursor(static_cast<int>(text_editor_->getData().size())-1, Prompt.size());
+		prompt_pos_ = text_editor_->getData().size()-1;
 		if(ffl.empty() == false) {
 			history_.push_back(ffl);
 			if(history_.size() > 512) {
@@ -432,17 +445,27 @@ namespace debug_console
 	void ConsoleDialog::addMessage(const std::string& msg)
 	{
 
+		const int old_nlines = text_editor_->getData().size();
+
 		std::string m;
-		for(std::vector<std::string>::const_iterator i = text_editor_->getData().begin(); i != text_editor_->getData().end()-1; ++i) {
+		for(std::vector<std::string>::const_iterator i = text_editor_->getData().begin(); i != text_editor_->getData().begin()+prompt_pos_; ++i) {
 			m += *i + "\n";
 		}
 
 		m += msg + "\n";
-		m += text_editor_->getData().back();
+		for(std::vector<std::string>::const_iterator i = text_editor_->getData().begin() + prompt_pos_; i != text_editor_->getData().end(); ++i) {
+			m += *i;
+			if(i+1 != text_editor_->getData().end()) {
+				m += "\n";
+			}
+		}
 
 		auto col = text_editor_->cursorCol();
 		text_editor_->setText(m);
 		text_editor_->setCursor(static_cast<int>(text_editor_->getData().size())-1, col);
+
+		const int new_nlines = text_editor_->getData().size();
+		prompt_pos_ += new_nlines - old_nlines;
 	}
 
 	bool ConsoleDialog::handleEvent(const SDL_Event& event, bool claimed)
@@ -450,8 +473,16 @@ namespace debug_console
 		if(!claimed && hasKeyboardFocus()) {
 			switch(event.type) {
 			case SDL_KEYDOWN:
-				if((event.key.keysym.sym == SDLK_UP || event.key.keysym.sym == SDLK_DOWN) && !history_.empty()) {
+				if(((event.key.keysym.sym == SDLK_UP && text_editor_->cursorRow() == prompt_pos_) ||
+				    (event.key.keysym.sym == SDLK_DOWN && text_editor_->cursorRow() == text_editor_->getData().size()-1))
+				   && !history_.empty()) {
 					if(event.key.keysym.sym == SDLK_UP) {
+						if(history_pos_ == history_.size()) {
+							std::string ffl = getEnteredCommand();
+							if(!ffl.empty()) {
+								history_.push_back(ffl);
+							}
+						}
 						--history_pos_;
 					} else {
 						++history_pos_;
@@ -459,7 +490,11 @@ namespace debug_console
 
 					if(history_pos_ < 0) {
 						history_pos_ = static_cast<int>(history_.size());
-					} else if(history_pos_ > static_cast<int>(history_.size())) {
+					} else if(history_pos_ >= static_cast<int>(history_.size())) {
+						std::string ffl = getEnteredCommand();
+						if(ffl.empty() == false && (history_.empty() || history_.back() != ffl)) {
+							history_.push_back(ffl);
+						}
 						history_pos_ = static_cast<int>(history_.size());
 					}
 
@@ -481,7 +516,7 @@ namespace debug_console
 		}
 
 		std::string m;
-		for(std::vector<std::string>::const_iterator i = text_editor_->getData().begin(); i != text_editor_->getData().end()-1; ++i) {
+		for(std::vector<std::string>::const_iterator i = text_editor_->getData().begin(); i != text_editor_->getData().begin() + prompt_pos_; ++i) {
 			m += *i + "\n";
 		}
 
