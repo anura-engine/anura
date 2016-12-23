@@ -293,7 +293,7 @@ namespace debug_console
 
 	ConsoleDialog::ConsoleDialog(Level& lvl, game_logic::FormulaCallable& obj)
 	   : Dialog(0, KRE::WindowManager::getMainWindow()->height() - g_console_height, g_console_width, g_console_height), lvl_(&lvl), focus_(&obj),
-		 history_pos_(0), prompt_pos_(0)
+		 history_pos_(0), prompt_pos_(0), dragging_(false)
 	{
 		if(sys::file_exists(console_history_path())) {
 			try {
@@ -470,12 +470,12 @@ namespace debug_console
 
 	bool ConsoleDialog::handleEvent(const SDL_Event& event, bool claimed)
 	{
-		if(!claimed && hasKeyboardFocus()) {
+		if(!claimed) {
 			switch(event.type) {
 			case SDL_KEYDOWN:
 				if(((event.key.keysym.sym == SDLK_UP && text_editor_->cursorRow() == prompt_pos_) ||
 				    (event.key.keysym.sym == SDLK_DOWN && text_editor_->cursorRow() == text_editor_->getData().size()-1))
-				   && !history_.empty()) {
+				   && !history_.empty() && hasKeyboardFocus()) {
 					if(event.key.keysym.sym == SDLK_UP) {
 						if(history_pos_ == history_.size()) {
 							std::string ffl = getEnteredCommand();
@@ -500,6 +500,22 @@ namespace debug_console
 
 					loadHistory();
 					return true;
+				}
+				break;
+			case SDL_MOUSEMOTION: {
+				if(dragging_) {
+					setLoc(x() + event.motion.xrel, y() + event.motion.yrel);
+				}
+				break;
+			}
+			case SDL_MOUSEBUTTONUP: {
+				dragging_ = false;
+				break;
+			}
+			case SDL_MOUSEBUTTONDOWN:
+				dragging_ = false;
+				if(event.button.x >= x() && event.button.y >= y() && event.button.x <= x() + width() && event.button.y < y()+18) {
+					dragging_ = true;
 				}
 				break;
 			}

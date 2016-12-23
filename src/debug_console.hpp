@@ -76,5 +76,7 @@ namespace debug_console
 		int history_pos_;
 
 		int prompt_pos_;
+
+		bool dragging_;
 	};
 }
