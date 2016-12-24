@@ -1612,9 +1612,10 @@ namespace {
 	}
 	END_CAIRO_FN
 
-	BEGIN_CAIRO_FN(paint_image, "(string, [decimal,decimal]|null=null, [enum { mask }]|null=null)")
+	BEGIN_CAIRO_FN(paint_image, "(string, [decimal,decimal]|null=null, [enum { mask, filter_best }]|null=null)")
 
 		bool use_mask = false;
+		bool use_best_filter = false;
 		if(args.size() > 2) {
 			variant flags = args[2];
 			if(flags.is_list()) {
@@ -1622,6 +1623,8 @@ namespace {
 					const std::string& str = f.as_enum();
 					if(str == "mask") {
 						use_mask = true;
+					} else if(str == "filter_best") {
+						use_best_filter = true;
 					} else {
 						ASSERT_LOG(false, "Unknown flag");
 					}
@@ -1650,7 +1653,7 @@ namespace {
 		}
 
 		cairo_set_source_surface(context.get(), surface, translate_x, translate_y);
-		cairo_pattern_set_filter(cairo_get_source(context.get()), CAIRO_FILTER_BILINEAR);
+		cairo_pattern_set_filter(cairo_get_source(context.get()), use_best_filter ? CAIRO_FILTER_BEST : CAIRO_FILTER_BILINEAR);
 
 		status = cairo_status(context.get());
 		ASSERT_LOG(status == 0, "rendering error painting " << args[0].as_string() << ": " << cairo_status_to_string(status));

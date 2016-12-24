@@ -2786,7 +2786,7 @@ void CustomObject::addAnimatedMovement(variant attr_var, variant options)
 
 	for(const auto& p : attr) {
 		slots.emplace_back(def->getSlot(p.first.as_string()));
-		ASSERT_LOG(slots.back() >= 0, "Unknown attribute in object: " << p.first.as_string());
+		ASSERT_LOG(slots.back() >= 0, "Using animate on " << type << " object with unknown property: " << p.first.as_string());
 		end_values.emplace_back(p.second);
 		begin_values.emplace_back(queryValueBySlot(slots.back()));
 	}

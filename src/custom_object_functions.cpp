@@ -3717,7 +3717,9 @@ RETURN_TYPE("bool")
 		const variant attr_var = EVAL_ARG(1);
 		const variant options = EVAL_ARG(2);
 
-		return variant(new animate_command(obj.convert_to<CustomObject>(), attr_var, options));
+		auto cmd = new animate_command(obj.convert_to<CustomObject>(), attr_var, options);
+		cmd->setExpression(this);
+		return variant(cmd);
 
 	FUNCTION_ARGS_DEF
 		ARG_TYPE("custom_obj")
