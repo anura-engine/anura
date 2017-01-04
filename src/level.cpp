@@ -2562,7 +2562,7 @@ void Level::do_processing()
 	while(!active_chars.empty()) {
 		new_chars_.clear();
 		for(const EntityPtr& c : active_chars) {
-			if(!c->destroyed() && (chars_by_label_.count(c->label()) || c->isHuman())) {
+			if(!c->destroyed()) {
 				c->process(*this);
 			}
 	
