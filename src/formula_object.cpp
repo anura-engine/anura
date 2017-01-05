@@ -1260,12 +1260,13 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 				if(seen.insert(obj).second == false) {
 					return;
 				}
+
+				for(variant& var : obj->variables_) {
+					deepDestroy(var, seen);
+					var = variant();
+				}
 			}
 
-			for(variant& var : obj->variables_) {
-				deepDestroy(var, seen);
-				var = variant();
-			}
 		} else if(v.is_list()) {
 			for(int n = 0; n != v.num_elements(); ++n) {
 				deepDestroy(v[n], seen);
