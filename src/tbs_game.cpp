@@ -761,17 +761,15 @@ namespace {
 			client->process();
 		}
 
-		if(started_) {
-			const int starting_state_id = state_id_;
+		const int starting_state_id = state_id_;
 
-			executeCommand(game_type_->process());
+		executeCommand(game_type_->process());
 
-			++cycle_;
+		++cycle_;
 
-			if(state_id_ != starting_state_id) {
-				send_game_state();
-				replay_.push_back(write_replay().write_json());
-			}
+		if(state_id_ != starting_state_id) {
+			send_game_state();
+			replay_.push_back(write_replay().write_json());
 		}
 	}
 
