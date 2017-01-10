@@ -68,6 +68,10 @@ namespace game_logic
 			return getValueBySlot(slot);
 		}
 
+		bool queryConstantValue(const std::string& key, variant* value) const {
+			return getConstantValue(key, value);
+		}
+
 		void mutateValue(const std::string& key, const variant& value) {
 			setValue(key, value);
 		}
@@ -134,6 +138,10 @@ namespace game_logic
 	private:
 		virtual variant getValue(const std::string& key) const = 0;
 		virtual variant getValueBySlot(int slot) const;
+
+		virtual bool getConstantValue(const std::string& key, variant* value) const {
+			return false;
+		}
 
 		virtual std::string getObjectId() const { return "FormulaCallable"; }
 

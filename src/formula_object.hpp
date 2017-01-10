@@ -88,6 +88,8 @@ namespace game_logic
 
 		variant_type_ptr getPropertySetType(const std::string& key) const;
 
+		bool getConstantValue(const std::string& id, variant* result) const override;
+
 #if defined(USE_LUA)
 		const ffl::IntrusivePtr<lua::LuaContext> & get_lua_context() const {
 			return lua_ptr_;
@@ -140,6 +142,9 @@ namespace game_logic
 
 	FormulaCallableDefinitionPtr get_library_definition();
 	FormulaCallablePtr get_library_object();
+
+	bool can_load_library_instance(const std::string& id);
+	FormulaCallablePtr get_library_instance(const std::string& id);
 
 #if defined(USE_LUA)
 	class formula_class_unit_test_helper {

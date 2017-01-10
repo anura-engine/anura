@@ -831,6 +831,11 @@ variant variant::change_function_callable(const game_logic::FormulaCallable& cal
 	return res;
 }
 
+const game_logic::FormulaCallable* variant::get_function_closure() const
+{
+	return fn_->callable.get();
+}
+
 variant::variant(std::function<variant(const game_logic::FormulaCallable&)> builtin_fn, const VariantFunctionTypeInfoPtr& type_info)
   : type_(VARIANT_TYPE_FUNCTION)
 {

@@ -321,6 +321,8 @@ public:
 	variant bind_closure(const game_logic::FormulaCallable* callable);
 	variant bind_args(const std::vector<variant>& args);
 
+	const game_logic::FormulaCallable* get_function_closure() const;
+
 	void get_mutable_closure_ref(std::vector<ffl::IntrusivePtr<const game_logic::FormulaCallable>*>& result);
 
 	//precondition: is_function(). Gives the min/max arguments the function

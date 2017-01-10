@@ -122,6 +122,16 @@ class FrameDetailsWidget : public Widget
 
 	std::map<const char*, Color> id_to_color_;
 	std::map<const char*, TexturePtr> id_to_texture_;
+	std::map<const char*, uint64_t> id_to_time_;
+	std::map<const char*, int> id_to_nsamples_;
+
+	void calculateTimings(const InstrumentationNode* node) {
+		id_to_time_[node->id] += node->end_time - node->begin_time;
+		id_to_nsamples_[node->id]++;
+		for(auto record : node->records) {
+			calculateTimings(record);
+		}
+	}
 
 	int calculateColors(const InstrumentationNode* node, int index=0, int depth=1) {
 		const int x1 = calculateX(node->begin_time);
@@ -147,8 +157,11 @@ class FrameDetailsWidget : public Widget
 				color = Color(LegendColors[index%NumLegendColors]);
 				++index;
 			}
+
+			const uint64_t timing = id_to_time_[node->id];
+
 			id_to_color_[node->id] = color;
-			id_to_texture_[node->id] = Font::getInstance()->renderText(node->id ? node->id : "Frame", white_color_, 12, true, Font::get_default_monospace_font());
+			id_to_texture_[node->id] = Font::getInstance()->renderText(node->id ? std::string(formatter() << node->id << " (" << id_to_time_[node->id]/1000 << "us, " << id_to_nsamples_[node->id] << "x)") : std::string("Frame"), white_color_, 12, true, Font::get_default_monospace_font());
 		}
 
 		for(auto record : node->records) {
@@ -159,6 +172,8 @@ class FrameDetailsWidget : public Widget
 	}
 public:
 	explicit FrameDetailsWidget(const InstrumentationNode* node) : white_color_("white"), node_(node), selected_node_(nullptr) {
+
+		calculateTimings(node_);
 
 		variant area = game_logic::Formula(variant(g_profile_widget_details_area)).execute();
 		std::vector<int> area_int = area.as_list_int();
@@ -236,7 +251,14 @@ public:
 
 	TexturePtr calculateNodeText(const InstrumentationNode* node) const {
 
-		std::string text = formatter() << (node->id ? node->id : "Frame") << ": " << (node->end_time - node->begin_time)/1000 << "us";
+		uint64_t child_time = 0LL;
+		for(auto c : node->records) {
+			child_time += (c->end_time - c->begin_time);
+		}
+
+		uint64_t self_time = (node->end_time - node->begin_time) - child_time;
+
+		std::string text = formatter() << (node->id ? node->id : "Frame") << ": " << (node->end_time - node->begin_time)/1000 << "us (self: " << self_time/1000 << "us)";
 
 		auto info = node->info.get_debug_info();
 		if(info) {

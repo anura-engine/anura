@@ -248,7 +248,7 @@ enum OP {
 		  // POP: 1
 		  // PUSH: 1
 		  // ARGS: NONE
-		  OP_LAMBDA, OP_LAMBDA_WITH_CLOSURE,
+		  OP_LAMBDA_WITH_CLOSURE,
 
 		  //TOS is a FormulaInterfaceInstanceFactory and TOS+1 is an argument.
 		  //Pops these two off the stack and pushes an interface created with this factory.
@@ -271,6 +271,26 @@ class VirtualMachine
 {
 public:
 	typedef short InstructionType;
+
+	class Iterator {
+		const VirtualMachine* vm_;
+		size_t index_;
+	public:
+
+		explicit Iterator(const VirtualMachine* vm) : vm_(vm), index_(0)
+		{}
+
+		InstructionType get() const;
+		bool has_arg() const;
+		InstructionType arg() const;
+
+		void next();
+		bool at_end() const;
+	};
+
+	Iterator begin_itor() const {
+		return Iterator(this);
+	}
 
 	variant execute(const game_logic::FormulaCallable& variables) const;
 

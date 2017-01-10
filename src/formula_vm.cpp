@@ -820,10 +820,20 @@ void VirtualMachine::executeInternal(const FormulaCallable& variables, std::vect
 			using namespace game_logic;
 
 			++p;
-			WhereVariablesInfoPtr info(constants_[*p].convert_to<WhereVariablesInfo>());
-			const FormulaCallable& vars = variables_stack.empty() ? variables : *variables_stack.back();
-			FormulaCallablePtr wrapped_variables(new WhereVariables(vars, info));
-			variables_stack.push_back(wrapped_variables);
+
+			if(*p >= 0) {
+				const FormulaCallable& vars = variables_stack.empty() ? variables : *variables_stack.back();
+
+				ffl::IntrusivePtr<SlotFormulaCallable> callable(new SlotFormulaCallable);
+				callable->setFallback(&vars);
+				callable->setBaseSlot(*p);
+
+				variables_stack.push_back(callable);
+			}
+
+			static_cast<SlotFormulaCallable*>(variables_stack.back().get())->add(stack.back());
+			stack.pop_back();
+
 			break;
 		}
 
@@ -850,12 +860,6 @@ void VirtualMachine::executeInternal(const FormulaCallable& variables, std::vect
 
 		case OP_JMP: {
 			p += *(p+1);
-			break;
-		}
-
-		case OP_LAMBDA: {
-			static ffl::IntrusivePtr<SlotFormulaCallable> callable(new SlotFormulaCallable);
-			stack.back() = stack.back().change_function_callable(*callable);
 			break;
 		}
 
@@ -986,7 +990,7 @@ void VirtualMachine::append(const VirtualMachine& other)
 
 	for(size_t i = 0; i < other.instructions_.size(); ++i) {
 		instructions_.push_back(other.instructions_[i]);
-		if(instructions_.back() == OP_CONSTANT || instructions_.back() == OP_WHERE) {
+		if(instructions_.back() == OP_CONSTANT) {
 			++i;
 			instructions_.push_back(constants_.size() + other.instructions_[i]);
 		} else {
@@ -1029,7 +1033,7 @@ static const std::string OpNames[] = {
 		  "OP_POP", "OP_DUP", "OP_DUP2", "OP_SWAP", "OP_UNDER", "OP_PUSH_NULL", "OP_PUSH_0", "OP_PUSH_1",
 
 		  "OP_WHERE", "OP_JMP_IF", "OP_JMP_UNLESS", "OP_POP_JMP_IF", "OP_POP_JMP_UNLESS", "OP_JMP",
-		  "OP_LAMBDA", "OP_LAMBDA_WITH_CLOSURE", "OP_CREATE_INTERFACE",
+		  "OP_LAMBDA_WITH_CLOSURE", "OP_CREATE_INTERFACE",
 
 		  "OP_PUSH_SYMBOL_STACK", "OP_POP_SYMBOL_STACK", "OP_LOOKUP_SYMBOL_STACK",
 };
@@ -1173,6 +1177,42 @@ std::string VirtualMachine::debugPinpointLocation(const InstructionType* p, cons
 	}
 
 	return stream.str();
+}
+
+VirtualMachine::InstructionType VirtualMachine::Iterator::get() const
+{
+	return vm_->instructions_[index_];
+}
+
+bool VirtualMachine::Iterator::has_arg() const
+{
+	auto cur = get();
+	for(auto in : g_arg_instructions) {
+		if(cur == in) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+VirtualMachine::InstructionType VirtualMachine::Iterator::arg() const
+{
+	return vm_->instructions_[index_+1];
+}
+
+void VirtualMachine::Iterator::next()
+{
+	if(has_arg()) {
+		++index_;
+	}
+
+	++index_;
+}
+
+bool VirtualMachine::Iterator::at_end() const
+{
+	return index_ == vm_->instructions_.size();
 }
 
 UNIT_TEST(formula_vm) {

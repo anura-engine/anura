@@ -61,6 +61,9 @@ using namespace formula_vm;
 
 namespace 
 {
+	PREF_BOOL(ffl_vm_opt_library_lookups, true, "Optimize library lookups in VM");
+	PREF_BOOL(ffl_vm_opt_constant_lookups, true, "Optimize contant lookups in VM");
+
 	//the last formula that was executed; used for outputting debugging info.
 	const game_logic::Formula* last_executed_formula;
 
@@ -315,7 +318,7 @@ namespace game_logic
 	{
 		class VMExpression : public FormulaExpression {
 		public:
-			VMExpression(VirtualMachine& vm, variant_type_ptr t, const FormulaExpression& o) : FormulaExpression("_vm"), vm_(vm), type_(t)
+			VMExpression(VirtualMachine& vm, variant_type_ptr t, const FormulaExpression& o) : FormulaExpression("_vm"), vm_(vm), type_(t), can_reduce_to_variant_(false)
 			{
 				setDebugInfo(o);
 				setVMDebugInfo(vm_);
@@ -338,6 +341,19 @@ namespace game_logic
 
 			bool isVM() const override { return true; }
 
+			bool canReduceToVariant(variant& v) const override {
+				v = variant_;
+				return can_reduce_to_variant_;
+			}
+
+			void setVariant(const variant& v) {
+				variant_ = v;
+				can_reduce_to_variant_ = true;
+			}
+
+			formula_vm::VirtualMachine& get_vm() { return vm_; }
+			const formula_vm::VirtualMachine& get_vm() const { return vm_; }
+
 		private:
 			variant execute(const FormulaCallable& variables) const override {
 //				Formula::failIfStaticContext();
@@ -352,6 +368,9 @@ namespace game_logic
 
 			formula_vm::VirtualMachine vm_;
 			variant_type_ptr type_;
+
+			variant variant_;
+			bool can_reduce_to_variant_;
 		};
 
 		#if defined(USE_LUA)
@@ -1267,10 +1286,10 @@ namespace {
 		private:
 			variant execute(const FormulaCallable& variables) const override {
 				if(requires_closure_) {
+
 					return fn_.change_function_callable(variables);
 				} else {
-					static ffl::IntrusivePtr<SlotFormulaCallable> callable(new SlotFormulaCallable);
-					return fn_.change_function_callable(*callable);
+					return fn_;
 				}
 			}
 
@@ -1289,7 +1308,9 @@ namespace {
 			ExpressionPtr optimizeToVM() override {
 				formula_vm::VirtualMachine vm;
 				vm.addLoadConstantInstruction(fn_);
-				vm.addInstruction(requires_closure_ ? OP_LAMBDA_WITH_CLOSURE : OP_LAMBDA);
+				if(requires_closure_) {
+					vm.addInstruction(OP_LAMBDA_WITH_CLOSURE);
+				}
 				return ExpressionPtr(new VMExpression(vm, queryVariantType(), *this));
 			}
 
@@ -1729,6 +1750,34 @@ namespace {
 				return result;
 			}
 
+			ExpressionPtr optimize() const override {
+
+				auto left_type = left_->queryVariantType();
+
+				//Optimization so that an expression such as lib.gui would boil down directly into
+				//the actual class instance.
+				if(g_ffl_vm_opt_library_lookups && left_type->is_builtin() && *left_type->is_builtin() == "library") {
+					const std::string& s = right_->str();
+
+					if(can_load_library_instance(s)) {
+						FormulaCallablePtr res = get_library_instance(s);
+						ASSERT_LOG(res.get() != nullptr, "Could not get library: " << s);
+						return ExpressionPtr(new VariantExpression(variant(res.get())));
+					}
+				}
+
+				variant left_var;
+				if(g_ffl_vm_opt_constant_lookups && left_->canReduceToVariant(left_var) && left_var.is_callable()) {
+					auto p = left_var.as_callable();
+					variant value;
+					if(p->queryConstantValue(right_->str(), &value)) {
+						return ExpressionPtr(new VariantExpression(value));
+					}
+				}
+
+				return ExpressionPtr();
+			}
+
 			bool canCreateVM() const override { return canChildrenVM(); }
 
 			ExpressionPtr optimizeToVM() override {
@@ -1739,6 +1788,19 @@ namespace {
 
 				if(left_->canCreateVM() && right_->canCreateVM()) {
 					formula_vm::VirtualMachine vm;
+
+					//Optimization so that an expression such as lib.gui would boil down directly into
+					//the actual class instance.
+					if(g_ffl_vm_opt_library_lookups && left_type->is_builtin() && *left_type->is_builtin() == "library") {
+						const std::string& s = right_->str();
+
+						if(can_load_library_instance(s)) {
+							FormulaCallablePtr res = get_library_instance(s);
+							ASSERT_LOG(res.get() != nullptr, "Could not get library: " << s);
+							vm.addLoadConstantInstruction(variant(res.get()));
+							return ExpressionPtr(new VMExpression(vm, queryVariantType(), *this));
+						}
+					}
 
 					if(variant_type::get_type(variant::VARIANT_TYPE_LIST)->is_compatible(left_type)) {
 						left_->emitVM(vm);
@@ -2600,12 +2662,19 @@ namespace {
 				}
 
 				formula_vm::VirtualMachine vm;
-				vm.addInstruction(formula_vm::OP_WHERE);
-				vm.addConstant(variant(info_.get()));
 
+				bool first = true;
 				for(ExpressionPtr& e : info_->entries) {
-//					e->emitVM(vm);
+					e->emitVM(vm);
 //					vm.addInstruction(formula_vm::OP_PUSH_SYMBOL_STACK);
+
+					vm.addInstruction(formula_vm::OP_WHERE);
+					if(first) {
+						vm.addInt(info_->base_slot);
+						first = false;
+					} else {
+						vm.addInt(-1);
+					}
 				}
 
 				body_->emitVM(vm);
@@ -3208,7 +3277,9 @@ namespace {
 				if(subs_.empty()) {
 					formula_vm::VirtualMachine vm;
 					vm.addLoadConstantInstruction(str_);
-					return ExpressionPtr(new VMExpression(vm, queryVariantType(), *this));
+					VMExpression* result = new VMExpression(vm, queryVariantType(), *this);
+					result->setVariant(variant(str_));
+					return ExpressionPtr(result);
 				} else {
 					//TODO: VM code for string subs.
 					return ExpressionPtr();
@@ -3932,9 +4003,24 @@ static std::string debugSubexpressionTypes(ConstFormulaPtr & fml)
 					std::vector<const VMExpression*> vm_expr;
 					query_formula_expression_lookups(fml->expr(), &slot_expr, &id_expr, &vm_expr);
 
-					if(vm_expr.empty() == false) {
-						//TODO: consider looking at lookups in VM's in here.
-						uses_closure = true;
+					for(auto vm : vm_expr) {
+						std::vector<bool> unrelated_scope_stack;
+
+						for(VirtualMachine::Iterator itor(vm->get_vm().begin_itor()); !itor.at_end(); itor.next()) {
+							if(itor.get() == formula_vm::OP_PUSH_SCOPE) {
+								unrelated_scope_stack.push_back(true);
+							} else if(itor.get() == formula_vm::OP_WHERE && itor.arg() >= 0) {
+								unrelated_scope_stack.push_back(false);
+							} else if(itor.get() == formula_vm::OP_POP_SCOPE) {
+								unrelated_scope_stack.pop_back();
+							} else if((itor.get() == formula_vm::OP_LOOKUP_STR && std::find(unrelated_scope_stack.begin(), unrelated_scope_stack.end(), true) == unrelated_scope_stack.end()) || itor.get() == formula_vm::OP_CALL_BUILTIN || itor.get() == formula_vm::OP_LAMBDA_WITH_CLOSURE) {
+								uses_closure = true;
+								break;
+							} else if(itor.get() == formula_vm::OP_LOOKUP && std::find(unrelated_scope_stack.begin(), unrelated_scope_stack.end(), true) == unrelated_scope_stack.end() && itor.arg() < callable_def->getNumSlots()) {
+								uses_closure = true;
+								break;
+							}
+						}
 					}
 
 					if(uses_closure == false) {
@@ -4921,7 +5007,9 @@ ExpressionPtr VariantExpression::optimizeToVM()
 {
 	formula_vm::VirtualMachine vm;
 	vm.addLoadConstantInstruction(v_);
-	return ExpressionPtr(new VMExpression(vm, queryVariantType(), *this));
+	VMExpression* result = new VMExpression(vm, queryVariantType(), *this);
+	result->setVariant(v_);
+	return ExpressionPtr(result);
 }
 
 ExpressionPtr createVMExpression(formula_vm::VirtualMachine vm, variant_type_ptr t, const FormulaExpression& o)

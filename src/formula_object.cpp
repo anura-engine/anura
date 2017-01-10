@@ -1505,6 +1505,31 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 
 	REGISTER_SERIALIZABLE_CALLABLE(FormulaObject, "@class");
 
+	bool FormulaObject::getConstantValue(const std::string& id, variant* result) const
+	{
+		std::map<std::string, int>::const_iterator itor = class_->properties().find(id);
+		if(itor == class_->properties().end()) {
+			return false;
+		}
+
+		ConstFormulaPtr getter;
+
+		if(static_cast<unsigned>(itor->second) < property_overrides_.size()) {
+			getter = property_overrides_[itor->second];
+		}
+
+		if(!getter) {
+			const PropertyEntry& entry = class_->slots()[itor->second];
+			getter = entry.getter;
+		}
+
+		if(getter && getter->evaluatesToConstant(*result)) {
+			return true;
+		}
+
+		return false;
+	}
+
 	variant FormulaObject::getValue(const std::string& key) const
 	{
 		{
@@ -1827,7 +1852,6 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 	namespace 
 	{
 		FormulaCallableDefinitionPtr g_library_definition;
-		FormulaCallablePtr g_library_obj;
 	}
 
 	FormulaCallableDefinitionPtr get_library_definition()
@@ -1883,11 +1907,27 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 
 	namespace 
 	{
+		struct SlotsLoadingGuard {
+			explicit SlotsLoadingGuard(std::vector<int>& v) : v_(v)
+			{}
+
+			~SlotsLoadingGuard() { v_.pop_back(); }
+
+			std::vector<int>& v_;
+		};
+
 		class LibraryCallable : public game_logic::FormulaCallable
 		{
 		public:
 			LibraryCallable() {
 				items_.resize(get_library_definition()->getNumSlots());
+			}
+
+			bool currently_loading_library(const std::string& key) {
+				FormulaCallableDefinitionPtr def = get_library_definition();
+				const int slot = def->getSlot(key);
+				ASSERT_LOG(slot >= 0, "Unknown library: " << key << "\n" << get_full_call_stack());
+				return std::find(slots_loading_.begin(), slots_loading_.end(), slot) != slots_loading_.end();
 			}
 		private:
 			variant getValue(const std::string& key) const override {
@@ -1908,6 +1948,8 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 						ASSERT_LOG(false, "ERROR IN LIBRARY");
 					}
 
+					slots_loading_.push_back(slot);
+					SlotsLoadingGuard guard(slots_loading_);
 					items_[slot] = variant(FormulaObject::create(class_name).get());
 				}
 
@@ -1921,7 +1963,13 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 			}
 
 			mutable std::vector<variant> items_;
+
+			mutable std::vector<int> slots_loading_;
 		};
+	}
+
+	namespace {
+		boost::intrusive_ptr<LibraryCallable> g_library_obj;
 	}
 
 	FormulaCallablePtr get_library_object()
@@ -1931,6 +1979,17 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 		}
 
 		return g_library_obj;
+	}
+
+	bool can_load_library_instance(const std::string& id)
+	{
+		get_library_object();
+		return !g_library_obj->currently_loading_library(id);
+	}
+
+	FormulaCallablePtr get_library_instance(const std::string& id)
+	{
+		return FormulaCallablePtr(get_library_object()->queryValue(id).mutable_callable());
 	}
 
 #if defined(USE_LUA)
