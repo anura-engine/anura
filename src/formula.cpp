@@ -1456,7 +1456,7 @@ namespace {
 					}
 				}
 		
-				return left(args);
+				return left(&args);
 			}
 
 			variant_type_ptr getVariantType() const override {

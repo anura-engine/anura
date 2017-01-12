@@ -232,6 +232,7 @@ public:
 
 	bool function_call_valid(const std::vector<variant>& args, std::string* message=nullptr, bool allow_partial=false) const;
 	variant operator()(const std::vector<variant>& args) const;
+	variant operator()(std::vector<variant>* args) const;
 
 	bool disassemble(std::string* result) const;
 

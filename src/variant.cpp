@@ -41,6 +41,7 @@
 #include "formula_garbage_collector.hpp"
 #include "formula_interface.hpp"
 #include "formula_object.hpp"
+#include "formula_profiler.hpp"
 
 #include "i18n.hpp"
 #include "unit_test.hpp"
@@ -1117,16 +1118,24 @@ bool variant::function_call_valid(const std::vector<variant>& passed_args, std::
 
 variant variant::operator()(const std::vector<variant>& passed_args) const
 {
+	std::vector<variant> args(passed_args);
+	return (*this)(&args);
+}
+
+variant variant::operator()(std::vector<variant>* passed_args) const
+{
+	ffl::IntrusivePtr<game_logic::SlotFormulaCallable> callable = new game_logic::SlotFormulaCallable;
+	{
 	if(type_ == VARIANT_TYPE_MULTI_FUNCTION) {
 		for(const variant& v : multi_fn_->functions) {
-			if(v.function_call_valid(passed_args)) {
+			if(v.function_call_valid(*passed_args)) {
 				return v(passed_args);
 			}
 		}
 
 		int narg = 1;
 		std::ostringstream msg;
-		for(variant arg : passed_args) {
+		for(variant arg : *passed_args) {
 			msg << "Argument " << narg << ": " << arg.write_json() << " Type: " << get_variant_type_from_value(arg)->to_string() << "\n";
 			++narg;
 		}
@@ -1152,12 +1161,13 @@ variant variant::operator()(const std::vector<variant>& passed_args) const
 	std::vector<variant> args_buf;
 	if(fn_->bound_args.empty() == false) {
 		args_buf = fn_->bound_args;
-		args_buf.insert(args_buf.end(), passed_args.begin(), passed_args.end());
+		args_buf.insert(args_buf.end(), passed_args->begin(), passed_args->end());
 	}
 
-	const std::vector<variant>* args = args_buf.empty() ? &passed_args : &args_buf;
+	std::vector<variant>* args = args_buf.empty() ? passed_args : &args_buf;
 
-	ffl::IntrusivePtr<game_logic::SlotFormulaCallable> callable = new game_logic::SlotFormulaCallable;
+	callable.reset(new game_logic::SlotFormulaCallable);
+
 	if(fn_->callable) {
 		callable->setFallback(fn_->callable);
 	}
@@ -1179,8 +1189,10 @@ variant variant::operator()(const std::vector<variant>& passed_args) const
 		generate_error(formatter() << "Function passed " << args->size() << " arguments, between " <<  min_args << " and " << max_args << " expected (" << str.str() << ")");
 	}
 
+	const int num_args_provided = args->size();
+
 	if(fn_->needs_type_checking == false) {
-		callable->setValues(*args);
+		callable->setValues(args);
 	} else {
 
 	for(size_t n = 0; n != args->size(); ++n) {
@@ -1222,8 +1234,10 @@ variant variant::operator()(const std::vector<variant>& passed_args) const
 	}
 	}
 
-	for(std::vector<variant>::size_type n = args->size(); n < max_args && (n - min_args) < fn_->type->default_args.size(); ++n) {
+	for(std::vector<variant>::size_type n = num_args_provided; n < max_args && (n - min_args) < fn_->type->default_args.size(); ++n) {
 		callable->add(fn_->type->default_args[n - min_args]);
+	}
+
 	}
 
 	if(fn_->fn) {

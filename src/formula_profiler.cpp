@@ -976,13 +976,12 @@ namespace formula_profiler
 
 	Instrument::Instrument(const char* id, const game_logic::Formula* formula) : id_(id)
 	{
+		t_ = SDL_GetPerformanceCounter();
 		if(profiler_on) {
-			t_ = SDL_GetPerformanceCounter();
 			if(g_profiler_widget) {
 				g_profiler_widget->beginInstrument(id, t_, formula ? formula->strVal() : variant());
 			}
 		}
-		t_ = SDL_GetPerformanceCounter();
 	}
 
 	void Instrument::init(const char* id, variant info)

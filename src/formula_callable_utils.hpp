@@ -44,8 +44,9 @@ namespace game_logic
 			value_names_ = names;
 		}
 		void setFallback(const ConstFormulaCallablePtr& fallback) { fallback_ = fallback; }
-		void add(const variant& val) { values_.push_back(val); }
+		void add(const variant& val) { values_.emplace_back(val); }
 		void setValues(const std::vector<variant>& values) { values_ = values; }
+		void setValues(std::vector<variant>* values) { values->swap(values_); }
 		variant& backDirectAccess() { return values_.back(); }
 		void reserve(size_t n) { values_.reserve(n); }
 
