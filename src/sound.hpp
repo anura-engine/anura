@@ -66,7 +66,7 @@ namespace sound
 	float get_sound_volume();
 	void set_sound_volume(float volume);
 
-	void change_volume(const void* object, float volume);
+	void change_volume(const void* object, float volume, float nseconds=0.0);
 
 	float get_music_volume();
 	void set_music_volume(float volume);

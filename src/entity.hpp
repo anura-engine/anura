@@ -201,7 +201,7 @@ public:
 	virtual void boardVehicle() {}
 	virtual void unboardVehicle() {}
 
-	virtual void setSoundVolume(float volume) = 0;
+	virtual void setSoundVolume(float volume, float nseconds=0.0) = 0;
 	virtual int weight() const { return 1; }
 	
 	virtual int mass() const = 0;

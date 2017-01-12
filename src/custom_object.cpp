@@ -5784,9 +5784,9 @@ void CustomObject::unboardVehicle()
 {
 }
 
-void CustomObject::setSoundVolume(float sound_volume)
+void CustomObject::setSoundVolume(float sound_volume, float nseconds)
 {
-	sound::change_volume(this, sound_volume);
+	sound::change_volume(this, sound_volume, nseconds);
 	sound_volume_ = sound_volume;
 }
 

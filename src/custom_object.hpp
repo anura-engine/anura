@@ -208,7 +208,7 @@ public:
 
 	virtual bool serializable() const override;
 
-	void setSoundVolume(float volume) override;
+	void setSoundVolume(float volume, float nseconds=0.0) override;
 	void setZSubOrder(const int zsub_order) override {zsub_order_ = zsub_order;}
 	
 	bool executeCommand(const variant& var) override;

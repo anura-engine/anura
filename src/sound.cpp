@@ -1265,12 +1265,12 @@ namespace sound
 	class RawPlayingSound : public SoundSource
 	{
 	public:
-		RawPlayingSound(const std::string& fname, float volume, float fade_in) : fname_(fname), pos_(0), volume_(volume), fade_in_(fade_in), looped_(false), loop_point_(0), loop_from_(0), fade_out_(-1.0f), fade_out_current_(0.0f), left_pan_(1.0f), right_pan_(1.0f)
+		RawPlayingSound(const std::string& fname, float volume, float fade_in) : fname_(fname), pos_(0), volume_(volume), volume_target_(0.0), volume_target_time_(-1.0), fade_in_(fade_in), looped_(false), loop_point_(0), loop_from_(0), fade_out_(-1.0f), fade_out_current_(0.0f), left_pan_(1.0f), right_pan_(1.0f)
 		{
 			init();
 		}
 
-		RawPlayingSound(const std::string& fname, variant options) : fname_(fname), pos_(int(options["pos"].as_double()*SampleRate)), volume_(options["volume"].as_float(1.0f)), fade_in_(options["fade_in"].as_float(0.0f)), looped_(options["loop"].as_bool(false)), loop_point_(int(options["loop_point"].as_float(0.0f)*SampleRate)), loop_from_(int(options["loop_from"].as_float(0.0f)*SampleRate)), fade_out_(-1.0f), fade_out_current_(0.0f), left_pan_(1.0f), right_pan_(1.0f)
+		RawPlayingSound(const std::string& fname, variant options) : fname_(fname), pos_(int(options["pos"].as_double()*SampleRate)), volume_(options["volume"].as_float(1.0f)), volume_target_(0.0), volume_target_time_(-1.0), fade_in_(options["fade_in"].as_float(0.0f)), looped_(options["loop"].as_bool(false)), loop_point_(int(options["loop_point"].as_float(0.0f)*SampleRate)), loop_from_(int(options["loop_from"].as_float(0.0f)*SampleRate)), fade_out_(-1.0f), fade_out_current_(0.0f), left_pan_(1.0f), right_pan_(1.0f)
 		{
 			variant panning = options["pan"];
 			if(panning.is_list()) {
@@ -1341,9 +1341,15 @@ namespace sound
 			return (data_.get() != nullptr && !looped_ && pos_ >= int(data_->nsamples())) || (fade_out_ >= 0.0f && fade_out_current_ >= fade_out_);
 		}
 
-		void setVolume(float volume)
+		void setVolume(float volume, float nseconds=0.0)
 		{
-			volume_ = volume;
+			if(nseconds <= 0.0) {
+				volume_ = volume;
+				volume_target_time_ = -1.0;
+			} else {
+				volume_target_ = volume;
+				volume_target_time_ = nseconds;
+			}
 		}
 
 		//Mix data into the output buffer. Can be safely called from the mixing thread.
@@ -1401,6 +1407,33 @@ namespace sound
 					*output++ += (float(*p)/SHRT_MAX) * volume * std::min<float>(1.0f, ((pos+n*2) / (SampleRate*fade_in_))) * (1.0f - (fade_out_current + (n*0.5f)/SampleRate)/fade_out);
 					++p;
 				}
+			} else if(volume_target_time_ > 0.0f) {
+				float begin_volume = volume_*g_sfx_volume;
+				float ntime = nsamples/44100.0f;
+				if(ntime > volume_target_time_) {
+					ntime = volume_target_time_;
+				}
+
+				float ratio = ntime/volume_target_time_;
+
+				float end_volume = ((1.0-ratio)*begin_volume + volume_target_*ratio)*g_sfx_volume;
+
+				for(int n = 0; n != nsamples; ++n) {
+					float r = float(n)/float(nsamples);
+					float volume = (begin_volume*(1.0-r) + end_volume*r);
+					*output++ += (float(*p)/SHRT_MAX) * volume * left_pan_;
+					if(data->nchannels > 1) {
+						++p;
+					}
+					*output++ += (float(*p++)/SHRT_MAX) * volume * right_pan_;
+				}
+
+				volume_target_time_ -= ntime;
+				volume_ = end_volume;
+				if(volume_target_time_ <= 0.001) {
+					volume_target_time_ = 0.0f;
+					volume_ = volume_target_;
+				}
 			} else if(left_pan_ != 1.0f || right_pan_ != 1.0f) {
 				for(int n = 0; n != nsamples; ++n) {
 					*output++ += (float(*p)/SHRT_MAX) * volume * left_pan_;
@@ -1438,7 +1471,7 @@ namespace sound
 
 		int pos_;
 
-		float volume_, fade_in_;
+		float volume_, volume_target_, volume_target_time_, fade_in_;
 
 		float fade_out_, fade_out_current_;
 
@@ -1530,10 +1563,10 @@ namespace sound
 			return first_filter_->finished();
 		}
 
-		void setVolume(float volume)
+		void setVolume(float volume, float nseconds=0.0)
 		{
 			threading::lock lck(mutex_);
-			source_->setVolume(volume);
+			source_->setVolume(volume, nseconds);
 		}
 
 		//Mix data into the output buffer. Can be safely called from the mixing thread.
@@ -1942,11 +1975,11 @@ void preload(const std::string& fname)
 	g_loader_thread_cond.notify_one();
 }
 
-void change_volume(const void* object, float volume)
+void change_volume(const void* object, float volume, float nseconds)
 {
 	for(const ffl::IntrusivePtr<PlayingSound>& s : g_playing_sounds) {
 		if(s->obj() == object) {
-			s->setVolume(volume);
+			s->setVolume(volume, nseconds);
 		}
 	}
 }

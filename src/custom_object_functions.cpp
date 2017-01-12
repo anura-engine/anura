@@ -1086,21 +1086,25 @@ namespace
 
 	class sound_volume_command : public EntityCommandCallable {
 	public:
-		explicit sound_volume_command(float volume)
-		: volume_(volume)
+		sound_volume_command(float volume, float nseconds)
+		: volume_(volume), nseconds_(nseconds)
 		{}
 		virtual void execute(Level& lvl,Entity& ob) const override {
 			//sound::change_volume(&ob, volume_);
-			ob.setSoundVolume(volume_);
+			ob.setSoundVolume(volume_, nseconds_);
 		}
 	private:
 		std::string name_;
-		float volume_;
+		float volume_, nseconds_;
 	};
 
-	FUNCTION_DEF(sound_volume, 1, 1, "sound_volume(decimal volume): sets the volume of sound effects")
+	FUNCTION_DEF(sound_volume, 1, 2, "sound_volume(decimal volume, decimal time_seconds): sets the volume of sound effects")
+		float nseconds = 0.0f;
+		if(NUM_ARGS > 1) {
+			nseconds = EVAL_ARG(1).as_decimal().as_float();
+		}
 		sound_volume_command* cmd = (new sound_volume_command(
-										 EVAL_ARG(0).as_decimal().as_float()));
+										 EVAL_ARG(0).as_decimal().as_float(), nseconds));
 		cmd->setExpression(this);
 		return variant(cmd);
 	FUNCTION_ARGS_DEF
