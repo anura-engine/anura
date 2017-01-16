@@ -1215,6 +1215,11 @@ bool VirtualMachine::Iterator::at_end() const
 	return index_ == vm_->instructions_.size();
 }
 
+bool VirtualMachine::isInstructionLoop(InstructionType i)
+{
+	return i >= OP_ALGO_MAP && i <= OP_ALGO_COMPREHENSION;
+}
+
 UNIT_TEST(formula_vm) {
 	MapFormulaCallable* callable = new MapFormulaCallable;
 	variant ref(callable);

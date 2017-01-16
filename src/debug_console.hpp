@@ -62,7 +62,9 @@ namespace debug_console
 		void init();
 		bool handleEvent(const SDL_Event& event, bool claimed) override;
 
-		gui::TextEditorWidget* text_editor_;
+		void changeFontSize(int delta);
+
+		ffl::IntrusivePtr<gui::TextEditorWidget> text_editor_;
 
 		ffl::IntrusivePtr<Level> lvl_;
 		game_logic::FormulaCallablePtr focus_;
@@ -77,6 +79,6 @@ namespace debug_console
 
 		int prompt_pos_;
 
-		bool dragging_;
+		bool dragging_, resizing_;
 	};
 }

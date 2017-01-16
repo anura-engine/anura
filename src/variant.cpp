@@ -388,6 +388,8 @@ struct variant_fn : public GarbageCollectible {
 	game_logic::ConstFormulaPtr fn;
 	game_logic::ConstFormulaCallablePtr callable;
 
+	boost::intrusive_ptr<game_logic::SlotFormulaCallable> cached_callable;
+
 	std::vector<variant> bound_args;
 
 	int base_slot;
@@ -1124,8 +1126,6 @@ variant variant::operator()(const std::vector<variant>& passed_args) const
 
 variant variant::operator()(std::vector<variant>* passed_args) const
 {
-	ffl::IntrusivePtr<game_logic::SlotFormulaCallable> callable = new game_logic::SlotFormulaCallable;
-	{
 	if(type_ == VARIANT_TYPE_MULTI_FUNCTION) {
 		for(const variant& v : multi_fn_->functions) {
 			if(v.function_call_valid(*passed_args)) {
@@ -1166,7 +1166,13 @@ variant variant::operator()(std::vector<variant>* passed_args) const
 
 	std::vector<variant>* args = args_buf.empty() ? passed_args : &args_buf;
 
-	callable.reset(new game_logic::SlotFormulaCallable);
+	ffl::IntrusivePtr<game_logic::SlotFormulaCallable> callable = fn_->cached_callable;
+	
+	if(callable) {
+		fn_->cached_callable.reset();
+	} else {
+		callable.reset(new game_logic::SlotFormulaCallable);
+	}
 
 	if(fn_->callable) {
 		callable->setFallback(fn_->callable);
@@ -1238,14 +1244,18 @@ variant variant::operator()(std::vector<variant>* passed_args) const
 		callable->add(fn_->type->default_args[n - min_args]);
 	}
 
-	}
-
 	if(fn_->fn) {
 		const variant result = fn_->fn->execute(*callable);
 		if(fn_->type->return_type && !fn_->type->return_type->match(result)) {
 			CallStackManager scope(fn_->fn->expr().get(), callable.get());
 			generate_error(formatter() << "Function returned incorrect type, expecting " << fn_->type->return_type->to_string() << " but found " << result.write_json() << " (type: " << get_variant_type_from_value(result)->to_string() << ") FOR " << fn_->fn->str());
 		}
+
+		if(callable->refcount() == 1) {
+			callable->clear();
+			fn_->cached_callable = callable;
+		}
+
 		return result;
 	} else {
 		return fn_->builtin_fn(*callable);

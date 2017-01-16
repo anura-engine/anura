@@ -272,6 +272,8 @@ class VirtualMachine
 public:
 	typedef short InstructionType;
 
+	static bool isInstructionLoop(InstructionType instruction);
+
 	class Iterator {
 		const VirtualMachine* vm_;
 		size_t index_;

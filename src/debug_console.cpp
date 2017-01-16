@@ -31,6 +31,7 @@
 #include "WindowManager.hpp"
 
 #include "asserts.hpp"
+#include "button.hpp"
 #include "logger.hpp"
 #include "custom_object.hpp"
 #include "custom_object_functions.hpp"
@@ -286,14 +287,15 @@ namespace debug_console
 			return std::string(preferences::user_data_path()) + "/console-history.cfg";
 		}
 
-		PREF_INT(console_width, 600, "Width of console in pixels");
-		PREF_INT(console_height, 200, "Width of console in pixels");
-		PREF_INT(console_font_size, 14, "Font size of console text");
+		PREF_INT_PERSISTENT(console_width, 600, "Width of console in pixels");
+		PREF_INT_PERSISTENT(console_height, 200, "Width of console in pixels");
+		PREF_INT_PERSISTENT(console_font_size, 14, "Font size of console text");
 	}
 
 	ConsoleDialog::ConsoleDialog(Level& lvl, game_logic::FormulaCallable& obj)
-	   : Dialog(0, KRE::WindowManager::getMainWindow()->height() - g_console_height, g_console_width, g_console_height), lvl_(&lvl), focus_(&obj),
-		 history_pos_(0), prompt_pos_(0), dragging_(false)
+	   : Dialog(0, KRE::WindowManager::getMainWindow()->height() - g_console_height, g_console_width, g_console_height),
+	     text_editor_(nullptr), lvl_(&lvl), focus_(&obj),
+		 history_pos_(0), prompt_pos_(0), dragging_(false), resizing_(false)
 	{
 		if(sys::file_exists(console_history_path())) {
 			try {
@@ -317,19 +319,31 @@ namespace debug_console
 
 	void ConsoleDialog::init()
 	{
+		ffl::IntrusivePtr<gui::TextEditorWidget> old_text_editor(text_editor_);
+
 		using namespace gui;
-		text_editor_ = new TextEditorWidget(width() - 20, height() - 20);
+		text_editor_.reset(new TextEditorWidget(width() - 40, height() - 20));
 		addWidget(WidgetPtr(text_editor_), 10, 10);
 
 		text_editor_->setOnMoveCursorHandler(std::bind(&ConsoleDialog::onMoveCursor, this));
 		text_editor_->setOnBeginEnterHandler(std::bind(&ConsoleDialog::onBeginEnter, this));
 		text_editor_->setOnEnterHandler(std::bind(&ConsoleDialog::onEnter, this));
 
-		text_editor_->setText(Prompt);
-		text_editor_->setCursor(0, static_cast<int>(Prompt.size()));
-		text_editor_->setFontSize(g_console_font_size);
+		if(old_text_editor) {
+			text_editor_->setText(old_text_editor->text());
+			text_editor_->setCursor(old_text_editor->cursorRow(), old_text_editor->cursorCol());
+			text_editor_->setFontSize(g_console_font_size);
+		} else {
+			text_editor_->setText(Prompt);
+			text_editor_->setCursor(0, static_cast<int>(Prompt.size()));
+			text_editor_->setFontSize(g_console_font_size);
+			prompt_pos_ = 0;
+		}
 
-		prompt_pos_ = 0;
+		auto b = new gui::Button("+", std::bind(&ConsoleDialog::changeFontSize, this, 2));
+		addWidget(WidgetPtr(b), width() - 30, 20);
+		b = new gui::Button("-", std::bind(&ConsoleDialog::changeFontSize, this, -2));
+		addWidget(WidgetPtr(b), width() - 30, 40);
 	}
 
 	void ConsoleDialog::onMoveCursor()
@@ -503,25 +517,47 @@ namespace debug_console
 				}
 				break;
 			case SDL_MOUSEMOTION: {
-				if(dragging_) {
+				if(dragging_ && resizing_) {
+					clear();
+					setLoc(x(), y() + event.motion.yrel);
+					g_console_width = width() + event.motion.xrel;
+					g_console_height = height() - event.motion.yrel;
+					setDim(g_console_width, g_console_height);
+					init();
+					text_editor_->setFocus(true);
+					preferences::save_preferences();
+				} else if(dragging_) {
 					setLoc(x() + event.motion.xrel, y() + event.motion.yrel);
 				}
 				break;
 			}
 			case SDL_MOUSEBUTTONUP: {
 				dragging_ = false;
+				resizing_ = false;
 				break;
 			}
 			case SDL_MOUSEBUTTONDOWN:
 				dragging_ = false;
 				if(event.button.x >= x() && event.button.y >= y() && event.button.x <= x() + width() && event.button.y < y()+18) {
 					dragging_ = true;
+					if(event.button.x >= x() + width() - 60) {
+						resizing_ = true;
+					}
 				}
 				break;
 			}
 		}
 
 		return Dialog::handleEvent(event, claimed);
+	}
+
+	void ConsoleDialog::changeFontSize(int delta)
+	{
+		g_console_font_size = std::min<int>(40, std::max<int>(8, g_console_font_size + delta));
+		clear();
+		init();
+		text_editor_->setFocus(true);
+		preferences::save_preferences();
 	}
 
 	void ConsoleDialog::loadHistory()
