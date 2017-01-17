@@ -1217,12 +1217,13 @@ variant variant::operator()(std::vector<variant>* passed_args) const
 
 					args_buf[n] = variant(obj.get());
 
-				} else if(const game_logic::FormulaInterface* interface = fn_->type->variant_types[n]->is_interface()) {
+				} else if(fn_->type->variant_types[n]->is_interface()) {
+					const game_logic::FormulaInterface* iface = fn_->type->variant_types[n]->is_interface();
 					if((*args)[n].is_map() == false && (*args)[n].is_callable() == false) {
 						generate_error((formatter() << "FUNCTION ARGUMENT " << (n+1) << " EXPECTED INTERFACE " << fn_->type->variant_types[n]->str() << " BUT FOUND " << (*args)[n].write_json()).str());
 					}
 
-					variant obj = interface->getDynamicFactory()->create((*args)[n]);
+					variant obj = iface->getDynamicFactory()->create((*args)[n]);
 
 					args_buf = *args;
 					args = &args_buf;
