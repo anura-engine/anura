@@ -64,6 +64,7 @@ namespace graphics
 			std::string font;
 			int font_size;
 			variant tag;
+			variant info;
 			KRE::Color color;
 
 			std::string text;
@@ -201,6 +202,7 @@ namespace {
 			bool font_italic;
 			bool nobr;
 			variant tag;
+			variant info;
 			variant align, valign;
 			std::string svg;
 
@@ -388,7 +390,7 @@ namespace {
 	public:
 		cairo_text_fragment() : x(0), y(0), width(0), height(0), ascent(0), descent(0), x_advance(0), has_image(false), has_text(false) {
 		}
-		variant path, tag;
+		variant path, tag, info;
 		float x, y, width, height, ascent, descent, x_advance;
 		KRE::Color color;
 		bool has_image, has_text;
@@ -408,6 +410,8 @@ namespace {
 				static variant empty_list(&v);
 				return empty_list;
 			}
+		DEFINE_FIELD(info, "any")
+			return obj.info;
 		DEFINE_FIELD(x, "decimal")
 			return variant(obj.x);
 		DEFINE_FIELD(y, "decimal")
@@ -583,6 +587,7 @@ namespace {
 			const std::string& font = item.font;
 			const int font_size = item.font_size;
 			const variant& tag = item.tag;
+			const variant& info = item.info;
 			const variant& align = item.align;
 			const variant& valign = item.valign;
 			std::string svg = item.svg;
@@ -759,7 +764,7 @@ namespace {
 						}
 					}
 
-					TextFragment fragment = { xpos, ypos, static_cast<float>(extents.width), static_cast<float>(extents.height), static_cast<float>(extents.x_advance), extents.y_bearing, font, font_size, tag, item.color, std::string(i1, i2), valign, font_extents, svg, img };
+					TextFragment fragment = { xpos, ypos, static_cast<float>(extents.width), static_cast<float>(extents.height), static_cast<float>(extents.x_advance), extents.y_bearing, font, font_size, tag, info, item.color, std::string(i1, i2), valign, font_extents, svg, img };
 					output.back().fragments.push_back(fragment);
 					output.back().fragment_width += static_cast<float>(extents.width);
 
@@ -848,6 +853,7 @@ namespace {
 				}
 
 				res->tag = fragment.tag;
+				res->info = fragment.info;
 				res->color = fragment.color;
 				res->has_image = fragment.svg.empty() == false || fragment.img.empty() == false;
 				res->has_text = fragment.text.empty() == false;
@@ -1031,6 +1037,8 @@ namespace {
 
 							v.push_back(variant(value));
 							stack.back().tag = variant(&v);
+						} else if(attr == "info") {
+							stack.back().info = game_logic::Formula(variant(value)).execute();
 						} else if(attr == "align") {
 							stack.back().align = variant(value);
 						} else if(attr == "valign") {
