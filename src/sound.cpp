@@ -53,6 +53,8 @@
 PREF_INT(mixer_looped_sounds_fade_time_ms, 100, "Number of milliseconds looped sounds should fade for");
 PREF_INT(audio_cache_size_mb, 30, "Audio data cache size in megabytes");
 
+PREF_BOOL(debug_visualize_audio, false, "Show a graph of audio data");
+
 namespace sound 
 {
 	namespace 
@@ -1718,6 +1720,9 @@ namespace sound
 
 	END_DEFINE_CALLABLE(PlayingSound)
 
+	std::vector<Uint8> g_debug_audio_stream;
+	threading::mutex g_debug_audio_stream_mutex;
+
 	int g_audio_callback_done_fade_out = 0;
 	bool g_audio_callback_fade_out = false;
 
@@ -1799,6 +1804,18 @@ namespace sound
 				float ratio = 1.0 - float(n)/float(nsamples);
 				buf[n] *= ratio;
 			}
+		}
+
+		if(g_debug_visualize_audio) {
+			threading::lock lck(g_debug_audio_stream_mutex);
+			const int MaxData = 44100*32;
+			const int new_data_size = g_debug_audio_stream.size() + len;
+			if(new_data_size > MaxData) {
+				g_debug_audio_stream.erase(g_debug_audio_stream.begin(), g_debug_audio_stream.begin() + (new_data_size - MaxData));
+			}
+
+			g_debug_audio_stream.resize(g_debug_audio_stream.size() + len);
+			memcpy(&g_debug_audio_stream[0] + g_debug_audio_stream.size() - len, stream, len);
 		}
 	}
 
@@ -2266,6 +2283,15 @@ MemoryUsageInfo get_memory_usage_info()
 	info.max_cache_usage = g_audio_cache_size_mb*1024*1024;
 	info.nsounds_cached = static_cast<int>(g_wave_cache_lru.size());
 	return info;
+}
+
+void get_debug_audio_stream(std::vector<float>& res)
+{
+	threading::lock lck(g_debug_audio_stream_mutex);
+	res.resize(g_debug_audio_stream.size()/sizeof(float));
+	if(res.empty() == false) {
+		memcpy(&res[0], &g_debug_audio_stream[0], g_debug_audio_stream.size());
+	}
 }
 
 }

@@ -388,12 +388,129 @@ namespace {
 	class cairo_text_fragment : public game_logic::FormulaCallable
 	{
 	public:
-		cairo_text_fragment() : x(0), y(0), width(0), height(0), ascent(0), descent(0), x_advance(0), has_image(false), has_text(false) {
+		cairo_text_fragment() : x(0), y(0), width(0), height(0), ascent(0), descent(0), x_advance(0), has_image(false), has_text(false), font_size(12), translate_x(0), translate_y(0) {
 		}
-		variant path, tag, info;
+		variant tag, info;
 		float x, y, width, height, ascent, descent, x_advance;
 		KRE::Color color;
 		bool has_image, has_text;
+		std::string text;
+
+		std::string img, svg;
+
+		std::string font;
+		int font_size;
+
+		float translate_x, translate_y;
+
+		variant get_slice(int begin, int end) const {
+			if(begin == 0 && end == text.size()) {
+				return variant(this);
+			}
+
+			ASSERT_LOG(begin >= 0 && begin <= text.size() && end >= begin && end <= text.size(), "Illegal slice of text fragment: " << begin << ", " << end << " / " << text << " " << text.size());
+
+			cairo_text_fragment* res = new cairo_text_fragment(*this);
+			res->text.erase(res->text.begin(), res->text.begin() + begin);
+			res->text.resize(end - begin);
+
+			FT_Face face = get_ft_font(font);
+			cairo_font_face_t* cairo_face = cairo_ft_font_face_create_for_ft_face(face, 0);
+			cairo_set_font_face(dummy_context().get(), cairo_face);
+			cairo_set_font_size(dummy_context().get(), font_size);
+
+			std::string s(text.begin(), text.begin() + begin);
+			cairo_text_extents_t extents;
+			cairo_text_extents(dummy_context().get(), s.c_str(), &extents);
+			res->translate_x += extents.x_advance;
+
+			return variant(res);
+		}
+
+		variant calculate_path(bool do_translate=true) const {
+			if(img.empty() == false) {
+				std::vector<variant> fn_args;
+				fn_args.push_back(variant(img));
+				fn_args.push_back(variant(translate_x));
+				fn_args.push_back(variant(translate_y));
+				fn_args.push_back(variant(width));
+				fn_args.push_back(variant(height));
+				return variant(new cairo_op([=](cairo_context& context, const std::vector<variant>& args) {
+					cairo_save(context.get());
+
+					if(do_translate) {
+						cairo_translate(context.get(), args[1].as_decimal().as_float(), args[2].as_decimal().as_float());
+					}
+
+					cairo_surface_t* surface = get_cairo_image(args[0].as_string());
+					cairo_status_t status = cairo_status(context.get());
+					ASSERT_LOG(status == 0, "rendering error painting " << args[0].as_string() << ": " << cairo_status_to_string(status));
+
+					float img_w = cairo_image_surface_get_width(surface);
+					float img_h = cairo_image_surface_get_height(surface);
+					cairo_scale(context.get(), args[3].as_decimal().as_float()/img_w, args[4].as_decimal().as_float()/img_h);
+
+					cairo_set_source_surface(context.get(), surface, 0.0, 0.0);
+
+					status = cairo_status(context.get());
+					ASSERT_LOG(status == 0, "SVG rendering error painting " << args[0].as_string() << ": " << cairo_status_to_string(status));
+					cairo_paint(context.get());
+
+					status = cairo_status(context.get());
+					ASSERT_LOG(status == 0, "SVG rendering error painting " << args[0].as_string() << ": " << cairo_status_to_string(status));
+
+					cairo_restore(context.get());
+
+				}, fn_args));
+
+			} else if(svg.empty() == false) {
+
+				std::vector<variant> fn_args;
+				fn_args.push_back(variant(svg));
+				fn_args.push_back(variant(translate_x));
+				fn_args.push_back(variant(translate_y));
+				fn_args.push_back(variant(width));
+				fn_args.push_back(variant(height));
+
+				return variant(new cairo_op([=](cairo_context& context, const std::vector<variant>& args) {
+					if(do_translate) {
+						cairo_translate(context.get(), args[1].as_decimal().as_float(), args[2].as_decimal().as_float());
+					}
+
+					variant svg = args[0];
+					int w = args[3].as_decimal().as_int();
+					int h = args[4].as_decimal().as_int();
+					const cairo_matrix_saver saver(context);
+
+					context.render_svg(svg.as_string(), w, h);
+
+				}, fn_args));
+
+			} else {
+
+				std::vector<variant> fn_args;
+				fn_args.push_back(variant(translate_x));
+				fn_args.push_back(variant(translate_y));
+				fn_args.push_back(variant(text));
+				fn_args.push_back(variant(font));
+				fn_args.push_back(variant(font_size));
+
+				return variant(new cairo_op([=](cairo_context& context, const std::vector<variant>& args) {
+
+					if(do_translate) {
+						cairo_translate(context.get(), args[0].as_decimal().as_float(), args[1].as_decimal().as_float());
+					}
+
+					FT_Face face = get_ft_font(args[3].as_string());
+					cairo_font_face_t* cairo_face = cairo_ft_font_face_create_for_ft_face(face, 0);
+					cairo_set_font_face(context.get(), cairo_face);
+					cairo_set_font_size(context.get(), args[4].as_int());
+
+					cairo_text_path(context.get(), args[2].as_string().c_str());
+				}, fn_args));
+			}
+		}
+
 	private:
 		DECLARE_CALLABLE(cairo_text_fragment);
 
@@ -401,7 +518,14 @@ namespace {
 
 	BEGIN_DEFINE_CALLABLE_NOBASE(cairo_text_fragment)
 		DEFINE_FIELD(path, "builtin cairo_op")
-			return obj.path;
+			return obj.calculate_path();
+		DEFINE_FIELD(path_no_translate, "builtin cairo_op")
+			return obj.calculate_path(false);
+		DEFINE_FIELD(translate_x, "decimal")
+			return variant(obj.translate_x);
+		DEFINE_FIELD(translate_y, "decimal")
+			return variant(obj.translate_y);
+
 		DEFINE_FIELD(tag, "[string]")
 			if(obj.tag.is_list()) {
 				return obj.tag;
@@ -438,6 +562,13 @@ namespace {
 			return variant::from_bool(obj.has_image);
 		DEFINE_FIELD(has_text, "bool")
 			return variant::from_bool(obj.has_text);
+		DEFINE_FIELD(text, "string")
+			return variant(obj.text);
+		BEGIN_DEFINE_FN(get_slice, "(int, int) ->builtin cairo_text_fragment")
+			int begin = FN_ARG(0).as_int();
+			int end = FN_ARG(1).as_int();
+			return obj.get_slice(begin, end);
+		END_DEFINE_FN
 	END_DEFINE_CALLABLE(cairo_text_fragment)
 
 	struct MarkupEntry 
@@ -675,6 +806,25 @@ namespace {
 
 						output.push_back(LineOfText());
 						output.back().align = align;
+					} else {
+						while(i2 != line.end()) {
+							auto anchor = i2;
+							i2 = std::find(i2, line.end(), ' ');
+							if(i2 != line.end()) {
+								++i2;
+							}
+
+							cairo_text_extents_t new_extents;
+							cairo_text_extents(context.get(), std::string(i1,i2).c_str(), &new_extents);
+
+							if(xpos + new_extents.x_advance > width) {
+								i2 = anchor;
+								break;
+							}
+
+							extents = new_extents;
+							word = std::string(i1,i2);
+						}
 					}
 
 					if(break_line) {
@@ -857,82 +1007,27 @@ namespace {
 				res->color = fragment.color;
 				res->has_image = fragment.svg.empty() == false || fragment.img.empty() == false;
 				res->has_text = fragment.text.empty() == false;
+				res->text = fragment.text;
 
 				if(fragment.img.empty() == false) {
-					std::vector<variant> fn_args;
-					fn_args.push_back(variant(fragment.img));
-					fn_args.push_back(variant(fragment.xpos));
-					fn_args.push_back(variant(fragment.ypos));
-					fn_args.push_back(variant(fragment.width));
-					fn_args.push_back(variant(fragment.height));
-					res->path = variant(new cairo_op([](cairo_context& context, const std::vector<variant>& args) {
-						cairo_save(context.get());
-
-						cairo_translate(context.get(), args[1].as_decimal().as_float(), args[2].as_decimal().as_float());
-
-						cairo_surface_t* surface = get_cairo_image(args[0].as_string());
-						cairo_status_t status = cairo_status(context.get());
-						ASSERT_LOG(status == 0, "rendering error painting " << args[0].as_string() << ": " << cairo_status_to_string(status));
-
-						float img_w = cairo_image_surface_get_width(surface);
-						float img_h = cairo_image_surface_get_height(surface);
-						cairo_scale(context.get(), args[3].as_decimal().as_float()/img_w, args[4].as_decimal().as_float()/img_h);
-
-						cairo_set_source_surface(context.get(), surface, 0.0, 0.0);
-
-						status = cairo_status(context.get());
-						ASSERT_LOG(status == 0, "SVG rendering error painting " << args[0].as_string() << ": " << cairo_status_to_string(status));
-						cairo_paint(context.get());
-
-						status = cairo_status(context.get());
-						ASSERT_LOG(status == 0, "SVG rendering error painting " << args[0].as_string() << ": " << cairo_status_to_string(status));
-
-						cairo_restore(context.get());
-
-					}, fn_args));
-
+					res->translate_x = fragment.xpos;
+					res->translate_y = fragment.ypos;
+					res->width = fragment.width;
+					res->height = fragment.height;
 				} else if(fragment.svg.empty() == false) {
-
-					std::vector<variant> fn_args;
-					fn_args.push_back(variant(fragment.svg));
-					fn_args.push_back(variant(fragment.xpos));
-					fn_args.push_back(variant(fragment.ypos));
-					fn_args.push_back(variant(fragment.font_extents.ascent + fragment.font_extents.descent));
-					fn_args.push_back(variant(fragment.font_extents.ascent + fragment.font_extents.descent));
-
-					res->path = variant(new cairo_op([](cairo_context& context, const std::vector<variant>& args) {
-						cairo_translate(context.get(), args[1].as_decimal().as_float(), args[2].as_decimal().as_float());
-
-						variant svg = args[0];
-						int w = args[3].as_decimal().as_int();
-						int h = args[4].as_decimal().as_int();
-						const cairo_matrix_saver saver(context);
-
-						context.render_svg(svg.as_string(), w, h);
-
-					}, fn_args));
+					res->translate_x = fragment.xpos;
+					res->translate_y = fragment.ypos;
+					res->width = fragment.font_extents.ascent + fragment.font_extents.descent;
+					res->height = fragment.font_extents.ascent + fragment.font_extents.descent;
 				} else {
-
-					std::vector<variant> fn_args;
-					fn_args.push_back(variant(fragment.xpos + xpos_align_adjust));
-					fn_args.push_back(variant(fragment.ypos + fragment_baseline));
-					fn_args.push_back(variant(fragment.text));
-					fn_args.push_back(variant(fragment.font));
-					fn_args.push_back(variant(fragment.font_size));
-
-					res->path = variant(new cairo_op([](cairo_context& context, const std::vector<variant>& args) {
-	
-						cairo_translate(context.get(), args[0].as_decimal().as_float(), args[1].as_decimal().as_float());
-
-						FT_Face face = get_ft_font(args[3].as_string());
-						cairo_font_face_t* cairo_face = cairo_ft_font_face_create_for_ft_face(face, 0);
-						cairo_set_font_face(context.get(), cairo_face);
-						cairo_set_font_size(context.get(), args[4].as_int());
-
-						cairo_text_path(context.get(), args[2].as_string().c_str());
-					}, fn_args));
-
+					res->translate_x = fragment.xpos + xpos_align_adjust;
+					res->translate_y = fragment.ypos + fragment_baseline;
 				}
+
+				res->img = fragment.img;
+				res->svg = fragment.svg;
+				res->font = fragment.font;
+				res->font_size = fragment.font_size;
 
 				res->x = fragment.xpos + xpos_align_adjust;
 				res->y = fragment.ypos + fragment_baseline - static_cast<float>(fragment.font_extents.ascent);

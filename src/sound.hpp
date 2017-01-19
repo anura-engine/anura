@@ -104,4 +104,6 @@ namespace sound
 	};
 
 	MemoryUsageInfo get_memory_usage_info();
+
+	void get_debug_audio_stream(std::vector<float>& res);
 }

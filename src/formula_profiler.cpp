@@ -68,6 +68,8 @@
 
 void init_call_stack(int min_size);
 
+extern bool g_debug_visualize_audio;
+
 namespace {
 
 PREF_STRING(profile_widget_area, "[20,20,1000,200]", "Area of the profile widget");
@@ -951,7 +953,68 @@ public:
 	}
 };
 
+PREF_INT(debug_visualize_audio_samples_per_pixel, 64, "Number of audio samples to represent per pixel");
+PREF_FLOAT(debug_visualize_audio_scale, 1.0, "scale audio graph by this amount");
+
 ffl::IntrusivePtr<MemoryProfilerWidget> g_memory_profiler_widget;
+
+class SoundVisualizerWidget : public Widget
+{
+	mutable std::vector<float> buf_;
+public:
+	SoundVisualizerWidget()
+	{
+		setLoc(0, 10);
+		setDim(800, 500);
+	};
+
+	void handleDraw() const override {
+		Canvas& c = *Canvas::getInstance();
+
+		c.drawSolidRect(rect(x(), y(), width(), height()), Color(0.0f, 0.0f, 0.0f, 0.3f));
+
+		sound::get_debug_audio_stream(buf_);
+
+		BarGraphRenderable renderable;
+		renderable.setColor(Color("white"));
+
+		int pos = width() - 1;
+		int index = int(buf_.size())-1;
+		while(index >= 0 && pos >= 0) {
+			const float sample = buf_[index];
+
+			int npixels_height = g_debug_visualize_audio_scale*sample*height()/2;
+			if(npixels_height > height()/2) {
+				npixels_height = height()/2;
+			}
+
+			if(npixels_height < -height()/2) {
+				npixels_height = -height()/2;
+			}
+
+			if(sample > 0.0) {
+				renderable.addRect(rect(pos, height()/2 - npixels_height, 1, npixels_height));
+			} else {
+				renderable.addRect(rect(pos, height()/2, 1, -npixels_height));
+			}
+
+			--pos;
+			index -= g_debug_visualize_audio_samples_per_pixel;
+		}
+
+		renderable.prepareDraw();
+		auto wnd = KRE::WindowManager::getMainWindow();
+		renderable.preRender(wnd);
+		wnd->render(&renderable);
+	}
+
+	WidgetPtr clone() const override {
+		return WidgetPtr(new SoundVisualizerWidget);
+	}
+private:
+};
+
+ffl::IntrusivePtr<SoundVisualizerWidget> g_sound_visualizer_widget;
 
 }
 
@@ -1326,6 +1389,14 @@ namespace formula_profiler
 			g_profiler_widget->process();
 			g_profiler_widget->newFrame();
 		}
+
+		if(g_debug_visualize_audio) {
+			if(!g_sound_visualizer_widget) {
+				g_sound_visualizer_widget.reset(new SoundVisualizerWidget);
+			}
+
+			g_sound_visualizer_widget->process();
+		}
 	}
 
 	void draw()
@@ -1336,6 +1407,10 @@ namespace formula_profiler
 
 		if(g_profiler_widget) {
 			g_profiler_widget->draw();
+		}
+
+		if(g_sound_visualizer_widget) {
+			g_sound_visualizer_widget->draw();
 		}
 	}
 
