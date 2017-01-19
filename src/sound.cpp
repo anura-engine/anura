@@ -1380,8 +1380,6 @@ namespace sound
 
 			float looped = looped_;
 
-			float volume = volume_ * g_sfx_volume;
-
 			if(pos < 0) {
 				nsamples += pos;
 				pos = 0;
@@ -1400,6 +1398,8 @@ namespace sound
 
 			const short* p = &data->buffer[pos*data->nchannels];
 
+			float volume = volume_ * g_sfx_volume;
+
 			if(pos < fade_in_*SampleRate || fade_out >= 0.0f) {
 				for(int n = 0; n != nsamples; ++n) {
 					*output++ += (float(*p)/SHRT_MAX) * volume * std::min<float>(1.0f, ((pos+n*2) / (SampleRate*fade_in_))) * (1.0f - (fade_out_current + (n*0.5f)/SampleRate)/fade_out);
@@ -1410,7 +1410,7 @@ namespace sound
 					++p;
 				}
 			} else if(volume_target_time_ > 0.0f) {
-				float begin_volume = volume_*g_sfx_volume;
+				const float begin_volume = volume;
 				float ntime = nsamples/44100.0f;
 				if(ntime > volume_target_time_) {
 					ntime = volume_target_time_;
@@ -1418,7 +1418,7 @@ namespace sound
 
 				float ratio = ntime/volume_target_time_;
 
-				float end_volume = ((1.0-ratio)*begin_volume + volume_target_*ratio)*g_sfx_volume;
+				float end_volume = (1.0-ratio)*begin_volume + volume_target_*ratio*g_sfx_volume;
 
 				for(int n = 0; n != nsamples; ++n) {
 					float r = float(n)/float(nsamples);
@@ -1431,7 +1431,7 @@ namespace sound
 				}
 
 				volume_target_time_ -= ntime;
-				volume_ = end_volume;
+				volume_ = (1.0-ratio)*volume_ + volume_target_*ratio;
 				if(volume_target_time_ <= 0.001) {
 					volume_target_time_ = 0.0f;
 					volume_ = volume_target_;
