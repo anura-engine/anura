@@ -167,6 +167,7 @@ CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_PLAYER_UNDERWATER_CONTROLS,         "un
 CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_PLAYER_CTRL_MOD_KEY,                "ctrl_mod_key", "int" )
 CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_PLAYER_CTRL_MOD_KEYS,               "ctrl_mod_keys", "[string]" )
 CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_PLAYER_CTRL_KEYS,                   "ctrl_keys", "[string]" )
+CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_PLAYER_CTRL_PREV_KEYS,                   "ctrl_prev_keys", "[string]" )
 CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_PLAYER_CTRL_MICE,                   "ctrl_mice", "[[int|string]]" )
 CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_PLAYER_CTRL_TILT,                   "ctrl_tilt", "int" )
 CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_PLAYER_CTRL_X,                      "ctrl_x", "int" )

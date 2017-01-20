@@ -419,7 +419,7 @@ namespace scrollable
 		if(thumb_dragging_) {
 			claimed = true;
 			thumb_dragging_ = false;
-			SDL_CaptureMouse(SDL_FALSE);
+			//SDL_CaptureMouse(SDL_FALSE);
 		}
 		return claimed;
 	}
@@ -436,7 +436,7 @@ namespace scrollable
 			} else if (geometry::pointInRect(p, thumb_area_)) {
 				thumb_dragging_ = true;
 				drag_start_position_ = p;
-				SDL_CaptureMouse(SDL_TRUE);
+				//SDL_CaptureMouse(SDL_TRUE);
 			} else {
 				// mouse down somewhere else on the scrollbar.
 				const int range = max_range_ - min_range_ + 1;

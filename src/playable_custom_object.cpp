@@ -142,6 +142,9 @@ int PlayableCustomObject::walkUpOrDownStairs() const
 
 void PlayableCustomObject::process(Level& lvl)
 {
+	prev_ctrl_keys_ = ctrl_keys_;
+	ctrl_keys_ = getCtrlKeys();
+
 	if(player_info_.currentLevel() != lvl.id()) {
 		player_info_.setCurrentLevel(lvl.id());
 	}
@@ -307,48 +310,22 @@ variant PlayableCustomObject::getPlayerValueBySlot(int slot) const
 		return variant(&res);
 	}
 	case CUSTOM_OBJECT_PLAYER_CTRL_KEYS: {
-		std::vector<variant> result;
-		if(LevelRunner::getCurrent() && LevelRunner::getCurrent()->get_debug_console() && LevelRunner::getCurrent()->get_debug_console()->hasKeyboardFocus()) {
-			//the debug console is stealing all keystrokes.
-			return variant(&result);
+		if(ctrl_keys_.is_null()) {
+			std::vector<variant> res;
+			return variant(&res);
 		}
 
-/* //currently don't exclude from widgets as we might
-   //have widgets still alive but not displayed, so
-   //comment this out until we work around that.
-		for(auto& w : get_key_handling_widgets()) {
-			if(w->hasFocus()) {
-				return variant(&result);
-			}
-		}
-		*/
+		return ctrl_keys_;
 
-		int ary_length;
-		const Uint8* key_state = SDL_GetKeyboardState(&ary_length);
-
-#ifndef NO_EDITOR
-		if(LevelRunner::getCurrent()) {
-			ConstEditorPtr e = LevelRunner::getCurrent()->get_editor();
-			if(e && e->hasKeyboardFocus()) {
-				//the editor has the focus, so we tell the game there
-				//are no keys pressed.
-				ary_length = 0;
-			}
+	}
+	case CUSTOM_OBJECT_PLAYER_CTRL_PREV_KEYS: {
+		if(prev_ctrl_keys_.is_null()) {
+			std::vector<variant> res;
+			return variant(&res);
 		}
-#endif
 
-		for(int count = 0; count < ary_length; ++count) {
-			if(key_state[count]) {				//Returns only keys that are down so the list that ffl has to deal with is small.
-				SDL_Keycode k = SDL_GetKeyFromScancode(SDL_Scancode(count));
-				if(k < 128 && util::c_isprint(k)) {
-					std::string str(1,k);
-					result.push_back(variant(str));
-				} else {
-					result.push_back(variant(k));
-				}
-			}
-		}
-		return variant(&result);
+		return prev_ctrl_keys_;
+
 	}
 	case CUSTOM_OBJECT_PLAYER_CTRL_MICE: {
 		std::vector<variant> info;
@@ -510,3 +487,39 @@ void PlayableCustomObject::unregisterKeyboardOverrideWidget(gui::Widget* widget)
 	}
 }
 
+
+variant PlayableCustomObject::getCtrlKeys() const
+{
+	std::vector<variant> result;
+	if(LevelRunner::getCurrent() && LevelRunner::getCurrent()->get_debug_console() && LevelRunner::getCurrent()->get_debug_console()->hasKeyboardFocus()) {
+		//the debug console is stealing all keystrokes.
+		return variant(&result);
+	}
+
+	int ary_length;
+	const Uint8* key_state = SDL_GetKeyboardState(&ary_length);
+
+#ifndef NO_EDITOR
+	if(LevelRunner::getCurrent()) {
+		ConstEditorPtr e = LevelRunner::getCurrent()->get_editor();
+		if(e && e->hasKeyboardFocus()) {
+			//the editor has the focus, so we tell the game there
+			//are no keys pressed.
+			ary_length = 0;
+		}
+	}
+#endif
+
+	for(int count = 0; count < ary_length; ++count) {
+		if(key_state[count]) {				//Returns only keys that are down so the list that ffl has to deal with is small.
+			SDL_Keycode k = SDL_GetKeyFromScancode(SDL_Scancode(count));
+			if(k < 128 && util::c_isprint(k)) {
+				std::string str(1,k);
+				result.push_back(variant(str));
+			} else {
+				result.push_back(variant(k));
+			}
+		}
+	}
+	return variant(&result);
+}

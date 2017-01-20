@@ -91,5 +91,9 @@ private:
 	
 	std::unique_ptr<controls::local_controls_lock> control_lock_;
 
+	variant ctrl_keys_, prev_ctrl_keys_;
+
+	variant getCtrlKeys() const;
+
 	void operator=(const PlayableCustomObject&);
 };
