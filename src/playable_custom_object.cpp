@@ -517,7 +517,12 @@ variant PlayableCustomObject::getCtrlKeys() const
 				std::string str(1,k);
 				result.push_back(variant(str));
 			} else {
-				result.push_back(variant(k));
+				const char* name = SDL_GetKeyName(k);
+				if(*name) {
+					result.push_back(variant(std::string(name)));
+				} else {
+					result.push_back(variant(k));
+				}
 			}
 		}
 	}
