@@ -63,6 +63,7 @@ namespace
 {
 	PREF_BOOL(ffl_vm_opt_library_lookups, true, "Optimize library lookups in VM");
 	PREF_BOOL(ffl_vm_opt_constant_lookups, true, "Optimize contant lookups in VM");
+	PREF_BOOL(ffl_vm_opt_inline, true, "Try to inline FFL calls.");
 
 	//the last formula that was executed; used for outputting debugging info.
 	const game_logic::Formula* last_executed_formula;
@@ -1525,20 +1526,56 @@ namespace {
 				}
 
 				if(can_vm) {
-					formula_vm::VirtualMachine vm;
-					left_->emitVM(vm);
-					size_t index = 0;
-					for(ExpressionPtr& e : args_) {
-						e->emitVM(vm);
-						if(index < interfaces_.size() && interfaces_[index]) {
-							vm.addLoadConstantInstruction(variant(interfaces_[index].get()));
-							vm.addInstruction(OP_CREATE_INTERFACE);
-						}
-						++index;
-					}
 
-					vm.addInstruction(OP_CALL);
-					vm.addInt(static_cast<VirtualMachine::InstructionType>(args_.size()));
+					formula_vm::VirtualMachine vm;
+
+					variant fn_var;
+					if(g_ffl_vm_opt_inline && left_->canReduceToVariant(fn_var) && fn_var.is_regular_function() && fn_var.get_function_formula() && fn_var.get_function_formula()->hasGuards() == false && fn_var.get_function_formula()->expr()->canCreateVM()) {
+
+						for(ExpressionPtr& e : args_) {
+							e->emitVM(vm);
+						}
+
+						auto info = fn_var.get_function_info();
+
+						if(args_.size() < info->arg_names.size()) {
+							ASSERT_LOG(args_.size() + info->default_args.size() >= info->arg_names.size(), "Wrong number of function args");
+
+							auto i = info->default_args.end() - (info->arg_names.size() - args_.size());
+							while(i != info->default_args.end()) {
+								vm.addLoadConstantInstruction(*i);
+								++i;
+							}
+
+						}
+
+						vm.addLoadConstantInstruction(variant(fn_var.get_function_closure()));
+
+						vm.addInstruction(OP_PUSH_INT);
+						vm.addInt(info->arg_names.size());
+
+						vm.addInstruction(formula_vm::OP_INLINE_FUNCTION);
+						vm.addInt(fn_var.get_function_base_slot());
+
+						fn_var.get_function_formula()->expr()->emitVM(vm);
+
+						vm.addInstruction(formula_vm::OP_POP_SCOPE);
+					} else {
+
+						left_->emitVM(vm);
+						size_t index = 0;
+						for(ExpressionPtr& e : args_) {
+							e->emitVM(vm);
+							if(index < interfaces_.size() && interfaces_[index]) {
+								vm.addLoadConstantInstruction(variant(interfaces_[index].get()));
+								vm.addInstruction(OP_CREATE_INTERFACE);
+							}
+							++index;
+						}
+
+						vm.addInstruction(OP_CALL);
+						vm.addInt(static_cast<VirtualMachine::InstructionType>(args_.size()));
+					}
 
 					return ExpressionPtr(new VMExpression(vm, queryVariantType(), *this));
 				}
@@ -1807,15 +1844,11 @@ namespace {
 
 						const std::string& s = right_->str();
 						if(s == "x" || s == "r") {
-							vm.addInstruction(OP_PUSH_0);
-							vm.addInstruction(OP_INDEX);
+							vm.addInstruction(OP_INDEX_0);
 						} else if(s == "y" || s == "g") {
-							vm.addInstruction(OP_PUSH_1);
-							vm.addInstruction(OP_INDEX);
+							vm.addInstruction(OP_INDEX_1);
 						} else if(s == "z" || s == "b") {
-							vm.addInstruction(OP_PUSH_INT);
-							vm.addInt(2);
-							vm.addInstruction(OP_INDEX);
+							vm.addInstruction(OP_INDEX_2);
 						} else if(s == "a") {
 							vm.addInstruction(OP_PUSH_INT);
 							vm.addInt(3);
@@ -1934,12 +1967,25 @@ namespace {
 				if(left_->canCreateVM() && key_->canCreateVM()) {
 					formula_vm::VirtualMachine vm;
 					left_->emitVM(vm);
-					key_->emitVM(vm);
-					if(left_type->is_list_of() || left_type->is_map_of().first) {
-						vm.addInstruction(formula_vm::OP_INDEX);
+
+					variant key_const;
+					if(left_type->is_list_of() && key_->canReduceToVariant(key_const) && key_const.is_int() && key_const.as_int() >= 0 && key_const.as_int() <= 2) {
+						switch(key_const.as_int()) {
+							case 0: vm.addInstruction(formula_vm::OP_INDEX_0); break;
+							case 1: vm.addInstruction(formula_vm::OP_INDEX_1); break;
+							case 2: vm.addInstruction(formula_vm::OP_INDEX_2); break;
+							default: assert(false);
+						}
+						
 					} else {
-						vm.addInstruction(formula_vm::OP_INDEX_STR);
+						key_->emitVM(vm);
+						if(left_type->is_list_of() || left_type->is_map_of().first) {
+							vm.addInstruction(formula_vm::OP_INDEX);
+						} else {
+							vm.addInstruction(formula_vm::OP_INDEX_STR);
+						}
 					}
+
 					return ExpressionPtr(new VMExpression(vm, queryVariantType(), *this));
 				}
 				return ExpressionPtr();
@@ -3069,6 +3115,7 @@ namespace {
 					vm.addLoadConstantInstruction(variant(formatter() << "Type mis-match. Expected " << type_->to_string() << " found "));
 					vm.addInstruction(OP_SWAP);
 					vm.addInstruction(OP_ADD);
+					vm.addInstruction(OP_PUSH_NULL);
 
 					vm.addInstruction(OP_ASSERT);
 					vm.jumpToEnd(jump_source);
@@ -3139,6 +3186,11 @@ namespace {
 						a->emitVM(vm);
 						const int jump_source = vm.addJumpSource(OP_JMP_IF);
 						vm.addLoadConstantInstruction(variant(a->str()));
+						if(debug_) {
+							debug_->emitVM(vm);
+						} else {
+							vm.addInstruction(OP_PUSH_NULL);
+						}
 						vm.addInstruction(OP_ASSERT);
 						vm.jumpToEnd(jump_source);
 						vm.addInstruction(OP_POP);
@@ -4009,6 +4061,8 @@ static std::string debugSubexpressionTypes(ConstFormulaPtr & fml)
 						for(VirtualMachine::Iterator itor(vm->get_vm().begin_itor()); !itor.at_end(); itor.next()) {
 							if(itor.get() == formula_vm::OP_PUSH_SCOPE) {
 								unrelated_scope_stack.push_back(true);
+							} else if(itor.get() == formula_vm::OP_INLINE_FUNCTION) {
+								unrelated_scope_stack.push_back(false);
 							} else if(itor.get() == formula_vm::OP_WHERE && itor.arg() >= 0) {
 								unrelated_scope_stack.push_back(false);
 							} else if(itor.get() == formula_vm::OP_POP_SCOPE) {

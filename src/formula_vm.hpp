@@ -31,16 +31,6 @@ namespace formula_vm {
 
 enum OP {
 
-		  //Binary operators
-		  // POP: 2
-		  // PUSH: 1
-		  // ARGS: NONE
-		  OP_GT='>', OP_LT='<', OP_EQ='=',
-          OP_ADD='+', OP_SUB='-', OP_MUL='*', OP_DIV='/', OP_DICE='d', OP_POW='^', OP_MOD='%',
-
-		  OP_INVALID = 128,
-
-
 		  //Binary operations which operate on the top two items
 		  //on the stack. Pop those items and push the result.
 		  // POP: 2
@@ -78,6 +68,10 @@ enum OP {
 		  // PUSH: 1
 		  // ARGS: NONE
 		  OP_INDEX,
+
+		  OP_INDEX_0,
+		  OP_INDEX_1,
+		  OP_INDEX_2,
 		  
 		  //Binary operator which indexes a map, list, or callable by string.
 		  // POP: 2
@@ -187,6 +181,14 @@ enum OP {
 		  // ARGS: NONE
 		  OP_POP,
 
+		  //Binary operators
+		  // POP: 2
+		  // PUSH: 1
+		  // ARGS: NONE
+		  OP_MOD='%',
+          OP_MUL='*', OP_ADD='+', OP_SUB='-', OP_DIV='/',
+		  OP_LT='<', OP_EQ='=', OP_GT='>',
+
 		  //Duplicates the top item on the stack
 		  // POP: 0 (PEEK 1)
 		  // PUSH: 1
@@ -227,6 +229,11 @@ enum OP {
 		  // ARGS: 1
 		  OP_WHERE,
 
+		  // POP: 1 + n (n = value on top of stack)
+		  // PUSH: 1
+		  // ARGS: 1
+		  OP_INLINE_FUNCTION,
+
 		  //Jumps n spaces forward if (or unless) the top item on the stack is true
 		  //Note: doesn't pop the item it considers off the stack
 		  // POP: 0
@@ -263,6 +270,9 @@ enum OP {
 		  OP_POP_SYMBOL_STACK,
 
 		  OP_LOOKUP_SYMBOL_STACK,
+		  
+		  
+		  OP_POW='^', OP_DICE='d',
 
 		  };
 
@@ -271,6 +281,8 @@ class VirtualMachine
 {
 public:
 	typedef short InstructionType;
+	typedef unsigned short UnsignedInstructionType;
+	typedef int ExtInstructionType;
 
 	static bool isInstructionLoop(InstructionType instruction);
 

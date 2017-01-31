@@ -55,7 +55,7 @@ variant VirtualMachine::execute(const FormulaCallable& variables) const
 void VirtualMachine::executeInternal(const FormulaCallable& variables, std::vector<FormulaCallablePtr>& variables_stack, std::vector<variant>& stack, std::vector<variant>& symbol_stack, const InstructionType* p, const InstructionType* p2) const
 {
 	for(; p != p2; ++p) {
-		switch(*p) {
+		switch((unsigned char)*p) {
 		case OP_IN:
 		case OP_NOT_IN: {
 			variant& left = stack[stack.size()-2];
@@ -266,6 +266,27 @@ void VirtualMachine::executeInternal(const FormulaCallable& variables, std::vect
 			break;
 		}
 
+		case OP_INDEX_0: {
+			variant& left = stack.back();
+			variant result = left[0];
+			left = result;
+			break;
+		}
+
+		case OP_INDEX_1: {
+			variant& left = stack.back();
+			variant result = left[1];
+			left = result;
+			break;
+		}
+
+		case OP_INDEX_2: {
+			variant& left = stack.back();
+			variant result = left[2];
+			left = result;
+			break;
+		}
+
 		case OP_INDEX_STR: {
 			variant& left = stack[stack.size()-2];
 			variant& right = stack[stack.size()-1];
@@ -398,7 +419,7 @@ void VirtualMachine::executeInternal(const FormulaCallable& variables, std::vect
 			}
 
 			stack.resize(stack.size() - nitems);
-			stack.back() = left(args);
+			stack.back() = left(&args);
 			break;
 		}
 
@@ -419,7 +440,11 @@ void VirtualMachine::executeInternal(const FormulaCallable& variables, std::vect
 		}
 
 		case OP_ASSERT: {
-			ASSERT_LOG(false, "Assertion failed: " << stack.back().as_string() << " at " << debugPinpointLocation(p, stack));
+			if(stack.back().is_null()) {
+				ASSERT_LOG(false, "Assertion failed: " << stack[stack.size()-2].as_string() << " at " << debugPinpointLocation(p, stack));
+			} else {
+				ASSERT_LOG(false, "Assertion failed: " << stack[stack.size()-2].as_string() << " message: " << stack.back().write_json() << " at " << debugPinpointLocation(p, stack));
+			}
 			break;
 		}
 
@@ -837,6 +862,35 @@ void VirtualMachine::executeInternal(const FormulaCallable& variables, std::vect
 			break;
 		}
 
+		case OP_INLINE_FUNCTION: {
+			using namespace game_logic;
+
+			++p;
+
+			ffl::IntrusivePtr<SlotFormulaCallable> callable(new SlotFormulaCallable);
+
+			if(stack[stack.size()-2].is_callable()) {
+				callable->setFallback(stack[stack.size()-2].as_callable());
+			}
+			callable->setBaseSlot(*p);
+
+			variables_stack.push_back(callable);
+
+			const int nitems = stack.back().int_addr();
+
+			auto i1 = stack.end() - nitems - 2;
+			auto i2 = stack.end() - 2;
+			callable->reserve(i2 - i1);
+			while(i1 != i2) {
+				callable->add(*i1);
+				++i1;
+			}
+
+			stack.resize(stack.size() - nitems - 2);
+
+			break;
+		}
+
 		case OP_JMP_IF:
 		case OP_JMP_UNLESS: {
 			if(stack.back().as_bool() == (*p == OP_JMP_IF)) {
@@ -974,7 +1028,7 @@ void VirtualMachine::addJumpToPosition(InstructionType i, int pos)
 }
 
 namespace {
-	VirtualMachine::InstructionType g_arg_instructions[] = { OP_LOOKUP, OP_JMP_IF, OP_JMP, OP_JMP_UNLESS, OP_POP_JMP_IF, OP_POP_JMP_UNLESS, OP_CALL, OP_CALL_BUILTIN, OP_ALGO_MAP, OP_ALGO_FILTER, OP_ALGO_FIND, OP_ALGO_COMPREHENSION, OP_UNDER, OP_PUSH_INT, OP_LOOKUP_SYMBOL_STACK };
+	VirtualMachine::InstructionType g_arg_instructions[] = { OP_LOOKUP, OP_JMP_IF, OP_JMP, OP_JMP_UNLESS, OP_POP_JMP_IF, OP_POP_JMP_UNLESS, OP_CALL, OP_CALL_BUILTIN, OP_ALGO_MAP, OP_ALGO_FILTER, OP_ALGO_FIND, OP_ALGO_COMPREHENSION, OP_UNDER, OP_PUSH_INT, OP_LOOKUP_SYMBOL_STACK, OP_WHERE, OP_INLINE_FUNCTION };
 }
 
 void VirtualMachine::append(const VirtualMachine& other)
@@ -1013,30 +1067,107 @@ void VirtualMachine::append(const VirtualMachine& other)
 	constants_.insert(constants_.end(), other.constants_.begin(), other.constants_.end());
 }
 
-static const std::string OpNames[] = {
-"OP_INVALID",
-"OP_IN", "OP_NOT_IN", "OP_AND", "OP_OR", "OP_NEQ", "OP_LTE", "OP_GTE", "OP_IS",
+namespace {
 
-		  "OP_UNARY_NOT", "OP_UNARY_SUB", "OP_UNARY_STR", "OP_UNARY_NUM_ELEMENTS",
-		  "OP_INCREMENT",
-		  "OP_LOOKUP", "OP_LOOKUP_STR",
-		  "OP_INDEX", "OP_INDEX_STR", "OP_CONSTANT", "OP_PUSH_INT",
-		  "OP_LIST", "OP_MAP",
+const char* getOpName(VirtualMachine::InstructionType op) {
+#define DEF_OP(n) case n: return #n;
 
-		  "OP_ARRAY_SLICE",
+	switch(op) {
+		  DEF_OP(OP_IN) DEF_OP(OP_NOT_IN) DEF_OP(OP_AND) DEF_OP(OP_OR) DEF_OP(OP_NEQ) DEF_OP(OP_LTE) DEF_OP(OP_GTE) DEF_OP(OP_IS)
 
-		  "OP_CALL",
-		  "OP_CALL_BUILTIN",
-		  "OP_ASSERT",
-		  "OP_PUSH_SCOPE", "OP_POP_SCOPE", "OP_BREAK", "OP_BREAK_IF",
-		  "OP_ALGO_MAP", "OP_ALGO_FILTER", "OP_ALGO_FIND", "OP_ALGO_COMPREHENSION",
-		  "OP_POP", "OP_DUP", "OP_DUP2", "OP_SWAP", "OP_UNDER", "OP_PUSH_NULL", "OP_PUSH_0", "OP_PUSH_1",
+		  DEF_OP(OP_UNARY_NOT) DEF_OP(OP_UNARY_SUB) DEF_OP(OP_UNARY_STR) DEF_OP(OP_UNARY_NUM_ELEMENTS)
 
-		  "OP_WHERE", "OP_JMP_IF", "OP_JMP_UNLESS", "OP_POP_JMP_IF", "OP_POP_JMP_UNLESS", "OP_JMP",
-		  "OP_LAMBDA_WITH_CLOSURE", "OP_CREATE_INTERFACE",
+		  DEF_OP(OP_INCREMENT)
 
-		  "OP_PUSH_SYMBOL_STACK", "OP_POP_SYMBOL_STACK", "OP_LOOKUP_SYMBOL_STACK",
-};
+		  DEF_OP(OP_LOOKUP)
+
+		  DEF_OP(OP_LOOKUP_STR)
+		  
+		  DEF_OP(OP_INDEX)
+
+		  DEF_OP(OP_INDEX_0)
+		  DEF_OP(OP_INDEX_1)
+		  DEF_OP(OP_INDEX_2)
+		  
+		  DEF_OP(OP_INDEX_STR)
+
+		  DEF_OP(OP_CONSTANT)
+
+		  DEF_OP(OP_PUSH_INT)
+
+		  DEF_OP(OP_LIST) DEF_OP(OP_MAP)
+
+		  DEF_OP(OP_ARRAY_SLICE)
+
+		  DEF_OP(OP_CALL)
+
+		  DEF_OP(OP_CALL_BUILTIN)
+
+		  DEF_OP(OP_ASSERT)
+
+		  DEF_OP(OP_PUSH_SCOPE)
+		  
+		  DEF_OP(OP_POP_SCOPE)
+
+		  DEF_OP(OP_BREAK)
+
+		  DEF_OP(OP_BREAK_IF)
+
+		  DEF_OP(OP_ALGO_MAP)
+		  DEF_OP(OP_ALGO_FILTER)
+
+		  DEF_OP(OP_ALGO_FIND)
+
+		  DEF_OP(OP_ALGO_COMPREHENSION)
+
+		  DEF_OP(OP_POP)
+
+		  DEF_OP(OP_MOD)
+          DEF_OP(OP_MUL) DEF_OP(OP_ADD) DEF_OP(OP_SUB) DEF_OP(OP_DIV)
+		  DEF_OP(OP_LT) DEF_OP(OP_EQ) DEF_OP(OP_GT)
+
+		  DEF_OP(OP_DUP)
+
+		  DEF_OP(OP_DUP2)
+
+		  DEF_OP(OP_SWAP)
+
+		  DEF_OP(OP_UNDER)
+
+		  DEF_OP(OP_PUSH_NULL)
+		  DEF_OP(OP_PUSH_0)
+		  DEF_OP(OP_PUSH_1)
+
+		  DEF_OP(OP_WHERE)
+
+		  DEF_OP(OP_INLINE_FUNCTION)
+
+		  DEF_OP(OP_JMP_IF) DEF_OP(OP_JMP_UNLESS)
+
+		  DEF_OP(OP_POP_JMP_IF) DEF_OP(OP_POP_JMP_UNLESS)
+
+
+		  DEF_OP(OP_JMP)
+
+		  DEF_OP(OP_LAMBDA_WITH_CLOSURE)
+
+		  DEF_OP(OP_CREATE_INTERFACE)
+
+		  DEF_OP(OP_PUSH_SYMBOL_STACK)
+
+		  DEF_OP(OP_POP_SYMBOL_STACK)
+
+		  DEF_OP(OP_LOOKUP_SYMBOL_STACK)
+		  
+		  
+		  DEF_OP(OP_POW) DEF_OP(OP_DICE)
+		  default:
+		  	return "UNKNOWN";
+	}
+
+#undef DEF_OP
+}
+}
 
 std::string VirtualMachine::debugOutput(const VirtualMachine::InstructionType* instruction_ptr) const
 {
@@ -1048,6 +1179,7 @@ std::string VirtualMachine::debugOutput(const VirtualMachine::InstructionType* i
 		} else {
 			s << "   " << n;
 		}
+
 		if(op == OP_CONSTANT) {
 			s << ": OP_CONSTANT ";
 			++n;
@@ -1101,6 +1233,10 @@ std::string VirtualMachine::debugOutput(const VirtualMachine::InstructionType* i
 			s << ": OP_WHERE ";
 			++n;
 			s << static_cast<int>(instructions_[n]) << "\n";
+		} else if(op == OP_INLINE_FUNCTION) {
+			s << ": OP_INLINE_FUNCTION ";
+			++n;
+			s << static_cast<int>(instructions_[n]) << "\n";
 		} else if(op == OP_ALGO_MAP) {
 			s << ": OP_ALGO_MAP ";
 			++n;
@@ -1121,16 +1257,12 @@ std::string VirtualMachine::debugOutput(const VirtualMachine::InstructionType* i
 			s << ": OP_UNDER ";
 			++n;
 			s << static_cast<int>(instructions_[n]) << "\n";
-		} else if(op < OP_INVALID) {
-			s << ": " << "OP(" << static_cast<char>(op) << ")\n";
-		} else if((op-OP_INVALID) < sizeof(OpNames)/sizeof(*OpNames)) {
-			s << ": " << OpNames[(op-OP_INVALID)] << "\n";
 		} else if(op == OP_LOOKUP_SYMBOL_STACK) {
 			s << ": OP_LOOKUP_SYMBOL_STACK ";
 			++n;
 			s << static_cast<int>(instructions_[n]) << "\n";
 		} else {
-			s << ": UNKNOWN: " << op << "\n";
+			s << ": " << getOpName(op) << "\n";
 		}
 	}
 

@@ -1118,6 +1118,24 @@ bool variant::function_call_valid(const std::vector<variant>& passed_args, std::
 	return true;
 }
 
+VariantFunctionTypeInfoPtr variant::get_function_info() const
+{
+	must_be(VARIANT_TYPE_FUNCTION);
+	return fn_->type;
+}
+
+game_logic::ConstFormulaPtr variant::get_function_formula() const
+{
+	must_be(VARIANT_TYPE_FUNCTION);
+	return fn_->fn;
+}
+
+int variant::get_function_base_slot() const
+{
+	must_be(VARIANT_TYPE_FUNCTION);
+	return fn_->base_slot;
+}
+
 variant variant::operator()(const std::vector<variant>& passed_args) const
 {
 	std::vector<variant> args(passed_args);

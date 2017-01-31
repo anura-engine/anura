@@ -234,6 +234,11 @@ public:
 	variant operator()(const std::vector<variant>& args) const;
 	variant operator()(std::vector<variant>* args) const;
 
+	//Pre-condition: is_regular_function() == true
+	VariantFunctionTypeInfoPtr get_function_info() const;
+	game_logic::ConstFormulaPtr get_function_formula() const;
+	int get_function_base_slot() const;
+
 	bool disassemble(std::string* result) const;
 
 	variant instantiate_generic_function(const std::vector<variant_type_ptr>& args) const;
@@ -246,7 +251,7 @@ public:
 	//unsafe function which is called on an integer variant and returns
 	//direct access to the underlying integer. Should only be used
 	//when high performance is needed.
-	int& int_addr() { must_be(VARIANT_TYPE_INT); return int_value_; }
+	int& int_addr() { return int_value_; }
 
 	bool is_string() const { return type_ == VARIANT_TYPE_STRING; }
 	bool is_enum() const { return type_ == VARIANT_TYPE_ENUM; }
@@ -258,6 +263,7 @@ public:
 	bool is_float() const { return is_numeric(); }
 	bool is_map() const { return type_ == VARIANT_TYPE_MAP; }
 	bool is_function() const { return type_ == VARIANT_TYPE_FUNCTION || type_ == VARIANT_TYPE_MULTI_FUNCTION; }
+	bool is_regular_function() const { return type_ == VARIANT_TYPE_FUNCTION; }
 	bool is_generic_function() const { return type_ == VARIANT_TYPE_GENERIC_FUNCTION; }
 	int as_int(int default_value=0) const { if(type_ == VARIANT_TYPE_NULL) { return default_value; } if(type_ == VARIANT_TYPE_DECIMAL) { return int( decimal_value_/VARIANT_DECIMAL_PRECISION ); } if(type_ == VARIANT_TYPE_BOOL) { return bool_value_ ? 1 : 0; } must_be(VARIANT_TYPE_INT); return int_value_; }
 	int as_int32(int default_value=0) const { return as_int(default_value); }
