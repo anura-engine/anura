@@ -37,8 +37,8 @@ namespace input
 	{
 		const int result = SDL_PollEvent(event);
 #ifdef USE_IMGUI
-		if(result && ImGui_ImplSdlGL3_ProcessEvent(event)) {
-			return 0;
+		if(result) {
+			ImGui_ImplSdlGL3_ProcessEvent(event);
 		}
 #endif
 		if(result) {
