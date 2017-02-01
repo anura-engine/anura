@@ -52,6 +52,8 @@ namespace graphics
 		int last_process_time_;
 
 		bool running_;
+		mutable bool enable_mouselook_;
+		mutable bool invert_mouselook_;
 	};
 
 	typedef ffl::IntrusivePtr<ParticleSystemContainerProxy> ParticleSystemContainerProxyPtr; 

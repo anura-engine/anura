@@ -105,6 +105,7 @@ namespace KRE
 		BlendMode() : src_(BlendModeConstants::BM_SRC_ALPHA), dst_(BlendModeConstants::BM_ONE_MINUS_SRC_ALPHA) {}
 		explicit BlendMode(BlendModeConstants src, BlendModeConstants dst) : src_(src), dst_(dst) {}
 		explicit BlendMode(const variant& node);
+		explicit BlendMode(const std::string& bm);
 		BlendModeConstants source() const { return src_; }
 		BlendModeConstants destination() const { return dst_; }
 		BlendModeConstants src() const { return src_; }
@@ -127,6 +128,11 @@ namespace KRE
 			dst_ = dst;
 		}
 		void set(const variant& node);
+		void set_from_string(const std::string& s);
+
+		std::string to_string() const;
+
+		static const std::vector<std::string>& getBlendModeStrings();
 	private:
 		BlendModeConstants src_;
 		BlendModeConstants dst_;

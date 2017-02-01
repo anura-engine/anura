@@ -26,11 +26,21 @@
 #include "input.hpp"
 #include "screen_handling.hpp"
 
+#ifdef USE_IMGUI
+#include "imgui.h"
+#include "imgui_impl_sdl_gl3.h"
+#endif
+
 namespace input
 {
 	int sdl_poll_event(SDL_Event* event)
 	{
 		const int result = SDL_PollEvent(event);
+#ifdef USE_IMGUI
+		if(result && ImGui_ImplSdlGL3_ProcessEvent(event)) {
+			return 0;
+		}
+#endif
 		if(result) {
 			switch(event->type) {
 			case SDL_MOUSEMOTION: {
