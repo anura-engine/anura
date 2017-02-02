@@ -858,9 +858,6 @@
     <ClInclude Include="..\..\src\kre\ParticleSystemFwd.hpp">
       <Filter>Header Files\kre</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\kre\ParticleSystemObservers.hpp">
-      <Filter>Header Files\kre</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\kre\ParticleSystemParameters.hpp">
       <Filter>Header Files\kre</Filter>
     </ClInclude>
@@ -1182,6 +1179,15 @@
     <ClInclude Include="..\..\src\formula_where.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\kre\ParticleSystemUI.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\imgui_impl_sdl_gl3.h">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\imgui\imgui.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\src\kre\geometry.inl">
@@ -1189,6 +1195,9 @@
     </None>
     <None Include="..\..\src\custom_object.inc">
       <Filter>Header Files</Filter>
+    </None>
+    <None Include="..\..\imgui\imgui_user.inl">
+      <Filter>Source Files\kre</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -1304,9 +1313,6 @@
       <Filter>Source Files\kre</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\kre\ParticleSystemEmitters.cpp">
-      <Filter>Source Files\kre</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\kre\ParticleSystemObservers.cpp">
       <Filter>Source Files\kre</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\kre\ParticleSystemParameters.cpp">
@@ -2196,6 +2202,18 @@
     </ClCompile>
     <ClCompile Include="..\..\src\formula_internal.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\ParticleSystemUI.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\imgui\imgui.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\imgui\imgui_draw.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\imgui_impl_sdl_gl3.cpp">
+      <Filter>Source Files\kre</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

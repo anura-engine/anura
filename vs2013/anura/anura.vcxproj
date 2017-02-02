@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\imgui\imgui.h" />
     <ClInclude Include="..\..\src\achievements.hpp" />
     <ClInclude Include="..\..\src\animation_creator.hpp" />
     <ClInclude Include="..\..\src\animation_preview_widget.hpp" />
@@ -173,14 +174,15 @@
     <ClInclude Include="..\..\src\kre\Frustum.hpp" />
     <ClInclude Include="..\..\src\kre\geometry.hpp" />
     <ClInclude Include="..\..\src\kre\Gradients.hpp" />
+    <ClInclude Include="..\..\src\kre\imgui_impl_sdl_gl3.h" />
     <ClInclude Include="..\..\src\kre\LightObject.hpp" />
     <ClInclude Include="..\..\src\kre\ModelMatrixScope.hpp" />
     <ClInclude Include="..\..\src\kre\ParticleSystem.hpp" />
     <ClInclude Include="..\..\src\kre\ParticleSystemAffectors.hpp" />
     <ClInclude Include="..\..\src\kre\ParticleSystemEmitters.hpp" />
     <ClInclude Include="..\..\src\kre\ParticleSystemFwd.hpp" />
-    <ClInclude Include="..\..\src\kre\ParticleSystemObservers.hpp" />
     <ClInclude Include="..\..\src\kre\ParticleSystemParameters.hpp" />
+    <ClInclude Include="..\..\src\kre\ParticleSystemUI.hpp" />
     <ClInclude Include="..\..\src\kre\PixelFormat.hpp" />
     <ClInclude Include="..\..\src\kre\Renderable.hpp" />
     <ClInclude Include="..\..\src\kre\RenderFwd.hpp" />
@@ -400,10 +402,15 @@
     <ClInclude Include="..\..\src\xhtml\xslider.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\..\imgui\imgui_user.inl" />
     <None Include="..\..\src\custom_object.inc" />
     <None Include="..\..\src\kre\geometry.inl" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\imgui\imgui.cpp">
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">IMGUI_INCLUDE_IMGUI_USER_INL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="..\..\imgui\imgui_draw.cpp" />
     <ClCompile Include="..\..\src\achievements.cpp" />
     <ClCompile Include="..\..\src\animation_creator.cpp" />
     <ClCompile Include="..\..\src\animation_preview_widget.cpp" />
@@ -540,13 +547,14 @@
     <ClCompile Include="..\..\src\kre\FontSTB.cpp" />
     <ClCompile Include="..\..\src\kre\Frustum.cpp" />
     <ClCompile Include="..\..\src\kre\Gradients.cpp" />
+    <ClCompile Include="..\..\src\kre\imgui_impl_sdl_gl3.cpp" />
     <ClCompile Include="..\..\src\kre\LightObject.cpp" />
     <ClCompile Include="..\..\src\kre\ModelMatrixScope.cpp" />
     <ClCompile Include="..\..\src\kre\ParticleSystem.cpp" />
     <ClCompile Include="..\..\src\kre\ParticleSystemAffectors.cpp" />
     <ClCompile Include="..\..\src\kre\ParticleSystemEmitters.cpp" />
-    <ClCompile Include="..\..\src\kre\ParticleSystemObservers.cpp" />
     <ClCompile Include="..\..\src\kre\ParticleSystemParameters.cpp" />
+    <ClCompile Include="..\..\src\kre\ParticleSystemUI.cpp" />
     <ClCompile Include="..\..\src\kre\Renderable.cpp" />
     <ClCompile Include="..\..\src\kre\RenderManager.cpp" />
     <ClCompile Include="..\..\src\kre\RenderQueue.cpp" />
@@ -828,8 +836,8 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;_USE_MATH_DEFINES;HAVE_M_PI;USE_BOX2D;USE_LUA;USE_LIBVPX;USE_SVG;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;_WIN32_WINNT=0x0600;NOMINMAX;USE_BREAKPAD;OGG_DYNAMIC="libvorbisfile-3.dll";%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..\src;..\..\src\kre;..\..\src\svg;..\..\src\hex;..\..\src\xhtml;..\..\src\tiled;..\..\src\lua;..\..\Box2D;..\..\external\include;..\..\external\include\SDL;..\..\external\include\windows;..\..\external\include\windows\client\windows\handler;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;_USE_MATH_DEFINES;HAVE_M_PI;USE_BOX2D;USE_LUA;USE_LIBVPX;USE_SVG;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;_WIN32_WINNT=0x0600;NOMINMAX;USE_BREAKPAD;OGG_DYNAMIC="libvorbisfile-3.dll";USE_IMGUI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\src;..\..\src\kre;..\..\src\svg;..\..\src\hex;..\..\src\xhtml;..\..\src\tiled;..\..\src\lua;..\..\Box2D;..\..\external\include;..\..\external\include\SDL;..\..\external\include\windows;..\..\external\include\windows\client\windows\handler;..\..\imgui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

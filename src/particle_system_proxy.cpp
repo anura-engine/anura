@@ -21,6 +21,8 @@
 	   distribution.
 */
 
+#include "filesystem.hpp"
+#include "module.hpp"
 #include "particle_system_proxy.hpp"
 #include "profile_timer.hpp"
 #include "variant_utils.hpp"
@@ -29,6 +31,7 @@
 #include "ParticleSystem.hpp"
 #include "ParticleSystemAffectors.hpp"
 #include "ParticleSystemEmitters.hpp"
+#include "ParticleSystemUI.hpp"
 #include "SceneGraph.hpp"
 #include "SceneNode.hpp"
 #include "RenderManager.hpp"
@@ -44,7 +47,9 @@ namespace graphics
 		  rmanager_(),
 		  particle_system_container_(),
 		  last_process_time_(-1),
-		  running_(true)
+		  running_(true),
+		  enable_mouselook_(false),
+		  invert_mouselook_(false)
 	{
 		root_->setNodeName("root_node");
 
@@ -54,8 +59,9 @@ namespace graphics
 		particle_system_container_ = Particles::ParticleSystemContainer::create(scene_, node);
 		root_->attachNode(particle_system_container_);
 
-		for(auto p : particle_system_container_->getActiveParticleSystems()) {
-			p->fastForward();
+		auto& psystem = particle_system_container_->getParticleSystem();
+		if(psystem) {
+			psystem->fastForward();
 		}
 	}
 
@@ -64,6 +70,15 @@ namespace graphics
 		if(running_) {
 			scene_->renderScene(rmanager_);
 			rmanager_->render(wnd);
+#ifdef USE_IMGUI
+			static std::vector<std::string> ifiles;
+			// XX should update this if the directory contents changes.
+			if(ifiles.empty()) {
+				module::get_files_in_dir("images", &ifiles, nullptr);
+			}
+			KRE::Particles::ParticleUI(particle_system_container_, &enable_mouselook_, &invert_mouselook_, ifiles);
+#endif
+
 		}
 	}
 
@@ -99,16 +114,6 @@ namespace graphics
 		KRE::Particles::ParticleSystemPtr obj_;
 	};
 
-	class ParticleTechniqueProxy : public game_logic::FormulaCallable
-	{
-	public:
-		explicit ParticleTechniqueProxy(KRE::Particles::TechniquePtr obj) : obj_(obj)
-		{}
-	private:
-		DECLARE_CALLABLE(ParticleTechniqueProxy);
-		KRE::Particles::TechniquePtr obj_;
-	};
-
 	class ParticleEmitterProxy : public game_logic::FormulaCallable
 	{
 	public:
@@ -136,48 +141,31 @@ namespace graphics
 			obj.running_ = value.as_bool();
 		DEFINE_FIELD(systems, "[builtin particle_system_proxy]")
 
-			auto v = obj.particle_system_container_->getActiveParticleSystems();
-			std::vector<variant> result;
-			result.reserve(v.size());
-			for(auto p : v) {
-				result.push_back(variant(new ParticleSystemProxy(p)));
-			}
-
-			return variant(&result);
-
-		DEFINE_FIELD(techniques, "[builtin particle_technique_proxy]")
-
-			auto v = obj.particle_system_container_->getTechniques();
-			std::vector<variant> result;
-			result.reserve(v.size());
-			for(auto p : v) {
-				result.push_back(variant(new ParticleTechniqueProxy(p)));
-			}
-
-			return variant(&result);
+			auto psystem = obj.particle_system_container_->getParticleSystem();
+			return variant(new ParticleSystemProxy(psystem));
 
 		DEFINE_FIELD(emitters, "[builtin particle_emitter_proxy]")
 
-			auto v = obj.particle_system_container_->getEmitters();
-			std::vector<variant> result;
-			result.reserve(v.size());
-			for(auto p : v) {
-				result.push_back(variant(new ParticleEmitterProxy(p)));
+			auto psystem = obj.particle_system_container_->getParticleSystem();
+			if(psystem) {
+				auto emitter = psystem->getEmitter();
+				return variant(new ParticleEmitterProxy(emitter));
 			}
-
-			return variant(&result);
+			return variant();
 
 		DEFINE_FIELD(affectors, "[builtin particle_affector_proxy]")
 
-			auto v = obj.particle_system_container_->getAffectors();
-			std::vector<variant> result;
-			result.reserve(v.size());
-			for(auto p : v) {
-				result.push_back(variant(new ParticleAffectorProxy(p)));
+			auto psystem = obj.particle_system_container_->getParticleSystem();
+			if(psystem) {
+				auto v = psystem->getAffectors();
+				std::vector<variant> result;
+				result.reserve(v.size());
+				for(auto p : v) {
+					result.emplace_back(variant(new ParticleAffectorProxy(p)));
+				}
+				return variant(&result);
 			}
-
-			return variant(&result);
-
+			return variant();
 
 	END_DEFINE_CALLABLE(ParticleSystemContainerProxy)
 
@@ -186,64 +174,7 @@ namespace graphics
 		char buf[64];
 		sprintf(buf, "%p", obj.obj_.get());
 		return variant(std::string(buf));
-
-	BEGIN_DEFINE_FN(add_technique, "(map) ->commands")
-		variant arg = FN_ARG(0);
-		return variant(new game_logic::FnCommandCallable("add_technique", [=]() {
-			obj.obj_->addTechnique(KRE::Particles::TechniquePtr(new KRE::Particles::Technique(obj.obj_->getParentContainer(), arg)));
-		}));
-	END_DEFINE_FN
-
-	DEFINE_FIELD(techniques, "[builtin particle_technique_proxy]")
-
-		auto v = obj.obj_->getActiveTechniques();
-		std::vector<variant> result;
-		result.reserve(v.size());
-		for(auto p : v) {
-			result.push_back(variant(new ParticleTechniqueProxy(p)));
-		}
-
-		return variant(&result);
 	END_DEFINE_CALLABLE(ParticleSystemProxy)
-
-	BEGIN_DEFINE_CALLABLE_NOBASE(ParticleTechniqueProxy)
-	DEFINE_FIELD(addr, "string")
-		char buf[64];
-		sprintf(buf, "%p", obj.obj_.get());
-		return variant(std::string(buf));
-	DEFINE_FIELD(position, "[decimal,decimal,decimal]")
-		const Renderable& r = *obj.obj_;
-		const glm::vec3& v = r.getPosition();
-		return vec3_to_variant(v);
-
-	DEFINE_SET_FIELD
-		Renderable& r = *obj.obj_;
-		glm::vec3 v = variant_to_vec3(value);
-		r.setPosition(v);
-
-	DEFINE_FIELD(emitters, "[builtin particle_emitter_proxy]")
-
-		auto v = obj.obj_->getActiveEmitters();
-		std::vector<variant> result;
-		result.reserve(v.size());
-		for(auto p : v) {
-			result.push_back(variant(new ParticleEmitterProxy(p)));
-		}
-
-		return variant(&result);
-
-	DEFINE_FIELD(affectors, "[builtin particle_affector_proxy]")
-
-		auto v = obj.obj_->getActiveAffectors();
-		std::vector<variant> result;
-		result.reserve(v.size());
-		for(auto p : v) {
-			result.push_back(variant(new ParticleAffectorProxy(p)));
-		}
-
-		return variant(&result);
-	END_DEFINE_CALLABLE(ParticleTechniqueProxy)
-
 
 	BEGIN_DEFINE_CALLABLE_NOBASE(ParticleEmitterProxy)
 	DEFINE_FIELD(addr, "string")

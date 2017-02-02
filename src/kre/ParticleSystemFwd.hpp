@@ -31,6 +31,7 @@
 #include <glm/gtx/perpendicular.hpp>
 
 #include "variant.hpp"
+#include "variant_utils.hpp"
 
 namespace KRE
 {
@@ -42,8 +43,6 @@ namespace KRE
 		typedef std::shared_ptr<ParticleSystemContainer> ParticleSystemContainerPtr;
 		class ParticleSystem;
 		typedef std::shared_ptr<ParticleSystem> ParticleSystemPtr;
-		class Technique;
-		typedef std::shared_ptr<Technique> TechniquePtr;
 		class Parameter;
 		typedef std::shared_ptr<Parameter> ParameterPtr;
 		class Emitter;
