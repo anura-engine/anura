@@ -5661,7 +5661,25 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 		return variant_type::get_map(variant_type::get_type(variant::VARIANT_TYPE_STRING), variant_type::get_any());
 	END_FUNCTION_DEF(inspect_object)
 
+	namespace {
+		int g_in_simulation = 0;
+		struct SimulationScope {
+			SimulationScope() { g_in_simulation++; }
+			~SimulationScope() { g_in_simulation--; }
+		};
+	}
+
+	FUNCTION_DEF(is_simulation, 0, 0, "is_simulation(): returns true iff we are in a 'simulation' such as get_modified_objcts() or eval_with_temp_modifications()")
+		return variant::from_bool(g_in_simulation != 0);
+
+	FUNCTION_ARGS_DEF
+	RETURN_TYPE("bool")
+	END_FUNCTION_DEF(is_simulation)
+
 	FUNCTION_DEF(get_modified_object, 2, 2, "get_modified_object(obj, commands) -> obj: yields a copy of the given object modified by the given commands")
+
+		SimulationScope sim;
+
 		ffl::IntrusivePtr<FormulaObject> obj(EVAL_ARG(0).convert_to<FormulaObject>());
 
 		obj = FormulaObject::deepClone(variant(obj.get())).convert_to<FormulaObject>();
@@ -5681,6 +5699,9 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 	END_FUNCTION_DEF(get_modified_object)
 
 	FUNCTION_DEF(eval_with_temp_modifications, 4, 4, "")
+
+		SimulationScope sim;
+		
 		FormulaCallablePtr callable(EVAL_ARG(0).mutable_callable());
 		ASSERT_LOG(callable.get(), "Callable invalid");
 		variant do_cmd = EVAL_ARG(2);
