@@ -56,7 +56,7 @@ namespace KRE
 			}
 
 			using namespace KRE::Particles;
-			ImGui::Text(label);
+			ImGui::Text("%s", label);
 			const char* const ptype[] = { "Fixed", "Random", "Linear", "Spline", "Oscillate" };
 			int current_type = static_cast<int>(param->getType());
 			std::string combo_label = "Type##";
@@ -273,7 +273,7 @@ namespace KRE
 			float angle;
 			glm::vec3 axis;
 			ImGui::BeginGroup();
-			ImGui::Text(s.c_str());
+			ImGui::Text("%s", s.c_str());
 			KRE::Particles::convert_quat_to_axis_angle(*q, &angle, &axis);
 			angle *= static_cast<float>(180.0f / M_PI);		// radians to degrees for display
 			bool changed = false;
@@ -338,7 +338,7 @@ namespace KRE
 			auto ps_camera = pscontainer->getCamera();
 			auto& psystem = pscontainer->getParticleSystem();
 
-			auto& wnd = KRE::WindowManager::getMainWindow();
+			auto wnd = KRE::WindowManager::getMainWindow();
 			const int neww = wnd->getDisplaySize().width;
 			const int newh = wnd->getDisplaySize().height;
 			const float aspect_ratio = static_cast<float>(neww) / static_cast<float>(newh);
@@ -476,7 +476,7 @@ namespace KRE
 						if(!selected_texture.empty()) {
 							current_file = std::distance(image_files.begin(), std::find(image_files.begin(), image_files.end(), selected_texture));
 						}
-						ImGui::Text(selected_texture.c_str());
+						ImGui::Text("%s", selected_texture.c_str());
 						if(ImGui::ListBox("Textures", &current_file, vector_string_getter, const_cast<void*>(static_cast<const void*>(&image_files)), image_files.size())) {
 							psystem->setTexture(Texture::createTexture(image_files[current_file]));
 						}
@@ -630,7 +630,7 @@ namespace KRE
 						break;
 					}
 					case KRE::Particles::EmitterType::LINE: {
-						auto& le = std::dynamic_pointer_cast<Particles::LineEmitter>(e);
+						auto le = std::dynamic_pointer_cast<Particles::LineEmitter>(e);
 						float mini = le->getMinIncrement();
 						if(ImGui::DragFloat("Min Increment", &mini, 0.1f, 0.0f, 100.0f)) {
 							le->setMinIncrement(mini);
@@ -646,7 +646,7 @@ namespace KRE
 						break;
 					}
 					case KRE::Particles::EmitterType::BOX: {
-						auto& be = std::dynamic_pointer_cast<Particles::BoxEmitter>(e);
+						auto be = std::dynamic_pointer_cast<Particles::BoxEmitter>(e);
 						const auto& dims = be->getDimensions();
 						float v[3]{ dims.x, dims.y, dims.z };
 						if(ImGui::SliderFloat3("Dimensions", v, 0.0f, 100.0f)) {
@@ -655,7 +655,7 @@ namespace KRE
 						break;
 					}
 					case KRE::Particles::EmitterType::CIRCLE: {
-						auto& ce = std::dynamic_pointer_cast<Particles::CircleEmitter>(e);
+						auto ce = std::dynamic_pointer_cast<Particles::CircleEmitter>(e);
 						ParameterGui("Radius", ce->getRadius(), 0.01f, 200.0f);
 						float step = ce->getStep();
 						if(ImGui::DragFloat("Step", &step, 0.1f, 0.0f, 100.0f)) {
@@ -689,7 +689,7 @@ namespace KRE
 						break;
 					}
 					case KRE::Particles::EmitterType::SPHERE_SURFACE: {
-						auto& sse = std::dynamic_pointer_cast<Particles::SphereSurfaceEmitter>(e);
+						auto sse = std::dynamic_pointer_cast<Particles::SphereSurfaceEmitter>(e);
 						ParameterGui("Radius", sse->getRadius());
 						break;
 					}
@@ -718,7 +718,7 @@ namespace KRE
 				}
 				for(auto& a : psystem->getAffectors()) {
 					std::string aff_name = std::string(Particles::get_affector_name(a->getType())) + " - " + a->getName();
-					ImGui::Text(aff_name.c_str());
+					ImGui::Text("%s", aff_name.c_str());
 					ImGui::SameLine();
 					ImGui::PushID(a.get());
 					if(ImGui::SmallButton("X")) {
@@ -910,7 +910,7 @@ namespace KRE
 							break;
 						}
 						case Particles::AffectorType::SCALE: {
-							auto& sa = std::dynamic_pointer_cast<Particles::ScaleAffector>(a);
+							auto sa = std::dynamic_pointer_cast<Particles::ScaleAffector>(a);
 							auto& xyz_scale = sa->getScaleXYZ();
 							auto& x_scale = sa->getScaleX();
 							auto& y_scale = sa->getScaleY();
@@ -933,7 +933,7 @@ namespace KRE
 							break;
 						}
 						case Particles::AffectorType::PARTICLE_FOLLOWER: {
-							auto& pfa = std::dynamic_pointer_cast<Particles::ParticleFollowerAffector>(a);
+							auto pfa = std::dynamic_pointer_cast<Particles::ParticleFollowerAffector>(a);
 							float minmaxd[2]{ pfa->getMinDistance(), pfa->getMaxDistance() };
 							if(ImGui::DragFloat2("Min/Max Distance", minmaxd, 1.0f, 0.0f, 1000.0f)) {
 								pfa->setMinDistance(minmaxd[0]);
@@ -942,7 +942,7 @@ namespace KRE
 							break;
 						}
 						case Particles::AffectorType::ALIGN: {
-							auto& aa = std::dynamic_pointer_cast<Particles::AlignAffector>(a);
+							auto aa = std::dynamic_pointer_cast<Particles::AlignAffector>(a);
 							bool resize = aa->getResizeable();
 							if(ImGui::Checkbox("Resize", &resize)) {
 								aa->setResizeable(resize);
@@ -954,7 +954,7 @@ namespace KRE
 							break;
 						}
 						case Particles::AffectorType::BLACK_HOLE: {
-							auto& bha = std::dynamic_pointer_cast<Particles::BlackHoleAffector>(a);
+							auto bha = std::dynamic_pointer_cast<Particles::BlackHoleAffector>(a);
 							ParameterGui("Velocity", bha->getVelocity());
 							ParameterGui("Acceleration", bha->getAcceleration());
 							break;
@@ -964,7 +964,7 @@ namespace KRE
 							break;
 						}
 						case Particles::AffectorType::RANDOMISER: {
-							auto& ra = std::dynamic_pointer_cast<Particles::RandomiserAffector>(a);
+							auto ra = std::dynamic_pointer_cast<Particles::RandomiserAffector>(a);
 							float ts = ra->getTimeStep();
 							if(ImGui::DragFloat("Time Step", &ts, 1.0f, 0.0f, 10.0f)) {
 								ra->setTimeStep(ts);
@@ -983,7 +983,7 @@ namespace KRE
 							break;
 						}
 						case Particles::AffectorType::SINE_FORCE: {
-							auto& sfa = std::dynamic_pointer_cast<Particles::SineForceAffector>(a);
+							auto sfa = std::dynamic_pointer_cast<Particles::SineForceAffector>(a);
 
 							float v[2]{ sfa->getMinFrequency(), sfa->getMaxFrequency() };
 							if(ImGui::DragFloat2("Min/Max Frequency", v, 0.1f, 0.0f, 1000.0f)) {

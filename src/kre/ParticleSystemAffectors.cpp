@@ -954,7 +954,7 @@ namespace KRE
 			}
 
 			prev_particle_ = particles.begin();				
-			for(auto& p = particles.begin(); p != particles.end(); ++p) {
+			for(auto p = particles.begin(); p != particles.end(); ++p) {
 				internalApply(*p, t);
 				prev_particle_ = p;
 			}

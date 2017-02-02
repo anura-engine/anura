@@ -108,7 +108,7 @@ BASE_CXXFLAGS += -fsanitize=undefined
 endif
 
 # Compiler include options, used after CXXFLAGS and CPPFLAGS.
-INC := -isystem external/header-only-libs $(shell pkg-config --cflags x11 sdl2 glew SDL2_image SDL2_ttf libpng zlib freetype2 cairo)
+INC := -isystem external/include external/header-only-libs $(shell pkg-config --cflags x11 sdl2 glew SDL2_image SDL2_ttf libpng zlib freetype2 cairo)
 
 ifdef STEAM_RUNTIME_ROOT
 	INC += -isystem $(STEAM_RUNTIME_ROOT)/include
@@ -155,6 +155,16 @@ OBJ       := $(patsubst src/%.cpp,./build/%.o,$(SRC))
 DEPS      := $(patsubst src/%.cpp,./build/%.d,$(SRC))
 INCLUDES  := $(addprefix -I,$(SRC_DIR))
 
+USE_IMGUI?=yes
+ifeq ($(USE_IMGUI),yes)
+  BASE_CXXFLAGS += -DUSE_IMGUI
+  INC += -Iimgui
+  CPPFLAGS += -I external/header-only-libs -DIMGUI_INCLUDE_IMGUI_USER_INL
+  SRC += imgui/imgui.cpp imgui/imgui_draw.cpp
+  OBJ += imgui/imgui.o imgui/imgui_draw.o
+  SRC_DIR += ./imgui
+endif
+
 vpath %.cpp $(SRC_DIR)
 
 CPPFLAGS += -MMD -MP
@@ -191,6 +201,7 @@ checkdirs: $(BUILD_DIR)
 	  "BASE_CXXFLAGS       : $(BASE_CXXFLAGS)\n" \
 	  "CXXFLAGS            : $(CXXFLAGS)\n" \
 	  "LDFLAGS             : $(LDFLAGS)\n" \
+	  "INC                 : $(INC)\n" \
 	  "LIBS                : $(LIBS)"
 
 
