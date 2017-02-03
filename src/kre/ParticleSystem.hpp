@@ -163,8 +163,8 @@ namespace KRE
 			static ParticleSystemPtr factory(std::weak_ptr<ParticleSystemContainer> parent, const variant& node);
 			void initAttributes();
 
-			void preRender(const WindowPtr& wnd);
-			void postRender(const WindowPtr& wnd);
+			void preRender(const WindowPtr& wnd) override;
+			void postRender(const WindowPtr& wnd) override;
 
 			void fastForward();
 		private:

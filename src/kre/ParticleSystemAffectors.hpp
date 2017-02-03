@@ -76,7 +76,7 @@ namespace KRE
 		private:
 			virtual void init(const variant& node) = 0;
 			virtual void internalApply(Particle& p, float t) = 0;
-			virtual void handleWrite(variant_builder* build) const = 0;
+			virtual void handleWrite(variant_builder* build) const override = 0;
 
 			AffectorType type_;
 			float mass_;
