@@ -7,7 +7,9 @@
 // https://github.com/ocornut/imgui
 
 #include <iostream>
+#include <vector>
 
+#include "asserts.hpp"
 #include "imgui.h"
 #include "imgui_impl_sdl_gl3.h"
 
@@ -201,8 +203,34 @@ void ImGui_ImplSdlGL3_CreateFontsTexture()
     glBindTexture(GL_TEXTURE_2D, last_texture);
 }
 
+namespace
+{
+
+void checkShaderCompileErrors(const char* shader_name, int nshader)
+{
+	GLint compiled;
+	glGetShaderiv(nshader, GL_COMPILE_STATUS, &compiled);
+	if(!compiled) {
+		GLint info_len = 0;
+		glGetShaderiv(nshader, GL_INFO_LOG_LENGTH, &info_len);
+		if(info_len > 1) {
+			std::vector<char> info_log;
+			info_log.resize(info_len);
+			glGetShaderInfoLog(nshader, static_cast<GLsizei>(info_log.size()), nullptr, &info_log[0]);
+			std::string s(info_log.begin(), info_log.end());
+			ASSERT_LOG(false, "Failed to build " << shader_name << " shader: " << s);
+		} else {
+			ASSERT_LOG(false, "Failed to build " << shader_name << " shader. Could not get error message");
+		}
+	}
+}
+
+}
+
 bool ImGui_ImplSdlGL3_CreateDeviceObjects()
 {
+	assert(glGetError() == 0);
+
     // Backup GL state
     GLint last_texture, last_array_buffer, last_vertex_array;
     glGetIntegerv(GL_TEXTURE_BINDING_2D, &last_texture);
@@ -210,7 +238,7 @@ bool ImGui_ImplSdlGL3_CreateDeviceObjects()
     glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &last_vertex_array);
 
     const GLchar *vertex_shader =
-        "#version 330\n"
+        "#version 130\n"
         "uniform mat4 ProjMtx;\n"
         "in vec2 Position;\n"
         "in vec2 UV;\n"
@@ -225,7 +253,7 @@ bool ImGui_ImplSdlGL3_CreateDeviceObjects()
         "}\n";
 
     const GLchar* fragment_shader =
-        "#version 330\n"
+        "#version 130\n"
         "uniform sampler2D Texture;\n"
         "in vec2 Frag_UV;\n"
         "in vec4 Frag_Color;\n"
@@ -241,10 +269,15 @@ bool ImGui_ImplSdlGL3_CreateDeviceObjects()
     glShaderSource(g_VertHandle, 1, &vertex_shader, 0);
     glShaderSource(g_FragHandle, 1, &fragment_shader, 0);
     glCompileShader(g_VertHandle);
+	checkShaderCompileErrors("imgui vertex", g_VertHandle);
+
     glCompileShader(g_FragHandle);
+	checkShaderCompileErrors("imgui fragment", g_FragHandle);
+
     glAttachShader(g_ShaderHandle, g_VertHandle);
     glAttachShader(g_ShaderHandle, g_FragHandle);
     glLinkProgram(g_ShaderHandle);
+
 
     g_AttribLocationTex = glGetUniformLocation(g_ShaderHandle, "Texture");
     g_AttribLocationProjMtx = glGetUniformLocation(g_ShaderHandle, "ProjMtx");
@@ -274,6 +307,8 @@ bool ImGui_ImplSdlGL3_CreateDeviceObjects()
     glBindTexture(GL_TEXTURE_2D, last_texture);
     glBindBuffer(GL_ARRAY_BUFFER, last_array_buffer);
     glBindVertexArray(last_vertex_array);
+
+	assert(glGetError() == 0);
 
     return true;
 }
