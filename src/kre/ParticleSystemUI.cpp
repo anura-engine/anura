@@ -339,8 +339,8 @@ namespace KRE
 			auto& psystem = pscontainer->getParticleSystem();
 
 			auto wnd = KRE::WindowManager::getMainWindow();
-			const int neww = wnd->getDisplaySize().width;
-			const int newh = wnd->getDisplaySize().height;
+			const int neww = wnd->width();
+			const int newh = wnd->height();
 			const float aspect_ratio = static_cast<float>(neww) / static_cast<float>(newh);
 
 			if(ps_camera == nullptr) {
