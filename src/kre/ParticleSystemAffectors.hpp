@@ -108,6 +108,9 @@ namespace KRE
 			void addTimecolorEntry(const tc_pair& tc) { tc_data_.emplace_back(tc); sort_tc_data(); }
 			void setTimeColorData(const std::vector<tc_pair>& tc) { tc_data_ = tc; sort_tc_data(); }
 			void removeTimeColorEntry(const tc_pair& f);
+
+			bool isInterpolated() const { return interpolate_; }
+			void setInterpolate(bool f) { interpolate_ = f; }
 		private:
 			void internalApply(Particle& p, float t) override;
 			AffectorPtr clone() const override {
@@ -117,6 +120,7 @@ namespace KRE
 		
 			ColourOperation operation_;
 			std::vector<tc_pair> tc_data_;
+			bool interpolate_;	// interpolate or stepped.
 
 			void sort_tc_data();
 			std::vector<tc_pair>::iterator find_nearest_color(float dt);

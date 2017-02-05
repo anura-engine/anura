@@ -777,7 +777,11 @@ namespace KRE
 							static std::vector<std::string> optype{ "Set", "Multiply" };
 							if(ImGui::Combo("Operation", &current_item, vector_string_getter, &optype, optype.size())) {
 								tca->setOperation(static_cast<Particles::TimeColorAffector::ColourOperation>(current_item));
-							}					
+							}
+							bool interpolate = tca->isInterpolated();
+							if(ImGui::Checkbox("Interpolate", &interpolate)) {
+								tca->setInterpolate(interpolate);
+							}
 							auto tcdata = tca->getTimeColorData();
 							bool data_changed = false;
 							ImGui::BeginGroup();
