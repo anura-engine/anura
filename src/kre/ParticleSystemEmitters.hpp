@@ -99,7 +99,7 @@ namespace KRE
 		protected:
 			virtual void internalCreate(Particle& p, float t) = 0;
 			virtual bool durationExpired() override { return can_be_deleted_; }
-			virtual void handleWrite(variant_builder* build) const override;
+			void writeInternal(variant_builder* build) const;
 		private:
 			virtual void handleEmitProcess(float t) override;
 			virtual void handleDraw(const WindowPtr& wnd) const override;

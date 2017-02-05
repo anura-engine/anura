@@ -23,6 +23,9 @@
 
 #include <memory>
 
+#include "filesystem.hpp"
+#include "preferences.hpp"
+#include "module.hpp"
 #include "CameraObject.hpp"
 #include "ParticleSystemUI.hpp"
 #include "ParticleSystem.hpp"
@@ -334,7 +337,7 @@ namespace KRE
 
 		void ParticleUI(ParticleSystemContainerPtr pscontainer, bool* enable_mouselook, bool* invert_mouselook, const std::vector<std::string>& image_files)
 		{
-			ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f), ImGuiSetCond_Always);
+			//ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f), ImGuiSetCond_Always);
 			auto ps_camera = pscontainer->getCamera();
 			auto& psystem = pscontainer->getParticleSystem();
 
@@ -351,6 +354,45 @@ namespace KRE
 			ImGui::Begin("Particle System Editor");
 			ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 			ImGui::Text("Particle Count: %d", psystem->getParticleCount());
+
+			if(ImGui::Button("Save")) {
+				ImGui::OpenPopup("Save File As ...");
+			}
+
+			bool save_open = true;
+			if (ImGui::BeginPopupModal("Save File As ...", &save_open)) {
+				
+				bool write_file = false;
+				bool close_popup = false;
+				ImGui::Text("Enter File Name to Save:");
+				char fname[128];
+				memset(fname, 0, 128);
+				if (ImGui::InputText("FileName", fname, 128, ImGuiInputTextFlags_EnterReturnsTrue)) {
+					write_file = true;
+					close_popup = true;
+				}
+				if(ImGui::Button("Save")) {
+					write_file = true;
+					close_popup = true;
+				}
+				ImGui::SameLine();
+				if(ImGui::Button("Close")) {
+					close_popup = true;
+				}
+
+				if(write_file) {
+					const variant v = pscontainer->write();
+					//module::write_file(std::string(fname.data()), v.write_json());
+					const std::string fname2 = std::string(preferences::user_data_path()) + std::string(fname);
+					//std::cerr << "XXX: " << fname2 << "\n";
+					//std::cerr << v.write_json();
+					sys::write_file(fname2, v.write_json());
+				}
+				if(close_popup) {
+					ImGui::CloseCurrentPopup();
+				}
+				ImGui::EndPopup();
+			}
 
 			if(ImGui::CollapsingHeader("Camera")) {
 				std::vector<std::string> camera_types{ "Perspective", "Orthogonal" };

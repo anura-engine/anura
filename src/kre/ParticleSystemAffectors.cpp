@@ -106,7 +106,7 @@ namespace KRE
 			if(position_ != glm::vec3(0.0f)) {
 				res.add("position", vec3_to_variant(position_));
 			}
-			if(position_ != glm::vec3(1.0f)) {
+			if(scale_ != glm::vec3(1.0f)) {
 				res.add("scale", vec3_to_variant(scale_));
 			}
 			switch (type_) {
@@ -153,6 +153,7 @@ namespace KRE
 					ASSERT_LOG(false, "Bad affector type: " << static_cast<int>(type_));
 					break;
 			}
+			handleWrite(&res);
 			return res.build();
 		}
 
