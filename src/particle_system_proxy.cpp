@@ -24,6 +24,7 @@
 #include "filesystem.hpp"
 #include "module.hpp"
 #include "particle_system_proxy.hpp"
+#include "preferences.hpp"
 #include "profile_timer.hpp"
 #include "variant_utils.hpp"
 
@@ -36,6 +37,10 @@
 #include "SceneNode.hpp"
 #include "RenderManager.hpp"
 #include "WindowManager.hpp"
+
+namespace {
+	PREF_BOOL(particle_editor, false, "Show the particle editor");
+}
 
 namespace graphics
 {
@@ -76,7 +81,9 @@ namespace graphics
 			if(ifiles.empty()) {
 				module::get_files_in_dir("images", &ifiles, nullptr);
 			}
-			KRE::Particles::ParticleUI(particle_system_container_, &enable_mouselook_, &invert_mouselook_, ifiles);
+			if(g_particle_editor) {
+				KRE::Particles::ParticleUI(particle_system_container_, &enable_mouselook_, &invert_mouselook_, ifiles);
+			}
 #endif
 
 		}
