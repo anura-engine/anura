@@ -106,7 +106,7 @@ namespace KRE
 			if(position_ != glm::vec3(0.0f)) {
 				res.add("position", vec3_to_variant(position_));
 			}
-			if(position_ != glm::vec3(1.0f)) {
+			if(scale_ != glm::vec3(1.0f)) {
 				res.add("scale", vec3_to_variant(scale_));
 			}
 			switch (type_) {
@@ -153,6 +153,7 @@ namespace KRE
 					ASSERT_LOG(false, "Bad affector type: " << static_cast<int>(type_));
 					break;
 			}
+			handleWrite(&res);
 			return res.build();
 		}
 
@@ -243,13 +244,16 @@ namespace KRE
 		TimeColorAffector::TimeColorAffector(std::weak_ptr<ParticleSystemContainer> parent)
 			: Affector(parent, AffectorType::COLOR), 
 			  operation_(ColourOperation::COLOR_OP_SET),
-			  tc_data_()
+			  tc_data_(),
+			  interpolate_(true)
 		{			
 		}
 
 		TimeColorAffector::TimeColorAffector(std::weak_ptr<ParticleSystemContainer> parent, const variant& node)
 			: Affector(parent, node, AffectorType::COLOR), 
-			  operation_(ColourOperation::COLOR_OP_SET)
+			  operation_(ColourOperation::COLOR_OP_SET),
+			  tc_data_(),
+			  interpolate_(true)
 		{
 			init(node);
 		}
@@ -270,6 +274,9 @@ namespace KRE
 				} else {
 					ASSERT_LOG(false, "unrecognised time_color affector operation: " << op);
 				}
+			}
+			if(node.has_key("interpolate")) {
+				interpolate_ = node["interpolate"].as_bool();
 			}
 			ASSERT_LOG(node.has_key("time_colour") || node.has_key("time_color"), "Must be a 'time_colour' attribute");
 			const variant& tc_node = node.has_key("time_colour") ? node["time_colour"] : node["time_color"];
@@ -342,7 +349,11 @@ namespace KRE
 			auto it1 = find_nearest_color(ttl_percentage);
 			auto it2 = it1 + 1;
 			if(it2 != tc_data_.end()) {
-				c = it1->second + ((it2->second - it1->second) * ((ttl_percentage - it1->first)/(it2->first - it1->first)));
+				if(interpolate_) {
+					c = it1->second + ((it2->second - it1->second) * ((ttl_percentage - it1->first)/(it2->first - it1->first)));
+				} else {
+					c = it1->second;
+				}
 			} else {
 				c = it1->second;
 			}
@@ -363,6 +374,7 @@ namespace KRE
 		void TimeColorAffector::handleWrite(variant_builder* build) const 
 		{
 			build->add("color_operation", operation_ == ColourOperation::COLOR_OP_SET ? "set" : "multiply");
+			build->add("interpolate", interpolate_);
 			for(const auto& tc : tc_data_) {
 				variant_builder res;
 				res.add("time", tc.first);

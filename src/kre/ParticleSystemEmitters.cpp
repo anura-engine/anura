@@ -204,27 +204,45 @@ namespace KRE
 		{
 		}
 
-		void Emitter::handleWrite(variant_builder* build) const
+		void Emitter::writeInternal(variant_builder* build) const
 		{
+			switch (type_) {
+				case KRE::Particles::EmitterType::POINT:
+					build->add("type", "point");
+					break;
+				case KRE::Particles::EmitterType::LINE:
+					build->add("type", "line");
+					break;
+				case KRE::Particles::EmitterType::BOX:
+					build->add("type", "box");
+					break;
+				case KRE::Particles::EmitterType::CIRCLE:
+					build->add("type", "circle");
+					break;
+				case KRE::Particles::EmitterType::SPHERE_SURFACE:
+					build->add("type", "sphere_surface");
+					break;
+				default: break;
+			}
 			if(force_emission_) {
 				build->add("force_emission", force_emission_);
 			}
 			if(!can_be_deleted_) {
 				build->add("can_be_deleted", can_be_deleted_);
 			}
-			if(emission_rate_ && emission_rate_->getType() != ParameterType::FIXED && emission_rate_->getValue() != 10.0f) {
+			if(emission_rate_ /*&& emission_rate_->getType() != ParameterType::FIXED && emission_rate_->getValue() != 10.0f*/) {
 				build->add("emission_rate", emission_rate_->write());
 			}
-			if(time_to_live_ && time_to_live_->getType() != ParameterType::FIXED && time_to_live_->getValue() != 10.0f) {
+			if(time_to_live_ /*&& time_to_live_->getType() != ParameterType::FIXED && time_to_live_->getValue() != 10.0f*/) {
 				build->add("time_to_live", time_to_live_->write());
 			}
-			if(velocity_ && velocity_->getType() != ParameterType::FIXED && velocity_->getValue() != 10.0f) {
+			if(velocity_ /*&& velocity_->getType() != ParameterType::FIXED && velocity_->getValue() != 10.0f*/) {
 				build->add("velocity", velocity_->write());
 			}
-			if(angle_ && angle_->getType() != ParameterType::FIXED && angle_->getValue() != 20.0f) {
+			if(angle_ /*&& angle_->getType() != ParameterType::FIXED && angle_->getValue() != 20.0f*/) {
 				build->add("angle", angle_->write());
 			}
-			if(mass_ && mass_->getType() != ParameterType::FIXED && mass_->getValue() != 1.0f) {
+			if(mass_ /*&& mass_->getType() != ParameterType::FIXED && mass_->getValue() != 1.0f*/) {
 				build->add("mass", mass_->write());
 			}
 			if(duration_) {
@@ -578,8 +596,8 @@ namespace KRE
 
 		void CircleEmitter::handleWrite(variant_builder* build) const 
 		{
-			Emitter::handleWrite(build);
-			if(circle_radius_ != nullptr && circle_radius_->getType() != ParameterType::FIXED && circle_radius_->getValue() != 1.0f) {
+			Emitter::writeInternal(build);
+			if(circle_radius_ != nullptr /*&& circle_radius_->getType() != ParameterType::FIXED && circle_radius_->getValue() != 1.0f*/) {
 				build->add("circle_radius", circle_radius_->write());
 			}
 			if(circle_step_ != 0.1f) {
@@ -658,7 +676,7 @@ namespace KRE
 
 		void BoxEmitter::handleWrite(variant_builder* build) const 
 		{
-			Emitter::handleWrite(build);
+			Emitter::writeInternal(build);
 			if(box_dimensions_.x != 1.0f) {
 				build->add("box_width", box_dimensions_.x);
 			}
@@ -706,7 +724,7 @@ namespace KRE
 
 		void LineEmitter::handleWrite(variant_builder* build) const 
 		{
-			Emitter::handleWrite(build);
+			Emitter::writeInternal(build);
 			if(line_deviation_!= 0.0f) {
 				build->add("max_deviation", line_deviation_);
 			}
@@ -739,7 +757,7 @@ namespace KRE
 
 		void PointEmitter::handleWrite(variant_builder* build) const 
 		{
-			Emitter::handleWrite(build);
+			Emitter::writeInternal(build);
 			// no extra parameters.
 		}
 
@@ -773,8 +791,8 @@ namespace KRE
 
 		void SphereSurfaceEmitter::handleWrite(variant_builder* build) const 
 		{
-			Emitter::handleWrite(build);
-			if(radius_ != nullptr && radius_->getType() != ParameterType::FIXED && radius_->getValue() != 1.0f) {
+			Emitter::writeInternal(build);
+			if(radius_ != nullptr/* && radius_->getType() != ParameterType::FIXED && radius_->getValue() != 1.0f*/) {
 				build->add("radius", radius_->write());
 			}
 		}
