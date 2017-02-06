@@ -89,6 +89,7 @@
 #include "string_utils.hpp"
 #include "tbs_internal_server.hpp"
 #include "tile_map.hpp"
+#include "theme_imgui.hpp"
 #include "unit_test.hpp"
 #include "variant_utils.hpp"
 
@@ -96,7 +97,6 @@
 #include "Canvas.hpp"
 #include "SDLWrapper.hpp"
 #include "Font.hpp"
-#include "ParticleSystemUI.hpp"
 #include "SceneGraph.hpp"
 #include "SceneNode.hpp"
 #include "WindowManager.hpp"
@@ -1123,7 +1123,7 @@ int main(int argcount, char* argvec[])
 	bool quit = false;
 
 	// Apply a new default theme to ImGui.
-	KRE::Particles::theme_imgui();
+	theme_imgui_default();
 
 	while(!quit && !show_title_screen(level_cfg)) {
 		LevelPtr lvl(load_level(level_cfg));

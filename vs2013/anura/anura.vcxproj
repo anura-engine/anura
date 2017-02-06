@@ -331,6 +331,7 @@
     <ClInclude Include="..\..\src\tbs_web_server.hpp" />
     <ClInclude Include="..\..\src\TextureObject.hpp" />
     <ClInclude Include="..\..\src\text_editor_widget.hpp" />
+    <ClInclude Include="..\..\src\theme_imgui.hpp" />
     <ClInclude Include="..\..\src\thread.hpp" />
     <ClInclude Include="..\..\src\tiled\tiled.hpp" />
     <ClInclude Include="..\..\src\tiled\tmx_reader.hpp" />
@@ -680,6 +681,7 @@
     <ClCompile Include="..\..\src\tbs_web_server.cpp" />
     <ClCompile Include="..\..\src\TextureObject.cpp" />
     <ClCompile Include="..\..\src\text_editor_widget.cpp" />
+    <ClCompile Include="..\..\src\theme_imgui.cpp" />
     <ClCompile Include="..\..\src\thread.cpp" />
     <ClCompile Include="..\..\src\tiled\tiled.cpp" />
     <ClCompile Include="..\..\src\tiled\tmx_reader.cpp" />

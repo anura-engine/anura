@@ -1188,6 +1188,9 @@
     <ClInclude Include="..\..\imgui\imgui.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\theme_imgui.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\src\kre\geometry.inl">
@@ -2214,6 +2217,9 @@
     </ClCompile>
     <ClCompile Include="..\..\src\kre\imgui_impl_sdl_gl3.cpp">
       <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\theme_imgui.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

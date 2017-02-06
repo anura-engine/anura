@@ -72,6 +72,7 @@
 #include "stats.hpp"
 #include "surface_cache.hpp"
 #include "tbs_internal_server.hpp"
+#include "theme_imgui.hpp"
 #include "user_voxel_object.hpp"
 #include "utils.hpp"
 #include "variant_utils.hpp"
@@ -100,6 +101,8 @@ namespace
 	
 	PREF_STRING(editor_controller, "", "Object used when the editor is started");
 	PREF_BOOL_PERSISTENT(skip_odd_frames, false, "Skips every other frame");
+
+	PREF_BOOL(theme_imgui_ui, false, "Displays a dialog to customize the ImGui User Interface.");
 
 	LevelRunner* current_level_runner = nullptr;
 
@@ -1513,6 +1516,13 @@ bool LevelRunner::play_cycle()
 				} else if(key == SDLK_F3) {
 					LOG_DEBUG("F3 pressed");
 					preferences::set_show_fps(!preferences::show_fps());
+				} else if(key == SDLK_F9) {
+					g_theme_imgui_ui = !g_theme_imgui_ui;
+					if(mod & KMOD_CTRL) {
+						// resets to default ui and shows it
+						theme_imgui_default();
+						g_theme_imgui_ui = true;
+					}
 				}
 				break;
 			}
@@ -1723,6 +1733,10 @@ bool LevelRunner::play_cycle()
 
 			if(console_) {
 				console_->draw();
+			}
+
+			if(g_theme_imgui_ui) {
+				imgui_theme_ui();
 			}
 
 			formula_profiler::Instrument instrument_profiler("DRAW_PROFILE");
