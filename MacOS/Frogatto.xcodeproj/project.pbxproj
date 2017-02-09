@@ -116,7 +116,6 @@
 		639B538C1AC20D5A00ECC4F8 /* ParticleSystem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 639B53231AC20D5900ECC4F8 /* ParticleSystem.cpp */; };
 		639B538D1AC20D5A00ECC4F8 /* ParticleSystemAffectors.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 639B53251AC20D5900ECC4F8 /* ParticleSystemAffectors.cpp */; };
 		639B538E1AC20D5A00ECC4F8 /* ParticleSystemEmitters.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 639B53271AC20D5900ECC4F8 /* ParticleSystemEmitters.cpp */; };
-		639B538F1AC20D5A00ECC4F8 /* ParticleSystemObservers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 639B532A1AC20D5900ECC4F8 /* ParticleSystemObservers.cpp */; };
 		639B53901AC20D5A00ECC4F8 /* ParticleSystemParameters.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 639B532C1AC20D5900ECC4F8 /* ParticleSystemParameters.cpp */; };
 		639B53911AC20D5A00ECC4F8 /* Renderable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 639B532F1AC20D5900ECC4F8 /* Renderable.cpp */; };
 		639B53921AC20D5A00ECC4F8 /* RenderManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 639B53321AC20D5900ECC4F8 /* RenderManager.cpp */; };
@@ -385,6 +384,11 @@
 		C02C5D081CA23AE4006D53E3 /* libboost_locale.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = C02C5D061CA23AB3006D53E3 /* libboost_locale.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		C02C5D0B1CA252E2006D53E3 /* url_handler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C02C5D091CA252E2006D53E3 /* url_handler.cpp */; };
 		C02C5D0E1CAE5AFF006D53E3 /* SurfaceScale.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C02C5D0C1CAE5AFF006D53E3 /* SurfaceScale.cpp */; };
+		C02D938D1E4C3CEF00CB0A6A /* imgui_draw.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C02D938A1E4C3CEF00CB0A6A /* imgui_draw.cpp */; };
+		C02D938E1E4C3CEF00CB0A6A /* imgui.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C02D938B1E4C3CEF00CB0A6A /* imgui.cpp */; };
+		C02D93911E4C52C000CB0A6A /* ParticleSystemUI.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C02D938F1E4C52C000CB0A6A /* ParticleSystemUI.cpp */; };
+		C02D93941E4C533300CB0A6A /* imgui_impl_sdl_gl3.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C02D93921E4C533300CB0A6A /* imgui_impl_sdl_gl3.cpp */; };
+		C02D93971E4C54A100CB0A6A /* imgui_user.inl in Resources */ = {isa = PBXBuildFile; fileRef = C02D93961E4C54A100CB0A6A /* imgui_user.inl */; };
 		C03585B81D812A240090FC2D /* hex_helper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C03585B41D812A240090FC2D /* hex_helper.cpp */; };
 		C03585B91D812A240090FC2D /* hex_loader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C03585B61D812A240090FC2D /* hex_loader.cpp */; };
 		C03585BE1D812A5D0090FC2D /* tile_rules.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C03585BC1D812A5D0090FC2D /* tile_rules.cpp */; };
@@ -723,8 +727,6 @@
 		639B53271AC20D5900ECC4F8 /* ParticleSystemEmitters.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ParticleSystemEmitters.cpp; sourceTree = "<group>"; };
 		639B53281AC20D5900ECC4F8 /* ParticleSystemEmitters.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = ParticleSystemEmitters.hpp; sourceTree = "<group>"; };
 		639B53291AC20D5900ECC4F8 /* ParticleSystemFwd.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = ParticleSystemFwd.hpp; sourceTree = "<group>"; };
-		639B532A1AC20D5900ECC4F8 /* ParticleSystemObservers.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ParticleSystemObservers.cpp; sourceTree = "<group>"; };
-		639B532B1AC20D5900ECC4F8 /* ParticleSystemObservers.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = ParticleSystemObservers.hpp; sourceTree = "<group>"; };
 		639B532C1AC20D5900ECC4F8 /* ParticleSystemParameters.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ParticleSystemParameters.cpp; sourceTree = "<group>"; };
 		639B532D1AC20D5900ECC4F8 /* ParticleSystemParameters.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = ParticleSystemParameters.hpp; sourceTree = "<group>"; };
 		639B532E1AC20D5900ECC4F8 /* PixelFormat.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = PixelFormat.hpp; sourceTree = "<group>"; };
@@ -1268,6 +1270,15 @@
 		C02C5D0A1CA252E2006D53E3 /* url_handler.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = url_handler.hpp; sourceTree = "<group>"; };
 		C02C5D0C1CAE5AFF006D53E3 /* SurfaceScale.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SurfaceScale.cpp; sourceTree = "<group>"; };
 		C02C5D0D1CAE5AFF006D53E3 /* SurfaceScale.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = SurfaceScale.hpp; sourceTree = "<group>"; };
+		C02D938A1E4C3CEF00CB0A6A /* imgui_draw.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = imgui_draw.cpp; path = ../imgui/imgui_draw.cpp; sourceTree = "<group>"; };
+		C02D938B1E4C3CEF00CB0A6A /* imgui.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = imgui.cpp; path = ../imgui/imgui.cpp; sourceTree = "<group>"; };
+		C02D938C1E4C3CEF00CB0A6A /* imgui.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = imgui.h; path = ../imgui/imgui.h; sourceTree = "<group>"; };
+		C02D938F1E4C52C000CB0A6A /* ParticleSystemUI.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ParticleSystemUI.cpp; sourceTree = "<group>"; };
+		C02D93901E4C52C000CB0A6A /* ParticleSystemUI.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = ParticleSystemUI.hpp; sourceTree = "<group>"; };
+		C02D93921E4C533300CB0A6A /* imgui_impl_sdl_gl3.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = imgui_impl_sdl_gl3.cpp; sourceTree = "<group>"; };
+		C02D93931E4C533300CB0A6A /* imgui_impl_sdl_gl3.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = imgui_impl_sdl_gl3.h; sourceTree = "<group>"; };
+		C02D93951E4C53E000CB0A6A /* spline.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = spline.h; path = ../imgui/spline.h; sourceTree = "<group>"; };
+		C02D93961E4C54A100CB0A6A /* imgui_user.inl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = imgui_user.inl; path = ../imgui/imgui_user.inl; sourceTree = "<group>"; };
 		C03585B41D812A240090FC2D /* hex_helper.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = hex_helper.cpp; sourceTree = "<group>"; };
 		C03585B51D812A240090FC2D /* hex_helper.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = hex_helper.hpp; sourceTree = "<group>"; };
 		C03585B61D812A240090FC2D /* hex_loader.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = hex_loader.cpp; sourceTree = "<group>"; };
@@ -1682,6 +1693,8 @@
 				639B531C1AC20D5900ECC4F8 /* Frustum.hpp */,
 				639B531D1AC20D5900ECC4F8 /* geometry.hpp */,
 				639B531E1AC20D5900ECC4F8 /* geometry.inl */,
+				C02D93921E4C533300CB0A6A /* imgui_impl_sdl_gl3.cpp */,
+				C02D93931E4C533300CB0A6A /* imgui_impl_sdl_gl3.h */,
 				639B531F1AC20D5900ECC4F8 /* LightObject.cpp */,
 				639B53201AC20D5900ECC4F8 /* LightObject.hpp */,
 				639B53211AC20D5900ECC4F8 /* ModelMatrixScope.cpp */,
@@ -1693,10 +1706,10 @@
 				639B53271AC20D5900ECC4F8 /* ParticleSystemEmitters.cpp */,
 				639B53281AC20D5900ECC4F8 /* ParticleSystemEmitters.hpp */,
 				639B53291AC20D5900ECC4F8 /* ParticleSystemFwd.hpp */,
-				639B532A1AC20D5900ECC4F8 /* ParticleSystemObservers.cpp */,
-				639B532B1AC20D5900ECC4F8 /* ParticleSystemObservers.hpp */,
 				639B532C1AC20D5900ECC4F8 /* ParticleSystemParameters.cpp */,
 				639B532D1AC20D5900ECC4F8 /* ParticleSystemParameters.hpp */,
+				C02D938F1E4C52C000CB0A6A /* ParticleSystemUI.cpp */,
+				C02D93901E4C52C000CB0A6A /* ParticleSystemUI.hpp */,
 				639B532E1AC20D5900ECC4F8 /* PixelFormat.hpp */,
 				639B532F1AC20D5900ECC4F8 /* Renderable.cpp */,
 				639B53301AC20D5900ECC4F8 /* Renderable.hpp */,
@@ -2016,6 +2029,11 @@
 		C010C5BC160AFD4C006E7D90 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				C02D938A1E4C3CEF00CB0A6A /* imgui_draw.cpp */,
+				C02D938B1E4C3CEF00CB0A6A /* imgui.cpp */,
+				C02D938C1E4C3CEF00CB0A6A /* imgui.h */,
+				C02D93961E4C54A100CB0A6A /* imgui_user.inl */,
+				C02D93951E4C53E000CB0A6A /* spline.h */,
 				C0127C341DB486E00095AC80 /* formula_internal.cpp */,
 				C0127C351DB486E00095AC80 /* formula_internal.hpp */,
 				C0127C331DB486CC0095AC80 /* formula_where.hpp */,
@@ -2555,6 +2573,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C02D93971E4C54A100CB0A6A /* imgui_user.inl in Resources */,
 				638CC7431AF6057700C7A106 /* SConscript in Resources */,
 				C02751C417FD4A1A00173646 /* master-config.cfg in Resources */,
 				638CC7201AF6057700C7A106 /* FILEFORMAT in Resources */,
@@ -2614,6 +2633,7 @@
 				C010C743160AFD4D006E7D90 /* animation_preview_widget.cpp in Sources */,
 				C010C744160AFD4D006E7D90 /* animation_widget.cpp in Sources */,
 				639B53AA1AC20D5A00ECC4F8 /* VGraphOGL.cpp in Sources */,
+				C02D93911E4C52C000CB0A6A /* ParticleSystemUI.cpp in Sources */,
 				638CC7241AF6057700C7A106 /* lbitlib.cpp in Sources */,
 				C010C746160AFD4D006E7D90 /* asserts.cpp in Sources */,
 				C0CB6CFA1933E62C004A6450 /* cairo.cpp in Sources */,
@@ -2641,7 +2661,6 @@
 				639B54551AC20D7600ECC4F8 /* b2FrictionJoint.cpp in Sources */,
 				C010C752160AFD4D006E7D90 /* code_editor_dialog.cpp in Sources */,
 				C010C753160AFD4D006E7D90 /* code_editor_widget.cpp in Sources */,
-				639B538F1AC20D5A00ECC4F8 /* ParticleSystemObservers.cpp in Sources */,
 				C010C754160AFD4D006E7D90 /* collision_utils.cpp in Sources */,
 				C010C758160AFD4D006E7D90 /* compress.cpp in Sources */,
 				638CC7341AF6057700C7A106 /* lobject.cpp in Sources */,
@@ -2669,6 +2688,7 @@
 				639B53871AC20D5A00ECC4F8 /* FontSDL.cpp in Sources */,
 				C07A47D419444C2000F1190E /* svg_gradient.cpp in Sources */,
 				C010C762160AFD4D006E7D90 /* decimal.cpp in Sources */,
+				C02D938D1E4C3CEF00CB0A6A /* imgui_draw.cpp in Sources */,
 				C010C763160AFD4D006E7D90 /* dialog.cpp in Sources */,
 				639B54231AC20D7600ECC4F8 /* b2CircleShape.cpp in Sources */,
 				C010C764160AFD4D006E7D90 /* difficulty.cpp in Sources */,
@@ -2719,6 +2739,7 @@
 				639B53951AC20D5A00ECC4F8 /* SceneGraph.cpp in Sources */,
 				639B537C1AC20D5A00ECC4F8 /* ClipScope.cpp in Sources */,
 				639B53811AC20D5A00ECC4F8 /* DisplayDeviceOGL.cpp in Sources */,
+				C02D93941E4C533300CB0A6A /* imgui_impl_sdl_gl3.cpp in Sources */,
 				639B539E1AC20D5A00ECC4F8 /* StencilScopeOGL.cpp in Sources */,
 				6357A6E81B258B1C00793D60 /* hex_renderable.cpp in Sources */,
 				638CC74B1AF75D3400C7A106 /* test_persist.cpp in Sources */,
@@ -2730,6 +2751,7 @@
 				639B537D1AC20D5A00ECC4F8 /* ClipScopeOGL.cpp in Sources */,
 				638CC7321AF6057700C7A106 /* lmem.cpp in Sources */,
 				C010C780160AFD4D006E7D90 /* formula_test.cpp in Sources */,
+				C02D938E1E4C3CEF00CB0A6A /* imgui.cpp in Sources */,
 				C010C781160AFD4D006E7D90 /* formula_tokenizer.cpp in Sources */,
 				C010C782160AFD4D006E7D90 /* formula_variable_storage.cpp in Sources */,
 				6357A7471B3F116900793D60 /* xhtml_text_node.cpp in Sources */,
@@ -3025,12 +3047,22 @@
 		C010C589160AFADA006E7D90 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					USE_IMGUI,
+					IMGUI_INCLUDE_IMGUI_USER_INL,
+				);
+				OTHER_CFLAGS = "-DIMGUI_INCLUDE_IMGUI_USER_INL";
 			};
 			name = Debug;
 		};
 		C010C58A160AFADA006E7D90 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					USE_IMGUI,
+					IMGUI_INCLUDE_IMGUI_USER_INL,
+				);
+				OTHER_CFLAGS = "-DIMGUI_INCLUDE_IMGUI_USER_INL";
 			};
 			name = Release;
 		};
