@@ -128,6 +128,8 @@ namespace KRE
 			ParticleSystem(const ParticleSystem& ps);
 			void init();
 
+			void setTextureNode(const variant& node);
+
 			const EmitterPtr& getEmitter() const { return emitter_; }
 			void setEmitter(const EmitterPtr& e) { emitter_ = e; init(); }
 			const EmitterPtr& getActiveEmitter() const { return active_emitter_; }
@@ -195,6 +197,8 @@ namespace KRE
 
 			EmitterPtr emitter_;
 			std::vector<AffectorPtr> affectors_;
+
+			variant texture_node_;
 
 			ParticleSystem() = delete;
 		};
