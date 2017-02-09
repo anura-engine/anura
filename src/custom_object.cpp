@@ -2789,6 +2789,8 @@ void CustomObject::addAnimatedMovement(variant attr_var, variant options)
 		ASSERT_LOG(slots.back() >= 0, "Using animate on " << type << " object with unknown property: " << p.first.as_string());
 		end_values.emplace_back(p.second);
 		begin_values.emplace_back(queryValueBySlot(slots.back()));
+
+		ASSERT_LOG(begin_values.back().is_null() == false, "Using animate on " << type << " object property " << p.first.as_string() << " which is null");
 	}
 
 	const int ncycles = options["duration"].as_int(10);
