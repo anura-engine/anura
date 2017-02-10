@@ -25,7 +25,17 @@
 
 #ifdef USE_IMGUI
 
+#include <string>
+
+#include "asserts.hpp"
 #include "imgui.h"
+#include "json_parser.hpp"
+#include "preferences.hpp"
+
+namespace
+{
+	const std::string imgui_theme_file = "data/imgui.cfg"; 
+}
 
 // A default theme
 void theme_imgui_default()
@@ -183,6 +193,30 @@ void imgui_theme_ui()
 		ImGui::DragFloat("Curve Tessellation Tolerance", &style.CurveTessellationTol, 0.1f, 0.0f, 100.0f);
 	}
 	ImGui::End();
+}
+
+void save_imgui_theme()
+{
+}
+
+void load_theme_from_variant(const variant& v)
+{
+	ImGuiStyle& style = ImGui::GetStyle();
+	style.Alpha = v["alpha"].as_float(style.Alpha);
+	if(v.has_key("window_padding")) {
+		style.WindowPadding = variant_to_vec2(v["window_padding"]);
+	}
+}
+
+void load_imgui_theme()
+{
+	std::string fname = std::string(preferences::user_data_path()) + imgui_theme_file;
+	try {
+		variant v = json::parse_from_file(fname);
+		load_theme_from_variant(v);
+	} catch(json::ParseError& e) {
+		LOG_ERROR("Failed to read file: " << fname << " : " << e.errorMessage());
+	}
 }
 
 #else
