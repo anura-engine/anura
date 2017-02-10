@@ -131,7 +131,7 @@ variant vec2_to_variant(const ImVec2& v)
 	return variant(&res);
 }
 
-void EditColor(char* label, ImVec4* col)
+void EditColor(const char* label, ImVec4* col)
 {
 	float v[4];
 	ImVec4ToFloat4(v, *col);
@@ -140,7 +140,7 @@ void EditColor(char* label, ImVec4* col)
 	}
 }
 
-void EditVec2(char* label, ImVec2* v, float v_speed = 1.0f, float v_min = 0.0f, float v_max = 0.0f)
+void EditVec2(const char* label, ImVec2* v, float v_speed = 1.0f, float v_min = 0.0f, float v_max = 0.0f)
 {
 	float f[2];
 	ImVec2ToFloat2(f, *v);
@@ -315,6 +315,14 @@ void theme_imgui_default()
 }
 
 void imgui_theme_ui()
+{
+}
+
+void save_imgui_theme()
+{
+}
+
+void load_imgui_theme()
 {
 }
 #endif
