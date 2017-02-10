@@ -24,6 +24,7 @@
 #include "filesystem.hpp"
 #include "module.hpp"
 #include "particle_system_proxy.hpp"
+#include "preferences.hpp"
 #include "profile_timer.hpp"
 #include "variant_utils.hpp"
 
@@ -31,15 +32,43 @@
 #include "ParticleSystem.hpp"
 #include "ParticleSystemAffectors.hpp"
 #include "ParticleSystemEmitters.hpp"
+#include "ParticleSystemParameters.hpp"
 #include "ParticleSystemUI.hpp"
 #include "SceneGraph.hpp"
 #include "SceneNode.hpp"
 #include "RenderManager.hpp"
 #include "WindowManager.hpp"
 
+namespace {
+	PREF_BOOL(particle_editor, false, "Show the particle editor");
+}
+
 namespace graphics
 {
 	using namespace KRE;
+
+
+	const KRE::Particles::Emitter& ParticleSystemContainerProxy::getActiveEmitter() const
+	{
+		auto psystem = particle_system_container_->getParticleSystem();
+		if(psystem) {
+			auto emitter = psystem->getActiveEmitter();
+			return *emitter;
+		}
+
+		ASSERT_LOG(false, "Could not get emitter");
+	}
+
+	KRE::Particles::Emitter& ParticleSystemContainerProxy::getActiveEmitter()
+	{
+		auto psystem = particle_system_container_->getParticleSystem();
+		if(psystem) {
+			auto emitter = psystem->getActiveEmitter();
+			return *emitter;
+		}
+
+		ASSERT_LOG(false, "Could not get emitter");
+	}
 
 	ParticleSystemContainerProxy::ParticleSystemContainerProxy(const variant& node)
 		: scene_(SceneGraph::create("ParticleSystemContainerProxy")),
@@ -75,8 +104,33 @@ namespace graphics
 			// XX should update this if the directory contents changes.
 			if(ifiles.empty()) {
 				module::get_files_in_dir("images", &ifiles, nullptr);
+				auto end_itor = std::remove_if(ifiles.begin(), ifiles.end(), [](std::string fname) {
+
+					auto end = fname.end();
+					while(end != fname.begin() && *end != '.') {
+						--end;
+					}
+
+					std::string ext(end, fname.end());
+					for(char& c : ext) {
+						c = tolower(c);
+					}
+
+					static const std::string AllowedExt[] = { ".jpg", ".jpeg", ".png" };
+					for(const std::string& ae : AllowedExt) {
+						if(ae == ext) {
+							return false;
+						}
+					}
+
+					return true;
+				});
+
+				ifiles.erase(end_itor, ifiles.end());
 			}
-			KRE::Particles::ParticleUI(particle_system_container_, &enable_mouselook_, &invert_mouselook_, ifiles);
+			if(g_particle_editor) {
+				KRE::Particles::ParticleUI(particle_system_container_, &enable_mouselook_, &invert_mouselook_, ifiles);
+			}
 #endif
 
 		}
@@ -135,10 +189,18 @@ namespace graphics
 	};
 
 	BEGIN_DEFINE_CALLABLE_NOBASE(ParticleSystemContainerProxy)
+		DEFINE_FIELD(write, "map")
+			return obj.particle_system_container_->write();
 		DEFINE_FIELD(running, "bool")
 			return variant::from_bool(obj.running_);
 		DEFINE_SET_FIELD
 			obj.running_ = value.as_bool();
+
+		DEFINE_FIELD(emission_rate, "any")
+			return obj.getActiveEmitter().getEmissionRate()->write();
+		DEFINE_SET_FIELD
+			obj.getActiveEmitter().setEmissionRate(value);
+
 		DEFINE_FIELD(systems, "[builtin particle_system_proxy]")
 
 			auto psystem = obj.particle_system_container_->getParticleSystem();

@@ -51,11 +51,12 @@ namespace KRE
 {
 	namespace Particles
 	{
-		void ParameterGui(const char* label, const KRE::Particles::ParameterPtr& param, float fmin = 0.0f, float fmax = 0.0f)
+		bool ParameterGui(const char* label, const KRE::Particles::ParameterPtr& param, float fmin = 0.0f, float fmax = 0.0f)
 		{
+			bool result = false;
 			// XXX we need to deal with this condition. Probably add another option to type.
 			if(param == nullptr) {
-				return;
+				return result;
 			}
 
 			using namespace KRE::Particles;
@@ -66,6 +67,7 @@ namespace KRE
 			combo_label += label;
 			if(ImGui::Combo(combo_label.c_str(), &current_type, ptype, 5)) {
 				param->setType(static_cast<ParameterType>(current_type));
+				result = true;
 			}
 
 			float v_speed = 1.0f;
@@ -81,6 +83,7 @@ namespace KRE
 				fixed_label += label;
 				if(ImGui::DragFloat(fixed_label.c_str(), &fp.value, v_speed, fmin, fmax)) {
 					param->setFixedValue(fp);
+					result = true;
 				}
 				break;
 			}
@@ -91,11 +94,13 @@ namespace KRE
 				min_label += label;
 				if(ImGui::DragFloat(min_label.c_str(), &rp.min_value, v_speed, fmin, fmax)) {
 					param->setRandomRange(rp);
+					result = true;
 				}
 				std::string max_label = "Max Value##";
 				max_label += label;
 				if(ImGui::DragFloat(max_label.c_str(), &rp.max_value, v_speed, fmin, fmax)) {
 					param->setRandomRange(rp);
+					result = true;
 				}
 				break;
 			}
@@ -124,6 +129,7 @@ namespace KRE
 						cp.control_points.emplace_back(points[n].x, points[n].y);
 					}
 					param->setControlPoints(InterpolationType::LINEAR,  cp);
+					result = true;
 				}
 				break;
 			}
@@ -152,6 +158,7 @@ namespace KRE
 						cp.control_points.emplace_back(points[n].x, points[n].y);
 					}
 					param->setControlPoints(InterpolationType::SPLINE,  cp);
+					result = true;
 				}
 				break;
 			}
@@ -166,31 +173,38 @@ namespace KRE
 				if(ImGui::Combo(wtype_label.c_str(), &otype, osc_items, 2)) {
 					op.osc_type = static_cast<WaveType>(otype);
 					param->setOscillation(op);
+					result = true;
 				}
 				std::string freq_label = "Frequency##";
 				freq_label += label;
 				if(ImGui::DragFloat(freq_label.c_str(), &op.frequency, 1.0f, 1.0f, 10000.0f)) {
 					param->setOscillation(op);
+					result = true;
 				}
 				std::string phase_label = "Phase##";
 				phase_label += label;
 				if(ImGui::DragFloat(phase_label.c_str(), &op.phase, 1.0f, 0.0f, 360.0f)) {
 					param->setOscillation(op);
+					result = true;
 				}
 				std::string base_label = "Base##";
 				base_label += label;
 				if(ImGui::DragFloat(base_label.c_str(), &op.base, 1.0f, 0.0f, 1000.0f)) {
 					param->setOscillation(op);
+					result = true;
 				}
 				std::string amplitude_label = "Amplitude##";
 				amplitude_label += label;
 				if(ImGui::DragFloat(amplitude_label.c_str(), &op.amplitude, v_speed, fmin, fmax)) {
 					param->setOscillation(op);
+					result = true;
 				}
 				break;
 			}
 			default: break;
 			}
+
+			return result;
 		}
 
 		bool vector_string_getter(void* data, int n, const char** out_text)
@@ -477,7 +491,7 @@ namespace KRE
 						}
 						ImGui::Text("%s", selected_texture.c_str());
 						if(ImGui::ListBox("Textures", &current_file, vector_string_getter, const_cast<void*>(static_cast<const void*>(&image_files)), image_files.size())) {
-							psystem->setTexture(Texture::createTexture(image_files[current_file]));
+							psystem->setTextureNode(variant(image_files[current_file]));
 						}
 					}
 
@@ -534,7 +548,8 @@ namespace KRE
 			}
 
 			Particles::EmitterPtr emitter_replace = nullptr;
-			auto& e = psystem->getActiveEmitter();
+			bool emitter_modified = false;
+			auto& e = psystem->getEmitter();
 			{
 				if(ImGui::CollapsingHeader("Emitter")) {
 					Particles::EmitterType type = e->getType();
@@ -549,13 +564,13 @@ namespace KRE
 					}
 					ImGui::PopID();
 
-					ParameterGui("Emission Rate", e->getEmissionRate());
-					ParameterGui("Time to live", e->getTimeToLive());
-					ParameterGui("Velocity", e->getVelocity());
-					ParameterGui("Angle", e->getAngle(), 0.0f, 360.0f);
-					ParameterGui("Mass", e->getMass());
-					ParameterGui("Duration", e->getDuration(), 0.0f, 100.0f);
-					ParameterGui("Repeat Delay", e->getRepeatDelay());
+					emitter_modified = emitter_modified || ParameterGui("Emission Rate", e->getEmissionRate());
+					emitter_modified = emitter_modified || ParameterGui("Time to live", e->getTimeToLive());
+					emitter_modified = emitter_modified || ParameterGui("Velocity", e->getVelocity());
+					emitter_modified = emitter_modified || ParameterGui("Angle", e->getAngle(), 0.0f, 360.0f);
+					emitter_modified = emitter_modified || ParameterGui("Mass", e->getMass());
+					emitter_modified = emitter_modified || ParameterGui("Duration", e->getDuration(), 0.0f, 100.0f);
+					emitter_modified = emitter_modified || ParameterGui("Repeat Delay", e->getRepeatDelay());
 
 					if(e->hasOrientationRange()) {
 						glm::quat start, end;
@@ -565,6 +580,7 @@ namespace KRE
 						changed |= QuaternionGui("Orientation End", &end);
 						if(changed) {
 							e->setOrientationRange(start, end);
+							emitter_modified = true;
 						}
 						if(ImGui::Button("Remove Orientation Range")) {
 							e->clearOrientationRange();
@@ -573,9 +589,11 @@ namespace KRE
 						glm::quat q = e->getOrientation();
 						if(QuaternionGui("Orientation", &q)) {
 							e->setOrientation(q);
+							emitter_modified = true;
 						}
 						if(ImGui::Button("Add Orientation Range")) {
 							e->setOrientationRange(glm::angleAxis(0.0f, glm::vec3(0.0f, 1.0f, 0.0f)), glm::angleAxis(2.0f * static_cast<float>(M_PI), glm::vec3(0.0f, 1.0f, 0.0f)));
+							emitter_modified = true;
 						}
 					}
 
@@ -594,6 +612,7 @@ namespace KRE
 
 						if(changed) {
 							e->setColorRange(glm::vec4(scol[0], scol[1], scol[2], scol[3]), glm::vec4(ecol[0], ecol[1], ecol[2], ecol[3]));
+							emitter_modified = true;
 						}
 
 						if(ImGui::Button("Remove Color Range")) {
@@ -603,23 +622,27 @@ namespace KRE
 						float col[4] = { e->getColorFloat().r, e->getColorFloat().g, e->getColorFloat().b, e->getColorFloat().a };
 						if(ImGui::ColorEdit4("color", col, true)) {
 							e->setColor(glm::vec4(col[0], col[1], col[2], col[3]));
+							emitter_modified = true;
 						}
 						if(ImGui::Button("Add Color Range")) {
 							e->setColorRange(glm::vec4(0.0f), glm::vec4(1.0f));
+							emitter_modified = true;
 						}
 					}
 
-					ParameterGui("Width", e->getParticleWidth());
-					ParameterGui("Height", e->getParticleHeight());
-					ParameterGui("Depth", e->getParticleDepth());
+					emitter_modified = emitter_modified || ParameterGui("Width", e->getParticleWidth());
+					emitter_modified = emitter_modified || ParameterGui("Height", e->getParticleHeight());
+					emitter_modified = emitter_modified || ParameterGui("Depth", e->getParticleDepth());
 
 					bool force_emission = e->getForceEmission();
 					if(ImGui::Checkbox("Force Emission", &force_emission)) {
 						e->setForceEmission(force_emission);
+						emitter_modified = true;
 					}
 					bool can_be_deleted = e->getCanBeDeleted();
 					if(ImGui::Checkbox("Can Be Deleted", &can_be_deleted)) {
 						e->setCanBeDeleted(can_be_deleted);
+						emitter_modified = true;
 					}
 
 					switch (type) {
@@ -633,14 +656,17 @@ namespace KRE
 						float mini = le->getMinIncrement();
 						if(ImGui::DragFloat("Min Increment", &mini, 0.1f, 0.0f, 100.0f)) {
 							le->setMinIncrement(mini);
+							emitter_modified = true;
 						}
 						float maxi = le->getMaxIncrement();
 						if(ImGui::DragFloat("Max Increment", &maxi, 0.1f, 0.0f, 100.0f)) {
 							le->setMinIncrement(maxi);
+							emitter_modified = true;
 						}
 						float ld = le->getLineDeviation();
 						if(ImGui::DragFloat("Line Deviation", &ld, 0.1f, 0.0f, 100.0f)) {
 							le->setLineDeviation(ld);
+							emitter_modified = true;
 						}
 						break;
 					}
@@ -650,46 +676,54 @@ namespace KRE
 						float v[3]{ dims.x, dims.y, dims.z };
 						if(ImGui::SliderFloat3("Dimensions", v, 0.0f, 100.0f)) {
 							be->setDimensions(v);
+							emitter_modified = true;
 						}
 						break;
 					}
 					case KRE::Particles::EmitterType::CIRCLE: {
 						auto ce = std::dynamic_pointer_cast<Particles::CircleEmitter>(e);
-						ParameterGui("Radius", ce->getRadius(), 0.01f, 200.0f);
+						emitter_modified = emitter_modified || ParameterGui("Radius", ce->getRadius(), 0.01f, 200.0f);
 						float step = ce->getStep();
 						if(ImGui::DragFloat("Step", &step, 0.1f, 0.0f, 100.0f)) {
 							ce->setStep(step);
+							emitter_modified = true;
 						}
 						float angle = ce->getAngle();
 						if(ImGui::DragFloat("Angle", &angle, 0.1f, 0.0f, 360.0f)) {
 							ce->setAngle(angle);
+							emitter_modified = true;
 						}
 						auto& norm = ce->getNormal();
 						float nv[3]{ norm.x, norm.y, norm.z };
 						if(ImGui::Button(" XY ")) {
 							ce->setNormal(0.0f, 0.0f, 1.0f);
+							emitter_modified = true;
 						}
 						ImGui::SameLine();
 						if(ImGui::Button(" XZ ")) {
 							ce->setNormal(0.0f, 1.0f, 0.0f);
+							emitter_modified = true;
 						}
 						ImGui::SameLine();
 						if(ImGui::Button(" YZ ")) {
 							ce->setNormal(1.0f, 0.0f, 0.0f);
+							emitter_modified = true;
 						}
 						if(ImGui::DragFloat3("Normal", nv, 0.05f, 0.0f, 2.0f)) {
 							ce->setNormal(nv);
+							emitter_modified = true;
 						}
 
 						bool random_loc = ce->isRandomLocation();
 						if(ImGui::Checkbox("Random Location", &random_loc)) {
 							ce->setRandomLocation(random_loc);
+							emitter_modified = true;
 						}
 						break;
 					}
 					case KRE::Particles::EmitterType::SPHERE_SURFACE: {
 						auto sse = std::dynamic_pointer_cast<Particles::SphereSurfaceEmitter>(e);
-						ParameterGui("Radius", sse->getRadius());
+						emitter_modified = emitter_modified || ParameterGui("Radius", sse->getRadius());
 						break;
 					}
 					default:
@@ -701,6 +735,10 @@ namespace KRE
 
 			if(emitter_replace) {
 				psystem->setEmitter(emitter_replace);
+			}
+
+			if(emitter_modified) {
+				psystem->init();
 			}
 
 			if(ImGui::CollapsingHeader("Affectors")) {
@@ -781,7 +819,7 @@ namespace KRE
 							if(ImGui::Checkbox("Interpolate", &interpolate)) {
 								tca->setInterpolate(interpolate);
 							}
-							auto tcdata = tca->getTimeColorData();
+							auto& tcdata = tca->getTimeColorData();
 							bool data_changed = false;
 							ImGui::BeginGroup();
 							if(ImGui::SmallButton("Clear")) {

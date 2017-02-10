@@ -45,6 +45,9 @@ namespace graphics
 	private:
 		DECLARE_CALLABLE(ParticleSystemContainerProxy);
 
+		const KRE::Particles::Emitter& getActiveEmitter() const;
+		KRE::Particles::Emitter& getActiveEmitter();
+
 		KRE::Particles::ParticleSystemContainerPtr particle_system_container_;
 		KRE::SceneGraphPtr scene_;
 		KRE::SceneNodePtr root_;

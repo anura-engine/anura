@@ -104,6 +104,7 @@ namespace KRE
 			void setOperation(ColourOperation op) { operation_ = op; }
 
 			const std::vector<tc_pair>& getTimeColorData() const { return tc_data_; }
+			std::vector<tc_pair>& getTimeColorData() { return tc_data_; }
 			void clearTimeColorData() { tc_data_.clear(); }
 			void addTimecolorEntry(const tc_pair& tc) { tc_data_.emplace_back(tc); sort_tc_data(); }
 			void setTimeColorData(const std::vector<tc_pair>& tc) { tc_data_ = tc; sort_tc_data(); }

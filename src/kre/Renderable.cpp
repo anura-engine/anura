@@ -191,6 +191,21 @@ namespace KRE
 		}
 	}
 
+	void Renderable::writeData(variant_builder* build) const
+	{
+		if(ignore_global_model_) {
+			build->add("ignore_global_model", true);
+		}
+
+		build->add("order", order_);
+
+		if(isBlendEnabled()) {
+			build->add("blend_enable", true);
+			build->add("blend", getBlendMode().write());
+			build->add("blend_equation", getBlendEquation().write());
+		}
+	}
+
 	void Renderable::setDerivedModel(const glm::vec3& p, const glm::quat& r, const glm::vec3& s)
 	{
 		derived_position_ = p;

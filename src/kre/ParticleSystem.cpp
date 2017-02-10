@@ -156,7 +156,8 @@ namespace KRE
 			  elapsed_time_(0.0f), 
 			  scale_velocity_(1.0f), 
 			  scale_time_(1.0f),
-			  scale_dimensions_(1.0f)
+			  scale_dimensions_(1.0f),
+			  texture_node_(node["texture"])
 		{
 			if(node.has_key("fast_forward")) {
 				float ff_time = float(node["fast_forward"]["time"].as_float());
@@ -215,6 +216,12 @@ namespace KRE
 			active_particles_.reserve(particle_quota_);
 		}
 
+		void ParticleSystem::setTextureNode(const variant& node)
+		{
+			setTexture(Texture::createTexture(node));
+			texture_node_ = node;
+		}
+
 		void ParticleSystem::fastForward()
 		{
 			if(fast_forward_) {
@@ -235,7 +242,9 @@ namespace KRE
 			  elapsed_time_(0),
 			  scale_velocity_(ps.scale_velocity_),
 			  scale_time_(ps.scale_time_),
-			  scale_dimensions_(ps.scale_dimensions_)
+			  scale_dimensions_(ps.scale_dimensions_),
+			  texture_node_(ps.texture_node_)
+
 		{
 			if(ps.fast_forward_) {
 				fast_forward_.reset(new std::pair<float,float>(ps.fast_forward_->first, ps.fast_forward_->second));
@@ -250,6 +259,12 @@ namespace KRE
 
 		void ParticleSystem::handleWrite(variant_builder* build) const
 		{
+			Renderable::writeData(build);
+
+			if(texture_node_.is_null() == false) {
+				build->add("texture", texture_node_);
+			}
+
 			if(default_particle_width_ != 1.0f) {
 				build->add("default_particle_width", default_particle_width_);
 			}

@@ -72,6 +72,7 @@ namespace sound
 
 	//The sample rate we use for all sounds.
 	const int SampleRate = 44100;
+	const double SampleRateDouble = double(SampleRate);
 	const int NumChannels = 2;
 
 	struct MusicInfo 
@@ -1631,6 +1632,14 @@ namespace sound
 		return variant(obj.fname());
 	DEFINE_SET_FIELD
 		obj.setFilename(value.as_string());
+	DEFINE_FIELD(pos, "decimal")
+		return variant(obj.src()->pos()/SampleRateDouble);
+	DEFINE_FIELD(duration, "decimal|null")
+		if(obj.src()->data()) {
+			return variant(obj.src()->data()->nsamples()/SampleRateDouble);
+		}
+
+		return variant();
 	DEFINE_FIELD(loop, "bool")
 		return variant::from_bool(obj.looped());
 	DEFINE_SET_FIELD
@@ -2237,6 +2246,17 @@ BEGIN_DEFINE_CALLABLE_NOBASE(AudioEngine)
 	
 	DEFINE_FIELD(current_music, "null|builtin music_player")
 		return variant(g_current_player.get());
+	
+	DEFINE_FIELD(current_sounds, "[builtin playing_sound]")
+		std::vector<variant> res;
+
+		threading::lock lck(g_playing_sounds_mutex);
+
+		for(auto p : g_playing_sounds) {
+			res.push_back(variant(p.get()));
+		}
+
+		return variant(&res);
 	
 	BEGIN_DEFINE_FN(low_pass_filter, "(map) ->builtin sound_effect_filter")
 		return variant(new BiQuadSoundEffectFilter(bq_type_lowpass, FN_ARG(0)));
