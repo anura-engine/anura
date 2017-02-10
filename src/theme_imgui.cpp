@@ -30,7 +30,9 @@
 #include "asserts.hpp"
 #include "imgui.h"
 #include "json_parser.hpp"
+#include "filesystem.hpp"
 #include "preferences.hpp"
+#include "variant_utils.hpp"
 
 namespace
 {
@@ -79,6 +81,8 @@ void theme_imgui_default()
 	style.Alpha = 1.0f;
 	style.FrameRounding = 4;
 	style.IndentSpacing = 12.0f;
+
+	load_imgui_theme();
 }
 
 
@@ -110,6 +114,23 @@ void Float4ToImVec4(ImVec4* cvec, float* v)
 	cvec->w = v[3];
 }
 
+ImVec2 variant_to_vec2(const variant& v)
+{
+	ImVec2 res;
+	ASSERT_LOG(v.is_list() && v.num_elements() == 2, "Value is not a list of 2 elements.");
+	res.x = v[0].as_float();
+	res.y = v[1].as_float();
+	return res;
+}
+
+variant vec2_to_variant(const ImVec2& v)
+{
+	std::vector<variant> res;
+	res.emplace_back(variant(v.x));
+	res.emplace_back(variant(v.y));
+	return variant(&res);
+}
+
 void EditColor(char* label, ImVec4* col)
 {
 	float v[4];
@@ -133,6 +154,9 @@ void imgui_theme_ui()
 	ImGuiStyle& style = ImGui::GetStyle();
 
 	ImGui::Begin("ImGui Theme Editor");
+	if(ImGui::Button("Save theme")) {
+		save_imgui_theme();
+	}
 	if(ImGui::CollapsingHeader("Colors")) {
 		EditColor("Text", &style.Colors[ImGuiCol_Text]);
 		EditColor("TextDisabled", &style.Colors[ImGuiCol_TextDisabled]);
@@ -197,6 +221,33 @@ void imgui_theme_ui()
 
 void save_imgui_theme()
 {
+	ImGuiStyle& style = ImGui::GetStyle();
+	std::string fname = std::string(preferences::user_data_path()) + imgui_theme_file;
+	variant_builder res;
+	res.add("alpha", style.Alpha);
+	res.add("window_padding", vec2_to_variant(style.WindowPadding));
+	res.add("window_rounding", style.WindowRounding);
+	res.add("window_min_size", vec2_to_variant(style.WindowMinSize));
+	res.add("child_window_rounding", style.ChildWindowRounding);
+	res.add("window_title_align", vec2_to_variant(style.WindowTitleAlign));
+	res.add("frame_padding", vec2_to_variant(style.FramePadding));
+	res.add("frame_rounding", style.FrameRounding);
+	res.add("item_spacing", vec2_to_variant(style.ItemSpacing));
+	res.add("item_inner_spacing", vec2_to_variant(style.ItemInnerSpacing));
+	res.add("touch_extra_padding", vec2_to_variant(style.TouchExtraPadding));
+	res.add("indent_spacing", style.IndentSpacing);
+	res.add("columns_min_spacing", style.ColumnsMinSpacing);
+	res.add("scrollbar_size", style.ScrollbarSize);
+	res.add("scrollbar_rounding", style.ScrollbarRounding);
+	res.add("grab_min_size", style.GrabMinSize);
+	res.add("grab_rounding", style.GrabRounding);
+	res.add("button_text_align", vec2_to_variant(style.ButtonTextAlign));
+	res.add("display_window_padding", vec2_to_variant(style.DisplayWindowPadding));
+	res.add("display_safe_area", vec2_to_variant(style.DisplaySafeAreaPadding));
+	res.add("anti_aliased_lines", style.AntiAliasedLines);
+	res.add("anti_aliased_shapes", style.AntiAliasedShapes);
+	res.add("curve_tessellation_tolerance", style.CurveTessellationTol);
+	sys::write_file(fname, res.build().write_json());
 }
 
 void load_theme_from_variant(const variant& v)
@@ -206,6 +257,45 @@ void load_theme_from_variant(const variant& v)
 	if(v.has_key("window_padding")) {
 		style.WindowPadding = variant_to_vec2(v["window_padding"]);
 	}
+	if(v.has_key("window_min_size")) {
+		style.WindowMinSize = variant_to_vec2(v["window_min_size"]);
+	}
+	style.WindowRounding = v["window_rounding"].as_float(style.WindowRounding);
+	if(v.has_key("window_title_align")) {
+		style.WindowTitleAlign = variant_to_vec2(v["window_title_align"]);
+	}
+	style.ChildWindowRounding = v["child_window_rounding"].as_float(style.ChildWindowRounding);
+	if(v.has_key("frame_padding")) {
+		style.FramePadding = variant_to_vec2(v["frame_padding"]);
+	}
+	style.FrameRounding = v["frame_rounding"].as_float(style.FrameRounding);
+	if(v.has_key("item_spacing")) {
+		style.ItemSpacing = variant_to_vec2(v["item_spacing"]);
+	}
+	if(v.has_key("item_inner_spacing")) {
+		style.ItemInnerSpacing = variant_to_vec2(v["item_inner_spacing"]);
+	}
+	if(v.has_key("touch_extra_padding")) {
+		style.TouchExtraPadding = variant_to_vec2(v["touch_extra_padding"]);
+	}
+	style.IndentSpacing = v["indent_spacing"].as_float(style.IndentSpacing);
+	style.ColumnsMinSpacing = v["columns_min_spacing"].as_float(style.ColumnsMinSpacing);
+	style.ScrollbarSize = v["scrollbar_size"].as_float(style.ScrollbarSize);
+	style.ScrollbarRounding = v["scrollbar_rounding"].as_float(style.ScrollbarRounding);
+	style.GrabMinSize = v["grab_min_size"].as_float(style.GrabMinSize);
+	style.GrabRounding = v["grab_rounding"].as_float(style.GrabRounding);
+	if(v.has_key("button_text_align")) {
+		style.ButtonTextAlign = variant_to_vec2(v["button_text_align"]);
+	}
+	if(v.has_key("display_window_padding")) {
+		style.DisplayWindowPadding = variant_to_vec2(v["display_window_padding"]);
+	}
+	if(v.has_key("display_safe_area")) {
+		style.DisplaySafeAreaPadding = variant_to_vec2(v["display_safe_area"]);
+	}
+	style.AntiAliasedLines = v["anti_aliased_lines"].as_bool(style.AntiAliasedLines);
+	style.AntiAliasedShapes = v["anti_aliased_shapes"].as_bool(style.AntiAliasedShapes);
+	style.CurveTessellationTol = v["curve_tessellation_tolerance"].as_float(style.CurveTessellationTol);
 }
 
 void load_imgui_theme()

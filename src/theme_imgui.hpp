@@ -25,3 +25,6 @@
 
 void imgui_theme_ui();
 void theme_imgui_default();
+
+void load_imgui_theme();
+void save_imgui_theme();
