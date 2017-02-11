@@ -29,6 +29,17 @@ static int          g_AttribLocationTex = 0, g_AttribLocationProjMtx = 0;
 static int          g_AttribLocationPosition = 0, g_AttribLocationUV = 0, g_AttribLocationColor = 0;
 static unsigned int g_VboHandle = 0, g_VaoHandle = 0, g_ElementsHandle = 0;
 
+void ImGui_ImplSdlGL3_EnableAttribs()
+{
+	glEnableVertexAttribArray(g_AttribLocationPosition);
+	glEnableVertexAttribArray(g_AttribLocationUV);
+	glEnableVertexAttribArray(g_AttribLocationColor);
+
+	glVertexAttribPointer(g_AttribLocationPosition, 2, GL_FLOAT, GL_FALSE, sizeof(ImDrawVert), reinterpret_cast<const void*>(offsetof(ImDrawVert, pos)));
+	glVertexAttribPointer(g_AttribLocationUV, 2, GL_FLOAT, GL_FALSE, sizeof(ImDrawVert), reinterpret_cast<const void*>(offsetof(ImDrawVert, uv)));
+	glVertexAttribPointer(g_AttribLocationColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(ImDrawVert), reinterpret_cast<const void*>(offsetof(ImDrawVert, col)));
+}
+
 // This is the main rendering function that you have to implement and provide to ImGui (via setting up 'RenderDrawListsFn' in the ImGuiIO structure)
 // If text or lines are blurry when integrating ImGui in your engine:
 // - in your Render function, try translating your projection matrix by (0.5f,0.5f) or (0.375f,0.375f)
@@ -48,7 +59,10 @@ void ImGui_ImplSdlGL3_RenderDrawLists(ImDrawData* draw_data)
     GLint last_active_texture; glGetIntegerv(GL_ACTIVE_TEXTURE, &last_active_texture);
     GLint last_array_buffer; glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &last_array_buffer);
     GLint last_element_array_buffer; glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, &last_element_array_buffer);
-    GLint last_vertex_array; glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &last_vertex_array);
+#if defined(GL_ARB_vertex_array_object)
+	GLint last_vertex_array; 
+	glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &last_vertex_array);
+#endif
     GLint last_blend_src; glGetIntegerv(GL_BLEND_SRC, &last_blend_src);
     GLint last_blend_dst; glGetIntegerv(GL_BLEND_DST, &last_blend_dst);
     GLint last_blend_equation_rgb; glGetIntegerv(GL_BLEND_EQUATION_RGB, &last_blend_equation_rgb);
@@ -81,7 +95,9 @@ void ImGui_ImplSdlGL3_RenderDrawLists(ImDrawData* draw_data)
     glUseProgram(g_ShaderHandle);
     glUniform1i(g_AttribLocationTex, 0);
     glUniformMatrix4fv(g_AttribLocationProjMtx, 1, GL_FALSE, &ortho_projection[0][0]);
-    glBindVertexArray(g_VaoHandle);
+#if defined(GL_ARB_vertex_array_object)
+	glBindVertexArray(g_VaoHandle);
+#endif
 
     for (int n = 0; n < draw_data->CmdListsCount; n++)
     {
@@ -90,6 +106,10 @@ void ImGui_ImplSdlGL3_RenderDrawLists(ImDrawData* draw_data)
 
         glBindBuffer(GL_ARRAY_BUFFER, g_VboHandle);
         glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)cmd_list->VtxBuffer.Size * sizeof(ImDrawVert), (GLvoid*)cmd_list->VtxBuffer.Data, GL_STREAM_DRAW);
+
+#if !defined(GL_ARB_vertex_array_object)
+		ImGui_ImplSdlGL3_EnableAttribs();
+#endif
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, g_ElementsHandle);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, (GLsizeiptr)cmd_list->IdxBuffer.Size * sizeof(ImDrawIdx), (GLvoid*)cmd_list->IdxBuffer.Data, GL_STREAM_DRAW);
@@ -105,18 +125,26 @@ void ImGui_ImplSdlGL3_RenderDrawLists(ImDrawData* draw_data)
             {
                 glBindTexture(GL_TEXTURE_2D, (GLuint)(intptr_t)pcmd->TextureId);
                 glScissor((int)pcmd->ClipRect.x, (int)(fb_height - pcmd->ClipRect.w), (int)(pcmd->ClipRect.z - pcmd->ClipRect.x), (int)(pcmd->ClipRect.w - pcmd->ClipRect.y));
-                glDrawElements(GL_TRIANGLES, (GLsizei)pcmd->ElemCount, sizeof(ImDrawIdx) == 2 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT, idx_buffer_offset);
-            }
+                glDrawElements(GL_TRIANGLES, (GLsizei)pcmd->ElemCount, sizeof(ImDrawIdx) == 2 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT, (GLvoid*)idx_buffer_offset);
+            }			
             idx_buffer_offset += pcmd->ElemCount;
         }
     }
+	
+#if !defined(GL_ARB_vertex_array_object)
+	glDisableVertexAttribArray(g_AttribLocationPosition);
+	glDisableVertexAttribArray(g_AttribLocationUV);
+	glDisableVertexAttribArray(g_AttribLocationColor);
+#endif
 
     // Restore modified GL state
     glUseProgram(last_program);
     glActiveTexture(last_active_texture);
     glBindTexture(GL_TEXTURE_2D, last_texture);
-    glBindVertexArray(last_vertex_array);
-    glBindBuffer(GL_ARRAY_BUFFER, last_array_buffer);
+#if defined(GL_ARB_vertex_array_object)
+	glBindVertexArray(last_vertex_array);
+#endif
+	glBindBuffer(GL_ARRAY_BUFFER, last_array_buffer);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, last_element_array_buffer);
     glBlendEquationSeparate(last_blend_equation_rgb, last_blend_equation_alpha);
     glBlendFunc(last_blend_src, last_blend_dst);
@@ -232,10 +260,13 @@ bool ImGui_ImplSdlGL3_CreateDeviceObjects()
 	assert(glGetError() == 0);
 
     // Backup GL state
-    GLint last_texture, last_array_buffer, last_vertex_array;
+    GLint last_texture, last_array_buffer;
     glGetIntegerv(GL_TEXTURE_BINDING_2D, &last_texture);
     glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &last_array_buffer);
-    glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &last_vertex_array);
+#if defined(GL_ARB_vertex_array_object)
+	GLint last_vertex_array;
+	glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &last_vertex_array);
+#endif
 
     const GLchar *vertex_shader =
         "#version 130\n"
@@ -288,25 +319,22 @@ bool ImGui_ImplSdlGL3_CreateDeviceObjects()
     glGenBuffers(1, &g_VboHandle);
     glGenBuffers(1, &g_ElementsHandle);
 
-    glGenVertexArrays(1, &g_VaoHandle);
-    glBindVertexArray(g_VaoHandle);
+#if defined(GL_ARB_vertex_array_object)
+	glGenVertexArrays(1, &g_VaoHandle);
+	glBindVertexArray(g_VaoHandle);
+#endif
     glBindBuffer(GL_ARRAY_BUFFER, g_VboHandle);
-    glEnableVertexAttribArray(g_AttribLocationPosition);
-    glEnableVertexAttribArray(g_AttribLocationUV);
-    glEnableVertexAttribArray(g_AttribLocationColor);
 
-#define OFFSETOF(TYPE, ELEMENT) ((size_t)&(((TYPE *)0)->ELEMENT))
-    glVertexAttribPointer(g_AttribLocationPosition, 2, GL_FLOAT, GL_FALSE, sizeof(ImDrawVert), (GLvoid*)OFFSETOF(ImDrawVert, pos));
-    glVertexAttribPointer(g_AttribLocationUV, 2, GL_FLOAT, GL_FALSE, sizeof(ImDrawVert), (GLvoid*)OFFSETOF(ImDrawVert, uv));
-    glVertexAttribPointer(g_AttribLocationColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(ImDrawVert), (GLvoid*)OFFSETOF(ImDrawVert, col));
-#undef OFFSETOF
+	ImGui_ImplSdlGL3_EnableAttribs();
 
     ImGui_ImplSdlGL3_CreateFontsTexture();
 
     // Restore modified GL state
     glBindTexture(GL_TEXTURE_2D, last_texture);
     glBindBuffer(GL_ARRAY_BUFFER, last_array_buffer);
-    glBindVertexArray(last_vertex_array);
+#if defined(GL_ARB_vertex_array_object)
+	glBindVertexArray(last_vertex_array);
+#endif
 
 	assert(glGetError() == 0);
 
@@ -315,7 +343,9 @@ bool ImGui_ImplSdlGL3_CreateDeviceObjects()
 
 void    ImGui_ImplSdlGL3_InvalidateDeviceObjects()
 {
-    if (g_VaoHandle) glDeleteVertexArrays(1, &g_VaoHandle);
+#if defined(GL_ARB_vertex_array_object)
+	if (g_VaoHandle) glDeleteVertexArrays(1, &g_VaoHandle);
+#endif
     if (g_VboHandle) glDeleteBuffers(1, &g_VboHandle);
     if (g_ElementsHandle) glDeleteBuffers(1, &g_ElementsHandle);
     g_VaoHandle = g_VboHandle = g_ElementsHandle = 0;
@@ -339,7 +369,7 @@ void    ImGui_ImplSdlGL3_InvalidateDeviceObjects()
     }
 }
 
-bool    ImGui_ImplSdlGL3_Init(SDL_Window* window)
+bool ImGui_ImplSdlGL3_Init(SDL_Window* window)
 {
     ImGuiIO& io = ImGui::GetIO();
     io.KeyMap[ImGuiKey_Tab] = SDLK_TAB;                     // Keyboard mapping. ImGui will use those indices to peek into the io.KeyDown[] array.
