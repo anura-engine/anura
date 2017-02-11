@@ -389,6 +389,7 @@
 		C02D93911E4C52C000CB0A6A /* ParticleSystemUI.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C02D938F1E4C52C000CB0A6A /* ParticleSystemUI.cpp */; };
 		C02D93941E4C533300CB0A6A /* imgui_impl_sdl_gl3.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C02D93921E4C533300CB0A6A /* imgui_impl_sdl_gl3.cpp */; };
 		C02D93971E4C54A100CB0A6A /* imgui_user.inl in Resources */ = {isa = PBXBuildFile; fileRef = C02D93961E4C54A100CB0A6A /* imgui_user.inl */; };
+		C02D939D1E4FDB2300CB0A6A /* theme_imgui.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C02D939B1E4FDB2300CB0A6A /* theme_imgui.cpp */; };
 		C03585B81D812A240090FC2D /* hex_helper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C03585B41D812A240090FC2D /* hex_helper.cpp */; };
 		C03585B91D812A240090FC2D /* hex_loader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C03585B61D812A240090FC2D /* hex_loader.cpp */; };
 		C03585BE1D812A5D0090FC2D /* tile_rules.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C03585BC1D812A5D0090FC2D /* tile_rules.cpp */; };
@@ -1279,6 +1280,8 @@
 		C02D93931E4C533300CB0A6A /* imgui_impl_sdl_gl3.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = imgui_impl_sdl_gl3.h; sourceTree = "<group>"; };
 		C02D93951E4C53E000CB0A6A /* spline.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = spline.h; path = ../imgui/spline.h; sourceTree = "<group>"; };
 		C02D93961E4C54A100CB0A6A /* imgui_user.inl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = imgui_user.inl; path = ../imgui/imgui_user.inl; sourceTree = "<group>"; };
+		C02D939B1E4FDB2300CB0A6A /* theme_imgui.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = theme_imgui.cpp; sourceTree = "<group>"; };
+		C02D939C1E4FDB2300CB0A6A /* theme_imgui.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = theme_imgui.hpp; sourceTree = "<group>"; };
 		C03585B41D812A240090FC2D /* hex_helper.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = hex_helper.cpp; sourceTree = "<group>"; };
 		C03585B51D812A240090FC2D /* hex_helper.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = hex_helper.hpp; sourceTree = "<group>"; };
 		C03585B61D812A240090FC2D /* hex_loader.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = hex_loader.cpp; sourceTree = "<group>"; };
@@ -2029,6 +2032,8 @@
 		C010C5BC160AFD4C006E7D90 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				C02D939B1E4FDB2300CB0A6A /* theme_imgui.cpp */,
+				C02D939C1E4FDB2300CB0A6A /* theme_imgui.hpp */,
 				C02D938A1E4C3CEF00CB0A6A /* imgui_draw.cpp */,
 				C02D938B1E4C3CEF00CB0A6A /* imgui.cpp */,
 				C02D938C1E4C3CEF00CB0A6A /* imgui.h */,
@@ -2892,6 +2897,7 @@
 				C0AD7517183494F100FAFA3D /* poly_map.cpp in Sources */,
 				639B542B1AC20D7600ECC4F8 /* b2Draw.cpp in Sources */,
 				C010C7E7160AFD4E006E7D90 /* thread.cpp in Sources */,
+				C02D939D1E4FDB2300CB0A6A /* theme_imgui.cpp in Sources */,
 				C02C5D051CA127E6006D53E3 /* SceneTree.cpp in Sources */,
 				C010C7E8160AFD4E006E7D90 /* tile_map.cpp in Sources */,
 				C010C7E9160AFD4E006E7D90 /* tileset_editor_dialog.cpp in Sources */,
