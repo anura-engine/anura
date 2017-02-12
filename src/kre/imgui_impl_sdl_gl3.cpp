@@ -19,6 +19,11 @@
 
 #include <GL/glew.h>
 
+#ifdef __APPLE__
+#undef GL_ARB_vertex_array_object
+#endif
+
+
 // Data
 static double       g_Time = 0.0f;
 static bool         g_MousePressed[3] = { false, false, false };
