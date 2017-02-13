@@ -786,7 +786,6 @@ namespace KRE
 							auto new_a = Particles::Affector::factory(pscontainer, static_cast<Particles::AffectorType>(current_type));
 							affector_replace.emplace_back(std::make_pair(a, new_a));
 						}
-						ImGui::PopID();
 
 						//mass
 						float mass = a->getMass();
@@ -1050,6 +1049,7 @@ namespace KRE
 							break;
 						}
 						//excluded emitters
+						ImGui::PopID();
 					}
 				}
 				for(auto& aff : affector_replace) {
