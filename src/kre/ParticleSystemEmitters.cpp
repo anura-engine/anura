@@ -394,6 +394,9 @@ namespace KRE
 				if(!force_emission_processed_) {
 					// Single shot of all particles at once.
 					cnt = static_cast<int>(emission_rate_->getValue(psystem->getElapsedTime()));
+					if(cnt < 0) {
+						cnt = 0;
+					}
 					force_emission_processed_ = true;
 				}
 			} else {
@@ -465,7 +468,10 @@ namespace KRE
 			ASSERT_LOG(emission_rate_ != nullptr, "emission_rate_ is nullptr");
 			// at each step we produce emission_rate()*process_step_time particles.
 			float cnt = 0;
-			const float particles_per_cycle = emission_rate_->getValue(t) * t;
+			float particles_per_cycle = emission_rate_->getValue(t) * t;
+			if(particles_per_cycle < 0) {
+				particles_per_cycle = 0;
+			}
 			emission_fraction_ = std::modf(emission_fraction_ + particles_per_cycle, &cnt);
 			//LOG_DEBUG("EPCPC: frac: " << emission_fraction_ << ", integral: " << cnt << ", ppc: " << particles_per_cycle << ", time: " << t);
 			return static_cast<int>(cnt);
