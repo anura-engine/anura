@@ -39,9 +39,7 @@
 #include "RenderManager.hpp"
 #include "WindowManager.hpp"
 
-namespace {
-	PREF_BOOL(particle_editor, false, "Show the particle editor");
-}
+PREF_BOOL(particle_editor, false, "Show the particle editor");
 
 namespace graphics
 {

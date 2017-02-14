@@ -82,6 +82,8 @@ extern std::map<std::string, variant> g_user_info_registry;
 
 PREF_STRING(editor_object, "", "Object to use for the editor");
 
+extern bool g_particle_editor;
+
 namespace 
 {
 	std::vector<std::pair<std::function<void()>,void*>> process_functions;
@@ -1513,6 +1515,8 @@ bool LevelRunner::play_cycle()
 							formula_profiler::Manager::get()->init("profile.dat", true);
 						}
 					}
+				} else if(key == SDLK_F6) {
+					g_particle_editor = !g_particle_editor;
 				} else if(key == SDLK_F3) {
 					LOG_DEBUG("F3 pressed");
 					preferences::set_show_fps(!preferences::show_fps());
