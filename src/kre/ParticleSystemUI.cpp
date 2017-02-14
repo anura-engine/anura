@@ -564,7 +564,7 @@ namespace KRE
 					}
 					ImGui::PopID();
 
-					emitter_modified = emitter_modified || ParameterGui("Emission Rate", e->getEmissionRate());
+					emitter_modified = emitter_modified || ParameterGui("Emission Rate", e->getEmissionRate(), 0.0f, 5000.0f);
 					emitter_modified = emitter_modified || ParameterGui("Time to live", e->getTimeToLive());
 					emitter_modified = emitter_modified || ParameterGui("Velocity", e->getVelocity());
 					emitter_modified = emitter_modified || ParameterGui("Angle", e->getAngle(), 0.0f, 360.0f);
