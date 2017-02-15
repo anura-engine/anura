@@ -208,6 +208,9 @@ namespace KRE
 			if(node.has_key("texture")) {
 				setTextureNode(node["texture"]);
 			}
+			if(node.has_key("image")) {
+				setTextureNode(node["image"]);
+			}
 
 			initAttributes();
 		}
@@ -222,7 +225,6 @@ namespace KRE
 
 		void ParticleSystem::setTextureNode(const variant& node)
 		{
-			setTexture(Texture::createTexture(node));
 			texture_node_ = node;
 		}
 

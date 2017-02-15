@@ -491,6 +491,7 @@ namespace KRE
 						}
 						ImGui::Text("%s", selected_texture.c_str());
 						if(ImGui::ListBox("Textures", &current_file, vector_string_getter, const_cast<void*>(static_cast<const void*>(&image_files)), image_files.size())) {
+							psystem->setTexture(Texture::createTexture(image_files[current_file]));
 							psystem->setTextureNode(variant(image_files[current_file]));
 						}
 					}

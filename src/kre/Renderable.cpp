@@ -173,10 +173,14 @@ namespace KRE
 		if(node.has_key("texture")) {
 			if(node["texture"].is_string() && (node["texture"].as_string() != "fbo" && node["texture"].as_string() != "svg")) {
 				texture_ = Texture::createTexture(node["texture"]);
+			} else if(node["texture"].is_map()) {
+				texture_ = Texture::createTexture(node["texture"]);
 			}
 		} else if(node.has_key("image")) {
 			if(node["image"].is_string() && (node["image"].as_string() != "fbo" && node["image"].as_string() != "svg")) {
 				texture_ = Texture::createTexture(node["image"]);
+			} else if(node["image"].is_map()) {
+				texture_ = Texture::createTexture(node["texture"]);
 			}
 		}
 		if(node.has_key("depth_check")) {
