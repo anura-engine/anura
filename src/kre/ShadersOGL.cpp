@@ -314,6 +314,60 @@ namespace KRE
 				{"", ""},
 			};
 
+
+			const char* const particles_vs = 
+				"#version 120\n"
+				"uniform mat4 u_pv_matrix;\n"
+				"attribute vec3 a_position;\n"
+				"attribute vec3 a_center_position;\n"
+				"attribute vec4 a_qrotation;\n"
+				"attribute vec4 a_color;\n"
+				"attribute vec2 a_texcoord;\n"
+				"attribute vec3 a_scale;\n"
+				"varying vec2 v_texcoord;\n"
+				"varying vec4 v_color;\n"
+				"\n"
+				"vec3 rotate_vertex_position(vec3 position, vec4 q)\n"
+				"{\n"
+				"    vec3 v = position.xyz;\n"
+				"    return v + 2.0 * cross(q.xyz, cross(q.xyz, v) + q.w * v);\n"
+				"}\n"
+				"\n"
+				"void main()\n"
+				"{\n"
+				"   v_color = a_color;\n"
+				"   v_texcoord = a_texcoord;\n"
+				"	vec3 pos = a_position - a_center_position;\n"
+				"	pos = a_center_position + rotate_vertex_position(a_scale * pos, a_qrotation);\n"
+				"	gl_Position = u_pv_matrix * vec4(pos, 1.0);\n"
+				"	\n"
+				"}\n";
+			const char* const particles_fs = 
+				"#version 120\n"
+				"uniform sampler2D u_tex_map;\n"
+				"uniform vec4 u_color;\n"
+				"varying vec2 v_texcoord;\n"
+				"varying vec4 v_color;\n"
+				"void main()\n"
+				"{\n"
+				"    vec4 color = texture2D(u_tex_map, v_texcoord);\n"
+				"    gl_FragColor = color * v_color * u_color;\n"
+				"}\n";
+			const uniform_mapping particles_uniform_mapping[] =
+			{
+				{"pv_matrix", "u_pv_matrix"},
+				{"color", "u_color"},
+				{"tex_map", "u_tex_map"},
+				{"", ""},
+			};
+			const attribute_mapping particles_attribue_mapping[] =
+			{
+				{"position", "a_position"},
+				{"texcoord", "a_texcoord"},
+				{"color", "a_color"},
+				{"", ""},
+			};
+
 			const char* const point_shader_vs = 
 				"uniform mat4 u_mvp_matrix;\n"
 				"uniform float u_point_size;\n"
@@ -658,6 +712,7 @@ namespace KRE
 				{ "complex", "complex_vs", complex_vs, "complex_fs", complex_fs, complex_uniform_mapping, complex_attribue_mapping },
 				{ "attr_color_shader", "attr_color_vs", attr_color_vs, "attr_color_fs", attr_color_fs, attr_color_uniform_mapping, attr_color_attribue_mapping },
 				{ "vtc_shader", "vtc_vs", vtc_vs, "vtc_fs", vtc_fs, vtc_uniform_mapping, vtc_attribue_mapping },
+				{ "particles_shader", "particles_vs", particles_vs, "particles_fs", particles_fs, particles_uniform_mapping, particles_attribue_mapping },
 				{ "circle", "circle_vs", circle_vs, "circle_fs", circle_fs, circle_uniform_mapping, circle_attribue_mapping },
 				{ "point_shader", "point_shader_vs", point_shader_vs, "point_shader_fs", point_shader_fs, point_shader_uniform_mapping, point_shader_attribute_mapping },
 				//{ "font_shader", "font_shader_vs", font_shader_vs, "font_shader_fs", font_shader_fs, font_shader_uniform_mapping, font_shader_attribute_mapping },
@@ -858,6 +913,7 @@ namespace KRE
 			  u_mvp_(-1),
 			  u_mv_(-1),
 			  u_p_(-1),
+			  u_pv_(-1),
 			  u_color_(-1),
 			  u_line_width_(-1),
 			  u_tex_(-1),
@@ -893,6 +949,7 @@ namespace KRE
 			  u_mvp_(-1),
 			  u_mv_(-1),
 			  u_p_(-1),
+			  u_pv_(-1),
 			  u_color_(-1),
 			  u_line_width_(-1),
 			  u_tex_(-1),
@@ -1611,6 +1668,7 @@ namespace KRE
 			u_mvp_ = getUniform("mvp_matrix");
 			u_mv_ = getUniform("mv_matrix");
 			u_p_ = getUniform("p_matrix");
+			u_pv_ = getUniform("pv_matrix");
 			u_color_ = getUniform("color");
 			u_line_width_ = getUniform("line_width");
 			u_tex_ = getUniform("tex_map");

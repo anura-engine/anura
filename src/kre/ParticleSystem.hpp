@@ -43,6 +43,18 @@ namespace KRE
 	{
 		typedef glm::tvec4<unsigned char> color_vector;
 
+		struct particle_s
+		{
+			particle_s(const glm::vec3& v, const glm::vec3& ctr, const glm::vec4& qr, const glm::vec3& s, const glm::vec2& t, const glm::u8vec4& c)
+				: vertex(v), center(ctr), q(qr), scale(s), texcoord(t), color(c) {}
+			glm::vec3 vertex;
+			glm::vec3 center;
+			glm::vec4 q;
+			glm::vec3 scale;
+			glm::vec2 texcoord;
+			glm::u8vec4 color;
+		};
+
 		struct vertex_texture_color3
 		{
 			vertex_texture_color3(const glm::vec3& v, const glm::vec2& t, const glm::u8vec4& c)
@@ -174,7 +186,7 @@ namespace KRE
 			void update(float t);
 			void handleWrite(variant_builder* build) const override;
 
-			std::shared_ptr<Attribute<vertex_texture_color3>> arv_;
+			std::shared_ptr<Attribute<particle_s>> arv_;
 
 			float elapsed_time_;
 			float scale_velocity_;

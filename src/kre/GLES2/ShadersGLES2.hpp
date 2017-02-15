@@ -127,6 +127,7 @@ namespace KRE
 			int getLineWidthUniform() const override { return u_line_width_; }
 			int getMvUniform() const override { return u_mv_; }
 			int getPUniform() const override { return u_p_; }
+			int getPVUniform() const override { return u_pv_; }
 			int getMvpUniform() const override { return u_mvp_; }
 			int getTexMapUniform() const override { return u_tex_; }
 			int getDiscardUniform() const override { return u_discard_; }
@@ -164,6 +165,7 @@ namespace KRE
 			int u_mvp_;
 			int u_mv_;
 			int u_p_;
+			int u_pv_;
 			int u_color_;
 			int u_line_width_;
 			int u_tex_;

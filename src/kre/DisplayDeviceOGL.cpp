@@ -377,6 +377,11 @@ namespace KRE
 			shader->setUniformValue(shader->getMvpUniform(), glm::value_ptr(pvmat));
 		}
 
+		if(shader->getPVUniform() != ShaderProgram::INVALID_UNIFORM) {
+			glm::mat4 pvmat = pmat * vmat;
+			shader->setUniformValue(shader->getPVUniform(), glm::value_ptr(pvmat));
+		}
+
 		if(shader->getColorUniform() != ShaderProgram::INVALID_UNIFORM) {
 			if(r->isColorSet()) {
 				shader->setUniformValue(shader->getColorUniform(), r->getColor().asFloatVector());
