@@ -45,6 +45,7 @@ namespace KRE
 			PATH_FOLLOWER,
 			RANDOMISER,
 			SINE_FORCE,
+			TEXTURE_ROTATOR,
 		};
 
 		class Affector : public EmitObject
@@ -431,7 +432,7 @@ namespace KRE
 			AffectorPtr clone() const override {
 				return std::make_shared<SineForceAffector>(*this);
 			}
-			virtual void handleWrite(variant_builder* build) const override;
+			void handleWrite(variant_builder* build) const override;
 		
 			glm::vec3 force_vector_;
 			glm::vec3 scale_vector_;
@@ -442,6 +443,28 @@ namespace KRE
 			float frequency_;
 			float angle_;
 			SineForceAffector() = delete;
+		};
+
+		class TextureRotatorAffector : public Affector
+		{
+		public:
+			explicit TextureRotatorAffector(std::weak_ptr<ParticleSystemContainer> parent);
+			explicit TextureRotatorAffector(std::weak_ptr<ParticleSystemContainer> parent, const variant& node);
+			void init(const variant& node) override;
+
+			const ParameterPtr& getAngle() const { return angle_; }
+			const ParameterPtr& getSpeed() const { return speed_; }
+		private:
+			void internalApply(Particle& p, float t) override;
+			AffectorPtr clone() const override {
+				return std::make_shared<TextureRotatorAffector>(*this);
+			}
+			void handleWrite(variant_builder* build) const override;
+
+			ParameterPtr angle_;
+			ParameterPtr speed_;
+
+			TextureRotatorAffector() = delete;
 		};
 
 		const char* get_affector_name(AffectorType type);

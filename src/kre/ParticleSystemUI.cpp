@@ -780,7 +780,7 @@ namespace KRE
 					if(ImGui::CollapsingHeader(ss.str().c_str())) {
 						EmitObjectUI(a);
 
-						static std::vector<std::string> ptype{ "Color", "Jet", "Vortex", "Gravity", "Linear Force", "Scale", "Particle Follower", "Align", "Flock Centering", "Black Hole", "Path Follower", "Radomizer", "Sine Force" };
+						static std::vector<std::string> ptype{ "Color", "Jet", "Vortex", "Gravity", "Linear Force", "Scale", "Particle Follower", "Align", "Flock Centering", "Black Hole", "Path Follower", "Radomizer", "Sine Force", "Texture Rotator" };
 						int current_type = static_cast<int>(a->getType());
 						ImGui::PushID(a.get());
 						if(ImGui::Combo("Type", &current_type, vector_string_getter, &ptype, ptype.size())) {
@@ -1043,6 +1043,12 @@ namespace KRE
 							if(ImGui::Combo("Force Application", &current_item, optype, 2)) {
 								sfa->setForceApplication(static_cast<Particles::SineForceAffector::ForceApplication>(current_item));
 							}			
+							break;
+						}
+						case Particles::AffectorType::TEXTURE_ROTATOR: {
+							auto tra = std::dynamic_pointer_cast<Particles::TextureRotatorAffector>(a);
+							ParameterGui("Rotation Angle", tra->getAngle());
+							ParameterGui("Rotation Speed", tra->getSpeed());
 							break;
 						}
 						default:

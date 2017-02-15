@@ -48,6 +48,7 @@ namespace KRE
 				case KRE::Particles::AffectorType::PATH_FOLLOWER:		return "Path Follower";
 				case KRE::Particles::AffectorType::RANDOMISER:			return "Randomizer";
 				case KRE::Particles::AffectorType::SINE_FORCE:			return "Sine Force";
+				case KRE::Particles::AffectorType::TEXTURE_ROTATOR:		return "Texture Rotator";
 				default:
 					ASSERT_LOG(false, "No name for affector: " << static_cast<int>(type));
 					break;
@@ -149,6 +150,9 @@ namespace KRE
 				case AffectorType::SINE_FORCE:
 					res.add("type", "sine_force");
 					break;
+				case AffectorType::TEXTURE_ROTATOR:
+					res.add("type", "texture_rotator");
+					break;
 				default:
 					ASSERT_LOG(false, "Bad affector type: " << static_cast<int>(type_));
 					break;
@@ -197,6 +201,8 @@ namespace KRE
 				return std::make_shared<RandomiserAffector>(parent);
 			case AffectorType::SINE_FORCE:
 				return std::make_shared<SineForceAffector>(parent);
+			case AffectorType::TEXTURE_ROTATOR:
+				return std::make_shared<TextureRotatorAffector>(parent);
 			default:
 				ASSERT_LOG(false, "Unrecognised afftor type: " << static_cast<int>(type));
 				break;
@@ -234,6 +240,8 @@ namespace KRE
 				return std::make_shared<BlackHoleAffector>(parent, node);
 			} else if(ntype == "flock_centering") {
 				return std::make_shared<FlockCenteringAffector>(parent, node);
+			} else if(ntype == "texture_rotator") {
+				return std::make_shared<TextureRotatorAffector>(parent, node);
 			} else {
 				ASSERT_LOG(false, "Unrecognised affector type: " << ntype);
 			}
@@ -1166,6 +1174,53 @@ namespace KRE
 			}
 		}
 
+		TextureRotatorAffector::TextureRotatorAffector(std::weak_ptr<ParticleSystemContainer> parent)
+			: Affector(parent, AffectorType::TEXTURE_ROTATOR),
+			  angle_(new Parameter(1.0f)),
+			  speed_(new Parameter(1.0f))
+		{
+		}
+
+		TextureRotatorAffector::TextureRotatorAffector(std::weak_ptr<ParticleSystemContainer> parent, const variant& node)
+			: Affector(parent, AffectorType::TEXTURE_ROTATOR),
+			  angle_(nullptr),
+			  speed_(nullptr)
+		{
+			init(node);
+		}
+
+		void TextureRotatorAffector::init(const variant& node) 
+		{
+			if(node.has_key("angle")) {
+				angle_ = Parameter::factory(node["angle"]);
+			} else {
+				angle_.reset(new Parameter(0.0f));
+			}
+			if(node.has_key("speed")) {
+				speed_ = Parameter::factory(node["speed"]);
+			} else {
+				speed_.reset(new Parameter(1.0f));
+			}
+		}
+
+		void TextureRotatorAffector::internalApply(Particle& p, float t)
+		{
+			const float angle = angle_->getValue(t);
+			const float speed = speed_->getValue(t);
+			const auto qaxis = glm::angleAxis(angle, glm::vec3(0.0f, 0.0f, 1.0f));
+			/// XXX properly work out speed/angle handling and what we want it to mean
+			p.current.orientation = qaxis * p.current.orientation;
+		}
+
+		void TextureRotatorAffector::handleWrite(variant_builder* build) const 
+		{
+			if(angle_) {
+				build->add("angle", angle_->write());
+			}
+			if(speed_) {
+				build->add("speed", speed_->write());
+			}
+		}
 
 
 	}
