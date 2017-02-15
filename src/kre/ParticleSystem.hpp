@@ -174,6 +174,9 @@ namespace KRE
 			void setMaxVelocity(float mv) { max_velocity_.reset(new float(mv)); }
 			void clearMaxVelocity() { max_velocity_.reset(); }
 
+			bool useParticleSystemPosition() const { return use_position_; }
+			void setUsePosition(bool f = true) { use_position_ = f; }
+
 			static ParticleSystemPtr factory(std::weak_ptr<ParticleSystemContainer> parent, const variant& node);
 			void initAttributes();
 
@@ -211,6 +214,7 @@ namespace KRE
 			std::vector<AffectorPtr> affectors_;
 
 			variant texture_node_;
+			bool use_position_;
 
 			ParticleSystem() = delete;
 		};

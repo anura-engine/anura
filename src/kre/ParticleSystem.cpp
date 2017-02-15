@@ -24,6 +24,7 @@
 #include <cmath>
 #include <chrono>
 
+#include "ModelMatrixScope.hpp"
 #include "ParticleSystem.hpp"
 #include "ParticleSystemAffectors.hpp"
 #include "ParticleSystemParameters.hpp"
@@ -157,7 +158,8 @@ namespace KRE
 			  scale_velocity_(1.0f), 
 			  scale_time_(1.0f),
 			  scale_dimensions_(1.0f),
-			  texture_node_()
+			  texture_node_(),
+			  use_position_(true)
 		{
 			if(node.has_key("fast_forward")) {
 				float ff_time = float(node["fast_forward"]["time"].as_float());
@@ -249,7 +251,8 @@ namespace KRE
 			  scale_velocity_(ps.scale_velocity_),
 			  scale_time_(ps.scale_time_),
 			  scale_dimensions_(ps.scale_dimensions_),
-			  texture_node_()
+			  texture_node_(),
+			  use_position_(ps.use_position_)
 
 		{
 			if(ps.fast_forward_) {
@@ -402,14 +405,9 @@ namespace KRE
 
 			//auto as = DisplayDevice::createAttributeSet(true, false ,true);
 			auto as = DisplayDevice::createAttributeSet(true, false, false);
-			//as->setDrawMode(DrawMode::TRIANGLE_STRIP);
 			as->setDrawMode(DrawMode::TRIANGLES);
 
 			arv_ = std::make_shared<Attribute<particle_s>>(AccessFreqHint::DYNAMIC);
-			//arv_->addAttributeDesc(AttributeDesc(AttrType::POSITION, 3, AttrFormat::FLOAT, false, sizeof(vertex_texture_color3), offsetof(vertex_texture_color3, vertex)));
-			//arv_->addAttributeDesc(AttributeDesc(AttrType::TEXTURE, 2, AttrFormat::FLOAT, false, sizeof(vertex_texture_color3), offsetof(vertex_texture_color3, texcoord)));
-			//arv_->addAttributeDesc(AttributeDesc(AttrType::COLOR, 4, AttrFormat::UNSIGNED_BYTE, true, sizeof(vertex_texture_color3), offsetof(vertex_texture_color3, color)));
-
 			arv_->addAttributeDesc(AttributeDesc(AttrType::POSITION, 3, AttrFormat::FLOAT, false, sizeof(particle_s), offsetof(particle_s, vertex)));
 			arv_->addAttributeDesc(AttributeDesc("a_center_position", 3, AttrFormat::FLOAT, false, sizeof(particle_s), offsetof(particle_s, center)));
 			arv_->addAttributeDesc(AttributeDesc("a_qrotation", 4, AttrFormat::FLOAT, false, sizeof(particle_s), offsetof(particle_s, q)));
@@ -443,28 +441,38 @@ namespace KRE
 			const glm::vec2 tr{ rf.x2(), rf.y2() };
 			const glm::vec2 br{ rf.x2(), rf.y1() };
 
+
 			for(auto it = active_particles_.cbegin(); it != active_particles_.cend(); ++it) {
 				const auto& p = *it;
-				const glm::vec3 p1 = p.current.position - p.current.dimensions / 2.0f;
-				const glm::vec3 p2 = p.current.position + p.current.dimensions / 2.0f;
+				auto cp = p.current.position;
+				
+				if(!ignoreGlobalModelMatrix()) {
+					cp += glm::vec3(get_global_model_matrix()[3]); // need global model translation.
+				}
+				if(useParticleSystemPosition()) {
+					cp += getPosition();
+				}
+
+				const glm::vec3 p1 = cp - p.current.dimensions / 2.0f;
+				const glm::vec3 p2 = cp + p.current.dimensions / 2.0f;
 				const glm::vec4 q{ p.current.orientation.x, p.current.orientation.y, p.current.orientation.z, p.current.orientation.w };
 				vtc.emplace_back(
 					glm::vec3(p1.x, p1.y, p1.z),
-					p.current.position,		// center position
+					cp,		// center position
 					q,
 					getScaleDimensions(),		// scale
 					tl,						// tex coord
 					p.current.color);		// color
 				vtc.emplace_back(
 					glm::vec3(p2.x, p1.y, p1.z),
-					p.current.position,		// center position
+					cp,		// center position
 					q,
 					glm::vec3(1.0f),		// scale
 					tr,						// tex coord
 					p.current.color);		// color
 				vtc.emplace_back(
 					glm::vec3(p1.x, p2.y, p1.z),
-					p.current.position,		// center position
+					cp,		// center position
 					q,
 					getScaleDimensions(),		// scale
 					bl,						// tex coord
@@ -472,46 +480,25 @@ namespace KRE
 
 				vtc.emplace_back(
 					glm::vec3(p1.x, p2.y, p1.z),
-					p.current.position,		// center position
+					cp,		// center position
 					q,
 					getScaleDimensions(),		// scale
 					bl,						// tex coord
 					p.current.color);		// color
 				vtc.emplace_back(
 					glm::vec3(p2.x, p2.y, p1.z),
-					p.current.position,		// center position
+					cp,		// center position
 					q,
 					getScaleDimensions(),		// scale
 					br,						// tex coord
 					p.current.color);		// color
 				vtc.emplace_back(
 					glm::vec3(p2.x, p1.y, p1.z),
-					p.current.position,		// center position
+					cp,		// center position
 					q,
 					getScaleDimensions(),		// scale
 					tr,						// tex coord
 					p.current.color);		// color
-
-				/*auto& p = *it;
-				const auto acp = p.current.position - p.current.dimensions / 2.0f + p.current.orientation * (- p.current.dimensions / 2.0f);
-				const auto bcp = p.current.position + p.current.dimensions / 2.0f + p.current.orientation * (+ p.current.dimensions / 2.0f);
-				const float x1 = acp.x;
-				const float x2 = bcp.x;
-				const float y1 = acp.y;
-				const float y2 = bcp.y;
-
-				if(it != active_particles_.cbegin()) {
-					// degenerate
-					vtc.emplace_back(glm::vec3(x1, y1, p.current.position.z), tl, p.current.color);
-				}
-				vtc.emplace_back(glm::vec3(x1, y1, p.current.position.z), tl, p.current.color);
-				vtc.emplace_back(glm::vec3(x1, y2 ,p.current.position.z), bl, p.current.color);
-				vtc.emplace_back(glm::vec3(x2, y1, p.current.position.z), tr, p.current.color);
-				vtc.emplace_back(glm::vec3(x2, y2, p.current.position.z), br, p.current.color);
-				if(it != active_particles_.cend()) {
-					// degenerate
-					vtc.emplace_back(glm::vec3(x2, y2, p.current.position.z), br, p.current.color);
-				}*/
 			}
 			arv_->update(&vtc);
 		}

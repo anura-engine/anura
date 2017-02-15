@@ -512,15 +512,19 @@ namespace KRE
 						}
 					}
 
-					// stuff from renderable
-					bool ignore_global_mm = psystem->ignoreGlobalModelMatrix();
-					if(ImGui::Checkbox("Ignore Global Transform", &ignore_global_mm)) {
-						psystem->useGlobalModelMatrix(ignore_global_mm);
-					}
 					const auto& pos = psystem->getPosition();
 					float v[3]{ pos.x, pos.y, pos.z };
 					if(ImGui::DragFloat3("Position", v)) {
 						psystem->setPosition(v[0], v[1], v[2]);
+					}
+					bool use_position = psystem->useParticleSystemPosition();
+					if(ImGui::Checkbox("Use PS Position", &use_position)) {
+						psystem->setUsePosition(use_position);
+					}
+					// stuff from renderable
+					bool ignore_global_mm = psystem->ignoreGlobalModelMatrix();
+					if(ImGui::Checkbox("Ignore Global Transform", &ignore_global_mm)) {
+						psystem->useGlobalModelMatrix(ignore_global_mm);
 					}
 					// blend mode
 					const auto& bm = psystem->getBlendMode();
