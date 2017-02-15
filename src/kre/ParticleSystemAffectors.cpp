@@ -1207,7 +1207,7 @@ namespace KRE
 		{
 			const float angle = angle_->getValue(t);
 			const float speed = speed_->getValue(t);
-			const auto qaxis = glm::angleAxis(angle, glm::vec3(0.0f, 0.0f, 1.0f));
+			const auto qaxis = glm::angleAxis(angle / 180.0f * static_cast<float>(M_PI), glm::vec3(0.0f, 0.0f, 1.0f));
 			/// XXX properly work out speed/angle handling and what we want it to mean
 			p.current.orientation = qaxis * p.current.orientation;
 		}
