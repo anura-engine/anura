@@ -57,6 +57,8 @@ namespace KRE
 		float getVangle() const { return vertical_angle_; }
 		float getFov() const { return fov_; }
 		float getAspect() const { return aspect_; }
+		bool areClipPlanesSet() const { return clip_planes_set_; }
+		void clearClipPlanes();
 		float getNearClip() const { return near_clip_; }
 		float getFarClip() const { return far_clip_; }
 		CameraType getType() const { return type_; }

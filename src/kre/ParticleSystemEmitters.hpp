@@ -93,6 +93,9 @@ namespace KRE
 			void clearColorRange() { color_range_.reset(); }
 			void setColorRange(const glm::vec4& start, const glm::vec4& end);
 
+			bool isEmitOnly2D() const { return emit_only_2d_; }
+			void setEmitOnly2D(bool f) { emit_only_2d_ = f; }
+
 			virtual EmitterPtr clone() = 0;
 			static EmitterPtr factory(std::weak_ptr<ParticleSystemContainer> parent, const variant& node);
 			static EmitterPtr factory(std::weak_ptr<ParticleSystemContainer> parent, EmitterType type);
@@ -150,6 +153,8 @@ namespace KRE
 			int particles_remaining_;
 
 			glm::vec3 scale_;
+
+			bool emit_only_2d_;
 
 			Emitter() = delete;
 		};

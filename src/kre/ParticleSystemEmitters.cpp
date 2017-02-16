@@ -44,7 +44,8 @@ namespace KRE
 			  duration_remaining_(0),
               repeat_delay_remaining_(0),
 			  particles_remaining_(0),
-			  scale_(1.0f)
+			  scale_(1.0f),
+			  emit_only_2d_(node["emit_only_2d"].as_bool(false))
 		{
 			initPhysics();
 
@@ -128,7 +129,7 @@ namespace KRE
 			}
 			if(repeat_delay_) {
 				repeat_delay_remaining_ = repeat_delay_->getValue(0);
-			}
+			}			
 		}
 
 		Emitter::Emitter(std::weak_ptr<ParticleSystemContainer> parent, EmitterType type)
@@ -154,7 +155,8 @@ namespace KRE
 			  duration_remaining_(0),
 			  repeat_delay_remaining_(0),
 			  particles_remaining_(0),
-			  scale_(1.0f)
+			  scale_(1.0f),
+			  emit_only_2d_(false)
 		{
 			initPhysics();
 		}
@@ -180,7 +182,8 @@ namespace KRE
 			  color_(e.color_),
               repeat_delay_remaining_(0),
 			  particles_remaining_(e.particles_remaining_),
-			  scale_(e.scale_)
+			  scale_(e.scale_),
+			  emit_only_2d_(e.emit_only_2d_)
 		{
 			if(e.orientation_range_) {
 				orientation_range_.reset(new std::pair<glm::quat,glm::quat>(e.orientation_range_->first, e.orientation_range_->second));
@@ -277,6 +280,9 @@ namespace KRE
 				if(particle_depth_ != nullptr) {
 					build->add("particle_depth", particle_depth_->write());
 				}
+			}
+			if(emit_only_2d_) {
+				build->add("emit_only_2d", emit_only_2d_);
 			}
 		}
 
@@ -425,6 +431,9 @@ namespace KRE
 			init_physics_parameters(p.initial);
 			init_physics_parameters(p.current);
 			p.initial.position = current.position;
+			if(emit_only_2d_) {
+				p.initial.position.z = 0.0f;
+			}
 			p.initial.color = getColor();
 			p.initial.time_to_live = time_to_live_->getValue(psystem->getElapsedTime());
 			p.initial.velocity = velocity_->getValue(psystem->getElapsedTime());
@@ -448,6 +457,9 @@ namespace KRE
 				p.initial.orientation = current.orientation;
 			}
 			p.initial.direction = getInitialDirection();
+			if(emit_only_2d_) {
+				p.initial.direction.z = 0.0f;
+			}
 			//std::cerr << "initial direction: " << p.initial.direction << " vel = " << p.initial.velocity << "\n";
 			p.emitted_by = this;
 		}

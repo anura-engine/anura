@@ -439,6 +439,31 @@ namespace KRE
 					if(ImGui::DragInt2("Left/Right", lrv, 1, 0, 4000)) {
 						ps_camera->setOrthoWindow(lrv[0], lrv[1], ps_camera->getOrthoTop(), ps_camera->getOrthoBottom());
 					}
+
+					bool use_clip_planes = ps_camera->areClipPlanesSet();
+					if(ImGui::Checkbox("Use Clip Planes", &use_clip_planes)) {
+						if(use_clip_planes) {
+							ps_camera->setClipPlanes(0.0f, 1.0f);
+						} else {
+							ps_camera->clearClipPlanes();
+						}
+					}
+					if(use_clip_planes) {
+						bool changed = false;
+						float near_clip = ps_camera->getNearClip();
+						float far_clip = ps_camera->getFarClip();
+
+						if(ImGui::DragFloat("Near Clip", &near_clip, 0.01f, 0.0f, 2.0f)) {
+							changed |= true;
+						}
+						if(ImGui::DragFloat("Far Clip", &far_clip, 1.0f, 0.0f, 100.0f, "%.3f", 1.2f)) {
+							changed |= true;
+						}
+						if(changed) {
+							ps_camera->setClipPlanes(near_clip, far_clip);
+						}
+					}
+
 					if(ImGui::Button("Set to screen dimensions")) {
 						ps_camera->setOrthoWindow(0, neww, 0, newh);
 					}
@@ -648,6 +673,10 @@ namespace KRE
 					if(ImGui::Checkbox("Can Be Deleted", &can_be_deleted)) {
 						e->setCanBeDeleted(can_be_deleted);
 						emitter_modified = true;
+					}
+					bool emit_2d = e->isEmitOnly2D();
+					if(ImGui::Checkbox("Emit only 2D", &emit_2d)) {
+						e->setEmitOnly2D(emit_2d);
 					}
 
 					switch (type) {

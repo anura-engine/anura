@@ -347,6 +347,17 @@ namespace KRE
 		}
 	}
 
+	void Camera::clearClipPlanes() 
+	{ 
+		clip_planes_set_ = false; 
+		if(type_ == CAMERA_ORTHOGONAL) {
+			computeProjection();
+		} else {
+			computeView();
+			computeProjection();
+		}
+	}
+
 	void Camera::createFrustum()
 	{
 		attachFrustum(std::make_shared<Frustum>());
