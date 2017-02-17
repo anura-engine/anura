@@ -111,6 +111,8 @@ namespace game_logic
 				v.push_back(variant(bo));
 			}
 			return variant(&v);
+	} else if(id == "MODULE_NAME") {
+		return variant(module::get_module_name());
 	} else if(id == "MODULE_PRETTY_NAME") {
 		return variant(module::get_module_pretty_name());
 	} else if(id == "MODULE_OPTIONS") {
