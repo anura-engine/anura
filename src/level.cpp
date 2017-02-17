@@ -3328,6 +3328,10 @@ void Level::add_player(EntityPtr p)
 		chars_.erase(std::remove(chars_.begin(), chars_.end(), player_), chars_.end());
 	}
 
+	if(LevelRunner::getCurrent()) {
+		LevelRunner::getCurrent()->on_player_set(p);
+	}
+
 	last_touched_player_ = player_ = p;
 	ASSERT_LOG(!g_player_type || g_player_type->match(variant(p.get())), "Player object being added to level does not match required player type. " << p->getDebugDescription() << " is not a " << g_player_type->to_string());
 	if(players_.empty()) {

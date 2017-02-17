@@ -403,6 +403,15 @@ void LevelRunner::video_resize_event(const SDL_Event &event)
 	lvl_->player()->getEntity().handleEvent(WindowResizeEventID, callable.get());
 }
 
+void LevelRunner::on_player_set(EntityPtr e)
+{
+#ifndef NO_EDITOR
+	if(console_.get()) {
+		console_->setFocus(e);
+	}
+#endif
+}
+
 #if 0
 void LevelRunner::handle_mouse_over_voxel_objects(const SDL_Event &event,
 	const std::vector<voxel::UserVoxelObjectPtr>& voxel_objs, 

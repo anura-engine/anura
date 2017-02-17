@@ -78,6 +78,8 @@ public:
 
 	void video_resize_event(const SDL_Event &event);
 
+	void on_player_set(EntityPtr e);
+
 #ifndef NO_EDITOR
 	void replay_level_from_start();
 #endif
