@@ -677,6 +677,7 @@ namespace KRE
 					bool emit_2d = e->isEmitOnly2D();
 					if(ImGui::Checkbox("Emit only 2D", &emit_2d)) {
 						e->setEmitOnly2D(emit_2d);
+						emitter_modified = true;
 					}
 
 					switch (type) {

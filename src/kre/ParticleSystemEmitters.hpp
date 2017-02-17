@@ -94,7 +94,7 @@ namespace KRE
 			void setColorRange(const glm::vec4& start, const glm::vec4& end);
 
 			bool isEmitOnly2D() const { return emit_only_2d_; }
-			void setEmitOnly2D(bool f) { emit_only_2d_ = f; }
+			void setEmitOnly2D(bool f);
 
 			virtual EmitterPtr clone() = 0;
 			static EmitterPtr factory(std::weak_ptr<ParticleSystemContainer> parent, const variant& node);

@@ -392,6 +392,11 @@ namespace KRE
 			}
 		}
 
+		void Emitter::setEmitOnly2D(bool f) 
+		{ 
+			emit_only_2d_ = f; 
+		}
+
 		int Emitter::calculateParticlesToEmit(float t, int quota, int current_size)
 		{
 			auto& psystem = getParentContainer()->getParticleSystem();
