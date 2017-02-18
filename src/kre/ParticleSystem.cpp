@@ -442,17 +442,18 @@ namespace KRE
 			const glm::vec2 br{ rf.x2(), rf.y1() };
 
 
-			for(auto it = active_particles_.cbegin(); it != active_particles_.cend(); ++it) {
-				const auto& p = *it;
-				auto cp = p.current.position;
-				
-				if(!ignoreGlobalModelMatrix()) {
-					cp += glm::vec3(get_global_model_matrix()[3]); // need global model translation.
+			for(auto it = active_particles_.begin(); it != active_particles_.end(); ++it) {
+				auto& p = *it;
+				auto& cp = p.current.position;
+				if(!p.init_pos) {
+					p.init_pos = true;
+					if(!ignoreGlobalModelMatrix()) {
+						p.current.position += glm::vec3(get_global_model_matrix()[3]); // need global model translation.
+					}
+					if(useParticleSystemPosition()) {
+						p.current.position += getPosition();
+					}
 				}
-				if(useParticleSystemPosition()) {
-					cp += getPosition();
-				}
-
 				const glm::vec3 p1 = cp - p.current.dimensions / 2.0f;
 				const glm::vec3 p2 = cp + p.current.dimensions / 2.0f;
 				const glm::vec4 q{ p.current.orientation.x, p.current.orientation.y, p.current.orientation.z, p.current.orientation.w };

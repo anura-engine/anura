@@ -88,11 +88,12 @@ namespace KRE
 		// This structure should be POD (i.e. plain old data)
 		struct Particle
 		{
-			Particle() : emitted_by(nullptr) {}
+			Particle() : emitted_by(nullptr), init_pos(false) {}
 			PhysicsParameters current;
 			PhysicsParameters initial;
 			// Still wavering over whether this should be std::weak_ptr<Emitter>
 			Emitter* emitted_by;
+			bool init_pos;
 		};
 
 		// General class for emitter objects which encapsulate and exposes physical parameters
