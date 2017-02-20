@@ -82,6 +82,8 @@ FUNCTION_DEF_CTOR(name, min_args, max_args, helpstring) \
 FUNCTION_DEF_MEMBERS \
 FUNCTION_DEF_IMPL
 
+#define FUNCTION_DYNAMIC_ARGUMENTS } bool dynamicArguments() const override { return true;
+
 #define END_FUNCTION_DEF(name) } }; const int name##_dummy_var = register_function_creator(FunctionModule, #name, new SpecificFunctionCreator<name##_function>(FunctionModule));
 
 #define FUNCTION_ARGS_DEF } void staticErrorAnalysis() const override { int num_passed_args = -1; int narg_number = 0;

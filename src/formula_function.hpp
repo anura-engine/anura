@@ -209,6 +209,8 @@ namespace game_logic
 
 		virtual bool useSingletonVM() const { return true; }
 
+		virtual bool dynamicArguments() const { return false; }
+
 	private:
 		std::vector<ConstExpressionPtr> getChildren() const override {
 			return std::vector<ConstExpressionPtr>(args_.begin(), args_.end());

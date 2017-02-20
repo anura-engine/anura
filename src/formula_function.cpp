@@ -816,6 +816,7 @@ namespace game_logic
 			cache->store(key, value);
 			return value;
 
+		FUNCTION_DYNAMIC_ARGUMENTS
 		FUNCTION_TYPE_DEF
 			return args()[2]->queryVariantType();
 		END_FUNCTION_DEF(query_cache)
@@ -850,6 +851,7 @@ namespace game_logic
 
 			return EVAL_ARG(nargs-1);
 
+		FUNCTION_DYNAMIC_ARGUMENTS
 		FUNCTION_OPTIMIZE
 
 			variant v;
@@ -1235,6 +1237,7 @@ namespace game_logic
 		const timeout_scope scope(time_ms);
 		return args()[1]->evaluate(variables);
 
+	FUNCTION_DYNAMIC_ARGUMENTS
 	FUNCTION_ARGS_DEF
 		ARG_TYPE("int");
 	FUNCTION_TYPE_DEF
@@ -1275,6 +1278,7 @@ namespace game_logic
 				g_handle_errors_error_message = e.msg;
 				return args()[1]->evaluate(variables);
 			}
+		FUNCTION_DYNAMIC_ARGUMENTS
 		FUNCTION_TYPE_DEF
 			return args()[0]->queryVariantType();
 		END_FUNCTION_DEF(handle_errors)
@@ -1293,6 +1297,7 @@ namespace game_logic
 			} else {
 				return variant();
 			}
+		FUNCTION_DYNAMIC_ARGUMENTS
 		FUNCTION_TYPE_DEF
 			std::vector<variant_type_ptr> types;
 			for(unsigned n = 2; n < NUM_ARGS; ++n) {
@@ -2196,6 +2201,7 @@ FUNCTION_DEF_CTOR(fold, 2, 3, "fold(list, expr, [default]) -> value")
 		}
 	}
 
+FUNCTION_DYNAMIC_ARGUMENTS
 FUNCTION_DEF_MEMBERS
 	variant default_;
 	bool optimizeArgNumToVM(int narg) const override {
@@ -2272,6 +2278,7 @@ FUNCTION_DEF_IMPL
 		END_FUNCTION_DEF(unzip)
 
 		FUNCTION_DEF_CTOR(zip, 2, 3, "zip(list1, list2, expr=null) -> list")
+		FUNCTION_DYNAMIC_ARGUMENTS
 		FUNCTION_DEF_MEMBERS
 		bool optimizeArgNumToVM(int narg) const override {
 			return narg != 2;
@@ -2452,6 +2459,7 @@ FUNCTION_DEF_IMPL
 			}
 			pathfinding::DirectedGraph* dg = new pathfinding::DirectedGraph(&vertex_list, &edges);
 			return variant(dg);
+		FUNCTION_DYNAMIC_ARGUMENTS
 		CAN_VM
 			return false;
 		FUNCTION_VM
@@ -2586,9 +2594,11 @@ FUNCTION_DEF_IMPL
 			ExpressionPtr heuristic = args()[4];
 			ffl::IntrusivePtr<MapFormulaCallable> callable(new MapFormulaCallable(&variables));
 			return variant(pathfinding::a_star_find_path(lvl, src, dst, heuristic, weight_expr, callable, tile_size_x, tile_size_y));
+		FUNCTION_DYNAMIC_ARGUMENTS
 		END_FUNCTION_DEF(plot_path)
 
 		FUNCTION_DEF_CTOR(sort, 1, 2, "sort(list, criteria): Returns a nicely-ordered list. If you give it an optional formula such as 'a>b' it will sort it according to that. This example favours larger numbers first instead of the default of smaller numbers first.")
+		FUNCTION_DYNAMIC_ARGUMENTS
 		FUNCTION_DEF_MEMBERS
 			bool optimizeArgNumToVM(int narg) const override {
 				return narg != 1;
@@ -2872,6 +2882,7 @@ FUNCTION_DEF_IMPL
 			if(!args().empty()) {
 				def_ = this->args().back()->getDefinitionUsedByExpression();
 			}
+		FUNCTION_DYNAMIC_ARGUMENTS
 		FUNCTION_DEF_MEMBERS
 			ConstFormulaCallableDefinitionPtr def_;
 		FUNCTION_DEF_IMPL
@@ -2952,6 +2963,7 @@ FUNCTION_DEF_IMPL
 			if(!args().empty()) {
 				def_ = args().back()->getDefinitionUsedByExpression();
 			}
+		FUNCTION_DYNAMIC_ARGUMENTS
 		FUNCTION_DEF_MEMBERS
 			std::string identifier_;
 			ConstFormulaCallableDefinitionPtr def_;
@@ -3133,6 +3145,7 @@ FUNCTION_DEF_IMPL
 			if(!args().empty()) {
 				def_ = args().back()->getDefinitionUsedByExpression();
 			}
+		FUNCTION_DYNAMIC_ARGUMENTS
 		FUNCTION_DEF_MEMBERS
 			bool optimizeArgNumToVM(int narg) const override {
 				if(NUM_ARGS > 2 && narg == 1) {
@@ -3251,6 +3264,7 @@ FUNCTION_DEF_IMPL
 			if(!args().empty()) {
 				def_ = args().back()->getDefinitionUsedByExpression();
 			}
+		FUNCTION_DYNAMIC_ARGUMENTS
 		FUNCTION_DEF_MEMBERS
 			bool optimizeArgNumToVM(int narg) const override {
 				if(NUM_ARGS > 2 && narg == 1) {
@@ -3399,6 +3413,7 @@ FUNCTION_DEF_IMPL
 			if(!args().empty()) {
 				def_ = args().back()->getDefinitionUsedByExpression();
 			}
+		FUNCTION_DYNAMIC_ARGUMENTS
 		FUNCTION_DEF_MEMBERS
 			bool optimizeArgNumToVM(int narg) const override {
 				return narg != 1;
@@ -3451,6 +3466,8 @@ FUNCTION_DEF_IMPL
 				}
 				def_ = args.back()->getDefinitionUsedByExpression();
 			}
+
+			bool dynamicArguments() const override { return true; }
 
 			bool canCreateVM() const override {
 				return args().size() == 2 && canChildrenVM() && def_.get() != nullptr;
@@ -3799,6 +3816,7 @@ FUNCTION_DEF_IMPL
 		}
 
 		FUNCTION_DEF_CTOR(benchmark, 1, 1, "benchmark(expr): Executes expr in a benchmark harness and returns a string describing its benchmark performance")
+		FUNCTION_DYNAMIC_ARGUMENTS
 		FUNCTION_DEF_MEMBERS
 			bool optimizeArgNumToVM(int narg) const override {
 				return false;
@@ -3826,6 +3844,7 @@ FUNCTION_DEF_IMPL
 			Formula::failIfStaticContext();
 			SDL_Delay(EVAL_ARG(0).as_int());
 			return EVAL_ARG(1);
+		FUNCTION_DYNAMIC_ARGUMENTS
 		FUNCTION_ARGS_DEF
 			ARG_TYPE("int");
 			ARG_TYPE("any");
@@ -3835,6 +3854,7 @@ FUNCTION_DEF_IMPL
 
 
 		FUNCTION_DEF_CTOR(instrument, 2, 2, "instrument(string, expr): Executes expr and outputs debug instrumentation on the time it took with the given string")
+		FUNCTION_DYNAMIC_ARGUMENTS
 		FUNCTION_DEF_MEMBERS
 			bool optimizeArgNumToVM(int narg) const override {
 				return narg != 1;
@@ -4303,6 +4323,8 @@ FUNCTION_DEF_IMPL
 				}
 			}
 
+			bool dynamicArguments() const override { return true; }
+
 			bool optimizeArgNumToVM(int narg) const override {
 				return narg != 0;
 			}
@@ -4373,6 +4395,8 @@ FUNCTION_DEF_IMPL
 					}
 				}
 			}
+
+			bool dynamicArguments() const override { return true; }
 
 			bool optimizeArgNumToVM(int narg) const override {
 				return narg != 0;
@@ -5257,7 +5281,11 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 				++arg_index;
 			}
 
-			vm.addInstruction(OP_CALL_BUILTIN);
+			if(dynamicArguments()) {
+				vm.addInstruction(OP_CALL_BUILTIN_DYNAMIC);
+			} else {
+				vm.addInstruction(OP_CALL_BUILTIN);
+			}
 			vm.addInt(static_cast<int>(args_.size()));
 
 			return createVMExpression(vm, queryVariantType(), *this);

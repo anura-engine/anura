@@ -57,6 +57,8 @@ namespace game_logic
 
 			bool isPrivate() const { return private_counter > 0; }
 			int private_counter;
+
+			std::function<bool(variant*)> constant_fn;
 		};
 
 		FormulaCallableDefinition();
