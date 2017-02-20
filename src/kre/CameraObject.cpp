@@ -547,7 +547,7 @@ namespace KRE
 	{
 		if(type_ == CAMERA_ORTHOGONAL) {
 			if(clip_planes_set_) {
-				projection_ = glm::frustum(float(ortho_left_), float(ortho_right_), float(ortho_bottom_), float(ortho_top_), getNearClip(), getFarClip());
+				projection_ = glm::ortho(float(ortho_left_), float(ortho_right_), float(ortho_bottom_), float(ortho_top_), getNearClip(), getFarClip());
 			} else {
 				projection_ = glm::ortho(float(ortho_left_), float(ortho_right_), float(ortho_bottom_), float(ortho_top_));
 			}
