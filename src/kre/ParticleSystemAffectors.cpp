@@ -1265,7 +1265,6 @@ namespace KRE
 					uv_data_.emplace_back(std::make_pair(t, rectf(uv_node[n]["area"])));
 				}
 			}
-			transformCoords();
 		}
 
 		void AnimationAffector::removeTimeCoordEntry(const uv_pair& f)
@@ -1287,7 +1286,8 @@ namespace KRE
 
 			auto psystem = getParentContainer()->getParticleSystem();
 			auto tex = psystem->getTexture();
-			
+			ASSERT_LOG(tex != nullptr, "No texture is defined.");
+
 			for(const auto& uvp : uv_data_) {
 				trf_uv_data_.emplace_back(uvp.first, tex->getTextureCoords(0, uvp.second));
 			}
@@ -1295,8 +1295,11 @@ namespace KRE
 
 		void AnimationAffector::internalApply(Particle& p, float t) 
 		{
-			if(trf_uv_data_.empty()) {
+			if(uv_data_.empty()) {
 				return;
+			}
+			if(trf_uv_data_.empty()) {
+				transformCoords();
 			}
 			float ttl_percentage = 1.0f - p.current.time_to_live / p.initial.time_to_live;
 			auto it1 = find_nearest_coords(ttl_percentage);

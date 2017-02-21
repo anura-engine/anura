@@ -142,9 +142,9 @@ namespace KRE
 
 			const std::vector<uv_pair>& getTimeCoordData() const { return uv_data_; }
 			std::vector<uv_pair>& getTimeCoordData() { return uv_data_; }
-			void clearTimeCoordData() { uv_data_.clear(); }
-			void addTimeCoordEntry(const uv_pair& tc) { uv_data_.emplace_back(tc); transformCoords(); }
-			void setTimeCoordData(const std::vector<uv_pair>& tc) { uv_data_ = tc; transformCoords(); }
+			void clearTimeCoordData() { uv_data_.clear(); trf_uv_data_.clear(); }
+			void addTimeCoordEntry(const uv_pair& tc) { uv_data_.emplace_back(tc); trf_uv_data_.clear(); }
+			void setTimeCoordData(const std::vector<uv_pair>& tc) { uv_data_ = tc; trf_uv_data_.clear(); }
 			void removeTimeCoordEntry(const uv_pair& f);
 
 			bool isPixelCoords() const { return pixel_coords_; }
