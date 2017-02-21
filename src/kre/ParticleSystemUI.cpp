@@ -927,19 +927,38 @@ namespace KRE
 								if(ImGui::DragFloat("T", &tc.first, 0.01f, 0.0f, 1.0f)) {
 									data_changed = true;
 								}
-								ImGui::SameLine();
 								if(pixel_coords) {
 									int r[4]{ static_cast<int>(tc.second.x1()), 
 										static_cast<int>(tc.second.y1()), 
 										static_cast<int>(tc.second.x2()), 
 										static_cast<int>(tc.second.y2()) };
-									if(ImGui::DragInt4("area", r, 1, 0, 1000)) {
+									bool changed = false;
+									int width = psystem->getTexture()->surfaceWidth();
+									int height = psystem->getTexture()->surfaceHeight();
+									if(ImGui::DragInt("x1", &r[0], 1, 0, width)) {
+										changed |= true;
+									}
+									ImGui::SameLine();
+									if(ImGui::DragInt("y1", &r[1], 1, 0, height)) {
+										changed |= true;
+									}
+									if(ImGui::DragInt("x2", &r[2], 1, 0, width)) {
+										changed |= true;
+									}
+									ImGui::SameLine();
+									if(ImGui::DragInt("y2", &r[3], 1, 0, height)) {
+										changed |= true;
+									}
+									if(changed) {
 										tc.second = rectf::from_coordinates(r[0], r[1], r[2], r[3]);
+										data_changed = true;
 									}
 								} else {
+									ImGui::SameLine();
 									float r[4]{ tc.second.x1(),tc.second.y1(), tc.second.x2(), tc.second.y2() };
 									if(ImGui::DragFloat4("area", r, 0.01f, 0.0f, 1.0f)) {
 										tc.second = rectf::from_coordinates(r[0], r[1], r[2], r[3]);
+										data_changed = true;
 									}
 								}
 								ImGui::PopItemWidth();

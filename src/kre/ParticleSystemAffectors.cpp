@@ -1232,7 +1232,7 @@ namespace KRE
 
 		AnimationAffector::AnimationAffector(std::weak_ptr<ParticleSystemContainer> parent)
 			: Affector(parent, AffectorType::ANIMATION), 
-			  pixel_coords_(true),
+			  pixel_coords_(false),
 			  uv_data_(),
 			  trf_uv_data_()
 		{
@@ -1240,7 +1240,7 @@ namespace KRE
 
 		AnimationAffector::AnimationAffector(std::weak_ptr<ParticleSystemContainer> parent, const variant& node)
 			: Affector(parent, AffectorType::ANIMATION), 
-			  pixel_coords_(true),
+			  pixel_coords_(false),
 			  uv_data_(),
 			  trf_uv_data_()
 		{
@@ -1280,21 +1280,22 @@ namespace KRE
 		{
 			sort_uv_data();
 			trf_uv_data_.clear();
-			if(pixel_coords_) {
+			if(!pixel_coords_) {
 				std::copy(uv_data_.begin(), uv_data_.end(), std::back_inserter(trf_uv_data_));
 				return;
 			}
 
 			auto psystem = getParentContainer()->getParticleSystem();
+			auto tex = psystem->getTexture();
 			
 			for(const auto& uvp : uv_data_) {
-				trf_uv_data_.emplace_back(uvp.first, psystem->getTexture()->getTextureCoords(0, uvp.second));
+				trf_uv_data_.emplace_back(uvp.first, tex->getTextureCoords(0, uvp.second));
 			}
 		}
 
 		void AnimationAffector::internalApply(Particle& p, float t) 
 		{
-			if(uv_data_.empty()) {
+			if(trf_uv_data_.empty()) {
 				return;
 			}
 			float ttl_percentage = 1.0f - p.current.time_to_live / p.initial.time_to_live;
@@ -1304,9 +1305,7 @@ namespace KRE
 
 		void AnimationAffector::handleWrite(variant_builder* build) const 
 		{
-			if(!pixel_coords_) {
-				build->add("pixel_coords", pixel_coords_);
-			}
+			build->add("pixel_coords", pixel_coords_);
 			variant_builder res;
 			for(const auto& uv : uv_data_) {
 				res.add("time", uv.first);
@@ -1324,10 +1323,10 @@ namespace KRE
 
 		std::vector<AnimationAffector::uv_pair>::iterator AnimationAffector::find_nearest_coords(float dt)
 		{
-			auto it = uv_data_.begin();
-			for(; it != uv_data_.end(); ++it) {
+			auto it = trf_uv_data_.begin();
+			for(; it != trf_uv_data_.end(); ++it) {
 				if(dt < it->first) {
-					if(it == uv_data_.begin()) {
+					if(it == trf_uv_data_.begin()) {
 						return it;
 					} else {
 						return --it;
