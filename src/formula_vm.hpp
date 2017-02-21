@@ -270,7 +270,8 @@ enum OP {
 		  OP_POP_SYMBOL_STACK,
 
 		  OP_LOOKUP_SYMBOL_STACK,
-		  
+
+		  OP_CALL_BUILTIN_DYNAMIC,
 		  
 		  OP_POW='^', OP_DICE='d',
 
@@ -285,6 +286,7 @@ public:
 	typedef int ExtInstructionType;
 
 	static bool isInstructionLoop(InstructionType instruction);
+	static bool isInstructionJump(InstructionType instruction);
 
 	class Iterator {
 		const VirtualMachine* vm_;
@@ -294,9 +296,14 @@ public:
 		explicit Iterator(const VirtualMachine* vm) : vm_(vm), index_(0)
 		{}
 
+		const VirtualMachine* get_vm() const { return vm_; }
+
 		InstructionType get() const;
 		bool has_arg() const;
 		InstructionType arg() const;
+		InstructionType& arg_mutable();
+
+		size_t get_index() const { return index_; }
 
 		void next();
 		bool at_end() const;
@@ -307,6 +314,8 @@ public:
 	}
 
 	variant execute(const game_logic::FormulaCallable& variables) const;
+
+	void replaceInstructions(Iterator i1, Iterator i2, const std::vector<InstructionType>& new_instructions);
 
 	void addInstruction(OP op);
 	void addConstant(const variant& v);
@@ -327,6 +336,8 @@ public:
 	void addJumpToPosition(InstructionType i, int pos);
 
 	void append(const VirtualMachine& other);
+
+	void append(Iterator i1, Iterator i2, const VirtualMachine& other);
 
 	std::string debugOutput(const InstructionType* p=nullptr) const;
 

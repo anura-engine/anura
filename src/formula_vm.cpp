@@ -244,6 +244,7 @@ void VirtualMachine::executeInternal(const FormulaCallable& variables, std::vect
 		}
 
 		case OP_LOOKUP: {
+			//std::cerr << "LOOKUP...\n"  << debugPinpointLocation(p, stack) << "\n";
 			const FormulaCallable& vars = variables_stack.empty() ? variables : *variables_stack.back();
 			++p;
 			stack.push_back(vars.queryValueBySlot(static_cast<int>(*p)));
@@ -423,7 +424,10 @@ void VirtualMachine::executeInternal(const FormulaCallable& variables, std::vect
 			break;
 		}
 
-		case OP_CALL_BUILTIN: {
+		case OP_CALL_BUILTIN:
+		case OP_CALL_BUILTIN_DYNAMIC:
+		{
+			//std::cerr << "CALL---\n" << debugPinpointLocation(p, stack) << "\n";
 			++p;
 			const int nitems = static_cast<size_t>(*p);
 
@@ -669,7 +673,7 @@ void VirtualMachine::executeInternal(const FormulaCallable& variables, std::vect
 
 				p += *(p+1);
 			} else {
-				ASSERT_LOG(false, "Unexpected type given to filter: " << stack.back().to_debug_string());
+				ASSERT_LOG(false, "Unexpected type given to filter: " << stack.back().to_debug_string() << " " << debugPinpointLocation(p, stack));
 			}
 			break;
 		}
@@ -952,6 +956,38 @@ void VirtualMachine::executeInternal(const FormulaCallable& variables, std::vect
 	}
 }
 
+void VirtualMachine::replaceInstructions(Iterator i1, Iterator i2, const std::vector<InstructionType>& new_instructions)
+{
+	const int diff = static_cast<int>(new_instructions.size()) - (static_cast<int>(i2.get_index()) - static_cast<int>(i1.get_index()));
+
+	for(DebugInfo& info : debug_info_) {
+		if(info.bytecode_pos >= i2.get_index()) {
+			info.bytecode_pos += diff;
+		}
+	}
+
+	for(Iterator i = begin_itor(); i.at_end() == false; i.next()) {
+		if(i.get_index() >= i1.get_index() && i.get_index() < i2.get_index()) {
+			continue;
+		}
+
+		if(isInstructionJump(i.get()) == false) {
+			continue;
+		}
+
+		const int src_index = static_cast<int>(i.get_index());
+		const int dst_index = src_index + static_cast<int>(i.arg()) + 1;
+		if(src_index < i1.get_index() && dst_index >= i2.get_index()) {
+			i.arg_mutable() += diff;
+		} else if(src_index >= i2.get_index() && dst_index <= i1.get_index()) {
+			i.arg_mutable() -= diff;
+		}
+	}
+
+	instructions_.erase(instructions_.begin() + i1.get_index(), instructions_.begin() + i2.get_index());
+	instructions_.insert(instructions_.begin() + i1.get_index(), new_instructions.begin(), new_instructions.end());
+}
+
 void VirtualMachine::addInstruction(OP op)
 {
 	instructions_.push_back(op);
@@ -1028,7 +1064,7 @@ void VirtualMachine::addJumpToPosition(InstructionType i, int pos)
 }
 
 namespace {
-	VirtualMachine::InstructionType g_arg_instructions[] = { OP_LOOKUP, OP_JMP_IF, OP_JMP, OP_JMP_UNLESS, OP_POP_JMP_IF, OP_POP_JMP_UNLESS, OP_CALL, OP_CALL_BUILTIN, OP_ALGO_MAP, OP_ALGO_FILTER, OP_ALGO_FIND, OP_ALGO_COMPREHENSION, OP_UNDER, OP_PUSH_INT, OP_LOOKUP_SYMBOL_STACK, OP_WHERE, OP_INLINE_FUNCTION };
+	VirtualMachine::InstructionType g_arg_instructions[] = { OP_LOOKUP, OP_JMP_IF, OP_JMP, OP_JMP_UNLESS, OP_POP_JMP_IF, OP_POP_JMP_UNLESS, OP_CALL, OP_CALL_BUILTIN, OP_CALL_BUILTIN_DYNAMIC, OP_ALGO_MAP, OP_ALGO_FILTER, OP_ALGO_FIND, OP_ALGO_COMPREHENSION, OP_UNDER, OP_PUSH_INT, OP_LOOKUP_SYMBOL_STACK, OP_WHERE, OP_INLINE_FUNCTION, OP_CONSTANT };
 }
 
 void VirtualMachine::append(const VirtualMachine& other)
@@ -1067,6 +1103,16 @@ void VirtualMachine::append(const VirtualMachine& other)
 	constants_.insert(constants_.end(), other.constants_.begin(), other.constants_.end());
 }
 
+void VirtualMachine::append(Iterator i1, Iterator i2, const VirtualMachine& other)
+{
+	std::vector<InstructionType> old_instructions = instructions_;
+	append(other);
+	std::vector<InstructionType> new_instructions(instructions_.begin() + old_instructions.size(), instructions_.end());
+	instructions_.resize(old_instructions.size());
+
+	replaceInstructions(i1, i2, new_instructions);
+}
+
 namespace {
 
 const char* getOpName(VirtualMachine::InstructionType op) {
@@ -1102,6 +1148,8 @@ const char* getOpName(VirtualMachine::InstructionType op) {
 		  DEF_OP(OP_CALL)
 
 		  DEF_OP(OP_CALL_BUILTIN)
+
+		  DEF_OP(OP_CALL_BUILTIN_DYNAMIC)
 
 		  DEF_OP(OP_ASSERT)
 
@@ -1207,6 +1255,10 @@ std::string VirtualMachine::debugOutput(const VirtualMachine::InstructionType* i
 			s << static_cast<int>(instructions_[n]) << "\n";
 		} else if(op == OP_CALL_BUILTIN) {
 			s << ": OP_CALL_BUILTIN ";
+			++n;
+			s << static_cast<int>(instructions_[n]) << "\n";
+		} else if(op == OP_CALL_BUILTIN_DYNAMIC) {
+			s << ": OP_CALL_BUILTIN_DYNAMIC ";
 			++n;
 			s << static_cast<int>(instructions_[n]) << "\n";
 		} else if(op == OP_JMP_IF) {
@@ -1333,6 +1385,11 @@ VirtualMachine::InstructionType VirtualMachine::Iterator::arg() const
 	return vm_->instructions_[index_+1];
 }
 
+VirtualMachine::InstructionType& VirtualMachine::Iterator::arg_mutable()
+{
+	return const_cast<VirtualMachine*>(vm_)->instructions_[index_+1];
+}
+
 void VirtualMachine::Iterator::next()
 {
 	if(has_arg()) {
@@ -1350,6 +1407,11 @@ bool VirtualMachine::Iterator::at_end() const
 bool VirtualMachine::isInstructionLoop(InstructionType i)
 {
 	return i >= OP_ALGO_MAP && i <= OP_ALGO_COMPREHENSION;
+}
+
+bool VirtualMachine::isInstructionJump(InstructionType i)
+{
+	return isInstructionLoop(i) || (i >= OP_JMP_IF && i <= OP_JMP);
 }
 
 UNIT_TEST(formula_vm) {

@@ -1610,6 +1610,7 @@ namespace
 		spawn_command* cmd = (new spawn_command(obj, commands));
 		cmd->setExpression(this);
 		return variant(cmd);
+	FUNCTION_DYNAMIC_ARGUMENTS
 	FUNCTION_ARGS_DEF
 		//ASSERT_LOG(false, "spawn() not supported in strict mode " << debugPinpointLocation());
 		if(NUM_ARGS <= 3) {
@@ -1708,6 +1709,7 @@ namespace
 		cmd->setExpression(this);
 		return variant(cmd);
 
+	FUNCTION_DYNAMIC_ARGUMENTS
 	CAN_VM
 		return false;
 	FUNCTION_VM

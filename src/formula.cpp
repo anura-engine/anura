@@ -64,6 +64,7 @@ namespace
 	PREF_BOOL(ffl_vm_opt_library_lookups, true, "Optimize library lookups in VM");
 	PREF_BOOL(ffl_vm_opt_constant_lookups, true, "Optimize contant lookups in VM");
 	PREF_BOOL(ffl_vm_opt_inline, true, "Try to inline FFL calls.");
+	PREF_BOOL(ffl_vm_opt_replace_where, true, "Try to replace trivial where calls.");
 
 	//the last formula that was executed; used for outputting debugging info.
 	const game_logic::Formula* last_executed_formula;
@@ -873,6 +874,14 @@ namespace game_logic
 
 			bool canCreateVM() const override { return true; }
 			void emitVM(formula_vm::VirtualMachine& vm) const override {
+				const FormulaCallableDefinition::Entry* def = callable_def_->getEntry(slot_);
+
+				variant v;
+				if(def != nullptr && def->constant_fn && def->constant_fn(&v)) {
+					vm.addLoadConstantInstruction(v);
+					return;
+				}
+
 				int index = -1;
 				if(false && callable_def_->getSymbolIndexForSlot(slot_, &index)) {
 					vm.addInstruction(formula_vm::OP_LOOKUP_SYMBOL_STACK);
@@ -1011,6 +1020,12 @@ namespace {
 					const int index = callable_def_->getSlot(id_);
 					if(index != -1) {
 						if(callable_def_->supportsSlotLookups()) {
+							auto entry = callable_def_->getEntry(index);
+							variant v;
+							if(entry != nullptr && entry->constant_fn && entry->constant_fn(&v)) {
+								return ExpressionPtr(new VariantExpression(v));
+							}
+
 							return ExpressionPtr(new SlotIdentifierExpression(id_, index, callable_def_.get()));
 						}
 					} else if(callable_def_->isStrict() || g_strict_formula_checking) {
@@ -1531,35 +1546,138 @@ namespace {
 
 					variant fn_var;
 					if(g_ffl_vm_opt_inline && left_->canReduceToVariant(fn_var) && fn_var.is_regular_function() && fn_var.get_function_formula() && fn_var.get_function_formula()->hasGuards() == false && fn_var.get_function_formula()->expr()->canCreateVM()) {
-
-						for(ExpressionPtr& e : args_) {
-							e->emitVM(vm);
-						}
-
 						auto info = fn_var.get_function_info();
 
-						if(args_.size() < info->arg_names.size()) {
-							ASSERT_LOG(args_.size() + info->default_args.size() >= info->arg_names.size(), "Wrong number of function args");
+						const int base_slot = fn_var.get_function_base_slot();
+						const int num_args = static_cast<int>(info->arg_names.size());
 
-							auto i = info->default_args.end() - (info->arg_names.size() - args_.size());
-							while(i != info->default_args.end()) {
-								vm.addLoadConstantInstruction(*i);
-								++i;
+						formula_vm::VirtualMachine fn_vm;
+						fn_var.get_function_formula()->expr()->emitVM(fn_vm);
+
+						//see if the function never uses its closure and we can fully inline it.
+						bool can_optimize = true;
+
+						std::map<int, VirtualMachine::Iterator> lookups;
+						std::vector<VirtualMachine::Iterator> ordered_lookups;
+
+						std::vector<bool> vm_trivial;
+						for(int n = 0; n < num_args; ++n) {
+							if(n < args_.size()) {
+								formula_vm::VirtualMachine vm;
+								args_[n]->emitVM(vm);
+								auto itor(vm.begin_itor());
+								if(!itor.at_end()) {
+									itor.next();
+								}
+
+								vm_trivial.push_back(itor.at_end());
+							} else {
+								vm_trivial.push_back(true);
 							}
-
 						}
 
-						vm.addLoadConstantInstruction(variant(fn_var.get_function_closure()));
 
-						vm.addInstruction(OP_PUSH_INT);
-						vm.addInt(info->arg_names.size());
+						std::vector<bool> unrelated_scope_stack;
+						int loop_end = -1;
 
-						vm.addInstruction(formula_vm::OP_INLINE_FUNCTION);
-						vm.addInt(fn_var.get_function_base_slot());
+						for(VirtualMachine::Iterator itor(fn_vm.begin_itor()); !itor.at_end(); itor.next()) {
+							if(formula_vm::VirtualMachine::isInstructionLoop(itor.get())) {
+								const int end = static_cast<int>(itor.get_index()) + itor.arg();
+								if(end > loop_end) {
+									loop_end = end;
+								}
+							} else if(itor.get() == formula_vm::OP_PUSH_SCOPE) {
+								unrelated_scope_stack.push_back(true);
+							} else if(itor.get() == formula_vm::OP_INLINE_FUNCTION) {
+								unrelated_scope_stack.push_back(false);
+							} else if(itor.get() == formula_vm::OP_WHERE && itor.arg() >= 0) {
+								unrelated_scope_stack.push_back(false);
+							} else if(itor.get() == formula_vm::OP_POP_SCOPE) {
+								assert(unrelated_scope_stack.empty() == false);
+								unrelated_scope_stack.pop_back();
+							} else if((itor.get() == formula_vm::OP_LOOKUP_STR && std::find(unrelated_scope_stack.begin(), unrelated_scope_stack.end(), true) == unrelated_scope_stack.end()) || itor.get() == formula_vm::OP_CALL_BUILTIN_DYNAMIC || itor.get() == formula_vm::OP_LAMBDA_WITH_CLOSURE) {
+								can_optimize = false;
+								break;
+							} else if(itor.get() == formula_vm::OP_LOOKUP && std::find(unrelated_scope_stack.begin(), unrelated_scope_stack.end(), true) == unrelated_scope_stack.end() && itor.arg() < base_slot) {
+								can_optimize = false;
+								break;
+							} else if(itor.get() == formula_vm::OP_LOOKUP && std::find(unrelated_scope_stack.begin(), unrelated_scope_stack.end(), true) == unrelated_scope_stack.end() && itor.arg() >= base_slot + num_args) {
+								//TODO: remap lookups of symbols created within the function. For now just don't allow inlining.
+								can_optimize = false;
+								break;
+							} else if(itor.get() == formula_vm::OP_LOOKUP && std::find(unrelated_scope_stack.begin(), unrelated_scope_stack.end(), true) == unrelated_scope_stack.end() && itor.arg() >= base_slot && itor.arg() < base_slot + num_args) {
 
-						fn_var.get_function_formula()->expr()->emitVM(vm);
+								const int index = itor.arg() - base_slot;
+								assert(index >= 0 && index < vm_trivial.size());
 
-						vm.addInstruction(formula_vm::OP_POP_SCOPE);
+								if((static_cast<int>(itor.get_index()) < loop_end || lookups.count(itor.arg()) > 0) && vm_trivial[index] == false) {
+									can_optimize = false;
+									break;
+								}
+
+								lookups.insert(std::pair<int, VirtualMachine::Iterator>(itor.arg(), itor));
+	
+								ordered_lookups.emplace_back(itor);
+							}
+						}
+
+						if(can_optimize) {
+
+							std::reverse(ordered_lookups.begin(), ordered_lookups.end());
+
+							for(auto lookup : ordered_lookups) {
+								auto next_itor = lookup;
+								next_itor.next();
+	
+								const int index = lookup.arg() - base_slot;
+								assert(index >= 0 && index < num_args);
+
+								VirtualMachine arg_vm;
+
+								if(index < args_.size()) {
+									args_[index]->emitVM(arg_vm);
+								} else {
+									//a default argument
+									const int start_default = num_args - static_cast<int>(info->default_args.size());
+									const int default_index = index - start_default;
+									assert(default_index >= 0 && default_index < info->default_args.size());
+
+									arg_vm.addLoadConstantInstruction(info->default_args[default_index]);
+								}
+
+								fn_vm.append(lookup, next_itor, arg_vm);
+							}
+
+							vm.append(fn_vm);
+						} else {
+
+							for(ExpressionPtr& e : args_) {
+								e->emitVM(vm);
+							}
+
+							if(args_.size() < info->arg_names.size()) {
+								ASSERT_LOG(args_.size() + info->default_args.size() >= info->arg_names.size(), "Wrong number of function args");
+
+								auto i = info->default_args.end() - (info->arg_names.size() - args_.size());
+								while(i != info->default_args.end()) {
+									vm.addLoadConstantInstruction(*i);
+									++i;
+								}
+	
+							}
+
+							vm.addLoadConstantInstruction(variant(fn_var.get_function_closure()));
+
+							vm.addInstruction(OP_PUSH_INT);
+							vm.addInt(info->arg_names.size());
+
+							vm.addInstruction(formula_vm::OP_INLINE_FUNCTION);
+							vm.addInt(base_slot);
+
+							vm.append(fn_vm);
+
+							vm.addInstruction(formula_vm::OP_POP_SCOPE);
+						}
 					} else {
 
 						left_->emitVM(vm);
@@ -2705,6 +2823,108 @@ namespace {
 
 				if(!can_vm) {
 					return ExpressionPtr();
+				}
+
+				VMExpression* vm_body = dynamic_cast<VMExpression*>(body_.get());
+				std::vector<VMExpression*> vm_entries;
+				for(ExpressionPtr& e : info_->entries) {
+					vm_entries.push_back(dynamic_cast<VMExpression*>(e.get()));
+				}
+
+				static int num_where = 0;
+				static int num_opt_where = 0;
+
+				++num_where;
+
+				if(g_ffl_vm_opt_replace_where && vm_body != nullptr && std::count(vm_entries.begin(), vm_entries.end(), nullptr) == 0) {
+
+					std::map<int, VirtualMachine::Iterator> lookups;
+					std::vector<VirtualMachine::Iterator> ordered_lookups;
+
+					int loop_end = -1;
+
+					bool can_optimize = true;
+					
+					std::vector<formula_vm::VirtualMachine> all_vm;
+					all_vm.reserve(vm_entries.size() + 1);
+					all_vm.emplace_back(vm_body->get_vm());
+					std::reverse(vm_entries.begin(), vm_entries.end());
+					for(auto e : vm_entries) {
+						all_vm.emplace_back(e->get_vm());
+					}
+
+					std::vector<bool> vm_trivial;
+					for(int n = 0; n < vm_entries.size(); ++n) {
+						auto i = all_vm[all_vm.size() - n - 1].begin_itor();
+						if(!i.at_end()) {
+							i.next();
+						}
+
+						vm_trivial.push_back(i.at_end());
+					}
+
+					for(auto& vm : all_vm) {
+
+						std::vector<bool> unrelated_scope_stack;
+
+						for(VirtualMachine::Iterator itor(vm.begin_itor()); !itor.at_end(); itor.next()) {
+							if(formula_vm::VirtualMachine::isInstructionLoop(itor.get())) {
+								const int end = static_cast<int>(itor.get_index()) + itor.arg();
+								if(end > loop_end) {
+									loop_end = end;
+								}
+							} else if(itor.get() == formula_vm::OP_PUSH_SCOPE) {
+								unrelated_scope_stack.push_back(true);
+							} else if(itor.get() == formula_vm::OP_INLINE_FUNCTION) {
+								unrelated_scope_stack.push_back(false);
+							} else if(itor.get() == formula_vm::OP_WHERE && itor.arg() >= 0) {
+								unrelated_scope_stack.push_back(false);
+							} else if(itor.get() == formula_vm::OP_POP_SCOPE) {
+								assert(unrelated_scope_stack.empty() == false);
+								unrelated_scope_stack.pop_back();
+							} else if((itor.get() == formula_vm::OP_LOOKUP_STR && std::find(unrelated_scope_stack.begin(), unrelated_scope_stack.end(), true) == unrelated_scope_stack.end()) || itor.get() == formula_vm::OP_CALL_BUILTIN_DYNAMIC || itor.get() == formula_vm::OP_LAMBDA_WITH_CLOSURE) {
+								can_optimize = false;
+								break;
+							} else if(itor.get() == formula_vm::OP_LOOKUP && std::find(unrelated_scope_stack.begin(), unrelated_scope_stack.end(), true) == unrelated_scope_stack.end() && itor.arg() >= info_->base_slot && itor.arg() < info_->base_slot + info_->entries.size()) {
+
+								const int index = itor.arg() - info_->base_slot;
+								assert(index >= 0 && index < vm_trivial.size());
+
+								if((static_cast<int>(itor.get_index()) < loop_end || lookups.count(itor.arg()) > 0) && vm_trivial[index] == false) {
+									can_optimize = false;
+									break;
+								}
+
+								lookups.insert(std::pair<int, VirtualMachine::Iterator>(itor.arg(), itor));
+	
+								ordered_lookups.emplace_back(itor);
+							}
+						}
+
+						if(!can_optimize) {
+							break;
+						}
+					}
+
+					if(can_optimize) {
+
+						std::reverse(ordered_lookups.begin(), ordered_lookups.end());
+
+						for(auto lookup : ordered_lookups) {
+							VirtualMachine* vm = const_cast<VirtualMachine*>(lookup.get_vm());
+							auto next_itor = lookup;
+							next_itor.next();
+
+							const int index = lookup.arg() - info_->base_slot;
+							assert(index >= 0 && index < static_cast<int>(info_->entries.size()));
+
+							vm->append(lookup, next_itor, all_vm[all_vm.size() - index - 1]);
+						}
+
+						++num_opt_where;
+
+						return ExpressionPtr(new VMExpression(all_vm.front(), queryVariantType(), *this));
+					}
 				}
 
 				formula_vm::VirtualMachine vm;
@@ -4056,6 +4276,7 @@ static std::string debugSubexpressionTypes(ConstFormulaPtr & fml)
 					query_formula_expression_lookups(fml->expr(), &slot_expr, &id_expr, &vm_expr);
 
 					for(auto vm : vm_expr) {
+
 						std::vector<bool> unrelated_scope_stack;
 
 						for(VirtualMachine::Iterator itor(vm->get_vm().begin_itor()); !itor.at_end(); itor.next()) {
@@ -4067,7 +4288,7 @@ static std::string debugSubexpressionTypes(ConstFormulaPtr & fml)
 								unrelated_scope_stack.push_back(false);
 							} else if(itor.get() == formula_vm::OP_POP_SCOPE) {
 								unrelated_scope_stack.pop_back();
-							} else if((itor.get() == formula_vm::OP_LOOKUP_STR && std::find(unrelated_scope_stack.begin(), unrelated_scope_stack.end(), true) == unrelated_scope_stack.end()) || itor.get() == formula_vm::OP_CALL_BUILTIN || itor.get() == formula_vm::OP_LAMBDA_WITH_CLOSURE) {
+							} else if((itor.get() == formula_vm::OP_LOOKUP_STR && std::find(unrelated_scope_stack.begin(), unrelated_scope_stack.end(), true) == unrelated_scope_stack.end()) || itor.get() == formula_vm::OP_CALL_BUILTIN_DYNAMIC || itor.get() == formula_vm::OP_LAMBDA_WITH_CLOSURE) {
 								uses_closure = true;
 								break;
 							} else if(itor.get() == formula_vm::OP_LOOKUP && std::find(unrelated_scope_stack.begin(), unrelated_scope_stack.end(), true) == unrelated_scope_stack.end() && itor.arg() < callable_def->getNumSlots()) {
@@ -4075,6 +4296,7 @@ static std::string debugSubexpressionTypes(ConstFormulaPtr & fml)
 								break;
 							}
 						}
+
 					}
 
 					if(uses_closure == false) {

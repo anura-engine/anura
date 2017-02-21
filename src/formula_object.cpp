@@ -54,6 +54,7 @@
 #define strtoll _strtoi64
 #endif
 
+PREF_BOOL(ffl_vm_opt_const_library_calls, true, "Optimize library calls");
 
 namespace game_logic
 {
@@ -548,6 +549,8 @@ std::map<std::string, std::string>& class_path_map()
 		void build_nested_classes();
 		void run_unit_tests();
 
+		bool is_library_only() const { return is_library_only_; }
+
 		void update_class(FormulaClass* new_class) {
 			if(new_class == this) {
 				return;
@@ -601,6 +604,8 @@ std::map<std::string, std::string>& class_path_map()
 #endif
 
 		int nstate_slots_;
+		
+		bool is_library_only_;
 	};
 
 	bool is_class_derived_from(const std::string& derived, const std::string& base)
@@ -624,8 +629,35 @@ std::map<std::string, std::string>& class_path_map()
 		return false;
 	}
 
+	struct DefinitionConstantFunctionResetter {
+		FormulaCallableDefinitionPtr def_;
+		DefinitionConstantFunctionResetter(FormulaCallableDefinitionPtr def) : def_(def)
+		{}
+
+		~DefinitionConstantFunctionResetter()
+		{
+			reset();
+		}
+
+		void reset() {
+			if(def_) {
+
+				for(int n = 0; n != def_->getNumSlots(); ++n) {
+					auto entry = def_->getEntry(n);
+					if(entry == nullptr) {
+						continue;
+					}
+	
+					entry->constant_fn = std::function<bool(variant*)>();
+				}
+				
+				def_.reset();
+			}
+		}
+	};
+
 	FormulaClass::FormulaClass(const std::string& class_name, const variant& node)
-	  : builtin_slots_(0), name_(class_name), nstate_slots_(0)
+	  : builtin_slots_(0), name_(class_name), nstate_slots_(0), is_library_only_(false)
 	{
 		if(node["base_type"].is_string()) {
 			std::string builtin = node["base_type"].as_string();
@@ -664,17 +696,83 @@ std::map<std::string, std::string>& class_path_map()
 			properties = node;
 		}
 
+		is_library_only_ = node["is_library"].as_bool(false);
+
 		FormulaCallableDefinitionPtr class_def = get_class_definition(class_name);
 		assert(class_def);
 
 		FormulaClassDefinition* class_definition = dynamic_cast<FormulaClassDefinition*>(class_def.get());
 		assert(class_definition);
 
+		std::vector<std::string> entries_loading;
+
+		std::map<std::string, PropertyEntry> preloaded_entries;
+
+		DefinitionConstantFunctionResetter resetter(class_def);
+
+		if(g_ffl_vm_opt_const_library_calls && is_library_only_) {
+			for(int n = 0; n != class_def->getNumSlots(); ++n) {
+				auto entry = class_def->getEntry(n);
+				if(entry == nullptr || entry->id.empty()) {
+					continue;
+				}
+
+				entry->constant_fn = [n,&class_def,&preloaded_entries,&entries_loading,&class_name,&properties](variant* value) {
+					auto entry = class_def->getEntry(n);
+
+					const std::string& id = entry->id;
+					if(std::count(entries_loading.begin(), entries_loading.end(), id)) {
+						return false;
+					}
+
+					int dummy_slot = 0;
+					const variant prop_node = properties[variant(id)];
+
+					if(prop_node.is_string() == false) {
+						return false;
+					}
+
+					PropertyEntry* e = nullptr;
+
+					auto itor = preloaded_entries.find(id);
+					if(itor != preloaded_entries.end()) {
+						e = &itor->second;
+					} else {
+
+						entries_loading.push_back(id);
+						PropertyEntry entry(class_name, id, prop_node, dummy_slot);
+						e = &preloaded_entries[id];
+						*e = entry;
+						entries_loading.pop_back();
+					}
+
+					if(e->getter && e->getter->evaluatesToConstant(*value)) {
+						return true;
+					}
+
+
+					return false;
+				};
+			}
+		}
+
 		const definition_access_private_in_scope expose_scope(*class_definition);
 
 		for(variant key : properties.getKeys().as_list()) {
+			entries_loading.push_back(key.as_string());
+
 			const variant prop_node = properties[key];
-			PropertyEntry entry(class_name, key.as_string(), prop_node, nstate_slots_);
+			PropertyEntry entry;
+			
+			auto itor = preloaded_entries.find(key.as_string());
+			if(itor != preloaded_entries.end()) {
+				entry = itor->second;
+			} else {
+				entry = PropertyEntry(class_name, key.as_string(), prop_node, nstate_slots_);
+				if(is_library_only_) {
+					preloaded_entries[key.as_string()] = entry;
+				}
+			}
 
 			if(properties_.count(key.as_string()) == 0) {
 				properties_[key.as_string()] = static_cast<int>(slots_.size());
@@ -682,7 +780,11 @@ std::map<std::string, std::string>& class_path_map()
 			}
 
 			slots_[properties_[key.as_string()]] = entry;
+
+			entries_loading.pop_back();
 		}
+
+		resetter.reset();
 
 		for(const PropertyEntry& entry : slots_) {
 			if(entry.variable_slot >= 0) {
@@ -1311,6 +1413,8 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 	  : id_(generate_uuid()), new_in_update_(true), orphaned_(false),
 		class_(get_class(type)), private_data_(-1)
 	{
+		ASSERT_LOG(class_->is_library_only() == false || args.is_null(), "Creating instance of library class is illegal: " << type);
+
 		if(class_->getBuiltinCtor()) {
 			builtin_base_ = class_->getBuiltinCtor()(args);
 		}
