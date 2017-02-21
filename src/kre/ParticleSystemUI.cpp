@@ -933,8 +933,8 @@ namespace KRE
 										static_cast<int>(tc.second.x2()), 
 										static_cast<int>(tc.second.y2()) };
 									bool changed = false;
-									int width = psystem->getTexture()->surfaceWidth();
-									int height = psystem->getTexture()->surfaceHeight();
+									int width = psystem->getTexture()->surfaceWidth() - 1;
+									int height = psystem->getTexture()->surfaceHeight() - 1;
 									if(ImGui::DragInt("x1", &r[0], 1, 0, width)) {
 										changed |= true;
 									}

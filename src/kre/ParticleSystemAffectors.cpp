@@ -1306,12 +1306,12 @@ namespace KRE
 		void AnimationAffector::handleWrite(variant_builder* build) const 
 		{
 			build->add("pixel_coords", pixel_coords_);
-			variant_builder res;
 			for(const auto& uv : uv_data_) {
+				variant_builder res;
 				res.add("time", uv.first);
 				res.add("area", uv.second.write());
+				build->add("time_uv", res.build());
 			}
-			build->add("time_uv", res.build());
 		}
 
 		void AnimationAffector::sort_uv_data()
