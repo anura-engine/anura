@@ -1262,7 +1262,7 @@ namespace KRE
 			} else if(uv_node.is_list()) {
 				for(int n = 0; n != uv_node.num_elements(); ++n) {
 					float t = uv_node[n]["time"].as_float();
-					uv_data_.emplace_back(std::make_pair(t, rectf(uv_node["area"])));
+					uv_data_.emplace_back(std::make_pair(t, rectf(uv_node[n]["area"])));
 				}
 			}
 			transformCoords();
