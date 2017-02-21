@@ -154,6 +154,9 @@ namespace KRE
 				case AffectorType::TEXTURE_ROTATOR:
 					res.add("type", "texture_rotator");
 					break;
+				case AffectorType::ANIMATION:
+					res.add("type", "animation");
+					break;
 				default:
 					ASSERT_LOG(false, "Bad affector type: " << static_cast<int>(type_));
 					break;
