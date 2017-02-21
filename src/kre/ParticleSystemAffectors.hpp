@@ -46,6 +46,7 @@ namespace KRE
 			RANDOMISER,
 			SINE_FORCE,
 			TEXTURE_ROTATOR,
+			ANIMATION,
 		};
 
 		class Affector : public EmitObject
@@ -129,6 +130,44 @@ namespace KRE
 
 			TimeColorAffector() = delete;
 		};
+
+		class AnimationAffector : public Affector
+		{
+		public:
+			typedef std::pair<float,rectf> uv_pair;
+
+			explicit AnimationAffector(std::weak_ptr<ParticleSystemContainer> parent);
+			explicit AnimationAffector(std::weak_ptr<ParticleSystemContainer> parent, const variant& node);
+			void init(const variant& node) override;
+
+			const std::vector<uv_pair>& getTimeCoordData() const { return uv_data_; }
+			std::vector<uv_pair>& getTimeCoordData() { return uv_data_; }
+			void clearTimeCoordData() { uv_data_.clear(); }
+			void addTimeCoordEntry(const uv_pair& tc) { uv_data_.emplace_back(tc); transformCoords(); }
+			void setTimeCoordData(const std::vector<uv_pair>& tc) { uv_data_ = tc; transformCoords(); }
+			void removeTimeCoordEntry(const uv_pair& f);
+
+			bool isPixelCoords() const { return pixel_coords_; }
+			void setUsePixelCoords(bool f) { pixel_coords_ = f; }
+		private:
+			void internalApply(Particle& p, float t) override;
+			AffectorPtr clone() const override {
+				return std::make_shared<AnimationAffector>(*this);
+			}
+			void handleWrite(variant_builder* build) const override;
+			void transformCoords();
+
+			bool pixel_coords_;
+			std::vector<uv_pair> uv_data_;
+			// transformed version of the uv data as required.
+			std::vector<uv_pair> trf_uv_data_;
+
+			void sort_uv_data();
+			std::vector<uv_pair>::iterator find_nearest_coords(float dt);
+
+			AnimationAffector() = delete;
+		};
+
 
 		class JetAffector : public Affector
 		{

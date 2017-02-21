@@ -81,6 +81,8 @@ namespace KRE
 			float velocity;
 			glm::vec3 direction;
 			glm::quat orientation;
+			// for animation of the texture co-ordinates.
+			rectf area;
 		};
 
 		void init_physics_parameters(PhysicsParameters& pp); 

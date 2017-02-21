@@ -814,7 +814,7 @@ namespace KRE
 					if(ImGui::CollapsingHeader(ss.str().c_str())) {
 						EmitObjectUI(a);
 
-						static std::vector<std::string> ptype{ "Color", "Jet", "Vortex", "Gravity", "Linear Force", "Scale", "Particle Follower", "Align", "Flock Centering", "Black Hole", "Path Follower", "Radomizer", "Sine Force", "Texture Rotator" };
+						static std::vector<std::string> ptype{ "Color", "Jet", "Vortex", "Gravity", "Linear Force", "Scale", "Particle Follower", "Align", "Flock Centering", "Black Hole", "Path Follower", "Radomizer", "Sine Force", "Texture Rotator", "Texture Animation" };
 						int current_type = static_cast<int>(a->getType());
 						ImGui::PushID(a.get());
 						if(ImGui::Combo("Type", &current_type, vector_string_getter, &ptype, ptype.size())) {
@@ -898,6 +898,68 @@ namespace KRE
 							}
 							if(data_changed) {
 								tca->setTimeColorData(tcdata);
+							}
+							break;
+						}
+						case Particles::AffectorType::ANIMATION: {
+							auto aa = std::dynamic_pointer_cast<Particles::AnimationAffector>(a);
+							auto& tcdata = aa->getTimeCoordData();
+							bool data_changed = false;
+							ImGui::BeginGroup();
+							if(ImGui::SmallButton("Clear")) {
+								aa->clearTimeCoordData();
+							}
+							ImGui::SameLine();
+							if(ImGui::SmallButton("+")) {
+								aa->addTimeCoordEntry(std::make_pair(0.0f, rectf::from_coordinates(0.0f, 0.0f, 1.0f, 1.0f)));
+							}
+							ImGui::EndGroup();
+							bool pixel_coords = aa->isPixelCoords();
+							if(ImGui::Checkbox("Pixel Coords", &pixel_coords)) {
+								aa->setUsePixelCoords(pixel_coords);
+							}
+
+							std::vector<Particles::AnimationAffector::uv_pair> tc_data_to_remove;
+							for(auto& tc : tcdata) {
+								ImGui::PushID(&tc.second);
+								ImGui::BeginGroup();
+								ImGui::PushItemWidth(ImGui::CalcItemWidth() * 0.5f);
+								if(ImGui::DragFloat("T", &tc.first, 0.01f, 0.0f, 1.0f)) {
+									data_changed = true;
+								}
+								ImGui::SameLine();
+								if(pixel_coords) {
+									int r[4]{ static_cast<int>(tc.second.x1()), 
+										static_cast<int>(tc.second.y1()), 
+										static_cast<int>(tc.second.x2()), 
+										static_cast<int>(tc.second.y2()) };
+									if(ImGui::DragInt4("area", r, 1, 0, 1000)) {
+										tc.second = rectf::from_coordinates(r[0], r[1], r[2], r[3]);
+									}
+								} else {
+									float r[4]{ tc.second.x1(),tc.second.y1(), tc.second.x2(), tc.second.y2() };
+									if(ImGui::DragFloat4("area", r, 0.01f, 0.0f, 1.0f)) {
+										tc.second = rectf::from_coordinates(r[0], r[1], r[2], r[3]);
+									}
+								}
+								ImGui::PopItemWidth();
+								ImGui::SameLine();
+								if(ImGui::SmallButton("X")) {
+									tc_data_to_remove.emplace_back(tc);
+									data_changed = true;
+								}
+								ImGui::EndGroup();
+								ImGui::PopID();								
+							}
+							for(auto& p : tc_data_to_remove) {
+								auto it = std::find(tcdata.begin(), tcdata.end(), p);
+								if(it != tcdata.end()) {
+									tcdata.erase(it);
+									data_changed = true;
+								}
+							}
+							if(data_changed) {
+								aa->setTimeCoordData(tcdata);
 							}
 							break;
 						}

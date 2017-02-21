@@ -49,6 +49,7 @@ namespace KRE
 				case KRE::Particles::AffectorType::RANDOMISER:			return "Randomizer";
 				case KRE::Particles::AffectorType::SINE_FORCE:			return "Sine Force";
 				case KRE::Particles::AffectorType::TEXTURE_ROTATOR:		return "Texture Rotator";
+				case KRE::Particles::AffectorType::ANIMATION:			return "Texture Animation";
 				default:
 					ASSERT_LOG(false, "No name for affector: " << static_cast<int>(type));
 					break;
@@ -203,6 +204,8 @@ namespace KRE
 				return std::make_shared<SineForceAffector>(parent);
 			case AffectorType::TEXTURE_ROTATOR:
 				return std::make_shared<TextureRotatorAffector>(parent);
+			case AffectorType::ANIMATION:
+				return std::make_shared<AnimationAffector>(parent);
 			default:
 				ASSERT_LOG(false, "Unrecognised afftor type: " << static_cast<int>(type));
 				break;
@@ -242,6 +245,8 @@ namespace KRE
 				return std::make_shared<FlockCenteringAffector>(parent, node);
 			} else if(ntype == "texture_rotator") {
 				return std::make_shared<TextureRotatorAffector>(parent, node);
+			} else if(ntype == "animation") {
+				return std::make_shared<AnimationAffector>(parent, node);
 			} else {
 				ASSERT_LOG(false, "Unrecognised affector type: " << ntype);
 			}
@@ -1222,6 +1227,112 @@ namespace KRE
 			}
 		}
 
+		AnimationAffector::AnimationAffector(std::weak_ptr<ParticleSystemContainer> parent)
+			: Affector(parent, AffectorType::ANIMATION), 
+			  pixel_coords_(true),
+			  uv_data_(),
+			  trf_uv_data_()
+		{
+		}
+
+		AnimationAffector::AnimationAffector(std::weak_ptr<ParticleSystemContainer> parent, const variant& node)
+			: Affector(parent, AffectorType::ANIMATION), 
+			  pixel_coords_(true),
+			  uv_data_(),
+			  trf_uv_data_()
+		{
+			init(node);
+		}
+
+		void AnimationAffector::init(const variant& node) 
+		{
+			uv_data_.clear();
+			if(node.has_key("pixel_coords")) {
+				pixel_coords_ = node["pixel_coords"].as_bool();
+			}
+			ASSERT_LOG(node.has_key("time_uv") || node.has_key("time_uv"), "Must be a 'time_uv' attribute");
+			const variant& uv_node = node.has_key("time_uv") ? node["time_uv"] : node["time_uv"];
+			auto psystem = getParentContainer()->getParticleSystem();
+			if(uv_node.is_map()) {
+				float t = uv_node["time"].as_float();
+				uv_data_.emplace_back(std::make_pair(t, rectf(uv_node["area"])));
+			} else if(uv_node.is_list()) {
+				for(int n = 0; n != uv_node.num_elements(); ++n) {
+					float t = uv_node[n]["time"].as_float();
+					uv_data_.emplace_back(std::make_pair(t, rectf(uv_node["area"])));
+				}
+			}
+			transformCoords();
+		}
+
+		void AnimationAffector::removeTimeCoordEntry(const uv_pair& f)
+		{
+			auto it = std::find(uv_data_.begin(), uv_data_.end(), f);
+			if(it != uv_data_.end()) {
+				uv_data_.erase(it);
+			}
+		}
+
+		void AnimationAffector::transformCoords()
+		{
+			sort_uv_data();
+			trf_uv_data_.clear();
+			if(pixel_coords_) {
+				std::copy(uv_data_.begin(), uv_data_.end(), std::back_inserter(trf_uv_data_));
+				return;
+			}
+
+			auto psystem = getParentContainer()->getParticleSystem();
+			
+			for(const auto& uvp : uv_data_) {
+				trf_uv_data_.emplace_back(uvp.first, psystem->getTexture()->getTextureCoords(0, uvp.second));
+			}
+		}
+
+		void AnimationAffector::internalApply(Particle& p, float t) 
+		{
+			if(uv_data_.empty()) {
+				return;
+			}
+			float ttl_percentage = 1.0f - p.current.time_to_live / p.initial.time_to_live;
+			auto it1 = find_nearest_coords(ttl_percentage);
+			p.current.area = it1->second;
+		}
+
+		void AnimationAffector::handleWrite(variant_builder* build) const 
+		{
+			if(!pixel_coords_) {
+				build->add("pixel_coords", pixel_coords_);
+			}
+			variant_builder res;
+			for(const auto& uv : uv_data_) {
+				res.add("time", uv.first);
+				res.add("area", uv.second.write());
+			}
+			build->add("time_uv", res.build());
+		}
+
+		void AnimationAffector::sort_uv_data()
+		{
+			std::sort(uv_data_.begin(), uv_data_.end(), [](const uv_pair& lhs, const uv_pair& rhs){
+				return lhs.first < rhs.first;
+			});
+		}
+
+		std::vector<AnimationAffector::uv_pair>::iterator AnimationAffector::find_nearest_coords(float dt)
+		{
+			auto it = uv_data_.begin();
+			for(; it != uv_data_.end(); ++it) {
+				if(dt < it->first) {
+					if(it == uv_data_.begin()) {
+						return it;
+					} else {
+						return --it;
+					}
+				} 
+			}
+			return --it;
+		}
 
 	}
 }

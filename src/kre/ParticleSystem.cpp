@@ -64,7 +64,7 @@ namespace KRE
 			pp.velocity = 100.0f;
 			pp.direction = glm::vec3(0.0f,1.0f,0.0f);
 			pp.orientation = glm::quat(1.0f,0.0f,0.0f,0.0f);
-
+			pp.area = rectf::fromCoordinates(0.0f, 0.0f, 1.0f, 1.0f);
 		}
 
 		float get_random_float(float min, float max)
@@ -435,16 +435,16 @@ namespace KRE
 			//if(!tex) {
 			//	return;
 			//}
-			const auto rf = tex->getSourceRectNormalised();
-			const glm::vec2 tl{ rf.x1(), rf.y2() };
-			const glm::vec2 bl{ rf.x1(), rf.y1() };
-			const glm::vec2 tr{ rf.x2(), rf.y2() };
-			const glm::vec2 br{ rf.x2(), rf.y1() };
-
-
 			for(auto it = active_particles_.begin(); it != active_particles_.end(); ++it) {
 				auto& p = *it;
 				auto& cp = p.current.position;
+
+				const auto rf = p.current.area;//tex->getSourceRectNormalised();
+				const glm::vec2 tl{ rf.x1(), rf.y2() };
+				const glm::vec2 bl{ rf.x1(), rf.y1() };
+				const glm::vec2 tr{ rf.x2(), rf.y2() };
+				const glm::vec2 br{ rf.x2(), rf.y1() };
+
 				if(!p.init_pos) {
 					p.init_pos = true;
 					if(!ignoreGlobalModelMatrix()) {
