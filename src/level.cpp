@@ -4029,9 +4029,11 @@ void Level::replay_from_cycle(int ncycle)
 	}
 }
 
+PREF_BOOL(enable_history, true, "Allow editor history features");
+
 void Level::backup()
 {
-	if(backups_.empty() == false && backups_.back()->cycle == cycle_) {
+	if(!g_enable_history || (backups_.empty() == false && backups_.back()->cycle == cycle_)) {
 		return;
 	}
 
