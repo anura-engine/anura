@@ -70,7 +70,7 @@ printf qq~
 		pattern:"
 		.* ,   ,.*  ,
 		$friend,$tilename,$friend,
-		   ,$friend,   "
+		$friend?,$friend,$friend?"
 	},
 ~, &coord($base, 0, 2), $solid;
 
@@ -81,7 +81,7 @@ printf qq~
 		tiles:"%s",
 		%s
 		pattern:"
-		   ,$friend,    ,
+		$friend?,$friend,$friend?,
 		$friend,$tilename,$friend,
 		.* ,   , .*"
 	},
@@ -179,7 +179,7 @@ printf qq~
 		pattern:"
 		  .*,   ,$friend?,
 			,$tilename,$friend ,
-		$friend?,$friend,    "
+		$friend?,$friend,$friend?"
 	},
 ~, &coord($base, 0, 3), $solid;
 
@@ -193,7 +193,7 @@ printf qq~
 		pattern:"
 		$friend?,   ,.*,
 		$friend,$tilename,   ,
-			,$friend,$friend?"
+		$friend?,$friend,$friend?"
 	},
 ~, &coord($base, 0, 1), $solid;
 
@@ -204,9 +204,9 @@ printf qq~
 		tiles:"%s",
 		$solid
 		pattern:"
-		   ,$friend,   ,
+		$friend?,$friend,$friend?,
 		$friend,$tilename,$friend ,
-		   ,$friend,   "
+		$friend?,$friend,$friend?"
 	},
 ~, &coord($base, 1, 2);
 
@@ -221,7 +221,7 @@ printf qq~
 		tiles:"%s",
 		$solid
 		pattern:"
-		$friend?,$friend,   ,
+		$friend?,$friend,$friend?,
 			,$tilename,$friend,
 		.*  ,   , .*"
 	},
@@ -235,7 +235,7 @@ printf qq~
 		tiles:"%s",
 		$solid
 		pattern:"
-		   ,$friend,$friend?,
+		$friend?,$friend,$friend?,
 		$friend,$tilename,   ,
 		.*  ,   , .*"
 	},
@@ -251,9 +251,9 @@ printf qq~
 		tiles:"%s",
 		$solid
 		pattern:"
-		   ,$friend,.* ,
+		$friend?,$friend,.* ,
 		$friend,$tilename,   ,
-		   ,$friend,.* "
+		$friend?,$friend,.* "
 	},
 ~, &coord($base, 1, 1);
 
@@ -266,9 +266,9 @@ printf qq~
 		tiles:"%s",
 		$solid
 		pattern:"
-		.* ,$friend,   ,
+		.* ,$friend,$friend?,
 		   ,$tilename,$friend,
-		.* ,$friend,   "
+		.* ,$friend,$friend?"
 	},
 ~, &coord($base, 1, 3);
 
