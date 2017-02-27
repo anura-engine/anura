@@ -53,6 +53,15 @@ namespace module
 		PREF_STRING(module_server, "theargentlark.com", "server to use to get modules from");
 		PREF_STRING(module_port, "23455", "server port to get modules from");
 
+		PREF_STRING(module_chunk_server, "", "server to use to get modules chunk from (defaults to module_server)");
+
+		PREF_STRING(module_chunk_port, "", "server port to get modules chunk from (defaults to module_port)");
+		PREF_STRING(module_chunk_query, "POST /download_chunk?chunk_id=", "request to download a module chunk");
+
+		bool module_chunk_query_is_get() {
+			return g_module_chunk_query.size() > 3 && std::equal(g_module_chunk_query.begin(), g_module_chunk_query.begin()+3, "GET");
+		}
+
 		// The base files are referred to as core.
 		module::modules core = {"core", "core", "core", {""}};
 
@@ -1244,7 +1253,7 @@ static const int ModuleProtocolVersion = 1;
 				operation_ = OPERATION_NONE;
 			}
 		} else {
-			boost::shared_ptr<http_client> new_client(new http_client(host_, port_));
+			boost::shared_ptr<http_client> new_client(new http_client(g_module_chunk_server.empty() ? host_ : g_module_chunk_server, g_module_chunk_port.empty() ? port_ : g_module_chunk_port));
 			new_client->set_timeout_and_retry();
 
 			variant chunk = chunks_to_get_.back();
@@ -1256,8 +1265,8 @@ static const int ModuleProtocolVersion = 1;
 
 			LOG_INFO("Module request chunk: " << chunk["md5"].as_string() << "\n");
 
-			const std::string url = "POST /download_chunk?chunk_id=" + chunk["md5"].as_string();
-			const std::string doc = request.build().write_json();
+			const std::string url = g_module_chunk_query + chunk["md5"].as_string();
+			const std::string doc = module_chunk_query_is_get() ? "" : request.build().write_json();
 			new_client->send_request(url, doc,
 						  std::bind(&client::on_chunk_response, this, url, chunk, new_client, _1),
 						  std::bind(&client::on_chunk_error, this, _1, url, doc, chunk, new_client),
@@ -1474,11 +1483,11 @@ static const int ModuleProtocolVersion = 1;
 				request.add("type", "download_chunk");
 				request.add("chunk_id", chunk["md5"]);
 
-				boost::shared_ptr<http_client> client(new http_client(host_, port_));
+				boost::shared_ptr<http_client> client(new http_client(g_module_chunk_server.empty() ? host_ : g_module_chunk_server, g_module_chunk_port.empty() ? port_ : g_module_chunk_port));
 				client->set_timeout_and_retry();
 
-				const std::string url = "POST /download_chunk?chunk_id=" + chunk["md5"].as_string();
-				const std::string doc = request.build().write_json();
+				const std::string url = g_module_chunk_query + chunk["md5"].as_string();
+				const std::string doc = module_chunk_query_is_get() ? "" : request.build().write_json();
 				client->send_request(url, doc, 
 							  std::bind(&client::on_chunk_response, this, url, chunk, client, _1),
 							  std::bind(&client::on_chunk_error, this, _1, url, doc, chunk, client),
