@@ -57,6 +57,7 @@ namespace module
 
 		PREF_STRING(module_chunk_port, "", "server port to get modules chunk from (defaults to module_port)");
 		PREF_STRING(module_chunk_query, "POST /download_chunk?chunk_id=", "request to download a module chunk");
+		PREF_BOOL(module_chunk_deflate, false, "If true, module chunks are assumed compressed and will be deflated");
 
 		bool module_chunk_query_is_get() {
 			return g_module_chunk_query.size() > 3 && std::equal(g_module_chunk_query.begin(), g_module_chunk_query.begin()+3, "GET");
@@ -1234,6 +1235,12 @@ static const int ModuleProtocolVersion = 1;
 
 	void client::on_chunk_response(std::string chunk_url, variant node, boost::shared_ptr<http_client> client, std::string response)
 	{
+		if(g_module_chunk_deflate) {
+			std::vector<char> data(response.begin(), response.end());
+			auto v = zip::decompress(data);
+			std::string(v.begin(), v.end()).swap(response);
+		}
+
 		auto progress_itor = chunk_progress_.find(chunk_url);
 		if(progress_itor != chunk_progress_.end()) {
 			nbytes_transferred_ -= progress_itor->second;
