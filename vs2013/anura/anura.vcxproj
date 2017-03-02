@@ -751,11 +751,15 @@
     <ClCompile Include="..\..\src\xhtml\xslider.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <Library Include="..\Box2D\$(Configuration)\$(Platform)\Box2D.lib" />
-    <Library Include="..\lua\$(Configuration)\$(Platform)\lua.lib" />
+    <ResourceCompile Include="..\..\src\anura-resouces.rc" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="..\..\src\anura-resouces.rc" />
+    <ProjectReference Include="..\Box2D\Box2D.vcxproj">
+      <Project>{d58a2972-afa1-4363-9777-52d8bc187dc0}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\lua\lua.vcxproj">
+      <Project>{4d133dd4-c7f6-4867-b53c-8a27711438a1}</Project>
+    </ProjectReference>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{716CE053-6375-400F-BEB5-0AC23E709C55}</ProjectGuid>

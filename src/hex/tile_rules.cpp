@@ -630,10 +630,10 @@ namespace hex
 			} else {
 				if(invert_match == false) {
 					tile_match = true;
-					break;
 				} else {
 					tile_match = false;
 				}
+				break;
 			}
 		}
 
