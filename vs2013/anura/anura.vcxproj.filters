@@ -2223,10 +2223,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <Library Include="..\Box2D\$(Configuration)\$(Platform)\Box2D.lib" />
-    <Library Include="..\lua\$(Configuration)\$(Platform)\lua.lib" />
-  </ItemGroup>
-  <ItemGroup>
     <ResourceCompile Include="..\..\src\anura-resouces.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
