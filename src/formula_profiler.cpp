@@ -113,6 +113,8 @@ class FrameDetailsWidget : public Widget
 	const InstrumentationNode* node_;
 	const InstrumentationNode* selected_node_;
 
+	std::vector<const InstrumentationNode*> chosen_nodes_stack_;
+
 	TexturePtr selected_node_text_;
 
 	struct NodeRegion {
@@ -175,7 +177,6 @@ class FrameDetailsWidget : public Widget
 public:
 	explicit FrameDetailsWidget(const InstrumentationNode* node) : white_color_("white"), node_(node), selected_node_(nullptr) {
 
-		calculateTimings(node_);
 
 		variant area = game_logic::Formula(variant(g_profile_widget_details_area)).execute();
 		std::vector<int> area_int = area.as_list_int();
@@ -183,7 +184,19 @@ public:
 		setLoc(area_int[0], area_int[1]);
 		setDim(area_int[2], area_int[3]);
 
-		calculateColors(node);
+		recalculate();
+	}
+
+	void recalculate()
+	{
+		regions_.clear();
+		id_to_color_.clear();
+		id_to_texture_.clear();
+		id_to_time_.clear();
+		id_to_nsamples_.clear();
+
+		calculateTimings(node_);
+		calculateColors(node_);
 	}
 
 	int calculateX(uint64_t t) const {
@@ -213,11 +226,24 @@ public:
 		c.drawSolidRect(rect(x(), y(), width(), height()), Color("black"));
 		drawNode(node_, 1);
 
-		int n = 0;
-		for(auto p : id_to_color_) {
-			auto itor = id_to_texture_.find(p.first);
+		std::vector<std::pair<uint64_t, const char*> > ids;
+		for(auto p : id_to_time_) {
+			ids.push_back(std::pair<uint64_t,const char*>(p.second, p.first));
+		}
+
+		std::sort(ids.begin(), ids.end());
+		std::reverse(ids.begin(), ids.end());
+
+		int n = 1;
+		for(auto p : ids) {
+			if(n > 12) {
+				break;
+			}
+
+			auto itor = id_to_texture_.find(p.second);
+			auto color_itor = id_to_color_.find(p.second);
 			c.blitTexture(itor->second, 0, x() + 25, 4 + y() + n*16, white_color_);
-			c.drawSolidRect(rect(x()+10, 4 + y() + n*16, 10, 10), p.second);
+			c.drawSolidRect(rect(x()+10, 4 + y() + n*16, 10, 10), color_itor->second);
 			++n;
 		}
 
@@ -240,6 +266,21 @@ public:
 					selected_node_text_ = calculateNodeText(region.node);
 				}
 			}
+			break;
+		}
+
+		case SDL_MOUSEBUTTONDOWN: {
+			const SDL_MouseButtonEvent& e = event.button;
+			if(e.button == SDL_BUTTON_LEFT && selected_node_ && selected_node_ != node_) {
+				chosen_nodes_stack_.push_back(node_);
+				node_ = selected_node_;
+				recalculate();
+			} else if(e.button == SDL_BUTTON_RIGHT && chosen_nodes_stack_.empty() == false) {
+				node_ = chosen_nodes_stack_.back();
+				chosen_nodes_stack_.pop_back();
+				recalculate();
+			}
+
 			break;
 		}
 		}
@@ -1033,6 +1074,18 @@ namespace formula_profiler
 		std::map<const char*, InstrumentationRecord> g_instrumentation;
 	}
 
+	const char* Instrument::generate_id(const char* id, int num)
+	{
+		static std::map<std::pair<const char*,int>, std::string> m;
+
+		std::string& s = m[std::pair<const char*,int>(id, num)];
+		if(s.empty()) {
+			s = (formatter() << id << " " << num);
+		}
+
+		return s.c_str();
+	}
+
 	Instrument::Instrument() : id_(nullptr)
 	{
 	}
@@ -1059,7 +1112,12 @@ namespace formula_profiler
 
 	Instrument::~Instrument()
 	{
-		if(profiler_on) {
+		finish();
+	}
+
+	void Instrument::finish()
+	{
+		if(profiler_on && id_) {
 			uint64_t end_t = SDL_GetPerformanceCounter();
 			InstrumentationRecord& r = g_instrumentation[id_];
 			r.time_ns += tsc_to_ns(end_t) - tsc_to_ns(t_);
@@ -1067,6 +1125,8 @@ namespace formula_profiler
 			if(g_profiler_widget) {
 				g_profiler_widget->endInstrument(id_, end_t);
 			}
+
+			id_ = nullptr;
 		}
 	}
 

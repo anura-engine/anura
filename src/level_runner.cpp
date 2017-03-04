@@ -1695,7 +1695,10 @@ bool LevelRunner::play_cycle()
 		}
 #endif
 
+		{
+		formula_profiler::Instrument instrument("PROC_DRAW");
 		lvl_->process_draw();
+		}
 
 		if(should_draw) {
 			wnd->setClearColor(KRE::Color(0, 0, 0, 0));

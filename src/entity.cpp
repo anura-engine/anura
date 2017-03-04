@@ -42,6 +42,7 @@ Entity::Entity(variant node)
 	anchory_(-1),
 	prev_feet_x_(std::numeric_limits<int>::min()), prev_feet_y_(std::numeric_limits<int>::min()),
 	last_move_x_(0), last_move_y_(0),
+	zorder_(0), zsub_order_(0),
 	face_right_(node["face_right"].as_bool(true)),
 	upside_down_(node["upside_down"].as_bool(false)),
 	rotate_z_(0),
@@ -70,6 +71,7 @@ Entity::Entity(variant node)
 Entity::Entity(int x, int y, bool face_right)
   : x_(x*100), y_(y*100), anchorx_(-1), anchory_(-1), prev_feet_x_(std::numeric_limits<int>::min()), prev_feet_y_(std::numeric_limits<int>::min()),
 	last_move_x_(0), last_move_y_(0),
+	zorder_(0), zsub_order_(0),
     face_right_(face_right), upside_down_(false), group_(-1), id_(-1),
 	respawn_(true), solid_dimensions_(0), collide_dimensions_(0),
 	weak_solid_dimensions_(0), weak_collide_dimensions_(0),	platform_motion_x_(0), 
@@ -531,22 +533,11 @@ void Entity::beingRemoved()
 
 bool zorder_compare(const EntityPtr& a, const EntityPtr& b)
 {
-	//the reverse_global_vertical_zordering flag is set in the player object (our general repository for all major game rules et al).  It's meant to reverse vertical sorting of objects in the same zorder, depending on whether objects are being viewed from above, or below.  In frogatto proper, objects at a higher vertical position should overlap those below.  In a top-down game, the reverse is desirable.
-	if(Level::current().player() && Level::current().player()->hasReverseGlobalVerticalZordering()){
-		return a->zorder() < b->zorder() ||
-			(a->zorder() == b->zorder() && a->zSubOrder() < b->zSubOrder()) ||
-			(a->zorder() == b->zorder() && a->zSubOrder() == b->zSubOrder() && a->getMidpoint().y < b->getMidpoint().y) ||
-			(a->zorder() == b->zorder() && a->zSubOrder() == b->zSubOrder() && a->getMidpoint().y == b->getMidpoint().y && a.get() < b.get());		
-	}
-	return a->zorder() < b->zorder() ||
-		(a->zorder() == b->zorder() && a->zSubOrder() < b->zSubOrder()) ||
-		(a->zorder() == b->zorder() && a->zSubOrder() == b->zSubOrder() && a->getMidpoint().y > b->getMidpoint().y) ||
-		(a->zorder() == b->zorder() && a->zSubOrder() == b->zSubOrder() && a->getMidpoint().y == b->getMidpoint().y && a.get() > b.get());
+	return EntityZOrderCompare()(a, b);
 }
 
-bool EntityZOrderCompare::operator()(const EntityPtr& lhs, const EntityPtr& rhs) 
+EntityZOrderCompare::EntityZOrderCompare() : reverse_(Level::current().player() && Level::current().player()->hasReverseGlobalVerticalZordering())
 {
-	return zorder_compare(lhs, rhs);
 }
 
 void Entity::surrenderReferences(GarbageCollector* collector)

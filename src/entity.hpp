@@ -88,7 +88,6 @@ public:
 
 	void setCentiX(int x) { x_ = x; calculateSolidRect(); }
 	void setCentiY(int y) { y_ = y; calculateSolidRect(); }
-	virtual void setZSubOrder(const int zsub_order) = 0;
 
 	int x() const { return x_/100 - (x_ < 0 && x_%100 ? 1 : 0); }
 	int y() const { return y_/100 - (y_ < 0 && y_%100 ? 1 : 0); }
@@ -96,8 +95,13 @@ public:
 	virtual int parallaxScaleMillisX() const { return 1000;}
 	virtual int parallaxScaleMillisY() const { return 1000;}
 		
-	virtual int zorder() const { return 0; }
-	virtual int zSubOrder() const { return 0; }
+	int zorder() const { return zorder_; }
+	int zSubOrder() const { return zsub_order_; }
+
+	void setZOrder(int z) { zorder_ = z; }
+	void setZSubOrder(int z) { zsub_order_ = z; }
+
+	public:
 
 	virtual const std::pair<int,int>* parallaxScaleMillis() const { return 0; }
 
@@ -382,6 +386,8 @@ private:
 	int prev_feet_x_, prev_feet_y_;
 	int last_move_x_, last_move_y_;
 
+	int zorder_, zsub_order_;
+
 	bool face_right_;
 	bool upside_down_;
 
@@ -432,5 +438,19 @@ private:
 bool zorder_compare(const EntityPtr& e1, const EntityPtr& e2);	
 struct EntityZOrderCompare
 {
-	bool operator()(const EntityPtr& lhs, const EntityPtr& rhs);
+
+	bool reverse_;
+	EntityZOrderCompare();
+	bool operator()(const EntityPtr& a, const EntityPtr& b) const {
+	if(reverse_){
+		return a->zorder() < b->zorder() ||
+			(a->zorder() == b->zorder() && a->zSubOrder() < b->zSubOrder()) ||
+			(a->zorder() == b->zorder() && a->zSubOrder() == b->zSubOrder() && a->getMidpoint().y < b->getMidpoint().y) ||
+			(a->zorder() == b->zorder() && a->zSubOrder() == b->zSubOrder() && a->getMidpoint().y == b->getMidpoint().y && a.get() < b.get());		
+	}
+		return a->zorder() < b->zorder() ||
+		(a->zorder() == b->zorder() && a->zSubOrder() < b->zSubOrder()) ||
+		(a->zorder() == b->zorder() && a->zSubOrder() == b->zSubOrder() && a->getMidpoint().y > b->getMidpoint().y) ||
+		(a->zorder() == b->zorder() && a->zSubOrder() == b->zSubOrder() && a->getMidpoint().y == b->getMidpoint().y && a.get() > b.get());
+	}
 };

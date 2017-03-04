@@ -175,8 +175,7 @@ CustomObject::CustomObject(variant node)
 	accel_x_(node["accel_x"].as_decimal()),
 	accel_y_(node["accel_y"].as_decimal()),
 	gravity_shift_(node["gravity_shift"].as_int(0)),
-	rotate_z_(node["rotate"].as_decimal()), zorder_(node["zorder"].as_int(type_->zorder())),
-	zsub_order_(node["zsub_order"].as_int(type_->zSubOrder())),
+	rotate_z_(node["rotate"].as_decimal()),
 	hitpoints_(node["hitpoints"].as_int(type_->getHitpoints())),
 	max_hitpoints_(node["max_hitpoints"].as_int(type_->getHitpoints()) - type_->getHitpoints()),
 	was_underwater_(false),
@@ -207,6 +206,10 @@ CustomObject::CustomObject(variant node)
 	particles_(),
 	document_(nullptr)
 {
+	setZOrder(node["zorder"].as_int(type_->zorder()));
+	setZSubOrder(node["zsub_order"].as_int(type_->zSubOrder()));
+
+
 	vars_->setObjectName(getDebugDescription());
 	tmp_vars_->setObjectName(getDebugDescription());
 
@@ -521,8 +524,7 @@ CustomObject::CustomObject(const std::string& type, int x, int y, bool face_righ
 	time_in_frame_(0), time_in_frame_delta_(1),
 	velocity_x_(0), velocity_y_(0),
 	accel_x_(0), accel_y_(0), gravity_shift_(0),
-	rotate_z_(), zorder_(type_->zorder()),
-	zsub_order_(type_->zSubOrder()),
+	rotate_z_(),
 	hitpoints_(type_->getHitpoints()),
 	max_hitpoints_(0),
 	was_underwater_(false),
@@ -553,6 +555,9 @@ CustomObject::CustomObject(const std::string& type, int x, int y, bool face_righ
 	particles_(),
 	document_(nullptr)
 {
+	setZOrder(type_->zorder());
+	setZSubOrder(type_->zSubOrder());
+
 	properties_requiring_dynamic_initialization_ = type_->getPropertiesRequiringDynamicInitialization();
 	properties_requiring_dynamic_initialization_.insert(properties_requiring_dynamic_initialization_.end(), type_->getPropertiesRequiringInitialization().begin(), type_->getPropertiesRequiringInitialization().end());
 
@@ -642,8 +647,6 @@ CustomObject::CustomObject(const CustomObject& o)
 	gravity_shift_(o.gravity_shift_),
 	rotate_z_(o.rotate_z_),
 	parallax_scale_millis_(new std::pair<int, int>(*o.parallax_scale_millis_)),
-	zorder_(o.zorder_),
-	zsub_order_(o.zsub_order_),
 	hitpoints_(o.hitpoints_),
 	max_hitpoints_(o.max_hitpoints_),
 	was_underwater_(o.was_underwater_),
@@ -1041,8 +1044,8 @@ variant CustomObject::write() const
 	}
 #endif
 
-	if(zorder_ != type_->zorder()) {
-		res.add("zorder", zorder_);
+	if(zorder() != type_->zorder()) {
+		res.add("zorder", zorder());
 	}
 
 	if(parallax_scale_millis_.get()) {
@@ -1052,8 +1055,8 @@ variant CustomObject::write() const
 		}
 	}
 	   
-	if(zsub_order_ != type_->zSubOrder()) {
-		res.add("zsub_order", zsub_order_);
+	if(zSubOrder() != type_->zSubOrder()) {
+		res.add("zsub_order", zSubOrder());
 	}
 	
     if(isFacingRight() != 1){
@@ -1236,6 +1239,43 @@ void CustomObject::drawLater(int xx, int yy) const
 	}
 }
 
+namespace {
+
+bool g_draw_zorder_manager_active = false;
+
+std::unique_ptr<KRE::ClipScope::Manager> g_clip_stencil_scope;
+std::unique_ptr<rect> g_clip_stencil_rect;
+
+struct BatchDrawInfo {
+	int xx, yy;
+	std::vector<const CustomObject*> objects;
+};
+
+std::map<std::string, BatchDrawInfo > g_batch_draw_objects;
+}
+
+CustomObjectDrawZOrderManager::CustomObjectDrawZOrderManager() : disabled_(g_draw_zorder_manager_active)
+{
+	g_draw_zorder_manager_active = true;
+}
+
+CustomObjectDrawZOrderManager::~CustomObjectDrawZOrderManager()
+{
+	if(disabled_) {
+		return;
+	}
+
+	for(const auto& p : g_batch_draw_objects) {
+		p.second.objects.front()->draw(p.second.xx, p.second.yy);
+	}
+
+	g_batch_draw_objects.clear();
+
+	g_draw_zorder_manager_active = false;
+	g_clip_stencil_scope.reset();
+	g_clip_stencil_rect.reset();
+}
+
 extern int g_camera_extend_x, g_camera_extend_y;
 
 void CustomObject::draw(int xx, int yy) const
@@ -1247,6 +1287,33 @@ void CustomObject::draw(int xx, int yy) const
 	if(frame_ == nullptr) {
 		return;
 	}
+
+	const BatchDrawInfo* batch = nullptr;
+
+	const bool batch_draw = (type_->drawBatchID().empty() == false);
+
+	if(batch_draw && g_draw_zorder_manager_active) {
+		BatchDrawInfo& b = g_batch_draw_objects[type_->drawBatchID()];
+		if(b.objects.empty() || b.objects.front() != this) {
+			b.xx = xx;
+			b.yy = yy;
+			b.objects.emplace_back(this);
+			return;
+		}
+
+		batch = &b;
+	} else if(batch_draw) {
+
+		//just a single object but it is designed to use batch drawing,
+		//so make it use just a single-object batch.
+		static BatchDrawInfo singleton_batch;
+		singleton_batch.xx = xx;
+		singleton_batch.yy = yy;
+		singleton_batch.objects.push_back(this);
+
+		batch = &singleton_batch
+	}
+
 	auto wnd = KRE::WindowManager::getMainWindow();
 
 	std::unique_ptr<KRE::ModelManager2D> model_scope;
@@ -1260,14 +1327,26 @@ void CustomObject::draw(int xx, int yy) const
 		}
 	}
 
-	std::unique_ptr<KRE::ClipScope::Manager> clip_scope;
+	CustomObjectDrawZOrderManager draw_manager;
 
 	KRE::StencilScopePtr stencil_scope;
+
+	if(!clip_area_) {
+		g_clip_stencil_scope.reset();
+		g_clip_stencil_rect.reset();
+	}
+
 	if(clip_area_) {
+		rect area;
 		if(clip_area_absolute_) {
-			clip_scope.reset(new KRE::ClipScope::Manager(*clip_area_));
+			area = *clip_area_;
 		} else {
-			clip_scope.reset(new KRE::ClipScope::Manager(*clip_area_ + point(x(), y())));
+			area = *clip_area_ + point(x(), y());
+		}
+
+		if(!g_clip_stencil_rect || *g_clip_stencil_rect != area) {
+			g_clip_stencil_scope.reset(new KRE::ClipScope::Manager(area));
+			g_clip_stencil_rect.reset(new rect(area));
 		}
 	} else if(type_->isShadow()) {
 		stencil_scope = KRE::StencilScope::create(KRE::StencilSettings(true, 
@@ -1310,6 +1389,48 @@ void CustomObject::draw(int xx, int yy) const
 
 	if(type_->isHiddenInGame() && !Level::current().in_editor()) {
 		//pass
+	} else if(batch != nullptr) {
+		using namespace KRE;
+
+		std::vector<Frame::BatchDrawItem> items;
+		for(auto p : batch->objects) {
+			Frame::BatchDrawItem item = { p->frame_.get(), p->x(), p->y(), p->isFacingRight(), p->isUpsideDown(), p->time_in_frame_, p->rotate_z_.as_float32() };
+			items.emplace_back(item);
+		}
+
+		//If the shader has any attributes it wants set, we query those attributes for each object
+		//and set the attributes for every vertex that is part of that object.
+		//
+		//TODO: right now we only support float attributes. Add support for other kinds of attributes!
+		std::vector<std::vector<float> > attributes;
+		if(shader_ && shader_->getObjectPropertyAttributes().empty() == false) {
+			shader_->getShader()->makeActive();
+			attributes.resize(shader_->getObjectPropertyAttributes().size());
+			auto attr_itor = attributes.begin();
+			for(const auto& attr : shader_->getObjectPropertyAttributes()) {
+
+				for(auto p : batch->objects) {
+					const float f = p->queryValueBySlot(attr.slot).as_float();
+
+					if(attr_itor->empty() == false) {
+						attr_itor->emplace_back(attr_itor->back());
+						attr_itor->emplace_back(attr_itor->back());
+					}
+
+					for(int n = 0; n != 4; ++n) {
+						attr_itor->emplace_back(f);
+					}
+				}
+
+				attr.attr_target->update(&(*attr_itor)[0], sizeof(float), attr_itor->size());
+
+				shader_->getShader()->applyAttribute(attr.attr_target);
+
+				++attr_itor;
+			}
+		}
+
+		Frame::drawBatch(shader_, &items[0], &items[0] + items.size());
 	} else if(custom_draw_xy_.size() >= 7 &&
 	          custom_draw_xy_.size() == custom_draw_uv_.size()) {
 		frame_->drawCustom(shader_, draw_x, draw_y, &custom_draw_xy_[0], &custom_draw_uv_[0], static_cast<int>(custom_draw_xy_.size())/2, isFacingRight(), isUpsideDown(), time_in_frame_, rotate_z_.as_float32(), cycle_);
@@ -1374,8 +1495,6 @@ void CustomObject::draw(int xx, int yy) const
 		text_->font->draw(xpos, draw_y, text_->text, text_->size, KRE::Color(255,255,255,text_->alpha));
 	}
 	
-	clip_scope.reset();
-
 	for(auto& eff : effects_shaders_) {
 		if(eff->zorder() >= 0 && eff->isEnabled()) {
 			eff->draw(wnd);
@@ -2414,16 +2533,6 @@ ConstEditorEntityInfoPtr CustomObject::getEditorInfo() const
 }
 #endif // !NO_EDITOR
 
-int CustomObject::zorder() const
-{
-	return zorder_;
-}
-
-int CustomObject::zSubOrder() const
-{
-	return zsub_order_;
-}
-
 int CustomObject::velocityX() const
 {
 	return velocity_x_.as_int();
@@ -3004,8 +3113,8 @@ variant CustomObject::getValueBySlot(int slot) const
 											return variant(&v);
 										  }
 	case CUSTOM_OBJECT_Z:
-	case CUSTOM_OBJECT_ZORDER:            return variant(zorder_);
-	case CUSTOM_OBJECT_ZSUB_ORDER:        return variant(zsub_order_);
+	case CUSTOM_OBJECT_ZORDER:            return variant(zorder());
+	case CUSTOM_OBJECT_ZSUB_ORDER:        return variant(zSubOrder());
     case CUSTOM_OBJECT_RELATIVE_X:        return variant(relative_x_);
 	case CUSTOM_OBJECT_RELATIVE_Y:        return variant(relative_y_);
 	case CUSTOM_OBJECT_SPAWNED_BY:        if(wasSpawnedBy().empty()) return variant(); else return variant(Level::current().get_entity_by_label(wasSpawnedBy()).get());
@@ -3606,9 +3715,9 @@ void CustomObject::setValue(const std::string& key, const variant& value)
 			setCentiY(start_y);
 		}
 	} else if(key == "z" || key == "zorder") {
-		zorder_ = value.as_int();
+		setZOrder(value.as_int());
 	} else if(key == "zsub_order") {
-		zsub_order_ = value.as_int();
+		setZSubOrder(value.as_int());
 	} else if(key == "midpoint_x" || key == "mid_x") {
         setMidX(value.as_int());
 	} else if(key == "midpoint_y" || key == "mid_y") {
@@ -4023,11 +4132,11 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 
 	case CUSTOM_OBJECT_Z:
 	case CUSTOM_OBJECT_ZORDER:
-		zorder_ = value.as_int();
+		setZOrder(value.as_int());
 		break;
 		
 	case CUSTOM_OBJECT_ZSUB_ORDER:
-		zsub_order_ = value.as_int();
+		setZSubOrder(value.as_int());
 		break;
 	
 	case CUSTOM_OBJECT_RELATIVE_X: {

@@ -1901,6 +1901,8 @@ int g_camera_extend_x, g_camera_extend_y;
 
 void Level::draw(int x, int y, int w, int h) const
 {
+	formula_profiler::Instrument instrument_prepare("LEVEL_PREPARE_DRAW");
+
 	auto wnd = KRE::WindowManager::getMainWindow();
 	if(shader_) {
 		ASSERT_LOG(false, "apply shader_ here");
@@ -1923,7 +1925,10 @@ void Level::draw(int x, int y, int w, int h) const
 	h += highest_tile_;
 	
 	{
-		std::sort(active_chars_.begin(), active_chars_.end(), zorder_compare);
+		{
+		formula_profiler::Instrument instrument_sort("LEVEL_SORT");
+		std::sort(active_chars_.begin(), active_chars_.end(), EntityZOrderCompare());
+		}
 
 		const std::vector<EntityPtr>* chars_ptr = &active_chars_;
 		std::vector<EntityPtr> editor_chars_buf;
@@ -1996,9 +2001,13 @@ void Level::draw(int x, int y, int w, int h) const
 			rmanager_->render(KRE::WindowManager::getMainWindow());
 		}
 
+		instrument_prepare.finish();
+
 		std::set<int>::const_iterator layer = layers_.begin();
 
 		for(; layer != layers_.end(); ++layer) {
+			formula_profiler::Instrument instrument(formula_profiler::Instrument::generate_id("ZORDER", *layer));
+
 			frameBufferEnterZorder(*layer);
 			const bool alpha_test = *layer >= begin_alpha_test && *layer < end_alpha_test;
 			graphics::set_alpha_test(alpha_test);
@@ -2010,9 +2019,15 @@ void Level::draw(int x, int y, int w, int h) const
 				water_drawn = true;
 			}
 
+			{
+
+			CustomObjectDrawZOrderManager draw_manager;
+
 			while(entity_itor != chars.end() && (*entity_itor)->zorder() <= *layer) {
 				draw_entity(**entity_itor, x, y, editor_);
 				++entity_itor;
+			}
+
 			}
 
 			draw_layer(*layer, x, y, w, h);

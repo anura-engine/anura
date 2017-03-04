@@ -50,6 +50,18 @@ struct CollisionInfo;
 class Level;
 struct CustomObjectText;
 
+//Construct one of these managers in a draw layer
+//to make it so objects within that layer will
+//attempt to optimize their drawing. Batch drawing
+//will be used where possible and the objects will
+//try to reuse stencils and other settings.
+struct CustomObjectDrawZOrderManager
+{
+	CustomObjectDrawZOrderManager();
+	~CustomObjectDrawZOrderManager();
+
+	bool disabled_;
+};
 
 class CustomObject : public Entity
 {
@@ -104,9 +116,6 @@ public:
 		}
 	}
 	
-	virtual int zorder() const override;
-	virtual int zSubOrder() const override;
-
 	virtual int velocityX() const override;
 	virtual int velocityY() const override;
 	virtual int mass() const override { return type_->mass(); }
@@ -209,7 +218,6 @@ public:
 	virtual bool serializable() const override;
 
 	void setSoundVolume(float volume, float nseconds=0.0) override;
-	void setZSubOrder(const int zsub_order) override {zsub_order_ = zsub_order;}
 	
 	bool executeCommand(const variant& var) override;
 	bool executeCommandOrFn(const variant& var);
@@ -403,9 +411,6 @@ private:
     
 	std::unique_ptr<std::pair<int, int>> parallax_scale_millis_;
 
-	int zorder_;
-	int zsub_order_;
-	
 	int hitpoints_, max_hitpoints_;
 	bool was_underwater_;
 

@@ -89,6 +89,7 @@ namespace KRE
 			int getUniform(const std::string& attr) const override;
 
 			std::vector<std::string> getAllUniforms() const override;
+			std::vector<std::string> getAllAttributes() const override;
 
 			void setActives();
 

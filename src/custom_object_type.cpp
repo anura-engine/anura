@@ -1285,7 +1285,8 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 	is_shadow_(node["is_shadow"].as_bool(false)),
 	particle_system_desc_(node["particles"]),
 	preload_objects_(node["preload_objects"].as_list_string_optional()),
-	document_(nullptr)
+	document_(nullptr),
+	draw_batch_id_(node["draw_batch_id"].as_string_default(""))
 {
 	if(g_player_type_str.is_null() == false) {
 		//if a playable object type has been set, register what the type of

@@ -67,6 +67,18 @@ namespace graphics
 		int zorder() const { return zorder_; }
 
 		void surrenderReferences(GarbageCollector* collector) override;
+
+		struct ObjectPropertyAttribute {
+			std::string name;
+			int slot;
+			int attr;
+			mutable KRE::GenericAttributePtr attr_target;
+		};
+
+		const std::vector<ObjectPropertyAttribute>& getObjectPropertyAttributes() const { return object_attributes_; }
+		std::vector<ObjectPropertyAttribute>& getObjectPropertyAttributes() { return object_attributes_; }
+
+		KRE::GenericAttributePtr getAttributeOrDie(int attr) const;
 	private:
 		DECLARE_CALLABLE(AnuraShader);
 		AnuraShader& operator=(const AnuraShader&) = delete;
@@ -130,7 +142,9 @@ namespace graphics
 			int uniform;
 		};
 
+
 		std::vector<ObjectPropertyUniform> object_uniforms_;
+		std::vector<ObjectPropertyAttribute> object_attributes_;
 
 		bool discard_;
 		int tex_map_;

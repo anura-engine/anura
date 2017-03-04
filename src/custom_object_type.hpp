@@ -297,6 +297,8 @@ public:
 	variant getParticleSystemDesc() const { return particle_system_desc_; }
 
 	const std::vector<std::string>& preloadObjects() const { return preload_objects_; }
+
+	const std::string& drawBatchID() const { return draw_batch_id_; }
 private:
 	void initSubObjects(variant node, const CustomObjectType* old_type);
 
@@ -449,5 +451,7 @@ private:
 	std::vector<std::string> preload_objects_;
 
 	xhtml::DocumentObjectPtr document_;
+
+	std::string draw_batch_id_;
 };
 

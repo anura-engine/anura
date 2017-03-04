@@ -820,6 +820,58 @@ void Frame::draw(graphics::AnuraShaderPtr shader, int x, int y, const rect& area
 }
 
 
+void Frame::drawBatch(graphics::AnuraShaderPtr shader, const BatchDrawItem* i1, const BatchDrawItem* i2)
+{
+	if(i1 == i2) {
+		return;
+	}
+
+	const Frame* frame = i1->frame;
+
+	if(shader) {
+		frame->blit_target_.setShader(shader->getShader());
+	}
+
+	std::vector<KRE::vertex_texcoord> queue;
+
+	while(i1 != i2) {
+		const FrameInfo* info = nullptr;
+		i1->frame->getRectInTexture(i1->time, info);
+
+		int x = i1->x + static_cast<int>((i1->face_right ? info->x_adjust : info->x2_adjust) * i1->frame->scale_);
+		int y = i1->y + static_cast<int>(info->y_adjust * i1->frame->scale_);
+		int w = static_cast<int>(info->area.w() * i1->frame->scale_);
+		int h = static_cast<int>(info->area.h() * i1->frame->scale_);
+
+		if(i1->upside_down) {
+			y += h;
+			h = -h;
+		}
+
+		if(i1->face_right) {
+			x += w;
+			w = -w;
+		}
+
+		if(queue.empty() == false) {
+			queue.emplace_back(queue.back());
+			queue.emplace_back(glm::vec2(x, y), glm::vec2(info->draw_rect.x1(), info->draw_rect.y1()));
+		}
+
+		queue.emplace_back(glm::vec2(x, y), glm::vec2(info->draw_rect.x1(), info->draw_rect.y1()));
+		queue.emplace_back(glm::vec2(x+w, y), glm::vec2(info->draw_rect.x2(), info->draw_rect.y1()));
+		queue.emplace_back(glm::vec2(x, y+h), glm::vec2(info->draw_rect.x1(), info->draw_rect.y2()));
+		queue.emplace_back(glm::vec2(x+w, y+h), glm::vec2(info->draw_rect.x2(), info->draw_rect.y2()));
+
+		++i1;
+	}
+
+	auto wnd = KRE::WindowManager::getMainWindow();
+	frame->blit_target_.update(&queue);
+
+	wnd->render(&frame->blit_target_);
+}
+
 void Frame::drawCustom(graphics::AnuraShaderPtr shader, int x, int y, const std::vector<CustomPoint>& points, const rect* area, bool face_right, bool upside_down, int time, float rotation) const
 {
 	KRE::Blittable blit;

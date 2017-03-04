@@ -87,6 +87,17 @@ public:
 	void drawCustom(graphics::AnuraShaderPtr shader, int x, int y, const std::vector<CustomPoint>& points, const rect* area, bool face_right, bool upside_down, int time, float rotate) const;
 	void drawCustom(graphics::AnuraShaderPtr shader, int x, int y, const float* xy, const float* uv, int nelements, bool face_right, bool upside_down, int time, float rotate, int cycle) const;
 
+	struct BatchDrawItem {
+		const Frame* frame;
+		int x, y;
+		bool face_right;
+		bool upside_down;
+		int time;
+		float rotate;
+	};
+
+	static void drawBatch(graphics::AnuraShaderPtr shader, const BatchDrawItem* i1, const BatchDrawItem* i2);
+
 	void setImageAsSolid();
 	ConstSolidInfoPtr solid() const { return solid_; }
 	ConstSolidInfoPtr platform() const { return platform_; }

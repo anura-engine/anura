@@ -48,10 +48,12 @@ namespace formula_profiler
 	class Instrument
 	{
 	public:
+		static const char* generate_id(const char* id, int num) { return id; }
 		explicit Instrument(const char* id, const game_logic::Formula* formula=nullptr) {}
 		~Instrument() {}
 		void init(const char* id, variant info);
 		uint64_t get_ns() const { return 0; }
+		void finish() {}
 	};
 
 	//should be called every cycle while the profiler is running.
@@ -96,11 +98,16 @@ namespace formula_profiler
 	class Instrument
 	{
 	public:
+		static const char* generate_id(const char* id, int num);
+
 		Instrument();
 		void init(const char* id, variant info);
 		explicit Instrument(const char* id, const game_logic::Formula* formula=nullptr);
 		Instrument(const char* id, variant info);
 		~Instrument();
+
+		void finish();
+
 		uint64_t get_ns() const;
 	private:
 		const char* id_;

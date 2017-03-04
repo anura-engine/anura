@@ -741,14 +741,15 @@ namespace graphics
 			e->executeCommand(cf->execute(*e));
 		}
 
+		object_attributes_.clear();
 		object_uniforms_.clear();
 
 		if(parent != nullptr) {
-			static const std::string Prefix = "u_property_";
+			static const std::string UniformPrefix = "u_property_";
 			auto v = shader_->getAllUniforms();
 			for(const std::string& s : v) {
-				if(s.size() > Prefix.size() && std::equal(Prefix.begin(), Prefix.end(), s.begin())) {
-					std::string prop_name(s.begin() + Prefix.size(), s.end());
+				if(s.size() > UniformPrefix.size() && std::equal(UniformPrefix.begin(), UniformPrefix.end(), s.begin())) {
+					std::string prop_name(s.begin() + UniformPrefix.size(), s.end());
 					const int slot = parent->getValueSlot(prop_name);
 					ASSERT_LOG(slot >= 0, "Unknown shader property: " << s << " for object " << parent->getDebugDescription());
 
@@ -759,9 +760,54 @@ namespace graphics
 					object_uniforms_.push_back(u);
 				}
 			}
+
+			static const std::string AttributePrefix = "a_property_";
+			v = shader_->getAllAttributes();
+			for(const std::string& s : v) {
+				if(s.size() > AttributePrefix.size() && std::equal(AttributePrefix.begin(), AttributePrefix.end(), s.begin())) {
+					using namespace KRE;
+
+					std::string prop_name(s.begin() + AttributePrefix.size(), s.end());
+					const int slot = parent->getValueSlot(prop_name);
+					ASSERT_LOG(slot >= 0, "Unknown shader property: " << s << " for object " << parent->getDebugDescription());
+
+					ObjectPropertyAttribute u;
+					u.name = prop_name;
+					u.slot = slot;
+					u.attr = shader_->getAttributeOrDie(s);
+
+					int num_components = 1;
+					AttrFormat fmt = KRE::AttrFormat::FLOAT;
+					bool normalise = false;
+					ptrdiff_t stride = 0;
+					ptrdiff_t offset = 0;
+					int divisor = 1;
+
+					KRE::AttributeDesc desc(s, num_components, fmt, normalise, stride, offset, divisor);
+
+					auto attr = std::make_shared<GenericAttribute>(AccessFreqHint::DYNAMIC, AccessTypeHint::DRAW);
+					attr->addAttributeDesc(desc);
+					getShader()->configureAttribute(attr);
+
+					auto loc = attr->getAttrDesc().back().getLocation();
+					ASSERT_LOG(loc != ShaderProgram::INVALID_ATTRIBUTE, "No attribute with name '" << s << "' in shader.");
+					ASSERT_LOG(loc == u.attr, "Attribute mismatch: " << loc << " vs " << u.attr);
+
+					renderable_.getAttributeSet().front()->addAttribute(attr);
+					ASSERT_LOG(attr->getParent() != nullptr, "attribute parent was null after adding to attribute set.");
+					u.attr_target = attr;
+
+					object_attributes_.push_back(u);
+				}
+			}
 		}
 
 		initialised_ = true;
+	}
+
+	KRE::GenericAttributePtr AnuraShader::getAttributeOrDie(int attr) const
+	{
+		return const_cast<ShaderRenderable&>(renderable_).getAttributeOrDie(attr);
 	}
 
 	void AnuraShader::draw(KRE::WindowPtr wnd) const

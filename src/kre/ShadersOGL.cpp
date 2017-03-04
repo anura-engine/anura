@@ -1063,6 +1063,16 @@ namespace KRE
 			return res;
 		}
 
+		std::vector<std::string> ShaderProgram::getAllAttributes() const
+		{
+			std::vector<std::string> res;
+			for(auto p : attribs_) {
+				res.push_back(p.first);
+			}
+
+			return res;
+		}
+
 		bool ShaderProgram::link(const std::vector<Shader>& shader_programs)
 		{
 			if(object_) {
