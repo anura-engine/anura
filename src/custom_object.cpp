@@ -1316,7 +1316,7 @@ void CustomObject::draw(int xx, int yy) const
 		singleton_batch.yy = yy;
 		singleton_batch.objects.push_back(this);
 
-		batch = &singleton_batch
+		batch = &singleton_batch;
 	}
 
 	auto wnd = KRE::WindowManager::getMainWindow();
