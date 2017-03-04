@@ -309,13 +309,13 @@ void GarbageCollectorImpl::collect()
 {
 	LockGC lock;
 
-	LOG_INFO("Beginning garbage collection of " << g_count << " items");
+	LOG_DEBUG("Beginning garbage collection of " << g_count << " items");
 	profile::timer timer;
 
 	accumulateAll();
 	performCollection();
 
-	LOG_INFO("Garbage collection complete in " << static_cast<int>(timer.get_time()) << "us. Collected " << items_.size() << " objects. " << saved_.size() << " objects remaining; variants: " << variants_.size() << "; pointers: " << pointers_.size());
+	LOG_DEBUG("Garbage collection complete in " << static_cast<int>(timer.get_time()) << "us. Collected " << items_.size() << " objects. " << saved_.size() << " objects remaining; variants: " << variants_.size() << "; pointers: " << pointers_.size());
 }
 
 void GarbageCollectorImpl::accumulateAll()
@@ -386,7 +386,7 @@ void GarbageCollectorImpl::reap()
 		item->dec_reference();
 	}
 
-	LOG_INFO("Garbage collection reap in " << static_cast<int>(timer.get_time()) << "us.");
+	LOG_DEBUG("Garbage collection reap in " << static_cast<int>(timer.get_time()) << "us.");
 }
 
 void GarbageCollectorImpl::debugOutputCollected()
