@@ -1246,11 +1246,16 @@ bool g_draw_zorder_manager_active = false;
 std::unique_ptr<KRE::ClipScope::Manager> g_clip_stencil_scope;
 std::unique_ptr<rect> g_clip_stencil_rect;
 
+//This struct contains a batch of objects that are to be
+//drawn together in a single call.
 struct BatchDrawInfo {
 	int xx, yy;
 	std::vector<const CustomObject*> objects;
 };
 
+//Objects we have ready bo batch draw by batch ID
+//this will be flushed when the CustomObjectDrawZOrderManager
+//is destroyed.
 std::map<std::string, BatchDrawInfo > g_batch_draw_objects;
 }
 
