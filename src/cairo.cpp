@@ -44,6 +44,7 @@
 #include "asserts.hpp"
 #include "cairo.hpp"
 #include "filesystem.hpp"
+#include "formula_callable.hpp"
 #include "formula_object.hpp"
 #include "formula_profiler.hpp"
 #include "module.hpp"
@@ -153,9 +154,18 @@ namespace {
 			}
 		}
 
+		bool has(const std::string& image) const {
+			std::lock_guard<std::mutex> guard(mutex_);
+			return cache_.count(image) != 0;
+		}
+
 		cairo_surface_t* get(const std::string& image) {
-			cairo_surface_t*& result = cache_[image];
-			if(result == nullptr) {
+			mutex_.lock();
+			auto itor = cache_.find(image);
+			cairo_surface_t*& result = itor == cache_.end() ? cache_[image] : itor->second;
+			mutex_.unlock();
+
+			if(itor == cache_.end()) {
 				result = cairo_image_surface_create_from_png(module::map_file(image).c_str());
 				ASSERT_LOG(result, "Could not load cairo image: " << image);
 
@@ -165,25 +175,39 @@ namespace {
 				usage_ += w*h*4;
 			}
 
+			while(result == nullptr) {
+				SDL_Delay(1);
+			}
+
 			return result;
 		}
 
-		size_t size() const { return cache_.size(); }
-		size_t usage() const { return usage_; }
+		size_t size() const {
+			std::lock_guard<std::mutex> guard(mutex_);
+			return cache_.size();
+		}
+		size_t usage() const {
+			std::lock_guard<std::mutex> guard(mutex_);
+			return usage_;
+		}
 	private:
 		std::map<std::string, cairo_surface_t*> cache_;
 		size_t usage_;
+
+		mutable std::mutex mutex_;
 	};
 
 	static surface_cache_man g_surface_cache;
-	static std::mutex g_surface_cache_mutex;
 }
 
 		cairo_surface_t* get_cairo_image(const std::string& image)
 		{
-
-			std::lock_guard<std::mutex> guard(g_surface_cache_mutex);
 			return g_surface_cache.get(image);
+		}
+
+		bool has_cairo_image(const std::string& image)
+		{
+			return g_surface_cache.has(image);
 		}
 
 		cairo_context& dummy_context() 
@@ -2001,6 +2025,19 @@ namespace {
 		return variant(&result);
 	END_DEFINE_FN
 
+	BEGIN_DEFINE_FN(precache_image, "(string) ->commands")
+		const std::string img = FN_ARG(0).as_string();
+		if(has_cairo_image(img)) {
+			return variant();
+		}
+
+		return variant(new game_logic::FnCommandCallable("precache_image", [=]() {
+			std::async(std::launch::async, [=]() {
+				get_cairo_image(img);
+			});
+		}));
+	END_DEFINE_FN
+
 	BEGIN_DEFINE_FN(font_extents, "(string, decimal) -> {ascent: decimal, descent: decimal, height: decimal, max_x_advance: decimal, max_y_advance: decimal}")
 		static cairo_context& context = *new cairo_context(8,8);
 		FT_Face face = get_ft_font(FN_ARG(0).as_string());
@@ -2183,7 +2220,6 @@ namespace {
 	{
 		CairoCacheStatus status;
 
-		std::lock_guard<std::mutex> guard(g_surface_cache_mutex);
 		status.num_items = static_cast<int>(g_surface_cache.size());
 		status.memory_usage = static_cast<int>(g_surface_cache.usage());
 		return status;
