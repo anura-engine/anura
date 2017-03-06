@@ -1026,7 +1026,7 @@ std::map<std::string, std::string>& class_path_map()
 		}
 	}
 
-	void FormulaObject::visitVariants(const variant& node, const std::function<void (FormulaObject*)>& fn)
+	void FormulaObject::visitVariantObjects(const variant& node, const std::function<void (FormulaObject*)>& fn)
 	{
 		std::vector<FormulaObject*> seen;
 		visitVariantsInternal(node, fn, &seen);
@@ -1120,11 +1120,11 @@ std::map<std::string, std::string>& class_path_map()
 		std::map<boost::uuids::uuid, FormulaObject*> src, dst;
 		{
 		formula_profiler::Instrument instrument("UPDATE_A");
-		visitVariants(variant(this), [&dst,&objects](FormulaObject* obj) {
+		visitVariantObjects(variant(this), [&dst,&objects](FormulaObject* obj) {
 			dst[obj->id_] = obj;
 			objects.push_back(obj);
 		});
-		visitVariants(variant(&updated), [&src,&objects](FormulaObject* obj) {
+		visitVariantObjects(variant(&updated), [&src,&objects](FormulaObject* obj) {
 			src[obj->id_] = obj;
 			objects.push_back(obj);
 		});

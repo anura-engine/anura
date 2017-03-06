@@ -52,7 +52,7 @@ namespace game_logic
 		static void visitVariantsInternal(const variant& v, const std::function<void (FormulaObject*)>& fn, std::vector<FormulaObject*>* seen);
 	public:
 		static void visitVariants(const variant& v, const std::function<void (variant)>& fn);
-		static void visitVariants(const variant& v, const std::function<void (FormulaObject*)>& fn);
+		static void visitVariantObjects(const variant& v, const std::function<void (FormulaObject*)>& fn);
 		static void mapObjectIntoDifferentTree(variant& v, const std::map<FormulaObject*, FormulaObject*>& mapping, std::set<FormulaObject*>& seen);
 
 		void update(FormulaObject& updated);
