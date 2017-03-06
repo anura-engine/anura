@@ -1396,6 +1396,13 @@ std::string variant::as_enum() const
 	return g_enum_vector[int_value_];
 }
 
+const std::vector<variant>& variant::as_list_ref() const
+{
+	must_be(VARIANT_TYPE_LIST);
+
+	return list_->elements;
+}
+
 std::vector<variant> variant::as_list() const
 {
 	if(is_list()) {

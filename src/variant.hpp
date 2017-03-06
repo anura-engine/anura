@@ -279,6 +279,7 @@ public:
 	bool is_weak() const { return type_ == VARIANT_TYPE_WEAK; }
 
 	std::vector<variant> as_list() const;
+	const std::vector<variant>& as_list_ref() const;
 	const std::map<variant,variant>& as_map() const;
 
 	typedef std::pair<variant,variant> map_pair;

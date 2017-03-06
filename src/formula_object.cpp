@@ -37,6 +37,7 @@
 #include "formula_callable.hpp"
 #include "formula_callable_definition.hpp"
 #include "formula_object.hpp"
+#include "formula_profiler.hpp"
 #include "json_parser.hpp"
 #include "module.hpp"
 #include "preferences.hpp"
@@ -1025,7 +1026,56 @@ std::map<std::string, std::string>& class_path_map()
 		}
 	}
 
-	void FormulaObject::visitVariants(variant node, std::function<void (variant)> fn, std::vector<FormulaObject*>* seen)
+	void FormulaObject::visitVariants(const variant& node, const std::function<void (FormulaObject*)>& fn)
+	{
+		std::vector<FormulaObject*> seen;
+		visitVariantsInternal(node, fn, &seen);
+	}
+
+	void FormulaObject::visitVariantsInternal(const variant& node, const std::function<void (FormulaObject*)>& fn, std::vector<FormulaObject*>* seen)
+	{
+		std::vector<FormulaObject*> seen_buf;
+		if(!seen) {
+			seen = &seen_buf;
+		}
+
+		if(node.try_convert<FormulaObject>()) {
+			FormulaObject* obj = node.try_convert<FormulaObject>();
+			if(std::count(seen->begin(), seen->end(), obj)) {
+				return;
+			}
+
+			ConstWmlSerializableFormulaCallablePtr ptr(obj);
+			fn(obj);
+
+			seen->push_back(obj);
+
+			for(const variant& v : obj->variables_) {
+				visitVariantsInternal(v, fn, seen);
+			}
+
+			seen->pop_back();
+			return;
+		}
+	
+		if(node.is_list()) {
+			for(const variant& item : node.as_list()) {
+				FormulaObject::visitVariantsInternal(item, fn, seen);
+			}
+		} else if(node.is_map()) {
+			for(const variant_pair& item : node.as_map()) {
+				FormulaObject::visitVariantsInternal(item.second, fn, seen);
+			}
+		}
+	}
+
+	void FormulaObject::visitVariants(const variant& node, const std::function<void (variant)>& fn)
+	{
+		std::vector<FormulaObject*> seen;
+		visitVariantsInternal(node, fn, &seen);
+	}
+
+	void FormulaObject::visitVariantsInternal(const variant& node, const std::function<void (variant)>& fn, std::vector<FormulaObject*>* seen)
 	{
 		std::vector<FormulaObject*> seen_buf;
 		if(!seen) {
@@ -1044,7 +1094,7 @@ std::map<std::string, std::string>& class_path_map()
 			seen->push_back(obj);
 
 			for(const variant& v : obj->variables_) {
-				visitVariants(v, fn, seen);
+				visitVariantsInternal(v, fn, seen);
 			}
 
 			seen->pop_back();
@@ -1055,11 +1105,11 @@ std::map<std::string, std::string>& class_path_map()
 
 		if(node.is_list()) {
 			for(const variant& item : node.as_list()) {
-				FormulaObject::visitVariants(item, fn, seen);
+				FormulaObject::visitVariantsInternal(item, fn, seen);
 			}
 		} else if(node.is_map()) {
 			for(const variant_pair& item : node.as_map()) {
-				FormulaObject::visitVariants(item.second, fn, seen);
+				FormulaObject::visitVariantsInternal(item.second, fn, seen);
 			}
 		}
 	}
@@ -1068,33 +1118,41 @@ std::map<std::string, std::string>& class_path_map()
 	{
 		std::vector<ffl::IntrusivePtr<FormulaObject> > objects;
 		std::map<boost::uuids::uuid, FormulaObject*> src, dst;
-		visitVariants(variant(this), [&dst,&objects](variant v) {
-			FormulaObject* obj = v.try_convert<FormulaObject>();
-			if(obj) {
-				dst[obj->id_] = obj;
-				objects.push_back(obj);
-			}});
-		visitVariants(variant(&updated), [&src,&objects](variant v) {
-			FormulaObject* obj = v.try_convert<FormulaObject>();
-			if(obj) {
-				src[obj->id_] = obj;
-				objects.push_back(obj);
-			}});
+		{
+		formula_profiler::Instrument instrument("UPDATE_A");
+		visitVariants(variant(this), [&dst,&objects](FormulaObject* obj) {
+			dst[obj->id_] = obj;
+			objects.push_back(obj);
+		});
+		visitVariants(variant(&updated), [&src,&objects](FormulaObject* obj) {
+			src[obj->id_] = obj;
+			objects.push_back(obj);
+		});
+		}
 
 		std::map<FormulaObject*, FormulaObject*> mapping;
 
+		{
+		formula_profiler::Instrument instrument("UPDATE_B");
 		for(auto& i : src) {
 			auto j = dst.find(i.first);
 			if(j != dst.end()) {
 				mapping[i.second] = j->second;
 			}
 		}
-
-		for(auto& i : src) {
-			variant v(i.second);
-			mapObjectIntoDifferentTree(v, mapping);
 		}
 
+		{
+		formula_profiler::Instrument instrument("UPDATE_C");
+		std::set<FormulaObject*> seen;
+		for(auto& i : src) {
+			variant v(i.second);
+			mapObjectIntoDifferentTree(v, mapping, seen);
+		}
+		}
+
+		{
+		formula_profiler::Instrument instrument("UPDATE_D");
 		for(auto& i : mapping) {
 			*i.second = *i.first;
 		}
@@ -1108,6 +1166,7 @@ std::map<std::string, std::string>& class_path_map()
 
 		for(auto i = src.begin(); i != src.end(); ++i) {
 			i->second->new_in_update_ = dst.count(i->first) == 0;
+		}
 		}
 	}
 
@@ -1143,9 +1202,10 @@ variant FormulaObject::generateDiff(variant before, variant b)
 
 	std::vector<variant> deltas;
 
+	std::set<FormulaObject*> seen;
 	for(auto i = src.begin(); i != src.end(); ++i) {
 		variant v(i->second);
-		mapObjectIntoDifferentTree(v, mapping);
+		mapObjectIntoDifferentTree(v, mapping, seen);
 		auto j = dst.find(i->first);
 		if(j != dst.end() && i->second->variables_ != j->second->variables_) {
 			std::map<variant, variant> node_delta;
@@ -1252,13 +1312,8 @@ void FormulaObject::applyDiff(variant delta)
 	}
 }
 
-void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<FormulaObject*, FormulaObject*>& mapping, std::vector<FormulaObject*>* seen)
+void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<FormulaObject*, FormulaObject*>& mapping, std::set<FormulaObject*>& seen)
 	{
-		std::vector<FormulaObject*> seen_buf;
-		if(!seen) {
-			seen = &seen_buf;
-		}
-	
 		if(v.try_convert<FormulaObject>()) {
 			FormulaObject* obj = v.try_convert<FormulaObject>();
 			auto itor = mapping.find(obj);
@@ -1266,17 +1321,16 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 				v = variant(itor->second);
 			}
 
-			if(std::count(seen->begin(), seen->end(), obj)) {
+			if(seen.count(obj)) {
 				return;
 			}
 
-			seen->push_back(obj);
+			seen.insert(obj);
 
 			for(variant& v : obj->variables_) {
 				mapObjectIntoDifferentTree(v, mapping, seen);
 			}
 
-			seen->pop_back();
 			return;
 		}
 

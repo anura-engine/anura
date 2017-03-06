@@ -48,9 +48,12 @@ namespace game_logic
 
 	class FormulaObject : public game_logic::WmlSerializableFormulaCallable
 	{
+		static void visitVariantsInternal(const variant& v, const std::function<void (variant)>& fn, std::vector<FormulaObject*>* seen);
+		static void visitVariantsInternal(const variant& v, const std::function<void (FormulaObject*)>& fn, std::vector<FormulaObject*>* seen);
 	public:
-		static void visitVariants(variant v, std::function<void (variant)> fn, std::vector<FormulaObject*>* seen=nullptr);
-		static void mapObjectIntoDifferentTree(variant& v, const std::map<FormulaObject*, FormulaObject*>& mapping, std::vector<FormulaObject*>* seen=nullptr);
+		static void visitVariants(const variant& v, const std::function<void (variant)>& fn);
+		static void visitVariants(const variant& v, const std::function<void (FormulaObject*)>& fn);
+		static void mapObjectIntoDifferentTree(variant& v, const std::map<FormulaObject*, FormulaObject*>& mapping, std::set<FormulaObject*>& seen);
 
 		void update(FormulaObject& updated);
 

@@ -530,6 +530,28 @@ namespace game_logic
 			}
 
 			return variant(&v);
+
+		BEGIN_DEFINE_FN(get, "(any) ->any")
+			variant key = FN_ARG(0);
+			const variant* result = obj.get(key);
+			if(result != nullptr) {
+				return *result;
+			}
+
+			return variant();
+		END_DEFINE_FN
+
+		BEGIN_DEFINE_FN(store, "(any, any) ->commands")
+			variant key = FN_ARG(0);
+			variant value = FN_ARG(1);
+
+			ffl::IntrusivePtr<ffl_cache> ptr(const_cast<ffl_cache*>(&obj));
+			return variant(new game_logic::FnCommandCallable("cache_store", [=]() {
+				if(ptr->get(key) == nullptr) {
+					ptr->store(key, value);
+				}
+			}));
+		END_DEFINE_FN
 		END_DEFINE_CALLABLE(ffl_cache)
 
 		class Geometry : public game_logic::FormulaCallable {
