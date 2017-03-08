@@ -1,5 +1,4 @@
 #include "ffl_weak_ptr.hpp"
-#include <pthread.h>
 
 #ifdef MT_FFL
 namespace {
