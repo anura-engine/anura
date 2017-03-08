@@ -843,6 +843,16 @@ void Frame::drawBatch(graphics::AnuraShaderPtr shader, const BatchDrawItem* i1, 
 		int w = static_cast<int>(info->area.w() * i1->frame->scale_);
 		int h = static_cast<int>(info->area.h() * i1->frame->scale_);
 
+		if(i1->scale != 1.0f) {
+			const int orig_w = w;
+			const int orig_h = h;
+			w *= i1->scale;
+			h *= i1->scale;
+
+			x -= (w - orig_w)/2;
+			y -= (h - orig_h)/2;
+		}
+
 		if(i1->upside_down) {
 			y += h;
 			h = -h;

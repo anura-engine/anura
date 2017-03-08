@@ -94,6 +94,7 @@ public:
 		bool upside_down;
 		int time;
 		float rotate;
+		float scale;
 	};
 
 	static void drawBatch(graphics::AnuraShaderPtr shader, const BatchDrawItem* i1, const BatchDrawItem* i2);
