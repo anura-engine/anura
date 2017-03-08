@@ -50,7 +50,7 @@ void variant_type::set_expr(const game_logic::FormulaExpression* expr) const
 	expr_ .reset(expr);
 }
 
-const game_logic::FormulaExpression* variant_type::get_expr() const
+ffl::IntrusivePtr<const game_logic::FormulaExpression> variant_type::get_expr() const
 {
 	return expr_.get();
 }

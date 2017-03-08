@@ -6,8 +6,6 @@
 #include "intrusive_ptr.hpp"
 #include "reference_counted_object.hpp"
 
-extern THREAD_LOCAL bool g_thread_read_only_variants;
-
 namespace ffl
 {
 
@@ -17,19 +15,11 @@ std::set<void*> g_all_intrusive_ptr;
 
 void registerIntrusivePtr(void* p)
 {
-	if(g_thread_read_only_variants) {
-		return;
-	}
-	
 	g_all_intrusive_ptr.insert(p);
 }
 
 void unregisterIntrusivePtr(void* p)
 {
-	if(g_thread_read_only_variants) {
-		return;
-	}
-
 	g_all_intrusive_ptr.erase(p);
 }
 

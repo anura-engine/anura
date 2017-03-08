@@ -412,7 +412,7 @@ namespace
 
 	void tbs_send_event(ffl::weak_ptr<Entity> e, game_logic::MapFormulaCallablePtr callable, const std::string& ev)
 	{
-		Entity* entity = e.get();
+		auto entity = e.get();
 		if(entity) {
 			entity->handleEvent(ev, callable.get());
 		}

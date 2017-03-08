@@ -126,7 +126,7 @@ public:
 	static bool may_be_null(variant_type_ptr type);
 
 	void set_expr(const game_logic::FormulaExpression* expr) const;
-	const game_logic::FormulaExpression* get_expr() const;
+	ffl::IntrusivePtr<const game_logic::FormulaExpression> get_expr() const;
 
 	virtual variant_type_ptr extend_type(variant_type_ptr extension) const { return variant_type_ptr(); }
 

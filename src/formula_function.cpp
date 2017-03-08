@@ -418,8 +418,9 @@ namespace game_logic
 						cache_.erase(i);
 						return nullptr;
 					} else if(i->second->use_weak) {
+						auto weak = i->second->weak.get();
 						i->second->use_weak = false;
-						i->second->obj = variant(i->second->weak.get());
+						i->second->obj = variant(weak.get());
 						i->second->weak.reset();
 					}
 

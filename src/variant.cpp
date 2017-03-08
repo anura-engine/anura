@@ -49,8 +49,6 @@
 #include "variant_type.hpp"
 #include "wml_formula_callable.hpp"
 
-THREAD_LOCAL bool g_thread_read_only_variants = false;
-
 namespace 
 {
 	static const std::string variant_type_str[] = {"null", "bool", "int", "decimal", "object", "object_loading", "list", "string", "map", "function", "generic_function", "multi_function", "delayed", "weak", "enum"};
@@ -490,9 +488,6 @@ struct variant_weak
 
 void variant::increment_refcount()
 {
-if(g_thread_read_only_variants) {
-	return;
-}
 switch(type_) {
 case VARIANT_TYPE_LIST:
 if(list_) list_->add_reference();
@@ -539,9 +534,6 @@ break;
 
 void variant::release()
 {
-if(g_thread_read_only_variants) {
-	return;
-}
 
 switch(type_) {
 case VARIANT_TYPE_LIST:
@@ -1625,7 +1617,8 @@ void variant::weaken()
 void variant::strengthen()
 {
 	if(is_weak()) {
-		*this = variant(weak_->ptr.get());
+		auto p = weak_->ptr.get();
+		*this = variant(p.get());
 	}
 }
 

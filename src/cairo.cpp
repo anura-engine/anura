@@ -53,8 +53,6 @@
 #include "unit_test.hpp"
 #include "utf8_to_codepoint.hpp"
 
-extern THREAD_LOCAL bool g_thread_read_only_variants;
-
 namespace graphics
 {
 	namespace 
@@ -676,7 +674,6 @@ namespace {
 			                   //have a constructor version of atomic_bool
 			TextureObjectFuture* f = this;
 			future_ = std::async(std::launch::async, [=]() {
-				g_thread_read_only_variants = true;
 				execute_cairo_ops(f->context_, f->ops_);
 				f->finished_ = true;
 				return true;

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "intrusive_ptr.hpp"
 #include "reference_counted_object.hpp"
 
 namespace ffl
@@ -15,13 +16,24 @@ public:
 		init(obj);
 	}
 
-	T* get() const { return reinterpret_cast<T*>(get_obj()); }
+	ffl::IntrusivePtr<T> get() const {
 
-	weak_ptr(const weak_ptr<T>& p) : weak_ptr_base(p.get()) {
+		auto res = reinterpret_cast<T*>(get_obj_add_ref());
+		ffl::IntrusivePtr<T> val(res);
+		if(res) {
+			res->dec_reference();
+		}
+		return val;
+	}
+
+	weak_ptr(const weak_ptr<T>& p) {
+		auto ptr = p.get();
+		init(ptr.get());
 	}
 
 	const weak_ptr<T>& operator=(const weak_ptr<T>& p) {
-		init(p.get());
+		auto ptr = p.get();
+		init(ptr.get());
 		return *this;
 	}
 };
