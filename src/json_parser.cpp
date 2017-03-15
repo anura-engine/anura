@@ -436,6 +436,10 @@ namespace json
 
 							try {
 								v = preprocess_string_value(s, callable);
+
+								if(v.get_debug_info()) {
+									str_debug_info = *v.get_debug_info();
+								}
 							} catch(preprocessor_error&) {
 								CHECK_PARSE(false, "Preprocessor error: " + s, t.begin - doc.c_str());
 							}

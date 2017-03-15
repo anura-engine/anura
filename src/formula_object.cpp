@@ -1652,7 +1652,16 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 				}
 
 				const PropertyEntry& entry = class_->slots()[n];
-				properties[entry.name_variant] = variant(property_overrides_[n]->str());
+
+				auto debug_info = property_overrides_[n]->strVal().get_debug_info();
+
+				if(debug_info && debug_info->filename) {
+					std::ostringstream s;
+					s << "@str_with_debug " << *debug_info->filename << ":" << debug_info->line << "|" << property_overrides_[n]->str();
+					properties[entry.name_variant] = variant(s.str());
+				} else {
+					properties[entry.name_variant] = variant(property_overrides_[n]->str());
+				}
 			}
 
 			result[variant("property_overrides")] = variant(&properties);

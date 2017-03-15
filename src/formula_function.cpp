@@ -676,6 +676,33 @@ namespace game_logic
 		RETURN_TYPE("builtin date_time")
 		END_FUNCTION_DEF(time)
 
+		FUNCTION_DEF(get_debug_info, 1, 1, "get_debug_info(value)")
+
+			variant value = EVAL_ARG(0);
+
+			const variant::debug_info* info = value.get_debug_info();
+
+			if(info == nullptr) {
+				return variant();
+			}
+
+			variant_builder b;
+			if(info->filename) {
+				b.add("filename", variant(*info->filename));
+			}
+
+			b.add("line", info->line);
+			b.add("col", info->column);
+			b.add("end_line", info->end_line);
+			b.add("end_col", info->end_column);
+
+			return b.build();
+
+		FUNCTION_ARGS_DEF
+			ARG_TYPE("any");
+			RETURN_TYPE("null|{filename: string|null, line: int, col: int, end_line: int, end_col: int}")
+		END_FUNCTION_DEF(get_debug_info)
+
 		FUNCTION_DEF(set_user_info, 2, 2, "set_user_info(string, any): sets some user info used in stats collection")
 			std::string key = EVAL_ARG(0).as_string();
 			variant value = EVAL_ARG(1);
