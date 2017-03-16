@@ -1273,7 +1273,7 @@ namespace sound
 			init();
 		}
 
-		RawPlayingSound(const std::string& fname, variant options) : fname_(fname), pos_(int(options["pos"].as_double()*SampleRate)), volume_(options["volume"].as_float(1.0f)), volume_target_(0.0), volume_target_time_(-1.0), fade_in_(options["fade_in"].as_float(0.0f)), looped_(options["loop"].as_bool(false)), loop_point_(int(options["loop_point"].as_float(0.0f)*SampleRate)), loop_from_(int(options["loop_from"].as_float(0.0f)*SampleRate)), fade_out_(-1.0f), fade_out_current_(0.0f), left_pan_(1.0f), right_pan_(1.0f)
+		RawPlayingSound(const std::string& fname, variant options) : fname_(fname), pos_(int(options["pos"].as_double(0.0)*SampleRate)), volume_(options["volume"].as_float(1.0f)), volume_target_(0.0), volume_target_time_(-1.0), fade_in_(options["fade_in"].as_float(0.0f)), looped_(options["loop"].as_bool(false)), loop_point_(int(options["loop_point"].as_float(0.0f)*SampleRate)), loop_from_(int(options["loop_from"].as_float(0.0f)*SampleRate)), fade_out_(-1.0f), fade_out_current_(0.0f), left_pan_(1.0f), right_pan_(1.0f)
 		{
 			variant panning = options["pan"];
 			if(panning.is_list()) {
@@ -2215,6 +2215,9 @@ BEGIN_DEFINE_CALLABLE_NOBASE(AudioEngine)
 		std::map<variant,variant> options_buf;
 		if(NUM_FN_ARGS > 1) {
 			options = FN_ARG(1);
+			if(options.is_null()) {
+				options = variant(&options_buf);
+			}
 		} else {
 			options = variant(&options_buf);
 		}
