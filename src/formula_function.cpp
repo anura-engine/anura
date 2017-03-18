@@ -480,6 +480,11 @@ namespace game_logic
 				}
 			}
 
+			void clear() {
+				lru_.clear();
+				cache_.clear();
+			}
+
 			void surrenderReferences(GarbageCollector* collector) override {
 				for(std::pair<const variant, std::list<Entry>::iterator>& p : cache_) {
 					collector->surrenderVariant(&p.first);
@@ -542,6 +547,13 @@ namespace game_logic
 			return variant();
 		END_DEFINE_FN
 
+		BEGIN_DEFINE_FN(contains, "(any) ->bool")
+			variant key = FN_ARG(0);
+			const variant* result = obj.get(key);
+
+			return variant::from_bool(result != nullptr);
+		END_DEFINE_FN
+
 		BEGIN_DEFINE_FN(store, "(any, any) ->commands")
 			variant key = FN_ARG(0);
 			variant value = FN_ARG(1);
@@ -551,6 +563,13 @@ namespace game_logic
 				if(ptr->get(key) == nullptr) {
 					ptr->store(key, value);
 				}
+			}));
+		END_DEFINE_FN
+
+		BEGIN_DEFINE_FN(clear, "() ->commands")
+			ffl::IntrusivePtr<ffl_cache> ptr(const_cast<ffl_cache*>(&obj));
+			return variant(new game_logic::FnCommandCallable("cache_clear", [=]() {
+				ptr->clear();
 			}));
 		END_DEFINE_FN
 		END_DEFINE_CALLABLE(ffl_cache)
