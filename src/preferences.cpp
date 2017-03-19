@@ -1158,13 +1158,17 @@ namespace preferences
 							*setting.bool_value = true;
 						}
 					} else if(setting.variant_value) {
-						std::string value(equal+1, arg.end());
-						if(value == "yes" || value == "true") {
-							*setting.variant_value = variant::from_bool(true);
-						} else if(value == "no" || value == "false") {
-							*setting.variant_value = variant::from_bool(false);
+						if(equal != arg.end()) {
+							std::string value(equal+1, arg.end());
+							if(value == "yes" || value == "true") {
+								*setting.variant_value = variant::from_bool(true);
+							} else if(value == "no" || value == "false") {
+								*setting.variant_value = variant::from_bool(false);
+							} else {
+								*setting.variant_value = variant(value);
+							}
 						} else {
-							*setting.variant_value = variant(value);
+							*setting.variant_value = variant::from_bool(true);
 						}
 					} else {
 						ASSERT_LOG(false, "Error making sense of preference type " << base_name);
