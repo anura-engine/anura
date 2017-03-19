@@ -159,7 +159,9 @@ int Entity::getFeetX() const
 int Entity::getFeetY() const
 {
 	if(solid_) {
-		return y() + solid_->area().y() + solid_->area().h();
+		return isUpsideDown() ?
+				solidRect().y2() + 1 :
+		       y() + solid_->area().y() + solid_->area().h();
 	}
 	if(anchory_ != -1) {
 		return y() + (getCurrentFrame().area().h()*getCurrentFrame().scale()*anchory_)/1000;
@@ -232,7 +234,15 @@ void Entity::setFacingRight(bool facing)
 
 void Entity::setUpsideDown(bool facing)
 {
+	const int start_y = solid_rect_.y();
 	upside_down_ = facing;
+	calculateSolidRect();
+
+	const int delta_y = solid_rect_.y() - start_y;
+	y_ -= delta_y*100;
+	calculateSolidRect();
+
+	assert(start_y == solid_rect_.y());
 }
 
 void Entity::setRotateZ(float new_rotate_z)
@@ -255,11 +265,21 @@ void Entity::calculateSolidRect()
 	if(solid_) {
 		const rect& area = solid_->area();
 
+		int xpos;
 		if(isFacingRight()) {
-			solid_rect_ = rect(x() + area.x(), y() + area.y(), area.w(), area.h());
+			xpos = x() + area.x();
 		} else {
-			solid_rect_ = rect(x() + f.width() - area.x() - area.w(), y() + area.y(), area.w(), area.h());
+			xpos = x() + f.width() - area.x() - area.w();
 		}
+
+		int ypos;
+		if(isUpsideDown()) {
+			ypos = y() + f.height() - area.y() - area.h();
+		} else {
+			ypos = y() + area.y();
+		}
+
+		solid_rect_ = rect(xpos, ypos, area.w(), area.h());
 	} else {
 		solid_rect_ = rect();
 	}
