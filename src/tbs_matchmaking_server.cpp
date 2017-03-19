@@ -199,6 +199,7 @@ std::string generate_beta_key()
 
 PREF_STRING(beta_keys_file, "", "File to store beta keys in (default = no beta keys)");
 PREF_INT(matchmaking_heartbeat_ms, 50, "Frequency of matchmaking heartbeats");
+PREF_INT(matchmaking_server_session_timeout_ms, 30000, "Number of seconds of no contact to expire a session");
 
 class matchmaking_server : public game_logic::FormulaCallable, public http::web_server
 
@@ -384,7 +385,7 @@ public:
 					p.second.current_socket = socket_ptr();
 					p.second.sent_heartbeat = true;
 					p.second.have_state_id = status_doc_state_id_;
-				} else if(!p.second.current_socket && time_ms_ - p.second.last_contact >= 10000) {
+				} else if(!p.second.current_socket && time_ms_ - p.second.last_contact >= g_matchmaking_server_session_timeout_ms) {
 					p.second.session_id = 0;
 				}
 			}
