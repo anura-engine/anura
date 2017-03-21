@@ -33,6 +33,15 @@ namespace
 {
 	std::map<std::string, int> solid_dimensions;
 	std::vector<std::string> solid_dimension_ids;
+
+	//Translate the y position when the object is inverted. To do this we invert the solid position
+	int translate_y_for_inverted_solid(int ypos, const rect& frame_rect, const rect& solid_rect) {
+		const int dist_from_bottom = (frame_rect.h()-1) - solid_rect.y2();
+
+		const int delta_y = solid_rect.y() - dist_from_bottom;
+
+		return ypos + delta_y;
+	}
 }
 
 void CollisionInfo::readSurfInfo()
@@ -154,7 +163,12 @@ bool point_standable(const Level& lvl, const Entity& e, const std::vector<Entity
 
 		const SolidInfo* solid = obj->solid();
 
-		if(solid && solid->isSolidAt(x - obj->x(), y - obj->y(), info ? &info->collide_with_area_id : nullptr)) {
+		int ypos = y - obj->y();
+		if(obj->isUpsideDown()) {
+			ypos = translate_y_for_inverted_solid(ypos, obj->frameRect(), solid->area());
+		}
+
+		if(solid && solid->isSolidAt(x - obj->x(), ypos, info ? &info->collide_with_area_id : nullptr)) {
 			if(info) {
 				info->collide_with = obj;
 				info->friction = obj->getSurfaceFriction();
@@ -283,10 +297,18 @@ bool entity_collides_with_entity(const Entity& e, const Entity& other, Collision
 	for(int y = area.y(); y <= area.y2(); ++y) {
 		for(int x = area.x(); x < area.x2(); ++x) {
 			const int our_x = e.isFacingRight() ? x - e.x() : (e.x() + our_frame.width()-1) - x;
-			const int our_y = y - e.y();
+			int our_y = y - e.y();
+			if(e.isUpsideDown()) {
+				our_y = translate_y_for_inverted_solid(our_y, e.frameRect(), our_solid->area());
+			}
+
 			if(our_solid->isSolidAt(our_x, our_y, info ? &info->area_id : nullptr)) {
 				const int other_x = other.isFacingRight() ? x - other.x() : (other.x() + other_frame.width()-1) - x;
-				const int other_y = y - other.y();
+				int other_y = y - other.y();
+				if(other.isUpsideDown()) {
+					other_y = translate_y_for_inverted_solid(other_y, other.frameRect(), other_solid->area());
+				}
+
 				if(other_solid->isSolidAt(other_x, other_y, info ? &info->collide_with_area_id : nullptr)) {
 					return true;
 				}
