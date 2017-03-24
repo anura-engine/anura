@@ -73,6 +73,7 @@ namespace
 		res.push_back("being_removed");
 		res.push_back("window_resize");
 		res.push_back("settings_menu");
+		res.push_back("quit_game");
 		res.push_back("mouse_down");
 		res.push_back("mouse_up");
 		res.push_back("mouse_move");

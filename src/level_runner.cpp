@@ -1383,8 +1383,15 @@ bool LevelRunner::play_cycle()
 			switch(event.type) {
 			case SDL_QUIT: {
 				stats::Entry("quit").addPlayerPos();
-				done = true;
 				quit_ = true;
+				std::vector<EntityPtr> active_chars = lvl_->get_active_chars();
+				for(const auto& c : active_chars) {
+					c->handleEvent(OBJECT_EVENT_QUIT_GAME);
+				}
+
+				if(quit_) {
+					done = true;
+				}
 				break;
 			}
 			case SDL_WINDOWEVENT:

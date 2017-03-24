@@ -3909,6 +3909,18 @@ DEFINE_FIELD(absolute_object_adjust_y, "int")
 DEFINE_SET_FIELD_TYPE("int")
 	obj.absolute_object_adjust_y_ = value.as_int();
 
+DEFINE_FIELD(quitting_game, "bool")
+	if(LevelRunner::getCurrent()) {
+		return variant::from_bool(LevelRunner::getCurrent()->is_quitting());
+	}
+
+	return variant::from_bool(false);
+
+DEFINE_SET_FIELD_TYPE("bool")
+	if(LevelRunner::getCurrent()) {
+		LevelRunner::getCurrent()->set_quitting(value.as_bool());
+	}
+
 END_DEFINE_CALLABLE(Level)
 
 int Level::camera_rotation() const

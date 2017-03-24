@@ -63,6 +63,8 @@ public:
 	}
 
 	void quit_game();
+	bool is_quitting() { return quit_; }
+	void set_quitting(bool value) { quit_ = value; }
 
 	ffl::IntrusivePtr<editor> get_editor() const { return editor_; }
 
