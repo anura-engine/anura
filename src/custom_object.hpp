@@ -389,15 +389,6 @@ private:
 	decimal accel_x_, accel_y_;
 	int gravity_shift_;
 
-	virtual int currentRotation() const override;
-
-	decimal rotate_z_;
-	decimal getRotateZ() const override { return getValueBySlot(CUSTOM_OBJECT_ROTATE).as_decimal(); };
-	
-	void setRotateZ(float new_rotate_z) override {
-		setValueBySlot(CUSTOM_OBJECT_ROTATE, variant(new_rotate_z));
-	}
-
     void setMidX(int new_mid_x) {
         const int current_x = x() + getCurrentFrame().width()/2;
 		const int xdiff = current_x - x();

@@ -160,8 +160,9 @@ public:
 	virtual void setUpsideDown(bool facing);
 
 	decimal rotate_z_;
-	virtual decimal getRotateZ() const { return rotate_z_; }
-	virtual void setRotateZ(float new_rotate_z);
+	decimal getRotateZ() const { return rotate_z_; }
+	void setRotateZ(decimal new_rotate_z) { rotate_z_ = new_rotate_z; }
+	void setRotateZ(float new_rotate_z);
 	
 	virtual decimal getDrawScale() const { return decimal(1.0); };
 	virtual void setDrawScale(float new_scale);
@@ -339,6 +340,8 @@ public:
 	//up using queryValueBySlot()
 	virtual int getValueSlot(const std::string& key) const = 0;
 
+	int currentRotation() const { return rotate_z_.as_int(); }
+
 protected:
 	virtual ConstSolidInfoPtr calculateSolid() const = 0;
 	virtual ConstSolidInfoPtr calculatePlatform() const = 0;
@@ -374,7 +377,6 @@ protected:
 	void surrenderReferences(GarbageCollector* collector) override;
 
 private:
-	virtual int currentRotation() const = 0;
 
 	std::string label_;
 

@@ -45,7 +45,7 @@ Entity::Entity(variant node)
 	zorder_(0), zsub_order_(0),
 	face_right_(node["face_right"].as_bool(true)),
 	upside_down_(node["upside_down"].as_bool(false)),
-	rotate_z_(0),
+	rotate_z_(node["rotate"].as_decimal()),
 	group_(node["group"].as_int(-1)),
     id_(-1), respawn_(node["respawn"].as_bool(true)),
 	solid_dimensions_(0), collide_dimensions_(0),
@@ -367,19 +367,23 @@ void Entity::drawDebugRects() const
 		return;
 	}
 
+	const float radians_to_degrees = 57.29577951308232087f;
+
+	float rotation = currentRotation()/radians_to_degrees;
+
 	auto wnd = KRE::WindowManager::getMainWindow();
 
 	const rect& body = solidRect();
 	if(body.w() > 0 && body.h() > 0) {
 		RectRenderable body_rr(true, true);
-		body_rr.update(body, KRE::Color(255,255,255,0xaa));
+		body_rr.update(body, rotation, KRE::Color(255,255,255,0xaa));
 		wnd->render(&body_rr);
 	}
 
 	const rect& hit = getHitRect();
 	if(hit.w() > 0 && hit.h() > 0) {
 		RectRenderable hit_rr(true, true);
-		hit_rr.update(body, KRE::Color(255,0,0,0xaa));
+		hit_rr.update(body, rotation, KRE::Color(255,0,0,0xaa));
 		wnd->render(&hit_rr);
 	}
 
@@ -392,7 +396,7 @@ void Entity::drawDebugRects() const
 		if(area.name == "attack") {
 			const rect r = calculateCollisionRect(f, area);
 			RectRenderable rr(true, true);
-			rr.update(r, KRE::Color(255,0,0,0xaa));
+			rr.update(r, rotation, KRE::Color(255,0,0,0xaa));
 			wnd->render(&rr);
 		}
 	}

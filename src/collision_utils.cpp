@@ -27,6 +27,7 @@
 #include "geometry.hpp"
 #include "level.hpp"
 #include "object_events.hpp"
+#include "rectangle_rotator.hpp"
 #include "solid_map.hpp"
 
 namespace 
@@ -506,11 +507,18 @@ int entity_user_collision(const Entity& a, const Entity& b, CollisionPair* areas
 	const Frame& fa = a.getCurrentFrame();
 	const Frame& fb = b.getCurrentFrame();
 
+	const int rotate_a = a.currentRotation();
+	const int rotate_b = b.currentRotation();
+
 	if(fa.getCollisionAreas().empty() || fb.getCollisionAreas().empty() ||
-	   (fa.hasCollisionAreasInsideFrame() && fb.hasCollisionAreasInsideFrame() &&
+	   (rotate_a == 0 && rotate_b == 0 &&
+	    fa.hasCollisionAreasInsideFrame() && fb.hasCollisionAreasInsideFrame() &&
 	   !rects_intersect(a.frameRect(), b.frameRect()))) {
 		return 0;
 	}
+
+	const int time_a = a.getTimeInFrame();
+	const int time_b = b.getTimeInFrame();
 
 	int result = 0;
 
@@ -518,14 +526,91 @@ int entity_user_collision(const Entity& a, const Entity& b, CollisionPair* areas
 		rect rect_a = a.calculateCollisionRect(fa, area_a);
 		for(const auto& area_b : fb.getCollisionAreas()) {
 			rect rect_b = b.calculateCollisionRect(fb, area_b);
-			if(rects_intersect(rect_a, rect_b)) {
-				const int time_a = a.getTimeInFrame();
-				const int time_b = b.getTimeInFrame();
+
+			bool found = false;
+
+			if(rotate_a != 0 || rotate_b != 0) {
+				//calculate axis-aligned bounding rects to
+				//try to exclude any possible collision quickly.
+				rect bounding_a, bounding_b;
+
+				if(rotate_a == 0) {
+					bounding_a = rect_a;
+				} else {
+					const int center_x = rect_a.x() + rect_a.w()/2;
+					const int center_y = rect_a.y() + rect_a.h()/2;
+					const int dim = std::max(rect_a.w(), rect_a.h());
+
+					bounding_a = rect(center_x - dim/2 - 1, center_y - dim/2 - 1, dim+2, dim+2);
+				}
+
+				if(rotate_b == 0) {
+					bounding_b = rect_b;
+				} else {
+					const int center_x = rect_b.x() + rect_b.w()/2;
+					const int center_y = rect_b.y() + rect_b.h()/2;
+					const int dim = std::max(rect_b.w(), rect_b.h());
+
+					bounding_b = rect(center_x - dim/2 - 1, center_y - dim/2 - 1, dim+2, dim+2);
+				}
+
+				if(rects_intersect(bounding_a, bounding_b)) {
+					const int Stride = 2;
+
+
+					const float radians_to_degrees = 57.29577951308232087f;
+
+					const float rot_a = rotate_a/radians_to_degrees;
+					const float rot_b = rotate_b/radians_to_degrees;
+					const float cos_a = cos(rot_a);
+					const float sin_a = sin(rot_a);
+
+					const float a_center_x = rect_a.x() + float(rect_a.w())*0.5f;
+					const float a_center_y = rect_a.y() + float(rect_a.h())*0.5f;
+
+					const float b_center_x = rect_b.x() + float(rect_b.w())*0.5f;
+					const float b_center_y = rect_b.y() + float(rect_b.h())*0.5f;
+
+					//there might be a collision. Do a rigorous check.
+					for(int xpos = 1; xpos < rect_a.w() && !found; xpos += Stride) {
+						for(int ypos = 1; ypos < rect_a.h(); ypos += Stride) {
+							if(area_a.no_alpha_check == false && fa.isAlpha(xpos, ypos, time_a, a.isFacingRight())) {
+								continue;
+							}
+
+							float a_x = static_cast<float>(rect_a.x() + xpos);
+							float a_y = static_cast<float>(rect_a.y() + ypos);
+
+							geometry::Point<float> p = rotate_point_around_origin_with_offset(a_x, a_y, rot_a, a_center_x, a_center_y, false);
+
+							p = rotate_point_around_origin_with_offset(p.x, p.y, -rot_b, b_center_x, b_center_y, false);
+
+							int b_x = static_cast<int>(p.x) - rect_b.x();
+							int b_y = static_cast<int>(p.y) - rect_b.y();
+
+							if(b_x < 0 || b_y < 0 || b_x >= rect_b.w() || b_y >= rect_b.h()) {
+								continue;
+							}
+
+							if(area_b.no_alpha_check == false && fb.isAlpha(b_x, b_y, time_b, b.isFacingRight())) {
+								continue;
+							}
+
+							fprintf(stderr, "COLLIDE: %d, %d / %d, %d\n", b_x, b_y, rect_b.w(), rect_b.h());
+
+							found = true;
+							break;
+						}
+					}
+				}
+			}
+
+			//simple case of axis-aligned rectangles
+			else if(rects_intersect(rect_a, rect_b)) {
 
 				//we only check every other pixel, since this gives us
 				//enough accuracy and is 4x faster.
 				const int Stride = 2;
-				bool found = false;
 				const rect intersection = intersection_rect(rect_a, rect_b);
 				for(int y = intersection.y(); y <= intersection.y2() && !found; y += Stride) {
 					for(int x = intersection.x(); x <= intersection.x2(); x += Stride) {
@@ -536,15 +621,15 @@ int entity_user_collision(const Entity& a, const Entity& b, CollisionPair* areas
 						}
 					}
 				}
+			}
 
-				if(found) {
-					++result;
-					if(buf_size > 0) {
-						areas_colliding->first = &area_a.name;
-						areas_colliding->second = &area_b.name;
-						++areas_colliding;
-						--buf_size;
-					}
+			if(found) {
+				++result;
+				if(buf_size > 0) {
+					areas_colliding->first = &area_a.name;
+					areas_colliding->second = &area_b.name;
+					++areas_colliding;
+					--buf_size;
 				}
 			}
 		}

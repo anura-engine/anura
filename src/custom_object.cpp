@@ -175,7 +175,6 @@ CustomObject::CustomObject(variant node)
 	accel_x_(node["accel_x"].as_decimal()),
 	accel_y_(node["accel_y"].as_decimal()),
 	gravity_shift_(node["gravity_shift"].as_int(0)),
-	rotate_z_(node["rotate"].as_decimal()),
 	hitpoints_(node["hitpoints"].as_int(type_->getHitpoints())),
 	max_hitpoints_(node["max_hitpoints"].as_int(type_->getHitpoints()) - type_->getHitpoints()),
 	was_underwater_(false),
@@ -524,7 +523,6 @@ CustomObject::CustomObject(const std::string& type, int x, int y, bool face_righ
 	time_in_frame_(0), time_in_frame_delta_(1),
 	velocity_x_(0), velocity_y_(0),
 	accel_x_(0), accel_y_(0), gravity_shift_(0),
-	rotate_z_(),
 	hitpoints_(type_->getHitpoints()),
 	max_hitpoints_(0),
 	was_underwater_(false),
@@ -645,7 +643,6 @@ CustomObject::CustomObject(const CustomObject& o)
 	velocity_x_(o.velocity_x_), velocity_y_(o.velocity_y_),
 	accel_x_(o.accel_x_), accel_y_(o.accel_y_),
 	gravity_shift_(o.gravity_shift_),
-	rotate_z_(o.rotate_z_),
 	parallax_scale_millis_(new std::pair<int, int>(*o.parallax_scale_millis_)),
 	hitpoints_(o.hitpoints_),
 	max_hitpoints_(o.max_hitpoints_),
@@ -959,8 +956,8 @@ variant CustomObject::write() const
 		res.add("anchory", getAnchorY());
 	}
 
-	if(rotate_z_ != decimal()) {
-		res.add("rotate", rotate_z_);
+	if(getRotateZ() != decimal()) {
+		res.add("rotate", getRotateZ());
 	}
 
     if(velocity_x_ != decimal(0)) {
@@ -1234,7 +1231,7 @@ void CustomObject::drawLater(int xx, int yy) const
 	KRE::ModelManager2D model_matrix(x()+offs_x, y()+offs_y);
 	for(const gui::WidgetPtr& w : widgets_) {
 		if(w->zorder() >= widget_zorder_draw_later_threshold) {
-			w->draw(0, 0, rotate_z_.as_float32(), draw_scale_ ? draw_scale_->as_float32() : 1);
+			w->draw(0, 0, getRotateZ().as_float32(), draw_scale_ ? draw_scale_->as_float32() : 1);
 		}
 	}
 }
@@ -1399,7 +1396,7 @@ void CustomObject::draw(int xx, int yy) const
 
 		std::vector<Frame::BatchDrawItem> items;
 		for(auto p : batch->objects) {
-			Frame::BatchDrawItem item = { p->frame_.get(), p->x(), p->y(), p->isFacingRight(), p->isUpsideDown(), p->time_in_frame_, p->rotate_z_.as_float32(), p->draw_scale_ ? p->draw_scale_->as_float() : 1.0f };
+			Frame::BatchDrawItem item = { p->frame_.get(), p->x(), p->y(), p->isFacingRight(), p->isUpsideDown(), p->time_in_frame_, p->getRotateZ().as_float32(), p->draw_scale_ ? p->draw_scale_->as_float() : 1.0f };
 			items.emplace_back(item);
 		}
 
@@ -1438,15 +1435,15 @@ void CustomObject::draw(int xx, int yy) const
 		Frame::drawBatch(shader_, &items[0], &items[0] + items.size());
 	} else if(custom_draw_xy_.size() >= 7 &&
 	          custom_draw_xy_.size() == custom_draw_uv_.size()) {
-		frame_->drawCustom(shader_, draw_x, draw_y, &custom_draw_xy_[0], &custom_draw_uv_[0], static_cast<int>(custom_draw_xy_.size())/2, isFacingRight(), isUpsideDown(), time_in_frame_, rotate_z_.as_float32(), cycle_);
+		frame_->drawCustom(shader_, draw_x, draw_y, &custom_draw_xy_[0], &custom_draw_uv_[0], static_cast<int>(custom_draw_xy_.size())/2, isFacingRight(), isUpsideDown(), time_in_frame_, getRotateZ().as_float32(), cycle_);
 	} else if(custom_draw_.get() != nullptr) {
-		frame_->drawCustom(shader_, draw_x, draw_y, *custom_draw_, draw_area_.get(), isFacingRight(), isUpsideDown(), time_in_frame_, rotate_z_.as_float32());
+		frame_->drawCustom(shader_, draw_x, draw_y, *custom_draw_, draw_area_.get(), isFacingRight(), isUpsideDown(), time_in_frame_, getRotateZ().as_float32());
 	} else if(draw_scale_) {
-		frame_->draw(shader_, draw_x, draw_y, isFacingRight(), isUpsideDown(), time_in_frame_, rotate_z_.as_float32(), draw_scale_->as_float32());
+		frame_->draw(shader_, draw_x, draw_y, isFacingRight(), isUpsideDown(), time_in_frame_, getRotateZ().as_float32(), draw_scale_->as_float32());
 	} else if(!draw_area_.get()) {
-		frame_->draw(shader_, draw_x, draw_y, isFacingRight(), isUpsideDown(), time_in_frame_, rotate_z_.as_float32());
+		frame_->draw(shader_, draw_x, draw_y, isFacingRight(), isUpsideDown(), time_in_frame_, getRotateZ().as_float32());
 	} else {
-		frame_->draw(shader_, draw_x, draw_y, *draw_area_, isFacingRight(), isUpsideDown(), time_in_frame_, rotate_z_.as_float32());
+		frame_->draw(shader_, draw_x, draw_y, *draw_area_, isFacingRight(), isUpsideDown(), time_in_frame_, getRotateZ().as_float32());
 	}
 
 	if(draw_color_) {
@@ -1456,7 +1453,7 @@ void CustomObject::draw(int xx, int yy) const
 			while(!transform.fits_in_color()) {
 				transform = transform - transform.toColor();
 				KRE::ColorScope color_scope(transform.toColor());
-				frame_->draw(shader_, draw_x, draw_y, isFacingRight(), isUpsideDown(), time_in_frame_, rotate_z_.as_float32());
+				frame_->draw(shader_, draw_x, draw_y, isFacingRight(), isUpsideDown(), time_in_frame_, getRotateZ().as_float32());
 			}
 		}
 	}
@@ -1479,7 +1476,7 @@ void CustomObject::draw(int xx, int yy) const
 		for(const gui::WidgetPtr& w : widgets_) {
 			if(w->zorder() < widget_zorder_draw_later_threshold) {
 				if(w->drawWithObjectShader()) {
-					w->draw(x()&~1, y()&~1, rotate_z_.as_float32(), draw_scale_ ? draw_scale_->as_float32() : 1.0f);
+					w->draw(x()&~1, y()&~1, getRotateZ().as_float32(), draw_scale_ ? draw_scale_->as_float32() : 1.0f);
 				}
 			}
 		}
@@ -1579,7 +1576,7 @@ void CustomObject::draw(int xx, int yy) const
 		for(const gui::WidgetPtr& w : widgets_) {
 			if(w->zorder() < widget_zorder_draw_later_threshold) {
 				if(w->drawWithObjectShader() == false) {
-					w->draw(x(), y(), rotate_z_.as_float32(), draw_scale_ ? draw_scale_->as_float32() : 0);
+					w->draw(x(), y(), getRotateZ().as_float32(), draw_scale_ ? draw_scale_->as_float32() : 0);
 				}
 			}
 		}
@@ -1644,7 +1641,7 @@ void CustomObject::process(Level& lvl)
 	if(body_) {
 		const b2Vec2 v = body_->get_body_ptr()->GetPosition();
 		const double a = body_->get_body_ptr()->GetAngle();
-		rotate_z_ = decimal(a * 180.0 / M_PI);
+		setRotateZ(decimal(a * 180.0 / M_PI));
 		setX(int(v.x * world->scale() - (solidRect().w() ? (solidRect().w()/2) : getCurrentFrame().width()/2)));
 		setY(int(v.y * world->scale() - (solidRect().h() ? (solidRect().h()/2) : getCurrentFrame().height()/2)));
 		//setY(graphics::screen_height() - v.y * world->scale() - getCurrentFrame().height());
@@ -1754,7 +1751,7 @@ void CustomObject::process(Level& lvl)
 
 	const int start_x = x();
 	const int start_y = y();
-	const decimal start_rotate = rotate_z_;
+	const decimal start_rotate = getRotateZ();
 	++cycle_;
 
 	if(invincible_) {
@@ -1870,13 +1867,13 @@ void CustomObject::process(Level& lvl)
 			}
 
 			if(position_schedule_->rotation.empty() == false) {
-				rotate_z_ = position_schedule_->rotation[pos%position_schedule_->rotation.size()];
+				setRotateZ(position_schedule_->rotation[pos%position_schedule_->rotation.size()]);
 				while(rotate_z_ >= 360) {
 					rotate_z_ -= 360;
 				}
 
 				if(next_fraction) {
-					rotate_z_ = decimal((rotate_z_*this_fraction + next_fraction*position_schedule_->rotation[(pos+1)%position_schedule_->rotation.size()])/position_schedule_->speed);
+					setRotateZ(decimal((getRotateZ()*this_fraction + next_fraction*position_schedule_->rotation[(pos+1)%position_schedule_->rotation.size()])/position_schedule_->speed));
 				}
 			}
 		}
@@ -3213,7 +3210,7 @@ variant CustomObject::getValueBySlot(int slot) const
 	case CUSTOM_OBJECT_VARS:              return variant(vars_.get());
 	case CUSTOM_OBJECT_TMP:               return variant(tmp_vars_.get());
 	case CUSTOM_OBJECT_GROUP:             return variant(group());
-	case CUSTOM_OBJECT_ROTATE:            return variant(rotate_z_);
+	case CUSTOM_OBJECT_ROTATE:            return variant(getRotateZ());
 	case CUSTOM_OBJECT_ME:
 	case CUSTOM_OBJECT_SELF:              return variant(this);
 	case CUSTOM_OBJECT_BRIGHTNESS:		  return variant((draw_color().addRed() + draw_color().addGreen() + draw_color().addBlue())/3);
@@ -3751,7 +3748,7 @@ void CustomObject::setValue(const std::string& key, const variant& value)
 	} else if(key == "accel_y") {
 		accel_y_ = value.as_decimal();
 	} else if(key == "rotate" || key == "rotate_z") {
-		rotate_z_ = value.as_decimal();
+		setRotateZ(value.as_decimal());
 	} else if(key == "red") {
 		make_draw_color();
 		draw_color_->setAddRed(value.as_int());
@@ -4391,7 +4388,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 		break;
 
 	case CUSTOM_OBJECT_ROTATE:
-		rotate_z_ = value.as_decimal();
+		setRotateZ(value.as_decimal());
 		break;
 
 	case CUSTOM_OBJECT_RED:
@@ -6247,11 +6244,6 @@ void CustomObject::addToLevel()
 	for(auto eff : effects_shaders_) {
 		eff->setParent(this);
 	}
-}
-
-int CustomObject::currentRotation() const
-{
-	return rotate_z_.as_int();
 }
 
 int CustomObject::mouseDragThreshold(int default_value) const
