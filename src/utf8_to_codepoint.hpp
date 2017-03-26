@@ -44,6 +44,8 @@ namespace utils
 				utf8_bitmask_4(0x10)
 			{}
 			~iterator() {}
+
+			std::string::const_iterator str_itor() const { return it_; }
 			bool operator!= (const iterator& other) const
 			{
 				return it_ != other.it_;

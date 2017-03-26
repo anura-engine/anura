@@ -425,23 +425,37 @@ namespace {
 
 		float translate_x, translate_y;
 
+		size_t num_chars() const {
+			utils::utf8_to_codepoint s(text);
+			return std::distance(s.begin(), s.end());
+		}
+
 		variant get_slice(int begin, int end) const {
-			if(begin == 0 && end == text.size()) {
+			const size_t nchars = num_chars();
+			if(begin == 0 && end == nchars) {
 				return variant(this);
 			}
 
-			ASSERT_LOG(begin >= 0 && begin <= text.size() && end >= begin && end <= text.size(), "Illegal slice of text fragment: " << begin << ", " << end << " / " << text << " " << text.size());
+			ASSERT_LOG(begin >= 0 && begin <= nchars && end >= begin && end <= nchars, "Illegal slice of text fragment: " << begin << ", " << end << " / " << text << " " << nchars);
 
 			cairo_text_fragment* res = new cairo_text_fragment(*this);
-			res->text.erase(res->text.begin(), res->text.begin() + begin);
-			res->text.resize(end - begin);
+
+			utils::utf8_to_codepoint utf8_str(text);
+
+			auto utf8_begin = utf8_str.begin();
+			auto utf8_i1 = utf8_str.begin();
+			std::advance(utf8_i1, begin);
+			auto utf8_i2 = utf8_i1;
+			std::advance(utf8_i2, end - begin);
+
+			res->text = std::string(utf8_i1.str_itor(), utf8_i2.str_itor());
 
 			FT_Face face = get_ft_font(font);
 			cairo_font_face_t* cairo_face = cairo_ft_font_face_create_for_ft_face(face, 0);
 			cairo_set_font_face(dummy_context().get(), cairo_face);
 			cairo_set_font_size(dummy_context().get(), font_size);
 
-			std::string s(text.begin(), text.begin() + begin);
+			std::string s(utf8_begin.str_itor(), utf8_i1.str_itor());
 			cairo_text_extents_t extents;
 			cairo_text_extents(dummy_context().get(), s.c_str(), &extents);
 			res->translate_x += extents.x_advance;
@@ -586,6 +600,8 @@ namespace {
 			return variant::from_bool(obj.has_text);
 		DEFINE_FIELD(text, "string")
 			return variant(obj.text);
+		DEFINE_FIELD(num_chars, "int")
+			return variant(static_cast<int>(obj.num_chars()));
 		BEGIN_DEFINE_FN(get_slice, "(int, int) ->builtin cairo_text_fragment")
 			int begin = FN_ARG(0).as_int();
 			int end = FN_ARG(1).as_int();
