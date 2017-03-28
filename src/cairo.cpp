@@ -664,6 +664,41 @@ namespace {
 		return result;
 	}
 
+	std::string utf8_to_markup(const std::string& text)
+	{
+		std::string result;
+
+		utils::utf8_to_codepoint s(text);
+		auto i1 = s.begin();
+		auto i2 = s.end();
+		while(i1 != i2) {
+			auto codepoint = *i1;
+			if(codepoint < 128) {
+				result.push_back(static_cast<char>(codepoint));
+			} else {
+				const char* symbol = nullptr;
+				for(const MarkupEntry& entry : MarkupMap) {
+					if(entry.codepoint == codepoint) {
+						symbol = entry.tag;
+						break;
+					}
+				}
+				std::ostringstream stream;
+
+				if(symbol == nullptr) {
+					stream << "&#" << static_cast<unsigned int>(codepoint) << ";";
+				} else {
+					stream << "&" << symbol << ";";
+				}
+				result += stream.str();
+			}
+
+			++i1;
+		}
+
+		return result;
+	}
+
 	void execute_cairo_ops(cairo_context& context, variant v)
 	{
 		if(v.is_null()) {
@@ -2108,6 +2143,12 @@ namespace {
 	BEGIN_DEFINE_FN(parse_special_chars, "(string) -> string")
 		std::string s = FN_ARG(0).as_string();
 		return variant(parse_special_chars_internal(s));
+	END_DEFINE_FN
+
+	BEGIN_DEFINE_FN(utf8_to_markup, "(string) -> string")
+		std::string s = FN_ARG(0).as_string();
+		return variant(utf8_to_markup(s));
+
 	END_DEFINE_FN
 
 	//a string representing an emdash in utf-8.

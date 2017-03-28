@@ -54,7 +54,7 @@ namespace utils
 			{
 				char32_t codepoint = 0;
 				std::string::const_iterator it(it_);
-				auto c = *it++;
+				unsigned char c = *it++;
 				if(c & utf8_bitmask_1) {
 					if(c & utf8_bitmask_3) {
 						if(c & utf8_bitmask_4) {
