@@ -3081,6 +3081,10 @@ variant CustomObject::getValueBySlot(int slot) const
 		}
 	}
 
+	case CUSTOM_OBJECT_CREATED: {
+		return variant::from_bool(created_);
+	}
+
 	case CUSTOM_OBJECT_ARG: {
 		if(backup_callable_stack_.empty() == false && backup_callable_stack_.top()) {
 			return variant(backup_callable_stack_.top());
@@ -3985,6 +3989,9 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 			}
 		}
 		
+		break;
+	}
+	case CUSTOM_OBJECT_CREATED: {
 		break;
 	}
 	case CUSTOM_OBJECT_TYPE: {

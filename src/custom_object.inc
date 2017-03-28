@@ -1,5 +1,6 @@
 CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_VALUE,								 "value", "any" )
 CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_DATA,                               "_data", "any" )
+CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_CREATED,                            "created", "bool/null" )
 CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_ARG,                                "arg", "object" )
 CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_CONSTS,                             "consts", "any" )
 CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_TYPE,                               "type", "string" )
