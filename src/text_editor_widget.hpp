@@ -206,6 +206,8 @@ namespace gui
 		game_logic::FormulaPtr ffl_on_change_focus_;
 		game_logic::FormulaPtr ffl_onBeginEnter_;
 
+		variant ffl_fn_filter_paste_;
+
 		bool begin_enter_return_;
 
 		int in_event_;
