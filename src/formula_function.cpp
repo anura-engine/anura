@@ -3402,6 +3402,8 @@ FUNCTION_DEF_IMPL
 			const int jump_from_assert = vm.addJumpSource(OP_POP_JMP_UNLESS);
 
 			vm.addLoadConstantInstruction(variant("Could not find item in find_or_die"));
+
+			args()[0]->emitVM(vm);
 			vm.addInstruction(OP_ASSERT);
 
 			vm.jumpToEnd(jump_from_assert);
@@ -4118,8 +4120,7 @@ FUNCTION_DEF_IMPL
 		FUNCTION_DEF(deserialize, 1, 1, "deserialize(obj)")
 
 			Formula::failIfStaticContext();	
-			const intptr_t id = static_cast<intptr_t>(std::stoll(EVAL_ARG(0).as_string().c_str(), nullptr, 16));
-			return variant::create_variant_under_construction(id);
+			return variant::create_variant_under_construction(addr_to_uuid(EVAL_ARG(0).as_string()));
 		RETURN_TYPE("any")
 		END_FUNCTION_DEF(deserialize)
 

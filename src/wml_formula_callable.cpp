@@ -55,6 +55,14 @@ namespace game_logic
 		}
 	}
 
+	WmlSerializableFormulaCallable::WmlSerializableFormulaCallable(bool has_self) : FormulaCallable(has_self), uuid_(generate_uuid()) {}
+	WmlSerializableFormulaCallable::WmlSerializableFormulaCallable(const boost::uuids::uuid& uuid, bool has_self) : FormulaCallable(has_self), uuid_(uuid) {}
+
+	std::string WmlSerializableFormulaCallable::addr() const {
+		return write_uuid(uuid_);
+	}
+
+
 	int WmlSerializableFormulaCallable::registerSerializableType(const char* name, std::function<variant(variant)> ctor)
 	{
 		std::string key(name);
@@ -82,9 +90,7 @@ namespace game_logic
 	variant WmlSerializableFormulaCallable::writeToWml() const
 	{
 		variant result = serializeToWml();
-		char addr_buf[256];
-		sprintf(addr_buf, "%p", this);
-		result.add_attr(variant("_addr"), variant(addr_buf));
+		result.add_attr(variant("_uuid"), variant(write_uuid(uuid_)));
 		return result;
 	}
 
@@ -111,12 +117,12 @@ namespace game_logic
 
 	namespace 
 	{
-		void add_object_to_set(variant v, std::set<WmlSerializableFormulaCallable*>* set, std::set<std::string>* already_recorded) 
+		void add_object_to_set(variant v, std::set<WmlSerializableFormulaCallable*>* set, std::set<boost::uuids::uuid>* already_recorded) 
 		{
 			if(v.is_map()) {
-				variant addr = v["_addr"];
+				variant addr = v["_uuid"];
 				if(addr.is_string()) {
-					already_recorded->insert(addr.as_string());
+					already_recorded->insert(read_uuid(addr.as_string()));
 				}
 
 				return;
@@ -138,15 +144,12 @@ namespace game_logic
 	{
 		std::map<variant, variant> res;
 		std::set<WmlSerializableFormulaCallable*> objects;
-		std::set<std::string> already_known;
+		std::set<boost::uuids::uuid> already_known;
 		game_logic::FormulaObject::visitVariants(obj, std::bind(add_object_to_set, std::placeholders::_1, &objects, &already_known));
 
 		std::vector<variant> results_list;
 		for(WmlSerializableFormulaCallable* item : objects) {
-			char addr_buf[256];
-			sprintf(addr_buf, "%p", item);
-			std::string key(addr_buf);
-			if(already_known.count(key)) {
+			if(already_known.count(item->uuid())) {
 				continue;
 			}
 
@@ -164,24 +167,24 @@ namespace game_logic
 
 	namespace 
 	{
-		std::map<intptr_t, WmlSerializableFormulaCallablePtr>& get_registered_objects()
+		std::map<boost::uuids::uuid, WmlSerializableFormulaCallablePtr>& get_registered_objects()
 		{
-			static std::map<intptr_t, WmlSerializableFormulaCallablePtr> res;
+			static std::map<boost::uuids::uuid, WmlSerializableFormulaCallablePtr> res;
 			return res;
 		}
 		
 	}
 
-	void wmlFormulaCallableReadScope::registerSerializedObject(intptr_t addr, WmlSerializableFormulaCallablePtr ptr)
+	void wmlFormulaCallableReadScope::registerSerializedObject(const boost::uuids::uuid& uuid, WmlSerializableFormulaCallablePtr ptr)
 	{
 		if(ptr.get() != nullptr) {
-			get_registered_objects()[addr] = ptr;
+			get_registered_objects()[uuid] = ptr;
 		}
 	}
 
-	WmlSerializableFormulaCallablePtr wmlFormulaCallableReadScope::getSerializedObject(intptr_t addr)
+	WmlSerializableFormulaCallablePtr wmlFormulaCallableReadScope::getSerializedObject(const boost::uuids::uuid& uuid)
 	{
-		auto itor = get_registered_objects().find(addr);
+		auto itor = get_registered_objects().find(uuid);
 		if(itor != get_registered_objects().end()) {
 			return itor->second;
 		} else {
@@ -225,15 +228,15 @@ namespace game_logic
 		}
 	}
 
-	bool wmlFormulaCallableReadScope::try_load_object(intptr_t id, variant& v)
+	bool wmlFormulaCallableReadScope::try_load_object(const boost::uuids::uuid& id, variant& v)
 	{
-		std::map<intptr_t, WmlSerializableFormulaCallablePtr>::const_iterator itor = get_registered_objects().find(id);
+		std::map<boost::uuids::uuid, WmlSerializableFormulaCallablePtr>::const_iterator itor = get_registered_objects().find(id);
 		if(itor != get_registered_objects().end()) {
 			v = variant(itor->second.get());
 			return true;
-		} else {
-			return false;
 		}
+
+		return false;
 	}
 
 	variant serialize_doc_with_objects(variant v)
@@ -280,13 +283,8 @@ namespace game_logic
 					for(variant& obj_node : v["serialized_objects"]["character"].as_list()) {
 						game_logic::WmlSerializableFormulaCallablePtr obj = obj_node.try_convert<game_logic::WmlSerializableFormulaCallable>();
 						ASSERT_LOG(obj.get() != nullptr, "ILLEGAL OBJECT FOUND IN SERIALIZATION");
-						std::string addr_str = obj->addr();
-						if(addr_str.size() > 15) {
-							addr_str.resize(15);
-						}
-						const intptr_t addr_id = static_cast<intptr_t>(strtoll(addr_str.c_str(), NULL, 16));
 
-						game_logic::wmlFormulaCallableReadScope::registerSerializedObject(addr_id, obj);
+						game_logic::wmlFormulaCallableReadScope::registerSerializedObject(obj->uuid(), obj);
 					}
 
 					v.remove_attr_mutation(variant("serialized_objects"));

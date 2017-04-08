@@ -1183,7 +1183,7 @@ int main(int argcount, char* argvec[])
 	std::set<variant*> loading;
 	swap_variants_loading(loading);
 	if(loading.empty() == false) {
-		LOG_ERROR("Illegal object: " << (void*)(*loading.begin())->as_callable_loading());
+		LOG_ERROR("Illegal object: " << write_uuid((*loading.begin())->as_callable_loading()));
 		ASSERT_LOG(false, "Unresolved unserialized objects: " << loading.size());
 	}
 

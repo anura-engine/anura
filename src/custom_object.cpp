@@ -849,9 +849,7 @@ variant CustomObject::write() const
 {
 	variant_builder res;
 
-	char addr_buf[256];
-	sprintf(addr_buf, "%p", this);
-	res.add("_addr", addr_buf);
+	res.add("_uuid", write_uuid(uuid()));
 
 	if(created_) {
 		res.add("created", true);
@@ -915,9 +913,7 @@ variant CustomObject::write() const
 				s += ",";
 			}
 
-			char buf[256];
-			sprintf(buf, "%p", e.get());
-			s += buf;
+			s += write_uuid(e->uuid());
 		}
 
 		res.add("attached_objects", s);

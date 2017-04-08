@@ -50,7 +50,8 @@ namespace voxel
 		scale_x_(node["scale_x"].as_int(1)), scale_y_(node["scale_y"].as_int(1)), scale_z_(node["scale_z"].as_int(1)),
 		chunks_(node)
 	{
-		READ_SERIALIZABLE_CALLABLE(node);
+		//this code wouldn't work anymore. Change it if we ever resurrect this.
+		//READ_SERIALIZABLE_CALLABLE(node);
 		ASSERT_LOG(node.has_key("chunks"), "To create a logic world must have 'chunks' attribute");
 
 		int min_x, min_y, min_z;

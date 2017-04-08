@@ -32,6 +32,12 @@
 //turn on multi-threaded protection for FFL constructs.
 //#define MT_FFL
 
+#ifdef MT_FFL
+typedef std::atomic_int IntRefCount;
+#else
+typedef int IntRefCount;
+#endif
+
 #ifdef __APPLE__
 #define THREAD_LOCAL __thread
 #elif defined(WIN32)
@@ -107,11 +113,7 @@ protected:
 	virtual ~reference_counted_object() { if(weak_ != nullptr) { weak_ptr_base::release(this); } }
 private:
 
-#ifdef MT_FFL
-	mutable std::atomic_int count_;
-#else
-	mutable int count_;
-#endif
+	mutable IntRefCount count_;
 	mutable weak_ptr_base* weak_;
 };
 

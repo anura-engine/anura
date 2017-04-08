@@ -222,6 +222,11 @@ type_error::type_error(const std::string& str) : message(str) {
 VariantFunctionTypeInfo::VariantFunctionTypeInfo() : num_unneeded_args(0)
 {}
 
+struct variant_uuid : public GarbageCollectible {
+	explicit variant_uuid(boost::uuids::uuid id) : uuid(id) {}
+	boost::uuids::uuid uuid;
+};
+
 struct variant_list : public GarbageCollectible {
 
 	variant_list() : begin(elements.begin()), end(elements.end()),
@@ -305,7 +310,7 @@ struct variant_string {
 	variant_string(const variant_string& o) : str(o.str), translated_from(o.translated_from), refcount(1)
 	{}
 	std::string str, translated_from;
-	int refcount;
+	IntRefCount refcount;
 
 	std::vector<const game_logic::Formula*> formulae_using_this;
 
@@ -474,7 +479,7 @@ game_logic::ConstFormulaCallablePtr callable;
 bool has_result;
 variant result;
 
-int refcount;
+IntRefCount refcount;
 };
 
 struct variant_weak 
@@ -482,7 +487,7 @@ struct variant_weak
 	variant_weak() : refcount(0)
 	{}
 
-	int refcount;
+	IntRefCount refcount;
 	ffl::weak_ptr<game_logic::FormulaCallable> ptr;
 };
 
@@ -501,9 +506,6 @@ break;
 case VARIANT_TYPE_CALLABLE:
 variant_ptr_add_ref(callable_);
 break;
-case VARIANT_TYPE_CALLABLE_LOADING:
-callable_variants_loading.insert(this);
-break;
 case VARIANT_TYPE_FUNCTION:
 fn_->add_reference();
 break;
@@ -520,6 +522,9 @@ break;
 case VARIANT_TYPE_WEAK:
 ++weak_->refcount;
 break;
+case VARIANT_TYPE_CALLABLE_LOADING:
+callable_loading_->add_reference();
+callable_variants_loading.insert(this);
 
 // These are not used here, add them to silence a compiler warning.
 case VARIANT_TYPE_NULL:
@@ -550,9 +555,6 @@ break;
 case VARIANT_TYPE_CALLABLE:
 variant_ptr_release(callable_);
 break;
-case VARIANT_TYPE_CALLABLE_LOADING:
-callable_variants_loading.erase(this);
-break;
 case VARIANT_TYPE_FUNCTION:
 fn_->dec_reference();
 break;
@@ -572,6 +574,11 @@ case VARIANT_TYPE_WEAK:
 if(--weak_->refcount == 0) {
 	delete weak_;
 }
+break;
+
+case VARIANT_TYPE_CALLABLE_LOADING:
+callable_variants_loading.erase(this);
+callable_loading_->dec_reference();
 break;
 
 // These are not used here, add them to silence a compiler warning.
@@ -1785,6 +1792,12 @@ const std::string& variant::as_string() const
 	return string_->str;
 }
 
+boost::uuids::uuid variant::as_callable_loading() const
+{
+	must_be(VARIANT_TYPE_CALLABLE_LOADING);
+	return callable_loading_->uuid;
+}
+
 variant variant::operator+(const variant& v) const
 {
 	if(type_ == VARIANT_TYPE_INT && v.type_ == VARIANT_TYPE_INT) {
@@ -2259,15 +2272,7 @@ void variant::serializeToString(std::string& str) const
 			//from multiple objects. So we record the address of it and
 			//register it to be recorded seperately.
 			char buf[256];
-			if(obj->addr().size()) {
-				std::string addr = obj->addr();
-				if(addr.size() > 15) {
-					addr.resize(15);
-				}
-				sprintf(buf, "deserialize('0x%s')", addr.c_str());
-			} else {
-				sprintf(buf, "deserialize('%p')", obj);
-			}
+			sprintf(buf, "deserialize('%s')", write_uuid(obj->uuid()).c_str());
 			str += buf;
 			return;
 		}
@@ -2341,7 +2346,7 @@ void variant::serialize_from_string(const std::string& str)
 	}
 }
 
-variant variant::create_variant_under_construction(intptr_t id)
+variant variant::create_variant_under_construction(boost::uuids::uuid id)
 {
 	variant v;
 	if(game_logic::wmlFormulaCallableReadScope::try_load_object(id, v)) {
@@ -2349,8 +2354,8 @@ variant variant::create_variant_under_construction(intptr_t id)
 	}
 
 	v.type_ = VARIANT_TYPE_CALLABLE_LOADING;
-	v.callable_loading_ = id;
-	v.increment_refcount();
+	v.callable_loading_ = new variant_uuid(id);
+	v.callable_loading_->add_reference();
 	return v;
 }
 
@@ -2520,7 +2525,7 @@ std::string variant::to_debug_string(std::vector<const game_logic::FormulaCallab
 	}
 	case VARIANT_TYPE_CALLABLE_LOADING: {
 		char buf[64];
-		sprintf(buf, "(loading %lx)", (long unsigned int)callable_loading_);
+		sprintf(buf, "(loading %s)", write_uuid(callable_loading_->uuid).c_str());
 		s << buf;
 		break;
 	}

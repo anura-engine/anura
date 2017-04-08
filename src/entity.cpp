@@ -36,7 +36,8 @@
 #include "variant_utils.hpp"
 
 Entity::Entity(variant node)
-  : x_(node["x"].as_int()*100),
+  : WmlSerializableFormulaCallable(node["_uuid"].is_string() ? read_uuid(node["_uuid"].as_string()) : generate_uuid()),
+    x_(node["x"].as_int()*100),
     y_(node["y"].as_int()*100),
 	anchorx_(-1),
 	anchory_(-1),

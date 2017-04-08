@@ -113,8 +113,6 @@ namespace game_logic
 
 		void getInputs(std::vector<FormulaInput>* inputs) const override;
 
-		boost::uuids::uuid id_;
-
 		bool new_in_update_;
 		bool orphaned_;
 

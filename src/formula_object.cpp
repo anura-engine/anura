@@ -1116,16 +1116,17 @@ std::map<std::string, std::string>& class_path_map()
 
 	void FormulaObject::update(FormulaObject& updated)
 	{
+		fprintf(stderr, "ZZZ: update %p -> %p\n", &updated, this);
 		std::vector<ffl::IntrusivePtr<FormulaObject> > objects;
 		std::map<boost::uuids::uuid, FormulaObject*> src, dst;
 		{
 		formula_profiler::Instrument instrument("UPDATE_A");
 		visitVariantObjects(variant(this), [&dst,&objects](FormulaObject* obj) {
-			dst[obj->id_] = obj;
+			dst[obj->uuid()] = obj;
 			objects.push_back(obj);
 		});
 		visitVariantObjects(variant(&updated), [&src,&objects](FormulaObject* obj) {
-			src[obj->id_] = obj;
+			src[obj->uuid()] = obj;
 			objects.push_back(obj);
 		});
 		}
@@ -1180,14 +1181,14 @@ variant FormulaObject::generateDiff(variant before, variant b)
 	visitVariants(b, [&dst,&objects](variant v) {
 		FormulaObject* obj = v.try_convert<FormulaObject>();
 		if(obj) {
-			dst[obj->id_] = obj;
+			dst[obj->uuid()] = obj;
 			objects.push_back(obj);
 		}});
 
 	visitVariants(a, [&src,&objects](variant v) {
 		FormulaObject* obj = v.try_convert<FormulaObject>();
 		if(obj) {
-			src[obj->id_] = obj;
+			src[obj->uuid()] = obj;
 			objects.push_back(obj);
 		}});
 
@@ -1209,7 +1210,7 @@ variant FormulaObject::generateDiff(variant before, variant b)
 		auto j = dst.find(i->first);
 		if(j != dst.end() && i->second->variables_ != j->second->variables_) {
 			std::map<variant, variant> node_delta;
-			node_delta[variant("_uuid")] = variant(write_uuid(i->second->id_));
+			node_delta[variant("_uuid")] = variant(write_uuid(i->second->uuid()));
 			if(i->second->variables_.size() < j->second->variables_.size()) {
 				i->second->variables_.resize(j->second->variables_.size());
 			}
@@ -1257,11 +1258,12 @@ variant FormulaObject::generateDiff(variant before, variant b)
 
 void FormulaObject::applyDiff(variant delta)
 {
+	fprintf(stderr, "ZZZ: applyDiff(%s)\n", delta.write_json().c_str());
 	std::map<boost::uuids::uuid, FormulaObject*> objects;
 	visitVariants(variant(this), [&objects](variant v) {
 		FormulaObject* obj = v.try_convert<FormulaObject>();
 		if(obj) {
-			objects[obj->id_] = obj;
+			objects[obj->uuid()] = obj;
 		}});
 
 	const std::string& data_str = delta["delta"].as_string();
@@ -1273,25 +1275,15 @@ void FormulaObject::applyDiff(variant delta)
 	const game_logic::wmlFormulaCallableReadScope read_scope;
 
 	for(auto p : objects) {
-		std::string addr_str = p.second->addr();
-		if(addr_str.size() > 15) {
-			addr_str.resize(15);
-		}
-		const intptr_t addr_id = static_cast<intptr_t>(strtoll(addr_str.c_str(), NULL, 16));
-		game_logic::wmlFormulaCallableReadScope::registerSerializedObject(addr_id, p.second);
+		game_logic::wmlFormulaCallableReadScope::registerSerializedObject(p.second->uuid(), p.second);
 	}
 
 	variant v = json::parse(std::string(data.begin(), data.end()));
 	for(variant obj_node : v["objects"].as_list()) {
 		game_logic::WmlSerializableFormulaCallablePtr obj = obj_node.try_convert<game_logic::WmlSerializableFormulaCallable>();
 		ASSERT_LOG(obj.get() != NULL, "ILLEGAL OBJECT FOUND IN SERIALIZATION");
-		std::string addr_str = obj->addr();
-		if(addr_str.size() > 15) {
-			addr_str.resize(15);
-		}
-		const intptr_t addr_id = static_cast<intptr_t>(strtoll(addr_str.c_str(), NULL, 16));
 
-		game_logic::wmlFormulaCallableReadScope::registerSerializedObject(addr_id, obj);
+		game_logic::wmlFormulaCallableReadScope::registerSerializedObject(obj->uuid(), obj);
 	}
 
 	for(variant d : v["deltas"].as_list()) {
@@ -1464,7 +1456,7 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 	}
 
 	FormulaObject::FormulaObject(const std::string& type, variant args)
-	  : id_(generate_uuid()), new_in_update_(true), orphaned_(false),
+	  : new_in_update_(true), orphaned_(false),
 		class_(get_class(type)), private_data_(-1)
 	{
 		ASSERT_LOG(class_->is_library_only() == false || args.is_null(), "Creating instance of library class is illegal: " << type);
@@ -1488,8 +1480,6 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 		init_lua();
 #endif
 
-
-		setAddr(write_id());
 	}
 
 	void FormulaObject::surrenderReferences(GarbageCollector* collector)
@@ -1512,7 +1502,7 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 
 	std::string FormulaObject::write_id() const
 	{
-		std::string result = write_uuid(id_);
+		std::string result = write_uuid(uuid());
 		result.resize(15);
 		return result;
 	}
@@ -1558,7 +1548,7 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 	}
 
 	FormulaObject::FormulaObject(variant data)
-	  : id_(data["id"].is_string() ? read_uuid(data["id"].as_string()) : generate_uuid()), new_in_update_(true), orphaned_(false),
+	  : WmlSerializableFormulaCallable(data["_uuid"].is_string() ? read_uuid(data["_uuid"].as_string()) : generate_uuid()), new_in_update_(true), orphaned_(false),
 		class_(get_class(data["@class"].as_string())), private_data_(-1)
 	{
 		if(class_->getBuiltinCtor()) {
@@ -1612,8 +1602,6 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 #if defined(USE_LUA)
 		init_lua();
 #endif
-
-		setAddr(write_id());
 	}
 
 	FormulaObject::~FormulaObject()
@@ -1622,8 +1610,6 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 	ffl::IntrusivePtr<FormulaObject> FormulaObject::clone() const
 	{
 		ffl::IntrusivePtr<FormulaObject> result(new FormulaObject(*this));
-	//result->id_ = generate_uuid();
-	//result->setAddr(result->write_id());
 
 		return result;
 	}
@@ -1632,7 +1618,7 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 	{
 		std::map<variant, variant> result;
 		result[variant("@class")] = variant(class_->name());
-		result[variant("id")] = variant(write_uuid(id_));
+		result[variant("_uuid")] = variant(write_uuid(uuid()));
 
 		std::map<variant,variant> state;
 		for(const PropertyEntry& slot : class_->slots()) {
@@ -1761,7 +1747,7 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 			case FIELD_ORPHANED: return variant::from_bool(orphaned_);
 			case FIELD_CLASS: return class_->nameVariant();
 			case FIELD_LIB: return variant(get_library_object().get());
-			case FIELD_UUID: return variant(write_uuid(id_));
+			case FIELD_UUID: return variant(write_uuid(uuid()));
 			default: break;
 		}
 

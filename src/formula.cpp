@@ -25,6 +25,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/optional/optional.hpp>
 #include <cmath>
+#include <future>
 #include <stack>
 #include <stdio.h>
 #include <iostream>
@@ -5589,6 +5590,48 @@ BENCHMARK(formula_add) {
 	BENCHMARK_LOOP {
 		f.execute(*callable);
 	}
+}
+
+COMMAND_LINE_UTILITY(test_multithread_variants) {
+	std::vector<variant> lists;
+
+	for(int n = 0; n != 20; ++n) {
+		std::vector<variant> mylist;
+		for(int m = 0; m != 2; ++m) {
+			mylist.push_back(variant(int(rand()%10)));
+		}
+
+		lists.push_back(variant(&mylist));
+	}
+
+	for(int n = 0; n != 10; ++n) {
+		std::map<variant,variant> mymap;
+		mymap[variant("a")] = variant(int(rand()%10));
+		lists.push_back(variant(&mymap));
+	}
+
+	std::vector<std::thread> threads;
+
+	for(int n = 0; n != 16; ++n) {
+		threads.push_back(std::thread([=,&lists] {
+			fprintf(stderr, "THREAD: %d\n", n);
+			for(;;) {
+				int sum = 0;
+				for(int m = 0; m != 10000; ++m) {
+					variant item = lists[rand()%20];
+					if(item.is_list()) {
+						sum += item[0].as_int();
+					} else {
+						sum += item["a"].as_int();
+					}
+				}
+
+				//fprintf(stderr, "THREAD %d: %d\n", n, sum);
+			}
+		}));
+	}
+
+	sleep(1000);
 }
 
 }

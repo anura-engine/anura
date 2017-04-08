@@ -37,6 +37,7 @@
 #include "formula_fwd.hpp"
 #include "intrusive_ptr.hpp"
 #include "reference_counted_object.hpp"
+#include "uuid.hpp"
 
 namespace game_logic 
 {
@@ -85,6 +86,7 @@ struct variant_generic_fn;
 struct variant_multi_fn;
 struct variant_delayed;
 struct variant_weak;
+struct variant_uuid;
 
 struct type_error 
 {
@@ -154,7 +156,7 @@ public:
 	variant(std::function<variant(const game_logic::FormulaCallable&)> fn, const VariantFunctionTypeInfoPtr& type_info);
 	//variant(game_logic::ConstFormulaPtr, const std::vector<std::string>& args, const game_logic::FormulaCallable& callable, int base_slot, const std::vector<variant>& default_args, const std::vector<variant_type_ptr>& variant_types, const variant_type_ptr& return_type);
 
-	static variant create_variant_under_construction(intptr_t id);
+	static variant create_variant_under_construction(boost::uuids::uuid id);
 
 	//only call the non-inlined release() function if we have a type
 	//that needs releasing.
@@ -351,7 +353,7 @@ public:
 	game_logic::FormulaCallable* mutable_callable() const {
 		must_be(VARIANT_TYPE_CALLABLE); return mutable_callable_; }
 
-	intptr_t as_callable_loading() const { return callable_loading_; }
+	boost::uuids::uuid as_callable_loading() const;
 
 	template<typename T>
 	T* try_convert() const {
@@ -456,7 +458,7 @@ private:
 		int64_t decimal_value_;
 		const game_logic::FormulaCallable* callable_;
 		game_logic::FormulaCallable* mutable_callable_;
-		intptr_t callable_loading_;
+		variant_uuid* callable_loading_;
 		variant_list* list_;
 		variant_string* string_;
 		variant_map* map_;

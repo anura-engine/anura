@@ -731,28 +731,40 @@ void Level::finishLoading()
 		for(variant obj_node : node["character"].as_list()) {
 			game_logic::WmlSerializableFormulaCallablePtr obj;
 
-			std::string addr_str;
+			boost::uuids::uuid obj_uuid;
 
 			if(obj_node.is_map()) {
-				addr_str = obj_node["_addr"].as_string();
+
 				EntityPtr e(Entity::build(obj_node));
 				objects_not_in_level.push_back(e);
 				obj = e;
+
+				if(obj_node.has_key("_addr")) {
+					//convert old style _addr to uuid.
+					obj_uuid = addr_to_uuid(obj_node["_addr"].as_string());
+				} else {
+					obj_uuid = obj->uuid();
+				}
 			} else {
 				obj = obj_node.try_convert<game_logic::WmlSerializableFormulaCallable>();
-				addr_str = obj->addr();
+				obj_uuid = obj->uuid();
 			}
-			const intptr_t addr_id = static_cast<intptr_t>(strtoll(addr_str.c_str(), nullptr, 16));
 
-			game_logic::wmlFormulaCallableReadScope::registerSerializedObject(addr_id, obj);
+			game_logic::wmlFormulaCallableReadScope::registerSerializedObject(obj_uuid, obj);
 		}
 	}
 
 	for(variant node : wml_chars_) {
 		load_character(node);
 
-		const intptr_t addr_id = static_cast<intptr_t>(strtoll(node["_addr"].as_string().c_str(), nullptr, 16));
-		game_logic::wmlFormulaCallableReadScope::registerSerializedObject(addr_id, chars_.back());
+		boost::uuids::uuid obj_uuid;
+		if(node.has_key("_addr")) {
+			obj_uuid = addr_to_uuid(node["_addr"].as_string());
+		} else {
+			obj_uuid = read_uuid(node["_uuid"].as_string());
+		}
+
+		game_logic::wmlFormulaCallableReadScope::registerSerializedObject(obj_uuid, chars_.back());
 
 		if(node.has_key("attached_objects")) {
 			LOG_INFO("LOADING ATTACHED: " << node["attached_objects"].as_string());
@@ -760,8 +772,8 @@ void Level::finishLoading()
 			std::vector<std::string> v = util::split(node["attached_objects"].as_string());
 			for(const std::string& s : v) {
 				LOG_INFO("ATTACHED: " << s);
-				const intptr_t addr_id = static_cast<intptr_t>(strtoll(s.c_str(), nullptr, 16));
-				game_logic::WmlSerializableFormulaCallablePtr obj = game_logic::wmlFormulaCallableReadScope::getSerializedObject(addr_id);
+				boost::uuids::uuid attached_uuid = addr_to_uuid(s);
+				game_logic::WmlSerializableFormulaCallablePtr obj = game_logic::wmlFormulaCallableReadScope::getSerializedObject(attached_uuid);
 				Entity* e = dynamic_cast<Entity*>(obj.get());
 				if(e) {
 					LOG_INFO("GOT ATTACHED\n");

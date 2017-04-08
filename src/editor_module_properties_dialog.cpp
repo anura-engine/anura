@@ -48,6 +48,7 @@
 #include "stats.hpp"
 #include "text_editor_widget.hpp"
 #include "unit_test.hpp"
+#include "uuid.hpp"
 
 namespace editor_dialogs
 {
@@ -91,7 +92,7 @@ namespace editor_dialogs
 				empty_lvl.add_attr(variant("id"), variant("titlescreen.cfg"));
 
 				std::map<variant, variant> playable_m;
-				playable_m[variant("_addr")] = variant("1010101");
+				playable_m[variant("_uuid")] = variant(write_uuid(generate_uuid()));
 				playable_m[variant("current_frame")] = variant("normal");
 				playable_m[variant("custom")] = variant("yes");
 				playable_m[variant("face_right")] = variant(1);
