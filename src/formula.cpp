@@ -5631,7 +5631,7 @@ COMMAND_LINE_UTILITY(test_multithread_variants) {
 		}));
 	}
 
-	sleep(1000);
+	SDL_Delay(100000);
 }
 
 }
