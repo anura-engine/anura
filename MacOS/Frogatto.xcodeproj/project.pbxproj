@@ -2598,7 +2598,7 @@
 /* Begin PBXShellScriptBuildPhase section */
 		C08F3054180FBD3F005BDCDB /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
+			buildActionMask = 12;
 			files = (
 			);
 			inputPaths = (
@@ -2607,7 +2607,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "touch -cm ${SRCROOT}/../modules\ntouch -cm ${SRCROOT}/../data\ntouch -cm ${SRCROOT}/../images";
+			shellScript = "# touch -cm ${SRCROOT}/../modules\n# touch -cm ${SRCROOT}/../data\n# touch -cm ${SRCROOT}/../images";
 		};
 /* End PBXShellScriptBuildPhase section */
 
