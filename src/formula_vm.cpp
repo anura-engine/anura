@@ -587,6 +587,18 @@ void VirtualMachine::executeInternal(const FormulaCallable& variables, std::vect
 			const int num_base_slots = stack.back().as_int();
 			stack.pop_back();
 
+			if(!stack.back().is_list() && !stack.back().is_map()) {
+				//not a list or map try to convert to a list.
+				std::vector<variant> items;
+				items.reserve(stack.back().num_elements());
+
+				for(int n = 0; n != static_cast<int>(stack.back().num_elements()); ++n) {
+					items.push_back(stack.back()[n]);
+				}
+
+				stack.back() = variant(&items);
+			}
+
 			if(stack.back().is_list()) {
 				variant back = stack.back();
 				stack.pop_back();
