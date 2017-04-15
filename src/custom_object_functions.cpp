@@ -259,16 +259,6 @@ namespace
 
 	END_FUNCTION_DEF(texture)
 
-#ifdef USE_SVG
-	FUNCTION_DEF(canvas, 0, 0, "canvas() -> canvas object")
-		static variant result(new graphics::cairo_callable());
-		return result;
-	FUNCTION_ARGS_DEF
-		RETURN_TYPE("builtin cairo_callable")
-
-	END_FUNCTION_DEF(canvas)
-#endif
-
 	FUNCTION_DEF(open_url, 1, 1, "open_url(string url): opens a given url on the platform's web browser")
 		std::string url = EVAL_ARG(0).as_string();
 
