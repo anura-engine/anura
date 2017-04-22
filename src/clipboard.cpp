@@ -25,7 +25,7 @@
 #include <algorithm>
 #include <iostream>
 
-#if (defined(_X11) || defined(__linux__)) || defined(__APPLE__) && !defined(__ANDROID__)
+#if (defined(_X11) || defined(__linux__)) || defined(__APPLE__) && !defined(__ANDROID__) || defined(_WIN32)
 #define CLIPBOARD_FUNCS_DEFINED
 
 void copy_to_clipboard(const std::string& text, const bool mouse)
@@ -44,78 +44,6 @@ std::string copy_from_clipboard(const bool mouse)
 bool clipboard_handleEvent(const SDL_Event& ev)
 {
 	return false;
-}
-
-#endif
-#ifdef _WIN32
-#include <windows.h>
-#define CLIPBOARD_FUNCS_DEFINED
-
-bool clipboard_handleEvent(const SDL_Event& )
-{
-	return false;
-}
-
-void copy_to_clipboard(const std::string& text, const bool)
-{
-	if(text.empty()) {
-		return;
-	}
-
-	if(!OpenClipboard(nullptr))
-		return;
-	EmptyClipboard();
-
-	// Convert newlines
-	std::string str;
-	str.reserve(text.size());
-	std::string::const_iterator last = text.begin();
-	while(last != text.end()) {
-		if(*last != '\n') {
-			str.push_back(*last);
-		} else {
-			str.append("\r\n");
-		}
-		++last;
-	}
-
-	const HGLOBAL hglb = GlobalAlloc(GMEM_MOVEABLE, (str.size() + 1) * sizeof(TCHAR));
-	if(hglb == nullptr) {
-		CloseClipboard();
-		return;
-	}
-	char* const buffer = reinterpret_cast<char* const>(GlobalLock(hglb));
-	strcpy(buffer, str.c_str());
-	GlobalUnlock(hglb);
-	SetClipboardData(CF_TEXT, hglb);
-	CloseClipboard();
-}
-
-std::string copy_from_clipboard(const bool)
-{
-	if(!IsClipboardFormatAvailable(CF_TEXT))
-		return "";
-	if(!OpenClipboard(nullptr))
-		return "";
-
-	HGLOBAL hglb = GetClipboardData(CF_TEXT);
-	if(hglb == nullptr) {
-		CloseClipboard();
-		return "";
-	}
-	char const * buffer = reinterpret_cast<char*>(GlobalLock(hglb));
-	if(buffer == nullptr) {
-		CloseClipboard();
-		return "";
-	}
-
-	// Convert newlines
-	std::string str(buffer);
-	str.erase(std::remove(str.begin(),str.end(),'\r'),str.end());
-
-	GlobalUnlock(hglb);
-	CloseClipboard();
-	return str;
 }
 
 #endif
