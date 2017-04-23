@@ -73,7 +73,13 @@ namespace module
 	const std::string get_module_name();
 	const std::string get_module_pretty_name();
 	std::string get_module_version();
+
+	//tries to find a file path in all possible modules
 	std::string map_file(const std::string& fname);
+
+	//maps a filename, which might have an encoded module id, otherwise uses get_module_name().
+	//doesn't depend on any existing files.
+	std::string map_write_path(const std::string& fname, BASE_PATH_TYPE path_type=BASE_PATH_GAME);
 
 	std::string get_default_font();
 	const KRE::ColorPtr& get_speech_dialog_bg_color();

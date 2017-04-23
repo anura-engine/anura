@@ -4805,7 +4805,61 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 			return variant_type::get_type(variant::VARIANT_TYPE_CALLABLE);
 		END_FUNCTION_DEF(file_backed_map)
 
+		FUNCTION_DEF(remove_document, 2, 2, "remove_document(string filename, doc, [enum{game_dir}]): deletes document at the given filename")
+
+			bool prefs_directory = true;
+
+			if(NUM_ARGS > 1) {
+				const variant flags = EVAL_ARG(1);
+				for(int n = 0; n != flags.num_elements(); ++n) {
+					variant f = flags[n];
+					const std::string& flag = f.is_enum() ? f.as_enum() : f.as_string();
+					if(flag == "game_dir") {
+						prefs_directory = false;
+					} else {
+						ASSERT_LOG(false, "Illegal flag to write_document: " << flag);
+					}
+				}
+			}
+			Formula::failIfStaticContext();
+			std::string docname = EVAL_ARG(0).as_string();
+
+
+			std::string path_error;
+			if(!sys::is_safe_write_path(docname, &path_error)) {
+				ASSERT_LOG(false, "ERROR in write_document(" + docname + "): " + path_error);
+			}
+
+			if(docname.empty()) {
+				ASSERT_LOG(false, "DOCUMENT NAME GIVEN TO write_document() IS EMPTY");
+			}
+			if(sys::is_path_absolute(docname)) {
+				ASSERT_LOG(false, "DOCUMENT NAME IS ABSOLUTE PATH " << docname);
+			}
+			if(std::adjacent_find(docname.begin(), docname.end(), consecutive_periods) != docname.end()) {
+				ASSERT_LOG(false, "RELATIVE PATH OUTSIDE ALLOWED " << docname);
+			}
+
+			return variant(new FnCommandCallableArg("remove_document", [=](FormulaCallable* callable) {
+				get_doc_cache(prefs_directory).erase(docname);
+
+				std::string real_docname = preferences::user_data_path() + docname;
+				if(prefs_directory == false) {
+					real_docname = module::map_file(docname);
+				}
+
+				sys::remove_file(real_docname);
+			}));
+
+		FUNCTION_ARGS_DEF
+			ARG_TYPE("string");
+			ARG_TYPE("[enum{game_dir}]");
+			RETURN_TYPE("commands")
+		END_FUNCTION_DEF(remove_document)
+
+
 		FUNCTION_DEF(write_document, 2, 3, "write_document(string filename, doc, [enum{game_dir}]): writes 'doc' to the given filename")
+
 			bool prefs_directory = true;
 
 			if(NUM_ARGS > 2) {
@@ -4846,7 +4900,7 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 
 				std::string real_docname = preferences::user_data_path() + docname;
 				if(prefs_directory == false) {
-					real_docname = module::map_file(docname);
+					real_docname = module::map_write_path(docname);
 				}
 
 				sys::write_file(real_docname, game_logic::serialize_doc_with_objects(doc).write_json());

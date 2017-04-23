@@ -146,6 +146,32 @@ namespace module
 		return fname;
 	}
 
+	std::string map_write_path(const std::string& fname, BASE_PATH_TYPE path_type)
+	{
+		if(sys::is_path_absolute(fname)) {
+			return fname;
+		}
+
+		std::string module_id = get_module_name();
+		std::string file = fname;
+		if(std::find(fname.begin(), fname.end(), ':') != fname.end()) {
+			module_id = get_module_id(fname);
+			file = get_id(fname);
+		}
+
+		for(const modules& p : loaded_paths()) {
+			if(module_id != p.name_) {
+				continue;
+			}
+
+			std::string base_path = p.base_path_[path_type];
+			std::string result = base_path + file;
+			return result;
+		}
+
+		return file;
+	}
+
 	std::map<std::string, std::string>::const_iterator find(const std::map<std::string, std::string>& filemap, const std::string& name) {
 		for(const modules& p : loaded_paths()) {
 			std::map<std::string, std::string>::const_iterator itor = filemap.find(p.abbreviation_ + ":" + name);
