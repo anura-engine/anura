@@ -1461,25 +1461,6 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 	{
 		ASSERT_LOG(class_->is_library_only() == false || args.is_null(), "Creating instance of library class is illegal: " << type);
 
-		if(class_->getBuiltinCtor()) {
-			builtin_base_ = class_->getBuiltinCtor()(args);
-		}
-
-		variables_.resize(class_->getNstateSlots());
-		for(const PropertyEntry& slot : class_->slots()) {
-			if(slot.variable_slot != -1) {
-				if(slot.initializer) {
-					variables_[slot.variable_slot] = slot.initializer->execute(*this);
-				} else {
-					variables_[slot.variable_slot] = deep_copy_variant(slot.default_value);
-				}
-			}
-		}
-
-#if defined(USE_LUA)
-		init_lua();
-#endif
-
 	}
 
 	void FormulaObject::surrenderReferences(GarbageCollector* collector)
@@ -1519,6 +1500,25 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 
 	void FormulaObject::callConstructors(variant args)
 	{
+		if(class_->getBuiltinCtor()) {
+			builtin_base_ = class_->getBuiltinCtor()(args);
+		}
+
+		variables_.resize(class_->getNstateSlots());
+		for(const PropertyEntry& slot : class_->slots()) {
+			if(slot.variable_slot != -1) {
+				if(slot.initializer) {
+					variables_[slot.variable_slot] = slot.initializer->execute(*this);
+				} else {
+					variables_[slot.variable_slot] = deep_copy_variant(slot.default_value);
+				}
+			}
+		}
+
+#if defined(USE_LUA)
+		init_lua();
+#endif
+
 		if(args.is_map()) {
 			ConstFormulaCallableDefinitionPtr def = get_class_definition(class_->name());
 			for(const variant& key : args.getKeys().as_list()) {
