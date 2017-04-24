@@ -20,6 +20,10 @@
 name: Anura
 file_extensions: [ cfg ]
 scope: source.cfg
+variables:
+  keyword: '[A-Za-z_][A-Za-z_\d]*'
+  repeated_keyword: '(?<=[A-Za-z_\d]).[^:]*'
+  
 contexts:
   main:
     - include: value
@@ -84,6 +88,27 @@ contexts:
       scope: constant.numeric.fson
       
   string:
+    #FSON postprocessor commands
+    - match: (")(?=@)
+      scope: punctuation.definition.string.begin.fson
+      push:
+      - meta_scope: string.quoted.double.fson
+      - clear_scopes: true
+      - match: \"
+        scope: punctuation.definition.string.end.fson
+        pop: true
+      - include: postprocessor_double_quote
+    - match: (')(?=@)
+      scope: punctuation.definition.string.begin.fson
+      push:
+      - meta_scope: string.quoted.single.fson
+      - clear_scopes: true
+      - match: \'
+        scope: punctuation.definition.string.end.fson
+        pop: true
+      - include: postprocessor_single_quote
+    
+    #unremarkable strings
     - match: '"'
       scope: punctuation.definition.string.begin.fson
       push:
@@ -102,8 +127,6 @@ contexts:
               )
             )
           scope: constant.character.escape.fson
-        - match: \\.
-          scope: invalid.illegal.unrecognized-string-escape.fson
     - match: "'"
       scope: punctuation.definition.string.begin.fson
       push:
@@ -122,8 +145,44 @@ contexts:
               )
             )
           scope: constant.character.escape.fson
-        - match: \\.
-          scope: invalid.illegal.unrecognized-string-escape.fson
+          
+  postprocessor_double_quote:
+    - match: (?:@eval|@macro|@include)[^"]* #macros with args
+      push:
+        - meta_scope: meta.preprocessor.fson
+        - match: (?=\")
+          pop: true
+        - match: '.'
+          scope: invalid.illegal.fson
+    - match: (?:@base|@flatten|@call|@merge|@derive) #macros without args
+      push:
+        - meta_scope: meta.preprocessor.fson
+        - match: (?=\")
+          pop: true
+        - match: '.'
+          scope: invalid.illegal.fson
+    - match: (.\w*)([^"]*)
+      captures: 
+        1: invalid.illegal.fson
+          
+  postprocessor_single_quote:
+    - match: (?:@eval|@macro|@include)[^']* #macros with args
+      push:
+        - meta_scope: meta.preprocessor.fson
+        - match: (?=\')
+          pop: true
+        - match: '.'
+          scope: invalid.illegal.fson
+    - match: (?:@base|@flatten|@call|@merge|@derive) #macros without args
+      push:
+        - meta_scope: meta.preprocessor.fson
+        - match: (?=\')
+          pop: true
+        - match: '.'
+          scope: invalid.illegal.fson
+    - match: (.\w*)([^']*)
+      captures: 
+        1: invalid.illegal.fson
   
   constant:
     - match: \b(?:true|false|null)\b
@@ -151,9 +210,9 @@ contexts:
             - include: value
             - match: '[^\s,]'
               scope: invalid.illegal.expected-dictionary-separator.fson
-        - match: '[A-Za-z_][A-Za-z_\d]*'
+        - match: '{{keyword}}'
           scope: string.unquoted.fson
-        - match: '(?<=[A-Za-z_\d]).[^:]*'
+        - match: '{{repeated_keyword}}'
           scope: invalid.illegal.expected-dictionary-separator.fson
-        - match: '[^\s\}]'
+        - match: '[^\s]'
           scope: invalid.illegal.expected-dictionary-separator.fson
