@@ -1584,8 +1584,26 @@ public:
 						args.push_back(variant(itor->second.user_id));
 						args.push_back(account_itor->second.account_info["info"]);
 
+						static const variant TrxVar("trx");
+
+						variant trx = doc[TrxVar];
+						if(trx.is_string()) {
+							auto res = confirmed_trx_.insert(trx.as_string());
+							if(res.second == false) {
+								variant_builder response;
+								response.add("type", "trx_confirmed");
+								response.add("confirm_trx", trx.as_string());
+								send_msg(socket, "text/json", response.build().write_json(), "");
+								return;
+							}
+						}
+
 						variant cmd = handle_request_fn_(args);
 						executeCommand(cmd);
+
+						if(current_response_.is_map() && trx.is_string()) {
+							current_response_ = current_response_.add_attr(TrxVar, trx);
+						}
 
 						send_msg(socket, "text/json", current_response_.write_json(), "");
 						current_response_ = variant();
@@ -2201,6 +2219,8 @@ private:
 
 		std::vector<std::string>& message_queue() { return account_info->message_queue; }
 	};
+
+	std::set<std::string> confirmed_trx_;
 
 	std::map<int, SessionInfo> sessions_;
 	std::map<std::string, int> users_to_sessions_;

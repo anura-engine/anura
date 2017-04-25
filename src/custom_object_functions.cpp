@@ -1342,7 +1342,7 @@ namespace
 	RETURN_TYPE("object")
 	END_FUNCTION_DEF(radial_current)
 
-	class execute_on_command : public EntityCommandCallable
+	class execute_on_command : public CommandCallable
 	{
 		EntityPtr e_;
 		variant cmd_;
@@ -1355,7 +1355,7 @@ namespace
 		execute_on_command(EntityPtr e, variant cmd) : e_(e), cmd_(cmd)
 		{}
 
-		virtual void execute(Level& lvl, Entity& ob) const override {
+		virtual void execute(game_logic::FormulaCallable& ob) const override {
 			e_->executeCommand(cmd_);
 		}
 	};

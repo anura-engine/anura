@@ -197,6 +197,8 @@ namespace game_logic
 			CommandCallable* callable = v.try_convert<CommandCallable>();
 			if(callable) {
 				callable->runCommand(*this);
+			} else if(variant_type::get_commands()->match(v)) {
+				ASSERT_LOG(false, "RUNNING CUSTOM OBJECT COMMANDS IN A NON-CUSTOM OBJECT CONTEXT: " << v.to_debug_string() << "\nFORMULA INFO: " << output_formula_error_info() << "\n");
 			} else {
 				ASSERT_LOG(false, "EXPECTED EXECUTABLE COMMAND OBJECT, INSTEAD FOUND: " << v.to_debug_string() << "\nFORMULA INFO: " << output_formula_error_info() << "\n");
 			}
