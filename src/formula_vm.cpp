@@ -1090,11 +1090,30 @@ void VirtualMachine::append(const VirtualMachine& other)
 		parent_formula_ = other.parent_formula_;
 	}
 
+	//try to map constants from the other vm into our vm.
+	std::map<int,int> map_constants;
+	std::vector<variant> other_constants = other.constants_;
+	while(other_constants.empty() == false) {
+		auto itor = std::find(constants_.begin(), constants_.end(), other_constants.back());
+		if(itor == constants_.end()) {
+			break;
+		}
+		map_constants[static_cast<int>(other_constants.size())-1] = itor - constants_.begin();
+
+		other_constants.pop_back();
+	}
+
 	for(size_t i = 0; i < other.instructions_.size(); ++i) {
 		instructions_.push_back(other.instructions_[i]);
 		if(instructions_.back() == OP_CONSTANT) {
 			++i;
-			instructions_.push_back(constants_.size() + other.instructions_[i]);
+
+			auto mapping = map_constants.find(static_cast<int>(other.instructions_[i]));
+			if(mapping != map_constants.end()) {
+				instructions_.push_back(mapping->second);
+			} else {
+				instructions_.push_back(constants_.size() + other.instructions_[i]);
+			}
 		} else {
 		
 			bool need_skip = false;
@@ -1112,7 +1131,7 @@ void VirtualMachine::append(const VirtualMachine& other)
 		}
 	}
 
-	constants_.insert(constants_.end(), other.constants_.begin(), other.constants_.end());
+	constants_.insert(constants_.end(), other_constants.begin(), other_constants.end());
 }
 
 void VirtualMachine::append(Iterator i1, Iterator i2, const VirtualMachine& other)
