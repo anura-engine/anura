@@ -929,6 +929,8 @@ namespace
 	std::map<const Level*, level_tile_rebuild_info> tile_rebuild_map;
 
 	void build_tiles_thread_function(level_tile_rebuild_info* info, std::map<int, TileMap> tile_maps, threading::mutex& sync) {
+		std::lock_guard<std::mutex> lock(GarbageCollector::getGlobalMutex());
+
 		info->task_tiles.clear();
 
 		if(info->rebuild_tile_layers_worker_buffer.empty()) {

@@ -5682,20 +5682,23 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 	class gc_command : public game_logic::CommandCallable
 	{
 		int gens_;
+		bool mandatory_;
 	public:
-		explicit gc_command(int num_gens) : gens_(num_gens) {}
+		gc_command(int num_gens, bool mandatory) : gens_(num_gens), mandatory_(mandatory) {}
 		virtual void execute(game_logic::FormulaCallable& ob) const override
 		{
 			//CustomObject::run_garbage_collection();
 			int gens = gens_;
-			addAsynchronousWorkItem([=]() { runGarbageCollection(gens); });
+			bool mandatory = mandatory_;
+			addAsynchronousWorkItem([=]() { runGarbageCollection(gens, mandatory); });
 			addAsynchronousWorkItem([=]() { reapGarbageCollection(); });
 		}
 	};
 
-	FUNCTION_DEF(trigger_garbage_collection, 0, 1, "trigger_garbage_collection(num_gens): trigger an FFL garbage collection")
+	FUNCTION_DEF(trigger_garbage_collection, 0, 1, "trigger_garbage_collection(num_gens, mandatory): trigger an FFL garbage collection")
 		const int num_gens = NUM_ARGS > 0 ? EVAL_ARG(0).as_int() : -1;
-		return variant(new gc_command(num_gens));
+		const bool mandatory = NUM_ARGS > 1 ? EVAL_ARG(1).as_bool() : false;
+		return variant(new gc_command(num_gens, mandatory));
 	FUNCTION_ARGS_DEF
 	ARG_TYPE("null|int")
 	RETURN_TYPE("commands")

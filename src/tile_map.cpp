@@ -1047,7 +1047,8 @@ const TilePattern* TileMap::getMatchingPattern(int x, int y, TilePatternCache& c
 
 	const int xpos = xpos_ + x*TileSize;
 
-	FilterCallable callable(*this, x, y);
+	ffl::IntrusivePtr<FilterCallable> callable_ptr(new FilterCallable(*this, x, y));
+	FilterCallable& callable = *callable_ptr;
 
 	const char* current_tile = getTile(y,x);
 

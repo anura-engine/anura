@@ -1,6 +1,9 @@
 #include <assert.h>
 #include <algorithm>
 #include <map>
+#include <mutex>
+#include <thread>
+
 #include <vector>
 
 #include <SDL.h>
@@ -41,6 +44,13 @@ namespace {
 			}
 		}
 	};
+
+}
+
+std::mutex& GarbageCollector::getGlobalMutex()
+{
+	static std::mutex instance;
+	return instance;
 }
 
 void GarbageCollectible::getAll(std::vector<GarbageCollectible*>* result)
@@ -749,8 +759,16 @@ namespace {
 	std::vector<std::shared_ptr<GarbageCollectorImpl>> g_reapable_gc;
 }
 
-void runGarbageCollection(int num_gens)
+void runGarbageCollection(int num_gens, bool mandatory)
 {
+	if(mandatory) {
+		GarbageCollector::getGlobalMutex().lock();
+	} else if(GarbageCollector::getGlobalMutex().try_lock() == false) {
+		return;
+	}
+
+	std::lock_guard<std::mutex> lock(GarbageCollector::getGlobalMutex(), std::adopt_lock_t());
+	
 	reapGarbageCollection();
 
 	formula_profiler::Instrument instrument("GC");

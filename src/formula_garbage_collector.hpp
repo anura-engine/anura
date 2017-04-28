@@ -1,5 +1,7 @@
 #pragma once
 
+#include <mutex>
+
 #include "intrusive_ptr.hpp"
 
 #include "reference_counted_object.hpp"
@@ -46,6 +48,7 @@ private:
 class GarbageCollector
 {
 public:
+	static std::mutex& getGlobalMutex();
 	virtual ~GarbageCollector();
 	virtual void surrenderVariant(const variant* v, const char* description=nullptr) = 0;
 	template<typename T>
@@ -53,11 +56,12 @@ public:
 		ffl::IntrusivePtr<const GarbageCollectible> ensureCopyable = *ptr;
 		surrenderPtrInternal((ffl::IntrusivePtr<GarbageCollectible>*)ptr, description);
 	}
+
 private:
 
 	virtual void surrenderPtrInternal(ffl::IntrusivePtr<GarbageCollectible>* ptr, const char* description) = 0;
 };
 
-void runGarbageCollection(int num_gens=-1);
+void runGarbageCollection(int num_gens=-1, bool mandatory=true);
 void reapGarbageCollection();
 void runGarbageCollectionDebug(const char* fname);

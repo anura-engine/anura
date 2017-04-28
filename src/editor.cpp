@@ -856,6 +856,8 @@ std::string editor::last_edited_level()
 namespace 
 {
 	int g_codebar_width = 0;
+
+	PREF_BOOL(editor_history, false, "Allow editor history feature");
 }
 
 int editor::sidebar_width()
@@ -897,7 +899,10 @@ editor::editor(const char* level_cfg)
 {
 	LOG_INFO("BEGIN EDITOR::EDITOR");
 	const int begin = profile::get_tick_time();
-	preferences::set_record_history(true);
+
+	if(g_editor_history) {
+		preferences::set_record_history(true);
+	}
 
 	static bool first_time = true;
 	if(first_time) {
@@ -940,7 +945,9 @@ editor::editor(const char* level_cfg)
 
 editor::~editor()
 {
-	preferences::set_record_history(false);
+	if(g_editor_history) {
+		preferences::set_record_history(false);
+	}
 }
 
 void editor::group_selection()
