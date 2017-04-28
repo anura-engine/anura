@@ -5695,7 +5695,7 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 		}
 	};
 
-	FUNCTION_DEF(trigger_garbage_collection, 0, 1, "trigger_garbage_collection(num_gens, mandatory): trigger an FFL garbage collection")
+	FUNCTION_DEF(trigger_garbage_collection, 0, 2, "trigger_garbage_collection(num_gens, mandatory): trigger an FFL garbage collection")
 		const int num_gens = NUM_ARGS > 0 ? EVAL_ARG(0).as_int() : -1;
 		const bool mandatory = NUM_ARGS > 1 ? EVAL_ARG(1).as_bool() : false;
 		return variant(new gc_command(num_gens, mandatory));
