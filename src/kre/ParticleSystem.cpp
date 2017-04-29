@@ -159,7 +159,7 @@ namespace KRE
 			  scale_time_(1.0f),
 			  scale_dimensions_(1.0f),
 			  texture_node_(),
-			  use_position_(true)
+			  use_position_(node["use_position"].as_bool(true))
 		{
 			if(node.has_key("fast_forward")) {
 				float ff_time = float(node["fast_forward"]["time"].as_float());
@@ -272,6 +272,10 @@ namespace KRE
 		void ParticleSystem::handleWrite(variant_builder* build) const
 		{
 			Renderable::writeData(build);
+
+			if(use_position_ == false) {
+				build->add("use_position", use_position_);
+			}
 
 			if(texture_node_.is_null() == false) {
 				build->add("texture", texture_node_);
@@ -437,7 +441,6 @@ namespace KRE
 			//}
 			for(auto it = active_particles_.begin(); it != active_particles_.end(); ++it) {
 				auto& p = *it;
-				auto& cp = p.current.position;
 
 				const auto rf = p.current.area;//tex->getSourceRectNormalised();
 				const glm::vec2 tl{ rf.x1(), rf.y2() };
@@ -447,13 +450,18 @@ namespace KRE
 
 				if(!p.init_pos) {
 					p.init_pos = true;
-					if(!ignoreGlobalModelMatrix()) {
+					p.current.position += getPosition();
+					if(!ignoreGlobalModelMatrix() && !useParticleSystemPosition()) {
 						p.current.position += glm::vec3(get_global_model_matrix()[3]); // need global model translation.
 					}
-					if(useParticleSystemPosition()) {
-						p.current.position += getPosition();
-					}
 				}
+
+				auto cp = p.current.position;
+
+				if(useParticleSystemPosition() && !ignoreGlobalModelMatrix()) {
+					cp += glm::vec3(get_global_model_matrix()[3]); // need global model translation.
+				}
+
 				const glm::vec3 p1 = cp - p.current.dimensions / 2.0f;
 				const glm::vec3 p2 = cp + p.current.dimensions / 2.0f;
 				const glm::vec4 q{ p.current.orientation.x, p.current.orientation.y, p.current.orientation.z, p.current.orientation.w };
