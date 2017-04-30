@@ -1500,6 +1500,10 @@ void CustomObject::draw(int xx, int yy) const
 	}
 
 	if(particles_ != nullptr) {
+		glm::vec3 translation = KRE::get_global_model_matrix()[3];
+		KRE::Particles::ParticleSystem::TranslationScope translation_scope(translation - particles_->get_last_translation());
+		particles_->get_last_translation() = translation;
+
 		KRE::ModelManager2D mm(x(), y());
 		particles_->draw(wnd);
 	}

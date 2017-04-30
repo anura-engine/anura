@@ -139,6 +139,11 @@ namespace KRE
 		class ParticleSystem : public EmitObject, public SceneObject
 		{
 		public:
+			struct TranslationScope {
+				explicit TranslationScope(const glm::vec3& v);
+				~TranslationScope();
+			};
+
 			explicit ParticleSystem(std::weak_ptr<ParticleSystemContainer> parent, const variant& node);
 			ParticleSystem(const ParticleSystem& ps);
 			void init();

@@ -42,6 +42,8 @@ namespace graphics
 		void process();
 
 		void surrenderReferences(GarbageCollector* collector) override;
+
+		glm::vec3& get_last_translation() { return last_translation_; }
 	private:
 		DECLARE_CALLABLE(ParticleSystemContainerProxy);
 
@@ -52,6 +54,7 @@ namespace graphics
 		KRE::SceneGraphPtr scene_;
 		KRE::SceneNodePtr root_;
 		KRE::RenderManagerPtr rmanager_;
+		glm::vec3 last_translation_;
 		int last_process_time_;
 
 		bool running_;

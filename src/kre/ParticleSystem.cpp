@@ -423,6 +423,17 @@ namespace KRE
 			addAttributeSet(as);
 		}
 
+		namespace {
+			std::vector<glm::vec3> g_particle_system_translation;
+		}
+
+		ParticleSystem::TranslationScope::TranslationScope(const glm::vec3& v) {
+			g_particle_system_translation.push_back(v);
+		}
+
+		ParticleSystem::TranslationScope::~TranslationScope() {
+		}
+
 		void ParticleSystem::preRender(const WindowPtr& wnd)
 		{
 			if(active_particles_.size() == 0) {
@@ -449,17 +460,25 @@ namespace KRE
 				const glm::vec2 br{ rf.x2(), rf.y1() };
 
 				if(!p.init_pos) {
-					p.init_pos = true;
 					p.current.position += getPosition();
 					if(!ignoreGlobalModelMatrix() && !useParticleSystemPosition()) {
 						p.current.position += glm::vec3(get_global_model_matrix()[3]); // need global model translation.
 					}
+
+					p.init_pos = true;
+				} else if(!useParticleSystemPosition() && g_particle_system_translation.empty() == false) {
+					//This particle doesn't move relative to its object, so
+					//just adjust it according to how much the screen translation
+					//has changed since last frame.'
+					p.current.position += g_particle_system_translation.back();
 				}
 
 				auto cp = p.current.position;
 
-				if(useParticleSystemPosition() && !ignoreGlobalModelMatrix()) {
-					cp += glm::vec3(get_global_model_matrix()[3]); // need global model translation.
+				if(!ignoreGlobalModelMatrix()) {
+					if(useParticleSystemPosition()) {
+						cp += glm::vec3(get_global_model_matrix()[3]); // need global model translation.
+					}
 				}
 
 				const glm::vec3 p1 = cp - p.current.dimensions / 2.0f;
