@@ -101,7 +101,7 @@ namespace graphics
 			static std::vector<std::string> ifiles;
 			// XX should update this if the directory contents changes.
 			if(ifiles.empty()) {
-				module::get_files_in_dir("images", &ifiles, nullptr);
+				module::get_files_in_dir("images/particles/", &ifiles, nullptr);
 				auto end_itor = std::remove_if(ifiles.begin(), ifiles.end(), [](std::string fname) {
 
 					auto end = fname.end();
@@ -125,6 +125,10 @@ namespace graphics
 				});
 
 				ifiles.erase(end_itor, ifiles.end());
+
+				for(auto& f : ifiles) {
+					f = "particles/" + f;
+				}
 			}
 			if(g_particle_editor) {
 				KRE::Particles::ParticleUI(particle_system_container_, &enable_mouselook_, &invert_mouselook_, ifiles);

@@ -39,6 +39,10 @@
 #include "imgui_impl_sdl_gl3.h"
 #endif
 
+namespace {
+PREF_BOOL(particle_ui_show_save, true, "");
+}
+
 namespace ImGui
 {
 	int Curve(const char *label, const ImVec2& size, int maxpoints, ImVec2 *points);
@@ -326,7 +330,7 @@ namespace KRE
 			ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 			ImGui::Text("Particle Count: %d", psystem->getParticleCount());
 
-			if(ImGui::Button("Save")) {
+			if(g_particle_ui_show_save && ImGui::Button("Save")) {
 				ImGui::OpenPopup("Save File As ...");
 			}
 
