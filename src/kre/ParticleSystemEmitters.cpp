@@ -594,6 +594,30 @@ namespace KRE
 			return nullptr;
 		}
 
+		EmitterPtr Emitter::factory_similar(std::weak_ptr<ParticleSystemContainer> parent, EmitterType type, const Emitter& existing)
+		{
+			EmitterPtr result = factory(parent, type);
+			result->emission_rate_ = existing.emission_rate_;
+			result->time_to_live_ = existing.time_to_live_;
+			result->velocity_ = existing.velocity_;
+			result->angle_ = existing.angle_;
+			result->mass_ = existing.mass_;
+			result->duration_ = existing.duration_;
+			result->repeat_delay_ = existing.repeat_delay_;
+			result->color_range_ = existing.color_range_;
+			result->color_= existing.color_;
+			result->particle_width_ = existing.particle_width_;
+			result->particle_height_ = existing.particle_height_;
+			result->particle_depth_ = existing.particle_depth_;
+			result->force_emission_ = existing.force_emission_;
+			result->force_emission_processed_ = existing.force_emission_processed_;
+			result->can_be_deleted_ = existing.can_be_deleted_;
+			result->scale_ = existing.scale_;
+			result->emit_only_2d_ = existing.emit_only_2d_;
+			return result;
+		}
+
+
 		CircleEmitter::CircleEmitter(std::weak_ptr<ParticleSystemContainer> parent, const variant& node) 			
 			: Emitter(parent, node, EmitterType::CIRCLE), 
 			  circle_radius_(Parameter::factory(node["circle_radius"])),

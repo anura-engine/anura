@@ -99,6 +99,9 @@ namespace KRE
 			virtual EmitterPtr clone() = 0;
 			static EmitterPtr factory(std::weak_ptr<ParticleSystemContainer> parent, const variant& node);
 			static EmitterPtr factory(std::weak_ptr<ParticleSystemContainer> parent, EmitterType type);
+
+			//make an emitter of a new type but with similar parameters to an existing emitter.
+			static EmitterPtr factory_similar(std::weak_ptr<ParticleSystemContainer> parent, EmitterType type, const Emitter& existing);
 		protected:
 			virtual void internalCreate(Particle& p, float t) = 0;
 			virtual bool durationExpired() override { return can_be_deleted_; }

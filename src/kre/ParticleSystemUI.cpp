@@ -41,6 +41,8 @@
 
 namespace {
 PREF_BOOL(particle_ui_show_save, true, "");
+PREF_BOOL(particle_ui_show_camera, true, "");
+PREF_BOOL(particle_ui_2d, false, "");
 }
 
 namespace ImGui
@@ -369,7 +371,7 @@ namespace KRE
 				ImGui::EndPopup();
 			}
 
-			if(ImGui::CollapsingHeader("Camera")) {
+			if(g_particle_ui_show_camera && ImGui::CollapsingHeader("Camera")) {
 				std::vector<std::string> camera_types{ "Perspective", "Orthogonal" };
 				int current_item = ps_camera->getType();
 
@@ -594,7 +596,7 @@ namespace KRE
 					int current_type = static_cast<int>(type);
 					ImGui::PushID(e.get());
 					if(ImGui::Combo("Type", &current_type, vector_string_getter, &ptype, ptype.size())) {
-						emitter_replace = Particles::Emitter::factory(pscontainer, static_cast<Particles::EmitterType>(current_type));						
+						emitter_replace = Particles::Emitter::factory_similar(pscontainer, static_cast<Particles::EmitterType>(current_type), *e);
 					}
 					ImGui::PopID();
 
@@ -606,7 +608,9 @@ namespace KRE
 					emitter_modified = emitter_modified || ParameterGui("Duration", e->getDuration(), 0.0f, 100.0f);
 					emitter_modified = emitter_modified || ParameterGui("Repeat Delay", e->getRepeatDelay());
 
-					if(e->hasOrientationRange()) {
+					if(g_particle_ui_2d) {
+						//skip showing this UI in 2D mode.
+					} else if(e->hasOrientationRange()) {
 						glm::quat start, end;
 						e->getOrientationRange(&start, &end);
 						bool changed = false;
@@ -678,10 +682,17 @@ namespace KRE
 						e->setCanBeDeleted(can_be_deleted);
 						emitter_modified = true;
 					}
-					bool emit_2d = e->isEmitOnly2D();
-					if(ImGui::Checkbox("Emit only 2D", &emit_2d)) {
-						e->setEmitOnly2D(emit_2d);
-						emitter_modified = true;
+
+					if(g_particle_ui_2d) {
+						if(!e->isEmitOnly2D()) {
+							e->setEmitOnly2D(true);
+						}
+					} else {
+						bool emit_2d = e->isEmitOnly2D();
+						if(ImGui::Checkbox("Emit only 2D", &emit_2d)) {
+							e->setEmitOnly2D(emit_2d);
+							emitter_modified = true;
+						}
 					}
 
 					switch (type) {
