@@ -100,37 +100,37 @@ namespace graphics
 #ifdef USE_IMGUI
 			static std::vector<std::string> ifiles;
 			// XX should update this if the directory contents changes.
-			if(ifiles.empty()) {
-				module::get_files_in_dir("images/particles/", &ifiles, nullptr);
-				auto end_itor = std::remove_if(ifiles.begin(), ifiles.end(), [](std::string fname) {
-
-					auto end = fname.end();
-					while(end != fname.begin() && *end != '.') {
-						--end;
-					}
-
-					std::string ext(end, fname.end());
-					for(char& c : ext) {
-						c = tolower(c);
-					}
-
-					static const std::string AllowedExt[] = { ".jpg", ".jpeg", ".png" };
-					for(const std::string& ae : AllowedExt) {
-						if(ae == ext) {
-							return false;
-						}
-					}
-
-					return true;
-				});
-
-				ifiles.erase(end_itor, ifiles.end());
-
-				for(auto& f : ifiles) {
-					f = "particles/" + f;
-				}
-			}
 			if(g_particle_editor) {
+				if(ifiles.empty()) {
+					module::get_files_in_dir("images/particles/", &ifiles, nullptr);
+					auto end_itor = std::remove_if(ifiles.begin(), ifiles.end(), [](std::string fname) {
+	
+						auto end = fname.end();
+						while(end != fname.begin() && *end != '.') {
+							--end;
+						}
+
+						std::string ext(end, fname.end());
+						for(char& c : ext) {
+							c = tolower(c);
+						}
+
+						static const std::string AllowedExt[] = { ".jpg", ".jpeg", ".png" };
+						for(const std::string& ae : AllowedExt) {
+							if(ae == ext) {
+								return false;
+							}
+						}
+
+						return true;
+					});
+
+					ifiles.erase(end_itor, ifiles.end());
+
+					for(auto& f : ifiles) {
+						f = "particles/" + f;
+					}
+				}
 				KRE::Particles::ParticleUI(particle_system_container_, &enable_mouselook_, &invert_mouselook_, ifiles);
 			}
 #endif
@@ -197,6 +197,15 @@ namespace graphics
 			return variant::from_bool(obj.running_);
 		DEFINE_SET_FIELD
 			obj.running_ = value.as_bool();
+
+		DEFINE_FIELD(scale_dimensions, "[decimal,decimal,decimal]")
+			auto psystem = obj.particle_system_container_->getParticleSystem();
+			glm::vec3 dim = psystem->getScaleDimensions();
+			return vec3_to_variant(dim);
+			
+		DEFINE_SET_FIELD
+			auto psystem = obj.particle_system_container_->getParticleSystem();
+			psystem->setScaleDimensions(variant_to_vec3(value));
 
 		DEFINE_FIELD(emission_rate, "any")
 			return obj.getActiveEmitter().getEmissionRate()->write();
