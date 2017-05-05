@@ -475,6 +475,10 @@ namespace KRE
 
 				auto cp = p.current.position;
 
+				for(int n = 0; n != 3; ++n) {
+					cp[n] *= getScaleDimensions()[n];
+				}
+
 				if(!ignoreGlobalModelMatrix()) {
 					if(useParticleSystemPosition()) {
 						cp += glm::vec3(get_global_model_matrix()[3]); // need global model translation.
@@ -495,7 +499,7 @@ namespace KRE
 					glm::vec3(p2.x, p1.y, p1.z),
 					cp,		// center position
 					q,
-					glm::vec3(1.0f),		// scale
+					getScaleDimensions(),	// scale
 					tr,						// tex coord
 					p.current.color);		// color
 				vtc.emplace_back(
