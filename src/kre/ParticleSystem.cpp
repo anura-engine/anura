@@ -238,6 +238,20 @@ namespace KRE
 			}
 		}
 
+		std::pair<float,float> ParticleSystem::getFastForward() const
+		{
+			if(fast_forward_) {
+				return *fast_forward_;
+			}
+
+			return std::pair<float,float>(0.0f, 0.05f);
+		}
+
+		void ParticleSystem::setFastForward(const std::pair<float,float>& p)
+		{
+			fast_forward_.reset(new std::pair<float,float>(p));
+		}
+
 		ParticleSystem::ParticleSystem(const ParticleSystem& ps)
 			: EmitObject(ps),
 			  SceneObject(ps),

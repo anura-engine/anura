@@ -192,6 +192,9 @@ namespace KRE
 			void postRender(const WindowPtr& wnd) override;
 
 			void fastForward();
+
+			std::pair<float,float> getFastForward() const;
+			void setFastForward(const std::pair<float,float>& p);
 		private:
 			virtual void handleEmitProcess(float t) override;
 			void update(float t);

@@ -478,6 +478,15 @@ namespace KRE
 
 			{
 				if(ImGui::CollapsingHeader("Particle System")) {
+
+					std::pair<float,float> fast_forward = psystem->getFastForward();
+					float ff_time = fast_forward.first;
+					float ff_interval = fast_forward.second;
+					if(ImGui::DragFloat("Fast Forward Time", &ff_time, 0.0f, 5.0f)) {
+						psystem->setFastForward(std::pair<float,float>(ff_time, ff_interval));
+						psystem->init();
+					}
+
 					float sv = psystem->getScaleVelocity();
 					if(ImGui::DragFloat("Scale Velocity", &sv, 0.5f, -100.0f, 100.0f)) {
 						psystem->setScaleVelocity(sv);
