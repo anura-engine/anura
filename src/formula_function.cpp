@@ -1635,15 +1635,28 @@ namespace game_logic
 
 		FUNCTION_DEF(mix, 3, 3, "mix(x, y, ratio): equal to x*(1-ratio) + y*ratio")
 			decimal ratio = EVAL_ARG(2).as_decimal();
-			return variant(EVAL_ARG(0).as_decimal() * (decimal::from_int(1) - ratio) + EVAL_ARG(1).as_decimal() * ratio);
+			return interpolate_variants(EVAL_ARG(0), EVAL_ARG(1), ratio);
 
 		FUNCTION_ARGS_DEF
-			ARG_TYPE("decimal");
-			ARG_TYPE("decimal");
+			ARG_TYPE("decimal|[decimal]");
+			ARG_TYPE("decimal|[decimal]");
 			ARG_TYPE("decimal");
 
 		FUNCTION_TYPE_DEF
-			return variant_type::get_type(variant::VARIANT_TYPE_DECIMAL);
+			variant_type_ptr type_a = args()[0]->queryVariantType();
+			variant_type_ptr type_b = args()[1]->queryVariantType();
+
+			if(type_b->is_compatible(type_a)) {
+				return type_a;
+			}
+
+			if(type_a->is_compatible(type_b)) {
+				return type_b;
+			}
+
+			ASSERT_LOG(false, "Types given to mix incompatible " << type_a->str() << " vs " << type_b->str() << ": " << debugPinpointLocation());
+
+			return type_a;
 	
 		END_FUNCTION_DEF(mix)
 
