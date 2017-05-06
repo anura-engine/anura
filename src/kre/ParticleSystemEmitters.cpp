@@ -498,16 +498,12 @@ namespace KRE
 		{
 			auto& psystem = getParentContainer()->getParticleSystem();
 			float angle = angle_->getValue(psystem->getElapsedTime());
-			if(angle_->getType() == ParameterType::FIXED) {
-				return get_random_float() * angle;
-			}
 			return angle;
 		}
 
 		glm::vec3 Emitter::getInitialDirection() const
 		{
 			float angle = generateAngle();
-			//std::cerr << "angle:" << angle << "\n";
 			if(angle != 0) {
 				return create_deviating_vector(angle, initial.direction);
 			}
