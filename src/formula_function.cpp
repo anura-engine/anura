@@ -4818,7 +4818,7 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 			return variant_type::get_type(variant::VARIANT_TYPE_CALLABLE);
 		END_FUNCTION_DEF(file_backed_map)
 
-		FUNCTION_DEF(remove_document, 2, 2, "remove_document(string filename, doc, [enum{game_dir}]): deletes document at the given filename")
+		FUNCTION_DEF(remove_document, 1, 2, "remove_document(string filename, [enum{game_dir}]): deletes document at the given filename")
 
 			bool prefs_directory = true;
 
