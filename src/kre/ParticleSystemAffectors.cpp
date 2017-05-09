@@ -443,7 +443,7 @@ namespace KRE
 			if(p.current.direction.x == 0 && p.current.direction.y == 0 && p.current.direction.z == 0) {
 				p.current.direction += p.initial.direction * scale;
 			} else {
-				p.current.direction += p.initial.direction * scale;
+				p.current.direction += p.current.direction * scale;
 			}
 		}
 
