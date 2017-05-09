@@ -88,6 +88,7 @@
 #include "random.hpp"
 #include "level.hpp"
 #include "json_parser.hpp"
+#include "utf8_to_codepoint.hpp"
 #include "uuid.hpp"
 #include "variant_utils.hpp"
 #include "voxel_model.hpp"
@@ -3625,11 +3626,14 @@ FUNCTION_DEF_IMPL
 					} else if(items.is_string()) {
 						const std::string& s = items.as_string();
 						ffl::IntrusivePtr<map_callable> callable(new map_callable(variables, def_ ? def_->getNumSlots() : 0));
-						for(int n = 0; n != s.length(); ++n) {
+						utils::utf8_to_codepoint cp(s);
+						auto i1 = cp.begin();
+						auto i2 = cp.end();
+						for(int n = 0; i1 != i2; ++i1, ++n) {
 							if(callable->refcount() > 1) {
 								callable.reset(new map_callable(variables, def_ ? def_->getNumSlots() : 0));
 							}
-							variant v(s.substr(n,1));
+							variant v(i1.get_char_as_string());
 							callable->set(v, n);
 							const variant val = args().back()->evaluate(*callable);
 							vars.push_back(val);
@@ -4057,9 +4061,6 @@ FUNCTION_DEF_IMPL
 		FUNCTION_DEF(size, 1, 1, "size(list)")
 
 			const variant items = EVAL_ARG(0);
-			if(items.is_string()) {
-				return variant(static_cast<int>(items.as_string().size()));
-			}
 			return variant(static_cast<int>(items.num_elements()));
 			RETURN_TYPE("int");
 

@@ -47,6 +47,7 @@
 #include "unit_test.hpp"
 #include "variant.hpp"
 #include "variant_type.hpp"
+#include "utf8_to_codepoint.hpp"
 #include "wml_formula_callable.hpp"
 
 namespace 
@@ -305,14 +306,22 @@ struct variant_string {
 	variant::debug_info info;
 	ffl::IntrusivePtr<const game_logic::FormulaExpression> expression;
 
-	variant_string() : refcount(0)
+	variant_string() : refcount(0), str_len(0)
 	{}
-	variant_string(const variant_string& o) : str(o.str), translated_from(o.translated_from), refcount(1)
+	variant_string(const variant_string& o) : str(o.str), translated_from(o.translated_from), refcount(1), str_len(o.str_len)
 	{}
+	explicit variant_string(const std::string& s) : str(s), refcount(0) {
+		str_len = utils::str_len_utf8(str);
+	}
+
 	std::string str, translated_from;
 	IntRefCount refcount;
 
 	std::vector<const game_logic::Formula*> formulae_using_this;
+
+	//number of characters. Might not be equal to str.size() if the string contains
+	//extended utf-8 characters.
+	size_t str_len;
 
 	private:
 	void operator=(const variant_string&);
@@ -736,8 +745,7 @@ variant::variant(const char* s)
 		type_ = VARIANT_TYPE_NULL;
 		return;
 	}
-	string_ = new variant_string;
-	string_->str = std::string(s);
+	string_ = new variant_string(std::string(s));
 	increment_refcount();
 
 	registerGlobalVariant(this);
@@ -746,8 +754,7 @@ variant::variant(const char* s)
 variant::variant(const std::string& str)
 	: type_(VARIANT_TYPE_STRING)
 {
-	string_ = new variant_string;
-	string_->str = str;
+	string_ = new variant_string(str);
 	increment_refcount();
 
 	registerGlobalVariant(this);
@@ -1002,7 +1009,7 @@ int variant::num_elements() const
 		return static_cast<int>(list_->size());
 	} else if (type_ == VARIANT_TYPE_STRING) {
 		assert(string_);
-		return static_cast<int>(string_->str.size());
+		return static_cast<int>(string_->str_len);
 	} else if (type_ == VARIANT_TYPE_MAP) {
 		assert(map_);
 		return static_cast<int>(map_->elements.size());
@@ -1015,6 +1022,12 @@ int variant::num_elements() const
 		generate_error(formatter() << "type error: " << " expected a list or a map but found " << variant_type_to_string(type_) << " (" << write_json() << ")" << loc);
 		return 0;
 	}
+}
+
+bool variant::is_str_utf8() const
+{
+	must_be(VARIANT_TYPE_STRING);
+	return string_->str_len != string_->str.size();
 }
 
 variant variant::get_list_slice(int begin, int end) const

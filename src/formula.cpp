@@ -52,6 +52,7 @@
 #include "random.hpp"
 #include "string_utils.hpp"
 #include "unit_test.hpp"
+#include "utf8_to_codepoint.hpp"
 #include "variant_type.hpp"
 #include "variant_utils.hpp"
 
@@ -2016,10 +2017,17 @@ namespace {
 				if(left.is_list() || left.is_map()) {
 					return left[ key ];
 				} else if(left.is_string()) {
-					const std::string& s = left.as_string();
 					unsigned index = key.as_int();
-					ASSERT_LOG(index < s.length(), "index outside bounds: " << s << "[" << index << "]'\n'"  << debugPinpointLocation());
-					return variant(s.substr(index, 1));
+					if(left.is_str_utf8()) {
+						ASSERT_LOG(index < left.num_elements(), "index outside bounds: " << left.as_string() << "[" << index << "]'\n'" << debugPinpointLocation());
+
+						return variant(utils::str_substr_utf8(left.as_string(), index, index+1));
+
+					} else {
+						const std::string& s = left.as_string();
+						ASSERT_LOG(index < s.length(), "index outside bounds: " << s << "[" << index << "]'\n'"  << debugPinpointLocation());
+						return variant(s.substr(index, 1));
+					}
 				} else if(left.is_callable()) {
 					return left.as_callable()->queryValue(key.as_string());
 				} else {
@@ -2128,7 +2136,7 @@ namespace {
 
 				if(left.is_string()) {
 					const std::string& s = left.as_string();
-					int s_len = static_cast<int>(s.length());
+					int s_len = static_cast<int>(left.num_elements());
 					if(begin_index > s_len) {
 						begin_index = s_len;
 					}
@@ -2139,7 +2147,12 @@ namespace {
 						return left;
 					}
 					if(end_index >= begin_index) {
-						return variant(s.substr(begin_index, end_index-begin_index));
+						if(s_len != s.size()) {
+							//utf8 string.
+							return variant(utils::str_substr_utf8(s, begin_index, end_index));
+						} else {
+							return variant(s.substr(begin_index, end_index-begin_index));
+						}
 					} else {
 						return variant("");
 					}

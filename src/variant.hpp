@@ -227,6 +227,8 @@ public:
 	const variant& operator[](const std::string& key) const;
 	int num_elements() const;
 
+	bool is_str_utf8() const;
+
 	variant get_list_slice(int begin, int end) const;
 
 	bool has_key(const variant& key) const;

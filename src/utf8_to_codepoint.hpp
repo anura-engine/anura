@@ -45,6 +45,12 @@ namespace utils
 			{}
 			~iterator() {}
 
+			std::string get_char_as_string() const {
+				auto i2 = *this;
+				++i2;
+				return std::string(str_itor(), i2.str_itor());
+			}
+
 			std::string::const_iterator str_itor() const { return it_; }
 			bool operator!= (const iterator& other) const
 			{
@@ -148,4 +154,23 @@ namespace utils
 		}
 		return std::string(utf8_str, n);
     }
+
+	inline size_t str_len_utf8(const std::string& s)
+	{
+		utf8_to_codepoint cp(s);
+		return std::distance(cp.begin(), cp.end());
+	}
+
+	inline std::string str_substr_utf8(const std::string& s, size_t n1, size_t n2)
+	{
+		utf8_to_codepoint cp(s);
+		auto i = cp.begin();
+		std::advance(i, n1);
+
+		auto begin = i.str_itor();
+		std::advance(i, n2 - n1);
+		auto end = i.str_itor();
+
+		return std::string(begin, end);
+	}
 }

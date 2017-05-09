@@ -12,6 +12,7 @@
 #include "formula_where.hpp"
 #include "random.hpp"
 #include "unit_test.hpp"
+#include "utf8_to_codepoint.hpp"
 #include "variant_type.hpp"
 
 namespace formula_vm {
@@ -485,11 +486,13 @@ void VirtualMachine::executeInternal(const FormulaCallable& variables, std::vect
 
 			if(stack.back().is_string()) {
 				std::string s = stack.back().as_string();
+				utils::utf8_to_codepoint cp(s);
+				auto i1 = cp.begin();
+				auto i2 = cp.end();
 				std::vector<variant> v;
-				for(auto c : s) {
-					std::string str;
-					str.resize(1);
-					str[0] = c;
+
+				for(; i1 != i2; ++i1) {
+					std::string str(i1.get_char_as_string());
 					v.push_back(variant(str));
 				}
 

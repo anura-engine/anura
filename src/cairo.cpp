@@ -1155,7 +1155,7 @@ namespace {
 			if(itor->first == XMLText) {
 				if(itor->second.data().empty() == false) {
 					output.push_back(stack.back());
-					output.back().text = parse_special_chars_internal(itor->second.data());
+					output.back().text = itor->second.data();
 				}
 
 				continue;
@@ -1917,7 +1917,9 @@ namespace {
 		std::string out;
 
 		for(char c : text) {
-			if(c == '<') {
+			if(c == '&') {
+				out += "&amp;";
+			} else if(c == '<') {
 				out += "&lt;";
 			} else if(c == '>') {
 				out += "&gt;";
