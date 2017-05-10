@@ -59,6 +59,10 @@ namespace KRE
 
 			AffectorType getType() const { return type_; }
 
+			virtual bool showMassUI() const { return false; }
+			virtual bool showPositionUI() const { return false; }
+			virtual bool showScaleUI() const { return false; }
+
 			float getMass() const { return mass_; }
 			void setMass(float m) { mass_ = m; }
 			const glm::vec3& getPosition() const { return position_; }
@@ -196,6 +200,9 @@ namespace KRE
 			void init(const variant& node) override;
 
 			const ParameterPtr& getGravity() const { return gravity_; }
+
+			virtual bool showMassUI() const override { return true; }
+			virtual bool showPositionUI() const override { return true; }
 		private:
 			void internalApply(Particle& p, float t) override;
 			AffectorPtr clone() const override {
@@ -268,6 +275,7 @@ namespace KRE
 			const glm::vec3& getRotationAxis() const { return rotation_axis_; }
 			void setRotationAxis(const glm::vec3& axis) { rotation_axis_ = axis; }
 			const ParameterPtr& getRotationSpeed() const { return rotation_speed_; }
+			virtual bool showPositionUI() const override { return true; }
 		private:
 			void internalApply(Particle& p, float t) override;
 			AffectorPtr clone() const override {
@@ -366,6 +374,7 @@ namespace KRE
 
 			const ParameterPtr& getVelocity() const { return velocity_; };
 			const ParameterPtr& getAcceleration() const { return acceleration_; }
+			virtual bool showPositionUI() const override { return true; }
 		private:
 			void handleEmitProcess(float t) override;
 			void internalApply(Particle& p, float t) override;

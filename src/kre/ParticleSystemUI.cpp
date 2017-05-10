@@ -846,22 +846,30 @@ namespace KRE
 							affector_replace.emplace_back(std::make_pair(a, new_a));
 						}
 
-						//mass
-						float mass = a->getMass();
-						if(ImGui::SliderFloat("Mass", &mass, 0.0f, 1000.0f)) {
-							a->setMass(mass);
+						if(a->showMassUI()) {
+							//mass
+							float mass = a->getMass();
+							if(ImGui::SliderFloat("Mass", &mass, 0.0f, 1000.0f)) {
+								a->setMass(mass);
+							}
 						}
-						//position
-						const auto& pos = a->getPosition();
-						float posf[3] = { pos.x, pos.y, pos.z };
-						if(ImGui::SliderFloat3("Position", posf, 0.0f, 1000.0f)) {
-							a->setPosition(glm::vec3(posf[0], posf[1], posf[2]));
+
+						if(a->showPositionUI()) {
+							//position
+							const auto& pos = a->getPosition();
+							float posf[3] = { pos.x, pos.y, pos.z };
+							if(ImGui::SliderFloat3("Position", posf, 0.0f, 1000.0f)) {
+								a->setPosition(glm::vec3(posf[0], posf[1], posf[2]));
+							}
 						}
-						//scale
-						const auto& scale = a->getScale();
-						float scalef[3] = { scale.x, scale.y, scale.z };
-						if(ImGui::SliderFloat3("Scale", scalef, 0.0f, 1000.0f)) {
-							a->setScale(glm::vec3(scalef[0], scalef[1], scalef[2]));
+
+						if(a->showScaleUI()) {
+							//scale
+							const auto& scale = a->getScale();
+							float scalef[3] = { scale.x, scale.y, scale.z };
+							if(ImGui::SliderFloat3("Scale", scalef, 0.0f, 1000.0f)) {
+								a->setScale(glm::vec3(scalef[0], scalef[1], scalef[2]));
+							}
 						}
 
 						switch(a->getType()) {
@@ -1054,7 +1062,7 @@ namespace KRE
 						}
 						case Particles::AffectorType::LINEAR_FORCE: {
 							auto fa = std::dynamic_pointer_cast<Particles::LinearForceAffector>(a);
-							ParameterGui("Force", fa->getForce());
+							ParameterGui("Force", fa->getForce(), 0.0f, 10.0f);
 
 							// rdirection
 							ImGui::BeginGroup();
