@@ -108,7 +108,9 @@ namespace KRE
 			virtual ~EmitObject() {}
 			const std::string& getName() const { return name_; }
 			void emitProcess(float t) {
-				handleEmitProcess(t);
+				if(isEnabled()) {
+					handleEmitProcess(t);
+				}
 			}
 			void draw(const WindowPtr& wnd) const {
 				handleDraw(wnd);
