@@ -680,12 +680,12 @@ namespace KRE
 		void LinearForceAffector::internalApply(Particle& p, float t) 
 		{
 			float scale = t * force_->getValue(1.0f - p.current.time_to_live/p.initial.time_to_live);
-			p.current.position += direction_*scale;
+			p.current.direction += direction_*scale;
 		}
 
 		void LinearForceAffector::handleWrite(variant_builder* build) const 
 		{
-			if(force_ && force_->getType() != ParameterType::FIXED && force_->getValue() != 1.0f) {
+			if(force_) {
 				build->add("force", force_->write());
 			}
 			if(direction_ != glm::vec3(0.0f, 0.0f, 1.0f)) {
