@@ -3821,6 +3821,8 @@ FUNCTION_DEF_IMPL
 		END_FUNCTION_DEF(get_all_files_under_dir)
 
 		FUNCTION_DEF(get_files_in_dir, 1, 1, "get_files_in_dir(path): Returns a list of the files in the given directory")
+			Formula::failIfStaticContext();
+
 			std::vector<variant> v;
 			std::vector<std::string> files;
 			std::string dirname = EVAL_ARG(0).as_string();
