@@ -3626,7 +3626,7 @@ DEFINE_SET_FIELD
 DEFINE_FIELD(id, "string")
 	return variant(obj.id_);
 
-DEFINE_FIELD(dimensions, "[int]")
+DEFINE_FIELD(dimensions, "[int,int,int,int]")
 	std::vector<variant> v;
 	v.push_back(variant(obj.boundaries_.x()));
 	v.push_back(variant(obj.boundaries_.y()));
