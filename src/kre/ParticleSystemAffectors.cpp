@@ -449,7 +449,7 @@ namespace KRE
 
 		void JetAffector::handleWrite(variant_builder* build) const 
 		{
-			if(acceleration_ && acceleration_->getType() != ParameterType::FIXED && acceleration_->getValue() != 1.0f) {
+			if(acceleration_) {
 				build->add("acceleration", acceleration_->write());
 			}
 		}
