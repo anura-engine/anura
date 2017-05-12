@@ -1143,7 +1143,7 @@ namespace {
 		return get_font_fn(arg_list).as_string();
 	}
 
-	void parse_text_markup_impl(std::vector<TextMarkupFragment>& stack, std::vector<TextMarkupFragment>& output, const boost::property_tree::ptree& ptree, const variant& get_font_fn, const std::string& element, double scale)
+	void parse_text_markup_impl(std::vector<TextMarkupFragment>& stack, std::vector<TextMarkupFragment>& output, const boost::property_tree::ptree& ptree, const variant& get_font_fn, const std::string& element, double scale, bool escape_special_chars)
 	{
 		static const std::string XMLText = "<xmltext>";
 		static const std::string XMLAttr = "<xmlattr>";
@@ -1155,7 +1155,11 @@ namespace {
 			if(itor->first == XMLText) {
 				if(itor->second.data().empty() == false) {
 					output.push_back(stack.back());
-					output.back().text = itor->second.data();
+					if(escape_special_chars) {
+						output.back().text = parse_special_chars_internal(itor->second.data());
+					} else {
+						output.back().text = itor->second.data();
+					}
 				}
 
 				continue;
@@ -1255,7 +1259,7 @@ namespace {
 				ASSERT_LOG(false, "Unrecognized markup element: " << itor->first);
 			}
 
-			parse_text_markup_impl(stack, output, itor->second, get_font_fn, itor->first, scale);
+			parse_text_markup_impl(stack, output, itor->second, get_font_fn, itor->first, scale, escape_special_chars);
 
 			stack.resize(start_size);
 		}
@@ -1944,7 +1948,7 @@ namespace {
 
 	END_DEFINE_FN
 
-	BEGIN_DEFINE_FN(markup_text, "(string, decimal|{width: decimal, width_delta: null|decimal, scale: null|decimal, scale_line_heights: null|decimal}, decimal=0.0) ->[builtin cairo_text_fragment]")
+	BEGIN_DEFINE_FN(markup_text, "(string, decimal|{width: decimal, width_delta: null|decimal, scale: null|decimal, scale_line_heights: null|decimal, no_escaping: null|bool}, decimal=0.0) ->[builtin cairo_text_fragment]")
 		const std::string markup = "<root>" + FN_ARG(0).as_string() + "</root>";
 
 		variant params = FN_ARG(1);
@@ -1954,6 +1958,7 @@ namespace {
 		double scale = 1.0;
 		float width = params.is_map() ? params["width"].as_float() : params.as_float();
 		float width_delta = 0.0;
+		bool escape_special_chars = true;
 		if(NUM_FN_ARGS > 2) {
 			width_delta = FN_ARG(2).as_float();
 		}
@@ -1969,6 +1974,10 @@ namespace {
 			
 			if(params["scale_line_heights"].is_decimal()) {
 				scale_line_heights = params["scale_line_heights"].as_float();
+			}
+
+			if(params["no_escaping"].as_bool(false)) {
+				escape_special_chars = false;
 			}
 		}
 
@@ -2006,7 +2015,7 @@ namespace {
 
 		std::vector<TextMarkupFragment> fragments;
 
-		parse_text_markup_impl(stack, fragments, ptree, get_font_fn, "", scale);
+		parse_text_markup_impl(stack, fragments, ptree, get_font_fn, "", scale, escape_special_chars);
 
 		if(fragments.empty() == false) {
 			return layout_text_impl(&fragments[0], &fragments[0] + fragments.size(), width, width_delta, scale_line_heights);
