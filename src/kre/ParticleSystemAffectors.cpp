@@ -28,6 +28,8 @@
 #include "ParticleSystemParameters.hpp"
 #include "variant_utils.hpp"
 
+extern bool g_particle_ui_2d;
+
 namespace KRE
 {
 	namespace Particles
@@ -602,9 +604,11 @@ namespace KRE
 				if(value > 0) {
 					p.current.dimensions.y = value;
 				}
-				value = p.initial.dimensions.z * calc_scale * getScale().z;
-				if(value > 0) {
-					p.current.dimensions.z = value;
+				if(g_particle_ui_2d == false) {
+					value = p.initial.dimensions.z * calc_scale * getScale().z;
+					if(value > 0) {
+						p.current.dimensions.z = value;
+					}
 				}
 			} else {
 				if(scale_x_) {
@@ -1233,6 +1237,7 @@ namespace KRE
 		AnimationAffector::AnimationAffector(std::weak_ptr<ParticleSystemContainer> parent)
 			: Affector(parent, AffectorType::ANIMATION), 
 			  pixel_coords_(false),
+			  use_mass_instead_of_time_(false),
 			  uv_data_(),
 			  trf_uv_data_()
 		{
@@ -1252,6 +1257,10 @@ namespace KRE
 			uv_data_.clear();
 			if(node.has_key("pixel_coords")) {
 				pixel_coords_ = node["pixel_coords"].as_bool();
+			}
+
+			if(node.has_key("use_mass_instead_of_time")) {
+				use_mass_instead_of_time_ = node["use_mass_instead_of_time"].as_bool();
 			}
 			ASSERT_LOG(node.has_key("time_uv") || node.has_key("time_uv"), "Must be a 'time_uv' attribute");
 			const variant& uv_node = node.has_key("time_uv") ? node["time_uv"] : node["time_uv"];
@@ -1301,7 +1310,7 @@ namespace KRE
 			if(trf_uv_data_.empty()) {
 				transformCoords();
 			}
-			float ttl_percentage = 1.0f - p.current.time_to_live / p.initial.time_to_live;
+			float ttl_percentage = use_mass_instead_of_time_ ? p.current.mass : 1.0f - p.current.time_to_live / p.initial.time_to_live;
 			auto it1 = find_nearest_coords(ttl_percentage);
 			p.current.area = it1->second;
 		}
@@ -1309,6 +1318,11 @@ namespace KRE
 		void AnimationAffector::handleWrite(variant_builder* build) const 
 		{
 			build->add("pixel_coords", pixel_coords_);
+			build->add("use_mass_instead_of_time", use_mass_instead_of_time_);
+			if(uv_data_.empty()) {
+				std::vector<variant> time_uv;
+				build->add("time_uv", variant(&time_uv));
+			}
 			for(const auto& uv : uv_data_) {
 				variant_builder res;
 				res.add("time", uv.first);

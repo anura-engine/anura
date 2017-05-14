@@ -66,6 +66,16 @@ namespace KRE
 			} else {
 				angle_.reset(new Parameter(20.0f));
 			}
+			if(node.has_key("rotation")) {
+				orientation_ = Parameter::factory(node["rotation"]);
+			} else {
+				orientation_.reset(new Parameter(0.0f));
+			}
+			if(node.has_key("scaling")) {
+				scaling_ = Parameter::factory(node["scaling"]);
+			} else {
+				scaling_.reset(new Parameter(1.0f));
+			}
 			if(node.has_key("mass")) {
 				mass_ = Parameter::factory(node["mass"]);
 			} else {
@@ -139,6 +149,8 @@ namespace KRE
 			  time_to_live_(new Parameter(4.0f)),
 			  velocity_(new Parameter(100.0f)),
 			  angle_(new Parameter(20.0f)),
+			  orientation_(new Parameter(0.0f)),
+			  scaling_(new Parameter(1.0f)),
 			  mass_(new Parameter(1.0f)),
 			  duration_(nullptr),
 			  repeat_delay_(nullptr),
@@ -168,6 +180,8 @@ namespace KRE
 			  time_to_live_(e.time_to_live_),
 			  velocity_(e.velocity_),
 			  angle_(e.angle_),
+			  orientation_(e.orientation_),
+			  scaling_(e.scaling_),
 			  mass_(e.mass_),
 			  duration_(e.duration_),
 			  repeat_delay_(e.repeat_delay_),
@@ -238,6 +252,12 @@ namespace KRE
 			}
 			if(time_to_live_ /*&& time_to_live_->getType() != ParameterType::FIXED && time_to_live_->getValue() != 10.0f*/) {
 				build->add("time_to_live", time_to_live_->write());
+			}
+			if(orientation_) {
+				build->add("rotation", orientation_->write());
+			}
+			if(scaling_) {
+				build->add("scaling", scaling_->write());
 			}
 			if(velocity_ /*&& velocity_->getType() != ParameterType::FIXED && velocity_->getValue() != 10.0f*/) {
 				build->add("velocity", velocity_->write());
@@ -453,13 +473,16 @@ namespace KRE
 			if(particle_depth_ != nullptr) {
 				p.initial.dimensions.z = particle_depth_->getValue(t);
 			}
-			p.initial.dimensions.x *= scale_.x;
-			p.initial.dimensions.y *= scale_.y;
+			const float scale_value = scaling_->getValue(psystem->getElapsedTime());
+			p.initial.dimensions.x *= scale_.x * scale_value;
+			p.initial.dimensions.y *= scale_.y * scale_value;
 			p.initial.dimensions.z *= scale_.z;
 			if(orientation_range_) {
 				p.initial.orientation = glm::slerp(orientation_range_->first, orientation_range_->second, get_random_float(0.0f,1.0f));
 			} else {
-				p.initial.orientation = current.orientation;
+				const float angle = orientation_->getValue(psystem->getElapsedTime());
+				const auto qaxis = glm::angleAxis(angle / 180.0f * static_cast<float>(M_PI), glm::vec3(0.0f, 0.0f, 1.0f));
+				p.initial.orientation = qaxis * p.current.orientation;
 			}
 			p.initial.direction = getInitialDirection();
 			if(emit_only_2d_) {
@@ -598,6 +621,8 @@ namespace KRE
 			result->velocity_ = existing.velocity_;
 			result->angle_ = existing.angle_;
 			result->mass_ = existing.mass_;
+			result->orientation_ = existing.orientation_;
+			result->scaling_ = existing.scaling_;
 			result->duration_ = existing.duration_;
 			result->repeat_delay_ = existing.repeat_delay_;
 			result->color_range_ = existing.color_range_;

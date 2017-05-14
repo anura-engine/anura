@@ -303,6 +303,18 @@ namespace geometry
 		return os;
 	}
 
+	template<> inline
+	variant Rect<float>::write() const
+	{
+		std::vector<variant> v;
+		v.reserve(4);
+		v.emplace_back(x());
+		v.emplace_back(y());
+		v.emplace_back(x2());
+		v.emplace_back(y2());
+		return variant(&v);
+	}
+
 	template<typename T> inline
 	variant Rect<T>::write() const
 	{

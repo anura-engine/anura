@@ -153,6 +153,9 @@ namespace KRE
 
 			bool isPixelCoords() const { return pixel_coords_; }
 			void setUsePixelCoords(bool f) { pixel_coords_ = f; }
+
+			bool useMassInsteadOfTime() const { return use_mass_instead_of_time_; }
+			void setUseMassInsteadOfTime(bool f) { use_mass_instead_of_time_ = f; }
 		private:
 			void internalApply(Particle& p, float t) override;
 			AffectorPtr clone() const override {
@@ -162,6 +165,7 @@ namespace KRE
 			void transformCoords();
 
 			bool pixel_coords_;
+			bool use_mass_instead_of_time_;
 			std::vector<uv_pair> uv_data_;
 			// transformed version of the uv data as required.
 			std::vector<uv_pair> trf_uv_data_;
@@ -249,6 +253,8 @@ namespace KRE
 			const ParameterPtr& getScaleXYZ() const { return scale_xyz_; }
 			bool getSinceSystemStart() const { return since_system_start_; }
 			void setSinceSystemStart(bool f) { since_system_start_ = f; }
+
+			virtual bool showScaleUI() const override { return true; }
 		private:
 			void internalApply(Particle& p, float t) override;
 			AffectorPtr clone() const override {
@@ -430,6 +436,8 @@ namespace KRE
 			void setRandomDirection(bool f) { random_direction_ = f; }
 			float getTimeStep() const { return time_step_; }
 			void setTimeStep(float step) { time_step_ = step; }
+
+			bool showScaleUI() const override { return true; }
 		private:
 			void internalApply(Particle& p, float t) override;
 			void handle_apply(std::vector<Particle>& particles, float t);

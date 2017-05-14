@@ -71,6 +71,8 @@ namespace KRE
 			const ParameterPtr& getVelocity() const { return velocity_; }
 			const ParameterPtr& getAngle() const { return angle_; }
 			const ParameterPtr& getMass() const { return mass_; }
+			const ParameterPtr& getOrientationParam() const { return orientation_; }
+			const ParameterPtr& getScaling() const { return scaling_; }
 
 			const ParameterPtr& getDuration() const { return duration_; }
 			const ParameterPtr& getRepeatDelay() const { return repeat_delay_; }
@@ -119,6 +121,8 @@ namespace KRE
 			ParameterPtr time_to_live_;
 			ParameterPtr velocity_;
 			ParameterPtr angle_;
+			ParameterPtr orientation_;
+			ParameterPtr scaling_;
 			ParameterPtr mass_;
 			// This is the duration that the emitter lives for
 			ParameterPtr duration_;

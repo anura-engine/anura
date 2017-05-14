@@ -42,8 +42,9 @@
 namespace {
 PREF_BOOL(particle_ui_show_save, true, "");
 PREF_BOOL(particle_ui_show_camera, true, "");
-PREF_BOOL(particle_ui_2d, false, "");
 }
+
+PREF_BOOL(particle_ui_2d, false, "");
 
 namespace ImGui
 {
@@ -72,7 +73,16 @@ namespace KRE
 			std::string combo_label = "Type##";
 			combo_label += label;
 			if(ImGui::Combo(combo_label.c_str(), &current_type, ptype, 5)) {
-				param->setType(static_cast<ParameterType>(current_type));
+				ParameterType t = static_cast<ParameterType>(current_type);
+				param->setType(t);
+
+				if(t == ParameterType::CURVED_LINEAR || t == ParameterType::CURVED_SPLINE) {
+					geometry::control_point_vector v;
+					v.push_back(geometry::control_point(0.0f, 0.0f));
+					v.push_back(geometry::control_point(1.0f, 1.0f));
+					param->setControlPoints(t == ParameterType::CURVED_LINEAR ? InterpolationType::LINEAR : InterpolationType::SPLINE, v);
+				}
+
 				result = true;
 			}
 
@@ -612,6 +622,8 @@ namespace KRE
 					emitter_modified = emitter_modified || ParameterGui("Emission Rate", e->getEmissionRate(), 0.0f, 5000.0f);
 					emitter_modified = emitter_modified || ParameterGui("Time to live", e->getTimeToLive());
 					emitter_modified = emitter_modified || ParameterGui("Velocity", e->getVelocity());
+					emitter_modified = emitter_modified || ParameterGui("Scale", e->getScaling());
+					emitter_modified = emitter_modified || ParameterGui("Rotation", e->getOrientationParam());
 					emitter_modified = emitter_modified || ParameterGui("Angle", e->getAngle(), 0.0f, 360.0f);
 					emitter_modified = emitter_modified || ParameterGui("Mass", e->getMass());
 					emitter_modified = emitter_modified || ParameterGui("Duration", e->getDuration(), 0.0f, 100.0f);
@@ -943,12 +955,39 @@ namespace KRE
 							}
 							ImGui::SameLine();
 							if(ImGui::SmallButton("+")) {
-								aa->addTimeCoordEntry(std::make_pair(0.0f, rectf::from_coordinates(0.0f, 0.0f, 1.0f, 1.0f)));
+								float t = 0.0f;
+								float x1 = 0.0f, y1 = 0.0f, x2 = 1.0f, y2 = 1.0f;
+
+								if(tcdata.size() == 1 && tcdata[0].first <= 0.01f) {
+									t = 1.0f;
+								} else if(tcdata.size() > 1 && tcdata[0].first <= 0.01f) {
+									t = static_cast<float>(tcdata.size()) / static_cast<float>(tcdata.size()+1);
+									for(unsigned int n = 0; n < tcdata.size(); ++n) {
+										float r = static_cast<float>(n) / static_cast<float>(tcdata.size()+1);
+										tcdata[n].first = r;
+									}
+								} else if(tcdata.size() > 1) {
+									t = tcdata.back().first + (tcdata.back().first - tcdata[tcdata.size()-2].first);
+								}
+
+								if(tcdata.empty() == false) {
+									x1 = tcdata.back().second.x2();
+									x2 = x1 + (tcdata.back().second.x2() - tcdata.back().second.x1());
+									y1 = tcdata.back().second.y1();
+									y2 = tcdata.back().second.y2();
+								}
+
+								aa->addTimeCoordEntry(std::make_pair(t, rectf::from_coordinates(x1, y1, x2, y2)));
 							}
 							ImGui::EndGroup();
 							bool pixel_coords = aa->isPixelCoords();
 							if(ImGui::Checkbox("Pixel Coords", &pixel_coords)) {
 								aa->setUsePixelCoords(pixel_coords);
+							}
+
+							bool use_mass = aa->useMassInsteadOfTime();
+							if(ImGui::Checkbox("Use Mass Instead of Time", &use_mass)) {
+								aa->setUseMassInsteadOfTime(use_mass);
 							}
 
 							std::vector<Particles::AnimationAffector::uv_pair> tc_data_to_remove;
@@ -1002,6 +1041,7 @@ namespace KRE
 								ImGui::EndGroup();
 								ImGui::PopID();								
 							}
+
 							for(auto& p : tc_data_to_remove) {
 								auto it = std::find(tcdata.begin(), tcdata.end(), p);
 								if(it != tcdata.end()) {
@@ -1009,6 +1049,7 @@ namespace KRE
 									data_changed = true;
 								}
 							}
+
 							if(data_changed) {
 								aa->setTimeCoordData(tcdata);
 							}
