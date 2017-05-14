@@ -83,6 +83,7 @@ extern std::map<std::string, variant> g_user_info_registry;
 PREF_STRING(editor_object, "", "Object to use for the editor");
 
 extern bool g_particle_editor;
+extern int g_vsync;
 
 namespace 
 {
@@ -1004,7 +1005,8 @@ bool LevelRunner::play_cycle()
 
 	const bool is_multiplayer = controls::num_players() > 1;
 
-	int desired_end_time = start_time_ + pause_time_ + global_pause_time + cycle*preferences::frame_time_millis() + preferences::frame_time_millis();
+	int desired_end_time = g_vsync != 0 ? profile::get_tick_time() + preferences::frame_time_millis() :
+	                                      start_time_ + pause_time_ + global_pause_time + cycle*preferences::frame_time_millis() + preferences::frame_time_millis();
 
 	if(!is_multiplayer) {
 		const int ticks = profile::get_tick_time();

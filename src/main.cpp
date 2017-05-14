@@ -120,6 +120,8 @@
 
 variant g_auto_update_info;
 
+extern int g_vsync;
+
 namespace 
 {
 	PREF_BOOL(auto_update_module, false, "Auto updates the module from the module server on startup (number of milliseconds to spend attempting to update the module)");
@@ -911,7 +913,7 @@ int main(int argcount, char* argvec[])
 
 	variant_builder hints;
 	hints.add("renderer", "opengl");
-	hints.add("use_vsync", "false");
+	hints.add("use_vsync", g_vsync != 0 ? true : false);
 	hints.add("width", preferences::requested_window_width() > 0 ? preferences::requested_window_width() : 800);
 	hints.add("height", preferences::requested_window_height() > 0 ? preferences::requested_window_height() : 600);
 	hints.add("resizeable", g_resizeable);
