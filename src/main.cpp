@@ -646,8 +646,18 @@ int main(int argcount, char* argvec[])
 			print_help(std::string(argvec[0]));
 			return 0;
 		} else {
-			const bool res = preferences::parse_arg(argv[n], n+1 < argc ? argv[n+1] : "");
-			if(!res) {
+			bool require = true;
+			std::string a(argv[n]);
+			if(a.empty() == false && a[0] == '?') {
+				//putting a ? in front of an argument indicates to only use the
+				//argument if the option is known, and to ignore it silently if
+				//it's unknown to the engine.
+				a.erase(a.begin());
+				require = false;
+			}
+
+			const bool res = preferences::parse_arg(a, n+1 < argc ? argv[n+1] : "");
+			if(!res && require) {
 				print_help(std::string(argvec[0]));
 				LOG_ERROR("unrecognized arg: '" << arg);
 				return -1;
