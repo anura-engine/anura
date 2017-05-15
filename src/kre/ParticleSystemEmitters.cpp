@@ -693,10 +693,11 @@ namespace KRE
 			const float theta = angle + circle_angle_ / 180.0f * static_cast<float>(M_PI);
 
 			const float r = circle_radius_->getValue();
-			//std::cerr << "circle radius: " << r << "\n";
-			//p.initial.position.x += r * sin(theta);
-			//p.initial.position.z += r * cos(theta);
+			std::cerr << "circle radius: " << r << "\n";
+			p.initial.position.x += r * sin(theta);
+			p.initial.position.y += r * cos(theta);
 
+/* TODO: this does some fancy math in 3d space but doesn't seem to actually work. FIXME!
 			const float s = 1.0f / (normal_.x * normal_.x + + normal_.y * normal_.y + normal_.z * normal_.z);
 			const float v1x = s * normal_.z;
 			const float v1y = 0.0f;
@@ -712,6 +713,7 @@ namespace KRE
 			p.initial.position.x += r * (v1x * cos(theta) + v2x * sin(theta));
 			p.initial.position.y += r * (v1y * cos(theta) + v2y * sin(theta));
 			p.initial.position.z += r * (v1z * cos(theta) + v2z * sin(theta));
+			*/
 		}
 
 		BoxEmitter::BoxEmitter(std::weak_ptr<ParticleSystemContainer> parent) 
