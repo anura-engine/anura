@@ -693,27 +693,27 @@ namespace KRE
 			const float theta = angle + circle_angle_ / 180.0f * static_cast<float>(M_PI);
 
 			const float r = circle_radius_->getValue();
-			std::cerr << "circle radius: " << r << "\n";
-			p.initial.position.x += r * sin(theta);
-			p.initial.position.y += r * cos(theta);
+			if(isEmitOnly2D()) {
+				p.initial.position.x += r * sin(theta);
+				p.initial.position.y += r * cos(theta);
+			} else {
+				//NB: must have a sane normal set for this code to work.
+				const float s = 1.0f / (normal_.x * normal_.x + + normal_.y * normal_.y + normal_.z * normal_.z);
+				const float v1x = s * normal_.z;
+				const float v1y = 0.0f;
+				const float v1z = s * -normal_.x;
 
-/* TODO: this does some fancy math in 3d space but doesn't seem to actually work. FIXME!
-			const float s = 1.0f / (normal_.x * normal_.x + + normal_.y * normal_.y + normal_.z * normal_.z);
-			const float v1x = s * normal_.z;
-			const float v1y = 0.0f;
-			const float v1z = s * -normal_.x;
+				// Calculate v2 as cross product of v3 and v1.
+				// Since v1y is 0, it could be removed from the following calculations. Keeping it for consistency.
+				const float v2x = normal_.y * v1z - normal_.z * v1y;
+				const float v2y = normal_.z * v1x - normal_.x * v1z;
+				const float v2z = normal_.x * v1y - normal_.y * v1x;
 
-			// Calculate v2 as cross product of v3 and v1.
-			// Since v1y is 0, it could be removed from the following calculations. Keeping it for consistency.
-			const float v2x = normal_.y * v1z - normal_.z * v1y;
-			const float v2y = normal_.z * v1x - normal_.x * v1z;
-			const float v2z = normal_.x * v1y - normal_.y * v1x;
-
-			// For each circle point.
-			p.initial.position.x += r * (v1x * cos(theta) + v2x * sin(theta));
-			p.initial.position.y += r * (v1y * cos(theta) + v2y * sin(theta));
-			p.initial.position.z += r * (v1z * cos(theta) + v2z * sin(theta));
-			*/
+				// For each circle point.
+				p.initial.position.x += r * (v1x * cos(theta) + v2x * sin(theta));
+				p.initial.position.y += r * (v1y * cos(theta) + v2y * sin(theta));
+				p.initial.position.z += r * (v1z * cos(theta) + v2z * sin(theta));
+			}
 		}
 
 		BoxEmitter::BoxEmitter(std::weak_ptr<ParticleSystemContainer> parent) 
