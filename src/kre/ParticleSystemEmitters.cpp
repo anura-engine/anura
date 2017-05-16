@@ -714,6 +714,7 @@ namespace KRE
 				p.initial.position.y += r * (v1y * cos(theta) + v2y * sin(theta));
 				p.initial.position.z += r * (v1z * cos(theta) + v2z * sin(theta));
 			}
+
 		}
 
 		BoxEmitter::BoxEmitter(std::weak_ptr<ParticleSystemContainer> parent) 
