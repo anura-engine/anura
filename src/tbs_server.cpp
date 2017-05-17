@@ -44,6 +44,7 @@
 namespace {
 	PREF_BOOL(quit_server_after_game, false, "");
 	PREF_BOOL(quit_server_on_parent_exit, false, "");
+	PREF_INT(tbs_server_player_timeout_ms, 20000, "");
 }
 
 namespace tbs 
@@ -348,7 +349,7 @@ namespace tbs
 						time_since_last_contact = get_ms_since_last_contact(session_id);
 					}
 
-					const int DisconnectTimeoutMS = 5000;
+					const int DisconnectTimeoutMS = g_tbs_server_player_timeout_ms;
 
 					const bool disconnected = time_since_last_contact > DisconnectTimeoutMS;
 					const bool recorded_as_disconnected = g->clients_disconnected.count(session_id) == 1;
