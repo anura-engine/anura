@@ -936,15 +936,8 @@ namespace KRE
 		{
 			ASSERT_LOG(node.has_key("path") && node["path"].is_list(),
 				"path_follower must have a 'path' attribute.");
-			for(unsigned n = 0; n != node["path"].num_elements(); ++n) {
-				const auto& pt = node["path"][n];
-				ASSERT_LOG(pt.is_list() && pt.num_elements() > 0, "points in path must be lists of more than one element.");
-				const float x = pt[0].as_float();
-				const float y = pt.num_elements() > 1 ? pt[1].as_float() : 0.0f;
-				const float z = pt.num_elements() > 2 ? pt[2].as_float() : 0.0f;
-				points_.emplace_back(x,y,z);
-			}
-			spl_ = std::make_shared<geometry::spline3d<float>>(points_);
+			
+			setPoints(node["path"]);
 		}
 
 		void PathFollowerAffector::clearPoints()
@@ -965,12 +958,27 @@ namespace KRE
 			spl_.reset(new geometry::spline3d<float>(points_));
 		}
 
+		void PathFollowerAffector::setPoints(const variant& path_list)
+		{
+			points_.clear();
+
+			for(unsigned n = 0; n != path_list.num_elements(); ++n) {
+				const auto& pt = path_list[n];
+				ASSERT_LOG(pt.is_list() && pt.num_elements() > 0, "points in path must be lists of more than one element.");
+				const float x = pt[0].as_float();
+				const float y = pt.num_elements() > 1 ? pt[1].as_float() : 0.0f;
+				const float z = pt.num_elements() > 2 ? pt[2].as_float() : 0.0f;
+				points_.emplace_back(x,y,z);
+			}
+			spl_ = std::make_shared<geometry::spline3d<float>>(points_);
+		}
+
 		void PathFollowerAffector::internalApply(Particle& p, float t) 
 		{
-			const float time_fraction = p.current.time_to_live / p.initial.time_to_live;
-			const float time_fraction_next = (p.current.time_to_live + t) > p.initial.time_to_live 
-				? 1.0f 
-				: (p.current.time_to_live + t) / p.initial.time_to_live;
+			const float time_fraction = (p.initial.time_to_live - p.current.time_to_live) / p.initial.time_to_live;
+			const float time_fraction_next = std::min<float>(1.0f, (p.initial.time_to_live - (p.current.time_to_live - t)) / p.initial.time_to_live);
+			auto pt = spl_->interpolate(time_fraction);
+			auto pn = spl_->interpolate(time_fraction_next);
 			p.current.position += spl_->interpolate(time_fraction_next) - spl_->interpolate(time_fraction);
 		}
 

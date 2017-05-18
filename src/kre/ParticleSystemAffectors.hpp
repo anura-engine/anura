@@ -407,6 +407,7 @@ namespace KRE
 			void clearPoints();
 			void addPoint(const glm::vec3& p);
 			void setPoints(const std::vector<glm::vec3>& points);
+			void setPoints(const variant& p);
 		private:
 			void internalApply(Particle& p, float t) override;
 			void handleEmitProcess(float t) override;

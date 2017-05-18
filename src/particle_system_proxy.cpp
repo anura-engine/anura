@@ -265,6 +265,7 @@ namespace graphics
 		return variant();
 	DEFINE_SET_FIELD
 		obj.obj_->setEmissionRate(value);
+	
 	END_DEFINE_CALLABLE(ParticleEmitterProxy)
 
 	BEGIN_DEFINE_CALLABLE_NOBASE(ParticleAffectorProxy)
@@ -276,6 +277,27 @@ namespace graphics
 		return obj.obj_->node();
 	DEFINE_SET_FIELD
 		obj.obj_->setNode(value);
+
+	DEFINE_FIELD(path, "null|[[decimal]]")
+		KRE::Particles::PathFollowerAffector* pfa = dynamic_cast<KRE::Particles::PathFollowerAffector*>(obj.obj_.get());
+		if(pfa == nullptr) {
+			return variant();
+		}
+
+		std::vector<variant> v;
+
+		const std::vector<glm::vec3>& points = pfa->getPoints();
+
+		for(auto& p : points) {
+			v.push_back(vec3_to_variant(p));
+		}
+
+		return variant(&v);
+	DEFINE_SET_FIELD
+		KRE::Particles::PathFollowerAffector* pfa = dynamic_cast<KRE::Particles::PathFollowerAffector*>(obj.obj_.get());
+		if(pfa) {
+			pfa->setPoints(value);
+		}
 	END_DEFINE_CALLABLE(ParticleAffectorProxy)
 
 }

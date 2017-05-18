@@ -38,13 +38,13 @@ namespace geometry
                     if(points_[0] == points_[points_.size()-1]) {
                         tangents_[n] = static_cast<T>(0.5) * points_[1] - points_[n-2];
                     } else {
-                        tangents_[n] = static_cast<T>(0.5) * points_[1] - points_[0];
+                        tangents_[n] = static_cast<T>(0.5) * (points_[1] - points_[0]);
                     }
                 } else if(n == points_.size() - 1) {
                     if(points_[0] == points_[n-1]) {
                         tangents_[n] = tangents_[0];
                     } else {
-                        tangents_[n] = static_cast<T>(0.5) * points_[n] - points_[n-1];
+                        tangents_[n] = static_cast<T>(0.5) * (points_[n] - points_[n-1]);
                     }
                 } else {
                     tangents_[n] = static_cast<T>(0.5) * (points_[n+1] - points_[n-1]);
