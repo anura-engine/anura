@@ -810,7 +810,7 @@ void Frame::draw(graphics::AnuraShaderPtr shader, int x, int y, const rect& area
 	blit_target_.setPosition(x + w/2, y + h/2);
 	blit_target_.setRotation(rotate, z_axis);
 	blit_target_.setDrawRect(rect(0, 0, w, h));
-	blit_target_.getTexture()->setSourceRect(0, rect(src_rect.x() + x_adjust, src_rect.y() + y_adjust, src_rect.w() + x_adjust + w_adjust, src_rect.h() + y_adjust + h_adjust));
+	blit_target_.getTexture()->setSourceRect(0, rect(src_rect.x() + x_adjust, src_rect.y() + y_adjust, src_rect.w() + w_adjust, src_rect.h() + h_adjust));
 	blit_target_.setMirrorHoriz(upside_down);
 	blit_target_.setMirrorVert(!face_right);
 	blit_target_.preRender(wnd);
