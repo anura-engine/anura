@@ -92,7 +92,6 @@ contexts:
     - match: (")(?=@)
       scope: punctuation.definition.string.begin.fson
       push:
-      - meta_scope: string.quoted.double.fson
       - clear_scopes: true
       - match: \"
         scope: punctuation.definition.string.end.fson
@@ -101,7 +100,6 @@ contexts:
     - match: (')(?=@)
       scope: punctuation.definition.string.begin.fson
       push:
-      - meta_scope: string.quoted.single.fson
       - clear_scopes: true
       - match: \'
         scope: punctuation.definition.string.end.fson
