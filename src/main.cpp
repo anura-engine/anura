@@ -135,6 +135,8 @@ namespace
 
 	PREF_BOOL(disable_global_alpha_filter, false, "Disables using alpha-colors.png to denote some special colors as 'alpha colors'");
 
+	PREF_INT(auto_size_ideal_width, 0, "");
+	PREF_INT(auto_size_ideal_height, 0, "");
 	PREF_BOOL_PERSISTENT(desktop_fullscreen, false, "Sets the game window to be a fullscreen window the size of the desktop");
 	PREF_BOOL_PERSISTENT(desktop_fullscreen_force, false, "(Windows) forces desktop fullscreen to actually use fullscreen rather than a borderless window the size of the desktop");
 	PREF_BOOL(msaa, false, "Use msaa");
@@ -310,6 +312,28 @@ namespace
 		
 		const float MinReduction = reduce ? 0.9f : 2.0f;
 		for(auto& candidate_mode : wm->getWindowModes([](const KRE::WindowMode&){ return true; })) {
+			if(g_auto_size_ideal_width && g_auto_size_ideal_height) {
+				if(found && candidate_mode.width < best_mode.width) {
+					continue;
+				}
+
+				if(candidate_mode.width > mode.width * MinReduction) {
+					LOG_INFO("REJECTED MODE IS " << candidate_mode.width << "x" << candidate_mode.height);
+					continue;
+				}
+
+				int h = (candidate_mode.width * g_auto_size_ideal_height) / g_auto_size_ideal_width;
+				if(h > mode.height * MinReduction) {
+					continue;
+				}
+
+				best_mode = candidate_mode;
+				best_mode.height = h;
+				found = true;
+
+				LOG_INFO("BETTER MODE IS " << best_mode.width << "x" << best_mode.height);
+
+			} else
 			if(    candidate_mode.width < mode.width * MinReduction
 				&& candidate_mode.height < mode.height * MinReduction
 				&& ((candidate_mode.width >= best_mode.width
