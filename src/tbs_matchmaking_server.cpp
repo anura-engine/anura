@@ -2575,6 +2575,8 @@ private:
 				status_doc_delete_users_.erase(itor);
 			}
 			status_doc_new_users_.push_back(user_id);
+		} else {
+			change_user_status(user_id, "idle");
 		}
 	}
 
