@@ -396,6 +396,12 @@ public:
 	void setRenderToTexture(int width, int height);
 	KRE::RenderTargetPtr getRenderTarget() const { return rt_; }
 
+	//sends events to all objects telling them about the transition to another level. They can
+	//set transition frames and otherwise set things up for a transition.
+	int setup_level_transition(const std::string& transition_type);
+
+	static void set_level_transition_ratio(decimal value);
+
 private:
 	DECLARE_CALLABLE(Level);
 

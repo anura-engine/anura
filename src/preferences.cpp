@@ -524,8 +524,11 @@ namespace preferences
 
 		int requested_window_width_ = 0;
 		int requested_window_height_ = 0;
-		int requested_virtual_window_width_ = 0;
-		int requested_virtual_window_height_ = 0;
+
+		PREF_INT(virtual_window_width, 0, "Virtual width of the game window");
+		PREF_INT(virtual_window_height, 0, "Virtual height of the game window");
+
+		PREF_INT(virtual_window_width_max, 0, "If set, the virtual width of the game window can be adjusted up to this amount, to match the aspect ratio of the physical device");
 	
 	}
 	
@@ -724,12 +727,22 @@ namespace preferences
 
 	int requested_virtual_window_width()
 	{
-		return requested_virtual_window_width_;
+		return g_virtual_window_width;
 	}
 
 	int requested_virtual_window_height()
 	{
-		return requested_virtual_window_height_;
+		return g_virtual_window_height;
+	}
+
+	void adjust_virtual_width_to_match_physical(int width, int height)
+	{
+		if(g_virtual_window_width_max > g_virtual_window_width) {
+			const int ideal_width = (g_virtual_window_height * width) / height;
+			if(ideal_width > g_virtual_window_width) {
+				g_virtual_window_width = std::min<int>(ideal_width, g_virtual_window_width_max);
+			}
+		}
 	}
 
 	bool edit_on_start()
@@ -1027,12 +1040,12 @@ namespace preferences
 				requested_window_width_ = widths[0];
 			}
 			if(widths.size() > 1) {
-				requested_virtual_window_width_ = widths[1];
-				//if(requested_virtual_window_width_ > requested_window_width_) {
+				g_virtual_window_width = widths[1];
+				//if(g_virtual_window_width > requested_window_width_) {
 				//	xypos_draw_mask = 0;
 				//}
-			} else {
-				requested_virtual_window_width_ = requested_window_width_;
+			} else if(!g_virtual_window_width) {
+				g_virtual_window_width = requested_window_width_;
 			}
         } else if(s == "--height") {
 			auto heights = util::split_into_vector_int(arg_value, ':');
@@ -1040,9 +1053,9 @@ namespace preferences
 				requested_window_height_ = heights[0];
 			}
 			if(heights.size() > 1) {
-				requested_virtual_window_height_ = heights[1];
-			} else {
-				requested_virtual_window_height_ = requested_window_height_;
+				g_virtual_window_height = heights[1];
+			} else if(!g_virtual_window_height) {
+				g_virtual_window_height = requested_window_height_;
 			}
 		} else if(s == "--no-resizable") {
 			resizable_ = false;

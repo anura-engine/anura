@@ -1478,8 +1478,11 @@ void CustomObject::draw(int xx, int yy) const
 		}
 	}
 
+
+	auto& gs = graphics::GameScreen::get();
+
 	for(auto& ps : particle_systems_) {
-		ps.second->draw(wnd, rect(last_draw_position().x/100, last_draw_position().y/100, wnd->width(), wnd->height()), *this);
+		ps.second->draw(wnd, rect(last_draw_position().x/100, last_draw_position().y/100, gs.getVirtualWidth(), gs.getVirtualHeight()), *this);
 	}
 
 	if(text_ && text_->font && text_->alpha) {

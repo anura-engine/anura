@@ -74,6 +74,7 @@ namespace
 		res.push_back("window_resize");
 		res.push_back("settings_menu");
 		res.push_back("quit_game");
+		res.push_back("begin_transition_level");
 		res.push_back("mouse_down");
 		res.push_back("mouse_up");
 		res.push_back("mouse_move");
@@ -160,6 +161,7 @@ variant_type_ptr get_object_event_arg_type(int id)
 		return p; \
 	}
 	switch(id) {
+		EVENT_ARG(BEGIN_TRANSITION_LEVEL, "{transition: string}")
 		EVENT_ARG(WINDOW_RESIZE, "{width: int, height: int}")
 		EVENT_ARG(MOUSE_DOWN, "{mouse_x: int, mouse_y: int, mouse_button: int, world_point: [decimal, decimal, decimal]}")
 		EVENT_ARG(MOUSE_UP, "{mouse_x: int, mouse_y: int, mouse_button: int, world_point: [decimal, decimal, decimal]}")

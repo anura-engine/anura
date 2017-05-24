@@ -143,6 +143,25 @@ namespace KRE
 			CanvasPtr canvas_;
 		};
 
+		struct DimScope
+		{
+			DimScope(int w, int h) : canvas_(Canvas::getInstance())
+			{
+				width_ = canvas_->width();
+				height_ = canvas_->height();
+
+				canvas_->setDimensions(w, h);
+			}
+
+			~DimScope()
+			{
+				canvas_->setDimensions(width_, height_);
+			}
+
+			CanvasPtr canvas_;
+			unsigned int width_, height_;
+		};
+
 		const Color getColor() const {
 			if(color_stack_.empty()) {
 				return Color::colorWhite();

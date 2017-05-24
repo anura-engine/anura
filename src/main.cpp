@@ -964,6 +964,8 @@ int main(int argcount, char* argvec[])
 		int res = SDL_GetDesktopDisplayMode(0, &dm);
 		ASSERT_LOG(res == 0, "Could not get desktop display mode: " << SDL_GetError());
 
+		preferences::adjust_virtual_width_to_match_physical(dm.w, dm.h);
+
 		hints.set("width", dm.w);
 		hints.set("height", dm.h);
 #if defined(_MSC_VER)
@@ -992,6 +994,8 @@ int main(int argcount, char* argvec[])
 		int height = 0;
 		auto_select_resolution(main_wnd, &width, &height, true);
 
+		preferences::adjust_virtual_width_to_match_physical(width, height);
+
 		main_wnd->setWindowSize(width, height);
 	}
 
@@ -1012,6 +1016,9 @@ int main(int argcount, char* argvec[])
 	graphics::GameScreen::get().setDimensions(main_wnd->width(), main_wnd->height());
 	graphics::GameScreen::get().setVirtualDimensions(vw, vh);
 	//main_wnd->setWindowIcon(module::map_file("images/window-icon.png"));
+
+	int swap_result = SDL_GL_SetSwapInterval(1);
+	ASSERT_LOG(swap_result == 0, "Could not set swap");
 
 	try {
 		std::map<std::string, std::string> shader_files;

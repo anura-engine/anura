@@ -86,7 +86,7 @@ bool SpeechDialog::handleMouseMove(int x, int y)
 {
 	input::sdl_get_mouse_state(&x, &y);
 	rect box(
-		graphics::GameScreen::get().getWidth() - option_width_/2 - OptionsBorder*2,
+		graphics::GameScreen::get().getVirtualWidth() - option_width_/2 - OptionsBorder*2,
 		0,
 		option_width_ + OptionsBorder*2, OptionHeight * static_cast<int>(options_.size()) + OptionsBorder*2
 	);

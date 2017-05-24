@@ -192,25 +192,26 @@ namespace
 	{
 		draw_scene(lvl, screen_pos);
 		KRE::WindowManager::getMainWindow()->swap();
-		draw_scene(lvl, screen_pos);
-		KRE::WindowManager::getMainWindow()->swap();
 	}
 
-	void transition_scene(Level& lvl, screen_position& screen_pos, bool transition_out, TransitionFn draw_fn) 
+	void transition_scene(Level& lvl, screen_position& screen_pos, bool transition_out, const std::string& transition_type) 
 	{
+		const int num_frames = lvl.setup_level_transition(transition_type);
+
 		if(lvl.player()) {
 			lvl.player()->getEntity().setInvisible(true);
 		}
 
+		Level::set_level_transition_ratio(decimal(0.0f));
+
 		const int start_time = profile::get_tick_time();
 		auto wnd = KRE::WindowManager::getMainWindow();
 
-		for(int n = 0; n <= 20; ++n) {
-			wnd->setClearColor(KRE::Color::colorBlack());
-			wnd->clear(KRE::ClearFlags::COLOR);
-			draw_fn(lvl, screen_pos, transition_out ? (n/20.0f) : (1 - n/20.0f));
-
-			wnd->swap();
+		for(int n = 0; n <= num_frames; ++n) {
+			Level::set_level_transition_ratio(decimal(static_cast<float>(n)/static_cast<float>(num_frames)));
+			lvl.process_draw();
+			render_scene(lvl, screen_pos);
+			KRE::WindowManager::getMainWindow()->swap();
 
 			const int target_end_time = start_time + (n+1)*preferences::frame_time_millis();
 			const int current_time = profile::get_tick_time();
@@ -219,6 +220,8 @@ namespace
 				profile::delay(skip_time);
 			}
 		}
+
+		Level::set_level_transition_ratio(decimal(0.0f));
 	
 		if(lvl.player()) {
 			lvl.player()->getEntity().setInvisible(false);
@@ -227,8 +230,8 @@ namespace
 
 	void fade_scene(const Level& lvl, screen_position& screen_pos, float fade) 
 	{
-		auto wnd = KRE::WindowManager::getMainWindow();
-		KRE::Canvas::getInstance()->drawSolidRect(rect(0,0,wnd->width(),wnd->height()),KRE::Color(0.0f, 0.0f, 0.0f, 0.5f*fade));
+		auto& gs = graphics::GameScreen::get();
+		KRE::Canvas::getInstance()->drawSolidRect(rect(0,0,gs.getVirtualWidth(),gs.getVirtualHeight()),KRE::Color(0.0f, 0.0f, 0.0f, 0.5f*fade));
 	}
 
 	void flip_scene(const Level& lvl, screen_position& screen_pos, float amount) 
@@ -237,67 +240,19 @@ namespace
 		draw_scene(lvl, screen_pos);
 	}
 
-	void iris_scene(const Level& lvl, screen_position& screen_pos, float amount) 
-	{
-		if(lvl.player() == nullptr) {
-			return;
-		}
-		auto wnd = KRE::WindowManager::getMainWindow();
-		auto canvas = KRE::Canvas::getInstance();
-
-		ConstEntityPtr player = &lvl.player()->getEntity();
-		const point light_pos = player->getMidpoint();
-
-		if(amount >= 0.99) {
-			canvas->drawSolidRect(rect(0, 0, wnd->width(), wnd->height()),KRE::Color::colorBlack());
-		} else {
-			draw_scene(lvl, screen_pos);
-
-			const int screen_x = screen_pos.x/100;
-			const int screen_y = screen_pos.y/100;
-
-			float radius_scale = 1.0f - amount;
-			const int radius = static_cast<int>(radius_scale*radius_scale*500);
-			const int center_x = -screen_x + light_pos.x;
-			const int center_y = -screen_y + light_pos.y;
-			rect center_rect(center_x - radius, center_y - radius, radius*2, radius*2);
-
-			if(center_rect.y() > 0) {
-				canvas->drawSolidRect(rect(0, 0, wnd->width(), center_rect.y()), KRE::Color::colorBlack());
-			}
-
-			const int bot_rect_height = wnd->height() - (center_rect.y() + center_rect.h());
-			if(bot_rect_height > 0) {
-				canvas->drawSolidRect(rect(0, wnd->height() - bot_rect_height, wnd->width(), bot_rect_height), KRE::Color::colorBlack());
-			}
-
-			if(center_rect.x() > 0) {
-				canvas->drawSolidRect(rect(0, 0, center_rect.x(), wnd->height()), KRE::Color::colorBlack());
-			}
-
-			const int right_rect_width = wnd->width() - (center_rect.x() + center_rect.w());
-			if(right_rect_width > 0) {
-				canvas->drawSolidRect(rect(wnd->width() - right_rect_width, 0, right_rect_width, wnd->height()), KRE::Color::colorBlack());
-			}
-
-			float inner_radius = static_cast<float>(radius);
-			float outer_radius = (center_rect.w() + center_rect.h()) / 2.0f + inner_radius;
-			canvas->drawHollowCircle(point(center_x, center_y), outer_radius, inner_radius, KRE::Color::colorBlack());
-		}
-	}
-
 	void show_end_game()
 	{
+		auto& gs = graphics::GameScreen::get();
 		const std::string msg = "to be continued...";
 		auto t = KRE::Font::getInstance()->renderText(msg, KRE::Color::colorWhite(), 48);
 		auto wnd = KRE::WindowManager::getMainWindow();
 		auto canvas = KRE::Canvas::getInstance();
-		const int xpos = wnd->width()/2 - t->width()/2;
-		const int ypos = wnd->height()/2 - t->height()/2;
+		const int xpos = gs.getVirtualWidth()/2 - t->width()/2;
+		const int ypos = gs.getVirtualHeight()/2 - t->height()/2;
 		for(unsigned n = 0; n <= msg.size(); ++n) {
 			const float percent = static_cast<float>(n)/static_cast<float>(msg.size());
-			canvas->drawSolidRect(rect(0, 0, wnd->width(), wnd->height()), KRE::Color::colorBlack());
-			canvas->blitTexture(t, rect(0,0,static_cast<int>(percent*wnd->width()),0), 0, 
+			canvas->drawSolidRect(rect(0, 0, gs.getVirtualWidth(), gs.getVirtualHeight()), KRE::Color::colorBlack());
+			canvas->blitTexture(t, rect(0,0,static_cast<int>(percent*gs.getVirtualWidth()),0), 0, 
 				rect(xpos, ypos,static_cast<int>(t->width()*percent), t->height()));
 			wnd->swap();
 			profile::delay(40);
@@ -568,12 +523,12 @@ bool LevelRunner::handle_mouse_events(const SDL_Event &event)
 					if(e->useAbsoluteScreenCoordinates()) {
 						int xadj = 0, yadj = 0;
 						auto& gs = graphics::GameScreen::get();
-						if(gs.getWidth() > lvl_->boundaries().w()) {
-							xadj = (gs.getWidth() - lvl_->boundaries().w());
+						if(gs.getVirtualWidth() > lvl_->boundaries().w()) {
+							xadj = (gs.getVirtualWidth() - lvl_->boundaries().w());
 						}
 
-						if(gs.getHeight() > lvl_->boundaries().h()) {
-							yadj = (gs.getHeight() - lvl_->boundaries().h());
+						if(gs.getVirtualHeight() > lvl_->boundaries().h()) {
+							yadj = (gs.getVirtualHeight() - lvl_->boundaries().h());
 						}
 
 						p = point(mx + lvl_->absolute_object_adjust_x() - xadj,my + lvl_->absolute_object_adjust_y() - yadj);
@@ -953,9 +908,9 @@ bool LevelRunner::play_cycle()
 	if(editor_) {
 		controls::control_backup_scope ctrl_backup;
 		auto& gs = graphics::GameScreen::get();
-		editor_->setPos(last_draw_position().x/100 - (editor_->zoom() - 1) * gs.getWidth()/2, 
-			last_draw_position().y/100 - (editor_->zoom() - 1) * gs.getHeight()/2);
-		//editor_->setPos(last_draw_position().x/100 - (editor_->zoom()-1)*(wnd->width()-editor::sidebar_width())/2, last_draw_position().y/100 - (editor_->zoom()-1)*(wnd->height())/2);
+		editor_->setPos(last_draw_position().x/100 - (editor_->zoom() - 1) * gs.getVirtualWidth()/2, 
+			last_draw_position().y/100 - (editor_->zoom() - 1) * gs.getVirtualHeight()/2);
+		//editor_->setPos(last_draw_position().x/100 - (editor_->zoom()-1)*(gs.getVirtualWidth()-editor::sidebar_width())/2, last_draw_position().y/100 - (editor_->zoom()-1)*(gs.getVirtualHeight())/2);
 		editor_->process();
 		lvl_->complete_rebuild_tiles_in_background();
 		lvl_->setAsCurrentLevel();
@@ -1065,7 +1020,7 @@ bool LevelRunner::play_cycle()
 		prepare_transition_scene(*lvl_, last_draw_position());
 
 		preload_level(save->getPlayerInfo()->currentLevel());
-		transition_scene(*lvl_, last_draw_position(), true, fade_scene);
+		transition_scene(*lvl_, last_draw_position(), true, "fade");
 		sound::stop_looped_sounds(nullptr);
 		ffl::IntrusivePtr<Level> new_level = load_level(save->getPlayerInfo()->currentLevel());
 
@@ -1148,15 +1103,16 @@ bool LevelRunner::play_cycle()
 			prepare_transition_scene(*lvl_, last_draw_position());
 
 			const std::string transition = portal->transition;
+
 			if(transition == "flip") {
-				transition_scene(*lvl_, last_draw_position(), true, flip_scene);
+				transition_scene(*lvl_, last_draw_position(), true, transition);
 			} else if(transition == "instant") {
 				//do nothing
 			} else if(transition != "fade") {
-				transition_scene(*lvl_, last_draw_position(), true, iris_scene);
+				transition_scene(*lvl_, last_draw_position(), true, transition);
 			} else {
 				preload_level(level_cfg_);
-				transition_scene(*lvl_, last_draw_position(), true, fade_scene);
+				transition_scene(*lvl_, last_draw_position(), true, transition);
 			}
 
 			sound::stop_looped_sounds(nullptr);
@@ -1235,9 +1191,9 @@ bool LevelRunner::play_cycle()
 			reapGarbageCollection();
 			CustomObject::run_garbage_collection();
 
-			if(transition == "flip") {
-				transition_scene(*lvl_, last_draw_position(), false, flip_scene);
-			}
+//			if(transition == "flip") {
+//				transition_scene(*lvl_, last_draw_position(), false, flip_scene);
+//			}
 #ifndef NO_EDITOR
 			if(editor_) {
 				editor_ = editor::get_editor(lvl_->id().c_str());
@@ -1636,7 +1592,7 @@ bool LevelRunner::play_cycle()
 	}
 
 	if(lvl_->end_game()) {
-		transition_scene(*lvl_, last_draw_position(), false, fade_scene);
+		transition_scene(*lvl_, last_draw_position(), false, "fade");
 		show_end_game();
 		done = true;
 		return true;

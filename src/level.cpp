@@ -160,19 +160,6 @@ void Level::setAsCurrentLevel()
 {
 	get_current_level() = this;
 	Frame::setColorPalette(palettes_used_);
-
-	auto wnd = KRE::WindowManager::getMainWindow();
-
-	if(false && preferences::auto_size_window()) {
-		static bool auto_sized = false;
-		if(!auto_sized) {
-			auto_sized = true;
-		}
-
-		int w,h;
-		wnd->autoWindowSize(w, h);
-		wnd->setWindowSize(w, h);
-	}
 }
 
 namespace 
@@ -242,10 +229,10 @@ Level::Level(const std::string& level_cfg, variant node)
 
 		try {
 			const assert_recover_scope safe_scope;
-			rt_ = KRE::RenderTarget::create(gs.getWidth(), gs.getHeight(), 1, false, true);
+			rt_ = KRE::RenderTarget::create(gs.getVirtualWidth(), gs.getVirtualHeight(), 1, false, true);
 		} catch(validation_failure_exception& /*e*/) {
 			LOG_INFO("Could not create fbo with stencil buffer. Trying without stencil buffer");
-			rt_ = KRE::RenderTarget::create(gs.getWidth(), gs.getHeight(), 1, false, false);
+			rt_ = KRE::RenderTarget::create(gs.getVirtualWidth(), gs.getVirtualHeight(), 1, false, false);
 		}
 
 		if(rt_ != nullptr) {
@@ -575,6 +562,30 @@ void Level::setRenderToTexture(int width, int height)
 			rt_ = KRE::RenderTarget::create(width, height, 1, false, false);
 			rt_->setBlendState(false);
 		}
+}
+
+namespace {
+	int g_num_level_transition_frames = 0;
+	decimal g_level_transition_ratio;
+}
+
+int Level::setup_level_transition(const std::string& transition_type)
+{
+	g_num_level_transition_frames = 0;
+
+	game_logic::MapFormulaCallablePtr callable(new game_logic::MapFormulaCallable());
+	callable->add("transition", variant(transition_type));
+	std::vector<EntityPtr> active_chars = get_active_chars();
+	for(const auto& c : active_chars) {
+		c->handleEvent(OBJECT_EVENT_BEGIN_TRANSITION_LEVEL, callable.get());
+	}
+
+	return g_num_level_transition_frames;
+}
+
+void Level::set_level_transition_ratio(decimal d)
+{
+	g_level_transition_ratio = d;
 }
 
 void Level::read_compiled_tiles(variant node, std::vector<LevelTile>::iterator& out)
@@ -1977,15 +1988,17 @@ void Level::draw(int x, int y, int w, int h) const
 			water_zorder = water_->zorder();
 		}
 
+		auto& gs = graphics::GameScreen::get();
+
 		for(auto mask : hex_masks_) {
 			KRE::RenderTargetPtr rt = mask->getRenderTarget();
 			if(rt.get() == nullptr) {
-				rt = KRE::RenderTarget::create(wnd->width(), wnd->height());
+				rt = KRE::RenderTarget::create(gs.getVirtualWidth(), gs.getVirtualHeight());
 				mask->setRenderTarget(rt);
 			}
 
 			{
-				KRE::RenderTarget::RenderScope scope(rt, rect(0, 0, wnd->width(), wnd->height()));
+				KRE::RenderTarget::RenderScope scope(rt, rect(0, 0, gs.getVirtualWidth(), gs.getVirtualHeight()));
 				rt->setClearColor(KRE::Color(0,0,0,0));
 				rt->clear();
 
@@ -2214,10 +2227,10 @@ KRE::RenderTargetPtr& Level::applyShaderToFrameBufferTexture(graphics::AnuraShad
 		if(!backup_rt_) {
 			try {
 				const assert_recover_scope safe_scope;
-				backup_rt_ = KRE::RenderTarget::create(gs.getWidth(), gs.getHeight(), 1, false, true);			
+				backup_rt_ = KRE::RenderTarget::create(gs.getVirtualWidth(), gs.getVirtualHeight(), 1, false, true);			
 			} catch(validation_failure_exception& /*e*/) {
 				LOG_INFO("Could not create fbo with stencil buffer. Trying without stencil buffer");
-				backup_rt_ = KRE::RenderTarget::create(gs.getWidth(), gs.getHeight(), 1, false, false);
+				backup_rt_ = KRE::RenderTarget::create(gs.getVirtualWidth(), gs.getVirtualHeight(), 1, false, false);
 			}
 			ASSERT_LOG(backup_rt_ != nullptr, "Backup render target was null.");
 			if(fb_render_target_.is_null()) {
@@ -2236,8 +2249,10 @@ KRE::RenderTargetPtr& Level::applyShaderToFrameBufferTexture(graphics::AnuraShad
 
 	auto wnd = KRE::WindowManager::getMainWindow();
 
+	auto& gs = graphics::GameScreen::get();
+
 	rt_->setShader(shader->getShader());
-	shader->setDrawArea(rect(0, 0, wnd->width(), wnd->height()));
+	shader->setDrawArea(rect(0, 0, gs.getVirtualWidth(), gs.getVirtualHeight()));
 	shader->setCycle(cycle());
 
 	if(preferences::screen_rotated()) {
@@ -2281,14 +2296,15 @@ void Level::calculateLighting(int x, int y, int w, int h) const
 		}
 	}
 
-	static auto rt = KRE::RenderTarget::create(wnd->width(), wnd->height());
+	auto& gs = graphics::GameScreen::get();
+	static auto rt = KRE::RenderTarget::create(gs.getVirtualWidth(), gs.getVirtualHeight());
 
 	{
 		KRE::BlendModeScope blend_scope(KRE::BlendModeConstants::BM_ONE, KRE::BlendModeConstants::BM_ONE);
 		//rect screen_area(x, y, w, h);
 		
 		rt->setClearColor(dark_color_.applyBlack());
-		KRE::RenderTarget::RenderScope scope(rt, rect(0, 0, wnd->width(), wnd->height()));
+		KRE::RenderTarget::RenderScope scope(rt, rect(0, 0, gs.getVirtualWidth(), gs.getVirtualHeight()));
 
 		rt->clear();
 
@@ -2368,8 +2384,10 @@ void Level::draw_background(int x, int y, int rotation) const
 
 		static std::vector<rect> opaque_areas;
 		opaque_areas.clear();
-		int screen_width = wnd->width();
-		int screen_height = wnd->height();
+
+		auto& gs = graphics::GameScreen::get();
+		int screen_width = gs.getVirtualWidth();
+		int screen_height = gs.getVirtualHeight();
 		if(last_draw_position().zoom < 1.0) {
 			screen_width = static_cast<int>(screen_width / last_draw_position().zoom);
 			screen_height = static_cast<int>(screen_height / last_draw_position().zoom);
@@ -2455,32 +2473,32 @@ void Level::process()
 	
 	auto& gs = graphics::GameScreen::get();
 	if(rt_ && rt_->needsRebuild()) {
-		rt_->rebuild(gs.getWidth(), gs.getHeight());
+		rt_->rebuild(gs.getVirtualWidth(), gs.getVirtualHeight());
 	}
 	if(backup_rt_ && backup_rt_->needsRebuild()) {
-		backup_rt_->rebuild(gs.getWidth(), gs.getHeight());
+		backup_rt_->rebuild(gs.getVirtualWidth(), gs.getVirtualHeight());
 	}
 	for(auto mask : hex_masks_) {
 		KRE::RenderTargetPtr rt = mask->getRenderTarget();
 		if(rt && rt->needsRebuild()) {
-			auto wnd = KRE::WindowManager::getMainWindow();
-			rt->rebuild(wnd->width(), wnd->height());
+			auto& gs = graphics::GameScreen::get();
+			rt->rebuild(gs.getVirtualWidth(), gs.getVirtualHeight());
 		}
 	}
 
 	if(shader_) {
 		shader_->process();
 	}
-	
+}
+
+void Level::process_draw()
+{
 	for(auto& fb : fb_shaders_) {
 		if(fb.shader) {
 			fb.shader->process();
 		}
 	}
-}
 
-void Level::process_draw()
-{
 	std::vector<EntityPtr> chars = active_chars_;
 	for(const EntityPtr& e : chars) {
 		e->handleEvent(OBJECT_EVENT_DRAW);
@@ -2507,8 +2525,8 @@ namespace
 
 void Level::set_active_chars()
 {
-	int screen_width = graphics::GameScreen::get().getWidth();
-	int screen_height = graphics::GameScreen::get().getHeight();
+	int screen_width = graphics::GameScreen::get().getVirtualWidth();
+	int screen_height = graphics::GameScreen::get().getVirtualHeight();
 	
 	const float inverse_zoom_level = std::abs(zoom_level_) > FLT_EPSILON ? (1.0f / zoom_level_) : 0.0f;
 	// pad the screen if we're zoomed out so stuff now-visible becomes active  
@@ -3698,13 +3716,14 @@ DEFINE_FIELD(num_segments, "int")
 	return variant(unsigned(obj.sub_levels_.size()));
 
 DEFINE_FIELD(camera_position, "[int, int, int, int]")
-	auto wnd = KRE::WindowManager::getMainWindow();
 	std::vector<variant> pos;
 	pos.reserve(4);
 	pos.push_back(variant(last_draw_position().x/100));
 	pos.push_back(variant(last_draw_position().y/100));
-	pos.push_back(variant(wnd->width()));
-	pos.push_back(variant(wnd->height()));
+
+	auto& gs = graphics::GameScreen::get();
+	pos.push_back(variant(gs.getVirtualWidth()));
+	pos.push_back(variant(gs.getVirtualHeight()));
 	return variant(&pos);
 DEFINE_SET_FIELD_TYPE("[decimal,decimal]")
 
@@ -3934,6 +3953,14 @@ DEFINE_SET_FIELD_TYPE("bool")
 	if(LevelRunner::getCurrent()) {
 		LevelRunner::getCurrent()->set_quitting(value.as_bool());
 	}
+
+DEFINE_FIELD(num_transition_frames, "int")
+	return variant(g_num_level_transition_frames);
+DEFINE_SET_FIELD_TYPE("int")
+	g_num_level_transition_frames = value.as_int();
+
+DEFINE_FIELD(transition_ratio, "decimal")
+	return variant(g_level_transition_ratio);
 
 END_DEFINE_CALLABLE(Level)
 
