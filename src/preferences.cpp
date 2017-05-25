@@ -892,9 +892,10 @@ namespace preferences
 		}
 
 		for(std::map<std::string, RegisteredSetting>::iterator i = g_registered_settings().begin(); i != g_registered_settings().end(); ++i) {
-			if(i->second.persistent && node.has_key(i->first)) {
+			if(node.has_key(i->first)) {
 				i->second.read(node[i->first]);
 				i->second.has_been_set_from_persistent = true;
+				i->second.persistent = true;
 			}
 		}
 		
@@ -1346,13 +1347,28 @@ namespace preferences
 			return variant(*it->second.double_value);
 		END_DEFINE_FN
 
-		BEGIN_DEFINE_FN(set_preference_value, "(string, any)->commands")
+		BEGIN_DEFINE_FN(set_preference_value, "(string, any, null|[enum {persistent}]=null)->commands")
 			const std::string key = FN_ARG(0).as_string();
 			variant val = FN_ARG(1);
 			auto it = g_registered_settings().find(key);
 			ASSERT_LOG(it != g_registered_settings().end(), "Unknown preference setting: " << key);
 
+			bool force_persistent = false;
+
+			if(NUM_FN_ARGS > 2 && FN_ARG(2).is_list()) {
+				variant flags = FN_ARG(2);
+				for(variant flag : flags.as_list()) {
+					if(flag.as_enum() == "persistent") {
+						force_persistent = true;
+					}
+				}
+			}
+
 			return variant(new game_logic::FnCommandCallable("set_preference_value", [=]() {
+				if(force_persistent) {
+					it->second.persistent = true;
+				}
+
 				if(it->second.int_value) {
 					*it->second.int_value = val.as_int();
 				} else if(it->second.bool_value) {

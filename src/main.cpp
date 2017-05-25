@@ -137,8 +137,8 @@ namespace
 
 	PREF_INT(auto_size_ideal_width, 0, "");
 	PREF_INT(auto_size_ideal_height, 0, "");
-	PREF_BOOL_PERSISTENT(desktop_fullscreen, false, "Sets the game window to be a fullscreen window the size of the desktop");
-	PREF_BOOL_PERSISTENT(desktop_fullscreen_force, false, "(Windows) forces desktop fullscreen to actually use fullscreen rather than a borderless window the size of the desktop");
+	PREF_BOOL(desktop_fullscreen, false, "Sets the game window to be a fullscreen window the size of the desktop");
+	PREF_BOOL(desktop_fullscreen_force, false, "(Windows) forces desktop fullscreen to actually use fullscreen rather than a borderless window the size of the desktop");
 	PREF_BOOL(msaa, false, "Use msaa");
 
 
