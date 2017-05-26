@@ -49,6 +49,8 @@ void removeProcessFunction(void* tag);
 
 void addAsynchronousWorkItem(std::function<void()> fn);
 
+void mapSDLEventScreenCoordinatesToVirtual(SDL_Event& event);
+
 class LevelRunner 
 {
 public:

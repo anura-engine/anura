@@ -82,8 +82,11 @@ extern std::map<std::string, variant> g_user_info_registry;
 
 PREF_STRING(editor_object, "", "Object to use for the editor");
 
+extern bool g_desktop_fullscreen;
 extern bool g_particle_editor;
 extern int g_vsync;
+
+void auto_select_resolution(const KRE::WindowPtr& wm, int *width, int *height, bool reduce);
 
 namespace 
 {
@@ -276,6 +279,34 @@ namespace
 				}
 			}
 		}
+	}
+}
+
+namespace {
+int TranslateCoordinatesPhysicalToVirtual(int pos, int virt, int phys) {
+	return (pos * virt) / phys;
+}
+}
+
+void mapSDLEventScreenCoordinatesToVirtual(SDL_Event& event)
+{
+	switch(event.type) {
+	case SDL_MOUSEMOTION: {
+		auto& gs = graphics::GameScreen::get();
+		event.motion.x = TranslateCoordinatesPhysicalToVirtual(event.motion.x, gs.getVirtualWidth(), gs.getWidth());
+		event.motion.y = TranslateCoordinatesPhysicalToVirtual(event.motion.y, gs.getVirtualHeight(), gs.getHeight());
+		event.motion.xrel = TranslateCoordinatesPhysicalToVirtual(event.motion.xrel, gs.getVirtualWidth(), gs.getWidth());
+		event.motion.yrel = TranslateCoordinatesPhysicalToVirtual(event.motion.yrel, gs.getVirtualHeight(), gs.getHeight());
+		break;
+	}
+
+	case SDL_MOUSEBUTTONDOWN:
+	case SDL_MOUSEBUTTONUP: {
+		auto& gs = graphics::GameScreen::get();
+		event.button.x = TranslateCoordinatesPhysicalToVirtual(event.button.x, gs.getVirtualWidth(), gs.getWidth());
+		event.button.y = TranslateCoordinatesPhysicalToVirtual(event.button.y, gs.getVirtualHeight(), gs.getHeight());
+		break;
+	}
 	}
 }
 
@@ -1260,7 +1291,12 @@ bool LevelRunner::play_cycle()
 			events.push_back(ev);
 		}
 
-		for(const SDL_Event& event : events) {
+		static int nevent_frame = 0;
+		++nevent_frame;
+
+		for(SDL_Event& event : events) {
+			mapSDLEventScreenCoordinatesToVirtual(event);
+
 			bool swallowed = false;
 #ifndef NO_EDITOR
 			if(console_) {
@@ -1464,14 +1500,59 @@ bool LevelRunner::play_cycle()
 					}
 					
 				} else if(key == SDLK_f && mod & KMOD_CTRL && !preferences::no_fullscreen_ever()) {
+
+					static int last_pushed = -1;
+
+					if(last_pushed >= nevent_frame-1) {
+						//If we switch between fullscreen and non-fullscreen we can get repeated
+						//key press events resulting in us switching back and forth, so ignore
+						//ctrl+f key events in successive frames.
+						continue;
+					}
+
+					auto& gs = graphics::GameScreen::get();
+					const int virtual_width = gs.getVirtualWidth();
+					const int virtual_height = gs.getVirtualHeight();
+
+					last_pushed = nevent_frame;
 					LOG_DEBUG("ctrl-f pushed");
 					// XXX this changes if editor is active.
 					if(wnd->fullscreenMode() == KRE::FullScreenMode::WINDOWED) {
+
 						LOG_DEBUG("Enter full-screen mode");
 						wnd->setFullscreenMode(KRE::FullScreenMode::FULLSCREEN_WINDOWED);
+
+						if(preferences::auto_size_window() || g_desktop_fullscreen) {
+							SDL_DisplayMode dm;
+							if(SDL_GetDesktopDisplayMode(0, &dm) == 0) {
+								//preferences::adjust_virtual_width_to_match_physical(dm.w, dm.h);
+								wnd->setWindowSize(dm.w, dm.h);
+								gs.setDimensions(dm.w, dm.h);
+								gs.setVirtualDimensions(virtual_width, virtual_height);
+							}
+
+						}
+
 					} else {
 						LOG_DEBUG("Enter windowed mode");
 						wnd->setFullscreenMode(KRE::FullScreenMode::WINDOWED);
+
+						if(preferences::auto_size_window() || g_desktop_fullscreen) {
+							int width = 0, height = 0;
+
+							if(preferences::requested_window_width() > 0 && preferences::requested_window_height() > 0) {
+								width = preferences::requested_window_width();
+								height = preferences::requested_window_height();
+							} else {
+								auto_select_resolution(wnd, &width, &height, true);
+							}
+
+							//preferences::adjust_virtual_width_to_match_physical(width, height);
+
+							wnd->setWindowSize(width, height);
+							gs.setDimensions(width, height);
+							gs.setVirtualDimensions(virtual_width, virtual_height);
+						}
 					}
 				} else if(key == SDLK_F7) {
 					if(formula_profiler::Manager::get()) {

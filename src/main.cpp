@@ -122,6 +122,8 @@ variant g_auto_update_info;
 
 extern int g_vsync;
 
+PREF_BOOL(desktop_fullscreen, false, "Sets the game window to be a fullscreen window the size of the desktop");
+
 namespace 
 {
 	PREF_BOOL(auto_update_module, false, "Auto updates the module from the module server on startup (number of milliseconds to spend attempting to update the module)");
@@ -137,7 +139,6 @@ namespace
 
 	PREF_INT(auto_size_ideal_width, 0, "");
 	PREF_INT(auto_size_ideal_height, 0, "");
-	PREF_BOOL(desktop_fullscreen, false, "Sets the game window to be a fullscreen window the size of the desktop");
 	PREF_BOOL(desktop_fullscreen_force, false, "(Windows) forces desktop fullscreen to actually use fullscreen rather than a borderless window the size of the desktop");
 	PREF_BOOL(msaa, false, "Use msaa");
 
@@ -301,61 +302,6 @@ namespace
 	}
 
 
-	void auto_select_resolution(const KRE::WindowPtr& wm, int *width, int *height, bool reduce)
-	{
-		ASSERT_LOG(width != nullptr, "width is null.");
-		ASSERT_LOG(height != nullptr, "height is null.");
-
-		auto mode = wm->getDisplaySize();
-		auto best_mode = mode;
-		bool found = false;
-		
-		const float MinReduction = reduce ? 0.9f : 2.0f;
-		for(auto& candidate_mode : wm->getWindowModes([](const KRE::WindowMode&){ return true; })) {
-			if(g_auto_size_ideal_width && g_auto_size_ideal_height) {
-				if(found && candidate_mode.width < best_mode.width) {
-					continue;
-				}
-
-				if(candidate_mode.width > mode.width * MinReduction) {
-					LOG_INFO("REJECTED MODE IS " << candidate_mode.width << "x" << candidate_mode.height);
-					continue;
-				}
-
-				int h = (candidate_mode.width * g_auto_size_ideal_height) / g_auto_size_ideal_width;
-				if(h > mode.height * MinReduction) {
-					continue;
-				}
-
-				best_mode = candidate_mode;
-				best_mode.height = h;
-				found = true;
-
-				LOG_INFO("BETTER MODE IS " << best_mode.width << "x" << best_mode.height);
-
-			} else
-			if(    candidate_mode.width < mode.width * MinReduction
-				&& candidate_mode.height < mode.height * MinReduction
-				&& ((candidate_mode.width >= best_mode.width
-				&& candidate_mode.height >= best_mode.height) || !found)
-				) {
-					found = true;
-					LOG_INFO("BETTER MODE IS " << candidate_mode.width << "x" << candidate_mode.height << " vs " << best_mode.width << "x" << best_mode.height);
-				best_mode = candidate_mode;
-			} else {
-				LOG_INFO("REJECTED MODE IS " << candidate_mode.width << "x" << candidate_mode.height);
-			}
-		}
-
-		if(best_mode.width < g_min_window_width || best_mode.height < g_min_window_height) {
-			best_mode.width = g_min_window_width;
-			best_mode.height = g_min_window_height;
-		}
-
-		*width = best_mode.width;
-		*height = best_mode.height;
-	}
-
 	void process_log_level(const std::string& argstr)
 	{
 		SDL_LogPriority log_priority = SDL_LOG_PRIORITY_INFO;
@@ -402,6 +348,61 @@ namespace
 	}
 
 } //namespace
+
+void auto_select_resolution(const KRE::WindowPtr& wm, int *width, int *height, bool reduce)
+{
+	ASSERT_LOG(width != nullptr, "width is null.");
+	ASSERT_LOG(height != nullptr, "height is null.");
+
+	auto mode = wm->getDisplaySize();
+	auto best_mode = mode;
+	bool found = false;
+	
+	const float MinReduction = reduce ? 0.9f : 2.0f;
+	for(auto& candidate_mode : wm->getWindowModes([](const KRE::WindowMode&){ return true; })) {
+		if(g_auto_size_ideal_width && g_auto_size_ideal_height) {
+			if(found && candidate_mode.width < best_mode.width) {
+				continue;
+			}
+
+			if(candidate_mode.width > mode.width * MinReduction) {
+				LOG_INFO("REJECTED MODE IS " << candidate_mode.width << "x" << candidate_mode.height);
+				continue;
+			}
+
+			int h = (candidate_mode.width * g_auto_size_ideal_height) / g_auto_size_ideal_width;
+			if(h > mode.height * MinReduction) {
+				continue;
+			}
+
+			best_mode = candidate_mode;
+			best_mode.height = h;
+			found = true;
+
+			LOG_INFO("BETTER MODE IS " << best_mode.width << "x" << best_mode.height);
+
+		} else
+		if(    candidate_mode.width < mode.width * MinReduction
+			&& candidate_mode.height < mode.height * MinReduction
+			&& ((candidate_mode.width >= best_mode.width
+			&& candidate_mode.height >= best_mode.height) || !found)
+			) {
+				found = true;
+				LOG_INFO("BETTER MODE IS " << candidate_mode.width << "x" << candidate_mode.height << " vs " << best_mode.width << "x" << best_mode.height);
+			best_mode = candidate_mode;
+		} else {
+			LOG_INFO("REJECTED MODE IS " << candidate_mode.width << "x" << candidate_mode.height);
+		}
+	}
+
+	if(best_mode.width < g_min_window_width || best_mode.height < g_min_window_height) {
+		best_mode.width = g_min_window_width;
+		best_mode.height = g_min_window_height;
+	}
+
+	*width = best_mode.width;
+	*height = best_mode.height;
+}
 
 extern int g_tile_scale;
 extern int g_tile_size;

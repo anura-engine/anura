@@ -368,7 +368,7 @@ void render_scene(Level& lvl, const screen_position& pos)
 
 	static KRE::RenderTargetPtr rt;
 	
-	if(!rt && need_rt) {
+	if(need_rt && (!rt || rt->width() != screen_width || rt->height() != screen_height)) {
 		rt = (KRE::RenderTarget::create(screen_width, screen_height, 1, false, false));
 		rt->setBlendState(false);
 	}
