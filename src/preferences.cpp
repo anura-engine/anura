@@ -737,9 +737,10 @@ namespace preferences
 
 	void adjust_virtual_width_to_match_physical(int width, int height)
 	{
-		if(g_virtual_window_width_max > g_virtual_window_width) {
+		static int min_window_width = g_virtual_window_width;
+		if(g_virtual_window_width_max > min_window_width) {
 			const int ideal_width = (g_virtual_window_height * width) / height;
-			if(ideal_width > g_virtual_window_width) {
+			if(ideal_width >= min_window_width) {
 				g_virtual_window_width = std::min<int>(ideal_width, g_virtual_window_width_max);
 			}
 		}

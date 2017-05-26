@@ -1525,10 +1525,10 @@ bool LevelRunner::play_cycle()
 						if(preferences::auto_size_window() || g_desktop_fullscreen) {
 							SDL_DisplayMode dm;
 							if(SDL_GetDesktopDisplayMode(0, &dm) == 0) {
-								//preferences::adjust_virtual_width_to_match_physical(dm.w, dm.h);
+								preferences::adjust_virtual_width_to_match_physical(dm.w, dm.h);
 								wnd->setWindowSize(dm.w, dm.h);
 								gs.setDimensions(dm.w, dm.h);
-								gs.setVirtualDimensions(virtual_width, virtual_height);
+								gs.setVirtualDimensions(preferences::requested_virtual_window_width(), preferences::requested_virtual_window_height());
 							}
 
 						}
@@ -1547,11 +1547,11 @@ bool LevelRunner::play_cycle()
 								auto_select_resolution(wnd, &width, &height, true);
 							}
 
-							//preferences::adjust_virtual_width_to_match_physical(width, height);
+							preferences::adjust_virtual_width_to_match_physical(width, height);
 
 							wnd->setWindowSize(width, height);
 							gs.setDimensions(width, height);
-							gs.setVirtualDimensions(virtual_width, virtual_height);
+							gs.setVirtualDimensions(preferences::requested_virtual_window_width(), preferences::requested_virtual_window_height());
 						}
 					}
 				} else if(key == SDLK_F7) {
