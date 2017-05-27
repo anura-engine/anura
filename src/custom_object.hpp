@@ -76,7 +76,7 @@ public:
 	static void run_garbage_collection();
 
 	explicit CustomObject(variant node);
-	CustomObject(const std::string& type, int x, int y, bool face_right);
+	CustomObject(const std::string& type, int x, int y, bool face_right, bool deferInitProperties=false);
 	CustomObject(const CustomObject& o);
 	virtual ~CustomObject();
 
@@ -340,11 +340,14 @@ protected:
 
 	bool editorOnly() const override { return editor_only_; }
 
+	void initDeferredProperties();
+
 protected:
 	void surrenderReferences(GarbageCollector* collector) override;
 
 private:
-	void initProperties();
+	void initProperties(bool defer=false);
+	void initProperty(const CustomObjectType::PropertyEntry& e);
 	CustomObject& operator=(const CustomObject& o);
 	struct Accessor;
 
@@ -418,9 +421,29 @@ private:
 	game_logic::FormulaVariableStoragePtr vars_, tmp_vars_;
 	game_logic::MapFormulaCallablePtr tags_;
 
-	variant& get_property_data(int slot) { if(property_data_.size() <= size_t(slot)) { property_data_.resize(slot+1); } return property_data_[slot]; }
-	variant get_property_data(int slot) const { if(property_data_.size() <= size_t(slot)) { return variant(); } return property_data_[slot]; }
+	void ensure_property_data_init(int slot) const {
+		if(property_init_deferred_.empty() == false) {
+			for(auto i = property_init_deferred_.begin(); i != property_init_deferred_.end(); ++i) {
+				auto p = *i;
+				if(p->storage_slot == slot) {
+					auto mutable_this = const_cast<CustomObject*>(this);
+
+					mutable_this->property_init_deferred_.erase(i);
+					mutable_this->initProperty(*p);
+					return;
+				}
+			}
+		}
+	}
+	variant& get_property_data(int slot) { ensure_property_data_init(slot); if(property_data_.size() <= size_t(slot)) { property_data_.resize(slot+1); } return property_data_[slot]; }
+	variant get_property_data(int slot) const { ensure_property_data_init(slot); if(property_data_.size() <= size_t(slot)) { return variant(); } return property_data_[slot]; }
 	std::vector<variant> property_data_;
+
+	//A list of properties which have their initialization *deferred*. This is so properties with an init:
+	//can wait until all the other fields are populated. If an attempt is made to access one of these
+	//properties it will be initialized on the spot. Otherwise all deferred properties are initialized
+	//at the end of construction.
+	std::vector<const CustomObjectType::PropertyEntry*> property_init_deferred_;
 	mutable int active_property_;
 
 	//a stack of items that serve as the 'value' parameter, used in

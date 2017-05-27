@@ -513,7 +513,7 @@ CustomObject::CustomObject(variant node)
 	}
 }
 
-CustomObject::CustomObject(const std::string& type, int x, int y, bool face_right)
+CustomObject::CustomObject(const std::string& type, int x, int y, bool face_right, bool deferInitProperties)
   : Entity(x, y, face_right),
     previous_y_(y),
     type_(CustomObjectType::getOrDie(type)),
@@ -553,6 +553,7 @@ CustomObject::CustomObject(const std::string& type, int x, int y, bool face_righ
 	particles_(),
 	document_(nullptr)
 {
+	fprintf(stderr, "ZZZ: OBJ: %s -> %d\n", type.c_str(), (int)deferInitProperties);
 	setZOrder(type_->zorder());
 	setZSubOrder(type_->zSubOrder());
 
@@ -626,7 +627,7 @@ CustomObject::CustomObject(const std::string& type, int x, int y, bool face_righ
 		setMouseOverArea(type_->getMouseOverArea());
 	}
 	createParticles(type_->getParticleSystemDesc());
-	initProperties();
+	initProperties(deferInitProperties);
 }
 
 CustomObject::CustomObject(const CustomObject& o)
@@ -764,18 +765,38 @@ void CustomObject::validate_properties()
 	}
 }
 
-void CustomObject::initProperties()
+void CustomObject::initProperties(bool defer)
 {
 	for(std::map<std::string, CustomObjectType::PropertyEntry>::const_iterator i = type_->properties().begin(); i != type_->properties().end(); ++i) {
 		if(!i->second.init || i->second.storage_slot == -1) {
 			continue;
 		}
 
+		if(defer) {
+			property_init_deferred_.push_back(&i->second);
+			continue;
+		}
+
 		reference_counted_object_pin_norelease pin(this);
-		get_property_data(i->second.storage_slot) = i->second.init->execute(*this);
+		initProperty(i->second);
 		if(i->second.is_weak) { get_property_data(i->second.storage_slot).weaken(); }
 	}
 }
+
+void CustomObject::initDeferredProperties()
+{
+	while(property_init_deferred_.empty() == false) {
+		auto p = property_init_deferred_.back();
+		property_init_deferred_.pop_back();
+		initProperty(*p);
+	}
+}
+
+void CustomObject::initProperty(const CustomObjectType::PropertyEntry& e)
+{
+	get_property_data(e.storage_slot) = e.init->execute(*this);
+}
+
 
 bool CustomObject::isA(const std::string& type) const
 {
@@ -1610,6 +1631,7 @@ void CustomObject::drawGroup() const
 
 void CustomObject::construct()
 {
+	initDeferredProperties();
 	handleEvent(OBJECT_EVENT_CONSTRUCT);
 }
 

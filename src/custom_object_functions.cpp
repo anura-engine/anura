@@ -1503,7 +1503,7 @@ namespace
 			obj.reset(new CustomObject(*prototype));
 			obj->setPos(x - obj->getCurrentFrame().width() / 2 , y - obj->getCurrentFrame().height() / 2);
 		} else {
-			obj.reset(new CustomObject(type, x, y, facing));
+			obj.reset(new CustomObject(type, x, y, facing, true));
 			obj->setPos(obj->x() - obj->getCurrentFrame().width() / 2 , obj->y() - obj->getCurrentFrame().height() / 2);
 		}
 
@@ -1677,10 +1677,9 @@ namespace
 		const int x = EVAL_ARG(1).as_int();
 		const int y = EVAL_ARG(2).as_int();
 		const bool facing = EVAL_ARG(3).as_int() > 0;
-		ffl::IntrusivePtr<CustomObject> obj(new CustomObject(type, x, y, facing));
+		ffl::IntrusivePtr<CustomObject> obj(new CustomObject(type, x, y, facing, true));
 		obj.reset(new PlayableCustomObject(*obj));
 		obj->setPos(obj->x() - obj->getCurrentFrame().width() / 2 , obj->y() - obj->getCurrentFrame().height() / 2);
-		obj->construct();
 
 		variant commands;
 		if(NUM_ARGS > 4) {
@@ -1694,6 +1693,8 @@ namespace
 			callable->add(variant(obj.get()));
 			commands = args()[4]->evaluate(*callable);
 		}
+
+		obj->construct();
 
 		spawn_command* cmd = (new spawn_command(obj, commands));
 		cmd->setExpression(this);
@@ -1746,7 +1747,7 @@ namespace
 			if(prototype) {
 				obj.reset(new CustomObject(*prototype));
 			} else {
-				obj.reset(new CustomObject(type, x, y, face_right));
+				obj.reset(new CustomObject(type, x, y, face_right, true));
 			}
 		} else {
 			const int x = 0;
@@ -1758,13 +1759,12 @@ namespace
 			if(prototype) {
 				obj.reset(new CustomObject(*prototype));
 			} else {
-				obj.reset(new CustomObject(type, x, y, face_right));
+				obj.reset(new CustomObject(type, x, y, face_right, true));
 			}
 		}
 		
 		//adjust so the object's x/y is its midpoint.
 		obj->setPos(obj->x() - obj->getCurrentFrame().width() / 2 , obj->y() - obj->getCurrentFrame().height() / 2);
-		obj->construct();
 
 		if(NUM_ARGS > 4) {
 			properties = EVAL_ARG(4);
@@ -1838,6 +1838,8 @@ namespace
 				obj->mutateValue(last_key.as_string(), value);
 			}
 		}
+
+		obj->construct();
 
 		return variant(obj.get());
 	FUNCTION_ARGS_DEF
@@ -1927,7 +1929,6 @@ namespace
 		
 		//adjust so the object's x/y is its midpoint.
 		obj->setPos(obj->x() - obj->getCurrentFrame().width() / 2 , obj->y() - obj->getCurrentFrame().height() / 2);
-		obj->construct();
 
 		if(NUM_ARGS > 4) {
 			ConstCustomObjectTypePtr type_ptr = CustomObjectType::getOrDie(type);
@@ -1948,6 +1949,8 @@ namespace
 				obj->mutateValue(last_key.as_string(), value);
 			}
 		}
+
+		obj->construct();
 
 		return variant(obj.get());
 	FUNCTION_ARGS_DEF
