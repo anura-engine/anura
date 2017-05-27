@@ -438,7 +438,7 @@ void ImGui_ImplSdlGL3_NewFrame(SDL_Window* window)
     // Setup time step
     Uint32	time = SDL_GetTicks();
     double current_time = time / 1000.0;
-    io.DeltaTime = g_Time > 0.0 ? (float)(current_time - g_Time) : (float)(1.0f / 60.0f);
+    io.DeltaTime = (current_time > g_Time) ? (float)(current_time - g_Time) : (float)(1.0f / 60.0f);
     g_Time = current_time;
 
     // Setup inputs
