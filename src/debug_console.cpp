@@ -261,6 +261,11 @@ namespace debug_console
 		}
 	}
 
+	void clearMessages()
+	{
+		messages().clear();
+	}
+
 	void draw()
 	{
 		auto canvas = KRE::Canvas::getInstance();

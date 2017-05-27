@@ -4585,6 +4585,14 @@ FUNCTION_DEF_IMPL
 			return variant_type::get_commands();
 		END_FUNCTION_DEF(debug)
 
+		FUNCTION_DEF(clear, 0, 0, "clear(): clears debug messages")
+			return variant(new FnCommandCallableArg("clear", [=](FormulaCallable* callable) {
+				debug_console::clearMessages();
+			}));
+		FUNCTION_TYPE_DEF
+			return variant_type::get_commands();
+		END_FUNCTION_DEF(clear)
+
 		FUNCTION_DEF(log, 1, -1, "log(...): outputs arguments to stderr")
 			Formula::failIfStaticContext();
 

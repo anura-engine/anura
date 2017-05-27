@@ -41,6 +41,7 @@ namespace debug_console
 	void draw_graph();
 
 	void addMessage(const std::string& msg);
+	void clearMessages();
 	void draw();
 	void enable_screen_output(bool en=true);
 
@@ -52,6 +53,7 @@ namespace debug_console
 
 		bool hasKeyboardFocus() const;
 
+		void clearMessages();
 		void addMessage(const std::string& msg);
 
 		void setFocus(game_logic::FormulaCallablePtr e);
