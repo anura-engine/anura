@@ -428,7 +428,10 @@ private:
 				if(p->storage_slot == slot) {
 					auto mutable_this = const_cast<CustomObject*>(this);
 
-					mutable_this->property_init_deferred_.erase(i);
+					auto itor = mutable_this->property_init_deferred_.begin();
+					itor += i - property_init_deferred_.begin();
+
+					mutable_this->property_init_deferred_.erase(itor);
 					mutable_this->initProperty(*p);
 					return;
 				}
