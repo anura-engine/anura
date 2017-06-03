@@ -1475,8 +1475,6 @@ COMMAND_LINE_UTILITY(make_image_wrap)
 					target[i] = (int(begin_line[i]) + int(end_line[i]))/2;
 				}
 
-				fprintf(stderr, "ZZZ: LINE: %d -> %d,%d,%d,%d\n", y, (int)begin_line[0], (int)begin_line[1],  (int)begin_line[2], (int)begin_line[3]);
-
 				for(int x = 0; x < BorderWidth; ++x) {
 
 					const double mix_ratio = double(x)/double(BorderWidth);

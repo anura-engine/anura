@@ -119,6 +119,7 @@ namespace KRE
 
 		std::string saveFrameBuffer(const std::string& filename);
 
+		virtual void setVisible(bool visible) = 0;
 		virtual std::vector<WindowMode> getWindowModes(std::function<bool(const WindowMode&)> mode_filter) const = 0;
 		virtual WindowMode getDisplaySize() const = 0;
 

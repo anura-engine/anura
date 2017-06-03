@@ -553,7 +553,6 @@ CustomObject::CustomObject(const std::string& type, int x, int y, bool face_righ
 	particles_(),
 	document_(nullptr)
 {
-	fprintf(stderr, "ZZZ: OBJ: %s -> %d\n", type.c_str(), (int)deferInitProperties);
 	setZOrder(type_->zorder());
 	setZSubOrder(type_->zSubOrder());
 
@@ -3389,6 +3388,14 @@ variant CustomObject::getValueBySlot(int slot) const
 		return variant(&result);
 	}
 
+	case CUSTOM_OBJECT_PARALLAX_SCALE_X: {
+		return variant(parallaxScaleMillisX()/1000.0);
+	}
+
+	case CUSTOM_OBJECT_PARALLAX_SCALE_Y: {
+		return variant(parallaxScaleMillisY()/1000.0);
+	}
+
 	case CUSTOM_OBJECT_ATTACHED_OBJECTS: {
 		std::vector<variant> result;
 		for(const EntityPtr& e : attachedObjects()) {
@@ -4586,6 +4593,16 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 		calculateSolidRect();
 		handleEvent("set_variations");
 		break;
+
+	case CUSTOM_OBJECT_PARALLAX_SCALE_X: {
+		parallax_scale_millis_.reset(new std::pair<int, int>(static_cast<int>(value.as_float()*1000), parallaxScaleMillisY()));
+		break;
+	}
+
+	case CUSTOM_OBJECT_PARALLAX_SCALE_Y: {
+		parallax_scale_millis_.reset(new std::pair<int, int>(parallaxScaleMillisX(), static_cast<int>(value.as_float()*1000)));
+		break;
+	}
 	
 	case CUSTOM_OBJECT_ATTACHED_OBJECTS: {
 		std::vector<EntityPtr> v;

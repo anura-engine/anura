@@ -303,6 +303,14 @@ namespace KRE
 			window_.reset();
 		}
 
+		void setVisible(bool visible) override {
+			if(visible) {
+				SDL_ShowWindow(window_.get());
+			} else {
+				SDL_HideWindow(window_.get());
+			}
+		}
+
 		void clear(ClearFlags f) override {
 			// N.B. Clear color is global GL state, so we need to re-configure it everytime we clear.
 			// Since it may have changed by some sneaky render target user.

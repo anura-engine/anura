@@ -1558,7 +1558,7 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 				entry.setter = game_logic::Formula::createOptionalFormula(value["set"], getFunctionSymbols(), setter_def);
 				entry.onchange = game_logic::Formula::createOptionalFormula(value["change"], getFunctionSymbols(), setter_def);
 				if(value["init"].is_null() == false) {
-					entry.init = game_logic::Formula::createOptionalFormula(value["init"], getFunctionSymbols(), game_logic::ConstFormulaCallableDefinitionPtr(&CustomObjectCallable::instance()));
+					entry.init = game_logic::Formula::createOptionalFormula(value["init"], getFunctionSymbols(), callable_definition_);
 					assert(entry.init);
 					if(is_strict_) {
 						assert(entry.type);

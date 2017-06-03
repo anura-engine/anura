@@ -1116,7 +1116,6 @@ std::map<std::string, std::string>& class_path_map()
 
 	void FormulaObject::update(FormulaObject& updated)
 	{
-		fprintf(stderr, "ZZZ: update %p -> %p\n", &updated, this);
 		std::vector<ffl::IntrusivePtr<FormulaObject> > objects;
 		std::map<boost::uuids::uuid, FormulaObject*> src, dst;
 		{
@@ -1258,7 +1257,6 @@ variant FormulaObject::generateDiff(variant before, variant b)
 
 void FormulaObject::applyDiff(variant delta)
 {
-	fprintf(stderr, "ZZZ: applyDiff(%s)\n", delta.write_json().c_str());
 	std::map<boost::uuids::uuid, FormulaObject*> objects;
 	visitVariants(variant(this), [&objects](variant v) {
 		FormulaObject* obj = v.try_convert<FormulaObject>();

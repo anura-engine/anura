@@ -2464,6 +2464,14 @@ RETURN_TYPE("bool")
 	RETURN_TYPE("commands")
 	END_FUNCTION_DEF(toggle_pause)
 
+	FUNCTION_DEF(hide_window, 0, 0, "hide_window()")
+		Formula::failIfStaticContext();
+		return variant(new FnCommandCallable("hide_window", [=]() {
+			KRE::WindowManager::getMainWindow()->setVisible(false);
+		}));
+	RETURN_TYPE("commands")
+	END_FUNCTION_DEF(hide_window)
+
 	FUNCTION_DEF(quit_to_desktop, 0, 0, "quit_to_desktop()")
 		Formula::failIfStaticContext();
 		return variant(new FnCommandCallable("quit_to_desktop", [=]() {

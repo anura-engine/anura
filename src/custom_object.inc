@@ -109,6 +109,8 @@ CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_STANDING_ON,                        "st
 CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_SHADER,                             "shader", "null|anura_shader/null|anura_shader|map" )
 CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_EFFECTS,							 "effects", "[anura_shader]/[anura_shader|map]" )
 CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_VARIATIONS,                         "variations", "[string]" )
+CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_PARALLAX_SCALE_X,                   "parallax_scale_x", "decimal" )
+CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_PARALLAX_SCALE_Y,                   "parallax_scale_y", "decimal" )
 CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_ATTACHED_OBJECTS,                   "attached_objects", "[custom_obj]" )
 CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_CALL_STACK,                         "call_stack", "[string]" )
 CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_LIGHTS,                             "lights", "[object]" )
