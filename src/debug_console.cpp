@@ -531,8 +531,12 @@ namespace debug_console
 					init();
 					text_editor_->setFocus(true);
 					preferences::save_preferences();
+					claimed = true;
+					return true;
 				} else if(dragging_) {
 					setLoc(x() + event.motion.xrel, y() + event.motion.yrel);
+					claimed = true;
+					return true;
 				}
 				break;
 			}
@@ -548,6 +552,8 @@ namespace debug_console
 					if(event.button.x >= x() + width() - 60) {
 						resizing_ = true;
 					}
+					claimed = true;
+					return true;
 				}
 				break;
 			}

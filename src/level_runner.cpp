@@ -1303,7 +1303,7 @@ bool LevelRunner::play_cycle()
 				swallowed = console_->processEvent(point(), event, swallowed);
 			}
 
-			swallowed = formula_profiler::handle_sdl_event(event, swallowed);
+			swallowed = formula_profiler::handle_sdl_event(event, swallowed) || swallowed;
 
 			if(history_slider_ && paused) {
 				swallowed = history_slider_->processEvent(point(), event, swallowed) || swallowed;
