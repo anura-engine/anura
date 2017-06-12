@@ -3494,8 +3494,8 @@ void BuiltinEditor::draw_gui() const
 		rect boundaries = modify_selected_rect(*this, lvl_->boundaries(), selectx, selecty);
 		const int x1 = boundaries.x()/zoom_;
 		const int x2 = boundaries.x2()/zoom_;
-		const int y1 = boundaries.y()/zoom_+EDITOR_MENUBAR_HEIGHT;
-		const int y2 = boundaries.y2()/zoom_+EDITOR_MENUBAR_HEIGHT;
+		const int y1 = boundaries.y()/zoom_;
+		const int y2 = boundaries.y2()/zoom_;
 		
 		glm::u8vec4 selected_color = KRE::Color::colorYellow().as_u8vec4();
 		glm::u8vec4 normal_color = KRE::Color::colorWhite().as_u8vec4();
@@ -3650,7 +3650,7 @@ void editor::draw_selection(int xoffset, int yoffset) const
 	for(const point& p : tile_selection_.tiles) {
 		const int size = TileSize/zoom_;
 		const int xpos = xoffset/zoom_ + p.x*size - xpos_/zoom_;
-		const int ypos = yoffset/zoom_ + p.y*size - ypos_/zoom_ + EDITOR_MENUBAR_HEIGHT;
+		const int ypos = yoffset/zoom_ + p.y*size - ypos_/zoom_;
 
 		if(std::binary_search(tile_selection_.tiles.begin(), tile_selection_.tiles.end(), point(p.x, p.y - 1)) == false) {
 			varray.emplace_back(xpos, ypos);
