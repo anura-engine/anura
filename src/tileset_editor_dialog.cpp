@@ -34,6 +34,8 @@
 #include "preview_tileset_widget.hpp"
 #include "tileset_editor_dialog.hpp"
 
+PREF_INT(editor_tileset_button_size, 44, "Size of tileset editing buttons in the editor");
+
 namespace editor_dialogs
 {
 	namespace 
@@ -91,9 +93,9 @@ namespace editor_dialogs
 					first_index_ = index;
 				}
 				PreviewTilesetWidget* preview = new PreviewTilesetWidget(*t.preview());
-				preview->setDim(40, 40);
+				preview->setDim(g_editor_tileset_button_size - 4, g_editor_tileset_button_size - 4);
 				ButtonPtr tileset_button(new Button(WidgetPtr(preview), std::bind(&TilesetEditorDialog::setTileset, this, index)));
-				tileset_button->setDim(44, 44);
+				tileset_button->setDim(g_editor_tileset_button_size, g_editor_tileset_button_size);
 				grid->addCol(gui::WidgetPtr(new gui::BorderWidget(tileset_button, index == editor_.get_tileset() ? KRE::Color::colorWhite() : KRE::Color::colorBlack())));
 			}
 
