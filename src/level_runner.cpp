@@ -93,6 +93,7 @@ namespace
 	std::vector<std::pair<std::function<void()>,void*>> process_functions;
 	std::deque<std::function<void()>> asynchronous_work_items_;
 
+	PREF_BOOL(editor_pause, false, "If true, the editor auto pauses when started");
 	PREF_INT(time_quota_async_work_items, 10, "Number of milliseconds allowed each frame for asynchronous/background work items to run");
 
 	PREF_BOOL(allow_debug_console_clicking, true, "Allow clicking on objects in the debug console to select them");
@@ -778,6 +779,10 @@ void LevelRunner::start_editor()
 			ffl::IntrusivePtr<CustomObject> obj(new CustomObject(g_editor_object, 0, 0, 1));
 			obj->construct();
 			lvl_->add_character(obj);
+		}
+
+		if(g_editor_pause) {
+			start_editor();
 		}
 	} else {
 		//Pause the game and set the level to its original
