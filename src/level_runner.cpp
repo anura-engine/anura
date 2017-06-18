@@ -78,6 +78,8 @@
 #include "variant_utils.hpp"
 #include "globals.h"
 
+extern bool g_mouse_event_swallowed;
+
 extern std::map<std::string, variant> g_user_info_registry;
 
 PREF_STRING(editor_object, "", "Object to use for the editor");
@@ -462,6 +464,8 @@ bool LevelRunner::handle_mouse_events(const SDL_Event &event)
 
 	static const int MouseWheelID = get_object_event_id("mouse_wheel");
 
+	g_mouse_event_swallowed = false;
+
 	if(paused) {
 		// skip mouse event handling when paused.
 		// XXX: when we become unpaused we need to reset the state of drag operations
@@ -597,8 +601,9 @@ bool LevelRunner::handle_mouse_events(const SDL_Event &event)
 
 				if(event_type == SDL_MOUSEBUTTONUP && mouse_clicking_ && !click_handled && e->isBeingDragged() == false && mouse_drag_count_ <= DragThresholdPx) {
 					e->handleEvent(MouseClickID, callable.get());
-					if(it->isMouseEventSwallowed()) {
+					if(g_mouse_event_swallowed) {
 						click_handled = true;
+						g_mouse_event_swallowed = false;
 					}
 				}
 				items.push_back(variant(e.get()));
@@ -623,8 +628,9 @@ bool LevelRunner::handle_mouse_events(const SDL_Event &event)
 						if(object->getMouseButtons() == 0 && object->isBeingDragged()) {
 							object->handleEvent(MouseDragEndID, callable.get());
 							object->setBeingDragged(false);
-							if(object->isMouseEventSwallowed()) {
+							if(g_mouse_event_swallowed) {
 								drag_handled = true;
+								g_mouse_event_swallowed = false;
 							}
 						}
 					} else if(event_type == SDL_MOUSEMOTION && !drag_handled) {
@@ -636,15 +642,17 @@ bool LevelRunner::handle_mouse_events(const SDL_Event &event)
 								object->handleEvent(MouseDragEndID, callable.get());
 								object->setBeingDragged(false);
 							}
-							if(object->isMouseEventSwallowed()) {
+							if(g_mouse_event_swallowed) {
 								drag_handled = true;
+								g_mouse_event_swallowed = false;
 							}
 						} else if(object->getMouseButtons() & button_state && mouse_drag_count_ > object->mouseDragThreshold(DragThresholdPx)) {
 							// start drag.
 							object->handleEvent(MouseDragStartID, callable.get());
 							object->setBeingDragged();
-							if(object->isMouseEventSwallowed()) {
+							if(g_mouse_event_swallowed) {
 								drag_handled = true;
+								g_mouse_event_swallowed = false;
 							}
 						}
 					}

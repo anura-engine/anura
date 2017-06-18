@@ -244,8 +244,6 @@ public:
 	void updateType(ConstCustomObjectTypePtr old_type,
 	                 ConstCustomObjectTypePtr new_type);
 
-	bool isMouseEventSwallowed() const override {return swallow_mouse_event_;}
-	void resetMouseEvent() {swallow_mouse_event_ = false;}
 	void addWidget(const gui::WidgetPtr& w);
 	void addWidgets(std::vector<gui::WidgetPtr>* widgets);
 	void clearWidgets();
@@ -552,8 +550,6 @@ private:
 	void set_platform_area(const rect& area);
 
 	std::vector<int> platform_offsets_;
-
-	bool swallow_mouse_event_;
 
 	bool editor_only_;
 

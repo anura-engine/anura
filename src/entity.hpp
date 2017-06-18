@@ -301,8 +301,6 @@ public:
 	void setSpawnedBy(const std::string& key);
 	const std::string& wasSpawnedBy() const;
 
-	virtual bool isMouseEventSwallowed() const {return false;}
-
 	bool isMouseOverEntity() const { return mouse_over_entity_; }
 	void setMouseOverEntity(bool val=true) { mouse_over_entity_=val; }
 	void setMouseButtons(uint8_t buttons) { mouse_button_state_ = buttons; }

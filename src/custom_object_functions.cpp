@@ -88,6 +88,8 @@
 #include "graphical_font.hpp"
 #include "user_voxel_object.hpp"
 
+bool g_mouse_event_swallowed;
+
 void run_auto_updater();
 
 PREF_BOOL(tbs_use_shared_mem, true, "Use shared memory for tbs comms");
@@ -3697,7 +3699,9 @@ RETURN_TYPE("bool")
 	END_FUNCTION_DEF(swallow_event)
 
 	FUNCTION_DEF(swallow_mouse_event, 0, 0, "swallow_mouse_event(): when used in an instance-specific event handler, this causes the mouse event to be swallowed and not passed to the next object in the z-order stack.")
-		return variant(new SwallowMouseCommandCallable);
+		return variant(new FnCommandCallable("swallow_mouse_event", [=]() {
+			g_mouse_event_swallowed = true;
+		}));
 	RETURN_TYPE("commands")
 	END_FUNCTION_DEF(swallow_mouse_event)
 
