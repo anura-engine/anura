@@ -2432,7 +2432,7 @@ RETURN_TYPE("bool")
 	RETURN_TYPE("[object]")
 	END_FUNCTION_DEF(tiles_at)
 
-	FUNCTION_DEF(set_tiles, 3, 3, "set_tiles(zorder, [area], tile)")
+	FUNCTION_DEF(set_tiles, 3, 3, "set_tiles(zorder, [area], tile): modify the tilemap within a certain area.")
 		int zorder = EVAL_ARG(0).as_int();
 		std::vector<int> r = EVAL_ARG(1).as_list_int();
 		std::string t = EVAL_ARG(2).as_string();
@@ -2450,7 +2450,7 @@ RETURN_TYPE("bool")
 	RETURN_TYPE("commands")
 	END_FUNCTION_DEF(set_tiles)
 
-	FUNCTION_DEF(complete_rebuild_tiles, 0, 0, "complete_rebuild_tiles()")
+	FUNCTION_DEF(complete_rebuild_tiles, 0, 0, "complete_rebuild_tiles(): run to complete the rebuild of tiles started by a previous call to set_tiles")
 		return variant(new FnCommandCallable("set_tiles", [=]() {
 			Level::current().complete_rebuild_tiles_in_background();
 		}));
