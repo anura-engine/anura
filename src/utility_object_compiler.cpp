@@ -1992,3 +1992,185 @@ COMMAND_LINE_UTILITY(generate_terrain_spritesheet)
 	v.write_json_pretty(ss, "\t");
 	sys::write_file("terrain-file-data.json", ss.str());
 }
+
+namespace {
+const int TileDim = 32;
+using namespace KRE;
+
+static const unsigned char alpha_colors[] = {
+	0x6f, 0x6d, 0x51,
+	0xf9, 0x30, 0x3d,
+};
+
+bool is_tile_empty(SurfacePtr surf, const unsigned char* pixels, int tile_x, int tile_y)
+{
+	for(int x = 0; x != TileDim; ++x) {
+		for(int y = 0; y != TileDim; ++y) {
+			const int px = tile_x*TileDim + x;
+			const int py = tile_y*TileDim + y;
+
+			const unsigned char* p = pixels + py*surf->width()*4 + px*4;
+
+//			fprintf(stderr, "%d, %d: %02x %02x %02x %02x\n", px, py, (unsigned int)p[0], (unsigned int)p[1], (unsigned int)p[2], (unsigned int)p[3]);
+
+			bool is_alpha = memcmp(p, alpha_colors, 3) == 0 || memcmp(p, alpha_colors+3, 3) == 0;
+			if(!is_alpha) {
+				return false;
+			}
+		}
+	}
+
+	return true;
+}
+
+void blit_tile(SurfacePtr surf, unsigned char* pixels, int src_tile_x, int src_tile_y, int dst_tile_x, int dst_tile_y, int rotate)
+{
+	for(int x = 0; x != TileDim; ++x) {
+		for(int y = 0; y != TileDim; ++y) {
+			const int px = src_tile_x*TileDim + x;
+			const int py = src_tile_y*TileDim + y;
+			const unsigned char* p = pixels + py*surf->width()*4 + px*4;
+			bool is_alpha = memcmp(p, alpha_colors, 3) == 0 || memcmp(p, alpha_colors+3, 3) == 0;
+			if(is_alpha) {
+				continue;
+			}
+
+			int dst_x = x;
+			int dst_y = y;
+			if(rotate == 1) {
+				dst_y = x;
+				dst_x = TileDim - y - 1;
+			} else if(rotate == 2) {
+				dst_y = TileDim - y - 1;
+				dst_x = TileDim - x - 1;
+			} else if(rotate == 3) {
+				dst_y = TileDim - x - 1;
+				dst_x = y;
+			}
+
+			const int dpx = dst_tile_x*TileDim + dst_x;
+			const int dpy = dst_tile_y*TileDim + dst_y;
+
+			unsigned char* dp = pixels + dpy*surf->width()*4 + dpx*4;
+
+			memcpy(dp, p, 4);
+		}
+	}
+	
+}
+
+}
+
+COMMAND_LINE_UTILITY(generate_tilesheet)
+{
+	using namespace KRE;
+
+	std::deque<std::string> argv(args.begin(), args.end());
+
+	ASSERT_LOG(!argv.empty(), "Must specify name of tilesheet");
+	std::string fname = argv.front();
+	argv.pop_front();
+
+	SurfacePtr surf = graphics::SurfaceCache::get(fname);
+	ASSERT_LOG(surf->getPixelFormat()->bytesPerPixel() == 4, "Incorrect bpp: " << (int)surf->getPixelFormat()->bytesPerPixel());
+	if(surf->width() != 512 || surf->width() < 64) {
+		ASSERT_LOG(false, "Input tilesheet must be 512 pixels wide and at least 64 pixels tall");
+	}
+
+	KRE::SurfaceLock lck(surf);
+	unsigned char* pixels = reinterpret_cast<unsigned char*>(surf->pixelsWriteable());
+
+	if(is_tile_empty(surf, pixels, 2, 0)) {
+		blit_tile(surf, pixels, 1, 0, 2, 0, 3);
+	}
+
+	if(is_tile_empty(surf, pixels, 3, 0)) {
+		blit_tile(surf, pixels, 1, 0, 3, 0, 2);
+	}
+
+	if(is_tile_empty(surf, pixels, 4, 0)) {
+		blit_tile(surf, pixels, 1, 0, 4, 0, 1);
+	}
+
+	if(is_tile_empty(surf, pixels, 5, 0)) {
+		blit_tile(surf, pixels, 1, 0, 5, 0, 0);
+		blit_tile(surf, pixels, 2, 0, 5, 0, 0);
+		blit_tile(surf, pixels, 3, 0, 5, 0, 0);
+	}
+
+	if(is_tile_empty(surf, pixels, 6, 0)) {
+		blit_tile(surf, pixels, 1, 0, 6, 0, 0);
+		blit_tile(surf, pixels, 4, 0, 6, 0, 0);
+		blit_tile(surf, pixels, 3, 0, 6, 0, 0);
+	}
+
+	if(is_tile_empty(surf, pixels, 7, 0)) {
+		blit_tile(surf, pixels, 1, 0, 7, 0, 0);
+		blit_tile(surf, pixels, 2, 0, 7, 0, 0);
+		blit_tile(surf, pixels, 4, 0, 7, 0, 0);
+	}
+
+	if(is_tile_empty(surf, pixels, 8, 0)) {
+		blit_tile(surf, pixels, 2, 0, 8, 0, 0);
+		blit_tile(surf, pixels, 3, 0, 8, 0, 0);
+		blit_tile(surf, pixels, 4, 0, 8, 0, 0);
+	}
+
+	if(is_tile_empty(surf, pixels, 9, 0)) {
+		blit_tile(surf, pixels, 1, 0, 9, 0, 0);
+		blit_tile(surf, pixels, 2, 0, 9, 0, 0);
+	}
+
+	if(is_tile_empty(surf, pixels, 10, 0)) {
+		blit_tile(surf, pixels, 1, 0, 10, 0, 0);
+		blit_tile(surf, pixels, 4, 0, 10, 0, 0);
+	}
+
+	if(is_tile_empty(surf, pixels, 11, 0)) {
+		blit_tile(surf, pixels, 2, 0, 11, 0, 0);
+		blit_tile(surf, pixels, 3, 0, 11, 0, 0);
+	}
+
+	if(is_tile_empty(surf, pixels, 12, 0)) {
+		blit_tile(surf, pixels, 3, 0, 12, 0, 0);
+		blit_tile(surf, pixels, 4, 0, 12, 0, 0);
+	}
+
+	if(is_tile_empty(surf, pixels, 13, 0)) {
+		blit_tile(surf, pixels, 1, 0, 13, 0, 0);
+		blit_tile(surf, pixels, 3, 0, 13, 0, 0);
+	}
+
+	if(is_tile_empty(surf, pixels, 14, 0)) {
+		blit_tile(surf, pixels, 2, 0, 14, 0, 0);
+		blit_tile(surf, pixels, 4, 0, 14, 0, 0);
+	}
+
+	if(is_tile_empty(surf, pixels, 15, 0)) {
+		blit_tile(surf, pixels, 1, 0, 15, 0, 0);
+		blit_tile(surf, pixels, 2, 0, 15, 0, 0);
+		blit_tile(surf, pixels, 3, 0, 15, 0, 0);
+		blit_tile(surf, pixels, 4, 0, 15, 0, 0);
+	}
+
+	if(is_tile_empty(surf, pixels, 1, 1)) {
+		blit_tile(surf, pixels, 0, 1, 1, 1, 3);
+	}
+
+	if(is_tile_empty(surf, pixels, 2, 1)) {
+		blit_tile(surf, pixels, 0, 1, 2, 1, 1);
+	}
+
+	if(is_tile_empty(surf, pixels, 3, 1)) {
+		blit_tile(surf, pixels, 0, 1, 3, 1, 2);
+	}
+
+
+	for(int x = 0; x != 32; ++x) {
+		fprintf(stderr, "%d ", is_tile_empty(surf, pixels, x, 0) ? 1 : 0);
+	}
+	fprintf(stderr, "\n");
+
+	surf->savePng("sheet.png"); //module::get_module_path() + fname.str());
+
+}
