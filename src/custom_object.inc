@@ -118,6 +118,7 @@ CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_SOLID_DIMENSIONS_IN,                "so
 CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_SOLID_DIMENSIONS_NOT_IN,            "solid_dimensions_not_in", "[string]" )
 CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_COLLIDE_DIMENSIONS_IN,              "collide_dimensions_in", "[string]" )
 CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_COLLIDE_DIMENSIONS_NOT_IN,          "collide_dimensions_not_in", "[string]" )
+CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_COLLIDES_WITH_LEVEL,                "collides_with_level", "bool" )
 CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_BRIGHTNESS,                         "brightness", "int" )
 CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_CURRENTGENERATOR,                   "current_generator", "object|null" )
 CUSTOM_OBJECT_CALLABLE_INC(CUSTOM_OBJECT_TAGS,                               "tags", "object" )

@@ -1720,7 +1720,12 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 			}
 			
 			KRE::ShaderProgram::loadFromVariant(shader_info);
-			std::string shader_name = shader_info["name"].as_string();
+			std::string shader_name;
+			if(shader_info.has_key("name")) {
+				shader_name = shader_info["name"].as_string();
+			} else {
+				shader_name = write_uuid(generate_uuid());
+			}
 			shader_ = graphics::AnuraShaderPtr(new graphics::AnuraShader(shader_name));
 		}
 		//LOG_DEBUG("Added shader '" << shader_->getName() << "' for CustomObjectType '" << id_ << "'");

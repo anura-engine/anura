@@ -198,6 +198,7 @@ CustomObject::CustomObject(variant node)
 	parent_prev_x_(std::numeric_limits<int>::min()), parent_prev_y_(std::numeric_limits<int>::min()), parent_prev_facing_(true),
     relative_x_(node["relative_x"].as_int(0)), relative_y_(node["relative_y"].as_int(0)),
 	editor_only_(node["editor_only"].as_bool(false)),
+	collides_with_level_(node["collides_with_level"].as_bool(type_->collidesWithLevel())),
 	currently_handling_die_event_(0),
 	use_absolute_screen_coordinates_(node["use_absolute_screen_coordinates"].as_bool(type_->useAbsoluteScreenCoordinates())),
 	paused_(false),
@@ -544,6 +545,7 @@ CustomObject::CustomObject(const std::string& type, int x, int y, bool face_righ
 	parent_prev_x_(std::numeric_limits<int>::min()), parent_prev_y_(std::numeric_limits<int>::min()), parent_prev_facing_(true),
     relative_x_(0), relative_y_(0),
 	editor_only_(type_->editorOnly()),
+	collides_with_level_(type_->collidesWithLevel()),
 	min_difficulty_(-1), max_difficulty_(-1),
 	currently_handling_die_event_(0),
 	use_absolute_screen_coordinates_(type_->useAbsoluteScreenCoordinates()),
@@ -693,6 +695,7 @@ CustomObject::CustomObject(const CustomObject& o)
 	custom_draw_(o.custom_draw_),
 	platform_offsets_(o.platform_offsets_),
 	editor_only_(o.editor_only_),
+	collides_with_level_(o.collides_with_level_),
 	currently_handling_die_event_(0),
 	//do NOT copy widgets since they do not support deep copying
 	//and re-seating references is difficult.
@@ -3437,6 +3440,10 @@ variant CustomObject::getValueBySlot(int slot) const
 		return variant(&v);
 	}
 
+	case CUSTOM_OBJECT_COLLIDES_WITH_LEVEL: {
+		return variant::from_bool(collides_with_level_);
+	}
+
 	case CUSTOM_OBJECT_ALWAYS_ACTIVE: return variant::from_bool(always_active_);
 	case CUSTOM_OBJECT_TAGS: return variant(tags_.get());
 	case CUSTOM_OBJECT_SCALE:
@@ -4696,6 +4703,11 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 		break;
 	}
 
+	case CUSTOM_OBJECT_COLLIDES_WITH_LEVEL: {
+		collides_with_level_ = value.as_bool();
+		break;
+	}
+
 	case CUSTOM_OBJECT_X_SCHEDULE: {
 		if(position_schedule_.get() == nullptr) {
 			position_schedule_.reset(new PositionSchedule);
@@ -5947,7 +5959,7 @@ void CustomObject::setSoundVolume(float sound_volume, float nseconds)
 
 bool CustomObject::allowLevelCollisions() const
 {
-	return type_->isStaticObject() || !type_->collidesWithLevel();
+	return type_->isStaticObject() || !collides_with_level_;
 }
 
 void CustomObject::set_platform_area(const rect& area)

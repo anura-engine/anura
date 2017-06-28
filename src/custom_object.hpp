@@ -552,6 +552,7 @@ private:
 	std::vector<int> platform_offsets_;
 
 	bool editor_only_;
+	bool collides_with_level_;
 
 	bool handleEventInternal(int event, const FormulaCallable* context, bool executeCommands_now=true);
 	std::vector<variant> delayed_commands_;

@@ -212,7 +212,8 @@ Frame::Frame(variant node)
 		ASSERT_LOG(res.size() > 0 && !res[0].empty(), "No valid filenames for texture found in: " << node["image"].to_debug_string());
 		image_ = res[0];
 	} else {
-		ASSERT_LOG(false, "No 'image' attribute found.");
+		ASSERT_LOG(node.has_key("fbo"), "No 'image' attribute found.");
+		image_ = "fbo";
 	}
 
 	std::vector<std::string> palettes = parse_variant_list_or_csv_string(node["palettes"]);
