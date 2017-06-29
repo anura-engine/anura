@@ -159,6 +159,8 @@ public:
 
 	point pivot(const std::string& name, int time_in_frame) const;
 	int frameNumber(int time_in_frame) const;
+
+	const std::vector <std::string>& getSounds() const { return sounds_; }
 private:
 	DECLARE_CALLABLE(Frame);
 

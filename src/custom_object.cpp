@@ -116,6 +116,8 @@ namespace
 	}
 
 	PREF_BOOL(draw_objects_on_even_pixel_boundaries, true, "If true will only draw objects on 2-pixel boundaries");
+
+	PREF_STRING(play_sound_function, "", "");
 }
 
 struct CustomObjectText 
@@ -5085,7 +5087,23 @@ void CustomObject::setFrame(const Frame& new_frame)
 
 	setFrameNoAdjustments(new_frame);
 
-	frame_->playSound(this);
+	if(g_play_sound_function.empty() == false) {
+		if(frame_->getSounds().empty() == false) {
+			const std::string& sound = frame_->getSounds()[rand()%frame_->getSounds().size()];
+
+			static game_logic::FormulaPtr ffl(new game_logic::Formula(variant(g_play_sound_function, &get_custom_object_functions_symbol_table())));
+
+			game_logic::MapFormulaCallablePtr callable(new game_logic::MapFormulaCallable);
+			callable->add("sound", variant(sound));
+
+			BackupCallableStackScope callable_scope(&backup_callable_stack_, callable.get());
+
+			variant cmd = ffl->execute(*this);
+			executeCommand(cmd);
+		}
+	} else {
+		frame_->playSound(this);
+	}
 
 	if(entity_collides(Level::current(), *this, MOVE_DIRECTION::NONE) && entity_in_current_level(this)) {
 		game_logic::MapFormulaCallable* callable(new game_logic::MapFormulaCallable);
