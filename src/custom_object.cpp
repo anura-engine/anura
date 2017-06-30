@@ -5091,7 +5091,7 @@ void CustomObject::setFrame(const Frame& new_frame)
 		if(frame_->getSounds().empty() == false) {
 			const std::string& sound = frame_->getSounds()[rand()%frame_->getSounds().size()];
 
-			static game_logic::FormulaPtr ffl(new game_logic::Formula(variant(g_play_sound_function, &get_custom_object_functions_symbol_table())));
+			static game_logic::FormulaPtr ffl(new game_logic::Formula(variant(g_play_sound_function), &get_custom_object_functions_symbol_table()));
 
 			game_logic::MapFormulaCallablePtr callable(new game_logic::MapFormulaCallable);
 			callable->add("sound", variant(sound));

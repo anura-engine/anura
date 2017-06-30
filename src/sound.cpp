@@ -1355,6 +1355,11 @@ namespace sound
 			}
 		}
 
+		float getVolume() const
+		{
+			return volume_;
+		}
+
 		//Mix data into the output buffer. Can be safely called from the mixing thread.
 		virtual void MixData(float* output, int nsamples) override
 		{
@@ -1672,6 +1677,18 @@ namespace sound
 		} else {
 			obj.setLoopFrom(int(value.as_float()*SampleRate));
 		}
+	
+	DEFINE_FIELD(volume, "decimal")
+		return variant(obj.source_->getVolume());
+	
+	BEGIN_DEFINE_FN(set_volume, "(decimal,decimal)->commands")
+		float vol = FN_ARG(0).as_float();
+		float t = FN_ARG(1).as_float();
+		ffl::IntrusivePtr<PlayingSound> ptr(const_cast<PlayingSound*>(&obj));
+		return variant(new game_logic::FnCommandCallable("sound::set_volume", [=]() {
+			ptr->setVolume(vol, t);
+		}));
+	END_DEFINE_FN
 
 	DEFINE_FIELD(pan, "[decimal,decimal]")
 		std::vector<variant> v;
