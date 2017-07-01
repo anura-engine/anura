@@ -905,7 +905,7 @@ namespace sound
 	class SoundEffectFilter : public SoundSource
 	{
 	public:
-		explicit SoundEffectFilter() : source_(nullptr) {
+		explicit SoundEffectFilter(variant node) : source_(nullptr) {
 		}
 		virtual ~SoundEffectFilter() {}
 
@@ -914,6 +914,8 @@ namespace sound
 		bool finished() const override {
 			return source_->finished();
 		}
+
+		virtual SoundEffectFilter* clone() const = 0;
 
 	protected:
 		void GetData(float* output, int nsamples) {
@@ -924,9 +926,15 @@ namespace sound
 	private:
 		DECLARE_CALLABLE(SoundEffectFilter);
 		SoundSource* source_;
+
+		variant userdata_;
 	};
 
 	BEGIN_DEFINE_CALLABLE(SoundEffectFilter, SoundSource)
+	DEFINE_FIELD(userdata, "any")
+		return obj.userdata_;
+	DEFINE_SET_FIELD
+		obj.userdata_ = value;
 	END_DEFINE_CALLABLE(SoundEffectFilter)
 
 	enum BiquadFilterType {
@@ -944,24 +952,24 @@ namespace sound
 		Biquad(BiquadFilterType type, variant node);
 		~Biquad();
 		void setType(BiquadFilterType type);
-		void setQ(double Q);
-		void setFc(double Fc);
-		void setPeakGain(double peakGainDB);
-		void setBiquad(BiquadFilterType type, double Fc, double Q, double peakGain);
+		void setQ(float Q);
+		void setFc(float Fc);
+		void setPeakGain(float peakGainDB);
+		void setBiquad(BiquadFilterType type, float Fc, float Q, float peakGain);
 		float process(int nchannel, float in);
 		
 	protected:
 		void calcBiquad(void);
 
 		BiquadFilterType type_;
-		double a0, a1, a2, b1, b2;
-		double Fc, Q, peakGain;
+		float a0, a1, a2, b1, b2;
+		float Fc, Q, peakGain;
 
-		double z1_[NumChannels], z2_[NumChannels];
+		float z1_[NumChannels], z2_[NumChannels];
 	};
 
 	inline float Biquad::process(int nchannel, float in) {
-		double out = in * a0 + z1_[nchannel];
+		float out = in * a0 + z1_[nchannel];
 		z1_[nchannel] = in * a1 + z2_[nchannel] - b1 * out;
 		z2_[nchannel] = in * a2 - b2 * out;
 		return out;
@@ -982,22 +990,22 @@ namespace sound
 		calcBiquad();
 	}
 
-	void Biquad::setQ(double Q) {
+	void Biquad::setQ(float Q) {
 		this->Q = Q;
 		calcBiquad();
 	}
 
-	void Biquad::setFc(double Fc) {
+	void Biquad::setFc(float Fc) {
 		this->Fc = Fc;
 		calcBiquad();
 	}
 
-	void Biquad::setPeakGain(double peakGainDB) {
+	void Biquad::setPeakGain(float peakGainDB) {
 		this->peakGain = peakGainDB;
 		calcBiquad();
 	}
 		
-	void Biquad::setBiquad(BiquadFilterType type, double Fc, double Q, double peakGainDB) {
+	void Biquad::setBiquad(BiquadFilterType type, float Fc, float Q, float peakGainDB) {
 		this->type_ = type;
 		this->Q = Q;
 		this->Fc = Fc;
@@ -1005,9 +1013,9 @@ namespace sound
 	}
 
 	void Biquad::calcBiquad(void) {
-		double norm;
-		double V = pow(10, fabs(peakGain) / 20.0);
-		double K = tan(M_PI * Fc);
+		float norm;
+		float V = pow(10, fabs(peakGain) / 20.0);
+		float K = tan(M_PI * Fc);
 		switch (this->type_) {
 			case bq_type_lowpass:
 				norm = 1 / (1 + K / Q + K * K);
@@ -1107,7 +1115,7 @@ namespace sound
 	class BiQuadSoundEffectFilter : public SoundEffectFilter
 	{
 	public:
-		BiQuadSoundEffectFilter(BiquadFilterType t, variant node) : filter_(t, node)
+		BiQuadSoundEffectFilter(BiquadFilterType t, variant node) : SoundEffectFilter(node), filter_(t, node)
 		{}
 
 		void MixData(float* output, int nsamples) override
@@ -1118,16 +1126,17 @@ namespace sound
 			input.resize(nsamples*NumChannels);
 			GetData(&input[0], nsamples);
 
-			output[0] = input[0];
-			output[1] = input[1];
-
 			const float* in = &input[0];
 
 			for(int n = 0; n < nsamples; ++n) {
-				*output++ = filter_.process(0, *in++);
-				*output++ = filter_.process(1, *in++);
+				float left = filter_.process(0, *in++);
+				float right = filter_.process(1, *in++);
+				*output++ += left;
+				*output++ += right;
 			}
 		}
+
+		SoundEffectFilter* clone() const override { return new BiQuadSoundEffectFilter(*this); }
 	private:
 		threading::mutex mutex_;
 		Biquad filter_;
@@ -1140,7 +1149,7 @@ namespace sound
 	class SpeedSoundEffectFilter : public SoundEffectFilter
 	{
 	public:
-		explicit SpeedSoundEffectFilter(variant options) : speed_(options["speed"].as_float(1.0f))
+		explicit SpeedSoundEffectFilter(variant options) : SoundEffectFilter(options), speed_(options["speed"].as_float(1.0f))
 		{}
 
 		void MixData(float* output, int nsamples) override
@@ -1165,6 +1174,8 @@ namespace sound
 				output[n*2+1] += util::mix<float>(buf[a*2+1], buf[b*2+1], ratio);
 			}
 		}
+
+		SoundEffectFilter* clone() const override { return new SpeedSoundEffectFilter(*this); }
 	private:
 		threading::mutex mutex_;
 		float speed_;
@@ -1182,8 +1193,10 @@ namespace sound
 	class BinauralDelaySoundEffectFilter : public SoundEffectFilter
 	{
 	public:
-		explicit BinauralDelaySoundEffectFilter(variant options) : delay_(options["delay"].as_float())
+		explicit BinauralDelaySoundEffectFilter(variant options) : SoundEffectFilter(options), delay_(options["delay"].as_float())
 		{}
+
+		SoundEffectFilter* clone() const override { return new BinauralDelaySoundEffectFilter(*this); }
 
 		bool finished() const override {
 			threading::lock lck(mutex_);
@@ -1504,7 +1517,7 @@ namespace sound
 			first_filter_ = source_;
 		}
 
-		PlayingSound(const std::string& fname, const void* obj, variant options) : obj_(obj), source_(new RawPlayingSound(fname, options))
+		PlayingSound(const std::string& fname, const void* obj, variant options) : obj_(obj), source_(new RawPlayingSound(fname, options)), userdata_(options["userdata"])
 		{
 			first_filter_ = source_;
 
@@ -1595,7 +1608,10 @@ namespace sound
 
 		void setFilters(std::vector<ffl::IntrusivePtr<SoundEffectFilter> > filters) {
 			threading::lock lck(mutex_);
-			filters_ = filters;
+			filters_.clear();
+			for(auto f : filters) {
+				filters_.push_back(ffl::IntrusivePtr<SoundEffectFilter>(f->clone()));
+			}
 			for(size_t n = 0; n != filters_.size(); ++n) {
 				if(n == 0) {
 					filters_[n]->setSource(source_.get());
@@ -1625,6 +1641,8 @@ namespace sound
 		ffl::IntrusivePtr<SoundSource> first_filter_;
 
 		std::vector<ffl::IntrusivePtr<SoundEffectFilter> > filters_;
+
+		variant userdata_;
 	};
 
 	//List of currently playing sounds. Only the game thread can modify this,
@@ -1637,6 +1655,8 @@ namespace sound
 		return variant(obj.fname());
 	DEFINE_SET_FIELD
 		obj.setFilename(value.as_string());
+	DEFINE_FIELD(userdata, "any")
+		return obj.userdata_;
 	DEFINE_FIELD(pos, "decimal")
 		return variant(obj.src()->pos()/SampleRateDouble);
 	DEFINE_FIELD(duration, "decimal|null")
@@ -2226,7 +2246,7 @@ BEGIN_DEFINE_CALLABLE_NOBASE(AudioEngine)
 
 		return variant(s.str());
 
-	BEGIN_DEFINE_FN(sound, "(string, {volume: decimal|null, pan: [decimal,decimal]|null, loop: bool|null, loop_point: decimal|null, loop_from: decimal|null, fade_in: decimal|null, pos: decimal|null, filters: null|[builtin sound_effect_filter]}|null=null) ->builtin playing_sound")
+	BEGIN_DEFINE_FN(sound, "(string, {userdata: null|any, volume: decimal|null, pan: [decimal,decimal]|null, loop: bool|null, loop_point: decimal|null, loop_from: decimal|null, fade_in: decimal|null, pos: decimal|null, filters: null|[builtin sound_effect_filter]}|null=null) ->builtin playing_sound")
 		const std::string& name = FN_ARG(0).as_string();
 		variant options;
 		std::map<variant,variant> options_buf;
@@ -2279,38 +2299,47 @@ BEGIN_DEFINE_CALLABLE_NOBASE(AudioEngine)
 		return variant(&res);
 	
 	BEGIN_DEFINE_FN(low_pass_filter, "(map) ->builtin sound_effect_filter")
+		game_logic::Formula::failIfStaticContext();
 		return variant(new BiQuadSoundEffectFilter(bq_type_lowpass, FN_ARG(0)));
 	END_DEFINE_FN
 
 	BEGIN_DEFINE_FN(high_pass_filter, "(map) ->builtin sound_effect_filter")
+		game_logic::Formula::failIfStaticContext();
 		return variant(new BiQuadSoundEffectFilter(bq_type_highpass, FN_ARG(0)));
 	END_DEFINE_FN
 
 	BEGIN_DEFINE_FN(band_pass_filter, "(map) ->builtin sound_effect_filter")
+		game_logic::Formula::failIfStaticContext();
 		return variant(new BiQuadSoundEffectFilter(bq_type_bandpass, FN_ARG(0)));
 	END_DEFINE_FN
 
 	BEGIN_DEFINE_FN(notch_filter, "(map) ->builtin sound_effect_filter")
+		game_logic::Formula::failIfStaticContext();
 		return variant(new BiQuadSoundEffectFilter(bq_type_notch, FN_ARG(0)));
 	END_DEFINE_FN
 
 	BEGIN_DEFINE_FN(peak_filter, "(map) ->builtin sound_effect_filter")
+		game_logic::Formula::failIfStaticContext();
 		return variant(new BiQuadSoundEffectFilter(bq_type_peak, FN_ARG(0)));
 	END_DEFINE_FN
 
 	BEGIN_DEFINE_FN(low_shelf_filter, "(map) ->builtin sound_effect_filter")
+		game_logic::Formula::failIfStaticContext();
 		return variant(new BiQuadSoundEffectFilter(bq_type_lowshelf, FN_ARG(0)));
 	END_DEFINE_FN
 
 	BEGIN_DEFINE_FN(high_shelf_filter, "(map) ->builtin sound_effect_filter")
+		game_logic::Formula::failIfStaticContext();
 		return variant(new BiQuadSoundEffectFilter(bq_type_highshelf, FN_ARG(0)));
 	END_DEFINE_FN
 	
 	BEGIN_DEFINE_FN(speed_filter, "({ speed: decimal }) ->builtin sound_effect_filter")
+		game_logic::Formula::failIfStaticContext();
 		return variant(new SpeedSoundEffectFilter(FN_ARG(0)));
 	END_DEFINE_FN
 
 	BEGIN_DEFINE_FN(binaural_delay_filter, "({ delay: decimal }) ->builtin sound_effect_filter")
+		game_logic::Formula::failIfStaticContext();
 		return variant(new BinauralDelaySoundEffectFilter(FN_ARG(0)));
 	END_DEFINE_FN
 END_DEFINE_CALLABLE(AudioEngine)
