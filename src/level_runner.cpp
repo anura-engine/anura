@@ -92,6 +92,26 @@ void auto_select_resolution(const KRE::WindowPtr& wm, int *width, int *height, b
 
 namespace 
 {
+	PREF_STRING(play_music_function, "", "");
+
+	void play_music_track(EntityPtr obj, const std::string& track)
+	{
+		if(g_play_music_function.empty() == false) {
+			ASSERT_LOG(obj.get(), "No object to play music");
+			static game_logic::FormulaPtr ffl(new game_logic::Formula(variant(g_play_music_function), &get_custom_object_functions_symbol_table()));
+
+			game_logic::MapFormulaCallablePtr callable(new game_logic::MapFormulaCallable);
+			callable->add("music", variant(track));
+			callable->add("obj", variant(obj.get()));
+
+			variant cmd = ffl->execute(*callable);
+			obj->executeCommand(cmd);
+
+		} else {
+			sound::play_music(track);
+		}
+	}
+
 	std::vector<std::pair<std::function<void()>,void*>> process_functions;
 	std::deque<std::function<void()>> asynchronous_work_items_;
 
@@ -842,6 +862,14 @@ bool LevelRunner::play_level()
 		start_editor();	
 	}
 
+	if(!lvl_->music().empty()) {
+		EntityPtr e;
+		if(lvl_->player()) {
+			e = EntityPtr(&lvl_->player()->getEntity());
+		}
+		play_music_track(e, lvl_->music());
+	}
+
 	while(!done && !quit_ && !force_return_) {
 		const Uint8 *key = SDL_GetKeyboardState(nullptr);
 		if(key[SDL_SCANCODE_T] && preferences::record_history()
@@ -1069,7 +1097,7 @@ bool LevelRunner::play_cycle()
 		ffl::IntrusivePtr<Level> new_level = load_level(save->getPlayerInfo()->currentLevel());
 
 		if(!new_level->music().empty()) {
-			sound::play_music(new_level->music());
+			play_music_track(save, new_level->music());
 		}
 
 		set_scene_title(new_level->title());
@@ -1140,7 +1168,11 @@ bool LevelRunner::play_cycle()
 			{
 				Level::Summary summary = Level::getSummary(level_cfg_);
 				if(!summary.music.empty()) {
-					sound::play_music(summary.music);
+					EntityPtr e;
+					if(lvl_->player()) {
+						e = EntityPtr(&lvl_->player()->getEntity());
+					}
+					play_music_track(e, summary.music);
 				}
 			}
 
@@ -1162,8 +1194,13 @@ bool LevelRunner::play_cycle()
 			sound::stop_looped_sounds(nullptr);
 
 			ffl::IntrusivePtr<Level> new_level(load_level(level_cfg_));
-			if (!preferences::load_compiled() && !new_level->music().empty())
-				sound::play_music(new_level->music());
+			if (!preferences::load_compiled() && !new_level->music().empty()) {
+				EntityPtr e;
+				if(lvl_->player()) {
+					e = EntityPtr(&lvl_->player()->getEntity());
+				}
+				play_music_track(e, new_level->music());
+			}
 
 			if(portal->dest_label.empty() == false) {
 				//the label of an object was specified as an entry point,
@@ -1337,7 +1374,11 @@ bool LevelRunner::play_cycle()
 					new_level->setAsCurrentLevel();
 
 					if(!new_level->music().empty()) {
-						sound::play_music(new_level->music());
+						EntityPtr e;
+						if(new_level->player()) {
+							e = EntityPtr(&new_level->player()->getEntity());
+						}
+						play_music_track(e, new_level->music());
 					}
 
 					set_scene_title(new_level->title());
@@ -2099,7 +2140,11 @@ void LevelRunner::replay_level_from_start()
 	new_level->setAsCurrentLevel();
 
 	if(!new_level->music().empty()) {
-		sound::play_music(new_level->music());
+		EntityPtr e;
+		if(new_level->player()) {
+			e = EntityPtr(&new_level->player()->getEntity());
+		}
+		play_music_track(e, new_level->music());
 	}
 
 	lvl_ = new_level;

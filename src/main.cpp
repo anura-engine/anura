@@ -1200,9 +1200,6 @@ int main(int argcount, char* argvec[])
 		last_draw_position() = screen_position();
 
 		assert(lvl.get());
-		if(!lvl->music().empty()) {
-			sound::play_music(lvl->music());
-		}
 
 		if(lvl->player() && level_cfg != "autosave.cfg") {
 			lvl->player()->setCurrentLevel(level_cfg);
