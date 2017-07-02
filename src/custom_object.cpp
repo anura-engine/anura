@@ -4706,7 +4706,17 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 	}
 
 	case CUSTOM_OBJECT_COLLIDES_WITH_LEVEL: {
+		bool starting_value = collides_with_level_;
 		collides_with_level_ = value.as_bool();
+		
+		CollisionInfo collide_info;
+		if(entity_in_current_level(this) && entity_collides(Level::current(), *this, MOVE_DIRECTION::NONE, &collide_info)) {
+			collides_with_level_ = starting_value;
+
+			ASSERT_EQ(entity_collides(Level::current(), *this, MOVE_DIRECTION::NONE), false);
+			handleEvent(OBJECT_EVENT_CHANGE_SOLID_DIMENSIONS_FAIL);
+		}
+
 		break;
 	}
 
