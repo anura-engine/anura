@@ -3574,6 +3574,8 @@ void Level::set_background_by_id(const std::string& id)
 }
 
 BEGIN_DEFINE_CALLABLE_NOBASE(Level)
+DEFINE_FIELD(title, "string")
+	return variant(obj.title());
 DEFINE_FIELD(cycle, "int")
 	return variant(obj.cycle_);
 DEFINE_SET_FIELD
