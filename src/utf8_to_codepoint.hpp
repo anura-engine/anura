@@ -121,7 +121,67 @@ namespace utils
 		iterator begin() const { return iterator(utf8_.begin()); }
 		iterator end() const { return iterator(utf8_.end()); }
 
-		utf8_to_codepoint(const std::string& s) : utf8_(s) {}
+		utf8_to_codepoint(const std::string& s) : utf8_(s) { validate_utf8_string(s); }
+
+		static std::string utf8_string_to_hex(const std::string& s) {
+			std::string result;
+			for(auto c : s) {
+				char buf[128];
+				sprintf(buf, "%02x ", (unsigned int)c);
+				result += buf;
+			}
+			return s;
+		}
+
+		static void validate_utf8_string(const std::string& s) {
+			auto i = s.begin();
+			auto i2 = s.end();
+			bool valid = true;
+			while(i != i2) {
+
+				uint8_t c = static_cast<uint8_t>(*i);
+				if(c & 0x80) {
+					if(!(c & 0x40)) {
+						valid = false;
+						break;
+					}
+
+					int nchars = 2;
+					if(c & 0x20) {
+						++nchars;
+						if(c & 0x10) {
+							++nchars;
+							if(c & 0x8) {
+								valid = false;
+								break;
+							}
+						}
+					}
+
+					if(std::distance(i, i2) < nchars) {
+						valid = false;
+						break;
+					}
+
+					++i;
+					--nchars;
+					while(nchars > 0) {
+						uint8_t c = static_cast<uint8_t>(*i);
+						if((c & (0x80 | 0x40)) != 0x80) {
+							valid = false;
+							break;
+						}
+
+						++i;
+						--nchars;
+					}
+				} else {
+					++i;
+				}
+			}
+
+			ASSERT_LOG(valid, "Invalid utf8 string: (" << s << ") : " << utf8_string_to_hex(s) << "\n");
+		}
 	private:
 		std::string utf8_;
 		utf8_to_codepoint();
