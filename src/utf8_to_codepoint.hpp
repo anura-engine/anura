@@ -121,7 +121,7 @@ namespace utils
 		iterator begin() const { return iterator(utf8_.begin()); }
 		iterator end() const { return iterator(utf8_.end()); }
 
-		utf8_to_codepoint(const std::string& s) : utf8_(s) { validate_utf8_string(s); }
+		utf8_to_codepoint(const std::string& s) : utf8_(s) { if(!validate_utf8_string(s)) { utf8_ = ""; } }
 
 		static std::string utf8_string_to_hex(const std::string& s) {
 			std::string result;
@@ -130,10 +130,10 @@ namespace utils
 				sprintf(buf, "%02x ", (unsigned int)c);
 				result += buf;
 			}
-			return s;
+			return result;
 		}
 
-		static void validate_utf8_string(const std::string& s) {
+		static bool validate_utf8_string(const std::string& s) {
 			auto i = s.begin();
 			auto i2 = s.end();
 			bool valid = true;
@@ -180,7 +180,8 @@ namespace utils
 				}
 			}
 
-			ASSERT_LOG(valid, "Invalid utf8 string: (" << s << ") : " << utf8_string_to_hex(s) << "\n");
+			//ASSERT_LOG(valid, "Invalid utf8 string: (" << s << ") : " << utf8_string_to_hex(s) << "\n");
+			return valid;
 		}
 	private:
 		std::string utf8_;
