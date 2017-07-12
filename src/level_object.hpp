@@ -131,7 +131,7 @@ public:
 	int traction() const { return traction_; }
 	int damage() const { return damage_; }
 	const KRE::TexturePtr& texture() const { return t_; }
-	static void queueDraw(KRE::CanvasPtr canvas, const LevelTile& t);
+	static void queueDraw(KRE::CanvasPtr canvas, const LevelTile& t, const rect* dst_area=nullptr);
 	static int calculateTileCorners(std::vector<tile_corner>* result, const LevelTile& t);
 
 	bool isOpaque() const { return opaque_; }

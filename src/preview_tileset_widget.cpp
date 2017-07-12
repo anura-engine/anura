@@ -70,8 +70,8 @@ namespace gui
 		KRE::ModelManager2D mm(x()+4, y()+4/*, 0, scale*/);
 		auto canvas = KRE::Canvas::getInstance();
 		for(auto& t : tiles_) {
-			//KRE::ModelManager2D mm(t.x, t.y);
-			LevelObject::queueDraw(canvas, t);
+			rect r(t.x/4, t.y/4, 8, 8);
+			LevelObject::queueDraw(canvas, t, &r);
 		}
 	}
 
