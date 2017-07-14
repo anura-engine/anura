@@ -244,6 +244,7 @@ namespace
 		result[variant("vars")] = prototype_node["vars"] + node["vars"];
 		result[variant("consts")] = prototype_node["consts"] + node["consts"];
 		result[variant("variations")] = prototype_node["variations"] + node["variations"];
+		result[variant("types")] = prototype_node["types"] + node["types"];
 
 		const variant editor_info_a = prototype_node["editor_info"];
 		const variant editor_info_b = node["editor_info"];
