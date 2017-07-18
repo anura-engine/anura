@@ -642,6 +642,7 @@ namespace gui
 			has_motion_ = true;
 			const SDL_MouseMotionEvent& e = event.motion;
 			if(moving_solid_rect_) {
+					fprintf(stderr, "ZZZ: MOVING WHOLE RECTANGLE: %d, %d\n", (int)e.x, (int)e.y);
 				if(solid_handler_) {
 					const int x = e.x/2;
 					const int y = e.y/2;
@@ -679,30 +680,34 @@ namespace gui
 
 				if(dragging_sides_bitmap_&LEFT_SIDE) {
 					x1 += delta_x;
-					if(x1 > x2 - 1) {
-						x1 = x2 - 1;
-					}
 				}
 
 				if(dragging_sides_bitmap_&RIGHT_SIDE) {
 					x2 += delta_x;
-					if(x2 < x1 + 1) {
-						x2 = x1 + 1;
-					}
 				}
 
 				if(dragging_sides_bitmap_&TOP_SIDE) {
 					y1 += delta_y;
-					if(y1 > y2 - 1) {
-						y1 = y2 - 1;
-					}
 				}
 
 				if(dragging_sides_bitmap_&BOTTOM_SIDE) {
 					y2 += delta_y;
-					if(y2 < y1 + 1) {
-						y2 = y1 + 1;
-					}
+				}
+
+				if(x1 > x2 - 1 && (dragging_sides_bitmap_&LEFT_SIDE)) {
+					x1 = x2 - 1;
+				}
+
+				if(x2 < x1 + 1 && (dragging_sides_bitmap_&RIGHT_SIDE)) {
+					x2 = x1 + 1;
+				}
+
+				if(y1 > y2 - 1 && (dragging_sides_bitmap_&TOP_SIDE)) {
+					y1 = y2 - 1;
+				}
+
+				if(y2 < y1 + 1 && (dragging_sides_bitmap_&BOTTOM_SIDE)) {
+					y2 = y1 + 1;
 				}
 
 				const int width = x2 - x1;
