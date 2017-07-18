@@ -1853,7 +1853,7 @@ void editor::handleKeyPress(const SDL_KeyboardEvent& key)
 				min_y = std::min(y, min_y);
 				max_y = std::max(y, max_y);
 
-				redo.push_back([&](){ lvl->clear_tile_rect(x, y, x, y); });
+				redo.push_back([=](){ lvl->clear_tile_rect(x, y, x, y); });
 				std::map<int, std::vector<std::string> > old_tiles;
 				lvl->getAllTilesRect(x, y, x, y, old_tiles);
 				for(auto i : old_tiles) {
