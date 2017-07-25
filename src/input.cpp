@@ -74,6 +74,15 @@ namespace input
 	Uint32 sdl_get_mouse_state(int* x, int* y)
 	{
 		const Uint32 result = SDL_GetMouseState(x, y);
+		auto& gs = graphics::GameScreen::get();
+		if(x != nullptr) {
+			*x = (*x * gs.getVirtualWidth()) / gs.getWidth();
+		}
+
+		if(y != nullptr) {
+			*y = (*y * gs.getVirtualHeight()) / gs.getHeight();
+		}
+
 		/*auto sdl_wnd = SDL_GetMouseFocus();
 		auto wnd = KRE::WindowManager::getMainWindow();
 		if(sdl_wnd != nullptr) {

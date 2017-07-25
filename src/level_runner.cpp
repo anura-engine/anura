@@ -1345,15 +1345,22 @@ bool LevelRunner::play_cycle()
 		++nevent_frame;
 
 		for(SDL_Event& event : events) {
-			mapSDLEventScreenCoordinatesToVirtual(event);
-
 			bool swallowed = false;
+
+			//formula profiler and console doesn't use virtual co-ords so it gets the event before virtual processing
+			swallowed = formula_profiler::handle_sdl_event(event, swallowed) || swallowed;
 #ifndef NO_EDITOR
 			if(console_) {
 				swallowed = console_->processEvent(point(), event, swallowed);
 			}
+#endif
 
-			swallowed = formula_profiler::handle_sdl_event(event, swallowed) || swallowed;
+			mapSDLEventScreenCoordinatesToVirtual(event);
+
+#ifndef NO_EDITOR
+			if(console_) {
+				swallowed = console_->processEvent(point(), event, swallowed);
+			}
 
 			if(history_slider_ && paused) {
 				swallowed = history_slider_->processEvent(point(), event, swallowed) || swallowed;
