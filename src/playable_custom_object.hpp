@@ -37,6 +37,7 @@ public:
 	PlayableCustomObject(const CustomObject& obj);
 	PlayableCustomObject(const PlayableCustomObject& obj);
 	PlayableCustomObject(variant node);
+	PlayableCustomObject(const std::string& type, int x, int y, bool face_right, bool deferInitProperties = false);
 
 	virtual variant write() const override;
 

@@ -89,6 +89,18 @@ PlayableCustomObject::PlayableCustomObject(variant node)
 {
 }
 
+PlayableCustomObject::PlayableCustomObject(const std::string& type, int x, int y, bool face_right, bool deferInitProperties)
+	: CustomObject(type, x, y, face_right, deferInitProperties),
+	player_info_(*this),
+	difficulty_(0),
+	vertical_look_(0),
+	underwater_ctrl_x_(0),
+	underwater_ctrl_y_(0),
+	underwater_controls_(false),
+	can_interact_(0)
+{
+}
+
 variant PlayableCustomObject::write() const
 {
 	variant_builder node;

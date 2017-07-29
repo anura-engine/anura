@@ -1679,8 +1679,7 @@ namespace
 		const int x = EVAL_ARG(1).as_int();
 		const int y = EVAL_ARG(2).as_int();
 		const bool facing = EVAL_ARG(3).as_int() > 0;
-		ffl::IntrusivePtr<CustomObject> obj(new CustomObject(type, x, y, facing, true));
-		obj.reset(new PlayableCustomObject(*obj));
+		ffl::IntrusivePtr<CustomObject> obj(new PlayableCustomObject(type, x, y, facing, true));
 		obj->setPos(obj->x() - obj->getCurrentFrame().width() / 2 , obj->y() - obj->getCurrentFrame().height() / 2);
 
 		variant commands;
