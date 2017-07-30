@@ -1358,9 +1358,6 @@ bool LevelRunner::play_cycle()
 			mapSDLEventScreenCoordinatesToVirtual(event);
 
 #ifndef NO_EDITOR
-			if(console_) {
-				swallowed = console_->processEvent(point(), event, swallowed);
-			}
 
 			if(history_slider_ && paused) {
 				swallowed = history_slider_->processEvent(point(), event, swallowed) || swallowed;
