@@ -482,36 +482,61 @@ CustomObject::CustomObject(variant node)
 	createParticles(type_->getParticleSystemDesc());
 
 	const variant property_data_node = node["property_data"];
-	for(int i = 0; i != type_->getSlotProperties().size(); ++i) {
+
+	//Init all properties: pass 1, properties specified in the node, or that don't have an init.
+	for (int i = 0; i != type_->getSlotProperties().size(); ++i) {
 		const CustomObjectType::PropertyEntry& e = type_->getSlotProperties()[i];
-		if(e.storage_slot < 0) {
+		if (e.storage_slot < 0) {
 			continue;
 		}
 
 		bool set = false;
-
-		if(property_data_node.is_map()) {
+		if (property_data_node.is_map()) {
 			const variant key(e.id);
-			if(property_data_node.has_key(key)) {
+			if (property_data_node.has_key(key)) {
 				get_property_data(e.storage_slot) = property_data_node[key];
-				if(e.is_weak) { get_property_data(e.storage_slot).weaken(); }
+				if (e.is_weak) { get_property_data(e.storage_slot).weaken(); }
 				set = true;
 			}
 		}
 
-		if(!set) {
-			if(e.init) {
-				reference_counted_object_pin_norelease pin(this);
-				get_property_data(e.storage_slot) = e.init->execute(*this);
-				if(e.is_weak) { get_property_data(e.storage_slot).weaken(); }
-			} else {
-				get_property_data(e.storage_slot) = deep_copy_variant(e.default_value);
-				if(e.is_weak) { get_property_data(e.storage_slot).weaken(); }
+		if (set == false && e.init) {
+			//this initializes in the second pass below
+			continue;
+		}
+
+		if (set == false) {
+			get_property_data(e.storage_slot) = deep_copy_variant(e.default_value);
+			if (e.is_weak) { get_property_data(e.storage_slot).weaken(); }
+		}
+
+		if (!get_property_data(e.storage_slot).is_null()) {
+			properties_requiring_dynamic_initialization_.erase(std::remove(properties_requiring_dynamic_initialization_.begin(), properties_requiring_dynamic_initialization_.end(), i), properties_requiring_dynamic_initialization_.end());
+		}
+	}
+
+	//Init all properties pass 2, properties that have an init and weren't in the node.
+	for (int i = 0; i != type_->getSlotProperties().size(); ++i) {
+		const CustomObjectType::PropertyEntry& e = type_->getSlotProperties()[i];
+		if (e.storage_slot < 0 || !e.init) {
+			continue;
+		}
+
+		if (property_data_node.is_map()) {
+			const variant key(e.id);
+			if (property_data_node.has_key(key)) {
+				continue;
 			}
 		}
 
+
+		reference_counted_object_pin_norelease pin(this);
+		get_property_data(e.storage_slot) = e.init->execute(*this);
+		if(e.is_weak) { get_property_data(e.storage_slot).weaken(); }
+
 		if(!get_property_data(e.storage_slot).is_null()) {
-			properties_requiring_dynamic_initialization_.erase(std::remove(properties_requiring_dynamic_initialization_.begin(), properties_requiring_dynamic_initialization_.end(), i), properties_requiring_dynamic_initialization_.end());}
+			properties_requiring_dynamic_initialization_.erase(std::remove(properties_requiring_dynamic_initialization_.begin(), properties_requiring_dynamic_initialization_.end(), i), properties_requiring_dynamic_initialization_.end());
+		}
 	}
 }
 
