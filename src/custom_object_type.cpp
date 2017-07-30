@@ -1696,6 +1696,10 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 			shader_ = graphics::AnuraShaderPtr(new graphics::AnuraShader(node["shader"].as_string()));
 		} else {
 			variant shader_info = node["shader"];
+
+			const std::string shader_name = write_uuid(generate_uuid());
+			shader_info = shader_info.add_attr(variant("name"), variant(shader_name));
+
 			if(shader_info.has_key("fragment")) {
 				if(shader_info.has_key("name") == false) {
 					static int shader_num = 1;
@@ -1721,12 +1725,6 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 			}
 			
 			KRE::ShaderProgram::loadFromVariant(shader_info);
-			std::string shader_name;
-			if(shader_info.has_key("name")) {
-				shader_name = shader_info["name"].as_string();
-			} else {
-				shader_name = write_uuid(generate_uuid());
-			}
 			shader_ = graphics::AnuraShaderPtr(new graphics::AnuraShader(shader_name));
 		}
 		//LOG_DEBUG("Added shader '" << shader_->getName() << "' for CustomObjectType '" << id_ << "'");

@@ -6224,6 +6224,10 @@ void CustomObject::updateType(ConstCustomObjectTypePtr old_type,
 		addParticleSystem(i->first, i->second->type());
 	}
 
+	if (type_->getShader() != nullptr) {
+		shader_ = graphics::AnuraShaderPtr(new graphics::AnuraShader(*type_->getShader()));
+	}
+
 	if(shader_ != nullptr) {
 		shader_->setParent(this);
 		//LOG_DEBUG("shader '" << shader_->getName() << "' attached to object: " << type_->id());
