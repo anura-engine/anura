@@ -242,9 +242,7 @@ private:
 			"Restart Level (including player)", "ctrl+alt+r", std::bind(&editor::reset_playing_level, &editor_, false),
 			"Pause Game", "ctrl+p", std::bind(&editor::toggle_pause, &editor_),
 			"Code", "", std::bind(&editor::toggle_code, &editor_),
-#if defined(USE_SHADERS)
 			"Shaders", "", std::bind(&editor::edit_shaders, &editor_),
-#endif
 			"Level Code", "", std::bind(&editor::edit_level_code, &editor_),
 		};
 
