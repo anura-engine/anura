@@ -1724,6 +1724,7 @@ namespace KRE
 
 		ShaderProgramPtr ShaderProgram::getProgramFromVariant(const variant& node)
 		{
+			LOG_INFO("getProgramFromVariant(" << node.write_json() << ")");
 			auto& sf = get_shader_factory();
 
 			if(node.has_key("name") && !node.has_key("vertex") && !node.has_key("fragment")) {
@@ -1741,16 +1742,11 @@ namespace KRE
 			const std::string& vert_data = node["vertex"].as_string();
 			const std::string& frag_data = node["fragment"].as_string();
 
-			auto it = sf.find(name);
-			if(it != sf.end()) {
-				return it->second;
-			}
-
 			auto spp = std::make_shared<OpenGL::ShaderProgram>(name, 
 				ShaderDef(name + "_vs", vert_data),
 				ShaderDef(name + "_fs", frag_data),
 				node);
-			it = sf.find(name);
+			auto it = sf.find(name);
 			if(it != sf.end()) {
 				LOG_WARN("Overwriting shader with name: " << name);
 			}

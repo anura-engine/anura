@@ -554,8 +554,11 @@ private:
 	void flushFrameBufferShadersToScreen() const;
 	KRE::RenderTargetPtr& applyShaderToFrameBufferTexture(graphics::AnuraShaderPtr shader, bool render_to_screen) const;
 	void frameBufferEnterZorder(int zorder) const;
+
+public:
 	void shadersUpdated();
 
+private:
 	int save_point_x_, save_point_y_;
 	bool editor_;
 	EntityPtr editor_highlight_;
