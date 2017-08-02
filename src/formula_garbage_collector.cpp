@@ -337,6 +337,11 @@ void GarbageCollectorImpl::accumulateAll()
 			p->add_reference();
 			ASSERT_LOG(p->refcount() > 1, "Object with bad refcount: " << p->refcount() << ": " << p->debugObjectName());
 			items_.push_back(p);
+		} else if(p->tenure_ >= gens_) {
+			//the list of objects is sorted in order of tenure,
+			//since we always add at the head, so we don't need to continue
+			//once we found one already tenured.
+			break;
 		}
 	}
 
