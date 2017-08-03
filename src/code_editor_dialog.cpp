@@ -519,10 +519,13 @@ void CodeEditorDialog::process()
 				LOG_INFO("INIT TILE MAP OK");
 			} else if(strstr(fname_.c_str(), "data/shaders.cfg")) {
 				LOG_INFO("CODE_EDIT_DIALOG FILE: " << fname_);
-				ASSERT_LOG(false, "XXX edited shaders file fixme");
-				//for(Level* lvl : get_all_levels_set()) {
-				//	lvl->shadersUpdated();
-				//}
+				//ASSERT_LOG(false, "XXX edited shaders file fixme");
+
+				variant node = json::parse(editor_->text());
+				KRE::ShaderProgram::loadFromVariant(node);
+				for(Level* lvl : get_all_levels_set()) {
+					lvl->shadersUpdated();
+				}
 			} else if(strstr(fname_.c_str(), "classes/") &&
 			          std::equal(fname_.end()-4,fname_.end(),".cfg")) {
 
