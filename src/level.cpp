@@ -21,7 +21,6 @@
 	   distribution.
 */
 
-
 #include <GL/glew.h>
 
 #include <algorithm>
