@@ -3082,6 +3082,7 @@
 					"$(inherited)",
 					"\"$(SRCROOT)/dylibs\"",
 				);
+				GCC_OPTIMIZATION_LEVEL = 2;
 				HEADER_SEARCH_PATHS = (
 					.,
 					./dylibs/SDL2.framework/Headers,
@@ -3149,6 +3150,7 @@
 					"$(inherited)",
 					"\"$(SRCROOT)/dylibs\"",
 				);
+				GCC_OPTIMIZATION_LEVEL = 2;
 				HEADER_SEARCH_PATHS = (
 					.,
 					./dylibs/SDL2.framework/Headers,
