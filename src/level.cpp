@@ -90,6 +90,8 @@ std::set<Level*>& get_all_levels_set()
 
 namespace 
 {
+	PREF_INT(debug_skip_draw_zorder_begin, INT_MIN, "Avoid drawing the given zorder");
+	PREF_INT(debug_skip_draw_zorder_end, INT_MIN, "Avoid drawing the given zorder");
 	PREF_BOOL(debug_shadows, false, "Show debug visualization of shadow drawing");
 
 	LevelPtr& get_current_level() 
@@ -2033,6 +2035,10 @@ void Level::draw(int x, int y, int w, int h) const
 		std::set<int>::const_iterator layer = layers_.begin();
 
 		for(; layer != layers_.end(); ++layer) {
+			if (*layer >= g_debug_skip_draw_zorder_begin && *layer < g_debug_skip_draw_zorder_end) {
+				continue;
+			}
+
 			formula_profiler::Instrument instrument(formula_profiler::Instrument::generate_id("ZORDER", *layer));
 
 			frameBufferEnterZorder(*layer);
