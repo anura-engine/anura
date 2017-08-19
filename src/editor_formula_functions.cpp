@@ -48,7 +48,7 @@ namespace editor_script
 			virtual ~EditorCommand() {}
 			virtual void execute(editor& e) = 0;
 		private:
-			variant getValue(const std::string& key) const {
+			variant getValue(const std::string& key) const override {
 				return variant();
 			}
 		};
@@ -63,7 +63,7 @@ namespace editor_script
 			  : id_(id), x_(x), y_(y), facing_(facing)
 			{}
 		private:
-			void execute(editor& e) {
+			void execute(editor& e) override {
 				CustomObject* obj = new CustomObject(id_, x_, y_, facing_);
 				obj->setLevel(e.get_level());
 				e.get_level().add_character(obj);
@@ -77,7 +77,7 @@ namespace editor_script
 			  : FunctionExpression("add_object", args, 4, 4)
 			{}
 		private:
-			variant execute(const FormulaCallable& variables) const {
+			variant execute(const FormulaCallable& variables) const override {
 				return variant(new AddObjectCommand(
 						args()[0]->evaluate(variables).as_string(),
 						args()[1]->evaluate(variables).as_int(),
@@ -95,7 +95,7 @@ namespace editor_script
 			  : tile_id_(tile_id), x1_(x1), y1_(y1), x2_(x2), y2_(y2)
 			{}
 
-			void execute(editor& e) {
+			void execute(editor& e) override {
 				e.add_tile_rect(e.get_tile_zorder(tile_id_), "", x1_, y1_, x2_, y2_);
 			}
 		};
@@ -107,7 +107,7 @@ namespace editor_script
 			  : FunctionExpression("remove_tiles", args, 3, 5)
 			{}
 		private:
-			variant execute(const FormulaCallable& variables) const {
+			variant execute(const FormulaCallable& variables) const override {
 				const std::string tile_id = args()[0]->evaluate(variables).as_string();
 				const int x1 = args()[1]->evaluate(variables).as_int();
 				const int y1 = args()[2]->evaluate(variables).as_int();
@@ -126,7 +126,7 @@ namespace editor_script
 			  : tile_id_(tile_id), x1_(x1), y1_(y1), x2_(x2), y2_(y2)
 			{}
 
-			void execute(editor& e) {
+			void execute(editor& e) override {
 				e.add_tile_rect(e.get_tile_zorder(tile_id_), tile_id_, x1_, y1_, x2_, y2_);
 			}
 		};
@@ -137,7 +137,7 @@ namespace editor_script
 			  : FunctionExpression("add_tiles", args, 3, 5)
 			{}
 		private:
-			variant execute(const FormulaCallable& variables) const {
+			variant execute(const FormulaCallable& variables) const override {
 				const std::string tile_id = args()[0]->evaluate(variables).as_string();
 				const int x1 = args()[1]->evaluate(variables).as_int();
 				const int y1 = args()[2]->evaluate(variables).as_int();
@@ -152,7 +152,7 @@ namespace editor_script
 		public:
 			explicit DebugCommand(const std::string& str) : str_(str)
 			{}
-			virtual void execute(editor& e) {
+			virtual void execute(editor& e) override {
 				debug_console::addMessage(str_);
 			}
 		private:
@@ -166,7 +166,7 @@ namespace editor_script
 			  : FunctionExpression("debug", args, 1, -1) {
 			}
 		private:
-			variant execute(const FormulaCallable& variables) const {
+			variant execute(const FormulaCallable& variables) const override {
 				std::string str;
 				for(int n = 0; n != args().size(); ++n) {
 					if(n) str += " ";
@@ -189,7 +189,7 @@ namespace editor_script
 			ExpressionPtr createFunction(
 									   const std::string& fn,
 									   const std::vector<ExpressionPtr>& args,
-									   ConstFormulaCallableDefinitionPtr callable_def) const
+									   ConstFormulaCallableDefinitionPtr callable_def) const override
 			{
 				if(fn == "remove_tiles") {
 					return ExpressionPtr(new RemoveTilesFunction(args));
@@ -228,7 +228,7 @@ namespace editor_script
 			{}
 
 		private:
-			variant getValue(const std::string& key) const {
+			variant getValue(const std::string& key) const override {
 				if(key == "x") {
 					return variant(x_);
 				} else if(key == "y") {
@@ -272,7 +272,7 @@ namespace editor_script
 			explicit EditorCommandCallable(editor& e) : editor_(e)
 			{}
 		private:
-			variant getValue(const std::string& key) const {
+			variant getValue(const std::string& key) const override {
 				if(key == "cells") {
 					std::vector<variant> result;
 

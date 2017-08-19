@@ -25,6 +25,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/optional/optional.hpp>
 #include <cmath>
+#include <future>
 #include <stack>
 #include <stdio.h>
 #include <iostream>
@@ -41,21 +42,32 @@
 #include "formula_function.hpp"
 #include "formula_interface.hpp"
 #include "formula_object.hpp"
+#include "formula_profiler.hpp"
 #include "formula_tokenizer.hpp"
+#include "formula_vm.hpp"
+#include "formula_where.hpp"
 #include "i18n.hpp"
 #include "lua_iface.hpp"
 #include "preferences.hpp"
 #include "random.hpp"
 #include "string_utils.hpp"
 #include "unit_test.hpp"
+#include "utf8_to_codepoint.hpp"
 #include "variant_type.hpp"
 #include "variant_utils.hpp"
 
 #define STRICT_ERROR(s) if(g_strict_formula_checking_warnings) { LOG_WARN(s); } else { ASSERT_LOG(false, s); }
 #define STRICT_ASSERT(cond, s) if(!(cond)) { STRICT_ERROR(s); }
 
+using namespace formula_vm;
+
 namespace 
 {
+	PREF_BOOL(ffl_vm_opt_library_lookups, true, "Optimize library lookups in VM");
+	PREF_BOOL(ffl_vm_opt_constant_lookups, true, "Optimize contant lookups in VM");
+	PREF_BOOL(ffl_vm_opt_inline, true, "Try to inline FFL calls.");
+	PREF_BOOL(ffl_vm_opt_replace_where, true, "Try to replace trivial where calls.");
+
 	//the last formula that was executed; used for outputting debugging info.
 	const game_logic::Formula* last_executed_formula;
 
@@ -87,6 +99,58 @@ namespace game_logic
 
 	void set_verbatim_string_expressions(bool verbatim) {
 		g_verbatim_string_expressions = verbatim;
+	}
+
+	WhereVariables::WhereVariables(const FormulaCallable &base, WhereVariablesInfoPtr info)
+		: FormulaCallable(false), base_(&base), info_(info)
+		{}
+
+	void WhereVariables::surrenderReferences(GarbageCollector* collector) {
+		collector->surrenderPtr(&base_, "base");
+		for(CacheEntry& v : results_cache_) {
+			collector->surrenderVariant(&v.result);
+		}
+	}
+
+	void WhereVariables::setValueBySlot(int slot, const variant& value) {
+		ASSERT_LOG(slot < info_->base_slot, "Illegal set on immutable where variables " << slot);
+		const_cast<FormulaCallable*>(base_.get())->mutateValueBySlot(slot, value);
+	}
+
+	void WhereVariables::setValue(const std::string& key, const variant& value) {
+		const_cast<FormulaCallable*>(base_.get())->mutateValue(key, value);
+	}
+
+	variant WhereVariables::getValueBySlot(int slot) const {
+		if(slot >= info_->base_slot) {
+			slot -= info_->base_slot;
+			if(static_cast<unsigned>(slot) < results_cache_.size() && results_cache_[slot].have_result) {
+				return results_cache_[slot].result;
+			} else {
+				variant result = info_->entries[slot]->evaluate(*this);
+				if(results_cache_.size() <= static_cast<unsigned>(slot)) {
+					results_cache_.resize(slot+1);
+				}
+
+				results_cache_[slot].result = result;
+				results_cache_[slot].have_result = true;
+				return result;
+			}
+		}
+
+		return base_->queryValueBySlot(slot);
+	}
+
+	variant WhereVariables::getValue(const std::string& key) const {
+		const variant result = base_->queryValue(key);
+		if(result.is_null()) {
+			std::vector<std::string>::const_iterator i = std::find(info_->names.begin(), info_->names.end(), key);
+			if(i != info_->names.end()) {
+				const int slot = static_cast<int>(i - info_->names.begin());
+				return getValueBySlot(info_->base_slot + slot);
+			}
+		}
+		return result;
 	}
 	
 	void FormulaCallable::setValue(const std::string& key, const variant& /*value*/)
@@ -122,7 +186,11 @@ namespace game_logic
 			return true;
 		}
 
-		if(v.is_list()) {
+		if(v.is_function()) {
+			std::vector<variant> args;
+			variant cmd = v(args);
+			executeCommand(cmd);
+		} else if(v.is_list()) {
 			for(int n = 0; n != v.num_elements(); ++n) {
 				executeCommand(v[n]);
 			}
@@ -130,6 +198,8 @@ namespace game_logic
 			CommandCallable* callable = v.try_convert<CommandCallable>();
 			if(callable) {
 				callable->runCommand(*this);
+			} else if(variant_type::get_commands()->match(v)) {
+				ASSERT_LOG(false, "RUNNING CUSTOM OBJECT COMMANDS IN A NON-CUSTOM OBJECT CONTEXT: " << v.to_debug_string() << "\nFORMULA INFO: " << output_formula_error_info() << "\n");
 			} else {
 				ASSERT_LOG(false, "EXPECTED EXECUTABLE COMMAND OBJECT, INSTEAD FOUND: " << v.to_debug_string() << "\nFORMULA INFO: " << output_formula_error_info() << "\n");
 			}
@@ -252,6 +322,63 @@ namespace game_logic
 	
 	namespace 
 	{
+		class VMExpression : public FormulaExpression {
+		public:
+			VMExpression(VirtualMachine& vm, variant_type_ptr t, const FormulaExpression& o) : FormulaExpression("_vm"), vm_(vm), type_(t), can_reduce_to_variant_(false)
+			{
+				setDebugInfo(o);
+				setVMDebugInfo(vm_);
+				t->set_expr(this);
+			}
+
+			bool canCreateVM() const override {
+				return true;
+			}
+
+			void emitVM(formula_vm::VirtualMachine& vm) const override {
+				vm.append(vm_);
+			}
+
+			variant executeMember(const FormulaCallable& variables, std::string& id, variant* variant_id) const override {
+				ASSERT_LOG(false, "executemember on VMExpression");
+			}
+
+			std::string debugOutput() const { return vm_.debugOutput(); }
+
+			bool isVM() const override { return true; }
+
+			bool canReduceToVariant(variant& v) const override {
+				v = variant_;
+				return can_reduce_to_variant_;
+			}
+
+			void setVariant(const variant& v) {
+				variant_ = v;
+				can_reduce_to_variant_ = true;
+			}
+
+			formula_vm::VirtualMachine& get_vm() { return vm_; }
+			const formula_vm::VirtualMachine& get_vm() const { return vm_; }
+
+		private:
+			variant execute(const FormulaCallable& variables) const override {
+//				Formula::failIfStaticContext();
+
+				variant result = vm_.execute(variables);
+				return result;
+			}
+
+			variant_type_ptr getVariantType() const override {
+				return type_;
+			}
+
+			formula_vm::VirtualMachine vm_;
+			variant_type_ptr type_;
+
+			variant variant_;
+			bool can_reduce_to_variant_;
+		};
+
 		#if defined(USE_LUA)
 		class LuaFnExpression : public FormulaExpression {
 		public:
@@ -259,12 +386,12 @@ namespace game_logic
 				: fn_ref_(fn_ref)
 			{
 			}
-			variant execute(const FormulaCallable& variables) const 
+			variant execute(const FormulaCallable& variables) const override
 			{
 				return fn_ref_->call();
 			}
 		private:
-			variant_type_ptr getVariantType() const {
+			variant_type_ptr getVariantType() const override {
 				return variant_type::get_any();
 			}
 			lua::LuaFunctionReferencePtr fn_ref_;
@@ -278,10 +405,10 @@ namespace game_logic
 			{}
 
 		private:
-			variant_type_ptr getVariantType() const {
+			variant_type_ptr getVariantType() const override {
 				return variant_type::get_list(variant_type::get_type(variant::VARIANT_TYPE_STRING));
 			}
-			variant execute(const FormulaCallable& /*variables*/) const {
+			variant execute(const FormulaCallable& /*variables*/) const override {
 				std::vector<variant> res;
 				std::vector<std::string> function_names = builtin_function_names();
 				std::vector<std::string> more_function_names = symbols_->getFunctionNames();
@@ -302,7 +429,7 @@ namespace game_logic
 			{}
 
 		private:
-			variant_type_ptr getVariantType() const {
+			variant_type_ptr getVariantType() const override {
 				std::vector<variant_type_ptr> types;
 				for(const ExpressionPtr& item : items_) {
 					variant_type_ptr new_type = item->queryVariantType();
@@ -315,7 +442,7 @@ namespace game_logic
 			//a special version of static evaluation that doesn't save a
 			//reference to the list, so that we can allow static evaluation
 			//not to be fooled.
-			variant staticEvaluate(const FormulaCallable& variables) const {
+			variant staticEvaluate(const FormulaCallable& variables) const override {
 				std::vector<variant> res;
 				res.reserve(items_.size());
 				for(std::vector<ExpressionPtr>::const_iterator i = items_.begin(); i != items_.end(); ++i) {
@@ -325,12 +452,38 @@ namespace game_logic
 				return variant(&res);
 			}
 
-			variant execute(const FormulaCallable& variables) const {
+			variant execute(const FormulaCallable& variables) const override {
 				return staticEvaluate(variables);
 			}
 
-			std::vector<ConstExpressionPtr> getChildren() const {
+			std::vector<ConstExpressionPtr> getChildren() const override {
 				return std::vector<ConstExpressionPtr>(items_.begin(), items_.end());
+			}
+
+			bool canCreateVM() const override { return canChildrenVM(); }
+
+			ExpressionPtr optimizeToVM() override {
+				bool can_vm = true;
+				for(ExpressionPtr& e : items_) {
+					optimizeChildToVM(e);
+					if(e->canCreateVM() == false) {
+						can_vm = false;
+					}
+				}
+
+				if(can_vm) {
+					formula_vm::VirtualMachine vm;
+					for(ExpressionPtr& e : items_) {
+						e->emitVM(vm);
+					}
+
+					vm.addLoadConstantInstruction(variant(static_cast<int>(items_.size())));
+
+					vm.addInstruction(OP_LIST);
+					return ExpressionPtr(new VMExpression(vm, queryVariantType(), *this));
+				}
+
+				return ExpressionPtr();
 			}
 	
 			std::vector<ExpressionPtr> items_;
@@ -347,11 +500,11 @@ namespace game_logic
 			}
 	
 		private:
-			variant_type_ptr getVariantType() const {
+			variant_type_ptr getVariantType() const override {
 				return variant_type::get_list(expr_->queryVariantType());
 			}
 
-			variant execute(const FormulaCallable& variables) const {
+			variant execute(const FormulaCallable& variables) const override {
 				std::vector<int> nelements;
 				std::vector<variant> lists;
 				for(std::map<std::string, ExpressionPtr>::const_iterator i = generators_.begin(); i != generators_.end(); ++i) {
@@ -367,21 +520,17 @@ namespace game_logic
 
 				std::vector<variant*> args;
 
-				boost::intrusive_ptr<SlotFormulaCallable> callable;
+				ffl::IntrusivePtr<SlotFormulaCallable> callable(new SlotFormulaCallable);
+				callable->setFallback(&variables);
+				callable->setBaseSlot(base_slot_);
+				callable->reserve(generator_names_.size());
+				for(const std::string& arg : generator_names_) {
+					callable->add(variant());
+					args.push_back(&callable->backDirectAccess());
+				}
 
 				std::vector<int> indexes(lists.size());
 				for(;;) {
-
-					if(!callable) {
-						callable.reset(new SlotFormulaCallable);
-						callable->setFallback(&variables);
-						callable->setBaseSlot(base_slot_);
-						callable->reserve(generator_names_.size());
-						for(const std::string& arg : generator_names_) {
-							callable->add(variant());
-							args.push_back(&callable->backDirectAccess());
-						}
-					}
 
 					for(int n = 0; n != indexes.size(); ++n) {
 						*args[n] = lists[n][indexes[n]];
@@ -421,7 +570,7 @@ namespace game_logic
 				return false;
 			}
 
-			std::vector<ConstExpressionPtr> getChildren() const {
+			std::vector<ConstExpressionPtr> getChildren() const override {
 				std::vector<ConstExpressionPtr> result;
 				result.push_back(expr_);
 				for(std::map<std::string, ExpressionPtr>::const_iterator i = generators_.begin(); i != generators_.end(); ++i) {
@@ -430,6 +579,53 @@ namespace game_logic
 
 				result.insert(result.end(), filters_.begin(), filters_.end());
 				return result;
+			}
+
+			bool canCreateVM() const override { return canChildrenVM(); }
+
+			ExpressionPtr optimizeToVM() override {
+				optimizeChildToVM(expr_);
+				bool can_vm = expr_->canCreateVM();
+				for(std::map<std::string, ExpressionPtr>::iterator i = generators_.begin(); i != generators_.end(); ++i) {
+					optimizeChildToVM(i->second);
+					can_vm = can_vm && i->second->canCreateVM();
+				}
+
+				for(ExpressionPtr& f : filters_) {
+					optimizeChildToVM(f);
+					can_vm = can_vm && f->canCreateVM();
+				}
+
+				if(!can_vm) {
+					return ExpressionPtr();
+				}
+
+				formula_vm::VirtualMachine vm;
+
+				for(std::map<std::string, ExpressionPtr>::const_iterator i = generators_.begin(); i != generators_.end(); ++i) {
+					i->second->emitVM(vm);
+				}
+
+				vm.addInstruction(formula_vm::OP_PUSH_INT);
+				vm.addInt(static_cast<int>(generators_.size()));
+
+				vm.addInstruction(formula_vm::OP_PUSH_INT);
+				vm.addInt(base_slot_);
+
+				const int jump_source = vm.addJumpSource(OP_ALGO_COMPREHENSION);
+
+
+				for(ExpressionPtr& f : filters_) {
+					f->emitVM(vm);
+					vm.addInstruction(formula_vm::OP_UNARY_NOT);
+					vm.addInstruction(formula_vm::OP_BREAK_IF);
+				}
+
+				expr_->emitVM(vm);
+
+				vm.jumpToEnd(jump_source);
+
+				return ExpressionPtr(new VMExpression(vm, queryVariantType(), *this));
 			}
 
 			ExpressionPtr expr_;
@@ -446,7 +642,7 @@ namespace game_logic
 			{}
 	
 		private:
-			variant_type_ptr getVariantType() const {
+			variant_type_ptr getVariantType() const override {
 				std::map<variant, variant_type_ptr> types;
 
 				std::vector<variant_type_ptr> key_types, value_types;
@@ -509,7 +705,7 @@ namespace game_logic
 				return variant_type::get_map(key_type, value_type);
 			}
 
-			variant execute(const FormulaCallable& variables) const {
+			variant execute(const FormulaCallable& variables) const override {
 				//since maps can be modified we want any map construction to return
 				//a brand new map.
 				Formula::failIfStaticContext();
@@ -526,9 +722,34 @@ namespace game_logic
 				return result;
 			}
 
-			std::vector<ConstExpressionPtr> getChildren() const {
+			std::vector<ConstExpressionPtr> getChildren() const override {
 				std::vector<ConstExpressionPtr> result(items_.begin(), items_.end());
 				return result;
+			}
+
+			bool canCreateVM() const override { return canChildrenVM(); }
+
+			ExpressionPtr optimizeToVM() override {
+				bool can_vm = true;
+				for(ExpressionPtr& i : items_) {
+					optimizeChildToVM(i);
+					if(i->canCreateVM() == false) {
+						can_vm = false;
+					}
+				}
+
+				if(can_vm) {
+					formula_vm::VirtualMachine vm;
+					for(ExpressionPtr& e : items_) {
+						e->emitVM(vm);
+					}
+
+					vm.addLoadConstantInstruction(variant(static_cast<int>(items_.size())));
+
+					vm.addInstruction(OP_MAP);
+					return ExpressionPtr(new VMExpression(vm, queryVariantType(), *this));
+				}
+				return ExpressionPtr();
 			}
 	
 			std::vector<ExpressionPtr> items_;
@@ -548,7 +769,7 @@ namespace game_logic
 				}
 			}
 		private:
-			variant_type_ptr getVariantType() const {
+			variant_type_ptr getVariantType() const override {
 				switch(op_) {
 				case OP::NOT: return variant_type::get_type(variant::VARIANT_TYPE_BOOL);
 				case OP::SUB:
@@ -561,7 +782,7 @@ namespace game_logic
 				}
 			}
 
-			variant execute(const FormulaCallable& variables) const {
+			variant execute(const FormulaCallable& variables) const override {
 				const variant res = operand_->evaluate(variables);
 				switch(op_) {
 					case OP::NOT: 
@@ -572,53 +793,33 @@ namespace game_logic
 				}
 			}
 
-			std::vector<ConstExpressionPtr> getChildren() const {
+			std::vector<ConstExpressionPtr> getChildren() const override {
 				std::vector<ConstExpressionPtr> result;
 				result.push_back(operand_);
 				return result;
 			}
 
+			bool canCreateVM() const override { return canChildrenVM(); }
+
+			ExpressionPtr optimizeToVM() override {
+				optimizeChildToVM(operand_);
+				if(operand_->canCreateVM()) {
+					formula_vm::VirtualMachine vm;
+					operand_->emitVM(vm);
+					if(op_ == OP::NOT) {
+						vm.addInstruction(OP_UNARY_NOT);
+					} else {
+						vm.addInstruction(OP_UNARY_SUB);
+					}
+
+					return ExpressionPtr(new VMExpression(vm, queryVariantType(), *this));
+				}
+				return ExpressionPtr();
+			}
+
 			enum class OP { NOT, SUB };
 			OP op_;
 			ExpressionPtr operand_;
-		};
-
-		class ListCallable : public FormulaCallable {
-			variant list_;
-	
-			ListCallable(const ListCallable&);
-		public:
-			explicit ListCallable(const variant& list) : FormulaCallable(false), list_(list)
-			{}
-	
-			void getInputs(std::vector<FormulaInput>* inputs) const {
-				inputs->push_back(FormulaInput("size", FORMULA_ACCESS_TYPE::READ_WRITE));
-				inputs->push_back(FormulaInput("empty", FORMULA_ACCESS_TYPE::READ_WRITE));
-				inputs->push_back(FormulaInput("first", FORMULA_ACCESS_TYPE::READ_WRITE));
-				inputs->push_back(FormulaInput("last", FORMULA_ACCESS_TYPE::READ_WRITE));
-			}
-	
-			variant getValue(const std::string& key) const {
-				if(key == "size") {
-					return variant(unsigned(list_.num_elements()));
-				} else if(key == "empty") {
-					return variant(list_.num_elements() == 0);
-				} else if(key == "first") {
-					if(list_.num_elements() > 0) {
-						return list_[0];
-					} else {
-						return variant();
-					}
-				} else if(key == "last") {
-					if(list_.num_elements() > 0) {
-						return list_[list_.num_elements()-1];
-					} else {
-						return variant();
-					}
-				} else {
-					return variant();
-				}
-			}
 		};
 
 		class ConstIdentifierExpression : public FormulaExpression {
@@ -629,11 +830,11 @@ namespace game_logic
 			}
 	
 		private:
-			variant execute(const FormulaCallable& variables) const {
+			variant execute(const FormulaCallable& variables) const override {
 				return v_;
 			}
 
-			variant_type_ptr getVariantType() const {
+			variant_type_ptr getVariantType() const override {
 				return variant_type::get_type(v_.type());
 			}
 	
@@ -643,7 +844,7 @@ namespace game_logic
 		class SlotIdentifierExpression : public FormulaExpression {
 		public:
 			SlotIdentifierExpression(const std::string& id, int slot, ConstFormulaCallableDefinitionPtr callable_def)
-			: FormulaExpression("_id"), slot_(slot), id_(id), callable_def_(callable_def)
+			: FormulaExpression("_slot"), slot_(slot), id_(id), callable_def_(callable_def)
 			{
 				const FormulaCallableDefinition::Entry* entry = callable_def_->getEntry(slot_);
 				ASSERT_LOG(entry != nullptr, "COULD NOT FIND DEFINITION IN SLOT CALLABLE: " << id);
@@ -652,7 +853,7 @@ namespace game_logic
 	
 			const std::string& id() const { return id_; }
 
-			bool isIdentifier(std::string* ident) const {
+			bool isIdentifier(std::string* ident) const override {
 				if(ident) {
 					*ident = id_;
 				}
@@ -660,7 +861,7 @@ namespace game_logic
 				return true;
 			}
 
-			ConstFormulaCallableDefinitionPtr getTypeDefinition() const {
+			ConstFormulaCallableDefinitionPtr getTypeDefinition() const override {
 				const FormulaCallableDefinition::Entry* def = callable_def_->getEntry(slot_);
 				ASSERT_LOG(def, "DID NOT FIND EXPECTED DEFINITION");
 				if(def->type_definition) {
@@ -674,25 +875,53 @@ namespace game_logic
 			const FormulaCallableDefinition& getDefinition() const { return *callable_def_; }
 
 			variant_type_ptr variant_type() const { return callable_def_->getEntry(slot_)->variant_type; }
+
+			bool canCreateVM() const override { return true; }
+			void emitVM(formula_vm::VirtualMachine& vm) const override {
+				const FormulaCallableDefinition::Entry* def = callable_def_->getEntry(slot_);
+
+				variant v;
+				if(def != nullptr && def->constant_fn && def->constant_fn(&v)) {
+					vm.addLoadConstantInstruction(v);
+					return;
+				}
+
+				int index = -1;
+				if(false && callable_def_->getSymbolIndexForSlot(slot_, &index)) {
+					vm.addInstruction(formula_vm::OP_LOOKUP_SYMBOL_STACK);
+					vm.addInt(index);
+				} else {
+					vm.addInstruction(formula_vm::OP_LOOKUP);
+					vm.addInt(slot_);
+				}
+			}
+
+			ExpressionPtr optimizeToVM() override {
+				formula_vm::VirtualMachine vm;
+				emitVM(vm);
+				return ExpressionPtr(new VMExpression(vm, queryVariantType(), *this));
+			}
+
 		private:
-			variant executeMember(const FormulaCallable& variables, std::string& id, variant* variant_id) const {
+			variant executeMember(const FormulaCallable& variables, std::string& id, variant* variant_id) const override {
 				id = id_;
 				return variables.queryValue("self");
 			}
 	
-			variant execute(const FormulaCallable& variables) const {
+			variant execute(const FormulaCallable& variables) const override {
+				Formula::failIfStaticContext();
 				return variables.queryValueBySlot(slot_);
 			}
 
-			variant_type_ptr getVariantType() const {
+			variant_type_ptr getVariantType() const override {
 				return callable_def_->getEntry(slot_)->variant_type;
 			}
 
-			variant_type_ptr getMutableType() const {
+			variant_type_ptr getMutableType() const override {
 				return callable_def_->getEntry(slot_)->getWriteType();
 			}
 
-			ConstFormulaCallableDefinitionPtr getModifiedDefinitionBasedOnResult(bool result, ConstFormulaCallableDefinitionPtr current_def, variant_type_ptr expression_is_this_type) const {
+			ConstFormulaCallableDefinitionPtr getModifiedDefinitionBasedOnResult(bool result, ConstFormulaCallableDefinitionPtr current_def, variant_type_ptr expression_is_this_type) const override {
 				variant_type_ptr current_type = getVariantType();
 				if(result && current_type) {
 					variant_type_ptr new_type;
@@ -719,7 +948,7 @@ namespace game_logic
 				return nullptr;
 			}
 
-			void staticErrorAnalysis() const {
+			void staticErrorAnalysis() const override {
 				const FormulaCallableDefinition::Entry* entry = callable_def_->getEntry(slot_);
 				ASSERT_LOG(entry != nullptr, "COULD NOT FIND DEFINITION IN SLOT CALLABLE: " << id_ << " " << debugPinpointLocation());
 				ASSERT_LOG(entry->isPrivate() == false, "Identifier " << id_ << " is private " << debugPinpointLocation());
@@ -780,7 +1009,7 @@ namespace {
 	
 			const std::string& id() const { return id_; }
 
-			bool isIdentifier(std::string* ident) const {
+			bool isIdentifier(std::string* ident) const override {
 				if(ident) {
 					*ident = id_;
 				}
@@ -790,11 +1019,17 @@ namespace {
 
 			void set_function(ExpressionPtr fn) { function_ = fn; }
 
-			ExpressionPtr optimize() const {
+			ExpressionPtr optimize() const override {
 				if(callable_def_) {
 					const int index = callable_def_->getSlot(id_);
 					if(index != -1) {
 						if(callable_def_->supportsSlotLookups()) {
+							auto entry = callable_def_->getEntry(index);
+							variant v;
+							if(entry != nullptr && entry->constant_fn && entry->constant_fn(&v)) {
+								return ExpressionPtr(new VariantExpression(v));
+							}
+
 							return ExpressionPtr(new SlotIdentifierExpression(id_, index, callable_def_.get()));
 						}
 					} else if(callable_def_->isStrict() || g_strict_formula_checking) {
@@ -842,7 +1077,7 @@ namespace {
 				return ExpressionPtr();
 			}
 
-			ConstFormulaCallableDefinitionPtr getTypeDefinition() const {
+			ConstFormulaCallableDefinitionPtr getTypeDefinition() const override {
 				if(callable_def_) {
 					const FormulaCallableDefinition::Entry* e = callable_def_->getEntry(callable_def_->getSlot(id_));
 					if(e && e->type_definition) {
@@ -856,7 +1091,7 @@ namespace {
 			}
 
 		private:
-			ConstFormulaCallableDefinitionPtr getModifiedDefinitionBasedOnResult(bool result, ConstFormulaCallableDefinitionPtr current_def, variant_type_ptr expression_is_this_type) const {
+			ConstFormulaCallableDefinitionPtr getModifiedDefinitionBasedOnResult(bool result, ConstFormulaCallableDefinitionPtr current_def, variant_type_ptr expression_is_this_type) const override {
 				if(!callable_def_) {
 					return ConstFormulaCallableDefinitionPtr();
 				}
@@ -888,12 +1123,12 @@ namespace {
 				return nullptr;
 			}
 
-			variant executeMember(const FormulaCallable& variables, std::string& id, variant* variant_id) const {
+			variant executeMember(const FormulaCallable& variables, std::string& id, variant* variant_id) const override {
 				id = id_;
 				return variables.queryValue("self");
 			}
 	
-			variant execute(const FormulaCallable& variables) const {
+			variant execute(const FormulaCallable& variables) const override {
 				variant result = variables.queryValue(id_);
 				if(result.is_null() && function_) {
 					return function_->evaluate(variables);
@@ -901,7 +1136,21 @@ namespace {
 
 				return result;
 			}
-			variant_type_ptr getVariantType() const {
+
+			bool canCreateVM() const override { return !function_; }
+
+			ExpressionPtr optimizeToVM() override {
+			//	optimizeChildToVM(left_);
+				if(!function_) {
+					formula_vm::VirtualMachine vm;
+					vm.addLoadConstantInstruction(variant(id_));
+					vm.addInstruction(formula_vm::OP_LOOKUP_STR);
+					return ExpressionPtr(new VMExpression(vm, queryVariantType(), *this));
+				}
+				return ExpressionPtr();
+			}
+
+			variant_type_ptr getVariantType() const override {
 
 				if(callable_def_) {
 					const FormulaCallableDefinition::Entry* e = callable_def_->getEntry(callable_def_->getSlot(id_));
@@ -916,7 +1165,7 @@ namespace {
 
 				return variant_type::get_any();
 			}
-			variant_type_ptr getMutableType() const {
+			variant_type_ptr getMutableType() const override {
 
 				if(callable_def_) {
 					const FormulaCallableDefinition::Entry* e = callable_def_->getEntry(callable_def_->getSlot(id_));
@@ -956,15 +1205,22 @@ namespace {
 			}
 
 		private:
-			variant execute(const FormulaCallable& variables) const {
+			variant execute(const FormulaCallable& variables) const override {
 				const variant left = left_->evaluate(variables);
 				return left.instantiate_generic_function(types_);
 			}
 
-			std::vector<ConstExpressionPtr> getChildren() const {
+			std::vector<ConstExpressionPtr> getChildren() const override {
 				std::vector<ConstExpressionPtr> result;
 				result.push_back(left_);
 				return result;
+			}
+
+			bool canCreateVM() const override { return false; }
+
+			ExpressionPtr optimizeToVM() override {
+				optimizeChildToVM(left_);
+				return ExpressionPtr();
 			}
 		};
 
@@ -990,18 +1246,24 @@ namespace {
 			}
 	
 		private:
-			variant execute(const FormulaCallable& variables) const {
+			variant execute(const FormulaCallable& variables) const override {
 				variant v(fml_, variables, base_slot_, type_info_, generic_types_, factory_);
 				return v;
 			}
 
-			variant_type_ptr getVariantType() const {
+			variant_type_ptr getVariantType() const override {
 				return variant_type::get_function_type(type_info_->variant_types, type_info_->return_type, static_cast<int>(type_info_->variant_types.size() - type_info_->default_args.size()));
 			}
 
-			std::vector<ConstExpressionPtr> getChildren() const {
+			std::vector<ConstExpressionPtr> getChildren() const override {
 				std::vector<ConstExpressionPtr> result;
 				return result;
+			}
+
+			bool canCreateVM() const override { return false; }
+
+			ExpressionPtr optimizeToVM() override {
+				return ExpressionPtr();
 			}
 
 			variant fml_;
@@ -1017,7 +1279,7 @@ namespace {
 
 		class LambdaFunctionExpression : public FormulaExpression {
 		public:
-			LambdaFunctionExpression(const std::vector<std::string>& args, ConstFormulaPtr fml, int base_slot, const std::vector<variant>& default_args, const std::vector<variant_type_ptr>& variant_types, const variant_type_ptr& return_type) :    fml_(fml), base_slot_(base_slot), type_info_(new VariantFunctionTypeInfo), requires_closure_(true)
+			LambdaFunctionExpression(const std::vector<std::string>& args, ConstFormulaPtr fml, int base_slot, const std::vector<variant>& default_args, const std::vector<variant_type_ptr>& variant_types, const variant_type_ptr& return_type) : FormulaExpression("_lambda"), fml_(fml), base_slot_(base_slot), type_info_(new VariantFunctionTypeInfo), requires_closure_(true)
 			{
 				type_info_->arg_names = args;
 				type_info_->default_args = default_args;
@@ -1034,30 +1296,42 @@ namespace {
 						t = variant_type::get_any();
 					}
 				}
+
+				static ffl::IntrusivePtr<SlotFormulaCallable> callable(new SlotFormulaCallable);
+				fn_ = variant(fml_, *callable, base_slot_, type_info_);
 			}
 
 			void setNoClosure() { requires_closure_ = false; }
 	
 		private:
-			variant execute(const FormulaCallable& variables) const {
+			variant execute(const FormulaCallable& variables) const override {
 				if(requires_closure_) {
-					variant v(fml_, variables, base_slot_, type_info_);
-					return v;
+
+					return fn_.change_function_callable(variables);
 				} else {
-					static boost::intrusive_ptr<SlotFormulaCallable> callable(new SlotFormulaCallable);
-					variant v(fml_, *callable, base_slot_, type_info_);
-					return v;
+					return fn_;
 				}
 			}
 
-			variant_type_ptr getVariantType() const {
+			variant_type_ptr getVariantType() const override {
 				return variant_type::get_function_type(type_info_->variant_types, type_info_->return_type, static_cast<int>(type_info_->variant_types.size() - type_info_->default_args.size()));
 			}
 
-			std::vector<ConstExpressionPtr> getChildren() const {
+			std::vector<ConstExpressionPtr> getChildren() const override {
 				std::vector<ConstExpressionPtr> result;
 				result.push_back(fml_->expr());
 				return result;
+			}
+
+			bool canCreateVM() const override { return true; }
+			
+			ExpressionPtr optimizeToVM() override {
+				formula_vm::VirtualMachine vm;
+				vm.addLoadConstantInstruction(fn_);
+				if(requires_closure_) {
+					vm.addInstruction(OP_LAMBDA_WITH_CLOSURE);
+				}
+				return ExpressionPtr(new VMExpression(vm, queryVariantType(), *this));
 			}
 
 			game_logic::ConstFormulaPtr fml_;
@@ -1066,6 +1340,8 @@ namespace {
 			VariantFunctionTypeInfoPtr type_info_;
 
 			bool requires_closure_;
+
+			variant fn_;
 	
 		};
 
@@ -1161,12 +1437,12 @@ namespace {
 				std::vector<variant_type_ptr> arg_types;
 				if(fn_type->is_function(&arg_types, nullptr, nullptr)) {
 					for(unsigned n = 0; n < arg_types.size() && n < args.size(); ++n) {
-						const FormulaInterface* interface = arg_types[n]->is_interface();
+						const FormulaInterface* formula_interface = arg_types[n]->is_interface();
 
-						boost::intrusive_ptr<FormulaInterfaceInstanceFactory> interface_factory;
-						if(interface) {
+						ffl::IntrusivePtr<FormulaInterfaceInstanceFactory> interface_factory;
+						if(formula_interface) {
 							try {
-								interface_factory.reset(interface->createFactory(args[n]->queryVariantType()));
+								interface_factory.reset(formula_interface->createFactory(args[n]->queryVariantType()));
 							} catch(FormulaInterface::interface_mismatch_error& e) {
 								error_msg_ = "Could not create interface: " + e.msg;
 							}
@@ -1177,7 +1453,7 @@ namespace {
 				}
 			}
 		private:
-			variant execute(const FormulaCallable& variables) const {
+			variant execute(const FormulaCallable& variables) const override {
 				const InfiniteRecursionProtector recurse_scope(left_);
 				const variant left = left_->evaluate(variables);
 				std::vector<variant> args;
@@ -1200,10 +1476,10 @@ namespace {
 					}
 				}
 		
-				return left(args);
+				return left(&args);
 			}
 
-			variant_type_ptr getVariantType() const {
+			variant_type_ptr getVariantType() const override {
 				std::vector<variant_type_ptr> arg_types;
 				for(const ExpressionPtr& expr : args_) {
 					arg_types.push_back(expr->queryVariantType());
@@ -1216,7 +1492,7 @@ namespace {
 				return variant_type::get_any();
 			}
 
-			void staticErrorAnalysis() const {
+			void staticErrorAnalysis() const override {
 				if(error_msg_.empty() == false) {
 					ASSERT_LOG(false, error_msg_ << " " << debugPinpointLocation());
 				}
@@ -1248,16 +1524,190 @@ namespace {
 				}
 			}
 
-			std::vector<ConstExpressionPtr> getChildren() const {
+			std::vector<ConstExpressionPtr> getChildren() const override {
 				std::vector<ConstExpressionPtr> result;
 				result.push_back(left_);
 				result.insert(result.end(), args_.begin(), args_.end());
 				return result;
 			}
+
+			bool canCreateVM() const override { return canChildrenVM(); }
+
+			ExpressionPtr optimizeToVM() override {
+				optimizeChildToVM(left_);
+				bool can_vm = left_->canCreateVM();
+
+				for(ExpressionPtr& e : args_) {
+					optimizeChildToVM(e);
+					if(!e->canCreateVM()) {
+						can_vm = false;
+					}
+				}
+
+				if(can_vm) {
+
+					formula_vm::VirtualMachine vm;
+
+					variant fn_var;
+					if(g_ffl_vm_opt_inline && left_->canReduceToVariant(fn_var) && fn_var.is_regular_function() && fn_var.get_function_formula() && fn_var.get_function_formula()->hasGuards() == false && fn_var.get_function_formula()->expr()->canCreateVM()) {
+						auto info = fn_var.get_function_info();
+
+						const int base_slot = fn_var.get_function_base_slot();
+						const int num_args = static_cast<int>(info->arg_names.size());
+
+						formula_vm::VirtualMachine fn_vm;
+						fn_var.get_function_formula()->expr()->emitVM(fn_vm);
+
+						//see if the function never uses its closure and we can fully inline it.
+						bool can_optimize = true;
+
+						std::map<int, VirtualMachine::Iterator> lookups;
+						std::vector<VirtualMachine::Iterator> ordered_lookups;
+
+						std::vector<bool> vm_trivial;
+						for(int n = 0; n < num_args; ++n) {
+							if(n < args_.size()) {
+								formula_vm::VirtualMachine vm;
+								args_[n]->emitVM(vm);
+								auto itor(vm.begin_itor());
+								if(!itor.at_end()) {
+									itor.next();
+								}
+
+								vm_trivial.push_back(itor.at_end());
+							} else {
+								vm_trivial.push_back(true);
+							}
+						}
+
+
+						std::vector<bool> unrelated_scope_stack;
+						int loop_end = -1;
+
+						for(VirtualMachine::Iterator itor(fn_vm.begin_itor()); !itor.at_end(); itor.next()) {
+							if(formula_vm::VirtualMachine::isInstructionLoop(itor.get())) {
+								const int end = static_cast<int>(itor.get_index()) + itor.arg();
+								if(end > loop_end) {
+									loop_end = end;
+								}
+							} else if(itor.get() == formula_vm::OP_PUSH_SCOPE) {
+								unrelated_scope_stack.push_back(true);
+							} else if(itor.get() == formula_vm::OP_INLINE_FUNCTION) {
+								unrelated_scope_stack.push_back(false);
+							} else if(itor.get() == formula_vm::OP_WHERE && itor.arg() >= 0) {
+								unrelated_scope_stack.push_back(false);
+							} else if(itor.get() == formula_vm::OP_POP_SCOPE) {
+								assert(unrelated_scope_stack.empty() == false);
+								unrelated_scope_stack.pop_back();
+							} else if((itor.get() == formula_vm::OP_LOOKUP_STR && std::find(unrelated_scope_stack.begin(), unrelated_scope_stack.end(), true) == unrelated_scope_stack.end()) || itor.get() == formula_vm::OP_CALL_BUILTIN_DYNAMIC || itor.get() == formula_vm::OP_LAMBDA_WITH_CLOSURE) {
+								can_optimize = false;
+								break;
+							} else if(itor.get() == formula_vm::OP_LOOKUP && std::find(unrelated_scope_stack.begin(), unrelated_scope_stack.end(), true) == unrelated_scope_stack.end() && itor.arg() < base_slot) {
+								can_optimize = false;
+								break;
+							} else if(itor.get() == formula_vm::OP_LOOKUP && std::find(unrelated_scope_stack.begin(), unrelated_scope_stack.end(), true) == unrelated_scope_stack.end() && itor.arg() >= base_slot + num_args) {
+								//TODO: remap lookups of symbols created within the function. For now just don't allow inlining.
+								can_optimize = false;
+								break;
+							} else if(itor.get() == formula_vm::OP_LOOKUP && std::find(unrelated_scope_stack.begin(), unrelated_scope_stack.end(), true) == unrelated_scope_stack.end() && itor.arg() >= base_slot && itor.arg() < base_slot + num_args) {
+
+								const int index = itor.arg() - base_slot;
+								assert(index >= 0 && index < vm_trivial.size());
+
+								if((static_cast<int>(itor.get_index()) < loop_end || lookups.count(itor.arg()) > 0) && vm_trivial[index] == false) {
+									can_optimize = false;
+									break;
+								}
+
+								lookups.insert(std::pair<int, VirtualMachine::Iterator>(itor.arg(), itor));
+	
+								ordered_lookups.emplace_back(itor);
+							}
+						}
+
+						if(can_optimize) {
+
+							std::reverse(ordered_lookups.begin(), ordered_lookups.end());
+
+							for(auto lookup : ordered_lookups) {
+								auto next_itor = lookup;
+								next_itor.next();
+	
+								const int index = lookup.arg() - base_slot;
+								assert(index >= 0 && index < num_args);
+
+								VirtualMachine arg_vm;
+
+								if(index < args_.size()) {
+									args_[index]->emitVM(arg_vm);
+								} else {
+									//a default argument
+									const int start_default = num_args - static_cast<int>(info->default_args.size());
+									const int default_index = index - start_default;
+									assert(default_index >= 0 && default_index < info->default_args.size());
+
+									arg_vm.addLoadConstantInstruction(info->default_args[default_index]);
+								}
+
+								fn_vm.append(lookup, next_itor, arg_vm);
+							}
+
+							vm.append(fn_vm);
+						} else {
+
+							for(ExpressionPtr& e : args_) {
+								e->emitVM(vm);
+							}
+
+							if(args_.size() < info->arg_names.size()) {
+								ASSERT_LOG(args_.size() + info->default_args.size() >= info->arg_names.size(), "Wrong number of function args");
+
+								auto i = info->default_args.end() - (info->arg_names.size() - args_.size());
+								while(i != info->default_args.end()) {
+									vm.addLoadConstantInstruction(*i);
+									++i;
+								}
+	
+							}
+
+							vm.addLoadConstantInstruction(variant(fn_var.get_function_closure()));
+
+							vm.addInstruction(OP_PUSH_INT);
+							vm.addInt(info->arg_names.size());
+
+							vm.addInstruction(formula_vm::OP_INLINE_FUNCTION);
+							vm.addInt(base_slot);
+
+							vm.append(fn_vm);
+
+							vm.addInstruction(formula_vm::OP_POP_SCOPE);
+						}
+					} else {
+
+						left_->emitVM(vm);
+						size_t index = 0;
+						for(ExpressionPtr& e : args_) {
+							e->emitVM(vm);
+							if(index < interfaces_.size() && interfaces_[index]) {
+								vm.addLoadConstantInstruction(variant(interfaces_[index].get()));
+								vm.addInstruction(OP_CREATE_INTERFACE);
+							}
+							++index;
+						}
+
+						vm.addInstruction(OP_CALL);
+						vm.addInt(static_cast<VirtualMachine::InstructionType>(args_.size()));
+					}
+
+					return ExpressionPtr(new VMExpression(vm, queryVariantType(), *this));
+				}
+
+				return ExpressionPtr();
+			}
 	
 			ExpressionPtr left_;
 			std::vector<ExpressionPtr> args_;
-			std::vector<boost::intrusive_ptr<FormulaInterfaceInstanceFactory> > interfaces_;
+			std::vector<ffl::IntrusivePtr<FormulaInterfaceInstanceFactory> > interfaces_;
 			std::string error_msg_;
 		};
 
@@ -1266,18 +1716,28 @@ namespace {
 			DotExpression(ExpressionPtr left, ExpressionPtr right, ConstFormulaCallableDefinitionPtr right_def)
 			: FormulaExpression("_dot"), left_(left), right_(right), right_def_(right_def)
 			{}
-			ConstFormulaCallableDefinitionPtr getTypeDefinition() const {
+			ConstFormulaCallableDefinitionPtr getTypeDefinition() const override {
 				return right_->getTypeDefinition();
 			}
 		private:
-			variant execute(const FormulaCallable& variables) const {
+			variant execute(const FormulaCallable& variables) const override {
 				const variant left = left_->evaluate(variables);
 				if(!left.is_callable()) {
-					if(left.is_list()) {
-						FormulaCallablePtr lc(new ListCallable(left));	
-						return right_->evaluate(*lc);
-					} else if(left.is_map()) {
+					if(left.is_map()) {
 						return left[variant(right_->str())];
+					} else if(left.is_list()) {
+						const std::string& s = right_->str();
+						if(s == "x" || s == "r") {
+							return left[0];
+						} else if(s == "y" || s == "g") {
+							return left[1];
+						} else if(s == "z" || s == "b") {
+							return left[2];
+						} else if(s == "a") {
+							return left[2];
+						} else {
+							return variant();
+						}
 					}
 
 					ASSERT_LOG(!left.is_null(), "CALL OF DOT OPERATOR ON nullptr VALUE: '" << left_->str() << "': " << debugPinpointLocation());
@@ -1289,7 +1749,7 @@ namespace {
 				return right_->evaluate(*left.as_callable());
 			}
 	
-			variant executeMember(const FormulaCallable& variables, std::string& id, variant* variant_id) const {
+			variant executeMember(const FormulaCallable& variables, std::string& id, variant* variant_id) const override {
 				variant left = left_->evaluate(variables);
 		
 				if(!right_->isIdentifier(&id)) {
@@ -1299,11 +1759,31 @@ namespace {
 				return left;
 			}
 
-			variant_type_ptr getVariantType() const {
+			variant_type_ptr getVariantType() const override {
+				variant_type_ptr type = left_->queryVariantType();
+				if(type && variant_type::get_type(variant::VARIANT_TYPE_LIST)->is_compatible(type)) {
+					variant_type_ptr list_of = type->is_list_of();
+					if(list_of) {
+						return list_of;
+					} else {
+						return variant_type::get_any();
+					}
+				}
+
 				return right_->queryVariantType();
 			}
 
-			variant_type_ptr getMutableType() const {
+			variant_type_ptr getMutableType() const override {
+				variant_type_ptr type = left_->queryMutableType();
+				if(type && variant_type::get_type(variant::VARIANT_TYPE_LIST)->is_compatible(type)) {
+					variant_type_ptr list_of = type->is_list_of();
+					if(list_of) {
+						return list_of;
+					} else {
+						return variant_type::get_any();
+					}
+				}
+
 				return right_->queryMutableType();
 			}
 
@@ -1322,21 +1802,34 @@ namespace {
 				return variant_types_compatible(variant_type::get_type(variant::VARIANT_TYPE_CALLABLE), type) || variant_types_compatible(variant_type::get_type(variant::VARIANT_TYPE_MAP), type);
 			}
 
-			void staticErrorAnalysis() const {
+			void staticErrorAnalysis() const override {
 				variant_type_ptr type = left_->queryVariantType();
 				ASSERT_LOG(type, "Could not find type for left side of '.' operator: " << left_->str() << ": " << debugPinpointLocation());
+
+				if(variant_type::get_type(variant::VARIANT_TYPE_LIST)->is_compatible(type)) {
+					const std::string& s = right_->str();
+					static const std::string ListMembers[] = { "x", "y", "z", "r", "g", "b", "a" };
+					for(const std::string& item : ListMembers) {
+						if(s == item) {
+							return;
+						}
+					}
+
+					ASSERT_LOG(false, "No such member " << s << " in list: " << debugPinpointLocation());
+				}
+
 				ASSERT_LOG(variant_type::may_be_null(type) == false, "Left side of '.' operator may be null: " << left_->str() << " is " << type->to_string() << " " << debugPinpointLocation());
 				ASSERT_LOG(is_type_valid_left_side(type), "Left side of '.' is of invalid type: " << left_->str() << " is " << type->to_string() << " " << debugPinpointLocation());
 			}
 
-			ConstFormulaCallableDefinitionPtr getModifiedDefinitionBasedOnResult(bool result, ConstFormulaCallableDefinitionPtr current_def, variant_type_ptr expression_is_this_type) const {
+			ConstFormulaCallableDefinitionPtr getModifiedDefinitionBasedOnResult(bool result, ConstFormulaCallableDefinitionPtr current_def, variant_type_ptr expression_is_this_type) const override {
 
 				std::vector<const DotExpression*> expr;
 				if(isIdentifierChain(&expr) == false) {
 					return ConstFormulaCallableDefinitionPtr();
 				}
 
-				//This expressoin is the top of an identifier chain -- i.e. expression of the form a.b.c.d
+				//This expression is the top of an identifier chain -- i.e. expression of the form a.b.c.d
 				//where a, b, c, and d are all plain identifiers. They are stored with right-associativity
 				//meaning this expression is the last expression in the chain.
 
@@ -1409,11 +1902,99 @@ namespace {
 				return false;
 			}
 
-			std::vector<ConstExpressionPtr> getChildren() const {
+			std::vector<ConstExpressionPtr> getChildren() const override {
 				std::vector<ConstExpressionPtr> result;
 				result.push_back(left_);
 				result.push_back(right_);
 				return result;
+			}
+
+			ExpressionPtr optimize() const override {
+
+				auto left_type = left_->queryVariantType();
+
+				//Optimization so that an expression such as lib.gui would boil down directly into
+				//the actual class instance.
+				if(g_ffl_vm_opt_library_lookups && left_type->is_builtin() && *left_type->is_builtin() == "library") {
+					const std::string& s = right_->str();
+
+					if(can_load_library_instance(s)) {
+						FormulaCallablePtr res = get_library_instance(s);
+						ASSERT_LOG(res.get() != nullptr, "Could not get library: " << s);
+						return ExpressionPtr(new VariantExpression(variant(res.get())));
+					}
+				}
+
+				variant left_var;
+				if(g_ffl_vm_opt_constant_lookups && left_->canReduceToVariant(left_var) && left_var.is_callable()) {
+					auto p = left_var.as_callable();
+					variant value;
+					if(p->queryConstantValue(right_->str(), &value)) {
+						return ExpressionPtr(new VariantExpression(value));
+					}
+				}
+
+				return ExpressionPtr();
+			}
+
+			bool canCreateVM() const override { return canChildrenVM(); }
+
+			ExpressionPtr optimizeToVM() override {
+				optimizeChildToVM(left_);
+				optimizeChildToVM(right_);
+
+				auto left_type = left_->queryVariantType();
+
+				if(left_->canCreateVM() && right_->canCreateVM()) {
+					formula_vm::VirtualMachine vm;
+
+					//Optimization so that an expression such as lib.gui would boil down directly into
+					//the actual class instance.
+					if(g_ffl_vm_opt_library_lookups && left_type->is_builtin() && *left_type->is_builtin() == "library") {
+						const std::string& s = right_->str();
+
+						if(can_load_library_instance(s)) {
+							FormulaCallablePtr res = get_library_instance(s);
+							ASSERT_LOG(res.get() != nullptr, "Could not get library: " << s);
+							vm.addLoadConstantInstruction(variant(res.get()));
+							return ExpressionPtr(new VMExpression(vm, queryVariantType(), *this));
+						}
+					}
+
+					if(variant_type::get_type(variant::VARIANT_TYPE_LIST)->is_compatible(left_type)) {
+						left_->emitVM(vm);
+
+						const std::string& s = right_->str();
+						if(s == "x" || s == "r") {
+							vm.addInstruction(OP_INDEX_0);
+						} else if(s == "y" || s == "g") {
+							vm.addInstruction(OP_INDEX_1);
+						} else if(s == "z" || s == "b") {
+							vm.addInstruction(OP_INDEX_2);
+						} else if(s == "a") {
+							vm.addInstruction(OP_PUSH_INT);
+							vm.addInt(3);
+							vm.addInstruction(OP_INDEX);
+						}
+						return ExpressionPtr(new VMExpression(vm, queryVariantType(), *this));
+					} else if(variant_type::get_type(variant::VARIANT_TYPE_CALLABLE)->is_compatible(left_type)) {
+						left_->emitVM(vm);
+						vm.addInstruction(OP_PUSH_SCOPE);
+						right_->emitVM(vm);
+						vm.addInstruction(OP_POP_SCOPE);
+					} else if(variant_type::get_type(variant::VARIANT_TYPE_MAP)->is_compatible(left_type) && left_->str() != "arg" /*HORRIBLE HACK to exclude arg, TODO: fix arg to not mismatch object and map types*/) {
+						left_->emitVM(vm);
+						vm.addLoadConstantInstruction(variant(right_->str()));
+						vm.addInstruction(formula_vm::OP_INDEX);
+					} else {
+						left_->emitVM(vm);
+						vm.addLoadConstantInstruction(variant(right_->str()));
+						vm.addInstruction(formula_vm::OP_INDEX_STR);
+					}
+
+					return ExpressionPtr(new VMExpression(vm, queryVariantType(), *this));
+				}
+				return ExpressionPtr();
 			}
 	
 			ExpressionPtr left_, right_;
@@ -1430,16 +2011,23 @@ namespace {
 			{
 			}
 		private:
-			variant execute(const FormulaCallable& variables) const {
+			variant execute(const FormulaCallable& variables) const override {
 				const variant left = left_->evaluate(variables);
 				const variant key = key_->evaluate(variables);
 				if(left.is_list() || left.is_map()) {
 					return left[ key ];
 				} else if(left.is_string()) {
-					const std::string& s = left.as_string();
 					unsigned index = key.as_int();
-					ASSERT_LOG(index < s.length(), "index outside bounds: " << s << "[" << index << "]'\n'"  << debugPinpointLocation());
-					return variant(s.substr(index, 1));
+					if(left.is_str_utf8()) {
+						ASSERT_LOG(index < left.num_elements(), "index outside bounds: " << left.as_string() << "[" << index << "]'\n'" << debugPinpointLocation());
+
+						return variant(utils::str_substr_utf8(left.as_string(), index, index+1));
+
+					} else {
+						const std::string& s = left.as_string();
+						ASSERT_LOG(index < s.length(), "index outside bounds: " << s << "[" << index << "]'\n'"  << debugPinpointLocation());
+						return variant(s.substr(index, 1));
+					}
 				} else if(left.is_callable()) {
 					return left.as_callable()->queryValue(key.as_string());
 				} else {
@@ -1449,7 +2037,7 @@ namespace {
 				}
 			}
 	
-			variant executeMember(const FormulaCallable& variables, std::string& id, variant* variant_id) const {
+			variant executeMember(const FormulaCallable& variables, std::string& id, variant* variant_id) const override {
 				const variant left = left_->evaluate(variables);
 				const variant key = key_->evaluate(variables);
 
@@ -1461,8 +2049,12 @@ namespace {
 				return left;
 			}
 
-			variant_type_ptr getVariantType() const {
+			variant_type_ptr getVariantType() const override {
 				variant_type_ptr left_type = left_->queryVariantType();
+				if(left_type->is_type(variant::VARIANT_TYPE_STRING)) {
+					return variant_type::get_type(variant::VARIANT_TYPE_STRING);
+				}
+
 				variant_type_ptr list_element_type = left_type->is_list_of();
 				if(list_element_type) {
 					return list_element_type;
@@ -1476,21 +2068,56 @@ namespace {
 				return variant_type::get_any();
 			}
 
-			variant_type_ptr getMutableType() const {
+			variant_type_ptr getMutableType() const override {
 				return queryVariantType();
 			}
 
-			void staticErrorAnalysis() const {
+			void staticErrorAnalysis() const override {
 				variant_type_ptr type = left_->queryVariantType();
 
 				ASSERT_LOG(variant_type::get_null_excluded(type) == type, "Left side of '[]' operator may be null: " << left_->str() << " is " << type->to_string() << " " << debugPinpointLocation());
 			}
 
-			std::vector<ConstExpressionPtr> getChildren() const {
+			std::vector<ConstExpressionPtr> getChildren() const override {
 				std::vector<ConstExpressionPtr> result;
 				result.push_back(left_);
 				result.push_back(key_);
 				return result;
+			}
+
+			bool canCreateVM() const override { return canChildrenVM(); }
+
+			ExpressionPtr optimizeToVM() override {
+				optimizeChildToVM(left_);
+				optimizeChildToVM(key_);
+
+				auto left_type = left_->queryVariantType();
+
+				if(left_->canCreateVM() && key_->canCreateVM()) {
+					formula_vm::VirtualMachine vm;
+					left_->emitVM(vm);
+
+					variant key_const;
+					if(left_type->is_list_of() && key_->canReduceToVariant(key_const) && key_const.is_int() && key_const.as_int() >= 0 && key_const.as_int() <= 2) {
+						switch(key_const.as_int()) {
+							case 0: vm.addInstruction(formula_vm::OP_INDEX_0); break;
+							case 1: vm.addInstruction(formula_vm::OP_INDEX_1); break;
+							case 2: vm.addInstruction(formula_vm::OP_INDEX_2); break;
+							default: assert(false);
+						}
+						
+					} else {
+						key_->emitVM(vm);
+						if(left_type->is_list_of() || left_type->is_map_of().first) {
+							vm.addInstruction(formula_vm::OP_INDEX);
+						} else {
+							vm.addInstruction(formula_vm::OP_INDEX_STR);
+						}
+					}
+
+					return ExpressionPtr(new VMExpression(vm, queryVariantType(), *this));
+				}
+				return ExpressionPtr();
 			}
 	
 			ExpressionPtr left_, key_;
@@ -1502,14 +2129,14 @@ namespace {
 			: FormulaExpression("_slice_sqbr"), left_(left), start_(start), end_(end)
 			{}
 		private:
-			variant execute(const FormulaCallable& variables) const {
+			variant execute(const FormulaCallable& variables) const override {
 				const variant left = left_->evaluate(variables);
 				int begin_index = start_ ? start_->evaluate(variables).as_int() : 0;
 				int end_index = end_ ? end_->evaluate(variables).as_int() : left.num_elements();
 
 				if(left.is_string()) {
 					const std::string& s = left.as_string();
-					int s_len = static_cast<int>(s.length());
+					int s_len = static_cast<int>(left.num_elements());
 					if(begin_index > s_len) {
 						begin_index = s_len;
 					}
@@ -1517,12 +2144,17 @@ namespace {
 						end_index = s_len;
 					}
 					if(s.length() == 0) {
-						return variant();
+						return left;
 					}
 					if(end_index >= begin_index) {
-						return variant(s.substr(begin_index, end_index-begin_index));
+						if(s_len != s.size()) {
+							//utf8 string.
+							return variant(utils::str_substr_utf8(s, begin_index, end_index));
+						} else {
+							return variant(s.substr(begin_index, end_index-begin_index));
+						}
 					} else {
-						return variant();
+						return variant("");
 					}
 				}
 
@@ -1551,16 +2183,42 @@ namespace {
 				}
 			}
 
-			variant_type_ptr getVariantType() const {
+			variant_type_ptr getVariantType() const override {
 				return left_->queryVariantType();
 			}
 
-			std::vector<ConstExpressionPtr> getChildren() const {
+			std::vector<ConstExpressionPtr> getChildren() const override {
 				std::vector<ConstExpressionPtr> result;
 				result.push_back(left_);
 				result.push_back(start_);
 				result.push_back(end_);
 				return result;
+			}
+
+			bool canCreateVM() const override { return canChildrenVM(); }
+
+			ExpressionPtr optimizeToVM() override {
+				optimizeChildToVM(left_);
+				optimizeChildToVM(start_);
+				optimizeChildToVM(end_);
+				if(left_->canCreateVM() && (!start_ || start_->canCreateVM()) && (!end_ || end_->canCreateVM()) && (start_ || end_)) {
+					formula_vm::VirtualMachine vm;
+					left_->emitVM(vm);
+					if(start_) {
+						start_->emitVM(vm);
+					} else {
+						vm.addLoadConstantInstruction(variant(0));
+					}
+
+					if(end_) {
+						end_->emitVM(vm);
+					} else {
+						vm.addLoadConstantInstruction(variant());
+					}
+					vm.addInstruction(OP_ARRAY_SLICE);
+					return ExpressionPtr(new VMExpression(vm, queryVariantType(), *this));
+				}
+				return ExpressionPtr();
 			}
 	
 			ExpressionPtr left_, start_, end_;
@@ -1591,7 +2249,7 @@ namespace {
 			}
 
 		private:
-			variant execute(const FormulaCallable& variables) const {
+			variant execute(const FormulaCallable& variables) const override {
 				variant v = left_->evaluate(variables);
 				if(!v.as_bool()) {
 					return v;
@@ -1600,12 +2258,12 @@ namespace {
 				return right_->evaluate(variables);
 			}
 
-			variant_type_ptr getVariantType() const {
+			variant_type_ptr getVariantType() const override {
 				return get_variant_type_and_or(left_, right_);
 			}
 
 			ConstFormulaCallableDefinitionPtr
-			getModifiedDefinitionBasedOnResult(bool result, ConstFormulaCallableDefinitionPtr current_def, variant_type_ptr expression_is_this_type) const {
+			getModifiedDefinitionBasedOnResult(bool result, ConstFormulaCallableDefinitionPtr current_def, variant_type_ptr expression_is_this_type) const override {
 				if(expression_is_this_type) {
 					return ConstFormulaCallableDefinitionPtr();
 				}
@@ -1630,11 +2288,30 @@ namespace {
 				return ConstFormulaCallableDefinitionPtr();
 			}
 
-			std::vector<ConstExpressionPtr> getChildren() const {
+			std::vector<ConstExpressionPtr> getChildren() const override {
 				std::vector<ConstExpressionPtr> result;
 				result.push_back(left_);
 				result.push_back(right_);
 				return result;
+			}
+
+			bool canCreateVM() const override { return canChildrenVM(); }
+
+			ExpressionPtr optimizeToVM() override {
+				optimizeChildToVM(left_);
+				optimizeChildToVM(right_);
+
+				if(left_->canCreateVM() && right_->canCreateVM()) {
+					formula_vm::VirtualMachine vm;
+					left_->emitVM(vm);
+					const int jump_source = vm.addJumpSource(OP_JMP_UNLESS);
+					vm.addInstruction(OP_POP);
+					right_->emitVM(vm);
+					vm.jumpToEnd(jump_source);
+					return ExpressionPtr(new VMExpression(vm, queryVariantType(), *this));
+				}
+
+				return ExpressionPtr();
 			}
 
 			ExpressionPtr left_, right_;
@@ -1648,7 +2325,7 @@ namespace {
 			}
 
 		private:
-			variant execute(const FormulaCallable& variables) const {
+			variant execute(const FormulaCallable& variables) const override {
 				variant v = left_->evaluate(variables);
 				if(v.as_bool()) {
 					return v;
@@ -1657,12 +2334,12 @@ namespace {
 				return right_->evaluate(variables);
 			}
 
-			variant_type_ptr getVariantType() const {
+			variant_type_ptr getVariantType() const override {
 				return get_variant_type_and_or(left_, right_, true);
 			}
 
 			ConstFormulaCallableDefinitionPtr
-			getModifiedDefinitionBasedOnResult(bool result, ConstFormulaCallableDefinitionPtr current_def, variant_type_ptr expression_is_this_type) const {
+			getModifiedDefinitionBasedOnResult(bool result, ConstFormulaCallableDefinitionPtr current_def, variant_type_ptr expression_is_this_type) const override {
 				if(expression_is_this_type) {
 					return ConstFormulaCallableDefinitionPtr();
 				}
@@ -1679,11 +2356,30 @@ namespace {
 				return ConstFormulaCallableDefinitionPtr();
 			}
 
-			std::vector<ConstExpressionPtr> getChildren() const {
+			std::vector<ConstExpressionPtr> getChildren() const override {
 				std::vector<ConstExpressionPtr> result;
 				result.push_back(left_);
 				result.push_back(right_);
 				return result;
+			}
+
+			bool canCreateVM() const override { return canChildrenVM(); }
+
+			ExpressionPtr optimizeToVM() override {
+				optimizeChildToVM(left_);
+				optimizeChildToVM(right_);
+
+				if(left_->canCreateVM() && right_->canCreateVM()) {
+					formula_vm::VirtualMachine vm;
+					left_->emitVM(vm);
+					const int jump_source = vm.addJumpSource(OP_JMP_IF);
+					vm.addInstruction(OP_POP);
+					right_->emitVM(vm);
+					vm.jumpToEnd(jump_source);
+					return ExpressionPtr(new VMExpression(vm, queryVariantType(), *this));
+				}
+
+				return ExpressionPtr();
 			}
 
 			ExpressionPtr left_, right_;
@@ -1712,7 +2408,7 @@ namespace {
 				}
 			}
 
-			ExpressionPtr optimize() const {
+			ExpressionPtr optimize() const override {
 				if(op_ == OP_AND) {
 					return ExpressionPtr(new AndOperatorExpression(left_, right_));
 				} else if(op_ == OP_OR) {
@@ -1724,9 +2420,16 @@ namespace {
 
 			ExpressionPtr get_left() const { return left_; }
 			ExpressionPtr get_right() const { return right_; }
+
+
+			void emitVM(formula_vm::VirtualMachine& vm) const override {
+				left_->emitVM(vm);
+				right_->emitVM(vm);
+				vm.addInstruction(op_);
+			}
 	
 		private:
-			variant execute(const FormulaCallable& variables) const {
+			variant execute(const FormulaCallable& variables) const override {
 				const variant left = left_->evaluate(variables);
 				variant right = right_->evaluate(variables);
 				switch(op_) {
@@ -1796,7 +2499,7 @@ namespace {
 				return res;
 			}
 
-			void staticErrorAnalysis() const {
+			void staticErrorAnalysis() const override {
 				variant_type_ptr left_type = left_->queryVariantType();
 				variant_type_ptr right_type = right_->queryVariantType();
 
@@ -1805,14 +2508,15 @@ namespace {
 				}
 
 				switch(op_) {
+				case OP_EQ:
+				case OP_NEQ:
+					ASSERT_LOG(variant_types_might_match(left_type, right_type) || left_type->is_type(variant::VARIANT_TYPE_NULL) || right_type->is_type(variant::VARIANT_TYPE_NULL), "Equality expression on incompatible types: " << left_type->to_string() << " compared to " << right_type->to_string() << " " << debugPinpointLocation());
 				case OP_IN:
 				case OP_NOT_IN:
-				case OP_NEQ:
 				case OP_LTE:
 				case OP_GTE:
 				case OP_GT:
 				case OP_LT:
-				case OP_EQ:
 				case OP_AND:
 				case OP_OR:
 					return;
@@ -1872,7 +2576,7 @@ namespace {
 				}
 			}
 
-			variant_type_ptr getVariantType() const {
+			variant_type_ptr getVariantType() const override {
 
 				switch(op_) {
 				case OP_IN:
@@ -2010,7 +2714,7 @@ namespace {
 
 			}
 
-			ConstFormulaCallableDefinitionPtr getModifiedDefinitionBasedOnResult(bool result, ConstFormulaCallableDefinitionPtr current_def, variant_type_ptr expression_is_this_type) const {
+			ConstFormulaCallableDefinitionPtr getModifiedDefinitionBasedOnResult(bool result, ConstFormulaCallableDefinitionPtr current_def, variant_type_ptr expression_is_this_type) const override {
 				if(expression_is_this_type) {
 					return ConstFormulaCallableDefinitionPtr();
 				}
@@ -2027,15 +2731,29 @@ namespace {
 				return ConstFormulaCallableDefinitionPtr();
 			}
 
-			std::vector<ConstExpressionPtr> getChildren() const {
+			std::vector<ConstExpressionPtr> getChildren() const override {
 				std::vector<ConstExpressionPtr> result;
 				result.push_back(left_);
 				result.push_back(right_);
 				return result;
 			}
-	
-			enum OP { OP_IN, OP_NOT_IN, OP_AND, OP_OR, OP_NEQ, OP_LTE, OP_GTE, OP_GT='>', OP_LT='<', OP_EQ='=',
-				OP_ADD='+', OP_SUB='-', OP_MUL='*', OP_DIV='/', OP_DICE='d', OP_POW='^', OP_MOD='%' };
+
+			bool canCreateVM() const override { return canChildrenVM(); }
+
+			ExpressionPtr optimizeToVM() override {
+				optimizeChildToVM(left_);
+				optimizeChildToVM(right_);
+
+				if(left_->canCreateVM() && right_->canCreateVM()) {
+					formula_vm::VirtualMachine vm;
+					left_->emitVM(vm);
+					right_->emitVM(vm);
+					vm.addInstruction(op_);
+					return ExpressionPtr(new VMExpression(vm, queryVariantType(), *this));
+				}
+
+				return ExpressionPtr();
+			}
 	
 			OP op_;
 			ExpressionPtr left_, right_;
@@ -2060,58 +2778,6 @@ namespace {
 			return result;
 		}
 
-		class WhereVariables: public FormulaCallable {
-		public:
-			WhereVariables(const FormulaCallable &base, WhereVariablesInfoPtr info)
-			: FormulaCallable(false), base_(&base), info_(info)
-			{}
-		private:
-			boost::intrusive_ptr<const FormulaCallable> base_;
-			WhereVariablesInfoPtr info_;
-	
-			mutable std::vector<variant> results_cache_;
-
-			void setValueBySlot(int slot, const variant& value) override {
-				ASSERT_LOG(slot < info_->base_slot, "Illegal set on immutable where variables " << slot);
-				const_cast<FormulaCallable*>(base_.get())->mutateValueBySlot(slot, value);
-			}
-
-			void setValue(const std::string& key, const variant& value) override {
-				const_cast<FormulaCallable*>(base_.get())->mutateValue(key, value);
-			}
-
-			variant getValueBySlot(int slot) const override {
-				if(slot >= info_->base_slot) {
-					slot -= info_->base_slot;
-					if(static_cast<unsigned>(slot) < results_cache_.size() && results_cache_[slot].is_null() == false) {
-						return results_cache_[slot];
-					} else {
-						variant result = info_->entries[slot]->evaluate(*this);
-						if(results_cache_.size() <= static_cast<unsigned>(slot)) {
-							results_cache_.resize(slot+1);
-						}
-
-						results_cache_[slot] = result;
-						return result;
-					}
-				}
-
-				return base_->queryValueBySlot(slot);
-			}
-	
-			variant getValue(const std::string& key) const override {
-				const variant result = base_->queryValue(key);
-				if(result.is_null()) {
-					std::vector<std::string>::const_iterator i = std::find(info_->names.begin(), info_->names.end(), key);
-					if(i != info_->names.end()) {
-						const int slot = static_cast<int>(i - info_->names.begin());
-						return getValueBySlot(info_->base_slot + slot);
-					}
-				}
-				return result;
-			}
-		};
-
 		class WhereExpression : public FormulaExpression {
 		public:
 			WhereExpression(ExpressionPtr body, WhereVariablesInfoPtr info)
@@ -2120,7 +2786,7 @@ namespace {
 			}
 	
 		private:
-			ExpressionPtr optimize() const {
+			ExpressionPtr optimize() const override {
 
 				WhereExpression* base_where = dynamic_cast<WhereExpression*>(body_.get());
 				if(base_where == NULL) {
@@ -2138,42 +2804,300 @@ namespace {
 				return ExpressionPtr(new WhereExpression(base_where->body_, res));
 			}
 
-			variant_type_ptr getVariantType() const {
+			variant_type_ptr getVariantType() const override {
 				return body_->queryVariantType();
 			}
 
 			ExpressionPtr body_;
 			WhereVariablesInfoPtr info_;
 	
-			variant execute(const FormulaCallable& variables) const {
+			variant execute(const FormulaCallable& variables) const override {
 				FormulaCallablePtr wrapped_variables(new WhereVariables(variables, info_));
 				return body_->evaluate(*wrapped_variables);
 			}
 
-			std::vector<ConstExpressionPtr> getChildren() const {
+			std::vector<ConstExpressionPtr> getChildren() const override {
 				std::vector<ConstExpressionPtr> result;
 				result.push_back(body_);
 				result.insert(result.end(), info_->entries.begin(), info_->entries.end());
 				return result;
 			}
+
+			bool canCreateVM() const override { return canChildrenVM(); }
+
+			ExpressionPtr optimizeToVM() override {
+
+				bool can_vm = canCreateVM();
+				if(can_vm && g_strict_formula_checking && info_->callable_where_def) {
+		//			const_cast<FormulaCallableDefinition*>(info_->callable_where_def.get())->setHasSymbolIndexes();
+				}
+
+				optimizeChildToVM(body_);
+				for(ExpressionPtr& e : info_->entries) {
+					optimizeChildToVM(e);
+				}
+
+				if(!can_vm) {
+					return ExpressionPtr();
+				}
+
+				VMExpression* vm_body = dynamic_cast<VMExpression*>(body_.get());
+				std::vector<VMExpression*> vm_entries;
+				for(ExpressionPtr& e : info_->entries) {
+					vm_entries.push_back(dynamic_cast<VMExpression*>(e.get()));
+				}
+
+				static int num_where = 0;
+				static int num_opt_where = 0;
+
+				++num_where;
+
+				if(g_ffl_vm_opt_replace_where && vm_body != nullptr && std::count(vm_entries.begin(), vm_entries.end(), nullptr) == 0) {
+
+					std::map<int, VirtualMachine::Iterator> lookups;
+					std::vector<VirtualMachine::Iterator> ordered_lookups;
+
+					int loop_end = -1;
+
+					bool can_optimize = true;
+					
+					std::vector<formula_vm::VirtualMachine> all_vm;
+					all_vm.reserve(vm_entries.size() + 1);
+					all_vm.emplace_back(vm_body->get_vm());
+					std::reverse(vm_entries.begin(), vm_entries.end());
+					for(auto e : vm_entries) {
+						all_vm.emplace_back(e->get_vm());
+					}
+
+					std::vector<bool> vm_trivial;
+					for(int n = 0; n < vm_entries.size(); ++n) {
+						auto i = all_vm[all_vm.size() - n - 1].begin_itor();
+						if(!i.at_end()) {
+							i.next();
+						}
+
+						vm_trivial.push_back(i.at_end());
+					}
+
+					for(auto& vm : all_vm) {
+
+						std::vector<bool> unrelated_scope_stack;
+
+						for(VirtualMachine::Iterator itor(vm.begin_itor()); !itor.at_end(); itor.next()) {
+							if(formula_vm::VirtualMachine::isInstructionLoop(itor.get())) {
+								const int end = static_cast<int>(itor.get_index()) + itor.arg();
+								if(end > loop_end) {
+									loop_end = end;
+								}
+							} else if(itor.get() == formula_vm::OP_PUSH_SCOPE) {
+								unrelated_scope_stack.push_back(true);
+							} else if(itor.get() == formula_vm::OP_INLINE_FUNCTION) {
+								unrelated_scope_stack.push_back(false);
+							} else if(itor.get() == formula_vm::OP_WHERE && itor.arg() >= 0) {
+								unrelated_scope_stack.push_back(false);
+							} else if(itor.get() == formula_vm::OP_POP_SCOPE) {
+								assert(unrelated_scope_stack.empty() == false);
+								unrelated_scope_stack.pop_back();
+							} else if((itor.get() == formula_vm::OP_LOOKUP_STR && std::find(unrelated_scope_stack.begin(), unrelated_scope_stack.end(), true) == unrelated_scope_stack.end()) || itor.get() == formula_vm::OP_CALL_BUILTIN_DYNAMIC || itor.get() == formula_vm::OP_LAMBDA_WITH_CLOSURE) {
+								can_optimize = false;
+								break;
+							} else if(itor.get() == formula_vm::OP_LOOKUP && std::find(unrelated_scope_stack.begin(), unrelated_scope_stack.end(), true) == unrelated_scope_stack.end() && itor.arg() >= info_->base_slot && itor.arg() < info_->base_slot + info_->entries.size()) {
+
+								const int index = itor.arg() - info_->base_slot;
+								assert(index >= 0 && index < vm_trivial.size());
+
+								if((static_cast<int>(itor.get_index()) < loop_end || lookups.count(itor.arg()) > 0) && vm_trivial[index] == false) {
+									can_optimize = false;
+									break;
+								}
+
+								lookups.insert(std::pair<int, VirtualMachine::Iterator>(itor.arg(), itor));
+	
+								ordered_lookups.emplace_back(itor);
+							}
+						}
+
+						if(!can_optimize) {
+							break;
+						}
+					}
+
+					if(can_optimize) {
+
+						std::reverse(ordered_lookups.begin(), ordered_lookups.end());
+
+						for(auto lookup : ordered_lookups) {
+							VirtualMachine* vm = const_cast<VirtualMachine*>(lookup.get_vm());
+							auto next_itor = lookup;
+							next_itor.next();
+
+							const int index = lookup.arg() - info_->base_slot;
+							assert(index >= 0 && index < static_cast<int>(info_->entries.size()));
+
+							vm->append(lookup, next_itor, all_vm[all_vm.size() - index - 1]);
+						}
+
+						++num_opt_where;
+
+						return ExpressionPtr(new VMExpression(all_vm.front(), queryVariantType(), *this));
+					}
+				}
+
+				formula_vm::VirtualMachine vm;
+
+				bool first = true;
+				for(ExpressionPtr& e : info_->entries) {
+					e->emitVM(vm);
+//					vm.addInstruction(formula_vm::OP_PUSH_SYMBOL_STACK);
+
+					vm.addInstruction(formula_vm::OP_WHERE);
+					if(first) {
+						vm.addInt(info_->base_slot);
+						first = false;
+					} else {
+						vm.addInt(-1);
+					}
+				}
+
+				body_->emitVM(vm);
+				vm.addInstruction(formula_vm::OP_POP_SCOPE);
+
+				for(ExpressionPtr& e : info_->entries) {
+//					vm.addInstruction(formula_vm::OP_POP_SYMBOL_STACK);
+				}
+
+				return ExpressionPtr(new VMExpression(vm, queryVariantType(), *this));
+			}
 		};
+
+		struct CommandSequenceEntry {
+			const class CommandSequence* first;
+			bool* second;
+			ffl::IntrusivePtr<class CommandSequence> deferred;
+			CommandSequenceEntry(const class CommandSequence* seq, bool* flag) : first(seq), second(flag)
+			{}
+
+			CommandSequenceEntry() : first(nullptr), second(nullptr) {}
+
+		};
+
+		std::vector<CommandSequenceEntry> g_command_sequence_stack;
+
+		struct CommandSequenceStackScope {
+			bool deferred = false;
+			explicit CommandSequenceStackScope(const class CommandSequence* seq) {
+				g_command_sequence_stack.push_back(CommandSequenceEntry(seq, &deferred));
+			}
+
+			~CommandSequenceStackScope() {
+				g_command_sequence_stack.pop_back();
+			}
+		};
+
 
 		class CommandSequence : public CommandCallable {
 			variant cmd_;
 			ExpressionPtr right_;
 			ConstFormulaCallablePtr variables_;
+			mutable int nbarrier_;
+
+			void surrenderReferences(GarbageCollector* collector) override {
+				collector->surrenderVariant(&cmd_, "cmd");
+				collector->surrenderPtr(&variables_, "variables");
+			}
 		public:
 			CommandSequence(const variant& cmd, ExpressionPtr right_expr, ConstFormulaCallablePtr variables)
-			  : cmd_(cmd), right_(right_expr), variables_(variables)
+			  : cmd_(cmd), right_(right_expr), variables_(variables), nbarrier_(0)
 			{}
 
-			void execute(game_logic::FormulaCallable& ob) const {
-				ob.executeCommand(cmd_);
+			void createBarrier() { ++nbarrier_; }
+
+			void execute(game_logic::FormulaCallable& ob) const override {
+				if(nbarrier_ > 0) {
+					--nbarrier_;
+					return;
+				}
+
+				{
+					CommandSequenceStackScope scope(this);
+					ob.executeCommand(cmd_);
+					if(scope.deferred) {
+						return;
+					}
+				}
+
+				formula_profiler::Instrument instrument("CMD_EVAL");
 				const variant right_cmd = right_->evaluate(*variables_);
+				formula_profiler::Instrument instrument2("CMD_EXEC");
 				ob.executeCommand(right_cmd);
 			}
-		private:
+
+			ffl::IntrusivePtr<CommandSequence> createDeferred() const
+			{
+				return ffl::IntrusivePtr<CommandSequence>(new CommandSequence(variant(), right_, variables_));
+			}
 		};
+
+		struct MultiCommandSequenceStackScope {
+			std::vector<ffl::IntrusivePtr<CommandSequence> >* stack_;
+			bool deferred_;
+			explicit MultiCommandSequenceStackScope(std::vector<ffl::IntrusivePtr<CommandSequence> >* stack) : stack_(stack), deferred_(false)
+			{
+				for(auto p : *stack_) {
+					g_command_sequence_stack.push_back(CommandSequenceEntry(p.get(), &deferred_));
+				}
+			}
+
+			~MultiCommandSequenceStackScope() {
+				g_command_sequence_stack.resize(g_command_sequence_stack.size() - stack_->size());
+			}
+		};
+
+		class DeferredCommandSequence : public CommandCallable {
+			mutable std::vector<ffl::IntrusivePtr<CommandSequence> > stack_;
+		public:
+			DeferredCommandSequence() {
+				stack_.reserve(g_command_sequence_stack.size());
+				for(auto& seq : g_command_sequence_stack) {
+					*seq.second = true;
+					if(!seq.deferred) {
+						seq.deferred = seq.first->createDeferred();
+					} else {
+						seq.deferred->createBarrier();
+					}
+					stack_.push_back(seq.deferred);
+				}
+			}
+
+			void execute(game_logic::FormulaCallable& ob) const override {
+				MultiCommandSequenceStackScope scope(&stack_);
+				while(scope.deferred_ == false && stack_.empty() == false) {
+					auto seq = stack_.back();
+					stack_.pop_back();
+					g_command_sequence_stack.pop_back();
+					seq->execute(ob);
+				}
+			}
+
+			void surrenderReferences(GarbageCollector* collector) override {
+				for(ffl::IntrusivePtr<CommandSequence>& p : stack_) {
+					collector->surrenderPtr(&p);
+				}
+			}
+		};
+
+	} //namespace
+
+	variant deferCurrentCommandSequence()
+	{
+		if(g_command_sequence_stack.empty()) {
+			return variant();
+		} else {
+			return variant(new DeferredCommandSequence);
+		}
+	}
+
+	namespace {
 
 		class CommandSequenceExpression : public FormulaExpression {
 			ExpressionPtr left_, right_;
@@ -2182,11 +3106,11 @@ namespace {
 			  : left_(left), right_(right)
 			{}
 
-			variant_type_ptr getVariantType() const {
+			variant_type_ptr getVariantType() const override {
 				return variant_type::get_commands();
 			}
 
-			void staticErrorAnalysis() const {
+			void staticErrorAnalysis() const override {
 				if(left_) {
 					variant_type_ptr left_type = left_->queryVariantType();
 					ASSERT_LOG(variant_types_compatible(variant_type::get_commands(), left_type), "Expression to the left of ; must be of commands type, is of type " << left_type->to_string() << " " << debugPinpointLocation());
@@ -2196,7 +3120,7 @@ namespace {
 				ASSERT_LOG(variant_types_compatible(variant_type::get_commands(), right_type), "Expression to the right of ; must be of commands type, is of type " << right_type->to_string() << " " << debugPinpointLocation());
 			}
 
-			variant execute(const FormulaCallable& variables) const {
+			variant execute(const FormulaCallable& variables) const override {
 
 				Formula::failIfStaticContext();
 
@@ -2208,7 +3132,7 @@ namespace {
 				return variant(res);
 			}
 
-			std::vector<ConstExpressionPtr> getChildren() const {
+			std::vector<ConstExpressionPtr> getChildren() const override {
 				std::vector<ConstExpressionPtr> result;
 				if(left_) {
 					result.push_back(left_);
@@ -2217,6 +3141,13 @@ namespace {
 				return result;
 			}
 
+			bool canCreateVM() const override { return false; }
+
+			ExpressionPtr optimizeToVM() override {
+				optimizeChildToVM(left_);
+				optimizeChildToVM(right_);
+				return ExpressionPtr();
+			}
 		};
 
 		class LetExpression : public FormulaExpression {
@@ -2235,14 +3166,14 @@ namespace {
 				names_.push_back(identifier);
 			}
 
-			variant_type_ptr getVariantType() const {
+			variant_type_ptr getVariantType() const override {
 				return right_expr_->queryVariantType();
 			}
 
-			variant execute(const FormulaCallable& variables) const {
+			variant execute(const FormulaCallable& variables) const override {
 				const variant value = let_expr_->evaluate(variables);
 
-				boost::intrusive_ptr<MutableSlotFormulaCallable> callable(new MutableSlotFormulaCallable);
+				ffl::IntrusivePtr<MutableSlotFormulaCallable> callable(new MutableSlotFormulaCallable);
 				callable->setFallback(&variables);
 				callable->setBaseSlot(slot_);
 				callable->setNames(&names_);
@@ -2251,11 +3182,19 @@ namespace {
 				return right_expr_->evaluate(*callable);
 			}
 
-			std::vector<ConstExpressionPtr> getChildren() const {
+			std::vector<ConstExpressionPtr> getChildren() const override {
 				std::vector<ConstExpressionPtr> result;
 				result.push_back(let_expr_);
 				result.push_back(right_expr_);
 				return result;
+			}
+
+			bool canCreateVM() const override { return false; }
+
+			ExpressionPtr optimizeToVM() override {
+				optimizeChildToVM(let_expr_);
+				optimizeChildToVM(right_expr_);
+				return ExpressionPtr();
 			}
 		};
 
@@ -2267,22 +3206,34 @@ namespace {
 			}
 
 		private:
-			variant_type_ptr getVariantType() const {
+			variant_type_ptr getVariantType() const override {
 				return variant_type::get_type(variant::VARIANT_TYPE_BOOL);
 			}
 
-			variant execute(const FormulaCallable& variables) const {
+			variant execute(const FormulaCallable& variables) const override {
 				const variant value = expression_->evaluate(variables);
 				return variant::from_bool(type_->match(value));
 			}
 
-			std::vector<ConstExpressionPtr> getChildren() const {
+			std::vector<ConstExpressionPtr> getChildren() const override {
 				std::vector<ConstExpressionPtr> result;
 				result.push_back(expression_);
 				return result;
 			}
 
-			ConstFormulaCallableDefinitionPtr getModifiedDefinitionBasedOnResult(bool result, ConstFormulaCallableDefinitionPtr current_def, variant_type_ptr expression_is_this_type) const {
+			ExpressionPtr optimizeToVM() override {
+				optimizeChildToVM(expression_);
+				if(expression_->canCreateVM()) {
+					formula_vm::VirtualMachine vm;
+					expression_->emitVM(vm);
+					vm.addLoadConstantInstruction(variant(type_.get()));
+					vm.addInstruction(OP_IS);
+					return ExpressionPtr(new VMExpression(vm, queryVariantType(), *this));
+				}
+				return ExpressionPtr();
+			}
+
+			ConstFormulaCallableDefinitionPtr getModifiedDefinitionBasedOnResult(bool result, ConstFormulaCallableDefinitionPtr current_def, variant_type_ptr expression_is_this_type) const override {
 				if(expression_is_this_type) {
 					return ConstFormulaCallableDefinitionPtr();
 				}
@@ -2299,11 +3250,11 @@ namespace {
 			StaticTypeExpression(variant_type_ptr type, ExpressionPtr expr)
 			: FormulaExpression("_static_type"), type_(type), expression_(expr)
 			{
-				const FormulaInterface* interface = type->is_interface();
-				if(interface) {
-					boost::intrusive_ptr<FormulaInterfaceInstanceFactory> interface_factory;
+				const FormulaInterface* formula_interface = type->is_interface();
+				if(formula_interface) {
+					ffl::IntrusivePtr<FormulaInterfaceInstanceFactory> interface_factory;
 					try {
-						interface_factory.reset(interface->createFactory(expr->queryVariantType()));
+						interface_factory.reset(formula_interface->createFactory(expr->queryVariantType()));
 					} catch(FormulaInterface::interface_mismatch_error& e) {
 						ASSERT_LOG(false, "Could not create interface: " << e.msg << " " << debugPinpointLocation());
 					}
@@ -2313,14 +3264,14 @@ namespace {
 			}
 	
 		private:
-			variant_type_ptr getVariantType() const {
+			variant_type_ptr getVariantType() const override {
 				return type_;
 			}
 
 			variant_type_ptr type_;
 			ExpressionPtr expression_;
 	
-			variant execute(const FormulaCallable& variables) const {
+			variant execute(const FormulaCallable& variables) const override {
 				if(interface_) {
 					return interface_->create(expression_->evaluate(variables));
 				} else {
@@ -2328,13 +3279,20 @@ namespace {
 				}
 			}
 
-			std::vector<ConstExpressionPtr> getChildren() const {
+			std::vector<ConstExpressionPtr> getChildren() const override {
 				std::vector<ConstExpressionPtr> result;
 				result.push_back(expression_);
 				return result;
 			}
 
-			ExpressionPtr optimize() const {
+			bool canCreateVM() const override { return false; }
+
+			ExpressionPtr optimizeToVM() override {
+				optimizeChildToVM(expression_);
+				return ExpressionPtr();
+			}
+
+			ExpressionPtr optimize() const override {
 				if(!interface_) {
 					return expression_;
 				} else {
@@ -2342,11 +3300,14 @@ namespace {
 				}
 			}
 
-			void staticErrorAnalysis() const {
-				ASSERT_LOG(variant_types_compatible(type_, expression_->queryVariantType()), "Expression is not declared type. Of type " << expression_->queryVariantType()->to_string() << " when type " << type_->to_string() << " expected " << debugPinpointLocation());
+			void staticErrorAnalysis() const override {
+				if(variant_types_compatible(type_, expression_->queryVariantType()) == false) {
+					std::ostringstream reason;
+					ASSERT_LOG(variant_types_compatible(type_, expression_->queryVariantType(), &reason), "Expression is not declared type. Of type " << expression_->queryVariantType()->to_string() << " when type " << type_->to_string() << " expected (" << reason.str() << ") " << debugPinpointLocation());
+				}
 			}
 
-			boost::intrusive_ptr<FormulaInterfaceInstanceFactory> interface_;
+			ffl::IntrusivePtr<FormulaInterfaceInstanceFactory> interface_;
 		};
 
 		class TypeExpression : public FormulaExpression {
@@ -2357,23 +3318,47 @@ namespace {
 			}
 	
 		private:
-			variant_type_ptr getVariantType() const {
+			variant_type_ptr getVariantType() const override {
 				return type_;
 			}
 
 			variant_type_ptr type_;
 			ExpressionPtr expression_;
 	
-			variant execute(const FormulaCallable& variables) const {
+			variant execute(const FormulaCallable& variables) const override {
 				const variant result = expression_->evaluate(variables);
-				ASSERT_LOG(type_->match(result), "TYPE MIS-MATCH: EXPECTED " << type_->to_string() << " BUT FOUND " << result.write_json() << " OF TYPE '" << get_variant_type_from_value(result)->to_string() << "' AT " << debugPinpointLocation());
+				ASSERT_LOG(type_->match(result), "TYPE MIS-MATCH: EXPECTED " << type_->to_string() << " BUT FOUND " << result.write_json() << " OF TYPE '" << get_variant_type_from_value(result)->to_string() << "' " << type_->mismatch_reason(result) << " AT " << debugPinpointLocation());
 				return result;
 			}
 
-			std::vector<ConstExpressionPtr> getChildren() const {
+			std::vector<ConstExpressionPtr> getChildren() const override {
 				std::vector<ConstExpressionPtr> result;
 				result.push_back(expression_);
 				return result;
+			}
+
+			ExpressionPtr optimizeToVM() override {
+				optimizeChildToVM(expression_);
+				if(expression_->canCreateVM()) {
+					formula_vm::VirtualMachine vm;
+					expression_->emitVM(vm);
+
+					vm.addInstruction(OP_DUP);
+					vm.addLoadConstantInstruction(variant(type_.get()));
+					vm.addInstruction(OP_IS);
+					const int jump_source = vm.addJumpSource(OP_POP_JMP_IF);
+
+					vm.addLoadConstantInstruction(variant(formatter() << "Type mis-match. Expected " << type_->to_string() << " found "));
+					vm.addInstruction(OP_SWAP);
+					vm.addInstruction(OP_ADD);
+					vm.addInstruction(OP_PUSH_NULL);
+
+					vm.addInstruction(OP_ASSERT);
+					vm.jumpToEnd(jump_source);
+
+					return ExpressionPtr(new VMExpression(vm, queryVariantType(), *this));
+				}
+				return ExpressionPtr();
 			}
 		};
 
@@ -2388,7 +3373,7 @@ namespace {
 			ExpressionPtr body_, debug_;
 			std::vector<ExpressionPtr> asserts_;
 
-			variant execute(const FormulaCallable& variables) const {
+			variant execute(const FormulaCallable& variables) const override {
 				for(const ExpressionPtr& a : asserts_) {
 					if(!a->evaluate(variables).as_bool()) {
 						OperatorExpression* op_expr = dynamic_cast<OperatorExpression*>(a.get());
@@ -2411,15 +3396,48 @@ namespace {
 				return body_->evaluate(variables);
 			}
 
-			variant_type_ptr getVariantType() const {
+			variant_type_ptr getVariantType() const override {
 				return body_->queryVariantType();
 			}
 	
-			std::vector<ConstExpressionPtr> getChildren() const {
+			std::vector<ConstExpressionPtr> getChildren() const override {
 				std::vector<ConstExpressionPtr> result;
 				result.push_back(body_);
 				result.push_back(debug_);
 				return result;
+			}
+
+			ExpressionPtr optimizeToVM() override {
+				optimizeChildToVM(body_);
+				optimizeChildToVM(debug_);
+				bool can_vm = body_->canCreateVM() && (!debug_ || debug_->canCreateVM());
+				for(ExpressionPtr& a : asserts_) {
+					optimizeChildToVM(a);
+					can_vm = can_vm && a->canCreateVM();
+				}
+
+				if(can_vm) {
+					formula_vm::VirtualMachine vm;
+					for(const ExpressionPtr& a : asserts_) {
+						a->emitVM(vm);
+						const int jump_source = vm.addJumpSource(OP_JMP_IF);
+						vm.addLoadConstantInstruction(variant(a->str()));
+						if(debug_) {
+							debug_->emitVM(vm);
+						} else {
+							vm.addInstruction(OP_PUSH_NULL);
+						}
+						vm.addInstruction(OP_ASSERT);
+						vm.jumpToEnd(jump_source);
+						vm.addInstruction(OP_POP);
+					}
+
+					body_->emitVM(vm);
+
+					return ExpressionPtr(new VMExpression(vm, queryVariantType(), *this));
+				}
+
+				return ExpressionPtr();
 			}
 		};
 
@@ -2428,12 +3446,20 @@ namespace {
 		public:
 			explicit IntegerExpression(int i) : FormulaExpression("_int"), i_(i)
 			{}
+
+			bool canCreateVM() const override { return true; }
+
+			ExpressionPtr optimizeToVM() override {
+				formula_vm::VirtualMachine vm;
+				vm.addLoadConstantInstruction(i_);
+				return ExpressionPtr(new VMExpression(vm, queryVariantType(), *this));
+			}
 		private:
-			variant execute(const FormulaCallable& /*variables*/) const {
+			variant execute(const FormulaCallable& /*variables*/) const override {
 				return i_;
 			}
 
-			variant_type_ptr getVariantType() const {
+			variant_type_ptr getVariantType() const override {
 				return variant_type::get_type(variant::VARIANT_TYPE_INT);
 			}
 	
@@ -2444,12 +3470,19 @@ namespace {
 		public:
 			explicit decimal_expression(const decimal& d) : FormulaExpression("_decimal"), v_(d)
 			{}
+
+			bool canCreateVM() const override { return true; }
+			ExpressionPtr optimizeToVM() override {
+				formula_vm::VirtualMachine vm;
+				vm.addLoadConstantInstruction(v_);
+				return ExpressionPtr(new VMExpression(vm, queryVariantType(), *this));
+			}
 		private:
-			variant execute(const FormulaCallable& /*variables*/) const {
+			variant execute(const FormulaCallable& /*variables*/) const override {
 				return v_;
 			}
 
-			variant_type_ptr getVariantType() const {
+			variant_type_ptr getVariantType() const override {
 				return variant_type::get_type(variant::VARIANT_TYPE_DECIMAL);
 			}
 	
@@ -2508,7 +3541,7 @@ namespace {
 				str_ = variant(str);
 			}
 
-			bool isLiteral(variant& result) const {
+			bool isLiteral(variant& result) const override {
 				if(subs_.empty()) {
 					result = str_;
 					return true;
@@ -2517,7 +3550,7 @@ namespace {
 				}
 			}
 
-			bool canReduceToVariant(variant& v) const {
+			bool canReduceToVariant(variant& v) const override {
 				if(subs_.empty()) {
 					v = variant(str_);
 					return true;
@@ -2525,9 +3558,24 @@ namespace {
 					return false;
 				}
 			}
+
+			bool canCreateVM() const override { return subs_.empty(); }
+
+			ExpressionPtr optimizeToVM() override {
+				if(subs_.empty()) {
+					formula_vm::VirtualMachine vm;
+					vm.addLoadConstantInstruction(str_);
+					VMExpression* result = new VMExpression(vm, queryVariantType(), *this);
+					result->setVariant(variant(str_));
+					return ExpressionPtr(result);
+				} else {
+					//TODO: VM code for string subs.
+					return ExpressionPtr();
+				}
+			}
 			
 		private:
-			variant execute(const FormulaCallable& variables) const {
+			variant execute(const FormulaCallable& variables) const override {
 				if(subs_.empty()) {
 					return str_;
 				} else {
@@ -2542,7 +3590,7 @@ namespace {
 				}
 			}
 
-			variant_type_ptr getVariantType() const {
+			variant_type_ptr getVariantType() const override {
 				return variant_type::get_type(variant::VARIANT_TYPE_STRING);
 			}
 	
@@ -2556,7 +3604,7 @@ namespace {
 		};
 
 		using namespace formula_tokenizer;
-		int operator_precedence(const Token& t)
+		int operator_precedence(const Token& t, const variant& formula_str)
 		{
 			static std::map<std::string,int> precedence_map;
 			if(precedence_map.empty()) {
@@ -2594,7 +3642,7 @@ namespace {
 				precedence_map["."]     = n;
 			}
 	
-			ASSERT_LOG(precedence_map.count(std::string(t.begin,t.end)), "Unknown precedence for '" << std::string(t.begin,t.end) << "'");
+			ASSERT_LOG(precedence_map.count(std::string(t.begin,t.end)), "Unknown precedence for '" << std::string(t.begin,t.end) << "': " << pinpoint_location(formula_str, t.begin, t.end));
 			return precedence_map[std::string(t.begin,t.end)];
 		}
 
@@ -2639,7 +3687,7 @@ namespace {
 						const ExpressionPtr expr = parse_expression(
 							formula_str, begin, i1, nullptr, nullptr);
 
-						boost::intrusive_ptr<MapFormulaCallable> callable(new MapFormulaCallable);
+						ffl::IntrusivePtr<MapFormulaCallable> callable(new MapFormulaCallable);
 						default_values->push_back(expr->evaluate(*callable));
 						if(variant_type_info && !variant_type_info->match(default_values->back())) {
 							ASSERT_LOG(false, "Default argument to function doesn't match type for argument " << (types->size()+1) << " arg: " << default_values->back().write_json() << " AT: " << pinpoint_location(formula_str, i1->begin, (i2-1)->end));
@@ -2723,7 +3771,7 @@ namespace {
 				if(n+1 == args.size()) {
 					//Certain special functions take a special callable definition
 					//to evaluate their last argument. Discover what that is here.
-					static const std::string MapCallableFuncs[] = { "count", "filter", "find", "find_or_die", "choose", "map", "count" };
+					static const std::string MapCallableFuncs[] = { "count", "filter", "find", "find_or_die", "choose", "map" };
 					if(args.size() >= 2 && function_name != nullptr && std::count(MapCallableFuncs, MapCallableFuncs + sizeof(MapCallableFuncs)/sizeof(*MapCallableFuncs), *function_name)) {
 						std::string value_name = "value";
 
@@ -2745,7 +3793,12 @@ namespace {
 						variant_type_ptr key_type, value_type;
 
 						variant_type_ptr sequence_type = (*res)[0]->queryVariantType();
-						value_type = sequence_type->is_list_of();
+						if(sequence_type->is_type(variant::VARIANT_TYPE_STRING)) {
+							value_type = variant_type::get_type(variant::VARIANT_TYPE_STRING);
+						} else {
+							value_type = sequence_type->is_list_of();
+						}
+
 						if(!value_type) {
 							key_type = sequence_type->is_map_of().first;
 							value_type = sequence_type->is_map_of().second;
@@ -2767,7 +3820,7 @@ namespace {
 					callable_def = get_variant_comparator_definition(callable_def, value_type);
 				}
 
-				if(function_name != nullptr && n == 4 &&
+				if(function_name != nullptr && (n == 4 || (args.size() == 3 && n == 2)) &&
 				   (*function_name == "spawn" || *function_name == "spawn_player")) {
 					//The spawn custom_object_functions take a special child
 					//argument as their last parameter.
@@ -2808,6 +3861,7 @@ namespace {
 							FunctionSymbolTable* symbols,
 							ConstFormulaCallableDefinitionPtr callable_def)
 		{
+			const size_t begin_size = res->size();
 			int parens = 0;
 			bool check_pointer = false;
 			const Token* beg = i1;
@@ -2828,9 +3882,14 @@ namespace {
 						}
 						beg = i1+1;
 					} else {
-						ASSERT_LOG(false, "Too many ':' operators.\n" << pinpoint_location(formula_str, i1->begin, (i2-1)->end));
+						if((i1-1)->type == FFL_TOKEN_TYPE::IDENTIFIER || (i1-1)->type == FFL_TOKEN_TYPE::STRING_LITERAL) {
+							ASSERT_LOG(false, "Missing comma\n" << pinpoint_location(formula_str, (i1-2)->end, (i1-2)->end));
+						} else {
+							ASSERT_LOG(false, "Too many ':' operators.\n" << pinpoint_location(formula_str, i1->begin, (i2-1)->end));
+						}
 					}
 				} else if( i1->type == FFL_TOKEN_TYPE::COMMA && !parens ) {
+					ASSERT_LOG(check_pointer, "Expected ':' and found ',' instead\n" << pinpoint_location(formula_str, i1->begin, (i2-1)->end));
 					check_pointer = false;
 					res->push_back(parse_expression(formula_str, beg,i1, symbols, callable_def));
 					beg = i1+1;
@@ -2838,10 +3897,12 @@ namespace {
 		
 				++i1;
 			}
-	
+
 			if(beg != i1) {
 				res->push_back(parse_expression(formula_str, beg,i1, symbols, callable_def));
 			}
+
+			ASSERT_LOG((res->size() - begin_size)%2 == 0, "Expected : before end of map expression.\n" << pinpoint_location(formula_str, (i2-1)->end, (i2-1)->end));
 		}
 
 		void parse_where_clauses(const variant& formula_str,
@@ -2905,18 +3966,12 @@ namespace {
 				static_FormulaCallable(const static_FormulaCallable&);
 			public:
 				static_FormulaCallable() : FormulaCallable(false) {
-					if(static_FormulaCallable_active) {
-						throw non_static_expression_exception();
-					}
-			
-					static_FormulaCallable_active = true;
 				}
 		
 				~static_FormulaCallable() {
-					static_FormulaCallable_active = false;
 				}
 		
-				variant getValue(const std::string& key) const {
+				variant getValue(const std::string& key) const override {
 					if(key == "lib") {
 						return variant(get_library_object().get());
 					}
@@ -2924,20 +3979,39 @@ namespace {
 					throw non_static_expression_exception();
 				}
 
-				variant getValueBySlot(int slot) const {
+				variant getValueBySlot(int slot) const override {
 					throw non_static_expression_exception();
 				}
 			};
 
+			class StaticFormulaCallableGuard {
+				ffl::IntrusivePtr<static_FormulaCallable> callable_;
+			public:
+				StaticFormulaCallableGuard() : callable_(new static_FormulaCallable) {
+					if(static_FormulaCallable_active) {
+						throw non_static_expression_exception();
+					}
+			
+					static_FormulaCallable_active = true;
+				}
+
+				~StaticFormulaCallableGuard() {
+					static_FormulaCallable_active = false;
+				}
+
+				ffl::IntrusivePtr<static_FormulaCallable> callable() const { return callable_; }
+				bool callableNotCopied() const { return callable_->refcount() == 1; }
+			};
+
 			//A helper function which queries an expression and finds all the occurrences where it
 			//looks up a symbol in its enclosing scope.
-			void query_formula_expression_lookups(ConstExpressionPtr expr, std::vector<const SlotIdentifierExpression*>* slot_expr, std::vector<const IdentifierExpression*>* id_expr) {
+			void query_formula_expression_lookups(ConstExpressionPtr expr, std::vector<const SlotIdentifierExpression*>* slot_expr, std::vector<const IdentifierExpression*>* id_expr, std::vector<const VMExpression*>* vm_expr) {
 
 				std::vector<ConstExpressionPtr> children = expr->queryChildren();
 
 				if(dynamic_cast<const DotExpression*>(expr.get())) {
 					if(children.empty() == false) {
-						query_formula_expression_lookups(children.front(), slot_expr, id_expr);
+						query_formula_expression_lookups(children.front(), slot_expr, id_expr, vm_expr);
 					}
 
 					return;
@@ -2945,9 +4019,11 @@ namespace {
 					slot_expr->push_back(dynamic_cast<const SlotIdentifierExpression*>(expr.get()));
 				} else if(dynamic_cast<const IdentifierExpression*>(expr.get())) {
 					id_expr->push_back(dynamic_cast<const IdentifierExpression*>(expr.get()));
+				} else if(dynamic_cast<const VMExpression*>(expr.get())) {
+					vm_expr->push_back(dynamic_cast<const VMExpression*>(expr.get()));
 				} else {
 					for(auto c : children) {
-						query_formula_expression_lookups(c, slot_expr, id_expr);
+						query_formula_expression_lookups(c, slot_expr, id_expr, vm_expr);
 					}
 				}
 			}
@@ -2978,8 +4054,9 @@ namespace {
 
 			if(result) {
 				ExpressionPtr optimized = result->optimize();
-				if(optimized) {
+				while(optimized) {
 					result = optimized;
+					optimized = result->optimize();
 				}
 			}
 
@@ -2987,18 +4064,17 @@ namespace {
 				//we want to try to evaluate this expression, and see if it is static.
 				//it is static if it never reads its input, if it doesn't call the rng,
 				//and if a reference to the input itself is not stored.
+				const rng::Seed rng_seed = rng::get_seed();
+				StaticFormulaCallableGuard static_callable;
 				try {
-					const rng::Seed rng_seed = rng::get_seed();
-					FormulaCallablePtr static_callable(new static_FormulaCallable);
-
 					variant res;
 			
 					{
 						const static_context ctx;
-						res = result->staticEvaluate(*static_callable);
+						res = result->staticEvaluate(*static_callable.callable());
 					}
 
-					if(rng_seed == rng::get_seed() && static_callable->refcount() == 1) {
+					if(rng_seed == rng::get_seed() && static_callable.callableNotCopied()) {
 						//this expression is static. Reduce it to its result.
 						VariantExpression* expr = new VariantExpression(res);
 						if(result) {
@@ -3007,11 +4083,6 @@ namespace {
 
 						result.reset(expr);
 					}
-
-					//it's possible if there is a latent reference to it the
-					//static callable won't get destroyed, so make sure we
-					//mark it as inactive to allow others to be created.
-					static_FormulaCallable_active = false;
 				} catch(non_static_expression_exception&) {
 					//the expression isn't static. Not an error.
 				} catch(fatal_assert_failure_exception& e) {
@@ -3217,12 +4288,39 @@ static std::string debugSubexpressionTypes(ConstFormulaPtr & fml)
 
 					std::vector<const SlotIdentifierExpression*> slot_expr;
 					std::vector<const IdentifierExpression*> id_expr;
-					query_formula_expression_lookups(fml->expr(), &slot_expr, &id_expr);
+					std::vector<const VMExpression*> vm_expr;
+					query_formula_expression_lookups(fml->expr(), &slot_expr, &id_expr, &vm_expr);
 
-					for(auto id : id_expr) {
-						if(callable_def->isStrict() == false || callable_def->getSlot(id->id()) >= 0) {
-							uses_closure = true;
-							break;
+					for(auto vm : vm_expr) {
+
+						std::vector<bool> unrelated_scope_stack;
+
+						for(VirtualMachine::Iterator itor(vm->get_vm().begin_itor()); !itor.at_end(); itor.next()) {
+							if(itor.get() == formula_vm::OP_PUSH_SCOPE) {
+								unrelated_scope_stack.push_back(true);
+							} else if(itor.get() == formula_vm::OP_INLINE_FUNCTION) {
+								unrelated_scope_stack.push_back(false);
+							} else if(itor.get() == formula_vm::OP_WHERE && itor.arg() >= 0) {
+								unrelated_scope_stack.push_back(false);
+							} else if(itor.get() == formula_vm::OP_POP_SCOPE) {
+								unrelated_scope_stack.pop_back();
+							} else if((itor.get() == formula_vm::OP_LOOKUP_STR && std::find(unrelated_scope_stack.begin(), unrelated_scope_stack.end(), true) == unrelated_scope_stack.end()) || itor.get() == formula_vm::OP_CALL_BUILTIN_DYNAMIC || itor.get() == formula_vm::OP_LAMBDA_WITH_CLOSURE) {
+								uses_closure = true;
+								break;
+							} else if(itor.get() == formula_vm::OP_LOOKUP && std::find(unrelated_scope_stack.begin(), unrelated_scope_stack.end(), true) == unrelated_scope_stack.end() && itor.arg() < callable_def->getNumSlots()) {
+								uses_closure = true;
+								break;
+							}
+						}
+
+					}
+
+					if(uses_closure == false) {
+						for(auto id : id_expr) {
+							if(callable_def->isStrict() == false || callable_def->getSlot(id->id()) >= 0) {
+								uses_closure = true;
+								break;
+							}
 						}
 					}
 
@@ -3278,7 +4376,11 @@ static std::string debugSubexpressionTypes(ConstFormulaPtr & fml)
 		{
 			ASSERT_LOG(i1 != i2, "Empty expression in formula\n" << pinpoint_location(formula_str, (i1-1)->end));
 	
-			if(symbols && i1->type == FFL_TOKEN_TYPE::KEYWORD && std::string(i1->begin, i1->end) == "def" &&
+			if(i1->type == FFL_TOKEN_TYPE::KEYWORD && i1+1 != i2 && i1+2 == i2 && i1->str() == "enum") {
+				ASSERT_LOG((i1+1)->type == FFL_TOKEN_TYPE::IDENTIFIER, "Expected identifier after enum\n" << pinpoint_location(formula_str, i1->begin, i1->end));
+				return ExpressionPtr(new VariantExpression(variant::create_enum((i1+1)->str())));
+			}
+			else if(symbols && i1->type == FFL_TOKEN_TYPE::KEYWORD && std::string(i1->begin, i1->end) == "def" &&
 			   ((i1+1)->type == FFL_TOKEN_TYPE::IDENTIFIER || (i1+1)->type == FFL_TOKEN_TYPE::LPARENS ||
 				(i1+1)->type == FFL_TOKEN_TYPE::LDUBANGLE)) {
 
@@ -3307,7 +4409,7 @@ static std::string debugSubexpressionTypes(ConstFormulaPtr & fml)
 				if(i->type == FFL_TOKEN_TYPE::LPARENS || i->type == FFL_TOKEN_TYPE::LSQUARE || i->type == FFL_TOKEN_TYPE::LBRACKET) {
 					if(i->type == FFL_TOKEN_TYPE::LPARENS && parens == 0 && i != i1) {
 						fn_call = i;
-					} else if(i->type == FFL_TOKEN_TYPE::LSQUARE && parens == 0 && i != i1 && (i-1)->type != FFL_TOKEN_TYPE::OPERATOR && (op == nullptr || operator_precedence(*op) >= operator_precedence(*i))) {
+					} else if(i->type == FFL_TOKEN_TYPE::LSQUARE && parens == 0 && i != i1 && (i-1)->type != FFL_TOKEN_TYPE::OPERATOR && (op == nullptr || operator_precedence(*op, formula_str) >= operator_precedence(*i, formula_str))) {
 						//the square bracket itself is an operator
 						op = i;
 					}
@@ -3320,7 +4422,7 @@ static std::string debugSubexpressionTypes(ConstFormulaPtr & fml)
 						fn_call = nullptr;
 					}
 				} else if(parens == 0 && (i->type == FFL_TOKEN_TYPE::OPERATOR || i->type == FFL_TOKEN_TYPE::SEMICOLON || i->type == FFL_TOKEN_TYPE::LEFT_POINTER || (i->type == FFL_TOKEN_TYPE::LDUBANGLE && (i2-1)->type == FFL_TOKEN_TYPE::RDUBANGLE))) {
-					if(op == nullptr || operator_precedence(*op) >= operator_precedence(*i)) {
+					if(op == nullptr || operator_precedence(*op, formula_str) >= operator_precedence(*i, formula_str)) {
 						if(i != i1 && i->end - i->begin == 3 && std::equal(i->begin, i->end, "not")) {
 							//The not operator is always unary and can only
 							//appear at the start of an expression.
@@ -3595,7 +4697,7 @@ static std::string debugSubexpressionTypes(ConstFormulaPtr & fml)
 			}
 	
 			if(fn_call && (op == nullptr ||
-			   operator_precedence(*op) >= operator_precedence(*fn_call))) {
+			   operator_precedence(*op, formula_str) >= operator_precedence(*fn_call, formula_str))) {
 				op = fn_call;
 			}
 
@@ -3706,8 +4808,7 @@ static std::string debugSubexpressionTypes(ConstFormulaPtr & fml)
 				std::vector<ExpressionPtr> args;
 				parse_args(formula_str,nullptr,op+1, i2-1, &args, symbols, callable_def, can_optimize);
 		
-				return ExpressionPtr(new FunctionCallExpression(
-																   parse_expression(formula_str, i1, op, symbols, callable_def, can_optimize), args));
+				return ExpressionPtr(new FunctionCallExpression(parse_expression(formula_str, i1, op, symbols, callable_def, can_optimize), args));
 			}
 	
 			if(op_name == ".") {
@@ -3814,7 +4915,12 @@ FormulaPtr Formula::createOptionalFormula(const variant& val, FunctionSymbolTabl
 	}
 }
 
-Formula::Formula(const variant& val, FunctionSymbolTable* symbols, ConstFormulaCallableDefinitionPtr callableDefinition) 
+PREF_BOOL(ffl_vm, true, "Use VM for FFL optimization");
+
+Formula::Formula()
+{}
+
+Formula::Formula(const variant& val, FunctionSymbolTable* symbols, ConstFormulaCallableDefinitionPtr callableDefinition)
 	: str_(val), 
 	def_(callableDefinition)
 {
@@ -3927,13 +5033,30 @@ Formula::Formula(const variant& val, FunctionSymbolTable* symbols, ConstFormulaC
 		}
 	} else {
 		expr_ = ExpressionPtr(new VariantExpression(variant()));
-	}	
+	}
 
 	str_.add_formula_using_this(this);
 
 #ifndef NO_EDITOR
 	all_formulae().insert(this);
 #endif
+
+	if(g_ffl_vm) {
+		int before = expr_->refcount();
+		//VMizing can lose type information so save it here.
+		type_ = expr_->queryVariantType();
+		int before2 = expr_->refcount();
+
+		static size_t total_before = 0, total_after = 0;
+
+		const size_t before_children = expr_->queryChildrenRecursive().size();
+
+		ExpressionPtr vm_expr = expr_->optimizeToVM();
+		if(vm_expr) {
+			type_->set_expr(vm_expr.get());
+			expr_ = vm_expr;
+		}
+	}
 }
 
 ConstFormulaCallablePtr Formula::wrapCallableWithGlobalWhere(const FormulaCallable& callable) const
@@ -3948,6 +5071,10 @@ ConstFormulaCallablePtr Formula::wrapCallableWithGlobalWhere(const FormulaCallab
 
 variant_type_ptr Formula::queryVariantType() const
 {
+	if(type_) {
+		return type_;
+	}
+
 	return expr_->queryVariantType();
 }
 
@@ -4070,6 +5197,19 @@ std::string Formula::outputDebugInfo() const
 	return s.str();
 }
 
+bool Formula::outputDisassemble(std::string* result) const
+{
+	const VMExpression* ex = dynamic_cast<const VMExpression*>(expr().get());
+	if(ex != nullptr) {
+		if(result) {
+			*result = ex->debugOutput();
+		}
+		return true;
+	}
+
+	return false;
+}
+
 int Formula::guardMatches(const FormulaCallable& variables) const
 {
 	if(base_expr_.empty() == false) {
@@ -4155,6 +5295,50 @@ bool Formula::evaluatesToConstant(variant& result) const
 	return expr_->canReduceToVariant(result);
 }
 
+ExpressionPtr VariantExpression::optimizeToVM()
+{
+	formula_vm::VirtualMachine vm;
+	vm.addLoadConstantInstruction(v_);
+	VMExpression* result = new VMExpression(vm, queryVariantType(), *this);
+	result->setVariant(v_);
+	return ExpressionPtr(result);
+}
+
+ExpressionPtr createVMExpression(formula_vm::VirtualMachine vm, variant_type_ptr t, const FormulaExpression& o)
+{
+	return ExpressionPtr(new VMExpression(vm, t, o));
+}
+
+UNIT_TEST(where_statement) {
+	if(g_ffl_vm) {
+		Formula* f = new Formula(variant("a * b + c where a = 2d8 where b = 1d4 where c = 2d6"));
+
+		std::string assembly;
+		bool result = f->outputDisassemble(&assembly);
+		CHECK(result, "Could not disassemble");
+		delete f;
+
+//		fprintf(stderr, "ZZZ: ASM: %s\n", assembly.c_str());
+
+		f = new Formula(variant("a * b + c where a = 2d8, b = 1d4, c = 2d6"));
+
+		assembly = "";
+
+		result = f->outputDisassemble(&assembly);
+
+//		fprintf(stderr, "ZZZ: ASM2: %s\n", assembly.c_str());
+
+		f = new Formula(variant("a * b + c where a = 2d8, b = 1d4 where c = 2d6"));
+
+		assembly = "";
+
+		result = f->outputDisassemble(&assembly);
+
+//		fprintf(stderr, "ZZZ: ASM3: %s\n", assembly.c_str());
+
+	}
+}
+
 UNIT_TEST(recursive_call_lambda) {
 	CHECK(Formula(variant("def fact_tail(n,a,b) factt(n,1) where factt = def(m,x) if(m > 0, x + m + recurse(m-1,x*m),x); fact_tail(5,0,0)")).execute() != variant(), "test failed");
 }
@@ -4179,7 +5363,7 @@ UNIT_TEST(formula_fn) {
 }
 
 UNIT_TEST(array_index) {
-	Formula f(variant("map(range(6), 'n', elements[n]) = elements "
+	Formula f(variant("map(range(6), elements[value]) = elements "
 			          "where elements = [5, 6, 7, 8, 9, 10]"));
 	CHECK(f.execute() == variant::from_bool(true), "test failed");
 }
@@ -4338,6 +5522,12 @@ UNIT_TEST(edit_distance) {
 	CHECK_EQ(edit_distance_calculator("abcdefg", "bdcegf")(), 3);
 }
 
+UNIT_TEST(formula_enum) {
+	CHECK_EQ(Formula(variant("enum abc = enum abc")).execute(), variant::from_bool(true));
+	CHECK_EQ(Formula(variant("enum abc != enum abc")).execute(), variant::from_bool(false));
+	CHECK_EQ(Formula(variant("enum abc = enum d")).execute(), variant::from_bool(false));
+}
+
 BENCHMARK(formula_list_comprehension_bench) {
 	Formula f(variant("[x*x + 5 | x <- range(input)]"));
 	static MapFormulaCallable* callable = new MapFormulaCallable;
@@ -4415,6 +5605,48 @@ BENCHMARK(formula_add) {
 	BENCHMARK_LOOP {
 		f.execute(*callable);
 	}
+}
+
+COMMAND_LINE_UTILITY(test_multithread_variants) {
+	std::vector<variant> lists;
+
+	for(int n = 0; n != 20; ++n) {
+		std::vector<variant> mylist;
+		for(int m = 0; m != 2; ++m) {
+			mylist.push_back(variant(int(rand()%10)));
+		}
+
+		lists.push_back(variant(&mylist));
+	}
+
+	for(int n = 0; n != 10; ++n) {
+		std::map<variant,variant> mymap;
+		mymap[variant("a")] = variant(int(rand()%10));
+		lists.push_back(variant(&mymap));
+	}
+
+	std::vector<std::thread> threads;
+
+	for(int n = 0; n != 16; ++n) {
+		threads.push_back(std::thread([=,&lists] {
+			fprintf(stderr, "THREAD: %d\n", n);
+			for(;;) {
+				int sum = 0;
+				for(int m = 0; m != 10000; ++m) {
+					variant item = lists[rand()%20];
+					if(item.is_list()) {
+						sum += item[0].as_int();
+					} else {
+						sum += item["a"].as_int();
+					}
+				}
+
+				//fprintf(stderr, "THREAD %d: %d\n", n, sum);
+			}
+		}));
+	}
+
+	SDL_Delay(100000);
 }
 
 }

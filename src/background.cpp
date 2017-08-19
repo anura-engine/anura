@@ -103,7 +103,9 @@ std::shared_ptr<Background> Background::get(const std::string& name, int palette
 	const cache_key id(name, palette_id);
 
 	std::shared_ptr<Background>& obj = cache[id];
-	if(!obj) {
+	if(obj) {
+		obj->refreshPalette();
+	} else {
 		try {
 			const std::string fname = "data/backgrounds/" + name + ".cfg";
 			obj.reset(new Background(json::parse_from_file(fname), palette_id));
@@ -228,6 +230,17 @@ Background::Background(variant node, int palette)
 		bg->tile_upwards = layer_node["tile_upwards"].as_bool(false);
 		bg->tile_downwards = layer_node["tile_downwards"].as_bool(false);
 		layers_.emplace_back(bg);
+	}
+}
+
+void Background::refreshPalette()
+{
+	for(auto bg : layers_) {
+		if(bg->texture) {
+			if(palette_ != -1) {
+				bg->texture->setPalette(palette_);
+			}
+		}
 	}
 }
 

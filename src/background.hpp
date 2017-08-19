@@ -55,8 +55,12 @@ public:
 	void drawForeground(int x, int y, float rotation, int cycle) const;
 
 	void setOffset(const point& offset);
-private:
 
+	//this will make sure the palette this background uses is applied to underlying textures.
+	void refreshPalette();
+
+private:
+	
 	void drawLayers(int x, int y, const rect& area, const std::vector<rect>& opaque_areas, float rotation, int cycle) const;
 	std::string id_, file_;
 	KRE::Color top_, bot_;

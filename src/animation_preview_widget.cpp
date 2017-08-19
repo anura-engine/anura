@@ -419,8 +419,12 @@ namespace gui
 		cycle_ = 0;
 	}
 
-	void AnimationPreviewWidget::process()
+
+	void AnimationPreviewWidget::handleProcess()
 	{
+		for(auto w : widgets_) {
+			w->process();
+		}
 	}
 
 	void AnimationPreviewWidget::handleDraw() const
@@ -627,7 +631,7 @@ namespace gui
 	bool AnimationPreviewWidget::handleEvent(const SDL_Event& event, bool claimed)
 	{
 		for(WidgetPtr w : widgets_) {
-			claimed = w->processEvent(getPos(), event, claimed) || claimed;
+			claimed = w->processEvent(point(0,0), event, claimed) || claimed;
 		}
 
 		if(event.type == SDL_MOUSEBUTTONUP) {
@@ -638,6 +642,7 @@ namespace gui
 			has_motion_ = true;
 			const SDL_MouseMotionEvent& e = event.motion;
 			if(moving_solid_rect_) {
+					fprintf(stderr, "ZZZ: MOVING WHOLE RECTANGLE: %d, %d\n", (int)e.x, (int)e.y);
 				if(solid_handler_) {
 					const int x = e.x/2;
 					const int y = e.y/2;
@@ -675,30 +680,34 @@ namespace gui
 
 				if(dragging_sides_bitmap_&LEFT_SIDE) {
 					x1 += delta_x;
-					if(x1 > x2 - 1) {
-						x1 = x2 - 1;
-					}
 				}
 
 				if(dragging_sides_bitmap_&RIGHT_SIDE) {
 					x2 += delta_x;
-					if(x2 < x1 + 1) {
-						x2 = x1 + 1;
-					}
 				}
 
 				if(dragging_sides_bitmap_&TOP_SIDE) {
 					y1 += delta_y;
-					if(y1 > y2 - 1) {
-						y1 = y2 - 1;
-					}
 				}
 
 				if(dragging_sides_bitmap_&BOTTOM_SIDE) {
 					y2 += delta_y;
-					if(y2 < y1 + 1) {
-						y2 = y1 + 1;
-					}
+				}
+
+				if(x1 > x2 - 1 && (dragging_sides_bitmap_&LEFT_SIDE)) {
+					x1 = x2 - 1;
+				}
+
+				if(x2 < x1 + 1 && (dragging_sides_bitmap_&RIGHT_SIDE)) {
+					x2 = x1 + 1;
+				}
+
+				if(y1 > y2 - 1 && (dragging_sides_bitmap_&TOP_SIDE)) {
+					y1 = y2 - 1;
+				}
+
+				if(y2 < y1 + 1 && (dragging_sides_bitmap_&BOTTOM_SIDE)) {
+					y2 = y1 + 1;
 				}
 
 				const int width = x2 - x1;
@@ -724,8 +733,9 @@ namespace gui
 			anchor_area_ = frame_->area();
 			anchor_pad_ = frame_->pad();
 			has_motion_ = false;
+
 			if(pointInRect(p, dst_rect_)) {
-				claimed = claimMouseEvents();
+				claimed = true;
 				anchor_x_ = e.x;
 				anchor_y_ = e.y;
 			} else {
@@ -736,6 +746,10 @@ namespace gui
 					anchor_solid_x_ = e.x/2;
 					anchor_solid_y_ = e.y/2;
 				}
+			}
+
+			if(pointInRect(p, rect(x(), y(), width(), height()))) {
+				claimed = true;
 			}
 		} else if(event.type == SDL_MOUSEBUTTONUP && anchor_x_ != -1) {
 
@@ -801,6 +815,10 @@ namespace gui
 			}
 
 			anchor_x_ = anchor_y_ = -1;
+
+			if(pointInRect(p, rect(x(), y(), width(), height()))) {
+				claimed = true;
+			}
 		}
 
 		return claimed;

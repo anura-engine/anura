@@ -26,7 +26,7 @@
 /* XXX - needs re-write
 #include <string>
 
-#include <boost/intrusive_ptr.hpp>
+#include "intrusive_ptr.hpp"
 
 #include "formula_callable_definition.hpp"
 #include "variant.hpp"
@@ -96,7 +96,7 @@ namespace voxel
 
 		std::vector<game_logic::ConstFormulaPtr> event_handlers_;
 
-		boost::intrusive_ptr<voxel_object> prototype_;
+		ffl::IntrusivePtr<voxel_object> prototype_;
 	};
 
 }

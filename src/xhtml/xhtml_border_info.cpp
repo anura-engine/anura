@@ -23,9 +23,9 @@
 
 #include "AttributeSet.hpp"
 #include "SceneObject.hpp"
+#include "SceneTree.hpp"
 #include "DisplayDevice.hpp"
 
-#include "display_list.hpp"
 #include "solid_renderable.hpp"
 #include "xhtml_border_info.hpp"
 #include "xhtml_box.hpp"
@@ -304,7 +304,7 @@ namespace xhtml
 	bool BorderInfo::isValid(css::Side side) const 
 	{ 
 		return (styles_ != nullptr && styles_->getBorderStyle()[static_cast<int>(side)] != css::BorderStyle::HIDDEN 
-			&& styles_->getBorderStyle()[static_cast<int>(side)] != css::BorderStyle::NONE) || (styles_->getBorderImage() != nullptr); 
+			&& styles_->getBorderStyle()[static_cast<int>(side)] != css::BorderStyle::NONE) || (styles_ != nullptr && styles_->getBorderImage() != nullptr); 
 	}
 
 	void BorderInfo::init(const Dimensions& dims)
@@ -395,15 +395,17 @@ namespace xhtml
 		}
 	}
 
-	void BorderInfo::renderNormal(DisplayListPtr display_list, const point& offset, const Dimensions& dims) const
+	void BorderInfo::renderNormal(const KRE::SceneTreePtr& scene_tree, const Dimensions& dims, const point& offset) const
 	{
 		std::array<std::shared_ptr<SolidRenderable>, 4> border;
 
 		FixedPoint bw[4];
-		bw[0] = dims.border_.left; 
-		bw[1] = dims.border_.top; 
-		bw[2] = dims.border_.right; 
-		bw[3] = dims.border_.bottom; 
+		bw[0] = dims.border_.top; 
+		bw[1] = dims.border_.left; 
+		bw[2] = dims.border_.bottom;
+		bw[3] = dims.border_.right; 
+
+		int draw_border = 0;
 
 		// this is the left/top edges of the appropriate side
 		const float side_left    = static_cast<float>(offset.x - dims.padding_.left   - dims.border_.left) / LayoutEngine::getFixedPointScaleFloat();
@@ -426,7 +428,8 @@ namespace xhtml
 
 		KRE::Color white;
 		KRE::Color off_white(128, 128, 128);
-		if(bw[0] > 0 && border_color[0]->ai() != 0) {
+		if(bw[0] > 0 && border_color[0]->ai() != 0 && (border_style[0] != BorderStyle::NONE || border_style[0] != BorderStyle::HIDDEN)) {
+			draw_border |= 1;
 			switch(border_style[0]) {
 				case BorderStyle::SOLID:
 					generate_solid_top_side(&vc[0], side_left, left_width, side_right, right_width, side_top, top_width, white.as_u8vec4()); 
@@ -460,7 +463,8 @@ namespace xhtml
 					break;
 			}
 		}
-		if(bw[1] > 0 && border_color[1]->ai() != 0) {
+		if(bw[1] > 0 && border_color[1]->ai() != 0 && (border_style[1] != BorderStyle::NONE || border_style[1] != BorderStyle::HIDDEN)) {
+			draw_border |= 2;
 			switch(border_style[1]) {
 				case BorderStyle::SOLID:
 					generate_solid_left_side(&vc[1], side_left, left_width, side_top, top_width, side_bottom, bottom_width, white.as_u8vec4());
@@ -494,7 +498,8 @@ namespace xhtml
 					break;
 			}
 		}
-		if(bw[2] > 0 && border_color[2]->ai() != 0) {
+		if(bw[2] > 0 && border_color[2]->ai() != 0 && (border_style[2] != BorderStyle::NONE || border_style[2] != BorderStyle::HIDDEN)) {
+			draw_border |= 4;
 			switch(border_style[2]) {
 				case BorderStyle::SOLID:
 					generate_solid_bottom_side(&vc[2], side_left, left_width, side_right, right_width, side_bottom, bottom_width, white.as_u8vec4());
@@ -528,7 +533,8 @@ namespace xhtml
 					break;
 			}
 		}
-		if(bw[3] > 0 && border_color[3]->ai() != 0) {
+		if(bw[3] > 0 && border_color[3]->ai() != 0 && (border_style[3] != BorderStyle::NONE || border_style[3] != BorderStyle::HIDDEN)) {
+			draw_border |= 8;
 			switch(border_style[3]) {
 				case BorderStyle::SOLID:
 					generate_solid_right_side(&vc[3], side_right, right_width, side_top, top_width, side_bottom, bottom_width, white.as_u8vec4()); 
@@ -564,12 +570,14 @@ namespace xhtml
 		}
 
 		for(int side = 0; side != 4; ++side) {
-			border[side]->update(&vc[side]);
-			display_list->addRenderable(border[side]);
+			if(draw_border & (1 << side)) {
+				border[side]->update(&vc[side]);
+				scene_tree->addObject(border[side]);
+			}
 		}
 	}
 
-	bool BorderInfo::render(DisplayListPtr display_list, const point& offset, const Dimensions& dims) const
+	bool BorderInfo::render(const KRE::SceneTreePtr& scene_tree, const Dimensions& dims, const point& offset) const
 	{
 		if(styles_ == nullptr) {
 			return false;
@@ -577,7 +585,7 @@ namespace xhtml
 
 		if(image_ == nullptr) {
 			// no image, indicate we should try fallback.
-			renderNormal(display_list, offset, dims);
+			renderNormal(scene_tree, dims, offset);
 			return false;
 		}
 		bool no_fill = false;
@@ -587,10 +595,10 @@ namespace xhtml
 		std::vector<KRE::vertex_texcoord> coords;
 
 		// These are the outside edges.
-		const float y1 = static_cast<float>(offset.y - dims.padding_.top - dims.border_.top) / LayoutEngine::getFixedPointScaleFloat() - outset_[0];
-		const float x1 = static_cast<float>(offset.x - dims.padding_.left - dims.border_.left) / LayoutEngine::getFixedPointScaleFloat() - outset_[1];
-		const float y2 = static_cast<float>(offset.y + dims.content_.height + dims.padding_.bottom + dims.border_.bottom) / LayoutEngine::getFixedPointScaleFloat() + outset_[2];
-		const float x2 = static_cast<float>(offset.x + dims.content_.width + dims.padding_.right + dims.border_.right) / LayoutEngine::getFixedPointScaleFloat() + outset_[3];
+		const float y1 = static_cast<float>(offset.x - dims.padding_.top - dims.border_.top) / LayoutEngine::getFixedPointScaleFloat() - outset_[0];
+		const float x1 = static_cast<float>(offset.y - dims.padding_.left - dims.border_.left) / LayoutEngine::getFixedPointScaleFloat() - outset_[1];
+		const float y2 = static_cast<float>(offset.x + dims.content_.height + dims.padding_.bottom + dims.border_.bottom) / LayoutEngine::getFixedPointScaleFloat() + outset_[2];
+		const float x2 = static_cast<float>(offset.y + dims.content_.width + dims.padding_.right + dims.border_.right) / LayoutEngine::getFixedPointScaleFloat() + outset_[3];
 
 		auto uw1 = image_->getTextureCoordW(0, slice_[1]);
 		auto vw1 = image_->getTextureCoordH(0, slice_[0]);
@@ -759,7 +767,7 @@ namespace xhtml
 
 		// pass co-ordinates to renderable object and add to display list ready for rendering.
 		ptr->update(&coords);
-		display_list->addRenderable(ptr);
+		scene_tree->addObject(ptr);
 		// returning true indicates we handled drawing the border
 		return true;
 	}

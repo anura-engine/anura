@@ -50,6 +50,18 @@ struct CollisionInfo;
 class Level;
 struct CustomObjectText;
 
+//Construct one of these managers in a draw layer
+//to make it so objects within that layer will
+//attempt to optimize their drawing. Batch drawing
+//will be used where possible and the objects will
+//try to reuse stencils and other settings.
+struct CustomObjectDrawZOrderManager
+{
+	CustomObjectDrawZOrderManager();
+	~CustomObjectDrawZOrderManager();
+
+	bool disabled_;
+};
 
 class CustomObject : public Entity
 {
@@ -64,7 +76,7 @@ public:
 	static void run_garbage_collection();
 
 	explicit CustomObject(variant node);
-	CustomObject(const std::string& type, int x, int y, bool face_right);
+	CustomObject(const std::string& type, int x, int y, bool face_right, bool deferInitProperties=false);
 	CustomObject(const CustomObject& o);
 	virtual ~CustomObject();
 
@@ -73,6 +85,7 @@ public:
 	void validate_properties() override;
 
 	bool isA(const std::string& type) const;
+	bool isA(int type_index) const;
 
 	//finishLoading(): called when a level finishes loading all objects,
 	//and allows us to do any final setup such as finding our parent.
@@ -103,9 +116,6 @@ public:
 		}
 	}
 	
-	virtual int zorder() const override;
-	virtual int zSubOrder() const override;
-
 	virtual int velocityX() const override;
 	virtual int velocityY() const override;
 	virtual int mass() const override { return type_->mass(); }
@@ -207,11 +217,10 @@ public:
 
 	virtual bool serializable() const override;
 
-	void set_blur(const BlurInfo* blur);
-	void setSoundVolume(const int volume) override;
-	void setZSubOrder(const int zsub_order) override {zsub_order_ = zsub_order;}
+	void setSoundVolume(float volume, float nseconds=0.0) override;
 	
 	bool executeCommand(const variant& var) override;
+	bool executeCommandOrFn(const variant& var);
 
 	virtual game_logic::FormulaPtr createFormula(const variant& v) override;
 
@@ -235,8 +244,6 @@ public:
 	void updateType(ConstCustomObjectTypePtr old_type,
 	                 ConstCustomObjectTypePtr new_type);
 
-	bool isMouseEventSwallowed() const override {return swallow_mouse_event_;}
-	void resetMouseEvent() {swallow_mouse_event_ = false;}
 	void addWidget(const gui::WidgetPtr& w);
 	void addWidgets(std::vector<gui::WidgetPtr>* widgets);
 	void clearWidgets();
@@ -258,7 +265,7 @@ public:
 
 		int pos;
 
-		variant on_process, on_complete;
+		variant on_begin, on_process, on_complete;
 
 		std::vector<std::pair<variant,variant>> follow_on;
 
@@ -277,12 +284,15 @@ public:
 	void createParticles(const variant& node);
 
 	xhtml::DocumentObjectPtr getDocument() const { return document_; }
+
+	virtual int mouseDragThreshold(int default_value) const override;
 protected:
 	//components of per-cycle process() that can be done even on
 	//static objects.
 	void staticProcess(Level& lvl);
 
 	virtual void control(const Level& lvl) override;
+	int getValueSlot(const std::string& key) const override;
 	variant getValue(const std::string& key) const override;
 	variant getValueBySlot(int slot) const override;
 	void setValue(const std::string& key, const variant& value) override;
@@ -326,11 +336,16 @@ protected:
 	//set up an animation schedule. values.size() should be a multiple of
 	//slots.size().
 
+	bool editorOnly() const override { return editor_only_; }
+
+	void initDeferredProperties();
+
 protected:
 	void surrenderReferences(GarbageCollector* collector) override;
 
 private:
-	void initProperties();
+	void initProperties(bool defer=false);
+	void initProperty(const CustomObjectType::PropertyEntry& e);
 	CustomObject& operator=(const CustomObject& o);
 	struct Accessor;
 
@@ -366,23 +381,14 @@ private:
 	ConstCustomObjectTypePtr type_; //the type after variations are applied
 	ConstCustomObjectTypePtr base_type_; //the type without any variation
 	std::vector<std::string> current_variation_;
-	boost::intrusive_ptr<const Frame> frame_;
+	ffl::IntrusivePtr<const Frame> frame_;
 	std::string frame_name_;
 	int time_in_frame_;
 	int time_in_frame_delta_;
 
-	int velocity_x_, velocity_y_;
-	int accel_x_, accel_y_;
+	decimal velocity_x_, velocity_y_;
+	decimal accel_x_, accel_y_;
 	int gravity_shift_;
-
-	virtual int currentRotation() const override;
-
-	decimal rotate_z_;
-	decimal getRotateZ() const override { return getValueBySlot(CUSTOM_OBJECT_ROTATE).as_decimal(); };
-	
-	void setRotateZ(float new_rotate_z) override {
-		setValueBySlot(CUSTOM_OBJECT_ROTATE, variant(new_rotate_z));
-	}
 
     void setMidX(int new_mid_x) {
         const int current_x = x() + getCurrentFrame().width()/2;
@@ -397,9 +403,6 @@ private:
     
 	std::unique_ptr<std::pair<int, int>> parallax_scale_millis_;
 
-	int zorder_;
-	int zsub_order_;
-	
 	int hitpoints_, max_hitpoints_;
 	bool was_underwater_;
 
@@ -409,16 +412,39 @@ private:
 
 	bool use_absolute_screen_coordinates_;
 	
-	int sound_volume_;	//see sound.cpp; valid values are 0-128, note that this affects all sounds spawned by this object
+	float sound_volume_;
 
 	game_logic::ConstFormulaPtr next_animation_formula_;
 
 	game_logic::FormulaVariableStoragePtr vars_, tmp_vars_;
 	game_logic::MapFormulaCallablePtr tags_;
 
-	variant& get_property_data(int slot) { if(property_data_.size() <= size_t(slot)) { property_data_.resize(slot+1); } return property_data_[slot]; }
-	variant get_property_data(int slot) const { if(property_data_.size() <= size_t(slot)) { return variant(); } return property_data_[slot]; }
+	void ensure_property_data_init(int slot) const {
+		if(property_init_deferred_.empty() == false) {
+			for(auto i = property_init_deferred_.begin(); i != property_init_deferred_.end(); ++i) {
+				auto p = *i;
+				if(p->storage_slot == slot) {
+					auto mutable_this = const_cast<CustomObject*>(this);
+
+					auto itor = mutable_this->property_init_deferred_.begin();
+					itor += i - property_init_deferred_.begin();
+
+					mutable_this->property_init_deferred_.erase(itor);
+					mutable_this->initProperty(*p);
+					return;
+				}
+			}
+		}
+	}
+	variant& get_property_data(int slot) { ensure_property_data_init(slot); if(property_data_.size() <= size_t(slot)) { property_data_.resize(slot+1); } return property_data_[slot]; }
+	variant get_property_data(int slot) const { ensure_property_data_init(slot); if(property_data_.size() <= size_t(slot)) { return variant(); } return property_data_[slot]; }
 	std::vector<variant> property_data_;
+
+	//A list of properties which have their initialization *deferred*. This is so properties with an init:
+	//can wait until all the other fields are populated. If an attempt is made to access one of these
+	//properties it will be initialized on the spot. Otherwise all deferred properties are initialized
+	//at the end of construction.
+	std::vector<const CustomObjectType::PropertyEntry*> property_init_deferred_;
 	mutable int active_property_;
 
 	//a stack of items that serve as the 'value' parameter, used in
@@ -469,7 +495,7 @@ private:
 
 	EntityPtr driver_;
 
-	std::shared_ptr<BlurInfo> blur_;
+	std::vector<ffl::IntrusivePtr<BlurObject> > blur_objects_;
 
 	//set if we should fall through platforms. This is decremented automatically
 	//at the end of every cycle.
@@ -525,7 +551,8 @@ private:
 
 	std::vector<int> platform_offsets_;
 
-	bool swallow_mouse_event_;
+	bool editor_only_;
+	bool collides_with_level_;
 
 	bool handleEventInternal(int event, const FormulaCallable* context, bool executeCommands_now=true);
 	std::vector<variant> delayed_commands_;

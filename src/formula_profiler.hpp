@@ -25,27 +25,50 @@
 
 #include <string>
 
+#include "SDL.h"
+
+#include "formatter.hpp"
+#include "formula.hpp"
+
+#define PROFILE_INSTRUMENT(id, info) \
+	formula_profiler::Instrument id_##instrument; \
+	if(formula_profiler::profiler_on) { \
+		variant v(formatter() << info); \
+		id_##instrument.init(#id, v); \
+	}
+
 #ifdef DISABLE_FORMULA_PROFILER
 
 namespace formula_profiler
 {
+	static bool profiler_on = false;
+
 	void dump_instrumentation() {}
 
 	class Instrument
 	{
 	public:
-		explicit Instrument(const char* id) {}
+		static const char* generate_id(const char* id, int num) { return id; }
+		explicit Instrument(const char* id, const game_logic::Formula* formula=nullptr) {}
 		~Instrument() {}
+		void init(const char* id, variant info);
+		uint64_t get_ns() const { return 0; }
+		void finish() {}
 	};
 
 	//should be called every cycle while the profiler is running.
 	void pump();
+
+	void draw();
+	bool handle_sdl_event(const SDL_Event& event, bool claimed);
 
 	class Manager
 	{
 	public:
 		explicit Manager(const char* output_file) {}
 		~Manager() {}
+		static Manager* get();
+		void init(const char* output_file, bool memory_profiler=false) {}
 	};
 
 	class SuspendScope
@@ -69,21 +92,35 @@ class CustomObjectType;
 
 namespace formula_profiler
 {
+	extern bool profiler_on;
+
 	//instruments inside a given scope.
 	class Instrument
 	{
 	public:
-		explicit Instrument(const char* id);
+		static const char* generate_id(const char* id, int num);
+
+		Instrument();
+		void init(const char* id, variant info);
+		explicit Instrument(const char* id, const game_logic::Formula* formula=nullptr);
+		Instrument(const char* id, variant info);
 		~Instrument();
+
+		void finish();
+
+		uint64_t get_ns() const;
 	private:
 		const char* id_;
-		struct timeval tv_;
+		uint64_t t_;
 	};
 
 	void dump_instrumentation();
 
 	//should be called every cycle while the profiler is running.
 	void pump();
+
+	void draw();
+	bool handle_sdl_event(const SDL_Event& event, bool claimed);
 
 	struct CustomObjectEventFrame 
 	{
@@ -100,8 +137,13 @@ namespace formula_profiler
 	class Manager
 	{
 	public:
+		static Manager* get();
 		explicit Manager(const char* output_file);
 		~Manager();
+
+		bool is_profiling() const;
+		void init(const char* output_file, bool memory_profiler=false);
+		void halt();
 	};
 
 	void end_profiling();

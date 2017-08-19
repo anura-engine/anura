@@ -1,16 +1,10 @@
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// OpenGL Mathematics Copyright (c) 2005 - 2013 G-Truc Creation (www.g-truc.net)
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// Created : 2006-01-07
-// Updated : 2008-10-05
-// Licence : This source is under MIT License
-// File    : glm/gtx/extend.inl
-///////////////////////////////////////////////////////////////////////////////////////////////////
+/// @ref gtx_extend
+/// @file glm/gtx/extend.inl
 
 namespace glm
 {
 	template <typename genType>
-	genType extend
+	GLM_FUNC_QUALIFIER genType extend
 	(
 		genType const & Origin, 
 		genType const & Source, 
@@ -20,34 +14,34 @@ namespace glm
 		return Origin + (Source - Origin) * Distance;
 	}
 
-	template <typename valType>
-	detail::tvec2<valType> extend
+	template <typename T, precision P>
+	GLM_FUNC_QUALIFIER tvec2<T, P> extend
 	(
-		detail::tvec2<valType> const & Origin, 
-		detail::tvec2<valType> const & Source, 
-		valType const & Distance
+		tvec2<T, P> const & Origin,
+		tvec2<T, P> const & Source,
+		T const & Distance
 	)
 	{
 		return Origin + (Source - Origin) * Distance;
 	}
 
-	template <typename valType>
-	detail::tvec3<valType> extend
+	template <typename T, precision P>
+	GLM_FUNC_QUALIFIER tvec3<T, P> extend
 	(
-		detail::tvec3<valType> const & Origin, 
-		detail::tvec3<valType> const & Source, 
-		valType const & Distance
+		tvec3<T, P> const & Origin,
+		tvec3<T, P> const & Source,
+		T const & Distance
 	)
 	{
 		return Origin + (Source - Origin) * Distance;
 	}
 
-	template <typename valType>
-	detail::tvec4<valType> extend
+	template <typename T, precision P>
+	GLM_FUNC_QUALIFIER tvec4<T, P> extend
 	(
-		detail::tvec4<valType> const & Origin, 
-		detail::tvec4<valType> const & Source, 
-		valType const & Distance
+		tvec4<T, P> const & Origin,
+		tvec4<T, P> const & Source,
+		T const & Distance
 	)
 	{
 		return Origin + (Source - Origin) * Distance;

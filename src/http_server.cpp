@@ -48,26 +48,132 @@ using boost::asio::ip::tcp;
 
 namespace http 
 {
+	namespace {
+		typedef web_server::socket_ptr socket_ptr;
+	}
+	struct WebServerProxyInfo {
+		WebServerProxyInfo(web_server& server, uint32_t session_id, boost::asio::io_service& io_service, const std::string& host, const std::string& port);
+		web_server* server;
+		uint32_t session_id;
+		std::string host;
+		std::string port;
+		std::shared_ptr<tcp::resolver> resolver;
+		std::shared_ptr<tcp::resolver::query> resolver_query;
+		tcp::resolver::iterator endpoint_iterator;
+		socket_ptr socket;
+	};
+
+	namespace {
+		typedef std::shared_ptr<WebServerProxyInfo> WebServerProxyInfoPtr;
+
+		void proxy_connect(WebServerProxyInfoPtr info);
+
+		void handle_proxy_send(WebServerProxyInfoPtr info, std::shared_ptr<std::string> msg, const boost::system::error_code& error, size_t nbytes)
+		{
+			if(error) {
+				LOG_ERROR("Proxy send failed: " << info->host << ":" << info->port);
+			} else {
+				if(info->server) {
+					info->server->start_receive(info->socket);
+				}
+			}
+		}
+
+		void handle_proxy_connect(WebServerProxyInfoPtr info, const boost::system::error_code& error)
+		{
+			if(error) {
+				++(info->endpoint_iterator);
+				proxy_connect(info);
+			} else {
+				std::shared_ptr<std::string> msg(new std::string);
+				msg->resize(4);
+				memcpy(&(*msg)[0], &info->session_id, 4);
+				boost::asio::async_write(info->socket->socket, boost::asio::buffer(*msg),
+				  std::bind(handle_proxy_send, info, msg, std::placeholders::_1, std::placeholders::_2));
+			}
+		}
+
+		void proxy_connect(WebServerProxyInfoPtr info)
+		{
+			if(info->endpoint_iterator == tcp::resolver::iterator()) {
+				LOG_ERROR("Failed to connect to proxy: " << info->host);
+				return;
+			}
+
+			boost::asio::async_connect(info->socket->socket,
+			  info->endpoint_iterator,
+			  std::bind(&handle_proxy_connect, info, std::placeholders::_1));
+		}
+
+		void handle_resolve_proxy(WebServerProxyInfoPtr info, const boost::system::error_code& error, tcp::resolver::iterator endpoint_iterator)
+		{
+			if(!error) {
+				info->endpoint_iterator = endpoint_iterator;
+				proxy_connect(info);
+
+			} else {
+				LOG_ERROR("Could not resolve proxy server: " << info->host << ":" << info->port);
+			}
+		}
+
+		std::shared_ptr<WebServerProxyInfo> create_web_server_proxy(web_server& server_, uint32_t session_id_, boost::asio::io_service& io_service_, const std::string& host_, const std::string& port_)
+		{
+			std::shared_ptr<WebServerProxyInfo> result(new WebServerProxyInfo(server_, session_id_,io_service_, host_, port_));
+			result->resolver->async_resolve(*result->resolver_query,
+		  	   std::bind(handle_resolve_proxy, result, std::placeholders::_1, std::placeholders::_2));
+			return result;
+		}
+	}
+
+	WebServerProxyInfo::WebServerProxyInfo(web_server& server_, uint32_t session_id_, boost::asio::io_service& io_service_, const std::string& host_, const std::string& port_)
+	  : server(&server_), session_id(session_id_), host(host_), port(port_),
+	    resolver(new tcp::resolver(io_service_)),
+		resolver_query(new tcp::resolver::query(tcp::resolver::query::protocol_type::v4(), host_.c_str(), port_.c_str())),
+		socket(new web_server::SocketInfo(io_service_))
+	{
+	}
+
 	web_server::SocketInfo::SocketInfo(boost::asio::io_service& service)
 	  : socket(service), supports_deflate(false)
 	{
 	}
 
 	web_server::web_server(boost::asio::io_service& io_service, int port)
-	  : acceptor_(io_service, tcp::endpoint(tcp::v4(), port))
+	  : io_service_(io_service)
 	{
+		if(port) {
+			acceptor_.reset(new boost::asio::ip::tcp::acceptor(io_service, tcp::endpoint(tcp::v4(), port)));
+		}
+
 		start_accept();
 	}
 
 	web_server::~web_server()
 	{
-		acceptor_.close();
+		if(acceptor_) {
+			acceptor_->close();
+		}
+
+		for(auto p : proxies_) {
+			p->server = nullptr;
+		}
+	}
+
+	void web_server::connect_proxy(uint32_t session_id, const std::string& host, const std::string& port)
+	{
+		std::shared_ptr<WebServerProxyInfo> proxy = create_web_server_proxy(*this, session_id, io_service_, host, port);
+		proxies_.push_back(proxy);
+		
 	}
 
 	void web_server::start_accept()
 	{
-		socket_ptr socket(new SocketInfo(acceptor_.get_io_service()));
-		acceptor_.async_accept(socket->socket, std::bind(&web_server::handle_accept, this, socket, std::placeholders::_1));
+		if(!acceptor_) {
+			return;
+		}
+
+		socket_ptr socket(new SocketInfo(io_service_));
+		acceptor_->async_accept(socket->socket, std::bind(&web_server::handle_accept, this, socket, std::placeholders::_1));
 	}
 
 	namespace {
@@ -168,6 +274,14 @@ namespace http
 
 	void web_server::handle_message(socket_ptr socket, receive_buf_ptr recv_buf)
 	{
+		for(auto& p : proxies_) {
+			if(p->socket == socket) {
+				p->socket.reset(new SocketInfo(io_service_));
+				proxy_connect(p);
+				break;
+			}
+		}
+
 		const std::string& msg = recv_buf->msg;
 		if(msg.size() < 16) {
 			LOG_INFO("CLOSESOCKB");
@@ -233,7 +347,7 @@ namespace http
 			}
 
 			if(!doc.is_null()) {
-				handlePost(socket, doc, env);
+				handlePost(socket, doc, env, msg);
 				return;
 			}
 		} else if(std::equal(msg.begin(), msg.begin()+4, "GET ")) {
@@ -277,7 +391,7 @@ namespace http
 		if(e) {
 			disconnect(socket);
 		} else if(nbytes == max_bytes) {
-			LOG_INFO("COMPLETE_MSG(((" << *buf << ")))");
+			//LOG_INFO("COMPLETE_MSG(((" << *buf << ")))");
 			keepalive_socket(socket);
 		}
 	}
@@ -290,6 +404,14 @@ namespace http
 
 	void web_server::disconnect(socket_ptr socket)
 	{
+		for(auto& p : proxies_) {
+			if(p->socket == socket) {
+				p->socket.reset(new SocketInfo(io_service_));
+				proxy_connect(p);
+				break;
+			}
+		}
+
 		disconnect_socket(socket);
 	}
 
@@ -299,7 +421,6 @@ namespace http
 		std::string compress_header;
 		const std::string* msg_ptr = &msg_ref;
 		if(socket->supports_deflate && msg_ref.size() > 1024 && (header_parms.empty() || strstr(header_parms.c_str(), "Content-Encoding") == nullptr)) {
-			const int nbefore = SDL_GetTicks();
 			compressed_buf = zip::compress(msg_ref);
 			msg_ptr = &compressed_buf;
 
@@ -326,8 +447,6 @@ namespace http
 		std::shared_ptr<std::string> str(new std::string(buf.str()));
 		*str += msg;
 
-		LOG_INFO("SEND_MSG(((" << *str << ")))");
-
 		boost::asio::async_write(socket->socket, boost::asio::buffer(*str),
 								 std::bind(&web_server::handle_send, this, socket, std::placeholders::_1, std::placeholders::_2, str->size(), str));
 	}
@@ -351,6 +470,7 @@ namespace http
 	{
 		return json::parse(msg, json::JSON_PARSE_OPTIONS::NO_PREPROCESSOR);
 	}
+
 }
 
 namespace {
@@ -358,11 +478,11 @@ using namespace http;
 class test_web_server : public http::web_server {
 public:
 	test_web_server(boost::asio::io_service& io_service) : web_server(io_service) {}
-	void handlePost(socket_ptr socket, variant doc, const environment& env) {
+	void handlePost(socket_ptr socket, variant doc, const environment& env, const std::string& raw_msg) override {
 
 		send_msg(socket, "text/json", "{ \"type\": \"ok\" }", "");
 	}
-	void handleGet(socket_ptr socket, const std::string& url, const std::map<std::string, std::string>& args) {
+	void handleGet(socket_ptr socket, const std::string& url, const std::map<std::string, std::string>& args) override {
 		send_msg(socket, "text/json", "{ \"type\": \"ok\" }", "");
 	}
 

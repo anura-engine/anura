@@ -88,6 +88,9 @@ namespace KRE
 			int getAttribute(const std::string& attr) const override;
 			int getUniform(const std::string& attr) const override;
 
+			std::vector<std::string> getAllUniforms() const override;
+			std::vector<std::string> getAllAttributes() const override;
+
 			void setActives();
 
 			void setUniformValue(int uid, const GLint) const override;
@@ -95,6 +98,14 @@ namespace KRE
 			void setUniformValue(int uid, const GLfloat*) const override;
 			void setUniformValue(int uid, const GLint*) const override;
 			void setUniformValue(int uid, const void*) const override;
+
+			void setAttributeValue(int aid, const int) const override;
+			void setAttributeValue(int aid, const float) const override;
+			void setAttributeValue(int aid, const float*) const override;
+			void setAttributeValue(int aid, const int*) const override;
+			void setAttributeValue(int aid, const void*) const override;
+			void setAttributeValue(int aid, const unsigned char*) const override;
+			void setAttributeFromVariant(int uid, const variant& value) const override;
 
 			void setUniformFromVariant(int uid, const variant& value) const override;
 
@@ -125,8 +136,10 @@ namespace KRE
 			int getLineWidthUniform() const override { return u_line_width_; }
 			int getMvUniform() const override { return u_mv_; }
 			int getPUniform() const override { return u_p_; }
+			int getPVUniform() const override { return u_pv_; }
 			int getMvpUniform() const override { return u_mvp_; }
 			int getTexMapUniform() const override { return u_tex_; }
+			int getDiscardUniform() const override { return u_discard_; }
 			
 			int getColorAttribute() const override { return a_color_; }
 			int getVertexAttribute() const override { return a_vertex_; }
@@ -146,7 +159,7 @@ namespace KRE
 
 			std::vector<GLint> active_attributes_;
 		private:
-			void operator=(const ShaderProgram&);
+			void operator=(const ShaderProgram&) = delete;
 
 			std::string name_;
 			GLuint object_;
@@ -161,6 +174,7 @@ namespace KRE
 			int u_mvp_;
 			int u_mv_;
 			int u_p_;
+			int u_pv_;
 			int u_color_;
 			int u_line_width_;
 			int u_tex_;
@@ -175,6 +189,7 @@ namespace KRE
 			int u_palette_map_;
 			int u_mix_palettes_;
 			int u_mix_;
+			int u_discard_;
 
 			std::vector<GLuint> enabled_attribs_;
 		};

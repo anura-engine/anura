@@ -40,7 +40,7 @@ namespace tbs
 			game_logic::MapFormulaCallablePtr callable, 
 			std::function<void(std::string)> handler);
 
-		virtual void process();
+		virtual void process() override;
 		void setId(const std::string& id);
 
 		void set_use_local_cache(bool value) { use_local_cache_ = value; }
@@ -50,13 +50,15 @@ namespace tbs
 
 		void recv_handler(const std::string& msg);
 		void error_handler(const std::string& err);
-		variant getValue(const std::string& key) const;
+		variant getValue(const std::string& key) const override;
+
+		void handle_message(variant node);
 
 		std::string connection_id_;
 
 		bool use_local_cache_;
 		tbs::game* local_game_cache_;
-		boost::intrusive_ptr<game_logic::FormulaCallable> local_game_cache_holder_;
+		ffl::IntrusivePtr<game_logic::FormulaCallable> local_game_cache_holder_;
 		int local_nplayer_;
 
 		std::vector<std::string> local_responses_;

@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2014-2015 by Kristina Simpson <sweet.kristas@gmail.com>
+	Copyright (C) 2013-2016 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -23,85 +23,67 @@
 
 #pragma once
 
-#include <vector>
-#include <map>
+#include <string>
 
 #include "hex_fwd.hpp"
-#include "hex_logical_tiles.hpp"
-#include "variant.hpp"
+#include "formula_callable.hpp"
+#include "formula_callable_definition.hpp"
+#include "geometry.hpp"
 
-#include "SceneUtil.hpp"
-#include "Texture.hpp"
-
-namespace hex 
+namespace hex
 {
-	class TileSheet
+	class HexTile : public game_logic::FormulaCallable
 	{
 	public:
-		explicit TileSheet(const variant& n);
-		const KRE::TexturePtr& getTexture() const { return texture_; }
-		rect getArea(int index) const;
+		HexTile(const variant& value);
+		const std::string& getId() const { return id_; }
+		const std::string& geName() const { return name_; }
+		const std::string& getString() const { return str_; }
+
+		const std::string& getEditorGroup() const { return str_; }
+		const std::string& getEditorName() const { return str_; }
+		const std::string& getSymbolImage() const { return str_; }
+		const std::string& getIconImage() const { return str_; }
+		const std::string& getHelpTopicText() const { return str_; }
+		bool isHidden() const { return hidden_; }
+		bool canRecruitOnto() const { return recruit_onto_; }
+		bool isHelpHidden() const { return hide_help_; }
+
+		void setId(const std::string& id) { id_ = id; }
+		void setName(const std::string& name) { name_ = name; }
+		void setEditorGroup(const std::string& editor_group) { editor_group_ = editor_group; }
+		void setEditorName(const std::string& editor_name) { editor_name_ = editor_name; }
+		void setEditorImage(const std::string& editor_image) { editor_image_ = editor_image; }
+		void setSymbolImage(const std::string& symbol_image) { symbol_image_ = symbol_image; }
+		void setIconImage(const std::string& icon_image) { icon_image_ = icon_image; }
+		void setHelpTopicText(const std::string& help_topic_text) { help_topic_text_ = help_topic_text; }
+		void setHidden(bool hidden=true) { hidden_ = hidden; }
+		void setRecruitable(bool recruitable=true) { recruit_onto_ = recruitable; }
+		void setHideHelp(bool hidden=true) { hide_help_ = hidden; }
+		void setSubmerge(float submerge) { submerge_ = submerge; }
+
+		void surrenderReferences(GarbageCollector* collector) override;
+
+		static HexTilePtr create(const variant& value);
 	private:
-		KRE::TexturePtr texture_;
-		rect area_;
-		int nrows_, ncols_, pad_;
+		DECLARE_CALLABLE(HexTile);
+
+		std::string id_;
+		std::string name_;
+		std::string str_;
+		std::string editor_group_;
+		std::string editor_name_;
+		std::string editor_image_;
+		// minimap image
+		std::string symbol_image_;
+		// icon image.
+		std::string icon_image_;
+		std::string help_topic_text_;
+		bool hidden_;
+		bool recruit_onto_;
+		bool hide_help_;
+		float submerge_;
+		rect image_rect_;
+		std::string symbol_image_filename_;
 	};
-
-	class TileType
-	{
-	public:
-		TileType(const std::string& id, const variant& n);
-		
-		struct EditorInfo {
-			std::string name;
-			std::string type;
-			KRE::TexturePtr texture;
-			std::string group;
-			rect image_rect;
-			void draw(int tx, int ty) const;
-		};
-
-		const std::string& id() const { return tile_->id(); }
-
-		int tile_id() const { return tile_->tile_id(); }
-
-		const EditorInfo& getEditorInfo() const { return editor_info_; } 
-
-		const std::vector<int>& getSheetIndexes() const { return sheet_indexes_; }
-
-		float getCost() const { return tile_->getCost(); }
-
-		int getHeight() const { return tile_->getHeight(); }
-
-		variant write() const;
-		void calculateAdjacencyPattern(unsigned char adjmap);
-
-		static TileTypePtr factory(const std::string& name);
-
-		KRE::TexturePtr getTexture() const { return sheet_ != nullptr ? sheet_->getTexture() : nullptr; }
-
-		void render(int x, int y, std::vector<KRE::vertex_texcoord>* coords) const;
-		void renderAdjacent(int x, int y, std::vector<KRE::vertex_texcoord>* coords, unsigned char adjmap) const;
-	private:
-		logical::TilePtr tile_;
-		TileSheetPtr sheet_;
-
-		void renderInternal(int x, int y, int index, std::vector<KRE::vertex_texcoord>* coords) const;
-
-		std::vector<int> sheet_indexes_;
-
-		struct AdjacencyPattern {
-			AdjacencyPattern() : init(false), depth(0)
-			{}
-			bool init;
-			int depth;
-			std::vector<int> sheet_indexes;
-		};
-
-		AdjacencyPattern adjacency_patterns_[64];
-
-		EditorInfo editor_info_;
-	};
-
-	void loader(const variant& n);
 }

@@ -34,8 +34,8 @@
 #include "variant.hpp"
 
 class ParticleSystem;
-typedef boost::intrusive_ptr<ParticleSystem> ParticleSystemPtr;
-typedef boost::intrusive_ptr<const ParticleSystem> ConstParticleSystemPtr;
+typedef ffl::IntrusivePtr<ParticleSystem> ParticleSystemPtr;
+typedef ffl::IntrusivePtr<const ParticleSystem> ConstParticleSystemPtr;
 
 class ParticleSystemFactory;
 typedef std::shared_ptr<const ParticleSystemFactory> ConstParticleSystemFactoryPtr;

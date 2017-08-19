@@ -42,8 +42,6 @@ namespace gui
 		void init();
 		void setObject(variant obj);
 
-		void process();
-
 		void setRectHandler(std::function<void(rect)>);
 		void setPadHandler(std::function<void(int)>);
 		void setNumFramesHandler(std::function<void(int)>);
@@ -54,6 +52,7 @@ namespace gui
 	private:
 		DECLARE_CALLABLE(AnimationPreviewWidget);
 		
+		void handleProcess() override;
 		void handleDraw() const override;
 		bool handleEvent(const SDL_Event& event, bool claimed) override;
 
@@ -65,7 +64,7 @@ namespace gui
 
 		variant obj_;
 
-		std::unique_ptr<Frame> frame_;
+		FramePtr frame_;
 		mutable int cycle_;
 
 		std::vector<WidgetPtr> widgets_;
@@ -113,7 +112,7 @@ namespace gui
 		AnimationPreviewWidget() = delete;
 	};
 
-	typedef boost::intrusive_ptr<AnimationPreviewWidget> AnimationPreviewWidgetPtr;
+	typedef ffl::IntrusivePtr<AnimationPreviewWidget> AnimationPreviewWidgetPtr;
 }
 
 #endif // !NO_EDITOR

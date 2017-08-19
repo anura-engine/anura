@@ -37,7 +37,7 @@
 //#include "voxel_object.hpp"
 //#include "voxel_object_type.hpp"
 
-variant_type::variant_type()
+variant_type::variant_type() : FormulaCallable(GARBAGE_COLLECTOR_EXCLUDE)
 {
 }
 
@@ -45,12 +45,12 @@ variant_type::~variant_type()
 {
 }
 
-void variant_type::set_expr(const game_logic::FormulaExpression* expr)
+void variant_type::set_expr(const game_logic::FormulaExpression* expr) const
 {
-	expr_.reset(expr);
+	expr_ .reset(expr);
 }
 
-const game_logic::FormulaExpression* variant_type::get_expr() const
+ffl::IntrusivePtr<const game_logic::FormulaExpression> variant_type::get_expr() const
 {
 	return expr_.get();
 }
@@ -59,25 +59,80 @@ namespace {
 
 std::set<std::string> g_generic_variant_names;
 
-std::map<std::string, variant> get_builtin_variant_info()
+std::map<std::string, std::vector<variant> > get_builtin_variant_info()
 {
-	std::map<std::string, variant> result;
-	result["Numeric"] = variant("int|decimal");
-	result["Vec2"] = variant("[numeric,numeric]");
-	result["Vec3"] = variant("[numeric,numeric,numeric]");
+	std::map<std::string, std::vector<variant> > result;
+	result["Numeric"] = std::vector<variant>(1, variant("int|decimal"));
+	result["Vec2"] = std::vector<variant>(1, variant("[numeric,numeric]"));
+	result["Vec3"] = std::vector<variant>(1, variant("[numeric,numeric,numeric]"));
 	return result;
 }
 
-std::map<std::string, variant> load_named_variant_info()
+std::map<std::string, std::vector<variant> > load_named_variant_info()
 {
-	std::map<std::string, variant> result = get_builtin_variant_info();
+	std::map<std::string, std::vector<variant> > result = get_builtin_variant_info();
+
+	std::map<std::string, std::string> definition_file;
+
+	std::vector<std::pair<std::string, variant> > extends;
 
 	const std::string path = module::map_file("data/types.cfg");
 	if(sys::file_exists(path)) {
 		variant node = json::parse_from_file(path);
 		for(const variant::map_pair& p : node.as_map()) {
-			result[p.first.as_string()] = p.second;
+			std::string key = p.first.as_string();
+
+			auto colon = std::find(key.begin(), key.end(), ':');
+			if(colon != key.end()) {
+				std::string directive = std::string(key.begin(), colon);
+				key.erase(key.begin(), colon+1);
+
+				if(directive == "extends") {
+					extends.push_back(std::pair<std::string,variant>(key, p.second));
+				} else {
+					ASSERT_LOG(false, "Unknown type directive: " << directive << ":" << key);
+				}
+			} else {
+				result[key].push_back(p.second);
+				definition_file[key] = "data/types.cfg";
+			}
 		}
+	}
+
+	std::vector<std::string> files;
+	module::get_files_in_dir("data/types", &files);
+	for(const std::string& f : files) {
+		if(f.size() <= 4 || !std::equal(f.end()-4, f.end(), ".cfg") || f[0] == '.') {
+			continue;
+		}
+
+		const std::string path = module::map_file("data/types/" + f);
+		variant node = json::parse_from_file(path);
+		for(const variant::map_pair& p : node.as_map()) {
+			ASSERT_LOG(result.count(p.first.as_string()) == 0, "Multiple definition of type " << p.first.as_string() << " defined in " << definition_file[p.first.as_string()] << " and " << path);
+			std::string key = p.first.as_string();
+			auto colon = std::find(key.begin(), key.end(), ':');
+			if(colon != key.end()) {
+				std::string directive = std::string(key.begin(), colon);
+				key.erase(key.begin(), colon+1);
+
+				if(directive == "extends") {
+					extends.push_back(std::pair<std::string,variant>(key, p.second));
+				} else {
+					ASSERT_LOG(false, "Unknown type directive: " << directive << ":" << key);
+				}
+			} else {
+				result[key].push_back(p.second);
+				definition_file[key] = path;
+			}
+		}
+	}
+
+	for(auto p : extends) {
+		auto itor = result.find(p.first);
+		ASSERT_LOG(itor != result.end(), "Type extension when base type not found: " << p.first);
+
+		itor->second.push_back(p.second);
 	}
 
 	return result;
@@ -89,16 +144,29 @@ std::vector<std::map<std::string, variant_type_ptr> >& named_type_cache()
 	return instance;
 }
 
-std::vector<std::map<std::string, variant> >& named_type_symbols()
+std::vector<std::map<std::string, std::vector<variant> > >& named_type_symbols()
 {
-	static std::vector<std::map<std::string, variant> > instance(1, load_named_variant_info());
+	static std::vector<std::map<std::string, std::vector<variant> > > instance(1, load_named_variant_info());
 	return instance;
+}
+
+variant_type_ptr get_unified_variant_type(const std::vector<variant>& defs)
+{
+	variant_type_ptr result = parse_variant_type(defs[0]);
+
+	for(int i = 1; i < static_cast<int>(defs.size()); ++i) {
+		variant_type_ptr extension = parse_variant_type(defs[i]);
+		result = result->extend_type(extension);
+		ASSERT_LOG(result, "Could not extend variant type: " << defs[0].write_json() << " with " << defs[i].write_json());
+	}
+
+	return result;
 }
 
 variant_type_ptr get_named_variant_type(const std::string& name)
 {
 	for(auto n = named_type_cache().size(); n > 0; --n) {
-		std::map<std::string, variant>& info = named_type_symbols()[n-1];
+		std::map<std::string, std::vector<variant> > & info = named_type_symbols()[n-1];
 		std::map<std::string, variant_type_ptr>& cache = named_type_cache()[n-1];
 
 		std::map<std::string,variant_type_ptr>::const_iterator itor = cache.find(name);
@@ -106,12 +174,12 @@ variant_type_ptr get_named_variant_type(const std::string& name)
 			return itor->second;
 		}
 
-		std::map<std::string, variant>::const_iterator info_itor = info.find(name);
+		auto info_itor = info.find(name);
 		if(info_itor != info.end()) {
 			//insert into the cache a null entry to symbolize we're parsing
 			//this, to avoid infinite recursion.
 			variant_type_ptr& ptr = cache[name];
-			ptr = parse_variant_type(info_itor->second);
+			ptr = get_unified_variant_type(info_itor->second);
 			return ptr;
 		}
 	}
@@ -124,11 +192,11 @@ variant_type_ptr get_named_variant_type(const std::string& name)
 
 types_cfg_scope::types_cfg_scope(variant v)
 {
-	ASSERT_LOG(v.is_null() || v.is_map(), "Unrecognized types definition: " << v.debug_location());
-	std::map<std::string, variant> symbols;
+	ASSERT_LOG(v.is_null() || v.is_map(), "Unrecognized types definition: " << v.write_json() << " " << v.debug_location());
+	std::map<std::string, std::vector<variant> > symbols;
 	if(v.is_map()) {
 		for(const variant::map_pair& p : v.as_map()) {
-			symbols[p.first.as_string()] = p.second;
+			symbols[p.first.as_string()].push_back(p.second);
 		}
 	}
 	named_type_cache().resize(named_type_cache().size()+1);
@@ -154,19 +222,19 @@ public:
 
 	explicit variant_type_simple(variant::TYPE type) : type_(type) {}
 
-	bool match(const variant& v) const {
+	bool match(const variant& v) const override {
 		return v.type() == type_ || (type_ == variant::VARIANT_TYPE_DECIMAL && v.type() == variant::VARIANT_TYPE_INT);
 	}
 
-	bool is_type(variant::TYPE type) const {
+	bool is_type(variant::TYPE type) const override {
 		return type == type_;
 	}
 
-	bool is_numeric() const {
+	bool is_numeric() const override {
 		return type_ == variant::VARIANT_TYPE_DECIMAL || type_ == variant::VARIANT_TYPE_INT;
 	}
 
-	bool is_equal(const variant_type& o) const {
+	bool is_equal(const variant_type& o) const override {
 		const variant_type_simple* other = dynamic_cast<const variant_type_simple*>(&o);
 		if(!other) {
 			return false;
@@ -175,11 +243,11 @@ public:
 		return type_ == other->type_;
 	}
 
-	std::string to_string_impl() const {
+	std::string to_string_impl() const override {
 		return variant::variant_type_to_string(type_);
 	}
 
-	variant_type_ptr is_list_of() const {
+	variant_type_ptr is_list_of() const override {
 		if(type_ == variant::VARIANT_TYPE_LIST) {
 			return variant_type::get_any();
 		} else {
@@ -187,7 +255,7 @@ public:
 		}
 	}
 
-	std::pair<variant_type_ptr, variant_type_ptr> is_map_of() const {
+	std::pair<variant_type_ptr, variant_type_ptr> is_map_of() const override {
 		if(type_ == variant::VARIANT_TYPE_MAP) {
 			return std::pair<variant_type_ptr, variant_type_ptr>(variant_type::get_any(), variant_type::get_any());
 		} else {
@@ -195,14 +263,10 @@ public:
 		}
 	}
 
-	bool is_compatible(variant_type_ptr type, std::ostringstream* why) const {
+	bool is_compatible(variant_type_ptr type, std::ostringstream* why) const override {
 		const variant_type_simple* simple_type = dynamic_cast<const variant_type_simple*>(type.get());
 		if(simple_type && simple_type->type_ == type_) {
 			return true;
-		}
-
-		if(type->is_enumerable()) {
-			return is_compatible(type->base_type_no_enum(), why);
 		}
 
 		if(type_ == variant::VARIANT_TYPE_DECIMAL) {
@@ -237,57 +301,57 @@ private:
 class variant_type_none : public variant_type
 {
 public:
-	bool match(const variant& v) const { return false; }
-	bool is_equal(const variant_type& o) const {
+	bool match(const variant& v) const override { return false; }
+	bool is_equal(const variant_type& o) const override {
 		const variant_type_none* other = dynamic_cast<const variant_type_none*>(&o);
 		return other != nullptr;
 	}
 
-	std::string to_string_impl() const {
+	std::string to_string_impl() const override {
 		return "none";
 	}
 
-	bool is_compatible(variant_type_ptr type, std::ostringstream* why) const {
+	bool is_compatible(variant_type_ptr type, std::ostringstream* why) const override {
 		return false;
 	}
 
-	bool maybe_convertible_to(variant_type_ptr type) const {
+	bool maybe_convertible_to(variant_type_ptr type) const override {
 		return false;
 	}
 
-	bool is_none() const { return true; }
+	bool is_none() const override { return true; }
 private:
 };
 
 class variant_type_any : public variant_type
 {
 public:
-	bool match(const variant& v) const { return true; }
-	bool is_equal(const variant_type& o) const {
+	bool match(const variant& v) const override { return true; }
+	bool is_equal(const variant_type& o) const override {
 		const variant_type_any* other = dynamic_cast<const variant_type_any*>(&o);
 		return other != nullptr;
 	}
 
-	std::string to_string_impl() const {
+	std::string to_string_impl() const override {
 		return "any";
 	}
 
-	bool is_compatible(variant_type_ptr type, std::ostringstream* why) const {
+	bool is_compatible(variant_type_ptr type, std::ostringstream* why) const override {
 		return true;
 	}
 
-	bool maybe_convertible_to(variant_type_ptr type) const {
+	bool maybe_convertible_to(variant_type_ptr type) const override {
 		return true;
 	}
 
-	bool is_any() const { return true; }
+	bool is_any() const override { return true; }
 private:
 };
 
 class variant_type_commands : public variant_type
 {
 public:
-	bool match(const variant& v) const {
+	bool match(const variant& v) const override {
 		if(v.is_null()) {
 			return true;
 		}
@@ -308,16 +372,16 @@ public:
 
 		return false;
 	}
-	bool is_equal(const variant_type& o) const {
+	bool is_equal(const variant_type& o) const override {
 		const variant_type_commands* other = dynamic_cast<const variant_type_commands*>(&o);
 		return other != nullptr;
 	}
 
-	std::string to_string_impl() const {
+	std::string to_string_impl() const override {
 		return "commands";
 	}
 
-	bool is_compatible(variant_type_ptr type, std::ostringstream* why) const {
+	bool is_compatible(variant_type_ptr type, std::ostringstream* why) const override {
 		if(type->is_type(variant::VARIANT_TYPE_NULL)) {
 			return true;
 		}
@@ -335,7 +399,7 @@ private:
 class variant_type_cairo_commands : public variant_type
 {
 public:
-	bool match(const variant& v) const {
+	bool match(const variant& v) const override {
 		if(v.is_null()) {
 			return true;
 		}
@@ -356,16 +420,16 @@ public:
 
 		return false;
 	}
-	bool is_equal(const variant_type& o) const {
+	bool is_equal(const variant_type& o) const override {
 		const variant_type_cairo_commands* other = dynamic_cast<const variant_type_cairo_commands*>(&o);
 		return other != nullptr;
 	}
 
-	std::string to_string_impl() const {
+	std::string to_string_impl() const override {
 		return "cairo_commands";
 	}
 
-	bool is_compatible(variant_type_ptr type, std::ostringstream* why) const {
+	bool is_compatible(variant_type_ptr type, std::ostringstream* why) const override {
 		if(type->is_type(variant::VARIANT_TYPE_NULL)) {
 			return true;
 		}
@@ -392,7 +456,7 @@ public:
 		ASSERT_LOG(game_logic::formula_class_valid(type), "INVALID FORMULA CLASS: " << type);
 	}
 
-	bool match(const variant& v) const {
+	bool match(const variant& v) const override {
 		const game_logic::FormulaObject* obj = v.try_convert<game_logic::FormulaObject>();
 		if(!obj) {
 			return false;
@@ -401,7 +465,7 @@ public:
 		return obj->isA(type_);
 	}
 
-	bool is_class(std::string* class_name) const {
+	bool is_class(std::string* class_name) const override {
 		if(class_name) {
 			*class_name = type_;
 		}
@@ -409,7 +473,7 @@ public:
 		return true;
 	}
 
-	bool is_equal(const variant_type& o) const {
+	bool is_equal(const variant_type& o) const override {
 		const variant_type_class* other = dynamic_cast<const variant_type_class*>(&o);
 		if(!other) {
 			return false;
@@ -418,11 +482,11 @@ public:
 		return type_ == other->type_;
 	}
 
-	std::string to_string_impl() const {
+	std::string to_string_impl() const override {
 		return "class " + type_;
 	}
 
-	bool is_compatible(variant_type_ptr type, std::ostringstream* why) const {
+	bool is_compatible(variant_type_ptr type, std::ostringstream* why) const override {
 		const variant_type_class* class_type = dynamic_cast<const variant_type_class*>(type.get());
 		if(class_type) {
 			return game_logic::is_class_derived_from(class_type->type_, type_);
@@ -434,7 +498,7 @@ public:
 		return false;
 	}
 
-	const game_logic::FormulaCallableDefinition* getDefinition() const {
+	const game_logic::FormulaCallableDefinition* getDefinition() const override {
 		return game_logic::get_class_definition(type_).get();
 	}
 private:
@@ -444,20 +508,20 @@ private:
 class variant_type_custom_object : public variant_type
 {
 public:
-	explicit variant_type_custom_object(const std::string& type) : type_(type)
+	explicit variant_type_custom_object(const std::string& type) : type_(type), type_index_(type_ == "" ? -1 : CustomObjectType::getObjectTypeIndex(type))
 	{
 	}
 
-	bool match(const variant& v) const {
+	bool match(const variant& v) const override {
 		const CustomObject* obj = v.try_convert<CustomObject>();
 		if(!obj) {
 			return false;
 		}
 
-		return type_ == "" || obj->isA(type_);
+		return type_index_ == -1 || obj->isA(type_index_);
 	}
 
-	bool is_equal(const variant_type& o) const {
+	bool is_equal(const variant_type& o) const override {
 		const variant_type_custom_object* other = dynamic_cast<const variant_type_custom_object*>(&o);
 		if(!other) {
 			return false;
@@ -466,7 +530,7 @@ public:
 		return type_ == other->type_;
 	}
 
-	std::string to_string_impl() const {
+	std::string to_string_impl() const override {
 		if(type_ == "") {
 			return "custom_obj";
 		}
@@ -474,7 +538,7 @@ public:
 		return "obj " + type_;
 	}
 
-	bool is_compatible(variant_type_ptr type, std::ostringstream* why) const {
+	bool is_compatible(variant_type_ptr type, std::ostringstream* why) const override {
 		const variant_type_custom_object* other = dynamic_cast<const variant_type_custom_object*>(type.get());
 		if(other == nullptr) {
 			return false;
@@ -483,7 +547,7 @@ public:
 		return type_ == "" || CustomObjectType::isDerivedFrom(type_, other->type_);
 	}
 
-	const game_logic::FormulaCallableDefinition* getDefinition() const {
+	const game_logic::FormulaCallableDefinition* getDefinition() const override {
 		if(type_ == "") {
 			return &CustomObjectCallable::instance();
 		}
@@ -493,9 +557,10 @@ public:
 		return def;
 	}
 
-	const std::string* is_custom_object() const { return &type_; }
+	const std::string* is_custom_object() const override { return &type_; }
 private:
 	std::string type_;
+	int type_index_;
 };
 
 /* XXX -- rework
@@ -565,7 +630,7 @@ public:
 	{
 	}
 
-	bool match(const variant& v) const {
+	bool match(const variant& v) const override {
 		const game_logic::FormulaCallable* obj = v.try_convert<game_logic::FormulaCallable>();
 		if(!obj) {
 			return false;
@@ -574,7 +639,7 @@ public:
 		return game_logic::registered_definition_is_a(obj->queryId(), type_);
 	}
 
-	bool is_equal(const variant_type& o) const {
+	bool is_equal(const variant_type& o) const override {
 		const variant_type_builtin* other = dynamic_cast<const variant_type_builtin*>(&o);
 		if(!other) {
 			return false;
@@ -583,11 +648,11 @@ public:
 		return type_ == other->type_;
 	}
 
-	std::string to_string_impl() const {
+	std::string to_string_impl() const override {
 		return type_;
 	}
 
-	bool is_compatible(variant_type_ptr type, std::ostringstream* why) const {
+	bool is_compatible(variant_type_ptr type, std::ostringstream* why) const override {
 		if(is_equal(*type)) {
 			return true;
 		}
@@ -600,7 +665,7 @@ public:
 		return false;
 	}
 
-	const game_logic::FormulaCallableDefinition* getDefinition() const {
+	const game_logic::FormulaCallableDefinition* getDefinition() const override {
 		if(!def_) {
 			game_logic::ConstFormulaCallableDefinitionPtr def = game_logic::get_formula_callable_definition(type_);
 			ASSERT_LOG(def, "Could not find builtin type definition: " << type_);
@@ -609,7 +674,7 @@ public:
 		return def_.get();
 	}
 
-	const std::string* is_builtin() const { return &type_; }
+	const std::string* is_builtin() const override { return &type_; }
 private:
 	std::string type_;
 	mutable game_logic::ConstFormulaCallableDefinitionPtr def_;
@@ -622,20 +687,20 @@ public:
 	  : interface_(i)
 	{}
 
-	bool match(const variant& v) const {
+	bool match(const variant& v) const override {
 		return interface_->match(v);
 	}
 
-	bool is_equal(const variant_type& o) const {
+	bool is_equal(const variant_type& o) const override {
 		const variant_type_interface* other = dynamic_cast<const variant_type_interface*>(&o);
 		return other && other->interface_ == interface_;
 	}
 
-	std::string to_string_impl() const {
+	std::string to_string_impl() const override {
 		return interface_->to_string();
 	}
 
-	bool is_compatible(variant_type_ptr type, std::ostringstream* why) const {
+	bool is_compatible(variant_type_ptr type, std::ostringstream* why) const override {
 		const game_logic::FormulaInterface* interface_a = is_interface();
 		const game_logic::FormulaInterface* interface_b = type->is_interface();
 		if(interface_a == interface_b) {
@@ -705,11 +770,11 @@ public:
 		}*/
 	}
 
-	const game_logic::FormulaCallableDefinition* getDefinition() const {
+	const game_logic::FormulaCallableDefinition* getDefinition() const override {
 		return interface_->getDefinition().get();
 	}
 
-	const game_logic::FormulaInterface* is_interface() const {
+	const game_logic::FormulaInterface* is_interface() const override {
 		return interface_.get();
 	}
 private:
@@ -721,7 +786,7 @@ class variant_type_union : public variant_type
 public:
 	explicit variant_type_union(const std::vector<variant_type_ptr>& v) : types_(v)
 	{}
-	bool match(const variant& v) const {
+	bool match(const variant& v) const override {
 		for(const variant_type_ptr& p : types_) {
 			if(p->match(v)) {
 				return true;
@@ -731,7 +796,7 @@ public:
 		return false;
 	}
 
-	bool is_numeric() const {
+	bool is_numeric() const override {
 		if(types_.empty()) {
 			return false;
 		}
@@ -745,7 +810,7 @@ public:
 		return true;
 	}
 
-	bool is_equal(const variant_type& o) const {
+	bool is_equal(const variant_type& o) const override {
 		const variant_type_union* other = dynamic_cast<const variant_type_union*>(&o);
 		if(!other) {
 			return false;
@@ -764,7 +829,7 @@ public:
 		return true;
 	}
 
-	std::string to_string_impl() const {
+	std::string to_string_impl() const override {
 		std::string result;
 		if(types_.empty()) {
 			result = "(empty union)";
@@ -779,7 +844,7 @@ public:
 		return result;
 	}
 
-	bool is_function(std::vector<variant_type_ptr>* args, variant_type_ptr* return_type, int* min_args, bool* return_type_specified) const
+	bool is_function(std::vector<variant_type_ptr>* args, variant_type_ptr* return_type, int* min_args, bool* return_type_specified) const override
 	{
 		std::vector<std::vector<variant_type_ptr>> arg_lists(types_.size());
 		std::vector<variant_type_ptr> return_types(types_.size());
@@ -835,9 +900,9 @@ public:
 		return true;
 	}
 
-	const std::vector<variant_type_ptr>* is_union() const { return &types_; }
+	const std::vector<variant_type_ptr>* is_union() const override { return &types_; }
 
-	variant_type_ptr is_list_of() const {
+	variant_type_ptr is_list_of() const override {
 		std::vector<variant_type_ptr> types;
 		for(const variant_type_ptr& type : types_) {
 			types.push_back(type->is_list_of());
@@ -849,7 +914,7 @@ public:
 		return get_union(types);
 	}
 
-	const std::map<variant, variant_type_ptr>* is_specific_map() const {
+	const std::map<variant, variant_type_ptr>* is_specific_map() const override {
 		if(specific_map_.get() != nullptr) {
 			return specific_map_.get();
 		}
@@ -880,7 +945,7 @@ public:
 	}
 	
 
-	std::pair<variant_type_ptr,variant_type_ptr> is_map_of() const {
+	std::pair<variant_type_ptr,variant_type_ptr> is_map_of() const override {
 		std::vector<variant_type_ptr> key_types, value_types;
 		for(const variant_type_ptr& type : types_) {
 			key_types.push_back(type->is_map_of().first);
@@ -893,7 +958,7 @@ public:
 		return std::pair<variant_type_ptr,variant_type_ptr>(get_union(key_types), get_union(value_types));
 	}
 
-	variant_type_ptr base_type_no_enum() const {
+	variant_type_ptr base_type_no_enum() const override {
 		std::vector<variant_type_ptr> result;
 		bool is_different = false;
 		for(const variant_type_ptr& t : types_) {
@@ -910,7 +975,7 @@ public:
 		return get_union(result);
 	}
 private:
-	variant_type_ptr null_excluded() const {
+	variant_type_ptr null_excluded() const override {
 		std::vector<variant_type_ptr> new_types;
 		for(variant_type_ptr t : types_) {
 			if(t->is_type(variant::VARIANT_TYPE_NULL) == false) {
@@ -925,7 +990,7 @@ private:
 		}
 	}
 
-	variant_type_ptr subtract(variant_type_ptr type) const {
+	variant_type_ptr subtract(variant_type_ptr type) const override {
 		std::vector<variant_type_ptr> new_types;
 		for(variant_type_ptr t : types_) {
 			if(t->is_equal(*type) == false) {
@@ -953,7 +1018,7 @@ public:
 		assert(value);
 	}
 
-	bool match(const variant& v) const {
+	bool match(const variant& v) const override {
 		if(!v.is_list()) {
 			return false;
 		}
@@ -967,7 +1032,7 @@ public:
 		return true;
 	}
 
-	bool is_equal(const variant_type& o) const {
+	bool is_equal(const variant_type& o) const override {
 		const variant_type_list* other = dynamic_cast<const variant_type_list*>(&o);
 		if(!other) {
 			return false;
@@ -976,15 +1041,15 @@ public:
 		return value_type_->is_equal(*other->value_type_);
 	}
 
-	std::string to_string_impl() const {
+	std::string to_string_impl() const override {
 		return "[" + value_type_->to_string() + "]";
 	}
 
-	variant_type_ptr is_list_of() const {
+	variant_type_ptr is_list_of() const override {
 		return value_type_;
 	}
 
-	bool is_compatible(variant_type_ptr type, std::ostringstream* why) const {
+	bool is_compatible(variant_type_ptr type, std::ostringstream* why) const override {
 		variant_type_ptr value_type = type->is_list_of();
 		if(value_type) {
 			bool result = variant_types_compatible(value_type_, value_type);
@@ -1034,7 +1099,7 @@ public:
 		list_ = get_union(value);
 	}
 
-	bool match(const variant& v) const {
+	bool match(const variant& v) const override {
 		if(!v.is_list()) {
 			return false;
 		}
@@ -1052,7 +1117,7 @@ public:
 		return true;
 	}
 
-	bool is_equal(const variant_type& o) const {
+	bool is_equal(const variant_type& o) const override {
 		const variant_type_specific_list* other = dynamic_cast<const variant_type_specific_list*>(&o);
 		if(!other) {
 			return false;
@@ -1071,7 +1136,7 @@ public:
 		return true;
 	}
 
-	std::string to_string_impl() const {
+	std::string to_string_impl() const override {
 		std::ostringstream s;
 		s << "[";
 		for(variant_type_ptr t : value_) {
@@ -1081,11 +1146,11 @@ public:
 		return s.str();
 	}
 
-	variant_type_ptr is_list_of() const {
+	variant_type_ptr is_list_of() const override {
 		return list_;
 	}
 
-	bool is_compatible(variant_type_ptr type, std::ostringstream* why) const {
+	bool is_compatible(variant_type_ptr type, std::ostringstream* why) const override {
 		if(is_equal(*type)) {
 			return true;
 		}
@@ -1104,7 +1169,7 @@ public:
 		return true;
 	}
 
-	const std::vector<variant_type_ptr>* is_specific_list() const { return &value_; }
+	const std::vector<variant_type_ptr>* is_specific_list() const override { return &value_; }
 private:
 	variant_type_ptr list_;
 	std::vector<variant_type_ptr> value_;
@@ -1117,7 +1182,7 @@ public:
 	  : key_type_(key), value_type_(value)
 	{}
 
-	bool match(const variant& v) const {
+	bool match(const variant& v) const override {
 		if(!v.is_map()) {
 			return false;
 		}
@@ -1131,7 +1196,7 @@ public:
 		return true;
 	}
 
-	bool is_equal(const variant_type& o) const {
+	bool is_equal(const variant_type& o) const override {
 		const variant_type_map* other = dynamic_cast<const variant_type_map*>(&o);
 		if(!other) {
 			return false;
@@ -1140,15 +1205,15 @@ public:
 		return value_type_->is_equal(*other->value_type_) &&
 		       key_type_->is_equal(*other->key_type_);
 	}
-	std::string to_string_impl() const {
+	std::string to_string_impl() const override {
 		return "{" + key_type_->to_string() + " -> " + value_type_->to_string() + "}";
 	}
 
-	std::pair<variant_type_ptr, variant_type_ptr> is_map_of() const {
+	std::pair<variant_type_ptr, variant_type_ptr> is_map_of() const override {
 		return std::pair<variant_type_ptr, variant_type_ptr>(key_type_, value_type_);
 	}
 
-	bool is_compatible(variant_type_ptr type, std::ostringstream* why) const {
+	bool is_compatible(variant_type_ptr type, std::ostringstream* why) const override {
 		std::pair<variant_type_ptr,variant_type_ptr> p = type->is_map_of();
 		if(p.first && p.second) {
 			// The given type of map can be used as a map of this type if,
@@ -1167,7 +1232,7 @@ public:
 
 	}
 
-	const game_logic::FormulaCallableDefinition* getDefinition() const {
+	const game_logic::FormulaCallableDefinition* getDefinition() const override {
 		if(!def_) {
 			def_ = game_logic::create_map_formula_callable_definition(value_type_);
 		}
@@ -1201,7 +1266,22 @@ public:
 		def_->setSupportsSlotLookups(false);
 	}
 
-	bool match(const variant& v) const {
+	variant_type_ptr extend_type(variant_type_ptr extension) const override {
+		auto m = extension->is_specific_map();
+		if(!m) {
+			return variant_type_ptr();
+		}
+
+		auto result = type_map_;
+
+		for(auto p : *m) {
+			result[p.first] = p.second;
+		}
+
+		return get_specific_map(result);
+	}
+
+	bool match(const variant& v) const override {
 		if(!v.is_map()) {
 			return false;
 		}
@@ -1226,7 +1306,38 @@ public:
 		return true;
 	}
 
-	bool is_equal(const variant_type& o) const {
+	std::string mismatch_reason(const variant& v) const override
+	{
+		if(!v.is_map()) {
+			return "Type is not a map";
+		}
+
+		std::ostringstream s;
+
+		for(const variant::map_pair& p : v.as_map()) {
+			std::map<variant, variant_type_ptr>::const_iterator itor = type_map_.find(p.first);
+			if(itor == type_map_.end()) {
+				s << "Key " << p.first << " not in type";
+				return s.str();
+			}
+
+			if(!itor->second->match(p.second)) {
+				s << "Value for " << p.first << " does not match";
+				return s.str();
+			}
+		}
+
+		for(const variant& k : must_have_keys_) {
+			if(v.as_map().count(k) == 0) {
+				s << "Key " << k.write_json() << " required but not found";
+				return s.str();
+			}
+		}
+
+		return "";
+	}
+
+	bool is_equal(const variant_type& o) const override {
 		const variant_type_specific_map* other = dynamic_cast<const variant_type_specific_map*>(&o);
 		if(!other) {
 			return false;
@@ -1253,7 +1364,7 @@ public:
 
 		return true;
 	}
-	std::string to_string_impl() const {
+	std::string to_string_impl() const override {
 		std::ostringstream s;
 		s << "{";
 		std::map<variant, variant_type_ptr>::const_iterator i = type_map_.begin();
@@ -1276,11 +1387,11 @@ public:
 		return s.str();
 	}
 
-	std::pair<variant_type_ptr, variant_type_ptr> is_map_of() const {
+	std::pair<variant_type_ptr, variant_type_ptr> is_map_of() const override {
 		return std::pair<variant_type_ptr, variant_type_ptr>(key_type_, value_type_);
 	}
 
-	bool is_compatible(variant_type_ptr type, std::ostringstream* why) const {
+	bool is_compatible(variant_type_ptr type, std::ostringstream* why) const override {
 		if(type->is_equal(*this)) {
 			return true;
 		}
@@ -1322,9 +1433,9 @@ public:
 		return true;
 	}
 
-	const std::map<variant, variant_type_ptr>* is_specific_map() const { return &type_map_; }
+	const std::map<variant, variant_type_ptr>* is_specific_map() const override { return &type_map_; }
 
-	const game_logic::FormulaCallableDefinition* getDefinition() const
+	const game_logic::FormulaCallableDefinition* getDefinition() const override
 	{
 		return def_.get();
 	}
@@ -1348,7 +1459,7 @@ public:
 		}
 	}
 
-	bool is_function(std::vector<variant_type_ptr>* args, variant_type_ptr* return_type, int* min_args, bool* return_type_specified) const
+	bool is_function(std::vector<variant_type_ptr>* args, variant_type_ptr* return_type, int* min_args, bool* return_type_specified) const override
 	{
 		if(args) {
 			*args = args_;
@@ -1369,7 +1480,7 @@ public:
 		return true;
 	}
 
-	bool is_equal(const variant_type& o) const {
+	bool is_equal(const variant_type& o) const override {
 		const variant_type_function* other = dynamic_cast<const variant_type_function*>(&o);
 		if(!other) {
 			return false;
@@ -1388,7 +1499,7 @@ public:
 		return true;
 	}
 
-	std::string to_string_impl() const {
+	std::string to_string_impl() const override {
 		std::string result = "function(";
 		for(int n = 0; n != args_.size(); ++n) {
 			if(n != 0) {
@@ -1402,7 +1513,7 @@ public:
 		return result;
 	}
 
-	bool match(const variant& v) const {
+	bool match(const variant& v) const override {
 		if(v.is_function() == false) {
 			return false;
 		}
@@ -1425,7 +1536,7 @@ public:
 		return true;
 	}
 
-	bool is_compatible(variant_type_ptr type, std::ostringstream* why) const {
+	bool is_compatible(variant_type_ptr type, std::ostringstream* why) const override {
 		std::vector<variant_type_ptr> args;
 		variant_type_ptr return_type;
 		int min_args = 0;
@@ -1472,16 +1583,16 @@ public:
 	variant_type_function_overload(variant_type_ptr overloaded_fn, const std::vector<variant_type_ptr>& fn) : overloaded_(overloaded_fn), fn_(fn)
 	{}
 
-	bool is_function(std::vector<variant_type_ptr>* args, variant_type_ptr* return_type, int* min_args, bool* return_type_specified) const
+	bool is_function(std::vector<variant_type_ptr>* args, variant_type_ptr* return_type, int* min_args, bool* return_type_specified) const override
 	{
 		return overloaded_->is_function(args, return_type, min_args, return_type_specified);
 	}
 
-	bool match(const variant& v) const {
+	bool match(const variant& v) const override {
 		return overloaded_->match(v);
 	}
 
-	bool is_equal(const variant_type& o) const {
+	bool is_equal(const variant_type& o) const override {
 		const variant_type_function_overload* f = dynamic_cast<const variant_type_function_overload*>(&o);
 		if(!f) {
 			return false;
@@ -1504,7 +1615,7 @@ public:
 		return true;
 	}
 
-	std::string to_string_impl() const {
+	std::string to_string_impl() const override {
 		std::string result = "overload(";
 		for(const variant_type_ptr& p : fn_) {
 			result += p->to_string() + ",";
@@ -1514,11 +1625,11 @@ public:
 		return result;
 	}
 
-	bool is_compatible(variant_type_ptr type, std::ostringstream* why) const {
+	bool is_compatible(variant_type_ptr type, std::ostringstream* why) const override {
 		return overloaded_->is_compatible(type);
 	}
 
-	variant_type_ptr function_return_type_with_args(const std::vector<variant_type_ptr>& parms) const
+	variant_type_ptr function_return_type_with_args(const std::vector<variant_type_ptr>& parms) const override
 	{
 		std::vector<variant_type_ptr> result_types;
 		for(const variant_type_ptr& fn : fn_) {
@@ -1561,61 +1672,25 @@ private:
 class variant_type_enum : public variant_type
 {
 public:
-	explicit variant_type_enum(const std::vector<variant_range>& values)
-	  : values_(values)
+	explicit variant_type_enum(const std::vector<std::string>& values) : values_(values)
 	{
 		std::sort(values_.begin(), values_.end());
-		for(const auto& r : values_) {
-			ASSERT_LOG(r.first.type() == r.second.type(), "Enumeration range with different types: " << r.first.write_json() << " vs " << r.second.write_json());
-		}
 	}
 
-	const std::vector<variant_range>* is_enumerable() const { return &values_; }
 
-	variant_type_ptr base_type_no_enum() const {
-		std::vector<variant_type_ptr> result;
-		for(const auto& r : values_) {
-			result.push_back(get_variant_type_from_value(r.first));
-		}
-
-		return get_union(result);
-	}
-
-	bool match(const variant& v) const {
-		for(const auto& r : values_) {
-			if(v >= r.first && v <= r.second) {
-				return true;
-			}
+	bool match(const variant& v) const override {
+		if(v.is_enum()) {
+			return std::find(values_.begin(), values_.end(), v.as_enum()) != values_.end();
 		}
 
 		return false;
 	}
 
-	bool is_numeric() const {
-		for(const auto& r : values_) {
-			if(!r.first.is_decimal() && !r.first.is_int()) {
-				return false;
-			}
-
-			if(!r.second.is_decimal() && !r.second.is_int()) {
-				return false;
-			}
-		}
-
-		return true;
+	bool is_type(variant::TYPE type) const override {
+		return type == variant::VARIANT_TYPE_ENUM;
 	}
 
-	bool is_type(variant::TYPE type) const {
-		for(const auto& r : values_) {
-			if(r.first.type() != type) {
-				return false;
-			}
-		}
-
-		return true;
-	}
-
-	bool is_equal(const variant_type& o) const {
+	bool is_equal(const variant_type& o) const override {
 		const variant_type_enum* other = dynamic_cast<const variant_type_enum*>(&o);
 		if(!other) {
 			return false;
@@ -1624,58 +1699,26 @@ public:
 		return values_ == other->values_;
 	}
 
-	bool is_compatible(variant_type_ptr type, std::ostringstream* why) const {
+	bool is_compatible(variant_type_ptr type, std::ostringstream* why) const override {
 		const variant_type_enum* other = dynamic_cast<const variant_type_enum*>(type.get());
-		if(!other) {
-			return false;
-		}
+		return other && is_subset(other->values_);
+	}
+private:
+	std::string to_string_impl() const override {
+		return "enum{" + util::join(values_) + "}";
+	}
 
-		for(const auto& r : other->values_) {
-			if(!contains(r)) {
+	bool is_subset(const std::vector<std::string>& values) const {
+		for(const std::string& s : values) {
+			if(std::find(values_.begin(), values_.end(), s) == values_.end()) {
 				return false;
 			}
 		}
 
 		return true;
 	}
-private:
-	std::string to_string_impl() const {
-		std::ostringstream s;
-		s << "enum {";
-		for(const auto& r : values_) {
-			s << r.first.write_json();
-			if(r.first != r.second) {
-				s << " - " << r.second.write_json();
-			}
 
-			s << ", ";
-		}
-
-		s << "}";
-		return s.str();
-	}
-
-	variant_type_ptr null_excluded() const {
-		std::vector<variant_range> result;
-		for(auto r : values_) {
-			if(r.first.is_null() == false) {
-				result.push_back(r);
-			}
-		}
-
-		return variant_type_ptr(new variant_type_enum(result));
-	}
-
-	bool contains(const variant_range& candidate) const {
-		for(const auto& r : values_) {
-			if(r.first <= candidate.first && r.second >= candidate.second) {
-				return true;
-			}
-		}
-
-		return false;
-	}
-	std::vector<variant_range> values_;
+	std::vector<std::string> values_;
 };
 
 class variant_type_generic : public variant_type
@@ -1684,12 +1727,12 @@ public:
 	explicit variant_type_generic(const std::string& id) : id_(id)
 	{}
 
-	bool is_equal(const variant_type& o) const {
+	bool is_equal(const variant_type& o) const override {
 		const variant_type_generic* gen = dynamic_cast<const variant_type_generic*>(&o);
 		return gen && gen->id_ == id_;
 	}
 
-	variant_type_ptr map_generic_types(const std::map<std::string, variant_type_ptr>& mapping) const {
+	variant_type_ptr map_generic_types(const std::map<std::string, variant_type_ptr>& mapping) const override {
 		auto itor = mapping.find(id_);
 		if(itor != mapping.end()) {
 			return itor->second;
@@ -1698,11 +1741,11 @@ public:
 		return variant_type_ptr();
 	}
 
-	bool match(const variant& v) const {
+	bool match(const variant& v) const override {
 		return false;
 	}
 
-	bool is_generic(std::string* id) const {
+	bool is_generic(std::string* id) const override {
 		if(id) {
 			*id = id_;
 		}
@@ -1710,7 +1753,7 @@ public:
 		return true;
 	}
 private:
-	std::string to_string_impl() const {
+	std::string to_string_impl() const override {
 		return id_;
 	}
 
@@ -1726,7 +1769,11 @@ bool variant_type::may_be_null(variant_type_ptr type)
 
 variant_type_ptr get_variant_type_from_value(const variant& value) {
 	using namespace game_logic;
-	if(value.try_convert<FormulaObject>()) {
+	if(value.is_enum()) {
+		std::vector<std::string> v;
+		v.push_back(value.as_enum());
+		return variant_type_ptr(new variant_type_enum(v));
+	} else if(value.try_convert<FormulaObject>()) {
 		return variant_type::get_class(value.try_convert<FormulaObject>()->getClassName());
 	} else if(value.try_convert<CustomObject>()) {
 		const CustomObject* obj = value.try_convert<CustomObject>();
@@ -1857,11 +1904,6 @@ bool variant_types_compatible(variant_type_ptr to, variant_type_ptr from, std::o
 	}
 
 	if(to->is_union()) {
-		//handle a case like string|int matching with enum { 5, 'a' }.
-		if(from->is_enumerable() && variant_types_compatible(to, from->base_type_no_enum())) {
-			return true;
-		}
-
 		for(variant_type_ptr to_type : *to->is_union()) {
 			if(variant_types_compatible(to_type, from)) {
 				return true;
@@ -1983,45 +2025,26 @@ variant_type_ptr parse_variant_type(const variant& original_str,
 
 			v.push_back(variant_type_ptr(new variant_type_interface(
 			    ConstFormulaInterfacePtr(new game_logic::FormulaInterface(types)))));
-		} else if(i1->type == FFL_TOKEN_TYPE::IDENTIFIER && i1->equals("enum") && i1+1 != i2 && (i1+1)->equals("{")) {
-			i1 += 2;
+		} else if(i1->type == FFL_TOKEN_TYPE::KEYWORD && i1->equals("enum")) {
+			++i1;
+			ASSERT_COND(i1 != i2 && i1->type == FFL_TOKEN_TYPE::LBRACKET, "Expected '{' after enum in type");
+			++i1;
+			std::vector<std::string> enums;
 
-			std::vector<variant_range> ranges;
-			while(i1 != i2 && !i1->equals("}")) {
-				variant_range range;
-				bool result = parse_variant_constant(original_str, i1, i2, allow_failure, range.first);
-				if(!result) {
-					return variant_type_ptr();
-				}
-
-				if(i1 != i2 && i1->type == formula_tokenizer::FFL_TOKEN_TYPE::ELLIPSIS && i1+1 != i2) {
-					++i1;
-					bool result = parse_variant_constant(original_str, i1, i2, allow_failure, range.second);
-					if(!result) {
-						return variant_type_ptr();
-					}
-
-					ASSERT_COND(range.first.type() == range.second.type(), "Values in enum have different type: " << game_logic::pinpoint_location(original_str, i1->end));
-				} else {
-					range.second = range.first;
-				}
-
-				ranges.push_back(range);
-
-				ASSERT_COND(i1 != i2,  "Unexpected end of enum: " << game_logic::pinpoint_location(original_str, (i1-1)->end));
-
-				ASSERT_COND(i1->equals(",") || i1->equals("}"), "Unexpected token: " << game_logic::pinpoint_location(original_str, i1->end));
-
-				if(i1->equals(",")) {
+			while(i1 != i2 && i1->type != FFL_TOKEN_TYPE::RBRACKET) {
+				ASSERT_COND(i1->type == FFL_TOKEN_TYPE::IDENTIFIER, "Expected identifier after enum in type");
+				enums.push_back(i1->str());
+				++i1;
+				ASSERT_COND(i1 != i2 && (i1->type == FFL_TOKEN_TYPE::COMMA || i1->type == FFL_TOKEN_TYPE::RBRACKET), "Unexpected token when parsing enum type");
+				if(i1->type == FFL_TOKEN_TYPE::COMMA) {
 					++i1;
 				}
 			}
-			ASSERT_COND(i1 != i2,  "Unexpected end of enum: " << game_logic::pinpoint_location(original_str, (i1-1)->end));
 
+			ASSERT_COND(i1 != i2, "Unexpected end of enum type");
+
+			v.push_back(variant_type_ptr(new variant_type_enum(enums)));
 			++i1;
-
-			v.push_back(variant_type_ptr(new variant_type_enum(ranges)));
-
 		} else if(i1->type == FFL_TOKEN_TYPE::IDENTIFIER && i1->equals("function") && i1+1 != i2 && (i1+1)->equals("(")) {
 			i1 += 2;
 
@@ -2120,7 +2143,10 @@ variant_type_ptr parse_variant_type(const variant& original_str,
 		} else if(i1->type == FFL_TOKEN_TYPE::IDENTIFIER || (i1->type == FFL_TOKEN_TYPE::KEYWORD && std::equal(i1->begin, i1->end, "null"))) {
 			ASSERT_COND(variant::string_to_type(std::string(i1->begin, i1->end)) != variant::VARIANT_TYPE_INVALID,
 			  "INVALID TOKEN WHEN PARSING TYPE: " << std::string(i1->begin, i1->end) << " AT:\n" << game_logic::pinpoint_location(original_str, i1->begin, i1->end));
-			v.push_back(variant_type_ptr(new variant_type_simple(original_str, *i1)));
+
+	  		variant::TYPE t(variant::string_to_type(std::string(i1->begin, i1->end)));
+			ASSERT_LOG(t != variant::VARIANT_TYPE_INVALID, "INVALID TYPE: " << std::string(i1->begin, i1->end) << " AT:\n" << game_logic::pinpoint_location(original_str, i1->begin, i1->end));
+			v.push_back(variant_type::get_type(t));
 			++i1;
 		} else if(i1->type == FFL_TOKEN_TYPE::LBRACKET) {
 			const Token* end = i1+1;
@@ -2265,7 +2291,9 @@ variant_type_ptr parse_variant_type(const variant& type)
 	ASSERT_LOG(tokens.empty() == false, "ERROR PARSING TYPE: EMPTY STRING AT " << type.debug_location());
 
 	const Token* begin = &tokens[0];
-	return parse_variant_type(type, begin, begin + tokens.size());
+	variant_type_ptr result = parse_variant_type(type, begin, begin + tokens.size());
+	ASSERT_LOG(begin == &tokens[0] + tokens.size(), "Unexpected characters after type: '" << begin->str() << ": " << type.debug_location());
+	return result;
 }
 
 variant_type_ptr
@@ -2435,29 +2463,16 @@ variant_type_ptr variant_type::get_cairo_commands()
 
 variant_type_ptr variant_type::get_type(variant::TYPE type)
 {
-	return variant_type_ptr(new variant_type_simple(type));
-}
-
-variant_type_ptr variant_type::get_singleton_enum(variant item)
-{
-	std::vector<variant> items;
-	items.push_back(item);
-	return get_enum(items);
-}
-
-variant_type_ptr variant_type::get_enum(const std::vector<variant>& elements)
-{
-	std::vector<variant_range> ranges;
-	for(const variant& v : elements) {
-		ranges.push_back(variant_range(v,v));
+	static std::vector<variant_type_ptr> result;
+	if(static_cast<size_t>(type) >= result.size()) {
+		result.resize(static_cast<size_t>(type)+1);
 	}
 
-	return variant_type_ptr(new variant_type_enum(ranges));
-}
+	if(!result[type]) {
+		result[type].reset(new variant_type_simple(type));
+	}
 
-variant_type_ptr variant_type::get_enum(const std::vector<variant_range>& elements)
-{
-	return variant_type_ptr(new variant_type_enum(elements));
+	return result[type];
 }
 
 variant_type_ptr variant_type::get_union(const std::vector<variant_type_ptr>& elements_input)
@@ -2487,29 +2502,6 @@ variant_type_ptr variant_type::get_union(const std::vector<variant_type_ptr>& el
 				elements.erase(elements.begin() + nitem_to_delete);
 			}
 		} while(nitem_to_delete != -1);
-	}
-
-	int num_enums = 0;
-	for(const variant_type_ptr& type : elements_input) {
-		if(type->is_enumerable()) {
-			++num_enums;
-		}
-	}
-
-	if(num_enums > 1) {
-		std::vector<variant_range> e;
-		std::vector<variant_type_ptr> out;
-		for(const variant_type_ptr& type : elements_input) {
-			auto items = type->is_enumerable();
-			if(items) {
-				e.insert(e.end(), items->begin(), items->end());
-			} else {
-				out.push_back(type);
-			}
-		}
-
-		out.push_back(get_enum(e));
-		return get_union(out);
 	}
 
 	for(variant_type_ptr el : elements) {
@@ -2682,12 +2674,8 @@ UNIT_TEST(variant_type) {
 
 	TYPES_COMPAT("[{keys: [string], sound: commands}]", "[{keys: [string,], sound: commands}, {keys: [string,], sound: commands}]");
 
-	TYPES_COMPAT("int", "enum {4, 5, 8}");
-	TYPES_COMPAT("int", "enum {-2, 0, 5, 17}");
-	TYPES_COMPAT("int|null", "enum {-2, 0, 5, 17}");
-	TYPES_COMPAT("int|null", "enum {-2, 0, 5, 17, null}");
-	TYPES_COMPAT("enum { 2, 3, 4 }", "enum { 2, 3 }");
-	TYPES_COMPAT("enum { 2..8 }", "enum { 2, 3, 4..6 }");
+	TYPES_COMPAT("enum{abc}", "enum{abc}");
+	TYPES_COMPAT("enum{abc,dee}", "enum{abc}");
 
 	TYPES_COMPAT("int|function(int)->int", "int");
 
@@ -2699,9 +2687,10 @@ UNIT_TEST(variant_type) {
 	TYPES_INCOMPAT("{int -> int}", "{string -> int}");
 	TYPES_INCOMPAT("[int]", "[int,int,decimal]");
 	TYPES_INCOMPAT("[int,int]", "[int]");
-	TYPES_INCOMPAT("enum { 2, 3 }", "enum { 2, 3, 4 }");
-	TYPES_INCOMPAT("int|null", "enum { 2, 3, 4.5 }");
-	TYPES_INCOMPAT("enum { 2..8 }", "enum { 2, 3, 4..6, 9 }");
+	TYPES_INCOMPAT("enum{abc,dec}", "enum{abc,deg}");
+	TYPES_INCOMPAT("enum{abc}", "enum{abc,dee}");
+	TYPES_INCOMPAT("enum{abc}", "enum{abcd}");
+	TYPES_INCOMPAT("enum{abc}", "int");
 	TYPES_INCOMPAT("{int -> string}", "{int|string -> string}");
 
 #undef TYPES_COMPAT	

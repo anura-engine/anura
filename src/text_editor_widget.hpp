@@ -23,14 +23,14 @@
 
 #pragma once
 
-#include <boost/intrusive_ptr.hpp>
+#include "intrusive_ptr.hpp"
 
 #include "scrollable_widget.hpp"
 
 namespace gui 
 {
 	class TextEditorWidget;
-	typedef boost::intrusive_ptr<TextEditorWidget> TextEditorWidgetPtr;
+	typedef ffl::IntrusivePtr<TextEditorWidget> TextEditorWidgetPtr;
 
 	class TextEditorWidget : public ScrollableWidget
 	{
@@ -67,6 +67,7 @@ namespace gui
 
 		void setSearch(const std::string& term);
 		void nextSearchMatch();
+		void prevSearchMatch();
 		bool hasSearchMatches() const { return search_matches_.empty() == false; }
 
 		void replace(const std::string& replace_with);
@@ -141,6 +142,9 @@ namespace gui
 		void onPageUp();
 		void onPageDown();
 
+		void searchForward();
+		void searchBackward();
+
 		size_t findEquivalentCol(size_t old_col, size_t old_row, size_t new_row) const;
 
 		void onSetYscroll(int old_pos, int new_pos) override;
@@ -201,6 +205,8 @@ namespace gui
 		game_logic::FormulaPtr ffl_on_escape_;
 		game_logic::FormulaPtr ffl_on_change_focus_;
 		game_logic::FormulaPtr ffl_onBeginEnter_;
+
+		variant ffl_fn_filter_paste_;
 
 		bool begin_enter_return_;
 

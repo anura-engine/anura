@@ -41,7 +41,7 @@ namespace KRE
 	struct BlendEquationScopeOGL
 	{
 		BlendEquationScopeOGL(const ScopeableValue& eqn);
-		~BlendEquationScopeOGL();
+		~BlendEquationScopeOGL() NOEXCEPT(false);
 	private:
 		bool stored_;
 	};
@@ -49,12 +49,9 @@ namespace KRE
 	struct BlendModeScopeOGL
 	{
 		BlendModeScopeOGL(const ScopeableValue& bm);
-		~BlendModeScopeOGL();
+		~BlendModeScopeOGL() NOEXCEPT(false);
 	private:
 		bool stored_;
 		bool state_stored_;
 	};
-
-	void set_blend_mode(const BlendMode& bm);
-	void set_blend_equation(const BlendEquation& eqn);
 }

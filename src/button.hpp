@@ -96,7 +96,9 @@ namespace gui
 		WidgetPtr label_;
 		std::function<void ()> onclick_;
 		bool down_;
+		variant mouseover_handler_, mouseoff_handler_;
 		game_logic::FormulaPtr click_handler_;
+		variant click_handler_fn_;
 		game_logic::FormulaCallablePtr handler_arg_;
 	
 		ConstFramedGuiElementPtr normal_button_image_set_,depressed_button_image_set_,focus_button_image_set_,current_button_image_set_;
@@ -105,6 +107,6 @@ namespace gui
 		KRE::Color text_normal_color_, text_depressed_color_, text_focus_color_;
 	};
 
-	typedef boost::intrusive_ptr<Button> ButtonPtr;
+	typedef ffl::IntrusivePtr<Button> ButtonPtr;
 
 }

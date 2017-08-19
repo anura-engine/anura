@@ -105,8 +105,8 @@ namespace gui
 		std::map<int, variant_pair> selection_map_;
 	};
 
-	typedef boost::intrusive_ptr<TreeViewWidget> TreeViewWidgetPtr;
-	typedef boost::intrusive_ptr<const TreeViewWidget> ConstTreeViewWidgetPtr;
+	typedef ffl::IntrusivePtr<TreeViewWidget> TreeViewWidgetPtr;
+	typedef ffl::IntrusivePtr<const TreeViewWidget> ConstTreeViewWidgetPtr;
 
 	class TreeEditorWidget : public TreeViewWidget
 	{
@@ -148,6 +148,6 @@ namespace gui
 		std::map<variant::TYPE, WidgetPtr> ex_editor_map_;
 	};
 
-	typedef boost::intrusive_ptr<TreeEditorWidget> TreeEditorWidgetPtr;
-	typedef boost::intrusive_ptr<const TreeEditorWidget> ConstTreeEditorWidgetPtr;
+	typedef ffl::IntrusivePtr<TreeEditorWidget> TreeEditorWidgetPtr;
+	typedef ffl::IntrusivePtr<const TreeEditorWidget> ConstTreeEditorWidgetPtr;
 }

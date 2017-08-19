@@ -77,11 +77,11 @@ namespace KRE
 
 			virtual void Arc(const double cx, const double cy, const double radius, const double start_angle, const double end_angle, bool negative=false) = 0;
 				
-			// Adds a Cubic Bézier curve to the current path from the current position to the end position
+			// Adds a Cubic Bezier curve to the current path from the current position to the end position
 			// (ex,ey) using the control points (x1,y1) and (x2,y2)
 			// If relative is true then the curve is drawn with all positions relative to the current point.
 			virtual void CubicCurveTo(const double x1, const double y1, const double x2, const double y2, const double ex, const double ey, bool relative=false) = 0;
-			// Adds a Quadratic Bézier curve to the current path from the current position to the end position
+			// Adds a Quadratic Bezier curve to the current path from the current position to the end position
 			// (ex,ey) using the control point (x1,y1)
 			// If relative is true then the curve is drawn with all positions relative to the current point.
 			virtual void QuadraticCurveTo(const double x1, const double y1, const double ex, const double ey, bool relative=false) = 0;

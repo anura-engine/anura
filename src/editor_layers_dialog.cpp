@@ -37,7 +37,7 @@ namespace editor_dialogs
 	using std::placeholders::_1;
 
 	EditorLayersDialog::EditorLayersDialog(editor& e)
-		: Dialog(KRE::WindowManager::getMainWindow()->width() - 200, LAYERS_DIALOG_WIDTH, 40, KRE::WindowManager::getMainWindow()->height() - 40), 
+		: Dialog(KRE::WindowManager::getMainWindow()->width() - 200, 40, LAYERS_DIALOG_WIDTH, KRE::WindowManager::getMainWindow()->height() - 40), 
 		editor_(e), 
 		locked_(false)
 	{

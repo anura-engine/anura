@@ -37,3 +37,19 @@ void toggle_fullscreen();
 #if defined(_MSC_VER)
 int gettimeofday(struct timeval *tv, struct timezone2 *tz);
 #endif
+
+namespace util {
+template<typename T>
+T clamp(T value, T minval, T maxval)
+{
+	return std::min<T>(maxval, std::max(value, minval));
+}
+
+template<typename T, typename R>
+T mix(T a, T b, R ratio)
+{
+	R inv = R(1.0) - ratio;
+	return a*inv + b*ratio;
+}
+
+}

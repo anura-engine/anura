@@ -82,7 +82,7 @@ namespace editor_dialogs
 		std::unique_ptr<assert_recover_scope> assert_recover_scope_;
 	};
 
-	typedef boost::intrusive_ptr<PropertyEditorDialog> PropertyEditorDialogPtr;
+	typedef ffl::IntrusivePtr<PropertyEditorDialog> PropertyEditorDialogPtr;
 }
 
 #endif // !NO_EDITOR

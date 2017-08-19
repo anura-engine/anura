@@ -166,6 +166,29 @@ variant preprocess_string_value(const std::string& input, const game_logic::Form
 		} else {
 			return f.execute();
 		}
+	} else if(directive == "@str_with_debug") {
+		auto colon = std::find(i, input.end(), ':');
+		auto end = std::find(colon, input.end(), '|');
+		if(end == input.end() || colon == input.end()) {
+			throw preprocessor_error();
+		}
+
+		static std::set<std::string> filenames;
+
+		variant result(std::string(end+1, input.end()));
+		std::string fname(i, colon);
+		const int line_num = atoi(&*(colon+1));
+
+		auto itor = filenames.insert(fname).first;
+
+		variant::debug_info info;
+		info.filename = &*itor;
+		info.line = line_num;
+
+		result.setDebugInfo(info);
+
+		return result;
+
 	} else {
 		throw preprocessor_error();
 	}

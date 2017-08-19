@@ -30,13 +30,14 @@ namespace xhtml
 	class ListItemBox : public Box
 	{
 	public:
-		explicit ListItemBox(BoxPtr parent, StyleNodePtr node, int count);
+		explicit ListItemBox(const BoxPtr& parent, const StyleNodePtr& node, const RootBoxPtr& root, int count);
 		std::string toString() const override;
 	private:
 		void handlePreChildLayout(LayoutEngine& eng, const Dimensions& containing) override;
+		void handlePreChildLayout3(LayoutEngine& eng, const Dimensions& containing) override;
 		void handleLayout(LayoutEngine& eng, const Dimensions& containing) override;
 		void handlePostChildLayout(LayoutEngine& eng, BoxPtr child) override;
-		void handleRender(DisplayListPtr display_list, const point& offset) const override;
+		void handleRender(const KRE::SceneTreePtr& scene_tree, const point& offset) const override;
 		int count_;
 		std::string marker_;
 	};

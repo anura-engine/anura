@@ -30,6 +30,7 @@
 #include "Canvas.hpp"
 #include "Font.hpp"
 #include "ModelMatrixScope.hpp"
+#include "RenderTarget.hpp"
 #include "WindowManager.hpp"
 
 #include "asserts.hpp"
@@ -149,8 +150,8 @@ bool update_camera_position(const Level& lvl, screen_position& pos, const Entity
 	//screen position being initialized now.
 	const bool draw_level = doDraw && pos.init;
 	
-	const int screen_width = graphics::GameScreen::get().getWidth();
-	const int screen_height = graphics::GameScreen::get().getHeight();
+	const int screen_width = graphics::GameScreen::get().getVirtualWidth();
+	const int screen_height = graphics::GameScreen::get().getVirtualHeight();
 
 	ASSERT_LOG(focus || lvl.in_editor(), "No player found in level. Must have a player object. (An object with is_human: true marked");
 
@@ -358,18 +359,35 @@ bool update_camera_position(const Level& lvl, screen_position& pos, const Entity
 
 void render_scene(Level& lvl, const screen_position& pos) 
 {
+	auto& gs = graphics::GameScreen::get();
+
+	const int screen_width = gs.getVirtualWidth();
+	const int screen_height = gs.getVirtualHeight();
+
+	const bool need_rt = gs.getVirtualWidth() != gs.getWidth() || gs.getVirtualHeight() != gs.getHeight();
+
+	static KRE::RenderTargetPtr rt;
+	
+	if(need_rt && (!rt || rt->width() != screen_width || rt->height() != screen_height)) {
+		rt = (KRE::RenderTarget::create(screen_width, screen_height, 1, false, false));
+		rt->setBlendState(false);
+	}
+
+	if(rt && need_rt) {
+		rt->renderToThis(rect(0,0,screen_width,screen_height));
+		rt->setClearColor(KRE::Color(0,0,0,255));
+		rt->clear();
+
+	}
+
 	auto wnd = KRE::WindowManager::getMainWindow();
 	auto canvas = KRE::Canvas::getInstance();
-	formula_profiler::Instrument instrumentation("DRAW");
-
-	auto& gs = graphics::GameScreen::get();
-	const int screen_width = gs.getWidth();
-	const int screen_height = gs.getHeight();
 
 	graphics::GameScreen::Manager screen_manager(wnd);
-	KRE::ModelManager2D model(gs.x(), gs.y(), 0, glm::vec2(1.0f/gs.getScaleW(), 1.0f/gs.getScaleH()));
+	KRE::ModelManager2D model(gs.x(), gs.y(), 0, 1.0f); //glm::vec2(1.0f/gs.getScaleW(), 1.0f/gs.getScaleH()));
 
 	KRE::Canvas::CameraScope cam_scope(gs.getCurrentCamera());
+	KRE::Canvas::DimScope dim_scope(screen_width, screen_height);
 
 	const int camera_rotation = lvl.camera_rotation();
 	if(camera_rotation) {
@@ -382,10 +400,10 @@ void render_scene(Level& lvl, const screen_position& pos)
 		wnd->clear(KRE::ClearFlags::COLOR);
 
 		const double angle = sin(0.5f*static_cast<float>(M_PI*pos.flip_rotate)/1000.0f);
-		const int pixels = static_cast<int>((graphics::GameScreen::get().getWidth()/2)*angle);
+		const int pixels = static_cast<int>((graphics::GameScreen::get().getVirtualWidth()/2)*angle);
 		
 		//then squish all future drawing inwards
-		wnd->setViewPort(pixels, 0, graphics::GameScreen::get().getWidth() - pixels*2, graphics::GameScreen::get().getHeight());
+		wnd->setViewPort(pixels, 0, graphics::GameScreen::get().getVirtualWidth() - pixels*2, graphics::GameScreen::get().getVirtualHeight());
 		*/
 		ASSERT_LOG(false, "Fix pos.flip_rotate");
 	}
@@ -469,7 +487,7 @@ void render_scene(Level& lvl, const screen_position& pos)
 		lvl.draw_status();
 	}
 
-	if(scene_title_duration_ > 0) {
+	if(scene_title_duration_ > 0 && scene_title().empty() == false) {
 		--scene_title_duration_;
 		const ConstGraphicalFontPtr f = GraphicalFont::get("default");
 		ASSERT_LOG(f.get() != nullptr, "COULD NOT LOAD DEFAULT FONT");
@@ -551,6 +569,12 @@ void render_scene(Level& lvl, const screen_position& pos)
 		glColor4ub(255, 255, 255, 255);
 		*/
 	}
+
+	if(need_rt && rt) {
+		rt->renderToPrevious();
+		rt->preRender(wnd);
+		wnd->render(rt.get());
+	}
 }
 
 namespace 
@@ -605,7 +629,7 @@ void draw_fps(const Level& lvl, const performance_data& data)
 	}
 
 	std::ostringstream s;
-	s << data.fps << "/" << data.cycles_per_second << "fps; " << (data.draw/10) << "% draw; " << (data.flip/10) << "% flip; " << (data.process/10) << "% process; " << (data.delay/10) << "% idle; " << lvl.num_active_chars() << " objects; " << data.nevents << " events";
+	s << data.fps << "/" << data.cycles_per_second << "fps; max: " << data.max_frame_time << "ms; " << (data.draw/10) << "% draw; " << (data.flip/10) << "% flip; " << (data.process/10) << "% process; " << (data.delay/10) << "% idle; " << lvl.num_active_chars() << " objects; " << data.nevents << " events";
 
 	std::ostringstream nets;
 

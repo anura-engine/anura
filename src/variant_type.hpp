@@ -25,6 +25,8 @@
 
 #include <map>
 
+#include "ffl_weak_ptr.hpp"
+#include "formula_callable.hpp"
 #include "formula_tokenizer.hpp"
 #include "reference_counted_object.hpp"
 #include "variant.hpp"
@@ -43,22 +45,19 @@ struct types_cfg_scope
 };
 
 class variant_type;
-typedef boost::intrusive_ptr<const variant_type> variant_type_ptr;
-typedef boost::intrusive_ptr<const variant_type> const_variant_type_ptr;
+typedef ffl::IntrusivePtr<const variant_type> variant_type_ptr;
+typedef ffl::IntrusivePtr<const variant_type> const_variant_type_ptr;
 
-typedef std::pair<variant,variant> variant_range;
-
-class variant_type : public reference_counted_object
+class variant_type : public game_logic::FormulaCallable
 {
 public:
+	variant getValue(const std::string& id) const override { return variant(); }
+
 	static variant_type_ptr get_none();
 	static variant_type_ptr get_any();
 	static variant_type_ptr get_commands();
 	static variant_type_ptr get_cairo_commands();
 	static variant_type_ptr get_type(variant::TYPE type);
-	static variant_type_ptr get_singleton_enum(variant item);
-	static variant_type_ptr get_enum(const std::vector<variant>& items);
-	static variant_type_ptr get_enum(const std::vector<variant_range>& items);
 	static variant_type_ptr get_union(const std::vector<variant_type_ptr>& items);
 	static variant_type_ptr get_list(variant_type_ptr element_type);
 	static variant_type_ptr get_specific_list(const std::vector<variant_type_ptr>& types);
@@ -81,6 +80,8 @@ public:
 	virtual ~variant_type();
 	virtual bool match(const variant& v) const = 0;
 
+	virtual std::string mismatch_reason(const variant& v) const { return ""; }
+
 	//decay from enum.
 	virtual variant_type_ptr base_type_no_enum() const { return variant_type_ptr(this); }
 
@@ -100,8 +101,6 @@ public:
 	virtual const std::string* is_builtin() const { return nullptr; }
 	virtual const std::string* is_custom_object() const { return nullptr; }
 	virtual const std::string* is_voxel_object() const { return nullptr; }
-
-	virtual const std::vector<variant_range>* is_enumerable() const { return nullptr; }
 
 	virtual bool is_function(std::vector<variant_type_ptr>* args, variant_type_ptr* return_type, int* min_args, bool* return_type_specified=nullptr) const { return false; }
 	virtual bool is_generic(std::string* id=nullptr) const { return false; }
@@ -126,8 +125,10 @@ public:
 
 	static bool may_be_null(variant_type_ptr type);
 
-	void set_expr(const game_logic::FormulaExpression* expr);
-	const game_logic::FormulaExpression* get_expr() const;
+	void set_expr(const game_logic::FormulaExpression* expr) const;
+	ffl::IntrusivePtr<const game_logic::FormulaExpression> get_expr() const;
+
+	virtual variant_type_ptr extend_type(variant_type_ptr extension) const { return variant_type_ptr(); }
 
 private:
 	virtual variant_type_ptr null_excluded() const { return variant_type_ptr(); }
@@ -139,7 +140,7 @@ private:
 
 	mutable std::string str_;
 
-	boost::intrusive_ptr<const game_logic::FormulaExpression> expr_;
+	mutable ffl::weak_ptr<const game_logic::FormulaExpression> expr_;
 };
 
 

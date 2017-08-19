@@ -82,3 +82,30 @@ boost::uuids::uuid read_uuid(const std::string& s)
 
 	return result;
 }
+
+boost::uuids::uuid addr_to_uuid(const std::string& s)
+{
+	auto itor = s.begin();
+	if(s.size() > 2 && s[0] == '0' && s[1] == 'x') {
+		itor += 2;
+	}
+
+	std::string str(itor, s.end());
+	const size_t sz = str.size();
+	if(sz < 32) {
+		str.resize(32);
+		std::fill(str.begin() + sz, str.end(), '0');
+	} else {
+		str.resize(32);
+	}
+
+	return read_uuid(str);
+}
+
+
+BENCHMARK(generate_uuid) {
+	generate_uuid();
+	BENCHMARK_LOOP {
+		generate_uuid();
+	}
+}

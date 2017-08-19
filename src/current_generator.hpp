@@ -23,13 +23,13 @@
 
 #pragma once
 
-#include <boost/intrusive_ptr.hpp>
+#include "intrusive_ptr.hpp"
 
 #include "formula_callable.hpp"
 #include "geometry.hpp"
 #include "variant.hpp"
 
-typedef boost::intrusive_ptr<class CurrentGenerator> CurrentGeneratorPtr;
+typedef ffl::IntrusivePtr<class CurrentGenerator> CurrentGeneratorPtr;
 
 class CurrentGenerator : public game_logic::FormulaCallable
 {
@@ -41,7 +41,7 @@ public:
 	virtual void generate(int center_x, int center_y, int target_x, int target_y, int target_mass, int* velocity_x, int* velocity_y) = 0;
 	virtual variant write() const = 0;
 private:
-	virtual variant getValue(const std::string& key) const;
+	virtual variant getValue(const std::string& key) const override;
 };
 
 class RadialCurrentGenerator : public CurrentGenerator
@@ -51,8 +51,8 @@ public:
 	explicit RadialCurrentGenerator(variant node);
 	virtual ~RadialCurrentGenerator() {}
 
-	virtual void generate(int center_x, int center_y, int target_x, int target_y, int target_mass, int* velocity_x, int* velocity_y);
-	virtual variant write() const;
+	virtual void generate(int center_x, int center_y, int target_x, int target_y, int target_mass, int* velocity_x, int* velocity_y) override;
+	virtual variant write() const override;
 private:
 	int intensity_;
 	int radius_;
@@ -65,8 +65,8 @@ public:
 	explicit RectCurrentGenerator(variant node);
 	virtual ~RectCurrentGenerator() {}
 
-	virtual void generate(int center_x, int center_y, int target_x, int target_y, int target_mass, int* velocity_x, int* velocity_y);
-	virtual variant write() const;
+	virtual void generate(int center_x, int center_y, int target_x, int target_y, int target_mass, int* velocity_x, int* velocity_y) override;
+	virtual variant write() const override;
 private:
 	rect rect_;
 	int xvelocity_, yvelocity_;

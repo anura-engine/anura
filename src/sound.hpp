@@ -23,6 +23,9 @@
 
 #pragma once
 
+#include "custom_object.hpp"
+#include "formula_callable.hpp"
+#include "formula_callable_definition.hpp"
 #include "variant.hpp"
 
 #include <string>
@@ -58,11 +61,12 @@ namespace sound
 	//stop all looped sounds associated with an object; same object as in play()
 	//intended to be called in all object's destructors
 	void stop_looped_sounds(const void* object=0);
-	void change_volume(const void* object=0, int volume=-1);
 
 	//Ways to set the sound and music volumes from the user's perspective.
 	float get_sound_volume();
 	void set_sound_volume(float volume);
+
+	void change_volume(const void* object, float volume, float nseconds=0.0);
 
 	float get_music_volume();
 	void set_music_volume(float volume);
@@ -82,4 +86,24 @@ namespace sound
 	void play_music_interrupt(const std::string& file);
 
 	const std::string& current_music();
+
+	class AudioEngine : public game_logic::FormulaCallable
+	{
+	public:
+		explicit AudioEngine(ffl::IntrusivePtr<const CustomObject> obj);
+	private:
+		DECLARE_CALLABLE(AudioEngine);
+
+		ffl::IntrusivePtr<const CustomObject> obj_;
+	};
+
+	struct MemoryUsageInfo {
+		int nsounds_cached;
+		int cache_usage;
+		int max_cache_usage;
+	};
+
+	MemoryUsageInfo get_memory_usage_info();
+
+	void get_debug_audio_stream(std::vector<float>& res);
 }

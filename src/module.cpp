@@ -53,6 +53,16 @@ namespace module
 		PREF_STRING(module_server, "theargentlark.com", "server to use to get modules from");
 		PREF_STRING(module_port, "23455", "server port to get modules from");
 
+		PREF_STRING(module_chunk_server, "", "server to use to get modules chunk from (defaults to module_server)");
+
+		PREF_STRING(module_chunk_port, "", "server port to get modules chunk from (defaults to module_port)");
+		PREF_STRING(module_chunk_query, "POST /download_chunk?chunk_id=", "request to download a module chunk");
+		PREF_BOOL(module_chunk_deflate, false, "If true, module chunks are assumed compressed and will be deflated");
+
+		bool module_chunk_query_is_get() {
+			return g_module_chunk_query.size() > 3 && std::equal(g_module_chunk_query.begin(), g_module_chunk_query.begin()+3, "GET");
+		}
+
 		// The base files are referred to as core.
 		module::modules core = {"core", "core", "core", {""}};
 
@@ -136,6 +146,32 @@ namespace module
 		return fname;
 	}
 
+	std::string map_write_path(const std::string& fname, BASE_PATH_TYPE path_type)
+	{
+		if(sys::is_path_absolute(fname)) {
+			return fname;
+		}
+
+		std::string module_id = get_module_name();
+		std::string file = fname;
+		if(std::find(fname.begin(), fname.end(), ':') != fname.end()) {
+			module_id = get_module_id(fname);
+			file = get_id(fname);
+		}
+
+		for(const modules& p : loaded_paths()) {
+			if(module_id != p.name_) {
+				continue;
+			}
+
+			std::string base_path = p.base_path_[path_type];
+			std::string result = base_path + file;
+			return result;
+		}
+
+		return file;
+	}
+
 	std::map<std::string, std::string>::const_iterator find(const std::map<std::string, std::string>& filemap, const std::string& name) {
 		for(const modules& p : loaded_paths()) {
 			std::map<std::string, std::string>::const_iterator itor = filemap.find(p.abbreviation_ + ":" + name);
@@ -154,10 +190,26 @@ namespace module
 										std::map<std::string, std::string>* file_map,
 										MODULE_PREFIX_BEHAVIOR prefix)
 	{
-		for(const modules& p : loaded_paths()) {
+		auto paths = loaded_paths();
+		std::reverse(paths.begin(), paths.end());
+		for(const modules& p : paths) {
 			for(const std::string& base_path : p.base_path_) {
 				const std::string path = base_path + dir;
 				sys::get_unique_filenames_under_dir(path, file_map, prefix == MODULE_PREFIX ? p.abbreviation_ + ":" : "");
+			}
+		}
+	}
+
+	void get_all_filenames_under_dir(const std::string& dir,
+										std::multimap<std::string, std::string>* file_map,
+										MODULE_PREFIX_BEHAVIOR prefix)
+	{
+		auto paths = loaded_paths();
+		std::reverse(paths.begin(), paths.end());
+		for(const modules& p : paths) {
+			for(const std::string& base_path : p.base_path_) {
+				const std::string path = base_path + dir;
+				sys::get_all_filenames_under_dir(path, file_map, prefix == MODULE_PREFIX ? p.abbreviation_ + ":" : "");
 			}
 		}
 	}
@@ -259,7 +311,7 @@ namespace module
 			for(const std::string& dir : dirs) {
 				std::string fname = path + "/" + dir + "/module.cfg";
 				if(sys::file_exists(fname)) {
-					variant v = json::parse_from_file(fname);
+					variant v = json::parse_from_file_or_die(fname);
 					v.add_attr(variant("id"), variant(dir));
 					result.push_back(v);
 				}
@@ -280,7 +332,7 @@ namespace module
 			std::string fname = path + "/" + name + "/module.cfg";
 			LOG_INFO("LOOKING IN '" << fname << "': " << sys::file_exists(fname));
 			if(sys::file_exists(fname)) {
-				variant v = json::parse_from_file(fname);
+				variant v = json::parse_from_file_or_die(fname);
 				v.add_attr(variant("id"), variant(fname));
 				return v;
 			}
@@ -345,12 +397,7 @@ namespace module
 		std::string pretty_name = name;
 		std::string abbrev = name;
 		std::string fname = make_base_module_path(name) + "module.cfg";
-		variant v;
-		try {
-			v = json::parse_from_file(fname);
-		} catch(json::ParseError& e) {
-			ASSERT_LOG(false, "Error parsing file: " << e.errorMessage());
-		}
+		variant v = json::parse_from_file_or_die(fname);
 		std::string def_font = "FreeSans";
 		std::string def_font_cjk = "unifont";
 		auto speech_dialog_bg_color = std::make_shared<KRE::Color>(85, 53, 53, 255);
@@ -366,6 +413,8 @@ namespace module
 				ASSERT_LOG(false, "Error parsing file: " << e.errorMessage());
 			}
 		}
+
+		std::vector<int> module_version;
 
 		if(v.is_map()) {
 			ASSERT_LOG(v["min_engine_version"].is_null() == false, "A min_engine_version field in the module.cfg file must be specified.");
@@ -446,11 +495,16 @@ namespace module
 			if(v.has_key("player_type")) {
 				player_type = v["player_type"];
 			}
+
+			if(v.has_key("version")) {
+				module_version = v["version"].as_list_int();
+			}
 		}
 		modules m = {name, pretty_name, abbrev,
 					 {make_base_module_path(name), make_user_module_path(name)},
 				def_font, def_font_cjk, speech_dialog_bg_color};
 		m.default_preferences = v["default_preferences"];
+		m.version_ = module_version;
 		loaded_paths().insert(loaded_paths().begin(), m);
 
 		if(initial) {
@@ -493,7 +547,7 @@ namespace module
 	}
 
 	void load_module_from_file(const std::string& modname, modules* mod_) {
-		variant v = json::parse_from_file("./modules/" + modname + "/module.cfg");
+		variant v = json::parse_from_file_or_die("./modules/" + modname + "/module.cfg");
 		ASSERT_LOG(mod_ != nullptr, "Invalid module pointer passed.");
 		if(v.is_map()) {
 			ASSERT_LOG(v["min_engine_version"].is_null() == false, "A min_engine_version field in the module.cfg file must be specified.");
@@ -607,7 +661,7 @@ namespace module
 			ASSERT_LOG(version.empty() == false, "Illegal version");
 			version.back()++;
 			config.add_attr(variant("version"), vector_to_variant(version));
-			sys::write_file(path + "/module.cfg", config.write_json());
+			sys::write_file(path + "/module.cfg", config.write_json(true, variant::EXPANDED_LISTS));
 		}
 
 		std::vector<std::string> exclude_paths;
@@ -807,7 +861,6 @@ COMMAND_LINE_UTILITY(generate_manifest)
 		std::string response;
 
 		http_client client(server, port);
-		client.set_timeout_and_retry();
 		client.send_request("POST /replicate_module", msg, 
 							std::bind(finish_upload, _1, &done, &response),
 							std::bind(error_upload, _1, &error),
@@ -832,6 +885,7 @@ COMMAND_LINE_UTILITY(generate_manifest)
 		std::string module_id_override;
 		std::string server = g_module_server;
 		std::string port = g_module_port;
+		std::string upload_passcode;
 		bool increment_version = false;
 
 		std::deque<std::string> arguments(args.begin(), args.end());
@@ -856,6 +910,11 @@ COMMAND_LINE_UTILITY(generate_manifest)
 				ASSERT_LOG(arguments.empty() == false, "NEED ARGUMENT AFTER " << arg);
 				module_id_override = arguments.front();
 				arguments.pop_front();
+			} else if(arg == "--passcode") {
+				ASSERT_LOG(arguments.empty() == false, "NEED ARGUMENT AFTER " << arg);
+				upload_passcode = arguments.front();
+				arguments.pop_front();
+
 			} else {
 				ASSERT_LOG(module_id.empty(), "UNRECOGNIZED ARGUMENT: " << arg);
 				module_id = arg;
@@ -877,7 +936,6 @@ COMMAND_LINE_UTILITY(generate_manifest)
 			bool error = false;
 
 			http_client client(server, port);
-			client.set_timeout_and_retry();
 			client.send_request("POST /upload_module", msg, 
 								std::bind(finish_upload, _1, &done, &response),
 								std::bind(error_upload, _1, &error),
@@ -902,6 +960,10 @@ COMMAND_LINE_UTILITY(generate_manifest)
 		attr[variant("type")] = variant("prepare_upload_module");
 		attr[variant("module_id")] = variant(module_id);
 
+		if(upload_passcode.empty() == false) {
+			attr[variant("passcode")] = variant(upload_passcode);
+		}
+
 		if(module_id_override != "") {
 			attr[variant("module_id")] = variant(module_id_override);
 			package.add_attr_mutation(variant("id"), variant(module_id_override));
@@ -914,7 +976,6 @@ COMMAND_LINE_UTILITY(generate_manifest)
 			bool error = false;
 
 			http_client client(server, port);
-			client.set_timeout_and_retry();
 			client.send_request("POST /upload_module", msg, 
 								std::bind(finish_upload, _1, &done, &response),
 								std::bind(error_upload, _1, &error),
@@ -983,7 +1044,6 @@ COMMAND_LINE_UTILITY(generate_manifest)
 		std::string* response = nullptr;
 
 		http_client client(server, port);
-		client.set_timeout_and_retry();
 		client.send_request("POST /upload_module", msg, 
 							std::bind(finish_upload, _1, &done, response),
 							std::bind(error_upload, _1, &done),
@@ -1019,6 +1079,7 @@ COMMAND_LINE_UTILITY(generate_manifest)
 	}
 
 	client::client() : operation_(client::OPERATION_NONE),
+	                   force_install_(false),
 	                   host_(g_module_server), port_(g_module_port),
 					   out_of_date_(false),
 					   client_(new http_client(host_, port_)),
@@ -1034,6 +1095,7 @@ COMMAND_LINE_UTILITY(generate_manifest)
 
 	client::client(const std::string& host, const std::string& port)
 	  : operation_(client::OPERATION_NONE),
+	    force_install_(false),
 	    host_(host), port_(port), out_of_date_(false),
 	    client_(new http_client(host, port)),
 		nbytes_transferred_(0), nbytes_total_(0),
@@ -1041,6 +1103,10 @@ COMMAND_LINE_UTILITY(generate_manifest)
 		nchunk_errors_(0)
 	{
 		client_->set_timeout_and_retry();
+	}
+
+	client::~client()
+	{
 	}
 
 	void client::prepare_install_module(const std::string& module_id, bool force)
@@ -1067,15 +1133,9 @@ static const int ModuleProtocolVersion = 1;
 	bool client::install_module(const std::string& module_id, bool force)
 	{
 		data_.clear();
-		operation_ = OPERATION_INSTALL;
 		module_id_ = module_id;
+		force_install_ = force;
 
-		variant_builder request;
-		request.add("type", "download_module");
-		request.add("module_id", module_id);
-		request.add("protocol_version", ModuleProtocolVersion);
-
-		std::string version_str;
 		std::string current_path = install_image_ ? InstallImagePath : make_base_module_path(module_id);
 
 		if(!current_path.empty() && !force && sys::dir_exists(current_path + "/.git")) {
@@ -1085,29 +1145,44 @@ static const int ModuleProtocolVersion = 1;
 		}
 
 		if(!current_path.empty() && !force && sys::file_exists(current_path + "/module.cfg")) {
-			variant config = json::parse(sys::read_file(current_path + "/module.cfg"));
-			request.add("current_version", config["version"]);
-
-			if(!current_path.empty() && !force && sys::file_exists(current_path + "/manifest.cfg")) {
-				request.add("manifest", json::parse(sys::read_file(current_path + "/manifest.cfg")));
-			}
 
 			is_new_install_ = false;
+
+			LOG_INFO("Querying version of module available on server");
+			operation_ = OPERATION_QUERY_VERSION_FOR_INSTALL;
+
+			std::string doc;
+			const std::string url = "GET /module_version/" + module_id;
+			client_->send_request(url, doc, 
+							  std::bind(&client::on_response, this, _1),
+							  std::bind(&client::on_error, this, _1, url, ""),
+							  std::bind(&client::on_progress, this, _1, _2, _3));
+
+			return true;
+		} else {
+			return install_module_confirmed_out_of_date(module_id);
 		}
+	}
+
+	bool client::install_module_confirmed_out_of_date(const std::string& module_id)
+	{
+		operation_ = OPERATION_INSTALL;
+		data_.clear();
 
 		LOG_INFO("Requesting module '" << module_id << "'");
 
-		bool done = false;
-
-		std::string response;
-
-		const std::string url = "POST /download_module?module_id=" + module_id + version_str;
-		const std::string doc = request.build().write_json();
-		client_->send_request(url, doc, 
+		const std::string url = "GET /module_data/" + module_id;
+		client_->send_request(url, "", 
 							  std::bind(&client::on_response, this, _1),
-							  std::bind(&client::on_error, this, _1, url, doc),
+							  std::bind(&client::on_error, this, _1, url, ""),
 							  std::bind(&client::on_progress, this, _1, _2, _3));
 		return true;
+	}
+
+	std::string client::module_path() const
+	{
+		const std::string path_str = preferences::dlc_path() + "/" + module_id_ + "/";
+		return path_str;
 	}
 
 	void client::rate_module(const std::string& module_id, int rating, const std::string& review)
@@ -1184,10 +1259,24 @@ static const int ModuleProtocolVersion = 1;
 		} 
 	}
 
-	void client::on_chunk_response(variant node, boost::shared_ptr<http_client> client, std::string response)
+	void client::on_chunk_response(std::string chunk_url, variant node, boost::shared_ptr<http_client> client, std::string response)
 	{
+		if(g_module_chunk_deflate) {
+			std::vector<char> data(response.begin(), response.end());
+			auto v = zip::decompress(data);
+			std::string(v.begin(), v.end()).swap(response);
+		}
+
+		auto progress_itor = chunk_progress_.find(chunk_url);
+		if(progress_itor != chunk_progress_.end()) {
+			nbytes_transferred_ -= progress_itor->second;
+			chunk_progress_.erase(progress_itor);
+		}
+
 		nbytes_transferred_ += node["size"].as_int();
 		node.add_attr_mutation(variant("data"), variant(response));
+
+		onChunkReceived(node);
 
 		chunk_clients_.erase(std::remove(chunk_clients_.begin(), chunk_clients_.end(), client), chunk_clients_.end());
 		if(chunks_to_get_.empty()) {
@@ -1197,7 +1286,7 @@ static const int ModuleProtocolVersion = 1;
 				operation_ = OPERATION_NONE;
 			}
 		} else {
-			boost::shared_ptr<http_client> new_client(new http_client(host_, port_));
+			boost::shared_ptr<http_client> new_client(new http_client(g_module_chunk_server.empty() ? host_ : g_module_chunk_server, g_module_chunk_port.empty() ? port_ : g_module_chunk_port));
 			new_client->set_timeout_and_retry();
 
 			variant chunk = chunks_to_get_.back();
@@ -1207,24 +1296,47 @@ static const int ModuleProtocolVersion = 1;
 			request.add("type", "download_chunk");
 			request.add("chunk_id", chunk["md5"]);
 
-			const std::string url = "POST /download_chunk?chunk_id=" + chunk["md5"].as_string();
-			const std::string doc = request.build().write_json();
+			LOG_INFO("Module request chunk: " << chunk["md5"].as_string() << "\n");
+
+			const std::string url = g_module_chunk_query + chunk["md5"].as_string();
+			const std::string doc = module_chunk_query_is_get() ? "" : request.build().write_json();
 			new_client->send_request(url, doc,
-						  std::bind(&client::on_chunk_response, this, chunk, new_client, _1),
+						  std::bind(&client::on_chunk_response, this, url, chunk, new_client, _1),
 						  std::bind(&client::on_chunk_error, this, _1, url, doc, chunk, new_client),
-						  [](size_t a, size_t b, bool c) {}
+						  std::bind(&client::on_chunk_progress, this, url, _1, _2, _3)
 			);
 
 			chunk_clients_.push_back(new_client);
 		}
 	}
 
+	void client::on_chunk_progress(std::string chunk_url, size_t received, size_t total, bool response)
+	{
+		auto progress_itor = chunk_progress_.find(chunk_url);
+		if(progress_itor != chunk_progress_.end()) {
+			nbytes_transferred_ -= progress_itor->second;
+			chunk_progress_.erase(progress_itor);
+		}
+
+		nbytes_transferred_ += received;
+		chunk_progress_[chunk_url] = received;
+	}
+
 	void client::on_chunk_error(std::string response, std::string url, std::string doc, variant chunk, boost::shared_ptr<http_client> client)
 	{
+		auto progress_itor = chunk_progress_.find(url);
+		if(progress_itor != chunk_progress_.end()) {
+			nbytes_transferred_ -= progress_itor->second;
+			chunk_progress_.erase(progress_itor);
+		}
+
+		LOG_INFO("Chunk error: " << chunk.write_json() << " errors = " << nchunk_errors_ << "\n");
+
 		chunk_clients_.erase(std::remove(chunk_clients_.begin(), chunk_clients_.end(), client), chunk_clients_.end());
 		++nchunk_errors_;
 		if (nchunk_errors_ > 128)
 		{
+			LOG_INFO("Failed too many chunks, aborting\n");
 			on_error(response, url, doc);
 		}
 		else
@@ -1233,9 +1345,9 @@ static const int ModuleProtocolVersion = 1;
 			new_client->set_timeout_and_retry();
 
 			new_client->send_request(url, doc,
-				std::bind(&client::on_chunk_response, this, chunk, new_client, _1),
+				std::bind(&client::on_chunk_response, this, url, chunk, new_client, _1),
 				std::bind(&client::on_chunk_error, this, _1, url, doc, chunk, new_client),
-				[](size_t a, size_t b, bool c) {}
+				std::bind(&client::on_chunk_progress, this, url, _1, _2, _3)
 			);
 
 			chunk_clients_.push_back(new_client);
@@ -1248,7 +1360,7 @@ static const int ModuleProtocolVersion = 1;
 
 		try {
 			variant doc = json::parse(response, json::JSON_PARSE_OPTIONS::NO_PREPROCESSOR);
-			if(doc[variant("status")] != variant("ok")) {
+			if(doc[variant("status")] != variant("ok") && doc[variant("manifest")].is_null()) {
 				if(doc[variant("out_of_date")].as_bool(false)) {
 					on_error(doc[variant("message")].as_string(), "", "");
 					out_of_date_ = true;
@@ -1259,11 +1371,25 @@ static const int ModuleProtocolVersion = 1;
 				on_error(doc[variant("status")].as_string(), "", "");
 
 				LOG_ERROR("SET ERROR: " << doc.write_json());
+			} else if(operation_ == OPERATION_QUERY_VERSION_FOR_INSTALL) {
+				variant version = doc[variant("version")];
+				std::string current_path = install_image_ ? InstallImagePath : make_base_module_path(module_id_);
+				variant config = json::parse(sys::read_file(current_path + "/module.cfg"));
+				LOG_INFO("Server has module version " << version.write_json() << " we have " << config["version"].write_json());
+				if(version == config["version"]) {
+					operation_ = OPERATION_NONE;
+					LOG_INFO("You already have the newest version of this module. Use --force to force download.");
+					return;
+				} else {
+					install_module_confirmed_out_of_date(module_id_);
+					return;
+				}
+
 			} else if(operation_ == OPERATION_INSTALL) {
 
 				operation_ = OPERATION_NONE;
 
-				perform_install(response);
+				perform_install(doc);
 				return;
 
 			} else if(operation_ == OPERATION_PREPARE_INSTALL) {
@@ -1322,32 +1448,58 @@ static const int ModuleProtocolVersion = 1;
 		operation_ = OPERATION_NONE;
 	}
 
-	void client::perform_install(const std::string& response)
+	void client::perform_install(const variant& doc_ref)
 	{
-		variant doc;
+		variant doc = doc_ref;
 
-		LOG_INFO("Performing module install");
-
-		try {
-			doc = json::parse(response, json::JSON_PARSE_OPTIONS::NO_PREPROCESSOR);
-		} catch(json::ParseError& e) {
-			sys::write_file("./download.txt", response);
-			ASSERT_LOG(false, "Failed to parse: " << e.errorMessage());
+		variant local_manifest;
+		std::string current_path = install_image_ ? InstallImagePath : make_base_module_path(module_id_);
+		if(!current_path.empty() && !force_install_ && sys::file_exists(current_path + "/module.cfg") && sys::file_exists(current_path + "/manifest.cfg")) {
+			local_manifest = json::parse(sys::read_file(current_path + "/manifest.cfg"));
+			LOG_INFO("Parsed local manifest");
 		}
 
-		if(doc["status"].as_string() == "no_newer_module") {
-			LOG_INFO("You already have the newest version of this module. Use --force to force download.");
-			return;
-		}
+		std::vector<variant> unchanged_keys;
 
-		ASSERT_LOG(doc["status"].as_string() == "ok", "COULD NOT DOWNLOAD MODULE: " << doc["message"]);
+		static const variant md5_variant("md5");
 
-		variant manifest = doc["module"]["manifest"];
+		std::vector<variant> high_priority_chunks;
+
+		variant manifest = doc["manifest"];
 		for(auto p : manifest.as_map()) {
-			if(p.second["data"].is_null()) {
+			if(local_manifest.is_map() && local_manifest.has_key(p.first) && local_manifest[p.first][md5_variant] == p.second[md5_variant]) {
+				unchanged_keys.push_back(p.first);
+			} else if(p.second["data"].is_null()) {
 				nbytes_total_ += p.second["size"].as_int();
-				chunks_to_get_.push_back(p.second);
+
+				if(isHighPriorityChunk(p.first, p.second)) {
+					high_priority_chunks.push_back(p.second);
+				} else {
+					chunks_to_get_.push_back(p.second);
+				}
+			} else {
+				isHighPriorityChunk(p.first, p.second);
+				onChunkReceived(p.second);
 			}
+		}
+
+		for(auto v : high_priority_chunks) {
+			chunks_to_get_.push_back(v);
+		}
+
+		if(local_manifest.is_map()) {
+			std::vector<variant> keys_to_delete;
+			for(auto p : local_manifest.as_map()) {
+				if(manifest.has_key(p.first) == false) {
+					keys_to_delete.push_back(p.first);
+				}
+			}
+
+			doc.add_attr_mutation(variant("delete"), variant(&keys_to_delete));
+		}
+
+		for(variant k : unchanged_keys) {
+			manifest.remove_attr_mutation(k);
 		}
 
 		LOG_INFO("Getting chunks: " << chunks_to_get_.size());
@@ -1364,15 +1516,15 @@ static const int ModuleProtocolVersion = 1;
 				request.add("type", "download_chunk");
 				request.add("chunk_id", chunk["md5"]);
 
-				boost::shared_ptr<http_client> client(new http_client(host_, port_));
+				boost::shared_ptr<http_client> client(new http_client(g_module_chunk_server.empty() ? host_ : g_module_chunk_server, g_module_chunk_port.empty() ? port_ : g_module_chunk_port));
 				client->set_timeout_and_retry();
 
-				const std::string url = "POST /download_chunk?chunk_id=" + chunk["md5"].as_string();
-				const std::string doc = request.build().write_json();
+				const std::string url = g_module_chunk_query + chunk["md5"].as_string();
+				const std::string doc = module_chunk_query_is_get() ? "" : request.build().write_json();
 				client->send_request(url, doc, 
-							  std::bind(&client::on_chunk_response, this, chunk, client, _1),
+							  std::bind(&client::on_chunk_response, this, url, chunk, client, _1),
 							  std::bind(&client::on_chunk_error, this, _1, url, doc, chunk, client),
-							  [](size_t a, size_t b, bool c) {}
+							  std::bind(&client::on_chunk_progress, this, url, _1, _2, _3)
 				);
 				chunk_clients_.push_back(client);
 			}
@@ -1385,11 +1537,9 @@ static const int ModuleProtocolVersion = 1;
 
 	void client::perform_install_from_doc(variant doc)
 	{
-		variant module_data = doc["module"];
-
-		if(module_data.has_key("delete")) {
-			for(variant path : module_data["delete"].as_list()) {
-				const std::string path_str = preferences::dlc_path() + "/" + module_id_ + "/" + path.as_string();
+		if(doc.has_key("delete")) {
+			for(variant path : doc["delete"].as_list()) {
+				const std::string path_str = module_path() + "/" + path.as_string();
 				LOG_INFO("DELETING FILE: " << path_str);
 
 				try {
@@ -1404,7 +1554,7 @@ static const int ModuleProtocolVersion = 1;
 			}
 		}
 
-		variant manifest = module_data["manifest"];
+		variant manifest = doc["manifest"];
 		for(variant path : manifest.getKeys().as_list()) {
 			const std::string path_str = path.as_string();
 			ASSERT_LOG(is_module_path_valid(path_str), "INVALID PATH IN MODULE: " << path_str);
@@ -1416,7 +1566,7 @@ static const int ModuleProtocolVersion = 1;
 
 		for(variant path : manifest.getKeys().as_list()) {
 			variant info = manifest[path];
-		std::string path_str = (install_image_ ? InstallImagePath : preferences::dlc_path() + "/" + module_id_) + "/" + path.as_string();
+			std::string path_str = (install_image_ ? InstallImagePath : module_path()) + "/" + path.as_string();
 
 			if(install_image_ && sys::file_exists(path_str)) {
 				//try removing the file, and failing that, move it.
@@ -1595,7 +1745,7 @@ static const int ModuleProtocolVersion = 1;
 			}
 		}
 
-		boost::intrusive_ptr<client> cl(new client(server, port));
+		ffl::IntrusivePtr<client> cl(new client(server, port));
 
 		cl->install_module(module_id, force);
 		int nbytes_transferred = 0;

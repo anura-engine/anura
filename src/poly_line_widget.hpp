@@ -52,5 +52,5 @@ namespace gui
 		float width_;
 		std::vector<glm::vec2> points_;	
 	};
-	typedef boost::intrusive_ptr<PolyLineWidget> PolyLineWidgetPtr;
+	typedef ffl::IntrusivePtr<PolyLineWidget> PolyLineWidgetPtr;
 }

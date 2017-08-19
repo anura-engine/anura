@@ -24,6 +24,7 @@
 #include <SDL.h>
 
 #include <boost/interprocess/sync/named_semaphore.hpp>
+#include <boost/exception/diagnostic_information.hpp>
 
 #if !defined(_MSC_VER)
 #include <sys/types.h>
@@ -32,10 +33,14 @@
 #endif
 
 #include "asserts.hpp"
+#include "background_task_pool.hpp"
 #include "formatter.hpp"
 #include "json_parser.hpp"
 #include "module.hpp"
+#include "preferences.hpp"
+#include "shared_memory_pipe.hpp"
 #include "tbs_internal_server.hpp"
+#include "uuid.hpp"
 #include "variant_utils.hpp"
 #include "wml_formula_callable.hpp"
 
@@ -122,7 +127,7 @@ bool create_utility_process(const std::string& app, const std::vector<std::strin
 	std::string command_line_params;
 	command_line_params += "\"" + app_name_and_path + "\" ";
 	for(size_t n = 0; n != argv.size(); ++n) {
-		command_line_params += argv[n] + " ";
+		command_line_params += "\"" + argv[n] + "\" ";
 	}
 	std::vector<char> child_args;
 	child_args.resize(command_line_params.size()+1);
@@ -220,52 +225,96 @@ bool is_utility_process_running()
 	return false;
 }
 
-void terminate_utility_process()
+void terminate_utility_process(bool* complete=nullptr)
 {
 	if(!g_termination_semaphore) {
+		if(complete) {
+			*complete = true;
+		}
 		return;
 	}
 
 	g_termination_semaphore->post();
 
 #if defined(_MSC_VER)
-	WaitForSingleObject(child_process, INFINITE);
-	CloseHandle(child_process);
-	CloseHandle(child_thread);
-	CloseHandle(child_stderr);
-	CloseHandle(child_stdout);
+	HANDLE local_child_process = child_process;
+	HANDLE local_child_thread = child_thread;
+	HANDLE local_child_stderr = child_stderr;
+	HANDLE local_child_stdout = child_stdout;
+	std::string named_semaphore = g_termination_semaphore_name;
+	boost::interprocess::named_semaphore* sem = g_termination_semaphore;
+	
+	background_task_pool::submit([=]() {
+		WaitForSingleObject(local_child_process, INFINITE);
+		CloseHandle(local_child_process);
+		CloseHandle(local_child_thread);
+		CloseHandle(local_child_stderr);
+		CloseHandle(local_child_stdout);
+		if(complete) {
+			*complete = true;
+		}
+
+		boost::interprocess::named_semaphore::remove(named_semaphore.c_str());
+		delete sem;
+	}, 
+
+	[=]() {
+		if(complete != nullptr) {
+			*complete = true;
+		}
+	});
+
 #else
 	if(!g_child_pid) {
+		if(complete) {
+			*complete = true;
+		}
 		return;
 	}
-	
-	// .. close child or whatever.
-	int status;
-	if(waitpid(g_child_pid, &status, 0) != g_child_pid) {
-		std::cerr << "Error waiting for child process to finish: " << errno << std::endl;
-	}
+
+	pid_t child_pid = g_child_pid;
+	std::string named_semaphore = g_termination_semaphore_name;
+	boost::interprocess::named_semaphore* sem = g_termination_semaphore;
+
+	background_task_pool::submit([=]() {
+		int status;
+		if(waitpid(child_pid, &status, 0) != child_pid) {
+			std::cerr << "Error waiting for child process to finish: " << errno << std::endl;
+		} else {
+			LOG_INFO("Child process " << child_pid << " reaped");
+		}
+
+		boost::interprocess::named_semaphore::remove(named_semaphore.c_str());
+		delete sem;
+	},
+
+	[=]() {
+		if(complete != nullptr) {
+			*complete = true;
+		}
+	});
 
 	g_child_pid = 0;
 #endif
 
-	boost::interprocess::named_semaphore::remove(g_termination_semaphore_name.c_str());
-
-	delete g_termination_semaphore;
-	g_termination_semaphore = NULL;
+	g_termination_semaphore = nullptr;
 }
 
 	namespace {
 		int g_local_server_port;
-
+		SharedMemoryPipePtr g_current_ipc_pipe;
 	}
 
-	int get_server_on_localhost() {
+	int get_server_on_localhost(SharedMemoryPipePtr* ipc_pipe) {
+		if(ipc_pipe != nullptr) {
+			*ipc_pipe = g_current_ipc_pipe;
+		}
 		return g_local_server_port;
 	}
 
-	int spawn_server_on_localhost() {
+	int spawn_server_on_localhost(SharedMemoryPipePtr* ipc_pipe) {
 
-		terminate_utility_process();
+		terminate_utility_process(nullptr);
 
 		delete g_termination_semaphore;
 		g_termination_semaphore = NULL;
@@ -291,6 +340,32 @@ void terminate_utility_process()
 			break;
 		}
 
+		std::string pipe_name;
+		if(ipc_pipe != nullptr) {
+			std::string error_msg;
+			for(int i = 0; i != 4 && pipe_name.empty(); ++i) {
+				std::string uuid_str = write_uuid(generate_uuid());
+				uuid_str.resize(16);
+				pipe_name = formatter() << "anura_tbs." << uuid_str;
+				try {
+					SharedMemoryPipeManager::createNamedPipe(pipe_name);
+					g_current_ipc_pipe.reset(new SharedMemoryPipe(pipe_name, true));
+					*ipc_pipe = g_current_ipc_pipe;
+				} catch(boost::exception& e) {
+					error_msg = diagnostic_information(e);
+					error_msg = "boost exception: " + error_msg;
+				} catch(std::exception& e) {
+					error_msg = e.what();
+					error_msg = "unknown exception: " + error_msg;
+				} catch(...) {
+					pipe_name = "";
+					error_msg = "Unknown error";
+				}
+			}
+
+			ASSERT_LOG(*ipc_pipe, "Could not create named pipe after 64 attempts: " << error_msg);
+		}
+
 		ASSERT_LOG(startup_semaphore, "Could not create semaphore");
 
 		bool started_server = false;
@@ -299,14 +374,24 @@ void terminate_utility_process()
 
 			std::vector<std::string> args;
 			args.push_back(formatter() << "--module=" << module::get_module_name());
+			args.push_back(formatter() << "--tbs-server-save-replay-file=" << preferences::user_data_path() << "/local-replays.cfg");
+			args.push_back("--tbs-server-local=true");
 			args.push_back("--log-file=server-log.txt");
 			args.push_back("--log-level=debug");
 			args.push_back("--no-tbs-server");
 			args.push_back("--quit-server-after-game");
+			args.push_back("--quit-server-on-parent-exit");
+			args.push_back("--tbs-server-timeout=0");
 			args.push_back(formatter() << "--tbs-server-semaphore=" << sem_id);
 			args.push_back("--utility=tbs_server");
 			args.push_back("--port");
 			args.push_back(formatter() << g_local_server_port);
+
+			if(pipe_name.empty() == false) {
+				args.push_back("--sharedmem");
+				args.push_back(pipe_name);
+				args.push_back("1");
+			}
 
 			create_utility_process(g_anura_exe_name, args);
 
@@ -343,7 +428,12 @@ void terminate_utility_process()
 	internal_server_manager::~internal_server_manager()
 	{
 		if(g_termination_semaphore) {
-			terminate_utility_process();
+			bool complete = false;
+			terminate_utility_process(&complete);
+			while(!complete) {
+				background_task_pool::pump();
+				SDL_Delay(1);
+			}
 		}
 
 		server_ptr.reset();

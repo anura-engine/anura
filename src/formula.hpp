@@ -30,6 +30,7 @@
 #include "formula_fwd.hpp"
 #include "formula_function.hpp"
 #include "formula_tokenizer.hpp"
+#include "formula_where.hpp"
 #include "variant.hpp"
 #include "variant_type.hpp"
 
@@ -42,19 +43,7 @@ namespace game_logic
 	class FormulaCallable;
 	class FormulaExpression;
 	class FunctionSymbolTable;
-	typedef boost::intrusive_ptr<FormulaExpression> ExpressionPtr;
-
-	//helper struct which contains info for a where expression.
-	struct WhereVariablesInfo : public reference_counted_object 
-	{
-		explicit WhereVariablesInfo(int nslot) : base_slot(nslot) {}
-		std::vector<std::string> names;
-		std::vector<ExpressionPtr> entries;
-		int base_slot;
-		ConstFormulaCallableDefinitionPtr callable_where_def;
-	};
-
-	typedef boost::intrusive_ptr<WhereVariablesInfo> WhereVariablesInfoPtr;
+	typedef ffl::IntrusivePtr<FormulaExpression> ExpressionPtr;
 
 	class Formula 
 	{
@@ -100,9 +89,10 @@ namespace game_logic
 		variant execute() const;
 		bool evaluatesToConstant(variant& result) const;
 		std::string str() const { return str_.as_string(); }
-		variant strVal() const { return str_; }
+		const variant& strVal() const { return str_; }
 
 		std::string outputDebugInfo() const;
+		bool outputDisassemble(std::string* result) const;
 
 		bool hasGuards() const { return base_expr_.empty() == false; }
 		int guardMatches(const FormulaCallable& variables) const;
@@ -117,9 +107,11 @@ namespace game_logic
 		variant_type_ptr queryVariantType() const;
 
 	private:
-		Formula() {}
+		Formula();
 		variant str_;
 		ExpressionPtr expr_;
+
+		variant_type_ptr type_;
 
 		ConstFormulaCallableDefinitionPtr def_;
 

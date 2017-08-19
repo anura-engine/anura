@@ -64,5 +64,5 @@ namespace gui
 		typedef std::set<WidgetPtr, WidgetSortZOrder> WidgetList;
 		WidgetList children_;
 	};
-	typedef boost::intrusive_ptr<LayoutWidget> LayoutWidgetPtr;
+	typedef ffl::IntrusivePtr<LayoutWidget> LayoutWidgetPtr;
 }

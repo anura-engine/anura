@@ -43,7 +43,7 @@ namespace editor_dialogs
 		editor& editor_;
 	};
 
-	typedef boost::intrusive_ptr<EditorStatsDialog> EditorStatsDialogPtr;
+	typedef ffl::IntrusivePtr<EditorStatsDialog> EditorStatsDialogPtr;
 }
 
 #endif // !NO_EDITOR

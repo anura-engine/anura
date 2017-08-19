@@ -26,7 +26,7 @@
 #include <map>
 #include <vector>
 
-#include <boost/intrusive_ptr.hpp>
+#include "intrusive_ptr.hpp"
 #include <boost/scoped_ptr.hpp>
 
 #include "formula_callable.hpp"
@@ -38,7 +38,7 @@ namespace game_logic
 {
 	struct FormulaInterfaceImpl;
 
-	class FormulaInterfaceInstanceFactory : public reference_counted_object
+	class FormulaInterfaceInstanceFactory : public FormulaCallable
 	{
 	public:
 		virtual ~FormulaInterfaceInstanceFactory();
@@ -46,6 +46,8 @@ namespace game_logic
 		virtual bool all_static_lookups() const = 0;
 		virtual variant create(const variant& v) const = 0;
 		virtual int getId() const = 0;
+
+		variant getValue(const std::string& key) const override { return variant(); }
 	};
 
 	class FormulaInterface : public FormulaCallable
@@ -69,12 +71,12 @@ namespace game_logic
 		std::string to_string() const;
 
 	private:
-		variant getValue(const std::string& key) const;
+		variant getValue(const std::string& key) const override;
 
 		std::map<std::string, variant_type_ptr> types_;
 		std::unique_ptr<FormulaInterfaceImpl> impl_;
 	};
 }
 
-typedef boost::intrusive_ptr<game_logic::FormulaInterface> FormulaInterfacePtr;
-typedef boost::intrusive_ptr<const game_logic::FormulaInterface> ConstFormulaInterfacePtr;
+typedef ffl::IntrusivePtr<game_logic::FormulaInterface> FormulaInterfacePtr;
+typedef ffl::IntrusivePtr<const game_logic::FormulaInterface> ConstFormulaInterfacePtr;

@@ -49,7 +49,7 @@ namespace editor_dialogs
 		std::vector<EntityPtr> group_;
 	};
 
-	typedef boost::intrusive_ptr<GroupPropertyEditorDialog> GroupPropertyEditorDialogPtr;
+	typedef ffl::IntrusivePtr<GroupPropertyEditorDialog> GroupPropertyEditorDialogPtr;
 }
 
 #endif // !NO_EDITOR

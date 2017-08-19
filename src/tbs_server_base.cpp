@@ -30,6 +30,9 @@
 #include "tbs_server_base.hpp"
 #include "variant_utils.hpp"
 
+PREF_BOOL(tbs_server_local, false,"Sets tbs server to be in local mode");
+PREF_INT(tbs_server_timeout, 5000, "Timeout for connections to the tbs server");
+
 namespace tbs
 {
 	namespace 
@@ -75,6 +78,8 @@ namespace tbs
 			return game_info_ptr();
 		}
 
+		g->game_state->set_server(this);
+
 		g->nlast_touch = nheartbeat_;
 
 		std::vector<variant> users = msg["users"].as_list();
@@ -119,7 +124,7 @@ namespace tbs
 	{
 		const std::string& type = msg["type"].as_string();
 
-		if(session_id == -1) {
+		if(session_id == -1 || g_tbs_server_local) {
 			if(type == "create_game") {
 
 				game_info_ptr g(create_game(msg));
@@ -146,7 +151,7 @@ namespace tbs
 			} else if(type == "get_server_info") {
 				send_fn(get_server_info());
 				return;
-			} else {
+			} else if(session_id == -1) {
 				std::map<variant,variant> m;
 				m[variant("type")] = variant("unknown_message");
 				m[variant("msg_type")] = variant(type);
@@ -155,9 +160,16 @@ namespace tbs
 			}
 		}
 
-		if(type == "observe_game") {
+		if(type == "connect_relay") {
+			const int relay_session = msg["relay_session"].as_int();
+			LOG_INFO("Connecting to relay: " << msg["relay_host"].as_string() << ":" << msg["relay_port"].as_string() << " session = " << relay_session);
+			connect_relay_session(msg["relay_host"].as_string(), msg["relay_port"].as_string(), relay_session);
+
+			clients_[relay_session].session_id = relay_session;
+		} else if(type == "observe_game") {
 			const int id = msg["game_id"].as_int(-1);
 			const std::string user = msg["user"].as_string();
+			LOG_INFO("trying to observe: " << user << ", " << id << " games = " << games_.size());
 
 			game_info_ptr g;
 			for(const game_info_ptr& gm : games_) {
@@ -172,7 +184,7 @@ namespace tbs
 				return;
 			}
 
-			if(clients_.count(session_id)) {
+			if(clients_.count(session_id) && clients_[session_id].user.empty() == false) {
 				send_fn(json::parse("{ \"type\": \"reuse_session_id\" }"));
 				return;
 			}
@@ -186,7 +198,7 @@ namespace tbs
 
 			g->clients.push_back(session_id);
 
-			g->game_state->observer_connect(g->clients.size()-1);
+			g->game_state->observer_connect(g->clients.size()-1, user);
 
 			send_fn(json::parse(formatter() << "{ \"type\": \"observing_game\" }"));
 
@@ -207,7 +219,7 @@ namespace tbs
 		
 		if(socket_info_fn) {
 			socket_info& info = socket_info_fn();
-			ASSERT_EQ(info.session_id, -1);
+			ASSERT_LOG(info.session_id == -1 || g_tbs_server_local, "Invalid session: " << info.session_id << " " << cli_info.user);
 			info.nick = cli_info.user;
 			info.session_id = session_id;
 		}
@@ -289,6 +301,8 @@ namespace tbs
 					g->game_state->queue_message("{ type: 'player_quit' }");
 					g->game_state->queue_message(formatter() << "{ type: 'message', message: '" << cli_info.user << " has quit' }");
 					flush_game_messages(*g);
+				} else {
+					g->game_state->observer_disconnect(cli_info.user);
 				}
 
 				if(g->clients.empty()) {
@@ -396,7 +410,7 @@ namespace tbs
 	PREF_INT(tbs_server_delay_ms, 20, "");
 	PREF_INT(tbs_server_heartbeat_freq, 1, "");
 
-	int server_base::connection_timeout_ticks() const { return 5000; }
+	int server_base::connection_timeout_ticks() const { return g_tbs_server_timeout; }
 
 	void server_base::heartbeat(const boost::system::error_code& error)
 	{
@@ -420,17 +434,20 @@ namespace tbs
 			return;
 		}
 
-		for(game_info_ptr& g : games_) {
-			if(nheartbeat_ - g->nlast_touch > 300) {
-				g = game_info_ptr();
+		if(!g_tbs_server_local) {
+			for(game_info_ptr& g : games_) {
+				if(nheartbeat_ - g->nlast_touch > 300) {
+					g = game_info_ptr();
+				}
 			}
-		}
 
-		games_.erase(std::remove(games_.begin(), games_.end(), game_info_ptr()), games_.end());
+			games_.erase(std::remove(games_.begin(), games_.end(), game_info_ptr()), games_.end());
+		}
 
 		for(std::map<int,client_info>::iterator i = clients_.begin();
 		    i != clients_.end(); ) {
 			if(nheartbeat_ - i->second.last_contact > connection_timeout_ticks() && connection_timeout_ticks() > 0) {
+				LOG_INFO("TIMEOUT_QUIT: " << i->second.session_id << ": TIMEOUT: " << connection_timeout_ticks());
 				quit_games(i->first);
 				clients_.erase(i++);
 			} else {

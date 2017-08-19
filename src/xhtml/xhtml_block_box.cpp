@@ -28,8 +28,8 @@ namespace xhtml
 {
 	using namespace css;
 
-	BlockBox::BlockBox(BoxPtr parent, StyleNodePtr node)
-		: Box(BoxId::BLOCK, parent, node),
+	BlockBox::BlockBox(const BoxPtr& parent, const StyleNodePtr& node, const RootBoxPtr& root)
+		: Box(BoxId::BLOCK, parent, node, root),
 		  child_height_(0)
 	{
 	}
@@ -81,6 +81,11 @@ namespace xhtml
 			}
 			setContentX(left);
 			setContentY(top);
+
+		} else {
+			for(auto& child : getChildren()) {
+				setContentHeight(child->getTop() + child->getHeight() + child->getMBPBottom());
+			}
 		}
 	}
 
@@ -133,7 +138,13 @@ namespace xhtml
 	void BlockBox::handlePostChildLayout(LayoutEngine& eng, BoxPtr child)
 	{
 		// Called after every child is laid out.
+		//std::cerr << "t: " << (child->getTop()/65536.f) << ", h: " << (child->getHeight()/65536.f) << ", mbp-b: " << (child->getMBPBottom()/65536.f) << "\n";
 		setContentHeight(child->getTop() + child->getHeight() + child->getMBPBottom());
+	}
+
+	void BlockBox::handlePostFloatChildLayout(LayoutEngine& eng, BoxPtr child)
+	{
+		//handlePostChildLayout(eng, child);
 	}
 
 	void BlockBox::layoutWidth(const Dimensions& containing)
@@ -203,9 +214,10 @@ namespace xhtml
 		// XXX we should add collapsible margins to children here.
 		child_height_ = 0;
 		FixedPoint width = 0;
+
 		for(auto& child : getChildren()) {
 			if(!child->isFloat()) {
-				child_height_ += child->getHeight() + child->getMBPHeight();
+				child_height_ = std::max(child_height_, child->getHeight() + child->getTop() + child->getMBPBottom());
 				width = std::max(width, child->getLeft() + child->getWidth() + child->getMBPWidth());
 			}
 		}
@@ -242,15 +254,10 @@ namespace xhtml
 		//}
 	}
 
-	void BlockBox::handleRender(DisplayListPtr display_list, const point& offset) const
+	void BlockBox::handleRender(const KRE::SceneTreePtr& scene_tree, const point& offset) const
 	{
 		if(isReplaceable()) {
-			NodePtr node = getNode();
-			auto r = node->getRenderable();
-			r->setPosition(glm::vec3(static_cast<float>(offset.x)/65536.0f,
-				static_cast<float>(offset.y)/65536.0f,
-				0.0f));
-			display_list->addRenderable(r);
+			scene_tree->addObject(getNode()->getRenderable());
 		}
 	}
 

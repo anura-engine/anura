@@ -118,6 +118,8 @@ namespace xhtml
 		css::CssBorderImageRepeat getBorderImageRepeatHoriz() const { return border_image_repeat_horiz_; }
 		css::CssBorderImageRepeat getBorderImageRepeatVert() const { return border_image_repeat_vert_; }
 		css::BackgroundClip getBackgroundClip() const { return background_clip_; }
+		std::shared_ptr<css::FilterStyle> getFilters() const { return filters_; }
+		const std::shared_ptr<css::TransformStyle>& getTransform() const { return transform_; }
 
 		const css::StylePtr& getBackgroundAttachmentStyle() const { return background_attachment_style_; }
 		const css::StylePtr& getBackgroundRepeatStyle() const { return background_repeat_style_; }
@@ -152,6 +154,10 @@ namespace xhtml
 	private:
 		void processStyles(bool created);
 		void processColor(bool created, css::Property p, KRE::ColorPtr& color);
+		void processLength(bool created, css::Property p, std::shared_ptr<css::Length>& length);
+		void processWidth(bool created, css::Property p, std::shared_ptr<css::Width>& width);
+		void processFilter(bool created);
+		void processTransform(bool created);
 		WeakNodePtr node_;
 		std::vector<StyleNodePtr> children_;
 		std::vector<css::TransitionPtr> transitions_;
@@ -311,5 +317,9 @@ namespace xhtml
 		//BACKGROUND_CLIP
 		css::StylePtr background_clip_style_;
 		css::BackgroundClip background_clip_;
+		//FILTER
+		std::shared_ptr<css::FilterStyle> filters_;
+		//TRANSFORM
+		std::shared_ptr<css::TransformStyle> transform_;
 	};
 }

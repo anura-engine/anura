@@ -37,6 +37,11 @@ ifneq ($(SANITIZE_ADDRESS), yes)
 SANITIZE_ADDRESS=
 endif
 
+SANITIZE_UNDEFINED?=
+ifneq ($(SANITIZE_UNDEFINED), yes)
+SANITIZE_UNDEFINED=
+endif
+
 ifeq ($(OPTIMIZE),yes)
 BASE_CXXFLAGS += -O2
 endif
@@ -48,15 +53,24 @@ endif
 BASE_CXXFLAGS += -Wall -Werror
 
 ifneq (,$(findstring clang, `$(CXX)`))
+SANITIZE_UNDEFINED=
 BASE_CXXFLAGS += -Qunused-arguments -Wno-unknown-warning-option -Wno-deprecated-register
 ifeq ($(USE_LUA), yes)
 BASE_CXXFLAGS += -Wno-pointer-bool-conversion -Wno-parentheses-equality
 endif
 else ifneq (, $(findstring g++, `$(CXX)`))
 GCC_GTEQ_490 := $(shell expr `$(CXX) -dumpversion | sed -e 's/\.\([0-9][0-9]\)/\1/g' -e 's/\.\([0-9]\)/0\1/g' -e 's/^[0-9]\{3,4\}$$/&00/'` \>= 40900)
+GCC_GTEQ_510 := $(shell expr `$(CXX) -dumpversion | sed -e 's/\.\([0-9][0-9]\)/\1/g' -e 's/\.\([0-9]\)/0\1/g' -e 's/^[0-9]\{3,4\}$$/&00/'` \>= 50100)
 BASE_CXXFLAGS += -Wno-literal-suffix -Wno-sign-compare
+
+ifeq "$(GCC_GTEQ_510)" "1"
+BASE_CXXFLAGS += -Wsuggest-override
+endif
+
 ifeq "$(GCC_GTEQ_490)" "1"
-BASE_CXXFLAGS += -fdiagnostics-color=auto -fsanitize=undefined
+BASE_CXXFLAGS += -fdiagnostics-color=auto
+else
+SANITIZE_UNDEFINED=
 endif
 endif
 
@@ -88,8 +102,13 @@ BASE_CXXFLAGS += -g3 -fsanitize=address
 LDFLAGS += -fsanitize=address
 endif
 
+# Check for sanitize-undefined option
+ifeq ($(SANITIZE_UNDEFINED), yes)
+BASE_CXXFLAGS += -fsanitize=undefined
+endif
+
 # Compiler include options, used after CXXFLAGS and CPPFLAGS.
-INC := -isystem external/include $(shell pkg-config --cflags x11 sdl2 glew SDL2_image SDL2_ttf libpng zlib freetype2 cairo)
+INC := -isystem external/header-only-libs $(shell pkg-config --cflags x11 sdl2 glew SDL2_image SDL2_ttf libpng zlib freetype2 cairo)
 
 ifdef STEAM_RUNTIME_ROOT
 	INC += -isystem $(STEAM_RUNTIME_ROOT)/include
@@ -98,7 +117,7 @@ endif
 # Linker library options.
 LIBS := $(shell pkg-config --libs x11 gl ) \
 	$(shell pkg-config --libs sdl2 glew SDL2_image libpng zlib freetype2 cairo) \
-	-lSDL2_ttf -lSDL2_mixer
+	-lSDL2_ttf -logg -lvorbis -lvorbisfile -lrt
 
 # libvpx check
 USE_LIBVPX?=$(shell pkg-config --exists vpx && echo yes)
@@ -133,21 +152,26 @@ BUILD_DIR := $(addprefix build/,$(MODULES)) build
 
 SRC       := $(foreach sdir,$(SRC_DIR),$(wildcard $(sdir)/*.cpp))
 OBJ       := $(patsubst src/%.cpp,./build/%.o,$(SRC))
-DEPS      := $(patsubst src/%.cpp,./build/%.o.d,$(SRC))
+DEPS      := $(patsubst src/%.cpp,./build/%.d,$(SRC))
 INCLUDES  := $(addprefix -I,$(SRC_DIR))
+
+USE_IMGUI?=yes
+ifeq ($(USE_IMGUI),yes)
+  BASE_CXXFLAGS += -DUSE_IMGUI
+  INC += -Iimgui
+  CPPFLAGS += -Iexternal/header-only-libs -DIMGUI_INCLUDE_IMGUI_USER_INL
+  SRC += imgui/imgui.cpp imgui/imgui_draw.cpp
+  OBJ += imgui/imgui.o imgui/imgui_draw.o
+  SRC_DIR += ./imgui
+endif
 
 vpath %.cpp $(SRC_DIR)
 
+CPPFLAGS += -MMD -MP
 define cc-command
 $1/%.o: %.cpp
 	@echo "Building:" $$<
-	@$(CCACHE) $(CXX) $(BASE_CXXFLAGS) $(CXXFLAGS) $(CPPFLAGS) $(INC) $(INCLUDES) -c -o $$@ $$<
-	@$(CXX) $(BASE_CXXFLAGS) $(CXXFLAGS) $(CPPFLAGS) $(INC) $(INCLUDES) -MM $$< > $$@.d
-	@mv -f $$@.d $$@.d.tmp
-	@sed -e 's|.*:|$$@:|' < $$@.d.tmp > $$@.d
-	@sed -e 's/.*://' -e 's/\\$$$$//' < $$@.d.tmp | fmt -1 | \
-		sed -e 's/^ *//' -e 's/$$$$/:/' >> $$@.d
-	@rm -f $$@.d.tmp
+	@$(CCACHE) $(CXX) $(CPPFLAGS) $(BASE_CXXFLAGS) $(CXXFLAGS) $(INC) $(INCLUDES) -MF $$@.d -c -o $$@ $$<
 endef
 
 .PHONY: all checkdirs clean
@@ -159,9 +183,27 @@ anura: $(OBJ)
 	@$(CXX) \
 		$(BASE_CXXFLAGS) $(LDFLAGS) $(CXXFLAGS) $(CPPFLAGS) \
 		$(OBJ) -o anura \
-		$(LIBS) -lboost_regex -lboost_system -lboost_filesystem -lpthread -fthreadsafe-statics
+		$(LIBS) -lboost_regex -lboost_system -lboost_filesystem -lboost_locale -licui18n -licuuc -licudata -lpthread -fthreadsafe-statics
 
 checkdirs: $(BUILD_DIR)
+	@echo \
+	  " OPTIMIZE            : $(OPTIMIZE)\n" \
+	  "USE_CCACHE          : $(USE_CCACHE)\n" \
+	  "CCACHE              : $(CCACHE)\n" \
+	  "SANITIZE_ADDRESS    : $(SANITIZE_ADDRESS)\n" \
+	  "SANITIZE_UNDEFINED  : $(SANITIZE_UNDEFINED)\n" \
+	  "USE_DB_CLIENT       : $(USE_DB_CLIENT)\n" \
+	  "USE_BOX2D           : $(USE_BOX2D)\n" \
+	  "USE_LIBVPX          : $(USE_LIBVPX)\n" \
+	  "USE_LUA             : $(USE_LUA)\n" \
+	  "USE_SDL2            : $(USE_SDL2)\n" \
+	  "CXX                 : $(CXX)\n" \
+	  "BASE_CXXFLAGS       : $(BASE_CXXFLAGS)\n" \
+	  "CXXFLAGS            : $(CXXFLAGS)\n" \
+	  "LDFLAGS             : $(LDFLAGS)\n" \
+	  "INC                 : $(INC)\n" \
+	  "LIBS                : $(LIBS)"
+
 
 $(BUILD_DIR):
 	@mkdir -p $@
@@ -181,4 +223,3 @@ $(foreach bdir,$(BUILD_DIR),$(eval $(call cc-command,$(bdir))))
 
 # pull in dependency info for *existing* .o files
 -include $(OBJ:.o=.o.d)
-

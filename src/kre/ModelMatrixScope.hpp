@@ -26,6 +26,8 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+#include "Util.hpp"
+
 namespace KRE
 {
 	class ModelManager2D
@@ -34,7 +36,7 @@ namespace KRE
 		ModelManager2D();
 		explicit ModelManager2D(int tx, int ty, float angle=0.0f, float scale=1.0f);
 		explicit ModelManager2D(int tx, int ty, float angle, const glm::vec2& scale);
-		~ModelManager2D();
+		~ModelManager2D() NOEXCEPT(false);
 		void setIdentity();
 		void translate(int tx, int ty);
 		void rotate(float angle);
@@ -44,4 +46,5 @@ namespace KRE
 
 	bool is_global_model_matrix_valid();
 	const glm::mat4& get_global_model_matrix();
+	glm::mat4 set_global_model_matrix(const glm::mat4& m);
 }

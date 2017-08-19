@@ -238,6 +238,14 @@ namespace gui
 			ffl_on_change_focus_ = getEnvironment()->createFormula(v["on_change_focus"]);
 		}
 
+		//a filter for pasting, a function which takes a string and spews out a string which will
+		//be used to filter any incoming pastes.
+		ffl_fn_filter_paste_ = v["filter_paste"];
+		if(ffl_fn_filter_paste_.is_null() == false) {
+			variant_type_ptr t = parse_variant_type(variant("function(string)->string"));
+			ASSERT_LOG(t->match(ffl_fn_filter_paste_), "illegal variant type given to filter_paste: " << t->mismatch_reason(ffl_fn_filter_paste_));
+		}
+
 		char_width_= KRE::Font::charWidth(font_size_, monofont());
 		char_height_ = KRE::Font::charHeight(font_size_, monofont());
 		nrows_ = (height - BorderSize*2)/char_height_;
@@ -847,6 +855,9 @@ namespace gui
 					recordOp();
 					return true;
 				}
+			} else if(event.keysym.sym == SDLK_d) {
+				setFocus(false);// Lose focus when debug console is opened
+				return false;	// Let the input fall through so the console is opened
 			} else { 
 				recordOp();
 				return false;
@@ -1010,15 +1021,27 @@ namespace gui
 						cursor_.col = static_cast<int>(text_[cursor_.row].size());
 					}
 
-					if(cursor_.row == 0 && cursor_.col == 0) {
-						break;
+					// Are we at the start of the line?
+					if(cursor_.col == 0)
+					{
+						// Are we at the start of the file?
+						if(cursor_.row == 0)
+						{
+							// Do nothing; we're at the very top-left of the file
+							break;
+						}
+						else
+						{
+							// Move up and to the end
+							--cursor_.row;
+							cursor_.col = static_cast<int>(text_[cursor_.row].size());
+						}
 					}
-
-                    if(cursor_.col == 1) {
-                        cursor_.col = 0;
-                    } else {
-                        --cursor_.col;
-                    }
+					else
+					{
+						// Just move to the left
+						--cursor_.col;
+					}
 
 					onMoveCursor();
 				}
@@ -1145,6 +1168,13 @@ namespace gui
 		return false;
 	}
 
+	namespace {
+		//the last string we stuck in the clipboard. Used to
+		//determine if text from the clipboard looks like it
+		//came from our own application.
+		static std::string g_str_put_in_clipboard;
+	}
+
 	void TextEditorWidget::handlePaste(std::string txt)
 	{
 		if(!editable_) {
@@ -1155,6 +1185,15 @@ namespace gui
 		deleteSelection();
 
 		txt.erase(std::remove(txt.begin(), txt.end(), '\r'), txt.end());
+
+		//if we have a filtering function and the text doesn't appear to be
+		//text we got from ourselves, then filter it.
+		if(ffl_fn_filter_paste_.is_function() && txt != g_str_put_in_clipboard) {
+			std::vector<variant> arg;
+			arg.push_back(variant(txt));
+			txt = ffl_fn_filter_paste_(arg).as_string();
+		}
+
 		std::vector<std::string> lines = util::split(txt, '\n', 0 /*don't remove empties or strip spaces*/);
 
 		truncateColPosition();
@@ -1211,6 +1250,7 @@ namespace gui
 
 		LOG_INFO("COPY TO CLIPBOARD: " << str << " " << mouse_based);
 
+		g_str_put_in_clipboard = str;
 		copy_to_clipboard(str, mouse_based);
 	}
 
@@ -1331,12 +1371,12 @@ namespace gui
 
 	void TextEditorWidget::onPageUp()
 	{
-		size_t leap = nrows_ - 1;
+		int leap = static_cast<int>(nrows_) - 1;
 		while(scroll_pos_ > 0 && leap > 0) {
 			--scroll_pos_;
 			--leap;
 
-			for(size_t n = text_[scroll_pos_].size() - ncols_; n > 0; n -= ncols_) {
+			for(int n = static_cast<int>(text_[scroll_pos_].size() - ncols_); n > 0; n -= static_cast<int>(ncols_)) {
 				--leap;
 			}
 		}
@@ -1346,12 +1386,12 @@ namespace gui
 
 	void TextEditorWidget::onPageDown()
 	{
-		size_t leap = nrows_ - 1;
+		int leap = static_cast<int>(nrows_ - 1);
 		while(scroll_pos_ < text_.size()-2 && leap > 0) {
 			++scroll_pos_;
 			--leap;
 
-			for(size_t n = text_[scroll_pos_].size() - ncols_; n > 0; n -= ncols_) {
+			for(int n = static_cast<int>(text_[scroll_pos_].size() - ncols_); n > 0; n -= static_cast<int>(ncols_)) {
 				--leap;
 			}
 		}
@@ -1551,35 +1591,86 @@ namespace gui
 		}
 	}
 
+	// This runs every time the search string is updated.
 	void TextEditorWidget::setSearch(const std::string& term)
 	{
 		search_ = term;
 		calculateSearchMatches();
-		if(search_matches_.empty()) {
-			return;
-		}
 
-		std::vector<std::pair<Loc, Loc> >::const_iterator search_itor =
-		   std::lower_bound(search_matches_.begin(), search_matches_.end(),
-							std::pair<Loc,Loc>(cursor_, cursor_));
-		if(search_itor == search_matches_.end()) {
-			search_itor = search_matches_.begin();
-		}
-
-		select_ = cursor_ = search_itor->first;
-
-		onMoveCursor();
+		searchForward();
 	}
 
+	// This advances until the first match below the cursor, if one exists. It
+	// won't advance the cursor unless it needs to.
+	void TextEditorWidget::searchForward()
+	{
+		if(!search_matches_.empty()) {
+			// The std::pair<Loc, Loc> represents the beginning and the end
+			// of the match.
+			std::vector<std::pair<Loc, Loc> >::const_iterator search_itor;
+			
+			// Jump to the next match.
+			search_itor = std::lower_bound(search_matches_.begin(), search_matches_.end(),
+								 		   std::pair<Loc,Loc>(cursor_, cursor_));
+
+			// Loop around to the top if at the end.
+			if(search_itor == search_matches_.end()) {
+				search_itor = search_matches_.begin();
+			}
+
+			// Move the cursor to the match, and select it.
+			select_ = cursor_ = search_itor->first;
+
+			onMoveCursor();
+		} // end if(!search_matches_.empty())
+	}
+
+	// TODO: Finish this function!
+	// This advances until the first match below the cursor, if one exists. It
+	// won't advance the cursor unless it needs to.
+	void TextEditorWidget::searchBackward()
+	{
+		/*if(!search_matches_.empty()) {
+			std::vector<std::pair<Loc, Loc> >::const_iterator search_itor;
+			
+			// First, we want to find where the 
+			
+			if(search_itor == search_matches_.begin()) {
+				search_itor = search_matches_.end();
+			}
+			else
+			{
+				
+			}
+
+			select_ = cursor_ = search_itor->first;
+
+			onMoveCursor();
+		} // end if(!search_matches_.empty())*/
+	}
+
+	// This function is run when "Find next" is clicked. Unlike
+	// searchForward(), this one will try to find a match other than the
+	// currently highlighted one.
 	void TextEditorWidget::nextSearchMatch()
 	{
-		if(search_matches_.empty()) {
-			return;
-		}
+		if(!search_matches_.empty()) {
+			cursor_.col++;
+			select_ = cursor_;
+			searchForward();
+		} // end if(!search_matches_.empty()) 
+	}
 
-		cursor_.col++;
-		select_ = cursor_;
-		setSearch(search_);
+	// This function searches in reverse. Note that it is like
+	// nextSearchMatch(), in that it attempts to find a new match, rather
+	// than the current one.
+	void TextEditorWidget::prevSearchMatch()
+	{
+		if(!search_matches_.empty()) {
+			cursor_.col--;
+			select_ = cursor_;
+			searchBackward();
+		}
 	}
 
 	void TextEditorWidget::calculateSearchMatches()
@@ -1651,7 +1742,19 @@ namespace gui
 		DEFINE_FIELD(text, "string")
 			return variant(obj.text());
 		DEFINE_SET_FIELD
-			obj.setText(value.as_string());
+			std::string v = value.as_string();
+			if(v != obj.text()) {
+				obj.setText(v, true);
+			}
+
+		//text but without influencing the cursor.
+		DEFINE_FIELD(text_stable, "string")
+			return variant(obj.text());
+		DEFINE_SET_FIELD
+			std::string v = value.as_string();
+			if(v != obj.text()) {
+				obj.setText(v, false);
+			}
 		DEFINE_FIELD(begin_enter, "bool")
 			return variant::from_bool(obj.begin_enter_return_);
 		DEFINE_SET_FIELD

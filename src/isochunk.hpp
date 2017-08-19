@@ -68,7 +68,7 @@ namespace voxel
 	};
 
 	class LogicalWorld;
-	typedef boost::intrusive_ptr<LogicalWorld> LogicalWorldPtr;
+	typedef ffl::IntrusivePtr<LogicalWorld> LogicalWorldPtr;
 
 	class Chunk : public graphics::SceneObjectCallable
 	{
@@ -210,8 +210,8 @@ namespace voxel
 		std::unordered_map<ChunkPosition, std::string, chunk_hasher> tiles_;
 	};
 
-	typedef boost::intrusive_ptr<Chunk> ChunkPtr;
-	typedef boost::intrusive_ptr<const Chunk> ConstChunkPtr;
+	typedef ffl::IntrusivePtr<Chunk> ChunkPtr;
+	typedef ffl::IntrusivePtr<const Chunk> ConstChunkPtr;
 
 	namespace chunk_factory 
 	{

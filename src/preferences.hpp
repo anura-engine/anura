@@ -165,6 +165,7 @@ namespace preferences
 	int requested_window_height();
 	int requested_virtual_window_width();
 	int requested_virtual_window_height();
+	void adjust_virtual_width_to_match_physical(int width, int height);
 	bool is_resizeable();
 	ScreenMode get_screen_mode();
 	void set_screen_mode(ScreenMode mode);
@@ -215,4 +216,6 @@ namespace preferences
 
 	bool internal_tbs_server();
 	const std::set<std::string>& get_build_options();
+
+	variant ffl_interface();
 }

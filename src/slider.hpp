@@ -70,5 +70,5 @@ namespace gui
 		void dragEndDelegate(float);
 	};
 	
-	typedef boost::intrusive_ptr<Slider> SliderPtr;
+	typedef ffl::IntrusivePtr<Slider> SliderPtr;
 }

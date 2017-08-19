@@ -46,48 +46,36 @@ namespace graphics
 	GameScreen& GameScreen::get()
 	{
 		static GameScreen res;
-		KRE::WindowManager::getMainWindow()->registerSizeChangeObserver(std::bind(&GameScreen::windowSizeUpdated, &res, std::placeholders::_1, std::placeholders::_2));
+		static int handle = KRE::WindowManager::getMainWindow()->registerSizeChangeObserver(std::bind(&GameScreen::windowSizeUpdated, &res, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 		return res;
-	}
-
-	void GameScreen::mapCoordsPtoV(int* x, int *y)
-	{
-		ASSERT_LOG(x != nullptr && y != nullptr, "Either x or y is null.");
-		*x = static_cast<int>(static_cast<float>(*x) * getScaleW());
-		*y = static_cast<int>(static_cast<float>(*y) * getScaleH());
-	}
-
-	void GameScreen::mapCoordsVtoP(int* x, int *y)
-	{
-		ASSERT_LOG(x != nullptr && y != nullptr, "Either x or y is null.");
-		*x = static_cast<int>(static_cast<float>(*x) / getScaleW());
-		*y = static_cast<int>(static_cast<float>(*y) / getScaleH());
 	}
 
 	void GameScreen::setDimensions(int width, int height)
 	{
 		width_ = width;
 		height_ = height;
-		cam_ = std::make_shared<KRE::Camera>("gs.cam", 0, width_, 0, height_);
 	}
 
-	void GameScreen::windowSizeUpdated(int width, int height)
+	void GameScreen::windowSizeUpdated(int width, int height, int flags)
 	{
-		setDimensions(width, height);
-		setVirtualDimensions(width, height);
+		if(!(flags & KRE::WindowSizeChangeFlags::NOTIFY_CANVAS_ONLY)) {
+			setDimensions(width, height);
+			setVirtualDimensions(width, height);
+		}
 	}
 
 	void GameScreen::setVirtualDimensions(int vwidth, int vheight)
 	{
 		virtual_width_ = vwidth;
 		virtual_height_ = vheight;
+		cam_ = std::make_shared<KRE::Camera>("gs.cam", 0, virtual_width_, 0, virtual_height_);
 	}
 
 	void GameScreen::setLocation(int x, int y)
 	{
 		x_ = x;
 		y_ = y;
-		cam_ = std::make_shared<KRE::Camera>("gs.cam", x_, width_, y_, height_);
+		cam_ = std::make_shared<KRE::Camera>("gs.cam", x_, virtual_width_, y_, virtual_height_);
 	}
 
 	void GameScreen::setupForDraw(KRE::WindowPtr wnd)

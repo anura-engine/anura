@@ -29,6 +29,9 @@
 
 class FunctionCreator {
 public:
+	std::string module_name;
+	explicit FunctionCreator(const std::string& module_name_) : module_name(module_name_)
+	{}
 	virtual ~FunctionCreator() {}
 	virtual game_logic::FunctionExpression* create(const game_logic::FunctionExpression::args_list& args) const = 0;
 };
@@ -36,9 +39,13 @@ public:
 template<typename T>
 class SpecificFunctionCreator : public FunctionCreator {
 public:
+	explicit SpecificFunctionCreator(const std::string& module_name) : FunctionCreator(module_name)
+	{}
 	virtual ~SpecificFunctionCreator() {}
-	virtual game_logic::FunctionExpression* create(const game_logic::FunctionExpression::args_list& args) const {
-		return new T(args);
+	virtual game_logic::FunctionExpression* create(const game_logic::FunctionExpression::args_list& args) const override {
+		T* result =  new T(args);
+		result->setModule(module_name);
+		return result;
 	}
 };
 
@@ -49,6 +56,9 @@ int register_function_creator(const std::string& module, const std::string& id, 
 const std::vector<std::string>& function_helpstrings(const std::string& module);
 
 int register_function_helpstring(const std::string& module, const std::string& str);
+
+int get_builtin_ffl_function_index(const std::string& module, const std::string& id);
+game_logic::FunctionExpression* get_builtin_ffl_function_from_index(int index);
 
 #define FUNCTION_DEF_CTOR(name, min_args, max_args, helpstring) \
 const int name##_dummy_help_var = register_function_helpstring(FunctionModule, helpstring); \
@@ -62,22 +72,35 @@ public: \
 private:
 
 #define FUNCTION_DEF_IMPL \
-	variant execute(const FormulaCallable& variables) const {
+	variant execute(const FormulaCallable& variables) const override { \
+		return executeWithArgs(variables, nullptr, -1); \
+	} \
+	variant executeWithArgs(const FormulaCallable& variables, const variant* passed_args, int num_passed_args) const override {
 
 #define FUNCTION_DEF(name, min_args, max_args, helpstring) \
 FUNCTION_DEF_CTOR(name, min_args, max_args, helpstring) \
 FUNCTION_DEF_MEMBERS \
 FUNCTION_DEF_IMPL
 
-#define END_FUNCTION_DEF(name) } }; const int name##_dummy_var = register_function_creator(FunctionModule, #name, new SpecificFunctionCreator<name##_function>());
+#define FUNCTION_DYNAMIC_ARGUMENTS } bool dynamicArguments() const override { return true;
 
-#define FUNCTION_ARGS_DEF } void staticErrorAnalysis() const { int narg_number = 0;
+#define END_FUNCTION_DEF(name) } }; const int name##_dummy_var = register_function_creator(FunctionModule, #name, new SpecificFunctionCreator<name##_function>(FunctionModule));
+
+#define FUNCTION_ARGS_DEF } void staticErrorAnalysis() const override { int num_passed_args = -1; int narg_number = 0;
 #define ARG_TYPE(str) check_arg_type(narg_number++, str);
-#define FUNCTION_TYPE_DEF } variant_type_ptr getVariantType() const {
-#define RETURN_TYPE(str) } variant_type_ptr getVariantType() const { return parse_variant_type(variant(str));
-#define DEFINE_RETURN_TYPE } variant_type_ptr getVariantType() const {
+#define FUNCTION_TYPE_DEF } variant_type_ptr getVariantType() const override { int num_passed_args = -1;
+#define RETURN_TYPE(str) } variant_type_ptr getVariantType() const override { return parse_variant_type(variant(str));
+#define DEFINE_RETURN_TYPE } variant_type_ptr getVariantType() const override { int num_passed_args = -1;
 
-#define FUNCTION_OPTIMIZE } ExpressionPtr optimize() const {
+#define FUNCTION_OPTIMIZE } ExpressionPtr optimize() const override {
 
-#define EVAL_ARG(n) (args()[n]->evaluate(variables))
-#define NUM_ARGS (args().size())
+#define CAN_VM } bool canCreateVM() const override {
+
+#define FUNCTION_VM } ExpressionPtr optimizeToVM() override { \
+	FunctionExpression::optimizeToVM(); \
+	for(auto& a : args()) { if(a->canCreateVM() == false) { return ExpressionPtr(); } } \
+	formula_vm::VirtualMachine vm;
+
+
+#define EVAL_ARG(n) (num_passed_args < 0 ? args()[n]->evaluate(variables) : passed_args[n])
+#define NUM_ARGS (num_passed_args < 0 ? args().size() : num_passed_args)

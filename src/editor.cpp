@@ -64,6 +64,7 @@
 #include "filesystem.hpp"
 #include "formatter.hpp"
 #include "formula.hpp"
+#include "formula_callable_definition.hpp"
 #include "frame.hpp"
 #include "grid_widget.hpp"
 #include "image_widget.hpp"
@@ -102,11 +103,46 @@ using std::placeholders::_2;
 #endif
 // XXX: fix this in the code?
 
+extern std::string g_editor_object;
+
 namespace 
 {
+	
+	class BuiltinEditor : public editor
+	{
+	public:
+		BuiltinEditor(const char* level_cfg) : editor(level_cfg)
+		{}
+
+		virtual void process() override;
+		virtual bool handleEvent(const SDL_Event& event, bool swallowed) override;
+
+		virtual void draw_gui() const override;
+
+	private:
+	};
+	
+	class CustomEditor : public editor
+	{
+	public:
+		CustomEditor(const char* level_cfg) : editor(level_cfg)
+		{}
+
+		virtual void process() override {}
+
+		virtual bool handleEvent(const SDL_Event& event, bool swallowed) override {
+			return false;
+		}
+
+		virtual void draw_gui() const override {
+		}
+
+	private:
+	};
+
 	//keep a map of editors so that when we edit a level and then later
 	//come back to it we'll save all the state we had previously
-	std::map<std::string, editor*> all_editors;
+	std::map<std::string, EditorPtr> all_editors;
 
 	//the last level we edited
 	std::string& g_last_edited_level() 
@@ -183,7 +219,8 @@ private:
 			"Open...", "ctrl+o", std::bind(&editor_menu_dialog::open_level, this),
 			"Save", "ctrl+s", std::bind(&editor::save_level, &editor_),
 			"Save As...", "", std::bind(&editor_menu_dialog::save_level_as, this),
-			"Create New Module...", "", std::bind(&editor::create_new_module, &editor_),
+// This doesn't really work. Use --create-module utility instead.
+//			"Create New Module...", "", std::bind(&editor::create_new_module, &editor_),
 			"Edit Module Properties...", "", std::bind(&editor::edit_module_properties, &editor_),
 			"Create New Object...", "", std::bind(&editor::create_new_object, &editor_),
 			"Exit", "<esc>", std::bind(&editor::quit, &editor_),
@@ -205,9 +242,7 @@ private:
 			"Restart Level (including player)", "ctrl+alt+r", std::bind(&editor::reset_playing_level, &editor_, false),
 			"Pause Game", "ctrl+p", std::bind(&editor::toggle_pause, &editor_),
 			"Code", "", std::bind(&editor::toggle_code, &editor_),
-#if defined(USE_SHADERS)
 			"Shaders", "", std::bind(&editor::edit_shaders, &editor_),
-#endif
 			"Level Code", "", std::bind(&editor::edit_level_code, &editor_),
 		};
 
@@ -271,7 +306,7 @@ private:
 	void show_window_menu() 
 	{
 		std::vector<menu_item> res;
-		for(std::map<std::string, editor*>::const_iterator i = all_editors.begin(); i != all_editors.end(); ++i) {
+		for(std::map<std::string, EditorPtr>::const_iterator i = all_editors.begin(); i != all_editors.end(); ++i) {
 			std::string name = i->first;
 			if(name == g_last_edited_level()) {
 				name += " *";
@@ -288,7 +323,7 @@ private:
 	std::string code_button_text_;
 public:
 	explicit editor_menu_dialog(editor& e)
-	  : gui::Dialog(0, 0, e.xres() ? e.xres() : 1200, 40 /*FIXME: SHOULD BE EDITOR_MENUBAR_HEIGHT INSTEAD OF HARD-CODED VALUE. FIX THIS WHEN WE GET EDITOR_MENUBAR_HEIGHT WORKING PROPERLY EVERYWHERE*/), 
+	  : gui::Dialog(0, 0, e.xres() ? e.xres() : 1200, EDITOR_MENUBAR_HEIGHT),
 	  editor_(e)
 	{
 		setClearBgAmount(255);
@@ -401,7 +436,7 @@ public:
 			empty_lvl.add_attr(variant("id"), variant(module::get_id(id)));
 			std::string nn = module::get_id(name);
 			std::string modname = module::get_module_id(name);
-			sys::write_file(module::get_module_path(modname, (preferences::editor_save_to_user_preferences() ? module::BASE_PATH_USER : module::BASE_PATH_GAME)) + nn, empty_lvl.write_json());
+			sys::write_file(module::get_module_path(modname, (preferences::editor_save_to_user_preferences() ? module::BASE_PATH_USER : module::BASE_PATH_GAME)) + "data/level/" + nn, empty_lvl.write_json());
 			load_level_paths();
 			editor_.close();
 			g_last_edited_level() = id;
@@ -487,7 +522,7 @@ class editor_mode_dialog : public gui::Dialog
 		}
 	}
 
-	bool handleEvent(const SDL_Event& event, bool claimed)
+	bool handleEvent(const SDL_Event& event, bool claimed) override
 	{
 		if(!claimed) {
 			const bool ctrl_pressed = (SDL_GetModState()&(KMOD_LCTRL|KMOD_RCTRL)) != 0;
@@ -749,7 +784,7 @@ const EntityPtr& editor::enemy_type::preview_object() const
 	return preview_object_;
 }
 
-const boost::intrusive_ptr<const Frame>& editor::enemy_type::preview_frame() const
+const ffl::IntrusivePtr<const Frame>& editor::enemy_type::preview_frame() const
 {
 	if(!preview_frame_) {
 		if(frame_info_.is_map() && !preview_object_) {
@@ -791,14 +826,24 @@ std::shared_ptr<TileMap> editor::tileset::preview() const
 }
 
 
-editor* editor::get_editor(const char* level_cfg)
+EditorPtr editor::get_editor(const char* level_cfg)
 {
-	editor*& e = all_editors[level_cfg];
+	EditorPtr& e = all_editors[level_cfg];
 	if(!e) {
-		e = new editor(level_cfg);
+		if(g_editor_object.empty()) {
+			e.reset(new BuiltinEditor(level_cfg));
+		} else {
+			e.reset(new CustomEditor(level_cfg));
+		}
 	}
 	e->done_ = false;
 	return e;
+}
+
+// This returns the area for the ENTIRE code editor, including the area with buttons.
+rect editor::get_code_editor_rect()
+{
+	return rect(KRE::WindowManager::getMainWindow()->width() - 620, 30, 620, KRE::WindowManager::getMainWindow()->height() - 60);
 }
 
 std::string editor::last_edited_level()
@@ -809,6 +854,8 @@ std::string editor::last_edited_level()
 namespace 
 {
 	int g_codebar_width = 0;
+
+	PREF_BOOL(editor_history, false, "Allow editor history feature");
 }
 
 int editor::sidebar_width()
@@ -850,11 +897,14 @@ editor::editor(const char* level_cfg)
 {
 	LOG_INFO("BEGIN EDITOR::EDITOR");
 	const int begin = profile::get_tick_time();
-	preferences::set_record_history(true);
+
+	if(g_editor_history) {
+		preferences::set_record_history(true);
+	}
 
 	static bool first_time = true;
 	if(first_time) {
-		variant editor_cfg = json::parse_from_file("data/editor.cfg");
+		variant editor_cfg = json::parse_from_file_or_die("data/editor.cfg");
 		const int begin = profile::get_tick_time();
 		TileMap::loadAll();
 		const int mid = profile::get_tick_time();
@@ -893,7 +943,9 @@ editor::editor(const char* level_cfg)
 
 editor::~editor()
 {
-	preferences::set_record_history(false);
+	if(g_editor_history) {
+		preferences::set_record_history(false);
+	}
 }
 
 void editor::group_selection()
@@ -965,9 +1017,9 @@ void editor::set_rotate_reference()
 	const float radians_to_degrees = 57.29577951308232087f;
 	
 	int mousex, mousey;
-	const unsigned int buttons = input::sdl_get_mouse_state(&mousex, &mousey);
+    input::sdl_get_mouse_state(&mousex, &mousey);
 	mousex = xpos_ + mousex*zoom_;
-	mousey = ypos_ + mousey*zoom_ - EDITOR_MENUBAR_HEIGHT;
+	mousey = ypos_ + mousey*zoom_;
 	
 	if(character_dialog_) {
 		character_dialog_->init();
@@ -987,9 +1039,9 @@ void editor::change_rotation()
 	const bool ctrl_pressed = (SDL_GetModState()&(KMOD_LCTRL|KMOD_RCTRL)) != 0;
 	
 	int mousex, mousey;
-	const unsigned int buttons = input::sdl_get_mouse_state(&mousex, &mousey);
+    input::sdl_get_mouse_state(&mousex, &mousey);
 	mousex = xpos_ + mousex*zoom_;
-	mousey = ypos_ + mousey*zoom_ - EDITOR_MENUBAR_HEIGHT;
+	mousey = ypos_ + mousey*zoom_;
 	
 	if(character_dialog_) {
 		character_dialog_->init();
@@ -1029,9 +1081,9 @@ float scale_reference_ratio = 0;
 void editor::set_scale_reference()
 {
 	int mousex, mousey;
-	const unsigned int buttons = input::sdl_get_mouse_state(&mousex, &mousey);
+    input::sdl_get_mouse_state(&mousex, &mousey);
 	mousex = xpos_ + mousex*zoom_;
-	mousey = ypos_ + mousey*zoom_ - EDITOR_MENUBAR_HEIGHT;
+	mousey = ypos_ + mousey*zoom_;
 	
 	if(character_dialog_) {
 		character_dialog_->init();
@@ -1049,9 +1101,9 @@ void editor::change_scale()
 	const bool ctrl_pressed = (SDL_GetModState()&(KMOD_LCTRL|KMOD_RCTRL)) != 0;
 	
 	int mousex, mousey;
-	const unsigned int buttons = input::sdl_get_mouse_state(&mousex, &mousey);
+	input::sdl_get_mouse_state(&mousex, &mousey);
 	mousex = xpos_ + mousex*zoom_;
-	mousey = ypos_ + mousey*zoom_ - EDITOR_MENUBAR_HEIGHT;
+	mousey = ypos_ + mousey*zoom_;
 	
 	if(character_dialog_) {
 		character_dialog_->init();
@@ -1192,7 +1244,7 @@ EditorResolutionManager::EditorResolutionManager(int xres, int yres)
 
 	if(++editor_resolution_manager_count == 1) {
 		LOG_INFO("EDITOR RESOLUTION: " << editor_x_resolution << "," << editor_y_resolution);
-		KRE::WindowManager::getMainWindow()->setWindowSize(editor_x_resolution, editor_y_resolution);
+		KRE::WindowManager::getMainWindow()->setWindowSize(editor_x_resolution, editor_y_resolution); //, KRE::WindowSizeChangeFlags::NOTIFY_CANVAS_ONLY);
 		graphics::GameScreen::get().setLocation(0, EDITOR_MENUBAR_HEIGHT);
 	}
 }
@@ -1244,7 +1296,7 @@ void editor::setup_for_editing()
 	change_tool(tool_);
 }
 
-bool editor::handleEvent(const SDL_Event& event, bool swallowed)
+bool BuiltinEditor::handleEvent(const SDL_Event& event, bool swallowed)
 {
 	const bool dialog_started_with_focus = (code_dialog_ && code_dialog_->hasFocus()) || (current_dialog_ && current_dialog_->hasFocus());
 	if(code_dialog_ && code_dialog_->processEvent(point(), event, swallowed)) {
@@ -1311,9 +1363,9 @@ bool editor::handleEvent(const SDL_Event& event, bool swallowed)
 	case SDL_MOUSEWHEEL: {
 			int mousex, mousey;
 			input::sdl_get_mouse_state(&mousex, &mousey);
-			
-			const int xpos = xpos_ + mousex*zoom_;
-			if(xpos < editor_x_resolution-sidebar_width()) {
+
+			//const int xpos = xpos_ + mousex*zoom_;
+			if(mousex < editor_x_resolution-sidebar_width()) {
 				if(event.wheel.y < 0) {
 					zoomIn();
 				} else {
@@ -1342,7 +1394,7 @@ bool editor::handleEvent(const SDL_Event& event, bool swallowed)
 	return false;
 }
 
-void editor::process()
+void BuiltinEditor::process()
 {
 	if(code_dialog_) {
 		code_dialog_->process();
@@ -1382,7 +1434,6 @@ void editor::process()
 
 	int mousex, mousey;
 	const unsigned int buttons = input::sdl_get_mouse_state(&mousex, &mousey) & mouse_buttons_down_;
-	//mousey -= EDITOR_MENUBAR_HEIGHT;
 
 	if(buttons == 0) {
 		drawing_rect_ = false;
@@ -1458,10 +1509,11 @@ void editor::process()
 			}
 		}
 	} else if(object_mode && !buttons) {
+
 		//remove ghost objects and re-add them. This guarantees ghost
 		//objects always remain at the end of the level ordering.
 		remove_ghost_objects();
-		EntityPtr c = lvl_->get_next_character_at_point(xpos_ + mousex*zoom_, ypos_ + mousey*zoom_, xpos_, ypos_);
+		EntityPtr c = lvl_->get_next_character_at_point(xpos_ + mousex*zoom_, ypos_ + mousey*zoom_, xpos_, ypos_, nullptr);
 		for(const EntityPtr& ghost : ghost_objects_) {
 			lvl_->add_character(ghost);
 		}
@@ -1521,15 +1573,23 @@ void editor::process()
 	//if we're drawing with a pencil see if we add a new tile
 	if(tool() == TOOL_PENCIL && dragging_ && buttons) {
 		const int xpos = xpos_ + mousex*zoom_;
-		const int ypos = ypos_ + mousey*zoom_ - EDITOR_MENUBAR_HEIGHT;
+		const int ypos = ypos_ + mousey*zoom_;
 		const int last_xpos = xpos_ + last_mousex*zoom_;
-		const int last_ypos = ypos_ + last_mousey*zoom_ - EDITOR_MENUBAR_HEIGHT;
+		const int last_ypos = ypos_ + last_mousey*zoom_;
 
 		pencil_motion(last_xpos, last_ypos, xpos, ypos, buttons&SDL_BUTTON(SDL_BUTTON_LEFT));
 	}
 
 	for(LevelPtr lvl : levels_) {
-		lvl->complete_rebuild_tiles_in_background();
+		try {
+			const assert_recover_scope safe_scope;
+			lvl->complete_rebuild_tiles_in_background();
+		} catch(validation_failure_exception& e) {
+			if(!drawing_rect_) {
+				undo_command();
+			}
+			debug_console::addMessage(formatter() << "Failed to add tiles: " << e.msg);
+		}
 	}
 }
 
@@ -1791,7 +1851,7 @@ void editor::handleKeyPress(const SDL_KeyboardEvent& key)
 				min_y = std::min(y, min_y);
 				max_y = std::max(y, max_y);
 
-				redo.push_back([&](){ lvl->clear_tile_rect(x, y, x, y); });
+				redo.push_back([=](){ lvl->clear_tile_rect(x, y, x, y); });
 				std::map<int, std::vector<std::string> > old_tiles;
 				lvl->getAllTilesRect(x, y, x, y, old_tiles);
 				for(auto i : old_tiles) {
@@ -1971,7 +2031,7 @@ void editor::handle_object_dragging(int mousex, int mousey)
 
 	const bool ctrl_pressed = (SDL_GetModState()&(KMOD_LCTRL|KMOD_RCTRL)) != 0;
 	const int dx = xpos_ + mousex*zoom_ - anchorx_;
-	const int dy = ypos_ + mousey*zoom_ - anchory_ - EDITOR_MENUBAR_HEIGHT;
+	const int dy = ypos_ + mousey*zoom_ - anchory_;
 	const int xpos = selected_entity_startx_ + dx;
 	const int ypos = selected_entity_starty_ + dy;
 
@@ -2026,10 +2086,9 @@ void editor::handle_object_dragging(int mousex, int mousey)
 void editor::handleDrawingRect(int mousex, int mousey)
 {
 	const unsigned int buttons = input::sdl_get_mouse_state(&mousex, &mousey);
-	//mousey -= EDITOR_MENUBAR_HEIGHT;
 
 	const int xpos = xpos_ + mousex*zoom_;
-	const int ypos = ypos_ + mousey*zoom_ - EDITOR_MENUBAR_HEIGHT;
+	const int ypos = ypos_ + mousey*zoom_;
 
 	int x1 = xpos;
 	int x2 = anchorx_;
@@ -2079,10 +2138,9 @@ void editor::handleMouseButtonDown(const SDL_MouseButtonEvent& event)
 	const bool alt_pressed = (SDL_GetModState()&KMOD_ALT) != 0;
 	int mousex, mousey;
 	const unsigned int buttons = input::sdl_get_mouse_state(&mousex, &mousey);
-	//mousey -= EDITOR_MENUBAR_HEIGHT;
 
 	anchorx_ = xpos_ + mousex*zoom_;
-	anchory_ = ypos_ + mousey*zoom_ - EDITOR_MENUBAR_HEIGHT;
+	anchory_ = ypos_ + mousey*zoom_;
 	if(event.button == SDL_BUTTON_MIDDLE && !alt_pressed) {
 		return;
 	}
@@ -2316,7 +2374,7 @@ void editor::handleMouseButtonDown(const SDL_MouseButtonEvent& event)
 
 	if(tool() == TOOL_ADD_OBJECT && event.button == SDL_BUTTON_LEFT && !lvl_->editor_highlight()) {
 		const int xpos = anchorx_ - all_characters()[cur_object_].preview_object()->getCurrentFrame().width()/2;
-		const int ypos = anchory_ - all_characters()[cur_object_].preview_object()->getCurrentFrame().height()/2 + EDITOR_MENUBAR_HEIGHT;
+		const int ypos = anchory_ - all_characters()[cur_object_].preview_object()->getCurrentFrame().height()/2;
 		variant_builder node;
 		node.merge_object(all_characters()[cur_object_].node);
 		node.set("x", (ctrl_pressed ? xpos : round_tile_size(xpos)));
@@ -2403,10 +2461,9 @@ void editor::handleMouseButtonUp(const SDL_MouseButtonEvent& event)
 {
 	int mousex, mousey;
 	input::sdl_get_mouse_state(&mousex, &mousey);
-	//mousey -= EDITOR_MENUBAR_HEIGHT;
 			
 	const int xpos = xpos_ + mousex*zoom_;
-	const int ypos = ypos_ + mousey*zoom_ - EDITOR_MENUBAR_HEIGHT;
+	const int ypos = ypos_ + mousey*zoom_;
 
 	if(g_variable_editing) {
 		if(property_dialog_ && property_dialog_->getEntity()) {
@@ -2450,7 +2507,7 @@ void editor::handleMouseButtonUp(const SDL_MouseButtonEvent& event)
 	if(editing_tiles()) {
 		if(dragging_) {
 			const int selectx = xpos_ + mousex*zoom_;
-			const int selecty = ypos_ + mousey*zoom_ - EDITOR_MENUBAR_HEIGHT;
+			const int selecty = ypos_ + mousey*zoom_;
 
 			//dragging selection
 			int diffx = (selectx - anchorx_)/TileSize;
@@ -2806,11 +2863,18 @@ void editor::remove_tile_rect(int x1, int y1, int x2, int y2)
 
 		std::map<int, std::vector<std::string> > old_tiles;
 		lvl->getAllTilesRect(x1, y1, x2, y2, old_tiles);
+		std::vector<int> layers;
 		for(auto i : old_tiles) {
+			if(std::count(layers.begin(), layers.end(), i.first) == 0) {
+				layers.push_back(i.first);
+			}
 			undo.push_back([=](){ lvl->addTileRectVector(i.first, x1, y1, x2, y2, i.second); });
 		}
 
 		redo.push_back([=](){ lvl->clear_tile_rect(x1, y1, x2, y2); });
+
+		undo.push_back(std::bind(&Level::start_rebuild_tiles_in_background, lvl.get(), layers));
+		redo.push_back(std::bind(&Level::start_rebuild_tiles_in_background, lvl.get(), layers));
 	}
 
 	executeCommand(std::bind(execute_functions, redo), std::bind(execute_functions, undo));
@@ -3227,15 +3291,14 @@ void editor::zoomOut()
 	}
 }
 
-void editor::draw_gui() const
+void BuiltinEditor::draw_gui() const
 {
 	auto canvas = KRE::Canvas::getInstance();
-	auto mm = std::unique_ptr<KRE::ModelManager2D>(new KRE::ModelManager2D(-xpos_, EDITOR_MENUBAR_HEIGHT-ypos_, 0, 1.0f/zoom_));
+	auto mm = std::unique_ptr<KRE::ModelManager2D>(new KRE::ModelManager2D(-xpos_, -ypos_, 0, 1.0f/zoom_));
 
 	const bool ctrl_pressed = (SDL_GetModState()&(KMOD_LCTRL|KMOD_RCTRL)) != 0;
 	int mousex, mousey;
 	input::sdl_get_mouse_state(&mousex, &mousey);
-	//mousey -= EDITOR_MENUBAR_HEIGHT;
 	const int selectx = xpos_ + mousex*zoom_;
 	const int selecty = ypos_ + mousey*zoom_;
 
@@ -3429,8 +3492,8 @@ void editor::draw_gui() const
 		rect boundaries = modify_selected_rect(*this, lvl_->boundaries(), selectx, selecty);
 		const int x1 = boundaries.x()/zoom_;
 		const int x2 = boundaries.x2()/zoom_;
-		const int y1 = boundaries.y()/zoom_+EDITOR_MENUBAR_HEIGHT;
-		const int y2 = boundaries.y2()/zoom_+EDITOR_MENUBAR_HEIGHT;
+		const int y1 = boundaries.y()/zoom_;
+		const int y2 = boundaries.y2()/zoom_;
 		
 		glm::u8vec4 selected_color = KRE::Color::colorYellow().as_u8vec4();
 		glm::u8vec4 normal_color = KRE::Color::colorWhite().as_u8vec4();
@@ -3585,7 +3648,7 @@ void editor::draw_selection(int xoffset, int yoffset) const
 	for(const point& p : tile_selection_.tiles) {
 		const int size = TileSize/zoom_;
 		const int xpos = xoffset/zoom_ + p.x*size - xpos_/zoom_;
-		const int ypos = yoffset/zoom_ + p.y*size - ypos_/zoom_ + EDITOR_MENUBAR_HEIGHT;
+		const int ypos = yoffset/zoom_ + p.y*size - ypos_/zoom_;
 
 		if(std::binary_search(tile_selection_.tiles.begin(), tile_selection_.tiles.end(), point(p.x, p.y - 1)) == false) {
 			varray.emplace_back(xpos, ypos);
@@ -3751,7 +3814,6 @@ void editor::edit_module_properties()
 	}
 }
 
-
 void editor::create_new_object()
 {
 	auto wnd = KRE::WindowManager::getMainWindow();
@@ -3800,7 +3862,7 @@ void editor::edit_shaders()
 	if(code_dialog_) {
 		code_dialog_.reset();
 	} else {
-		code_dialog_.reset(new CodeEditorDialog(rect(KRE::WindowManager::getMainWindow()->width() - 620, 30, 620, KRE::WindowManager::getMainWindow()->height() - 30)));
+		code_dialog_.reset(new CodeEditorDialog(get_code_editor_rect()));
 		code_dialog_->load_file(path);
 	}
 }
@@ -3812,7 +3874,7 @@ void editor::edit_level_code()
 		external_code_editor_->loadFile(path);
 	}
 	
-	code_dialog_.reset(new CodeEditorDialog(rect(KRE::WindowManager::getMainWindow()->width() - 620, 30, 620, KRE::WindowManager::getMainWindow()->height() - 30)));
+	code_dialog_.reset(new CodeEditorDialog(get_code_editor_rect()));
 	code_dialog_->load_file(path);
 }
 
@@ -3931,7 +3993,7 @@ void editor::toggle_code()
 	if(code_dialog_) {
 		code_dialog_.reset();
 	} else {
-		code_dialog_.reset(new CodeEditorDialog(rect(KRE::WindowManager::getMainWindow()->width() - 620, 30, 620, KRE::WindowManager::getMainWindow()->height() - 30)));
+		code_dialog_.reset(new CodeEditorDialog(get_code_editor_rect()));
 		set_code_file();
 	}
 }
@@ -4034,5 +4096,9 @@ void editor::object_instance_modified_in_editor(const std::string& label)
 	  std::bind(execute_functions, undo));
 }
 
-#endif // !NO_EDITOR
+BEGIN_DEFINE_CALLABLE_NOBASE(editor)
+DEFINE_FIELD(test, "int")
+	return variant(5);
+END_DEFINE_CALLABLE(editor)
 
+#endif // !NO_EDITOR

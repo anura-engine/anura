@@ -91,7 +91,31 @@ namespace json
 			return result;
 		}
 
-		if(*i1 == '"' || *i1 == '\'' || *i1 == '~') {
+		if(*i1 == '"' && i1+1 != i2 && *(i1+1) == '"' && i1+2 != i2 && *(i1+2) == '"') {
+			Token result;
+			result.translate = false;
+			result.type = Token::TYPE::STRING;
+
+			i1 += 3;
+			result.begin = i1;
+
+			while(i1+2 != i2) {
+				if(std::equal(i1, i1+3, "\"\"\"")) {
+					break;
+				}
+
+				++i1;
+			}
+
+			if(i1+2 == i2) {
+				TokenizerError error = { "Unexpected end of file while parsing string", result.begin };
+				throw error;
+			}
+
+			result.end = i1;
+			i1 += 3;
+			return result;
+		} else if(*i1 == '"' || *i1 == '\'' || *i1 == '~') {
 			const char quote_type = *i1;
 			Token result;
 			result.translate = quote_type == '~';

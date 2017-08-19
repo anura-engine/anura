@@ -129,7 +129,7 @@ void Frame::buildPatterns(variant obj_variant)
 		// Create uncached texture from surface.
 		auto tex = KRE::Texture::createTexture(sheet);
 
-		boost::intrusive_ptr<TextureObject> tex_obj(new TextureObject(tex));
+		ffl::IntrusivePtr<TextureObject> tex_obj(new TextureObject(tex));
 
 		std::vector<variant> area;
 		area.emplace_back(variant(0));
@@ -196,7 +196,8 @@ Frame::Frame(variant node)
 	 rotate_on_slope_(node["rotate_on_slope"].as_bool()),
 	 damage_(node["damage"].as_int()),
 	 sounds_(node["sound"].is_list() ? node["sound"].as_list_string() : util::split(node["sound"].as_string_default())),
-	 force_no_alpha_(node["force_no_alpha"].as_bool(false)),
+	 allow_wrapping_(node["allow_wrapping"].as_bool(false)),
+	 force_no_alpha_(allow_wrapping_ || node["force_no_alpha"].as_bool(false)),
 	 no_remove_alpha_borders_(node["no_remove_alpha_borders"].as_bool(node.has_key("fbo"))),
 	 collision_areas_inside_frame_(true),
 	 current_palette_(-1), 
@@ -211,7 +212,8 @@ Frame::Frame(variant node)
 		ASSERT_LOG(res.size() > 0 && !res[0].empty(), "No valid filenames for texture found in: " << node["image"].to_debug_string());
 		image_ = res[0];
 	} else {
-		ASSERT_LOG(false, "No 'image' attribute found.");
+		ASSERT_LOG(node.has_key("fbo"), "No 'image' attribute found.");
+		image_ = "fbo";
 	}
 
 	std::vector<std::string> palettes = parse_variant_list_or_csv_string(node["palettes"]);
@@ -221,22 +223,22 @@ Frame::Frame(variant node)
 		palettes_recognized_.emplace_back(id);
 	}
 
+	KRE::TexturePtr fbo_texture;
+
 	if(node.has_key("fbo")) {
-		blit_target_.setTexture(node["fbo"].convert_to<TextureObject>()->texture());
+		fbo_texture = node["fbo"].convert_to<TextureObject>()->texture();
+		blit_target_.setTexture(fbo_texture);
 		if(node.has_key("blend")) {
 			blit_target_.setBlendMode(KRE::BlendMode(node["blend"]));
 		} else {
 			blit_target_.setBlendMode(KRE::BlendModeConstants::BM_SRC_ALPHA, KRE::BlendModeConstants::BM_ONE_MINUS_SRC_ALPHA);
 		}
+
+		if(node.has_key("blend_equation")) {
+			blit_target_.setBlendEquation(KRE::BlendEquation(node));
+		}
 	} else if(node.has_key("image")) {
 		blit_target_.setTexture(graphics::get_palette_texture(image_, node["image"], palettes_recognized_));
-	}
-
-	if(palettes_recognized_.empty() == false) {
-		palette_frames().insert(this);
-		if(current_palette_mask) {
-			setPalettes(current_palette_mask);
-		}
 	}
 
 	std::vector<std::string> hit_frames = util::split(node["hit_frames"].as_string_default());
@@ -381,7 +383,22 @@ Frame::Frame(variant node)
 		}
 	}
 
+	//by default once we've used an fbo texture we clear surfaces
+	//from it as generally fbo textures don't need their surfaces
+	//anymore after that.
+	if(fbo_texture && node["clear_fbo"].as_bool(true)) {
+		fbo_texture->clearSurfaces();
+	}
+
+	if(palettes_recognized_.empty() == false) {
+		palette_frames().insert(this);
+		if(current_palette_mask) {
+			setPalettes(current_palette_mask);
+		}
+	}
+
 	// Need to do stuff with co-ordinates here I think.
+
 }
 
 Frame::~Frame()
@@ -497,8 +514,8 @@ void Frame::buildAlphaFromFrameInfo()
 		return;
 	}
 
-	alpha_.resize(nframes_*img_rect_.w()*img_rect_.h(), true);
-	for(int n = 0; n < nframes_; ++n) {
+	alpha_.resize(nframes_*img_rect_.w()*img_rect_.h(), force_no_alpha_ ?  false : true);
+	for(int n = 0; n < nframes_ && !force_no_alpha_; ++n) {
 		const rect& area = frames_[n].area;
 		int dst_index = frames_[n].y_adjust*img_rect_.w()*nframes_ + n*img_rect_.w() + frames_[n].x_adjust;
 		for(int y = 0; y != area.h(); ++y) {
@@ -515,23 +532,24 @@ void Frame::buildAlphaFromFrameInfo()
 			dst_index += img_rect_.w()*nframes_;
 		}
 	}
-
-	if(force_no_alpha_) {
-		const auto nsize = alpha_.size();
-		alpha_.clear();
-		alpha_.resize(nsize, false);
-		return;
-	}
 }
 
 void Frame::buildAlpha()
 {
+	ASSERT_LOG(nframes_ < 1024, "Animation has too many frames");
 	frames_.resize(nframes_);
 	if(!blit_target_.getTexture()) {
 		return;
 	}
 
-	alpha_.resize(nframes_*img_rect_.w()*img_rect_.h(), true);
+	const size_t bufsize = nframes_*img_rect_.w()*img_rect_.h();
+	ASSERT_LOG(bufsize < size_t(8192*8192), "Animation is unreasonably large");
+
+	if(force_no_alpha_) {
+		alpha_.resize(bufsize, false);
+	} else {
+		alpha_.resize(bufsize, true);
+	}
 
 	for(int n = 0; n < nframes_; ++n) {
 		const int current_col = (nframes_per_row_ > 0) ? (n% nframes_per_row_) : n;
@@ -539,9 +557,9 @@ void Frame::buildAlpha()
 		const int xbase = img_rect_.x() + current_col*(img_rect_.w()+pad_);
 		const int ybase = img_rect_.y() + current_row*(img_rect_.h()+pad_);
 
-		if(xbase < 0 || ybase < 0 
+		if(!allow_wrapping_ && (xbase < 0 || ybase < 0 
 			|| xbase + img_rect_.w() > blit_target_.getTexture()->surfaceWidth()
-			|| ybase + img_rect_.h() > blit_target_.getTexture()->surfaceHeight()) {
+			|| ybase + img_rect_.h() > blit_target_.getTexture()->surfaceHeight())) {
 			LOG_INFO("IMAGE RECT FOR FRAME '" << id_ << "' #" << n << ": " << img_rect_.x() << " + " << current_col << " * (" << img_rect_.w() << "+" << pad_ << ") IS INVALID: " << xbase << ", " << ybase << ", " << (xbase + img_rect_.w()) << ", " << (ybase + img_rect_.h()) << " / " << blit_target_.getTexture()->surfaceWidth() << "," << blit_target_.getTexture()->surfaceHeight());
 			LOG_INFO("IMAGE_NAME: " << image_ << ", Name from texture: " << blit_target_.getTexture()->getFrontSurface()->getName());
 			throw Error();
@@ -553,14 +571,19 @@ void Frame::buildAlpha()
 			continue;
 		}*/
 
-		for(int y = 0; y != img_rect_.h(); ++y) {
+		for(int y = 0; y != img_rect_.h() && !force_no_alpha_; ++y) {
 			const int dst_index = y*img_rect_.w()*nframes_ + n*img_rect_.w();
 			ASSERT_INDEX_INTO_VECTOR(dst_index, alpha_);
 
 			std::vector<bool>::iterator dst = alpha_.begin() + dst_index;
 
-			std::vector<bool>::const_iterator src = blit_target_.getTexture()->getFrontSurface()->getAlphaRow(xbase, ybase + y);
-			std::copy(src, src + img_rect_.w(), dst);
+			if(!blit_target_.getTexture()->getFrontSurface()) {
+				no_remove_alpha_borders_ = true;
+				std::fill(dst, dst + img_rect_.w(), false);
+			} else {
+				std::vector<bool>::const_iterator src = blit_target_.getTexture()->getFrontSurface()->getAlphaRow(xbase, ybase + y);
+				std::copy(src, src + img_rect_.w(), dst);
+			}
 		}
 
 		//now calculate if the actual frame we should be using for drawing
@@ -568,7 +591,7 @@ void Frame::buildAlpha()
 		auto& f = frames_[n];
 		f.area = rect(xbase, ybase, img_rect_.w(), img_rect_.h());
 
-		if(no_remove_alpha_borders_) {
+		if(no_remove_alpha_borders_ || force_no_alpha_) {
 			continue;
 		}
 		
@@ -642,13 +665,6 @@ void Frame::buildAlpha()
 		f.area = rect(xbase + left, ybase + top, right - left, bot - top);
 		ASSERT_EQ(f.area.w() + f.x_adjust + f.x2_adjust, img_rect_.w());
 		ASSERT_EQ(f.area.h() + f.y_adjust + f.y2_adjust, img_rect_.h());
-	}
-
-	if(force_no_alpha_) {
-		const auto nsize = alpha_.size();
-		alpha_.clear();
-		alpha_.resize(nsize, false);
-		return;
 	}
 }
 
@@ -795,7 +811,7 @@ void Frame::draw(graphics::AnuraShaderPtr shader, int x, int y, const rect& area
 	blit_target_.setPosition(x + w/2, y + h/2);
 	blit_target_.setRotation(rotate, z_axis);
 	blit_target_.setDrawRect(rect(0, 0, w, h));
-	blit_target_.getTexture()->setSourceRect(0, rect(src_rect.x() + x_adjust, src_rect.y() + y_adjust, src_rect.w() + x_adjust + w_adjust, src_rect.h() + y_adjust + h_adjust));
+	blit_target_.getTexture()->setSourceRect(0, rect(src_rect.x() + x_adjust, src_rect.y() + y_adjust, src_rect.w() + w_adjust, src_rect.h() + h_adjust));
 	blit_target_.setMirrorHoriz(upside_down);
 	blit_target_.setMirrorVert(!face_right);
 	blit_target_.preRender(wnd);
@@ -804,6 +820,68 @@ void Frame::draw(graphics::AnuraShaderPtr shader, int x, int y, const rect& area
 	blit_target_.getTexture()->setSourceRect(0, old_src_rect);
 }
 
+
+void Frame::drawBatch(graphics::AnuraShaderPtr shader, const BatchDrawItem* i1, const BatchDrawItem* i2)
+{
+	if(i1 == i2) {
+		return;
+	}
+
+	const Frame* frame = i1->frame;
+
+	if(shader) {
+		frame->blit_target_.setShader(shader->getShader());
+	}
+
+	std::vector<KRE::vertex_texcoord> queue;
+
+	while(i1 != i2) {
+		const FrameInfo* info = nullptr;
+		i1->frame->getRectInTexture(i1->time, info);
+
+		int x = i1->x + static_cast<int>((i1->face_right ? info->x_adjust : info->x2_adjust) * i1->frame->scale_);
+		int y = i1->y + static_cast<int>(info->y_adjust * i1->frame->scale_);
+		int w = static_cast<int>(info->area.w() * i1->frame->scale_);
+		int h = static_cast<int>(info->area.h() * i1->frame->scale_);
+
+		if(i1->scale != 1.0f) {
+			const int orig_w = w;
+			const int orig_h = h;
+			w *= i1->scale;
+			h *= i1->scale;
+
+			x -= (w - orig_w)/2;
+			y -= (h - orig_h)/2;
+		}
+
+		if(i1->upside_down) {
+			y += h;
+			h = -h;
+		}
+
+		if(i1->face_right) {
+			x += w;
+			w = -w;
+		}
+
+		if(queue.empty() == false) {
+			queue.emplace_back(queue.back());
+			queue.emplace_back(glm::vec2(x, y), glm::vec2(info->draw_rect.x1(), info->draw_rect.y1()));
+		}
+
+		queue.emplace_back(glm::vec2(x, y), glm::vec2(info->draw_rect.x1(), info->draw_rect.y1()));
+		queue.emplace_back(glm::vec2(x+w, y), glm::vec2(info->draw_rect.x2(), info->draw_rect.y1()));
+		queue.emplace_back(glm::vec2(x, y+h), glm::vec2(info->draw_rect.x1(), info->draw_rect.y2()));
+		queue.emplace_back(glm::vec2(x+w, y+h), glm::vec2(info->draw_rect.x2(), info->draw_rect.y2()));
+
+		++i1;
+	}
+
+	auto wnd = KRE::WindowManager::getMainWindow();
+	frame->blit_target_.update(&queue);
+
+	wnd->render(&frame->blit_target_);
+}
 
 void Frame::drawCustom(graphics::AnuraShaderPtr shader, int x, int y, const std::vector<CustomPoint>& points, const rect* area, bool face_right, bool upside_down, int time, float rotation) const
 {
@@ -946,14 +1024,16 @@ void Frame::drawCustom(graphics::AnuraShaderPtr shader, int x, int y, const floa
 	std::vector<KRE::vertex_texcoord> queue;
 	KRE::Blittable blit;
 
-	blit.setTexture(blit_target_.getTexture());
-	blit.setRotation(rotation, z_axis);
+	float center_x = w/2.0;
+	float center_y = h/2.0;
 
-	const float center_x = x + static_cast<float>(w)/2.0f;
-	const float center_y = y + static_cast<float>(h)/2.0f;
+	blit_target_.setCentre(KRE::Blittable::Centre::MIDDLE);
+	blit.setPosition(x + center_x, y + center_y);
+	blit.setRotation(rotation, z_axis);
+	blit.setTexture(blit_target_.getTexture());
 
 	for(int n = 0; n < nelements; ++n) {
-		queue.emplace_back(glm::vec2(x + w*xy[0], y + h*xy[1]), glm::vec2(r[0] + (r[2] - r[0]) * uv[0], r[1] + (r[3] - r[1]) * uv[1]));
+		queue.emplace_back(glm::vec2(-center_x + w*xy[0], -center_y + h*xy[1]), glm::vec2(r[0] + (r[2] - r[0]) * uv[0], r[1] + (r[3] - r[1]) * uv[1]));
 		xy += 2;
 		uv += 2;
 	}
@@ -963,7 +1043,6 @@ void Frame::drawCustom(graphics::AnuraShaderPtr shader, int x, int y, const floa
 	if(shader) {
 		shader->setDrawArea(rect(x, y, w, h));
 		shader->setSpriteArea(rectf::from_coordinates(r[0], r[1], r[2], r[3]));
-		shader->setCycle(cycle);
 		blit.setShader(shader->getShader());
 	}
 
@@ -995,9 +1074,6 @@ void Frame::getRectInFrameNumber(int nframe, const FrameInfo*& info_result) cons
 		info.draw_rect = blit_target_.getTexture()->getSourceRectNormalised();
 		return;
 	}
-
-	const int current_col = (nframes_per_row_ > 0) ? (nframe % nframes_per_row_) : nframe ;
-	const int current_row = (nframes_per_row_ > 0) ? (nframe/nframes_per_row_) : 0 ;
 
 	blit_target_.getTexture()->setSourceRect(0, info.area);
 	info.draw_rect = blit_target_.getTexture()->getSourceRectNormalised();
@@ -1094,6 +1170,11 @@ point Frame::pivot(const std::string& name, int time_in_frame) const
 	return point(getFeetX(),getFeetY()); //default is to pivot around feet.
 }
 
+void Frame::surrenderReferences(GarbageCollector* collector)
+{
+	collector->surrenderVariant(&doc_);
+}
+
 BEGIN_DEFINE_CALLABLE_NOBASE(Frame)
 	DEFINE_FIELD(id, "string")
 		return obj.variantId();
@@ -1103,4 +1184,8 @@ BEGIN_DEFINE_CALLABLE_NOBASE(Frame)
 		return variant(obj.frame_time_);
 	DEFINE_FIELD(total_animation_time, "int")
 		return variant(obj.duration());
+	DEFINE_FIELD(width, "int")
+		return variant(obj.width());
+	DEFINE_FIELD(height, "int")
+		return variant(obj.height());
 END_DEFINE_CALLABLE(Frame)

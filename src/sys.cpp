@@ -21,12 +21,22 @@
 	   distribution.
 */
 
-#if TARGET_OS_IPHONE
+#ifdef __APPLE__
 #include <mach/mach.h>
 #include <mach/mach_host.h>
 #endif
 
+
+#ifdef _MSC_VER
+#include <windows.h>
+#include <psapi.h>
+#endif
+
+#include "asserts.hpp"
+#include "filesystem.hpp"
+#include "string_utils.hpp"
 #include "sys.hpp"
+#include "unit_test.hpp"
 
 namespace sys 
 {
@@ -63,4 +73,116 @@ namespace sys
 	}
 
 #endif
+
+#ifdef __linux__
+
+#include <malloc.h>
+
+	namespace {
+	bool parse_linux_status_value(const char* haystack, const char* stat_name, int* value)
+	{
+		const char* s = strstr(haystack, stat_name);
+		if(s == nullptr) {
+			return false;
+		}
+
+		while(*s && !util::c_isdigit(*s)) {
+			++s;
+		}
+
+		if(!*s) {
+			return false;
+		}
+
+		*value = atoi(s);
+		return true;
+	}
+	}
+
+	bool get_memory_consumption(MemoryConsumptionInfo* info)
+	{
+		std::string s = read_file("/proc/self/status");
+		if(parse_linux_status_value(s.c_str(), "VmSize:", &info->vm_used_kb) == false) {
+			return false;
+		}
+
+		if(parse_linux_status_value(s.c_str(), "VmRSS:", &info->phys_used_kb) == false) {
+			return false;
+		}
+
+		struct mallinfo m = mallinfo();
+
+		info->heap_free_kb = m.fordblks/1024;
+		info->heap_used_kb = m.uordblks/1024;
+
+		return true;
+	}
+
+	int get_heap_object_usable_size(void* ptr) {
+		return malloc_usable_size(ptr);
+	}
+
+#elif defined(__APPLE__)
+
+	bool get_memory_consumption(MemoryConsumptionInfo* res)
+	{
+	    struct mach_task_basic_info info;
+		mach_msg_type_number_t infoCount = MACH_TASK_BASIC_INFO_COUNT;
+		if(task_info(mach_task_self(), MACH_TASK_BASIC_INFO,
+			(task_info_t)&info, &infoCount) != KERN_SUCCESS ) {
+			return false;
+		}
+
+		res->heap_free_kb = 0;
+		res->heap_used_kb = 0;
+
+		res->vm_used_kb = info.virtual_size/1024;
+		res->phys_used_kb = info.resident_size/1024;
+		return true;
+	}
+
+	int get_heap_object_usable_size(void* ptr) {
+		return 0;
+	}
+
+#elif defined(_MSC_VER)
+
+	bool get_memory_consumption(MemoryConsumptionInfo* res)
+	{
+		PROCESS_MEMORY_COUNTERS counters;
+		GetProcessMemoryInfo(GetCurrentProcess(), &counters, sizeof(counters));
+
+		res->heap_free_kb = 0;
+		res->heap_used_kb = 0;
+
+		res->vm_used_kb = 0;
+		res->phys_used_kb = counters.WorkingSetSize/1024;
+		return true;
+	}
+
+	int get_heap_object_usable_size(void* ptr) {
+		return 0;
+	}
+
+#else
+//Add additional implementations here.
+	bool get_memory_consumption(MemoryConsumptionInfo* info)
+	{
+		return false;
+	}
+
+	int get_heap_object_usable_size(void* ptr) {
+		return 0;
+	}
+#endif
+}
+
+COMMAND_LINE_UTILITY(util_test_memory_consumption)
+{
+	sys::MemoryConsumptionInfo info;
+	const bool res = sys::get_memory_consumption(&info);
+
+	ASSERT_LOG(res, "Failed to parse memory consumption");
+
+	printf("Memory consumption: %d virt, %d phys\n", info.vm_used_kb, info.phys_used_kb);
 }

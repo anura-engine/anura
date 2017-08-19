@@ -49,7 +49,7 @@ namespace
 	struct TilePatternCache;
 }
 
-class TileMap : public game_logic::FormulaCallable 
+class TileMap
 {
 public:
 	static void init(variant node);

@@ -67,10 +67,10 @@ namespace editor_dialogs
 		//the first object in each category
 		std::map<std::string, int> first_obj_;
 
-		boost::intrusive_ptr<gui::TextEditorWidget> find_edit_;
+		ffl::IntrusivePtr<gui::TextEditorWidget> find_edit_;
 	};
 
-	typedef boost::intrusive_ptr<CharacterEditorDialog> CharacterEditorDialogPtr;
+	typedef ffl::IntrusivePtr<CharacterEditorDialog> CharacterEditorDialogPtr;
 }
 
 #endif // NO_EDITOR

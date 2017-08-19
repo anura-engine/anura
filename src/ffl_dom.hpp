@@ -32,6 +32,7 @@
 
 #include "xhtml.hpp"
 #include "xhtml_script_interface.hpp"
+#include "SceneTree.hpp"
 
 #include "ffl_dom_fwd.hpp"
 
@@ -46,7 +47,7 @@ namespace xhtml
 		DECLARE_CALLABLE(StyleObject);
 		StyleNodePtr style_node_;
 	};
-	typedef boost::intrusive_ptr<StyleObject> StyleObjectPtr;
+	typedef ffl::IntrusivePtr<StyleObject> StyleObjectPtr;
 
 	class ElementObject : public game_logic::FormulaCallable
 	{
@@ -68,7 +69,7 @@ namespace xhtml
 		std::vector<variant> handlers_;
 		StyleObjectPtr styles_;
 	};
-	typedef boost::intrusive_ptr<ElementObject> ElementObjectPtr;
+	typedef ffl::IntrusivePtr<ElementObject> ElementObjectPtr;
 
 	class DocumentObject : public game_logic::FormulaCallable
 	{
@@ -88,7 +89,8 @@ namespace xhtml
 		game_logic::FormulaCallable* getEnvironment() const { return environment_; }
 
 		void setLayoutSize(const rect& r) { layout_size_ = r; }
-
+		
+		ElementObjectPtr getActiveElement() const;
 		ElementObjectPtr getElementById(const std::string& element_id) const;
 		ElementObjectPtr getElementByNode(const NodePtr& node) const;
 		std::vector<ElementObjectPtr> getElementsByTagName(const std::string& element_tag) const;
@@ -106,15 +108,16 @@ namespace xhtml
 		
 		xhtml::DocumentPtr doc_;
 		xhtml::StyleNodePtr style_tree_;
-		xhtml::DisplayListPtr display_list_;
+		KRE::SceneTreePtr scene_tree_;
 
 		std::string doc_name_;
 		std::string ss_name_;
 
 		rect layout_size_;
+		bool do_onload_;
 
 		mutable std::map<NodePtr, ElementObjectPtr> element_cache_;
 	};
 	
-	typedef boost::intrusive_ptr<DocumentObject> DocumentObjectPtr;
+	typedef ffl::IntrusivePtr<DocumentObject> DocumentObjectPtr;
 }

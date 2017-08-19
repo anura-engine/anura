@@ -930,7 +930,7 @@ void LevelObject::getPalettesUsed(std::vector<int>& v) const
 	}
 }
 
-void LevelObject::queueDraw(KRE::CanvasPtr canvas, const LevelTile& t)
+void LevelObject::queueDraw(KRE::CanvasPtr canvas, const LevelTile& t, const rect* dst_rect_ptr)
 {
 	const int random_index = hash_level_object(t.x,t.y);
 	const int tile_num = t.object->tiles_[random_index%t.object->tiles_.size()];
@@ -945,7 +945,7 @@ void LevelObject::queueDraw(KRE::CanvasPtr canvas, const LevelTile& t)
 	const int xpos = BaseTileSize*(tile_num%(width/BaseTileSize)) + area.x();
 	const int ypos = BaseTileSize*(tile_num/(width/BaseTileSize)) + area.y();
 
-	rect src_rect(xpos, ypos, xpos + area.w(), ypos + area.h());
+	rect src_rect(xpos, ypos, area.w(), area.h());
 
 	//int area_x = area.x() * g_tile_scale;
 	//if(t.face_right) {
@@ -957,6 +957,10 @@ void LevelObject::queueDraw(KRE::CanvasPtr canvas, const LevelTile& t)
 	//const int y = t.y + area.y() * g_tile_scale;
 	//rect dst_rect(x, y, area.w() * g_tile_scale, area.h() * g_tile_scale);
 	rect dst_rect(area.x(), area.y(), area.w() * g_tile_scale, area.h() * g_tile_scale);
+
+	if(dst_rect_ptr != nullptr) {
+		dst_rect = *dst_rect_ptr;
+	}
 
 	canvas->blitTexture(t.object->t_, src_rect, 0, dst_rect);
 }

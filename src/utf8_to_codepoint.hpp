@@ -44,6 +44,14 @@ namespace utils
 				utf8_bitmask_4(0x10)
 			{}
 			~iterator() {}
+
+			std::string get_char_as_string() const {
+				auto i2 = *this;
+				++i2;
+				return std::string(str_itor(), i2.str_itor());
+			}
+
+			std::string::const_iterator str_itor() const { return it_; }
 			bool operator!= (const iterator& other) const
 			{
 				return it_ != other.it_;
@@ -52,11 +60,11 @@ namespace utils
 			{
 				char32_t codepoint = 0;
 				std::string::const_iterator it(it_);
-				auto c = *it++;
+				unsigned char c = *it++;
 				if(c & utf8_bitmask_1) {
 					if(c & utf8_bitmask_3) {
 						if(c & utf8_bitmask_4) {
-							// U = (C1 – 240) * 262,144 + (C2 – 128) * 4,096 + (C3 – 128) * 64 + C4 – 128
+							// U = (C1 - 240) * 262,144 + (C2 - 128) * 4,096 + (C3 - 128) * 64 + C4 - 128
 							codepoint = (c - 240) * 262144;
 							c = *it++;
 							codepoint += (c - 128) * 4096;
@@ -65,7 +73,7 @@ namespace utils
 							c = *it++;
 							codepoint += c - 128;
 						} else {
-							// U = (C1 – 224) * 4,096 + (C2 – 128) * 64 + C3 – 128
+							// U = (C1 - 224) * 4,096 + (C2 - 128) * 64 + C3 - 128
 							codepoint = (c - 224) * 4096;
 							c = *it++;
 							codepoint += (c - 128) * 64;
@@ -73,7 +81,7 @@ namespace utils
 							codepoint += c - 128;
 						}
 					} else {
-						// U = (C1 – 192) * 64 + C2 – 128
+						// U = (C1 - 192) * 64 + C2 - 128
 						codepoint = (c - 192) * 64;
 						c = *it++;
 						codepoint += c - 128;
@@ -113,7 +121,68 @@ namespace utils
 		iterator begin() const { return iterator(utf8_.begin()); }
 		iterator end() const { return iterator(utf8_.end()); }
 
-		utf8_to_codepoint(const std::string& s) : utf8_(s) {}
+		utf8_to_codepoint(const std::string& s) : utf8_(s) { if(!validate_utf8_string(s)) { utf8_ = ""; } }
+
+		static std::string utf8_string_to_hex(const std::string& s) {
+			std::string result;
+			for(auto c : s) {
+				char buf[128];
+				sprintf(buf, "%02x ", (unsigned int)c);
+				result += buf;
+			}
+			return result;
+		}
+
+		static bool validate_utf8_string(const std::string& s) {
+			auto i = s.begin();
+			auto i2 = s.end();
+			bool valid = true;
+			while(i != i2) {
+
+				uint8_t c = static_cast<uint8_t>(*i);
+				if(c & 0x80) {
+					if(!(c & 0x40)) {
+						valid = false;
+						break;
+					}
+
+					int nchars = 2;
+					if(c & 0x20) {
+						++nchars;
+						if(c & 0x10) {
+							++nchars;
+							if(c & 0x8) {
+								valid = false;
+								break;
+							}
+						}
+					}
+
+					if(std::distance(i, i2) < nchars) {
+						valid = false;
+						break;
+					}
+
+					++i;
+					--nchars;
+					while(nchars > 0) {
+						uint8_t c = static_cast<uint8_t>(*i);
+						if((c & (0x80 | 0x40)) != 0x80) {
+							valid = false;
+							break;
+						}
+
+						++i;
+						--nchars;
+					}
+				} else {
+					++i;
+				}
+			}
+
+			//ASSERT_LOG(valid, "Invalid utf8 string: (" << s << ") : " << utf8_string_to_hex(s) << "\n");
+			return valid;
+		}
 	private:
 		std::string utf8_;
 		utf8_to_codepoint();
@@ -146,4 +215,23 @@ namespace utils
 		}
 		return std::string(utf8_str, n);
     }
+
+	inline size_t str_len_utf8(const std::string& s)
+	{
+		utf8_to_codepoint cp(s);
+		return std::distance(cp.begin(), cp.end());
+	}
+
+	inline std::string str_substr_utf8(const std::string& s, size_t n1, size_t n2)
+	{
+		utf8_to_codepoint cp(s);
+		auto i = cp.begin();
+		std::advance(i, n1);
+
+		auto begin = i.str_itor();
+		std::advance(i, n2 - n1);
+		auto end = i.str_itor();
+
+		return std::string(begin, end);
+	}
 }

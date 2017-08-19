@@ -24,6 +24,7 @@
 #include <map>
 
 #include "asserts.hpp"
+#include "preferences.hpp"
 #include "AttributeSet.hpp"
 #include "Canvas.hpp"
 #include "ClipScope.hpp"
@@ -39,6 +40,8 @@ namespace KRE
 {
 	namespace 
 	{
+		PREF_BOOL(kre_allow_hardware_attribute_set, false, "Allows hardware attribute sets in the rendering engine");
+
 		// A quick hack to do case insensitive case compare, doesn't support utf-8,
 		// doesn't support unicode comparison between code-points.
 		// But then it isn't intended to.
@@ -113,7 +116,7 @@ namespace KRE
 
 	AttributeSetPtr DisplayDevice::createAttributeSet(bool hardware_hint, bool indexed, bool instanced)
 	{
-		if(hardware_hint) {
+		if(g_kre_allow_hardware_attribute_set && hardware_hint) {
 			auto as = DisplayDevice::getCurrent()->handleCreateAttributeSet(indexed, instanced);
 			if(as) {
 				return as;

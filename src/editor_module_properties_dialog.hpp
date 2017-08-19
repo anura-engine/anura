@@ -62,7 +62,7 @@ namespace editor_dialogs
 		std::vector<std::string> dirs_;
 	};
 
-	typedef boost::intrusive_ptr<EditorModulePropertiesDialog> EditorModulePropertiesDialogPtr;
+	typedef ffl::IntrusivePtr<EditorModulePropertiesDialog> EditorModulePropertiesDialogPtr;
 }
 
 #endif // !NO_EDITOR

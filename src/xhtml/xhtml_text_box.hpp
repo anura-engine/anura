@@ -28,28 +28,40 @@
 
 namespace xhtml
 {
+	struct TextHolder;
+
+	struct LineInfo 
+	{
+		LineInfo() : line_(nullptr), offset_(), justification_(0), width_(0), height_(0) {}
+		explicit LineInfo(const LinePtr& line, const point& offset=point()) : line_(line), offset_(offset), justification_(0), width_(0), height_(0) {}
+		LinePtr line_;
+		point offset_;
+		FixedPoint justification_;
+		FixedPoint width_;
+		FixedPoint height_;
+	};
+
 	class TextBox : public Box
 	{
 	public:
-		TextBox(BoxPtr parent, StyleNodePtr node);
+		TextBox(const BoxPtr& parent, const StyleNodePtr& node, const RootBoxPtr& root);
 		std::string toString() const override;
-		Text::iterator reflow(LayoutEngine& eng, point& cursor, Text::iterator it);
-		Text::iterator begin() { return it_; }
-		Text::iterator end();
-		LinePtr getLine() const { return line_; }
-		TextPtr getText() const { return txt_; }
-		void justify(FixedPoint containing_width) override;
+		const LineInfo& getLine() const { return line_; }
+		static std::vector<LineBoxPtr> reflowText(const std::vector<TextHolder>& th, const BoxPtr& parent, const RootBoxPtr& root, LayoutEngine& eng, const Dimensions& containing);
 	private:
 		void handleLayout(LayoutEngine& eng, const Dimensions& containing) override;
-		void handleRender(DisplayListPtr display_list, const point& offset) const override;
-		void handleRenderBackground(DisplayListPtr display_list, const point& offset) const override;
-		void handleRenderBorder(DisplayListPtr display_list, const point& offset) const override;
-		void handleRenderShadow(DisplayListPtr display_list, const point& offset, KRE::FontRenderablePtr fontr, float w, float h) const;
-		FixedPoint calculateWidth() const;
-		LinePtr line_;
-		TextPtr txt_;
-		Text::iterator it_;
-		FixedPoint justification_;
+		void postParentLayout(LayoutEngine& eng, const Dimensions& containing) override;
+		void handleRender(const KRE::SceneTreePtr& scene_tree, const point& offset) const override;
+		void handleRenderBackground(const KRE::SceneTreePtr& scene_tree, const point& offset) const override;
+		void handleRenderBorder(const KRE::SceneTreePtr& scene_tree, const point& offset) const override;
+		void handleRenderShadow(const KRE::SceneTreePtr& scene_tree, KRE::FontRenderablePtr fontr, float w, float h) const;
+		FixedPoint calculateWidth(const LineInfo& line) const;
+
+		void setJustify(FixedPoint containing_width);
+		void setRightAlign(FixedPoint containing_width);
+		void setCenterAlign(FixedPoint containing_width);
+
+		LineInfo line_;
 
 		// for text shadows
 		struct Shadow {

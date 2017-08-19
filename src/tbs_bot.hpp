@@ -32,6 +32,7 @@
 #include "formula_callable.hpp"
 #include "tbs_client.hpp"
 #include "tbs_internal_client.hpp"
+#include "tbs_ipc_client.hpp"
 #include "variant.hpp"
 
 namespace tbs 
@@ -43,6 +44,8 @@ class bot : public game_logic::FormulaCallable
 	public:
 		bot(boost::asio::io_service& io_service, const std::string& host, const std::string& port, variant v);
 		~bot();
+
+		void set_ipc_client(ffl::IntrusivePtr<ipc_client> ipc_client) { ipc_client_ = ipc_client; }
 
 		void process(const boost::system::error_code& error);
 
@@ -59,9 +62,10 @@ class bot : public game_logic::FormulaCallable
 
 		std::string host_, port_;
 		std::vector<variant> script_;
-		std::vector<variant> response_;
-		boost::intrusive_ptr<client> client_;
-		boost::intrusive_ptr<internal_client> internal_client_;
+		int response_pos_;
+		int script_pos_;
+		ffl::IntrusivePtr<client> client_;
+		ffl::IntrusivePtr<ipc_client> ipc_client_;
 
 		boost::asio::io_service& service_;
 		boost::asio::deadline_timer timer_;

@@ -30,10 +30,9 @@ namespace xhtml
 	class InlineBlockBox : public Box
 	{
 	public:
-		explicit InlineBlockBox(BoxPtr parent, StyleNodePtr node);
+		explicit InlineBlockBox(const BoxPtr& parent, const StyleNodePtr& node, const RootBoxPtr& root);
 		std::string toString() const override;
 		FixedPoint getBaselineOffset() const override { return 0; }
-		bool isMultiline() const override { return multiline_; }
 	private:
 		void layoutWidth(const Dimensions& containing);
 		void layoutChildren(LayoutEngine& eng);
@@ -43,9 +42,7 @@ namespace xhtml
 		void handlePreChildLayout(LayoutEngine& eng, const Dimensions& containing) override;
 		void handlePreChildLayout2(LayoutEngine& eng, const Dimensions& containing) override;
 		void handlePostChildLayout(LayoutEngine& eng, BoxPtr child) override;
-		void handleRender(DisplayListPtr display_list, const point& offset) const override;
-		
-		// If it's one line or more than one, if it's non-replaceable
-		bool multiline_;
+		void handleRender(const KRE::SceneTreePtr& scene_tree, const point& offset) const override;
+		point cursor_;
 	};
 }

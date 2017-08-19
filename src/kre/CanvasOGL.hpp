@@ -23,11 +23,12 @@
 
 #pragma once
 
+#include "AlignedAllocator.hpp"
 #include "Canvas.hpp"
 
 namespace KRE
 {
-	class CanvasOGL : public Canvas
+	class CanvasOGL : public Canvas, public AlignedAllocator16
 	{
 	public:
 		CanvasOGL();

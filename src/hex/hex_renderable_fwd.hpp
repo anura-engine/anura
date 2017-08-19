@@ -29,4 +29,6 @@ namespace hex
 	typedef std::shared_ptr<MapNode> MapNodePtr;
 	class MapLayer;
 	typedef std::shared_ptr<MapLayer> MapLayerPtr;
+	class AnimatedMapLayer;
+	typedef std::shared_ptr<AnimatedMapLayer> AnimatedMapLayerPtr;
 }

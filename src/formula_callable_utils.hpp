@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include <boost/intrusive_ptr.hpp>
+#include "intrusive_ptr.hpp"
 
 #include <vector>
 
@@ -33,6 +33,45 @@
 
 namespace game_logic
 {
+	template<size_t N>
+	class NSlotFormulaCallable : public FormulaCallable
+	{
+	public:
+		NSlotFormulaCallable(const ConstFormulaCallablePtr& fallback, int nbase_slot=0) : fallback_(fallback), base_slot_(0)
+		{}
+
+		~NSlotFormulaCallable() {
+			for(int n = 0; n != N; ++n) {
+				((variant*)&buf_[n*sizeof(variant)])->~variant();
+			}
+		}
+
+		void set(int nslot, const variant& v) {
+			new (&buf_[nslot*sizeof(variant)]) variant(v);
+		}
+		
+		variant getValue(const std::string& key) const override {
+			if(fallback_) {
+				return fallback_->queryValue(key);
+			}
+			ASSERT_LOG(false, "GET VALUE " << key << " FROM SLOT CALLABLE");
+			return variant();
+		}
+
+		variant getValueBySlot(int slot) const override {
+			if(slot < base_slot_) {
+				return fallback_->queryValueBySlot(slot);
+			}
+
+			slot -= base_slot_;
+
+			return *(const variant*)buf_[slot*sizeof(variant)];
+		}
+	private:
+		char buf_[sizeof(variant)*N];
+		ConstFormulaCallablePtr fallback_;
+		int base_slot_;
+	};
 
 	class SlotFormulaCallable : public FormulaCallable
 	{
@@ -44,7 +83,9 @@ namespace game_logic
 			value_names_ = names;
 		}
 		void setFallback(const ConstFormulaCallablePtr& fallback) { fallback_ = fallback; }
-		void add(const variant& val) { values_.push_back(val); }
+		void add(const variant& val) { values_.emplace_back(val); }
+		void setValues(const std::vector<variant>& values) { values_ = values; }
+		void setValues(std::vector<variant>* values) { values->swap(values_); }
 		variant& backDirectAccess() { return values_.back(); }
 		void reserve(size_t n) { values_.reserve(n); }
 

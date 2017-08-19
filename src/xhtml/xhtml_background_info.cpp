@@ -350,7 +350,7 @@ namespace xhtml
 		}
 	}
 
-	void BackgroundInfo::renderBoxShadow(DisplayListPtr display_list, const point& offset, const Dimensions& dims, KRE::RenderablePtr clip_shape) const
+	void BackgroundInfo::renderBoxShadow(const KRE::SceneTreePtr& scene_tree, const Dimensions& dims, KRE::RenderablePtr clip_shape) const
 	{
 		using namespace KRE;
 
@@ -388,14 +388,14 @@ namespace xhtml
 						new_clip_shape->setScale(scalew, scaleh);
 						box->setClipSettings(get_stencil_mask_settings(), new_clip_shape);
 					}
-					box->setPosition((shadow.x_offset + offset.x) / LayoutEngine::getFixedPointScaleFloat() - ssr, 
-						(shadow.y_offset + offset.y) / LayoutEngine::getFixedPointScaleFloat() - ssr);
-					display_list->addRenderable(box);
+					box->setPosition((shadow.x_offset) / LayoutEngine::getFixedPointScaleFloat() - ssr, 
+						(shadow.y_offset) / LayoutEngine::getFixedPointScaleFloat() - ssr);
+					scene_tree->addObject(box);
 				} else {
 					const int gaussian_radius = 7;
 				
-					const int width = spread_width + gaussian_radius * 4; 
-					const int height = spread_height + gaussian_radius * 4;;
+					const int width = static_cast<int>(spread_width + gaussian_radius * 4); 
+					const int height = static_cast<int>(spread_height + gaussian_radius * 4);
 
 					auto shader_blur = ShaderProgram::createGaussianShader(gaussian_radius)->clone();
 					const int blur_two = shader_blur->getUniform("texel_width_offset");
@@ -405,7 +405,7 @@ namespace xhtml
 
 					CameraPtr rt_cam = std::make_shared<Camera>("ortho_blur", 0, width, 0, height);
 
-					rect box_size(0, 0, spread_width, spread_height);
+					rect box_size(0, 0, static_cast<int>(spread_width), static_cast<int>(spread_height));
 					SolidRenderablePtr box = std::make_shared<SolidRenderable>(box_size, shadow.color);
 					if(clip_shape != nullptr) {
 						const float scalew = spread_width / static_cast<float>(box_width);
@@ -453,15 +453,15 @@ namespace xhtml
 						shader->setUniformValue(blur_tho, 1.0f / (height - 1.0f));
 					});
 
-					rt_blur_v->setPosition((shadow.x_offset + offset.x) / LayoutEngine::getFixedPointScaleFloat() - ssr - gaussian_radius * 2, 
-						(shadow.y_offset + offset.y) / LayoutEngine::getFixedPointScaleFloat() - ssr - gaussian_radius * 2);
-					display_list->addRenderable(rt_blur_v);
+					rt_blur_v->setPosition((shadow.x_offset) / LayoutEngine::getFixedPointScaleFloat() - ssr - gaussian_radius * 2, 
+						(shadow.y_offset) / LayoutEngine::getFixedPointScaleFloat() - ssr - gaussian_radius * 2);
+					scene_tree->addObject(rt_blur_v);
 				}
 			}
 		}
 	}
 
-	void BackgroundInfo::render(DisplayListPtr display_list, const point& offset, const Dimensions& dims) const
+	void BackgroundInfo::render(const KRE::SceneTreePtr& scene_tree, const Dimensions& dims, const point& offset) const
 	{
 		if(styles_ == nullptr) {
 			return;
@@ -503,7 +503,7 @@ namespace xhtml
 				break;
 		}
 
-		renderBoxShadow(display_list, offset, dims, clip_shape);
+		renderBoxShadow(scene_tree, dims, clip_shape);
 
 		if(styles_->getBackgroundColor()->ai() != 0) {
 			auto solid = std::make_shared<SolidRenderable>(rect(0, 0, rw, rh), styles_->getBackgroundColor());
@@ -511,7 +511,7 @@ namespace xhtml
 			if(clip_shape != nullptr) {
 				solid->setClipSettings(get_stencil_mask_settings(), clip_shape);
 			}
-			display_list->addRenderable(solid);
+			scene_tree->addObject(solid);
 		}
 		// XXX if texture is set then use background position and repeat as appropriate.
 		if(texture_ != nullptr) {
@@ -553,15 +553,15 @@ namespace xhtml
 			ptr->setPosition(rxf, ryf);
 			switch(styles_->getBackgroundRepeat()) {
 				case BackgroundRepeat::REPEAT:
-					tex->setSourceRect(0, rect(-left, -top, width, height));
+					tex->setSourceRect(0, rect(-static_cast<int>(left), -static_cast<int>(top), static_cast<int>(width), static_cast<int>(height)));
 					ptr->setDrawRect(rectf(0.0f, 0.0f, width, height));
 					break;
 				case BackgroundRepeat::REPEAT_X:
-					tex->setSourceRect(0, rect(-left, 0, width, sh));
+					tex->setSourceRect(0, rect(-static_cast<int>(left), 0, static_cast<int>(width), sh));
 					ptr->setDrawRect(rectf(0.0f, top, width, static_cast<float>(sh)));
 					break;
 				case BackgroundRepeat::REPEAT_Y:
-					tex->setSourceRect(0, rect(0, -top, sw, height));
+					tex->setSourceRect(0, rect(0, -static_cast<int>(top), sw, static_cast<int>(height)));
 					ptr->setDrawRect(rectf(left, 0.0f, static_cast<float>(sw), height));
 					break;
 				case BackgroundRepeat::NO_REPEAT:
@@ -573,7 +573,7 @@ namespace xhtml
 			if(clip_shape != nullptr) {
 				ptr->setClipSettings(get_stencil_mask_settings(), clip_shape);
 			}
-			display_list->addRenderable(ptr);
+			scene_tree->addObject(ptr);
 		}
 	}
 }

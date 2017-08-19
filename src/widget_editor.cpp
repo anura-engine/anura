@@ -158,7 +158,7 @@ private:
 	widget_window();
 	widget_window(const widget_window&);
 };
-typedef boost::intrusive_ptr<widget_window> widget_window_ptr;
+typedef ffl::IntrusivePtr<widget_window> widget_window_ptr;
 
 class widget_editor : public gui::dialog
 {
@@ -408,7 +408,7 @@ UTILITY(widget_editor)
 		// load file
 	}
 	
-	boost::intrusive_ptr<widget_editor> editor(new widget_editor(rect(0, 0, preferences::actual_screen_width(), preferences::actual_screen_height()), fname));
+	ffl::IntrusivePtr<widget_editor> editor(new widget_editor(rect(0, 0, preferences::actual_screen_width(), preferences::actual_screen_height()), fname));
 	editor->showModal();
 }
 #endif

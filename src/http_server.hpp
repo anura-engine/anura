@@ -27,11 +27,15 @@
 #include <boost/asio.hpp>
 #include <map>
 
+#include "variant.hpp"
+
 namespace http 
 {
 	typedef std::map<std::string, std::string> environment;
 
 	std::map<std::string, std::string> parse_http_headers(std::string& str);
+
+	struct WebServerProxyInfo;
 
 	class web_server
 	{
@@ -49,6 +53,8 @@ namespace http
 		explicit web_server(boost::asio::io_service& io_service, int port=23456);
 		virtual ~web_server();
 
+		void connect_proxy(uint32_t session_id, const std::string& host, const std::string& port);
+
 		void keepalive_socket(socket_ptr socket);
 
 		static void disconnect_socket(socket_ptr socket);
@@ -64,10 +70,13 @@ namespace http
 
 		virtual void disconnect(socket_ptr socket);
 
-		virtual void handlePost(socket_ptr socket, variant doc, const environment& env) = 0;
+		virtual void handlePost(socket_ptr socket, variant doc, const environment& env, const std::string& raw_msg) = 0;
 		virtual void handleGet(socket_ptr socket, const std::string& url, const std::map<std::string, std::string>& args) = 0;
 
 	private:
+
+		std::vector<std::shared_ptr<WebServerProxyInfo>> proxies_;
+
 		struct receive_buf {
 			receive_buf() : wanted(0) {}
 			std::string msg;
@@ -75,7 +84,11 @@ namespace http
 		};
 		typedef std::shared_ptr<receive_buf> receive_buf_ptr;
 
+	public:
 		void start_receive(socket_ptr socket, receive_buf_ptr buf=receive_buf_ptr());
+	
+	private:
+
 		void handle_receive(socket_ptr socket, buffer_ptr buf, const boost::system::error_code& e, size_t nbytes, receive_buf_ptr recv_buf);
 		void handle_incoming_data(socket_ptr socket, const char* i1, const char* i2, receive_buf_ptr recv_buf);
 
@@ -83,6 +96,7 @@ namespace http
 
 		virtual variant parse_message(const std::string& msg) const;
 
-		boost::asio::ip::tcp::acceptor acceptor_;
+		boost::asio::io_service& io_service_;
+		std::shared_ptr<boost::asio::ip::tcp::acceptor> acceptor_;
 	};
 }

@@ -858,9 +858,6 @@
     <ClInclude Include="..\..\src\kre\ParticleSystemFwd.hpp">
       <Filter>Header Files\kre</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\kre\ParticleSystemObservers.hpp">
-      <Filter>Header Files\kre</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\kre\ParticleSystemParameters.hpp">
       <Filter>Header Files\kre</Filter>
     </ClInclude>
@@ -999,33 +996,6 @@
     <ClInclude Include="..\..\src\tiled\tmx_reader.hpp">
       <Filter>Header Files\tiled</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\hex\hex_fwd.hpp">
-      <Filter>Header Files\hex</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\hex\hex_logical_fwd.hpp">
-      <Filter>Header Files\hex</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\hex\hex_logical_tiles.hpp">
-      <Filter>Header Files\hex</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\hex\hex_map.hpp">
-      <Filter>Header Files\hex</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\hex\hex_object.hpp">
-      <Filter>Header Files\hex</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\hex\hex_pathfinding.hpp">
-      <Filter>Header Files\hex</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\hex\hex_tile.hpp">
-      <Filter>Header Files\hex</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\hex\hex_renderable.hpp">
-      <Filter>Header Files\hex</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\hex\hex_renderable_fwd.hpp">
-      <Filter>Header Files\hex</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\xhtml\css_lexer.hpp">
       <Filter>Header Files\xhtml</Filter>
     </ClInclude>
@@ -1045,9 +1015,6 @@
       <Filter>Header Files\xhtml</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\xhtml\css_transition.hpp">
-      <Filter>Header Files\xhtml</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\xhtml\display_list.hpp">
       <Filter>Header Files\xhtml</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\xhtml\solid_renderable.hpp">
@@ -1090,9 +1057,6 @@
       <Filter>Header Files\xhtml</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\xhtml\xhtml_layout_engine.hpp">
-      <Filter>Header Files\xhtml</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\xhtml\xhtml_line_box.hpp">
       <Filter>Header Files\xhtml</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\xhtml\xhtml_listitem_box.hpp">
@@ -1143,6 +1107,90 @@
     <ClInclude Include="..\..\src\kre\SurfaceBlur.hpp">
       <Filter>Header Files\kre</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\hex\hex_mask.hpp">
+      <Filter>Header Files\hex</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\shared_memory_pipe.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\tbs_ipc_client.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\breakpad.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\SceneTree.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\xhtml\url_handler.hpp">
+      <Filter>Header Files\xhtml</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\AlignedAllocator.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\SurfaceScale.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\Cursor.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\xhtml\scrollable.hpp">
+      <Filter>Header Files\xhtml</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\xhtml\xhtml_line_box.hpp">
+      <Filter>Header Files\xhtml</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\xhtml\event_listener.hpp">
+      <Filter>Header Files\xhtml</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\xhtml\xslider.hpp">
+      <Filter>Header Files\xhtml</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\hex\hex_tile.hpp">
+      <Filter>Header Files\hex</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\hex\tile_rules.hpp">
+      <Filter>Header Files\hex</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\hex\hex.hpp">
+      <Filter>Header Files\hex</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\hex\hex_fwd.hpp">
+      <Filter>Header Files\hex</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\hex\hex_helper.hpp">
+      <Filter>Header Files\hex</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\hex\hex_loader.hpp">
+      <Filter>Header Files\hex</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\hex\hex_map.hpp">
+      <Filter>Header Files\hex</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\hex\hex_renderable.hpp">
+      <Filter>Header Files\hex</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\hex\hex_renderable_fwd.hpp">
+      <Filter>Header Files\hex</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\formula_vm.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\formula_where.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\ParticleSystemUI.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\imgui_impl_sdl_gl3.h">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\imgui\imgui.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\theme_imgui.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\src\kre\geometry.inl">
@@ -1150,6 +1198,9 @@
     </None>
     <None Include="..\..\src\custom_object.inc">
       <Filter>Header Files</Filter>
+    </None>
+    <None Include="..\..\imgui\imgui_user.inl">
+      <Filter>Source Files\kre</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -1265,9 +1316,6 @@
       <Filter>Source Files\kre</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\kre\ParticleSystemEmitters.cpp">
-      <Filter>Source Files\kre</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\kre\ParticleSystemObservers.cpp">
       <Filter>Source Files\kre</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\kre\ParticleSystemParameters.cpp">
@@ -1993,24 +2041,6 @@
     <ClCompile Include="..\..\src\tiled\tmx_reader.cpp">
       <Filter>Source Files\tiled</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\hex\hex_logical_tiles.cpp">
-      <Filter>Source Files\hex</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\hex\hex_map.cpp">
-      <Filter>Source Files\hex</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\hex\hex_object.cpp">
-      <Filter>Source Files\hex</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\hex\hex_pathfinding.cpp">
-      <Filter>Source Files\hex</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\hex\hex_tile.cpp">
-      <Filter>Source Files\hex</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\hex\hex_renderable.cpp">
-      <Filter>Source Files\hex</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\xhtml\css_lexer.cpp">
       <Filter>Source Files\xhtml</Filter>
     </ClCompile>
@@ -2030,9 +2060,6 @@
       <Filter>Source Files\xhtml</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\xhtml\css_transition.cpp">
-      <Filter>Source Files\xhtml</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\xhtml\display_list.cpp">
       <Filter>Source Files\xhtml</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\xhtml\solid_renderable.cpp">
@@ -2066,9 +2093,6 @@
       <Filter>Source Files\xhtml</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\xhtml\xhtml_layout_engine.cpp">
-      <Filter>Source Files\xhtml</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\xhtml\xhtml_line_box.cpp">
       <Filter>Source Files\xhtml</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\xhtml\xhtml_listitem_box.cpp">
@@ -2122,10 +2146,81 @@
     <ClCompile Include="..\..\src\ffl_lib.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <Library Include="..\Box2D\$(Configuration)\$(Platform)\Box2D.lib" />
-    <Library Include="..\lua\$(Configuration)\$(Platform)\lua.lib" />
+    <ClCompile Include="..\..\src\hex\hex_mask.cpp">
+      <Filter>Source Files\hex</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\shared_memory_pipe.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\tbs_ipc_client.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\breakpad.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\SceneTree.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\xhtml\url_handler.cpp">
+      <Filter>Source Files\xhtml</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\SurfaceScale.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\Cursor.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\xhtml\scrollable.cpp">
+      <Filter>Source Files\xhtml</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\xhtml\xhtml_line_box.cpp">
+      <Filter>Source Files\xhtml</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\xhtml\event_listener.cpp">
+      <Filter>Source Files\xhtml</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\xhtml\xslider.cpp">
+      <Filter>Source Files\xhtml</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\hex\hex_helper.cpp">
+      <Filter>Source Files\hex</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\hex\hex_loader.cpp">
+      <Filter>Source Files\hex</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\hex\hex_map.cpp">
+      <Filter>Source Files\hex</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\hex\hex_renderable.cpp">
+      <Filter>Source Files\hex</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\hex\hex_tile.cpp">
+      <Filter>Source Files\hex</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\hex\tile_rules.cpp">
+      <Filter>Source Files\hex</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\formula_vm.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\formula_internal.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\ParticleSystemUI.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\imgui\imgui.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\imgui\imgui_draw.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\imgui_impl_sdl_gl3.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\theme_imgui.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\..\src\anura-resouces.rc">

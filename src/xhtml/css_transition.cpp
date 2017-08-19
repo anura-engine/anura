@@ -185,6 +185,209 @@ namespace css
 		mix_color_->setBlue(mix(outp, start_color_.b(), end_color_.b()));
 		mix_color_->setAlpha(mix(outp, start_color_.a(), end_color_.a()));
 	}
+	
+	LengthTransition::LengthTransition(const TimingFunction& fn, float duration, float delay)
+		: Transition(fn, duration, delay),
+		  start_(),
+		  end_(),
+		  mix_()
+	{
+	}
+
+	void LengthTransition::setStartLength(std::function<xhtml::FixedPoint()> fn)
+	{
+		start_ = fn();
+	}
+
+	void LengthTransition::setEndLength(std::function<xhtml::FixedPoint()> fn)
+	{
+		end_ = fn();
+	}
+
+	std::string LengthTransition::handleToString() const
+	{
+		std::stringstream ss;
+		ss << "LengthTransition: start length: " << start_
+		   << ", end length: " << end_
+		   << ", mix: " << mix_;
+		return ss.str();
+	}
+
+	void LengthTransition::handleProcess(float dt, float outp)
+	{
+		mix_ = mix(outp, start_, end_);
+	}
+
+	WidthTransition::WidthTransition(const TimingFunction& fn, float duration, float delay)
+		: Transition(fn, duration, delay),
+		  start_(),
+		  end_(),
+		  mix_()
+	{
+	}
+
+	void WidthTransition::setStartWidth(std::function<xhtml::FixedPoint()> fn)
+	{
+		start_ = fn();
+	}
+
+	void WidthTransition::setEndWidth(std::function<xhtml::FixedPoint()> fn)
+	{
+		end_ = fn();
+	}
+
+	std::string WidthTransition::handleToString() const
+	{
+		std::stringstream ss;
+		ss << "LengthTransition: start length: " << start_
+		   << ", end length: " << end_
+		   << ", mix: " << mix_;
+		return ss.str();
+	}
+
+	void WidthTransition::handleProcess(float dt, float outp)
+	{
+		mix_ = mix(outp, start_, end_);
+	}
+
+	FilterTransition::FilterTransition(const TimingFunction& fn, float duration, float delay)
+		: Transition(fn, duration, delay),
+		  start_(nullptr),
+		  end_(nullptr),
+		  mix_filter_(std::make_shared<FilterStyle>())
+	{
+	}
+
+	void FilterTransition::setStartFilter(const std::shared_ptr<FilterStyle>& start) 
+	{ 
+		start_ = start; 
+	
+		ASSERT_LOG(start_ != nullptr, "start filter list was invalid.");
+		// assume that start and end are set up correctly
+		mix_filter_->clearFilters();
+		for(auto& f : start_->getFilters()) {
+			mix_filter_->addFilter(std::make_shared<Filter>(*f));
+		}
+	}
+
+	std::string FilterTransition::handleToString() const 
+	{
+		std::stringstream ss;
+		ss  << "FilterTransition: StartFilter: " << start_->toString(Property::FILTER)
+			<< ", EndFilter: " << end_->toString(Property::FILTER)
+			<< ", Mix: " << mix_filter_->toString(Property::FILTER)
+			;
+		return ss.str();
+	}
+
+	void FilterTransition::handleProcess(float dt, float outp) 
+	{
+		auto sf = start_->getFilters();
+		auto ef = end_->getFilters();
+		auto mf = mix_filter_->getFilters();
+		// XXX this isn't quite right, since we need to pad the end list with a default to make it the same size
+		// XXX actually we need to find a similar filter in each list -- oh well
+		auto mit = mf.begin();
+		for(auto sit = sf.cbegin(), eit = ef.cbegin();
+			sit != sf.cend() && eit != ef.cend(); 
+			++sit, ++eit, ++mit)  {
+			// Are they the same type.
+			if((*sit)->id() == (*eit)->id()) {
+				switch((*sit)->id()) {
+					case CssFilterId::DROP_SHADOW:
+						// XXX
+						break;
+					case CssFilterId::HUE_ROTATE:
+						(*mit)->setComputedAngle(mix(outp, (*sit)->getComputedAngle(), (*eit)->getComputedAngle()));
+						break;
+					case CssFilterId::BLUR:
+					case CssFilterId::BRIGHTNESS:
+					case CssFilterId::CONTRAST:
+					case CssFilterId::GRAYSCALE:
+					case CssFilterId::INVERT:
+					case CssFilterId::OPACITY:
+					case CssFilterId::SEPIA:
+					case CssFilterId::SATURATE:
+						(*mit)->setComputedLength(mix(outp, (*sit)->getComputedLength(), (*eit)->getComputedLength()));
+						break;
+					default:
+						break;
+				}
+			}
+		}
+	}
+
+	TransformTransition::TransformTransition(const TimingFunction& fn, float duration, float delay)
+		: Transition(fn, duration, delay),
+		  start_(nullptr),
+		  end_(nullptr),
+		  mix_(nullptr)
+	{
+	}
+
+	void TransformTransition::setStart(const std::shared_ptr<TransformStyle>& start)
+	{
+		ASSERT_LOG(start != nullptr, "start transform list was invalid.");
+		
+		start_ = start; 
+		// since there are no shared_ptr and everything will be copied we can just copy start in this case.
+		mix_ = std::make_shared<TransformStyle>(*start_);
+	}
+
+	std::string TransformTransition::handleToString() const
+	{
+		std::stringstream ss;
+		ss  << "FilterTransition: StartFilter: " << start_->toString(Property::FILTER)
+			<< ", EndFilter: " << end_->toString(Property::FILTER)
+			<< ", Mix: " << mix_->toString(Property::FILTER)
+			;
+		return ss.str();
+	}
+
+	void TransformTransition::handleProcess(float dt, float outp)
+	{
+		auto& st = start_->getTransforms();
+		auto& et = end_->getTransforms();
+
+		// XXX here we should apply the rules for matching transitions up
+		auto mit = mix_->getTransforms().begin();
+		for(auto sit = st.cbegin(), eit = et.cbegin();
+			sit != st.cend() && eit != et.cend(); 
+			++sit, ++eit, ++mit)  {
+			// Are they the same type.
+			if(sit->id() == eit->id()) {
+				switch(sit->id()) {
+					case TransformId::NONE: 
+						return;
+					case TransformId::MATRIX_2D: {
+						// todo
+						break;
+					}
+					case TransformId::TRANSLATE_2D:
+					case TransformId::SCALE_2D: {
+						const float a = mix(outp, sit->getComputedLength()[0], eit->getComputedLength()[0]);
+						const float b = mix(outp, sit->getComputedLength()[1], eit->getComputedLength()[1]);
+						mit->setComputedLength(a, b);
+						break;
+					}
+					case TransformId::ROTATE_2D: {
+						const float a = mix(outp, sit->getComputedAngle()[0], eit->getComputedAngle()[0]);
+						mit->setComputedAngle(a, 0.0f);
+						break;
+					}
+					case TransformId::SKEW_2D:
+					case TransformId::SKEWX_2D:
+					case TransformId::SKEWY_2D: {
+						const float a = mix(outp, sit->getComputedAngle()[0], eit->getComputedAngle()[0]);
+						const float b = mix(outp, sit->getComputedAngle()[1], eit->getComputedAngle()[1]);
+						mit->setComputedAngle(a, b);
+						break;
+					}
+					default: break;
+				}
+			}
+		}
+	}
 }
 
 UNIT_TEST(cubic_bezier) 

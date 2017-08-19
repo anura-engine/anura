@@ -35,8 +35,8 @@ namespace xhtml
 	public:
 		explicit BorderInfo(const StyleNodePtr& styles);
 		void init(const Dimensions& dims);
-		bool render(DisplayListPtr display_list, const point& offset, const Dimensions& dims) const;
-		void renderNormal(DisplayListPtr display_list, const point& offset, const Dimensions& dims) const;
+		bool render(const KRE::SceneTreePtr& scene_tree, const Dimensions& dims, const point& offset) const;
+		void renderNormal(const KRE::SceneTreePtr& scene_tree, const Dimensions& dims, const point& offset) const;
 		void setWidths(const std::array<float,4>& widths) { widths_ = widths; }
 		void setOutset(const std::array<float,4>& outset) { outset_ = outset; }
 		void setSlice(const std::array<float,4>& slice) { slice_ = slice; }

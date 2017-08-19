@@ -35,6 +35,11 @@
 #include "SDL_image.h"
 #include "WindowManager.hpp"
 
+#ifdef USE_IMGUI
+#include "imgui.h"
+#include "imgui_impl_sdl_gl3.h"
+#endif
+
 namespace KRE
 {
 	namespace 
@@ -82,7 +87,11 @@ namespace KRE
 			  renderer_(nullptr),
 			  context_(nullptr),
 			  nonfs_width_(width),
-			  nonfs_height_(height)
+			  nonfs_height_(height),
+			  request_major_version_(2),
+			  request_minor_version_(1),
+			  profile_(ProfileValue::COMPAT),
+			  new_frame_(0)
 		{
 			if(hints.has_key("renderer")) {
 				if(hints["renderer"].is_string()) {
@@ -103,6 +112,24 @@ namespace KRE
 			} else {
 				SDL_SetHint(SDL_HINT_VIDEO_HIGHDPI_DISABLED, "1");
 			}
+
+			if(hints.has_key("version")) {
+				const int version = hints["version"].as_int32();
+				request_major_version_ = version / 100;
+				request_minor_version_ = version % 100;
+			}
+			if(hints.has_key("profile")) {
+				const std::string profile = hints["profile"].as_string();
+				if(profile == "compatibility" || profile == "compat") {
+					profile_ = ProfileValue::COMPAT;
+				} else if(profile == "core") {
+					profile_ = ProfileValue::CORE;
+				} else if(profile == "es" || profile == "ES") {
+					profile_ = ProfileValue::ES;
+				} else {
+					LOG_ERROR("Unrecognized profile setting '" << profile << "' defaulting to compatibility.");
+				}
+			}
 		}
 
 		void createWindow() override {
@@ -121,8 +148,64 @@ namespace KRE
 				// We need to do extra SDL set-up for an OpenGL context.
 				// Since these parameter's need to be set-up before context
 				// creation.
+				int err;
+				err = SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, request_major_version_);
+				if(err) {
+					LOG_ERROR("Setting major OpenGL context version to " << request_major_version_ << ": " << SDL_GetError());
+				}
+				err = SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, request_minor_version_);
+				if(err) {
+					LOG_ERROR("Setting minor OpenGL context version to " << request_minor_version_ << ": " << SDL_GetError());
+				}
+				SDL_GLprofile prof;
+				switch(profile_) {
+					case ProfileValue::COMPAT:	prof = SDL_GL_CONTEXT_PROFILE_COMPATIBILITY; break;
+					case ProfileValue::CORE:	prof = SDL_GL_CONTEXT_PROFILE_CORE; break;
+					case ProfileValue::ES:		prof = SDL_GL_CONTEXT_PROFILE_ES; break;
+					default: prof = SDL_GL_CONTEXT_PROFILE_COMPATIBILITY;
+				}
+				err = SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, prof);
+				if(err) {
+					LOG_ERROR("Setting major OpenGL profile mask to " << prof << ": " << SDL_GetError());
+				}
+				err = SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+				if(err) {
+					LOG_ERROR("Setting major OpenGL depth to 24: " << SDL_GetError());
+				}
+				err = SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
+				if(err) {
+					LOG_ERROR("Setting major OpenGL stencil size to 8: " << SDL_GetError());
+				}
+				if(use16bpp()) {
+					SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 5);
+					SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 5);
+					SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 5);
+					SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 1);
+				} else {
+					SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
+					SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
+					SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
+					SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
+				}
+				if(useMultiSampling()) {
+					if(SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1) != 0) {
+						LOG_WARN("MSAA(" << multiSamples() << ") requested but mutlisample buffer couldn't be allocated.");
+					} else {
+						int msaa = next_pow2(multiSamples());
+						if(SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, msaa) != 0) {
+							LOG_INFO("Requested MSAA of " << msaa << " but couldn't allocate");
+						}
+					}
+				}
+				wnd_flags |= SDL_WINDOW_OPENGL;
+			} else if(getDisplayDevice()->ID() == DisplayDevice::DISPLAY_DEVICE_OPENGLES) {
+				// We need to do extra SDL set-up for an OpenGL context.
+				// Since these parameter's need to be set-up before context
+				// creation.
+				SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
 				SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
-				SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
+				SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+				
 				SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 				SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
 				if(use16bpp()) {
@@ -153,6 +236,10 @@ namespace KRE
 				wnd_flags |= SDL_WINDOW_RESIZABLE;
 			}
 
+			if(borderless()) {
+				wnd_flags |= SDL_WINDOW_BORDERLESS;
+			}
+
 			int x = SDL_WINDOWPOS_CENTERED;
 			int y = SDL_WINDOWPOS_CENTERED;
 			int w = width();
@@ -161,15 +248,18 @@ namespace KRE
 			case FullScreenMode::WINDOWED:		break;
 			case FullScreenMode::FULLSCREEN_WINDOWED:
 				x = y = SDL_WINDOWPOS_UNDEFINED;
-				w = h = 0;
+				//w = h = 0;
 				wnd_flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
 				break;
-			//case FullscreenMode::FULLSCREEN:
-			//	x = y = SDL_WINDOWPOS_UNDEFINED;
-			//	wnd_flags |= SDL_WINDOW_FULLSCREEN;
-			//	break;
+			case FullScreenMode::FULLSCREEN_EXCLUSIVE:
+				x = y = SDL_WINDOWPOS_UNDEFINED;
+				wnd_flags |= SDL_WINDOW_FULLSCREEN;
+				break;
 			}
 			window_.reset(SDL_CreateWindow(getTitle().c_str(), x, y, w, h, wnd_flags), [&](SDL_Window* wnd){
+#ifdef USE_IMGUI
+				ImGui_ImplSdlGL3_Shutdown();
+#endif
 				if(getDisplayDevice()->ID() != DisplayDevice::DISPLAY_DEVICE_SDL) {
 					SDL_DestroyRenderer(renderer_);
 				}
@@ -181,6 +271,10 @@ namespace KRE
 				SDL_DestroyWindow(wnd);
 			});
 
+#ifdef USE_IMGUI
+			ImGui_ImplSdlGL3_Init(window_.get());
+#endif
+
 			if(getDisplayDevice()->ID() != DisplayDevice::DISPLAY_DEVICE_SDL) {
 				Uint32 rnd_flags = SDL_RENDERER_ACCELERATED;
 				if(vSync()) {
@@ -191,7 +285,7 @@ namespace KRE
 			}
 
 			ASSERT_LOG(window_ != nullptr, "Failed to create window: " << SDL_GetError());
-			if(getDisplayDevice()->ID() == DisplayDevice::DISPLAY_DEVICE_OPENGL) {
+			if(getDisplayDevice()->ID() == DisplayDevice::DISPLAY_DEVICE_OPENGL ||getDisplayDevice()->ID() == DisplayDevice::DISPLAY_DEVICE_OPENGLES) {
 				context_ = SDL_GL_CreateContext(window_.get());	
 				ASSERT_LOG(context_ != nullptr, "Failed to GL Context: " << SDL_GetError());
 			}
@@ -199,8 +293,9 @@ namespace KRE
 			getDisplayDevice()->init(width(), height());
 			getDisplayDevice()->printDeviceInfo();
 
-			getDisplayDevice()->setClearColor(clear_color_);
-			getDisplayDevice()->clear(ClearFlags::ALL);
+			clear(ClearFlags::ALL);
+			//getDisplayDevice()->setClearColor(clear_color_);
+			//getDisplayDevice()->clear(ClearFlags::ALL);
 			swap();
 		}
 
@@ -208,18 +303,38 @@ namespace KRE
 			window_.reset();
 		}
 
+		void setVisible(bool visible) override {
+			if(visible) {
+				SDL_ShowWindow(window_.get());
+			} else {
+				SDL_HideWindow(window_.get());
+			}
+		}
+
 		void clear(ClearFlags f) override {
 			// N.B. Clear color is global GL state, so we need to re-configure it everytime we clear.
 			// Since it may have changed by some sneaky render target user.
 			getDisplayDevice()->setClearColor(clear_color_);
 			getDisplayDevice()->clear(f);
+#ifdef USE_IMGUI
+			if(new_frame_ == 0) {
+				ImGui_ImplSdlGL3_NewFrame(window_.get());
+				++new_frame_;
+			}
+#endif
 		}
 
 		void swap() override {
 			// This is a little bit hacky -- ideally the display device should swap buffers.
 			// But SDL provides a device independent way of doing it which is really nice.
 			// So we use that.
-			if(getDisplayDevice()->ID() == DisplayDevice::DISPLAY_DEVICE_OPENGL) {
+#ifdef USE_IMGUI
+			ImGui::Render();
+			if(--new_frame_ < 0) {
+				new_frame_ = 0;
+			}
+#endif
+			if(getDisplayDevice()->ID() == DisplayDevice::DISPLAY_DEVICE_OPENGL || getDisplayDevice()->ID() == DisplayDevice::DISPLAY_DEVICE_OPENGLES) {
 				SDL_GL_SwapWindow(window_.get());
 			} else {
 				// default to delegating to the display device.
@@ -319,7 +434,14 @@ namespace KRE
 			}
 		}
 		void changeFullscreenMode() override {
-			if(fullscreenMode() == FullScreenMode::FULLSCREEN_WINDOWED) {
+			if(fullscreenMode() == FullScreenMode::FULLSCREEN_EXCLUSIVE) {
+				nonfs_width_ = width();
+				nonfs_height_ = height();
+				if(SDL_SetWindowFullscreen(window_.get(), SDL_WINDOW_FULLSCREEN) != 0) {
+					LOG_WARN("Unable to set fullscreen mode at " << width() << " x " << height());
+					return;
+				}
+			} else if(fullscreenMode() == FullScreenMode::FULLSCREEN_WINDOWED) {
 				nonfs_width_ = width();
 				nonfs_height_ = height();
 
@@ -373,6 +495,18 @@ namespace KRE
 		// Height of the window before changing to full-screen mode
 		int nonfs_height_;
 
+		int request_major_version_;
+		int request_minor_version_;
+
+		enum class ProfileValue {
+			COMPAT,
+			CORE,
+			ES,
+		};
+		ProfileValue profile_;
+
+		int new_frame_;
+
 		SDLWindow(const SDLWindow&);
 	};
 
@@ -385,6 +519,7 @@ namespace KRE
 		  use_multi_sampling_(hints["use_multisampling"].as_bool(false)),
 		  samples_(hints["samples"].as_int32(4)),
 		  is_resizeable_(hints["resizeable"].as_bool(false)),
+		  is_borderless_(hints["borderless"].as_bool(false)),
 		  fullscreen_mode_(hints["fullscreen"].as_bool(false) ? FullScreenMode::FULLSCREEN_WINDOWED : FullScreenMode::WINDOWED),
 		  title_(hints["title"].as_string_default("")),
 		  use_vsync_(hints["use_vsync"].as_bool(false)),
@@ -444,25 +579,25 @@ namespace KRE
 		}
 	}
 
-	bool Window::setWindowSize(int width, int height)
+	bool Window::setWindowSize(int width, int height, int flags)
 	{
 		width_ = width;
 		height_ = height;
 		bool result = handlePhysicalWindowSizeChange();
 		if(result) {
 			for(auto& observer : dimensions_changed_observers_) {
-				observer.second(width_, height_);
+				observer.second(width_, height_, flags);
 			}
 		}
 		return result;
 	}
 
-	void Window::updateDimensions(int w, int h)
+	void Window::updateDimensions(int w, int h, int flags)
 	{
 		width_ = w;
 		height_ = h;
 		for(auto& observer : dimensions_changed_observers_) {
-			observer.second(width_, height_);
+			observer.second(width_, height_, flags);
 		}
 	}
 
@@ -491,14 +626,14 @@ namespace KRE
 		handleSetClearColor();
 	}
 
-	void Window::notifyNewWindowSize(int new_width, int new_height)
+	void Window::notifyNewWindowSize(int new_width, int new_height, int flags)
 	{
 		width_ = new_width;
 		height_ = new_height;
 		handlePhysicalWindowSizeChange();
 
 		for(auto& observer : dimensions_changed_observers_) {
-			observer.second(new_width, new_height);
+			observer.second(new_width, new_height, flags);
 		}
 	}
 
@@ -524,14 +659,14 @@ namespace KRE
 		return std::string();
 	}
 
-	int Window::registerSizeChangeObserver(std::function<void(int,int)> fn)
+	int Window::registerSizeChangeObserver(std::function<void(int,int,int)> fn)
 	{
 		static int counter = 0;
 		dimensions_changed_observers_[counter] = fn;
 		return counter++;
 	}
 
-	bool Window::registerSizeChangeObserver(int key, std::function<void(int,int)> fn)
+	bool Window::registerSizeChangeObserver(int key, std::function<void(int,int,int)> fn)
 	{
 		auto it = dimensions_changed_observers_.find(key);
 		if(it == dimensions_changed_observers_.end()) {
@@ -598,7 +733,7 @@ namespace KRE
 	{
 		std::vector<WindowPtr> res;
 		auto it = get_window_list().begin();
-		for(auto w : get_window_list()) {
+		for(auto& w : get_window_list()) {
 			res.emplace_back(w.second.lock());
 		}
 		return res;

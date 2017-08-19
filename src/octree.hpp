@@ -23,12 +23,12 @@
 
 #pragma once
 
-#include <boost/intrusive_ptr.hpp>
+#include "intrusive_ptr.hpp"
 
 namespace graphics
 {
 	template <typename T1, typename T2> class Octree;
-	template <typename T1, typename T2> typedef boost::intrusive_ptr<Octree<T1,T2>> OctreePtr<T1,T2>;
+	template <typename T1, typename T2> typedef ffl::IntrusivePtr<Octree<T1,T2>> OctreePtr<T1,T2>;
 	
 	template <typename T1, typename T2>
 	class Octree : public reference_counted_object

@@ -30,9 +30,10 @@
 
 #include <functional>
 
-#include <boost/intrusive_ptr.hpp>
+#include "intrusive_ptr.hpp"
 
 #include "formula_callable.hpp"
+#include "uuid.hpp"
 #include "variant.hpp"
 
 namespace game_logic
@@ -58,27 +59,29 @@ namespace game_logic
 		static const std::map<std::string, std::function<variant(variant)> >& registeredTypes();
 		static bool deserializeObj(const variant& var, variant* target);
 
-		explicit WmlSerializableFormulaCallable(bool has_self=true) : FormulaCallable(has_self) {}
+		explicit WmlSerializableFormulaCallable(bool has_self=true);
+		explicit WmlSerializableFormulaCallable(const boost::uuids::uuid& uuid, bool has_self=true);
 
 		virtual ~WmlSerializableFormulaCallable() {}
 
 		variant writeToWml() const;
 
-		const std::string& addr() const { return addr_; }
+		std::string addr() const;
+
+		const boost::uuids::uuid& uuid() const { return uuid_; }
 	protected:
-		void setAddr(const std::string& addr) { addr_ = addr; }
+		void setUuid(const boost::uuids::uuid& uuid) { uuid_ = uuid; }
 	private:
 		virtual variant serializeToWml() const = 0;
-		std::string addr_;
+
+		boost::uuids::uuid uuid_;
 	};
 
 	#define REGISTER_SERIALIZABLE_CALLABLE(classname, idname) \
 		static const int classname##_registration_var_unique__ = game_logic::WmlSerializableFormulaCallable::registerSerializableType(idname, [](variant v) ->variant { return variant(new classname(v)); });
 
-	#define READ_SERIALIZABLE_CALLABLE(node) if(node.has_key("_addr")) { setAddr(node["_addr"].as_string()); }
-
-	typedef boost::intrusive_ptr<WmlSerializableFormulaCallable> WmlSerializableFormulaCallablePtr;
-	typedef boost::intrusive_ptr<const WmlSerializableFormulaCallable> ConstWmlSerializableFormulaCallablePtr;
+	typedef ffl::IntrusivePtr<WmlSerializableFormulaCallable> WmlSerializableFormulaCallablePtr;
+	typedef ffl::IntrusivePtr<const WmlSerializableFormulaCallable> ConstWmlSerializableFormulaCallablePtr;
 
 	class wmlFormulaCallableSerializationScope
 	{
@@ -97,12 +100,12 @@ namespace game_logic
 	class wmlFormulaCallableReadScope
 	{
 	public:
-		static void registerSerializedObject(intptr_t addr, WmlSerializableFormulaCallablePtr ptr);
-		static WmlSerializableFormulaCallablePtr getSerializedObject(intptr_t addr);
+		static void registerSerializedObject(const boost::uuids::uuid& uuid, WmlSerializableFormulaCallablePtr ptr);
+		static WmlSerializableFormulaCallablePtr getSerializedObject(const boost::uuids::uuid& uuid);
 		wmlFormulaCallableReadScope();
 		~wmlFormulaCallableReadScope();
 
-		static bool try_load_object(intptr_t id, variant& v);
+		static bool try_load_object(const boost::uuids::uuid& id, variant& v);
 	private:
 	};
 

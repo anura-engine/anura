@@ -103,7 +103,7 @@ namespace KRE
 		if(node.has_key("rotation")) {
 			// single rotation value. Assume about z-axis.
 			if(node["rotation"].is_numeric()) {
-				rotation_ = glm::angleAxis(node["rotation"].as_float(), z_axis);
+				rotation_ = glm::angleAxis(glm::radians(node["rotation"].as_float()), z_axis);
 			} else if(node["rotation"].is_list()) {
 				if(node["rotation"].num_elements() == 3 && node["rotation"][0].is_float()) {
 					// Attempt to specify rotation as Euler angles.
@@ -117,7 +117,7 @@ namespace KRE
 						const variant& aa = node["rotation"][n];
 						ASSERT_LOG(aa.is_map(), "Expected the 'rotation' attribute to be a list of maps. " << aa.to_debug_string());
 						ASSERT_LOG(aa.has_key("angle") && aa.has_key("axis"), "'rotation' attribute should me a list of maps containing 'angle' and 'axis'. " << aa.to_debug_string());
-						rotation_ = rotation_ * glm::angleAxis(aa["angle"].as_float(), variant_to_vec3(aa["axis"]));
+						rotation_ = rotation_ * glm::angleAxis(glm::radians(aa["angle"].as_float()), variant_to_vec3(aa["axis"]));
 					}
 				}
 			} else {
@@ -217,7 +217,7 @@ namespace KRE
 
 	void SceneNode::setRotation(float angle, const glm::vec3& axis) 
 	{
-		rotation_ = glm::angleAxis(angle, axis);
+		rotation_ = glm::angleAxis(glm::radians(angle), axis);
 	}
 
 	void SceneNode::setRotation(const glm::quat& rot) 

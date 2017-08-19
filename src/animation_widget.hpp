@@ -24,7 +24,7 @@
 #pragma once
 
 #include <boost/scoped_ptr.hpp>
-#include <boost/intrusive_ptr.hpp>
+#include "intrusive_ptr.hpp"
 
 #include "frame.hpp"
 #include "geometry.hpp"
@@ -65,5 +65,5 @@ namespace gui
 		std::vector<variant>::const_iterator current_anim_;
 	};
 
-	typedef boost::intrusive_ptr<AnimationWidget> AnimationWidgetPtr;
+	typedef ffl::IntrusivePtr<AnimationWidget> AnimationWidgetPtr;
 }

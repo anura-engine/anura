@@ -25,19 +25,65 @@
 #include "formula_function_registry.hpp"
 #include "unit_test.hpp"
 
-namespace 
+namespace
 {
+	typedef std::map<std::string, std::map<std::string, FunctionCreator*> > function_creators_table;
+	typedef std::map<std::string, std::map<std::string, ffl::IntrusivePtr<game_logic::FunctionExpression> > > singleton_function_table;
+	typedef std::map<std::string, std::vector<std::string> > helpstrings_table;
+
+	// Takes ownership of the pointers in the function creator table,
+	// deleting them at program termination to suppress valgrind false positives.
+	struct function_creator_manager {
+		function_creators_table table_;
+
+		~function_creator_manager() {
+			for(function_creators_table::value_type & v : table_) {
+				for(auto u : v.second) {
+					delete(u.second);
+				}
+			}
+		}
+	};
+
 	std::map<std::string, std::map<std::string, FunctionCreator*> >& function_creators()
 	{
-		static std::map<std::string, std::map<std::string, FunctionCreator*> > instance;
+		static function_creator_manager instance;
+		return instance.table_;
+	}
+
+	singleton_function_table& singleton_functions()
+	{
+		static singleton_function_table instance;
 		return instance;
 	}
 
+	std::vector<game_logic::FunctionExpression*> g_all_singleton_functions;
+	std::map<std::pair<std::string,std::string>, int> g_all_singleton_function_indexes;
+
 	std::map<std::string, std::vector<std::string> >& helpstrings()
 	{
-		static std::map<std::string, std::vector<std::string> > instance;
+		static helpstrings_table instance;
 		return instance;
 	}
+}
+
+int get_builtin_ffl_function_index(const std::string& module, const std::string& id)
+{
+	std::pair<std::string,std::string> key(module, id);
+	auto itor = g_all_singleton_function_indexes.find(key);
+	if(itor != g_all_singleton_function_indexes.end()) {
+		return itor->second;
+	}
+
+	int result = static_cast<int>(g_all_singleton_functions.size());
+	g_all_singleton_functions.push_back(singleton_functions()[module][id].get());
+	g_all_singleton_function_indexes[key] = result;
+	return result;
+}
+
+game_logic::FunctionExpression* get_builtin_ffl_function_from_index(int index)
+{
+	return g_all_singleton_functions[index];
 }
 
 const std::map<std::string, FunctionCreator*>& get_function_creators(const std::string& module)
@@ -48,6 +94,10 @@ const std::map<std::string, FunctionCreator*>& get_function_creators(const std::
 int register_function_creator(const std::string& module, const std::string& id, FunctionCreator* creator)
 {
 	function_creators()[module][id] = creator;
+	game_logic::FunctionExpression::args_list args;
+	auto fn = creator->create(args);
+	fn->clearUnusedArguments();
+	singleton_functions()[module][id] = fn;
 	return static_cast<int>(function_creators()[module].size());
 }
 

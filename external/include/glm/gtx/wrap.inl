@@ -1,165 +1,58 @@
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// OpenGL Mathematics Copyright (c) 2005 - 2013 G-Truc Creation (www.g-truc.net)
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// Created : 2009-11-25
-// Updated : 2010-02-13
-// Licence : This source is under MIT License
-// File    : glm/gtx/wrap.inl
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// Dependency:
-// - GLM core
-///////////////////////////////////////////////////////////////////////////////////////////////////
+/// @ref gtx_wrap
+/// @file glm/gtx/wrap.inl
 
 namespace glm
 {
-	template <typename genType> 
-	GLM_FUNC_QUALIFIER genType clamp
-	(
-		genType const & Texcoord
-	)
+	template <typename T, precision P, template <typename, precision> class vecType>
+	GLM_FUNC_QUALIFIER vecType<T, P> clamp(vecType<T, P> const& Texcoord)
 	{
-		return glm::clamp(Texcoord, genType(0), genType(1));
+		return glm::clamp(Texcoord, vecType<T, P>(0), vecType<T, P>(1));
 	}
 
-	template <typename T> 
-	GLM_FUNC_QUALIFIER detail::tvec2<T> clamp
-	(
-		detail::tvec2<T> const & Texcoord
-	)
+	template <typename genType>
+	GLM_FUNC_QUALIFIER genType clamp(genType const & Texcoord)
 	{
-		detail::tvec2<T> Result;
-		for(typename detail::tvec2<T>::size_type i = 0; i < detail::tvec2<T>::value_size(); ++i)
-			Result[i] = clamp(Texcoord[i]);
-		return Result;
+		return clamp(tvec1<genType, defaultp>(Texcoord)).x;
 	}
 
-	template <typename T> 
-	GLM_FUNC_QUALIFIER detail::tvec3<T> clamp
-	(
-		detail::tvec3<T> const & Texcoord
-	)
-	{
-		detail::tvec3<T> Result;
-		for(typename detail::tvec3<T>::size_type i = 0; i < detail::tvec3<T>::value_size(); ++i)
-			Result[i] = clamp(Texcoord[i]);
-		return Result;
-	}
-
-	template <typename T> 
-	GLM_FUNC_QUALIFIER detail::tvec4<T> clamp
-	(
-		detail::tvec4<T> const & Texcoord
-	)
-	{
-		detail::tvec4<T> Result;
-		for(typename detail::tvec4<T>::size_type i = 0; i < detail::tvec4<T>::value_size(); ++i)
-			Result[i] = clamp(Texcoord[i]);
-		return Result;
-	}
-
-	////////////////////////
-	// repeat
-
-	template <typename genType> 
-	GLM_FUNC_QUALIFIER genType repeat
-	(
-		genType const & Texcoord
-	)
+	template <typename T, precision P, template <typename, precision> class vecType>
+	GLM_FUNC_QUALIFIER vecType<T, P> repeat(vecType<T, P> const& Texcoord)
 	{
 		return glm::fract(Texcoord);
 	}
 
-	template <typename T> 
-	GLM_FUNC_QUALIFIER detail::tvec2<T> repeat
-	(
-		detail::tvec2<T> const & Texcoord
-	)
+	template <typename genType>
+	GLM_FUNC_QUALIFIER genType repeat(genType const & Texcoord)
 	{
-		detail::tvec2<T> Result;
-		for(typename detail::tvec2<T>::size_type i = 0; i < detail::tvec2<T>::value_size(); ++i)
-			Result[i] = repeat(Texcoord[i]);
-		return Result;
+		return repeat(tvec1<genType, defaultp>(Texcoord)).x;
 	}
 
-	template <typename T> 
-	GLM_FUNC_QUALIFIER detail::tvec3<T> repeat
-	(
-		detail::tvec3<T> const & Texcoord
-	)
+	template <typename T, precision P, template <typename, precision> class vecType>
+	GLM_FUNC_QUALIFIER vecType<T, P> mirrorClamp(vecType<T, P> const& Texcoord)
 	{
-		detail::tvec3<T> Result;
-		for(typename detail::tvec3<T>::size_type i = 0; i < detail::tvec3<T>::value_size(); ++i)
-			Result[i] = repeat(Texcoord[i]);
-		return Result;
+		return glm::fract(glm::abs(Texcoord));
 	}
 
-	template <typename T> 
-	GLM_FUNC_QUALIFIER detail::tvec4<T> repeat
-	(
-		detail::tvec4<T> const & Texcoord
-	)
+	template <typename genType>
+	GLM_FUNC_QUALIFIER genType mirrorClamp(genType const & Texcoord)
 	{
-		detail::tvec4<T> Result;
-		for(typename detail::tvec4<T>::size_type i = 0; i < detail::tvec4<T>::value_size(); ++i)
-			Result[i] = repeat(Texcoord[i]);
-		return Result;
+		return mirrorClamp(tvec1<genType, defaultp>(Texcoord)).x;
 	}
 
-	////////////////////////
-	// mirrorRepeat
-
-	template <typename genType> 
-	GLM_FUNC_QUALIFIER genType mirrorRepeat
-	(
-		genType const & Texcoord
-	)
+	template <typename T, precision P, template <typename, precision> class vecType>
+	GLM_FUNC_QUALIFIER vecType<T, P> mirrorRepeat(vecType<T, P> const& Texcoord)
 	{
-		genType const Clamp = genType(int(glm::floor(Texcoord)) % 2);
-		genType const Floor = glm::floor(Texcoord);
-		genType const Rest = Texcoord - Floor;
-		genType const Mirror = Clamp + Rest;
-
-		genType Out;
-		if(Mirror >= genType(1))
-			Out = genType(1) - Rest;
-		else
-			Out = Rest;
-		return Out;
+		vecType<T, P> const Abs = glm::abs(Texcoord);
+		vecType<T, P> const Clamp = glm::mod(glm::floor(Abs), vecType<T, P>(2));
+		vecType<T, P> const Floor = glm::floor(Abs);
+		vecType<T, P> const Rest = Abs - Floor;
+		vecType<T, P> const Mirror = Clamp + Rest;
+		return mix(Rest, vecType<T, P>(1) - Rest, glm::greaterThanEqual(Mirror, vecType<T, P>(1)));
 	}
 
-	template <typename T> 
-	GLM_FUNC_QUALIFIER detail::tvec2<T> mirrorRepeat
-	(
-		detail::tvec2<T> const & Texcoord
-	)
+	template <typename genType>
+	GLM_FUNC_QUALIFIER genType mirrorRepeat(genType const& Texcoord)
 	{
-		detail::tvec2<T> Result;
-		for(typename detail::tvec2<T>::size_type i = 0; i < detail::tvec2<T>::value_size(); ++i)
-			Result[i] = mirrorRepeat(Texcoord[i]);
-		return Result;
-	}
-
-	template <typename T> 
-	GLM_FUNC_QUALIFIER detail::tvec3<T> mirrorRepeat
-	(
-		detail::tvec3<T> const & Texcoord
-	)
-	{
-		detail::tvec3<T> Result;
-		for(typename detail::tvec3<T>::size_type i = 0; i < detail::tvec3<T>::value_size(); ++i)
-			Result[i] = mirrorRepeat(Texcoord[i]);
-		return Result;
-	}
-
-	template <typename T> 
-	GLM_FUNC_QUALIFIER detail::tvec4<T> mirrorRepeat
-	(
-		detail::tvec4<T> const & Texcoord
-	)
-	{
-		detail::tvec4<T> Result;
-		for(typename detail::tvec4<T>::size_type i = 0; i < detail::tvec4<T>::value_size(); ++i)
-			Result[i] = mirrorRepeat(Texcoord[i]);
-		return Result;
+		return mirrorRepeat(tvec1<genType, defaultp>(Texcoord)).x;
 	}
 }//namespace glm

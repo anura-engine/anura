@@ -28,7 +28,7 @@
 #include "formula_callable_definition.hpp"
 
 class RectCallable;
-typedef boost::intrusive_ptr<RectCallable> RectCallablePtr;
+typedef ffl::IntrusivePtr<RectCallable> RectCallablePtr;
 
 class RectCallable : public game_logic::FormulaCallable
 {

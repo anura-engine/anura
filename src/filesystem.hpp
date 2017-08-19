@@ -49,6 +49,10 @@ namespace sys
 										file_path_map* file_map,
 										const std::string& prefix);
 
+	void get_all_filenames_under_dir(const std::string& dir,
+										std::multimap<std::string, std::string>* file_map,
+										const std::string& prefix);
+
 	//creates a dir if it doesn't exist and returns the path
 	std::string get_dir(const std::string& dir);
 	std::string get_user_data_dir();
@@ -79,7 +83,8 @@ namespace sys
 		~FilesystemManager();
 	};
 
-	void notify_on_file_modification(const std::string& path, std::function<void()> handler);
+	int notify_on_file_modification(const std::string& path, std::function<void()> handler);
+	void remove_notify_on_file_modification(int handle);
 	void pump_file_modifications();
 
 	bool is_safe_write_path(const std::string& path, std::string* error=nullptr);
@@ -89,4 +94,6 @@ namespace sys
 
 	bool is_file_executable(const std::string& path);
 	void set_file_executable(const std::string& path);
+
+	std::string get_cwd();
 }

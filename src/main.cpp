@@ -36,6 +36,7 @@
 #if defined(_DEBUG)
 #pragma comment(linker, "/SUBSYSTEM:CONSOLE")
 #else
+#pragma comment(linker, "/SUBSYSTEM:CONSOLE")
 //#pragma comment(linker, "/SUBSYSTEM:WINDOWS")
 #endif
 #endif
@@ -47,6 +48,7 @@
 #include "asserts.hpp"
 #include "auto_update_window.hpp"
 #include "background_task_pool.hpp"
+#include "breakpad.hpp"
 #include "checksum.hpp"
 #include "controls.hpp"
 #include "custom_object.hpp"
@@ -62,7 +64,7 @@
 #include "framed_gui_element.hpp"
 #include "graphical_font.hpp"
 #include "gui_section.hpp"
-#include "hex_tile.hpp"
+#include "hex.hpp"
 #include "i18n.hpp"
 #include "input.hpp"
 #include "joystick.hpp"
@@ -81,11 +83,13 @@
 #include "preprocessor.hpp"
 #include "profile_timer.hpp"
 #include "screen_handling.hpp"
+#include "shared_memory_pipe.hpp"
 #include "sound.hpp"
 #include "stats.hpp"
 #include "string_utils.hpp"
 #include "tbs_internal_server.hpp"
 #include "tile_map.hpp"
+#include "theme_imgui.hpp"
 #include "unit_test.hpp"
 #include "variant_utils.hpp"
 
@@ -116,6 +120,10 @@
 
 variant g_auto_update_info;
 
+extern int g_vsync;
+
+PREF_BOOL(desktop_fullscreen, false, "Sets the game window to be a fullscreen window the size of the desktop");
+
 namespace 
 {
 	PREF_BOOL(auto_update_module, false, "Auto updates the module from the module server on startup (number of milliseconds to spend attempting to update the module)");
@@ -126,6 +134,13 @@ namespace
 	PREF_BOOL(resizeable, false, "Window is dynamically resizeable.");
 	PREF_INT(min_window_width, 1024, "Minimum window width when auto-determining window size");
 	PREF_INT(min_window_height, 768, "Minimum window height when auto-determining window size");
+
+	PREF_BOOL(disable_global_alpha_filter, false, "Disables using alpha-colors.png to denote some special colors as 'alpha colors'");
+
+	PREF_INT(auto_size_ideal_width, 0, "");
+	PREF_INT(auto_size_ideal_height, 0, "");
+	PREF_BOOL(desktop_fullscreen_force, false, "(Windows) forces desktop fullscreen to actually use fullscreen rather than a borderless window the size of the desktop");
+	PREF_BOOL(msaa, false, "Use msaa");
 
 
 #if defined(_MSC_VER)
@@ -241,10 +256,20 @@ namespace
 			const std::vector<std::string>& arguments = mod_info["arguments"].as_list_string();
 			auto insertion_point = argv->size();
 			for(std::vector<std::string>::size_type i = 0; i != argv->size(); ++i) {
-				const char* utility_arg = "--module=";
-				if(std::equal(utility_arg, utility_arg+strlen(utility_arg), (*argv)[i].c_str())) {
+				const char* module_arg = "--module=";
+				if(std::equal(module_arg, module_arg+strlen(module_arg), (*argv)[i].c_str())) {
 					insertion_point = i+1;
 					break;
+				}
+			}
+
+			if(insertion_point == argv->size()) {
+				for(std::vector<std::string>::size_type i = 0; i != argv->size(); ++i) {
+					const char* utility_arg = "--utility=";
+					if(std::equal(utility_arg, utility_arg+strlen(utility_arg), (*argv)[i].c_str())) {
+						insertion_point = i;
+						break;
+					}
 				}
 			}
 
@@ -276,38 +301,6 @@ namespace
 		});
 	}
 
-
-	void auto_select_resolution(const KRE::WindowPtr& wm, int *width, int *height)
-	{
-		ASSERT_LOG(width != nullptr, "width is null.");
-		ASSERT_LOG(height != nullptr, "height is null.");
-
-		auto mode = wm->getDisplaySize();
-		auto best_mode = mode;
-		
-		const float MinReduction = 0.9f;
-		for(auto& candidate_mode : wm->getWindowModes([](const KRE::WindowMode&){ return true; })) {
-			if(candidate_mode.width < mode.width && candidate_mode.height < mode.width
-				&& candidate_mode.width < mode.width * MinReduction
-				&& candidate_mode.height < mode.height * MinReduction
-				&& ((candidate_mode.width >= best_mode.width
-				&& candidate_mode.height >= best_mode.height)
-				|| (best_mode.width == mode.width && best_mode.height == mode.height))) {
-				LOG_INFO("BETTER MODE IS " << candidate_mode.width << "x" << candidate_mode.height);
-				best_mode = candidate_mode;
-			} else {
-				LOG_INFO("REJECTED MODE IS " << candidate_mode.width << "x" << candidate_mode.height);
-			}
-		}
-
-		if(best_mode.width < g_min_window_width || best_mode.height < g_min_window_height) {
-			best_mode.width = g_min_window_width;
-			best_mode.height = g_min_window_height;
-		}
-
-		*width = best_mode.width;
-		*height = best_mode.height;
-	}
 
 	void process_log_level(const std::string& argstr)
 	{
@@ -356,6 +349,61 @@ namespace
 
 } //namespace
 
+void auto_select_resolution(const KRE::WindowPtr& wm, int *width, int *height, bool reduce)
+{
+	ASSERT_LOG(width != nullptr, "width is null.");
+	ASSERT_LOG(height != nullptr, "height is null.");
+
+	auto mode = wm->getDisplaySize();
+	auto best_mode = mode;
+	bool found = false;
+	
+	const float MinReduction = reduce ? 0.9f : 2.0f;
+	for(auto& candidate_mode : wm->getWindowModes([](const KRE::WindowMode&){ return true; })) {
+		if(g_auto_size_ideal_width && g_auto_size_ideal_height) {
+			if(found && candidate_mode.width < best_mode.width) {
+				continue;
+			}
+
+			if(candidate_mode.width > mode.width * MinReduction) {
+				LOG_INFO("REJECTED MODE IS " << candidate_mode.width << "x" << candidate_mode.height);
+				continue;
+			}
+
+			int h = (candidate_mode.width * g_auto_size_ideal_height) / g_auto_size_ideal_width;
+			if(h > mode.height * MinReduction) {
+				continue;
+			}
+
+			best_mode = candidate_mode;
+			best_mode.height = h;
+			found = true;
+
+			LOG_INFO("BETTER MODE IS " << best_mode.width << "x" << best_mode.height);
+
+		} else
+		if(    candidate_mode.width < mode.width * MinReduction
+			&& candidate_mode.height < mode.height * MinReduction
+			&& ((candidate_mode.width >= best_mode.width
+			&& candidate_mode.height >= best_mode.height) || !found)
+			) {
+				found = true;
+				LOG_INFO("BETTER MODE IS " << candidate_mode.width << "x" << candidate_mode.height << " vs " << best_mode.width << "x" << best_mode.height);
+			best_mode = candidate_mode;
+		} else {
+			LOG_INFO("REJECTED MODE IS " << candidate_mode.width << "x" << candidate_mode.height);
+		}
+	}
+
+	if(best_mode.width < g_min_window_width || best_mode.height < g_min_window_height) {
+		best_mode.width = g_min_window_width;
+		best_mode.height = g_min_window_height;
+	}
+
+	*width = best_mode.width;
+	*height = best_mode.height;
+}
+
 extern int g_tile_scale;
 extern int g_tile_size;
 
@@ -366,6 +414,10 @@ int main(int argcount, char* argvec[])
 	g_anura_exe_name = argvec[0];
 
 	SDL_LogSetPriority(SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_INFO);
+
+#ifdef USE_BREAKPAD
+	breakpad::install();
+#endif
 
 	{
 		std::vector<std::string> args;
@@ -391,8 +443,8 @@ int main(int argcount, char* argvec[])
 	std::freopen("CON", "w", stderr);
 	std::freopen("CON", "w", stdout);
 #else
-	std::freopen("CON", "w", stderr);
-	std::freopen("CON", "w", stdout);
+//	std::freopen("CON", "w", stderr);
+//	std::freopen("CON", "w", stdout);
 //	std::freopen("stdout.txt","w",stdout);
 //	std::freopen("stderr.txt","w",stderr);
 #endif
@@ -593,8 +645,12 @@ int main(int argcount, char* argvec[])
 					test_names.reset(new std::vector<std::string> (util::split(arg_value)));
 				}
 			}
-		} else if(arg.substr(0, 12) == "--log-level=" || arg.substr(0, 11) == "--log-file=") {
-			// ignore
+		} else if(arg.substr(0,12) == "--log-level=") {
+			//respect these log arguments here too so they can be set in
+			//master-config.cfg or module.cfg
+			process_log_level(arg);
+		} else if(arg.substr(0,11) == "--log-file=") {
+			set_log_file(arg.substr(11));
 		} else if(arg_name == "--level") {
 			override_level_cfg = arg_value;
 		} else if(arg == "--level" && n+1 < argc) {
@@ -615,8 +671,18 @@ int main(int argcount, char* argvec[])
 			print_help(std::string(argvec[0]));
 			return 0;
 		} else {
-			const bool res = preferences::parse_arg(argv[n], n+1 < argc ? argv[n+1] : "");
-			if(!res) {
+			bool require = true;
+			std::string a(argv[n]);
+			if(a.empty() == false && a[0] == '?') {
+				//putting a ? in front of an argument indicates to only use the
+				//argument if the option is known, and to ignore it silently if
+				//it's unknown to the engine.
+				a.erase(a.begin());
+				require = false;
+			}
+
+			const bool res = preferences::parse_arg(a, n+1 < argc ? argv[n+1] : "");
+			if(!res && require) {
 				print_help(std::string(argvec[0]));
 				LOG_ERROR("unrecognized arg: '" << arg);
 				return -1;
@@ -700,7 +766,7 @@ int main(int argcount, char* argvec[])
 			}
 		}
 
-		boost::intrusive_ptr<module::client> cl, anura_cl;
+		ffl::IntrusivePtr<module::client> cl, anura_cl;
 		
 		if(g_auto_update_module) {
 			cl.reset(new module::client);
@@ -838,10 +904,16 @@ int main(int argcount, char* argvec[])
 
 	const stats::Manager stats_manager;
 
+	const SharedMemoryPipeManager ipc_manager;
+
 	const tbs::internal_server_manager internal_server_manager_scope(preferences::internal_tbs_server());
 
 	if(utility_program.empty() == false 
 		&& test::utility_needs_video(utility_program) == false) {
+#ifdef _MSC_VER
+		std::freopen("CON", "w", stderr);
+		std::freopen("CON", "w", stdout);
+#endif
 		test::run_utility(utility_program, util_args);
 		return 0;
 	}
@@ -876,21 +948,54 @@ int main(int argcount, char* argvec[])
 
 	variant_builder hints;
 	hints.add("renderer", "opengl");
-	hints.add("use_vsync", "false");
+	hints.add("use_vsync", g_vsync != 0 ? true : false);
 	hints.add("width", preferences::requested_window_width() > 0 ? preferences::requested_window_width() : 800);
 	hints.add("height", preferences::requested_window_height() > 0 ? preferences::requested_window_height() : 600);
 	hints.add("resizeable", g_resizeable);
 	hints.add("fullscreen", preferences::get_screen_mode() == preferences::ScreenMode::FULLSCREEN_WINDOWED ? true : false);
+	if(g_msaa) {
+		hints.add("use_multisampling", true);
+	}
 
-    KRE::WindowPtr main_wnd = wm.allocateWindow(hints.build());
+
+	if(g_desktop_fullscreen) {
+		//KRE::WindowMode mode = main_wnd->getDisplaySize();
+
+		SDL_DisplayMode dm;
+		int res = SDL_GetDesktopDisplayMode(0, &dm);
+		ASSERT_LOG(res == 0, "Could not get desktop display mode: " << SDL_GetError());
+
+		preferences::adjust_virtual_width_to_match_physical(dm.w, dm.h);
+
+		hints.set("width", dm.w);
+		hints.set("height", dm.h);
+#if defined(_MSC_VER)
+		if(g_desktop_fullscreen_force) {
+			hints.set("fullscreen", true);
+		} else {
+			hints.set("fullscreen", false);
+			hints.set("borderless", true);
+		}
+#else
+		hints.set("fullscreen", true);
+#endif
+	}
+
+	variant built_hints = hints.build();
+	LOG_INFO("Initializing fullscreen window: " << built_hints.write_json());
+
+    KRE::WindowPtr main_wnd = wm.allocateWindow(built_hints);
 	main_wnd->setWindowTitle(module::get_module_pretty_name());
-
-	if(preferences::auto_size_window() 
+	
+	if(!g_desktop_fullscreen &&
+	   preferences::auto_size_window() 
 		&& preferences::requested_window_width() == 0 
 		&& preferences::requested_window_height() == 0) {
 		int width = 0;
 		int height = 0;
-		auto_select_resolution(main_wnd, &width, &height);
+		auto_select_resolution(main_wnd, &width, &height, true);
+
+		preferences::adjust_virtual_width_to_match_physical(width, height);
 
 		main_wnd->setWindowSize(width, height);
 	}
@@ -913,7 +1018,17 @@ int main(int argcount, char* argvec[])
 	graphics::GameScreen::get().setVirtualDimensions(vw, vh);
 	//main_wnd->setWindowIcon(module::map_file("images/window-icon.png"));
 
+	int swap_result = SDL_GL_SetSwapInterval(1);
+	ASSERT_LOG(swap_result == 0, "Could not set swap");
+
 	try {
+		std::map<std::string, std::string> shader_files;
+		module::get_unique_filenames_under_dir("data/shaders/", &shader_files);
+		for(auto p : shader_files) {
+			if(p.second.size() >= 4 && std::equal(p.second.end()-4, p.second.end(), ".cfg")) {
+				ShaderProgram::loadFromVariant(json::parse_from_file(p.second));
+			}
+		}
 		ShaderProgram::loadFromVariant(json::parse_from_file("data/shaders.cfg"));
 	} catch(const json::ParseError& e) {
 		LOG_ERROR("ERROR PARSING: " << e.errorMessage());
@@ -924,7 +1039,9 @@ int main(int argcount, char* argvec[])
 	Surface::setFileFilter(FileFilterType::LOAD, [](const std::string& s){ return module::map_file("images/" + s); });
 	Surface::setFileFilter(FileFilterType::SAVE, [](const std::string& s){ return std::string(preferences::user_data_path()) + s; });
 
-	set_alpha_masks();
+	if(g_disable_global_alpha_filter == false) {
+		set_alpha_masks();
+	}
 
 	//SceneGraphPtr scene = SceneGraph::create("root");
 	//SceneNodePtr root = scene->getRootNode();
@@ -977,14 +1094,6 @@ int main(int argcount, char* argvec[])
 	box2d::manager b2d_manager;
 #endif
 
-	try {
-		hex::loader(json::parse_from_file("data/hex_tiles.cfg"));
-	} catch(json::ParseError& pe) {
-		LOG_INFO(pe.message);
-	} catch(KRE::ImageLoadError& ile) {
-		ASSERT_LOG(false, ile.what());
-	}
-
 	const load_level_manager load_manager;
 
 	{ //manager scope
@@ -1002,6 +1111,12 @@ int main(int argcount, char* argvec[])
 		GuiSection::init(gui_node);
 		loader.drawAndIncrement(_("Initializing GUI"));
 		FramedGuiElement::init(gui_node);
+
+		try {
+			hex::load("data/");
+		} catch(KRE::ImageLoadError& ile) {
+			ASSERT_LOG(false, ile.what());
+		}
 
 		sound::init_music(json::parse_from_file("data/music.cfg"));
 		GraphicalFont::initForLocale(i18n::get_locale());
@@ -1051,6 +1166,9 @@ int main(int argcount, char* argvec[])
 
 	bool quit = false;
 
+	// Apply a new default theme to ImGui.
+	theme_imgui_default();
+
 	while(!quit && !show_title_screen(level_cfg)) {
 		LevelPtr lvl(load_level(level_cfg));
 		
@@ -1082,9 +1200,6 @@ int main(int argcount, char* argvec[])
 		last_draw_position() = screen_position();
 
 		assert(lvl.get());
-		if(!lvl->music().empty()) {
-			sound::play_music(lvl->music());
-		}
 
 		if(lvl->player() && level_cfg != "autosave.cfg") {
 			lvl->player()->setCurrentLevel(level_cfg);
@@ -1109,7 +1224,7 @@ int main(int argcount, char* argvec[])
 	std::set<variant*> loading;
 	swap_variants_loading(loading);
 	if(loading.empty() == false) {
-		LOG_ERROR("Illegal object: " << (void*)(*loading.begin())->as_callable_loading());
+		LOG_ERROR("Illegal object: " << write_uuid((*loading.begin())->as_callable_loading()));
 		ASSERT_LOG(false, "Unresolved unserialized objects: " << loading.size());
 	}
 

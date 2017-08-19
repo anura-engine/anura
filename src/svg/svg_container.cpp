@@ -79,7 +79,7 @@ namespace KRE
 				} else if(v.first == "<xmlcomment>") {
 					// ignore
 				} else {
-					LOG_ERROR("SVG: svg unhandled child element: " << v.first << " : " << v.second.data());
+					LOG_DEBUG("SVG: svg unhandled child element: " << v.first << " : " << v.second.data());
 				}
 			}
 		}

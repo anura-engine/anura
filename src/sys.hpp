@@ -31,4 +31,16 @@ namespace sys
 	};
 
 	bool get_available_memory(AvailableMemoryInfo* info);
+
+	struct MemoryConsumptionInfo
+	{
+		MemoryConsumptionInfo() : vm_used_kb(0), phys_used_kb(0), heap_free_kb(0), heap_used_kb(0)
+		{}
+		int vm_used_kb, phys_used_kb;
+		int heap_free_kb, heap_used_kb;
+	};
+
+	bool get_memory_consumption(MemoryConsumptionInfo* info);
+
+	int get_heap_object_usable_size(void* ptr);
 }

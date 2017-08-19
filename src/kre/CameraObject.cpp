@@ -347,6 +347,17 @@ namespace KRE
 		}
 	}
 
+	void Camera::clearClipPlanes() 
+	{ 
+		clip_planes_set_ = false; 
+		if(type_ == CAMERA_ORTHOGONAL) {
+			computeProjection();
+		} else {
+			computeView();
+			computeProjection();
+		}
+	}
+
 	void Camera::createFrustum()
 	{
 		attachFrustum(std::make_shared<Frustum>());
@@ -536,12 +547,12 @@ namespace KRE
 	{
 		if(type_ == CAMERA_ORTHOGONAL) {
 			if(clip_planes_set_) {
-				projection_ = glm::frustum(float(ortho_left_), float(ortho_right_), float(ortho_bottom_), float(ortho_top_), getNearClip(), getFarClip());
+				projection_ = glm::ortho(float(ortho_left_), float(ortho_right_), float(ortho_bottom_), float(ortho_top_), getNearClip(), getFarClip());
 			} else {
 				projection_ = glm::ortho(float(ortho_left_), float(ortho_right_), float(ortho_bottom_), float(ortho_top_));
 			}
 		} else {
-			projection_ = glm::perspective(getFov(), aspect_, getNearClip(), getFarClip());
+			projection_ = glm::perspective(glm::radians(getFov()), aspect_, getNearClip(), getFarClip());
 		}
 		if(frustum_) {
 			frustum_->updateMatrices(projection_, view_);

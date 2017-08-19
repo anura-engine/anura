@@ -110,8 +110,8 @@ namespace gui
 		bool in_widget_;
 	};
 
-	typedef boost::intrusive_ptr<DropdownWidget> DropdownWidgetPtr;
-	typedef boost::intrusive_ptr<const DropdownWidget> ConstDropdownWidgetPtr;
+	typedef ffl::IntrusivePtr<DropdownWidget> DropdownWidgetPtr;
+	typedef ffl::IntrusivePtr<const DropdownWidget> ConstDropdownWidgetPtr;
 }
 
 #endif // NO_EDITOR

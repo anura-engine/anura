@@ -75,8 +75,10 @@ namespace graphics
 			explicit GetMvpMatrixFunction(const args_list& args)
 			 : FunctionExpression("get_mvp_matrix", args, 0, 0)
 			{}
+
+			bool useSingletonVM() const override { return false; }
 		private:
-			variant execute(const game_logic::FormulaCallable& variables) const {
+			variant execute(const game_logic::FormulaCallable& variables) const override {
 				game_logic::Formula::failIfStaticContext();
 				std::vector<variant> v;
 				for(size_t n = 0; n < 16; n++) {
@@ -98,7 +100,7 @@ namespace graphics
 				texture_->setBindingPoint(binding_point_);
 			}
 		private:
-			boost::intrusive_ptr<TextureObject> texture_;
+			ffl::IntrusivePtr<TextureObject> texture_;
 			int binding_point_;
 		};
 
@@ -108,8 +110,10 @@ namespace graphics
 			explicit BindTextureFunction(const args_list& args)
 			 : FunctionExpression("bind_texture", args, 1, 2)
 			{}
+
+			bool useSingletonVM() const override { return false; }
 		private:
-			variant execute(const game_logic::FormulaCallable& variables) const 
+			variant execute(const game_logic::FormulaCallable& variables) const override
 			{
 				int binding_point = args().size() > 1 ? args()[1]->evaluate(variables).as_int() : 0;
 				variant tex = args()[0]->evaluate(variables);
@@ -125,8 +129,10 @@ namespace graphics
 			explicit LoadTextureFunction(const args_list& args)
 			 : FunctionExpression("load_texture", args, 1, 2)
 			{}
+
+			bool useSingletonVM() const override { return false; }
 		private:
-			variant execute(const game_logic::FormulaCallable& variables) const 
+			variant execute(const game_logic::FormulaCallable& variables) const override
 			{
 				game_logic::Formula::failIfStaticContext();
 				const std::string filename = module::map_file(args()[0]->evaluate(variables).as_string());
@@ -155,8 +161,10 @@ namespace graphics
 			explicit BlendModeFunction(const args_list& args)
 			 : FunctionExpression("blend_mode", args, 2, 2)
 			{}
+
+			bool useSingletonVM() const override { return false; }
 		private:
-			variant execute(const game_logic::FormulaCallable& variables) const 
+			variant execute(const game_logic::FormulaCallable& variables) const override
 			{
 				KRE::BlendMode bm(args()[0]->evaluate(variables));
 				return variant(new BlendModeCommand(bm));
@@ -220,7 +228,7 @@ namespace graphics
 		  sprite_area_(0.0f),
 		  draw_area_(0.0f),
 		  cycle_(0),
-		  color_(1.0f),
+		  color_(255, 255, 255, 255),
 		  point_size_(1.0f),
 		  parent_(nullptr),
 		  enabled_(true),
@@ -247,7 +255,7 @@ namespace graphics
 		  sprite_area_(0.0f),
 		  draw_area_(0.0f),
 		  cycle_(0),
-		  color_(1.0f),
+		  color_(255, 255, 255, 255),
 		  point_size_(1.0f),
 		  parent_(nullptr),
 		  enabled_(true),
@@ -286,9 +294,11 @@ namespace graphics
 		  name_(o.name_),
 		  initialised_(false)
 	{
+		ASSERT_LOG(o.shader_ != nullptr, "No shader to copy.");
 		shader_ = o.shader_->clone();
 		renderable_.clearAttributes();
-		draw_formulas_.clear();
+		draw_formulas_ = o.draw_formulas_;
+		create_formulas_ = o.create_formulas_;
 		draw_commands_.clear();
 		create_formulas_.clear();
 		create_commands_.clear();
@@ -335,7 +345,7 @@ namespace graphics
 
 		// Set the draw commands here if required from shader_->getShaderVariant()
 		game_logic::FormulaCallable* e = this;
-		if(shader_node.has_key("draw")) {
+		if(draw_formulas_.empty() && shader_node.has_key("draw")) {
 			const variant& d = shader_node["draw"];
 			if(d.is_list()) {
 				for(int n = 0; n < d.num_elements(); ++n) {
@@ -351,7 +361,7 @@ namespace graphics
 			}
 		}
 	
-		if(shader_node.has_key("create")) {
+		if(create_formulas_.empty() && shader_node.has_key("create")) {
 			const variant& c = shader_node["create"];
 			if(c.is_list()) {
 				for(int n = 0; n < c.num_elements(); ++n) {
@@ -409,8 +419,51 @@ namespace graphics
 			shader_->setUniformValue(u_anura_point_size_, point_size_);
 		}
 
+		int binding_point = 2;
+
 		for(auto& tex : textures_) {
 			tex->texture()->bind(tex->getBindingPoint());
+			if(tex->getBindingPoint() >= binding_point) {
+				binding_point = tex->getBindingPoint() + 1;
+			}
+		}
+
+		std::vector<KRE::Texture*> seen_textures;
+
+		for(const ObjectPropertyUniform& u : object_uniforms_) {
+			variant v = parent_->queryValueBySlot(u.slot);
+
+			if(v.is_callable()) {
+				auto p = v.try_convert<TextureObject>();
+				if(p) {
+					int point = 0;
+					for(auto t : textures_) {
+						if(p->texture() == t->texture()) {
+							point = t->getBindingPoint();
+							break;
+						}
+					}
+
+					for(int n = 0; n < static_cast<int>(seen_textures.size()); ++n) {
+						if(seen_textures[n] == p->texture().get()) {
+							point = binding_point - seen_textures.size() + n;
+							break;
+						}
+					}
+
+					if(point == 0) {
+						point = binding_point++;
+						seen_textures.push_back(p->texture().get());
+						p->texture()->bind(point);
+					}
+
+					shader_->setUniformValue(u.uniform, point);
+
+					continue;
+				}
+			} else if(v.is_null() == false) {
+				shader_->setUniformFromVariant(u.uniform, v);
+			}
 		}
 		
 		for(auto& u : uniforms_to_set_) {
@@ -552,6 +605,10 @@ namespace graphics
 		for(std::pair<const int, variant>& p : uniforms_to_set_) {
 			collector->surrenderVariant(&p.second);
 		}
+
+		for(ffl::IntrusivePtr<TextureObject>& t : textures_) {
+			collector->surrenderPtr(&t);
+		}
 	}
 
 	void AnuraShader::UniformCommandsCallable::surrenderReferences(GarbageCollector* collector)
@@ -683,7 +740,74 @@ namespace graphics
 		for(auto & cf : create_formulas_) {
 			e->executeCommand(cf->execute(*e));
 		}
+
+		object_attributes_.clear();
+		object_uniforms_.clear();
+
+		if(parent != nullptr) {
+			static const std::string UniformPrefix = "u_property_";
+			auto v = shader_->getAllUniforms();
+			for(const std::string& s : v) {
+				if(s.size() > UniformPrefix.size() && std::equal(UniformPrefix.begin(), UniformPrefix.end(), s.begin())) {
+					std::string prop_name(s.begin() + UniformPrefix.size(), s.end());
+					const int slot = parent->getValueSlot(prop_name);
+					ASSERT_LOG(slot >= 0, "Unknown shader property: " << s << " for object " << parent->getDebugDescription());
+
+					ObjectPropertyUniform u;
+					u.name = prop_name;
+					u.slot = slot;
+					u.uniform = shader_->getUniformOrDie(s);
+					object_uniforms_.push_back(u);
+				}
+			}
+
+			static const std::string AttributePrefix = "a_property_";
+			v = shader_->getAllAttributes();
+			for(const std::string& s : v) {
+				if(s.size() > AttributePrefix.size() && std::equal(AttributePrefix.begin(), AttributePrefix.end(), s.begin())) {
+					using namespace KRE;
+
+					std::string prop_name(s.begin() + AttributePrefix.size(), s.end());
+					const int slot = parent->getValueSlot(prop_name);
+					ASSERT_LOG(slot >= 0, "Unknown shader property: " << s << " for object " << parent->getDebugDescription());
+
+					ObjectPropertyAttribute u;
+					u.name = prop_name;
+					u.slot = slot;
+					u.attr = shader_->getAttributeOrDie(s);
+
+					int num_components = 1;
+					AttrFormat fmt = KRE::AttrFormat::FLOAT;
+					bool normalise = false;
+					ptrdiff_t stride = 0;
+					ptrdiff_t offset = 0;
+					int divisor = 1;
+
+					KRE::AttributeDesc desc(s, num_components, fmt, normalise, stride, offset, divisor);
+
+					auto attr = std::make_shared<GenericAttribute>(AccessFreqHint::DYNAMIC, AccessTypeHint::DRAW);
+					attr->addAttributeDesc(desc);
+					getShader()->configureAttribute(attr);
+
+					auto loc = attr->getAttrDesc().back().getLocation();
+					ASSERT_LOG(loc != ShaderProgram::INVALID_ATTRIBUTE, "No attribute with name '" << s << "' in shader.");
+					ASSERT_LOG(loc == u.attr, "Attribute mismatch: " << loc << " vs " << u.attr);
+
+					renderable_.getAttributeSet().front()->addAttribute(attr);
+					ASSERT_LOG(attr->getParent() != nullptr, "attribute parent was null after adding to attribute set.");
+					u.attr_target = attr;
+
+					object_attributes_.push_back(u);
+				}
+			}
+		}
+
 		initialised_ = true;
+	}
+
+	KRE::GenericAttributePtr AnuraShader::getAttributeOrDie(int attr) const
+	{
+		return const_cast<ShaderRenderable&>(renderable_).getAttributeOrDie(attr);
 	}
 
 	void AnuraShader::draw(KRE::WindowPtr wnd) const

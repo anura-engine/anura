@@ -30,13 +30,13 @@ namespace xhtml
 	class AbsoluteBox : public Box
 	{
 	public:
-		AbsoluteBox(BoxPtr parent, StyleNodePtr node);
+		AbsoluteBox(const BoxPtr& parent, const StyleNodePtr& node, const RootBoxPtr& root);
 		std::string toString() const override;
 	private:
 		void handlePreChildLayout(LayoutEngine& eng, const Dimensions& containing) override;
 		void handlePostChildLayout(LayoutEngine& eng, BoxPtr child) override;
 		void handleLayout(LayoutEngine& eng, const Dimensions& containing) override;
-		void handleRender(DisplayListPtr display_list, const point& offset) const override;
+		void handleRender(const KRE::SceneTreePtr& scene_tree, const point& offset) const override;
 		Rect container_;
 	};
 }

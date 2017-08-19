@@ -63,7 +63,7 @@ namespace KRE
 		//FixedParameter(const variant& node);
 		virtual ~FixedParameter();
 
-		float get_value(float t) {
+		float get_value(float t) override {
 			return value_;
 		}		
 	private:
@@ -78,7 +78,7 @@ namespace KRE
 		explicit RandomParameter(float mnv=0.0f, float mxv=1.0f);
 		//RandomParameter(const variant& node);
 		virtual ~RandomParameter();
-		virtual float get_value(float t);
+		virtual float get_value(float t) override;
 	private:
 		float min_value_;
 		float max_value_;
@@ -91,7 +91,7 @@ namespace KRE
 		explicit OscillateParameter(const std::string&, float freq=1.0f, float phase=0.0f, float base=0.0f, float amplitude=1.0f);
 		//OscillateParameter(const variant& node);
 		virtual ~OscillateParameter();
-		virtual float get_value(float t);
+		virtual float get_value(float t) override;
 	private:
 		enum WaveType {
 			TYPE_SINE,
@@ -116,7 +116,7 @@ namespace KRE
 		explicit CurvedParameter(const std::string&, const geometry::control_point_vector& control_points);
 		//CurvedParameter(InterpolationType type, const variant& node);
 		virtual ~CurvedParameter();
-		virtual float get_value(float t);
+		virtual float get_value(float t) override;
 	private:
 		InterpolationType curve_type_;
 		geometry::control_point_vector control_points_;

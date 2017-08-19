@@ -39,8 +39,8 @@ namespace KRE
 	namespace
 	{
 		const int default_dpi = 96;
-		const int surface_width = 512;
-		const int surface_height = 512;
+		const int surface_width = 2048;
+		const int surface_height = 2048;
 	}
 
 	// Implication of non-overlapping ranges.
@@ -58,7 +58,7 @@ namespace KRE
 		}
 	};
 
-	class stb_impl : public FontHandle::Impl
+	class stb_impl : public FontHandle::Impl, public AlignedAllocator16
 	{
 	public:
 		stb_impl(const std::string& fnt_name, const std::string& fnt_path, float size, const Color& color, bool init_texture)
@@ -82,14 +82,16 @@ namespace KRE
 			stbtt_InitFont(&font_handle_, ttf_buffer, 0);
 
 			scale_ = stbtt_ScaleForPixelHeight(&font_handle_, size);
-			stbtt_GetFontVMetrics(&font_handle_, &ascent_, &descent_, &line_gap_);
+			int line_gap = 0;
+			stbtt_GetFontVMetrics(&font_handle_, &ascent_, &descent_, &line_gap);
 			baseline_ = static_cast<int>(ascent_ * scale_);
+			line_gap_ = line_gap * scale_;
 
 			float em_scale = stbtt_ScaleForMappingEmToPixels(&font_handle_, size);
 
 			has_kerning_ = font_handle_.kern ? true : false;
 
-			x_height_ = static_cast<int>(ascent_ * scale_ * 65536.0f);
+			x_height_ = ascent_ * scale_;
 
 			std::ostringstream debug_ss;
 			debug_ss << "Loaded font '" << fnt_ << "'\n\tfamily name: '" << "unknown"
@@ -106,6 +108,17 @@ namespace KRE
 				font_texture_->setUnpackAlignment(0, 1);
 				font_texture_->setFiltering(0, Texture::Filtering::LINEAR, Texture::Filtering::LINEAR, Texture::Filtering::NONE);
 				addGlyphsToTexture(FontDriver::getCommonGlyphs());
+
+				// Calculate maximum bounding box height of all the common glyphs.
+				for(const auto& range : packed_char_) {
+					for(char32_t cp = range.first.first; cp != range.first.last + 1; ++cp) {
+						const stbtt_packedchar *b = range.second.data() + cp - range.first.first;
+						const int char_height = b->y1 - b->y0;
+						if(char_height > bounding_height_) {
+							bounding_height_ = char_height;
+						}
+					}
+				}
 			}
 		}
 
@@ -119,8 +132,30 @@ namespace KRE
 			return static_cast<int>(descent_ * scale_ * 65536.0f);
 		}
 
+		int getBaseline() override
+		{
+			return baseline_ * 65536;
+		}
+
+		int getBoundingHeight() override
+		{
+			return bounding_height_;
+		}
+
 		void getBoundingBox(const std::string& str, long* w, long* h) override
 		{
+			ASSERT_LOG(w != nullptr, "getBoundingBox: width was null.");
+			ASSERT_LOG(h != nullptr, "getBoundingBox: height was null.");
+			*w = 0;
+			*h = 0;
+			glyphTraverse(str, [w, h](stbtt_packedchar* b) {
+				auto char_width = b->x1 - b->x0;
+				auto char_height = b->y1 - b->y0;
+				*w += char_width;
+				if(*h < char_height) {
+					*h = char_height;
+				}
+			});
 		}
 
 		std::vector<unsigned> getGlyphs(const std::string& text) override		
@@ -132,6 +167,37 @@ namespace KRE
 			return res;
 		}
 
+
+		void glyphTraverse(const std::string& text, std::function<void(stbtt_packedchar*)> fn)
+		{
+			auto cp_str = utils::utf8_to_codepoint(text);
+
+			std::vector<char32_t> glyphs_to_add;
+			for(char32_t cp : cp_str) {
+				auto it = packed_char_.find(UnicodeRange(cp));
+				if(it == packed_char_.end()) {
+					glyphs_to_add.emplace_back(cp);
+				}
+			}
+			if(!glyphs_to_add.empty()) {
+				addGlyphsToTexture(glyphs_to_add);
+			}
+
+			for(char32_t cp : cp_str) {
+				auto it = packed_char_.find(UnicodeRange(cp));
+				if(it == packed_char_.end()) {
+					cp = 0xfffd;
+					it = packed_char_.find(UnicodeRange(0xfffd));
+					if(it == packed_char_.end()) {
+						continue;
+					}
+				}
+				
+				stbtt_packedchar* b = it->second.data() + cp - it->first.first;
+				fn(b);
+			}
+		}
+
 		const std::vector<point>& getGlyphPath(const std::string& text) override
 		{
 			auto it = glyph_path_cache_.find(text);
@@ -140,8 +206,21 @@ namespace KRE
 			}
 			std::vector<point>& path = glyph_path_cache_[text];
 
+			auto cp_str = utils::utf8_to_codepoint(text);
+
+			std::vector<char32_t> glyphs_to_add;
+			for(char32_t cp : cp_str) {
+				auto it = packed_char_.find(UnicodeRange(cp));
+				if(it == packed_char_.end()) {
+					glyphs_to_add.emplace_back(cp);
+				}
+			}
+			if(!glyphs_to_add.empty()) {
+				addGlyphsToTexture(glyphs_to_add);
+			}
+
 			point pen;
-			for(char32_t cp : utils::utf8_to_codepoint(text)) {
+			for(char32_t cp : cp_str) {
 				path.emplace_back(pen);
 				auto it = packed_char_.find(UnicodeRange(cp));
 				if(it == packed_char_.end()) {
@@ -182,8 +261,9 @@ namespace KRE
 				font_renderable->setTexture(font_texture_);
 			}
 
-			int width = 0;
-			int height = 0;
+			int width = font_renderable->getWidth();
+			int height = font_renderable->getHeight();
+			int max_height = 0;
 
 			std::vector<font_coord> coords;
 			coords.reserve(glyphs_in_text * 6);
@@ -203,7 +283,81 @@ namespace KRE
 
 				//width += pt.x >> 16;
 				//width += static_cast<int>(b->xoff2 - b->xoff);
-				height = std::max(height, static_cast<int>(b->yoff2 - b->yoff));
+				max_height = std::max(max_height, static_cast<int>(b->yoff2 - b->yoff));
+
+				const float u1 = font_texture_->getTextureCoordW(0, b->x0);
+				const float v1 = font_texture_->getTextureCoordH(0, b->y0);
+				const float u2 = font_texture_->getTextureCoordW(0, b->x1);
+				const float v2 = font_texture_->getTextureCoordH(0, b->y1);
+
+				const float x1 = static_cast<float>(pt.x) / 65536.0f + b->xoff;
+				const float y1 = static_cast<float>(pt.y) / 65536.0f + b->yoff;
+				const float x2 = x1 + b->xoff2 - b->xoff;
+				const float y2 = y1 + b->yoff2 - b->yoff;
+				coords.emplace_back(glm::vec2(x1, y2), glm::vec2(u1, v2));
+				coords.emplace_back(glm::vec2(x1, y1), glm::vec2(u1, v1));
+				coords.emplace_back(glm::vec2(x2, y1), glm::vec2(u2, v1));
+
+				coords.emplace_back(glm::vec2(x2, y1), glm::vec2(u2, v1));
+				coords.emplace_back(glm::vec2(x1, y2), glm::vec2(u1, v2));
+				coords.emplace_back(glm::vec2(x2, y2), glm::vec2(u2, v2));
+				++n;
+			}
+			height += max_height;
+			width = std::max(width, path.back().x >> 16);
+
+			font_renderable->setWidth(width);
+			font_renderable->setHeight(height);
+			font_renderable->update(&coords);
+			return font_renderable;
+		}
+
+		ColoredFontRenderablePtr createColoredRenderableFromPath(ColoredFontRenderablePtr font_renderable, const std::string& text, const std::vector<point>& path, const std::vector<KRE::Color>& colors) override
+		{
+			auto cp_string = utils::utf8_to_codepoint(text);
+			int glyphs_in_text = 0;
+			std::vector<char32_t> glyphs_to_add;
+			for(char32_t cp : cp_string) {
+				++glyphs_in_text;
+
+				auto it = packed_char_.find(UnicodeRange(cp));
+				if(it == packed_char_.end()) {
+					glyphs_to_add.emplace_back(cp);
+				}
+			}
+			if(!glyphs_to_add.empty()) {
+				addGlyphsToTexture(glyphs_to_add);
+			}
+			ASSERT_LOG(glyphs_in_text == colors.size(), "Not enough/Too many colors for the text.");
+			
+			if(font_renderable == nullptr) {
+				font_renderable = std::make_shared<ColoredFontRenderable>();
+				font_renderable->setTexture(font_texture_);
+			}
+
+			int width = font_renderable->getWidth();
+			int height = font_renderable->getHeight();
+			int max_height = 0;
+
+			std::vector<font_coord> coords;
+			coords.reserve(glyphs_in_text * 6);
+			int n = 0;
+			for(char32_t cp : cp_string) {
+				ASSERT_LOG(n < static_cast<int>(path.size()), "Insufficient points were supplied to create a path from the string '" << text << "'");
+				auto& pt =path[n];
+				auto it = packed_char_.find(UnicodeRange(cp));
+				if(it == packed_char_.end()) {
+					it = packed_char_.find(UnicodeRange(0xfffd));
+					if(it == packed_char_.end()) {
+						continue;
+					}
+				}
+
+				stbtt_packedchar *b = it->second.data() + cp - it->first.first;
+
+				//width += pt.x >> 16;
+				//width += static_cast<int>(b->xoff2 - b->xoff);
+				max_height = std::max(max_height, static_cast<int>(b->yoff2 - b->yoff));
 
 				const float u1 = font_texture_->getTextureCoordW(0, b->x0);
 				const float v1 = font_texture_->getTextureCoordH(0, b->y0);
@@ -223,19 +377,32 @@ namespace KRE
 				coords.emplace_back(glm::vec2(x2, y2), glm::vec2(u2, v2));
 				++n;
 			}
-			width = path.back().x >> 16;
+			height += max_height;
+			width = std::max(width, path.back().x >> 16);
 
 			font_renderable->setWidth(width);
 			font_renderable->setHeight(height);
 			font_renderable->update(&coords);
+			font_renderable->setVerticesPerColor(6);
+			font_renderable->updateColors(colors);
 			return font_renderable;
 		}
 
 		long calculateCharAdvance(char32_t cp) override
 		{
-			int advance = 0;
-			stbtt_GetCodepointHMetrics(&font_handle_, cp, &advance, nullptr);
-			return static_cast<int>(advance * scale_ * 65536.0f);
+			//int advance = 0;
+			//int bearing = 0;
+			//stbtt_GetCodepointHMetrics(&font_handle_, cp, &advance, &bearing);
+			//return static_cast<int>(advance * scale_ * 65536.0f);
+			auto it = packed_char_.find(UnicodeRange(cp));
+			if(it == packed_char_.end()) {
+				int advance = 0;
+				int bearing = 0;
+				stbtt_GetCodepointHMetrics(&font_handle_, cp, &advance, &bearing);
+				return static_cast<int>(advance * scale_ * 65536.0f);
+			}		
+			stbtt_packedchar *b = it->second.data() + cp - it->first.first;
+			return static_cast<int>(b->xadvance * 65536.0f);
 		}
 
 		void addGlyphsToTexture(const std::vector<char32_t>& codepoints) override
@@ -293,15 +460,21 @@ namespace KRE
 		{
 			return &font_handle_;
 		}
+
+		float getLineGap() const override
+		{
+			return line_gap_;
+		}
 	private:
 		stbtt_fontinfo font_handle_;
 		std::string font_data_;
 		int ascent_;
 		int descent_;
-		int line_gap_;
 		int baseline_;
+		int bounding_height_;
 		float scale_;
 		float font_size_;
+		float line_gap_;
 		stbtt_pack_context pc_;
 		std::map<UnicodeRange, std::vector<stbtt_packedchar>, UnicodeRange> packed_char_;
 		std::vector<unsigned char> pixels_;

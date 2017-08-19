@@ -41,7 +41,7 @@ namespace SDL
 		{}
 		virtual ~init_error() throw()
 		{}
-		virtual const char* what() const throw() { return msg_.c_str(); }
+		virtual const char* what() const throw() override { return msg_.c_str(); }
 	private:
 		std::string msg_;
 	};

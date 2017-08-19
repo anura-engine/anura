@@ -29,6 +29,7 @@
 #include <stdio.h>
 
 #include "asserts.hpp"
+#include "db_client.hpp"
 #include "formatter.hpp"
 #include "formula.hpp"
 #include "formula_object.hpp"
@@ -39,12 +40,19 @@
 #include "random.hpp"
 #include "tbs_ai_player.hpp"
 #include "tbs_internal_server.hpp"
+#include "tbs_server.hpp"
 #include "tbs_game.hpp"
 #include "tbs_web_server.hpp"
 #include "string_utils.hpp"
 #include "unit_test.hpp"
 #include "variant_utils.hpp"
 #include "wml_formula_callable.hpp"
+
+extern bool g_tbs_use_shared_mem;
+extern bool g_tbs_server_local;
+
+PREF_STRING(tbs_server_save_replay, "", "ID for the tbs server to save the replay as");
+PREF_STRING(tbs_server_save_replay_file, "", "File for the tbs server to save the replay to");
 
 namespace game_logic 
 {
@@ -53,7 +61,7 @@ namespace game_logic
 
 namespace tbs 
 {
-	extern boost::intrusive_ptr<http_client> g_game_server_http_client_to_matchmaking_server;
+	extern ffl::IntrusivePtr<http_client> g_game_server_http_client_to_matchmaking_server;
 
 	class GameType
 	{
@@ -72,7 +80,9 @@ namespace tbs
 			DEFINE_INTERFACE_FN(add_bot, "(int,string,any,any)->commands");
 			DEFINE_INTERFACE_FN(player_disconnected, "()->commands");
 			DEFINE_INTERFACE_FN(transform, "(object,int)->commands");
+			DEFINE_INTERFACE_FN(restore_state, "(object)->commands");
 			DEFINE_INTERFACE_FN(get_state, "()->object");
+			DEFINE_INTERFACE_FN(player_waiting_on, "()->int|null");
 
 			if(obj_->queryValue("process").is_null() == false) {
 				DEFINE_INTERFACE_FN(process, "()->commands");
@@ -87,16 +97,18 @@ namespace tbs
 		variant add_bot(int session_id, const std::string& bot_type, variant args, variant bot_args) {std::vector<variant> v; v.push_back(variant(session_id)); v.push_back(variant(bot_type)); v.push_back(args); v.push_back(bot_args); return add_bot_fn_(v); }
 		variant player_disconnected() { std::vector<variant> v; return player_disconnected_fn_(v); }
 		variant transform(variant msg, int nplayer) { std::vector<variant> v; v.push_back(msg); v.push_back(variant(nplayer)); return transform_fn_(v); }
+		variant restore_state(variant state) { std::vector<variant> v; v.push_back(state); return restore_state_fn_(v); }
 		variant get_state() { std::vector<variant> v; return get_state_fn_(v); }
+		variant player_waiting_on() { std::vector<variant> v; return player_waiting_on_fn_(v); }
 
 		variant process() { if(process_fn_.is_null() == false) { std::vector<variant> v; return process_fn_(v); } return variant(); }
 
-		boost::intrusive_ptr<game_logic::FormulaObject>& object() { return obj_; }
+		ffl::IntrusivePtr<game_logic::FormulaObject>& object() { return obj_; }
 
 	private:
-		boost::intrusive_ptr<game_logic::FormulaObject> obj_;
+		ffl::IntrusivePtr<game_logic::FormulaObject> obj_;
 
-		variant create_fn_, restart_fn_, add_bot_fn_, message_fn_, player_disconnected_fn_, transform_fn_, get_state_fn_;
+		variant create_fn_, restart_fn_, add_bot_fn_, message_fn_, player_disconnected_fn_, transform_fn_, get_state_fn_, restore_state_fn_, player_waiting_on_fn_;
 		variant process_fn_;
 	};
 
@@ -148,19 +160,22 @@ namespace tbs
 		return current_game;
 	}
 
-	boost::intrusive_ptr<game> game::create(const variant& v)
+	ffl::IntrusivePtr<game> game::create(const variant& v)
 	{
-		boost::intrusive_ptr<game> result(new game);
+		ffl::IntrusivePtr<game> result(new game);
 		variant cmd = result->game_type_->create(v);
 		result->executeCommand(cmd);
 		return result;
 	}
 
 	game::game()
-	  : game_type_(new GameType(variant(this))),
+	  : server_(nullptr),
+	    game_type_(new GameType(variant(this))),
 	    game_id_(generate_game_id()),
 	    started_(false), state_(STATE_SETUP), state_id_(0), cycle_(0), tick_rate_(50),
-		backup_callable_(nullptr)
+		backup_callable_(nullptr),
+		started_waiting_for_player_at_(-1),
+		start_timestamp_(static_cast<int>(time(nullptr)))
 	{
 	}
 
@@ -169,8 +184,103 @@ namespace tbs
 		LOG_INFO("DESTROY GAME");
 	}
 
+	void game::verify_replay()
+	{
+		LOG_INFO("Verifying replay: " << replay_.size());
+		if(replay_.empty()) {
+			return;
+		}
+
+		variant doc = deserialize_doc_with_objects(replay_.front());
+		variant state = doc["state"];
+		ffl::IntrusivePtr<FormulaObject> state_ptr = state.convert_to<FormulaObject>();
+		ASSERT_LOG(state_ptr.get() != nullptr, "No state found");
+		for(int i = 1; i < static_cast<int>(replay_.size()); ++i) {
+			variant doc = deserialize_doc_with_objects(replay_[i]);
+			variant delta = doc["delta"];
+			ASSERT_LOG(delta.is_map(), "Delta not found");
+
+			variant clone = FormulaObject::deepClone(variant(state_ptr.get()));
+			FormulaObject* obj = clone.try_convert<FormulaObject>();
+			ASSERT_LOG(obj, "Could not clone");
+
+			obj->applyDiff(delta);
+			state_ptr.reset(obj);
+		}
+	}
+
 	void game::cancel_game()
 	{
+		std::vector<variant> player_info;
+		for(auto& p : players_) {
+			player_info.push_back(p.info);
+		}
+
+		variant player_info_var(&player_info);
+		if(g_tbs_server_save_replay.empty() == false && replay_.empty() == false) {
+			verify_replay();
+
+			variant_builder replay_info;
+			replay_info.add("replay", vector_to_variant(replay_));
+			replay_.clear();
+
+			DbClientPtr db = DbClient::create();
+
+			db->get("game:" + g_tbs_server_save_replay, [=](variant game_info) {
+				game_info.add_attr_mutation(variant("winner"), winner_);
+				game_info.add_attr_mutation(variant("end_timestamp"), variant(static_cast<int>(time(nullptr))));
+				game_info.add_attr_mutation(variant("player_info"), player_info_var);
+				db->put("game:" + g_tbs_server_save_replay, game_info,
+				[=]() {
+				},
+				[=]() {
+				}
+				);
+			});
+
+			db->put("replay:" + g_tbs_server_save_replay, replay_info.build(),
+			[=]() {
+			},
+			[=]() {
+			}
+			);
+
+			db->process(10000000);
+			LOG_INFO("Posted replay to database\n");
+		}
+
+		if(g_tbs_server_save_replay_file.empty() == false) {
+			verify_replay();
+			std::vector<variant> v;
+			try {
+				variant items = json::parse(sys::read_file(g_tbs_server_save_replay_file), json::JSON_PARSE_OPTIONS::NO_PREPROCESSOR);
+				if(items.is_list()) {
+					v = items.as_list();
+				}
+			} catch(...) {
+			}
+
+			std::vector<variant> players_val;
+			for(const player& p : players_) {
+				players_val.push_back(variant(p.name));
+			}
+
+
+			variant replay = vector_to_variant(replay_);
+			variant_builder b;
+			b.add("players", variant(&players_val));
+			b.add("player_info", player_info_var);
+			b.add("replay", replay);
+			b.add("timestamp", start_timestamp_);
+			b.add("end_timestamp", static_cast<int>(time(NULL)));
+			b.add("winner", winner_);
+			v.push_back(b.build());
+			if(v.size() > 10) {
+				v.erase(v.begin(), v.end()-10);
+			}
+			sys::write_file(g_tbs_server_save_replay_file, variant(&v).write_json());
+		}
+
 		players_.clear();
 		outgoing_messages_.clear();
 		ai_.clear();
@@ -189,6 +299,17 @@ namespace tbs
 		result.add("game_type", module::get_module_name());
 		result.add("started", variant::from_bool(started_));
 		result.add("state_id", state_id_);
+
+		std::vector<variant> observers;
+		observers.reserve(observers_.size());
+		for(const std::string& s : observers_) {
+			variant v(s);
+			if(observers.empty() || observers.back() != v) {
+				observers.push_back(v);
+			}
+		}
+
+		result.add("observers", variant(&observers));
 
 		if(processing_ms != -1) {
 			LOG_INFO("ZZZ: server_time: " << processing_ms);
@@ -222,13 +343,11 @@ namespace tbs
 			send_delta = true;
 		}
 
-		variant state_doc;
-
 		variant msg = FormulaObject::deepClone(variant(game_type_->get_state()));
 		variant cmd = game_type_->transform(msg, nplayer < 0 ? 0 : nplayer);
 		const_cast<game*>(this)->executeCommand(cmd);
 
-		state_doc = msg;
+		variant state_doc = msg;
 
 		if(send_delta) {
 			result.add("delta", FormulaObject::generateDiff(players_[nplayer].state_sent, state_doc));
@@ -257,6 +376,170 @@ namespace tbs
 		return res;
 	}
 
+	variant game::write_replay() const
+	{
+		game_logic::wmlFormulaCallableSerializationScope serialization_scope;
+		variant_builder result;
+		result.add("id", game_id_);
+		result.add("type", "game");
+		result.add("game_type", module::get_module_name());
+		result.add("started", variant::from_bool(started_));
+		result.add("state_id", state_id_);
+		result.add("nplayer", variant(0));
+
+		std::vector<variant> players_val;
+		for(const player& p : players_) {
+			players_val.push_back(variant(p.name));
+		}
+
+		result.add("players", variant(&players_val));
+
+		if(current_message_.empty() == false) {
+			result.add("message", current_message_);
+		}
+
+		variant msg = FormulaObject::deepClone(variant(game_type_->get_state()));
+		variant cmd = game_type_->transform(msg, 0);
+		const_cast<game*>(this)->executeCommand(cmd);
+
+		variant state_doc = msg;
+
+		if(replay_last_.is_null()) {
+			result.add("state", state_doc);
+		} else {
+			result.add("delta", FormulaObject::generateDiff(replay_last_, state_doc));
+		}
+
+		replay_last_ = state_doc;
+
+		variant res = result.build();
+		res.add_attr(variant("serialized_objects"), serialization_scope.writeObjects(res));
+		return res;
+	}
+
+namespace {
+	ffl::IntrusivePtr<http_client> g_upload_state_client;
+}
+	void game::download_state(const std::string& id)
+	{
+		g_upload_state_client.reset(new http_client("www.theargentlark.com", "80"));
+		g_upload_state_client->send_request("GET /game-states/citadel/state." + id + ".json", "",
+		std::bind(&game::finished_download_state, this, std::placeholders::_1),
+		std::bind(&game::finished_upload_state, this),
+		[](size_t,size_t,bool){});
+	}
+
+	void game::upload_state(const std::string& id)
+	{
+		std::vector<variant> v;
+		for(auto r : replay_) {
+			v.push_back(variant(r));
+		}
+
+		std::string msg = variant(&v).write_json();
+
+		g_upload_state_client.reset(new http_client("www.theargentlark.com", "80"));
+		g_upload_state_client->send_request("POST /cgi-bin/upload-game-state.pl?module=" + module::get_module_name() + "&id=" + id,
+		msg,
+		std::bind(&game::finished_upload_state, this),
+		std::bind(&game::finished_upload_state, this),
+		[](size_t,size_t,bool){});
+	}
+
+	void game::finished_upload_state()
+	{
+		LOG_INFO("finished uploading state");
+		g_upload_state_client.reset();
+	}
+
+	void game::finished_download_state(std::string s)
+	{
+		LOG_INFO("finished download state: " << s);
+		try {
+			variant v = json::parse(s, json::JSON_PARSE_OPTIONS::NO_PREPROCESSOR);
+			replay_ = v.as_list_string();
+
+			restore_replay(INT_MAX);
+			for(player& p : players_) {
+				p.allow_deltas = false;
+			}
+			LOG_INFO("restored state");
+		} catch(json::ParseError& e) {
+			LOG_INFO("JSON ERROR RESTORING GAME STATE");
+		} catch(...) {
+			LOG_INFO("ERROR RESTORING GAME STATE");
+		}
+
+		++state_id_;
+
+		g_upload_state_client.reset();
+
+		send_game_state();
+	}
+
+	void game::save_state(const std::string& fname)
+	{
+		std::vector<variant> v;
+		for(auto r : replay_) {
+			v.push_back(variant(r));
+		}
+
+		sys::write_file(fname, variant(&v).write_json());
+	}
+
+	void game::load_state(const std::string& fname)
+	{
+		std::string s = sys::read_file(fname);
+		if(s.empty()) {
+			LOG_INFO("load_state failed: " << fname);
+			return;
+		}
+
+		variant v = json::parse(s, json::JSON_PARSE_OPTIONS::NO_PREPROCESSOR);
+		replay_ = v.as_list_string();
+
+		restore_replay(INT_MAX);
+		for(player& p : players_) {
+			p.allow_deltas = false;
+		}
+	}
+
+	void game::restore_replay(int state_id) const
+	{
+		if(replay_.empty()) {
+			return;
+		}
+
+		variant doc = deserialize_doc_with_objects(replay_.front());
+		variant state = doc["state"];
+		ffl::IntrusivePtr<FormulaObject> state_ptr = state.convert_to<FormulaObject>();
+
+		if(doc["state_id"].as_int() >= state_id) {
+			game_type_->restore_state(variant(state_ptr.get()));
+			return;
+		}
+
+		ASSERT_LOG(state_ptr.get() != nullptr, "No state found");
+		for(int i = 1; i < static_cast<int>(replay_.size()); ++i) {
+			variant doc = deserialize_doc_with_objects(replay_[i]);
+			variant delta = doc["delta"];
+			ASSERT_LOG(delta.is_map(), "Delta not found");
+
+			variant clone = FormulaObject::deepClone(variant(state_ptr.get()));
+			FormulaObject* obj = clone.try_convert<FormulaObject>();
+			ASSERT_LOG(obj, "Could not clone");
+
+			obj->applyDiff(delta);
+			state_ptr.reset(obj);
+
+			if(doc["state_id"].as_int() >= state_id || i == static_cast<int>(replay_.size())-1) {
+				variant cmd = game_type_->restore_state(variant(state_ptr.get()));
+				const_cast<game*>(this)->executeCommand(cmd);
+				return;
+			}
+		}
+	}
+
 	void game::start_game()
 	{
 		if(started_) {
@@ -265,6 +548,7 @@ namespace tbs
 
 		state_ = STATE_PLAYING;
 		started_ = true;
+		start_timestamp_ = static_cast<int>(time(nullptr));
 
 		executeCommand(game_type_->restart());
 
@@ -305,6 +589,7 @@ namespace tbs
 		variant_builder result;
 		result.add("type", "error");
 		result.add("message", msg);
+		result.add("timestamp", static_cast<int>(time(NULL)));
 		queue_message(result.build(), nplayer);
 	}
 
@@ -313,6 +598,7 @@ namespace tbs
 		variant_builder result;
 		result.add("type", "message");
 		result.add("message", msg);
+		result.add("timestamp", static_cast<int>(time(NULL)));
 		queue_message(result.build(), nplayer);
 	}
 
@@ -339,7 +625,7 @@ namespace tbs
 
 		//handleEvent("add_bot", map_into_callable(info).get());
 
-	//	boost::intrusive_ptr<bot> new_bot(new bot(*web_server::service(), "127.0.0.1", formatter() << web_server::port(), info));
+	//	ffl::IntrusivePtr<bot> new_bot(new bot(*web_server::service(), "127.0.0.1", formatter() << web_server::port(), info));
 	//	bots_.push_back(new_bot);
 	}
 
@@ -390,10 +676,26 @@ namespace tbs
 		return -1;
 	}
 
-	void game::observer_connect(int nclient)
+	void game::observer_connect(int nclient, const std::string& username)
 	{
+		variant_builder msg;
+		msg.add("type", "observer_connect");
+		msg.add("nick", username);
+		queue_message(msg.build().write_json());
+
+		observers_.push_back(username);
+		std::sort(observers_.begin(), observers_.end());
+
 		queue_message(write(-1));
 		outgoing_messages_.back().recipients.push_back(nclient);
+	}
+
+	void game::observer_disconnect(const std::string& username)
+	{
+		auto itor = std::find(observers_.begin(), observers_.end(), username);
+		if(itor != observers_.end()) {
+			observers_.erase(itor);
+		}
 	}
 
 	void game::send_game_state(int nplayer, int processing_ms)
@@ -410,7 +712,21 @@ namespace tbs
 
 			current_message_ = "";
 		} else if(nplayer >= 0 && static_cast<unsigned>(nplayer) < players().size()) {
+
+			if(g_tbs_server_local && players_[nplayer].confirmed_state_id == state_id_) {
+				LOG_DEBUG("NOT RE-SENDING GAME STATE SINCE PLAYER ALREADY HAS GAME STATE: " << state_id_);
+				//a local game has a guaranteed connection, so never re-send states.
+				return;
+			}
+
 			queue_message(write(nplayer, processing_ms), nplayer);
+
+
+			if(g_tbs_server_local && players_[nplayer].confirmed_state_id != -1) {
+				//a local game has a guaranteed connection, so once we send a state
+				//to a player, they have it for sure.
+				players_[nplayer].confirmed_state_id = state_id_;
+			}
 		}
 	}
 
@@ -439,16 +755,21 @@ namespace tbs
 			db_client_->process(100);
 		}
 
-		if(started_) {
-			const int starting_state_id = state_id_;
+		if(g_upload_state_client) {
+			LOG_INFO("process http");
+			ffl::IntrusivePtr<http_client> client = g_upload_state_client;
+			client->process();
+		}
 
-			executeCommand(game_type_->process());
+		const int starting_state_id = state_id_;
 
-			++cycle_;
+		executeCommand(game_type_->process());
 
-			if(state_id_ != starting_state_id) {
-				send_game_state();
-			}
+		++cycle_;
+
+		if(state_id_ != starting_state_id) {
+			send_game_state();
+			replay_.push_back(write_replay().write_json());
 		}
 	}
 
@@ -509,12 +830,26 @@ namespace tbs
 			for(unsigned n = 0; n != value.num_elements(); ++n) {
 				LOG_INFO("BOT_ADD: " << value[n].write_json());
 				if(value[n].is_callable() && value[n].try_convert<tbs::bot>()) {
-					obj.bots_.push_back(boost::intrusive_ptr<tbs::bot>(value[n].try_convert<tbs::bot>()));
-				} else if(preferences::internal_tbs_server()) {
-					boost::intrusive_ptr<bot> new_bot(new bot(tbs::internal_server::get_io_service(), "127.0.0.1", "23456", value[n]));
+					obj.bots_.push_back(ffl::IntrusivePtr<tbs::bot>(value[n].try_convert<tbs::bot>()));
+				} else if(g_tbs_use_shared_mem) {
+					ASSERT_LOG(obj.server_, "no server_ set");
+
+					server* s = dynamic_cast<server*>(obj.server_);
+					ASSERT_LOG(s, "Wrong type of server");
+
+					const int session_id = value[n]["session_id"].as_int();
+					auto p = SharedMemoryPipe::makeInMemoryPair();
+
+					s->add_ipc_client(session_id, p.first);
+
+					ffl::IntrusivePtr<ipc_client> cli(new ipc_client(p.second));
+
+					ffl::IntrusivePtr<bot> new_bot(new bot(*web_server::service(), "127.0.0.1", "23456", value[n]));
+					new_bot->set_ipc_client(cli);
+
 					obj.bots_.push_back(new_bot);
 				} else {
-					boost::intrusive_ptr<bot> new_bot(new bot(*web_server::service(), "127.0.0.1", formatter() << web_server::port(), value[n]));
+					ffl::IntrusivePtr<bot> new_bot(new bot(*web_server::service(), "127.0.0.1", formatter() << web_server::port(), value[n]));
 					obj.bots_.push_back(new_bot);
 				}
 			}
@@ -526,10 +861,21 @@ namespace tbs
 			}
 			return variant(&result);
 
+		BEGIN_DEFINE_FN(set_player_info, "(int, any)->commands")
+			const int nplayer = FN_ARG(0).as_int();
+			const variant info = FN_ARG(1);
+			ASSERT_LOG(nplayer >= 0 && nplayer < obj.players_.size(), "Illegal player index: " << nplayer);
+			const game* g = &obj;
+			return variant(new game_logic::FnCommandCallable("game::set_player_info", [=]() {
+				const_cast<game*>(g)->players_[nplayer].info = info;
+			}));
+		END_DEFINE_FN
+
 		DEFINE_FIELD(winner, "null")
 			return variant();
 		DEFINE_SET_FIELD_TYPE("any")
-			std::cout << "WINNER: " << value.write_json() << std::endl;
+			LOG_INFO("WINNER: " << value.write_json());
+			obj.winner_ = value;
 
 			if(g_game_server_http_client_to_matchmaking_server.get() != nullptr) {
 				http_client& client = *g_game_server_http_client_to_matchmaking_server;
@@ -571,11 +917,28 @@ namespace tbs
 
 	void game::handle_message(int nplayer, const variant& msg)
 	{
-		//LOG_DEBUG("HANDLE MESSAGE (((" << msg.write_json() << ")))");
+		LOG_INFO("HANDLE MESSAGE " << nplayer << " (((" << msg.write_json() << ")))");
 		const std::string type = msg["type"].as_string();
 		if(type == "start_game") {
+			LOG_INFO("tbs::game: received start_game");
 			start_game();
 			return;
+		} else if(type == "restore_state") {
+			const auto start_time = profile::get_tick_time();
+			restore_replay(msg["state_id"].as_int());
+			++state_id_;
+			const auto time_taken = profile::get_tick_time() - start_time;
+			send_game_state(-1, time_taken);
+			replay_.push_back(write_replay().write_json());
+		} else if(type == "download_state") {
+			download_state(msg["id"].as_string());
+		} else if(type == "upload_state") {
+			upload_state(msg["id"].as_string());
+		} else if(type == "save_state") {
+			save_state("./server-save.cfg");
+		} else if(type == "load_state") {
+			load_state("./server-save.cfg");
+			++state_id_;
 		} else if(type == "request_updates") {
 			if(msg.has_key("state_id")) {
 				if(nplayer >= 0 && nplayer < static_cast<int>(players_.size()) && msg.has_key("allow_deltas")) {
@@ -584,7 +947,9 @@ namespace tbs
 
 				const variant state_id = msg["state_id"];
 				if(state_id.as_int() != state_id_ && nplayer >= 0) {
-					players_[nplayer].confirmed_state_id = state_id.as_int();
+					if(!g_tbs_server_local || players_[nplayer].confirmed_state_id == -1) {
+						players_[nplayer].confirmed_state_id = state_id.as_int();
+					}
 					send_game_state(nplayer);
 				} else if(state_id.as_int() == state_id_ && nplayer >= 0 && static_cast<unsigned>(nplayer) < players_.size() && players_[nplayer].confirmed_state_id != state_id_) {
 					LOG_DEBUG("XXX: @" << profile::get_tick_time() << " player " << nplayer << " confirm sync " << state_id_);
@@ -603,6 +968,7 @@ namespace tbs
 			return;
 		} else if(type == "chat_message") {
 			variant m = msg;
+			m.add_attr_mutation(variant("timestamp"), variant(static_cast<int>(time(NULL))));
 			if(nplayer >= 0) {
 				m.add_attr_mutation(variant("nick"), variant(players_[nplayer].name));
 			} else {
@@ -633,9 +999,22 @@ namespace tbs
 
 		const auto time_taken = profile::get_tick_time() - start_time;
 
-		LOG_DEBUG("XXX: @" << profile::get_tick_time() << " HANDLED MESSAGE " << type);
+		LOG_DEBUG("XXX: @" << profile::get_tick_time() << " HANDLED MESSAGE " << type << " IN " << time_taken << "ms");
+
+		variant new_player_waiting_on = game_type_->player_waiting_on();
+		if(new_player_waiting_on != player_waiting_on_) {
+			const int ticks = SDL_GetTicks();
+			if(player_waiting_on_.is_null() == false) {
+				const int elapsed = ticks - started_waiting_for_player_at_;
+				LOG_INFO("PLAYER " << player_waiting_on_.as_int() << " MOVED IN " << elapsed << "ms");
+			}
+
+			player_waiting_on_ = new_player_waiting_on;
+			started_waiting_for_player_at_ = ticks;
+		}
 
 		send_game_state(-1, time_taken);
+		replay_.push_back(write_replay().write_json());
 	}
 
 	void game::setup_game()
@@ -729,7 +1108,7 @@ namespace tbs
 	void game::surrenderReferences(GarbageCollector* collector)
 	{
 		collector->surrenderPtr(&game_type_->object(), "object");
-		for(boost::intrusive_ptr<tbs::bot>& bot : bots_) {
+		for(ffl::IntrusivePtr<tbs::bot>& bot : bots_) {
 			collector->surrenderPtr(&bot, "bot");
 		}
 	}
@@ -768,8 +1147,8 @@ COMMAND_LINE_UTILITY(tbs_bot_game)
 
 	variant start_game_request = json::parse("{type: 'start_game'}");
 
-	boost::intrusive_ptr<MapFormulaCallable> callable(new MapFormulaCallable);
-	boost::intrusive_ptr<internal_client> client(new internal_client);
+	ffl::IntrusivePtr<MapFormulaCallable> callable(new MapFormulaCallable);
+	ffl::IntrusivePtr<internal_client> client(new internal_client);
 	client->send_request(create_game_request, -1, callable, create_game_return);
 	while(!g_create_bot_game) {
 		internal_server::process();

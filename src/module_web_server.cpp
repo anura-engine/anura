@@ -48,11 +48,12 @@
 
 using boost::asio::ip::tcp;
 
-ModuleWebServer::ModuleWebServer(const std::string& data_path, boost::asio::io_service& io_service, int port)
+ModuleWebServer::ModuleWebServer(const std::string& data_path, const std::string& chunk_path, boost::asio::io_service& io_service, int port)
 	: http::web_server(io_service, port), 
 	timer_(io_service), 
 	nheartbeat_(0), 
 	data_path_(data_path), 
+	chunk_path_(chunk_path), 
 	next_lock_id_(1)
 {
 	if(data_path_.empty() || data_path_[data_path_.size()-1] != '/') {
@@ -75,23 +76,23 @@ void ModuleWebServer::heartbeat()
 	timer_.async_wait(std::bind(&ModuleWebServer::heartbeat, this));
 }
 
-namespace {
-
-void add_chunks_to_manifest(const std::string& data_path, variant manifest)
+void ModuleWebServer::add_chunks_to_manifest(const std::string& data_path, variant manifest) const
 {
 	for(auto p : manifest.as_map()) {
 		if(p.second["data"].is_null()) {
 			std::string chunk_id = p.second["md5"].as_string();
-			std::string data = zip::decompress(sys::read_file(data_path + "/chunks/" + chunk_id));
+			std::string data = zip::decompress(sys::read_file(getChunkPath(chunk_id)));
 			p.second.add_attr_mutation(variant("data"), variant(data));
 		}
 	}
 }
 
+namespace {
+
 static const int ModuleProtocolVersion = 1;
 }
 
-void ModuleWebServer::handlePost(socket_ptr socket, variant doc, const http::environment& env)
+void ModuleWebServer::handlePost(socket_ptr socket, variant doc, const http::environment& env, const std::string& raw_msg)
 {
 	std::map<variant,variant> response;
 	try {
@@ -222,7 +223,7 @@ void ModuleWebServer::handlePost(socket_ptr socket, variant doc, const http::env
 		} else if(msg_type == "download_chunk") {
 			const std::string chunk_id = doc["chunk_id"].as_string();
 
-			std::string data = sys::read_file(data_path_ + "/chunks/" + chunk_id);
+			std::string data = sys::read_file(getChunkPath(chunk_id));
 			if(data.empty()) {
 				send_msg(socket, "text/json", "{ status: \"no_such_chunk\" }", "");
 				return;
@@ -320,6 +321,17 @@ void ModuleWebServer::handlePost(socket_ptr socket, variant doc, const http::env
 			variant lock_id = doc["lock_id"];
 			ASSERT_LOG(lock_id == variant(module_lock_ids_[module_id]), "Invalid lock on module: " << lock_id.write_json() << " vs " << module_lock_ids_[module_id]);
 
+			//basic passcode validation.
+			variant passcode = doc["passcode"];
+			std::string current_passcode = sys::read_file(data_path_ + module_id + ".pass");
+			if(current_passcode.empty() == false && (passcode.is_string() == false || passcode.as_string() != current_passcode)) {
+				ASSERT_LOG(false, "Incorrect passcode");
+			}
+
+			if(passcode.is_string() && current_passcode.empty()) {
+				sys::write_file(data_path_ + module_id + ".pass", passcode.as_string());
+			}
+
 			variant current_data = data_[variant(module_id)];
 			if(current_data.is_null() == false) {
 				const variant new_version = module_node[variant("version")];
@@ -386,14 +398,14 @@ void ModuleWebServer::handlePost(socket_ptr socket, variant doc, const http::env
 			static const variant MD5Variant("md5");
 			for(auto p : manifest.as_map()) {
 				const int size = p.second[SizeVariant].as_int();
-				if(size >= 8192) {
+				if(size >= 128) {
 					if(p.second[DataVariant].is_string()) {
 						const std::string data = zip::compress(p.second[DataVariant].as_string());
-						sys::write_file(data_path_ + "/chunks/" + p.second[MD5Variant].as_string(), data);
+						sys::write_file(getChunkPath(p.second[MD5Variant].as_string()), data);
 
 						p.second.remove_attr_mutation(DataVariant);
 					} else {
-						ASSERT_LOG(sys::file_exists(data_path_ + "/chunks/" + p.second[MD5Variant].as_string()), "Object has no file: " << p.second[MD5Variant].as_string());
+						ASSERT_LOG(sys::file_exists(getChunkPath(p.second[MD5Variant].as_string())), "Object has no file: " << p.second[MD5Variant].as_string());
 					}
 				}
 			}
@@ -537,13 +549,48 @@ void ModuleWebServer::handlePost(socket_ptr socket, variant doc, const http::env
 	send_msg(socket, "text/json", variant(&response).write_json(), "");
 }
 
+namespace {
+	bool consecutive_periods(char a, char b) {
+		return a == '.' && b == '.';
+	}
+}
+
 void ModuleWebServer::handleGet(socket_ptr socket, const std::string& url, const std::map<std::string, std::string>& args)
 {
+	if(std::adjacent_find(url.begin(), url.end(), consecutive_periods) != url.end()) {
+		return;
+	}
+	
 	std::map<variant,variant> response;
 	try {
+		static const std::string ModuleVersionStr = "/module_version/";
+		static const std::string ModuleDataStr = "/module_data/";
+		if(std::equal(ModuleVersionStr.begin(), ModuleVersionStr.end(), url.begin())) {
+			const std::string module_id(url.begin()+ModuleVersionStr.size(), url.end());
+
+			variant module_info = data_[module_id];
+
+			if(module_info.is_map()) {
+				variant latest_version = module_info["version"];
+				response[variant("status")] = variant("ok");
+				response[variant("version")] = latest_version;
+				send_msg(socket, "text/json", variant(&response).write_json(), "");
+				return;
+			}
+		} else if(std::equal(ModuleDataStr.begin(), ModuleDataStr.end(), url.begin())) {
+			const std::string module_id(url.begin()+ModuleDataStr.size(), url.end());
+
+			std::string module_path = data_path_ + module_id + ".cfg";
+			if(sys::file_exists(module_path)) {
+				std::string contents = sys::read_file(module_path);
+				send_msg(socket, "text/json", contents, "");
+				return;
+			}
+		}
+
 		LOG_INFO("URL: (" << url << ")");
 		response[variant("status")] = variant("error");
-		 if(url == "/get_summary") {
+		if(url == "/get_summary") {
 			response[variant("status")] = variant("ok");
 			response[variant("summary")] = data_;
 		} else if(url == "/package") {
@@ -585,16 +632,29 @@ void ModuleWebServer::writeData()
 		ASSERT_LOG(rename_result == 0, "FAILED TO RENAME FILE: " << errno);
 }
 
+std::string ModuleWebServer::getChunkPath(const std::string& chunk_id) const
+{
+	if(chunk_path_.empty()) {
+		return data_path_ + "/chunks/" + chunk_id;
+	} else {
+		return chunk_path_ + "/" + chunk_id;
+	}
+}
+
 COMMAND_LINE_UTILITY(module_server)
 {
-	std::string path = ".";
+	std::string path = ".", chunk_path;
 	int port = 23456;
 
 	std::deque<std::string> arguments(args.begin(), args.end());
 	while(!arguments.empty()) {
 		const std::string arg = arguments.front();
 		arguments.pop_front();
-		if(arg == "--path") {
+		if(arg == "--chunk-path") {
+			ASSERT_LOG(arguments.empty() == false, "NEED ARGUMENT AFTER " << arg);
+			chunk_path = arguments.front();
+			arguments.pop_front();
+		} else if(arg == "--path") {
 			ASSERT_LOG(arguments.empty() == false, "NEED ARGUMENT AFTER " << arg);
 			path = arguments.front();
 			arguments.pop_front();
@@ -609,6 +669,6 @@ COMMAND_LINE_UTILITY(module_server)
 
 	const assert_recover_scope recovery;
 	boost::asio::io_service io_service;
-	ModuleWebServer server(path, io_service, port);
+	ModuleWebServer server(path, chunk_path, io_service, port);
 	io_service.run();
 }

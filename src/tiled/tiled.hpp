@@ -295,6 +295,6 @@ namespace tiled
 
 		MapPtr get_this_pointer();
 		void init(const variant& node);
-		void notifyNodeAttached(std::weak_ptr<SceneNode> parent);
+		void notifyNodeAttached(std::weak_ptr<SceneNode> parent) override;
 	};
 }

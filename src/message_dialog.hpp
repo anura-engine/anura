@@ -54,4 +54,4 @@ private:
 	int selected_option_;
 };
 
-typedef boost::intrusive_ptr<MessageDialog> MessageDialogPtr;
+typedef ffl::IntrusivePtr<MessageDialog> MessageDialogPtr;

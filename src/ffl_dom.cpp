@@ -30,8 +30,8 @@
 #include "WindowManager.hpp"
 
 #include "css_parser.hpp"
-#include "display_list.hpp"
 #include "xhtml.hpp"
+#include "xhtml_element.hpp"
 #include "xhtml_layout_engine.hpp"
 #include "xhtml_root_box.hpp"
 #include "xhtml_style_tree.hpp"
@@ -39,8 +39,11 @@
 #include "xhtml_render_ctx.hpp"
 #include "xhtml_script_interface.hpp"
 
+#include "custom_object.hpp"
 #include "ffl_dom.hpp"
 #include "formula.hpp"
+#include "json_parser.hpp"
+#include "level.hpp"
 #include "module.hpp"
 #include "profile_timer.hpp"
 #include "screen_handling.hpp"
@@ -96,6 +99,84 @@ namespace xhtml
 			boost::split(res, s, boost::is_any_of(" \n\r\t\f"), boost::token_compress_on);
 			return res;
 		}
+
+		class EntityObject : public ObjectProxy
+		{
+		public:
+			EntityObject(const AttributeMap& am) 
+				: ObjectProxy(am),
+				  entity_(),
+				  handle_process_on_entity_(true),
+				  commands_handler_()
+			{
+				auto attr_data = am.find("data");
+				std::string obj_str;
+				if(attr_data != am.end()) {
+					obj_str = attr_data->second->getValue();
+				} else {
+					auto attr_clsid = am.find("classid");
+					if(attr_clsid != am.end()) {
+						obj_str = attr_clsid->second->getValue();
+					} else {
+						LOG_ERROR("No data or clasid tag for ImageObject");
+					}
+				}
+
+				const variant v = json::parse(obj_str);
+
+				handle_process_on_entity_ = v["handle_process"].as_bool(false);
+				if(v["object"].is_string()) {
+					// type name, has obj_x, obj_y, facing			
+					entity_ = EntityPtr(new CustomObject(v["object"].as_string(), v["obj_x"].as_int(0), v["obj_y"].as_int(0), v["facing"].as_int(1) > 0 ? true : false));
+					entity_->finishLoading(NULL);
+				} else if(v["object"].is_map()) {
+					entity_ = EntityPtr(new CustomObject(v["object"]));
+					entity_->finishLoading(NULL);
+				} else {
+					entity_ = v["object"].try_convert<Entity>();
+					ASSERT_LOG(entity_ != NULL, "Couldn't convert 'object' attribue to an entity");
+					entity_->finishLoading(NULL);
+					entity_->validate_properties();
+				}
+				if(v.has_key("properties")) {
+					ASSERT_LOG(v["properties"].is_map(), "properties field must be a map");
+					const variant& properties = v["properties"];
+					variant keys = properties.getKeys();
+					for(int n = 0; n != keys.num_elements(); ++n) {
+						variant value = properties[keys[n]];
+						entity_->mutateValue(keys[n].as_string(), value);
+					}
+				}
+				if(v.has_key("commands")) {
+					commands_handler_ = entity_->createFormula(v["commands"]);
+					using namespace game_logic;
+					MapFormulaCallablePtr callable = MapFormulaCallablePtr(new MapFormulaCallable(entity_.get()));
+					variant value = commands_handler_->execute(*callable);
+					entity_->executeCommand(value);
+				}
+			}
+			KRE::SceneObjectPtr getRenderable() override
+			{
+				return nullptr;
+			}
+			void process(float dt) override
+			{
+				if(entity_ && handle_process_on_entity_) {
+					CustomObject* obj = static_cast<CustomObject*>(entity_.get());
+					obj->process(Level::current());
+				}
+			}
+			// XXX should probably handle and pass mouse and keyboard events here.
+		private:
+			EntityPtr entity_;
+			bool handle_process_on_entity_;
+			game_logic::FormulaPtr commands_handler_;
+		};
+
+		ObjectProxyRegistrar obj_png("application/x.entity", [](const AttributeMap& attributes){
+			return std::make_shared<EntityObject>(attributes);
+		});
+
 	}
 
 	using namespace KRE;
@@ -107,13 +188,21 @@ namespace xhtml
 		  last_process_time_(-1),
 		  doc_(nullptr),
 		  style_tree_(nullptr),
-		  display_list_(nullptr),
+		  scene_tree_(nullptr),
 		  doc_name_(),
 		  ss_name_(),
-		  layout_size_()
+		  layout_size_(),
+		  do_onload_(true)
 	{
-		ASSERT_LOG(v.has_key("xhtml") && v["xhtml"].is_string(), "No xhtml document was specified.");
-		doc_name_ = module::map_file(v["xhtml"].as_string());
+		if(v.is_map() && v.has_key("xhtml") && v["xhtml"].is_string()) {
+			doc_name_ = module::map_file(v["xhtml"].as_string());
+		} else if(v.is_string()) {
+			doc_name_ = module::map_file(v.as_string());
+			// XXX should test if file exists if not then set the name to a fake document name
+			// and try loading contents directly from the string.
+		} else {
+			ASSERT_LOG(false, "No xhtml document was specified.");
+		}
 
 		root_->setNodeName("xhtml_root_node");
 
@@ -155,8 +244,8 @@ namespace xhtml
 		// whitespace can only be processed after applying styles.
 		doc_->processWhitespace();
 
-		display_list_ = std::make_shared<DisplayList>(scene_);
-		root_->attachNode(display_list_);		
+		//style_tree_ = xhtml::StyleNode::createStyleTree(doc_);
+		//scene_tree_ = style_tree_->getSceneTree();
 
 		/*
 		doc_->preOrderTraversal([](xhtml::NodePtr n) {
@@ -182,52 +271,29 @@ namespace xhtml
 	void DocumentObject::draw(const KRE::WindowPtr& wnd) const
 	{
 		ModelManager2D mm(layout_size_.x(), layout_size_.y());
-		scene_->renderScene(rmanager_);
-		rmanager_->render(wnd);
+		//scene_->renderScene(rmanager_);
+		//rmanager_->render(wnd);
+		if(scene_tree_ != nullptr) {
+			scene_tree_->preRender(wnd);
+			scene_tree_->render(wnd);
+		}
 	}
 	
 	void DocumentObject::process()
 	{
-		static xhtml::RootBoxPtr layout = nullptr;
-		if(doc_->needsLayout()) {
-			LOG_DEBUG("Triggered layout!");
-
-			display_list_->clear();
-
-			// XXX should we should have a re-process styles flag here.
-
-			{
-			profile::manager pman("apply styles");
-			doc_->processStyleRules();
-			}
-
-			{
-				profile::manager pman("update style tree");
-				if(style_tree_ == nullptr) {
-					style_tree_ = xhtml::StyleNode::createStyleTree(doc_);
-					doc_->processScriptAttributes();
-				} else {
-					style_tree_->updateStyles();
+		auto st = doc_->process(style_tree_, layout_size_.x(), layout_size_.y(), layout_size_.w(), layout_size_.h());
+		if(st != nullptr) {
+			scene_tree_ = st;
+		}
+		if(do_onload_) {
+			do_onload_ = false;
+			if(environment_ != nullptr) {
+				auto* obj = dynamic_cast<CustomObject*>(environment_);
+				if(obj != nullptr) {
+					obj->handleEvent("onload");
 				}
 			}
-
-			{
-			profile::manager pman("layout");
-			layout = xhtml::Box::createLayout(style_tree_, layout_size_.w(), layout_size_.h());
-			}
-
-			{
-			profile::manager pman_render("render");
-			layout->render(display_list_, point());
-			}
-		} else if(doc_->needsRender() && layout != nullptr) {
-			profile::manager pman_render("render");
-			display_list_->clear();
-			layout->render(display_list_, point());
-			// XXX shoud internalise this
-			doc_->renderComplete();
 		}
-
 
 		float delta_time = 0.0f;
 		if(last_process_time_ == -1) {
@@ -247,15 +313,30 @@ namespace xhtml
 		const int adj_x = (e.type == SDL_MOUSEMOTION ? e.motion.x : e.button.x) - p.x - layout_size_.x();
 		const int adj_y = (e.type == SDL_MOUSEMOTION ? e.motion.y : e.button.y) - p.y - layout_size_.y();
 		bool claimed = false;
-		if(e.type == SDL_MOUSEMOTION) {
-			claimed = doc_->handleMouseMotion(false, adj_x, adj_y);
-		} else if(e.type == SDL_MOUSEBUTTONDOWN) {
-			claimed = doc_->handleMouseButtonDown(false, adj_x, adj_y, e.button.button);
-		} else if(e.type == SDL_MOUSEBUTTONUP) {
-			claimed = doc_->handleMouseButtonUp(false, adj_x, adj_y, e.button.button);
+		if(adj_x >= 0 && adj_y >= 0) {
+			if(e.type == SDL_MOUSEMOTION) {
+				claimed = doc_->handleMouseMotion(false, adj_x, adj_y);
+			} else if(e.type == SDL_MOUSEBUTTONDOWN) {
+				claimed = doc_->handleMouseButtonDown(false, adj_x, adj_y, e.button.button);
+			} else if(e.type == SDL_MOUSEBUTTONUP) {
+				claimed = doc_->handleMouseButtonUp(false, adj_x, adj_y, e.button.button);
+			}
 		}
 
 		return claimed;
+	}
+
+	ElementObjectPtr DocumentObject::getActiveElement() const
+	{
+		auto element = doc_->getActiveElement();
+		if(element != nullptr) {
+			ElementObjectPtr& eo = element_cache_[element];
+			if(eo == nullptr) {
+				eo.reset(new ElementObject(element));
+			}
+			return eo;
+		} 
+		return nullptr;
 	}
 
 	ElementObjectPtr DocumentObject::getElementById(const std::string& element_id) const
@@ -414,14 +495,15 @@ namespace xhtml
 			obj.layout_size_.set_x(value[0].as_int());
 			obj.layout_size_.set_y(value[1].as_int());
 
+		DEFINE_FIELD(activeElement, "builtin element_object|null")
+			ElementObjectPtr eo = obj.getActiveElement();
+			return eo == nullptr ? variant() : variant(eo.get());
+
 		BEGIN_DEFINE_FN(getElementById, "(string) ->builtin element_object|null")
 			const std::string element_id = FN_ARG(0).as_string();
 			ElementObjectPtr eo = obj.getElementById(element_id);
-			if(eo == nullptr) {
-				return variant();
-			}
-			return variant(eo.get());
-		END_DEFINE_FN
+			return eo == nullptr ? variant() : variant(eo.get());
+			END_DEFINE_FN
 
 		BEGIN_DEFINE_FN(getElementsByTagName, "(string) ->[builtin element_object]")
 			const std::string element_tag = FN_ARG(0).as_string();
@@ -451,6 +533,12 @@ namespace xhtml
 				v.emplace_back(el.get());
 			}
 			return variant(&v);
+		END_DEFINE_FN
+
+		BEGIN_DEFINE_FN(rebuildTree, "() ->commands")
+			return variant(new game_logic::FnCommandCallable("dom::rebuildTree", [=]() {
+				obj.doc_->rebuildTree();
+			}));
 		END_DEFINE_FN
 		
 	END_DEFINE_CALLABLE(DocumentObject)
@@ -639,6 +727,11 @@ namespace xhtml
 			}
 			return variant(&res);
 
+		DEFINE_FIELD(innerHTML, "string")
+			return variant(obj.element_->writeXHTML());
+		DEFINE_SET_FIELD
+			obj.element_->setInnerXHTML(value.as_string());
+
 		BEGIN_DEFINE_FN(getAttribute, "(string) ->string|null")
 			const std::string attr_name = FN_ARG(0).as_string();
 			auto attr = obj.element_->getAttribute(attr_name);
@@ -657,8 +750,8 @@ namespace xhtml
 			const std::string attr_name = FN_ARG(0).as_string();
 			const std::string attr_value = FN_ARG(1).as_string();
 
-			boost::intrusive_ptr<const ElementObject> ptr(&obj);
-			return variant(new game_logic::FnCommandCallable([ptr, attr_name, attr_value]() {
+			ffl::IntrusivePtr<const ElementObject> ptr(&obj);
+			return variant(new game_logic::FnCommandCallable("dom::setAttribute", [ptr, attr_name, attr_value]() {
 				ptr->element_->setAttribute(attr_name, attr_value);
 			}));
 		END_DEFINE_FN

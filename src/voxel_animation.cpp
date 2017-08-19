@@ -73,14 +73,14 @@ private:
 
 	GLint video_framebuffer_id_;
 
-	boost::intrusive_ptr<camera_callable> camera_;
+	ffl::IntrusivePtr<camera_callable> camera_;
 	GLfloat camera_hangle_, camera_vangle_, camera_distance_;
 
 	bool focused_, dragging_view_;
 
 	int tex_width_, tex_height_;
 
-	boost::intrusive_ptr<voxel_model> vox_model_;
+	ffl::IntrusivePtr<voxel_model> vox_model_;
 
 };
 
@@ -98,7 +98,7 @@ animation_renderer::animation_renderer(const rect& area, const std::string& fnam
 
 	items[variant("model")] = variant("modules/ftactics/sword.cfg");
 
-	boost::intrusive_ptr<voxel_model> weapon(new voxel_model(variant(&items)));
+	ffl::IntrusivePtr<voxel_model> weapon(new voxel_model(variant(&items)));
 	weapon->set_animation("stand");
 
 	vox_model_->attach_child(weapon, "handle", "melee_weapon");
@@ -356,7 +356,7 @@ public:
 private:
 	bool handleEvent(const SDL_Event& event, bool claimed) override;
 
-	boost::intrusive_ptr<animation_renderer> renderer_;
+	ffl::IntrusivePtr<animation_renderer> renderer_;
 	rect area_;
 	std::string fname_;
 
@@ -405,7 +405,7 @@ UTILITY(voxel_animator)
 		fname = module::map_file(arguments.front());
 	}
 
-	boost::intrusive_ptr<voxel_animation_editor> editor(new voxel_animation_editor(rect(0, 0, preferences::actual_screen_width(), preferences::actual_screen_height()), fname));
+	ffl::IntrusivePtr<voxel_animation_editor> editor(new voxel_animation_editor(rect(0, 0, preferences::actual_screen_width(), preferences::actual_screen_height()), fname));
 	editor->showModal();
 }
 */

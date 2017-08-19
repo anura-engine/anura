@@ -21,16 +21,21 @@
 	   distribution.
 */
 
-//#include <boost/locale.hpp>
+#include <boost/locale.hpp>
+#include <boost/thread.hpp>
 
 #include "asserts.hpp"
 #include "profile_timer.hpp"
+#include "xhtml_style_tree.hpp"
 #include "xhtml_text_node.hpp"
-#include "xhtml_render_ctx.hpp"
 #include "utf8_to_codepoint.hpp"
 #include "unit_test.hpp"
 
 #include "WindowManager.hpp"
+
+#pragma comment(lib, "icudt.lib")
+#pragma comment(lib, "icuin.lib")
+#pragma comment(lib, "icuuc.lib")
 
 namespace xhtml
 {
@@ -99,15 +104,18 @@ namespace xhtml
 		return ss.str();
 	}
 
-	void Text::transformText(bool non_zero_width)
+	void Text::transformText(const StyleNodePtr& style_node, bool non_zero_width)
 	{
 		if(transformed_) {
 			return;
 		}
-		auto ctx = RenderContext::get();
+
+		boost::locale::generator gen;
+		std::locale::global(gen(""));
 
 		// Apply transform text_ based on "text-transform" property		
-		css::TextTransform text_transform = ctx.getComputedValue(css::Property::TEXT_TRANSFORM)->getEnum<css::TextTransform>();
+		
+		css::TextTransform text_transform = style_node->getTextTransform();
 		std::string transformed_text = text_;
 		switch(text_transform) {
 			case css::TextTransform::CAPITALIZE: {
@@ -120,7 +128,7 @@ namespace xhtml
 					} else {
 						if(first_letter) {
 							first_letter = false;
-							transformed_text += /*boost::locale::to_upper*/(utils::codepoint_to_utf8(cp));
+							transformed_text += boost::locale::to_upper(utils::codepoint_to_utf8(cp));
 						} else {
 							transformed_text += utils::codepoint_to_utf8(cp);
 						}
@@ -129,16 +137,16 @@ namespace xhtml
 				break;
 			}
 			case css::TextTransform::UPPERCASE:
-				transformed_text = /*boost::locale::to_upper*/(text_);
+				transformed_text = boost::locale::to_upper(text_);
 				break;
 			case css::TextTransform::LOWERCASE:
-				transformed_text = /*boost::locale::to_lower*/(text_);
+				transformed_text = boost::locale::to_lower(text_);
 				break;
 			case css::TextTransform::NONE:
 			default: break;
 		}
 
-		css::Whitespace ws = ctx.getComputedValue(css::Property::WHITE_SPACE)->getEnum<css::Whitespace>();
+		css::Whitespace ws = style_node->getWhitespace();
 
 		// indicates whitespace should be collapsed together.
 		bool collapse_whitespace = ws == css::Whitespace::NORMAL || ws == css::Whitespace::NOWRAP || ws == css::Whitespace::PRE_LINE;
@@ -154,25 +162,19 @@ namespace xhtml
 		transformed_ = true;
 	}
 
-	LinePtr Text::reflowText(iterator& start, FixedPoint remaining_line_width, KRE::FontHandlePtr font_handle)
+	LinePtr Text::reflowText(iterator& start, FixedPoint remaining_line_width, const StyleNodePtr& style_node)
 	{
 		auto parent = getParent();
 		ASSERT_LOG(parent != nullptr, "Text::reflowText() parent was null.");
 		ASSERT_LOG(transformed_ == true, "Text must be transformed before reflowing.");
 		auto ctx = RenderContext::get();
 
-		/// XXXX FIXME
-		line_.space_advance = font_handle->calculateCharAdvance(' ');
-		FixedPoint word_spacing = ctx.getComputedValue(css::Property::WORD_SPACING)->asType<css::Length>()->compute();
+		line_.space_advance = style_node->getFont()->calculateCharAdvance(' ');
+		FixedPoint word_spacing = style_node->getWordSpacing()->compute();
 		line_.space_advance += word_spacing;
-		FixedPoint letter_spacing = ctx.getComputedValue(css::Property::LETTER_SPACING)->asType<css::Length>()->compute();
+		FixedPoint letter_spacing = style_node->getLetterSpacing()->compute();
 		line_.space_advance += letter_spacing;
-		
-		css::Direction dir = ctx.getComputedValue(css::Property::DIRECTION)->getEnum<css::Direction>();
-		css::TextAlign text_align = ctx.getComputedValue(css::Property::TEXT_ALIGN)->getEnum<css::TextAlign>();
-		if(text_align == css::TextAlign::NORMAL) {
-			text_align = dir == css::Direction::LTR ? css::TextAlign::LEFT : css::TextAlign::RIGHT;
-		}
+		css::Direction dir = style_node->getDirection();
 
 		// XXX padding-left is applied to the start of the first word
 		// and padding-right is applied to the end of the last word.
@@ -200,7 +202,7 @@ namespace xhtml
 				continue;
 			}
 			word.advance.clear();
-			word.advance = font_handle->getGlyphPath(word.word);
+			word.advance = style_node->getFont()->getGlyphPath(word.word);
 			if(letter_spacing != 0) {
 				long ls_acc = 0;
 				for(auto& pt : word.advance) {
@@ -210,10 +212,10 @@ namespace xhtml
 			}
 			if(break_at_line_ && length_acc + word.advance.back().x + line_.space_advance > remaining_line_width) {
 				// Enforce a minimum of one-word per line even if it overflows.
-				if(current_line->line.empty() && !word.word.empty()) {
+				/*if(current_line->line.empty() && !word.word.empty()) {
 					current_line->line.emplace_back(word);
 					++start;
-				}
+				}*/
 
 				current_line->is_end_line = true;
 				return current_line;

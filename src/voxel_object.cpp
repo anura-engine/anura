@@ -128,9 +128,9 @@ namespace voxel
 			model_matrix_ = 
 				  glm::translate(glm::mat4(1.0f), translation_)
 				* glm::scale(glm::mat4(1.0f), scale_)
-				* glm::rotate(glm::mat4(1.0f), rotation_.x, glm::vec3(1,0,0))
-				* glm::rotate(glm::mat4(1.0f), rotation_.z, glm::vec3(0,0,1))
-				* glm::rotate(glm::mat4(1.0f), rotation_.y, glm::vec3(0,1,0));
+				* glm::rotate(glm::mat4(1.0f), glm::radians(rotation_.x), glm::vec3(1,0,0))
+				* glm::rotate(glm::mat4(1.0f), glm::radians(rotation_.z), glm::vec3(0,0,1))
+				* glm::rotate(glm::mat4(1.0f), glm::radians(rotation_.y), glm::vec3(0,1,0));
 			model_->draw(lighting, camera, model_matrix_);
 		}
 
@@ -222,7 +222,7 @@ namespace voxel
 		variant child_point = FN_ARG(1);
 		variant parent_point = FN_ARG(2);
 
-		boost::intrusive_ptr<voxel_model> model(model_var.convert_to<voxel_model>());
+		ffl::IntrusivePtr<voxel_model> model(model_var.convert_to<voxel_model>());
 
 		std::function<void()> fn = [=]() { obj.model_->attach_child(model, child_point.as_string(), parent_point.as_string()); };
 		return variant(new game_logic::FnCommandCallable(fn));

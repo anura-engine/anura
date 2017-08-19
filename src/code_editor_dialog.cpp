@@ -63,6 +63,8 @@ namespace game_logic
 void invalidate_class_definition(const std::string& class_name);
 }
 
+PREF_INT(code_editor_error_area, 300, "");
+
 std::set<Level*>& get_all_levels_set();
 
 CodeEditorDialog::CodeEditorDialog(const rect& r)
@@ -79,14 +81,21 @@ void CodeEditorDialog::init()
 
 	using namespace gui;
 
+	const int EDITOR_BUTTONS_X = 42;
+	const int EDITOR_BUTTONS_Y = 12;
+	const int Y_SPACING        = 4;
+
 	if(!editor_) {
-		editor_.reset(new CodeEditorWidget(width() - 40, height() - (60 + (optional_error_text_area_ ? 170 : 0))));
+		editor_.reset(new CodeEditorWidget(width() - 40, height() - (60 + (optional_error_text_area_ ? g_code_editor_error_area : 0))));
 	}
 
-	Button* save_button = new Button("Save", std::bind(&CodeEditorDialog::save, this));
-	Button* increase_font = new Button("+", std::bind(&CodeEditorDialog::changeFontSize, this, 1));
-	Button* decrease_font = new Button("-", std::bind(&CodeEditorDialog::changeFontSize, this, -1));
-
+	Button* save_button      = new Button("Save", std::bind(&CodeEditorDialog::save, this));
+	Button* undo_button      = new Button("Undo", std::bind(&CodeEditorDialog::undo, this));
+	Button* redo_button      = new Button("Redo", std::bind(&CodeEditorDialog::redo, this));
+	Button* increase_font    = new Button("Increase font size", std::bind(&CodeEditorDialog::changeFontSize, this, 1));
+	Button* decrease_font    = new Button("Decrease font size", std::bind(&CodeEditorDialog::changeFontSize, this, -1));
+	
+	find_next_button_ = new Button("Find next", std::bind(&CodeEditorDialog::on_find_next, this));
 	save_button_.reset(save_button);
 
 	using std::placeholders::_1;
@@ -100,15 +109,16 @@ void CodeEditorDialog::init()
 	search_ = new TextEditorWidget(120);
 	replace_ = new TextEditorWidget(120);
 	const KRE::Color col = KRE::Color::colorWhite();
+
+	WidgetPtr change_font_label(Label::create("Change font size:", col));
 	WidgetPtr find_label(Label::create("Find: ", col));
 	replace_label_ = Label::create("Replace: ", col);
-	status_label_ = Label::create("Ok", col);
-	error_label_ = Label::create("", col);
-	addWidget(find_label, 42, 12, MOVE_DIRECTION::RIGHT);
-	addWidget(WidgetPtr(search_), MOVE_DIRECTION::RIGHT);
-	addWidget(replace_label_, MOVE_DIRECTION::RIGHT);
-	addWidget(WidgetPtr(replace_), MOVE_DIRECTION::RIGHT);
-	addWidget(WidgetPtr(save_button), MOVE_DIRECTION::RIGHT);
+	status_label_ = Label::create(" ", col);
+	error_label_ = Label::create("Ok", col);
+	error_label_->setTooltip("No errors detected");
+
+	// Saving and fonts
+	addWidget(WidgetPtr(save_button), EDITOR_BUTTONS_X, EDITOR_BUTTONS_Y, MOVE_DIRECTION::RIGHT);
 
 	if(have_close_buttons_) {
 		Button* save_and_close_button = new Button("Save+Close", std::bind(&CodeEditorDialog::save_and_close, this));
@@ -117,9 +127,20 @@ void CodeEditorDialog::init()
 		addWidget(WidgetPtr(abort_button), MOVE_DIRECTION::RIGHT);
 	}
 
+
+	addWidget(WidgetPtr(undo_button), MOVE_DIRECTION::RIGHT);
+	addWidget(WidgetPtr(redo_button), MOVE_DIRECTION::RIGHT);
 	addWidget(WidgetPtr(increase_font), MOVE_DIRECTION::RIGHT);
 	addWidget(WidgetPtr(decrease_font), MOVE_DIRECTION::RIGHT);
-	addWidget(editor_, find_label->x(), find_label->y() + save_button->height() + 2);
+
+	// Search and replace
+	addWidget(find_label, EDITOR_BUTTONS_X, save_button->y() + save_button->height() + Y_SPACING, MOVE_DIRECTION::RIGHT);
+	addWidget(WidgetPtr(search_), MOVE_DIRECTION::RIGHT);
+	addWidget(replace_label_, MOVE_DIRECTION::RIGHT);
+	addWidget(WidgetPtr(replace_), MOVE_DIRECTION::RIGHT);
+	addWidget(WidgetPtr(find_next_button_), MOVE_DIRECTION::RIGHT);
+
+	addWidget(editor_, find_label->x(), search_->y() + search_->height() + Y_SPACING);
 	if(optional_error_text_area_) {
 		addWidget(optional_error_text_area_);
 	}
@@ -129,6 +150,7 @@ void CodeEditorDialog::init()
 
 	replace_label_->setVisible(false);
 	replace_->setVisible(false);
+	find_next_button_->setVisible(false);
 
 	if(fname_.empty() == false && fname_[0] == '@') {
 		save_button->setVisible(false);
@@ -148,14 +170,14 @@ void CodeEditorDialog::init()
 void CodeEditorDialog::add_optional_error_text_area(const std::string& text)
 {
 	using namespace gui;
-	optional_error_text_area_.reset(new TextEditorWidget(width() - 40, 160));
+	optional_error_text_area_.reset(new TextEditorWidget(width() - 40, g_code_editor_error_area-10));
 	optional_error_text_area_->setText(text);
 	for(KnownFile& f : files_) {
-		f.editor->setDim(width() - 40, height() - (60 + (optional_error_text_area_ ? 170 : 0)));
+		f.editor->setDim(width() - 40, height() - (60 + (optional_error_text_area_ ? g_code_editor_error_area : 0)));
 	}
 
 	if(editor_) {
-		editor_->setDim(width() - 40, height() - (60 + (optional_error_text_area_ ? 170 : 0)));
+		editor_->setDim(width() - 40, height() - (60 + (optional_error_text_area_ ? g_code_editor_error_area : 0)));
 	}
 }
 
@@ -243,7 +265,7 @@ void CodeEditorDialog::load_file(std::string fname, bool focus, std::function<vo
 		if(fn) {
 			f.op_fn = *fn;
 		}
-		f.editor.reset(new CodeEditorWidget(width() - 40, height() - (60 + (optional_error_text_area_ ? 170 : 0))));
+		f.editor.reset(new CodeEditorWidget(width() - 40, height() - (60 + (optional_error_text_area_ ? g_code_editor_error_area : 0))));
 		std::string text = json::get_file_contents(fname);
 		try {
 			file_contents_set_ = true;
@@ -413,6 +435,20 @@ void CodeEditorDialog::handleDrawChildren() const
 	}
 }
 
+void CodeEditorDialog::undo()
+{
+	if(editor_) {
+		editor_->undo();
+	}
+}
+
+void CodeEditorDialog::redo()
+{
+	if(editor_) {
+		editor_->redo();
+	}
+}
+
 void CodeEditorDialog::changeFontSize(int amount)
 {
 	if(editor_) {
@@ -426,6 +462,8 @@ void CodeEditorDialog::process()
 
 	using std::placeholders::_1;
 	using std::placeholders::_2;
+
+	sys::pump_file_modifications();
 
 	if(invalidated_ && profile::get_tick_time() > invalidated_ + 200) {
 		try {
@@ -481,10 +519,13 @@ void CodeEditorDialog::process()
 				LOG_INFO("INIT TILE MAP OK");
 			} else if(strstr(fname_.c_str(), "data/shaders.cfg")) {
 				LOG_INFO("CODE_EDIT_DIALOG FILE: " << fname_);
-				ASSERT_LOG(false, "XXX edited shaders file fixme");
-				//for(Level* lvl : get_all_levels_set()) {
-				//	lvl->shadersUpdated();
-				//}
+				//ASSERT_LOG(false, "XXX edited shaders file fixme");
+
+				variant node = json::parse(editor_->text());
+				KRE::ShaderProgram::loadFromVariant(node);
+				for(Level* lvl : get_all_levels_set()) {
+					lvl->shadersUpdated();
+				}
 			} else if(strstr(fname_.c_str(), "classes/") &&
 			          std::equal(fname_.end()-4,fname_.end(),".cfg")) {
 
@@ -504,7 +545,7 @@ void CodeEditorDialog::process()
 				CustomObjectType::setFileContents(fname_, editor_->text());
 			}
 			error_label_->setText("Ok");
-			error_label_->setTooltip("");
+			error_label_->setTooltip("No errors detected");
 
 			if(optional_error_text_area_) {
 				optional_error_text_area_->setText("No errors");
@@ -544,6 +585,7 @@ void CodeEditorDialog::process()
 	const bool show_replace = editor_->hasSearchMatches();
 	replace_label_->setVisible(show_replace);
 	replace_->setVisible(show_replace);
+	find_next_button_->setVisible(show_replace);
 
 	const int cursor_pos = static_cast<int>(editor_->rowColToTextPos(editor_->cursorRow(), editor_->cursorCol()));
 	const std::string& text = editor_->currentText();
@@ -628,7 +670,7 @@ void CodeEditorDialog::process()
 				if(selected && selected->type == formula_tokenizer::FFL_TOKEN_TYPE::IDENTIFIER) {
 					const std::string identifier(selected->begin, selected->end);
 
-					static const boost::intrusive_ptr<CustomObjectCallable> obj_definition(new CustomObjectCallable);
+					static const ffl::IntrusivePtr<CustomObjectCallable> obj_definition(new CustomObjectCallable);
 					for(int n = 0; n != obj_definition->getNumSlots(); ++n) {
 						const std::string id = obj_definition->getEntry(n)->id;
 						if(id.size() > identifier.size() && std::equal(identifier.begin(), identifier.end(), id.begin())) {
@@ -770,7 +812,7 @@ void CodeEditorDialog::change_width(int amount)
 
 
 	for(KnownFile& f : files_) {
-		f.editor->setDim(width() - 40, height() - (60 + (optional_error_text_area_ ? 170 : 0)));
+		f.editor->setDim(width() - 40, height() - (60 + (optional_error_text_area_ ? g_code_editor_error_area : 0)));
 	}
 	init();
 }
@@ -796,7 +838,7 @@ void CodeEditorDialog::on_drag(int dx, int dy)
 
 
 	for(KnownFile& f : files_) {
-		f.editor->setDim(width() - 40, height() - (60 + (optional_error_text_area_ ? 170 : 0)));
+		f.editor->setDim(width() - 40, height() - (60 + (optional_error_text_area_ ? g_code_editor_error_area : 0)));
 	}
 	//init();
 }
@@ -828,6 +870,14 @@ void CodeEditorDialog::on_search_changed()
 
 void CodeEditorDialog::on_search_enter()
 {
+	search_->setFocus(false);
+	replace_->setFocus(false);
+	editor_->setFocus(true);
+}
+
+void CodeEditorDialog::on_find_next()
+{
+	editor_->nextSearchMatch();
 	search_->setFocus(false);
 	replace_->setFocus(false);
 	editor_->setFocus(true);
@@ -1013,7 +1063,7 @@ void edit_and_continue_class(const std::string& class_name, const std::string& e
 {
 	auto wnd_w = KRE::WindowManager::getMainWindow()->width();
 	auto wnd_h = KRE::WindowManager::getMainWindow()->height();
-	boost::intrusive_ptr<CodeEditorDialog> d(new CodeEditorDialog(rect(0,0,wnd_w,wnd_h)));
+	ffl::IntrusivePtr<CodeEditorDialog> d(new CodeEditorDialog(rect(0,0,wnd_w,wnd_h)));
 
 	const std::string::const_iterator end_itor = std::find(class_name.begin(), class_name.end(), '.');
 	const std::string filename = "data/classes/" + std::string(class_name.begin(), end_itor) + ".cfg";
@@ -1036,13 +1086,19 @@ void edit_and_continue_fn(const std::string& filename, const std::string& error,
 {
 	auto wnd_w = KRE::WindowManager::getMainWindow()->width();
 	auto wnd_h = KRE::WindowManager::getMainWindow()->height();
-	boost::intrusive_ptr<CodeEditorDialog> d(new CodeEditorDialog(rect(0,0,wnd_w,wnd_h)));
+	ffl::IntrusivePtr<CodeEditorDialog> d(new CodeEditorDialog(rect(0,0,wnd_w,wnd_h)));
 
 	d->setProcessHook(std::bind(&CodeEditorDialog::process, d.get()));
 	d->add_optional_error_text_area(error);
 	d->set_close_buttons();
 	d->init();
 	d->load_file(filename, true, &fn);
+
+	std::string real_filename = module::map_file(filename);
+
+	std::function<void()> reload_dialog_fn = std::bind(&CodeEditorDialog::close, d.get());
+	const int file_mod_handle = sys::notify_on_file_modification(real_filename, reload_dialog_fn);
+
 	const bool result = d->jump_to_error(error);
 	if(!result) {
 		const char* fname = strstr(error.c_str(), "\nAt ");
@@ -1057,6 +1113,16 @@ void edit_and_continue_fn(const std::string& filename, const std::string& error,
 		}
 	}
 	d->showModal();
+
+	sys::remove_notify_on_file_modification(file_mod_handle);
+
+	SDL_Event event;
+	while(input::sdl_poll_event(&event)) {
+		switch(event.type) {
+		case SDL_QUIT:
+			_exit(0);
+		}
+	}
 
 	if(d->cancelled() || d->has_error()) {
 		_exit(0);
@@ -1076,7 +1142,7 @@ void edit_and_continue_assert(const std::string& msg, std::function<void()> fn)
 	std::vector<CallStackEntry> reverse_stack = stack;
 	std::reverse(reverse_stack.begin(), reverse_stack.end());
 	if(stack.empty() || !Level::getCurrentPtr()) {
-		return;
+		assert(false);
 	}
 
 	auto wnd = KRE::WindowManager::getMainWindow();
@@ -1089,7 +1155,7 @@ void edit_and_continue_assert(const std::string& msg, std::function<void()> fn)
 
 	using debug_console::ConsoleDialog;
 
-	boost::intrusive_ptr<ConsoleDialog> console(new ConsoleDialog(Level::current(), *const_cast<game_logic::FormulaCallable*>(stack.back().callable)));
+	ffl::IntrusivePtr<ConsoleDialog> console(new ConsoleDialog(Level::current(), *const_cast<game_logic::FormulaCallable*>(stack.back().callable)));
 
 	GridPtr call_grid(new Grid(1));
 	call_grid->setMaxHeight(wnd->height() - console->y());
@@ -1107,7 +1173,7 @@ void edit_and_continue_assert(const std::string& msg, std::function<void()> fn)
 	call_grid->setLoc(console->x() + console->width() + 6, console->y());
 	call_grid->setDim(wnd->width() - call_grid->x(), wnd->height() - call_grid->y());
 
-	boost::intrusive_ptr<CodeEditorDialog> d(new CodeEditorDialog(rect(wnd->width()/2,0,wnd->width()/2,console->y())));
+	ffl::IntrusivePtr<CodeEditorDialog> d(new CodeEditorDialog(rect(wnd->width()/2,0,wnd->width()/2,console->y())));
 
 	d->set_close_buttons();
 	d->show();
@@ -1135,6 +1201,7 @@ void edit_and_continue_assert(const std::string& msg, std::function<void()> fn)
 			switch(event.type) {
 				case SDL_QUIT: {
 					quit = true;
+					_exit(0);
 					break;
 				}
 			}

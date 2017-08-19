@@ -48,14 +48,20 @@ namespace game_logic
 
 	class FormulaObject : public game_logic::WmlSerializableFormulaCallable
 	{
+		static void visitVariantsInternal(const variant& v, const std::function<void (variant)>& fn, std::vector<FormulaObject*>* seen);
+		static void visitVariantsInternal(const variant& v, const std::function<void (FormulaObject*)>& fn, std::vector<FormulaObject*>* seen);
 	public:
-		static void visitVariants(variant v, std::function<void (variant)> fn, std::vector<FormulaObject*>* seen=nullptr);
-		static void mapObjectIntoDifferentTree(variant& v, const std::map<FormulaObject*, FormulaObject*>& mapping, std::vector<FormulaObject*>* seen=nullptr);
+		static void visitVariants(const variant& v, const std::function<void (variant)>& fn);
+		static void visitVariantObjects(const variant& v, const std::function<void (FormulaObject*)>& fn);
+		static void mapObjectIntoDifferentTree(variant& v, const std::map<FormulaObject*, FormulaObject*>& mapping, std::set<FormulaObject*>& seen);
 
 		void update(FormulaObject& updated);
 
 		static variant deepClone(variant v);
 		static variant deepClone(variant v, std::map<FormulaObject*,FormulaObject*>& mapping);
+
+		static void deepDestroy(variant v);
+		static void deepDestroy(variant v, std::set<FormulaObject*>& seen);
 		
 		static variant generateDiff(variant a, variant b);
 		void applyDiff(variant delta);
@@ -65,7 +71,7 @@ namespace game_logic
 		static void loadAllClasses();
 		static void tryLoadClass(const std::string& name);
 
-		static boost::intrusive_ptr<FormulaObject> create(const std::string& type, variant args=variant());
+		static ffl::IntrusivePtr<FormulaObject> create(const std::string& type, variant args=variant());
 
 		bool isA(const std::string& class_name) const;
 		const std::string& getClassName() const;
@@ -74,7 +80,7 @@ namespace game_logic
 		explicit FormulaObject(variant data);
 		virtual ~FormulaObject();
 
-		boost::intrusive_ptr<FormulaObject> clone() const;
+		ffl::IntrusivePtr<FormulaObject> clone() const;
 
 		void validate() const;
 
@@ -85,8 +91,10 @@ namespace game_logic
 
 		variant_type_ptr getPropertySetType(const std::string& key) const;
 
+		bool getConstantValue(const std::string& id, variant* result) const override;
+
 #if defined(USE_LUA)
-		const boost::intrusive_ptr<lua::LuaContext> & get_lua_context() const {
+		const ffl::IntrusivePtr<lua::LuaContext> & get_lua_context() const {
 			return lua_ptr_;
 		}
 #endif
@@ -105,25 +113,22 @@ namespace game_logic
 
 		void getInputs(std::vector<FormulaInput>* inputs) const override;
 
-		boost::uuids::uuid id_;
-
 		bool new_in_update_;
 		bool orphaned_;
 
-		boost::intrusive_ptr<FormulaObject> previous_;
-		boost::intrusive_ptr<game_logic::FormulaCallable> builtin_base_;
+		ffl::IntrusivePtr<game_logic::FormulaCallable> builtin_base_;
 
 		//overrides of the class's read-only properties.
 		std::vector<FormulaPtr> property_overrides_;
 
 		std::vector<variant> variables_;
 
-		boost::intrusive_ptr<const FormulaClass> class_;
+		ffl::IntrusivePtr<const FormulaClass> class_;
 
 		// for lua integration
 #if defined(USE_LUA)
 		void init_lua();
-		boost::intrusive_ptr<lua::LuaContext> lua_ptr_;
+		ffl::IntrusivePtr<lua::LuaContext> lua_ptr_;
 #endif
 
 		variant tmp_value_;
@@ -132,12 +137,15 @@ namespace game_logic
 		mutable int private_data_;
 	};
 
-	typedef boost::intrusive_ptr<FormulaObject> FormulaObjectPtr;
+	typedef ffl::IntrusivePtr<FormulaObject> FormulaObjectPtr;
 
 	bool formula_class_valid(const std::string& type);
 
 	FormulaCallableDefinitionPtr get_library_definition();
 	FormulaCallablePtr get_library_object();
+
+	bool can_load_library_instance(const std::string& id);
+	FormulaCallablePtr get_library_instance(const std::string& id);
 
 #if defined(USE_LUA)
 	class formula_class_unit_test_helper {

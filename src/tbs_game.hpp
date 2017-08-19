@@ -24,7 +24,7 @@
 #pragma once
 
 #include <boost/scoped_ptr.hpp>
-#include <boost/intrusive_ptr.hpp>
+#include "intrusive_ptr.hpp"
 #include <deque>
 #include <set>
 
@@ -39,6 +39,8 @@ namespace tbs
 {
 	class GameType;
 
+	class server_base;
+
 	class game : public game_logic::FormulaCallable
 	{
 	public:
@@ -48,11 +50,13 @@ namespace tbs
 			std::string msg;
 		};
 
-		static boost::intrusive_ptr<game> create(const variant& v);
+		static ffl::IntrusivePtr<game> create(const variant& v);
 		static game* current();
 
 		explicit game();
 		virtual ~game();
+
+		void set_server(server_base* server) { server_ = server; }
 
 		void cancel_game();
 
@@ -81,13 +85,15 @@ namespace tbs
 		struct player {
 			player();
 			std::string name;
+			variant info;
 			int side;
 			bool is_human;
 			int confirmed_state_id;
 
-		mutable variant state_sent;
-		mutable int state_id_sent;
-		bool allow_deltas;
+			mutable variant state_sent;
+			mutable int state_id_sent;
+			bool allow_deltas;
+
 		};
 
 		int get_player_index(const std::string& nick) const;
@@ -111,7 +117,8 @@ namespace tbs
 		void player_reconnect(int nplayer);
 		void player_disconnected_for(int nplayer, int time_ms);
 
-		void observer_connect(int nclient);
+		void observer_connect(int nclient, const std::string& username);
+		void observer_disconnect(const std::string& username);
 
 	protected:
 		void start_game();
@@ -132,6 +139,8 @@ namespace tbs
 		virtual void setValueDefault(const std::string& key, const variant& value) override;
 
 		virtual ai_player* create_ai() const { return nullptr; }
+
+		server_base* server_;
 
 		boost::scoped_ptr<GameType> game_type_;
 
@@ -162,11 +171,33 @@ namespace tbs
 
 		game_logic::FormulaCallable* backup_callable_;
 
-		std::vector<boost::intrusive_ptr<tbs::bot> > bots_;
+		std::vector<ffl::IntrusivePtr<tbs::bot> > bots_;
 
 		void executeCommand(variant cmd);
 
 		mutable DbClientPtr db_client_;
+
+		std::vector<std::string> observers_;
+
+		variant player_waiting_on_;
+		int started_waiting_for_player_at_;
+
+		std::vector<std::string> replay_;
+		mutable variant replay_last_;
+		variant winner_;
+
+		int start_timestamp_;
+
+		void finished_upload_state();
+		void finished_download_state(std::string data);
+		void download_state(const std::string& id);
+		void upload_state(const std::string& id);
+		void save_state(const std::string& fname);
+		void load_state(const std::string& fname);
+
+		variant write_replay() const;
+		void restore_replay(int state_id) const;
+		void verify_replay();
 	};
 
 	class game_context 
@@ -178,6 +209,6 @@ namespace tbs
 		~game_context();
 	};
 
-	typedef boost::intrusive_ptr<game> game_ptr;
-	typedef boost::intrusive_ptr<const game> const_game_ptr;
+	typedef ffl::IntrusivePtr<game> game_ptr;
+	typedef ffl::IntrusivePtr<const game> const_game_ptr;
 }

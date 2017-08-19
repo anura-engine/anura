@@ -108,6 +108,6 @@ namespace gui
 		game_logic::FormulaCallablePtr handler_arg_;
 	};
 
-	typedef boost::intrusive_ptr<ColorPicker> ColorPickerPtr;
-	typedef boost::intrusive_ptr<const ColorPicker> ConstColorPickerPtr;
+	typedef ffl::IntrusivePtr<ColorPicker> ColorPickerPtr;
+	typedef ffl::IntrusivePtr<const ColorPicker> ConstColorPickerPtr;
 }

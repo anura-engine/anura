@@ -34,6 +34,7 @@ namespace tbs
 	public:
 		static boost::asio::io_service* service();
 		static int port();
+		static boost::interprocess::named_semaphore* termination_semaphore();
 
 		//set the debug state that will be sent out as a web page to see what's
 		//happening in the server.
@@ -44,8 +45,8 @@ namespace tbs
 	private:
 		web_server(const web_server&);
 
-		virtual void handlePost(socket_ptr socket, variant doc, const http::environment& env);
-		virtual void handleGet(socket_ptr socket, const std::string& url, const std::map<std::string, std::string>& args);
+		virtual void handlePost(socket_ptr socket, variant doc, const http::environment& env, const std::string& raw_msg) override;
+		virtual void handleGet(socket_ptr socket, const std::string& url, const std::map<std::string, std::string>& args) override;
 
 		void heartbeat(const boost::system::error_code& error);
 

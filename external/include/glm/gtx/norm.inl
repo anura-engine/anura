@@ -1,152 +1,102 @@
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// OpenGL Mathematics Copyright (c) 2005 - 2013 G-Truc Creation (www.g-truc.net)
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// Created : 2005-12-21
-// Updated : 2008-07-24
-// Licence : This source is under MIT License
-// File    : glm/gtx/norm.inl
-///////////////////////////////////////////////////////////////////////////////////////////////////
+/// @ref gtx_norm
+/// @file glm/gtx/norm.inl
 
-namespace glm
+#include "../detail/precision.hpp"
+
+namespace glm{
+namespace detail
 {
-	template <typename T>
-	GLM_FUNC_QUALIFIER T length2
-	(
-		T const & x
-	)
+	template <template <typename, precision> class vecType, typename T, precision P, bool Aligned>
+	struct compute_length2
 	{
+		GLM_FUNC_QUALIFIER static T call(vecType<T, P> const & v)
+		{
+			return dot(v, v);
+		}
+	};
+}//namespace detail
+
+	template <typename genType>
+	GLM_FUNC_QUALIFIER genType length2(genType x)
+	{
+		GLM_STATIC_ASSERT(std::numeric_limits<genType>::is_iec559, "'length2' accepts only floating-point inputs");
 		return x * x;
 	}
 
-	template <typename T>
-	GLM_FUNC_QUALIFIER T length2
-	(
-		detail::tvec2<T> const & x
-	)
+	template <typename T, precision P, template <typename, precision> class vecType>
+	GLM_FUNC_QUALIFIER T length2(vecType<T, P> const & v)
 	{
-		return dot(x, x);
+		GLM_STATIC_ASSERT(std::numeric_limits<T>::is_iec559, "'length2' accepts only floating-point inputs");
+		return detail::compute_length2<vecType, T, P, detail::is_aligned<P>::value>::call(v);
 	}
 
 	template <typename T>
-	GLM_FUNC_QUALIFIER T length2
-	(
-		detail::tvec3<T> const & x
-	)
+	GLM_FUNC_QUALIFIER T distance2(T p0, T p1)
 	{
-		return dot(x, x);
-	}
-
-	template <typename T>
-	GLM_FUNC_QUALIFIER T length2
-	(
-		detail::tvec4<T> const & x
-	)
-	{
-		return dot(x, x);
-	}
-
-	template <typename T> 
-	GLM_FUNC_QUALIFIER T length2
-	(
-		detail::tquat<T> const & q
-	)
-	{
-		return q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w;
-	}
-
-	template <typename T> 
-	GLM_FUNC_QUALIFIER T distance2
-	(
-		T const & p0, 
-		T const & p1
-	)
-	{
+		GLM_STATIC_ASSERT(std::numeric_limits<T>::is_iec559, "'distance2' accepts only floating-point inputs");
 		return length2(p1 - p0);
 	}
 
-	template <typename T> 
-	GLM_FUNC_QUALIFIER T distance2
-	(
-		detail::tvec2<T> const & p0, 
-		detail::tvec2<T> const & p1
-	)
+	template <typename T, precision P, template <typename, precision> class vecType>
+	GLM_FUNC_QUALIFIER T distance2(vecType<T, P> const & p0, vecType<T, P> const & p1)
 	{
+		GLM_STATIC_ASSERT(std::numeric_limits<T>::is_iec559, "'distance2' accepts only floating-point inputs");
 		return length2(p1 - p0);
 	}
 
-	template <typename T> 
-	GLM_FUNC_QUALIFIER T distance2
-	(
-		detail::tvec3<T> const & p0, 
-		detail::tvec3<T> const & p1
-	)
-	{
-		return length2(p1 - p0);
-	}
-
-	template <typename T>
-	GLM_FUNC_QUALIFIER T distance2
-	(
-		detail::tvec4<T> const & p0, 
-		detail::tvec4<T> const & p1
-	)
-	{
-		return length2(p1 - p0);
-	}
-
-	template <typename T> 
+	template <typename T, precision P>
 	GLM_FUNC_QUALIFIER T l1Norm
 	(
-		detail::tvec3<T> const & a, 
-		detail::tvec3<T> const & b
+		tvec3<T, P> const & a,
+		tvec3<T, P> const & b
 	)
 	{
 		return abs(b.x - a.x) + abs(b.y - a.y) + abs(b.z - a.z);
 	}
 
-	template <typename T> 
+	template <typename T, precision P>
 	GLM_FUNC_QUALIFIER T l1Norm
 	(
-		detail::tvec3<T> const & v
+		tvec3<T, P> const & v
 	)
 	{
 		return abs(v.x) + abs(v.y) + abs(v.z);
 	}
 
-	template <typename T> 
+	template <typename T, precision P>
 	GLM_FUNC_QUALIFIER T l2Norm
 	(
-		detail::tvec3<T> const & a, 
-		detail::tvec3<T> const & b
+		tvec3<T, P> const & a,
+		tvec3<T, P> const & b
 	)
 	{
 		return length(b - a);
 	}
 
-	template <typename T> 
+	template <typename T, precision P>
 	GLM_FUNC_QUALIFIER T l2Norm
 	(
-		detail::tvec3<T> const & v
+		tvec3<T, P> const & v
 	)
 	{
 		return length(v);
 	}
 
-	template <typename T> 
+	template <typename T, precision P>
 	GLM_FUNC_QUALIFIER T lxNorm
 	(
-		detail::tvec3<T> const & x, 
-		detail::tvec3<T> const & y, 
+		tvec3<T, P> const & x,
+		tvec3<T, P> const & y,
 		unsigned int Depth
 	)
 	{
 		return pow(pow(y.x - x.x, T(Depth)) + pow(y.y - x.y, T(Depth)) + pow(y.z - x.z, T(Depth)), T(1) / T(Depth));
 	}
 
-	template <typename T> 
+	template <typename T, precision P>
 	GLM_FUNC_QUALIFIER T lxNorm
 	(
-		detail::tvec3<T> const & v, 
+		tvec3<T, P> const & v,
 		unsigned int Depth
 	)
 	{

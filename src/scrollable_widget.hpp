@@ -65,6 +65,6 @@ namespace gui
 		ScrollbarWidgetPtr scrollbar_;
 	};
 
-	typedef boost::intrusive_ptr<ScrollableWidget> ScrollableWidgetPtr;
-	typedef boost::intrusive_ptr<const ScrollableWidget> ConstScrollableWidgetPtr;
+	typedef ffl::IntrusivePtr<ScrollableWidget> ScrollableWidgetPtr;
+	typedef ffl::IntrusivePtr<const ScrollableWidget> ConstScrollableWidgetPtr;
 }

@@ -62,7 +62,7 @@ namespace KRE
 		void setWidth(int width) { width_ = width; }
 		void setHeight(int height) { height_ = height; }
 		void setColorPointer(const ColorPtr& color);
-		void preRender(const WindowPtr& wnd);
+		void preRender(const WindowPtr& wnd) override;
 	private:
 		std::shared_ptr<Attribute<font_coord>> attribs_;
 		// intrinsic width and height when rendered, in pixels.
@@ -71,6 +71,31 @@ namespace KRE
 		ColorPtr color_;
 	};
 	typedef std::shared_ptr<FontRenderable> FontRenderablePtr;
+
+	class ColoredFontRenderable : public SceneObject
+	{
+	public:
+		ColoredFontRenderable();
+		void clear();
+		void update(std::vector<font_coord>* queue);
+		int getWidth() const { return width_; }
+		int getHeight() const { return height_; }
+		void setWidth(int width) { width_ = width; }
+		void setHeight(int height) { height_ = height; }
+		void setColorPointer(const ColorPtr& color);
+		void preRender(const WindowPtr& wnd) override;
+		void updateColors(const std::vector<Color>& colors);
+		void setVerticesPerColor(int n) { vertices_per_color_ = n; }
+	private:
+		std::shared_ptr<Attribute<font_coord>> attribs_;
+		std::shared_ptr<Attribute<glm::u8vec4>> color_attrib_;
+		// intrinsic width and height when rendered, in pixels.
+		int width_;
+		int height_;
+		ColorPtr color_;
+		int vertices_per_color_;
+	};
+	typedef std::shared_ptr<ColoredFontRenderable> ColoredFontRenderablePtr;
 
 	class FontHandle
 	{
@@ -86,13 +111,17 @@ namespace KRE
 		void renderText();
 		void getFontMetrics();
 		int getDescender();
+		int getBoundingHeight();
+		int getBaseline();
 		rect getBoundingBox(const std::string& text);
 		FontRenderablePtr createRenderableFromPath(FontRenderablePtr r, const std::string& text, const std::vector<point>& path);
+		ColoredFontRenderablePtr createColoredRenderableFromPath(ColoredFontRenderablePtr r, const std::string& text, const std::vector<point>& path, const std::vector<KRE::Color>& colors);
 		const std::vector<point>& getGlyphPath(const std::string& text);
 		int calculateCharAdvance(char32_t cp);
 		int getScaleFactor() const { return 65536; }
 		std::vector<unsigned> getGlyphs(const std::string& text);
 		void* getRawFontHandle();
+		float getLineGap() const;
 	private:
 		std::unique_ptr<Impl> impl_;
 	};

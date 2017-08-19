@@ -42,6 +42,8 @@ namespace gui
 		int getWindowPos() const { return window_pos_; }
 
 		WidgetPtr clone() const override;
+
+		void surrenderReferences(GarbageCollector* collector) override;
 	private:
 		DECLARE_CALLABLE(ScrollBarWidget)
 
@@ -70,6 +72,6 @@ namespace gui
 		void handlerDelegate(int);
 	};
 
-	typedef boost::intrusive_ptr<ScrollBarWidget> ScrollbarWidgetPtr;
+	typedef ffl::IntrusivePtr<ScrollBarWidget> ScrollbarWidgetPtr;
 
 }

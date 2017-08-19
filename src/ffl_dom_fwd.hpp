@@ -28,7 +28,7 @@
 namespace xhtml
 {
 	class DocumentObject;
-	typedef boost::intrusive_ptr<DocumentObject> DocumentObjectPtr;
+	typedef ffl::IntrusivePtr<DocumentObject> DocumentObjectPtr;
 
 	inline void intrusive_ptr_add_ref(const DocumentObject* obj) {
 		intrusive_ptr_add_ref((const reference_counted_object*)obj);

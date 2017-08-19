@@ -29,8 +29,8 @@ namespace xhtml
 	// This encapsulates a replaced inline element, non-replaced inline elements are
 	// dealt with elsewhere
 
-	InlineElementBox::InlineElementBox(BoxPtr parent, StyleNodePtr node)
-		: Box(BoxId::INLINE_ELEMENT, parent, node)
+	InlineElementBox::InlineElementBox(const BoxPtr& parent, const StyleNodePtr& node, const RootBoxPtr& root)
+		: Box(BoxId::INLINE_ELEMENT, parent, node, root)
 	{
 	}
 
@@ -62,21 +62,62 @@ namespace xhtml
 		// or width of the largest rectangle that has a 2:1 ratio.
 	}
 
+	void InlineElementBox::layoutWidth(const Dimensions& containing)
+	{
+		RenderContext& ctx = RenderContext::get();
+		const FixedPoint containing_width = containing.content_.width;
+
+		auto css_width = getStyleNode()->getWidth();
+		FixedPoint width = 0;
+		if(!css_width->isAuto()) {
+			width = css_width->getLength().compute(containing_width);
+			setContentWidth(width);
+		}
+
+		calculateHorzMPB(containing_width);
+		auto css_margin_left = getStyleNode()->getMargin()[static_cast<int>(css::Side::LEFT)];
+		auto css_margin_right = getStyleNode()->getMargin()[static_cast<int>(css::Side::RIGHT)];
+
+		FixedPoint total = getMBPWidth() + width;
+
+		if(!css_width->isAuto() && total > containing.content_.width) {
+			if(css_margin_left->isAuto()) {
+				setMarginLeft(0);
+			}
+			if(css_margin_right->isAuto()) {
+				setMarginRight(0);
+			}
+		}
+
+		// If negative is overflow.
+		FixedPoint underflow = containing.content_.width - total;
+
+		if(css_width->isAuto()) {
+			setContentWidth(underflow);
+		}
+	}
+
+	void InlineElementBox::handlePreChildLayout(LayoutEngine& eng, const Dimensions& containing)
+	{
+		layoutWidth(containing);
+		calculateVertMPB(containing.content_.height);
+	}
+
 	std::string InlineElementBox::toString() const
 	{
 		std::ostringstream ss;
-		ss << "InlineElementBox: " << getDimensions().content_;
+		auto node = getNode();
+		ss << "InlineElementBox: " << getDimensions().content_ << "; " << node->getActiveRect();
 		return ss.str();
 	}
 
-	void InlineElementBox::handleRender(DisplayListPtr display_list, const point& offset) const
+	void InlineElementBox::handleRender(const KRE::SceneTreePtr& scene_tree, const point& offset) const
 	{
 		auto node = getNode();
 		if(node != nullptr) {
 			auto r = node->getRenderable();
 			if(r != nullptr) {
-				r->setPosition(glm::vec3(offset.x/LayoutEngine::getFixedPointScaleFloat(), offset.y/LayoutEngine::getFixedPointScaleFloat(), 0.0f));
-				display_list->addRenderable(r);
+				scene_tree->addObject(r);
 			}
 		}
 	}

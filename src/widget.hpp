@@ -52,6 +52,8 @@ namespace gui
 		enum HORIZONTAL_ALIGN {HALIGN_LEFT, HALIGN_CENTER, HALIGN_RIGHT};
 		enum VERTICAL_ALIGN   {VALIGN_TOP,  VALIGN_CENTER, VALIGN_BOTTOM};
 
+		void onHide();
+
 		bool processEvent(const point& p, const SDL_Event& event, bool claimed);
 		void draw(int xt=0, int yt=0, float rotate=0, float scale=1.0f) const;
 

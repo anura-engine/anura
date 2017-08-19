@@ -26,8 +26,8 @@
 #include "xhtml_block_box.hpp"
 #include "xhtml_inline_block_box.hpp"
 #include "xhtml_inline_element_box.hpp"
-#include "xhtml_listitem_box.hpp"
 #include "xhtml_line_box.hpp"
+#include "xhtml_listitem_box.hpp"
 #include "xhtml_root_box.hpp"
 #include "xhtml_text_box.hpp"
 #include "xhtml_text_node.hpp"
@@ -81,7 +81,9 @@ namespace xhtml
 		  ctx_(RenderContext::get()), 
 		  list_item_counter_(),
 		  offset_(),
-		  float_list_()
+		  float_list_(),
+		  cursor_(),
+		  open_line_box_(nullptr)
 	{
 		list_item_counter_.emplace(0);
 		offset_.emplace(point());
@@ -98,11 +100,13 @@ namespace xhtml
 			root_dims.content_.width = container.x;
 
 			root_->layout(*this, root_dims);
+
+			root_->createSceneTree(nullptr);
 			return;
 		}
 	}
 	
-	std::vector<BoxPtr> LayoutEngine::layoutChildren(const std::vector<StyleNodePtr>& children, BoxPtr parent, LineBoxPtr& open_box)
+	std::vector<BoxPtr> LayoutEngine::layoutChildren(const std::vector<StyleNodePtr>& children, BoxPtr parent)
 	{
 		StackManager<point> offset_manager(offset_, point(parent->getLeft(), parent->getTop()) + offset_.top());
 
@@ -137,10 +141,10 @@ namespace xhtml
 
 				if(position == Position::ABSOLUTE_POS) {
 					// absolute positioned elements are taken out of the normal document flow
-					parent->addAbsoluteElement(*this, parent->getDimensions(), std::make_shared<AbsoluteBox>(parent, child));
+					parent->addAbsoluteElement(*this, parent->getDimensions(), std::make_shared<AbsoluteBox>(parent, child, root_));
 				} else if(position == Position::FIXED) {
 					// fixed positioned elements are taken out of the normal document flow
-					root_->addFixed(std::make_shared<BlockBox>(parent, child));
+					root_->addFixed(std::make_shared<BlockBox>(parent, child, root_));
 				} else {
 					if(cfloat != Float::NONE) {
 						// XXX need to add an offset to position for the float box based on body margin.
@@ -148,15 +152,15 @@ namespace xhtml
 						// a table box rather than a block box. Inline boxes are going to get wrapped in a BlockBox
 						
 						if(display == Display::BLOCK) {
-							res.emplace_back(std::make_shared<BlockBox>(parent, child));
+							res.emplace_back(std::make_shared<BlockBox>(parent, child, root_));
 						} else if(display == Display::LIST_ITEM) {
-							res.emplace_back(std::make_shared<ListItemBox>(parent, child, list_item_counter_.top()));
+							res.emplace_back(std::make_shared<ListItemBox>(parent, child, root_, list_item_counter_.top()));
 						} else if(display == Display::TABLE) {
 							//root_->addFloatBox(*this, std::make_shared<TableBox>(parent, child), cfloat, offset_.top().x, offset_.top().y + (open_box != nullptr ? open_box->getCursor().y : 0));
 							ASSERT_LOG(false, "Implement Table display");
 						} else {
 							// default to using a block box to wrap content.
-							res.emplace_back(std::make_shared<BlockBox>(parent, child));
+							res.emplace_back(std::make_shared<BlockBox>(parent, child, root_));
 						}
 						continue;
 					}
@@ -167,48 +171,65 @@ namespace xhtml
 						case Display::INLINE: {
 							if(node->isReplaced()) {
 								// replaced elements should generate a box.
-								// XXX should these go into open_box?
-								res.emplace_back(std::make_shared<InlineElementBox>(parent, child));
+								// XXX should these go into open_box? -- yes yes they should
+								if(open_line_box_ == nullptr) {
+									open_line_box_ = std::make_shared<LineBoxContainer>(parent, nullptr, root_);
+									res.emplace_back(open_line_box_);
+								}
+								auto element_box = std::make_shared<InlineElementBox>(parent, child, root_);
+								open_line_box_->addBoxForLayout(element_box, child);
+								//res.emplace_back(std::make_shared<InlineElementBox>(parent, child, root_));
 							} else {
+								// find first and last text children
+								std::vector<StyleNodePtr>::const_iterator first_text_child = child->getChildren().end();
+								std::vector<StyleNodePtr>::const_iterator last_text_child = child->getChildren().end();
+								for(auto it = child->getChildren().begin(); it != child->getChildren().end(); ++it) {
+									if(*it != nullptr && (*it)->getNode()->id() == NodeId::TEXT) {
+										if(first_text_child == child->getChildren().end()) {
+											first_text_child = it;
+										}
+										last_text_child = it;
+									}
+								}
+
 								// non-replaced elements we just generate children and add them.
-								for(auto& inline_child : child->getChildren()) {
+								for(auto it = child->getChildren().begin(); it != child->getChildren().end(); ++it) {
+									auto& inline_child = *it;
 									NodePtr inline_node = inline_child->getNode();
 									if(inline_node != nullptr && inline_node->id() == NodeId::TEXT) {
 										inline_child->inheritProperties(child);
 									}
 								}
-								std::vector<BoxPtr> new_children = layoutChildren(child->getChildren(), parent, open_box);
+
+								std::vector<BoxPtr> new_children = layoutChildren(child->getChildren(), parent);
+
+								// alter border and padding to suit
+								for(auto& box_child : new_children) {
+									if(*first_text_child == box_child->getStyleNode()) {
+										box_child->setFirstInlineChild();
+									}
+									if(*last_text_child == box_child->getStyleNode()) {
+										box_child->setLastInlineChild();
+									}
+								}
+
 								res.insert(res.end(), new_children.begin(), new_children.end());
 							}
 							break;
 						}
 						case Display::BLOCK: {
-							if(open_box) {
-								if(!open_box->getChildren().empty()) {
-									res.emplace_back(open_box);
-								}
-								open_box.reset();
-							}
-							res.emplace_back(std::make_shared<BlockBox>(parent, child));
+							open_line_box_.reset();
+							res.emplace_back(std::make_shared<BlockBox>(parent, child, root_));
 							break;
 						}
 						case Display::INLINE_BLOCK: {
-							if(open_box == nullptr) {
-								open_box = std::make_shared<LineBox>(parent);
-							}
-							auto ibb = std::make_shared<InlineBlockBox>(parent, child);
-							ibb->layout(*this, parent->getDimensions());
-							open_box->addChild(ibb);
+							open_line_box_.reset();
+							res.emplace_back(std::make_shared<InlineBlockBox>(parent, child, root_));
 							break;
 						}
 						case Display::LIST_ITEM: {
-							if(open_box) {
-								if(!open_box->getChildren().empty()) {
-									res.emplace_back(open_box);
-								}
-								open_box.reset();
-							}
-							res.emplace_back(std::make_shared<ListItemBox>(parent, child, list_item_counter_.top()));
+							open_line_box_.reset();
+							res.emplace_back(std::make_shared<ListItemBox>(parent, child, root_, list_item_counter_.top()));
 							break;
 						}
 						case Display::TABLE:
@@ -221,6 +242,7 @@ namespace xhtml
 						case Display::TABLE_COLUMN:
 						case Display::TABLE_CELL:
 						case Display::TABLE_CAPTION:
+							open_line_box_.reset();
 							ASSERT_LOG(false, "FIXME: LayoutEngine::formatNode(): " << display_string(display));
 							break;
 						default:
@@ -229,15 +251,11 @@ namespace xhtml
 					}
 				}
 			} else if(node->id() == NodeId::TEXT) {
-				TextPtr tnode = std::dynamic_pointer_cast<Text>(node);
-				ASSERT_LOG(tnode != nullptr, "Logic error, couldn't up-cast node to Text.");
-
-				tnode->transformText(true);
-				if(open_box == nullptr) {
-					open_box = std::make_shared<LineBox>(parent);
+				if(open_line_box_ == nullptr) {
+					open_line_box_ = std::make_shared<LineBoxContainer>(parent, child, root_);
+					res.emplace_back(open_line_box_);
 				}
-				auto txt = std::make_shared<TextBox>(open_box, child);
-				open_box->addChild(txt);
+				open_line_box_->transform(std::dynamic_pointer_cast<Text>(node), child);
 			} else {
 				ASSERT_LOG(false, "Unhandled node id, only elements and text can be used in layout: " << static_cast<int>(node->id()));
 			}

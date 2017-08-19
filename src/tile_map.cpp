@@ -262,8 +262,8 @@ namespace
 	};
 
 	BEGIN_DEFINE_CALLABLE_NOBASE(FilterCallable)
-		DEFINE_FIELD(tiles, "builtin tile_map")
-			return variant(&obj.m_);
+//		DEFINE_FIELD(tiles, "builtin tile_map")
+//			return variant(&obj.m_);
 		DEFINE_FIELD(x, "int")
 			return variant(obj.x_);
 		DEFINE_FIELD(y, "int")
@@ -278,7 +278,7 @@ namespace
 		{}
 
 	private:
-		variant execute(const FormulaCallable& variables) const {
+		variant execute(const FormulaCallable& variables) const override {
 			variant v = args()[0]->evaluate(variables);
 			TileMap* m = v.convert_to<TileMap>();
 			return variant(m->getTile(args()[1]->evaluate(variables).as_int(),
@@ -291,7 +291,7 @@ namespace
 	public:
 		ExpressionPtr createFunction(const std::string& fn, 
 			const std::vector<ExpressionPtr>& args, 
-			ConstFormulaCallableDefinitionPtr callable_def) const 
+			ConstFormulaCallableDefinitionPtr callable_def) const  override
 		{
 			if(fn == "tile_at") {
 				return ExpressionPtr(new TileAtFunction(args));
@@ -322,7 +322,13 @@ void TileMap::load(const std::string& fname, const std::string& tile_id)
 
 	files_loaded.insert(fname);
 
-	variant node = json::parse_from_file("data/tiles/" + fname);
+	variant node;
+	
+	try {
+		node = json::parse_from_file("data/tiles/" + fname);
+	} catch(json::ParseError& e) {
+		ASSERT_LOG(false, "Error parsing data/tiles/" << fname << ": " << e.errorMessage());
+	}
 
 	palette_scope palette_setter(parse_variant_list_or_csv_string(node["palettes"]));
 
@@ -420,7 +426,7 @@ TileMap::TileMap() : xpos_(0), ypos_(0), x_speed_(100), y_speed_(100), zorder_(0
 #endif
 
 	//turn off reference counting
-	add_ref();
+//	add_ref();
 
 	//make an entry for the empty string.
 	pattern_index_.push_back(PatternIndexEntry());
@@ -442,7 +448,7 @@ TileMap::TileMap(variant node)
 #endif
 
 	//turn off reference counting
-	add_ref();
+//	add_ref();
 
 	const std::string& unique_tiles = node["unique_tiles"].as_string_default();
 	for(const std::string& tile : util::split(unique_tiles)) {
@@ -525,7 +531,7 @@ TileMap::TileMap(const TileMap& o)
 	create_tile_map(this);
 #endif
 
-	add_ref();
+//	add_ref();
 	*this = o;
 }
 
@@ -1041,7 +1047,8 @@ const TilePattern* TileMap::getMatchingPattern(int x, int y, TilePatternCache& c
 
 	const int xpos = xpos_ + x*TileSize;
 
-	FilterCallable callable(*this, x, y);
+	ffl::IntrusivePtr<FilterCallable> callable_ptr(new FilterCallable(*this, x, y));
+	FilterCallable& callable = *callable_ptr;
 
 	const char* current_tile = getTile(y,x);
 

@@ -14,7 +14,7 @@
 namespace graphics
 {
 	class AnuraShader;
-	typedef boost::intrusive_ptr<AnuraShader> AnuraShaderPtr;
+	typedef ffl::IntrusivePtr<AnuraShader> AnuraShaderPtr;
 
 	class ShaderRenderable : public KRE::SceneObject
 	{
@@ -67,6 +67,18 @@ namespace graphics
 		int zorder() const { return zorder_; }
 
 		void surrenderReferences(GarbageCollector* collector) override;
+
+		struct ObjectPropertyAttribute {
+			std::string name;
+			int slot;
+			int attr;
+			mutable KRE::GenericAttributePtr attr_target;
+		};
+
+		const std::vector<ObjectPropertyAttribute>& getObjectPropertyAttributes() const { return object_attributes_; }
+		std::vector<ObjectPropertyAttribute>& getObjectPropertyAttributes() { return object_attributes_; }
+
+		KRE::GenericAttributePtr getAttributeOrDie(int attr) const;
 	private:
 		DECLARE_CALLABLE(AnuraShader);
 		AnuraShader& operator=(const AnuraShader&) = delete;
@@ -124,6 +136,16 @@ namespace graphics
 		int u_anura_color_;
 		int u_anura_point_size_;
 
+		struct ObjectPropertyUniform {
+			std::string name;
+			int slot;
+			int uniform;
+		};
+
+
+		std::vector<ObjectPropertyUniform> object_uniforms_;
+		std::vector<ObjectPropertyAttribute> object_attributes_;
+
 		bool discard_;
 		int tex_map_;
 		glm::mat4 mvp_matrix_;
@@ -138,8 +160,8 @@ namespace graphics
 		std::vector<game_logic::FormulaPtr> draw_formulas_;
 		std::vector<game_logic::FormulaPtr> create_formulas_;
 
-		boost::intrusive_ptr<UniformCommandsCallable> uniform_commands_;
-		boost::intrusive_ptr<AttributeCommandsCallable> attribute_commands_;
+		ffl::IntrusivePtr<UniformCommandsCallable> uniform_commands_;
+		ffl::IntrusivePtr<AttributeCommandsCallable> attribute_commands_;
 
 		Entity* parent_;
 
@@ -152,7 +174,7 @@ namespace graphics
 		std::string name_;
 		
 		ShaderRenderable renderable_;
-		std::vector<boost::intrusive_ptr<TextureObject>> textures_;
+		std::vector<ffl::IntrusivePtr<TextureObject>> textures_;
 
 		bool initialised_;
 	};

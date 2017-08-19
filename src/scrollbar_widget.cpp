@@ -228,6 +228,7 @@ namespace gui
 		} else
 		if(event.type == SDL_MOUSEBUTTONDOWN) {
 			const SDL_MouseButtonEvent& e = event.button;
+
 			if(!inWidget(e.x, e.y)) {
 				return claimed;
 			}
@@ -300,6 +301,20 @@ namespace gui
 				setDim(width(), height());
 				handler_(window_pos_);
 			}
+		} else if(event.type == SDL_KEYDOWN) {
+			if(focus_override_ && event.key.keysym.sym == SDLK_PAGEUP) {
+				window_pos_ -= window_size_;
+				clipWindowPosition();
+				setDim(width(), height());
+				handler_(window_pos_);
+				return true;
+			} else if(focus_override_ && event.key.keysym.sym == SDLK_PAGEDOWN) {
+				window_pos_ += window_size_;
+				clipWindowPosition();
+				setDim(width(), height());
+				handler_(window_pos_);
+				return true;
+			}
 		}
 		return claimed;
 	}
@@ -320,6 +335,17 @@ namespace gui
 		handle_top_->setAlpha(a);
 	}
 
+	void ScrollBarWidget::surrenderReferences(GarbageCollector* collector)
+	{
+		collector->surrenderVariant(&on_scroll_fn_);
+		collector->surrenderPtr(&up_arrow_);
+		collector->surrenderPtr(&down_arrow_);
+		collector->surrenderPtr(&handle_);
+		collector->surrenderPtr(&handle_bot_);
+		collector->surrenderPtr(&handle_top_);
+		collector->surrenderPtr(&background_);
+	}
+
 	BEGIN_DEFINE_CALLABLE(ScrollBarWidget, Widget)
 		DEFINE_FIELD(range, "[int,int]")
 			std::vector<variant> v;
@@ -334,6 +360,7 @@ namespace gui
 		DEFINE_SET_FIELD
 			obj.window_pos_ = value.as_int();
 			obj.clipWindowPosition();
+			obj.setDim(obj.width(), obj.height());
 
 		DEFINE_FIELD(up_arrow, "builtin widget")
 			return variant(obj.up_arrow_.get());

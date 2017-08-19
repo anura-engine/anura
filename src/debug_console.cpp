@@ -31,6 +31,7 @@
 #include "WindowManager.hpp"
 
 #include "asserts.hpp"
+#include "button.hpp"
 #include "logger.hpp"
 #include "custom_object.hpp"
 #include "custom_object_functions.hpp"
@@ -260,6 +261,11 @@ namespace debug_console
 		}
 	}
 
+	void clearMessages()
+	{
+		messages().clear();
+	}
+
 	void draw()
 	{
 		auto canvas = KRE::Canvas::getInstance();
@@ -285,11 +291,16 @@ namespace debug_console
 		{
 			return std::string(preferences::user_data_path()) + "/console-history.cfg";
 		}
+
+		PREF_INT_PERSISTENT(console_width, 600, "Width of console in pixels");
+		PREF_INT_PERSISTENT(console_height, 200, "Width of console in pixels");
+		PREF_INT_PERSISTENT(console_font_size, 14, "Font size of console text");
 	}
 
 	ConsoleDialog::ConsoleDialog(Level& lvl, game_logic::FormulaCallable& obj)
-	   : Dialog(0, KRE::WindowManager::getMainWindow()->height() - 200, 600, 200), lvl_(&lvl), focus_(&obj),
-		 history_pos_(0)
+	   : Dialog(0, KRE::WindowManager::getMainWindow()->height() - g_console_height, g_console_width, g_console_height),
+	     text_editor_(nullptr), lvl_(&lvl), focus_(&obj),
+		 history_pos_(0), prompt_pos_(0), dragging_(false), resizing_(false)
 	{
 		if(sys::file_exists(console_history_path())) {
 			try {
@@ -313,35 +324,46 @@ namespace debug_console
 
 	void ConsoleDialog::init()
 	{
+		ffl::IntrusivePtr<gui::TextEditorWidget> old_text_editor(text_editor_);
+
 		using namespace gui;
-		text_editor_ = new TextEditorWidget(width() - 20, height() - 20);
+		text_editor_.reset(new TextEditorWidget(width() - 40, height() - 20));
 		addWidget(WidgetPtr(text_editor_), 10, 10);
 
 		text_editor_->setOnMoveCursorHandler(std::bind(&ConsoleDialog::onMoveCursor, this));
 		text_editor_->setOnBeginEnterHandler(std::bind(&ConsoleDialog::onBeginEnter, this));
 		text_editor_->setOnEnterHandler(std::bind(&ConsoleDialog::onEnter, this));
 
-		text_editor_->setText(Prompt);
-		text_editor_->setCursor(0, static_cast<int>(Prompt.size()));
+		if(old_text_editor) {
+			text_editor_->setText(old_text_editor->text());
+			text_editor_->setCursor(old_text_editor->cursorRow(), old_text_editor->cursorCol());
+			text_editor_->setFontSize(g_console_font_size);
+		} else {
+			text_editor_->setText(Prompt);
+			text_editor_->setCursor(0, static_cast<int>(Prompt.size()));
+			text_editor_->setFontSize(g_console_font_size);
+			prompt_pos_ = 0;
+		}
+
+		auto b = new gui::Button("+", std::bind(&ConsoleDialog::changeFontSize, this, 2));
+		addWidget(WidgetPtr(b), width() - 30, 20);
+		b = new gui::Button("-", std::bind(&ConsoleDialog::changeFontSize, this, -2));
+		addWidget(WidgetPtr(b), width() - 30, 40);
 	}
 
 	void ConsoleDialog::onMoveCursor()
 	{
-		if(static_cast<unsigned>(text_editor_->cursorRow()) < text_editor_->getData().size()-1) {
-			text_editor_->setCursor(static_cast<int>(text_editor_->getData().size())-1, text_editor_->cursorCol());
+		if(static_cast<unsigned>(text_editor_->cursorRow()) < prompt_pos_) {
+			text_editor_->setCursor(prompt_pos_, text_editor_->cursorCol());
 		}
 
-		if(static_cast<unsigned>(text_editor_->cursorCol()) < Prompt.size() && text_editor_->getData().back().size() >= Prompt.size()) {
-			text_editor_->setCursor(static_cast<int>(text_editor_->getData().size())-1, Prompt.size());
+		if(text_editor_->cursorRow() == prompt_pos_ && static_cast<unsigned>(text_editor_->cursorCol()) < Prompt.size() && text_editor_->getData()[prompt_pos_].size() >= Prompt.size()) {
+			text_editor_->setCursor(prompt_pos_, Prompt.size());
 		}
 	}
 
-	bool ConsoleDialog::onBeginEnter()
+	std::string ConsoleDialog::getEnteredCommand()
 	{
-		if(lvl_->editor_selection().empty() == false) {
-			focus_ = lvl_->editor_selection().front();
-		}
-
 		std::vector<std::string> data = text_editor_->getData();
 
 		std::string ffl(text_editor_->getData().back());
@@ -365,9 +387,24 @@ namespace debug_console
 				}
 			}
 		}
+		return ffl;
+	}
+
+	bool ConsoleDialog::onBeginEnter()
+	{
+		if(SDL_GetModState()&KMOD_SHIFT) {
+			return true;
+		}
+
+		if(lvl_->editor_selection().empty() == false) {
+			focus_ = lvl_->editor_selection().front();
+		}
+
+		std::string ffl = getEnteredCommand();
 
 		text_editor_->setText(text_editor_->text() + "\n" + Prompt);
 		text_editor_->setCursor(static_cast<int>(text_editor_->getData().size())-1, Prompt.size());
+		prompt_pos_ = text_editor_->getData().size()-1;
 		if(ffl.empty() == false) {
 			history_.push_back(ffl);
 			if(history_.size() > 512) {
@@ -427,26 +464,44 @@ namespace debug_console
 	void ConsoleDialog::addMessage(const std::string& msg)
 	{
 
+		const int old_nlines = text_editor_->getData().size();
+
 		std::string m;
-		for(std::vector<std::string>::const_iterator i = text_editor_->getData().begin(); i != text_editor_->getData().end()-1; ++i) {
+		for(std::vector<std::string>::const_iterator i = text_editor_->getData().begin(); i != text_editor_->getData().begin()+prompt_pos_; ++i) {
 			m += *i + "\n";
 		}
 
 		m += msg + "\n";
-		m += text_editor_->getData().back();
+		for(std::vector<std::string>::const_iterator i = text_editor_->getData().begin() + prompt_pos_; i != text_editor_->getData().end(); ++i) {
+			m += *i;
+			if(i+1 != text_editor_->getData().end()) {
+				m += "\n";
+			}
+		}
 
 		auto col = text_editor_->cursorCol();
 		text_editor_->setText(m);
 		text_editor_->setCursor(static_cast<int>(text_editor_->getData().size())-1, col);
+
+		const int new_nlines = text_editor_->getData().size();
+		prompt_pos_ += new_nlines - old_nlines;
 	}
 
 	bool ConsoleDialog::handleEvent(const SDL_Event& event, bool claimed)
 	{
-		if(!claimed && hasKeyboardFocus()) {
+		if(!claimed) {
 			switch(event.type) {
 			case SDL_KEYDOWN:
-				if((event.key.keysym.sym == SDLK_UP || event.key.keysym.sym == SDLK_DOWN) && !history_.empty()) {
+				if(((event.key.keysym.sym == SDLK_UP && text_editor_->cursorRow() == prompt_pos_) ||
+				    (event.key.keysym.sym == SDLK_DOWN && text_editor_->cursorRow() == text_editor_->getData().size()-1))
+				   && !history_.empty() && hasKeyboardFocus()) {
 					if(event.key.keysym.sym == SDLK_UP) {
+						if(history_pos_ == history_.size()) {
+							std::string ffl = getEnteredCommand();
+							if(!ffl.empty()) {
+								history_.push_back(ffl);
+							}
+						}
 						--history_pos_;
 					} else {
 						++history_pos_;
@@ -454,7 +509,11 @@ namespace debug_console
 
 					if(history_pos_ < 0) {
 						history_pos_ = static_cast<int>(history_.size());
-					} else if(history_pos_ > static_cast<int>(history_.size())) {
+					} else if(history_pos_ >= static_cast<int>(history_.size())) {
+						std::string ffl = getEnteredCommand();
+						if(ffl.empty() == false && (history_.empty() || history_.back() != ffl)) {
+							history_.push_back(ffl);
+						}
 						history_pos_ = static_cast<int>(history_.size());
 					}
 
@@ -462,10 +521,54 @@ namespace debug_console
 					return true;
 				}
 				break;
+			case SDL_MOUSEMOTION: {
+				if(dragging_ && resizing_) {
+					clear();
+					setLoc(x(), y() + event.motion.yrel);
+					g_console_width = width() + event.motion.xrel;
+					g_console_height = height() - event.motion.yrel;
+					setDim(g_console_width, g_console_height);
+					init();
+					text_editor_->setFocus(true);
+					preferences::save_preferences();
+					claimed = true;
+					return true;
+				} else if(dragging_) {
+					setLoc(x() + event.motion.xrel, y() + event.motion.yrel);
+					claimed = true;
+					return true;
+				}
+				break;
+			}
+			case SDL_MOUSEBUTTONUP: {
+				dragging_ = false;
+				resizing_ = false;
+				break;
+			}
+			case SDL_MOUSEBUTTONDOWN:
+				dragging_ = false;
+				if(event.button.x >= x() && event.button.y >= y() && event.button.x <= x() + width() && event.button.y < y()+18) {
+					dragging_ = true;
+					if(event.button.x >= x() + width() - 60) {
+						resizing_ = true;
+					}
+					claimed = true;
+					return true;
+				}
+				break;
 			}
 		}
 
 		return Dialog::handleEvent(event, claimed);
+	}
+
+	void ConsoleDialog::changeFontSize(int delta)
+	{
+		g_console_font_size = std::min<int>(40, std::max<int>(8, g_console_font_size + delta));
+		clear();
+		init();
+		text_editor_->setFocus(true);
+		preferences::save_preferences();
 	}
 
 	void ConsoleDialog::loadHistory()
@@ -476,7 +579,7 @@ namespace debug_console
 		}
 
 		std::string m;
-		for(std::vector<std::string>::const_iterator i = text_editor_->getData().begin(); i != text_editor_->getData().end()-1; ++i) {
+		for(std::vector<std::string>::const_iterator i = text_editor_->getData().begin(); i != text_editor_->getData().begin() + prompt_pos_; ++i) {
 			m += *i + "\n";
 		}
 

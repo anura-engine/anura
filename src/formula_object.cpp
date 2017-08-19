@@ -37,6 +37,7 @@
 #include "formula_callable.hpp"
 #include "formula_callable_definition.hpp"
 #include "formula_object.hpp"
+#include "formula_profiler.hpp"
 #include "json_parser.hpp"
 #include "module.hpp"
 #include "preferences.hpp"
@@ -54,6 +55,7 @@
 #define strtoll _strtoi64
 #endif
 
+PREF_BOOL(ffl_vm_opt_const_library_calls, true, "Optimize library calls");
 
 namespace game_logic
 {
@@ -85,7 +87,7 @@ namespace game_logic
 			}
 		};
 
-		boost::intrusive_ptr<const FormulaClass> get_class(const std::string& type);
+		ffl::IntrusivePtr<const FormulaClass> get_class(const std::string& type);
 
 		struct PropertyEntry {
 			PropertyEntry() : variable_slot(-1) {
@@ -182,7 +184,7 @@ std::map<std::string, std::string>& class_path_map()
 	if(!init) {
 		init = true;
 		std::map<std::string, std::string> items;
-		module::get_unique_filenames_under_dir("data/classes/", &items);
+		module::get_unique_filenames_under_dir("data/classes/", &items, module::MODULE_NO_PREFIX);
 		for(auto p : items) {
 			std::string key = p.first;
 			if(key.size() > 4 && std::equal(key.end()-4, key.end(), ".cfg")) {
@@ -191,9 +193,8 @@ std::map<std::string, std::string>& class_path_map()
 				continue;
 			}
 
-			auto colon = std::find(key.begin(), key.end(), ':');
-			if(colon != key.end()) {
-				key.erase(key.begin(), colon+1);
+			if(mapping.count(key) != 0) {
+				continue;
 			}
 
 			mapping[key] = p.second;
@@ -228,7 +229,7 @@ std::map<std::string, std::string>& class_path_map()
 
 			sys::notify_on_file_modification(real_path, std::bind(invalidate_class_definition, type));
 
-			const variant v = json::parse_from_file(path);
+			variant v = json::parse_from_file_or_die(path);
 			ASSERT_LOG(v.is_map(), "COULD NOT PARSE FFL CLASS: " << type);
 
 			load_class_node(type, v);
@@ -261,8 +262,8 @@ std::map<std::string, std::string>& class_path_map()
 			return i->second;
 		}
 
-		enum CLASS_BASE_FIELDS { FIELD_PRIVATE, FIELD_VALUE, FIELD_SELF, FIELD_ME, FIELD_NEW_IN_UPDATE, FIELD_ORPHANED, FIELD_PREVIOUS, FIELD_CLASS, FIELD_LIB, FIELD_UUID, NUM_BASE_FIELDS };
-		static const std::string BaseFields[] = {"_data", "value", "self", "me", "new_in_update", "orphaned_by_update", "previous", "_class", "lib", "_uuid"};
+		enum CLASS_BASE_FIELDS { FIELD_PRIVATE, FIELD_VALUE, FIELD_SELF, FIELD_ME, FIELD_NEW_IN_UPDATE, FIELD_ORPHANED, FIELD_CLASS, FIELD_LIB, FIELD_UUID, NUM_BASE_FIELDS };
+		static const std::string BaseFields[] = {"_data", "value", "self", "me", "new_in_update", "orphaned_by_update", "_class", "lib", "_uuid"};
 
 		class FormulaClassDefinition : public FormulaCallableDefinition
 		{
@@ -289,9 +290,6 @@ std::map<std::string, std::string>& class_path_map()
 					case FIELD_NEW_IN_UPDATE:
 					case FIELD_ORPHANED:
 					slots_.back().variant_type = variant_type::get_type(variant::VARIANT_TYPE_BOOL);
-					break;
-					case FIELD_PREVIOUS:
-					slots_.back().variant_type = variant_type::get_class(class_name);
 					break;
 					case FIELD_CLASS:
 					slots_.back().variant_type = variant_type::get_type(variant::VARIANT_TYPE_STRING);
@@ -421,7 +419,7 @@ std::map<std::string, std::string>& class_path_map()
 				}
 			}
 
-			virtual int getSlot(const std::string& key) const {
+			virtual int getSlot(const std::string& key) const override {
 				std::map<std::string, int>::const_iterator itor = properties_.find(key);
 				if(itor != properties_.end()) {
 					return itor->second;
@@ -430,7 +428,7 @@ std::map<std::string, std::string>& class_path_map()
 				return -1;
 			}
 
-			virtual Entry* getEntry(int slot) {
+			virtual Entry* getEntry(int slot) override {
 				if(slot < 0 || static_cast<unsigned>(slot) >= slots_.size()) {
 					return nullptr;
 				}
@@ -438,18 +436,26 @@ std::map<std::string, std::string>& class_path_map()
 				return &slots_[slot];
 			}
 
-			virtual const Entry* getEntry(int slot) const {
+			virtual const Entry* getEntry(int slot) const override {
 				if(slot < 0 || static_cast<unsigned>(slot) >= slots_.size()) {
 					return nullptr;
 				}
 
 				return &slots_[slot];
 			}
-			virtual int getNumSlots() const {
+			virtual int getNumSlots() const override {
 				return static_cast<int>(slots_.size());
 			}
 
-			const std::string* getTypeName() const {
+			bool getSymbolIndexForSlot(int slot, int* index) const override {
+				return false;
+			}
+
+			int getBaseSymbolIndex() const override {
+				return 0;
+			}
+
+			const std::string* getTypeName() const override {
 				return &type_name_;
 			}
 
@@ -465,7 +471,7 @@ std::map<std::string, std::string>& class_path_map()
 				}
 			}
 
-			int getSubsetSlotBase(const FormulaCallableDefinition* subset) const
+			int getSubsetSlotBase(const FormulaCallableDefinition* subset) const override
 			{
 				return -1;
 			}
@@ -491,10 +497,10 @@ std::map<std::string, std::string>& class_path_map()
 			FormulaClassDefinition& def_;
 		};
 
-		typedef std::map<std::string, boost::intrusive_ptr<FormulaClassDefinition> > class_definition_map;
+		typedef std::map<std::string, ffl::IntrusivePtr<FormulaClassDefinition> > class_definition_map;
 		class_definition_map class_definitions;
 
-		typedef std::map<std::string, boost::intrusive_ptr<FormulaClass> > classes_map;
+		typedef std::map<std::string, ffl::IntrusivePtr<FormulaClass> > classes_map;
 
 		bool in_unit_test = false;
 		std::vector<FormulaClass*> unit_test_queue;
@@ -544,6 +550,27 @@ std::map<std::string, std::string>& class_path_map()
 		void build_nested_classes();
 		void run_unit_tests();
 
+		bool is_library_only() const { return is_library_only_; }
+
+		void update_class(FormulaClass* new_class) {
+			if(new_class == this) {
+				return;
+			}
+
+			new_class->previous_version_.reset(this);
+
+			for(int i = 0; i < slots_.size() && i < new_class->slots_.size(); ++i) {
+				if(slots_[i].name == new_class->slots_[i].name &&
+				   slots_[i].variable_slot == new_class->slots_[i].variable_slot) {
+					slots_[i] = new_class->slots_[i];
+				}
+			}
+
+			if(previous_version_) {
+				previous_version_->update_class(this);
+			}
+		}
+
 	private:
 		void build_nested_classes(variant obj);
 
@@ -565,9 +592,11 @@ std::map<std::string, std::string>& class_path_map()
 
 		variant unit_test_;
 
-		std::vector<boost::intrusive_ptr<const FormulaClass> > bases_;
+		std::vector<ffl::IntrusivePtr<const FormulaClass> > bases_;
 
 		variant nested_classes_;
+
+		ffl::IntrusivePtr<FormulaClass> previous_version_;
 
 #if defined(USE_LUA)
 		// For lua integration
@@ -576,6 +605,8 @@ std::map<std::string, std::string>& class_path_map()
 #endif
 
 		int nstate_slots_;
+		
+		bool is_library_only_;
 	};
 
 	bool is_class_derived_from(const std::string& derived, const std::string& base)
@@ -599,8 +630,35 @@ std::map<std::string, std::string>& class_path_map()
 		return false;
 	}
 
+	struct DefinitionConstantFunctionResetter {
+		FormulaCallableDefinitionPtr def_;
+		DefinitionConstantFunctionResetter(FormulaCallableDefinitionPtr def) : def_(def)
+		{}
+
+		~DefinitionConstantFunctionResetter()
+		{
+			reset();
+		}
+
+		void reset() {
+			if(def_) {
+
+				for(int n = 0; n != def_->getNumSlots(); ++n) {
+					auto entry = def_->getEntry(n);
+					if(entry == nullptr) {
+						continue;
+					}
+	
+					entry->constant_fn = std::function<bool(variant*)>();
+				}
+				
+				def_.reset();
+			}
+		}
+	};
+
 	FormulaClass::FormulaClass(const std::string& class_name, const variant& node)
-	  : builtin_slots_(0), name_(class_name), nstate_slots_(0)
+	  : builtin_slots_(0), name_(class_name), nstate_slots_(0), is_library_only_(false)
 	{
 		if(node["base_type"].is_string()) {
 			std::string builtin = node["base_type"].as_string();
@@ -619,13 +677,13 @@ std::map<std::string, std::string>& class_path_map()
 		std::map<variant, variant> m;
 		private_data_ = variant(&m);
 
-		for(boost::intrusive_ptr<const FormulaClass> base : bases_) {
+		for(ffl::IntrusivePtr<const FormulaClass> base : bases_) {
 			merge_variant_over(&private_data_, base->private_data_);
 		}
 
 		ASSERT_LOG(bases_.size() <= 1, "Multiple inheritance of classes not currently supported");
 
-		for(boost::intrusive_ptr<const FormulaClass> base : bases_) {
+		for(ffl::IntrusivePtr<const FormulaClass> base : bases_) {
 			slots_ = base->slots();
 			properties_ = base->properties();
 			nstate_slots_ = base->nstate_slots_;
@@ -639,17 +697,83 @@ std::map<std::string, std::string>& class_path_map()
 			properties = node;
 		}
 
+		is_library_only_ = node["is_library"].as_bool(false);
+
 		FormulaCallableDefinitionPtr class_def = get_class_definition(class_name);
 		assert(class_def);
 
 		FormulaClassDefinition* class_definition = dynamic_cast<FormulaClassDefinition*>(class_def.get());
 		assert(class_definition);
 
+		std::vector<std::string> entries_loading;
+
+		std::map<std::string, PropertyEntry> preloaded_entries;
+
+		DefinitionConstantFunctionResetter resetter(class_def);
+
+		if(g_ffl_vm_opt_const_library_calls && is_library_only_) {
+			for(int n = 0; n != class_def->getNumSlots(); ++n) {
+				auto entry = class_def->getEntry(n);
+				if(entry == nullptr || entry->id.empty()) {
+					continue;
+				}
+
+				entry->constant_fn = [n,&class_def,&preloaded_entries,&entries_loading,&class_name,&properties](variant* value) {
+					auto entry = class_def->getEntry(n);
+
+					const std::string& id = entry->id;
+					if(std::count(entries_loading.begin(), entries_loading.end(), id)) {
+						return false;
+					}
+
+					int dummy_slot = 0;
+					const variant prop_node = properties[variant(id)];
+
+					if(prop_node.is_string() == false) {
+						return false;
+					}
+
+					PropertyEntry* e = nullptr;
+
+					auto itor = preloaded_entries.find(id);
+					if(itor != preloaded_entries.end()) {
+						e = &itor->second;
+					} else {
+
+						entries_loading.push_back(id);
+						PropertyEntry entry(class_name, id, prop_node, dummy_slot);
+						e = &preloaded_entries[id];
+						*e = entry;
+						entries_loading.pop_back();
+					}
+
+					if(e->getter && e->getter->evaluatesToConstant(*value)) {
+						return true;
+					}
+
+
+					return false;
+				};
+			}
+		}
+
 		const definition_access_private_in_scope expose_scope(*class_definition);
 
 		for(variant key : properties.getKeys().as_list()) {
+			entries_loading.push_back(key.as_string());
+
 			const variant prop_node = properties[key];
-			PropertyEntry entry(class_name, key.as_string(), prop_node, nstate_slots_);
+			PropertyEntry entry;
+			
+			auto itor = preloaded_entries.find(key.as_string());
+			if(itor != preloaded_entries.end()) {
+				entry = itor->second;
+			} else {
+				entry = PropertyEntry(class_name, key.as_string(), prop_node, nstate_slots_);
+				if(is_library_only_) {
+					preloaded_entries[key.as_string()] = entry;
+				}
+			}
 
 			if(properties_.count(key.as_string()) == 0) {
 				properties_[key.as_string()] = static_cast<int>(slots_.size());
@@ -657,7 +781,11 @@ std::map<std::string, std::string>& class_path_map()
 			}
 
 			slots_[properties_[key.as_string()]] = entry;
+
+			entries_loading.pop_back();
 		}
+
+		resetter.reset();
 
 		for(const PropertyEntry& entry : slots_) {
 			if(entry.variable_slot >= 0) {
@@ -722,7 +850,7 @@ std::map<std::string, std::string>& class_path_map()
 			return true;
 		}
 
-		typedef boost::intrusive_ptr<const FormulaClass> Ptr;
+		typedef ffl::IntrusivePtr<const FormulaClass> Ptr;
 		for(const Ptr& base : bases_) {
 			if(base->isA(name)) {
 				return true;
@@ -751,7 +879,7 @@ std::map<std::string, std::string>& class_path_map()
 
 		in_unit_test = true;
 
-		boost::intrusive_ptr<game_logic::MapFormulaCallable> callable(new game_logic::MapFormulaCallable);
+		ffl::IntrusivePtr<game_logic::MapFormulaCallable> callable(new game_logic::MapFormulaCallable);
 		std::map<variant,variant> attr;
 		callable->add("vars", variant(&attr));
 		callable->add("lib", variant(game_logic::get_library_object().get()));
@@ -835,22 +963,22 @@ std::map<std::string, std::string>& class_path_map()
 			}
 		}
 
-		boost::intrusive_ptr<FormulaClass> build_class(const std::string& type)
+		ffl::IntrusivePtr<FormulaClass> build_class(const std::string& type)
 		{
 			const variant v = get_class_node(type);
 
 			record_classes(type, v);
 
-			boost::intrusive_ptr<FormulaClass> result(new FormulaClass(type, v));
+			ffl::IntrusivePtr<FormulaClass> result(new FormulaClass(type, v));
 			result->setName(type);
 			return result;
 		}
 
-		boost::intrusive_ptr<const FormulaClass> get_class(const std::string& type)
+		ffl::IntrusivePtr<const FormulaClass> get_class(const std::string& type)
 		{
 			if(std::find(type.begin(), type.end(), '.') != type.end()) {
 				std::vector<std::string> v = util::split(type, '.');
-				boost::intrusive_ptr<const FormulaClass> c = get_class(v.front());
+				ffl::IntrusivePtr<const FormulaClass> c = get_class(v.front());
 				for(unsigned n = 1; n < v.size(); ++n) {
 					classes_map::const_iterator itor = c->subClasses().find(v[n]);
 					ASSERT_LOG(itor != c->subClasses().end(), "COULD NOT FIND FFL CLASS: " << type);
@@ -865,7 +993,7 @@ std::map<std::string, std::string>& class_path_map()
 				return itor->second;
 			}
 
-			boost::intrusive_ptr<FormulaClass> result;
+			ffl::IntrusivePtr<FormulaClass> result;
 	
 			if(!backup_classes_.empty() && backup_classes_.count(type)) {
 				try {
@@ -894,11 +1022,60 @@ std::map<std::string, std::string>& class_path_map()
 			classes_[type] = result;
 			result->build_nested_classes();
 			result->run_unit_tests();
-			return boost::intrusive_ptr<const FormulaClass>(result.get());
+			return ffl::IntrusivePtr<const FormulaClass>(result.get());
 		}
 	}
 
-	void FormulaObject::visitVariants(variant node, std::function<void (variant)> fn, std::vector<FormulaObject*>* seen)
+	void FormulaObject::visitVariantObjects(const variant& node, const std::function<void (FormulaObject*)>& fn)
+	{
+		std::vector<FormulaObject*> seen;
+		visitVariantsInternal(node, fn, &seen);
+	}
+
+	void FormulaObject::visitVariantsInternal(const variant& node, const std::function<void (FormulaObject*)>& fn, std::vector<FormulaObject*>* seen)
+	{
+		std::vector<FormulaObject*> seen_buf;
+		if(!seen) {
+			seen = &seen_buf;
+		}
+
+		if(node.try_convert<FormulaObject>()) {
+			FormulaObject* obj = node.try_convert<FormulaObject>();
+			if(std::count(seen->begin(), seen->end(), obj)) {
+				return;
+			}
+
+			ConstWmlSerializableFormulaCallablePtr ptr(obj);
+			fn(obj);
+
+			seen->push_back(obj);
+
+			for(const variant& v : obj->variables_) {
+				visitVariantsInternal(v, fn, seen);
+			}
+
+			seen->pop_back();
+			return;
+		}
+	
+		if(node.is_list()) {
+			for(const variant& item : node.as_list()) {
+				FormulaObject::visitVariantsInternal(item, fn, seen);
+			}
+		} else if(node.is_map()) {
+			for(const variant_pair& item : node.as_map()) {
+				FormulaObject::visitVariantsInternal(item.second, fn, seen);
+			}
+		}
+	}
+
+	void FormulaObject::visitVariants(const variant& node, const std::function<void (variant)>& fn)
+	{
+		std::vector<FormulaObject*> seen;
+		visitVariantsInternal(node, fn, &seen);
+	}
+
+	void FormulaObject::visitVariantsInternal(const variant& node, const std::function<void (variant)>& fn, std::vector<FormulaObject*>* seen)
 	{
 		std::vector<FormulaObject*> seen_buf;
 		if(!seen) {
@@ -917,7 +1094,7 @@ std::map<std::string, std::string>& class_path_map()
 			seen->push_back(obj);
 
 			for(const variant& v : obj->variables_) {
-				visitVariants(v, fn, seen);
+				visitVariantsInternal(v, fn, seen);
 			}
 
 			seen->pop_back();
@@ -928,48 +1105,54 @@ std::map<std::string, std::string>& class_path_map()
 
 		if(node.is_list()) {
 			for(const variant& item : node.as_list()) {
-				FormulaObject::visitVariants(item, fn, seen);
+				FormulaObject::visitVariantsInternal(item, fn, seen);
 			}
 		} else if(node.is_map()) {
 			for(const variant_pair& item : node.as_map()) {
-				FormulaObject::visitVariants(item.second, fn, seen);
+				FormulaObject::visitVariantsInternal(item.second, fn, seen);
 			}
 		}
 	}
 
 	void FormulaObject::update(FormulaObject& updated)
 	{
-		std::vector<boost::intrusive_ptr<FormulaObject> > objects;
+		std::vector<ffl::IntrusivePtr<FormulaObject> > objects;
 		std::map<boost::uuids::uuid, FormulaObject*> src, dst;
-		visitVariants(variant(this), [&dst,&objects](variant v) {
-			FormulaObject* obj = v.try_convert<FormulaObject>();
-			if(obj) {
-				dst[obj->id_] = obj;
-				obj->previous_.reset();
-				obj->previous_.reset(new FormulaObject(*obj));
-				objects.push_back(obj);
-			}});
-		visitVariants(variant(&updated), [&src,&objects](variant v) {
-			FormulaObject* obj = v.try_convert<FormulaObject>();
-			if(obj) {
-				src[obj->id_] = obj;
-				objects.push_back(obj);
-			}});
+		{
+		formula_profiler::Instrument instrument("UPDATE_A");
+		visitVariantObjects(variant(this), [&dst,&objects](FormulaObject* obj) {
+			dst[obj->uuid()] = obj;
+			objects.push_back(obj);
+		});
+		visitVariantObjects(variant(&updated), [&src,&objects](FormulaObject* obj) {
+			src[obj->uuid()] = obj;
+			objects.push_back(obj);
+		});
+		}
 
 		std::map<FormulaObject*, FormulaObject*> mapping;
 
+		{
+		formula_profiler::Instrument instrument("UPDATE_B");
 		for(auto& i : src) {
 			auto j = dst.find(i.first);
 			if(j != dst.end()) {
 				mapping[i.second] = j->second;
 			}
 		}
-
-		for(auto& i : src) {
-			variant v(i.second);
-			mapObjectIntoDifferentTree(v, mapping);
 		}
 
+		{
+		formula_profiler::Instrument instrument("UPDATE_C");
+		std::set<FormulaObject*> seen;
+		for(auto& i : src) {
+			variant v(i.second);
+			mapObjectIntoDifferentTree(v, mapping, seen);
+		}
+		}
+
+		{
+		formula_profiler::Instrument instrument("UPDATE_D");
 		for(auto& i : mapping) {
 			*i.second = *i.first;
 		}
@@ -984,28 +1167,27 @@ std::map<std::string, std::string>& class_path_map()
 		for(auto i = src.begin(); i != src.end(); ++i) {
 			i->second->new_in_update_ = dst.count(i->first) == 0;
 		}
+		}
 	}
 
 variant FormulaObject::generateDiff(variant before, variant b)
 {
 	variant a = deepClone(before);
 
-	std::vector<boost::intrusive_ptr<FormulaObject> > objects;
+	std::vector<ffl::IntrusivePtr<FormulaObject> > objects;
 
 	std::map<boost::uuids::uuid, FormulaObject*> src, dst;
 	visitVariants(b, [&dst,&objects](variant v) {
 		FormulaObject* obj = v.try_convert<FormulaObject>();
 		if(obj) {
-			dst[obj->id_] = obj;
-			obj->previous_.reset();
-			obj->previous_.reset(new FormulaObject(*obj));
+			dst[obj->uuid()] = obj;
 			objects.push_back(obj);
 		}});
 
 	visitVariants(a, [&src,&objects](variant v) {
 		FormulaObject* obj = v.try_convert<FormulaObject>();
 		if(obj) {
-			src[obj->id_] = obj;
+			src[obj->uuid()] = obj;
 			objects.push_back(obj);
 		}});
 
@@ -1020,13 +1202,14 @@ variant FormulaObject::generateDiff(variant before, variant b)
 
 	std::vector<variant> deltas;
 
+	std::set<FormulaObject*> seen;
 	for(auto i = src.begin(); i != src.end(); ++i) {
 		variant v(i->second);
-		mapObjectIntoDifferentTree(v, mapping);
+		mapObjectIntoDifferentTree(v, mapping, seen);
 		auto j = dst.find(i->first);
 		if(j != dst.end() && i->second->variables_ != j->second->variables_) {
 			std::map<variant, variant> node_delta;
-			node_delta[variant("_uuid")] = variant(write_uuid(i->second->id_));
+			node_delta[variant("_uuid")] = variant(write_uuid(i->second->uuid()));
 			if(i->second->variables_.size() < j->second->variables_.size()) {
 				i->second->variables_.resize(j->second->variables_.size());
 			}
@@ -1078,9 +1261,7 @@ void FormulaObject::applyDiff(variant delta)
 	visitVariants(variant(this), [&objects](variant v) {
 		FormulaObject* obj = v.try_convert<FormulaObject>();
 		if(obj) {
-			obj->previous_.reset();
-			obj->previous_.reset(new FormulaObject(*obj));
-			objects[obj->id_] = obj;
+			objects[obj->uuid()] = obj;
 		}});
 
 	const std::string& data_str = delta["delta"].as_string();
@@ -1092,25 +1273,15 @@ void FormulaObject::applyDiff(variant delta)
 	const game_logic::wmlFormulaCallableReadScope read_scope;
 
 	for(auto p : objects) {
-		std::string addr_str = p.second->addr();
-		if(addr_str.size() > 15) {
-			addr_str.resize(15);
-		}
-		const intptr_t addr_id = static_cast<intptr_t>(strtoll(addr_str.c_str(), NULL, 16));
-		game_logic::wmlFormulaCallableReadScope::registerSerializedObject(addr_id, p.second);
+		game_logic::wmlFormulaCallableReadScope::registerSerializedObject(p.second->uuid(), p.second);
 	}
 
 	variant v = json::parse(std::string(data.begin(), data.end()));
 	for(variant obj_node : v["objects"].as_list()) {
 		game_logic::WmlSerializableFormulaCallablePtr obj = obj_node.try_convert<game_logic::WmlSerializableFormulaCallable>();
 		ASSERT_LOG(obj.get() != NULL, "ILLEGAL OBJECT FOUND IN SERIALIZATION");
-		std::string addr_str = obj->addr();
-		if(addr_str.size() > 15) {
-			addr_str.resize(15);
-		}
-		const intptr_t addr_id = static_cast<intptr_t>(strtoll(addr_str.c_str(), NULL, 16));
 
-		game_logic::wmlFormulaCallableReadScope::registerSerializedObject(addr_id, obj);
+		game_logic::wmlFormulaCallableReadScope::registerSerializedObject(obj->uuid(), obj);
 	}
 
 	for(variant d : v["deltas"].as_list()) {
@@ -1131,13 +1302,8 @@ void FormulaObject::applyDiff(variant delta)
 	}
 }
 
-void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<FormulaObject*, FormulaObject*>& mapping, std::vector<FormulaObject*>* seen)
+void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<FormulaObject*, FormulaObject*>& mapping, std::set<FormulaObject*>& seen)
 	{
-		std::vector<FormulaObject*> seen_buf;
-		if(!seen) {
-			seen = &seen_buf;
-		}
-	
 		if(v.try_convert<FormulaObject>()) {
 			FormulaObject* obj = v.try_convert<FormulaObject>();
 			auto itor = mapping.find(obj);
@@ -1145,17 +1311,16 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 				v = variant(itor->second);
 			}
 
-			if(std::count(seen->begin(), seen->end(), obj)) {
+			if(seen.count(obj)) {
 				return;
 			}
 
-			seen->push_back(obj);
+			seen.insert(obj);
 
 			for(variant& v : obj->variables_) {
 				mapObjectIntoDifferentTree(v, mapping, seen);
 			}
 
-			seen->pop_back();
 			return;
 		}
 
@@ -1197,7 +1362,7 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 					return variant(itor->second);
 				}
 
-				boost::intrusive_ptr<FormulaObject> duplicate = obj->clone();
+				ffl::IntrusivePtr<FormulaObject> duplicate = obj->clone();
 				mapping[obj] = duplicate.get();
 
 				for(int n = 0; n != duplicate->variables_.size(); ++n) {
@@ -1227,6 +1392,38 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 		}
 	}
 
+	void FormulaObject::deepDestroy(variant v)
+	{
+		std::set<FormulaObject*> seen;
+		deepDestroy(v, seen);
+	}
+
+	void FormulaObject::deepDestroy(variant v, std::set<FormulaObject*>& seen)
+	{
+		if(v.is_callable()) {
+			FormulaObject* obj = v.try_convert<FormulaObject>();
+			if(obj) {
+				if(seen.insert(obj).second == false) {
+					return;
+				}
+
+				for(variant& var : obj->variables_) {
+					deepDestroy(var, seen);
+					var = variant();
+				}
+			}
+
+		} else if(v.is_list()) {
+			for(int n = 0; n != v.num_elements(); ++n) {
+				deepDestroy(v[n], seen);
+			}
+		} else if(v.is_map()) {
+			for(auto p : v.as_map()) {
+				deepDestroy(p.second, seen);
+			}
+		}
+	}
+
 	void FormulaObject::reloadClasses()
 	{
 		classes_.clear();
@@ -1247,18 +1444,59 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 		build_class(name);
 	}
 
-	boost::intrusive_ptr<FormulaObject> FormulaObject::create(const std::string& type, variant args)
+	ffl::IntrusivePtr<FormulaObject> FormulaObject::create(const std::string& type, variant args)
 	{
 		const Formula::StrictCheckScope strict_checking;
-		boost::intrusive_ptr<FormulaObject> res(new FormulaObject(type, args));
+		ffl::IntrusivePtr<FormulaObject> res(new FormulaObject(type, args));
 		res->callConstructors(args);
 		res->validate();
 		return res;
 	}
 
 	FormulaObject::FormulaObject(const std::string& type, variant args)
-	  : id_(generate_uuid()), new_in_update_(true), orphaned_(false),
+	  : new_in_update_(true), orphaned_(false),
 		class_(get_class(type)), private_data_(-1)
+	{
+		ASSERT_LOG(class_->is_library_only() == false || args.is_null(), "Creating instance of library class is illegal: " << type);
+
+	}
+
+	void FormulaObject::surrenderReferences(GarbageCollector* collector)
+	{
+		collector->surrenderVariant(&tmp_value_, "TMP");
+
+		const std::vector<const PropertyEntry*>& entries = class_->variableSlots();
+
+		int index = 0;
+		for(variant& v : variables_) {
+			collector->surrenderVariant(&v, entries[index] ? entries[index]->name.c_str() : nullptr);
+			++index;
+		}
+	}
+
+	std::string FormulaObject::debugObjectName() const
+	{
+		return "class " + class_->name();
+	}
+
+	std::string FormulaObject::write_id() const
+	{
+		std::string result = write_uuid(uuid());
+		result.resize(15);
+		return result;
+	}
+
+	bool FormulaObject::isA(const std::string& class_name) const
+	{
+		return class_->isA(class_name);
+	}
+
+	const std::string& FormulaObject::getClassName() const
+	{
+		return class_->name();
+	}
+
+	void FormulaObject::callConstructors(variant args)
 	{
 		if(class_->getBuiltinCtor()) {
 			builtin_base_ = class_->getBuiltinCtor()(args);
@@ -1279,48 +1517,6 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 		init_lua();
 #endif
 
-
-		setAddr(write_id());
-	}
-
-	void FormulaObject::surrenderReferences(GarbageCollector* collector)
-	{
-		collector->surrenderPtr(&previous_, "PREV");
-		collector->surrenderVariant(&tmp_value_, "TMP");
-
-		const std::vector<const PropertyEntry*>& entries = class_->variableSlots();
-
-		int index = 0;
-		for(variant& v : variables_) {
-			collector->surrenderVariant(&v, entries[index] ? entries[index]->name.c_str() : nullptr);
-			++index;
-		}
-	}
-
-	std::string FormulaObject::debugObjectName() const
-	{
-		return "class " + class_->name();
-	}
-
-	std::string FormulaObject::write_id() const
-	{
-		std::string result = write_uuid(id_);
-		result.resize(15);
-		return result;
-	}
-
-	bool FormulaObject::isA(const std::string& class_name) const
-	{
-		return class_->isA(class_name);
-	}
-
-	const std::string& FormulaObject::getClassName() const
-	{
-		return class_->name();
-	}
-
-	void FormulaObject::callConstructors(variant args)
-	{
 		if(args.is_map()) {
 			ConstFormulaCallableDefinitionPtr def = get_class_definition(class_->name());
 			for(const variant& key : args.getKeys().as_list()) {
@@ -1350,7 +1546,7 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 	}
 
 	FormulaObject::FormulaObject(variant data)
-	  : id_(data["id"].is_string() ? read_uuid(data["id"].as_string()) : generate_uuid()), new_in_update_(true), orphaned_(false),
+	  : WmlSerializableFormulaCallable(data["_uuid"].is_string() ? read_uuid(data["_uuid"].as_string()) : generate_uuid()), new_in_update_(true), orphaned_(false),
 		class_(get_class(data["@class"].as_string())), private_data_(-1)
 	{
 		if(class_->getBuiltinCtor()) {
@@ -1404,18 +1600,14 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 #if defined(USE_LUA)
 		init_lua();
 #endif
-
-		setAddr(write_id());
 	}
 
 	FormulaObject::~FormulaObject()
 	{}
 
-	boost::intrusive_ptr<FormulaObject> FormulaObject::clone() const
+	ffl::IntrusivePtr<FormulaObject> FormulaObject::clone() const
 	{
-		boost::intrusive_ptr<FormulaObject> result(new FormulaObject(*this));
-	//result->id_ = generate_uuid();
-	//result->setAddr(result->write_id());
+		ffl::IntrusivePtr<FormulaObject> result(new FormulaObject(*this));
 
 		return result;
 	}
@@ -1424,7 +1616,7 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 	{
 		std::map<variant, variant> result;
 		result[variant("@class")] = variant(class_->name());
-		result[variant("id")] = variant(write_uuid(id_));
+		result[variant("_uuid")] = variant(write_uuid(uuid()));
 
 		std::map<variant,variant> state;
 		for(const PropertyEntry& slot : class_->slots()) {
@@ -1444,7 +1636,16 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 				}
 
 				const PropertyEntry& entry = class_->slots()[n];
-				properties[entry.name_variant] = variant(property_overrides_[n]->str());
+
+				auto debug_info = property_overrides_[n]->strVal().get_debug_info();
+
+				if(debug_info && debug_info->filename) {
+					std::ostringstream s;
+					s << "@str_with_debug " << *debug_info->filename << ":" << debug_info->line << "|" << property_overrides_[n]->str();
+					properties[entry.name_variant] = variant(s.str());
+				} else {
+					properties[entry.name_variant] = variant(property_overrides_[n]->str());
+				}
 			}
 
 			result[variant("property_overrides")] = variant(&properties);
@@ -1454,6 +1655,31 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 	}
 
 	REGISTER_SERIALIZABLE_CALLABLE(FormulaObject, "@class");
+
+	bool FormulaObject::getConstantValue(const std::string& id, variant* result) const
+	{
+		std::map<std::string, int>::const_iterator itor = class_->properties().find(id);
+		if(itor == class_->properties().end()) {
+			return false;
+		}
+
+		ConstFormulaPtr getter;
+
+		if(static_cast<unsigned>(itor->second) < property_overrides_.size()) {
+			getter = property_overrides_[itor->second];
+		}
+
+		if(!getter) {
+			const PropertyEntry& entry = class_->slots()[itor->second];
+			getter = entry.getter;
+		}
+
+		if(getter && getter->evaluatesToConstant(*result)) {
+			return true;
+		}
+
+		return false;
+	}
 
 	variant FormulaObject::getValue(const std::string& key) const
 	{
@@ -1517,10 +1743,9 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 			case FIELD_ME: return variant(this);
 			case FIELD_NEW_IN_UPDATE: return variant::from_bool(new_in_update_);
 			case FIELD_ORPHANED: return variant::from_bool(orphaned_);
-			case FIELD_PREVIOUS: if(previous_) { return variant(previous_.get()); } else { return variant(this); }
 			case FIELD_CLASS: return class_->nameVariant();
 			case FIELD_LIB: return variant(get_library_object().get());
-			case FIELD_UUID: return variant(write_uuid(id_));
+			case FIELD_UUID: return variant(write_uuid(uuid()));
 			default: break;
 		}
 
@@ -1752,12 +1977,15 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 			}
 		}
 
+		classes_map removed_classes;
+
 		for(auto i = classes_.begin(); i != classes_.end(); )
 		{
 			const std::string& class_name = i->first;
 			std::string::const_iterator dot = std::find(class_name.begin(), class_name.end(), '.');
 			std::string base_class(class_name.begin(), dot);
 			if(base_class == name) {
+				removed_classes.insert(*i);
 				known_classes.erase(class_name);
 				backup_classes_[i->first] = i->second;
 				classes_.erase(i++);
@@ -1765,12 +1993,16 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 				++i;
 			}
 		}
+
+		for(auto p : removed_classes) {
+			auto new_class = get_class(p.first);
+			p.second->update_class(const_cast<FormulaClass*>(new_class.get()));
+		}
 	}
 
 	namespace 
 	{
 		FormulaCallableDefinitionPtr g_library_definition;
-		FormulaCallablePtr g_library_obj;
 	}
 
 	FormulaCallableDefinitionPtr get_library_definition()
@@ -1782,7 +2014,13 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 			for(auto p : class_path_map()) {
 				const std::string& class_name = p.first;
 				if(std::count(classes.begin(), classes.end(), class_name) == 0) {
-					variant node = json::parse_from_file(p.second);
+					variant node;
+					try {
+						node = json::parse_from_file(p.second);
+					} catch(json::ParseError& e) {
+						ASSERT_LOG(false, "Error parsing " << p.second << ": " << e.errorMessage());
+					}
+
 					if(node["server_only"].as_bool(false) == false) {
 						classes.push_back(class_name);
 					}
@@ -1820,21 +2058,37 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 
 	namespace 
 	{
+		struct SlotsLoadingGuard {
+			explicit SlotsLoadingGuard(std::vector<int>& v) : v_(v)
+			{}
+
+			~SlotsLoadingGuard() { v_.pop_back(); }
+
+			std::vector<int>& v_;
+		};
+
 		class LibraryCallable : public game_logic::FormulaCallable
 		{
 		public:
 			LibraryCallable() {
 				items_.resize(get_library_definition()->getNumSlots());
 			}
+
+			bool currently_loading_library(const std::string& key) {
+				FormulaCallableDefinitionPtr def = get_library_definition();
+				const int slot = def->getSlot(key);
+				ASSERT_LOG(slot >= 0, "Unknown library: " << key << "\n" << get_full_call_stack());
+				return std::find(slots_loading_.begin(), slots_loading_.end(), slot) != slots_loading_.end();
+			}
 		private:
-			variant getValue(const std::string& key) const {
+			variant getValue(const std::string& key) const override {
 				FormulaCallableDefinitionPtr def = get_library_definition();
 				const int slot = def->getSlot(key);
 				ASSERT_LOG(slot >= 0, "Unknown library: " << key << "\n" << get_full_call_stack());
 				return queryValueBySlot(slot);
 			}
 
-			variant getValueBySlot(int slot) const {
+			variant getValueBySlot(int slot) const override {
 				ASSERT_LOG(slot >= 0 && static_cast<unsigned>(slot) < items_.size(), "ILLEGAL LOOK UP IN LIBRARY: " << slot << "/" << items_.size());
 				if(items_[slot].is_null()) {
 					FormulaCallableDefinitionPtr def = get_library_definition();
@@ -1845,14 +2099,28 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 						ASSERT_LOG(false, "ERROR IN LIBRARY");
 					}
 
+					slots_loading_.push_back(slot);
+					SlotsLoadingGuard guard(slots_loading_);
 					items_[slot] = variant(FormulaObject::create(class_name).get());
 				}
 
 				return items_[slot];
 			}
 
+			void surrenderReferences(GarbageCollector* collector) override {
+				for(variant& item : items_) {
+					collector->surrenderVariant(&item);
+				}
+			}
+
 			mutable std::vector<variant> items_;
+
+			mutable std::vector<int> slots_loading_;
 		};
+	}
+
+	namespace {
+		boost::intrusive_ptr<LibraryCallable> g_library_obj;
 	}
 
 	FormulaCallablePtr get_library_object()
@@ -1862,6 +2130,17 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 		}
 
 		return g_library_obj;
+	}
+
+	bool can_load_library_instance(const std::string& id)
+	{
+		get_library_object();
+		return !g_library_obj->currently_loading_library(id);
+	}
+
+	FormulaCallablePtr get_library_instance(const std::string& id)
+	{
+		return FormulaCallablePtr(get_library_object()->queryValue(id).mutable_callable());
 	}
 
 #if defined(USE_LUA)

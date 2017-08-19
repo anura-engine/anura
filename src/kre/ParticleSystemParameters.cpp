@@ -22,7 +22,6 @@
 */
 
 #include "asserts.hpp"
-#include "spline.hpp"
 #include "ParticleSystemParameters.hpp"
 
 #ifndef M_PI
@@ -45,221 +44,188 @@ namespace KRE
 				}
 				return 0;
 			}
+
+			geometry::control_point_vector::const_iterator find_closest_point(const geometry::control_point_vector& control_points, float t)
+			{
+				// find nearest control point to t
+				auto it = control_points.cbegin();
+				for(; it != control_points.cend(); ++it) {
+					if(t < it->first) {
+						if(it == control_points.cbegin()) {
+							return it;
+						} else {
+							return --it;
+						}
+					}
+				}
+				return --it;
+			}
 		}
 
-		class RandomParameter : public Parameter
-		{
-		public:
-			RandomParameter(const variant& node);
-			virtual ~RandomParameter();
-			virtual float getValue(float t);
-		private:
-			float min_value_;
-			float max_value_;
-			RandomParameter(const RandomParameter&);
-		};
-
-		class OscillateParameter : public Parameter
-		{
-		public:
-			OscillateParameter(const variant& node);
-			virtual ~OscillateParameter();
-			virtual float getValue(float t);
-		private:
-			enum class WaveType {
-				SINE,
-				SQUARE,
-			};
-			WaveType osc_type_;
-			float frequency_;
-			float phase_;
-			float base_;
-			float amplitude_;
-			OscillateParameter(const OscillateParameter&);
-		};
-
-		class CurvedParameter : public Parameter
-		{
-		public:
-			enum class InterpolationType {
-				LINEAR,
-				SPLINE,
-			};
-			CurvedParameter(InterpolationType type, const variant& node);
-			virtual ~CurvedParameter();
-			virtual float getValue(float t);
-		private:
-			InterpolationType curve_type_;
-			geometry::control_point_vector control_points_;
-
-			geometry::control_point_vector::iterator findClosestPoint(float t);
-			CurvedParameter(const CurvedParameter&);
-		};
 
 		ParameterPtr Parameter::factory(const variant& node)
 		{
 			if(node.is_float() || node.is_int()) {
 				// single fixed attribute
-				return ParameterPtr(new FixedParameter(float(node.as_float())));
+				return std::make_shared<Parameter>(node.as_float());
 			}
 			ASSERT_LOG(node.has_key("type"), "parameter must have 'type' attribute");
 			const std::string& ntype = node["type"].as_string();
+
+			geometry::control_point_vector cps;
+			if(ntype == "curved_linear" || ntype == "curved_spline") {
+				ASSERT_LOG(node.has_key("control_point") 
+					&& node["control_point"].is_list()
+					&& node["control_point"].num_elements() >= 2, 
+					"curved parameters must have at least 2 control points.");
+				for(size_t n = 0; n != node["control_point"].num_elements(); ++n) {
+					ASSERT_LOG(node["control_point"][n].is_list() 
+						&& node["control_point"][n].num_elements() == 2,
+						"Control points should be list of two elements.");
+					auto p = std::make_pair(node["control_point"][n][0].as_float(), 
+						node["control_point"][n][1].as_float());
+					cps.emplace_back(p);
+				}
+			}
+
 			if(ntype == "fixed") {
-				return ParameterPtr(new FixedParameter(node));
-			} else if(ntype == "dyn_random") {
-				return ParameterPtr(new RandomParameter(node));
-			} else if(ntype == "dyn_curved_linear") {
-				return ParameterPtr(new CurvedParameter(CurvedParameter::InterpolationType::LINEAR, node));
-			} else if(ntype == "dyn_curved_spline") {
-				return ParameterPtr(new CurvedParameter(CurvedParameter::InterpolationType::SPLINE, node));
-			} else if(ntype == "dyn_oscillate") {
-				return ParameterPtr(new OscillateParameter(node));
+				return std::make_shared<Parameter>(node["value"].as_float());
+			} else if(ntype == "random") {
+				return std::make_shared<Parameter>(node["min"].as_float(), node["max"].as_float());
+			} else if(ntype == "curved_linear") {
+				return std::make_shared<Parameter>(InterpolationType::LINEAR, cps);
+			} else if(ntype == "curved_spline") {
+				return std::make_shared<Parameter>(InterpolationType::SPLINE, cps);
+			} else if(ntype == "oscillate") {
+				WaveType osc_type = WaveType::SINE;
+				float freq = 1.0f;
+				float base = 0.0f;
+				float phase = 0.0f;
+				float ampl = 0.0f;
+				if(node.has_key("oscillate_frequency")) {
+					freq = node["oscillate_frequency"].as_float();
+				} 
+				if(node.has_key("oscillate_phase")) {
+					phase = node["oscillate_phase"].as_float();
+				} 
+				if(node.has_key("oscillate_base")) {
+					base = node["oscillate_base"].as_float();
+				} 
+				if(node.has_key("oscillate_amplitude")) {
+					ampl = node["oscillate_amplitude"].as_float();
+				} 
+				if(node.has_key("oscillate_type")) {
+					const std::string& type = node["oscillate_type"].as_string();
+					if(type == "sine" || type == "sin") {
+						osc_type = WaveType::SINE;
+					} else if(type == "square" || type == "sq") {
+						osc_type = WaveType::SQUARE;
+					} else {
+						ASSERT_LOG(false, "unrecognised oscillate type: " << type);
+					}
+				}
+				return std::make_shared<Parameter>(osc_type, freq, phase, base, ampl);
 			} else {
-				ASSERT_LOG(false, "Unrecognised affector type: " << ntype);
+				ASSERT_LOG(false, "Unrecognised parameter type: " << ntype);
 			}
 			return ParameterPtr();
-		}
-
-		Parameter::Parameter()
-		{
 		}
 
 		Parameter::~Parameter()
 		{
 		}
 
-		FixedParameter::FixedParameter(float value)
-			: Parameter(ParameterType::FIXED), 
-			  value_(value)
+		variant Parameter::write() const
 		{
-		}
-
-		FixedParameter::FixedParameter(const variant& node)
-		{
-			value_ = node["value"].as_float();
-		}
-
-		FixedParameter::~FixedParameter()
-		{
-		}
-
-		RandomParameter::RandomParameter(const variant& node)
-			: Parameter(ParameterType::RANDOM), 
-			min_value_(node["min"].as_float(0.1f)),
-			max_value_(node["max"].as_float(1.0f))
-		{
-		}
-
-		RandomParameter::~RandomParameter()
-		{
-		}
-
-		float RandomParameter::getValue(float t)
-		{
-			return get_random_float(min_value_, max_value_);
-		}
-
-		OscillateParameter::OscillateParameter(const variant& node)
-			: Parameter(ParameterType::OSCILLATE), 
-			  frequency_(1.0f), 
-			  phase_(0.0f), 
-			  base_(0.0f), 
-			  amplitude_(1.0f),
-			  osc_type_(WaveType::SINE)
-		{
-			if(node.has_key("oscillate_frequency")) {
-				frequency_ = node["oscillate_frequency"].as_float();
-			} 
-			if(node.has_key("oscillate_phase")) {
-				phase_ = node["oscillate_phase"].as_float();
-			} 
-			if(node.has_key("oscillate_base")) {
-				base_ = node["oscillate_base"].as_float();
-			} 
-			if(node.has_key("oscillate_amplitude")) {
-				amplitude_ = node["oscillate_amplitude"].as_float();
-			} 
-			if(node.has_key("oscillate_type")) {
-				const std::string& type = node["oscillate_type"].as_string();
-				if(type == "sine" || type == "sin") {
-					osc_type_ = WaveType::SINE;
-				} else if(type == "square" || type == "sq") {
-					osc_type_ = WaveType::SQUARE;
-				} else {
-					ASSERT_LOG(false, "unrecognised oscillate type: " << type);
+			variant_builder res;
+			switch(type_) {
+				case KRE::Particles::ParameterType::FIXED: {
+					// Fixed parameters can be just returned as a single value.
+					return variant(fixed_.value);
 				}
-			}             
-		}
-
-		OscillateParameter::~OscillateParameter()
-		{
-		}
-
-		float OscillateParameter::getValue(float t)
-		{
-			if(osc_type_ == WaveType::SINE) {
-				return float(base_ + amplitude_ * sin(2*M_PI*frequency_*t + phase_));
-			} else if(osc_type_ == WaveType::SQUARE) {
-				return float(base_ + amplitude_ * sign(sin(2*M_PI*frequency_*t + phase_)));
+				case KRE::Particles::ParameterType::RANDOM: {
+					res.add("type", "random");
+					res.add("min", random_.min_value);
+					res.add("max", random_.max_value);
+					break;
+				}
+				case KRE::Particles::ParameterType::CURVED_LINEAR: {
+					res.add("type", "curved_linear");
+					std::vector<variant> v;
+					for(const auto& cp : curved_.control_points) {
+						v.emplace_back(variant(cp.first));
+						v.emplace_back(variant(cp.second));
+						res.add("control_point", &v);
+					}
+					break;
+				}
+				case KRE::Particles::ParameterType::CURVED_SPLINE: {
+					res.add("type", "curved_spline");
+					std::vector<variant> v;
+					for(const auto& cp : curved_.control_points) {
+						v.emplace_back(variant(cp.first));
+						v.emplace_back(variant(cp.second));
+						res.add("control_point", &v);
+					}
+					break;
+				}
+				case KRE::Particles::ParameterType::OSCILLATE: {
+					res.add("type", "oscillate");
+					res.add("oscillate_type", oscillate_.osc_type == WaveType::SINE ? "sine" : "square");
+					res.add("oscillate_frequency", oscillate_.frequency);
+					res.add("oscillate_phase", oscillate_.phase);
+					res.add("oscillate_base", oscillate_.base);
+					res.add("oscillate_amplitude", oscillate_.amplitude);
+					break;
+				}
+				default: 
+					ASSERT_LOG(false, "Something went wrong with the parameter type: " << static_cast<int>(type_));
+					break;
 			}
-			return 0;
+			return res.build();
 		}
 
-		CurvedParameter::CurvedParameter(InterpolationType type, const variant& node)
-			: Parameter(ParameterType::CURVED), 
-			  curve_type_(type)
+		float Parameter::getValue(float t)
 		{
-			ASSERT_LOG(node.has_key("control_point") 
-				&& node["control_point"].is_list()
-				&& node["control_point"].num_elements() >= 2, 
-				"curved parameters must have at least 2 control points.");
-			for(size_t n = 0; n != node["control_point"].num_elements(); ++n) {
-				ASSERT_LOG(node["control_point"][n].is_list() 
-					&& node["control_point"][n].num_elements() == 2,
-					"Control points should be list of two elements.");
-				auto p = std::make_pair(node["control_point"][n][0].as_float(), 
-					node["control_point"][n][1].as_float());
-				control_points_.push_back(p);
-			}
-		}
+			switch(type_) {
+				case ParameterType::FIXED:
+					return fixed_.value;
 
-		CurvedParameter::~CurvedParameter()
-		{
-		}
+				case ParameterType::RANDOM:
+					return get_random_float(random_.min_value, random_.max_value);
 
-		geometry::control_point_vector::iterator CurvedParameter::findClosestPoint(float t)
-		{
-			// find nearest control point to t
-			auto it = control_points_.begin();
-			for(; it != control_points_.end(); ++it) {
-				if(t < it->first) {
-					if(it == control_points_.begin()) {
-						return it;
+				case ParameterType::CURVED_LINEAR: {
+					if(curved_.control_points.size() < 2) {
+						return 0.0f;
+					}
+					auto it = find_closest_point(curved_.control_points, t);
+					auto it2 = it + 1;
+					if(it2 == curved_.control_points.end()) {
+						return static_cast<float>(it2->second);
 					} else {
-						return --it;
+						// linear interpolate, see http://en.wikipedia.org/wiki/Linear_interpolation
+						return static_cast<float>(it->second + (it2->second - it->second) * (t - it->first) / (it2->first - it->first));
 					}
 				}
-			}
-			return --it;
-		}
-
-		float CurvedParameter::getValue(float t)
-		{
-			if(curve_type_ == InterpolationType::LINEAR) {
-				auto it = findClosestPoint(t);
-				auto it2 = it + 1;
-				if(it2 == control_points_.end()) {
-					return float(it2->second);
-				} else {
-					// linear interpolate, see http://en.wikipedia.org/wiki/Linear_interpolation
-					return float(it->second + (it2->second - it->second) * (t - it->first) / (it2->first - it->first));
+				case ParameterType::CURVED_SPLINE: {
+					if(curved_.control_points.size() < 2) {
+						return 0.0f;
+					}
+					// http://en.wikipedia.org/wiki/Spline_interpolation
+					geometry::spline spl(curved_.control_points);
+					return static_cast<float>(spl.interpolate(t));
 				}
-			} else if(curve_type_ == InterpolationType::SPLINE) {
-				// http://en.wikipedia.org/wiki/Spline_interpolation
-				geometry::spline spl(control_points_);
-				return float(spl.interpolate(t));
+				case ParameterType::OSCILLATE:
+					if(oscillate_.osc_type == WaveType::SINE) {
+						return static_cast<float>(oscillate_.base + oscillate_.amplitude * sin(2*M_PI*oscillate_.frequency*t + oscillate_.phase));
+					} else if(oscillate_.osc_type == WaveType::SQUARE) {
+						return static_cast<float>(oscillate_.base + oscillate_.amplitude * sign(sin(2*M_PI*oscillate_.frequency*t + oscillate_.phase)));
+					}
+					return 0;
+				default:
+					ASSERT_LOG(false, "Unknown type for parameter: " << static_cast<int>(type_));
 			}
-			return 0;
+			return 0.0f;
 		}
 	}
 }

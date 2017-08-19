@@ -56,7 +56,7 @@
 #include "water.hpp"
 
 class Level;
-typedef boost::intrusive_ptr<Level> LevelPtr;
+typedef ffl::IntrusivePtr<Level> LevelPtr;
 
 class CurrentLevelScope 
 {
@@ -152,7 +152,7 @@ public:
 	void remove_character(EntityPtr e);
 	std::vector<EntityPtr> get_characters_in_rect(const rect& r, int screen_xpos, int screen_ypos) const;
 	std::vector<EntityPtr> get_characters_at_point(int x, int y, int screen_xpos, int screen_ypos) const;
-	EntityPtr get_next_character_at_point(int x, int y, int screen_xpos, int screen_ypos) const;
+	EntityPtr get_next_character_at_point(int x, int y, int screen_xpos, int screen_ypos, const void* currently_selected=nullptr) const;
 	const PlayerInfo* player() const { return player_ ? player_->getPlayerInfo() : nullptr; }
 	PlayerInfo* player() { return player_ ? player_->getPlayerInfo() : nullptr; }
 	std::vector<EntityPtr>& players() { return players_; }
@@ -372,6 +372,9 @@ public:
 	int x_resolution() const { return x_resolution_; }
 	int y_resolution() const { return y_resolution_; }
 
+	int absolute_object_adjust_x() const { return absolute_object_adjust_x_; }
+	int absolute_object_adjust_y() const { return absolute_object_adjust_y_; }
+
 	void launch_new_module(const std::string& module_id, game_logic::ConstFormulaCallablePtr callable = nullptr);
 
 	typedef std::vector<LevelTile>::const_iterator TileItor;
@@ -389,6 +392,16 @@ public:
 	bool show_builtin_settingsDialog() const { return show_builtin_settings_; }
 
 	KRE::SceneGraphPtr getSceneGraph() const { return scene_graph_; }
+
+	void setRenderToTexture(int width, int height);
+	KRE::RenderTargetPtr getRenderTarget() const { return rt_; }
+
+	//sends events to all objects telling them about the transition to another level. They can
+	//set transition frames and otherwise set things up for a transition.
+	int setup_level_transition(const std::string& transition_type);
+
+	static void set_level_transition_ratio(decimal value);
+
 private:
 	DECLARE_CALLABLE(Level);
 
@@ -427,6 +440,8 @@ private:
 
 	//preferred screen dimensions to play the level on.
 	int x_resolution_, y_resolution_;
+
+	int absolute_object_adjust_x_, absolute_object_adjust_y_;
 
 	bool set_screen_resolution_on_entry_;
 
@@ -529,16 +544,21 @@ private:
 		int begin_zorder, end_zorder;
 		variant shader_node;
 		mutable graphics::AnuraShaderPtr shader;
+
+		mutable KRE::RenderTargetPtr rt;
 	};
 	std::vector<FrameBufferShaderEntry> fb_shaders_;
 	mutable std::vector<graphics::AnuraShaderPtr> active_fb_shaders_;
 	mutable variant fb_shaders_variant_;
 
 	void flushFrameBufferShadersToScreen() const;
-	void applyShaderToFrameBufferTexture(graphics::AnuraShaderPtr shader, bool render_to_screen) const;
+	KRE::RenderTargetPtr& applyShaderToFrameBufferTexture(graphics::AnuraShaderPtr shader, bool render_to_screen) const;
 	void frameBufferEnterZorder(int zorder) const;
+
+public:
 	void shadersUpdated();
 
+private:
 	int save_point_x_, save_point_y_;
 	bool editor_;
 	EntityPtr editor_highlight_;
@@ -631,8 +651,11 @@ private:
 
 	mutable std::map<int, std::shared_ptr<LayerBlitInfo>> blit_cache_;
 
-	KRE::RenderTargetPtr rt_;
+	mutable KRE::RenderTargetPtr rt_, backup_rt_;
 	bool have_render_to_texture_;
+
+	bool render_to_texture_;
+	mutable bool doing_render_to_texture_;
 
 	void surrenderReferences(GarbageCollector* gc) override;
 
@@ -642,6 +665,9 @@ private:
 
 	hex::HexMapPtr hex_map_;
 	hex::MapNodePtr hex_renderable_;
+	std::vector<hex::MaskNodePtr> hex_masks_;
+
+	variant fb_render_target_;
 };
 
 bool entity_in_current_level(const Entity* e);

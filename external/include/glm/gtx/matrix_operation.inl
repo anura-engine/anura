@@ -1,95 +1,89 @@
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// OpenGL Mathematics Copyright (c) 2005 - 2013 G-Truc Creation (www.g-truc.net)
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// Created : 2009-08-29
-// Updated : 2009-08-29
-// Licence : This source is under MIT License
-// File    : glm/gtx/matrix_operation.inl
-///////////////////////////////////////////////////////////////////////////////////////////////////
+/// @ref gtx_matrix_operation
+/// @file glm/gtx/matrix_operation.inl
 
 namespace glm
 {
-	template <typename valType> 
-	GLM_FUNC_QUALIFIER detail::tmat2x2<valType> diagonal2x2
+	template <typename T, precision P>
+	GLM_FUNC_QUALIFIER tmat2x2<T, P> diagonal2x2
 	(
-		detail::tvec2<valType> const & v
+		tvec2<T, P> const & v
 	)
 	{
-		detail::tmat2x2<valType> Result(valType(1));
+		tmat2x2<T, P> Result(static_cast<T>(1));
 		Result[0][0] = v[0];
 		Result[1][1] = v[1];
 		return Result;
 	}
 
-	template <typename valType> 
-	GLM_FUNC_QUALIFIER detail::tmat2x3<valType> diagonal2x3
+	template <typename T, precision P>
+	GLM_FUNC_QUALIFIER tmat2x3<T, P> diagonal2x3
 	(
-		detail::tvec2<valType> const & v
+		tvec2<T, P> const & v
 	)
 	{
-		detail::tmat2x3<valType> Result(valType(1));
+		tmat2x3<T, P> Result(static_cast<T>(1));
 		Result[0][0] = v[0];
 		Result[1][1] = v[1];
 		return Result;
 	}
 
-	template <typename valType> 
-	GLM_FUNC_QUALIFIER detail::tmat2x4<valType> diagonal2x4
+	template <typename T, precision P>
+	GLM_FUNC_QUALIFIER tmat2x4<T, P> diagonal2x4
 	(
-		detail::tvec2<valType> const & v
+		tvec2<T, P> const & v
 	)
 	{
-		detail::tmat2x4<valType> Result(valType(1));
+		tmat2x4<T, P> Result(static_cast<T>(1));
 		Result[0][0] = v[0];
 		Result[1][1] = v[1];
 		return Result;
 	}
 
-	template <typename valType> 
-	GLM_FUNC_QUALIFIER detail::tmat3x2<valType> diagonal3x2
+	template <typename T, precision P>
+	GLM_FUNC_QUALIFIER tmat3x2<T, P> diagonal3x2
 	(
-		detail::tvec2<valType> const & v
+		tvec2<T, P> const & v
 	)
 	{
-		detail::tmat3x2<valType> Result(valType(1));
+		tmat3x2<T, P> Result(static_cast<T>(1));
 		Result[0][0] = v[0];
 		Result[1][1] = v[1];
 		return Result;
 	}
 
-	template <typename valType> 
-	GLM_FUNC_QUALIFIER detail::tmat3x3<valType> diagonal3x3
+	template <typename T, precision P>
+	GLM_FUNC_QUALIFIER tmat3x3<T, P> diagonal3x3
 	(
-		detail::tvec3<valType> const & v
+		tvec3<T, P> const & v
 	)
 	{
-		detail::tmat3x3<valType> Result(valType(1));
-		Result[0][0] = v[0];
-		Result[1][1] = v[1];
-		Result[2][2] = v[2];
-		return Result;
-	}
-
-	template <typename valType> 
-	GLM_FUNC_QUALIFIER detail::tmat3x4<valType> diagonal3x4
-	(
-		detail::tvec3<valType> const & v
-	)
-	{
-		detail::tmat3x4<valType> Result(valType(1));
+		tmat3x3<T, P> Result(static_cast<T>(1));
 		Result[0][0] = v[0];
 		Result[1][1] = v[1];
 		Result[2][2] = v[2];
 		return Result;
 	}
 
-	template <typename valType> 
-	GLM_FUNC_QUALIFIER detail::tmat4x4<valType> diagonal4x4
+	template <typename T, precision P>
+	GLM_FUNC_QUALIFIER tmat3x4<T, P> diagonal3x4
 	(
-		detail::tvec4<valType> const & v
+		tvec3<T, P> const & v
 	)
 	{
-		detail::tmat4x4<valType> Result(valType(1));
+		tmat3x4<T, P> Result(static_cast<T>(1));
+		Result[0][0] = v[0];
+		Result[1][1] = v[1];
+		Result[2][2] = v[2];
+		return Result;
+	}
+
+	template <typename T, precision P>
+	GLM_FUNC_QUALIFIER tmat4x4<T, P> diagonal4x4
+	(
+		tvec4<T, P> const & v
+	)
+	{
+		tmat4x4<T, P> Result(static_cast<T>(1));
 		Result[0][0] = v[0];
 		Result[1][1] = v[1];
 		Result[2][2] = v[2];
@@ -97,26 +91,26 @@ namespace glm
 		return Result;		
 	}
 
-	template <typename valType> 
-	GLM_FUNC_QUALIFIER detail::tmat4x3<valType> diagonal4x3
+	template <typename T, precision P>
+	GLM_FUNC_QUALIFIER tmat4x3<T, P> diagonal4x3
 	(
-		detail::tvec3<valType> const & v
+		tvec3<T, P> const & v
 	)
 	{
-		detail::tmat4x3<valType> Result(valType(1));
+		tmat4x3<T, P> Result(static_cast<T>(1));
 		Result[0][0] = v[0];
 		Result[1][1] = v[1];
 		Result[2][2] = v[2];
 		return Result;		
 	}
 
-	template <typename valType> 
-	GLM_FUNC_QUALIFIER detail::tmat4x2<valType> diagonal4x2
+	template <typename T, precision P>
+	GLM_FUNC_QUALIFIER tmat4x2<T, P> diagonal4x2
 	(
-		detail::tvec2<valType> const & v
+		tvec2<T, P> const & v
 	)
 	{
-		detail::tmat4x2<valType> Result(valType(1));
+		tmat4x2<T, P> Result(static_cast<T>(1));
 		Result[0][0] = v[0];
 		Result[1][1] = v[1];
 		return Result;		

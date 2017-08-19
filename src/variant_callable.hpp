@@ -27,8 +27,8 @@
 
 class variant_callable;
 
-typedef boost::intrusive_ptr<variant_callable> variant_callable_ptr;
-typedef boost::intrusive_ptr<const variant_callable> const_variant_callable_ptr;
+typedef ffl::IntrusivePtr<variant_callable> variant_callable_ptr;
+typedef ffl::IntrusivePtr<const variant_callable> const_variant_callable_ptr;
 
 class variant_callable : public game_logic::FormulaCallable
 {
@@ -39,10 +39,14 @@ public:
 private:
 	variant_callable(const variant& v);
 
-	variant getValue(const std::string& key) const;
-	void setValue(const std::string& key, const variant& value);
+	variant getValue(const std::string& key) const override;
+	void setValue(const std::string& key, const variant& value) override;
 
 	variant create_for_list(const variant& list) const;
+
+	void surrenderReferences(GarbageCollector* collector) override {
+		collector->surrenderVariant(&value_);
+	}
 
 	variant value_;
 };

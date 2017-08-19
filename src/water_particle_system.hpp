@@ -45,7 +45,7 @@ public:
 	explicit WaterParticleSystemFactory(variant node);
 	~WaterParticleSystemFactory() {}
 	
-	ParticleSystemPtr create(const Entity& e) const;
+	ParticleSystemPtr create(const Entity& e) const override;
 	WaterParticleSystemInfo info;
 };
 

@@ -57,6 +57,6 @@ namespace zip
 	private:
 		DECLARE_CALLABLE(CompressedData);
 	};
-	typedef boost::intrusive_ptr<zip::CompressedData> CompressedDataPtr;
+	typedef ffl::IntrusivePtr<zip::CompressedData> CompressedDataPtr;
 
 }

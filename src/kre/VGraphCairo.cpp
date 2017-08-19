@@ -269,13 +269,13 @@ namespace KRE
 				path_instructions_.emplace_back(new ArcInstruction(cx, cy, radius, start_angle, end_angle, negative));
 			}
 				
-			// Adds a Cubic Bézier curve to the current path from the current position to the end position
+			// Adds a Cubic Bezier curve to the current path from the current position to the end position
 			// (ex,ey) using the control points (x1,y1) and (x2,y2)
 			// If relative is true then the curve is drawn with all positions relative to the current point.
 			void CubicCurveTo(const double x1, const double y1, const double x2, const double y2, const double ex, const double ey, bool relative=false) override {
 				path_instructions_.emplace_back(new CubicCurveInstruction(x1, y1, x2, y2, ex, ey, relative));
 			}
-			// Adds a Quadratic Bézier curve to the current path from the current position to the end position
+			// Adds a Quadratic Bezier curve to the current path from the current position to the end position
 			// (ex,ey) using the control point (x1,y1)
 			// If relative is true then the curve is drawn with all positions relative to the current point.
 			void QuadraticCurveTo(const double x1, const double y1, const double ex, const double ey, bool relative=false) override {

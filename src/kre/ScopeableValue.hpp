@@ -62,7 +62,7 @@ namespace KRE
 		bool isBlendEnabled() const { return blend_enabled_; }
 		bool isBlendStateSet() const { return blend_state_set_; }
 		void setBlendState(bool en = true) { blend_enabled_ = en; blend_state_set_ = true; }
-		void clearblendState() { blend_state_set_ = false; blend_enabled_ = true; }
+		void clearBlendState() { blend_state_set_ = false; blend_enabled_ = true; }
 
 		void setColor(float r, float g, float b, float a=1.0) { color_ = Color(r, g, b, a); color_set_ = true; }
 		void setColor(int r, int g, int b, int a=255) { color_ = Color(r, g, b, a); color_set_ = true; }
@@ -87,6 +87,19 @@ namespace KRE
 		void disbleLighting(bool en = true) { use_lighting_ = !en; is_use_lighting_set_ = true; }
 		void clearLighting() { is_use_lighting_set_ = false; use_lighting_ = false; }
 
+		void clear() { 
+			color_set_ = false; 
+			blend_equation_set_ = false;
+			blend_mode_set_ = false;
+			blend_enabled_ = true;
+			blend_state_set_ = false;
+			depth_enabled_ = false;
+			is_depth_enable_set_ = false;
+			use_depth_write_ = false;
+			is_use_depth_write_set_ = false;
+			use_lighting_ = false;
+			is_use_lighting_set_ = false;
+		}
 	private:
 		Color color_;
 		bool color_set_;

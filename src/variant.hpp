@@ -31,10 +31,13 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <string.h>
 
 #include "decimal.hpp"
 #include "formula_fwd.hpp"
+#include "intrusive_ptr.hpp"
 #include "reference_counted_object.hpp"
+#include "uuid.hpp"
 
 namespace game_logic 
 {
@@ -43,8 +46,8 @@ namespace game_logic
 }
 
 class variant_type;
-typedef boost::intrusive_ptr<const variant_type> variant_type_ptr;
-typedef boost::intrusive_ptr<const variant_type> const_variant_type_ptr;
+typedef ffl::IntrusivePtr<const variant_type> variant_type_ptr;
+typedef ffl::IntrusivePtr<const variant_type> const_variant_type_ptr;
 
 struct CallStackEntry 
 {
@@ -83,6 +86,7 @@ struct variant_generic_fn;
 struct variant_multi_fn;
 struct variant_delayed;
 struct variant_weak;
+struct variant_uuid;
 
 struct type_error 
 {
@@ -105,7 +109,15 @@ struct VariantFunctionTypeInfo : public reference_counted_object
 	int num_default_args() const { return static_cast<int>(default_args.size()) + num_unneeded_args; }
 };
 
-typedef boost::intrusive_ptr<VariantFunctionTypeInfo> VariantFunctionTypeInfoPtr;
+#ifdef DEBUG_GARBAGE_COLLECTOR
+void registerGlobalVariant(variant* v);
+void unregisterGlobalVariant(variant* v);
+#else
+inline void registerGlobalVariant(variant* v) {}
+inline void unregisterGlobalVariant(variant* v) {}
+#endif
+
+typedef ffl::IntrusivePtr<VariantFunctionTypeInfo> VariantFunctionTypeInfoPtr;
 
 class variant 
 {
@@ -117,19 +129,21 @@ public:
 	enum DECIMAL_VARIANT_TYPE { DECIMAL_VARIANT };
 
 	static variant from_bool(bool b) { variant v; v.type_ = VARIANT_TYPE_BOOL; v.bool_value_ = b; return v; }
+	static variant create_enum(const std::string& enum_id);
+	static int get_enum_index(const std::string& enum_id);
 
-	static variant create_delayed(game_logic::ConstFormulaPtr f, boost::intrusive_ptr<const game_logic::FormulaCallable> callable);
+	static variant create_delayed(game_logic::ConstFormulaPtr f, ffl::IntrusivePtr<const game_logic::FormulaCallable> callable);
 	static void resolve_delayed();
 
 	static variant create_function_overload(const std::vector<variant>& fn);
 
-	variant() : type_(VARIANT_TYPE_NULL), int_value_(0) {}
-	explicit variant(int n) : type_(VARIANT_TYPE_INT), int_value_(n) {}
-	explicit variant(unsigned int n) : type_(VARIANT_TYPE_INT), int_value_(n) {}
-	explicit variant(long unsigned int n) : type_(VARIANT_TYPE_INT), int_value_(n) {}
-	explicit variant(decimal d) : type_(VARIANT_TYPE_DECIMAL), decimal_value_(d.value()) {}
-	explicit variant(double f) : type_(VARIANT_TYPE_DECIMAL), decimal_value_(decimal(f).value()) {}
-	variant(int64_t n, DECIMAL_VARIANT_TYPE) : type_(VARIANT_TYPE_DECIMAL), decimal_value_(n) {}
+	variant() : type_(VARIANT_TYPE_NULL), int_value_(0) { registerGlobalVariant(this); }
+	explicit variant(int n) : type_(VARIANT_TYPE_INT), int_value_(n) { registerGlobalVariant(this); }
+	explicit variant(unsigned int n) : type_(VARIANT_TYPE_INT), int_value_(n) { registerGlobalVariant(this); }
+	explicit variant(long unsigned int n) : type_(VARIANT_TYPE_INT), int_value_(n) { registerGlobalVariant(this); }
+	explicit variant(decimal d) : type_(VARIANT_TYPE_DECIMAL), decimal_value_(d.value()) { registerGlobalVariant(this); }
+	explicit variant(double f) : type_(VARIANT_TYPE_DECIMAL), decimal_value_(decimal(f).value()) { registerGlobalVariant(this); }
+	variant(int64_t n, DECIMAL_VARIANT_TYPE) : type_(VARIANT_TYPE_DECIMAL), decimal_value_(n) { registerGlobalVariant(this); }
 	explicit variant(const game_logic::FormulaCallable* callable);
 	explicit variant(std::vector<variant>* array);
 	explicit variant(const char* str);
@@ -142,13 +156,14 @@ public:
 	variant(std::function<variant(const game_logic::FormulaCallable&)> fn, const VariantFunctionTypeInfoPtr& type_info);
 	//variant(game_logic::ConstFormulaPtr, const std::vector<std::string>& args, const game_logic::FormulaCallable& callable, int base_slot, const std::vector<variant>& default_args, const std::vector<variant_type_ptr>& variant_types, const variant_type_ptr& return_type);
 
-	static variant create_variant_under_construction(intptr_t id);
+	static variant create_variant_under_construction(boost::uuids::uuid id);
 
 	//only call the non-inlined release() function if we have a type
 	//that needs releasing.
-	~variant() { if(type_ > VARIANT_TYPE_INT) { release(); } }
+	~variant() { unregisterGlobalVariant(this); if(type_ > VARIANT_TYPE_INT) { release(); } }
 
 	variant(const variant& v) {
+		registerGlobalVariant(this);
 		type_ = v.type_;
 		value_ = v.value_;
 		if(type_ > VARIANT_TYPE_INT) {
@@ -156,12 +171,63 @@ public:
 		}
 	}
 
+	variant(variant&& v) {
+		registerGlobalVariant(this);
+		type_ = v.type_;
+		value_ = v.value_;
+
+		if(v.type_ == VARIANT_TYPE_CALLABLE_LOADING || v.type_ == VARIANT_TYPE_DELAYED) {
+			increment_refcount();
+		} else {
+			v.type_ = VARIANT_TYPE_NULL;
+			v.int_value_ = 0;
+		}
+	}
+
+	const variant& operator=(variant&& v)
+	{
+		if(&v != this) {
+			if(type_ > VARIANT_TYPE_INT) {
+				release();
+			}
+
+			type_ = v.type_;
+			value_ = v.value_;
+
+			if(v.type_ == VARIANT_TYPE_CALLABLE_LOADING || v.type_ == VARIANT_TYPE_DELAYED) {
+				increment_refcount();
+			} else {
+				v.type_ = VARIANT_TYPE_NULL;
+				v.int_value_ = 0;
+			}
+		}
+
+		return *this;
+	}
+
 	const variant& operator=(const variant& v);
+
+	void swap(variant& v) {
+		if(type_ == VARIANT_TYPE_CALLABLE_LOADING || type_ == VARIANT_TYPE_DELAYED ||
+		   v.type_ == VARIANT_TYPE_CALLABLE_LOADING || v.type_ == VARIANT_TYPE_DELAYED) {
+			variant tmp;
+			tmp = v;
+			v = *this;
+			*this = tmp;
+		} else {
+			char buf[sizeof(variant)];
+			memcpy(buf, &v, sizeof(variant));
+			memcpy(&v, this, sizeof(variant));
+			memcpy(this, buf, sizeof(variant));
+		}
+	}
 
 	const variant& operator[](size_t n) const;
 	const variant& operator[](const variant& v) const;
 	const variant& operator[](const std::string& key) const;
 	int num_elements() const;
+
+	bool is_str_utf8() const;
 
 	variant get_list_slice(int begin, int end) const;
 
@@ -170,18 +236,29 @@ public:
 
 	bool function_call_valid(const std::vector<variant>& args, std::string* message=nullptr, bool allow_partial=false) const;
 	variant operator()(const std::vector<variant>& args) const;
+	variant operator()(std::vector<variant>* args) const;
+
+	//Pre-condition: is_regular_function() == true
+	VariantFunctionTypeInfoPtr get_function_info() const;
+	game_logic::ConstFormulaPtr get_function_formula() const;
+	int get_function_base_slot() const;
+
+	bool disassemble(std::string* result) const;
 
 	variant instantiate_generic_function(const std::vector<variant_type_ptr>& args) const;
 	std::vector<std::string> generic_function_type_args() const;
+
+	variant change_function_callable(const game_logic::FormulaCallable& callable) const;
 
 	variant get_member(const std::string& str) const;
 
 	//unsafe function which is called on an integer variant and returns
 	//direct access to the underlying integer. Should only be used
 	//when high performance is needed.
-	int& int_addr() { must_be(VARIANT_TYPE_INT); return int_value_; }
+	int& int_addr() { return int_value_; }
 
 	bool is_string() const { return type_ == VARIANT_TYPE_STRING; }
+	bool is_enum() const { return type_ == VARIANT_TYPE_ENUM; }
 	bool is_null() const { return type_ == VARIANT_TYPE_NULL; }
 	bool is_bool() const { return type_ == VARIANT_TYPE_BOOL; }
 	bool is_numeric() const { return is_int() || is_decimal(); }
@@ -190,6 +267,7 @@ public:
 	bool is_float() const { return is_numeric(); }
 	bool is_map() const { return type_ == VARIANT_TYPE_MAP; }
 	bool is_function() const { return type_ == VARIANT_TYPE_FUNCTION || type_ == VARIANT_TYPE_MULTI_FUNCTION; }
+	bool is_regular_function() const { return type_ == VARIANT_TYPE_FUNCTION; }
 	bool is_generic_function() const { return type_ == VARIANT_TYPE_GENERIC_FUNCTION; }
 	int as_int(int default_value=0) const { if(type_ == VARIANT_TYPE_NULL) { return default_value; } if(type_ == VARIANT_TYPE_DECIMAL) { return int( decimal_value_/VARIANT_DECIMAL_PRECISION ); } if(type_ == VARIANT_TYPE_BOOL) { return bool_value_ ? 1 : 0; } must_be(VARIANT_TYPE_INT); return int_value_; }
 	int as_int32(int default_value=0) const { return as_int(default_value); }
@@ -199,10 +277,13 @@ public:
 	bool as_bool(bool default_value) const;
 	bool as_bool() const;
 
+	std::string as_enum() const;
+
 	bool is_list() const { return type_ == VARIANT_TYPE_LIST; }
 	bool is_weak() const { return type_ == VARIANT_TYPE_WEAK; }
 
 	std::vector<variant> as_list() const;
+	const std::vector<variant>& as_list_ref() const;
 	const std::map<variant,variant>& as_map() const;
 
 	typedef std::pair<variant,variant> map_pair;
@@ -252,7 +333,9 @@ public:
 	variant bind_closure(const game_logic::FormulaCallable* callable);
 	variant bind_args(const std::vector<variant>& args);
 
-	void get_mutable_closure_ref(std::vector<boost::intrusive_ptr<const game_logic::FormulaCallable>*>& result);
+	const game_logic::FormulaCallable* get_function_closure() const;
+
+	void get_mutable_closure_ref(std::vector<ffl::IntrusivePtr<const game_logic::FormulaCallable>*>& result);
 
 	//precondition: is_function(). Gives the min/max arguments the function
 	//accepts.
@@ -272,7 +355,7 @@ public:
 	game_logic::FormulaCallable* mutable_callable() const {
 		must_be(VARIANT_TYPE_CALLABLE); return mutable_callable_; }
 
-	intptr_t as_callable_loading() const { return callable_loading_; }
+	boost::uuids::uuid as_callable_loading() const;
 
 	template<typename T>
 	T* try_convert() const {
@@ -323,14 +406,15 @@ public:
 
 	enum write_flags
 	{
-		FSON_MODE,
-		JSON_COMPLIANT,
+		FSON_MODE = 0,
+		JSON_COMPLIANT = 1,
+		EXPANDED_LISTS = 2,
 	};
-	std::string write_json(bool pretty=true, write_flags flags=FSON_MODE) const;
-	void write_json(std::ostream& s, write_flags flags=FSON_MODE) const;
-	void write_json_pretty(std::ostream& s, std::string indent, write_flags flags=FSON_MODE) const;
+	std::string write_json(bool pretty=true, unsigned int flags=FSON_MODE) const;
+	void write_json(std::ostream& s, unsigned int flags=FSON_MODE) const;
+	void write_json_pretty(std::ostream& s, std::string indent, unsigned int flags=FSON_MODE) const;
 
-	enum TYPE { VARIANT_TYPE_NULL, VARIANT_TYPE_BOOL, VARIANT_TYPE_INT, VARIANT_TYPE_DECIMAL, VARIANT_TYPE_CALLABLE, VARIANT_TYPE_CALLABLE_LOADING, VARIANT_TYPE_LIST, VARIANT_TYPE_STRING, VARIANT_TYPE_MAP, VARIANT_TYPE_FUNCTION, VARIANT_TYPE_GENERIC_FUNCTION, VARIANT_TYPE_MULTI_FUNCTION, VARIANT_TYPE_DELAYED, VARIANT_TYPE_WEAK, VARIANT_TYPE_INVALID };
+	enum TYPE { VARIANT_TYPE_NULL, VARIANT_TYPE_BOOL, VARIANT_TYPE_INT, VARIANT_TYPE_DECIMAL, VARIANT_TYPE_CALLABLE, VARIANT_TYPE_CALLABLE_LOADING, VARIANT_TYPE_LIST, VARIANT_TYPE_STRING, VARIANT_TYPE_MAP, VARIANT_TYPE_FUNCTION, VARIANT_TYPE_GENERIC_FUNCTION, VARIANT_TYPE_MULTI_FUNCTION, VARIANT_TYPE_DELAYED, VARIANT_TYPE_WEAK, VARIANT_TYPE_ENUM, VARIANT_TYPE_INVALID };
 	TYPE type() const { return type_; }
 
 	void write_function(std::ostream& s) const;
@@ -376,7 +460,7 @@ private:
 		int64_t decimal_value_;
 		const game_logic::FormulaCallable* callable_;
 		game_logic::FormulaCallable* mutable_callable_;
-		intptr_t callable_loading_;
+		variant_uuid* callable_loading_;
 		variant_list* list_;
 		variant_string* string_;
 		variant_map* map_;

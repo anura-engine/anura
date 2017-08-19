@@ -53,7 +53,7 @@ namespace xhtml
 		void update(std::vector<KRE::vertex_color>* coords);
 		void setColorPointer(const KRE::ColorPtr& color) { color_ = color; }
 		void setDrawMode(KRE::DrawMode draw_mode);
-		void preRender(const KRE::WindowPtr& wnd);
+		void preRender(const KRE::WindowPtr& wnd) override;
 	private:
 		std::shared_ptr<KRE::Attribute<KRE::vertex_color>> attribs_;
 		KRE::ColorPtr color_;

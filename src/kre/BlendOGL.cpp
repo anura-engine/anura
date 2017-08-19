@@ -137,7 +137,7 @@ namespace KRE
 		}
 	}
 
-	BlendEquationScopeOGL::~BlendEquationScopeOGL()
+	BlendEquationScopeOGL::~BlendEquationScopeOGL() NOEXCEPT(false)
 	{
 		if(stored_) {
 			ASSERT_LOG(!get_equation_stack().empty(), "Something went badly wrong blend equation stack was empty.");
@@ -178,7 +178,7 @@ namespace KRE
 		}
 	}
 
-	BlendModeScopeOGL::~BlendModeScopeOGL()
+	BlendModeScopeOGL::~BlendModeScopeOGL() NOEXCEPT(false)
 	{
 		if(stored_) {
 			ASSERT_LOG(!get_blend_mode_stack().empty(), "Something went badly wrong blend mode stack was empty.");
@@ -208,15 +208,5 @@ namespace KRE
 				}
 			}
 		}
-	}
-
-	void set_blend_mode(const BlendMode& bm)
-	{
-		glBlendFunc(convert_blend_mode(bm.src()), convert_blend_mode(bm.dst()));
-	}
-
-	void set_blend_equation(const BlendEquation& eqn)
-	{
-		glBlendEquationSeparate(convert_eqn(eqn.getRgbEquation()), convert_eqn(eqn.getAlphaEquation()));
 	}
 }

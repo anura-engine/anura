@@ -38,7 +38,7 @@ namespace game_logic
 		{
 			f_.swap(*f);
 		}
-		virtual void setValue(const std::string& key, const variant& value) 
+		virtual void setValue(const std::string& key, const variant& value) override
 		{
 			if(key == "floats" || key == "value") {
 				ASSERT_LOG(value.is_list(), "Must be a list type");
@@ -48,7 +48,7 @@ namespace game_logic
 				}
 			}
 		}
-		virtual variant getValue(const std::string& key) const
+		virtual variant getValue(const std::string& key) const override
 		{
 			if(key == "floats" || key == "value") {
 				std::vector<variant> v;
@@ -74,7 +74,7 @@ namespace game_logic
 		{
 			s_.swap(*s);
 		}
-		virtual void setValue(const std::string& key, const variant& value) 
+		virtual void setValue(const std::string& key, const variant& value) override
 		{
 			if(key == "shorts" || key == "value") {
 				ASSERT_LOG(value.is_list(), "Must be a list type");
@@ -84,7 +84,7 @@ namespace game_logic
 				}
 			}
 		}
-		variant getValue(const std::string& key) const
+		variant getValue(const std::string& key) const override
 		{
 			if(key == "shorts" || key == "value") {
 				std::vector<variant> v;

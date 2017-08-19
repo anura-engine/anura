@@ -25,11 +25,12 @@
 
 #include <GL/glew.h>
 
+#include "AlignedAllocator.hpp"
 #include "Texture.hpp"
 
 namespace KRE
 {
-	class OpenGLTexture : public Texture
+	class OpenGLTexture : public Texture, public AlignedAllocator16
 	{
 	public:
 		explicit OpenGLTexture(const variant& node, const std::vector<SurfacePtr>& surfaces);
@@ -45,7 +46,7 @@ namespace KRE
 		void update(int n, int x, int width, void* pixels) override;
 		void update(int n, int x, int y, int width, int height, const void* pixels) override;
 		void update2D(int n, int x, int y, int width, int height, int stride, const void* pixels) override;
-		void updateYUV(int x, int y, int width, int height, const std::vector<int>& stride, const void* pixels) override;
+		void updateYUV(int x, int y, int width, int height, const std::vector<int>& stride, const std::vector<void*>& pixels) override;
 		void update(int n, int x, int y, int z, int width, int height, int depth, void* pixels) override;
 
 		SurfacePtr extractTextureToSurface(int n) const override;

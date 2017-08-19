@@ -29,6 +29,7 @@
 #include "formula_constants.hpp"
 #include "i18n.hpp"
 #include "key_button.hpp"
+#include "module.hpp"
 #include "preferences.hpp"
 #include "string_utils.hpp"
 #include "variant_utils.hpp"
@@ -110,9 +111,17 @@ namespace game_logic
 				v.push_back(variant(bo));
 			}
 			return variant(&v);
+	} else if(id == "MODULE_NAME") {
+		return variant(module::get_module_name());
+	} else if(id == "MODULE_PRETTY_NAME") {
+		return variant(module::get_module_pretty_name());
 	} else if(id == "MODULE_OPTIONS") {
 		return preferences::get_module_settings();
-		}
+	} else if(id == "MODULE_VERSION") {
+		return variant(module::get_module_version());
+	} else if(id == "MODULE_PATH") {
+		return variant(module::get_module_path());
+	}
 
 		for(auto i = constants_stack.rbegin(); i != constants_stack.rend(); ++i) {
 			constants_map& m = *i;
@@ -121,6 +130,8 @@ namespace game_logic
 				return itor->second;
 			}
 		}
+
+		ASSERT_LOG(false, "Unknown constant accessed: " << id);
 
 		return variant();
 	}
@@ -147,7 +158,7 @@ namespace game_logic
 		constants_stack.push_back(m);
 	}
 
-	ConstantsLoader::~ConstantsLoader()
+	ConstantsLoader::~ConstantsLoader() NOEXCEPT(false)
 	{
 		ASSERT_EQ(constants_stack.empty(), false);
 		constants_stack.pop_back();

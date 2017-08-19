@@ -59,7 +59,7 @@ namespace editor_dialogs
 		int first_index_;
 	};
 
-	typedef boost::intrusive_ptr<TilesetEditorDialog> TilesetEditorDialogPtr;
+	typedef ffl::IntrusivePtr<TilesetEditorDialog> TilesetEditorDialogPtr;
 }
 
 #endif // !NO_EDITOR

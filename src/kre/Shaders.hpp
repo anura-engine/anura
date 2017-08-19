@@ -96,6 +96,9 @@ namespace KRE
 		virtual int getAttribute(const std::string& attr) const = 0;
 		virtual int getUniform(const std::string& attr) const = 0;
 
+		virtual std::vector<std::string> getAllUniforms() const = 0;
+		virtual std::vector<std::string> getAllAttributes() const = 0;
+
 		virtual void setUniformMapping(const std::vector<std::pair<std::string, std::string>>& mapping) = 0;
 		virtual void setAttributeMapping(const std::vector<std::pair<std::string, std::string>>& mapping) = 0;
 
@@ -106,6 +109,15 @@ namespace KRE
 		virtual void setUniformValue(int uid, const void*) const = 0;
 		virtual void setUniformFromVariant(int uid, const variant& value) const = 0;
 
+		// These are for setting the values for attributes that aren't enabled.
+		virtual void setAttributeValue(int aid, const int) const = 0;
+		virtual void setAttributeValue(int aid, const float) const = 0;
+		virtual void setAttributeValue(int aid, const float*) const = 0;
+		virtual void setAttributeValue(int aid, const int*) const = 0;
+		virtual void setAttributeValue(int aid, const void*) const = 0;
+		virtual void setAttributeValue(int aid, const unsigned char*) const = 0;
+		virtual void setAttributeFromVariant(int uid, const variant& value) const = 0;
+
 		virtual void configureActives(AttributeSetPtr attrset) = 0;
 		virtual void configureAttribute(AttributeBasePtr attr) = 0;
 		virtual void configureUniforms(UniformBufferBase& uniforms) = 0;
@@ -114,8 +126,10 @@ namespace KRE
 		virtual int getLineWidthUniform() const = 0;
 		virtual int getMvUniform() const = 0;
 		virtual int getPUniform() const = 0;
+		virtual int getPVUniform() const = 0;
 		virtual int getMvpUniform() const = 0;
 		virtual int getTexMapUniform() const = 0;
+		virtual int getDiscardUniform() const = 0;
 
 		virtual int getColorAttribute() const = 0;
 		virtual int getVertexAttribute() const = 0;
@@ -140,7 +154,7 @@ namespace KRE
 			const std::vector<ActiveMapping>& uniform_map = std::vector<ActiveMapping>(),
 			const std::vector<ActiveMapping>& attribute_map = std::vector<ActiveMapping>());
 
-		variant getShaderVariant() { return node_; }
+		const variant& getShaderVariant() const { return node_; }
 
 		virtual ShaderProgramPtr clone() = 0;
 

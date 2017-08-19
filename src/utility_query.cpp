@@ -328,7 +328,7 @@ namespace
 		} else if(cmd.try_convert<game_logic::CommandCallable>()) {
 			cmd.try_convert<game_logic::CommandCallable>()->runCommand(*obj.try_convert<FormulaCallable>());
 		} else if(cmd.as_bool()) {
-			LOG_INFO(cmd.write_json());
+			printf("%s\n", cmd.write_json().c_str());
 		}
 	}
 
@@ -344,7 +344,7 @@ namespace
 
 		variant obj = variant_callable::create(&v);
 
-		boost::intrusive_ptr<MapFormulaCallable> map_callable(new MapFormulaCallable(obj.try_convert<FormulaCallable>()));
+		ffl::IntrusivePtr<MapFormulaCallable> map_callable(new MapFormulaCallable(obj.try_convert<FormulaCallable>()));
 		map_callable->add("doc", v);
 		map_callable->add("filename", variant(fname));
 

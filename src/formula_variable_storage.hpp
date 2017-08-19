@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include <boost/intrusive_ptr.hpp>
+#include "intrusive_ptr.hpp"
 
 #include "formula_callable.hpp"
 #include "variant.hpp"
@@ -70,7 +70,7 @@ namespace game_logic
 		bool disallow_new_keys_;
 	};
 
-	typedef boost::intrusive_ptr<FormulaVariableStorage> FormulaVariableStoragePtr;
-	typedef boost::intrusive_ptr<const FormulaVariableStorage> ConstFormulaVariableStoragePtr;
+	typedef ffl::IntrusivePtr<FormulaVariableStorage> FormulaVariableStoragePtr;
+	typedef ffl::IntrusivePtr<const FormulaVariableStorage> ConstFormulaVariableStoragePtr;
 
 }

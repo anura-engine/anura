@@ -92,10 +92,10 @@ namespace KRE
 		}
 
 		if(get_rotation_stack().empty()) {
-			get_rotation_stack().emplace(angle);
+			get_rotation_stack().emplace(glm::radians(angle));
 		} else {
 			auto top = get_rotation_stack().top();
-			get_rotation_stack().emplace(angle + top);
+			get_rotation_stack().emplace(glm::radians(angle) + top);
 		}
 
 		if(get_scale_stack().empty()) {
@@ -117,10 +117,10 @@ namespace KRE
 		}
 
 		if(get_rotation_stack().empty()) {
-			get_rotation_stack().emplace(angle);
+			get_rotation_stack().emplace(glm::radians(angle));
 		} else {
 			auto top = get_rotation_stack().top();
-			get_rotation_stack().emplace(angle + top);
+			get_rotation_stack().emplace(glm::radians(angle) + top);
 		}
 
 		if(get_scale_stack().empty()) {
@@ -132,7 +132,7 @@ namespace KRE
 		model_matrix_changed = true;
 	}
 
-	ModelManager2D::~ModelManager2D() 
+	ModelManager2D::~ModelManager2D() NOEXCEPT(false)
 	{
 		ASSERT_LOG(get_translation_stack().empty() == false, "Unbalanced translation stack.");
 		ASSERT_LOG(get_rotation_stack().empty() == false, "Unbalanced rotation stack.");
@@ -172,9 +172,9 @@ namespace KRE
 	void ModelManager2D::rotate(float angle)
 	{
 		if(get_rotation_stack().empty()) {
-			get_rotation_stack().emplace(angle);
+			get_rotation_stack().emplace(glm::radians(angle));
 		} else {
-			get_rotation_stack().top() += angle;
+			get_rotation_stack().top() += glm::radians(angle);
 		}
 		model_matrix_changed = true;
 	}
@@ -232,4 +232,10 @@ namespace KRE
 		return get_model_matrix();
 	}
 
+	glm::mat4 set_global_model_matrix(const glm::mat4& m)
+	{
+		glm::mat4 current_matrix = get_model_matrix();
+		get_model_matrix() = m;
+		return current_matrix;
+	}
 }

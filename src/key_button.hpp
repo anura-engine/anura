@@ -56,5 +56,5 @@ namespace gui
 		ConstFramedGuiElementPtr normal_button_image_set_,depressed_button_image_set_,focus_button_image_set_,current_button_image_set_;
 	};
 
-	typedef boost::intrusive_ptr<KeyButton> KeyButtonPtr;
+	typedef ffl::IntrusivePtr<KeyButton> KeyButtonPtr;
 }

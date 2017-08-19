@@ -42,13 +42,17 @@ namespace KRE
 		}
 		virtual ~Impl() {}
 		virtual int getDescender() = 0;
+		virtual int getBaseline() = 0;
+		virtual int getBoundingHeight() = 0;
 		virtual void getBoundingBox(const std::string& str, long* w, long* h) = 0;
 		virtual std::vector<unsigned> getGlyphs(const std::string& text) = 0;
 		virtual const std::vector<point>& getGlyphPath(const std::string& text) = 0;
 		virtual FontRenderablePtr createRenderableFromPath(FontRenderablePtr font_renderable, const std::string& text, const std::vector<point>& path) = 0;
+		virtual ColoredFontRenderablePtr createColoredRenderableFromPath(ColoredFontRenderablePtr r, const std::string& text, const std::vector<point>& path, const std::vector<KRE::Color>& colors) = 0;
 		virtual long calculateCharAdvance(char32_t cp) = 0;
 		virtual void addGlyphsToTexture(const std::vector<char32_t>& glyphs) = 0;
 		virtual void* getRawFontHandle() = 0;
+		virtual float getLineGap() const = 0;
 	protected:
 		std::string fnt_;
 		std::string fnt_path_;

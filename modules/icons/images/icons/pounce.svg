@@ -1,11 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-<g transform="matrix(14.99998 0 0 14.99998 16.0003 -12049.41695)">
-<use width="744.094" height="1052.362" transform="translate(36 800.36217)"/>
-<g fill="#fff">
-<path d="m 20 804.362 -4 4 -4 -4 z"/>
-<path d="m 20 1024.36 a 4 4 0 1 1 -8 0 4 4 0 1 1 8 0 z" transform="translate(0 -191.99999)"/>
-<path d="m 22 810.362 -6 6 -6 -6 z"/>
-<path d="m 24 818.362 -8 8 -8 -8 z"/>
-</g>
-</g>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="#fff" d="M196 16l60 60 60-60H196zm-30 90l90 90 90-90H166zm-30 120l120 120 120-120H136zm121.75 150.03A60 60 0 0 0 196 436a60 60 0 0 0 120 0 60 60 0 0 0-58.25-59.97z" /></svg>

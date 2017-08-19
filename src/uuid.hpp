@@ -30,3 +30,5 @@
 boost::uuids::uuid generate_uuid();
 std::string write_uuid(const boost::uuids::uuid& id);
 boost::uuids::uuid read_uuid(const std::string& s);
+
+boost::uuids::uuid addr_to_uuid(const std::string& s);

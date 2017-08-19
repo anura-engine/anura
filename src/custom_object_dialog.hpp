@@ -42,7 +42,7 @@ namespace editor_dialogs
 		explicit CustomObjectDialog(editor& e, int x, int y, int w, int h);
 		void init();
 		variant getObject() const { return object_template_; }
-		void showModal();
+		void showModal() override;
 	protected:
 		void changeTextAttribute(const gui::TextEditorWidgetPtr editor, const std::string& s);
 		void changeIntAttributeText(const gui::TextEditorWidgetPtr editor, const std::string& s, gui::SliderPtr slide);

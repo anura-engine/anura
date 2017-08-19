@@ -26,6 +26,8 @@
 #include <string>
 #include <ctime>
 
+#include <boost/interprocess/sync/named_semaphore.hpp>
+
 #include "asserts.hpp"
 #include "compress.hpp"
 #include "filesystem.hpp"
@@ -34,12 +36,15 @@
 #include "json_parser.hpp"
 #include "preferences.hpp"
 #include "tbs_server.hpp"
+#include "tbs_web_server.hpp"
 #include "string_utils.hpp"
 #include "utils.hpp"
 #include "variant_utils.hpp"
 
 namespace {
 	PREF_BOOL(quit_server_after_game, false, "");
+	PREF_BOOL(quit_server_on_parent_exit, false, "");
+	PREF_INT(tbs_server_player_timeout_ms, 20000, "");
 }
 
 namespace tbs 
@@ -72,9 +77,9 @@ namespace tbs
 			g_exit_server = true;
 		}
 
-	if(game_state) {
-		game_state->cancel_game();
-	}
+		if(game_state) {
+			game_state->cancel_game();
+		}
 	}
 
 	server::client_info::client_info() : nplayer(0), last_contact(0)
@@ -102,6 +107,11 @@ namespace tbs
 	server_base::socket_info& server::get_socket_info(socket_ptr socket)
 	{
 		return connections_[socket];
+	}
+
+	server_base::socket_info& server::get_ipc_info(int session_id)
+	{
+		return ipc_clients_[session_id].info;
 	}
 
 	void server::close_ajax(socket_ptr socket, client_info& cli_info)
@@ -142,6 +152,13 @@ namespace tbs
 			return;
 		}
 
+		auto ipc_itor = ipc_clients_.find(session_id);
+		if(ipc_itor != ipc_clients_.end()) {
+			ipc_itor->second.pipe->write(msg);
+			LOG_INFO("queue to ipc: " << ipc_clients_.size());
+			return;
+		}
+
 		std::map<int, socket_ptr>::iterator itor = sessions_to_waiting_connections_.find(session_id);
 		if(itor != sessions_to_waiting_connections_.end()) {
 			const int session_id = itor->first;
@@ -153,6 +170,21 @@ namespace tbs
 		}
 
 		server_base::queue_msg(session_id, msg, has_priority);
+	}
+
+	void server::add_ipc_client(int session_id, SharedMemoryPipePtr pipe)
+	{
+		LOG_INFO("server::add_ipc_client: " << session_id);
+		IPCClientInfo& info = ipc_clients_[session_id];
+		info.pipe = pipe;
+	}
+
+	void server::connect_relay_session(const std::string& host, const std::string& port, int session_id)
+	{
+		if(web_server_) {
+			LOG_INFO("Connnect relay session: " << host << ":" << port << " session = " << session_id);
+			web_server_->connect_proxy(static_cast<uint32_t>(session_id), host, port);
+		}
 	}
 
 	void server::send_msg(socket_ptr socket, const variant& msg)
@@ -167,6 +199,7 @@ namespace tbs
 
 	void server::send_msg(socket_ptr socket, const std::string& msg_ref)
 	{
+		LOG_INFO("DO send_msg: " << msg_ref);
 		std::string compressed_buf;
 		std::string compress_header;
 		const std::string* msg_ptr = &msg_ref;
@@ -234,8 +267,39 @@ namespace tbs
 
 	void server::heartbeat_internal(int send_heartbeat, std::map<int, client_info>& clients)
 	{
-		if (g_exit_server) {
+#if defined(__linux__) || defined(__APPLE__)
+		if(g_quit_server_on_parent_exit && getppid() == 1) {
+			g_exit_server = true;
+		}
+#endif
+
+		if (g_exit_server || (web_server::termination_semaphore() && web_server::termination_semaphore()->try_wait())) {
+			throw tbs::exit_exception();
 			exit(0);
+		}
+
+		for(auto i = ipc_clients_.begin(); i != ipc_clients_.end(); ++i) {
+			i->second.pipe->process();
+		}
+
+		for(auto i = ipc_clients_.begin(); i != ipc_clients_.end(); ++i) {
+			std::vector<std::string> messages;
+			i->second.pipe->read(messages);
+
+			for(const std::string& msg : messages) {
+				//LOG_INFO("read IPC message " << msg);
+				SharedMemoryPipePtr pipe = i->second.pipe;
+				variant v(json::parse(msg, json::JSON_PARSE_OPTIONS::NO_PREPROCESSOR));
+				handle_message(
+					[=](variant v) {
+						pipe->write(v.write_json());
+					},
+					[](client_info& info) {
+					},
+					std::bind(&server::get_ipc_info, this, i->first),
+					i->first, v
+				);
+			}
 		}
 
 		std::vector<std::pair<socket_ptr, std::string> > messages;
@@ -272,16 +336,20 @@ namespace tbs
 			send_msg(messages[i].first, messages[i].second);
 		}
 
-		if(!g_quit_server_after_game && get_num_heartbeat()%10 == 0) {
+		if(get_num_heartbeat()%5 == 0) {
 			for(auto g : games()) {
 				for(int n = 0; n < static_cast<int>(g->clients.size()) && n < static_cast<int>(g->game_state->players().size()); ++n) {
 					const int session_id = g->clients[n];
+					if(ipc_clients_.count(session_id)) {
+						continue;
+					}
+
 					int time_since_last_contact = 0;
 					if(sessions_to_waiting_connections_.count(session_id) == 0) {
 						time_since_last_contact = get_ms_since_last_contact(session_id);
 					}
 
-					const int DisconnectTimeoutMS = 5000;
+					const int DisconnectTimeoutMS = g_tbs_server_player_timeout_ms;
 
 					const bool disconnected = time_since_last_contact > DisconnectTimeoutMS;
 					const bool recorded_as_disconnected = g->clients_disconnected.count(session_id) == 1;

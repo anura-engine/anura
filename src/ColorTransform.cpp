@@ -26,14 +26,6 @@
 
 namespace KRE
 {
-	namespace 
-	{
-		template<typename T>
-		T clamp(T value, T minval, T maxval)
-		{
-			return std::min<T>(maxval, std::max(value, minval));
-		}
-	}
 
 	ColorTransform::ColorTransform()
 //		: add_rgba_()

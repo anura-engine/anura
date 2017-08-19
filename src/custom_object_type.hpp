@@ -65,6 +65,7 @@ public:
 
 	static game_logic::FormulaCallableDefinitionPtr getDefinition(const std::string& id);
 	static bool isDerivedFrom(const std::string& base, const std::string& derived);
+	static bool isDerivedFrom(int base, int derived);
 	static variant mergePrototype(variant node, std::vector<std::string>* proto_paths=nullptr);
 	static const std::string* getObjectPath(const std::string& id);
 	static ConstCustomObjectTypePtr get(const std::string& id);
@@ -74,6 +75,8 @@ public:
 	static void invalidateAllObjects();
 	static std::vector<ConstCustomObjectTypePtr> getAll();
 	static std::vector<std::string> getAllIds();
+
+	static int getObjectTypeIndex(const std::string& id);
 
 	//a function which returns all objects that have an editor category
 	//mapped to the category they are in.
@@ -93,6 +96,11 @@ public:
 
 	typedef std::vector<game_logic::ConstFormulaPtr> event_handler_map;
 
+	void initEventHandler(const std::string& event,
+	                      const variant& value,
+	                      event_handler_map& handlers,
+						  game_logic::FunctionSymbolTable* symbols=0,
+						  const event_handler_map* base_handlers=nullptr) const;
 	void initEventHandlers(variant node,
 	                         event_handler_map& handlers,
 							 game_logic::FunctionSymbolTable* symbols=0,
@@ -106,6 +114,7 @@ public:
 	ConstCustomObjectCallablePtr callableDefinition() const { return callable_definition_; }
 
 	const std::string& id() const { return id_; }
+	int numericId() const { return numeric_id_; }
 	int getHitpoints() const { return hitpoints_; }
 
 	int timerFrequency() const { return timerFrequency_; }
@@ -141,6 +150,7 @@ public:
 	bool isBodyHarmful() const { return body_harmful_; }
 	bool isBodyPassthrough() const { return body_passthrough_; }
 	bool hasIgnoreCollide() const { return ignore_collide_; }
+	bool editorOnly() const { return editor_only_; }
 
 #ifdef USE_BOX2D
 	box2d::body_ptr body() { return body_; }
@@ -149,6 +159,8 @@ public:
 
 	int getMouseoverDelay() const { return mouseover_delay_; }
 	const rect& getMouseOverArea() const { return mouse_over_area_; }
+
+	int getMouseDragThreshold() const { return mouse_drag_threshold_; }
 
 	bool hasObjectLevelCollisions() const { return object_level_collisions_; }
 
@@ -205,7 +217,7 @@ public:
 	struct PropertyEntry {
 		PropertyEntry() : slot(-1), storage_slot(-1), persistent(true), requires_initialization(false), has_editor_info(false), is_weak(false) {}
 		std::string id;
-		game_logic::ConstFormulaPtr getter, setter, init;
+		game_logic::ConstFormulaPtr getter, setter, init, onchange;
 		std::shared_ptr<variant> const_value;
 		variant default_value;
 		variant_type_ptr type, set_type;
@@ -220,6 +232,7 @@ public:
 	const std::vector<PropertyEntry>& getSlotProperties() const { return slot_properties_; }
 	const std::vector<const PropertyEntry*>& getVariableProperties() const { return variable_properties_; }
 	const std::vector<int>& getPropertiesWithInit() const { return properties_with_init_; }
+	const std::vector<int>& getPropertiesWithSetter() const { return properties_with_setter_; }
 	const std::vector<int>& getPropertiesRequiringInitialization() const { return properties_requiring_initialization_; }
 	const std::vector<int>& getPropertiesRequiringDynamicInitialization() const { return properties_requiring_dynamic_initialization_; }
 
@@ -274,12 +287,18 @@ public:
 	const std::shared_ptr<lua::CompiledChunk> & getLuaInit( lua::LuaContext & ) const ;
 #endif
 
+	bool autoAnchor() const { return auto_anchor_; }
+
 	graphics::AnuraShaderPtr getShader() const { return shader_; }
 	const std::vector<graphics::AnuraShaderPtr>& getEffectsShaders() const { return effects_shaders_; }
 
 	xhtml::DocumentObjectPtr getDocument() const { return document_; }
 
 	variant getParticleSystemDesc() const { return particle_system_desc_; }
+
+	const std::vector<std::string>& preloadObjects() const { return preload_objects_; }
+
+	const std::string& drawBatchID() const { return draw_batch_id_; }
 private:
 	void initSubObjects(variant node, const CustomObjectType* old_type);
 
@@ -290,6 +309,7 @@ private:
 	CustomObjectCallablePtr callable_definition_;
 
 	std::string id_;
+	int numeric_id_;
 	int hitpoints_;
 
 	int timerFrequency_;
@@ -319,6 +339,8 @@ private:
 	bool ignore_collide_;
 	bool object_level_collisions_;
 
+	bool editor_only_;
+
 	int surface_friction_;
 	int surface_traction_;
 	int friction_, traction_, traction_in_air_, traction_in_water_;
@@ -347,6 +369,8 @@ private:
 	int mouseover_delay_;
 	rect mouse_over_area_;
 
+	int mouse_drag_threshold_;
+
 	bool adjust_feet_on_animation_change_;
 
 	std::map<std::string, variant> variables_, tmp_variables_;
@@ -356,7 +380,7 @@ private:
 	std::map<std::string, PropertyEntry> properties_;
 	std::vector<PropertyEntry> slot_properties_;
 	std::vector<const PropertyEntry*> variable_properties_;
-	std::vector<int> properties_with_init_, properties_requiring_initialization_, properties_requiring_dynamic_initialization_;
+	std::vector<int> properties_with_init_, properties_requiring_initialization_, properties_requiring_dynamic_initialization_, properties_with_setter_;
 	std::string last_initialization_property_;
 	int slot_properties_base_;
 
@@ -392,6 +416,10 @@ private:
 	//object should be hidden in the game but will show in the editor.
 	bool hidden_in_game_;
 
+	//object will have its location (its "feet") automatically chosen
+	//when spawned based on which attribute is set.
+	bool auto_anchor_;
+
 	//object is stateless, meaning that a backup of the object to restore
 	//later will not deep copy the object, just have another reference to it.
 	bool stateless_;
@@ -420,6 +448,10 @@ private:
 
 	variant particle_system_desc_;	
 
+	std::vector<std::string> preload_objects_;
+
 	xhtml::DocumentObjectPtr document_;
+
+	std::string draw_batch_id_;
 };
 

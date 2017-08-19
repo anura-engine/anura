@@ -72,20 +72,66 @@
 #include "stats.hpp"
 #include "surface_cache.hpp"
 #include "tbs_internal_server.hpp"
+#include "theme_imgui.hpp"
 #include "user_voxel_object.hpp"
 #include "utils.hpp"
 #include "variant_utils.hpp"
 #include "globals.h"
 
+extern bool g_mouse_event_swallowed;
+
 extern std::map<std::string, variant> g_user_info_registry;
+
+PREF_STRING(editor_object, "", "Object to use for the editor");
+
+extern bool g_desktop_fullscreen;
+extern bool g_particle_editor;
+extern int g_vsync;
+
+void auto_select_resolution(const KRE::WindowPtr& wm, int *width, int *height, bool reduce);
 
 namespace 
 {
+	PREF_STRING(play_music_function, "", "");
+
+	void play_music_track(EntityPtr obj, const std::string& track)
+	{
+		if(g_play_music_function.empty() == false) {
+			ASSERT_LOG(obj.get(), "No object to play music");
+			static game_logic::FormulaPtr ffl(new game_logic::Formula(variant(g_play_music_function), &get_custom_object_functions_symbol_table()));
+
+			game_logic::MapFormulaCallablePtr callable(new game_logic::MapFormulaCallable);
+			callable->add("music", variant(track));
+			callable->add("obj", variant(obj.get()));
+
+			variant cmd = ffl->execute(*callable);
+			obj->executeCommand(cmd);
+
+		} else {
+			sound::play_music(track);
+		}
+	}
+
+	std::vector<std::pair<std::function<void()>,void*>> process_functions;
+	std::deque<std::function<void()>> asynchronous_work_items_;
+
+	PREF_BOOL(editor_pause, false, "If true, the editor auto pauses when started");
+	PREF_INT(time_quota_async_work_items, 10, "Number of milliseconds allowed each frame for asynchronous/background work items to run");
+
 	PREF_BOOL(allow_debug_console_clicking, true, "Allow clicking on objects in the debug console to select them");
 	PREF_BOOL(reload_modified_objects, false, "Reload object definitions when their file is modified on disk");
-	PREF_INT(mouse_drag_threshold, 1000, "Threshold for how much motion can take place in a mouse drag");
+	PREF_INT(mouse_drag_threshold, 5, "Threshold for how much motion can take place in a mouse drag");
 
 	PREF_FLOAT(global_scale, 1.0f, "Global scale value.");
+
+	PREF_BOOL(allow_builtin_settings_dialog, true, "Allow the builtin Anura settings dialog");
+
+	PREF_INT(max_frame_skips, 3, "Maximum frames to skip due to performance");
+	
+	PREF_STRING(editor_controller, "", "Object used when the editor is started");
+	PREF_BOOL_PERSISTENT(skip_odd_frames, false, "Skips every other frame");
+
+	PREF_BOOL(theme_imgui_ui, false, "Displays a dialog to customize the ImGui User Interface.");
 
 	LevelRunner* current_level_runner = nullptr;
 
@@ -121,7 +167,7 @@ namespace
 		bool error;
 		bool done;
 
-		boost::intrusive_ptr<http_client> client;
+		ffl::IntrusivePtr<http_client> client;
 	};
 
 	void upload_screenshot(std::string file, std::shared_ptr<upload_screenshot_info> info)
@@ -172,25 +218,26 @@ namespace
 	{
 		draw_scene(lvl, screen_pos);
 		KRE::WindowManager::getMainWindow()->swap();
-		draw_scene(lvl, screen_pos);
-		KRE::WindowManager::getMainWindow()->swap();
 	}
 
-	void transition_scene(Level& lvl, screen_position& screen_pos, bool transition_out, TransitionFn draw_fn) 
+	void transition_scene(Level& lvl, screen_position& screen_pos, bool transition_out, const std::string& transition_type) 
 	{
+		const int num_frames = lvl.setup_level_transition(transition_type);
+
 		if(lvl.player()) {
 			lvl.player()->getEntity().setInvisible(true);
 		}
 
+		Level::set_level_transition_ratio(decimal(0.0f));
+
 		const int start_time = profile::get_tick_time();
 		auto wnd = KRE::WindowManager::getMainWindow();
 
-		for(int n = 0; n <= 20; ++n) {
-			wnd->setClearColor(KRE::Color::colorBlack());
-			wnd->clear(KRE::ClearFlags::COLOR);
-			draw_fn(lvl, screen_pos, transition_out ? (n/20.0f) : (1 - n/20.0f));
-
-			wnd->swap();
+		for(int n = 0; n <= num_frames; ++n) {
+			Level::set_level_transition_ratio(decimal(static_cast<float>(n)/static_cast<float>(num_frames)));
+			lvl.process_draw();
+			render_scene(lvl, screen_pos);
+			KRE::WindowManager::getMainWindow()->swap();
 
 			const int target_end_time = start_time + (n+1)*preferences::frame_time_millis();
 			const int current_time = profile::get_tick_time();
@@ -199,6 +246,8 @@ namespace
 				profile::delay(skip_time);
 			}
 		}
+
+		Level::set_level_transition_ratio(decimal(0.0f));
 	
 		if(lvl.player()) {
 			lvl.player()->getEntity().setInvisible(false);
@@ -207,8 +256,8 @@ namespace
 
 	void fade_scene(const Level& lvl, screen_position& screen_pos, float fade) 
 	{
-		auto wnd = KRE::WindowManager::getMainWindow();
-		KRE::Canvas::getInstance()->drawSolidRect(rect(0,0,wnd->width(),wnd->height()),KRE::Color(0.0f, 0.0f, 0.0f, 0.5f*fade));
+		auto& gs = graphics::GameScreen::get();
+		KRE::Canvas::getInstance()->drawSolidRect(rect(0,0,gs.getVirtualWidth(),gs.getVirtualHeight()),KRE::Color(0.0f, 0.0f, 0.0f, 0.5f*fade));
 	}
 
 	void flip_scene(const Level& lvl, screen_position& screen_pos, float amount) 
@@ -217,67 +266,19 @@ namespace
 		draw_scene(lvl, screen_pos);
 	}
 
-	void iris_scene(const Level& lvl, screen_position& screen_pos, float amount) 
-	{
-		if(lvl.player() == nullptr) {
-			return;
-		}
-		auto wnd = KRE::WindowManager::getMainWindow();
-		auto canvas = KRE::Canvas::getInstance();
-
-		ConstEntityPtr player = &lvl.player()->getEntity();
-		const point light_pos = player->getMidpoint();
-
-		if(amount >= 0.99) {
-			canvas->drawSolidRect(rect(0, 0, wnd->width(), wnd->height()),KRE::Color::colorBlack());
-		} else {
-			draw_scene(lvl, screen_pos);
-
-			const int screen_x = screen_pos.x/100;
-			const int screen_y = screen_pos.y/100;
-
-			float radius_scale = 1.0f - amount;
-			const int radius = static_cast<int>(radius_scale*radius_scale*500);
-			const int center_x = -screen_x + light_pos.x;
-			const int center_y = -screen_y + light_pos.y;
-			rect center_rect(center_x - radius, center_y - radius, radius*2, radius*2);
-
-			if(center_rect.y() > 0) {
-				canvas->drawSolidRect(rect(0, 0, wnd->width(), center_rect.y()), KRE::Color::colorBlack());
-			}
-
-			const int bot_rect_height = wnd->height() - (center_rect.y() + center_rect.h());
-			if(bot_rect_height > 0) {
-				canvas->drawSolidRect(rect(0, wnd->height() - bot_rect_height, wnd->width(), bot_rect_height), KRE::Color::colorBlack());
-			}
-
-			if(center_rect.x() > 0) {
-				canvas->drawSolidRect(rect(0, 0, center_rect.x(), wnd->height()), KRE::Color::colorBlack());
-			}
-
-			const int right_rect_width = wnd->width() - (center_rect.x() + center_rect.w());
-			if(right_rect_width > 0) {
-				canvas->drawSolidRect(rect(wnd->width() - right_rect_width, 0, right_rect_width, wnd->height()), KRE::Color::colorBlack());
-			}
-
-			float inner_radius = static_cast<float>(radius);
-			float outer_radius = (center_rect.w() + center_rect.h()) / 2.0f + inner_radius;
-			canvas->drawHollowCircle(point(center_x, center_y), outer_radius, inner_radius, KRE::Color::colorBlack());
-		}
-	}
-
 	void show_end_game()
 	{
+		auto& gs = graphics::GameScreen::get();
 		const std::string msg = "to be continued...";
 		auto t = KRE::Font::getInstance()->renderText(msg, KRE::Color::colorWhite(), 48);
 		auto wnd = KRE::WindowManager::getMainWindow();
 		auto canvas = KRE::Canvas::getInstance();
-		const int xpos = wnd->width()/2 - t->width()/2;
-		const int ypos = wnd->height()/2 - t->height()/2;
+		const int xpos = gs.getVirtualWidth()/2 - t->width()/2;
+		const int ypos = gs.getVirtualHeight()/2 - t->height()/2;
 		for(unsigned n = 0; n <= msg.size(); ++n) {
 			const float percent = static_cast<float>(n)/static_cast<float>(msg.size());
-			canvas->drawSolidRect(rect(0, 0, wnd->width(), wnd->height()), KRE::Color::colorBlack());
-			canvas->blitTexture(t, rect(0,0,static_cast<int>(percent*wnd->width()),0), 0, 
+			canvas->drawSolidRect(rect(0, 0, gs.getVirtualWidth(), gs.getVirtualHeight()), KRE::Color::colorBlack());
+			canvas->blitTexture(t, rect(0,0,static_cast<int>(percent*gs.getVirtualWidth()),0), 0, 
 				rect(xpos, ypos,static_cast<int>(t->width()*percent), t->height()));
 			wnd->swap();
 			profile::delay(40);
@@ -302,6 +303,49 @@ namespace
 			}
 		}
 	}
+}
+
+namespace {
+int TranslateCoordinatesPhysicalToVirtual(int pos, int virt, int phys) {
+	return (pos * virt) / phys;
+}
+}
+
+void mapSDLEventScreenCoordinatesToVirtual(SDL_Event& event)
+{
+	switch(event.type) {
+	case SDL_MOUSEMOTION: {
+		auto& gs = graphics::GameScreen::get();
+		event.motion.x = TranslateCoordinatesPhysicalToVirtual(event.motion.x, gs.getVirtualWidth(), gs.getWidth());
+		event.motion.y = TranslateCoordinatesPhysicalToVirtual(event.motion.y, gs.getVirtualHeight(), gs.getHeight());
+		event.motion.xrel = TranslateCoordinatesPhysicalToVirtual(event.motion.xrel, gs.getVirtualWidth(), gs.getWidth());
+		event.motion.yrel = TranslateCoordinatesPhysicalToVirtual(event.motion.yrel, gs.getVirtualHeight(), gs.getHeight());
+		break;
+	}
+
+	case SDL_MOUSEBUTTONDOWN:
+	case SDL_MOUSEBUTTONUP: {
+		auto& gs = graphics::GameScreen::get();
+		event.button.x = TranslateCoordinatesPhysicalToVirtual(event.button.x, gs.getVirtualWidth(), gs.getWidth());
+		event.button.y = TranslateCoordinatesPhysicalToVirtual(event.button.y, gs.getVirtualHeight(), gs.getHeight());
+		break;
+	}
+	}
+}
+
+void addProcessFunction(std::function<void()> fn, void* tag)
+{
+	process_functions.push_back(std::pair<std::function<void()>,void*>(fn, tag));
+}
+
+void removeProcessFunction(void* tag)
+{
+	process_functions.erase(std::remove_if(process_functions.begin(), process_functions.end(), [&tag](const std::pair<std::function<void()>,void*>& p) { return p.second == tag; }), process_functions.end());
+}
+
+void addAsynchronousWorkItem(std::function<void()> fn)
+{
+	asynchronous_work_items_.push_back(fn);
 }
 
 void begin_skipping_game() 
@@ -361,11 +405,21 @@ void video_resize(const SDL_Event &event)
 
 void LevelRunner::video_resize_event(const SDL_Event &event)
 {
+	// event.window.data1/event.window.data2 may not reflect the correct window size.
 	static const int WindowResizeEventID = get_object_event_id("window_resize");
 	game_logic::MapFormulaCallablePtr callable(new game_logic::MapFormulaCallable);
-	callable->add("width", variant(event.window.data1));
-	callable->add("height", variant(event.window.data2));
+	callable->add("width", variant(KRE::WindowManager::getMainWindow()->width()));
+	callable->add("height", variant(KRE::WindowManager::getMainWindow()->height()));
 	lvl_->player()->getEntity().handleEvent(WindowResizeEventID, callable.get());
+}
+
+void LevelRunner::on_player_set(EntityPtr e)
+{
+#ifndef NO_EDITOR
+	if(console_.get()) {
+		console_->setFocus(e);
+	}
+#endif
 }
 
 #if 0
@@ -430,6 +484,8 @@ bool LevelRunner::handle_mouse_events(const SDL_Event &event)
 
 	static const int MouseWheelID = get_object_event_id("mouse_wheel");
 
+	g_mouse_event_swallowed = false;
+
 	if(paused) {
 		// skip mouse event handling when paused.
 		// XXX: when we become unpaused we need to reset the state of drag operations
@@ -437,7 +493,7 @@ bool LevelRunner::handle_mouse_events(const SDL_Event &event)
 		return false;
 	}
 
-	const int DragThresholdMilliPx = g_mouse_drag_threshold;
+	const int DragThresholdPx = g_mouse_drag_threshold;
 
 	switch(event.type)
 	{
@@ -455,7 +511,7 @@ bool LevelRunner::handle_mouse_events(const SDL_Event &event)
 		case SDL_MOUSEBUTTONUP:
 			mouse_drag_count_ = 0;
 
-		case SDL_MOUSEMOTION:
+		case SDL_MOUSEMOTION: {
 		    int x, mx = event.type == SDL_MOUSEMOTION ? event.motion.x : event.button.x;
 			int y, my = event.type == SDL_MOUSEMOTION ? event.motion.y : event.button.y;
 			int event_type = event.type;
@@ -510,7 +566,7 @@ bool LevelRunner::handle_mouse_events(const SDL_Event &event)
 				if(m_area.w() != 0) {
 					point p(x,y);
 					if(e->useAbsoluteScreenCoordinates()) {
-						p = point(mx,my);
+						p = point(mx + lvl_->absolute_object_adjust_x(),my + lvl_->absolute_object_adjust_y());
 					}
 					if(pointInRect(p, m_area) == false) {
 						continue;
@@ -521,7 +577,18 @@ bool LevelRunner::handle_mouse_events(const SDL_Event &event)
 				if(e->getClipArea(&clip_area)) {
 					point p(x,y);
 					if(e->useAbsoluteScreenCoordinates()) {
-						p = point(mx,my);
+						int xadj = 0, yadj = 0;
+						auto& gs = graphics::GameScreen::get();
+						if(gs.getVirtualWidth() > lvl_->boundaries().w()) {
+							xadj = (gs.getVirtualWidth() - lvl_->boundaries().w());
+						}
+
+						if(gs.getVirtualHeight() > lvl_->boundaries().h()) {
+							yadj = (gs.getVirtualHeight() - lvl_->boundaries().h());
+						}
+
+						p = point(mx + lvl_->absolute_object_adjust_x() - xadj,my + lvl_->absolute_object_adjust_y() - yadj);
+
 					}
 					if(pointInRect(p, clip_area) == false) {
 						continue;
@@ -531,6 +598,9 @@ bool LevelRunner::handle_mouse_events(const SDL_Event &event)
 				if(event_type == SDL_MOUSEBUTTONDOWN) {
 					e->setMouseButtons(e->getMouseButtons() | SDL_BUTTON(event_button_button));
 				} else if(event_type == SDL_MOUSEMOTION) {
+
+					mouse_drag_count_ += abs(event.motion.xrel) + abs(event.motion.yrel);
+
 					// handling for mouse_enter
 					if(e->isMouseOverEntity() == false) {
 						if((e->getMouseoverDelay() == 0 || static_cast<unsigned>(lvl_->cycle()) > e->getMouseoverTriggerCycle())) {
@@ -549,10 +619,11 @@ bool LevelRunner::handle_mouse_events(const SDL_Event &event)
 					handled |= e->handleEvent(basic_evt, callable.get());
 				}
 
-				if(event_type == SDL_MOUSEBUTTONUP && mouse_clicking_ && !click_handled && e->isBeingDragged() == false) {
+				if(event_type == SDL_MOUSEBUTTONUP && mouse_clicking_ && !click_handled && e->isBeingDragged() == false && mouse_drag_count_ <= DragThresholdPx) {
 					e->handleEvent(MouseClickID, callable.get());
-					if(it->isMouseEventSwallowed()) {
+					if(g_mouse_event_swallowed) {
 						click_handled = true;
+						g_mouse_event_swallowed = false;
 					}
 				}
 				items.push_back(variant(e.get()));
@@ -577,12 +648,12 @@ bool LevelRunner::handle_mouse_events(const SDL_Event &event)
 						if(object->getMouseButtons() == 0 && object->isBeingDragged()) {
 							object->handleEvent(MouseDragEndID, callable.get());
 							object->setBeingDragged(false);
-							if(object->isMouseEventSwallowed()) {
+							if(g_mouse_event_swallowed) {
 								drag_handled = true;
+								g_mouse_event_swallowed = false;
 							}
 						}
 					} else if(event_type == SDL_MOUSEMOTION && !drag_handled) {
-						mouse_drag_count_ += abs(event.motion.xrel) + abs(event.motion.yrel);
 						// drag check.
 						if(object->isBeingDragged()) {
 							if(object->getMouseButtons() & button_state) {
@@ -591,15 +662,17 @@ bool LevelRunner::handle_mouse_events(const SDL_Event &event)
 								object->handleEvent(MouseDragEndID, callable.get());
 								object->setBeingDragged(false);
 							}
-							if(object->isMouseEventSwallowed()) {
+							if(g_mouse_event_swallowed) {
 								drag_handled = true;
+								g_mouse_event_swallowed = false;
 							}
-						} else if(object->getMouseButtons() & button_state && mouse_drag_count_ > DragThresholdMilliPx) {
+						} else if(object->getMouseButtons() & button_state && mouse_drag_count_ > object->mouseDragThreshold(DragThresholdPx)) {
 							// start drag.
 							object->handleEvent(MouseDragStartID, callable.get());
 							object->setBeingDragged();
-							if(object->isMouseEventSwallowed()) {
+							if(g_mouse_event_swallowed) {
 								drag_handled = true;
+								g_mouse_event_swallowed = false;
 							}
 						}
 					}
@@ -625,7 +698,7 @@ bool LevelRunner::handle_mouse_events(const SDL_Event &event)
 					bool has_m_area = m_area.w() != 0;
 					point p(x,y);
 					if(e->useAbsoluteScreenCoordinates()) {
-						p = point(mx,my);
+						p = point(mx + lvl_->absolute_object_adjust_x(),my + lvl_->absolute_object_adjust_y());
 					}
 
 					if(mouse_in.find(e) == mouse_in.end()) {
@@ -648,19 +721,22 @@ bool LevelRunner::handle_mouse_events(const SDL_Event &event)
 				}
 			}
 
-			if(event.type == SDL_MOUSEMOTION && mouse_drag_count_ <= DragThresholdMilliPx) {
+			if(event.type == SDL_MOUSEMOTION && mouse_drag_count_ <= DragThresholdPx) {
 				break;
 			}
 
 			mouse_clicking_ = event.type == SDL_MOUSEBUTTONDOWN;
 			break;
+		} //end mouse motion event case
 	}
 	return false;
 }
 
+extern bool g_enable_graphical_fonts;
+
 void LevelRunner::show_pause_title()
 {
-	if(!editor_) {
+	if(!editor_ && g_enable_graphical_fonts) {
 		set_scene_title("Paused\n\n\n(ctrl-p)", paused ? std::numeric_limits<int>::max() : 25);
 	}
 }
@@ -685,6 +761,8 @@ LevelRunner::LevelRunner(LevelPtr& lvl, std::string& level_cfg, std::string& ori
 	force_return_ = false;
 
 	current_second_ = time(nullptr);
+	current_max_ = 0;
+	next_max_ = 0;
 	current_fps_ = 0;
 	next_fps_ = 0;
 	current_cycles_ = 0;
@@ -722,7 +800,18 @@ void LevelRunner::start_editor()
 		editor_->setup_for_editing();
 		lvl_->set_editor();
 		lvl_->setAsCurrentLevel();
+		lvl_->player()->getEntity().handleEvent("open_editor");
 		initHistorySlider();
+
+		if(g_editor_object.empty() == false) {
+			ffl::IntrusivePtr<CustomObject> obj(new CustomObject(g_editor_object, 0, 0, 1));
+			obj->construct();
+			lvl_->add_character(obj);
+		}
+
+		if(g_editor_pause) {
+			start_editor();
+		}
 	} else {
 		//Pause the game and set the level to its original
 		//state if the user presses ctrl+e twice.
@@ -752,6 +841,7 @@ void LevelRunner::close_editor()
 	history_trails_.clear();
 	lvl_->mutateValue("zoom", variant(1));
 	lvl_->set_editor(false);
+	lvl_->player()->getEntity().handleEvent("close_editor");
 	paused = false;
 	show_pause_title();
 	controls::read_until(lvl_->cycle());
@@ -770,6 +860,14 @@ bool LevelRunner::play_level()
 
 	if(preferences::edit_on_start()) {
 		start_editor();	
+	}
+
+	if(!lvl_->music().empty()) {
+		EntityPtr e;
+		if(lvl_->player()) {
+			e = EntityPtr(&lvl_->player()->getEntity());
+		}
+		play_music_track(e, lvl_->music());
 	}
 
 	while(!done && !quit_ && !force_return_) {
@@ -819,8 +917,16 @@ void process_tbs_matchmaking_server();
 
 bool LevelRunner::play_cycle()
 {
+	formula_profiler::pump();
+
+	const int start_cycle_time = profile::get_tick_time();
+
 	auto wnd = KRE::WindowManager::getMainWindow();
 	static SettingsDialog settingsDialog;
+
+	for(auto& p : process_functions) {
+		p.first();
+	}
 
 	const preferences::alt_frame_time_scope alt_frame_time_scoper(preferences::has_alt_frame_time() && SDL_GetModState()&KMOD_ALT);
 	if(controls::first_invalid_cycle() >= 0) {
@@ -830,7 +936,7 @@ bool LevelRunner::play_cycle()
 
 	background_task_pool::pump();
 
-	performance_data current_perf(current_fps_,50,0,0,0,0,0,CustomObject::events_handled_per_second,"");
+	performance_data current_perf(current_max_,current_fps_,50,0,0,0,0,0,CustomObject::events_handled_per_second,"");
 
 	if(preferences::internal_tbs_server()) {
 		tbs::internal_server::process();
@@ -862,7 +968,7 @@ bool LevelRunner::play_cycle()
 	}
 
 	static bool pumped_file_mods = false;
-	if(editor_ || console_ || pumped_file_mods) {
+	if(editor_ || console_ || pumped_file_mods || g_reload_modified_objects) {
 		sys::pump_file_modifications();
 		pumped_file_mods = true;
 	}
@@ -874,9 +980,9 @@ bool LevelRunner::play_cycle()
 	if(editor_) {
 		controls::control_backup_scope ctrl_backup;
 		auto& gs = graphics::GameScreen::get();
-		editor_->setPos(last_draw_position().x/100 - (editor_->zoom() - 1) * gs.getWidth()/2, 
-			last_draw_position().y/100 - (editor_->zoom() - 1) * gs.getHeight()/2);
-		//editor_->setPos(last_draw_position().x/100 - (editor_->zoom()-1)*(wnd->width()-editor::sidebar_width())/2, last_draw_position().y/100 - (editor_->zoom()-1)*(wnd->height())/2);
+		editor_->setPos(last_draw_position().x/100 - (editor_->zoom() - 1) * gs.getVirtualWidth()/2, 
+			last_draw_position().y/100 - (editor_->zoom() - 1) * gs.getVirtualHeight()/2);
+		//editor_->setPos(last_draw_position().x/100 - (editor_->zoom()-1)*(gs.getVirtualWidth()-editor::sidebar_width())/2, last_draw_position().y/100 - (editor_->zoom()-1)*(gs.getVirtualHeight())/2);
 		editor_->process();
 		lvl_->complete_rebuild_tiles_in_background();
 		lvl_->setAsCurrentLevel();
@@ -926,7 +1032,8 @@ bool LevelRunner::play_cycle()
 
 	const bool is_multiplayer = controls::num_players() > 1;
 
-	int desired_end_time = start_time_ + pause_time_ + global_pause_time + cycle*preferences::frame_time_millis() + preferences::frame_time_millis();
+	int desired_end_time = g_vsync != 0 ? profile::get_tick_time() + preferences::frame_time_millis() :
+	                                      start_time_ + pause_time_ + global_pause_time + cycle*preferences::frame_time_millis() + preferences::frame_time_millis();
 
 	if(!is_multiplayer) {
 		const int ticks = profile::get_tick_time();
@@ -985,12 +1092,12 @@ bool LevelRunner::play_cycle()
 		prepare_transition_scene(*lvl_, last_draw_position());
 
 		preload_level(save->getPlayerInfo()->currentLevel());
-		transition_scene(*lvl_, last_draw_position(), true, fade_scene);
+		transition_scene(*lvl_, last_draw_position(), true, "fade");
 		sound::stop_looped_sounds(nullptr);
-		boost::intrusive_ptr<Level> new_level = load_level(save->getPlayerInfo()->currentLevel());
+		ffl::IntrusivePtr<Level> new_level = load_level(save->getPlayerInfo()->currentLevel());
 
 		if(!new_level->music().empty()) {
-			sound::play_music(new_level->music());
+			play_music_track(save, new_level->music());
 		}
 
 		set_scene_title(new_level->title());
@@ -1004,6 +1111,7 @@ bool LevelRunner::play_cycle()
 
 		//trigger a garbage collection of objects now.
 		runGarbageCollection();
+		reapGarbageCollection();
 	} else if(lvl_->players().size() > 1) {
 		for(const EntityPtr& c : lvl_->players()) {
 			if(c->getHitpoints() <= 0) {
@@ -1060,29 +1168,39 @@ bool LevelRunner::play_cycle()
 			{
 				Level::Summary summary = Level::getSummary(level_cfg_);
 				if(!summary.music.empty()) {
-					sound::play_music(summary.music);
+					EntityPtr e;
+					if(lvl_->player()) {
+						e = EntityPtr(&lvl_->player()->getEntity());
+					}
+					play_music_track(e, summary.music);
 				}
 			}
 
 			prepare_transition_scene(*lvl_, last_draw_position());
 
 			const std::string transition = portal->transition;
+
 			if(transition == "flip") {
-				transition_scene(*lvl_, last_draw_position(), true, flip_scene);
+				transition_scene(*lvl_, last_draw_position(), true, transition);
 			} else if(transition == "instant") {
 				//do nothing
 			} else if(transition != "fade") {
-				transition_scene(*lvl_, last_draw_position(), true, iris_scene);
+				transition_scene(*lvl_, last_draw_position(), true, transition);
 			} else {
 				preload_level(level_cfg_);
-				transition_scene(*lvl_, last_draw_position(), true, fade_scene);
+				transition_scene(*lvl_, last_draw_position(), true, transition);
 			}
 
 			sound::stop_looped_sounds(nullptr);
 
-			boost::intrusive_ptr<Level> new_level(load_level(level_cfg_));
-			if (!preferences::load_compiled() && !new_level->music().empty())
-				sound::play_music(new_level->music());
+			ffl::IntrusivePtr<Level> new_level(load_level(level_cfg_));
+			if (!preferences::load_compiled() && !new_level->music().empty()) {
+				EntityPtr e;
+				if(lvl_->player()) {
+					e = EntityPtr(&lvl_->player()->getEntity());
+				}
+				play_music_track(e, new_level->music());
+			}
 
 			if(portal->dest_label.empty() == false) {
 				//the label of an object was specified as an entry point,
@@ -1151,11 +1269,12 @@ bool LevelRunner::play_cycle()
 
 			//garbage collect objects from the last level.
 			runGarbageCollection();
+			reapGarbageCollection();
 			CustomObject::run_garbage_collection();
 
-			if(transition == "flip") {
-				transition_scene(*lvl_, last_draw_position(), false, flip_scene);
-			}
+//			if(transition == "flip") {
+//				transition_scene(*lvl_, last_draw_position(), false, flip_scene);
+//			}
 #ifndef NO_EDITOR
 			if(editor_) {
 				editor_ = editor::get_editor(lvl_->id().c_str());
@@ -1176,6 +1295,14 @@ bool LevelRunner::play_cycle()
 	joystick::update();
 	bool should_pause = false;
 
+	static bool pause_next = false;
+	if(pause_next) {
+		paused = true;
+		pause_next = false;
+		show_pause_title();
+		controls::read_until(lvl_->cycle());
+	}
+
 	static int joystick_pause_lockout = 0;
 	if(joystick_pause_lockout) {
 		--joystick_pause_lockout;
@@ -1188,13 +1315,49 @@ bool LevelRunner::play_cycle()
 
 	SDL_StartTextInput();
 	if(MessageDialog::get() == nullptr) {
-		SDL_Event event;
-		while(input::sdl_poll_event(&event)) {
+
+		bool have_motion_event = false;
+
+		//Poll all the events. Sometimes we can have multiple mouse motion events
+		//in one frame, but that isn't really useful, so coalesce multiple motion
+		//events into a single event.
+		std::vector<SDL_Event> events;
+		SDL_Event ev;
+		while(input::sdl_poll_event(&ev)) {
+			if(ev.type == SDL_MOUSEMOTION) {
+				if(have_motion_event) {
+					for(auto it = events.begin(); it != events.end(); ++it) {
+						if(it->type == SDL_MOUSEMOTION) {
+							ev.motion.xrel += it->motion.xrel;
+							ev.motion.yrel += it->motion.yrel;
+							events.erase(it);
+							break;
+						}
+					}
+				}
+
+				have_motion_event = true;
+			}
+			events.push_back(ev);
+		}
+
+		static int nevent_frame = 0;
+		++nevent_frame;
+
+		for(SDL_Event& event : events) {
 			bool swallowed = false;
+
+			//formula profiler and console doesn't use virtual co-ords so it gets the event before virtual processing
+			swallowed = formula_profiler::handle_sdl_event(event, swallowed) || swallowed;
 #ifndef NO_EDITOR
 			if(console_) {
 				swallowed = console_->processEvent(point(), event, swallowed);
 			}
+#endif
+
+			mapSDLEventScreenCoordinatesToVirtual(event);
+
+#ifndef NO_EDITOR
 
 			if(history_slider_ && paused) {
 				swallowed = history_slider_->processEvent(point(), event, swallowed) || swallowed;
@@ -1207,7 +1370,7 @@ bool LevelRunner::play_cycle()
 
 				if(editor::last_edited_level() != lvl_->id() && editor_->confirm_quit()) {
 
-					boost::intrusive_ptr<Level> new_level = load_level(editor::last_edited_level());
+					ffl::IntrusivePtr<Level> new_level = load_level(editor::last_edited_level());
 					if(editor_) {
 						new_level->set_editor();
 					}
@@ -1215,7 +1378,11 @@ bool LevelRunner::play_cycle()
 					new_level->setAsCurrentLevel();
 
 					if(!new_level->music().empty()) {
-						sound::play_music(new_level->music());
+						EntityPtr e;
+						if(new_level->player()) {
+							e = EntityPtr(&new_level->player()->getEntity());
+						}
+						play_music_track(e, new_level->music());
 					}
 
 					set_scene_title(new_level->title());
@@ -1242,6 +1409,19 @@ bool LevelRunner::play_cycle()
 
 			{
 				const std::vector<EntityPtr> active_chars = lvl_->get_active_chars();
+
+				if(event.type == SDL_TEXTINPUT) {
+					const std::string text = event.text.text;
+
+					game_logic::MapFormulaCallable* callable(new game_logic::MapFormulaCallable);
+					variant holder(callable);
+					callable->add("text", variant(text));
+
+					for(const EntityPtr& e : active_chars) {
+						e->handleEvent(OBJECT_EVENT_TEXT_INPUT, callable);
+					}
+				}
+
 				for(const EntityPtr& e : active_chars) {
 					CustomObject* custom_obj = dynamic_cast<CustomObject*>(e.get());
 					swallowed = custom_obj->handle_sdl_event(event, swallowed);
@@ -1255,8 +1435,15 @@ bool LevelRunner::play_cycle()
 			switch(event.type) {
 			case SDL_QUIT: {
 				stats::Entry("quit").addPlayerPos();
-				done = true;
 				quit_ = true;
+				std::vector<EntityPtr> active_chars = lvl_->get_active_chars();
+				for(const auto& c : active_chars) {
+					c->handleEvent(OBJECT_EVENT_QUIT_GAME);
+				}
+
+				if(quit_) {
+					done = true;
+				}
 				break;
 			}
 			case SDL_WINDOWEVENT:
@@ -1272,8 +1459,15 @@ bool LevelRunner::play_cycle()
 							toggle_pause();
 						}
 					}
+				} else if (event.window.event == SDL_WINDOWEVENT_MINIMIZED) {
+					LOG_INFO("SDL WINDOW EVENT MINIMIZED");
+				} else if (event.window.event == SDL_WINDOWEVENT_MAXIMIZED) {
+					LOG_INFO("SDL WINDOW EVENT MAXIMIZED");
+				} else if (event.window.event == SDL_WINDOWEVENT_RESTORED) {
+					LOG_INFO("SDL WINDOW EVENT RESTORED");
 				} else if(event.window.event == SDL_WINDOWEVENT_RESIZED) {
-					video_resize(event); 
+					LOG_INFO("SDL WINDOW EVENT RESIZED to " << event.window.data1 << " x " << event.window.data2);
+					//video_resize(event); 
 					video_resize_event(event);
 				}
 			break;
@@ -1349,7 +1543,7 @@ bool LevelRunner::play_cycle()
 					}
 				} else if(key == SDLK_m && mod & KMOD_CTRL) {
 					sound::mute(!sound::muted()); //toggle sound
-				} else if(key == SDLK_p && mod & KMOD_CTRL) {
+				} else if((key == SDLK_p || (key == SDLK_n && paused)) && mod & KMOD_CTRL) {
 					paused = !paused;
 #ifndef NO_EDITOR
 					initHistorySlider();
@@ -1358,19 +1552,94 @@ bool LevelRunner::play_cycle()
 					if(!paused) {
 						controls::read_until(lvl_->cycle());
 					}
+
+					if(key == SDLK_n) {
+						pause_next = true;
+					}
+					
 				} else if(key == SDLK_f && mod & KMOD_CTRL && !preferences::no_fullscreen_ever()) {
+
+					static int last_pushed = -1;
+
+					if(last_pushed >= nevent_frame-1) {
+						//If we switch between fullscreen and non-fullscreen we can get repeated
+						//key press events resulting in us switching back and forth, so ignore
+						//ctrl+f key events in successive frames.
+						continue;
+					}
+
+					auto& gs = graphics::GameScreen::get();
+					const int virtual_width = gs.getVirtualWidth();
+					const int virtual_height = gs.getVirtualHeight();
+
+					last_pushed = nevent_frame;
 					LOG_DEBUG("ctrl-f pushed");
 					// XXX this changes if editor is active.
 					if(wnd->fullscreenMode() == KRE::FullScreenMode::WINDOWED) {
+
 						LOG_DEBUG("Enter full-screen mode");
 						wnd->setFullscreenMode(KRE::FullScreenMode::FULLSCREEN_WINDOWED);
+
+						if(preferences::auto_size_window() || g_desktop_fullscreen) {
+							SDL_DisplayMode dm;
+							if(SDL_GetDesktopDisplayMode(0, &dm) == 0) {
+								preferences::adjust_virtual_width_to_match_physical(dm.w, dm.h);
+								wnd->setWindowSize(dm.w, dm.h);
+								gs.setDimensions(dm.w, dm.h);
+								gs.setVirtualDimensions(preferences::requested_virtual_window_width(), preferences::requested_virtual_window_height());
+							}
+
+						}
+
 					} else {
 						LOG_DEBUG("Enter windowed mode");
 						wnd->setFullscreenMode(KRE::FullScreenMode::WINDOWED);
+
+						if(preferences::auto_size_window() || g_desktop_fullscreen) {
+							int width = 0, height = 0;
+
+							if(preferences::requested_window_width() > 0 && preferences::requested_window_height() > 0) {
+								width = preferences::requested_window_width();
+								height = preferences::requested_window_height();
+							} else {
+								auto_select_resolution(wnd, &width, &height, true);
+							}
+
+							preferences::adjust_virtual_width_to_match_physical(width, height);
+
+							wnd->setWindowSize(width, height);
+							gs.setDimensions(width, height);
+							gs.setVirtualDimensions(preferences::requested_virtual_window_width(), preferences::requested_virtual_window_height());
+						}
 					}
+				} else if(key == SDLK_F7) {
+					if(formula_profiler::Manager::get()) {
+						if(formula_profiler::Manager::get()->is_profiling()) {
+							formula_profiler::Manager::get()->halt();
+						} else {
+							formula_profiler::Manager::get()->init("profile.dat");
+						}
+					}
+				} else if(key == SDLK_F8) {
+					if(formula_profiler::Manager::get()) {
+						if(formula_profiler::Manager::get()->is_profiling()) {
+							formula_profiler::Manager::get()->halt();
+						} else {
+							formula_profiler::Manager::get()->init("profile.dat", true);
+						}
+					}
+				} else if(key == SDLK_F6) {
+					g_particle_editor = !g_particle_editor;
 				} else if(key == SDLK_F3) {
 					LOG_DEBUG("F3 pressed");
 					preferences::set_show_fps(!preferences::show_fps());
+				} else if(key == SDLK_F9) {
+					g_theme_imgui_ui = !g_theme_imgui_ui;
+					if(mod & KMOD_CTRL) {
+						// resets to default ui and shows it
+						theme_imgui_default();
+						g_theme_imgui_ui = true;
+					}
 				}
 				break;
 			}
@@ -1385,7 +1654,7 @@ bool LevelRunner::play_cycle()
 				if(console_.get() && (g_allow_debug_console_clicking || ctrl_pressed)) {
 					int mousex, mousey;
 					input::sdl_get_mouse_state(&mousex, &mousey);
-					EntityPtr selected = lvl_->get_next_character_at_point(last_draw_position().x/100 + mousex, last_draw_position().y/100 + mousey, last_draw_position().x/100, last_draw_position().y/100);
+					EntityPtr selected = lvl_->get_next_character_at_point(last_draw_position().x/100 + mousex, last_draw_position().y/100 + mousey, last_draw_position().x/100, last_draw_position().y/100, console_->getFocus().get());
 					if(selected) {
 						lvl_->set_editor_highlight(selected);
 						console_->setFocus(selected);
@@ -1417,7 +1686,7 @@ bool LevelRunner::play_cycle()
 			}
 		}
 		
-		if(lvl_->show_builtin_settingsDialog())
+		if(lvl_->show_builtin_settingsDialog() && g_allow_builtin_settings_dialog)
 		{
 			lvl_->set_show_builtin_settingsDialog(false);
 
@@ -1462,16 +1731,17 @@ bool LevelRunner::play_cycle()
 	}
 
 	if(lvl_->end_game()) {
-		transition_scene(*lvl_, last_draw_position(), false, fade_scene);
+		transition_scene(*lvl_, last_draw_position(), false, "fade");
 		show_end_game();
 		done = true;
 		return true;
 	}
 
-	const int MaxSkips = 3;
+	const bool skip_odd_frame = g_skip_odd_frames && nskip_draw_ == 0;
 
 	const int start_draw = profile::get_tick_time();
-	if(start_draw < desired_end_time || nskip_draw_ >= MaxSkips) {
+	if(!skip_odd_frame && (start_draw < desired_end_time || nskip_draw_ >= g_max_frame_skips)) {
+		formula_profiler::Instrument instrument("DRAW");
 		bool should_draw = true;
 
 #ifndef NO_EDITOR		
@@ -1529,7 +1799,10 @@ bool LevelRunner::play_cycle()
 		}
 #endif
 
+		{
+		formula_profiler::Instrument instrument("PROC_DRAW");
 		lvl_->process_draw();
+		}
 
 		if(should_draw) {
 			wnd->setClearColor(KRE::Color(0, 0, 0, 0));
@@ -1581,6 +1854,13 @@ bool LevelRunner::play_cycle()
 			if(console_) {
 				console_->draw();
 			}
+
+			if(g_theme_imgui_ui) {
+				imgui_theme_ui();
+			}
+
+			formula_profiler::Instrument instrument_profiler("DRAW_PROFILE");
+			formula_profiler::draw();
 #endif
 		}
 
@@ -1593,7 +1873,7 @@ bool LevelRunner::play_cycle()
 	}
 #endif
 
-		performance_data perf(current_fps_, current_cycles_, current_delay_, current_draw_, current_process_, current_flip_, cycle, current_events_, profiling_summary_);
+		performance_data perf(current_max_,current_fps_, current_cycles_, current_delay_, current_draw_, current_process_, current_flip_, cycle, current_events_, profiling_summary_);
 	
 		if(!is_skipping_game() && preferences::show_fps()) {
 			draw_fps(*lvl_, perf);
@@ -1627,6 +1907,7 @@ bool LevelRunner::play_cycle()
 	const time_t this_second = time(nullptr);
 	if(this_second != current_second_) {
 		current_second_ = this_second;
+		current_max_ = next_max_;
 		current_fps_ = next_fps_;
 		current_cycles_ = next_cycles_;
 		current_delay_ = next_delay_;
@@ -1634,6 +1915,7 @@ bool LevelRunner::play_cycle()
 		current_flip_ = next_flip_;
 		current_process_ = next_process_;
 		current_events_ = CustomObject::events_handled_per_second;
+		next_max_ = 0;
 		next_fps_ = 0;
 		next_cycles_ = 0;
 		next_delay_ = 0;
@@ -1645,13 +1927,28 @@ bool LevelRunner::play_cycle()
 		profiling_summary_ = formula_profiler::get_profile_summary();
 	}
 
-	formula_profiler::pump();
-
 	const int raw_wait_time = desired_end_time - profile::get_tick_time();
-	const int wait_time = std::max<int>(1, desired_end_time - profile::get_tick_time());
+	int wait_time = std::max<int>(1, desired_end_time - profile::get_tick_time());
+
+	static int async_work_items_starvation = 0;
+	if(asynchronous_work_items_.empty() == false) {
+		++async_work_items_starvation;
+	}
+
+	while(!asynchronous_work_items_.empty() && (wait_time >= g_time_quota_async_work_items || async_work_items_starvation > 60)) {
+		async_work_items_starvation = 0;
+		std::function<void()> fn = asynchronous_work_items_.front();
+		asynchronous_work_items_.pop_front();
+		fn();
+
+		wait_time = std::max<int>(1, desired_end_time - profile::get_tick_time());
+	}
+
 	next_delay_ += wait_time;
 	current_perf.delay = wait_time;
+
 	if (wait_time != 1 && !is_skipping_game()) {
+		formula_profiler::Instrument instrument("SLEEP");
 		profile::delay(wait_time);
 	}
 
@@ -1665,6 +1962,11 @@ bool LevelRunner::play_cycle()
 	}
 
 	if (!paused && g_pause_stack == 0) ++cycle;
+
+	const int end_cycle_time = profile::get_tick_time();
+	if(end_cycle_time - start_cycle_time > next_max_) {
+		next_max_ = end_cycle_time - start_cycle_time;
+	}
 
 	return !quit_;
 }
@@ -1725,17 +2027,23 @@ pause_scope::~pause_scope()
 	}
 }
 
+void LevelRunner::quit_game()
+{
+	//record a quit event in stats
+	if(lvl_->player()) {
+		lvl_->player()->getEntity().recordStatsMovement();
+		stats::Entry("quit").addPlayerPos();
+	}
+	
+	done = true;
+	quit_ = true;
+}
+
 void LevelRunner::handle_pause_game_result(PAUSE_GAME_RESULT result)
 {
 	if(result == PAUSE_GAME_RESULT::QUIT) {
-		//record a quit event in stats
-		if(lvl_->player()) {
-			lvl_->player()->getEntity().recordStatsMovement();
-			stats::Entry("quit").addPlayerPos();
-		}
-		
-		done = true;
-		quit_ = true;
+		quit_game();
+
 	} else if(result == PAUSE_GAME_RESULT::GO_TO_TITLESCREEN) {
 		done = true;
 		original_level_cfg_ = "titlescreen.cfg";
@@ -1828,7 +2136,7 @@ void LevelRunner::update_history_trails()
 void LevelRunner::replay_level_from_start()
 {
 	std::unique_ptr<controls::control_backup_scope> backup_ctrl_ptr(new controls::control_backup_scope);
-	boost::intrusive_ptr<Level> new_level = load_level(lvl_->id());
+	ffl::IntrusivePtr<Level> new_level = load_level(lvl_->id());
 	if(editor_) {
 		new_level->set_editor();
 	}
@@ -1836,7 +2144,11 @@ void LevelRunner::replay_level_from_start()
 	new_level->setAsCurrentLevel();
 
 	if(!new_level->music().empty()) {
-		sound::play_music(new_level->music());
+		EntityPtr e;
+		if(new_level->player()) {
+			e = EntityPtr(&new_level->player()->getEntity());
+		}
+		play_music_track(e, new_level->music());
 	}
 
 	lvl_ = new_level;

@@ -77,8 +77,10 @@ namespace movie
 		bool playing_;
 
 		KRE::TexturePtr texture_;
+
+		unsigned u_tex_[3];
 	};
-	typedef boost::intrusive_ptr<vpx> vpx_ptr;
+	typedef ffl::IntrusivePtr<vpx> vpx_ptr;
 }
 
 #endif

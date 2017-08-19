@@ -23,12 +23,12 @@
 
 #pragma once
 
-#include <boost/intrusive_ptr.hpp>
+#include "intrusive_ptr.hpp"
 
 namespace game_logic
 {
 	class FormulaCallableDefinition;
 
-	typedef boost::intrusive_ptr<FormulaCallableDefinition> FormulaCallableDefinitionPtr;
-	typedef boost::intrusive_ptr<const FormulaCallableDefinition> ConstFormulaCallableDefinitionPtr;
+	typedef ffl::IntrusivePtr<FormulaCallableDefinition> FormulaCallableDefinitionPtr;
+	typedef ffl::IntrusivePtr<const FormulaCallableDefinition> ConstFormulaCallableDefinitionPtr;
 }

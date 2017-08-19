@@ -24,7 +24,7 @@
 /*
 	From www.w3.org/TR/SVG/implnote.html#PathElementImplementationNotes
 
-The S/s commands indicate that the first control point of the given cubic Bézier segment 
+The S/s commands indicate that the first control point of the given cubic Bezier segment
 is calculated by reflecting the previous path segments second control point relative to 
 the current point. The exact math is as follows. If the current point is (curx, cury) 
 and the second control point of the previous path segment is (oldx2, oldy2), then the 

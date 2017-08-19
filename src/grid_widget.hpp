@@ -96,7 +96,7 @@ namespace gui
 		void surrenderReferences(GarbageCollector* collector) override;
 
 	private:
-		DECLARE_CALLABLE(grid);
+		DECLARE_CALLABLE(Grid);
 
 		int getRowAt(int x, int y) const;
 		void recalculateDimensions();
@@ -143,8 +143,8 @@ namespace gui
 		game_logic::FormulaCallablePtr mouseover_arg_;
 	};
 
-	typedef boost::intrusive_ptr<Grid> GridPtr;
-	typedef boost::intrusive_ptr<const Grid> ConstGridPtr;
+	typedef ffl::IntrusivePtr<Grid> GridPtr;
+	typedef ffl::IntrusivePtr<const Grid> ConstGridPtr;
 
 	int show_grid_as_context_menu(GridPtr grid, WidgetPtr draw_widget);
 	int show_grid_as_context_menu(GridPtr grid, const std::vector<WidgetPtr> draw_widgets);

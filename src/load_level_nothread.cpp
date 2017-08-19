@@ -103,9 +103,9 @@ void preload_level(const std::string& lvl)
 {
 }
 
-boost::intrusive_ptr<Level> load_level(const std::string& lvl)
+ffl::IntrusivePtr<Level> load_level(const std::string& lvl)
 {
-	boost::intrusive_ptr<Level> res(new Level(lvl));
+	ffl::IntrusivePtr<Level> res(new Level(lvl));
 	res->finishLoading();
 	return res;
 }

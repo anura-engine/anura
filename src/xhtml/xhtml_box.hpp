@@ -26,8 +26,8 @@
 #include "xhtml_fwd.hpp"
 
 #include "geometry.hpp"
+#include "SceneTree.hpp"
 
-#include "display_list.hpp"
 #include "xhtml.hpp"
 #include "xhtml_background_info.hpp"
 #include "xhtml_border_info.hpp"
@@ -46,6 +46,12 @@ namespace xhtml
 		FixedPoint bottom;
 	};
 
+	inline std::ostream& operator<<(std::ostream& os, const EdgeSize& p)
+	{
+		os << "(" << p.left << "," << p.top << "," << p.right << "," << p.bottom << ")";
+		return os;
+	}
+
 	struct Dimensions
 	{
 		Rect content_;
@@ -56,8 +62,9 @@ namespace xhtml
 
 	enum class BoxId {
 		BLOCK,
-		LINE,
 		TEXT,
+		LINE,
+		LINE_CONTAINER,
 		INLINE_BLOCK,
 		INLINE_ELEMENT,
 		ABSOLUTE,
@@ -76,22 +83,23 @@ namespace xhtml
 	class Box : public std::enable_shared_from_this<Box>
 	{
 	public:
-		Box(BoxId id, BoxPtr parent, StyleNodePtr node);
-		virtual ~Box() {}
+		Box(BoxId id, const BoxPtr& parent, const StyleNodePtr& node, const RootBoxPtr& root);
+		virtual ~Box();
 		BoxId id() const { return id_; }
 		const Dimensions& getDimensions() const { return dimensions_; }
 		const std::vector<BoxPtr>& getChildren() const { return boxes_; }
 		bool isBlockBox() const { return id_ == BoxId::BLOCK || id_ == BoxId::LIST_ITEM || id_ == BoxId::TABLE; }
+		bool isAbsoluteBox() const { return id_ == BoxId::ABSOLUTE; }
 
 		bool hasChildBlockBox() const;
 
 		StyleNodePtr getStyleNode() const { return node_; }
 		NodePtr getNode() const { return node_ != nullptr ? node_->getNode() : nullptr; }
 		BoxPtr getParent() const { return parent_.lock(); }
+		KRE::SceneTreePtr getSceneTree() const { return scene_tree_; }
 
 		void addChild(BoxPtr box) { boxes_.emplace_back(box); }
 		void addChildren(const std::vector<BoxPtr>& children) { boxes_.insert(boxes_.end(), children.begin(), children.end()); }
-		void addAnonymousBoxes();
 
 		void setContentRect(const Rect& r) { dimensions_.content_ = r; }
 		void setContentX(FixedPoint x) { dimensions_.content_.x = x; }
@@ -127,43 +135,43 @@ namespace xhtml
 		FixedPoint getWidth() const { return dimensions_.content_.width; }
 		FixedPoint getHeight() const { return dimensions_.content_.height; }
 
-		FixedPoint getMBPWidth() { 
+		FixedPoint getMBPWidth() const { 
 			return dimensions_.margin_.left + dimensions_.margin_.right
 				+ dimensions_.padding_.left + dimensions_.padding_.right
 				+ dimensions_.border_.left + dimensions_.border_.right;
 		}
 
-		FixedPoint getMBPHeight() { 
+		FixedPoint getMBPHeight() const { 
 			return dimensions_.margin_.top + dimensions_.margin_.bottom
 				+ dimensions_.padding_.top + dimensions_.padding_.bottom
 				+ dimensions_.border_.top + dimensions_.border_.bottom;
 		}
 
-		FixedPoint getMBPLeft() {
+		FixedPoint getMBPLeft() const {
 			return dimensions_.margin_.left
 				+ dimensions_.padding_.left
 				+ dimensions_.border_.left;
 		}
 
-		FixedPoint getMBPTop() {
+		FixedPoint getMBPTop() const {
 			return dimensions_.margin_.top
 				+ dimensions_.padding_.top
 				+ dimensions_.border_.top;
 		}
 
-		FixedPoint getMBPBottom() {
+		FixedPoint getMBPBottom() const {
 			return dimensions_.margin_.bottom
 				+ dimensions_.padding_.bottom
 				+ dimensions_.border_.bottom;
 		}
 
-		FixedPoint getMBPRight() {
+		FixedPoint getMBPRight() const {
 			return dimensions_.margin_.right
 				+ dimensions_.padding_.right
 				+ dimensions_.border_.right;
 		}
 
-		Rect getAbsBoundingBox() {
+		Rect getAbsBoundingBox() const {
 			return Rect(dimensions_.content_.x - getMBPLeft() + getOffset().x, 
 				dimensions_.content_.y - getMBPTop() + getOffset().y, 
 				getMBPWidth() + getWidth(),
@@ -182,7 +190,7 @@ namespace xhtml
 
 		const point& getOffset() const { return offset_; }
 
-		void render(DisplayListPtr display_list, const point& offset) const;
+		void render(const point& offset) const;
 
 		BorderInfo& getBorderInfo() { return border_info_; }
 		const BorderInfo& getBorderInfo() const { return border_info_; }
@@ -191,35 +199,46 @@ namespace xhtml
 		virtual FixedPoint getBottomOffset() const { return dimensions_.content_.height; }
 
 		FixedPoint getLineHeight() const { return line_height_; }
-		bool isEOL() const { return end_of_line_; }
-		void setEOL(bool eol=true) { end_of_line_ = eol; }
-		virtual bool isMultiline() const { return false; }
+		void setLineHeight(FixedPoint lh) { line_height_ = lh; }
 
 		bool isReplaceable() const { return is_replaceable_; }
 
 		bool isFloat() const { return node_ != nullptr && node_->getFloat() != css::Float::NONE; }
 
-		// for text boxes
-		virtual void justify(FixedPoint containing_width) {};
+		RootBoxPtr getRoot() const { return root_.lock(); }
+		const Dimensions& getRootDimensions() const;
+
+		void setFirstInlineChild() { is_first_inline_child_ = true; }
+		void setLastInlineChild() { is_last_inline_child_ = true; }
+		bool isFirstInlineChild() const { return is_first_inline_child_; }
+		bool isLastInlineChild() const { return is_last_inline_child_; }
+
+		void setParent(BoxPtr parent) { parent_ = parent; }
+		KRE::SceneTreePtr createSceneTree(KRE::SceneTreePtr scene_parent);
 	protected:
 		void clearChildren() { boxes_.clear(); } 
-		virtual void handleRenderBackground(DisplayListPtr display_list, const point& offset) const;
-		virtual void handleRenderBorder(DisplayListPtr display_list, const point& offset) const;
+		virtual void handleRenderBackground(const KRE::SceneTreePtr& scene_tree, const point& offset) const;
+		virtual void handleRenderBorder(const KRE::SceneTreePtr& scene_tree, const point& offset) const;
+		virtual void handleRenderFilters(const KRE::SceneTreePtr& scene_tree, const point& offset) const;
+		const BackgroundInfo& getBackgroundInfo() const { return background_info_; }
 	private:
 		virtual void handleLayout(LayoutEngine& eng, const Dimensions& containing) = 0;
+		virtual void handlePreChildLayout3(LayoutEngine& eng, const Dimensions& containing) {}
 		virtual void handlePreChildLayout2(LayoutEngine& eng, const Dimensions& containing) {}
 		virtual void handlePreChildLayout(LayoutEngine& eng, const Dimensions& containing) {}
 		virtual void handlePostChildLayout(LayoutEngine& eng, BoxPtr child) {}
+		virtual void handlePostFloatChildLayout(LayoutEngine& eng, BoxPtr child) {}
 		virtual void postParentLayout(LayoutEngine& eng, const Dimensions& containing) {}
-		virtual void handleRender(DisplayListPtr display_list, const point& offset) const = 0;
-		virtual void handleEndRender(DisplayListPtr display_list, const point& offset) const {}
+		virtual void handleRender(const KRE::SceneTreePtr& scene_tree, const point& offset) const = 0;
+		virtual void handleEndRender(const KRE::SceneTreePtr& scene_tree, const point& offset) const {}
+		virtual void handleCreateSceneTree(KRE::SceneTreePtr scene_parent) {}
 
-		void setParent(BoxPtr parent) { parent_ = parent; }
 		void init();
 
 		BoxId id_;
 		StyleNodePtr node_;
 		std::weak_ptr<Box> parent_;
+		std::weak_ptr<RootBox> root_;
 		Dimensions dimensions_;
 		std::vector<BoxPtr> boxes_;
 		std::vector<BoxPtr> absolute_boxes_;
@@ -230,9 +249,15 @@ namespace xhtml
 		point offset_;
 		FixedPoint line_height_;
 
-		// Helper marker when doing LineBox layout
-		bool end_of_line_;
+		// The height of the content before any adjustments from CSS.
+		FixedPoint precss_content_height_;
+
 		bool is_replaceable_;
+
+		bool is_first_inline_child_;
+		bool is_last_inline_child_;
+
+		KRE::SceneTreePtr scene_tree_;
 	};
 
 	std::ostream& operator<<(std::ostream& os, const Rect& r);

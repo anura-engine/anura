@@ -76,7 +76,7 @@ namespace gui
 		int dragging_handle_;
 	};
 
-	typedef boost::intrusive_ptr<DragWidget> DragWidgetPtr;
+	typedef ffl::IntrusivePtr<DragWidget> DragWidgetPtr;
 }
 
 #endif // NO_EDITOR

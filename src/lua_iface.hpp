@@ -68,7 +68,7 @@ namespace lua
 	private:
 		DECLARE_CALLABLE(LuaCompiled);
 	};
-	typedef boost::intrusive_ptr<LuaCompiled> LuaCompiledPtr;
+	typedef ffl::IntrusivePtr<LuaCompiled> LuaCompiledPtr;
 
 	class LuaContext : public reference_counted_object
 	{
@@ -101,7 +101,7 @@ namespace lua
 
 	};
 
-	typedef boost::intrusive_ptr<LuaContext> LuaContextPtr;
+	typedef ffl::IntrusivePtr<LuaContext> LuaContextPtr;
 
 	class LuaFunctionReference : public game_logic::FormulaCallable
 	{
@@ -123,7 +123,7 @@ namespace lua
 		LuaFunctionReference(const LuaFunctionReference&);
 	};
 
-	typedef boost::intrusive_ptr<LuaFunctionReference> LuaFunctionReferencePtr;
+	typedef ffl::IntrusivePtr<LuaFunctionReference> LuaFunctionReferencePtr;
 }
 
 #endif

@@ -87,6 +87,18 @@ public:
 	void drawCustom(graphics::AnuraShaderPtr shader, int x, int y, const std::vector<CustomPoint>& points, const rect* area, bool face_right, bool upside_down, int time, float rotate) const;
 	void drawCustom(graphics::AnuraShaderPtr shader, int x, int y, const float* xy, const float* uv, int nelements, bool face_right, bool upside_down, int time, float rotate, int cycle) const;
 
+	struct BatchDrawItem {
+		const Frame* frame;
+		int x, y;
+		bool face_right;
+		bool upside_down;
+		int time;
+		float rotate;
+		float scale;
+	};
+
+	static void drawBatch(graphics::AnuraShaderPtr shader, const BatchDrawItem* i1, const BatchDrawItem* i2);
+
 	void setImageAsSolid();
 	ConstSolidInfoPtr solid() const { return solid_; }
 	ConstSolidInfoPtr platform() const { return platform_; }
@@ -121,6 +133,8 @@ public:
 	bool rotateOnSlope() const { return rotate_on_slope_; }
 	int damage() const { return damage_; }
 
+	float scale() const { return scale_; }
+
 	const std::string* getEvent(int time_in_frame) const;
 
 	const std::vector<CollisionArea>& getCollisionAreas() const { return collision_areas_; }
@@ -145,11 +159,15 @@ public:
 
 	point pivot(const std::string& name, int time_in_frame) const;
 	int frameNumber(int time_in_frame) const;
+
+	const std::vector <std::string>& getSounds() const { return sounds_; }
 private:
 	DECLARE_CALLABLE(Frame);
 
 	void getRectInTexture(int time, const FrameInfo*& info) const;
 	void getRectInFrameNumber(int nframe, const FrameInfo*& info) const;
+
+	void surrenderReferences(GarbageCollector* collector) override;
 	std::string id_, image_;
 
 	//ID as a variant, useful to be able to get a variant of the ID
@@ -196,6 +214,7 @@ private:
 	void buildAlphaFromFrameInfo();
 	void buildAlpha();
 	std::vector<bool> alpha_;
+	bool allow_wrapping_;
 	bool force_no_alpha_;
 
 	bool no_remove_alpha_borders_;
@@ -215,4 +234,4 @@ private:
 	mutable KRE::Blittable blit_target_;
 };
 
-typedef boost::intrusive_ptr<Frame> FramePtr;
+typedef ffl::IntrusivePtr<Frame> FramePtr;

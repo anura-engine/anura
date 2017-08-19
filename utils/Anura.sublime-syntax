@@ -1,0 +1,216 @@
+%YAML 1.2
+---
+# See http://www.sublimetext.com/docs/3/syntax.html
+#     https://www.sublimetext.com/docs/3/scope_naming.html
+ 
+# Syntax highlighting for Anura.
+# Anura .cfg files are separated into two main logical components:
+# - FSON: A container format like JSON. Basically JSON2 with nesting block comments.
+# - FFL: The scripting language ran by the Anura engine. Contained as strings in FSON.
+# Naturally, this presents a problem. We don't know which FSON strings are FFL and which are just
+# strings. For example, in an object, there's things in editor_info, which are just strings. And
+# there's things in properties, which are strings of FFL or maps or FSON constants. Then there's
+# no_compile_image, which is just a comma-separated list of files. This is all in the first page of
+# the object frogatto_playable.cfg. There's also object prototypes, tiles, particles, and so on.
+# Knowing which sort of file you're in is effectively guesswork as we can't really parse them. This
+# file could assume that if we highlight 'known paths' that are usually FFL, they'll never not be
+# FFL. But it doesn't yet.
+
+
+name: Anura
+file_extensions: [ cfg ]
+scope: source.cfg
+variables:
+  keyword: '[A-Za-z_][A-Za-z_\d]*'
+  repeated_keyword: '(?<=[A-Za-z_\d]).[^:]*'
+  
+contexts:
+  main:
+    - include: value
+    
+  value:
+    - include: comments
+    - include: array
+    - include: number
+    - include: string
+    - include: constant
+    - include: object
+    
+  comments:
+      - include: comment-single
+      - include: comment-multi
+  comment-single: 
+    - match: '//|#'
+      scope: punctuation.definition.comment.fson
+      push:
+        - meta_scope: comment.line.fson
+        - match: $
+          pop: true
+  #These nest, unlike c-style block comments.
+  comment-multi:
+    - meta_scope: comment.block.fson
+    - match: '/\*'
+      scope: punctuation.definition.comment.fson
+      push:
+      - include: comment-multi
+      - meta_scope: comment.block.fson
+      - match: '\*/'
+        scope: punctuation.definition.comment.fson
+        pop: true
+  
+  array:
+    - match: '\['
+      scope: punctuation.definition.array.begin.fson
+      push:
+        - meta_scope: meta.structure.array.fson
+        - match: '\]'
+          scope: punctuation.definition.array.end.fson
+          pop: true
+        - include: value
+        - match: ","
+          scope: punctuation.separator.array.fson
+        - match: '[^\s\]]'
+          scope: invalid.illegal.expected-array-separator.fson
+          
+  number:
+    # handles integer and decimal numbers
+    - match: |-
+        (?x:         # turn on extended mode
+          -?         # an optional minus
+          (?:
+            \d{0,10} # 0-10 digits, our fixed-point precision
+          )
+          (?:
+            \.       # a period
+            \d{0,6}  # followed by up to 6 digits, our fixed-point precision
+          )?         # make decimal portion optional
+        )
+      scope: constant.numeric.fson
+      
+  string:
+    #FSON postprocessor commands
+    - match: (")(?=@)
+      scope: punctuation.definition.string.begin.fson
+      push:
+      - clear_scopes: true
+      - match: \"
+        scope: punctuation.definition.string.end.fson
+        pop: true
+      - include: postprocessor_double_quote
+    - match: (')(?=@)
+      scope: punctuation.definition.string.begin.fson
+      push:
+      - clear_scopes: true
+      - match: \'
+        scope: punctuation.definition.string.end.fson
+        pop: true
+      - include: postprocessor_single_quote
+    
+    #unremarkable strings
+    - match: '"'
+      scope: punctuation.definition.string.begin.fson
+      push:
+        - meta_scope: string.quoted.double.fson
+        - match: '"'
+          scope: punctuation.definition.string.end.fson
+          pop: true
+        - match: |-
+            (?x:                # turn on extended mode
+              \\                # a literal backslash
+              (?:               # ...followed by...
+                ["\\/bfnrt]     # one of these characters
+                |               # ...or...
+                u               # a u
+                [0-9a-fA-F]{4}  # and four hex digits
+              )
+            )
+          scope: constant.character.escape.fson
+    - match: "'"
+      scope: punctuation.definition.string.begin.fson
+      push:
+        - meta_scope: string.quoted.single.fson
+        - match: "'"
+          scope: punctuation.definition.string.end.fson
+          pop: true
+        - match: |-
+            (?x:                # turn on extended mode
+              \\                # a literal backslash
+              (?:               # ...followed by...
+                ["\\/bfnrt]     # one of these characters
+                |               # ...or...
+                u               # a u
+                [0-9a-fA-F]{4}  # and four hex digits
+              )
+            )
+          scope: constant.character.escape.fson
+          
+  postprocessor_double_quote:
+    - match: (?:@eval|@macro|@include)[^"]* #macros with args
+      push:
+        - meta_scope: meta.preprocessor.fson
+        - match: (?=\")
+          pop: true
+        - match: '.'
+          scope: invalid.illegal.fson
+    - match: (?:@base|@flatten|@call|@merge|@derive) #macros without args
+      push:
+        - meta_scope: meta.preprocessor.fson
+        - match: (?=\")
+          pop: true
+        - match: '.'
+          scope: invalid.illegal.fson
+    - match: (.\w*)([^"]*)
+      captures: 
+        1: invalid.illegal.fson
+          
+  postprocessor_single_quote:
+    - match: (?:@eval|@macro|@include)[^']* #macros with args
+      push:
+        - meta_scope: meta.preprocessor.fson
+        - match: (?=\')
+          pop: true
+        - match: '.'
+          scope: invalid.illegal.fson
+    - match: (?:@base|@flatten|@call|@merge|@derive) #macros without args
+      push:
+        - meta_scope: meta.preprocessor.fson
+        - match: (?=\')
+          pop: true
+        - match: '.'
+          scope: invalid.illegal.fson
+    - match: (.\w*)([^']*)
+      captures: 
+        1: invalid.illegal.fson
+  
+  constant:
+    - match: \b(?:true|false|null)\b
+      scope: constant.language.fson
+      
+  object:
+    # a JSON object
+    - match: '\{'
+      scope: punctuation.definition.dictionary.begin.fson
+      push:
+        - meta_scope: meta.structure.dictionary.fson
+        - match: '\}'
+          scope: punctuation.definition.dictionary.end.fson
+          pop: true
+        - include: string
+        - include: comments
+        - match: ":"
+          scope: punctuation.separator.dictionary.key-value.fson
+          push:
+            - meta_scope: meta.structure.dictionary.value.fson
+            - match: '(,)|(?=\})'
+              captures:
+                1: punctuation.separator.dictionary.pair.fson
+              pop: true
+            - include: value
+            - match: '[^\s,]'
+              scope: invalid.illegal.expected-dictionary-separator.fson
+        - match: '{{keyword}}'
+          scope: string.unquoted.fson
+        - match: '{{repeated_keyword}}'
+          scope: invalid.illegal.expected-dictionary-separator.fson
+        - match: '[^\s]'
+          scope: invalid.illegal.expected-dictionary-separator.fson

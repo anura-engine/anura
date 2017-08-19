@@ -89,6 +89,18 @@ PlayableCustomObject::PlayableCustomObject(variant node)
 {
 }
 
+PlayableCustomObject::PlayableCustomObject(const std::string& type, int x, int y, bool face_right, bool deferInitProperties)
+	: CustomObject(type, x, y, face_right, deferInitProperties),
+	player_info_(*this),
+	difficulty_(0),
+	vertical_look_(0),
+	underwater_ctrl_x_(0),
+	underwater_ctrl_y_(0),
+	underwater_controls_(false),
+	can_interact_(0)
+{
+}
+
 variant PlayableCustomObject::write() const
 {
 	variant_builder node;
@@ -142,6 +154,9 @@ int PlayableCustomObject::walkUpOrDownStairs() const
 
 void PlayableCustomObject::process(Level& lvl)
 {
+	prev_ctrl_keys_ = ctrl_keys_;
+	ctrl_keys_ = getCtrlKeys();
+
 	if(player_info_.currentLevel() != lvl.id()) {
 		player_info_.setCurrentLevel(lvl.id());
 	}
@@ -202,6 +217,8 @@ variant PlayableCustomObject::getValue(const std::string& key) const
 		return getValueBySlot(CUSTOM_OBJECT_PLAYER_UNDERWATER_CONTROLS);
 	} else if(key == "ctrl_mod_key") {
 		return getValueBySlot(CUSTOM_OBJECT_PLAYER_CTRL_MOD_KEY);
+	} else if(key == "ctrl_mod_keys") {
+		return getValueBySlot(CUSTOM_OBJECT_PLAYER_CTRL_MOD_KEYS);
 	} else if(key == "ctrl_keys") {
 		return getValueBySlot(CUSTOM_OBJECT_PLAYER_CTRL_KEYS);
 	} else if(key == "ctrl_mice") {
@@ -254,45 +271,73 @@ variant PlayableCustomObject::getPlayerValueBySlot(int slot) const
 	case CUSTOM_OBJECT_PLAYER_CTRL_MOD_KEY: {
 		return variant(SDL_GetModState());
 	}
+	case CUSTOM_OBJECT_PLAYER_CTRL_MOD_KEYS: {
+		std::vector<variant> res;
+		auto mod_keys = SDL_GetModState();
+		if(mod_keys & KMOD_LSHIFT) {
+			res.emplace_back("lshift");
+		}
+		if(mod_keys & KMOD_RSHIFT) {
+			res.emplace_back("rshift");
+		}
+		if(mod_keys & KMOD_LCTRL) {
+			res.emplace_back("lctrl");
+		}
+		if(mod_keys & KMOD_RCTRL) {
+			res.emplace_back("lctrl");
+		}
+		if(mod_keys & KMOD_LALT) {
+			res.emplace_back("lalt");
+		}
+		if(mod_keys & KMOD_RALT) {
+			res.emplace_back("ralt");
+		}
+		if(mod_keys & KMOD_LGUI) {
+			res.emplace_back("lgui");
+		}
+		if(mod_keys & KMOD_RGUI) {
+			res.emplace_back("rgui");
+		}
+		if(mod_keys & KMOD_NUM) {
+			res.emplace_back("num");
+		}
+		if(mod_keys & KMOD_CAPS) {
+			res.emplace_back("caps");
+		}
+		if(mod_keys & KMOD_MODE) {
+			res.emplace_back("mode");
+		}
+		if(mod_keys & (KMOD_LSHIFT | KMOD_RSHIFT)) {
+			res.emplace_back("shift");
+		}
+		if(mod_keys & (KMOD_LCTRL | KMOD_RCTRL)) {
+			res.emplace_back("ctrl");
+		}
+		if(mod_keys & (KMOD_LALT | KMOD_RALT)) {
+			res.emplace_back("alt");
+		}
+		if(mod_keys & (KMOD_LGUI | KMOD_RGUI)) {
+			res.emplace_back("gui");
+		}
+		return variant(&res);
+	}
 	case CUSTOM_OBJECT_PLAYER_CTRL_KEYS: {
-		std::vector<variant> result;
-		if(LevelRunner::getCurrent() && LevelRunner::getCurrent()->get_debug_console() && LevelRunner::getCurrent()->get_debug_console()->hasKeyboardFocus()) {
-			//the debug console is stealing all keystrokes.
-			return variant(&result);
+		if(ctrl_keys_.is_null()) {
+			std::vector<variant> res;
+			return variant(&res);
 		}
 
-		for(auto& w : get_key_handling_widgets()) {
-			if(w->hasFocus()) {
-				return variant(&result);
-			}
+		return ctrl_keys_;
+
+	}
+	case CUSTOM_OBJECT_PLAYER_CTRL_PREV_KEYS: {
+		if(prev_ctrl_keys_.is_null()) {
+			std::vector<variant> res;
+			return variant(&res);
 		}
 
-		int ary_length;
-		const Uint8* key_state = SDL_GetKeyboardState(&ary_length);
+		return prev_ctrl_keys_;
 
-#ifndef NO_EDITOR
-		if(LevelRunner::getCurrent()) {
-			const editor* e = LevelRunner::getCurrent()->get_editor();
-			if(e && e->hasKeyboardFocus()) {
-				//the editor has the focus, so we tell the game there
-				//are no keys pressed.
-				ary_length = 0;
-			}
-		}
-#endif
-
-		for(int count = 0; count < ary_length; ++count) {
-			if(key_state[count]) {				//Returns only keys that are down so the list that ffl has to deal with is small.
-				SDL_Keycode k = SDL_GetKeyFromScancode(SDL_Scancode(count));
-				if(k < 128 && util::c_isprint(k)) {
-					std::string str(1,k);
-					result.push_back(variant(str));
-				} else {
-					result.push_back(variant(k));
-				}
-			}
-		}
-		return variant(&result);
 	}
 	case CUSTOM_OBJECT_PLAYER_CTRL_MICE: {
 		std::vector<variant> info;
@@ -454,3 +499,44 @@ void PlayableCustomObject::unregisterKeyboardOverrideWidget(gui::Widget* widget)
 	}
 }
 
+
+variant PlayableCustomObject::getCtrlKeys() const
+{
+	std::vector<variant> result;
+	if(LevelRunner::getCurrent() && LevelRunner::getCurrent()->get_debug_console() && LevelRunner::getCurrent()->get_debug_console()->hasKeyboardFocus()) {
+		//the debug console is stealing all keystrokes.
+		return variant(&result);
+	}
+
+	int ary_length;
+	const Uint8* key_state = SDL_GetKeyboardState(&ary_length);
+
+#ifndef NO_EDITOR
+	if(LevelRunner::getCurrent()) {
+		ConstEditorPtr e = LevelRunner::getCurrent()->get_editor();
+		if(e && e->hasKeyboardFocus()) {
+			//the editor has the focus, so we tell the game there
+			//are no keys pressed.
+			ary_length = 0;
+		}
+	}
+#endif
+
+	for(int count = 0; count < ary_length; ++count) {
+		if(key_state[count]) {				//Returns only keys that are down so the list that ffl has to deal with is small.
+			SDL_Keycode k = SDL_GetKeyFromScancode(SDL_Scancode(count));
+			if(k < 128 && util::c_isprint(k)) {
+				std::string str(1,k);
+				result.push_back(variant(str));
+			} else {
+				const char* name = SDL_GetKeyName(k);
+				if(*name) {
+					result.push_back(variant(std::string(name)));
+				} else {
+					result.push_back(variant(k));
+				}
+			}
+		}
+	}
+	return variant(&result);
+}

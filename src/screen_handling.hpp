@@ -45,10 +45,8 @@ namespace graphics
 		int getVirtualHeight() const { return virtual_height_; }
 		float getScaleW() const { return static_cast<float>(virtual_width_) / static_cast<float>(width_); }
 		float getScaleH() const { return static_cast<float>(virtual_height_) / static_cast<float>(height_); }
-		void mapCoordsPtoV(int* x, int* y);
-		void mapCoordsVtoP(int* x, int* y);
 
-		void windowSizeUpdated(int width, int height);
+		void windowSizeUpdated(int width, int height, int flags);
 
 		void setLocation(int x, int y);
 		void setDimensions(int width, int height);

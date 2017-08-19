@@ -25,6 +25,7 @@
 
 #include <array>
 #include <memory>
+#include <set>
 #include <string>
 #include "geometry.hpp"
 #include "ScopeableValue.hpp"
@@ -42,9 +43,11 @@ namespace KRE
 	// unpack image height
 	// unpack skip rows, skip pixels
 
-	class Texture : public ScopeableValue
+	class Texture : public ScopeableValue, public std::enable_shared_from_this<Texture>
 	{
 	public:
+		static const std::set<Texture*>& getAllTextures();
+
 		enum class AddressMode {
 			WRAP,
 			CLAMP,
@@ -90,6 +93,8 @@ namespace KRE
 		int surfaceWidth(int n = 0) const { return texture_params_[n].surface_width; }
 		int surfaceHeight(int n = 0) const { return texture_params_[n].surface_height; }
 
+		virtual void clearSurfaces();
+
 		virtual void init(int n) = 0;
 		virtual void bind(int binding_point=0) = 0;
 		virtual unsigned id(int n = 0) const = 0;
@@ -98,7 +103,7 @@ namespace KRE
 		// Less safe version for updating a multi-texture.
 		virtual void update(int n, int x, int y, int width, int height, const void* pixels) = 0;
 		virtual void update2D(int n, int x, int y, int width, int height, int stride, const void* pixels) = 0;
-		virtual void updateYUV(int x, int y, int width, int height, const std::vector<int>& stride, const void* pixels) = 0;
+		virtual void updateYUV(int x, int y, int width, int height, const std::vector<int>& stride, const std::vector<void*>& pixels) = 0;
 		virtual void update(int n, int x, int y, int z, int width, int height, int depth, void* pixels) = 0;
 
 		static void rebuildAll();
@@ -111,6 +116,8 @@ namespace KRE
 		static TexturePtr createTexture(const std::string& filename, const variant& node);
 		static TexturePtr createTexture(const SurfacePtr& surface, const variant& node);
 		static TexturePtr createTexture(const SurfacePtr& surface);
+		static TexturePtr createFromImage(const std::string& image_data, const variant& node);
+		static TexturePtr createFromImage(const std::string& image_data, TextureType type=TextureType::TEXTURE_2D, int mipmap_levels=0);
 		
 		static TexturePtr createTexture1D(int width, PixelFormat::PF fmt);
 		static TexturePtr createTexture2D(int width, int height, PixelFormat::PF fmt);
@@ -235,6 +242,7 @@ namespace KRE
 
 		// Helper function to extract all the image names out of a node and return them.
 		static std::vector<std::string> findImageNames(const variant& node);
+
 	protected:
 		explicit Texture(const variant& node, const std::vector<SurfacePtr>& surfaces);
 		explicit Texture(const std::vector<SurfacePtr>& surfaces,
@@ -246,6 +254,7 @@ namespace KRE
 			int depth,
 			PixelFormat::PF fmt, 
 			TextureType type);
+		Texture(const Texture& other);
 		void addSurface(SurfacePtr surf);
 		void replaceSurface(int n, SurfacePtr surf);
 	private:

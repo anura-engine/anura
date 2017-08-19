@@ -25,6 +25,7 @@
 
 #include <glm/gtx/quaternion.hpp>
 
+#include "AlignedAllocator.hpp"
 #include "RenderQueue.hpp"
 #include "SceneFwd.hpp"
 #include "ScopeableValue.hpp"
@@ -32,15 +33,22 @@
 #include "UniformBuffer.hpp"
 #include "variant.hpp"
 
+class variant_builder;
+
 namespace KRE
 {
-	class Renderable : public ScopeableValue
+	class Renderable : public ScopeableValue, public AlignedAllocator16
 	{
 	public:
 		explicit Renderable();
 		explicit Renderable(size_t order);
 		explicit Renderable(const variant& node);
 		virtual ~Renderable();
+
+		void setFromVariant(const variant& node);
+	protected:
+		void writeData(variant_builder* build) const;
+	public:
 
 		void setPosition(const glm::vec3& position);
 		void setPosition(float x, float y, float z=0.0f);

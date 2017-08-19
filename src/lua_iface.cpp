@@ -70,7 +70,7 @@ namespace lua
 				, file_(file)
 				, line_(line)
 			{}
-			~assert_stack_neutral()
+			~assert_stack_neutral() NOEXCEPT(false)
 			{
 				ASSERT_LOG(stack_ == lua_gettop(L_), "lua stack corruption detected: start " << stack_ << " end " << lua_gettop(L_) << "  [" << file_ << ":" << line_ << "]");
 			}
@@ -337,8 +337,6 @@ namespace lua
 	{
 		// First assemble the persistent table.
 		lua_State * L = getState();
-
-		int top = lua_gettop(L);
 
 		lua_newtable(L);					// persist
 		lua_pushstring(L, me_key);				// persist "me"
@@ -1149,7 +1147,7 @@ namespace lua
 		ASSERT_LOG(callable != nullptr, "Argument to LuaCompiled::execute was not a formula callable");
 		game_logic::FormulaObject * object = dynamic_cast<game_logic::FormulaObject*>(callable);
 		ASSERT_LOG(object != nullptr, "Argument to LuaCompiled::execute was not a formula object");
-		boost::intrusive_ptr<lua::LuaContext> ctx = object->get_lua_context();
+		ffl::IntrusivePtr<lua::LuaContext> ctx = object->get_lua_context();
 		ASSERT_LOG(ctx, "Argument to LuaCompiled::execute was not a formula object with a lua context. (Check class definition?)");
 		obj.run(*ctx);
 		//return lua_value_to_variant(ctx.getState());

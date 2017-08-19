@@ -31,14 +31,17 @@
 class ModuleWebServer : public http::web_server
 {
 public:
-	explicit ModuleWebServer(const std::string& data_path, boost::asio::io_service& io_service, int port=23456);
+	explicit ModuleWebServer(const std::string& data_path, const std::string& chunk_path, boost::asio::io_service& io_service, int port=23456);
 	virtual ~ModuleWebServer()
 	{}
 private:
 	void heartbeat();
 
-	virtual void handlePost(socket_ptr socket, variant doc, const http::environment& env);
-	virtual void handleGet(socket_ptr socket, const std::string& url, const std::map<std::string, std::string>& args);
+	virtual void handlePost(socket_ptr socket, variant doc, const http::environment& env, const std::string& raw_msg) override;
+	virtual void handleGet(socket_ptr socket, const std::string& url, const std::map<std::string, std::string>& args) override;
+
+	std::string getChunkPath(const std::string& chunk_id) const;
+	void add_chunks_to_manifest(const std::string& data_path, variant manifest) const;
 
 	boost::asio::deadline_timer timer_;
 	int nheartbeat_;
@@ -46,7 +49,7 @@ private:
 	std::string getDataFilePath() const;
 	void writeData();
 	variant data_;
-	std::string data_path_;
+	std::string data_path_, chunk_path_;
 
 	std::map<std::string, int> module_lock_ids_;
 	int next_lock_id_;

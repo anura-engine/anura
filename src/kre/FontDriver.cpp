@@ -76,7 +76,7 @@ namespace KRE
 			if(res.empty()) {
 				// replace character.
 				res.emplace_back(0xfffd);
-				for(char32_t n = 0x21; n < 0x7f; ++n) {
+				for(char32_t n = 0x21; n < 0x200; ++n) {
 					res.emplace_back(n);
 				}
 			}
@@ -200,9 +200,13 @@ namespace KRE
 	}
 
 	FontRenderable::FontRenderable() 
-		: SceneObject("font-renderable")
+		: SceneObject("font-renderable"),
+		  attribs_(nullptr),
+		  width_(0),
+		  height_(0),
+		  color_(nullptr)
 	{
-		ShaderProgramPtr shader = ShaderProgram::getProgram("font_shader");
+		ShaderProgramPtr shader = ShaderProgram::getProgram("font_shader")->clone();
 		setShader(shader);
 		auto as = DisplayDevice::createAttributeSet();
 		attribs_.reset(new Attribute<font_coord>(AccessFreqHint::DYNAMIC, AccessTypeHint::DRAW));
@@ -210,14 +214,17 @@ namespace KRE
 		attribs_->addAttributeDesc(AttributeDesc(AttrType::TEXTURE,  2, AttrFormat::FLOAT, false, sizeof(font_coord), offsetof(font_coord, tc)));
 		as->addAttribute(AttributeBasePtr(attribs_));
 		as->setDrawMode(DrawMode::TRIANGLES);
-		as->clearblendState();
+		as->clearBlendState();
 		as->clearBlendMode();
 
 		addAttributeSet(as);
 
 		int u_ignore_alpha = shader->getUniform("ignore_alpha");
-		shader->setUniformDrawFunction([u_ignore_alpha](ShaderProgramPtr shader) {
+		int a_color_attr = shader->getAttribute("a_color");
+		shader->setUniformDrawFunction([u_ignore_alpha, a_color_attr](ShaderProgramPtr shader) {
 			shader->setUniformValue(u_ignore_alpha, 0);
+			glm::vec4 attr_color(1.0f);
+			shader->setAttributeValue(a_color_attr, glm::value_ptr(attr_color));
 		});				
 	}
 
@@ -241,6 +248,76 @@ namespace KRE
 	}
 
 	void FontRenderable::clear()
+	{
+		attribs_->clear();
+	}
+
+	ColoredFontRenderable::ColoredFontRenderable() 
+		: SceneObject("colored-font-renderable"),
+		  attribs_(nullptr),
+		  color_attrib_(nullptr),
+		  width_(0),
+		  height_(0),
+		  color_(nullptr),
+		  vertices_per_color_(6)
+	{
+		ShaderProgramPtr shader = ShaderProgram::getProgram("font_shader");
+		setShader(shader);
+		auto as = DisplayDevice::createAttributeSet();
+		attribs_.reset(new Attribute<font_coord>(AccessFreqHint::STATIC, AccessTypeHint::DRAW));
+		attribs_->addAttributeDesc(AttributeDesc(AttrType::POSITION, 2, AttrFormat::FLOAT, false, sizeof(font_coord), offsetof(font_coord, vtx)));
+		attribs_->addAttributeDesc(AttributeDesc(AttrType::TEXTURE,  2, AttrFormat::FLOAT, false, sizeof(font_coord), offsetof(font_coord, tc)));
+		as->addAttribute(attribs_);
+
+		color_attrib_.reset(new Attribute<glm::u8vec4>(AccessFreqHint::DYNAMIC, AccessTypeHint::DRAW));
+		color_attrib_->addAttributeDesc(AttributeDesc(AttrType::COLOR,  4, AttrFormat::UNSIGNED_BYTE, true));
+		as->addAttribute(color_attrib_);
+
+		as->setDrawMode(DrawMode::TRIANGLES);
+		as->clearBlendState();
+		as->clearBlendMode();
+
+		addAttributeSet(as);
+
+		int u_ignore_alpha = shader->getUniform("ignore_alpha");
+		shader->setUniformDrawFunction([u_ignore_alpha](ShaderProgramPtr shader) {
+			shader->setUniformValue(u_ignore_alpha, 0);
+		});				
+	}
+
+	void ColoredFontRenderable::preRender(const WindowPtr& wnd)
+	{
+		//ASSERT_LOG(color_ != nullptr, "Color pointer was null.");
+		if(color_ != nullptr) {
+			setColor(*color_);
+		}
+	}
+
+	void ColoredFontRenderable::setColorPointer(const ColorPtr& color) 
+	{
+		ASSERT_LOG(color != nullptr, "Font color was null.");
+		color_ = color;
+	}
+
+	void ColoredFontRenderable::update(std::vector<font_coord>* queue)
+	{
+		attribs_->update(queue, attribs_->end());
+	}
+
+	void ColoredFontRenderable::updateColors(const std::vector<Color>& colors)
+	{
+		std::vector<glm::u8vec4> col;
+		col.reserve(vertices_per_color_ * colors.size());
+		for(auto& color : colors) {
+			auto c = color.as_u8vec4();
+			for(int n = 0; n != vertices_per_color_; ++n) {
+				col.emplace_back(c);
+			}
+		}
+		color_attrib_->update(&col);
+	}
+
+	void ColoredFontRenderable::clear()
 	{
 		attribs_->clear();
 	}
@@ -294,6 +371,16 @@ namespace KRE
 		return impl_->getDescender();
 	}
 
+	int FontHandle::getBoundingHeight()
+	{
+		return impl_->getBoundingHeight();
+	}
+
+	int FontHandle::getBaseline()
+	{
+		return impl_->getBaseline();
+	}
+
 	const std::vector<point>& FontHandle::getGlyphPath(const std::string& text)
 	{
 		return impl_->getGlyphPath(text);
@@ -301,12 +388,19 @@ namespace KRE
 
 	rect FontHandle::getBoundingBox(const std::string& text)
 	{
-		return rect();
+		long w, h;
+		impl_->getBoundingBox(text, &w, &h);
+		return rect(0, 0, w, h);
 	}
 
 	FontRenderablePtr FontHandle::createRenderableFromPath(FontRenderablePtr r, const std::string& text, const std::vector<point>& path)
 	{
 		return impl_->createRenderableFromPath(r, text, path);
+	}
+
+	ColoredFontRenderablePtr FontHandle::createColoredRenderableFromPath(ColoredFontRenderablePtr r, const std::string& text, const std::vector<point>& path, const std::vector<KRE::Color>& colors)
+	{
+		return impl_->createColoredRenderableFromPath(r, text, path, colors);
 	}
 
 	int FontHandle::calculateCharAdvance(char32_t cp)
@@ -322,5 +416,10 @@ namespace KRE
 	void* FontHandle::getRawFontHandle()
 	{
 		return impl_->getRawFontHandle();
+	}
+
+	float FontHandle::getLineGap() const
+	{
+		return impl_->getLineGap();
 	}
 }

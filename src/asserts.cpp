@@ -45,6 +45,8 @@
 
 namespace 
 {
+	PREF_BOOL_PERSISTENT(error_message_box, true, "Show a message dialog when an error occurs");
+
 	std::function<void()> g_edit_and_continue_fn;
 }
 
@@ -106,10 +108,12 @@ void report_assert_msg(const std::string& m)
 	__android_log_print(ANDROID_LOG_INFO, "Frogatto", m.c_str());
 #endif
 	
-	std::stringstream ss;
-	ss << "Assertion failed\n\n" << m;
-	std::string assert_str = ss.str();
-	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Assertion Failed", assert_str.c_str(), nullptr);
+	if(g_error_message_box) {
+		std::stringstream ss;
+		ss << "Assertion failed\n\n" << m;
+		std::string assert_str = ss.str();
+		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Assertion Failed", assert_str.c_str(), nullptr);
+	}
 
 #if defined(WIN32)
 	if(IsDebuggerPresent()) {
@@ -215,8 +219,9 @@ bool throw_validation_failure_on_assert()
 	return throw_validation_failure != 0 && !preferences::die_on_assert();
 }
 
-assert_recover_scope::assert_recover_scope(int options) : options_(options)
+assert_recover_scope::assert_recover_scope(int options) : options_(options), fatal_(throw_fatal)
 {
+	throw_fatal = 0;
 	if(options_&static_cast<int>(SilenceAsserts)) {
 		silence_on_assert++;
 	}
@@ -225,6 +230,7 @@ assert_recover_scope::assert_recover_scope(int options) : options_(options)
 
 assert_recover_scope::~assert_recover_scope()
 {
+	throw_fatal = fatal_;
 	if(options_&SilenceAsserts) {
 		silence_on_assert--;
 	}

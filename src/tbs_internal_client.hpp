@@ -48,7 +48,7 @@ namespace tbs
 		std::shared_ptr<std::function<void(const std::string&)>> handler_;
 	};
 
-	typedef boost::intrusive_ptr<internal_client> internal_client_ptr;
-	typedef boost::intrusive_ptr<const internal_client> const_internal_client_ptr;
+	typedef ffl::IntrusivePtr<internal_client> internal_client_ptr;
+	typedef ffl::IntrusivePtr<const internal_client> const_internal_client_ptr;
 }
 

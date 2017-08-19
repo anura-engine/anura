@@ -926,7 +926,7 @@ namespace voxel
 		}
 
 		model_ = glm::translate(glm::mat4(1.0f), p1) 
-			* glm::rotate(glm::mat4(1.0f), amount, glm::normalize(p2 - p1)) 
+			* glm::rotate(glm::mat4(1.0f), glm::radians(amount), glm::normalize(p2 - p1)) 
 			* glm::translate(glm::mat4(1.0f), -p1) 
 			* model_;
 	}

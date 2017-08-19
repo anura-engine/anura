@@ -82,6 +82,7 @@ void draw_scene(const Level& lvl, screen_position& pos, const Entity* focus=null
 
 struct performance_data {
 	int fps;
+	int max_frame_time;
 	int cycles_per_second;
 	int delay;
 	int draw;
@@ -92,8 +93,9 @@ struct performance_data {
 
 	std::string profiling_info;
 
-	performance_data(int fps_, int cycles_per_second_, int delay_, int draw_, int process_, int flip_, int cycle_, int nevents_, const std::string& profiling_info_)
-	  : fps(fps_), cycles_per_second(cycles_per_second_), delay(delay_),
+	performance_data(int max_frame_time_, int fps_, int cycles_per_second_, int delay_, int draw_, int process_, int flip_, int cycle_, int nevents_, const std::string& profiling_info_)
+	  : max_frame_time(max_frame_time_),
+	    fps(fps_), cycles_per_second(cycles_per_second_), delay(delay_),
 	    draw(draw_), process(process_), flip(flip_), cycle(cycle_),
 		nevents(nevents_), profiling_info(profiling_info_)
 	{}

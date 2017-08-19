@@ -30,9 +30,11 @@
 #include "filesystem.hpp"
 #include "formatter.hpp"
 #include "formula_object.hpp"
+//#include "hex.hpp"
 #include "json_parser.hpp"
 #include "module.hpp"
 #include "preferences.hpp"
+#include "shared_memory_pipe.hpp"
 #include "string_utils.hpp"
 #include "tbs_bot.hpp"
 #include "tbs_server.hpp"
@@ -44,6 +46,7 @@
 
 namespace {
 	PREF_STRING(tbs_server_semaphore, "", "");
+	//PREF_BOOL(tbs_server_hexes, false, "Whether the tbs server should load hexes");
 	boost::interprocess::named_semaphore* g_termination_semaphore;
 
 #if defined(_MSC_VER)
@@ -64,9 +67,6 @@ namespace tbs
 		boost::asio::io_service* g_service;
 		int g_listening_port = -1;
 		web_server* web_server_instance = nullptr;
-
-
-
 	}
 
 	std::string global_debug_str;
@@ -74,6 +74,7 @@ namespace tbs
 	using boost::asio::ip::tcp;
 
 	boost::asio::io_service* web_server::service() { return g_service; }
+	boost::interprocess::named_semaphore* web_server::termination_semaphore() { return g_termination_semaphore; }
 	int web_server::port() { return g_listening_port; }
 
 	web_server::web_server(server& serv, boost::asio::io_service& io_service, int port)
@@ -90,7 +91,7 @@ namespace tbs
 		web_server_instance = nullptr;
 	}
 
-	void web_server::handlePost(socket_ptr socket, variant doc, const http::environment& env)
+	void web_server::handlePost(socket_ptr socket, variant doc, const http::environment& env, const std::string& raw_msg)
 	{
 #if defined(_MSC_VER)
 		socket->socket.set_option(boost::asio::ip::tcp::no_delay(true));
@@ -158,10 +159,6 @@ namespace tbs
 
 	void web_server::heartbeat(const boost::system::error_code& error)
 	{
-		if(g_termination_semaphore && g_termination_semaphore->try_wait()) {
-			exit(0);
-		}
-
 		if(error == boost::asio::error::operation_aborted) {
 			LOG_INFO("tbs_webserver::heartbeat cancelled");
 			return;
@@ -206,7 +203,7 @@ namespace tbs
 		disconnect(socket);
 	}
 
-	boost::intrusive_ptr<http_client> g_game_server_http_client_to_matchmaking_server;
+	ffl::IntrusivePtr<http_client> g_game_server_http_client_to_matchmaking_server;
 }
 
 namespace 
@@ -221,15 +218,37 @@ namespace
 	}
 }
 
+namespace {
+struct IPCSession {
+	std::string pipe_name;
+	int session_id;
+};
+}
 
 COMMAND_LINE_UTILITY(tbs_server) {
+	//if(g_tbs_server_hexes) {
+	//}
+
+	std::vector<IPCSession> ipc_sessions;
+
 	int port = 23456;
 	std::vector<std::string> bot_id;
 	variant config;
 	if(args.size() > 0) {
 		std::vector<std::string>::const_iterator it = args.begin();
 		while(it != args.end()) {
-			if(*it == "--port" || *it == "--listen-port") {
+			if(*it == "--sharedmem") {
+				it++;
+				IPCSession s;
+				if(it != args.end()) {
+					s.pipe_name = *it++;
+					if(it != args.end()) {
+						s.session_id = atoi(it->c_str());
+						ipc_sessions.push_back(s);
+						++it;
+					}
+				}
+			} else if(*it == "--port" || *it == "--listen-port") {
 				it++;
 				if(it != args.end()) {
 					port = atoi(it->c_str());
@@ -251,7 +270,7 @@ COMMAND_LINE_UTILITY(tbs_server) {
 			}
 		}
 	}
-
+/*
 	const std::string MonitorDirs[] = { "data/tbs", "data/tbs_test", "data/classes" };
 	for(const std::string& dir : MonitorDirs) {
 		std::vector<std::string> files;
@@ -264,19 +283,28 @@ COMMAND_LINE_UTILITY(tbs_server) {
 			}
 		}
 	}
-
+*/
 	LOG_INFO("MONITOR URL: " << "http://localhost:" << port << "/tbs_monitor.html");
 
 	boost::asio::io_service io_service;
 
-	LOG_INFO("tbs_server(): Listening on port " << std::dec << port);
 	tbs::g_service = &io_service;
 	tbs::g_listening_port = port;
 
 	tbs::server s(io_service);
-	tbs::web_server ws(s, io_service, port);
 
-	s.set_http_server(&ws);
+	for(auto session : ipc_sessions) {
+		SharedMemoryPipePtr pipe(new SharedMemoryPipe(session.pipe_name, false));
+		s.add_ipc_client(session.session_id, pipe);
+
+		LOG_INFO("opened shared memory pipe: " << session.pipe_name << " for session " << session.session_id);
+	}
+
+	boost::shared_ptr<tbs::web_server> ws;
+
+	ws.reset(new tbs::web_server(s, io_service, ipc_sessions.empty() ? port : 0));
+	s.set_http_server(ws.get());
+	LOG_INFO("tbs_server(): Listening on port " << std::dec << port);
 
 	if(!config.is_null()) {
 		tbs::server_base::game_info_ptr result = s.create_game(config["game"]);
@@ -325,12 +353,12 @@ COMMAND_LINE_UTILITY(tbs_server) {
 		startup_semaphore.post();
 	}
 
-	std::vector<boost::intrusive_ptr<tbs::bot> > bots;
+	std::vector<ffl::IntrusivePtr<tbs::bot> > bots;
 	for(;;) {
 		try {
 			const assert_recover_scope assert_scope;
 			for(const std::string& id : bot_id) {
-				bots.push_back(boost::intrusive_ptr<tbs::bot>(new tbs::bot(io_service, "127.0.0.1", formatter() << port, json::parse_from_file("data/tbs_test/" + id + ".cfg"))));
+				bots.push_back(ffl::IntrusivePtr<tbs::bot>(new tbs::bot(io_service, "127.0.0.1", formatter() << port, json::parse_from_file("data/tbs_test/" + id + ".cfg"))));
 			}
 		} catch(validation_failure_exception& e) {
 			std::map<variant,variant> m;

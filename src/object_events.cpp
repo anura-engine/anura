@@ -73,6 +73,8 @@ namespace
 		res.push_back("being_removed");
 		res.push_back("window_resize");
 		res.push_back("settings_menu");
+		res.push_back("quit_game");
+		res.push_back("begin_transition_level");
 		res.push_back("mouse_down");
 		res.push_back("mouse_up");
 		res.push_back("mouse_move");
@@ -85,7 +87,10 @@ namespace
 		res.push_back("drag");
 		res.push_back("drag_start");
 		res.push_back("drag_end");
-	res.push_back("mouse_wheel");
+		res.push_back("mouse_wheel");
+		res.push_back("text_input");
+		res.push_back("type_updated");
+		res.push_back("message_received");
 
 		ASSERT_EQ(res.size(), NUM_OBJECT_BUILTIN_EVENT_IDS);
 		return res;
@@ -110,6 +115,12 @@ namespace
 		static std::map<std::string, int> event_ids = create_object_event_ids();
 		return event_ids;
 	}
+}
+
+const std::vector<std::string>& builtin_object_event_names()
+{
+	static const std::vector<std::string> event_names = create_object_event_names();
+	return event_names;
 }
 
 const std::string& get_object_event_str(int id)
@@ -150,6 +161,7 @@ variant_type_ptr get_object_event_arg_type(int id)
 		return p; \
 	}
 	switch(id) {
+		EVENT_ARG(BEGIN_TRANSITION_LEVEL, "{transition: string}")
 		EVENT_ARG(WINDOW_RESIZE, "{width: int, height: int}")
 		EVENT_ARG(MOUSE_DOWN, "{mouse_x: int, mouse_y: int, mouse_button: int, world_point: [decimal, decimal, decimal]}")
 		EVENT_ARG(MOUSE_UP, "{mouse_x: int, mouse_y: int, mouse_button: int, world_point: [decimal, decimal, decimal]}")
@@ -172,6 +184,7 @@ variant_type_ptr get_object_event_arg_type(int id)
 		EVENT_ARG(COLLIDE_SIDE, "{area: string|null, collide_with: custom_obj|null, collide_with_area: string|null}")
 		EVENT_ARG(CHANGE_ANIMATION_FAILURE, "{previous_animation: string}")
 		EVENT_ARG(COSMIC_SHIFT, "{xshift: int, yshift: int}")
+		EVENT_ARG(TEXT_INPUT, "{text: string}")
 		default: {
 			const std::string& str = get_object_event_str(id);
 			if(strstr(str.c_str(), "collide_object")) {

@@ -29,9 +29,10 @@
 class RectRenderable : public KRE::SceneObject
 {
 public:
-	explicit RectRenderable(bool strips=true);
+	explicit RectRenderable(bool strips=true, bool blend=false);
 	void update(int x, int y, int w, int h, const KRE::Color& color);
 	void update(const rect& r, const KRE::Color& color);
+	void update(const rect& r, float rotation, const KRE::Color& color);
 	void update(const std::vector<glm::u16vec2>& r, const KRE::Color& color);
 	void update(std::vector<glm::u16vec2>* r, const KRE::Color& color);
 private:

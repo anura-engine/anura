@@ -278,9 +278,6 @@ namespace json
 
 			std::set<std::string>::const_iterator filename_itor = filename_registry.insert(fname).first;
 
-
-			const std::string* filename = &*filename_itor;
-
 			variant::debug_info debug_info;
 			debug_info.filename = &*filename_itor;
 			debug_info.line = 1;
@@ -439,18 +436,12 @@ namespace json
 
 							try {
 								v = preprocess_string_value(s, callable);
+
+								if(v.get_debug_info()) {
+									str_debug_info = *v.get_debug_info();
+								}
 							} catch(preprocessor_error&) {
 								CHECK_PARSE(false, "Preprocessor error: " + s, t.begin - doc.c_str());
-							}
-
-							if(t.type == Token::TYPE::IDENTIFIER) {
-								const variant constant = game_logic::get_constant(s);
-								if(constant.is_null() == false) {
-									v = constant;
-								} else if(stack.back().type != VAL_TYPE::OBJ &&
-										  std::count_if(s.begin(), s.end(), util::c_isupper) + std::count(s.begin(), s.end(), '_') == s.size()) {
-									CHECK_PARSE(false, "Preprocessor error: symbol not found: " + s, t.begin - doc.c_str());
-								}
 							}
 
 							const std::string CallStr = "@call";

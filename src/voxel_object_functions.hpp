@@ -62,7 +62,7 @@ private:
 	//these two members are used as a more compiler-friendly version of a
 	//intrusive_ptr<FormulaExpression>
 	const game_logic::FormulaExpression* expr_;
-	boost::intrusive_ptr<const reference_counted_object> expr_holder_;
+	ffl::IntrusivePtr<const reference_counted_object> expr_holder_;
 };
 
 */

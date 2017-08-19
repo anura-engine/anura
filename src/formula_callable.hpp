@@ -52,6 +52,9 @@ namespace game_logic
 		explicit FormulaCallable(bool has_self=false) : has_self_(has_self)
 		{}
 
+		explicit FormulaCallable(GARBAGE_COLLECTOR_EXCLUDE_OPTIONS options) : has_self_(false), GarbageCollectible(options)
+		{}
+
 		std::string queryId() const { return getObjectId(); }
 
 		variant queryValue(const std::string& key) const {
@@ -63,6 +66,10 @@ namespace game_logic
 
 		variant queryValueBySlot(int slot) const {
 			return getValueBySlot(slot);
+		}
+
+		bool queryConstantValue(const std::string& key, variant* value) const {
+			return getConstantValue(key, value);
 		}
 
 		void mutateValue(const std::string& key, const variant& value) {
@@ -132,6 +139,10 @@ namespace game_logic
 		virtual variant getValue(const std::string& key) const = 0;
 		virtual variant getValueBySlot(int slot) const;
 
+		virtual bool getConstantValue(const std::string& key, variant* value) const {
+			return false;
+		}
+
 		virtual std::string getObjectId() const { return "FormulaCallable"; }
 
 		bool has_self_;
@@ -149,15 +160,15 @@ namespace game_logic
 		const FormulaCallable& main_;
 		const FormulaCallable& backup_;
 
-		void setValueBySlot(int slot, const variant& value) {
+		void setValueBySlot(int slot, const variant& value) override {
 			const_cast<FormulaCallable&>(backup_).mutateValueBySlot(slot, value);
 		}
 
-		variant getValueBySlot(int slot) const {
+		variant getValueBySlot(int slot) const override {
 			return backup_.queryValueBySlot(slot);
 		}
 
-		variant getValue(const std::string& key) const {
+		variant getValue(const std::string& key) const override {
 			variant var = main_.queryValue(key);
 			if(var.is_null()) {
 				return backup_.queryValue(key);
@@ -166,7 +177,7 @@ namespace game_logic
 			return var;
 		}
 
-		void getInputs(std::vector<FormulaInput>* inputs) const {
+		void getInputs(std::vector<FormulaInput>* inputs) const override {
 			main_.getInputs(inputs);
 			backup_.getInputs(inputs);
 		}
@@ -178,7 +189,7 @@ namespace game_logic
 	class FormulaVariantCallableWithBackup : public FormulaCallable {
 		variant var_;
 		const FormulaCallable& backup_;
-		variant getValue(const std::string& key) const {
+		variant getValue(const std::string& key) const override {
 			variant var = var_.get_member(key);
 			if(var.is_null()) {
 				return backup_.queryValue(key);
@@ -187,21 +198,25 @@ namespace game_logic
 			return var;
 		}
 
-		void setValueBySlot(int slot, const variant& value) {
+		void setValueBySlot(int slot, const variant& value) override {
 			const_cast<FormulaCallable&>(backup_).mutateValueBySlot(slot, value);
 		}
 
-		variant getValueBySlot(int slot) const {
+		variant getValueBySlot(int slot) const override {
 			return backup_.queryValueBySlot(slot);
 		}
 
-		void getInputs(std::vector<FormulaInput>* inputs) const {
+		void getInputs(std::vector<FormulaInput>* inputs) const override {
 			backup_.getInputs(inputs);
 		}
 
 	public:
 		FormulaVariantCallableWithBackup(const variant& var, const FormulaCallable& backup) : FormulaCallable(false), var_(var), backup_(backup)
 		{}
+
+		void surrenderReferences(GarbageCollector* collector) override {
+			collector->surrenderVariant(&var_);
+		}
 	};
 
 	class MapFormulaCallable : public FormulaCallable {
@@ -252,11 +267,11 @@ namespace game_logic
 		const FormulaCallable* fallback_;
 	};
 
-	typedef boost::intrusive_ptr<FormulaCallable> FormulaCallablePtr;
-	typedef boost::intrusive_ptr<const FormulaCallable> ConstFormulaCallablePtr;
+	typedef ffl::IntrusivePtr<FormulaCallable> FormulaCallablePtr;
+	typedef ffl::IntrusivePtr<const FormulaCallable> ConstFormulaCallablePtr;
 
-	typedef boost::intrusive_ptr<MapFormulaCallable> MapFormulaCallablePtr;
-	typedef boost::intrusive_ptr<const MapFormulaCallable> ConstMapFormulaCallablePtr;
+	typedef ffl::IntrusivePtr<MapFormulaCallable> MapFormulaCallablePtr;
+	typedef ffl::IntrusivePtr<const MapFormulaCallable> ConstMapFormulaCallablePtr;
 
 	class FormulaExpression;
 
@@ -267,31 +282,38 @@ namespace game_logic
 
 		void setExpression(const FormulaExpression* expr);
 
-		bool isCommand() const { return true; }
+		bool isCommand() const override { return true; }
 	private:
 		virtual void execute(FormulaCallable& context) const = 0;
-		variant getValue(const std::string& key) const { return variant(); }
-		void getInputs(std::vector<game_logic::FormulaInput>* inputs) const {}
+		variant getValue(const std::string& key) const override { return variant(); }
+		void getInputs(std::vector<game_logic::FormulaInput>* inputs) const override {}
 
 		//these two members are a more compiler-friendly version of a
 		//intrusive_ptr<FormulaExpression>
 		const FormulaExpression* expr_;
-		boost::intrusive_ptr<const reference_counted_object> expr_holder_;
+		ffl::IntrusivePtr<const reference_counted_object> expr_holder_;
 	};
 
 	class FnCommandCallable : public CommandCallable {
 	public:
-		explicit FnCommandCallable(std::function<void()> fn);
+		FnCommandCallable(const char* name, std::function<void()> fn);
+
+		std::string debugObjectName() const override;
 	private:
-		virtual void execute(FormulaCallable& context) const;
+		virtual void execute(FormulaCallable& context) const override;
+		const char* name_;
 		std::function<void()> fn_;
 	};
 
 	class FnCommandCallableArg : public CommandCallable {
 	public:
-		explicit FnCommandCallableArg(std::function<void(FormulaCallable*)> fn);
+		FnCommandCallableArg(const char* name, std::function<void(FormulaCallable*)> fn);
+		std::string debugObjectName() const override;
 	private:
-		virtual void execute(FormulaCallable& context) const;
+		virtual void execute(FormulaCallable& context) const override;
+		const char* name_;
 		std::function<void(FormulaCallable*)> fn_;
 	};
+
+	variant deferCurrentCommandSequence();
 }

@@ -50,6 +50,8 @@ namespace graphics
 
 		void set_pattern(cairo_pattern_t* pattern, bool take_ownership=true);
 
+		cairo_pattern_t* get_pattern_ownership(bool* get_ownership);
+
 		float width() const { return static_cast<float>(width_); }
 		float height() const { return static_cast<float>(height_); }
 	private:
@@ -86,4 +88,11 @@ namespace graphics
 		int char_width(int size, const std::string& fn="");
 		int char_height(int size, const std::string& fn="");
 	}
+
+	struct CairoCacheStatus {
+		int num_items;
+		int memory_usage;
+	};
+
+	CairoCacheStatus get_cairo_image_cache_status();
 }

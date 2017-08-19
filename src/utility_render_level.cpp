@@ -25,6 +25,7 @@
 #include <vector>
 
 #include "DisplayDevice.hpp"
+#include "ModelMatrixScope.hpp"
 #include "RenderTarget.hpp"
 #include "WindowManager.hpp"
 
@@ -59,7 +60,7 @@ UTILITY(render_level)
 		const std::string file = files[n];
 		const std::string output = outputs[n];
 		
-		boost::intrusive_ptr<Level> lvl(new Level(file));
+		ffl::IntrusivePtr<Level> lvl(new Level(file));
 		lvl->set_editor();
 		lvl->finishLoading();
 		lvl->setAsCurrentLevel();
@@ -88,35 +89,12 @@ UTILITY(render_level)
 			for(int x = lvl->boundaries().x(); x < lvl->boundaries().x2(); x += seg_width) {
 				fbo->apply();
 				fbo->clear();
-				// XXX figure out why the translate was needed.
-				//glPushMatrix();
-				//glTranslatef(-x, -y, 0);
+				KRE::ModelManager2D mm(-x, -y);
 				lvl->draw(x, y, seg_width, seg_height);
-				//glPopMatrix();
-				fbo->unapply();
-
-				wnd->swap();
-
-				auto s = KRE::Surface::create(seg_width, seg_height, KRE::PixelFormat::PF::PIXELFORMAT_RGB24);
-
-				std::vector<uint8_t> data;
-				KRE::DisplayDevice::getCurrent()->readPixels(0, 0, seg_width, seg_height, KRE::ReadFormat::RGB, KRE::AttrFormat::BYTE, data, s->rowPitch());
-
-				s->writePixels(&data[0], static_cast<int>(data.size()));
 				
-				// XXX double check the logic below for pixel ordering.
-				// If we need a different format we can always change the value of KRE::ReadFormat in the readPixels call
-				// to what is needed.
-				/*glReadPixels(0, 0, seg_width, seg_height, GL_RGB, GL_UNSIGNED_BYTE, s->pixels);
-				unsigned char* pixels = (unsigned char*)s->pixels;
+				auto s = fbo->readToSurface(nullptr);
 
-				for(int n = 0; n != seg_height/2; ++n) {
-					unsigned char* s1 = pixels + n*seg_width*3;
-					unsigned char* s2 = pixels + (seg_height-n-1)*seg_width*3;
-					for(int m = 0; m != seg_width*3; ++m) {
-						std::swap(s1[m], s2[m]);
-					}
-				}*/
+				fbo->unapply();
 
 				rect src_rect(0, 0, seg_width, seg_height);
 				rect dst_rect(x - lvl->boundaries().x(), y - lvl->boundaries().y(), 0, 0);

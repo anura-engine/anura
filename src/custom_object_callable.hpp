@@ -50,10 +50,10 @@ public:
 
 	void setObjectType(variant_type_ptr type);
 
-	int getSlot(const std::string& key) const;
-	Entry* getEntry(int slot);
-	const Entry* getEntry(int slot) const;
-	int getNumSlots() const { return static_cast<int>(entries_.size()); }
+	int getSlot(const std::string& key) const override;
+	Entry* getEntry(int slot) override;
+	const Entry* getEntry(int slot) const override;
+	int getNumSlots() const override { return static_cast<int>(entries_.size()); }
 
 	const std::vector<int>& slots_requiring_initialization() const { return slots_requiring_initialization_; }
 
@@ -64,8 +64,16 @@ public:
 	void pushPrivateAccess();
 	void popPrivateAccess();
 
+	bool getSymbolIndexForSlot(int slot, int* index) const override {
+		return false;
+	}
+
+	int getBaseSymbolIndex() const override {
+		return 0;
+	}
+
 private:
-	int getSubsetSlotBase(const FormulaCallableDefinition* subset) const { return -1; }
+	int getSubsetSlotBase(const FormulaCallableDefinition* subset) const override { return -1; }
 	
 	std::vector<Entry> entries_;
 
@@ -94,5 +102,5 @@ private:
 	int slot_;
 };
 
-typedef boost::intrusive_ptr<CustomObjectCallable> CustomObjectCallablePtr;
-typedef boost::intrusive_ptr<const CustomObjectCallable> ConstCustomObjectCallablePtr;
+typedef ffl::IntrusivePtr<CustomObjectCallable> CustomObjectCallablePtr;
+typedef ffl::IntrusivePtr<const CustomObjectCallable> ConstCustomObjectCallablePtr;

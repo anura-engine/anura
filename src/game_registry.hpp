@@ -35,7 +35,7 @@ public:
 	variant writeContents();
 private:
 	GameRegistry();
-	variant getValue(const std::string& key) const;
-	void setValue(const std::string& key, const variant& value);
+	variant getValue(const std::string& key) const override;
+	void setValue(const std::string& key, const variant& value) override;
 	variant values_;
 };

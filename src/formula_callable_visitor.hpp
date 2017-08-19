@@ -50,9 +50,9 @@ namespace game_logic
 		{
 		}
 
-		virtual const FormulaCallable* value() const { return value_; }
-		virtual void destroy_ref() { *v_ = variant(); }
-		virtual void restore_ref() { *v_ = variant(value_); }
+		virtual const FormulaCallable* value() const override { return value_; }
+		virtual void destroy_ref() override { *v_ = variant(); }
+		virtual void restore_ref() override { *v_ = variant(value_); }
 	private:
 		const FormulaCallable* value_;
 		variant* v_;
@@ -62,24 +62,24 @@ namespace game_logic
 	class FormulaCallableSuspendedImpl : public FormulaCallableSuspended
 	{
 	public:
-		explicit FormulaCallableSuspendedImpl(boost::intrusive_ptr<T>* ref)
+		explicit FormulaCallableSuspendedImpl(ffl::IntrusivePtr<T>* ref)
 		  : value_(ref->get()), ref_(ref)
 		{
 		}
 
-		virtual const FormulaCallable* value() const { return value_; }
-		virtual void destroy_ref() { if((*ref_)->refcount() == 1) { value_ = nullptr; } ref_->reset(); }
-		virtual void restore_ref() { if(!*ref_) { ref_->reset(dynamic_cast<T*>(const_cast<FormulaCallable*>(value_))); } }
+		virtual const FormulaCallable* value() const override { return value_; }
+		virtual void destroy_ref() override { if((*ref_)->refcount() == 1) { value_ = nullptr; } ref_->reset(); }
+		virtual void restore_ref() override { if(!*ref_) { ref_->reset(dynamic_cast<T*>(const_cast<FormulaCallable*>(value_))); } }
 	private:
 		const FormulaCallable* value_;
-		boost::intrusive_ptr<T>* ref_;
+		ffl::IntrusivePtr<T>* ref_;
 	};
 
 	class FormulaCallableVisitor
 	{
 	public:
 		template<typename T>
-		void visit(boost::intrusive_ptr<T>* ref) {
+		void visit(ffl::IntrusivePtr<T>* ref) {
 			if(ref->get() == nullptr) {
 				return;
 			}

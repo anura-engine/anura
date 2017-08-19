@@ -37,7 +37,7 @@ namespace
 		ExpressionPtr createFunction(
 								   const std::string& fn,
 								   const std::vector<ExpressionPtr>& args,
-								   ConstFormulaCallableDefinitionPtr callable_def) const;
+								   ConstFormulaCallableDefinitionPtr callable_def) const override;
 	};
 
 	ExpressionPtr TbsFunctionSymbolTable::createFunction(

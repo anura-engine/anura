@@ -86,6 +86,15 @@ namespace KRE
 			return;
 		}
 
+		setFromVariant(node);
+	}
+
+	Renderable::~Renderable()
+	{
+	}
+
+	void Renderable::setFromVariant(const variant& node)
+	{
 		if(node.has_key("ignore_global_model")) {
 			ignore_global_model_ = node["ignore_global_model"].as_bool(false);
 		}
@@ -95,6 +104,9 @@ namespace KRE
 		// XXX set other stuff here, tbd
 		if(node.has_key("blend")) {
 			setBlendMode(KRE::BlendMode(node["blend"]));
+		}
+		if(node.has_key("blend_enable")) {
+			setBlendState(node["blend_enable"].as_bool());
 		}
 		if(node.has_key("blend_equation")) {
 			setBlendEquation(KRE::BlendEquation(node["blend_equation"]));
@@ -161,10 +173,14 @@ namespace KRE
 		if(node.has_key("texture")) {
 			if(node["texture"].is_string() && (node["texture"].as_string() != "fbo" && node["texture"].as_string() != "svg")) {
 				texture_ = Texture::createTexture(node["texture"]);
+			} else if(node["texture"].is_map()) {
+				texture_ = Texture::createTexture(node["texture"]);
 			}
 		} else if(node.has_key("image")) {
 			if(node["image"].is_string() && (node["image"].as_string() != "fbo" && node["image"].as_string() != "svg")) {
 				texture_ = Texture::createTexture(node["image"]);
+			} else if(node["image"].is_map()) {
+				texture_ = Texture::createTexture(node["texture"]);
 			}
 		}
 		if(node.has_key("depth_check")) {
@@ -179,8 +195,19 @@ namespace KRE
 		}
 	}
 
-	Renderable::~Renderable()
+	void Renderable::writeData(variant_builder* build) const
 	{
+		if(ignore_global_model_) {
+			build->add("ignore_global_model", true);
+		}
+
+		build->add("order", order_);
+
+		if(isBlendEnabled()) {
+			build->add("blend_enable", true);
+			build->add("blend", getBlendMode().write());
+			build->add("blend_equation", getBlendEquation().write());
+		}
 	}
 
 	void Renderable::setDerivedModel(const glm::vec3& p, const glm::quat& r, const glm::vec3& s)
@@ -207,7 +234,7 @@ namespace KRE
 
 	void Renderable::setRotation(float angle, const glm::vec3& axis) 
 	{
-		rotation_ = glm::angleAxis(angle, axis);
+		rotation_ = glm::angleAxis(glm::radians(angle), axis);
 	}
 
 	void Renderable::setRotation(const glm::quat& rot) 

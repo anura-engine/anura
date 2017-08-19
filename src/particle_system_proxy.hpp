@@ -42,18 +42,26 @@ namespace graphics
 		void process();
 
 		void surrenderReferences(GarbageCollector* collector) override;
+
+		glm::vec3& get_last_translation() { return last_translation_; }
 	private:
 		DECLARE_CALLABLE(ParticleSystemContainerProxy);
+
+		const KRE::Particles::Emitter& getActiveEmitter() const;
+		KRE::Particles::Emitter& getActiveEmitter();
 
 		KRE::Particles::ParticleSystemContainerPtr particle_system_container_;
 		KRE::SceneGraphPtr scene_;
 		KRE::SceneNodePtr root_;
 		KRE::RenderManagerPtr rmanager_;
+		glm::vec3 last_translation_;
 		int last_process_time_;
 
 		bool running_;
+		mutable bool enable_mouselook_;
+		mutable bool invert_mouselook_;
 	};
 
-	typedef boost::intrusive_ptr<ParticleSystemContainerProxy> ParticleSystemContainerProxyPtr; 
+	typedef ffl::IntrusivePtr<ParticleSystemContainerProxy> ParticleSystemContainerProxyPtr; 
 }
 

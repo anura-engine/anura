@@ -138,6 +138,9 @@ namespace css
 		void parseTransitionProperty(const std::string& prefix, const std::string& suffix);
 		void parseTransitionTimingFunction(const std::string& prefix, const std::string& suffix);
 		void parseTransitionTiming(const std::string& prefix, const std::string& suffix);
+
+		void parseFilters(const std::string& prefix, const std::string& suffix);
+		void parseTransform(const std::string& prefix, const std::string& suffix);
 	private:
 		enum NumericParseOptions {
 			NUMBER = 1,
@@ -145,6 +148,8 @@ namespace css
 			LENGTH = 4,
 			AUTO = 8,
 			NUMERIC = NUMBER | PERCENTAGE | LENGTH,
+			NUMBER_OR_PERCENT = NUMBER | PERCENTAGE,
+			LENGTH_OR_PERCENT = LENGTH | PERCENTAGE,
 			ALL = NUMBER | PERCENTAGE | LENGTH | AUTO,
 		};
 		void advance();

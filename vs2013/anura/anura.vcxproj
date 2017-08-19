@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\imgui\imgui.h" />
     <ClInclude Include="..\..\src\achievements.hpp" />
     <ClInclude Include="..\..\src\animation_creator.hpp" />
     <ClInclude Include="..\..\src\animation_preview_widget.hpp" />
@@ -35,6 +36,7 @@
     <ClInclude Include="..\..\src\base64.hpp" />
     <ClInclude Include="..\..\src\blur.hpp" />
     <ClInclude Include="..\..\src\border_widget.hpp" />
+    <ClInclude Include="..\..\src\breakpad.hpp" />
     <ClInclude Include="..\..\src\button.hpp" />
     <ClInclude Include="..\..\src\cairo.hpp" />
     <ClInclude Include="..\..\src\character_editor_dialog.hpp" />
@@ -102,6 +104,8 @@
     <ClInclude Include="..\..\src\formula_tokenizer.hpp" />
     <ClInclude Include="..\..\src\formula_variable_storage.hpp" />
     <ClInclude Include="..\..\src\formula_visualize_widget.hpp" />
+    <ClInclude Include="..\..\src\formula_vm.hpp" />
+    <ClInclude Include="..\..\src\formula_where.hpp" />
     <ClInclude Include="..\..\src\frame.hpp" />
     <ClInclude Include="..\..\src\framed_gui_element.hpp" />
     <ClInclude Include="..\..\src\ft_iface.hpp" />
@@ -115,15 +119,16 @@
     <ClInclude Include="..\..\src\group_property_editor_dialog.hpp" />
     <ClInclude Include="..\..\src\gui_section.hpp" />
     <ClInclude Include="..\..\src\haptic.hpp" />
+    <ClInclude Include="..\..\src\hex\hex.hpp" />
     <ClInclude Include="..\..\src\hex\hex_fwd.hpp" />
-    <ClInclude Include="..\..\src\hex\hex_logical_fwd.hpp" />
-    <ClInclude Include="..\..\src\hex\hex_logical_tiles.hpp" />
+    <ClInclude Include="..\..\src\hex\hex_helper.hpp" />
+    <ClInclude Include="..\..\src\hex\hex_loader.hpp" />
     <ClInclude Include="..\..\src\hex\hex_map.hpp" />
-    <ClInclude Include="..\..\src\hex\hex_object.hpp" />
-    <ClInclude Include="..\..\src\hex\hex_pathfinding.hpp" />
+    <ClInclude Include="..\..\src\hex\hex_mask.hpp" />
     <ClInclude Include="..\..\src\hex\hex_renderable.hpp" />
     <ClInclude Include="..\..\src\hex\hex_renderable_fwd.hpp" />
     <ClInclude Include="..\..\src\hex\hex_tile.hpp" />
+    <ClInclude Include="..\..\src\hex\tile_rules.hpp" />
     <ClInclude Include="..\..\src\http_client.hpp" />
     <ClInclude Include="..\..\src\http_server.hpp" />
     <ClInclude Include="..\..\src\i18n.hpp" />
@@ -138,6 +143,7 @@
     <ClInclude Include="..\..\src\json_parser.hpp" />
     <ClInclude Include="..\..\src\json_tokenizer.hpp" />
     <ClInclude Include="..\..\src\key_button.hpp" />
+    <ClInclude Include="..\..\src\kre\AlignedAllocator.hpp" />
     <ClInclude Include="..\..\src\kre\AttributeSet.hpp" />
     <ClInclude Include="..\..\src\kre\AttributeSetOGL.hpp" />
     <ClInclude Include="..\..\src\kre\Blend.hpp" />
@@ -151,6 +157,7 @@
     <ClInclude Include="..\..\src\kre\ClipScopeOGL.hpp" />
     <ClInclude Include="..\..\src\kre\Color.hpp" />
     <ClInclude Include="..\..\src\kre\ColorScope.hpp" />
+    <ClInclude Include="..\..\src\kre\Cursor.hpp" />
     <ClInclude Include="..\..\src\kre\Depth.hpp" />
     <ClInclude Include="..\..\src\kre\DisplayDevice.hpp" />
     <ClInclude Include="..\..\src\kre\DisplayDeviceFwd.hpp" />
@@ -167,14 +174,15 @@
     <ClInclude Include="..\..\src\kre\Frustum.hpp" />
     <ClInclude Include="..\..\src\kre\geometry.hpp" />
     <ClInclude Include="..\..\src\kre\Gradients.hpp" />
+    <ClInclude Include="..\..\src\kre\imgui_impl_sdl_gl3.h" />
     <ClInclude Include="..\..\src\kre\LightObject.hpp" />
     <ClInclude Include="..\..\src\kre\ModelMatrixScope.hpp" />
     <ClInclude Include="..\..\src\kre\ParticleSystem.hpp" />
     <ClInclude Include="..\..\src\kre\ParticleSystemAffectors.hpp" />
     <ClInclude Include="..\..\src\kre\ParticleSystemEmitters.hpp" />
     <ClInclude Include="..\..\src\kre\ParticleSystemFwd.hpp" />
-    <ClInclude Include="..\..\src\kre\ParticleSystemObservers.hpp" />
     <ClInclude Include="..\..\src\kre\ParticleSystemParameters.hpp" />
+    <ClInclude Include="..\..\src\kre\ParticleSystemUI.hpp" />
     <ClInclude Include="..\..\src\kre\PixelFormat.hpp" />
     <ClInclude Include="..\..\src\kre\Renderable.hpp" />
     <ClInclude Include="..\..\src\kre\RenderFwd.hpp" />
@@ -186,6 +194,7 @@
     <ClInclude Include="..\..\src\kre\SceneNode.hpp" />
     <ClInclude Include="..\..\src\kre\SceneObject.hpp" />
     <ClInclude Include="..\..\src\kre\SceneParameters.hpp" />
+    <ClInclude Include="..\..\src\kre\SceneTree.hpp" />
     <ClInclude Include="..\..\src\kre\SceneUtil.hpp" />
     <ClInclude Include="..\..\src\kre\Scissor.hpp" />
     <ClInclude Include="..\..\src\kre\ScissorOGL.hpp" />
@@ -200,6 +209,7 @@
     <ClInclude Include="..\..\src\kre\StencilSettings.hpp" />
     <ClInclude Include="..\..\src\kre\Surface.hpp" />
     <ClInclude Include="..\..\src\kre\SurfaceBlur.hpp" />
+    <ClInclude Include="..\..\src\kre\SurfaceScale.hpp" />
     <ClInclude Include="..\..\src\kre\SurfaceSDL.hpp" />
     <ClInclude Include="..\..\src\kre\TexPack.hpp" />
     <ClInclude Include="..\..\src\kre\Texture.hpp" />
@@ -273,6 +283,7 @@
     <ClInclude Include="..\..\src\SDLMain.h" />
     <ClInclude Include="..\..\src\segment_editor_dialog.hpp" />
     <ClInclude Include="..\..\src\settings_dialog.hpp" />
+    <ClInclude Include="..\..\src\shared_memory_pipe.hpp" />
     <ClInclude Include="..\..\src\simplex_noise.hpp" />
     <ClInclude Include="..\..\src\skybox.hpp" />
     <ClInclude Include="..\..\src\slider.hpp" />
@@ -314,11 +325,13 @@
     <ClInclude Include="..\..\src\tbs_game.hpp" />
     <ClInclude Include="..\..\src\tbs_internal_client.hpp" />
     <ClInclude Include="..\..\src\tbs_internal_server.hpp" />
+    <ClInclude Include="..\..\src\tbs_ipc_client.hpp" />
     <ClInclude Include="..\..\src\tbs_server.hpp" />
     <ClInclude Include="..\..\src\tbs_server_base.hpp" />
     <ClInclude Include="..\..\src\tbs_web_server.hpp" />
     <ClInclude Include="..\..\src\TextureObject.hpp" />
     <ClInclude Include="..\..\src\text_editor_widget.hpp" />
+    <ClInclude Include="..\..\src\theme_imgui.hpp" />
     <ClInclude Include="..\..\src\thread.hpp" />
     <ClInclude Include="..\..\src\tiled\tiled.hpp" />
     <ClInclude Include="..\..\src\tiled\tmx_reader.hpp" />
@@ -360,9 +373,11 @@
     <ClInclude Include="..\..\src\xhtml\css_styles.hpp" />
     <ClInclude Include="..\..\src\xhtml\css_stylesheet.hpp" />
     <ClInclude Include="..\..\src\xhtml\css_transition.hpp" />
-    <ClInclude Include="..\..\src\xhtml\display_list.hpp" />
+    <ClInclude Include="..\..\src\xhtml\event_listener.hpp" />
+    <ClInclude Include="..\..\src\xhtml\scrollable.hpp" />
     <ClInclude Include="..\..\src\xhtml\solid_renderable.hpp" />
     <ClInclude Include="..\..\src\xhtml\to_roman.hpp" />
+    <ClInclude Include="..\..\src\xhtml\url_handler.hpp" />
     <ClInclude Include="..\..\src\xhtml\xhtml.hpp" />
     <ClInclude Include="..\..\src\xhtml\xhtml_absolute_box.hpp" />
     <ClInclude Include="..\..\src\xhtml\xhtml_background_info.hpp" />
@@ -385,12 +400,18 @@
     <ClInclude Include="..\..\src\xhtml\xhtml_style_tree.hpp" />
     <ClInclude Include="..\..\src\xhtml\xhtml_text_box.hpp" />
     <ClInclude Include="..\..\src\xhtml\xhtml_text_node.hpp" />
+    <ClInclude Include="..\..\src\xhtml\xslider.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\..\imgui\imgui_user.inl" />
     <None Include="..\..\src\custom_object.inc" />
     <None Include="..\..\src\kre\geometry.inl" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\imgui\imgui.cpp">
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">IMGUI_INCLUDE_IMGUI_USER_INL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="..\..\imgui\imgui_draw.cpp" />
     <ClCompile Include="..\..\src\achievements.cpp" />
     <ClCompile Include="..\..\src\animation_creator.cpp" />
     <ClCompile Include="..\..\src\animation_preview_widget.cpp" />
@@ -405,6 +426,7 @@
     <ClCompile Include="..\..\src\base64.cpp" />
     <ClCompile Include="..\..\src\blur.cpp" />
     <ClCompile Include="..\..\src\border_widget.cpp" />
+    <ClCompile Include="..\..\src\breakpad.cpp" />
     <ClCompile Include="..\..\src\button.cpp" />
     <ClCompile Include="..\..\src\cairo.cpp" />
     <ClCompile Include="..\..\src\character_editor_dialog.cpp" />
@@ -461,12 +483,14 @@
     <ClCompile Include="..\..\src\formula_function_registry.cpp" />
     <ClCompile Include="..\..\src\formula_garbage_collector.cpp" />
     <ClCompile Include="..\..\src\formula_interface.cpp" />
+    <ClCompile Include="..\..\src\formula_internal.cpp" />
     <ClCompile Include="..\..\src\formula_object.cpp" />
     <ClCompile Include="..\..\src\formula_profiler.cpp" />
     <ClCompile Include="..\..\src\formula_test.cpp" />
     <ClCompile Include="..\..\src\formula_tokenizer.cpp" />
     <ClCompile Include="..\..\src\formula_variable_storage.cpp" />
     <ClCompile Include="..\..\src\formula_visualize_widget.cpp" />
+    <ClCompile Include="..\..\src\formula_vm.cpp" />
     <ClCompile Include="..\..\src\frame.cpp" />
     <ClCompile Include="..\..\src\framed_gui_element.cpp" />
     <ClCompile Include="..\..\src\ft_iface.cpp" />
@@ -478,12 +502,13 @@
     <ClCompile Include="..\..\src\grid_widget.cpp" />
     <ClCompile Include="..\..\src\group_property_editor_dialog.cpp" />
     <ClCompile Include="..\..\src\gui_section.cpp" />
-    <ClCompile Include="..\..\src\hex\hex_logical_tiles.cpp" />
+    <ClCompile Include="..\..\src\hex\hex_helper.cpp" />
+    <ClCompile Include="..\..\src\hex\hex_loader.cpp" />
     <ClCompile Include="..\..\src\hex\hex_map.cpp" />
-    <ClCompile Include="..\..\src\hex\hex_object.cpp" />
-    <ClCompile Include="..\..\src\hex\hex_pathfinding.cpp" />
+    <ClCompile Include="..\..\src\hex\hex_mask.cpp" />
     <ClCompile Include="..\..\src\hex\hex_renderable.cpp" />
     <ClCompile Include="..\..\src\hex\hex_tile.cpp" />
+    <ClCompile Include="..\..\src\hex\tile_rules.cpp" />
     <ClCompile Include="..\..\src\http_client.cpp" />
     <ClCompile Include="..\..\src\http_server.cpp" />
     <ClCompile Include="..\..\src\i18n.cpp" />
@@ -508,6 +533,7 @@
     <ClCompile Include="..\..\src\kre\ClipScopeOGL.cpp" />
     <ClCompile Include="..\..\src\kre\Color.cpp" />
     <ClCompile Include="..\..\src\kre\ColorScope.cpp" />
+    <ClCompile Include="..\..\src\kre\Cursor.cpp" />
     <ClCompile Include="..\..\src\kre\Depth.cpp" />
     <ClCompile Include="..\..\src\kre\DisplayDevice.cpp" />
     <ClCompile Include="..\..\src\kre\DisplayDeviceOGL.cpp" />
@@ -522,13 +548,14 @@
     <ClCompile Include="..\..\src\kre\FontSTB.cpp" />
     <ClCompile Include="..\..\src\kre\Frustum.cpp" />
     <ClCompile Include="..\..\src\kre\Gradients.cpp" />
+    <ClCompile Include="..\..\src\kre\imgui_impl_sdl_gl3.cpp" />
     <ClCompile Include="..\..\src\kre\LightObject.cpp" />
     <ClCompile Include="..\..\src\kre\ModelMatrixScope.cpp" />
     <ClCompile Include="..\..\src\kre\ParticleSystem.cpp" />
     <ClCompile Include="..\..\src\kre\ParticleSystemAffectors.cpp" />
     <ClCompile Include="..\..\src\kre\ParticleSystemEmitters.cpp" />
-    <ClCompile Include="..\..\src\kre\ParticleSystemObservers.cpp" />
     <ClCompile Include="..\..\src\kre\ParticleSystemParameters.cpp" />
+    <ClCompile Include="..\..\src\kre\ParticleSystemUI.cpp" />
     <ClCompile Include="..\..\src\kre\Renderable.cpp" />
     <ClCompile Include="..\..\src\kre\RenderManager.cpp" />
     <ClCompile Include="..\..\src\kre\RenderQueue.cpp" />
@@ -537,6 +564,7 @@
     <ClCompile Include="..\..\src\kre\SceneNode.cpp" />
     <ClCompile Include="..\..\src\kre\SceneObject.cpp" />
     <ClCompile Include="..\..\src\kre\SceneParameters.cpp" />
+    <ClCompile Include="..\..\src\kre\SceneTree.cpp" />
     <ClCompile Include="..\..\src\kre\Scissor.cpp" />
     <ClCompile Include="..\..\src\kre\ScissorOGL.cpp" />
     <ClCompile Include="..\..\src\kre\Shaders.cpp" />
@@ -545,6 +573,7 @@
     <ClCompile Include="..\..\src\kre\StencilScopeOGL.cpp" />
     <ClCompile Include="..\..\src\kre\Surface.cpp" />
     <ClCompile Include="..\..\src\kre\SurfaceBlur.cpp" />
+    <ClCompile Include="..\..\src\kre\SurfaceScale.cpp" />
     <ClCompile Include="..\..\src\kre\SurfaceSDL.cpp" />
     <ClCompile Include="..\..\src\kre\TexPack.cpp" />
     <ClCompile Include="..\..\src\kre\Texture.cpp" />
@@ -609,6 +638,7 @@
     <ClCompile Include="..\..\src\scrollbar_widget.cpp" />
     <ClCompile Include="..\..\src\segment_editor_dialog.cpp" />
     <ClCompile Include="..\..\src\settings_dialog.cpp" />
+    <ClCompile Include="..\..\src\shared_memory_pipe.cpp" />
     <ClCompile Include="..\..\src\simplex_noise.cpp" />
     <ClCompile Include="..\..\src\skybox.cpp" />
     <ClCompile Include="..\..\src\slider.cpp" />
@@ -644,12 +674,14 @@
     <ClCompile Include="..\..\src\tbs_game.cpp" />
     <ClCompile Include="..\..\src\tbs_internal_client.cpp" />
     <ClCompile Include="..\..\src\tbs_internal_server.cpp" />
+    <ClCompile Include="..\..\src\tbs_ipc_client.cpp" />
     <ClCompile Include="..\..\src\tbs_matchmaking_server.cpp" />
     <ClCompile Include="..\..\src\tbs_server.cpp" />
     <ClCompile Include="..\..\src\tbs_server_base.cpp" />
     <ClCompile Include="..\..\src\tbs_web_server.cpp" />
     <ClCompile Include="..\..\src\TextureObject.cpp" />
     <ClCompile Include="..\..\src\text_editor_widget.cpp" />
+    <ClCompile Include="..\..\src\theme_imgui.cpp" />
     <ClCompile Include="..\..\src\thread.cpp" />
     <ClCompile Include="..\..\src\tiled\tiled.cpp" />
     <ClCompile Include="..\..\src\tiled\tmx_reader.cpp" />
@@ -692,9 +724,11 @@
     <ClCompile Include="..\..\src\xhtml\css_styles.cpp" />
     <ClCompile Include="..\..\src\xhtml\css_stylesheet.cpp" />
     <ClCompile Include="..\..\src\xhtml\css_transition.cpp" />
-    <ClCompile Include="..\..\src\xhtml\display_list.cpp" />
+    <ClCompile Include="..\..\src\xhtml\event_listener.cpp" />
+    <ClCompile Include="..\..\src\xhtml\scrollable.cpp" />
     <ClCompile Include="..\..\src\xhtml\solid_renderable.cpp" />
     <ClCompile Include="..\..\src\xhtml\to_roman.cpp" />
+    <ClCompile Include="..\..\src\xhtml\url_handler.cpp" />
     <ClCompile Include="..\..\src\xhtml\xhtml_absolute_box.cpp" />
     <ClCompile Include="..\..\src\xhtml\xhtml_background_info.cpp" />
     <ClCompile Include="..\..\src\xhtml\xhtml_block_box.cpp" />
@@ -714,13 +748,18 @@
     <ClCompile Include="..\..\src\xhtml\xhtml_style_tree.cpp" />
     <ClCompile Include="..\..\src\xhtml\xhtml_text_box.cpp" />
     <ClCompile Include="..\..\src\xhtml\xhtml_text_node.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <Library Include="..\Box2D\$(Configuration)\$(Platform)\Box2D.lib" />
-    <Library Include="..\lua\$(Configuration)\$(Platform)\lua.lib" />
+    <ClCompile Include="..\..\src\xhtml\xslider.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\..\src\anura-resouces.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Box2D\Box2D.vcxproj">
+      <Project>{d58a2972-afa1-4363-9777-52d8bc187dc0}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\lua\lua.vcxproj">
+      <Project>{4d133dd4-c7f6-4867-b53c-8a27711438a1}</Project>
+    </ProjectReference>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{716CE053-6375-400F-BEB5-0AC23E709C55}</ProjectGuid>
@@ -777,6 +816,7 @@
     <OutDir>$(SolutionDir)\$(Configuration)\$(Platform)\</OutDir>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
     <CustomBuildAfterTargets>Link</CustomBuildAfterTargets>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseXP|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -802,8 +842,8 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;_USE_MATH_DEFINES;HAVE_M_PI;USE_BOX2D;USE_LUA;USE_LIBVPX;USE_SVG;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;_WIN32_WINNT=0x0600;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..\src;..\..\src\kre;..\..\src\svg;..\..\src\hex;..\..\src\xhtml;..\..\src\tiled;..\..\src\lua;..\..\Box2D;..\..\external\include;..\..\external\include\SDL;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;_USE_MATH_DEFINES;HAVE_M_PI;USE_BOX2D;USE_LUA;USE_LIBVPX;USE_SVG;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;_WIN32_WINNT=0x0600;NOMINMAX;USE_BREAKPAD;OGG_DYNAMIC="libvorbisfile-3.dll";USE_IMGUI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\src;..\..\src\kre;..\..\src\svg;..\..\src\hex;..\..\src\xhtml;..\..\src\tiled;..\..\src\lua;..\..\Box2D;..\..\external\include;..\..\external\include\SDL;..\..\external\include\windows;..\..\external\include\windows\client\windows\handler;..\..\imgui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

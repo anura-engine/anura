@@ -57,6 +57,8 @@ namespace game_logic
 
 			bool isPrivate() const { return private_counter > 0; }
 			int private_counter;
+
+			std::function<bool(variant*)> constant_fn;
 		};
 
 		FormulaCallableDefinition();
@@ -72,6 +74,12 @@ namespace game_logic
 		virtual int getNumSlots() const = 0;
 
 		virtual const Entry* getDefaultEntry() const { return nullptr; }
+
+		virtual bool getSymbolIndexForSlot(int slot, int* index) const = 0;
+		virtual int getBaseSymbolIndex() const = 0;
+
+		virtual void setHasSymbolIndexes() { has_symbol_indexes_ = true; }
+		virtual bool hasSymbolIndexes() const { return has_symbol_indexes_; }
 
 		Entry* getEntryById(const std::string& key) {
 			const int slot = getSlot(key);
@@ -98,6 +106,8 @@ namespace game_logic
 		bool is_strict_;
 		bool supports_slot_lookups_;
 		std::string type_name_;
+
+		bool has_symbol_indexes_;
 	};
 
 	FormulaCallableDefinitionPtr modify_formula_callable_definition(ConstFormulaCallableDefinitionPtr base_def, int slot, variant_type_ptr new_type, const FormulaCallableDefinition* new_def=nullptr);
@@ -146,10 +156,11 @@ public: \
 	virtual std::string getObjectId() const override { return game_logic::modify_class_id(#classname); } \
 public: \
 	static void init_callable_type(std::vector<CallablePropertyEntry>& v, std::map<std::string, int>& properties); \
-private:
+	enum { classname##_DECLARE_CALLABLE_does_not_match_name_of_class = 0 }; \
+private: 
 
 #define BEGIN_DEFINE_CALLABLE_NOBASE(classname) \
-int classname##_num_base_slots = 0; \
+int classname##_num_base_slots = classname::classname##_DECLARE_CALLABLE_does_not_match_name_of_class; \
 const char* classname##_base_str_name = ""; \
 std::vector<CallablePropertyEntry> classname##_fields; \
 std::map<std::string, int> classname##_properties; \
@@ -158,7 +169,7 @@ void classname::init_callable_type(std::vector<CallablePropertyEntry>& fields, s
 	{ {
 
 #define BEGIN_DEFINE_CALLABLE(classname, base_type) \
-int classname##_num_base_slots = 0; \
+int classname##_num_base_slots = classname::classname##_DECLARE_CALLABLE_does_not_match_name_of_class; \
 const char* classname##_base_str_name = #base_type; \
 std::vector<CallablePropertyEntry> classname##_fields; \
 std::map<std::string, int> classname##_properties; \
@@ -203,7 +214,7 @@ void classname::init_callable_type(std::vector<CallablePropertyEntry>& fields, s
 			type_info->num_unneeded_args = static_cast<int>(type_info->variant_types.size()) - min_args; \
 			type_info->arg_names.resize(type_info->variant_types.size()); \
 		} \
-		boost::intrusive_ptr<const FormulaCallable> ref(&obj_instance); \
+		ffl::IntrusivePtr<const FormulaCallable> ref(&obj_instance); \
 		return variant([=](const game_logic::FormulaCallable& args) ->variant { \
 			const this_type& obj = *dynamic_cast<const this_type*>(ref.get());
 
@@ -229,7 +240,11 @@ void classname::init_callable_type(std::vector<CallablePropertyEntry>& fields, s
 		types.push_back(fields[n].type); \
 		set_types.push_back(fields[n].set_type); \
 	} \
-	game_logic::FormulaCallableDefinitionPtr def = game_logic::execute_command_callable_definition(&field_names[0], &field_names[0] + field_names.size(), game_logic::FormulaCallableDefinitionPtr(), &types[0]); \
+	const std::string* field_names_begin = nullptr, *field_names_end = nullptr; \
+	variant_type_ptr* types_begin = nullptr; \
+	if(!field_names.empty()) { field_names_begin = &field_names[0]; field_names_end = &field_names[0] + field_names.size(); } \
+	if(!types.empty()) { types_begin = &types[0]; } \
+	game_logic::FormulaCallableDefinitionPtr def = game_logic::execute_command_callable_definition(field_names_begin, field_names_end, game_logic::FormulaCallableDefinitionPtr(), types_begin); \
 	for(int n = 0; n != static_cast<int>(fields.size()); ++n) { \
 		if(set_types[n]) { \
 			def->getEntry(n)->write_type = set_types[n]; \

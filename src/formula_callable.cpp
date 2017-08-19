@@ -34,7 +34,7 @@ namespace game_logic
 		}
 	}
 
-	FnCommandCallable::FnCommandCallable(std::function<void()> fn) : fn_(fn)
+	FnCommandCallable::FnCommandCallable(const char* name, std::function<void()> fn) : name_(name), fn_(fn)
 	{}
 
 	void FnCommandCallable::execute(FormulaCallable& context) const
@@ -42,11 +42,21 @@ namespace game_logic
 		fn_();
 	}
 
-	FnCommandCallableArg::FnCommandCallableArg(std::function<void(FormulaCallable*)> fn) : fn_(fn)
+	std::string FnCommandCallable::debugObjectName() const
+	{
+		return std::string("FnCommandCallable: ") + name_;
+	}
+
+	FnCommandCallableArg::FnCommandCallableArg(const char* name, std::function<void(FormulaCallable*)> fn) : name_(name), fn_(fn)
 	{}
 
 	void FnCommandCallableArg::execute(FormulaCallable& context) const
 	{
 		fn_(&context);
+	}
+
+	std::string FnCommandCallableArg::debugObjectName() const
+	{
+		return std::string("FnCommandCallableArg: ") + name_;
 	}
 }

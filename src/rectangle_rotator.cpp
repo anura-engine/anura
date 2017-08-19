@@ -103,6 +103,29 @@ void rotate_rect(const rect& r, float angle, short* output)
 
 }
 
+//Calculate the bounding box for a rect which has been rotated and scaled.
+rect rotated_scaled_rect_bounds(const rect& r, float angle, float scale)
+{
+	point offset;
+	offset.x = r.x() + r.w()/2;
+	offset.y = r.y() + r.h()/2;
+
+	const point p1 = rotate_point_around_origin_with_offset( r.x(),  r.y(),  angle, offset.x, offset.y );
+	const point p2 = rotate_point_around_origin_with_offset( r.x2(), r.y(),  angle, offset.x, offset.y );
+	const point p3 = rotate_point_around_origin_with_offset( r.x2(), r.y2(), angle, offset.x, offset.y );
+	const point p4 = rotate_point_around_origin_with_offset( r.x(),  r.y2(), angle, offset.x, offset.y );
+	
+	point min_bound = point(fmin(fmin(p1.x, p2.x), fmin(p3.x, p4.x)), fmin(fmin(p1.y, p2.y), fmin(p3.y, p4.y)));
+	point max_bound = point(fmax(fmax(p1.x, p2.x), fmax(p3.x, p4.x)), fmax(fmax(p1.y, p2.y), fmax(p3.y, p4.y)));
+	
+	min_bound.x = (min_bound.x-offset.x)*scale + offset.x;
+	min_bound.y = (min_bound.y-offset.y)*scale + offset.y; 
+	max_bound.x = (max_bound.x-offset.x)*scale + offset.x;
+	max_bound.y = (max_bound.y-offset.y)*scale + offset.y;
+	
+	return rect(min_bound.x, min_bound.y, max_bound.x, max_bound.y);
+}
+
 
 /*UNIT_TEST(rotate_test) {
 	std::cerr << "rotating_a_point \n";

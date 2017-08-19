@@ -27,7 +27,7 @@
 #include "CameraObject.hpp"
 #include "Color.hpp"
 #include "ClipScopeOGL.hpp"
-#include "DisplayDevice.hpp"
+#include "DisplayDeviceOGL.hpp"
 #include "ModelMatrixScope.hpp"
 #include "ShadersOGL.hpp"
 #include "StencilScopeOGL.hpp"
@@ -86,4 +86,48 @@ namespace KRE
 	{
 		stencil_scope_.reset();
 	}
+
+
+	// shape scope
+	ClipShapeScopeOGL::ClipShapeScopeOGL(const RenderablePtr& r)
+		: ClipShapeScope(r),
+		  stencil_scope_(nullptr)
+	{
+	}
+
+	ClipShapeScopeOGL::~ClipShapeScopeOGL()
+	{
+		stencil_scope_.reset();
+	}
+
+	void ClipShapeScopeOGL::apply(const CameraPtr& cam) const 
+	{
+		stencil_scope_.reset(new StencilScopeOGL(get_stencil_mask_settings()));
+
+		glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+		glDepthMask(GL_FALSE);
+		glClear(GL_STENCIL_BUFFER_BIT);
+	
+		CameraPtr clip_cam = cam;
+		if(cam == nullptr) {
+			clip_cam = DisplayDevice::getCurrent()->getDefaultCamera();
+		}
+
+		//glm::mat4 mvp = clip_cam->getProjectionMat() * clip_cam->getViewMat() * get_global_model_matrix();
+		auto& clip_shape = getRenderable();
+		clip_shape->setCamera(clip_cam);
+		DisplayDeviceOpenGL::getCurrent()->render(clip_shape.get());
+		clip_shape->setCamera(nullptr);
+
+		stencil_scope_->applyNewSettings(get_stencil_keep_settings());
+
+		glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+		glDepthMask(GL_TRUE);
+	}
+
+	void ClipShapeScopeOGL::clear() const 
+	{
+		stencil_scope_.reset();
+	}
+
 }

@@ -1,17 +1,29 @@
 #include <assert.h>
 #include <algorithm>
 #include <map>
+#include <mutex>
+#include <thread>
+
 #include <vector>
 
 #include <SDL.h>
 
 #include "asserts.hpp"
 #include "formula_garbage_collector.hpp"
+#include "formula_profiler.hpp"
 #include "logger.hpp"
 #include "profile_timer.hpp"
+#include "sys.hpp"
 
 #include "formula_object.hpp"
 
+#ifdef DEBUG_GARBAGE_COLLECTOR
+namespace ffl {
+std::vector<IntrusivePtr<reference_counted_object>*> getAllIntrusivePtrDebug();
+}
+
+std::set<variant*>& get_all_global_variants();
+#endif
 	
 namespace {
 	GarbageCollectible* g_head;
@@ -32,6 +44,20 @@ namespace {
 			}
 		}
 	};
+
+}
+
+std::mutex& GarbageCollector::getGlobalMutex()
+{
+	static std::mutex instance;
+	return instance;
+}
+
+void GarbageCollectible::getAll(std::vector<GarbageCollectible*>* result)
+{
+	for(GarbageCollectible* p = g_head; p != nullptr; p = p->next_) {
+		result->push_back(p);
+	}
 }
 
 void GarbageCollectible::incrementWorkerThreads()
@@ -64,18 +90,23 @@ GarbageCollectible* GarbageCollectible::debugGetObject(void* ptr)
 	return NULL;
 }
 
-GarbageCollectible::GarbageCollectible() : reference_counted_object(), prev_(nullptr)
+GarbageCollectible::GarbageCollectible() : reference_counted_object(), prev_(nullptr), tenure_(0)
 {
 	LockGC lock;
 	next_ = g_head;
 	insertAtHead();
 }
 
-GarbageCollectible::GarbageCollectible(const GarbageCollectible& o) : reference_counted_object(o), prev_(nullptr)
+GarbageCollectible::GarbageCollectible(const GarbageCollectible& o) : reference_counted_object(o), prev_(nullptr), tenure_(0)
 {
 	LockGC lock;
 	next_ = g_head;
 	insertAtHead();
+}
+
+GarbageCollectible::GarbageCollectible(GARBAGE_COLLECTOR_EXCLUDE_OPTIONS options)
+  : reference_counted_object(), next_(this), prev_(nullptr), tenure_(0)
+{
 }
 
 void GarbageCollectible::insertAtHead()
@@ -95,6 +126,10 @@ GarbageCollectible& GarbageCollectible::operator=(const GarbageCollectible& o)
 
 GarbageCollectible::~GarbageCollectible()
 {
+	if(next_ == this) {
+		return;
+	}
+
 	LockGC lock;
 
 	--g_count;
@@ -125,6 +160,54 @@ std::string GarbageCollectible::debugObjectSpew() const
 	return debugObjectName();
 }
 
+#ifdef DEBUG_GARBAGE_COLLECTOR
+
+const size_t GCAllocSize = 2048;
+const size_t GCNumObjects = 100000;
+void* g_gc_data_pool[(GCAllocSize*GCNumObjects)/sizeof(void*)];
+unsigned char* g_gc_begin_data_pool = (unsigned char*)g_gc_data_pool;
+unsigned char* g_gc_end_data_pool = g_gc_begin_data_pool + sizeof(g_gc_data_pool);
+
+std::vector<void*> g_gc_alloc_free_slots;
+unsigned char* g_gc_next_spot = g_gc_begin_data_pool;
+
+void* GarbageCollectible::operator new(size_t sz)
+{
+	if(sz > GCAllocSize-sizeof(uint64_t) || (g_gc_alloc_free_slots.empty() && g_gc_next_spot == g_gc_end_data_pool)) {
+		return malloc(sz);
+	}
+
+	void* result;
+	if(!g_gc_alloc_free_slots.empty()) {
+		result = g_gc_alloc_free_slots.back();
+		memset(result, 0, GCAllocSize);
+		g_gc_alloc_free_slots.pop_back();
+	} else {
+		result = g_gc_next_spot;
+		memset(result, 0, GCAllocSize);
+		g_gc_next_spot += GCAllocSize;
+	}
+
+	uint64_t* p = (uint64_t*)result;
+	*p = sz;
+	++p;
+	return (void*)p;
+}
+
+void GarbageCollectible::operator delete(void* ptr) noexcept
+{
+	if(ptr < g_gc_begin_data_pool || ptr >= g_gc_end_data_pool) {
+		free(ptr);
+		return;
+	}
+
+	uint64_t* p = (uint64_t*)ptr;
+	--p;
+	g_gc_alloc_free_slots.push_back(p);
+}
+
+#endif //DEBUG_GARBAGE_COLLECTOR
+
 GarbageCollector::~GarbageCollector()
 {
 }
@@ -135,7 +218,7 @@ namespace {
 	};
 
 	struct PointerPair {
-		boost::intrusive_ptr<GarbageCollectible>* ptr;
+		ffl::IntrusivePtr<GarbageCollectible>* ptr;
 		GarbageCollectible* points_to;
 	};
 }
@@ -143,13 +226,19 @@ namespace {
 class GarbageCollectorImpl : public GarbageCollector
 {
 public:
+	GarbageCollectorImpl(int num_gens=-1) : gens_(num_gens)
+	{}
 
 	void surrenderVariant(const variant* v, const char* description) override;
-	void surrenderPtrInternal(boost::intrusive_ptr<GarbageCollectible>* ptr, const char* description) override;
+	void surrenderPtrInternal(ffl::IntrusivePtr<GarbageCollectible>* ptr, const char* description) override;
 
 	void collect();
+	void reap();
+	void debugOutputCollected();
 
 private:
+	void accumulateAll();
+	void performCollection();
 
 	void destroyReferences(GarbageCollectible* item);
 	void restoreReferences(GarbageCollectible* item);
@@ -158,6 +247,10 @@ private:
 	std::vector<PointerPair> pointers_;
 
 	std::map<GarbageCollectible*, ObjectRecord> records_;
+
+	std::vector<GarbageCollectible*> items_, saved_;
+
+	int gens_;
 };
 
 void GarbageCollectorImpl::surrenderVariant(const variant* v, const char* description)
@@ -169,22 +262,30 @@ void GarbageCollectorImpl::surrenderVariant(const variant* v, const char* descri
 	case variant::VARIANT_TYPE_FUNCTION:
 	case variant::VARIANT_TYPE_GENERIC_FUNCTION:
 	case variant::VARIANT_TYPE_MULTI_FUNCTION:
+		if(std::binary_search(items_.begin(), items_.end(), v->get_addr()) == false) {
+			break;
+		}
+
 		const_cast<variant*>(v)->release();
-		variants_.push_back(const_cast<variant*>(v));
+		variants_.emplace_back(const_cast<variant*>(v));
 		break;
 	default:
 		break;
 	}
 }
 
-void GarbageCollectorImpl::surrenderPtrInternal(boost::intrusive_ptr<GarbageCollectible>* ptr, const char* description)
+void GarbageCollectorImpl::surrenderPtrInternal(ffl::IntrusivePtr<GarbageCollectible>* ptr, const char* description)
 {
 	if(ptr->get() == NULL) {
 		return;
 	}
 
+	if(std::binary_search(items_.begin(), items_.end(), ptr->get()) == false) {
+		return;
+	}
+
 	PointerPair p = { ptr, ptr->get() };
-	pointers_.push_back(p);
+	pointers_.emplace_back(p);
 	ptr->reset();
 }
 
@@ -218,21 +319,38 @@ void GarbageCollectorImpl::collect()
 {
 	LockGC lock;
 
-	LOG_INFO("Beginning garbage collection of " << g_count << " items");
+	LOG_DEBUG("Beginning garbage collection of " << g_count << " items");
 	profile::timer timer;
 
-	std::vector<GarbageCollectible*> items, saved;
-	items.reserve(g_count);
+	accumulateAll();
+	performCollection();
 
-	int count = 0;
+	LOG_DEBUG("Garbage collection complete in " << static_cast<int>(timer.get_time()) << "us. Collected " << items_.size() << " objects. " << saved_.size() << " objects remaining; variants: " << variants_.size() << "; pointers: " << pointers_.size());
+}
+
+void GarbageCollectorImpl::accumulateAll()
+{
+	items_.reserve(g_count);
+
 	for(GarbageCollectible* p = g_head; p != nullptr; p = p->next_) {
-		p->add_ref();
-		ASSERT_LOG(p->refcount() > 1, "Object with bad refcount: " << p->refcount() << ": " << p->debugObjectName());
-		items.push_back(p);
-		++count;
+		if(gens_ < 0 || p->tenure_ < gens_) {
+			p->add_reference();
+			ASSERT_LOG(p->refcount() > 1, "Object with bad refcount: " << p->refcount() << ": " << p->debugObjectName());
+			items_.push_back(p);
+		} else if(p->tenure_ >= gens_) {
+			//the list of objects is sorted in order of tenure,
+			//since we always add at the head, so we don't need to continue
+			//once we found one already tenured.
+			break;
+		}
 	}
 
-	for(GarbageCollectible* p : items) {
+	std::sort(items_.begin(), items_.end());
+
+	pointers_.reserve(items_.size()*2);
+	variants_.reserve(items_.size()*2);
+
+	for(GarbageCollectible* p : items_) {
 		ObjectRecord& record = records_[p];
 		record.begin_variant = variants_.size();
 		record.begin_pointer = pointers_.size();
@@ -240,13 +358,16 @@ void GarbageCollectorImpl::collect()
 		record.end_variant = variants_.size();
 		record.end_pointer = pointers_.size();
 	}
+}
 
+void GarbageCollectorImpl::performCollection()
+{
 	int nlast = -1;
-	while(nlast != items.size()) {
-		nlast = items.size();
+	while(nlast != items_.size()) {
+		nlast = items_.size();
 
 		int save_count = 0;
-		for(GarbageCollectible*& item : items) {
+		for(GarbageCollectible*& item : items_) {
 			if(item->refcount() == 1) {
 				continue;
 			}
@@ -254,26 +375,60 @@ void GarbageCollectorImpl::collect()
 			++save_count;
 
 			restoreReferences(item);
-			saved.push_back(item);
+			saved_.push_back(item);
+			item->tenure_++;
 			item = nullptr;
 		}
 
-		items.erase(std::remove(items.begin(), items.end(), nullptr), items.end());
+		items_.erase(std::remove(items_.begin(), items_.end(), nullptr), items_.end());
 	}
 
-	for(auto item : items) {
+	for(auto item : items_) {
 		destroyReferences(item);
 	}
+}
 
-	for(auto item : items) {
-		item->dec_ref();
+void GarbageCollectorImpl::reap()
+{
+	LockGC lock;
+	profile::timer timer;
+
+	for(auto item : saved_) {
+		item->dec_reference();
 	}
 
-	for(auto item : saved) {
-		item->dec_ref();
+	for(auto item : items_) {
+		item->dec_reference();
 	}
 
-	LOG_INFO("Garbage collection complete in " << static_cast<int>(timer.get_time()) << "us. Collected " << items.size() << " objects. " << saved.size() << " objects remaining");
+	LOG_DEBUG("Garbage collection reap in " << static_cast<int>(timer.get_time()) << "us.");
+}
+
+void GarbageCollectorImpl::debugOutputCollected()
+{
+	LockGC lock;
+	std::map<std::string, int> m;
+
+	LOG_INFO("--DELETE REPORT--\n");
+
+	std::map<std::string, int> obj_counts;
+	for(auto item : items_) {
+		obj_counts[item->debugObjectName()]++;
+	}
+
+	std::vector<std::pair<int, std::string> > obj_counts_sorted;
+	for(auto p : obj_counts) {
+		obj_counts_sorted.push_back(std::pair<int, std::string>(p.second, p.first));
+	}
+
+	int ncount = 0;
+	std::sort(obj_counts_sorted.begin(), obj_counts_sorted.end());
+	for(auto p : obj_counts_sorted) {
+		LOG_INFO("  RELEASE: " << p.first << " x " << p.second);
+		ncount += p.first;
+	}
+
+	LOG_INFO("DELETED " << ncount << " OBJECTS");
 }
 
 namespace {
@@ -355,13 +510,20 @@ public:
 	{}
 	void run(const char* fname);
 	void surrenderVariant(const variant* v, const char* description=nullptr) override;
-	void surrenderPtrInternal(boost::intrusive_ptr<GarbageCollectible>* ptr, const char* description) override;
+	void surrenderPtrInternal(ffl::IntrusivePtr<GarbageCollectible>* ptr, const char* description) override;
 
 private:
 	Graph graph_;
 	std::vector<GarbageCollectible*> items_;
+	std::set<GarbageCollectible*> itemsSet_;
 	std::map<const void*, int> itemIndexes_;
 	int currentIndex_;
+
+	std::vector<const variant*> currentVariants_;
+	std::vector<ffl::IntrusivePtr<GarbageCollectible>*> currentPtrs_;
+
+	std::vector<const variant*> allVariants_;
+	std::vector<ffl::IntrusivePtr<GarbageCollectible>*> allPtrs_;
 };
 
 void GarbageCollectorAnalyzer::surrenderVariant(const variant* v, const char* description)
@@ -373,6 +535,9 @@ void GarbageCollectorAnalyzer::surrenderVariant(const variant* v, const char* de
 	case variant::VARIANT_TYPE_FUNCTION:
 	case variant::VARIANT_TYPE_GENERIC_FUNCTION:
 	case variant::VARIANT_TYPE_MULTI_FUNCTION: {
+		currentVariants_.push_back(v);
+		allVariants_.push_back(v);
+
 		auto itor = itemIndexes_.find(v->get_addr());
 		if(itor != itemIndexes_.end()) {
 			graph_.addEdge(currentIndex_, itor->second, description == NULL ? std::string("(variant)") : std::string(description));
@@ -384,8 +549,11 @@ void GarbageCollectorAnalyzer::surrenderVariant(const variant* v, const char* de
 	}
 }
 
-void GarbageCollectorAnalyzer::surrenderPtrInternal(boost::intrusive_ptr<GarbageCollectible>* ptr, const char* description)
+void GarbageCollectorAnalyzer::surrenderPtrInternal(ffl::IntrusivePtr<GarbageCollectible>* ptr, const char* description)
 {
+	currentPtrs_.push_back(ptr);
+	allPtrs_.push_back(ptr);
+
 	auto itor = itemIndexes_.find(ptr->get());
 	if(itor != itemIndexes_.end()) {
 		graph_.addEdge(currentIndex_, itor->second, description == NULL ? std::string("(variant)") : std::string(description));
@@ -406,14 +574,127 @@ void GarbageCollectorAnalyzer::run(const char* fname)
 
 		itemIndexes_[p] = items_.size();
 		items_.push_back(p);
-
+		itemsSet_.insert(p);
 	}
 
 	currentIndex_ = 0;
 	for(auto item : items_) {
+		currentVariants_.clear();
+		currentPtrs_.clear();
 		item->surrenderReferences(this);
+
+#ifdef DEBUG_GARBAGE_COLLECTOR
+		if((unsigned char*)item >= g_gc_begin_data_pool && (unsigned char*)item < g_gc_end_data_pool) {
+			void** p = (void**)item;
+			uint64_t* sz = (uint64_t*)item;
+			--sz;
+			const int usable_size = static_cast<int>(*sz);
+			for(int n = 0; n < usable_size/sizeof(void*); ++n, ++p) {
+				if(p == (void**)&item->next_ || p == (void**)&item->prev_) {
+					continue;
+				}
+
+				if(itemsSet_.count(reinterpret_cast<GarbageCollectible*>(*p)) == 0) {
+					continue;
+				}
+
+				bool found_variant = false;
+				for(const variant* v : currentVariants_) {
+					if((void*)(p) >= (void*)(v) && (void*)(p) < (void*)(v+1)) {
+						found_variant = true;
+					}
+				}
+
+				if(found_variant) {
+					continue;
+				}
+
+				for(const ffl::IntrusivePtr<GarbageCollectible>* ptr : currentPtrs_) {
+					if((void*)p >= (void*)ptr && (void*)p < (void*)(ptr+1)) {
+						found_variant = true;
+					}
+				}
+
+				if(found_variant) {
+					continue;
+				}
+
+				for(const variant* v : currentVariants_) {
+					const int offset = (const unsigned char*)v - (const unsigned char*)item;
+					fprintf(stderr, "  VARIANT OFFSET: %x - %d\n", offset, (int)sizeof(variant));
+				}
+
+				for(const ffl::IntrusivePtr<GarbageCollectible>* ptr : currentPtrs_) {
+					const int offset = (const unsigned char*)ptr - (const unsigned char*)item;
+					fprintf(stderr, "  PTR OFFSET: %d - %d\n", offset, (int)sizeof(variant));
+				}
+
+				GarbageCollectible* collectible = reinterpret_cast<GarbageCollectible*>(*p);
+
+				const int offset = n*sizeof(void*);
+
+				fprintf(stderr, "GC UNMARKED REFERENCE: [%s @%p] -> [%s @%p] OFFSET: %d/%d\n", item->debugObjectName().c_str(), item, collectible->debugObjectName().c_str(), collectible, offset, usable_size);
+			}
+		}
+#endif
+
 		++currentIndex_;
 	}
+
+	std::sort(allVariants_.begin(), allVariants_.end());
+	std::sort(allPtrs_.begin(), allPtrs_.end());
+
+#ifdef DEBUG_GARBAGE_COLLECTOR
+	std::vector<ffl::IntrusivePtr<reference_counted_object>*> intrusives = ffl::getAllIntrusivePtrDebug();
+	std::map<void*, std::vector<ffl::IntrusivePtr<reference_counted_object>*>> intrusive_dests;
+	for(auto p : intrusives) {
+		intrusive_dests[p->get()].push_back(p);
+	}
+
+	for(auto item : items_) {
+		if(intrusive_dests.count(item)) {
+			auto& v = intrusive_dests[item];
+			for(auto p : v) {
+				if(std::binary_search(allPtrs_.begin(), allPtrs_.end(), (ffl::IntrusivePtr<GarbageCollectible>*)p)) {
+					continue;
+				}
+
+				fprintf(stderr, "GC UNKNOWN INTRUSIVE @%p -> [%s @%p]\n", p, item->debugObjectName().c_str(), item);
+			}
+		}
+	}
+
+	std::set<variant*> all_variants = get_all_global_variants();
+	std::map<void*, std::vector<variant*>> variant_dests;
+
+	for(variant* v : all_variants) {
+		if(v->is_callable()) {
+			variant_dests[(void*)v->as_callable()].push_back(v);
+		}
+	}
+
+	for(auto item : items_) {
+		if(variant_dests.count(item)) {
+			auto& v = variant_dests[item];
+			for(auto p : v) {
+				if(std::binary_search(allVariants_.begin(), allVariants_.end(), p)) {
+					continue;
+				}
+
+				fprintf(stderr, "GC UNKNOWN VARIANT @%p -> [%s @%p]\n", p, item->debugObjectName().c_str(), item);
+			}
+		}
+	}
+
+	for(auto item : items_) {
+		auto& variants = variant_dests[(void*)item];
+		auto& ptrs = intrusive_dests[(void*)item];
+		if((int)variants.size() + (int)ptrs.size() != item->refcount()) {
+			fprintf(stderr, "GC REFCOUNT DISCREPANCY: %d variants, %d pointers != %d refcount (pointers: %d; variants: %d) for %s @%p\n", (int)variants.size(), (int)ptrs.size(), item->refcount(), item->ptr_count_, item->variant_count_, item->debugObjectName().c_str(), item);
+		}
+	}
+
+#endif
 
 	std::map<std::string, int> obj_counts;
 	for(int i = 0; i != g_count; ++i) {
@@ -479,16 +760,46 @@ void GarbageCollectorAnalyzer::run(const char* fname)
 	fclose(out);
 }
 
-void runGarbageCollection()
+namespace {
+	std::vector<std::shared_ptr<GarbageCollectorImpl>> g_reapable_gc;
+}
+
+void runGarbageCollection(int num_gens, bool mandatory)
 {
-	GarbageCollectorImpl gc;
-	gc.collect();
+	if(mandatory) {
+		GarbageCollector::getGlobalMutex().lock();
+	} else if(GarbageCollector::getGlobalMutex().try_lock() == false) {
+		return;
+	}
+
+	std::lock_guard<std::mutex> lock(GarbageCollector::getGlobalMutex(), std::adopt_lock_t());
+	
+	reapGarbageCollection();
+
+	formula_profiler::Instrument instrument("GC");
+	std::shared_ptr<GarbageCollectorImpl> gc(new GarbageCollectorImpl(num_gens));
+	gc->collect();
+	gc->reap();
+//	g_reapable_gc.push_back(gc);
+}
+
+void reapGarbageCollection()
+{
+	for(auto gc : g_reapable_gc) {
+		formula_profiler::Instrument instrument("GC");
+		gc->reap();
+	}
+
+	g_reapable_gc.clear();
 }
 
 void runGarbageCollectionDebug(const char* fname)
 {
+	reapGarbageCollection();
+
 	GarbageCollectorImpl gc;
 	gc.collect();
+	gc.reap();
 
 	GarbageCollectorAnalyzer().run(fname);
 }

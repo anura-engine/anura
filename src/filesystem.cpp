@@ -122,6 +122,22 @@ namespace sys
 		}
 	}
 
+	void get_all_filenames_under_dir(const std::string& dir,
+                                    std::multimap<std::string, std::string>* file_map,
+									const std::string& prefix)
+	{
+		ASSERT_LOG(file_map != nullptr, "get_unique_filenames_under_dir() passed a nullptr file_map");
+		path p(dir);
+		if(!is_directory(p)) {
+			return;
+		}
+		for(recursive_directory_iterator it = recursive_directory_iterator(p); it != recursive_directory_iterator(); ++it) {
+			if(!is_directory(it->path())) {
+				file_map->insert(std::pair<std::string,std::string>(prefix + it->path().filename().generic_string(), it->path().generic_string()));
+			}
+		}
+	}
+
 	std::string get_dir(const std::string& dir)
 	{
 		try {
@@ -290,6 +306,20 @@ namespace sys
 			return instance;
 		}
 
+		struct FileModHandle {
+			std::string fname;
+			int index;
+
+			void removeHandle(const FileModHandle& other) {
+				if(other.fname == fname && other.index < index) {
+					--index;
+				}
+			}
+		};
+
+		std::map<int, FileModHandle> g_file_mod_handles;
+		int g_next_file_mod_handle = 1;
+
 	std::vector<std::string> new_files_listening;
 
 	threading::mutex& get_mod_map_mutex() 
@@ -427,20 +457,45 @@ namespace sys
 		return get_dir(dir_path);
 	}
 
-	void notify_on_file_modification(const std::string& path, std::function<void()> handler)
+	int notify_on_file_modification(const std::string& path, std::function<void()> handler)
 	{
+		int handle = -1;
 		{
 			threading::lock lck(get_mod_map_mutex());
+			handle = g_next_file_mod_handle++;
 			std::vector<std::function<void()> >& handlers = get_mod_map()[path];
 			if(handlers.empty()) {
 				new_files_listening.push_back(path);
 			}
+
+			FileModHandle& handle_info = g_file_mod_handles[handle];
+			handle_info.fname = path;
+			handle_info.index = handlers.size();
+
 			handlers.push_back(handler);
 		}
 
 		if(file_mod_worker_thread == nullptr) {
 			file_mod_worker_thread = new threading::thread("file_change_notify", file_mod_worker_thread_fn);
 		}
+
+		return handle;
+	}
+
+	void remove_notify_on_file_modification(int handle)
+	{
+		auto itor = g_file_mod_handles.find(handle);
+		if(itor != g_file_mod_handles.end()) {
+			threading::lock lck(get_mod_map_mutex());
+			std::vector<std::function<void()> >& handlers = get_mod_map()[itor->second.fname];
+			handlers.erase(handlers.begin() + itor->second.index);
+		}
+
+		for(auto i = g_file_mod_handles.begin(); i != g_file_mod_handles.end(); ++i) {
+			i->second.removeHandle(itor->second);
+		}
+
+		g_file_mod_handles.erase(itor);
 	}
 
 	void pump_file_modifications()
@@ -533,5 +588,10 @@ namespace sys
 #else
 		boost::filesystem::permissions(path, boost::filesystem::status(path).permissions() | boost::filesystem::owner_write);
 #endif
+	}
+
+	std::string get_cwd()
+	{
+		return boost::filesystem::current_path().generic_string();
 	}
 }

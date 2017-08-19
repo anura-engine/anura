@@ -25,6 +25,7 @@
 #include "DisplayDevice.hpp"
 #include "RenderTarget.hpp"
 #include "variant_utils.hpp"
+#include "WindowManager.hpp"
 
 namespace KRE
 {
@@ -41,7 +42,9 @@ namespace KRE
 		  stencil_attachment_(stencil),
 		  multi_sampling_(use_multi_sampling),
 		  multi_samples_(multi_samples),
-		  clear_color_(0.0f, 0.0f, 0.0f, 1.0f)
+		  clear_color_(0.0f, 0.0f, 0.0f, 1.0f),
+		  size_change_observer_handle_(-1),
+		  needs_rebuild_(false)
 	{
 	}
 
@@ -53,7 +56,9 @@ namespace KRE
 		  stencil_attachment_(false),
 		  multi_sampling_(false),
 		  multi_samples_(0),
-		  clear_color_(0.0f, 0.0f, 0.0f, 1.0f)
+		  clear_color_(0.0f, 0.0f, 0.0f, 1.0f),
+		  size_change_observer_handle_(-1),
+		  needs_rebuild_(false)
 	{
 		ASSERT_LOG(node.is_map(), "RenderTarget definitions must be maps: " << node.to_debug_string());
 		ASSERT_LOG(node.has_key("width"), "Render target must have a 'width' attribute.");
@@ -81,6 +86,12 @@ namespace KRE
 
 	RenderTarget::~RenderTarget()
 	{
+		if(size_change_observer_handle_ != -1) {
+			auto wnd = WindowManager::getMainWindow();
+			if(wnd) {
+				wnd->unregisterSizeChangeObserver(size_change_observer_handle_);
+			}
+		}
 	}
 
 	void RenderTarget::on_create()
@@ -101,6 +112,21 @@ namespace KRE
 	void RenderTarget::clear() const
 	{
 		handleClear();
+	}
+
+	void RenderTarget::rebuild(int width, int height)
+	{
+		width_ = width;
+		height_ = height;
+		handleSizeChange(width, height);
+		needs_rebuild_ = false;
+	}
+
+	void RenderTarget::onSizeChange(int width, int height, int flags)
+	{
+		if(!(flags & WindowSizeChangeFlags::NOTIFY_CANVAS_ONLY)) {
+			needs_rebuild_ = true;
+		}
 	}
 
 	void RenderTarget::setClearColor(int r, int g, int b, int a)
@@ -166,7 +192,10 @@ namespace KRE
 		bool use_multi_sampling, 
 		unsigned multi_samples)
 	{
-		return DisplayDevice::renderTargetInstance(width, height, color_plane_count, depth, stencil, use_multi_sampling, multi_samples);
+		auto rt = DisplayDevice::renderTargetInstance(width, height, color_plane_count, depth, stencil, use_multi_sampling, multi_samples);
+		auto wnd = WindowManager::getMainWindow();
+		rt->size_change_observer_handle_ = wnd->registerSizeChangeObserver(std::bind(&RenderTarget::onSizeChange, rt.get(), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+		return rt;
 	}
 
 }
