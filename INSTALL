@@ -47,8 +47,8 @@ mkdir build && cd build
 ../configure && make && sudo make install
 
 
-Building on Debian Wheezy
--------------------------
+Building on Debian Wheezy (last updated Aug 2017)
+-------------------------------------------------
 
 The following are some specific instructions for setting up the pre
 requirements for Anura on Debian Wheezy.
@@ -124,11 +124,68 @@ package management:
 
 * ccache (recommended)
 * libcairo2-dev
-* libglew-dev
 * libglw1-mesa-dev (probably required)
 * libsdl-gfx1.2-dev
+* `libvorbis-dev`. Expect not to be able to compile Anura without this.
+* `libicu-dev`. Expect not to be able to link Anura without this.
 
-At this point you might be able to run `make` in Anura's source folder. That
+Make sure you did not selected these software and libraries:
+
+* `libglew-dev`. This package holds GLEW 1.7, which is no longer supported by
+  Anura.
+
+Since Debian Wheezy ships OpenGL ES 1 and 2, but not version 3 that is what
+Anura is currently requiring right now, manually install `GLES3/gl31.h` to
+`/usr/local/include/GLES3/` by doing something like:
+
+    # mkdir /usr/local/include/GLES3/
+    # pushd /usr/local/include/GLES3/
+    # wget https://www.khronos.org/registry/OpenGL/api/GLES3/gl31.h
+
+Check that the file name did not get mangled to `download` or something else,
+and fix it if it got.
+
+Manually download and build GLEW, since official Wheezy GLEW 1.7 is no longer
+supported by Anura. _I do not know which versions do and which do not work, but
+I only tried using GLEW 1.13 and it worked directly on first run._
+
+Manually download and build GLEW, GLEW 1.13 for instance. That is pretty
+straightforward, just go to the official site and download and uncompress
+gzipped tar. As it tells, run `make`.
+
+Check both glew-1.13/bin/glewinfo and glew-1.13/bin/visualinfo are running
+correctly. You would receive `error while loading shared libraries:
+libGLEW.so.1.13: cannot open shared object file: No such file or directory` if
+you ran just:
+
+    $ pwd
+    /PATH/TO/glew-1.13.0
+    $ bin/glewinfo
+
+You have to run both programas with an ld library path in the fashion of:
+
+    $ pwd
+    /PATH/TO/glew-1.13.0
+    $ LD_LIBRARY_PATH=lib/ bin/glewinfo
+
+That should work and both programs should do some output and finishing
+successfully (`echo $?` returning `0`). You do not need to understand their
+output.
+
+If that resulted in something like `Error: glewCreateContext failed` returning
+`1` (failure), that only means the program failed to create the window
+graphics. Probably only means that the terminal lost contact with some window
+server. Do not panic and just try the command in a brand new terminal window,
+it will probably succeed.
+
+Link `/usr/local/include/GL/glew.h` (it should not exist) to newly downloaded,
+possibly built `/PATH/TO/glew-1.13/include/GL/glew.h`, wherever you put it.
+Check that there does not exist a `/usr/include/GL/glew.h` document, in order
+to minimize as most as you can any possible undesirable path conflict with the
+newly created `/usr/local/include/GL/glew.h`.
+
+At this point you might be able to run `make -f Makefile.debian-wheezy` in
+Anura's source folder. That
 would create the `anura` executable in the Anura sources directory. If you got
 a linker error instead of a successful build, it is most probably because Anura
 deprecated GCC 4.7 to be able to use C++11 features. There is no GCC > 4.7.2 in
@@ -161,16 +218,24 @@ variable LD_LIBRARY_PATH when running Anura.
 
 So instead just calling the command `ANURA_DIR/anura`, you can call:
 
-    $ LD_LIBRARY_PATH=/usr/local/lib32/ ANURA_DIR/anura
+    $ LD_LIBRARY_PATH=/usr/local/lib32/:/PATH/TO/glew-1.13.0/lib/ anura
 
 or:
 
-    $ LD_LIBRARY_PATH=/usr/local/lib64/ ANURA_DIR/anura
+    $ LD_LIBRARY_PATH=/usr/local/lib64/:/PATH/TO/glew-1.13.0/lib/ anura
 
 Assuming a Debian multiarch environment after configuring the package
 `multiarch-support`, or a similar LD_LIBRARY_PATH value if not. For GCC 4.8.4
 corresponds libstdc++.so.6.0.19, that is the library version that you would
 want to find under /usr/local/.
+
+You can examinate the linking issuing:
+
+    $ LD_LIBRARY_PATH=/usr/local/lib32/:/PATH/TO/glew-1.13.0/lib/ ldd anura
+
+or
+
+    $ LD_LIBRARY_PATH=/usr/local/lib64/:/PATH/TO/glew-1.13.0/lib/ ldd anura
 
 Finally, running Anura at this point should tell you that it cannot find the
 frogatto module. Telling that would mean everything worked OK.
@@ -179,8 +244,13 @@ Build was successful, you could continue now, f.i., downloading Frogatto to
 ANURA_DIR/modules/frogatto, if you just want to run Frogatto.
 
 
-Building on Debian Jessie
--------------------------
+Building on Debian Jessie (last updated late 2015)
+--------------------------------------------------
+
+Just follow the general instructions, for the most part.
+
+For the list of required packages refer the general instructions and the
+particular guides for other Debian distributions.
 
 Include SDL2 like this:
 
