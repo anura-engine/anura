@@ -20,6 +20,9 @@ build the Anura engine:
  glew
  libz
  
+Boost 1.56.0 is required (later versions could possibly work) because Anura is
+using the alignment allocation facility introduced by this version of Boost.
+
 Building:
 
 It is recommended to install the program 'ccache' as this can considerably
@@ -244,15 +247,14 @@ Build was successful, you could continue now, f.i., downloading Frogatto to
 ANURA_DIR/modules/frogatto, if you just want to run Frogatto.
 
 
-Building on Debian Jessie (last updated late 2015)
+Building on Debian Jessie (last updated Aug 2017)
 --------------------------------------------------
 
 Follow the general instructions, for the most part.
 
 Boost 1.55.0 that ships with Debian Jessie apt system is not supported by Anura
-because it using aligned_alloc.hpp introduced by version '1.56.0'.
-an be troublesome, but 1.56.0 seems to build more stable.
-Moreover the developers were building against 1.56.0 as of Apr 2015.
+because it using aligned_alloc.hpp introduced by version '1.56.0'. Moreover the
+developers were building against 1.56.0 as of Apr 2015.
 
 You will have to download Boost 1.5X.X from http://www.boost.org/ the official
 home of Boost. I am assuming version 1.56.0 but other subsequent versions could
@@ -267,7 +269,7 @@ Extract Boost and run:
 
 Or:
 
-    $ ./bootstrap.sh --with-libraries=iostreams,filesystem,regex,system
+    $ ./bootstrap.sh --with-libraries=iostreams,filesystem,regex,system,locale
     $ su
     # ./b2 install
     # exit
