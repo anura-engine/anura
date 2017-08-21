@@ -162,7 +162,7 @@ you ran just:
     /PATH/TO/glew-1.13.0
     $ bin/glewinfo
 
-You have to run both programas with an ld library path in the fashion of:
+You have to run both programs with an ld library path in the fashion of:
 
     $ pwd
     /PATH/TO/glew-1.13.0
@@ -247,14 +247,91 @@ ANURA_DIR/modules/frogatto, if you just want to run Frogatto.
 Building on Debian Jessie (last updated late 2015)
 --------------------------------------------------
 
-Just follow the general instructions, for the most part.
+Follow the general instructions, for the most part.
 
-For the list of required packages refer the general instructions and the
+Boost 1.55.0 that ships with Debian Jessie apt system is not supported by Anura
+because it using aligned_alloc.hpp introduced by version '1.56.0'.
+an be troublesome, but 1.56.0 seems to build more stable.
+Moreover the developers were building against 1.56.0 as of Apr 2015.
+
+You will have to download Boost 1.5X.X from http://www.boost.org/ the official
+home of Boost. I am assuming version 1.56.0 but other subsequent versions could
+do too. Use 1.56.0 if you can, if you want to make sure you are following this
+procedure exactly as told.
+
+Extract Boost and run:
+
+    $ ./bootstrap.sh --with-libraries=iostreams,filesystem,regex,system,locale
+    $ su -c './b2 install'
+    $ _
+
+Or:
+
+    $ ./bootstrap.sh --with-libraries=iostreams,filesystem,regex,system
+    $ su
+    # ./b2 install
+    # exit
+    $ _
+
+Or maybe you prefer:
+
+    $ export UNPRIVILEGED_USER=$USER
+    $ su
+    # sudo -u $UNPRIVILEGED_USER ./bootstrap.sh --with-libraries=...
+    # ./b2 install
+    # exit
+    $ _
+
+If you ever need to reinstall Boost after installing from sources, you might
+find useful this command, because `b2` does not provide 'uninstall'
+capabilities.
+
+    # rm -rf /usr/local/lib/libboost_* /usr/local/include/boost/
+
+If there is any problem for building libbost_iostreams, as Boost documentation
+states, check if you already configured the development packages for libz and
+bzip2. In Debian Wheezy .deb repos, these are `zlib1g-dev` and `libbz2-dev`.
+
+You are probably required to make sure you selected this package too:
+
+* `libvorbis-dev`.
+* `libicu-dev`. Selecting it will select `icu-devtools` too, automatically.
+
+For the list of other required packages, in case the build fails, refer the
+general instructions, that most definitely will be more up to date, and the
 particular guides for other Debian distributions.
 
-Include SDL2 like this:
+If the compiler seems not to be finding `imgui.h`, you might want to replace
+`git@github.com:sweetkristas/imgui.git` by
+`https://[YOU@]github.com/sweetkristas/imgui.git` in `.gitmodules`. You might
+need to issue:
 
-    $ CXXFLAGS=-I/usr/include/SDL2/ make -j $JOBS
+    $ git submodule update --init --recursive
+
+The system should be ready now for building Anura with the standard
+`make -j $JOBS`.
+
+Take into consideration that your mileage may vary if you ever needed to
+maintain multiple concurrent versions of Boost libraries or other dependencies.
+
+If Anura compiled and then linked, you can check all the run time dependencies
+are met by issuing:
+
+    ldd ./anura
+
+It is likely to show that the Boost run time dependencies could not be found.
+Be that the case, issue:
+
+    LD_LIBRARY_PATH=/usr/local/lib/ ldd ./anura
+
+It should find all run time dependencies now. Be that the case, you should be
+able now to run Anura.
+
+For discovering the secrets of magic, configure under modules a symlink to the
+master branch of `github.com/davewx7/citadel`.
+
+For instant happiness, configure under modules a symlink to the master branch
+of `github.com/frogatto/frogatto`.
 
 
 Building on a 2016 Debian sid
