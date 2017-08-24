@@ -35,6 +35,7 @@ namespace gui
 	{
 		setEnvironment();
 		setDim(child->width() + border_size*2, child->height() + border_size*2);
+		setColor(col);
 		child_->setLoc(border_size, border_size);
 	}
 
