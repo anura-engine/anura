@@ -195,6 +195,95 @@ namespace multiplayer
 			return;
 		}
 
+		ffl::IntrusivePtr<const Level> lvl_ptr(&lvl);
+		ffl::IntrusivePtr<Client> client(new Client(lvl.id(), lvl.players().size()));
+
+		while(!client->PumpStartLevel()) {
+			if(idle_fn) {
+				const bool res = idle_fn();
+				if(!res) {
+					LOG_INFO("quitting game...");
+					throw multiplayer::Error();
+				}
+			}
+		}
+	}
+
+	namespace {
+		struct QueuedMessages {
+			std::vector<std::function<void()> > send_fn;
+		};
+
+		PREF_INT(fakelag, 0, "Number of milliseconds of artificial lag to introduce to multiplayer");
+	}
+
+	void send_and_receive()
+	{
+		if(!udp_socket || controls::num_players() == 1) {
+			return;
+		}
+
+		static std::deque<QueuedMessages> message_queue;
+
+		//send our ID followed by the send packet.
+		std::vector<char> send_buf(5);
+		send_buf[0] = 'C';
+		memcpy(&send_buf[1], &id, 4);
+		controls::write_control_packet(send_buf);
+
+		if(message_queue.empty() == false) {
+			QueuedMessages& msg = message_queue.front();
+			for(const std::function<void()>& fn : msg.send_fn) {
+				fn();
+			}
+
+			message_queue.pop_front();
+		}
+
+		for(int n = 0; n != udp_endpoint_peers.size(); ++n) {
+			if(n == player_slot) {
+				continue;
+			}
+
+			const unsigned lagframes = g_fakelag/20;
+
+			if(lagframes == 0) {
+				udp_socket->send_to(boost::asio::buffer(send_buf), *udp_endpoint_peers[n]);
+			} else {
+				while(lagframes >= message_queue.size()) {
+					message_queue.push_back(QueuedMessages());
+				}
+
+				message_queue[lagframes].send_fn.push_back([=]() {
+					udp_socket->send_to(boost::asio::buffer(send_buf), *udp_endpoint_peers[n]);
+				});
+			}
+		}
+
+		receive();
+	}
+
+	void receive()
+	{
+		while(udp_packet_waiting()) {
+			udp::endpoint sender_endpoint;
+			boost::array<char, 4096> udp_msg;
+			size_t len = udp_socket->receive(boost::asio::buffer(udp_msg));
+			if(len == 0 || udp_msg[0] != 'C') {
+				continue;
+			}
+
+			if(len < 5) {
+				LOG_INFO("UDP PACKET TOO SHORT: " << (int)len);
+				continue;
+			}
+
+			controls::read_control_packet(&udp_msg[5], len - 5);
+		}
+	}
+
+	Client::Client(const std::string& game_id, int nplayers) : game_id_(game_id), nplayers_(nplayers), completed_(false)
+	{
 		//find our host and port number within our NAT and tell the server
 		//about it, so if two servers from behind the same NAT connect to
 		//the server, it can tell them how to connect directly to each other.
@@ -215,28 +304,26 @@ namespace multiplayer
 		}
 
 		std::ostringstream s;
-		s << "READY/" << lvl.id() << "/" << lvl.players().size() << "/" << local_host << " " << local_port;
+		s << "READY/" << game_id_ << "/" << nplayers_ << "/" << local_host << " " << local_port;
 		boost::system::error_code error = boost::asio::error::host_not_found;
 		tcp_socket->write_some(boost::asio::buffer(s.str()), error);
 		if(error) {
 			LOG_INFO("ERROR WRITING TO SOCKET");
 			throw multiplayer::Error();
 		}
+	}
 
-		while(!tcp_packet_waiting()) {
-			if(idle_fn) {
-				const bool res = idle_fn();
-				if(!res) {
-					LOG_INFO("quitting game...");
-					throw multiplayer::Error();
-				}
-			}
-
+	bool Client::PumpStartLevel()
+	{
+		if(!tcp_packet_waiting()) {
 			std::vector<char> send_buf(5);
 			send_buf[0] = 'Z';
 			memcpy(&send_buf[1], &id, 4);
 			udp_socket->send_to(boost::asio::buffer(send_buf), *udp_endpoint);
+			return false;
 		}
+
+		boost::system::error_code error = boost::asio::error::host_not_found;
 
 		boost::array<char, 1024> response;
 		size_t len = tcp_socket->read_some(boost::asio::buffer(response), error);
@@ -517,80 +604,21 @@ namespace multiplayer
 		}
 
 		rng::seed_from_int(0);
+		completed_ = true;
+		return true;
 	}
 
-	namespace {
-		struct QueuedMessages {
-			std::vector<std::function<void()> > send_fn;
-		};
-
-		PREF_INT(fakelag, 0, "Number of milliseconds of artificial lag to introduce to multiplayer");
-	}
-
-	void send_and_receive()
-	{
-		if(!udp_socket || controls::num_players() == 1) {
-			return;
-		}
-
-		static std::deque<QueuedMessages> message_queue;
-
-		//send our ID followed by the send packet.
-		std::vector<char> send_buf(5);
-		send_buf[0] = 'C';
-		memcpy(&send_buf[1], &id, 4);
-		controls::write_control_packet(send_buf);
-
-		if(message_queue.empty() == false) {
-			QueuedMessages& msg = message_queue.front();
-			for(const std::function<void()>& fn : msg.send_fn) {
-				fn();
-			}
-
-			message_queue.pop_front();
-		}
-
-		for(int n = 0; n != udp_endpoint_peers.size(); ++n) {
-			if(n == player_slot) {
-				continue;
-			}
-
-			const unsigned lagframes = g_fakelag/20;
-
-			if(lagframes == 0) {
-				udp_socket->send_to(boost::asio::buffer(send_buf), *udp_endpoint_peers[n]);
-			} else {
-				while(lagframes >= message_queue.size()) {
-					message_queue.push_back(QueuedMessages());
-				}
-
-				message_queue[lagframes].send_fn.push_back([=]() {
-					udp_socket->send_to(boost::asio::buffer(send_buf), *udp_endpoint_peers[n]);
-				});
-			}
-		}
-
-		receive();
-	}
-
-	void receive()
-	{
-		while(udp_packet_waiting()) {
-			udp::endpoint sender_endpoint;
-			boost::array<char, 4096> udp_msg;
-			size_t len = udp_socket->receive(boost::asio::buffer(udp_msg));
-			if(len == 0 || udp_msg[0] != 'C') {
-				continue;
-			}
-
-			if(len < 5) {
-				LOG_INFO("UDP PACKET TOO SHORT: " << (int)len);
-				continue;
-			}
-
-			controls::read_control_packet(&udp_msg[5], len - 5);
-		}
-	}
+	
+BEGIN_DEFINE_CALLABLE_NOBASE(Client)
+DEFINE_FIELD(ready_to_start, "bool")
+	return variant::from_bool(obj.completed_);
+BEGIN_DEFINE_FN(pump, "() ->commands")
+	ffl::IntrusivePtr<Client> client(const_cast<Client*>(&obj));
+	return variant(new game_logic::FnCommandCallable("Multiplayer::Client::Pump", [=]() {
+		client->PumpStartLevel();
+	}));
+END_DEFINE_FN
+END_DEFINE_CALLABLE(Client)
 }
 
 namespace {

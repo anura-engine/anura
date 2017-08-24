@@ -1169,8 +1169,12 @@ int main(int argcount, char* argvec[])
 	// Apply a new default theme to ImGui.
 	theme_imgui_default();
 
+	{
+	LevelPtr lvl;
 	while(!quit && !show_title_screen(level_cfg)) {
-		LevelPtr lvl(load_level(level_cfg));
+		if(!lvl) {
+			lvl = load_level(level_cfg);
+		}
 		
 		//see if we're loading a multiplayer level, in which case we
 		//connect to the server.
@@ -1211,8 +1215,10 @@ int main(int argcount, char* argvec[])
 		try {
 			quit = LevelRunner(lvl, level_cfg, orig_level_cfg).play_level();
 			level_cfg = orig_level_cfg;
+			lvl.reset();
 		} catch(multiplayer_exception&) {
 		}
+	}
 	}
 
 	Level::clearCurrentLevel();

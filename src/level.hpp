@@ -69,6 +69,7 @@ public:
 class Level : public game_logic::FormulaCallable
 {
 public:
+
 	struct Summary {
 		std::string music, title;
 	};
@@ -176,6 +177,7 @@ public:
 		portal() : dest_starting_pos(false), automatic(false), saved_game(false), no_move_to_standing(false)
 		{}
 		rect area;
+		LevelPtr level_dest_obj;
 		std::string level_dest;
 		std::string dest_label;
 		std::string dest_str;
@@ -230,8 +232,8 @@ public:
 	void start_rebuild_tiles_in_background(const std::vector<int>& layers);
 
 	//a function which, if rebuilding tiles has been completed, will update
-	//with the new tiles.
-	void complete_rebuild_tiles_in_background();
+	//with the new tiles. Returns true iff there is no longer a tile build going on.
+	bool complete_rebuild_tiles_in_background();
 
 	//stop calls to start_rebuild_tiles_in_background from proceeding
 	//until unfreeze_rebuild_tiles_in_background() is called.
@@ -401,6 +403,42 @@ public:
 	int setup_level_transition(const std::string& transition_type);
 
 	static void set_level_transition_ratio(decimal value);
+
+	struct SubComponent {
+		rect source_area;
+		int num_variations;
+
+		SubComponent();
+		explicit SubComponent(variant node);
+		variant write() const;
+	};
+
+	struct SubComponentUsage {
+		rect dest_area;
+		int ncomponent;
+		int ninstance;
+
+		SubComponentUsage();
+		explicit SubComponentUsage(variant node);
+		const SubComponent& getSubComponent(const Level& lvl) const;
+		rect getSourceArea(const Level& lvl) const;
+		variant write() const;
+	};
+
+	const std::vector<SubComponent>& getSubComponents() const { return sub_components_; }
+	const std::vector<SubComponentUsage>& getSubComponentUsages() const { return sub_component_usages_; }
+
+	void setSubComponentUsages(const std::vector<SubComponentUsage>& u) { sub_component_usages_ = u; }
+
+	int addSubComponent(int w, int h);
+	void removeSubComponent(int nindex=-1);
+
+	void addSubComponentVariations(int nsub, int ndelta);
+	void setSubComponentArea(int nsub, const rect& area);
+
+	void addSubComponentUsage(int nsub, const rect& area);
+
+	void updateSubComponentFromUsage(const SubComponentUsage& usage);
 
 private:
 	DECLARE_CALLABLE(Level);
@@ -668,6 +706,9 @@ private:
 	std::vector<hex::MaskNodePtr> hex_masks_;
 
 	variant fb_render_target_;
+
+	std::vector<SubComponent> sub_components_;
+	std::vector<SubComponentUsage> sub_component_usages_;
 };
 
 bool entity_in_current_level(const Entity* e);

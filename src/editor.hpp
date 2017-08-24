@@ -65,6 +65,7 @@ public:
 	EditorResolutionManager(int xres, int yres);
 	~EditorResolutionManager();
 	static bool isActive();
+
 private:
 	int original_width_, original_height_;
 };
@@ -264,6 +265,17 @@ public:
 
 	bool mouselook_mode() const { return mouselook_mode_; }
 
+	void add_sub_component(int w, int h);
+	void remove_sub_component();
+
+	void add_sub_component_variations(int nsub, int delta);
+	void set_sub_component_area(int nsub, rect area);
+
+	void add_sub_component_usage(int nsub, rect area);
+	void set_sub_component_usage(std::vector<Level::SubComponentUsage> u);
+
+	void copy_rectangle(const rect& src, const rect& dst, std::vector<std::function<void()>>& redo, std::vector<std::function<void()>>& undo);
+
 protected:
 	editor(const editor&);
 	void operator=(const editor&);
@@ -316,6 +328,8 @@ protected:
 	void generate_remove_commands(EntityPtr e, std::vector<std::function<void()> >& undo, std::vector<std::function<void()> >& redo);
 
 	void pencil_motion(int prev_x, int prev_y, int x, int y, bool left_button);
+
+	void on_modify_level();
 
 	LevelPtr lvl_;
 

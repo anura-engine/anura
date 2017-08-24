@@ -1344,6 +1344,57 @@ namespace
 	RETURN_TYPE("object")
 	END_FUNCTION_DEF(radial_current)
 
+	class execute_level_on_command : public CommandCallable
+	{
+		LevelPtr lvl_;
+		variant cmd_;
+
+		void surrenderReferences(GarbageCollector* collector) override {
+			collector->surrenderPtr(&lvl_);
+			collector->surrenderVariant(&cmd_);
+		}
+	public:
+		execute_level_on_command(LevelPtr lvl, variant cmd) : lvl_(lvl), cmd_(cmd)
+		{}
+
+		virtual void execute(game_logic::FormulaCallable& ob) const override {
+			CurrentLevelScope scope(lvl_.get());
+			ob.executeCommand(cmd_);
+		}
+	};
+
+	FUNCTION_DEF(execute_on_level, 2, 2, "execute_on_level(Level lvl, command cmd): Executes the given commands, with the current level changed to the given level")
+		LevelPtr lvl(EVAL_ARG(0).convert_to<Level>());
+		variant command = EVAL_ARG(1);
+		execute_level_on_command* cmd = (new execute_level_on_command(lvl, command));
+		cmd->setExpression(this);
+		return variant(cmd);
+	FUNCTION_ARGS_DEF
+		ARG_TYPE("builtin level")
+		ARG_TYPE("commands")
+	RETURN_TYPE("commands")
+	END_FUNCTION_DEF(execute_on_level)
+
+	FUNCTION_DEF(create_level, 1, 1, "create_level")
+
+		Formula::failIfStaticContext();
+
+		variant node(EVAL_ARG(0));
+		variant id = node["id"];
+		std::string id_str;
+		if(id.is_null()) {
+			node.add_attr_mutation(variant("id"), variant("temp"));
+			id_str = "temp.cfg";
+		} else {
+			id_str = id.as_string();
+		}
+		LevelPtr lvl(new Level(id_str, node));
+		return variant(lvl.get());
+	FUNCTION_ARGS_DEF
+		ARG_TYPE("map")
+	RETURN_TYPE("builtin level")
+	END_FUNCTION_DEF(create_level)
+
 	class execute_on_command : public CommandCallable
 	{
 		EntityPtr e_;
@@ -2449,11 +2500,19 @@ RETURN_TYPE("bool")
 	RETURN_TYPE("commands")
 	END_FUNCTION_DEF(set_tiles)
 
-	FUNCTION_DEF(complete_rebuild_tiles, 0, 0, "complete_rebuild_tiles(): run to complete the rebuild of tiles started by a previous call to set_tiles")
+	FUNCTION_DEF(complete_rebuild_tiles, 0, 1, "complete_rebuild_tiles(bool): run to complete the rebuild of tiles started by a previous call to set_tiles")
+		bool wait = false;
+		if(NUM_ARGS > 0) {
+			wait = EVAL_ARG(0).as_bool();
+		}
 		return variant(new FnCommandCallable("set_tiles", [=]() {
-			Level::current().complete_rebuild_tiles_in_background();
+			bool result = false;
+			do {
+				result = Level::current().complete_rebuild_tiles_in_background();
+			} while(wait && result == false);
 		}));
 	FUNCTION_ARGS_DEF
+		ARG_TYPE("bool")
 	RETURN_TYPE("commands")
 	END_FUNCTION_DEF(complete_rebuild_tiles)
 
@@ -3211,13 +3270,14 @@ RETURN_TYPE("bool")
 	class teleport_command : public EntityCommandCallable
 	{
 	public:
-		teleport_command(const std::string& level, const std::string& label, const std::string& transition, const EntityPtr& new_playable, const bool no_move_to_standing) 
-			: level_(level), label_(label), transition_(transition), new_playable_(new_playable), no_move_to_standing_(no_move_to_standing)
+		teleport_command(const std::string& level, const std::string& label, const std::string& transition, const EntityPtr& new_playable, bool no_move_to_standing, LevelPtr level_obj) 
+			: level_(level), label_(label), transition_(transition), new_playable_(new_playable), no_move_to_standing_(no_move_to_standing), level_obj_(level_obj)
 		{}
 
 		virtual void execute(Level& lvl, Entity& ob) const override {
 			Level::portal p;
 			p.level_dest = level_;
+			p.level_dest_obj = level_obj_;
 			p.dest_starting_pos = true;
 			p.dest_label = label_;
 			p.automatic = true;
@@ -3230,6 +3290,7 @@ RETURN_TYPE("bool")
 		bool no_move_to_standing_;
 		std::string level_, label_, transition_;
 		EntityPtr new_playable_;
+		LevelPtr level_obj_;
 
 		void surrenderReferences(GarbageCollector* collector) override {
 			collector->surrenderPtr(&new_playable_);
@@ -3277,6 +3338,8 @@ RETURN_TYPE("bool")
 		bool no_move_to_standing = false;
 		std::string dst_Level_str;
 		variant play;
+
+		LevelPtr level_obj;
 	
 		if(!(NUM_ARGS == 1 && EVAL_ARG(0).is_map())) {
 			variant dst_Level = EVAL_ARG(0);
@@ -3295,6 +3358,10 @@ RETURN_TYPE("bool")
 			}
 		} else {
 			variant argMap = EVAL_ARG(0);
+			if(argMap.has_key("level_obj")) {
+				level_obj = argMap["level_obj"].convert_to<Level>();
+			}
+
 			dst_Level_str = argMap["level"].as_string_default("");
 			label = argMap["label"].as_string_default("");
 			if(argMap.has_key("player")) {
@@ -3312,11 +3379,11 @@ RETURN_TYPE("bool")
 			}
 		}
 
-		teleport_command* cmd = (new teleport_command(dst_Level_str, label, transition, new_playable, no_move_to_standing));
+		teleport_command* cmd = new teleport_command(dst_Level_str, label, transition, new_playable, no_move_to_standing, level_obj);
 		cmd->setExpression(this);
 		return variant(cmd);
 	FUNCTION_ARGS_DEF
-		ARG_TYPE("string|null")
+		ARG_TYPE("map|string|null")
 	RETURN_TYPE("commands")
 	END_FUNCTION_DEF(teleport)
 

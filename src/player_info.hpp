@@ -56,6 +56,7 @@ public:
 	void setCurrentLevel(const std::string& lvl) { current_level_ = lvl; }
 
 	void setPlayerSlot(int slot) { slot_ = slot; }
+	int getPlayerSlot() const { return slot_; }
 
 	void readControls(int cycle);
 

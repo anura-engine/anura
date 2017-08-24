@@ -844,7 +844,7 @@ void LevelRunner::close_editor()
 	lvl_->player()->getEntity().handleEvent("close_editor");
 	paused = false;
 	show_pause_title();
-	controls::read_until(lvl_->cycle());
+//	controls::read_until(lvl_->cycle());
 	initHistorySlider();
 #endif
 }
@@ -1128,7 +1128,7 @@ bool LevelRunner::play_cycle()
 		portal = &mutable_portal;
 
 		level_cfg_ = portal->level_dest;
-		if(level_cfg_.empty()) {
+		if(level_cfg_.empty() && portal->level_dest_obj.get() == nullptr) {
 			//the portal is within the same level
 
 			if(portal->dest_label.empty() == false) {
@@ -1186,14 +1186,19 @@ bool LevelRunner::play_cycle()
 				//do nothing
 			} else if(transition != "fade") {
 				transition_scene(*lvl_, last_draw_position(), true, transition);
-			} else {
+			} else if(!portal->level_dest_obj) {
 				preload_level(level_cfg_);
 				transition_scene(*lvl_, last_draw_position(), true, transition);
 			}
 
 			sound::stop_looped_sounds(nullptr);
 
-			ffl::IntrusivePtr<Level> new_level(load_level(level_cfg_));
+			ffl::IntrusivePtr<Level> new_level;
+			if(portal->level_dest_obj) {
+				new_level = portal->level_dest_obj;
+			} else {
+				new_level = load_level(level_cfg_);
+			}
 			if (!preferences::load_compiled() && !new_level->music().empty()) {
 				EntityPtr e;
 				if(lvl_->player()) {
@@ -1241,7 +1246,7 @@ bool LevelRunner::play_cycle()
 				player->getEntity().handleEvent("player_change_on_teleport", callable.get());
 			}
 
-			if(player && portal->saved_game == false) {
+			if(player && portal->saved_game == false && !portal->level_dest_obj) {
 				if(portal->new_playable) {
 					player = portal->new_playable->getPlayerInfo();
 					ASSERT_LOG(player != nullptr, "Object is not playable: " << portal->new_playable->getDebugDescription());
@@ -1258,7 +1263,7 @@ bool LevelRunner::play_cycle()
 
 			//if we're in a multiplayer level then going through a portal
 			//will take us out of multiplayer.
-			if(lvl_->players().size() != new_level->players().size()) {
+			if(lvl_->players().size() != new_level->players().size() || portal->level_dest_obj) {
 				lvl_ = new_level;
 				done = true;
 				throw multiplayer_exception();

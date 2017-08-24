@@ -1415,6 +1415,15 @@ const std::vector<variant>& variant::as_list_ref() const
 	return list_->elements;
 }
 
+std::vector<variant> variant::as_list_optional() const
+{
+	if(is_null()) {
+		return std::vector<variant>();
+	}
+
+	return as_list();
+}
+
 std::vector<variant> variant::as_list() const
 {
 	if(is_list()) {

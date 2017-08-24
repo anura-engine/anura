@@ -25,6 +25,9 @@
 
 #include <functional>
 
+#include "formula_callable.hpp"
+#include "formula_callable_definition.hpp"
+
 class Level;
 
 namespace multiplayer 
@@ -41,5 +44,16 @@ namespace multiplayer
 	struct Manager {
 		Manager(bool activate);
 		~Manager();
+	};
+
+	class Client : public game_logic::FormulaCallable {
+	public:
+		Client(const std::string& game_id, int nplayers);
+		bool PumpStartLevel();
+	private:
+		DECLARE_CALLABLE(Client);
+		std::string game_id_;
+		int nplayers_;
+		bool completed_;
 	};
 }

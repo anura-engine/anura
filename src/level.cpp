@@ -172,6 +172,47 @@ namespace
 	variant_type_ptr g_player_type;
 }
 
+Level::SubComponent::SubComponent() : source_area(0, 0, 0, 0), num_variations(1)
+{}
+
+Level::SubComponent::SubComponent(variant node) : source_area(node["source_area"]), num_variations(node["num_variations"].as_int(1))
+{}
+
+variant Level::SubComponent::write() const
+{
+	variant_builder res;
+	res.add("source_area", source_area.write());
+	res.add("num_variations", num_variations);
+	return res.build();
+}
+
+Level::SubComponentUsage::SubComponentUsage() : dest_area(0, 0, 0, 0), ncomponent(0), ninstance(0)
+{}
+
+Level::SubComponentUsage::SubComponentUsage(variant node) : dest_area(node["dest_area"]), ncomponent(node["ncomponent"].as_int(0)), ninstance(node["ninstance"].as_int(0))
+{}
+
+const Level::SubComponent& Level::SubComponentUsage::getSubComponent(const Level& lvl) const
+{
+	assert(ncomponent < lvl.getSubComponents().size());
+	return lvl.getSubComponents()[ncomponent];
+}
+
+rect Level::SubComponentUsage::getSourceArea(const Level& lvl) const
+{
+	const auto& sub = getSubComponent(lvl);
+	rect res = sub.source_area;
+	return rect(res.x() + (res.w() + TileSize*4)*ninstance, res.y(), res.w(), res.h());
+}
+
+variant Level::SubComponentUsage::write() const
+{
+	variant_builder res;
+	res.add("dest_area", dest_area.write());
+	res.add("ncomponent", ncomponent);
+	return res.build();
+}
+
 Level::Level(const std::string& level_cfg, variant node)
 	: id_(level_cfg),
 	  x_resolution_(0), 
@@ -260,6 +301,14 @@ Level::Level(const std::string& level_cfg, variant node)
 		id_ = node["id"].as_string();
 	}
 
+	for(variant v : node["sub_components"].as_list_optional()) {
+		sub_components_.push_back(SubComponent(v));
+	}
+
+	for(variant v : node["sub_component_usages"].as_list_optional()) {
+		sub_component_usages_.push_back(SubComponentUsage(v));
+	}
+
 	if(preferences::load_compiled() && (level_cfg == "save.cfg" || level_cfg == "autosave.cfg")) {
 		if(preferences::version() != node["version"].as_string()) {
 			LOG_INFO("DIFFERENT VERSION LEVEL");
@@ -338,7 +387,7 @@ Level::Level(const std::string& level_cfg, variant node)
 
 	camera_rotation_ = game_logic::Formula::createOptionalFormula(node["camera_rotation"]);
 
-	preloads_ = util::split(node["preloads"].as_string());
+	preloads_ = util::split(node["preloads"].as_string_default(""));
 
 	std::string empty_solid_info;
 	for(variant rect_node : node["solid_rect"].as_list()) {
@@ -527,6 +576,8 @@ Level::Level(const std::string& level_cfg, variant node)
 	const int time_taken_ms = (profile::get_tick_time() - start_time);
 	stats::Entry("load", id()).set("time", variant(time_taken_ms));
 	LOG_INFO("done level constructor: " << time_taken_ms);
+
+
 }
 
 Level::~Level()
@@ -1071,17 +1122,17 @@ struct TileBackupScope {
 };
 }
 
-void Level::complete_rebuild_tiles_in_background()
+bool Level::complete_rebuild_tiles_in_background()
 {
 	level_tile_rebuild_info& info = tile_rebuild_map[this];
 	if(!info.tile_rebuild_in_progress) {
-		return;
+		return true;
 	}
 
 	{
 		threading::lock l(info.tile_rebuild_complete_mutex);
 		if(!info.tile_rebuild_complete) {
-			return;
+			return false;
 		}
 	}
 
@@ -1122,6 +1173,7 @@ void Level::complete_rebuild_tiles_in_background()
 		start_rebuild_tiles_in_background(info.rebuild_tile_layers_buffer);
 	}
 
+	return true;
 }
 
 void Level::rebuildTiles()
@@ -1257,6 +1309,24 @@ variant Level::write() const
 	res.add("music", music_);
 	res.add("segment_width", segment_width_);
 	res.add("segment_height", segment_height_);
+
+	if(sub_components_.empty() == false) {
+		std::vector<variant> sub;
+		for(const auto& c : sub_components_) {
+			sub.push_back(c.write());
+		}
+
+		res.add("sub_components", variant(&sub));
+	}
+
+	if(sub_component_usages_.empty() == false) {
+		std::vector<variant> sub;
+		for(const auto& c : sub_component_usages_) {
+			sub.push_back(c.write());
+		}
+
+		res.add("sub_component_usages", variant(&sub));
+	}
 
 	if(x_resolution_ || y_resolution_) {
 		res.add("x_resolution", x_resolution_);
@@ -3363,16 +3433,18 @@ void Level::add_multi_player(EntityPtr p)
 
 void Level::add_player(EntityPtr p)
 {
-	if(player_) {
-		if(player_ != p) {
-			player_->beingRemoved();
+	const int nslot = p->getPlayerInfo()->getPlayerSlot();
+
+	if(players_.size() > nslot && players_[nslot]) {
+		if(players_[nslot] != p) {
+			players_[nslot]->beingRemoved();
 		}
 
-		if(player_->label().empty() == false) {
-			chars_by_label_.erase(player_->label());
+		if(players_[nslot]->label().empty() == false) {
+			chars_by_label_.erase(players_[nslot]->label());
 		}
 
-		chars_.erase(std::remove(chars_.begin(), chars_.end(), player_), chars_.end());
+		chars_.erase(std::remove(chars_.begin(), chars_.end(), players_[nslot]), chars_.end());
 	}
 
 	if(LevelRunner::getCurrent()) {
@@ -3381,13 +3453,12 @@ void Level::add_player(EntityPtr p)
 
 	last_touched_player_ = player_ = p;
 	ASSERT_LOG(!g_player_type || g_player_type->match(variant(p.get())), "Player object being added to level does not match required player type. " << p->getDebugDescription() << " is not a " << g_player_type->to_string());
-	if(players_.empty()) {
+	if(players_.size() <= nslot) {
 		player_->getPlayerInfo()->setPlayerSlot(static_cast<int>(players_.size()));
 		players_.push_back(player_);
 	} else {
 		ASSERT_LOG(player_->isHuman(), "Level::add_player(): Tried to add player to the level that isn't human.");
-		player_->getPlayerInfo()->setPlayerSlot(0);
-		players_[0] = player_;
+		players_[nslot] = player_;
 	}
 
 	p->addToLevel();
@@ -3614,6 +3685,16 @@ DEFINE_FIELD(players, "[custom_obj]")
 		v.push_back(variant(e.get()));
 	}
 	return variant(&v);
+DEFINE_SET_FIELD
+	std::vector<variant> list = value.as_list();
+	int nslot = 0;
+	for(variant p : list) {
+		EntityPtr pl(p.convert_to<Entity>());
+		pl->getPlayerInfo()->setPlayerSlot(nslot);
+		obj.add_character(pl);
+		++nslot;
+	}
+
 DEFINE_FIELD(in_editor, "bool")
 	return variant::from_bool(obj.editor_);
 DEFINE_FIELD(editor, "null|builtin editor")
@@ -3963,6 +4044,14 @@ DEFINE_SET_FIELD_TYPE("int")
 
 DEFINE_FIELD(transition_ratio, "decimal")
 	return variant(g_level_transition_ratio);
+
+DEFINE_FIELD(is_building_tiles, "bool")
+	level_tile_rebuild_info& info = tile_rebuild_map[&obj];
+	if(!info.tile_rebuild_in_progress) {
+		return variant::from_bool(false);
+	} else {
+		return variant::from_bool(true);
+	}
 
 END_DEFINE_CALLABLE(Level)
 
@@ -4643,6 +4732,67 @@ std::pair<std::vector<LevelTile>::const_iterator, std::vector<LevelTile>::const_
 
 	std::pair<int, int> loc(x, y);
 	return std::equal_range(tiles_by_position_.begin(), tiles_by_position_.end(), loc, level_tile_pos_comparer());
+}
+
+int Level::addSubComponent(int w, int h)
+{
+	int xpos = 0;
+	int ypos = boundaries_.y2() + TileSize*4;
+
+	if(sub_components_.empty() == false) {
+		ypos = sub_components_.back().source_area.y2() + TileSize*4;
+	}
+
+	SubComponent sub;
+	sub.source_area = rect(xpos, ypos, w, h);
+	sub.num_variations = 1;
+	sub_components_.push_back(sub);
+	return sub_components_.size() - 1;
+}
+
+void Level::removeSubComponent(int nindex)
+{
+	if(nindex < 0) {
+		nindex = sub_components_.size() - 1;
+	}
+
+	if(nindex >= 0 && nindex < sub_components_.size()) {
+		sub_components_.erase(sub_components_.begin() + nindex);
+	}
+}
+
+void Level::addSubComponentVariations(int nindex, int ndelta)
+{
+	if(nindex >= 0 && nindex < sub_components_.size()) {
+		sub_components_[nindex].num_variations = std::max<int>(1, sub_components_[nindex].num_variations+ndelta);
+	}
+}
+
+void Level::setSubComponentArea(int nindex, const rect& area)
+{
+	if(nindex >= 0 && nindex < sub_components_.size()) {
+		sub_components_[nindex].source_area = area;
+	}
+}
+
+void Level::addSubComponentUsage(int nsub, const rect& area)
+{
+	SubComponentUsage usage;
+	usage.dest_area = area;
+	usage.ncomponent = nsub;
+	sub_component_usages_.push_back(usage);
+}
+
+void Level::updateSubComponentFromUsage(const SubComponentUsage& usage)
+{
+	ASSERT_LOG(usage.ncomponent >= 0 && usage.ncomponent < sub_components_.size(), "Illegal sub component usage: " << usage.ncomponent);
+
+	rect source_area = sub_components_[usage.ncomponent].source_area;
+
+	std::map<int, std::vector<std::string> > tiles;
+
+	getAllTilesRect(usage.dest_area.x(), usage.dest_area.y(), usage.dest_area.x2(), usage.dest_area.y2(), tiles);
+
 }
 
 game_logic::FormulaPtr Level::createFormula(const variant& v)
