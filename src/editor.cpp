@@ -1901,8 +1901,8 @@ void editor::handleKeyPress(const SDL_KeyboardEvent& key)
 				redo.push_back([=](){ lvl->clear_tile_rect(x, y, x, y); });
 				std::map<int, std::vector<std::string> > old_tiles;
 				lvl->getAllTilesRect(x, y, x, y, old_tiles);
-				for(auto i : old_tiles) {
-					undo.push_back([=](){ lvl->addTileRectVector(i.first, x, y, x, y, i.second); });
+				for(auto i = old_tiles.begin(); i != old_tiles.end(); ++i) {
+					undo.push_back([=](){ lvl->addTileRectVector(i->first, x, y, x, y, i->second); });
 				}
 			}
 
@@ -2580,12 +2580,12 @@ void editor::handleMouseButtonDown(const SDL_MouseButtonEvent& event)
 
 		//we only want to actually set the vars once we've calculated all of
 		//them, to avoid any ordering issues etc. So set them all here.
-		for(auto i : vars) {
+		for(const auto& i : vars) {
 			game_logic::FormulaCallable* obj_vars = c->queryValue("vars").mutable_callable();
 			obj_vars->mutateValue(i.first, i.second);
 		}
 
-		for(auto i : props) {
+		for(const auto& i : props) {
 			c->mutateValue(i.first, i.second);
 		}
 
@@ -2773,9 +2773,9 @@ void editor::handleMouseButtonUp(const SDL_MouseButtonEvent& event)
 
 					std::map<int, std::vector<std::string> > old_tiles;
 					lvl->getAllTilesRect(x, y, x, y, old_tiles);
-					for(auto i : old_tiles) {
-						undo.push_back([=](){ lvl->addTileRectVector(i.first, x, y, x, y, i.second); });
-						redo.push_back([=](){ lvl->addTileRectVector(i.first, x, y, x, y, std::vector<std::string>(1,"")); });
+					for (auto i = old_tiles.begin(); i != old_tiles.end(); ++i) {
+						undo.push_back([=](){ lvl->addTileRectVector(i->first, x, y, x, y, i->second); });
+						redo.push_back([=](){ lvl->addTileRectVector(i->first, x, y, x, y, std::vector<std::string>(1,"")); });
 					}
 
 					old_tiles.clear();
@@ -2789,9 +2789,9 @@ void editor::handleMouseButtonUp(const SDL_MouseButtonEvent& event)
 					max_y = std::max(y, max_y);
 
 					lvl->getAllTilesRect(x, y, x, y, old_tiles);
-					for(auto i : old_tiles) {
-						undo.push_back([=](){ lvl->addTileRectVector(i.first, x, y, x, y, i.second); });
-						redo.push_back([=](){ lvl->addTileRectVector(i.first, x, y, x, y, std::vector<std::string>(1,"")); });
+					for (auto i = old_tiles.begin(); i != old_tiles.end(); ++i) {
+						undo.push_back([=](){ lvl->addTileRectVector(i->first, x, y, x, y, i->second); });
+						redo.push_back([=](){ lvl->addTileRectVector(i->first, x, y, x, y, std::vector<std::string>(1,"")); });
 					}
 				}
 
@@ -2807,8 +2807,8 @@ void editor::handleMouseButtonUp(const SDL_MouseButtonEvent& event)
 	
 					std::map<int, std::vector<std::string> > old_tiles;
 					lvl->getAllTilesRect(x, y, x, y, old_tiles);
-					for(auto i : old_tiles) {
-						redo.push_back([=](){ lvl->addTileRectVector(i.first, x + diffx*TileSize, y + diffy*TileSize, x + diffx*TileSize, y + diffy*TileSize, i.second); });
+					for (auto i = old_tiles.begin(); i != old_tiles.end(); ++i) {
+						redo.push_back([=](){ lvl->addTileRectVector(i->first, x + diffx*TileSize, y + diffy*TileSize, x + diffx*TileSize, y + diffy*TileSize, i->second); });
 					}
 				}
 
@@ -3099,11 +3099,11 @@ void editor::remove_tile_rect(int x1, int y1, int x2, int y2)
 		std::map<int, std::vector<std::string> > old_tiles;
 		lvl->getAllTilesRect(x1, y1, x2, y2, old_tiles);
 		std::vector<int> layers;
-		for(auto i : old_tiles) {
-			if(std::count(layers.begin(), layers.end(), i.first) == 0) {
-				layers.push_back(i.first);
+		for (auto i = old_tiles.begin(); i != old_tiles.end(); ++i) {
+			if(std::count(layers.begin(), layers.end(), i->first) == 0) {
+				layers.push_back(i->first);
 			}
-			undo.push_back([=](){ lvl->addTileRectVector(i.first, x1, y1, x2, y2, i.second); });
+			undo.push_back([=](){ lvl->addTileRectVector(i->first, x1, y1, x2, y2, i->second); });
 		}
 
 		redo.push_back([=](){ lvl->clear_tile_rect(x1, y1, x2, y2); });
@@ -4612,9 +4612,9 @@ void editor::clear_rectangle(const rect& area, std::vector<std::function<void()>
 		std::map<int, std::vector<std::string> > old_tiles;
 		lvl->getAllTilesRect(area.x(), area.y(), area.x() + area.w(), area.y() + area.h(), old_tiles);
 
-		redo.push_back(std::bind(&Level::clear_tile_rect, lvl.get(), area.x(), area.y(), area.x()+area.w(), area.y()+area.h()));
-		for(auto& p : old_tiles) {
-			undo.push_back([=]() { lvl->addTileRectVector(p.first, area.x(), area.y(), area.x()+area.w(), area.y()+area.h(), p.second); });
+		redo.push_back([=]() { lvl->clear_tile_rect(area.x(), area.y(), area.x() + area.w(), area.y() + area.h()); });
+		for (auto i = old_tiles.begin(); i != old_tiles.end(); ++i) {
+			undo.push_back([=]() { lvl->addTileRectVector(i->first, area.x(), area.y(), area.x()+area.w(), area.y()+area.h(), i->second); });
 		}
 
 		std::vector<EntityPtr> chars = lvl->get_chars();
@@ -4643,20 +4643,20 @@ void editor::clear_rectangle(const rect& area, std::vector<std::function<void()>
 
 void editor::copy_rectangle(const rect& src, const rect& dst, std::vector<std::function<void()>>& redo, std::vector<std::function<void()>>& undo, bool copy_usages)
 {
-	for(LevelPtr lvl : levels_) {
+	for (LevelPtr lvl : levels_) {
 		std::map<int, std::vector<std::string> > src_tiles, dst_tiles;
 		lvl->getAllTilesRect(src.x(), src.y(), src.x() + src.w(), src.y() + src.h(), src_tiles);
 		lvl->getAllTilesRect(dst.x(), dst.y(), dst.x() + dst.w(), dst.y() + dst.h(), dst_tiles);
 
-		redo.push_back(std::bind(&Level::clear_tile_rect, lvl.get(), dst.x(), dst.y(), dst.x()+dst.w(), dst.y()+dst.h()));
-		undo.push_back(std::bind(&Level::clear_tile_rect, lvl.get(), dst.x(), dst.y(), dst.x()+dst.w(), dst.y()+dst.h()));
+		redo.push_back([=]() { lvl->clear_tile_rect(dst.x(), dst.y(), dst.x() + dst.w(), dst.y() + dst.h()); });
+		undo.push_back([=]() { lvl->clear_tile_rect(dst.x(), dst.y(), dst.x() + dst.w(), dst.y() + dst.h()); });
 
-		for(auto& p : src_tiles) {
-			redo.push_back([=]() { lvl->addTileRectVector(p.first, dst.x(), dst.y(), dst.x()+dst.w(), dst.y()+dst.h(), p.second); });
+		for (auto i = src_tiles.begin(); i != src_tiles.end(); ++i){
+			redo.push_back([=]() { lvl->addTileRectVector(i->first, dst.x(), dst.y(), dst.x()+dst.w(), dst.y()+dst.h(), i->second); });
 		}
 
-		for(auto& p : dst_tiles) {
-			undo.push_back([=]() { lvl->addTileRectVector(p.first, dst.x(), dst.y(), dst.x()+dst.w(), dst.y()+dst.h(), p.second); });
+		for (auto i = dst_tiles.begin(); i != dst_tiles.end(); ++i) {
+			undo.push_back([=]() { lvl->addTileRectVector(i->first, dst.x(), dst.y(), dst.x()+dst.w(), dst.y()+dst.h(), i->second); });
 		}
 
 		std::vector<EntityPtr> chars = lvl->get_chars();
