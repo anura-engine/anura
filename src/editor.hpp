@@ -274,7 +274,9 @@ public:
 	void add_sub_component_usage(int nsub, rect area);
 	void set_sub_component_usage(std::vector<Level::SubComponentUsage> u);
 
-	void copy_rectangle(const rect& src, const rect& dst, std::vector<std::function<void()>>& redo, std::vector<std::function<void()>>& undo);
+	void copy_rectangle(const rect& src, const rect& dst, std::vector<std::function<void()>>& redo, std::vector<std::function<void()>>& undo, bool copy_usages=false);
+
+	void clear_rectangle(const rect& area, std::vector<std::function<void()>>& redo, std::vector<std::function<void()>>& undo);
 
 protected:
 	editor(const editor&);

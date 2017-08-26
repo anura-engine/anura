@@ -676,6 +676,8 @@ namespace
 	     resizing_sub_component_right_edge = false;
 	int resizing_sub_component_index = -1;
 
+	int dragging_sub_component_usage_index = -1;
+
 	rect modify_selected_rect(const editor& e, rect boundaries, int xpos, int ypos) 
 	{
 		const int x = round_tile_size(xpos);
@@ -757,6 +759,14 @@ namespace
 			   x <= r.x2() + RectEdgeSelectThreshold*zoom &&
 			   y >= r.y2() - RectEdgeSelectThreshold*zoom &&
 			   y <= r.y2() + RectEdgeSelectThreshold*zoom;
+	}
+
+	bool rect_any_edge_selected(const rect& r, int x, int y, int zoom)
+	{
+		return rect_left_edge_selected(r, x, y, zoom) ||
+		       rect_right_edge_selected(r, x, y, zoom) ||
+		       rect_top_edge_selected(r, x, y, zoom) ||
+		       rect_bottom_edge_selected(r, x, y, zoom);
 	}
 
 	bool is_rect_selected(const rect& r, int x, int y, int zoom)
@@ -1955,7 +1965,6 @@ void editor::handleKeyPress(const SDL_KeyboardEvent& key)
 		}
 	}
 
-	/* way to add level sub-components. disabled until this feature is more mature.
 	if(key.keysym.sym == SDLK_n) {
 		std::vector<std::function<void()> > redo, undo;
 
@@ -2016,7 +2025,6 @@ void editor::handleKeyPress(const SDL_KeyboardEvent& key)
 
 		on_modify_level();
 	}
-	*/
 }
 
 void editor::handle_scrolling()
@@ -2251,6 +2259,8 @@ void editor::handleMouseButtonDown(const SDL_MouseButtonEvent& event)
 	for(const Level::SubComponent& sub : lvl_->getSubComponents()) {
 		rect addArea(findSubComponentArea(sub, xpos_, ypos_, zoom_));
 		bool addAreaMouseover = pointInRect(point(mousex,mousey), addArea);
+
+		//add another variation of this sub component.
 		if(addAreaMouseover) {
 
 			std::vector<std::function<void()> > redo, undo;
@@ -2261,7 +2271,7 @@ void editor::handleMouseButtonDown(const SDL_MouseButtonEvent& event)
 			rect src(sub.source_area.x() + (sub.num_variations-1)*(TileSize*4 + sub.source_area.w()), sub.source_area.y(), sub.source_area.w(), sub.source_area.h());
 			rect dst(sub.source_area.x() + (sub.num_variations)*(TileSize*4 + sub.source_area.w()), sub.source_area.y(), sub.source_area.w(), sub.source_area.h());
 
-			copy_rectangle(src, dst, redo, undo);
+			copy_rectangle(src, dst, redo, undo, true);
 
 			executeCommand(
 			  std::bind(execute_functions, redo),
@@ -2274,6 +2284,20 @@ void editor::handleMouseButtonDown(const SDL_MouseButtonEvent& event)
 
 		if(resizing_sub_component_right_edge || resizing_sub_component_bottom_edge) {
 			resizing_sub_component_index = nsub_index;
+			return;
+		}
+
+		++nsub_index;
+	}
+
+	dragging_sub_component_usage_index = -1;
+
+	nsub_index = 0;
+	for(const Level::SubComponentUsage& sub : lvl_->getSubComponentUsages()) {
+		rect area = sub.dest_area;
+		const bool mouse_over = rect_any_edge_selected(area, anchorx_, anchory_, zoom_);
+		if(mouse_over) {
+			dragging_sub_component_usage_index = nsub_index;
 			return;
 		}
 
@@ -2604,7 +2628,6 @@ void editor::handleMouseButtonDown(const SDL_MouseButtonEvent& event)
 				LOG_INFO("ADD OBJECT: " << obj->x() << "," << obj->y());
 			}
 			end_command_group();
-
 			on_modify_level();
 		}
 	}
@@ -2637,6 +2660,30 @@ void editor::handleMouseButtonUp(const SDL_MouseButtonEvent& event)
 			on_modify_level();
 		}
 		g_variable_editing = nullptr;
+		return;
+	}
+
+	if(dragging_sub_component_usage_index != -1) {
+		const int dx = (xpos - anchorx_)/TileSize;
+		const int dy = (ypos - anchory_)/TileSize;
+
+		std::vector<Level::SubComponentUsage> usages = lvl_->getSubComponentUsages();
+		std::vector<Level::SubComponentUsage> new_usages = usages;
+
+		rect area = usages[dragging_sub_component_usage_index].dest_area;
+
+		area = rect(area.x() + dx*TileSize, area.y() + dy*TileSize, area.w(), area.h());
+
+		new_usages[dragging_sub_component_usage_index].dest_area = area;
+
+		executeCommand(
+			std::bind(&editor::set_sub_component_usage, this, new_usages),
+			std::bind(&editor::set_sub_component_usage, this, usages)
+		);
+
+		on_modify_level();
+
+		dragging_sub_component_usage_index = -1;
 		return;
 	}
 
@@ -3861,8 +3908,19 @@ void BuiltinEditor::draw_gui() const
 		++nsub;
 	}
 
+	int nsub_index = 0;
 	for(const Level::SubComponentUsage& sub : lvl_->getSubComponentUsages()) {
 		rect area = sub.dest_area;
+
+		const bool dragging = (dragging_sub_component_usage_index == nsub_index);
+		const bool mouse_over = rect_any_edge_selected(area, selectx, selecty, zoom_) || dragging;
+
+		if(dragging) {
+			const int dx = (selectx - anchorx_)/TileSize;
+			const int dy = (selecty - anchory_)/TileSize;
+
+			area = rect(area.x() + dx*TileSize, area.y() + dy*TileSize, area.w(), area.h());
+		}
 
 		const int x1 = area.x()/zoom_;
 		const int x2 = area.x2()/zoom_;
@@ -3888,10 +3946,8 @@ void BuiltinEditor::draw_gui() const
 		varray.emplace_back(x1 - xpos_/zoom_, y1 - ypos_/zoom_);
 
 		for(int i = 0; i != 8; ++i) {
-			carray.emplace_back(normal_color);
+			carray.emplace_back(mouse_over ? selected_color : normal_color);
 		}
-
-		std::cerr << "POINT IN RECT: " << selectx << ", " << selecty << ": " << area << "\n";
 
 		if(pointInRect(point(selectx, selecty), area)) {
 			ASSERT_LOG(sub.ncomponent < lvl_->getSubComponents().size(), "Illegal component: " << sub.ncomponent);
@@ -3923,6 +3979,7 @@ void BuiltinEditor::draw_gui() const
 		}
 
 		canvas->drawLines(varray, 2.0f, carray);
+		++nsub_index;
 	}
 
 	draw_selection(0, 0);
@@ -4065,7 +4122,37 @@ void editor::executeCommand(std::function<void()> command, std::function<void()>
 
 void editor::on_modify_level()
 {
-	for(const auto& usage : lvl_->getSubComponentUsages()) {
+	//sub component usages all copy their data in.
+	//Resolve the sub component usages in the correct order by
+	//searching for a sub component usage which doesn't have 
+	//any unresolved usages that map into its source.
+	std::vector<Level::SubComponentUsage> usages = lvl_->getSubComponentUsages();
+
+	while(usages.empty() == false) {
+		int ntries = 0;
+		size_t ncandidate = 0;
+		bool new_candidate = true;
+		while(new_candidate && ntries < usages.size()) {
+
+			const rect& source_area = usages[ncandidate].getSourceArea(*lvl_);
+
+			new_candidate = false;
+			for(size_t n = 0; n != usages.size(); ++n) {
+				if(n == ncandidate) {
+					continue;
+				}
+
+				if(rects_intersect(usages[n].dest_area, source_area)) {
+					new_candidate = true;
+					ncandidate = n;
+					++ntries;
+					break;
+				}
+			}
+		}
+
+		const auto& usage = usages[ncandidate];
+
 		const rect& dst = usage.dest_area;
 		const rect& src = usage.getSourceArea(*lvl_);
 
@@ -4074,6 +4161,8 @@ void editor::on_modify_level()
 		for(auto& fn : redo) {
 			fn();
 		}
+
+		usages.erase(usages.begin() + ncandidate);
 	}
 }
 
@@ -4517,7 +4606,42 @@ void editor::set_sub_component_usage(std::vector<Level::SubComponentUsage> u)
 	}
 }
 
-void editor::copy_rectangle(const rect& src, const rect& dst, std::vector<std::function<void()>>& redo, std::vector<std::function<void()>>& undo)
+void editor::clear_rectangle(const rect& area, std::vector<std::function<void()>>& redo, std::vector<std::function<void()>>& undo)
+{
+	for(LevelPtr lvl : levels_) {
+		std::map<int, std::vector<std::string> > old_tiles;
+		lvl->getAllTilesRect(area.x(), area.y(), area.x() + area.w(), area.y() + area.h(), old_tiles);
+
+		redo.push_back(std::bind(&Level::clear_tile_rect, lvl.get(), area.x(), area.y(), area.x()+area.w(), area.y()+area.h()));
+		for(auto& p : old_tiles) {
+			undo.push_back([=]() { lvl->addTileRectVector(p.first, area.x(), area.y(), area.x()+area.w(), area.y()+area.h(), p.second); });
+		}
+
+		std::vector<EntityPtr> chars = lvl->get_chars();
+		for(auto c : chars) {
+			if(c->x() >= area.x() && c->x() <= area.x2() && c->y() >= area.y() && c->y() <= area.y2()) {
+				redo.push_back(std::bind(&Level::remove_character, lvl.get(), c));
+				undo.push_back(std::bind(&Level::add_character, lvl.get(), c));
+			}
+		}
+
+		std::vector<Level::SubComponentUsage> usages, old_usages = lvl_->getSubComponentUsages();
+		
+		for(const Level::SubComponentUsage& usage : old_usages) {
+			if(!rects_intersect(usage.dest_area, area)) {
+				usages.push_back(usage);
+			}
+		}
+
+		if(usages.size() != old_usages.size()) {
+			redo.push_back(std::bind(&Level::setSubComponentUsages, lvl.get(), usages));
+			undo.push_back(std::bind(&Level::setSubComponentUsages, lvl.get(), old_usages));
+		}
+	}
+}
+
+
+void editor::copy_rectangle(const rect& src, const rect& dst, std::vector<std::function<void()>>& redo, std::vector<std::function<void()>>& undo, bool copy_usages)
 {
 	for(LevelPtr lvl : levels_) {
 		std::map<int, std::vector<std::string> > src_tiles, dst_tiles;
@@ -4528,11 +4652,11 @@ void editor::copy_rectangle(const rect& src, const rect& dst, std::vector<std::f
 		undo.push_back(std::bind(&Level::clear_tile_rect, lvl.get(), dst.x(), dst.y(), dst.x()+dst.w(), dst.y()+dst.h()));
 
 		for(auto& p : src_tiles) {
-			redo.push_back(std::bind(&Level::addTileRectVector, lvl.get(), p.first, dst.x(), dst.y(), dst.x()+dst.w(), dst.y()+dst.h(), p.second));
+			redo.push_back([=]() { lvl->addTileRectVector(p.first, dst.x(), dst.y(), dst.x()+dst.w(), dst.y()+dst.h(), p.second); });
 		}
 
 		for(auto& p : dst_tiles) {
-			undo.push_back(std::bind(&Level::addTileRectVector, lvl.get(), p.first, dst.x(), dst.y(), dst.x()+dst.w(), dst.y()+dst.h(), p.second));
+			undo.push_back([=]() { lvl->addTileRectVector(p.first, dst.x(), dst.y(), dst.x()+dst.w(), dst.y()+dst.h(), p.second); });
 		}
 
 		std::vector<EntityPtr> chars = lvl->get_chars();
@@ -4556,6 +4680,31 @@ void editor::copy_rectangle(const rect& src, const rect& dst, std::vector<std::f
 
 		undo.push_back(std::bind(&Level::start_rebuild_tiles_in_background, lvl.get(), std::vector<int>()));
 		redo.push_back(std::bind(&Level::start_rebuild_tiles_in_background, lvl.get(), std::vector<int>()));
+
+		if(copy_usages) {
+			std::vector<Level::SubComponentUsage> usages;
+			
+			for(const Level::SubComponentUsage& usage : lvl_->getSubComponentUsages()) {
+				if(rects_intersect(usage.dest_area, src)) {
+					usages.push_back(usage);
+				}
+			}
+
+			if(usages.empty() == false) {
+				const int dx = dst.x() - src.x();
+				const int dy = dst.y() - src.y();
+
+				std::vector<Level::SubComponentUsage> old_usages = lvl_->getSubComponentUsages();
+				std::vector<Level::SubComponentUsage> new_usages = old_usages;
+				for(auto& usage : usages) {
+					usage.dest_area = rect(usage.dest_area.x() + dx, usage.dest_area.y() + dy, usage.dest_area.w(), usage.dest_area.h());
+					new_usages.push_back(usage);
+				}
+
+				redo.push_back(std::bind(&Level::setSubComponentUsages, lvl.get(), new_usages));
+				undo.push_back(std::bind(&Level::setSubComponentUsages, lvl.get(), old_usages));
+			}
+		}
 	}
 }
 
