@@ -304,7 +304,12 @@ namespace debug_console
 	{
 		if(sys::file_exists(console_history_path())) {
 			try {
-				history_ = json::parse(sys::read_file(console_history_path())).as_list_string();
+				std::string file_contents =
+						sys::read_file(console_history_path());
+				variant parsed_json = json::parse(
+						file_contents,
+						json::JSON_PARSE_OPTIONS::NO_PREPROCESSOR);
+				history_ = parsed_json.as_list_string();
 				history_pos_ = static_cast<int>(history_.size());
 			} catch(...) {
 			}
