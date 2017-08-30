@@ -204,7 +204,7 @@ rect Level::SubComponentUsage::getSourceArea(const Level& lvl) const
 {
 	const auto& sub = getSubComponent(lvl);
 	rect res = sub.source_area;
-	return rect(res.x() + (res.w() + TileSize*4)*ninstance, res.y(), res.w(), res.h());
+	return rect(res.x() + (res.w() + TileSize*4)*(ninstance%sub.num_variations), res.y(), res.w(), res.h());
 }
 
 variant Level::SubComponentUsage::write() const
@@ -212,7 +212,96 @@ variant Level::SubComponentUsage::write() const
 	variant_builder res;
 	res.add("dest_area", dest_area.write());
 	res.add("ncomponent", ncomponent);
+	res.add("ninstance", ninstance);
 	return res.build();
+}
+
+std::vector<Level::SubComponentUsage> Level::getSubComponentUsagesOrdered() const
+{
+	//sub component usages all copy their data in.
+	//Resolve the sub component usages in the correct order by
+	//searching for a sub component usage which doesn't have 
+	//any unresolved usages that map into its source.
+	std::vector<SubComponentUsage> usages = getSubComponentUsages();
+	std::vector<SubComponentUsage> result;
+
+	while(usages.empty() == false) {
+		int ntries = 0;
+		size_t ncandidate = 0;
+		bool new_candidate = true;
+		while(new_candidate && ntries < usages.size()) {
+
+			const rect& source_area = usages[ncandidate].getSourceArea(*this);
+
+			new_candidate = false;
+			for(size_t n = 0; n != usages.size(); ++n) {
+				if(n == ncandidate) {
+					continue;
+				}
+
+				if(rects_intersect(usages[n].dest_area, source_area)) {
+					new_candidate = true;
+					ncandidate = n;
+					++ntries;
+					break;
+				}
+			}
+		}
+
+		result.push_back(usages[ncandidate]);
+		usages.erase(usages.begin() + ncandidate);
+	}
+
+	return result;
+}
+
+void Level::applySubComponents()
+{
+	std::vector<int> layers;
+	for(const SubComponentUsage& usage : getSubComponentUsagesOrdered()) {
+		const rect& dst = usage.dest_area;
+		const rect& src = usage.getSourceArea(*this);
+
+		const rect tile_src(src.x(), src.y(), src.w()-TileSize, src.h()-TileSize);
+		const rect tile_dst(dst.x(), dst.y(), dst.w()-TileSize, dst.h()-TileSize);
+
+		std::map<int, std::vector<std::string> > src_tiles, dst_tiles;
+		getAllTilesRect(tile_src.x(), tile_src.y(), tile_src.x2(), tile_src.y2(), src_tiles);
+		getAllTilesRect(tile_dst.x(), tile_dst.y(), tile_dst.x2(), tile_dst.y2(), dst_tiles);
+
+		clear_tile_rect(tile_dst.x(), tile_dst.y(), tile_dst.x2(), tile_dst.y2());
+
+		for(auto& p : src_tiles) {
+			addTileRectVector(p.first, tile_dst.x(), tile_dst.y(), tile_dst.x2(), tile_dst.y2(), p.second);
+			layers.push_back(p.first);
+		}
+	
+		std::vector<EntityPtr> chars = get_chars();
+		for(auto c : chars) {
+			if(c->x() >= dst.x() && c->x() <= dst.x2() && c->y() >= dst.y() && c->y() <= dst.y2()) {
+				remove_character(c);
+			}
+		}
+
+		chars = get_chars();
+		for(auto c : chars) {
+			if(c->x() >= src.x() && c->x() <= src.x2() && c->y() >= src.y() && c->y() <= src.y2()) {
+				auto clone = c->clone();
+				clone->shiftPosition(dst.x() - src.x(), dst.y() - src.y());
+				add_character(clone);
+			}
+		}
+	}
+
+	std::sort(layers.begin(), layers.end());
+
+	layers.erase(std::unique(layers.begin(), layers.end()), layers.end());
+
+	if(layers.empty() == false) {
+		start_rebuild_tiles_in_background(layers);
+		while(complete_rebuild_tiles_in_background() == false) {
+		}
+	}
 }
 
 Level::Level(const std::string& level_cfg, variant node)
@@ -723,6 +812,17 @@ PREF_BOOL(respect_difficulty, false, "");
 
 void Level::finishLoading()
 {
+	if(sub_component_usages_.empty() == false) {
+		if(!editor_) {
+			for(SubComponentUsage& usage : sub_component_usages_) {
+				const SubComponent& sub = usage.getSubComponent(*this);
+				usage.ninstance = rng::generate()%sub.num_variations;
+			}
+		}
+
+		applySubComponents();
+	}
+
 	assert(refcount() > 0);
 	CurrentLevelScope level_scope(this);
 

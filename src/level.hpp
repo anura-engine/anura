@@ -440,6 +440,10 @@ public:
 
 	void updateSubComponentFromUsage(const SubComponentUsage& usage);
 
+	std::vector<SubComponentUsage> getSubComponentUsagesOrdered() const;
+	void applySubComponents();
+
+
 private:
 	DECLARE_CALLABLE(Level);
 

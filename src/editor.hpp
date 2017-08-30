@@ -265,6 +265,7 @@ public:
 
 	bool mouselook_mode() const { return mouselook_mode_; }
 
+	void add_new_sub_component();
 	void add_sub_component(int w, int h);
 	void remove_sub_component();
 
