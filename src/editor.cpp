@@ -2749,24 +2749,40 @@ void editor::handleMouseButtonUp(const SDL_MouseButtonEvent& event)
 			const int deltay = boundaries.y2() - lvl_->boundaries().y2();
 
 			begin_command_group();
+
+			std::vector<std::function<void()>> redo, undo;
 			for(LevelPtr lvl : levels_) {
-				executeCommand(
-				  std::bind(&Level::set_boundaries, lvl.get(), boundaries),
-				  std::bind(&Level::set_boundaries, lvl.get(), lvl->boundaries()));
+				redo.push_back(std::bind(&Level::set_boundaries, lvl.get(), boundaries));
+				undo.push_back(std::bind(&Level::set_boundaries, lvl.get(), lvl->boundaries()));
 
 			}
 
 			int nsub = 0;
-			for(const Level::SubComponent& sub : lvl_->getSubComponents()) {
+			std::vector<Level::SubComponent> subs = lvl_->getSubComponents();
+			std::vector<int> indexes;
+			for(int n = 0; n != subs.size(); ++n) {
+				indexes.push_back(n);
+			}
+
+			if(deltay > 0) {
+				std::reverse(subs.begin(), subs.end());
+				std::reverse(indexes.begin(), indexes.end());
+			}
+			for(const Level::SubComponent& sub : subs) {
 				rect area = sub.source_area;
 				rect new_area(area.x(), area.y() + deltay, area.w(), area.h());
-				executeCommand(
-					std::bind(&editor::set_sub_component_area, this, nsub, new_area),
-					std::bind(&editor::set_sub_component_area, this, nsub, area)
-				);
 
+				clear_rectangle(area, redo, undo);
+				copy_rectangle(area, new_area, redo, undo, true);
+
+				redo.push_back(std::bind(&editor::set_sub_component_area, this, indexes[nsub], new_area));
+				undo.push_back(std::bind(&editor::set_sub_component_area, this, indexes[nsub], area));
 				++nsub;
 			}
+
+			executeCommand(
+			  std::bind(execute_functions, redo),
+			  std::bind(execute_functions, undo));
 
 			end_command_group();
 			on_modify_level();
