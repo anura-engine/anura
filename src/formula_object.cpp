@@ -32,6 +32,7 @@
 #include "base64.hpp"
 #include "code_editor_dialog.hpp"
 #include "compress.hpp"
+#include "custom_object_functions.hpp"
 #include "filesystem.hpp"
 #include "formula.hpp"
 #include "formula_callable.hpp"
@@ -56,6 +57,20 @@
 #endif
 
 PREF_BOOL(ffl_vm_opt_const_library_calls, true, "Optimize library calls");
+PREF_BOOL(ffl_allow_obj_api_from_class, false, "Allow classes to have access to custom object api.");
+
+namespace
+{
+game_logic::FunctionSymbolTable* getClassFunctionSymbolTable()
+{
+	if(g_ffl_allow_obj_api_from_class) {
+		return &get_custom_object_functions_symbol_table();
+	}
+
+	return nullptr;
+}
+
+}
 
 namespace game_logic
 {
@@ -113,7 +128,7 @@ namespace game_logic
 
 				const Formula::StrictCheckScope strict_checking;
 				if(node.is_string()) {
-					getter = game_logic::Formula::createOptionalFormula(node, nullptr, get_class_definition(class_name));
+					getter = game_logic::Formula::createOptionalFormula(node, getClassFunctionSymbolTable(), get_class_definition(class_name));
 					ASSERT_LOG(getter, "COULD NOT PARSE CLASS FORMULA " << class_name << "." << prop_name);
 
 					ASSERT_LOG(getter->queryVariantType()->is_any() == false, "COULD NOT INFER TYPE FOR CLASS PROPERTY " << class_name << "." << prop_name << ". SET THIS PROPERTY EXPLICITLY");
@@ -129,19 +144,19 @@ namespace game_logic
 					}
 
 					if(node["get"].is_string()) {
-						getter = game_logic::Formula::createOptionalFormula(node["get"], nullptr, get_class_definition(class_name));
+						getter = game_logic::Formula::createOptionalFormula(node["get"], getClassFunctionSymbolTable(), get_class_definition(class_name));
 					}
 
 					if(node["set"].is_string()) {
-						setter = game_logic::Formula::createOptionalFormula(node["set"], nullptr, get_class_definition(class_name));
+						setter = game_logic::Formula::createOptionalFormula(node["set"], getClassFunctionSymbolTable(), get_class_definition(class_name));
 					}
 
 					default_value = node["default"];
 
 					if(node["initialize"].is_string()) {
-						initializer = game_logic::Formula::createOptionalFormula(node["initialize"], nullptr);
+						initializer = game_logic::Formula::createOptionalFormula(node["initialize"], getClassFunctionSymbolTable());
 					} else if(node["init"].is_string()) {
-						initializer = game_logic::Formula::createOptionalFormula(node["init"], nullptr);
+						initializer = game_logic::Formula::createOptionalFormula(node["init"], getClassFunctionSymbolTable());
 					}
 
 					variant valid_types = node["type"];
@@ -396,7 +411,7 @@ std::map<std::string, std::string>& class_path_map()
 									slots_[slot].variant_type = type;
 								} else {
 									const Formula::StrictCheckScope strict_checking(false);
-									FormulaPtr f = Formula::createOptionalFormula(prop_node);
+									FormulaPtr f = Formula::createOptionalFormula(prop_node, getClassFunctionSymbolTable());
 									if(f) {
 										slots_[slot].variant_type = f->queryVariantType();
 									}
@@ -804,7 +819,7 @@ std::map<std::string, std::string>& class_path_map()
 		if(node["constructor"].is_string()) {
 			const Formula::StrictCheckScope strict_checking;
 
-			constructor_.push_back(game_logic::Formula::createOptionalFormula(node["constructor"], nullptr, class_def));
+			constructor_.push_back(game_logic::Formula::createOptionalFormula(node["constructor"], getClassFunctionSymbolTable(), class_def));
 		}
 
 #if defined(USE_LUA)
@@ -886,7 +901,7 @@ std::map<std::string, std::string>& class_path_map()
 
 		for(int n = 0; n != unit_test.num_elements(); ++n) {
 			variant test = unit_test[n];
-			game_logic::FormulaPtr cmd = game_logic::Formula::createOptionalFormula(test["command"]);
+			game_logic::FormulaPtr cmd = game_logic::Formula::createOptionalFormula(test["command"], getClassFunctionSymbolTable());
 			if(cmd) {
 				variant v = cmd->execute(*callable);
 				callable->executeCommand(v);
@@ -1527,7 +1542,7 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 					}
 
 					//A read-only property. Set the formula to what is passed in.
-					FormulaPtr f(new Formula(args[key], nullptr, def));
+					FormulaPtr f(new Formula(args[key], getClassFunctionSymbolTable(), def));
 					const FormulaCallableDefinition::Entry* entry = def->getEntryById(key.as_string());
 					ASSERT_LOG(entry, "COULD NOT FIND ENTRY IN CLASS DEFINITION: " << key.as_string());
 					if(entry->variant_type) {
@@ -1593,7 +1608,7 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 					property_overrides_.resize(itor->second+1);
 				}
 
-				property_overrides_[itor->second] = FormulaPtr(new Formula(p.second));
+				property_overrides_[itor->second] = FormulaPtr(new Formula(p.second, getClassFunctionSymbolTable()));
 			}
 		}
 
