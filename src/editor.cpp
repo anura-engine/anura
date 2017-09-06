@@ -4766,8 +4766,8 @@ void editor::copy_rectangle(const rect& src, const rect& dst, std::vector<std::f
 		lvl->getAllTilesRect(tile_src.x(), tile_src.y(), tile_src.x2(), tile_src.y2(), src_tiles);
 		lvl->getAllTilesRect(tile_dst.x(), tile_dst.y(), tile_dst.x2(), tile_dst.y2(), dst_tiles);
 
-		redo.push_back(std::bind(&Level::clear_tile_rect, lvl.get(), tile_dst.x(), tile_dst.y(), tile_dst.x2(), tile_dst.y2()));
-		undo.push_back(std::bind(&Level::clear_tile_rect, lvl.get(), tile_dst.x(), tile_dst.y(), tile_dst.x2(), tile_dst.y2()));
+		redo.push_back([=]() { lvl->clear_tile_rect(tile_dst.x(), tile_dst.y(), tile_dst.x2(), tile_dst.y2()); });
+		undo.push_back([=]() { lvl->clear_tile_rect(tile_dst.x(), tile_dst.y(), tile_dst.x2(), tile_dst.y2()); });
 
 		for(auto& p : src_tiles) {
 			redo.push_back([=]() { lvl->addTileRectVector(p.first, tile_dst.x(), tile_dst.y(), tile_dst.x2(), tile_dst.y2(), p.second); });
