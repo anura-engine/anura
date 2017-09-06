@@ -271,6 +271,17 @@ namespace formula_tokenizer
 			break;
 		case 'd':
 			if(i1 + 1 != i2 && !util::c_isalpha(*(i1+1)) && *(i1+1) != '_') {
+				if (!util::c_isdigit(*(i1 - 1)) &&
+						!util::c_isdigit(*(i1 + 1))) {
+					//   Legal variable named 'd'. As in:
+					//
+					//      def foo(...) type(d)
+					//      [...]
+					//      where d = 1d6
+					t.type = FFL_TOKEN_TYPE::IDENTIFIER;
+					t.end = ++i1;
+					return t;
+				}
 				//die operator as in 1d6.
 				t.type = FFL_TOKEN_TYPE::OPERATOR;
 				t.end = ++i1;
