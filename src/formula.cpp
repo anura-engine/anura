@@ -5400,6 +5400,8 @@ UNIT_TEST(formula_decimal) {
 	CHECK_EQ(Formula(variant("0.5")).execute().string_cast(), "0.5");
 	CHECK_EQ(Formula(variant("8.5 + 0.5")).execute().string_cast(), "9.0");
 	CHECK_EQ(Formula(variant("4 * (-1.1)")).execute().string_cast(), "-4.4");
+	//   In case of implicit zero valued integer part.
+	CHECK_EQ(Formula(variant(".032993")).execute().string_cast(), "0.032993");
 }
 
 UNIT_TEST(formula_quotes) {
