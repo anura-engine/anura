@@ -3880,6 +3880,76 @@ void BuiltinEditor::draw_gui() const
 		std::vector<glm::vec2> varray;
 		std::vector<glm::u8vec4> carray;
 
+		{
+
+			rect source_area = sub.source_area;
+			rect area(source_area.x() + -(source_area.w()+TileSize*4), source_area.y(), source_area.w(), source_area.h());
+
+			std::vector<rect> areas;
+			areas.push_back(area);
+
+			if(LevelRunner::getCurrent()->is_paused()) {
+				for(const Level::SubComponentUsage& usage : lvl_->getSubComponentUsages()) {
+					if(usage.ncomponent == nsub) {
+						rect usage_area(usage.dest_area.x(), usage.dest_area.y(), usage.dest_area.w(), usage.dest_area.h());
+						areas.push_back(usage_area);
+					}
+				}
+			}
+
+			const int x1 = area.x()/zoom_;
+			const int x2 = area.x2()/zoom_;
+			const int y1 = area.y()/zoom_;
+			const int y2 = area.y2()/zoom_;
+
+			varray.emplace_back(x1 - xpos_/zoom_, y1 - ypos_/zoom_);
+			varray.emplace_back(x2 - xpos_/zoom_, y1 - ypos_/zoom_);
+
+			varray.emplace_back(x2 - xpos_/zoom_, y1 - ypos_/zoom_);
+			varray.emplace_back(x2 - xpos_/zoom_, y2 - ypos_/zoom_);
+
+			varray.emplace_back(x2 - xpos_/zoom_, y2 - ypos_/zoom_);
+			varray.emplace_back(x1 - xpos_/zoom_, y2 - ypos_/zoom_);
+
+			varray.emplace_back(x1 - xpos_/zoom_, y2 - ypos_/zoom_);
+			varray.emplace_back(x1 - xpos_/zoom_, y1 - ypos_/zoom_);
+
+			for(int n = 0; n != 8; ++n) {
+				carray.emplace_back(KRE::Color::colorBlue().as_u8vec4());
+			}
+
+			KRE::Color solid_color(255, 255, 255, 255);
+			KRE::Color semi_color(127, 127, 127, 255);
+
+			for(int ypos = 0; ypos < area.h(); ypos += TileSize) {
+				for(int xpos = 0; xpos < area.w(); xpos += TileSize) {
+					int nsolid = 0;
+					for(int i = 0; i < sub.num_variations; ++i) {
+						rect var_area(source_area.x() + (source_area.w()+TileSize*4)*i, source_area.y(), source_area.w(), source_area.h());
+						if(lvl_->solid(var_area.x() + xpos + TileSize/2, var_area.y() + ypos + TileSize/2)) {
+							++nsolid;
+						}
+					}
+
+					if(nsolid > 0) {
+
+						for(const rect& area : areas) {
+							const int next_xpos = xpos + TileSize;
+							const int next_ypos = ypos + TileSize;
+
+							const int px_x = ((area.x() + xpos) - xpos_)/zoom_;
+							const int px_y = ((area.y() + ypos) - ypos_)/zoom_;
+							const int px_x2 = ((area.x() + next_xpos) - xpos_)/zoom_;
+							const int px_y2 = ((area.y() + next_ypos) - ypos_)/zoom_;
+
+							rect tile_area(px_x, px_y, px_x2 - px_x, px_y2 - px_y);
+							canvas->drawSolidRect(tile_area, nsolid == sub.num_variations ? solid_color : semi_color);
+						}
+					}
+				}
+			}
+		}
+
 		for(int i = 0; i < sub.num_variations; ++i) {
 
 			rect source_area = sub.source_area;
