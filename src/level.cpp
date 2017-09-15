@@ -2812,6 +2812,7 @@ void Level::do_processing()
 
 void Level::erase_char(EntityPtr c)
 {
+	c->beingRemoved();
 
 	if(c->label().empty() == false) {
 		chars_by_label_.erase(c->label());

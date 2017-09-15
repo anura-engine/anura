@@ -5449,7 +5449,7 @@ bool CustomObject::handleEventInternal(int event, const FormulaCallable* context
 	}
 
 	const DieEventScope die_scope(event, currently_handling_die_event_);
-	if(hitpoints_ <= 0 && !currently_handling_die_event_) {
+	if(hitpoints_ <= 0 && event != OBJECT_EVENT_BEING_REMOVED && !currently_handling_die_event_) {
 		return false;
 	}
 
