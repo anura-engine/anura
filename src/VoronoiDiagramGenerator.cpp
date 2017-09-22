@@ -1100,7 +1100,9 @@ Performance suffers if they are wrong; better to make nsites,
 deltax, and deltay too big than too small.  (?) */
 
 #pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#ifndef __clang__
+    #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#endif
 // XXX check about this? ^
 
 bool VoronoiDiagramGenerator::voronoi(int triangulate)
