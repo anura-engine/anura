@@ -694,8 +694,14 @@ bool do_auto_update(std::deque<std::string> argv, auto_update_window& update_win
 		}
 	}
 
-	std::string cwd_arg = "\"--auto-update-dir=" + sys::get_cwd() + "\"";
-	std::string exe_arg = "\"--auto-update-exe=" + g_anura_exe_name + "\"";
+#ifdef _MSC_VER
+	const std::string cl_quotes = "\"";
+#else
+	const std::string cl_quotes = "";
+#endif
+
+	std::string cwd_arg = cl_quotes + "--auto-update-dir=" + sys::get_cwd() + cl_quotes;
+	std::string exe_arg = cl_quotes + "--auto-update-exe=" + g_anura_exe_name + cl_quotes;
 
 	const std::string working_dir = preferences::dlc_path() + "/" + real_anura + subdir;
 	LOG_INFO("CHANGE DIRECTORY: " << working_dir);
