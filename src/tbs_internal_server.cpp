@@ -39,10 +39,13 @@
 #include "module.hpp"
 #include "preferences.hpp"
 #include "shared_memory_pipe.hpp"
+#include "string_utils.hpp"
 #include "tbs_internal_server.hpp"
 #include "uuid.hpp"
 #include "variant_utils.hpp"
 #include "wml_formula_callable.hpp"
+
+PREF_STRING(tbs_server_child_args, "", "Arguments to pass along to the tbs spawned child");
 
 extern std::string g_anura_exe_name;
 
@@ -373,6 +376,11 @@ void terminate_utility_process(bool* complete=nullptr)
 			g_local_server_port = 4096 + rand()%20000;
 
 			std::vector<std::string> args;
+
+			if(g_tbs_server_child_args.empty() == false) {
+				args = util::split(g_tbs_server_child_args, ' ');
+			}
+
 			args.push_back(formatter() << "--module=" << module::get_module_name());
 			args.push_back(formatter() << "--tbs-server-save-replay-file=" << preferences::user_data_path() << "/local-replays.cfg");
 			args.push_back("--tbs-server-local=true");

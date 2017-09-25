@@ -1328,7 +1328,7 @@ namespace preferences
 			const std::string key = FN_ARG(0).as_string();
 			auto it = g_registered_settings().find(key);
 			ASSERT_LOG(it != g_registered_settings().end(), "Unknown preference setting: " << key);
-			ASSERT_LOG(it->second.bool_value, "Preference is not a decimal: " << key);
+			ASSERT_LOG(it->second.bool_value, "Preference is not a bool: " << key);
 			return variant::from_bool(*it->second.bool_value);
 		END_DEFINE_FN
 
@@ -1336,7 +1336,7 @@ namespace preferences
 			const std::string key = FN_ARG(0).as_string();
 			auto it = g_registered_settings().find(key);
 			ASSERT_LOG(it != g_registered_settings().end(), "Unknown preference setting: " << key);
-			ASSERT_LOG(it->second.int_value, "Preference is not a decimal: " << key);
+			ASSERT_LOG(it->second.int_value, "Preference is not an int: " << key);
 			return variant(*it->second.int_value);
 		END_DEFINE_FN
 

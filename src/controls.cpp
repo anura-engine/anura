@@ -256,7 +256,6 @@ namespace controls
 
 	void read_until(int ncycle)
 	{
-		ncycle -= starting_cycles;
 		if(local_player >= nplayers) {
 			return;
 		}

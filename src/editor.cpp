@@ -3157,7 +3157,10 @@ void editor::remove_tile_rect(int x1, int y1, int x2, int y2)
 			if(std::count(layers.begin(), layers.end(), i->first) == 0) {
 				layers.push_back(i->first);
 			}
-			undo.push_back([=](){ lvl->addTileRectVector(i->first, x1, y1, x2, y2, i->second); });
+
+			int key = i->first;
+			std::vector<std::string> value = i->second;
+			undo.push_back([=](){ lvl->addTileRectVector(key, x1, y1, x2, y2, value); });
 		}
 
 		redo.push_back([=](){ lvl->clear_tile_rect(x1, y1, x2, y2); });

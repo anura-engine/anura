@@ -844,6 +844,7 @@ namespace {
 
 					ffl::IntrusivePtr<ipc_client> cli(new ipc_client(p.second));
 
+					LOG_INFO("CREATED BOT: " << n << "/" << value.num_elements());
 					ffl::IntrusivePtr<bot> new_bot(new bot(*web_server::service(), "127.0.0.1", "23456", value[n]));
 					new_bot->set_ipc_client(cli);
 
@@ -1148,15 +1149,28 @@ COMMAND_LINE_UTILITY(tbs_bot_game)
 	variant start_game_request = json::parse("{type: 'start_game'}");
 
 	ffl::IntrusivePtr<MapFormulaCallable> callable(new MapFormulaCallable);
-	ffl::IntrusivePtr<internal_client> client(new internal_client);
-	client->send_request(create_game_request, -1, callable, create_game_return);
+
+	SharedMemoryPipePtr pipe;
+	ASSERT_LOG(g_tbs_use_shared_mem, "Must use shared mem for tbs_bot_game util");
+
+	tbs::spawn_server_on_localhost(&pipe);
+
+	tbs::ipc_client* client = new tbs::ipc_client(pipe);
+
+	client->set_handler(create_game_return);
+
+	client->send_request(create_game_request);
 	while(!g_create_bot_game) {
-		internal_server::process();
+		SDL_Delay(10);
+		client->process();
 	}
 
-	client->send_request(start_game_request, 1, callable, start_game_return);
+	client->set_handler(start_game_return);
+
+	client->send_request(start_game_request);
 
 	for(;;) {
-		internal_server::process();
+		SDL_Delay(10);
+		client->process();
 	}
 }
