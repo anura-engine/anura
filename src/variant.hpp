@@ -160,13 +160,18 @@ public:
 
 	//only call the non-inlined release() function if we have a type
 	//that needs releasing.
-	~variant() { unregisterGlobalVariant(this); if(type_ > VARIANT_TYPE_INT) { release(); } }
+	~variant() {
+		unregisterGlobalVariant(this);
+		if (type_ > VARIANT_TYPE_DECIMAL) {
+			release();
+		}
+	}
 
 	variant(const variant& v) {
 		registerGlobalVariant(this);
 		type_ = v.type_;
 		value_ = v.value_;
-		if(type_ > VARIANT_TYPE_INT) {
+		if (type_ > VARIANT_TYPE_DECIMAL) {
 			increment_refcount();
 		}
 	}
@@ -187,7 +192,7 @@ public:
 	const variant& operator=(variant&& v)
 	{
 		if(&v != this) {
-			if(type_ > VARIANT_TYPE_INT) {
+			if (type_ > VARIANT_TYPE_DECIMAL) {
 				release();
 			}
 

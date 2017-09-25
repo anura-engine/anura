@@ -889,13 +889,13 @@ variant::variant(game_logic::ConstFormulaPtr fml, const std::vector<std::string>
 const variant& variant::operator=(const variant& v)
 {
 	if(&v != this) {
-		if(type_ > VARIANT_TYPE_INT) {
+		if (type_ > VARIANT_TYPE_DECIMAL) {
 			release();
 		}
 
 		type_ = v.type_;
 		value_ = v.value_;
-		if(type_ > VARIANT_TYPE_INT) {
+		if (type_ > VARIANT_TYPE_DECIMAL) {
 			increment_refcount();
 		}
 	}
