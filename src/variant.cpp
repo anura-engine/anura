@@ -2553,8 +2553,15 @@ std::string variant::to_debug_string(std::vector<const game_logic::FormulaCallab
 	}
 
 	case VARIANT_TYPE_CALLABLE: {
+
+		std::string str = callable_->toDebugString();
+		if(str.empty() == false) {
+			s << str;
+			break;
+		}
+
 		char buf[64];
-		sprintf(buf, "(%p)", callable_);
+		sprintf(buf, "(object at address %p)", callable_);
 		s << buf << "{";
 		if(std::find(seen->begin(), seen->end(), callable_) == seen->end()) {
 			seen->push_back(callable_);

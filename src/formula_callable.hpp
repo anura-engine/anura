@@ -94,6 +94,8 @@ namespace game_logic
 			return doCompare(other) < 0;
 		}
 
+		virtual std::string toDebugString() const { return ""; }
+
 		virtual void getInputs(std::vector<FormulaInput>* /*inputs*/) const {};
 
 		void serialize(std::string& str) const {
@@ -283,6 +285,8 @@ namespace game_logic
 		void setExpression(const FormulaExpression* expr);
 
 		bool isCommand() const override { return true; }
+
+		std::string toDebugString() const override { std::string s = typeid(*this).name(); return "(Command Object: " + s + ")"; }
 	private:
 		virtual void execute(FormulaCallable& context) const = 0;
 		variant getValue(const std::string& key) const override { return variant(); }

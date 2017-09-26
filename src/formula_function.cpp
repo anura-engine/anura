@@ -4256,6 +4256,11 @@ FUNCTION_DEF_IMPL
 				}
 			}
 
+			std::string toDebugString() const override {
+				std::ostringstream s;
+				s << "(set command: " << attr_ << " -> " << val_.to_debug_string() << ")";
+				return s.str();
+			}
 
 		protected:
 			void surrenderReferences(GarbageCollector* collector) override {
@@ -4292,6 +4297,12 @@ FUNCTION_DEF_IMPL
 					ob.mutateValue(attr_, ob.queryValue(attr_) + val_);
 				}
 			}
+
+			std::string toDebugString() const override {
+				std::ostringstream s;
+				s << "(add command: " << attr_ << " -> +" << val_.to_debug_string() << ")";
+				return s.str();
+			}
 		protected:
 			void surrenderReferences(GarbageCollector* collector) override {
 				collector->surrenderVariant(&target_, "TARGET");
@@ -4318,6 +4329,12 @@ FUNCTION_DEF_IMPL
 
 			void setValue(const variant& value) { value_ = value; }
 
+			std::string toDebugString() const override {
+				std::ostringstream s;
+				s << "(set command (optimized): " << value_.to_debug_string() << ")";
+				return s.str();
+			}
+
 		protected:
 			void surrenderReferences(GarbageCollector* collector) override {
 				collector->surrenderVariant(&value_, "VALUE");
@@ -4342,6 +4359,12 @@ FUNCTION_DEF_IMPL
 			}
 
 			void setValue(const variant& value) { value_ = value; }
+
+			std::string toDebugString() const override {
+				std::ostringstream s;
+				s << "(set target command (optimized): " << value_.to_debug_string() << ")";
+				return s.str();
+			}
 
 		protected:
 			void surrenderReferences(GarbageCollector* collector) override {
@@ -4370,6 +4393,12 @@ FUNCTION_DEF_IMPL
 
 			void setValue(const variant& value) { value_ = value; }
 
+			std::string toDebugString() const override {
+				std::ostringstream s;
+				s << "(add target command (optimized): " << value_.to_debug_string() << ")";
+				return s.str();
+			}
+
 		protected:
 			void surrenderReferences(GarbageCollector* collector) override {
 				collector->surrenderPtr(&target_, "TARGET");
@@ -4394,6 +4423,12 @@ FUNCTION_DEF_IMPL
 			}
 
 			void setValue(const variant& value) { value_ = value; }
+
+			std::string toDebugString() const override {
+				std::ostringstream s;
+				s << "(add command (optimized): " << value_.to_debug_string() << ")";
+				return s.str();
+			}
 
 		protected:
 			void surrenderReferences(GarbageCollector* collector) override {
