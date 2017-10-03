@@ -2330,10 +2330,16 @@ FUNCTION_DEF_IMPL
 		FUNCTION_TYPE_DEF
 			std::vector<variant_type_ptr> types;
 			types.push_back(args()[1]->queryVariantType());
+
+			variant_type_ptr list_type = args()[0]->queryVariantType();
+			variant_type_ptr list_element_type = list_type->is_list_of();
+			ASSERT_LOG(list_element_type.get() != nullptr, "First argument to fold() must be a list: " << debugPinpointLocation());
+			ASSERT_LOG(variant_types_compatible(list_element_type, types.back()), "fold() given argument of type " << list_type->to_string() << " must return type " << list_element_type->to_string() << " but returns type " << types.back()->to_string() << ": " << debugPinpointLocation());
+
 			if(NUM_ARGS > 2) {
 				types.push_back(args()[2]->queryVariantType());
-	} else if(default_.is_null()) {
-		types.push_back(variant_type::get_type(variant::VARIANT_TYPE_NULL));
+			} else if(default_.is_null()) {
+				types.push_back(variant_type::get_type(variant::VARIANT_TYPE_NULL));
 			}
 
 			return variant_type::get_union(types);
