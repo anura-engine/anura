@@ -1734,7 +1734,7 @@ namespace {
 						} else if(s == "z" || s == "b") {
 							return left[2];
 						} else if(s == "a") {
-							return left[2];
+							return left[3];
 						} else {
 							return variant();
 						}
