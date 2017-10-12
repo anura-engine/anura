@@ -1,3 +1,3 @@
 [submodule "imgui"]
 	path = imgui
-	url = git@github.com:sweetkristas/imgui.git
+	url = https://github.com/sweetkristas/imgui
