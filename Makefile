@@ -186,7 +186,7 @@ anura: $(OBJ)
 		$(LIBS) -lboost_regex -lboost_system -lboost_filesystem -lboost_locale -licui18n -licuuc -licudata -lpthread -fthreadsafe-statics
 
 checkdirs: $(BUILD_DIR)
-	@echo \
+	@echo -e \
 	  " OPTIMIZE            : $(OPTIMIZE)\n" \
 	  "USE_CCACHE          : $(USE_CCACHE)\n" \
 	  "CCACHE              : $(CCACHE)\n" \
@@ -213,7 +213,7 @@ clean:
 
 unittests: anura
 	./anura --tests
-	    
+
 tarball: unittests
 	@strip anura
 	@tar --transform='s,^,anura/,g' -cjf $(TARBALL) anura data/ images/
