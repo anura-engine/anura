@@ -130,6 +130,113 @@ namespace KRE
 		COPY,
 	};
 
+	class AttributeSet : public ScopeableValue, public std::enable_shared_from_this<AttributeSet>
+	{
+	public:
+		explicit AttributeSet(bool indexed, bool instanced);
+		AttributeSet(const AttributeSet& as);
+		virtual ~AttributeSet();
+
+		void setDrawMode(DrawMode dm);
+		DrawMode getDrawMode() { return draw_mode_; }
+
+		bool isIndexed() const { return indexed_draw_; }
+		bool isInstanced() const { return instanced_draw_; }
+		IndexType getIndexType() const { return index_type_; }
+		virtual const void* getIndexArray() const { 
+			switch(index_type_) {
+			case IndexType::INDEX_NONE:		break;
+			case IndexType::INDEX_UCHAR:	return &index8_[0];
+			case IndexType::INDEX_USHORT:	return &index16_[0];
+			case IndexType::INDEX_ULONG:	return &index32_[0];
+			}
+			ASSERT_LOG(false, "Index type not set to valid value.");
+		};
+		int getTotalArraySize() const {
+			switch(index_type_) {
+			case IndexType::INDEX_NONE:		break;
+			case IndexType::INDEX_UCHAR:	return static_cast<int>(index8_.size() * sizeof(uint8_t));
+			case IndexType::INDEX_USHORT:	return static_cast<int>(index16_.size() * sizeof(uint16_t));
+			case IndexType::INDEX_ULONG:	return static_cast<int>(index32_.size() * sizeof(uint32_t));
+			}
+			ASSERT_LOG(false, "Index type not set to valid value.");
+		}
+		void setCount(size_t count) { count_= count; }
+		size_t getCount() const { return count_; }
+		void setInstanceCount(int instance_count) { instance_count_ = instance_count; }
+		int getInstanceCount() const { return instance_count_; }
+
+		void updateIndicies(const std::vector<uint8_t>& value);
+		void updateIndicies(const std::vector<uint16_t>& value);
+		void updateIndicies(const std::vector<uint32_t>& value);
+		void updateIndicies(std::vector<uint8_t>* value);
+		void updateIndicies(std::vector<uint16_t>* value);
+		void updateIndicies(std::vector<uint32_t>* value);
+
+		void addAttribute(const AttributeBasePtr& attrib);
+
+		virtual void bindIndex() {};
+		virtual void unbindIndex() {};
+
+		void setOffset(ptrdiff_t offset) { offset_ = offset; }
+		ptrdiff_t getOffset() const { return offset_; }
+
+		virtual bool isHardwareBacked() const { return false; }
+
+		std::vector<AttributeBasePtr>& getAttributes() { return attributes_; }
+
+		void enable(bool e=true) { enabled_ = e; }
+		void disable() { enabled_ = false; }
+		bool isEnabled() const { return enabled_; }
+
+		void enableMultiDraw(bool en=true) { multi_draw_enabled_ = en; }
+		bool isMultiDrawEnabled() const { return multi_draw_enabled_; }
+		int getMultiDrawCount() const { return multi_draw_instances_; }
+		void clearMultiDrawData() { 
+			multi_draw_count_.clear();
+			multi_draw_offset_.clear();
+			multi_draw_instances_ = 0;
+		}
+		void addMultiDrawData(std::ptrdiff_t offset, std::size_t size) { 
+			multi_draw_count_.emplace_back(static_cast<int>(size)); 
+			multi_draw_offset_.emplace_back(static_cast<int>(offset));
+			++multi_draw_instances_;
+		}
+		const std::vector<int>& getMultiCountArray() const { return multi_draw_count_; }
+		const std::vector<int>& getMultiOffsetArray() const { return multi_draw_offset_; }
+
+		virtual AttributeSetPtr clone();
+	protected:
+		const void* getIndexData() const { 
+			switch(index_type_) {
+				case IndexType::INDEX_NONE:		break;
+				case IndexType::INDEX_UCHAR:	return &index8_[0];
+				case IndexType::INDEX_USHORT:	return &index16_[0];
+				case IndexType::INDEX_ULONG:	return &index32_[0];
+			}
+			ASSERT_LOG(false, "Index type not set to valid value.");
+		};
+	private:
+		virtual void handleIndexUpdate() {}
+		DrawMode draw_mode_;
+		bool indexed_draw_;
+		bool instanced_draw_;
+		IndexType index_type_;
+		int instance_count_;
+		std::vector<uint8_t> index8_;
+		std::vector<uint16_t> index16_;
+		std::vector<uint32_t> index32_;
+		std::vector<AttributeBasePtr> attributes_;
+		size_t count_;
+		ptrdiff_t offset_;
+		bool enabled_;
+		bool multi_draw_enabled_;
+		int multi_draw_instances_;
+		std::vector<int> multi_draw_count_;
+		std::vector<int> multi_draw_offset_;
+		AttributeSet() =delete;
+	};
+
 	class AttributeBase : public AlignedAllocator16
 	{
 	public:
@@ -301,112 +408,5 @@ namespace KRE
 		void update(const void* data_ptr, int data_size, int count);
 	private:
 		void handleAttachHardwareBuffer() override;
-	};
-
-	class AttributeSet : public ScopeableValue, public std::enable_shared_from_this<AttributeSet>
-	{
-	public:
-		explicit AttributeSet(bool indexed, bool instanced);
-		AttributeSet(const AttributeSet& as);
-		virtual ~AttributeSet();
-
-		void setDrawMode(DrawMode dm);
-		DrawMode getDrawMode() { return draw_mode_; }
-
-		bool isIndexed() const { return indexed_draw_; }
-		bool isInstanced() const { return instanced_draw_; }
-		IndexType getIndexType() const { return index_type_; }
-		virtual const void* getIndexArray() const { 
-			switch(index_type_) {
-			case IndexType::INDEX_NONE:		break;
-			case IndexType::INDEX_UCHAR:	return &index8_[0];
-			case IndexType::INDEX_USHORT:	return &index16_[0];
-			case IndexType::INDEX_ULONG:	return &index32_[0];
-			}
-			ASSERT_LOG(false, "Index type not set to valid value.");
-		};
-		int getTotalArraySize() const {
-			switch(index_type_) {
-			case IndexType::INDEX_NONE:		break;
-			case IndexType::INDEX_UCHAR:	return static_cast<int>(index8_.size() * sizeof(uint8_t));
-			case IndexType::INDEX_USHORT:	return static_cast<int>(index16_.size() * sizeof(uint16_t));
-			case IndexType::INDEX_ULONG:	return static_cast<int>(index32_.size() * sizeof(uint32_t));
-			}
-			ASSERT_LOG(false, "Index type not set to valid value.");
-		}
-		void setCount(size_t count) { count_= count; }
-		size_t getCount() const { return count_; }
-		void setInstanceCount(int instance_count) { instance_count_ = instance_count; }
-		int getInstanceCount() const { return instance_count_; }
-
-		void updateIndicies(const std::vector<uint8_t>& value);
-		void updateIndicies(const std::vector<uint16_t>& value);
-		void updateIndicies(const std::vector<uint32_t>& value);
-		void updateIndicies(std::vector<uint8_t>* value);
-		void updateIndicies(std::vector<uint16_t>* value);
-		void updateIndicies(std::vector<uint32_t>* value);
-
-		void addAttribute(const AttributeBasePtr& attrib);
-
-		virtual void bindIndex() {};
-		virtual void unbindIndex() {};
-
-		void setOffset(ptrdiff_t offset) { offset_ = offset; }
-		ptrdiff_t getOffset() const { return offset_; }
-
-		virtual bool isHardwareBacked() const { return false; }
-
-		std::vector<AttributeBasePtr>& getAttributes() { return attributes_; }
-
-		void enable(bool e=true) { enabled_ = e; }
-		void disable() { enabled_ = false; }
-		bool isEnabled() const { return enabled_; }
-
-		void enableMultiDraw(bool en=true) { multi_draw_enabled_ = en; }
-		bool isMultiDrawEnabled() const { return multi_draw_enabled_; }
-		int getMultiDrawCount() const { return multi_draw_instances_; }
-		void clearMultiDrawData() { 
-			multi_draw_count_.clear();
-			multi_draw_offset_.clear();
-			multi_draw_instances_ = 0;
-		}
-		void addMultiDrawData(std::ptrdiff_t offset, std::size_t size) { 
-			multi_draw_count_.emplace_back(static_cast<int>(size)); 
-			multi_draw_offset_.emplace_back(static_cast<int>(offset));
-			++multi_draw_instances_;
-		}
-		const std::vector<int>& getMultiCountArray() const { return multi_draw_count_; }
-		const std::vector<int>& getMultiOffsetArray() const { return multi_draw_offset_; }
-
-		virtual AttributeSetPtr clone();
-	protected:
-		const void* getIndexData() const { 
-			switch(index_type_) {
-				case IndexType::INDEX_NONE:		break;
-				case IndexType::INDEX_UCHAR:	return &index8_[0];
-				case IndexType::INDEX_USHORT:	return &index16_[0];
-				case IndexType::INDEX_ULONG:	return &index32_[0];
-			}
-			ASSERT_LOG(false, "Index type not set to valid value.");
-		};
-	private:
-		virtual void handleIndexUpdate() {}
-		DrawMode draw_mode_;
-		bool indexed_draw_;
-		bool instanced_draw_;
-		IndexType index_type_;
-		int instance_count_;
-		std::vector<uint8_t> index8_;
-		std::vector<uint16_t> index16_;
-		std::vector<uint32_t> index32_;
-		std::vector<AttributeBasePtr> attributes_;
-		size_t count_;
-		ptrdiff_t offset_;
-		bool enabled_;
-		bool multi_draw_enabled_;
-		int multi_draw_instances_;
-		std::vector<int> multi_draw_count_;
-		std::vector<int> multi_draw_offset_;
-		AttributeSet() =delete;
 	};
 }
