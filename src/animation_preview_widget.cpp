@@ -442,7 +442,7 @@ namespace gui
 		if(image_texture) {
 			KRE::ClipScope::Manager clip_scope(image_area, canvas->getCamera());
 
-			const bool view_locked = mouse_buttons && locked_focus_.w()*locked_focus_.h();
+			const bool view_locked = mouse_buttons && locked_focus_.w()*locked_focus_.h() > 0;
 
 			rect focus_area;
 			if(frame_->numFramesPerRow() == 0) {
@@ -606,7 +606,7 @@ namespace gui
 		solid_rect_ = rect();
 
 		ConstSolidInfoPtr solid = frame_->solid();
-		if(solid && solid->area().w()*solid->area().h()) {
+		if(solid && solid->area().w()*solid->area().h() > 0) {
 			const rect area = solid->area();
 			solid_rect_ = rect(framex + area.x(), framey + area.y(), area.w(), area.h());
 			canvas->drawSolidRect(solid_rect_, KRE::Color(255, 255, 255, 64));
