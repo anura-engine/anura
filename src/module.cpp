@@ -1267,6 +1267,9 @@ static const int ModuleProtocolVersion = 1;
 			std::string(v.begin(), v.end()).swap(response);
 		}
 
+		//write a copy of the response for this file to the update cache.
+		sys::write_file("update-cache/" + node["md5"].as_string(), response);
+
 		auto progress_itor = chunk_progress_.find(chunk_url);
 		if(progress_itor != chunk_progress_.end()) {
 			nbytes_transferred_ -= progress_itor->second;
@@ -1466,10 +1469,42 @@ static const int ModuleProtocolVersion = 1;
 		std::vector<variant> high_priority_chunks;
 
 		variant manifest = doc["manifest"];
+
+		LOG_INFO("Searching cache for existing files...");
+
+		int nfound_in_cache = 0;
+
+		//populate any files from the cache
+		for(auto p : manifest.as_map()) {
+			std::string cached_fname = "update-cache/" + p.second["md5"].as_string();
+			if(sys::file_exists(cached_fname)) {
+				std::string contents = sys::read_file(cached_fname);
+				std::vector<char> data_buf(contents.begin(), contents.end());
+				const int data_size = p.second["size"].as_int();
+
+				std::vector<char> data = zip::decompress_known_size(base64::b64decode(data_buf), data_size);
+				std::string data_str(data.begin(), data.end());
+
+				if(variant(md5::sum(data_str)) == p.second["md5"]) {
+					LOG_INFO("Cached data found for " << p.second["md5"].as_string());
+					p.second.add_attr_mutation(variant("data"), variant(contents));
+					++nfound_in_cache;
+				} else {
+					LOG_INFO("ERROR: CACHE INVALID FOR " << p.second["md5"].as_string());
+					sys::remove_file(cached_fname);
+				}
+			}
+		}
+
+		LOG_INFO("Found " << nfound_in_cache << " files in cache");
+
 		for(auto p : manifest.as_map()) {
 			if(local_manifest.is_map() && local_manifest.has_key(p.first) && local_manifest[p.first][md5_variant] == p.second[md5_variant]) {
 				unchanged_keys.push_back(p.first);
-			} else if(p.second["data"].is_null()) {
+			} else if(p.second["data"].is_null() == false) {
+				isHighPriorityChunk(p.first, p.second);
+				onChunkReceived(p.second);
+			} else {
 				nbytes_total_ += p.second["size"].as_int();
 
 				if(isHighPriorityChunk(p.first, p.second)) {
@@ -1477,9 +1512,6 @@ static const int ModuleProtocolVersion = 1;
 				} else {
 					chunks_to_get_.push_back(p.second);
 				}
-			} else {
-				isHighPriorityChunk(p.first, p.second);
-				onChunkReceived(p.second);
 			}
 		}
 
