@@ -533,6 +533,11 @@ bool do_auto_update(std::deque<std::string> argv, auto_update_window& update_win
 
 		if(update_module) {
 			cl.reset(new module_updater_client(update_window));
+			cl->set_show_progress_fn([&update_window](const std::string& msg) {
+				update_window.set_message(msg);
+				update_window.process();
+				update_window.draw();
+			});
 			const bool res = cl->install_module(module::get_module_name(), force);
 			if(!res) {
 				cl.reset();
@@ -548,6 +553,11 @@ bool do_auto_update(std::deque<std::string> argv, auto_update_window& update_win
 
 		if(update_anura) {
 			anura_cl.reset(new module::client);
+			anura_cl->set_show_progress_fn([&update_window](const std::string& msg) {
+				update_window.set_message(msg);
+				update_window.process();
+				update_window.draw();
+			});
 			//anura_cl->set_install_image(true);
 			const bool res = anura_cl->install_module(real_anura, force);
 			if(!res) {

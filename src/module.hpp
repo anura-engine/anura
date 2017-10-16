@@ -158,6 +158,8 @@ namespace module
 		bool is_new_install() const { return is_new_install_; }
 
 		std::string module_path() const;
+
+		void set_show_progress_fn(std::function<void(std::string)> fn) { show_progress_fn_ = fn; }
 	private:
 		
 		bool install_module_confirmed_out_of_date(const std::string& module_name);
@@ -204,5 +206,9 @@ namespace module
 		void on_chunk_progress(std::string chunk_url, size_t received, size_t total, bool response);
 
 		std::map<std::string, size_t> chunk_progress_;
+
+		std::function<void(std::string)> show_progress_fn_;
+
+		void show_progress(const std::string& msg) { if(show_progress_fn_) { show_progress_fn_(msg); } }
 	};
 }

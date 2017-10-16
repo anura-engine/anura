@@ -31,6 +31,7 @@
 #include "custom_object_type.hpp"
 #include "i18n.hpp"
 #include "filesystem.hpp"
+#include "formatter.hpp"
 #include "formula_constants.hpp"
 #include "http_client.hpp"
 #include "json_parser.hpp"
@@ -1472,10 +1473,14 @@ static const int ModuleProtocolVersion = 1;
 
 		LOG_INFO("Searching cache for existing files...");
 
+		int last_progress_update = SDL_GetTicks();
+
 		int nfound_in_cache = 0;
+		int ncount = 0;
 
 		//populate any files from the cache
 		for(auto p : manifest.as_map()) {
+			++ncount;
 			std::string cached_fname = "update-cache/" + p.second["md5"].as_string();
 			if(sys::file_exists(cached_fname)) {
 				std::string contents = sys::read_file(cached_fname);
@@ -1492,6 +1497,11 @@ static const int ModuleProtocolVersion = 1;
 				} else {
 					LOG_INFO("ERROR: CACHE INVALID FOR " << p.second["md5"].as_string());
 					sys::remove_file(cached_fname);
+				}
+
+				if(SDL_GetTicks() > last_progress_update+50) {
+					last_progress_update = SDL_GetTicks();
+					show_progress(formatter() << "Checking cache: " << ncount << "/" << manifest.as_map().size());
 				}
 			}
 		}
@@ -1596,7 +1606,21 @@ static const int ModuleProtocolVersion = 1;
 
 		LOG_INFO("Install files: " << (int)manifest.getKeys().as_list().size());
 
+		int last_draw = 0;
+
+		show_progress(formatter() << "Installing files: 0/" << manifest.getKeys().as_list().size());
+		last_draw = SDL_GetTicks();
+
+		int ncount = 0;
+
 		for(variant path : manifest.getKeys().as_list()) {
+			++ncount;
+			const int new_time = SDL_GetTicks();
+			if(new_time > last_draw+50) {
+				last_draw = new_time;
+				show_progress(formatter() << "Installing files: " << ncount << "/" << manifest.getKeys().as_list().size());
+			}
+
 			variant info = manifest[path];
 			std::string path_str = (install_image_ ? InstallImagePath : module_path()) + "/" + path.as_string();
 
@@ -1676,7 +1700,9 @@ static const int ModuleProtocolVersion = 1;
 		//if we downloaded a full manifest of all files, make sure that
 		//locally all the files we already had are copied appropriately.
 		if(full_manifest.is_null() == false && install_image_ == false) {
+			ncount = 0;
 			for(variant path : full_manifest.getKeys().as_list()) {
+				++ncount;
 				if(manifest.has_key(path)) {
 					//we just downloaded this file.
 					continue;
@@ -1686,6 +1712,14 @@ static const int ModuleProtocolVersion = 1;
 				if(sys::file_exists(path_str)) {
 					continue;
 				}
+
+				const int new_time = SDL_GetTicks();
+				if(new_time > last_draw+50) {
+					last_draw = new_time;
+					show_progress(formatter() << "Checking files: " << ncount << "/" << manifest.getKeys().as_list().size());
+				}
+
+				variant info = manifest[path];
 			
 				bool found = false;
 				for(auto dir : module_dirs()) {
@@ -1704,29 +1738,29 @@ static const int ModuleProtocolVersion = 1;
 
 				ASSERT_LOG(found, "Could not find file locally even though it's in the manifest: " << path.as_string());
 			}
-	}
-
-	//update the module.cfg version to be equal to the version of the module we now have.
-	variant new_module_version = doc["version"];
-
-	const std::string module_cfg_path = (install_image_ ? InstallImagePath : preferences::dlc_path() + "/" + module_id_) + "/module.cfg";
-
-	bool wrote_version = false;
-	if(sys::file_exists(module_cfg_path)) {
-		try {
-			variant node = json::parse(sys::read_file(module_cfg_path), json::JSON_PARSE_OPTIONS::NO_PREPROCESSOR);
-			node.add_attr_mutation(variant("version"), new_module_version);
-			sys::write_file(module_cfg_path, node.write_json());
-			wrote_version = true;
-		} catch(...) {
 		}
-	}
 
-	if(!wrote_version) {
-		std::map<variant,variant> m;
-		m[variant("version")] = new_module_version;
-		variant node(&m);
-		sys::write_file(module_cfg_path, node.write_json());
+		//update the module.cfg version to be equal to the version of the module we now have.
+		variant new_module_version = doc["version"];
+
+		const std::string module_cfg_path = (install_image_ ? InstallImagePath : preferences::dlc_path() + "/" + module_id_) + "/module.cfg";
+
+		bool wrote_version = false;
+		if(sys::file_exists(module_cfg_path)) {
+			try {
+				variant node = json::parse(sys::read_file(module_cfg_path), json::JSON_PARSE_OPTIONS::NO_PREPROCESSOR);
+				node.add_attr_mutation(variant("version"), new_module_version);
+				sys::write_file(module_cfg_path, node.write_json());
+				wrote_version = true;
+			} catch(...) {
+			}
+		}
+
+		if(!wrote_version) {
+			std::map<variant,variant> m;
+			m[variant("version")] = new_module_version;
+			variant node(&m);
+			sys::write_file(module_cfg_path, node.write_json());
 		}
 	}
 
