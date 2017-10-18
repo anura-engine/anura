@@ -31,7 +31,7 @@
 #include "variant_utils.hpp"
 
 PREF_BOOL(tbs_server_local, false,"Sets tbs server to be in local mode");
-PREF_INT(tbs_server_timeout, 5000, "Timeout for connections to the tbs server");
+PREF_INT(tbs_server_timeout, 60000, "Timeout for connections to the tbs server");
 
 namespace tbs
 {
