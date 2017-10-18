@@ -2001,7 +2001,7 @@ variant_type_ptr parse_variant_type(const variant& original_str,
 					std::string id(i1->begin, i1->end);
 					++i1;
 
-					ASSERT_COND(i1 != i2 && i1->equals(":"), "Expected : after " << id << " in interface definition");
+					ASSERT_COND(i1 != i2 && i1->equals(":"), "Expected : after " << id << " in interface definition: " << original_str.debug_location());
 
 					++i1;
 					variant_type_ptr type = parse_variant_type(original_str, i1, i2, allow_failure);
@@ -2015,7 +2015,7 @@ variant_type_ptr parse_variant_type(const variant& original_str,
 						++i1;
 					}
 				} else {
-					ASSERT_COND(false, "Expected identifier or } in interface definition");
+					ASSERT_COND(false, "Expected identifier or } in interface definition" << original_str.debug_location());
 				}
 			}
 
@@ -2027,21 +2027,21 @@ variant_type_ptr parse_variant_type(const variant& original_str,
 			    ConstFormulaInterfacePtr(new game_logic::FormulaInterface(types)))));
 		} else if(i1->type == FFL_TOKEN_TYPE::KEYWORD && i1->equals("enum")) {
 			++i1;
-			ASSERT_COND(i1 != i2 && i1->type == FFL_TOKEN_TYPE::LBRACKET, "Expected '{' after enum in type");
+			ASSERT_COND(i1 != i2 && i1->type == FFL_TOKEN_TYPE::LBRACKET, "Expected '{' after enum in type: " << game_logic::pinpoint_location(original_str, (i1-1)->begin));
 			++i1;
 			std::vector<std::string> enums;
 
 			while(i1 != i2 && i1->type != FFL_TOKEN_TYPE::RBRACKET) {
-				ASSERT_COND(i1->type == FFL_TOKEN_TYPE::IDENTIFIER, "Expected identifier after enum in type");
+				ASSERT_COND(i1->type == FFL_TOKEN_TYPE::IDENTIFIER, "Expected identifier after enum in type: " << game_logic::pinpoint_location(original_str, (i1-1)->begin));
 				enums.push_back(i1->str());
 				++i1;
-				ASSERT_COND(i1 != i2 && (i1->type == FFL_TOKEN_TYPE::COMMA || i1->type == FFL_TOKEN_TYPE::RBRACKET), "Unexpected token when parsing enum type");
+				ASSERT_COND(i1 != i2 && (i1->type == FFL_TOKEN_TYPE::COMMA || i1->type == FFL_TOKEN_TYPE::RBRACKET), "Unexpected token when parsing enum type" << game_logic::pinpoint_location(original_str, (i1-1)->begin));
 				if(i1->type == FFL_TOKEN_TYPE::COMMA) {
 					++i1;
 				}
 			}
 
-			ASSERT_COND(i1 != i2, "Unexpected end of enum type");
+			ASSERT_COND(i1 != i2, "Unexpected end of enum type" << game_logic::pinpoint_location(original_str, (i1-1)->begin));
 
 			v.push_back(variant_type_ptr(new variant_type_enum(enums)));
 			++i1;
