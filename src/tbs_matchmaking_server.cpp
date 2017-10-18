@@ -2165,6 +2165,9 @@ private:
 
 	DbClientPtr db_client_, registration_db_client_;
 
+	//TODO: make this persistent in some way.
+	std::set<std::string> trx_confirmed_;
+
 	struct UserAccountInfo {
 		variant account_info;
 		std::vector<std::string> message_queue;
@@ -3094,6 +3097,19 @@ BEGIN_DEFINE_FN(write_account, "(string, [string]|null=null) ->commands")
 
 	return variant(new write_account_command(const_cast<matchmaking_server&>(obj), *obj.db_client_, key, itor->second.account_info, silent_update));
 END_DEFINE_FN
+
+BEGIN_DEFINE_FN(mark_trx_processed, "(string) ->commands")
+	std::string trx = FN_ARG(0).as_string();
+	matchmaking_server* mm_obj = const_cast<matchmaking_server*>(&obj);
+	return variant(new game_logic::FnCommandCallable("mark_trx_processed", [=]() {
+		mm_obj->trx_confirmed_.insert(trx);
+	}));
+END_DEFINE_FN
+
+BEGIN_DEFINE_FN(has_processed_trx, "(string) ->bool")
+	return variant::from_bool(obj.trx_confirmed_.count(FN_ARG(0).as_string()) != 0);
+END_DEFINE_FN
+
 END_DEFINE_CALLABLE(matchmaking_server)
 
 void matchmaking_server::executeCommand(variant cmd)
