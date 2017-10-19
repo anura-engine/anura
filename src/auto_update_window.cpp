@@ -714,6 +714,9 @@ bool do_auto_update(std::deque<std::string> argv, auto_update_window& update_win
 		}
 	}
 
+	//remove the update cache since we downloaded and installed everything.
+	sys::rmdir_recursive("update-cache");
+
 #ifdef _MSC_VER
 	const std::string cl_quotes = "\"";
 #else
