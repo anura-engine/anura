@@ -36,6 +36,8 @@ PREF_STRING(auto_update_exe, "", "Exe of the auto-updater");
 PREF_STRING(auto_update_game_name, "Anura", "Title shown on the auto update window");
 PREF_STRING(auto_update_title, "Anura auto-update", "Title of the auto-update window");
 
+PREF_STRING(auto_update_install_dir, "", "Directory which to install the game to");
+
 void run_auto_updater()
 {
 	if(g_auto_update_dir.empty() || g_auto_update_exe.empty()) {
@@ -533,6 +535,10 @@ bool do_auto_update(std::deque<std::string> argv, auto_update_window& update_win
 
 		if(update_module) {
 			cl.reset(new module_updater_client(update_window));
+			if(g_auto_update_install_dir.empty() == false) {
+				cl->set_install_path_override(g_auto_update_install_dir + "/modules/" + module::get_module_name());
+			}
+
 			cl->set_show_progress_fn([&update_window](const std::string& msg) {
 				update_window.set_message(msg);
 				update_window.process();
@@ -553,6 +559,10 @@ bool do_auto_update(std::deque<std::string> argv, auto_update_window& update_win
 
 		if(update_anura) {
 			anura_cl.reset(new module::client);
+			if(g_auto_update_install_dir.empty() == false) {
+				anura_cl->set_install_path_override(g_auto_update_install_dir);
+			}
+
 			anura_cl->set_show_progress_fn([&update_window](const std::string& msg) {
 				update_window.set_message(msg);
 				update_window.process();
@@ -713,7 +723,7 @@ bool do_auto_update(std::deque<std::string> argv, auto_update_window& update_win
 	std::string cwd_arg = cl_quotes + "--auto-update-dir=" + sys::get_cwd() + cl_quotes;
 	std::string exe_arg = cl_quotes + "--auto-update-exe=" + g_anura_exe_name + cl_quotes;
 
-	const std::string working_dir = preferences::dlc_path() + "/" + real_anura + subdir;
+	const std::string working_dir = g_auto_update_install_dir.empty() == false ? g_auto_update_install_dir : preferences::dlc_path() + "/" + real_anura + subdir;
 	LOG_INFO("CHANGE DIRECTORY: " << working_dir);
 	const int res = chdir(working_dir.c_str());
 	ASSERT_LOG(res == 0, "Could not change directory to game working directory: " << working_dir);

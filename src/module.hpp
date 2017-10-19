@@ -154,6 +154,7 @@ namespace module
 		int nfiles_written() const { return nfiles_written_; }
 
 		void set_install_image(bool value) { install_image_ = value; }
+		void set_install_path_override(const std::string& path) { install_path_override_ = path; }
 
 		bool is_new_install() const { return is_new_install_; }
 
@@ -180,7 +181,10 @@ namespace module
 
 		int nfiles_written_;
 
+		std::string get_module_path(const std::string& module_id) const;
+
 		bool install_image_;
+		std::string install_path_override_;
 
 		//a response that is ready for installation. Only used when operation_ is
 		//OPERATION_PREPARE_INSTALL

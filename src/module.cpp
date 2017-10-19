@@ -1137,7 +1137,7 @@ static const int ModuleProtocolVersion = 1;
 		module_id_ = module_id;
 		force_install_ = force;
 
-		std::string current_path = install_image_ ? InstallImagePath : make_base_module_path(module_id);
+		std::string current_path = module_path();
 
 		if(!current_path.empty() && !force && sys::dir_exists(current_path + "/.git")) {
 			LOG_INFO("Not installing module " << module_id << " because a git sync exists in " << current_path);
@@ -1182,8 +1182,16 @@ static const int ModuleProtocolVersion = 1;
 
 	std::string client::module_path() const
 	{
-		const std::string path_str = preferences::dlc_path() + "/" + module_id_ + "/";
-		return path_str;
+		if(install_path_override_.empty() == false) {
+			return install_path_override_;
+		}
+
+		return get_module_path(module_id_);
+	}
+
+	std::string client::get_module_path(const std::string& module_id) const
+	{
+		return install_image_ ? InstallImagePath : make_base_module_path(module_id);
 	}
 
 	void client::rate_module(const std::string& module_id, int rating, const std::string& review)
@@ -1377,7 +1385,7 @@ static const int ModuleProtocolVersion = 1;
 				LOG_ERROR("SET ERROR: " << doc.write_json());
 			} else if(operation_ == OPERATION_QUERY_VERSION_FOR_INSTALL) {
 				variant version = doc[variant("version")];
-				std::string current_path = install_image_ ? InstallImagePath : make_base_module_path(module_id_);
+				std::string current_path = module_path();
 				variant config = json::parse(sys::read_file(current_path + "/module.cfg"));
 				LOG_INFO("Server has module version " << version.write_json() << " we have " << config["version"].write_json());
 				if(version == config["version"]) {
@@ -1457,7 +1465,7 @@ static const int ModuleProtocolVersion = 1;
 		variant doc = doc_ref;
 
 		variant local_manifest;
-		std::string current_path = install_image_ ? InstallImagePath : make_base_module_path(module_id_);
+		std::string current_path = module_path();
 		if(!current_path.empty() && !force_install_ && sys::file_exists(current_path + "/module.cfg") && sys::file_exists(current_path + "/manifest.cfg")) {
 			local_manifest = json::parse(sys::read_file(current_path + "/manifest.cfg"));
 			LOG_INFO("Parsed local manifest");
@@ -1476,13 +1484,24 @@ static const int ModuleProtocolVersion = 1;
 		int last_progress_update = SDL_GetTicks();
 
 		int nfound_in_cache = 0;
-		int ncount = 0;
 
-		//populate any files from the cache
+
+		int ncount = 0;
 		for(auto p : manifest.as_map()) {
 			++ncount;
+
+			if(SDL_GetTicks() > last_progress_update+50) {
+				last_progress_update = SDL_GetTicks();
+				show_progress(formatter() << "Checking cache: " << ncount << "/" << manifest.as_map().size());
+			}
+
+			if(local_manifest.is_map() && local_manifest.has_key(p.first) && local_manifest[p.first][md5_variant] == p.second[md5_variant]) {
+				unchanged_keys.push_back(p.first);
+				continue;
+			}
+
 			std::string cached_fname = "update-cache/" + p.second["md5"].as_string();
-			if(sys::file_exists(cached_fname)) {
+			if(p.second["data"].is_null() == false && sys::file_exists(cached_fname)) {
 				std::string contents = sys::read_file(cached_fname);
 				std::vector<char> data_buf(contents.begin(), contents.end());
 				const int data_size = p.second["size"].as_int();
@@ -1499,19 +1518,9 @@ static const int ModuleProtocolVersion = 1;
 					sys::remove_file(cached_fname);
 				}
 
-				if(SDL_GetTicks() > last_progress_update+50) {
-					last_progress_update = SDL_GetTicks();
-					show_progress(formatter() << "Checking cache: " << ncount << "/" << manifest.as_map().size());
-				}
 			}
-		}
-
-		LOG_INFO("Found " << nfound_in_cache << " files in cache");
-
-		for(auto p : manifest.as_map()) {
-			if(local_manifest.is_map() && local_manifest.has_key(p.first) && local_manifest[p.first][md5_variant] == p.second[md5_variant]) {
-				unchanged_keys.push_back(p.first);
-			} else if(p.second["data"].is_null() == false) {
+			
+			if(p.second["data"].is_null() == false) {
 				isHighPriorityChunk(p.first, p.second);
 				onChunkReceived(p.second);
 			} else {
@@ -1524,6 +1533,8 @@ static const int ModuleProtocolVersion = 1;
 				}
 			}
 		}
+
+		LOG_INFO("Found " << nfound_in_cache << " files in cache");
 
 		for(auto v : high_priority_chunks) {
 			chunks_to_get_.push_back(v);
@@ -1708,7 +1719,7 @@ static const int ModuleProtocolVersion = 1;
 					continue;
 				}
 
-				const std::string path_str = preferences::dlc_path() + "/" + module_id_ + "/" + path.as_string();
+				const std::string path_str = module_path() + "/" + path.as_string();
 				if(sys::file_exists(path_str)) {
 					continue;
 				}
