@@ -161,11 +161,17 @@ namespace module
 		std::string module_path() const;
 
 		void set_show_progress_fn(std::function<void(std::string)> fn) { show_progress_fn_ = fn; }
+
+		bool is_pending_install() const { return operation_ == OPERATION_PENDING_INSTALL; }
+
+		void complete_install();
+
+		void set_module_description(const std::string& str) { module_description_ = str; }
 	private:
 		
 		bool install_module_confirmed_out_of_date(const std::string& module_name);
 
-		enum OPERATION_TYPE { OPERATION_NONE, OPERATION_INSTALL, OPERATION_QUERY_VERSION_FOR_INSTALL, OPERATION_PREPARE_INSTALL, OPERATION_GET_CHUNKS, OPERATION_GET_STATUS, OPERATION_GET_ICONS, OPERATION_RATE };
+		enum OPERATION_TYPE { OPERATION_NONE, OPERATION_PENDING_INSTALL, OPERATION_INSTALL, OPERATION_QUERY_VERSION_FOR_INSTALL, OPERATION_PREPARE_INSTALL, OPERATION_GET_CHUNKS, OPERATION_GET_STATUS, OPERATION_GET_ICONS, OPERATION_RATE };
 		OPERATION_TYPE operation_;
 		bool force_install_;
 		std::string module_id_;
@@ -214,5 +220,7 @@ namespace module
 		std::function<void(std::string)> show_progress_fn_;
 
 		void show_progress(const std::string& msg) { if(show_progress_fn_) { show_progress_fn_(msg); } }
+
+		std::string module_description_;
 	};
 }

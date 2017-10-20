@@ -1085,7 +1085,7 @@ COMMAND_LINE_UTILITY(generate_manifest)
 					   out_of_date_(false),
 					   client_(new http_client(host_, port_)),
 					   nbytes_transferred_(0),
-					   nbytes_total_(0),
+					   nbytes_total_(-1),
 					   nfiles_written_(0),
 					   install_image_(false),
 					   is_new_install_(true),
@@ -1226,7 +1226,7 @@ static const int ModuleProtocolVersion = 1;
 
 	bool client::process()
 	{
-		if(operation_ == OPERATION_NONE || (operation_ == OPERATION_PREPARE_INSTALL && module_prepared())) {
+		if(operation_ == OPERATION_NONE || operation_ == OPERATION_PENDING_INSTALL || (operation_ == OPERATION_PREPARE_INSTALL && module_prepared())) {
 			return false;
 		}
 
@@ -1268,6 +1268,14 @@ static const int ModuleProtocolVersion = 1;
 		} 
 	}
 
+	void client::complete_install()
+	{
+		ASSERT_LOG(is_pending_install(), "Trying to complete install when not pending");
+
+		perform_install_from_doc(doc_pending_chunks_);
+		doc_pending_chunks_ = variant();
+	}
+
 	void client::on_chunk_response(std::string chunk_url, variant node, boost::shared_ptr<http_client> client, std::string response)
 	{
 		if(g_module_chunk_deflate) {
@@ -1286,16 +1294,13 @@ static const int ModuleProtocolVersion = 1;
 		}
 
 		nbytes_transferred_ += node["size"].as_int();
-		node.add_attr_mutation(variant("data"), variant(response));
 
 		onChunkReceived(node);
 
 		chunk_clients_.erase(std::remove(chunk_clients_.begin(), chunk_clients_.end(), client), chunk_clients_.end());
 		if(chunks_to_get_.empty()) {
 			if(chunk_clients_.empty()) {
-				perform_install_from_doc(doc_pending_chunks_);
-				doc_pending_chunks_ = variant();
-				operation_ = OPERATION_NONE;
+				operation_ = OPERATION_PENDING_INSTALL;
 			}
 		} else {
 			boost::shared_ptr<http_client> new_client(new http_client(g_module_chunk_server.empty() ? host_ : g_module_chunk_server, g_module_chunk_port.empty() ? port_ : g_module_chunk_port));
@@ -1500,8 +1505,10 @@ static const int ModuleProtocolVersion = 1;
 				continue;
 			}
 
+			bool cached = false;
+
 			std::string cached_fname = "update-cache/" + p.second["md5"].as_string();
-			if(p.second["data"].is_null() == false && sys::file_exists(cached_fname)) {
+			if(p.second["data"].is_null() && sys::file_exists(cached_fname)) {
 				std::string contents = sys::read_file(cached_fname);
 				std::vector<char> data_buf(contents.begin(), contents.end());
 				const int data_size = p.second["size"].as_int();
@@ -1511,7 +1518,7 @@ static const int ModuleProtocolVersion = 1;
 
 				if(variant(md5::sum(data_str)) == p.second["md5"]) {
 					LOG_INFO("Cached data found for " << p.second["md5"].as_string());
-					p.second.add_attr_mutation(variant("data"), variant(contents));
+					cached = true;
 					++nfound_in_cache;
 				} else {
 					LOG_INFO("ERROR: CACHE INVALID FOR " << p.second["md5"].as_string());
@@ -1520,7 +1527,7 @@ static const int ModuleProtocolVersion = 1;
 
 			}
 			
-			if(p.second["data"].is_null() == false) {
+			if(cached || p.second["data"].is_null() == false) {
 				isHighPriorityChunk(p.first, p.second);
 				onChunkReceived(p.second);
 			} else {
@@ -1619,7 +1626,7 @@ static const int ModuleProtocolVersion = 1;
 
 		int last_draw = 0;
 
-		show_progress(formatter() << "Installing files: 0/" << manifest.getKeys().as_list().size());
+		show_progress(formatter() << "Installing " << module_description_ << " files: 0/" << manifest.getKeys().as_list().size());
 		last_draw = SDL_GetTicks();
 
 		int ncount = 0;
@@ -1629,7 +1636,7 @@ static const int ModuleProtocolVersion = 1;
 			const int new_time = SDL_GetTicks();
 			if(new_time > last_draw+50) {
 				last_draw = new_time;
-				show_progress(formatter() << "Installing files: " << ncount << "/" << manifest.getKeys().as_list().size());
+				show_progress(formatter() << "Installing " << module_description_ << " files: " << ncount << "/" << manifest.getKeys().as_list().size());
 			}
 
 			variant info = manifest[path];
@@ -1669,7 +1676,17 @@ static const int ModuleProtocolVersion = 1;
 
 			std::vector<char> data_buf;
 			{
-				const std::string data_str = info["data"].as_string();
+				std::string data_str;
+				if(info["data"].is_null()) {
+					const std::string cache_path = "update-cache/" + info["md5"].as_string();
+					data_str = sys::read_file(cache_path);
+
+					if(data_str.empty() && sys::file_exists(cache_path) == false) {
+						ASSERT_LOG(false, "Could not find data for " << info["md5"].as_string());
+					}
+				} else {
+					data_str = info["data"].as_string();
+				}
 				data_buf.insert(data_buf.begin(), data_str.begin(), data_str.end());
 			}
 			const int data_size = info["size"].as_int();

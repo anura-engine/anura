@@ -406,7 +406,13 @@ private:
 		auto itor = update_chunks_.find(chunk["md5"].as_string());
 		if(itor != update_chunks_.end()) {
 			try {
-				std::string data_str = chunk["data"].as_string();
+				std::string data_str;
+				if(chunk["data"].is_string()) {
+					data_str = chunk["data"].as_string();
+				} else {
+					data_str = sys::read_file("update-cache/" + chunk["md5"].as_string());
+				}
+
 				std::vector<char> data_buf;
 				data_buf.insert(data_buf.begin(), data_str.begin(), data_str.end());
 
@@ -535,6 +541,7 @@ bool do_auto_update(std::deque<std::string> argv, auto_update_window& update_win
 
 		if(update_module) {
 			cl.reset(new module_updater_client(update_window));
+			cl->set_module_description("game");
 			if(g_auto_update_install_dir.empty() == false) {
 				cl->set_install_path_override(g_auto_update_install_dir + "/modules/" + module::get_module_name());
 			}
@@ -559,6 +566,7 @@ bool do_auto_update(std::deque<std::string> argv, auto_update_window& update_win
 
 		if(update_anura) {
 			anura_cl.reset(new module::client);
+			anura_cl->set_module_description("engine");
 			if(g_auto_update_install_dir.empty() == false) {
 				anura_cl->set_install_path_override(g_auto_update_install_dir);
 			}
@@ -584,7 +592,6 @@ bool do_auto_update(std::deque<std::string> argv, auto_update_window& update_win
 			timeout_ms *= 10;
 		}
 
-		int nbytes_transferred = 0, nbytes_anura_transferred = 0;
 		int start_time = profile::get_tick_time();
 		bool timeout = false;
 		LOG_INFO("Requesting update to module from server...");
@@ -596,46 +603,24 @@ bool do_auto_update(std::deque<std::string> argv, auto_update_window& update_win
 			update_window.set_is_new_install();
 		}
 
-		int max_nbytes_needed = 0;
+		ffl::IntrusivePtr<module::client> cl_install, anura_cl_install;
+
+		int cl_nbytes_total = 0, anura_cl_nbytes_total = 0, cl_nbytes_transferred = 0, anura_cl_nbytes_transferred = 0;
+
 		while(cl || anura_cl) {
 			update_window.process();
-
-			int nbytes_obtained = 0;
-			int nbytes_needed = 0;
 
 			++nupdate_cycle;
 
 			if(cl) {
-				const int transferred = cl->nbytes_transferred();
-				nbytes_obtained += transferred;
-				nbytes_needed += cl->nbytes_total();
-				if(transferred != nbytes_transferred) {
-					if(nupdate_cycle%10 == 0) {
-						LOG_INFO("Transferred " << (transferred/1024) << "/" << (cl->nbytes_total()/1024) << "KB");
-					}
-					start_time = profile::get_tick_time();
-					nbytes_transferred = transferred;
-				}
+				cl_nbytes_transferred = cl->nbytes_transferred();
+				cl_nbytes_total = cl->nbytes_total();
 			}
 
 			if(anura_cl) {
-				const int transferred = anura_cl->nbytes_transferred();
-				nbytes_obtained += transferred;
-				nbytes_needed += anura_cl->nbytes_total();
-				if(transferred != nbytes_anura_transferred) {
-					if(nupdate_cycle%10 == 0) {
-						LOG_INFO("Transferred " << (transferred/1024) << "/" << (anura_cl->nbytes_total()/1024) << "KB");
-					}
-					start_time = profile::get_tick_time();
-					nbytes_anura_transferred = transferred;
-				}
+				anura_cl_nbytes_transferred = anura_cl->nbytes_transferred();
+				anura_cl_nbytes_total = anura_cl->nbytes_total();
 			}
-
-			if(nbytes_needed < max_nbytes_needed) {
-				nbytes_needed = max_nbytes_needed;
-			}
-
-			max_nbytes_needed = nbytes_needed;
 
 			const int time_taken = profile::get_tick_time() - start_time;
 			if(time_taken > timeout_ms) {
@@ -647,15 +632,15 @@ bool do_auto_update(std::deque<std::string> argv, auto_update_window& update_win
 			}
 
 			char msg[1024];
-			if(nbytes_needed == 0) {
+			if(anura_cl_nbytes_total < 0 || cl_nbytes_total < 0) {
 				sprintf(msg, "%s", get_update_config("message_text_contacting").as_string_default("Updating Game. Contacting server...").c_str());
 			} else {
-				sprintf(msg, "%s%0.2f/%0.2f%s", get_update_config("message_text_prefix").as_string_default("Updating Game. Transferred ").c_str(), float(nbytes_obtained/(1024.0*1024.0)), float(nbytes_needed/(1024.0*1024.0)), get_update_config("message_text_postfix").as_string_default("MB").c_str());
+				sprintf(msg, "%s%0.2f/%0.2f%s", get_update_config("message_text_prefix").as_string_default("Updating Game. Transferred ").c_str(), float((cl_nbytes_transferred + anura_cl_nbytes_transferred)/(1024.0*1024.0)), float((anura_cl_nbytes_total + cl_nbytes_total)/(1024.0*1024.0)), get_update_config("message_text_postfix").as_string_default("MB").c_str());
 			}
 
 			update_window.set_message(msg);
 
-			const float ratio = nbytes_needed <= 0 ? 0 : static_cast<float>(nbytes_obtained)/static_cast<float>(nbytes_needed);
+			const float ratio = (anura_cl_nbytes_total < 0 || cl_nbytes_total < 0) ? 0 : static_cast<float>(cl_nbytes_transferred + anura_cl_nbytes_transferred)/static_cast<float>(std::max<int>(1, (anura_cl_nbytes_total + cl_nbytes_total)));
 			update_window.set_progress(ratio);
 			update_window.draw();
 
@@ -679,8 +664,9 @@ bool do_auto_update(std::deque<std::string> argv, auto_update_window& update_win
 						HANDLE_ERROR("Error while updating module: " << cl->error().c_str());
 						update_info.add("module_error", variant(cl->error()));
 					} else {
-						update_info.add("complete_module", true);
+						cl_install = cl;
 					}
+
 					cl.reset();
 				}
 
@@ -690,9 +676,34 @@ bool do_auto_update(std::deque<std::string> argv, auto_update_window& update_win
 						update_info.add("anura_error", variant(anura_cl->error()));
 					} else {
 						update_info.add("complete_anura", true);
+						anura_cl_install = anura_cl;
 					}
+
 					anura_cl.reset();
 				}
+			}
+		}
+
+		cl = cl_install;
+		anura_cl = anura_cl_install;
+
+		if(cl && cl->is_pending_install()) {
+			cl->complete_install();
+			if(cl->error().empty() == false) {
+				HANDLE_ERROR("Error while installing module: " << cl->error().c_str());
+				update_info.add("module_error", variant(cl->error()));
+			} else {
+				update_info.add("complete_module", true);
+			}
+		}
+
+		if(anura_cl && anura_cl->is_pending_install()) {
+			anura_cl->complete_install();
+			if(anura_cl->error().empty() == false) {
+				HANDLE_ERROR("Error while installing anura: " << anura_cl->error().c_str());
+				update_info.add("anura_error", variant(anura_cl->error()));
+			} else {
+				update_info.add("complete_anura", true);
 			}
 		}
 
