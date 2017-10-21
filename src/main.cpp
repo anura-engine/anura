@@ -135,6 +135,9 @@ namespace
 	PREF_INT(min_window_width, 1024, "Minimum window width when auto-determining window size");
 	PREF_INT(min_window_height, 768, "Minimum window height when auto-determining window size");
 
+	PREF_INT(max_window_width, 10240, "Minimum window width when auto-determining window size");
+	PREF_INT(max_window_height, 7680, "Minimum window height when auto-determining window size");
+
 	PREF_BOOL(disable_global_alpha_filter, false, "Disables using alpha-colors.png to denote some special colors as 'alpha colors'");
 
 	PREF_INT(auto_size_ideal_width, 0, "");
@@ -398,6 +401,14 @@ void auto_select_resolution(const KRE::WindowPtr& wm, int *width, int *height, b
 	if(best_mode.width < g_min_window_width || best_mode.height < g_min_window_height) {
 		best_mode.width = g_min_window_width;
 		best_mode.height = g_min_window_height;
+	}
+
+	if(best_mode.width > g_max_window_width) {
+		best_mode.width = g_max_window_width;
+	}
+
+	if(best_mode.height > g_max_window_height) {
+		best_mode.height = g_max_window_height;
 	}
 
 	*width = best_mode.width;
@@ -1019,7 +1030,9 @@ int main(int argcount, char* argvec[])
 	//main_wnd->setWindowIcon(module::map_file("images/window-icon.png"));
 
 	int swap_result = SDL_GL_SetSwapInterval(1);
-	ASSERT_LOG(swap_result == 0, "Could not set swap");
+	if(swap_result != 0) {
+		LOG_ERROR("Could not set swap interval with SDL_GL_SetSwapInterval: " << SDL_GetError());
+	}
 
 	try {
 		std::map<std::string, std::string> shader_files;
