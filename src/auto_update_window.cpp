@@ -647,13 +647,7 @@ bool do_auto_update(std::deque<std::string> argv, auto_update_window& update_win
 			SDL_Event event;
 			while(SDL_PollEvent(&event)) {
 				if(event.type == SDL_QUIT) {
-					if(is_new_install) {
-						return true;
-					}
-
-					cl.reset();
-					anura_cl.reset();
-					break;
+					return true;
 				}
 			}
 
