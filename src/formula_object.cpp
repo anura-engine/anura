@@ -673,7 +673,7 @@ std::map<std::string, std::string>& class_path_map()
 	};
 
 	FormulaClass::FormulaClass(const std::string& class_name, const variant& node)
-	  : builtin_slots_(0), name_(class_name), nstate_slots_(0), is_library_only_(false)
+	  : builtin_slots_(0), name_(class_name), name_variant_(class_name), nstate_slots_(0), is_library_only_(false)
 	{
 		if(node["base_type"].is_string()) {
 			std::string builtin = node["base_type"].as_string();
