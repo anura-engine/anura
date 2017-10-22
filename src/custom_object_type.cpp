@@ -487,7 +487,10 @@ void init_object_definition(variant node, const std::string& id_, CustomObjectCa
 				continue;
 			}
 
-			proto_definitions[properties_node.as_string()].reset(new CustomObjectCallable(*callable_definition_));
+			auto new_callable = new CustomObjectCallable(*callable_definition_);
+			new_callable->setTypeName("obj " + properties_node.as_string());
+
+			proto_definitions[properties_node.as_string()].reset(new_callable);
 			continue;
 		}
 
@@ -661,6 +664,7 @@ void init_object_definition(variant node, const std::string& id_, CustomObjectCa
 
 	callable_definition_->finalizeProperties();
 	callable_definition_->setStrict(is_strict_);
+
 }
 
 variant g_player_type_str;
