@@ -81,6 +81,9 @@ ifneq ($(USE_SDL2),yes)
 $(error SDL2 not found, SDL-1.2 is no longer supported)
 endif
 
+BASE_CXXFLAGS += $(shell $(SDL2_CONFIG) --cflags)
+LDFLAGS+ = $(shell $(SDL2_CONFIG) --ldflags)
+
 ifeq ($(USE_LUA), yes)
 BASE_CXXFLAGS += -DUSE_LUA
 #USE_LUA := yes # ?=$(shell pkg-config --exists lua5.2 && echo yes)
