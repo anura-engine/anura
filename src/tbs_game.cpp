@@ -961,7 +961,7 @@ namespace {
 					std::string msg = s.str();
 					for(int n = 0; n != players_.size(); ++n) {
 						if(n != nplayer && players_[n].is_human) {
-							queue_message(msg, nplayer);
+							queue_message(msg, n);
 						}
 					}
 				}
