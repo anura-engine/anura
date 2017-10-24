@@ -134,7 +134,7 @@ namespace http
 	}
 
 	web_server::SocketInfo::SocketInfo(boost::asio::io_service& service)
-	  : socket(service), supports_deflate(false)
+	  : socket(service), client_version(0), supports_deflate(false)
 	{
 	}
 
@@ -312,6 +312,17 @@ namespace http
 			}
 
 			environment env = parse_http_headers(headers);
+
+			static const std::string UserAgentStr("user-agent");
+			auto user_agent_itor = env.find(UserAgentStr);
+			if(user_agent_itor != env.end()) {
+				const char* p = strstr(user_agent_itor->second.c_str(), " 1.");
+				if(p != nullptr) {
+					p += 3;
+
+					socket->client_version = atoi(p);
+				}
+			}
 
 			static const std::string AcceptEncodingStr("accept-encoding");
 			auto encoding_itor = env.find(AcceptEncodingStr);

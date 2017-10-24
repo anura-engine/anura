@@ -87,6 +87,16 @@ namespace tbs
 		if(handler_) {
 			variant v = game_logic::deserialize_doc_with_objects(msg);
 
+			static const std::string UnderTypeStr = "__type";
+			static const variant MultiMessageVariant("multimessage");
+
+			if(v.is_map() && v[UnderTypeStr] == MultiMessageVariant) {
+				for(const std::string& s : v["items"].as_list_string()) {
+					recv_handler(s);
+				}
+				return;
+			}
+
 			if(use_local_cache_ && v["type"].as_string() == "game") {
 				//local cache currently disabled.
 				//local_game_cache_ = new tbs::game(v["game_type"].as_string(), v);

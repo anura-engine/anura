@@ -220,7 +220,7 @@ void http_client::send_connection_request(connection_ptr conn)
 	msg << conn->method_path << " HTTP/1.1\r\n"
 		   "Host: " << host_ << "\r\n"
 		   "Accept: */*\r\n"
-	       "User-Agent: Frogatto 1.0\r\n"
+	       "User-Agent: Frogatto 1.1\r\n"
 		   "Content-Type: text/plain\r\n"
 		   "Accept-Encoding: deflate\r\n"
 		   "Connection: close\r\n";

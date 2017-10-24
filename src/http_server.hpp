@@ -44,6 +44,7 @@ namespace http
 		struct SocketInfo {
 			explicit SocketInfo(boost::asio::io_service& service);
 			boost::asio::ip::tcp::socket socket;
+			int client_version;
 			bool supports_deflate;
 		};
 

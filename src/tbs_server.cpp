@@ -133,9 +133,23 @@ namespace tbs
 				}
 			}
 
-			const std::string msg = cli_info.msg_queue.front();
-			cli_info.msg_queue.pop_front();
-			send_msg(socket, msg);
+			if(cli_info.msg_queue.size() > 1 && socket->client_version >= 1) {
+				std::vector<variant> items;
+				for(const std::string& s : cli_info.msg_queue) {
+					items.push_back(variant(s));
+				}
+
+				cli_info.msg_queue.clear();
+
+				variant_builder b;
+				b.add("items", variant(&items));
+				b.add("__type", "multimessage");
+				send_msg(socket, b.build());
+			} else {
+				const std::string msg = cli_info.msg_queue.front();
+				cli_info.msg_queue.pop_front();
+				send_msg(socket, msg);
+			}
 
 			for(socket_ptr socket : keepalive_sockets) {
 				send_msg(socket, "{ \"type\": \"keepalive\" }");
