@@ -275,13 +275,15 @@ namespace KRE
 			ImGui_ImplSdlGL3_Init(window_.get());
 #endif
 
+			ASSERT_LOG(window_.get() != nullptr, "Could not create window: " << x << ", " << y << ", " << w << ", " << h << " / wnd_flags = " << wnd_flags);
+
 			if(getDisplayDevice()->ID() != DisplayDevice::DISPLAY_DEVICE_SDL) {
 				Uint32 rnd_flags = SDL_RENDERER_ACCELERATED;
 				if(vSync()) {
 					rnd_flags |= SDL_RENDERER_PRESENTVSYNC;
 				}
 				renderer_ = SDL_CreateRenderer(window_.get(), -1, rnd_flags);
-				ASSERT_LOG(renderer_ != nullptr, "Failed to create renderer: " << SDL_GetError());				
+				ASSERT_LOG(renderer_ != nullptr, "Failed to create renderer: " << SDL_GetError() << "; Windows details: " << w << "x" << h << " wnd_flags = " << wnd_flags);				
 			}
 
 			ASSERT_LOG(window_ != nullptr, "Failed to create window: " << SDL_GetError());
