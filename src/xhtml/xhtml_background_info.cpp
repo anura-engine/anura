@@ -179,7 +179,7 @@ namespace xhtml
 			corners[2] = glm::vec2(right, bottom);
 			corners[3] = glm::vec2(left, bottom);
 
-			std::array<glm::vec2, 4> quadrant = { glm::vec2(-1.0f, -1.0f), glm::vec2(1.0f, -1.0f), glm::vec2(1.0f, 1.0f), glm::vec2(-1.0f, 1.0f) };
+			std::array<glm::vec2, 4> quadrant = {{ glm::vec2(-1.0f, -1.0f), glm::vec2(1.0f, -1.0f), glm::vec2(1.0f, 1.0f), glm::vec2(-1.0f, 1.0f) }};
 
 			const float width = right - left;
 			const float height = bottom - top;
