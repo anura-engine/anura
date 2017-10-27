@@ -1719,6 +1719,10 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 			return variant(get_library_object().get());
 		}
 
+		if(key == "_uuid") {
+			return variant(write_uuid(uuid()));
+		}
+
 		auto def = class_->getBuiltinDef();
 		if(def) {
 			const int slot = def->getSlot(key);
