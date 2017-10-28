@@ -312,7 +312,7 @@ namespace xhtml
 		if(styles_ == nullptr) {
 			return;
 		}
-		std::array<FixedPoint, 4> border = { dims.border_.top, dims.border_.left, dims.border_.bottom, dims.border_.right };
+		std::array<FixedPoint, 4> border = {{ dims.border_.top, dims.border_.left, dims.border_.bottom, dims.border_.right }};
 
 		auto& outset = styles_->getBorderImageOutset();
 		for(auto side = 0; side != 4; ++side) {
