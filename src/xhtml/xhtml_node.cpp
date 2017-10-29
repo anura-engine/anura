@@ -780,7 +780,7 @@ namespace xhtml
 				auto attr = n->getAttribute("style");
 				if(attr) {
 					auto plist = css::Parser::parseDeclarationList(attr->getValue());
-					css::Specificity specificity = {9999, 9999, 9999};
+					css::Specificity specificity = {{9999, 9999, 9999}};
 					n->mergeProperties(specificity, plist);
 				}
 			}
