@@ -4968,7 +4968,7 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 					real_docname = module::map_write_path(docname);
 				}
 
-				sys::write_file(real_docname, game_logic::serialize_doc_with_objects(doc).write_json());
+				sys::write_file(real_docname, game_logic::serialize_doc_with_objects(doc).write_json(), true);
 			}));
 		FUNCTION_ARGS_DEF
 			ARG_TYPE("string");

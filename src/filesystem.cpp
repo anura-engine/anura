@@ -156,7 +156,9 @@ namespace sys
 		return ss.str();
 	}
 
-	void write_file(const std::string& fname, const std::string& data)
+	void write_file(
+			const std::string& fname, const std::string& data,
+			bool ensure_new_line_at_end_of_file)
 	{
 		path p(fname);
 		ASSERT_LOG(p.has_filename(), "No filename found in write_file path: " << fname);
@@ -168,6 +170,27 @@ namespace sys
 		// Write the file.
 		std::ofstream file(fname.c_str(), std::ios_base::binary);
 		file << data;
+
+		if (ensure_new_line_at_end_of_file) {
+#if defined(__linux__) || defined(__APPLE__)
+			if (data.length() == 0 || data.length() > 0 &&
+					data.at(data.length() - 1) != '\n') {
+				file << '\n';
+			}
+#endif /* __linux__ || __APPLE__ */
+#if ! defined(__linux__) && ! defined(__APPLE__)
+			//   Mobile and Microsoft won't even care (prove me
+			// wrong).
+#ifdef _MSC_VER
+			//   I think single newline without the need of
+			// carriage return is now universal at last..?
+			if (data.length() == 0 || data.length() > 0 &&
+					data.at(data.length() - 1) != '\n') {
+				file << '\n';
+			}
+#endif /* _MSC_VER */
+#endif /* ! __linux__ && ! __APPLE__ */
+		}
 	}
 
 	bool dir_exists(const std::string& fname)

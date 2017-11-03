@@ -59,7 +59,9 @@ namespace sys
 	std::string get_saves_dir();
 
 	std::string read_file(const std::string& fname);
-	void write_file(const std::string& fname, const std::string& data);
+	void write_file(
+			const std::string& fname, const std::string& data,
+			bool ensure_new_line_at_end_of_file = false);
 
 	bool dir_exists(const std::string& fname);
 	bool file_exists(const std::string& fname);
