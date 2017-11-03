@@ -3459,7 +3459,7 @@ FUNCTION_DEF_IMPL
 				}
 			}
 
-			ASSERT_LOG(found_valid_expr, "Last argument to find() function does not contain 'value' or 'index' " << debugPinpointLocation());
+			ASSERT_LOG(found_valid_expr, "Last argument to find_or_die() function does not contain 'value' or 'index' " << debugPinpointLocation());
 		END_FUNCTION_DEF(find_or_die)
 
 		namespace 
@@ -4821,7 +4821,7 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 			std::string docname = EVAL_ARG(0).as_string();
 
 			if(docname.empty()) {
-				return variant("DOCUMENT NAME GIVEN TO write_document() IS EMPTY");
+				return variant("DOCUMENT NAME GIVEN TO file_backed_map(string, function, map) IS EMPTY");
 			}
 			if(sys::is_path_absolute(docname)) {
 				return variant(formatter() << "DOCUMENT NAME IS ABSOLUTE PATH " << docname);
@@ -4860,7 +4860,7 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 					if(flag == "game_dir") {
 						prefs_directory = false;
 					} else {
-						ASSERT_LOG(false, "Illegal flag to write_document: " << flag);
+						ASSERT_LOG(false, "Illegal flag to function remove_document: " << flag);
 					}
 				}
 			}
@@ -4870,11 +4870,11 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 
 			std::string path_error;
 			if(!sys::is_safe_write_path(docname, &path_error)) {
-				ASSERT_LOG(false, "ERROR in write_document(" + docname + "): " + path_error);
+				ASSERT_LOG(false, "ERROR in remove_document(" + docname + "): " + path_error);
 			}
 
 			if(docname.empty()) {
-				ASSERT_LOG(false, "DOCUMENT NAME GIVEN TO write_document() IS EMPTY");
+				ASSERT_LOG(false, "DOCUMENT NAME GIVEN TO remove_document() IS EMPTY");
 			}
 			if(sys::is_path_absolute(docname)) {
 				ASSERT_LOG(false, "DOCUMENT NAME IS ABSOLUTE PATH " << docname);
