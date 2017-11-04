@@ -198,6 +198,14 @@ namespace graphics
 		DEFINE_SET_FIELD
 			obj.running_ = value.as_bool();
 
+		DEFINE_FIELD(scale_time, "decimal")
+			auto psystem = obj.particle_system_container_->getParticleSystem();
+			return variant(psystem->getScaleTime());
+			
+		DEFINE_SET_FIELD
+			auto psystem = obj.particle_system_container_->getParticleSystem();
+			psystem->setScaleTime(value.as_float());
+
 		DEFINE_FIELD(scale_dimensions, "[decimal,decimal,decimal]")
 			auto psystem = obj.particle_system_container_->getParticleSystem();
 			glm::vec3 dim = psystem->getScaleDimensions();
