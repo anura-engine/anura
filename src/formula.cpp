@@ -3775,7 +3775,7 @@ namespace {
 					if(args.size() >= 2 && function_name != nullptr && std::count(MapCallableFuncs, MapCallableFuncs + sizeof(MapCallableFuncs)/sizeof(*MapCallableFuncs), *function_name)) {
 						std::string value_name = "value";
 
-						static const std::string CustomIdMapCallableFuncs[] = { "filter", "find", "find_or_die", "map" };
+						static const std::string CustomIdMapCallableFuncs[] = { "filter", "find", "map" };
 						if(args.size() == 3 && std::count(CustomIdMapCallableFuncs, CustomIdMapCallableFuncs + sizeof(CustomIdMapCallableFuncs)/sizeof(*CustomIdMapCallableFuncs), *function_name)) {
 							//invocation like map(range(5), n, n*n) -- need to discover
 							//the string for the second argument to set that in our

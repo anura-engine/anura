@@ -3360,55 +3360,38 @@ FUNCTION_DEF_IMPL
 		END_FUNCTION_DEF(find)
 
 		FUNCTION_DEF_CTOR(find_or_die, 2, 3, "find_or_die")
-			if(args().size() == 3) {
-				identifier_ = read_identifier_expression(*args()[1]);
-			}
 			if(!args().empty()) {
 				def_ = args().back()->getDefinitionUsedByExpression();
 			}
 		FUNCTION_DYNAMIC_ARGUMENTS
 		FUNCTION_DEF_MEMBERS
 			bool optimizeArgNumToVM(int narg) const override {
-				if(NUM_ARGS > 2 && narg == 1) {
-					return false;
-				}
 				return true;
 			}
-			std::string identifier_;
 			ConstFormulaCallableDefinitionPtr def_;
 		FUNCTION_DEF_IMPL
 			const variant items = EVAL_ARG(0);
 
-			if(NUM_ARGS == 2) {
-				ffl::IntrusivePtr<map_callable> callable(new map_callable(variables, def_ ? def_->getNumSlots() : 0));
-				for(int n = 0; n != items.num_elements(); ++n) {
-					callable->set(items[n], n);
-					const variant val = args().back()->evaluate(*callable);
-					if(val.as_bool()) {
-						return items[n];
-					}
-				}
-			} else {
-				ffl::IntrusivePtr<map_callable> callable(new map_callable(variables, def_ ? def_->getNumSlots() : 0));
-
-				const std::string self = identifier_.empty() ? EVAL_ARG(1).as_string() : identifier_;
-				callable->setValue_name(self);
-
-				for(int n = 0; n != items.num_elements(); ++n) {
-					callable->set(items[n], n);
-					const variant val = args().back()->evaluate(*callable);
-					if(val.as_bool()) {
-						return items[n];
-					}
+			ffl::IntrusivePtr<map_callable> callable(new map_callable(variables, def_ ? def_->getNumSlots() : 0));
+			for(int n = 0; n != items.num_elements(); ++n) {
+				callable->set(items[n], n);
+				const variant val = args().back()->evaluate(*callable);
+				if(val.as_bool()) {
+					return items[n];
 				}
 			}
-			ASSERT_LOG(false, "Failed to find expected item. List has: " << items.write_json() << " " << debugPinpointLocation());
+
+			if(NUM_ARGS > 2) {
+				ASSERT_LOG(false, "Failed to find expected item: " << args()[1]->evaluate(*callable) << " " << debugPinpointLocation());
+			} else {
+				ASSERT_LOG(false, "Failed to find expected item. List has: " << items.write_json() << " " << debugPinpointLocation());
+			}
 
 		CAN_VM
-			return NUM_ARGS == 2 && canChildrenVM() && def_;
+			return canChildrenVM() && def_;
 		FUNCTION_VM
 
-			if(NUM_ARGS != 2 || !def_) {
+			if(!def_) {
 				return ExpressionPtr();
 			}
 
@@ -3426,7 +3409,7 @@ FUNCTION_DEF_IMPL
 			vm.addInstruction(OP_PUSH_INT);
 			vm.addInt(def_ ? def_->getNumSlots() : 0);
 			const int jump_from = vm.addJumpSource(OP_ALGO_FIND);
-			args()[1]->emitVM(vm);
+			args().back()->emitVM(vm);
 			vm.jumpToEnd(jump_from);
 
 			vm.addLoadConstantInstruction(variant(-1));
@@ -3436,7 +3419,12 @@ FUNCTION_DEF_IMPL
 
 			vm.addLoadConstantInstruction(variant("Could not find item in find_or_die"));
 
-			args()[0]->emitVM(vm);
+			if(NUM_ARGS > 2) {
+				args()[1]->emitVM(vm);
+			} else {
+				args()[0]->emitVM(vm);
+			}
+
 			vm.addInstruction(OP_ASSERT);
 
 			vm.jumpToEnd(jump_from_assert);
@@ -3445,16 +3433,6 @@ FUNCTION_DEF_IMPL
 		DEFINE_RETURN_TYPE
 
 			std::string value_str = "value";
-			if(NUM_ARGS > 2) {
-				variant literal;
-				args()[1]->isLiteral(literal);
-				if(literal.is_string()) {
-					value_str = literal.as_string();
-				} else if(args()[1]->isIdentifier(&value_str) == false) {
-					ASSERT_LOG(false, "find function requires a literal as its second argument");
-				}
-			}
-
 			ConstFormulaCallableDefinitionPtr def = def_;
 			if(def) {
 				ConstFormulaCallableDefinitionPtr modified = args().back()->queryModifiedDefinitionBasedOnResult(true, def);
@@ -3475,7 +3453,7 @@ FUNCTION_DEF_IMPL
 			std::vector<ConstExpressionPtr> expressions = args().back()->queryChildrenRecursive();
 			for(ConstExpressionPtr expr : expressions) {
 				const std::string& s = expr->str();
-				if(s == "value" || s == "key" || s == "index" || s == identifier_) {
+				if(s == "value" || s == "key" || s == "index") {
 					found_valid_expr = true;
 					break;
 				}
