@@ -358,8 +358,7 @@ void terminate_utility_process(bool* complete=nullptr)
 					error_msg = diagnostic_information(e);
 					error_msg = "boost exception: " + error_msg;
 				} catch(std::exception& e) {
-					error_msg = e.what();
-					error_msg = "unknown exception: " + error_msg;
+					ASSERT_LOG(false, "Error creating local server. Try restarting your computer to resolve this problem: " << e.what());
 				} catch(...) {
 					pipe_name = "";
 					error_msg = "Unknown error";
