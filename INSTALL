@@ -19,7 +19,9 @@ build the Anura engine:
  gl
  glew
  libz
- 
+ imgui (available as a git submodule)
+ icu-i18n
+
 Building:
 
 It is recommended to install the program 'ccache' as this can considerably
