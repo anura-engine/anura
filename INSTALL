@@ -20,6 +20,9 @@ build the Anura engine:
  glew
  libz
  
+Boost 1.56.0 is required (later versions could possibly work) because Anura is
+using the alignment allocation facility introduced by this version of Boost.
+
 Building:
 
 It is recommended to install the program 'ccache' as this can considerably
@@ -45,6 +48,293 @@ hg update "release-2.0.12"
 ./autogen.sh
 mkdir build && cd build
 ../configure && make && sudo make install
+
+
+Building on Debian Wheezy (last updated Aug 2017)
+-------------------------------------------------
+
+The following are some specific instructions for setting up the pre
+requirements for Anura on Debian Wheezy.
+
+Boost 1.57.0 can be troublesome, but 1.56.0 seems to build more stable.
+Moreover the developers are building against 1.56.0 as of Apr 2015. You will
+have to download Boost 1.5X.X from http://www.boost.org/ because the Debian
+.deb repos hold Boost 1.49.0.
+Personally, I have not tested 1.58.0 yet, but testing with 1.57.0 led me to a
+lot of trouble.
+
+Extract Boost and run:
+
+    $ ./bootstrap.sh --with-libraries=iostreams,filesystem,regex,system
+    $ su -c './b2 install'
+    $ _
+
+Or:
+
+    $ ./bootstrap.sh --with-libraries=iostreams,filesystem,regex,system
+    $ su
+    # ./b2 install
+    # exit
+    $ _
+
+Or maybe you prefer:
+
+    $ export UNPRIVILEGED_USER=$USER
+    $ su
+    # sudo -u $UNPRIVILEGED_USER ./bootstrap.sh --with-libraries=...
+    # ./b2 install
+    # exit
+    $ _
+
+If you ever need to reinstall Boost after installing from sources, you might
+find useful this command, because `b2` does not provide 'uninstall'
+capabilities.
+
+    # rm -rf /usr/local/lib/libboost_* /usr/local/include/boost/
+
+If there is any problem for building libbost_iostreams, as Boost documentation
+states, check if you already configured the development packages for libz and
+bzip2. In Debian Wheezy .deb repos, these are `zlib1g-dev` and `libbz2-dev`.
+
+You will also have to compile SDL2 yourself. It follows the standard build
+procedures of projects using GNU Autotools enhanced with autogen.sh. As an
+example, type these commands with your mileage variations, they are a lot of
+commands, but the process is often very stable, constant and straightforward:
+
+    $ wget http://libsdl.org/release/SDL2-2.0.3.tar.gz
+    $ tar xf SDL2-2.0.3.tar.gz && pushd SDL2-2.0.3/
+    $ sh autogen.sh
+    $ mkdir build/ && pushd build/
+    $ ../configure && make && su -c 'make install' && popd && popd
+    $ wget http://libsdl.org/projects/SDL_mixer/release/SDL2_mixer-2.0.0.tar.gz
+    $ tar xf SDL2_mixer-2.0.0.tar.gz && pushd SDL2_mixer-2.0.0/
+    $ sh autogen.sh
+    $ mkdir build/ && pushd build/
+    $ ../configure && make && su -c 'make install' && popd && popd
+    $ wget http://libsdl.org/projects/SDL_image/release/SDL2_image-2.0.0.tar.gz
+    $ tar xf SDL2_image-2.0.0.tar.gz && pushd SDL2_image-2.0.0/
+    $ sh autogen.sh
+    $ mkdir build/ && pushd build/
+    $ ../configure && make && su -c 'make install' && popd && popd
+    $ wget http://libsdl.org/projects/SDL_ttf/release/SDL2_ttf-2.0.12.tar.gz
+    $ tar xf SDL2_ttf-2.0.12.tar.gz && pushd SDL2_ttf-2.0.12/
+    $ sh autogen.sh
+    $ mkdir build/ && pushd build/
+    $ ../configure && make && su -c 'make install' && popd && popd
+
+Finally make sure you have got these software and libraries through Debian's
+package management:
+
+* ccache (recommended)
+* libcairo2-dev
+* libglw1-mesa-dev (probably required)
+* libsdl-gfx1.2-dev
+* `libvorbis-dev`. Expect not to be able to compile Anura without this.
+* `libicu-dev`. Expect not to be able to link Anura without this.
+
+Make sure you did not selected these software and libraries:
+
+* `libglew-dev`. This package holds GLEW 1.7, which is no longer supported by
+  Anura.
+
+Since Debian Wheezy ships OpenGL ES 1 and 2, but not version 3 that is what
+Anura is currently requiring right now, manually install `GLES3/gl31.h` to
+`/usr/local/include/GLES3/` by doing something like:
+
+    # mkdir /usr/local/include/GLES3/
+    # pushd /usr/local/include/GLES3/
+    # wget https://www.khronos.org/registry/OpenGL/api/GLES3/gl31.h
+
+Check that the file name did not get mangled to `download` or something else,
+and fix it if it got.
+
+Manually download and build GLEW, since official Wheezy GLEW 1.7 is no longer
+supported by Anura. _I do not know which versions do and which do not work, but
+I only tried using GLEW 1.13 and it worked directly on first run._
+
+Manually download and build GLEW, GLEW 1.13 for instance. That is pretty
+straightforward, just go to the official site and download and uncompress
+gzipped tar. As it tells, run `make`.
+
+Check both glew-1.13/bin/glewinfo and glew-1.13/bin/visualinfo are running
+correctly. You would receive `error while loading shared libraries:
+libGLEW.so.1.13: cannot open shared object file: No such file or directory` if
+you ran just:
+
+    $ pwd
+    /PATH/TO/glew-1.13.0
+    $ bin/glewinfo
+
+You have to run both programs with an ld library path in the fashion of:
+
+    $ pwd
+    /PATH/TO/glew-1.13.0
+    $ LD_LIBRARY_PATH=lib/ bin/glewinfo
+
+That should work and both programs should do some output and finishing
+successfully (`echo $?` returning `0`). You do not need to understand their
+output.
+
+If that resulted in something like `Error: glewCreateContext failed` returning
+`1` (failure), that only means the program failed to create the window
+graphics. Probably only means that the terminal lost contact with some window
+server. Do not panic and just try the command in a brand new terminal window,
+it will probably succeed.
+
+Link `/usr/local/include/GL/glew.h` (it should not exist) to newly downloaded,
+possibly built `/PATH/TO/glew-1.13/include/GL/glew.h`, wherever you put it.
+Check that there does not exist a `/usr/include/GL/glew.h` document, in order
+to minimize as most as you can any possible undesirable path conflict with the
+newly created `/usr/local/include/GL/glew.h`.
+
+At this point you might be able to run `make -f Makefile.debian-wheezy` in
+Anura's source folder. That
+would create the `anura` executable in the Anura sources directory. If you got
+a linker error instead of a successful build, it is most probably because Anura
+deprecated GCC 4.7 to be able to use C++11 features. There is no GCC > 4.7.2 in
+the Wheezy .deb repos, still you can advance downloading, building and
+installing GCC from sources 4.8.X, e.g. 4.8.4. It will cost you >5GiB of disk
+usage after a successful build, if you go the lazy way and do not specify which
+front-ends to compile, that builds all the available fronts.
+
+The GCC documentation for configuration, building, installing and testing is
+daunting, but the process, though uncommon because it's weird to know when it
+built correctly until installation time, even running the tests suite, is
+relatively straightforward. If you did not specify a PREFIX when configuring,
+at the end of the process you should have a `/usr/local/bin/g++` that depending
+on your $PATH value it might or might not override the default `/usr/bin/g++`.
+You might check using `/usr/local/bin/g++ --version` or
+`/usr/bin/g++ --version`.
+
+However, if you did this and compiled Anura with a custom GCC built and
+installed from sources, living in `/usr/local/`, if you try to run it, you most
+probably will have a GLIBC error during process creation. This is because you
+have to make sure you run Anura with a runtime environment (glibc, the GNU
+implementation of the C standard library) friendly to GCC 4.8.4. And very
+possibly, you might want this to apply ONLY to Anura.
+
+So, you could find reasonable to `find` libstdc++.so (which is a symlink) and
+wipe it recreating it repointing to a newly created libstdc++.so.X.X.X
+residing anywhere under /usr/local/. This should make Anura work, but you might
+find safer not to do more changes to /usr/ instead rather using the environment
+variable LD_LIBRARY_PATH when running Anura.
+
+So instead just calling the command `ANURA_DIR/anura`, you can call:
+
+    $ LD_LIBRARY_PATH=/usr/local/lib32/:/PATH/TO/glew-1.13.0/lib/ anura
+
+or:
+
+    $ LD_LIBRARY_PATH=/usr/local/lib64/:/PATH/TO/glew-1.13.0/lib/ anura
+
+Assuming a Debian multiarch environment after configuring the package
+`multiarch-support`, or a similar LD_LIBRARY_PATH value if not. For GCC 4.8.4
+corresponds libstdc++.so.6.0.19, that is the library version that you would
+want to find under /usr/local/.
+
+You can examinate the linking issuing:
+
+    $ LD_LIBRARY_PATH=/usr/local/lib32/:/PATH/TO/glew-1.13.0/lib/ ldd anura
+
+or
+
+    $ LD_LIBRARY_PATH=/usr/local/lib64/:/PATH/TO/glew-1.13.0/lib/ ldd anura
+
+Finally, running Anura at this point should tell you that it cannot find the
+frogatto module. Telling that would mean everything worked OK.
+
+Build was successful, you could continue now, f.i., downloading Frogatto to
+ANURA_DIR/modules/frogatto, if you just want to run Frogatto.
+
+
+Building on Debian Jessie (last updated Aug 2017)
+--------------------------------------------------
+
+Follow the general instructions, for the most part.
+
+Boost 1.55.0 that ships with Debian Jessie apt system is not supported by Anura
+because it using aligned_alloc.hpp introduced by version '1.56.0'. Moreover the
+developers were building against 1.56.0 as of Apr 2015.
+
+You will have to download Boost 1.5X.X from http://www.boost.org/ the official
+home of Boost. I am assuming version 1.56.0 but other subsequent versions could
+do too. Use 1.56.0 if you can, if you want to make sure you are following this
+procedure exactly as told.
+
+Extract Boost and run:
+
+    $ ./bootstrap.sh --with-libraries=iostreams,filesystem,regex,system,locale
+    $ su -c './b2 install'
+    $ _
+
+Or:
+
+    $ ./bootstrap.sh --with-libraries=iostreams,filesystem,regex,system,locale
+    $ su
+    # ./b2 install
+    # exit
+    $ _
+
+Or maybe you prefer:
+
+    $ export UNPRIVILEGED_USER=$USER
+    $ su
+    # sudo -u $UNPRIVILEGED_USER ./bootstrap.sh --with-libraries=...
+    # ./b2 install
+    # exit
+    $ _
+
+If you ever need to reinstall Boost after installing from sources, you might
+find useful this command, because `b2` does not provide 'uninstall'
+capabilities.
+
+    # rm -rf /usr/local/lib/libboost_* /usr/local/include/boost/
+
+If there is any problem for building libbost_iostreams, as Boost documentation
+states, check if you already configured the development packages for libz and
+bzip2. In Debian Wheezy .deb repos, these are `zlib1g-dev` and `libbz2-dev`.
+
+You are probably required to make sure you selected this package too:
+
+* `libvorbis-dev`.
+* `libicu-dev`. Selecting it will select `icu-devtools` too, automatically.
+
+For the list of other required packages, in case the build fails, refer the
+general instructions, that most definitely will be more up to date, and the
+particular guides for other Debian distributions.
+
+If the compiler seems not to be finding `imgui.h`, you might want to replace
+`git@github.com:sweetkristas/imgui.git` by
+`https://[YOU@]github.com/sweetkristas/imgui.git` in `.gitmodules`. You might
+need to issue:
+
+    $ git submodule update --init --recursive
+
+The system should be ready now for building Anura with the standard
+`make -j $JOBS`.
+
+Take into consideration that your mileage may vary if you ever needed to
+maintain multiple concurrent versions of Boost libraries or other dependencies.
+
+If Anura compiled and then linked, you can check all the run time dependencies
+are met by issuing:
+
+    ldd ./anura
+
+It is likely to show that the Boost run time dependencies could not be found.
+Be that the case, issue:
+
+    LD_LIBRARY_PATH=/usr/local/lib/ ldd ./anura
+
+It should find all run time dependencies now. Be that the case, you should be
+able now to run Anura.
+
+For discovering the secrets of magic, configure under modules a symlink to the
+master branch of `github.com/davewx7/citadel`.
+
+For instant happiness, configure under modules a symlink to the master branch
+of `github.com/frogatto/frogatto`.
+
 
 Building on a 2016 Debian sid
 -----------------------------

@@ -32,6 +32,7 @@
 #include "logger.hpp"
 
 void report_assert_msg(const std::string& m );
+void report_assert_msg_2(const std::string& m, const std::string& window_m);
 
 //An exception we intend to recover from.
 struct validation_failure_exception 
@@ -119,6 +120,25 @@ public:
 			log_internal(SDL_LOG_PRIORITY_CRITICAL, _s.str());	\
 			output_backtrace();									\
 			report_assert_msg(_s.str());						\
+			ABORT();											\
+		}														\
+	} } while(0)
+
+#define ASSERT_LOG_3(_a,_b, _c)									\
+	do { if( !(_a) ) {											\
+		std::ostringstream _s, _window_s;						\
+		_s << __SHORT_FORM_OF_FILE__ << ":" << __LINE__ <<		\
+			" ASSERTION FAILED: " << _b << "\n";				\
+		_window_s << __SHORT_FORM_OF_FILE__ << ":" <<			\
+			__LINE__ << " ASSERTION FAILED: " << _c << "\n";	\
+		if(throw_validation_failure_on_assert()) {				\
+			throw validation_failure_exception(_s.str());		\
+		} else if(throw_fatal_error_on_assert()) {				\
+			throw fatal_assert_failure_exception(_s.str());		\
+		} else {												\
+			log_internal(SDL_LOG_PRIORITY_CRITICAL, _s.str());	\
+			output_backtrace();									\
+			report_assert_msg_2(_s.str(), _window_s.str());		\
 			ABORT();											\
 		}														\
 	} } while(0)

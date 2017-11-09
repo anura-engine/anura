@@ -115,6 +115,70 @@ void report_assert_msg(const std::string& m)
 		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Assertion Failed", assert_str.c_str(), nullptr);
 	}
 
+#if defined(WIN32)
+	if(IsDebuggerPresent()) {
+		DebugBreak();
+	}
+#elif defined(__APPLE__)
+    *((volatile int *) NULL) = 0;	/* To continue from here in GDB: "return" then "continue". */
+    raise(SIGABRT);			/* In case above statement gets nixed by the optimizer. */
+#else
+    raise(SIGABRT);			/* To continue from here in GDB: "signal 0". */
+#endif
+}
+
+void report_assert_msg_2(const std::string& m, const std::string& window_m)
+{
+	if(Level::getCurrentPtr()) {
+		LOG_INFO("ATTEMPTING TO SEND CRASH REPORT...");
+		std::map<variant,variant> obj;
+		for(auto p : g_user_info_registry) {
+			obj[variant(p.first)] = p.second;
+		}
+		obj[variant("type")] = variant("crash");
+		obj[variant("msg")] = variant(m);
+#ifndef NO_EDITOR
+		obj[variant("editor")] = variant(editor::last_edited_level().empty() == false);
+#else
+		obj[variant("editor")] = variant(false);
+#endif
+
+		if(preferences::edit_and_continue()) {
+			if(g_edit_and_continue_fn) {
+				edit_and_continue_assert(m, g_edit_and_continue_fn);
+				throw validation_failure_exception("edit and continue recover");
+			} else {
+				edit_and_continue_assert(m);
+			}
+		}
+
+		stats::record(variant(&obj), Level::getCurrentPtr()->id());
+	} else {
+		std::map<variant, variant> obj;
+		obj[variant("type")] = variant("crash");
+		obj[variant("msg")] = variant(m);
+		obj[variant("editor")] = variant(false);
+		stats::record(variant(&obj), "nolevel");
+	}
+
+	stats::flush_and_quit();
+
+#if defined(__ANDROID__)
+	__android_log_print(ANDROID_LOG_INFO, "Frogatto", m.c_str());
+#endif
+
+	/* FIXME   Refactor properly. */
+	/*   Earlier code follows. */
+	/*
+	std::stringstream ss;
+	ss << "Assertion failed\n\n" << m;
+	std::string assert_str = ss.str();
+	*/
+	std::stringstream window_ss;
+	window_ss << "Assertion failed\n\n" << window_m;
+	std::string window_assert_str = window_ss.str();
+	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Assertion Failed",
+			window_assert_str.c_str(), nullptr);
 
 #if defined(WIN32)
 	if(IsDebuggerPresent()) {
