@@ -81,6 +81,9 @@ ifneq ($(USE_SDL2),yes)
 $(error SDL2 not found, SDL-1.2 is no longer supported)
 endif
 
+BASE_CXXFLAGS += $(shell $(SDL2_CONFIG) --cflags)
+LDFLAGS+ = $(shell $(SDL2_CONFIG) --ldflags)
+
 ifeq ($(USE_LUA), yes)
 BASE_CXXFLAGS += -DUSE_LUA
 #USE_LUA := yes # ?=$(shell pkg-config --exists lua5.2 && echo yes)
@@ -96,6 +99,8 @@ BASE_CXXFLAGS += -std=c++0x -g -fno-inline-functions \
 
 LDFLAGS?=-rdynamic
 
+MANDATORY_LIBS=pkg-config --cflags x11 sdl2 glew SDL2_image SDL2_ttf libpng zlib freetype2 cairo
+
 # Check for sanitize-address option
 ifeq ($(SANITIZE_ADDRESS), yes)
 BASE_CXXFLAGS += -g3 -fsanitize=address
@@ -108,7 +113,7 @@ BASE_CXXFLAGS += -fsanitize=undefined
 endif
 
 # Compiler include options, used after CXXFLAGS and CPPFLAGS.
-INC := -isystem external/header-only-libs $(shell pkg-config --cflags x11 sdl2 glew SDL2_image SDL2_ttf libpng zlib freetype2 cairo)
+INC := -isystem external/header-only-libs $(shell $(MANDATORY_LIBS))
 
 ifdef STEAM_RUNTIME_ROOT
 	INC += -isystem $(STEAM_RUNTIME_ROOT)/include
@@ -116,8 +121,8 @@ endif
 
 # Linker library options.
 LIBS := $(shell pkg-config --libs x11 gl ) \
-	$(shell pkg-config --libs sdl2 glew SDL2_image libpng zlib freetype2 cairo) \
-	-lSDL2_ttf -logg -lvorbis -lvorbisfile -lrt
+	$(shell pkg-config --libs $(MANDATORY_LIBS)) \
+	 -logg -lvorbis -lvorbisfile -lrt
 
 # libvpx check
 USE_LIBVPX?=$(shell pkg-config --exists vpx && echo yes)
