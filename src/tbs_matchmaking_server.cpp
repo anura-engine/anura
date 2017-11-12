@@ -1149,13 +1149,21 @@ public:
 				}
 
 			} else if(request_type == "channel_topic") {
+
+#define HANDLE_UNK_SESSION \
+				if(itor == sessions_.end()) { \
+					if(time_ms_ < 20000) { \
+						send_msg(socket, "text/json", "{ type: \"error\", message: \"server restarted\" }", ""); \
+						return; \
+					} \
+					fprintf(stderr, "Error: Unknown session: %d\n", session_id); \
+					send_msg(socket, "text/json", "{ type: \"error\", message: \"unknown session\" }", ""); \
+					return; \
+				}
+
 				int session_id = doc["session_id"].as_int(request_session_id);
 				auto itor = sessions_.find(session_id);
-				if(itor == sessions_.end()) {
-					fprintf(stderr, "Error: Unknown session: %d\n", session_id);
-					send_msg(socket, "text/json", "{ type: \"error\", message: \"unknown session\" }", "");
-					return;
-				}
+				HANDLE_UNK_SESSION
 
 				const std::string& channel_name = doc["channel"].as_string();
 				int count_legal = 0;
@@ -1176,11 +1184,7 @@ public:
 
 				int session_id = doc["session_id"].as_int(request_session_id);
 				auto itor = sessions_.find(session_id);
-				if(itor == sessions_.end()) {
-					fprintf(stderr, "Error: Unknown session: %d\n", session_id);
-					send_msg(socket, "text/json", "{ type: \"error\", message: \"unknown session\" }", "");
-					return;
-				}
+				HANDLE_UNK_SESSION
 
 				const std::string& channel_name = doc["channel"].as_string();
 				int count_legal = 0;
@@ -1215,11 +1219,7 @@ public:
 
 				int session_id = doc["session_id"].as_int(request_session_id);
 				auto itor = sessions_.find(session_id);
-				if(itor == sessions_.end()) {
-					fprintf(stderr, "Error: Unknown session: %d\n", session_id);
-					send_msg(socket, "text/json", "{ type: \"error\", message: \"unknown session\" }", "");
-					return;
-				}
+				HANDLE_UNK_SESSION
 
 				const std::string& channel_name = doc["channel"].as_string();
 
@@ -1244,11 +1244,7 @@ public:
 
 				int session_id = doc["session_id"].as_int(request_session_id);
 				auto itor = sessions_.find(session_id);
-				if(itor == sessions_.end()) {
-					fprintf(stderr, "Error: Unknown session: %d\n", session_id);
-					send_msg(socket, "text/json", "{ type: \"error\", message: \"unknown session\" }", "");
-					return;
-				}
+				HANDLE_UNK_SESSION
 
 				const std::string& channel_name = doc["channel"].as_string();
 
@@ -1263,28 +1259,22 @@ public:
 			} else if(request_type == "status_change") {
 				int session_id = doc["session_id"].as_int(request_session_id);
 				auto itor = sessions_.find(session_id);
-				if(itor == sessions_.end()) {
-					fprintf(stderr, "Error: Unknown session: %d\n", session_id);
-					send_msg(socket, "text/json", "{ type: \"error\", message: \"unknown session\" }", "");
-				} else {
-					if(doc["status"].is_string()) {
-						std::string status = doc["status"].as_string();
-						if(status != itor->second.status) {
-							itor->second.status = doc["status"].as_string();
-							change_user_status(itor->second.user_id, status);
-							fprintf(stderr, "CHANGE USER STATUS: %s -> %s\n", itor->second.user_id.c_str(), status.c_str());
-						}
+				HANDLE_UNK_SESSION
+
+				if(doc["status"].is_string()) {
+					std::string status = doc["status"].as_string();
+					if(status != itor->second.status) {
+						itor->second.status = doc["status"].as_string();
+						change_user_status(itor->second.user_id, status);
+						fprintf(stderr, "CHANGE USER STATUS: %s -> %s\n", itor->second.user_id.c_str(), status.c_str());
 					}
-					send_msg(socket, "text/json", "{ type: \"ack\" }", "");
 				}
+				send_msg(socket, "text/json", "{ type: \"ack\" }", "");
 
 			} else if(request_type == "request_observe") {
 				int session_id = doc["session_id"].as_int(request_session_id);
 				auto itor = sessions_.find(session_id);
-				if(itor == sessions_.end()) {
-					RESPOND_ERROR("unknown session");
-					return;
-				}
+				HANDLE_UNK_SESSION
 
 				SessionInfo* target = get_session(str_tolower(doc["target_user"].as_string()));
 				if(!target) {
@@ -1355,94 +1345,92 @@ public:
 
 				int session_id = doc["session_id"].as_int(request_session_id);
 				auto itor = sessions_.find(session_id);
-				if(itor == sessions_.end()) {
-					fprintf(stderr, "Error: Unknown session: %d\n", session_id);
-					send_msg(socket, "text/json", "{ type: \"error\", message: \"unknown session\" }", "");
+
+				HANDLE_UNK_SESSION
+
+				users_to_sessions_[itor->second.user_id] = session_id;
+
+				if(doc["status"].is_string()) {
+					std::string status = doc["status"].as_string();
+					if(status != itor->second.status) {
+						itor->second.status = doc["status"].as_string();
+						change_user_status(itor->second.user_id, status);
+						fprintf(stderr, "CHANGE USER STATUS: %s -> %s\n", itor->second.user_id.c_str(), status.c_str());
+					}
+				}
+
+				variant state_id_var = doc["state_id"];
+				if(state_id_var.is_int()) {
+					itor->second.have_state_id = state_id_var.as_int();
+				}
+
+				itor->second.request_server_info = doc["request_server_info"].as_bool(true);
+
+				itor->second.last_contact = time_ms_;
+
+				const int has_version = doc["info_version"].as_int(-1);
+				bool send_new_version = false;
+				if(has_version != -1) {
+					auto account_itor = account_info_.find(str_tolower(itor->second.user_id));
+					if(account_itor != account_info_.end() && account_itor->second.account_info["info_version"].as_int(0) != has_version) {
+						send_new_version = true;
+
+						variant_builder doc;
+						doc.add("type", "account_info");
+						doc.add("info", account_itor->second.account_info["info"]);
+						doc.add("info_version", account_itor->second.account_info["info_version"]);
+						send_msg(socket, "text/json", doc.build().write_json(), "");
+					}
+				}
+
+				if(send_new_version) {
+					//nothing, already done above
+				} else if(itor->second.game_details != "" && !itor->second.game_pending) {
+					send_msg(socket, "text/json", itor->second.game_details, "");
+					itor->second.game_details = "";
 				} else {
-					users_to_sessions_[itor->second.user_id] = session_id;
 
-					if(doc["status"].is_string()) {
-						std::string status = doc["status"].as_string();
-						if(status != itor->second.status) {
-							itor->second.status = doc["status"].as_string();
-							change_user_status(itor->second.user_id, status);
-							fprintf(stderr, "CHANGE USER STATUS: %s -> %s\n", itor->second.user_id.c_str(), status.c_str());
-						}
-					}
+					for(auto challenge : itor->second.challenges_received) {
+						if(challenge->received == false) {
 
-					variant state_id_var = doc["state_id"];
-					if(state_id_var.is_int()) {
-						itor->second.have_state_id = state_id_var.as_int();
-					}
-
-					itor->second.request_server_info = doc["request_server_info"].as_bool(true);
-
-					itor->second.last_contact = time_ms_;
-
-					const int has_version = doc["info_version"].as_int(-1);
-					bool send_new_version = false;
-					if(has_version != -1) {
-						auto account_itor = account_info_.find(str_tolower(itor->second.user_id));
-						if(account_itor != account_info_.end() && account_itor->second.account_info["info_version"].as_int(0) != has_version) {
-							send_new_version = true;
-
-							variant_builder doc;
-							doc.add("type", "account_info");
-							doc.add("info", account_itor->second.account_info["info"]);
-							doc.add("info_version", account_itor->second.account_info["info_version"]);
-							send_msg(socket, "text/json", doc.build().write_json(), "");
-						}
-					}
-
-					if(send_new_version) {
-						//nothing, already done above
-					} else if(itor->second.game_details != "" && !itor->second.game_pending) {
-						send_msg(socket, "text/json", itor->second.game_details, "");
-						itor->second.game_details = "";
-					} else {
-
-						for(auto challenge : itor->second.challenges_received) {
-							if(challenge->received == false) {
-
-								std::map<variant,variant> msg;
-								msg[variant("type")] = variant("challenge");
-								msg[variant("challenger")] = variant(challenge->challenger);
-								send_msg(socket, "text/json", variant(&msg).write_json(), "");
-								challenge->received = true;
-								return;
-							}
-						}
-
-						if(itor->second.message_queue().empty() == false) {
-							std::string s;
-							
-							if(itor->second.message_queue().size() == 1) {
-								s = itor->second.message_queue().front();
-							} else {
-								s = "{ __message_bundle: true, __messages: [";
-
-								for(size_t i = 0; i < static_cast<int>(itor->second.message_queue().size()); ++i) {
-									s += itor->second.message_queue()[i];
-									if(i+1 != itor->second.message_queue().size()) {
-										s += ",";
-									}
-								}
-
-								s += "]}";
-							}
-
-							itor->second.message_queue().clear();
-
-							send_msg(socket, "text/json", s, "");
+							std::map<variant,variant> msg;
+							msg[variant("type")] = variant("challenge");
+							msg[variant("challenger")] = variant(challenge->challenger);
+							send_msg(socket, "text/json", variant(&msg).write_json(), "");
+							challenge->received = true;
 							return;
 						}
+					}
 
-						if(itor->second.current_socket) {
-							disconnect(itor->second.current_socket);
+					if(itor->second.message_queue().empty() == false) {
+						std::string s;
+						
+						if(itor->second.message_queue().size() == 1) {
+							s = itor->second.message_queue().front();
+						} else {
+							s = "{ __message_bundle: true, __messages: [";
+
+							for(size_t i = 0; i < static_cast<int>(itor->second.message_queue().size()); ++i) {
+								s += itor->second.message_queue()[i];
+								if(i+1 != itor->second.message_queue().size()) {
+									s += ",";
+								}
+							}
+
+							s += "]}";
 						}
 
-						itor->second.current_socket = socket;
+						itor->second.message_queue().clear();
+
+						send_msg(socket, "text/json", s, "");
+						return;
 					}
+
+					if(itor->second.current_socket) {
+						disconnect(itor->second.current_socket);
+					}
+
+					itor->second.current_socket = socket;
 				}
 			} else if(request_type == "server_created_game") {
 				fprintf(stderr, "Notified of game up on server\n");
@@ -1511,37 +1499,30 @@ public:
 			} else if(request_type == "user_operation") {
 				int session_id = doc["session_id"].as_int(request_session_id);
 				auto itor = sessions_.find(session_id);
-				if(itor == sessions_.end()) {
-					fprintf(stderr, "Error: Unknown session: %d\n", session_id);
-					send_msg(socket, "text/json", "{ type: \"error\", message: \"unknown session\" }", "");
-				} else {
-					handleUserPost(socket, doc, itor->second);
 
-				}
+				HANDLE_UNK_SESSION
+
+				handleUserPost(socket, doc, itor->second);
 
 			} else if(request_type == "admin_operation") {
 				int session_id = doc["session_id"].as_int(request_session_id);
 				auto itor = sessions_.find(session_id);
-				if(itor == sessions_.end()) {
-					fprintf(stderr, "Error: Unknown session: %d\n", session_id);
-					send_msg(socket, "text/json", "{ type: \"error\", message: \"unknown session\" }", "");
+				HANDLE_UNK_SESSION
+				const SessionInfo& session = itor->second;
+				auto account_itor = account_info_.find(str_tolower(session.user_id));
+				if(account_itor == account_info_.end()) {
+					fprintf(stderr, "Error: Unknown account: %s\n", session.user_id.c_str());
+					send_msg(socket, "text/json", "{ type: \"error\", message: \"unknown account\" }", "");
 				} else {
-					const SessionInfo& session = itor->second;
-					auto account_itor = account_info_.find(str_tolower(session.user_id));
-					if(account_itor == account_info_.end()) {
-						fprintf(stderr, "Error: Unknown account: %s\n", session.user_id.c_str());
-						send_msg(socket, "text/json", "{ type: \"error\", message: \"unknown account\" }", "");
+					variant privileged = account_itor->second.account_info["info"]["privileged"];
+					if(!privileged.is_bool() || privileged.as_bool() != true) {
+						fprintf(stderr, "Error: Unprivileged account account: %s\n", session.user_id.c_str());
+						send_msg(socket, "text/json", "{ type: \"error\", message: \"account does not have admin privileges\" }", "");
 					} else {
-						variant privileged = account_itor->second.account_info["info"]["privileged"];
-						if(!privileged.is_bool() || privileged.as_bool() != true) {
-							fprintf(stderr, "Error: Unprivileged account account: %s\n", session.user_id.c_str());
-							send_msg(socket, "text/json", "{ type: \"error\", message: \"account does not have admin privileges\" }", "");
-						} else {
-							handleAdminPost(socket, doc);
-						}
+						handleAdminPost(socket, doc);
 					}
-
 				}
+
 			} else if(request_type == "get_replay") {
 
 				std::string game_id = doc["id"].as_string();
@@ -1567,47 +1548,43 @@ public:
 			} else {
 				int session_id = doc["session_id"].as_int(request_session_id);
 				auto itor = sessions_.find(session_id);
-				if(itor == sessions_.end()) {
-					fprintf(stderr, "Error: Unknown session: %d\n", session_id);
-					send_msg(socket, "text/json", "{ type: \"error\", message: \"unknown session\" }", "");
+				HANDLE_UNK_SESSION
+
+				auto account_itor = account_info_.find(str_tolower(itor->second.user_id));
+
+				if(account_itor == account_info_.end()) {
+					fprintf(stderr, "Error: Unknown user: %s / %d\n", itor->second.user_id.c_str(), (int)account_info_.size());
+					send_msg(socket, "text/json", "{ type: \"error\", message: \"unknown user\" }", "");
 				} else {
+					std::vector<variant> args;
+					args.push_back(variant(this));
+					args.push_back(doc);
+					args.push_back(variant(itor->second.user_id));
+					args.push_back(account_itor->second.account_info["info"]);
 
-					auto account_itor = account_info_.find(str_tolower(itor->second.user_id));
+					static const variant TrxVar("trx");
 
-					if(account_itor == account_info_.end()) {
-						fprintf(stderr, "Error: Unknown user: %s / %d\n", itor->second.user_id.c_str(), (int)account_info_.size());
-						send_msg(socket, "text/json", "{ type: \"error\", message: \"unknown user\" }", "");
-					} else {
-						std::vector<variant> args;
-						args.push_back(variant(this));
-						args.push_back(doc);
-						args.push_back(variant(itor->second.user_id));
-						args.push_back(account_itor->second.account_info["info"]);
-
-						static const variant TrxVar("trx");
-
-						variant trx = doc[TrxVar];
-						if(trx.is_string()) {
-							auto res = confirmed_trx_.insert(trx.as_string());
-							if(res.second == false) {
-								variant_builder response;
-								response.add("type", "trx_confirmed");
-								response.add("confirm_trx", trx.as_string());
-								send_msg(socket, "text/json", response.build().write_json(), "");
-								return;
-							}
+					variant trx = doc[TrxVar];
+					if(trx.is_string()) {
+						auto res = confirmed_trx_.insert(trx.as_string());
+						if(res.second == false) {
+							variant_builder response;
+							response.add("type", "trx_confirmed");
+							response.add("confirm_trx", trx.as_string());
+							send_msg(socket, "text/json", response.build().write_json(), "");
+							return;
 						}
-
-						variant cmd = handle_request_fn_(args);
-						executeCommand(cmd);
-
-						if(current_response_.is_map() && trx.is_string()) {
-							current_response_ = current_response_.add_attr(TrxVar, trx);
-						}
-
-						send_msg(socket, "text/json", current_response_.write_json(), "");
-						current_response_ = variant();
 					}
+
+					variant cmd = handle_request_fn_(args);
+					executeCommand(cmd);
+
+					if(current_response_.is_map() && trx.is_string()) {
+						current_response_ = current_response_.add_attr(TrxVar, trx);
+					}
+
+					send_msg(socket, "text/json", current_response_.write_json(), "");
+					current_response_ = variant();
 				}
 			}
 
