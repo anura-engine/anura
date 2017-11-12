@@ -143,6 +143,8 @@ namespace http
 	{
 		if(port) {
 			acceptor_.reset(new boost::asio::ip::tcp::acceptor(io_service, tcp::endpoint(tcp::v4(), port)));
+			boost::asio::socket_base::reuse_address option(true);
+			acceptor_->set_option(option);
 		}
 
 		start_accept();
