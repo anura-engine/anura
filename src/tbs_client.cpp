@@ -37,6 +37,7 @@
 namespace tbs 
 {
 	PREF_BOOL(tbs_client_prediction, false, "Use client-side prediction for tbs games");
+	PREF_INT(tbs_fake_error_rate, 0, "Percentage error rate for tbs connections; used to debug issues");
 
 	client::client(const std::string& host, const std::string& port,
 				   int session, boost::asio::io_service* service)
@@ -85,7 +86,22 @@ namespace tbs
 	void client::recv_handler(const std::string& msg)
 	{
 		if(handler_) {
-			variant v = game_logic::deserialize_doc_with_objects(msg);
+			variant v;
+			
+			try {
+				v = game_logic::deserialize_doc_with_objects(msg);
+			} catch(validation_failure_exception& e) {
+				error_handler("FSON Parse error");
+				return;
+			} catch(json::ParseError& e) {
+				error_handler("FSON Parse error");
+				return;
+			}
+
+			if(g_tbs_fake_error_rate > 0 && rand()%100 < g_tbs_fake_error_rate) {
+				error_handler("Fake error");
+				return;
+			}
 
 			static const std::string UnderTypeStr = "__type";
 			static const variant MultiMessageVariant("multimessage");
