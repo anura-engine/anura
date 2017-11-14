@@ -89,6 +89,7 @@ namespace tbs
 			variant v;
 			
 			try {
+				const assert_recover_scope guard;
 				v = game_logic::deserialize_doc_with_objects(msg);
 			} catch(validation_failure_exception& e) {
 				error_handler("FSON Parse error");
