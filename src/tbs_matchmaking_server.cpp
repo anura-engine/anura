@@ -436,6 +436,19 @@ public:
 		timer_.async_wait(boost::bind(&matchmaking_server::heartbeat, this, boost::asio::placeholders::error));
 	}
 
+	std::string get_dbdate(time_t cur_time)
+	{
+		char buf[1024];
+		tm* ltime = localtime(&cur_time);
+
+		const int year = ltime->tm_year + 1900;
+		const int month = ltime->tm_mon + 1;
+		const int mday = ltime->tm_mday;
+
+		snprintf(buf, sizeof(buf), "%d:%d:%d", year, month, mday);
+		return buf;
+	}
+
 	void write_stats(time_t cur_time)
 	{
 		variant_builder doc;
@@ -445,17 +458,33 @@ public:
 
 		variant v = doc.build();
 
-		tm* ltime = localtime(&cur_time);
+		std::string dbtime = get_dbdate(cur_time);
 
-		const int year = ltime->tm_year + 1900;
-		const int month = ltime->tm_mon + 1;
-		const int mday = ltime->tm_mday;
+		LOG_INFO("Logging server_stats: " << dbtime);
 
-		LOG_INFO("Logging server_stats: " << year << ":" << month << ":" << mday);
-
-		std::string key = formatter() << "server_stats:" << year << ":" << month << ":" << mday;
+		std::string key = formatter() << "server_stats:" << dbtime;
 
 		db_client_->put(key.c_str(), v, [](){}, [](){}, DbClient::PUT_APPEND);
+	}
+
+	void record_stats(variant record)
+	{
+		std::string table = record["table"].as_string();
+		if(table.size() > 64) {
+			LOG_INFO("Invalid table name: " << table);
+			return;
+		}
+
+		for(char c : table) {
+			if(!isalnum(c) && c != '_') {
+				LOG_INFO("Invalid table name: " << table);
+				return;
+			}
+		}
+
+		std::string key = "table:" + table + ":" + get_dbdate(time(nullptr));
+		db_client_->put(key.c_str(), record, [](){}, [](){}, DbClient::PUT_APPEND);
+		
 	}
 
 #define RESPOND_CUSTOM_MESSAGE(type, msg) { \
@@ -510,7 +539,20 @@ public:
 			assert_recover_scope recover_scope;
 			std::string request_type = doc["type"].as_string();
 
-			if(request_type == "anon_request") {
+			if(request_type == "httpget") {
+				std::string path = doc["path"].as_string();
+
+				std::map<variant,variant> args = doc["args"].as_map();
+
+				std::map<std::string,std::string> string_args;
+				for(auto p : args) {
+					string_args[p.first.as_string()] = p.second.as_string();
+				}
+
+				handleGet(socket, path, string_args);
+				return;
+
+			} else if(request_type == "anon_request") {
 
 				if(handle_anon_request_fn_.is_function()) {
 					std::vector<variant> args;
@@ -951,6 +993,26 @@ public:
 
 				remove_logged_in_user(info.user_id);
 				sessions_.erase(session_id);
+
+			} else if(request_type == "stats") {
+				if(sessions_.count(session_id) == 0) {
+					RESPOND_MESSAGE("Invalid session ID");
+					return;
+				}
+
+				variant_builder response;
+				response.add("type", "ack");
+				send_response(socket, response.build());
+
+				SessionInfo& info = sessions_[session_id];
+
+				variant records = doc["records"];
+				for(variant r : records.as_list()) {
+					r.add_attr_mutation(variant("user"), variant(info.user_id));
+					r.add_attr_mutation(variant("timestamp"), variant(static_cast<int>(time(nullptr))));
+
+					record_stats(r);
+				}
 
 			} else if(request_type == "quit_game") {
 
@@ -1773,6 +1835,69 @@ public:
 		fprintf(stderr, "handleGet(%s)\n", url.c_str());
 		if(url == "/tbs_monitor") {
 			send_msg(socket, "text/json", build_status().write_json(), "");
+		} else if(url == "/stats") {
+			auto table = args.find("table");
+			auto dates = args.find("dates");
+
+			variant_builder r;
+
+			if(table == args.end()) {
+				r.add("type", "error");
+				r.add("message", "Must include table argument");
+				send_msg(socket, "text/plain", r.build().write_json(), "");
+				return;
+			}
+
+			std::vector<std::string> items;
+			if(dates != args.end()) {
+				items = util::split(dates->second);
+			} else {
+				char buf[1024];
+				time_t cur_time = time(nullptr);
+				tm* ltime = localtime(&cur_time);
+
+				const int year = ltime->tm_year + 1900;
+				const int month = ltime->tm_mon + 1;
+				const int mday = ltime->tm_mday;
+
+				for(int n = 0; n != 32; ++n) {
+					int day = mday - n;
+					if(day <= 0) {
+						day = 32 + day;
+					}
+
+					char buf[1024];
+					snprintf(buf, sizeof(buf), "%d:%d:%d", year, month, day);
+					items.push_back(buf);
+				}
+			}
+
+			std::shared_ptr<std::vector<variant>> results(new std::vector<variant>);
+
+			const size_t nitems = items.size();
+
+			for(auto s : items) {
+				std::string key = "table:" + table->second + ":" + s;
+
+				db_client_->get(key, [=](variant data) {
+					results->push_back(data);
+					if(results->size() == nitems) {
+						std::vector<variant> records;
+						for(auto v : *results) {
+							if(v.is_list()) {
+								auto list = v.as_list();
+								records.insert(records.end(), list.begin(), list.end());
+							}
+						}
+
+						variant_builder doc;
+						doc.add("records", variant(&records));
+						send_msg(socket, "text/json", doc.build().write_json(), "");
+						
+					}
+				}, 0, DbClient::GET_LIST);
+			}
+			
 		} else if(url == "/recent_games") {
 
 			auto user = args.find("user");
