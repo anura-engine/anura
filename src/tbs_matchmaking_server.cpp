@@ -59,14 +59,12 @@
 #include "variant.hpp"
 #include "variant_utils.hpp"
 
-// secure-CRT_functions are only available starting with VC8
-#if _MSC_VER < 1400
-#define strcpy_s(dst, len, src) strcpy(dst, src)
-#define strncpy_s(dst, len, src, maxLen) strncpy(dst, len, src)
-#define strcat_s(dst, len, src) strcat(dst, src)
-#define _snprintf_s _snprintf
-#define _tcscat_s _tcscat
-#endif
+#ifdef _MSC_VER
+#if _MSC_VER < 1900
+#define snprintf _snprintf
+#endif // _MSC_VER < 1900
+#endif // _MSC_VER
+
 
 using namespace tbs;
 
