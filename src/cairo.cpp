@@ -48,10 +48,26 @@
 #include "formula_object.hpp"
 #include "formula_profiler.hpp"
 #include "module.hpp"
+#include "preferences.hpp"
 #include "string_utils.hpp"
 #include "TextureObject.hpp"
 #include "unit_test.hpp"
 #include "utf8_to_codepoint.hpp"
+#include "variant_utils.hpp"
+
+namespace {
+PREF_STRING(cairo_texture_filtering, "bilinear", "Filtering for cairo textures");
+PREF_INT(cairo_texture_mipmaps, 2, "Mipmaps for cairo textures");
+
+variant get_default_texture_settings()
+{
+	variant_builder b;
+	b.add("filtering", g_cairo_texture_filtering);
+	b.add("mipmaps", g_cairo_texture_mipmaps);
+	return b.build();
+}
+
+}
 
 namespace graphics
 {
@@ -292,7 +308,13 @@ namespace {
 		}
 
 		surf->createAlphaMap();
-		KRE::TexturePtr t = KRE::Texture::createTexture(surf, node);
+
+		static variant settings = get_default_texture_settings();
+		if(node.is_map()) {
+			settings = settings + node;
+		}
+
+		KRE::TexturePtr t = KRE::Texture::createTexture(surf, settings);
 		return t;
 		//tex->update2D(0, 0, 0, width_, height_, cairo_image_surface_get_stride(surface_), cairo_image_surface_get_data(surface_));
 		// Use the blend mode below to give correct for pre-multiplied alpha.
