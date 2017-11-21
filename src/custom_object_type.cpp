@@ -57,6 +57,19 @@ using game_logic::FormulaCallableDefinitionPtr;
 
 PREF_BOOL(auto_anchor_objects, false, "Auto-anchors an object based on x/mid_x/x2 based on what attributes are set when spawning them.");
 
+
+static const std::string DefaultVertexShaderStr(
+    "uniform mat4 u_anura_mvp_matrix;\n"
+    "attribute vec4 a_anura_vertex;\n"
+	"attribute vec2 a_anura_texcoord;\n"
+	"varying vec2 v_texcoord;\n"
+	"void main()\n"
+	"{\n"
+		"v_texcoord = a_anura_texcoord;\n"
+		"gl_Position = u_anura_mvp_matrix * a_anura_vertex;\n"
+	"}\n"
+);
+
 // XXX make this a static function in CustomObjectType
 std::map<std::string, std::string>& prototype_file_paths() 
 {
@@ -1701,35 +1714,34 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 		} else {
 			variant shader_info = node["shader"];
 
+			if(shader_info.has_key("flags")) {
+				variant flags = shader_info["flags"];
+				for(variant f : flags.as_list()) {
+					std::string prop = f.as_string();
+					auto it = properties().find(prop);
+					ASSERT_LOG(it != properties().end(), "Shader flag for " << id_ << " has invalid property: " << prop);
+					shader_flags_.push_back(&it->second);
+					ASSERT_LOG(shader_flags_.size() <= MAX_CUSTOM_OBJECT_SHADER_FLAGS, "Object " << id_ << " has too many shader flags. Only " << MAX_CUSTOM_OBJECT_SHADER_FLAGS << " allowed");
+				}
+
+				shader_node_ = shader_info;
+			}
+
 			const std::string shader_name = write_uuid(generate_uuid());
 			shader_info = shader_info.add_attr(variant("name"), variant(shader_name));
 
 			if(shader_info.has_key("fragment")) {
-				if(shader_info.has_key("name") == false) {
-					static int shader_num = 1;
-					shader_info = shader_info.add_attr(variant("name"), variant(formatter() << "shader" << shader_num));
-					++shader_num;
-				}
 
 				if(shader_info.has_key("vertex") == false) {
-					static variant DefaultVertexShader(
-				        "uniform mat4 u_anura_mvp_matrix;\n"
-   		 			    "attribute vec4 a_anura_vertex;\n"
-  						"attribute vec2 a_anura_texcoord;\n"
-						"varying vec2 v_texcoord;\n"
-						"void main()\n"
-						"{\n"
-							"v_texcoord = a_anura_texcoord;\n"
-							"gl_Position = u_anura_mvp_matrix * a_anura_vertex;\n"
-						"}\n"
-					);
 
+					static variant DefaultVertexShader(DefaultVertexShaderStr);
 					shader_info = shader_info.add_attr(variant("vertex"), DefaultVertexShader);
 				}
 			}
 			
 			KRE::ShaderProgram::loadFromVariant(shader_info);
 			shader_ = graphics::AnuraShaderPtr(new graphics::AnuraShader(shader_name));
+
 		}
 		//LOG_DEBUG("Added shader '" << shader_->getName() << "' for CustomObjectType '" << id_ << "'");
 	}
@@ -1948,6 +1960,46 @@ void CustomObjectType::loadVariations() const
 	for(const std::string& v : variations_to_load) {
 		getVariation(std::vector<std::string>(1, v));
 	}
+}
+
+graphics::AnuraShaderPtr CustomObjectType::getShaderWithParms(unsigned int flags) const
+{
+	if(flags == 0) {
+		return shader_;
+	}
+
+	if(flags >= shader_variants_.size()) {
+		shader_variants_.resize(flags+1);
+	}
+
+	if(shader_variants_[flags].get() == nullptr) {
+		variant shader_info = shader_node_;
+
+		const std::string shader_name = write_uuid(generate_uuid());
+		shader_info = shader_info.add_attr(variant("name"), variant(shader_name));
+
+		std::string frag = shader_info["fragment"].as_string();
+		std::string header = "";
+		for(unsigned int n = 0; n < shader_flags_.size(); ++n) {
+			if(flags&(1 << n)) {
+				header += "#define FLAG_" + shader_flags_[n]->id + "\n";
+			}
+		}
+
+		frag = header + frag;
+
+		shader_info = shader_info.add_attr(variant("fragment"), variant(frag));
+
+		if(shader_info.has_key("vertex") == false) {
+			static variant DefaultVertexShader(DefaultVertexShaderStr);
+			shader_info = shader_info.add_attr(variant("vertex"), DefaultVertexShader);
+		}
+	
+		KRE::ShaderProgram::loadFromVariant(shader_info);
+		shader_variants_[flags] = graphics::AnuraShaderPtr(new graphics::AnuraShader(shader_name));
+	}
+
+	return shader_variants_[flags];
 }
 
 using namespace game_logic;

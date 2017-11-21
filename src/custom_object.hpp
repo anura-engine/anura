@@ -580,6 +580,7 @@ private:
 #endif
 
 	graphics::AnuraShaderPtr shader_;
+	unsigned int shader_flags_;
 	std::vector<graphics::AnuraShaderPtr> effects_shaders_;
 
 	// new particles systems

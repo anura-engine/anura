@@ -45,6 +45,8 @@
 
 #include "ParticleSystemFwd.hpp"
 
+#define MAX_CUSTOM_OBJECT_SHADER_FLAGS 12
+
 class CustomObjectType;
 
 typedef std::shared_ptr<CustomObjectType> CustomObjectTypePtr;
@@ -290,7 +292,10 @@ public:
 	bool autoAnchor() const { return auto_anchor_; }
 
 	graphics::AnuraShaderPtr getShader() const { return shader_; }
+	graphics::AnuraShaderPtr getShaderWithParms(unsigned int flags) const;
 	const std::vector<graphics::AnuraShaderPtr>& getEffectsShaders() const { return effects_shaders_; }
+
+	const std::vector<const PropertyEntry*>& getShaderFlags() const { return shader_flags_; }
 
 	xhtml::DocumentObjectPtr getDocument() const { return document_; }
 
@@ -442,6 +447,11 @@ private:
 	variant lua_node_;
 	mutable std::shared_ptr<lua::CompiledChunk> lua_compiled_;
 #endif
+
+	std::vector<const PropertyEntry*> shader_flags_;
+	variant shader_node_;
+
+	mutable std::vector<graphics::AnuraShaderPtr> shader_variants_;
 
 	graphics::AnuraShaderPtr shader_;
 	std::vector<graphics::AnuraShaderPtr> effects_shaders_;	

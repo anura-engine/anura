@@ -204,6 +204,7 @@ CustomObject::CustomObject(variant node)
 	currently_handling_die_event_(0),
 	use_absolute_screen_coordinates_(node["use_absolute_screen_coordinates"].as_bool(type_->useAbsoluteScreenCoordinates())),
 	paused_(false),
+	shader_flags_(0),
 	particles_(),
 	document_(nullptr)
 {
@@ -577,6 +578,7 @@ CustomObject::CustomObject(const std::string& type, int x, int y, bool face_righ
 	currently_handling_die_event_(0),
 	use_absolute_screen_coordinates_(type_->useAbsoluteScreenCoordinates()),
 	paused_(false),
+	shader_flags_(0),
 	particles_(),
 	document_(nullptr)
 {
@@ -728,6 +730,7 @@ CustomObject::CustomObject(const CustomObject& o)
 	//and re-seating references is difficult.
 	//widgets_(o.widgets_),
 	paused_(o.paused_),
+	shader_flags_(0),
 	particles_(o.particles_),
 	document_(nullptr)
 {
@@ -2565,6 +2568,37 @@ void CustomObject::staticProcess(Level& lvl)
 
 	for(const LightPtr& p : lights_) {
 		p->process();
+	}
+
+	const std::vector<const CustomObjectType::PropertyEntry*>& shader_flags = type_->getShaderFlags();
+	if(shader_flags.empty() == false) {
+		unsigned int flags = 0;
+
+		for(unsigned int n = 0; n < shader_flags.size(); ++n) {
+			const CustomObjectType::PropertyEntry& e = *shader_flags[n];
+			variant result;
+			if(e.getter) {
+				ActivePropertyScope scope(*this, e.storage_slot);
+				result = e.getter->execute(*this);
+			} else if(e.const_value) {
+				result = *e.const_value;
+			} else if(e.storage_slot >= 0) {
+				result = get_property_data(e.storage_slot);
+				result.strengthen();
+			} else {
+				ASSERT_LOG(false, "Illegal property: " << e.id);
+			}
+
+			if(result.as_bool()) {
+				flags = flags | (1 << n);
+			}
+		}
+
+		if(flags != shader_flags_) {
+			shader_flags_ = flags;
+			shader_ = graphics::AnuraShaderPtr(new graphics::AnuraShader(*type_->getShaderWithParms(shader_flags_)));
+			shader_->setParent(this);
+		}
 	}
 }
 
