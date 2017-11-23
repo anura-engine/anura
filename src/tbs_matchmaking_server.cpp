@@ -3219,6 +3219,15 @@ BEGIN_DEFINE_FN(has_processed_trx, "(string) ->bool")
 	return variant::from_bool(obj.trx_confirmed_.count(FN_ARG(0).as_string()) != 0);
 END_DEFINE_FN
 
+BEGIN_DEFINE_FN(record_stats, "(map) ->commands")
+	variant v = FN_ARG(0);
+	matchmaking_server* mm_obj = const_cast<matchmaking_server*>(&obj);
+	return variant(new game_logic::FnCommandCallable("record_stats", [=]() {
+		mm_obj->record_stats(v);
+	}));
+	
+END_DEFINE_FN
+
 END_DEFINE_CALLABLE(matchmaking_server)
 
 void matchmaking_server::executeCommand(variant cmd)
