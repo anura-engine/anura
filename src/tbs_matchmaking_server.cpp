@@ -490,6 +490,7 @@ public:
 		}
 
 		std::string key = "table:" + table + ":" + get_dbdate(time(nullptr));
+		record.add_attr_mutation(variant("timestamp"), variant(static_cast<int>(time(nullptr))));
 		db_client_->put(key.c_str(), record, [](){}, [](){}, DbClient::PUT_APPEND);
 		
 	}
@@ -1016,7 +1017,6 @@ public:
 				variant records = doc["records"];
 				for(variant r : records.as_list()) {
 					r.add_attr_mutation(variant("user"), variant(info.user_id));
-					r.add_attr_mutation(variant("timestamp"), variant(static_cast<int>(time(nullptr))));
 
 					record_stats(r);
 				}
