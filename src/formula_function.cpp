@@ -3684,6 +3684,8 @@ FUNCTION_DEF_IMPL
 			types.push_back(args()[0]->queryVariantType()->is_list_of());
 			if(NUM_ARGS > 1) {
 				types.push_back(args()[1]->queryVariantType());
+			} else {
+				types.push_back(variant_type::get_type(variant::VARIANT_TYPE_INT));
 			}
 
 			return variant_type::get_union(types);
