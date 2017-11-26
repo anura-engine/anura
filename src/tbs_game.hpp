@@ -185,6 +185,7 @@ namespace tbs
 		std::vector<std::string> replay_;
 		mutable variant replay_last_;
 		variant winner_;
+		variant server_report_;
 
 		int start_timestamp_;
 
