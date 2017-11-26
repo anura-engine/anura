@@ -130,12 +130,18 @@ void VirtualMachine::executeInternal(const FormulaCallable& variables, std::vect
 			break;
 		}
 
+		case OP_IS_NOT:
 		case OP_IS: {
 			variant& left = stack[stack.size()-2];
 			variant& right = stack[stack.size()-1];
 
 			variant_type_ptr t(right.convert_to<variant_type>());
-			left = variant::from_bool(t->match(left));
+			if (*p == OP_IS) {
+				left = variant::from_bool(t->match(left));
+			} else {
+				assert(*p == OP_IS_NOT);
+				left = variant::from_bool(!t->match(left));
+			}
 			stack.pop_back();
 			break;
 		}
@@ -1154,6 +1160,7 @@ const char* getOpName(VirtualMachine::InstructionType op) {
 
 	switch(op) {
 		  DEF_OP(OP_IN) DEF_OP(OP_NOT_IN) DEF_OP(OP_AND) DEF_OP(OP_OR) DEF_OP(OP_NEQ) DEF_OP(OP_LTE) DEF_OP(OP_GTE) DEF_OP(OP_IS)
+	DEF_OP(OP_IS_NOT)
 
 		  DEF_OP(OP_UNARY_NOT) DEF_OP(OP_UNARY_SUB) DEF_OP(OP_UNARY_STR) DEF_OP(OP_UNARY_NUM_ELEMENTS)
 

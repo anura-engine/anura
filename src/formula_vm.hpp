@@ -37,6 +37,7 @@ enum OP {
 		  // PUSH: 1
 		  // ARGS: NONE
 		  OP_IN, OP_NOT_IN, OP_AND, OP_OR, OP_NEQ, OP_LTE, OP_GTE, OP_IS,
+	OP_IS_NOT,
 
 		  //Unary operations which operate on the top item on
 		  //the stack replacing it with the result
@@ -179,7 +180,10 @@ enum OP {
 		  // POP: 1
 		  // PUSH: 0
 		  // ARGS: NONE
-		  OP_POP,
+	//   Previously at position 36, now listed the position 37th but
+	// that ordinal is already taken by OP_MOD, because '%' is the
+	// character number 37, so must receive an explicit value.
+	OP_POP = 38,
 
 		  //Binary operators
 		  // POP: 2
