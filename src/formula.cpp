@@ -4779,7 +4779,7 @@ static std::string debugSubexpressionTypes(ConstFormulaPtr & fml)
 			int consume_backwards = 0;
 			std::string op_name(op->begin,op->end);
 
-			if (op_name == "is" && op > i1 && op + 1 > i1 &&
+			if (op_name == "is" && op + 1 > i1 && op + 1 < i2 &&
 					std::string((op + 1)->begin, (op + 1)->end) == "not") {
 				op_name = "is not";
 			}

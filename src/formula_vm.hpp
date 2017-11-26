@@ -180,9 +180,11 @@ enum OP {
 		  // POP: 1
 		  // PUSH: 0
 		  // ARGS: NONE
-	//   Previously at position 36, now listed the position 37th but
-	// that ordinal is already taken by OP_MOD, because '%' is the
-	// character number 37, so must receive an explicit value.
+	//   Previously at position 36, now listed at position 37.
+	// Because enum ordinal 37 is already taken explicity by OP_MOD
+	// (because of '%' being the character number 37), this is
+	// getting an explicit value too, in order to avoid collisions
+	// in C++ `switch` constructions.
 	OP_POP = 38,
 
 		  //Binary operators
