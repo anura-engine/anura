@@ -352,6 +352,12 @@ namespace
 
 } //namespace
 
+//   Meant to apply to only-online or mainly-online games while not
+// impacting standalone and mainly-offline games. The `citadel` module
+// would use this, and the default value is taylored to the pre existing
+// behavior of the module. The `frogatto` module does not use this.
+PREF_BOOL(remember_me, true, "Remember me (my gamer account) when connecting to the server");
+
 void auto_select_resolution(const KRE::WindowPtr& wm, int *width, int *height, bool reduce)
 {
 	ASSERT_LOG(width != nullptr, "width is null.");
