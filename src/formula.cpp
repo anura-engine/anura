@@ -3200,8 +3200,11 @@ namespace {
 
 		class IsExpression : public FormulaExpression {
 		public:
-			IsExpression(variant_type_ptr type, ExpressionPtr expr)
-				: FormulaExpression("_is"), type_(type), expression_(expr)
+			IsExpression(
+					variant_type_ptr type, ExpressionPtr expr,
+					bool negative = false)
+				: FormulaExpression("_is"), type_(type)
+				, expression_(expr), negative_(negative)
 			{
 			}
 
@@ -3212,7 +3215,9 @@ namespace {
 
 			variant execute(const FormulaCallable& variables) const override {
 				const variant value = expression_->evaluate(variables);
-				return variant::from_bool(type_->match(value));
+				bool matching = type_->match(value);
+				return variant::from_bool(
+						negative_ ? !matching : matching);
 			}
 
 			std::vector<ConstExpressionPtr> getChildren() const override {
@@ -3227,7 +3232,7 @@ namespace {
 					formula_vm::VirtualMachine vm;
 					expression_->emitVM(vm);
 					vm.addLoadConstantInstruction(variant(type_.get()));
-					vm.addInstruction(OP_IS);
+					vm.addInstruction(negative_ ? OP_IS_NOT : OP_IS);
 					return ExpressionPtr(new VMExpression(vm, queryVariantType(), *this));
 				}
 				return ExpressionPtr();
@@ -3243,6 +3248,7 @@ namespace {
 
 			variant_type_ptr type_;
 			ExpressionPtr expression_;
+			bool negative_;
 		};
 
 		class StaticTypeExpression : public FormulaExpression {
@@ -4773,6 +4779,11 @@ static std::string debugSubexpressionTypes(ConstFormulaPtr & fml)
 			int consume_backwards = 0;
 			std::string op_name(op->begin,op->end);
 
+			if (op_name == "is" && op + 1 > i1 && op + 1 < i2 &&
+					std::string((op + 1)->begin, (op + 1)->end) == "not") {
+				op_name = "is not";
+			}
+
 			if(op_name == "in" && op > i1 && op-1 > i1 && std::string((op-1)->begin, (op-1)->end) == "not") {
 				op_name = "not in";
 				consume_backwards = 1;
@@ -4789,6 +4800,19 @@ static std::string debugSubexpressionTypes(ConstFormulaPtr & fml)
 				} else {
 					return ExpressionPtr(new StaticTypeExpression(type, right));
 				}
+			}
+
+			if (op_name == "is not") {
+				const Token* type_tok = op + 2;
+				variant_type_ptr type = parse_variant_type(
+						formula_str, type_tok, i2);
+				ASSERT_LOG(type_tok == i2, "Unexpected tokens after type: " <<  pinpoint_location(formula_str, type_tok->begin, (i2-1)->end));
+
+				ExpressionPtr left(parse_expression(
+						formula_str, i1, op, symbols,
+						callable_def, can_optimize));
+				return ExpressionPtr(new IsExpression(
+						type, left, true));
 			}
 
 			if(op_name == "is") {
@@ -5381,6 +5405,37 @@ UNIT_TEST(formula_in) {
 	CHECK(Formula(variant("5 in [4,5,6]")).execute() == variant::from_bool(true), "test failed");
 	CHECK(Formula(variant("5 not in [4,5,6]")).execute() == variant::from_bool(false), "test failed");
 	CHECK(Formula(variant("8 not in [4,5,6]")).execute() == variant::from_bool(true), "test failed");
+}
+
+//   'is [not] null'.
+UNIT_TEST(formula_is) {
+	CHECK(Formula(variant("a is null where a = null")).execute() == variant::from_bool(true), "test failed");
+	CHECK(Formula(variant("a is int where a = null")).execute() == variant::from_bool(false), "test failed");
+	CHECK(Formula(variant("a is list where a = null")).execute() == variant::from_bool(false), "test failed");
+	CHECK(Formula(variant("a is null where a = 0")).execute() == variant::from_bool(false), "test failed");
+	CHECK(Formula(variant("a is int where a = 0")).execute() == variant::from_bool(true), "test failed");
+	CHECK(Formula(variant("a is list where a = 0")).execute() == variant::from_bool(false), "test failed");
+	CHECK(Formula(variant("a is null where a = [0]")).execute() == variant::from_bool(false), "test failed");
+	CHECK(Formula(variant("a is int where a = [0]")).execute() == variant::from_bool(false), "test failed");
+	CHECK(Formula(variant("a is list where a = [0]")).execute() == variant::from_bool(true), "test failed");
+	CHECK(Formula(variant("not a is null where a = null")).execute() == variant::from_bool(false), "test failed");
+	CHECK(Formula(variant("not a is int where a = null")).execute() == variant::from_bool(true), "test failed");
+	CHECK(Formula(variant("not a is list where a = null")).execute() == variant::from_bool(true), "test failed");
+	CHECK(Formula(variant("not a is null where a = 0")).execute() == variant::from_bool(true), "test failed");
+	CHECK(Formula(variant("not a is int where a = 0")).execute() == variant::from_bool(false), "test failed");
+	CHECK(Formula(variant("not a is list where a = 0")).execute() == variant::from_bool(true), "test failed");
+	CHECK(Formula(variant("not a is null where a = [0]")).execute() == variant::from_bool(true), "test failed");
+	CHECK(Formula(variant("not a is int where a = [0]")).execute() == variant::from_bool(true), "test failed");
+	CHECK(Formula(variant("not a is list where a = [0]")).execute() == variant::from_bool(false), "test failed");
+	CHECK(Formula(variant("a is not null where a = null")).execute() == variant::from_bool(false), "test failed");
+	CHECK(Formula(variant("a is not int where a = null")).execute() == variant::from_bool(true), "test failed");
+	CHECK(Formula(variant("a is not list where a = null")).execute() == variant::from_bool(true), "test failed");
+	CHECK(Formula(variant("a is not null where a = 0")).execute() == variant::from_bool(true), "test failed");
+	CHECK(Formula(variant("a is not int where a = 0")).execute() == variant::from_bool(false), "test failed");
+	CHECK(Formula(variant("a is not list where a = 0")).execute() == variant::from_bool(true), "test failed");
+	CHECK(Formula(variant("a is not null where a = [0]")).execute() == variant::from_bool(true), "test failed");
+	CHECK(Formula(variant("a is not int where a = [0]")).execute() == variant::from_bool(true), "test failed");
+	CHECK(Formula(variant("a is not list where a = [0]")).execute() == variant::from_bool(false), "test failed");
 }
 
 UNIT_TEST(formula_fn) {
