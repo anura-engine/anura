@@ -381,6 +381,16 @@ void Entity::drawDebugRects() const
 		wnd->render(&body_rr);
 	}
 
+	rect platform = platformRect();
+	if(platform.w() > 0) {
+		if(platform.h() < 2) {
+			platform = rect(platform.x(), platform.y(), platform.w(), 2);
+		}
+		RectRenderable platform_rr(true, true);
+		platform_rr.update(platform, rotation, KRE::Color(0,255,0,0xaa));
+		wnd->render(&platform_rr);
+	}
+
 	const rect& hit = getHitRect();
 	if(hit.w() > 0 && hit.h() > 0) {
 		RectRenderable hit_rr(true, true);
