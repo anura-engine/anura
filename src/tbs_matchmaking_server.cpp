@@ -2041,11 +2041,14 @@ private:
 		return static_cast<int>(session_ids.size() - match_sessions.size());
 	}
 
-	void begin_match(const std::vector<int>& match_sessions)
+	void begin_match(std::vector<int> match_sessions)
 	{
 #if defined(_MSC_VER)
 		return;
 #else
+
+		std::random_shuffle(match_sessions.begin(), match_sessions.end());
+
 		if(!available_ports_.empty()) {
 			//spawn off a server to play this game.
 			std::string fname = formatter() << "/tmp/anura_tbs_server." << match_sessions.front();
