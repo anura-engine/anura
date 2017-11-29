@@ -4692,18 +4692,23 @@ FUNCTION_DEF_IMPL
 		}
 
 		FUNCTION_DEF(dump, 1, 2, "dump(msg[, expr]): evaluates and returns expr. Will print 'msg' to stderr if it's printable, or execute it if it's an executable command.")
-			variant literal;
-			if(NUM_ARGS == 2 && args()[0]->isLiteral(literal) && literal.is_string()) {
-				variant res = EVAL_ARG(1);
-				debug_side_effect(literal, &res);
-				return res;
+
+			variant a = EVAL_ARG(0);
+
+			variant b;
+			if(NUM_ARGS > 1) {
+				b = EVAL_ARG(1);
+
+				if(a.is_string() && a != b) {
+					a = variant(a.as_string() + ": " + b.to_debug_string());
+				}
 			} else {
-				debug_side_effect(EVAL_ARG(0));
+				b = a;
 			}
 
-			variant res = EVAL_ARG(NUM_ARGS-1);
+			debug_side_effect(a);
+			return b;
 
-			return res;
 		FUNCTION_TYPE_DEF
 			return args().back()->queryVariantType();
 		END_FUNCTION_DEF(dump)
