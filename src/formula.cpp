@@ -3734,6 +3734,7 @@ namespace {
 				ASSERT_LOG(false, "Invalid function definition\n" << pinpoint_location(formula_str, i1->begin, (i2-1)->end));
 			}
 			++i1;
+			ASSERT_LOG(i1 != i2, "Unexpected end of function definition (missing return type definition): " << pinpoint_location(formula_str, (i1-1)->begin, (i1-1)->end));
 
 			if(i1 != i2 && i1->type == FFL_TOKEN_TYPE::POINTER) {
 				++i1;
@@ -4199,6 +4200,7 @@ static std::string debugSubexpressionTypes(ConstFormulaPtr & fml)
 			while((i1 != i2) && (i1->type != FFL_TOKEN_TYPE::SEMICOLON || formula_name.empty())) {
 				++i1;
 			}
+			ASSERT_LOG(beg != i2, "Unexpected end of function definition (missing return value definition): " << pinpoint_location(formula_str, (i1-1)->begin, (i1-1)->end));
 			const std::string function_str = std::string(beg->begin, (i1-1)->end);
 			variant function_var(function_str);
 			if(formula_str.get_debug_info()) {
