@@ -4592,6 +4592,26 @@ FUNCTION_DEF_IMPL
 			}
 
 			std::string str;
+			auto info = getParentFormula().get_debug_info();
+			if(info && info->filename != nullptr) {
+				std::string fname = *info->filename;
+
+				//cut off everything but the filename
+				std::reverse(fname.begin(), fname.end());
+				auto itor = fname.begin();
+				while(itor != fname.end() && *itor != '/' && *itor != '\\') {
+					++itor;
+				}
+
+				if(itor != fname.end()) {
+					fname.erase(itor, fname.end());
+				}
+				std::reverse(fname.begin(), fname.end());
+
+				//output debug() call site
+				str += (formatter() << fname << ":" << info->line << ": ");
+			}
+
 			for(int n = 0; n != NUM_ARGS; ++n) {
 				if(n > 0) {
 					str += " ";
@@ -4645,9 +4665,13 @@ FUNCTION_DEF_IMPL
 
 		namespace 
 		{
-			void debug_side_effect(variant v)
+			void debug_side_effect(variant v, const variant* v2=nullptr)
 			{
 				std::string s = v.to_debug_string();
+				if(v2) {
+					std::string s2 = v2->to_debug_string();
+					s += ": " + s2;
+				}
 			#ifndef NO_EDITOR
 				bool write_to_console = g_dump_to_console;
 
@@ -4668,7 +4692,15 @@ FUNCTION_DEF_IMPL
 		}
 
 		FUNCTION_DEF(dump, 1, 2, "dump(msg[, expr]): evaluates and returns expr. Will print 'msg' to stderr if it's printable, or execute it if it's an executable command.")
-			debug_side_effect(EVAL_ARG(0));
+			variant literal;
+			if(NUM_ARGS == 2 && args()[0]->isLiteral(literal) && literal.is_string()) {
+				variant res = EVAL_ARG(1);
+				debug_side_effect(literal, &res);
+				return res;
+			} else {
+				debug_side_effect(EVAL_ARG(0));
+			}
+
 			variant res = EVAL_ARG(NUM_ARGS-1);
 
 			return res;
