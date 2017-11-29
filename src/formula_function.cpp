@@ -4586,12 +4586,18 @@ FUNCTION_DEF_IMPL
 			std::string str_;
 		};
 
-		FUNCTION_DEF(debug, 1, -1, "debug(...): outputs arguments to the console")
-			if(!preferences::debug()) {
-				return variant();
-			}
+		FUNCTION_DEF_CTOR(debug, 1, -1, "debug(...): outputs arguments to the console")
 
-			std::string str;
+		FUNCTION_DEF_MEMBERS
+			std::string loc_;
+
+		virtual bool useSingletonVM() const override { return false; }
+		virtual void setDebugInfo(const variant& parent_formula,
+									std::string::const_iterator begin_str,
+									std::string::const_iterator end_str) override
+		{
+			FunctionExpression::setDebugInfo(parent_formula, begin_str, end_str);
+
 			auto info = getParentFormula().get_debug_info();
 			if(info && info->filename != nullptr) {
 				std::string fname = *info->filename;
@@ -4609,8 +4615,16 @@ FUNCTION_DEF_IMPL
 				std::reverse(fname.begin(), fname.end());
 
 				//output debug() call site
-				str += (formatter() << fname << ":" << info->line << ": ");
+				loc_ = (formatter() << fname << ":" << info->line << ": ");
 			}
+		}
+
+		FUNCTION_DEF_IMPL
+			if(!preferences::debug()) {
+				return variant();
+			}
+
+			std::string str = loc_;
 
 			for(int n = 0; n != NUM_ARGS; ++n) {
 				if(n > 0) {
