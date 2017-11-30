@@ -1035,7 +1035,12 @@ int main(int argcount, char* argvec[])
 	graphics::GameScreen::get().setVirtualDimensions(vw, vh);
 	//main_wnd->setWindowIcon(module::map_file("images/window-icon.png"));
 
-	int swap_result = SDL_GL_SetSwapInterval(1);
+	//we prefer late swap tearing so as to minimize frame loss when possible
+	int swap_result = SDL_GL_SetSwapInterval(g_vsync != 0 ? -1 : 0);
+	if(swap_result != 0 && g_vsync != 0) {
+		swap_result = SDL_GL_SetSwapInterval(1);
+	}
+	
 	if(swap_result != 0) {
 		LOG_ERROR("Could not set swap interval with SDL_GL_SetSwapInterval: " << SDL_GetError());
 	}
