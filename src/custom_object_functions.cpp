@@ -631,6 +631,51 @@ namespace
 	RETURN_TYPE("commands")
 	END_FUNCTION_DEF(report)
 
+
+	class engine_performance_info : public game_logic::FormulaCallable
+	{
+	public:
+
+		engine_performance_info()
+		{
+		}
+
+	private:
+		DECLARE_CALLABLE(engine_performance_info);
+	};
+
+	BEGIN_DEFINE_CALLABLE_NOBASE(engine_performance_info)
+		DEFINE_FIELD(platform, "string")
+#ifdef __linux__
+			return variant("linux");
+#elif defined(__APPLE__)
+			return variant("apple");
+#elif defined(_WIN32)
+			return variant("win32");
+#else
+			return variant("unknown");
+#endif
+
+		DEFINE_FIELD(fps, "int") return variant(performance_data::current()->fps);
+		DEFINE_FIELD(max_frame_time, "int") return variant(performance_data::current()->max_frame_time);
+		DEFINE_FIELD(cycles_per_second, "int") return variant(performance_data::current()->cycles_per_second);
+		DEFINE_FIELD(delay, "int") return variant(performance_data::current()->delay);
+		DEFINE_FIELD(draw, "int") return variant(performance_data::current()->draw);
+		DEFINE_FIELD(process, "int") return variant(performance_data::current()->process);
+		DEFINE_FIELD(flip, "int") return variant(performance_data::current()->flip);
+		DEFINE_FIELD(cycle, "int") return variant(performance_data::current()->cycle);
+		DEFINE_FIELD(nevents, "int") return variant(performance_data::current()->nevents);
+		DEFINE_FIELD(ticks, "int") return variant(SDL_GetTicks());
+	END_DEFINE_CALLABLE(engine_performance_info)
+
+	FUNCTION_DEF(get_perf_info, 0, 0, "get_perf_info(): return performance info")
+		return variant(new engine_performance_info);
+
+	FUNCTION_ARGS_DEF
+	RETURN_TYPE("builtin engine_performance_info")
+	END_FUNCTION_DEF(get_perf_info)
+
+
 	namespace 
 	{
 		int show_simple_option_dialog(Level& lvl, const std::string& text, const std::vector<std::string>& options)
