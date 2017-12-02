@@ -824,6 +824,7 @@ COMMAND_LINE_UTILITY(generate_manifest)
 		std::string port = g_module_port;
 
 		std::string src_module, dst_module;
+		std::string upload_passcode;
 
 		std::deque<std::string> arguments(args.begin(), args.end());
 		while(!arguments.empty()) {
@@ -836,6 +837,10 @@ COMMAND_LINE_UTILITY(generate_manifest)
 			} else if(arg == "-p" || arg == "--port") {
 				ASSERT_LOG(arguments.empty() == false, "NEED ARGUMENT AFTER " << arg);
 				port = arguments.front();
+				arguments.pop_front();
+			} else if(arg == "--passcode") {
+				ASSERT_LOG(arguments.empty() == false, "NEED ARGUMENT AFTER " << arg);
+				upload_passcode = arguments.front();
 				arguments.pop_front();
 			} else {
 				ASSERT_LOG(dst_module.empty(), "UNRECOGNIZED ARGUMENT: " << arg);
@@ -855,6 +860,10 @@ COMMAND_LINE_UTILITY(generate_manifest)
 		attr[variant("type")] = variant("replicate_module");
 		attr[variant("src_id")] = variant(src_module);
 		attr[variant("dst_id")] = variant(dst_module);
+
+		if(upload_passcode.empty() == false) {
+			attr[variant("passcode")] = variant(upload_passcode);
+		}
 
 		const std::string msg = variant(&attr).write_json();
 
@@ -961,10 +970,6 @@ COMMAND_LINE_UTILITY(generate_manifest)
 		attr[variant("type")] = variant("prepare_upload_module");
 		attr[variant("module_id")] = variant(module_id);
 
-		if(upload_passcode.empty() == false) {
-			attr[variant("passcode")] = variant(upload_passcode);
-		}
-
 		if(module_id_override != "") {
 			attr[variant("module_id")] = variant(module_id_override);
 			package.add_attr_mutation(variant("id"), variant(module_id_override));
@@ -1035,6 +1040,10 @@ COMMAND_LINE_UTILITY(generate_manifest)
 
 		attr[variant("type")] = variant("upload_module");
 		attr[variant("module")] = package;
+
+		if(upload_passcode.empty() == false) {
+			attr[variant("passcode")] = variant(upload_passcode);
+		}
 
 		const std::string msg = variant(&attr).write_json();
 
