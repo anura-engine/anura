@@ -454,6 +454,17 @@ void ModuleWebServer::handlePost(socket_ptr socket, variant doc, const http::env
 			const std::string src_path = data_path_ + src_id + ".cfg";
 			const std::string dst_path = data_path_ + dst_id + ".cfg";
 
+			//basic passcode validation.
+			variant passcode = doc["passcode"];
+			std::string current_passcode = sys::read_file(data_path_ + dst_id + ".pass");
+			if(current_passcode.empty() == false && (passcode.is_string() == false || passcode.as_string() != current_passcode)) {
+				ASSERT_LOG(false, "Incorrect passcode");
+			}
+
+			if(passcode.is_string() && current_passcode.empty()) {
+				sys::write_file(data_path_ + dst_id + ".pass", passcode.as_string());
+			}
+
 			variant src_info = data_[src_id];
 			ASSERT_LOG(src_info.is_map(), "Could not find source module " << src_id);
 			ASSERT_LOG(sys::file_exists(src_path), "Source module " << src_id << " does not exist");
