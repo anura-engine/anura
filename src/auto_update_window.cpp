@@ -3,6 +3,8 @@
 
 #include <boost/filesystem/operations.hpp>
 
+#include <GL/glew.h>
+
 #include "auto_update_window.hpp"
 #include "base64.hpp"
 #include "compress.hpp"
@@ -888,6 +890,24 @@ COMMAND_LINE_UTILITY(window_test)
 		fprintf(stderr, "Could not create window: %s\n", SDL_GetError());
 		return;
 	}
+
+	auto context = SDL_GL_CreateContext(win);
+	assert(context != nullptr);
+
+	SDL_GL_SetSwapInterval(0);
+
+	int prev = 0;
+	for(int i = 0; i != 100000; ++i) {
+		glClearColor(i%2 ? 0.05 : 0.0, 0.0, 0.0, 1.0);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+		SDL_GL_SwapWindow(win);
+		if(i%100 == 0) {
+			int t = SDL_GetTicks();
+			fprintf(stderr, "%d -> %fms\n", i, float((t - prev)/100.0f));
+			prev = t;
+		}
+	}
+	
 	SDL_Delay(1000);
 	SDL_DestroyWindow(win);
 	SDL_Quit();
