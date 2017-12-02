@@ -261,6 +261,64 @@ namespace
 
 	END_FUNCTION_DEF(texture)
 
+	namespace {
+		void sanitizeNotificationStr(std::string& s) {
+			for(char& c : s) {
+				if(util::c_isalnum(c) == false && strchr(".,'-_", c) == nullptr) {
+					c = ' ';
+				}
+			}
+		}
+	}
+
+	FUNCTION_DEF(desktop_notification, 1, 3, "desktop_notification(message, title, icon)")
+		std::string message = EVAL_ARG(0).as_string();
+		std::string title;
+		if(NUM_ARGS >= 2) {
+			title = EVAL_ARG(1).as_string();
+		}
+
+		std::string icon;
+		if(NUM_ARGS >= 3) {
+			icon = EVAL_ARG(2).as_string();
+		}
+
+		sanitizeNotificationStr(message);
+		sanitizeNotificationStr(title);
+		sanitizeNotificationStr(icon);
+
+		return variant(new FnCommandCallable("open_url", [=]() {
+#ifdef __linux__
+				std::ostringstream s;
+				s << "/usr/bin/notify-send \"" << message << "\"";
+				if(title.empty() == false) {
+					s << " \"" << title << "\"";
+				}
+
+				if(icon.empty() == false) {
+					s << " --icon=" << icon;
+				}
+
+				std::string cmd = s.str();
+				const int result = system(cmd.c_str());
+				if(result == -1) {
+					LOG_ERROR("Could not spawn system process: " << errno);
+				}
+
+#elif defined(WIN32) || defined(WIN64)
+			//Windows implementation here
+#elif defined(__APPLE__) && TARGET_OS_MAC
+			//OSX implementation here
+#endif
+		}));
+
+	FUNCTION_ARGS_DEF
+		ARG_TYPE("string")
+		ARG_TYPE("string")
+		ARG_TYPE("string")
+	RETURN_TYPE("commands")
+	END_FUNCTION_DEF(desktop_notification)
+
 	FUNCTION_DEF(open_url, 1, 1, "open_url(string url): opens a given url on the platform's web browser")
 		std::string url = EVAL_ARG(0).as_string();
 
