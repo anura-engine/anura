@@ -58,6 +58,9 @@ void run_auto_updater()
 
 		execv(anura_args[0], &anura_args[0]);
 		LOG_ERROR("Failed to execute auto updater. Re-running game...");
+#if defined(__linux__)
+		LOG_ERROR("Errno: " << errno);
+#endif
 	}
 	
 	auto v = preferences::argv();
@@ -70,6 +73,9 @@ void run_auto_updater()
 
 	execv(anura_args[0], &anura_args[0]);
 	LOG_ERROR("Failed to restart game\n");
+#if defined(__linux__)
+	LOG_ERROR("Errno: " << errno);
+#endif
 
 	return;
 }
