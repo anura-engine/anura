@@ -42,9 +42,11 @@ PREF_STRING(auto_update_install_dir, "", "Directory which to install the game to
 
 void run_auto_updater()
 {
+	std::string original_cwd = sys::get_cwd();
+
 	if(!g_auto_update_dir.empty() && !g_auto_update_exe.empty()) {
 
-		const int res = chdir(g_auto_update_dir.c_str());
+		int res = chdir(g_auto_update_dir.c_str());
 		if(res != 0) {
 			LOG_ERROR("Auto-update: Could not chdir " << g_auto_update_dir << ": " << res);
 			return;
@@ -61,6 +63,12 @@ void run_auto_updater()
 #if defined(__linux__)
 		LOG_ERROR("Errno: " << errno);
 #endif
+
+		res = chdir(original_cwd.c_str());
+		if(res != 0) {
+			LOG_ERROR("Auto-update: Could not chdir " << original_cwd << ": " << res);
+			return;
+		}
 	}
 	
 	auto v = preferences::argv();
