@@ -42,34 +42,36 @@ PREF_STRING(auto_update_install_dir, "", "Directory which to install the game to
 
 void run_auto_updater()
 {
-	if(g_auto_update_dir.empty() || g_auto_update_exe.empty()) {
-		auto v = preferences::argv();
-		std::vector<char*> anura_args;
-		for(const std::string& s : v) {
-			anura_args.push_back(const_cast<char*>(s.c_str()));
+	if(!g_auto_update_dir.empty() && !g_auto_update_exe.empty()) {
+
+		const int res = chdir(g_auto_update_dir.c_str());
+		if(res != 0) {
+			LOG_ERROR("Auto-update: Could not chdir " << g_auto_update_dir << ": " << res);
+			return;
 		}
 
+		std::vector<char*> anura_args;
+		anura_args.push_back(const_cast<char*>(g_anura_exe_name.c_str()));
 		anura_args.push_back(nullptr);
 
+		LOG_ERROR("Auto-update: switched to " << g_auto_update_dir << " running " << g_auto_update_exe);
+
 		execv(anura_args[0], &anura_args[0]);
-
-		return;
+		LOG_ERROR("Failed to execute auto updater. Re-running game...");
 	}
-
-	const int res = chdir(g_auto_update_dir.c_str());
-	if(res != 0) {
-		LOG_ERROR("Auto-update: Could not chdir " << g_auto_update_dir << ": " << res);
-		return;
-	}
-
+	
+	auto v = preferences::argv();
 	std::vector<char*> anura_args;
-	anura_args.push_back(const_cast<char*>(g_anura_exe_name.c_str()));
+	for(const std::string& s : v) {
+		anura_args.push_back(const_cast<char*>(s.c_str()));
+	}
+
 	anura_args.push_back(nullptr);
 
-	LOG_ERROR("Auto-update: switched to " << g_auto_update_dir << " running " << g_auto_update_exe);
-
 	execv(anura_args[0], &anura_args[0]);
-	assert(false);
+	LOG_ERROR("Failed to restart game\n");
+
+	return;
 }
 
 namespace 
