@@ -1868,13 +1868,20 @@ public:
 				const int mday = ltime->tm_mday;
 
 				for(int n = 0; n != 32; ++n) {
+					int yr = year;
+					int mon = month;
 					int day = mday - n;
 					if(day <= 0) {
 						day = 32 + day;
+						mon--;
+						if(mon < 1) {
+							mon = 12;
+							yr--;
+						}
 					}
 
 					char buf[1024];
-					snprintf(buf, sizeof(buf), "%d:%d:%d", year, month, day);
+					snprintf(buf, sizeof(buf), "%d:%d:%d", yr, mon, day);
 					items.push_back(buf);
 				}
 			}
