@@ -69,6 +69,7 @@ void run_auto_updater()
 	LOG_ERROR("Auto-update: switched to " << g_auto_update_dir << " running " << g_auto_update_exe);
 
 	execv(anura_args[0], &anura_args[0]);
+	assert(false);
 }
 
 namespace 
