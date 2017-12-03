@@ -731,7 +731,7 @@ bool do_auto_update(std::deque<std::string> argv, auto_update_window& update_win
 #endif
 
 	std::string cwd_arg = cl_quotes + "--auto-update-dir=" + sys::get_cwd() + cl_quotes;
-	std::string exe_arg = cl_quotes + "--auto-update-exe=" + g_anura_exe_name + cl_quotes;
+	std::string exe_arg = cl_quotes + "--auto-update-exe=" + (g_auto_update_exe.empty() == false ? g_auto_update_exe : g_anura_exe_name) + cl_quotes;
 
 	const std::string working_dir = g_auto_update_install_dir.empty() == false ? g_auto_update_install_dir : preferences::dlc_path() + "/" + real_anura + subdir;
 	LOG_INFO("CHANGE DIRECTORY: " << working_dir);
