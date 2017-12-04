@@ -98,43 +98,55 @@ int variant::get_enum_index(const std::string& enum_id) {
 }
 
 namespace {
-THREAD_LOCAL std::set<variant*> callable_variants_loading, delayed_variants_loading;
 
-THREAD_LOCAL std::vector<CallStackEntry> call_stack;
+struct VariantThreadInfo {
+	std::set<variant*> callable_variants_loading, delayed_variants_loading;
+	std::vector<CallStackEntry> call_stack;
+	variant last_failed_query_map, last_failed_query_key;
+	variant last_query_map;
+	variant UnfoundInMapNullVariant;
+};
 
-THREAD_LOCAL variant last_failed_query_map, last_failed_query_key;
-THREAD_LOCAL variant last_query_map;
-THREAD_LOCAL variant UnfoundInMapNullVariant;
+THREAD_LOCAL VariantThreadInfo *g_variant_thread_info;
+}
+
+void variant::registerThread()
+{
+	g_variant_thread_info = new VariantThreadInfo;
+}
+
+void variant::unregisterThread()
+{
 }
 
 void init_call_stack(int min_size)
 {
-	call_stack.reserve(min_size);
+	g_variant_thread_info->call_stack.reserve(min_size);
 }
 
 void swap_variants_loading(std::set<variant*>& v)
 {
-	callable_variants_loading.swap(v);
+	g_variant_thread_info->callable_variants_loading.swap(v);
 }
 
 void push_call_stack(const game_logic::FormulaExpression* frame, const game_logic::FormulaCallable* callable)
 {
-	call_stack.resize(call_stack.size()+1);
-	call_stack.back().expression = frame;
-	call_stack.back().callable = callable;
-	ASSERT_LOG(call_stack.size() < 4096, "FFL Recursion too deep (Exceeds 4096 frames)");
+	g_variant_thread_info->call_stack.resize(g_variant_thread_info->call_stack.size()+1);
+	g_variant_thread_info->call_stack.back().expression = frame;
+	g_variant_thread_info->call_stack.back().callable = callable;
+	ASSERT_LOG(g_variant_thread_info->call_stack.size() < 4096, "FFL Recursion too deep (Exceeds 4096 frames)");
 }
 
 void pop_call_stack()
 {
-	call_stack.pop_back();
+	g_variant_thread_info->call_stack.pop_back();
 }
 
 std::string get_call_stack()
 {
 	variant current_frame;
 	std::string res;
-	std::vector<CallStackEntry> reversed_call_stack = call_stack;
+	std::vector<CallStackEntry> reversed_call_stack = g_variant_thread_info->call_stack;
 	std::reverse(reversed_call_stack.begin(), reversed_call_stack.end());
 	for(std::vector<CallStackEntry>::const_iterator i = reversed_call_stack.begin(); i != reversed_call_stack.end(); ++i) {
 		const game_logic::FormulaExpression* p = i->expression;
@@ -156,7 +168,7 @@ std::string get_typed_call_stack()
 {
 	variant current_frame;
 	std::string res;
-	std::vector<CallStackEntry> reversed_call_stack = call_stack;
+	std::vector<CallStackEntry> reversed_call_stack = g_variant_thread_info->call_stack;
 	std::reverse(reversed_call_stack.begin(), reversed_call_stack.end());
 	for(std::vector<CallStackEntry>::const_iterator i = reversed_call_stack.begin(); i != reversed_call_stack.end(); ++i) {
 		const game_logic::FormulaExpression* p = i->expression;
@@ -177,18 +189,18 @@ std::string get_typed_call_stack()
 
 const std::vector<CallStackEntry>& get_expression_call_stack()
 {
-	return call_stack;
+	return g_variant_thread_info->call_stack;
 }
 
 std::string get_full_call_stack()
 {
 	std::string res;
-	for(std::vector<CallStackEntry>::const_iterator i = call_stack.begin();
-	    i != call_stack.end(); ++i) {
+	for(std::vector<CallStackEntry>::const_iterator i = g_variant_thread_info->call_stack.begin();
+	    i != g_variant_thread_info->call_stack.end(); ++i) {
 		if(!i->expression) {
 			continue;
 		}
-		res += formatter() << "  FRAME " << (i - call_stack.begin()) << ": " << i->expression->str() << "\n";
+		res += formatter() << "  FRAME " << (i - g_variant_thread_info->call_stack.begin()) << ": " << i->expression->str() << "\n";
 	}
 	return res;
 }
@@ -198,8 +210,8 @@ std::string output_formula_error_info();
 namespace {
 void generate_error(std::string message)
 {
-	if(call_stack.empty() == false && call_stack.back().expression) {
-		message += "\n" + call_stack.back().expression->debugPinpointLocation();
+	if(g_variant_thread_info->call_stack.empty() == false && g_variant_thread_info->call_stack.back().expression) {
+		message += "\n" + g_variant_thread_info->call_stack.back().expression->debugPinpointLocation();
 	}
 
 	std::ostringstream s;
@@ -212,8 +224,8 @@ void generate_error(std::string message)
 }
 
 type_error::type_error(const std::string& str) : message(str) {
-	if(call_stack.empty() == false && call_stack.back().expression) {
-		message += "\n" + call_stack.back().expression->debugPinpointLocation();
+	if(g_variant_thread_info->call_stack.empty() == false && g_variant_thread_info->call_stack.back().expression) {
+		message += "\n" + g_variant_thread_info->call_stack.back().expression->debugPinpointLocation();
 	}
 
 	LOG_ERROR(message << "\n" << get_typed_call_stack());
@@ -525,7 +537,7 @@ case VARIANT_TYPE_MULTI_FUNCTION:
 multi_fn_->add_reference();
 break;
 case VARIANT_TYPE_DELAYED:
-delayed_variants_loading.insert(this);
+g_variant_thread_info->delayed_variants_loading.insert(this);
 ++delayed_->refcount;
 break;
 case VARIANT_TYPE_WEAK:
@@ -533,7 +545,7 @@ case VARIANT_TYPE_WEAK:
 break;
 case VARIANT_TYPE_CALLABLE_LOADING:
 callable_loading_->add_reference();
-callable_variants_loading.insert(this);
+g_variant_thread_info->callable_variants_loading.insert(this);
 
 // These are not used here, add them to silence a compiler warning.
 case VARIANT_TYPE_NULL:
@@ -574,7 +586,7 @@ case VARIANT_TYPE_MULTI_FUNCTION:
 multi_fn_->dec_reference();
 break;
 case VARIANT_TYPE_DELAYED:
-delayed_variants_loading.erase(this);
+g_variant_thread_info->delayed_variants_loading.erase(this);
 if(--delayed_->refcount == 0) {
 	delete delayed_;
 }
@@ -586,7 +598,7 @@ if(--weak_->refcount == 0) {
 break;
 
 case VARIANT_TYPE_CALLABLE_LOADING:
-callable_variants_loading.erase(this);
+g_variant_thread_info->callable_variants_loading.erase(this);
 callable_loading_->dec_reference();
 break;
 
@@ -689,14 +701,14 @@ variant variant::create_delayed(game_logic::ConstFormulaPtr f, game_logic::Const
 
 void variant::resolve_delayed()
 {
-	std::set<variant*> items = delayed_variants_loading;
+	std::set<variant*> items = g_variant_thread_info->delayed_variants_loading;
 	for(variant* v : items) {
 		v->delayed_->calculate_result();
 		variant res = v->delayed_->result;
 		*v = res;
 	}
 
-	delayed_variants_loading.clear();
+	g_variant_thread_info->delayed_variants_loading.clear();
 }
 
 variant variant::create_function_overload(const std::vector<variant>& fn)
@@ -929,13 +941,13 @@ const variant& variant::operator[](const variant& v) const
 		std::map<variant,variant>::const_iterator i = map_->elements.find(v);
 		if (i == map_->elements.end())
 		{
-			last_failed_query_map = *this;
-			last_failed_query_key = v;
+			g_variant_thread_info->last_failed_query_map = *this;
+			g_variant_thread_info->last_failed_query_key = v;
 
-			return UnfoundInMapNullVariant;
+			return g_variant_thread_info->UnfoundInMapNullVariant;
 		}
 
-		last_query_map = *this;
+		g_variant_thread_info->last_query_map = *this;
 		return i->second;
 	} else if(type_ == VARIANT_TYPE_LIST) {
 		return operator[](v.as_int());
@@ -1554,7 +1566,7 @@ bool variant::is_unmodified_single_reference() const
 
 variant variant::add_attr(variant key, variant value)
 {
-	last_query_map = variant();
+	g_variant_thread_info->last_query_map = variant();
 
 	if(is_map()) {
 		if(map_->refcount() > 1) {
@@ -1573,7 +1585,7 @@ variant variant::add_attr(variant key, variant value)
 
 variant variant::remove_attr(variant key)
 {
-	last_query_map = variant();
+	g_variant_thread_info->last_query_map = variant();
 
 	if(is_map()) {
 		if(map_->refcount() > 1) {
@@ -2210,35 +2222,35 @@ bool variant::operator>(const variant& v) const
 
 void variant::throw_type_error(variant::TYPE t) const
 {
-	if(this == &UnfoundInMapNullVariant) {
-		const debug_info* info = last_failed_query_map.get_debug_info();
+	if(this == &g_variant_thread_info->UnfoundInMapNullVariant) {
+		const debug_info* info = g_variant_thread_info->last_failed_query_map.get_debug_info();
 		if(info) {
-			generate_error(formatter() << "In object at " << *info->filename << " " << info->line << " (column " << info->column << ") did not find attribute " << last_failed_query_key << " which was expected to be a " << variant_type_to_string(t));
-		} else if(last_failed_query_map.get_source_expression()) {
-			generate_error(formatter() << "Map object generated in FFL was expected to have key '" << last_failed_query_key << "' of type " << variant_type_to_string(t) << " but this key wasn't found. The map was generated by this expression:\n" << last_failed_query_map.get_source_expression()->debugPinpointLocation());
+			generate_error(formatter() << "In object at " << *info->filename << " " << info->line << " (column " << info->column << ") did not find attribute " << g_variant_thread_info->last_failed_query_key << " which was expected to be a " << variant_type_to_string(t));
+		} else if(g_variant_thread_info->last_failed_query_map.get_source_expression()) {
+			generate_error(formatter() << "Map object generated in FFL was expected to have key '" << g_variant_thread_info->last_failed_query_key << "' of type " << variant_type_to_string(t) << " but this key wasn't found. The map was generated by this expression:\n" << g_variant_thread_info->last_failed_query_map.get_source_expression()->debugPinpointLocation());
 		}
 	}
 
-	if(last_query_map.is_map() && last_query_map.get_debug_info()) {
-		for(std::map<variant,variant>::const_iterator i = last_query_map.map_->elements.begin(); i != last_query_map.map_->elements.end(); ++i) {
+	if(g_variant_thread_info->last_query_map.is_map() && g_variant_thread_info->last_query_map.get_debug_info()) {
+		for(std::map<variant,variant>::const_iterator i = g_variant_thread_info->last_query_map.map_->elements.begin(); i != g_variant_thread_info->last_query_map.map_->elements.end(); ++i) {
 			if(this == &i->second) {
 				const debug_info* info = i->first.get_debug_info();
 				if(info == nullptr) {
-					info = last_query_map.get_debug_info();
+					info = g_variant_thread_info->last_query_map.get_debug_info();
 				}
 				generate_error(formatter() << "In object at " << *info->filename << " " << info->line << " (column " << info->column << ") attribute for " << i->first << " was " << *this << ", which is a " << variant_type_to_string(type_) << ", must be a " << variant_type_to_string(t));
 				
 			}
 		}
-	} else if(last_query_map.is_map() && last_query_map.get_source_expression()) {
-		for(std::map<variant,variant>::const_iterator i = last_query_map.map_->elements.begin(); i != last_query_map.map_->elements.end(); ++i) {
+	} else if(g_variant_thread_info->last_query_map.is_map() && g_variant_thread_info->last_query_map.get_source_expression()) {
+		for(std::map<variant,variant>::const_iterator i = g_variant_thread_info->last_query_map.map_->elements.begin(); i != g_variant_thread_info->last_query_map.map_->elements.end(); ++i) {
 			if(this == &i->second) {
 				std::ostringstream expression;
-				if(last_failed_query_map.get_source_expression()) {
-					expression << " The map was generated by this expression:\n" << last_failed_query_map.get_source_expression()->debugPinpointLocation();
+				if(g_variant_thread_info->last_failed_query_map.get_source_expression()) {
+					expression << " The map was generated by this expression:\n" << g_variant_thread_info->last_failed_query_map.get_source_expression()->debugPinpointLocation();
 				}
 
-				generate_error(formatter() << "Map object generated in FFL was expected to have key '" << last_failed_query_key << "' of type " << variant_type_to_string(t) << " but this key was of type " << variant_type_to_string(i->second.type_) << " instead." << expression.str());
+				generate_error(formatter() << "Map object generated in FFL was expected to have key '" << g_variant_thread_info->last_failed_query_key << "' of type " << variant_type_to_string(t) << " but this key was of type " << variant_type_to_string(i->second.type_) << " instead." << expression.str());
 			}
 		}
 	}

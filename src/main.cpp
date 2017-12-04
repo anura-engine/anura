@@ -436,6 +436,8 @@ int main(int argcount, char* argvec[])
 	breakpad::install();
 #endif
 
+	variant::registerThread();
+
 	{
 		std::vector<std::string> args;
 		for(int i = 0; i != argcount; ++i) {

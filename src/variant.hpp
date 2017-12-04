@@ -126,6 +126,9 @@ public:
 	friend class GarbageCollectorImpl;
 	friend class GarbageCollectorAnalyzer;
 
+	static void registerThread();
+	static void unregisterThread();
+
 	enum DECIMAL_VARIANT_TYPE { DECIMAL_VARIANT };
 
 	static variant from_bool(bool b) { variant v; v.type_ = VARIANT_TYPE_BOOL; v.bool_value_ = b; return v; }
