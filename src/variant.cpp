@@ -98,13 +98,13 @@ int variant::get_enum_index(const std::string& enum_id) {
 }
 
 namespace {
-std::set<variant*> callable_variants_loading, delayed_variants_loading;
+THREAD_LOCAL std::set<variant*> callable_variants_loading, delayed_variants_loading;
 
-std::vector<CallStackEntry> call_stack;
+THREAD_LOCAL std::vector<CallStackEntry> call_stack;
 
-variant last_failed_query_map, last_failed_query_key;
-variant last_query_map;
-variant UnfoundInMapNullVariant;
+THREAD_LOCAL variant last_failed_query_map, last_failed_query_key;
+THREAD_LOCAL variant last_query_map;
+THREAD_LOCAL variant UnfoundInMapNullVariant;
 }
 
 void init_call_stack(int min_size)
