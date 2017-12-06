@@ -52,3 +52,8 @@ Building on a 2016 Debian sid
 -----------------------------
 
 sudo apt-get install libboost-dev libboost-filesystem-dev libboost-iostream-dev libboost-regex-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev libglew-dev libpng-dev libcairo-dev libfreetype6-dev libvorbis-dev
+
+Building on Fedora 27
+---------------------
+
+sudo dnf install boost-devel boost-iostreams boost-filesystem boost-regex boost-system SDL2 SDL2-devel SDL2_image-devel SDL2_mixer-devel SDL2_ttf-devel SDL2_image SDL2_mixer SDL2_ttf libvorbis-devel gcc glew icu
