@@ -4361,6 +4361,26 @@ RETURN_TYPE("bool")
 	END_FUNCTION_DEF(spawn_voxel_object)
 	#endif
 
+	//   TODO Copied from `std::string get_dbdate(time_t)`, future
+	// deduplication may apply.
+	FUNCTION_DEF(
+			localdate, 0, 0,
+			"get the local date of the client or the server")
+
+		char buf[128];
+		time_t cur_time = time(nullptr);
+		tm* ltime = localtime(&cur_time);
+
+		const int year = ltime->tm_year + 1900;
+		const int month = ltime->tm_mon + 1;
+		const int mday = ltime->tm_mday;
+
+		snprintf(buf, sizeof(buf), "%d:%d:%d", year, month, mday);
+
+		return variant(buf);
+
+	RETURN_TYPE("string")
+	END_FUNCTION_DEF(localdate)
 
 	class CustomObjectFunctionSymbolTable : public FunctionSymbolTable
 	{
