@@ -433,6 +433,22 @@ namespace
 
 }
 
+namespace {
+std::vector<variant> g_object_validation_functions;
+}
+
+void CustomObjectType::addObjectValidationFunction(const variant& str)
+{
+	game_logic::FormulaPtr f(new game_logic::Formula(str));
+	variant result(f->execute());
+
+	std::string fn_type = "function(map, [string])->string|null";
+	auto t = parse_variant_type(variant(fn_type));
+	ASSERT_LOG(t->match(result), "Object validation function must be of type " << fn_type);
+
+	g_object_validation_functions.push_back(result);
+}
+
 int CustomObjectType::getObjectTypeIndex(const std::string& id)
 {
 	static std::map<std::string, int>* m = new std::map<std::string, int>();
@@ -678,6 +694,25 @@ void init_object_definition(variant node, const std::string& id_, CustomObjectCa
 	callable_definition_->finalizeProperties();
 	callable_definition_->setStrict(is_strict_);
 
+	for(auto f : g_object_validation_functions) {
+		std::vector<variant> protos;
+
+		while(prototype_derived_from != "") {
+			protos.push_back(variant(prototype_derived_from));
+			auto it = object_type_inheritance().find(prototype_derived_from);
+			if(it == object_type_inheritance().end()) {
+				break;
+			}
+			prototype_derived_from = it->second;
+		}
+
+		std::vector<variant> args;
+		args.push_back(node);
+		args.push_back(variant(&protos));
+
+		variant result = f(args);
+		ASSERT_LOG(result.is_null(), "Object validation failed for object " << id_ << ": " << result.as_string());
+	}
 }
 
 variant g_player_type_str;

@@ -63,6 +63,8 @@ namespace wml
 class CustomObjectType
 {
 public:
+	static void addObjectValidationFunction(const variant& str);
+
 	static void setPlayerVariantType(variant type_str);
 
 	static game_logic::FormulaCallableDefinitionPtr getDefinition(const std::string& id);

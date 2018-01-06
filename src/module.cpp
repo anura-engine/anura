@@ -500,6 +500,10 @@ namespace module
 			if(v.has_key("version")) {
 				module_version = v["version"].as_list_int();
 			}
+
+			if(v.has_key("validate_objects")) {
+				CustomObjectType::addObjectValidationFunction(v["validate_objects"]);
+			}
 		}
 		modules m = {name, pretty_name, abbrev,
 					 {make_base_module_path(name), make_user_module_path(name)},
