@@ -900,6 +900,10 @@ bool LevelRunner::play_level()
 		}
 	}
 
+	for(EntityPtr e : lvl_->get_chars()) {
+		e->handleEvent(OBJECT_EVENT_BEING_REMOVED);
+	}
+
 	return quit_;
 }
 
@@ -1079,6 +1083,10 @@ bool LevelRunner::play_cycle()
 			e->handleEvent(OBJECT_EVENT_PLAYER_DEATH);
 		}
 
+		for(EntityPtr e : lvl_->get_chars()) {
+			e->handleEvent(OBJECT_EVENT_BEING_REMOVED);
+		}
+
 		//record stats of the player's death
 		lvl_->player()->getEntity().recordStatsMovement();
 		stats::Entry("die").addPlayerPos();
@@ -1192,6 +1200,10 @@ bool LevelRunner::play_cycle()
 			}
 
 			sound::stop_looped_sounds(nullptr);
+
+			for(EntityPtr e : lvl_->get_chars()) {
+				e->handleEvent(OBJECT_EVENT_BEING_REMOVED);
+			}
 
 			ffl::IntrusivePtr<Level> new_level;
 			if(portal->level_dest_obj) {
