@@ -53,7 +53,7 @@ namespace tbs
 		static ffl::IntrusivePtr<game> create(const variant& v);
 		static game* current();
 
-		explicit game();
+		explicit game(const variant& node);
 		virtual ~game();
 
 		void set_server(server_base* server) { server_ = server; }

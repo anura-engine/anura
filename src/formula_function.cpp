@@ -5942,11 +5942,15 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 
 	FUNCTION_DEF(get_modified_object, 2, 2, "get_modified_object(obj, commands) -> obj: yields a copy of the given object modified by the given commands")
 
+		formula_profiler::Instrument instrument("get_modified_object");
 		SimulationScope sim;
 
 		ffl::IntrusivePtr<FormulaObject> obj(EVAL_ARG(0).convert_to<FormulaObject>());
 
+		{
+		formula_profiler::Instrument instrument2("deep_clone");
 		obj = FormulaObject::deepClone(variant(obj.get())).convert_to<FormulaObject>();
+		}
 
 		variant commands_fn = EVAL_ARG(1);
 

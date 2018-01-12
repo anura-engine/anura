@@ -1144,7 +1144,6 @@ int main(int argcount, char* argvec[])
 			ASSERT_LOG(false, ile.what());
 		}
 
-		sound::init_music(json::parse_from_file("data/music.cfg"));
 		GraphicalFont::initForLocale(i18n::get_locale());
 		preloads = json::parse_from_file("data/preload.cfg");
 		int preload_items = preloads["preload"].num_elements();

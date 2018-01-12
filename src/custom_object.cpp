@@ -3152,7 +3152,7 @@ variant CustomObject::getValueBySlot(int slot) const
 {
 	switch(slot) {
 	case CUSTOM_OBJECT_VALUE: {
-		ASSERT_LOG(value_stack_.empty() == false, "Query of value in illegal context");
+		ASSERT_LOG(value_stack_.empty() == false, "Query of 'value' symbol in illegal context");
 		return value_stack_.top();
 	}
 	case CUSTOM_OBJECT_DATA: {

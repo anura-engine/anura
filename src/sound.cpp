@@ -81,9 +81,6 @@ namespace sound
 		float volume;
 	};
 
-	//Index of music info. Accessed only by the game thread.
-	std::map<std::string, MusicInfo> g_music_index;
-
 	//Name of the current music being played. Accessed only by the game thread.
 	std::string g_current_music;
 
@@ -223,7 +220,7 @@ namespace sound
 
 		//Should be constructed in the main thread.
 		explicit MusicPlayer(const std::string& file, variant options)
-		   : fname_(file), bit_stream_(0), volume_(1.0f), finished_(false), fadeout_time_(-1.0f), fadeout_current_(-1.0f),
+		   : fname_(file), bit_stream_(0), volume_(options["volume"].as_float(1.0f)), finished_(false), fadeout_time_(-1.0f), fadeout_current_(-1.0f),
 			 loop_(options["loop"].as_bool(false)),
 			 loop_point_(options["loop_point"].as_double(0.0)),
 			 loop_from_(options["loop_from"].as_double(-1.0)),
@@ -235,11 +232,6 @@ namespace sound
 
 			info_ = vorbis().ov_info(&file_, -1);
 			ASSERT_LOG(info_->channels == 1 || info_->channels == 2, "Ogg file " << file << " has unsupported number of channels: " << info_->channels << ". Only support mono and stereo");
-
-			auto i = g_music_index.find(file);
-			if(i != g_music_index.end()) {
-				volume_ = i->second.volume;
-			}
 
 			variant pos = options["pos"];
 			if(pos.is_decimal()) {
@@ -1944,15 +1936,6 @@ Manager::~Manager()
 
 		SDL_CloseAudioDevice(g_audio_device);
 		g_audio_device = 0;
-	}
-}
-
-//Load music volumes from the config file.
-void init_music(variant node)
-{
-	for(variant music_node : node["music"].as_list()) {
-		const std::string name = music_node["name"].as_string();
-		g_music_index[name].volume = music_node["volume"].as_float(1.0f);
 	}
 }
 

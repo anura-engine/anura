@@ -66,10 +66,10 @@ namespace tbs
 	class GameType
 	{
 	public:
-		explicit GameType(variant game_ref) {
+		GameType(variant game_ref, const variant& info) {
 			std::map<variant,variant> m;
 			m[variant("_game")] = game_ref;
-			obj_ = game_logic::FormulaObject::create("tbs_game", variant(&m));
+			obj_ = game_logic::FormulaObject::create(info["_tbs_game"].as_string_default("tbs_game"), variant(&m));
 #define DEFINE_INTERFACE_FN(name, type) \
 			name##_fn_ = obj_->queryValue(#name); \
 			ASSERT_LOG(parse_variant_type(variant("function" type))->match(name##_fn_), "In tbs_game class, member '" << #name << "' must have type function" << type << " but has type " << get_variant_type_from_value(name##_fn_)->to_string());
@@ -162,15 +162,15 @@ namespace tbs
 
 	ffl::IntrusivePtr<game> game::create(const variant& v)
 	{
-		ffl::IntrusivePtr<game> result(new game);
+		ffl::IntrusivePtr<game> result(new game(v));
 		variant cmd = result->game_type_->create(v);
 		result->executeCommand(cmd);
 		return result;
 	}
 
-	game::game()
+	game::game(const variant& node)
 	  : server_(nullptr),
-	    game_type_(new GameType(variant(this))),
+	    game_type_(new GameType(variant(this), node)),
 	    game_id_(generate_game_id()),
 	    started_(false), state_(STATE_SETUP), state_id_(0), cycle_(0), tick_rate_(50),
 		backup_callable_(nullptr),
