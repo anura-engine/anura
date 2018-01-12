@@ -219,6 +219,19 @@ namespace graphics
 			return obj.getActiveEmitter().getEmissionRate()->write();
 		DEFINE_SET_FIELD
 			obj.getActiveEmitter().setEmissionRate(value);
+	
+		DEFINE_FIELD(circle_radius, "any")
+			auto e = dynamic_cast<const KRE::Particles::CircleEmitter*>(&obj.getActiveEmitter());
+			if(e != nullptr) {
+				return e->getRadius()->write();
+			} else {
+				return variant();
+			}
+		DEFINE_SET_FIELD
+			auto e = dynamic_cast<KRE::Particles::CircleEmitter*>(&obj.getActiveEmitter());
+			if(e != nullptr) {
+				e->setRadius(value);
+			}
 
 		DEFINE_FIELD(systems, "[builtin particle_system_proxy]")
 

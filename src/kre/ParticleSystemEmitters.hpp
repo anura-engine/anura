@@ -173,6 +173,7 @@ namespace KRE
 			explicit CircleEmitter(std::weak_ptr<ParticleSystemContainer> parent, const variant& node);
 
 			const ParameterPtr& getRadius() const { return circle_radius_; }
+			void setRadius(variant node);
 			float getStep() const { return circle_step_; }
 			void setStep(float step) { circle_step_ = step; }
 			float getAngle() const { return circle_angle_; }

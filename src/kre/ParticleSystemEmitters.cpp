@@ -328,6 +328,15 @@ namespace KRE
 			}
 		}
 
+		void CircleEmitter::setRadius(variant node)
+		{
+			if(node.is_null() == false) {
+				circle_radius_ = Parameter::factory(node);
+			} else {
+				circle_radius_.reset(new Parameter(10));
+			}
+		}
+
 		void Emitter::calculateQuota()
 		{
 			auto& psystem = getParentContainer()->getParticleSystem();
