@@ -1341,6 +1341,8 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 	document_(nullptr),
 	draw_batch_id_(node["draw_batch_id"].as_string_default(""))
 {
+	ObjectTypesSpawnedTracker types_spawned;
+
 	if(g_player_type_str.is_null() == false) {
 		//if a playable object type has been set, register what the type of
 		//the player is before we construct our object.
@@ -1819,6 +1821,12 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 		}
 	}
 	initEventHandlers(node, event_handlers_, getFunctionSymbols(), base_type ? &base_type->event_handlers_ : nullptr);
+
+	for(const std::string& t : types_spawned.spawned) {
+		if(std::find(preload_objects_.begin(), preload_objects_.end(), t) == preload_objects_.end()) {
+			preload_objects_.push_back(t);
+		}
+	}
 }
 
 CustomObjectType::~CustomObjectType()

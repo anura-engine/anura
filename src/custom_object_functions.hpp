@@ -23,6 +23,7 @@
 
 #pragma once
 
+#include <set>
 #include <string>
 
 #include "formula.hpp"
@@ -98,4 +99,15 @@ public:
 private:
 	variant getValue(const std::string& key) const override { return variant(); }
 	void getInputs(std::vector<game_logic::FormulaInput>* inputs) const override {}
+};
+
+//create one of these to track all formulas parsed during its scope which contain object spawn points.
+//will record all possible objects the formulas can spawn. Useful for discovering which possible
+//objects might be spawned so we can preload them.
+struct ObjectTypesSpawnedTracker
+{
+	ObjectTypesSpawnedTracker();
+	~ObjectTypesSpawnedTracker();
+
+	std::set<std::string> spawned;
 };

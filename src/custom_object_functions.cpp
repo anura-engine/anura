@@ -88,6 +88,26 @@
 #include "graphical_font.hpp"
 #include "user_voxel_object.hpp"
 
+namespace {
+std::set<ObjectTypesSpawnedTracker*> g_spawned_tracker_scopes;
+void trackObjectSpawned(const std::string& id)
+{
+	for(auto s : g_spawned_tracker_scopes) {
+		s->spawned.insert(id);
+	}
+}
+}
+
+ObjectTypesSpawnedTracker::ObjectTypesSpawnedTracker()
+{
+	g_spawned_tracker_scopes.insert(this);
+}
+
+ObjectTypesSpawnedTracker::~ObjectTypesSpawnedTracker()
+{
+	g_spawned_tracker_scopes.erase(this);
+}
+
 bool g_mouse_event_swallowed;
 
 void run_auto_updater();
@@ -1619,6 +1639,13 @@ namespace
 		if(args().size() > ncommands_arg) {
 			base_slot_ = args()[ncommands_arg]->getDefinitionUsedByExpression()->getNumSlots()-1;
 		}
+
+
+		variant v;
+		if(args().empty() == false && args()[0]->canReduceToVariant(v) && v.is_string()) {
+			trackObjectSpawned(v.as_string());
+		}
+
 	FUNCTION_DEF_MEMBERS
 		int base_slot_;
 		bool optimizeArgNumToVM(int narg) const override {
