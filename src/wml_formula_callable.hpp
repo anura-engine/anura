@@ -100,6 +100,7 @@ namespace game_logic
 	class wmlFormulaCallableReadScope
 	{
 	public:
+		static int isActive();
 		static void registerSerializedObject(const boost::uuids::uuid& uuid, WmlSerializableFormulaCallablePtr ptr);
 		static WmlSerializableFormulaCallablePtr getSerializedObject(const boost::uuids::uuid& uuid);
 		wmlFormulaCallableReadScope();

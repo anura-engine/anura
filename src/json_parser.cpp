@@ -648,7 +648,7 @@ namespace json
 	bool file_exists_and_is_valid(const std::string& fname)
 	{
 		try {
-			parse_from_file(fname);
+			parse_from_file(fname, json::JSON_PARSE_OPTIONS::NO_PREPROCESSOR);
 			return true;
 		} catch(ParseError&) {
 			return false;

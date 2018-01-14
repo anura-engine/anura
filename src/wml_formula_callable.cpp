@@ -197,6 +197,11 @@ namespace game_logic
 		int g_nFormulaCallableReadScope = 0;
 	}
 
+	int wmlFormulaCallableReadScope::isActive()
+	{
+		return g_nFormulaCallableReadScope;
+	}
+
 	wmlFormulaCallableReadScope::wmlFormulaCallableReadScope()
 	{
 		++g_nFormulaCallableReadScope;

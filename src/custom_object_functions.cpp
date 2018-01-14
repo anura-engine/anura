@@ -851,6 +851,7 @@ namespace
 		{}
 
 		virtual void execute(Level& lvl, Entity& ob) const override {
+			formula_profiler::Instrument instrument(persistent_ ? "SAVE_GAME" : "CHECKPOINT_GAME");
 			lvl.player()->getEntity().saveGame();
 			if(persistent_) {
 				variant node = lvl.write();
