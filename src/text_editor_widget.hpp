@@ -81,6 +81,8 @@ namespace gui
 		void setOnEscHandler(std::function<void()> fn) { on_escape_ = fn; }
 		void setOnChangeFocusHandler(std::function<void(bool)> fn) { on_change_focus_ = fn; }
 
+		void setSelectAllHandler(std::function<std::pair<int,int>(std::string)> fn) { on_select_all_fn_ = fn; }
+
 		bool hasFocus() const override { return has_focus_; }
 		void setFocus(bool value) override;
 
@@ -189,6 +191,8 @@ namespace gui
 		std::function<void()> on_change_, on_user_change_, onMoveCursor_, on_enter_, on_tab_, on_escape_;
 		std::function<void(bool)> on_change_focus_;
 		std::function<bool()> onBeginEnter_;
+
+		std::function<std::pair<int,int>(std::string)> on_select_all_fn_;
 
 		void changeDelegate();
 		void moveCursorDelegate();

@@ -775,10 +775,26 @@ namespace gui
 
 		if(event.keysym.sym == SDLK_a && (event.keysym.mod&KMOD_CTRL)) {
 			recordOp();
-			cursor_.row = static_cast<int>(text_.size() - 1);
-			cursor_.col = static_cast<int>(text_[cursor_.row].size());
-			onMoveCursor();
-			select_ = Loc(0, 0);
+
+			if(on_select_all_fn_) {
+				auto p = on_select_all_fn_(text());
+				auto cursor = text_pos_to_row_col(static_cast<int>(p.first));
+				cursor_.row = cursor.first;
+				cursor_.col = cursor.second;
+
+				onMoveCursor();
+
+				auto select = text_pos_to_row_col(static_cast<int>(p.second));
+				select_.row = select.first;
+				select_.col = select.second;
+
+			} else {
+				cursor_.row = static_cast<int>(text_.size() - 1);
+				cursor_.col = static_cast<int>(text_[cursor_.row].size());
+				onMoveCursor();
+				select_ = Loc(0, 0);
+			}
+
 			if(select_ != cursor_) {
 				//a mouse-based copy for X-style copy/paste
 				handleCopy(true);

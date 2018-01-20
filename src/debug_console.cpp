@@ -339,6 +339,29 @@ namespace debug_console
 		text_editor_->setOnBeginEnterHandler(std::bind(&ConsoleDialog::onBeginEnter, this));
 		text_editor_->setOnEnterHandler(std::bind(&ConsoleDialog::onEnter, this));
 
+		text_editor_->setSelectAllHandler([](std::string s) {
+			const char* p1 = s.c_str();
+			const char* p2 = p1 + strlen(p1);
+
+			const char* p = strstr(p1, "--> ");
+			while(p != nullptr) {
+				const char* next_p = strstr(p+1, "\n--> ");
+				if(next_p == nullptr) {
+					break;
+				}
+
+				p = next_p + 1;
+			}
+
+			if(p == nullptr) {
+				return std::pair<int,int>(0, static_cast<int>(s.size()));
+			}
+
+			p += 4;
+
+			return std::pair<int,int>(static_cast<int>(p - p1), static_cast<int>(p2 - p1));
+		});
+
 		if(old_text_editor) {
 			text_editor_->setText(old_text_editor->text());
 			text_editor_->setCursor(old_text_editor->cursorRow(), old_text_editor->cursorCol());

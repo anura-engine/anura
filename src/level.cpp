@@ -3760,6 +3760,7 @@ DEFINE_FIELD(cycle, "int")
 	return variant(obj.cycle_);
 DEFINE_SET_FIELD
 	obj.cycle_ = value.as_int();
+	controls::new_level(obj.cycle_, obj.players_.empty() ? 1 : static_cast<int>(obj.players_.size()), multiplayer::slot());
 DEFINE_FIELD(player, "custom_obj")
 	ASSERT_LOG(obj.last_touched_player_, "No player found in level");
 	return variant(obj.last_touched_player_.get());
