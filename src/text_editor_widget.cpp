@@ -697,10 +697,6 @@ namespace gui
 					cursor_.col = text_[cursor_.row].size();
 				}
 
-				if(select_ != cursor_) {
-					//a mouse-based copy for X-style copy/paste
-					handleCopy(true);
-				}
 			} else {
 				consecutive_clicks_ = 0;
 
@@ -795,10 +791,6 @@ namespace gui
 				select_ = Loc(0, 0);
 			}
 
-			if(select_ != cursor_) {
-				//a mouse-based copy for X-style copy/paste
-				handleCopy(true);
-			}
 			return true;
 		}
 
@@ -1229,13 +1221,8 @@ namespace gui
 		onChange();
 	}
 
-	void TextEditorWidget::handleCopy(bool mouse_based)
+	void TextEditorWidget::handleCopy()
 	{
-		LOG_INFO("HANDLE COPY...");
-		if(mouse_based && !clipboard_has_mouse_area()) {
-			return;
-		}
-
 		Loc begin = cursor_;
 		Loc end = select_;
 
@@ -1264,10 +1251,10 @@ namespace gui
 			str += "\n" + std::string(text_[end.row].begin(), text_[end.row].begin() + end.col);
 		}
 
-		LOG_INFO("COPY TO CLIPBOARD: " << str << " " << mouse_based);
+		LOG_INFO("COPY TO CLIPBOARD: " << str);
 
 		g_str_put_in_clipboard = str;
-		copy_to_clipboard(str, mouse_based);
+		copy_to_clipboard(str);
 	}
 
 	void TextEditorWidget::deleteSelection()
@@ -1443,11 +1430,6 @@ namespace gui
 		}
 
 		ScrollableWidget::setYscroll(static_cast<int>(scroll_pos_ * char_height_));
-
-		if(select_ != cursor_) {
-			//a mouse-based copy for X-style copy/paste
-			handleCopy(true);
-		}
 
 		if(onMoveCursor_) {
 			onMoveCursor_();

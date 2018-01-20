@@ -28,7 +28,7 @@
 #if (defined(_X11) || defined(__linux__)) || defined(__APPLE__) && !defined(__ANDROID__) || defined(_WIN32)
 #define CLIPBOARD_FUNCS_DEFINED
 
-void copy_to_clipboard(const std::string& text, const bool mouse)
+void copy_to_clipboard(const std::string& text)
 {
 	SDL_SetClipboardText(text.c_str());
 }
@@ -52,7 +52,7 @@ bool clipboard_handleEvent(const SDL_Event& ev)
 #include <Clipboard.h>
 #define CLIPBOARD_FUNCS_DEFINED
 
-void copy_to_clipboard(const std::string& text, const bool)
+void copy_to_clipboard(const std::string& text)
 {
 	BMessage *clip;
 	if (be_clipboard->Lock())
@@ -87,7 +87,7 @@ std::string copy_from_clipboard(const bool)
 
 #ifndef CLIPBOARD_FUNCS_DEFINED
 
-void copy_to_clipboard(const std::string& /*text*/, const bool)
+void copy_to_clipboard(const std::string& /*text*/)
 {
 }
 

@@ -135,7 +135,7 @@ namespace gui
 		bool handleTextEditing(const SDL_TextEditingEvent& event);
 
 		void handlePaste(std::string txt);
-		void handleCopy(bool mouse_based=false);
+		void handleCopy();
 
 		virtual KRE::Color getCharacterColor(size_t row, size_t col) const;
 

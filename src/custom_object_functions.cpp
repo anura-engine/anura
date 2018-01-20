@@ -392,7 +392,7 @@ namespace
 		{}
 
 		virtual void execute(game_logic::FormulaCallable& ob) const override {
-			copy_to_clipboard(str_, false);
+			copy_to_clipboard(str_);
 		}
 	};
 
