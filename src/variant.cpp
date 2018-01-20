@@ -100,14 +100,29 @@ int variant::get_enum_index(const std::string& enum_id) {
 namespace {
 
 struct VariantThreadInfo {
+	VariantThreadInfo() : to_debug_string_depth(0) {}
 	std::set<variant*> callable_variants_loading, delayed_variants_loading;
 	std::vector<CallStackEntry> call_stack;
 	variant last_failed_query_map, last_failed_query_key;
 	variant last_query_map;
 	variant UnfoundInMapNullVariant;
+	int to_debug_string_depth;
 };
 
 THREAD_LOCAL VariantThreadInfo *g_variant_thread_info;
+
+struct ToDebugStringDepthContext {
+	ToDebugStringDepthContext() {
+		++g_variant_thread_info->to_debug_string_depth;
+	}
+
+	~ToDebugStringDepthContext() {
+		--g_variant_thread_info->to_debug_string_depth;
+	}
+
+	bool isTooDeep() const { return g_variant_thread_info->to_debug_string_depth > 100; }
+};
+
 }
 
 void variant::registerThread()
@@ -2566,6 +2581,11 @@ std::string variant::to_debug_string(std::vector<const game_logic::FormulaCallab
 	}
 
 	case VARIANT_TYPE_CALLABLE: {
+		ToDebugStringDepthContext depth_tracker;
+		if(depth_tracker.isTooDeep()) {
+			s << "(...)";
+			break;
+		}
 
 		std::string str = callable_->toDebugString();
 		if(str.empty() == false) {
