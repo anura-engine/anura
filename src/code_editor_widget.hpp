@@ -55,6 +55,8 @@ namespace gui
 		void setFormula(bool val=true) { is_formula_ = true; }
 
 		WidgetPtr clone() const override;
+
+		void changeFontSize(int amount) override;
 	private:
 		ObjectInfo getObjectAt(int row, int col) const;
 

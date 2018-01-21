@@ -28,12 +28,15 @@
 #include "formula_tokenizer.hpp"
 #include "json_parser.hpp"
 #include "label.hpp"
+#include "preferences.hpp"
 #include "string_utils.hpp"
 #include "utility_query.hpp"
 
 #include <boost/regex.hpp>
 
 #include <stack>
+
+PREF_INT_PERSISTENT(code_editor_font_size, 12, "Font size to use for the code editor");
 
 namespace gui
 {
@@ -55,6 +58,7 @@ namespace gui
 		is_formula_(false)
 	{
 		setEnvironment();
+		setFontSize(g_code_editor_font_size);
 	}
 
 	CodeEditorWidget::CodeEditorWidget(const variant& v, game_logic::FormulaCallable* e) 
@@ -74,6 +78,7 @@ namespace gui
 		  tokens_(),
 		  is_formula_(false)
 	{
+		setFontSize(g_code_editor_font_size);
 	}
 
 	WidgetPtr CodeEditorWidget::clone() const
@@ -581,6 +586,15 @@ namespace gui
 		const std::string new_str = modify_variant_text(str, info.obj, new_obj, info.obj.get_debug_info()->line, info.obj.get_debug_info()->column, indent);
 		current_text_ = std::string(current_text_.begin(), current_text_.begin() + info.begin) + new_str + std::string(current_text_.begin() + info.end, current_text_.end());
 		setText(current_text_, false /*don't move cursor*/);
+	}
+
+	void CodeEditorWidget::changeFontSize(int amount)
+	{
+		g_code_editor_font_size += amount;
+		g_code_editor_font_size = std::max<int>(6, std::min<int>(32, g_code_editor_font_size));
+		setFontSize(g_code_editor_font_size);
+
+		preferences::save_preferences();
 	}
 }
 

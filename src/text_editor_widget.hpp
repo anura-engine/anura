@@ -44,7 +44,7 @@ namespace gui
 
 		int getFontSize() const { return font_size_; }
 		void setFontSize(int font_size);
-		void changeFontSize(int amount);
+		virtual void changeFontSize(int amount);
 
 		virtual void setDim(int w, int h) override;
 
