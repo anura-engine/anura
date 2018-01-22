@@ -325,8 +325,8 @@ namespace gui
 				begin_col_slider_ = static_cast<int>(begin_col);
 				end_col_slider_ = static_cast<int>(end_col);
 
-				int x = static_cast<int>(pos.second) - slider_->width()/2;
-				int y = static_cast<int>(pos.first) + 20 - slider_->height();
+				int x = static_cast<int>(pos.second) - slider_->width()/2 + this->x();
+				int y = static_cast<int>(pos.first) - slider_->height() + this->y();
 				if(x < 10) {
 					x = 10;
 				}
@@ -409,7 +409,7 @@ namespace gui
 	bool CodeEditorWidget::handleEvent(const SDL_Event& event, bool claimed)
 	{
 		if(slider_) {
-			if(slider_->processEvent(getPos(), event, claimed)) {
+			if(slider_->processEvent(point(getPos().x - this->x(), getPos().y - this->y()), event, claimed)) {
 				return true;
 			}
 		}
