@@ -4646,13 +4646,12 @@ void editor::set_code_file()
 			variant v = obj_instance->write();
 			const std::string pseudo_fname = "@instance:" + obj_instance->label();
 			json::set_file_contents(pseudo_fname, v.write_json());
-			if(path) {
-				code_dialog_->load_file(*path);
-			}
 	
 			std::function<void()> fn(std::bind(&editor::object_instance_modified_in_editor, this, obj_instance->label()));
 			code_dialog_->load_file(pseudo_fname, true, &fn);
-		} else if(path) {
+		}
+		
+		if(path) {
 			code_dialog_->load_file(*path);
 		}
 	}
