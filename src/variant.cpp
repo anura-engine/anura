@@ -559,7 +559,7 @@ case VARIANT_TYPE_WEAK:
 ++weak_->refcount;
 break;
 case VARIANT_TYPE_CALLABLE_LOADING:
-ASSERT_LOG(game_logic::wmlFormulaCallableReadScope::isActive() > 0, "Callable loading created when not in a read scope");
+ASSERT_LOG(callable_loading_->refcount() > 0 || game_logic::wmlFormulaCallableReadScope::isActive() > 0, "Callable loading created when not in a read scope");
 callable_loading_->add_reference();
 g_variant_thread_info->callable_variants_loading.insert(this);
 
