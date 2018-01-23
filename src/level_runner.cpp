@@ -2070,10 +2070,12 @@ void LevelRunner::handle_pause_game_result(PAUSE_GAME_RESULT result)
 	}
 }
 
+extern bool g_editor_history;
+
 #ifndef NO_EDITOR
 void LevelRunner::initHistorySlider()
 {
-	if(paused && editor_) {
+	if(paused && editor_ && g_editor_history) {
 		using std::placeholders::_1;
 		history_slider_.reset(new gui::Slider(110, std::bind(&LevelRunner::onHistoryChange, this, _1)));
 		history_slider_->setLoc(370, 4);

@@ -884,9 +884,9 @@ std::string editor::last_edited_level()
 namespace 
 {
 	int g_codebar_width = 0;
-
-	PREF_BOOL(editor_history, false, "Allow editor history feature");
 }
+
+PREF_BOOL(editor_history, false, "Allow editor history feature");
 
 int editor::sidebar_width()
 {
