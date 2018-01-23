@@ -3605,9 +3605,18 @@ void BuiltinEditor::draw_gui() const
 		previous_level = "(no previous level)";
 	}
 	auto t = KRE::Font::getInstance()->renderText(previous_level, KRE::Color::colorBlack(), 24);
+	auto t2 = KRE::Font::getInstance()->renderText(previous_level, KRE::Color::colorWhite(), 24);
 	int x = lvl_->boundaries().x() - t->width();
 	int y = ypos_ + canvas->height()/2;
+
+	//outline the text with white to make it readable against any background
+	canvas->blitTexture(t2, 0, rect(x-2,y,0,0));
+	canvas->blitTexture(t2, 0, rect(x+2,y,0,0));
+	canvas->blitTexture(t2, 0, rect(x,y-2,0,0));
+	canvas->blitTexture(t2, 0, rect(x,y+2,0,0));
+
 	canvas->blitTexture(t, 0, rect(x,y,0,0));
+	
 
 	t = KRE::Font::getInstance()->renderText(next_level, KRE::Color::colorBlack(), 24);
 	x = lvl_->boundaries().x2();
