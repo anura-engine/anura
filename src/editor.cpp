@@ -2494,8 +2494,8 @@ void editor::handleMouseButtonDown(const SDL_MouseButtonEvent& event)
 
 		variant_builder node;
 		node.merge_object(all_characters()[cur_object_].node);
-		node.set("x", (ctrl_pressed ? x : round_tile_size(x)));
-		node.set("y", (ctrl_pressed ? y : round_tile_size(y)));
+		node.set("x", x);
+		node.set("y",  y);
 		node.set("face_right", face_right_);
 		node.set("upside_down", upside_down_);
 
