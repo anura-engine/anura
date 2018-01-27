@@ -1040,7 +1040,7 @@ std::map<std::string,CustomObjectType::EditorSummary> CustomObjectType::getEdito
 			if(node["editor_info"].is_map()) {
 				summary[variant("category")] = node["editor_info"]["category"];
 				if(node["editor_info"]["help"].is_string()) {
-					summary[variant("help")] = node["editor_info"]["help"];
+					summary[variant("help")] = util::word_wrap(node["editor_info"]["help"]);
 				}
 			}
 

@@ -314,6 +314,28 @@ namespace util
 	{
 		return wildcard_pattern_match(pattern.begin(), pattern.end(), str.begin(), str.end());
 	}
+	
+	std::string word_wrap(std::string msg) {
+		std::string res;
+		int nchar = 0, nlines = 0;
+		for(char c : msg) {
+			++nchar;
+			if(c == '\n') {
+				nchar = 0;
+				++nlines;
+			}
+			
+			res.push_back(c);
+			
+			if(nchar > 80) {
+				res.push_back('\n');
+				nchar = 0;
+				++nlines;
+			}
+		}
+		
+		return res;
+	}
 }
 
 UNIT_TEST(test_wildcard_matches)
