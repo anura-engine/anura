@@ -47,7 +47,7 @@ namespace
 {
 	PREF_BOOL_PERSISTENT(error_message_box, true, "Show a message dialog when an error occurs");
 	PREF_INT_PERSISTENT(error_message_box_max_rows, 30, "Maximum rows in error message dialog");
-	PREF_INT_PERSISTENT(error_message_box_max_cols, 180, "Maximum rows in error message dialog");
+	PREF_INT_PERSISTENT(error_message_box_max_cols, 180, "Maximum columns in error message dialog");
 
 	std::string trim_error_message(std::string msg)
 	{
