@@ -1040,7 +1040,7 @@ std::map<std::string,CustomObjectType::EditorSummary> CustomObjectType::getEdito
 			if(node["editor_info"].is_map()) {
 				summary[variant("category")] = node["editor_info"]["category"];
 				if(node["editor_info"]["help"].is_string()) {
-					summary[variant("help")] = variant(util::word_wrap(node["editor_info"]["help"].as_string()));
+					summary[variant("help")] = node["editor_info"]["help"];
 				}
 			}
 
@@ -1056,7 +1056,7 @@ std::map<std::string,CustomObjectType::EditorSummary> CustomObjectType::getEdito
 			EditorSummary& summary = m[i.first.as_string()];
 			summary.category = i.second["category"].as_string();
 			if(i.second["help"].is_string()) {
-				summary.help = util::word_wrap(i.second["help"].as_string());
+				summary.help = util::word_wrap(i.second["help"].as_string(), 120); //Word wrap the help descriptions of objects in the editor. For readability!
 			}
 			summary.first_frame = i.second["animation"];
 		}

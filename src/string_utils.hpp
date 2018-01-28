@@ -80,5 +80,5 @@ namespace util
 
 	bool wildcard_pattern_match(const std::string& pattern, const std::string& str);
 	
-	std::string word_wrap(std::string msg);
+	std::string word_wrap(std::string msg, int columns);
 }

@@ -315,22 +315,33 @@ namespace util
 		return wildcard_pattern_match(pattern.begin(), pattern.end(), str.begin(), str.end());
 	}
 	
-	std::string word_wrap(std::string msg) {
+	std::string word_wrap(std::string msg, int columns) {
 		std::string res;
-		int nchar = 0, nlines = 0;
+		int chars_in_line = 0, lines = 0;
+		
+		size_t index = 0;
+		size_t max_index = msg.length();
+		
 		for(char c : msg) {
-			++nchar;
+			++chars_in_line;
+			++index;
+			
+			//Hard wrap. (Pre-existing.)
 			if(c == '\n') {
-				nchar = 0;
-				++nlines;
+				chars_in_line = 0;
+				++lines;
+				res.push_back('\n');
 			}
 			
-			res.push_back(c);
+			//Soft wrap, either we've ran out of characters on this line or we can't fit another word on this line.
+			else if(chars_in_line > columns || (c == ' ' && (chars_in_line + std::min(msg.find_first_of(" \n", index), max_index) - index > columns))) {
+				res.append("\n    "); //Indent wrapped lines, so it's easier to read \n-deliminated "paragraphs".
+				chars_in_line = 4;
+				++lines;
+			}
 			
-			if(nchar > 80) {
-				res.push_back('\n');
-				nchar = 0;
-				++nlines;
+			else {
+				res.push_back(c);
 			}
 		}
 		
