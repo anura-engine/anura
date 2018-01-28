@@ -1056,7 +1056,7 @@ std::map<std::string,CustomObjectType::EditorSummary> CustomObjectType::getEdito
 			EditorSummary& summary = m[i.first.as_string()];
 			summary.category = i.second["category"].as_string();
 			if(i.second["help"].is_string()) {
-				summary.help = i.second["help"].as_string();
+				summary.help = util::word_wrap(i.second["help"].as_string());
 			}
 			summary.first_frame = i.second["animation"];
 		}
