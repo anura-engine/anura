@@ -41,6 +41,7 @@
 #include "level.hpp"
 #include "preferences.hpp"
 #include "stats.hpp"
+#include "string_utils.hpp"
 #include "variant.hpp"
 
 namespace 
@@ -49,32 +50,12 @@ namespace
 	PREF_INT_PERSISTENT(error_message_box_max_rows, 30, "Maximum rows in error message dialog");
 	PREF_INT_PERSISTENT(error_message_box_max_cols, 180, "Maximum columns in error message dialog");
 
-	std::string trim_error_message(std::string msg)
-	{
-		std::string res;
-		int nchar = 0, nlines = 0;
-		for(char c : msg) {
-			++nchar;
-			if(c == '\n') {
-				nchar = 0;
-				++nlines;
-			}
-
-			res.push_back(c);
-
-			if(nchar > g_error_message_box_max_cols) {
-				res.push_back('\n');
-				nchar = 0;
-				++nlines;
-			}
-
-			if(nlines > g_error_message_box_max_rows) {
-				res += "(error message truncated. See console for more)";
-				break;
-			}
-		}
-
-		return res;
+	std::string trim_error_message(std::string msg) {
+		return util::word_wrap(
+			msg, 
+			g_error_message_box_max_cols, "", 
+			g_error_message_box_max_rows, "(error message truncated. See console for more)"
+		);
 	}
 
 	std::function<void()> g_edit_and_continue_fn;
