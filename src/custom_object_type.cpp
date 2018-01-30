@@ -118,6 +118,12 @@ namespace
 		}
 	}
 
+	const std::string& prototype_path()
+	{
+		static const std::string value =  "data/object_prototypes";
+		return value;
+	}
+
 	void load_file_paths() 
 	{
 		//find out the paths to all our files
@@ -958,11 +964,11 @@ void CustomObjectType::invalidateAllObjects()
 	::prototype_file_paths().clear();
 }
 
-std::vector<std::string> CustomObjectType::getAllIds()
+std::vector<std::string> CustomObjectType::getAllIds(bool prototypes)
 {
 	std::vector<std::string> res;
 	std::map<std::string, std::string> file_paths;
-	module::get_unique_filenames_under_dir(object_path(), &file_paths);
+	module::get_unique_filenames_under_dir(prototypes ? prototype_path() : object_path(), &file_paths);
 	for(std::map<std::string, std::string>::const_iterator i = file_paths.begin(); i != file_paths.end(); ++i) {
 		const std::string& fname = i->first;
 		if(fname.size() < 4 || std::string(fname.end()-4, fname.end()) != ".cfg") {
@@ -975,6 +981,29 @@ std::vector<std::string> CustomObjectType::getAllIds()
 
 	return res;
 }
+
+const std::vector<std::string>& CustomObjectType::possibleIdsIncludingPrototypes()
+{
+	static std::vector<std::string> result;
+	if(result.empty()) {
+		auto a = getAllIds(true);
+		auto b = getAllIds(false);
+		result.insert(result.end(), a.begin(), a.end());
+		result.insert(result.end(), b.begin(), b.end());
+
+		for(std::string& s : result) {
+			auto colon = std::find(s.begin(), s.end(), ':');
+			if(colon != s.end()) {
+				s.erase(s.begin(), colon+1);
+			}
+		}
+
+		std::sort(result.begin(), result.end());
+	}
+
+	return result;
+}
+
 
 std::map<std::string,CustomObjectType::EditorSummary> CustomObjectType::getEditorCategories()
 {

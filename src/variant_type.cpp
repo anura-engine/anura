@@ -2107,6 +2107,8 @@ variant_type_ptr parse_variant_type(const variant& original_str,
 			ASSERT_COND(i1 != i2, "EXPECTED TYPE NAME BUT FOUND EMPTY EXPRESSION:\n" << game_logic::pinpoint_location(original_str, (i1-1)->end));
 			std::string class_name(i1->begin, i1->end);
 
+			ASSERT_COND(is_class || std::binary_search(CustomObjectType::possibleIdsIncludingPrototypes().begin(), CustomObjectType::possibleIdsIncludingPrototypes().end(), class_name), "Type obj " << class_name << "is invalid because there is no definition for a '" << class_name << "' object or object prototype:\n" << game_logic::pinpoint_location(original_str, i1->begin));
+
 			while(i1+1 != i2 && i1+2 != i2 && (i1+1)->equals(".")) {
 				class_name += ".";
 				i1 += 2;
