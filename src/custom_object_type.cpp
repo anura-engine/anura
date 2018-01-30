@@ -1056,7 +1056,16 @@ std::map<std::string,CustomObjectType::EditorSummary> CustomObjectType::getEdito
 			EditorSummary& summary = m[i.first.as_string()];
 			summary.category = i.second["category"].as_string();
 			if(i.second["help"].is_string()) {
-				summary.help = i.second["help"].as_string();
+				//   Word wrap the help descriptions of objects
+				// in the editor. For readability!
+				summary.help = util::word_wrap(
+						i.second["help"].as_string(),
+						//   Must be set up to this low
+						// when wanting to accomodate
+						// some 13" laptops.
+						//   TODO Make it variable.
+						108
+				);
 			}
 			summary.first_frame = i.second["animation"];
 		}

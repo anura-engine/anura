@@ -79,4 +79,8 @@ namespace util
 	}
 
 	bool wildcard_pattern_match(const std::string& pattern, const std::string& str);
+	
+	std::string word_wrap(std::string msg, unsigned short columns);
+	std::string word_wrap(std::string msg, unsigned short columns, const std::string& indent);
+	std::string word_wrap(std::string msg, unsigned short columns, const std::string& indent, unsigned short rows, const std::string& trim_msg);
 }
