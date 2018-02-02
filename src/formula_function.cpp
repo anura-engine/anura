@@ -23,6 +23,9 @@
 
 #include <glm/gtx/intersect.hpp>
 
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/xml_parser.hpp>
+
 #include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/uuid/sha1.hpp>
@@ -1308,6 +1311,90 @@ namespace game_logic
 		ARG_TYPE("string")
 	RETURN_TYPE("commands")
 	END_FUNCTION_DEF(set_mouse_cursor)
+
+	void parse_xml_to_json_internal(const boost::property_tree::ptree& ptree, std::vector<variant>& res)
+	{
+		static const variant TextEnum = variant::create_enum("text");
+		static const variant StartElementEnum = variant::create_enum("start_element");
+		static const variant EndElementEnum = variant::create_enum("end_element");
+
+		static const variant TypeStr("type");
+		static const variant DataStr("data");
+		static const variant AttrStr("attr");
+
+		static const std::string XMLText = "<xmltext>";
+		static const std::string XMLAttr = "<xmlattr>";
+
+		for(auto itor = ptree.begin(); itor != ptree.end(); ++itor) {
+			if(itor->first == XMLText) {
+				if(itor->second.data().empty() == false) {
+					std::map<variant,variant> m;
+					m[TypeStr] = TextEnum;
+					m[DataStr] = variant(itor->second.data());
+
+					std::map<variant,variant> m_empty;
+					m[AttrStr] = variant(&m_empty);
+					res.push_back(variant(&m));
+				}
+
+				continue;
+			} else if(itor->first == XMLAttr) {
+
+				for(auto a = itor->second.begin(); a != itor->second.end(); ++a) {
+					const std::string& attr = a->first;
+					const std::string& value = a->second.data();
+
+					assert(res.empty() == false);
+
+					variant m = res.back()[AttrStr];
+					m.add_attr_mutation(variant(attr), variant(value));
+				}
+
+				continue;
+			}
+
+			std::map<variant,variant> m;
+			m[TypeStr] = StartElementEnum;
+			m[DataStr] = variant(itor->first);
+
+			std::map<variant,variant> m_empty;
+			m[AttrStr] = variant(&m_empty);
+
+			res.push_back(variant(&m));
+
+			parse_xml_to_json_internal(itor->second, res);
+
+			m[TypeStr] = EndElementEnum;
+			m[DataStr] = variant(itor->first);
+
+			m[AttrStr] = variant(&m_empty);
+			res.push_back(variant(&m));
+		}
+	}
+
+	FUNCTION_DEF(parse_xml, 1, 1, "parse_xml(str): Parses XML into a JSON structure")
+		const std::string markup = EVAL_ARG(0).as_string();
+		std::istringstream s(markup);
+		boost::property_tree::ptree ptree;
+
+		try {
+			boost::property_tree::xml_parser::read_xml(s, ptree, boost::property_tree::xml_parser::no_concat_text);
+		} catch(...) {
+			std::ostringstream out;
+			out << "Error parsing XML: " << markup;
+			return variant(out.str());
+		}
+
+		std::vector<variant> res;
+
+		parse_xml_to_json_internal(ptree, res);
+
+		return variant(&res);
+
+	FUNCTION_ARGS_DEF
+		ARG_TYPE("string");
+	RETURN_TYPE("string|[{ type: enum { text, start_element, end_element }, data: string, attr: {string -> string} }]")
+	END_FUNCTION_DEF(parse_xml)
 
 	FUNCTION_DEF_CTOR(eval_with_timeout, 2, 2, "eval_with_timeout(int time_ms, expr): evals expr, but with a timeout of time_ms. This will not pre-emptively time out, but while expr is evaluating, has_timed_out() will start evaluating to true if the timeout has elapsed.")
 	FUNCTION_DEF_MEMBERS
