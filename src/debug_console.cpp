@@ -53,6 +53,8 @@ namespace debug_console
 {
 	namespace 
 	{
+		int g_executing_debug_console;
+
 		int graph_cycle = 0;
 
 		struct SampleSet {
@@ -87,6 +89,14 @@ namespace debug_console
 				return result;
 			}
 		}
+	}
+
+	ExecuteDebugConsoleScope::ExecuteDebugConsoleScope() { ++g_executing_debug_console; }
+	ExecuteDebugConsoleScope::~ExecuteDebugConsoleScope() { --g_executing_debug_console; }
+
+	bool isExecutingDebugConsoleCommand()
+	{
+		return g_executing_debug_console > 0;
 	}
 
 	void add_graph_sample(const std::string& id, decimal value)
@@ -457,6 +467,7 @@ namespace debug_console
 				variant v = f.execute(*focus_);
 				if(ent) {
 					try {
+						ExecuteDebugConsoleScope scope;
 						ent->executeCommand(v);
 					} catch(validation_failure_exception& e) {
 						//if this was a failure due to it not being a real command,

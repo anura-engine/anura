@@ -27,6 +27,7 @@
 #include "Canvas.hpp"
 
 #include "custom_object.hpp"
+#include "debug_console.hpp"
 #include "entity.hpp"
 #include "level.hpp"
 #include "playable_custom_object.hpp"
@@ -436,8 +437,8 @@ std::vector<variant> Entity::popEndAnimCommands()
 	std::vector<variant> result;
 	auto i = scheduled_commands_.begin();
 	while(i != scheduled_commands_.end()) {
-		if(i->first == EndAnimationScheduledCommand) {
-			result.push_back(i->second);
+		if(i->t == EndAnimationScheduledCommand) {
+			result.push_back(i->cmd);
 			i = scheduled_commands_.erase(i);
 		} else {
 			++i;
@@ -449,15 +450,22 @@ std::vector<variant> Entity::popEndAnimCommands()
 void Entity::addScheduledCommand(int cycle, variant cmd)
 {
 	scheduled_commands_.push_back(ScheduledCommand(cycle, cmd));
+	if(debug_console::isExecutingDebugConsoleCommand()) {
+		scheduled_commands_.back().is_debug = true;
+	}
 }
 
-std::vector<variant> Entity::popScheduledCommands()
+std::vector<variant> Entity::popScheduledCommands(bool* is_debug)
 {
 	std::vector<variant> result;
 	std::vector<ScheduledCommand>::iterator i = scheduled_commands_.begin();
 	while(i != scheduled_commands_.end()) {
-		if(i->first != EndAnimationScheduledCommand && --(i->first) <= 0) {
-			result.push_back(i->second);
+		if(i->t != EndAnimationScheduledCommand && --(i->t) <= 0) {
+			if(is_debug && i->is_debug) {
+				*is_debug = true;
+			}
+
+			result.push_back(i->cmd);
 			i = scheduled_commands_.erase(i);
 		} else {
 			++i;
@@ -580,7 +588,7 @@ void Entity::surrenderReferences(GarbageCollector* collector)
 	collector->surrenderVariant(&controls_user_, "CONTROLS_USER");
 
 	for(ScheduledCommand& cmd : scheduled_commands_) {
-		collector->surrenderVariant(&cmd.second, "SCHEDULED_CMD");
+		collector->surrenderVariant(&cmd.cmd, "SCHEDULED_CMD");
 	}
 
 	for(EntityPtr& attachment : attached_objects_) {

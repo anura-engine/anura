@@ -1828,10 +1828,21 @@ void CustomObject::process(Level& lvl)
 		handleEvent(OBJECT_EVENT_DONE_CREATE);
 	}
 
-	std::vector<variant> scheduled_commands = popScheduledCommands();
+	bool debug_commands = false;
+	std::vector<variant> scheduled_commands = popScheduledCommands(&debug_commands);
 	for(const variant& cmd : scheduled_commands) {
 		formula_profiler::Instrument anim_instrument("SCHEDULED_CMD");
-		executeCommand(cmd);
+
+		if(debug_commands) {
+			try {
+				debug_console::ExecuteDebugConsoleScope debug_scope;
+				const assert_recover_scope scope;
+				executeCommand(cmd);
+			} catch(validation_failure_exception&) {
+			}
+		} else {
+			executeCommand(cmd);
+		}
 	}
 
 	std::vector<std::pair<variant,variant> > follow_ons;

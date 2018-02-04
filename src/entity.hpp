@@ -249,7 +249,7 @@ public:
 	std::vector<variant> popEndAnimCommands();
 
 	void addScheduledCommand(int cycle, variant cmd);
-	std::vector<variant> popScheduledCommands();
+	std::vector<variant> popScheduledCommands(bool* is_debug=nullptr);
 
 	virtual void saveGame() {}
 
@@ -407,7 +407,15 @@ private:
 
 	CurrentGeneratorPtr current_generator_;
 
-	typedef std::pair<int, variant> ScheduledCommand;
+	struct ScheduledCommand
+	{
+		ScheduledCommand(int nt=0, const variant& c=variant()) : cmd(c), t(nt), is_debug(false)
+		{}
+		variant cmd;
+		int t;
+		bool is_debug;
+	};
+
 	std::vector<ScheduledCommand> scheduled_commands_;
 
 	bool controls_[controls::NUM_CONTROLS];	

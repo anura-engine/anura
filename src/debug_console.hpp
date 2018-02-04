@@ -45,6 +45,14 @@ namespace debug_console
 	void draw();
 	void enable_screen_output(bool en=true);
 
+	bool isExecutingDebugConsoleCommand();
+
+	struct ExecuteDebugConsoleScope {
+		ExecuteDebugConsoleScope();
+		~ExecuteDebugConsoleScope();
+	};
+
+
 	class ConsoleDialog : public gui::Dialog
 	{
 	public:
