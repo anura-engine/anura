@@ -734,6 +734,8 @@ CustomObject::CustomObject(const CustomObject& o)
 	particles_(o.particles_),
 	document_(nullptr)
 {
+	properties_requiring_dynamic_initialization_ = o.properties_requiring_dynamic_initialization_;
+
 	vars_->setObjectName(getDebugDescription());
 	tmp_vars_->setObjectName(getDebugDescription());
 
