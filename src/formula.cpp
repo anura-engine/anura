@@ -4453,12 +4453,12 @@ static std::string debugSubexpressionTypes(ConstFormulaPtr & fml)
 	
 			if(op == nullptr) {
 				if(i1->type == FFL_TOKEN_TYPE::LPARENS && (i2-1)->type == FFL_TOKEN_TYPE::RPARENS) {
-				//   This `if` will prevent ` ( def ( ) -> int 32993 ) ( ) `
-				// from being incorrectly interpreted as that
-				// ` def ( ) -> int 32993 ) ( ` must be parsed.
-				if (i2 - 2 >= i1 && (i2 - 2)->type != FFL_TOKEN_TYPE::LPARENS) {
-					return parse_expression(formula_str, i1+1,i2-1,symbols, callable_def, can_optimize);
-				}
+					//   This condition will prevent ` ( def ( ) -> int 32993 ) ( ) `
+					// from being incorrectly interpreted as that
+					// ` def ( ) -> int 32993 ) ( ` must be parsed.
+					if (i2 - 2 >= i1 && (i2 - 2)->type != FFL_TOKEN_TYPE::LPARENS) {
+						return parse_expression(formula_str, i1+1,i2-1,symbols, callable_def, can_optimize);
+					}
 				} else if( (i2-1)->type == FFL_TOKEN_TYPE::RSQUARE) { //check if there is [ ] : either a list definition, or a operator 
 					const Token* tok = i2-2;
 					int square_parens = 0;
