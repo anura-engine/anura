@@ -1164,7 +1164,8 @@ int CustomObjectType::reloadModifiedCode()
 		}
 	}
 
-	files_updated = error_paths;
+	//TODO: do something with the error paths/error messages.
+	files_updated.clear();
 
 	return result;
 }
