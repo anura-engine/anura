@@ -42,8 +42,8 @@
 namespace 
 {
 	using namespace KRE;
-	const unsigned char RedBorder[] = {0xf9, 0x30, 0x3d};
-	const unsigned char BackgroundColor[] = {0x6f, 0x6d, 0x51};
+	const unsigned char RedBorder[] = {0x3d, 0x30, 0xf9};
+	const unsigned char BackgroundColor[] = {0x51, 0x6d, 0x6f};
 
 	bool is_pixel_border(const SurfacePtr& s, int x, int y)
 	{
@@ -642,7 +642,6 @@ namespace gui
 			has_motion_ = true;
 			const SDL_MouseMotionEvent& e = event.motion;
 			if(moving_solid_rect_) {
-					fprintf(stderr, "ZZZ: MOVING WHOLE RECTANGLE: %d, %d\n", (int)e.x, (int)e.y);
 				if(solid_handler_) {
 					const int x = e.x/2;
 					const int y = e.y/2;
@@ -760,7 +759,7 @@ namespace gui
 				claimed = claimMouseEvents();
 				p = mousePointToImageLoc(p);
 
-				auto surf = KRE::Surface::create(obj_["image"].as_string());
+				auto surf = KRE::Surface::create(obj_["image"].as_string(), KRE::SurfaceFlags::NO_ALPHA_FILTER|KRE::SurfaceFlags::NO_CACHE);
 
 				if(surf) {
 					rect area = get_border_rect_around_loc(surf, p.x, p.y);

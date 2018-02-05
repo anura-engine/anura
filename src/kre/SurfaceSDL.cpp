@@ -266,14 +266,17 @@ namespace KRE
 	SurfacePtr SurfaceSDL::runGlobalAlphaFilter()
 	{
 		auto filter_fn = Surface::getAlphaFilter();
-		if(filter_fn && !(getFlags() & SurfaceFlags::NO_ALPHA_FILTER)) {
-			return handleConvert(PixelFormat::PF::PIXELFORMAT_ARGB8888, [&filter_fn](int& r, int& g, int& b, int& a) {
-				if(filter_fn(r, g, b)) {
-					r = g = b = a = 0;
-				}
-			});	
+		if(!filter_fn || (getFlags() & SurfaceFlags::NO_ALPHA_FILTER)) {
+			filter_fn = [=](int r, int g, int b) {
+				return false;
+			};
 		}
-		return shared_from_this();
+
+		return handleConvert(PixelFormat::PF::PIXELFORMAT_ARGB8888, [&filter_fn](int& r, int& g, int& b, int& a) {
+			if(filter_fn(r, g, b)) {
+				r = g = b = a = 0;
+			}
+		});	
 	}
 
 	void SurfaceSDL::createPalette()

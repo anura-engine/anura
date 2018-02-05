@@ -47,6 +47,7 @@
 #include "formula_callable.hpp"
 #include "formula_object.hpp"
 #include "formula_profiler.hpp"
+#include "graphical_font.hpp"
 #include "module.hpp"
 #include "preferences.hpp"
 #include "string_utils.hpp"
@@ -89,6 +90,7 @@ namespace graphics
 
 			std::string svg;
 			std::string img;
+			const rect* img_src_area;
 		};
 
 		struct LineOfText 
@@ -232,7 +234,7 @@ namespace {
 
 		struct TextMarkupFragment
 		{
-			TextMarkupFragment() : nobr(false), color(255,255,255,255), img_w(-1), img_h(-1) {}
+			TextMarkupFragment() : nobr(false), color(255,255,255,255), img_w(-1), img_h(-1), img_src_area(nullptr) {}
 			std::string text;
 			std::string font;
 			float font_size;
@@ -246,6 +248,9 @@ namespace {
 
 			std::string img;
 			int img_w, img_h;
+
+			//used for bitmap fonts.
+			const rect* img_src_area;
 
 			KRE::Color color;
 		};
@@ -289,6 +294,7 @@ namespace {
 
 	KRE::TexturePtr cairo_context::write(const variant& node) const
 	{
+		formula_profiler::Instrument instrument("CAIRO_CONTEXT_WRITE");
 		auto surf = KRE::Surface::create(width_, height_, KRE::PixelFormat::PF::PIXELFORMAT_ARGB8888);
 		std::vector<unsigned char> bytes;
 		bytes.resize(cairo_image_surface_get_stride(surface_) * height_);
@@ -314,6 +320,7 @@ namespace {
 			settings = settings + node;
 		}
 
+		formula_profiler::Instrument instrument2("CAIRO_CONTEXT_CREATE_TEXTURE");
 		KRE::TexturePtr t = KRE::Texture::createTexture(surf, settings);
 		return t;
 		//tex->update2D(0, 0, 0, width_, height_, cairo_image_surface_get_stride(surface_), cairo_image_surface_get_data(surface_));
@@ -432,7 +439,7 @@ namespace {
 	class cairo_text_fragment : public game_logic::FormulaCallable
 	{
 	public:
-		cairo_text_fragment() : x(0), y(0), width(0), height(0), ascent(0), descent(0), x_advance(0), has_image(false), has_text(false), font_size(12), translate_x(0), translate_y(0) {
+		cairo_text_fragment() : x(0), y(0), width(0), height(0), ascent(0), descent(0), x_advance(0), has_image(false), has_text(false), img_src_area(nullptr), font_size(12), translate_x(0), translate_y(0) {
 		}
 		variant tag, info;
 		float x, y, width, height, ascent, descent, x_advance;
@@ -441,6 +448,7 @@ namespace {
 		std::string text;
 
 		std::string img, svg;
+		const rect* img_src_area;
 
 		std::string font;
 		int font_size;
@@ -486,7 +494,38 @@ namespace {
 		}
 
 		variant calculate_path(bool do_translate=true) const {
-			if(img.empty() == false) {
+			if(img_src_area != nullptr) {
+				std::vector<variant> fn_args;
+				fn_args.push_back(variant(img));
+				fn_args.push_back(variant(translate_x));
+				fn_args.push_back(variant(translate_y));
+				fn_args.push_back(variant(img_src_area->x()));
+				fn_args.push_back(variant(img_src_area->y()));
+				fn_args.push_back(variant(img_src_area->w()));
+				fn_args.push_back(variant(img_src_area->h()));
+
+				return variant(new cairo_op([=](cairo_context& context, const std::vector<variant>& args) {
+					cairo_save(context.get());
+
+
+					//fprintf(stderr, "DRAW GLYPH: %s, %f, %f -> %f, %f, %f, %f\n", args[0].as_string().c_str(), args[1].as_decimal().as_float(), args[2].as_decimal().as_float(), args[3].as_decimal().as_float(), args[4].as_decimal().as_float(), args[5].as_decimal().as_float(), args[6].as_decimal().as_float());
+
+
+					cairo_translate(context.get(), args[1].as_decimal().as_float(), args[2].as_decimal().as_float());
+
+					cairo_surface_t* surface = get_cairo_image(args[0].as_string());
+					cairo_set_source_surface(context.get(), surface, -args[3].as_float(), -args[4].as_float());
+
+					cairo_rectangle(context.get(), 0.0f, 0.0f, args[5].as_decimal().as_float(), args[6].as_decimal().as_float());
+
+					cairo_clip(context.get());
+					cairo_paint(context.get());
+					cairo_reset_clip(context.get());
+
+					cairo_restore(context.get());
+				}, fn_args));
+
+			} else if(img.empty() == false) {
 				std::vector<variant> fn_args;
 				fn_args.push_back(variant(img));
 				fn_args.push_back(variant(translate_x));
@@ -818,20 +857,28 @@ namespace {
 			std::string svg = item.svg;
 			std::string img = item.img;
 
-
-			FT_Face face = get_ft_font(font);
-			cairo_font_face_t* cairo_face = cairo_ft_font_face_create_for_ft_face(face, 0);
-			cairo_set_font_face(context.get(), cairo_face);
-			cairo_set_font_size(context.get(), font_size);
+			float min_line_height = 0.0f;
 
 			cairo_font_extents_t font_extents;
-			cairo_font_extents(context.get(), &font_extents);
+			if(item.img_src_area == nullptr) {
 
-			if(font_extents.height > line_height) {
-				line_height = static_cast<float>(font_extents.height);
+				FT_Face face = get_ft_font(font);
+				cairo_font_face_t* cairo_face = cairo_ft_font_face_create_for_ft_face(face, 0);
+				cairo_set_font_face(context.get(), cairo_face);
+				cairo_set_font_size(context.get(), font_size);
+
+				cairo_font_extents(context.get(), &font_extents);
+	
+				if(font_extents.height > line_height) {
+					line_height = static_cast<float>(font_extents.height);
+				}
+
+				min_line_height = static_cast<float>(font_extents.height);
+			} else {
+				font_extents.max_y_advance = font_extents.height = static_cast<float>(item.img_src_area->h());
+				font_extents.max_x_advance = static_cast<float>(item.img_src_area->w());
+				font_extents.ascent = font_extents.descent = font_extents.height/2.0f;
 			}
-
-			float min_line_height = static_cast<float>(font_extents.height);
 
 			std::vector<std::string> lines = util::split(text, '\n', 0);
 
@@ -945,6 +992,11 @@ namespace {
 
 					int img_w = item.img_w, img_h = item.img_h;
 
+					if(item.img_src_area != nullptr) {
+						img_w = item.img_src_area->w();
+						img_h = item.img_src_area->h();
+					}
+
 					if(svg.empty() == false) {
 						//advance the text position along to account
 						//for the svg icon, wrapping to next line if necessary
@@ -1008,7 +1060,7 @@ namespace {
 						}
 					}
 
-					TextFragment fragment = { xpos, ypos, static_cast<float>(extents.width), static_cast<float>(extents.height), static_cast<float>(extents.x_advance), extents.y_bearing, font, font_size, tag, info, item.color, std::string(i1, i2), valign, font_extents, svg, img };
+					TextFragment fragment = { xpos, ypos, static_cast<float>(extents.width), static_cast<float>(extents.height), static_cast<float>(extents.x_advance), extents.y_bearing, font, font_size, tag, info, item.color, std::string(i1, i2), valign, font_extents, svg, img, item.img_src_area };
 					output.back().fragments.push_back(fragment);
 					output.back().fragment_width += static_cast<float>(extents.width);
 
@@ -1122,6 +1174,7 @@ namespace {
 				res->svg = fragment.svg;
 				res->font = fragment.font;
 				res->font_size = fragment.font_size;
+				res->img_src_area = fragment.img_src_area;
 
 				res->x = fragment.xpos + xpos_align_adjust;
 				res->y = fragment.ypos + fragment_baseline - static_cast<float>(fragment.font_extents.ascent);
@@ -1176,11 +1229,31 @@ namespace {
 
 			if(itor->first == XMLText) {
 				if(itor->second.data().empty() == false) {
-					output.push_back(stack.back());
-					if(escape_special_chars) {
-						output.back().text = parse_special_chars_internal(itor->second.data());
+
+					if(stack.back().font.size() > 7 && std::equal(stack.back().font.begin(), stack.back().font.begin()+7, "bitmap:")) {
+						std::string actual_font(stack.back().font.begin()+7, stack.back().font.end());
+						auto font_info = GraphicalFont::get(actual_font);
+						ASSERT_LOG(font_info, "Unknown graphical font: " << actual_font);
+
+						stack.back().img = "images/" + font_info->texture_file();
+
+						for(unsigned int cp : utils::utf8_to_codepoint(itor->second.data())) {
+							const rect& area = font_info->get_codepoint_area(cp);
+							if(area.w() > 0) {
+								stack.back().img_src_area = &area;
+								output.push_back(stack.back());
+								output.back().text = "";
+							}
+						}
+
 					} else {
-						output.back().text = itor->second.data();
+
+						output.push_back(stack.back());
+						if(escape_special_chars) {
+							output.back().text = parse_special_chars_internal(itor->second.data());
+						} else {
+							output.back().text = itor->second.data();
+						}
 					}
 				}
 
@@ -1362,6 +1435,8 @@ namespace {
 
 		formula_profiler::Instrument instrument2("CAIRO_RENDER");
 		execute_cairo_ops(context, ops);
+
+		formula_profiler::Instrument instrument3("CAIRO_CREATE_TEX");
 
 		return variant(new TextureObject(context.write(NUM_FN_ARGS > 3 ? FN_ARG(3) : variant())));
 	END_DEFINE_FN
