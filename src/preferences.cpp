@@ -380,7 +380,6 @@ namespace preferences
 		int alt_frame_time_millis_ = -1;
 		bool no_iphone_controls_ = false;
 		bool allow_autopause_ = false;
-		bool auto_size_window_ = false;
 		bool screen_dimensions_are_persistent = false;
 		
 		bool relay_through_server_ = false;
@@ -525,6 +524,7 @@ namespace preferences
 		int requested_window_width_ = 0;
 		int requested_window_height_ = 0;
 
+		PREF_BOOL(auto_size_window, true, "If true, window is auto-sized");
 		PREF_INT(virtual_window_width, 0, "Virtual width of the game window");
 		PREF_INT(virtual_window_height, 0, "Virtual height of the game window");
 
@@ -712,7 +712,7 @@ namespace preferences
 
 	bool auto_size_window()
 	{
-		return auto_size_window_;
+		return g_auto_size_window;
 	}
 
 	int requested_window_width()
@@ -1126,8 +1126,6 @@ namespace preferences
 			allow_autopause_ = false;
 		} else if(s == "--autopause") {
 			allow_autopause_ = true;
-		} else if(s == "--auto-size-window") {
-			auto_size_window_ = true;
 		} else if(s == "--difficulty" && !arg_value.empty()) {
 			if(boost::regex_match(arg_value, boost::regex("-?[0-9]+"))) {
 				force_difficulty_ = boost::lexical_cast<int>(arg_value);
