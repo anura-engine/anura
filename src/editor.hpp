@@ -344,6 +344,9 @@ protected:
 	// X and Y resolution of the editor, 0 means use default.
 	int xres_, yres_;
 
+	//track how much we're scheduled to move due to middle mouse button movement.
+	int middle_mouse_deltax_, middle_mouse_deltay_;
+
 	//if we are dragging an entity around, this marks the position from
 	//which the entity started the drag.
 	int selected_entity_startx_, selected_entity_starty_;

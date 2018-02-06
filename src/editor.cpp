@@ -923,6 +923,8 @@ editor::editor(const char* level_cfg)
 	prev_mousey_(-1),
 	xres_(0), 
 	yres_(0), 
+	middle_mouse_deltax_(0),
+	middle_mouse_deltay_(0),
 	mouselook_mode_(false)
 {
 	LOG_INFO("BEGIN EDITOR::EDITOR");
@@ -1486,8 +1488,8 @@ void BuiltinEditor::process()
 	if(prev_mousex_ != -1 && prev_mousey_ != -1 && (buttons&SDL_BUTTON_MIDDLE)) {
 		const int diff_x = mousex - prev_mousex_;
 		const int diff_y = mousey - prev_mousey_;
-		xpos_ -= diff_x*zoom_;
-		ypos_ -= diff_y*zoom_;
+		middle_mouse_deltax_ = -diff_x*zoom_;
+		middle_mouse_deltay_ = -diff_y*zoom_;
 	}
 
 	prev_mousex_ = mousex;
@@ -1974,6 +1976,11 @@ void editor::handleKeyPress(const SDL_KeyboardEvent& key)
 
 void editor::handle_scrolling()
 {
+	xpos_ += middle_mouse_deltax_;
+	ypos_ += middle_mouse_deltay_;
+
+	middle_mouse_deltax_ = middle_mouse_deltay_ = 0;
+
 	if(code_dialog_ && code_dialog_->hasKeyboardFocus()) {
 		return;
 	}
