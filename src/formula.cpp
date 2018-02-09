@@ -5365,32 +5365,6 @@ UNIT_TEST(where_statement) {
 
 //		fprintf(stderr, "ZZZ: ASM3: %s\n", assembly.c_str());
 
-		f = new Formula(variant(
-				"a * b + d where a = 2d8, b = 1d4 where d = 2d6"));
-
-		assembly = "";
-
-		result = f->outputDisassemble(&assembly);
-
-		//		fprintf(stderr, "ZZZ: ASM3: %s\n", assembly.c_str());
-
-		f = new Formula(variant(
-				"a * b + d where a = 2d8, b = 1d4 where d = 2 d6"));
-
-		assembly = "";
-
-		result = f->outputDisassemble(&assembly);
-
-		//		fprintf(stderr, "ZZZ: ASM3: %s\n", assembly.c_str());
-
-//		f = new Formula(variant(
-//				"a0 * b + d1 where a0 = 2d8, b = 1d4 where d1 = 2 d6"));
-//
-//		assembly = "";
-//
-//		result = f->outputDisassemble(&assembly);
-//
-//		//		fprintf(stderr, "ZZZ: ASM3: %s\n", assembly.c_str());
 	}
 }
 
