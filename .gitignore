@@ -70,6 +70,9 @@ modules/*
 !modules/gui
 !modules/tbs
 
+#Ignore this, don't know why it's being created for me.
+imgui.ini
+
 MacOS/include
 MacOS/lib
 xcuserdata
