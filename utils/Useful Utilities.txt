@@ -69,14 +69,6 @@ print('(search in ~/modules/frogatto/data/objects/)\n=== END REPORT ===')
 "
 
 
-Citadel (normal, MP)
-./game --module=Citadel --tbs-server
-X ./game --module=Citadel --server=theargentlark.com:23056
-./game --module=Citadel --user=DDR --server=theargentlark.com:18081 --tbs-server
-git pull                :: pulls from default, ddr0, here.
-git pull parent master  :: pulls from dave's fork
-
-
 
 Get a list of all enemy descriptions:
 ./anura --utility=query modules/frogatto/data/objects 'if(doc.properties and doc.properties.description, ("\n${doc.id}.cfg:\n     description: ${doc.properties.description}\n    taste: ${doc.properties.taste}\n\n"))' 2>&1 | grep -v "\""
