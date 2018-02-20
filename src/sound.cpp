@@ -35,6 +35,7 @@
 
 #include "asserts.hpp"
 #include "filesystem.hpp"
+#include "formatter.hpp"
 #include "formula_callable.hpp"
 #include "formula_callable_definition.hpp"
 #include "module.hpp"
@@ -909,6 +910,8 @@ namespace sound
 
 		virtual SoundEffectFilter* clone() const = 0;
 
+		virtual std::string debug_description() const = 0;
+
 	protected:
 		void GetData(float* output, int nsamples) {
 			if(source_ != nullptr) {
@@ -1129,6 +1132,8 @@ namespace sound
 		}
 
 		SoundEffectFilter* clone() const override { return new BiQuadSoundEffectFilter(*this); }
+
+		std::string debug_description() const override { return "BiQuad"; }
 	private:
 		threading::mutex mutex_;
 		Biquad filter_;
@@ -1168,6 +1173,8 @@ namespace sound
 		}
 
 		SoundEffectFilter* clone() const override { return new SpeedSoundEffectFilter(*this); }
+
+		std::string debug_description() const override { return (formatter() << "Speed(" << speed_ << ")"); }
 	private:
 		threading::mutex mutex_;
 		float speed_;
@@ -1258,6 +1265,8 @@ namespace sound
 				}
 			}
 		}
+
+		std::string debug_description() const override { return (formatter() << "BinauralDelay(" << delay_ << ")"); }
 	private:
 		threading::mutex mutex_;
 		float delay_;
@@ -1504,12 +1513,12 @@ namespace sound
 	class PlayingSound : public SoundSource
 	{
 	public:
-		PlayingSound(const std::string& fname, const void* obj, float volume, float fade_in) : obj_(obj), source_(new RawPlayingSound(fname, volume, fade_in))
+		PlayingSound(const std::string& fname, const void* obj, float volume, float fade_in) : obj_(obj), source_(new RawPlayingSound(fname, volume, fade_in)), actual_volume_(-1.0f)
 		{
 			first_filter_ = source_;
 		}
 
-		PlayingSound(const std::string& fname, const void* obj, variant options) : obj_(obj), source_(new RawPlayingSound(fname, options)), userdata_(options["userdata"])
+		PlayingSound(const std::string& fname, const void* obj, variant options) : obj_(obj), source_(new RawPlayingSound(fname, options)), userdata_(options["userdata"]), actual_volume_(-1.0f)
 		{
 			first_filter_ = source_;
 
@@ -1582,11 +1591,22 @@ namespace sound
 			source_->setVolume(volume, nseconds);
 		}
 
+		float getVolume()
+		{
+			if(actual_volume_ >= 0.0f) {
+				return actual_volume_;
+			}
+
+			threading::lock lck(mutex_);
+			return source_->getVolume();
+		}
+
 		//Mix data into the output buffer. Can be safely called from the mixing thread.
 		virtual void MixData(float* output, int nsamples) override
 		{
 			threading::lock lck(mutex_);
 			if(source_->loaded()) {
+				actual_volume_ = source_->getVolume();
 				first_filter_->MixData(output, nsamples);
 			}
 		}
@@ -1635,6 +1655,8 @@ namespace sound
 		std::vector<ffl::IntrusivePtr<SoundEffectFilter> > filters_;
 
 		variant userdata_;
+
+		float actual_volume_;
 	};
 
 	//List of currently playing sounds. Only the game thread can modify this,
@@ -2215,12 +2237,19 @@ BEGIN_DEFINE_CALLABLE_NOBASE(AudioEngine)
 			s << g_playing_sounds.size() << " sounds playing\n";
 
 			for(auto p : g_playing_sounds) {
-				s << "  " << p->fname() << ": " << (p->src()->loaded() == false ? "loading" : (p->finished() ? "finished" : ""));
+				s << "  " << p->fname() << ": " << (p->src()->loaded() == false ? "loading" : (p->finished() ? "finished" : "")) << " vol: " << p->getVolume() << " (stereo pan: " << p->src()->leftPan() << "/" << p->src()->rightPan() << ")";
 				if(p->src()->looped()) {
 					s << " (looped)";
 				}
 				if(p->src()->data()) {
-					s << " " << p->src()->pos() << "/" << p->src()->data()->nsamples();
+					s << " " << p->src()->pos()/44100.0f << "/" << p->src()->data()->nsamples()/44100.0f;
+				}
+
+				if(p->getFilters().empty() == false) {
+					s << " Filters: ";
+					for(auto f : p->getFilters()) {
+						s << f->debug_description() << " ";
+					}
 				}
 
 				s << "\n";
