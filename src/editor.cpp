@@ -2835,8 +2835,10 @@ void editor::handleMouseButtonUp(const SDL_MouseButtonEvent& event)
 					std::map<int, std::vector<std::string> > old_tiles;
 					lvl->getAllTilesRect(x, y, x, y, old_tiles);
 					for (auto i = old_tiles.begin(); i != old_tiles.end(); ++i) {
-						undo.push_back([=](){ lvl->addTileRectVector(i->first, x, y, x, y, i->second); });
-						redo.push_back([=](){ lvl->addTileRectVector(i->first, x, y, x, y, std::vector<std::string>(1,"")); });
+						int zorder = i->first;
+						std::vector<std::string> tiles = i->second;
+						undo.push_back([=](){ lvl->addTileRectVector(zorder, x, y, x, y, tiles); });
+						redo.push_back([=](){ lvl->addTileRectVector(zorder, x, y, x, y, std::vector<std::string>(1,"")); });
 					}
 
 					old_tiles.clear();
@@ -2851,8 +2853,10 @@ void editor::handleMouseButtonUp(const SDL_MouseButtonEvent& event)
 
 					lvl->getAllTilesRect(x, y, x, y, old_tiles);
 					for (auto i = old_tiles.begin(); i != old_tiles.end(); ++i) {
-						undo.push_back([=](){ lvl->addTileRectVector(i->first, x, y, x, y, i->second); });
-						redo.push_back([=](){ lvl->addTileRectVector(i->first, x, y, x, y, std::vector<std::string>(1,"")); });
+						int zorder = i->first;
+						std::vector<std::string> tiles = i->second;
+						undo.push_back([=](){ lvl->addTileRectVector(zorder, x, y, x, y, tiles); });
+						redo.push_back([=](){ lvl->addTileRectVector(zorder, x, y, x, y, std::vector<std::string>(1,"")); });
 					}
 				}
 
@@ -2869,7 +2873,9 @@ void editor::handleMouseButtonUp(const SDL_MouseButtonEvent& event)
 					std::map<int, std::vector<std::string> > old_tiles;
 					lvl->getAllTilesRect(x, y, x, y, old_tiles);
 					for (auto i = old_tiles.begin(); i != old_tiles.end(); ++i) {
-						redo.push_back([=](){ lvl->addTileRectVector(i->first, x + diffx*TileSize, y + diffy*TileSize, x + diffx*TileSize, y + diffy*TileSize, i->second); });
+						int zorder = i->first;
+						std::vector<std::string> tiles = i->second;
+						redo.push_back([=](){ lvl->addTileRectVector(zorder, x + diffx*TileSize, y + diffy*TileSize, x + diffx*TileSize, y + diffy*TileSize, tiles); });
 					}
 				}
 
