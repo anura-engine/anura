@@ -179,9 +179,9 @@ $1/%.o: %.cpp
 	@$(CCACHE) $(CXX) $(CPPFLAGS) $(BASE_CXXFLAGS) $(CXXFLAGS) $(INC) $(INCLUDES) -MF $$@.d -c -o $$@ $$<
 endef
 
-.PHONY: all checkdirs clean
+.PHONY: all checkdirs clean clear_untracked_at_imgui
 
-all: checkdirs anura
+all: checkdirs anura clear_untracked_at_imgui
 
 anura: $(OBJ)
 	@echo "Linking : anura"
@@ -189,6 +189,15 @@ anura: $(OBJ)
 		$(BASE_CXXFLAGS) $(LDFLAGS) $(CXXFLAGS) $(CPPFLAGS) \
 		$(OBJ) -o anura \
 		$(LIBS) -lboost_regex -lboost_system -lboost_filesystem -lboost_locale -licui18n -licuuc -licudata -lpthread -fthreadsafe-statics
+
+ifeq ($(OS),Windows_NT)
+clear_untracked_at_imgui:
+	;
+else
+clear_untracked_at_imgui:
+	$(shell true && find imgui/ -name '*.d' -type f -exec rm -f {} \;)
+	$(shell true && find imgui/ -name '*.o' -type f -exec rm -f {} \;)
+endif
 
 checkdirs: $(BUILD_DIR)
 	@echo -e \
