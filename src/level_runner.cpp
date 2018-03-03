@@ -1201,7 +1201,8 @@ bool LevelRunner::play_cycle()
 
 			sound::stop_looped_sounds(nullptr);
 
-			for(EntityPtr e : lvl_->get_chars()) {
+			std::vector<EntityPtr> chars = lvl_->get_chars();
+			for(EntityPtr e : chars) {
 				e->handleEvent(OBJECT_EVENT_BEING_REMOVED);
 			}
 
