@@ -4188,6 +4188,9 @@ static std::string debugSubexpressionTypes(ConstFormulaPtr & fml)
 			std::vector<variant_type_ptr> variant_types;
 			variant_type_ptr result_type;
 			parse_function_args(formula_str, i1, i2, &args, &types, &variant_types, &default_args, &result_type);
+
+			ASSERT_LOG(i1 != i2, "Unexpected end of formula\n" << pinpoint_location(formula_str, (i1-1)->begin, (i1-1)->end));
+
 			const Token* const beg = i1;
 			while((i1 != i2) && (i1->type != FFL_TOKEN_TYPE::SEMICOLON || formula_name.empty())) {
 				++i1;
