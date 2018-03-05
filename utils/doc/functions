@@ -1,0 +1,1071 @@
+matched line 1578 of file '../../src//formula_profiler.cpp':
+		FUNCTION_DEF(anura_profiler, 0, 0, "anura_profiler(): get the interface to the profiler")
+
+matched line 76 of file '../../src//voxel_object_functions.cpp':
+	FUNCTION_DEF(schedule, 2, 2, "schedule(int cycles_in_future, list of commands): schedules the given list of commands to be run on the current object the given number of cycles in the future. Note that the object must be valid (not destroyed) and still present in the level for the commands to be run.")
+
+matched line 118 of file '../../src//voxel_object_functions.cpp':
+	FUNCTION_DEF(fire_event, 1, 3, "fire_event((optional) object target, string id, (optional)callable arg): fires the event with the given id. Targets the current object by default, or target if given. Sends arg as the event argument if given")
+
+matched line 163 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(set_language, 1, 1, "set_language(str): set the language using a new locale code")
+
+matched line 172 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(translate, 1, 1, "translate(str): returns the translated version of the given string")
+
+matched line 212 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(get_texture, 1, 1, "get_texture(string|map): loads a texture")
+
+matched line 227 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(texture, 2, 3, "texture(objects, rect, bool half_size=false): render a texture")
+
+matched line 294 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(desktop_notification, 1, 3, "desktop_notification(message, title, icon)")
+
+matched line 342 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(open_url, 1, 1, "open_url(string url): opens a given url on the platform's web browser")
+
+matched line 381 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(get_clipboard_text, 0, 0, "get_clipboard_text(): returns the text currentl in the windowing clipboard")
+
+matched line 399 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(set_clipboard_text, 1, 1, "set_clipboard_text(str): sets the clipboard text to the given string")
+
+matched line 411 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(tbs_internal_client, 0, 1, "tbs_internal_client(session=-1): creates a client object to the local in-memory tbs server")
+
+matched line 441 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(tbs_client, 2, 3, "tbs_client(host, port, session=-1): creates a client object to the tbs server")
+
+matched line 526 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(tbs_send, 2, 2, "tbs_send(tbs_client, msg): sends a message through the given tbs_client connection")
+
+matched line 567 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(tbs_process, 1, 1, "tbs_process(tbs_client): processes events for the tbs client")
+
+matched line 674 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(tbs_blocking_request, 2, 2, "tbs_blocking_request(tbs_client, request)")
+
+matched line 703 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(report, 1, 1, "report(): Write a key and a value into [custom] in the stats.")
+
+matched line 749 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(get_perf_info, 0, 0, "get_perf_info(): return performance info")
+
+matched line 835 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(set_save_slot, 0, 1, "set_save_slot((optional) int slot): Allows the user to select the save slot, if no slot is specified a dialog is displayed.")
+
+matched line 867 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(checkpoint_game, 0, 0, "checkpoint_game(): saves a checkpoint of the game")
+
+matched line 874 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(get_save_document, 1, 1, "get_save_document(int slot): gets the FFL document for the save in the given slot")
+
+matched line 895 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(save_game, 0, 0, "saveGame(): saves the current game state")
+
+matched line 972 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(load_game, 0, 2, "load_game(transition, slot): loads the saved game. If transition (a string) is given, it will use that type of transition.")
+
+matched line 991 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(can_load_game, 0, 0, "can_load_game(): returns true if there is a saved game available to load")
+
+matched line 996 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(available_save_slots, 0, 0, "available_save_slots(): returns a list of numeric indexes of available save slots")
+
+matched line 1023 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(move_to_standing, 0, 0, "moveToStanding(): tries to move the object downwards if it's in the air, or upwards if it's in solid space, until it's standing on solid ground.");
+
+matched line 1051 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(music, 1, 1, "music(string id): plays the music file given by 'id' in a loop")
+
+matched line 1062 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(music_queue, 1, 2, "music_queue(string id, int fade_time=500): plays the music file given by 'id' in a loop after the current music is done.")
+
+matched line 1079 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(music_onetime, 1, 1, "music_onetime(string id): plays the music file given by 'id' once")
+
+matched line 1125 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(sound, 1, 4, "sound(string id, decimal volume, decimal fade_in_time, [decimal,decimal] stereo): plays the sound file given by 'id', reaching full volume after fade_in_time seconds.")
+
+matched line 1149 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(sound_loop, 1, 4, "sound_loop(string id, decimal volume, decimal fade_in_time, [decimal,decimal] stereo): plays the sound file given by 'id' in a loop, if fade_in_time is given it will reach full volume after this time.")
+
+matched line 1187 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(sound_pan, 2, 2, "sound_pan(string id, [decimal,decimal] stereo): pans the sound being played with the given id by the specified stereo amount.")
+
+matched line 1217 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(sound_volume, 1, 2, "sound_volume(decimal volume, decimal time_seconds): sets the volume of sound effects")
+
+matched line 1245 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(stop_sound, 1, 2, "stop_sound(string id, (opt) decimal fade_out_time): stops the sound that the current object is playing with the given id, if fade_out_time is given the sound fades out over this time before stopping")
+
+matched line 1270 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(preload_sound, 1, 1, "preload_sound(string id): preload the given sound so it'll be in the sound effects cache")
+
+matched line 1280 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(create_haptic_effect, 2, 2, "create_haptic_effect(string id, map): Creates a haptic effect that can be played later.")
+
+matched line 1304 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(play_haptic_effect, 1, 2, "play_haptic_effect(string id, (options) iterations): Plays the given haptic effect. Will default to 'rumble' if it couldn't be created.")
+
+matched line 1329 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(stop_haptic_effect_command, 1, 1, "stop_haptic_effect_command(string id): Stops the given haptic effect.")
+
+matched line 1348 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(stop_all_haptic_effect_command, 0, 0, "stop_all_haptic_effect_command(string id): Stops the given haptic effect.")
+
+matched line 1373 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(screen_flash, 2, 3, "screen_flash(list int[4] color, (optional) list int[4] delta, int duration): flashes the screen the given color, and keeps the flash going for duration cycles. If delta is given, the color of the flash will be changed every cycle until the duration expires.")
+
+matched line 1417 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(title, 1, 2, "title(string text, int duration=50): shows Level title text on the screen for duration cycles")
+
+matched line 1447 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(shake_screen, 4, 4, "shake_screen(int x_offset, int y_offset, int x_velocity, int y_velocity): makes the screen camera shake")
+
+matched line 1463 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(radial_current, 2, 2, "radial_current(int intensity, int radius) -> current object: creates a current generator with the given intensity and radius")
+
+matched line 1490 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(execute_on_level, 2, 2, "execute_on_level(Level lvl, command cmd): Executes the given commands, with the current level changed to the given level")
+
+matched line 1502 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(create_level, 1, 1, "create_level")
+
+matched line 1540 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(execute, 2, 2, "execute(object context, command cmd): this function will execute the command or list of commands given by cmd on the object given by context. For instance, animation('foo') will set the current object to animation 'foo'. execute(obj, animation('foo')) can be used to set the object given by obj to the animation 'foo'.")
+
+matched line 1576 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(execute_instrumented, 3, 3, "execute(object context, string id, command cmd): executes the given commands and instruments the time taken")
+
+matched line 1637 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF_CTOR(spawn, 2, 6, "spawn(custom_obj|string type_id, int midpoint_x, int midpoint_y, (optional) properties map, (optional) list of commands cmd): will create a new object of type given by type_id with the given midpoint and facing. Immediately after creation the object will have any commands given by cmd executed on it. The child object will have the spawned event sent to it, and the parent object will have the child_spawned event sent to it.")
+
+matched line 1650 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF_MEMBERS
+
+matched line 1656 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF_IMPL
+
+matched line 1846 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF_CTOR(spawn_player, 4, 5, "spawn_player(string type_id, int midpoint_x, int midpoint_y, int facing, (optional) list of commands cmd): identical to spawn except that the new object is playable.")
+
+matched line 1851 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF_MEMBERS
+
+matched line 1856 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF_IMPL
+
+matched line 1900 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(object, 1, 5, "object(string type_id, int midpoint_x, int midpoint_y, (optional) map properties) -> object: constructs and returns a new object. Note that the difference between this and spawn is that spawn returns a command to actually place the object in the Level. object only creates the object and returns it. It may be stored for later use.")
+
+matched line 2096 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(object_playable, 1, 5, "object_playable(string type_id, int midpoint_x, int midpoint_y, int facing, (optional) map properties) -> object: constructs and returns a new object. Note that the difference between this and spawn is that spawn returns a command to actually place the object in the Level. object_playable only creates the playble object and returns it. It may be stored for later use.")
+
+matched line 2199 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(animation, 1, 1, "animation(string id): changes the current object's animation to the given animation. time_in_animation is reset to 0.")
+
+matched line 2216 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(die, 0, 0, "die(): causes the current object to die. The object will receive the on_die signal and may even use it to resurrect itself. Use remove_object() to remove an object from play without it receiving on_die.")
+
+matched line 2236 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(facing, 1, 1, "facing(int new_facing): changes the current object's facing according to the value of new_facing (1 for right, otherwise left).")
+
+matched line 2245 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(debug_all_custom_objects, 0, 0, "debug_all_custom_objects(): gets access to all custom objects in memory")
+
+matched line 2269 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(debug_chart, 2, 2, "debug_chart(string id, decimal value): plots a sample in a graph")
+
+matched line 2286 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF_CTOR(solid, 3, 6, "solid(Level, int x, int y, (optional)int w=1, (optional) int h=1, (optional) map options={}) -> boolean: returns true iff the Level contains solid space within the given (x,y,w,h) rectangle. If 'debug' is set, then the tested area will be displayed on-screen.")
+
+matched line 2301 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF_MEMBERS
+
+matched line 2304 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF_IMPL
+
+matched line 2360 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(debug_rect, 2, 4, "debug_rect(int x, int y, (optional)int w=1, (optional) int h=1) -> Draws, for one frame, a rectangle on the Level")
+
+matched line 2379 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(plot_x, 1, 1, "plot_x(int x): plots a vertical debug line at the given position")
+
+matched line 2389 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(plot_y, 1, 1, "plot_y(int x): plots a horizontal debug line at the given position")
+
+matched line 2399 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(point_solid, 4, 4, "point_solid(Level, object, int x, int y) -> boolean: returns true iff the given point is solid for the given object")
+
+matched line 2414 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(object_can_stand, 4, 4, "object_can_stand(Level, object, int x, int y) -> boolean: returns true iff the given point is standable")
+
+matched line 2429 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(find_point_object_can_stand_on, 6, 7, "find_point_object_can_stand_on(Level, object, int x, int y, int dx, int dy, int max_search=1000) -> [int,int]|null: returns the first point that an object can stand on, starting at [x,y] and incrementing by [dx,dy] until the point is found")
+
+matched line 2483 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(standable, 3, 5, "standable(Level, int x, int y, (optional)int w=1, (optional) int h=1) -> boolean: returns true iff the Level contains standable space within the given (x,y,w,h) rectangle")
+
+matched line 2515 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(set_solid, 4, 5, "setSolid(x1, y1, x2, y2, boolean is_solid=false): modifies the solidity of the Level such that the rectangle given by (x1, y1, x2, y2) will have its solidity set to the value of is_solid")
+
+matched line 2534 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(group_size, 2, 2, "group_size(Level, int group_id) -> int: gives the number of objects in the object group given by group_id")
+
+matched line 2564 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(set_group, 0, 1, "setGroup((optional)int group_id): sets the current object to have the given group id, or to be in no group if group_id is not given")
+
+matched line 2598 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(tiles_at, 2, 2, "tiles_at(x, y): gives a list of the tiles at the given x, y position")
+
+matched line 2616 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(set_tiles, 3, 3, "set_tiles(zorder, [area], tile): modify the tilemap within a certain area.")
+
+matched line 2634 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(complete_rebuild_tiles, 0, 1, "complete_rebuild_tiles(bool): run to complete the rebuild of tiles started by a previous call to set_tiles")
+
+matched line 2650 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(get_objects_at_point, 2, 2, "get_objects_at_point(x, y): Returns all objects which intersect the specified x,y point, in absolute Level-coordinates.")
+
+matched line 2676 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(toggle_pause, 0, 0, "toggle_pause()")
+
+matched line 2684 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(hide_window, 0, 0, "hide_window()")
+
+matched line 2692 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(quit_to_desktop, 0, 0, "quit_to_desktop()")
+
+matched line 2700 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(update_and_restart, 0, 0, "update_and_restart()")
+
+matched line 2710 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(scroll_to, 1, 1, "scroll_to(object target): scrolls the screen to the target object")
+
+matched line 2767 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(transient_speech_dialog, 1, -1, "transient_speech_dialog(...): schedules a sequence of speech dialogs to be shown. Arguments may include a list of strings, which contain text. An integer which sets the duration of the dialog. An object which sets the speaker.")
+
+matched line 2855 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(begin_skip_dialog_sequence, 0, 0, "begin_skip_dialog_sequence(): command that will cause everything up until the next time end_skip_dialog_sequence() is called to be considered a single storyline sequence. If the player selects to skip the sequence between now and then everything up until the call to end_skip_dialog_sequence() will be skipped.")
+
+matched line 2862 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(end_skip_dialog_sequence, 0, 0, "end_skip_dialog_sequence(): ends the sequence begun with begin_skip_dialog_sequence().")
+
+matched line 3026 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(speech_dialog, 1, -1, "speech_dialog(...): schedules a sequence of speech dialogs to be shown modally. Arguments may include a list of strings, which contain text. An integer which sets the duration of the dialog. An object which sets the speaker. A string by itself indicates an option that should be shown for the player to select from. A string should be followed by a list of commands that will be executed should the player choose that option.")
+
+matched line 3038 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(paused_speech_dialog, 1, -1, "paused_speech_dialog(...): like SpeechDialog(), except the game is paused while the dialog is displayed.")
+
+matched line 3058 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(end_game, 0, 0, "end_game(): exits the game")
+
+matched line 3085 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(achievement, 1, 1, "achievement(id): unlocks the achievement with the given id")
+
+matched line 3122 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(fire_event, 1, 3, "fire_event((optional) object target, string id, (optional)callable arg): fires the event with the given id. Targets the current object by default, or target if given. Sends arg as the event argument if given")
+
+matched line 3175 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(proto_event, 2, 3, "proto_event(prototype, event_name, (optional) arg): for the given prototype, fire the named event. e.g. proto_event('playable', 'process')")
+
+matched line 3202 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(get_object, 2, 2, "get_object(Level, string label) -> custom_obj|null: returns the object that is present in the given Level that has the given label")
+
+matched line 3216 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(get_object_or_die, 2, 2, "get_object_or_die(Level, string label) -> custom_obj: returns the object that is present in the given Level that has the given label")
+
+matched line 3274 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(resolve_solid, 1, 4, "resolve_solid(object, int xdir, int ydir, int max_cycles=100): will attempt to move the given object in the direction indicated by xdir/ydir until the object no longer has a solid overlap. Gives up after max_cycles. If called with no arguments other than the object, will try desperately to place the object in the Level.")
+
+matched line 3339 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(add_object, 1, 1, "add_object(object): inserts the given object into the Level. The object should not currently be present in the Level. The position of the object is tweaked to make sure there are no solid overlaps, however if it is not possible to reasonably place the object without a solid overlap, then the object will not be placed and the object and caller will both receive the event add_object_fail.")
+
+matched line 3384 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(remove_object, 1, 1, "remove_object(object): removes the given object from the Level. If there are no references to the object stored, then the object will immediately be destroyed. However it is possible to keep a reference to the object and even insert it back into the Level later using add_object()")
+
+matched line 3431 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(suspend_level, 1, 1, "suspend_Level(string dest_Level)")
+
+matched line 3458 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(resume_level, 0, 0, "resume_level()")
+
+matched line 3466 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(teleport, 1, 5, "teleport(string dest_Level, (optional)string dest_label, (optional)string transition, (optional)playable): teleports the player to a new Level. The Level is given by dest_Level, with null() for the current Level. If dest_label is given then the player will be teleported to the object in the destination Level with that label. If transition is given, it names a type of transition (such as 'flip' or 'fade') which indicates the kind of visual effect to use for the transition. If a playable is specified it is placed in the Level instead of the current one.  If no_move_to_standing is set to true, rather than auto-positioning the player on the ground under/above the target, the player will appear at precisely the position of the destination object - e.g. this is useful if they need to fall out of a pipe or hole coming out of the ceiling.")
+
+matched line 3538 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(schedule, 2, 2, "schedule(int cycles_in_future, list of commands): schedules the given list of commands to be run on the current object the given number of cycles in the future. Note that the object must be valid (not destroyed) and still present in the Level for the commands to be run.")
+
+matched line 3576 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(sleep, 1, 1, "sleep(nseconds)")
+
+matched line 3617 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF_CTOR(sleep_until, 1, 1, "sleep(expression)")
+
+matched line 3618 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF_MEMBERS
+
+matched line 3622 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF_IMPL
+
+matched line 3653 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(sleep_until_animation_finished, 0, 0, "sleeps until the current animation is finished.")
+
+matched line 3672 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(add_water, 4, 5, "add_water(int x1, int y1, int x2, int y2, (optional)[r,g,b,a]=[70,0,0,50]): adds water of the given color in the given rectangle.")
+
+matched line 3708 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(remove_water, 4, 4, "remove_water(int x1, int y1, int x2, int y2): removes water that has the given rectangular area.")
+
+matched line 3743 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(add_wave, 7, 7, "addWave(int x, int y, int xvelocity, int height, int length, int delta_height, int delta_length): will add a wave with the given characteristics at the surface of the water above the (x,y) point. (x,y) must be within a body of water. Waves are a visual effect only and may not display at all on slower devices.")
+
+matched line 3765 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(rect_current, 7, 7, "rect_current(int x, int y, int w, int h, int xvelocity, int yvelocity, int strength) -> current generator object: creates a current generator object that has a current with the given parameters. Set the return value of this function to an object's rect_current to attach it to an object and thus place it in the Level.")
+
+matched line 3785 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(circle_light, 2, 2, "circle_light(object, radius): creates a circle of light with the given radius")
+
+matched line 3808 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(add_particles, 1, 2, "add_particles(string id): adds the particle system with the given id to the object")
+
+matched line 3820 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(collides, 4, 4, "collides(object a, string area_a, object b, string area_b) -> boolean: returns true iff area_a within object a collides with area_b within object b.")
+
+matched line 3834 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(collides_with_Level, 1, 1, "collides_with_Level(object) -> boolean: returns true iff the given object collides with the Level.")
+
+matched line 3843 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(blur_object, 2, 2, "blur_object(properties, params)")
+
+matched line 3885 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(text, 1, 4, "text(string text, (optional)string font='default', (optional)int size=2, (optional)bool|string centered=false): adds text for the current object")
+
+matched line 3919 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(swallow_event, 0, 0, "swallow_event(): when used in an instance-specific event handler, this causes the event to be swallowed and not passed to the object's main event handler.")
+
+matched line 3924 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(swallow_mouse_event, 0, 0, "swallow_mouse_event(): when used in an instance-specific event handler, this causes the mouse event to be swallowed and not passed to the next object in the z-order stack.")
+
+matched line 3949 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(animate, 3, 3, "animate(object, attributes, options)")
+
+matched line 4001 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(set_widgets, 1, -1, "set_widgets((optional) obj, widget, ...): Adds a group of widgets to the current object, or the specified object")
+
+matched line 4040 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(clear_widgets, 1, 1, "clear_widgets(obj): Clears all widgets from the object.")
+
+matched line 4050 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(get_widget, 2, 2, "get_widget(object obj, string id): returns the widget with the matching id for given object")
+
+matched line 4060 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(widget, 2, 2, "widget(callable, map w): Constructs a widget defined by w and returns it for later use")
+
+matched line 4089 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(add_Level_module, 3, 3, "add_Level_module(string lvl, int xoffset, int yoffset): adds the Level module with the given Level id at the given offset")
+
+matched line 4111 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(remove_Level_module, 1, 1, "remove_Level_module(string lvl): removes the given Level module")
+
+matched line 4132 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(cosmic_shift, 2, 2, "cosmic_shift(int xoffset, int yoffet): adjust position of all objects and tiles in the Level by the given offset")
+
+matched line 4142 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(create_animation, 1, 1, "create_animation(map): creates an animation object from the given data")
+
+matched line 4185 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(module_client, 0, 0, "module_client(): creates a module client object. The object will immediately start retrieving basic module info from the server. module_pump() should be called on it every frame. Has the following fields:\n  is_complete: true iff the current operation is complete and a new operation can be started. When the module_client is first created it automatically starts an operation to get the summary of modules.\n  downloaded_modules: a list of downloaded modules that are currently installed.\n  module_info: info about the modules available on the server.\n  error: contains an error string if the operation resulted in an error, null otherwise.\n  kbytes_transferred: number of kbytes transferred in the current operation\n  kbytes_total: total number of kbytes to transfer to complete the operation.")
+
+matched line 4190 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(module_pump, 1, 1, "module_pump(module_client): pumps module client events. Should be called every cycle.")
+
+matched line 4201 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(module_install, 2, 2, "module_install(module_client, string module_id): begins downloading the given module and installing it. This should only be called when module_client.is_complete = true (i.e. there is no operation currently underway)")
+
+matched line 4214 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(module_uninstall, 1, 1, "module_uninstall(string module_id): uninstalls the given module")
+
+matched line 4240 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(module_rate, 3, 4, "module_rate(module_client, string module_id, int num_stars (1-5), (optional) string review): begins a request to rate the given module with the given number of stars, optionally with a review.")
+
+matched line 4276 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(module_launch, 1, 2, "module_launch(string module_id, (optional) callable): launch the game using the given module.")
+
+matched line 4291 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(eval, 1, 2, "eval(str, [arg map]): evaluate the given string as FFL")
+
+matched line 4370 of file '../../src//custom_object_functions.cpp':
+		FUNCTION_DEF(spawn_voxel_object, 1, 2, "spawn_voxel(properties, (optional) list of commands cmd): will create a new object of type given by type_id with the given midpoint and facing. Immediately after creation the object will have any commands given by cmd executed on it. The child object will have the spawned event sent to it, and the parent object will have the child_spawned event sent to it.")
+
+matched line 629 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(geometry_api, 0, 1, "geometry_api()")
+
+matched line 638 of file '../../src//formula_function.cpp':
+		FUNCTION_DEF(canvas, 0, 0, "canvas() -> canvas object")
+
+matched line 693 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(time, 0, 1, "time(int unix_time) -> date_time: returns the current real time")
+
+matched line 715 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(get_debug_info, 1, 1, "get_debug_info(value)")
+
+matched line 742 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(set_user_info, 2, 2, "set_user_info(string, any): sets some user info used in stats collection")
+
+matched line 751 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(current_level, 0, 0, "current_level(): return the current level the game is in")
+
+matched line 757 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(cancel, 0, 0, "cancel(): cancel the current command pipeline")
+
+matched line 762 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(overload, 1, -1, "overload(fn...): makes an overload of functions")
+
+matched line 813 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(addr, 1, 1, "addr(obj): Provides the address of the given object as a string. Useful for distinguishing objects")
+
+matched line 829 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(get_call_stack, 0, 0, "get_call_stack()")
+
+matched line 835 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(get_full_call_stack, 0, 0, "get_full_call_stack()")
+
+matched line 841 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(create_cache, 0, 1, "create_cache(max_entries=4096): makes an FFL cache object")
+
+matched line 864 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(global_cache, 0, 2, "create_cache(max_entries=4096): makes an FFL cache object")
+
+matched line 884 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF_CTOR(query_cache, 3, 3, "query_cache(ffl_cache, key, expr): ")
+
+matched line 885 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF_MEMBERS
+
+matched line 889 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF_IMPL
+
+matched line 910 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(game_preferences, 0, 0, "game_preferences() ->builtin game_preferences")
+
+matched line 917 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(md5, 1, 1, "md5(string) ->string")
+
+matched line 924 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(if, 2, -1, "if(a,b,c)")
+
+matched line 1035 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(bind, 1, -1, "bind(fn, args...)")
+
+matched line 1069 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(bind_command, 1, -1, "bind_command(fn, args..)")
+
+matched line 1090 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(bind_closure, 2, 2, "bind_closure(fn, obj): binds the given lambda fn to the given object closure")
+
+matched line 1098 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(singleton, 1, 1, "singleton(string typename): create a singleton object with the given typename")
+
+matched line 1119 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(construct, 1, 2, "construct(string typename, arg): construct an object with the given typename")
+
+matched line 1152 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(update_object, 2, 2, "update_object(target_instance, src_instance)")
+
+matched line 1162 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(apply_delta, 2, 2, "apply_delta(instance, delta)")
+
+matched line 1172 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(delay_until_end_of_loading, 1, 1, "delay_until_end_of_loading(string): delays evaluation of the enclosed until loading is finished")
+
+matched line 1186 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(eval_lua, 1, 1, "eval_lua(str)")
+
+matched line 1201 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(compile_lua, 1, 1, "compile_lua(str)")
+
+matched line 1213 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(eval_no_recover, 1, 2, "eval_no_recover(str, [arg]): evaluate the given string as FFL")
+
+matched line 1241 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(eval, 1, 2, "eval(str, [arg]): evaluate the given string as FFL")
+
+matched line 1298 of file '../../src//formula_function.cpp':
+		FUNCTION_DEF(set_mouse_cursor, 1, 1, "set_mouse_cursor(string cursor)")
+
+matched line 1375 of file '../../src//formula_function.cpp':
+		FUNCTION_DEF(parse_xml, 1, 1, "parse_xml(str): Parses XML into a JSON structure")
+
+matched line 1399 of file '../../src//formula_function.cpp':
+		FUNCTION_DEF_CTOR(eval_with_timeout, 2, 2, "eval_with_timeout(int time_ms, expr): evals expr, but with a timeout of time_ms. This will not pre-emptively time out, but while expr is evaluating, has_timed_out() will start evaluating to true if the timeout has elapsed.")
+
+matched line 1400 of file '../../src//formula_function.cpp':
+		FUNCTION_DEF_MEMBERS
+
+matched line 1404 of file '../../src//formula_function.cpp':
+		FUNCTION_DEF_IMPL
+
+matched line 1417 of file '../../src//formula_function.cpp':
+		FUNCTION_DEF(has_timed_out, 0, 0, "has_timed_out(): will evaluate to true iff the timeout specified by an enclosing eval_with_timeout() has elapsed.")
+
+matched line 1432 of file '../../src//formula_function.cpp':
+		FUNCTION_DEF(get_error_message, 0, 0, "get_error_message: called after handle_errors() to get the error message")
+
+matched line 1438 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF_CTOR(handle_errors, 2, 2, "handle_errors(expr, failsafe): evaluates 'expr' and returns it. If expr has fatal errors in evaluation, return failsafe instead. 'failsafe' is an expression which receives 'error_msg' and 'context' as parameters.")
+
+matched line 1439 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF_MEMBERS
+
+matched line 1443 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF_IMPL
+
+matched line 1456 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(switch, 3, -1, "switch(value, case1, result1, case2, result2 ... casen, resultn, default) -> value: returns resultn where value = casen, or default otherwise.")
+
+matched line 1528 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(query, 2, 2, "query(object, str): evaluates object.str")
+
+matched line 1534 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(call, 2, 2, "call(fn, list): calls the given function with 'list' as the arguments")
+
+matched line 1553 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(abs, 1, 1, "abs(value) -> value: evaluates the absolute value of the value given")
+
+matched line 1569 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(sign, 1, 1, "sign(value) -> value: evaluates to 1 if positive, -1 if negative, and 0 if 0")
+
+matched line 1585 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(median, 1, -1, "median(args...) -> value: evaluates to the median of the given arguments. If given a single argument list, will evaluate to the median of the member items.")
+
+matched line 1645 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(min, 1, -1, "min(args...) -> value: evaluates to the minimum of the given arguments. If given a single argument list, will evaluate to the minimum of the member items.")
+
+matched line 1680 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(max, 1, -1, "max(args...) -> value: evaluates to the maximum of the given arguments. If given a single argument list, will evaluate to the maximum of the member items.")
+
+matched line 1724 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(mix, 3, 3, "mix(x, y, ratio): equal to x*(1-ratio) + y*ratio")
+
+matched line 1751 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(disassemble, 1, 1, "disassemble function")
+
+matched line 1765 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(rgb_to_hsv, 1, 1, "convert rgb to hsv")
+
+matched line 1779 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(hsv_to_rgb, 1, 1, "convert hsv to rgb")
+
+matched line 1792 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(keys, 1, 1, "keys(map|custom_obj|level) -> list: gives the keys for a map")
+
+matched line 1812 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(values, 1, 1, "values(map) -> list: gives the values for a map")
+
+matched line 1821 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(wave, 1, 1, "wave(int) -> int: a wave with a period of 1000 and height of 1000")
+
+matched line 1831 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(decimal, 1, 1, "decimal(value) -> decimal: converts the value to a decimal")
+
+matched line 1846 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(int, 1, 1, "int(value) -> int: converts the value to an integer")
+
+matched line 1860 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(bool, 1, 1, "bool(value) -> bool: converts the value to a boolean")
+
+matched line 1867 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(sin, 1, 1, "sin(x): Standard sine function.")
+
+matched line 1876 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(cos, 1, 1, "cos(x): Standard cosine function.")
+
+matched line 1885 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(tan, 1, 1, "tan(x): Standard tangent function.")
+
+matched line 1894 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(asin, 1, 1, "asin(x): Standard arc sine function.")
+
+matched line 1903 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(acos, 1, 1, "acos(x): Standard arc cosine function.")
+
+matched line 1912 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(atan, 1, 1, "atan(x): Standard arc tangent function.")
+
+matched line 1921 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(atan2, 2, 2, "atan2(x,y): Standard two-param arc tangent function (to allow determining the quadrant of the resulting angle by passing in the sign value of the operands).")
+
+matched line 1932 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(sinh, 1, 1, "sinh(x): Standard hyperbolic sine function.")
+
+matched line 1941 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(cosh, 1, 1, "cosh(x): Standard hyperbolic cosine function.")
+
+matched line 1950 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(tanh, 1, 1, "tanh(x): Standard hyperbolic tangent function.")
+
+matched line 1959 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(asinh, 1, 1, "asinh(x): Standard arc hyperbolic sine function.")
+
+matched line 1968 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(acosh, 1, 1, "acosh(x): Standard arc hyperbolic cosine function.")
+
+matched line 1977 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(atanh, 1, 1, "atanh(x): Standard arc hyperbolic tangent function.")
+
+matched line 1986 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(sqrt, 1, 1, "sqrt(x): Returns the square root of x.")
+
+matched line 1996 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(hypot, 2, 2, "hypot(x,y): Compute the hypotenuse of a triangle without the normal loss of precision incurred by using the pythagoream theorem.")
+
+matched line 2008 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(exp, 1, 1, "exp(x): Calculate the exponential function of x, whatever that means.")
+
+matched line 2017 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(angle, 4, 4, "angle(x1, y1, x2, y2) -> int: Returns the angle, from 0°, made by the line described by the two points (x1, y1) and (x2, y2).")
+
+matched line 2032 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(angle_delta, 2, 2, "angle_delta(a, b) -> int: Given two angles, returns the smallest rotation needed to make a equal to b.")
+
+matched line 2051 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(orbit, 4, 4, "orbit(x, y, angle, dist) -> [x,y]: Returns the point as a list containing an x/y pair which is dist away from the point as defined by x and y passed in, at the angle passed in.")
+
+matched line 2075 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(floor, 1, 1, "Returns the smaller near integer. 3.9 -> 3, 3.3 -> 3, 3 -> 3")
+
+matched line 2084 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(round, 1, 1, "Returns the smaller near integer. 3.9 -> 3, 3.3 -> 3, 3 -> 3")
+
+matched line 2093 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(round_to_even, 1, 1, "Returns the nearest integer that is even")
+
+matched line 2107 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(ceil, 1, 1, "Returns the smaller near integer. 3.9 -> 3, 3.3 -> 3, 3 -> 3")
+
+matched line 2117 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(regex_replace, 3, 4, "regex_replace(string, string, string, [string] flags=[]) -> string: Unknown.")
+
+matched line 2145 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(regex_match, 2, 2, "regex_match(string, re_string) -> string: returns null if not found, else returns the whole string or a list of sub-strings depending on whether blocks were demarcated.")
+
+matched line 2369 of file '../../src//formula_function.cpp':
+	FUNCTION_DEF_CTOR(fold, 2, 3, "fold(list, expr, [default]) -> value")
+
+matched line 2388 of file '../../src//formula_function.cpp':
+	FUNCTION_DEF_MEMBERS
+
+matched line 2394 of file '../../src//formula_function.cpp':
+	FUNCTION_DEF_IMPL
+
+matched line 2435 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(unzip, 1, 1, "unzip(list of lists) -> list of lists: Converts [[1,4],[2,5],[3,6]] -> [[1,2,3],[4,5,6]]")
+
+matched line 2469 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF_CTOR(zip, 2, 3, "zip(list1, list2, expr=null) -> list")
+
+matched line 2471 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF_MEMBERS
+
+matched line 2475 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF_IMPL
+
+matched line 2556 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(float_array, 1, 1, "float_array(list) -> callable: Converts a list of floating point values into an efficiently accessible object.")
+
+matched line 2568 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(short_array, 1, 1, "short_array(list) -> callable: Converts a list of integer values into an efficiently accessible object.")
+
+matched line 2580 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(generate_uuid, 0, 0, "generate_uuid() -> string: generates a unique string")
+
+matched line 2588 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(update_controls, 1, 1, "update_controls(map) : Updates the controls based on a list of id:string, pressed:bool pairs")
+
+matched line 2597 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(map_controls, 1, 1, "map_controls(map) : Creates or updates the mapping on controls to keys")
+
+matched line 2605 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(get_hex_editor_info, 0, 0, "get_hex_editor_info() ->[builtin hex_tile]")
+
+matched line 2612 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(tile_pixel_pos_from_loc, 1, 2, "tile_pixel_pos_from_loc(loc) -> [x,y]")
+
+matched line 2621 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(tile_loc_from_pixel_pos, 1, 2, "tile_pixel_pos_from_loc(loc) -> [x,y]")
+
+matched line 2630 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(directed_graph, 2, 2, "directed_graph(list_of_vertexes, adjacent_expression) -> a directed graph")
+
+matched line 2662 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(weighted_graph, 2, 2, "weighted_graph(directed_graph, weight_expression) -> a weighted directed graph")
+
+matched line 2693 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(a_star_search, 4, 4, "a_star_search(weighted_directed_graph, src_node, dst_node, heuristic) -> A list of nodes which represents the 'best' path from src_node to dst_node.")
+
+matched line 2709 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(path_cost_search, 3, 3, "path_cost_search(weighted_directed_graph, src_node, max_cost) -> A list of all possible points reachable from src_node within max_cost.")
+
+matched line 2723 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(create_graph_from_level, 1, 3, "create_graph_from_level(level, (optional) tile_size_x, (optional) tile_size_y) -> directed graph : Creates a directed graph based on the current level.")
+
+matched line 2765 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(plot_path, 6, 9, "plot_path(level, from_x, from_y, to_x, to_y, heuristic, (optional) weight_expr, (optional) tile_size_x, (optional) tile_size_y) -> list : Returns a list of points to get from (from_x, from_y) to (to_x, to_y)")
+
+matched line 2789 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF_CTOR(sort, 1, 2, "sort(list, criteria): Returns a nicely-ordered list. If you give it an optional formula such as 'a>b' it will sort it according to that. This example favours larger numbers first instead of the default of smaller numbers first.")
+
+matched line 2791 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF_MEMBERS
+
+matched line 2795 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF_IMPL
+
+matched line 2833 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(shuffle, 1, 1, "shuffle(list) - Returns a shuffled version of the list. Like shuffling cards.")
+
+matched line 2864 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(remove_from_map, 2, 2, "remove_from_map(map, key): Removes the given key from the map and returns it.")
+
+matched line 2911 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(flatten, 1, 1, "flatten(list): Returns a list with a depth of 1 containing the elements of any list passed in.")
+
+matched line 3070 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF_CTOR(count, 2, 2, "count(list, expr): Returns an integer count of how many items in the list 'expr' returns true for.")
+
+matched line 3075 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF_MEMBERS
+
+matched line 3077 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF_IMPL
+
+matched line 3147 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF_CTOR(filter, 2, 3, "filter(list, expr): ")
+
+matched line 3156 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF_MEMBERS
+
+matched line 3159 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF_IMPL
+
+matched line 3270 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(unique, 1, 1, "unique(list): returns unique elements of list")
+
+matched line 3286 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(binary_search, 2, 2, "binary_search(list, item) ->bool: returns true iff item is in the list. List must be sorted.")
+
+matched line 3320 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(mapping, -1, -1, "mapping(x): Turns the args passed in into a map. The first arg is a key, the second a value, the third a key, the fourth a value and so on and so forth.")
+
+matched line 3330 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF_CTOR(find, 2, 3, "find")
+
+matched line 3338 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF_MEMBERS
+
+matched line 3347 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF_IMPL
+
+matched line 3449 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF_CTOR(find_or_die, 2, 3, "find_or_die")
+
+matched line 3454 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF_MEMBERS
+
+matched line 3459 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF_IMPL
+
+matched line 3574 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(visit_objects, 1, 1, "visit_objects")
+
+matched line 3581 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF_CTOR(choose, 1, 2, "choose(list, (optional)scoring_expr) -> value: choose an item from the list according to which scores the highest according to the scoring expression, or at random by default.")
+
+matched line 3586 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF_MEMBERS
+
+matched line 3591 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF_IMPL
+
+matched line 3755 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(sum, 1, 2, "sum(list[, counter]): Adds all elements of the list together. If counter is supplied, all elements of the list are added to the counter instead of to 0.")
+
+matched line 3782 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(range, 1, 3, "range([start, ]finish[, step]): Returns a list containing all numbers smaller than the finish value and and larger than or equal to the start value. The start value defaults to 0.")
+
+matched line 3815 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(reverse, 1, 1, "reverse(list): reverses the given list")
+
+matched line 3830 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(head, 1, 1, "head(list): gives the first element of a list, or null for an empty list")
+
+matched line 3846 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(head_or_die, 1, 1, "head_or_die(list): gives the first element of a list, or die for an empty list")
+
+matched line 3856 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(back, 1, 1, "back(list): gives the last element of a list, or null for an empty list")
+
+matched line 3872 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(back_or_die, 1, 1, "back_or_die(list): gives the last element of a list, or die for an empty list")
+
+matched line 3882 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(get_all_files_under_dir, 1, 1, "get_all_files_under_dir(path): Returns a list of all the files in and under the given directory")
+
+matched line 3896 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(get_files_in_dir, 1, 1, "get_files_in_dir(path): Returns a list of the files in the given directory")
+
+matched line 3916 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(dialog, 2, 2, "dialog(obj, template): Creates a dialog given an object to operate on and a template for the dialog.")
+
+matched line 3939 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(show_modal, 1, 1, "show_modal(dialog): Displays a modal dialog on the screen.")
+
+matched line 3950 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(index, 2, 2, "index(list, value) -> index of value in list: Returns the index of the value in the list or -1 if value wasn't found in the list.")
+
+matched line 3966 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(CompileLua, 3, 3, "CompileLua(object, string, string) Compiles a lua script against a lua-enabled object. Returns the compiled script as an object with an execute method. The second argument is the 'name' of the script as will appear in lua debugging output (normally a filename). The third argument is the script.")
+
+matched line 3994 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF_CTOR(benchmark, 1, 1, "benchmark(expr): Executes expr in a benchmark harness and returns a string describing its benchmark performance")
+
+matched line 3996 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF_MEMBERS
+
+matched line 4000 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF_IMPL
+
+matched line 4005 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF_CTOR(benchmark_once, 1, 1, "benchmark_once(expr): Executes expr once and returns a string giving the timing")
+
+matched line 4006 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF_MEMBERS
+
+matched line 4010 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF_IMPL
+
+matched line 4019 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(eval_with_lag, 2, 2, "eval_with_lag")
+
+matched line 4032 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF_CTOR(instrument, 2, 2, "instrument(string, expr): Executes expr and outputs debug instrumentation on the time it took with the given string")
+
+matched line 4034 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF_MEMBERS
+
+matched line 4038 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF_IMPL
+
+matched line 4092 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(instrument_command, 2, 2, "instrument_command(string, expr): Executes expr and outputs debug instrumentation on the time it took with the given string")
+
+matched line 4113 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(start_profiling, 0, 0, "start_profiling()")
+
+matched line 4125 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(compress, 1, 2, "compress(string, (optional) compression_level): Compress the given string object")
+
+matched line 4136 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(size, 1, 1, "size(list)")
+
+matched line 4162 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(split, 1, 2, "split(list, divider")
+
+matched line 4185 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(str, 1, 1, "str(s)")
+
+matched line 4200 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(strstr, 2, 2, "strstr(haystack, needle)")
+
+matched line 4217 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(refcount, 1, 1, "refcount(obj)")
+
+matched line 4222 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(deserialize, 1, 1, "deserialize(obj)")
+
+matched line 4229 of file '../../src//formula_function.cpp':
+				FUNCTION_DEF(is_string, 1, 1, "is_string(any)")
+
+matched line 4236 of file '../../src//formula_function.cpp':
+				FUNCTION_DEF(is_null, 1, 1, "is_null(any)")
+
+matched line 4243 of file '../../src//formula_function.cpp':
+				FUNCTION_DEF(is_int, 1, 1, "is_int(any)")
+
+matched line 4250 of file '../../src//formula_function.cpp':
+				FUNCTION_DEF(is_bool, 1, 1, "is_bool(any)")
+
+matched line 4257 of file '../../src//formula_function.cpp':
+				FUNCTION_DEF(is_decimal, 1, 1, "is_decimal(any)")
+
+matched line 4264 of file '../../src//formula_function.cpp':
+				FUNCTION_DEF(is_number, 1, 1, "is_number(any)")
+
+matched line 4271 of file '../../src//formula_function.cpp':
+				FUNCTION_DEF(is_map, 1, 1, "is_map(any)")
+
+matched line 4278 of file '../../src//formula_function.cpp':
+				FUNCTION_DEF(is_function, 1, 1, "is_function(any)")
+
+matched line 4285 of file '../../src//formula_function.cpp':
+				FUNCTION_DEF(is_list, 1, 1, "is_list(any)")
+
+matched line 4292 of file '../../src//formula_function.cpp':
+				FUNCTION_DEF(is_callable, 1, 1, "is_callable(any)")
+
+matched line 4299 of file '../../src//formula_function.cpp':
+				FUNCTION_DEF(mod, 2, 2, "mod(num,den)")
+
+matched line 4676 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF_CTOR(debug, 1, -1, "debug(...): outputs arguments to the console")
+
+matched line 4678 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF_MEMBERS
+
+matched line 4709 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF_IMPL
+
+matched line 4730 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(clear, 0, 0, "clear(): clears debug messages")
+
+matched line 4738 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(log, 1, -1, "log(...): outputs arguments to stderr")
+
+matched line 4795 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(dump, 1, 2, "dump(msg[, expr]): evaluates and returns expr. Will print 'msg' to stderr if it's printable, or execute it if it's an executable command.")
+
+matched line 4959 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(file_backed_map, 2, 3, "file_backed_map(string filename, function generate_new, map initial_values)")
+
+matched line 4991 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(remove_document, 1, 2, "remove_document(string filename, [enum{game_dir}]): deletes document at the given filename")
+
+matched line 5044 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(write_document, 2, 3, "write_document(string filename, doc, [enum{game_dir}]): writes 'doc' to the given filename")
+
+matched line 5098 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(get_document_from_str, 1, 1, "get_document_from_str(string doc)")
+
+matched line 5105 of file '../../src//formula_function.cpp':
+			FUNCTION_DEF(get_document, 1, 2, "get_document(string filename, [enum{null_on_failure,user_preferences_dir,uncached,json}] flags): return reference to the given JSON document.")
+
+matched line 5637 of file '../../src//formula_function.cpp':
+		FUNCTION_DEF(sha1, 1, 1, "sha1(string) -> string: Returns the sha1 hash of the given string")
+
+matched line 5651 of file '../../src//formula_function.cpp':
+		FUNCTION_DEF(get_module_args, 0, 0, "get_module_args() -> callable: Returns the current module callable environment")
+
+matched line 5658 of file '../../src//formula_function.cpp':
+		FUNCTION_DEF(seed_rng, 0, 0, "seed_rng() -> none: Seeds the peudo-RNG used.")
+
+matched line 5666 of file '../../src//formula_function.cpp':
+		FUNCTION_DEF(deep_copy, 1, 1, "deep_copy(any) ->any")
+
+matched line 5674 of file '../../src//formula_function.cpp':
+		FUNCTION_DEF(lower, 1, 1, "lower(s) -> string: lowercase version of string")
+
+matched line 5683 of file '../../src//formula_function.cpp':
+		FUNCTION_DEF(upper, 1, 1, "upper(s) -> string: lowercase version of string")
+
+matched line 5692 of file '../../src//formula_function.cpp':
+		FUNCTION_DEF(rects_intersect, 2, 2, "rects_intersect([int], [int]) ->bool")
+
+matched line 5710 of file '../../src//formula_function.cpp':
+		FUNCTION_DEF(edit_and_continue, 2, 2, "edit_and_continue(expr, filename)")
+
+matched line 5746 of file '../../src//formula_function.cpp':
+		FUNCTION_DEF(console_output_to_screen, 1, 1, "console_output_to_screen(bool) -> none: Turns the console output to the screen on and off")
+
+matched line 5751 of file '../../src//formula_function.cpp':
+		FUNCTION_DEF(user_preferences_path, 0, 0, "user_preferences_path() -> string: Returns the users preferences path")
+
+matched line 5772 of file '../../src//formula_function.cpp':
+		FUNCTION_DEF(set_user_details, 1, 2, "set_user_details(string username, (opt) string password) -> none: Sets the username and password in the preferences.")
+
+matched line 5778 of file '../../src//formula_function.cpp':
+		FUNCTION_DEF(clamp, 3, 3, "clamp(numeric value, numeric min_val, numeric max_val) -> numeric: Clamps the given value inside the given bounds.")
+
+matched line 5811 of file '../../src//formula_function.cpp':
+		FUNCTION_DEF(set_cookie, 1, 1, "set_cookie(data) -> none: Sets the preferences user_data")
+
+matched line 5816 of file '../../src//formula_function.cpp':
+		FUNCTION_DEF(get_cookie, 0, 0, "get_cookie() -> none: Returns the preferences user_data")
+
+matched line 5821 of file '../../src//formula_function.cpp':
+		FUNCTION_DEF(types_compatible, 2, 2, "types_compatible(string a, string b) ->bool: returns true if type 'b' is a subset of type 'a'")
+
+matched line 5827 of file '../../src//formula_function.cpp':
+		FUNCTION_DEF(typeof, 1, 1, "typeof(expression) -> string: yields the statically known type of the given expression")
+
+matched line 5832 of file '../../src//formula_function.cpp':
+		FUNCTION_DEF(static_typeof, 1, 1, "static_typeof(expression) -> string: yields the statically known type of the given expression")
+
+matched line 5838 of file '../../src//formula_function.cpp':
+		FUNCTION_DEF(all_textures, 0, 0, "all_textures()")
+
+matched line 5881 of file '../../src//formula_function.cpp':
+		FUNCTION_DEF(trigger_garbage_collection, 0, 2, "trigger_garbage_collection(num_gens, mandatory): trigger an FFL garbage collection")
+
+matched line 5902 of file '../../src//formula_function.cpp':
+		FUNCTION_DEF(trigger_debug_garbage_collection, 1, 1, "trigger_debug_garbage_collection(): trigger an FFL garbage collection with additional memory usage information")
+
+matched line 5909 of file '../../src//formula_function.cpp':
+		FUNCTION_DEF(objects_known_to_gc, 0, 0, "objects_known_to_gc()")
+
+matched line 5938 of file '../../src//formula_function.cpp':
+		FUNCTION_DEF(force_destroy_object_references, 1, 1, "destroy_object_references(obj)")
+
+matched line 5954 of file '../../src//formula_function.cpp':
+		FUNCTION_DEF(debug_object_info, 1, 1, "debug_object_info(string) -> give info about the object at the given address")
+
+matched line 5968 of file '../../src//formula_function.cpp':
+		FUNCTION_DEF(build_animation, 1, 1, "build_animation(map)")
+
+matched line 5979 of file '../../src//formula_function.cpp':
+		FUNCTION_DEF(inspect_object, 1, 1, "inspect_object(object obj) -> map: outputs an object's properties")
+
+matched line 6023 of file '../../src//formula_function.cpp':
+		FUNCTION_DEF(is_simulation, 0, 0, "is_simulation(): returns true iff we are in a 'simulation' such as get_modified_objcts() or eval_with_temp_modifications()")
+
+matched line 6030 of file '../../src//formula_function.cpp':
+		FUNCTION_DEF(get_modified_object, 2, 2, "get_modified_object(obj, commands) -> obj: yields a copy of the given object modified by the given commands")
+
+matched line 6056 of file '../../src//formula_function.cpp':
+		FUNCTION_DEF(eval_with_temp_modifications, 4, 4, "")
+
+matched line 6081 of file '../../src//formula_function.cpp':
+		FUNCTION_DEF(release_object, 1, 1, "release_object(obj)")
+
+matched line 6090 of file '../../src//formula_function.cpp':
+		FUNCTION_DEF(DrawPrimitive, 1, 1, "DrawPrimitive(map): create and return a DrawPrimitive")
+
+matched line 6098 of file '../../src//formula_function.cpp':
+		FUNCTION_DEF(auto_update_status, 0, 0, "auto_update_info(): get info on auto update status")
+
+matched line 6113 of file '../../src//formula_function.cpp':
+	FUNCTION_DEF(rotate_rect, 4, 4, "rotate_rect(int|decimal center_x, int|decimal center_y, decimal rotation, int|decimal[8] rect) -> int|decimal[8]: rotates rect and returns the result")
+
+matched line 6179 of file '../../src//formula_function.cpp':
+	FUNCTION_DEF(points_along_curve, 1, 2, "points_along_curve([[decimal,decimal]], int) -> [[decimal,decimal]]")
+
+matched line 6247 of file '../../src//formula_function.cpp':
+	FUNCTION_DEF(solid, 3, 6, "solid(level, int x, int y, (optional)int w=1, (optional) int h=1, (optional) bool debug=false) -> boolean: returns true iff the level contains solid space within the given (x,y,w,h) rectangle. If 'debug' is set, then the tested area will be displayed on-screen.")
+
+matched line 6273 of file '../../src//formula_function.cpp':
+	FUNCTION_DEF(solid_grid, 5, 9, "solid_grid(level, int x, int y, int w, int h, int stride_x=1, int stride_y=1, int stride_w=1, int stride_h=1)")
+
+matched line 6309 of file '../../src//formula_function.cpp':
+	FUNCTION_DEF(hsv, 3, 4, "hsv(decimal h, decimal s, decimal v, decimal alpha) -> color_callable")
+
+matched line 6328 of file '../../src//formula_function.cpp':
+	FUNCTION_DEF(format, 1, 2, "format(string, [int|decimal]): Put the numbers in the list into the string. The fractional component of the number will be rounded to the nearest available digit. Example: format('#{01}/#{02}/#{2004}', [20, 5, 2015]) → '20/05/2015'; format('#{02}/#{02}/#{02}', [20, 5, 2015]) → '20/5/2015'; format(#{0.20}, [0.1]) → '0.10'; format(#{0.02}, [0.1]) → '0.1'.")
+
+matched line 6417 of file '../../src//formula_function.cpp':
+	FUNCTION_DEF(sprintf, 1, -1, "sprintf(string, ...): Format the string using standard printf formatting.")
+
+matched line 2150 of file '../../src//custom_object_type.cpp':
+	FUNCTION_DEF(anura_objects, 0, 0, "anura_objects()")
+
