@@ -311,6 +311,7 @@ namespace
 		variant node_events = node["events"];
 
 		if(proto_events.is_null() == false && node_events.is_null() == false) {
+			//merge prototype events into derived events
 			std::map<variant,variant> items = node_events.as_map();
 			for(auto p : proto_events.as_map()) {
 				auto itor = items.find(p.first);
@@ -322,6 +323,30 @@ namespace
 					itor->second = variant(appended);
 					if(orig.get_debug_info()) {
 						itor->second.setDebugInfo(*orig.get_debug_info());
+					}
+				}
+			}
+
+			result[variant("events")] = variant(&items);
+		}
+
+		if(proto_events.is_null() && node_events.is_null() == false) {
+			//backwards compatible merging of events for when a prototype uses events: {}
+			//and the derived uses on_event
+			const std::map<variant,variant>& proto_attr = prototype_node.as_map();
+
+			std::map<variant,variant> items = node_events.as_map();
+			for(auto p : proto_attr) {
+				const std::string& s = p.first.as_string();
+				if(s.size() > 3 && std::equal(s.begin(), s.begin() + 3, "on_")) {
+					std::string key(s.begin()+3, s.end());
+					auto itor = items.find(variant(key));
+					if(itor != items.end()) {
+						variant orig = p.second;
+						std::string appended = orig.as_string() + " ; " + itor->second.as_string();
+						items[variant(key)] = variant(appended);
+
+						result.erase(p.first);
 					}
 				}
 			}
