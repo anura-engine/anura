@@ -2146,6 +2146,10 @@ namespace {
 					if(s.length() == 0) {
 						return left;
 					}
+
+					ASSERT_LOG(begin_index >= 0, "Illegal negative index when slicing a string: " << begin_index << " at " << debugPinpointLocation());
+					ASSERT_LOG(end_index >= 0, "Illegal negative index when slicing a string: " << end_index << " at " << debugPinpointLocation());
+
 					if(end_index >= begin_index) {
 						if(s_len != s.size()) {
 							//utf8 string.
