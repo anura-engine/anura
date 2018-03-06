@@ -302,7 +302,7 @@ public:
 
 	int earliest_backup_cycle() const;
 	void replay_from_cycle(int ncycle);
-	void backup();
+	void backup(bool force=false);
 	void reverse_one_cycle();
 	void reverse_to_cycle(int ncycle);
 

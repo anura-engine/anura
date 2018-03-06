@@ -4305,9 +4305,9 @@ void Level::replay_from_cycle(int ncycle)
 
 PREF_BOOL(enable_history, true, "Allow editor history features");
 
-void Level::backup()
+void Level::backup(bool force)
 {
-	if(!g_enable_history || (backups_.empty() == false && backups_.back()->cycle == cycle_)) {
+	if((!g_enable_history && !force) || (backups_.empty() == false && backups_.back()->cycle == cycle_)) {
 		return;
 	}
 
@@ -4496,7 +4496,7 @@ std::vector<EntityPtr> Level::predict_future(EntityPtr e, int ncycles)
 
 void Level::transfer_state_to(Level& lvl)
 {
-	backup();
+	backup(true);
 	lvl.restore_from_backup(*backups_.back());
 	backups_.pop_back();
 }
