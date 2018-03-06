@@ -389,7 +389,12 @@ Level::Level(const std::string& level_cfg, variant node)
 	variant player_save_node;
 	ASSERT_LOG(node.is_null() == false, "LOAD LEVEL WML FOR " << level_cfg << " FAILED");
 	if(node.has_key("id")) {
+
 		id_ = node["id"].as_string();
+
+		if(level_cfg.size() > 4 && std::equal(level_cfg.begin(), level_cfg.begin()+4, "save") == false) {
+			ASSERT_LOG(level_cfg == id_, "Level file " << level_cfg << " has incorrect id: " << id_);
+		}
 	}
 
 	for(variant v : node["sub_components"].as_list_optional()) {
