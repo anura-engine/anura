@@ -259,7 +259,6 @@ namespace KRE
 			window_.reset(SDL_CreateWindow(getTitle().c_str(), x, y, w, h, wnd_flags), [&](SDL_Window* wnd){
 #ifdef USE_IMGUI
 				ImGui_ImplSdlGL3_Shutdown();
-				ImGui::DestroyContext();
 #endif
 				if(getDisplayDevice()->ID() != DisplayDevice::DISPLAY_DEVICE_SDL) {
 					SDL_DestroyRenderer(renderer_);
@@ -272,14 +271,11 @@ namespace KRE
 				SDL_DestroyWindow(wnd);
 			});
 
-			ASSERT_LOG(window_.get() != nullptr, "Could not create window: " << x << ", " << y << ", " << w << ", " << h << " / wnd_flags = " << wnd_flags);
-
 #ifdef USE_IMGUI
-			// Setup ImGui binding
-			ImGui::CreateContext();
-			{ ImGuiIO& io = ImGui::GetIO(); (void)io; }
-			ImGui_ImplSdlGL3_Init(window_.get(), nullptr);
+			ImGui_ImplSdlGL3_Init(window_.get());
 #endif
+
+			ASSERT_LOG(window_.get() != nullptr, "Could not create window: " << x << ", " << y << ", " << w << ", " << h << " / wnd_flags = " << wnd_flags);
 
 			if(getDisplayDevice()->ID() != DisplayDevice::DISPLAY_DEVICE_SDL) {
 				Uint32 rnd_flags = SDL_RENDERER_ACCELERATED;
