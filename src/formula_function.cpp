@@ -3630,6 +3630,7 @@ FUNCTION_DEF_IMPL
 			explicit map_function(const args_list& args)
 				: FunctionExpression("map", args, 2, 3)
 			{
+				ASSERT_LOG(args.size() > 1, "attempted to create the mapping of a function to an iterable without passing at least two arguments (the iterable to map the function to, and the function to be mapped)");
 				if(args.size() == 3) {
 					identifier_ = read_identifier_expression(*args[1]);
 				}
