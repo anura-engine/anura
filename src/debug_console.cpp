@@ -48,6 +48,8 @@
 #include "player_info.hpp"
 #include "preferences.hpp"
 #include "slider.hpp"
+#include "utils.hpp"
+
 
 namespace debug_console
 {
@@ -308,7 +310,19 @@ namespace debug_console
 	}
 
 	ConsoleDialog::ConsoleDialog(Level& lvl, game_logic::FormulaCallable& obj)
-	   : Dialog(0, KRE::WindowManager::getMainWindow()->height() - g_console_height, g_console_width, g_console_height),
+		: Dialog(
+			0,
+			KRE::WindowManager::getMainWindow()->height() -
+				util::clamp<uint_fast16_t>(
+					g_console_height, g_console_height,
+					KRE::WindowManager::getMainWindow()->height()),
+			util::clamp<uint_fast16_t>(
+				g_console_width, g_console_width,
+				KRE::WindowManager::getMainWindow()->width()),
+			util::clamp<uint_fast16_t>(
+				g_console_height, g_console_height,
+				KRE::WindowManager::getMainWindow()->height())
+		),
 	     text_editor_(nullptr), lvl_(&lvl), focus_(&obj),
 		 history_pos_(0), prompt_pos_(0), dragging_(false), resizing_(false)
 	{
