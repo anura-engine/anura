@@ -262,7 +262,11 @@ void ImGui_ImplSdlGL3_CreateFontsTexture()
 bool ImGui_ImplSdlGL3_CreateDeviceObjects()
 {
     // Backup GL state
-    GLint last_texture, last_array_buffer, last_vertex_array;
+    GLint last_texture, last_array_buffer;
+
+    //   TODO The API reference states `GLuint` as the type of the argument to `void glBindVertexArray(1)`.
+    GLint last_vertex_array;
+
     glGetIntegerv(GL_TEXTURE_BINDING_2D, &last_texture);
     glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &last_array_buffer);
     glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &last_vertex_array);
@@ -319,7 +323,13 @@ bool ImGui_ImplSdlGL3_CreateDeviceObjects()
     // Restore modified GL state
     glBindTexture(GL_TEXTURE_2D, last_texture);
     glBindBuffer(GL_ARRAY_BUFFER, last_array_buffer);
+
+    //   This call to `glBindVertexArray(1)` makes Xcode builds (Jetrel,
+    // ActionPackedJack?, galegosimpatico) crash on booting Anura.
+    //   Removing it, the crash disappears or at least gets deferred.
+#ifndef __APPLE__
     glBindVertexArray(last_vertex_array);
+#endif
 
     return true;
 }
