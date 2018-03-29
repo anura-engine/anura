@@ -27,19 +27,20 @@ OPTIMIZE?=yes
 USE_LUA?=yes
 USE_BOX2D?=yes
 CCACHE?=ccache
-USE_CCACHE?=$(shell which $(CCACHE) 2>&1 > /dev/null && echo yes)
+USE_CCACHE?=$(shell which $(CCACHE) > /dev/null 2>&1 && echo yes)
 ifneq ($(USE_CCACHE),yes)
 CCACHE=
+USE_CCACHE=no
 endif
 
 SANITIZE_ADDRESS?=
 ifneq ($(SANITIZE_ADDRESS), yes)
-SANITIZE_ADDRESS=
+SANITIZE_ADDRESS=no
 endif
 
 SANITIZE_UNDEFINED?=
 ifneq ($(SANITIZE_UNDEFINED), yes)
-SANITIZE_UNDEFINED=
+SANITIZE_UNDEFINED=no
 endif
 
 ifeq ($(OPTIMIZE),yes)
@@ -47,7 +48,7 @@ BASE_CXXFLAGS += -O2
 endif
 
 ifneq ($(USE_LUA), yes)
-USE_LUA=
+USE_LUA=no
 endif
 
 BASE_CXXFLAGS += -Wall -Werror
@@ -130,6 +131,8 @@ ifeq ($(USE_LIBVPX),yes)
 	BASE_CXXFLAGS += -DUSE_LIBVPX
 	INC += $(shell pkg-config --cflags vpx)
 	LIBS += $(shell pkg-config --libs vpx)
+else
+USE_LIBVPX=no
 endif
 
 # couchbase check
@@ -137,6 +140,8 @@ USE_DB_CLIENT?=no
 ifeq ($(USE_DB_CLIENT),yes)
     BASE_CXXFLAGS += -DUSE_DBCLIENT
     LIBS += -lcouchbase
+else
+USE_DB_CLIENT=no
 endif
 
 # cairo check
@@ -145,6 +150,8 @@ ifeq ($(USE_SVG),yes)
 	BASE_CXXFLAGS += -DUSE_SVG
 	INC += $(shell pkg-config --cflags cairo)
 	LIBS += $(shell pkg-config --libs cairo)
+else
+USE_SVG=no
 endif
 
 MODULES   := kre svg Box2D tiled hex xhtml
