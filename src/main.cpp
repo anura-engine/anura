@@ -404,17 +404,18 @@ void auto_select_resolution(const KRE::WindowPtr& wm, int *width, int *height, b
 		}
 	}
 
-	if(best_mode.width < g_min_window_width || best_mode.height < g_min_window_height) {
-		best_mode.width = g_min_window_width;
-		best_mode.height = g_min_window_height;
+	const int margin_of_error = 100;
+	if(best_mode.width + margin_of_error < g_min_window_width || best_mode.height + margin_of_error < g_min_window_height) {
+		best_mode.width = g_min_window_width - margin_of_error;
+		best_mode.height = g_min_window_height - margin_of_error;
 	}
 
-	if(best_mode.width > g_max_window_width) {
-		best_mode.width = g_max_window_width;
+	if(best_mode.width + margin_of_error > g_max_window_width) {
+		best_mode.width = g_max_window_width - margin_of_error;
 	}
 
-	if(best_mode.height > g_max_window_height) {
-		best_mode.height = g_max_window_height;
+	if(best_mode.height + margin_of_error > g_max_window_height) {
+		best_mode.height = g_max_window_height - margin_of_error;
 	}
 
 	*width = best_mode.width;
