@@ -49,11 +49,13 @@ LoadingScreen::LoadingScreen(int items)
 		background_ = KRE::Texture::createTexture("backgrounds/loading_screen.png");
 
 		auto wnd = KRE::WindowManager::getMainWindow();
+		/*
 		if(wnd->height() > 0 && wnd->width()/static_cast<float>(wnd->height()) <= 1.4) {
 			splash_ = KRE::Texture::createTexture("splash.jpg");
 		} else {
 			splash_ = KRE::Texture::createTexture("splash-wide.jpg");
 		}
+		*/
 	} catch(KRE::ImageLoadError&) {
 	}
 }
