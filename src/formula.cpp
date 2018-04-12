@@ -4574,14 +4574,27 @@ static std::string debugSubexpressionTypes(ConstFormulaPtr & fml)
 							//determine if it's an array-style access of a single list element, or a slice.
 							const Token* tok2 = i2-2;
 							int bracket_parens_count = 0;
+							uint_fast8_t open_sqbrackets_count = 0;
+							uint_fast8_t open_parens_count = 0;
 							const Token* colon_tok = nullptr;
 							while (tok2 != tok){
 								if (tok2->type == FFL_TOKEN_TYPE::RSQUARE || tok2->type == FFL_TOKEN_TYPE::RPARENS) {
 									bracket_parens_count++;
+									if (tok2->type == FFL_TOKEN_TYPE::RSQUARE) {
+										open_sqbrackets_count++;
+									} else if (tok2->type == FFL_TOKEN_TYPE::RPARENS) {
+										open_parens_count++;
+									}
 								} else if (tok2->type == FFL_TOKEN_TYPE::LSQUARE || tok2->type == FFL_TOKEN_TYPE::LPARENS){
 									bracket_parens_count--;
+									if (tok2->type == FFL_TOKEN_TYPE::LSQUARE) {
+										open_sqbrackets_count--;
+									} else if (tok2->type == FFL_TOKEN_TYPE::LPARENS) {
+										open_parens_count--;
+									}
 								} else if (tok2->type == FFL_TOKEN_TYPE::COLON){
-									if(bracket_parens_count != 0){
+									if (bracket_parens_count != 0 &&
+											open_sqbrackets_count > 0) {
 											//TODO - handle error - mismatching brackets
 											LOG_ERROR("mismatching brackets or parentheses inside [ ]: '" << std::string((i1+1)->begin, (i2-1)->end) << "'");
 									} else if (colon_tok != nullptr){
