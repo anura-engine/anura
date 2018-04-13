@@ -395,28 +395,16 @@ void auto_select_resolution(const KRE::WindowPtr& wm, int *width, int *height, b
 			&& candidate_mode.height < mode.height * MinReduction
 			&& ((candidate_mode.width >= best_mode.width
 			&& candidate_mode.height >= best_mode.height) || !found)
-			) {
-				found = true;
-				LOG_INFO("BETTER MODE IS " << candidate_mode.width << "x" << candidate_mode.height << " vs " << best_mode.width << "x" << best_mode.height);
+		) {
+			found = true;
+			LOG_INFO("BETTER MODE IS " << candidate_mode.width << "x" << candidate_mode.height << " vs " << best_mode.width << "x" << best_mode.height);
 			best_mode = candidate_mode;
 		} else {
 			LOG_INFO("REJECTED MODE IS " << candidate_mode.width << "x" << candidate_mode.height);
 		}
 	}
-
-	const int margin_of_error = 100;
-	if(best_mode.width + margin_of_error < g_min_window_width || best_mode.height + margin_of_error < g_min_window_height) {
-		best_mode.width = g_min_window_width - margin_of_error;
-		best_mode.height = g_min_window_height - margin_of_error;
-	}
-
-	if(best_mode.width + margin_of_error > g_max_window_width) {
-		best_mode.width = g_max_window_width - margin_of_error;
-	}
-
-	if(best_mode.height + margin_of_error > g_max_window_height) {
-		best_mode.height = g_max_window_height - margin_of_error;
-	}
+	
+	LOG_INFO("CHOSEN MODE IS " << best_mode.width << "x" << best_mode.height);
 
 	*width = best_mode.width;
 	*height = best_mode.height;
