@@ -26,6 +26,13 @@
 OPTIMIZE?=yes
 USE_LUA?=yes
 USE_BOX2D?=yes
+
+ifeq ($(SHELL), /bin/sh)
+MAYBE_MINUS_E=''
+else
+MAYBE_MINUS_E='-e'
+endif
+
 CCACHE?=ccache
 USE_CCACHE?=$(shell which $(CCACHE) > /dev/null 2>&1 && echo yes)
 ifneq ($(USE_CCACHE),yes)
@@ -198,8 +205,8 @@ anura: $(OBJ)
 		$(LIBS) -lboost_regex -lboost_system -lboost_filesystem -lboost_locale -licui18n -licuuc -licudata -lpthread -fthreadsafe-statics
 
 checkdirs: $(BUILD_DIR)
-	@echo -e \
-	  " OPTIMIZE            : $(OPTIMIZE)\n" \
+	@echo $(MAYBE_MINUS_E) \
+	  "OPTIMIZE            : $(OPTIMIZE)\n" \
 	  "USE_CCACHE          : $(USE_CCACHE)\n" \
 	  "CCACHE              : $(CCACHE)\n" \
 	  "SANITIZE_ADDRESS    : $(SANITIZE_ADDRESS)\n" \
