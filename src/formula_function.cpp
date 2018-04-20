@@ -44,9 +44,7 @@
 #define bmround	round
 #endif
 
-#ifndef __APPLE__
-    #include <malloc.h>
-#endif
+#include <stdlib.h>
 
 #include "geometry.hpp"
 

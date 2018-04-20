@@ -893,7 +893,7 @@ void Frame::drawCustom(graphics::AnuraShaderPtr shader, int x, int y, const std:
 	getRectInTexture(time, info);
 	rectf rf = blit_target_.getTexture()->getSourceRectNormalised();
 
-	std::array<float, 4> r = { rf.x1(), rf.y1(), rf.x2(), rf.y2() };
+	std::array<float, 4> r = { { rf.x1(), rf.y1(), rf.x2(), rf.y2() } };
 
 	x += static_cast<int>((face_right ? info->x_adjust : info->x2_adjust) * scale_);
 	y += static_cast<int>(info->y_adjust * scale_);
@@ -1006,7 +1006,7 @@ void Frame::drawCustom(graphics::AnuraShaderPtr shader, int x, int y, const floa
 	getRectInTexture(time, info);
 	rectf rf = blit_target_.getTexture()->getSourceRectNormalised();
 
-	std::array<float, 4> r = { rf.x1(), rf.y1(), rf.x2(), rf.y2() };
+	std::array<float, 4> r = { { rf.x1(), rf.y1(), rf.x2(), rf.y2() } };
 	
 	x += static_cast<int>((face_right ? info->x_adjust : info->x2_adjust) * scale_);
 	y += static_cast<int>(info->y_adjust * scale_);
