@@ -57,6 +57,22 @@
 #include "variant_utils.hpp"
 
 #define STRICT_ERROR(s) if(g_strict_formula_checking_warnings) { LOG_WARN(s); } else { ASSERT_LOG(false, s); }
+
+/**
+ * A variant of `STRICT_ERROR(1)` that will make more efforts in logging
+ * the message in a single atomic logging operation. This might bring
+ * greater readability at the costs of less performance, potentially
+ * riskier operation, and even potentially less readability.
+ *
+ * @see `validation_failure_exception::validation_failure_exception`.
+ */
+#define STRICT_ERROR_SINGLE_DISPATCH(s)          \
+	if(g_strict_formula_checking_warnings) {  \
+		/* TODO */ LOG_WARN(s);            \
+	} else {                                    \
+		ASSERT_LOG_SINGLE_DISPATCH(false, s);\
+	}
+
 #define STRICT_ASSERT(cond, s) if(!(cond)) { STRICT_ERROR(s); }
 
 using namespace formula_vm;
@@ -1062,7 +1078,10 @@ namespace {
 							suggested_match = "\nMaybe you meant '" + *candidate_match + "'?\n";
 						}
 						if(callable_def_->getTypeName() != nullptr) {
-							STRICT_ERROR("Unknown symbol '" << id_ << "' in " << *callable_def_->getTypeName() << " " << debugPinpointLocation() << suggested_match << "\nKnown symbols: (excluding built-in functions)\n" << known << "\n");
+							STRICT_ERROR_SINGLE_DISPATCH(
+									"Unknown symbol '" << id_ << "' in " << * callable_def_->getTypeName() <<
+									' ' << debugPinpointLocation() << suggested_match <<
+									"\nKnown symbols: (excluding built-in functions)\n" << known << '\n');
 						} else {
 							STRICT_ERROR("Unknown identifier '" << id_ << "' " << debugPinpointLocation() << suggested_match << "\nIdentifiers that are valid in this scope:\n" << known << "\n");
 						}

@@ -145,11 +145,16 @@ namespace {
 	int throw_fatal = 0;
 }
 
-validation_failure_exception::validation_failure_exception(const std::string& m)
+validation_failure_exception::validation_failure_exception(
+		const std::string & m, const bool single_batch)
   : msg(m)
 {
 	if(!silence_on_assert) {
+		if (single_batch) {
+			LOG_ERROR_SINGLE_DISPATCH("ASSERT FAIL: " << m);
+		} else {
 		LOG_ERROR("ASSERT FAIL: " << m);
+		}
 		output_backtrace();
 	}
 }
