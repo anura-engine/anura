@@ -44,6 +44,17 @@
 
 void log_internal(SDL_LogPriority priority, const std::string& s);
 
+/**
+ * A variant of `log_internal(2)` that will make more efforts in logging
+ * the message in a single atomic logging operation. This might bring
+ * greater readability at the costs of less performance, potentially
+ * riskier operation, and even potentially less readability.
+ *
+ * @see `validation_failure_exception::validation_failure_exception`.
+ */
+void log_internal_single_dispatch(
+		SDL_LogPriority priority, const std::string & s);
+
 #define LOG_VERBOSE(_a)																\
 	do {																			\
 		std::ostringstream _s;														\
@@ -78,6 +89,21 @@ void log_internal(SDL_LogPriority priority, const std::string& s);
 		_s << __SHORT_FORM_OF_FILE__ << ":" << __LINE__ << " : " << _a;				\
 		log_internal(SDL_LOG_PRIORITY_ERROR, _s.str());								\
 	} while(0)
+
+/**
+ * A variant of `LOG_ERROR(1)` that will make more efforts in logging
+ * the message in a single atomic logging operation. This might bring
+ * greater readability at the costs of less performance, potentially
+ * riskier operation, and even potentially less readability.
+ *
+ * @see `validation_failure_exception::validation_failure_exception`.
+ */
+#define LOG_ERROR_SINGLE_DISPATCH(_a) do {                           \
+	std::ostringstream _s;                                        \
+	_s << __SHORT_FORM_OF_FILE__ << ':' << __LINE__ << " : " << _a;\
+	log_internal_single_dispatch(                                   \
+			SDL_LOG_PRIORITY_CRITICAL, _s.str());            \
+	} while (false)
 
 #define LOG_CRITICAL(_a)															\
 	do {																			\

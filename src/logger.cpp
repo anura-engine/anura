@@ -25,7 +25,27 @@
 
 namespace
 {
+	/** Standard buffer. */
 	const int max_log_packet_length = 3072;
+
+	/** Double standard buffer. */
+	const uint_fast16_t max_log_packet_length_2x =
+			max_log_packet_length << 1;
+
+	/** Quadruple standard buffer. */
+	const uint_fast16_t max_log_packet_length_4x =
+			max_log_packet_length << 2;
+
+	/** Octuple standard buffer. */
+	const uint_fast16_t max_log_packet_length_8x =
+			max_log_packet_length << 3;
+
+	/**
+	 * Sexdecuple standard buffer. Next doubling step requires a 32 bits
+	 * wide integer type.
+	 */
+	const uint_fast16_t max_log_packet_length_16x =
+			max_log_packet_length << 4;
 }
 
 void log_internal(SDL_LogPriority priority, const std::string& str)
@@ -41,3 +61,32 @@ void log_internal(SDL_LogPriority priority, const std::string& str)
 	}
 }
 
+void log_internal_single_dispatch(
+		SDL_LogPriority priority, const std::string & str)
+{
+	std::string s(str);
+	const uint_fast16_t s_size = s.size();
+	uint_fast16_t batch_size = -1;
+	if (s_size < max_log_packet_length) {
+		batch_size = max_log_packet_length;
+	} else if (s_size < max_log_packet_length_2x) {
+		batch_size = max_log_packet_length_2x;
+	} else if (s_size < max_log_packet_length_4x) {
+		batch_size = max_log_packet_length_4x;
+	} else if (s_size < max_log_packet_length_8x) {
+		batch_size = max_log_packet_length_8x;
+	} else {
+		batch_size = max_log_packet_length_16x;
+	}
+	while (s.size() > batch_size) {
+		SDL_LogMessage(
+				SDL_LOG_CATEGORY_APPLICATION, priority, "%s\n",
+				s.substr(0, batch_size).c_str());
+		s = s.substr(batch_size + 1);
+	}
+	if (!s.empty()) {
+		SDL_LogMessage(
+				SDL_LOG_CATEGORY_APPLICATION, priority, "%s\n",
+				s.c_str());
+	}
+}

@@ -36,7 +36,16 @@ void report_assert_msg(const std::string& m );
 //An exception we intend to recover from.
 struct validation_failure_exception 
 {
-	explicit validation_failure_exception(const std::string& m);
+	/**
+	 * You can use param `single_batch` setting it to `true` for make an
+	 * effort in trying to log all the line in a single operation. This
+	 * might increase readability, but it'll come at the costs of less
+	 * performance, potentially riskier behavior, and even less readabilty
+	 * if there are multiple threads potentially accessing the logging or
+	 * standard output.
+	 */
+	explicit validation_failure_exception(
+			const std::string & m, const bool single_batch=false);
 	std::string msg;
 };
 
@@ -122,6 +131,30 @@ public:
 			ABORT();											\
 		}														\
 	} } while(0)
+
+/**
+ * A variant of `ASSERT_LOG(2)` that will make more efforts in logging
+ * the message in a single atomic logging operation. This might bring
+ * greater readability at the costs of less performance, potentially
+ * riskier operation, and even potentially less readability.
+ *
+ * @see `validation_failure_exception::validation_failure_exception`.
+ */
+#define ASSERT_LOG_SINGLE_DISPATCH(_a, _b)                      \
+	if (!(_a)) {                                             \
+		std::ostringstream _s;                            \
+		_s << __SHORT_FORM_OF_FILE__ << ':' << __LINE__ << \
+				" ASSERTION FAILED: " << _b << '\n';\
+		if (throw_validation_failure_on_assert()) {          \
+			throw validation_failure_exception(           \
+					_s.str(), true);               \
+		} else {                                                \
+			/* XXX */ log_internal(                          \
+					SDL_LOG_PRIORITY_CRITICAL,        \
+					_s.str());                         \
+			/* XXX */ output_backtrace();                       \
+			report_assert_msg(_s.str());                         \
+			ABORT(); } }
 
 #define ASSERT_FATAL(_b)										\
 	do {														\
