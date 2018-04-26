@@ -44,6 +44,12 @@
 
 void log_internal(SDL_LogPriority priority, const std::string& s);
 
+/**
+ * Logs without resorting to SDL. This way very large messages can be
+ * logged. SDL truncates log messages larger than 4.096 characters.
+ */
+void log_internal_wo_SDL(SDL_LogPriority priority, const std::string & s);
+
 #define LOG_VERBOSE(_a)																\
 	do {																			\
 		std::ostringstream _s;														\
@@ -71,6 +77,16 @@ void log_internal(SDL_LogPriority priority, const std::string& s);
 		_s << __SHORT_FORM_OF_FILE__ << ":" << __LINE__ << " : " << _a;				\
 		log_internal(SDL_LOG_PRIORITY_WARN, _s.str());								\
 	} while(0)
+
+/**
+ * Logs without resorting to SDL. This way very large messages can be
+ * logged. SDL truncates log messages larger than 4.096 characters.
+ */
+#define LOG_WARN_WO_SDL(_a) if (true) {                                    \
+	std::ostringstream _s;                                              \
+	_s << __SHORT_FORM_OF_FILE__ << ':' << __LINE__ <<                   \
+			" : " << _a;                                          \
+	log_internal_wo_SDL(SDL_LOG_PRIORITY_WARN, _s.str()); }
 
 #define LOG_ERROR(_a)																\
 	do {																			\
