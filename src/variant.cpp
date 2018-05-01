@@ -2024,6 +2024,20 @@ variant variant::operator^(const variant& v) const
 	if(v.type_ == VARIANT_TYPE_INT && v.as_int() >= 1) {
 		int num = v.as_int();
 		variant result = *this;
+
+		//   Loop computing the exponentiation using looped
+		// multiplication. The first iteration is unrolled in order to
+		// detect the operation `1 ^ n` and cease worthless
+		// multiplication for it.
+		if (num > 1) {
+			result = result * *this;
+			if (result == * this) {
+				//   This means `this` is the variant `1`:
+				// break the multiplication loop.
+				return result;
+			}
+			--num;
+		}
 		while(num > 1) {
 			result = result * *this;
 			--num;
@@ -3034,6 +3048,38 @@ UNIT_TEST(variant_decimal)
 	CHECK_EQ((d + d2).as_decimal().value(), 9880000);
 	CHECK_NE(zero_decimal, variant());
 }
+
+// UNIT_TEST(decimal_pow_micro_opt_bypass_if_one)
+// {
+// 	const variant one(1);
+// 	const variant two(2);
+// 	const variant three(3);
+// 	const variant sixteen(16);
+// 
+// 	uint_fast32_t limit = 0x03ff0000;
+// 
+// 	LOG_INFO("Starting");
+// 
+// 	for (int i = 0; i < limit; i++) {
+// 		const variant p2 = one ^ three;
+// 	}
+// 	LOG_INFO("Finished 1 ^ 3");
+// 
+// 	for (int i = 0; i < limit; i++) {
+// 		const variant p5 = one ^ sixteen;
+// 	}
+// 	LOG_INFO("Finished 1 ^ 16");
+// 
+// 	for (int i = 0; i < limit; i++) {
+// 		const variant p6 = two ^ three;
+// 	}
+// 	LOG_INFO("Finished 2 ^ 3");
+// 
+// 	for (int i = 0; i < limit; i++) {
+// 		const variant p6 = two ^ sixteen;
+// 	}
+// 	LOG_INFO("Finished 2 ^ 16");
+// }
 
 BENCHMARK(variant_assign)
 {
