@@ -3128,8 +3128,10 @@ VARIANT_APPROXIMATE_POW_UNIT_TEST(
 		"999999999999.999999"
 		)
 
+//   Some builds can have down to only 0.000001 error here! Some hosts
+//  might be yielding 0, others would yield `0.000021`.
 VARIANT_APPROXIMATE_POW_UNIT_TEST(
-		pow_test_13, "36", "-3", "0.000021", "0.000001")
+		pow_test_13, "36", "-3", "0.000021", "0.000021")
 
 VARIANT_APPROXIMATE_POW_UNIT_TEST(
 		pow_test_14, "36", "-.3", "0.341279", "0.000001")
