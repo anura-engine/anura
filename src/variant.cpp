@@ -3045,3 +3045,91 @@ BENCHMARK(variant_assign)
 		}
 	}
 }
+
+/**
+ *   Name a pow unit test where must be true that:
+ *
+ *     `n ^ v - r == 0`
+ */
+#define VARIANT_EXACT_POW_UNIT_TEST(name, n, v, r) UNIT_TEST (name) {         \
+	const variant t_##name_n = variant(decimal::from_string(n));          \
+	LOG_DEBUG("t_" << #name << "_n: " << t_##name_n);                     \
+	const variant t_##name_v = variant(decimal::from_string(v));          \
+	LOG_DEBUG("t_" << #name << "_v: " << t_##name_v);                     \
+	const variant t_##name_r = variant(decimal::from_string(r));          \
+	LOG_DEBUG("t_" << #name << "_r: " << t_##name_r);                     \
+	const variant t_##name_o = t_##name_n ^ t_##name_v;                   \
+	LOG_DEBUG("t_" << #name << "_o: " << t_##name_o);                     \
+	CHECK_EQ(t_##name_r, t_##name_o); }
+
+/**
+ *   Name a pow unit test where must be true that:
+ *
+ *     `abs(n ^ v - r) <= e`
+ */
+#define VARIANT_APPROXIMATE_POW_UNIT_TEST(name, n, v, r, e)                   \
+	UNIT_TEST (name) {                                                    \
+		const variant t_##name_n = variant(decimal::from_string(n));  \
+		LOG_DEBUG("t_" << #name << "_n: " << t_##name_n);             \
+		const variant t_##name_v = variant(decimal::from_string(v));  \
+		LOG_DEBUG("t_" << #name << "_v: " << t_##name_v);             \
+		const variant t_##name_r = variant(decimal::from_string(r));  \
+		LOG_DEBUG("t_" << #name << "_r: " << t_##name_r);             \
+		const variant t_##name_e = variant(decimal::from_string(e));  \
+		LOG_DEBUG("t_" << #name << "_e: " << t_##name_e);             \
+		const variant t_##name_o = t_##name_n ^ t_##name_v;           \
+		LOG_DEBUG("t_" << #name << "_o: " << t_##name_o);             \
+		const variant t_##name_d = t_##name_o - t_##name_r;           \
+		const variant zero(0);                                        \
+		const variant t_##name_d_a = t_##name_d > zero ?              \
+				t_##name_d : - t_##name_d;                    \
+		LOG_DEBUG("t_" << #name << "_d_a: " << t_##name_d_a);         \
+		ASSERT_LOG(                                                   \
+				t_##name_d_a <= t_##name_e,                   \
+				"math imprecision error happened, rerun " <<  \
+				"setting log level to DEBUG for finer " <<    \
+				"grain messages"); }
+
+VARIANT_EXACT_POW_UNIT_TEST(pow_test_00, "0", "1", "0")
+
+VARIANT_EXACT_POW_UNIT_TEST(pow_test_01, "0", "0", "1")
+
+VARIANT_EXACT_POW_UNIT_TEST(pow_test_02, "3", "3", "27")
+
+VARIANT_EXACT_POW_UNIT_TEST(pow_test_03, "-3", "4", "81")
+
+VARIANT_EXACT_POW_UNIT_TEST(pow_test_04, "-3", "5", "-243")
+
+VARIANT_APPROXIMATE_POW_UNIT_TEST(
+		pow_test_05, "2.001", "16", "66062.258674", "0.000001")
+
+VARIANT_EXACT_POW_UNIT_TEST(pow_test_06, "-333", "0", "1")
+
+VARIANT_APPROXIMATE_POW_UNIT_TEST(
+		pow_test_07, "-442.001", "2", "195364.884", "0.000001")
+
+VARIANT_APPROXIMATE_POW_UNIT_TEST(
+		pow_test_08, "-442.001", "3", "-86351474.093326", "0.000001")
+
+VARIANT_APPROXIMATE_POW_UNIT_TEST(
+		pow_test_09, "1.001", "9999", "21894.786552", "0.000001")
+
+VARIANT_APPROXIMATE_POW_UNIT_TEST(
+		pow_test_10, "-1.021", "939", "-298656395.733370", "0.000001")
+
+VARIANT_APPROXIMATE_POW_UNIT_TEST(
+		pow_test_11, "-1.021", "1300", "541333262032.771060",
+		"0.07")
+
+VARIANT_APPROXIMATE_POW_UNIT_TEST(
+		pow_test_12, "-1.023", "1399", "-65465360432130.221993",
+// 		"Inf" // XXX ???
+// 		"Infinity" // XXX ???
+		"999999999999.999999"
+		)
+
+VARIANT_APPROXIMATE_POW_UNIT_TEST(
+		pow_test_13, "36", "-3", "0.000021", "0.000001")
+
+VARIANT_APPROXIMATE_POW_UNIT_TEST(
+		pow_test_14, "36", "-.3", "0.341279", "0.000001")
