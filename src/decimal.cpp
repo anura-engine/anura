@@ -25,11 +25,17 @@
 #include <stdio.h>
 #include <sstream>
 
+#include "asserts.hpp"
 #include "decimal.hpp"
 #include "unit_test.hpp"
 
 #define DECIMAL(num) static_cast<int64_t>(num##LL)
 
+/**
+ * If needing more performance, remove the assertion after adding a
+ * documentation comment warning `s` must include the decimal indicator
+ * (`.`), else the function misbehaves.
+ */
 decimal decimal::from_string(const std::string& s)
 {
 	bool negative = false;
@@ -40,6 +46,13 @@ decimal decimal::from_string(const std::string& s)
 	}
 	char* endptr = nullptr, *enddec = nullptr;
 	int64_t n = strtol(ptr, &endptr, 10);
+
+	ASSERT_LOG(
+			* endptr == '.',
+			"function not ready to accept strings without " <<
+			"decimal indicator, but passed string '" <<
+			s << "', must abort");
+
 	int64_t m = strtol(endptr+1, &enddec, 10);
 	auto dist = enddec - endptr;
 	while(dist > (DECIMAL_PLACES+1)) {
