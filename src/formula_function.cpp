@@ -6301,7 +6301,7 @@ FUNCTION_ARGS_DEF
 	ARG_TYPE("int")
 	ARG_TYPE("int")
 	ARG_TYPE("int")
-RETURN_TYPE("bool")
+RETURN_TYPE("[bool]")
 END_FUNCTION_DEF(solid_grid)
 
 /*
