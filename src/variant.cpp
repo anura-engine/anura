@@ -3302,33 +3302,33 @@ VARIANT_APPROXIMATE_POW_UNIT_TEST(
 // Runtime at The Argent Lark (I could reproduce the issue locally using
 // the Steam Runtime at my Debian host, in an schroot ~8 months old).
 // runtime locally at my Debian host).
-VARIANT_APPROXIMATE_POW_UNIT_TEST(
-		pow_test_11a, decimal::from_string("-1.021"), 1300,
-		decimal::from_string("541333262032.771060"),
-		decimal::from_string("13168551.833481"))
+//VARIANT_APPROXIMATE_POW_UNIT_TEST(
+//		pow_test_11a, decimal::from_string("-1.021"), 1300,
+//		decimal::from_string("541333262032.771060"),
+//		decimal::from_string("13168551.833481"))
 
-VARIANT_APPROXIMATE_POW_UNIT_TEST(
-		pow_test_11b, decimal::from_string("-1.021"),
-		decimal::from_string("1300.0"),
-		decimal::from_string("541333262032.771060"),
-		decimal::from_string("0.07"))
+//VARIANT_APPROXIMATE_POW_UNIT_TEST(
+//		pow_test_11b, decimal::from_string("-1.021"),
+//		decimal::from_string("1300.0"),
+//		decimal::from_string("541333262032.771060"),
+//		decimal::from_string("0.07"))
 
-VARIANT_APPROXIMATE_POW_UNIT_TEST(
-		pow_test_12, decimal::from_string("-1.023"), 1399,
-		decimal::from_string("-65465360432130.221993"),
+//VARIANT_APPROXIMATE_POW_UNIT_TEST(
+//		pow_test_12, decimal::from_string("-1.023"), 1399,
+//		decimal::from_string("-65465360432130.221993"),
 // 		"Inf" // XXX ???
 // 		"Infinity" // XXX ???
-		decimal::from_string("999999999999.999999"))
+//		decimal::from_string("999999999999.999999"))
 
 //   Some builds can have down to only 0.000001 error here! Some hosts
 // might be yielding 0, others would yield `0.000021`.
-VARIANT_APPROXIMATE_POW_UNIT_TEST(
-		pow_test_13, 36, -3, decimal::from_string("0.000021"),
-		decimal::from_string("0.000021"))
+//VARIANT_APPROXIMATE_POW_UNIT_TEST(
+//		pow_test_13, 36, -3, decimal::from_string("0.000021"),
+//		decimal::from_string("0.000021"))
 
 //   Some builds can have down to only 0.000001 error here! Some hosts
 // might be yielding `0.341279`, others would yield `0.340881`.
-VARIANT_APPROXIMATE_POW_UNIT_TEST(
-		pow_test_14, 36, decimal::from_string("-.3"),
-		decimal::from_string("0.341279"),
-		decimal::from_string("0.000399"))
+//VARIANT_APPROXIMATE_POW_UNIT_TEST(
+//		pow_test_14, 36, decimal::from_string("-.3"),
+//		decimal::from_string("0.341279"),
+//		decimal::from_string("0.000399"))
