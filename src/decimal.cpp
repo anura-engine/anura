@@ -25,16 +25,18 @@
 #include <stdio.h>
 #include <sstream>
 
-#include "asserts.hpp"
 #include "decimal.hpp"
 #include "unit_test.hpp"
 
 #define DECIMAL(num) static_cast<int64_t>(num##LL)
 
 /**
- * If needing more performance, remove the assertion after adding a
- * documentation comment warning `s` must include the decimal indicator
- * (`.`), else the function misbehaves.
+ * Can handle most strings in the form of `-?\d+(\.\d+)?`.
+ *
+ * Should also handle well all of `-?(\d+)?\.\d+` I think, by
+ * documentation of `strtol(3)`.
+ *
+ * Undefined behavior for `-?\d+\.`?
  */
 decimal decimal::from_string(const std::string& s)
 {
@@ -47,13 +49,16 @@ decimal decimal::from_string(const std::string& s)
 	char* endptr = nullptr, *enddec = nullptr;
 	int64_t n = strtol(ptr, &endptr, 10);
 
-	ASSERT_LOG(
-			* endptr == '.',
-			"function not ready to accept strings without " <<
-			"decimal indicator, but passed string '" <<
-			s << "', must abort");
+	if (* endptr != '.') {
+		if (negative) {
+			n = -n;
+		}
+		return decimal::from_raw_value(n * DECIMAL_PRECISION);
+	}
 
 	int64_t m = strtol(endptr+1, &enddec, 10);
+	//   XXX Can `m` be not a part of `s`? For instance, passing `-5446.`
+	// to this function?
 	auto dist = enddec - endptr;
 	while(dist > (DECIMAL_PLACES+1)) {
 		m /= 10;
@@ -163,8 +168,28 @@ struct TestCase {
 
 UNIT_TEST(decimal_from_string) {
 	TestCase tests[] = {
+		{ 0, "0" },
+		{ 0.032993, "0.032993" },
+		{ .032993, ".032993" },
+		{ 0.32993, "0.32993" },
+		{ .32993, ".32993" },
+		{ 0.5, "0.5" },
+		{ .5, ".5" },
 		{ 5.5, "5.5" },
 		{ -1.5, "-1.5" },
+		{ 6, "6" },
+		{ 500000, "500000" },
+		{ 500000, "500000.000000" },
+		{ -500000, "-500000" },
+		{ -500000, "-500000.000000" },
+		{ 999999, "999999" },
+		{ -999999, "-999999" },
+		{ 999999.999999, "999999.999999" },
+		{ -999999.999999, "-999999.999999" },
+		{ 999999999.999999, "999999999.999999" },
+		{ -999999999.999999, "-999999999.999999" },
+		{ 999999999999.999999, "999999999999.999999" },
+		{ -999999999999.999999, "-999999999999.999999" },
 	};
 
 	for(int n = 0; n != sizeof(tests)/sizeof(tests[0]); ++n) {

@@ -3094,63 +3094,36 @@ VARIANT_EXACT_POW_UNIT_TEST(pow_test_00, 0, 1, 0)
 
 VARIANT_EXACT_POW_UNIT_TEST(pow_test_01, 0, 0, 1)
 
-//   FIXME Investigate and reenable tests disabled by this rev.
-
-//   Many hosts would be OK to this, but is causing issues to the Steam
-// Runtime at The Argent Lark (I could reproduce the issue locally using
-// the Steam Runtime at my Debian host, in an schroot ~8 months old).
-VARIANT_EXACT_POW_UNIT_TEST(pow_test_02a0a, 3, 0, 1)  //   FIXME
-VARIANT_APPROXIMATE_POW_UNIT_TEST(  //   FIXME
-		pow_test_02a0b, 3, 0, 1, decimal::from_string(".262")) //   FIXME
+VARIANT_EXACT_POW_UNIT_TEST(pow_test_02a0a, 3, 0, 1)
 
 VARIANT_EXACT_POW_UNIT_TEST(
 		pow_test_02a1, decimal::from_string("3.0"),
 		decimal::from_string("0.0"), 1)
 
-//   Many hosts would be OK to this, but is causing issues to the Steam
-// Runtime at The Argent Lark (I could reproduce the issue locally using
-// the Steam Runtime at my Debian host, in an schroot ~8 months old).
-// runtime locally at my Debian host).
-//VARIANT_EXACT_POW_UNIT_TEST(pow_test_02b0, "3", "1", "3")  //   FIXME
-VARIANT_APPROXIMATE_POW_UNIT_TEST(  //   FIXME
-		pow_test_02b0, 3, 1, 3, decimal::from_string("0.839"))  //   FIXME
+VARIANT_EXACT_POW_UNIT_TEST(pow_test_02b0, 3, 1, 3)
 
 VARIANT_EXACT_POW_UNIT_TEST(
 		pow_test_02b1, decimal::from_string("3.0"),
 		decimal::from_string("1.0"), 3)
 
-//   Many hosts would be OK to this, but is causing issues to the Steam
-// Runtime at The Argent Lark (I could reproduce the issue locally using
-// the Steam Runtime at my Debian host, in an schroot ~8 months old).
-// runtime locally at my Debian host).
-//VARIANT_EXACT_POW_UNIT_TEST(pow_test_02c0, "3", "2", "9")  //   FIXME
-VARIANT_APPROXIMATE_POW_UNIT_TEST(  //   FIXME
-		pow_test_02c0, 3, 2, 9, decimal::from_string("3.8"))  //   FIXME
+VARIANT_EXACT_POW_UNIT_TEST(pow_test_02c0a, 3, 2, 9)
+VARIANT_EXACT_POW_UNIT_TEST(
+		pow_test_02c0b, 3, decimal::from_string("2.0"),
+		decimal::from_string("9.0"))
 
 VARIANT_EXACT_POW_UNIT_TEST(
 		pow_test_02c1, decimal::from_string("3.0"), 2, 9)
 
-//   Many hosts would be OK to this, but is causing issues to the Steam
-// Runtime at The Argent Lark (I could reproduce the issue locally using
-// the Steam Runtime at my Debian host, in an schroot ~8 months old).
-// runtime locally at my Debian host).
-//VARIANT_EXACT_POW_UNIT_TEST(pow_test_02d0, "3", "3", "27")  //   FIXME
-VARIANT_APPROXIMATE_POW_UNIT_TEST(  //   FIXME
-		pow_test_02d0, 3, 3, 27,  //   FIXME
-		decimal::from_string("14.36"))  //   FIXME
+VARIANT_EXACT_POW_UNIT_TEST(pow_test_02d0a, 3, 3, 27)
+VARIANT_EXACT_POW_UNIT_TEST(
+		pow_test_02d0b, decimal::from_string("3.0"),
+		decimal::from_string("3.0"), 27)
 
 VARIANT_EXACT_POW_UNIT_TEST(
 		pow_test_02d1, decimal::from_string("3.0"),
 		decimal::from_string("3.0"), 27)
 
-//   Many hosts would be OK to this, but is causing issues to the Steam
-// Runtime at The Argent Lark (I could reproduce the issue locally using
-// the Steam Runtime at my Debian host, in an schroot ~8 months old).
-// runtime locally at my Debian host).
-//VARIANT_EXACT_POW_UNIT_TEST(pow_test_02e0, "3", "4", "81")  //   FIXME
-VARIANT_APPROXIMATE_POW_UNIT_TEST(  //   FIXME
-		pow_test_02e0, 3, 4, 81,  //   FIXME
-		decimal::from_string("51.322"))  //   FIXME
+VARIANT_EXACT_POW_UNIT_TEST(pow_test_02e0, 3, 4, 81)
 
 VARIANT_EXACT_POW_UNIT_TEST(
 		pow_test_02e1, decimal::from_string("3.0"),
@@ -3180,50 +3153,35 @@ VARIANT_EXACT_POW_UNIT_TEST(
 		pow_test_03d1, decimal::from_string("-3.0"),
 		decimal::from_string("3.0"), -27)
 
-//   Many hosts would be OK to this, but is causing issues to the Steam
-// Runtime at The Argent Lark (I could reproduce the issue locally using
-// the Steam Runtime at my Debian host, in an schroot ~8 months old).
-// runtime locally at my Debian host).
-//VARIANT_EXACT_POW_UNIT_TEST(pow_test_03e0, "-3", "4", "81")  //   FIXME
+VARIANT_EXACT_POW_UNIT_TEST(pow_test_03e0, -3, 4, 81)
 
 VARIANT_EXACT_POW_UNIT_TEST(
 		pow_test_03e1, decimal::from_string("-3.0"),
 		decimal::from_string("4.0"), 81)
 
-//   Many hosts would be OK to this, but is causing issues to the Steam
-// Runtime at The Argent Lark (I could reproduce the issue locally using
-// the Steam Runtime at my Debian host, in an schroot ~8 months old).
-// runtime locally at my Debian host).
-//VARIANT_EXACT_POW_UNIT_TEST(pow_test_04a, "-3", "5", "-243")  //   FIXME
-VARIANT_APPROXIMATE_POW_UNIT_TEST(  //   FIXME
-		pow_test_04a, -3, 5, -243,  //   FIXME
-		decimal::from_string("250.0"))  //   FIXME
+VARIANT_EXACT_POW_UNIT_TEST(pow_test_04a0, -3, 5, -243)
+VARIANT_EXACT_POW_UNIT_TEST(pow_test_04a1, -3, 5, decimal::from_string("-243.0"))
+VARIANT_EXACT_POW_UNIT_TEST(pow_test_04a2, -3, decimal::from_string("5.0"), -243)
+VARIANT_EXACT_POW_UNIT_TEST(pow_test_04a3, -3, decimal::from_string("5.0"), decimal::from_string("-243.0"))
+VARIANT_EXACT_POW_UNIT_TEST(pow_test_04a4, decimal::from_string("-3.0"), 5, -243)
+VARIANT_EXACT_POW_UNIT_TEST(pow_test_04a5, decimal::from_string("-3.0"), 5, decimal::from_string("-243.0"))
+VARIANT_EXACT_POW_UNIT_TEST(pow_test_04a6, decimal::from_string("-3.0"), decimal::from_string("5.0"), -243)
+VARIANT_EXACT_POW_UNIT_TEST(pow_test_04a7, decimal::from_string("-3.0"), decimal::from_string("5.0"), decimal::from_string("-243.0"))
 
-//   Many hosts would be OK to this, but is causing issues to the Steam
-// Runtime at The Argent Lark (I could reproduce the issue locally using
-// the Steam Runtime at my Debian host, in an schroot ~8 months old).
-// runtime locally at my Debian host).
-//VARIANT_EXACT_POW_UNIT_TEST(pow_test_04b, "-3.0", "5.0", "-243")  //   FIXME
-VARIANT_APPROXIMATE_POW_UNIT_TEST(  //   FIXME
-		pow_test_04b, decimal::from_string("-3.0"),  //   FIXME
-		decimal::from_string("5.0"), -243,  //   FIXME
-		decimal::from_string(".6"))  //   FIXME
+VARIANT_EXACT_POW_UNIT_TEST(pow_test_04b0, -3, 5, -243)
+VARIANT_APPROXIMATE_POW_UNIT_TEST(
+		pow_test_04b1, decimal::from_string("-3.0"),
+		decimal::from_string("5.0"), -243,
+		decimal::from_string(".000001"))
 
 VARIANT_EXACT_POW_UNIT_TEST(
 		pow_test_04c, decimal::from_string("-3.0"),
 		decimal::from_string("5.0"), decimal::from_string("-243.0"))
 
-//   Many hosts would be OK to this, but is causing issues to the Steam
-// Runtime at The Argent Lark (I could reproduce the issue locally using
-// the Steam Runtime at my Debian host, in an schroot ~8 months old).
-// runtime locally at my Debian host).
-//VARIANT_APPROXIMATE_POW_UNIT_TEST(  //   FIXME
-//		pow_test_05a, "2.001", "16", "66062.258674",  //   FIXME
-//		"0.000001")  //   FIXME
-VARIANT_APPROXIMATE_POW_UNIT_TEST(  //   FIXME
+VARIANT_APPROXIMATE_POW_UNIT_TEST(
 		pow_test_05a, decimal::from_string("2.001"), 16,
-		decimal::from_string("66062.258674"),  //   FIXME
-		decimal::from_string("15282.119720"))  //   FIXME
+		decimal::from_string("66062.258674"),
+		decimal::from_string("0.000631"))
 
 VARIANT_APPROXIMATE_POW_UNIT_TEST(
 		pow_test_05b, decimal::from_string("2.001"),
@@ -3231,39 +3189,30 @@ VARIANT_APPROXIMATE_POW_UNIT_TEST(
 		decimal::from_string("66062.258674"),
 		decimal::from_string("0.000001"))
 
-//   Many hosts would be OK to this, but is causing issues to the Steam
-// Runtime at The Argent Lark (I could reproduce the issue locally using
-// the Steam Runtime at my Debian host, in an schroot ~8 months old).
-// runtime locally at my Debian host).
-//VARIANT_EXACT_POW_UNIT_TEST(pow_test_06a, "-333", "0", "1")  //   FIXME
-//VARIANT_APPROXIMATE_POW_UNIT_TEST(  //   FIXME
-//		pow_test_06a, "-333", "0", "1",  //   FIXME
-//		"999999999999.999999")  //   FIXME
+VARIANT_EXACT_POW_UNIT_TEST(pow_test_06a, -333, 0, 1)
 
 VARIANT_EXACT_POW_UNIT_TEST(
 		pow_test_06b, -333, decimal::from_string("0.0"), 1)
 
-//   Many hosts would be OK to this, but is causing issues to the Steam
-// Runtime at The Argent Lark (I could reproduce the issue locally using
-// the Steam Runtime at my Debian host, in an schroot ~8 months old).
-// runtime locally at my Debian host).
-//VARIANT_APPROXIMATE_POW_UNIT_TEST(  //   FIXME
-//		pow_test_07, "-442.001", "2", "195364.884",  //   FIXME
-//		"0.000001")  //   FIXME
+VARIANT_EXACT_POW_UNIT_TEST(
+		pow_test_06c, decimal::from_string("-333.0"),
+		decimal::from_string("0.0"), 1)
 
 VARIANT_APPROXIMATE_POW_UNIT_TEST(
-		pow_test_07, decimal::from_string("-442.001"),
+		pow_test_07a, decimal::from_string("-442.001"), 2,
+		decimal::from_string("195364.884"),
+		decimal::from_string("0.000001"))
+
+VARIANT_APPROXIMATE_POW_UNIT_TEST(
+		pow_test_07b, decimal::from_string("-442.001"),
 		decimal::from_string("2.0"),
 		decimal::from_string("195364.884"),
 		decimal::from_string("0.000001"))
 
-//   Many hosts would be OK to this, but is causing issues to the Steam
-// Runtime at The Argent Lark (I could reproduce the issue locally using
-// the Steam Runtime at my Debian host, in an schroot ~8 months old).
-// runtime locally at my Debian host).
-//VARIANT_APPROXIMATE_POW_UNIT_TEST(  //   FIXME
-//		pow_test_08a, "-442.001", "3", "-86351474.093326",  //   FIXME
-//		"0.000001")  //   FIXME
+VARIANT_APPROXIMATE_POW_UNIT_TEST(
+		pow_test_08a, decimal::from_string("-442.001"), 3,
+		decimal::from_string("-86351474.093326"),
+		decimal::from_string("0.000001"))
 
 VARIANT_APPROXIMATE_POW_UNIT_TEST(
 		pow_test_08b, decimal::from_string("-442.001"),
@@ -3271,22 +3220,17 @@ VARIANT_APPROXIMATE_POW_UNIT_TEST(
 		decimal::from_string("-86351474.093326"),
 		decimal::from_string("0.000001"))
 
-//   Many hosts would be OK to this, but is causing issues to the Steam
-// Runtime at The Argent Lark (I could reproduce the issue locally using
-// the Steam Runtime at my Debian host, in an schroot ~8 months old).
-// runtime locally at my Debian host).
-//VARIANT_APPROXIMATE_POW_UNIT_TEST(  //   FIXME
-//		pow_test_09, "1.001", "9999", "21894.786552",  //   FIXME
-//		"0.000001")  //   FIXME
-VARIANT_APPROXIMATE_POW_UNIT_TEST(  //   FIXME
-		pow_test_09, decimal::from_string("1.001"), 9999,  //   FIXME
-		decimal::from_string("21894.786552"),  //   FIXME
-		decimal::from_string("10.8566"))  //   FIXME
+VARIANT_APPROXIMATE_POW_UNIT_TEST(
+		pow_test_09a, decimal::from_string("1.001"),
+		decimal::from_string("9999.0"),
+		decimal::from_string("21894.786552"),
+		decimal::from_string("0.000001"))
 
-//   Many hosts would be OK to this, but is causing issues to the Steam
-// Runtime at The Argent Lark (I could reproduce the issue locally using
-// the Steam Runtime at my Debian host, in an schroot ~8 months old).
-// runtime locally at my Debian host).
+VARIANT_APPROXIMATE_POW_UNIT_TEST(
+		pow_test_09b, decimal::from_string("1.001"), 9999,
+		decimal::from_string("21894.786552"),
+		decimal::from_string("10.8566"))
+
 VARIANT_APPROXIMATE_POW_UNIT_TEST(
 		pow_test_10a, decimal::from_string("-1.021"), 939,
 		decimal::from_string("-298656395.733370"),
@@ -3316,6 +3260,7 @@ VARIANT_APPROXIMATE_POW_UNIT_TEST(
 //VARIANT_APPROXIMATE_POW_UNIT_TEST(
 //		pow_test_12, decimal::from_string("-1.023"), 1399,
 //		decimal::from_string("-65465360432130.221993"),
+
 // 		"Inf" // XXX ???
 // 		"Infinity" // XXX ???
 //		decimal::from_string("999999999999.999999"))
