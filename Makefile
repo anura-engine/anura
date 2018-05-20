@@ -205,23 +205,23 @@ anura: $(OBJ)
 		$(LIBS) -lboost_regex -lboost_system -lboost_filesystem -lboost_locale -licui18n -licuuc -licudata -lpthread -fthreadsafe-statics
 
 checkdirs: $(BUILD_DIR)
-	@echo $(MAYBE_MINUS_E) \
-	  "OPTIMIZE            : $(OPTIMIZE)\n" \
-	  "USE_CCACHE          : $(USE_CCACHE)\n" \
-	  "CCACHE              : $(CCACHE)\n" \
-	  "SANITIZE_ADDRESS    : $(SANITIZE_ADDRESS)\n" \
-	  "SANITIZE_UNDEFINED  : $(SANITIZE_UNDEFINED)\n" \
-	  "USE_DB_CLIENT       : $(USE_DB_CLIENT)\n" \
-	  "USE_BOX2D           : $(USE_BOX2D)\n" \
-	  "USE_LIBVPX          : $(USE_LIBVPX)\n" \
-	  "USE_LUA             : $(USE_LUA)\n" \
-	  "USE_SDL2            : $(USE_SDL2)\n" \
-	  "CXX                 : $(CXX)\n" \
-	  "BASE_CXXFLAGS       : $(BASE_CXXFLAGS)\n" \
-	  "CXXFLAGS            : $(CXXFLAGS)\n" \
-	  "LDFLAGS             : $(LDFLAGS)\n" \
-	  "INC                 : $(INC)\n" \
-	  "LIBS                : $(LIBS)"
+	@printf "\
+	OPTIMIZE            : $(OPTIMIZE)\n\
+USE_CCACHE          : $(USE_CCACHE)\n\
+	CCACHE              : $(CCACHE)\n\
+SANITIZE_ADDRESS    : $(SANITIZE_ADDRESS)\n\
+SANITIZE_UNDEFINED  : $(SANITIZE_UNDEFINED)\n\
+	USE_DB_CLIENT       : $(USE_DB_CLIENT)\n\
+	USE_BOX2D           : $(USE_BOX2D)\n\
+USE_LIBVPX          : $(USE_LIBVPX)\n\
+	USE_LUA             : $(USE_LUA)\n\
+	USE_SDL2            : $(USE_SDL2)\n\
+CXX                 : $(CXX)\n\
+	BASE_CXXFLAGS       : $(BASE_CXXFLAGS)\n\
+	CXXFLAGS            : $(CXXFLAGS)\n\
+LDFLAGS             : $(LDFLAGS)\n\
+INC                 : $(INC)\n\
+LIBS                : $(LIBS)"
 
 
 $(BUILD_DIR):
