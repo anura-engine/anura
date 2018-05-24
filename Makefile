@@ -27,6 +27,10 @@ OPTIMIZE?=yes
 USE_LUA?=yes
 USE_BOX2D?=yes
 
+#   This was originally intended as a generic way to perform `$(ECHO)`
+# or `$(ECHO) $(MAYBE_MINUS_E)` (`echo ${ECHO_ARGS}` or
+# `echo -e ${ECHO_ARGS}`) as preferred, before turning to `printf`.
+#   You might want to remove this later.
 ifeq ($(SHELL), /bin/sh)
 MAYBE_MINUS_E=''
 else
@@ -69,6 +73,7 @@ endif
 else ifneq (, $(findstring g++, `$(CXX)`))
 GCC_GTEQ_490 := $(shell expr `$(CXX) -dumpversion | sed -e 's/\.\([0-9][0-9]\)/\1/g' -e 's/\.\([0-9]\)/0\1/g' -e 's/^[0-9]\{3,4\}$$/&00/'` \>= 40900)
 GCC_GTEQ_510 := $(shell expr `$(CXX) -dumpversion | sed -e 's/\.\([0-9][0-9]\)/\1/g' -e 's/\.\([0-9]\)/0\1/g' -e 's/^[0-9]\{3,4\}$$/&00/'` \>= 50100)
+GCC_GTEQ_81 := $(shell expr `$(CXX) -dumpversion | sed -e 's/\.\([0-9][0-9]\)/\1/g' -e 's/\.\([0-9]\)/0\1/g' -e 's/^[0-9]\{3,4\}$$/&00/'` \>= 80100)
 BASE_CXXFLAGS += -Wno-literal-suffix -Wno-sign-compare
 
 ifeq "$(GCC_GTEQ_510)" "1"
@@ -80,6 +85,10 @@ BASE_CXXFLAGS += -fdiagnostics-color=auto
 else
 SANITIZE_UNDEFINED=
 endif
+endif
+
+ifeq '$(GCC_GTEQ_81)' '1'
+BASE_CXXFLAGS += -Wno-class-memaccess
 endif
 
 SDL2_CONFIG?=sdl2-config
@@ -205,23 +214,23 @@ anura: $(OBJ)
 		$(LIBS) -lboost_regex -lboost_system -lboost_filesystem -lboost_locale -licui18n -licuuc -licudata -lpthread -fthreadsafe-statics
 
 checkdirs: $(BUILD_DIR)
-	@echo $(MAYBE_MINUS_E) \
-	  "OPTIMIZE            : $(OPTIMIZE)\n" \
-	  "USE_CCACHE          : $(USE_CCACHE)\n" \
-	  "CCACHE              : $(CCACHE)\n" \
-	  "SANITIZE_ADDRESS    : $(SANITIZE_ADDRESS)\n" \
-	  "SANITIZE_UNDEFINED  : $(SANITIZE_UNDEFINED)\n" \
-	  "USE_DB_CLIENT       : $(USE_DB_CLIENT)\n" \
-	  "USE_BOX2D           : $(USE_BOX2D)\n" \
-	  "USE_LIBVPX          : $(USE_LIBVPX)\n" \
-	  "USE_LUA             : $(USE_LUA)\n" \
-	  "USE_SDL2            : $(USE_SDL2)\n" \
-	  "CXX                 : $(CXX)\n" \
-	  "BASE_CXXFLAGS       : $(BASE_CXXFLAGS)\n" \
-	  "CXXFLAGS            : $(CXXFLAGS)\n" \
-	  "LDFLAGS             : $(LDFLAGS)\n" \
-	  "INC                 : $(INC)\n" \
-	  "LIBS                : $(LIBS)"
+	@printf "\
+	OPTIMIZE            : $(OPTIMIZE)\n\
+USE_CCACHE          : $(USE_CCACHE)\n\
+	CCACHE              : $(CCACHE)\n\
+SANITIZE_ADDRESS    : $(SANITIZE_ADDRESS)\n\
+SANITIZE_UNDEFINED  : $(SANITIZE_UNDEFINED)\n\
+	USE_DB_CLIENT       : $(USE_DB_CLIENT)\n\
+	USE_BOX2D           : $(USE_BOX2D)\n\
+USE_LIBVPX          : $(USE_LIBVPX)\n\
+	USE_LUA             : $(USE_LUA)\n\
+	USE_SDL2            : $(USE_SDL2)\n\
+CXX                 : $(CXX)\n\
+	BASE_CXXFLAGS       : $(BASE_CXXFLAGS)\n\
+	CXXFLAGS            : $(CXXFLAGS)\n\
+LDFLAGS             : $(LDFLAGS)\n\
+INC                 : $(INC)\n\
+LIBS                : $(LIBS)\n"
 
 
 $(BUILD_DIR):
