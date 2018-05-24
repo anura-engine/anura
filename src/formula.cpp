@@ -3782,11 +3782,11 @@ namespace {
 				if(n+1 == args.size()) {
 					//Certain special functions take a special callable definition
 					//to evaluate their last argument. Discover what that is here.
-					static const std::string MapCallableFuncs[] = { "count", "filter", "find", "find_or_die", "choose", "map" };
+					static const std::string MapCallableFuncs[] = { "count", "filter", "find", "find_or_die", "find_index", "find_index_or_die", "choose", "map" };
 					if(args.size() >= 2 && function_name != nullptr && std::count(MapCallableFuncs, MapCallableFuncs + sizeof(MapCallableFuncs)/sizeof(*MapCallableFuncs), *function_name)) {
 						std::string value_name = "value";
 
-						static const std::string CustomIdMapCallableFuncs[] = { "filter", "find", "map" };
+						static const std::string CustomIdMapCallableFuncs[] = { "filter", "find", "map", "find_index", "find_index_or_die" };
 						if(args.size() == 3 && std::count(CustomIdMapCallableFuncs, CustomIdMapCallableFuncs + sizeof(CustomIdMapCallableFuncs)/sizeof(*CustomIdMapCallableFuncs), *function_name)) {
 							//invocation like map(range(5), n, n*n) -- need to discover
 							//the string for the second argument to set that in our

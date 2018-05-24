@@ -3547,6 +3547,99 @@ FUNCTION_DEF_IMPL
 			ASSERT_LOG(found_valid_expr, "Last argument to find() function does not contain 'value' or 'index' " << debugPinpointLocation());
 		END_FUNCTION_DEF(find_or_die)
 
+		FUNCTION_DEF_CTOR(find_index, 2, 2, "find_index")
+		if (!args().empty()) {
+			def_ = args().back()->getDefinitionUsedByExpression();
+		}
+		FUNCTION_DYNAMIC_ARGUMENTS
+			FUNCTION_DEF_MEMBERS
+			bool optimizeArgNumToVM(int narg) const override {
+			return true;
+		}
+		std::string identifier_;
+		ConstFormulaCallableDefinitionPtr def_;
+		FUNCTION_DEF_IMPL
+			const variant items = EVAL_ARG(0);
+
+			ffl::IntrusivePtr<map_callable> callable(new map_callable(variables, def_ ? def_->getNumSlots() : 0));
+			for (int n = 0; n != items.num_elements(); ++n) {
+				callable->set(items[n], n);
+				const variant val = args().back()->evaluate(*callable);
+				if (val.as_bool()) {
+					return variant(n);
+				}
+			}
+
+		return variant(-1);
+		CAN_VM
+			return false; // canChildrenVM();
+		FUNCTION_VM
+			return ExpressionPtr();
+		DEFINE_RETURN_TYPE
+			return variant_type::get_type(variant::VARIANT_TYPE_INT);
+		FUNCTION_ARGS_DEF
+
+			bool found_valid_expr = false;
+		std::vector<ConstExpressionPtr> expressions = args().back()->queryChildrenRecursive();
+		for (ConstExpressionPtr expr : expressions) {
+			const std::string& s = expr->str();
+			if (s == "value" || s == "key" || s == "index" || s == identifier_) {
+				found_valid_expr = true;
+				break;
+			}
+		}
+
+		ASSERT_LOG(found_valid_expr, "Last argument to find_index() function does not contain 'value' or 'index' " << debugPinpointLocation());
+		END_FUNCTION_DEF(find_index)
+
+		FUNCTION_DEF_CTOR(find_index_or_die, 2, 2, "find_index_or_die")
+			if (!args().empty()) {
+				def_ = args().back()->getDefinitionUsedByExpression();
+			}
+		FUNCTION_DYNAMIC_ARGUMENTS
+			FUNCTION_DEF_MEMBERS
+			bool optimizeArgNumToVM(int narg) const override {
+			return true;
+		}
+		std::string identifier_;
+		ConstFormulaCallableDefinitionPtr def_;
+		FUNCTION_DEF_IMPL
+			const variant items = EVAL_ARG(0);
+
+		ffl::IntrusivePtr<map_callable> callable(new map_callable(variables, def_ ? def_->getNumSlots() : 0));
+		for (int n = 0; n != items.num_elements(); ++n) {
+			callable->set(items[n], n);
+			const variant val = args().back()->evaluate(*callable);
+			if (val.as_bool()) {
+				return variant(n);
+			}
+		}
+
+		ASSERT_LOG(false, "Failed to find expected item in find_index_or_die: " << args()[1]->evaluate(*callable) << " " << debugPinpointLocation());
+
+		return variant(-1);
+		CAN_VM
+			return false; // canChildrenVM();
+		FUNCTION_VM
+			return ExpressionPtr();
+		DEFINE_RETURN_TYPE
+			return variant_type::get_type(variant::VARIANT_TYPE_INT);
+		FUNCTION_ARGS_DEF
+
+			bool found_valid_expr = false;
+		std::vector<ConstExpressionPtr> expressions = args().back()->queryChildrenRecursive();
+		for (ConstExpressionPtr expr : expressions) {
+			const std::string& s = expr->str();
+			if (s == "value" || s == "key" || s == "index" || s == identifier_) {
+				found_valid_expr = true;
+				break;
+			}
+		}
+
+		ASSERT_LOG(found_valid_expr, "Last argument to find_index() function does not contain 'value' or 'index' " << debugPinpointLocation());
+		END_FUNCTION_DEF(find_index_or_die)
+
+
 		namespace 
 		{
 			void visit_objects(variant v, std::vector<variant>& res) {
