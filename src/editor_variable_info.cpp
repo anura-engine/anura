@@ -39,6 +39,7 @@ EditorVariableInfo::EditorVariableInfo(const variant& node)
   : name_(node["name"].as_string()),
     is_property_(false),
     type_(VARIABLE_TYPE::INTEGER), 
+	is_real_enum_(false),
 	info_(node["info"].as_string_default()),
     help_(node["help"].as_string_default()),
     formula_(game_logic::Formula::createOptionalFormula(node["value"])),
@@ -63,6 +64,7 @@ EditorVariableInfo::EditorVariableInfo(const variant& node)
 		type_ = VARIABLE_TYPE::BOOLEAN;
 	} else if(type == "enum") {
 		type_ = VARIABLE_TYPE::ENUM;
+		is_real_enum_ = node["real_enum"].as_bool(false);
 		if(node["enum_values"].is_list()) {
 			enum_values_ = node["enum_values"].as_list_string();
 		} else {

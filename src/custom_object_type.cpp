@@ -1697,10 +1697,23 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 
 				ASSERT_LOG(!entry.init || entry.storage_slot != -1, "Property " << id_ << "." << k << " cannot have initializer since it's not a variable");
 
+
+
 				if(value.has_key("editor_info")) {
 					entry.has_editor_info = true;
 					const game_logic::Formula::StrictCheckScope strict_checking(false);
 					variant editor_info_var = value["editor_info"];
+
+					if (editor_info_var.is_string() && editor_info_var.as_string() == "enum") {
+						ASSERT_LOG(entry.type->is_type(variant::VARIANT_TYPE_ENUM), "Property " << id_ << " cannot be exposed as an enum to the editor since it's not an enum type.");
+						variant_builder b;
+
+						//TODO: finish up calculating the enum value.
+						b.add("type", "enum");
+						editor_info_var = b.build();
+						value.add_attr_mutation(variant("editor_info"), editor_info_var);
+					}
+
 					static const variant name_key("name");
 					editor_info_var = editor_info_var.add_attr(name_key, variant(k));
 					EditorVariableInfo info(editor_info_var);
