@@ -199,6 +199,7 @@ Frame::Frame(variant node)
 	 allow_wrapping_(node["allow_wrapping"].as_bool(false)),
 	 force_no_alpha_(allow_wrapping_ || node["force_no_alpha"].as_bool(false)),
 	 no_remove_alpha_borders_(node["no_remove_alpha_borders"].as_bool(node.has_key("fbo"))),
+	 needs_serialization_(false),
 	 collision_areas_inside_frame_(true),
 	 current_palette_(-1), 
 	 blit_target_(node)

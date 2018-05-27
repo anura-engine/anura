@@ -161,6 +161,9 @@ public:
 	int frameNumber(int time_in_frame) const;
 
 	const std::vector <std::string>& getSounds() const { return sounds_; }
+
+	void SetNeedsSerialization(bool b) { needs_serialization_ = b; }
+	bool GetNeedsSerialization() const { return needs_serialization_;  }
 private:
 	DECLARE_CALLABLE(Frame);
 
@@ -218,6 +221,9 @@ private:
 	bool force_no_alpha_;
 
 	bool no_remove_alpha_borders_;
+
+	//the animation was created dynamically and should be serialized with objects
+	bool needs_serialization_;
 
 	std::vector<int> palettes_recognized_;
 	int current_palette_;

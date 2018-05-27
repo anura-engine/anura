@@ -377,7 +377,18 @@ CustomObject::CustomObject(variant node)
 
 	assert(type_.get());
 	//setFrameNoAdjustments(frame_name_);
-	frame_.reset(&type_->getFrame(frame_name_));
+
+	if (node.has_key("frame_obj")) {
+		FramePtr f(new Frame(node["frame_obj"]));
+		f->SetNeedsSerialization(true);
+		if (type_->useImageForCollisions()) {
+			f->setImageAsSolid();
+		}
+		frame_ = f;
+	}
+	else {
+		frame_.reset(&type_->getFrame(frame_name_));
+	}
 	calculateSolidRect();
 
 	next_animation_formula_ = type_->nextAnimationFormula();
@@ -989,6 +1000,10 @@ variant CustomObject::write() const
 
 	if(frame_name_ != "default") {
 		res.add("current_frame", frame_name_);
+	}
+
+	if (frame_ && frame_->GetNeedsSerialization()) {
+		res.add("frame_obj", frame_->write());
 	}
 
 	res.add("custom", true);
@@ -4169,6 +4184,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 			setFrame(value.as_string());
 		} else if(value.is_map()) {
 			FramePtr f(new Frame(value));
+			f->SetNeedsSerialization(true);
 			if(type_->useImageForCollisions()) {
 				f->setImageAsSolid();
 			}
