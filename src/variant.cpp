@@ -2761,8 +2761,14 @@ void variant::write_json(std::ostream& s, unsigned int flags) const
 				s << '"' << i->first.string_cast() << "\":";
 			} else {
 				std::string str = i->first.write_json(true, flags);
-				boost::replace_all(str, "\"", "\\\"");
-				s << "\"@eval " << str << "\":";
+
+				if (str.size() >= 7 && std::equal(str.begin(), str.begin() + 7, "\"@eval ")) {
+					s << str << ":";
+				}
+				else {
+					boost::replace_all(str, "\"", "\\\"");
+					s << "\"@eval " << str << "\":";
+				}
 			}
 
 			i->second.write_json(s, flags);
@@ -2899,16 +2905,21 @@ void variant::write_json_pretty(std::ostream& s, std::string indent, unsigned in
 				s << ',';
 			}
 
-			s << "\n" << indent << '"';
+			s << "\n" << indent;
 			if(i->first.is_string()) {
-				s << i->first.string_cast();
-			} else {
-				std::string str = i->first.write_json(true, flags);
-				boost::replace_all(str, "\"", "\\\"");
-				s << "@eval " << str;
+				s << '"' << i->first.string_cast() << "\": ";
 			}
+			else {
+				std::string str = i->first.write_json(true, flags);
 
-			s << "\": ";
+				if (str.size() >= 7 && std::equal(str.begin(), str.begin() + 7, "\"@eval ")) {
+					s << str << ": ";
+				}
+				else {
+					boost::replace_all(str, "\"", "\\\"");
+					s << "\"@eval " << str << "\": ";
+				}
+			}
 
 			i->second.write_json_pretty(s, indent, flags);
 		}
