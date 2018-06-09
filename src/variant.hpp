@@ -226,6 +226,9 @@ public:
 			char buf[sizeof(variant)];
 			void* pthis = (void*)this;
 			void* pv = (void*)&v;
+
+			//memcpy to swap the vectors as fast as possible, does less things than
+			//using std::move()
 			memcpy(buf, pv, sizeof(variant));
 			memcpy(pv, pthis, sizeof(variant));
 			memcpy(pthis, buf, sizeof(variant));
