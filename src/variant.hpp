@@ -224,9 +224,11 @@ public:
 			*this = tmp;
 		} else {
 			char buf[sizeof(variant)];
-			memcpy(buf, &v, sizeof(variant));
-			memcpy(&v, this, sizeof(variant));
-			memcpy(this, buf, sizeof(variant));
+			void* pthis = (void*)this;
+			void* pv = (void*)&v;
+			memcpy(buf, pv, sizeof(variant));
+			memcpy(pv, pthis, sizeof(variant));
+			memcpy(pthis, buf, sizeof(variant));
 		}
 	}
 
