@@ -2411,6 +2411,50 @@ RETURN_TYPE("bool")
 	RETURN_TYPE("bool")
 	END_FUNCTION_DEF(point_solid)
 
+
+
+
+	FUNCTION_DEF(find_point_solid, 6, 7, "find_point_solid(Level, object, int x, int y, int dx, int dy, int max_search=1000) -> boolean: returns true iff the given point is solid for the given object")
+		Level* lvl = EVAL_ARG(0).convert_to<Level>();
+		Entity* obj = EVAL_ARG(1).convert_to<Entity>();
+		int x = EVAL_ARG(2).as_int();
+		int y = EVAL_ARG(3).as_int();
+		const int dx = EVAL_ARG(4).as_int();
+		const int dy = EVAL_ARG(5).as_int();
+
+		int max_search = 1000;
+		if (NUM_ARGS > 6) {
+			max_search = EVAL_ARG(6).as_int();
+		}
+
+		while (max_search > 0) {
+			if (point_standable(*lvl, *obj, x, y, nullptr, SOLID_ONLY)) {
+				break;
+			}
+
+			x += dx;
+			y += dy;
+		}
+
+		std::vector<variant> res;
+		res.push_back(variant(x));
+		res.push_back(variant(y));
+		return variant(&res);
+
+	return variant(point_standable(*lvl, *obj, x, y, nullptr, SOLID_ONLY));
+	FUNCTION_ARGS_DEF
+		ARG_TYPE("builtin level")
+		ARG_TYPE("custom_obj")
+		ARG_TYPE("int")
+		ARG_TYPE("int")
+		ARG_TYPE("int")
+		ARG_TYPE("int")
+		ARG_TYPE("int")
+
+		RETURN_TYPE("[int,int]")
+	END_FUNCTION_DEF(find_point_solid)
+
+
 	FUNCTION_DEF(object_can_stand, 4, 4, "object_can_stand(Level, object, int x, int y) -> boolean: returns true iff the given point is standable")
 		Level* lvl = EVAL_ARG(0).convert_to<Level>();
 		Entity* obj = EVAL_ARG(1).convert_to<Entity>();
