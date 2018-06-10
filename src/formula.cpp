@@ -59,6 +59,8 @@
 #define STRICT_ERROR(s) if(g_strict_formula_checking_warnings) { LOG_WARN(s); } else { ASSERT_LOG(false, s); }
 #define STRICT_ASSERT(cond, s) if(!(cond)) { STRICT_ERROR(s); }
 
+PREF_INT(max_ffl_recursion, 1000, "Maximum depth of FFL recursion");
+
 using namespace formula_vm;
 
 namespace 
@@ -1345,9 +1347,9 @@ namespace {
 	
 		};
 
+
 		namespace 
 		{
-			PREF_INT(max_ffl_recursion, 1000, "Maximum depth of FFL recursion");
 			int function_recursion_depth = 0;
 
 			#define DEBUG_FULL_EXPRESSION_STACKS

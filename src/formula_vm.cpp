@@ -15,6 +15,8 @@
 #include "utf8_to_codepoint.hpp"
 #include "variant_type.hpp"
 
+extern int g_max_ffl_recursion;
+
 namespace formula_vm {
 using namespace game_logic;
 
@@ -41,14 +43,35 @@ static bool incrementVec(std::vector<int>& v, const std::vector<int>& max_values
 	return false;
 }
 
+int g_vmDepth = 0;
+
+struct VMOverflowGuard {
+	VMOverflowGuard() {
+		++g_vmDepth;
+	}
+
+	~VMOverflowGuard() {
+		--g_vmDepth;
+	}
+};
+
 }
+
+
 
 variant VirtualMachine::execute(const FormulaCallable& variables) const
 {
+	VMOverflowGuard overflow_guard;
+
 	std::vector<FormulaCallablePtr> variables_stack;
 	std::vector<variant> stack;
 	std::vector<variant> symbol_stack;
 	stack.reserve(8);
+
+	if (g_vmDepth > g_max_ffl_recursion) {
+		ASSERT_LOG(false, "Overflow in VM: " << debugPinpointLocation(&instructions_[0], stack));
+	}
+
 	executeInternal(variables, variables_stack, stack, symbol_stack, &instructions_[0], &instructions_[0] + instructions_.size());
 	return stack.back();
 }
