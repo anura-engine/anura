@@ -401,13 +401,14 @@ namespace
 			p.anim = &factory_.frames_[rand()%factory_.frames_.size()];
 
 			const int diff_x = info_.max_x_ - info_.min_x_;
+			float num_before = p.pos[0];
 			if(diff_x > 0) {
-				p.pos[0] += (rand()%(diff_x*1000))/1000.0f;
+				p.pos[0] += rand() % diff_x + (rand() % 1000)*0.001f;
 			}
 
 			const int diff_y = info_.max_y_ - info_.min_y_;
 			if(diff_y > 0) {
-				p.pos[1] += (rand()%(diff_y*1000))/1000.0f;
+				p.pos[1] += rand() % diff_y + (rand() % 1000)*0.001f;
 			}
 
 			if(!e.isFacingRight()) {
