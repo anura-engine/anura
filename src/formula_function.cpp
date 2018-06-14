@@ -3869,9 +3869,35 @@ FUNCTION_DEF_IMPL
 
 			return variant_type::get_union(types);
 
-		END_FUNCTION_DEF(sum)
+			END_FUNCTION_DEF(sum)
+
+				static const int StaticRangeListSize = 10000;
+		variant create_static_range_list() {
+			std::vector<variant> result;
+			for (int i = 0; i < StaticRangeListSize; ++i) {
+				result.push_back(variant(i));
+			}
+
+			return variant(&result);
+		}
 
 		FUNCTION_DEF(range, 1, 3, "range([start, ]finish[, step]): Returns a list containing all numbers smaller than the finish value and and larger than or equal to the start value. The start value defaults to 0.")
+
+			static variant static_list = create_static_range_list();
+			if (NUM_ARGS == 1) {
+				int size = EVAL_ARG(0).as_int();
+				if (size >= 0 && size <= StaticRangeListSize) {
+					return static_list.get_list_slice(0, size);
+				}
+			}
+			else if (NUM_ARGS == 2) {
+				int begin = EVAL_ARG(0).as_int();
+				int end = EVAL_ARG(1).as_int();
+				if (begin >= 0 && end >= begin && end <= StaticRangeListSize) {
+					return static_list.get_list_slice(begin, end);
+				}
+			}
+			
 			int start = NUM_ARGS > 1 ? EVAL_ARG(0).as_int() : 0;
 			int end = EVAL_ARG(NUM_ARGS > 1 ? 1 : 0).as_int();
 			int step = NUM_ARGS < 3 ? 1 : EVAL_ARG(2).as_int();
