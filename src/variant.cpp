@@ -3254,10 +3254,6 @@ VARIANT_APPROXIMATE_POW_UNIT_TEST(
 		decimal::from_string("-298656395.733370"),
 		decimal::from_string("7265.158963"))
 
-//   Many hosts would be OK to this, but is causing issues to the Steam
-// Runtime at The Argent Lark (I could reproduce the issue locally using
-// the Steam Runtime at my Debian host, in an schroot ~8 months old).
-// runtime locally at my Debian host).
 //VARIANT_APPROXIMATE_POW_UNIT_TEST(
 //		pow_test_11a, decimal::from_string("-1.021"), 1300,
 //		decimal::from_string("541333262032.771060"),
@@ -3272,10 +3268,14 @@ VARIANT_APPROXIMATE_POW_UNIT_TEST(
 //VARIANT_APPROXIMATE_POW_UNIT_TEST(
 //		pow_test_12, decimal::from_string("-1.023"), 1399,
 //		decimal::from_string("-65465360432130.221993"),
-
-// 		"Inf" // XXX ???
-// 		"Infinity" // XXX ???
-//		decimal::from_string("999999999999.999999"))
+//
+//// 		"Inf" // XXX ???
+//// 		"Infinity" // XXX ???
+//// 		decimal::from_string("Inf") // XXX ???
+//// 		decimal::from_string("Infinity") // XXX ???
+//		decimal::from_string("999999999999.999999")
+//
+//		)
 
 //   Some builds can have down to only 0.000001 error here! Some hosts
 // might be yielding 0, others would yield `0.000021`.
