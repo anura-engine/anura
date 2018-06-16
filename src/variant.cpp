@@ -3317,3 +3317,13 @@ VARIANT_APPROXIMATE_POW_UNIT_TEST(
 // VARIANT_APPROXIMATE_POW_UNIT_TEST(
 // 		pow_test_16, 3, -5, decimal::from_string("0.004115"),
 // 		decimal::from_string("0.000010"))
+
+VARIANT_APPROXIMATE_POW_UNIT_TEST(
+		pow_test_17, 2, decimal::from_string("-3.0"),
+		decimal::from_string("0.125"),
+		decimal::from_string("0.000001"))
+
+VARIANT_APPROXIMATE_POW_UNIT_TEST(
+		pow_test_18, 3, decimal::from_string("-5.0"),
+		decimal::from_string("0.004115"),
+		decimal::from_string("0.000010"))
