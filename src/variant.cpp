@@ -3071,8 +3071,7 @@ BENCHMARK(variant_assign)
 	LOG_DEBUG("t_" << #name << "_r: " << t_##name_r);                     \
 	const variant t_##name_o = t_##name_n ^ t_##name_v;                   \
 	LOG_DEBUG("t_" << #name << "_o: " << t_##name_o);                     \
-	/* Turn most equalities (if not every) into approximations before reactivating this... that means clearing out most uses of this macro, replacing them by `VARIANT_APPROXIMATE_POW_UNIT_TEST`. */ \
-	/* CHECK_EQ(t_##name_r, t_##name_o); */ }
+	CHECK_EQ(t_##name_r, t_##name_o); }
 
 /**
  *   Name a pow unit test where must be true that:
