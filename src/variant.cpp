@@ -2043,8 +2043,6 @@ variant variant::operator^(const variant& v) const
 #endif
 	}
 
-	// TODO   Makes pow_test_15 to fail (2 ^ -3) because of being 0 because of 0.125 being casted to int. Bug or feature?
-	// TODO   Makes pow_test_16 because of the same reason. Bug or feature?
 	return variant(static_cast<int>(pow(static_cast<double>(as_int()), v.as_int())));
 }
 
@@ -3310,13 +3308,9 @@ VARIANT_APPROXIMATE_POW_UNIT_TEST(
 //		decimal::from_string("0.341279"),
 //		decimal::from_string("0.000399"))
 
-// VARIANT_APPROXIMATE_POW_UNIT_TEST(
-// 		pow_test_15, 2, -3, decimal::from_string("0.125"),
-// 		decimal::from_string("0.000001"))
+VARIANT_EXACT_POW_UNIT_TEST(pow_test_15, 2, -3, 0)
 
-// VARIANT_APPROXIMATE_POW_UNIT_TEST(
-// 		pow_test_16, 3, -5, decimal::from_string("0.004115"),
-// 		decimal::from_string("0.000010"))
+VARIANT_EXACT_POW_UNIT_TEST(pow_test_16, 3, -5, 0)
 
 VARIANT_APPROXIMATE_POW_UNIT_TEST(
 		pow_test_17, 2, decimal::from_string("-3.0"),
