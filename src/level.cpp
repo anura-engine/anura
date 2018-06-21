@@ -306,27 +306,28 @@ void Level::applySubComponents()
 
 Level::Level(const std::string& level_cfg, variant node)
 	: id_(level_cfg),
-	  x_resolution_(0), 
-	  y_resolution_(0),
-	  absolute_object_adjust_x_(0),
-	  absolute_object_adjust_y_(0),
-	  set_screen_resolution_on_entry_(false),
-	  highlight_layer_(std::numeric_limits<int>::min()),
-	  num_compiled_tiles_(0),
-	  entered_portal_active_(false), 
-	  save_point_x_(-1), 
-	  save_point_y_(-1),
-	  editor_(false), 
-	  show_foreground_(true), 
-	  show_background_(true), 
-	  dark_(false), 
-	  dark_color_(KRE::ColorTransform(255, 255, 255, 255, 0, 0, 0, 255)), 
-	  air_resistance_(0), 
-	  water_resistance_(7), 
-	  end_game_(false),
-      editor_tile_updates_frozen_(0), 
-	  editor_dragging_objects_(false),
-	  zoom_level_(1.0f),
+	x_resolution_(0),
+	y_resolution_(0),
+	absolute_object_adjust_x_(0),
+	absolute_object_adjust_y_(0),
+	set_screen_resolution_on_entry_(false),
+	highlight_layer_(std::numeric_limits<int>::min()),
+	num_compiled_tiles_(0),
+	entered_portal_active_(false),
+	save_point_x_(-1),
+	save_point_y_(-1),
+	editor_(false),
+	show_foreground_(true),
+	show_background_(true),
+	dark_(false),
+	dark_color_(KRE::ColorTransform(255, 255, 255, 255, 0, 0, 0, 255)),
+	air_resistance_(0),
+	water_resistance_(7),
+	end_game_(false),
+	editor_tile_updates_frozen_(0),
+	editor_dragging_objects_(false),
+	zoom_level_(1.0f),
+	instant_zoom_level_set_(-1),
 	  palettes_used_(0),
 	  background_palette_(-1),
 	  segment_width_(0), 
@@ -3823,6 +3824,12 @@ DEFINE_FIELD(zoom, "decimal")
 	return variant(obj.zoom_level_);
 DEFINE_SET_FIELD
 	obj.zoom_level_ = value.as_float();
+DEFINE_FIELD(instant_zoom, "decimal")
+return variant(obj.zoom_level_);
+DEFINE_SET_FIELD
+obj.zoom_level_ = value.as_float();
+obj.instant_zoom_level_set_ = obj.cycle_;
+
 DEFINE_FIELD(focus, "[custom_obj]")
 	std::vector<variant> v;
 	for(const EntityPtr& e : obj.focus_override_) {
@@ -4556,6 +4563,11 @@ void Level::editor_freeze_tile_updates(bool value)
 float Level::zoom_level() const
 {
 	return zoom_level_;
+}
+
+bool Level::instant_zoom_level_set() const
+{
+	return instant_zoom_level_set_ >= cycle_-1;
 }
 
 void Level::add_speech_dialog(std::shared_ptr<SpeechDialog> d)

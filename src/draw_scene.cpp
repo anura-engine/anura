@@ -167,7 +167,7 @@ bool update_camera_position(const Level& lvl, screen_position& pos, const Entity
 		}
         
         //if we've set the zoom inside the very first cycle of a level (i.e. using on_start_level), then we're doing some kind of cutscene which has the camera start zoomed out.  We want the camera to immediately start in this state, not "progress to this state gradually from the normal zoom". 
-        if(lvl.cycle() == 1){
+        if(lvl.instant_zoom_level_set() || lvl.cycle() == 1){
             pos.zoom = target_zoom;
         }
 
@@ -419,14 +419,14 @@ void render_scene(Level& lvl, const screen_position& pos)
 
 
 	float xdelta = 0.0f, ydelta = 0.0f;
-	if(pos.zoom < 1.0f) {
+//	if(pos.zoom < 1.0f) {
 		xdelta = xscroll - bg_xscroll;
 		ydelta = yscroll - bg_yscroll;
 
 
 		bg_xscroll = xscroll;
 		bg_yscroll = yscroll;
-	}
+//	}
 
 	{
 		KRE::ModelManager2D model_matrix(-xscroll, -yscroll, 0, pos.zoom);
