@@ -2547,7 +2547,7 @@ void Level::draw_debug_solid(int x, int y, int w, int h) const
 	}
 }
 
-void Level::draw_background(int x, int y, int rotation) const
+void Level::draw_background(int x, int y, int rotation, float xdelta, float ydelta) const
 {
 	if(show_background_ == false) {
 		return;
@@ -2597,7 +2597,7 @@ void Level::draw_background(int x, int y, int rotation) const
 				}
 			}
 		}
-		background_->draw(x, y, screen_area, opaque_areas, static_cast<float>(rotation), cycle());
+		background_->draw(x, y, screen_area, opaque_areas, static_cast<float>(rotation), xdelta, ydelta, cycle());
 	} else {
 		wnd->setClearColor(KRE::Color(0.0f, 0.0f, 0.0f, 0.0f));
 		wnd->clear(KRE::ClearFlags::COLOR);

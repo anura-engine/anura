@@ -302,7 +302,7 @@ variant Background::write() const
 	return res.build();
 }
 
-void Background::draw(int x, int y, const rect& area, const std::vector<rect>& opaque_areas, float rotation, int cycle) const
+void Background::draw(int x, int y, const rect& area, const std::vector<rect>& opaque_areas, float rotation, float xdelta, float ydelta, int cycle) const
 {
 	auto& gs = graphics::GameScreen::get();
 	const int height = height_ + offset_.y * 2;
@@ -342,7 +342,7 @@ void Background::draw(int x, int y, const rect& area, const std::vector<rect>& o
 	wnd->render(&bot_rect_);
 	wnd->render(&top_rect_);
 
-	drawLayers(x, y, area, opaque_areas, rotation, cycle);
+	drawLayers(x, y, area, opaque_areas, rotation, xdelta, ydelta, cycle);
 }
 
 namespace 
@@ -372,7 +372,7 @@ namespace
 	}
 }
 
-void Background::drawLayers(int x, int y, const rect& area_ref, const std::vector<rect>& opaque_areas, float rotation, int cycle) const
+void Background::drawLayers(int x, int y, const rect& area_ref, const std::vector<rect>& opaque_areas, float rotation, float xdelta, float ydelta, int cycle) const
 {
 	auto wnd = KRE::WindowManager::getMainWindow();
 	static std::vector<rect> areas;
@@ -383,7 +383,7 @@ void Background::drawLayers(int x, int y, const rect& area_ref, const std::vecto
 		if(bg->foreground == false) {
 
 			for(auto& a : areas) {
-				drawLayer(x, y, a, rotation, *bg, cycle);
+				drawLayer(x, y, a, rotation, xdelta, ydelta, *bg, cycle);
 			}
 			wnd->render(bg.get());
 			bg->attr_->clear();
@@ -397,7 +397,7 @@ void Background::drawForeground(int xpos, int ypos, float rotation, int cycle) c
 	auto wnd = KRE::WindowManager::getMainWindow();
 	for(auto& bg : layers_) {
 		if(bg->foreground) {
-			drawLayer(xpos, ypos, rect(xpos, ypos, graphics::GameScreen::get().getVirtualWidth(), graphics::GameScreen::get().getVirtualHeight()), rotation, *bg, cycle);
+			drawLayer(xpos, ypos, rect(xpos, ypos, graphics::GameScreen::get().getVirtualWidth(), graphics::GameScreen::get().getVirtualHeight()), rotation, 0.0f, 0.0f, *bg, cycle);
 			if(bg->attr_->size() > 0) {
 				wnd->render(bg.get());
 			}
@@ -411,7 +411,7 @@ void Background::setOffset(const point& offset)
 	offset_ = offset;
 }
 
-void Background::drawLayer(int x, int y, const rect& area, float rotation, const Background::Layer& bg, int cycle) const
+void Background::drawLayer(int x, int y, const rect& area, float rotation, float xdelta, float ydelta, const Background::Layer& bg, int cycle) const
 {
 
 	auto& gs = graphics::GameScreen::get();
@@ -514,7 +514,7 @@ void Background::drawLayer(int x, int y, const rect& area, float rotation, const
 	int screen_width = area.w();
 
 	const float xscale = static_cast<float>(bg.xscale) / 100.0f;
-	float xpos = (-static_cast<float>(bg.xspeed)*static_cast<float>(cycle)/1000.0f + int(static_cast<float>(x + bg.xoffset)*xscale))
+	float xpos = (-static_cast<float>(bg.xspeed)*static_cast<float>(cycle)/1000.0f + int(static_cast<float>(x + bg.xoffset)*xscale + xdelta))
 		/ static_cast<float>((bg.texture->surfaceWidth()+bg.xpad)*ScaleImage) + static_cast<float>(area.x() - x)/static_cast<float>((bg.texture->surfaceWidth()+bg.xpad)*ScaleImage);
 
 	//clamp xpos into the [0.0, 1.0] range
