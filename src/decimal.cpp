@@ -120,7 +120,7 @@ decimal operator/(const decimal& a, const decimal& b)
 	int64_t va = a.value() > 0 ? a.value() : -a.value();
 	int64_t vb = b.value() > 0 ? b.value() : -b.value();
 
-	if(va == 0) {
+	if(va == 0LL) {
 		return a;
 	}
 
