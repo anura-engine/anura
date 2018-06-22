@@ -179,9 +179,9 @@ bool update_camera_position(const Level& lvl, screen_position& pos, const Entity
 		//find how much padding will have to be on the edge of the screen due
 		//to the level being wider than the screen. This value will be 0
 		//if the level is larger than the screen (i.e. most cases)
-		const int x_screen_pad = std::max<int>(0, screen_width - lvl.boundaries().w());
+		const int x_screen_pad = lvl.constrain_camera() ? std::max<int>(0, screen_width - lvl.boundaries().w()) : 0;
 
-		const int y_screen_pad = std::max<int>(0, screen_height - lvl.boundaries().h());
+		const int y_screen_pad = lvl.constrain_camera() ? std::max<int>(0, screen_height - lvl.boundaries().h()) : 0;
 		pos.x_border = x_screen_pad / 2;
 		pos.y_border = y_screen_pad / 2;
 
@@ -348,8 +348,13 @@ bool update_camera_position(const Level& lvl, screen_position& pos, const Entity
 			min_y = max_y = (min_y + max_y)/2;
 		}
 
-		pos.x = std::min(std::max(pos.x_pos, min_x), max_x);
-		pos.y = std::min(std::max(pos.y_pos, min_y), max_y);
+		if (lvl.constrain_camera()) {
+			pos.x = std::min(std::max(pos.x_pos, min_x), max_x);
+			pos.y = std::min(std::max(pos.y_pos, min_y), max_y);
+		} else {
+			pos.x = pos.x_pos;
+			pos.y = pos.y_pos;
+		}
 	}
 
 	last_position = pos;

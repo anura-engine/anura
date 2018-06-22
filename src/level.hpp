@@ -129,6 +129,7 @@ public:
 	EntityPtr board(int x, int y) const;
 	const rect& boundaries() const { return boundaries_; }
 	void set_boundaries(const rect& bounds) { boundaries_ = bounds; }
+	bool constrain_camera() const { return constrain_camera_; }
 	void add_tile(const LevelTile& t);
 	bool add_tile_rect(int zorder, int x1, int y1, int x2, int y2, const std::string& tile);
 	bool addTileRectVector(int zorder, int x1, int y1, int x2, int y2, const std::vector<std::string>& tiles);
@@ -504,6 +505,8 @@ private:
 	std::string title_;
 
 	rect boundaries_;
+
+	bool constrain_camera_;
 
 	struct solid_rect {
 		rect r;

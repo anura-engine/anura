@@ -457,6 +457,7 @@ Level::Level(const std::string& level_cfg, variant node)
 	y_resolution_ = node["y_resolution"].as_int();
 	set_screen_resolution_on_entry_ = node["set_screen_resolution_on_entry"].as_bool(false);
 	in_dialog_ = false;
+	constrain_camera_ = true;
 	title_ = node["title"].as_string_default();
 	if(node.has_key("dimensions")) {
 		boundaries_ = rect(node["dimensions"]);
@@ -1932,10 +1933,10 @@ void Level::prepare_tiles_for_drawing()
 		}
 
 		//in the editor we want to draw the whole level, so don't exclude
-		//things outside the level bounds.
-		if(!editor_ && (tiles_[n].x <= boundaries().x() - TileSize || tiles_[n].y <= boundaries().y() - TileSize || tiles_[n].x >= boundaries().x2() || tiles_[n].y >= boundaries().y2())) {
-			continue;
-		}
+		//things outside the level bounds. Also if the camera is unconstrained
+//		if(!editor_ && (tiles_[n].x <= boundaries().x() - TileSize || tiles_[n].y <= boundaries().y() - TileSize || tiles_[n].x >= boundaries().x2() || tiles_[n].y >= boundaries().y2())) {
+//			continue;
+//		}
 
 		std::shared_ptr<LayerBlitInfo>& blit_cache_info_ptr = blit_cache_[tiles_[n].zorder];
 		if(blit_cache_info_ptr == nullptr) {
@@ -1959,9 +1960,9 @@ void Level::prepare_tiles_for_drawing()
 	std::map<int, std::pair<std::vector<tile_corner>, std::vector<tile_corner>>> vertices_ot;
 
 	for(int n = 0; n != tiles_.size(); ++n) {
-		if(!editor_ && (tiles_[n].x <= boundaries().x() - TileSize || tiles_[n].y <= boundaries().y() - TileSize || tiles_[n].x >= boundaries().x2() || tiles_[n].y >= boundaries().y2())) {
-			continue;
-		}
+//		if(!editor_ && (tiles_[n].x <= boundaries().x() - TileSize || tiles_[n].y <= boundaries().y() - TileSize || tiles_[n].x >= boundaries().x2() || tiles_[n].y >= boundaries().y2())) {
+//			continue;
+//		}
 
 		if(!is_arcade_level() && tiles_[n].object->getSolidColor()) {
 			tiles_[n].draw_disabled = true;
@@ -3860,6 +3861,10 @@ DEFINE_SET_FIELD
 	ASSERT_EQ(value.num_elements(), 4);
 	obj.boundaries_ = rect(value[0].as_int(), value[1].as_int(), value[2].as_int() - value[0].as_int(), value[3].as_int() - value[1].as_int());
 
+DEFINE_FIELD(constrain_camera, "bool")
+	return variant::from_bool(obj.constrain_camera());
+DEFINE_SET_FIELD
+	obj.constrain_camera_ = value.as_bool();
 DEFINE_FIELD(music_volume, "decimal")
 	return variant(sound::get_engine_music_volume());
 DEFINE_SET_FIELD
