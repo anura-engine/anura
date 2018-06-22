@@ -419,14 +419,10 @@ void render_scene(Level& lvl, const screen_position& pos)
 
 
 	float xdelta = 0.0f, ydelta = 0.0f;
-//	if(pos.zoom < 1.0f) {
-//		xdelta = xscroll - bg_xscroll;
-//		ydelta = yscroll - bg_yscroll;
-
-
-//		bg_xscroll = xscroll;
-//		bg_yscroll = yscroll;
-//	}
+	if(pos.zoom < 1.0f) {
+		xdelta = bg_xscroll - xscroll;
+		ydelta = bg_yscroll - yscroll;
+	}
 
 	{
 		KRE::ModelManager2D model_matrix(-xscroll, -yscroll, 0, pos.zoom);

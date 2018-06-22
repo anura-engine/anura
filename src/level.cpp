@@ -2575,7 +2575,7 @@ void Level::draw_background(int x, int y, int rotation, float xdelta, float ydel
 			screen_height = static_cast<int>(screen_height / last_draw_position().zoom);
 		}
 
-		rect screen_area(x, y, screen_width, screen_height);
+		rect screen_area(x - xdelta, y - ydelta, screen_width + xdelta*2, screen_height + ydelta*2);
 		for(const rect& r : opaque_rects_) {
 			if(rects_intersect(r, screen_area)) {
 

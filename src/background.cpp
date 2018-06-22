@@ -413,12 +413,11 @@ void Background::setOffset(const point& offset)
 
 void Background::drawLayer(int x, int y, const rect& area, float rotation, float xdelta, float ydelta, const Background::Layer& bg, int cycle) const
 {
-
 	auto& gs = graphics::GameScreen::get();
 	const float ScaleImage = 2.0f;
 	int y1 = static_cast<int>(y + (bg.yoffset+offset_.y)*ScaleImage - (y*bg.yscale_top)/100);
 	int y2 = static_cast<int>(y + (bg.yoffset+offset_.y)*ScaleImage - (y*bg.yscale_bot)/100 + (bg.y2 - bg.y1) * ScaleImage);
-
+	/*
 	if(!bg.tile_downwards && y2 <= y) {
 		return;
 	}
@@ -434,7 +433,7 @@ void Background::drawLayer(int x, int y, const rect& area, float rotation, float
 	if(!bg.texture) {
 		return;
 	}
-
+	*/
 	ASSERT_GT(bg.texture->surfaceHeight(), 0);
 	ASSERT_GT(bg.texture->surfaceWidth(), 0);
 
@@ -514,7 +513,7 @@ void Background::drawLayer(int x, int y, const rect& area, float rotation, float
 	int screen_width = area.w();
 
 	const float xscale = static_cast<float>(bg.xscale) / 100.0f;
-	float xpos = (-static_cast<float>(bg.xspeed)*static_cast<float>(cycle)/1000.0f + int(static_cast<float>(x + bg.xoffset)*xscale + xdelta))
+	float xpos = (-static_cast<float>(bg.xspeed)*static_cast<float>(cycle)/1000.0f + int(static_cast<float>(x + bg.xoffset)*xscale))
 		/ static_cast<float>((bg.texture->surfaceWidth()+bg.xpad)*ScaleImage) + static_cast<float>(area.x() - x)/static_cast<float>((bg.texture->surfaceWidth()+bg.xpad)*ScaleImage);
 
 	//clamp xpos into the [0.0, 1.0] range
