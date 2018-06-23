@@ -2480,7 +2480,15 @@ void Level::calculateLighting(int x, int y, int w, int h) const
 	}
 
 	auto& gs = graphics::GameScreen::get();
-	static auto rt = KRE::RenderTarget::create(gs.getVirtualWidth(), gs.getVirtualHeight());
+	static KRE::RenderTargetPtr rt;
+	static int rt_width = -1;
+	static int rt_height = -1;
+
+	if (gs.getVirtualWidth() != rt_width || gs.getVirtualHeight() != rt_height) {
+		rt = KRE::RenderTarget::create(gs.getVirtualWidth(), gs.getVirtualHeight());
+		rt_width = gs.getVirtualWidth();
+		rt_height = gs.getVirtualHeight();
+	}
 
 	{
 		KRE::BlendModeScope blend_scope(KRE::BlendModeConstants::BM_ONE, KRE::BlendModeConstants::BM_ONE);
