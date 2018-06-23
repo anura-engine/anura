@@ -2047,13 +2047,13 @@ void prevent_invalid_collapse_in_zero(
 		//   Precondition on exponent makes possible to assume this is
 		// safe when exponent is one, else unsafe.
 		ASSERT_LOG(exponent == 1,
-				"prevented arithmetic overflow, at `operator^`, performing `" << base << " ^ " << exponent << '`');
+				"prevented arithmetic overflow, at `prevent_invalid_collapse_in_zero(const int_fast32_t & base = " << base << ", const int_fast32_t & exponent = " << exponent << ")`");
 		return;
 	}
 	//   Can do this because base is less than `-2147483648` (`-2^31`) and
 	// the positive range of the 32 bit unsigned ends in `2147483647`
 	// (`2 ^ 31 - 1`).
-	int_fast32_t minus_base = -base;
+	const int_fast32_t minus_base = -base;
 	if (count_bits_set(minus_base) > 1) {
 		return;
 	}
@@ -2130,18 +2130,18 @@ variant variant::operator^(const variant& v) const
 			prevent_invalid_collapse_in_zero(as_int(), num);
 		}
 		variant result = *this;
-		variant integer_zero(0);
-		bool this_is_positive = * this > integer_zero;
-		bool this_is_negative = * this < integer_zero;
+		const variant integer_zero(0);
+		const bool this_is_positive = * this > integer_zero;
+		const bool this_is_negative = * this < integer_zero;
 		while(num > 1) {
-			bool result_was_positive_at_iteration_start =
+			const bool result_was_positive_at_iteration_start =
 					result > integer_zero;
-			bool result_was_negative_at_iteration_start =
+			const bool result_was_negative_at_iteration_start =
 					result < integer_zero;
 			result = result * *this;
-			bool result_is_positive_at_iteration_end =
+			const bool result_is_positive_at_iteration_end =
 					result > integer_zero;
-			bool result_is_negative_at_iteration_end =
+			const bool result_is_negative_at_iteration_end =
 					result < integer_zero;
 			bool arithmetic_overflow = false;
 			if (this_is_positive) {
