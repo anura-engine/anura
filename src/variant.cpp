@@ -2161,7 +2161,18 @@ variant variant::operator^(const variant& v) const
 				}
 			}
 			ASSERT_LOG(!arithmetic_overflow,
-					"prevented arithmetic overflow, at `operator^`, performing `" << * this << " ^ " << v << '`');
+					"prevented arithmetic overflow, at `operator^`, performing `" << * this << " ^ " << v << '`'
+					<< " (additional debug info: {" <<
+					"variant_type_to_string(type_): " << variant_type_to_string(type_) << ", " <<
+					"result: " << result << ", " <<
+					"num: " << num << ", " <<
+					"this_is_positive: " << this_is_positive << ", " <<
+					"this_is_negative: " << this_is_negative << ", " <<
+					"result_was_positive_at_iteration_start: " << result_was_positive_at_iteration_start << ", " <<
+					"result_was_negative_at_iteration_start: " << result_was_negative_at_iteration_start << ", " <<
+					"result_is_positive_at_iteration_end: " << result_is_positive_at_iteration_end << ", " <<
+					"result_is_negative_at_iteration_end: " << result_is_negative_at_iteration_end << '}' <<
+					')');
 			--num;
 		}
 
