@@ -2057,7 +2057,7 @@ void prevent_invalid_collapse_in_zero(
 	if (count_bits_set(minus_base) > 1) {
 		return;
 	}
-	bool arithmetic_overflow;
+	bool arithmetic_overflow = false;
 	switch (minus_base) {
 	case 1 << 0:
 		//   Can not overflow, because it oscillates back and forth.
@@ -2143,7 +2143,7 @@ variant variant::operator^(const variant& v) const
 					result > integer_zero;
 			bool result_is_negative_at_iteration_end =
 					result < integer_zero;
-			bool arithmetic_overflow;
+			bool arithmetic_overflow = false;
 			if (this_is_positive) {
 				if (result_was_positive_at_iteration_start &&
 						result_is_negative_at_iteration_end) {
