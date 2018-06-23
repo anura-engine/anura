@@ -3057,51 +3057,61 @@ BENCHMARK(variant_assign)
 	}
 }
 
-/**
- *   Name a pow unit test where must be true that:
- *
- *     `n ^ v - r == 0`
- */
-#define VARIANT_EXACT_POW_UNIT_TEST(name, n, v, r) UNIT_TEST (name) {         \
-	const variant t_##name_n = variant(n);                                \
-	LOG_DEBUG("t_" << #name << "_n: " << t_##name_n);                     \
-	const variant t_##name_v = variant(v);                                \
-	LOG_DEBUG("t_" << #name << "_v: " << t_##name_v);                     \
-	const variant t_##name_r = variant(r);                                \
-	LOG_DEBUG("t_" << #name << "_r: " << t_##name_r);                     \
-	const variant t_##name_o = t_##name_n ^ t_##name_v;                   \
-	LOG_DEBUG("t_" << #name << "_o: " << t_##name_o);                     \
-	CHECK_EQ(t_##name_r, t_##name_o); }
+/**  Log (debug) unit test variable name and value. */
+#define LOG_DEBUG_UT_VAR(test_name, variable_suffix, variable_name)         \
+	LOG_DEBUG(                                                          \
+			"test__" << test_name << "__" << variable_suffix    \
+			<< ": " << variable_name)
 
 /**
- *   Name a pow unit test where must be true that:
+ *   Name `name` a pow unit test where must be true that:
  *
- *     `abs(n ^ v - r) <= e`
+ *     `base ^ exponent - expected_pow == 0`
  */
-#define VARIANT_APPROXIMATE_POW_UNIT_TEST(name, n, v, r, e)                   \
-	UNIT_TEST (name) {                                                    \
-		const variant t_##name_n = variant(n);                        \
-		LOG_DEBUG("t_" << #name << "_n: " << t_##name_n);             \
-		const variant t_##name_v = variant(v);                        \
-		LOG_DEBUG("t_" << #name << "_v: " << t_##name_v);             \
-		const variant t_##name_r = variant(r);                        \
-		LOG_DEBUG("t_" << #name << "_r: " << t_##name_r);             \
-		const variant t_##name_e = variant(e);                        \
-		LOG_DEBUG("t_" << #name << "_e: " << t_##name_e);             \
-		const variant t_##name_o = t_##name_n ^ t_##name_v;           \
-		LOG_DEBUG("t_" << #name << "_o: " << t_##name_o);             \
-		const variant t_##name_d = t_##name_o - t_##name_r;           \
+#define VARIANT_EXACT_POW_UNIT_TEST(                                          \
+		name, base, exponent, expected_pow) UNIT_TEST (name) {        \
+	const variant test__##name__base = variant(base);                     \
+	LOG_DEBUG_UT_VAR(#name, "base", test__##name__base);                  \
+	const variant test__##name__exponent = variant(exponent);             \
+	LOG_DEBUG_UT_VAR(#name, "exponent", test__##name__exponent);          \
+	const variant test__##name__expected_pow = variant(expected_pow);     \
+	LOG_DEBUG_UT_VAR(#name, "expected_pow", test__##name__expected_pow);  \
+	const variant test__##name__actual_pow =                              \
+			test__##name__base ^ test__##name__exponent;          \
+	LOG_DEBUG_UT_VAR(#name, "actual_pow", test__##name__actual_pow);      \
+	CHECK_EQ(test__##name__expected_pow, test__##name__actual_pow); }
+
+/**
+ *   Name `name` a pow unit test where must be true that:
+ *
+ *     `abs(base ^ exponent - expected_pow) <= error`
+ */
+#define VARIANT_APPROXIMATE_POW_UNIT_TEST(                                    \
+		name, base, exponent, expected_pow, error) UNIT_TEST (name) { \
+	const variant test__##name__base = variant(base);                     \
+	LOG_DEBUG_UT_VAR(#name, "base", test__##name__base);                  \
+	const variant test__##name__exponent = variant(exponent);             \
+	LOG_DEBUG_UT_VAR(#name, "exponent", test__##name__exponent);          \
+	const variant test__##name__expected_pow = variant(expected_pow);     \
+	LOG_DEBUG_UT_VAR(#name, "expected_pow", test__##name__expected_pow);  \
+	const variant test__##name__error = variant(error);                   \
+	LOG_DEBUG_UT_VAR(#name, "error", test__##name__error);                \
+	const variant test__##name__actual_pow =                              \
+			test__##name__base ^ test__##name__exponent;          \
+	LOG_DEBUG_UT_VAR(#name, "actual_pow", test__##name__actual_pow);      \
+	const variant test__##name__diff = test__##name__actual_pow -         \
+			test__##name__expected_pow;                           \
 		const variant zero(0);                                        \
-		const variant t_##name_d_a = t_##name_d > zero ?              \
-				t_##name_d : - t_##name_d;                    \
-		LOG_DEBUG("t_" << #name << "_d_a: " << t_##name_d_a);         \
+	const variant test__##name__abs_diff = test__##name__diff > zero ?    \
+			test__##name__diff : - test__##name__diff;            \
+	LOG_DEBUG_UT_VAR(#name, "abs_diff", test__##name__abs_diff);          \
 		ASSERT_LOG(                                                   \
-				t_##name_d_a <= t_##name_e,                   \
+			test__##name__abs_diff <= test__##name__error,        \
 				"math imprecision error happened" <<          \
 				", expected error less than or equal to " <<  \
-				t_##name_e << " but actual error is " <<      \
-				t_##name_d_a <<                               \
-				", rerun " <<  \
+			test__##name__error << ", but actual error is " <<    \
+			test__##name__abs_diff <<                             \
+			", rerun " <<                                         \
 				"setting log level to DEBUG for finer " <<    \
 				"grain messages (--log-level=debug)"); }
 
