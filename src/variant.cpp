@@ -2016,6 +2016,109 @@ variant variant::operator%(const variant& v) const
 	return variant(numerator%denominator);
 }
 
+/**  Will return _one_ for _two_, _four_, _eight_, _sixteen_... */
+uint_fast8_t count_bits_set(uint32_t n)
+{
+	uint_fast8_t returning = 0;
+	while (n) {
+		returning += n & 1;
+		n >>= 1;
+	}
+	return returning;
+}
+
+/**  Given the way `operator^` is currently implemented, when the exponent
+ * variant is typed `int`, arithmetic overflows can occur in a way so that the
+ * result does not change its sign incorrectly, but becomes zero incorrectly,
+ * so returning zero incorrectly for that exponent, but also for every exponent
+ * bigger than that, as long as it shares the `int` type.
+ *   This function simply returns whenever there is no possibility for an
+ * exponentiation to collapse to zero.
+ *   This function is aimed to prevent execution when detecting conditions for
+ * an exponentiation to collapse to zero. */
+void prevent_invalid_collapse_in_zero(
+		const int_fast32_t & base, const int_fast32_t & exponent)
+{
+	ASSERT_LOG(exponent >= 1, "precondition failed");
+	if (base >= 0) {
+		return;
+	}
+	if (base == -2147483648) {
+		//   Precondition on exponent makes possible to assume this is
+		// safe when exponent is one, else unsafe.
+		ASSERT_LOG(exponent == 1,
+				"prevented arithmetic overflow, at `operator^`, performing `" << base << " ^ " << exponent << '`');
+		return;
+	}
+	//   Can do this because base is less than `-2147483648` (`-2^31`) and
+	// the positive range of the 32 bit unsigned ends in `2147483647`
+	// (`2 ^ 31 - 1`).
+	int_fast32_t minus_base = -base;
+	if (count_bits_set(minus_base) > 1) {
+		return;
+	}
+	bool arithmetic_overflow;
+	switch (minus_base) {
+	case 1 << 0:
+		//   Can not overflow, because it oscillates back and forth.
+		return;
+	case 1 << 1:
+		arithmetic_overflow = exponent >= 32;
+		break;
+	case 1 << 2:
+		arithmetic_overflow = exponent >= 16;
+		break;
+	case 1 << 3:
+		arithmetic_overflow = exponent >= 11;
+		break;
+	case 1 << 4:
+		arithmetic_overflow = exponent >= 8;
+		break;
+	case 1 << 5:
+		arithmetic_overflow = exponent >= 7;
+		break;
+	case 1 << 6:
+		arithmetic_overflow = exponent >= 6;
+		break;
+	case 1 << 7:
+		arithmetic_overflow = exponent >= 5;
+		break;
+	case 1 << 8:
+	case 1 << 9:
+	case 1 << 10:
+		arithmetic_overflow = exponent >= 4;
+		break;
+	case 1 << 11:
+	case 1 << 12:
+	case 1 << 13:
+	case 1 << 14:
+	case 1 << 15:
+		arithmetic_overflow = exponent >= 3;
+		break;
+	case 1 << 16:
+	case 1 << 17:
+	case 1 << 18:
+	case 1 << 19:
+	case 1 << 20:
+	case 1 << 21:
+	case 1 << 22:
+	case 1 << 23:
+	case 1 << 24:
+	case 1 << 25:
+	case 1 << 26:
+	case 1 << 27:
+	case 1 << 28:
+	case 1 << 29:
+	case 1 << 30:
+		arithmetic_overflow = exponent >= 2;
+		break;
+	default:
+		ASSERT_LOG(false, "unreachable code executed, at `prevent_invalid_collapse_in_zero(base: " << base << ", exponent: " << exponent << ")`");
+	}
+	ASSERT_LOG(!arithmetic_overflow,
+			"prevented arithmetic overflow, at `operator^`, performing `" << base << " ^ " << exponent << '`');
+}
+
 variant variant::operator^(const variant& v) const
 {
 	//for the common case of exponentiation by a positive integer,
@@ -2023,9 +2126,42 @@ variant variant::operator^(const variant& v) const
 	//system pow(). TODO: eventually we want to always use fixed-point.
 	if(v.type_ == VARIANT_TYPE_INT && v.as_int() >= 1) {
 		int num = v.as_int();
+		if (type_ == VARIANT_TYPE_INT) {
+			prevent_invalid_collapse_in_zero(as_int(), num);
+		}
 		variant result = *this;
+		variant integer_zero(0);
+		bool this_is_positive = * this > integer_zero;
+		bool this_is_negative = * this < integer_zero;
 		while(num > 1) {
+			bool result_was_positive_at_iteration_start =
+					result > integer_zero;
+			bool result_was_negative_at_iteration_start =
+					result < integer_zero;
 			result = result * *this;
+			bool result_is_positive_at_iteration_end =
+					result > integer_zero;
+			bool result_is_negative_at_iteration_end =
+					result < integer_zero;
+			bool arithmetic_overflow;
+			if (this_is_positive) {
+				if (result_was_positive_at_iteration_start &&
+						result_is_negative_at_iteration_end) {
+					arithmetic_overflow = true;
+				}
+			}
+			if (this_is_negative) {
+				if (result_was_positive_at_iteration_start &&
+						result_is_positive_at_iteration_end) {
+					arithmetic_overflow = true;
+				}
+				if (result_was_negative_at_iteration_start &&
+						result_is_negative_at_iteration_end) {
+					arithmetic_overflow = true;
+				}
+			}
+			ASSERT_LOG(!arithmetic_overflow,
+					"prevented arithmetic overflow, at `operator^`, performing `" << * this << " ^ " << v << '`');
 			--num;
 		}
 
