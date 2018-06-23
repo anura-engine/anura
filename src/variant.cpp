@@ -2116,7 +2116,7 @@ void prevent_invalid_collapse_in_zero(
 		ASSERT_LOG(false, "unreachable code executed, at `prevent_invalid_collapse_in_zero(base: " << base << ", exponent: " << exponent << ")`");
 	}
 	ASSERT_LOG(!arithmetic_overflow,
-			"prevented arithmetic overflow, at `operator^`, performing `" << base << " ^ " << exponent << '`');
+			"prevented arithmetic overflow, at `prevent_invalid_collapse_in_zero`, performing `" << base << " ^ " << exponent << '`');
 }
 
 variant variant::operator^(const variant& v) const
