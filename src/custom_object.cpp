@@ -3338,7 +3338,7 @@ variant CustomObject::getValueBySlot(int slot) const
 	case CUSTOM_OBJECT_TEXT_ALPHA:        return variant(text_ ? text_->alpha : 255);
 	case CUSTOM_OBJECT_DAMAGE:            return variant(getCurrentFrame().damage());
 	case CUSTOM_OBJECT_HIT_BY:            return variant(last_hit_by_.get());
-	case CUSTOM_OBJECT_IS_STANDING:       return variant(standing_on_.get() || isStanding(Level::current()) != STANDING_STATUS::NOT_STANDING);
+	case CUSTOM_OBJECT_IS_STANDING:       return variant::from_bool(standing_on_.get() || isStanding(Level::current()) != STANDING_STATUS::NOT_STANDING);
 	case CUSTOM_OBJECT_STANDING_INFO:     {
 		CollisionInfo info;
 		isStanding(Level::current(), &info);
