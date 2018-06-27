@@ -2016,6 +2016,109 @@ variant variant::operator%(const variant& v) const
 	return variant(numerator%denominator);
 }
 
+/**  Will return _one_ for _two_, _four_, _eight_, _sixteen_... */
+uint_fast8_t count_bits_set(uint32_t n)
+{
+	uint_fast8_t returning = 0;
+	while (n) {
+		returning += n & 1;
+		n >>= 1;
+	}
+	return returning;
+}
+
+/**  Given the way `operator^` is currently implemented, when the exponent
+ * variant is typed `int`, arithmetic overflows can occur in a way so that the
+ * result does not change its sign incorrectly, but becomes zero incorrectly,
+ * so returning zero incorrectly for that exponent, but also for every exponent
+ * bigger than that, as long as it shares the `int` type.
+ *   This function simply returns whenever there is no possibility for an
+ * exponentiation to collapse to zero.
+ *   This function is aimed to prevent execution when detecting conditions for
+ * an exponentiation to collapse to zero. */
+void prevent_invalid_collapse_in_zero(
+		const int_fast32_t & base, const int_fast32_t & exponent)
+{
+	ASSERT_LOG(exponent >= 1, "precondition failed");
+	if (base >= 0) {
+		return;
+	}
+	if (base == -2147483648) {
+		//   Precondition on exponent makes possible to assume this is
+		// safe when exponent is one, else unsafe.
+		ASSERT_LOG(exponent == 1,
+				"prevented arithmetic overflow, at `prevent_invalid_collapse_in_zero(const int_fast32_t & base = " << base << ", const int_fast32_t & exponent = " << exponent << ")`");
+		return;
+	}
+	//   Can do this because base is less than `-2147483648` (`-2^31`) and
+	// the positive range of the 32 bit unsigned ends in `2147483647`
+	// (`2 ^ 31 - 1`).
+	const int_fast32_t minus_base = -base;
+	if (count_bits_set(minus_base) > 1) {
+		return;
+	}
+	bool arithmetic_overflow = false;
+	switch (minus_base) {
+	case 1 << 0:
+		//   Can not overflow, because it oscillates back and forth.
+		return;
+	case 1 << 1:
+		arithmetic_overflow = exponent >= 32;
+		break;
+	case 1 << 2:
+		arithmetic_overflow = exponent >= 16;
+		break;
+	case 1 << 3:
+		arithmetic_overflow = exponent >= 11;
+		break;
+	case 1 << 4:
+		arithmetic_overflow = exponent >= 8;
+		break;
+	case 1 << 5:
+		arithmetic_overflow = exponent >= 7;
+		break;
+	case 1 << 6:
+		arithmetic_overflow = exponent >= 6;
+		break;
+	case 1 << 7:
+		arithmetic_overflow = exponent >= 5;
+		break;
+	case 1 << 8:
+	case 1 << 9:
+	case 1 << 10:
+		arithmetic_overflow = exponent >= 4;
+		break;
+	case 1 << 11:
+	case 1 << 12:
+	case 1 << 13:
+	case 1 << 14:
+	case 1 << 15:
+		arithmetic_overflow = exponent >= 3;
+		break;
+	case 1 << 16:
+	case 1 << 17:
+	case 1 << 18:
+	case 1 << 19:
+	case 1 << 20:
+	case 1 << 21:
+	case 1 << 22:
+	case 1 << 23:
+	case 1 << 24:
+	case 1 << 25:
+	case 1 << 26:
+	case 1 << 27:
+	case 1 << 28:
+	case 1 << 29:
+	case 1 << 30:
+		arithmetic_overflow = exponent >= 2;
+		break;
+	default:
+		ASSERT_LOG(false, "unreachable code executed, at `prevent_invalid_collapse_in_zero(base: " << base << ", exponent: " << exponent << ")`");
+	}
+	ASSERT_LOG(!arithmetic_overflow,
+			"prevented arithmetic overflow, at `prevent_invalid_collapse_in_zero`, performing `" << base << " ^ " << exponent << '`');
+}
+
 variant variant::operator^(const variant& v) const
 {
 	//for the common case of exponentiation by a positive integer,
@@ -2023,9 +2126,53 @@ variant variant::operator^(const variant& v) const
 	//system pow(). TODO: eventually we want to always use fixed-point.
 	if(v.type_ == VARIANT_TYPE_INT && v.as_int() >= 1) {
 		int num = v.as_int();
+		if (type_ == VARIANT_TYPE_INT) {
+			prevent_invalid_collapse_in_zero(as_int(), num);
+		}
 		variant result = *this;
+		const variant integer_zero(0);
+		const bool this_is_positive = * this > integer_zero;
+		const bool this_is_negative = * this < integer_zero;
 		while(num > 1) {
+			const bool result_was_positive_at_iteration_start =
+					result > integer_zero;
+			const bool result_was_negative_at_iteration_start =
+					result < integer_zero;
 			result = result * *this;
+			const bool result_is_positive_at_iteration_end =
+					result > integer_zero;
+			const bool result_is_negative_at_iteration_end =
+					result < integer_zero;
+			bool arithmetic_overflow = false;
+			if (this_is_positive) {
+				if (result_was_positive_at_iteration_start &&
+						result_is_negative_at_iteration_end) {
+					arithmetic_overflow = true;
+				}
+			}
+			if (this_is_negative) {
+				if (result_was_positive_at_iteration_start &&
+						result_is_positive_at_iteration_end) {
+					arithmetic_overflow = true;
+				}
+				if (result_was_negative_at_iteration_start &&
+						result_is_negative_at_iteration_end) {
+					arithmetic_overflow = true;
+				}
+			}
+			ASSERT_LOG(!arithmetic_overflow,
+					"prevented arithmetic overflow, at `operator^`, performing `" << * this << " ^ " << v << '`'
+					<< " (additional debug info: {" <<
+					"variant_type_to_string(type_): " << variant_type_to_string(type_) << ", " <<
+					"result: " << result << ", " <<
+					"num: " << num << ", " <<
+					"this_is_positive: " << this_is_positive << ", " <<
+					"this_is_negative: " << this_is_negative << ", " <<
+					"result_was_positive_at_iteration_start: " << result_was_positive_at_iteration_start << ", " <<
+					"result_was_negative_at_iteration_start: " << result_was_negative_at_iteration_start << ", " <<
+					"result_is_positive_at_iteration_end: " << result_is_positive_at_iteration_end << ", " <<
+					"result_is_negative_at_iteration_end: " << result_is_negative_at_iteration_end << '}' <<
+					')');
 			--num;
 		}
 
@@ -3057,51 +3204,61 @@ BENCHMARK(variant_assign)
 	}
 }
 
-/**
- *   Name a pow unit test where must be true that:
- *
- *     `n ^ v - r == 0`
- */
-#define VARIANT_EXACT_POW_UNIT_TEST(name, n, v, r) UNIT_TEST (name) {         \
-	const variant t_##name_n = variant(n);                                \
-	LOG_DEBUG("t_" << #name << "_n: " << t_##name_n);                     \
-	const variant t_##name_v = variant(v);                                \
-	LOG_DEBUG("t_" << #name << "_v: " << t_##name_v);                     \
-	const variant t_##name_r = variant(r);                                \
-	LOG_DEBUG("t_" << #name << "_r: " << t_##name_r);                     \
-	const variant t_##name_o = t_##name_n ^ t_##name_v;                   \
-	LOG_DEBUG("t_" << #name << "_o: " << t_##name_o);                     \
-	CHECK_EQ(t_##name_r, t_##name_o); }
+/**  Log (debug) unit test variable name and value. */
+#define LOG_DEBUG_UT_VAR(test_name, variable_suffix, variable_name)         \
+	LOG_DEBUG(                                                          \
+			"test__" << test_name << "__" << variable_suffix    \
+			<< ": " << variable_name)
 
 /**
- *   Name a pow unit test where must be true that:
+ *   Name `name` a pow unit test where must be true that:
  *
- *     `abs(n ^ v - r) <= e`
+ *     `base ^ exponent - expected_pow == 0`
  */
-#define VARIANT_APPROXIMATE_POW_UNIT_TEST(name, n, v, r, e)                   \
-	UNIT_TEST (name) {                                                    \
-		const variant t_##name_n = variant(n);                        \
-		LOG_DEBUG("t_" << #name << "_n: " << t_##name_n);             \
-		const variant t_##name_v = variant(v);                        \
-		LOG_DEBUG("t_" << #name << "_v: " << t_##name_v);             \
-		const variant t_##name_r = variant(r);                        \
-		LOG_DEBUG("t_" << #name << "_r: " << t_##name_r);             \
-		const variant t_##name_e = variant(e);                        \
-		LOG_DEBUG("t_" << #name << "_e: " << t_##name_e);             \
-		const variant t_##name_o = t_##name_n ^ t_##name_v;           \
-		LOG_DEBUG("t_" << #name << "_o: " << t_##name_o);             \
-		const variant t_##name_d = t_##name_o - t_##name_r;           \
+#define VARIANT_EXACT_POW_UNIT_TEST(                                          \
+		name, base, exponent, expected_pow) UNIT_TEST (name) {        \
+	const variant test__##name__base = variant(base);                     \
+	LOG_DEBUG_UT_VAR(#name, "base", test__##name__base);                  \
+	const variant test__##name__exponent = variant(exponent);             \
+	LOG_DEBUG_UT_VAR(#name, "exponent", test__##name__exponent);          \
+	const variant test__##name__expected_pow = variant(expected_pow);     \
+	LOG_DEBUG_UT_VAR(#name, "expected_pow", test__##name__expected_pow);  \
+	const variant test__##name__actual_pow =                              \
+			test__##name__base ^ test__##name__exponent;          \
+	LOG_DEBUG_UT_VAR(#name, "actual_pow", test__##name__actual_pow);      \
+	CHECK_EQ(test__##name__expected_pow, test__##name__actual_pow); }
+
+/**
+ *   Name `name` a pow unit test where must be true that:
+ *
+ *     `abs(base ^ exponent - expected_pow) <= error`
+ */
+#define VARIANT_APPROXIMATE_POW_UNIT_TEST(                                    \
+		name, base, exponent, expected_pow, error) UNIT_TEST (name) { \
+	const variant test__##name__base = variant(base);                     \
+	LOG_DEBUG_UT_VAR(#name, "base", test__##name__base);                  \
+	const variant test__##name__exponent = variant(exponent);             \
+	LOG_DEBUG_UT_VAR(#name, "exponent", test__##name__exponent);          \
+	const variant test__##name__expected_pow = variant(expected_pow);     \
+	LOG_DEBUG_UT_VAR(#name, "expected_pow", test__##name__expected_pow);  \
+	const variant test__##name__error = variant(error);                   \
+	LOG_DEBUG_UT_VAR(#name, "error", test__##name__error);                \
+	const variant test__##name__actual_pow =                              \
+			test__##name__base ^ test__##name__exponent;          \
+	LOG_DEBUG_UT_VAR(#name, "actual_pow", test__##name__actual_pow);      \
+	const variant test__##name__diff = test__##name__actual_pow -         \
+			test__##name__expected_pow;                           \
 		const variant zero(0);                                        \
-		const variant t_##name_d_a = t_##name_d > zero ?              \
-				t_##name_d : - t_##name_d;                    \
-		LOG_DEBUG("t_" << #name << "_d_a: " << t_##name_d_a);         \
+	const variant test__##name__abs_diff = test__##name__diff > zero ?    \
+			test__##name__diff : - test__##name__diff;            \
+	LOG_DEBUG_UT_VAR(#name, "abs_diff", test__##name__abs_diff);          \
 		ASSERT_LOG(                                                   \
-				t_##name_d_a <= t_##name_e,                   \
+			test__##name__abs_diff <= test__##name__error,        \
 				"math imprecision error happened" <<          \
 				", expected error less than or equal to " <<  \
-				t_##name_e << " but actual error is " <<      \
-				t_##name_d_a <<                               \
-				", rerun " <<  \
+			test__##name__error << ", but actual error is " <<    \
+			test__##name__abs_diff <<                             \
+			", rerun " <<                                         \
 				"setting log level to DEBUG for finer " <<    \
 				"grain messages (--log-level=debug)"); }
 
