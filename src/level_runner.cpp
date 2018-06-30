@@ -1079,11 +1079,13 @@ bool LevelRunner::play_cycle()
 	} else if(die_at > 0 && cycle >= die_at + 30) {
 		die_at = -1;
 
-		for(EntityPtr e : lvl_->get_chars()) {
+		std::vector<EntityPtr> chars = lvl_->get_chars();
+
+		for(EntityPtr e : chars) {
 			e->handleEvent(OBJECT_EVENT_PLAYER_DEATH);
 		}
 
-		for(EntityPtr e : lvl_->get_chars()) {
+		for(EntityPtr e : chars) {
 			e->handleEvent(OBJECT_EVENT_BEING_REMOVED);
 		}
 
