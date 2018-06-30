@@ -228,9 +228,41 @@ UNIT_TEST(decimal_mul) {
 	CHECK_EQ(decimal::from_string("0.08")*decimal::from_string("0.5"), decimal::from_string("0.04"));
 }
 
+UNIT_TEST(decimal_assign_mul_0) {
+	const uint_fast8_t a = 2;
+	decimal b(decimal::from_int(3));
+	const decimal c(decimal::from_int(6));
+	b *= a;
+	CHECK_EQ(c, b);
+}
+
+UNIT_TEST(decimal_assign_mul_1) {
+	const decimal a(decimal::from_int(2));
+	decimal b(decimal::from_string("3.0"));
+	const decimal c(decimal::from_int(6));
+	b *= a;
+	CHECK_EQ(c, b);
+}
+
 UNIT_TEST(decimal_div) {
 	//10934.54 / 7649.44
 	CHECK_EQ(decimal::from_raw_value(DECIMAL(10934540000))/decimal::from_raw_value(DECIMAL(7649440000)), decimal::from_raw_value(DECIMAL(1429456)));
+}
+
+UNIT_TEST(decimal_assign_div_0) {
+	const uint_fast8_t a = 2;
+	decimal b(decimal::from_int(15));
+	const decimal c(decimal::from_string("7.5"));
+	b /= a;
+	CHECK_EQ(c, b);
+}
+
+UNIT_TEST(decimal_assign_div_1) {
+	const decimal a(decimal::from_int(2));
+	decimal b(decimal::from_string("15.0"));
+	const decimal c(decimal::from_string("7.5"));
+	b /= a;
+	CHECK_EQ(c, b);
 }
 
 BENCHMARK(decimal_div_bench) {
