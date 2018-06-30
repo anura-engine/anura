@@ -59,7 +59,7 @@
 #define STRICT_ERROR(s) if(g_strict_formula_checking_warnings) { LOG_WARN(s); } else { ASSERT_LOG(false, s); }
 #define STRICT_ASSERT(cond, s) if(!(cond)) { STRICT_ERROR(s); }
 
-PREF_INT(max_ffl_recursion, 1000, "Maximum depth of FFL recursion");
+PREF_INT(max_ffl_recursion, 100, "Maximum depth of FFL recursion");
 
 using namespace formula_vm;
 
@@ -522,17 +522,22 @@ namespace game_logic
 
 				std::vector<variant*> args;
 
-				ffl::IntrusivePtr<SlotFormulaCallable> callable(new SlotFormulaCallable);
-				callable->setFallback(&variables);
-				callable->setBaseSlot(base_slot_);
-				callable->reserve(generator_names_.size());
-				for(const std::string& arg : generator_names_) {
-					callable->add(variant());
-					args.push_back(&callable->backDirectAccess());
-				}
+				ffl::IntrusivePtr<SlotFormulaCallable> callable;
 
 				std::vector<int> indexes(lists.size());
 				for(;;) {
+					if(callable.get() == nullptr || callable->refcount() > 1) {
+						args.clear();
+
+						callable.reset(new SlotFormulaCallable);
+						callable->setFallback(&variables);
+						callable->setBaseSlot(base_slot_);
+						callable->reserve(generator_names_.size());
+						for(const std::string& arg : generator_names_) {
+							callable->add(variant());
+							args.push_back(&callable->backDirectAccess());
+						}
+					}
 
 					for(int n = 0; n != indexes.size(); ++n) {
 						*args[n] = lists[n][indexes[n]];
