@@ -2059,57 +2059,58 @@ void prevent_invalid_collapse_in_zero(
 	}
 	bool arithmetic_overflow = false;
 	switch (minus_base) {
-	case 1 << 0:
+	case 1 << 0:  //   1
 		//   Can not overflow, because it oscillates back and forth.
 		return;
-	case 1 << 1:
+	case 1 << 1:  //   2
 		arithmetic_overflow = exponent >= 32;
 		break;
-	case 1 << 2:
+	case 1 << 2:  //   4
 		arithmetic_overflow = exponent >= 16;
 		break;
 	case 1 << 3:
 		arithmetic_overflow = exponent >= 11;
 		break;
-	case 1 << 4:
+	case 1 << 4:  //   16
 		arithmetic_overflow = exponent >= 8;
 		break;
 	case 1 << 5:
 		arithmetic_overflow = exponent >= 7;
 		break;
-	case 1 << 6:
+	case 1 << 6:  //   64
 		arithmetic_overflow = exponent >= 6;
 		break;
 	case 1 << 7:
 		arithmetic_overflow = exponent >= 5;
 		break;
 	case 1 << 8:
-	case 1 << 9:
+	case 1 << 9:  //   512
 	case 1 << 10:
 		arithmetic_overflow = exponent >= 4;
 		break;
 	case 1 << 11:
-	case 1 << 12:
+	case 1 << 12:  //   4096
 	case 1 << 13:
 	case 1 << 14:
-	case 1 << 15:
+	case 1 << 15:  //   32768
 		arithmetic_overflow = exponent >= 3;
 		break;
 	case 1 << 16:
 	case 1 << 17:
-	case 1 << 18:
+	case 1 << 18:  //   262144
 	case 1 << 19:
 	case 1 << 20:
-	case 1 << 21:
+	case 1 << 21:  //   2097152
 	case 1 << 22:
 	case 1 << 23:
-	case 1 << 24:
+	case 1 << 24:  //   16777216
 	case 1 << 25:
 	case 1 << 26:
-	case 1 << 27:
+	case 1 << 27:  //   134217728
 	case 1 << 28:
 	case 1 << 29:
-	case 1 << 30:
+	case 1 << 30:  //   1073741824
+	//   2147483648 does not fit 32 bit two's complement.
 		arithmetic_overflow = exponent >= 2;
 		break;
 	default:
@@ -3477,3 +3478,154 @@ VARIANT_APPROXIMATE_POW_UNIT_TEST(
 		pow_test_18, 3, decimal::from_string("-5.0"),
 		decimal::from_string("0.004115"),
 		decimal::from_string("0.000010"))
+
+UNIT_TEST(good_variant_exponentiation_0) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a((int_fast32_t) 0xfffffffe);  //   -2
+	variant b(min_32_bit_integer);
+	b = a ^ variant(31);
+	const variant expected(min_32_bit_integer);
+	CHECK_EQ(expected, b);
+}
+
+//   `-2 ^ 32 = 4294967296`.
+//
+//   At the current implementation, `-2 ^ 32` will be transformed into
+// `(-2 ^ 31) * (-2)`. `-2 ^ 31 = -2147483648`. `-2147483648` is
+// represented as `0x80000000`, and `-2` as `0xfffffffe`.
+//   The multiplication collapses to zero, see `-128 * -2` as a simpler
+// example of the phenomenon:
+//
+//                         10000000  // 0x80 // -128
+//                       x 11111110  // 0xfe // -2
+//                       -+--------
+//                        |00000000
+//                       1|0000000
+//                      10|000000
+//                     100|00000
+//                    1000|0000
+//                   10000|000
+//                  100000|00
+//                 1000000|0
+//                 -------+--------
+//         excess  1111111|00000000  returned
+//
+//   Once it collapsed to zero, any further exponentiation results in
+// zero.
+UNIT_TEST(bad_variant_exponentiation_0) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a((int_fast32_t) 0xfffffffe);  //   -2
+	variant b(min_32_bit_integer);
+	bool excepted = false;
+	{
+		const assert_recover_scope unit_test_exception_expected;
+		try {
+			b = a ^ variant(32);
+		} catch (validation_failure_exception vfe) {
+			excepted = true;
+		}
+	}
+	CHECK_EQ(true, excepted);
+	ASSERT_LOG(excepted, "test expectation failed; `-2`, hosted in a 32 bit signed integer, raised to the power of `32`, should raise an exception, in order to prevent an arithmetic overflow");
+}
+
+UNIT_TEST(good_variant_exponentiation_1) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a((int_fast32_t) 0xfffffffc);  //   -4
+	variant b(min_32_bit_integer);
+	b = a ^ variant(15);
+	const variant expected((int_fast32_t) 0xc0000000);  //   -1073741824
+	CHECK_EQ(expected, b);
+}
+
+//   `-4 ^ 16 = 4294967296`.
+//
+//   At the current implementation, `-4 ^ 16` will be transformed into
+// `(-4 ^ 15) * (-4)`. `-4 ^ 15 = -1073741824`. `-1073741824` is
+// represented as `0xc0000000`, and `-4` as `0xfffffffc`.
+//   The multiplication collapses to zero, see `-64 * -4` as a simpler
+// example of the phenomenon:
+//
+//                         11000000  // 0xc0 // -64
+//                       x 11111100  // 0xfc // -4
+//                       -+--------
+//                        |00000000
+//                       0|0000000
+//                      11|000000
+//                     110|00000
+//                    1100|0000
+//                   11000|000
+//                  110000|00
+//                 1100000|0
+//                 -------+--------
+//        excess  10111101|00000000  returned
+//
+//   Once it collapsed to zero, any further exponentiation results in
+// zero.
+UNIT_TEST(bad_variant_exponentiation_1) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a((int_fast32_t) 0xffffffffc);  //   -4
+	variant b(min_32_bit_integer);
+	bool excepted = false;
+	{
+		const assert_recover_scope unit_test_exception_expected;
+		try {
+			b = a ^ variant(16);
+		} catch (validation_failure_exception vfe) {
+			excepted = true;
+		}
+	}
+	CHECK_EQ(true, excepted);
+	ASSERT_LOG(excepted, "test expectation failed; `-4`, hosted in a 32 bit signed integer, raised to the power of `16`, should raise an exception, in order to prevent an arithmetic overflow");
+}
+
+UNIT_TEST(good_variant_exponentiation_99) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a(min_32_bit_integer);
+	variant b(min_32_bit_integer);
+	b = a ^ variant(1);
+	const variant expected(min_32_bit_integer);
+	CHECK_EQ(expected, b);
+}
+
+//   `-2147483648 ^ 2 = 4611686018427387904`.
+//
+//   At the current implementation, `-2147483648 ^ 2` will be
+// transformed into `(-2147483648 ^ 1) * (-2147483648)`.
+// `-2147483648 ^ 1 = -2147483648`. `-2147483648` is represented as
+// `0x80000000`.
+//   The multiplication collapses to zero, see `-128 * -128` as a simpler
+// example of the phenomenon:
+//
+//                         10000000  // 0x80 // -128
+//                       x 10000000  // 0x80 // -128
+//                       -+--------
+//                        |00000000
+//                       0|0000000
+//                      00|000000
+//                     000|00000
+//                    0000|0000
+//                   00000|000
+//                  000000|00
+//                 1000000|0
+//                 -------+--------
+//         excess  1000000|00000000  returned
+//
+//   Once it collapsed to zero, any further exponentiation results in
+// zero.
+UNIT_TEST(bad_variant_exponentiation_99) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a(min_32_bit_integer);
+	variant b(min_32_bit_integer);
+	bool excepted = false;
+	{
+		const assert_recover_scope unit_test_exception_expected;
+		try {
+			b = a ^ variant(2);
+		} catch (validation_failure_exception vfe) {
+			excepted = true;
+		}
+	}
+	CHECK_EQ(true, excepted);
+	ASSERT_LOG(excepted, "test expectation failed; `-2147483648`, hosted in a 32 bit signed integer, raised to the power of `2`, should raise an exception, in order to prevent an arithmetic overflow");
+}
