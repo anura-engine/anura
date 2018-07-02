@@ -3510,8 +3510,8 @@ UNIT_TEST(good_variant_exponentiation_0) {
 //                 -------+--------
 //         excess  1111111|00000000  returned
 //
-//   Once it collapsed to zero, any further exponentiation results in
-// zero.
+//   Once it collapsed to zero, any further exponentiation step results
+// in zero again.
 UNIT_TEST(bad_variant_exponentiation_0) {
 	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
 	const variant a((int_fast32_t) 0xfffffffe);  //   -2
@@ -3560,8 +3560,8 @@ UNIT_TEST(good_variant_exponentiation_1) {
 //                 -------+--------
 //        excess  10111101|00000000  returned
 //
-//   Once it collapsed to zero, any further exponentiation results in
-// zero.
+//   Once it collapsed to zero, any further exponentiation step results
+// in zero again.
 UNIT_TEST(bad_variant_exponentiation_1) {
 	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
 	const variant a((int_fast32_t) 0xffffffffc);  //   -4
@@ -3611,8 +3611,8 @@ UNIT_TEST(good_variant_exponentiation_99) {
 //                 -------+--------
 //         excess  1000000|00000000  returned
 //
-//   Once it collapsed to zero, any further exponentiation results in
-// zero.
+//   Once it collapsed to zero, any further exponentiation step results
+// in zero again.
 UNIT_TEST(bad_variant_exponentiation_99) {
 	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
 	const variant a(min_32_bit_integer);
