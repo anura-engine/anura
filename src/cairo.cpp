@@ -1350,6 +1350,7 @@ namespace {
 				stack.back().font_italic = true;
 				stack.back().font = query_font_from_class(get_font_fn, stack.back());
 			} else if(itor->first == "img") {
+			} else if (itor->first == "<xmlcomment>") {
 			} else {
 				ASSERT_LOG(false, "Unrecognized markup element: " << itor->first);
 			}
