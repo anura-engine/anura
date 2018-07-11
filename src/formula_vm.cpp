@@ -325,10 +325,37 @@ void VirtualMachine::executeInternal(const FormulaCallable& variables, std::vect
 			if(left.is_callable()) {
 				variant result = left.as_callable()->queryValue(right.as_string());
 				left = result;
-			} else if(left.is_list() || left.is_map()) {
+			} else if(left.is_map()) {
 				variant result = left[right];
 				left = result;
-			} else if(left.is_string()) {
+			}
+			else if (left.is_list() && !right.is_string()) {
+				variant result = left[right];
+				left = result;
+			}
+			else if (left.is_list()) {
+				const std::string& s = right.as_string();
+				int index;
+				if (s == "x" || s == "r") {
+					index = 0;
+				}
+				else if (s == "y" || s == "g") {
+					index = 1;
+				}
+				else if (s == "z" || s == "b") {
+					index = 2;
+				}
+				else if (s == "a") {
+					index = 3;
+				}
+				else {
+					ASSERT_LOG(false, "Illegal string lookup on list: " << s << ": " << debugPinpointLocation(p, stack));
+				}
+
+				variant result = left[index];
+				left = result;
+			}
+			else if (left.is_string()) {
 				const std::string& s = left.as_string();
 				unsigned int index = right.as_int();
 				ASSERT_LOG(index < s.length(), "index outside bounds: " << s << "[" << index << "]'\n'"  << debugPinpointLocation(p, stack));

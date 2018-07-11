@@ -3817,6 +3817,11 @@ FUNCTION_DEF_IMPL
 					const std::string self = identifier_.empty() ? EVAL_ARG(1).as_string() : identifier_;
 					callable->setValue_name(self);
 					for(int n = 0; n != items.num_elements(); ++n) {
+						if(callable->refcount() > 1) {
+							callable.reset(new map_callable(variables, def_ ? def_->getNumSlots() : 0));
+							callable->setValue_name(self);
+						}
+
 						callable->set(items[n], n);
 						const variant val = args().back()->evaluate(*callable);
 						vars.push_back(val);
