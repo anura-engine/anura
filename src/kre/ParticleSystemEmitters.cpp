@@ -29,6 +29,8 @@
 #include "WindowManager.hpp"
 #include "variant_utils.hpp"
 
+#include "glm/gtx/transform.hpp"
+
 namespace KRE
 {
 	namespace Particles
@@ -45,7 +47,8 @@ namespace KRE
               repeat_delay_remaining_(0),
 			  particles_remaining_(0),
 			  scale_(1.0f),
-			  emit_only_2d_(node["emit_only_2d"].as_bool(false))
+			  emit_only_2d_(node["emit_only_2d"].as_bool(false)),
+			  orientation_follows_angle_(node["orientation_follows_angle"].as_bool(false))
 		{
 			initPhysics();
 
@@ -168,7 +171,8 @@ namespace KRE
 			  repeat_delay_remaining_(0),
 			  particles_remaining_(0),
 			  scale_(1.0f),
-			  emit_only_2d_(false)
+			  emit_only_2d_(false),
+			  orientation_follows_angle_(false)
 		{
 			initPhysics();
 		}
@@ -197,7 +201,8 @@ namespace KRE
               repeat_delay_remaining_(0),
 			  particles_remaining_(e.particles_remaining_),
 			  scale_(e.scale_),
-			  emit_only_2d_(e.emit_only_2d_)
+			  emit_only_2d_(e.emit_only_2d_),
+			  orientation_follows_angle_(e.orientation_follows_angle_)
 		{
 			if(e.orientation_range_) {
 				orientation_range_.reset(new std::pair<glm::quat,glm::quat>(e.orientation_range_->first, e.orientation_range_->second));
@@ -303,6 +308,9 @@ namespace KRE
 			}
 			if(emit_only_2d_) {
 				build->add("emit_only_2d", emit_only_2d_);
+			}
+			if(orientation_follows_angle_) {
+				build->add("orientation_follows_angle", orientation_follows_angle_);
 			}
 		}
 
@@ -491,11 +499,19 @@ namespace KRE
 			} else {
 				const float angle = orientation_->getValue(psystem->getElapsedTime());
 				const auto qaxis = glm::angleAxis(angle / 180.0f * static_cast<float>(M_PI), glm::vec3(0.0f, 0.0f, 1.0f));
-				p.initial.orientation = qaxis * p.current.orientation;
+				p.initial.orientation = qaxis * glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
 			}
 			p.initial.direction = getInitialDirection();
 			if(emit_only_2d_) {
 				p.initial.direction.z = 0.0f;
+			}
+			if(orientation_follows_angle_) {
+				glm::vec3 a(0.0f, 1.0f, 0.0f);
+				glm::vec3 v = -glm::cross(p.initial.direction, a);
+				float angle = acos(glm::dot(p.initial.direction, a) / (glm::length(p.initial.direction) * glm::length(a)));
+				glm::mat4 rotmat = glm::rotate(angle, v);
+
+				p.current.orientation = p.initial.orientation = glm::toQuat(rotmat);
 			}
 			//std::cerr << "initial direction: " << p.initial.direction << " vel = " << p.initial.velocity << "\n";
 			p.emitted_by = this;

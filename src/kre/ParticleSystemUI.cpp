@@ -655,6 +655,11 @@ namespace KRE
 							emitter_modified = true;
 						}
 					}
+					bool o_follows_d = e->doesOrientationFollowDirection();
+					if(ImGui::Checkbox("Orientation(rotation) follows Direction", &o_follows_d)) {
+						e->setOrientationFollowsDirection(o_follows_d);
+						emitter_modified = true;
+					}
 
 					//color_range_
 					if(e->hasColorRange()) {
