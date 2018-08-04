@@ -2110,9 +2110,9 @@ void prevent_invalid_collapse_in_zero(
 	case 1 << 28:
 	case 1 << 29:
 	case 1 << 30:  //   1073741824
-	//   2147483648 does not fit 32 bit two's complement.
 		arithmetic_overflow = exponent >= 2;
 		break;
+	//   2147483648 does not fit 32 bit two's complement.
 	default:
 		ASSERT_LOG(false, "unreachable code executed, at `prevent_invalid_collapse_in_zero(base: " << base << ", exponent: " << exponent << ")`");
 	}
@@ -3579,7 +3579,575 @@ UNIT_TEST(bad_variant_exponentiation_1) {
 	ASSERT_LOG(excepted, "test expectation failed; `-4`, hosted in a 32 bit signed integer, raised to the power of `16`, should raise an exception, in order to prevent an arithmetic overflow");
 }
 
-UNIT_TEST(good_variant_exponentiation_99) {
+UNIT_TEST(good_variant_exponentiation_2) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a((int_fast32_t) 0xfffffff8);  //   -8
+	variant b(min_32_bit_integer);
+	b = a ^ variant(10);
+	const variant expected((int_fast32_t) 0x40000000);  //   1073741824
+	CHECK_EQ(expected, b);
+}
+
+//   `-8 ^ 11 = 8589934592`.
+//
+//   At the current implementation, `-8 ^ 11` will be transformed into
+// `(-8 ^ 10) * (-8)`. `-8 ^ 10 = 1073741824`. `1073741824` is
+// represented as `0x40000000`, and `-8` as `0xfffffff8`.
+//   The multiplication collapses to zero, see `64 * -8` as a simpler
+// example of the phenomenon:
+//
+//                         01000000  // 0x40 // 64
+//                       x 11111000  // 0xf8 // -8
+//                       -+--------
+//                        |00000000
+//                       0|0000000
+//                      00|000000
+//                     010|00000
+//                    0100|0000
+//                   01000|000
+//                  010000|00
+//                 0100000|0
+//                 -------+--------
+//         excess  0111110|00000000  returned
+//
+//   Once it collapsed to zero, any further exponentiation step results
+// in zero again.
+UNIT_TEST(bad_variant_exponentiation_2) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a((int_fast32_t) 0xfffffff8);  //   -8
+	variant b(min_32_bit_integer);
+	bool excepted = false;
+	{
+		const assert_recover_scope unit_test_exception_expected;
+		try {
+			b = a ^ variant(11);
+		} catch (const validation_failure_exception vfe) {
+			excepted = true;
+		}
+	}
+	CHECK_EQ(true, excepted);
+	ASSERT_LOG(excepted, "test expectation failed; `-8`, hosted in a 32 bit signed integer, raised to the power of `11`, should raise an exception, in order to prevent an arithmetic overflow");
+}
+
+UNIT_TEST(good_variant_exponentiation_3) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a((int_fast32_t) 0xfffffff0);  //   -16
+	variant b(min_32_bit_integer);
+	b = a ^ variant(7);
+	const variant expected((int_fast32_t) 0xf0000000);  //   -268435456
+	CHECK_EQ(expected, b);
+}
+
+//   `-16 ^ 8 = 4294967296`.
+//
+//   At the current implementation, `-16 ^ 8` will be transformed into
+// `(-16 ^ 7) * (-16)`. `-16 ^ 7 = -268435456`. `-268435456` is
+// represented as `0xf0000000`, and `-16` as `0xfffffff0`.
+//   The multiplication collapses to zero, see `-16 * -16` as a simpler
+// example of the phenomenon:
+//
+//                         11110000  // 0xf0 // -16
+//                       x 11110000  // 0xf0 // -16
+//                       -+--------
+//                        |00000000
+//                       0|0000000
+//                      00|000000
+//                     000|00000
+//                    1111|0000
+//                   11110|000
+//                  111100|00
+//                 1111000|0
+//                 -------+--------
+//        excess  11011001|00000000  returned
+//
+//   Once it collapsed to zero, any further exponentiation step results
+// in zero again.
+UNIT_TEST(bad_variant_exponentiation_3) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a((int_fast32_t) 0xfffffff0);  //   -16
+	variant b(min_32_bit_integer);
+	bool excepted = false;
+	{
+		const assert_recover_scope unit_test_exception_expected;
+		try {
+			b = a ^ variant(8);
+		} catch (const validation_failure_exception vfe) {
+			excepted = true;
+		}
+	}
+	CHECK_EQ(true, excepted);
+	ASSERT_LOG(excepted, "test expectation failed; `-16`, hosted in a 32 bit signed integer, raised to the power of `8`, should raise an exception, in order to prevent an arithmetic overflow");
+}
+
+UNIT_TEST(good_variant_exponentiation_4) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a((int_fast32_t) 0xffffffe0);  //   -32
+	variant b(min_32_bit_integer);
+	b = a ^ variant(6);
+	const variant expected((int_fast32_t) 0x40000000);  //   1073741824
+	CHECK_EQ(expected, b);
+}
+
+//   `-32 ^ 7 = -34359738368`.
+//
+//   At the current implementation, `-32 ^ 7` will be transformed into
+// `(-32 ^ 6) * (-32)`. `-32 ^ 6 = 1073741824`. `1073741824` is
+// represented as `0x40000000`, and `-32` as `0xffffffe0`.
+//   The multiplication collapses to zero, see `64 * -32` as a simpler
+// example of the phenomenon:
+//
+//                         01000000  // 0x40 // 64
+//                       x 11100000  // 0xe0 // -32
+//                       -+--------
+//                        |00000000
+//                       0|0000000
+//                      00|000000
+//                     000|00000
+//                    0000|0000
+//                   01000|000
+//                  010000|00
+//                 0100000|0
+//                 -------+--------
+//         excess  0111000|00000000  returned
+//
+//   Once it collapsed to zero, any further exponentiation step results
+// in zero again.
+UNIT_TEST(bad_variant_exponentiation_4) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a((int_fast32_t) 0xffffffe0);  //   -32
+	variant b(min_32_bit_integer);
+	bool excepted = false;
+	{
+		const assert_recover_scope unit_test_exception_expected;
+		try {
+			b = a ^ variant(7);
+		} catch (const validation_failure_exception vfe) {
+			excepted = true;
+		}
+	}
+	CHECK_EQ(true, excepted);
+	ASSERT_LOG(excepted, "test expectation failed; `-32`, hosted in a 32 bit signed integer, raised to the power of `7`, should raise an exception, in order to prevent an arithmetic overflow");
+}
+
+UNIT_TEST(good_variant_exponentiation_5) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a((int_fast32_t) 0xffffffc0);  //   -64
+	variant b(min_32_bit_integer);
+	b = a ^ variant(5);
+	const variant expected((int_fast32_t) 0xc0000000);  //   -1073741824
+	CHECK_EQ(expected, b);
+}
+
+//   `-64 ^ 6 = -68719476736`.
+//
+//   At the current implementation, `-64 ^ 6` will be transformed into
+// `(-64 ^ 5) * (-64)`. `-64 ^ 5 = -1073741824`. `-1073741824` is
+// represented as `0xc0000000`, and `-64` as `0xffffffc0`.
+//   The multiplication collapses to zero, see `-64 * -64` as a simpler
+// example of the phenomenon:
+//
+//                         11000000  // 0xc0 // -64
+//                       x 11000000  // 0xc0 // -64
+//                       -+--------
+//                        |00000000
+//                       0|0000000
+//                      00|000000
+//                     000|00000
+//                    0000|0000
+//                   00000|000
+//                  110000|00
+//                 1100000|0
+//                 -------+--------
+//        excess  10010000|00000000  returned
+//
+//   Once it collapsed to zero, any further exponentiation step results
+// in zero again.
+UNIT_TEST(bad_variant_exponentiation_5) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a((int_fast32_t) 0xffffffc0);  //   -64
+	variant b(min_32_bit_integer);
+	bool excepted = false;
+	{
+		const assert_recover_scope unit_test_exception_expected;
+		try {
+			b = a ^ variant(6);
+		} catch (const validation_failure_exception vfe) {
+			excepted = true;
+		}
+	}
+	CHECK_EQ(true, excepted);
+	ASSERT_LOG(excepted, "test expectation failed; `-64`, hosted in a 32 bit signed integer, raised to the power of `6`, should raise an exception, in order to prevent an arithmetic overflow");
+}
+
+UNIT_TEST(good_variant_exponentiation_6) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a((int_fast32_t) 0xffffff80);  //   -128
+	variant b(min_32_bit_integer);
+	b = a ^ variant(4);
+	const variant expected((int_fast32_t) 0x10000000);  //   268435456
+	CHECK_EQ(expected, b);
+}
+
+//   `-128 ^ 5 = -34359738368`.
+//
+//   At the current implementation, `-128 ^ 5` will be transformed into
+// `(-128 ^ 4) * (-128)`. `-128 ^ 4 = 268435456`. `268435456` is
+// represented as `0x10000000`, and `-128` as `0xffffff80`.
+//   The multiplication collapses to zero, see `-16 * -128` as a simpler
+// example of the phenomenon:
+//
+//                         00010000  // 0x10 // 16
+//                       x 10000000  // 0x80 // -128
+//                       -+--------
+//                        |00000000
+//                       0|0000000
+//                      00|000000
+//                     000|00000
+//                    0000|0000
+//                   00000|000
+//                  000000|00
+//                 0001000|0
+//                 -------+--------
+//         excess  0001000|00000000  returned
+//
+//   Once it collapsed to zero, any further exponentiation step results
+// in zero again.
+UNIT_TEST(bad_variant_exponentiation_6) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a((int_fast32_t) 0xffffff80);  //   -128
+	variant b(min_32_bit_integer);
+	bool excepted = false;
+	{
+		const assert_recover_scope unit_test_exception_expected;
+		try {
+			b = a ^ variant(5);
+		} catch (const validation_failure_exception vfe) {
+			excepted = true;
+		}
+	}
+	CHECK_EQ(true, excepted);
+	ASSERT_LOG(excepted, "test expectation failed; `-128`, hosted in a 32 bit signed integer, raised to the power of `5`, should raise an exception, in order to prevent an arithmetic overflow");
+}
+
+UNIT_TEST(good_variant_exponentiation_7) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a((int_fast32_t) 0xffffff00);  //   -256
+	variant b(min_32_bit_integer);
+	b = a ^ variant(3);
+	const variant expected((int_fast32_t) 0xff000000);  //   -16777216
+	CHECK_EQ(expected, b);
+}
+
+UNIT_TEST(bad_variant_exponentiation_7) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a((int_fast32_t) 0xffffff00);  //   -256
+	variant b(min_32_bit_integer);
+	bool excepted = false;
+	{
+		const assert_recover_scope unit_test_exception_expected;
+		try {
+			b = a ^ variant(4);
+		} catch (const validation_failure_exception vfe) {
+			excepted = true;
+		}
+	}
+	CHECK_EQ(true, excepted);
+	ASSERT_LOG(excepted, "test expectation failed; `-256`, hosted in a 32 bit signed integer, raised to the power of `4`, should raise an exception, in order to prevent an arithmetic overflow");
+}
+
+UNIT_TEST(good_variant_exponentiation_8) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a((int_fast32_t) 0xfffffe00);  //   -512
+	variant b(min_32_bit_integer);
+	b = a ^ variant(3);
+	const variant expected((int_fast32_t) 0xf8000000);  //   -134217728
+	CHECK_EQ(expected, b);
+}
+
+UNIT_TEST(bad_variant_exponentiation_8) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a((int_fast32_t) 0xfffffe00);  //   -512
+	variant b(min_32_bit_integer);
+	bool excepted = false;
+	{
+		const assert_recover_scope unit_test_exception_expected;
+		try {
+			b = a ^ variant(4);
+		} catch (const validation_failure_exception vfe) {
+			excepted = true;
+		}
+	}
+	CHECK_EQ(true, excepted);
+	ASSERT_LOG(excepted, "test expectation failed; `-512`, hosted in a 32 bit signed integer, raised to the power of `4`, should raise an exception, in order to prevent an arithmetic overflow");
+}
+
+UNIT_TEST(good_variant_exponentiation_9) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a((int_fast32_t) 0xfffffc00);  //   -1024
+	variant b(min_32_bit_integer);
+	b = a ^ variant(3);
+	const variant expected((int_fast32_t) 0xc0000000);  //   -1073741824
+	CHECK_EQ(expected, b);
+}
+
+UNIT_TEST(bad_variant_exponentiation_9) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a((int_fast32_t) 0xfffffc00);  //   -1024
+	variant b(min_32_bit_integer);
+	bool excepted = false;
+	{
+		const assert_recover_scope unit_test_exception_expected;
+		try {
+			b = a ^ variant(4);
+		} catch (const validation_failure_exception vfe) {
+			excepted = true;
+		}
+	}
+	CHECK_EQ(true, excepted);
+	ASSERT_LOG(excepted, "test expectation failed; `-1024`, hosted in a 32 bit signed integer, raised to the power of `4`, should raise an exception, in order to prevent an arithmetic overflow");
+}
+
+UNIT_TEST(good_variant_exponentiation_10) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a((int_fast32_t) 0xfffff800);  //   -2048
+	variant b(min_32_bit_integer);
+	b = a ^ variant(2);
+	const variant expected((int_fast32_t) 0x00400000);  //   4194304
+	CHECK_EQ(expected, b);
+}
+
+UNIT_TEST(bad_variant_exponentiation_10) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a((int_fast32_t) 0xfffff800);  //   -2048
+	variant b(min_32_bit_integer);
+	bool excepted = false;
+	{
+		const assert_recover_scope unit_test_exception_expected;
+		try {
+			b = a ^ variant(3);
+		} catch (const validation_failure_exception vfe) {
+			excepted = true;
+		}
+	}
+	CHECK_EQ(true, excepted);
+	ASSERT_LOG(excepted, "test expectation failed; `-2048`, hosted in a 32 bit signed integer, raised to the power of `3`, should raise an exception, in order to prevent an arithmetic overflow");
+}
+
+UNIT_TEST(good_variant_exponentiation_11) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a((int_fast32_t) 0xfffff000);  //   -4096
+	variant b(min_32_bit_integer);
+	b = a ^ variant(2);
+	const variant expected((int_fast32_t) 0x01000000);  //   16777216
+	CHECK_EQ(expected, b);
+}
+
+UNIT_TEST(bad_variant_exponentiation_11) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a((int_fast32_t) 0xfffff000);  //   -4096
+	variant b(min_32_bit_integer);
+	bool excepted = false;
+	{
+		const assert_recover_scope unit_test_exception_expected;
+		try {
+			b = a ^ variant(3);
+		} catch (const validation_failure_exception vfe) {
+			excepted = true;
+		}
+	}
+	CHECK_EQ(true, excepted);
+	ASSERT_LOG(excepted, "test expectation failed; `-4096`, hosted in a 32 bit signed integer, raised to the power of `3`, should raise an exception, in order to prevent an arithmetic overflow");
+}
+
+UNIT_TEST(good_variant_exponentiation_12) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a((int_fast32_t) 0xffffe000);  //   -8192
+	variant b(min_32_bit_integer);
+	b = a ^ variant(2);
+	const variant expected((int_fast32_t) 0x04000000);  //   67108864
+	CHECK_EQ(expected, b);
+}
+
+UNIT_TEST(bad_variant_exponentiation_12) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a((int_fast32_t) 0xffffe000);  //   -8192
+	variant b(min_32_bit_integer);
+	bool excepted = false;
+	{
+		const assert_recover_scope unit_test_exception_expected;
+		try {
+			b = a ^ variant(3);
+		} catch (const validation_failure_exception vfe) {
+			excepted = true;
+		}
+	}
+	CHECK_EQ(true, excepted);
+	ASSERT_LOG(excepted, "test expectation failed; `-8192`, hosted in a 32 bit signed integer, raised to the power of `3`, should raise an exception, in order to prevent an arithmetic overflow");
+}
+
+UNIT_TEST(good_variant_exponentiation_13) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a((int_fast32_t) 0xffffc000);  //   -16384
+	variant b(min_32_bit_integer);
+	b = a ^ variant(2);
+	const variant expected((int_fast32_t) 0x10000000);  //   268435456
+	CHECK_EQ(expected, b);
+}
+
+UNIT_TEST(bad_variant_exponentiation_13) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a((int_fast32_t) 0xffffc000);  //   -16384
+	variant b(min_32_bit_integer);
+	bool excepted = false;
+	{
+		const assert_recover_scope unit_test_exception_expected;
+		try {
+			b = a ^ variant(3);
+		} catch (const validation_failure_exception vfe) {
+			excepted = true;
+		}
+	}
+	CHECK_EQ(true, excepted);
+	ASSERT_LOG(excepted, "test expectation failed; `-16384`, hosted in a 32 bit signed integer, raised to the power of `3`, should raise an exception, in order to prevent an arithmetic overflow");
+}
+
+UNIT_TEST(good_variant_exponentiation_14) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a((int_fast32_t) 0xffff8000);  //   -32768
+	variant b(min_32_bit_integer);
+	b = a ^ variant(2);
+	const variant expected((int_fast32_t) 0x40000000);  //   1073741824
+	CHECK_EQ(expected, b);
+}
+
+UNIT_TEST(bad_variant_exponentiation_14) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a((int_fast32_t) 0xffff8000);  //   -32768
+	variant b(min_32_bit_integer);
+	bool excepted = false;
+	{
+		const assert_recover_scope unit_test_exception_expected;
+		try {
+			b = a ^ variant(3);
+		} catch (const validation_failure_exception vfe) {
+			excepted = true;
+		}
+	}
+	CHECK_EQ(true, excepted);
+	ASSERT_LOG(excepted, "test expectation failed; `-32768`, hosted in a 32 bit signed integer, raised to the power of `3`, should raise an exception, in order to prevent an arithmetic overflow");
+}
+
+UNIT_TEST(good_variant_exponentiation_15) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a((int_fast32_t) 0xffff0000);  //   -65536
+	variant b(min_32_bit_integer);
+	b = a ^ variant(1);
+	const variant expected((int_fast32_t) 0xffff0000);  //   -65536
+	CHECK_EQ(expected, b);
+}
+
+UNIT_TEST(bad_variant_exponentiation_15) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a((int_fast32_t) 0xffff0000);  //   -65536
+	variant b(min_32_bit_integer);
+	bool excepted = false;
+	{
+		const assert_recover_scope unit_test_exception_expected;
+		try {
+			b = a ^ variant(2);
+		} catch (const validation_failure_exception vfe) {
+			excepted = true;
+		}
+	}
+	CHECK_EQ(true, excepted);
+	ASSERT_LOG(excepted, "test expectation failed; `-65536`, hosted in a 32 bit signed integer, raised to the power of `2`, should raise an exception, in order to prevent an arithmetic overflow");
+}
+
+UNIT_TEST(good_variant_exponentiation_16) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a((int_fast32_t) 0xfffe0000);  //   -131072
+	variant b(min_32_bit_integer);
+	b = a ^ variant(1);
+	const variant expected((int_fast32_t) 0xfffe0000);  //   -131072
+	CHECK_EQ(expected, b);
+}
+
+UNIT_TEST(bad_variant_exponentiation_16) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a((int_fast32_t) 0xfffe0000);  //   -131072
+	variant b(min_32_bit_integer);
+	bool excepted = false;
+	{
+		const assert_recover_scope unit_test_exception_expected;
+		try {
+			b = a ^ variant(2);
+		} catch (const validation_failure_exception vfe) {
+			excepted = true;
+		}
+	}
+	CHECK_EQ(true, excepted);
+	ASSERT_LOG(excepted, "test expectation failed; `-131072`, hosted in a 32 bit signed integer, raised to the power of `2`, should raise an exception, in order to prevent an arithmetic overflow");
+}
+
+UNIT_TEST(good_variant_exponentiation_17) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a((int_fast32_t) 0xfffc0000);  //   -262144
+	variant b(min_32_bit_integer);
+	b = a ^ variant(1);
+	const variant expected((int_fast32_t) 0xfffc0000);  //   -262144
+	CHECK_EQ(expected, b);
+}
+
+UNIT_TEST(bad_variant_exponentiation_17) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a((int_fast32_t) 0xfffc0000);  //   -262144
+	variant b(min_32_bit_integer);
+	bool excepted = false;
+	{
+		const assert_recover_scope unit_test_exception_expected;
+		try {
+			b = a ^ variant(2);
+		} catch (const validation_failure_exception vfe) {
+			excepted = true;
+		}
+	}
+	CHECK_EQ(true, excepted);
+	ASSERT_LOG(excepted, "test expectation failed; `-262144`, hosted in a 32 bit signed integer, raised to the power of `2`, should raise an exception, in order to prevent an arithmetic overflow");
+}
+
+UNIT_TEST(variant_exponentiation_18) {}
+
+UNIT_TEST(variant_exponentiation_19) {}
+
+UNIT_TEST(variant_exponentiation_20) {
+	//   -2097152
+}
+
+UNIT_TEST(variant_exponentiation_21) {}
+
+UNIT_TEST(variant_exponentiation_22) {}
+
+UNIT_TEST(variant_exponentiation_23) {
+	//   -16777216
+}
+
+UNIT_TEST(variant_exponentiation_24) {}
+
+UNIT_TEST(variant_exponentiation_25) {}
+
+UNIT_TEST(variant_exponentiation_26) {
+	//   -134217728
+}
+
+UNIT_TEST(variant_exponentiation_27) {}
+
+UNIT_TEST(variant_exponentiation_28) {}
+
+UNIT_TEST(variant_exponentiation_29) {
+	//   -1073741824
+}
+
+UNIT_TEST(good_variant_exponentiation_30) {
 	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
 	const variant a(min_32_bit_integer);
 	variant b(min_32_bit_integer);
@@ -3613,7 +4181,7 @@ UNIT_TEST(good_variant_exponentiation_99) {
 //
 //   Once it collapsed to zero, any further exponentiation step results
 // in zero again.
-UNIT_TEST(bad_variant_exponentiation_99) {
+UNIT_TEST(bad_variant_exponentiation_30) {
 	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
 	const variant a(min_32_bit_integer);
 	variant b(min_32_bit_integer);
@@ -3628,4 +4196,57 @@ UNIT_TEST(bad_variant_exponentiation_99) {
 	}
 	CHECK_EQ(true, excepted);
 	ASSERT_LOG(excepted, "test expectation failed; `-2147483648`, hosted in a 32 bit signed integer, raised to the power of `2`, should raise an exception, in order to prevent an arithmetic overflow");
+}
+
+UNIT_TEST(bad_variant_exponentiation_31) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a(11);
+	variant b(min_32_bit_integer);
+	bool excepted = false;
+	{
+		const assert_recover_scope unit_test_exception_expected;
+		try {
+			b = a ^ a;
+		} catch (const validation_failure_exception vfe) {
+			excepted = true;
+		}
+	}
+	CHECK_EQ(true, excepted);
+	ASSERT_LOG(excepted, "test expectation failed; `11`. hosted in a 32 bit signed integer, raised to the power of `11`, should raise an exception, in order to prevent an arithmetic overflow");
+}
+
+UNIT_TEST(bad_variant_exponentiation_32) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a(-11);
+	const variant c(9);
+	variant b(min_32_bit_integer);
+	bool excepted = false;
+	{
+		const assert_recover_scope unit_test_exception_expected;
+		try {
+			b = a ^ c;
+		} catch (const validation_failure_exception vfe) {
+			excepted = true;
+		}
+	}
+	CHECK_EQ(true, excepted);
+	ASSERT_LOG(excepted, "test expectation failed; `-11`. hosted in a 32 bit signed integer, raised to the power of `9`, should raise an exception, in order to prevent an arithmetic overflow");
+}
+
+UNIT_TEST(bad_variant_exponentiation_33) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a(-6);
+	const variant c(12);
+	variant b(min_32_bit_integer);
+	bool excepted = false;
+	{
+		const assert_recover_scope unit_test_exception_expected;
+		try {
+			b = a ^ c;
+		} catch (const validation_failure_exception vfe) {
+			excepted = true;
+		}
+	}
+	CHECK_EQ(true, excepted);
+	ASSERT_LOG(excepted, "test expectation failed; `-6`. hosted in a 32 bit signed integer, raised to the power of `12`, should raise an exception, in order to prevent an arithmetic overflow");
 }
