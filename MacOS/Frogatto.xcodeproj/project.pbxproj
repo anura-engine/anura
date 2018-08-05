@@ -479,6 +479,8 @@
 		C0EF2A5E16229160004CD227 /* libGLEW.1.9.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = C0EF2A5D16229160004CD227 /* libGLEW.1.9.0.dylib */; };
 		C0EF2A5F1622918D004CD227 /* libGLEW.1.9.0.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = C0EF2A5D16229160004CD227 /* libGLEW.1.9.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		C0F5E46B169AACF4005ADCF5 /* language_dialog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0F5E468169AAC97005ADCF5 /* language_dialog.cpp */; };
+		CF91F5D92117748C00DE58EA /* simplex_noise_tests.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CF91F5D82117748B00DE58EA /* simplex_noise_tests.cpp */; };
+		CFA55595211759B30005446A /* TextureUtils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CFA55594211759B30005446A /* TextureUtils.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -1408,6 +1410,8 @@
 		C0EF2A5D16229160004CD227 /* libGLEW.1.9.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libGLEW.1.9.0.dylib; sourceTree = "<group>"; };
 		C0F5E468169AAC97005ADCF5 /* language_dialog.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = language_dialog.cpp; sourceTree = "<group>"; };
 		C0F5E469169AAC97005ADCF5 /* language_dialog.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = language_dialog.hpp; sourceTree = "<group>"; };
+		CF91F5D82117748B00DE58EA /* simplex_noise_tests.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = simplex_noise_tests.cpp; sourceTree = "<group>"; };
+		CFA55594211759B30005446A /* TextureUtils.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = TextureUtils.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -1646,6 +1650,7 @@
 				63E3EC361B452D55002F8294 /* SurfaceBlur.hpp */,
 				6357A7481B3F13B400793D60 /* FontFreetype.cpp */,
 				6357A7491B3F13B400793D60 /* FontFreetype.hpp */,
+				CFA55594211759B30005446A /* TextureUtils.cpp */,
 				6357A74A1B3F13B400793D60 /* Gradients.cpp */,
 				6357A74B1B3F13B400793D60 /* Gradients.hpp */,
 				639B52EF1AC20D5900ECC4F8 /* AttributeSet.cpp */,
@@ -2200,6 +2205,7 @@
 				C010C629160AFD4C006E7D90 /* file_chooser_dialog.hpp */,
 				C010C62B160AFD4C006E7D90 /* filesystem.cpp */,
 				C010C62C160AFD4C006E7D90 /* filesystem.hpp */,
+				CF91F5D82117748B00DE58EA /* simplex_noise_tests.cpp */,
 				C08753E41B85AD1E00B89E53 /* ffl_lib.cpp */,
 				C010C630160AFD4C006E7D90 /* formatter.hpp */,
 				C010C631160AFD4C006E7D90 /* formula.cpp */,
@@ -2653,6 +2659,7 @@
 				C010C74B160AFD4D006E7D90 /* border_widget.cpp in Sources */,
 				C08F30571818E80B005BDCDB /* lua_iface.cpp in Sources */,
 				638CC7311AF6057700C7A106 /* lmathlib.cpp in Sources */,
+				CFA55595211759B30005446A /* TextureUtils.cpp in Sources */,
 				638CC7361AF6057700C7A106 /* loslib.cpp in Sources */,
 				6357A74C1B3F13B400793D60 /* FontFreetype.cpp in Sources */,
 				638CC72A1AF6057700C7A106 /* ldo.cpp in Sources */,
@@ -2974,6 +2981,7 @@
 				C0A1595A19F0F888009C25B3 /* ffl_weak_ptr.cpp in Sources */,
 				639B53851AC20D5A00ECC4F8 /* FboOGL.cpp in Sources */,
 				6357A72D1B3F116900793D60 /* css_properties.cpp in Sources */,
+				CF91F5D92117748C00DE58EA /* simplex_noise_tests.cpp in Sources */,
 				C0917B1117533AA7004307B0 /* formula_interface.cpp in Sources */,
 				C07A47D719444C2000F1190E /* svg_path_parse.cpp in Sources */,
 				639B539D1AC20D5A00ECC4F8 /* StencilScope.cpp in Sources */,
