@@ -400,7 +400,7 @@ void process_stats(const variant& doc)
 
 			if(type_str == "crash") {
 				variant m = msg;
-#ifdef LINUX
+#if defined(LINUX) || defined(__linux__)  //   `LINUX` not being detected in RHEL like!
 				time_t t = time(nullptr);
 				tm* ltime = localtime(&t);
 
