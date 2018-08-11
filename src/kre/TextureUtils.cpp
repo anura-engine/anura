@@ -48,38 +48,38 @@ UNIT_TEST(next_power_of_two_4) {
 }
 
 UNIT_TEST(next_power_of_two_4b) {  //   XXX
-#ifdef APPLE  //   XXX
+#ifdef __APPLE__  //   XXX
 	CHECK_EQ(2147483648, KRE::next_power_of_two(1073741825));  //   XXX
 #endif  //   XXX
 }  //   XXX
 
 UNIT_TEST(next_power_of_two_4c) {  //   XXX
-#ifdef APPLE  //   XXX
+#ifdef __APPLE__  //   XXX
 	CHECK_EQ(2147483648, KRE::next_power_of_two(2147483647));  //   XXX
 #endif  //   XXX
 }  //   XXX
 
 UNIT_TEST(next_power_of_two_4d) {  //   XXX
-#ifdef APPLE  //   XXX
+#ifdef __APPLE__  //   XXX
 	CHECK_EQ(2147483648, KRE::next_power_of_two(2147483648));  //   XXX
 #endif  //   XXX
 }  //   XXX
 
 UNIT_TEST(next_power_of_two_4e) {  //   XXX
-#ifdef APPLE  //   XXX
-	CHECK_EQ(2147483649, KRE::next_power_of_two(2147483649));  //   XXX
+#ifdef __APPLE__  //   XXX
+	CHECK_EQ(0, KRE::next_power_of_two(2147483649));  //   XXX
 #endif  //   XXX
 }  //   XXX
 
 UNIT_TEST(next_power_of_two_4f) {  //   XXX
-#ifdef APPLE  //   XXX
-	CHECK_EQ(2147483650, KRE::next_power_of_two(2147483650));  //   XXX
+#ifdef __APPLE__  //   XXX
+	CHECK_EQ(0, KRE::next_power_of_two(4611686018427387903));  //   XXX
 #endif  //   XXX
 }  //   XXX
 
 UNIT_TEST(next_power_of_two_4g) {  //   XXX
-#ifdef APPLE  //   XXX
-	CHECK_EQ(21474836482, KRE::next_power_of_two(21474836482));  //   XXX
+#ifdef __APPLE__  //   XXX
+	CHECK_EQ(0, KRE::next_power_of_two(9223372036854775807));  //   XXX
 #endif  //   XXX
 }  //   XXX
 
