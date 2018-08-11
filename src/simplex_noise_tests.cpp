@@ -64,8 +64,10 @@ UNIT_TEST(simplex_noise_4) {
 	float a2[2] = {0.7f, 0.8f};
 	const float noise2 = noise::simplex::noise2(a2);
 #ifdef __APPLE__  //   XXX
-	ASSERT_LOG(-0.47826 < noise2, noise2);
-	ASSERT_LOG(+0.44800 > noise2, noise2);
+	/** Results seem not to be evenly distributed. */
+	/** Negative extremes are more frequent than positive extremes. */
+	ASSERT_LOG(-0.47892 < noise2, noise2);
+	ASSERT_LOG(+0.47766 > noise2, noise2);
 #endif  //   XXX
 }
 
@@ -74,8 +76,9 @@ UNIT_TEST(simplex_noise_5) {
 	float a3[3] = {0.7f, 0.8f, 0.9f};
 	const float noise3 = noise::simplex::noise3(a3);
 #ifdef __APPLE__  //   XXX
-	/** Results are not evenly distributed. */
+	/** Results seem not to be evenly distributed. */
+	/** Negative extremes are more frequent than positive extremes. */
 	ASSERT_LOG(-0.44993 < noise3, noise3);
-	ASSERT_LOG(+0.42635 > noise3, noise3);
+	ASSERT_LOG(+0.44632 > noise3, noise3);
 #endif  //   XXX
 }

@@ -29,6 +29,8 @@
 #include "svg_shapes.hpp"
 #include "svg_element.hpp"
 
+#include "unit_test.hpp"
+
 namespace KRE
 {
 	namespace SVG
@@ -700,4 +702,149 @@ namespace KRE
 			shape::clip_render_path(ctx);
 		}
 	}
+}
+
+UNIT_TEST(parse_list_of_lengths_test_0) {
+	const std::string list_of_lengths_input =
+			"4 8 15 16 23 42";
+	const std::vector<KRE::SVG::svg_length> list_of_lengths_output =
+			KRE::SVG::parse_list_of_lengths(list_of_lengths_input);
+	std::vector<KRE::SVG::svg_length> expected_output;
+	expected_output.emplace_back(KRE::SVG::svg_length("4"));
+	expected_output.emplace_back(KRE::SVG::svg_length("8"));
+	expected_output.emplace_back(KRE::SVG::svg_length("15"));
+	expected_output.emplace_back(KRE::SVG::svg_length("16"));
+	expected_output.emplace_back(KRE::SVG::svg_length("23"));
+	expected_output.emplace_back(KRE::SVG::svg_length("42"));
+	const uint_fast8_t expected_output_size = expected_output.size();
+	CHECK_EQ(expected_output_size, list_of_lengths_output.size());
+	for (int i = 0; i < expected_output_size; i++) {
+		const KRE::SVG::svg_length expected_length =
+				expected_output[i];
+		const KRE::SVG::svg_length actual_length =
+				list_of_lengths_output[i];
+		const float expected_length_number =
+				expected_length.value_in_specified_units(
+						KRE::SVG::svg_length::LengthUnit::SVG_LENGTHTYPE_NUMBER);
+		LOG_DEBUG(expected_length_number);
+		const float actual_length_number =
+				actual_length.value_in_specified_units(
+						KRE::SVG::svg_length::LengthUnit::SVG_LENGTHTYPE_NUMBER);
+		LOG_DEBUG(actual_length_number);
+		CHECK_EQ(expected_length_number, actual_length_number);
+	}
+}
+
+UNIT_TEST(parse_list_of_lengths_test_1) {
+	const std::string list_of_lengths_input =
+			"lorem ipsum dolor sit amet 23 42 consectetur adipiscing elit";
+	const std::vector<KRE::SVG::svg_length> list_of_lengths_output =
+			KRE::SVG::parse_list_of_lengths(list_of_lengths_input);
+	std::vector<KRE::SVG::svg_length> expected_output;
+	expected_output.emplace_back(KRE::SVG::svg_length("0"));
+	expected_output.emplace_back(KRE::SVG::svg_length("0"));
+	expected_output.emplace_back(KRE::SVG::svg_length("0"));
+	expected_output.emplace_back(KRE::SVG::svg_length("0"));
+	expected_output.emplace_back(KRE::SVG::svg_length("0"));
+	expected_output.emplace_back(KRE::SVG::svg_length("23"));
+	expected_output.emplace_back(KRE::SVG::svg_length("42"));
+	expected_output.emplace_back(KRE::SVG::svg_length("0"));
+	expected_output.emplace_back(KRE::SVG::svg_length("0"));
+	expected_output.emplace_back(KRE::SVG::svg_length("0"));
+	const uint_fast8_t expected_output_size = expected_output.size();
+	CHECK_EQ(expected_output_size, list_of_lengths_output.size());
+	for (int i = 0; i < expected_output_size; i++) {
+		const KRE::SVG::svg_length expected_length =
+				expected_output[i];
+		const KRE::SVG::svg_length actual_length =
+				list_of_lengths_output[i];
+		const float expected_length_number =
+				expected_length.value_in_specified_units(
+						KRE::SVG::svg_length::LengthUnit::SVG_LENGTHTYPE_NUMBER);
+		LOG_DEBUG(expected_length_number);
+		const float actual_length_number =
+				actual_length.value_in_specified_units(
+						KRE::SVG::svg_length::LengthUnit::SVG_LENGTHTYPE_NUMBER);
+		LOG_DEBUG(actual_length_number);
+		CHECK_EQ(expected_length_number, actual_length_number);
+	}
+}
+
+UNIT_TEST(create_point_list) {
+	const std::string input = "0,0 1,1";
+	std::vector<std::pair<
+		KRE::SVG::svg_length, KRE::SVG::svg_length
+	>> expected_output;
+	{
+		using namespace KRE::SVG;
+		expected_output.emplace_back(
+				std::pair<svg_length, svg_length>(
+					svg_length("0"), svg_length("0")));
+		expected_output.emplace_back(
+				std::pair<svg_length, svg_length>(
+					svg_length("1"), svg_length("1")));
+	}
+	const KRE::SVG::point_list actual_output =
+			KRE::SVG::create_point_list(input);
+	const uint_fast8_t actual_output_size = actual_output.size();
+	CHECK_EQ(expected_output.size(), actual_output_size);
+	for (int i = 0; i < actual_output_size; i++) {
+		const std::pair<
+			KRE::SVG::svg_length, KRE::SVG::svg_length
+		> expected_point = expected_output[i];
+		const float expected_point_x =
+				expected_point.first.value_in_specified_units(
+						KRE::SVG::svg_length::LengthUnit::SVG_LENGTHTYPE_NUMBER);
+		LOG_DEBUG(expected_point_x);
+		const float expected_point_y =
+				expected_point.second.value_in_specified_units(
+						KRE::SVG::svg_length::LengthUnit::SVG_LENGTHTYPE_NUMBER);
+		LOG_DEBUG(expected_point_y);
+		const std::pair<
+			KRE::SVG::svg_length, KRE::SVG::svg_length
+		> actual_point = actual_output[i];
+		const float actual_point_x =
+				actual_point.first.value_in_specified_units(
+						KRE::SVG::svg_length::LengthUnit::SVG_LENGTHTYPE_NUMBER);
+		LOG_DEBUG(actual_point_x);
+		const float actual_point_y =
+				actual_point.second.value_in_specified_units(
+						KRE::SVG::svg_length::LengthUnit::SVG_LENGTHTYPE_NUMBER);
+		LOG_DEBUG(actual_point_y);
+		CHECK_EQ(expected_point_x, actual_point_x);
+		CHECK_EQ(expected_point_y, actual_point_y);
+	}
+}
+
+UNIT_TEST(parse_list_of_numbers_good_input) {
+	const std::string input = "0 1";
+	std::vector<double> expected_output_vector;
+	expected_output_vector.emplace_back(0);
+	expected_output_vector.emplace_back(1);
+	const std::vector<double> actual_output_vector =
+			KRE::SVG::parse_list_of_numbers(input);
+	const uint_fast8_t actual_output_vector_size = actual_output_vector.size();
+	CHECK_EQ(expected_output_vector.size(), actual_output_vector_size);
+	for (int i = 0; i < actual_output_vector_size; i++) {
+		double expected = expected_output_vector[i];
+		double actual = actual_output_vector[i];
+		LOG_DEBUG(expected);
+		LOG_DEBUG(actual);
+		CHECK_EQ(expected, actual);
+	}
+}
+
+UNIT_TEST(parse_list_of_numbers_bad_input) {
+	const std::string input = "Milgram";
+	std::vector<double> expected_output_vector;
+	bool excepted = false;
+	{
+		const assert_recover_scope unit_test_exception_expected;
+		try {
+			KRE::SVG::parse_list_of_numbers(input);
+		} catch (const validation_failure_exception vfe) {
+			excepted = true;
+		}
+	}
+	ASSERT_LOG(excepted, "expected an exception that did not happen");
 }

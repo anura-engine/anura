@@ -1519,4 +1519,60 @@ UNIT_TEST(formula_vm) {
 	}
 }
 
+UNIT_TEST(formula_vm_and_0) {
+	const MapFormulaCallable * callable = new MapFormulaCallable;
+	const variant ref(callable);
+	{
+		VirtualMachine vm;
+		vm.addInstruction(OP_CONSTANT);
+		vm.addConstant(variant(true));
+		vm.addInstruction(OP_CONSTANT);
+		vm.addConstant(variant(false));
+		vm.addInstruction(OP_AND);
+		CHECK_EQ(vm.execute(* callable), variant(false));
+	}
+}
+
+UNIT_TEST(formula_vm_and_1) {
+	const MapFormulaCallable * callable = new MapFormulaCallable;
+	const variant ref(callable);
+	{
+		VirtualMachine vm;
+		vm.addInstruction(OP_CONSTANT);
+		vm.addConstant(variant(false));
+		vm.addInstruction(OP_CONSTANT);
+		vm.addConstant(variant(true));
+		vm.addInstruction(OP_AND);
+		CHECK_EQ(vm.execute(* callable), variant(false));
+	}
+}
+
+UNIT_TEST(formula_vm_or_0) {
+	const MapFormulaCallable * callable = new MapFormulaCallable;
+	const variant ref(callable);
+	{
+		VirtualMachine vm;
+		vm.addInstruction(OP_CONSTANT);
+		vm.addConstant(variant(true));
+		vm.addInstruction(OP_CONSTANT);
+		vm.addConstant(variant(false));
+		vm.addInstruction(OP_OR);
+		CHECK_EQ(vm.execute(* callable), variant(true));
+	}
+}
+
+UNIT_TEST(formula_vm_or_1) {
+	const MapFormulaCallable * callable = new MapFormulaCallable;
+	const variant ref(callable);
+	{
+		VirtualMachine vm;
+		vm.addInstruction(OP_CONSTANT);
+		vm.addConstant(variant(false));
+		vm.addInstruction(OP_CONSTANT);
+		vm.addConstant(variant(true));
+		vm.addInstruction(OP_OR);
+		CHECK_EQ(vm.execute(* callable), variant(true));
+	}
+}
+
 }

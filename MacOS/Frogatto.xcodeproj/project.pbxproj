@@ -479,6 +479,8 @@
 		C0EF2A5E16229160004CD227 /* libGLEW.1.9.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = C0EF2A5D16229160004CD227 /* libGLEW.1.9.0.dylib */; };
 		C0EF2A5F1622918D004CD227 /* libGLEW.1.9.0.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = C0EF2A5D16229160004CD227 /* libGLEW.1.9.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		C0F5E46B169AACF4005ADCF5 /* language_dialog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0F5E468169AAC97005ADCF5 /* language_dialog.cpp */; };
+		CF3623D8211EE3C7008C2DFD /* svg_length.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CF3623D7211EE3C7008C2DFD /* svg_length.cpp */; };
+		CF3623DC211EF73F008C2DFD /* svg_fwd.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CF3623DB211EF73F008C2DFD /* svg_fwd.cpp */; };
 		CF91F5D92117748C00DE58EA /* simplex_noise_tests.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CF91F5D82117748B00DE58EA /* simplex_noise_tests.cpp */; };
 		CFA55595211759B30005446A /* TextureUtils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CFA55594211759B30005446A /* TextureUtils.cpp */; };
 /* End PBXBuildFile section */
@@ -1410,6 +1412,8 @@
 		C0EF2A5D16229160004CD227 /* libGLEW.1.9.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libGLEW.1.9.0.dylib; sourceTree = "<group>"; };
 		C0F5E468169AAC97005ADCF5 /* language_dialog.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = language_dialog.cpp; sourceTree = "<group>"; };
 		C0F5E469169AAC97005ADCF5 /* language_dialog.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = language_dialog.hpp; sourceTree = "<group>"; };
+		CF3623D7211EE3C7008C2DFD /* svg_length.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = svg_length.cpp; path = svg/svg_length.cpp; sourceTree = "<group>"; };
+		CF3623DB211EF73F008C2DFD /* svg_fwd.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = svg_fwd.cpp; path = svg/svg_fwd.cpp; sourceTree = "<group>"; };
 		CF91F5D82117748B00DE58EA /* simplex_noise_tests.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = simplex_noise_tests.cpp; sourceTree = "<group>"; };
 		CFA55594211759B30005446A /* TextureUtils.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = TextureUtils.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -2472,6 +2476,7 @@
 		C07A47AD19444C1000F1190E /* svg */ = {
 			isa = PBXGroup;
 			children = (
+				CF3623D7211EE3C7008C2DFD /* svg_length.cpp */,
 				6357A74E1B3F13E200793D60 /* easy_svg.cpp */,
 				6357A74F1B3F13E200793D60 /* easy_svg.hpp */,
 				C07A47B419444C2000F1190E /* svg_attribs.cpp */,
@@ -2480,6 +2485,7 @@
 				C07A47B719444C2000F1190E /* svg_container.hpp */,
 				C07A47B819444C2000F1190E /* svg_element.cpp */,
 				C07A47B919444C2000F1190E /* svg_element.hpp */,
+				CF3623DB211EF73F008C2DFD /* svg_fwd.cpp */,
 				C07A47BA19444C2000F1190E /* svg_fwd.hpp */,
 				C07A47BB19444C2000F1190E /* svg_gradient.cpp */,
 				C07A47BC19444C2000F1190E /* svg_gradient.hpp */,
@@ -2634,6 +2640,7 @@
 				C0AECE0A18E541BD00CD3161 /* uuid.cpp in Sources */,
 				C010C741160AFD4D006E7D90 /* achievements.cpp in Sources */,
 				639B54881AC2187500ECC4F8 /* rect_renderable.cpp in Sources */,
+				CF3623DC211EF73F008C2DFD /* svg_fwd.cpp in Sources */,
 				639B53801AC20D5A00ECC4F8 /* DisplayDevice.cpp in Sources */,
 				C010C742160AFD4D006E7D90 /* animation_creator.cpp in Sources */,
 				639B54631AC20D7600ECC4F8 /* b2RevoluteJoint.cpp in Sources */,
@@ -2763,6 +2770,7 @@
 				639B537D1AC20D5A00ECC4F8 /* ClipScopeOGL.cpp in Sources */,
 				638CC7321AF6057700C7A106 /* lmem.cpp in Sources */,
 				C010C780160AFD4D006E7D90 /* formula_test.cpp in Sources */,
+				CF3623D8211EE3C7008C2DFD /* svg_length.cpp in Sources */,
 				C02D938E1E4C3CEF00CB0A6A /* imgui.cpp in Sources */,
 				C010C781160AFD4D006E7D90 /* formula_tokenizer.cpp in Sources */,
 				C010C782160AFD4D006E7D90 /* formula_variable_storage.cpp in Sources */,
