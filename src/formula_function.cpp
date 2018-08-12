@@ -3547,6 +3547,99 @@ FUNCTION_DEF_IMPL
 			ASSERT_LOG(found_valid_expr, "Last argument to find() function does not contain 'value' or 'index' " << debugPinpointLocation());
 		END_FUNCTION_DEF(find_or_die)
 
+		FUNCTION_DEF_CTOR(find_index, 2, 2, "find_index")
+		if (!args().empty()) {
+			def_ = args().back()->getDefinitionUsedByExpression();
+		}
+		FUNCTION_DYNAMIC_ARGUMENTS
+			FUNCTION_DEF_MEMBERS
+			bool optimizeArgNumToVM(int narg) const override {
+			return true;
+		}
+		std::string identifier_;
+		ConstFormulaCallableDefinitionPtr def_;
+		FUNCTION_DEF_IMPL
+			const variant items = EVAL_ARG(0);
+
+			ffl::IntrusivePtr<map_callable> callable(new map_callable(variables, def_ ? def_->getNumSlots() : 0));
+			for (int n = 0; n != items.num_elements(); ++n) {
+				callable->set(items[n], n);
+				const variant val = args().back()->evaluate(*callable);
+				if (val.as_bool()) {
+					return variant(n);
+				}
+			}
+
+		return variant(-1);
+		CAN_VM
+			return false; // canChildrenVM();
+		FUNCTION_VM
+			return ExpressionPtr();
+		DEFINE_RETURN_TYPE
+			return variant_type::get_type(variant::VARIANT_TYPE_INT);
+		FUNCTION_ARGS_DEF
+
+			bool found_valid_expr = false;
+		std::vector<ConstExpressionPtr> expressions = args().back()->queryChildrenRecursive();
+		for (ConstExpressionPtr expr : expressions) {
+			const std::string& s = expr->str();
+			if (s == "value" || s == "key" || s == "index" || s == identifier_) {
+				found_valid_expr = true;
+				break;
+			}
+		}
+
+		ASSERT_LOG(found_valid_expr, "Last argument to find_index() function does not contain 'value' or 'index' " << debugPinpointLocation());
+		END_FUNCTION_DEF(find_index)
+
+		FUNCTION_DEF_CTOR(find_index_or_die, 2, 2, "find_index_or_die")
+			if (!args().empty()) {
+				def_ = args().back()->getDefinitionUsedByExpression();
+			}
+		FUNCTION_DYNAMIC_ARGUMENTS
+			FUNCTION_DEF_MEMBERS
+			bool optimizeArgNumToVM(int narg) const override {
+			return true;
+		}
+		std::string identifier_;
+		ConstFormulaCallableDefinitionPtr def_;
+		FUNCTION_DEF_IMPL
+			const variant items = EVAL_ARG(0);
+
+		ffl::IntrusivePtr<map_callable> callable(new map_callable(variables, def_ ? def_->getNumSlots() : 0));
+		for (int n = 0; n != items.num_elements(); ++n) {
+			callable->set(items[n], n);
+			const variant val = args().back()->evaluate(*callable);
+			if (val.as_bool()) {
+				return variant(n);
+			}
+		}
+
+		ASSERT_LOG(false, "Failed to find expected item in find_index_or_die: " << args()[1]->evaluate(*callable) << " " << debugPinpointLocation());
+
+		return variant(-1);
+		CAN_VM
+			return false; // canChildrenVM();
+		FUNCTION_VM
+			return ExpressionPtr();
+		DEFINE_RETURN_TYPE
+			return variant_type::get_type(variant::VARIANT_TYPE_INT);
+		FUNCTION_ARGS_DEF
+
+			bool found_valid_expr = false;
+		std::vector<ConstExpressionPtr> expressions = args().back()->queryChildrenRecursive();
+		for (ConstExpressionPtr expr : expressions) {
+			const std::string& s = expr->str();
+			if (s == "value" || s == "key" || s == "index" || s == identifier_) {
+				found_valid_expr = true;
+				break;
+			}
+		}
+
+		ASSERT_LOG(found_valid_expr, "Last argument to find_index() function does not contain 'value' or 'index' " << debugPinpointLocation());
+		END_FUNCTION_DEF(find_index_or_die)
+
+
 		namespace 
 		{
 			void visit_objects(variant v, std::vector<variant>& res) {
@@ -3724,6 +3817,11 @@ FUNCTION_DEF_IMPL
 					const std::string self = identifier_.empty() ? EVAL_ARG(1).as_string() : identifier_;
 					callable->setValue_name(self);
 					for(int n = 0; n != items.num_elements(); ++n) {
+						if(callable->refcount() > 1) {
+							callable.reset(new map_callable(variables, def_ ? def_->getNumSlots() : 0));
+							callable->setValue_name(self);
+						}
+
 						callable->set(items[n], n);
 						const variant val = args().back()->evaluate(*callable);
 						vars.push_back(val);
@@ -3776,9 +3874,35 @@ FUNCTION_DEF_IMPL
 
 			return variant_type::get_union(types);
 
-		END_FUNCTION_DEF(sum)
+			END_FUNCTION_DEF(sum)
+
+				static const int StaticRangeListSize = 10000;
+		variant create_static_range_list() {
+			std::vector<variant> result;
+			for (int i = 0; i < StaticRangeListSize; ++i) {
+				result.push_back(variant(i));
+			}
+
+			return variant(&result);
+		}
 
 		FUNCTION_DEF(range, 1, 3, "range([start, ]finish[, step]): Returns a list containing all numbers smaller than the finish value and and larger than or equal to the start value. The start value defaults to 0.")
+
+			static variant static_list = create_static_range_list();
+			if (NUM_ARGS == 1) {
+				int size = EVAL_ARG(0).as_int();
+				if (size >= 0 && size <= StaticRangeListSize) {
+					return static_list.get_list_slice(0, size);
+				}
+			}
+			else if (NUM_ARGS == 2) {
+				int begin = EVAL_ARG(0).as_int();
+				int end = EVAL_ARG(1).as_int();
+				if (begin >= 0 && end >= begin && end <= StaticRangeListSize) {
+					return static_list.get_list_slice(begin, end);
+				}
+			}
+			
 			int start = NUM_ARGS > 1 ? EVAL_ARG(0).as_int() : 0;
 			int end = EVAL_ARG(NUM_ARGS > 1 ? 1 : 0).as_int();
 			int step = NUM_ARGS < 3 ? 1 : EVAL_ARG(2).as_int();
@@ -6301,7 +6425,7 @@ FUNCTION_ARGS_DEF
 	ARG_TYPE("int")
 	ARG_TYPE("int")
 	ARG_TYPE("int")
-RETURN_TYPE("bool")
+RETURN_TYPE("[bool]")
 END_FUNCTION_DEF(solid_grid)
 
 /*

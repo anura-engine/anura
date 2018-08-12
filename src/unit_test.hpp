@@ -55,10 +55,30 @@ namespace test
 }
 
 #define CHECK(cond, msg) do { if(!(cond)) { std::ostringstream _s; _s << __SHORT_FORM_OF_FILE__ << ":" << __LINE__ << ": TEST CHECK FAILED:\nCONDITION:\n\t→ " << #cond << ":\nRESULTS:\n\t" << msg; log_internal(SDL_LOG_PRIORITY_CRITICAL, _s.str()); throw test::FailureException(); } } while(0)
+/**  CHECK_H(cond, msg, heading) is like CHECK(cond, msg), but receiving an
+ * additional heading message. */
+#define CHECK_H(cond, msg, heading) if (!(cond)) {            \
+	std::ostringstream _s;                                 \
+	_s << __SHORT_FORM_OF_FILE__ << ":" << __LINE__ <<      \
+			": TEST CHECK FAILED:\n" <<              \
+			heading << '\n' <<                        \
+			"CONDITION:\n\t→ " << #cond << '\n' <<     \
+			"RESULTS:\n\t" << msg;                      \
+	log_internal(SDL_LOG_PRIORITY_CRITICAL, _s.str());           \
+	throw test::FailureException(); }
 
 #define CHECK_CMP(a, b, cmp) CHECK((a) cmp (b), #a << ":\n\t→ " << (a) << ";\n\t" << #b << ":\n\t→ " << (b))
+/**  CHECK_CMP_M(a, b, cmp, m) is like CHECK_CMP(a, b, cmp), but receiving an
+ * additional [heading] message. */
+#define CHECK_CMP_M(a, b, cmp, m) CHECK_H(                         \
+	(a) cmp (b),                                                \
+	#a << ":\n\t→ " << (a) << ";\n\t" << #b << ":\n\t→ " << (b), \
+	m)
 
 #define CHECK_EQ(a, b) CHECK_CMP(a, b, ==)
+/**  CHECK_EQ_M is like CHECK_EQ, but receiving an additional [heading] message
+ * to be printed in case of error. */
+#define CHECK_EQ_M(a, b, m) CHECK_CMP_M(a, b, ==, m)
 #define CHECK_NE(a, b) CHECK_CMP(a, b, !=)
 #define CHECK_LE(a, b) CHECK_CMP(a, b, <=)
 #define CHECK_GE(a, b) CHECK_CMP(a, b, >=)

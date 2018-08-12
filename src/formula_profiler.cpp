@@ -1289,7 +1289,10 @@ namespace formula_profiler
 
 #if defined(_MSC_VER) || MOBILE_BUILD
 				// Crappy windows approximation.
-				sdl_profile_timer = SDL_AddTimer(10, sdl_timer_callback, 0);
+				// This is currently disabled pending a work-around since
+				// SDL_AddTimer() might make calls on another thread while we need
+				// profiling call to be on the main thread.
+				sdl_profile_timer = 0; // SDL_AddTimer(10, sdl_timer_callback, 0);
 				if(sdl_profile_timer == 0) {
 					LOG_WARN("Couldn't create a profiling timer!");
 				}

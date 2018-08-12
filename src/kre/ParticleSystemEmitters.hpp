@@ -98,6 +98,9 @@ namespace KRE
 			bool isEmitOnly2D() const { return emit_only_2d_; }
 			void setEmitOnly2D(bool f);
 
+			bool doesOrientationFollowDirection() const { return orientation_follows_angle_; }
+			void setOrientationFollowsDirection(bool f) { orientation_follows_angle_ = f; }
+
 			virtual EmitterPtr clone() = 0;
 			static EmitterPtr factory(std::weak_ptr<ParticleSystemContainer> parent, const variant& node);
 			static EmitterPtr factory(std::weak_ptr<ParticleSystemContainer> parent, EmitterType type);
@@ -162,6 +165,7 @@ namespace KRE
 			glm::vec3 scale_;
 
 			bool emit_only_2d_;
+			bool orientation_follows_angle_;
 
 			Emitter() = delete;
 		};

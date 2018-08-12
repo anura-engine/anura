@@ -247,6 +247,9 @@ namespace editor_dialogs
 					if(current_value_var.is_string()) {
 						current_value = current_value_var.as_string();
 					}
+					else if (current_value_var.is_enum()) {
+						current_value = current_value_var.as_enum();
+					}
 
 					if(std::count(info.getEnumValues().begin(), info.getEnumValues().end(), current_value) == 0) {
 						current_value = info.getEnumValues().front();
@@ -526,7 +529,7 @@ namespace editor_dialogs
 		grid->setShowBackground(true);
 		grid->allowSelection();
 
-		grid->registerSelectionCallback(std::bind(&PropertyEditorDialog::setEnumProperty, this, id, var_info->getEnumValues(), _1));
+		grid->registerSelectionCallback(std::bind(&PropertyEditorDialog::setEnumProperty, this, id, var_info->getEnumValues(), _1, var_info->realEnum()));
 		for(const std::string& s : var_info->getEnumValues()) {
 			grid->addCol(gui::WidgetPtr(new Label(s, KRE::Color::colorWhite())));
 		}
@@ -591,7 +594,7 @@ namespace editor_dialogs
 			grid->setZOrder(100);
 			grid->setShowBackground(true);
 			grid->allowSelection();
-			grid->registerSelectionCallback(std::bind(&PropertyEditorDialog::setEnumProperty, this, id, labels, _1));
+			grid->registerSelectionCallback(std::bind(&PropertyEditorDialog::setEnumProperty, this, id, labels, _1, var_info->realEnum()));
 			for(const std::string& lb : labels) {
 				grid->addCol(gui::WidgetPtr(new gui::Label(lb, KRE::Color::colorWhite())));
 			}
@@ -616,7 +619,7 @@ namespace editor_dialogs
 		}
 	}
 
-	void PropertyEditorDialog::setEnumProperty(const std::string& id, const std::vector<std::string>& labels, int index)
+	void PropertyEditorDialog::setEnumProperty(const std::string& id, const std::vector<std::string>& labels, int index, bool real_enum)
 	{
 		removeWidget(context_menu_);
 		context_menu_.reset();
@@ -625,7 +628,7 @@ namespace editor_dialogs
 			return;
 		}
 
-		mutateValue(id, variant(labels[index]));
+		mutateValue(id, real_enum ? variant::create_enum(labels[index]) : variant(labels[index]));
 		init();
 	}
 

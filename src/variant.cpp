@@ -2016,6 +2016,110 @@ variant variant::operator%(const variant& v) const
 	return variant(numerator%denominator);
 }
 
+/**  Will return _one_ for _two_, _four_, _eight_, _sixteen_... */
+uint_fast8_t count_bits_set(uint32_t n)
+{
+	uint_fast8_t returning = 0;
+	while (n) {
+		returning += n & 1;
+		n >>= 1;
+	}
+	return returning;
+}
+
+/**  Given the way `operator^` is currently implemented, when the exponent
+ * variant is typed `int`, arithmetic overflows can occur in a way so that the
+ * result does not change its sign incorrectly, but becomes zero incorrectly,
+ * so returning zero incorrectly for that exponent, but also for every exponent
+ * bigger than that, as long as it shares the `int` type.
+ *   This function simply returns whenever there is no possibility for an
+ * exponentiation to collapse to zero.
+ *   This function is aimed to prevent execution when detecting conditions for
+ * an exponentiation to collapse to zero. */
+void prevent_invalid_collapse_in_zero(
+		const int_fast32_t & base, const int_fast32_t & exponent)
+{
+	ASSERT_LOG(exponent >= 1, "precondition failed");
+	if (base >= 0) {
+		return;
+	}
+	if (base == -2147483648) {
+		//   Precondition on exponent makes possible to assume this is
+		// safe when exponent is one, else unsafe.
+		ASSERT_LOG(exponent == 1,
+				"prevented arithmetic overflow, at `prevent_invalid_collapse_in_zero(const int_fast32_t & base = " << base << ", const int_fast32_t & exponent = " << exponent << ")`");
+		return;
+	}
+	//   Can do this because base is less than `-2147483648` (`-2^31`) and
+	// the positive range of the 32 bit unsigned ends in `2147483647`
+	// (`2 ^ 31 - 1`).
+	const int_fast32_t minus_base = -base;
+	if (count_bits_set(minus_base) > 1) {
+		return;
+	}
+	bool arithmetic_overflow = false;
+	switch (minus_base) {
+	case 1 << 0:  //   1
+		//   Can not overflow, because it oscillates back and forth.
+		return;
+	case 1 << 1:  //   2
+		arithmetic_overflow = exponent >= 32;
+		break;
+	case 1 << 2:  //   4
+		arithmetic_overflow = exponent >= 16;
+		break;
+	case 1 << 3:
+		arithmetic_overflow = exponent >= 11;
+		break;
+	case 1 << 4:  //   16
+		arithmetic_overflow = exponent >= 8;
+		break;
+	case 1 << 5:
+		arithmetic_overflow = exponent >= 7;
+		break;
+	case 1 << 6:  //   64
+		arithmetic_overflow = exponent >= 6;
+		break;
+	case 1 << 7:
+		arithmetic_overflow = exponent >= 5;
+		break;
+	case 1 << 8:
+	case 1 << 9:  //   512
+	case 1 << 10:
+		arithmetic_overflow = exponent >= 4;
+		break;
+	case 1 << 11:
+	case 1 << 12:  //   4096
+	case 1 << 13:
+	case 1 << 14:
+	case 1 << 15:  //   32768
+		arithmetic_overflow = exponent >= 3;
+		break;
+	case 1 << 16:
+	case 1 << 17:
+	case 1 << 18:  //   262144
+	case 1 << 19:
+	case 1 << 20:
+	case 1 << 21:  //   2097152
+	case 1 << 22:
+	case 1 << 23:
+	case 1 << 24:  //   16777216
+	case 1 << 25:
+	case 1 << 26:
+	case 1 << 27:  //   134217728
+	case 1 << 28:
+	case 1 << 29:
+	case 1 << 30:  //   1073741824
+		arithmetic_overflow = exponent >= 2;
+		break;
+	//   2147483648 does not fit 32 bit two's complement.
+	default:
+		ASSERT_LOG(false, "unreachable code executed, at `prevent_invalid_collapse_in_zero(base: " << base << ", exponent: " << exponent << ")`");
+	}
+	ASSERT_LOG(!arithmetic_overflow,
+			"prevented arithmetic overflow, at `prevent_invalid_collapse_in_zero`, performing `" << base << " ^ " << exponent << '`');
+}
+
 variant variant::operator^(const variant& v) const
 {
 	//for the common case of exponentiation by a positive integer,
@@ -2023,9 +2127,53 @@ variant variant::operator^(const variant& v) const
 	//system pow(). TODO: eventually we want to always use fixed-point.
 	if(v.type_ == VARIANT_TYPE_INT && v.as_int() >= 1) {
 		int num = v.as_int();
+		if (type_ == VARIANT_TYPE_INT) {
+			prevent_invalid_collapse_in_zero(as_int(), num);
+		}
 		variant result = *this;
+		const variant integer_zero(0);
+		const bool this_is_positive = * this > integer_zero;
+		const bool this_is_negative = * this < integer_zero;
 		while(num > 1) {
+			const bool result_was_positive_at_iteration_start =
+					result > integer_zero;
+			const bool result_was_negative_at_iteration_start =
+					result < integer_zero;
 			result = result * *this;
+			const bool result_is_positive_at_iteration_end =
+					result > integer_zero;
+			const bool result_is_negative_at_iteration_end =
+					result < integer_zero;
+			bool arithmetic_overflow = false;
+			if (this_is_positive) {
+				if (result_was_positive_at_iteration_start &&
+						result_is_negative_at_iteration_end) {
+					arithmetic_overflow = true;
+				}
+			}
+			if (this_is_negative) {
+				if (result_was_positive_at_iteration_start &&
+						result_is_positive_at_iteration_end) {
+					arithmetic_overflow = true;
+				}
+				if (result_was_negative_at_iteration_start &&
+						result_is_negative_at_iteration_end) {
+					arithmetic_overflow = true;
+				}
+			}
+			ASSERT_LOG(!arithmetic_overflow,
+					"prevented arithmetic overflow, at `operator^`, performing `" << * this << " ^ " << v << '`'
+					<< " (additional debug info: {" <<
+					"variant_type_to_string(type_): " << variant_type_to_string(type_) << ", " <<
+					"result: " << result << ", " <<
+					"num: " << num << ", " <<
+					"this_is_positive: " << this_is_positive << ", " <<
+					"this_is_negative: " << this_is_negative << ", " <<
+					"result_was_positive_at_iteration_start: " << result_was_positive_at_iteration_start << ", " <<
+					"result_was_negative_at_iteration_start: " << result_was_negative_at_iteration_start << ", " <<
+					"result_is_positive_at_iteration_end: " << result_is_positive_at_iteration_end << ", " <<
+					"result_is_negative_at_iteration_end: " << result_is_negative_at_iteration_end << '}' <<
+					')');
 			--num;
 		}
 
@@ -2761,8 +2909,14 @@ void variant::write_json(std::ostream& s, unsigned int flags) const
 				s << '"' << i->first.string_cast() << "\":";
 			} else {
 				std::string str = i->first.write_json(true, flags);
-				boost::replace_all(str, "\"", "\\\"");
-				s << "\"@eval " << str << "\":";
+
+				if (str.size() >= 7 && std::equal(str.begin(), str.begin() + 7, "\"@eval ")) {
+					s << str << ":";
+				}
+				else {
+					boost::replace_all(str, "\"", "\\\"");
+					s << "\"@eval " << str << "\":";
+				}
 			}
 
 			i->second.write_json(s, flags);
@@ -2899,16 +3053,21 @@ void variant::write_json_pretty(std::ostream& s, std::string indent, unsigned in
 				s << ',';
 			}
 
-			s << "\n" << indent << '"';
+			s << "\n" << indent;
 			if(i->first.is_string()) {
-				s << i->first.string_cast();
-			} else {
-				std::string str = i->first.write_json(true, flags);
-				boost::replace_all(str, "\"", "\\\"");
-				s << "@eval " << str;
+				s << '"' << i->first.string_cast() << "\": ";
 			}
+			else {
+				std::string str = i->first.write_json(true, flags);
 
-			s << "\": ";
+				if (str.size() >= 7 && std::equal(str.begin(), str.begin() + 7, "\"@eval ")) {
+					s << str << ": ";
+				}
+				else {
+					boost::replace_all(str, "\"", "\\\"");
+					s << "\"@eval " << str << "\": ";
+				}
+			}
 
 			i->second.write_json_pretty(s, indent, flags);
 		}
@@ -3046,184 +3205,167 @@ BENCHMARK(variant_assign)
 	}
 }
 
-/**
- *   Name a pow unit test where must be true that:
- *
- *     `n ^ v - r == 0`
- */
-#define VARIANT_EXACT_POW_UNIT_TEST(name, n, v, r) UNIT_TEST (name) {         \
-	const variant t_##name_n = variant(n);                                \
-	LOG_DEBUG("t_" << #name << "_n: " << t_##name_n);                     \
-	const variant t_##name_v = variant(v);                                \
-	LOG_DEBUG("t_" << #name << "_v: " << t_##name_v);                     \
-	const variant t_##name_r = variant(r);                                \
-	LOG_DEBUG("t_" << #name << "_r: " << t_##name_r);                     \
-	const variant t_##name_o = t_##name_n ^ t_##name_v;                   \
-	LOG_DEBUG("t_" << #name << "_o: " << t_##name_o);                     \
-	CHECK_EQ(t_##name_r, t_##name_o); }
+/**  Log (debug) unit test variable name and value. */
+#define LOG_DEBUG_UT_VAR(test_name, variable_suffix, variable_name)         \
+	LOG_DEBUG(                                                          \
+			"test__" << test_name << "__" << variable_suffix    \
+			<< ": " << variable_name)
 
 /**
- *   Name a pow unit test where must be true that:
+ *   Name `name` a pow unit test where must be true that:
  *
- *     `abs(n ^ v - r) <= e`
+ *     `base ^ exponent - expected_pow == 0`
  */
-#define VARIANT_APPROXIMATE_POW_UNIT_TEST(name, n, v, r, e)                   \
-	UNIT_TEST (name) {                                                    \
-		const variant t_##name_n = variant(n);                        \
-		LOG_DEBUG("t_" << #name << "_n: " << t_##name_n);             \
-		const variant t_##name_v = variant(v);                        \
-		LOG_DEBUG("t_" << #name << "_v: " << t_##name_v);             \
-		const variant t_##name_r = variant(r);                        \
-		LOG_DEBUG("t_" << #name << "_r: " << t_##name_r);             \
-		const variant t_##name_e = variant(e);                        \
-		LOG_DEBUG("t_" << #name << "_e: " << t_##name_e);             \
-		const variant t_##name_o = t_##name_n ^ t_##name_v;           \
-		LOG_DEBUG("t_" << #name << "_o: " << t_##name_o);             \
-		const variant t_##name_d = t_##name_o - t_##name_r;           \
+#define VARIANT_EXACT_POW_UNIT_TEST(                                          \
+		name, base, exponent, expected_pow) UNIT_TEST (name) {        \
+	const variant test__##name__base = variant(base);                     \
+	LOG_DEBUG_UT_VAR(#name, "base", test__##name__base);                  \
+	const variant test__##name__exponent = variant(exponent);             \
+	LOG_DEBUG_UT_VAR(#name, "exponent", test__##name__exponent);          \
+	const variant test__##name__expected_pow = variant(expected_pow);     \
+	LOG_DEBUG_UT_VAR(#name, "expected_pow", test__##name__expected_pow);  \
+	const variant test__##name__actual_pow =                              \
+			test__##name__base ^ test__##name__exponent;          \
+	LOG_DEBUG_UT_VAR(#name, "actual_pow", test__##name__actual_pow);      \
+	CHECK_EQ(test__##name__expected_pow, test__##name__actual_pow); }
+
+/**
+ *   Name `name` a pow unit test where must be true that:
+ *
+ *     `abs(base ^ exponent - expected_pow) <= error`
+ */
+#define VARIANT_APPROXIMATE_POW_UNIT_TEST(                                    \
+		name, base, exponent, expected_pow, error) UNIT_TEST (name) { \
+	const variant test__##name__base = variant(base);                     \
+	LOG_DEBUG_UT_VAR(#name, "base", test__##name__base);                  \
+	const variant test__##name__exponent = variant(exponent);             \
+	LOG_DEBUG_UT_VAR(#name, "exponent", test__##name__exponent);          \
+	const variant test__##name__expected_pow = variant(expected_pow);     \
+	LOG_DEBUG_UT_VAR(#name, "expected_pow", test__##name__expected_pow);  \
+	const variant test__##name__error = variant(error);                   \
+	LOG_DEBUG_UT_VAR(#name, "error", test__##name__error);                \
+	const variant test__##name__actual_pow =                              \
+			test__##name__base ^ test__##name__exponent;          \
+	LOG_DEBUG_UT_VAR(#name, "actual_pow", test__##name__actual_pow);      \
+	const variant test__##name__diff = test__##name__actual_pow -         \
+			test__##name__expected_pow;                           \
 		const variant zero(0);                                        \
-		const variant t_##name_d_a = t_##name_d > zero ?              \
-				t_##name_d : - t_##name_d;                    \
-		LOG_DEBUG("t_" << #name << "_d_a: " << t_##name_d_a);         \
+	const variant test__##name__abs_diff = test__##name__diff > zero ?    \
+			test__##name__diff : - test__##name__diff;            \
+	LOG_DEBUG_UT_VAR(#name, "abs_diff", test__##name__abs_diff);          \
 		ASSERT_LOG(                                                   \
-				t_##name_d_a <= t_##name_e,                   \
-				"math imprecision error happened, rerun " <<  \
+			test__##name__abs_diff <= test__##name__error,        \
+				"math imprecision error happened" <<          \
+				", expected error less than or equal to " <<  \
+			test__##name__error << ", but actual error is " <<    \
+			test__##name__abs_diff <<                             \
+			", rerun " <<                                         \
 				"setting log level to DEBUG for finer " <<    \
 				"grain messages (--log-level=debug)"); }
 
 VARIANT_EXACT_POW_UNIT_TEST(pow_test_00, 0, 1, 0)
 
-VARIANT_EXACT_POW_UNIT_TEST(pow_test_01, 0, 0, 1)
+VARIANT_APPROXIMATE_POW_UNIT_TEST(
+		pow_test_01, 0, 0, 1, decimal::from_string("0.000001"))
 
-//   FIXME Investigate and reenable tests disabled by this rev.
+VARIANT_APPROXIMATE_POW_UNIT_TEST(
+		pow_test_02a0a, 3, 0, 1, decimal::from_string("0.000001"))
 
-//   Many hosts would be OK to this, but is causing issues to the Steam
-// Runtime at The Argent Lark (I could reproduce the issue locally using
-// the Steam Runtime at my Debian host, in an schroot ~8 months old).
-VARIANT_EXACT_POW_UNIT_TEST(pow_test_02a0a, 3, 0, 1)  //   FIXME
-VARIANT_APPROXIMATE_POW_UNIT_TEST(  //   FIXME
-		pow_test_02a0b, 3, 0, 1, decimal::from_string(".262")) //   FIXME
-
-VARIANT_EXACT_POW_UNIT_TEST(
+VARIANT_APPROXIMATE_POW_UNIT_TEST(
 		pow_test_02a1, decimal::from_string("3.0"),
-		decimal::from_string("0.0"), 1)
+		decimal::from_string("0.0"), 1,
+		decimal::from_string("0.000001"))
 
-//   Many hosts would be OK to this, but is causing issues to the Steam
-// Runtime at The Argent Lark (I could reproduce the issue locally using
-// the Steam Runtime at my Debian host, in an schroot ~8 months old).
-// runtime locally at my Debian host).
-//VARIANT_EXACT_POW_UNIT_TEST(pow_test_02b0, "3", "1", "3")  //   FIXME
-VARIANT_APPROXIMATE_POW_UNIT_TEST(  //   FIXME
-		pow_test_02b0, 3, 1, 3, decimal::from_string("0.839"))  //   FIXME
+VARIANT_EXACT_POW_UNIT_TEST(pow_test_02b0, 3, 1, 3)
 
-VARIANT_EXACT_POW_UNIT_TEST(
+VARIANT_APPROXIMATE_POW_UNIT_TEST(
 		pow_test_02b1, decimal::from_string("3.0"),
-		decimal::from_string("1.0"), 3)
+		decimal::from_string("1.0"), 3,
+		decimal::from_string("0.000001"))
 
-//   Many hosts would be OK to this, but is causing issues to the Steam
-// Runtime at The Argent Lark (I could reproduce the issue locally using
-// the Steam Runtime at my Debian host, in an schroot ~8 months old).
-// runtime locally at my Debian host).
-//VARIANT_EXACT_POW_UNIT_TEST(pow_test_02c0, "3", "2", "9")  //   FIXME
-VARIANT_APPROXIMATE_POW_UNIT_TEST(  //   FIXME
-		pow_test_02c0, 3, 2, 9, decimal::from_string("3.8"))  //   FIXME
+VARIANT_EXACT_POW_UNIT_TEST(pow_test_02c0a, 3, 2, 9)
+
+VARIANT_APPROXIMATE_POW_UNIT_TEST(
+		pow_test_02c0b, 3, decimal::from_string("2.0"),
+		decimal::from_string("9.0"), decimal::from_string("0.000001"))
 
 VARIANT_EXACT_POW_UNIT_TEST(
 		pow_test_02c1, decimal::from_string("3.0"), 2, 9)
 
-//   Many hosts would be OK to this, but is causing issues to the Steam
-// Runtime at The Argent Lark (I could reproduce the issue locally using
-// the Steam Runtime at my Debian host, in an schroot ~8 months old).
-// runtime locally at my Debian host).
-//VARIANT_EXACT_POW_UNIT_TEST(pow_test_02d0, "3", "3", "27")  //   FIXME
-VARIANT_APPROXIMATE_POW_UNIT_TEST(  //   FIXME
-		pow_test_02d0, 3, 3, 27,  //   FIXME
-		decimal::from_string("14.36"))  //   FIXME
+VARIANT_EXACT_POW_UNIT_TEST(pow_test_02d0a, 3, 3, 27)
 
-VARIANT_EXACT_POW_UNIT_TEST(
+VARIANT_APPROXIMATE_POW_UNIT_TEST(
 		pow_test_02d1, decimal::from_string("3.0"),
-		decimal::from_string("3.0"), 27)
+		decimal::from_string("3.0"), 27,
+		decimal::from_string("0.000001"))
 
-//   Many hosts would be OK to this, but is causing issues to the Steam
-// Runtime at The Argent Lark (I could reproduce the issue locally using
-// the Steam Runtime at my Debian host, in an schroot ~8 months old).
-// runtime locally at my Debian host).
-//VARIANT_EXACT_POW_UNIT_TEST(pow_test_02e0, "3", "4", "81")  //   FIXME
-VARIANT_APPROXIMATE_POW_UNIT_TEST(  //   FIXME
-		pow_test_02e0, 3, 4, 81,  //   FIXME
-		decimal::from_string("51.322"))  //   FIXME
+VARIANT_EXACT_POW_UNIT_TEST(pow_test_02e0, 3, 4, 81)
 
-VARIANT_EXACT_POW_UNIT_TEST(
+VARIANT_APPROXIMATE_POW_UNIT_TEST(
 		pow_test_02e1, decimal::from_string("3.0"),
-		decimal::from_string("4.0"), 81)
+		decimal::from_string("4.0"), 81,
+		decimal::from_string("0.000001"))
 
-VARIANT_EXACT_POW_UNIT_TEST(pow_test_03a0, -3, 0, 1)
+VARIANT_APPROXIMATE_POW_UNIT_TEST(
+		pow_test_03a0, -3, 0, 1, decimal::from_string("0.000001"))
 
-VARIANT_EXACT_POW_UNIT_TEST(
+VARIANT_APPROXIMATE_POW_UNIT_TEST(
 		pow_test_03a1, decimal::from_string("-3.0"),
-		decimal::from_string("0.0"), 1)
+		decimal::from_string("0.0"), 1,
+		decimal::from_string("0.000001"))
 
 VARIANT_EXACT_POW_UNIT_TEST(pow_test_03b0, -3, 1, -3)
 
-VARIANT_EXACT_POW_UNIT_TEST(
+VARIANT_APPROXIMATE_POW_UNIT_TEST(
 		pow_test_03b1, decimal::from_string("-3.0"),
-		decimal::from_string("1.0"), -3)
+		decimal::from_string("1.0"), -3,
+		decimal::from_string("0.000001"))
 
 VARIANT_EXACT_POW_UNIT_TEST(pow_test_03c0, -3, 2, 9)
 
-VARIANT_EXACT_POW_UNIT_TEST(
+VARIANT_APPROXIMATE_POW_UNIT_TEST(
 		pow_test_03c1, decimal::from_string("-3.0"),
-		decimal::from_string("2.0"), 9)
+		decimal::from_string("2.0"), 9,
+		decimal::from_string("0.000001"))
 
 VARIANT_EXACT_POW_UNIT_TEST(pow_test_03d0, -3, 3, -27)
 
-VARIANT_EXACT_POW_UNIT_TEST(
+VARIANT_APPROXIMATE_POW_UNIT_TEST(
 		pow_test_03d1, decimal::from_string("-3.0"),
-		decimal::from_string("3.0"), -27)
+		decimal::from_string("3.0"), -27,
+		decimal::from_string("0.000001"))
 
-//   Many hosts would be OK to this, but is causing issues to the Steam
-// Runtime at The Argent Lark (I could reproduce the issue locally using
-// the Steam Runtime at my Debian host, in an schroot ~8 months old).
-// runtime locally at my Debian host).
-//VARIANT_EXACT_POW_UNIT_TEST(pow_test_03e0, "-3", "4", "81")  //   FIXME
+VARIANT_EXACT_POW_UNIT_TEST(pow_test_03e0, -3, 4, 81)
 
-VARIANT_EXACT_POW_UNIT_TEST(
+VARIANT_APPROXIMATE_POW_UNIT_TEST(
 		pow_test_03e1, decimal::from_string("-3.0"),
-		decimal::from_string("4.0"), 81)
+		decimal::from_string("4.0"), 81,
+		decimal::from_string("0.000001"))
 
-//   Many hosts would be OK to this, but is causing issues to the Steam
-// Runtime at The Argent Lark (I could reproduce the issue locally using
-// the Steam Runtime at my Debian host, in an schroot ~8 months old).
-// runtime locally at my Debian host).
-//VARIANT_EXACT_POW_UNIT_TEST(pow_test_04a, "-3", "5", "-243")  //   FIXME
-VARIANT_APPROXIMATE_POW_UNIT_TEST(  //   FIXME
-		pow_test_04a, -3, 5, -243,  //   FIXME
-		decimal::from_string("250.0"))  //   FIXME
+VARIANT_EXACT_POW_UNIT_TEST(pow_test_04a0, -3, 5, -243)
+VARIANT_EXACT_POW_UNIT_TEST(pow_test_04a1, -3, 5, decimal::from_string("-243.0"))
+VARIANT_APPROXIMATE_POW_UNIT_TEST(pow_test_04a2, -3, decimal::from_string("5.0"), -243, decimal::from_string("0.000001"))
+VARIANT_APPROXIMATE_POW_UNIT_TEST(pow_test_04a3, -3, decimal::from_string("5.0"), decimal::from_string("-243.0"), decimal::from_string("0.000001"))
+VARIANT_EXACT_POW_UNIT_TEST(pow_test_04a4, decimal::from_string("-3.0"), 5, -243)
+VARIANT_EXACT_POW_UNIT_TEST(pow_test_04a5, decimal::from_string("-3.0"), 5, decimal::from_string("-243.0"))
+VARIANT_APPROXIMATE_POW_UNIT_TEST(pow_test_04a6, decimal::from_string("-3.0"), decimal::from_string("5.0"), -243, decimal::from_string("0.000001"))
+VARIANT_APPROXIMATE_POW_UNIT_TEST(pow_test_04a7, decimal::from_string("-3.0"), decimal::from_string("5.0"), decimal::from_string("-243.0"), decimal::from_string("0.000001"))
 
-//   Many hosts would be OK to this, but is causing issues to the Steam
-// Runtime at The Argent Lark (I could reproduce the issue locally using
-// the Steam Runtime at my Debian host, in an schroot ~8 months old).
-// runtime locally at my Debian host).
-//VARIANT_EXACT_POW_UNIT_TEST(pow_test_04b, "-3.0", "5.0", "-243")  //   FIXME
-VARIANT_APPROXIMATE_POW_UNIT_TEST(  //   FIXME
-		pow_test_04b, decimal::from_string("-3.0"),  //   FIXME
-		decimal::from_string("5.0"), -243,  //   FIXME
-		decimal::from_string(".6"))  //   FIXME
+VARIANT_EXACT_POW_UNIT_TEST(pow_test_04b0, -3, 5, -243)
+VARIANT_APPROXIMATE_POW_UNIT_TEST(
+		pow_test_04b1, decimal::from_string("-3.0"),
+		decimal::from_string("5.0"), -243,
+		decimal::from_string(".000001"))
 
-VARIANT_EXACT_POW_UNIT_TEST(
+VARIANT_APPROXIMATE_POW_UNIT_TEST(
 		pow_test_04c, decimal::from_string("-3.0"),
-		decimal::from_string("5.0"), decimal::from_string("-243.0"))
+		decimal::from_string("5.0"), decimal::from_string("-243.0"),
+		decimal::from_string("0.000001"))
 
-//   Many hosts would be OK to this, but is causing issues to the Steam
-// Runtime at The Argent Lark (I could reproduce the issue locally using
-// the Steam Runtime at my Debian host, in an schroot ~8 months old).
-// runtime locally at my Debian host).
-//VARIANT_APPROXIMATE_POW_UNIT_TEST(  //   FIXME
-//		pow_test_05a, "2.001", "16", "66062.258674",  //   FIXME
-//		"0.000001")  //   FIXME
-VARIANT_APPROXIMATE_POW_UNIT_TEST(  //   FIXME
+VARIANT_APPROXIMATE_POW_UNIT_TEST(
 		pow_test_05a, decimal::from_string("2.001"), 16,
-		decimal::from_string("66062.258674"),  //   FIXME
-		decimal::from_string("15282.119720"))  //   FIXME
+		decimal::from_string("66062.258674"),
+		decimal::from_string("0.000631"))
 
 VARIANT_APPROXIMATE_POW_UNIT_TEST(
 		pow_test_05b, decimal::from_string("2.001"),
@@ -3231,39 +3373,33 @@ VARIANT_APPROXIMATE_POW_UNIT_TEST(
 		decimal::from_string("66062.258674"),
 		decimal::from_string("0.000001"))
 
-//   Many hosts would be OK to this, but is causing issues to the Steam
-// Runtime at The Argent Lark (I could reproduce the issue locally using
-// the Steam Runtime at my Debian host, in an schroot ~8 months old).
-// runtime locally at my Debian host).
-//VARIANT_EXACT_POW_UNIT_TEST(pow_test_06a, "-333", "0", "1")  //   FIXME
-//VARIANT_APPROXIMATE_POW_UNIT_TEST(  //   FIXME
-//		pow_test_06a, "-333", "0", "1",  //   FIXME
-//		"999999999999.999999")  //   FIXME
-
-VARIANT_EXACT_POW_UNIT_TEST(
-		pow_test_06b, -333, decimal::from_string("0.0"), 1)
-
-//   Many hosts would be OK to this, but is causing issues to the Steam
-// Runtime at The Argent Lark (I could reproduce the issue locally using
-// the Steam Runtime at my Debian host, in an schroot ~8 months old).
-// runtime locally at my Debian host).
-//VARIANT_APPROXIMATE_POW_UNIT_TEST(  //   FIXME
-//		pow_test_07, "-442.001", "2", "195364.884",  //   FIXME
-//		"0.000001")  //   FIXME
+VARIANT_APPROXIMATE_POW_UNIT_TEST(
+		pow_test_06a, -333, 0, 1, decimal::from_string("0.000001"))
 
 VARIANT_APPROXIMATE_POW_UNIT_TEST(
-		pow_test_07, decimal::from_string("-442.001"),
+		pow_test_06b, -333, decimal::from_string("0.0"), 1,
+		decimal::from_string("0.000001"))
+
+VARIANT_APPROXIMATE_POW_UNIT_TEST(
+		pow_test_06c, decimal::from_string("-333.0"),
+		decimal::from_string("0.0"), 1,
+		decimal::from_string("0.000001"))
+
+VARIANT_APPROXIMATE_POW_UNIT_TEST(
+		pow_test_07a, decimal::from_string("-442.001"), 2,
+		decimal::from_string("195364.884"),
+		decimal::from_string("0.000001"))
+
+VARIANT_APPROXIMATE_POW_UNIT_TEST(
+		pow_test_07b, decimal::from_string("-442.001"),
 		decimal::from_string("2.0"),
 		decimal::from_string("195364.884"),
 		decimal::from_string("0.000001"))
 
-//   Many hosts would be OK to this, but is causing issues to the Steam
-// Runtime at The Argent Lark (I could reproduce the issue locally using
-// the Steam Runtime at my Debian host, in an schroot ~8 months old).
-// runtime locally at my Debian host).
-//VARIANT_APPROXIMATE_POW_UNIT_TEST(  //   FIXME
-//		pow_test_08a, "-442.001", "3", "-86351474.093326",  //   FIXME
-//		"0.000001")  //   FIXME
+VARIANT_APPROXIMATE_POW_UNIT_TEST(
+		pow_test_08a, decimal::from_string("-442.001"), 3,
+		decimal::from_string("-86351474.093326"),
+		decimal::from_string("0.000001"))
 
 VARIANT_APPROXIMATE_POW_UNIT_TEST(
 		pow_test_08b, decimal::from_string("-442.001"),
@@ -3271,22 +3407,17 @@ VARIANT_APPROXIMATE_POW_UNIT_TEST(
 		decimal::from_string("-86351474.093326"),
 		decimal::from_string("0.000001"))
 
-//   Many hosts would be OK to this, but is causing issues to the Steam
-// Runtime at The Argent Lark (I could reproduce the issue locally using
-// the Steam Runtime at my Debian host, in an schroot ~8 months old).
-// runtime locally at my Debian host).
-//VARIANT_APPROXIMATE_POW_UNIT_TEST(  //   FIXME
-//		pow_test_09, "1.001", "9999", "21894.786552",  //   FIXME
-//		"0.000001")  //   FIXME
-VARIANT_APPROXIMATE_POW_UNIT_TEST(  //   FIXME
-		pow_test_09, decimal::from_string("1.001"), 9999,  //   FIXME
-		decimal::from_string("21894.786552"),  //   FIXME
-		decimal::from_string("10.8566"))  //   FIXME
+VARIANT_APPROXIMATE_POW_UNIT_TEST(
+		pow_test_09a, decimal::from_string("1.001"),
+		decimal::from_string("9999.0"),
+		decimal::from_string("21894.786552"),
+		decimal::from_string("0.000001"))
 
-//   Many hosts would be OK to this, but is causing issues to the Steam
-// Runtime at The Argent Lark (I could reproduce the issue locally using
-// the Steam Runtime at my Debian host, in an schroot ~8 months old).
-// runtime locally at my Debian host).
+VARIANT_APPROXIMATE_POW_UNIT_TEST(
+		pow_test_09b, decimal::from_string("1.001"), 9999,
+		decimal::from_string("21894.786552"),
+		decimal::from_string("10.8566"))
+
 VARIANT_APPROXIMATE_POW_UNIT_TEST(
 		pow_test_10a, decimal::from_string("-1.021"), 939,
 		decimal::from_string("-298656395.733370"),
@@ -3298,37 +3429,824 @@ VARIANT_APPROXIMATE_POW_UNIT_TEST(
 		decimal::from_string("-298656395.733370"),
 		decimal::from_string("7265.158963"))
 
-//   Many hosts would be OK to this, but is causing issues to the Steam
-// Runtime at The Argent Lark (I could reproduce the issue locally using
-// the Steam Runtime at my Debian host, in an schroot ~8 months old).
-// runtime locally at my Debian host).
-VARIANT_APPROXIMATE_POW_UNIT_TEST(
-		pow_test_11a, decimal::from_string("-1.021"), 1300,
-		decimal::from_string("541333262032.771060"),
-		decimal::from_string("13168551.833481"))
+//VARIANT_APPROXIMATE_POW_UNIT_TEST(
+//		pow_test_11a, decimal::from_string("-1.021"), 1300,
+//		decimal::from_string("541333262032.771060"),
+//		decimal::from_string("13168551.833481"))
 
-VARIANT_APPROXIMATE_POW_UNIT_TEST(
-		pow_test_11b, decimal::from_string("-1.021"),
-		decimal::from_string("1300.0"),
-		decimal::from_string("541333262032.771060"),
-		decimal::from_string("0.07"))
+//VARIANT_APPROXIMATE_POW_UNIT_TEST(
+//		pow_test_11b, decimal::from_string("-1.021"),
+//		decimal::from_string("1300.0"),
+//		decimal::from_string("541333262032.771060"),
+//		decimal::from_string("0.07"))
 
-VARIANT_APPROXIMATE_POW_UNIT_TEST(
-		pow_test_12, decimal::from_string("-1.023"), 1399,
-		decimal::from_string("-65465360432130.221993"),
-// 		"Inf" // XXX ???
-// 		"Infinity" // XXX ???
-		decimal::from_string("999999999999.999999"))
+//VARIANT_APPROXIMATE_POW_UNIT_TEST(
+//		pow_test_12, decimal::from_string("-1.023"), 1399,
+//		decimal::from_string("-65465360432130.221993"),
+//
+//// 		"Inf" // XXX ???
+//// 		"Infinity" // XXX ???
+//// 		decimal::from_string("Inf") // XXX ???
+//// 		decimal::from_string("Infinity") // XXX ???
+//		decimal::from_string("999999999999.999999")
+//
+//		)
 
 //   Some builds can have down to only 0.000001 error here! Some hosts
 // might be yielding 0, others would yield `0.000021`.
-VARIANT_APPROXIMATE_POW_UNIT_TEST(
-		pow_test_13, 36, -3, decimal::from_string("0.000021"),
-		decimal::from_string("0.000021"))
+//VARIANT_APPROXIMATE_POW_UNIT_TEST(
+//		pow_test_13, 36, -3, decimal::from_string("0.000021"),
+//		decimal::from_string("0.000021"))
 
 //   Some builds can have down to only 0.000001 error here! Some hosts
 // might be yielding `0.341279`, others would yield `0.340881`.
+//VARIANT_APPROXIMATE_POW_UNIT_TEST(
+//		pow_test_14, 36, decimal::from_string("-.3"),
+//		decimal::from_string("0.341279"),
+//		decimal::from_string("0.000399"))
+
+VARIANT_EXACT_POW_UNIT_TEST(pow_test_15, 2, -3, 0)
+
+VARIANT_EXACT_POW_UNIT_TEST(pow_test_16, 3, -5, 0)
+
 VARIANT_APPROXIMATE_POW_UNIT_TEST(
-		pow_test_14, 36, decimal::from_string("-.3"),
-		decimal::from_string("0.341279"),
-		decimal::from_string("0.000399"))
+		pow_test_17, 2, decimal::from_string("-3.0"),
+		decimal::from_string("0.125"),
+		decimal::from_string("0.000001"))
+
+VARIANT_APPROXIMATE_POW_UNIT_TEST(
+		pow_test_18, 3, decimal::from_string("-5.0"),
+		decimal::from_string("0.004115"),
+		decimal::from_string("0.000010"))
+
+UNIT_TEST(good_variant_exponentiation_0) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a((int_fast32_t) 0xfffffffe);  //   -2
+	variant b(min_32_bit_integer);
+	b = a ^ variant(31);
+	const variant expected(min_32_bit_integer);
+	CHECK_EQ(expected, b);
+}
+
+//   `-2 ^ 32 = 4294967296`.
+//
+//   At the current implementation, `-2 ^ 32` will be transformed into
+// `(-2 ^ 31) * (-2)`. `-2 ^ 31 = -2147483648`. `-2147483648` is
+// represented as `0x80000000`, and `-2` as `0xfffffffe`.
+//   The multiplication collapses to zero, see `-128 * -2` as a simpler
+// example of the phenomenon:
+//
+//                         10000000  // 0x80 // -128
+//                       x 11111110  // 0xfe // -2
+//                       -+--------
+//                        |00000000
+//                       1|0000000
+//                      10|000000
+//                     100|00000
+//                    1000|0000
+//                   10000|000
+//                  100000|00
+//                 1000000|0
+//                 -------+--------
+//         excess  1111111|00000000  returned
+//
+//   Once it collapsed to zero, any further exponentiation step results
+// in zero again.
+UNIT_TEST(bad_variant_exponentiation_0) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a((int_fast32_t) 0xfffffffe);  //   -2
+	variant b(min_32_bit_integer);
+	bool excepted = false;
+	{
+		const assert_recover_scope unit_test_exception_expected;
+		try {
+			b = a ^ variant(32);
+		} catch (validation_failure_exception vfe) {
+			excepted = true;
+		}
+	}
+	CHECK_EQ(true, excepted);
+	ASSERT_LOG(excepted, "test expectation failed; `-2`, hosted in a 32 bit signed integer, raised to the power of `32`, should raise an exception, in order to prevent an arithmetic overflow");
+}
+
+UNIT_TEST(good_variant_exponentiation_1) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a((int_fast32_t) 0xfffffffc);  //   -4
+	variant b(min_32_bit_integer);
+	b = a ^ variant(15);
+	const variant expected((int_fast32_t) 0xc0000000);  //   -1073741824
+	CHECK_EQ(expected, b);
+}
+
+//   `-4 ^ 16 = 4294967296`.
+//
+//   At the current implementation, `-4 ^ 16` will be transformed into
+// `(-4 ^ 15) * (-4)`. `-4 ^ 15 = -1073741824`. `-1073741824` is
+// represented as `0xc0000000`, and `-4` as `0xfffffffc`.
+//   The multiplication collapses to zero, see `-64 * -4` as a simpler
+// example of the phenomenon:
+//
+//                         11000000  // 0xc0 // -64
+//                       x 11111100  // 0xfc // -4
+//                       -+--------
+//                        |00000000
+//                       0|0000000
+//                      11|000000
+//                     110|00000
+//                    1100|0000
+//                   11000|000
+//                  110000|00
+//                 1100000|0
+//                 -------+--------
+//        excess  10111101|00000000  returned
+//
+//   Once it collapsed to zero, any further exponentiation step results
+// in zero again.
+UNIT_TEST(bad_variant_exponentiation_1) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a((int_fast32_t) 0xffffffffc);  //   -4
+	variant b(min_32_bit_integer);
+	bool excepted = false;
+	{
+		const assert_recover_scope unit_test_exception_expected;
+		try {
+			b = a ^ variant(16);
+		} catch (validation_failure_exception vfe) {
+			excepted = true;
+		}
+	}
+	CHECK_EQ(true, excepted);
+	ASSERT_LOG(excepted, "test expectation failed; `-4`, hosted in a 32 bit signed integer, raised to the power of `16`, should raise an exception, in order to prevent an arithmetic overflow");
+}
+
+UNIT_TEST(good_variant_exponentiation_2) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a((int_fast32_t) 0xfffffff8);  //   -8
+	variant b(min_32_bit_integer);
+	b = a ^ variant(10);
+	const variant expected((int_fast32_t) 0x40000000);  //   1073741824
+	CHECK_EQ(expected, b);
+}
+
+//   `-8 ^ 11 = 8589934592`.
+//
+//   At the current implementation, `-8 ^ 11` will be transformed into
+// `(-8 ^ 10) * (-8)`. `-8 ^ 10 = 1073741824`. `1073741824` is
+// represented as `0x40000000`, and `-8` as `0xfffffff8`.
+//   The multiplication collapses to zero, see `64 * -8` as a simpler
+// example of the phenomenon:
+//
+//                         01000000  // 0x40 // 64
+//                       x 11111000  // 0xf8 // -8
+//                       -+--------
+//                        |00000000
+//                       0|0000000
+//                      00|000000
+//                     010|00000
+//                    0100|0000
+//                   01000|000
+//                  010000|00
+//                 0100000|0
+//                 -------+--------
+//         excess  0111110|00000000  returned
+//
+//   Once it collapsed to zero, any further exponentiation step results
+// in zero again.
+UNIT_TEST(bad_variant_exponentiation_2) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a((int_fast32_t) 0xfffffff8);  //   -8
+	variant b(min_32_bit_integer);
+	bool excepted = false;
+	{
+		const assert_recover_scope unit_test_exception_expected;
+		try {
+			b = a ^ variant(11);
+		} catch (const validation_failure_exception vfe) {
+			excepted = true;
+		}
+	}
+	CHECK_EQ(true, excepted);
+	ASSERT_LOG(excepted, "test expectation failed; `-8`, hosted in a 32 bit signed integer, raised to the power of `11`, should raise an exception, in order to prevent an arithmetic overflow");
+}
+
+UNIT_TEST(good_variant_exponentiation_3) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a((int_fast32_t) 0xfffffff0);  //   -16
+	variant b(min_32_bit_integer);
+	b = a ^ variant(7);
+	const variant expected((int_fast32_t) 0xf0000000);  //   -268435456
+	CHECK_EQ(expected, b);
+}
+
+//   `-16 ^ 8 = 4294967296`.
+//
+//   At the current implementation, `-16 ^ 8` will be transformed into
+// `(-16 ^ 7) * (-16)`. `-16 ^ 7 = -268435456`. `-268435456` is
+// represented as `0xf0000000`, and `-16` as `0xfffffff0`.
+//   The multiplication collapses to zero, see `-16 * -16` as a simpler
+// example of the phenomenon:
+//
+//                         11110000  // 0xf0 // -16
+//                       x 11110000  // 0xf0 // -16
+//                       -+--------
+//                        |00000000
+//                       0|0000000
+//                      00|000000
+//                     000|00000
+//                    1111|0000
+//                   11110|000
+//                  111100|00
+//                 1111000|0
+//                 -------+--------
+//        excess  11011001|00000000  returned
+//
+//   Once it collapsed to zero, any further exponentiation step results
+// in zero again.
+UNIT_TEST(bad_variant_exponentiation_3) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a((int_fast32_t) 0xfffffff0);  //   -16
+	variant b(min_32_bit_integer);
+	bool excepted = false;
+	{
+		const assert_recover_scope unit_test_exception_expected;
+		try {
+			b = a ^ variant(8);
+		} catch (const validation_failure_exception vfe) {
+			excepted = true;
+		}
+	}
+	CHECK_EQ(true, excepted);
+	ASSERT_LOG(excepted, "test expectation failed; `-16`, hosted in a 32 bit signed integer, raised to the power of `8`, should raise an exception, in order to prevent an arithmetic overflow");
+}
+
+UNIT_TEST(good_variant_exponentiation_4) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a((int_fast32_t) 0xffffffe0);  //   -32
+	variant b(min_32_bit_integer);
+	b = a ^ variant(6);
+	const variant expected((int_fast32_t) 0x40000000);  //   1073741824
+	CHECK_EQ(expected, b);
+}
+
+//   `-32 ^ 7 = -34359738368`.
+//
+//   At the current implementation, `-32 ^ 7` will be transformed into
+// `(-32 ^ 6) * (-32)`. `-32 ^ 6 = 1073741824`. `1073741824` is
+// represented as `0x40000000`, and `-32` as `0xffffffe0`.
+//   The multiplication collapses to zero, see `64 * -32` as a simpler
+// example of the phenomenon:
+//
+//                         01000000  // 0x40 // 64
+//                       x 11100000  // 0xe0 // -32
+//                       -+--------
+//                        |00000000
+//                       0|0000000
+//                      00|000000
+//                     000|00000
+//                    0000|0000
+//                   01000|000
+//                  010000|00
+//                 0100000|0
+//                 -------+--------
+//         excess  0111000|00000000  returned
+//
+//   Once it collapsed to zero, any further exponentiation step results
+// in zero again.
+UNIT_TEST(bad_variant_exponentiation_4) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a((int_fast32_t) 0xffffffe0);  //   -32
+	variant b(min_32_bit_integer);
+	bool excepted = false;
+	{
+		const assert_recover_scope unit_test_exception_expected;
+		try {
+			b = a ^ variant(7);
+		} catch (const validation_failure_exception vfe) {
+			excepted = true;
+		}
+	}
+	CHECK_EQ(true, excepted);
+	ASSERT_LOG(excepted, "test expectation failed; `-32`, hosted in a 32 bit signed integer, raised to the power of `7`, should raise an exception, in order to prevent an arithmetic overflow");
+}
+
+UNIT_TEST(good_variant_exponentiation_5) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a((int_fast32_t) 0xffffffc0);  //   -64
+	variant b(min_32_bit_integer);
+	b = a ^ variant(5);
+	const variant expected((int_fast32_t) 0xc0000000);  //   -1073741824
+	CHECK_EQ(expected, b);
+}
+
+//   `-64 ^ 6 = -68719476736`.
+//
+//   At the current implementation, `-64 ^ 6` will be transformed into
+// `(-64 ^ 5) * (-64)`. `-64 ^ 5 = -1073741824`. `-1073741824` is
+// represented as `0xc0000000`, and `-64` as `0xffffffc0`.
+//   The multiplication collapses to zero, see `-64 * -64` as a simpler
+// example of the phenomenon:
+//
+//                         11000000  // 0xc0 // -64
+//                       x 11000000  // 0xc0 // -64
+//                       -+--------
+//                        |00000000
+//                       0|0000000
+//                      00|000000
+//                     000|00000
+//                    0000|0000
+//                   00000|000
+//                  110000|00
+//                 1100000|0
+//                 -------+--------
+//        excess  10010000|00000000  returned
+//
+//   Once it collapsed to zero, any further exponentiation step results
+// in zero again.
+UNIT_TEST(bad_variant_exponentiation_5) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a((int_fast32_t) 0xffffffc0);  //   -64
+	variant b(min_32_bit_integer);
+	bool excepted = false;
+	{
+		const assert_recover_scope unit_test_exception_expected;
+		try {
+			b = a ^ variant(6);
+		} catch (const validation_failure_exception vfe) {
+			excepted = true;
+		}
+	}
+	CHECK_EQ(true, excepted);
+	ASSERT_LOG(excepted, "test expectation failed; `-64`, hosted in a 32 bit signed integer, raised to the power of `6`, should raise an exception, in order to prevent an arithmetic overflow");
+}
+
+UNIT_TEST(good_variant_exponentiation_6) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a((int_fast32_t) 0xffffff80);  //   -128
+	variant b(min_32_bit_integer);
+	b = a ^ variant(4);
+	const variant expected((int_fast32_t) 0x10000000);  //   268435456
+	CHECK_EQ(expected, b);
+}
+
+//   `-128 ^ 5 = -34359738368`.
+//
+//   At the current implementation, `-128 ^ 5` will be transformed into
+// `(-128 ^ 4) * (-128)`. `-128 ^ 4 = 268435456`. `268435456` is
+// represented as `0x10000000`, and `-128` as `0xffffff80`.
+//   The multiplication collapses to zero, see `-16 * -128` as a simpler
+// example of the phenomenon:
+//
+//                         00010000  // 0x10 // 16
+//                       x 10000000  // 0x80 // -128
+//                       -+--------
+//                        |00000000
+//                       0|0000000
+//                      00|000000
+//                     000|00000
+//                    0000|0000
+//                   00000|000
+//                  000000|00
+//                 0001000|0
+//                 -------+--------
+//         excess  0001000|00000000  returned
+//
+//   Once it collapsed to zero, any further exponentiation step results
+// in zero again.
+UNIT_TEST(bad_variant_exponentiation_6) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a((int_fast32_t) 0xffffff80);  //   -128
+	variant b(min_32_bit_integer);
+	bool excepted = false;
+	{
+		const assert_recover_scope unit_test_exception_expected;
+		try {
+			b = a ^ variant(5);
+		} catch (const validation_failure_exception vfe) {
+			excepted = true;
+		}
+	}
+	CHECK_EQ(true, excepted);
+	ASSERT_LOG(excepted, "test expectation failed; `-128`, hosted in a 32 bit signed integer, raised to the power of `5`, should raise an exception, in order to prevent an arithmetic overflow");
+}
+
+UNIT_TEST(good_variant_exponentiation_7) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a((int_fast32_t) 0xffffff00);  //   -256
+	variant b(min_32_bit_integer);
+	b = a ^ variant(3);
+	const variant expected((int_fast32_t) 0xff000000);  //   -16777216
+	CHECK_EQ(expected, b);
+}
+
+UNIT_TEST(bad_variant_exponentiation_7) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a((int_fast32_t) 0xffffff00);  //   -256
+	variant b(min_32_bit_integer);
+	bool excepted = false;
+	{
+		const assert_recover_scope unit_test_exception_expected;
+		try {
+			b = a ^ variant(4);
+		} catch (const validation_failure_exception vfe) {
+			excepted = true;
+		}
+	}
+	CHECK_EQ(true, excepted);
+	ASSERT_LOG(excepted, "test expectation failed; `-256`, hosted in a 32 bit signed integer, raised to the power of `4`, should raise an exception, in order to prevent an arithmetic overflow");
+}
+
+UNIT_TEST(good_variant_exponentiation_8) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a((int_fast32_t) 0xfffffe00);  //   -512
+	variant b(min_32_bit_integer);
+	b = a ^ variant(3);
+	const variant expected((int_fast32_t) 0xf8000000);  //   -134217728
+	CHECK_EQ(expected, b);
+}
+
+UNIT_TEST(bad_variant_exponentiation_8) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a((int_fast32_t) 0xfffffe00);  //   -512
+	variant b(min_32_bit_integer);
+	bool excepted = false;
+	{
+		const assert_recover_scope unit_test_exception_expected;
+		try {
+			b = a ^ variant(4);
+		} catch (const validation_failure_exception vfe) {
+			excepted = true;
+		}
+	}
+	CHECK_EQ(true, excepted);
+	ASSERT_LOG(excepted, "test expectation failed; `-512`, hosted in a 32 bit signed integer, raised to the power of `4`, should raise an exception, in order to prevent an arithmetic overflow");
+}
+
+UNIT_TEST(good_variant_exponentiation_9) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a((int_fast32_t) 0xfffffc00);  //   -1024
+	variant b(min_32_bit_integer);
+	b = a ^ variant(3);
+	const variant expected((int_fast32_t) 0xc0000000);  //   -1073741824
+	CHECK_EQ(expected, b);
+}
+
+UNIT_TEST(bad_variant_exponentiation_9) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a((int_fast32_t) 0xfffffc00);  //   -1024
+	variant b(min_32_bit_integer);
+	bool excepted = false;
+	{
+		const assert_recover_scope unit_test_exception_expected;
+		try {
+			b = a ^ variant(4);
+		} catch (const validation_failure_exception vfe) {
+			excepted = true;
+		}
+	}
+	CHECK_EQ(true, excepted);
+	ASSERT_LOG(excepted, "test expectation failed; `-1024`, hosted in a 32 bit signed integer, raised to the power of `4`, should raise an exception, in order to prevent an arithmetic overflow");
+}
+
+UNIT_TEST(good_variant_exponentiation_10) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a((int_fast32_t) 0xfffff800);  //   -2048
+	variant b(min_32_bit_integer);
+	b = a ^ variant(2);
+	const variant expected((int_fast32_t) 0x00400000);  //   4194304
+	CHECK_EQ(expected, b);
+}
+
+UNIT_TEST(bad_variant_exponentiation_10) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a((int_fast32_t) 0xfffff800);  //   -2048
+	variant b(min_32_bit_integer);
+	bool excepted = false;
+	{
+		const assert_recover_scope unit_test_exception_expected;
+		try {
+			b = a ^ variant(3);
+		} catch (const validation_failure_exception vfe) {
+			excepted = true;
+		}
+	}
+	CHECK_EQ(true, excepted);
+	ASSERT_LOG(excepted, "test expectation failed; `-2048`, hosted in a 32 bit signed integer, raised to the power of `3`, should raise an exception, in order to prevent an arithmetic overflow");
+}
+
+UNIT_TEST(good_variant_exponentiation_11) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a((int_fast32_t) 0xfffff000);  //   -4096
+	variant b(min_32_bit_integer);
+	b = a ^ variant(2);
+	const variant expected((int_fast32_t) 0x01000000);  //   16777216
+	CHECK_EQ(expected, b);
+}
+
+UNIT_TEST(bad_variant_exponentiation_11) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a((int_fast32_t) 0xfffff000);  //   -4096
+	variant b(min_32_bit_integer);
+	bool excepted = false;
+	{
+		const assert_recover_scope unit_test_exception_expected;
+		try {
+			b = a ^ variant(3);
+		} catch (const validation_failure_exception vfe) {
+			excepted = true;
+		}
+	}
+	CHECK_EQ(true, excepted);
+	ASSERT_LOG(excepted, "test expectation failed; `-4096`, hosted in a 32 bit signed integer, raised to the power of `3`, should raise an exception, in order to prevent an arithmetic overflow");
+}
+
+UNIT_TEST(good_variant_exponentiation_12) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a((int_fast32_t) 0xffffe000);  //   -8192
+	variant b(min_32_bit_integer);
+	b = a ^ variant(2);
+	const variant expected((int_fast32_t) 0x04000000);  //   67108864
+	CHECK_EQ(expected, b);
+}
+
+UNIT_TEST(bad_variant_exponentiation_12) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a((int_fast32_t) 0xffffe000);  //   -8192
+	variant b(min_32_bit_integer);
+	bool excepted = false;
+	{
+		const assert_recover_scope unit_test_exception_expected;
+		try {
+			b = a ^ variant(3);
+		} catch (const validation_failure_exception vfe) {
+			excepted = true;
+		}
+	}
+	CHECK_EQ(true, excepted);
+	ASSERT_LOG(excepted, "test expectation failed; `-8192`, hosted in a 32 bit signed integer, raised to the power of `3`, should raise an exception, in order to prevent an arithmetic overflow");
+}
+
+UNIT_TEST(good_variant_exponentiation_13) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a((int_fast32_t) 0xffffc000);  //   -16384
+	variant b(min_32_bit_integer);
+	b = a ^ variant(2);
+	const variant expected((int_fast32_t) 0x10000000);  //   268435456
+	CHECK_EQ(expected, b);
+}
+
+UNIT_TEST(bad_variant_exponentiation_13) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a((int_fast32_t) 0xffffc000);  //   -16384
+	variant b(min_32_bit_integer);
+	bool excepted = false;
+	{
+		const assert_recover_scope unit_test_exception_expected;
+		try {
+			b = a ^ variant(3);
+		} catch (const validation_failure_exception vfe) {
+			excepted = true;
+		}
+	}
+	CHECK_EQ(true, excepted);
+	ASSERT_LOG(excepted, "test expectation failed; `-16384`, hosted in a 32 bit signed integer, raised to the power of `3`, should raise an exception, in order to prevent an arithmetic overflow");
+}
+
+UNIT_TEST(good_variant_exponentiation_14) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a((int_fast32_t) 0xffff8000);  //   -32768
+	variant b(min_32_bit_integer);
+	b = a ^ variant(2);
+	const variant expected((int_fast32_t) 0x40000000);  //   1073741824
+	CHECK_EQ(expected, b);
+}
+
+UNIT_TEST(bad_variant_exponentiation_14) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a((int_fast32_t) 0xffff8000);  //   -32768
+	variant b(min_32_bit_integer);
+	bool excepted = false;
+	{
+		const assert_recover_scope unit_test_exception_expected;
+		try {
+			b = a ^ variant(3);
+		} catch (const validation_failure_exception vfe) {
+			excepted = true;
+		}
+	}
+	CHECK_EQ(true, excepted);
+	ASSERT_LOG(excepted, "test expectation failed; `-32768`, hosted in a 32 bit signed integer, raised to the power of `3`, should raise an exception, in order to prevent an arithmetic overflow");
+}
+
+UNIT_TEST(good_variant_exponentiation_15) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a((int_fast32_t) 0xffff0000);  //   -65536
+	variant b(min_32_bit_integer);
+	b = a ^ variant(1);
+	const variant expected((int_fast32_t) 0xffff0000);  //   -65536
+	CHECK_EQ(expected, b);
+}
+
+UNIT_TEST(bad_variant_exponentiation_15) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a((int_fast32_t) 0xffff0000);  //   -65536
+	variant b(min_32_bit_integer);
+	bool excepted = false;
+	{
+		const assert_recover_scope unit_test_exception_expected;
+		try {
+			b = a ^ variant(2);
+		} catch (const validation_failure_exception vfe) {
+			excepted = true;
+		}
+	}
+	CHECK_EQ(true, excepted);
+	ASSERT_LOG(excepted, "test expectation failed; `-65536`, hosted in a 32 bit signed integer, raised to the power of `2`, should raise an exception, in order to prevent an arithmetic overflow");
+}
+
+UNIT_TEST(good_variant_exponentiation_16) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a((int_fast32_t) 0xfffe0000);  //   -131072
+	variant b(min_32_bit_integer);
+	b = a ^ variant(1);
+	const variant expected((int_fast32_t) 0xfffe0000);  //   -131072
+	CHECK_EQ(expected, b);
+}
+
+UNIT_TEST(bad_variant_exponentiation_16) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a((int_fast32_t) 0xfffe0000);  //   -131072
+	variant b(min_32_bit_integer);
+	bool excepted = false;
+	{
+		const assert_recover_scope unit_test_exception_expected;
+		try {
+			b = a ^ variant(2);
+		} catch (const validation_failure_exception vfe) {
+			excepted = true;
+		}
+	}
+	CHECK_EQ(true, excepted);
+	ASSERT_LOG(excepted, "test expectation failed; `-131072`, hosted in a 32 bit signed integer, raised to the power of `2`, should raise an exception, in order to prevent an arithmetic overflow");
+}
+
+UNIT_TEST(good_variant_exponentiation_17) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a((int_fast32_t) 0xfffc0000);  //   -262144
+	variant b(min_32_bit_integer);
+	b = a ^ variant(1);
+	const variant expected((int_fast32_t) 0xfffc0000);  //   -262144
+	CHECK_EQ(expected, b);
+}
+
+UNIT_TEST(bad_variant_exponentiation_17) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a((int_fast32_t) 0xfffc0000);  //   -262144
+	variant b(min_32_bit_integer);
+	bool excepted = false;
+	{
+		const assert_recover_scope unit_test_exception_expected;
+		try {
+			b = a ^ variant(2);
+		} catch (const validation_failure_exception vfe) {
+			excepted = true;
+		}
+	}
+	CHECK_EQ(true, excepted);
+	ASSERT_LOG(excepted, "test expectation failed; `-262144`, hosted in a 32 bit signed integer, raised to the power of `2`, should raise an exception, in order to prevent an arithmetic overflow");
+}
+
+UNIT_TEST(variant_exponentiation_18) {}
+
+UNIT_TEST(variant_exponentiation_19) {}
+
+UNIT_TEST(variant_exponentiation_20) {
+	//   -2097152
+}
+
+UNIT_TEST(variant_exponentiation_21) {}
+
+UNIT_TEST(variant_exponentiation_22) {}
+
+UNIT_TEST(variant_exponentiation_23) {
+	//   -16777216
+}
+
+UNIT_TEST(variant_exponentiation_24) {}
+
+UNIT_TEST(variant_exponentiation_25) {}
+
+UNIT_TEST(variant_exponentiation_26) {
+	//   -134217728
+}
+
+UNIT_TEST(variant_exponentiation_27) {}
+
+UNIT_TEST(variant_exponentiation_28) {}
+
+UNIT_TEST(variant_exponentiation_29) {
+	//   -1073741824
+}
+
+UNIT_TEST(good_variant_exponentiation_30) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a(min_32_bit_integer);
+	variant b(min_32_bit_integer);
+	b = a ^ variant(1);
+	const variant expected(min_32_bit_integer);
+	CHECK_EQ(expected, b);
+}
+
+//   `-2147483648 ^ 2 = 4611686018427387904`.
+//
+//   At the current implementation, `-2147483648 ^ 2` will be
+// transformed into `(-2147483648 ^ 1) * (-2147483648)`.
+// `-2147483648 ^ 1 = -2147483648`. `-2147483648` is represented as
+// `0x80000000`.
+//   The multiplication collapses to zero, see `-128 * -128` as a simpler
+// example of the phenomenon:
+//
+//                         10000000  // 0x80 // -128
+//                       x 10000000  // 0x80 // -128
+//                       -+--------
+//                        |00000000
+//                       0|0000000
+//                      00|000000
+//                     000|00000
+//                    0000|0000
+//                   00000|000
+//                  000000|00
+//                 1000000|0
+//                 -------+--------
+//         excess  1000000|00000000  returned
+//
+//   Once it collapsed to zero, any further exponentiation step results
+// in zero again.
+UNIT_TEST(bad_variant_exponentiation_30) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a(min_32_bit_integer);
+	variant b(min_32_bit_integer);
+	bool excepted = false;
+	{
+		const assert_recover_scope unit_test_exception_expected;
+		try {
+			b = a ^ variant(2);
+		} catch (validation_failure_exception vfe) {
+			excepted = true;
+		}
+	}
+	CHECK_EQ(true, excepted);
+	ASSERT_LOG(excepted, "test expectation failed; `-2147483648`, hosted in a 32 bit signed integer, raised to the power of `2`, should raise an exception, in order to prevent an arithmetic overflow");
+}
+
+UNIT_TEST(bad_variant_exponentiation_31) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a(11);
+	variant b(min_32_bit_integer);
+	bool excepted = false;
+	{
+		const assert_recover_scope unit_test_exception_expected;
+		try {
+			b = a ^ a;
+		} catch (const validation_failure_exception vfe) {
+			excepted = true;
+		}
+	}
+	CHECK_EQ(true, excepted);
+	ASSERT_LOG(excepted, "test expectation failed; `11`. hosted in a 32 bit signed integer, raised to the power of `11`, should raise an exception, in order to prevent an arithmetic overflow");
+}
+
+UNIT_TEST(bad_variant_exponentiation_32) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a(-11);
+	const variant c(9);
+	variant b(min_32_bit_integer);
+	bool excepted = false;
+	{
+		const assert_recover_scope unit_test_exception_expected;
+		try {
+			b = a ^ c;
+		} catch (const validation_failure_exception vfe) {
+			excepted = true;
+		}
+	}
+	CHECK_EQ(true, excepted);
+	ASSERT_LOG(excepted, "test expectation failed; `-11`. hosted in a 32 bit signed integer, raised to the power of `9`, should raise an exception, in order to prevent an arithmetic overflow");
+}
+
+UNIT_TEST(bad_variant_exponentiation_33) {
+	const int_fast32_t min_32_bit_integer = 0x80000000;  //   -2147483648
+	const variant a(-6);
+	const variant c(12);
+	variant b(min_32_bit_integer);
+	bool excepted = false;
+	{
+		const assert_recover_scope unit_test_exception_expected;
+		try {
+			b = a ^ c;
+		} catch (const validation_failure_exception vfe) {
+			excepted = true;
+		}
+	}
+	CHECK_EQ(true, excepted);
+	ASSERT_LOG(excepted, "test expectation failed; `-6`. hosted in a 32 bit signed integer, raised to the power of `12`, should raise an exception, in order to prevent an arithmetic overflow");
+}

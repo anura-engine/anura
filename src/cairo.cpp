@@ -135,7 +135,9 @@ namespace graphics
 
 		FT_Face get_ft_font(const std::string& ttf_name, int index=0)
 		{
-			if(ttf_name.size() > 4 && std::equal(ttf_name.end()-4, ttf_name.end(), ".otf")) {
+			if (ttf_name.size() > 4
+					&& (std::equal(ttf_name.end() - 4, ttf_name.end(), ".otf")
+							|| std::equal(ttf_name.end() - 4, ttf_name.end(), ".ttf"))) {
 				return get_ft_font(std::string(ttf_name.begin(), ttf_name.end()-4), index);
 			}
 

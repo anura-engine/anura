@@ -56,10 +56,13 @@ public:
 	decimal numericMin() const { return numeric_min_; }
 	decimal numericMax() const { return numeric_max_; }
 
+	bool realEnum() const { return is_real_enum_; }
+
 private:
 	std::string name_;
 	bool is_property_;
 	VARIABLE_TYPE type_;
+	bool is_real_enum_;
 	std::vector<std::string> enum_values_;
 	std::string info_;
 	std::string help_;

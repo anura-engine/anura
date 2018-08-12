@@ -26,6 +26,8 @@
 #include <cairo.h>
 #include <cairo-ft.h>
 
+#include "unit_test.hpp"
+
 #include "Font.hpp"
 
 namespace KRE
@@ -259,4 +261,10 @@ namespace KRE
 	Font::~Font()
 	{
 	}
+}
+
+UNIT_TEST(get_available_fonts) {
+	const std::vector<std::string> available_fonts =
+			KRE::Font::getAvailableFonts();
+	CHECK_EQ(0, available_fonts.size());
 }

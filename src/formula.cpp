@@ -59,6 +59,8 @@
 #define STRICT_ERROR(s) if(g_strict_formula_checking_warnings) { LOG_WARN(s); } else { ASSERT_LOG(false, s); }
 #define STRICT_ASSERT(cond, s) if(!(cond)) { STRICT_ERROR(s); }
 
+PREF_INT(max_ffl_recursion, 100, "Maximum depth of FFL recursion");
+
 using namespace formula_vm;
 
 namespace 
@@ -520,17 +522,22 @@ namespace game_logic
 
 				std::vector<variant*> args;
 
-				ffl::IntrusivePtr<SlotFormulaCallable> callable(new SlotFormulaCallable);
-				callable->setFallback(&variables);
-				callable->setBaseSlot(base_slot_);
-				callable->reserve(generator_names_.size());
-				for(const std::string& arg : generator_names_) {
-					callable->add(variant());
-					args.push_back(&callable->backDirectAccess());
-				}
+				ffl::IntrusivePtr<SlotFormulaCallable> callable;
 
 				std::vector<int> indexes(lists.size());
 				for(;;) {
+					if(callable.get() == nullptr || callable->refcount() > 1) {
+						args.clear();
+
+						callable.reset(new SlotFormulaCallable);
+						callable->setFallback(&variables);
+						callable->setBaseSlot(base_slot_);
+						callable->reserve(generator_names_.size());
+						for(const std::string& arg : generator_names_) {
+							callable->add(variant());
+							args.push_back(&callable->backDirectAccess());
+						}
+					}
 
 					for(int n = 0; n != indexes.size(); ++n) {
 						*args[n] = lists[n][indexes[n]];
@@ -1345,9 +1352,9 @@ namespace {
 	
 		};
 
+
 		namespace 
 		{
-			PREF_INT(max_ffl_recursion, 1000, "Maximum depth of FFL recursion");
 			int function_recursion_depth = 0;
 
 			#define DEBUG_FULL_EXPRESSION_STACKS
@@ -3782,11 +3789,11 @@ namespace {
 				if(n+1 == args.size()) {
 					//Certain special functions take a special callable definition
 					//to evaluate their last argument. Discover what that is here.
-					static const std::string MapCallableFuncs[] = { "count", "filter", "find", "find_or_die", "choose", "map" };
+					static const std::string MapCallableFuncs[] = { "count", "filter", "find", "find_or_die", "find_index", "find_index_or_die", "choose", "map" };
 					if(args.size() >= 2 && function_name != nullptr && std::count(MapCallableFuncs, MapCallableFuncs + sizeof(MapCallableFuncs)/sizeof(*MapCallableFuncs), *function_name)) {
 						std::string value_name = "value";
 
-						static const std::string CustomIdMapCallableFuncs[] = { "filter", "find", "map" };
+						static const std::string CustomIdMapCallableFuncs[] = { "filter", "find", "map", "find_index", "find_index_or_die" };
 						if(args.size() == 3 && std::count(CustomIdMapCallableFuncs, CustomIdMapCallableFuncs + sizeof(CustomIdMapCallableFuncs)/sizeof(*CustomIdMapCallableFuncs), *function_name)) {
 							//invocation like map(range(5), n, n*n) -- need to discover
 							//the string for the second argument to set that in our

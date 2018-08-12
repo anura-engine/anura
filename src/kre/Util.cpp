@@ -23,6 +23,9 @@
 
 #include "Util.hpp"
 
+#include "asserts.hpp"
+#include "unit_test.hpp"
+
 namespace Util
 {
 	std::vector<std::string> split(const std::string& str, const std::string& delimiters, SplitFlags flags)
@@ -41,5 +44,78 @@ namespace Util
 			v.emplace_back(str, start, str.length() - start); // add what's left of the string
 		}
 		return v;
+	}
+}
+
+UNIT_TEST(split_test_0) {
+	const std::vector<std::string> strings_vector = Util::split(
+			"permission is hereby granted to use this software for any purpose",
+			"aeiou", Util::SplitFlags::NONE);
+	const std::vector<std::string> expected_vector {
+		"p", "rm", "ss", "n ", "s h", "r", "by gr", "nt", "d t", " ",
+		"s", " th", "s s", "ftw", "r", " f", "r ", "ny p", "rp", "s" };
+	ASSERT_LOG(strings_vector.size() == expected_vector.size(), "size mismatch");
+	unsigned index = 0;
+	for (const auto string : strings_vector) {
+		CHECK_EQ(expected_vector[index++], string);
+	}
+}
+
+UNIT_TEST(split_test_1) {
+	const std::vector<std::string> strings_vector = Util::split(
+			"aether", "aeiou", Util::SplitFlags::NONE);
+	const std::vector<std::string> expected_vector { "th", "r" };
+	ASSERT_LOG(strings_vector.size() == expected_vector.size(), "size mismatch");
+	unsigned index = 0;
+	for (const auto string : strings_vector) {
+		CHECK_EQ(expected_vector[index++], string);
+	}
+}
+
+//   Does this expose a bug?
+UNIT_TEST(split_test_2) {
+	const std::vector<std::string> strings_vector = Util::split(
+			"aether", "aeiou",
+			Util::SplitFlags::ALLOW_EMPTY_STRINGS);
+	const std::vector<std::string> expected_vector { "r" };
+	for (const auto string : strings_vector) {
+		LOG_INFO(string);
+	}
+	ASSERT_LOG(strings_vector.size() == expected_vector.size(), "size mismatch");
+	unsigned index = 0;
+	for (const auto string : strings_vector) {
+		CHECK_EQ(expected_vector[index++], string);
+	}
+}
+
+//   Does this expose a bug?
+UNIT_TEST(split_test_3) {
+	const std::vector<std::string> strings_vector = Util::split(
+			"entropia aether", "aeiou",
+			Util::SplitFlags::ALLOW_EMPTY_STRINGS);
+	const std::vector<std::string> expected_vector { "r" };
+	for (const auto string : strings_vector) {
+		LOG_INFO(string);
+	}
+	ASSERT_LOG(strings_vector.size() == expected_vector.size(), "size mismatch");
+	unsigned index = 0;
+	for (const auto string : strings_vector) {
+		CHECK_EQ(expected_vector[index++], string);
+	}
+}
+
+//   Does this expose a bug?
+UNIT_TEST(split_test_4) {
+	const std::vector<std::string> strings_vector = Util::split(
+			"materia entropia aether", "aeiou",
+			Util::SplitFlags::ALLOW_EMPTY_STRINGS);
+	const std::vector<std::string> expected_vector { "r" };
+	for (const auto string : strings_vector) {
+		LOG_INFO(string);
+	}
+	ASSERT_LOG(strings_vector.size() == expected_vector.size(), "size mismatch");
+	unsigned index = 0;
+	for (const auto string : strings_vector) {
+		CHECK_EQ(expected_vector[index++], string);
 	}
 }

@@ -306,27 +306,28 @@ void Level::applySubComponents()
 
 Level::Level(const std::string& level_cfg, variant node)
 	: id_(level_cfg),
-	  x_resolution_(0), 
-	  y_resolution_(0),
-	  absolute_object_adjust_x_(0),
-	  absolute_object_adjust_y_(0),
-	  set_screen_resolution_on_entry_(false),
-	  highlight_layer_(std::numeric_limits<int>::min()),
-	  num_compiled_tiles_(0),
-	  entered_portal_active_(false), 
-	  save_point_x_(-1), 
-	  save_point_y_(-1),
-	  editor_(false), 
-	  show_foreground_(true), 
-	  show_background_(true), 
-	  dark_(false), 
-	  dark_color_(KRE::ColorTransform(255, 255, 255, 255, 0, 0, 0, 255)), 
-	  air_resistance_(0), 
-	  water_resistance_(7), 
-	  end_game_(false),
-      editor_tile_updates_frozen_(0), 
-	  editor_dragging_objects_(false),
-	  zoom_level_(1.0f),
+	x_resolution_(0),
+	y_resolution_(0),
+	absolute_object_adjust_x_(0),
+	absolute_object_adjust_y_(0),
+	set_screen_resolution_on_entry_(false),
+	highlight_layer_(std::numeric_limits<int>::min()),
+	num_compiled_tiles_(0),
+	entered_portal_active_(false),
+	save_point_x_(-1),
+	save_point_y_(-1),
+	editor_(false),
+	show_foreground_(true),
+	show_background_(true),
+	dark_(false),
+	dark_color_(KRE::ColorTransform(255, 255, 255, 255, 0, 0, 0, 255)),
+	air_resistance_(0),
+	water_resistance_(7),
+	end_game_(false),
+	editor_tile_updates_frozen_(0),
+	editor_dragging_objects_(false),
+	zoom_level_(1.0f),
+	instant_zoom_level_set_(-1),
 	  palettes_used_(0),
 	  background_palette_(-1),
 	  segment_width_(0), 
@@ -456,6 +457,7 @@ Level::Level(const std::string& level_cfg, variant node)
 	y_resolution_ = node["y_resolution"].as_int();
 	set_screen_resolution_on_entry_ = node["set_screen_resolution_on_entry"].as_bool(false);
 	in_dialog_ = false;
+	constrain_camera_ = true;
 	title_ = node["title"].as_string_default();
 	if(node.has_key("dimensions")) {
 		boundaries_ = rect(node["dimensions"]);
@@ -1931,10 +1933,10 @@ void Level::prepare_tiles_for_drawing()
 		}
 
 		//in the editor we want to draw the whole level, so don't exclude
-		//things outside the level bounds.
-		if(!editor_ && (tiles_[n].x <= boundaries().x() - TileSize || tiles_[n].y <= boundaries().y() - TileSize || tiles_[n].x >= boundaries().x2() || tiles_[n].y >= boundaries().y2())) {
-			continue;
-		}
+		//things outside the level bounds. Also if the camera is unconstrained
+//		if(!editor_ && (tiles_[n].x <= boundaries().x() - TileSize || tiles_[n].y <= boundaries().y() - TileSize || tiles_[n].x >= boundaries().x2() || tiles_[n].y >= boundaries().y2())) {
+//			continue;
+//		}
 
 		std::shared_ptr<LayerBlitInfo>& blit_cache_info_ptr = blit_cache_[tiles_[n].zorder];
 		if(blit_cache_info_ptr == nullptr) {
@@ -1958,9 +1960,9 @@ void Level::prepare_tiles_for_drawing()
 	std::map<int, std::pair<std::vector<tile_corner>, std::vector<tile_corner>>> vertices_ot;
 
 	for(int n = 0; n != tiles_.size(); ++n) {
-		if(!editor_ && (tiles_[n].x <= boundaries().x() - TileSize || tiles_[n].y <= boundaries().y() - TileSize || tiles_[n].x >= boundaries().x2() || tiles_[n].y >= boundaries().y2())) {
-			continue;
-		}
+//		if(!editor_ && (tiles_[n].x <= boundaries().x() - TileSize || tiles_[n].y <= boundaries().y() - TileSize || tiles_[n].x >= boundaries().x2() || tiles_[n].y >= boundaries().y2())) {
+//			continue;
+//		}
 
 		if(!is_arcade_level() && tiles_[n].object->getSolidColor()) {
 			tiles_[n].draw_disabled = true;
@@ -2478,7 +2480,15 @@ void Level::calculateLighting(int x, int y, int w, int h) const
 	}
 
 	auto& gs = graphics::GameScreen::get();
-	static auto rt = KRE::RenderTarget::create(gs.getVirtualWidth(), gs.getVirtualHeight());
+	static KRE::RenderTargetPtr rt;
+	static int rt_width = -1;
+	static int rt_height = -1;
+
+	if (gs.getVirtualWidth() != rt_width || gs.getVirtualHeight() != rt_height) {
+		rt = KRE::RenderTarget::create(gs.getVirtualWidth(), gs.getVirtualHeight());
+		rt_width = gs.getVirtualWidth();
+		rt_height = gs.getVirtualHeight();
+	}
 
 	{
 		KRE::BlendModeScope blend_scope(KRE::BlendModeConstants::BM_ONE, KRE::BlendModeConstants::BM_ONE);
@@ -2547,7 +2557,7 @@ void Level::draw_debug_solid(int x, int y, int w, int h) const
 	}
 }
 
-void Level::draw_background(int x, int y, int rotation) const
+void Level::draw_background(int x, int y, int rotation, float xdelta, float ydelta) const
 {
 	if(show_background_ == false) {
 		return;
@@ -2574,7 +2584,7 @@ void Level::draw_background(int x, int y, int rotation) const
 			screen_height = static_cast<int>(screen_height / last_draw_position().zoom);
 		}
 
-		rect screen_area(x, y, screen_width, screen_height);
+		rect screen_area(x - xdelta, y - ydelta, screen_width + xdelta*2, screen_height + ydelta*2);
 		for(const rect& r : opaque_rects_) {
 			if(rects_intersect(r, screen_area)) {
 
@@ -2597,7 +2607,7 @@ void Level::draw_background(int x, int y, int rotation) const
 				}
 			}
 		}
-		background_->draw(x, y, screen_area, opaque_areas, static_cast<float>(rotation), cycle());
+		background_->draw(x, y, screen_area, opaque_areas, static_cast<float>(rotation), xdelta, ydelta, cycle());
 	} else {
 		wnd->setClearColor(KRE::Color(0.0f, 0.0f, 0.0f, 0.0f));
 		wnd->clear(KRE::ClearFlags::COLOR);
@@ -3823,6 +3833,12 @@ DEFINE_FIELD(zoom, "decimal")
 	return variant(obj.zoom_level_);
 DEFINE_SET_FIELD
 	obj.zoom_level_ = value.as_float();
+DEFINE_FIELD(instant_zoom, "decimal")
+return variant(obj.zoom_level_);
+DEFINE_SET_FIELD
+obj.zoom_level_ = value.as_float();
+obj.instant_zoom_level_set_ = obj.cycle_;
+
 DEFINE_FIELD(focus, "[custom_obj]")
 	std::vector<variant> v;
 	for(const EntityPtr& e : obj.focus_override_) {
@@ -3853,6 +3869,10 @@ DEFINE_SET_FIELD
 	ASSERT_EQ(value.num_elements(), 4);
 	obj.boundaries_ = rect(value[0].as_int(), value[1].as_int(), value[2].as_int() - value[0].as_int(), value[3].as_int() - value[1].as_int());
 
+DEFINE_FIELD(constrain_camera, "bool")
+	return variant::from_bool(obj.constrain_camera());
+DEFINE_SET_FIELD
+	obj.constrain_camera_ = value.as_bool();
 DEFINE_FIELD(music_volume, "decimal")
 	return variant(sound::get_engine_music_volume());
 DEFINE_SET_FIELD
@@ -4556,6 +4576,11 @@ void Level::editor_freeze_tile_updates(bool value)
 float Level::zoom_level() const
 {
 	return zoom_level_;
+}
+
+bool Level::instant_zoom_level_set() const
+{
+	return instant_zoom_level_set_ >= cycle_-1;
 }
 
 void Level::add_speech_dialog(std::shared_ptr<SpeechDialog> d)

@@ -25,16 +25,18 @@
 #include <stdio.h>
 #include <sstream>
 
-#include "asserts.hpp"
 #include "decimal.hpp"
 #include "unit_test.hpp"
 
 #define DECIMAL(num) static_cast<int64_t>(num##LL)
 
 /**
- * If needing more performance, remove the assertion after adding a
- * documentation comment warning `s` must include the decimal indicator
- * (`.`), else the function misbehaves.
+ * Can handle most strings in the form of `-?\d+(\.\d+)?`.
+ *
+ * Should also handle well all of `-?(\d+)?\.\d+` I think, by
+ * documentation of `strtol(3)`.
+ *
+ * Undefined behavior for `-?\d+\.`?
  */
 decimal decimal::from_string(const std::string& s)
 {
@@ -47,13 +49,16 @@ decimal decimal::from_string(const std::string& s)
 	char* endptr = nullptr, *enddec = nullptr;
 	int64_t n = strtol(ptr, &endptr, 10);
 
-	ASSERT_LOG(
-			* endptr == '.',
-			"function not ready to accept strings without " <<
-			"decimal indicator, but passed string '" <<
-			s << "', must abort");
+	if (* endptr != '.') {
+		if (negative) {
+			n = -n;
+		}
+		return decimal::from_raw_value(n * DECIMAL_PRECISION);
+	}
 
 	int64_t m = strtol(endptr+1, &enddec, 10);
+	//   XXX Can `m` be not a part of `s`? For instance, passing `-5446.`
+	// to this function?
 	auto dist = enddec - endptr;
 	while(dist > (DECIMAL_PLACES+1)) {
 		m /= 10;
@@ -115,7 +120,7 @@ decimal operator/(const decimal& a, const decimal& b)
 	int64_t va = a.value() > 0 ? a.value() : -a.value();
 	int64_t vb = b.value() > 0 ? b.value() : -b.value();
 
-	if(va == 0) {
+	if(va == 0LL) {
 		return a;
 	}
 
@@ -163,12 +168,35 @@ struct TestCase {
 
 UNIT_TEST(decimal_from_string) {
 	TestCase tests[] = {
+		{ 0, "0" },
+		{ 0.032993, "0.032993" },
+		{ .032993, ".032993" },
+		{ 0.32993, "0.32993" },
+		{ .32993, ".32993" },
+		{ 0.5, "0.5" },
+		{ .5, ".5" },
 		{ 5.5, "5.5" },
 		{ -1.5, "-1.5" },
+		{ 6, "6" },
+		{ 500000, "500000" },
+		{ 500000, "500000.000000" },
+		{ -500000, "-500000" },
+		{ -500000, "-500000.000000" },
+		{ 999999, "999999" },
+		{ -999999, "-999999" },
+		{ 999999.999999, "999999.999999" },
+		{ -999999.999999, "-999999.999999" },
+// 		{ 999999999.999999, "999999999.999999" },
+// 		{ -999999999.999999, "-999999999.999999" },
+// 		{ 999999999999.999999, "999999999999.999999" },
+// 		{ -999999999999.999999, "-999999999999.999999" },
 	};
 
 	for(int n = 0; n != sizeof(tests)/sizeof(tests[0]); ++n) {
-		CHECK_EQ(tests[n].value, decimal::from_string(tests[n].expected).as_float());
+		CHECK_EQ_M(
+				tests[n].value,
+				decimal::from_string(tests[n].expected).as_float(),
+				"CASE: " << n);
 	}
 }
 
@@ -200,9 +228,41 @@ UNIT_TEST(decimal_mul) {
 	CHECK_EQ(decimal::from_string("0.08")*decimal::from_string("0.5"), decimal::from_string("0.04"));
 }
 
+UNIT_TEST(decimal_assign_mul_0) {
+	const uint_fast8_t a = 2;
+	decimal b(decimal::from_int(3));
+	const decimal c(decimal::from_int(6));
+	b *= a;
+	CHECK_EQ(c, b);
+}
+
+UNIT_TEST(decimal_assign_mul_1) {
+	const decimal a(decimal::from_int(2));
+	decimal b(decimal::from_string("3.0"));
+	const decimal c(decimal::from_int(6));
+	b *= a;
+	CHECK_EQ(c, b);
+}
+
 UNIT_TEST(decimal_div) {
 	//10934.54 / 7649.44
 	CHECK_EQ(decimal::from_raw_value(DECIMAL(10934540000))/decimal::from_raw_value(DECIMAL(7649440000)), decimal::from_raw_value(DECIMAL(1429456)));
+}
+
+UNIT_TEST(decimal_assign_div_0) {
+	const uint_fast8_t a = 2;
+	decimal b(decimal::from_int(15));
+	const decimal c(decimal::from_string("7.5"));
+	b /= a;
+	CHECK_EQ(c, b);
+}
+
+UNIT_TEST(decimal_assign_div_1) {
+	const decimal a(decimal::from_int(2));
+	decimal b(decimal::from_string("15.0"));
+	const decimal c(decimal::from_string("7.5"));
+	b /= a;
+	CHECK_EQ(c, b);
 }
 
 BENCHMARK(decimal_div_bench) {

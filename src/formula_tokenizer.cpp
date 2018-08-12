@@ -23,6 +23,7 @@
 
 #include <iostream>
 
+#include "asserts.hpp"
 #include "formatter.hpp"
 #include "formula_tokenizer.hpp"
 #include "string_utils.hpp"
@@ -64,6 +65,8 @@ namespace formula_tokenizer
 
 		const FFL_TOKEN_TYPE* single_char_tokens = create_single_char_tokens();
 	}
+
+	const std::string UNRECOGNIZED_TOKEN_STR = "Unrecognized token";
 
 	Token get_token(iterator& i1, iterator i2) {
 		Token t;
@@ -345,7 +348,8 @@ namespace formula_tokenizer
 			return t;
 		}
 
-		throw TokenError(formatter() << "Unrecognized token: '" << std::string(i1,i2) << "'");
+		throw TokenError(formatter() << UNRECOGNIZED_TOKEN_STR << ": '"
+				<< std::string(i1,i2) << "'");
 	}
 
 	TokenError::TokenError(const std::string& m) : msg(m)
@@ -472,6 +476,176 @@ UNIT_TEST(tokenizer_test)
 		CHECK_EQ(std::string(t.begin,t.end), tokens[n]);
 		CHECK_EQ(static_cast<int>(t.type), static_cast<int>(types[n]));
 
+	}
+}
+
+UNIT_TEST(tokenization_error_test_0)
+{
+	const std::string test = "../*..*//* /* /* /**/ */ */ */ :: FOO /*..";
+	std::string::const_iterator i1 = test.begin();
+	std::string::const_iterator i2 = test.end();
+	const formula_tokenizer::FFL_TOKEN_TYPE types[] = {
+			formula_tokenizer::FFL_TOKEN_TYPE::ELLIPSIS,
+			formula_tokenizer::FFL_TOKEN_TYPE::COMMENT,
+			formula_tokenizer::FFL_TOKEN_TYPE::COMMENT,
+			formula_tokenizer::FFL_TOKEN_TYPE::WHITESPACE,
+			formula_tokenizer::FFL_TOKEN_TYPE::OPERATOR,
+			formula_tokenizer::FFL_TOKEN_TYPE::WHITESPACE,
+			formula_tokenizer::FFL_TOKEN_TYPE::CONST_IDENTIFIER,
+			formula_tokenizer::FFL_TOKEN_TYPE::WHITESPACE };
+	const std::string tokens[] = {
+			"..", "/*..*/", "/* /* /* /**/ */ */ */", " ", "::",
+			" ", "FOO", " " };
+	for (int i = 0; i < sizeof(tokens) / sizeof(*tokens); i++) {
+		const formula_tokenizer::Token t =
+				formula_tokenizer::get_token(i1, i2);
+		const std::string t_as_string(t.begin, t.end);
+		LOG_INFO(t_as_string);
+		CHECK_EQ(t_as_string, tokens[i]);
+		CHECK_EQ(static_cast<int>(t.type), static_cast<int>(types[i]));
+	}
+	bool excepted = false;
+	{
+		const assert_recover_scope unit_test_exception_expected;
+		try {
+			const formula_tokenizer::Token t1 =
+					formula_tokenizer::get_token(i1, i2);
+		} catch (const formula_tokenizer::TokenError te) {
+			excepted = true;
+		}
+	}
+	ASSERT_LOG(excepted, "failed to throw a tokenizer error on being presented an unterminated C-style comment");
+}
+
+UNIT_TEST(tokenization_error_test_1)
+{
+	const std::string test = "blah#blahblah";
+	std::string::const_iterator i1 = test.begin();
+	std::string::const_iterator i2 = test.end();
+	const formula_tokenizer::FFL_TOKEN_TYPE types[] = {
+			formula_tokenizer::FFL_TOKEN_TYPE::IDENTIFIER };
+	const std::string tokens[] = { "blah" };
+		const formula_tokenizer::Token t0 =
+		formula_tokenizer::get_token(i1, i2);
+	CHECK_EQ(std::string(t0.begin, t0.end), tokens[0]);
+	CHECK_EQ(static_cast<int>(t0.type), static_cast<int>(types[0]));
+	bool excepted = false;
+	{
+		const assert_recover_scope unit_test_exception_expected;
+		try {
+			const formula_tokenizer::Token t1 =
+					formula_tokenizer::get_token(i1, i2);
+		} catch (const formula_tokenizer::TokenError te) {
+			excepted = true;
+		}
+	}
+	ASSERT_LOG(excepted, "failed to throw a tokenizer error on being presented an unterminated shell-style comment");
+}
+
+UNIT_TEST(tokenization_error_test_2)
+{
+	const std::string test = "blah q(blahblah";
+	std::string::const_iterator i1 = test.begin();
+	std::string::const_iterator i2 = test.end();
+	const formula_tokenizer::FFL_TOKEN_TYPE types[] = {
+			formula_tokenizer::FFL_TOKEN_TYPE::IDENTIFIER,
+			formula_tokenizer::FFL_TOKEN_TYPE::WHITESPACE };
+	const std::string tokens[] = { "blah", " " };
+	for (int i = 0; i < sizeof(tokens) / sizeof(*tokens); i++) {
+		const formula_tokenizer::Token t =
+				formula_tokenizer::get_token(i1, i2);
+		LOG_INFO(std::string(t.begin, t.end));
+		CHECK_EQ(std::string(t.begin, t.end), tokens[i]);
+		CHECK_EQ(static_cast<int>(t.type), static_cast<int>(types[i]));
+	}
+	bool excepted = false;
+	{
+		const assert_recover_scope unit_test_exception_expected;
+		try {
+			const formula_tokenizer::Token t1 =
+					formula_tokenizer::get_token(i1, i2);
+		} catch (const formula_tokenizer::TokenError te) {
+			excepted = true;
+		}
+	}
+	ASSERT_LOG(excepted, "failed to throw a tokenizer error on being presented an unterminated quote");
+}
+
+// XXX   Why is this illegal?
+UNIT_TEST(tokenization_error_test_3)
+{
+	const std::string test = "blah!!blah";
+	std::string::const_iterator i1 = test.begin();
+	std::string::const_iterator i2 = test.end();
+	const formula_tokenizer::FFL_TOKEN_TYPE types[] = {
+			formula_tokenizer::FFL_TOKEN_TYPE::IDENTIFIER };
+	const std::string tokens[] = { "blah" };
+	const formula_tokenizer::Token t0 =
+			formula_tokenizer::get_token(i1, i2);
+	CHECK_EQ(std::string(t0.begin, t0.end), tokens[0]);
+	CHECK_EQ(static_cast<int>(t0.type), static_cast<int>(types[0]));
+	bool excepted = false;
+	{
+		const assert_recover_scope unit_test_exception_expected;
+		try {
+			const formula_tokenizer::Token t1 =
+					formula_tokenizer::get_token(i1, i2);
+		} catch (const formula_tokenizer::TokenError te) {
+			excepted = true;
+		}
+	}
+	ASSERT_LOG(excepted, "failed to throw a tokenizer error on being presented a double exclamation mark");
+}
+
+UNIT_TEST(tokenization_error_test_4)
+{
+	const std::string test = "blah$ blah";
+	std::string::const_iterator i1 = test.begin();
+	std::string::const_iterator i2 = test.end();
+	const formula_tokenizer::FFL_TOKEN_TYPE types[] = {
+			formula_tokenizer::FFL_TOKEN_TYPE::IDENTIFIER, };
+	const std::string tokens[] = { "blah" };
+	const formula_tokenizer::Token t0 =
+			formula_tokenizer::get_token(i1, i2);
+	CHECK_EQ(std::string(t0.begin, t0.end), tokens[0]);
+	CHECK_EQ(static_cast<int>(t0.type), static_cast<int>(types[0]));
+	bool excepted = false;
+	{
+		const assert_recover_scope unit_test_exception_expected;
+		try {
+			const formula_tokenizer::Token t1 =
+					formula_tokenizer::get_token(i1, i2);
+		} catch (const formula_tokenizer::TokenError te) {
+			ASSERT_LOG(
+					te.msg.find(formula_tokenizer::UNRECOGNIZED_TOKEN_STR) !=
+							std::string::npos,
+					"got unexpected tokenizer error '" << te.msg << '\'');
+			excepted = true;
+		}
+	}
+	ASSERT_LOG(excepted, "failed to throw a tokenizer error on being presented an unrecognized token");
+}
+
+UNIT_TEST(tokenization_test_1)
+{
+	const std::string test = " << q >> ";
+	std::string::const_iterator i1 = test.begin();
+	std::string::const_iterator i2 = test.end();
+	const formula_tokenizer::FFL_TOKEN_TYPE types[] = {
+			formula_tokenizer::FFL_TOKEN_TYPE::WHITESPACE,
+			formula_tokenizer::FFL_TOKEN_TYPE::LDUBANGLE,
+			formula_tokenizer::FFL_TOKEN_TYPE::WHITESPACE,
+			formula_tokenizer::FFL_TOKEN_TYPE::IDENTIFIER,
+			formula_tokenizer::FFL_TOKEN_TYPE::WHITESPACE,
+			formula_tokenizer::FFL_TOKEN_TYPE::RDUBANGLE,
+			formula_tokenizer::FFL_TOKEN_TYPE::WHITESPACE };
+	const std::string tokens[] = { " ", "<<", " ", "q", " ", ">>", " " };
+	for (int i = 0; i < sizeof(tokens) / sizeof(*tokens); i++) {
+		const formula_tokenizer::Token t =
+				formula_tokenizer::get_token(i1, i2);
+		LOG_INFO(std::string(t.begin, t.end));
+		CHECK_EQ(std::string(t.begin, t.end), tokens[i]);
+		CHECK_EQ(static_cast<int>(t.type), static_cast<int>(types[i]));
 	}
 }
 

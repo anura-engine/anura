@@ -15,6 +15,8 @@
 #include "utf8_to_codepoint.hpp"
 #include "variant_type.hpp"
 
+extern int g_max_ffl_recursion;
+
 namespace formula_vm {
 using namespace game_logic;
 
@@ -41,14 +43,35 @@ static bool incrementVec(std::vector<int>& v, const std::vector<int>& max_values
 	return false;
 }
 
+int g_vmDepth = 0;
+
+struct VMOverflowGuard {
+	VMOverflowGuard() {
+		++g_vmDepth;
+	}
+
+	~VMOverflowGuard() {
+		--g_vmDepth;
+	}
+};
+
 }
+
+
 
 variant VirtualMachine::execute(const FormulaCallable& variables) const
 {
+	VMOverflowGuard overflow_guard;
+
 	std::vector<FormulaCallablePtr> variables_stack;
 	std::vector<variant> stack;
 	std::vector<variant> symbol_stack;
 	stack.reserve(8);
+
+	if (g_vmDepth > g_max_ffl_recursion) {
+		ASSERT_LOG(false, "Overflow in VM: " << debugPinpointLocation(&instructions_[0], stack));
+	}
+
 	executeInternal(variables, variables_stack, stack, symbol_stack, &instructions_[0], &instructions_[0] + instructions_.size());
 	return stack.back();
 }
@@ -302,10 +325,37 @@ void VirtualMachine::executeInternal(const FormulaCallable& variables, std::vect
 			if(left.is_callable()) {
 				variant result = left.as_callable()->queryValue(right.as_string());
 				left = result;
-			} else if(left.is_list() || left.is_map()) {
+			} else if(left.is_map()) {
 				variant result = left[right];
 				left = result;
-			} else if(left.is_string()) {
+			}
+			else if (left.is_list() && !right.is_string()) {
+				variant result = left[right];
+				left = result;
+			}
+			else if (left.is_list()) {
+				const std::string& s = right.as_string();
+				int index;
+				if (s == "x" || s == "r") {
+					index = 0;
+				}
+				else if (s == "y" || s == "g") {
+					index = 1;
+				}
+				else if (s == "z" || s == "b") {
+					index = 2;
+				}
+				else if (s == "a") {
+					index = 3;
+				}
+				else {
+					ASSERT_LOG(false, "Illegal string lookup on list: " << s << ": " << debugPinpointLocation(p, stack));
+				}
+
+				variant result = left[index];
+				left = result;
+			}
+			else if (left.is_string()) {
 				const std::string& s = left.as_string();
 				unsigned int index = right.as_int();
 				ASSERT_LOG(index < s.length(), "index outside bounds: " << s << "[" << index << "]'\n'"  << debugPinpointLocation(p, stack));
@@ -1466,6 +1516,62 @@ UNIT_TEST(formula_vm) {
 		vm.addConstant(variant(8));
 		vm.addInstruction(OP_ADD);
 		CHECK_EQ(vm.execute(*callable), variant(13));
+	}
+}
+
+UNIT_TEST(formula_vm_and_0) {
+	const MapFormulaCallable * callable = new MapFormulaCallable;
+	const variant ref(callable);
+	{
+		VirtualMachine vm;
+		vm.addInstruction(OP_CONSTANT);
+		vm.addConstant(variant(true));
+		vm.addInstruction(OP_CONSTANT);
+		vm.addConstant(variant(false));
+		vm.addInstruction(OP_AND);
+		CHECK_EQ(vm.execute(* callable), variant(false));
+	}
+}
+
+UNIT_TEST(formula_vm_and_1) {
+	const MapFormulaCallable * callable = new MapFormulaCallable;
+	const variant ref(callable);
+	{
+		VirtualMachine vm;
+		vm.addInstruction(OP_CONSTANT);
+		vm.addConstant(variant(false));
+		vm.addInstruction(OP_CONSTANT);
+		vm.addConstant(variant(true));
+		vm.addInstruction(OP_AND);
+		CHECK_EQ(vm.execute(* callable), variant(false));
+	}
+}
+
+UNIT_TEST(formula_vm_or_0) {
+	const MapFormulaCallable * callable = new MapFormulaCallable;
+	const variant ref(callable);
+	{
+		VirtualMachine vm;
+		vm.addInstruction(OP_CONSTANT);
+		vm.addConstant(variant(true));
+		vm.addInstruction(OP_CONSTANT);
+		vm.addConstant(variant(false));
+		vm.addInstruction(OP_OR);
+		CHECK_EQ(vm.execute(* callable), variant(true));
+	}
+}
+
+UNIT_TEST(formula_vm_or_1) {
+	const MapFormulaCallable * callable = new MapFormulaCallable;
+	const variant ref(callable);
+	{
+		VirtualMachine vm;
+		vm.addInstruction(OP_CONSTANT);
+		vm.addConstant(variant(false));
+		vm.addInstruction(OP_CONSTANT);
+		vm.addConstant(variant(true));
+		vm.addInstruction(OP_OR);
+		CHECK_EQ(vm.execute(* callable), variant(true));
 	}
 }
 

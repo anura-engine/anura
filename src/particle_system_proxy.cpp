@@ -287,6 +287,11 @@ namespace graphics
 	DEFINE_SET_FIELD
 		obj.obj_->setEmissionRate(value);
 	
+	DEFINE_FIELD(orientation_follows_direction, "bool")
+		return variant::from_bool(obj.obj_->doesOrientationFollowDirection());
+	DEFINE_SET_FIELD
+		obj.obj_->setOrientationFollowsDirection(value.as_bool());
+
 	END_DEFINE_CALLABLE(ParticleEmitterProxy)
 
 	BEGIN_DEFINE_CALLABLE_NOBASE(ParticleAffectorProxy)

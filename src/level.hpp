@@ -113,7 +113,7 @@ public:
 	void drawLater(int x, int y, int w, int h) const;
 	void draw_status() const;
 	void draw_debug_solid(int x, int y, int w, int h) const;
-	void draw_background(int x, int y, int rotation) const;
+	void draw_background(int x, int y, int rotation, float xdelta, float ydelta) const;
 	void process();
 	void set_active_chars();
 	void process_draw();
@@ -129,6 +129,7 @@ public:
 	EntityPtr board(int x, int y) const;
 	const rect& boundaries() const { return boundaries_; }
 	void set_boundaries(const rect& bounds) { boundaries_ = bounds; }
+	bool constrain_camera() const { return constrain_camera_; }
 	void add_tile(const LevelTile& t);
 	bool add_tile_rect(int zorder, int x1, int y1, int x2, int y2, const std::string& tile);
 	bool addTileRectVector(int zorder, int x1, int y1, int x2, int y2, const std::vector<std::string>& tiles);
@@ -330,6 +331,7 @@ public:
 	void editor_freeze_tile_updates(bool value);
 
 	float zoom_level() const;
+	bool instant_zoom_level_set() const;
 
 	void add_speech_dialog(std::shared_ptr<SpeechDialog> d);
 	void remove_speech_dialog();
@@ -504,6 +506,8 @@ private:
 
 	rect boundaries_;
 
+	bool constrain_camera_;
+
 	struct solid_rect {
 		rect r;
 		int friction;
@@ -644,6 +648,7 @@ private:
 	bool editor_dragging_objects_;
 
 	float zoom_level_;
+	int instant_zoom_level_set_;
 	std::vector<EntityPtr> focus_override_;
 
 	std::stack<std::shared_ptr<SpeechDialog> > speech_dialogs_;
