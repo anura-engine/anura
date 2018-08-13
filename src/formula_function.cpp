@@ -6709,3 +6709,667 @@ FunctionSymbolTable& get_formula_functions_symbol_table()
 	static formula_FunctionSymbolTable table;
 	return table;
 }
+
+//   Includes a `CHECK_EQ` that must check that the type of the input variant
+// `v` matches `expected_type` (the type expectation). This is provided as an
+// alternative to `void variant::must_be(variant::TYPE) const` more centered
+// around unit tests (makes the test a failure, instead of aborting fatally).
+void check_type_matches(const variant::TYPE expected_type, const variant & v) {
+	const variant::TYPE v_type = v.type();
+	if (expected_type != v_type) {
+		std::string serialized_v;
+		v.serializeToString(serialized_v);
+		LOG_INFO("unexpected type for variant '" + serialized_v + "'");
+		const std::string expected_type_as_string =
+				variant::variant_type_to_string(expected_type);
+		LOG_INFO("expected type: '" + expected_type_as_string + '\'');
+		const std::string v_type_as_string =
+				variant::variant_type_to_string(v_type);
+		LOG_INFO("actual type: '" + v_type_as_string + '\'');
+		//   If the check is going to fail, check the type names
+		// instead of the actual types, in order to have a pretty
+		// failure message.
+		const std::string actual_type_as_string = v_type_as_string;
+		CHECK_EQ(expected_type_as_string, actual_type_as_string);
+	}
+	//   If the check is going to succeed, check the actual types, because
+	// that's how it's supposed to be.
+	CHECK_EQ(expected_type, v_type);
+}
+
+//   Includes a `CHECK_EQ` that must check that the type of the input variant
+// `v` matches the expectation. This is syntactic sugar for
+// `check_type_matches(const variant::TYPE, const variant &)`.
+void check_type_is_bool(const variant & v) {
+	check_type_matches(variant::TYPE::VARIANT_TYPE_BOOL, v);
+}
+
+//   Includes a `CHECK_EQ` that must check that the type of the input variant
+// `v` matches the expectation. This is syntactic sugar for
+// `check_type_matches(const variant::TYPE, const variant &)`.
+void check_type_is_int(const variant & v) {
+	check_type_matches(variant::TYPE::VARIANT_TYPE_INT, v);
+}
+
+//   Includes a `CHECK_EQ` that must check that the type of the input variant
+// `v` matches the expectation. This is syntactic sugar for
+// `check_type_matches(const variant::TYPE, const variant &)`.
+void check_type_is_decimal(const variant & v) {
+	check_type_matches(variant::TYPE::VARIANT_TYPE_DECIMAL, v);
+}
+
+//   Includes a `CHECK_EQ` that must check that the type of the input variant
+// `v` matches the expectation. This is syntactic sugar for
+// `check_type_matches(const variant::TYPE, const variant &)`.
+void check_type_is_object(const variant & v) {
+	check_type_matches(variant::TYPE::VARIANT_TYPE_CALLABLE, v);
+}
+
+//   Includes a `CHECK_EQ` that must check that the type of the input variant
+// `v` matches the expectation. This is syntactic sugar for
+// `check_type_matches(const variant::TYPE, const variant &)`.
+void check_type_is_list(const variant & v) {
+	check_type_matches(variant::TYPE::VARIANT_TYPE_LIST, v);
+}
+
+//   Includes a `CHECK_EQ` that must check that the type of the input variant
+// `v` matches the expectation. This is syntactic sugar for
+// `check_type_matches(const variant::TYPE, const variant &)`.
+void check_type_is_string(const variant & v) {
+	check_type_matches(variant::TYPE::VARIANT_TYPE_STRING, v);
+}
+
+//   Includes a `CHECK_EQ` that must check that the type of the input variant
+// `v` matches the expectation. This is syntactic sugar for
+// `check_type_matches(const variant::TYPE, const variant &)`.
+void check_type_is_dictionary(const variant & v) {
+	check_type_matches(variant::TYPE::VARIANT_TYPE_MAP, v);
+}
+
+//   Includes a `CHECK_EQ` that must check that the type of the input variant
+// `v` matches the expectation. This is syntactic sugar for
+// `check_type_matches(const variant::TYPE, const variant &)`.
+void check_type_is_enum(const variant & v) {
+	check_type_matches(variant::TYPE::VARIANT_TYPE_ENUM, v);
+}
+
+UNIT_TEST(split_variant_if_int) {
+	const variant non_str_variant(32993);
+	const variant split_returned = split_variant_if_str(non_str_variant);
+	check_type_is_int(split_returned);
+	CHECK_EQ(non_str_variant, split_returned);
+}
+
+UNIT_TEST(split_variant_if_str) {
+	const variant str_variant("foo");
+	LOG_DEBUG(str_variant);
+	std::vector<std::string> expected_contents;
+	expected_contents.emplace_back("f");
+	expected_contents.emplace_back("o");
+	expected_contents.emplace_back("o");
+	const variant split_returned = split_variant_if_str(str_variant);
+	LOG_DEBUG(split_returned);
+	check_type_is_list(split_returned);
+	const std::vector<variant> variant_list = split_returned.as_list();
+	const uint_fast8_t variant_list_size = variant_list.size();
+	CHECK_EQ(expected_contents.size(), variant_list_size);
+	for (int i = 0; i < variant_list_size; i++) {
+		const std::string expected = expected_contents[i];
+		const variant actual = variant_list[i];
+		check_type_is_string(actual);
+		const std::string actual_as_string = actual.as_string();
+		CHECK_EQ(expected, actual_as_string);
+	}
+}
+
+UNIT_TEST(bind_command_return_type) {
+	const std::string code = "bind_command(def () -> null null)";
+	const variant code_variant(code);
+	const game_logic::Formula formula(code_variant);
+	const variant execution_output(formula.execute());
+	check_type_is_object(execution_output);
+	const game_logic::FormulaCallable * execution_output_as_callable =
+			execution_output.as_callable();
+	std::string serialized;
+	execution_output_as_callable->serialize(serialized);
+	LOG_DEBUG(serialized);
+	const std::string needle = "(UNSERIALIZABLE_OBJECT ";
+	const auto occurrence = serialized.find(needle);
+	LOG_DEBUG(occurrence);
+	ASSERT_LOG(occurrence != std::string::npos,
+			"unexpected serialization form");
+// 	const variant slot_zero_value =
+// 			execution_output_as_callable->queryValueBySlot(0);
+// 	const variant::TYPE slot_zero_value_type = slot_zero_value.type();
+// 	const std::string slot_zero_value_type_as_string =
+// 			variant::variant_type_to_string(
+// 					slot_zero_value_type);
+// 	LOG_DEBUG(slot_zero_value_type_as_string);
+	const auto needle_len = needle.length();
+	const std::string label =
+			serialized.substr(
+					needle_len,
+					serialized.length() - needle_len - 1);
+	LOG_DEBUG(label);
+	// Observed `N10game_logic12_GLOBAL__N_113bound_commandE` at macOS.
+	if ("N10game_logic12_GLOBAL__N_113bound_commandE" != label) {
+		LOG_INFO("unexpected return label '" + label + '\'');
+		LOG_INFO("this is expected and not a problem");
+	}
+}
+
+void xml_to_json_demands_quoted_attributes_inner_good(
+		const std::string & code) {
+
+	const variant code_variant(code);
+	const game_logic::Formula formula(code_variant);
+	const variant output = formula.execute();
+	check_type_is_list(output);
+	const std::vector<variant> output_as_list = output.as_list();
+	const uint_fast8_t output_as_list_size = output_as_list.size();
+	CHECK_EQ(3, output_as_list_size);
+	for (int i = 0; i < output_as_list_size; i++) {
+		const variant element = output_as_list[i];
+		check_type_is_dictionary(element);
+		const std::map<variant, variant> element_as_map =
+				element.as_map();
+		const uint_fast8_t element_as_map_size = element_as_map.size();
+		CHECK_EQ(3, element_as_map_size);
+		for (auto const & it : element_as_map) {
+			const variant first = it.first;
+			check_type_is_string(first);
+			const std::string first_as_string = first.as_string();
+			const variant second = it.second;
+			if (first_as_string == "attr") {
+				check_type_is_dictionary(second);
+				const std::map<variant, variant> second_as_map =
+						second.as_map();
+				const uint_fast8_t second_as_map_size =
+						second_as_map.size();
+				LOG_DEBUG(second_as_map_size);
+				if (i == 0) {
+					CHECK_EQ(1, second_as_map_size);
+					std::map<variant, variant>::const_iterator
+					second_as_map_begin =
+							second_as_map.begin();
+					const variant second_as_map_first =
+							second_as_map_begin->first;
+					check_type_is_string(second_as_map_first);
+					const std::string second_as_map_first_as_string =
+							second_as_map_first.as_string();
+					CHECK_EQ("b", second_as_map_first_as_string);
+					const variant second_as_map_second =
+							second_as_map_begin->second;
+					check_type_is_string(second_as_map_second);
+					const std::string second_as_map_second_as_string =
+							second_as_map_second.as_string();
+					CHECK_EQ("c", second_as_map_second_as_string);
+				} else {
+					ASSERT_LOG(i == 1 || i == 2,
+							"unexpected list element/s");
+					CHECK_EQ(0, second_as_map_size);
+				}
+			} else if (first_as_string == "data") {
+				check_type_is_string(second);
+				const std::string second_as_string =
+						second.as_string();
+				if (i == 0 || i == 2) {
+					CHECK_EQ("a", second_as_string);
+				} else {
+					ASSERT_LOG(i == 1,
+							"unexpected list element/s");
+					CHECK_EQ("d", second_as_string);
+				}
+			} else {
+				ASSERT_LOG(
+						first_as_string == "type",
+						"unexpected map key/s");
+				check_type_is_enum(second);
+				const std::string second_as_enum =
+						second.as_enum();
+				LOG_DEBUG(second_as_enum);
+				if (i == 0) {
+					CHECK_EQ("start_element",
+							second_as_enum);
+				} else if (i == 1) {
+					CHECK_EQ("text", second_as_enum);
+				} else {
+					ASSERT_LOG(i == 2,
+							"unexpected list element/s");
+					CHECK_EQ("end_element",
+							second_as_enum);
+				}
+			}
+		}
+	}
+}
+
+UNIT_TEST(xml_to_json_demands_quoted_attributes_0) {
+	const std::string xml = "<a b=\"c\">d</a>";
+	const std::string code = "parse_xml('" + xml + "')";
+	xml_to_json_demands_quoted_attributes_inner_good(code);
+}
+
+UNIT_TEST(xml_to_json_demands_quoted_attributes_1) {
+	const std::string xml = "<a b='c'>d</a>";
+	const std::string code = "parse_xml(\"" + xml + "\")";
+	xml_to_json_demands_quoted_attributes_inner_good(code);
+}
+
+UNIT_TEST(xml_to_json_demands_quoted_attributes_2) {
+	const std::string xml = "<a b=c>d</a>";
+	const std::string code = "parse_xml('" + xml + "')";
+	const variant code_variant(code);
+	const game_logic::Formula formula(code_variant);
+	const variant output = formula.execute();
+	check_type_is_string(output);
+	const std::string output_as_string = output.as_string();
+	const std::string expected = "Error parsing XML: <a b=c>d</a>";
+	CHECK_EQ(expected, output_as_string);
+}
+
+UNIT_TEST(keys_of_map) {
+	const std::string code = "keys({0: 'a', 'b': 32993, })";
+	const variant code_variant(code);
+	const game_logic::Formula formula(code_variant);
+	const variant output = formula.execute();
+	check_type_is_list(output);
+	const std::vector<variant> output_as_list = output.as_list();
+	const uint_fast8_t output_as_list_size = output_as_list.size();
+	LOG_DEBUG(output_as_list_size);
+	for (uint_fast8_t i = 0; i < output_as_list_size; i++) {
+		const variant element = output_as_list[i];
+		if (i == 0) {
+			check_type_is_int(element);
+			const int_fast32_t element_as_int = element.as_int();
+			CHECK_EQ(0, element_as_int);
+		} else {
+			ASSERT_LOG(i == 1, "unexpected list element/s");
+			check_type_is_string(element);
+			const std::string element_as_string =
+					element.as_string();
+			CHECK_EQ("b", element_as_string);
+		}
+	}
+}
+
+UNIT_TEST(values_of_map) {
+	const std::string code = "values({0: 'a', 'b': 32993, })";
+	const variant code_variant(code);
+	const game_logic::Formula formula(code_variant);
+	const variant output = formula.execute();
+	check_type_is_list(output);
+	const std::vector<variant> output_as_list = output.as_list();
+	const uint_fast8_t output_as_list_size = output_as_list.size();
+	LOG_DEBUG(output_as_list_size);
+	for (uint_fast8_t i = 0; i < output_as_list_size; i++) {
+		const variant element = output_as_list[i];
+		if (i == 0) {
+			check_type_is_string(element);
+			const std::string element_as_string =
+					element.as_string();
+			CHECK_EQ("a", element_as_string);
+		} else {
+			ASSERT_LOG(i == 1, "unexpected list element/s");
+			check_type_is_int(element);
+			const int_fast32_t element_as_int = element.as_int();
+			CHECK_EQ(32993, element_as_int);
+		}
+	}
+}
+
+UNIT_TEST(wave_for_int_0) {
+	const std::string code = "wave(0)";
+	const variant code_variant(code);
+	const game_logic::Formula formula(code_variant);
+	const variant output = formula.execute();
+	check_type_is_int(output);
+	const int_fast32_t output_as_int = output.as_int();
+	CHECK_EQ(0, output_as_int);
+}
+
+UNIT_TEST(wave_for_int_1) {
+	const std::string code = "wave(1)";
+	const variant code_variant(code);
+	const game_logic::Formula formula(code_variant);
+	const variant output = formula.execute();
+	check_type_is_int(output);
+	const int_fast32_t output_as_int = output.as_int();
+	CHECK_GE(output_as_int, 5);
+	CHECK_LE(output_as_int, 7);
+}
+
+UNIT_TEST(wave_for_int_2) {
+	const std::string code = "wave(2)";
+	const variant code_variant(code);
+	const game_logic::Formula formula(code_variant);
+	const variant output = formula.execute();
+	check_type_is_int(output);
+	const int_fast32_t output_as_int = output.as_int();
+	CHECK_GE(output_as_int, 11);
+	CHECK_LE(output_as_int, 13);
+}
+
+UNIT_TEST(wave_for_int_100) {
+	const std::string code = "wave(100)";
+	const variant code_variant(code);
+	const game_logic::Formula formula(code_variant);
+	const variant output = formula.execute();
+	check_type_is_int(output);
+	const int_fast32_t output_as_int = output.as_int();
+	CHECK_GE(output_as_int, 586);
+	CHECK_LE(output_as_int, 588);
+}
+
+UNIT_TEST(wave_for_int_500) {
+	const std::string code = "wave(500)";
+	const variant code_variant(code);
+	const game_logic::Formula formula(code_variant);
+	const variant output = formula.execute();
+	check_type_is_int(output);
+	const int_fast32_t output_as_int = output.as_int();
+	CHECK_EQ(0, output_as_int);
+}
+
+UNIT_TEST(wave_for_int_750) {
+	const std::string code = "wave(750)";
+	const variant code_variant(code);
+	const game_logic::Formula formula(code_variant);
+	const variant output = formula.execute();
+	check_type_is_int(output);
+	const int_fast32_t output_as_int = output.as_int();
+	CHECK_EQ(-1000, output_as_int);
+}
+
+UNIT_TEST(wave_for_int_800) {
+	const std::string code = "wave(800)";
+	const variant code_variant(code);
+	const game_logic::Formula formula(code_variant);
+	const variant output = formula.execute();
+	check_type_is_int(output);
+	const int_fast32_t output_as_int = output.as_int();
+	CHECK_GE(output_as_int, -952);
+	CHECK_LE(output_as_int, -950);
+}
+
+UNIT_TEST(wave_for_int_1000) {
+	const std::string code = "wave(1000)";
+	const variant code_variant(code);
+	const game_logic::Formula formula(code_variant);
+	const variant output = formula.execute();
+	check_type_is_int(output);
+	const int_fast32_t output_as_int = output.as_int();
+	CHECK_EQ(0, output_as_int);
+}
+
+UNIT_TEST(wave_for_int_1500) {
+	const std::string code = "wave(1500)";
+	const variant code_variant(code);
+	const game_logic::Formula formula(code_variant);
+	const variant output = formula.execute();
+	check_type_is_int(output);
+	const int_fast32_t output_as_int = output.as_int();
+	CHECK_EQ(0, output_as_int);
+}
+
+UNIT_TEST(decimal_for_parsable_string) {
+	const std::string code = "decimal('32993')";
+	const variant code_variant(code);
+	const game_logic::Formula formula(code_variant);
+	const variant output = formula.execute();
+	check_type_is_decimal(output);
+	const decimal output_as_decimal = output.as_decimal();
+	CHECK_EQ(decimal::from_string("32993.0"), output_as_decimal);
+}
+
+// UNIT_TEST(decimal_for_unparsable_string) {
+// 	const std::string code = "decimal('foo')";
+// 	const variant code_variant(code);
+// 	const game_logic::Formula formula(code_variant);
+// 	bool excepted = false;
+// 	{
+// 		const assert_recover_scope unit_test_exception_expected;
+// 		try {
+// 			formula.execute();
+// 		} catch (const validation_failure_exception vfe) {
+// 			excepted = true;
+// 		}
+// 	}
+// 	ASSERT_LOG(excepted, "expected an exception that did not happen");
+// }
+
+UNIT_TEST(decimal_for_int) {
+	const std::string code = "decimal(32993)";
+	const variant code_variant(code);
+	const game_logic::Formula formula(code_variant);
+	const variant output = formula.execute();
+	check_type_is_decimal(output);
+	const decimal output_as_decimal = output.as_decimal();
+	CHECK_EQ(decimal::from_string("32993.0"), output_as_decimal);
+}
+
+UNIT_TEST(int_for_parsable_string) {
+	const std::string code = "int('32993')";
+	const variant code_variant(code);
+	const game_logic::Formula formula(code_variant);
+	const variant output = formula.execute();
+	check_type_is_int(output);
+	const int_fast32_t output_as_int = output.as_int();
+	CHECK_EQ(32993, output_as_int);
+}
+
+// UNIT_TEST(int_for_unparsable_string) {
+// 	const std::string code = "int('foo')";
+// 	const variant code_variant(code);
+// 	const game_logic::Formula formula(code_variant);
+// 	bool excepted = false;
+// 	{
+// 		const assert_recover_scope unit_test_exception_expected;
+// 		try {
+// 			formula.execute();
+// 		} catch (const validation_failure_exception vfe) {
+// 			excepted = true;
+// 		}
+// 	}
+// 	ASSERT_LOG(excepted, "expected an exception that did not happen");
+// }
+
+UNIT_TEST(int_for_decimal) {
+	const std::string code = "int(32993.0)";
+	const variant code_variant(code);
+	const game_logic::Formula formula(code_variant);
+	const variant output = formula.execute();
+	check_type_is_int(output);
+	const int_fast32_t output_as_int = output.as_int();
+	CHECK_EQ(32993, output_as_int);
+}
+
+UNIT_TEST(bool_for_expected_string) {
+	const std::string code = "bool('true')";
+	const variant code_variant(code);
+	const game_logic::Formula formula(code_variant);
+	const variant output = formula.execute();
+	check_type_is_bool(output);
+	const bool output_as_bool = output.as_bool();
+	CHECK_EQ(true, output_as_bool);
+}
+
+UNIT_TEST(bool_for_unexpected_string) {
+	const std::string code = "bool('foo')";
+	const variant code_variant(code);
+	const game_logic::Formula formula(code_variant);
+	const variant output = formula.execute();
+	check_type_is_bool(output);
+	const bool output_as_bool = output.as_bool();
+	CHECK_EQ(true, output_as_bool);
+}
+
+UNIT_TEST(bool_for_number) {
+	const std::string code = "bool(32993)";
+	const variant code_variant(code);
+	const game_logic::Formula formula(code_variant);
+	const variant output = formula.execute();
+	check_type_is_bool(output);
+	const bool output_as_bool = output.as_bool();
+	CHECK_EQ(true, output_as_bool);
+}
+
+
+UNIT_TEST(bool_for_zero) {
+	const std::string code = "bool(0)";
+	const variant code_variant(code);
+	const game_logic::Formula formula(code_variant);
+	const variant output = formula.execute();
+	check_type_is_bool(output);
+	const bool output_as_bool = output.as_bool();
+	CHECK_EQ(false, output_as_bool);
+}
+
+UNIT_TEST(bool_for_nonempty_map) {
+	const std::string code = "bool({1: 1, })";
+	const variant code_variant(code);
+	const game_logic::Formula formula(code_variant);
+	const variant output = formula.execute();
+	check_type_is_bool(output);
+	const bool output_as_bool = output.as_bool();
+	CHECK_EQ(true, output_as_bool);
+}
+
+UNIT_TEST(bool_for_empty_map) {
+	const std::string code = "bool({})";
+	const variant code_variant(code);
+	const game_logic::Formula formula(code_variant);
+	const variant output = formula.execute();
+	check_type_is_bool(output);
+	const bool output_as_bool = output.as_bool();
+	CHECK_EQ(false, output_as_bool);
+}
+
+UNIT_TEST(sin_zero_rad) {
+	const std::string code = "sin(0)";
+	const variant code_variant(code);
+	const game_logic::Formula formula(code_variant);
+	const variant output = formula.execute();
+	check_type_is_decimal(output);
+	const decimal output_as_decimal = output.as_decimal();
+	CHECK_EQ(decimal::from_string("0.0"), output_as_decimal);
+}
+
+UNIT_TEST(sin_one_sixth_pi_rad) {
+	const std::string code = "sin(30)";
+	const variant code_variant(code);
+	const game_logic::Formula formula(code_variant);
+	const variant output = formula.execute();
+	check_type_is_decimal(output);
+	const decimal output_as_decimal = output.as_decimal();
+	CHECK_EQ(decimal::from_string("0.5"), output_as_decimal);
+}
+
+UNIT_TEST(sin_one_quarter_pi_rad) {
+	const std::string code = "sin(45)";
+	const variant code_variant(code);
+	const game_logic::Formula formula(code_variant);
+	const variant output = formula.execute();
+	check_type_is_decimal(output);
+	const decimal output_as_decimal = output.as_decimal();
+	CHECK_LE(decimal::from_string("0.707"), output_as_decimal);
+	CHECK_GE(decimal::from_string("0.708"), output_as_decimal);
+}
+
+UNIT_TEST(sin_one_third_pi_rad) {
+	const std::string code = "sin(60)";
+	const variant code_variant(code);
+	const game_logic::Formula formula(code_variant);
+	const variant output = formula.execute();
+	check_type_is_decimal(output);
+	const decimal output_as_decimal = output.as_decimal();
+	CHECK_LE(decimal::from_string("0.86"), output_as_decimal);
+	CHECK_GE(decimal::from_string("0.87"), output_as_decimal);
+}
+
+UNIT_TEST(sin__half_pi_rad) {
+	const std::string code = "sin(90)";
+	const variant code_variant(code);
+	const game_logic::Formula formula(code_variant);
+	const variant output = formula.execute();
+	check_type_is_decimal(output);
+	const decimal output_as_decimal = output.as_decimal();
+	CHECK_LE(decimal::from_string("0.999999"), output_as_decimal);
+	CHECK_GE(decimal::from_string("1.000001"), output_as_decimal);
+}
+
+UNIT_TEST(sin_pi_rad) {
+	const std::string code = "sin(180)";
+	const variant code_variant(code);
+	const game_logic::Formula formula(code_variant);
+	const variant output = formula.execute();
+	check_type_is_decimal(output);
+	const decimal output_as_decimal = output.as_decimal();
+	CHECK_EQ(decimal::from_string("0.0"), output_as_decimal);
+}
+
+UNIT_TEST(range_two_args) {
+	const std::string code = "range(4, 6)";
+	const variant code_variant(code);
+	const game_logic::Formula formula(code_variant);
+	const variant output = formula.execute();
+	check_type_is_list(output);
+	const std::vector<variant> output_as_list = output.as_list();
+	const uint_fast8_t output_as_list_size = output_as_list.size();
+	CHECK_EQ(2, output_as_list_size);
+	for (uint_fast8_t i = 0; i < output_as_list_size; i++) {
+		const variant element = output_as_list[i];
+		check_type_is_int(element);
+		const int_fast32_t element_as_int = element.as_int();
+		if (i == 0) {
+			CHECK_EQ(4, element_as_int);
+		} else {
+			ASSERT_LOG(i == 1, "unexpected list element/s");
+			CHECK_EQ(5, element_as_int);
+		}
+	}
+}
+
+UNIT_TEST(reverse) {
+	const std::string code = "reverse([2, 3, 1, ])";
+	const variant code_variant(code);
+	const game_logic::Formula formula(code_variant);
+	const variant output = formula.execute();
+	check_type_is_list(output);
+	const std::vector<variant> output_as_list = output.as_list();
+	const uint_fast8_t output_as_list_size = output_as_list.size();
+	CHECK_EQ(3, output_as_list_size);
+	for (uint_fast8_t i = 0; i < output_as_list_size; i++) {
+		const variant element = output_as_list[i];
+		check_type_is_int(element);
+		const int_fast32_t element_as_int = element.as_int();
+		if (i == 0) {
+			CHECK_EQ(1, element_as_int);
+		} else if (i == 1) {
+			CHECK_EQ(3, element_as_int);
+		} else {
+			ASSERT_LOG(i == 2, "unexpected list element/s");
+			CHECK_EQ(2, element_as_int);
+		}
+	}
+}
+
+UNIT_TEST(str_for_str) {
+	const std::string code = "str('foo')";
+	const variant code_variant(code);
+	const game_logic::Formula formula(code_variant);
+	const variant output = formula.execute();
+	check_type_is_string(output);
+	const std::string output_as_string = output.as_string();
+	CHECK_EQ("foo", output_as_string);
+}
+
+UNIT_TEST(str_for_non_str) {
+	const std::string code = "str(42)";
+	const variant code_variant(code);
+	const game_logic::Formula formula(code_variant);
+	const variant output = formula.execute();
+	check_type_is_string(output);
+	const std::string output_as_string = output.as_string();
+	CHECK_EQ("42", output_as_string);
+}
