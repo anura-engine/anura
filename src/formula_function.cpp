@@ -7040,21 +7040,24 @@ UNIT_TEST(decimal_for_parsable_string) {
 	CHECK_EQ(decimal::from_string("32993.0"), output_as_decimal);
 }
 
-// UNIT_TEST(decimal_for_unparsable_string) {
-// 	const std::string code = "decimal('foo')";
-// 	const variant code_variant(code);
-// 	const game_logic::Formula formula(code_variant);
-// 	bool excepted = false;
-// 	{
-// 		const assert_recover_scope unit_test_exception_expected;
-// 		try {
-// 			formula.execute();
-// 		} catch (const validation_failure_exception vfe) {
-// 			excepted = true;
-// 		}
-// 	}
-// 	ASSERT_LOG(excepted, "expected an exception that did not happen");
-// }
+// XXX    Code running normally will abort fatally, as it has to, when
+// XXX  failing to parse a string to decimal. It would abort fatally also
+// XXX  when running this test, that's why it is disabled.
+UNIT_TEST(decimal_for_unparsable_string_FAILS) {
+	const std::string code = "decimal('foo')";
+	const variant code_variant(code);
+	const game_logic::Formula formula(code_variant);
+	bool excepted = false;
+	{
+		const assert_recover_scope unit_test_exception_expected;
+		try {
+			formula.execute();
+		} catch (const validation_failure_exception vfe) {
+			excepted = true;
+		}
+	}
+	ASSERT_LOG(excepted, "expected an exception that did not happen");
+}
 
 UNIT_TEST(decimal_for_int) {
 	const std::string code = "decimal(32993)";
@@ -7076,21 +7079,24 @@ UNIT_TEST(int_for_parsable_string) {
 	CHECK_EQ(32993, output_as_int);
 }
 
-// UNIT_TEST(int_for_unparsable_string) {
-// 	const std::string code = "int('foo')";
-// 	const variant code_variant(code);
-// 	const game_logic::Formula formula(code_variant);
-// 	bool excepted = false;
-// 	{
-// 		const assert_recover_scope unit_test_exception_expected;
-// 		try {
-// 			formula.execute();
-// 		} catch (const validation_failure_exception vfe) {
-// 			excepted = true;
-// 		}
-// 	}
-// 	ASSERT_LOG(excepted, "expected an exception that did not happen");
-// }
+// XXX    Code running normally will abort fatally, as it has to, when
+// XXX  failing to parse a string to decimal. It would abort fatally also
+// XXX  when running this test, that's why it is disabled.
+UNIT_TEST(int_for_unparsable_string_FAILS) {
+	const std::string code = "int('foo')";
+	const variant code_variant(code);
+	const game_logic::Formula formula(code_variant);
+	bool excepted = false;
+	{
+		const assert_recover_scope unit_test_exception_expected;
+		try {
+			formula.execute();
+		} catch (const validation_failure_exception vfe) {
+			excepted = true;
+		}
+	}
+	ASSERT_LOG(excepted, "expected an exception that did not happen");
+}
 
 UNIT_TEST(int_for_decimal) {
 	const std::string code = "int(32993.0)";

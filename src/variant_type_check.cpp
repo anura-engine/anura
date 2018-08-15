@@ -54,6 +54,11 @@ void check::type_is(const variant & v, const variant::TYPE expected_type)
 	CHECK_EQ(expected_type, v_type);
 }
 
+void check::type_is_null(const variant & v)
+{
+	type_is(v, variant::TYPE::VARIANT_TYPE_NULL);
+}
+
 void check::type_is_bool(const variant & v)
 {
 	type_is(v, variant::TYPE::VARIANT_TYPE_BOOL);

@@ -54,6 +54,7 @@
 #include "unit_test.hpp"
 #include "utf8_to_codepoint.hpp"
 #include "variant_type.hpp"
+#include "variant_type_check.hpp"
 #include "variant_utils.hpp"
 
 #define STRICT_ERROR(s) if(g_strict_formula_checking_warnings) { LOG_WARN(s); } else { ASSERT_LOG(false, s); }
@@ -4412,6 +4413,7 @@ static std::string debugSubexpressionTypes(ConstFormulaPtr & fml)
 				}
 
 				if((i1 == i2) || (i1 == (i2-1))) {
+					//   Is this line unreachable?
 					return ExpressionPtr(new FunctionListExpression(symbols));
 				}
 				else {
@@ -5488,6 +5490,11 @@ UNIT_TEST(map_to_maps_FAILS) {
 	CHECK_EQ(Formula(variant("{'a' -> ({'b' -> 2})}")).execute().string_cast(), Formula(variant("{'a' -> {'b' -> 2}}")).execute().string_cast());
 }
 
+UNIT_TEST(map_to_maps_1) {
+	CHECK_EQ(Formula(variant("{'a': ({'b': 2})}")).execute().string_cast(),
+			Formula(variant("{'a': {'b': 2}}")).execute().string_cast());
+}
+
 UNIT_TEST(formula_test_recursion) {
 	FunctionSymbolTable symbols;
 	Formula f(variant("def silly_add(a, c)"
@@ -5604,6 +5611,161 @@ UNIT_TEST(formula_enum) {
 	CHECK_EQ(Formula(variant("enum abc = enum abc")).execute(), variant::from_bool(true));
 	CHECK_EQ(Formula(variant("enum abc != enum abc")).execute(), variant::from_bool(false));
 	CHECK_EQ(Formula(variant("enum abc = enum d")).execute(), variant::from_bool(false));
+}
+
+UNIT_TEST(generic_function_0) {
+	const std::string code =
+			"f<<int>>(2) where f = def << T >> (T t) -> T t * t";
+	const variant code_variant(code);
+	const Formula code_variant_formula(code_variant);
+	const variant output = code_variant_formula.execute();
+	check::type_is_int(output);
+	CHECK_EQ(output, variant(4));
+}
+
+UNIT_TEST(generic_function_1) {
+	const std::string code =
+			"f<<int>>(2.0) where f = def << T >> (T t) -> T t * t";
+	const variant code_variant(code);
+	const Formula code_variant_formula(code_variant);
+	bool excepted = false;
+	{
+		const assert_recover_scope unit_test_exception_expected;
+		try {
+			code_variant_formula.execute();
+		} catch (const validation_failure_exception vfe) {
+			excepted = true;
+		}
+	}
+	CHECK_EQ(excepted, true);
+}
+
+UNIT_TEST(generic_function_2) {
+	const std::string code =
+			"f<<decimal>>(2.0) where f = def << T >> (T t) -> T t * t";
+	const variant code_variant(code);
+	const Formula code_variant_formula(code_variant);
+	const variant output = code_variant_formula.execute();
+	check::type_is_decimal(output);
+	CHECK_EQ(output, variant(4.0));
+}
+
+UNIT_TEST(generic_function_3) {
+	const std::string code =
+			"f<<decimal>>(2) where f = def << T >> (T t) -> T t * t";
+	const variant code_variant(code);
+	const Formula code_variant_formula(code_variant);
+	const variant output = code_variant_formula.execute();
+	check::type_is_int(output);
+	CHECK_EQ(output, variant(4));
+}
+
+UNIT_TEST(asserting_supposed_to_succeed_0) {
+	const std::string code =
+			"a asserting a is int where a = 3";
+	const variant code_variant(code);
+	const Formula code_variant_formula(code_variant);
+	const variant output = code_variant_formula.execute();
+	check::type_is_int(output);
+	CHECK_EQ(output, variant(3));
+}
+
+UNIT_TEST(asserting_supposed_to_succeed_1) {
+	const std::string code =
+			"a asserting a is decimal where a = 3";
+	const variant code_variant(code);
+	const Formula code_variant_formula(code_variant);
+	const variant output = code_variant_formula.execute();
+	check::type_is_int(output);
+	CHECK_EQ(output, variant(3));
+}
+
+// XXX    Code running normally will abort fatally, as it has to, when
+// XXX  failing a type assertion. It would abort fatally also when
+// XXX  running this test, that's why it is disabled.
+UNIT_TEST(asserting_supposed_to_fail_FAILS) {
+	const std::string code =
+			"a asserting a is not decimal where a = 3.0";
+	const variant code_variant(code);
+	const Formula code_variant_formula(code_variant);
+	bool excepted = false;
+	{
+		const assert_recover_scope unit_test_exception_expected;
+		try {
+			code_variant_formula.execute();
+		} catch (const validation_failure_exception vfe) {
+			excepted = true;
+		}
+	}
+	CHECK_EQ(excepted, true);
+}
+
+UNIT_TEST(identifier_suggested_0) {
+
+	// XXX    Can not assert that with this `StrictCheckScope` code emits
+	// XXX  a warning (suggesting a different identifier, typo detection),
+	// XXX  but that there is no such warning when not providing this
+	// XXX  `StrictCheckScope`.
+	const game_logic::Formula::StrictCheckScope strict_checking(
+			true, true);
+
+	//   There is only one similar identifier at a same distance to `aaaa`.
+	// So correcting to `aaaaa` is suggested.
+	const std::string code =
+			"aaaa where aaaaa = 3";
+
+	const variant code_variant(code);
+	const Formula code_variant_formula(code_variant);
+	const variant output = code_variant_formula.execute();
+	check::type_is_null(output);
+	CHECK_EQ(output, variant());
+}
+
+UNIT_TEST(identifier_suggested_1) {
+
+	// XXX    Can not assert that with this `StrictCheckScope` code emits
+	// XXX  a warning (suggesting a different identifier, typo detection),
+	// XXX  but that there is no such warning when not providing this
+	// XXX  `StrictCheckScope`.
+	const game_logic::Formula::StrictCheckScope strict_checking(
+			true, true);
+
+	//   There are two similar identifiers at the same distance to `aaaa`.
+	// So no correction is suggested.
+	const std::string code =
+			"aaaa where aaab = 3 where aaaaa = 3";
+
+	const variant code_variant(code);
+	const Formula code_variant_formula(code_variant);
+	const variant output = code_variant_formula.execute();
+	check::type_is_null(output);
+	CHECK_EQ(output, variant());
+}
+
+UNIT_TEST(semicolon_sequencing) {
+	const std::string code = "null; null; null";
+	const variant code_variant(code);
+	const Formula code_variant_formula(code_variant);
+	const variant output = code_variant_formula.execute();
+	check::type_is_object(output);
+}
+
+UNIT_TEST(array_dereference_accepts_nesting) {
+	const std::string code =
+			"map(range(2), a[b[value]]) where a = [0, 0, 3, 0, 3] where b = [2, 4]";
+	const variant code_variant(code);
+	const Formula code_variant_formula(code_variant);
+	const variant output = code_variant_formula.execute();
+	check::type_is_list(output);
+	const std::vector<variant> output_as_list = output.as_list();
+	const uint_fast8_t output_as_list_size = output_as_list.size();
+	CHECK_EQ(output_as_list_size, 2);
+	for (uint_fast8_t i = 0; i < output_as_list_size; i++) {
+		const variant element = output[i];
+		check::type_is_int(element);
+		const int_fast32_t element_as_int = element.as_int();
+		CHECK_EQ(element_as_int, 3);
+	}
 }
 
 BENCHMARK(formula_list_comprehension_bench) {
