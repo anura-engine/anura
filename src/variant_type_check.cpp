@@ -94,6 +94,16 @@ void check::type_is_dictionary(const variant & v)
 	type_is(v, variant::TYPE::VARIANT_TYPE_MAP);
 }
 
+void check::type_is_function(const variant & v)
+{
+	type_is(v, variant::TYPE::VARIANT_TYPE_FUNCTION);
+}
+
+void check::type_is_generic_function(const variant & v)
+{
+	type_is(v, variant::TYPE::VARIANT_TYPE_GENERIC_FUNCTION);
+}
+
 void check::type_is_enum(const variant & v)
 {
 	type_is(v, variant::TYPE::VARIANT_TYPE_ENUM);

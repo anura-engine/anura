@@ -78,5 +78,15 @@ namespace check
 	//   Includes a `CHECK_EQ` that must check that the type of the input
 	// variant `v` matches the expectation. This is syntactic sugar for
 	// `type_is(const variant &, const variant::TYPE)`.
+	void type_is_function(const variant & v);
+
+	//   Includes a `CHECK_EQ` that must check that the type of the input
+	// variant `v` matches the expectation. This is syntactic sugar for
+	// `type_is(const variant &, const variant::TYPE)`.
+	void type_is_generic_function(const variant & v);
+
+	//   Includes a `CHECK_EQ` that must check that the type of the input
+	// variant `v` matches the expectation. This is syntactic sugar for
+	// `type_is(const variant &, const variant::TYPE)`.
 	void type_is_enum(const variant & v);
 }
