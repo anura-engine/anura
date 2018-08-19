@@ -31,6 +31,8 @@
 
 #include "boost/algorithm/string/replace.hpp"
 #include "boost/lexical_cast.hpp"
+#include "boost/property_tree/ptree.hpp"
+#include "boost/property_tree/json_parser.hpp"
 
 #include "asserts.hpp"
 #include "ffl_weak_ptr.hpp"
@@ -47,6 +49,7 @@
 #include "unit_test.hpp"
 #include "variant.hpp"
 #include "variant_type.hpp"
+#include "variant_type_check.hpp"
 #include "utf8_to_codepoint.hpp"
 #include "wml_formula_callable.hpp"
 
@@ -1858,6 +1861,7 @@ variant variant::operator+(const variant& v) const
 
 	if(type_ == VARIANT_TYPE_STRING) {
 		if(v.type_ == VARIANT_TYPE_MAP) {
+			// FIXME - Possible bug - `as_string()` requires type string via `must_be(variant::TYPE)`. `v.as_string()` will fail because `v` is dictionary in this flow.
 			return variant(as_string() + v.as_string());
 		} else if(v.type_ == VARIANT_TYPE_STRING) {
 			return variant(as_string() + v.as_string());
@@ -2113,8 +2117,9 @@ void prevent_invalid_collapse_in_zero(
 		arithmetic_overflow = exponent >= 2;
 		break;
 	//   2147483648 does not fit 32 bit two's complement.
-	default:
-		ASSERT_LOG(false, "unreachable code executed, at `prevent_invalid_collapse_in_zero(base: " << base << ", exponent: " << exponent << ")`");
+// 	default:
+// 		ASSERT_LOG(false, "unreachable code executed, at `prevent_invalid_collapse_in_zero(base: " << base << ", exponent: " << exponent << ")`");
+// 		break;
 	}
 	ASSERT_LOG(!arithmetic_overflow,
 			"prevented arithmetic overflow, at `prevent_invalid_collapse_in_zero`, performing `" << base << " ^ " << exponent << '`');
@@ -4249,4 +4254,832 @@ UNIT_TEST(bad_variant_exponentiation_33) {
 	}
 	CHECK_EQ(true, excepted);
 	ASSERT_LOG(excepted, "test expectation failed; `-6`. hosted in a 32 bit signed integer, raised to the power of `12`, should raise an exception, in order to prevent an arithmetic overflow");
+}
+
+UNIT_TEST(variant_from_null_char_array) {
+	char * null_plain_old_char_array = nullptr;
+	const variant variant_from_null_plain_old_char_array(
+			null_plain_old_char_array);
+	check::type_is_null(variant_from_null_plain_old_char_array);
+	//   Logging the null char array is unsafe. However, it's safe to log
+	// the variant created out of it.
+	LOG_INFO(variant_from_null_plain_old_char_array);
+}
+
+UNIT_TEST(create_translated_string) {
+	const std::string string = "Hello, world!";
+	LOG_DEBUG(string);
+	const std::string expected_translated_string = string;
+	LOG_DEBUG(expected_translated_string);
+	const variant actual_translated_string_variant =
+			variant::create_translated_string(string);
+	LOG_DEBUG(actual_translated_string_variant);
+	check::type_is_string(actual_translated_string_variant);
+	const std::string actual_translated_string =
+			actual_translated_string_variant.as_string();
+	LOG_DEBUG(actual_translated_string);
+	CHECK_EQ(expected_translated_string, actual_translated_string);
+}
+
+UNIT_TEST(unable_to_create_variant_out_of_dictionary_with_boolean_keys_FAILS) {
+	std::map<variant, variant> dictionary_with_boolean_keys;
+	const variant key = variant::from_bool(true);
+	const std::string pi_as_string = boost::lexical_cast<std::string>(M_PI);
+	const variant value(decimal::from_string(pi_as_string));
+	std::pair<std::map<variant, variant>::iterator, bool> ret;
+	ret = dictionary_with_boolean_keys.insert(
+			std::pair<variant, variant>(key, value));
+	CHECK_EQ(true, ret.second);
+	//   Can not check that an exception gets raised.
+	const variant actual_test_output = variant(& dictionary_with_boolean_keys);
+	check::type_is_dictionary(actual_test_output);
+}
+
+//   operator[] on object variant returns self when requesting the zero index.
+UNIT_TEST(operator_square_brackets_on_object_returns_self_a) {
+	const std::string code = "; null";
+	const variant code_variant(code);
+	const game_logic::Formula code_variant_formula(code_variant);
+	const variant execution_output = code_variant_formula.execute();
+	check::type_is_object(execution_output);
+	const variant & indexed = execution_output[0];
+	LOG_DEBUG(execution_output);
+	LOG_DEBUG(indexed);
+	CHECK_EQ(execution_output, indexed);
+	LOG_DEBUG(& execution_output);
+	LOG_DEBUG(& indexed);
+	CHECK_EQ(& execution_output, & indexed);
+}
+
+//   operator[] on object variant returns self when requesting the zero index
+// wrapped in a variant.
+UNIT_TEST(operator_square_brackets_on_object_returns_self_b) {
+	const std::string code = "; null";
+	const variant code_variant(code);
+	const game_logic::Formula code_variant_formula(code_variant);
+	const variant execution_output = code_variant_formula.execute();
+	check::type_is_object(execution_output);
+	const variant index_zero(0);
+	const variant & indexed = execution_output[index_zero];
+	LOG_DEBUG(execution_output);
+	LOG_DEBUG(indexed);
+	CHECK_EQ(execution_output, indexed);
+	LOG_DEBUG(& execution_output);
+	LOG_DEBUG(& indexed);
+	CHECK_EQ(& execution_output, & indexed);
+}
+
+UNIT_TEST(list_indexing_out_of_bounds_excepts) {
+	const variant zero(0);
+	const variant a("a");
+	const variant true_variant = variant::from_bool(true);
+	std::vector<variant> list;
+	std::vector<variant>::iterator it = list.begin();
+	it = list.insert(it, true_variant);
+	it = list.insert(it, a);
+	list.insert(it, zero);
+	const variant list_variant(& list);
+	bool excepted = false;
+	{
+		const assert_recover_scope unit_test_exception_expected;
+		try {
+			list_variant[3];
+		} catch (const validation_failure_exception vfe) {
+			excepted = true;
+		}
+	}
+	CHECK_EQ(true, excepted);
+}
+
+//   Refuse to index (using variant) any variant not of type object,
+// dictionary, or list.
+UNIT_TEST(refuse_to_index_a_decimal_variant) {
+	const variant decimal_variant(decimal::from_string("0.0"));
+	bool excepted = false;
+	{
+		const assert_recover_scope unit_test_exception_expected;
+		try {
+			decimal_variant[decimal_variant];
+		} catch (const validation_failure_exception vfe) {
+			excepted = true;
+		}
+	}
+	CHECK_EQ(true, excepted);
+}
+
+UNIT_TEST(no_keys_in_non_dictionary_variants) {
+	const variant true_variant = variant::from_bool(true);
+	std::vector<variant> list;
+	list.push_back(true_variant);
+	const variant list_variant(& list);
+	const variant target_key("key");
+	const bool has_the_key = list_variant.has_key(target_key);
+	CHECK_EQ(has_the_key, false);
+}
+
+UNIT_TEST(no_elements_in_a_null_variant) {
+	const variant null_variant;
+	const uint_fast8_t expected = 0;
+	const uint_fast8_t actual = null_variant.num_elements();
+	CHECK_EQ(expected, actual);
+}
+
+UNIT_TEST(object_variant_has_a_single_element) {
+	const std::string code = "; null";
+	const variant code_variant(code);
+	const game_logic::Formula code_variant_formula(code_variant);
+	const variant object_variant = code_variant_formula.execute();
+	check::type_is_object(object_variant);
+	const uint_fast8_t expected = 1;
+	const uint_fast8_t actual = object_variant.num_elements();
+	CHECK_EQ(expected, actual);
+}
+
+UNIT_TEST(string_variant_num_elements_is_string_length) {
+	const std::string string = "; null";
+	const uint_fast8_t string_length = string.length();
+	const variant string_variant(string);
+	check::type_is_string(string_variant);
+	const uint_fast8_t expected = 6;
+	const uint_fast8_t actual = string_variant.num_elements();
+	CHECK_EQ(expected, actual);
+}
+
+//   Refuse to give the number of elements in any variant not of type null,
+// object, list, string, or dictionary.
+UNIT_TEST(refuse_to_return_num_elements_of_decimal_variant) {
+	const variant decimal_variant(decimal::from_string("0.0"));
+	bool excepted = false;
+	{
+		const assert_recover_scope unit_test_exception_expected;
+		try {
+			decimal_variant.num_elements();
+		} catch (const validation_failure_exception vfe) {
+			excepted = true;
+		}
+	}
+	CHECK_EQ(true, excepted);
+}
+
+UNIT_TEST(is_str_utf8_it_is) {
+	const std::string string = "\u00f1";  //   n with tilde.
+	LOG_DEBUG(string);
+	const variant string_variant(string);
+	const bool it_is = string_variant.is_str_utf8();
+	CHECK_EQ(true, it_is);
+}
+
+UNIT_TEST(is_str_utf8_it_is_not) {
+	const std::string string = "nn";
+	const variant string_variant(string);
+	const bool it_is_not = string_variant.is_str_utf8();
+	CHECK_EQ(false, it_is_not);
+}
+
+UNIT_TEST(can_request_an_empty_slice_to_any_variant_type) {
+	const variant null_variant;
+	const variant slice = null_variant.get_list_slice(-2147483648, -2147483648);
+	check::type_is_list(slice);
+	const std::vector<variant> slice_as_list = slice.as_list();
+	const uint_fast8_t slice_as_list_size = slice_as_list.size();
+	CHECK_EQ(0, slice_as_list_size);
+}
+
+UNIT_TEST(refuse_to_slice_lists_for_illegal_indexes) {
+	std::vector<variant> list;
+	const variant true_variant = variant::from_bool(true);
+	list.push_back(true_variant);
+	const variant list_variant(& list);
+	bool excepted = false;
+	{
+		const assert_recover_scope unit_test_exception_expected;
+		try {
+			list_variant.get_list_slice(-2147483648, 2147483647);
+		} catch (const validation_failure_exception vfe) {
+			excepted = true;
+		}
+	}
+	CHECK_EQ(true, excepted);
+}
+
+// XXX    This feels a little bit weird. Maybe it exposes a bug, or an
+// XXX  incomplete implementation. But it also could be like this on purpose
+// XXX  (i.e. a function call for a generic function depends on whether the
+// XXX  argument complies the expectation of the type erasure, or not).
+UNIT_TEST(function_call_valid_for_generic_function_is_invalid_wtf) {
+	const std::string code = "def << T >> (T t) -> T t";
+	const variant code_variant(code);
+	const game_logic::Formula code_variant_formula(code_variant);
+	const variant execution_result = code_variant_formula.execute();
+	check::type_is_generic_function(execution_result);
+	const variant generic_function = execution_result;
+	const std::vector<variant> args;
+	std::string message;
+	message.resize(128);
+	const bool call_valid = generic_function.function_call_valid(
+			args, & message, false);
+	CHECK_EQ(false, call_valid);
+	CHECK_EQ("Not a function", message);
+}
+
+UNIT_TEST(function_call_valid_passing_excess_arguments_is_invalid) {
+	const std::string code = "def (any a) -> any a";
+	const variant code_variant(code);
+	const game_logic::Formula code_variant_formula(code_variant);
+	const variant execution_result = code_variant_formula.execute();
+	check::type_is_function(execution_result);
+	const variant function = execution_result;
+	std::vector<variant> args;
+	args.push_back(variant(0));
+	args.push_back(variant("a"));
+	std::string message;
+	message.resize(128);
+	const bool call_valid = function.function_call_valid(args, & message, false);
+	CHECK_EQ(false, call_valid);
+	CHECK_EQ("Incorrect number of arguments to function", message);
+}
+
+UNIT_TEST(function_call_valid_passing_argument_of_unexpected_type_is_invalid) {
+	const std::string code = "def (int i) -> int i";
+	const variant code_variant(code);
+	const game_logic::Formula code_variant_formula(code_variant);
+	const variant execution_result = code_variant_formula.execute();
+	check::type_is_function(execution_result);
+	const variant function = execution_result;
+	std::vector<variant> args;
+	args.push_back(variant(decimal::from_string("0.32993")));
+	std::string message;
+	message.resize(128);
+	const bool call_valid = function.function_call_valid(args, & message, false);
+	CHECK_EQ(false, call_valid);
+	CHECK_EQ("Argument 1 does not match. Expects int but found 0.32993", message);
+}
+
+UNIT_TEST(function_call_passing_wrong_number_of_arguments_generates_error) {
+	const std::string code = "def (int i, int j) -> int i + j";
+	const variant code_variant(code);
+	const game_logic::Formula code_variant_formula(code_variant);
+	const variant execution_result = code_variant_formula.execute();
+	check::type_is_function(execution_result);
+	const variant function = execution_result;
+	std::vector<variant> args;
+	args.push_back(variant(0));
+	args.push_back(variant(1));
+	args.push_back(variant(decimal::from_string("0.32993")));
+	bool excepted = false;
+	{
+		const assert_recover_scope unit_test_exception_expected;
+		try {
+			function(& args);
+		} catch (const validation_failure_exception vfe) {
+			excepted = true;
+		}
+	}
+	CHECK_EQ(true, excepted);
+}
+
+UNIT_TEST(bool_variant_as_bool_with_default) {
+	const variant bool_variant(variant::from_bool(false));
+	const bool bool_variant_as_bool = bool_variant.as_bool(false);
+	CHECK_EQ(false, bool_variant_as_bool);
+}
+
+UNIT_TEST(int_variant_as_bool_with_default) {
+	const variant int_variant(2);
+	const bool int_variant_as_bool = int_variant.as_bool(false);
+	CHECK_EQ(true, int_variant_as_bool);
+}
+
+UNIT_TEST(null_variant_as_bool_without_default) {
+	const variant null_variant;
+	const bool null_variant_as_bool = null_variant.as_bool();
+	CHECK_EQ(false, null_variant_as_bool);
+}
+
+UNIT_TEST(decimal_variant_as_bool_without_default) {
+	const variant decimal_variant(decimal::from_string("0.32993"));
+	const bool decimal_variant_as_bool = decimal_variant.as_bool();
+	CHECK_EQ(true, decimal_variant_as_bool);
+}
+
+//   Object as bool is true unless nullptr.
+UNIT_TEST(object_variant_as_bool_without_default) {
+	const std::string code = "; null";
+	const variant code_variant(code);
+	const game_logic::Formula code_variant_formula(code_variant);
+	const variant execution = code_variant_formula.execute();
+	check::type_is_object(execution);
+	const variant object_variant = execution;
+	const bool object_variant_as_bool = object_variant.as_bool();
+	CHECK_EQ(true, object_variant_as_bool);
+}
+
+//   Empty list as bool is false.
+UNIT_TEST(list_as_bool_without_default) {
+	std::vector<variant> empty_vector;
+	const variant empty_list(& empty_vector);
+	check::type_is_list(empty_list);
+	const bool empty_list_as_bool = empty_list.as_bool();
+	CHECK_EQ(false, empty_list_as_bool);
+}
+
+UNIT_TEST(function_as_bool_without_default) {
+	const std::string code = "def () -> null null";
+	const variant code_variant(code);
+	const game_logic::Formula code_variant_formula(code_variant);
+	const variant execution = code_variant_formula.execute();
+	check::type_is_function(execution);
+	const variant function_variant = execution;
+	const bool function_variant_as_bool = function_variant.as_bool();
+	CHECK_EQ(true, function_variant_as_bool);
+}
+
+UNIT_TEST(generic_function_as_bool_without_default_is_false_wtf_FAILS) {
+	const std::string code = "def << T >> (T t) -> T t";
+	const variant code_variant(code);
+	const game_logic::Formula code_variant_formula(code_variant);
+	const variant execution = code_variant_formula.execute();
+	check::type_is_generic_function(execution);
+	const variant generic_function_variant = execution;
+	const bool generic_function_variant_as_bool = generic_function_variant.as_bool();
+	CHECK_EQ(false, generic_function_variant_as_bool);
+}
+
+//   This one segfaults.
+UNIT_TEST(empty_list_variant_as_list_ref_FAILS) {
+	std::vector<variant> empty_vector;
+	const variant empty_list(& empty_vector);
+	check::type_is_list(empty_list);
+	const std::vector<variant> vector = empty_list.as_list_ref();
+	const uint_fast8_t vector_size = vector.size();
+	CHECK_EQ(0, vector_size);
+}
+
+UNIT_TEST(list_variant_as_list_ref) {
+	std::vector<variant> variants_vector;
+	variants_vector.push_back(variant(32993));
+	const variant empty_list(& variants_vector);
+	check::type_is_list(empty_list);
+	const std::vector<variant> vector = empty_list.as_list_ref();
+	const uint_fast8_t vector_size = vector.size();
+	CHECK_EQ(1, vector_size);
+	const variant element = vector[0];
+	check::type_is_int(element);
+	const int_fast32_t element_as_int = element.as_int();
+	CHECK_EQ(32993, element_as_int);
+}
+
+UNIT_TEST(null_variant_as_list_optional) {
+	const variant null_variant;
+	const std::vector<variant> as_list_optional = null_variant.as_list_optional();
+	const uint_fast8_t as_list_optional_size = as_list_optional.size();
+	CHECK_EQ(0, as_list_optional_size);
+}
+
+UNIT_TEST(list_variant_as_list_optional) {
+	std::vector<variant> empty_variants_vector;
+	const variant empty_list_variant(& empty_variants_vector);
+	const std::vector<variant> as_list_optional = empty_list_variant.as_list_optional();
+	const uint_fast8_t as_list_optional_size = as_list_optional.size();
+	CHECK_EQ(0, as_list_optional_size);
+}
+
+UNIT_TEST(any_non_list_as_list_results_boxed_in_list) {
+	const variant int_variant(32993);
+	const std::vector<variant> int_variant_as_list = int_variant.as_list();
+	const uint_fast8_t int_variant_as_list_size = int_variant_as_list.size();
+	CHECK_EQ(1, int_variant_as_list_size);
+	const variant int_variant_as_list_boxed_list_element = int_variant_as_list[0];
+	CHECK_EQ(int_variant, int_variant_as_list_boxed_list_element);
+}
+
+UNIT_TEST(as_list_string) {
+	std::vector<variant> variants_vector;
+
+	const variant string_variant("null");
+	variants_vector.push_back(string_variant);
+	variants_vector.push_back(string_variant);
+	variants_vector.push_back(string_variant);
+	const variant list_variant(& variants_vector);
+
+	std::vector<std::string> expectation;
+	expectation.push_back("null");
+	expectation.push_back("null");
+	expectation.push_back("null");
+
+	const std::vector<std::string> list_variant_as_list_string =
+			list_variant.as_list_string();
+	const uint_fast8_t list_variant_as_list_string_size =
+			list_variant_as_list_string.size();
+	CHECK_EQ(expectation.size(), list_variant_as_list_string_size);
+	for (uint_fast8_t i = 0; i < list_variant_as_list_string_size; i++) {
+		const std::string expected_element = expectation[i];
+		LOG_DEBUG(expected_element);
+		const std::string actual_element =
+				list_variant_as_list_string[i];
+		LOG_DEBUG(actual_element);
+		CHECK_EQ(expected_element, actual_element);
+	}
+}
+
+UNIT_TEST(string_variant_plus_dictionary_variant_excepts) {
+	const std::string string = "null";
+	const variant string_variant(string);
+	std::map<variant, variant> empty_variants_map;
+	const variant empty_dictionary_variant(& empty_variants_map);
+	bool excepted = false;
+	{
+		const assert_recover_scope unit_test_exception_expected;
+		try {
+			string_variant + empty_dictionary_variant;
+		} catch (const validation_failure_exception vfe) {
+			excepted = true;
+		}
+	}
+	CHECK_EQ(true, excepted);
+}
+
+UNIT_TEST(string_variant_plus_int_variant) {
+	const std::string string = "null";
+	const variant string_variant(string);
+	const variant int_variant(329932);
+	const variant sum = string_variant + int_variant;
+	check::type_is_string(sum);
+	const std::string sum_as_string = sum.as_string();
+	CHECK_EQ("null329932", sum_as_string);
+}
+
+UNIT_TEST(list_variant_plus_string_variant) {
+	std::vector<variant> variants_vector;
+	variants_vector.push_back(variant(1));
+	variants_vector.push_back(variant(2));
+	const variant list_variant(& variants_vector);
+	const std::string string = "null";
+	const variant string_variant(string);
+	const variant sum = list_variant + string_variant;
+	check::type_is_string(sum);
+	const std::string sum_as_string = sum.as_string();
+	CHECK_EQ("[1,2]null", sum_as_string);
+}
+
+UNIT_TEST(int_variant_plus_bool_variant) {
+	const variant int_variant(32993);
+	const variant bool_variant(variant::from_bool(true));
+	const variant sum = int_variant + bool_variant;
+	check::type_is_int(sum);
+	const int_fast32_t sum_as_int = sum.as_int();
+	CHECK_EQ(32994, sum_as_int);
+}
+
+UNIT_TEST(bool_variant_plus_bool_variant) {
+	const variant bool_variant(variant::from_bool(true));
+	const variant bool_variant_(variant::from_bool(true));
+	const variant sum = bool_variant + bool_variant_;
+	check::type_is_int(sum);
+	const int_fast32_t sum_as_int = sum.as_int();
+	CHECK_EQ(2, sum_as_int);
+}
+
+UNIT_TEST(null_plus_anything_returns_anything) {
+	const variant null_variant;
+	const variant int_variant(32993);
+	const variant sum = null_variant + int_variant;
+	check::type_is_int(sum);
+	const int_fast32_t sum_as_int = sum.as_int();
+	CHECK_EQ(32993, sum_as_int);
+}
+
+UNIT_TEST(anything_plus_null_returns_anything) {
+	std::vector<variant> variants_vector;
+	const variant list_variant(& variants_vector);
+	const variant null_variant;
+	const variant sum = list_variant + null_variant;
+	check::type_is_list(sum);
+	const std::vector<variant> sum_as_list = sum.as_list();
+	CHECK_EQ(0, sum_as_list.size());
+}
+
+UNIT_TEST(empty_list_plus_empty_list_returns_empty_list) {
+	std::vector<variant> variants_vector;
+	const variant list_variant(& variants_vector);
+	std::vector<variant> variants_vector_;
+	const variant list_variant_(& variants_vector_);
+	const variant sum = list_variant + list_variant_;
+	check::type_is_list(sum);
+	const std::vector<variant> sum_as_list = sum.as_list();
+	CHECK_EQ(0, sum_as_list.size());
+}
+
+UNIT_TEST(dictionary_plus_dictionary_returns_dictionary) {
+	std::map<variant, variant> variants_map;
+	std::map<variant, variant> variants_map_;
+	const variant key("TT");
+	const variant key_(32993);
+	const std::string pi_as_string = boost::lexical_cast<std::string>(M_PI);
+	const variant value(decimal::from_string(pi_as_string));
+	const variant value_(variant::from_bool(true));
+	std::pair<std::map<variant, variant>::iterator, bool> ret;
+	ret = variants_map.insert(std::pair<variant, variant>(key, value));
+	CHECK_EQ(true, ret.second);
+	ret = variants_map_.insert(std::pair<variant, variant>(key_, value_));
+	CHECK_EQ(true, ret.second);
+	const variant dictionary_variant(& variants_map);
+	const variant dictionary_variant_(& variants_map_);
+	const variant sum = dictionary_variant + dictionary_variant_;
+	check::type_is_dictionary(sum);
+	const std::map<variant, variant> sum_as_map = sum.as_map();
+	CHECK_EQ(2, sum_as_map.size());
+	for (auto const & entry : sum_as_map) {
+		const variant key = entry.first;
+		const variant value = entry.second;
+		const variant::TYPE key_type = key.type();
+		if (key_type == variant::TYPE::VARIANT_TYPE_STRING) {
+			check::type_is_decimal(value);
+			const decimal value_as_decimal = value.as_decimal();
+			const decimal expected = decimal::from_string("3.141592");
+			CHECK_EQ(expected, value_as_decimal);
+		} else {
+			ASSERT_LOG(key_type == variant::TYPE::VARIANT_TYPE_INT, "unexpected map key/s");
+			check::type_is_bool(value);
+			const bool value_as_bool = value.as_bool();
+			CHECK_EQ(true, value_as_bool);
+		}
+	}
+}
+
+UNIT_TEST(empty_list_times_negative_int) {
+	std::vector<variant> empty_variants_vector;
+	const variant empty_list_variant(& empty_variants_vector);
+	const variant int_variant(-32993);
+	const variant product = empty_list_variant * int_variant;
+	LOG_DEBUG(product);
+}
+
+UNIT_TEST(divide_by_zero_decimal_excepts) {
+	const variant null_variant;
+	const variant decimal_zero_variant(decimal::from_string("0.0"));
+	bool excepted = false;
+	{
+        const assert_recover_scope unit_test_exception_expected;
+		try {
+			null_variant / decimal_zero_variant;
+		} catch (const validation_failure_exception vfe) {
+			excepted = true;
+		}
+	}
+	CHECK_EQ(true, excepted);
+}
+
+UNIT_TEST(decimal_variants_division_standard_case) {
+	const variant decimal_variant_n(decimal::from_string("6.0"));
+	const variant decimal_variant_d(decimal::from_string("3.0"));
+	const variant division = decimal_variant_n / decimal_variant_d;
+	check::type_is_decimal(division);
+	const decimal division_as_decimal = division.as_decimal();
+	const decimal expected(decimal::from_string("2.0"));
+	CHECK_EQ(expected, division_as_decimal);
+}
+
+UNIT_TEST(divide_by_zero_integer_excepts) {
+	const variant null_variant;
+	const variant integer_zero_variant(0);
+	bool excepted = false;
+	{
+		const assert_recover_scope unit_test_exception_expected;
+		try {
+			null_variant / integer_zero_variant;
+		} catch (const validation_failure_exception vfe) {
+			excepted = true;
+		}
+	}
+	CHECK_EQ(true, excepted);
+}
+
+UNIT_TEST(remainder_of_divide_by_zero_integer_excepts) {
+	const variant null_variant;
+	const variant integer_zero_variant(0);
+	bool excepted = false;
+	{
+		const assert_recover_scope unit_test_exception_expected;
+		try {
+			null_variant % integer_zero_variant;
+		} catch (const validation_failure_exception vfe) {
+			excepted = true;
+		}
+	}
+	CHECK_EQ(true, excepted);
+}
+
+UNIT_TEST(generic_function_variants_equality) {
+	const std::string code = "def << T >> (T t) -> T t";
+	const variant code_variant(code);
+	const game_logic::Formula code_variant_formula(code_variant);
+	const variant execution = code_variant_formula.execute();
+	check::type_is_generic_function(execution);
+	const variant generic_function = execution;
+	const std::string code_ = "def << T >> (T t) -> T t";
+	const variant code_variant_(code_);
+	const game_logic::Formula code_variant_formula_(code_variant_);
+	const variant execution_ = code_variant_formula_.execute();
+	check::type_is_generic_function(execution_);
+	const variant generic_function_ = execution_;
+	const bool equal_different_objects = generic_function == generic_function_;
+	CHECK_EQ(false, equal_different_objects);
+	const bool equal_same_object = generic_function == generic_function;
+	CHECK_EQ(true, equal_same_object);
+}
+
+UNIT_TEST(serialize_null_variant_to_string) {
+	const variant null_variant;
+	std::string serialization = "";
+	null_variant.serializeToString(serialization);
+	CHECK_EQ("null", serialization);
+}
+
+UNIT_TEST(serialize_bool_variant_to_string) {
+	const variant bool_variant(variant::from_bool(true));
+	std::string serialization = "";
+	bool_variant.serializeToString(serialization);
+	CHECK_EQ("true", serialization);
+}
+
+UNIT_TEST(serialize_enum_variant_to_string) {
+	const std::string code = "enum a";
+	const variant code_variant(code);
+	const game_logic::Formula code_variant_formula(code_variant);
+	const variant execution = code_variant_formula.execute();
+	check::type_is_enum(execution);
+	const variant enum_variant = execution;
+	std::string serialization = "";
+	enum_variant.serializeToString(serialization);
+	CHECK_EQ(code, serialization);
+}
+
+//   Dictionary variants can have integers as keys. I don't know if the Boost
+// property tree can be configured to be compatible with relaxed JSON key
+// types.
+UNIT_TEST(serialize_dictionary_variant_to_string) {
+	std::map<variant, variant> variants_map;
+	const variant key("TT");
+// 	const variant key_(32993);
+	const variant key_("32993");
+	const std::string pi_as_string = "3.141592";
+	const variant value(decimal::from_string(pi_as_string));
+	const variant value_(variant::from_bool(true));
+	std::pair<std::map<variant, variant>::iterator, bool> ret;
+	ret = variants_map.insert(std::pair<variant, variant>(key, value));
+	CHECK_EQ(true, ret.second);
+	ret = variants_map.insert(std::pair<variant, variant>(key_, value_));
+	CHECK_EQ(true, ret.second);
+	const variant dictionary_variant(& variants_map);
+	std::string serialization = "";
+	dictionary_variant.serializeToString(serialization);
+	LOG_DEBUG(serialization);
+// 	serialization = "{\"TT\":3.141592,\"32993\":true}";
+// 	LOG_DEBUG(serialization);
+	ASSERT_LOG(serialization.find("'") != std::string::npos, "unexpected serialization results");
+	std::replace(serialization.begin(), serialization.end(), '\'', '"');
+	LOG_DEBUG(serialization);
+	boost::property_tree::ptree property_tree;
+	std::istringstream iss(serialization);
+	boost::property_tree::read_json(iss, property_tree);
+	const std::string tt = property_tree.get<std::string>("TT");
+	CHECK_EQ("3.141592", tt);
+// 	const std::string number = property_tree.get<std::string>(32993);
+	const std::string number = property_tree.get<std::string>("32993");
+	CHECK_EQ("true", number);
+}
+
+UNIT_TEST(serialize_string_variant_to_string_a) {
+	const std::string string = "~32993";
+	const variant string_variant(string);
+	std::string serialization = "";
+	string_variant.serializeToString(serialization);
+	LOG_DEBUG(serialization);
+	CHECK_EQ("'~32993'", serialization);
+}
+
+UNIT_TEST(serialize_string_variant_to_string_b) {
+	const std::string string = "~32993~";
+	const variant string_variant(string);
+	std::string serialization = "";
+	string_variant.serializeToString(serialization);
+	LOG_DEBUG(serialization);
+	CHECK_EQ("~32993~", serialization);
+}
+
+UNIT_TEST(serialize_string_variant_to_string_c) {
+	const std::string string = "-='=-";
+	const variant string_variant(string);
+	std::string serialization = "";
+	string_variant.serializeToString(serialization);
+	LOG_DEBUG(serialization);
+	CHECK_EQ("q(-='=-)", serialization);
+}
+
+//   This exposes a possible bug.
+UNIT_TEST(serialize_string_variant_to_string_d) {
+	const std::string string = "-)=)'(=(-";
+	const variant string_variant(string);
+	std::string serialization = "";
+	string_variant.serializeToString(serialization);
+	LOG_DEBUG(serialization);
+	CHECK_EQ("q(-)=)'(=(-)", serialization);
+}
+
+UNIT_TEST(deserialize_bool_variant_from_bool_in_string) {
+	const std::string string = "true";
+	variant variant_;
+	variant_.serialize_from_string(string);
+	check::type_is_bool(variant_);
+	const variant from_deserializing_bool_in_string = variant_;
+	const bool deserialized = from_deserializing_bool_in_string.as_bool();
+	CHECK_EQ(true, deserialized);
+}
+
+UNIT_TEST(deserialize_string_variant_from_crashy_formula_in_string) {
+	const std::string string = "(-2147483648) ^ ";
+	variant variant_;
+	{
+		const assert_recover_scope expecting_exception;
+		variant_.serialize_from_string(string);
+	}
+	check::type_is_string(variant_);
+	const variant from_crashy_formula_deserialization = variant_;
+	const std::string from_crashy_formula_deserialization_as_string =
+			from_crashy_formula_deserialization.as_string();
+	LOG_DEBUG(from_crashy_formula_deserialization);
+	LOG_DEBUG(from_crashy_formula_deserialization_as_string);
+	CHECK_EQ(string, from_crashy_formula_deserialization_as_string);
+}
+
+UNIT_TEST(list_variant_refcount_0) {
+	std::vector<variant> variants_vector;
+	variants_vector.push_back(variant("tdfgdsfgdfsdfgdsfgdsf33gg"));
+	variants_vector.push_back(variant(2534564567452436457586222.0));
+	const variant list_variant(& variants_vector);
+	const uint_fast8_t refs_count = list_variant.refcount();
+	CHECK_EQ(1, refs_count);
+}
+
+UNIT_TEST(list_variant_refcount_1) {
+	std::vector<variant> variants_vector;
+	variants_vector.push_back(variant("3454536-----'sdfasdfasdf3"));
+	const variant list_variant(& variants_vector);
+	const uint_fast8_t refs_count = list_variant.refcount();
+	CHECK_EQ(1, refs_count);
+	const variant list_variant_(list_variant);
+	const uint_fast8_t refs_count_ = list_variant_.refcount();
+	CHECK_EQ(2, refs_count_);
+}
+
+UNIT_TEST(null_variant_string_cast) {
+	const variant variant_;
+	check::type_is_null(variant_);
+	const variant null_variant = variant_;
+	const std::string null_variant_string_cast = null_variant.string_cast();
+	CHECK_EQ("null", null_variant_string_cast);
+}
+
+UNIT_TEST(bool_variant_string_cast) {
+	const variant variant_ = variant::from_bool(true);
+	check::type_is_bool(variant_);
+	const variant bool_variant = variant_;
+	const std::string bool_variant_string_cast = bool_variant.string_cast();
+	CHECK_EQ("true", bool_variant_string_cast);
+}
+
+UNIT_TEST(enum_variant_string_cast) {
+	const std::string code = "enum a";
+	const variant code_variant(code);
+	const game_logic::Formula code_variant_formula(code_variant);
+	const variant execution = code_variant_formula.execute();
+	check::type_is_enum(execution);
+	const variant enum_variant = execution;
+	const std::string enum_variant_string_cast = enum_variant.string_cast();
+	CHECK_EQ("enum a", enum_variant_string_cast);
+}
+
+UNIT_TEST(dictionary_variant_string_cast) {
+	std::map<variant, variant> variants_map;
+	const variant key("TT");
+	const variant key_("32993");
+	const std::string pi_as_string = "3.141592";
+	const variant value(decimal::from_string(pi_as_string));
+	const variant value_(variant::from_bool(true));
+	std::pair<std::map<variant, variant>::iterator, bool> ret;
+	ret = variants_map.insert(std::pair<variant, variant>(key, value));
+	CHECK_EQ(true, ret.second);
+	ret = variants_map.insert(std::pair<variant, variant>(key_, value_));
+	CHECK_EQ(true, ret.second);
+	const variant variant_(& variants_map);
+	check::type_is_dictionary(variant_);
+	const variant dictionary_variant = variant_;
+	const std::string dictionary_variant_string_cast =
+			dictionary_variant.string_cast();
+	LOG_DEBUG(dictionary_variant_string_cast);
+	if ("32993: true,TT: 3.141592" != dictionary_variant_string_cast &&
+			"TT: 3.141592,32993: true" != dictionary_variant_string_cast) {
+		CHECK_EQ(false, true);
+	}
 }

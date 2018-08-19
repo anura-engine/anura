@@ -483,6 +483,7 @@
 		CF3623DC211EF73F008C2DFD /* svg_fwd.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CF3623DB211EF73F008C2DFD /* svg_fwd.cpp */; };
 		CF91F5D92117748C00DE58EA /* simplex_noise_tests.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CF91F5D82117748B00DE58EA /* simplex_noise_tests.cpp */; };
 		CFA55595211759B30005446A /* TextureUtils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CFA55594211759B30005446A /* TextureUtils.cpp */; };
+		CFD1E1272124516200FA450E /* variant_type_check.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CFD1E1262124516100FA450E /* variant_type_check.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -1416,6 +1417,7 @@
 		CF3623DB211EF73F008C2DFD /* svg_fwd.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = svg_fwd.cpp; path = svg/svg_fwd.cpp; sourceTree = "<group>"; };
 		CF91F5D82117748B00DE58EA /* simplex_noise_tests.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = simplex_noise_tests.cpp; sourceTree = "<group>"; };
 		CFA55594211759B30005446A /* TextureUtils.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = TextureUtils.cpp; sourceTree = "<group>"; };
+		CFD1E1262124516100FA450E /* variant_type_check.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = variant_type_check.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -2438,6 +2440,7 @@
 				C010C72D160AFD4D006E7D90 /* variant_callable.hpp */,
 				C02ACCAA16FD5F05006274BC /* variant_type.cpp */,
 				C02ACCAB16FD5F05006274BC /* variant_type.hpp */,
+				CFD1E1262124516100FA450E /* variant_type_check.cpp */,
 				C010C72E160AFD4D006E7D90 /* variant_utils.cpp */,
 				C010C72F160AFD4D006E7D90 /* variant_utils.hpp */,
 				C0AD75121834707D00FAFA3D /* VoronoiDiagramGenerator.cpp */,
@@ -2739,6 +2742,7 @@
 				639B547F1AC2183B00ECC4F8 /* normal_map.cpp in Sources */,
 				C010C771160AFD4D006E7D90 /* editor_variable_info.cpp in Sources */,
 				639B54131AC20D7600ECC4F8 /* b2CollideCircle.cpp in Sources */,
+				CFD1E1272124516200FA450E /* variant_type_check.cpp in Sources */,
 				C010C774160AFD4D006E7D90 /* entity.cpp in Sources */,
 				C07A47DA19444C2000F1190E /* svg_transform.cpp in Sources */,
 				639B53A71AC20D5A00ECC4F8 /* Util.cpp in Sources */,
