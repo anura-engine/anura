@@ -2221,6 +2221,9 @@
     <ClCompile Include="..\..\src\theme_imgui.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\variant_type_check.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\..\src\anura-resouces.rc">

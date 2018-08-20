@@ -700,6 +700,7 @@
     <ClCompile Include="..\..\src\variant.cpp" />
     <ClCompile Include="..\..\src\variant_callable.cpp" />
     <ClCompile Include="..\..\src\variant_type.cpp" />
+    <ClCompile Include="..\..\src\variant_type_check.cpp" />
     <ClCompile Include="..\..\src\variant_utils.cpp" />
     <ClCompile Include="..\..\src\video_selections.cpp" />
     <ClCompile Include="..\..\src\VoronoiDiagramGenerator.cpp" />
