@@ -1,0 +1,229 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Frogatto Font Definition Extractor</title>
+		
+		<script>
+			noncontiguousCharacters = [,,
+				"ΆΈΉΊΪΌΎΫΏ", //\" was contiguous in some fonts, just tweak this script as needed… :p
+				"…",
+			]
+			
+			document.addEventListener("DOMContentLoaded", ()=>{
+				let gctx = fontEditor.getContext('2d')
+				
+				let fontImage = new Image
+				fontImage.onload = function() {
+					fontEditor.width = fontImage.width*2
+					fontEditor.height = fontImage.height*2
+					gctx.imageSmoothingEnabled = false;
+					gctx.drawImage(fontImage, 0,0, fontEditor.width,fontEditor.height)
+				}
+				
+				fontImageInput.addEventListener("change", ()=>{
+					fontImage.src = URL.createObjectURL(fontImageInput.files[0])
+				})
+				
+				if(fontImageInput.files[0]) {
+					fontImage.src = URL.createObjectURL(fontImageInput.files[0])
+				}
+				
+				fontEditor.addEventListener('mousedown', sample)
+				fontEditor.addEventListener('mousemove', sample)
+				function sample(evt) {
+					if(!evt.buttons) return
+					
+					target = {
+						x: Math.round((evt.x - evt.target.offsetLeft + scrollX) / 2),
+						y: Math.round((evt.y - evt.target.offsetTop + scrollY) / 2),
+					}
+					
+					fontImage.onload() //Refresh the image, we draw over it in the next few lines.
+					let {topOfTextRow, bottomOfTextRow} = findRowAround(target.y)
+					
+					let visualBlocks = findCharsInRow(topOfTextRow, bottomOfTextRow)
+					
+					//Merge blocks which are mapped to noncontiguous characters.
+					blocks = []
+					visualCharacters = targetCharacters.value.split('')
+					while(visualBlocks.length) {
+						char = visualCharacters.shift()
+						visualBlocksToCharacter = Math.abs( //x is one visual block, … is three. i is 1 as well, because this is blocks of vertical scans.
+							noncontiguousCharacters.findIndex(
+								x=>x&&x.includes(char) ) )
+						blocks.push(visualBlocks
+							.slice(0,visualBlocksToCharacter)
+							.reduce((a, b) => ({
+								x1: Math.min(a.x1, b.x1),
+								y1: Math.min(a.y1, b.y1),
+								x2: Math.max(a.x2, b.x2),
+								y2: Math.max(a.y2, b.y2),
+							})) )
+						visualBlocks = visualBlocks.slice(visualBlocksToCharacter)
+					}
+					
+					//Show blocks visually, pair each block to it's char.
+					blocks.forEach((block, blockNum) => {
+						if(blockNum >= targetCharacters.value.length) { return }
+						gctx.fillStyle = blockNum%2?'#0007':'#2226';
+						gctx.fillRect(block.x1*2, block.y1*2, block.x2*2-block.x1*2, block.y2*2-block.y1*2)
+						
+						block.chars = targetCharacters.value[blockNum]
+					})
+					
+					//Reduce blocks according to runs rules, combining similar-width chars and only defining width if properly padded.
+					blocks = blocks.reduce((accum, block) => {
+						lastBlock = accum.slice([-1])[0]
+						between = +pad.value + +kerning.value
+						
+						if(!lastBlock || lastBlock.x1 + (lastBlock.x2 - lastBlock.x1 + between) * (lastBlock.chars.length) != block.x1 ) {
+							block.newAnchor = true
+							return accum.concat(block)
+						} else if(lastBlock.x2 - lastBlock.x1 != block.x2 - block.x1) {
+							block.newAnchor = false
+							return accum.concat(block)
+						} else {
+							lastBlock.chars += block.chars //Merge same-length char definitions.
+							return accum
+						}
+					}, [])
+					
+					//Print char definitions.
+					blocks.forEach(block => {
+						if(!block.chars) { return }
+						
+						output.textContent += `{
+							chars: "${block.chars
+								.replace("\\", "\\\\")
+								.replace("*", "\\*")}",
+							${block.newAnchor
+								? `rect: [${block.x1}, ${block.y1}, ${block.x2}, ${block.y2}]`
+								: `width: ${block.x2-block.x1}`},\n},`
+						.replace(/\t+/g, '\t') //Trim leading tabs.
+					})
+					
+					
+				}
+				
+				function samplePoint(x,y) {
+					let imgSamplerCanvas = document.createElement('canvas')
+					let ctx = imgSamplerCanvas.getContext('2d')
+					imgSamplerCanvas.width = fontImage.width
+					imgSamplerCanvas.height = fontImage.height
+					ctx.imageSmoothingEnabled = false
+					ctx.drawImage(fontImage, 0,0)
+					return ctx.getImageData(x,y, 1,1).data
+				}
+				
+				function imageData(fontImage) {
+					//Get image data as 2D Uint8ClampedArray.
+					let imgSamplerCanvas = document.createElement('canvas')
+					let ctx = imgSamplerCanvas.getContext('2d')
+					imgSamplerCanvas.width = fontImage.width
+					imgSamplerCanvas.height = fontImage.height
+					ctx.imageSmoothingEnabled = false
+					ctx.drawImage(fontImage, 0,0)
+					return ctx.getImageData(0,0, fontImage.width,fontImage.height).data
+				}
+				
+				function findRowAround(y) {
+					let width = fontImage.width
+					let height = fontImage.height
+					let data = imageData(fontImage)
+					
+					let topOfTextRow = y
+					while (!isTransparentHorizontalLine(data.slice(topOfTextRow*width*4, topOfTextRow*width*4+width*4))) {
+						if (!--topOfTextRow) break
+					}
+					
+					let bottomOfTextRow = y
+					while(!isTransparentHorizontalLine(data.slice(bottomOfTextRow*width*4, bottomOfTextRow*width*4+width*4))) {
+						if (++bottomOfTextRow >= height) break
+					}
+					
+					return {topOfTextRow, bottomOfTextRow}
+				}
+				
+				function isTransparentPixel(pixel) {
+					//A pixel is transparent to Anura if it has 0 alpha, or is magic brown or magic red.
+					if (!pixel[3]) return true
+					if (pixel[0] = 111 && pixel[1] == 109 && pixel[2] == 81 && pixel[3] == 255) return true
+					if (pixel[0] = 249 && pixel[1] == 48 && pixel[2] == 61 && pixel[3] == 255) return true
+					return false
+				}
+				
+				function isTransparentHorizontalLine(line) {
+					for (let i = 0; i < line.length; i+=4) {
+						if (!isTransparentPixel(line.slice(i, i+4))) { 
+							return false } }
+					return true
+				}
+				
+				function isTransparentVerticalLine(data, width, height, x) {
+					for (let y = 0; y < height; y++) {
+						//gctx.fillStyle = isTransparentPixel(data.slice(y*width*4+x*4, y*width*4+x*4+4)) ? '#0F0A' : '#F00A'
+						//gctx.fillRect(x*2, y*2+100, 2, 2)
+						if (!isTransparentPixel(data.slice(y*width*4+x*4, y*width*4+x*4+4))) { 
+							return false } }
+					return true
+				}
+				
+				function findCharsInRow(top, bottom) {
+					let width = fontImage.width
+					let height = fontImage.height
+					let data = imageData(fontImage).slice(top*width*4, bottom*width*4 + width*4)
+					
+					let edges = new Array(width-1).fill()
+					.map((_, i) => ({
+						offset: i,
+						edge: isTransparentVerticalLine(data, width, bottom-top, i+0) 
+						   != isTransparentVerticalLine(data, width, bottom-top, i+1),
+					}) )
+					.filter(d=>d.edge)
+					
+					chars = []
+					for (var i = 0; i < edges.length; i += 2) {
+						chars.push({
+							x1: edges[i+0].offset+1, 
+							y1: top+1,
+							x2: edges[i+1].offset+1, 
+							y2: bottom,
+						})
+					}
+					
+					return chars
+				}
+			})
+		</script>
+	</head>
+	
+	<body>
+		<h1>Frogatto Font Definition Extractor</h1>
+		<p>Extract text rects from a font image.</p>
+		<p>Open the font .png file. Fill in the line of text in <code>target line text</code> with the unicode characters. Click on a line of text to extract the font definition rects from it.</p>
+		
+		<label>
+			target line text
+			<input id=targetCharacters>
+		</label>
+		<br>
+		<label>
+			pad
+			<input id=pad type="number" value=1>
+		</label>
+		<label>
+			kerning
+			<input id=kerning type="number" value=1>
+		</label>
+		<br>
+		<label>
+			font .png file
+			<input id=fontImageInput type=file accept=image/png>
+		</label>
+		<br>
+		<canvas id=fontEditor style="image-rendering:pixelated; border:1px solid black"></canvas>
+		<br>
+		<pre><code id=output></code></pre>
+	</body>
+</html>
