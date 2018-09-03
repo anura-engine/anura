@@ -6,7 +6,7 @@
 		
 		<script>
 			noncontiguousCharacters = [,,
-				"ΆΈΉΊΪΌΎΫΏ", //\" was contiguous in some fonts, just tweak this script as needed… :p
+				"ΆΈΉΊΪΌΏЫыďť", //\" was contiguous in some fonts, just tweak this script as needed… :p
 				"…",
 			]
 			
@@ -34,7 +34,7 @@
 				function sample(evt) {
 					if(!evt.buttons) return
 					
-					target = {
+					let target = {
 						x: Math.round((evt.x - evt.target.offsetLeft + scrollX) / 2),
 						y: Math.round((evt.y - evt.target.offsetTop + scrollY) / 2),
 					}
@@ -45,10 +45,10 @@
 					let visualBlocks = findCharsInRow(topOfTextRow, bottomOfTextRow)
 					
 					//Merge blocks which are mapped to noncontiguous characters.
-					blocks = []
-					visualCharacters = targetCharacters.value.split('')
-					while(visualBlocks.length) {
-						char = visualCharacters.shift()
+					let blocks = []
+					for (let char of targetCharacters.value) {
+						console.log('char', char)
+						if(!visualBlocks.length) { break; }
 						visualBlocksToCharacter = Math.abs( //x is one visual block, … is three. i is 1 as well, because this is blocks of vertical scans.
 							noncontiguousCharacters.findIndex(
 								x=>x&&x.includes(char) ) )
@@ -74,10 +74,10 @@
 					
 					//Reduce blocks according to runs rules, combining similar-width chars and only defining width if properly padded.
 					blocks = blocks.reduce((accum, block) => {
-						lastBlock = accum.slice([-1])[0]
-						between = +pad.value + +kerning.value
+						let lastBlock = accum.slice([-1])[0]
+						let between = +pad.value + +kerning.value
 						
-						if(!lastBlock || lastBlock.x1 + (lastBlock.x2 - lastBlock.x1 + between) * (lastBlock.chars.length) != block.x1 ) {
+						if(!lastBlock || !lastBlock.chars || lastBlock.x1 + (lastBlock.x2 - lastBlock.x1 + between) * (lastBlock.chars.length) != block.x1 ) {
 							block.newAnchor = true
 							return accum.concat(block)
 						} else if(lastBlock.x2 - lastBlock.x1 != block.x2 - block.x1) {
@@ -90,6 +90,7 @@
 					}, [])
 					
 					//Print char definitions.
+					output.textContent = ''
 					blocks.forEach(block => {
 						if(!block.chars) { return }
 						
@@ -98,7 +99,7 @@
 								.replace("\\", "\\\\")
 								.replace("*", "\\*")}",
 							${block.newAnchor
-								? `rect: [${block.x1}, ${block.y1}, ${block.x2}, ${block.y2}]`
+								? `rect: [${block.x1},${block.y1},${block.x2},${block.y2}]`
 								: `width: ${block.x2-block.x1}`},\n},`
 						.replace(/\t+/g, '\t') //Trim leading tabs.
 					})
