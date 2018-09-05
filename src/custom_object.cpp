@@ -3336,6 +3336,22 @@ variant CustomObject::getValueBySlot(int slot) const
 	case CUSTOM_OBJECT_BLUE:              return variant(draw_color().addBlue());
 	case CUSTOM_OBJECT_ALPHA:             return variant(draw_color().addAlpha());
 	case CUSTOM_OBJECT_TEXT_ALPHA:        return variant(text_ ? text_->alpha : 255);
+	case CUSTOM_OBJECT_TEXT_ATTRS: {
+		std::map<variant, variant> v;
+		v[variant("text")] = variant(text_->text);
+		//v[variant("font")] = variant(text_->font); //kre/Font.cpp was unforthcoming about how to get a font name out of this.
+		v[variant("size")] = variant(text_->size);
+		v[variant("align")] = variant(text_->align);
+		v[variant("alpha")] = variant(text_->alpha);
+		
+		std::vector<variant> d;
+		d.emplace_back(variant(text_->dimensions.x()));
+		d.emplace_back(variant(text_->dimensions.y()));
+		d.emplace_back(variant(text_->dimensions.x2()));
+		d.emplace_back(variant(text_->dimensions.y2()));
+		v[variant("dimensions")] = variant(&d);
+		return variant(&v);
+	}
 	case CUSTOM_OBJECT_DAMAGE:            return variant(getCurrentFrame().damage());
 	case CUSTOM_OBJECT_HIT_BY:            return variant(last_hit_by_.get());
 	case CUSTOM_OBJECT_IS_STANDING:       return variant::from_bool(standing_on_.get() || isStanding(Level::current()) != STANDING_STATUS::NOT_STANDING);
