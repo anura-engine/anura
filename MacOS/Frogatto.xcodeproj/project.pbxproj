@@ -1385,6 +1385,7 @@
 		C0A1595919F0F888009C25B3 /* ffl_weak_ptr.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = ffl_weak_ptr.hpp; sourceTree = "<group>"; };
 		C0A2947A184B126F002B757E /* spline.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = spline.hpp; sourceTree = "<group>"; };
 		C0A362461873BB65002571F3 /* music */ = {isa = PBXFileReference; lastKnownFileType = folder; name = music; path = ../music; sourceTree = "<group>"; };
+		C0A481342171A44200D13A52 /* hex.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = hex.hpp; sourceTree = "<group>"; };
 		C0AD75121834707D00FAFA3D /* VoronoiDiagramGenerator.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = VoronoiDiagramGenerator.cpp; sourceTree = "<group>"; };
 		C0AD75131834707D00FAFA3D /* VoronoiDiagramGenerator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VoronoiDiagramGenerator.h; sourceTree = "<group>"; };
 		C0AD7515183494F100FAFA3D /* poly_map.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = poly_map.cpp; sourceTree = "<group>"; };
@@ -1474,6 +1475,7 @@
 				6357A6E11B258B1C00793D60 /* hex_renderable.hpp */,
 				6357A6E21B258B1C00793D60 /* hex_tile.cpp */,
 				6357A6E31B258B1C00793D60 /* hex_tile.hpp */,
+				C0A481342171A44200D13A52 /* hex.hpp */,
 				C03585BC1D812A5D0090FC2D /* tile_rules.cpp */,
 				C03585BD1D812A5D0090FC2D /* tile_rules.hpp */,
 			);
