@@ -1,0 +1,5 @@
+#   Exclude `external/` and `MacOS/` from GitHub language stats
+# (github.com/github/linguist). `external/` should be implicitly
+# marked vendored, but not `MacOS/`.
+external/ linguist-vendored=true
+MacOS/ linguist-vendored=true
