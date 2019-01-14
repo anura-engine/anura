@@ -2182,6 +2182,18 @@ namespace
 
 	END_FUNCTION_DEF(object_playable)
 
+    FUNCTION_DEF(get_object_type_animation, 2, 2, "get_object_type_animation(obj_type, animation_name): returns the animation object for the given object type")
+        std::string objTypeName = EVAL_ARG(0).as_string();
+        std::string anim_name = EVAL_ARG(1).as_string();
+        auto objType = CustomObjectType::get(objTypeName);
+        ASSERT_LOG(objType.get() != nullptr, "No object type: " << objTypeName);
+        return variant(&objType->getFrame(anim_name));
+    FUNCTION_ARGS_DEF
+        ARG_TYPE("string")
+        ARG_TYPE("string")
+    RETURN_TYPE("builtin frame")
+    END_FUNCTION_DEF(get_object_type_animation)
+    
 	class animation_command : public CustomObjectCommandCallable
 	{
 	public:
@@ -2196,6 +2208,7 @@ namespace
 		std::string anim_;
 	};
 
+    
 	FUNCTION_DEF(animation, 1, 1, "animation(string id): changes the current object's animation to the given animation. time_in_animation is reset to 0.")
 		animation_command* cmd = (new animation_command(EVAL_ARG(0).as_string()));
 		cmd->setExpression(this);
