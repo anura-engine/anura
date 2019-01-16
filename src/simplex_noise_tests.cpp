@@ -54,7 +54,7 @@ UNIT_TEST(simplex_noise_3) {
 	noise::simplex::init(0);
 	const double noise1 = noise::simplex::noise1(0.9);
 #ifdef __APPLE__  //   XXX
-	ASSERT_LOG(-0.12016 < noise1, noise1);
+	ASSERT_LOG(-0.12178 < noise1, noise1);
 	ASSERT_LOG(+0.12044 > noise1, noise1);
 #endif  //   XXX
 }
