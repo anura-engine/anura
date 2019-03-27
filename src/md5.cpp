@@ -293,8 +293,8 @@ UNIT_TEST(md5_test3) {
 	uint8_t result[16] = { 0 };
 	uint8_t values[3] = { 'a', 'b', 'c' };
 	uint8_t good_result[16] = {
-		'\x90', '\x01', '\x50', '\x98', '\x3C', '\xD2', '\x4F', '\xB0', 
-		'\xD6', '\x96', '\x3F', '\x7D', '\x28', '\xE1', '\x7F', '\x72',
+		0x90, '\x01', '\x50',   0x98, '\x3C', 0xD2, '\x4F',   0xB0,
+		0xD6,   0x96, '\x3F', '\x7D', '\x28', 0xE1, '\x7F', '\x72',
 	};
 	struct md5::MD5Context ctx;
 	md5::MD5Init(&ctx);

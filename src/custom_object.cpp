@@ -1459,7 +1459,7 @@ void CustomObject::draw(int xx, int yy) const
 
 		std::vector<Frame::BatchDrawItem> items;
 		for(auto p : batch->objects) {
-			Frame::BatchDrawItem item = { p->frame_.get(), p->x(), p->y(), p->isFacingRight(), p->isUpsideDown(), p->time_in_frame_, p->getRotateZ().as_float32(), p->draw_scale_ ? p->draw_scale_->as_float() : 1.0f };
+			Frame::BatchDrawItem item = { p->frame_.get(), p->x(), p->y(), p->isFacingRight(), p->isUpsideDown(), p->time_in_frame_, p->getRotateZ().as_float32(), p->draw_scale_ ? p->draw_scale_->as_float32() : 1.0f };
 			items.emplace_back(item);
 		}
 

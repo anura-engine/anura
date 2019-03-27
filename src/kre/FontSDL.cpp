@@ -42,7 +42,7 @@ namespace KRE
 
 		SDL_Color to_SDL_Color(const Color& c)
 		{
-			SDL_Color color = {c.r_int(), c.g_int(), c.b_int(), c.a_int()};
+			SDL_Color color = {(unsigned char) c.r_int(), (unsigned char) c.g_int(), (unsigned char) c.b_int(), (unsigned char) c.a_int()};
 			return color;
 		}
 
