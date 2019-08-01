@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\imgui\imconfig.h" />
     <ClInclude Include="..\..\imgui\imgui.h" />
     <ClInclude Include="..\..\src\achievements.hpp" />
     <ClInclude Include="..\..\src\animation_creator.hpp" />
@@ -174,7 +175,8 @@
     <ClInclude Include="..\..\src\kre\Frustum.hpp" />
     <ClInclude Include="..\..\src\kre\geometry.hpp" />
     <ClInclude Include="..\..\src\kre\Gradients.hpp" />
-    <ClInclude Include="..\..\src\kre\imgui_impl_sdl_gl3.h" />
+    <ClInclude Include="..\..\src\kre\imgui_impl_opengl3.h" />
+    <ClInclude Include="..\..\src\kre\imgui_impl_sdl.h" />
     <ClInclude Include="..\..\src\kre\LightObject.hpp" />
     <ClInclude Include="..\..\src\kre\ModelMatrixScope.hpp" />
     <ClInclude Include="..\..\src\kre\ParticleSystem.hpp" />
@@ -408,10 +410,9 @@
     <None Include="..\..\src\kre\geometry.inl" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\imgui\imgui.cpp">
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">IMGUI_INCLUDE_IMGUI_USER_INL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ClCompile>
+    <ClCompile Include="..\..\imgui\imgui.cpp" />
     <ClCompile Include="..\..\imgui\imgui_draw.cpp" />
+    <ClCompile Include="..\..\imgui\imgui_widgets.cpp" />
     <ClCompile Include="..\..\src\achievements.cpp" />
     <ClCompile Include="..\..\src\animation_creator.cpp" />
     <ClCompile Include="..\..\src\animation_preview_widget.cpp" />
@@ -548,7 +549,8 @@
     <ClCompile Include="..\..\src\kre\FontSTB.cpp" />
     <ClCompile Include="..\..\src\kre\Frustum.cpp" />
     <ClCompile Include="..\..\src\kre\Gradients.cpp" />
-    <ClCompile Include="..\..\src\kre\imgui_impl_sdl_gl3.cpp" />
+    <ClCompile Include="..\..\src\kre\imgui_impl_opengl3.cpp" />
+    <ClCompile Include="..\..\src\kre\imgui_impl_sdl.cpp" />
     <ClCompile Include="..\..\src\kre\LightObject.cpp" />
     <ClCompile Include="..\..\src\kre\ModelMatrixScope.cpp" />
     <ClCompile Include="..\..\src\kre\ParticleSystem.cpp" />

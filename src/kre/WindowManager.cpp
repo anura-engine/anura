@@ -37,7 +37,8 @@
 
 #ifdef USE_IMGUI
 #include "imgui.h"
-#include "imgui_impl_sdl_gl3.h"
+#include "imgui_impl_sdl.h"
+#include "imgui_impl_opengl3.h"
 #endif
 
 namespace KRE
@@ -258,7 +259,10 @@ namespace KRE
 			}
 			window_.reset(SDL_CreateWindow(getTitle().c_str(), x, y, w, h, wnd_flags), [&](SDL_Window* wnd){
 #ifdef USE_IMGUI
-				ImGui_ImplSdlGL3_Shutdown();
+                // Cleanup
+                ImGui_ImplOpenGL3_Shutdown();
+                ImGui_ImplSDL2_Shutdown();
+                ImGui::DestroyContext();
 #endif
 				if(getDisplayDevice()->ID() != DisplayDevice::DISPLAY_DEVICE_SDL) {
 					SDL_DestroyRenderer(renderer_);
@@ -272,7 +276,21 @@ namespace KRE
 			});
 
 #ifdef USE_IMGUI
-			ImGui_ImplSdlGL3_Init(window_.get());
+#if __APPLE__
+            const char* glsl_version = "#version 150";
+#else
+            const char* glsl_version = "#version 130";
+#endif // __APPLE__
+            // Setup Dear ImGui context
+            IMGUI_CHECKVERSION();
+            ImGui::CreateContext();
+            ImGuiIO& io = ImGui::GetIO(); (void)io;
+
+            ImGui::StyleColorsClassic();
+            //ImGui::StyleColorsDark();
+
+            ImGui_ImplSDL2_InitForOpenGL(window_.get(), context_);
+            ImGui_ImplOpenGL3_Init(glsl_version);
 #endif
 
 			ASSERT_LOG(window_.get() != nullptr, "Could not create window: " << x << ", " << y << ", " << w << ", " << h << " / wnd_flags = " << wnd_flags);
@@ -320,7 +338,9 @@ namespace KRE
 			getDisplayDevice()->clear(f);
 #ifdef USE_IMGUI
 			if(new_frame_ == 0) {
-				ImGui_ImplSdlGL3_NewFrame(window_.get());
+                ImGui_ImplOpenGL3_NewFrame();
+                ImGui_ImplSDL2_NewFrame(window_.get());
+                ImGui::NewFrame();
 				++new_frame_;
 			}
 #endif
@@ -331,7 +351,9 @@ namespace KRE
 			// But SDL provides a device independent way of doing it which is really nice.
 			// So we use that.
 #ifdef USE_IMGUI
-			ImGui::Render();
+            ImGui::Render();
+            ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
 			if(--new_frame_ < 0) {
 				new_frame_ = 0;
 			}
