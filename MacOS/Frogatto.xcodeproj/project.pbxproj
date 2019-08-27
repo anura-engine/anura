@@ -2544,7 +2544,6 @@
 			buildPhases = (
 				C010C569160AFAD9006E7D90 /* Sources */,
 				C010C56A160AFAD9006E7D90 /* Frameworks */,
-				C08F3054180FBD3F005BDCDB /* ShellScript */,
 				C010C80B160B064B006E7D90 /* CopyFiles */,
 				C02751BD17FD49D700173646 /* Resources */,
 			);
@@ -2571,6 +2570,7 @@
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
 			knownRegions = (
+				English,
 				en,
 				fr,
 				it,
@@ -2611,22 +2611,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
-
-/* Begin PBXShellScriptBuildPhase section */
-		C08F3054180FBD3F005BDCDB /* ShellScript */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 12;
-			files = (
-			);
-			inputPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "# touch -cm ${SRCROOT}/../modules\n# touch -cm ${SRCROOT}/../data\n# touch -cm ${SRCROOT}/../images";
-		};
-/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		C010C569160AFAD9006E7D90 /* Sources */ = {
