@@ -29,11 +29,12 @@
 #include <boost/regex.hpp>
 #include <boost/lexical_cast.hpp>
 
-// TODO: when anura boost req >=1.66 remove deprecated path
+#if defined __has_include
 #if __has_include("boost/uuid/sha1.hpp")
 
 #include <boost/uuid/sha1.hpp>
 
+#endif
 #else
 
 #include <boost/uuid/detail/sha1.hpp>
