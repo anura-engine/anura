@@ -30,17 +30,12 @@
 #include <boost/lexical_cast.hpp>
 
 #if defined __has_include
-#if __has_include("boost/uuid/sha1.hpp")
-
-#include <boost/uuid/sha1.hpp>
-
-#endif
+#  if __has_include("boost/uuid/detail/sha1.hpp")
+#    include <boost/uuid/detail/sha1.hpp>
+#  endif
 #else
-
-#include <boost/uuid/detail/sha1.hpp>
-
+#  include <boost/uuid/sha1.hpp>
 #endif
-
 
 #include "asserts.hpp"
 #include "controls.hpp"
