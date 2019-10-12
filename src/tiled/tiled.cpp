@@ -21,7 +21,6 @@
 	   distribution.
 */
 
-#define HAVE_M_PI
 #include "SDL.h"
 #include "SDL_image.h"
 
