@@ -445,10 +445,10 @@ namespace
 					color.a = std::max(256 - info_.delta_a_*(cycle_ - gen.created_at), 0);
 				}
 
-				const float x1 = pp->pos[0] + f.x_adjust * facing;
-				const float x2 = pp->pos[0] + (anim->width() - f.x2_adjust) * facing;
-				const float y1 = pp->pos[1] + f.y_adjust;
-				const float y2 = pp->pos[1] + anim->height() - f.y2_adjust;
+                const float x1 = pp->pos[0] + (f.x_adjust - anim->width()/2.0) * facing;
+                const float x2 = pp->pos[0] + (anim->width()/2.0 - f.x2_adjust) * facing;
+                const float y1 = pp->pos[1] + f.y_adjust - anim->height()/2.0;
+                const float y2 = pp->pos[1] + anim->height()/2.0 - f.y2_adjust;
 
 				vtc.emplace_back(glm::vec2(x1, y1), glm::vec2(f.u1, f.v1), color);
 				vtc.emplace_back(glm::vec2(x2, y1), glm::vec2(f.u2, f.v1), color);

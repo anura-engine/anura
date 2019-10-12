@@ -4467,7 +4467,7 @@ FUNCTION_DEF_IMPL
 
 			std::string toDebugString() const override {
 				std::ostringstream s;
-				s << "(set command: " << attr_ << " -> " << val_.to_debug_string() << ")";
+				s << "(set command: " << attr_ << ")";
 				return s.str();
 			}
 

@@ -596,7 +596,7 @@ int entity_user_collision(const Entity& a, const Entity& b, CollisionPair* areas
 								continue;
 							}
 
-							fprintf(stderr, "COLLIDE: %d, %d / %d, %d\n", b_x, b_y, rect_b.w(), rect_b.h());
+							// fprintf(stderr, "COLLIDE: %d, %d / %d, %d\n", b_x, b_y, rect_b.w(), rect_b.h());
 
 							found = true;
 							break;

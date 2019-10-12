@@ -813,7 +813,7 @@ namespace sound
 				}
 			}
 
-			LOG_INFO("Added wave: " << fname << " Have " << g_wave_cache_lru.size() << " items in cache, size " << (g_wave_cache_size/(1024*1024)) << "MB, " << nactive << " items live, " << (nlive/(1024*1024)) << "MB\n");
+			LOG_VERBOSE("Added wave: " << fname << " Have " << g_wave_cache_lru.size() << " items in cache, size " << (g_wave_cache_size/(1024*1024)) << "MB, " << nactive << " items live, " << (nlive/(1024*1024)) << "MB\n");
 
 			while(g_wave_cache_size >= static_cast<size_t>(g_audio_cache_size_mb*1024*1024)) {
 				assert(!g_wave_cache_lru.empty());

@@ -7,11 +7,11 @@ files for MSVC (requires 2013 desktop edition) for windows and Xcode (requires 4
 You'll need to have these libraries with equivalent development versions to 
 build the Anura engine:
 
- boost_iostreams >= 1.50.0
- boost_filesystem >= 1.50.0
- boost_regex >= 1.50.0
- boost_asio >= 1.50.0
- boost_system >= 1.50.0
+ 1.50.0 <= boost_iostreams  <= 1.67.0 
+ 1.50.0 <= boost_filesystem <= 1.67.0
+ 1.50.0 <= boost_regex      <= 1.67.0
+ 1.50.0 <= boost_asio       <= 1.67.0
+ 1.50.0 <= boost_system     <= 1.67.0
  libsdl >= 2.0.0
  libsdl-image >= 2.0.0 (with png support)
  libsdl-mixer >= 2.0.0 (with Vorbis support)

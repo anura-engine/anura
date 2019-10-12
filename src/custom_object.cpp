@@ -3337,6 +3337,10 @@ variant CustomObject::getValueBySlot(int slot) const
 	case CUSTOM_OBJECT_ALPHA:             return variant(draw_color().addAlpha());
 	case CUSTOM_OBJECT_TEXT_ALPHA:        return variant(text_ ? text_->alpha : 255);
 	case CUSTOM_OBJECT_TEXT_ATTRS: {
+		if(text_.get() == nullptr) {
+			return variant();
+		}
+
 		std::map<variant, variant> v;
 		v[variant("text")] = variant(text_->text);
 		//v[variant("font")] = variant(text_->font); //kre/Font.cpp was unforthcoming about how to get a font name out of this.

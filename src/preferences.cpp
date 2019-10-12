@@ -317,7 +317,7 @@ namespace preferences
 		std::string return_value;
 		for(std::map<std::string, RegisteredSetting>::const_iterator i = g_registered_settings().begin(); i != g_registered_settings().end(); ++i) {
 			std::ostringstream s;
-			s << "        --";
+			s << "      --";
 			if(i->second.bool_value) {
 				s << "[no-]";
 			}
@@ -334,9 +334,9 @@ namespace preferences
 			}
 
 			std::string result = s.str();
-			while(result.size() < 32) {
+			do {
 				result += " ";
-			}
+			} while(result.size() < 32);
 
 			if(i->second.helpstring) {
 				result += i->second.helpstring;
