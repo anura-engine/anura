@@ -7,8 +7,13 @@
 class tbs_relay_server : public http::web_server
 {
 	struct OutgoingSocketInfo {
+#if BOOST_ASIO_VERSION >= 101400
+		explicit OutgoingSocketInfo(boost::asio::ip::tcp::socket::executor_type executor)
+		  : socket(executor)
+#else
 		explicit OutgoingSocketInfo(boost::asio::io_service& service)
 		  : socket(service)
+#endif
 		{
 		}
 
@@ -86,7 +91,11 @@ public:
 
 	void start_accept_outgoing()
 	{
+#if BOOST_ASIO_VERSION >= 101400
+		OutgoingSocketPtr socket(new OutgoingSocketInfo(acceptor_.get_executor()));
+#else
 		OutgoingSocketPtr socket(new OutgoingSocketInfo(acceptor_.get_io_service()));
+#endif
 		acceptor_.async_accept(socket->socket, std::bind(&tbs_relay_server::handle_accept_outgoing, this, socket, std::placeholders::_1));
 	}
 
