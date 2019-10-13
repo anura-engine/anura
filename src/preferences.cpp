@@ -32,6 +32,8 @@
 #if defined __has_include
 #  if __has_include("boost/uuid/detail/sha1.hpp")
 #    include <boost/uuid/detail/sha1.hpp>
+#  else
+#    include <boost/uuid/sha1.hpp>
 #  endif
 #else
 #  include <boost/uuid/sha1.hpp>
