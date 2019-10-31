@@ -66,7 +66,11 @@ namespace multiplayer
 	private:
 		void start_accept()
 		{
+#if BOOST_ASIO_VERSION >= 101400
+			socket_ptr socket(new tcp::socket(acceptor_.get_executor()));
+#else
 			socket_ptr socket(new tcp::socket(acceptor_.get_io_service()));
+#endif
 			acceptor_.async_accept(*socket, std::bind(&server::handle_accept, this, socket, std::placeholders::_1));
 		}
 
