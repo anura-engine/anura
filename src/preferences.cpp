@@ -28,7 +28,16 @@
 
 #include <boost/regex.hpp>
 #include <boost/lexical_cast.hpp>
-#include <boost/uuid/sha1.hpp> //Not needed? Do we need for backwards compat on other systems?
+
+#if defined __has_include
+#  if __has_include("boost/uuid/detail/sha1.hpp")
+#    include <boost/uuid/detail/sha1.hpp>
+#  else
+#    include <boost/uuid/sha1.hpp>
+#  endif
+#else
+#  include <boost/uuid/sha1.hpp>
+#endif
 
 #include "asserts.hpp"
 #include "controls.hpp"
