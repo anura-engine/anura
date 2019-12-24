@@ -41,7 +41,7 @@ Building on Ubuntu 19.10
 The following are some specific instructions for setting up the prequisites for anura on Ubuntu.
 
 First, install the dependancies.
-sudo apt install build-essential ccache git libboost-dev libboost-filesystem-dev libboost-iostreams-dev libboost-regex-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev libglew-dev libpng-dev libcairo2-dev libfreetype6-dev libvorbis-dev
+sudo apt install build-essential ccache git libboost-dev libboost-filesystem-dev libboost-iostreams-dev libboost-regex-dev libboost-locale-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev libglew-dev libpng-dev libcairo2-dev libfreetype6-dev libvorbis-dev
 
 Then, build the project.
 cd anura #(or wherever you downloaded Anura to)
