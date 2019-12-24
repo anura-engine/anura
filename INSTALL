@@ -35,18 +35,17 @@ To access the level editor, press CTRL-E during the game.
 Have fun!
 
 
-Building on Ubuntu 13.10
+Building on Ubuntu 19.10
 ------------------------
 
-The following are some specific instructions for setting up the prequisites for anura on Ubuntu 13.10
+The following are some specific instructions for setting up the prequisites for anura on Ubuntu.
 
-sudo apt-get install build-essential ccache git libboost1.53-all-dev libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libfreetype6-dev mercurial autoconf libglew-dev libpng12-dev liblua5.2-dev
-hg clone http://hg.libsdl.org/SDL_ttf
-cd SDL_ttf
-hg update "release-2.0.12"
-./autogen.sh
-mkdir build && cd build
-../configure && make && sudo make install
+First, install the dependancies.
+sudo apt install build-essential ccache git libboost-dev libboost-filesystem-dev libboost-iostreams-dev libboost-regex-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev libglew-dev libpng-dev libcairo2-dev libfreetype6-dev libvorbis-dev
+
+Then, build the project.
+cd anura #(or wherever you downloaded Anura to)
+make -j$(nproc)
 
 Building on a 2016 Debian sid
 -----------------------------
