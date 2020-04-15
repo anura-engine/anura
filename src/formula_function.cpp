@@ -4015,9 +4015,9 @@ FUNCTION_DEF_IMPL
 
 		FUNCTION_DEF(get_all_files_under_dir, 1, 1, "get_all_files_under_dir(path): Returns a list of all the files in and under the given directory")
 			std::vector<variant> v;
-			std::map<std::string, std::string> file_paths;
-			module::get_unique_filenames_under_dir(EVAL_ARG(0).as_string(), &file_paths);
-			for(std::map<std::string, std::string>::const_iterator i = file_paths.begin(); i != file_paths.end(); ++i) {
+			std::multimap<std::string, std::string> file_paths;
+			module::get_all_filenames_under_dir(EVAL_ARG(0).as_string(), &file_paths);
+			for(std::multimap<std::string, std::string>::const_iterator i = file_paths.begin(); i != file_paths.end(); ++i) {
 				v.push_back(variant(i->second));
 			}
 			return variant(&v);
