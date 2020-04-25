@@ -311,7 +311,7 @@ namespace KRE
 		shader->makeActive();
 		shader->setUniformValue(shader->getMvpUniform(), glm::value_ptr(mvp));
 
-		shader->setUniformValue(shader->getLineWidthUniform(), line_width);
+		//shader->setUniformValue(shader->getLineWidthUniform(), line_width);
 		shader->setUniformValue(shader->getColorUniform(), color.asFloatVector());
 		glEnableVertexAttribArray(shader->getVertexAttribute());
 		glVertexAttribPointer(shader->getVertexAttribute(), 2, GL_FLOAT, GL_FALSE, 0, &varray[0]);
