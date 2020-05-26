@@ -2438,8 +2438,12 @@ RETURN_TYPE("bool")
 		int num_steps = static_cast<int>(line_length/step_size);
 
 		for(int i = 0; i < num_steps+1; ++i) {
-			int xpos = (i*x2 + (num_steps-i)*x)/num_steps;
-			int ypos = (i*y2 + (num_steps-i)*y)/num_steps;
+			int denominator = num_steps;
+			if(denominator <= 0) {
+				denominator = 1;
+			}
+			int xpos = (i*x2 + (num_steps-i)*x)/denominator;
+			int ypos = (i*y2 + (num_steps-i)*y)/denominator;
 
 			if(point_standable(*lvl, *obj, xpos, ypos, nullptr, SOLID_ONLY)) {
 				std::vector<variant> res;
@@ -2476,8 +2480,12 @@ RETURN_TYPE("bool")
 		int num_steps = static_cast<int>(line_length/step_size);
 
 		for(int i = 0; i < num_steps+1; ++i) {
-			int xpos = (i*x2 + (num_steps-i)*x)/num_steps;
-			int ypos = (i*y2 + (num_steps-i)*y)/num_steps;
+			int denominator = num_steps;
+			if(denominator <= 0) {
+				denominator = 1;
+			}
+			int xpos = (i*x2 + (num_steps-i)*x)/denominator;
+			int ypos = (i*y2 + (num_steps-i)*y)/denominator;
 
 			if(!point_standable(*lvl, *obj, xpos, ypos, nullptr, SOLID_ONLY)) {
 				std::vector<variant> res;
