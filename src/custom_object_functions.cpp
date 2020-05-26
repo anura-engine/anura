@@ -2463,6 +2463,44 @@ RETURN_TYPE("bool")
 	END_FUNCTION_DEF(find_first_solid_point_on_line)
 
 
+	FUNCTION_DEF(find_first_open_point_on_line, 7, 7, "find_first_solid_point_on_line(Level, object, int x1, int y1, int x2, int y2, decimal step_size)")
+		Level* lvl = EVAL_ARG(0).convert_to<Level>();
+		Entity* obj = EVAL_ARG(1).convert_to<Entity>();
+		const int x = EVAL_ARG(2).as_int();
+		const int y = EVAL_ARG(3).as_int();
+		const int x2 = EVAL_ARG(4).as_int();
+		const int y2 = EVAL_ARG(5).as_int();
+		float step_size = EVAL_ARG(6).as_decimal().as_float32();
+
+		float line_length = sqrt((x - x2)*(x - x2) + (y - y2)*(y - y2));
+		int num_steps = static_cast<int>(line_length/step_size);
+
+		for(int i = 0; i < num_steps+1; ++i) {
+			int xpos = (i*x2 + (num_steps-i)*x)/num_steps;
+			int ypos = (i*y2 + (num_steps-i)*y)/num_steps;
+
+			if(!point_standable(*lvl, *obj, xpos, ypos, nullptr, SOLID_ONLY)) {
+				std::vector<variant> res;
+				res.push_back(variant(xpos));
+				res.push_back(variant(ypos));
+				return variant(&res);
+			}
+		}
+
+		return variant();
+
+	FUNCTION_ARGS_DEF
+		ARG_TYPE("builtin level")
+		ARG_TYPE("custom_obj")
+		ARG_TYPE("int")
+		ARG_TYPE("int")
+		ARG_TYPE("int")
+		ARG_TYPE("int")
+		ARG_TYPE("decimal")
+		RETURN_TYPE("null|[int,int]")
+	END_FUNCTION_DEF(find_first_open_point_on_line)
+
+
 	FUNCTION_DEF(find_point_solid, 6, 7, "find_point_solid(Level, object, int x, int y, int dx, int dy, int max_search=1000) -> boolean: returns true iff the given point is solid for the given object")
 		Level* lvl = EVAL_ARG(0).convert_to<Level>();
 		Entity* obj = EVAL_ARG(1).convert_to<Entity>();
