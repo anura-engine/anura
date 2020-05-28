@@ -5956,17 +5956,20 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 		const variant a = EVAL_ARG(0);
 		const variant b = EVAL_ARG(1);
 		return variant::from_bool(variant_types_compatible(parse_variant_type(a), parse_variant_type(b)));
+	RETURN_TYPE("bool")
 	END_FUNCTION_DEF(types_compatible)
 
 	FUNCTION_DEF(typeof, 1, 1, "typeof(expression) -> string: yields the statically known type of the given expression")
 		variant v = EVAL_ARG(0);
 		return variant(get_variant_type_from_value(v)->to_string());
+	RETURN_TYPE("string")
 	END_FUNCTION_DEF(typeof)
 
 	FUNCTION_DEF(static_typeof, 1, 1, "static_typeof(expression) -> string: yields the statically known type of the given expression")
 		variant_type_ptr type = args()[0]->queryVariantType();
 		ASSERT_LOG(type.get() != nullptr, "nullptr VALUE RETURNED FROM TYPE QUERY");
 		return variant(type->base_type_no_enum()->to_string());
+	RETURN_TYPE("string")
 	END_FUNCTION_DEF(static_typeof)
 
 	FUNCTION_DEF(all_textures, 0, 0, "all_textures()")
