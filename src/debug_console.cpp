@@ -503,8 +503,14 @@ namespace debug_console
 							args.push_back(v);
 							variant v_formatted = pp_fn(args);
 
-							ExecuteDebugConsoleScope scope;
-							ent->executeCommand(v_formatted);
+							if(v_formatted.is_string()) {
+								std::string output = v.to_debug_string();
+								debug_console::addMessage(output);
+								LOG_INFO("OUTPUT: " << output);
+							} else {
+								ExecuteDebugConsoleScope scope;
+								ent->executeCommand(v_formatted);
+							}
 						}
 					}
 				}
