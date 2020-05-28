@@ -307,7 +307,7 @@ namespace debug_console
 		PREF_INT_PERSISTENT(console_width, 600, "Width of console in pixels");
 		PREF_INT_PERSISTENT(console_height, 200, "Width of console in pixels");
 		PREF_INT_PERSISTENT(console_font_size, 14, "Font size of console text");
-		PREF_STRING(console_prettyprint, "lib.debug.pp", "function to use to output results in the debug console");
+		PREF_STRING(console_prettyprint, "lib.debug.pretty_string", "function to use to output results in the debug console");
 	}
 
 	ConsoleDialog::ConsoleDialog(Level& lvl, game_logic::FormulaCallable& obj)
