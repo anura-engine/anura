@@ -503,7 +503,7 @@ namespace debug_console
 							args.push_back(v);
 							variant v_formatted = pp_fn(args);
 
-							std::string output = v_formatted.to_debug_string();
+							std::string output = v_formatted.as_string();
 							debug_console::addMessage(output);
 							LOG_INFO("OUTPUT: " << output);
 						}
