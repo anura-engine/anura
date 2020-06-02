@@ -1189,6 +1189,8 @@ BEGIN_DEFINE_CALLABLE_NOBASE(Frame)
 		return variant(obj.getImageName());
 	DEFINE_FIELD(duration, "int")
 		return variant(obj.frame_time_);
+    DEFINE_FIELD(frames, "int")
+        return variant(obj.nframes_);
     DEFINE_FIELD(frames_per_row, "int")
         return variant(obj.nframes_per_row_);
     DEFINE_FIELD(total_animation_time, "int")
