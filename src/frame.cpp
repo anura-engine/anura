@@ -1207,4 +1207,8 @@ BEGIN_DEFINE_CALLABLE_NOBASE(Frame)
 		return variant(obj.width());
 	DEFINE_FIELD(height, "int")
 		return variant(obj.height());
+    DEFINE_FIELD(reverse, "bool")
+        return variant::from_bool(obj.reverse_frame_);
+    DEFINE_FIELD(play_backwards, "bool")
+        return variant::from_bool(obj.play_backwards_);
 END_DEFINE_CALLABLE(Frame)
