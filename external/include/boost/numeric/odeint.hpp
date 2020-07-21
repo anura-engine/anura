@@ -51,6 +51,9 @@
 
 #include <boost/numeric/odeint/stepper/adams_bashforth_moulton.hpp>
 
+#include <boost/numeric/odeint/stepper/adaptive_adams_bashforth_moulton.hpp>
+#include <boost/numeric/odeint/stepper/controlled_adams_bashforth_moulton.hpp>
+
 #include <boost/numeric/odeint/stepper/implicit_euler.hpp>
 #include <boost/numeric/odeint/stepper/rosenbrock4.hpp>
 #include <boost/numeric/odeint/stepper/rosenbrock4_controller.hpp>
@@ -71,6 +74,7 @@
 #include <boost/numeric/odeint/integrate/integrate_times.hpp>
 
 #include <boost/numeric/odeint/integrate/observer_collection.hpp>
+#include <boost/numeric/odeint/integrate/max_step_checker.hpp>
 
 #include <boost/numeric/odeint/stepper/generation.hpp>
 

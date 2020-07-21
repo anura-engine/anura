@@ -8,6 +8,8 @@
 
 #ifdef _MSC_VER
 #pragma once
+#pragma warning(push)
+#pragma warning(disable:4702) // Unreachable code (release mode only warning)
 #endif
 
 #include <boost/math/special_functions/detail/bessel_j1.hpp>
@@ -16,6 +18,16 @@
 #include <boost/math/tools/big_constant.hpp>
 #include <boost/math/policies/error_handling.hpp>
 #include <boost/assert.hpp>
+
+#if defined(__GNUC__) && defined(BOOST_MATH_USE_FLOAT128)
+//
+// This is the only way we can avoid
+// warning: non-standard suffix on floating constant [-Wpedantic]
+// when building with -Wall -pedantic.  Neither __extension__
+// nor #pragma dianostic ignored work :(
+//
+#pragma GCC system_header
+#endif
 
 // Bessel function of the second kind of order one
 // x <= 8, minimax rational approximations on root-bracketing intervals
@@ -191,6 +203,10 @@ T bessel_y1(T x, const Policy& pol)
 }
 
 }}} // namespaces
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 #endif // BOOST_MATH_BESSEL_Y1_HPP
 

@@ -2,7 +2,11 @@
 //
 // R-tree initial packing
 //
-// Copyright (c) 2011-2014 Adam Wulkiewicz, Lodz, Poland.
+// Copyright (c) 2011-2017 Adam Wulkiewicz, Lodz, Poland.
+//
+// This file was modified by Oracle on 2019.
+// Modifications copyright (c) 2019 Oracle and/or its affiliates.
+// Contributed and/or modified by Adam Wulkiewicz, on behalf of Oracle
 //
 // Use, modification and distribution is subject to the Boost Software License,
 // Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
@@ -10,6 +14,14 @@
 
 #ifndef BOOST_GEOMETRY_INDEX_DETAIL_RTREE_PACK_CREATE_HPP
 #define BOOST_GEOMETRY_INDEX_DETAIL_RTREE_PACK_CREATE_HPP
+
+#include <boost/core/ignore_unused.hpp>
+
+#include <boost/geometry/algorithms/expand.hpp>
+#include <boost/geometry/index/detail/algorithms/bounds.hpp>
+#include <boost/geometry/index/detail/algorithms/nth_element.hpp>
+
+#include <boost/geometry/algorithms/detail/expand_by_epsilon.hpp>
 
 namespace boost { namespace geometry { namespace index { namespace detail { namespace rtree {
 
@@ -62,7 +74,7 @@ struct nth_element_and_half_boxes
     {
         if ( I == dim_index )
         {
-            std::nth_element(first, median, last, point_entries_comparer<I>());
+            index::detail::nth_element(first, median, last, point_entries_comparer<I>());
 
             geometry::convert(box, left);
             geometry::convert(box, right);
@@ -122,14 +134,15 @@ class pack
     typedef typename rtree::leaf<Value, typename Options::parameters_type, Box, Allocators, typename Options::node_tag>::type leaf;
 
     typedef typename Allocators::node_pointer node_pointer;
-    typedef rtree::node_auto_ptr<Value, Options, Translator, Box, Allocators> node_auto_ptr;
+    typedef rtree::subtree_destroyer<Value, Options, Translator, Box, Allocators> subtree_destroyer;
     typedef typename Allocators::size_type size_type;
 
-    typedef typename traits::point_type<Box>::type point_type;
-    typedef typename traits::coordinate_type<point_type>::type coordinate_type;
+    typedef typename geometry::point_type<Box>::type point_type;
+    typedef typename geometry::coordinate_type<point_type>::type coordinate_type;
     typedef typename detail::default_content_result<Box>::type content_type;
     typedef typename Options::parameters_type parameters_type;
-    static const std::size_t dimension = traits::dimension<point_type>::value;
+    typedef typename detail::strategy_type<parameters_type>::type strategy_type;
+    static const std::size_t dimension = geometry::dimension<point_type>::value;
 
     typedef typename rtree::container_from_elements_type<
         typename rtree::elements_type<leaf>::type,
@@ -157,25 +170,84 @@ public:
         values_count = static_cast<size_type>(diff);
         entries.reserve(values_count);
         
-        Box hint_box;
-        geometry::assign_inverse(hint_box);
+        expandable_box<Box, strategy_type> hint_box(detail::get_strategy(parameters));
         for ( ; first != last ; ++first )
         {
-            geometry::expand(hint_box, translator(*first));
+            // NOTE: support for iterators not returning true references adapted
+            // to Geometry concept and default translator returning true reference
+            // An alternative would be to dereference the iterator and translate
+            // in one expression each time the indexable was needed.
+            typename std::iterator_traits<InIt>::reference in_ref = *first;
+            typename Translator::result_type indexable = translator(in_ref);
+
+            // NOTE: added for consistency with insert()
+            // CONSIDER: alternative - ignore invalid indexable or throw an exception
+            BOOST_GEOMETRY_INDEX_ASSERT(detail::is_valid(indexable), "Indexable is invalid");
+
+            hint_box.expand(indexable);
 
             point_type pt;
-            geometry::centroid(translator(*first), pt);
+            geometry::centroid(indexable, pt);
             entries.push_back(std::make_pair(pt, first));
         }
 
         subtree_elements_counts subtree_counts = calculate_subtree_elements_counts(values_count, parameters, leafs_level);
-        internal_element el = per_level(entries.begin(), entries.end(), hint_box, values_count, subtree_counts,
+        internal_element el = per_level(entries.begin(), entries.end(), hint_box.get(), values_count, subtree_counts,
                                         parameters, translator, allocators);
 
         return el.second;
     }
 
 private:
+    template <typename BoxType, typename Strategy>
+    class expandable_box
+    {
+    public:
+        explicit expandable_box(Strategy const& strategy)
+            : m_strategy(strategy), m_initialized(false)
+        {}
+
+        template <typename Indexable>
+        explicit expandable_box(Indexable const& indexable, Strategy const& strategy)
+            : m_strategy(strategy), m_initialized(true)
+        {
+            detail::bounds(indexable, m_box, m_strategy);
+        }
+
+        template <typename Indexable>
+        void expand(Indexable const& indexable)
+        {
+            if ( !m_initialized )
+            {
+                // it's guaranteed that the Box will be initialized
+                // only for Points, Boxes and Segments but that's ok
+                // since only those Geometries can be stored
+                detail::bounds(indexable, m_box, m_strategy);
+                m_initialized = true;
+            }
+            else
+            {
+                detail::expand(m_box, indexable, m_strategy);
+            }
+        }
+
+        void expand_by_epsilon()
+        {
+            geometry::detail::expand_by_epsilon(m_box);
+        }
+
+        BoxType const& get() const
+        {
+            BOOST_GEOMETRY_INDEX_ASSERT(m_initialized, "uninitialized envelope accessed");
+            return m_box;
+        }
+
+    private:
+        BoxType m_box;
+        Strategy m_strategy;
+        bool m_initialized;
+    };
+
     struct subtree_elements_counts
     {
         subtree_elements_counts(std::size_t ma, std::size_t mi) : maxc(ma), minc(mi) {}
@@ -187,32 +259,57 @@ private:
     internal_element per_level(EIt first, EIt last, Box const& hint_box, std::size_t values_count, subtree_elements_counts const& subtree_counts,
                                parameters_type const& parameters, Translator const& translator, Allocators & allocators)
     {
-        BOOST_ASSERT(0 < std::distance(first, last) && static_cast<std::size_t>(std::distance(first, last)) == values_count);
+        BOOST_GEOMETRY_INDEX_ASSERT(0 < std::distance(first, last) && static_cast<std::size_t>(std::distance(first, last)) == values_count,
+                                    "unexpected parameters");
 
         if ( subtree_counts.maxc <= 1 )
         {
             // ROOT or LEAF
-            BOOST_ASSERT(values_count <= parameters.get_max_elements());
+            BOOST_GEOMETRY_INDEX_ASSERT(values_count <= parameters.get_max_elements(),
+                                        "too big number of elements");
             // if !root check m_parameters.get_min_elements() <= count
 
             // create new leaf node
             node_pointer n = rtree::create_node<Allocators, leaf>::apply(allocators);                       // MAY THROW (A)
-            node_auto_ptr auto_remover(n, allocators);
+            subtree_destroyer auto_remover(n, allocators);
             leaf & l = rtree::get<leaf>(*n);
 
             // reserve space for values
             rtree::elements(l).reserve(values_count);                                                       // MAY THROW (A)
+
             // calculate values box and copy values
-            Box elements_box;
-            geometry::assign_inverse(elements_box);
-            for ( ; first != last ; ++first )
+            //   initialize the box explicitly to avoid GCC-4.4 uninitialized variable warnings with O2
+            expandable_box<Box, strategy_type> elements_box(translator(*(first->second)),
+                                                            detail::get_strategy(parameters));
+            rtree::elements(l).push_back(*(first->second));                                                 // MAY THROW (A?,C)
+            for ( ++first ; first != last ; ++first )
             {
+                // NOTE: push_back() must be called at the end in order to support move_iterator.
+                //       The iterator is dereferenced 2x (no temporary reference) to support
+                //       non-true reference types and move_iterator without boost::forward<>.
+                elements_box.expand(translator(*(first->second)));
                 rtree::elements(l).push_back(*(first->second));                                             // MAY THROW (A?,C)
-                geometry::expand(elements_box, translator(*(first->second)));
             }
 
+#ifdef BOOST_GEOMETRY_INDEX_EXPERIMENTAL_ENLARGE_BY_EPSILON
+            // Enlarge bounds of a leaf node.
+            // It's because Points and Segments are compared WRT machine epsilon
+            // This ensures that leafs bounds correspond to the stored elements
+            // NOTE: this is done only if the Indexable is a different kind of Geometry
+            //   than the bounds (only Box for now). Spatial predicates are checked
+            //   the same way for Geometry of the same kind.
+            if ( BOOST_GEOMETRY_CONDITION((
+                    ! index::detail::is_bounding_geometry
+                        <
+                            typename indexable_type<Translator>::type
+                        >::value )) )
+            {
+                elements_box.expand_by_epsilon();
+            }
+#endif
+
             auto_remover.release();
-            return internal_element(elements_box, n);
+            return internal_element(elements_box.get(), n);
         }
 
         // calculate next max and min subtree counts
@@ -222,35 +319,36 @@ private:
 
         // create new internal node
         node_pointer n = rtree::create_node<Allocators, internal_node>::apply(allocators);                  // MAY THROW (A)
-        node_auto_ptr auto_remover(n, allocators);
+        subtree_destroyer auto_remover(n, allocators);
         internal_node & in = rtree::get<internal_node>(*n);
 
         // reserve space for values
         std::size_t nodes_count = calculate_nodes_count(values_count, subtree_counts);
         rtree::elements(in).reserve(nodes_count);                                                           // MAY THROW (A)
         // calculate values box and copy values
-        Box elements_box;
-        geometry::assign_inverse(elements_box);
-
+        expandable_box<Box, strategy_type> elements_box(detail::get_strategy(parameters));
+        
         per_level_packets(first, last, hint_box, values_count, subtree_counts, next_subtree_counts,
                           rtree::elements(in), elements_box,
                           parameters, translator, allocators);
 
         auto_remover.release();
-        return internal_element(elements_box, n);
+        return internal_element(elements_box.get(), n);
     }
 
-    template <typename EIt> inline static
+    template <typename EIt, typename ExpandableBox> inline static
     void per_level_packets(EIt first, EIt last, Box const& hint_box,
                            std::size_t values_count,
                            subtree_elements_counts const& subtree_counts,
                            subtree_elements_counts const& next_subtree_counts,
-                           internal_elements & elements, Box & elements_box,
+                           internal_elements & elements, ExpandableBox & elements_box,
                            parameters_type const& parameters, Translator const& translator, Allocators & allocators)
     {
-        BOOST_ASSERT(0 < std::distance(first, last) && static_cast<std::size_t>(std::distance(first, last)) == values_count);
+        BOOST_GEOMETRY_INDEX_ASSERT(0 < std::distance(first, last) && static_cast<std::size_t>(std::distance(first, last)) == values_count,
+                                    "unexpected parameters");
 
-        BOOST_ASSERT_MSG( subtree_counts.minc <= values_count, "too small number of elements");
+        BOOST_GEOMETRY_INDEX_ASSERT(subtree_counts.minc <= values_count,
+                                    "too small number of elements");
 
         // only one packet
         if ( values_count <= subtree_counts.maxc )
@@ -262,12 +360,12 @@ private:
             // in case if push_back() do throw here
             // and even if this is not probable (previously reserved memory, nonthrowing pairs copy)
             // this case is also tested by exceptions test.
-            node_auto_ptr auto_remover(el.second, allocators);
+            subtree_destroyer auto_remover(el.second, allocators);
             // this container should have memory allocated, reserve() called outside
             elements.push_back(el);                                                 // MAY THROW (A?,C) - however in normal conditions shouldn't
             auto_remover.release();
 
-            geometry::expand(elements_box, el.first);
+            elements_box.expand(el.first);
             return;
         }
         
@@ -294,7 +392,7 @@ private:
     inline static
     subtree_elements_counts calculate_subtree_elements_counts(std::size_t elements_count, parameters_type const& parameters, size_type & leafs_level)
     {
-        boost::ignore_unused_variable_warning(parameters);
+        boost::ignore_unused(parameters);
 
         subtree_elements_counts res(1, 1);
         leafs_level = 0;
@@ -343,7 +441,7 @@ private:
         {
             if ( subtree_counts.minc <= r ) // e.g. 10 <= 2 == false
             {
-                //BOOST_ASSERT_MSG(0 < n, "unexpected value");
+                //BOOST_GEOMETRY_INDEX_ASSERT(0 < n, "unexpected value");
                 median_count = ((n+1)/2) * subtree_counts.maxc; // if calculated ((2+1)/2) * 25 which would be ok, but not in all cases
             }
             else // r < subtree_counts.second  // e.g. 2 < 10 == true
@@ -354,7 +452,7 @@ private:
                 if ( r == 0 )                               // e.g. false
                 {
                     // n can't be equal to 0 because then there wouldn't be any element in the other node
-                    //BOOST_ASSERT_MSG(0 < n, "unexpected value");
+                    //BOOST_GEOMETRY_INDEX_ASSERT(0 < n, "unexpected value");
                     median_count = ((n+1)/2) * subtree_counts.maxc;     // if calculated ((1+1)/2) * 25 which would be ok, but not in all cases
                 }
                 else

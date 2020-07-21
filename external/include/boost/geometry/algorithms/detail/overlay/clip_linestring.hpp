@@ -1,6 +1,12 @@
 // Boost.Geometry (aka GGL, Generic Geometry Library)
 
-// Copyright (c) 2007-2012 Barend Gehrels, Amsterdam, the Netherlands.
+// Copyright (c) 2007-2015 Barend Gehrels, Amsterdam, the Netherlands.
+
+// This file was modified by Oracle on 2015, 2018.
+// Modifications copyright (c) 2015-2018 Oracle and/or its affiliates.
+
+// Contributed and/or modified by Menelaos Karavelas, on behalf of Oracle
+// Contributed and/or modified by Adam Wulkiewicz, on behalf of Oracle
 
 // Use, modification and distribution is subject to the Boost Software License,
 // Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
@@ -18,6 +24,8 @@
 
 #include <boost/geometry/util/select_coordinate_type.hpp>
 #include <boost/geometry/geometries/segment.hpp>
+
+#include <boost/geometry/strategies/cartesian/point_in_point.hpp>
 
 namespace boost { namespace geometry
 {
@@ -46,14 +54,14 @@ class liang_barsky
 private:
     typedef model::referring_segment<Point> segment_type;
 
-    template <typename T>
-    inline bool check_edge(T const& p, T const& q, T& t1, T& t2) const
+    template <typename CoordinateType, typename CalcType>
+    inline bool check_edge(CoordinateType const& p, CoordinateType const& q, CalcType& t1, CalcType& t2) const
     {
         bool visible = true;
 
         if(p < 0)
         {
-            T const r = q / p;
+            CalcType const r = static_cast<CalcType>(q) / p;
             if (r > t2)
                 visible = false;
             else if (r > t1)
@@ -61,7 +69,7 @@ private:
         }
         else if(p > 0)
         {
-            T const r = q / p;
+            CalcType const r = static_cast<CalcType>(q) / p;
             if (r < t1)
                 visible = false;
             else if (r < t2)
@@ -78,12 +86,22 @@ private:
 
 public:
 
+// TODO: Temporary, this strategy should be moved, it is cartesian-only
+
+    typedef strategy::within::cartesian_point_point equals_point_point_strategy_type;
+
+    static inline equals_point_point_strategy_type get_equals_point_point_strategy()
+    {
+        return equals_point_point_strategy_type();
+    }
+
     inline bool clip_segment(Box const& b, segment_type& s, bool& sp1_clipped, bool& sp2_clipped) const
     {
         typedef typename select_coordinate_type<Box, Point>::type coordinate_type;
+        typedef typename select_most_precise<coordinate_type, double>::type calc_type;
 
-        coordinate_type t1 = 0;
-        coordinate_type t2 = 1;
+        calc_type t1 = 0;
+        calc_type t2 = 1;
 
         coordinate_type const dx = get<1, 0>(s) - get<0, 0>(s);
         coordinate_type const dy = get<1, 1>(s) - get<0, 1>(s);
@@ -160,10 +178,12 @@ template
     typename OutputLinestring,
     typename OutputIterator,
     typename Range,
+    typename RobustPolicy,
     typename Box,
     typename Strategy
 >
 OutputIterator clip_range_with_box(Box const& b, Range const& range,
+            RobustPolicy const&,
             OutputIterator out, Strategy const& strategy)
 {
     if (boost::begin(range) == boost::end(range))
@@ -216,9 +236,10 @@ OutputIterator clip_range_with_box(Box const& b, Range const& range,
             // b. Add p1 only if it is the first point, then add p2
             if (boost::empty(line_out))
             {
-                detail::overlay::append_no_duplicates(line_out, p1, true);
+                detail::overlay::append_with_duplicates(line_out, p1);
             }
-            detail::overlay::append_no_duplicates(line_out, p2);
+            detail::overlay::append_no_duplicates(line_out, p2,
+                                                  strategy.get_equals_point_point_strategy());
 
             // c. If c2 is clipped, finish the line
             if (c2)

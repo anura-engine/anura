@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2014.
+ *          Copyright Andrey Semashev 2007 - 2015.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -31,6 +31,8 @@ namespace boost {
 // which would bring in many dependent headers, including a great deal of Boost.DateTime.
 template< typename >
 class lock_guard;
+template< typename >
+class shared_lock_guard;
 template< typename >
 class shared_lock;
 template< typename >
@@ -92,6 +94,25 @@ struct is_shared_lockable
     enum value_t { value = sizeof(check_shared_lockable((MutexT*)NULL)) == sizeof(true_type) };
 };
 
+//! A scope guard that automatically unlocks the mutex on destruction
+template< typename MutexT >
+struct exclusive_auto_unlocker
+{
+    explicit exclusive_auto_unlocker(MutexT& m) BOOST_NOEXCEPT : m_Mutex(m)
+    {
+    }
+    ~exclusive_auto_unlocker()
+    {
+        m_Mutex.unlock();
+    }
+
+    BOOST_DELETED_FUNCTION(exclusive_auto_unlocker(exclusive_auto_unlocker const&))
+    BOOST_DELETED_FUNCTION(exclusive_auto_unlocker& operator= (exclusive_auto_unlocker const&))
+
+protected:
+    MutexT& m_Mutex;
+};
+
 //! An analogue to the minimalistic \c lock_guard template. Defined here to avoid including Boost.Thread.
 template< typename MutexT >
 struct exclusive_lock_guard
@@ -105,9 +126,8 @@ struct exclusive_lock_guard
         m_Mutex.unlock();
     }
 
-private:
-    exclusive_lock_guard(exclusive_lock_guard const&);
-    exclusive_lock_guard& operator= (exclusive_lock_guard const&);
+    BOOST_DELETED_FUNCTION(exclusive_lock_guard(exclusive_lock_guard const&))
+    BOOST_DELETED_FUNCTION(exclusive_lock_guard& operator= (exclusive_lock_guard const&))
 
 private:
     MutexT& m_Mutex;
@@ -126,9 +146,8 @@ struct shared_lock_guard
         m_Mutex.unlock_shared();
     }
 
-private:
-    shared_lock_guard(shared_lock_guard const&);
-    shared_lock_guard& operator= (shared_lock_guard const&);
+    BOOST_DELETED_FUNCTION(shared_lock_guard(shared_lock_guard const&))
+    BOOST_DELETED_FUNCTION(shared_lock_guard& operator= (shared_lock_guard const&))
 
 private:
     MutexT& m_Mutex;

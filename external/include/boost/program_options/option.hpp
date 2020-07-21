@@ -15,7 +15,7 @@ namespace boost { namespace program_options {
 
     /** Option found in input source.
         Contains a key and a value. The key, in turn, can be a string (name of
-        an option), or an integer (position in input source) -- in case no name
+        an option), or an integer (position in input source) \-- in case no name
         is specified. The latter is only possible for command line.
         The template parameter specifies the type of char used for storing the
         option's value.
@@ -31,6 +31,7 @@ namespace boost { namespace program_options {
         basic_option(const std::string& xstring_key, 
                const std::vector< std::string> &xvalue)
         : string_key(xstring_key)
+        , position_key(-1)
         , value(xvalue)
         , unregistered(false)
         , case_insensitive(false)

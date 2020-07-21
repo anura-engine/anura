@@ -1,6 +1,6 @@
 //=======================================================================
 // Copyright 2013 University of Warsaw.
-// Authors: Piotr Wygocki 
+// Authors: Piotr Wygocki
 //
 // Distributed under the Boost Software License, Version 1.0. (See
 // accompanying file LICENSE_1_0.txt or copy at
@@ -12,7 +12,7 @@
 // by Ahuja, Magnanti, Orlin.
 
 #ifndef BOOST_GRAPH_CYCLE_CANCELING_HPP
-#define BOOST_GRAPH_CYCLE_CANCELING_HPP 
+#define BOOST_GRAPH_CYCLE_CANCELING_HPP
 
 #include <numeric>
 
@@ -20,7 +20,6 @@
 #include <boost/graph/graph_traits.hpp>
 #include <boost/graph/graph_concepts.hpp>
 #include <boost/pending/indirect_cmp.hpp>
-#include <boost/pending/relaxed_heap.hpp>
 #include <boost/graph/bellman_ford_shortest_paths.hpp>
 #include <boost/graph/iteration_macros.hpp>
 #include <boost/graph/detail/augment.hpp>
@@ -32,11 +31,11 @@ namespace boost {
 namespace detail {
 
 template <typename PredEdgeMap, typename Vertex>
-class RecordEdgeMapAndCycleVertex 
+class RecordEdgeMapAndCycleVertex
     : public bellman_visitor<edge_predecessor_recorder<PredEdgeMap, on_edge_relaxed> > {
         typedef edge_predecessor_recorder<PredEdgeMap, on_edge_relaxed> PredRec;
 public:
-    RecordEdgeMapAndCycleVertex(PredEdgeMap pred, Vertex & v) : 
+    RecordEdgeMapAndCycleVertex(PredEdgeMap pred, Vertex & v) :
         bellman_visitor<PredRec>(PredRec(pred)), m_v(v), m_pred(pred) {}
 
     template <typename Graph, typename Edge>
@@ -63,27 +62,27 @@ template <class Graph, class Pred, class Distance, class Reversed, class Residua
 void cycle_canceling(const Graph &g, Weight weight, Reversed rev, ResidualCapacity residual_capacity, Pred pred, Distance distance) {
     typedef filtered_graph<const Graph, is_residual_edge<ResidualCapacity> > ResGraph;
     ResGraph gres = detail::residual_graph(g, residual_capacity);
-    
+
     typedef graph_traits<ResGraph> ResGTraits;
     typedef graph_traits<Graph> GTraits;
     typedef typename ResGTraits::edge_descriptor edge_descriptor;
     typedef typename ResGTraits::vertex_descriptor vertex_descriptor;
-    
+
     typename GTraits::vertices_size_type N = num_vertices(g);
-    
+
     BGL_FORALL_VERTICES_T(v, g, Graph) {
         put(pred, v, edge_descriptor());
         put(distance, v, 0);
     }
 
     vertex_descriptor cycleStart;
-    while(!bellman_ford_shortest_paths(gres, N, 
+    while(!bellman_ford_shortest_paths(gres, N,
             weight_map(weight).
             distance_map(distance).
             visitor(detail::RecordEdgeMapAndCycleVertex<Pred, vertex_descriptor>(pred, cycleStart)))) {
 
         detail::augment(g, cycleStart, cycleStart, pred, residual_capacity, rev);
-        
+
         BGL_FORALL_VERTICES_T(v, g, Graph) {
             put(pred, v, edge_descriptor());
             put(distance, v, 0);
@@ -97,7 +96,7 @@ namespace detail {
 
 template <class Graph, class P, class T, class R, class ResidualCapacity, class Weight, class Reversed, class Pred, class Distance>
 void cycle_canceling_dispatch2(
-        const Graph &g, 
+        const Graph &g,
         Weight weight,
         Reversed rev,
         ResidualCapacity residual_capacity,
@@ -110,7 +109,7 @@ void cycle_canceling_dispatch2(
 //setting default distance map
 template <class Graph, class P, class T, class R, class Pred, class ResidualCapacity, class Weight, class Reversed>
 void cycle_canceling_dispatch2(
-        Graph &g, 
+        Graph &g,
         Weight weight,
         Reversed rev,
         ResidualCapacity residual_capacity,
@@ -121,27 +120,27 @@ void cycle_canceling_dispatch2(
 
     std::vector<D> d_map(num_vertices(g));
 
-    cycle_canceling(g, weight, rev, residual_capacity, pred, 
+    cycle_canceling(g, weight, rev, residual_capacity, pred,
                     make_iterator_property_map(d_map.begin(), choose_const_pmap(get_param(params, vertex_index), g, vertex_index)));
 }
 
 template <class Graph, class P, class T, class R, class ResidualCapacity, class Weight, class Reversed, class Pred>
 void cycle_canceling_dispatch1(
-        Graph &g, 
-        Weight weight, 
+        Graph &g,
+        Weight weight,
         Reversed rev,
         ResidualCapacity residual_capacity,
         Pred pred,
         const bgl_named_params<P, T, R>& params) {
-    cycle_canceling_dispatch2(g, weight, rev,residual_capacity,  pred, 
+    cycle_canceling_dispatch2(g, weight, rev,residual_capacity,  pred,
                                 get_param(params, vertex_distance), params);
 }
 
 //setting default predecessors map
 template <class Graph, class P, class T, class R, class ResidualCapacity, class Weight, class Reversed>
 void cycle_canceling_dispatch1(
-        Graph &g, 
-        Weight weight, 
+        Graph &g,
+        Weight weight,
         Reversed rev,
         ResidualCapacity residual_capacity,
         param_not_found,
@@ -151,7 +150,7 @@ void cycle_canceling_dispatch1(
 
     cycle_canceling_dispatch2(g, weight, rev, residual_capacity,
                               make_iterator_property_map(p_map.begin(), choose_const_pmap(get_param(params, vertex_index), g, vertex_index)),
-                                get_param(params, vertex_distance), params); 
+                                get_param(params, vertex_distance), params);
 }
 
 }//detail
@@ -159,12 +158,12 @@ void cycle_canceling_dispatch1(
 template <class Graph, class  P, class T, class R>
 void cycle_canceling(Graph &g,
         const bgl_named_params<P, T, R>& params) {
-    cycle_canceling_dispatch1(g, 
+    cycle_canceling_dispatch1(g,
            choose_const_pmap(get_param(params, edge_weight), g, edge_weight),
            choose_const_pmap(get_param(params, edge_reverse), g, edge_reverse),
-           choose_pmap(get_param(params, edge_residual_capacity), 
+           choose_pmap(get_param(params, edge_residual_capacity),
                        g, edge_residual_capacity),
-           get_param(params, vertex_predecessor), 
+           get_param(params, vertex_predecessor),
            params);
 }
 
@@ -178,4 +177,3 @@ void cycle_canceling(Graph &g) {
 }
 
 #endif /* BOOST_GRAPH_CYCLE_CANCELING_HPP */
-

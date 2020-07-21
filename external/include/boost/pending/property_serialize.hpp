@@ -7,11 +7,7 @@
 #define BOOST_PROPERTY_SERIALIZE_HPP
 
 #include <boost/pending/property.hpp>
-#ifdef BOOST_GRAPH_USE_MPI
-#include <boost/mpi/datatype.hpp>
 #include <boost/serialization/is_bitwise_serializable.hpp>
-#endif // BOOST_GRAPH_USE_MPI
-
 #include <boost/serialization/base_object.hpp>
 #include <boost/serialization/nvp.hpp>
 
@@ -29,7 +25,26 @@ namespace boost {
   }
 
 #ifdef BOOST_GRAPH_USE_MPI
+
+// Setting the serialization properties of boost::property<> and
+// boost::no_property to is_bitwise_serializable, object_serializable,
+// track_never only when BOOST_GRAPH_USE_MPI is defined is dubious.
+//
+// This changes the serialization format of these classes, and hence
+// of boost::adjacency_list, depending on whether BOOST_GRAPH_USE_MPI
+// is defined.
+//
+// These serialization properties should probably be set in either case.
+//
+// Unfortunately, doing that now will change the serialization format
+// of boost::adjacency_list in the non-MPI case, and could potentially
+// break software that reads files serialized with an older release.
+
   namespace mpi {
+
+    // forward declaration, to avoid including mpi
+    template<typename T> struct is_mpi_datatype;
+
     template<typename Tag, typename T, typename Base>
     struct is_mpi_datatype<property<Tag, T, Base> >
       : mpl::and_<is_mpi_datatype<T>,

@@ -20,11 +20,12 @@
 #include <boost/range/concepts.hpp>
 #include <boost/range/metafunctions.hpp>
 
+#include <boost/geometry/core/mutable_range.hpp>
 
 #include <boost/geometry/geometries/concepts/point_concept.hpp>
 
 
-namespace boost { namespace geometry { namespace concept
+namespace boost { namespace geometry { namespace concepts
 {
 
 
@@ -44,7 +45,7 @@ class MultiPoint
 #ifndef DOXYGEN_NO_CONCEPT_MEMBERS
     typedef typename boost::range_value<Geometry>::type point_type;
 
-    BOOST_CONCEPT_ASSERT( (concept::Point<point_type>) );
+    BOOST_CONCEPT_ASSERT( (concepts::Point<point_type>) );
     BOOST_CONCEPT_ASSERT( (boost::RandomAccessRangeConcept<Geometry>) );
 
 
@@ -72,7 +73,7 @@ class ConstMultiPoint
 #ifndef DOXYGEN_NO_CONCEPT_MEMBERS
     typedef typename boost::range_value<Geometry>::type point_type;
 
-    BOOST_CONCEPT_ASSERT( (concept::ConstPoint<point_type>) );
+    BOOST_CONCEPT_ASSERT( (concepts::ConstPoint<point_type>) );
     BOOST_CONCEPT_ASSERT( (boost::RandomAccessRangeConcept<Geometry>) );
 
 
@@ -84,7 +85,7 @@ public :
 #endif
 };
 
-}}} // namespace boost::geometry::concept
+}}} // namespace boost::geometry::concepts
 
 
 #endif // BOOST_GEOMETRY_GEOMETRIES_CONCEPTS_MULTI_POINT_CONCEPT_HPP

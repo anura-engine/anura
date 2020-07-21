@@ -6,8 +6,12 @@
 
 //  Authors: Douglas Gregor
 //           Andrew Lumsdaine
+#warning "Use of relaxed_heap is depreciated; please use the standard heap functions."
 #ifndef BOOST_RELAXED_HEAP_HEADER
 #define BOOST_RELAXED_HEAP_HEADER
+
+#include <boost/config/header_deprecated.hpp>
+BOOST_HEADER_DEPRECATED("the standard heap functions")
 
 #include <functional>
 #include <boost/property_map/property_map.hpp>
@@ -191,7 +195,9 @@ public:
     return !smallest_value || (smallest_value->kind == largest_key);
   }
 
-  bool contains(const value_type& x) const { return groups[get(id, x)]; }
+  bool contains(const value_type& x) const {
+    return static_cast<bool>(groups[get(id, x)]);
+  }
 
   void pop()
   {

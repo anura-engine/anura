@@ -43,22 +43,6 @@ namespace boost { namespace spirit { namespace qi { namespace detail
             return false;
         }
 
-        template <typename Component, typename Attribute>
-        bool operator()(Component const& component, boost::optional<Attribute>& attr)
-        {
-            // return true if the parser succeeds and the slot is not yet taken
-            Attribute val;
-            if (!*taken && component.parse(first, last, context, skipper, val))
-            {
-                attr = val;
-                *taken = true;
-                ++taken;
-                return true;
-            }
-            ++taken;
-            return false;
-        }
-
         template <typename Component>
         bool operator()(Component const& component)
         {
@@ -79,9 +63,8 @@ namespace boost { namespace spirit { namespace qi { namespace detail
         Skipper const& skipper;
         bool* taken;
 
-    private:
         // silence MSVC warning C4512: assignment operator could not be generated
-        permute_function& operator= (permute_function const&);
+        BOOST_DELETED_FUNCTION(permute_function& operator= (permute_function const&))
     };
 }}}}
 

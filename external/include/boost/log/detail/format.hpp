@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2014.
+ *          Copyright Andrey Semashev 2007 - 2015.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -16,14 +16,15 @@
 #ifndef BOOST_LOG_DETAIL_FORMAT_HPP_INCLUDED_
 #define BOOST_LOG_DETAIL_FORMAT_HPP_INCLUDED_
 
+#include <cstddef>
 #include <string>
 #include <vector>
 #include <iosfwd>
 #include <boost/assert.hpp>
 #include <boost/move/core.hpp>
-#include <boost/move/utility.hpp>
+#include <boost/move/utility_core.hpp>
+#include <boost/core/uncaught_exceptions.hpp>
 #include <boost/log/detail/config.hpp>
-#include <boost/log/detail/unhandled_exception_count.hpp>
 #include <boost/log/detail/cleanup_scope_guard.hpp>
 #include <boost/log/utility/formatting_ostream.hpp>
 #include <boost/log/detail/header.hpp>
@@ -188,29 +189,11 @@ public:
     }
 
     //! Creates a pump that will receive all format arguments and put the formatted string into the stream
-    pump make_pump(stream_type& strm) BOOST_NOEXCEPT
+    pump make_pump(stream_type& strm)
     {
+        // Flush the stream beforehand so that the pump can safely switch the stream storage string
+        strm.flush();
         return pump(*this, strm);
-    }
-
-    //! Composes the final string from the formatted pieces
-    void compose(string_type& str) const
-    {
-        typename format_description_type::format_element_list::const_iterator it = m_format.format_elements.begin(), end = m_format.format_elements.end();
-        for (; it != end; ++it)
-        {
-            if (it->arg_number >= 0)
-            {
-                // This is a placeholder
-                str.append(m_formatting_params[it->arg_number].target);
-            }
-            else
-            {
-                // This is a literal
-                const char_type* p = m_format.literal_chars.c_str() + it->literal_start_pos;
-                str.append(p, it->literal_len);
-            }
-        }
     }
 
     //! Composes the final string from the formatted pieces
@@ -218,7 +201,7 @@ public:
     {
         string_type result;
         compose(result);
-        return boost::move(result);
+        return BOOST_LOG_NRVO_RESULT(result);
     }
 
 private:
@@ -236,6 +219,28 @@ private:
             }
         }
     }
+
+    //! Composes the final string from the formatted pieces
+    template< typename T >
+    void compose(T& str) const
+    {
+        typename format_description_type::format_element_list::const_iterator it = m_format.format_elements.begin(), end = m_format.format_elements.end();
+        for (; it != end; ++it)
+        {
+            if (it->arg_number >= 0)
+            {
+                // This is a placeholder
+                string_type const& target = m_formatting_params[it->arg_number].target;
+                str.append(target.data(), target.size());
+            }
+            else
+            {
+                // This is a literal
+                const char_type* p = m_format.literal_chars.c_str() + it->literal_start_pos;
+                str.append(p, it->literal_len);
+            }
+        }
+    }
 };
 
 //! The pump receives arguments and formats them into strings. At destruction the pump composes the final string in the attached stream.
@@ -248,18 +253,18 @@ private:
     //! The guard temporarily replaces storage string in the specified stream
     struct scoped_storage
     {
-        scoped_storage(stream_type& strm, string_type& storage) : m_stream(strm), m_storage_backup(*strm.rdbuf()->storage())
+        scoped_storage(stream_type& strm, string_type& storage) : m_stream(strm), m_storage_state_backup(strm.rdbuf()->get_storage_state())
         {
             strm.attach(storage);
         }
         ~scoped_storage()
         {
-            m_stream.attach(m_storage_backup);
+            m_stream.rdbuf()->set_storage_state(m_storage_state_backup);
         }
 
     private:
         stream_type& m_stream;
-        string_type& m_storage_backup;
+        typename stream_type::streambuf_type::storage_state m_storage_state_backup;
     };
 
 private:
@@ -272,7 +277,7 @@ private:
 
 public:
     //! Initializing constructor
-    pump(basic_format& owner, stream_type& strm) BOOST_NOEXCEPT : m_owner(&owner), m_stream(&strm), m_exception_count(unhandled_exception_count())
+    pump(basic_format& owner, stream_type& strm) BOOST_NOEXCEPT : m_owner(&owner), m_stream(&strm), m_exception_count(boost::core::uncaught_exceptions())
     {
     }
 
@@ -292,11 +297,11 @@ public:
             boost::log::aux::cleanup_guard< basic_format< char_type > > cleanup1(*m_owner);
 
             BOOST_ASSERT(m_stream != NULL);
-            if (m_exception_count >= unhandled_exception_count())
+            if (m_exception_count >= boost::core::uncaught_exceptions())
             {
                 // Compose the final string in the stream buffer
                 m_stream->flush();
-                m_owner->compose(*m_stream->rdbuf()->storage());
+                m_owner->compose(*m_stream->rdbuf());
             }
         }
     }
@@ -333,4 +338,4 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 #include <boost/log/detail/footer.hpp>
 
-#endif // BOOST_LOG_DETAIL_SNPRINTF_HPP_INCLUDED_
+#endif // BOOST_LOG_DETAIL_FORMAT_HPP_INCLUDED_

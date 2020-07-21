@@ -4,10 +4,11 @@
 // Copyright (c) 2008-2014 Bruno Lalande, Paris, France.
 // Copyright (c) 2009-2014 Mateusz Loskot, London, UK.
 
-// This file was modified by Oracle on 2014.
-// Modifications copyright (c) 2014, Oracle and/or its affiliates.
+// This file was modified by Oracle on 2014, 2015.
+// Modifications copyright (c) 2014-2015, Oracle and/or its affiliates.
 
 // Contributed and/or modified by Menelaos Karavelas, on behalf of Oracle
+// Contributed and/or modified by Adam Wulkiewicz, on behalf of Oracle
 
 // Parts of Boost.Geometry are redesigned from Geodan's Geographic Library
 // (geolib/GGL), copyright (c) 1995-2010 Geodan, Amsterdam, the Netherlands.
@@ -22,8 +23,7 @@
 #include <iterator>
 
 #include <boost/concept_check.hpp>
-#include <boost/range.hpp>
-
+#include <boost/core/ignore_unused.hpp>
 #include <boost/mpl/fold.hpp>
 #include <boost/mpl/greater.hpp>
 #include <boost/mpl/if.hpp>
@@ -32,8 +32,10 @@
 #include <boost/mpl/set.hpp>
 #include <boost/mpl/size.hpp>
 #include <boost/mpl/transform.hpp>
-#include <boost/type_traits.hpp>
-
+#include <boost/range/begin.hpp>
+#include <boost/range/end.hpp>
+#include <boost/range/iterator.hpp>
+#include <boost/range/value_type.hpp>
 #include <boost/variant/apply_visitor.hpp>
 #include <boost/variant/static_visitor.hpp>
 #include <boost/variant/variant_fwd.hpp>
@@ -49,6 +51,7 @@
 #include <boost/geometry/algorithms/detail/multi_sum.hpp>
 // #include <boost/geometry/algorithms/detail/throw_on_empty_input.hpp>
 #include <boost/geometry/views/closeable_view.hpp>
+#include <boost/geometry/strategies/default_strategy.hpp>
 #include <boost/geometry/strategies/distance.hpp>
 #include <boost/geometry/strategies/default_length_result.hpp>
 
@@ -69,6 +72,7 @@ struct segment_length
     static inline typename default_length_result<Segment>::type apply(
             Segment const& segment, Strategy const& strategy)
     {
+        boost::ignore_unused(strategy);
         typedef typename point_type<Segment>::type point_type;
         point_type p1, p2;
         geometry::detail::assign_point_from_index<0>(segment, p1);
@@ -92,7 +96,7 @@ struct range_length
     static inline return_type apply(
             Range const& range, Strategy const& strategy)
     {
-        boost::ignore_unused_variable_warning(strategy);
+        boost::ignore_unused(strategy);
         typedef typename closeable_view<Range const, Closure>::type view_type;
         typedef typename boost::range_iterator
             <
@@ -181,6 +185,33 @@ struct length<MultiLinestring, multi_linestring_tag> : detail::multi_sum
 #endif // DOXYGEN_NO_DISPATCH
 
 
+namespace resolve_strategy {
+
+struct length
+{
+    template <typename Geometry, typename Strategy>
+    static inline typename default_length_result<Geometry>::type
+    apply(Geometry const& geometry, Strategy const& strategy)
+    {
+        return dispatch::length<Geometry>::apply(geometry, strategy);
+    }
+
+    template <typename Geometry>
+    static inline typename default_length_result<Geometry>::type
+    apply(Geometry const& geometry, default_strategy)
+    {
+        typedef typename strategy::distance::services::default_strategy
+            <
+                point_tag, point_tag, typename point_type<Geometry>::type
+            >::type strategy_type;
+
+        return dispatch::length<Geometry>::apply(geometry, strategy_type());
+    }
+};
+
+} // namespace resolve_strategy
+
+
 namespace resolve_variant {
 
 template <typename Geometry>
@@ -190,7 +221,7 @@ struct length
     static inline typename default_length_result<Geometry>::type
     apply(Geometry const& geometry, Strategy const& strategy)
     {
-        return dispatch::length<Geometry>::apply(geometry, strategy);
+        return resolve_strategy::length::apply(geometry, strategy);
     }
 };
 
@@ -226,7 +257,7 @@ struct length<boost::variant<BOOST_VARIANT_ENUM_PARAMS(T)> >
         Strategy const& strategy
     )
     {
-        return apply_visitor(visitor<Strategy>(strategy), geometry);
+        return boost::apply_visitor(visitor<Strategy>(strategy), geometry);
     }
 };
 
@@ -248,17 +279,11 @@ template<typename Geometry>
 inline typename default_length_result<Geometry>::type
 length(Geometry const& geometry)
 {
-    concept::check<Geometry const>();
+    concepts::check<Geometry const>();
 
     // detail::throw_on_empty_input(geometry);
 
-    // TODO put this into a resolve_strategy stage
-    typedef typename strategy::distance::services::default_strategy
-        <
-            point_tag, point_tag, typename point_type<Geometry>::type
-        >::type strategy_type;
-
-    return resolve_variant::length<Geometry>::apply(geometry, strategy_type());
+    return resolve_variant::length<Geometry>::apply(geometry, default_strategy());
 }
 
 
@@ -280,7 +305,7 @@ template<typename Geometry, typename Strategy>
 inline typename default_length_result<Geometry>::type
 length(Geometry const& geometry, Strategy const& strategy)
 {
-    concept::check<Geometry const>();
+    concepts::check<Geometry const>();
 
     // detail::throw_on_empty_input(geometry);
 

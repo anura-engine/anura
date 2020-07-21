@@ -22,11 +22,11 @@
 #include <boost/graph/relax.hpp>
 #include <boost/pending/indirect_cmp.hpp>
 #include <boost/graph/exception.hpp>
-#include <boost/pending/relaxed_heap.hpp>
 #include <boost/graph/overloading.hpp>
 #include <boost/smart_ptr.hpp>
 #include <boost/graph/detail/d_ary_heap.hpp>
 #include <boost/graph/two_bit_color_map.hpp>
+#include <boost/graph/detail/mpi_include.hpp>
 #include <boost/property_map/property_map.hpp>
 #include <boost/property_map/vector_property_map.hpp>
 #include <boost/type_traits.hpp>
@@ -53,18 +53,13 @@ namespace boost {
    * @param old_distance  the previous distance to @p vertex
    */
   template<typename Buffer, typename Vertex, typename DistanceType>
-  inline void 
+  inline void
   dijkstra_queue_update(Buffer& Q, Vertex vertex, DistanceType old_distance)
   {
     (void)old_distance;
     Q.update(vertex);
   }
 
-#ifdef BOOST_GRAPH_DIJKSTRA_TESTING
-  // This is a misnomer now: it now just refers to the "default heap", which is
-  // currently d-ary (d=4) but can be changed by a #define.
-  static bool dijkstra_relaxed_heap = true;
-#endif
 
   template <class Visitor, class Graph>
   struct DijkstraVisitorConcept {
@@ -129,7 +124,7 @@ namespace boost {
 
       template <class Edge, class Graph>
       void tree_edge(Edge e, Graph& g) {
-        bool decreased = relax(e, g, m_weight, m_predecessor, m_distance,
+        bool decreased = relax_target(e, g, m_weight, m_predecessor, m_distance,
                                m_combine, m_compare);
         if (decreased)
           m_vis.edge_relaxed(e, g);
@@ -140,7 +135,7 @@ namespace boost {
       void gray_target(Edge e, Graph& g) {
         D old_distance = get(m_distance, target(e, g));
 
-        bool decreased = relax(e, g, m_weight, m_predecessor, m_distance,
+        bool decreased = relax_target(e, g, m_weight, m_predecessor, m_distance,
                                m_combine, m_compare);
         if (decreased) {
           dijkstra_queue_update(m_Q, target(e, g), old_distance);
@@ -187,7 +182,7 @@ namespace boost {
         // The test here is equivalent to e_weight < 0 if m_combine has a
         // cancellation law, but always returns false when m_combine is a
         // projection operator.
-        if (m_compare(m_combine(m_zero, get(m_weight, e)), m_zero)) 
+        if (m_compare(m_combine(m_zero, get(m_weight, e)), m_zero))
             boost::throw_exception(negative_edge());
         // End of test for negative-weight edges.
 
@@ -345,25 +340,7 @@ namespace boost {
 
     typedef typename graph_traits<Graph>::vertex_descriptor Vertex;
 
-#ifdef BOOST_GRAPH_DIJKSTRA_TESTING
-    if (!dijkstra_relaxed_heap) {
-      typedef mutable_queue<Vertex, std::vector<Vertex>, IndirectCmp, IndexMap>
-        MutableQueue;
-
-      MutableQueue Q(num_vertices(g), icmp, index_map);
-      detail::dijkstra_bfs_visitor<DijkstraVisitor, MutableQueue, WeightMap,
-        PredecessorMap, DistanceMap, Combine, Compare>
-      bfs_vis(vis, Q, weight, predecessor, distance, combine, compare, zero);
-
-      breadth_first_visit(g, s_begin, s_end, Q, bfs_vis, color);
-      return;
-    }
-#endif // BOOST_GRAPH_DIJKSTRA_TESTING
-
-#ifdef BOOST_GRAPH_DIJKSTRA_USE_RELAXED_HEAP
-    typedef relaxed_heap<Vertex, IndirectCmp, IndexMap> MutableQueue;
-    MutableQueue Q(num_vertices(g), icmp, index_map);
-#else // Now the default: use a d-ary heap
+    // Now the default: use a d-ary heap
       boost::scoped_array<std::size_t> index_in_heap_map_holder;
       typedef
         detail::vertex_property_map_generator<Graph, IndexMap, std::size_t>
@@ -374,7 +351,6 @@ namespace boost {
       typedef d_ary_heap_indirect<Vertex, 4, IndexInHeapMap, DistanceMap, Compare>
         MutableQueue;
       MutableQueue Q(distance, index_in_heap, compare);
-#endif // Relaxed heap
 
     detail::dijkstra_bfs_visitor<DijkstraVisitor, MutableQueue, WeightMap,
       PredecessorMap, DistanceMap, Combine, Compare>
@@ -406,7 +382,7 @@ namespace boost {
   template <class VertexListGraph, class SourceInputIter, class DijkstraVisitor,
             class PredecessorMap, class DistanceMap,
             class WeightMap, class IndexMap, class Compare, class Combine,
-            class DistInf, class DistZero, typename T, typename Tag, 
+            class DistInf, class DistZero, typename T, typename Tag,
             typename Base>
   inline void
   dijkstra_shortest_paths
@@ -429,7 +405,7 @@ namespace boost {
   template <class VertexListGraph, class DijkstraVisitor,
             class PredecessorMap, class DistanceMap,
             class WeightMap, class IndexMap, class Compare, class Combine,
-            class DistInf, class DistZero, typename T, typename Tag, 
+            class DistInf, class DistZero, typename T, typename Tag,
             typename Base>
   inline void
   dijkstra_shortest_paths
@@ -564,7 +540,7 @@ namespace boost {
          choose_param(get_param(params, distance_compare_t()),
                       std::less<D>()),
          choose_param(get_param(params, distance_combine_t()),
-                      closed_plus<D>(inf)),
+                      std::plus<D>()),
          inf,
          choose_param(get_param(params, distance_zero_t()),
                       D()),
@@ -616,8 +592,6 @@ namespace boost {
 
 } // namespace boost
 
-#ifdef BOOST_GRAPH_USE_MPI
-#  include <boost/graph/distributed/dijkstra_shortest_paths.hpp>
-#endif
+#include BOOST_GRAPH_MPI_INCLUDE(<boost/graph/distributed/dijkstra_shortest_paths.hpp>)
 
 #endif // BOOST_GRAPH_DIJKSTRA_HPP

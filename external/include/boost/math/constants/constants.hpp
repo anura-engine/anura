@@ -10,6 +10,7 @@
 #include <boost/math/tools/config.hpp>
 #include <boost/math/policies/policy.hpp>
 #include <boost/math/tools/precision.hpp>
+#include <boost/math/tools/convert_from_string.hpp>
 #ifdef BOOST_MSVC
 #pragma warning(push)
 #pragma warning(disable: 4127 4701)
@@ -26,6 +27,15 @@
 #include <boost/type_traits/is_convertible.hpp>
 #include <boost/utility/declval.hpp>
 
+#if defined(__GNUC__) && defined(BOOST_MATH_USE_FLOAT128)
+//
+// This is the only way we can avoid
+// warning: non-standard suffix on floating constant [-Wpedantic]
+// when building with -Wall -pedantic.  Neither __extension__
+// nor #pragma dianostic ignored work :(
+//
+#pragma GCC system_header
+#endif
 
 namespace boost{ namespace math
 {
@@ -63,25 +73,8 @@ namespace boost{ namespace math
    template <int N>
    struct dummy_size{};
 
-   template <class T>
-   struct is_explicitly_convertible_from_string
-   {
-#ifndef BOOST_NO_SFINAE_EXPR
-      template<typename S1, typename T1>
-      static type_traits::yes_type selector(dummy_size<sizeof(static_cast<T1>(declval<S1>()))>*);
-
-      template<typename S1, typename T1>
-      static type_traits::no_type selector(...);
-
-      static const bool value = sizeof(selector<const char*, T>(0)) == sizeof(type_traits::yes_type);
-#else
-      static const bool value = false;
-#endif
-   };
-
    //
-   // Max number of binary digits in the string representations
-   // of our constants:
+   // Max number of binary digits in the string representations of our constants:
    //
    BOOST_STATIC_CONSTANT(int, max_string_digits = (101 * 1000L) / 301L);
 
@@ -147,22 +140,6 @@ namespace boost{ namespace math
             const Real&, Real>::type type;
       };
 
-      template <class Real>
-      Real convert_from_string(const char* p, const mpl::false_&)
-      {
-#ifdef BOOST_MATH_NO_LEXICAL_CAST
-         // This function should not compile, we don't have the necesary functionality to support it:
-         BOOST_STATIC_ASSERT(sizeof(Real) == 0);
-#else
-         return boost::lexical_cast<Real>(p);
-#endif
-      }
-      template <class Real>
-      const char* convert_from_string(const char* p, const mpl::true_&)
-      {
-         return p;
-      }
-
       template <class T, const T& (*F)()>
       struct constant_initializer
       {
@@ -211,10 +188,16 @@ namespace boost{ namespace math
 
 #ifdef BOOST_MATH_USE_FLOAT128
 #  define BOOST_MATH_FLOAT128_CONSTANT_OVERLOAD(x) \
-   static inline BOOST_CONSTEXPR T get(const mpl::int_<construct_from_float128>&)\
+   static inline BOOST_CONSTEXPR T get(const mpl::int_<construct_from_float128>&) BOOST_NOEXCEPT\
    { return BOOST_JOIN(x, Q); }
 #else
 #  define BOOST_MATH_FLOAT128_CONSTANT_OVERLOAD(x)
+#endif
+
+#ifdef BOOST_NO_CXX11_THREAD_LOCAL
+#  define BOOST_MATH_PRECOMPUTE_IF_NOT_LOCAL(constant_, name)       constant_initializer<T, & BOOST_JOIN(constant_, name)<T>::get_from_variable_precision>::force_instantiate();
+#else
+#  define BOOST_MATH_PRECOMPUTE_IF_NOT_LOCAL(constant_, name)
 #endif
 
 #define BOOST_DEFINE_MATH_CONSTANT(name, x, y)\
@@ -224,8 +207,7 @@ namespace boost{ namespace math
    /* The default implementations come next: */ \
    static inline const T& get_from_string()\
    {\
-      typedef mpl::bool_<boost::is_convertible<const char*, T>::value || boost::math::constants::is_explicitly_convertible_from_string<T>::value> tag_type;\
-      static const T result(convert_from_string<T>(y, tag_type()));\
+      static const T result(boost::math::tools::convert_from_string<T>(y));\
       return result;\
    }\
    /* This one is for very high precision that is none the less known at compile time: */ \
@@ -235,6 +217,18 @@ namespace boost{ namespace math
       static const T result = compute<N>();\
       return result;\
    }\
+   static inline const T& get_from_variable_precision()\
+   {\
+      static BOOST_MATH_THREAD_LOCAL int digits = 0;\
+      static BOOST_MATH_THREAD_LOCAL T value;\
+      int current_digits = boost::math::tools::digits<T>();\
+      if(digits != current_digits)\
+      {\
+         value = current_digits > max_string_digits ? compute<0>() : T(boost::math::tools::convert_from_string<T>(y));\
+         digits = current_digits; \
+      }\
+      return value;\
+   }\
    /* public getters come next */\
    public:\
    static inline const T& get(const mpl::int_<construct_from_string>&)\
@@ -242,11 +236,11 @@ namespace boost{ namespace math
       constant_initializer<T, & BOOST_JOIN(constant_, name)<T>::get_from_string >::force_instantiate();\
       return get_from_string();\
    }\
-   static inline BOOST_CONSTEXPR T get(const mpl::int_<construct_from_float>)\
+   static inline BOOST_CONSTEXPR T get(const mpl::int_<construct_from_float>) BOOST_NOEXCEPT\
    { return BOOST_JOIN(x, F); }\
-   static inline BOOST_CONSTEXPR T get(const mpl::int_<construct_from_double>&)\
+   static inline BOOST_CONSTEXPR T get(const mpl::int_<construct_from_double>&) BOOST_NOEXCEPT\
    { return x; }\
-   static inline BOOST_CONSTEXPR T get(const mpl::int_<construct_from_long_double>&)\
+   static inline BOOST_CONSTEXPR T get(const mpl::int_<construct_from_long_double>&) BOOST_NOEXCEPT\
    { return BOOST_JOIN(x, L); }\
    BOOST_MATH_FLOAT128_CONSTANT_OVERLOAD(x) \
    template <int N> static inline const T& get(const mpl::int_<N>&)\
@@ -256,28 +250,31 @@ namespace boost{ namespace math
    }\
    /* This one is for true arbitary precision, which may well vary at runtime: */ \
    static inline T get(const mpl::int_<0>&)\
-   { return tools::digits<T>() > max_string_digits ? compute<0>() : get(mpl::int_<construct_from_string>()); }\
+   {\
+      BOOST_MATH_PRECOMPUTE_IF_NOT_LOCAL(constant_, name)\
+      return get_from_variable_precision(); }\
    }; /* end of struct */\
    } /* namespace detail */ \
    \
    \
    /* The actual forwarding function: */ \
-   template <class T, class Policy> inline BOOST_CONSTEXPR typename detail::constant_return<T, Policy>::type name(BOOST_MATH_EXPLICIT_TEMPLATE_TYPE_SPEC(T) BOOST_MATH_APPEND_EXPLICIT_TEMPLATE_TYPE_SPEC(Policy))\
+   template <class T, class Policy> inline BOOST_CONSTEXPR typename detail::constant_return<T, Policy>::type name(BOOST_MATH_EXPLICIT_TEMPLATE_TYPE_SPEC(T) BOOST_MATH_APPEND_EXPLICIT_TEMPLATE_TYPE_SPEC(Policy)) BOOST_MATH_NOEXCEPT(T)\
    { return detail:: BOOST_JOIN(constant_, name)<T>::get(typename construction_traits<T, Policy>::type()); }\
-   template <class T> inline BOOST_CONSTEXPR typename detail::constant_return<T>::type name(BOOST_MATH_EXPLICIT_TEMPLATE_TYPE_SPEC(T))\
+   template <class T> inline BOOST_CONSTEXPR typename detail::constant_return<T>::type name(BOOST_MATH_EXPLICIT_TEMPLATE_TYPE_SPEC(T)) BOOST_MATH_NOEXCEPT(T)\
    { return name<T, boost::math::policies::policy<> >(); }\
    \
    \
    /* Now the namespace specific versions: */ \
-   } namespace float_constants{ static const float name = BOOST_JOIN(x, F); }\
-   namespace double_constants{ static const double name = x; } \
-   namespace long_double_constants{ static const long double name = BOOST_JOIN(x, L); }\
+   } namespace float_constants{ BOOST_STATIC_CONSTEXPR float name = BOOST_JOIN(x, F); }\
+   namespace double_constants{ BOOST_STATIC_CONSTEXPR double name = x; } \
+   namespace long_double_constants{ BOOST_STATIC_CONSTEXPR long double name = BOOST_JOIN(x, L); }\
    namespace constants{
 
   BOOST_DEFINE_MATH_CONSTANT(half, 5.000000000000000000000000000000000000e-01, "5.00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000e-01")
   BOOST_DEFINE_MATH_CONSTANT(third, 3.333333333333333333333333333333333333e-01, "3.33333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333e-01")
   BOOST_DEFINE_MATH_CONSTANT(twothirds, 6.666666666666666666666666666666666666e-01, "6.66666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666667e-01")
   BOOST_DEFINE_MATH_CONSTANT(two_thirds, 6.666666666666666666666666666666666666e-01, "6.66666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666667e-01")
+  BOOST_DEFINE_MATH_CONSTANT(sixth, 1.666666666666666666666666666666666666e-01, "1.66666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666666667e-01")
   BOOST_DEFINE_MATH_CONSTANT(three_quarters, 7.500000000000000000000000000000000000e-01, "7.50000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000e-01")
   BOOST_DEFINE_MATH_CONSTANT(root_two, 1.414213562373095048801688724209698078e+00, "1.41421356237309504880168872420969807856967187537694807317667973799073247846210703885038753432764157273501384623e+00")
   BOOST_DEFINE_MATH_CONSTANT(root_three, 1.732050807568877293527446341505872366e+00, "1.73205080756887729352744634150587236694280525381038062805580697945193301690880003708114618675724857567562614142e+00")
@@ -313,6 +310,7 @@ namespace boost{ namespace math
   BOOST_DEFINE_MATH_CONSTANT(one_div_cbrt_pi, 6.827840632552956814670208331581645981e-01, "6.82784063255295681467020833158164598108367515632448804042681583118899226433403918237673501922595519865685577274e-01")
   BOOST_DEFINE_MATH_CONSTANT(e, 2.718281828459045235360287471352662497e+00, "2.71828182845904523536028747135266249775724709369995957496696762772407663035354759457138217852516642742746639193e+00")
   BOOST_DEFINE_MATH_CONSTANT(exp_minus_half, 6.065306597126334236037995349911804534e-01, "6.06530659712633423603799534991180453441918135487186955682892158735056519413748423998647611507989456026423789794e-01")
+  BOOST_DEFINE_MATH_CONSTANT(exp_minus_one, 3.678794411714423215955237701614608674e-01, "3.67879441171442321595523770161460867445811131031767834507836801697461495744899803357147274345919643746627325277e-01")
   BOOST_DEFINE_MATH_CONSTANT(e_pow_pi, 2.314069263277926900572908636794854738e+01, "2.31406926327792690057290863679485473802661062426002119934450464095243423506904527835169719970675492196759527048e+01")
   BOOST_DEFINE_MATH_CONSTANT(root_e, 1.648721270700128146848650787814163571e+00, "1.64872127070012814684865078781416357165377610071014801157507931164066102119421560863277652005636664300286663776e+00")
   BOOST_DEFINE_MATH_CONSTANT(log10_e, 4.342944819032518276511289189166050822e-01, "4.34294481903251827651128918916605082294397005803666566114453783165864649208870774729224949338431748318706106745e-01")

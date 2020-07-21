@@ -27,6 +27,7 @@
 #include <boost/graph/dll_import_export.hpp>
 #include <boost/graph/compressed_sparse_row_graph.hpp>
 #include <boost/graph/iteration_macros.hpp>
+#include <boost/graph/detail/mpi_include.hpp>
 #include <boost/spirit/include/classic_multi_pass.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/static_assert.hpp>
@@ -616,12 +617,12 @@ namespace boost {
 /////////////////////////////////////////////////////////////////////////////
 // Graph reader exceptions
 /////////////////////////////////////////////////////////////////////////////
-struct graph_exception : public std::exception {
+struct BOOST_SYMBOL_VISIBLE graph_exception : public std::exception {
   virtual ~graph_exception() throw() {}
   virtual const char* what() const throw() = 0;
 };
 
-struct bad_parallel_edge : public graph_exception {
+struct BOOST_SYMBOL_VISIBLE bad_parallel_edge : public graph_exception {
   std::string from;
   std::string to;
   mutable std::string statement;
@@ -639,7 +640,7 @@ struct bad_parallel_edge : public graph_exception {
   }
 };
 
-struct directed_graph_error : public graph_exception {
+struct BOOST_SYMBOL_VISIBLE directed_graph_error : public graph_exception {
   virtual ~directed_graph_error() throw() {}
   virtual const char* what() const throw() {
     return
@@ -648,7 +649,7 @@ struct directed_graph_error : public graph_exception {
   }
 };
 
-struct undirected_graph_error : public graph_exception {
+struct BOOST_SYMBOL_VISIBLE undirected_graph_error : public graph_exception {
   virtual ~undirected_graph_error() throw() {}
   virtual const char* what() const throw() {
     return
@@ -657,7 +658,7 @@ struct undirected_graph_error : public graph_exception {
   }
 };
 
-struct bad_graphviz_syntax: public graph_exception {
+struct BOOST_SYMBOL_VISIBLE bad_graphviz_syntax: public graph_exception {
   std::string errmsg;
   bad_graphviz_syntax(const std::string& errmsg)
     : errmsg(errmsg) {}
@@ -951,8 +952,6 @@ bool read_graphviz(std::istream& in, MutableGraph& graph,
 
 } // namespace boost
 
-#ifdef BOOST_GRAPH_USE_MPI
-#  include <boost/graph/distributed/graphviz.hpp>
-#endif
+#include BOOST_GRAPH_MPI_INCLUDE(<boost/graph/distributed/graphviz.hpp>)
 
 #endif // BOOST_GRAPHVIZ_HPP

@@ -17,7 +17,10 @@
 
 
 #include <boost/mpl/assert.hpp>
+#include <boost/mpl/if.hpp>
+#include <boost/type_traits/is_const.hpp>
 #include <boost/type_traits/remove_const.hpp>
+#include <boost/type_traits/remove_reference.hpp>
 
 #include <boost/geometry/core/tag.hpp>
 #include <boost/geometry/core/tags.hpp>
@@ -86,7 +89,7 @@ struct interior_return_type<polygon_tag, Polygon>
 {
     typedef typename boost::remove_const<Polygon>::type nc_polygon_type;
 
-    typedef typename mpl::if_
+    typedef typename boost::mpl::if_
         <
             boost::is_const<Polygon>,
             typename traits::interior_const_type<nc_polygon_type>::type,

@@ -16,6 +16,7 @@
 #ifndef BOOST_ATOMIC_DETAIL_OPS_GCC_ALPHA_HPP_INCLUDED_
 #define BOOST_ATOMIC_DETAIL_OPS_GCC_ALPHA_HPP_INCLUDED_
 
+#include <cstddef>
 #include <boost/memory_order.hpp>
 #include <boost/atomic/detail/config.hpp>
 #include <boost/atomic/detail/storage_type.hpp>
@@ -63,15 +64,18 @@ namespace detail {
 
 struct gcc_alpha_operations_base
 {
+    static BOOST_CONSTEXPR_OR_CONST bool full_cas_based = false;
+    static BOOST_CONSTEXPR_OR_CONST bool is_always_lock_free = true;
+
     static BOOST_FORCEINLINE void fence_before(memory_order order) BOOST_NOEXCEPT
     {
-        if ((order & memory_order_release) != 0)
+        if ((static_cast< unsigned int >(order) & static_cast< unsigned int >(memory_order_release)) != 0u)
             __asm__ __volatile__ ("mb" ::: "memory");
     }
 
     static BOOST_FORCEINLINE void fence_after(memory_order order) BOOST_NOEXCEPT
     {
-        if ((order & (memory_order_consume | memory_order_acquire)) != 0)
+        if ((static_cast< unsigned int >(order) & (static_cast< unsigned int >(memory_order_consume) | static_cast< unsigned int >(memory_order_acquire))) != 0u)
             __asm__ __volatile__ ("mb" ::: "memory");
     }
 
@@ -87,7 +91,11 @@ template< bool Signed >
 struct operations< 4u, Signed > :
     public gcc_alpha_operations_base
 {
-    typedef typename make_storage_type< 4u, Signed >::type storage_type;
+    typedef typename make_storage_type< 4u >::type storage_type;
+    typedef typename make_storage_type< 4u >::aligned aligned_storage_type;
+
+    static BOOST_CONSTEXPR_OR_CONST std::size_t storage_size = 4u;
+    static BOOST_CONSTEXPR_OR_CONST bool is_signed = Signed;
 
     static BOOST_FORCEINLINE void store(storage_type volatile& storage, storage_type v, memory_order order) BOOST_NOEXCEPT
     {
@@ -123,7 +131,7 @@ struct operations< 4u, Signed > :
               "=&r" (tmp)        // %1
             : "m" (storage),     // %2
               "r" (v)            // %3
-            :
+            : BOOST_ATOMIC_DETAIL_ASM_CLOBBER_CC
         );
         fence_after(order);
         return original;
@@ -150,7 +158,7 @@ struct operations< 4u, Signed > :
               "=&r" (current),   // %2
               "=&r" (success)    // %3
             : "m" (storage)      // %4
-            :
+            : BOOST_ATOMIC_DETAIL_ASM_CLOBBER_CC
         );
         if (success)
             fence_after(success_order);
@@ -188,7 +196,7 @@ struct operations< 4u, Signed > :
               "=&r" (success)    // %3
             : "m" (storage),     // %4
               "r" (desired)      // %5
-            :
+            : BOOST_ATOMIC_DETAIL_ASM_CLOBBER_CC
         );
         if (success)
             fence_after(success_order);
@@ -217,7 +225,7 @@ struct operations< 4u, Signed > :
               "=&r" (modified)   // %1
             : "m" (storage),     // %2
               "r" (v)            // %3
-            :
+            : BOOST_ATOMIC_DETAIL_ASM_CLOBBER_CC
         );
         fence_after(order);
         return original;
@@ -243,7 +251,7 @@ struct operations< 4u, Signed > :
               "=&r" (modified)   // %1
             : "m" (storage),     // %2
               "r" (v)            // %3
-            :
+            : BOOST_ATOMIC_DETAIL_ASM_CLOBBER_CC
         );
         fence_after(order);
         return original;
@@ -269,7 +277,7 @@ struct operations< 4u, Signed > :
               "=&r" (modified)   // %1
             : "m" (storage),     // %2
               "r" (v)            // %3
-            :
+            : BOOST_ATOMIC_DETAIL_ASM_CLOBBER_CC
         );
         fence_after(order);
         return original;
@@ -295,7 +303,7 @@ struct operations< 4u, Signed > :
               "=&r" (modified)   // %1
             : "m" (storage),     // %2
               "r" (v)            // %3
-            :
+            : BOOST_ATOMIC_DETAIL_ASM_CLOBBER_CC
         );
         fence_after(order);
         return original;
@@ -321,7 +329,7 @@ struct operations< 4u, Signed > :
               "=&r" (modified)   // %1
             : "m" (storage),     // %2
               "r" (v)            // %3
-            :
+            : BOOST_ATOMIC_DETAIL_ASM_CLOBBER_CC
         );
         fence_after(order);
         return original;
@@ -335,11 +343,6 @@ struct operations< 4u, Signed > :
     static BOOST_FORCEINLINE void clear(storage_type volatile& storage, memory_order order) BOOST_NOEXCEPT
     {
         store(storage, 0, order);
-    }
-
-    static BOOST_FORCEINLINE bool is_lock_free(storage_type const volatile&) BOOST_NOEXCEPT
-    {
-        return true;
     }
 };
 
@@ -372,7 +375,7 @@ struct operations< 1u, false > :
               "=&r" (modified)   // %1
             : "m" (storage),     // %2
               "r" (v)            // %3
-            :
+            : BOOST_ATOMIC_DETAIL_ASM_CLOBBER_CC
         );
         fence_after(order);
         return original;
@@ -399,7 +402,7 @@ struct operations< 1u, false > :
               "=&r" (modified)   // %1
             : "m" (storage),     // %2
               "r" (v)            // %3
-            :
+            : BOOST_ATOMIC_DETAIL_ASM_CLOBBER_CC
         );
         fence_after(order);
         return original;
@@ -434,7 +437,7 @@ struct operations< 1u, true > :
               "=&r" (modified)   // %1
             : "m" (storage),     // %2
               "r" (v)            // %3
-            :
+            : BOOST_ATOMIC_DETAIL_ASM_CLOBBER_CC
         );
         fence_after(order);
         return original;
@@ -461,7 +464,7 @@ struct operations< 1u, true > :
               "=&r" (modified)   // %1
             : "m" (storage),     // %2
               "r" (v)            // %3
-            :
+            : BOOST_ATOMIC_DETAIL_ASM_CLOBBER_CC
         );
         fence_after(order);
         return original;
@@ -497,7 +500,7 @@ struct operations< 2u, false > :
               "=&r" (modified)   // %1
             : "m" (storage),     // %2
               "r" (v)            // %3
-            :
+            : BOOST_ATOMIC_DETAIL_ASM_CLOBBER_CC
         );
         fence_after(order);
         return original;
@@ -524,7 +527,7 @@ struct operations< 2u, false > :
               "=&r" (modified)   // %1
             : "m" (storage),     // %2
               "r" (v)            // %3
-            :
+            : BOOST_ATOMIC_DETAIL_ASM_CLOBBER_CC
         );
         fence_after(order);
         return original;
@@ -559,7 +562,7 @@ struct operations< 2u, true > :
               "=&r" (modified)   // %1
             : "m" (storage),     // %2
               "r" (v)            // %3
-            :
+            : BOOST_ATOMIC_DETAIL_ASM_CLOBBER_CC
         );
         fence_after(order);
         return original;
@@ -586,7 +589,7 @@ struct operations< 2u, true > :
               "=&r" (modified)   // %1
             : "m" (storage),     // %2
               "r" (v)            // %3
-            :
+            : BOOST_ATOMIC_DETAIL_ASM_CLOBBER_CC
         );
         fence_after(order);
         return original;
@@ -598,7 +601,11 @@ template< bool Signed >
 struct operations< 8u, Signed > :
     public gcc_alpha_operations_base
 {
-    typedef typename make_storage_type< 8u, Signed >::type storage_type;
+    typedef typename make_storage_type< 8u >::type storage_type;
+    typedef typename make_storage_type< 8u >::aligned aligned_storage_type;
+
+    static BOOST_CONSTEXPR_OR_CONST std::size_t storage_size = 8u;
+    static BOOST_CONSTEXPR_OR_CONST bool is_signed = Signed;
 
     static BOOST_FORCEINLINE void store(storage_type volatile& storage, storage_type v, memory_order order) BOOST_NOEXCEPT
     {
@@ -634,7 +641,7 @@ struct operations< 8u, Signed > :
               "=&r" (tmp)        // %1
             : "m" (storage),     // %2
               "r" (v)            // %3
-            :
+            : BOOST_ATOMIC_DETAIL_ASM_CLOBBER_CC
         );
         fence_after(order);
         return original;
@@ -661,7 +668,7 @@ struct operations< 8u, Signed > :
               "=&r" (current),   // %2
               "=&r" (success)    // %3
             : "m" (storage)      // %4
-            :
+            : BOOST_ATOMIC_DETAIL_ASM_CLOBBER_CC
         );
         if (success)
             fence_after(success_order);
@@ -699,7 +706,7 @@ struct operations< 8u, Signed > :
               "=&r" (success)    // %3
             : "m" (storage),     // %4
               "r" (desired)      // %5
-            :
+            : BOOST_ATOMIC_DETAIL_ASM_CLOBBER_CC
         );
         if (success)
             fence_after(success_order);
@@ -728,7 +735,7 @@ struct operations< 8u, Signed > :
               "=&r" (modified)   // %1
             : "m" (storage),     // %2
               "r" (v)            // %3
-            :
+            : BOOST_ATOMIC_DETAIL_ASM_CLOBBER_CC
         );
         fence_after(order);
         return original;
@@ -754,7 +761,7 @@ struct operations< 8u, Signed > :
               "=&r" (modified)   // %1
             : "m" (storage),     // %2
               "r" (v)            // %3
-            :
+            : BOOST_ATOMIC_DETAIL_ASM_CLOBBER_CC
         );
         fence_after(order);
         return original;
@@ -780,7 +787,7 @@ struct operations< 8u, Signed > :
               "=&r" (modified)   // %1
             : "m" (storage),     // %2
               "r" (v)            // %3
-            :
+            : BOOST_ATOMIC_DETAIL_ASM_CLOBBER_CC
         );
         fence_after(order);
         return original;
@@ -806,7 +813,7 @@ struct operations< 8u, Signed > :
               "=&r" (modified)   // %1
             : "m" (storage),     // %2
               "r" (v)            // %3
-            :
+            : BOOST_ATOMIC_DETAIL_ASM_CLOBBER_CC
         );
         fence_after(order);
         return original;
@@ -832,7 +839,7 @@ struct operations< 8u, Signed > :
               "=&r" (modified)   // %1
             : "m" (storage),     // %2
               "r" (v)            // %3
-            :
+            : BOOST_ATOMIC_DETAIL_ASM_CLOBBER_CC
         );
         fence_after(order);
         return original;
@@ -846,11 +853,6 @@ struct operations< 8u, Signed > :
     static BOOST_FORCEINLINE void clear(storage_type volatile& storage, memory_order order) BOOST_NOEXCEPT
     {
         store(storage, 0, order);
-    }
-
-    static BOOST_FORCEINLINE bool is_lock_free(storage_type const volatile&) BOOST_NOEXCEPT
-    {
-        return true;
     }
 };
 

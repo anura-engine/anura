@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////
 //  Copyright 2013 John Maddock. Distributed under the Boost
 //  Software License, Version 1.0. (See accompanying file
-//  LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_
+//  LICENSE_1_0.txt or copy at https://www.boost.org/LICENSE_1_0.txt
 //
 // Generic routines for converting floating point values to and from decimal strings.
 // Note that these use "naive" algorithms which result in rounding error - so they
@@ -24,7 +24,7 @@ inline void round_string_up_at(std::string& s, int pos, I& expon)
    //
    if(pos < 0)
    {
-      s.insert(0, 1, '1');
+      s.insert(static_cast<std::string::size_type>(0), 1, '1');
       s.erase(s.size() - 1);
       ++expon;
    }
@@ -182,7 +182,7 @@ std::string convert_to_string(Backend b, std::streamsize digits, std::ios_base::
    }
    BOOST_ASSERT(org_digits >= 0);
    if(isneg)
-      result.insert(0, 1, '-');
+      result.insert(static_cast<std::string::size_type>(0), 1, '-');
    format_float_string(result, expon, org_digits, f, iszero);
 
    return result;

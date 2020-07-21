@@ -14,6 +14,10 @@ extern "C" {
 #include <unistd.h>
 }
 
+#if defined(BOOST_USE_VALGRIND)
+#include <valgrind/valgrind.h>
+#endif
+
 #include <cmath>
 #include <cstddef>
 #include <new>
@@ -49,7 +53,7 @@ struct basic_protected_stack_allocator
                     static_cast< float >( size) / traits_type::page_size() ) ) );
         BOOST_ASSERT_MSG( 2 <= pages, "at least two pages must fit into stack (one page is guard-page)");
         const std::size_t size_( pages * traits_type::page_size() );
-        BOOST_ASSERT( 0 < size && 0 < size_);
+        BOOST_ASSERT( 0 != size && 0 != size_);
         BOOST_ASSERT( size_ <= size);
 
         // conform to POSIX.4 (POSIX.1b-1993, _POSIX_C_SOURCE=199309L)
@@ -70,6 +74,9 @@ struct basic_protected_stack_allocator
 
         ctx.size = size_;
         ctx.sp = static_cast< char * >( limit) + ctx.size;
+#if defined(BOOST_USE_VALGRIND)
+        ctx.valgrind_stack_id = VALGRIND_STACK_REGISTER( ctx.sp, limit);
+#endif
     }
 
     void deallocate( stack_context & ctx)
@@ -78,6 +85,9 @@ struct basic_protected_stack_allocator
         BOOST_ASSERT( traits_type::minimum_size() <= ctx.size);
         BOOST_ASSERT( traits_type::is_unbounded() || ( traits_type::maximum_size() >= ctx.size) );
 
+#if defined(BOOST_USE_VALGRIND)
+        VALGRIND_STACK_DEREGISTER( ctx.valgrind_stack_id);
+#endif
         void * limit = static_cast< char * >( ctx.sp) - ctx.size;
         // conform to POSIX.4 (POSIX.1b-1993, _POSIX_C_SOURCE=199309L)
         ::munmap( limit, ctx.size);

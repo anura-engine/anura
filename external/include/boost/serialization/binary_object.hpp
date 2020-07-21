@@ -55,7 +55,7 @@ struct binary_object :
         m_size = rhs.m_size;
         return *this;
     }
-    binary_object(/* const */ void * const t, std::size_t size) :
+    binary_object(const void * const t, std::size_t size) :
         m_t(t),
         m_size(size)
     {}
@@ -68,11 +68,8 @@ struct binary_object :
 // just a little helper to support the convention that all serialization
 // wrappers follow the naming convention make_xxxxx
 inline 
-#ifndef BOOST_NO_FUNCTION_TEMPLATE_ORDERING
-const
-#endif
-binary_object 
-make_binary_object(/* const */ void * t, std::size_t size){
+const binary_object
+make_binary_object(const void * t, std::size_t size){
     return binary_object(t, size);
 }
 

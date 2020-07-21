@@ -12,8 +12,7 @@
 #ifndef BOOST_ALGORITHM_IS_PERMUTATION14_HPP
 #define BOOST_ALGORITHM_IS_PERMUTATION14_HPP
 
-#include <algorithm>    // for std::less, tie, mismatch and is_permutation (if available)
-#include <utility>      // for std::make_pair
+#include <utility>      // for std::pair
 #include <functional>   // for std::equal_to
 #include <iterator>
 
@@ -22,7 +21,6 @@
 
 namespace boost { namespace algorithm {
 
-#if __cplusplus <= 201103L
 /// \fn is_permutation ( ForwardIterator1 first, ForwardIterator1 last, 
 ///                      ForwardIterator2 first2, ForwardIterator2 last2 )
 /// \brief Tests to see if the sequence [first,last) is a permutation of the sequence starting at first2
@@ -32,18 +30,16 @@ namespace boost { namespace algorithm {
 /// \param first2   The start of the second sequence
 /// \param last1    One past the end of the second sequence
 /// \note           This function is part of the C++2014 standard library.
-///  We will use the standard one if it is available,
-///     otherwise we have our own implementation.
 template< class ForwardIterator1, class ForwardIterator2 >
 bool is_permutation ( ForwardIterator1 first1, ForwardIterator1 last1, 
                       ForwardIterator2 first2, ForwardIterator2 last2 )
 {
 //  How should I deal with the idea that ForwardIterator1::value_type
 //  and ForwardIterator2::value_type could be different? Define my own comparison predicate?
-	std::pair<ForwardIterator1, ForwardIterator2> eq = boost::algorithm::mismatch
-		( first1, last1, first2, last2 );
-	if ( eq.first == last1 && eq.second == last2)
-		return true;
+    std::pair<ForwardIterator1, ForwardIterator2> eq = boost::algorithm::mismatch
+        ( first1, last1, first2, last2 );
+    if ( eq.first == last1 && eq.second == last2)
+        return true;
     return boost::algorithm::detail::is_permutation_tag (
         eq.first, last1, eq.second, last2, 
         std::equal_to<typename std::iterator_traits<ForwardIterator1>::value_type> (),
@@ -63,23 +59,20 @@ bool is_permutation ( ForwardIterator1 first1, ForwardIterator1 last1,
 /// \param pred     The predicate to compare elements with
 ///
 /// \note           This function is part of the C++2014 standard library.
-///  We will use the standard one if it is available,
-///     otherwise we have our own implementation.
 template< class ForwardIterator1, class ForwardIterator2, class BinaryPredicate >
 bool is_permutation ( ForwardIterator1 first1, ForwardIterator1 last1,
                       ForwardIterator2 first2, ForwardIterator2 last2, 
                       BinaryPredicate pred )
 {
-	std::pair<ForwardIterator1, ForwardIterator2> eq = boost::algorithm::mismatch
-		( first1, last1, first2, last2, pred );
-	if ( eq.first == last1 && eq.second == last2)
-		return true;
+    std::pair<ForwardIterator1, ForwardIterator2> eq = boost::algorithm::mismatch
+        ( first1, last1, first2, last2, pred );
+    if ( eq.first == last1 && eq.second == last2)
+        return true;
     return boost::algorithm::detail::is_permutation_tag (
         first1, last1, first2, last2, pred, 
         typename std::iterator_traits<ForwardIterator1>::iterator_category (),
         typename std::iterator_traits<ForwardIterator2>::iterator_category ());
 }
-#endif
 
 }}
 

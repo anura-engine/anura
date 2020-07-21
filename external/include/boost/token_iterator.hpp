@@ -18,11 +18,11 @@
 #ifndef BOOST_TOKENIZER_POLICY_JRB070303_HPP_
 #define BOOST_TOKENIZER_POLICY_JRB070303_HPP_
 
-#include<boost/assert.hpp>
-#include<boost/iterator/iterator_adaptor.hpp>
-#include<boost/iterator/detail/minimum_category.hpp>
-#include<boost/token_functions.hpp>
-#include<utility>
+#include <boost/assert.hpp>
+#include <boost/iterator/iterator_adaptor.hpp>
+#include <boost/iterator/minimum_category.hpp>
+#include <boost/token_functions.hpp>
+#include <utility>
 
 namespace boost
 {
@@ -31,7 +31,7 @@ namespace boost
       : public iterator_facade<
             token_iterator<TokenizerFunc, Iterator, Type>
           , Type
-          , typename detail::minimum_category<
+          , typename iterators::minimum_category<
                 forward_traversal_tag
               , typename iterator_traversal<Iterator>::type
             >::type
@@ -39,8 +39,11 @@ namespace boost
         >
   {
 
-      friend class iterator_core_access;
-
+#ifdef __DCC__ 
+      friend class boost::iterator_core_access; 
+#else 
+      friend class iterator_core_access; 
+#endif  
       TokenizerFunc f_;
       Iterator begin_;
       Iterator end_;

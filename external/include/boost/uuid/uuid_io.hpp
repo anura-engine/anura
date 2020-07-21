@@ -3,7 +3,7 @@
 // Copyright 2009 Andy Tompkins.
 // Distributed under the Boost Software License, Version 1.0. (See
 // accompanying file LICENSE_1_0.txt or copy at
-// http://www.boost.org/LICENSE_1_0.txt)
+// https://www.boost.org/LICENSE_1_0.txt)
 
 // Revision History
 //  20 Mar 2009 - Initial Revision
@@ -46,7 +46,7 @@ template <typename ch, typename char_traits>
             }
         }
 
-        os << std::hex;
+        os << std::hex << std::right;
         os.fill(os.widen('0'));
 
         std::size_t i=0;
@@ -57,13 +57,13 @@ template <typename ch, typename char_traits>
                 os << os.widen('-');
             }
         }
-        
+
         if (flags & std::ios_base::left) {
             for (std::streamsize s=uuid_width; s<width; s++) {
                 os << fill;
             }
         }
-        
+
         os.width(0); //used the width so reset it
     }
     return os;

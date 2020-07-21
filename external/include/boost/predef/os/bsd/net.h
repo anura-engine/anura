@@ -1,5 +1,5 @@
 /*
-Copyright Rene Rivera 2012-2013
+Copyright Rene Rivera 2012-2015
 Distributed under the Boost Software License, Version 1.0.
 (See accompanying file LICENSE_1_0.txt or copy at
 http://www.boost.org/LICENSE_1_0.txt)
@@ -76,9 +76,9 @@ http://www.boost.org/LICENSE_1_0.txt)
 #   include <boost/predef/detail/os_detected.h>
 #endif
 
-#define BOOST_OS_BSD_NET_NAME "DragonFly BSD"
+#define BOOST_OS_BSD_NET_NAME "NetBSD"
+
+#endif
 
 #include <boost/predef/detail/test.h>
 BOOST_PREDEF_DECLARE_TEST(BOOST_OS_BSD_NET,BOOST_OS_BSD_NET_NAME)
-
-#endif

@@ -10,6 +10,7 @@
 #define BOOST_THREAD_EXECUTORS_EXECUTOR_ADAPTOR_HPP
 
 #include <boost/thread/detail/config.hpp>
+#if defined BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION && defined BOOST_THREAD_PROVIDES_EXECUTORS && defined BOOST_THREAD_USES_MOVE
 
 #include <boost/thread/executors/executor.hpp>
 
@@ -97,39 +98,27 @@ namespace executors
      */
     void submit(BOOST_THREAD_RV_REF(work) closure)  {
       return ex.submit(boost::move(closure));
-      //return ex.submit(boost::forward<work>(closure));
     }
 
 #if defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
     template <typename Closure>
     void submit(Closure & closure)
     {
-      work w ((closure));
-      submit(boost::move(w));
-      //submit(work(closure));
+      submit(work(closure));
     }
 #endif
     void submit(void (*closure)())
     {
-      work w ((closure));
-      submit(boost::move(w));
-      //submit(work(closure));
+      submit(work(closure));
     }
 
-#if 0
-    template <typename Closure>
-    void submit(BOOST_THREAD_RV_REF(Closure) closure)
-    {
-      work w =boost::move(closure);
-      submit(boost::move(w));
-    }
-#else
     template <typename Closure>
     void submit(BOOST_THREAD_FWD_REF(Closure) closure)
     {
-      submit(work(boost::forward<Closure>(closure)));
+      //submit(work(boost::forward<Closure>(closure)));
+      work w((boost::forward<Closure>(closure)));
+      submit(boost::move(w));
     }
-#endif
 
     /**
      * Effects: try to execute one task.
@@ -145,4 +134,5 @@ using executors::executor_adaptor;
 
 #include <boost/config/abi_suffix.hpp>
 
+#endif
 #endif

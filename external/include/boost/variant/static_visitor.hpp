@@ -13,14 +13,14 @@
 #ifndef BOOST_VARIANT_STATIC_VISITOR_HPP
 #define BOOST_VARIANT_STATIC_VISITOR_HPP
 
-#include "boost/config.hpp"
-#include "boost/detail/workaround.hpp"
+#include <boost/config.hpp>
+#include <boost/detail/workaround.hpp>
 
-#include "boost/mpl/if.hpp"
-#include "boost/type_traits/is_base_and_derived.hpp"
+#include <boost/mpl/if.hpp>
+#include <boost/type_traits/is_base_and_derived.hpp>
 
-// should be the last #include
-#include "boost/type_traits/detail/bool_trait_def.hpp"
+#include <boost/type_traits/integral_constant.hpp>
+#include <boost/mpl/aux_/lambda_support.hpp>
 
 namespace boost {
 
@@ -48,12 +48,10 @@ public: // typedefs
     typedef R result_type;
 
 protected: // for use as base class only
-#ifndef BOOST_NO_DEFAULTED_FUNCTIONS
+#if !defined(BOOST_NO_CXX11_DEFAULTED_FUNCTIONS) && !defined(BOOST_NO_CXX11_NON_PUBLIC_DEFAULTED_FUNCTIONS)
     static_visitor() = default;
-    ~static_visitor() = default;
 #else
     static_visitor()  BOOST_NOEXCEPT { }
-    ~static_visitor()  BOOST_NOEXCEPT { }
 #endif
 };
 
@@ -83,14 +81,13 @@ struct is_static_visitor_impl
 
 } // namespace detail
 
-BOOST_TT_AUX_BOOL_TRAIT_DEF1(
-      is_static_visitor
-    , T
-    , (::boost::detail::is_static_visitor_impl<T>::value)
-    )
+template< typename T > struct is_static_visitor
+	: public ::boost::integral_constant<bool,(::boost::detail::is_static_visitor_impl<T>::value)>
+{
+public:
+    BOOST_MPL_AUX_LAMBDA_SUPPORT(1,is_static_visitor,(T))
+};
 
 } // namespace boost
-
-#include "boost/type_traits/detail/bool_trait_undef.hpp"
 
 #endif // BOOST_VARIANT_STATIC_VISITOR_HPP

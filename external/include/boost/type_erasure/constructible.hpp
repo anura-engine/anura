@@ -13,6 +13,7 @@
 #ifndef BOOST_TYPE_ERASURE_CONSTRUCTIBLE_HPP_INCLUDED
 #define BOOST_TYPE_ERASURE_CONSTRUCTIBLE_HPP_INCLUDED
 
+#include <boost/detail/workaround.hpp>
 #include <boost/preprocessor/iteration/iterate.hpp>
 #include <boost/preprocessor/repetition/enum_params.hpp>
 #include <boost/preprocessor/repetition/enum_binary_params.hpp>
@@ -40,7 +41,7 @@ struct get_null_vtable_entry;
 template<class C, class Sig>
 struct vtable_adapter;
 
-};
+}
 
 #ifdef BOOST_TYPE_ERASURE_DOXYGEN
 
@@ -60,7 +61,9 @@ struct vtable_adapter;
 template<class Sig>
 struct constructible {};
 
-#elif !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) && !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+#elif !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) && \
+    !defined(BOOST_NO_CXX11_RVALUE_REFERENCES) && \
+    !BOOST_WORKAROUND(BOOST_MSVC, == 1800)
 
 template<class R, class... T>
 struct constructible<R(T...)>
@@ -85,7 +88,7 @@ struct concept_interface<
     using Base::_boost_type_erasure_deduce_constructor;
     ::boost::type_erasure::constructible<Tag(T...)>*
     _boost_type_erasure_deduce_constructor(
-        typename ::boost::type_erasure::as_param<Base, T>::type...)
+        typename ::boost::type_erasure::as_param<Base, T>::type...) const
     {
         return 0;
     }
@@ -165,7 +168,7 @@ struct concept_interface<
     using Base::_boost_type_erasure_deduce_constructor;
     ::boost::type_erasure::constructible<Tag(BOOST_PP_ENUM_PARAMS(N, T))>*
     _boost_type_erasure_deduce_constructor(
-        BOOST_PP_ENUM(N, BOOST_TYPE_ERASURE_ARG_DECL, ~))
+        BOOST_PP_ENUM(N, BOOST_TYPE_ERASURE_ARG_DECL, ~)) const
     {
         return 0;
     }

@@ -104,8 +104,14 @@ namespace boost { namespace spirit { namespace karma
                     long exp = traits::truncate_to_long::call(-dim);
                     if (exp != -dim)
                         ++exp;
-                    dim = -exp;
-                    n *= spirit::traits::pow10<U>(exp);
+                    dim = static_cast<U>(-exp);
+                    // detect and handle denormalized numbers to prevent overflow in pow10
+                    if (exp > std::numeric_limits<U>::max_exponent10)
+                    {
+                        n *= spirit::traits::pow10<U>(std::numeric_limits<U>::max_exponent10);
+                        n *= spirit::traits::pow10<U>(exp - std::numeric_limits<U>::max_exponent10);
+                    } else
+                        n *= spirit::traits::pow10<U>(exp);
                 }
             }
 

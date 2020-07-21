@@ -1,8 +1,9 @@
 // Boost.Geometry (aka GGL, Generic Geometry Library)
 
-// Copyright (c) 2014, Oracle and/or its affiliates.
+// Copyright (c) 2014, 2018, 2019, Oracle and/or its affiliates.
 
 // Contributed and/or modified by Menelaos Karavelas, on behalf of Oracle
+// Contributed and/or modified by Adam Wulkiewicz, on behalf of Oracle
 
 // Licensed under the Boost Software License version 1.0.
 // http://www.boost.org/users/license.html
@@ -17,9 +18,10 @@
 #include <utility>
 #include <vector>
 
-#include <boost/assert.hpp>
 #include <boost/core/addressof.hpp>
 
+#include <boost/geometry/algorithms/detail/signed_size_type.hpp>
+#include <boost/geometry/core/assert.hpp>
 #include <boost/geometry/policies/compare.hpp>
 
 
@@ -30,7 +32,7 @@ namespace detail { namespace is_valid
 {
 
 
-template <typename TurnPoint>
+template <typename TurnPoint, typename CSTag>
 class complement_graph_vertex
 {
 public:
@@ -53,7 +55,7 @@ public:
         {
             return geometry::less
                 <
-                    TurnPoint
+                    TurnPoint, -1, CSTag
                 >()(*m_turn_point, *other.m_turn_point);
         }
         if ( m_turn_point == NULL && other.m_turn_point == NULL )
@@ -75,11 +77,11 @@ private:
 
 
 
-template <typename TurnPoint>
+template <typename TurnPoint, typename CSTag>
 class complement_graph
 {
 private:
-    typedef complement_graph_vertex<TurnPoint> vertex;
+    typedef complement_graph_vertex<TurnPoint, CSTag> vertex;
     typedef std::set<vertex> vertex_container;
 
 public:
@@ -104,12 +106,12 @@ private:
             , m_parent_id(num_nodes, -1)
         {}
 
-        inline int parent_id(vertex_handle v) const
+        inline signed_size_type parent_id(vertex_handle v) const
         {
             return m_parent_id[v->id()];
         }
 
-        inline void set_parent_id(vertex_handle v, int id)
+        inline void set_parent_id(vertex_handle v, signed_size_type id)
         {
             m_parent_id[v->id()] = id;
         }
@@ -125,7 +127,7 @@ private:
         }
     private:
         std::vector<bool> m_visited;
-        std::vector<int> m_parent_id;
+        std::vector<signed_size_type> m_parent_id;
     };
 
 
@@ -145,7 +147,7 @@ private:
                      = m_neighbors[v->id()].begin();
                  nit != m_neighbors[v->id()].end(); ++nit)
             {
-                if ( static_cast<int>((*nit)->id()) != data.parent_id(v) )
+                if ( static_cast<signed_size_type>((*nit)->id()) != data.parent_id(v) )
                 {
                     if ( data.visited(*nit) )
                     {
@@ -153,7 +155,7 @@ private:
                     }
                     else
                     {
-                        data.set_parent_id(*nit, static_cast<int>(v->id()));
+                        data.set_parent_id(*nit, static_cast<signed_size_type>(v->id()));
                         stack.push(*nit);
                     }
                 }
@@ -173,7 +175,7 @@ public:
 
     // inserts a ring vertex in the graph and returns its handle
     // ring id's are zero-based (so the first interior ring has id 1)
-    inline vertex_handle add_vertex(int id)
+    inline vertex_handle add_vertex(signed_size_type id)
     {
         return m_vertices.insert(vertex(static_cast<std::size_t>(id))).first;
     }
@@ -197,8 +199,8 @@ public:
 
     inline void add_edge(vertex_handle v1, vertex_handle v2)
     {
-        BOOST_ASSERT( v1 != m_vertices.end() );
-        BOOST_ASSERT( v2 != m_vertices.end() );
+        BOOST_GEOMETRY_ASSERT( v1 != m_vertices.end() );
+        BOOST_GEOMETRY_ASSERT( v2 != m_vertices.end() );
         m_neighbors[v1->id()].insert(v2);
         m_neighbors[v2->id()].insert(v1);
     }
@@ -221,9 +223,11 @@ public:
         return false;
     }
 
+#ifdef BOOST_GEOMETRY_TEST_DEBUG
     template <typename OStream, typename TP>
     friend inline
     void debug_print_complement_graph(OStream&, complement_graph<TP> const&);
+#endif // BOOST_GEOMETRY_TEST_DEBUG
 
 private:
     std::size_t m_num_rings, m_num_turns;

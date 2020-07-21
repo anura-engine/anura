@@ -27,6 +27,7 @@
 #include <boost/accumulators/statistics/tail_variate.hpp>
 #include <boost/accumulators/statistics/tail_mean.hpp>
 #include <boost/accumulators/statistics/parameters/quantile_probability.hpp>
+#include <boost/serialization/vector.hpp>
 
 #ifdef _MSC_VER
 # pragma warning(push)
@@ -118,7 +119,11 @@ namespace impl
                     this->tail_means_.begin()
                   , this->tail_means_.end()
                   , this->tail_means_.begin()
+#ifdef BOOST_NO_CXX98_BINDERS
+                  , std::bind(std::divides<float_type>(), std::placeholders::_1, factor)
+#else
                   , std::bind2nd(std::divides<float_type>(), factor)
+#endif
                 );
             }
             else
@@ -139,6 +144,13 @@ namespace impl
                 }
             }
             return make_iterator_range(this->tail_means_);
+        }
+
+        // make this accumulator serializeable
+        template<class Archive>
+        void serialize(Archive & ar, const unsigned int file_version)
+        { 
+            ar & tail_means_;
         }
 
     private:

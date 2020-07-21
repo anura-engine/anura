@@ -12,13 +12,11 @@
 #ifndef BOOST_BIMAP_CONTAINER_ADAPTOR_DETAIL_KEY_EXTRACTOR_HPP
 #define BOOST_BIMAP_CONTAINER_ADAPTOR_DETAIL_KEY_EXTRACTOR_HPP
 
-#if defined(_MSC_VER) && (_MSC_VER>=1200)
+#if defined(_MSC_VER)
 #pragma once
 #endif
 
 #include <boost/config.hpp>
-
-#include <functional>
 
 namespace boost {
 namespace bimaps {
@@ -29,9 +27,11 @@ namespace detail {
 
 template < class T >
 struct key_from_pair_extractor 
-    : std::unary_function< T, BOOST_DEDUCED_TYPENAME T::first_type >
 {
-    bool operator()( const T & p ) { return p.first; }
+    typedef T argument_type;
+    typedef BOOST_DEDUCED_TYPENAME T::first_type result_type;
+
+    result_type operator()( const T & p ) { return p.first; }
 };
 
 } // namespace detail

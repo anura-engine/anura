@@ -18,6 +18,7 @@
 #include <boost/spirit/home/lex/lexer/lexertl/wrap_action.hpp>
 #include <boost/mpl/bool.hpp>
 #include <boost/algorithm/string/predicate.hpp>
+#include <iterator> // for std::iterator_traits
 
 namespace boost { namespace spirit { namespace lex { namespace lexertl
 { 
@@ -48,7 +49,7 @@ namespace boost { namespace spirit { namespace lex { namespace lexertl
         {
         protected:
             typedef typename 
-                boost::detail::iterator_traits<Iterator>::value_type 
+                std::iterator_traits<Iterator>::value_type 
             char_type;
 
         public:
@@ -208,9 +209,8 @@ namespace boost { namespace spirit { namespace lex { namespace lexertl
 
             bool bol_;      // helper storing whether last character was \n
 
-        private:
             // silence MSVC warning C4512: assignment operator could not be generated
-            static_data& operator= (static_data const&);
+            BOOST_DELETED_FUNCTION(static_data& operator= (static_data const&))
         };
 
         ///////////////////////////////////////////////////////////////////////
@@ -283,9 +283,8 @@ namespace boost { namespace spirit { namespace lex { namespace lexertl
             std::size_t state_;
             std::size_t num_states_;
 
-        private:
             // silence MSVC warning C4512: assignment operator could not be generated
-            static_data& operator= (static_data const&);
+            BOOST_DELETED_FUNCTION(static_data& operator= (static_data const&))
         };
 
         ///////////////////////////////////////////////////////////////////////
@@ -422,9 +421,8 @@ namespace boost { namespace spirit { namespace lex { namespace lexertl
             mutable bool has_value_;    // 'true' if value_ is valid
             bool has_hold_;     // 'true' if hold_ is valid
 
-        private:
             // silence MSVC warning C4512: assignment operator could not be generated
-            static_data& operator= (static_data const&);
+            BOOST_DELETED_FUNCTION(static_data& operator= (static_data const&))
         };
 
         ///////////////////////////////////////////////////////////////////////
@@ -562,9 +560,8 @@ namespace boost { namespace spirit { namespace lex { namespace lexertl
             mutable bool has_value_;    // 'true' if value_ is valid
             bool has_hold_;     // 'true' if hold_ is valid
 
-        private:
             // silence MSVC warning C4512: assignment operator could not be generated
-            static_data& operator= (static_data const&);
+            BOOST_DELETED_FUNCTION(static_data& operator= (static_data const&))
         };
     }
 }}}}

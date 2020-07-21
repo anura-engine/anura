@@ -3,6 +3,7 @@
 // Copyright (c) 2007-2012 Barend Gehrels, Amsterdam, the Netherlands.
 // Copyright (c) 2008-2012 Bruno Lalande, Paris, France.
 // Copyright (c) 2009-2012 Mateusz Loskot, London, UK.
+// Copyright (c) 2014-2018 Adam Wulkiewicz, Lodz, Poland.
 
 // Parts of Boost.Geometry are redesigned from Geodan's Geographic Library
 // (geolib/GGL), copyright (c) 1995-2010 Geodan, Amsterdam, the Netherlands.
@@ -26,6 +27,11 @@
 #include <boost/geometry/geometries/concepts/point_concept.hpp>
 #include <boost/geometry/geometries/ring.hpp>
 
+#include <boost/config.hpp>
+#ifndef BOOST_NO_CXX11_HDR_INITIALIZER_LIST
+#include <initializer_list>
+#endif
+
 namespace boost { namespace geometry
 {
 
@@ -41,14 +47,15 @@ namespace model
 \tparam Closed true for closed polygons (last point == first point),
             false open points
 \tparam PointList container type for points,
-            for example std::vector, std::list, std::deque
+            for example std::vector, std::deque
 \tparam RingList container type for inner rings,
-            for example std::vector, std::list, std::deque
+            for example std::vector, std::deque
 \tparam PointAlloc container-allocator-type, for the points
 \tparam RingAlloc container-allocator-type, for the rings
 \note The container collecting the points in the rings can be different
     from the container collecting the inner rings. They all default to vector.
 
+\qbk{[include reference/geometries/polygon.qbk]}
 \qbk{before.synopsis,
 [heading Model of]
 [link geometry.reference.concepts.concept_polygon Polygon Concept]
@@ -68,7 +75,7 @@ template
 >
 class polygon
 {
-    BOOST_CONCEPT_ASSERT( (concept::Point<Point>) );
+    BOOST_CONCEPT_ASSERT( (concepts::Point<Point>) );
 
 public:
 
@@ -82,6 +89,47 @@ public:
 
     inline ring_type& outer() { return m_outer; }
     inline inner_container_type & inners() { return m_inners; }
+
+#ifndef BOOST_NO_CXX11_HDR_INITIALIZER_LIST
+
+    // default constructor definition is required only
+    // if the constructor taking std::initializer_list is defined
+
+    /// \constructor_default{polygon}
+    inline polygon()
+        : m_outer()
+        , m_inners()
+    {}
+
+    /// \constructor_initializer_list{polygon}
+    inline polygon(std::initializer_list<ring_type> l)
+        : m_outer(l.size() > 0 ? *l.begin() : ring_type())
+        , m_inners(l.size() > 0 ? l.begin() + 1 : l.begin(), l.end())
+    {}
+
+// Commented out for now in order to support Boost.Assign
+// Without this assignment operator first the object should be created
+//   from initializer list, then it shoudl be moved.
+//// Without this workaround in MSVC the assignment operator is ambiguous
+//#ifndef BOOST_MSVC
+//    /// \assignment_initializer_list{polygon}
+//    inline polygon & operator=(std::initializer_list<ring_type> l)
+//    {
+//        if ( l.size() > 0 )
+//        {
+//            m_outer = *l.begin();
+//            m_inners.assign(l.begin() + 1, l.end());
+//        }
+//        else
+//        {
+//            m_outer.clear();
+//            m_inners.clear();
+//        }
+//        return *this;
+//    }
+//#endif
+
+#endif
 
     /// Utility method, clears outer and inner rings
     inline void clear()

@@ -1,11 +1,15 @@
 // Boost.Geometry (aka GGL, Generic Geometry Library)
 
-// Copyright (c) 2014, Oracle and/or its affiliates.
+// Copyright (c) 2017 Adam Wulkiewicz, Lodz, Poland.
+
+// Copyright (c) 2014-2017, Oracle and/or its affiliates.
+
+// Contributed and/or modified by Menelaos Karavelas, on behalf of Oracle
+// Contributed and/or modified by Adam Wulkiewicz, on behalf of Oracle
 
 // Licensed under the Boost Software License version 1.0.
 // http://www.boost.org/users/license.html
 
-// Contributed and/or modified by Menelaos Karavelas, on behalf of Oracle
 
 #ifndef BOOST_GEOMETRY_ALGORITHMS_DETAIL_OVERLAY_FOLLOW_LINEAR_LINEAR_HPP
 #define BOOST_GEOMETRY_ALGORITHMS_DETAIL_OVERLAY_FOLLOW_LINEAR_LINEAR_HPP
@@ -14,14 +18,16 @@
 #include <algorithm>
 #include <iterator>
 
-#include <boost/assert.hpp>
 #include <boost/range.hpp>
+#include <boost/throw_exception.hpp>
 
+#include <boost/geometry/core/assert.hpp>
 #include <boost/geometry/core/tag.hpp>
 #include <boost/geometry/core/tags.hpp>
 
 #include <boost/geometry/algorithms/detail/overlay/copy_segments.hpp>
 #include <boost/geometry/algorithms/detail/overlay/follow.hpp>
+#include <boost/geometry/algorithms/detail/overlay/inconsistent_turns_exception.hpp>
 #include <boost/geometry/algorithms/detail/overlay/overlay_type.hpp>
 #include <boost/geometry/algorithms/detail/overlay/segment_identifier.hpp>
 #include <boost/geometry/algorithms/detail/overlay/turn_info.hpp>
@@ -34,7 +40,6 @@
 
 namespace boost { namespace geometry
 {
-
 
 #ifndef DOXYGEN_NO_DETAIL
 namespace detail { namespace overlay
@@ -125,7 +130,7 @@ static inline bool is_isolated_point(Turn const& turn,
 
     if ( turn.method == method_none )
     {
-        BOOST_ASSERT( operation.operation == operation_continue );
+        BOOST_GEOMETRY_ASSERT( operation.operation == operation_continue );
         return true;
     }
 
@@ -180,7 +185,8 @@ protected:
         typename TurnIterator,
         typename TurnOperationIterator,
         typename SegmentIdentifier,
-        typename OutputIterator
+        typename OutputIterator,
+        typename SideStrategy
     >
     static inline OutputIterator
     process_turn(TurnIterator it,
@@ -190,7 +196,8 @@ protected:
                  Linestring const& linestring,
                  LinestringOut& current_piece,
                  SegmentIdentifier& current_segment_id,
-                 OutputIterator oit)
+                 OutputIterator oit,
+                 SideStrategy const& strategy)
     {
         // We don't rescale linear/linear
         detail::no_rescale_policy robust_policy;
@@ -205,7 +212,7 @@ protected:
                 action::enter(current_piece, linestring,
                               current_segment_id,
                               op_it->seg_id.segment_index,
-                              it->point, *op_it, robust_policy, oit);
+                              it->point, *op_it, strategy, robust_policy, oit);
             }
             ++enter_count;
         }
@@ -220,7 +227,7 @@ protected:
                 action::leave(current_piece, linestring,
                               current_segment_id,
                               op_it->seg_id.segment_index,
-                              it->point, *op_it, robust_policy, oit);
+                              it->point, *op_it, strategy, robust_policy, oit);
             }
         }
         else if ( FollowIsolatedPoints
@@ -246,14 +253,16 @@ protected:
     template
     <
         typename SegmentIdentifier,
-        typename OutputIterator
+        typename OutputIterator,
+        typename SideStrategy
     >
     static inline OutputIterator
     process_end(bool entered,
                 Linestring const& linestring,
                 SegmentIdentifier const& current_segment_id,
                 LinestringOut& current_piece,
-                OutputIterator oit)
+                OutputIterator oit,
+                SideStrategy const& strategy)
     {
         if ( action::is_entered(entered) )
         {
@@ -263,8 +272,11 @@ protected:
             detail::copy_segments::copy_segments_linestring
                 <
                     false, false // do not reverse; do not remove spikes
-                >::apply(linestring, current_segment_id,
-                         boost::size(linestring) - 1, robust_policy,
+                >::apply(linestring,
+                         current_segment_id,
+                         static_cast<signed_size_type>(boost::size(linestring) - 1),
+                         strategy,
+                         robust_policy,
                          current_piece);
         }
 
@@ -278,11 +290,12 @@ protected:
     }
 
 public:
-    template <typename TurnIterator, typename OutputIterator>
+    template <typename TurnIterator, typename OutputIterator, typename SideStrategy>
     static inline OutputIterator
     apply(Linestring const& linestring, Linear const&,
           TurnIterator first, TurnIterator beyond,
-          OutputIterator oit)
+          OutputIterator oit,
+          SideStrategy const& strategy)
     {
         // Iterate through all intersection points (they are
         // ordered along the each line)
@@ -299,14 +312,23 @@ public:
                                entered, enter_count, 
                                linestring,
                                current_piece, current_segment_id,
-                               oit);
+                               oit,
+                               strategy);
         }
 
-        BOOST_ASSERT( enter_count == 0 );
+#if ! defined(BOOST_GEOMETRY_OVERLAY_NO_THROW)
+        if (enter_count != 0)
+        {
+            BOOST_THROW_EXCEPTION(inconsistent_turns_exception());
+        }
+#else
+        BOOST_GEOMETRY_ASSERT(enter_count == 0);
+#endif
 
         return process_end(entered, linestring,
                            current_segment_id, current_piece,
-                           oit);
+                           oit,
+                           strategy);
     }
 };
 
@@ -378,7 +400,7 @@ protected:
     };
 
     template <typename TurnIterator>
-    static inline int get_multi_index(TurnIterator it)
+    static inline signed_size_type get_multi_index(TurnIterator it)
     {
         return boost::begin(it->operations)->seg_id.multi_index;
     }
@@ -386,10 +408,10 @@ protected:
     class has_other_multi_id
     {
     private:
-        int m_multi_id;
+        signed_size_type m_multi_id;
 
     public:
-        has_other_multi_id(int multi_id)
+        has_other_multi_id(signed_size_type multi_id)
             : m_multi_id(multi_id) {}
 
         template <typename Turn>
@@ -401,13 +423,14 @@ protected:
     };
 
 public:
-    template <typename TurnIterator, typename OutputIterator>
+    template <typename TurnIterator, typename OutputIterator, typename SideStrategy>
     static inline OutputIterator
     apply(MultiLinestring const& multilinestring, Linear const& linear,
           TurnIterator first, TurnIterator beyond,
-          OutputIterator oit)
+          OutputIterator oit,
+          SideStrategy const& strategy)
     {
-        BOOST_ASSERT( first != beyond );
+        BOOST_GEOMETRY_ASSERT( first != beyond );
 
         typedef copy_linestrings_in_range
             <
@@ -420,7 +443,7 @@ public:
         // Iterate through all intersection points (they are
         // ordered along the each linestring)
 
-        int current_multi_id = get_multi_index(first);
+        signed_size_type current_multi_id = get_multi_index(first);
 
         oit = copy_linestrings::apply(ls_first,
                                       ls_first + current_multi_id,
@@ -435,9 +458,9 @@ public:
                                        has_other_multi_id(current_multi_id));
 
             oit = Base::apply(*(ls_first + current_multi_id),
-                              linear, per_ls_current, per_ls_next, oit);
+                              linear, per_ls_current, per_ls_next, oit, strategy);
 
-            int next_multi_id(-1);
+            signed_size_type next_multi_id = -1;
             linestring_iterator ls_next = ls_beyond;
             if ( per_ls_next != beyond )
             {

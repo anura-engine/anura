@@ -12,7 +12,10 @@
 
 #include <boost/array.hpp>
 
+#include <boost/geometry/core/coordinate_type.hpp>
+#include <boost/geometry/algorithms/detail/signed_size_type.hpp>
 #include <boost/geometry/algorithms/detail/overlay/segment_identifier.hpp>
+#include <boost/geometry/algorithms/detail/overlay/overlay_type.hpp>
 
 namespace boost { namespace geometry
 {
@@ -20,18 +23,6 @@ namespace boost { namespace geometry
 #ifndef DOXYGEN_NO_DETAIL
 namespace detail { namespace overlay
 {
-
-
-enum operation_type
-{
-    operation_none,
-    operation_union,
-    operation_intersection,
-    operation_blocked,
-    operation_continue,
-    operation_opposite
-};
-
 
 enum method_type
 {
@@ -42,6 +33,7 @@ enum method_type
     method_touch_interior,
     method_collinear,
     method_equal,
+    method_start,
     method_error
 };
 
@@ -54,16 +46,21 @@ enum method_type
         The class is to be included in the turn_info class, either direct
         or a derived or similar class with more (e.g. enrichment) information.
  */
-template <typename SegmentRatio>
+template <typename Point, typename SegmentRatio>
 struct turn_operation
 {
+    typedef SegmentRatio segment_ratio_type;
+
     operation_type operation;
     segment_identifier seg_id;
-    segment_identifier other_id;
     SegmentRatio fraction;
+
+    typedef typename coordinate_type<Point>::type comparable_distance_type;
+    comparable_distance_type remaining_distance;
 
     inline turn_operation()
         : operation(operation_none)
+        , remaining_distance(0)
     {}
 };
 
@@ -81,27 +78,31 @@ template
 <
     typename Point,
     typename SegmentRatio,
-    typename Operation = turn_operation<SegmentRatio>,
+    typename Operation = turn_operation<Point, SegmentRatio>,
     typename Container = boost::array<Operation, 2>
 >
 struct turn_info
 {
     typedef Point point_type;
+    typedef SegmentRatio segment_ratio_type;
     typedef Operation turn_operation_type;
     typedef Container container_type;
 
     Point point;
     method_type method;
+    bool touch_only; // True in case of method touch(interior) and lines do not cross
+    signed_size_type cluster_id; // For multiple turns on same location, > 0. Else -1. 0 is unused.
     bool discarded;
-    bool selectable_start; // Can be used as starting-turn in traverse
-
+    bool has_colocated_both; // Colocated with a uu turn (for union) or ii (other)
 
     Container operations;
 
     inline turn_info()
         : method(method_none)
+        , touch_only(false)
+        , cluster_id(-1)
         , discarded(false)
-        , selectable_start(true)
+        , has_colocated_both(false)
     {}
 
     inline bool both(operation_type type) const
@@ -132,7 +133,10 @@ struct turn_info
     {
         return has(operation_blocked);
     }
-
+    inline bool is_clustered() const
+    {
+        return cluster_id > 0;
+    }
 
 private :
     inline bool has12(operation_type type1, operation_type type2) const

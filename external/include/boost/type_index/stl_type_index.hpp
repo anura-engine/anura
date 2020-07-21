@@ -1,5 +1,5 @@
 //
-// Copyright (c) Antony Polukhin, 2013-2014.
+// Copyright (c) 2013-2019 Antony Polukhin.
 //
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
@@ -27,33 +27,31 @@
 #endif
 
 #include <typeinfo>
-#include <cstring>                                  // std::strcmp, std::strlen
+#include <cstring>                                  // std::strcmp, std::strlen, std::strstr
+#include <stdexcept>
 #include <boost/static_assert.hpp>
+#include <boost/throw_exception.hpp>
+#include <boost/core/demangle.hpp>
+#include <boost/type_traits/conditional.hpp>
 #include <boost/type_traits/is_const.hpp>
 #include <boost/type_traits/is_reference.hpp>
 #include <boost/type_traits/is_volatile.hpp>
 #include <boost/type_traits/remove_cv.hpp>
 #include <boost/type_traits/remove_reference.hpp>
-#include <boost/mpl/if.hpp>
-#include <boost/mpl/or.hpp>
-#include <boost/functional/hash_fwd.hpp>
 
-
-#ifdef __GNUC__
-#   include <cxxabi.h>                              // abi::__cxa_demangle
-#endif
-
-#if !defined(BOOST_MSVC)
-#   include <boost/assert.hpp>
-#   include <cstdlib>                           // std::free
-#   include <algorithm>                         // std::find, std::search
+#if (defined(_MSC_VER) && _MSC_VER > 1600) \
+    || (defined(__GNUC__) && __GNUC__ == 4 && __GNUC_MINOR__ > 5 && defined(__GXX_EXPERIMENTAL_CXX0X__)) \
+    || (defined(__GNUC__) && __GNUC__ > 4 && __cplusplus >= 201103)
+#   define BOOST_TYPE_INDEX_STD_TYPE_INDEX_HAS_HASH_CODE
+#else
+#   include <boost/container_hash/hash.hpp>
 #endif
 
 #if (defined(__EDG_VERSION__) && __EDG_VERSION__ < 245) \
         || (defined(__sgi) && defined(_COMPILER_VERSION) && _COMPILER_VERSION <= 744)
 #   include <boost/type_traits/is_signed.hpp>
 #   include <boost/type_traits/make_signed.hpp>
-#   include <boost/mpl/identity.hpp>
+#   include <boost/type_traits/type_identity.hpp>
 #endif
 
 #ifdef BOOST_HAS_PRAGMA_ONCE
@@ -133,66 +131,49 @@ inline const char* stl_type_index::name() const BOOST_NOEXCEPT {
     return data_->name();
 }
 
-namespace detail {
-    class free_at_scope_exit {
-        char* to_free_;
-
-    public:
-        explicit free_at_scope_exit(char* to_free) BOOST_NOEXCEPT
-            : to_free_(to_free)
-        {}
-
-        ~free_at_scope_exit() BOOST_NOEXCEPT {
-            std::free(to_free_);
-        }
-    };
-}
-
 inline std::string stl_type_index::pretty_name() const {
     static const char cvr_saver_name[] = "boost::typeindex::detail::cvr_saver<";
+    static BOOST_CONSTEXPR_OR_CONST std::string::size_type cvr_saver_name_len = sizeof(cvr_saver_name) - 1;
 
-#if defined(_MSC_VER)
-    std::string ret = data_->name();
-    std::string::size_type pos_beg = ret.find(cvr_saver_name);
-    if (pos_beg == std::string::npos) {
-        return ret;
+    // In case of MSVC demangle() is a no-op, and name() already returns demangled name.
+    // In case of GCC and Clang (on non-Windows systems) name() returns mangled name and demangle() undecorates it.
+    const boost::core::scoped_demangled_name demangled_name(data_->name());
+
+    const char* begin = demangled_name.get();
+    if (!begin) {
+        boost::throw_exception(std::runtime_error("Type name demangling failed"));
     }
 
-    const char* begin = ret.c_str() + pos_beg + sizeof(cvr_saver_name) - 1;
-    const char* end = ret.c_str() + ret.size() - 1;
-#else
-    int status = 0;
-    char* demang = abi::__cxa_demangle(raw_name(), NULL, 0, &status);
-    detail::free_at_scope_exit scope(demang);
-    BOOST_ASSERT(!status);
-    const std::size_t length = std::strlen(demang);
-    const char* begin = std::search(
-        demang, demang + length,
-        cvr_saver_name, cvr_saver_name + sizeof(cvr_saver_name) - 1
-    );
+    const std::string::size_type len = std::strlen(begin);
+    const char* end = begin + len;
 
-    if (begin == demang + length) {
-        return std::string(demang, demang + length);
-    }
-    begin += sizeof(cvr_saver_name) - 1;
-    const char* end = demang + length - 1;
-#endif
-    while (*begin == ' ') {         // begin is zero terminated
-        ++ begin;
-    }
+    if (len > cvr_saver_name_len) {
+        const char* b = std::strstr(begin, cvr_saver_name);
+        if (b) {
+            b += cvr_saver_name_len;
 
-    while (end != begin && *end != '>') {
-        -- end;
-    }
+            // Trim leading spaces
+            while (*b == ' ') {         // the string is zero terminated, we won't exceed the buffer size
+                ++ b;
+            }
 
-    // we have cvr_saver_name somewhere at the start of the end
-    while (end != begin && *(end - 1) == ' ') {
-        -- end;
-    }
+            // Skip the closing angle bracket
+            const char* e = end - 1;
+            while (e > b && *e != '>') {
+                -- e;
+            }
 
-    if (begin >= end) {
-        // Some strange error in demangled name parsing
-        return begin;
+            // Trim trailing spaces
+            while (e > b && *(e - 1) == ' ') {
+                -- e;
+            }
+
+            if (b < e) {
+                // Parsing seems to have succeeded, the type name is not empty
+                begin = b;
+                end = e;
+            }
+        }
     }
 
     return std::string(begin, end);
@@ -200,11 +181,11 @@ inline std::string stl_type_index::pretty_name() const {
 
 
 inline std::size_t stl_type_index::hash_code() const BOOST_NOEXCEPT {
-#if _MSC_VER > 1600 || (__GNUC__ == 4 && __GNUC_MINOR__ > 5 && defined(__GXX_EXPERIMENTAL_CXX0X__))
+#ifdef BOOST_TYPE_INDEX_STD_TYPE_INDEX_HAS_HASH_CODE
     return data_->hash_code();
-#else 
+#else
     return boost::hash_range(raw_name(), raw_name() + std::strlen(raw_name()));
-#endif 
+#endif
 }
 
 
@@ -217,31 +198,28 @@ inline std::size_t stl_type_index::hash_code() const BOOST_NOEXCEPT {
     || (defined(__sgi) && defined(__host_mips)) \
     || (defined(__hpux) && defined(__HP_aCC)) \
     || (defined(linux) && defined(__INTEL_COMPILER) && defined(__ICC))
-#  define BOOST_CLASSINFO_COMPARE_BY_NAMES
+#  define BOOST_TYPE_INDEX_CLASSINFO_COMPARE_BY_NAMES
 # endif
 
 /// @endcond
 
 inline bool stl_type_index::equal(const stl_type_index& rhs) const BOOST_NOEXCEPT {
-#ifdef BOOST_CLASSINFO_COMPARE_BY_NAMES
+#ifdef BOOST_TYPE_INDEX_CLASSINFO_COMPARE_BY_NAMES
     return raw_name() == rhs.raw_name() || !std::strcmp(raw_name(), rhs.raw_name());
 #else
-    return *data_ == *rhs.data_;
+    return !!(*data_ == *rhs.data_);
 #endif
 }
 
 inline bool stl_type_index::before(const stl_type_index& rhs) const BOOST_NOEXCEPT {
-#ifdef BOOST_CLASSINFO_COMPARE_BY_NAMES
+#ifdef BOOST_TYPE_INDEX_CLASSINFO_COMPARE_BY_NAMES
     return raw_name() != rhs.raw_name() && std::strcmp(raw_name(), rhs.raw_name()) < 0;
 #else
     return !!data_->before(*rhs.data_);
 #endif
 }
 
-#ifdef BOOST_CLASSINFO_COMPARE_BY_NAMES
-#undef BOOST_CLASSINFO_COMPARE_BY_NAMES
-#endif
-
+#undef BOOST_TYPE_INDEX_CLASSINFO_COMPARE_BY_NAMES
 
 
 template <class T>
@@ -253,11 +231,11 @@ inline stl_type_index stl_type_index::type_id() BOOST_NOEXCEPT {
         || (defined(__sgi) && defined(_COMPILER_VERSION) && _COMPILER_VERSION <= 744)
 
         // Old EDG-based compilers seem to mistakenly distinguish 'integral' from 'signed integral'
-        // in typeid() expressions. Full temaplte specialization for 'integral' fixes that issue:
-        typedef BOOST_DEDUCED_TYPENAME boost::mpl::if_<
-            boost::is_signed<no_cvr_prefinal_t>,
+        // in typeid() expressions. Full template specialization for 'integral' fixes that issue:
+        typedef BOOST_DEDUCED_TYPENAME boost::conditional<
+            boost::is_signed<no_cvr_prefinal_t>::value,
             boost::make_signed<no_cvr_prefinal_t>,
-            boost::mpl::identity<no_cvr_prefinal_t>
+            boost::type_identity<no_cvr_prefinal_t>
         >::type no_cvr_prefinal_lazy_t;
 
         typedef BOOST_DEDUCED_TYPENAME no_cvr_prefinal_t::type no_cvr_t;
@@ -274,8 +252,8 @@ namespace detail {
 
 template <class T>
 inline stl_type_index stl_type_index::type_id_with_cvr() BOOST_NOEXCEPT {
-    typedef BOOST_DEDUCED_TYPENAME boost::mpl::if_<
-        boost::mpl::or_<boost::is_reference<T>, boost::is_const<T>, boost::is_volatile<T> >,
+    typedef BOOST_DEDUCED_TYPENAME boost::conditional<
+        boost::is_reference<T>::value ||  boost::is_const<T>::value || boost::is_volatile<T>::value,
         detail::cvr_saver<T>,
         T
     >::type type;
@@ -286,7 +264,7 @@ inline stl_type_index stl_type_index::type_id_with_cvr() BOOST_NOEXCEPT {
 
 template <class T>
 inline stl_type_index stl_type_index::type_id_runtime(const T& value) BOOST_NOEXCEPT {
-#ifdef BOOST_NO_RTTI 
+#ifdef BOOST_NO_RTTI
     return value.boost_type_index_type_id_runtime_();
 #else
     return typeid(value);
@@ -295,6 +273,6 @@ inline stl_type_index stl_type_index::type_id_runtime(const T& value) BOOST_NOEX
 
 }} // namespace boost::typeindex
 
+#undef BOOST_TYPE_INDEX_STD_TYPE_INDEX_HAS_HASH_CODE
 
 #endif // BOOST_TYPE_INDEX_STL_TYPE_INDEX_HPP
-

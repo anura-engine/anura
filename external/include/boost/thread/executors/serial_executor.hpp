@@ -10,15 +10,23 @@
 #define BOOST_THREAD_SERIAL_EXECUTOR_HPP
 
 #include <boost/thread/detail/config.hpp>
+#if defined BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION && defined BOOST_THREAD_PROVIDES_EXECUTORS && defined BOOST_THREAD_USES_MOVE
+
+#include <exception>
 #include <boost/thread/detail/delete.hpp>
 #include <boost/thread/detail/move.hpp>
-#include <boost/thread/sync_queue.hpp>
+#include <boost/thread/concurrent_queues/sync_queue.hpp>
 #include <boost/thread/executors/work.hpp>
-#include <boost/thread/executors/executor.hpp>
+#include <boost/thread/executors/generic_executor_ref.hpp>
 #include <boost/thread/future.hpp>
 #include <boost/thread/scoped_thread.hpp>
 
 #include <boost/config/abi_prefix.hpp>
+
+#if defined(BOOST_MSVC)
+# pragma warning(push)
+# pragma warning(disable: 4355) // 'this' : used in base member initializer list
+#endif
 
 namespace boost
 {
@@ -33,8 +41,8 @@ namespace executors
     typedef  scoped_thread<> thread_t;
 
     /// the thread safe work queue
-    sync_queue<work > work_queue;
-    executor& ex;
+    concurrent::sync_queue<work > work_queue;
+    generic_executor_ref ex;
     thread_t thr;
 
     struct try_executing_one_task {
@@ -43,11 +51,22 @@ namespace executors
       try_executing_one_task(work& task, boost::promise<void> &p)
       : task(task), p(p) {}
       void operator()() {
-        task(); // if task() throws promise is not set but as the the program terminates and should terminate there is no need to use try-catch here.
-        p.set_value();
+        try {
+          task();
+          p.set_value();
+        } catch (...)
+        {
+          p.set_exception(current_exception());
+        }
       }
     };
   public:
+    /**
+     * \par Returns
+     * The underlying executor wrapped on a generic executor reference.
+     */
+    generic_executor_ref& underlying_executor() BOOST_NOEXCEPT { return ex; }
+
     /**
      * Effects: try to execute one task.
      * Returns: whether a task has been executed.
@@ -58,28 +77,20 @@ namespace executors
       work task;
       try
       {
-        if (work_queue.try_pull_front(task) == queue_op_status::success)
+        if (work_queue.try_pull(task) == queue_op_status::success)
         {
           boost::promise<void> p;
           try_executing_one_task tmp(task,p);
           ex.submit(tmp);
-//          ex.submit([&task, &p]()
-//          {
-//            task(); // if task() throws promise is not set but as the the program terminates and should terminate there is no need to use try-catch here.
-//            p.set_value();
-//          });
           p.get_future().wait();
           return true;
         }
         return false;
       }
-      catch (std::exception& )
-      {
-        return false;
-      }
       catch (...)
       {
-        return false;
+        std::terminate();
+        //return false;
       }
     }
   private:
@@ -118,7 +129,8 @@ namespace executors
      *
      * \b Throws: Whatever exception is thrown while initializing the needed resources.
      */
-    serial_executor(executor& ex)
+    template <class Executor>
+    serial_executor(Executor& ex)
     : ex(ex), thr(&serial_executor::worker_thread, this)
     {
     }
@@ -129,7 +141,7 @@ namespace executors
      */
     ~serial_executor()
     {
-      // signal to all the worker thread that there will be no more submissions.
+      // signal to the worker thread that there will be no more submissions.
       close();
     }
 
@@ -161,29 +173,28 @@ namespace executors
      * \b Throws: \c sync_queue_is_closed if the thread pool is closed.
      * Whatever exception that can be throw while storing the closure.
      */
+    void submit(BOOST_THREAD_RV_REF(work) closure)
+    {
+      work_queue.push(boost::move(closure));
+    }
 
 #if defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
     template <typename Closure>
     void submit(Closure & closure)
     {
-      work w ((closure));
-      work_queue.push_back(boost::move(w));
-      //work_queue.push(work(closure)); // todo check why this doesn't work
+      submit(work(closure));
     }
 #endif
     void submit(void (*closure)())
     {
-      work w ((closure));
-      work_queue.push_back(boost::move(w));
-      //work_queue.push_back(work(closure)); // todo check why this doesn't work
+      submit(work(closure));
     }
 
     template <typename Closure>
-    void submit(BOOST_THREAD_RV_REF(Closure) closure)
+    void submit(BOOST_THREAD_FWD_REF(Closure) closure)
     {
-      work w =boost::move(closure);
-      work_queue.push_back(boost::move(w));
-      //work_queue.push_back(work(boost::move(closure))); // todo check why this doesn't work
+      work w((boost::forward<Closure>(closure)));
+      submit(boost::move(w));
     }
 
     /**
@@ -208,6 +219,11 @@ namespace executors
 using executors::serial_executor;
 }
 
+#if defined(BOOST_MSVC)
+# pragma warning(pop)
+#endif
+
 #include <boost/config/abi_suffix.hpp>
 
+#endif
 #endif

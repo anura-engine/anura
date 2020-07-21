@@ -84,7 +84,7 @@ namespace boost
 //          number = {1},
 //          year = {2006},
 //          pages = {28-42}
-//          ee = {http://dx.doi.org/10.1016/j.tcs.2006.06.015}
+//          ee = {https://doi.org/10.1016/j.tcs.2006.06.015}
 //      }
 
 /**

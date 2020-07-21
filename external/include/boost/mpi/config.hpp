@@ -20,14 +20,45 @@
 #include <mpi.h>
 #include <boost/config.hpp>
 
-/** @brief Define this macro to avoid expensice MPI_Pack/Unpack calls on 
- *  homogeneous machines.
-*/
-//#define BOOST_MPI_HOMOGENEOUS
+/** @brief Comment this macro is you are running in an heterogeneous environment.
+ *
+ * When this flag is enabled, we assume some simple, POD-like, type can be 
+ * transmitted without paying the cost of portable serialization. 
+ *
+ * Comment this if your platform is not homogeneous and that portable 
+ * serialization/deserialization must be performed.
+ *
+ * It you do so, check that your MPI implementation supports thats kind of environment.
+ */
+#define BOOST_MPI_HOMOGENEOUS
+
+#if defined MPI_VERSION
+/** @brief Major version of the underlying MPI implementation supproted standard.
+ * 
+ * If, for some reason, MPI_VERSION is not supported, you should probably set that
+ * according to your MPI documentation
+ */
+# define BOOST_MPI_VERSION MPI_VERSION
+#else 
+// assume a safe default
+# define BOOST_MPI_VERSION 2
+#endif
+
+#if defined MPI_SUBVERSION
+/** @brief Major version of the underlying MPI implementation supproted standard.
+ * 
+ * If, for some reason, MPI_SUBVERSION is not supported, you should probably set that
+ * according to your MPI documentation
+ */
+# define BOOST_MPI_SUBVERSION MPI_SUBVERSION
+#else 
+// assume a safe default
+# define BOOST_MPI_SUBVERSION 2
+#endif
 
 // If this is an MPI-2 implementation, define configuration macros for
 // the features we are interested in.
-#if defined(MPI_VERSION) && MPI_VERSION >= 2
+#if BOOST_MPI_VERSION >= 2
 /** @brief Determine if the MPI implementation has support for memory
  *  allocation.
  *
@@ -50,7 +81,7 @@
 #  define BOOST_MPI_HAS_NOARG_INITIALIZATION
 #else
 // If this is an MPI-1.x implementation, no arg initialization for
-// mpi environement could still be available, but not mandatory.
+// mpi environment could still be available, but not mandatory.
 // Undef this if no arg init is available:
 //#  define BOOST_MPI_HAS_NOARG_INITIALIZATION
 #endif
@@ -71,12 +102,27 @@
 #  define BOOST_MPI_CALLING_CONVENTION
 #endif
 
+/** @brief Indicates that MPI_Bcast supports MPI_BOTTOM.
+ *
+ * Some implementations have a broken MPI_Bcast wrt to MPI_BOTTOM.
+ * BullX MPI and LAM seems to be among them, at least for some versions.
+ * The `broacast_test.cpp` test `test_skeleton_and_content` can be used to 
+ * detect that.
+ */
+#define BOOST_MPI_BCAST_BOTTOM_WORKS_FINE
+
 #if defined(LAM_MPI)
 // Configuration for LAM/MPI
 #  define BOOST_MPI_HAS_MEMORY_ALLOCATION
 #  define BOOST_MPI_HAS_NOARG_INITIALIZATION
+#  undef  BOOST_MPI_BCAST_BOTTOM_WORKS_FINE
 #elif defined(MPICH_NAME)
 // Configuration for MPICH
+#endif
+
+#if BOOST_MPI_VERSION >= 3 && (!defined(I_MPI_NUMVERSION))
+// This is intel
+#define BOOST_MPI_USE_IMPROBE 1
 #endif
 
 /*****************************************************************************

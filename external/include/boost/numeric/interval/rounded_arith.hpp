@@ -1,6 +1,6 @@
 /* Boost interval/rounded_arith.hpp template implementation file
  *
- * Copyright 2002-2003 Hervé Brönnimann, Guillaume Melquiond, Sylvain Pion
+ * Copyright 2002-2003 HervÃ© BrÃ¶nnimann, Guillaume Melquiond, Sylvain Pion
  *
  * Distributed under the Boost Software License, Version 1.0.
  * (See accompanying file LICENSE_1_0.txt or
@@ -68,8 +68,8 @@ struct rounded_arith_std: Rounding {
   { BOOST_NUMERIC_INTERVAL_using_math(sqrt); BOOST_DN(sqrt(x)); }
   T sqrt_up  (const T& x)
   { BOOST_NUMERIC_INTERVAL_using_math(sqrt); BOOST_UP(sqrt(x)); }
-  T int_down(const T& x) { this->downward(); return to_int(x); }
-  T int_up  (const T& x) { this->upward();   return to_int(x); }
+  T int_down(const T& x) { this->downward(); return this->to_int(x); }
+  T int_up  (const T& x) { this->upward();   return this->to_int(x); }
 # undef BOOST_DN
 # undef BOOST_NR
 # undef BOOST_UP
@@ -105,8 +105,8 @@ struct rounded_arith_opp: Rounding {
   { BOOST_NUMERIC_INTERVAL_using_math(sqrt); BOOST_DN(sqrt(x)); }
   T sqrt_up  (const T& x)
   { BOOST_NUMERIC_INTERVAL_using_math(sqrt); BOOST_UP(sqrt(x)); }
-  T int_down(const T& x) { return -to_int(-x); }
-  T int_up  (const T& x) { return to_int(x); }
+  T int_down(const T& x) { return -this->to_int(-x); }
+  T int_up  (const T& x) { return  this->to_int(x); }
 # undef BOOST_DN
 # undef BOOST_NR
 # undef BOOST_UP

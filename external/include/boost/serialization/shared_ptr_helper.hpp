@@ -26,20 +26,17 @@
 #include <boost/type_traits/is_polymorphic.hpp>
 #include <boost/mpl/if.hpp>
 
-#include <boost/serialization/type_info_implementation.hpp>
+#include <boost/serialization/singleton.hpp>
+#include <boost/serialization/extended_type_info.hpp>
 #include <boost/serialization/throw_exception.hpp>
+#include <boost/serialization/type_info_implementation.hpp>
 #include <boost/archive/archive_exception.hpp>
-#include <boost/archive/detail/decl.hpp>
-
-#include <boost/archive/detail/abi_prefix.hpp> // must be the last headern
 
 namespace boost_132 {
     template<class T> class shared_ptr;
 }
 namespace boost {
 namespace serialization {
-
-class extended_type_info;
 
 #ifndef BOOST_NO_MEMBER_TEMPLATE_FRIENDS
 template<class Archive, template<class U> class SPT >
@@ -57,7 +54,7 @@ template<template<class T> class SPT>
 class shared_ptr_helper {
     typedef std::map<
         const void *, // address of object
-        SPT<void> // address shared ptr to single instance
+        SPT<const void> // address shared ptr to single instance
     > object_shared_pointer_map;
 
     // list of shared_pointers create accessable by raw pointer. This
@@ -71,7 +68,9 @@ class shared_ptr_helper {
         void operator()(void const *) const {}
     };
 
-#if defined(BOOST_NO_MEMBER_TEMPLATE_FRIENDS) || defined(BOOST_MSVC)
+#if defined(BOOST_NO_MEMBER_TEMPLATE_FRIENDS) \
+|| defined(BOOST_MSVC) \
+|| defined(__SUNPRO_CC)
 public:
 #else
     template<class Archive, class U>
@@ -92,7 +91,7 @@ public:
     // by a change in load_construct_data below.  It makes this file suitable
     // only for loading pointers into a 1.33 or later boost system.
     std::list<boost_132::shared_ptr<const void> > * m_pointers_132;
-    BOOST_ARCHIVE_DECL(void)
+    void
     append(const boost_132::shared_ptr<const void> & t){
         if(NULL == m_pointers_132)
             m_pointers_132 = new std::list<boost_132::shared_ptr<const void> >;
@@ -206,7 +205,5 @@ public:
 
 } // namespace serialization
 } // namespace boost
-
-#include <boost/archive/detail/abi_suffix.hpp> // pops abi_suffix.hpp pragmas
 
 #endif // BOOST_SERIALIZATION_SHARED_PTR_HELPER_HPP

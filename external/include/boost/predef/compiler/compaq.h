@@ -1,5 +1,5 @@
 /*
-Copyright Rene Rivera 2008-2014
+Copyright Rene Rivera 2008-2015
 Distributed under the Boost Software License, Version 1.0.
 (See accompanying file LICENSE_1_0.txt or copy at
 http://www.boost.org/LICENSE_1_0.txt)
@@ -38,7 +38,7 @@ Version number available as major, minor, and patch.
 #       define BOOST_COMP_DEC_DETECTION BOOST_PREDEF_MAKE_10_VVRR0PP00(__DECC_VER)
 #   endif
 #   if !defined(BOOST_COMP_DEC_DETECTION)
-#       define BOOST_COM_DEC_DETECTION BOOST_VERSION_NUMBER_AVAILABLE
+#       define BOOST_COMP_DEC_DETECTION BOOST_VERSION_NUMBER_AVAILABLE
 #   endif
 #endif
 
@@ -55,13 +55,12 @@ Version number available as major, minor, and patch.
 
 #define BOOST_COMP_DEC_NAME "Compaq C/C++"
 
+#endif
+
 #include <boost/predef/detail/test.h>
 BOOST_PREDEF_DECLARE_TEST(BOOST_COMP_DEC,BOOST_COMP_DEC_NAME)
 
 #ifdef BOOST_COMP_DEC_EMULATED
 #include <boost/predef/detail/test.h>
 BOOST_PREDEF_DECLARE_TEST(BOOST_COMP_DEC_EMULATED,BOOST_COMP_DEC_NAME)
-#endif
-
-
 #endif

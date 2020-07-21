@@ -9,25 +9,31 @@
 #if !defined(BOOST_SPIRIT_X3_MOVE_TO_JAN_17_2013_0859PM)
 #define BOOST_SPIRIT_X3_MOVE_TO_JAN_17_2013_0859PM
 
-#if defined(_MSC_VER)
-#pragma once
-#endif
-
 #include <boost/spirit/home/x3/support/traits/attribute_category.hpp>
 #include <boost/spirit/home/x3/support/traits/tuple_traits.hpp>
 #include <boost/spirit/home/x3/support/traits/variant_has_substitute.hpp>
 #include <boost/fusion/include/is_sequence.hpp>
 #include <boost/fusion/include/front.hpp>
-#include <boost/fusion/include/size.hpp>
 #include <boost/fusion/include/move.hpp>
 #include <boost/fusion/include/is_sequence.hpp>
-#include <boost/range/iterator_range.hpp>
 #include <utility>
 
 namespace boost { namespace spirit { namespace x3 { namespace traits
 {
     template <typename Source, typename Dest>
-    void move_to(Source&& src, Dest& dest);
+    inline void move_to(Source&& src, Dest& dest);
+
+    template <typename T>
+    inline void move_to(T& src, T& dest);
+
+    template <typename T>
+    inline void move_to(T const& src, T& dest);
+
+    template <typename T>
+    inline void move_to(T&& src, T& dest);
+
+    template <typename Iterator, typename Dest>
+    inline void move_to(Iterator first, Iterator last, Dest& dest);
 
     template <typename Dest>
     inline void move_to(unused_type, Dest&) {}
@@ -36,10 +42,6 @@ namespace boost { namespace spirit { namespace x3 { namespace traits
     inline void move_to(Source&, unused_type) {}
 
     inline void move_to(unused_type, unused_type) {}
-
-    template <typename Iterator, typename Dest>
-    void
-    move_to(Iterator first, Iterator last, Dest& dest);
 
     template <typename Iterator>
     inline void
@@ -74,7 +76,7 @@ namespace boost { namespace spirit { namespace x3 { namespace traits
                 is_size_one_sequence<Source> >
             is_single_element_sequence;
         
-            move_to_plain(std::move(src), dest, is_single_element_sequence);
+            move_to_plain(std::forward<Source>(src), dest, is_single_element_sequence);
         }
 
         template <typename Source, typename Dest>
@@ -92,7 +94,7 @@ namespace boost { namespace spirit { namespace x3 { namespace traits
         >::type
         move_to(Source&& src, Dest& dest, tuple_attribute)
         {
-            fusion::move(std::move(src), dest);
+            fusion::move(std::forward<Source>(src), dest);
         }
 
         template <typename Source, typename Dest>
@@ -101,7 +103,7 @@ namespace boost { namespace spirit { namespace x3 { namespace traits
         >::type
         move_to(Source&& src, Dest& dest, tuple_attribute)
         {
-            traits::move_to(src, fusion::front(dest));
+            traits::move_to(std::forward<Source>(src), fusion::front(dest));
         }
 
         template <typename Source, typename Dest>
@@ -148,6 +150,13 @@ namespace boost { namespace spirit { namespace x3 { namespace traits
             move_to(src, dest, tag, is_size_one_sequence<Source>());
         }
 
+        template <typename Source, typename Dest>
+        inline void
+        move_to(Source&& src, Dest& dest, optional_attribute)
+        {
+            dest = std::move(src);
+        }
+
         template <typename Iterator>
         inline void
         move_to(Iterator, Iterator, unused_type, unused_attribute) {}
@@ -161,18 +170,26 @@ namespace boost { namespace spirit { namespace x3 { namespace traits
             else
                 append(dest, first, last);
         }
+
+        template <typename Iterator, typename Dest>
+        inline typename enable_if<
+            is_size_one_sequence<Dest>
+        >::type
+        move_to(Iterator first, Iterator last, Dest& dest, tuple_attribute)
+        {
+            traits::move_to(first, last, fusion::front(dest));
+        }
         
         template <typename Iterator>
         inline void
-        move_to(Iterator first, Iterator last, boost::iterator_range<Iterator>& rng, container_attribute)
+        move_to(Iterator first, Iterator last, boost::iterator_range<Iterator>& rng, range_attribute)
         {
             rng = {first, last};
         }
     }
 
     template <typename Source, typename Dest>
-    inline void
-    move_to(Source&& src, Dest& dest)
+    inline void move_to(Source&& src, Dest& dest)
     {
         detail::move_to(std::move(src), dest
           , typename attribute_category<Dest>::type());
@@ -181,27 +198,26 @@ namespace boost { namespace spirit { namespace x3 { namespace traits
     template <typename T>
     inline void move_to(T& src, T& dest)
     {
-        if (&src != &dest)
+        if (boost::addressof(src) != boost::addressof(dest))
             dest = std::move(src);
     }
 
     template <typename T>
     inline void move_to(T const& src, T& dest)
     {
-        if (&src != &dest)
+        if (boost::addressof(src) != boost::addressof(dest))
             dest = std::move(src);
     }
 
     template <typename T>
     inline void move_to(T&& src, T& dest)
     {
-        if (&src != &dest)
+        if (boost::addressof(src) != boost::addressof(dest))
             dest = std::move(src);
     }
 
     template <typename Iterator, typename Dest>
-    inline void
-    move_to(Iterator first, Iterator last, Dest& dest)
+    inline void move_to(Iterator first, Iterator last, Dest& dest)
     {
         // $$$ Use std::move_iterator when iterator is not a const-iterator $$$
         detail::move_to(first, last, dest, typename attribute_category<Dest>::type());

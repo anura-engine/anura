@@ -171,8 +171,9 @@ namespace boost { namespace polygon{
         pts.push_back(he1.second);
         std::set<Point>& segmentpts = intersection_points[(*outer).second];
         for(typename std::set<Point>::iterator itr = segmentpts.begin(); itr != segmentpts.end(); ++itr) {
-          if((*itr).y() > min_y - 1)
+          if ((*itr).y() >= min_y) {
             pts.push_back(*itr);
+          }
         }
         bool have_first_y = he1.first.y() >= min_y && he1.second.y() >= min_y;
         for(typename std::vector<std::pair<half_edge, segment_id> >::iterator inner = outer;
@@ -315,8 +316,11 @@ namespace boost { namespace polygon{
       return true;
     }
 
-    class less_point_down_slope : public std::binary_function<Point, Point, bool> {
+    class less_point_down_slope {
     public:
+      typedef Point first_argument_type;
+      typedef Point second_argument_type;
+      typedef bool result_type;
       inline less_point_down_slope() {}
       inline bool operator () (const Point& pt1, const Point& pt2) const {
         if(pt1.get(HORIZONTAL) < pt2.get(HORIZONTAL)) return true;
@@ -1640,7 +1644,7 @@ namespace boost { namespace polygon{
 
     template <typename polygon_with_holes_type>
     void insert(const polygon_with_holes_type& polygon_with_holes_object, const property_type& property_value, bool is_hole,
-                polygon_with_holes_concept tag) {
+                polygon_with_holes_concept) {
       insert(polygon_with_holes_object, property_value, is_hole, polygon_concept());
       for(typename polygon_with_holes_traits<polygon_with_holes_type>::iterator_holes_type itr =
             begin_holes(polygon_with_holes_object);

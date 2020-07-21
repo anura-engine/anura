@@ -16,10 +16,11 @@
 
 //  See http://www.boost.org for updates, documentation, and revision history.
 
+#include <boost/config.hpp>
+#include <boost/detail/workaround.hpp>
 #include <boost/assert.hpp>
 
 #include <boost/serialization/throw_exception.hpp>
-#include <boost/serialization/pfto.hpp>
 
 #include <boost/archive/iterators/unescape.hpp>
 #include <boost/archive/iterators/dataflow_exception.hpp>
@@ -43,19 +44,19 @@ class xml_unescape
         return unescape<xml_unescape<Base>, Base>::dereference();
     }
 public:
-    // workaround msvc 7.1 ICU crash
-    #if defined(BOOST_MSVC)
+    // msvc versions prior to 14.0 crash with and ICE 
+    #if BOOST_WORKAROUND(BOOST_MSVC, < 1900)
         typedef int value_type;
     #else
-        typedef typename this_t::value_type value_type;
+        typedef typename super_t::value_type value_type;
     #endif
 
     void drain_residue(const char *literal);
     value_type drain();
 
     template<class T>
-    xml_unescape(BOOST_PFTO_WRAPPER(T) start) : 
-        super_t(Base(BOOST_MAKE_PFTO_WRAPPER(static_cast< T >(start))))
+    xml_unescape(T start) : 
+        super_t(Base(static_cast< T >(start)))
     {}
     // intel 7.1 doesn't like default copy constructor
     xml_unescape(const xml_unescape & rhs) : 

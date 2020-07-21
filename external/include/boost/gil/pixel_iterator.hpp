@@ -1,41 +1,25 @@
-/*
-    Copyright 2005-2007 Adobe Systems Incorporated
-   
-    Use, modification and distribution are subject to the Boost Software License,
-    Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
-    http://www.boost.org/LICENSE_1_0.txt).
+//
+// Copyright 2005-2007 Adobe Systems Incorporated
+//
+// Distributed under the Boost Software License, Version 1.0
+// See accompanying file LICENSE_1_0.txt or copy at
+// http://www.boost.org/LICENSE_1_0.txt
+//
+#ifndef BOOST_GIL_PIXEL_ITERATOR_HPP
+#define BOOST_GIL_PIXEL_ITERATOR_HPP
 
-    See http://opensource.adobe.com/gil for most recent version including documentation.
-*/
+#include <boost/gil/concepts.hpp>
+#include <boost/gil/dynamic_step.hpp>
+#include <boost/gil/utilities.hpp>
+#include <boost/gil/pixel.hpp>
 
-/*************************************************************************************************/
-
-#ifndef GIL_PIXEL_ITERATOR_H
-#define GIL_PIXEL_ITERATOR_H
-
-////////////////////////////////////////////////////////////////////////////////////////
-/// \file               
-/// \brief pixel iterator support
-/// \author Lubomir Bourdev and Hailin Jin \n
-///         Adobe Systems Incorporated
-/// \date   2005-2007 \n May 16, 2006
-///
-////////////////////////////////////////////////////////////////////////////////////////
-
-#include <cassert>
 #include <iterator>
-#include "gil_config.hpp"
-#include "gil_concept.hpp"
-#include "utilities.hpp"
-#include "pixel.hpp"
 
 namespace boost { namespace gil {
 
 //forwarded declaration (as this file is included in step_iterator.hpp)
 template <typename Iterator>
 class memory_based_step_iterator;
-
-template <typename Iterator> struct dynamic_x_step_type;
 
 /// \brief metafunction predicate determining whether the given iterator is a plain one or an adaptor over another iterator.
 /// Examples of adaptors are the step iterator and the dereference iterator adaptor.
@@ -55,8 +39,8 @@ template <typename It>
 struct const_iterator_type;
 
 // The default implementation when the iterator is a C pointer is to use the standard constness semantics
-template <typename T> struct const_iterator_type<      T*> { typedef const T* type; };
-template <typename T> struct const_iterator_type<const T*> { typedef const T* type; };
+template <typename T> struct const_iterator_type<T*>       { using type = T const*; };
+template <typename T> struct const_iterator_type<T const*> { using type = T const*; };
 
 /// \brief Metafunction predicate returning whether the given iterator allows for changing its values
 /// \ingroup GILIsMutable
@@ -78,16 +62,16 @@ template <typename T> struct iterator_is_mutable<const T*> : public mpl::false_{
 //  HasDynamicXStepTypeConcept
 /////////////////////////////
 
-/// \ingroup PixelIteratorModelInterleavedPtr 
+/// \ingroup PixelIteratorModelInterleavedPtr
 template <typename Pixel>
 struct dynamic_x_step_type<Pixel*> {
-    typedef memory_based_step_iterator<Pixel*> type;
+    using type = memory_based_step_iterator<Pixel *>;
 };
 
-/// \ingroup PixelIteratorModelInterleavedPtr 
+/// \ingroup PixelIteratorModelInterleavedPtr
 template <typename Pixel>
 struct dynamic_x_step_type<const Pixel*> {
-    typedef memory_based_step_iterator<const Pixel*> type;
+    using type = memory_based_step_iterator<const Pixel *>;
 };
 
 
@@ -129,12 +113,12 @@ template <typename P>
 inline std::ptrdiff_t memunit_step(const P*) { return sizeof(P); }
 
 template <typename P>
-inline std::ptrdiff_t memunit_distance(const P* p1, const P* p2) { 
-    return (gil_reinterpret_cast_c<const unsigned char*>(p2)-gil_reinterpret_cast_c<const unsigned char*>(p1)); 
+inline std::ptrdiff_t memunit_distance(const P* p1, const P* p2) {
+    return (gil_reinterpret_cast_c<const unsigned char*>(p2)-gil_reinterpret_cast_c<const unsigned char*>(p1));
 }
 
 template <typename P>
-inline void memunit_advance(P* &p, std::ptrdiff_t diff) { 
+inline void memunit_advance(P* &p, std::ptrdiff_t diff) {
     p=(P*)((unsigned char*)(p)+diff);
 }
 

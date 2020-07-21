@@ -7,13 +7,7 @@
 #if !defined(BOOST_SPIRIT_X3_TST_MARCH_09_2007_0905AM)
 #define BOOST_SPIRIT_X3_TST_MARCH_09_2007_0905AM
 
-#if defined(_MSC_VER)
-#pragma once
-#endif
-
 #include <boost/call_traits.hpp>
-#include <boost/detail/iterator.hpp>
-#include <boost/foreach.hpp>
 #include <boost/assert.hpp>
 
 namespace boost { namespace spirit { namespace x3 { namespace detail
@@ -61,9 +55,9 @@ namespace boost { namespace spirit { namespace x3 { namespace detail
             return 0;
         }
 
-        template <typename Iterator, typename Filter>
+        template <typename Iterator, typename CaseCompare>
         static T*
-        find(tst_node* start, Iterator& first, Iterator last, Filter filter)
+        find(tst_node* start, Iterator& first, Iterator last, CaseCompare comp)
         {
             if (first == last)
                 return 0;
@@ -75,11 +69,8 @@ namespace boost { namespace spirit { namespace x3 { namespace detail
 
             while (p && i != last)
             {
-                typename
-                    boost::detail::iterator_traits<Iterator>::value_type
-                c = filter(*i); // filter only the input
-
-                if (c == p->id)
+                int32_t c = comp(*i,p->id);
+                if (c == 0)
                 {
                     if (p->data)
                     {
@@ -89,7 +80,7 @@ namespace boost { namespace spirit { namespace x3 { namespace detail
                     p = p->eq;
                     i++;
                 }
-                else if (c < p->id)
+                else if (c < 0)
                 {
                     p = p->lt;
                 }
@@ -117,11 +108,9 @@ namespace boost { namespace spirit { namespace x3 { namespace detail
                 return 0;
 
             tst_node** pp = &start;
-            for(;;)
+            for (;;)
             {
-                typename
-                    boost::detail::iterator_traits<Iterator>::value_type
-                c = *first;
+                auto c = *first;
 
                 if (*pp == 0)
                     *pp = alloc->new_node(c);
@@ -155,9 +144,7 @@ namespace boost { namespace spirit { namespace x3 { namespace detail
             if (p == 0 || first == last)
                 return;
 
-            typename
-                boost::detail::iterator_traits<Iterator>::value_type
-            c = *first;
+            auto c = *first;
 
             if (c == p->id)
             {

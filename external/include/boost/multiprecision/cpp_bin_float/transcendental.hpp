@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////
 //  Copyright 2013 John Maddock. Distributed under the Boost
 //  Software License, Version 1.0. (See accompanying file
-//  LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_
+//  LICENSE_1_0.txt or copy at https://www.boost.org/LICENSE_1_0.txt
 
 #ifndef BOOST_MULTIPRECISION_CPP_BIN_FLOAT_TRANSCENDENTAL_HPP
 #define BOOST_MULTIPRECISION_CPP_BIN_FLOAT_TRANSCENDENTAL_HPP
@@ -64,12 +64,14 @@ void eval_exp(cpp_bin_float<Digits, DigitBase, Allocator, Exponent, MinE, MaxE> 
    using default_ops::eval_subtract;
    using default_ops::eval_add;
    using default_ops::eval_convert_to;
+   using default_ops::eval_increment;
 
    int type = eval_fpclassify(arg);
    bool isneg = eval_get_sign(arg) < 0;
    if(type == (int)FP_NAN)
    {
       res = arg;
+      errno = EDOM;
       return;
    }
    else if(type == (int)FP_INFINITE)
@@ -103,19 +105,41 @@ void eval_exp(cpp_bin_float<Digits, DigitBase, Allocator, Exponent, MinE, MaxE> 
    eval_multiply(t, n, default_ops::get_constant_ln2<cpp_bin_float<Digits, DigitBase, Allocator, Exponent, MinE, MaxE> >());
    eval_subtract(t, arg);
    t.negate();
-   BOOST_ASSERT(t.compare(limb_type(0)) >= 0);
-   BOOST_ASSERT(t.compare(default_ops::get_constant_ln2<cpp_bin_float<Digits, DigitBase, Allocator, Exponent, MinE, MaxE> >()) < 0);
+   if (t.compare(default_ops::get_constant_ln2<cpp_bin_float<Digits, DigitBase, Allocator, Exponent, MinE, MaxE> >()) > 0)
+   {
+      // There are some rare cases where the multiply rounds down leaving a remainder > ln2
+      // See https://github.com/boostorg/multiprecision/issues/120
+      eval_increment(n);
+      t = limb_type(0);
+   }
+   if(eval_get_sign(t) < 0)
+   {
+      // There are some very rare cases where arg/ln2 is an integer, and the subsequent multiply
+      // rounds up, in that situation t ends up negative at this point which breaks our invariants below:
+      t = limb_type(0);
+   }
 
    Exponent k, nn;
    eval_convert_to(&nn, n);
+
+   if (nn == (std::numeric_limits<Exponent>::max)())
+   {
+      // The result will necessarily oveflow:
+      res = std::numeric_limits<number<cpp_bin_float<Digits, DigitBase, Allocator, Exponent, MinE, MaxE> > >::infinity().backend();
+      return;
+   }
+
+   BOOST_ASSERT(t.compare(default_ops::get_constant_ln2<cpp_bin_float<Digits, DigitBase, Allocator, Exponent, MinE, MaxE> >()) < 0);
+
    k = nn ? Exponent(1) << (msb(nn) / 2) : 0;
+   k = (std::min)(k, (Exponent)(cpp_bin_float<Digits, DigitBase, Allocator, Exponent, MinE, MaxE>::bit_count / 4));
    eval_ldexp(t, t, -k);
 
    eval_exp_taylor(res, t);
    //
    // Square 1 + res k times:
    //
-   for(int s = 0; s < k; ++s)
+   for(Exponent s = 0; s < k; ++s)
    {
       t.swap(res);
       eval_multiply(res, t, t);

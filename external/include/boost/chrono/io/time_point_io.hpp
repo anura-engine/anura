@@ -34,20 +34,22 @@
 #include <locale>
 #include <ctime>
 
-#define  BOOST_CHRONO_INTERNAL_TIMEGM \
-     ( defined BOOST_WINDOWS && ! defined(__CYGWIN__) )  \
+#if  ( defined BOOST_WINDOWS && ! defined(__CYGWIN__) )  \
   || (defined(sun) || defined(__sun)) \
   || (defined __IBMCPP__) \
   || defined __ANDROID__ \
   || defined __QNXNTO__ \
   || (defined(_AIX) && defined __GNUC__)
+#define  BOOST_CHRONO_INTERNAL_TIMEGM
+#endif
 
-#define  BOOST_CHRONO_INTERNAL_GMTIME \
-     (defined BOOST_WINDOWS && ! defined(__CYGWIN__)) \
+#if (defined BOOST_WINDOWS && ! defined(__CYGWIN__)) \
   || ( (defined(sun) || defined(__sun)) && defined __GNUC__) \
   || (defined __IBMCPP__) \
   || defined __ANDROID__ \
   || (defined(_AIX) && defined __GNUC__)
+#define  BOOST_CHRONO_INTERNAL_GMTIME
+#endif
 
 #define  BOOST_CHRONO_USES_INTERNAL_TIME_GET
 
@@ -125,9 +127,9 @@ namespace boost
             std::ios_base::iostate& err,
             const std::ctype<char_type>& ct) const
         {
-            int t = get_up_to_n_digits(b, e, err, ct, 2) - 1;
-            if (!(err & std::ios_base::failbit) && t <= 11)
-                m = t;
+            int t = get_up_to_n_digits(b, e, err, ct, 2);
+            if (!(err & std::ios_base::failbit) && 1 <= t && t <= 12)
+                m = --t;
             else
                 err |= std::ios_base::failbit;
         }
@@ -224,8 +226,8 @@ namespace boost
                                                              const std::ctype<char_type>& ct) const
         {
             int t = get_up_to_n_digits(b, e, err, ct, 3);
-            if (!(err & std::ios_base::failbit) && t <= 365)
-                d = t;
+            if (!(err & std::ios_base::failbit) && 1 <= t && t <= 366)
+                d = --t;
             else
                 err |= std::ios_base::failbit;
         }
@@ -527,7 +529,9 @@ namespace boost
     {
 
       //! the type of the state to restore
-      typedef std::basic_ostream<CharT, Traits> state_type;
+      //typedef std::basic_ostream<CharT, Traits> state_type;
+      typedef std::ios_base state_type;
+
       //! the type of aspect to save
       typedef std::basic_string<CharT, Traits> aspect_type;
 
@@ -537,7 +541,7 @@ namespace boost
        * Store a reference to the i/o stream and the value of the associated @c time format .
        */
       explicit time_fmt_io_saver(state_type &s) :
-        s_save_(s), a_save_(get_time_fmt(s_save_))
+        s_save_(s), a_save_(get_time_fmt<CharT>(s_save_))
       {
       }
 
@@ -547,8 +551,9 @@ namespace boost
        * Stores a reference to the i/o stream and the value @c new_value to restore given as parameter.
        */
       time_fmt_io_saver(state_type &s, aspect_type new_value) :
-        s_save_(s), a_save_(new_value)
+        s_save_(s), a_save_(get_time_fmt<CharT>(s_save_))
       {
+        set_time_fmt(s_save_, new_value);
       }
 
       /**
@@ -566,7 +571,7 @@ namespace boost
        */
       void restore()
       {
-        set_time_fmt(a_save_, a_save_);
+        set_time_fmt(s_save_, a_save_);
       }
     private:
       state_type& s_save_;
@@ -602,8 +607,9 @@ namespace boost
        * Stores a reference to the i/o stream and the value @c new_value to restore given as parameter.
        */
       timezone_io_saver(state_type &s, aspect_type new_value) :
-        s_save_(s), a_save_(new_value)
+        s_save_(s), a_save_(get_timezone(s_save_))
       {
+        set_timezone(s_save_, new_value);
       }
 
       /**
@@ -742,7 +748,7 @@ namespace boost
     namespace detail
     {
 
-//#if BOOST_CHRONO_INTERNAL_TIMEGM
+//#if defined BOOST_CHRONO_INTERNAL_TIMEGM
 
     inline int32_t is_leap(int32_t year)
     {
@@ -761,7 +767,7 @@ namespace boost
     }
     inline int32_t days_from_1970(int32_t year)
     {
-      static const int days_from_0_to_1970 = days_from_0(1970);
+      static const int32_t days_from_0_to_1970 = days_from_0(1970);
       return days_from_0(year) - days_from_0_to_1970;
     }
     inline int32_t days_from_1jan(int32_t year,int32_t month,int32_t day)
@@ -934,18 +940,22 @@ namespace boost
           if (tz == timezone::local)
           {
 #if defined BOOST_WINDOWS && ! defined(__CYGWIN__)
+#if BOOST_MSVC < 1400  // localtime_s doesn't exist in vc7.1
             std::tm *tmp = 0;
             if ((tmp=localtime(&t)) == 0)
               failed = true;
             else
               tm =*tmp;
+# else
+            if (localtime_s(&tm, &t) != 0) failed = true;
+# endif
 #else
             if (localtime_r(&t, &tm) == 0) failed = true;
 #endif
           }
           else
           {
-#if BOOST_CHRONO_INTERNAL_GMTIME
+#if defined BOOST_CHRONO_INTERNAL_GMTIME
             if (detail::internal_gmtime(&t, &tm) == 0) failed = true;
 
 #elif defined BOOST_WINDOWS && ! defined(__CYGWIN__)
@@ -1153,7 +1163,7 @@ namespace boost
             if (err & std::ios_base::failbit) goto exit;
             time_t t;
 
-#if BOOST_CHRONO_INTERNAL_TIMEGM
+#if defined BOOST_CHRONO_INTERNAL_TIMEGM
             t = detail::internal_timegm(&tm);
 #else
             t = timegm(&tm);
@@ -1205,7 +1215,7 @@ namespace boost
             time_t t;
             if (tz == timezone::utc || fz != pe)
             {
-#if BOOST_CHRONO_INTERNAL_TIMEGM
+#if defined BOOST_CHRONO_INTERNAL_TIMEGM
               t = detail::internal_timegm(&tm);
 #else
               t = timegm(&tm);

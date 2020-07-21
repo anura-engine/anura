@@ -11,7 +11,11 @@
 #ifndef BOOST_CONTAINER_DETAIL_POOL_COMMON_HPP
 #define BOOST_CONTAINER_DETAIL_POOL_COMMON_HPP
 
-#if defined(_MSC_VER)
+#ifndef BOOST_CONFIG_HPP
+#  include <boost/config.hpp>
+#endif
+
+#if defined(BOOST_HAS_PRAGMA_ONCE)
 #  pragma once
 #endif
 
@@ -19,11 +23,10 @@
 #include <boost/container/detail/workaround.hpp>
 
 #include <boost/intrusive/slist.hpp>
-#include <new>
 
 namespace boost {
 namespace container {
-namespace container_detail {
+namespace dtl {
 
 template<class VoidPointer>
 struct node_slist
@@ -45,7 +48,7 @@ struct is_stateless_segment_manager
    static const bool value = false;
 };
 
-}  //namespace container_detail {
+}  //namespace dtl {
 }  //namespace container {
 }  //namespace boost {
 

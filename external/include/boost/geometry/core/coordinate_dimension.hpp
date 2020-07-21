@@ -18,7 +18,6 @@
 #include <cstddef>
 
 #include <boost/mpl/assert.hpp>
-#include <boost/mpl/equal_to.hpp>
 #include <boost/static_assert.hpp>
 
 #include <boost/geometry/core/point_type.hpp>
@@ -58,7 +57,15 @@ template <typename T, typename G>
 struct dimension : dimension<point_tag, typename point_type<T, G>::type> {};
 
 template <typename P>
-struct dimension<point_tag, P> : traits::dimension<typename geometry::util::bare_type<P>::type> {};
+struct dimension<point_tag, P>
+    : traits::dimension<typename geometry::util::bare_type<P>::type>
+{
+    BOOST_MPL_ASSERT_MSG(
+        (traits::dimension<typename geometry::util::bare_type<P>::type>::value > 0),
+        INVALID_DIMENSION_VALUE,
+        (traits::dimension<typename geometry::util::bare_type<P>::type>)
+    );
+};
 
 } // namespace core_dispatch
 #endif
@@ -86,13 +93,7 @@ struct dimension
 template <typename Geometry, int Dimensions>
 inline void assert_dimension()
 {
-    BOOST_STATIC_ASSERT((
-        boost::mpl::equal_to
-        <
-            geometry::dimension<Geometry>,
-            boost::mpl::int_<Dimensions>
-        >::type::value
-        ));
+    BOOST_STATIC_ASSERT(( static_cast<int>(dimension<Geometry>::value) == Dimensions ));
 }
 
 /*!
@@ -102,13 +103,13 @@ inline void assert_dimension()
 template <typename Geometry, int Dimensions>
 inline void assert_dimension_less_equal()
 {
-    BOOST_STATIC_ASSERT(( dimension<Geometry>::type::value <= Dimensions ));
+    BOOST_STATIC_ASSERT(( static_cast<int>(dimension<Geometry>::type::value) <= Dimensions ));
 }
 
 template <typename Geometry, int Dimensions>
 inline void assert_dimension_greater_equal()
 {
-    BOOST_STATIC_ASSERT(( dimension<Geometry>::type::value >= Dimensions ));
+    BOOST_STATIC_ASSERT(( static_cast<int>(dimension<Geometry>::type::value) >= Dimensions ));
 }
 
 /*!
@@ -118,7 +119,7 @@ inline void assert_dimension_greater_equal()
 template <typename G1, typename G2>
 inline void assert_dimension_equal()
 {
-    BOOST_STATIC_ASSERT(( dimension<G1>::type::value == dimension<G2>::type::value ));
+    BOOST_STATIC_ASSERT(( static_cast<size_t>(dimension<G1>::type::value) == static_cast<size_t>(dimension<G2>::type::value) ));
 }
 
 }} // namespace boost::geometry

@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////
 //  Copyright 2012 John Maddock. Distributed under the Boost
 //  Software License, Version 1.0. (See accompanying file
-//  LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_
+//  LICENSE_1_0.txt or copy at https://www.boost.org/LICENSE_1_0.txt
 //
 // Comparison operators for cpp_int_backend:
 //
@@ -9,11 +9,16 @@
 #define BOOST_MP_CPP_INT_MISC_HPP
 
 #include <boost/multiprecision/detail/bitscan.hpp> // lsb etc
+#include <boost/integer/common_factor_rt.hpp> // gcd/lcm
+#include <boost/functional/hash_fwd.hpp>
 
 #ifdef BOOST_MSVC
 #pragma warning(push)
 #pragma warning(disable:4702)
+#pragma warning(disable:4127) // conditional expression is constant
+#pragma warning(disable:4146) // unary minus operator applied to unsigned type, result still unsigned
 #endif
+
 
 namespace boost{ namespace multiprecision{ namespace backends{
 
@@ -23,6 +28,8 @@ void check_in_range(const CppInt& val, const mpl::int_<checked>&)
    typedef typename boost::multiprecision::detail::canonical<R, CppInt>::type cast_type;
    if(val.sign())
    {
+      if(boost::is_signed<R>::value == false)
+         BOOST_THROW_EXCEPTION(std::range_error("Attempt to assign a negative value to an unsigned type."));
       if(val.compare(static_cast<cast_type>((std::numeric_limits<R>::min)())) < 0)
          BOOST_THROW_EXCEPTION(std::overflow_error("Could not convert to the target type - -value is out of range."));
    }
@@ -54,17 +61,71 @@ inline Integer negate_integer(Integer i, const mpl::false_&) BOOST_NOEXCEPT
 
 template <class R, unsigned MinBits1, unsigned MaxBits1, cpp_integer_type SignType1, cpp_int_check_type Checked1, class Allocator1>
 inline typename enable_if_c<is_integral<R>::value && !is_trivial_cpp_int<cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1> >::value, void>::type
-   eval_convert_to(R* result, const cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>& backend) BOOST_NOEXCEPT_IF((is_non_throwing_cpp_int<cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1> >::value))
+   eval_convert_to(R* result, const cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>& backend)
 {
    typedef mpl::int_<Checked1> checked_type;
    check_in_range<R>(backend, checked_type());
 
-   *result = static_cast<R>(backend.limbs()[0]);
-   unsigned shift = cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>::limb_bits;
-   for(unsigned i = 1; (i < backend.size()) && (shift < static_cast<unsigned>(std::numeric_limits<R>::digits)); ++i)
+   if (std::numeric_limits<R>::digits < cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>::limb_bits)
    {
-      *result += static_cast<R>(backend.limbs()[i]) << shift;
-      shift += cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>::limb_bits;
+      if ((backend.sign() && boost::is_signed<R>::value) && (1 + static_cast<boost::multiprecision::limb_type>((std::numeric_limits<R>::max)()) <= backend.limbs()[0]))
+      {
+         *result = (std::numeric_limits<R>::min)();
+         return;
+      }
+      else if (boost::is_signed<R>::value && !backend.sign() && static_cast<boost::multiprecision::limb_type>((std::numeric_limits<R>::max)()) <= backend.limbs()[0])
+      {
+         *result = (std::numeric_limits<R>::max)();
+         return;
+      }
+      else
+         *result = static_cast<R>(backend.limbs()[0]);
+   }
+   else
+      *result = static_cast<R>(backend.limbs()[0]);
+   unsigned shift = cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>::limb_bits;
+   unsigned i = 1;
+   if (std::numeric_limits<R>::digits > cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>::limb_bits)
+   {
+      while ((i < backend.size()) && (shift < static_cast<unsigned>(std::numeric_limits<R>::digits - cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>::limb_bits)))
+      {
+         *result += static_cast<R>(backend.limbs()[i]) << shift;
+         shift += cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>::limb_bits;
+         ++i;
+      }
+      //
+      // We have one more limb to extract, but may not need all the bits, so treat this as a special case:
+      //
+      if (i < backend.size())
+      {
+         static const limb_type mask = std::numeric_limits<R>::digits - shift == cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>::limb_bits ?
+            ~static_cast<limb_type>(0) : (static_cast<limb_type>(1u) << (std::numeric_limits<R>::digits - shift)) - 1;
+         *result += (static_cast<R>(backend.limbs()[i]) & mask) << shift;
+         if ((static_cast<R>(backend.limbs()[i]) & static_cast<limb_type>(~mask)) || (i + 1 < backend.size()))
+         {
+            // Overflow:
+            if (backend.sign())
+            {
+               check_is_negative(boost::is_signed<R>());
+               *result = (std::numeric_limits<R>::min)();
+            }
+            else if(boost::is_signed<R>::value)
+               *result = (std::numeric_limits<R>::max)();
+            return;
+         }
+      }
+   }
+   else if (backend.size() > 1)
+   {
+      // Overflow:
+      if (backend.sign())
+      {
+         check_is_negative(boost::is_signed<R>());
+         *result = (std::numeric_limits<R>::min)();
+      }
+      else if(boost::is_signed<R>::value)
+         *result = (std::numeric_limits<R>::max)();
+      return;
    }
    if(backend.sign())
    {
@@ -75,7 +136,7 @@ inline typename enable_if_c<is_integral<R>::value && !is_trivial_cpp_int<cpp_int
 
 template <class R, unsigned MinBits1, unsigned MaxBits1, cpp_integer_type SignType1, cpp_int_check_type Checked1, class Allocator1>
 inline typename enable_if_c<is_floating_point<R>::value && !is_trivial_cpp_int<cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1> >::value, void>::type
-   eval_convert_to(R* result, const cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>& backend) BOOST_NOEXCEPT_IF(is_arithmetic<R>::value)
+   eval_convert_to(R* result, const cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>& backend) BOOST_MP_NOEXCEPT_IF(is_arithmetic<R>::value)
 {
    typename cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>::const_limb_pointer p = backend.limbs();
    unsigned shift = cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>::limb_bits;
@@ -103,7 +164,7 @@ BOOST_MP_FORCEINLINE typename enable_if_c<!is_trivial_cpp_int<cpp_int_backend<Mi
 }
 template <unsigned MinBits1, unsigned MaxBits1, cpp_integer_type SignType1, cpp_int_check_type Checked1, class Allocator1>
 BOOST_MP_FORCEINLINE typename enable_if_c<!is_trivial_cpp_int<cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1> >::value>::type
-   eval_abs(cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>& result, const cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>& val) BOOST_NOEXCEPT_IF((is_non_throwing_cpp_int<cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1> >::value))
+   eval_abs(cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>& result, const cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>& val) BOOST_MP_NOEXCEPT_IF((is_non_throwing_cpp_int<cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1> >::value))
 {
    result = val;
    result.sign(false);
@@ -145,6 +206,16 @@ inline typename enable_if_c<!is_trivial_cpp_int<cpp_int_backend<MinBits1, MaxBit
 //
 template <unsigned MinBits1, unsigned MaxBits1, cpp_integer_type SignType1, cpp_int_check_type Checked1, class Allocator1>
 inline typename enable_if_c<!is_trivial_cpp_int<cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1> >::value, unsigned>::type
+eval_msb_imp(const cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>& a)
+{
+   //
+   // Find the index of the most significant bit that is non-zero:
+   //
+   return (a.size() - 1) * cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>::limb_bits + boost::multiprecision::detail::find_msb(a.limbs()[a.size() - 1]);
+}
+
+template <unsigned MinBits1, unsigned MaxBits1, cpp_integer_type SignType1, cpp_int_check_type Checked1, class Allocator1>
+inline typename enable_if_c<!is_trivial_cpp_int<cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1> >::value, unsigned>::type
    eval_msb(const cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>& a)
 {
    using default_ops::eval_get_sign;
@@ -156,11 +227,7 @@ inline typename enable_if_c<!is_trivial_cpp_int<cpp_int_backend<MinBits1, MaxBit
    {
       BOOST_THROW_EXCEPTION(std::range_error("Testing individual bits in negative values is not supported - results are undefined."));
    }
-
-   //
-   // Find the index of the most significant bit that is non-zero:
-   //
-   return (a.size() - 1) * cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>::limb_bits + boost::multiprecision::detail::find_msb(a.limbs()[a.size() - 1]);
+   return eval_msb_imp(a);
 }
 
 template <unsigned MinBits1, unsigned MaxBits1, cpp_integer_type SignType1, cpp_int_check_type Checked1, class Allocator1>
@@ -233,7 +300,7 @@ inline typename enable_if_c<!is_trivial_cpp_int<cpp_int_backend<MinBits1, MaxBit
       const cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>& x,
       const cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>& y,
       cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>& q,
-      cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>& r) BOOST_NOEXCEPT_IF((is_non_throwing_cpp_int<cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1> >::value))
+      cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>& r) BOOST_MP_NOEXCEPT_IF((is_non_throwing_cpp_int<cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1> >::value))
 {
    divide_unsigned_helper(&q, x, y, r);
    q.sign(x.sign() != y.sign());
@@ -246,7 +313,7 @@ inline typename enable_if_c<!is_trivial_cpp_int<cpp_int_backend<MinBits1, MaxBit
       const cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>& x,
       limb_type y,
       cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>& q,
-      cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>& r) BOOST_NOEXCEPT_IF((is_non_throwing_cpp_int<cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1> >::value))
+      cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>& r) BOOST_MP_NOEXCEPT_IF((is_non_throwing_cpp_int<cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1> >::value))
 {
    divide_unsigned_helper(&q, x, y, r);
    q.sign(x.sign());
@@ -258,10 +325,11 @@ inline typename enable_if_c<is_integral<U>::value>::type eval_qr(
       const cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>& x,
       U y,
       cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>& q,
-      cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>& r) BOOST_NOEXCEPT_IF((is_non_throwing_cpp_int<cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1> >::value))
+      cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>& r) BOOST_MP_NOEXCEPT_IF((is_non_throwing_cpp_int<cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1> >::value))
 {
    using default_ops::eval_qr;
-   cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1> t(y);
+   cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1> t;
+   t = y;
    eval_qr(x, t, q, r);
 }
 
@@ -316,7 +384,11 @@ inline double_limb_type integer_gcd_reduce(double_limb_type u, double_limb_type 
          break;
       }
       v -= u;
+#ifdef __MSVC_RUNTIME_CHECKS
+      while((v & 1u) == 0)
+#else
       while((static_cast<unsigned>(v) & 1u) == 0)
+#endif
          v >>= 1;
    } while(true);
    return u;
@@ -505,14 +577,14 @@ template <unsigned MinBits1, unsigned MaxBits1, cpp_integer_type SignType1, cpp_
 BOOST_MP_FORCEINLINE typename enable_if_c<is_trivial_cpp_int<cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1> >::value>::type
    eval_gcd(cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>& result, const cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>& a, const cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>& b) BOOST_NOEXCEPT
 {
-   *result.limbs() = boost::math::gcd(*a.limbs(), *b.limbs());
+   *result.limbs() = boost::integer::gcd(*a.limbs(), *b.limbs());
 }
 // This one is only enabled for unchecked cpp_int's, for checked int's we need the checking in the default version:
 template <unsigned MinBits1, unsigned MaxBits1, cpp_integer_type SignType1, cpp_int_check_type Checked1, class Allocator1>
 BOOST_MP_FORCEINLINE typename enable_if_c<is_trivial_cpp_int<cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1> >::value && (Checked1 == unchecked)>::type
-   eval_lcm(cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>& result, const cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>& a, const cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>& b) BOOST_NOEXCEPT_IF((is_non_throwing_cpp_int<cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1> >::value))
+   eval_lcm(cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>& result, const cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>& a, const cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>& b) BOOST_MP_NOEXCEPT_IF((is_non_throwing_cpp_int<cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1> >::value))
 {
-   *result.limbs() = boost::math::lcm(*a.limbs(), *b.limbs());
+   *result.limbs() = boost::integer::lcm(*a.limbs(), *b.limbs());
    result.normalize(); // result may overflow the specified number of bits
 }
 
@@ -526,21 +598,34 @@ template <class R, unsigned MinBits1, unsigned MaxBits1, cpp_integer_type SignTy
 inline typename enable_if_c<
             is_trivial_cpp_int<cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1> >::value
             && is_signed_number<cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1> >::value
+            && boost::is_convertible<typename cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>::local_limb_type, R>::value
          >::type
    eval_convert_to(R* result, const cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>& val)
 {
    typedef typename common_type<R, typename cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>::local_limb_type>::type common_type;
    if(std::numeric_limits<R>::is_specialized && (static_cast<common_type>(*val.limbs()) > static_cast<common_type>((std::numeric_limits<R>::max)())))
    {
-      conversion_overflow(typename cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>::checked_type());
-      *result = (std::numeric_limits<R>::max)();
+      if(val.isneg())
+      {
+         check_is_negative(mpl::bool_<boost::is_signed<R>::value || (number_category<R>::value == number_kind_floating_point)>());
+         if(static_cast<common_type>(*val.limbs()) > -static_cast<common_type>((std::numeric_limits<R>::min)()))
+            conversion_overflow(typename cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>::checked_type());
+         *result = (std::numeric_limits<R>::min)();
+      }
+      else
+      {
+         conversion_overflow(typename cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>::checked_type());
+         *result = boost::is_signed<R>::value ? (std::numeric_limits<R>::max)() : static_cast<R>(*val.limbs());
+      }
    }
    else
-      *result = static_cast<R>(*val.limbs());
-   if(val.isneg())
    {
-      check_is_negative(mpl::bool_<boost::is_signed<R>::value || boost::is_floating_point<R>::value>());
-      *result = negate_integer(*result, mpl::bool_<boost::is_signed<R>::value || boost::is_floating_point<R>::value>());
+      *result = static_cast<R>(*val.limbs());
+      if(val.isneg())
+      {
+         check_is_negative(mpl::bool_<boost::is_signed<R>::value || (number_category<R>::value == number_kind_floating_point)>());
+         *result = negate_integer(*result, mpl::bool_<is_signed_number<R>::value || (number_category<R>::value == number_kind_floating_point)>());
+      }
    }
 }
 
@@ -548,6 +633,7 @@ template <class R, unsigned MinBits1, unsigned MaxBits1, cpp_integer_type SignTy
 inline typename enable_if_c<
             is_trivial_cpp_int<cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1> >::value
             && is_unsigned_number<cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1> >::value
+            && boost::is_convertible<typename cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>::local_limb_type, R>::value
          >::type
    eval_convert_to(R* result, const cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>& val)
 {
@@ -555,7 +641,7 @@ inline typename enable_if_c<
    if(std::numeric_limits<R>::is_specialized && (static_cast<common_type>(*val.limbs()) > static_cast<common_type>((std::numeric_limits<R>::max)())))
    {
       conversion_overflow(typename cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>::checked_type());
-      *result = (std::numeric_limits<R>::max)();
+      *result = boost::is_signed<R>::value ? (std::numeric_limits<R>::max)() : static_cast<R>(*val.limbs());
    }
    else
       *result = static_cast<R>(*val.limbs());
@@ -582,6 +668,16 @@ inline typename enable_if_c<is_trivial_cpp_int<cpp_int_backend<MinBits1, MaxBits
 
 template <unsigned MinBits1, unsigned MaxBits1, cpp_integer_type SignType1, cpp_int_check_type Checked1, class Allocator1>
 inline typename enable_if_c<is_trivial_cpp_int<cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1> >::value, unsigned>::type
+eval_msb_imp(const cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>& a)
+{
+   //
+   // Find the index of the least significant bit within that limb:
+   //
+   return boost::multiprecision::detail::find_msb(*a.limbs());
+}
+
+template <unsigned MinBits1, unsigned MaxBits1, cpp_integer_type SignType1, cpp_int_check_type Checked1, class Allocator1>
+inline typename enable_if_c<is_trivial_cpp_int<cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1> >::value, unsigned>::type
    eval_msb(const cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>& a)
 {
    using default_ops::eval_get_sign;
@@ -593,10 +689,19 @@ inline typename enable_if_c<is_trivial_cpp_int<cpp_int_backend<MinBits1, MaxBits
    {
       BOOST_THROW_EXCEPTION(std::range_error("Testing individual bits in negative values is not supported - results are undefined."));
    }
-   //
-   // Find the index of the least significant bit within that limb:
-   //
-   return boost::multiprecision::detail::find_msb(*a.limbs());
+   return eval_msb_imp(a);
+}
+
+template <unsigned MinBits1, unsigned MaxBits1, cpp_integer_type SignType1, cpp_int_check_type Checked1, class Allocator1>
+inline std::size_t hash_value(const cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>& val) BOOST_NOEXCEPT
+{
+   std::size_t result = 0;
+   for(unsigned i = 0; i < val.size(); ++i)
+   {
+      boost::hash_combine(result, val.limbs()[i]);
+   }
+   boost::hash_combine(result, val.sign());
+   return result;
 }
 
 #ifdef BOOST_MSVC

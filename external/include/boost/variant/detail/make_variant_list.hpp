@@ -4,7 +4,7 @@
 //-----------------------------------------------------------------------------
 //
 // Copyright (c) 2002-2003 Eric Friedman, Itay Maman
-// Copyright (c) 2013 Antony Polukhin
+// Copyright (c) 2013-2019 Antony Polukhin
 //
 // Distributed under the Boost Software License, Version 1.0. (See
 // accompanying file LICENSE_1_0.txt or copy at
@@ -13,11 +13,11 @@
 #ifndef BOOST_VARIANT_DETAIL_MAKE_VARIANT_LIST_HPP
 #define BOOST_VARIANT_DETAIL_MAKE_VARIANT_LIST_HPP
 
-#include "boost/variant/variant_fwd.hpp"
+#include <boost/variant/variant_fwd.hpp>
 
-#include "boost/mpl/list.hpp"
-#include "boost/preprocessor/cat.hpp"
-#include "boost/preprocessor/enum.hpp"
+#include <boost/mpl/list.hpp>
+#include <boost/preprocessor/cat.hpp>
+#include <boost/preprocessor/enum.hpp>
 
 namespace boost {
 namespace detail { namespace variant {

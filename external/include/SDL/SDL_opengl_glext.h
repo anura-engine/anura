@@ -40,6 +40,9 @@ extern "C" {
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN 1
 #endif
+#ifndef NOMINMAX   /* don't define min() and max(). */
+#define NOMINMAX
+#endif
 #include <windows.h>
 #endif
 
@@ -2987,6 +2990,11 @@ GLAPI GLboolean APIENTRY glIsProgramARB (GLuint program);
 #ifndef GL_ARB_framebuffer_sRGB
 #define GL_ARB_framebuffer_sRGB 1
 #endif /* GL_ARB_framebuffer_sRGB */
+
+#ifndef GL_KHR_context_flush_control
+#define GL_CONTEXT_RELEASE_BEHAVIOR       0x82FB
+#define GL_CONTEXT_RELEASE_BEHAVIOR_FLUSH 0x82FC
+#endif /* GL_KHR_context_flush_control */
 
 #ifndef GL_ARB_geometry_shader4
 #define GL_ARB_geometry_shader4 1

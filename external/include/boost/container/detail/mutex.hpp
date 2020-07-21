@@ -1,14 +1,9 @@
-// Copyright (C) 2000 Stephen Cleary
-//
-// Distributed under the Boost Software License, Version 1.0. (See
-// accompanying file LICENSE_1_0.txt or copy at
-// http://www.boost.org/LICENSE_1_0.txt)
-//
-// See http://www.boost.org for updates, documentation, and revision history.
-
 //////////////////////////////////////////////////////////////////////////////
 //
-// (C) Copyright Ion Gaztanaga 2007-2013. Distributed under the Boost
+// (C) Copyright Stephen Cleary 2000 
+// (C) Copyright Ion Gaztanaga  2015-2017.
+//
+// Distributed under the Boost
 // Software License, Version 1.0. (See accompanying file
 // LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
@@ -18,6 +13,14 @@
 
 #ifndef BOOST_CONTAINER_MUTEX_HPP
 #define BOOST_CONTAINER_MUTEX_HPP
+
+#ifndef BOOST_CONFIG_HPP
+#  include <boost/config.hpp>
+#endif
+
+#if defined(BOOST_HAS_PRAGMA_ONCE)
+#  pragma once
+#endif
 
 //#define BOOST_CONTAINER_NO_MT
 //#define BOOST_CONTAINER_NO_SPINLOCKS
@@ -99,7 +102,7 @@
 
    #elif (defined(__GNUC__) && (defined(__i386__) || defined(__x86_64__)))
       /* Custom spin locks for older gcc on x86 */
-      static FORCEINLINE int boost_container_x86_cas_lock(int *sl) {
+      static inline int boost_container_x86_cas_lock(int *sl) {
          int ret;
          int val = 1;
          int cmp = 0;
@@ -110,7 +113,7 @@
          return ret;
       }
 
-      static FORCEINLINE void boost_container_x86_clear_lock(int* sl) {
+      static inline void boost_container_x86_clear_lock(int* sl) {
          assert(*sl != 0);
          int prev = 0;
          int ret;
@@ -134,8 +137,10 @@
       #define SLEEP_EX_DURATION     50 /* delay for yield/sleep */
       #define SPIN_LOCK_YIELD  SleepEx(SLEEP_EX_DURATION, FALSE)
    #elif defined (__SVR4) && defined (__sun) /* solaris */
+      #include <thread.h>
       #define SPIN_LOCK_YIELD   thr_yield();
    #elif !defined(LACKS_SCHED_H)
+      #include <sched.h>
       #define SPIN_LOCK_YIELD   sched_yield();
    #else
       #define SPIN_LOCK_YIELD
@@ -156,7 +161,7 @@
    #define BOOST_CONTAINER_TRY_LOCK(sl)          !BOOST_CONTAINER_CAS_LOCK(sl)
    #define BOOST_CONTAINER_RELEASE_LOCK(sl)      BOOST_CONTAINER_CLEAR_LOCK(sl)
    #define BOOST_CONTAINER_ACQUIRE_LOCK(sl)      (BOOST_CONTAINER_CAS_LOCK(sl)? boost_interprocess_spin_acquire_lock(sl) : 0)
-   #define BOOST_CONTAINER_INITIAL_LOCK(sl)      (*sl = 0)
+   #define BOOST_MOVE_INITIAL_LOCK(sl)      (*sl = 0)
    #define BOOST_CONTAINER_DESTROY_LOCK(sl)      (0)
 #elif BOOST_MUTEX_HELPER == BOOST_MUTEX_HELPER_WIN32
    //
@@ -166,7 +171,7 @@
 
 namespace boost {
 namespace container {
-namespace container_detail {
+namespace dtl {
 
 #if BOOST_MUTEX_HELPER == BOOST_MUTEX_HELPER_NONE
    class null_mutex
@@ -193,7 +198,7 @@ namespace container_detail {
       void operator=(const spin_mutex &);
 
    public:
-      spin_mutex() { BOOST_CONTAINER_INITIAL_LOCK(&sl); }
+      spin_mutex() { BOOST_MOVE_INITIAL_LOCK(&sl); }
 
       void lock() { BOOST_CONTAINER_ACQUIRE_LOCK(&sl); }
       void unlock() { BOOST_CONTAINER_RELEASE_LOCK(&sl); }
@@ -263,7 +268,7 @@ class scoped_lock
    Mutex &m_;
 };
 
-} // namespace container_detail
+} // namespace dtl
 } // namespace container
 } // namespace boost
 

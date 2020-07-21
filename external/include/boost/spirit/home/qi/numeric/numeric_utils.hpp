@@ -44,7 +44,7 @@ namespace boost { namespace spirit { namespace qi
     // Low level unsigned integer parser
     ///////////////////////////////////////////////////////////////////////////
     template <typename T, unsigned Radix, unsigned MinDigits, int MaxDigits
-      , bool Accumulate = false>
+      , bool Accumulate = false, bool IgnoreOverflowDigits = false>
     struct extract_uint
     {
         // check template parameter 'Radix' for validity
@@ -64,12 +64,12 @@ namespace boost { namespace spirit { namespace qi
               , MinDigits
               , MaxDigits
               , detail::positive_accumulator<Radix>
-              , Accumulate>
+              , Accumulate
+              , IgnoreOverflowDigits>
             extract_type;
 
             Iterator save = first;
-            if (!extract_type::parse(first, last,
-                detail::cast_unsigned<T>::call(attr_)))
+            if (!extract_type::parse(first, last, attr_))
             {
                 first = save;
                 return false;

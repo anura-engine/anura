@@ -1,5 +1,6 @@
 /*=============================================================================
     Copyright (c) 2001-2011 Joel de Guzman
+    Copyright (c) 2018 Kohei Takahashi
 
     Distributed under the Boost Software License, Version 1.0. (See accompanying
     file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -10,7 +11,6 @@
 #include <boost/fusion/support/config.hpp>
 #include <iosfwd>
 
-#include <boost/config.hpp>
 #if defined(BOOST_MSVC)
 # pragma warning(push)
 # pragma warning(disable: 4522) // multiple assignment operators specified warning
@@ -22,65 +22,51 @@ namespace boost { namespace fusion
 {
     struct unused_type
     {
-        BOOST_FUSION_GPU_ENABLED
-        unused_type()
+        BOOST_CONSTEXPR BOOST_FUSION_GPU_ENABLED
+        BOOST_DEFAULTED_FUNCTION(
+        unused_type() BOOST_FUSION_NOEXCEPT_ON_DEFAULTED,
+        {
+        })
+
+        BOOST_CONSTEXPR BOOST_FUSION_GPU_ENABLED
+        BOOST_DEFAULTED_FUNCTION(
+        unused_type(unused_type const&) BOOST_FUSION_NOEXCEPT_ON_DEFAULTED,
+        {
+        })
+
+        template <typename T>
+        BOOST_CONSTEXPR BOOST_FUSION_GPU_ENABLED
+        unused_type(T const&) BOOST_NOEXCEPT
         {
         }
 
-        template <typename T>
-        BOOST_FUSION_GPU_ENABLED
-        unused_type(T const&)
-        {
-        }
-
-        template <typename T>
-        BOOST_FUSION_GPU_ENABLED
+        BOOST_FUSION_CONSTEXPR_THIS BOOST_FUSION_GPU_ENABLED
         unused_type const&
-        operator=(T const&) const
-        {
-            return *this;
-        }
-
-        template <typename T>
-        BOOST_FUSION_GPU_ENABLED
-        unused_type&
-        operator=(T const&)
-        {
-            return *this;
-        }
-
-        BOOST_FUSION_GPU_ENABLED
-        unused_type const&
-        operator=(unused_type const&) const
-        {
-            return *this;
-        }
-
-        BOOST_FUSION_GPU_ENABLED
-        unused_type&
-        operator=(unused_type const&)
+        operator=(unused_type const&) const BOOST_NOEXCEPT
         {
             return *this;
         }
     };
 
-    unused_type const unused = unused_type();
+    BOOST_CONSTEXPR_OR_CONST unused_type unused = unused_type();
 
     namespace detail
     {
         struct unused_only
         {
-            BOOST_FUSION_GPU_ENABLED
-            unused_only(unused_type const&) {}
+            BOOST_CONSTEXPR BOOST_FUSION_GPU_ENABLED
+            unused_only(unused_type const&) BOOST_NOEXCEPT {}
         };
     }
 
-    inline std::ostream& operator<<(std::ostream& out, detail::unused_only const&)
+    BOOST_CONSTEXPR
+    inline std::ostream& operator<<(std::ostream& out, detail::unused_only const&) BOOST_NOEXCEPT
     {
         return out;
     }
 
-    inline std::istream& operator>>(std::istream& in, unused_type&)
+    BOOST_CONSTEXPR
+    inline std::istream& operator>>(std::istream& in, unused_type&) BOOST_NOEXCEPT
     {
         return in;
     }

@@ -22,6 +22,7 @@
 #include <set>
 #include <map>
 #include <stdexcept>
+#include <utility>
 
 #include <iosfwd>
 
@@ -41,7 +42,7 @@ namespace program_options {
         are used only to validate input. Second affect interpretation of the
         option, for example default value for it or function that should be
         called  when the value is finally known. Routines which perform parsing
-        never use second kind of properties -- they are side effect free.
+        never use second kind of properties \-- they are side effect free.
         @sa options_description
     */
     class BOOST_PROGRAM_OPTIONS_DECL option_description {
@@ -71,7 +72,7 @@ namespace program_options {
             The 'name' parameter is interpreted by the following rules:
             - if there's no "," character in 'name', it specifies long name
             - otherwise, the part before "," specifies long name and the part
-            after -- short name.
+            after \-- short name.
         */
         option_description(const char* name,
                            const value_semantic* s);
@@ -106,13 +107,15 @@ namespace program_options {
         /** Returns the canonical name for the option description to enable the user to
             recognised a matching option.
             1) For short options ('-', '/'), returns the short name prefixed.
-            2) For long options ('--' / '-') returns the long name prefixed
-            3) All other cases, returns the long name (if present) or the short name,
-                unprefixed.
+            2) For long options ('--' / '-') returns the first long name prefixed
+            3) All other cases, returns the first long name (if present) or the short
+               name, unprefixed.
         */
         std::string canonical_display_name(int canonical_option_style = 0) const;
 
         const std::string& long_name() const;
+
+        const std::pair<const std::string*, std::size_t> long_names() const;
 
         /// Explanation of this option
         const std::string& description() const;
@@ -129,9 +132,24 @@ namespace program_options {
 
     private:
     
-        option_description& set_name(const char* name);
+        option_description& set_names(const char* name);
 
-        std::string m_short_name, m_long_name, m_description;
+        /**
+         * a one-character "switch" name - with its prefix,
+         * so that this is either empty or has length 2 (e.g. "-c"
+         */
+        std::string m_short_name;
+
+        /**
+         *  one or more names by which this option may be specified
+         *  on a command-line or in a config file, which are not
+         *  a single-letter switch. The names here are _without_
+         * any prefix.
+         */
+        std::vector<std::string> m_long_names;
+
+        std::string m_description;
+
         // shared_ptr is needed to simplify memory management in
         // copy ctor and destructor.
         shared_ptr<const value_semantic> m_value_semantic;
@@ -236,6 +254,11 @@ namespace program_options {
         void print(std::ostream& os, unsigned width = 0) const;
 
     private:
+#if BOOST_WORKAROUND(BOOST_MSVC, BOOST_TESTED_AT(1800))
+        // prevent warning C4512: assignment operator could not be generated
+        options_description& operator=(const options_description&);
+#endif
+
         typedef std::map<std::string, int>::const_iterator name2index_iterator;
         typedef std::pair<name2index_iterator, name2index_iterator> 
             approximation_range;

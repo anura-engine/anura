@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2014.
+ *          Copyright Andrey Semashev 2007 - 2015.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -16,7 +16,7 @@
 #define BOOST_LOG_SUPPORT_SPIRIT_CLASSIC_HPP_INCLUDED_
 
 #include <boost/mpl/bool.hpp>
-#include <boost/utility/enable_if.hpp>
+#include <boost/core/enable_if.hpp>
 #include <boost/log/detail/config.hpp>
 #include <boost/log/utility/functional/matches.hpp>
 

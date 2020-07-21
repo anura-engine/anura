@@ -67,7 +67,11 @@ class priority_queue:
 
     typedef typename heap_base_maker::type super_t;
     typedef typename super_t::internal_type internal_type;
+#ifdef BOOST_NO_CXX11_ALLOCATOR
     typedef typename heap_base_maker::allocator_argument::template rebind<internal_type>::other internal_type_allocator;
+#else
+    typedef typename std::allocator_traits<typename heap_base_maker::allocator_argument>::template rebind_alloc<internal_type> internal_type_allocator;
+#endif
     typedef std::vector<internal_type, internal_type_allocator> container_type;
 
     template <typename Heap1, typename Heap2>
@@ -83,6 +87,9 @@ class priority_queue:
         typedef detail::stable_heap_iterator<T, typename container_type::const_iterator, super_t> iterator;
         typedef iterator const_iterator;
         typedef typename container_type::allocator_type allocator_type;
+#ifndef BOOST_NO_CXX11_ALLOCATOR
+        typedef typename std::allocator_traits<allocator_type> allocator_traits;
+#endif
     };
 #endif
 
@@ -92,6 +99,9 @@ public:
     typedef typename implementation_defined::difference_type difference_type;
     typedef typename implementation_defined::value_compare value_compare;
     typedef typename implementation_defined::allocator_type allocator_type;
+#ifndef BOOST_NO_CXX11_ALLOCATOR
+    typedef typename implementation_defined::allocator_traits allocator_traits;
+#endif
     typedef typename implementation_defined::reference reference;
     typedef typename implementation_defined::const_reference const_reference;
     typedef typename implementation_defined::pointer pointer;
@@ -136,7 +146,7 @@ public:
      *
      * \b Note: Only available, if BOOST_NO_CXX11_RVALUE_REFERENCES is not defined
      * */
-    priority_queue(priority_queue && rhs):
+    priority_queue(priority_queue && rhs) BOOST_NOEXCEPT_IF(boost::is_nothrow_move_constructible<super_t>::value):
         super_t(std::move(rhs)), q_(std::move(rhs.q_))
     {}
 
@@ -147,7 +157,7 @@ public:
      *
      * \b Note: Only available, if BOOST_NO_CXX11_RVALUE_REFERENCES is not defined
      * */
-    priority_queue & operator=(priority_queue && rhs)
+    priority_queue & operator=(priority_queue && rhs) BOOST_NOEXCEPT_IF(boost::is_nothrow_move_assignable<super_t>::value)
     {
         super_t::operator=(std::move(rhs));
         q_ = std::move(rhs.q_);
@@ -174,7 +184,7 @@ public:
      * \b Complexity: Constant.
      *
      * */
-    bool empty(void) const
+    bool empty(void) const BOOST_NOEXCEPT
     {
         return q_.empty();
     }
@@ -185,7 +195,7 @@ public:
      * \b Complexity: Constant.
      *
      * */
-    size_type size(void) const
+    size_type size(void) const BOOST_NOEXCEPT
     {
         return q_.size();
     }
@@ -196,7 +206,7 @@ public:
      * \b Complexity: Constant.
      *
      * */
-    size_type max_size(void) const
+    size_type max_size(void) const BOOST_NOEXCEPT
     {
         return q_.max_size();
     }
@@ -207,7 +217,7 @@ public:
      * \b Complexity: Linear.
      *
      * */
-    void clear(void)
+    void clear(void) BOOST_NOEXCEPT
     {
         q_.clear();
     }
@@ -281,7 +291,7 @@ public:
      * \b Complexity: Constant.
      *
      * */
-    void swap(priority_queue & rhs)
+    void swap(priority_queue & rhs) BOOST_NOEXCEPT_IF(boost::is_nothrow_move_constructible<super_t>::value && boost::is_nothrow_move_assignable<super_t>::value)
     {
         super_t::swap(rhs);
         q_.swap(rhs.q_);
@@ -293,7 +303,7 @@ public:
      * \b Complexity: Constant.
      *
      * */
-    iterator begin(void) const
+    iterator begin(void) const BOOST_NOEXCEPT
     {
         return iterator(q_.begin());
     }
@@ -304,7 +314,7 @@ public:
      * \b Complexity: Constant.
      *
      * */
-    iterator end(void) const
+    iterator end(void) const BOOST_NOEXCEPT
     {
         return iterator(q_.end());
     }

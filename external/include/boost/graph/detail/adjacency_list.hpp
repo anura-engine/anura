@@ -237,12 +237,6 @@ namespace boost {
       inline stored_edge() { }
       inline stored_edge(Vertex target, const no_property& = no_property())
         : m_target(target) { }
-      // Need to write this explicitly so stored_edge_property can
-      // invoke Base::operator= (at least, for SGI MIPSPro compiler)
-      inline stored_edge& operator=(const stored_edge& x) {
-        m_target = x.m_target;
-        return *this;
-      }
       inline Vertex& get_target() const { return m_target; }
       inline const no_property& get_property() const { return s_prop; }
       inline bool operator==(const stored_edge& x) const
@@ -258,7 +252,7 @@ namespace boost {
     template <class Vertex>
     no_property stored_edge<Vertex>::s_prop;
 
-#if defined(BOOST_NO_CXX11_RVALUE_REFERENCES) || defined(BOOST_NO_CXX11_DEFAULTED_FUNCTIONS)
+#if defined(BOOST_NO_CXX11_RVALUE_REFERENCES) || defined(BOOST_NO_CXX11_SMART_PTR)
     template <class Vertex, class Property>
     class stored_edge_property : public stored_edge<Vertex> {
       typedef stored_edge_property self;
@@ -270,12 +264,24 @@ namespace boost {
                                   const Property& p = Property())
         : stored_edge<Vertex>(target), m_property(new Property(p)) { }
       stored_edge_property(const self& x)
-        : Base(x), m_property(const_cast<self&>(x).m_property) { }
+        : Base(static_cast< Base const& >(x)), m_property(const_cast<self&>(x).m_property) { }
       self& operator=(const self& x) {
-        Base::operator=(x);
+        // NOTE: avoid 'Base::operator=(x);' broken on SGI MIPSpro (bug 55771 of Mozilla).
+        static_cast<Base&>(*this) = static_cast< Base const& >(x);
         m_property = const_cast<self&>(x).m_property;
         return *this;
       }
+#if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+      // NOTE Don't rely on default operators, their behavior is broken on several compilers (GCC 4.6).
+      stored_edge_property(self&& x)
+        : Base(static_cast< Base&& >(x)), m_property(std::move(x.m_property)) { }
+      self& operator=(self&& x) {
+        // NOTE: avoid 'Base::operator=(x);' broken on SGI MIPSpro (bug 55771 of Mozilla).
+        static_cast<Base&>(*this) = static_cast< Base&& >(x);
+        m_property = std::move(x.m_property);
+        return *this;
+      }
+#endif
       inline Property& get_property() { return *m_property; }
       inline const Property& get_property() const { return *m_property; }
     protected:
@@ -283,7 +289,11 @@ namespace boost {
       // invalidation for add_edge() with EdgeList=vecS. Instead we
       // hold a pointer to the property. std::auto_ptr is not
       // a perfect fit for the job, but it is darn close.
+#ifdef BOOST_NO_AUTO_PTR
+      std::unique_ptr<Property> m_property;
+#else
       std::auto_ptr<Property> m_property;
+#endif
     };
 #else
     template <class Vertex, class Property>
@@ -296,27 +306,22 @@ namespace boost {
       inline stored_edge_property(Vertex target,
                                   const Property& p = Property())
         : stored_edge<Vertex>(target), m_property(new Property(p)) { }
-#if defined(BOOST_MSVC) || (defined(BOOST_GCC) && (BOOST_GCC / 100) < 406)
-      stored_edge_property(self&& x) : Base(static_cast< Base const& >(x)) {
-        m_property.swap(x.m_property);
-      }
-      stored_edge_property(self const& x) : Base(static_cast< Base const& >(x)) {
-        m_property.swap(const_cast<self&>(x).m_property);
-      }
+      stored_edge_property(self&& x) : Base(static_cast< Base&& >(x)),
+          m_property(std::move(x.m_property)) { }
+      stored_edge_property(self const& x) : Base(static_cast< Base const& >(x)),
+          m_property(std::move(const_cast<self&>(x).m_property)) { }
       self& operator=(self&& x) {
-        Base::operator=(static_cast< Base const& >(x));
+        // NOTE: avoid 'Base::operator=(x);' broken on SGI MIPSpro (bug 55771 of Mozilla).
+        static_cast<Base&>(*this) = static_cast< Base&& >(x);
         m_property = std::move(x.m_property);
         return *this;
       }
       self& operator=(self const& x) {
-        Base::operator=(static_cast< Base const& >(x));
+        // NOTE: avoid 'Base::operator=(x);' broken on SGI MIPSpro (bug 55771 of Mozilla).
+        static_cast<Base&>(*this) = static_cast< Base const& >(x);
         m_property = std::move(const_cast<self&>(x).m_property);
         return *this;
       }
-#else
-      stored_edge_property(self&& x) = default;
-      self& operator=(self&& x) = default;
-#endif
       inline Property& get_property() { return *m_property; }
       inline const Property& get_property() const { return *m_property; }
     protected:
@@ -2046,16 +2051,15 @@ namespace boost {
           if ((*ei).get_target() > u)
             --(*ei).get_target();
       }
+
       template <class EdgeList, class vertex_descriptor>
       inline void
       reindex_edge_list(EdgeList& el, vertex_descriptor u,
                         boost::disallow_parallel_edge_tag)
       {
-        typename EdgeList::iterator ei = el.begin(), e_end = el.end();
-        while (ei != e_end) {
-          typename EdgeList::value_type ce = *ei;
-          ++ei;
-          if (ce.get_target() > u) {
+        for(typename EdgeList::iterator ei = el.begin(); ei != el.end(); ++ei) {
+          if (ei->get_target() > u) {
+            typename EdgeList::value_type ce = *ei;
             el.erase(ce);
             --ce.get_target();
             el.insert(ce);

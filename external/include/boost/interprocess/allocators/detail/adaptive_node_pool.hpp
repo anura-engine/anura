@@ -11,7 +11,11 @@
 #ifndef BOOST_INTERPROCESS_DETAIL_ADAPTIVE_NODE_POOL_HPP
 #define BOOST_INTERPROCESS_DETAIL_ADAPTIVE_NODE_POOL_HPP
 
-#if defined(_MSC_VER)
+#ifndef BOOST_CONFIG_HPP
+#  include <boost/config.hpp>
+#endif
+#
+#if defined(BOOST_HAS_PRAGMA_ONCE)
 #  pragma once
 #endif
 
@@ -44,13 +48,13 @@ template< class SegmentManager
         , unsigned char OverheadPercent
         >
 class private_adaptive_node_pool
-   :  public boost::container::container_detail::private_adaptive_node_pool_impl
+   :  public boost::container::dtl::private_adaptive_node_pool_impl_rt
          < typename SegmentManager::segment_manager_base_type
          , ::boost::container::adaptive_pool_flag::size_ordered |
            ::boost::container::adaptive_pool_flag::address_ordered
          >
 {
-   typedef boost::container::container_detail::private_adaptive_node_pool_impl
+   typedef boost::container::dtl::private_adaptive_node_pool_impl_rt
       < typename SegmentManager::segment_manager_base_type
       , ::boost::container::adaptive_pool_flag::size_ordered |
         ::boost::container::adaptive_pool_flag::address_ordered
@@ -65,9 +69,6 @@ class private_adaptive_node_pool
    typedef typename base_t::size_type  size_type;
 
    static const size_type nodes_per_block = NodesPerBlock;
-
-   //Deprecated, use node_per_block
-   static const size_type nodes_per_chunk = NodesPerBlock;
 
    //!Constructor from a segment manager. Never throws
    private_adaptive_node_pool(segment_manager *segment_mngr)

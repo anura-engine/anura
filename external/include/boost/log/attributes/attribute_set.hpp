@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2014.
+ *          Copyright Andrey Semashev 2007 - 2015.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -60,9 +60,16 @@ public:
     }
 
     //! Conversion operator (would be invoked in case of reading from the container)
-    operator mapped_type() const BOOST_NOEXCEPT;
+    BOOST_FORCEINLINE operator mapped_type() const BOOST_NOEXCEPT
+    {
+        return read_mapped_value();
+    }
     //! Assignment operator (would be invoked in case of writing to the container)
     mapped_type& operator= (mapped_type const& val) const;
+
+private:
+    //! Reads the referenced mapped value from the container
+    mapped_type read_mapped_value() const BOOST_NOEXCEPT;
 };
 
 } // namespace aux
@@ -468,8 +475,8 @@ inline void swap(attribute_set& left, attribute_set& right) BOOST_NOEXCEPT
 
 namespace aux {
 
-//! Conversion operator (would be invoked in case of reading from the container)
-inline attribute_set_reference_proxy::operator mapped_type() const BOOST_NOEXCEPT
+//! Reads the referenced mapped value from the container
+inline attribute_set_reference_proxy::mapped_type attribute_set_reference_proxy::read_mapped_value() const BOOST_NOEXCEPT
 {
     attribute_set::iterator it = m_pContainer->find(m_key);
     if (it != m_pContainer->end())

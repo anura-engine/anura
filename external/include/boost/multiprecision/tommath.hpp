@@ -12,7 +12,9 @@
 #include <boost/math/special_functions/fpclassify.hpp>
 #include <boost/cstdint.hpp>
 #include <boost/scoped_array.hpp>
+#include <boost/functional/hash_fwd.hpp>
 #include <tommath.h>
+#include <cctype>
 #include <cmath>
 #include <limits>
 #include <climits>
@@ -38,8 +40,8 @@ void eval_add(tommath_int& t, const tommath_int& o);
 
 struct tommath_int
 {
-   typedef mpl::list<boost::int32_t, long long>             signed_types;
-   typedef mpl::list<boost::uint32_t, unsigned long long>   unsigned_types;
+   typedef mpl::list<boost::int32_t, boost::long_long_type>             signed_types;
+   typedef mpl::list<boost::uint32_t, boost::ulong_long_type>   unsigned_types;
    typedef mpl::list<long double>                           float_types;
 
    tommath_int()
@@ -70,11 +72,11 @@ struct tommath_int
          detail::check_tommath_result(mp_copy(const_cast< ::mp_int*>(&o.m_data), &m_data));
       return *this;
    }
-   tommath_int& operator = (unsigned long long i)
+   tommath_int& operator = (boost::ulong_long_type i)
    {
       if(m_data.dp == 0)
          detail::check_tommath_result(mp_init(&m_data));
-      unsigned long long mask = ((1uLL << std::numeric_limits<unsigned>::digits) - 1);
+      boost::ulong_long_type mask = ((1uLL << std::numeric_limits<unsigned>::digits) - 1);
       unsigned shift = 0;
       ::mp_int t;
       detail::check_tommath_result(mp_init(&t));
@@ -91,7 +93,7 @@ struct tommath_int
       mp_clear(&t);
       return *this;
    }
-   tommath_int& operator = (long long i)
+   tommath_int& operator = (boost::long_long_type i)
    {
       if(m_data.dp == 0)
          detail::check_tommath_result(mp_init(&m_data));
@@ -118,7 +120,7 @@ struct tommath_int
       if(m_data.dp == 0)
          detail::check_tommath_result(mp_init(&m_data));
       bool neg = i < 0;
-      *this = static_cast<boost::uint32_t>(std::abs(i));
+      *this = boost::multiprecision::detail::unsigned_abs(i);
       if(neg)
          detail::check_tommath_result(mp_neg(&m_data, &m_data));
       return *this;
@@ -222,7 +224,7 @@ struct tommath_int
             unsigned shift = radix == 8 ? 3 : 4;
             unsigned block_count = DIGIT_BIT / shift;
             unsigned block_shift = shift * block_count;
-            unsigned long long val, block;
+            boost::ulong_long_type val, block;
             while(*s)
             {
                block = 0;
@@ -310,14 +312,17 @@ struct tommath_int
       boost::scoped_array<char> a(new char[s+1]);
       detail::check_tommath_result(mp_toradix_n(const_cast< ::mp_int*>(&m_data), a.get(), base, s+1));
       std::string result = a.get();
+      if (f & std::ios_base::uppercase)
+          for (size_t i = 0; i < result.length(); ++i)
+              result[i] = std::toupper(result[i]);
       if((base != 10) && (f & std::ios_base::showbase))
       {
          int pos = result[0] == '-' ? 1 : 0;
-         const char* pp = base == 8 ? "0" : "0x";
-         result.insert(pos, pp);
+         const char* pp = base == 8 ? "0" : (f & std::ios_base::uppercase) ? "0X" : "0x";
+         result.insert(static_cast<std::string::size_type>(pos), pp);
       }
       if((f & std::ios_base::showpos) && (result[0] != '-'))
-         result.insert(0, 1, '+');
+         result.insert(static_cast<std::string::size_type>(0), 1, '+');
       return result;
    }
    ~tommath_int()
@@ -415,21 +420,29 @@ inline void eval_left_shift(tommath_int& t, UI i)
 template <class UI>
 inline void eval_right_shift(tommath_int& t, UI i)
 {
+   using default_ops::eval_increment;
+   using default_ops::eval_decrement;
+   bool neg = eval_get_sign(t) < 0;
    tommath_int d;
+   if(neg)
+      eval_increment(t);
    detail::check_tommath_result(mp_div_2d(&t.data(), static_cast<unsigned>(i), &t.data(), &d.data()));
+   if(neg)
+      eval_decrement(t);
 }
 template <class UI>
 inline void eval_left_shift(tommath_int& t, const tommath_int& v, UI i)
 {
    detail::check_tommath_result(mp_mul_2d(const_cast< ::mp_int*>(&v.data()), static_cast<unsigned>(i), &t.data()));
 }
+/*
 template <class UI>
 inline void eval_right_shift(tommath_int& t, const tommath_int& v, UI i)
 {
    tommath_int d;
    detail::check_tommath_result(mp_div_2d(const_cast< ::mp_int*>(&v.data()), static_cast<unsigned long>(i), &t.data(), &d.data()));
 }
-
+*/
 inline void eval_bitwise_and(tommath_int& result, const tommath_int& v)
 {
    BOOST_MP_TOMMATH_BIT_OP_CHECK(result);
@@ -536,7 +549,7 @@ inline void eval_complement(tommath_int& result, const tommath_int& u)
 
    // Create a mask providing the extra bits we need and add to result:
    tommath_int mask;
-   mask = static_cast<long long>((1u << padding) - 1);
+   mask = static_cast<boost::long_long_type>((1u << padding) - 1);
    eval_left_shift(mask, shift);
    add(result, mask);
 }
@@ -549,6 +562,7 @@ inline int eval_get_sign(const tommath_int& val)
 {
    return mp_iszero(&val.data()) ? 0 : SIGN(&val.data()) ? -1 : 1;
 }
+/*
 template <class A>
 inline void eval_convert_to(A* result, const tommath_int& val)
 {
@@ -566,6 +580,7 @@ inline void eval_convert_to(signed char* result, const tommath_int& val)
 {
    *result = static_cast<signed char>(boost::lexical_cast<int>(val.str(0, std::ios_base::fmtflags(0))));
 }
+*/
 inline void eval_abs(tommath_int& result, const tommath_int& val)
 {
    detail::check_tommath_result(mp_abs(const_cast< ::mp_int*>(&val.data()), &result.data()));
@@ -640,8 +655,17 @@ inline typename enable_if<is_unsigned<Integer>, Integer>::type eval_integer_modu
 template <class Integer>
 inline typename enable_if<is_signed<Integer>, Integer>::type eval_integer_modulus(const tommath_int& x, Integer val)
 {
-   typedef typename make_unsigned<Integer>::type unsigned_type;
-   return eval_integer_modulus(x, static_cast<unsigned_type>(std::abs(val)));
+   return eval_integer_modulus(x, boost::multiprecision::detail::unsigned_abs(val));
+}
+
+inline std::size_t hash_value(const tommath_int& val)
+{
+   std::size_t result = 0;
+   std::size_t len = val.data().used;
+   for(std::size_t i = 0; i < len; ++i)
+      boost::hash_combine(result, val.data().dp[i]);
+   boost::hash_combine(result, val.data().sign);
+   return result;
 }
 
 } // namespace backends
@@ -680,7 +704,7 @@ public:
    static number_type lowest() { return (min)(); }
    BOOST_STATIC_CONSTEXPR int digits = INT_MAX;
    BOOST_STATIC_CONSTEXPR int digits10 = (INT_MAX / 1000) * 301L;
-   BOOST_STATIC_CONSTEXPR int max_digits10 = digits10 + 2;
+   BOOST_STATIC_CONSTEXPR int max_digits10 = digits10 + 3;
    BOOST_STATIC_CONSTEXPR bool is_signed = true;
    BOOST_STATIC_CONSTEXPR bool is_integer = true;
    BOOST_STATIC_CONSTEXPR bool is_exact = true;

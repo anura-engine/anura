@@ -26,7 +26,6 @@
 #include <boost/spirit/home/support/handles_container.hpp>
 #include <boost/fusion/include/at.hpp>
 #include <boost/fusion/include/vector.hpp>
-#include <boost/lexical_cast.hpp>
 #include <boost/integer_traits.hpp>
 #include <boost/mpl/bool.hpp>
 #include <boost/utility/enable_if.hpp>
@@ -275,10 +274,10 @@ namespace boost { namespace spirit { namespace karma
 
         template <typename Terminal>
         result_type operator()(Terminal const& term, Subject const& subject
-          , unused_type) const
+          , Modifiers const& modifiers) const
         {
             return result_type(subject
-              , compile<karma::domain>(fusion::at_c<1>(term.args))
+              , compile<karma::domain>(fusion::at_c<1>(term.args), modifiers)
               , fusion::at_c<0>(term.args));
         }
     };

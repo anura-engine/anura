@@ -19,7 +19,6 @@
 #include <boost/assert.hpp>
 
 #include <boost/serialization/throw_exception.hpp>
-#include <boost/serialization/pfto.hpp>
 #include <boost/static_assert.hpp>
 
 #include <boost/iterator/transform_iterator.hpp>
@@ -38,7 +37,7 @@ template<class CharType>
 struct to_6_bit {
     typedef CharType result_type;
     CharType operator()(CharType t) const{
-        const signed char lookup_table[] = {
+        static const signed char lookup_table[] = {
             -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
             -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
             -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,62,-1,-1,-1,63,
@@ -96,9 +95,9 @@ class binary_from_base64 : public
 public:
     // make composible buy using templated constructor
     template<class T>
-    binary_from_base64(BOOST_PFTO_WRAPPER(T)  start) :
+    binary_from_base64(T  start) :
         super_t(
-            Base(BOOST_MAKE_PFTO_WRAPPER(static_cast< T >(start))), 
+            Base(static_cast< T >(start)),
             detail::to_6_bit<CharType>()
         )
     {}

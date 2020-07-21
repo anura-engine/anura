@@ -7,12 +7,11 @@
 #if !defined(BOOST_SPIRIT_X3_DETAIL_RULE_JAN_08_2012_0326PM)
 #define BOOST_SPIRIT_X3_DETAIL_RULE_JAN_08_2012_0326PM
 
-#if defined(_MSC_VER)
-#pragma once
-#endif
-
+#include <boost/core/ignore_unused.hpp>
+#include <boost/spirit/home/x3/auxiliary/guard.hpp>
 #include <boost/spirit/home/x3/core/parser.hpp>
-#include <boost/spirit/home/x3/support/traits/make_attribute.hpp>
+#include <boost/spirit/home/x3/core/skip_over.hpp>
+#include <boost/spirit/home/x3/directive/expect.hpp>
 #include <boost/spirit/home/x3/support/utility/sfinae.hpp>
 #include <boost/spirit/home/x3/nonterminal/detail/transform_attribute.hpp>
 #include <boost/utility/addressof.hpp>
@@ -25,8 +24,8 @@ namespace boost { namespace spirit { namespace x3
 {
     template <typename ID>
     struct identity;
-    
-    template <typename ID, typename Attribute = unused_type>
+
+    template <typename ID, typename Attribute = unused_type, bool force_attribute = false>
     struct rule;
 
     struct parse_pass_context_tag;
@@ -43,7 +42,7 @@ namespace boost { namespace spirit { namespace x3
             bool r;
         };
     }
-    
+
     // default parse_rule implementation
     template <typename ID, typename Attribute, typename Iterator
       , typename Context, typename ActualAttribute>
@@ -88,7 +87,7 @@ namespace boost { namespace spirit { namespace x3 { namespace detail
         detail::simple_trace_type& f;
     };
 #endif
-    
+
     template <typename ID, typename Iterator, typename Context, typename Enable = void>
     struct has_on_error : mpl::false_ {};
 
@@ -106,7 +105,7 @@ namespace boost { namespace spirit { namespace x3 { namespace detail
         >
       : mpl::true_
     {};
-    
+
     template <typename ID, typename Iterator, typename Attribute, typename Context, typename Enable = void>
     struct has_on_success : mpl::false_ {};
 
@@ -136,15 +135,15 @@ namespace boost { namespace spirit { namespace x3 { namespace detail
     {
         typedef identity<ID> type;
     };
-    
+
     template <typename ID, typename RHS, typename Context>
     Context const&
-    make_rule_context(RHS const& rhs, Context const& context
+    make_rule_context(RHS const& /* rhs */, Context const& context
       , mpl::false_ /* is_default_parse_rule */)
     {
         return context;
     }
-    
+
     template <typename ID, typename RHS, typename Context>
     auto make_rule_context(RHS const& rhs, Context const& context
       , mpl::true_ /* is_default_parse_rule */ )
@@ -157,13 +156,13 @@ namespace boost { namespace spirit { namespace x3 { namespace detail
     {
         template <typename Iterator, typename Context, typename ActualAttribute>
         static bool call_on_success(
-            Iterator& first, Iterator const& last
-          , Context const& context, ActualAttribute& attr
+            Iterator& /* first */, Iterator const& /* last */
+          , Context const& /* context */, ActualAttribute& /* attr */
           , mpl::false_ /* No on_success handler */ )
         {
             return true;
         }
-        
+
         template <typename Iterator, typename Context, typename ActualAttribute>
         static bool call_on_success(
             Iterator& first, Iterator const& last
@@ -179,7 +178,7 @@ namespace boost { namespace spirit { namespace x3 { namespace detail
             );
             return pass;
         }
-        
+
         template <typename RHS, typename Iterator, typename Context
           , typename RContext, typename ActualAttribute>
         static bool parse_rhs_main(
@@ -219,7 +218,7 @@ namespace boost { namespace spirit { namespace x3 { namespace detail
                 r = call_on_success(first_, i, context, attr
                   , has_on_success<ID, Iterator, Context, ActualAttribute>());
             }
-            
+
             if (r)
                 first = i;
             return r;
@@ -286,7 +285,7 @@ namespace boost { namespace spirit { namespace x3 { namespace detail
         static bool parse_rhs(
             RHS const& rhs
           , Iterator& first, Iterator const& last
-          , Context const& context, RContext& rcontext, ActualAttribute& attr
+          , Context const& context, RContext& rcontext, ActualAttribute& /* attr */
           , mpl::true_)
         {
             return parse_rhs_main(rhs, first, last, context, rcontext, unused);
@@ -301,84 +300,48 @@ namespace boost { namespace spirit { namespace x3 { namespace detail
           , Context const& context, ActualAttribute& attr
           , ExplicitAttrPropagation)
         {
-            typedef traits::make_attribute<Attribute, ActualAttribute> make_attribute;
+            boost::ignore_unused(rule_name);
 
             // do down-stream transformation, provides attribute for
             // rhs parser
             typedef traits::transform_attribute<
-                typename make_attribute::type, Attribute, parser_id>
+                ActualAttribute, Attribute, parser_id>
             transform;
 
-            typedef typename make_attribute::value_type value_type;
             typedef typename transform::type transform_attr;
-            value_type made_attr = make_attribute::call(attr);
-            transform_attr attr_ = transform::pre(made_attr);
+            transform_attr attr_ = transform::pre(attr);
 
             bool ok_parse
               //Creates a place to hold the result of parse_rhs
               //called inside the following scope.
               ;
             {
-             //Create a scope to cause the dbg variable below (within
-             //the #if...#endif) to call it's DTOR before any
-             //modifications are made to the attribute, attr_ passed
-             //to parse_rhs (such as might be done in
-             //traits::post_transform when, for example,
-             //ActualAttribute is a recursive variant).
+             // Create a scope to cause the dbg variable below (within
+             // the #if...#endif) to call it's DTOR before any
+             // modifications are made to the attribute, attr_ passed
+             // to parse_rhs (such as might be done in
+             // transform::post when, for example,
+             // ActualAttribute is a recursive variant).
 #if defined(BOOST_SPIRIT_X3_DEBUG)
-                  context_debug<Iterator, typename make_attribute::value_type>
+                context_debug<Iterator, transform_attr>
                 dbg(rule_name, first, last, attr_, ok_parse);
 #endif
-                ok_parse=parse_rhs(rhs, first, last, context, attr_, attr_
+                ok_parse = parse_rhs(rhs, first, last, context, attr_, attr_
                    , mpl::bool_
-                     < (  RHS::has_action 
+                     < (  RHS::has_action
                        && !ExplicitAttrPropagation::value
                        )
                      >()
                   );
             }
-            if(ok_parse)
+            if (ok_parse)
             {
                 // do up-stream transformation, this integrates the results
                 // back into the original attribute value, if appropriate
-                traits::post_transform(attr, attr_);
+                transform::post(attr, std::forward<transform_attr>(attr_));
             }
             return ok_parse;
         }
-
-//        template <typename RuleDef, typename Iterator, typename Context
-//            , typename ActualAttribute, typename AttributeContext>
-//        static bool call_from_rule(
-//            RuleDef const& rule_def
-//          , char const* rule_name
-//          , Iterator& first, Iterator const& last
-//          , Context const& context, ActualAttribute& attr, AttributeContext& attr_ctx)
-//        {
-//            // This is called when a rule-body has already been established.
-//            // The rule body is already established by the rule_definition class,
-//            // we will not do it again. We'll simply call the RHS by calling
-//            // call_rule_definition.
-//
-//            return call_rule_definition(
-//                rule_def.rhs, rule_name, first, last
-//              , context, attr, attr_ctx.attr_ptr
-//              , mpl::bool_<(RuleDef::explicit_attribute_propagation)>());
-//        }
-//
-//        template <typename RuleDef, typename Iterator, typename Context
-//            , typename ActualAttribute>
-//        static bool call_from_rule(
-//            RuleDef const& rule_def
-//          , char const* rule_name
-//          , Iterator& first, Iterator const& last
-//          , Context const& context, ActualAttribute& attr, unused_type)
-//        {
-//            // This is called when a rule-body has *not yet* been established.
-//            // The rule body is established by the rule_definition class, so
-//            // we call it to parse and establish the rule-body.
-//
-//            return rule_def.parse(first, last, context, unused, attr); // $$$ fix unused param $$$
-//        }
     };
 }}}}
 

@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2014.
+ *          Copyright Andrey Semashev 2007 - 2015.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -18,6 +18,9 @@
 
 #include <boost/cstdint.hpp>
 #include <boost/log/detail/config.hpp>
+#if defined(BOOST_WINDOWS) && !defined(__CYGWIN__)
+#include <boost/winapi/basic_types.hpp>
+#endif
 #include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_HAS_PRAGMA_ONCE
@@ -73,7 +76,7 @@ public:
  */
 #if defined(BOOST_WINDOWS) && !defined(__CYGWIN__)
 
-typedef uint64_t (__stdcall* get_tick_count_t)();
+typedef uint64_t (BOOST_WINAPI_WINAPI_CC* get_tick_count_t)();
 extern BOOST_LOG_API get_tick_count_t get_tick_count;
 
 inline timestamp get_timestamp()

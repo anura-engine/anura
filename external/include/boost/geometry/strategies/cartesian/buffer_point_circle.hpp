@@ -1,5 +1,13 @@
 // Boost.Geometry (aka GGL, Generic Geometry Library)
-// Copyright (c) 2012-2014 Barend Gehrels, Amsterdam, the Netherlands.
+
+// Copyright (c) 2012-2015 Barend Gehrels, Amsterdam, the Netherlands.
+
+// This file was modified by Oracle on 2015, 2018.
+// Modifications copyright (c) 2015, 2018, Oracle and/or its affiliates.
+
+// Contributed and/or modified by Menelaos Karavelas, on behalf of Oracle
+// Contributed and/or modified by Adam Wulkiewicz, on behalf of Oracle
+
 // Use, modification and distribution is subject to the Boost Software License,
 // Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
@@ -9,12 +17,15 @@
 
 #include <cstddef>
 
-#include <boost/range.hpp>
+#include <boost/range/value_type.hpp>
 
-#include <boost/geometry/util/math.hpp>
+#include <boost/geometry/core/access.hpp>
+#include <boost/geometry/core/coordinate_type.hpp>
 
 #include <boost/geometry/strategies/buffer.hpp>
 
+#include <boost/geometry/util/math.hpp>
+#include <boost/geometry/util/select_most_precise.hpp>
 
 namespace boost { namespace geometry
 {
@@ -39,15 +50,17 @@ namespace strategy { namespace buffer
 [heading See also]
 \* [link geometry.reference.algorithms.buffer.buffer_7_with_strategies buffer (with strategies)]
 \* [link geometry.reference.strategies.strategy_buffer_point_square point_square]
+\* [link geometry.reference.strategies.strategy_buffer_geographic_point_circle geographic_point_circle]
 }
  */
 class point_circle
 {
 public :
     //! \brief Constructs the strategy
-    //! \param count number of points for the created circle
+    //! \param count number of points for the created circle (if count
+    //! is smaller than 3, count is internally set to 3)
     explicit point_circle(std::size_t count = 90)
-        : m_count(count)
+        : m_count((count < 3u) ? 3u : count)
     {}
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
@@ -77,8 +90,7 @@ public :
         promoted_type const buffer_distance = distance_strategy.apply(point, point,
                         strategy::buffer::buffer_side_left);
 
-        promoted_type const two = 2.0;
-        promoted_type const two_pi = two * geometry::math::pi<promoted_type>();
+        promoted_type const two_pi = geometry::math::two_pi<promoted_type>();
 
         promoted_type const diff = two_pi / promoted_type(m_count);
         promoted_type a = 0;

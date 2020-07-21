@@ -248,8 +248,8 @@ namespace boost {
 
     template <class Graph>
     struct choose_graph_copy {
-      typedef typename Graph::traversal_category Trv;
-      typedef typename Graph::directed_category Dr;
+      typedef typename graph_traits<Graph>::traversal_category Trv;
+      typedef typename graph_traits<Graph>::directed_category Dr;
       enum { algo = 
              (is_convertible<Trv, vertex_list_graph_tag>::value
               && is_convertible<Trv, edge_list_graph_tag>::value)
@@ -395,7 +395,7 @@ namespace boost {
                          CopyVertex cv, CopyEdge ce)
         : g_out(graph), orig2copy(c), copy_vertex(cv), copy_edge(ce) { }
 
-      template <class Vertex, class Graph>
+      template <class Vertex>
       typename graph_traits<NewGraph>::vertex_descriptor copy_one_vertex(Vertex u) const {
         typename graph_traits<NewGraph>::vertex_descriptor
           new_u = add_vertex(g_out);

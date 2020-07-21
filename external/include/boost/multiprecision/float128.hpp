@@ -1,13 +1,14 @@
 ///////////////////////////////////////////////////////////////
 //  Copyright 2013 John Maddock. Distributed under the Boost
 //  Software License, Version 1.0. (See accompanying file
-//  LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_
+//  LICENSE_1_0.txt or copy at https://www.boost.org/LICENSE_1_0.txt
 
 #ifndef BOOST_MP_FLOAT128_HPP
 #define BOOST_MP_FLOAT128_HPP
 
 #include <boost/config.hpp>
 #include <boost/scoped_array.hpp>
+#include <boost/functional/hash.hpp>
 #include <boost/multiprecision/number.hpp>
 
 #if defined(BOOST_INTEL) && !defined(BOOST_MP_USE_FLOAT128) && !defined(BOOST_MP_USE_QUAD)
@@ -118,38 +119,128 @@ using backends::float128_backend;
 
 template<>
 struct number_category<backends::float128_backend> : public mpl::int_<number_kind_floating_point> {};
+#if defined(BOOST_MP_USE_QUAD)
 template<>
 struct number_category<float128_type> : public mpl::int_<number_kind_floating_point> {};
+#endif
 
 typedef number<float128_backend, et_off> float128;
+
+#ifndef BOOST_NO_CXX11_CONSTEXPR
+
+namespace quad_constants {
+   constexpr __float128 quad_min = static_cast<__float128>(1)
+      * static_cast<__float128>(DBL_MIN)
+      * static_cast<__float128>(DBL_MIN)
+      * static_cast<__float128>(DBL_MIN)
+      * static_cast<__float128>(DBL_MIN)
+      * static_cast<__float128>(DBL_MIN)
+      * static_cast<__float128>(DBL_MIN)
+      * static_cast<__float128>(DBL_MIN)
+      * static_cast<__float128>(DBL_MIN)
+      * static_cast<__float128>(DBL_MIN)
+      * static_cast<__float128>(DBL_MIN)
+      * static_cast<__float128>(DBL_MIN)
+      * static_cast<__float128>(DBL_MIN)
+      * static_cast<__float128>(DBL_MIN)
+      * static_cast<__float128>(DBL_MIN)
+      * static_cast<__float128>(DBL_MIN)
+      * static_cast<__float128>(DBL_MIN) / 1073741824;
+
+   constexpr __float128 quad_denorm_min = static_cast<__float128>(1)
+      * static_cast<__float128>(DBL_MIN)
+      * static_cast<__float128>(DBL_MIN)
+      * static_cast<__float128>(DBL_MIN)
+      * static_cast<__float128>(DBL_MIN)
+      * static_cast<__float128>(DBL_MIN)
+      * static_cast<__float128>(DBL_MIN)
+      * static_cast<__float128>(DBL_MIN)
+      * static_cast<__float128>(DBL_MIN)
+      * static_cast<__float128>(DBL_MIN)
+      * static_cast<__float128>(DBL_MIN)
+      * static_cast<__float128>(DBL_MIN)
+      * static_cast<__float128>(DBL_MIN)
+      * static_cast<__float128>(DBL_MIN)
+      * static_cast<__float128>(DBL_MIN)
+      * static_cast<__float128>(DBL_MIN)
+      * static_cast<__float128>(DBL_MIN) / 5.5751862996326557854e+42;
+
+   constexpr double dbl_mult = 8.9884656743115795386e+307;  // This has one bit set only.
+   constexpr __float128 quad_max = (static_cast<__float128>(1) - 9.62964972193617926527988971292463659e-35)  // This now has all bits sets to 1
+      * static_cast<__float128>(dbl_mult)
+      * static_cast<__float128>(dbl_mult)
+      * static_cast<__float128>(dbl_mult)
+      * static_cast<__float128>(dbl_mult)
+      * static_cast<__float128>(dbl_mult)
+      * static_cast<__float128>(dbl_mult)
+      * static_cast<__float128>(dbl_mult)
+      * static_cast<__float128>(dbl_mult)
+      * static_cast<__float128>(dbl_mult)
+      * static_cast<__float128>(dbl_mult)
+      * static_cast<__float128>(dbl_mult)
+      * static_cast<__float128>(dbl_mult)
+      * static_cast<__float128>(dbl_mult)
+      * static_cast<__float128>(dbl_mult)
+      * static_cast<__float128>(dbl_mult)
+      * static_cast<__float128>(dbl_mult) * 65536;
+}
+
+#define BOOST_MP_QUAD_MIN boost::multiprecision::quad_constants::quad_min
+#define BOOST_MP_QUAD_DENORM_MIN boost::multiprecision::quad_constants::quad_denorm_min
+#define BOOST_MP_QUAD_MAX boost::multiprecision::quad_constants::quad_max
+
+#else
+
+#define BOOST_MP_QUAD_MIN 3.36210314311209350626267781732175260e-4932Q
+#define BOOST_MP_QUAD_DENORM_MIN 6.475175119438025110924438958227646552e-4966Q
+#define BOOST_MP_QUAD_MAX 1.18973149535723176508575932662800702e4932Q
+
+#endif
 
 namespace backends{
 
 struct float128_backend
 {
-   typedef mpl::list<signed char, short, int, long, long long>   signed_types;
+   typedef mpl::list<signed char, short, int, long, boost::long_long_type>   signed_types;
    typedef mpl::list<unsigned char, unsigned short, 
-      unsigned int, unsigned long, unsigned long long>           unsigned_types;
+      unsigned int, unsigned long, boost::ulong_long_type>           unsigned_types;
    typedef mpl::list<float, double, long double>                 float_types;
    typedef int                                                   exponent_type;
 
 private:
    float128_type m_value;
 public:
-   BOOST_CONSTEXPR float128_backend() : m_value(0) {}
-   BOOST_CONSTEXPR float128_backend(const float128_backend& o) : m_value(o.m_value) {}
-   float128_backend& operator = (const float128_backend& o) 
+   BOOST_CONSTEXPR float128_backend() BOOST_NOEXCEPT : m_value(0) {}
+   BOOST_CONSTEXPR float128_backend(const float128_backend& o) BOOST_NOEXCEPT : m_value(o.m_value) {}
+   float128_backend& operator = (const float128_backend& o) BOOST_NOEXCEPT
    {
       m_value = o.m_value;
       return *this;
    }
    template <class T>
-   BOOST_CONSTEXPR float128_backend(const T& i, const typename enable_if_c<is_convertible<T, float128_type>::value>::type* = 0)
+   BOOST_CONSTEXPR float128_backend(const T& i, const typename enable_if_c<is_convertible<T, float128_type>::value>::type* = 0) BOOST_NOEXCEPT_IF(noexcept(std::declval<float128_type&>() = std::declval<const T&>()))
       : m_value(i) {}
    template <class T>
-   typename enable_if_c<is_arithmetic<T>::value || is_convertible<T, float128_type>::value, float128_backend&>::type operator = (const T& i)
+   typename enable_if_c<is_arithmetic<T>::value || is_convertible<T, float128_type>::value, float128_backend&>::type operator = (const T& i) BOOST_NOEXCEPT_IF(noexcept(std::declval<float128_type&>() = std::declval<const T&>()))
    {
       m_value = i;
+      return *this;
+   }
+   float128_backend(long double const& f)
+   {
+      BOOST_STATIC_CONSTEXPR __float128 inf_val = static_cast<__float128>(HUGE_VAL);
+      if(boost::math::isinf(f))
+         m_value = (f < 0) ? -inf_val : inf_val;
+      else
+         m_value = f;
+   }
+   float128_backend& operator=(long double const& f)
+   {
+      BOOST_STATIC_CONSTEXPR __float128 inf_val = static_cast<__float128>(HUGE_VAL);
+      if(boost::math::isinf(f))
+         m_value = (f < 0) ? -inf_val : inf_val;
+      else
+         m_value = f;
       return *this;
    }
    float128_backend& operator = (const char* s)
@@ -166,15 +257,14 @@ public:
 #endif
       return *this;
    }
-   void swap(float128_backend& o)
+   void swap(float128_backend& o) BOOST_NOEXCEPT
    {
       std::swap(m_value, o.value());
    }
    std::string str(std::streamsize digits, std::ios_base::fmtflags f)const
    {
 #ifndef BOOST_MP_USE_QUAD
-      char buf[100];
-      boost::scoped_array<char> buf2;
+      char buf[128];
       std::string format = "%";
       if(f & std::ios_base::showpos)
          format += "+";
@@ -184,6 +274,7 @@ public:
       if(digits == 0)
          digits = 36;
       format += "Q";
+
       if(f & std::ios_base::scientific)
          format += "e";
       else if(f & std::ios_base::fixed)
@@ -191,11 +282,17 @@ public:
       else
          format += "g";
 
-      int v = quadmath_snprintf (buf, 100, format.c_str(), digits, m_value);
+      int v;
+      if ((f & std::ios_base::scientific) && (f & std::ios_base::fixed) ) {
+         v = quadmath_snprintf (buf, sizeof buf, "%Qa", m_value);
+      } else {
+         v = quadmath_snprintf (buf, sizeof buf, format.c_str(), digits, m_value);
+      }
 
-      if((v < 0) || (v >= 99))
+      if((v < 0) || (v >= 127))
       {
          int v_max = v;
+         boost::scoped_array<char> buf2;
          buf2.reset(new char[v+3]);
          v = quadmath_snprintf (&buf2[0], v_max + 3, format.c_str(), digits, m_value);
          if(v >= v_max + 3)
@@ -209,7 +306,7 @@ public:
       return boost::multiprecision::detail::convert_to_string(*this, digits ? digits : 37, f);
 #endif
    }
-   void negate()
+   void negate() BOOST_NOEXCEPT
    {
       m_value = -m_value;
    }
@@ -336,7 +433,19 @@ inline void eval_sqrt(float128_backend& result, const float128_backend& arg)
 }
 inline int eval_fpclassify(const float128_backend& arg)
 {
-   return isnanq(arg.value()) ? FP_NAN : isinfq(arg.value()) ? FP_INFINITE : arg.value() == 0 ? FP_ZERO : FP_NORMAL;
+   if(isnanq(arg.value()))
+      return FP_NAN;
+   else if(isinfq(arg.value()))
+      return FP_INFINITE;
+   else if(arg.value() == 0)
+      return FP_ZERO;
+
+   float128_backend t(arg);
+   if(t.value() < 0)
+      t.negate();
+   if(t.value() < BOOST_MP_QUAD_MIN)
+      return FP_SUBNORMAL;
+   return FP_NORMAL;
 }
 
 inline void eval_increment(float128_backend& arg)
@@ -371,15 +480,6 @@ inline void eval_fabs(float128_backend& result, const float128_backend& arg)
 
 inline void eval_trunc(float128_backend& result, const float128_backend& arg)
 {
-   if(isnanq(arg.value()) || isinfq(arg.value()))
-   {
-      result = boost::math::policies::raise_rounding_error(
-            "boost::multiprecision::trunc<%1%>(%1%)", 0, 
-            number<float128_backend, et_off>(arg), 
-            number<float128_backend, et_off>(arg), 
-            boost::math::policies::policy<>()).backend();
-      return;
-   }
    result.value() = truncq(arg.value());
 }
 /*
@@ -461,10 +561,102 @@ inline void eval_atan2(float128_backend& result, const float128_backend& a, cons
 {
    result.value() = atan2q(a.value(), b.value());
 }
+#ifndef BOOST_MP_USE_QUAD
+inline void eval_multiply_add(float128_backend& result, const float128_backend& a, const float128_backend& b, const float128_backend& c)
+{
+   result.value() = fmaq(a.value(), b.value(), c.value());
+}
+inline int eval_signbit BOOST_PREVENT_MACRO_SUBSTITUTION(const float128_backend& arg)
+{
+   return ::signbitq(arg.value());
+}
+#endif
+
+inline std::size_t hash_value(const float128_backend& val)
+{
+   return  boost::hash_value(static_cast<double>(val.value()));
+}
 
 } // namespace backends
 
-}} // namespaces
+   template<boost::multiprecision::expression_template_option ExpressionTemplates>
+   inline boost::multiprecision::number<float128_backend, ExpressionTemplates> asinh BOOST_PREVENT_MACRO_SUBSTITUTION(const boost::multiprecision::number<float128_backend, ExpressionTemplates>& arg)
+   {
+      return asinhq(arg.backend().value());
+   }
+   template<boost::multiprecision::expression_template_option ExpressionTemplates>
+   inline boost::multiprecision::number<float128_backend, ExpressionTemplates> acosh BOOST_PREVENT_MACRO_SUBSTITUTION(const boost::multiprecision::number<float128_backend, ExpressionTemplates>& arg)
+   {
+      return acoshq(arg.backend().value());
+   }
+   template<boost::multiprecision::expression_template_option ExpressionTemplates>
+   inline boost::multiprecision::number<float128_backend, ExpressionTemplates> atanh BOOST_PREVENT_MACRO_SUBSTITUTION(const boost::multiprecision::number<float128_backend, ExpressionTemplates>& arg)
+   {
+      return atanhq(arg.backend().value());
+   }
+   template<boost::multiprecision::expression_template_option ExpressionTemplates>
+   inline boost::multiprecision::number<float128_backend, ExpressionTemplates> cbrt BOOST_PREVENT_MACRO_SUBSTITUTION(const boost::multiprecision::number<float128_backend, ExpressionTemplates>& arg)
+   {
+      return cbrtq(arg.backend().value());
+   }
+   template<boost::multiprecision::expression_template_option ExpressionTemplates>
+   inline boost::multiprecision::number<float128_backend, ExpressionTemplates> erf BOOST_PREVENT_MACRO_SUBSTITUTION(const boost::multiprecision::number<float128_backend, ExpressionTemplates>& arg)
+   {
+      return erfq(arg.backend().value());
+   }
+   template<boost::multiprecision::expression_template_option ExpressionTemplates>
+   inline boost::multiprecision::number<float128_backend, ExpressionTemplates> erfc BOOST_PREVENT_MACRO_SUBSTITUTION(const boost::multiprecision::number<float128_backend, ExpressionTemplates>& arg)
+   {
+      return erfcq(arg.backend().value());
+   }
+   template<boost::multiprecision::expression_template_option ExpressionTemplates>
+   inline boost::multiprecision::number<float128_backend, ExpressionTemplates> expm1 BOOST_PREVENT_MACRO_SUBSTITUTION(const boost::multiprecision::number<float128_backend, ExpressionTemplates>& arg)
+   {
+      return expm1q(arg.backend().value());
+   }
+   template<boost::multiprecision::expression_template_option ExpressionTemplates>
+   inline boost::multiprecision::number<float128_backend, ExpressionTemplates> lgamma BOOST_PREVENT_MACRO_SUBSTITUTION(const boost::multiprecision::number<float128_backend, ExpressionTemplates>& arg)
+   {
+      return lgammaq(arg.backend().value());
+   }
+   template<boost::multiprecision::expression_template_option ExpressionTemplates>
+   inline boost::multiprecision::number<float128_backend, ExpressionTemplates> tgamma BOOST_PREVENT_MACRO_SUBSTITUTION(const boost::multiprecision::number<float128_backend, ExpressionTemplates>& arg)
+   {
+      return tgammaq(arg.backend().value());
+   }
+   template<boost::multiprecision::expression_template_option ExpressionTemplates>
+   inline boost::multiprecision::number<float128_backend, ExpressionTemplates> log1p BOOST_PREVENT_MACRO_SUBSTITUTION(const boost::multiprecision::number<float128_backend, ExpressionTemplates>& arg)
+   {
+      return log1pq(arg.backend().value());
+   }
+
+#ifndef BOOST_MP_USE_QUAD
+   template <multiprecision::expression_template_option ExpressionTemplates>
+   inline boost::multiprecision::number<boost::multiprecision::backends::float128_backend, ExpressionTemplates> copysign BOOST_PREVENT_MACRO_SUBSTITUTION(const boost::multiprecision::number<boost::multiprecision::backends::float128_backend, ExpressionTemplates>& a, const boost::multiprecision::number<boost::multiprecision::backends::float128_backend, ExpressionTemplates>& b)
+   {
+      return ::copysignq(a.backend().value(), b.backend().value());
+   }
+
+   inline void eval_remainder(float128_backend& result, const float128_backend& a, const float128_backend& b)
+   {
+      result.value() = remainderq(a.value(), b.value());
+   }
+   inline void eval_remainder(float128_backend& result, const float128_backend& a, const float128_backend& b, int* pi)
+   {
+      result.value() = remquoq(a.value(), b.value(), pi);
+   }
+#endif
+
+} // namespace multiprecision
+
+namespace math {
+
+   using boost::multiprecision::signbit;
+   using boost::multiprecision::copysign;
+
+} // namespace math
+
+} // namespace boost
 
 namespace boost{ 
 namespace archive{
@@ -482,7 +674,7 @@ void do_serialize(Archive& ar, boost::multiprecision::backends::float128_backend
    // saving
    // non-binary
    std::string s(val.str(0, std::ios_base::scientific));
-   ar & s;
+   ar & boost::serialization::make_nvp("value", s);
 }
 template <class Archive>
 void do_serialize(Archive& ar, boost::multiprecision::backends::float128_backend& val, const mpl::true_&, const mpl::false_&)
@@ -490,7 +682,7 @@ void do_serialize(Archive& ar, boost::multiprecision::backends::float128_backend
    // loading
    // non-binary
    std::string s;
-   ar & s;
+   ar & boost::serialization::make_nvp("value", s);
    val = s.c_str();
 }
 
@@ -520,7 +712,9 @@ void serialize(Archive& ar, boost::multiprecision::backends::float128_backend& v
    float128_detail::do_serialize(ar, val, load_tag(), binary_tag());
 }
 
-}}
+} // namepsace archive
+
+} // namespace boost
 
 namespace std{
 
@@ -530,17 +724,17 @@ class numeric_limits<boost::multiprecision::number<boost::multiprecision::backen
    typedef boost::multiprecision::number<boost::multiprecision::backends::float128_backend, ExpressionTemplates> number_type;
 public:
    BOOST_STATIC_CONSTEXPR bool is_specialized = true;
-   static number_type (min)() BOOST_NOEXCEPT { return 3.36210314311209350626267781732175260e-4932Q; }
-   static number_type (max)() BOOST_NOEXCEPT { return 1.18973149535723176508575932662800702e4932Q; }
+   static number_type (min)() BOOST_NOEXCEPT { return BOOST_MP_QUAD_MIN; }
+   static number_type (max)() BOOST_NOEXCEPT { return BOOST_MP_QUAD_MAX; }
    static number_type lowest() BOOST_NOEXCEPT { return -(max)(); }
    BOOST_STATIC_CONSTEXPR int digits = 113;
-   BOOST_STATIC_CONSTEXPR int digits10 = 34;
+   BOOST_STATIC_CONSTEXPR int digits10 = 33;
    BOOST_STATIC_CONSTEXPR int max_digits10 = 36;
    BOOST_STATIC_CONSTEXPR bool is_signed = true;
    BOOST_STATIC_CONSTEXPR bool is_integer = false;
    BOOST_STATIC_CONSTEXPR bool is_exact = false;
    BOOST_STATIC_CONSTEXPR int radix = 2;
-   static number_type epsilon() { return 1.92592994438723585305597794258492732e-34Q; }
+   static number_type epsilon() { return 1.92592994438723585305597794258492732e-34; /* this double value has only one bit set and so is exact */ }
    static number_type round_error() { return 0.5; }
    BOOST_STATIC_CONSTEXPR int min_exponent = -16381;
    BOOST_STATIC_CONSTEXPR int min_exponent10 = min_exponent * 301L / 1000L;
@@ -549,12 +743,12 @@ public:
    BOOST_STATIC_CONSTEXPR bool has_infinity = true;
    BOOST_STATIC_CONSTEXPR bool has_quiet_NaN = true;
    BOOST_STATIC_CONSTEXPR bool has_signaling_NaN = false;
-   BOOST_STATIC_CONSTEXPR float_denorm_style has_denorm = denorm_absent;
-   BOOST_STATIC_CONSTEXPR bool has_denorm_loss = false;
-   static number_type infinity() { return 1.0q / 0.0q; }
+   BOOST_STATIC_CONSTEXPR float_denorm_style has_denorm = denorm_present;
+   BOOST_STATIC_CONSTEXPR bool has_denorm_loss = true;
+   static number_type infinity() { return HUGE_VAL; /* conversion from double infinity OK */ }
    static number_type quiet_NaN() { return number_type("nan"); }
    static number_type signaling_NaN() { return 0; }
-   static number_type denorm_min() { return 0; }
+   static number_type denorm_min() { return BOOST_MP_QUAD_DENORM_MIN; }
    BOOST_STATIC_CONSTEXPR bool is_iec559 = true;
    BOOST_STATIC_CONSTEXPR bool is_bounded = false;
    BOOST_STATIC_CONSTEXPR bool is_modulo = false;
@@ -562,6 +756,59 @@ public:
    BOOST_STATIC_CONSTEXPR bool tinyness_before = false;
    BOOST_STATIC_CONSTEXPR float_round_style round_style = round_to_nearest;
 };
+
+template <boost::multiprecision::expression_template_option ExpressionTemplates>
+BOOST_CONSTEXPR_OR_CONST bool numeric_limits<boost::multiprecision::number<boost::multiprecision::backends::float128_backend, ExpressionTemplates> >::is_specialized;
+template <boost::multiprecision::expression_template_option ExpressionTemplates>
+BOOST_CONSTEXPR_OR_CONST int numeric_limits<boost::multiprecision::number<boost::multiprecision::backends::float128_backend, ExpressionTemplates> >::digits;
+template <boost::multiprecision::expression_template_option ExpressionTemplates>
+BOOST_CONSTEXPR_OR_CONST int numeric_limits<boost::multiprecision::number<boost::multiprecision::backends::float128_backend, ExpressionTemplates> >::digits10;
+template <boost::multiprecision::expression_template_option ExpressionTemplates>
+BOOST_CONSTEXPR_OR_CONST int numeric_limits<boost::multiprecision::number<boost::multiprecision::backends::float128_backend, ExpressionTemplates> >::max_digits10;
+
+template <boost::multiprecision::expression_template_option ExpressionTemplates>
+BOOST_CONSTEXPR_OR_CONST bool numeric_limits<boost::multiprecision::number<boost::multiprecision::backends::float128_backend, ExpressionTemplates> >::is_signed;
+template <boost::multiprecision::expression_template_option ExpressionTemplates>
+BOOST_CONSTEXPR_OR_CONST bool numeric_limits<boost::multiprecision::number<boost::multiprecision::backends::float128_backend, ExpressionTemplates> >::is_integer;
+template <boost::multiprecision::expression_template_option ExpressionTemplates>
+BOOST_CONSTEXPR_OR_CONST bool numeric_limits<boost::multiprecision::number<boost::multiprecision::backends::float128_backend, ExpressionTemplates> >::is_exact;
+template <boost::multiprecision::expression_template_option ExpressionTemplates>
+BOOST_CONSTEXPR_OR_CONST int numeric_limits<boost::multiprecision::number<boost::multiprecision::backends::float128_backend, ExpressionTemplates> >::radix;
+
+
+template <boost::multiprecision::expression_template_option ExpressionTemplates>
+BOOST_CONSTEXPR_OR_CONST int numeric_limits<boost::multiprecision::number<boost::multiprecision::backends::float128_backend, ExpressionTemplates> >::min_exponent;
+template <boost::multiprecision::expression_template_option ExpressionTemplates>
+BOOST_CONSTEXPR_OR_CONST int numeric_limits<boost::multiprecision::number<boost::multiprecision::backends::float128_backend, ExpressionTemplates> >::max_exponent;
+template <boost::multiprecision::expression_template_option ExpressionTemplates>
+BOOST_CONSTEXPR_OR_CONST int numeric_limits<boost::multiprecision::number<boost::multiprecision::backends::float128_backend, ExpressionTemplates> >::min_exponent10;
+template <boost::multiprecision::expression_template_option ExpressionTemplates>
+BOOST_CONSTEXPR_OR_CONST int numeric_limits<boost::multiprecision::number<boost::multiprecision::backends::float128_backend, ExpressionTemplates> >::max_exponent10;
+
+template <boost::multiprecision::expression_template_option ExpressionTemplates>
+BOOST_CONSTEXPR_OR_CONST bool numeric_limits<boost::multiprecision::number<boost::multiprecision::backends::float128_backend, ExpressionTemplates> >::has_infinity;
+template <boost::multiprecision::expression_template_option ExpressionTemplates>
+BOOST_CONSTEXPR_OR_CONST bool numeric_limits<boost::multiprecision::number<boost::multiprecision::backends::float128_backend, ExpressionTemplates> >::has_quiet_NaN;
+template <boost::multiprecision::expression_template_option ExpressionTemplates>
+BOOST_CONSTEXPR_OR_CONST bool numeric_limits<boost::multiprecision::number<boost::multiprecision::backends::float128_backend, ExpressionTemplates> >::has_signaling_NaN;
+template <boost::multiprecision::expression_template_option ExpressionTemplates>
+BOOST_CONSTEXPR_OR_CONST bool numeric_limits<boost::multiprecision::number<boost::multiprecision::backends::float128_backend, ExpressionTemplates> >::has_denorm_loss;
+
+template <boost::multiprecision::expression_template_option ExpressionTemplates>
+BOOST_CONSTEXPR_OR_CONST bool numeric_limits<boost::multiprecision::number<boost::multiprecision::backends::float128_backend, ExpressionTemplates> >::is_iec559;
+template <boost::multiprecision::expression_template_option ExpressionTemplates>
+BOOST_CONSTEXPR_OR_CONST bool numeric_limits<boost::multiprecision::number<boost::multiprecision::backends::float128_backend, ExpressionTemplates> >::is_bounded;
+template <boost::multiprecision::expression_template_option ExpressionTemplates>
+BOOST_CONSTEXPR_OR_CONST bool numeric_limits<boost::multiprecision::number<boost::multiprecision::backends::float128_backend, ExpressionTemplates> >::is_modulo;
+template <boost::multiprecision::expression_template_option ExpressionTemplates>
+BOOST_CONSTEXPR_OR_CONST bool numeric_limits<boost::multiprecision::number<boost::multiprecision::backends::float128_backend, ExpressionTemplates> >::traps;
+template <boost::multiprecision::expression_template_option ExpressionTemplates>
+BOOST_CONSTEXPR_OR_CONST bool numeric_limits<boost::multiprecision::number<boost::multiprecision::backends::float128_backend, ExpressionTemplates> >::tinyness_before;
+
+template <boost::multiprecision::expression_template_option ExpressionTemplates>
+BOOST_CONSTEXPR_OR_CONST float_round_style numeric_limits<boost::multiprecision::number<boost::multiprecision::backends::float128_backend, ExpressionTemplates> >::round_style;
+template <boost::multiprecision::expression_template_option ExpressionTemplates>
+BOOST_CONSTEXPR_OR_CONST float_denorm_style numeric_limits<boost::multiprecision::number<boost::multiprecision::backends::float128_backend, ExpressionTemplates> >::has_denorm;
 
 } // namespace std
 

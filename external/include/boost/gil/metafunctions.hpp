@@ -1,29 +1,17 @@
-/*
-    Copyright 2005-2007 Adobe Systems Incorporated
-   
-    Use, modification and distribution are subject to the Boost Software License,
-    Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
-    http://www.boost.org/LICENSE_1_0.txt).
+//
+// Copyright 2005-2007 Adobe Systems Incorporated
+//
+// Distributed under the Boost Software License, Version 1.0
+// See accompanying file LICENSE_1_0.txt or copy at
+// http://www.boost.org/LICENSE_1_0.txt
+//
+#ifndef BOOST_GIL_METAFUNCTIONS_HPP
+#define BOOST_GIL_METAFUNCTIONS_HPP
 
-    See http://opensource.adobe.com/gil for most recent version including documentation.
-*/
+#include <boost/gil/channel.hpp>
+#include <boost/gil/dynamic_step.hpp>
+#include <boost/gil/concepts.hpp>
 
-/*************************************************************************************************/
-
-#ifndef GIL_METAFUNCTIONS_HPP
-#define GIL_METAFUNCTIONS_HPP
-
-////////////////////////////////////////////////////////////////////////////////////////
-/// \file               
-/// \brief metafunctions that construct types or return type properties
-/// \author Lubomir Bourdev and Hailin Jin \n
-///         Adobe Systems Incorporated
-///
-/// \date 2005-2007 \n Last updated on February 6, 2007
-///
-////////////////////////////////////////////////////////////////////////////////////////
-
-#include <iterator>
 #include <boost/mpl/accumulate.hpp>
 #include <boost/mpl/back.hpp>
 #include <boost/mpl/bool.hpp>
@@ -32,10 +20,10 @@
 #include <boost/mpl/push_back.hpp>
 #include <boost/mpl/transform.hpp>
 #include <boost/mpl/vector.hpp>
+#include <boost/mpl/vector_c.hpp>
 #include <boost/type_traits.hpp>
-#include "gil_config.hpp"
-#include "gil_concept.hpp"
-#include "channel.hpp"
+
+#include <iterator>
 
 namespace boost { namespace gil {
 
@@ -65,13 +53,13 @@ template <typename BitField, typename ChannelBitSizes, typename Layout, bool IsM
 
 /// \defgroup GILIsBasic xxx_is_basic
 /// \ingroup TypeAnalysis
-/// \brief Determines if GIL constructs are basic. 
-///    Basic constructs are the ones that can be generated with the type 
+/// \brief Determines if GIL constructs are basic.
+///    Basic constructs are the ones that can be generated with the type
 ///    factory methods pixel_reference_type, iterator_type, locator_type, view_type and image_type
 ///    They can be mutable/immutable, planar/interleaved, step/nonstep. They must use GIL-provided models.
 
 /// \brief Determines if a given pixel reference is basic
-///    Basic references must use gil::pixel& (if interleaved), gil::planar_pixel_reference (if planar). They must use the standard constness rules. 
+///    Basic references must use gil::pixel& (if interleaved), gil::planar_pixel_reference (if planar). They must use the standard constness rules.
 /// \ingroup GILIsBasic
 template <typename PixelRef>        struct pixel_reference_is_basic                     : public mpl::false_ {};
 template <typename T,  typename L>  struct pixel_reference_is_basic<      pixel<T,L>&>  : public mpl::true_ {};
@@ -81,7 +69,7 @@ template <typename TR, typename Cs> struct pixel_reference_is_basic<const planar
 
 
 /// \brief Determines if a given pixel iterator is basic
-///    Basic iterators must use gil::pixel (if interleaved), gil::planar_pixel_iterator (if planar) and gil::memory_based_step_iterator (if step). They must use the standard constness rules. 
+///    Basic iterators must use gil::pixel (if interleaved), gil::planar_pixel_iterator (if planar) and gil::memory_based_step_iterator (if step). They must use the standard constness rules.
 /// \ingroup GILIsBasic
 template <typename Iterator>
 struct iterator_is_basic : public mpl::false_ {};
@@ -114,7 +102,7 @@ template <typename View> struct view_is_basic : public mpl::false_ {};
 template <typename Loc> struct view_is_basic<image_view<Loc> > : public locator_is_basic<Loc> {};
 
 /// \ingroup GILIsBasic
-/// \brief Basic images must use basic views and std::allocator of char
+/// \brief Basic images must use basic views and std::allocator
 template <typename Img> struct image_is_basic : public mpl::false_ {};
 template <typename Pixel, bool IsPlanar, typename Alloc> struct image_is_basic<image<Pixel,IsPlanar,Alloc> > : public mpl::true_ {};
 
@@ -133,39 +121,39 @@ namespace detail {
     template <typename It> struct iterator_is_step_impl<It,true,false> : public mpl::false_{};
 
     // for an iterator adaptor, see if its base is step
-    template <typename It> struct iterator_is_step_impl<It,false,false> 
+    template <typename It> struct iterator_is_step_impl<It,false,false>
         : public iterator_is_step<typename iterator_adaptor_get_base<It>::type>{};
 }
 
 /// \ingroup GILIsStep
 /// \brief Determines if the given iterator has a step that could be set dynamically
-template <typename I> struct iterator_is_step 
-    : public detail::iterator_is_step_impl<I, 
-        !is_iterator_adaptor<I>::type::value,
+template <typename I> struct iterator_is_step
+    : public detail::iterator_is_step_impl<I,
+        !is_iterator_adaptor<I>::value,
         is_same<I,typename dynamic_x_step_type<I>::type>::value >{};
 
 /// \ingroup GILIsStep
 /// \brief Determines if the given locator has a horizontal step that could be set dynamically
-template <typename L> struct locator_is_step_in_x : public iterator_is_step<typename L::x_iterator> {}; 
+template <typename L> struct locator_is_step_in_x : public iterator_is_step<typename L::x_iterator> {};
 
 /// \ingroup GILIsStep
 /// \brief Determines if the given locator has a vertical step that could be set dynamically
-template <typename L> struct locator_is_step_in_y : public iterator_is_step<typename L::y_iterator> {}; 
+template <typename L> struct locator_is_step_in_y : public iterator_is_step<typename L::y_iterator> {};
 
 /// \ingroup GILIsStep
 /// \brief Determines if the given view has a horizontal step that could be set dynamically
-template <typename V> struct view_is_step_in_x : public locator_is_step_in_x<typename V::xy_locator> {}; 
+template <typename V> struct view_is_step_in_x : public locator_is_step_in_x<typename V::xy_locator> {};
 
 /// \ingroup GILIsStep
 /// \brief Determines if the given view has a vertical step that could be set dynamically
-template <typename V> struct view_is_step_in_y : public locator_is_step_in_y<typename V::xy_locator> {}; 
+template <typename V> struct view_is_step_in_y : public locator_is_step_in_y<typename V::xy_locator> {};
 
 /// \brief Determines whether the given pixel reference is a proxy class or a native C++ reference
 /// \ingroup TypeAnalysis
 template <typename PixelReference>
 struct pixel_reference_is_proxy
-    : public mpl::not_<is_same<typename remove_const_and_reference<PixelReference>::type,
-                               typename remove_const_and_reference<PixelReference>::type::value_type> > {};
+    : public mpl::not_<is_same<typename detail::remove_const_and_reference<PixelReference>::type,
+                               typename detail::remove_const_and_reference<PixelReference>::type::value_type> > {};
 
 /// \brief Given a model of a pixel, determines whether the model represents a pixel reference (as opposed to pixel value)
 /// \ingroup TypeAnalysis
@@ -214,61 +202,61 @@ template <typename V> struct view_is_mutable : public iterator_is_mutable<typena
 /// \ingroup TypeFactoryFromElements
 /// \brief Returns the type of a homogeneous pixel reference given the channel type, layout, whether it operates on planar data and whether it is mutable
 template <typename T, typename L, bool IsPlanar=false, bool IsMutable=true> struct pixel_reference_type{};
-template <typename T, typename L> struct pixel_reference_type<T,L,false,true > { typedef pixel<T,L>& type; };
-template <typename T, typename L> struct pixel_reference_type<T,L,false,false> { typedef const pixel<T,L>& type; };
-template <typename T, typename L> struct pixel_reference_type<T,L,true,true> { typedef const planar_pixel_reference<typename channel_traits<T>::reference,typename color_space_type<L>::type> type; };       // TODO: Assert M=identity
-template <typename T, typename L> struct pixel_reference_type<T,L,true,false> { typedef const planar_pixel_reference<typename channel_traits<T>::const_reference,typename color_space_type<L>::type> type; };// TODO: Assert M=identity
+template <typename T, typename L> struct pixel_reference_type<T,L,false,true > { using type = pixel<T,L>&; };
+template <typename T, typename L> struct pixel_reference_type<T,L,false,false> { using type = pixel<T,L> const&; };
+template <typename T, typename L> struct pixel_reference_type<T,L,true,true> { using type = planar_pixel_reference<typename channel_traits<T>::reference,typename color_space_type<L>::type> const; };       // TODO: Assert M=identity
+template <typename T, typename L> struct pixel_reference_type<T,L,true,false> { using type = planar_pixel_reference<typename channel_traits<T>::const_reference,typename color_space_type<L>::type> const; };// TODO: Assert M=identity
 
 /// \ingroup TypeFactoryFromPixel
 /// \brief Returns the type of a pixel iterator given the pixel type, whether it operates on planar data, whether it is a step iterator, and whether it is mutable
 template <typename Pixel, bool IsPlanar=false, bool IsStep=false, bool IsMutable=true> struct iterator_type_from_pixel{};
-template <typename Pixel> struct iterator_type_from_pixel<Pixel,false,false,true > { typedef Pixel* type; };
-template <typename Pixel> struct iterator_type_from_pixel<Pixel,false,false,false> { typedef const Pixel* type; };
-template <typename Pixel> struct iterator_type_from_pixel<Pixel,true,false,true> { 
-    typedef planar_pixel_iterator<typename channel_traits<typename channel_type<Pixel>::type>::pointer,typename color_space_type<Pixel>::type> type; 
+template <typename Pixel> struct iterator_type_from_pixel<Pixel,false,false,true > { using type = Pixel *; };
+template <typename Pixel> struct iterator_type_from_pixel<Pixel,false,false,false> { using type = const Pixel *; };
+template <typename Pixel> struct iterator_type_from_pixel<Pixel,true,false,true> {
+    using type = planar_pixel_iterator<typename channel_traits<typename channel_type<Pixel>::type>::pointer,typename color_space_type<Pixel>::type>;
 };
-template <typename Pixel> struct iterator_type_from_pixel<Pixel,true,false,false> { 
-    typedef planar_pixel_iterator<typename channel_traits<typename channel_type<Pixel>::type>::const_pointer,typename color_space_type<Pixel>::type> type; 
+template <typename Pixel> struct iterator_type_from_pixel<Pixel,true,false,false> {
+    using type = planar_pixel_iterator<typename channel_traits<typename channel_type<Pixel>::type>::const_pointer,typename color_space_type<Pixel>::type>;
 };
-template <typename Pixel, bool IsPlanar, bool IsMutable> struct iterator_type_from_pixel<Pixel,IsPlanar,true,IsMutable> { 
-    typedef memory_based_step_iterator<typename iterator_type_from_pixel<Pixel,IsPlanar,false,IsMutable>::type> type; 
+template <typename Pixel, bool IsPlanar, bool IsMutable> struct iterator_type_from_pixel<Pixel,IsPlanar,true,IsMutable> {
+    using type = memory_based_step_iterator<typename iterator_type_from_pixel<Pixel,IsPlanar,false,IsMutable>::type>;
 };
 
 /// \ingroup TypeFactoryFromElements
 /// \brief Returns the type of a homogeneous iterator given the channel type, layout, whether it operates on planar data, whether it is a step iterator, and whether it is mutable
 template <typename T, typename L, bool IsPlanar=false, bool IsStep=false, bool IsMutable=true> struct iterator_type{};
-template <typename T, typename L> struct iterator_type<T,L,false,false,true > { typedef pixel<T,L>* type; };
-template <typename T, typename L> struct iterator_type<T,L,false,false,false> { typedef const pixel<T,L>* type; };
-template <typename T, typename L> struct iterator_type<T,L,true,false,true> { typedef planar_pixel_iterator<T*,typename L::color_space_t> type; };               // TODO: Assert M=identity
-template <typename T, typename L> struct iterator_type<T,L,true,false,false> { typedef planar_pixel_iterator<const T*,typename L::color_space_t> type; };        // TODO: Assert M=identity
-template <typename T, typename L, bool IsPlanar, bool IsMutable> struct iterator_type<T,L,IsPlanar,true,IsMutable> { 
-    typedef memory_based_step_iterator<typename iterator_type<T,L,IsPlanar,false,IsMutable>::type> type; 
+template <typename T, typename L> struct iterator_type<T,L,false,false,true > { using type = pixel<T,L>*; };
+template <typename T, typename L> struct iterator_type<T,L,false,false,false> { using type = pixel<T,L> const*; };
+template <typename T, typename L> struct iterator_type<T,L,true,false,true> { using type = planar_pixel_iterator<T*,typename L::color_space_t>; };               // TODO: Assert M=identity
+template <typename T, typename L> struct iterator_type<T,L,true,false,false> { using type = planar_pixel_iterator<const T*,typename L::color_space_t>; };        // TODO: Assert M=identity
+template <typename T, typename L, bool IsPlanar, bool IsMutable> struct iterator_type<T,L,IsPlanar,true,IsMutable> {
+    using type = memory_based_step_iterator<typename iterator_type<T,L,IsPlanar,false,IsMutable>::type>;
 };
 
 /// \brief Given a pixel iterator defining access to pixels along a row, returns the types of the corresponding built-in step_iterator, xy_locator, image_view
 /// \ingroup TypeFactory
-template <typename XIterator> 
+template <typename XIterator>
 struct type_from_x_iterator {
-    typedef memory_based_step_iterator<XIterator>    step_iterator_t;
-    typedef memory_based_2d_locator<step_iterator_t> xy_locator_t;
-    typedef image_view<xy_locator_t>                     view_t;
+    using step_iterator_t = memory_based_step_iterator<XIterator>;
+    using xy_locator_t = memory_based_2d_locator<step_iterator_t>;
+    using view_t = image_view<xy_locator_t>;
 };
 
 namespace detail {
     template <typename BitField, typename FirstBit, typename NumBits>
     struct packed_channel_reference_type {
-        typedef const packed_channel_reference<BitField,FirstBit::value,NumBits::value,true> type;
+        using type = packed_channel_reference<BitField,FirstBit::value,NumBits::value,true> const;
     };
 
     template <typename BitField, typename ChannelBitSizesVector>
     class packed_channel_references_vector_type {
         // If ChannelBitSizesVector is mpl::vector<int,7,7,2>
         // Then first_bits_vector will be mpl::vector<int,0,7,14,16>
-        typedef typename mpl::accumulate<ChannelBitSizesVector, mpl::vector1<mpl::int_<0> >, 
-            mpl::push_back<mpl::_1, mpl::plus<mpl::back<mpl::_1>, mpl::_2> > >::type first_bits_vector;
+        using first_bits_vector = typename mpl::accumulate<ChannelBitSizesVector, mpl::vector1<mpl::int_<0> >,
+            mpl::push_back<mpl::_1, mpl::plus<mpl::back<mpl::_1>, mpl::_2> > >::type;
     public:
-        typedef typename mpl::transform<typename mpl::pop_back<first_bits_vector>::type, ChannelBitSizesVector,
-               packed_channel_reference_type<BitField, mpl::_1,mpl::_2> >::type type;
+        using type = typename mpl::transform<typename mpl::pop_back<first_bits_vector>::type, ChannelBitSizesVector,
+               packed_channel_reference_type<BitField, mpl::_1,mpl::_2> >::type;
     };
 
 }
@@ -282,24 +270,25 @@ namespace detail {
 /// The sum of bit sizes for all channels must be less than or equal to the number of bits in BitField (and cannot exceed 64).
 ///  If it is less than the number of bits in BitField, the last bits will be unused.
 template <typename BitField, typename ChannelBitSizeVector, typename Layout>
-struct packed_pixel_type {
-    typedef packed_pixel<BitField, typename detail::packed_channel_references_vector_type<BitField,ChannelBitSizeVector>::type, Layout> type;
+struct packed_pixel_type
+{
+    using type = packed_pixel<BitField, typename detail::packed_channel_references_vector_type<BitField,ChannelBitSizeVector>::type, Layout>;
 };
 
 /// \defgroup TypeFactoryPacked packed_image_type,bit_aligned_image_type
 /// \ingroup TypeFactoryFromElements
-/// \brief Returns the type of an image whose channels are not byte-aligned. 
-/// 
+/// \brief Returns the type of an image whose channels are not byte-aligned.
+///
 /// A packed image is an image whose pixels are byte aligned, such as "rgb565". <br>
 /// A bit-aligned image is an image whose pixels are not byte aligned, such as "rgb222". <br>
-/// 
+///
 /// The sum of the bit sizes of all channels cannot exceed 64.
 
 /// \ingroup TypeFactoryPacked
 /// \brief Returns the type of an interleaved packed image: an image whose channels may not be byte-aligned, but whose pixels are byte aligned.
 template <typename BitField, typename ChannelBitSizeVector, typename Layout, typename Alloc=std::allocator<unsigned char> >
 struct packed_image_type {
-    typedef image<typename packed_pixel_type<BitField,ChannelBitSizeVector,Layout>::type,false,Alloc> type;
+    using type = image<typename packed_pixel_type<BitField,ChannelBitSizeVector,Layout>::type,false,Alloc>;
 };
 
 /// \ingroup TypeFactoryPacked
@@ -333,15 +322,29 @@ struct packed_image5_type : public packed_image_type<BitField, mpl::vector5_c<un
 ///
 /// Note that the alignment parameter in the constructor of bit-aligned images is in bit units. For example, if you want to construct a bit-aligned
 /// image whose rows are byte-aligned, use 8 as the alignment parameter, not 1.
-
-template <typename ChannelBitSizeVector, typename Layout, typename Alloc=std::allocator<unsigned char> >
-struct bit_aligned_image_type {
+///
+template
+<
+    typename ChannelBitSizeVector,
+    typename Layout,
+    typename Alloc = std::allocator<unsigned char>
+>
+struct bit_aligned_image_type
+{
 private:
-    BOOST_STATIC_CONSTANT(int, bit_size = (mpl::accumulate<ChannelBitSizeVector, mpl::int_<0>, mpl::plus<mpl::_1, mpl::_2> >::type::value));
-    typedef typename detail::min_fast_uint<bit_size+7>::type                        bitfield_t;  
-    typedef const bit_aligned_pixel_reference<bitfield_t, ChannelBitSizeVector, Layout, true> bit_alignedref_t;
+    static constexpr int bit_size =
+        mpl::accumulate
+        <
+            ChannelBitSizeVector,
+            mpl::int_<0>,
+            mpl::plus<mpl::_1, mpl::_2>
+        >::type::value;
+
+    using bitfield_t = typename detail::min_fast_uint<bit_size + 7>::type;
+    using bit_alignedref_t = bit_aligned_pixel_reference<bitfield_t, ChannelBitSizeVector, Layout, true> const;
+
 public:
-    typedef image<bit_alignedref_t,false,Alloc> type;
+    using type = image<bit_alignedref_t,false,Alloc>;
 };
 
 /// \ingroup TypeFactoryPacked
@@ -373,57 +376,57 @@ struct bit_aligned_image5_type : public bit_aligned_image_type<mpl::vector5_c<un
 
 /// \ingroup TypeFactoryFromElements
 /// \brief Returns the type of a homogeneous pixel given the channel type and layout
-template <typename Channel, typename Layout> 
+template <typename Channel, typename Layout>
 struct pixel_value_type {
-    typedef pixel<Channel,Layout> type;     // by default use gil::pixel. Specializations are provided for 
+    using type = pixel<Channel,Layout>;     // by default use gil::pixel. Specializations are provided for
 };
 
 // Specializations for packed channels
-template <typename BitField, int NumBits, bool IsMutable, typename Layout> 
+template <typename BitField, int NumBits, bool IsMutable, typename Layout>
 struct pixel_value_type<      packed_dynamic_channel_reference<BitField,NumBits,IsMutable>,Layout> :
     public packed_pixel_type<BitField, mpl::vector1_c<unsigned,NumBits>, Layout> {};
-template <typename BitField, int NumBits, bool IsMutable, typename Layout> 
+template <typename BitField, int NumBits, bool IsMutable, typename Layout>
 struct pixel_value_type<const packed_dynamic_channel_reference<BitField,NumBits,IsMutable>,Layout> :
     public packed_pixel_type<BitField, mpl::vector1_c<unsigned,NumBits>, Layout> {};
 
-template <typename BitField, int FirstBit, int NumBits, bool IsMutable, typename Layout> 
+template <typename BitField, int FirstBit, int NumBits, bool IsMutable, typename Layout>
 struct pixel_value_type<      packed_channel_reference<BitField,FirstBit,NumBits,IsMutable>,Layout> :
     public packed_pixel_type<BitField, mpl::vector1_c<unsigned,NumBits>, Layout> {};
-template <typename BitField, int FirstBit, int NumBits, bool IsMutable, typename Layout> 
+template <typename BitField, int FirstBit, int NumBits, bool IsMutable, typename Layout>
 struct pixel_value_type<const packed_channel_reference<BitField,FirstBit,NumBits,IsMutable>,Layout> :
     public packed_pixel_type<BitField, mpl::vector1_c<unsigned,NumBits>, Layout> {};
 
-template <int NumBits, typename Layout> 
+template <int NumBits, typename Layout>
 struct pixel_value_type<packed_channel_value<NumBits>,Layout> :
     public packed_pixel_type<typename detail::min_fast_uint<NumBits>::type, mpl::vector1_c<unsigned,NumBits>, Layout> {};
 
 
 /// \ingroup TypeFactoryFromElements
 /// \brief Returns the type of a homogeneous locator given the channel type, layout, whether it operates on planar data and whether it has a step horizontally
-template <typename T, typename L, bool IsPlanar=false, bool IsStepX=false, bool IsMutable=true> 
+template <typename T, typename L, bool IsPlanar=false, bool IsStepX=false, bool IsMutable=true>
 struct locator_type {
-    typedef typename type_from_x_iterator<typename iterator_type<T,L,IsPlanar,IsStepX,IsMutable>::type>::xy_locator_type type;
+    using type = typename type_from_x_iterator<typename iterator_type<T,L,IsPlanar,IsStepX,IsMutable>::type>::xy_locator_type;
 };
 
 /// \ingroup TypeFactoryFromElements
 /// \brief Returns the type of a homogeneous view given the channel type, layout, whether it operates on planar data and whether it has a step horizontally
-template <typename T, typename L, bool IsPlanar=false, bool IsStepX=false, bool IsMutable=true> 
+template <typename T, typename L, bool IsPlanar=false, bool IsStepX=false, bool IsMutable=true>
 struct view_type {
-    typedef typename type_from_x_iterator<typename iterator_type<T,L,IsPlanar,IsStepX,IsMutable>::type>::view_t type;
+    using type = typename type_from_x_iterator<typename iterator_type<T,L,IsPlanar,IsStepX,IsMutable>::type>::view_t;
 };
 
 /// \ingroup TypeFactoryFromElements
 /// \brief Returns the type of a homogeneous image given the channel type, layout, and whether it operates on planar data
-template <typename T, typename L, bool IsPlanar=false, typename Alloc=std::allocator<unsigned char> > 
+template <typename T, typename L, bool IsPlanar=false, typename Alloc=std::allocator<unsigned char> >
 struct image_type {
-    typedef image<pixel<T,L>, IsPlanar, Alloc> type;
+    using type = image<pixel<T,L>, IsPlanar, Alloc>;
 };
 
 /// \ingroup TypeFactoryFromPixel
 /// \brief Returns the type of a view the pixel type, whether it operates on planar data and whether it has a step horizontally
-template <typename Pixel, bool IsPlanar=false, bool IsStepX=false, bool IsMutable=true> 
+template <typename Pixel, bool IsPlanar=false, bool IsStepX=false, bool IsMutable=true>
 struct view_type_from_pixel {
-    typedef typename type_from_x_iterator<typename iterator_type_from_pixel<Pixel,IsPlanar,IsStepX,IsMutable>::type>::view_t type;
+    using type = typename type_from_x_iterator<typename iterator_type_from_pixel<Pixel,IsPlanar,IsStepX,IsMutable>::type>::view_t;
 };
 
 
@@ -432,14 +435,14 @@ struct view_type_from_pixel {
 ///  Use use_default for the properties of the source view that you want to keep
 template <typename Ref, typename T=use_default, typename L=use_default, typename IsPlanar=use_default, typename IsMutable=use_default>
 class derived_pixel_reference_type {
-    typedef typename remove_reference<Ref>::type pixel_t;
-    typedef typename  mpl::if_<is_same<T, use_default>, typename channel_type<pixel_t>::type,     T >::type channel_t;
-    typedef typename  mpl::if_<is_same<L, use_default>, 
-        layout<typename color_space_type<pixel_t>::type, typename channel_mapping_type<pixel_t>::type>, L>::type           layout_t;
+    using pixel_t = typename remove_reference<Ref>::type;
+    using channel_t = typename  mpl::if_<is_same<T, use_default>, typename channel_type<pixel_t>::type, T>::type;
+    using layout_t = typename  mpl::if_<is_same<L, use_default>,
+        layout<typename color_space_type<pixel_t>::type, typename channel_mapping_type<pixel_t>::type>, L>::type;
     static const bool mut   =mpl::if_<is_same<IsMutable,use_default>, pixel_reference_is_mutable<Ref>, IsMutable>::type::value;
     static const bool planar=mpl::if_<is_same<IsPlanar,use_default>,  is_planar<pixel_t>,  IsPlanar>::type::value;
 public:
-    typedef typename pixel_reference_type<channel_t, layout_t, planar, mut>::type type;
+    using type = typename pixel_reference_type<channel_t, layout_t, planar, mut>::type;
 };
 
 /// \brief Constructs a pixel iterator type from a source pixel iterator type by changing some of the properties.
@@ -447,15 +450,15 @@ public:
 ///  Use use_default for the properties of the source view that you want to keep
 template <typename Iterator, typename T=use_default, typename L=use_default, typename IsPlanar=use_default, typename IsStep=use_default, typename IsMutable=use_default>
 class derived_iterator_type {
-    typedef typename  mpl::if_<is_same<T ,use_default>, typename channel_type<Iterator>::type,     T >::type channel_t;
-    typedef typename  mpl::if_<is_same<L,use_default>, 
-        layout<typename color_space_type<Iterator>::type, typename channel_mapping_type<Iterator>::type>, L>::type layout_t;
+    using channel_t = typename  mpl::if_<is_same<T ,use_default>, typename channel_type<Iterator>::type, T>::type;
+    using layout_t = typename  mpl::if_<is_same<L,use_default>,
+        layout<typename color_space_type<Iterator>::type, typename channel_mapping_type<Iterator>::type>, L>::type;
 
     static const bool mut   =mpl::if_<is_same<IsMutable,use_default>, iterator_is_mutable<Iterator>, IsMutable>::type::value;
     static const bool planar=mpl::if_<is_same<IsPlanar,use_default>,         is_planar<Iterator>,  IsPlanar>::type::value;
     static const bool step  =mpl::if_<is_same<IsStep  ,use_default>,  iterator_is_step<Iterator>,    IsStep>::type::value;
 public:
-    typedef typename iterator_type<channel_t, layout_t, planar, step, mut>::type type;
+    using type = typename iterator_type<channel_t, layout_t, planar, step, mut>::type;
 };
 
 /// \brief Constructs an image view type from a source view type by changing some of the properties.
@@ -463,14 +466,14 @@ public:
 ///  Use use_default for the properties of the source view that you want to keep
 template <typename View, typename T=use_default, typename L=use_default, typename IsPlanar=use_default, typename StepX=use_default, typename IsMutable=use_default>
 class derived_view_type {
-    typedef typename  mpl::if_<is_same<T ,use_default>, typename channel_type<View>::type, T>::type channel_t;
-    typedef typename  mpl::if_<is_same<L,use_default>, 
-        layout<typename color_space_type<View>::type, typename channel_mapping_type<View>::type>, L>::type layout_t;
+    using channel_t = typename  mpl::if_<is_same<T ,use_default>, typename channel_type<View>::type, T>::type;
+    using layout_t = typename  mpl::if_<is_same<L,use_default>,
+        layout<typename color_space_type<View>::type, typename channel_mapping_type<View>::type>, L>::type;
     static const bool mut   =mpl::if_<is_same<IsMutable,use_default>, view_is_mutable<View>, IsMutable>::type::value;
     static const bool planar=mpl::if_<is_same<IsPlanar,use_default>,  is_planar<View>,  IsPlanar>::type::value;
     static const bool step  =mpl::if_<is_same<StepX ,use_default>,  view_is_step_in_x<View>,StepX>::type::value;
 public:
-    typedef typename view_type<channel_t, layout_t, planar, step, mut>::type type;
+    using type = typename view_type<channel_t, layout_t, planar, step, mut>::type;
 };
 
 /// \brief Constructs a homogeneous image type from a source image type by changing some of the properties.
@@ -478,17 +481,14 @@ public:
 ///  Use use_default for the properties of the source image that you want to keep
 template <typename Image, typename T=use_default, typename L=use_default, typename IsPlanar=use_default>
 class derived_image_type {
-    typedef typename  mpl::if_<is_same<T ,use_default>, typename channel_type<Image>::type,     T >::type channel_t;
-    typedef typename  mpl::if_<is_same<L,use_default>, 
-        layout<typename color_space_type<Image>::type, typename channel_mapping_type<Image>::type>, L>::type layout_t;
+    using channel_t = typename  mpl::if_<is_same<T ,use_default>, typename channel_type<Image>::type, T>::type;
+    using layout_t = typename  mpl::if_<is_same<L,use_default>,
+        layout<typename color_space_type<Image>::type, typename channel_mapping_type<Image>::type>, L>::type;
     static const bool planar=mpl::if_<is_same<IsPlanar,use_default>,  is_planar<Image>,  IsPlanar>::type::value;
 public:
-    typedef typename image_type<channel_t, layout_t, planar>::type type;
+    using type = typename image_type<channel_t, layout_t, planar>::type;
 };
 
-
-
-
-} }  // namespace boost::gil
+}}  // namespace boost::gil
 
 #endif

@@ -4,14 +4,11 @@
     Distributed under the Boost Software License, Version 1.0. (See accompanying
     file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 =============================================================================*/
-#if !defined(SPIRIT_ALTERNATIVE_DETAIL_JAN_07_2013_1245PM)
-#define SPIRIT_ALTERNATIVE_DETAIL_JAN_07_2013_1245PM
-
-#if defined(_MSC_VER)
-#pragma once
-#endif
+#if !defined(BOOST_SPIRIT_X3_ALTERNATIVE_DETAIL_JAN_07_2013_1245PM)
+#define BOOST_SPIRIT_X3_ALTERNATIVE_DETAIL_JAN_07_2013_1245PM
 
 #include <boost/spirit/home/x3/support/traits/attribute_of.hpp>
+#include <boost/spirit/home/x3/support/traits/pseudo_attribute.hpp>
 #include <boost/spirit/home/x3/support/traits/is_variant.hpp>
 #include <boost/spirit/home/x3/support/traits/tuple_traits.hpp>
 #include <boost/spirit/home/x3/support/traits/move_to.hpp>
@@ -23,9 +20,9 @@
 #include <boost/mpl/copy_if.hpp>
 #include <boost/mpl/not.hpp>
 #include <boost/mpl/if.hpp>
+#include <boost/mpl/insert_range.hpp>
 #include <boost/mpl/eval_if.hpp>
 #include <boost/mpl/vector.hpp>
-#include <boost/mpl/joint_view.hpp>
 
 #include <boost/fusion/include/front.hpp>
 
@@ -182,34 +179,21 @@ namespace boost { namespace spirit { namespace x3 { namespace detail
 
     template <typename LL, typename LR, typename R, typename C>
     struct get_alternative_types<alternative<LL, LR>, R, C>
-    {
-        typedef typename
-            mpl::push_back<
-                typename get_alternative_types<LL, LR, C>::type
-              , typename traits::attribute_of<R, C>::type
-            >::type
-        type;
-    };
+        : mpl::push_back< typename get_alternative_types<LL, LR, C>::type
+                        , typename traits::attribute_of<R, C>::type> {};
 
     template <typename L, typename RL, typename RR, typename C>
     struct get_alternative_types<L, alternative<RL, RR>, C>
-    {
-        typedef typename
-            mpl::push_front<
-                typename get_alternative_types<RL, RR, C>::type
-              , typename traits::attribute_of<L, C>::type
-            >::type
-        type;
-    };
+        : mpl::push_front< typename get_alternative_types<RL, RR, C>::type
+                         , typename traits::attribute_of<L, C>::type> {};
 
     template <typename LL, typename LR, typename RL, typename RR, typename C>
     struct get_alternative_types<alternative<LL, LR>, alternative<RL, RR>, C>
     {
-        typedef
-            mpl::joint_view<
-                typename get_alternative_types<LL, LR, C>::type
-              , typename get_alternative_types<RL, RR, C>::type
-            >
+        typedef typename get_alternative_types<LL, LR, C>::type left;
+        typedef typename get_alternative_types<RL, RR, C>::type right;
+        typedef typename
+            mpl::insert_range<left, typename mpl::end<left>::type, right>::type
         type;
     };
 
@@ -243,7 +227,7 @@ namespace boost { namespace spirit { namespace x3 { namespace detail
     struct move_if_not_alternative
     {
         template<typename T1, typename T2>
-        static void call(T1& attr_, T2& attr) {}
+        static void call(T1& /* attr_ */, T2& /* attr */) {}
     };
 
     template <>
@@ -261,9 +245,11 @@ namespace boost { namespace spirit { namespace x3 { namespace detail
     bool parse_alternative(Parser const& p, Iterator& first, Iterator const& last
       , Context const& context, RContext& rcontext, Attribute& attr)
     {
-        typedef detail::pass_variant_attribute<Parser, Attribute, Context> pass;
+        using pass = detail::pass_variant_attribute<Parser, Attribute, Context>;
+        using pseudo = traits::pseudo_attribute<Context, typename pass::type, Iterator>;
 
-        typename pass::type attr_ = pass::call(attr);
+        typename pseudo::type attr_ = pseudo::call(first, last, pass::call(attr));
+
         if (p.parse(first, last, context, rcontext, attr_))
         {
             move_if_not_alternative<typename pass::is_alternative>::call(attr_, attr);
@@ -271,7 +257,6 @@ namespace boost { namespace spirit { namespace x3 { namespace detail
         }
         return false;
     }
-
 
     template <typename Left, typename Right, typename Context, typename RContext>
     struct parse_into_container_impl<alternative<Left, Right>, Context, RContext>

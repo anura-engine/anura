@@ -4,12 +4,8 @@
     Distributed under the Boost Software License, Version 1.0. (See accompanying
     file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 =============================================================================*/
-#if !defined(SPIRIT_AND_PREDICATE_MARCH_23_2007_0617PM)
-#define SPIRIT_AND_PREDICATE_MARCH_23_2007_0617PM
-
-#if defined(_MSC_VER)
-#pragma once
-#endif
+#if !defined(BOOST_SPIRIT_X3_AND_PREDICATE_MARCH_23_2007_0617PM)
+#define BOOST_SPIRIT_X3_AND_PREDICATE_MARCH_23_2007_0617PM
 
 #include <boost/spirit/home/x3/core/parser.hpp>
 
@@ -40,7 +36,7 @@ namespace boost { namespace spirit { namespace x3
     inline and_predicate<typename extension::as_parser<Subject>::value_type>
     operator&(Subject const& subject)
     {
-        return {as_parser(subject)};
+        return { as_parser(subject) };
     }
 }}}
 

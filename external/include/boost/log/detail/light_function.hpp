@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2014.
+ *          Copyright Andrey Semashev 2007 - 2015.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -21,9 +21,9 @@
 
 #include <cstddef>
 #include <boost/move/core.hpp>
-#include <boost/move/utility.hpp>
+#include <boost/move/utility_core.hpp>
+#include <boost/core/explicit_operator_bool.hpp>
 #include <boost/log/detail/config.hpp>
-#include <boost/utility/explicit_operator_bool.hpp>
 #include <boost/type_traits/remove_cv.hpp>
 #if defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 #include <boost/preprocessor/iteration/iterate.hpp>
@@ -33,9 +33,7 @@
 #include <boost/preprocessor/repetition/enum_trailing_binary_params.hpp>
 #endif
 #if defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
-#include <boost/utility/enable_if.hpp>
-#include <boost/type_traits/is_same.hpp>
-#include <boost/mpl/or.hpp>
+#include <boost/log/detail/sfinae_tools.hpp>
 #else
 #include <boost/type_traits/remove_reference.hpp>
 #endif
@@ -57,6 +55,28 @@ namespace boost {
 BOOST_LOG_OPEN_NAMESPACE
 
 namespace aux {
+
+#if defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+
+template< typename T, typename ThisT >
+struct is_cv_same { enum _ { value = false }; };
+template< typename T >
+struct is_cv_same< T, T > { enum _ { value = true }; };
+template< typename T >
+struct is_cv_same< T, const T > { enum _ { value = true }; };
+template< typename T >
+struct is_cv_same< T, volatile T > { enum _ { value = true }; };
+template< typename T >
+struct is_cv_same< T, const volatile T > { enum _ { value = true }; };
+
+template< typename T, typename ThisT >
+struct is_rv_or_same { enum _ { value = false }; };
+template< typename T >
+struct is_rv_or_same< T, T > { enum _ { value = true }; };
+template< typename T, typename ThisT >
+struct is_rv_or_same< boost::rv< T >, ThisT > { enum _ { value = true }; };
+
+#endif
 
 template< typename SignatureT >
 class light_function;
@@ -117,7 +137,7 @@ private:
 #if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
         explicit impl(FunT&& fun) :
             impl_base(&this_type::invoke_impl, &this_type::clone_impl, &this_type::destroy_impl),
-            m_Function(boost::forward< FunT >(fun))
+            m_Function(boost::move(fun))
         {
         }
 #endif // !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
@@ -174,12 +194,12 @@ public:
     }
 #else
     template< typename FunT >
-    light_function(FunT const& fun, typename disable_if< mpl::or_< move_detail::is_rv< FunT >, is_same< FunT, this_type > >, int >::type = 0) :
+    light_function(FunT const& fun, typename boost::disable_if_c< is_rv_or_same< FunT, this_type >::value, boost::log::aux::sfinae_dummy >::type = boost::log::aux::sfinae_dummy()) :
         m_pImpl(new impl< FunT >(fun))
     {
     }
     template< typename FunT >
-    light_function(rv< FunT > const& fun, typename disable_if< is_same< typename remove_cv< FunT >::type, this_type >, int >::type = 0) :
+    light_function(BOOST_RV_REF(FunT) fun, typename boost::disable_if_c< is_cv_same< FunT, this_type >::value, boost::log::aux::sfinae_dummy >::type = boost::log::aux::sfinae_dummy()) :
         m_pImpl(new impl< typename remove_cv< FunT >::type >(fun))
     {
     }
@@ -209,7 +229,7 @@ public:
     }
     light_function& operator= (BOOST_COPY_ASSIGN_REF(this_type) that)
     {
-        light_function tmp(that);
+        light_function tmp = static_cast< this_type const& >(that);
         this->swap(tmp);
         return *this;
     }
@@ -236,7 +256,7 @@ public:
     }
 #else
     template< typename FunT >
-    typename disable_if< mpl::or_< move_detail::is_rv< FunT >, is_same< FunT, this_type > >, this_type& >::type
+    typename boost::disable_if_c< is_rv_or_same< FunT, this_type >::value, this_type& >::type
     operator= (FunT const& fun)
     {
         light_function tmp(fun);
@@ -324,7 +344,7 @@ private:
 #if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
         explicit impl(FunT&& fun) :
             impl_base(&this_type::invoke_impl, &this_type::clone_impl, &this_type::destroy_impl),
-            m_Function(boost::forward< FunT >(fun))
+            m_Function(boost::move(fun))
         {
         }
 #endif // !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
@@ -380,12 +400,12 @@ public:
     }
 #else
     template< typename FunT >
-    light_function(FunT const& fun, typename disable_if< mpl::or_< move_detail::is_rv< FunT >, is_same< FunT, this_type > >, int >::type = 0) :
+    light_function(FunT const& fun, typename boost::disable_if_c< is_rv_or_same< FunT, this_type >::value, boost::log::aux::sfinae_dummy >::type = boost::log::aux::sfinae_dummy()) :
         m_pImpl(new impl< FunT >(fun))
     {
     }
     template< typename FunT >
-    light_function(rv< FunT > const& fun, typename disable_if< is_same< typename remove_cv< FunT >::type, this_type >, int >::type = 0) :
+    light_function(BOOST_RV_REF(FunT) fun, typename boost::disable_if_c< is_cv_same< FunT, this_type >::value, boost::log::aux::sfinae_dummy >::type = boost::log::aux::sfinae_dummy()) :
         m_pImpl(new impl< typename remove_cv< FunT >::type >(fun))
     {
     }
@@ -415,7 +435,7 @@ public:
     }
     light_function& operator= (BOOST_COPY_ASSIGN_REF(this_type) that)
     {
-        light_function tmp = that;
+        light_function tmp = static_cast< this_type const& >(that);
         this->swap(tmp);
         return *this;
     }
@@ -442,7 +462,7 @@ public:
     }
 #else
     template< typename FunT >
-    typename disable_if< mpl::or_< move_detail::is_rv< FunT >, is_same< FunT, this_type > >, this_type& >::type
+    typename boost::disable_if_c< is_rv_or_same< FunT, this_type >::value, this_type& >::type
     operator= (FunT const& fun)
     {
         light_function tmp(fun);
