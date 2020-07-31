@@ -9,11 +9,11 @@ Please see https://github.com/anura-engine/anura/wiki/Building-On-Windows for Wi
 You'll need to have these libraries with equivalent development versions to 
 build the Anura engine:
 
- 1.50.0 <= boost_iostreams  <= 1.67.0 
- 1.50.0 <= boost_filesystem <= 1.67.0
- 1.50.0 <= boost_regex      <= 1.67.0
- 1.50.0 <= boost_asio       <= 1.67.0
- 1.50.0 <= boost_system     <= 1.67.0
+ 1.50.0 <= boost_iostreams  <= 1.71.0
+ 1.50.0 <= boost_filesystem <= 1.71.0
+ 1.50.0 <= boost_regex      <= 1.71.0
+ 1.50.0 <= boost_asio       <= 1.71.0
+ 1.50.0 <= boost_system     <= 1.71.0
  libsdl >= 2.0.0
  libsdl-image >= 2.0.0 (with png support)
  libsdl-mixer >= 2.0.0 (with Vorbis support)
