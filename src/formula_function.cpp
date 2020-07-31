@@ -4433,8 +4433,8 @@ FUNCTION_DEF_IMPL
 			FUNCTION_DEF(mod, 2, 2, "mod(num,den)")
 				int left = EVAL_ARG(0).as_int();
 				int right = EVAL_ARG(1).as_int();
-		
-				return variant((left%right + right)%right);
+				
+				return variant(right ? (left%right + right)%right : 0);
 			FUNCTION_ARGS_DEF
 				ARG_TYPE("int|decimal")
 				ARG_TYPE("int|decimal")
