@@ -36,9 +36,7 @@
 
 #ifdef USE_IMGUI
 #include "imgui.h"
-#include "imgui_impl_sdl.h"
-#include "imgui_impl_opengl3.h"
-#include "imgui_user.inl"
+#include "imgui_impl_sdl_gl3.h"
 #endif
 
 namespace {
