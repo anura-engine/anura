@@ -10,9 +10,16 @@
 #define BOOST_THREAD_INLINE_EXECUTOR_HPP
 
 #include <boost/thread/detail/config.hpp>
+#if defined BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION && defined BOOST_THREAD_PROVIDES_EXECUTORS && defined BOOST_THREAD_USES_MOVE
+
+#include <exception> // std::terminate
+#include <boost/throw_exception.hpp>
 #include <boost/thread/detail/delete.hpp>
 #include <boost/thread/detail/move.hpp>
 #include <boost/thread/executors/work.hpp>
+#include <boost/thread/mutex.hpp>
+#include <boost/thread/lock_guard.hpp>
+#include <boost/thread/concurrent_queues/queue_op_status.hpp> // sync_queue_is_closed
 
 #include <boost/config/abi_prefix.hpp>
 
@@ -26,6 +33,7 @@ namespace executors
     /// type-erasure to store the works to do
     typedef  executors::work work;
     bool closed_;
+    mutable mutex mtx_;
     /**
      * Effects: try to execute one task.
      * Returns: whether a task has been executed.
@@ -66,15 +74,21 @@ namespace executors
      */
     void close()
     {
+      lock_guard<mutex> lk(mtx_);
       closed_ = true;
     }
 
     /**
      * \b Returns: whether the pool is closed for submissions.
      */
-    bool closed()
+    bool closed(lock_guard<mutex>& )
     {
       return closed_;
+    }
+    bool closed()
+    {
+      lock_guard<mutex> lk(mtx_);
+      return closed(lk);
     }
 
     /**
@@ -93,21 +107,54 @@ namespace executors
     template <typename Closure>
     void submit(Closure & closure)
     {
-      if (closed()) return;
-      closure();
+      {
+        lock_guard<mutex> lk(mtx_);
+        if (closed(lk))  BOOST_THROW_EXCEPTION( sync_queue_is_closed() );
+      }
+      try
+      {
+        closure();
+      }
+      catch (...)
+      {
+        std::terminate();
+        return;
+      }
     }
 #endif
     void submit(void (*closure)())
     {
-      if (closed()) return;
-      closure();
+      {
+        lock_guard<mutex> lk(mtx_);
+        if (closed(lk))  BOOST_THROW_EXCEPTION( sync_queue_is_closed() );
+      }
+      try
+      {
+        closure();
+      }
+      catch (...)
+      {
+        std::terminate();
+        return;
+      }
     }
 
     template <typename Closure>
     void submit(BOOST_THREAD_FWD_REF(Closure) closure)
     {
-      if (closed()) return;
-      closure();
+      {
+        lock_guard<mutex> lk(mtx_);
+        if (closed(lk))  BOOST_THROW_EXCEPTION( sync_queue_is_closed() );
+      }
+      try
+      {
+        closure();
+      }
+      catch (...)
+      {
+        std::terminate();
+        return;
+      }
     }
 
     /**
@@ -128,4 +175,5 @@ using executors::inline_executor;
 
 #include <boost/config/abi_suffix.hpp>
 
+#endif
 #endif

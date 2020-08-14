@@ -22,6 +22,14 @@
 #ifndef BOOST_CONTAINER_DETAIL_SINGLETON_DETAIL_HPP
 #define BOOST_CONTAINER_DETAIL_SINGLETON_DETAIL_HPP
 
+#ifndef BOOST_CONFIG_HPP
+#  include <boost/config.hpp>
+#endif
+
+#if defined(BOOST_HAS_PRAGMA_ONCE)
+#  pragma once
+#endif
+
 #include <boost/container/detail/config_begin.hpp>
 #include <boost/container/detail/workaround.hpp>
 
@@ -61,7 +69,7 @@
 
 namespace boost {
 namespace container {
-namespace container_detail {
+namespace dtl {
 
 // T must be: no-throw default constructible and no-throw destructible
 template <typename T>
@@ -104,7 +112,7 @@ template <typename T>
 typename singleton_default<T>::object_creator
 singleton_default<T>::create_object;
 
-} // namespace container_detail
+} // namespace dtl
 } // namespace container
 } // namespace boost
 

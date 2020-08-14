@@ -93,9 +93,11 @@ namespace KRE
 		{
 			switch (bec)
 			{
-				case BlendEquationConstants::BE_ADD:				return "add";
+				case BlendEquationConstants::BE_ADD:			return "add";
 				case BlendEquationConstants::BE_REVERSE_SUBTRACT:	return "reverse_subtract";
-				case BlendEquationConstants::BE_SUBTRACT:			return "subtract";
+				case BlendEquationConstants::BE_SUBTRACT:		return "subtract";
+				case BlendEquationConstants::BE_MIN:			return "min";
+				case BlendEquationConstants::BE_MAX:			return "max";
 				default: break;
 			}
 			ASSERT_LOG(false, "Unrecognised BlendEquationConstants: " << static_cast<int>(bec));
@@ -230,6 +232,10 @@ namespace KRE
 			} else if(s == "reverse_subtract" || s == "REVERSE_SUBTRACT" 
 				|| s == "rsubtract" || s == " RSUBSTRACT" || s == "reverseSubtract") {
 				return BlendEquationConstants::BE_REVERSE_SUBTRACT;
+			} else if(s == "min" || s == "MIN") {
+				return BlendEquationConstants::BE_MIN;
+			} else if(s == "max" || s == "MAX") {
+				return BlendEquationConstants::BE_MAX;
 			} else {
 				ASSERT_LOG(false, "Unrecognised value for blend equation: " << s);
 			}

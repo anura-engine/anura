@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////
 //
-// (C) Copyright Ion Gaztanaga 2005-2013. Distributed under the Boost
+// (C) Copyright Ion Gaztanaga 2005-2014. Distributed under the Boost
 // Software License, Version 1.0. (See accompanying file
 // LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
@@ -11,7 +11,11 @@
 #ifndef BOOST_CONTAINER_CONTAINER_FWD_HPP
 #define BOOST_CONTAINER_CONTAINER_FWD_HPP
 
-#if defined(_MSC_VER)
+#ifndef BOOST_CONFIG_HPP
+#  include <boost/config.hpp>
+#endif
+
+#if defined(BOOST_HAS_PRAGMA_ONCE)
 #  pragma once
 #endif
 
@@ -20,6 +24,8 @@
 //!   - boost::container::vector
 //!   - boost::container::stable_vector
 //!   - boost::container::static_vector
+//!   - boost::container::small_vector_base
+//!   - boost::container::small_vector
 //!   - boost::container::slist
 //!   - boost::container::list
 //!   - boost::container::set
@@ -34,36 +40,45 @@
 //!   - boost::container::string
 //!   - boost::container::wstring
 //!
-//! It forward declares the following allocators:
+//! Forward declares the following allocators:
 //!   - boost::container::allocator
 //!   - boost::container::node_allocator
 //!   - boost::container::adaptive_pool
 //!
+//! Forward declares the following polymorphic resource classes:
+//!   - boost::container::pmr::memory_resource
+//!   - boost::container::pmr::polymorphic_allocator
+//!   - boost::container::pmr::monotonic_buffer_resource
+//!   - boost::container::pmr::pool_options
+//!   - boost::container::pmr::unsynchronized_pool_resource
+//!   - boost::container::pmr::synchronized_pool_resource
+//!
 //! And finally it defines the following types
-
-//////////////////////////////////////////////////////////////////////////////
-//                        Standard predeclarations
-//////////////////////////////////////////////////////////////////////////////
 
 #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
+//Std forward declarations
+#ifndef BOOST_CONTAINER_DETAIL_STD_FWD_HPP
+   #include <boost/container/detail/std_fwd.hpp>
+#endif
+
 namespace boost{
 namespace intrusive{
+namespace detail{
    //Create namespace to avoid compilation errors
-}}
+}}}
 
-namespace boost{ namespace container{ namespace container_detail{
+namespace boost{ namespace container{ namespace dtl{
+   namespace bi = boost::intrusive;
+   namespace bid = boost::intrusive::detail;
+}}}
 
-namespace bi = boost::intrusive;
-
+namespace boost{ namespace container{ namespace pmr{
+   namespace bi = boost::intrusive;
+   namespace bid = boost::intrusive::detail;
 }}}
 
 #include <cstddef>
-#include <utility>
-#include <memory>
-#include <functional>
-#include <iosfwd>
-#include <string>
 
 #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
@@ -74,110 +89,107 @@ namespace bi = boost::intrusive;
 namespace boost {
 namespace container {
 
-//! Enumeration used to configure ordered associative containers
-//! with a concrete tree implementation.
-enum tree_type_enum
-{
-   red_black_tree,
-   avl_tree,
-   scapegoat_tree,
-   splay_tree
-};
-
 #ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
+template<class T1, class T2>
+struct pair;
+
+template<class T>
+class new_allocator;
+
 template <class T
-         ,class Allocator = std::allocator<T> >
+         ,class Allocator = void
+         ,class Options   = void>
 class vector;
 
 template <class T
-         ,class Allocator = std::allocator<T> >
+         ,class Allocator = void >
 class stable_vector;
 
-template <class T, std::size_t Capacity>
+template < class T
+         , std::size_t Capacity
+         , class Options = void>
 class static_vector;
 
+template < class T
+         , class Allocator = void
+         , class Options   = void >
+class small_vector_base;
+
+template < class T
+         , std::size_t N
+         , class Allocator = void
+         , class Options   = void  >
+class small_vector;
+
 template <class T
-         ,class Allocator = std::allocator<T> >
+         ,class Allocator = void
+         ,class Options   = void>
 class deque;
 
 template <class T
-         ,class Allocator = std::allocator<T> >
+         ,class Allocator = void >
 class list;
 
 template <class T
-         ,class Allocator = std::allocator<T> >
+         ,class Allocator = void >
 class slist;
-
-template<tree_type_enum TreeType, bool OptimizeSize>
-struct tree_opt;
-
-typedef tree_opt<red_black_tree, true> tree_assoc_defaults;
 
 template <class Key
          ,class Compare  = std::less<Key>
-         ,class Allocator = std::allocator<Key>
-         ,class Options = tree_assoc_defaults >
+         ,class Allocator = void
+         ,class Options = void>
 class set;
 
 template <class Key
          ,class Compare  = std::less<Key>
-         ,class Allocator = std::allocator<Key>
-         ,class Options = tree_assoc_defaults >
+         ,class Allocator = void
+         ,class Options = void >
 class multiset;
 
 template <class Key
          ,class T
          ,class Compare  = std::less<Key>
-         ,class Allocator = std::allocator<std::pair<const Key, T> >
-         ,class Options = tree_assoc_defaults >
+         ,class Allocator = void
+         ,class Options = void >
 class map;
 
 template <class Key
          ,class T
          ,class Compare  = std::less<Key>
-         ,class Allocator = std::allocator<std::pair<const Key, T> >
-         ,class Options = tree_assoc_defaults >
+         ,class Allocator = void
+         ,class Options = void >
 class multimap;
 
 template <class Key
          ,class Compare  = std::less<Key>
-         ,class Allocator = std::allocator<Key> >
+         ,class Allocator = void >
 class flat_set;
 
 template <class Key
          ,class Compare  = std::less<Key>
-         ,class Allocator = std::allocator<Key> >
+         ,class Allocator = void >
 class flat_multiset;
 
 template <class Key
          ,class T
          ,class Compare  = std::less<Key>
-         ,class Allocator = std::allocator<std::pair<Key, T> > >
+         ,class Allocator = void >
 class flat_map;
 
 template <class Key
          ,class T
          ,class Compare  = std::less<Key>
-         ,class Allocator = std::allocator<std::pair<Key, T> > >
+         ,class Allocator = void >
 class flat_multimap;
 
 template <class CharT
          ,class Traits = std::char_traits<CharT>
-         ,class Allocator  = std::allocator<CharT> >
+         ,class Allocator  = void >
 class basic_string;
 
-typedef basic_string
-   <char
-   ,std::char_traits<char>
-   ,std::allocator<char> >
-string;
-
-typedef basic_string
-   <wchar_t
-   ,std::char_traits<wchar_t>
-   ,std::allocator<wchar_t> >
-wstring;
+typedef basic_string <char>   string;
+typedef basic_string<wchar_t> wstring;
 
 static const std::size_t ADP_nodes_per_block    = 256u;
 static const std::size_t ADP_max_free_blocks    = 2u;
@@ -205,12 +217,25 @@ template
    , std::size_t Version = 2>
 class node_allocator;
 
-#else
+namespace pmr {
 
-//! Default options for tree-based associative containers
-//!   - tree_type<red_black_tree>
-//!   - optimize_size<true>
-typedef implementation_defined tree_assoc_defaults;
+class memory_resource;
+
+template<class T>
+class polymorphic_allocator;
+
+class monotonic_buffer_resource;
+
+struct pool_options;
+
+template <class Allocator>
+class resource_adaptor_imp;
+
+class unsynchronized_pool_resource;
+
+class synchronized_pool_resource;
+
+}  //namespace pmr {
 
 #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 
@@ -267,6 +292,7 @@ struct dummy
 };
 
 }  //detail_really_deep_namespace {
+
 
 #endif   //#ifndef BOOST_CONTAINER_DOXYGEN_INVOKED
 

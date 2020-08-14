@@ -28,7 +28,16 @@
 
 #include <boost/regex.hpp>
 #include <boost/lexical_cast.hpp>
-#include <boost/uuid/sha1.hpp>
+
+#if defined __has_include
+#  if __has_include("boost/uuid/detail/sha1.hpp")
+#    include <boost/uuid/detail/sha1.hpp>
+#  else
+#    include <boost/uuid/sha1.hpp>
+#  endif
+#else
+#  include <boost/uuid/sha1.hpp>
+#endif
 
 #include "asserts.hpp"
 #include "controls.hpp"
@@ -306,7 +315,7 @@ namespace preferences
 		std::string return_value;
 		for(std::map<std::string, RegisteredSetting>::const_iterator i = g_registered_settings().begin(); i != g_registered_settings().end(); ++i) {
 			std::ostringstream s;
-			s << "        --";
+			s << "      --";
 			if(i->second.bool_value) {
 				s << "[no-]";
 			}
@@ -323,9 +332,9 @@ namespace preferences
 			}
 
 			std::string result = s.str();
-			while(result.size() < 32) {
+			do {
 				result += " ";
-			}
+			} while(result.size() < 32);
 
 			if(i->second.helpstring) {
 				result += i->second.helpstring;

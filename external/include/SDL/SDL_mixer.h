@@ -1,6 +1,6 @@
 /*
   SDL_mixer:  An audio mixer library based on the SDL library
-  Copyright (C) 1997-2013 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -19,10 +19,8 @@
   3. This notice may not be removed or altered from any source distribution.
 */
 
-/* $Id$ */
-
-#ifndef _SDL_MIXER_H
-#define _SDL_MIXER_H
+#ifndef SDL_MIXER_H_
+#define SDL_MIXER_H_
 
 #include "SDL_stdinc.h"
 #include "SDL_rwops.h"
@@ -40,7 +38,7 @@ extern "C" {
 */
 #define SDL_MIXER_MAJOR_VERSION 2
 #define SDL_MIXER_MINOR_VERSION 0
-#define SDL_MIXER_PATCHLEVEL    0
+#define SDL_MIXER_PATCHLEVEL    4
 
 /* This macro can be used to fill a version structure with the compile-time
  * version of the SDL_mixer library.
@@ -58,6 +56,18 @@ extern "C" {
 #define MIX_PATCHLEVEL      SDL_MIXER_PATCHLEVEL
 #define MIX_VERSION(X)      SDL_MIXER_VERSION(X)
 
+/**
+ *  This is the version number macro for the current SDL_mixer version.
+ */
+#define SDL_MIXER_COMPILEDVERSION \
+    SDL_VERSIONNUM(SDL_MIXER_MAJOR_VERSION, SDL_MIXER_MINOR_VERSION, SDL_MIXER_PATCHLEVEL)
+
+/**
+ *  This macro will evaluate to true if compiled with SDL_mixer at least X.Y.Z.
+ */
+#define SDL_MIXER_VERSION_ATLEAST(X, Y, Z) \
+    (SDL_MIXER_COMPILEDVERSION >= SDL_VERSIONNUM(X, Y, Z))
+
 /* This function gets the version of the dynamically linked SDL_mixer library.
    it should NOT be used to fill a version structure, instead you should
    use the SDL_MIXER_VERSION() macro.
@@ -66,12 +76,12 @@ extern DECLSPEC const SDL_version * SDLCALL Mix_Linked_Version(void);
 
 typedef enum
 {
-    MIX_INIT_FLAC        = 0x00000001,
-    MIX_INIT_MOD         = 0x00000002,
-    MIX_INIT_MODPLUG     = 0x00000004,
-    MIX_INIT_MP3         = 0x00000008,
-    MIX_INIT_OGG         = 0x00000010,
-    MIX_INIT_FLUIDSYNTH  = 0x00000020
+    MIX_INIT_FLAC   = 0x00000001,
+    MIX_INIT_MOD    = 0x00000002,
+    MIX_INIT_MP3    = 0x00000008,
+    MIX_INIT_OGG    = 0x00000010,
+    MIX_INIT_MID    = 0x00000020,
+    MIX_INIT_OPUS   = 0x00000040
 } MIX_InitFlags;
 
 /* Loads dynamic libraries and prepares them for use.  Flags should be
@@ -90,14 +100,14 @@ extern DECLSPEC void SDLCALL Mix_Quit(void);
 #endif
 
 /* Good default values for a PC soundcard */
-#define MIX_DEFAULT_FREQUENCY   22050
+#define MIX_DEFAULT_FREQUENCY   44100
 #if SDL_BYTEORDER == SDL_LIL_ENDIAN
 #define MIX_DEFAULT_FORMAT  AUDIO_S16LSB
 #else
 #define MIX_DEFAULT_FORMAT  AUDIO_S16MSB
 #endif
 #define MIX_DEFAULT_CHANNELS    2
-#define MIX_MAX_VOLUME          128 /* Volume of a chunk */
+#define MIX_MAX_VOLUME          SDL_MIX_MAXVOLUME /* Volume of a chunk */
 
 /* The internal format for an audio chunk */
 typedef struct Mix_Chunk {
@@ -114,6 +124,7 @@ typedef enum {
     MIX_FADING_IN
 } Mix_Fading;
 
+/* These are types of music files (not libraries used to load them) */
 typedef enum {
     MUS_NONE,
     MUS_CMD,
@@ -122,9 +133,10 @@ typedef enum {
     MUS_MID,
     MUS_OGG,
     MUS_MP3,
-    MUS_MP3_MAD,
+    MUS_MP3_MAD_UNUSED,
     MUS_FLAC,
-    MUS_MODPLUG
+    MUS_MODPLUG_UNUSED,
+    MUS_OPUS
 } Mix_MusicType;
 
 /* The internal format for a music chunk interpreted via mikmod */
@@ -132,6 +144,9 @@ typedef struct _Mix_Music Mix_Music;
 
 /* Open the mixer with a certain audio format */
 extern DECLSPEC int SDLCALL Mix_OpenAudio(int frequency, Uint16 format, int channels, int chunksize);
+
+/* Open the mixer with specific device and certain audio format */
+extern DECLSPEC int SDLCALL Mix_OpenAudioDevice(int frequency, Uint16 format, int channels, int chunksize, const char* device, int allowed_changes);
 
 /* Dynamically change the number of channels managed by the mixer.
    If decreasing the number of channels, the upper channels are
@@ -150,8 +165,8 @@ extern DECLSPEC Mix_Chunk * SDLCALL Mix_LoadWAV_RW(SDL_RWops *src, int freesrc);
 #define Mix_LoadWAV(file)   Mix_LoadWAV_RW(SDL_RWFromFile(file, "rb"), 1)
 extern DECLSPEC Mix_Music * SDLCALL Mix_LoadMUS(const char *file);
 
-/* Load a music file from an SDL_RWop object (Ogg and MikMod specific currently)
-   Matt Campbell (matt@campbellhome.dhs.org) April 2000 */
+/* Load a music file from an SDL_RWop object
+ * Matt Campbell (matt@campbellhome.dhs.org) April 2000 */
 extern DECLSPEC Mix_Music * SDLCALL Mix_LoadMUS_RW(SDL_RWops *src, int freesrc);
 
 /* Load a music file from an SDL_RWop object assuming a specific format */
@@ -188,29 +203,42 @@ extern DECLSPEC void SDLCALL Mix_FreeMusic(Mix_Music *music);
 */
 extern DECLSPEC int SDLCALL Mix_GetNumChunkDecoders(void);
 extern DECLSPEC const char * SDLCALL Mix_GetChunkDecoder(int index);
+extern DECLSPEC SDL_bool SDLCALL Mix_HasChunkDecoder(const char *name);
 extern DECLSPEC int SDLCALL Mix_GetNumMusicDecoders(void);
 extern DECLSPEC const char * SDLCALL Mix_GetMusicDecoder(int index);
+extern DECLSPEC SDL_bool SDLCALL Mix_HasMusicDecoder(const char *name);
 
 /* Find out the music format of a mixer music, or the currently playing
    music, if 'music' is NULL.
 */
 extern DECLSPEC Mix_MusicType SDLCALL Mix_GetMusicType(const Mix_Music *music);
 
+/* Get music title from meta-tag if possible. If title tag is empty, filename will be returned */
+extern DECLSPEC const char *SDLCALL Mix_GetMusicTitle(const Mix_Music *music);
+/* Get music title from meta-tag if possible */
+extern DECLSPEC const char *SDLCALL Mix_GetMusicTitleTag(const Mix_Music *music);
+/* Get music artist from meta-tag if possible */
+extern DECLSPEC const char *SDLCALL Mix_GetMusicArtistTag(const Mix_Music *music);
+/* Get music album from meta-tag if possible */
+extern DECLSPEC const char *SDLCALL Mix_GetMusicAlbumTag(const Mix_Music *music);
+/* Get music copyright from meta-tag if possible */
+extern DECLSPEC const char *SDLCALL Mix_GetMusicCopyrightTag(const Mix_Music *music);
+
 /* Set a function that is called after all mixing is performed.
    This can be used to provide real-time visual display of the audio stream
    or add a custom mixer filter for the stream data.
 */
-extern DECLSPEC void SDLCALL Mix_SetPostMix(void (*mix_func)(void *udata, Uint8 *stream, int len), void *arg);
+extern DECLSPEC void SDLCALL Mix_SetPostMix(void (SDLCALL *mix_func)(void *udata, Uint8 *stream, int len), void *arg);
 
 /* Add your own music player or additional mixer function.
    If 'mix_func' is NULL, the default music player is re-enabled.
  */
-extern DECLSPEC void SDLCALL Mix_HookMusic(void (*mix_func)(void *udata, Uint8 *stream, int len), void *arg);
+extern DECLSPEC void SDLCALL Mix_HookMusic(void (SDLCALL *mix_func)(void *udata, Uint8 *stream, int len), void *arg);
 
 /* Add your own callback for when the music has finished playing or when it is
  * stopped from a call to Mix_HaltMusic.
  */
-extern DECLSPEC void SDLCALL Mix_HookMusicFinished(void (*music_finished)(void));
+extern DECLSPEC void SDLCALL Mix_HookMusicFinished(void (SDLCALL *music_finished)(void));
 
 /* Get a pointer to the user data for the current music hook */
 extern DECLSPEC void * SDLCALL Mix_GetMusicHookData(void);
@@ -223,12 +251,12 @@ extern DECLSPEC void * SDLCALL Mix_GetMusicHookData(void);
  *  inside the audio callback, or SDL_mixer will explicitly lock the audio
  *  before calling your callback.
  */
-extern DECLSPEC void SDLCALL Mix_ChannelFinished(void (*channel_finished)(int channel));
+extern DECLSPEC void SDLCALL Mix_ChannelFinished(void (SDLCALL *channel_finished)(int channel));
 
 
 /* Special Effects API by ryan c. gordon. (icculus@icculus.org) */
 
-#define MIX_CHANNEL_POST  -2
+#define MIX_CHANNEL_POST  (-2)
 
 /* This is the format of a special effect callback:
  *
@@ -247,7 +275,7 @@ extern DECLSPEC void SDLCALL Mix_ChannelFinished(void (*channel_finished)(int ch
  *
  * DO NOT EVER call SDL_LockAudio() from your callback function!
  */
-typedef void (*Mix_EffectFunc_t)(int chan, void *stream, int len, void *udata);
+typedef void (SDLCALL *Mix_EffectFunc_t)(int chan, void *stream, int len, void *udata);
 
 /*
  * This is a callback that signifies that a channel has finished all its
@@ -258,7 +286,7 @@ typedef void (*Mix_EffectFunc_t)(int chan, void *stream, int len, void *udata);
  *
  * DO NOT EVER call SDL_LockAudio() from your callback function!
  */
-typedef void (*Mix_EffectDone_t)(int chan, void *udata);
+typedef void (SDLCALL *Mix_EffectDone_t)(int chan, void *udata);
 
 
 /* Register a special effect function. At mixing time, the channel data is
@@ -549,6 +577,8 @@ extern DECLSPEC int SDLCALL Mix_FadeInChannelTimed(int channel, Mix_Chunk *chunk
 extern DECLSPEC int SDLCALL Mix_Volume(int channel, int volume);
 extern DECLSPEC int SDLCALL Mix_VolumeChunk(Mix_Chunk *chunk, int volume);
 extern DECLSPEC int SDLCALL Mix_VolumeMusic(int volume);
+/* Get the current volume value in the range of 0-128 of a music stream */
+extern DECLSPEC int SDLCALL Mix_GetVolumeMusicStream(Mix_Music *music);
 
 /* Halt playing of a particular channel */
 extern DECLSPEC int SDLCALL Mix_HaltChannel(int channel);
@@ -587,10 +617,38 @@ extern DECLSPEC int SDLCALL Mix_PausedMusic(void);
 /* Set the current position in the music stream.
    This returns 0 if successful, or -1 if it failed or isn't implemented.
    This function is only implemented for MOD music formats (set pattern
-   order number) and for OGG, FLAC, MP3_MAD, and MODPLUG music (set
-   position in seconds), at the moment.
+   order number) and for WAV, OGG, FLAC, MP3_MAD, MP3_MPG, and MODPLUG music
+   (set position in seconds), at the moment.
 */
 extern DECLSPEC int SDLCALL Mix_SetMusicPosition(double position);
+
+/*
+    Get the time current position of music stream
+    returns -1.0 if this feature is not supported for some codec
+ */
+extern DECLSPEC double SDLCALL Mix_GetMusicPosition(Mix_Music *music);
+
+/* Return music duration in seconds.
+   If NULL is passed, returns duration of current playing music.
+   Returns -1 on error.
+ */
+extern DECLSPEC double SDLCALL Mix_MusicDuration(Mix_Music *music);
+
+/*
+    Get the loop start time position of music stream
+    returns -1.0 if this feature is not used for this music or not supported for some codec
+ */
+extern DECLSPEC double SDLCALL Mix_GetMusicLoopStartTime(Mix_Music *music);
+/*
+    Get the loop end time position of music stream
+    returns -1.0 if this feature is not used for this music or not supported for some codec
+ */
+extern DECLSPEC double SDLCALL Mix_GetMusicLoopEndTime(Mix_Music *music);
+/*
+    Get the loop time length of music stream
+    returns -1.0 if this feature is not used for this music or not supported for some codec
+ */
+extern DECLSPEC double SDLCALL Mix_GetMusicLoopLengthTime(Mix_Music *music);
 
 /* Check the status of a specific channel.
    If the specified channel is -1, check all channels.
@@ -608,7 +666,11 @@ extern DECLSPEC int SDLCALL Mix_GetSynchroValue(void);
 /* Set/Get/Iterate SoundFonts paths to use by supported MIDI backends */
 extern DECLSPEC int SDLCALL Mix_SetSoundFonts(const char *paths);
 extern DECLSPEC const char* SDLCALL Mix_GetSoundFonts(void);
-extern DECLSPEC int SDLCALL Mix_EachSoundFont(int (*function)(const char*, void*), void *data);
+extern DECLSPEC int SDLCALL Mix_EachSoundFont(int (SDLCALL *function)(const char*, void*), void *data);
+
+/* Set/Get full path of Timidity config file (e.g. /etc/timidity.cfg) */
+extern DECLSPEC int SDLCALL Mix_SetTimidityCfg(const char *path);
+extern DECLSPEC const char* SDLCALL Mix_GetTimidityCfg(void);
 
 /* Get the Mix_Chunk currently associated with a mixer channel
     Returns NULL if it's an invalid channel, or there's no chunk associated.
@@ -621,6 +683,7 @@ extern DECLSPEC void SDLCALL Mix_CloseAudio(void);
 /* We'll use SDL for reporting errors */
 #define Mix_SetError    SDL_SetError
 #define Mix_GetError    SDL_GetError
+#define Mix_ClearError  SDL_ClearError
 
 /* Ends C function definitions when using C++ */
 #ifdef __cplusplus
@@ -628,4 +691,6 @@ extern DECLSPEC void SDLCALL Mix_CloseAudio(void);
 #endif
 #include "close_code.h"
 
-#endif /* _SDL_MIXER_H */
+#endif /* SDL_MIXER_H_ */
+
+/* vi: set ts=4 sw=4 expandtab: */

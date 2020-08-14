@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2014.
+ *          Copyright Andrey Semashev 2007 - 2015.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -17,8 +17,9 @@
 
 #include <boost/smart_ptr/intrusive_ptr.hpp>
 #include <boost/move/core.hpp>
+#include <boost/move/utility_core.hpp>
+#include <boost/core/explicit_operator_bool.hpp>
 #include <boost/log/detail/config.hpp>
-#include <boost/utility/explicit_operator_bool.hpp>
 #include <boost/log/attributes/attribute_value_set.hpp>
 #include <boost/log/expressions/keyword_fwd.hpp>
 #ifndef BOOST_LOG_NO_THREADS
@@ -72,10 +73,10 @@ private:
         //! Attribute values view
         attribute_value_set m_attribute_values;
 
-        //! Constructor from the attribute sets
-        explicit public_data(BOOST_RV_REF(attribute_value_set) values) :
+        //! Constructor from the attribute value set
+        explicit public_data(BOOST_RV_REF(attribute_value_set) values) BOOST_NOEXCEPT :
             m_ref_counter(1),
-            m_attribute_values(values)
+            m_attribute_values(boost::move(values))
         {
         }
 
@@ -88,8 +89,8 @@ private:
         BOOST_DELETED_FUNCTION(public_data(public_data const&))
         BOOST_DELETED_FUNCTION(public_data& operator= (public_data const&))
 
-        friend void intrusive_ptr_add_ref(const public_data* p) { ++p->m_ref_counter; }
-        friend void intrusive_ptr_release(const public_data* p) { if (--p->m_ref_counter == 0) public_data::destroy(p); }
+        friend void intrusive_ptr_add_ref(const public_data* p) BOOST_NOEXCEPT { ++p->m_ref_counter; }
+        friend void intrusive_ptr_release(const public_data* p) BOOST_NOEXCEPT { if (--p->m_ref_counter == 0) public_data::destroy(p); }
     };
 
 private:
@@ -98,7 +99,7 @@ private:
 
 private:
     //  A private constructor, accessible from record
-    explicit record_view(public_data* impl) : m_impl(impl, false) {}
+    explicit record_view(public_data* impl) BOOST_NOEXCEPT : m_impl(impl, false) {}
 
 #endif // BOOST_LOG_DOXYGEN_PASS
 
@@ -108,7 +109,12 @@ public:
      *
      * \post <tt>!*this == true</tt>
      */
-    BOOST_DEFAULTED_FUNCTION(record_view(), {})
+    BOOST_CONSTEXPR record_view() BOOST_NOEXCEPT
+#if !defined(BOOST_LOG_NO_CXX11_DEFAULTED_NOEXCEPT_FUNCTIONS) && !defined(BOOST_LOG_NO_CXX11_DEFAULTED_CONSTEXPR_CONSTRUCTORS)
+        = default;
+#else
+    {}
+#endif
 
     /*!
      * Copy constructor

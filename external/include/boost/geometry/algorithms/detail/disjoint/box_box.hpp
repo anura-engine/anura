@@ -1,12 +1,12 @@
 // Boost.Geometry (aka GGL, Generic Geometry Library)
 
-// Copyright (c) 2007-2014 Barend Gehrels, Amsterdam, the Netherlands.
-// Copyright (c) 2008-2014 Bruno Lalande, Paris, France.
-// Copyright (c) 2009-2014 Mateusz Loskot, London, UK.
-// Copyright (c) 2013-2014 Adam Wulkiewicz, Lodz, Poland
+// Copyright (c) 2007-2015 Barend Gehrels, Amsterdam, the Netherlands.
+// Copyright (c) 2008-2015 Bruno Lalande, Paris, France.
+// Copyright (c) 2009-2015 Mateusz Loskot, London, UK.
+// Copyright (c) 2013-2015 Adam Wulkiewicz, Lodz, Poland.
 
-// This file was modified by Oracle on 2013-2014.
-// Modifications copyright (c) 2013-2014, Oracle and/or its affiliates.
+// This file was modified by Oracle on 2013-2018.
+// Modifications copyright (c) 2013-2018, Oracle and/or its affiliates.
 
 // Contributed and/or modified by Adam Wulkiewicz, on behalf of Oracle
 // Contributed and/or modified by Menelaos Karavelas, on behalf of Oracle
@@ -23,69 +23,30 @@
 
 #include <cstddef>
 
-#include <boost/geometry/core/access.hpp>
-#include <boost/geometry/core/tags.hpp>
-
 #include <boost/geometry/algorithms/dispatch/disjoint.hpp>
 
+// For backward compatibility
+#include <boost/geometry/strategies/cartesian/disjoint_box_box.hpp>
+#include <boost/geometry/strategies/spherical/disjoint_box_box.hpp>
 
 namespace boost { namespace geometry
 {
+
 
 #ifndef DOXYGEN_NO_DETAIL
 namespace detail { namespace disjoint
 {
 
 
-template
-<
-    typename Box1, typename Box2,
-    std::size_t Dimension, std::size_t DimensionCount
->
-struct box_box
-{
-    static inline bool apply(Box1 const& box1, Box2 const& box2)
-    {
-        if (get<max_corner, Dimension>(box1) < get<min_corner, Dimension>(box2))
-        {
-            return true;
-        }
-        if (get<min_corner, Dimension>(box1) > get<max_corner, Dimension>(box2))
-        {
-            return true;
-        }
-        return box_box
-            <
-                Box1, Box2,
-                Dimension + 1, DimensionCount
-            >::apply(box1, box2);
-    }
-};
-
-
-template <typename Box1, typename Box2, std::size_t DimensionCount>
-struct box_box<Box1, Box2, DimensionCount, DimensionCount>
-{
-    static inline bool apply(Box1 const& , Box2 const& )
-    {
-        return false;
-    }
-};
-
-
 /*!
-    \brief Internal utility function to detect of boxes are disjoint
+    \brief Internal utility function to detect if boxes are disjoint
     \note Is used from other algorithms, declared separately
         to avoid circular references
  */
-template <typename Box1, typename Box2>
-inline bool disjoint_box_box(Box1 const& box1, Box2 const& box2)
+template <typename Box1, typename Box2, typename Strategy>
+inline bool disjoint_box_box(Box1 const& box1, Box2 const& box2, Strategy const&)
 {
-    return box_box
-        <
-            Box1, Box2,
-            0, dimension<Box1>::type::value
-        >::apply(box1, box2);
+    return Strategy::apply(box1, box2);
 }
 
 
@@ -100,8 +61,13 @@ namespace dispatch
 
 template <typename Box1, typename Box2, std::size_t DimensionCount>
 struct disjoint<Box1, Box2, DimensionCount, box_tag, box_tag, false>
-    : detail::disjoint::box_box<Box1, Box2, 0, DimensionCount>
-{};
+{
+    template <typename Strategy>
+    static inline bool apply(Box1 const& box1, Box2 const& box2, Strategy const&)
+    {
+        return Strategy::apply(box1, box2);
+    }
+};
 
 
 } // namespace dispatch

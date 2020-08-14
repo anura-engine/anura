@@ -4,10 +4,11 @@
 // Copyright (c) 2008-2014 Bruno Lalande, Paris, France.
 // Copyright (c) 2009-2014 Mateusz Loskot, London, UK.
 
-// This file was modified by Oracle on 2014.
-// Modifications copyright (c) 2014, Oracle and/or its affiliates.
+// This file was modified by Oracle on 2014, 2019.
+// Modifications copyright (c) 2014, 2019, Oracle and/or its affiliates.
 
 // Contributed and/or modified by Menelaos Karavelas, on behalf of Oracle
+// Contributed and/or modified by Adam Wulkiewicz, on behalf of Oracle
 
 // Parts of Boost.Geometry are redesigned from Geodan's Geographic Library
 // (geolib/GGL), copyright (c) 1995-2010 Geodan, Amsterdam, the Netherlands.
@@ -35,9 +36,10 @@ namespace boost { namespace geometry
 namespace resolve_strategy
 {
 
+template <typename Strategy>
 struct comparable_distance
 {
-    template <typename Geometry1, typename Geometry2, typename Strategy>
+    template <typename Geometry1, typename Geometry2>
     static inline
     typename comparable_distance_result<Geometry1, Geometry2, Strategy>::type
     apply(Geometry1 const& geometry1,
@@ -59,7 +61,11 @@ struct comparable_distance
                              Strategy
                          >::apply(strategy));
     }
+};
 
+template <>
+struct comparable_distance<default_strategy>
+{
     template <typename Geometry1, typename Geometry2>
     static inline typename comparable_distance_result
         <
@@ -101,9 +107,10 @@ struct comparable_distance
           Geometry2 const& geometry2,
           Strategy const& strategy)
     {
-        return resolve_strategy::comparable_distance::apply(geometry1,
-                                                            geometry2,
-                                                            strategy);
+        return resolve_strategy::comparable_distance
+            <
+                Strategy
+            >::apply(geometry1, geometry2, strategy);
     }
 };
 
@@ -164,7 +171,7 @@ struct comparable_distance
           Geometry2 const& geometry2,
           Strategy const& strategy)
     {
-        return apply_visitor(visitor<Strategy>(geometry2, strategy), geometry1);
+        return boost::apply_visitor(visitor<Strategy>(geometry2, strategy), geometry1);
     }
 };
 
@@ -225,20 +232,20 @@ struct comparable_distance
           boost::variant<BOOST_VARIANT_ENUM_PARAMS(T)> const& geometry2,
           Strategy const& strategy)
     {
-        return apply_visitor(visitor<Strategy>(geometry1, strategy), geometry2);
+        return boost::apply_visitor(visitor<Strategy>(geometry1, strategy), geometry2);
     }
 };
 
 
 template
 <
-    BOOST_VARIANT_ENUM_PARAMS(typename A),
-    BOOST_VARIANT_ENUM_PARAMS(typename B)
+    BOOST_VARIANT_ENUM_PARAMS(typename T1),
+    BOOST_VARIANT_ENUM_PARAMS(typename T2)
 >
 struct comparable_distance
     <
-        boost::variant<BOOST_VARIANT_ENUM_PARAMS(A)>,
-        boost::variant<BOOST_VARIANT_ENUM_PARAMS(B)>
+        boost::variant<BOOST_VARIANT_ENUM_PARAMS(T1)>,
+        boost::variant<BOOST_VARIANT_ENUM_PARAMS(T2)>
     >
 {
     template <typename Strategy>
@@ -246,8 +253,8 @@ struct comparable_distance
         <
             typename comparable_distance_result
                 <
-                    boost::variant<BOOST_VARIANT_ENUM_PARAMS(A)>,
-                    boost::variant<BOOST_VARIANT_ENUM_PARAMS(B)>,
+                    boost::variant<BOOST_VARIANT_ENUM_PARAMS(T1)>,
+                    boost::variant<BOOST_VARIANT_ENUM_PARAMS(T2)>,
                     Strategy
                 >::type
         >
@@ -279,15 +286,15 @@ struct comparable_distance
     template <typename Strategy>
     static inline typename comparable_distance_result
         <
-            boost::variant<BOOST_VARIANT_ENUM_PARAMS(A)>,
-            boost::variant<BOOST_VARIANT_ENUM_PARAMS(B)>,
+            boost::variant<BOOST_VARIANT_ENUM_PARAMS(T1)>,
+            boost::variant<BOOST_VARIANT_ENUM_PARAMS(T2)>,
             Strategy
         >::type
-    apply(boost::variant<BOOST_VARIANT_ENUM_PARAMS(A)> const& geometry1,
-          boost::variant<BOOST_VARIANT_ENUM_PARAMS(B)> const& geometry2,
+    apply(boost::variant<BOOST_VARIANT_ENUM_PARAMS(T1)> const& geometry1,
+          boost::variant<BOOST_VARIANT_ENUM_PARAMS(T2)> const& geometry2,
           Strategy const& strategy)
     {
-        return apply_visitor(visitor<Strategy>(strategy), geometry1, geometry2);
+        return boost::apply_visitor(visitor<Strategy>(strategy), geometry1, geometry2);
     }
 };
 
@@ -318,8 +325,8 @@ inline typename comparable_distance_result<Geometry1, Geometry2, Strategy>::type
 comparable_distance(Geometry1 const& geometry1, Geometry2 const& geometry2,
                     Strategy const& strategy)
 {
-    concept::check<Geometry1 const>();
-    concept::check<Geometry2 const>();
+    concepts::check<Geometry1 const>();
+    concepts::check<Geometry2 const>();
 
     return resolve_variant::comparable_distance
         <
@@ -350,10 +357,10 @@ template <typename Geometry1, typename Geometry2>
 inline typename default_comparable_distance_result<Geometry1, Geometry2>::type
 comparable_distance(Geometry1 const& geometry1, Geometry2 const& geometry2)
 {
-    concept::check<Geometry1 const>();
-    concept::check<Geometry2 const>();
+    concepts::check<Geometry1 const>();
+    concepts::check<Geometry2 const>();
 
-    return comparable_distance(geometry1, geometry2, default_strategy());
+    return geometry::comparable_distance(geometry1, geometry2, default_strategy());
 }
 
 

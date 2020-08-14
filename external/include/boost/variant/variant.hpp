@@ -4,7 +4,7 @@
 //-----------------------------------------------------------------------------
 //
 // Copyright (c) 2002-2003 Eric Friedman, Itay Maman
-// Copyright (c) 2012-2013 Antony Polukhin
+// Copyright (c) 2012-2019 Antony Polukhin
 //
 // Distributed under the Boost Software License, Version 1.0. (See
 // accompanying file LICENSE_1_0.txt or copy at
@@ -18,73 +18,76 @@
 #include <cstddef> // for std::size_t
 #include <new> // for placement new
 
-#if !defined(BOOST_NO_TYPEID)
-#include <typeinfo> // for typeid, std::type_info
-#endif // BOOST_NO_TYPEID
+#include <boost/type_index.hpp>
 
-#include "boost/variant/detail/config.hpp"
-#include "boost/mpl/aux_/value_wknd.hpp"
+#include <boost/variant/detail/config.hpp>
+#include <boost/mpl/aux_/value_wknd.hpp>
 
-#include "boost/variant/variant_fwd.hpp"
-#include "boost/variant/detail/backup_holder.hpp"
-#include "boost/variant/detail/enable_recursive_fwd.hpp"
-#include "boost/variant/detail/forced_return.hpp"
-#include "boost/variant/detail/initializer.hpp"
-#include "boost/variant/detail/make_variant_list.hpp"
-#include "boost/variant/detail/over_sequence.hpp"
-#include "boost/variant/detail/visitation_impl.hpp"
-#include "boost/variant/detail/hash_variant.hpp"
+#include <boost/variant/variant_fwd.hpp>
+#include <boost/variant/detail/backup_holder.hpp>
+#include <boost/variant/detail/enable_recursive_fwd.hpp>
+#include <boost/variant/detail/forced_return.hpp>
+#include <boost/variant/detail/initializer.hpp>
+#include <boost/variant/detail/make_variant_list.hpp>
+#include <boost/variant/detail/over_sequence.hpp>
+#include <boost/variant/detail/visitation_impl.hpp>
+#include <boost/variant/detail/hash_variant.hpp>
+#include <boost/variant/detail/std_hash.hpp>
 
-#include "boost/variant/detail/generic_result_type.hpp"
-#include "boost/variant/detail/move.hpp"
+#include <boost/variant/detail/move.hpp>
 
-#include "boost/detail/no_exceptions_support.hpp"
-#include "boost/detail/reference_content.hpp"
-#include "boost/aligned_storage.hpp"
-#include "boost/blank.hpp"
-#include "boost/math/common_factor_ct.hpp"
-#include "boost/static_assert.hpp"
-#include "boost/preprocessor/cat.hpp"
-#include "boost/preprocessor/repeat.hpp"
-#include "boost/type_traits/alignment_of.hpp"
-#include "boost/type_traits/add_const.hpp"
-#include "boost/type_traits/has_nothrow_constructor.hpp"
-#include "boost/type_traits/has_nothrow_copy.hpp"
-#include "boost/type_traits/is_nothrow_move_constructible.hpp"
-#include "boost/type_traits/is_const.hpp"
-#include "boost/type_traits/is_same.hpp"
-#include "boost/type_traits/is_rvalue_reference.hpp"
-#include "boost/utility/enable_if.hpp"
-#include "boost/utility/declval.hpp"
-#include "boost/variant/recursive_wrapper_fwd.hpp"
-#include "boost/variant/static_visitor.hpp"
+#include <boost/detail/no_exceptions_support.hpp>
+#include <boost/detail/reference_content.hpp>
+#include <boost/aligned_storage.hpp>
+#include <boost/blank.hpp>
+#include <boost/integer/common_factor_ct.hpp>
+#include <boost/static_assert.hpp>
+#include <boost/preprocessor/cat.hpp>
+#include <boost/preprocessor/repeat.hpp>
+#include <boost/type_traits/alignment_of.hpp>
+#include <boost/type_traits/add_const.hpp>
+#include <boost/type_traits/has_nothrow_constructor.hpp>
+#include <boost/type_traits/has_nothrow_copy.hpp>
+#include <boost/type_traits/is_nothrow_move_assignable.hpp>
+#include <boost/type_traits/is_nothrow_move_constructible.hpp>
+#include <boost/type_traits/is_const.hpp>
+#include <boost/type_traits/is_same.hpp>
+#include <boost/type_traits/is_rvalue_reference.hpp>
+#include <boost/type_traits/is_constructible.hpp>
+#include <boost/type_traits/add_lvalue_reference.hpp>
+#include <boost/utility/enable_if.hpp>
+#include <boost/utility/declval.hpp>
+#include <boost/variant/recursive_wrapper_fwd.hpp>
+#include <boost/variant/static_visitor.hpp>
 
-#include "boost/mpl/assert.hpp"
-#include "boost/mpl/begin_end.hpp"
-#include "boost/mpl/bool.hpp"
-#include "boost/mpl/deref.hpp"
-#include "boost/mpl/empty.hpp"
-#include "boost/mpl/eval_if.hpp"
-#include "boost/mpl/find_if.hpp"
-#include "boost/mpl/fold.hpp"
-#include "boost/mpl/front.hpp"
-#include "boost/mpl/identity.hpp"
-#include "boost/mpl/if.hpp"
-#include "boost/mpl/int.hpp"
-#include "boost/mpl/is_sequence.hpp"
-#include "boost/mpl/iterator_range.hpp"
-#include "boost/mpl/iter_fold_if.hpp"
-#include "boost/mpl/logical.hpp"
-#include "boost/mpl/max_element.hpp"
-#include "boost/mpl/next.hpp"
-#include "boost/mpl/not.hpp"
-#include "boost/mpl/pair.hpp"
-#include "boost/mpl/protect.hpp"
-#include "boost/mpl/push_front.hpp"
-#include "boost/mpl/same_as.hpp"
-#include "boost/mpl/size_t.hpp"
-#include "boost/mpl/sizeof.hpp"
-#include "boost/mpl/transform.hpp"
+#include <boost/mpl/assert.hpp>
+#include <boost/mpl/begin_end.hpp>
+#include <boost/mpl/bool.hpp>
+#include <boost/mpl/deref.hpp>
+#include <boost/mpl/empty.hpp>
+#include <boost/mpl/eval_if.hpp>
+#include <boost/mpl/find_if.hpp>
+#include <boost/mpl/fold.hpp>
+#include <boost/mpl/front.hpp>
+#include <boost/mpl/identity.hpp>
+#include <boost/mpl/if.hpp>
+#include <boost/mpl/insert_range.hpp>
+#include <boost/mpl/int.hpp>
+#include <boost/mpl/is_sequence.hpp>
+#include <boost/mpl/iterator_range.hpp>
+#include <boost/mpl/iter_fold_if.hpp>
+#include <boost/mpl/list.hpp>
+#include <boost/mpl/logical.hpp>
+#include <boost/mpl/max_element.hpp>
+#include <boost/mpl/next.hpp>
+#include <boost/mpl/not.hpp>
+#include <boost/mpl/pair.hpp>
+#include <boost/mpl/protect.hpp>
+#include <boost/mpl/push_front.hpp>
+#include <boost/mpl/same_as.hpp>
+#include <boost/mpl/size_t.hpp>
+#include <boost/mpl/sizeof.hpp>
+#include <boost/mpl/transform.hpp>
 
 ///////////////////////////////////////////////////////////////////////////////
 // Implementation Macros:
@@ -100,14 +103,14 @@
 
 #if defined(BOOST_VARIANT_MINIMIZE_SIZE)
 #   include <climits> // for SCHAR_MAX
-#   include "boost/mpl/eval_if.hpp"
-#   include "boost/mpl/equal_to.hpp"
-#   include "boost/mpl/identity.hpp"
-#   include "boost/mpl/int.hpp"
-#   include "boost/mpl/if.hpp"
-#   include "boost/mpl/less.hpp"
-#   include "boost/mpl/long.hpp"
-#   include "boost/mpl/O1_size.hpp"
+#   include <boost/mpl/eval_if.hpp>
+#   include <boost/mpl/equal_to.hpp>
+#   include <boost/mpl/identity.hpp>
+#   include <boost/mpl/int.hpp>
+#   include <boost/mpl/if.hpp>
+#   include <boost/mpl/less.hpp>
+#   include <boost/mpl/long.hpp>
+#   include <boost/mpl/O1_size.hpp>
 #endif
 
 
@@ -142,7 +145,7 @@ struct add_alignment
     template <typename State, typename Item>
     struct apply
         : mpl::size_t<
-              ::boost::math::static_lcm<
+              ::boost::integer::static_lcm<
                   BOOST_MPL_AUX_VALUE_WKND(State)::value
                 , ::boost::alignment_of<Item>::value
                 >::value
@@ -255,6 +258,72 @@ struct is_variant_move_noexcept_assignable {
 #endif // BOOST_NO_CXX11_NOEXCEPT
 
 ///////////////////////////////////////////////////////////////////////////////
+// (detail) metafunction is_variant_constructible_from
+//
+// Derives from true_type if at least one variant's type is constructible from T.
+//
+template <class T1, class T2>
+struct is_constructible_ext:
+    boost::mpl::or_<
+        boost::is_constructible<
+            T1,
+            T2
+        >,
+        boost::is_constructible<
+            T1,
+            typename boost::add_lvalue_reference<T2>::type
+        >
+    >
+{};
+
+template <class T, class Types>
+struct is_variant_constructible_from:
+    boost::mpl::not_< boost::is_same<
+        typename boost::mpl::find_if<
+            Types,
+            is_constructible_ext<boost::mpl::_1, T>
+        >::type,
+        typename boost::mpl::end<Types>::type
+    > >
+{};
+
+template <BOOST_VARIANT_ENUM_PARAMS(typename T), class Types>
+struct is_variant_constructible_from< boost::variant<BOOST_VARIANT_ENUM_PARAMS(T)>, Types >:
+    boost::is_same<
+        typename boost::mpl::find_if<
+            typename boost::variant<BOOST_VARIANT_ENUM_PARAMS(T)>::recursive_enabled_types,
+            mpl::not_< is_variant_constructible_from< boost::mpl::_1, Types> >
+        >::type,
+        typename boost::mpl::end< typename boost::variant<BOOST_VARIANT_ENUM_PARAMS(T)>::recursive_enabled_types >::type
+    >
+{};
+
+template <BOOST_VARIANT_ENUM_PARAMS(typename T), class Types>
+struct is_variant_constructible_from< const boost::variant<BOOST_VARIANT_ENUM_PARAMS(T)>& , Types >:
+    is_variant_constructible_from<boost::variant<BOOST_VARIANT_ENUM_PARAMS(T)>, Types >
+{};
+
+template <BOOST_VARIANT_ENUM_PARAMS(typename T), class Types>
+struct is_variant_constructible_from< boost::variant<BOOST_VARIANT_ENUM_PARAMS(T)>& , Types >:
+    is_variant_constructible_from<boost::variant<BOOST_VARIANT_ENUM_PARAMS(T)>, Types >
+{};
+
+#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
+
+template <BOOST_VARIANT_ENUM_PARAMS(typename T), class Types>
+struct is_variant_constructible_from< boost::variant<BOOST_VARIANT_ENUM_PARAMS(T)>&& , Types >:
+    is_variant_constructible_from<boost::variant<BOOST_VARIANT_ENUM_PARAMS(T)>, Types >
+{};
+
+template <BOOST_VARIANT_ENUM_PARAMS(typename T), class Types>
+struct is_variant_constructible_from< boost::variant<BOOST_VARIANT_ENUM_PARAMS(T)> const && , Types >:
+    is_variant_constructible_from<boost::variant<BOOST_VARIANT_ENUM_PARAMS(T)>, Types >
+{};
+
+#endif // #ifndef BOOST_NO_CXX11_RVALUE_REFERENCE
+
+
+///////////////////////////////////////////////////////////////////////////////
 // (detail) metafunction make_storage
 //
 // Provides an aligned storage type capable of holding any of the types
@@ -312,17 +381,14 @@ struct destroyer
 public: // visitor interfaces
 
     template <typename T>
-        BOOST_VARIANT_AUX_RETURN_VOID_TYPE
-    internal_visit(T& operand, int) const BOOST_NOEXCEPT
+    void internal_visit(T& operand, int) const BOOST_NOEXCEPT
     {
         operand.~T(); // must be noexcept
 
 #if BOOST_WORKAROUND(__BORLANDC__, BOOST_TESTED_AT(0x0551)) || \
     BOOST_WORKAROUND(BOOST_MSVC, BOOST_TESTED_AT(1600))
-        operand; // suppresses warnings
+        (void)operand; // suppresses warnings
 #endif
-
-        BOOST_VARIANT_AUX_RETURN_VOID;
     }
 
 };
@@ -376,27 +442,21 @@ public: // structors
 public: // internal visitor interface
 
     template <typename T>
-        BOOST_VARIANT_AUX_RETURN_VOID_TYPE
-    internal_visit(boost::detail::variant::backup_holder<T>& operand, long) const
+    void internal_visit(boost::detail::variant::backup_holder<T>& operand, long) const
     {
         new(storage_) T( operand.get() );
-        BOOST_VARIANT_AUX_RETURN_VOID;
     }
 
     template <typename T>
-        BOOST_VARIANT_AUX_RETURN_VOID_TYPE
-    internal_visit(const boost::detail::variant::backup_holder<T>& operand, long) const
+    void internal_visit(const boost::detail::variant::backup_holder<T>& operand, long) const
     {
         new(storage_) T( operand.get() );
-        BOOST_VARIANT_AUX_RETURN_VOID;
     }
 
     template <typename T>
-        BOOST_VARIANT_AUX_RETURN_VOID_TYPE
-    internal_visit(const T& operand, int) const
+    void internal_visit(const T& operand, int) const
     {
         new(storage_) T(operand);
-        BOOST_VARIANT_AUX_RETURN_VOID;
     }
 
 };
@@ -424,19 +484,15 @@ public: // structors
 public: // internal visitor interface
 
     template <typename T>
-        BOOST_VARIANT_AUX_RETURN_VOID_TYPE
-    internal_visit(boost::detail::variant::backup_holder<T>& operand, long) const
+    void internal_visit(boost::detail::variant::backup_holder<T>& operand, long) const
     {
         new(storage_) T( ::boost::detail::variant::move(operand.get()) );
-        BOOST_VARIANT_AUX_RETURN_VOID;
     }
 
     template <typename T>
-        BOOST_VARIANT_AUX_RETURN_VOID_TYPE
-    internal_visit(T& operand, int) const BOOST_NOEXCEPT_IF(BOOST_NOEXCEPT_EXPR(T(boost::declval<T>())))
+    void internal_visit(T& operand, int) const BOOST_NOEXCEPT_IF(BOOST_NOEXCEPT_EXPR(T(boost::declval<T>())))
     {
         new(storage_) T(::boost::detail::variant::move(operand));
-        BOOST_VARIANT_AUX_RETURN_VOID;
     }
 };
 #endif
@@ -464,26 +520,21 @@ public: // structors
 public: // internal visitor interfaces
 
     template <typename T>
-        BOOST_VARIANT_AUX_RETURN_VOID_TYPE
-    internal_visit(backup_holder<T>& lhs_content, long) const
+    void internal_visit(backup_holder<T>& lhs_content, long) const
     {
         lhs_content.get()
             = static_cast< const backup_holder<T>* >(rhs_storage_)->get();
-        BOOST_VARIANT_AUX_RETURN_VOID;
     }
 
     template <typename T>
-        BOOST_VARIANT_AUX_RETURN_VOID_TYPE
-    internal_visit(const backup_holder<T>& lhs_content, long) const
+    void internal_visit(const backup_holder<T>& lhs_content, long) const
     {
         lhs_content.get()
             = static_cast< const backup_holder<T>* >(rhs_storage_)->get();
-        BOOST_VARIANT_AUX_RETURN_VOID;
     }
 
     template <typename T>
-        BOOST_VARIANT_AUX_RETURN_VOID_TYPE
-    internal_visit(T& lhs_content, int) const
+    void internal_visit(T& lhs_content, int) const
     {
         // NOTE TO USER :
         // Compile error here indicates one of variant's bounded types does
@@ -493,7 +544,6 @@ public: // internal visitor interfaces
         // Hint: Are any of the bounded types const-qualified or references?
         //
         lhs_content = *static_cast< const T* >(rhs_storage_);
-        BOOST_VARIANT_AUX_RETURN_VOID;
     }
 
 };
@@ -521,26 +571,21 @@ public: // structors
 public: // internal visitor interfaces
 
     template <typename T>
-        BOOST_VARIANT_AUX_RETURN_VOID_TYPE
-    internal_visit(backup_holder<T>& lhs_content, long) const
+    void internal_visit(backup_holder<T>& lhs_content, long) const
     {
         lhs_content.get()
             = ::boost::detail::variant::move(static_cast<backup_holder<T>* >(rhs_storage_)->get());
-        BOOST_VARIANT_AUX_RETURN_VOID;
     }
 
     template <typename T>
-        BOOST_VARIANT_AUX_RETURN_VOID_TYPE
-    internal_visit(const backup_holder<T>& lhs_content, long) const
+    void internal_visit(const backup_holder<T>& lhs_content, long) const
     {
         lhs_content.get()
             = ::boost::detail::variant::move(static_cast<backup_holder<T>* >(rhs_storage_)->get());
-        BOOST_VARIANT_AUX_RETURN_VOID;
     }
 
     template <typename T>
-        BOOST_VARIANT_AUX_RETURN_VOID_TYPE
-    internal_visit(T& lhs_content, int) const
+    void internal_visit(T& lhs_content, int) const
     {
         // NOTE TO USER :
         // Compile error here indicates one of variant's bounded types does
@@ -550,7 +595,6 @@ public: // internal visitor interfaces
         // Hint: Are any of the bounded types const-qualified or references?
         //
         lhs_content = ::boost::detail::variant::move(*static_cast<T* >(rhs_storage_));
-        BOOST_VARIANT_AUX_RETURN_VOID;
     }
 
 };
@@ -683,8 +727,46 @@ private: // helpers, for visitor interface (below)
 
     template <typename LhsT>
     void backup_assign_impl(
+          backup_holder<LhsT>& lhs_content
+        , mpl::false_ // is_nothrow_move_constructible
+        , long
+        )
+    {
+        // Move lhs content to backup...
+        backup_holder<LhsT> backup_lhs_content(0);
+        backup_lhs_content.swap(lhs_content); // nothrow
+
+        // ...destroy lhs content...
+        lhs_content.~backup_holder<LhsT>(); // nothrow
+
+        BOOST_TRY
+        {
+            // ...and attempt to copy rhs content into lhs storage:
+            copy_rhs_content_(lhs_.storage_.address(), rhs_content_);
+        }
+        BOOST_CATCH (...)
+        {
+            // In case of failure, copy backup pointer to lhs storage...
+            new(lhs_.storage_.address())
+                    backup_holder<LhsT>( 0 ); // nothrow
+
+            static_cast<backup_holder<LhsT>* >(lhs_.storage_.address())
+                    ->swap(backup_lhs_content); // nothrow
+
+            // ...and rethrow:
+            BOOST_RETHROW;
+        }
+        BOOST_CATCH_END
+
+        // In case of success, indicate new content type:
+        lhs_.indicate_which(rhs_which_); // nothrow
+    }
+
+    template <typename LhsT>
+    void backup_assign_impl(
           LhsT& lhs_content
         , mpl::true_ // is_nothrow_move_constructible
+        , int
         )
     {
         // Move lhs content to backup...
@@ -721,6 +803,7 @@ private: // helpers, for visitor interface (below)
     void backup_assign_impl(
           LhsT& lhs_content
         , mpl::false_ // is_nothrow_move_constructible
+        , int
         )
     {
         // Backup lhs content...
@@ -758,15 +841,12 @@ private: // helpers, for visitor interface (below)
 public: // visitor interface
 
     template <typename LhsT>
-        BOOST_VARIANT_AUX_RETURN_VOID_TYPE
-    internal_visit(LhsT& lhs_content, int)
+    void internal_visit(LhsT& lhs_content, int)
     {
         typedef typename is_nothrow_move_constructible<LhsT>::type
             nothrow_move;
 
-        backup_assign_impl( lhs_content, nothrow_move() );
-
-        BOOST_VARIANT_AUX_RETURN_VOID;
+        backup_assign_impl( lhs_content, nothrow_move(), 1L);
     }
 
 #if BOOST_WORKAROUND(BOOST_MSVC, BOOST_TESTED_AT(1600))
@@ -822,22 +902,18 @@ private:
 // Generic static visitor that performs a typeid on the value it visits.
 //
 
-#if !defined(BOOST_NO_TYPEID)
-
 class reflect
-    : public static_visitor<const std::type_info&>
+    : public static_visitor<const boost::typeindex::type_info&>
 {
 public: // visitor interfaces
 
     template <typename T>
-    const std::type_info& operator()(const T&) const BOOST_NOEXCEPT
+    const boost::typeindex::type_info& operator()(const T&) const BOOST_NOEXCEPT
     {
-        return typeid(T);
+        return boost::typeindex::type_id<T>().type_info();
     }
 
 };
-
-#endif // BOOST_NO_TYPEID
 
 ///////////////////////////////////////////////////////////////////////////////
 // (detail) class comparer
@@ -865,10 +941,10 @@ public: // structors
 public: // visitor interfaces
 
     template <typename T>
-    bool operator()(const T& rhs_content) const
+    bool operator()(T& rhs_content) const
     {
         // Since the precondition ensures lhs and rhs types are same, get T...
-        known_get<const T> getter;
+        known_get<T> getter;
         const T& lhs_content = lhs_.apply_visitor(getter);
 
         // ...and compare lhs and rhs contents:
@@ -915,7 +991,7 @@ struct less_comp
 //  * for wrappers (e.g., recursive_wrapper), the wrapper's held value.
 //  * for all other values, the value itself.
 //
-template <typename Visitor>
+template <typename Visitor, bool MoveSemantics>
 class invoke_visitor
 {
 private: // representation
@@ -934,9 +1010,25 @@ public: // structors
     {
     }
 
-#if !defined(BOOST_NO_VOID_RETURNS)
-
 public: // internal visitor interfaces
+
+#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
+
+    //using workaround with is_same<T, T> to prenvent compilation error, because we need to use T in enable_if to make SFINAE work
+    template <typename T>
+    typename enable_if_c<MoveSemantics && is_same<T, T>::value, result_type>::type internal_visit(T&& operand, int)
+    {
+        return visitor_(::boost::move<T>(operand));
+    }
+
+    //using workaround with is_same<T, T> to prenvent compilation error, because we need to use T in enable_if to make SFINAE work
+    template <typename T>
+    typename disable_if_c<MoveSemantics && is_same<T, T>::value, result_type>::type internal_visit(T&& operand, int)
+    {
+        return visitor_(operand);
+    }
+
+#else
 
     template <typename T>
     result_type internal_visit(T& operand, int)
@@ -950,81 +1042,44 @@ public: // internal visitor interfaces
     {
         return visitor_(operand);
     }
-#   endif
+#   endif //BORLAND
 
-#else // defined(BOOST_NO_VOID_RETURNS)
-
-private: // helpers, for internal visitor interfaces (below)
-
-    template <typename T>
-        BOOST_VARIANT_AUX_GENERIC_RESULT_TYPE(result_type)
-    visit_impl(T& operand, mpl::false_)
-    {
-        return visitor_(operand);
-    }
-
-    template <typename T>
-        BOOST_VARIANT_AUX_RETURN_VOID_TYPE
-    visit_impl(T& operand, mpl::true_)
-    {
-        visitor_(operand);
-        BOOST_VARIANT_AUX_RETURN_VOID;
-    }
-
-public: // internal visitor interfaces
-
-    template <typename T>
-        BOOST_VARIANT_AUX_GENERIC_RESULT_TYPE(result_type)
-    internal_visit(T& operand, int)
-    {
-        typedef typename is_same<result_type, void>::type
-            has_void_result_type;
-
-        return visit_impl(operand, has_void_result_type());
-    }
-
-#endif // BOOST_NO_VOID_RETURNS) workaround
+#endif //RVALUE REFERENCES
 
 public: // internal visitor interfaces, cont.
 
     template <typename T>
-        BOOST_VARIANT_AUX_GENERIC_RESULT_TYPE(result_type)
-    internal_visit(boost::recursive_wrapper<T>& operand, long)
+    result_type internal_visit(boost::recursive_wrapper<T>& operand, long)
     {
         return internal_visit( operand.get(), 1L );
     }
 
     template <typename T>
-        BOOST_VARIANT_AUX_GENERIC_RESULT_TYPE(result_type)
-    internal_visit(const boost::recursive_wrapper<T>& operand, long)
+    result_type internal_visit(const boost::recursive_wrapper<T>& operand, long)
     {
         return internal_visit( operand.get(), 1L );
     }
 
     template <typename T>
-        BOOST_VARIANT_AUX_GENERIC_RESULT_TYPE(result_type)
-    internal_visit(boost::detail::reference_content<T>& operand, long)
+    result_type internal_visit(boost::detail::reference_content<T>& operand, long)
     {
         return internal_visit( operand.get(), 1L );
     }
 
     template <typename T>
-        BOOST_VARIANT_AUX_GENERIC_RESULT_TYPE(result_type)
-    internal_visit(const boost::detail::reference_content<T>& operand, long)
+    result_type internal_visit(const boost::detail::reference_content<T>& operand, long)
     {
         return internal_visit( operand.get(), 1L );
     }
 
     template <typename T>
-        BOOST_VARIANT_AUX_GENERIC_RESULT_TYPE(result_type)
-    internal_visit(boost::detail::variant::backup_holder<T>& operand, long)
+    result_type internal_visit(boost::detail::variant::backup_holder<T>& operand, long)
     {
         return internal_visit( operand.get(), 1L );
     }
 
     template <typename T>
-        BOOST_VARIANT_AUX_GENERIC_RESULT_TYPE(result_type)
-    internal_visit(const boost::detail::variant::backup_holder<T>& operand, long)
+    result_type internal_visit(const boost::detail::variant::backup_holder<T>& operand, long)
     {
         return internal_visit( operand.get(), 1L );
     }
@@ -1086,6 +1141,7 @@ private: // helpers, for typedefs (below)
           ::boost::mpl::not_< mpl::empty<specified_types> >::value
         ));
 
+public: // public typedefs
     typedef typename mpl::eval_if<
           is_recursive_
         , mpl::transform<
@@ -1095,9 +1151,7 @@ private: // helpers, for typedefs (below)
                 >
             >
         , mpl::identity< specified_types >
-        >::type recursive_enabled_types;
-
-public: // public typedefs
+        >::type recursive_enabled_types;    // used by is_variant_constructible_from<> trait
 
     typedef typename mpl::transform<
           recursive_enabled_types
@@ -1318,7 +1372,10 @@ public: // structors
         destroy_content();
     }
 
-    variant() BOOST_NOEXCEPT_IF(boost::has_nothrow_constructor<internal_T0>::value)
+    variant() 
+#if !(defined(__SUNPRO_CC) && BOOST_WORKAROUND(__SUNPRO_CC, <= 0x5130))
+              BOOST_NOEXCEPT_IF(boost::has_nothrow_constructor<internal_T0>::value)
+#endif
     {
 #ifdef _MSC_VER
 #pragma warning( push )
@@ -1611,7 +1668,10 @@ private: // helpers, for structors, below
 #endif
 
     template <BOOST_VARIANT_ENUM_PARAMS(typename U)>
-    void convert_construct(
+    typename boost::enable_if<mpl::or_<
+        boost::is_same<boost::variant<BOOST_VARIANT_ENUM_PARAMS(U)>, variant>,
+        boost::detail::variant::is_variant_constructible_from<boost::variant<BOOST_VARIANT_ENUM_PARAMS(U)>&, internal_types>
+    > >::type convert_construct(
           boost::variant<BOOST_VARIANT_ENUM_PARAMS(U)>& operand
         , long
         )
@@ -1620,7 +1680,10 @@ private: // helpers, for structors, below
     }
 
     template <BOOST_VARIANT_ENUM_PARAMS(typename U)>
-    void convert_construct(
+    typename boost::enable_if<mpl::or_<
+        boost::is_same<boost::variant<BOOST_VARIANT_ENUM_PARAMS(U)>, variant>,
+        boost::detail::variant::is_variant_constructible_from<const boost::variant<BOOST_VARIANT_ENUM_PARAMS(U)>&, internal_types>
+    > >::type convert_construct(
           const boost::variant<BOOST_VARIANT_ENUM_PARAMS(U)>& operand
         , long
         )
@@ -1630,7 +1693,10 @@ private: // helpers, for structors, below
 
 #ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
     template <BOOST_VARIANT_ENUM_PARAMS(typename U)>
-    void convert_construct(
+    typename boost::enable_if<mpl::or_<
+        boost::is_same<boost::variant<BOOST_VARIANT_ENUM_PARAMS(U)>, variant>,
+        boost::detail::variant::is_variant_constructible_from<boost::variant<BOOST_VARIANT_ENUM_PARAMS(U)>&&, internal_types>
+    > >::type convert_construct(
           boost::variant<BOOST_VARIANT_ENUM_PARAMS(U)>&& operand
         , long
         )
@@ -1641,27 +1707,14 @@ private: // helpers, for structors, below
 
 public: // structors, cont.
 
-#if !defined(BOOST_VARIANT_AUX_BROKEN_CONSTRUCTOR_TEMPLATE_ORDERING)
-
     template <typename T>
-    variant(const T& operand)
-    {
-        convert_construct(operand, 1L);
-    }
-
-    template <typename T>
-    variant(T& operand)
-    {
-        convert_construct(operand, 1L);
-    }
-
-#elif defined(BOOST_VARIANT_AUX_HAS_CONSTRUCTOR_TEMPLATE_ORDERING_SFINAE_WKND)
-
-    // For compilers that cannot distinguish between T& and const T& in
-    // template constructors, but do fully support SFINAE, we can workaround:
-
-    template <typename T>
-    variant(const T& operand)
+    variant(const T& operand,
+        typename boost::enable_if<mpl::or_<
+            mpl::and_<
+                mpl::not_< boost::is_same<T, variant> >,
+                boost::detail::variant::is_variant_constructible_from<const T&, internal_types>
+            >, 
+            boost::is_same<T, boost::recursive_variant_> > >::type* = 0)
     {
         convert_construct(operand, 1L);
     }
@@ -1669,31 +1722,29 @@ public: // structors, cont.
     template <typename T>
     variant(
           T& operand
-        , typename enable_if<
-              mpl::not_< is_const<T> >
-            , void
-            >::type* = 0
+        , typename boost::enable_if<mpl::or_<
+            mpl::and_<
+                mpl::not_< is_const<T> >,
+                mpl::not_< boost::is_same<T, variant> >,
+                boost::detail::variant::is_variant_constructible_from<T&, internal_types>
+            >,
+            boost::is_same<T, boost::recursive_variant_> > >::type* = 0
         )
     {
         convert_construct(operand, 1L);
     }
 
-#else // !defined(BOOST_VARIANT_AUX_HAS_CONSTRUCTOR_TEMPLATE_ORDERING_SFINAE_WKND)
-
-    // For compilers that cannot distinguish between T& and const T& in
-    // template constructors, and do NOT support SFINAE, we can't workaround:
-
-    template <typename T>
-    variant(const T& operand)
-    {
-        convert_construct(operand, 1L);
-    }
-#endif // BOOST_VARIANT_AUX_BROKEN_CONSTRUCTOR_TEMPLATE_ORDERING workarounds
-    
 #ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
     template <class T>
-    variant(T&& operand, typename boost::enable_if<boost::is_rvalue_reference<T&&> >::type* = 0, 
-        typename boost::disable_if<boost::is_const<T> >::type* = 0)
+    variant(T&& operand,
+        typename boost::enable_if<mpl::or_<
+            mpl::and_<
+                boost::is_rvalue_reference<T&&>,
+                mpl::not_< boost::is_const<T> >,
+                mpl::not_< boost::is_same<T, variant> >,
+                boost::detail::variant::is_variant_constructible_from<T&&, internal_types>
+            >,
+            boost::is_same<T, boost::recursive_variant_> > >::type* = 0)
     {
         convert_construct( detail::variant::move(operand), 1L);
     }
@@ -1711,7 +1762,7 @@ public: // structors, cont.
         // ...and activate the *this's primary storage on success:
         indicate_which(operand.which());
     }
-    
+
 #ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
     variant(variant&& operand) BOOST_NOEXCEPT_IF(variant_move_noexcept_constructible::type::value)
     {
@@ -1853,8 +1904,7 @@ private: // helpers, for modifiers (below)
     public: // internal visitor interfaces
 
         template <typename RhsT>
-            BOOST_VARIANT_AUX_RETURN_VOID_TYPE
-        internal_visit(const RhsT& rhs_content, int) const
+        void internal_visit(const RhsT& rhs_content, int) const
         {
             typedef typename has_nothrow_copy<RhsT>::type
                 nothrow_copy;
@@ -1869,8 +1919,6 @@ private: // helpers, for modifiers (below)
                 , nothrow_move_constructor()
                 , has_fallback_type_()
                 );
-
-            BOOST_VARIANT_AUX_RETURN_VOID;
         }
 
 #if BOOST_WORKAROUND(BOOST_MSVC, BOOST_TESTED_AT(1600))
@@ -1975,8 +2023,7 @@ private: // helpers, for modifiers (below)
     public: // internal visitor interfaces
 
         template <typename RhsT>
-            BOOST_VARIANT_AUX_RETURN_VOID_TYPE
-        internal_visit(RhsT& rhs_content, int) const
+        void internal_visit(RhsT& rhs_content, int) const
         {
             typedef typename is_nothrow_move_constructible<RhsT>::type
                 nothrow_move_constructor;
@@ -1991,8 +2038,6 @@ private: // helpers, for modifiers (below)
                 , nothrow_move_constructor()
                 , has_fallback_type_()
                 );
-
-            BOOST_VARIANT_AUX_RETURN_VOID;
         }
 
 #if BOOST_WORKAROUND(BOOST_MSVC, BOOST_TESTED_AT(1600))
@@ -2085,8 +2130,14 @@ public: // modifiers
 
 #ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
     template <class T>
-    typename boost::enable_if_c<boost::is_rvalue_reference<T&&>::value && !boost::is_const<T>::value, variant& >::type 
-        operator=(T&& rhs) 
+    typename boost::enable_if<
+        boost::mpl::and_<
+            boost::is_rvalue_reference<T&&>,
+            mpl::not_< boost::is_const<T> >,
+            boost::detail::variant::is_variant_constructible_from<T&&, internal_types>
+        >,
+        variant&
+    >::type operator=(T&& rhs) 
     {
         move_assign( detail::variant::move(rhs) );
         return *this;
@@ -2094,7 +2145,13 @@ public: // modifiers
 #endif // BOOST_NO_CXX11_RVALUE_REFERENCES
 
     template <typename T>
-    variant& operator=(const T& rhs)
+    typename boost::enable_if<
+        mpl::or_<
+            boost::is_same<T, variant>,
+            boost::detail::variant::is_variant_constructible_from<const T&, internal_types>
+        >,
+        variant&
+    >::type operator=(const T& rhs)
     {
         assign(rhs);
         return *this;
@@ -2109,7 +2166,7 @@ public: // modifiers
 
 #ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
     variant& operator=(variant&& rhs) 
-#if !defined(__GNUC__) || (__GNUC__ != 4) || (__GNUC_MINOR__ > 6)
+#if !defined(__GNUC__) || (__GNUC__ != 4) || (__GNUC_MINOR__ > 6) || defined(__clang__)
         BOOST_NOEXCEPT_IF(variant_move_noexcept_constructible::type::value && variant_move_noexcept_assignable::type::value)
 #endif
     {
@@ -2147,19 +2204,13 @@ public: // queries
         return false;
     }
 
-#if !defined(BOOST_NO_TYPEID)
-    const std::type_info& type() const
+    const boost::typeindex::type_info& type() const
     {
         detail::variant::reflect visitor;
         return this->apply_visitor(visitor);
     }
-#endif
 
 public: // prevent comparison with foreign types
-
-// Obsolete. Remove.
-#   define BOOST_VARIANT_AUX_FAIL_COMPARISON_RETURN_TYPE \
-    void
 
     template <typename U>
     void operator==(const U&) const
@@ -2169,6 +2220,30 @@ public: // prevent comparison with foreign types
 
     template <typename U>
     void operator<(const U&) const
+    {
+        BOOST_STATIC_ASSERT( false && sizeof(U) );
+    }
+
+    template <typename U>
+    void operator!=(const U&) const
+    {
+        BOOST_STATIC_ASSERT( false && sizeof(U) );
+    }
+
+    template <typename U>
+    void operator>(const U&) const
+    {
+        BOOST_STATIC_ASSERT( false && sizeof(U) );
+    }
+
+    template <typename U>
+    void operator<=(const U&) const
+    {
+        BOOST_STATIC_ASSERT( false && sizeof(U) );
+    }
+
+    template <typename U>
+    void operator>=(const U&) const
     {
         BOOST_STATIC_ASSERT( false && sizeof(U) );
     }
@@ -2203,6 +2278,28 @@ public: // comparison operators
         return rhs.apply_visitor(visitor);
     }
 
+    ///////////////////////////////////////////////////////////////////////////////
+    // comparison operators != > <= >=
+    inline bool operator!=(const variant& rhs) const
+    {
+        return !(*this == rhs);
+    }
+
+    inline bool operator>(const variant& rhs) const
+    {
+        return rhs < *this;
+    }
+
+    inline bool operator<=(const variant& rhs) const
+    {
+        return !(*this > rhs);
+    }
+
+    inline bool operator>=(const variant& rhs) const
+    {
+        return !(*this < rhs);
+    }
+
 // helpers, for visitation support (below) -- private when possible
 #if !defined(BOOST_NO_MEMBER_TEMPLATE_FRIENDS)
 
@@ -2218,10 +2315,7 @@ public:
 #endif// !defined(BOOST_NO_MEMBER_TEMPLATE_FRIENDS)
 
     template <typename Visitor, typename VoidPtrCV>
-    static
-        BOOST_VARIANT_AUX_GENERIC_RESULT_TYPE(
-              typename Visitor::result_type
-            )
+    BOOST_FORCEINLINE static typename Visitor::result_type
     internal_apply_visitor_impl(
           int internal_which
         , int logical_which
@@ -2246,9 +2340,7 @@ public:
     }
 
     template <typename Visitor>
-        BOOST_VARIANT_AUX_GENERIC_RESULT_TYPE(
-              typename Visitor::result_type
-            )
+    BOOST_FORCEINLINE typename Visitor::result_type
     internal_apply_visitor(Visitor& visitor)
     {
         return internal_apply_visitor_impl(
@@ -2257,9 +2349,7 @@ public:
     }
 
     template <typename Visitor>
-        BOOST_VARIANT_AUX_GENERIC_RESULT_TYPE(
-              typename Visitor::result_type
-            )
+    BOOST_FORCEINLINE typename Visitor::result_type
     internal_apply_visitor(Visitor& visitor) const
     {
         return internal_apply_visitor_impl(
@@ -2269,23 +2359,45 @@ public:
 
 public: // visitation support
 
+#ifndef BOOST_NO_CXX11_REF_QUALIFIERS
+
     template <typename Visitor>
-        BOOST_VARIANT_AUX_GENERIC_RESULT_TYPE(
-              typename Visitor::result_type
-            )
-    apply_visitor(Visitor& visitor)
+    typename Visitor::result_type
+    apply_visitor(Visitor& visitor) &&
     {
-        detail::variant::invoke_visitor<Visitor> invoker(visitor);
+        detail::variant::invoke_visitor<Visitor, true> invoker(visitor);
         return this->internal_apply_visitor(invoker);
     }
 
     template <typename Visitor>
-        BOOST_VARIANT_AUX_GENERIC_RESULT_TYPE(
-              typename Visitor::result_type
-            )
-    apply_visitor(Visitor& visitor) const
+    typename Visitor::result_type
+    apply_visitor(Visitor& visitor) const&&
     {
-        detail::variant::invoke_visitor<Visitor> invoker(visitor);
+        detail::variant::invoke_visitor<Visitor, true> invoker(visitor);
+        return this->internal_apply_visitor(invoker);
+    }
+
+#endif
+
+    template <typename Visitor>
+    typename Visitor::result_type
+    apply_visitor(Visitor& visitor)
+#ifndef BOOST_NO_CXX11_REF_QUALIFIERS
+    &
+#endif
+    {
+        detail::variant::invoke_visitor<Visitor, false> invoker(visitor);
+        return this->internal_apply_visitor(invoker);
+    }
+
+    template <typename Visitor>
+    typename Visitor::result_type
+    apply_visitor(Visitor& visitor) const
+#ifndef BOOST_NO_CXX11_REF_QUALIFIERS
+    &
+#endif
+    {
+        detail::variant::invoke_visitor<Visitor, false> invoker(visitor);
         return this->internal_apply_visitor(invoker);
     }
 
@@ -2302,11 +2414,16 @@ struct make_variant_over
 private: // precondition assertions
 
     BOOST_STATIC_ASSERT(( ::boost::mpl::is_sequence<Types>::value ));
+    typedef typename boost::mpl::insert_range<
+      boost::mpl::list<>
+    , boost::mpl::end< boost::mpl::list<> >::type
+    , Types
+    >::type copied_sequence_t;
 
 public: // metafunction result
 
     typedef variant<
-          detail::variant::over_sequence< Types >
+          detail::variant::over_sequence<copied_sequence_t>
         > type;
 
 };
@@ -2330,7 +2447,7 @@ inline void swap(
 // implementation additions
 
 #if !defined(BOOST_NO_IOSTREAM)
-#include "boost/variant/detail/variant_io.hpp"
+#include <boost/variant/detail/variant_io.hpp>
 #endif // BOOST_NO_IOSTREAM
 
 #endif // BOOST_VARIANT_VARIANT_HPP

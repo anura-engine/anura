@@ -85,7 +85,6 @@ namespace KRE
 		explicit SDLWindow(int width, int height, const variant& hints) 
 			: Window(width, height, hints),
 			  renderer_hint_(),
-			  renderer_(nullptr),
 			  context_(nullptr),
 			  nonfs_width_(width),
 			  nonfs_height_(height),
@@ -264,9 +263,6 @@ namespace KRE
                 ImGui_ImplSDL2_Shutdown();
                 ImGui::DestroyContext();
 #endif
-				if(getDisplayDevice()->ID() != DisplayDevice::DISPLAY_DEVICE_SDL) {
-					SDL_DestroyRenderer(renderer_);
-				}
 				getDisplayDevice().reset();
 				if(context_) {
 					SDL_GL_DeleteContext(context_);
@@ -300,8 +296,6 @@ namespace KRE
 				if(vSync()) {
 					rnd_flags |= SDL_RENDERER_PRESENTVSYNC;
 				}
-				renderer_ = SDL_CreateRenderer(window_.get(), -1, rnd_flags);
-				ASSERT_LOG(renderer_ != nullptr, "Failed to create renderer: " << SDL_GetError() << "; Windows details: " << w << "x" << h << " wnd_flags = " << wnd_flags);				
 			}
 
 			ASSERT_LOG(window_ != nullptr, "Failed to create window: " << SDL_GetError());
@@ -511,7 +505,6 @@ namespace KRE
 
 		SDL_WindowPtr window_;
 		SDL_GLContext context_;
-		SDL_Renderer* renderer_;
 		std::vector<std::string> renderer_hint_;
 
 		// Width of the window before changing to full-screen mode

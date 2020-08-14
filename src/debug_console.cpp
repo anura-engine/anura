@@ -307,6 +307,7 @@ namespace debug_console
 		PREF_INT_PERSISTENT(console_width, 600, "Width of console in pixels");
 		PREF_INT_PERSISTENT(console_height, 200, "Width of console in pixels");
 		PREF_INT_PERSISTENT(console_font_size, 14, "Font size of console text");
+		PREF_STRING(console_prettyprint, "lib.debug.pretty_string", "function to use to output results in the debug console");
 	}
 
 	ConsoleDialog::ConsoleDialog(Level& lvl, game_logic::FormulaCallable& obj)
@@ -483,18 +484,34 @@ namespace debug_console
 					try {
 						ExecuteDebugConsoleScope scope;
 						ent->executeCommand(v);
+
+						std::string output = v.to_debug_string();
+						debug_console::addMessage(output);
+						LOG_INFO("OUTPUT: " << output);
+
 					} catch(validation_failure_exception& e) {
 						//if this was a failure due to it not being a real command,
 						//that's fine, since we just want to output the result.
 						if(!strstr(e.msg.c_str(), "COMMAND WAS EXPECTED, BUT FOUND")) {
 							throw e;
 						}
+
+						game_logic::Formula pp(variant(g_console_prettyprint), &get_custom_object_functions_symbol_table(), nullptr);
+						variant pp_fn = pp.execute();
+						if(pp_fn.is_null() == false) {
+							std::vector<variant> args;
+							args.push_back(v);
+							variant v_formatted = pp_fn(args);
+
+							std::string output = v_formatted.as_string();
+							debug_console::addMessage(output);
+							LOG_INFO("OUTPUT: " << output);
+						}
 					}
 				}
 
-				std::string output = v.to_debug_string();
-				debug_console::addMessage(output);
-				LOG_INFO("OUTPUT: " << output);
+
+
 			} catch(validation_failure_exception& e) {
 				debug_console::addMessage("error parsing formula: " + e.msg);
 			} catch(type_error& e) {

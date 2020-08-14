@@ -29,7 +29,7 @@
 #include <cstddef>
 
 namespace boost{
-   namespace re_detail{
+   namespace BOOST_REGEX_DETAIL_NS{
 
 #ifdef BOOST_MSVC
 #pragma warning(push)
@@ -138,12 +138,12 @@ public:
 
    size_type BOOST_REGEX_CALL size()
    {
-      return end - start;
+      return size_type(end - start);
    }
 
    size_type BOOST_REGEX_CALL capacity()
    {
-      return last - start;
+      return size_type(last - start);
    }
 
    void* BOOST_REGEX_CALL data()const
@@ -153,7 +153,7 @@ public:
 
    size_type BOOST_REGEX_CALL index(void* ptr)
    {
-      return static_cast<pointer>(ptr) - static_cast<pointer>(data());
+      return size_type(static_cast<pointer>(ptr) - static_cast<pointer>(data()));
    }
 
    void BOOST_REGEX_CALL clear()
@@ -198,7 +198,7 @@ inline raw_storage::raw_storage(size_type n)
 #pragma warning(pop)
 #endif
 
-} // namespace re_detail
+} // namespace BOOST_REGEX_DETAIL_NS
 } // namespace boost
 
 #endif

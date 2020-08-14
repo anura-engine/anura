@@ -21,26 +21,38 @@ namespace boost {
 namespace coroutines {
 
 #if defined(BOOST_USE_SEGMENTED_STACKS)
-struct stack_context
+struct BOOST_COROUTINES_DECL stack_context
 {
-    typedef void *  segments_context[BOOST_COROUTINES_SEGMENTS];
+    typedef void *  segments_context[BOOST_CONTEXT_SEGMENTS];
 
     std::size_t             size;
     void                *   sp;
     segments_context        segments_ctx;
+#if defined(BOOST_USE_VALGRIND)
+    unsigned                valgrind_stack_id;
+#endif
 
     stack_context() :
         size( 0), sp( 0), segments_ctx()
+#if defined(BOOST_USE_VALGRIND)
+        , valgrind_stack_id( 0)
+#endif
     {}
 };
 #else
-struct stack_context
+struct BOOST_COROUTINES_DECL stack_context
 {
     std::size_t             size;
     void                *   sp;
+#if defined(BOOST_USE_VALGRIND)
+    unsigned                valgrind_stack_id;
+#endif
 
     stack_context() :
         size( 0), sp( 0)
+#if defined(BOOST_USE_VALGRIND)
+        , valgrind_stack_id( 0)
+#endif
     {}
 };
 #endif

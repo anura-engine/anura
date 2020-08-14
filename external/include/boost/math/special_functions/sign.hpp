@@ -27,7 +27,7 @@ namespace detail {
     template<class T> 
     inline int signbit_impl(T x, native_tag const&)
     {
-        return (std::signbit)(x);
+        return (std::signbit)(x) ? 1 : 0;
     }
 #endif
 
@@ -56,11 +56,11 @@ namespace detail {
     //
     inline int signbit_impl(long double x, generic_tag<true> const&)
     {
-       return boost::math::signbit(static_cast<double>(x));
+       return (boost::math::signbit)(static_cast<double>(x));
     }
     inline int signbit_impl(long double x, generic_tag<false> const&)
     {
-       return boost::math::signbit(static_cast<double>(x));
+       return (boost::math::signbit)(static_cast<double>(x));
     }
 #endif
 

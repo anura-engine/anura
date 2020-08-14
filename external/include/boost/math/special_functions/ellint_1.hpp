@@ -51,12 +51,6 @@ T ellint_f_imp(T phi, T k, const Policy& pol)
     BOOST_MATH_INSTRUMENT_VARIABLE(k);
     BOOST_MATH_INSTRUMENT_VARIABLE(function);
 
-    if (abs(k) > 1)
-    {
-       return policies::raise_domain_error<T>(function,
-            "Got k = %1%, function requires |k| <= 1", k, pol);
-    }
-
     bool invert = false;
     if(phi < 0)
     {
@@ -103,10 +97,28 @@ T ellint_f_imp(T phi, T k, const Policy& pol)
           BOOST_MATH_INSTRUMENT_VARIABLE(rphi);
        }
        T sinp = sin(rphi);
+       sinp *= sinp;
+       if (sinp * k * k >= 1)
+       {
+          return policies::raise_domain_error<T>(function,
+             "Got k^2 * sin^2(phi) = %1%, but the function requires this < 1", sinp * k * k, pol);
+       }
        T cosp = cos(rphi);
+       cosp *= cosp;
        BOOST_MATH_INSTRUMENT_VARIABLE(sinp);
        BOOST_MATH_INSTRUMENT_VARIABLE(cosp);
-       result = s * sinp * ellint_rf_imp(T(cosp * cosp), T(1 - k * k * sinp * sinp), T(1), pol);
+       if(sinp > tools::min_value<T>())
+       {
+          BOOST_ASSERT(rphi != 0); // precondition, can't be true if sin(rphi) != 0.
+          //
+          // Use http://dlmf.nist.gov/19.25#E5, note that
+          // c-1 simplifies to cot^2(rphi) which avoid cancellation:
+          //
+          T c = 1 / sinp;
+          result = static_cast<T>(s * ellint_rf_imp(T(cosp / sinp), T(c - k * k), c, pol));
+       }
+       else
+          result = s * sin(rphi);
        BOOST_MATH_INSTRUMENT_VARIABLE(result);
        if(m != 0)
        {

@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////
 //  Copyright 2012 John Maddock. Distributed under the Boost
 //  Software License, Version 1.0. (See accompanying file
-//  LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_
+//  LICENSE_1_0.txt or copy at https://www.boost.org/LICENSE_1_0.txt
 
 #ifndef BOOST_MP_INT_FUNC_HPP
 #define BOOST_MP_INT_FUNC_HPP
@@ -469,7 +469,19 @@ inline typename enable_if<
          is_integral<V>
       >
    >,
-   detail::expression<detail::function, default_ops::powm_func, T, U, V> >::type 
+   typename mpl::if_<
+      is_no_et_number<T>, 
+      T,
+      typename mpl::if_<
+         is_no_et_number<U>,
+         U,
+         typename mpl::if_<
+            is_no_et_number<V>,
+            V,
+            detail::expression<detail::function, default_ops::powm_func, T, U, V> >::type
+         >::type
+      >::type
+   >::type
    powm(const T& b, const U& p, const V& mod)
 {
    return detail::expression<detail::function, default_ops::powm_func, T, U, V>(

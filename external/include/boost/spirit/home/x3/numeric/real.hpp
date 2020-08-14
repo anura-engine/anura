@@ -28,7 +28,7 @@ namespace boost { namespace spirit { namespace x3
 
         template <typename Iterator, typename Context>
         bool parse(Iterator& first, Iterator const& last
-          , Context& context, unused_type, T& attr_) const
+          , Context const& context, unused_type, T& attr_) const
         {
             x3::skip_over(first, last, context);
             return extract_real<T, RealPolicies>::parse(first, last, attr_, policies);
@@ -36,7 +36,7 @@ namespace boost { namespace spirit { namespace x3
 
         template <typename Iterator, typename Context, typename Attribute>
         bool parse(Iterator& first, Iterator const& last
-          , Context& context, unused_type, Attribute& attr_param) const
+          , Context const& context, unused_type, Attribute& attr_param) const
         {
             // this case is called when Attribute is not T
             T attr_;
@@ -56,6 +56,9 @@ namespace boost { namespace spirit { namespace x3
 
     typedef real_parser<double> double_type;
     double_type const double_ = {};
+
+    typedef real_parser<long double> long_double_type;
+    long_double_type const long_double = {};
 
 }}}
 

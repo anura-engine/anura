@@ -561,8 +561,14 @@ void Frame::buildAlpha()
 		if(!allow_wrapping_ && (xbase < 0 || ybase < 0 
 			|| xbase + img_rect_.w() > blit_target_.getTexture()->surfaceWidth()
 			|| ybase + img_rect_.h() > blit_target_.getTexture()->surfaceHeight())) {
-			LOG_INFO("IMAGE RECT FOR FRAME '" << id_ << "' #" << n << ": " << img_rect_.x() << " + " << current_col << " * (" << img_rect_.w() << "+" << pad_ << ") IS INVALID: " << xbase << ", " << ybase << ", " << (xbase + img_rect_.w()) << ", " << (ybase + img_rect_.h()) << " / " << blit_target_.getTexture()->surfaceWidth() << "," << blit_target_.getTexture()->surfaceHeight());
-			LOG_INFO("IMAGE_NAME: " << image_ << ", Name from texture: " << blit_target_.getTexture()->getFrontSurface()->getName());
+			LOG_INFO("IMAGE RECT FOR FRAME #" << n << " OF THE ANIMATION '" << id_ << "' GOES OUTSIDE THE BOUNDS OF THE SOURCE IMAGE." <<
+                "\n  The image's name is: '" << image_ << "'." <<
+                "\n  The texture's internal image name is: '" << blit_target_.getTexture()->getFrontSurface()->getName() << "'." <<
+                "\n  This frame's x-pos is: " << xbase << ", derived from the formula: " << img_rect_.x() << " + " << current_col << " * (" << img_rect_.w() << "+" << pad_ << ")." <<
+                "\n  This frame's y-pos is: " << ybase << ", derived from the formula: " << img_rect_.y() << " + " << current_row << " * (" << img_rect_.h() << "+" << pad_ << ")." <<
+                "\n  This formula means: (x1 pos of the first frame) + (the current frame number) * ((the width of a frame) + (the padding of each frame))." <<
+                "\n  The frame's bounds are (x1,y1,x2,y2): " << xbase << ", " << ybase << ", " << (xbase + img_rect_.w()) << ", " << (ybase + img_rect_.h()) << "." <<
+                "\n  The source's image size is (w/h): " << blit_target_.getTexture()->surfaceWidth() << "," << blit_target_.getTexture()->surfaceHeight() << ".");
 			throw Error();
 		}
 
@@ -1183,6 +1189,8 @@ BEGIN_DEFINE_CALLABLE_NOBASE(Frame)
 		return variant(obj.getImageName());
 	DEFINE_FIELD(duration, "int")
 		return variant(obj.frame_time_);
+    DEFINE_FIELD(frames, "int")
+        return variant(obj.nframes_);
     DEFINE_FIELD(frames_per_row, "int")
         return variant(obj.nframes_per_row_);
     DEFINE_FIELD(total_animation_time, "int")
@@ -1201,4 +1209,8 @@ BEGIN_DEFINE_CALLABLE_NOBASE(Frame)
 		return variant(obj.width());
 	DEFINE_FIELD(height, "int")
 		return variant(obj.height());
+    DEFINE_FIELD(reverse, "bool")
+        return variant::from_bool(obj.reverse_frame_);
+    DEFINE_FIELD(play_backwards, "bool")
+        return variant::from_bool(obj.play_backwards_);
 END_DEFINE_CALLABLE(Frame)

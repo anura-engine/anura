@@ -10,6 +10,7 @@
  */
 
 #include <boost/throw_exception.hpp>
+#include <boost/date_time/compiler_config.hpp>
 #include <boost/date_time/date.hpp>
 #include <boost/date_time/special_defs.hpp>
 #include <boost/date_time/gregorian/greg_calendar.hpp>
@@ -34,7 +35,7 @@ namespace gregorian {
       supported.
       \ingroup date_basics
   */
-  class date : public date_time::date<date, gregorian_calendar, date_duration>
+  class BOOST_SYMBOL_VISIBLE date : public date_time::date<date, gregorian_calendar, date_duration>
   {
    public:
     typedef gregorian_calendar::year_type year_type;
@@ -119,7 +120,7 @@ namespace gregorian {
     date end_of_month() const
     {
       ymd_type ymd = year_month_day();
-      short eom_day =  gregorian_calendar::end_of_month_day(ymd.year, ymd.month);
+      unsigned short eom_day =  gregorian_calendar::end_of_month_day(ymd.year, ymd.month);
       return date(ymd.year, ymd.month, eom_day);
     }
 

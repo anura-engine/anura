@@ -14,17 +14,17 @@
 #  define BOOST_GEOMETRY_DEBUG_SEGMENT_IDENTIFIER
 #endif
 
+#if defined(BOOST_GEOMETRY_DEBUG_SEGMENT_IDENTIFIER)
+#include <iostream>
+#endif
 
-#include <vector>
 
-
-#include <boost/geometry/core/access.hpp>
-#include <boost/geometry/core/coordinate_dimension.hpp>
-
+#include <boost/geometry/algorithms/detail/signed_size_type.hpp>
 
 
 namespace boost { namespace geometry
 {
+
 
 
 // Internal struct to uniquely identify a segment
@@ -38,13 +38,18 @@ struct segment_identifier
         , multi_index(-1)
         , ring_index(-1)
         , segment_index(-1)
+        , piece_index(-1)
     {}
 
-    inline segment_identifier(int src, int mul, int rin, int seg)
+    inline segment_identifier(signed_size_type src,
+                              signed_size_type mul,
+                              signed_size_type rin,
+                              signed_size_type seg)
         : source_index(src)
         , multi_index(mul)
         , ring_index(rin)
         , segment_index(seg)
+        , piece_index(-1)
     {}
 
     inline bool operator<(segment_identifier const& other) const
@@ -52,6 +57,7 @@ struct segment_identifier
         return source_index != other.source_index ? source_index < other.source_index
             : multi_index !=other.multi_index ? multi_index < other.multi_index
             : ring_index != other.ring_index ? ring_index < other.ring_index
+            : piece_index != other.piece_index ? piece_index < other.piece_index
             : segment_index < other.segment_index
             ;
     }
@@ -61,6 +67,7 @@ struct segment_identifier
         return source_index == other.source_index
             && segment_index == other.segment_index
             && ring_index == other.ring_index
+            && piece_index == other.piece_index
             && multi_index == other.multi_index
             ;
     }
@@ -68,20 +75,24 @@ struct segment_identifier
 #if defined(BOOST_GEOMETRY_DEBUG_SEGMENT_IDENTIFIER)
     friend std::ostream& operator<<(std::ostream &os, segment_identifier const& seg_id)
     {
-        std::cout
+        os
             << "s:" << seg_id.source_index
-            << ", v:" << seg_id.segment_index // ~vertex
+            << ", v:" << seg_id.segment_index // v:vertex because s is used for source
             ;
-        if (seg_id.ring_index >= 0) std::cout << ", r:" << seg_id.ring_index;
-        if (seg_id.multi_index >= 0) std::cout << ", m:" << seg_id.multi_index;
+        if (seg_id.ring_index >= 0) os << ", r:" << seg_id.ring_index;
+        if (seg_id.multi_index >= 0) os << ", m:" << seg_id.multi_index;
+        if (seg_id.piece_index >= 0) os << ", p:" << seg_id.piece_index;
         return os;
     }
 #endif
 
-    int source_index;
-    int multi_index;
-    int ring_index;
-    int segment_index;
+    signed_size_type source_index;
+    signed_size_type multi_index;
+    signed_size_type ring_index;
+    signed_size_type segment_index;
+
+    // For buffer - todo: move this to buffer-only
+    signed_size_type piece_index;
 };
 
 

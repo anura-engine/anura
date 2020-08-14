@@ -28,7 +28,17 @@
 
 #include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
-#include <boost/uuid/sha1.hpp>
+
+#if defined __has_include
+#  if __has_include("boost/uuid/detail/sha1.hpp")
+#    include <boost/uuid/detail/sha1.hpp>
+#  else
+#    include <boost/uuid/sha1.hpp>
+#  endif
+#else
+#  include <boost/uuid/sha1.hpp>
+#endif
+
 #include <boost/algorithm/string.hpp>
 #include <boost/exception/diagnostic_information.hpp>
 #include <boost/exception_ptr.hpp>
@@ -4005,9 +4015,9 @@ FUNCTION_DEF_IMPL
 
 		FUNCTION_DEF(get_all_files_under_dir, 1, 1, "get_all_files_under_dir(path): Returns a list of all the files in and under the given directory")
 			std::vector<variant> v;
-			std::map<std::string, std::string> file_paths;
-			module::get_unique_filenames_under_dir(EVAL_ARG(0).as_string(), &file_paths);
-			for(std::map<std::string, std::string>::const_iterator i = file_paths.begin(); i != file_paths.end(); ++i) {
+			std::multimap<std::string, std::string> file_paths;
+			module::get_all_filenames_under_dir(EVAL_ARG(0).as_string(), &file_paths);
+			for(std::multimap<std::string, std::string>::const_iterator i = file_paths.begin(); i != file_paths.end(); ++i) {
 				v.push_back(variant(i->second));
 			}
 			return variant(&v);
@@ -4423,8 +4433,8 @@ FUNCTION_DEF_IMPL
 			FUNCTION_DEF(mod, 2, 2, "mod(num,den)")
 				int left = EVAL_ARG(0).as_int();
 				int right = EVAL_ARG(1).as_int();
-		
-				return variant((left%right + right)%right);
+				
+				return variant(right ? (left%right + right)%right : 0);
 			FUNCTION_ARGS_DEF
 				ARG_TYPE("int|decimal")
 				ARG_TYPE("int|decimal")
@@ -5946,17 +5956,20 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 		const variant a = EVAL_ARG(0);
 		const variant b = EVAL_ARG(1);
 		return variant::from_bool(variant_types_compatible(parse_variant_type(a), parse_variant_type(b)));
+	RETURN_TYPE("bool")
 	END_FUNCTION_DEF(types_compatible)
 
 	FUNCTION_DEF(typeof, 1, 1, "typeof(expression) -> string: yields the statically known type of the given expression")
 		variant v = EVAL_ARG(0);
 		return variant(get_variant_type_from_value(v)->to_string());
+	RETURN_TYPE("string")
 	END_FUNCTION_DEF(typeof)
 
 	FUNCTION_DEF(static_typeof, 1, 1, "static_typeof(expression) -> string: yields the statically known type of the given expression")
 		variant_type_ptr type = args()[0]->queryVariantType();
 		ASSERT_LOG(type.get() != nullptr, "nullptr VALUE RETURNED FROM TYPE QUERY");
 		return variant(type->base_type_no_enum()->to_string());
+	RETURN_TYPE("string")
 	END_FUNCTION_DEF(static_typeof)
 
 	FUNCTION_DEF(all_textures, 0, 0, "all_textures()")

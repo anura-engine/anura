@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2014.
+ *          Copyright Andrey Semashev 2007 - 2015.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -18,7 +18,7 @@
 #define BOOST_LOG_DETAIL_ENQUEUED_RECORD_HPP_INCLUDED_
 
 #include <boost/move/core.hpp>
-#include <boost/move/utility.hpp>
+#include <boost/move/utility_core.hpp>
 #include <boost/log/detail/config.hpp>
 #include <boost/log/detail/timestamp.hpp>
 #include <boost/log/core/record_view.hpp>

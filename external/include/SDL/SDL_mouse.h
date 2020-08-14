@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2014 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -25,8 +25,8 @@
  *  Include file for SDL mouse event handling.
  */
 
-#ifndef _SDL_mouse_h
-#define _SDL_mouse_h
+#ifndef SDL_mouse_h_
+#define SDL_mouse_h_
 
 #include "SDL_stdinc.h"
 #include "SDL_error.h"
@@ -38,10 +38,10 @@
 extern "C" {
 #endif
 
-typedef struct SDL_Cursor SDL_Cursor;   /* Implementation dependent */
+typedef struct SDL_Cursor SDL_Cursor;   /**< Implementation dependent */
 
 /**
- * \brief Cursor types for SDL_CreateSystemCursor.
+ * \brief Cursor types for SDL_CreateSystemCursor().
  */
 typedef enum
 {
@@ -59,6 +59,15 @@ typedef enum
     SDL_SYSTEM_CURSOR_HAND,      /**< Hand */
     SDL_NUM_SYSTEM_CURSORS
 } SDL_SystemCursor;
+
+/**
+ * \brief Scroll direction types for the Scroll event
+ */
+typedef enum
+{
+    SDL_MOUSEWHEEL_NORMAL,    /**< The scroll direction is normal */
+    SDL_MOUSEWHEEL_FLIPPED    /**< The scroll direction is flipped / natural */
+} SDL_MouseWheelDirection;
 
 /* Function prototypes */
 
@@ -128,10 +137,11 @@ extern DECLSPEC void SDLCALL SDL_WarpMouseInWindow(SDL_Window * window,
  *
  *  \param x The x coordinate
  *  \param y The y coordinate
+ *  \return 0 on success, -1 on error (usually: unsupported by a platform).
  *
  *  \note This function generates a mouse motion event
  */
-extern DECLSPEC void SDLCALL SDL_WarpMouseGlobal(int x, int y);
+extern DECLSPEC int SDLCALL SDL_WarpMouseGlobal(int x, int y);
 
 /**
  *  \brief Set relative mouse mode.
@@ -244,9 +254,11 @@ extern DECLSPEC SDL_Cursor *SDLCALL SDL_GetCursor(void);
 extern DECLSPEC SDL_Cursor *SDLCALL SDL_GetDefaultCursor(void);
 
 /**
- *  \brief Frees a cursor created with SDL_CreateCursor().
+ *  \brief Frees a cursor created with SDL_CreateCursor() or similar functions.
  *
  *  \sa SDL_CreateCursor()
+ *  \sa SDL_CreateColorCursor()
+ *  \sa SDL_CreateSystemCursor()
  */
 extern DECLSPEC void SDLCALL SDL_FreeCursor(SDL_Cursor * cursor);
 
@@ -285,6 +297,6 @@ extern DECLSPEC int SDLCALL SDL_ShowCursor(int toggle);
 #endif
 #include "close_code.h"
 
-#endif /* _SDL_mouse_h */
+#endif /* SDL_mouse_h_ */
 
 /* vi: set ts=4 sw=4 expandtab: */

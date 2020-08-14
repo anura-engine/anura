@@ -13,6 +13,31 @@
 #ifndef _BOOST_UBLAS_VECTOR_SPARSE_
 #define _BOOST_UBLAS_VECTOR_SPARSE_
 
+#include <boost/config.hpp>
+
+// In debug mode, MSCV enables iterator debugging, which additional checks are
+// executed for consistency. So, when two iterators are compared, it is tested
+// that they point to elements of the same container. If the check fails, then
+// the program is aborted.
+//
+// When matrices MVOV are traversed by column and then by row, the previous
+// check fails.
+//
+// MVOV::iterator2 iter2 = mvov.begin2();
+// for (; iter2 != mvov.end() ; iter2++) {
+//    MVOV::iterator1 iter1 = iter2.begin();
+//    .....
+// }
+//
+// These additional checks in iterators are disabled in this file, but their
+// status are restored at the end of file.
+// https://msdn.microsoft.com/en-us/library/hh697468.aspx
+#ifdef BOOST_MSVC
+#define _BACKUP_ITERATOR_DEBUG_LEVEL _ITERATOR_DEBUG_LEVEL
+#undef _ITERATOR_DEBUG_LEVEL
+#define _ITERATOR_DEBUG_LEVEL 0
+#endif
+
 #include <boost/numeric/ublas/storage_sparse.hpp>
 #include <boost/numeric/ublas/vector_expression.hpp>
 #include <boost/numeric/ublas/detail/vector_assign.hpp>
@@ -372,7 +397,7 @@ namespace boost { namespace numeric { namespace ublas {
 
         // Reserving
         BOOST_UBLAS_INLINE
-        void reserve (size_type non_zeros = 0, bool preserve = true) {
+				void reserve (size_type non_zeros, bool /*preserve*/ = true) {
             detail::map_reserve (data (), restrict_capacity (non_zeros));
         }
 
@@ -649,8 +674,16 @@ namespace boost { namespace numeric { namespace ublas {
             return const_iterator (*this, data ().begin ());
         }
         BOOST_UBLAS_INLINE
+        const_iterator cbegin () const {
+            return begin ();
+        }
+        BOOST_UBLAS_INLINE
         const_iterator end () const {
             return const_iterator (*this, data ().end ());
+        }
+        BOOST_UBLAS_INLINE
+        const_iterator cend () const {
+            return end ();
         }
 
         class iterator:
@@ -737,8 +770,16 @@ namespace boost { namespace numeric { namespace ublas {
             return const_reverse_iterator (end ());
         }
         BOOST_UBLAS_INLINE
+        const_reverse_iterator crbegin () const {
+            return rbegin ();
+        }
+        BOOST_UBLAS_INLINE
         const_reverse_iterator rend () const {
             return const_reverse_iterator (begin ());
+        }
+        BOOST_UBLAS_INLINE
+        const_reverse_iterator crend () const {
+            return rend ();
         }
         BOOST_UBLAS_INLINE
         reverse_iterator rbegin () {
@@ -1261,8 +1302,16 @@ namespace boost { namespace numeric { namespace ublas {
             return find (0);
         }
         BOOST_UBLAS_INLINE
+        const_iterator cbegin () const {
+            return begin ();
+        }
+        BOOST_UBLAS_INLINE
         const_iterator end () const {
             return find (size_);
+        }
+        BOOST_UBLAS_INLINE
+        const_iterator cend () const {
+            return end ();
         }
 
         class iterator:
@@ -1349,8 +1398,16 @@ namespace boost { namespace numeric { namespace ublas {
             return const_reverse_iterator (end ());
         }
         BOOST_UBLAS_INLINE
+        const_reverse_iterator crbegin () const {
+            return rbegin ();
+        }
+        BOOST_UBLAS_INLINE
         const_reverse_iterator rend () const {
             return const_reverse_iterator (begin ());
+        }
+        BOOST_UBLAS_INLINE
+        const_reverse_iterator crend () const {
+            return rend ();
         }
         BOOST_UBLAS_INLINE
         reverse_iterator rbegin () {
@@ -2007,8 +2064,16 @@ namespace boost { namespace numeric { namespace ublas {
             return find (0);
         }
         BOOST_UBLAS_INLINE
+        const_iterator cbegin () const {
+            return begin();
+        }
+        BOOST_UBLAS_INLINE
         const_iterator end () const {
             return find (size_);
+        }
+        BOOST_UBLAS_INLINE
+        const_iterator cend () const {
+            return end();
         }
 
         class iterator:
@@ -2095,8 +2160,16 @@ namespace boost { namespace numeric { namespace ublas {
             return const_reverse_iterator (end ());
         }
         BOOST_UBLAS_INLINE
+        const_reverse_iterator crbegin () const {
+            return rbegin ();
+        }
+        BOOST_UBLAS_INLINE
         const_reverse_iterator rend () const {
             return const_reverse_iterator (begin ());
+        }
+        BOOST_UBLAS_INLINE
+        const_reverse_iterator crend () const {
+            return rend ();
         }
         BOOST_UBLAS_INLINE
         reverse_iterator rbegin () {
@@ -2163,5 +2236,11 @@ namespace boost { namespace numeric { namespace ublas {
     const typename coordinate_vector<T, IB, IA, TA>::value_type coordinate_vector<T, IB, IA, TA>::zero_ = value_type/*zero*/();
 
 }}}
+
+#ifdef BOOST_MSVC
+#undef _ITERATOR_DEBUG_LEVEL
+#define _ITERATOR_DEBUG_LEVEL _BACKUP_ITERATOR_DEBUG_LEVEL
+#undef _BACKUP_ITERATOR_DEBUG_LEVEL
+#endif
 
 #endif

@@ -4,26 +4,25 @@
     Distributed under the Boost Software License, Version 1.0. (See accompanying
     file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 =============================================================================*/
-#if !defined(SPIRIT_PARSE_INTO_CONTAINER_JAN_15_2013_0957PM)
-#define SPIRIT_PARSE_INTO_CONTAINER_JAN_15_2013_0957PM
-
-#if defined(_MSC_VER)
-#pragma once
-#endif
+#if !defined(BOOST_SPIRIT_X3_PARSE_INTO_CONTAINER_JAN_15_2013_0957PM)
+#define BOOST_SPIRIT_X3_PARSE_INTO_CONTAINER_JAN_15_2013_0957PM
 
 #include <type_traits>
 
 #include <boost/spirit/home/x3/support/traits/container_traits.hpp>
 #include <boost/spirit/home/x3/support/traits/value_traits.hpp>
 #include <boost/spirit/home/x3/support/traits/attribute_of.hpp>
+#include <boost/spirit/home/x3/support/traits/pseudo_attribute.hpp>
 #include <boost/spirit/home/x3/support/traits/handles_container.hpp>
 #include <boost/spirit/home/x3/support/traits/has_attribute.hpp>
 #include <boost/spirit/home/x3/support/traits/is_substitute.hpp>
 #include <boost/spirit/home/x3/support/traits/move_to.hpp>
 #include <boost/mpl/and.hpp>
+#include <boost/fusion/include/at_key.hpp>
 #include <boost/fusion/include/front.hpp>
 #include <boost/fusion/include/back.hpp>
 #include <boost/variant/apply_visitor.hpp>
+#include <iterator> // for std::make_move_iterator
 
 namespace boost { namespace spirit { namespace x3 { namespace detail
 {
@@ -41,14 +40,13 @@ namespace boost { namespace spirit { namespace x3 { namespace detail
         }
     };
 
-	
     // save to associative fusion container where Key
     // is variant over possible keys
     template <typename ...T>
     struct save_to_assoc_attr<variant<T...> >
     {
         typedef variant<T...> variant_t;
-            
+
         template <typename Value, typename Attribute>
         static void call(const variant_t key, Value& value, Attribute& attr)
         {
@@ -64,7 +62,7 @@ namespace boost { namespace spirit { namespace x3 { namespace detail
 
         Attribute& attr;
         Value& value;
-            
+
         template <typename Key>
         void operator()(Key) const
         {
@@ -72,6 +70,13 @@ namespace boost { namespace spirit { namespace x3 { namespace detail
         }
     };
 
+    template <typename Parser, typename Container, typename Context>
+    struct parser_accepts_container
+        : traits::is_substitute<
+                typename traits::attribute_of<Parser, Context>::type
+              , Container
+            >
+    {};
 
     template <typename Parser>
     struct parse_into_container_base_impl
@@ -81,23 +86,50 @@ namespace boost { namespace spirit { namespace x3 { namespace detail
         // Parser has attribute (synthesize; Attribute is a container)
         template <typename Iterator, typename Context
           , typename RContext, typename Attribute>
-        static bool call_synthesize(
+        static bool call_synthesize_x(
             Parser const& parser
           , Iterator& first, Iterator const& last
-          , Context const& context, RContext& rcontext, Attribute& attr)
+          , Context const& context, RContext& rcontext, Attribute& attr, mpl::false_)
         {
             // synthesized attribute needs to be value initialized
-            typedef typename
-                traits::container_value<Attribute>::type
-            value_type;
-            value_type val = traits::value_initialize<value_type>::call();
+            using value_type = typename traits::container_value<Attribute>::type;
+            using pseudo = traits::pseudo_attribute<Context, value_type, Iterator>;
+            typename pseudo::type val = pseudo::call(
+                first, last, traits::value_initialize<value_type>::call());
 
             if (!parser.parse(first, last, context, rcontext, val))
                 return false;
 
             // push the parsed value into our attribute
-            traits::push_back(attr, val);
+            traits::push_back(attr, static_cast<value_type&&>(val));
             return true;
+        }
+
+        // Parser has attribute (synthesize; Attribute is a container)
+        template <typename Iterator, typename Context
+          , typename RContext, typename Attribute>
+        static bool call_synthesize_x(
+            Parser const& parser
+          , Iterator& first, Iterator const& last
+          , Context const& context, RContext& rcontext, Attribute& attr, mpl::true_)
+        {
+            return parser.parse(first, last, context, rcontext, attr);
+        }
+
+        // Parser has attribute (synthesize; Attribute is a container)
+        template <typename Iterator, typename Context
+          , typename RContext, typename Attribute>
+        static bool call_synthesize(
+            Parser const& parser
+          , Iterator& first, Iterator const& last
+          , Context const& context, RContext& rcontext, Attribute& attr)
+        {
+            typedef
+                parser_accepts_container<Parser, Attribute, Context>
+            parser_accepts_container;
+
+            return call_synthesize_x(parser, first, last, context, rcontext, attr
+                , parser_accepts_container());
         }
 
         // Parser has attribute (synthesize; Attribute is a single element fusion sequence)
@@ -169,11 +201,11 @@ namespace boost { namespace spirit { namespace x3 { namespace detail
         static bool call(
             Parser const& parser
           , Iterator& first, Iterator const& last, Context const& context
-          , RContext& rcontext, Attribute& attr, mpl::false_)
+          , RContext& rcontext, Attribute& /* attr */, mpl::false_)
         {
             return parser.parse(first, last, context, rcontext, unused);
         }
-	
+
 
     public:
 
@@ -190,10 +222,14 @@ namespace boost { namespace spirit { namespace x3 { namespace detail
     template <typename Parser, typename Context, typename RContext, typename Enable = void>
     struct parse_into_container_impl : parse_into_container_base_impl<Parser> {};
 
-    template <typename Parser, typename Container, typename RContext, typename Context>
+    template <typename Parser, typename Iterator, typename Container, typename Context>
     struct parser_attr_is_substitute_for_container_value
         : traits::is_substitute<
-            typename traits::attribute_of<Parser, Context>::type
+            typename traits::pseudo_attribute<
+                Context
+              , typename traits::attribute_of<Parser, Context>::type
+              , Iterator
+            >::type
           , typename traits::container_value<Container>::type
         >
     {};
@@ -206,19 +242,35 @@ namespace boost { namespace spirit { namespace x3 { namespace detail
         static bool call(
             Parser const& parser
           , Iterator& first, Iterator const& last
-          , Context const& context, RContext& rcontext, Attribute& attr, mpl::true_)
+          , Context const& context, RContext& rcontext, Attribute& attr, mpl::false_)
         {
             return parse_into_container_base_impl<Parser>::call(
                 parser, first, last, context, rcontext, attr);
+        }
+
+        template <typename Iterator>
+        static bool call(
+            Parser const& parser
+          , Iterator& first, Iterator const& last
+          , Context const& context, RContext& rcontext, unused_type attr, mpl::true_)
+        {
+            return parser.parse(first, last, context, rcontext, attr);
         }
 
         template <typename Iterator, typename Attribute>
         static bool call(
             Parser const& parser
           , Iterator& first, Iterator const& last
-          , Context const& context, RContext& rcontext, Attribute& attr, mpl::false_)
+          , Context const& context, RContext& rcontext, Attribute& attr, mpl::true_)
         {
-            return parser.parse(first, last, context, rcontext, attr);
+            if (traits::is_empty(attr))
+                return parser.parse(first, last, context, rcontext, attr);
+            Attribute rest;
+            bool r = parser.parse(first, last, context, rcontext, rest);
+            if (r)
+                traits::append(attr, std::make_move_iterator(rest.begin()),
+                                     std::make_move_iterator(rest.end()));
+            return r;
         }
 
         template <typename Iterator, typename Attribute>
@@ -226,9 +278,21 @@ namespace boost { namespace spirit { namespace x3 { namespace detail
           , Iterator& first, Iterator const& last
           , Context const& context, RContext& rcontext, Attribute& attr)
         {
+            typedef parser_accepts_container<
+                    Parser, Attribute, Context>
+            parser_accepts_container;
+
+            typedef parser_attr_is_substitute_for_container_value<
+                    Parser, Iterator, Attribute, Context>
+            parser_attr_is_substitute_for_container_value;
+
+            typedef mpl::or_<
+                parser_accepts_container
+              , mpl::not_<parser_attr_is_substitute_for_container_value>>
+            pass_attibute_as_is;
+
             return call(parser, first, last, context, rcontext, attr,
-                parser_attr_is_substitute_for_container_value<
-                    Parser, Attribute, Context, RContext>());
+                pass_attibute_as_is());
         }
     };
 

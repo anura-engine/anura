@@ -20,8 +20,9 @@
 #define BOOST_GEOMETRY_ALGORITHMS_PERIMETER_HPP
 
 #include <boost/range/metafunctions.hpp>
-#include <boost/variant/static_visitor.hpp>
+
 #include <boost/variant/apply_visitor.hpp>
+#include <boost/variant/static_visitor.hpp>
 #include <boost/variant/variant_fwd.hpp>
 
 #include <boost/geometry/algorithms/length.hpp>
@@ -141,7 +142,7 @@ struct perimeter
     static inline typename default_length_result<Geometry>::type
     apply(Geometry const& geometry, Strategy const& strategy)
     {
-        concept::check<Geometry const>();
+        concepts::check<Geometry const>();
         return resolve_strategy::perimeter::apply(geometry, strategy);
     }
 };

@@ -3,6 +3,12 @@
 // Copyright (c) 2007-2012 Barend Gehrels, Amsterdam, the Netherlands.
 // Copyright (c) 2008-2012 Bruno Lalande, Paris, France.
 // Copyright (c) 2009-2012 Mateusz Loskot, London, UK.
+// Copyright (c) 2017 Adam Wulkiewicz, Lodz, Poland.
+
+// This file was modified by Oracle on 2015.
+// Modifications copyright (c) 2015 Oracle and/or its affiliates.
+
+// Contributed and/or modified by Adam Wulkiewicz, on behalf of Oracle
 
 // Parts of Boost.Geometry are redesigned from Geodan's Geographic Library
 // (geolib/GGL), copyright (c) 1995-2010 Geodan, Amsterdam, the Netherlands.
@@ -15,7 +21,10 @@
 #define BOOST_GEOMETRY_STRATEGIES_CARTESIAN_CENTROID_AVERAGE_HPP
 
 
+#include <cstddef>
+
 #include <boost/geometry/algorithms/assign.hpp>
+#include <boost/geometry/algorithms/detail/signed_size_type.hpp>
 #include <boost/geometry/arithmetic/arithmetic.hpp>
 #include <boost/geometry/core/coordinate_type.hpp>
 #include <boost/geometry/core/point_type.hpp>
@@ -46,7 +55,7 @@ private :
     class sum
     {
         friend class average;
-        int count;
+        signed_size_type count;
         PointCentroid centroid;
 
     public :
@@ -68,10 +77,15 @@ public :
         state.count++;
     }
 
-    static inline void result(sum const& state, PointCentroid& centroid)
+    static inline bool result(sum const& state, PointCentroid& centroid)
     {
         centroid = state.centroid;
-        divide_value(centroid, state.count);
+        if ( state.count > 0 )
+        {
+            divide_value(centroid, state.count);
+            return true;
+        }
+        return false;
     }
 
 };

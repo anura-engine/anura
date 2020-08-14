@@ -7,17 +7,19 @@
 
 # include <boost/python/detail/cv_category.hpp>
 # include <boost/python/detail/indirect_traits.hpp>
-# include <boost/type_traits/object_traits.hpp>
+# include <boost/python/detail/type_traits.hpp>
 
 namespace boost { namespace python { namespace detail {
 
-#ifndef _MSC_VER //if forward declared, msvc6.5 does not recognize them as inline
-// forward declaration, required (at least) by Tru64 cxx V6.5-042
+#if (!defined(_MSC_VER) || _MSC_VER >= 1915)
+// If forward declared, msvc6.5 does not recognize them as inline.
+// However, as of msvc14.15 (_MSC_VER 1915/Visual Studio 15.8.0) name lookup is now consistent with other compilers.
+// forward declaration, required (at least) by Tru64 cxx V6.5-042 and msvc14.15
 template <class Generator, class U>
 inline typename Generator::result_type
 unwind_type(U const& p, Generator* = 0);
 
-// forward declaration, required (at least) by Tru64 cxx V6.5-042
+// forward declaration, required (at least) by Tru64 cxx V6.5-042 and msvc14.15
 template <class Generator, class U>
 inline typename Generator::result_type
 unwind_type(boost::type<U>*p = 0, Generator* = 0);
@@ -83,7 +85,7 @@ struct unwind_helper<false>
 
 template <class Generator, class U>
 inline typename Generator::result_type
-#ifndef _MSC_VER
+#if (!defined(_MSC_VER) || _MSC_VER >= 1915)
 unwind_type(U const& p, Generator*)
 #else
 unwind_type(U const& p, Generator* = 0)
@@ -148,17 +150,17 @@ struct unwind_helper2<reference_to_pointer_>
 // why bother?
 template <class Generator, class U>
 inline typename Generator::result_type
-#ifndef _MSC_VER
+#if (!defined(_MSC_VER) || _MSC_VER >= 1915)
 unwind_type(boost::type<U>*, Generator*)
 #else
 unwind_type(boost::type<U>*p =0, Generator* =0)
 #endif
 {
     BOOST_STATIC_CONSTANT(int, indirection
-        = (boost::is_pointer<U>::value ? pointer_ : 0)
+        = (is_pointer<U>::value ? pointer_ : 0)
                              + (indirect_traits::is_reference_to_pointer<U>::value
                              ? reference_to_pointer_
-                             : boost::is_reference<U>::value
+                             : is_lvalue_reference<U>::value
                              ? reference_
                              : 0));
 

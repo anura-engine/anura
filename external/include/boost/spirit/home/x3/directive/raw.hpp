@@ -10,6 +10,7 @@
 #include <boost/spirit/home/x3/core/skip_over.hpp>
 #include <boost/spirit/home/x3/core/parser.hpp>
 #include <boost/spirit/home/x3/support/traits/move_to.hpp>
+#include <boost/spirit/home/x3/support/traits/pseudo_attribute.hpp>
 #include <boost/range/iterator_range.hpp>
 
 namespace boost { namespace spirit { namespace x3
@@ -60,11 +61,26 @@ namespace boost { namespace spirit { namespace x3
         raw_directive<typename extension::as_parser<Subject>::value_type>
         operator[](Subject const& subject) const
         {
-            return {as_parser(subject)};
+            return { as_parser(subject) };
         }
     };
 
-    raw_gen const raw = raw_gen();
+    auto const raw = raw_gen{};
+
+    namespace traits
+    {
+        template <typename Context, typename Iterator>
+        struct pseudo_attribute<Context, raw_attribute_type, Iterator>
+        {
+            using attribute_type = raw_attribute_type;
+            using type = boost::iterator_range<Iterator>;
+
+            static type call(Iterator& first, Iterator const& last, attribute_type)
+            {
+                return { first, last };
+            }
+        };
+    }
 }}}
 
 #endif

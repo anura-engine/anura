@@ -42,9 +42,12 @@ public:
 
   struct children_type {
     struct iterator
-        : boost::iterator<std::bidirectional_iterator_tag, ArrayBinaryTreeNode,
-                       difference_type, array_binary_tree_node*, ArrayBinaryTreeNode&>
     { // replace with iterator_adaptor implementation -JGS
+      typedef std::bidirectional_iterator_tag iterator_category;
+      typedef ArrayBinaryTreeNode value_type;
+      typedef size_type difference_type;
+      typedef array_binary_tree_node* pointer;
+      typedef ArrayBinaryTreeNode& reference;
 
       inline iterator() : i(0), n(0) { }
       inline iterator(const iterator& x) : r(x.r), i(x.i), n(x.n), id(x.id) { }
@@ -63,6 +66,9 @@ public:
       inline iterator& operator++() { ++i; return *this; }
       inline iterator operator++(int)
         { iterator t = *this; ++(*this); return t; }
+      inline iterator& operator--() { --i; return *this; }
+      inline iterator operator--(int)
+        { iterator t = *this; --(*this); return t; }
       inline bool operator==(const iterator& x) const { return i == x.i; }
       inline bool operator!=(const iterator& x) const
         { return !(*this == x); }

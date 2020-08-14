@@ -1,15 +1,16 @@
 // Boost.Geometry (aka GGL, Generic Geometry Library)
 
-// Copyright (c) 2007-2012 Barend Gehrels, Amsterdam, the Netherlands.
+// Copyright (c) 2007-2015 Barend Gehrels, Amsterdam, the Netherlands.
 
-// This file was modified by Oracle on 2013, 2014.
-// Modifications copyright (c) 2013-2014 Oracle and/or its affiliates.
+// This file was modified by Oracle on 2013, 2014, 2015, 2017, 2019.
+// Modifications copyright (c) 2013-2019 Oracle and/or its affiliates.
+
+// Contributed and/or modified by Adam Wulkiewicz, on behalf of Oracle
+// Contributed and/or modified by Menelaos Karavelas, on behalf of Oracle
 
 // Use, modification and distribution is subject to the Boost Software License,
 // Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
-
-// Contributed and/or modified by Adam Wulkiewicz, on behalf of Oracle
 
 #ifndef BOOST_GEOMETRY_ALGORITHMS_DETAIL_RELATE_TURNS_HPP
 #define BOOST_GEOMETRY_ALGORITHMS_DETAIL_RELATE_TURNS_HPP
@@ -19,7 +20,11 @@
 #include <boost/geometry/algorithms/detail/overlay/get_turns.hpp>
 #include <boost/geometry/algorithms/detail/overlay/get_turn_info.hpp>
 
+#include <boost/geometry/policies/robustness/get_rescale_policy.hpp>
+#include <boost/geometry/policies/robustness/no_rescale_policy.hpp>
+
 #include <boost/type_traits/is_base_of.hpp>
+
 
 namespace boost { namespace geometry {
 
@@ -35,24 +40,50 @@ struct assign_policy
 
 // GET_TURNS
 
-template <typename Geometry1,
-          typename Geometry2,
-          typename GetTurnPolicy
-            = detail::get_turns::get_turn_info_type<Geometry1, Geometry2, assign_policy<> > >
+template
+<
+    typename Geometry1,
+    typename Geometry2,
+    typename GetTurnPolicy = detail::get_turns::get_turn_info_type
+        <
+            Geometry1, Geometry2, assign_policy<>
+        >
+>
 struct get_turns
 {
     typedef typename geometry::point_type<Geometry1>::type point1_type;
 
-    typedef overlay::turn_info
+    template <typename Strategy>
+    struct robust_policy_type
+        : geometry::rescale_overlay_policy_type
+            <
+                Geometry1,
+                Geometry2,
+                typename Strategy::cs_tag
+            >
+    {};
+
+    template
+    <
+        typename Strategy,
+        typename RobustPolicy = typename robust_policy_type<Strategy>::type
+    >
+    struct turn_info_type
+    {
+        typedef overlay::turn_info
             <
                 point1_type,
-                typename segment_ratio_type<point1_type, detail::no_rescale_policy>::type,
+                typename segment_ratio_type<point1_type, RobustPolicy>::type,
                 typename detail::get_turns::turn_operation_type
                     <
                         Geometry1, Geometry2,
-                        typename segment_ratio_type<point1_type, detail::no_rescale_policy>::type
+                        typename segment_ratio_type
+                            <
+                                point1_type, RobustPolicy
+                            >::type
                     >::type
-            > turn_info;
+            > type;
+    };
 
     template <typename Turns>
     static inline void apply(Turns & turns,
@@ -61,17 +92,47 @@ struct get_turns
     {
         detail::get_turns::no_interrupt_policy interrupt_policy;
 
-        apply(turns, geometry1, geometry2, interrupt_policy);
+        typename strategy::intersection::services::default_strategy
+            <
+                typename cs_tag<Geometry1>::type
+            >::type intersection_strategy;
+
+        apply(turns, geometry1, geometry2, interrupt_policy, intersection_strategy);
     }
 
-    template <typename Turns, typename InterruptPolicy>
+    template <typename Turns, typename InterruptPolicy, typename IntersectionStrategy>
     static inline void apply(Turns & turns,
                              Geometry1 const& geometry1,
                              Geometry2 const& geometry2,
-                             InterruptPolicy & interrupt_policy)
+                             InterruptPolicy & interrupt_policy,
+                             IntersectionStrategy const& intersection_strategy)
     {
-        static const bool reverse1 = detail::overlay::do_reverse<geometry::point_order<Geometry1>::value>::value;
-        static const bool reverse2 = detail::overlay::do_reverse<geometry::point_order<Geometry2>::value>::value;
+        typedef typename robust_policy_type<IntersectionStrategy>::type robust_policy_t;
+
+        robust_policy_t robust_policy
+                = geometry::get_rescale_policy<robust_policy_t>(
+                    geometry1, geometry2, intersection_strategy);
+
+        apply(turns, geometry1, geometry2, interrupt_policy, intersection_strategy, robust_policy);
+    }
+
+    template <typename Turns, typename InterruptPolicy, typename IntersectionStrategy, typename RobustPolicy>
+    static inline void apply(Turns & turns,
+                             Geometry1 const& geometry1,
+                             Geometry2 const& geometry2,
+                             InterruptPolicy & interrupt_policy,
+                             IntersectionStrategy const& intersection_strategy,
+                             RobustPolicy const& robust_policy)
+    {
+        static const bool reverse1 = detail::overlay::do_reverse
+            <
+                geometry::point_order<Geometry1>::value
+            >::value;
+
+        static const bool reverse2 = detail::overlay::do_reverse
+            <
+                geometry::point_order<Geometry2>::value
+            >::value;
 
         dispatch::get_turns
             <
@@ -83,7 +144,8 @@ struct get_turns
                 reverse2,
                 GetTurnPolicy
             >::apply(0, geometry1, 1, geometry2,
-                     detail::no_rescale_policy(), turns, interrupt_policy);
+                     intersection_strategy, robust_policy,
+                     turns, interrupt_policy);
     }
 };
 
@@ -92,8 +154,8 @@ struct get_turns
 template <int N = 0, int U = 1, int I = 2, int B = 3, int C = 4, int O = 0>
 struct op_to_int
 {
-    template <typename Op>
-    inline int operator()(Op const& op) const
+    template <typename Operation>
+    inline int operator()(Operation const& op) const
     {
         switch(op.operation)
         {
@@ -108,106 +170,141 @@ struct op_to_int
     }
 };
 
-template <typename OpToInt>
+template <std::size_t OpId, typename OpToInt>
 struct less_op_xxx_linear
 {
-    template <typename Op>
-    inline bool operator()(Op const& left, Op const& right)
+    template <typename Turn>
+    inline bool operator()(Turn const& left, Turn const& right) const
     {
         static OpToInt op_to_int;
-        return op_to_int(left) < op_to_int(right);
+        return op_to_int(left.operations[OpId]) < op_to_int(right.operations[OpId]);
     }
 };
 
+template <std::size_t OpId>
 struct less_op_linear_linear
-    : less_op_xxx_linear< op_to_int<0,2,3,1,4,0> >
+    : less_op_xxx_linear< OpId, op_to_int<0,2,3,1,4,0> >
 {};
 
-struct less_op_linear_areal
+template <std::size_t OpId>
+struct less_op_linear_areal_single
 {
-    template <typename Op>
-    inline bool operator()(Op const& left, Op const& right)
+    template <typename Turn>
+    inline bool operator()(Turn const& left, Turn const& right) const
     {
+        static const std::size_t other_op_id = (OpId + 1) % 2;
         static turns::op_to_int<0,2,3,1,4,0> op_to_int_xuic;
         static turns::op_to_int<0,3,2,1,4,0> op_to_int_xiuc;
 
-        if ( left.other_id.multi_index == right.other_id.multi_index )
+        segment_identifier const& left_other_seg_id = left.operations[other_op_id].seg_id;
+        segment_identifier const& right_other_seg_id = right.operations[other_op_id].seg_id;
+
+        typedef typename Turn::turn_operation_type operation_type;
+        operation_type const& left_operation = left.operations[OpId];
+        operation_type const& right_operation = right.operations[OpId];
+
+        if ( left_other_seg_id.ring_index == right_other_seg_id.ring_index )
         {
-            if ( left.other_id.ring_index == right.other_id.ring_index )
-                return op_to_int_xuic(left) < op_to_int_xuic(right);
-            else
-                return op_to_int_xiuc(left) < op_to_int_xiuc(right);
+            return op_to_int_xuic(left_operation)
+                 < op_to_int_xuic(right_operation);
         }
         else
         {
-            //return op_to_int_xuic(left) < op_to_int_xuic(right);
-            return left.other_id.multi_index < right.other_id.multi_index;
+            return op_to_int_xiuc(left_operation)
+                 < op_to_int_xiuc(right_operation);
         }
     }
 };
 
+template <std::size_t OpId>
 struct less_op_areal_linear
-    : less_op_xxx_linear< op_to_int<0,1,0,0,2,0> >
+    : less_op_xxx_linear< OpId, op_to_int<0,1,0,0,2,0> >
 {};
 
+template <std::size_t OpId>
 struct less_op_areal_areal
 {
-    template <typename Op>
-    inline bool operator()(Op const& left, Op const& right)
+    template <typename Turn>
+    inline bool operator()(Turn const& left, Turn const& right) const
     {
+        static const std::size_t other_op_id = (OpId + 1) % 2;
         static op_to_int<0, 1, 2, 3, 4, 0> op_to_int_uixc;
         static op_to_int<0, 2, 1, 3, 4, 0> op_to_int_iuxc;
 
-        if ( left.other_id.multi_index == right.other_id.multi_index )
+        segment_identifier const& left_other_seg_id = left.operations[other_op_id].seg_id;
+        segment_identifier const& right_other_seg_id = right.operations[other_op_id].seg_id;
+
+        typedef typename Turn::turn_operation_type operation_type;
+        operation_type const& left_operation = left.operations[OpId];
+        operation_type const& right_operation = right.operations[OpId];
+
+        if ( left_other_seg_id.multi_index == right_other_seg_id.multi_index )
         {
-            if ( left.other_id.ring_index == right.other_id.ring_index )
+            if ( left_other_seg_id.ring_index == right_other_seg_id.ring_index )
             {
-                return op_to_int_uixc(left) < op_to_int_uixc(right);
+                return op_to_int_uixc(left_operation) < op_to_int_uixc(right_operation);
             }
             else
             {
-                if ( left.other_id.ring_index == -1 )
+                if ( left_other_seg_id.ring_index == -1 )
                 {
-                    if ( left.operation == overlay::operation_union )
+                    if ( left_operation.operation == overlay::operation_union )
                         return false;
-                    else if ( left.operation == overlay::operation_intersection )
+                    else if ( left_operation.operation == overlay::operation_intersection )
                         return true;
                 }
-                else if ( right.other_id.ring_index == -1 )
+                else if ( right_other_seg_id.ring_index == -1 )
                 {
-                    if ( right.operation == overlay::operation_union )
+                    if ( right_operation.operation == overlay::operation_union )
                         return true;
-                    else if ( right.operation == overlay::operation_intersection )
+                    else if ( right_operation.operation == overlay::operation_intersection )
                         return false;
                 }
                 
-                return op_to_int_iuxc(left) < op_to_int_iuxc(right);
+                return op_to_int_iuxc(left_operation) < op_to_int_iuxc(right_operation);
             }
         }
         else
         {
-            return op_to_int_uixc(left) < op_to_int_uixc(right);
+            return op_to_int_uixc(left_operation) < op_to_int_uixc(right_operation);
         }
+    }
+};
+
+template <std::size_t OpId>
+struct less_other_multi_index
+{
+    static const std::size_t other_op_id = (OpId + 1) % 2;
+
+    template <typename Turn>
+    inline bool operator()(Turn const& left, Turn const& right) const
+    {
+        return left.operations[other_op_id].seg_id.multi_index
+             < right.operations[other_op_id].seg_id.multi_index;
     }
 };
 
 // sort turns by G1 - source_index == 0 by:
 // seg_id -> distance -> operation
 template <std::size_t OpId = 0,
-          typename LessOp = less_op_xxx_linear< op_to_int<> > >
+          typename LessOp = less_op_xxx_linear< OpId, op_to_int<> > >
 struct less
 {
     BOOST_STATIC_ASSERT(OpId < 2);
 
-    template <typename Op> static inline
-    bool use_fraction(Op const& left, Op const& right)
+    template <typename Turn>
+    static inline bool use_fraction(Turn const& left, Turn const& right)
     {
         static LessOp less_op;
 
-        if ( left.fraction == right.fraction )
-            return less_op(left, right);
-        else
-            return left.fraction < right.fraction;
+        return
+            geometry::math::equals(left.operations[OpId].fraction,
+                                   right.operations[OpId].fraction)
+            ?
+            less_op(left, right)
+            :
+            (left.operations[OpId].fraction < right.operations[OpId].fraction)
+            ;
     }
 
     template <typename Turn>
@@ -216,7 +313,7 @@ struct less
         segment_identifier const& sl = left.operations[OpId].seg_id;
         segment_identifier const& sr = right.operations[OpId].seg_id;
 
-        return sl < sr || ( sl == sr && use_fraction(left.operations[OpId], right.operations[OpId]) );
+        return sl < sr || ( sl == sr && use_fraction(left, right) );
     }
 };
 

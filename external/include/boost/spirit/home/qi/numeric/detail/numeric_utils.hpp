@@ -2,7 +2,7 @@
     Copyright (c) 2001-2011 Joel de Guzman
     Copyright (c) 2001-2011 Hartmut Kaiser
     Copyright (c) 2011 Jan Frederick Eick
-    Copyright (c) 2011 Christopher Jefferson 
+    Copyright (c) 2011 Christopher Jefferson
     Copyright (c) 2006 Stephen Nutt
 
     Distributed under the Boost Software License, Version 1.0. (See accompanying
@@ -15,7 +15,6 @@
 #pragma once
 #endif
 
-#include <boost/detail/iterator.hpp>
 #include <boost/spirit/home/support/unused.hpp>
 #include <boost/spirit/home/qi/detail/attributes.hpp>
 #include <boost/spirit/home/support/char_encoding/ascii.hpp>
@@ -31,6 +30,13 @@
 #include <boost/mpl/bool.hpp>
 #include <boost/mpl/and.hpp>
 #include <boost/limits.hpp>
+#include <boost/static_assert.hpp>
+#include <iterator> // for std::iterator_traits
+
+#if defined(BOOST_MSVC)
+# pragma warning(push)
+# pragma warning(disable: 4127) // conditional expression is constant
+#endif
 
 #if !defined(SPIRIT_NUMERICS_LOOP_UNROLL)
 # define SPIRIT_NUMERICS_LOOP_UNROLL 3
@@ -50,6 +56,9 @@ namespace boost { namespace spirit { namespace qi { namespace detail
     template <typename T, unsigned Radix>
     struct digits_traits;
 
+    template <int Digits, unsigned Radix>
+    struct digits2_to_n;
+
 // lookup table for log2(x) : 2 <= x <= 36
 #define BOOST_SPIRIT_LOG2 (#error)(#error)                                    \
         (1000000)(1584960)(2000000)(2321920)(2584960)(2807350)                \
@@ -61,11 +70,10 @@ namespace boost { namespace spirit { namespace qi { namespace detail
     /***/
 
 #define BOOST_PP_LOCAL_MACRO(Radix)                                           \
-    template <typename T> struct digits_traits<T, Radix>                      \
+    template <int Digits> struct digits2_to_n<Digits, Radix>                  \
     {                                                                         \
-        typedef std::numeric_limits<T> numeric_limits_type;                   \
         BOOST_STATIC_CONSTANT(int, value = static_cast<int>(                  \
-            (numeric_limits_type::digits * 1000000) /                         \
+            (Digits * 1000000) /                                              \
                 BOOST_PP_SEQ_ELEM(Radix, BOOST_SPIRIT_LOG2)));                \
     };                                                                        \
     /***/
@@ -74,6 +82,18 @@ namespace boost { namespace spirit { namespace qi { namespace detail
 #include BOOST_PP_LOCAL_ITERATE()
 
 #undef BOOST_SPIRIT_LOG2
+
+    template <typename T, unsigned Radix>
+    struct digits_traits : digits2_to_n<std::numeric_limits<T>::digits, Radix>
+    {
+        BOOST_STATIC_ASSERT(std::numeric_limits<T>::radix == 2);
+    };
+
+    template <typename T>
+    struct digits_traits<T, 10>
+    {
+        static int const value = std::numeric_limits<T>::digits10;
+    };
 
     ///////////////////////////////////////////////////////////////////////////
     //
@@ -95,11 +115,9 @@ namespace boost { namespace spirit { namespace qi { namespace detail
         template <typename Char>
         inline static bool is_valid(Char ch)
         {
-            if (Radix <= 10)
-                return (ch >= '0' && ch <= static_cast<Char>('0' + Radix -1));
-            return (ch >= '0' && ch <= '9')
-                || (ch >= 'a' && ch <= static_cast<Char>('a' + Radix -10 -1))
-                || (ch >= 'A' && ch <= static_cast<Char>('A' + Radix -10 -1));
+            return (ch >= '0' && ch <= (Radix > 10 ? '9' : static_cast<Char>('0' + Radix -1)))
+                || (Radix > 10 && ch >= 'a' && ch <= static_cast<Char>('a' + Radix -10 -1))
+                || (Radix > 10 && ch >= 'A' && ch <= static_cast<Char>('A' + Radix -10 -1));
         }
 
         template <typename Char>
@@ -130,19 +148,20 @@ namespace boost { namespace spirit { namespace qi { namespace detail
         inline static bool add(T& n, Char ch, mpl::true_) // checked add
         {
             // Ensure n *= Radix will not overflow
-            static T const max = (std::numeric_limits<T>::max)();
-            static T const val = max / Radix;
+            T const max = (std::numeric_limits<T>::max)();
+            T const val = max / Radix;
+
             if (n > val)
                 return false;
 
-            n *= Radix;
+            T tmp = n * Radix;
 
             // Ensure n += digit will not overflow
             const int digit = radix_traits<Radix>::digit(ch);
-            if (n > max - digit)
+            if (tmp > max - digit)
                 return false;
 
-            n += static_cast<T>(digit);
+            n = tmp + static_cast<T>(digit);
             return true;
         }
     };
@@ -161,19 +180,20 @@ namespace boost { namespace spirit { namespace qi { namespace detail
         inline static bool add(T& n, Char ch, mpl::true_) // checked subtract
         {
             // Ensure n *= Radix will not underflow
-            static T const min = (std::numeric_limits<T>::min)();
-            static T const val = (min + 1) / T(Radix);
+            T const min = (std::numeric_limits<T>::min)();
+            T const val = min / T(Radix);
+
             if (n < val)
                 return false;
 
-            n *= Radix;
+            T tmp = n * Radix;
 
             // Ensure n -= digit will not underflow
             int const digit = radix_traits<Radix>::digit(ch);
-            if (n < min + digit)
+            if (tmp < min + digit)
                 return false;
 
-            n -= static_cast<T>(digit);
+            n = tmp - static_cast<T>(digit);
             return true;
         }
     };
@@ -181,17 +201,16 @@ namespace boost { namespace spirit { namespace qi { namespace detail
     ///////////////////////////////////////////////////////////////////////////
     //  Common code for extract_int::parse specializations
     ///////////////////////////////////////////////////////////////////////////
-    template <unsigned Radix, typename Accumulator, int MaxDigits>
+    template <unsigned Radix, typename Accumulator, int MaxDigits, bool AlwaysCheckOverflow>
     struct int_extractor
     {
         template <typename Char, typename T>
         inline static bool
         call(Char ch, std::size_t count, T& n, mpl::true_)
         {
-            static std::size_t const
-                overflow_free = digits_traits<T, Radix>::value - 1;
+            std::size_t const overflow_free = digits_traits<T, Radix>::value - 1;
 
-            if (count < overflow_free)
+            if (!AlwaysCheckOverflow && (count < overflow_free))
             {
                 Accumulator::add(n, ch, mpl::false_());
             }
@@ -265,10 +284,23 @@ namespace boost { namespace spirit { namespace qi { namespace detail
 #define SPIRIT_NUMERIC_INNER_LOOP(z, x, data)                                 \
         if (!check_max_digits<MaxDigits>::call(count + leading_zeros)         \
             || it == last)                                                    \
+        {                                                                     \
             break;                                                            \
+        }                                                                     \
         ch = *it;                                                             \
-        if (!radix_check::is_valid(ch) || !extractor::call(ch, count, val))   \
+        if (!radix_check::is_valid(ch))                                       \
+        {                                                                     \
             break;                                                            \
+        }                                                                     \
+        if (!extractor::call(ch, count, val))                                 \
+        {                                                                     \
+            if (IgnoreOverflowDigits)                                         \
+            {                                                                 \
+                first = it;                                                   \
+            }                                                                 \
+            traits::assign_to(val, attr);                                     \
+            return IgnoreOverflowDigits;                                      \
+        }                                                                     \
         ++it;                                                                 \
         ++count;                                                              \
     /**/
@@ -277,6 +309,7 @@ namespace boost { namespace spirit { namespace qi { namespace detail
         typename T, unsigned Radix, unsigned MinDigits, int MaxDigits
       , typename Accumulator = positive_accumulator<Radix>
       , bool Accumulate = false
+      , bool IgnoreOverflowDigits = false
     >
     struct extract_int
     {
@@ -292,17 +325,15 @@ namespace boost { namespace spirit { namespace qi { namespace detail
           , Attribute& attr)
         {
             typedef radix_traits<Radix> radix_check;
-            typedef int_extractor<Radix, Accumulator, MaxDigits> extractor;
-            typedef typename
-                boost::detail::iterator_traits<Iterator>::value_type
-            char_type;
+            typedef int_extractor<Radix, Accumulator, MaxDigits, Accumulate> extractor;
+            typedef typename std::iterator_traits<Iterator>::value_type char_type;
 
             Iterator it = first;
             std::size_t leading_zeros = 0;
             if (!Accumulate)
             {
                 // skip leading zeros
-                while (it != last && *it == '0' && leading_zeros < MaxDigits)
+                while (it != last && *it == '0' && (MaxDigits < 0 || leading_zeros < static_cast< std::size_t >(MaxDigits)))
                 {
                     ++it;
                     ++leading_zeros;
@@ -365,12 +396,19 @@ namespace boost { namespace spirit { namespace qi { namespace detail
     ///////////////////////////////////////////////////////////////////////////
 #define SPIRIT_NUMERIC_INNER_LOOP(z, x, data)                                 \
         if (it == last)                                                       \
+        {                                                                     \
             break;                                                            \
+        }                                                                     \
         ch = *it;                                                             \
         if (!radix_check::is_valid(ch))                                       \
+        {                                                                     \
             break;                                                            \
+        }                                                                     \
         if (!extractor::call(ch, count, val))                                 \
+        {                                                                     \
+            traits::assign_to(val, attr);                                     \
             return false;                                                     \
+        }                                                                     \
         ++it;                                                                 \
         ++count;                                                              \
     /**/
@@ -390,10 +428,8 @@ namespace boost { namespace spirit { namespace qi { namespace detail
           , Attribute& attr)
         {
             typedef radix_traits<Radix> radix_check;
-            typedef int_extractor<Radix, Accumulator, -1> extractor;
-            typedef typename
-                boost::detail::iterator_traits<Iterator>::value_type
-            char_type;
+            typedef int_extractor<Radix, Accumulator, -1, Accumulate> extractor;
+            typedef typename std::iterator_traits<Iterator>::value_type char_type;
 
             Iterator it = first;
             std::size_t count = 0;
@@ -432,7 +468,7 @@ namespace boost { namespace spirit { namespace qi { namespace detail
                 return true;
             }
 
-            count = 0;
+            // count = 0; $$$ verify: I think this is wrong $$$
             ++it;
             while (true)
             {
@@ -472,35 +508,10 @@ namespace boost { namespace spirit { namespace qi { namespace detail
     };
 
 #undef SPIRIT_NUMERIC_INNER_LOOP
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Cast an signed integer to an unsigned integer
-    ///////////////////////////////////////////////////////////////////////////
-    template <typename T,
-        bool force_unsigned
-            = mpl::and_<is_integral<T>, is_signed<T> >::value>
-    struct cast_unsigned;
-
-    template <typename T>
-    struct cast_unsigned<T, true>
-    {
-        typedef typename make_unsigned<T>::type unsigned_type;
-        typedef typename make_unsigned<T>::type& unsigned_type_ref;
-
-        inline static unsigned_type_ref call(T& n)
-        {
-            return unsigned_type_ref(n);
-        }
-    };
-
-    template <typename T>
-    struct cast_unsigned<T, false>
-    {
-        inline static T& call(T& n)
-        {
-            return n;
-        }
-    };
 }}}}
+
+#if defined(BOOST_MSVC)
+# pragma warning(pop)
+#endif
 
 #endif

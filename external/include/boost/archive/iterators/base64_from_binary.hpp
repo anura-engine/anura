@@ -25,8 +25,6 @@ namespace std{
 } // namespace std
 #endif
 
-#include <boost/serialization/pfto.hpp>
-
 #include <boost/iterator/transform_iterator.hpp>
 #include <boost/archive/iterators/dataflow_exception.hpp>
 
@@ -43,7 +41,7 @@ template<class CharType>
 struct from_6_bit {
     typedef CharType result_type;
     CharType operator()(CharType t) const{
-        const char * lookup_table = 
+        static const char * lookup_table =
             "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
             "abcdefghijklmnopqrstuvwxyz"
             "0123456789"
@@ -88,9 +86,9 @@ class base64_from_binary :
 public:
     // make composible buy using templated constructor
     template<class T>
-    base64_from_binary(BOOST_PFTO_WRAPPER(T) start) :
+    base64_from_binary(T start) :
         super_t(
-            Base(BOOST_MAKE_PFTO_WRAPPER(static_cast< T >(start))),
+            Base(static_cast< T >(start)),
             detail::from_6_bit<CharType>()
         )
     {}

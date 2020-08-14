@@ -264,6 +264,7 @@ namespace
 		result[variant("consts")] = prototype_node["consts"] + node["consts"];
 		result[variant("variations")] = prototype_node["variations"] + node["variations"];
 		result[variant("types")] = prototype_node["types"] + node["types"];
+		result[variant("required_animations")] = prototype_node["required_animations"] + node["required_animations"];
 
 		const variant editor_info_a = prototype_node["editor_info"];
 		const variant editor_info_b = node["editor_info"];
@@ -1609,6 +1610,13 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 		const std::vector<std::string> tags = util::split(node["tags"].as_string());
 		for(const std::string& tag : tags) {
 			tags_[tag] = variant(1);
+		}
+	}
+
+	variant required_animations = node["required_animations"];
+	if(required_animations.is_list()) {
+		for(variant anim : required_animations.as_list()) {
+			ASSERT_LOG(frames_.count(anim.as_string()) == 1, "OBJECT " << id << " DOES NOT HAVE REQUIRED ANIMATION " << anim.as_string());
 		}
 	}
 

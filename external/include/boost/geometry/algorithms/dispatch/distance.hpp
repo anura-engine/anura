@@ -5,10 +5,11 @@
 // Copyright (c) 2009-2014 Mateusz Loskot, London, UK.
 // Copyright (c) 2013-2014 Adam Wulkiewicz, Lodz, Poland.
 
-// This file was modified by Oracle on 2014.
-// Modifications copyright (c) 2014, Oracle and/or its affiliates.
+// This file was modified by Oracle on 2014, 2018.
+// Modifications copyright (c) 2014-2018, Oracle and/or its affiliates.
 
 // Contributed and/or modified by Menelaos Karavelas, on behalf of Oracle
+// Contributed and/or modified by Adam Wulkiewicz, on behalf of Oracle
 
 // Parts of Boost.Geometry are redesigned from Geodan's Geographic Library
 // (geolib/GGL), copyright (c) 1995-2010 Geodan, Amsterdam, the Netherlands.
@@ -22,9 +23,12 @@
 
 
 #include <boost/geometry/core/reverse_dispatch.hpp>
+#include <boost/geometry/core/tag.hpp>
 #include <boost/geometry/core/tag_cast.hpp>
-#include <boost/geometry/strategies/distance.hpp>
+#include <boost/geometry/core/tags.hpp>
+#include <boost/geometry/algorithms/detail/distance/default_strategies.hpp>
 #include <boost/geometry/algorithms/not_implemented.hpp>
+#include <boost/geometry/strategies/distance.hpp>
 
 
 namespace boost { namespace geometry
@@ -36,22 +40,37 @@ namespace dispatch
 {
 
 
-using strategy::distance::services::return_type;
-
-
 template
 <
     typename Geometry1, typename Geometry2,
-    typename Strategy = typename detail::distance::default_strategy<Geometry1, Geometry2>::type,
-    typename Tag1 = typename tag_cast<typename tag<Geometry1>::type, multi_tag>::type,
-    typename Tag2 = typename tag_cast<typename tag<Geometry2>::type, multi_tag>::type,
-    typename StrategyTag = typename strategy::distance::services::tag<Strategy>::type,
+    typename Strategy = typename detail::distance::default_strategy
+        <
+            Geometry1, Geometry2
+        >::type,
+    typename Tag1 = typename tag_cast
+        <
+            typename tag<Geometry1>::type,
+            segment_tag,
+            box_tag,
+            linear_tag,
+            areal_tag
+        >::type,
+    typename Tag2 = typename tag_cast
+        <
+            typename tag<Geometry2>::type,
+            segment_tag,
+            box_tag,
+            linear_tag,
+            areal_tag
+        >::type,
+    typename StrategyTag = typename strategy::distance::services::tag
+        <
+            Strategy
+        >::type,
     bool Reverse = reverse_dispatch<Geometry1, Geometry2>::type::value
 >
 struct distance: not_implemented<Tag1, Tag2>
 {};
-
-
 
 
 

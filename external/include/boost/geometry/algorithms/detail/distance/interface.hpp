@@ -6,10 +6,11 @@
 // Copyright (c) 2013-2014 Adam Wulkiewicz, Lodz, Poland.
 // Copyright (c) 2014 Samuel Debionne, Grenoble, France.
 
-// This file was modified by Oracle on 2014.
-// Modifications copyright (c) 2014, Oracle and/or its affiliates.
+// This file was modified by Oracle on 2014, 2018.
+// Modifications copyright (c) 2014-2018, Oracle and/or its affiliates.
 
 // Contributed and/or modified by Menelaos Karavelas, on behalf of Oracle
+// Contributed and/or modified by Adam Wulkiewicz, on behalf of Oracle
 
 // Parts of Boost.Geometry are redesigned from Geodan's Geographic Library
 // (geolib/GGL), copyright (c) 1995-2010 Geodan, Amsterdam, the Netherlands.
@@ -94,9 +95,10 @@ struct distance
 namespace resolve_strategy
 {
 
+template <typename Strategy>
 struct distance
 {
-    template <typename Geometry1, typename Geometry2, typename Strategy>
+    template <typename Geometry1, typename Geometry2>
     static inline typename distance_result<Geometry1, Geometry2, Strategy>::type
     apply(Geometry1 const& geometry1,
           Geometry2 const& geometry2,
@@ -107,7 +109,11 @@ struct distance
                 Geometry1, Geometry2, Strategy
             >::apply(geometry1, geometry2, strategy);
     }
+};
 
+template <>
+struct distance<default_strategy>
+{
     template <typename Geometry1, typename Geometry2>
     static inline
     typename distance_result<Geometry1, Geometry2, default_strategy>::type
@@ -143,8 +149,10 @@ struct distance
           Geometry2 const& geometry2,
           Strategy const& strategy)
     {
-        return
-            resolve_strategy::distance::apply(geometry1, geometry2, strategy);
+        return resolve_strategy::distance
+            <
+                Strategy
+            >::apply(geometry1, geometry2, strategy);
     }
 };
 
@@ -198,7 +206,7 @@ struct distance<variant<BOOST_VARIANT_ENUM_PARAMS(T)>, Geometry2>
           Geometry2 const& geometry2,
           Strategy const& strategy)
     {
-        return apply_visitor(visitor<Strategy>(geometry2, strategy), geometry1);
+        return boost::apply_visitor(visitor<Strategy>(geometry2, strategy), geometry1);
     }
 };
 
@@ -253,20 +261,20 @@ struct distance<Geometry1, variant<BOOST_VARIANT_ENUM_PARAMS(T)> >
         const variant<BOOST_VARIANT_ENUM_PARAMS(T)>& geometry2,
         Strategy const& strategy)
     {
-        return apply_visitor(visitor<Strategy>(geometry1, strategy), geometry2);
+        return boost::apply_visitor(visitor<Strategy>(geometry1, strategy), geometry2);
     }
 };
 
 
 template
 <
-    BOOST_VARIANT_ENUM_PARAMS(typename A),
-    BOOST_VARIANT_ENUM_PARAMS(typename B)
+    BOOST_VARIANT_ENUM_PARAMS(typename T1),
+    BOOST_VARIANT_ENUM_PARAMS(typename T2)
 >
 struct distance
     <
-        boost::variant<BOOST_VARIANT_ENUM_PARAMS(A)>,
-        boost::variant<BOOST_VARIANT_ENUM_PARAMS(B)>
+        boost::variant<BOOST_VARIANT_ENUM_PARAMS(T1)>,
+        boost::variant<BOOST_VARIANT_ENUM_PARAMS(T2)>
     >
 {
     template <typename Strategy>
@@ -274,8 +282,8 @@ struct distance
         <
             typename distance_result
                 <
-                    boost::variant<BOOST_VARIANT_ENUM_PARAMS(A)>,
-                    boost::variant<BOOST_VARIANT_ENUM_PARAMS(B)>,
+                    boost::variant<BOOST_VARIANT_ENUM_PARAMS(T1)>,
+                    boost::variant<BOOST_VARIANT_ENUM_PARAMS(T2)>,
                     Strategy
                 >::type
         >
@@ -304,15 +312,15 @@ struct distance
     template <typename Strategy>
     static inline typename distance_result
         <
-            boost::variant<BOOST_VARIANT_ENUM_PARAMS(A)>,
-            boost::variant<BOOST_VARIANT_ENUM_PARAMS(B)>,
+            boost::variant<BOOST_VARIANT_ENUM_PARAMS(T1)>,
+            boost::variant<BOOST_VARIANT_ENUM_PARAMS(T2)>,
             Strategy
         >::type
-    apply(boost::variant<BOOST_VARIANT_ENUM_PARAMS(A)> const& geometry1,
-          boost::variant<BOOST_VARIANT_ENUM_PARAMS(B)> const& geometry2,
+    apply(boost::variant<BOOST_VARIANT_ENUM_PARAMS(T1)> const& geometry1,
+          boost::variant<BOOST_VARIANT_ENUM_PARAMS(T2)> const& geometry2,
           Strategy const& strategy)
     {
-        return apply_visitor(visitor<Strategy>(strategy), geometry1, geometry2);
+        return boost::apply_visitor(visitor<Strategy>(strategy), geometry1, geometry2);
     }
 };
 
@@ -320,10 +328,10 @@ struct distance
 
 
 /*!
-\brief \brief_calc2{distance} \brief_strategy
+\brief Calculate the distance between two geometries \brief_strategy
 \ingroup distance
 \details
-\details \details_calc{area}. \brief_strategy. \details_strategy_reasons
+\details The free function distance calculates the distance between two geometries \brief_strategy. \details_strategy_reasons
 
 \tparam Geometry1 \tparam_geometry
 \tparam Geometry2 \tparam_geometry
@@ -361,8 +369,8 @@ distance(Geometry1 const& geometry1,
          Geometry2 const& geometry2,
          Strategy const& strategy)
 {
-    concept::check<Geometry1 const>();
-    concept::check<Geometry2 const>();
+    concepts::check<Geometry1 const>();
+    concepts::check<Geometry2 const>();
 
     detail::throw_on_empty_input(geometry1);
     detail::throw_on_empty_input(geometry2);
@@ -376,9 +384,10 @@ distance(Geometry1 const& geometry1,
 
 
 /*!
-\brief \brief_calc2{distance}
+\brief Calculate the distance between two geometries.
 \ingroup distance
-\details The default strategy is used, corresponding to the coordinate system of the geometries
+\details The free function distance calculates the distance between two geometries. \details_default_strategy
+
 \tparam Geometry1 \tparam_geometry
 \tparam Geometry2 \tparam_geometry
 \param geometry1 \param_geometry
@@ -392,10 +401,10 @@ inline typename default_distance_result<Geometry1, Geometry2>::type
 distance(Geometry1 const& geometry1,
          Geometry2 const& geometry2)
 {
-    concept::check<Geometry1 const>();
-    concept::check<Geometry2 const>();
+    concepts::check<Geometry1 const>();
+    concepts::check<Geometry2 const>();
 
-    return distance(geometry1, geometry2, default_strategy());
+    return geometry::distance(geometry1, geometry2, default_strategy());
 }
 
 }} // namespace boost::geometry

@@ -13,19 +13,50 @@
 #ifndef BOOST_INTRUSIVE_GENERIC_HOOK_HPP
 #define BOOST_INTRUSIVE_GENERIC_HOOK_HPP
 
-#include <boost/intrusive/detail/config_begin.hpp>
-#include <boost/intrusive/intrusive_fwd.hpp>
+#ifndef BOOST_CONFIG_HPP
+#  include <boost/config.hpp>
+#endif
+
+#if defined(BOOST_HAS_PRAGMA_ONCE)
+#  pragma once
+#endif
+
 #include <boost/intrusive/pointer_traits.hpp>
 #include <boost/intrusive/link_mode.hpp>
-#include <boost/intrusive/detail/utilities.hpp>
 #include <boost/intrusive/detail/mpl.hpp>
-#include <boost/intrusive/pointer_traits.hpp>
+#include <boost/intrusive/detail/assert.hpp>
+#include <boost/intrusive/detail/node_holder.hpp>
+#include <boost/intrusive/detail/algo_type.hpp>
 #include <boost/static_assert.hpp>
 
 namespace boost {
 namespace intrusive {
 
 /// @cond
+
+namespace detail {
+
+template <link_mode_type LinkMode>
+struct link_dispatch
+{};
+
+template<class Hook>
+void destructor_impl(Hook &hook, detail::link_dispatch<safe_link>)
+{  //If this assertion raises, you might have destroyed an object
+   //while it was still inserted in a container that is alive.
+   //If so, remove the object from the container before destroying it.
+   (void)hook; BOOST_INTRUSIVE_SAFE_HOOK_DESTRUCTOR_ASSERT(!hook.is_linked());
+}
+
+template<class Hook>
+void destructor_impl(Hook &hook, detail::link_dispatch<auto_unlink>)
+{  hook.unlink();  }
+
+template<class Hook>
+void destructor_impl(Hook &, detail::link_dispatch<normal_link>)
+{}
+
+}  //namespace detail {
 
 enum base_hook_type
 {  NoBaseHookId
@@ -90,7 +121,8 @@ struct hooktags_impl
 /// @endcond
 
 template
-   < class GetNodeAlgorithms
+   < boost::intrusive::algo_types Algo
+   , class NodeTraits
    , class Tag
    , link_mode_type LinkMode
    , base_hook_type BaseHookType
@@ -105,20 +137,20 @@ class generic_hook
    //from the hook.
    : public detail::if_c
       < detail::is_same<Tag, member_tag>::value
-      , typename GetNodeAlgorithms::type::node
-      , node_holder<typename GetNodeAlgorithms::type::node, Tag, BaseHookType>
+      , typename NodeTraits::node
+      , node_holder<typename NodeTraits::node, Tag, BaseHookType>
       >::type
-   //If this is the a default-tagged base hook derive from a class that 
+   //If this is the a default-tagged base hook derive from a class that
    //will define an special internal typedef. Containers will be able to detect this
    //special typedef and obtain generic_hook's internal types in order to deduce
    //value_traits for this hook.
    , public hook_tags_definer
-      < generic_hook<GetNodeAlgorithms, Tag, LinkMode, BaseHookType>
-      , detail::is_same<Tag, default_tag>::value*BaseHookType>
+      < generic_hook<Algo, NodeTraits, Tag, LinkMode, BaseHookType>
+      , detail::is_same<Tag, dft_tag>::value ? BaseHookType : NoBaseHookId>
    /// @endcond
 {
    /// @cond
-   typedef typename GetNodeAlgorithms::type           node_algorithms;
+   typedef typename get_algo<Algo, NodeTraits>::type  node_algorithms;
    typedef typename node_algorithms::node             node;
    typedef typename node_algorithms::node_ptr         node_ptr;
    typedef typename node_algorithms::const_node_ptr   const_node_ptr;
@@ -126,65 +158,66 @@ class generic_hook
    public:
 
    typedef hooktags_impl
-      < typename GetNodeAlgorithms::type::node_traits
+      < NodeTraits
       , Tag, LinkMode, BaseHookType>                  hooktags;
 
-   node_ptr this_ptr()
+   BOOST_INTRUSIVE_FORCEINLINE node_ptr this_ptr()
    {  return pointer_traits<node_ptr>::pointer_to(static_cast<node&>(*this)); }
 
-   const_node_ptr this_ptr() const
+   BOOST_INTRUSIVE_FORCEINLINE const_node_ptr this_ptr() const
    {  return pointer_traits<const_node_ptr>::pointer_to(static_cast<const node&>(*this)); }
 
    public:
    /// @endcond
 
-   generic_hook()
+   BOOST_INTRUSIVE_FORCEINLINE generic_hook()
    {
       if(hooktags::safemode_or_autounlink){
          node_algorithms::init(this->this_ptr());
       }
    }
 
-   generic_hook(const generic_hook& )
+   BOOST_INTRUSIVE_FORCEINLINE generic_hook(const generic_hook& )
    {
       if(hooktags::safemode_or_autounlink){
          node_algorithms::init(this->this_ptr());
       }
    }
 
-   generic_hook& operator=(const generic_hook& )
+   BOOST_INTRUSIVE_FORCEINLINE generic_hook& operator=(const generic_hook& )
    {  return *this;  }
 
-   ~generic_hook()
+   BOOST_INTRUSIVE_FORCEINLINE ~generic_hook()
    {
       destructor_impl
          (*this, detail::link_dispatch<hooktags::link_mode>());
    }
 
-   void swap_nodes(generic_hook &other)
+   BOOST_INTRUSIVE_FORCEINLINE void swap_nodes(generic_hook &other)
    {
       node_algorithms::swap_nodes
          (this->this_ptr(), other.this_ptr());
    }
 
-   bool is_linked() const
+   BOOST_INTRUSIVE_FORCEINLINE bool is_linked() const
    {
       //is_linked() can be only used in safe-mode or auto-unlink
       BOOST_STATIC_ASSERT(( hooktags::safemode_or_autounlink ));
       return !node_algorithms::unique(this->this_ptr());
    }
 
-   void unlink()
+   BOOST_INTRUSIVE_FORCEINLINE void unlink()
    {
       BOOST_STATIC_ASSERT(( (int)hooktags::link_mode == (int)auto_unlink ));
-      node_algorithms::unlink(this->this_ptr());
-      node_algorithms::init(this->this_ptr());
+      node_ptr n(this->this_ptr());
+      if(!node_algorithms::inited(n)){
+         node_algorithms::unlink(n);
+         node_algorithms::init(n);
+      }
    }
 };
 
 } //namespace intrusive
 } //namespace boost
-
-#include <boost/intrusive/detail/config_end.hpp>
 
 #endif //BOOST_INTRUSIVE_GENERIC_HOOK_HPP

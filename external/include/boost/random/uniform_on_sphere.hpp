@@ -172,6 +172,7 @@ public:
                 } else {
                     *_container.begin() = 1;
                 }
+                break;
             }
         case 2:
             {
@@ -194,7 +195,7 @@ public:
             {
                 uniform_01<RealType> uniform;
                 RealType sqsum;
-                RealType x, y, z;
+                RealType x, y;
                 do {
                     x = uniform(eng) * 2 - 1;
                     y = uniform(eng) * 2 - 1;
@@ -224,8 +225,12 @@ public:
                     }
                 } while(sqsum == 0);
                 // for all i: result[i] /= sqrt(sqsum)
-                std::transform(_container.begin(), _container.end(), _container.begin(),
-                               std::bind2nd(std::multiplies<RealType>(), 1/sqrt(sqsum)));
+                RealType inverse_distance = 1 / sqrt(sqsum);
+                for(typename Cont::iterator it = _container.begin();
+                    it != _container.end();
+                    ++it) {
+                    *it *= inverse_distance;
+                }
             }
         }
         return _container;

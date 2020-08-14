@@ -131,12 +131,24 @@ public:
 
     // copy constructor
     subgraph(const subgraph& x)
-        : m_parent(x.m_parent), m_edge_counter(x.m_edge_counter)
-        , m_global_vertex(x.m_global_vertex), m_global_edge(x.m_global_edge)
+        : m_parent(x.m_parent), m_edge_counter(0)
     {
         if(x.is_root())
         {
-         m_graph = x.m_graph;
+            m_graph = x.m_graph;
+            m_edge_counter = x.m_edge_counter;
+            m_global_vertex = x.m_global_vertex;
+            m_global_edge = x.m_global_edge;
+        }
+        else
+        {
+            get_property(*this) = get_property(x);
+            typename subgraph<Graph>::vertex_iterator vi,vi_end;
+            boost::tie(vi, vi_end) = vertices(x);
+            for(; vi != vi_end; ++vi)
+            {
+                add_vertex(x.local_to_global(*vi), *this);
+            }
         }
         // Do a deep copy (recursive).
         // Only the root graph is copied, the subgraphs contain
@@ -144,16 +156,10 @@ public:
         typename subgraph<Graph>::children_iterator i,i_end;
         boost::tie(i,i_end) = x.children();
         for(; i != i_end; ++i)
-        {         
-         subgraph<Graph> child = this->create_subgraph();
-         child = *i;
-         vertex_iterator vi,vi_end;   
-         boost::tie(vi,vi_end) = vertices(*i);
-         for (;vi!=vi_end;++vi)  
-         {
-          add_vertex(*vi,child);
-         }
-       }
+        {
+            m_children.push_back(new subgraph<Graph>(*i));
+            m_children.back()->m_parent = this;
+        }
     }
 
 
@@ -371,46 +377,54 @@ typename subgraph<G>::vertex_descriptor
 add_vertex(typename subgraph<G>::vertex_descriptor u_global,
            subgraph<G>& g)
 {
-    BOOST_ASSERT(!g.is_root());
-    typename subgraph<G>::vertex_descriptor u_local, v_global;
-    typename subgraph<G>::edge_descriptor e_global;
+   BOOST_ASSERT(!g.is_root());
+   typename subgraph<G>::vertex_descriptor u_local;
+   bool exists_local;
+   boost::tie(u_local, exists_local) = g.find_vertex(u_global);
 
-    u_local = add_vertex(g.m_graph);
-    g.m_global_vertex.push_back(u_global);
-    g.m_local_vertex[u_global] = u_local;
+   if (!exists_local) {
+      typename subgraph<G>::vertex_descriptor v_global;
+      typename subgraph<G>::edge_descriptor e_global;
+      // call recursion for parent subgraph
+      if (!g.parent().is_root()) 
+         add_vertex(u_global, g.parent());
+            
+      u_local = add_vertex(g.m_graph);
+      g.m_global_vertex.push_back(u_global);
+      g.m_local_vertex[u_global] = u_local;
+            
+      subgraph<G>& r = g.root();
 
-    subgraph<G>& r = g.root();
-
-    // remember edge global and local maps
-    {
-        typename subgraph<G>::out_edge_iterator ei, ei_end;
-        for (boost::tie(ei, ei_end) = out_edges(u_global, r);
-            ei != ei_end; ++ei) {
-            e_global = *ei;
-            v_global = target(e_global, r);
-            if (g.find_vertex(v_global).second == true)
-            g.local_add_edge(u_local, g.global_to_local(v_global), e_global);
-        }
-    }
-    if (is_directed(g)) { // not necessary for undirected graph
-        typename subgraph<G>::vertex_iterator vi, vi_end;
-        typename subgraph<G>::out_edge_iterator ei, ei_end;
-        for(boost::tie(vi, vi_end) = vertices(r); vi != vi_end; ++vi) {
-            v_global = *vi;
-            if (v_global == u_global)
-                continue; // don't insert self loops twice!
-            if (!g.find_vertex(v_global).second)
-                continue; // not a subgraph vertex => try next one
-            for(boost::tie(ei, ei_end) = out_edges(*vi, r); ei != ei_end; ++ei) {
-                e_global = *ei;
-                if(target(e_global, r) == u_global) {
-                    g.local_add_edge(g.global_to_local(v_global), u_local, e_global);
-                }
+      // remember edge global and local maps
+      {
+            typename subgraph<G>::out_edge_iterator ei, ei_end;
+            for (boost::tie(ei, ei_end) = out_edges(u_global, r);
+               ei != ei_end; ++ei) {
+               e_global = *ei;
+               v_global = target(e_global, r);
+               if (g.find_vertex(v_global).second == true)
+               g.local_add_edge(u_local, g.global_to_local(v_global), e_global);
             }
-        }
-    }
-
-    return u_local;
+      }
+      if (is_directed(g)) { // not necessary for undirected graph
+            typename subgraph<G>::vertex_iterator vi, vi_end;
+            typename subgraph<G>::out_edge_iterator ei, ei_end;
+            for(boost::tie(vi, vi_end) = vertices(r); vi != vi_end; ++vi) {
+               v_global = *vi;
+               if (v_global == u_global)
+                  continue; // don't insert self loops twice!
+               if (!g.find_vertex(v_global).second)
+                  continue; // not a subgraph vertex => try next one
+               for(boost::tie(ei, ei_end) = out_edges(*vi, r); ei != ei_end; ++ei) {
+                  e_global = *ei;
+                  if(target(e_global, r) == u_global) {
+                        g.local_add_edge(g.global_to_local(v_global), u_local, e_global);
+                  }
+               }
+            }
+      }
+   }
+   return u_local;
 }
 
 // NOTE: Descriptors are local unless otherwise noted.

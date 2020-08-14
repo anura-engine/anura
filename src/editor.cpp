@@ -1984,6 +1984,11 @@ void editor::handle_scrolling()
 	if(code_dialog_ && code_dialog_->hasKeyboardFocus()) {
 		return;
 	}
+
+	if(LevelRunner::getCurrent() && LevelRunner::getCurrent()->get_debug_console() && LevelRunner::getCurrent()->get_debug_console()->hasKeyboardFocus()) {
+		return;
+	}
+
 	const int ScrollSpeed = 24*zoom_;
 	const int FastScrollSpeed = 384*zoom_;
 	const Uint8* keystate = SDL_GetKeyboardState(nullptr);

@@ -2,6 +2,11 @@
 
 // Copyright (c) 2007-2012 Barend Gehrels, Amsterdam, the Netherlands.
 
+// This file was modified by Oracle on 2014, 2018.
+// Modifications copyright (c) 2014, 2018 Oracle and/or its affiliates.
+
+// Contributed and/or modified by Adam Wulkiewicz, on behalf of Oracle
+
 // Parts of Boost.Geometry are redesigned from Geodan's Geographic Library
 // (geolib/GGL), copyright (c) 1995-2010 Geodan, Amsterdam, the Netherlands.
 
@@ -17,17 +22,17 @@
 #include <algorithm>
 #include <vector>
 
-#include <boost/range.hpp>
-
-#include <boost/geometry/core/cs.hpp>
-#include <boost/geometry/core/point_type.hpp>
-#include <boost/geometry/strategies/convex_hull.hpp>
-
-#include <boost/geometry/views/detail/range_type.hpp>
-
-#include <boost/geometry/policies/compare.hpp>
+#include <boost/range/begin.hpp>
+#include <boost/range/end.hpp>
 
 #include <boost/geometry/algorithms/detail/for_each_range.hpp>
+#include <boost/geometry/core/assert.hpp>
+#include <boost/geometry/core/cs.hpp>
+#include <boost/geometry/core/point_type.hpp>
+#include <boost/geometry/policies/compare.hpp>
+#include <boost/geometry/strategies/convex_hull.hpp>
+#include <boost/geometry/strategies/side.hpp>
+#include <boost/geometry/views/detail/range_type.hpp>
 #include <boost/geometry/views/reversible_view.hpp>
 
 
@@ -187,9 +192,6 @@ static inline void sort(Range& range)
 /*!
 \brief Graham scan strategy to calculate convex hull
 \ingroup strategies
-\note Completely reworked version inspired on the sources listed below
-\see http://www.ddj.com/architect/201806315
-\see http://marknelson.us/2007/08/22/convex
  */
 template <typename InputGeometry, typename OutputPoint>
 class graham_andrew
@@ -282,17 +284,17 @@ public:
 
     template <typename OutputIterator>
     inline void result(partitions const& state,
-                    OutputIterator out, bool clockwise)  const
+                       OutputIterator out,
+                       bool clockwise,
+                       bool closed) const
     {
         if (clockwise)
         {
-            output_range<iterate_forward>(state.m_upper_hull, out, false);
-            output_range<iterate_reverse>(state.m_lower_hull, out, true);
+            output_ranges(state.m_upper_hull, state.m_lower_hull, out, closed);
         }
         else
         {
-            output_range<iterate_forward>(state.m_lower_hull, out, false);
-            output_range<iterate_reverse>(state.m_upper_hull, out, true);
+            output_ranges(state.m_lower_hull, state.m_upper_hull, out, closed);
         }
     }
 
@@ -343,28 +345,28 @@ private:
     }
 
 
-    template <iterate_direction Direction, typename OutputIterator>
-    static inline void output_range(container_type const& range,
-        OutputIterator out, bool skip_first)
+    template <typename OutputIterator>
+    static inline void output_ranges(container_type const& first, container_type const& second,
+                                     OutputIterator out, bool closed)
     {
-        typedef typename reversible_view<container_type const, Direction>::type view_type;
-        view_type view(range);
-        bool first = true;
-        for (typename boost::range_iterator<view_type const>::type it = boost::begin(view);
-            it != boost::end(view); ++it)
+        std::copy(boost::begin(first), boost::end(first), out);
+
+        BOOST_GEOMETRY_ASSERT(closed ? !boost::empty(second) : boost::size(second) > 1);
+        std::copy(++boost::rbegin(second), // skip the first Point
+                  closed ? boost::rend(second) : --boost::rend(second), // skip the last Point if open
+                  out);
+
+        typedef typename boost::range_size<container_type>::type size_type;
+        size_type const count = boost::size(first) + boost::size(second) - 1;
+        // count describes a closed case but comparison with min size of closed
+        // gives the result compatible also with open
+        // here core_detail::closure::minimum_ring_size<closed> could be used
+        if (count < 4)
         {
-            if (first && skip_first)
-            {
-                first = false;
-            }
-            else
-            {
-                *out = *it;
-                ++out;
-            }
+            // there should be only one missing
+            *out++ = *boost::begin(first);
         }
     }
-
 };
 
 }} // namespace strategy::convex_hull

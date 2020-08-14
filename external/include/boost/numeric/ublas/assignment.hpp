@@ -8,6 +8,7 @@
 
 #ifndef ASSIGNMENT_HPP
 #define ASSIGNMENT_HPP
+
 #include <boost/numeric/ublas/vector_expression.hpp>
 #include <boost/numeric/ublas/matrix_expression.hpp>
 
@@ -170,11 +171,15 @@ BOOST_UBLAS_INLINE vector_move_manip<T>  move(T i) {
 *
 * \todo Doxygen has some problems with similar template functions. Correct that.
 */
-template <std::size_t I>
+template <std::ptrdiff_t I>
 class static_vector_move_manip: public index_manipulator<static_vector_move_manip<I> > {
 public:
     template <typename V>
-    BOOST_UBLAS_INLINE void manip(V &k) const { k+=I; }
+    BOOST_UBLAS_INLINE void manip(V &k) const {
+        // With the equivalent expression using '+=' operator, mscv reports waring C4245:
+        // '+=' : conversion from 'ptrdiff_t' to 'unsigned int', signed/unsigned mismatch
+        k = k + I;
+    }
 };
 
 /**
@@ -198,8 +203,8 @@ public:
 *
 * \todo Doxygen has some problems with similar template functions. Correct that.
 */
-template <std::size_t I>
-BOOST_UBLAS_INLINE static_vector_move_manip<I>  move() {
+template <std::ptrdiff_t I>
+static_vector_move_manip<I>  move() {
     return static_vector_move_manip<I>();
 }
 
@@ -269,7 +274,7 @@ BOOST_UBLAS_INLINE matrix_move_to_manip<T>  move_to(T i, T j) {
 *
 * \todo Doxygen has some problems with similar template functions. Correct that.
 */
-template <std::size_t I, std::size_t J>
+template <std::size_t I,std::size_t J>
 class static_matrix_move_to_manip: public index_manipulator<static_matrix_move_to_manip<I, J> > {
 public:
     template <typename V, typename K>
@@ -369,14 +374,16 @@ BOOST_UBLAS_INLINE matrix_move_manip<T>  move(T i, T j) {
 *
 * \todo Doxygen has some problems with similar template functions. Correct that.
 */
-template <std::size_t I, std::size_t J>
+template <std::ptrdiff_t I, std::ptrdiff_t J>
 class static_matrix_move_manip: public index_manipulator<static_matrix_move_manip<I, J> > {
 public:
     template <typename V, typename K>
     BOOST_UBLAS_INLINE
     void manip(V &k, K &l) const {
-        k+=I;
-        l+=J;
+        // With the equivalent expression using '+=' operator, mscv reports waring C4245:
+        // '+=' : conversion from 'ptrdiff_t' to 'unsigned int', signed/unsigned mismatch
+        k = k + I;
+        l = l + J;
     }
 };
 
@@ -407,7 +414,7 @@ public:
 *
 * \todo Doxygen has some problems with similar template functions. Correct that.
 */
-template <std::size_t I, std::size_t J>
+template <std::ptrdiff_t I, std::ptrdiff_t J>
 BOOST_UBLAS_INLINE static_matrix_move_manip<I, J>  move() {
     return static_matrix_move_manip<I, J>();
 }
@@ -804,7 +811,7 @@ namespace traverse_policy {
             l++; j++;
             if (l>=e().size2()) {
                 l=0; k++; j=j0; i++;
-                // It is assumed that the iteration starts from 0 and happens only using this function from within
+                // It is assumed that the iteration starts from 0 and progresses only using this function from within
                 // an assigner object.
                 // Otherwise (i.e. if it is called outside the assigner object) apply2 should have been
                 // outside the if statement.
@@ -850,7 +857,7 @@ namespace traverse_policy {
             k++; i++;
             if (k>=e().size1()) {
                 k=0; l++; i=i0; j++;
-                // It is assumed that the iteration starts from 0 and happens only using this function from within
+                // It is assumed that the iteration starts from 0 and progresses only using this function from within
                 // an assigner object.
                 // Otherwise (i.e. if it is called outside the assigner object) apply2 should have been
                 // outside the if statement.
@@ -926,29 +933,29 @@ public:
     typedef typename E::expression_type::size_type size_type;
 
     BOOST_UBLAS_INLINE
-    vector_expression_assigner(E &e):ve(e), i(0) {
+    vector_expression_assigner(E &e):ve(&e), i(0) {
     }
 
     BOOST_UBLAS_INLINE
-    vector_expression_assigner(size_type k, E &e):ve(e), i(k) {
+    vector_expression_assigner(size_type k, E &e):ve(&e), i(k) {
         // Overloaded like that so it can be differentiated from (E, val).
         // Otherwise there would be an ambiquity when value_type == size_type.
     }
 
     BOOST_UBLAS_INLINE
-    vector_expression_assigner(E &e, value_type val):ve(e), i(0) {
+    vector_expression_assigner(E &e, value_type val):ve(&e), i(0) {
         operator,(val);
     }
 
     template <class AE>
     BOOST_UBLAS_INLINE
-    vector_expression_assigner(E &e, const vector_expression<AE> &nve):ve(e), i(0) {
+    vector_expression_assigner(E &e, const vector_expression<AE> &nve):ve(&e), i(0) {
         operator,(nve);
     }
 
     template <typename T>
     BOOST_UBLAS_INLINE
-    vector_expression_assigner(E &e, const index_manipulator<T> &ta):ve(e), i(0) {
+    vector_expression_assigner(E &e, const index_manipulator<T> &ta):ve(&e), i(0) {
         operator,(ta);
     }
 
@@ -976,18 +983,18 @@ public:
     template <class T>
     BOOST_UBLAS_INLINE
     vector_expression_assigner<E, T> operator, (fill_policy_wrapper<T>) const {
-        return vector_expression_assigner<E, T>(i, ve);
+        return vector_expression_assigner<E, T>(i, *ve);
     }
 
 private:
     BOOST_UBLAS_INLINE
     vector_expression_assigner &apply(const typename E::expression_type::value_type& val) {
-        Fill_Policy::apply(ve, i++, val);
+        Fill_Policy::apply(*ve, i++, val);
         return *this;
     }
 
 private:
-    E &ve;
+    E *ve;
     size_type i;
 };
 
@@ -1101,39 +1108,39 @@ public:
     typedef typename E::expression_type::size_type size_type;
 
     BOOST_UBLAS_INLINE
-    matrix_expression_assigner(E &e): me(e), i(0), j(0) {
+    matrix_expression_assigner(E &e): me(&e), i(0), j(0) {
     }
 
     BOOST_UBLAS_INLINE
-    matrix_expression_assigner(E &e, size_type k, size_type l): me(e), i(k), j(l) {
+    matrix_expression_assigner(E &e, size_type k, size_type l): me(&e), i(k), j(l) {
     }
 
     BOOST_UBLAS_INLINE
-    matrix_expression_assigner(E &e, typename E::expression_type::value_type val): me(e), i(0), j(0) {
+    matrix_expression_assigner(E &e, typename E::expression_type::value_type val): me(&e), i(0), j(0) {
         operator,(val);
     }
 
     template <class AE>
     BOOST_UBLAS_INLINE
-    matrix_expression_assigner(E &e, const vector_expression<AE> &nve):me(e), i(0), j(0) {
+    matrix_expression_assigner(E &e, const vector_expression<AE> &nve):me(&e), i(0), j(0) {
         operator,(nve);
     }
 
     template <class AE>
     BOOST_UBLAS_INLINE
-    matrix_expression_assigner(E &e, const matrix_expression<AE> &nme):me(e), i(0), j(0) {
+    matrix_expression_assigner(E &e, const matrix_expression<AE> &nme):me(&e), i(0), j(0) {
         operator,(nme);
     }
 
     template <typename T>
     BOOST_UBLAS_INLINE
-    matrix_expression_assigner(E &e, const index_manipulator<T> &ta):me(e), i(0), j(0) {
+    matrix_expression_assigner(E &e, const index_manipulator<T> &ta):me(&e), i(0), j(0) {
         operator,(ta);
     }
 
     BOOST_UBLAS_INLINE
     matrix_expression_assigner &operator, (const typename E::expression_type::value_type& val) {
-        Traverse_Policy::apply_wrap(me, i ,j);
+        Traverse_Policy::apply_wrap(*me, i ,j);
         return apply(val);
     }
 
@@ -1162,21 +1169,21 @@ public:
     template <class T>
     BOOST_UBLAS_INLINE
     matrix_expression_assigner<E, T, Traverse_Policy> operator, (fill_policy_wrapper<T>) const {
-        return matrix_expression_assigner<E, T, Traverse_Policy>(me, i, j);
+        return matrix_expression_assigner<E, T, Traverse_Policy>(*me, i, j);
     }
 
 
     template <class T>
     BOOST_UBLAS_INLINE
     matrix_expression_assigner<E, Fill_Policy, T> operator, (traverse_policy_wrapper<T>) {
-        Traverse_Policy::apply_wrap(me, i ,j);
-        return matrix_expression_assigner<E, Fill_Policy, T>(me, i, j);
+        Traverse_Policy::apply_wrap(*me, i ,j);
+        return matrix_expression_assigner<E, Fill_Policy, T>(*me, i, j);
     }
 
 private:
     BOOST_UBLAS_INLINE
     matrix_expression_assigner &apply(const typename E::expression_type::value_type& val) {
-        Fill_Policy::apply(me, i, j, val);
+        Fill_Policy::apply(*me, i, j, val);
         Traverse_Policy::advance(i,j);
         return *this;
     }
@@ -1187,14 +1194,14 @@ private:
         size_type bi = i;
         size_type bj = j;
         typename AE::size_type k=0, l=0;
-        Fill_Policy::apply(me, i, j, nme()(k, l));
-        while (Traverse_Policy::next(nme, me, i, j, bi, bj, k, l))
-            Fill_Policy::apply(me, i, j, nme()(k, l));
+        Fill_Policy::apply(*me, i, j, nme()(k, l));
+        while (Traverse_Policy::next(nme, *me, i, j, bi, bj, k, l))
+            Fill_Policy::apply(*me, i, j, nme()(k, l));
         return *this;
     }
 
 private:
-    E &me;
+    E *me;
     size_type i, j;
 };
 

@@ -5,8 +5,8 @@
 // Copyright (c) 2009-2014 Mateusz Loskot, London, UK.
 // Copyright (c) 2013-2014 Adam Wulkiewicz, Lodz, Poland.
 
-// This file was modified by Oracle on 2013-2014.
-// Modifications copyright (c) 2013-2014, Oracle and/or its affiliates.
+// This file was modified by Oracle on 2013-2017.
+// Modifications copyright (c) 2013-2017, Oracle and/or its affiliates.
 
 // Contributed and/or modified by Adam Wulkiewicz, on behalf of Oracle
 // Contributed and/or modified by Menelaos Karavelas, on behalf of Oracle
@@ -53,7 +53,9 @@ namespace detail { namespace disjoint
 template <typename Segment1, typename Segment2>
 struct disjoint_segment
 {
-    static inline bool apply(Segment1 const& segment1, Segment2 const& segment2)
+    template <typename Strategy>
+    static inline bool apply(Segment1 const& segment1, Segment2 const& segment2,
+                             Strategy const& strategy)
     {
         typedef typename point_type<Segment1>::type point_type;
 
@@ -62,23 +64,23 @@ struct disjoint_segment
         rescale_policy_type robust_policy;
 
         typedef segment_intersection_points
-                <
-                    point_type,
-                    typename segment_ratio_type
+            <
+                point_type,
+                typename segment_ratio_type
                     <
                         point_type,
                         rescale_policy_type
                     >::type
-                > intersection_return_type;
+            > intersection_return_type;
 
-        intersection_return_type is
-            = strategy::intersection::relate_cartesian_segments
+        typedef policies::relate::segments_intersection_points
             <
-                policies::relate::segments_intersection_points
-                    <
-                        intersection_return_type
-                    >
-            >::apply(segment1, segment2, robust_policy);
+                intersection_return_type
+            > intersection_policy;
+
+        intersection_return_type is = strategy.apply(segment1, segment2,
+                                                     intersection_policy(),
+                                                     robust_policy);
 
         return is.count == 0;
     }
@@ -91,52 +93,55 @@ struct assign_disjoint_policy
     static bool const include_no_turn = true;
     static bool const include_degenerate = true;
     static bool const include_opposite = true;
-
-    // We don't assign extra info:
-    template
-    <
-        typename Info,
-        typename Point1,
-        typename Point2,
-        typename IntersectionInfo,
-        typename DirInfo
-    >
-    static inline void apply(Info& , Point1 const& , Point2 const&,
-                IntersectionInfo const&, DirInfo const&)
-    {}
 };
 
 
 template <typename Geometry1, typename Geometry2>
 struct disjoint_linear
 {
-    static inline
-    bool apply(Geometry1 const& geometry1, Geometry2 const& geometry2)
+    template <typename Strategy>
+    static inline bool apply(Geometry1 const& geometry1,
+                             Geometry2 const& geometry2,
+                             Strategy const& strategy)
     {
         typedef typename geometry::point_type<Geometry1>::type point_type;
         typedef detail::no_rescale_policy rescale_policy_type;
+        typedef typename geometry::segment_ratio_type
+            <
+                point_type, rescale_policy_type
+            >::type segment_ratio_type;
         typedef overlay::turn_info
-        <
-            point_type,
-            typename segment_ratio_type<point_type, rescale_policy_type>::type
-        > turn_info;
-        std::deque<turn_info> turns;
+            <
+                point_type,
+                segment_ratio_type,
+                typename detail::get_turns::turn_operation_type
+                        <
+                            Geometry1, Geometry2, segment_ratio_type
+                        >::type
+            > turn_info_type;
 
-        static const bool reverse1 = overlay::do_reverse<geometry::point_order<Geometry1>::value>::value; // should be false
-        static const bool reverse2 = overlay::do_reverse<geometry::point_order<Geometry2>::value>::value; // should be false
+        std::deque<turn_info_type> turns;
 
         // Specify two policies:
         // 1) Stop at any intersection
         // 2) In assignment, include also degenerate points (which are normally skipped)
-        disjoint_interrupt_policy policy;
-        rescale_policy_type robust_policy;
-        geometry::get_turns
+        disjoint_interrupt_policy interrupt_policy;
+        dispatch::get_turns
             <
-                reverse1, reverse2,
-                assign_disjoint_policy
-            >(geometry1, geometry2, robust_policy, turns, policy);
+                typename geometry::tag<Geometry1>::type,
+                typename geometry::tag<Geometry2>::type,
+                Geometry1,
+                Geometry2,
+                overlay::do_reverse<geometry::point_order<Geometry1>::value>::value, // should be false
+                overlay::do_reverse<geometry::point_order<Geometry2>::value>::value, // should be false
+                detail::get_turns::get_turn_info_type
+                    <
+                        Geometry1, Geometry2, assign_disjoint_policy
+                    >
+            >::apply(0, geometry1, 1, geometry2,
+                     strategy, rescale_policy_type(), turns, interrupt_policy);
 
-        return !policy.has_intersections;
+        return !interrupt_policy.has_intersections;
     }
 };
 

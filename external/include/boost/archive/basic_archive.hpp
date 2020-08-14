@@ -69,7 +69,7 @@ public:
     }   
 };
 
-BOOST_ARCHIVE_DECL(library_version_type)
+BOOST_ARCHIVE_DECL library_version_type
 BOOST_ARCHIVE_VERSION();
 
 class version_type {
@@ -127,11 +127,11 @@ public:
     }
 
     // used for text output
-    operator int () const {
+    operator base_type () const {
         return t;
     }                
     // used for text input
-    operator int_least16_t &() {
+    operator base_type &() {
         return t;
     }                
     bool operator==(const class_id_type & rhs) const {
@@ -151,7 +151,10 @@ private:
 public:
     object_id_type(): t(0) {};
     // note: presumes that size_t >= unsigned int.
-    explicit object_id_type(const std::size_t & t_) : t(t_){
+    // use explicit cast to silence useless warning
+    explicit object_id_type(const std::size_t & t_) : t(static_cast<base_type>(t_)){
+        // make quadriple sure that we haven't lost any real integer
+        // precision
         BOOST_ASSERT(t_ <= boost::integer_traits<base_type>::const_max);
     }
     object_id_type(const object_id_type & t_) : 
@@ -162,11 +165,11 @@ public:
         return *this;
     }
     // used for text output
-    operator uint_least32_t () const {
+    operator base_type () const {
         return t;
     }                
     // used for text input
-    operator uint_least32_t & () {
+    operator base_type & () {
         return t;
     }                
     bool operator==(const object_id_type & rhs) const {
@@ -242,7 +245,7 @@ enum archive_flags {
     flags_last = 8
 };
 
-BOOST_ARCHIVE_DECL(const char *)
+BOOST_ARCHIVE_DECL const char *
 BOOST_ARCHIVE_SIGNATURE();
 
 /* NOTE : Warning  : Warning : Warning : Warning : Warning

@@ -47,7 +47,12 @@ public:
     {
       return size_ = buffer_.size();
     }
-
+    
+    const std::size_t* size_ptr() const
+    {
+      return &size();
+    }
+    
     void save_binary(void const *address, std::size_t count)
     {
       save_impl(address,count);
@@ -55,7 +60,7 @@ public:
 
     // fast saving of arrays
     template<class T>
-    void save_array(serialization::array<T> const& x, unsigned int /* file_version */)
+    void save_array(serialization::array_wrapper<T> const& x, unsigned int /* file_version */)
     {
     
       BOOST_MPL_ASSERT((serialization::is_bitwise_serializable<BOOST_DEDUCED_TYPENAME remove_const<T>::type>));
@@ -64,7 +69,7 @@ public:
     }
 
     template<class T>
-    void save(serialization::array<T> const& x)
+    void save(serialization::array_wrapper<T> const& x)
     {
       save_array(x,0u);
     }

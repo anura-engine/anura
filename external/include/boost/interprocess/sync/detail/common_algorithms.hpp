@@ -11,6 +11,14 @@
 #ifndef BOOST_INTERPROCESS_SYNC_DETAIL_COMMON_ALGORITHMS_HPP
 #define BOOST_INTERPROCESS_SYNC_DETAIL_COMMON_ALGORITHMS_HPP
 
+#ifndef BOOST_CONFIG_HPP
+#  include <boost/config.hpp>
+#endif
+#
+#if defined(BOOST_HAS_PRAGMA_ONCE)
+#  pragma once
+#endif
+
 #include <boost/interprocess/detail/config_begin.hpp>
 #include <boost/interprocess/detail/workaround.hpp>
 
@@ -54,6 +62,49 @@ void try_based_lock(MutexType &m)
       spin_wait swait;
       do{
          if(m.try_lock()){
+            break;
+         }
+         else{
+            swait.yield();
+         }
+      }
+      while(1);
+   }
+}
+
+template<class MutexType>
+void timed_based_lock(MutexType &m, unsigned const uCheckPeriodSec)
+{
+   const boost::posix_time::time_duration dur(0, 0, uCheckPeriodSec);
+   boost::posix_time::ptime deadline(microsec_clock::universal_time()+dur);
+   if(!m.timed_lock(deadline)){
+      spin_wait swait;
+      do{
+         deadline = microsec_clock::universal_time()+dur;
+         if(m.timed_lock(deadline)){
+            break;
+         }
+         else{
+            swait.yield();
+         }
+      }
+      while(1);
+   }
+}
+
+template<class MutexType>
+void timed_based_timed_lock(MutexType &m, const boost::posix_time::ptime &abs_time, unsigned const uCheckPeriodSec)
+{
+   const boost::posix_time::time_duration dur(0, 0, uCheckPeriodSec);
+   boost::posix_time::ptime deadline(microsec_clock::universal_time()+dur);
+   if(abs_time <= deadline){
+      m.timed_lock(abs_time);
+   }
+   else if(!m.timed_lock(deadline)){
+      spin_wait swait;
+      do{
+         deadline = microsec_clock::universal_time()+dur;
+         if(m.timed_lock(deadline)){
             break;
          }
          else{

@@ -24,7 +24,11 @@
 #ifndef BOOST_INTERPROCESS_ERRORS_HPP
 #define BOOST_INTERPROCESS_ERRORS_HPP
 
-#if defined(_MSC_VER)
+#ifndef BOOST_CONFIG_HPP
+#  include <boost/config.hpp>
+#endif
+#
+#if defined(BOOST_HAS_PRAGMA_ONCE)
 #  pragma once
 #endif
 
@@ -49,7 +53,7 @@
 
 namespace boost {
 namespace interprocess {
-/// @cond
+#if !defined(BOOST_INTERPROCESS_DOXYGEN_INVOKED)
 inline int system_error_code() // artifact of POSIX and WINDOWS error reporting
 {
    #if defined (BOOST_INTERPROCESS_WINDOWS)
@@ -64,7 +68,7 @@ inline int system_error_code() // artifact of POSIX and WINDOWS error reporting
 inline void fill_system_message(int sys_err_code, std::string &str)
 {
    void *lpMsgBuf;
-   winapi::format_message(
+   unsigned long ret = winapi::format_message(
       winapi::format_message_allocate_buffer |
       winapi::format_message_from_system |
       winapi::format_message_ignore_inserts,
@@ -75,17 +79,22 @@ inline void fill_system_message(int sys_err_code, std::string &str)
       0,
       0
    );
-   str += static_cast<const char*>(lpMsgBuf);
-   winapi::local_free( lpMsgBuf ); // free the buffer
-   while ( str.size()
-      && (str[str.size()-1] == '\n' || str[str.size()-1] == '\r') )
-      str.erase( str.size()-1 );
+   if (ret != 0){
+      str += static_cast<const char*>(lpMsgBuf);
+      winapi::local_free( lpMsgBuf ); // free the buffer
+      while ( str.size()
+         && (str[str.size()-1] == '\n' || str[str.size()-1] == '\r') )
+         str.erase( str.size()-1 );
+   }
+   else{
+      str += "WinApi FormatMessage returned error";
+   }
 }
 # else
 inline void fill_system_message( int system_error, std::string &str)
 {  str = std::strerror(system_error);  }
 # endif
-/// @endcond
+#endif   //#ifndef BOOST_INTERPROCESS_DOXYGEN_INVOKED
 
 enum error_code_t
 {
@@ -120,7 +129,7 @@ enum error_code_t
 
 typedef int    native_error_t;
 
-/// @cond
+#if !defined(BOOST_INTERPROCESS_DOXYGEN_INVOKED)
 struct ec_xlate
 {
    native_error_t sys_ec;
@@ -227,7 +236,7 @@ struct error_info
    native_error_t m_nat;
    error_code_t   m_ec;
 };
-/// @endcond
+#endif   //#ifndef BOOST_INTERPROCESS_DOXYGEN_INVOKED
 
 }  // namespace interprocess {
 }  // namespace boost

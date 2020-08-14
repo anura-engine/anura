@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2014.
+ *          Copyright Andrey Semashev 2007 - 2015.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -38,11 +38,11 @@ namespace aux {
 class thread_specific_base
 {
 private:
-    union key_storage
-    {
-        void* as_pointer;
-        unsigned int as_dword;
-    };
+#if defined(BOOST_THREAD_PLATFORM_WIN32)
+    typedef unsigned long key_storage;
+#else
+    typedef void* key_storage;
+#endif
 
     key_storage m_Key;
 

@@ -14,7 +14,7 @@
 #include <boost/utility/enable_if.hpp>
 #include <boost/type_traits/is_signed.hpp>
 #include <boost/mpl/if.hpp>
-#include <boost/math/common_factor_rt.hpp>
+#include <boost/integer/common_factor_rt.hpp>
 #include <boost/chrono/detail/scan_keyword.hpp>
 #include <boost/chrono/detail/no_warning/signed_unsigned_cmp.hpp>
 #include <boost/chrono/process_cpu_clocks.hpp>
@@ -58,7 +58,7 @@ namespace boost
         typedef typename common_type<intermediate_type, unsigned long long>::type common_type_t;
 
         // Reduce r * num / den
-        common_type_t t = math::gcd<common_type_t>(common_type_t(r), common_type_t(den));
+        common_type_t t = integer::gcd<common_type_t>(common_type_t(r), common_type_t(den));
         r /= t;
         den /= t;
         if (den != 1)
@@ -278,8 +278,8 @@ namespace boost
 
         // r should be multiplied by (num/den) / Period
         // Reduce (num/den) / Period to lowest terms
-        unsigned long long gcd_n1_n2 = math::gcd<unsigned long long>(num, Period::num);
-        unsigned long long gcd_d1_d2 = math::gcd<unsigned long long>(den, Period::den);
+        unsigned long long gcd_n1_n2 = integer::gcd<unsigned long long>(num, Period::num);
+        unsigned long long gcd_d1_d2 = integer::gcd<unsigned long long>(den, Period::den);
         num /= gcd_n1_n2;
         den /= gcd_d1_d2;
         unsigned long long n2 = Period::num / gcd_n1_n2;
@@ -309,8 +309,7 @@ namespace boost
         t /= den;
         if (t > duration_values<common_type_t>::zero())
         {
-          Rep pt = t;
-          if ( (duration_values<Rep>::max)() < pt)
+          if ( (duration_values<Rep>::max)() < Rep(t))
           {
             // Conversion to Period overflowed
             err |= std::ios_base::failbit;
@@ -318,8 +317,7 @@ namespace boost
           }
         }
         // Success!  Store it.
-        r = Rep(t);
-        d = duration<Rep, Period> (r);
+        d = duration<Rep, Period> (Rep(t));
 
         return s;
       }

@@ -24,9 +24,6 @@
 #ifndef _USE_MATH_DEFINES
 #	define _USE_MATH_DEFINES	1
 #endif 
-#ifndef HAVE_M_PI
-#	define HAVE_M_PI
-#endif 
 
 #include "SDL_image.h"
 
@@ -35,9 +32,12 @@
 #include "SurfaceSDL.hpp"
 
 enum {
-	SDL_PIXELFORMAT_XRGB8888 = 
+	#ifndef _WIN32
+	//This exists on Windows, and so can't be redefined.
+	SDL_PIXELFORMAT_XRGB8888 =
         SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_PACKED32, SDL_PACKEDORDER_XRGB,
                                SDL_PACKEDLAYOUT_8888, 32, 4),
+    #endif
 	SDL_PIXELFORMAT_R8 = 
         SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_PACKED8, SDL_PACKEDORDER_NONE,
                                SDL_PACKEDLAYOUT_NONE, 8, 1),

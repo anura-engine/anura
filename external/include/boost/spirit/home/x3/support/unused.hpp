@@ -8,27 +8,14 @@
 #if !defined(BOOST_SPIRIT_X3_UNUSED_APRIL_16_2006_0616PM)
 #define BOOST_SPIRIT_X3_UNUSED_APRIL_16_2006_0616PM
 
-#if defined(_MSC_VER)
-#pragma once
-#endif
-
-#include <ostream>
-#include <istream>
-#include <boost/mpl/identity.hpp>
-
-#if defined(BOOST_MSVC)
-# pragma warning(push)
-# pragma warning(disable: 4522) // multiple assignment operators specified warning
-#endif
+#include <iosfwd>
 
 ///////////////////////////////////////////////////////////////////////////////
 namespace boost { namespace spirit { namespace x3
 {
     struct unused_type
     {
-        unused_type()
-        {
-        }
+        unused_type() = default;
 
         template <typename T>
         unused_type(T const&)
@@ -49,31 +36,16 @@ namespace boost { namespace spirit { namespace x3
             return *this;
         }
 
-        unused_type const&
-        operator=(unused_type const&) const
-        {
-            return *this;
-        }
-
-        unused_type&
-        operator=(unused_type const&)
-        {
-            return *this;
-        }
-
         // unused_type can also masquerade as an empty context (see context.hpp)
-
-        template <typename ID>
-        struct get_result : mpl::identity<unused_type> {};
 
         template <typename ID>
         unused_type get(ID) const
         {
-            return unused_type();
+            return {};
         }
     };
 
-    unused_type const unused = unused_type();
+    auto const unused = unused_type{};
 
     inline std::ostream& operator<<(std::ostream& out, unused_type const&)
     {
@@ -85,9 +57,5 @@ namespace boost { namespace spirit { namespace x3
         return in;
     }
 }}}
-
-#if defined(BOOST_MSVC)
-# pragma warning(pop)
-#endif
 
 #endif

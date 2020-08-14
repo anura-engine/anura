@@ -1,12 +1,12 @@
 ///////////////////////////////////////////////////////////////
 //  Copyright 2012 John Maddock. Distributed under the Boost
 //  Software License, Version 1.0. (See accompanying file
-//  LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_
+//  LICENSE_1_0.txt or copy at https://www.boost.org/LICENSE_1_0.txt
 
 #ifndef BOOST_MP_MR_HPP
 #define BOOST_MP_MR_HPP
 
-#include <boost/multiprecision/random.hpp>
+#include <boost/random.hpp>
 #include <boost/multiprecision/integer.hpp>
 
 namespace boost{
@@ -144,6 +144,8 @@ typename enable_if_c<number_category<I>::value == number_kind_integer, bool>::ty
 #endif
    typedef I number_type;
 
+   if (n == 2)
+      return true;  // Trivial special case.
    if(bit_test(n, 0) == 0)
       return false;  // n is even
    if(n <= 227)

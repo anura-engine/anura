@@ -25,6 +25,7 @@
 
 #include <vector>
 #include <memory>
+#include <string>
 
 typedef unsigned long key_type;
 

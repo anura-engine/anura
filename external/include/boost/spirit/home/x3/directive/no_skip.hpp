@@ -6,12 +6,8 @@
     Distributed under the Boost Software License, Version 1.0. (See accompanying
     file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 =============================================================================*/
-#if !defined(SPIRIT_NO_SKIP_JAN_16_2010_0802PM)
-#define SPIRIT_NO_SKIP_JAN_16_2010_0802PM
-
-#if defined(_MSC_VER)
-#pragma once
-#endif
+#if !defined(BOOST_SPIRIT_X3_NO_SKIP_JAN_16_2010_0802PM)
+#define BOOST_SPIRIT_X3_NO_SKIP_JAN_16_2010_0802PM
 
 #include <boost/spirit/home/x3/support/context.hpp>
 #include <boost/spirit/home/x3/support/unused.hpp>
@@ -72,11 +68,11 @@ namespace boost { namespace spirit { namespace x3
         no_skip_directive<typename extension::as_parser<Subject>::value_type>
         operator[](Subject const& subject) const
         {
-            return {as_parser(subject)};
+            return { as_parser(subject) };
         }
     };
 
-    no_skip_gen const no_skip = no_skip_gen();
+    auto const no_skip = no_skip_gen{};
 }}}
 
 #endif

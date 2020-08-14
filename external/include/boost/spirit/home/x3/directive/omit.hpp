@@ -4,12 +4,8 @@
     Distributed under the Boost Software License, Version 1.0. (See accompanying
     file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 =============================================================================*/
-#if !defined(SPIRIT_OMIT_MARCH_24_2007_0802AM)
-#define SPIRIT_OMIT_MARCH_24_2007_0802AM
-
-#if defined(_MSC_VER)
-#pragma once
-#endif
+#if !defined(BOOST_SPIRIT_X3_OMIT_MARCH_24_2007_0802AM)
+#define BOOST_SPIRIT_X3_OMIT_MARCH_24_2007_0802AM
 
 #include <boost/spirit/home/x3/support/unused.hpp>
 #include <boost/spirit/home/x3/core/parser.hpp>
@@ -45,11 +41,11 @@ namespace boost { namespace spirit { namespace x3
         omit_directive<typename extension::as_parser<Subject>::value_type>
         operator[](Subject const& subject) const
         {
-            return {as_parser(subject)};
+            return { as_parser(subject) };
         }
     };
 
-    omit_gen const omit = omit_gen();
+    auto const omit = omit_gen{};
 }}}
 
 #endif

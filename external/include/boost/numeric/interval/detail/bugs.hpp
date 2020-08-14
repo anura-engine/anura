@@ -1,7 +1,7 @@
 /* Boost interval/detail/bugs.hpp file
  *
  * Copyright 2000 Jens Maurer
- * Copyright 2002 Hervé Brönnimann, Guillaume Melquiond, Sylvain Pion
+ * Copyright 2002 HervÃ© BrÃ¶nnimann, Guillaume Melquiond, Sylvain Pion
  *
  * Distributed under the Boost Software License, Version 1.0.
  * (See accompanying file LICENSE_1_0.txt or
@@ -43,37 +43,6 @@
 
 #ifndef BOOST_NUMERIC_INTERVAL_using_ahyp
 #  define BOOST_NUMERIC_INTERVAL_using_ahyp(a)
-#endif
-
-#if defined(__GNUC__) && (__GNUC__ <= 2)
-// cf PR c++/1981 for a description of the bug
-#include <algorithm>
-#include <boost/config/no_tr1/cmath.hpp>
-namespace boost {
-namespace numeric {
-  using std::min;
-  using std::max;
-  using std::sqrt;
-  using std::exp;
-  using std::log;
-  using std::cos;
-  using std::tan;
-  using std::asin;
-  using std::acos;
-  using std::atan;
-  using std::ceil;
-  using std::floor;
-  using std::sinh;
-  using std::cosh;
-  using std::tanh;
-# undef BOOST_NUMERIC_INTERVAL_using_max
-# undef BOOST_NUMERIC_INTERVAL_using_math
-# define BOOST_NUMERIC_INTERVAL_using_max(a)
-# define BOOST_NUMERIC_INTERVAL_using_math(a)
-# undef BOOST_NUMERIC_INTERVAL_using_ahyp
-# define BOOST_NUMERIC_INTERVAL_using_ahyp(a)
-} // namespace numeric
-} // namespace boost
 #endif
 
 #endif // BOOST_NUMERIC_INTERVAL_DETAIL_BUGS

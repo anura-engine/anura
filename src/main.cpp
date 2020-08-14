@@ -132,8 +132,8 @@ namespace
 	PREF_INT(auto_update_timeout, 5000, "Timeout to use on auto updates (given in milliseconds)");
 
 	PREF_BOOL(resizeable, false, "Window is dynamically resizeable.");
-	PREF_INT(min_window_width, 1024, "Minimum window width when auto-determining window size");
-	PREF_INT(min_window_height, 768, "Minimum window height when auto-determining window size");
+	PREF_INT(min_window_width, 934, "Minimum window width when auto-determining window size");
+	PREF_INT(min_window_height, 700, "Minimum window height when auto-determining window size");
 
 	PREF_INT(max_window_width, 10240, "Minimum window width when auto-determining window size");
 	PREF_INT(max_window_height, 7680, "Minimum window height when auto-determining window size");
@@ -190,7 +190,7 @@ namespace
 			"      --relay                  use the server as a relay in multiplayer rather\n" <<
 			"                                 than trying to initiate direct connections\n" <<
 			"      --[no-]resizable         allows/disallows to resize the game window\n" <<
-			"      ----module-args=ARGS     map of arguments passed to the module\n" <<
+			"      --module-args=ARGS       map of arguments passed to the module\n" <<
 			"      --scale                  enables an experimental pixel art interpolation\n" <<
 			"                                 algorithm for scaling the game graphics (some\n" <<
 			"                                 issues with this still have to be solved)\n" <<
@@ -243,6 +243,8 @@ namespace
 			"      --utility=NAME           runs the specified UTILITY( NAME ) code block,\n" <<
 			"                                 such as compile_levels or compile_objects,\n" <<
 			"                                 with the specified arguments\n" <<
+			"\n" <<
+			"Other options:\n" <<
 		   preferences::get_registered_helpstring();
 	}
 
@@ -404,6 +406,21 @@ void auto_select_resolution(const KRE::WindowPtr& wm, int *width, int *height, b
 		}
 	}
 	
+	if (best_mode.width < g_min_window_width ||
+			best_mode.height < g_min_window_height) {
+
+		best_mode.width = g_min_window_width;
+		best_mode.height = g_min_window_height;
+	}
+
+	if (best_mode.width > g_max_window_width) {
+		best_mode.width = g_max_window_width;
+	}
+
+	if (best_mode.height > g_max_window_height) {
+		best_mode.height = g_max_window_height;
+	}
+
 	LOG_INFO("CHOSEN MODE IS " << best_mode.width << "x" << best_mode.height);
 
 	*width = best_mode.width;

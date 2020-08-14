@@ -2,6 +2,11 @@
 
 // Copyright (c) 2012-2014 Barend Gehrels, Amsterdam, the Netherlands.
 
+// This file was modified by Oracle on 2017, 2018.
+// Modifications copyright (c) 2017-2018, Oracle and/or its affiliates.
+
+// Contributed and/or modified by Adam Wulkiewicz, on behalf of Oracle
+
 // Use, modification and distribution is subject to the Boost Software License,
 // Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
@@ -9,9 +14,14 @@
 #ifndef BOOST_GEOMETRY_ALGORITHMS_DETAIL_GET_LEFT_TURNS_HPP
 #define BOOST_GEOMETRY_ALGORITHMS_DETAIL_GET_LEFT_TURNS_HPP
 
-#include <boost/geometry/arithmetic/arithmetic.hpp>
+#include <set>
+#include <vector>
+
+#include <boost/geometry/core/assert.hpp>
+
 #include <boost/geometry/algorithms/detail/overlay/segment_identifier.hpp>
 #include <boost/geometry/algorithms/detail/overlay/turn_info.hpp>
+#include <boost/geometry/arithmetic/arithmetic.hpp>
 #include <boost/geometry/iterators/closing_iterator.hpp>
 #include <boost/geometry/iterators/ever_circling_iterator.hpp>
 #include <boost/geometry/strategies/side.hpp>
@@ -34,39 +44,7 @@ inline std::pair<T, T> ordered_pair(T const& first, T const& second)
 namespace left_turns
 {
 
-template <typename Point>
-struct turn_angle_info
-{
-    segment_identifier seg_id;
-    int turn_index;
-    Point points[2];
 
-    turn_angle_info(segment_identifier const& id, Point const& from, Point const& to)
-        : seg_id(id)
-        , turn_index(-1)
-    {
-        points[0] = from;
-        points[1] = to;
-    }
-};
-
-
-template <typename Point>
-struct angle_info
-{
-    segment_identifier seg_id;
-    Point point;
-    bool incoming;
-    bool blocked;
-
-    inline angle_info(segment_identifier const& id, bool inc, Point const& p)
-        : seg_id(id)
-        , point(p)
-        , incoming(inc)
-        , blocked(false)
-    {
-    }
-};
 
 template <typename Vector>
 inline int get_quadrant(Vector const& vector)
@@ -90,17 +68,14 @@ inline int squared_length(Vector const& vector)
 }
 
 
-template <typename Point>
+template <typename Point, typename SideStrategy>
 struct angle_less
 {
     typedef Point vector_type;
-    typedef typename strategy::side::services::default_strategy
-    <
-        typename cs_tag<Point>::type
-    >::type side_strategy_type;
 
-    angle_less(Point const& origin)
+    angle_less(Point const& origin, SideStrategy const& strategy)
         : m_origin(origin)
+        , m_strategy(strategy)
     {}
 
     template <typename Angle>
@@ -119,18 +94,18 @@ struct angle_less
             return quadrant_p < quadrant_q;
         }
         // Same quadrant, check if p is located left of q
-        int const side = side_strategy_type::apply(m_origin, q.point,
-                    p.point);
+        int const side = m_strategy.apply(m_origin, q.point, p.point);
         if (side != 0)
         {
             return side == 1;
         }
-        // Collinear, check if one is incoming
+        // Collinear, check if one is incoming, incoming angles come first
         if (p.incoming != q.incoming)
         {
             return int(p.incoming) < int(q.incoming);
         }
         // Same quadrant/side/direction, return longest first
+        // TODO: maybe not necessary, decide this
         int const length_p = squared_length(pv);
         int const length_q = squared_length(qv);
         if (length_p != length_q)
@@ -143,19 +118,17 @@ struct angle_less
 
 private:
     Point m_origin;
+    SideStrategy m_strategy;
 };
 
-template <typename Point>
+template <typename Point, typename SideStrategy>
 struct angle_equal_to
 {
     typedef Point vector_type;
-    typedef typename strategy::side::services::default_strategy
-    <
-        typename cs_tag<Point>::type
-    >::type side_strategy_type;
-
-    inline angle_equal_to(Point const& origin)
+    
+    inline angle_equal_to(Point const& origin, SideStrategy const& strategy)
         : m_origin(origin)
+        , m_strategy(strategy)
     {}
 
     template <typename Angle>
@@ -172,96 +145,146 @@ struct angle_equal_to
             return false;
         }
         // Same quadrant, check if p/q are collinear
-        int const side = side_strategy_type::apply(m_origin, q.point,
-                    p.point);
+        int const side = m_strategy.apply(m_origin, q.point, p.point);
         return side == 0;
     }
 
 private:
     Point m_origin;
+    SideStrategy m_strategy;
 };
 
-struct left_turn
+template <typename AngleCollection, typename Turns>
+inline void get_left_turns(AngleCollection const& sorted_angles,
+        Turns& turns)
 {
-    segment_identifier from;
-    segment_identifier to;
-};
+    std::set<std::size_t> good_incoming;
+    std::set<std::size_t> good_outgoing;
 
-
-template <typename Point, typename AngleCollection, typename OutputCollection>
-inline void get_left_turns(AngleCollection const& sorted_angles, Point const& origin,
-        OutputCollection& output_collection)
-{
-    angle_equal_to<Point> comparator(origin);
-    typedef geometry::closing_iterator<AngleCollection const> closing_iterator;
-    closing_iterator it(sorted_angles);
-    closing_iterator end(sorted_angles, true);
-
-    closing_iterator previous = it++;
-    for( ; it != end; previous = it++)
+    for (typename boost::range_iterator<AngleCollection const>::type it =
+        sorted_angles.begin(); it != sorted_angles.end(); ++it)
     {
-        if (! it->blocked)
+        if (!it->blocked)
         {
-            bool equal = comparator(*previous, *it);
-            bool include = ! equal
-                && previous->incoming
-                && !it->incoming;
-            if (include)
+            if (it->incoming)
             {
-                left_turn turn;
-                turn.from = previous->seg_id;
-                turn.to = it->seg_id;
-                output_collection.push_back(turn);
+                good_incoming.insert(it->turn_index);
             }
+            else
+            {
+                good_outgoing.insert(it->turn_index);
+            }
+        }
+    }
+
+    if (good_incoming.empty() || good_outgoing.empty())
+    {
+        return;
+    }
+
+    for (typename boost::range_iterator<AngleCollection const>::type it =
+        sorted_angles.begin(); it != sorted_angles.end(); ++it)
+    {
+        if (good_incoming.count(it->turn_index) == 0
+            || good_outgoing.count(it->turn_index) == 0)
+        {
+            turns[it->turn_index].remove_on_multi = true;
         }
     }
 }
 
-template <typename AngleTurnCollection, typename AngleCollection>
-inline void block_turns_on_right_sides(AngleTurnCollection const& turns,
-        AngleCollection& sorted)
+
+//! Returns the number of clusters
+template <typename Point, typename AngleCollection, typename SideStrategy>
+inline std::size_t assign_cluster_indices(AngleCollection& sorted, Point const& origin,
+                                          SideStrategy const& strategy)
 {
-    // Create a small (seg_id -> index) map for fast finding turns
-    std::map<segment_identifier, int> incoming;
-    std::map<segment_identifier, int> outgoing;
-    int index = 0;
-    for (typename boost::range_iterator<AngleCollection>::type it =
-        sorted.begin(); it != sorted.end(); ++it, ++index)
+    // Assign same cluster_index for all turns in same direction
+    BOOST_GEOMETRY_ASSERT(boost::size(sorted) >= 4u);
+
+    angle_equal_to<Point, SideStrategy> comparator(origin, strategy);
+    typename boost::range_iterator<AngleCollection>::type it = sorted.begin();
+
+    std::size_t cluster_index = 0;
+    it->cluster_index = cluster_index;
+    typename boost::range_iterator<AngleCollection>::type previous = it++;
+    for (; it != sorted.end(); ++it)
+    {
+        if (!comparator(*previous, *it))
+        {
+            cluster_index++;
+            previous = it;
+        }
+        it->cluster_index = cluster_index;
+    }
+    return cluster_index + 1;
+}
+
+template <typename AngleCollection>
+inline void block_turns(AngleCollection& sorted, std::size_t cluster_size)
+{
+    BOOST_GEOMETRY_ASSERT(boost::size(sorted) >= 4u && cluster_size > 0);
+
+    std::vector<std::pair<bool, bool> > directions;
+    for (std::size_t i = 0; i < cluster_size; i++)
+    {
+        directions.push_back(std::make_pair(false, false));
+    }
+
+    for (typename boost::range_iterator<AngleCollection const>::type it = sorted.begin();
+        it != sorted.end(); ++it)
     {
         if (it->incoming)
         {
-            incoming[it->seg_id] = index;
+            directions[it->cluster_index].first = true;
         }
         else
         {
-            outgoing[it->seg_id] = index;
+            directions[it->cluster_index].second = true;
         }
     }
 
-    // Walk through turns and block every outgoing angle on the right side
-    for (typename boost::range_iterator<AngleTurnCollection const>::type it =
-        turns.begin(); it != turns.end(); ++it)
+    for (typename boost::range_iterator<AngleCollection>::type it = sorted.begin();
+        it != sorted.end(); ++it)
     {
-        int incoming_index = incoming[it->seg_id];
-        int outgoing_index = outgoing[it->seg_id];
-        int index = incoming_index;
-        while(index != outgoing_index)
-        {
-            if (!sorted[index].incoming)
-            {
-                sorted[index].blocked = true;
-            }
+        std::size_t const cluster_index = it->cluster_index;
+        std::size_t const previous_index
+                = cluster_index == 0 ? cluster_size - 1 : cluster_index - 1;
+        std::size_t const next_index
+                = cluster_index + 1 >= cluster_size ? 0 : cluster_index + 1;
 
-            // Go back (circular)
-            index--;
-            if (index == -1)
-            {
-                index = boost::size(sorted) - 1;
-            }
+        if (directions[cluster_index].first
+            && directions[cluster_index].second)
+        {
+            it->blocked = true;
+        }
+        else if (!directions[cluster_index].first
+            && directions[cluster_index].second
+            && directions[previous_index].second)
+        {
+            // Only outgoing, previous was also outgoing: block this one
+            it->blocked = true;
+        }
+        else if (directions[cluster_index].first
+            && !directions[cluster_index].second
+            && !directions[previous_index].first
+            && directions[previous_index].second)
+        {
+            // Only incoming, previous was only outgoing: block this one
+            it->blocked = true;
+        }
+        else if (directions[cluster_index].first
+            && !directions[cluster_index].second
+            && directions[next_index].first
+            && !directions[next_index].second)
+        {
+            // Only incoming, next also incoming, block this one
+            it->blocked = true;
         }
     }
 }
 
+#if defined(BOOST_GEOMETRY_BUFFER_ENLARGED_CLUSTERS)
 template <typename AngleCollection, typename Point>
 inline bool has_rounding_issues(AngleCollection const& angles, Point const& origin)
 {
@@ -278,6 +301,7 @@ inline bool has_rounding_issues(AngleCollection const& angles, Point const& orig
     }
     return false;
 }
+#endif
 
 
 }  // namespace left_turns

@@ -76,6 +76,37 @@ namespace boost {
       } else
         return false;
     }
+
+    template <class Graph, class WeightMap,
+            class PredecessorMap, class DistanceMap,
+            class BinaryFunction, class BinaryPredicate>
+    bool relax_target(typename graph_traits<Graph>::edge_descriptor e,
+                      const Graph& g, const WeightMap& w,
+                      PredecessorMap& p, DistanceMap& d,
+                      const BinaryFunction& combine, const BinaryPredicate& compare)
+    {
+      typedef typename graph_traits<Graph>::vertex_descriptor Vertex;
+      typedef typename property_traits<DistanceMap>::value_type D;
+      typedef typename property_traits<WeightMap>::value_type W;
+      const Vertex u = source(e, g);
+      const Vertex v = target(e, g);
+      const D d_u = get(d, u);
+      const D d_v = get(d, v);
+      const W& w_e = get(w, e);
+
+      // The seemingly redundant comparisons after the distance puts are to
+      // ensure that extra floating-point precision in x87 registers does not
+      // lead to relax() returning true when the distance did not actually
+      // change.
+      if (compare(combine(d_u, w_e), d_v)) {
+        put(d, v, combine(d_u, w_e));
+        if (compare(get(d, v), d_v)) {
+          put(p, v, u);
+          return true;
+        }
+      }
+      return false;
+    }
     
     template <class Graph, class WeightMap, 
       class PredecessorMap, class DistanceMap>

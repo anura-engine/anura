@@ -15,7 +15,6 @@
 #define BOOST_GEOMETRY_ITERATORS_CLOSING_ITERATOR_HPP
 
 #include <boost/range.hpp>
-#include <boost/iterator.hpp>
 #include <boost/iterator/iterator_facade.hpp>
 #include <boost/iterator/iterator_categories.hpp>
 
@@ -28,8 +27,9 @@ namespace boost { namespace geometry
 \brief Iterator which iterates through a range, but adds first element at end of the range
 \tparam Range range on which this class is based on
 \ingroup iterators
-\note Use with "closing_iterator<Range> or "closing_iterator<Range const>
-        to get non-const / const behaviour
+\note It's const iterator treating the Range as one containing non-mutable elements.
+        For both "closing_iterator<Range> and "closing_iterator<Range const>
+        const reference is always returned when dereferenced.
 \note This class is normally used from "closeable_view" if Close==true
 */
 template <typename Range>
@@ -38,15 +38,31 @@ struct closing_iterator
     <
         closing_iterator<Range>,
         typename boost::range_value<Range>::type const,
-        boost::random_access_traversal_tag
+        boost::random_access_traversal_tag,
+        typename boost::range_reference<Range const>::type,
+        typename boost::range_difference<Range>::type
     >
 {
+private:
+    typedef boost::iterator_facade
+        <
+            closing_iterator<Range>,
+            typename boost::range_value<Range>::type const,
+            boost::random_access_traversal_tag,
+            typename boost::range_reference<Range const>::type,
+            typename boost::range_difference<Range>::type
+        > base_type;
+
+public:
+    typedef typename base_type::reference reference;
+    typedef typename base_type::difference_type difference_type;
+
     /// Constructor including the range it is based on
     explicit inline closing_iterator(Range& range)
         : m_range(&range)
         , m_iterator(boost::begin(range))
         , m_end(boost::end(range))
-        , m_size(boost::size(range))
+        , m_size(static_cast<difference_type>(boost::size(range)))
         , m_index(0)
     {}
 
@@ -55,8 +71,8 @@ struct closing_iterator
         : m_range(&range)
         , m_iterator(boost::end(range))
         , m_end(boost::end(range))
-        , m_size(boost::size(range))
-        , m_index(m_size + 1)
+        , m_size(static_cast<difference_type>(boost::size(range)))
+        , m_index((m_size == 0) ? 0 : m_size + 1)
     {}
 
     /// Default constructor
@@ -66,22 +82,10 @@ struct closing_iterator
         , m_index(0)
     {}
 
-    inline closing_iterator<Range>& operator=(closing_iterator<Range> const& source)
-    {
-        m_range = source.m_range;
-        m_iterator = source.m_iterator;
-        m_end = source.m_end;
-        m_size = source.m_size;
-        m_index = source.m_index;
-        return *this;
-    }
-
-    typedef std::ptrdiff_t difference_type;
-
 private:
     friend class boost::iterator_core_access;
 
-    inline typename boost::range_value<Range>::type const& dereference() const
+    inline reference dereference() const
     {
         return *m_iterator;
     }

@@ -25,7 +25,7 @@
 //
 
 #include <boost/config.hpp>
-#include <boost/predef.h>
+#include <boost/predef/platform/windows_runtime.h>
 
 #if BOOST_PLAT_WINDOWS_RUNTIME
 #include <thread>
@@ -33,7 +33,7 @@
 
 // BOOST_SMT_PAUSE
 
-#if defined(_MSC_VER) && _MSC_VER >= 1310 && ( defined(_M_IX86) || defined(_M_X64) )
+#if defined(_MSC_VER) && _MSC_VER >= 1310 && ( defined(_M_IX86) || defined(_M_X64) ) && !defined(__c2__)
 
 extern "C" void _mm_pause();
 
@@ -60,10 +60,25 @@ namespace detail
 {
 
 #if !defined( BOOST_USE_WINDOWS_H ) && !BOOST_PLAT_WINDOWS_RUNTIME
-  extern "C" void __stdcall Sleep( unsigned long ms );
+
+#if defined(__clang__) && defined(__x86_64__)
+// clang x64 warns that __stdcall is ignored
+# define BOOST_SP_STDCALL
+#else
+# define BOOST_SP_STDCALL __stdcall
 #endif
 
-inline void yield( unsigned k )
+#if defined(__LP64__) // Cygwin 64
+  extern "C" __declspec(dllimport) void BOOST_SP_STDCALL Sleep( unsigned int ms );
+#else
+  extern "C" __declspec(dllimport) void BOOST_SP_STDCALL Sleep( unsigned long ms );
+#endif
+
+#undef BOOST_SP_STDCALL
+
+#endif // !defined( BOOST_USE_WINDOWS_H ) && !BOOST_PLAT_WINDOWS_RUNTIME
+
+inline void yield( unsigned k ) BOOST_NOEXCEPT
 {
     if( k < 4 )
     {
@@ -98,7 +113,13 @@ inline void yield( unsigned k )
 
 #elif defined( BOOST_HAS_PTHREADS )
 
+#ifndef _AIX
 #include <sched.h>
+#else
+   // AIX's sched.h defines ::var which sometimes conflicts with Lambda's var
+       extern "C" int sched_yield(void);
+#endif
+
 #include <time.h>
 
 namespace boost

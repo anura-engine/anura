@@ -1,33 +1,22 @@
-/*
-    Copyright 2005-2007 Adobe Systems Incorporated
-   
-    Use, modification and distribution are subject to the Boost Software License,
-    Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
-    http://www.boost.org/LICENSE_1_0.txt).
+//
+// Copyright 2005-2007 Adobe Systems Incorporated
+//
+// Distributed under the Boost Software License, Version 1.0
+// See accompanying file LICENSE_1_0.txt or copy at
+// http://www.boost.org/LICENSE_1_0.txt
+//
+#ifndef BOOST_GIL_DEVICE_N_HPP
+#define BOOST_GIL_DEVICE_N_HPP
 
-    See http://stlab.adobe.com/gil for most recent version including documentation.
-*/
-/*************************************************************************************************/
+#include <boost/gil/metafunctions.hpp>
+#include <boost/gil/utilities.hpp>
 
-#ifndef GIL_DEVICE_N_H
-#define GIL_DEVICE_N_H
-
-
-////////////////////////////////////////////////////////////////////////////////////////
-/// \file
-/// \brief Support for color space of N channels and variants
-/// \author Lubomir Bourdev and Hailin Jin \n
-///         Adobe Systems Incorporated
-/// \date 2005-2009 \n Last updated on February 20, 2009
-////////////////////////////////////////////////////////////////////////////////////////
-
-#include <cstddef>
-#include "gil_config.hpp"
-#include "utilities.hpp"
-#include "metafunctions.hpp"
-#include <boost/type_traits.hpp>
+#include <boost/config.hpp>
 #include <boost/mpl/range_c.hpp>
 #include <boost/mpl/vector_c.hpp>
+#include <boost/type_traits.hpp>
+
+#include <cstddef>
 
 namespace boost { namespace gil {
 
@@ -64,36 +53,40 @@ template <int N> struct devicen_layout_t : public layout<devicen_t<N> > {};
 /// \ingroup ImageViewConstructors
 /// \brief from 2-channel planar data
 template <typename IC>
-inline typename type_from_x_iterator<planar_pixel_iterator<IC,devicen_t<2> > >::view_t
-planar_devicen_view(std::size_t width, std::size_t height, IC c0, IC c1, std::ptrdiff_t rowsize_in_bytes) {
-    typedef typename type_from_x_iterator<planar_pixel_iterator<IC,devicen_t<2> > >::view_t view_t;
+inline typename type_from_x_iterator<planar_pixel_iterator<IC,devicen_t<2>>>::view_t
+planar_devicen_view(std::size_t width, std::size_t height, IC c0, IC c1, std::ptrdiff_t rowsize_in_bytes)
+{
+    using view_t = typename type_from_x_iterator<planar_pixel_iterator<IC,devicen_t<2>>>::view_t;
     return view_t(width, height, typename view_t::locator(typename view_t::x_iterator(c0,c1), rowsize_in_bytes));
 }
 
 /// \ingroup ImageViewConstructors
 /// \brief from 3-channel planar data
 template <typename IC>
-inline typename type_from_x_iterator<planar_pixel_iterator<IC,devicen_t<3> > >::view_t
-planar_devicen_view(std::size_t width, std::size_t height, IC c0, IC c1, IC c2, std::ptrdiff_t rowsize_in_bytes) {
-    typedef typename type_from_x_iterator<planar_pixel_iterator<IC,devicen_t<3> > >::view_t view_t;
+inline typename type_from_x_iterator<planar_pixel_iterator<IC,devicen_t<3>>>::view_t
+planar_devicen_view(std::size_t width, std::size_t height, IC c0, IC c1, IC c2, std::ptrdiff_t rowsize_in_bytes)
+{
+    using view_t = typename type_from_x_iterator<planar_pixel_iterator<IC,devicen_t<3>>>::view_t;
     return view_t(width, height, typename view_t::locator(typename view_t::x_iterator(c0,c1,c2), rowsize_in_bytes));
 }
 
 /// \ingroup ImageViewConstructors
 /// \brief from 4-channel planar data
 template <typename IC>
-inline typename type_from_x_iterator<planar_pixel_iterator<IC,devicen_t<4> > >::view_t
-planar_devicen_view(std::size_t width, std::size_t height, IC c0, IC c1, IC c2, IC c3, std::ptrdiff_t rowsize_in_bytes) {
-    typedef typename type_from_x_iterator<planar_pixel_iterator<IC,devicen_t<4> > >::view_t view_t;
+inline typename type_from_x_iterator<planar_pixel_iterator<IC,devicen_t<4>>>::view_t
+planar_devicen_view(std::size_t width, std::size_t height, IC c0, IC c1, IC c2, IC c3, std::ptrdiff_t rowsize_in_bytes)
+{
+    using view_t = typename type_from_x_iterator<planar_pixel_iterator<IC,devicen_t<4>>>::view_t;
     return view_t(width, height, typename view_t::locator(typename view_t::x_iterator(c0,c1,c2,c3), rowsize_in_bytes));
 }
 
 /// \ingroup ImageViewConstructors
 /// \brief from 5-channel planar data
 template <typename IC>
-inline typename type_from_x_iterator<planar_pixel_iterator<IC,devicen_t<5> > >::view_t
-planar_devicen_view(std::size_t width, std::size_t height, IC c0, IC c1, IC c2, IC c3, IC c4, std::ptrdiff_t rowsize_in_bytes) {
-    typedef typename type_from_x_iterator<planar_pixel_iterator<IC,devicen_t<5> > >::view_t view_t;
+inline typename type_from_x_iterator<planar_pixel_iterator<IC,devicen_t<5>>>::view_t
+planar_devicen_view(std::size_t width, std::size_t height, IC c0, IC c1, IC c2, IC c3, IC c4, std::ptrdiff_t rowsize_in_bytes)
+{
+    using view_t = typename type_from_x_iterator<planar_pixel_iterator<IC,devicen_t<5>>>::view_t;
     return view_t(width, height, typename view_t::locator(typename view_t::x_iterator(c0,c1,c2,c3,c4), rowsize_in_bytes));
 }
 

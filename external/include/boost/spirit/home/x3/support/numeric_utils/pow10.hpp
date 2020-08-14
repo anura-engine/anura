@@ -1,5 +1,5 @@
 /*=============================================================================
-    Copyright (c) 2001-2014 Joel de Guzman
+    Copyright (c) 2001-2019 Joel de Guzman
     Copyright (c) 2001-2011 Hartmut Kaiser
     http://spirit.sourceforge.net/
 
@@ -8,10 +8,6 @@
 =============================================================================*/
 #if !defined(BOOST_SPIRIT_X3_POW10_DECEMBER_26_2008_1118AM)
 #define BOOST_SPIRIT_X3_POW10_DECEMBER_26_2008_1118AM
-
-#if defined(_MSC_VER)
-#pragma once
-#endif
 
 #include <boost/config/no_tr1/cmath.hpp>
 #include <boost/limits.hpp>
@@ -46,7 +42,11 @@ namespace boost { namespace spirit { namespace x3 { namespace traits
             }
         };
 
-#if (DBL_MAX_10_EXP == 308) // for IEEE-754
+#if BOOST_WORKAROUND(BOOST_MSVC, < 1910)
+#pragma message("Spirit X3 requires full c++14 support.")
+#pragma message("Support for VS2015 will cease in the next Boost release.")
+#pragma message("This code branch will be removed.")
+
         template <>
         struct pow10_helper<double>
         {
@@ -99,7 +99,46 @@ namespace boost { namespace spirit { namespace x3 { namespace traits
                 return pow10_helper<double>::call(dim);
             }
         };
-#endif // for IEEE-754
+#else
+        template <typename T>
+        struct pow10_table
+        {
+            constexpr static std::size_t size =
+                std::numeric_limits<T>::max_exponent10;
+
+            constexpr pow10_table()
+             : exponents()
+            {
+                exponents[0] = T(1);
+                for (auto i = 1; i != size; ++i)
+                    exponents[i] = exponents[i-1] * T(10);
+            }
+
+            T exponents[size];
+        };
+
+        template <typename T>
+        struct native_pow10_helper
+        {
+            static T call(unsigned dim)
+            {
+                constexpr auto table = pow10_table<T>();
+                return table.exponents[dim];
+            }
+        };
+
+        template <>
+        struct pow10_helper<float>
+          : native_pow10_helper<float> {};
+
+        template <>
+        struct pow10_helper<double>
+          : native_pow10_helper<double> {};
+
+        template <>
+        struct pow10_helper<long double>
+          : native_pow10_helper<long double> {};
+#endif
     }
 
     template <typename T>

@@ -5,6 +5,10 @@
 // Copyright (c) 2009-2012 Mateusz Loskot, London, UK.
 // Copyright (c) 2014 Adam Wulkiewicz, Lodz, Poland.
 
+// This file was modified by Oracle on 2017.
+// Modifications copyright (c) 2017, Oracle and/or its affiliates.
+// Contributed and/or modified by Adam Wulkiewicz, on behalf of Oracle
+
 // Parts of Boost.Geometry are redesigned from Geodan's Geographic Library
 // (geolib/GGL), copyright (c) 1995-2010 Geodan, Amsterdam, the Netherlands.
 
@@ -22,16 +26,15 @@
 #include <boost/range.hpp>
 #include <boost/type_traits/is_array.hpp>
 #include <boost/type_traits/remove_reference.hpp>
-#include <boost/variant/static_visitor.hpp>
+
 #include <boost/variant/apply_visitor.hpp>
+#include <boost/variant/static_visitor.hpp>
 #include <boost/variant/variant_fwd.hpp>
 
 #include <boost/geometry/arithmetic/arithmetic.hpp>
 #include <boost/geometry/algorithms/not_implemented.hpp>
-#include <boost/geometry/algorithms/append.hpp>
 #include <boost/geometry/algorithms/clear.hpp>
 #include <boost/geometry/algorithms/for_each.hpp>
-#include <boost/geometry/algorithms/detail/assign_values.hpp>
 #include <boost/geometry/algorithms/detail/assign_box_corners.hpp>
 #include <boost/geometry/algorithms/detail/assign_indexed_point.hpp>
 #include <boost/geometry/algorithms/detail/convert_point_to_point.hpp>
@@ -40,6 +43,8 @@
 
 #include <boost/geometry/views/closeable_view.hpp>
 #include <boost/geometry/views/reversible_view.hpp>
+
+#include <boost/geometry/util/range.hpp>
 
 #include <boost/geometry/core/cs.hpp>
 #include <boost/geometry/core/closure.hpp>
@@ -111,7 +116,7 @@ struct box_to_range
         assign_box_corners_oriented<Reverse>(box, range);
         if (Close)
         {
-            range[4] = range[0];
+            range::at(range, 4) = range::at(range, 0);
         }
     }
 };
@@ -150,7 +155,23 @@ struct range_to_range
             geometry::closure<Range1>::value
         >::type view_type;
 
+    struct default_policy
+    {
+        template <typename Point1, typename Point2>
+        static inline void apply(Point1 const& point1, Point2 & point2)
+        {
+            geometry::detail::conversion::convert_point_to_point(point1, point2);
+        }
+    };
+    
     static inline void apply(Range1 const& source, Range2& destination)
+    {
+        apply(source, destination, default_policy());
+    }
+
+    template <typename ConvertPointPolicy>
+    static inline ConvertPointPolicy apply(Range1 const& source, Range2& destination,
+                                           ConvertPointPolicy convert_point)
     {
         geometry::clear(destination);
 
@@ -160,20 +181,28 @@ struct range_to_range
         // point for open output.
         view_type view(rview);
 
-        int n = boost::size(view);
+        typedef typename boost::range_size<Range1>::type size_type;
+        size_type n = boost::size(view);
         if (geometry::closure<Range2>::value == geometry::open)
         {
             n--;
         }
 
-        int i = 0;
+        // If size == 0 && geometry::open <=> n = numeric_limits<size_type>::max()
+        // but ok, sice below it == end()
+
+        size_type i = 0;
         for (typename boost::range_iterator<view_type const>::type it
             = boost::begin(view);
             it != boost::end(view) && i < n;
             ++it, ++i)
         {
-            geometry::append(destination, *it);
+            typename boost::range_value<Range2>::type point;
+            convert_point.apply(*it, point);
+            range::push_back(destination, point);
         }
+
+        return convert_point;
     }
 };
 
@@ -270,7 +299,7 @@ template
     bool UseAssignment = boost::is_same<Geometry1, Geometry2>::value
                          && !boost::is_array<Geometry1>::value
 >
-struct convert: not_implemented<Tag1, Tag2, mpl::int_<DimensionCount> >
+struct convert: not_implemented<Tag1, Tag2, boost::mpl::int_<DimensionCount> >
 {};
 
 
@@ -487,7 +516,7 @@ struct convert
 {
     static inline void apply(Geometry1 const& geometry1, Geometry2& geometry2)
     {
-        concept::check_concepts_and_equal_dimensions<Geometry1 const, Geometry2>();
+        concepts::check_concepts_and_equal_dimensions<Geometry1 const, Geometry2>();
         dispatch::convert<Geometry1, Geometry2>::apply(geometry1, geometry2);
     }
 };
@@ -515,7 +544,7 @@ struct convert<boost::variant<BOOST_VARIANT_ENUM_PARAMS(T)>, Geometry2>
         Geometry2& geometry2
     )
     {
-        apply_visitor(visitor(geometry2), geometry1);
+        boost::apply_visitor(visitor(geometry2), geometry1);
     }
 };
 

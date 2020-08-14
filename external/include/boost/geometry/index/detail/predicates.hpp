@@ -2,7 +2,11 @@
 //
 // Spatial query predicates definition and checks.
 //
-// Copyright (c) 2011-2013 Adam Wulkiewicz, Lodz, Poland.
+// Copyright (c) 2011-2015 Adam Wulkiewicz, Lodz, Poland.
+//
+// This file was modified by Oracle on 2019.
+// Modifications copyright (c) 2019 Oracle and/or its affiliates.
+// Contributed and/or modified by Adam Wulkiewicz, on behalf of Oracle
 //
 // Use, modification and distribution is subject to the Boost Software License,
 // Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
@@ -11,10 +15,16 @@
 #ifndef BOOST_GEOMETRY_INDEX_DETAIL_PREDICATES_HPP
 #define BOOST_GEOMETRY_INDEX_DETAIL_PREDICATES_HPP
 
-#include <boost/geometry/index/predicates.hpp>
+//#include <utility>
+
+#include <boost/mpl/assert.hpp>
+#include <boost/tuple/tuple.hpp>
+
 #include <boost/geometry/index/detail/tags.hpp>
 
 namespace boost { namespace geometry { namespace index { namespace detail {
+
+namespace predicates {
 
 // ------------------------------------------------------------------ //
 // predicates
@@ -23,6 +33,7 @@ namespace boost { namespace geometry { namespace index { namespace detail {
 template <typename Fun, bool IsFunction>
 struct satisfies_impl
 {
+    satisfies_impl() : fun(NULL) {}
     satisfies_impl(Fun f) : fun(f) {}
     Fun * fun;
 };
@@ -30,6 +41,7 @@ struct satisfies_impl
 template <typename Fun>
 struct satisfies_impl<Fun, false>
 {
+    satisfies_impl() {}
     satisfies_impl(Fun const& f) : fun(f) {}
     Fun fun;
 };
@@ -40,6 +52,7 @@ struct satisfies
 {
     typedef satisfies_impl<Fun, ::boost::is_function<Fun>::value> base;
 
+    satisfies() {}
     satisfies(Fun const& f) : base(f) {}
     satisfies(base const& b) : base(b) {}
 };
@@ -58,22 +71,25 @@ struct within_tag {};
 template <typename Geometry, typename Tag, bool Negated>
 struct spatial_predicate
 {
+    spatial_predicate() {}
     spatial_predicate(Geometry const& g) : geometry(g) {}
     Geometry geometry;
 };
 
 // ------------------------------------------------------------------ //
 
-// TODO
-// may be replaced by
-// nearest_predicate<Geometry>
-//   Geometry geometry
-//   unsigned count
-// + point_tag, path_tag
+// CONSIDER: separated nearest<> and path<> may be replaced by
+//           nearest_predicate<Geometry, Tag>
+//           where Tag = point_tag | path_tag
+// IMPROVEMENT: user-defined nearest predicate allowing to define
+//              all or only geometrical aspects of the search
 
 template <typename PointOrRelation>
 struct nearest
 {
+    nearest()
+//        : count(0)
+    {}
     nearest(PointOrRelation const& por, unsigned k)
         : point_or_relation(por)
         , count(k)
@@ -85,6 +101,9 @@ struct nearest
 template <typename SegmentOrLinestring>
 struct path
 {
+    path()
+//        : count(0)
+    {}
     path(SegmentOrLinestring const& g, unsigned k)
         : geometry(g)
         , count(k)
@@ -92,6 +111,8 @@ struct path
     SegmentOrLinestring geometry;
     unsigned count;
 };
+
+} // namespace predicates
 
 // ------------------------------------------------------------------ //
 // predicate_check
@@ -109,20 +130,20 @@ struct predicate_check
 // ------------------------------------------------------------------ //
 
 template <typename Fun>
-struct predicate_check<satisfies<Fun, false>, value_tag>
+struct predicate_check<predicates::satisfies<Fun, false>, value_tag>
 {
-    template <typename Value, typename Indexable>
-    static inline bool apply(satisfies<Fun, false> const& p, Value const& v, Indexable const&)
+    template <typename Value, typename Indexable, typename Strategy>
+    static inline bool apply(predicates::satisfies<Fun, false> const& p, Value const& v, Indexable const& , Strategy const&)
     {
         return p.fun(v);
     }
 };
 
 template <typename Fun>
-struct predicate_check<satisfies<Fun, true>, value_tag>
+struct predicate_check<predicates::satisfies<Fun, true>, value_tag>
 {
-    template <typename Value, typename Indexable>
-    static inline bool apply(satisfies<Fun, true> const& p, Value const& v, Indexable const&)
+    template <typename Value, typename Indexable, typename Strategy>
+    static inline bool apply(predicates::satisfies<Fun, true> const& p, Value const& v, Indexable const& , Strategy const&)
     {
         return !p.fun(v);
     }
@@ -137,80 +158,112 @@ struct spatial_predicate_call
 };
 
 template <>
-struct spatial_predicate_call<contains_tag>
+struct spatial_predicate_call<predicates::contains_tag>
 {
-    template <typename G1, typename G2>
-    static inline bool apply(G1 const& g1, G2 const& g2)
+    template <typename G1, typename G2, typename S>
+    static inline bool apply(G1 const& g1, G2 const& g2, S const&)
     {
         return geometry::within(g2, g1);
     }
 };
 
 template <>
-struct spatial_predicate_call<covered_by_tag>
+struct spatial_predicate_call<predicates::covered_by_tag>
 {
-    template <typename G1, typename G2>
-    static inline bool apply(G1 const& g1, G2 const& g2)
+    template <typename G1, typename G2, typename S>
+    static inline bool apply(G1 const& g1, G2 const& g2, S const&)
     {
         return geometry::covered_by(g1, g2);
     }
 };
 
 template <>
-struct spatial_predicate_call<covers_tag>
+struct spatial_predicate_call<predicates::covers_tag>
 {
-    template <typename G1, typename G2>
-    static inline bool apply(G1 const& g1, G2 const& g2)
+    template <typename G1, typename G2, typename S>
+    static inline bool apply(G1 const& g1, G2 const& g2, S const&)
     {
         return geometry::covered_by(g2, g1);
     }
 };
 
 template <>
-struct spatial_predicate_call<disjoint_tag>
+struct spatial_predicate_call<predicates::disjoint_tag>
 {
-    template <typename G1, typename G2>
-    static inline bool apply(G1 const& g1, G2 const& g2)
+    template <typename G1, typename G2, typename S>
+    static inline bool apply(G1 const& g1, G2 const& g2, S const&)
     {
         return geometry::disjoint(g1, g2);
     }
 };
 
-template <>
-struct spatial_predicate_call<intersects_tag>
+// TEMP: used to implement CS-specific intersects predicate for certain
+// combinations of geometries until umbrella strategies are implemented
+template
+<
+    typename G1, typename G2,
+    typename Tag1 = typename tag<G1>::type,
+    typename Tag2 = typename tag<G2>::type
+>
+struct spatial_predicate_intersects
 {
-    template <typename G1, typename G2>
-    static inline bool apply(G1 const& g1, G2 const& g2)
+    template <typename S>
+    static inline bool apply(G1 const& g1, G2 const& g2, S const&)
     {
         return geometry::intersects(g1, g2);
     }
 };
+// TEMP: used in within and relate
+template <typename G1, typename G2>
+struct spatial_predicate_intersects<G1, G2, box_tag, point_tag>
+{
+    static inline bool apply(G1 const& g1, G2 const& g2, default_strategy const&)
+    {
+        return geometry::intersects(g1, g2);
+    }
+
+    template <typename S>
+    static inline bool apply(G1 const& g1, G2 const& g2, S const& )
+    {
+        return geometry::intersects(g1, g2, typename S::covered_by_point_box_strategy_type());
+    }
+};
 
 template <>
-struct spatial_predicate_call<overlaps_tag>
+struct spatial_predicate_call<predicates::intersects_tag>
 {
-    template <typename G1, typename G2>
-    static inline bool apply(G1 const& g1, G2 const& g2)
+    template <typename G1, typename G2, typename S>
+    static inline bool apply(G1 const& g1, G2 const& g2, S const& s)
+    {
+        return spatial_predicate_intersects<G1, G2>::apply(g1, g2, s);
+    }
+};
+
+template <>
+struct spatial_predicate_call<predicates::overlaps_tag>
+{
+    template <typename G1, typename G2, typename S>
+    static inline bool apply(G1 const& g1, G2 const& g2, S const&)
     {
         return geometry::overlaps(g1, g2);
     }
 };
 
 template <>
-struct spatial_predicate_call<touches_tag>
+struct spatial_predicate_call<predicates::touches_tag>
 {
-    template <typename G1, typename G2>
-    static inline bool apply(G1 const& g1, G2 const& g2)
+    template <typename G1, typename G2, typename S>
+    static inline bool apply(G1 const& g1, G2 const& g2, S const&)
     {
         return geometry::touches(g1, g2);
     }
 };
 
 template <>
-struct spatial_predicate_call<within_tag>
+struct spatial_predicate_call<predicates::within_tag>
 {
-    template <typename G1, typename G2>
-    static inline bool apply(G1 const& g1, G2 const& g2)
+    template <typename G1, typename G2, typename S>
+    static inline bool apply(G1 const& g1, G2 const& g2, S const&)
     {
         return geometry::within(g1, g2);
     }
@@ -220,47 +273,47 @@ struct spatial_predicate_call<within_tag>
 
 // spatial predicate
 template <typename Geometry, typename Tag>
-struct predicate_check<spatial_predicate<Geometry, Tag, false>, value_tag>
+struct predicate_check<predicates::spatial_predicate<Geometry, Tag, false>, value_tag>
 {
-    typedef spatial_predicate<Geometry, Tag, false> Pred;
+    typedef predicates::spatial_predicate<Geometry, Tag, false> Pred;
 
-    template <typename Value, typename Indexable>
-    static inline bool apply(Pred const& p, Value const&, Indexable const& i)
+    template <typename Value, typename Indexable, typename Strategy>
+    static inline bool apply(Pred const& p, Value const&, Indexable const& i, Strategy const& s)
     {
-        return spatial_predicate_call<Tag>::apply(i, p.geometry);
+        return spatial_predicate_call<Tag>::apply(i, p.geometry, s);
     }
 };
 
 // negated spatial predicate
 template <typename Geometry, typename Tag>
-struct predicate_check<spatial_predicate<Geometry, Tag, true>, value_tag>
+struct predicate_check<predicates::spatial_predicate<Geometry, Tag, true>, value_tag>
 {
-    typedef spatial_predicate<Geometry, Tag, true> Pred;
+    typedef predicates::spatial_predicate<Geometry, Tag, true> Pred;
 
-    template <typename Value, typename Indexable>
-    static inline bool apply(Pred const& p, Value const&, Indexable const& i)
+    template <typename Value, typename Indexable, typename Strategy>
+    static inline bool apply(Pred const& p, Value const&, Indexable const& i, Strategy const& s)
     {
-        return !spatial_predicate_call<Tag>::apply(i, p.geometry);
+        return !spatial_predicate_call<Tag>::apply(i, p.geometry, s);
     }
 };
 
 // ------------------------------------------------------------------ //
 
 template <typename DistancePredicates>
-struct predicate_check<nearest<DistancePredicates>, value_tag>
+struct predicate_check<predicates::nearest<DistancePredicates>, value_tag>
 {
-    template <typename Value, typename Box>
-    static inline bool apply(nearest<DistancePredicates> const&, Value const&, Box const&)
+    template <typename Value, typename Box, typename Strategy>
+    static inline bool apply(predicates::nearest<DistancePredicates> const&, Value const&, Box const&, Strategy const&)
     {
         return true;
     }
 };
 
 template <typename Linestring>
-struct predicate_check<path<Linestring>, value_tag>
+struct predicate_check<predicates::path<Linestring>, value_tag>
 {
-    template <typename Value, typename Box>
-    static inline bool apply(path<Linestring> const&, Value const&, Box const&)
+    template <typename Value, typename Box, typename Strategy>
+    static inline bool apply(predicates::path<Linestring> const&, Value const&, Box const&, Strategy const&)
     {
         return true;
     }
@@ -271,10 +324,10 @@ struct predicate_check<path<Linestring>, value_tag>
 // ------------------------------------------------------------------ //
 
 template <typename Fun, bool Negated>
-struct predicate_check<satisfies<Fun, Negated>, bounds_tag>
+struct predicate_check<predicates::satisfies<Fun, Negated>, bounds_tag>
 {
-    template <typename Value, typename Box>
-    static bool apply(satisfies<Fun, Negated> const&, Value const&, Box const&)
+    template <typename Value, typename Box, typename Strategy>
+    static bool apply(predicates::satisfies<Fun, Negated> const&, Value const&, Box const&, Strategy const&)
     {
         return true;
     }
@@ -285,7 +338,7 @@ struct predicate_check<satisfies<Fun, Negated>, bounds_tag>
 // NOT NEGATED
 // value_tag        bounds_tag
 // ---------------------------
-// contains(I,G)    contains(I,G)
+// contains(I,G)    covers(I,G)
 // covered_by(I,G)  intersects(I,G)
 // covers(I,G)      covers(I,G)
 // disjoint(I,G)    !covered_by(I,G)
@@ -296,53 +349,53 @@ struct predicate_check<satisfies<Fun, Negated>, bounds_tag>
 
 // spatial predicate - default
 template <typename Geometry, typename Tag>
-struct predicate_check<spatial_predicate<Geometry, Tag, false>, bounds_tag>
+struct predicate_check<predicates::spatial_predicate<Geometry, Tag, false>, bounds_tag>
 {
-    typedef spatial_predicate<Geometry, Tag, false> Pred;
+    typedef predicates::spatial_predicate<Geometry, Tag, false> Pred;
 
-    template <typename Value, typename Indexable>
-    static inline bool apply(Pred const& p, Value const&, Indexable const& i)
+    template <typename Value, typename Indexable, typename Strategy>
+    static inline bool apply(Pred const& p, Value const&, Indexable const& i, Strategy const& s)
     {
-        return spatial_predicate_call<intersects_tag>::apply(i, p.geometry);
+        return spatial_predicate_call<predicates::intersects_tag>::apply(i, p.geometry, s);
     }
 };
 
 // spatial predicate - contains
 template <typename Geometry>
-struct predicate_check<spatial_predicate<Geometry, contains_tag, false>, bounds_tag>
+struct predicate_check<predicates::spatial_predicate<Geometry, predicates::contains_tag, false>, bounds_tag>
 {
-    typedef spatial_predicate<Geometry, contains_tag, false> Pred;
+    typedef predicates::spatial_predicate<Geometry, predicates::contains_tag, false> Pred;
 
-    template <typename Value, typename Indexable>
-    static inline bool apply(Pred const& p, Value const&, Indexable const& i)
+    template <typename Value, typename Indexable, typename Strategy>
+    static inline bool apply(Pred const& p, Value const&, Indexable const& i, Strategy const& s)
     {
-        return spatial_predicate_call<contains_tag>::apply(i, p.geometry);
+        return spatial_predicate_call<predicates::covers_tag>::apply(i, p.geometry, s);
     }
 };
 
 // spatial predicate - covers
 template <typename Geometry>
-struct predicate_check<spatial_predicate<Geometry, covers_tag, false>, bounds_tag>
+struct predicate_check<predicates::spatial_predicate<Geometry, predicates::covers_tag, false>, bounds_tag>
 {
-    typedef spatial_predicate<Geometry, covers_tag, false> Pred;
+    typedef predicates::spatial_predicate<Geometry, predicates::covers_tag, false> Pred;
 
-    template <typename Value, typename Indexable>
-    static inline bool apply(Pred const& p, Value const&, Indexable const& i)
+    template <typename Value, typename Indexable, typename Strategy>
+    static inline bool apply(Pred const& p, Value const&, Indexable const& i, Strategy const& s)
     {
-        return spatial_predicate_call<covers_tag>::apply(i, p.geometry);
+        return spatial_predicate_call<predicates::covers_tag>::apply(i, p.geometry, s);
     }
 };
 
 // spatial predicate - disjoint
 template <typename Geometry>
-struct predicate_check<spatial_predicate<Geometry, disjoint_tag, false>, bounds_tag>
+struct predicate_check<predicates::spatial_predicate<Geometry, predicates::disjoint_tag, false>, bounds_tag>
 {
-    typedef spatial_predicate<Geometry, disjoint_tag, false> Pred;
+    typedef predicates::spatial_predicate<Geometry, predicates::disjoint_tag, false> Pred;
 
-    template <typename Value, typename Indexable>
-    static inline bool apply(Pred const& p, Value const&, Indexable const& i)
+    template <typename Value, typename Indexable, typename Strategy>
+    static inline bool apply(Pred const& p, Value const&, Indexable const& i, Strategy const& s)
     {
-        return !spatial_predicate_call<covered_by_tag>::apply(i, p.geometry);
+        return !spatial_predicate_call<predicates::covered_by_tag>::apply(i, p.geometry, s);
     }
 };
 
@@ -360,25 +413,25 @@ struct predicate_check<spatial_predicate<Geometry, disjoint_tag, false>, bounds_
 
 // negated spatial predicate - default
 template <typename Geometry, typename Tag>
-struct predicate_check<spatial_predicate<Geometry, Tag, true>, bounds_tag>
+struct predicate_check<predicates::spatial_predicate<Geometry, Tag, true>, bounds_tag>
 {
-    typedef spatial_predicate<Geometry, Tag, true> Pred;
+    typedef predicates::spatial_predicate<Geometry, Tag, true> Pred;
 
-    template <typename Value, typename Indexable>
-    static inline bool apply(Pred const& p, Value const&, Indexable const& i)
+    template <typename Value, typename Indexable, typename Strategy>
+    static inline bool apply(Pred const& p, Value const&, Indexable const& i, Strategy const& s)
     {
-        return !spatial_predicate_call<Tag>::apply(i, p.geometry);
+        return !spatial_predicate_call<Tag>::apply(i, p.geometry, s);
     }
 };
 
 // negated spatial predicate - contains
 template <typename Geometry>
-struct predicate_check<spatial_predicate<Geometry, contains_tag, true>, bounds_tag>
+struct predicate_check<predicates::spatial_predicate<Geometry, predicates::contains_tag, true>, bounds_tag>
 {
-    typedef spatial_predicate<Geometry, contains_tag, true> Pred;
+    typedef predicates::spatial_predicate<Geometry, predicates::contains_tag, true> Pred;
 
-    template <typename Value, typename Indexable>
-    static inline bool apply(Pred const& , Value const&, Indexable const& )
+    template <typename Value, typename Indexable, typename Strategy>
+    static inline bool apply(Pred const& , Value const&, Indexable const&, Strategy const&)
     {
         return true;
     }
@@ -386,12 +439,12 @@ struct predicate_check<spatial_predicate<Geometry, contains_tag, true>, bounds_t
 
 // negated spatial predicate - covers
 template <typename Geometry>
-struct predicate_check<spatial_predicate<Geometry, covers_tag, true>, bounds_tag>
+struct predicate_check<predicates::spatial_predicate<Geometry, predicates::covers_tag, true>, bounds_tag>
 {
-    typedef spatial_predicate<Geometry, covers_tag, true> Pred;
+    typedef predicates::spatial_predicate<Geometry, predicates::covers_tag, true> Pred;
 
-    template <typename Value, typename Indexable>
-    static inline bool apply(Pred const& , Value const&, Indexable const& )
+    template <typename Value, typename Indexable, typename Strategy>
+    static inline bool apply(Pred const& , Value const&, Indexable const&, Strategy const&)
     {
         return true;
     }
@@ -399,25 +452,25 @@ struct predicate_check<spatial_predicate<Geometry, covers_tag, true>, bounds_tag
 
 // negated spatial predicate - intersects
 template <typename Geometry>
-struct predicate_check<spatial_predicate<Geometry, intersects_tag, true>, bounds_tag>
+struct predicate_check<predicates::spatial_predicate<Geometry, predicates::intersects_tag, true>, bounds_tag>
 {
-    typedef spatial_predicate<Geometry, intersects_tag, true> Pred;
+    typedef predicates::spatial_predicate<Geometry, predicates::intersects_tag, true> Pred;
 
-    template <typename Value, typename Indexable>
-    static inline bool apply(Pred const& p, Value const&, Indexable const& i)
+    template <typename Value, typename Indexable, typename Strategy>
+    static inline bool apply(Pred const& p, Value const&, Indexable const& i, Strategy const& s)
     {
-        return !spatial_predicate_call<covered_by_tag>::apply(i, p.geometry);
+        return !spatial_predicate_call<predicates::covered_by_tag>::apply(i, p.geometry, s);
     }
 };
 
 // negated spatial predicate - overlaps
 template <typename Geometry>
-struct predicate_check<spatial_predicate<Geometry, overlaps_tag, true>, bounds_tag>
+struct predicate_check<predicates::spatial_predicate<Geometry, predicates::overlaps_tag, true>, bounds_tag>
 {
-    typedef spatial_predicate<Geometry, overlaps_tag, true> Pred;
+    typedef predicates::spatial_predicate<Geometry, predicates::overlaps_tag, true> Pred;
 
-    template <typename Value, typename Indexable>
-    static inline bool apply(Pred const& , Value const&, Indexable const& )
+    template <typename Value, typename Indexable, typename Strategy>
+    static inline bool apply(Pred const& , Value const&, Indexable const&, Strategy const&)
     {
         return true;
     }
@@ -425,34 +478,34 @@ struct predicate_check<spatial_predicate<Geometry, overlaps_tag, true>, bounds_t
 
 // negated spatial predicate - touches
 template <typename Geometry>
-struct predicate_check<spatial_predicate<Geometry, touches_tag, true>, bounds_tag>
+struct predicate_check<predicates::spatial_predicate<Geometry, predicates::touches_tag, true>, bounds_tag>
 {
-    typedef spatial_predicate<Geometry, touches_tag, true> Pred;
+    typedef predicates::spatial_predicate<Geometry, predicates::touches_tag, true> Pred;
 
-    template <typename Value, typename Indexable>
-    static inline bool apply(Pred const& p, Value const&, Indexable const& i)
+    template <typename Value, typename Indexable, typename Strategy>
+    static inline bool apply(Pred const& p, Value const&, Indexable const& i, Strategy const&)
     {
-        return !spatial_predicate_call<intersects_tag>::apply(i, p.geometry);
+        return !spatial_predicate_call<predicates::intersects_tag>::apply(i, p.geometry);
     }
 };
 
 // ------------------------------------------------------------------ //
 
 template <typename DistancePredicates>
-struct predicate_check<nearest<DistancePredicates>, bounds_tag>
+struct predicate_check<predicates::nearest<DistancePredicates>, bounds_tag>
 {
-    template <typename Value, typename Box>
-    static inline bool apply(nearest<DistancePredicates> const&, Value const&, Box const&)
+    template <typename Value, typename Box, typename Strategy>
+    static inline bool apply(predicates::nearest<DistancePredicates> const&, Value const&, Box const&, Strategy const&)
     {
         return true;
     }
 };
 
 template <typename Linestring>
-struct predicate_check<path<Linestring>, bounds_tag>
+struct predicate_check<predicates::path<Linestring>, bounds_tag>
 {
-    template <typename Value, typename Box>
-    static inline bool apply(path<Linestring> const&, Value const&, Box const&)
+    template <typename Value, typename Box, typename Strategy>
+    static inline bool apply(predicates::path<Linestring> const&, Value const&, Box const&, Strategy const&)
     {
         return true;
     }
@@ -583,23 +636,23 @@ struct predicates_element< I, boost::tuples::cons<Head, Tail> >
 template <typename TuplePredicates, typename Tag, unsigned First, unsigned Last>
 struct predicates_check_tuple
 {
-    template <typename Value, typename Indexable>
-    static inline bool apply(TuplePredicates const& p, Value const& v, Indexable const& i)
+    template <typename Value, typename Indexable, typename Strategy>
+    static inline bool apply(TuplePredicates const& p, Value const& v, Indexable const& i, Strategy const& s)
     {
-        return
-        predicate_check<
-            typename boost::tuples::element<First, TuplePredicates>::type,
-            Tag
-        >::apply(boost::get<First>(p), v, i) &&
-        predicates_check_tuple<TuplePredicates, Tag, First+1, Last>::apply(p, v, i);
+        return predicate_check
+                <
+                    typename boost::tuples::element<First, TuplePredicates>::type,
+                    Tag
+                >::apply(boost::get<First>(p), v, i, s)
+            && predicates_check_tuple<TuplePredicates, Tag, First+1, Last>::apply(p, v, i, s);
     }
 };
 
 template <typename TuplePredicates, typename Tag, unsigned First>
 struct predicates_check_tuple<TuplePredicates, Tag, First, First>
 {
-    template <typename Value, typename Indexable>
-    static inline bool apply(TuplePredicates const& , Value const& , Indexable const& )
+    template <typename Value, typename Indexable, typename Strategy>
+    static inline bool apply(TuplePredicates const& , Value const& , Indexable const& , Strategy const& )
     {
         return true;
     }
@@ -611,10 +664,10 @@ struct predicates_check_impl
     static const bool check = First < 1 && Last <= 1 && First <= Last;
     BOOST_MPL_ASSERT_MSG((check), INVALID_INDEXES, (predicates_check_impl));
 
-    template <typename Value, typename Indexable>
-    static inline bool apply(Predicate const& p, Value const& v, Indexable const& i)
+    template <typename Value, typename Indexable, typename Strategy>
+    static inline bool apply(Predicate const& p, Value const& v, Indexable const& i, Strategy const& s)
     {
-        return predicate_check<Predicate, Tag>::apply(p, v, i);
+        return predicate_check<Predicate, Tag>::apply(p, v, i, s);
     }
 };
 
@@ -668,21 +721,21 @@ struct predicates_check_impl<
     static const bool check = First < pred_len && Last <= pred_len && First <= Last;
     BOOST_MPL_ASSERT_MSG((check), INVALID_INDEXES, (predicates_check_impl));
 
-    template <typename Value, typename Indexable>
-    static inline bool apply(predicates_type const& p, Value const& v, Indexable const& i)
+    template <typename Value, typename Indexable, typename Strategy>
+    static inline bool apply(predicates_type const& p, Value const& v, Indexable const& i, Strategy const& s)
     {
         return predicates_check_tuple<
             predicates_type,
             Tag, First, Last
-        >::apply(p, v, i);
+        >::apply(p, v, i, s);
     }
 };
 
-template <typename Tag, unsigned First, unsigned Last, typename Predicates, typename Value, typename Indexable>
-inline bool predicates_check(Predicates const& p, Value const& v, Indexable const& i)
+template <typename Tag, unsigned First, unsigned Last, typename Predicates, typename Value, typename Indexable, typename Strategy>
+inline bool predicates_check(Predicates const& p, Value const& v, Indexable const& i, Strategy const& s)
 {
     return detail::predicates_check_impl<Predicates, Tag, First, Last>
-        ::apply(p, v, i);
+        ::apply(p, v, i, s);
 }
 
 // ------------------------------------------------------------------ //
@@ -698,13 +751,13 @@ struct predicates_is_distance
 };
 
 template <typename DistancePredicates>
-struct predicates_is_distance< nearest<DistancePredicates> >
+struct predicates_is_distance< predicates::nearest<DistancePredicates> >
 {
     static const unsigned value = 1;
 };
 
 template <typename Linestring>
-struct predicates_is_distance< path<Linestring> >
+struct predicates_is_distance< predicates::path<Linestring> >
 {
     static const unsigned value = 1;
 };

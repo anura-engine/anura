@@ -10,10 +10,12 @@
 #define BOOST_THREAD_USER_SCHEDULER_HPP
 
 #include <boost/thread/detail/config.hpp>
+#if defined BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION && defined BOOST_THREAD_PROVIDES_EXECUTORS && defined BOOST_THREAD_USES_MOVE
+
 #include <boost/thread/detail/delete.hpp>
 #include <boost/thread/detail/move.hpp>
-#include <boost/thread/sync_queue.hpp>
-#include <boost/thread/detail/work.hpp>
+#include <boost/thread/concurrent_queues/sync_queue.hpp>
+#include <boost/thread/executors/work.hpp>
 
 #include <boost/config/abi_prefix.hpp>
 
@@ -23,7 +25,7 @@ namespace boost
   class user_scheduler
   {
     /// type-erasure to store the works to do
-    typedef  thread_detail::work work;
+    typedef  executors::work work;
 
     /// the thread safe work queue
     sync_queue<work > work_queue;
@@ -39,7 +41,7 @@ namespace boost
       work task;
       try
       {
-        if (work_queue.try_pull_front(task) == queue_op_status::success)
+        if (work_queue.try_pull(task) == queue_op_status::success)
         {
           task();
           return true;
@@ -144,23 +146,23 @@ namespace boost
     void submit(Closure & closure)
     {
       work w ((closure));
-      work_queue.push_back(boost::move(w));
+      work_queue.push(boost::move(w));
       //work_queue.push(work(closure)); // todo check why this doesn't work
     }
 #endif
     void submit(void (*closure)())
     {
       work w ((closure));
-      work_queue.push_back(boost::move(w));
-      //work_queue.push_back(work(closure)); // todo check why this doesn't work
+      work_queue.push(boost::move(w));
+      //work_queue.push(work(closure)); // todo check why this doesn't work
     }
 
     template <typename Closure>
     void submit(BOOST_THREAD_RV_REF(Closure) closure)
     {
       work w =boost::move(closure);
-      work_queue.push_back(boost::move(w));
-      //work_queue.push_back(work(boost::move(closure))); // todo check why this doesn't work
+      work_queue.push(boost::move(w));
+      //work_queue.push(work(boost::move(closure))); // todo check why this doesn't work
     }
 
     /**
@@ -199,4 +201,5 @@ namespace boost
 
 #include <boost/config/abi_suffix.hpp>
 
+#endif
 #endif

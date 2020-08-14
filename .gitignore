@@ -80,5 +80,6 @@ project.xcworkspace
 sdk/
 build-x64/
 build-Win32/
+build/xhtml/*.o*
 anura.kdev4
 .kdev4/

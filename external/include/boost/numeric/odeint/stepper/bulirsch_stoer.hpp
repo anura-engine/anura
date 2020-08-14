@@ -90,12 +90,15 @@ public:
 
     bulirsch_stoer(
         value_type eps_abs = 1E-6 , value_type eps_rel = 1E-6 ,
-        value_type factor_x = 1.0 , value_type factor_dxdt = 1.0 )
+        value_type factor_x = 1.0 , value_type factor_dxdt = 1.0 ,
+        time_type max_dt = static_cast<time_type>(0))
         : m_error_checker( eps_abs , eps_rel , factor_x, factor_dxdt ) , m_midpoint() ,
           m_last_step_rejected( false ) , m_first( true ) ,
+          m_max_dt(max_dt) ,
           m_interval_sequence( m_k_max+1 ) ,
           m_coeff( m_k_max+1 ) ,
           m_cost( m_k_max+1 ) ,
+          m_facmin_table( m_k_max+1 ) ,
           m_table( m_k_max ) ,
           STEPFAC1( 0.65 ) , STEPFAC2( 0.94 ) , STEPFAC3( 0.02 ) , STEPFAC4( 4.0 ) , KFAC1( 0.8 ) , KFAC2( 0.9 )
     {
@@ -110,21 +113,14 @@ public:
             else
                 m_cost[i] = m_cost[i-1] + m_interval_sequence[i];
             m_coeff[i].resize(i);
+            m_facmin_table[i] = pow BOOST_PREVENT_MACRO_SUBSTITUTION( STEPFAC3 , static_cast< value_type >(1) / static_cast< value_type >( 2*i+1 ) );
             for( size_t k = 0 ; k < i ; ++k  )
             {
                 const value_type r = static_cast< value_type >( m_interval_sequence[i] ) / static_cast< value_type >( m_interval_sequence[k] );
                 m_coeff[i][k] = 1.0 / ( r*r - static_cast< value_type >( 1.0 ) ); // coefficients for extrapolation
             }
-
-            // crude estimate of optimal order
-
-            m_current_k_opt = 4;
-            /* no calculation because log10 might not exist for value_type!
-            const value_type logfact( -log10( max BOOST_PREVENT_MACRO_SUBSTITUTION( eps_rel , static_cast< value_type >(1.0E-12) ) ) * 0.6 + 0.5 );
-            m_current_k_opt = max BOOST_PREVENT_MACRO_SUBSTITUTION( static_cast<value_type>( 1 ) , min BOOST_PREVENT_MACRO_SUBSTITUTION( static_cast<value_type>( m_k_max-1 ) , logfact ));
-            */
         }
-
+        reset();
     }
 
 
@@ -189,12 +185,19 @@ public:
     template< class System , class StateIn , class DerivIn , class StateOut >
     controlled_step_result try_step( System system , const StateIn &in , const DerivIn &dxdt , time_type &t , StateOut &out , time_type &dt )
     {
+        if( m_max_dt != static_cast<time_type>(0) && detail::less_with_sign(m_max_dt, dt, dt) )
+        {
+            // given step size is bigger then max_dt
+            // set limit and return fail
+            dt = m_max_dt;
+            return fail;
+        }
+
         BOOST_USING_STD_MIN();
         BOOST_USING_STD_MAX();
 
         static const value_type val1( 1.0 );
 
-        typename odeint::unwrap_reference< System >::type &sys = system;
         if( m_resizer.adjust_size( in , detail::bind( &controlled_error_bs_type::template resize_impl< StateIn > , detail::ref( *this ) , detail::_1 ) ) )
         {
             reset(); // system resized -> reset
@@ -219,12 +222,12 @@ public:
             m_midpoint.set_steps( m_interval_sequence[k] );
             if( k == 0 )
             {
-                m_midpoint.do_step( sys , in , dxdt , t , out , dt );
+                m_midpoint.do_step( system , in , dxdt , t , out , dt );
                 /* the first step, nothing more to do */
             }
             else
             {
-                m_midpoint.do_step( sys , in , dxdt , t , m_table[k-1].m_v , dt );
+                m_midpoint.do_step( system , in , dxdt , t , m_table[k-1].m_v , dt );
                 extrapolate( k , m_table , m_coeff , out );
                 // get error estimate
                 m_algebra.for_each3( m_err.m_v , out , m_table[0].m_v ,
@@ -273,7 +276,7 @@ public:
                         {
                             m_current_k_opt = min BOOST_PREVENT_MACRO_SUBSTITUTION( static_cast<int>(m_k_max-1) , static_cast<int>(m_current_k_opt)+1 );
                             new_h = h_opt[k];
-                            new_h *= m_cost[m_current_k_opt]/m_cost[k];
+                            new_h *= static_cast<value_type>(m_cost[m_current_k_opt])/static_cast<value_type>(m_cost[k]);
                         } else
                             new_h = h_opt[m_current_k_opt];
                         break;
@@ -312,6 +315,11 @@ public:
 
         if( !m_last_step_rejected || boost::numeric::odeint::detail::less_with_sign(new_h, dt, dt) )
         {
+            // limit step size
+            if( m_max_dt != static_cast<time_type>(0) )
+            {
+                new_h = detail::min_abs(m_max_dt, new_h);
+            }
             m_dt_last = new_h;
             dt = new_h;
         }
@@ -330,6 +338,12 @@ public:
     {
         m_first = true;
         m_last_step_rejected = false;
+        // crude estimate of optimal order
+        m_current_k_opt = 4;
+        /* no calculation because log10 might not exist for value_type!
+        const value_type logfact( -log10( max BOOST_PREVENT_MACRO_SUBSTITUTION( eps_rel , static_cast< value_type >(1.0E-12) ) ) * 0.6 + 0.5 );
+        m_current_k_opt = max BOOST_PREVENT_MACRO_SUBSTITUTION( static_cast<value_type>( 1 ) , min BOOST_PREVENT_MACRO_SUBSTITUTION( static_cast<value_type>( m_k_max-1 ) , logfact ));
+        */
     }
 
 
@@ -341,7 +355,7 @@ public:
         resize_m_dxdt( x );
         resize_m_xnew( x );
         resize_impl( x );
-        m_midpoint.adjust_size();
+        m_midpoint.adjust_size( x );
     }
 
 
@@ -403,7 +417,7 @@ private:
         BOOST_USING_STD_MAX();
         using std::pow;
         value_type expo( 1.0/(2*k+1) );
-        value_type facmin = pow BOOST_PREVENT_MACRO_SUBSTITUTION( STEPFAC3 , expo );
+        value_type facmin = m_facmin_table[k];
         value_type fac;
         if (error == 0.0)
             fac=1.0/facmin;
@@ -475,6 +489,7 @@ private:
 
     time_type m_dt_last;
     time_type m_t_last;
+    time_type m_max_dt;
 
     size_t m_current_k_opt;
 
@@ -491,10 +506,11 @@ private:
     int_vector m_interval_sequence; // stores the successive interval counts
     value_matrix m_coeff;
     int_vector m_cost; // costs for interval count
+    value_vector m_facmin_table; // for precomputed facmin to save pow calls
 
     state_table_type m_table; // sequence of states for extrapolation
 
-    const value_type STEPFAC1 , STEPFAC2 , STEPFAC3 , STEPFAC4 , KFAC1 , KFAC2;
+    value_type STEPFAC1 , STEPFAC2 , STEPFAC3 , STEPFAC4 , KFAC1 , KFAC2;
 };
 
 

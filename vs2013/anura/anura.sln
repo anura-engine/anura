@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.31101.0
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30309.148
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "anura", "anura.vcxproj", "{716CE053-6375-400F-BEB5-0AC23E709C55}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -35,7 +35,6 @@ Global
 		{716CE053-6375-400F-BEB5-0AC23E709C55}.ReleaseXP|x64.ActiveCfg = ReleaseXP|x64
 		{716CE053-6375-400F-BEB5-0AC23E709C55}.ReleaseXP|x64.Build.0 = ReleaseXP|x64
 		{4D133DD4-C7F6-4867-B53C-8A27711438A1}.Release|Win32.ActiveCfg = Release|Win32
-		{4D133DD4-C7F6-4867-B53C-8A27711438A1}.Release|Win32.Build.0 = Release|Win32
 		{4D133DD4-C7F6-4867-B53C-8A27711438A1}.Release|x64.ActiveCfg = Release|x64
 		{4D133DD4-C7F6-4867-B53C-8A27711438A1}.Release|x64.Build.0 = Release|x64
 		{4D133DD4-C7F6-4867-B53C-8A27711438A1}.ReleaseXP|Win32.ActiveCfg = ReleaseXP|Win32
@@ -43,7 +42,6 @@ Global
 		{4D133DD4-C7F6-4867-B53C-8A27711438A1}.ReleaseXP|x64.ActiveCfg = ReleaseXP|x64
 		{4D133DD4-C7F6-4867-B53C-8A27711438A1}.ReleaseXP|x64.Build.0 = ReleaseXP|x64
 		{D58A2972-AFA1-4363-9777-52D8BC187DC0}.Release|Win32.ActiveCfg = Release|Win32
-		{D58A2972-AFA1-4363-9777-52D8BC187DC0}.Release|Win32.Build.0 = Release|Win32
 		{D58A2972-AFA1-4363-9777-52D8BC187DC0}.Release|x64.ActiveCfg = Release|x64
 		{D58A2972-AFA1-4363-9777-52D8BC187DC0}.Release|x64.Build.0 = Release|x64
 		{D58A2972-AFA1-4363-9777-52D8BC187DC0}.ReleaseXP|Win32.ActiveCfg = ReleaseXP|Win32
@@ -53,5 +51,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {68A353E5-6EE0-404F-B996-80DD41919DE9}
 	EndGlobalSection
 EndGlobal

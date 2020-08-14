@@ -92,7 +92,7 @@ struct integer_alias_table {
         return _alias_table == other._alias_table &&
             _average == other._average && _excess == other._excess;
     }
-    static WeightType normalize(WeightType val, WeightType average)
+    static WeightType normalize(WeightType val, WeightType /* average */)
     {
         return val;
     }
@@ -183,7 +183,7 @@ struct real_alias_table {
     {
         return true;
     }
-    static WeightType try_get_sum(const std::vector<WeightType>& weights)
+    static WeightType try_get_sum(const std::vector<WeightType>& /* weights */)
     {
         return static_cast<WeightType>(1);
     }
@@ -434,10 +434,10 @@ public:
             result = uniform_int_distribution<IntType>((min)(), (max)())(urng);
             test = _impl.test(urng);
         } while(!_impl.accept(result, test));
-        if(test < _impl._alias_table[result].first) {
+        if(test < _impl._alias_table[static_cast<std::size_t>(result)].first) {
             return result;
         } else {
-            return(_impl._alias_table[result].second);
+            return(_impl._alias_table[static_cast<std::size_t>(result)].second);
         }
     }
     
@@ -495,7 +495,7 @@ public:
      */
     std::vector<WeightType> probabilities() const
     {
-        std::vector<WeightType> result(_impl._alias_table.size());
+        std::vector<WeightType> result(_impl._alias_table.size(), static_cast<WeightType>(0));
         std::size_t i = 0;
         for(typename impl_type::alias_table_t::const_iterator
                 iter = _impl._alias_table.begin(),
@@ -504,7 +504,7 @@ public:
         {
             WeightType val = iter->first;
             result[i] += val;
-            result[iter->second] += _impl.get_weight(i) - val;
+            result[static_cast<std::size_t>(iter->second)] += _impl.get_weight(i) - val;
         }
         impl_type::normalize(result);
         return(result);
@@ -571,8 +571,12 @@ private:
     template<class Iter>
     void init(Iter first, Iter last, std::forward_iterator_tag)
     {
+        size_t input_size = std::distance(first, last);
         std::vector<std::pair<WeightType, IntType> > below_average;
         std::vector<std::pair<WeightType, IntType> > above_average;
+        below_average.reserve(input_size);
+        above_average.reserve(input_size);
+        
         WeightType weight_average = _impl.init_average(first, last);
         WeightType normalized_average = _impl.get_weight(0);
         std::size_t i = 0;
@@ -593,7 +597,7 @@ private:
             a_end = above_average.end()
             ;
         while(b_iter != b_end && a_iter != a_end) {
-            _impl._alias_table[b_iter->second] =
+            _impl._alias_table[static_cast<std::size_t>(b_iter->second)] =
                 std::make_pair(b_iter->first, a_iter->second);
             a_iter->first -= (_impl.get_weight(b_iter->second) - b_iter->first);
             if(a_iter->first < normalized_average) {
@@ -603,11 +607,11 @@ private:
             }
         }
         for(; b_iter != b_end; ++b_iter) {
-            _impl._alias_table[b_iter->second].first =
+            _impl._alias_table[static_cast<std::size_t>(b_iter->second)].first =
                 _impl.get_weight(b_iter->second);
         }
         for(; a_iter != a_end; ++a_iter) {
-            _impl._alias_table[a_iter->second].first =
+            _impl._alias_table[static_cast<std::size_t>(a_iter->second)].first =
                 _impl.get_weight(a_iter->second);
         }
     }

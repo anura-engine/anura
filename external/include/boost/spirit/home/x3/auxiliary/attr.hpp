@@ -9,10 +9,6 @@
 #ifndef BOOST_SPIRIT_X3_ATTR_JUL_23_2008_0956AM
 #define BOOST_SPIRIT_X3_ATTR_JUL_23_2008_0956AM
 
-#if defined(_MSC_VER)
-#pragma once
-#endif
-
 #include <boost/spirit/home/x3/core/parser.hpp>
 #include <boost/spirit/home/x3/support/unused.hpp>
 #include <boost/spirit/home/x3/support/traits/container_traits.hpp>
@@ -44,8 +40,8 @@ namespace boost { namespace spirit { namespace x3
 
         template <typename Iterator, typename Context
           , typename RuleContext, typename Attribute>
-        bool parse(Iterator& first, Iterator const& last
-          , Context const& context, RuleContext&, Attribute& attr_) const
+        bool parse(Iterator& /* first */, Iterator const& /* last */
+          , Context const& /* context */, RuleContext&, Attribute& attr_) const
         {
             // $$$ Change to copy_to once we have it $$$
             traits::move_to(value_, attr_);
@@ -54,9 +50,8 @@ namespace boost { namespace spirit { namespace x3
 
         Value value_;
 
-    private:
         // silence MSVC warning C4512: assignment operator could not be generated
-        attr_parser& operator= (attr_parser const&);
+        attr_parser& operator= (attr_parser const&) = delete;
     };
     
     template <typename Value, std::size_t N>
@@ -80,8 +75,8 @@ namespace boost { namespace spirit { namespace x3
 
         template <typename Iterator, typename Context
           , typename RuleContext, typename Attribute>
-        bool parse(Iterator& first, Iterator const& last
-          , Context const& context, RuleContext&, Attribute& attr_) const
+        bool parse(Iterator& /* first */, Iterator const& /* last */
+          , Context const& /* context */, RuleContext&, Attribute& attr_) const
         {
             // $$$ Change to copy_to once we have it $$$
             traits::move_to(value_ + 0, value_ + N, attr_);
@@ -90,9 +85,8 @@ namespace boost { namespace spirit { namespace x3
 
         Value value_[N];
 
-    private:
         // silence MSVC warning C4512: assignment operator could not be generated
-        attr_parser& operator= (attr_parser const&);
+        attr_parser& operator= (attr_parser const&) = delete;
     };
     
     template <typename Value>
@@ -112,24 +106,24 @@ namespace boost { namespace spirit { namespace x3
             typename remove_reference<Value>::type>::type>
         operator()(Value&& value) const
         {
-            return {std::forward<Value>(value)};
+            return { std::forward<Value>(value) };
         }
         
         template <typename Value, std::size_t N>
         attr_parser<typename remove_cv<Value>::type[N]>
         operator()(Value (&value)[N]) const
         {
-            return {value};
+            return { value };
         }
         template <typename Value, std::size_t N>
         attr_parser<typename remove_cv<Value>::type[N]>
         operator()(Value (&&value)[N]) const
         {
-            return {value};
+            return { value };
         }
     };
 
-    attr_gen const attr = attr_gen();
+    auto const attr = attr_gen{};
 }}}
 
 #endif

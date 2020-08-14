@@ -5669,7 +5669,7 @@ bool CustomObject::executeCommand(const variant& var)
 					if(cmd) {
 						result = false;
 					} else {
-						ASSERT_LOG(false, "COMMAND WAS EXPECTED, BUT FOUND: " << var.to_debug_string() << "\nFORMULA INFO: " << output_formula_error_info() << "\n");
+						ASSERT_LOG(false, "COMMAND WAS EXPECTED, BUT FOUND NON-COMMAND OBJECT\nFORMULA INFO: " << output_formula_error_info() << "\n");
 					}
 				}
 			}

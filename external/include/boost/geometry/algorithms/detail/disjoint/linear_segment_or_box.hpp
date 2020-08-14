@@ -5,8 +5,8 @@
 // Copyright (c) 2009-2014 Mateusz Loskot, London, UK.
 // Copyright (c) 2013-2014 Adam Wulkiewicz, Lodz, Poland.
 
-// This file was modified by Oracle on 2013-2014.
-// Modifications copyright (c) 2013-2014, Oracle and/or its affiliates.
+// This file was modified by Oracle on 2013-2019.
+// Modifications copyright (c) 2013-2019, Oracle and/or its affiliates.
 
 // Contributed and/or modified by Adam Wulkiewicz, on behalf of Oracle
 // Contributed and/or modified by Menelaos Karavelas, on behalf of Oracle
@@ -21,18 +21,14 @@
 #ifndef BOOST_GEOMETRY_ALGORITHMS_DETAIL_DISJOINT_LINEAR_SEGMENT_OR_BOX_HPP
 #define BOOST_GEOMETRY_ALGORITHMS_DETAIL_DISJOINT_LINEAR_SEGMENT_OR_BOX_HPP
 
-#include <boost/range.hpp>
-#include <boost/geometry/util/range.hpp>
 
-#include <boost/geometry/core/closure.hpp>
-
-#include <boost/geometry/geometries/segment.hpp>
-
-#include <boost/geometry/algorithms/not_implemented.hpp>
-
-#include <boost/geometry/views/closeable_view.hpp>
-
+#include <boost/geometry/algorithms/detail/disjoint/multirange_geometry.hpp>
 #include <boost/geometry/algorithms/dispatch/disjoint.hpp>
+#include <boost/geometry/algorithms/not_implemented.hpp>
+#include <boost/geometry/core/closure.hpp>
+#include <boost/geometry/geometries/segment.hpp>
+#include <boost/geometry/util/range.hpp>
+#include <boost/geometry/views/closeable_view.hpp>
 
 
 namespace boost { namespace geometry
@@ -44,30 +40,40 @@ namespace detail { namespace disjoint
 {
 
 
-template <typename MultiRange, typename SegmentOrBox>
-struct disjoint_multirange_segment_or_box
-{
-    static inline
-    bool apply(MultiRange const& multirange, SegmentOrBox const& segment_or_box)
-    {
-        typedef typename boost::range_iterator
-            <
-                MultiRange const
-            >::type const_iterator;
+template
+<
+    typename SegmentOrBox,
+    typename Tag = typename tag<SegmentOrBox>::type
+>
+struct disjoint_point_segment_or_box
+    : not_implemented<Tag>
+{};
 
-        for (const_iterator it = boost::begin(multirange);
-             it != boost::end(multirange); ++it)
-        {
-            if ( !dispatch::disjoint
-                     <
-                         typename boost::range_value<MultiRange>::type,
-                         SegmentOrBox
-                     >::apply(*it, segment_or_box) )
-            {
-                return false;
-            }
-        }
-        return true;
+template <typename Segment>
+struct disjoint_point_segment_or_box<Segment, segment_tag>
+{
+    template <typename Point, typename Strategy>
+    static inline bool apply(Point const& point, Segment const& segment, Strategy const& strategy)
+    {
+        return dispatch::disjoint
+            <
+                Point, Segment
+            >::apply(point, segment,
+                     strategy.template get_point_in_geometry_strategy<Point, Segment>());
+    }
+};
+
+template <typename Box>
+struct disjoint_point_segment_or_box<Box, box_tag>
+{
+    template <typename Point, typename Strategy>
+    static inline bool apply(Point const& point, Box const& box, Strategy const& strategy)
+    {
+        return dispatch::disjoint
+            <
+                Point, Box
+            >::apply(point, box,
+                     strategy.get_disjoint_point_box_strategy());
     }
 };
 
@@ -80,8 +86,10 @@ template
 >
 struct disjoint_range_segment_or_box
 {
-    static inline
-    bool apply(Range const& range, SegmentOrBox const& segment_or_box)
+    template <typename Strategy>
+    static inline bool apply(Range const& range,
+                             SegmentOrBox const& segment_or_box,
+                             Strategy const& strategy)
     {
         typedef typename closeable_view<Range const, Closure>::type view_type;
 
@@ -108,11 +116,12 @@ struct disjoint_range_segment_or_box
         }
         else if ( count == 1 )
         {
-            return dispatch::disjoint
+            return disjoint_point_segment_or_box
                 <
-                    point_type, SegmentOrBox
+                    SegmentOrBox
                 >::apply(geometry::range::front<view_type const>(view),
-                         segment_or_box);
+                         segment_or_box,
+                         strategy);
         }
         else
         {
@@ -126,7 +135,7 @@ struct disjoint_range_segment_or_box
                 if ( !dispatch::disjoint
                          <
                              range_segment, SegmentOrBox
-                         >::apply(rng_segment, segment_or_box) )
+                         >::apply(rng_segment, segment_or_box, strategy) )
                 {
                     return false;
                 }
@@ -160,7 +169,7 @@ template <typename MultiLinestring, typename SegmentOrBox>
 struct disjoint_linear_segment_or_box
     <
         MultiLinestring, SegmentOrBox, multi_linestring_tag
-    > : disjoint_multirange_segment_or_box<MultiLinestring, SegmentOrBox>
+    > : multirange_constant_size_geometry<MultiLinestring, SegmentOrBox>
 {};
 
 

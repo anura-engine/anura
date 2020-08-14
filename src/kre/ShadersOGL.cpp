@@ -1724,7 +1724,7 @@ namespace KRE
 
 		ShaderProgramPtr ShaderProgram::getProgramFromVariant(const variant& node)
 		{
-			LOG_INFO("getProgramFromVariant(" << node.write_json() << ")");
+			//LOG_INFO("getProgramFromVariant(" << node.write_json() << ")");
 			auto& sf = get_shader_factory();
 
 			if(node.has_key("name") && !node.has_key("vertex") && !node.has_key("fragment")) {
@@ -1764,7 +1764,7 @@ namespace KRE
 				}
 			}
 			spp->setActives();
-			LOG_INFO("Added shader: " << name);
+			//LOG_INFO("Added shader: " << name);
 			return spp;
 		}
 

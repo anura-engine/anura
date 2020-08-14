@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="ReleaseXP|Win32">
@@ -19,7 +19,6 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\imgui\imconfig.h" />
     <ClInclude Include="..\..\imgui\imgui.h" />
     <ClInclude Include="..\..\src\achievements.hpp" />
     <ClInclude Include="..\..\src\animation_creator.hpp" />
@@ -175,8 +174,7 @@
     <ClInclude Include="..\..\src\kre\Frustum.hpp" />
     <ClInclude Include="..\..\src\kre\geometry.hpp" />
     <ClInclude Include="..\..\src\kre\Gradients.hpp" />
-    <ClInclude Include="..\..\src\kre\imgui_impl_opengl3.h" />
-    <ClInclude Include="..\..\src\kre\imgui_impl_sdl.h" />
+    <ClInclude Include="..\..\src\kre\imgui_impl_sdl_gl3.h" />
     <ClInclude Include="..\..\src\kre\LightObject.hpp" />
     <ClInclude Include="..\..\src\kre\ModelMatrixScope.hpp" />
     <ClInclude Include="..\..\src\kre\ParticleSystem.hpp" />
@@ -410,9 +408,10 @@
     <None Include="..\..\src\kre\geometry.inl" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\imgui\imgui.cpp" />
+    <ClCompile Include="..\..\imgui\imgui.cpp">
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">IMGUI_INCLUDE_IMGUI_USER_INL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
     <ClCompile Include="..\..\imgui\imgui_draw.cpp" />
-    <ClCompile Include="..\..\imgui\imgui_widgets.cpp" />
     <ClCompile Include="..\..\src\achievements.cpp" />
     <ClCompile Include="..\..\src\animation_creator.cpp" />
     <ClCompile Include="..\..\src\animation_preview_widget.cpp" />
@@ -549,8 +548,7 @@
     <ClCompile Include="..\..\src\kre\FontSTB.cpp" />
     <ClCompile Include="..\..\src\kre\Frustum.cpp" />
     <ClCompile Include="..\..\src\kre\Gradients.cpp" />
-    <ClCompile Include="..\..\src\kre\imgui_impl_opengl3.cpp" />
-    <ClCompile Include="..\..\src\kre\imgui_impl_sdl.cpp" />
+    <ClCompile Include="..\..\src\kre\imgui_impl_sdl_gl3.cpp" />
     <ClCompile Include="..\..\src\kre\LightObject.cpp" />
     <ClCompile Include="..\..\src\kre\ModelMatrixScope.cpp" />
     <ClCompile Include="..\..\src\kre\ParticleSystem.cpp" />
@@ -768,13 +766,13 @@
     <ProjectGuid>{716CE053-6375-400F-BEB5-0AC23E709C55}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>anura</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>false</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -788,7 +786,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -846,7 +844,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;_USE_MATH_DEFINES;HAVE_M_PI;USE_BOX2D;USE_LUA;USE_LIBVPX;USE_SVG;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;_WIN32_WINNT=0x0600;NOMINMAX;OGG_DYNAMIC="libvorbisfile-3.dll";USE_IMGUI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;_USE_MATH_DEFINES;HAVE_M_PI;USE_SVG;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;_WIN32_WINNT=0x0600;NOMINMAX;OGG_DYNAMIC="libvorbisfile-3.dll";USE_IMGUI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\..\src;..\..\src\kre;..\..\src\svg;..\..\src\hex;..\..\src\xhtml;..\..\src\tiled;..\..\src\lua;..\..\Box2D;..\..\..\boost;..\..\external\include;..\..\external\include\SDL;..\..\external\include\windows;..\..\external\include\windows\client\windows\handler;..\..\imgui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>

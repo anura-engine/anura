@@ -4,12 +4,13 @@
 #ifndef BOOST_CONCEPT_DETAIL_GENERAL_DWA2006429_HPP
 # define BOOST_CONCEPT_DETAIL_GENERAL_DWA2006429_HPP
 
+# include <boost/config.hpp>
 # include <boost/preprocessor/cat.hpp>
 # include <boost/concept/detail/backward_compatibility.hpp>
 
 # ifdef BOOST_OLD_CONCEPT_SUPPORT
 #  include <boost/concept/detail/has_constraints.hpp>
-#  include <boost/mpl/if.hpp>
+#  include <boost/type_traits/conditional.hpp>
 # endif
 
 // This implementation works on Comeau and GCC, all the way back to
@@ -48,8 +49,8 @@ struct constraint
   
 template <class Model>
 struct requirement_<void(*)(Model)>
-  : mpl::if_<
-        concepts::not_satisfied<Model>
+  : boost::conditional<
+        concepts::not_satisfied<Model>::value
       , constraint<Model>
       , requirement<failed ************ Model::************>
     >::type
@@ -65,19 +66,11 @@ struct requirement_<void(*)(Model)>
   
 # endif
 
-// Version check from https://svn.boost.org/trac/boost/changeset/82886
-// (boost/static_assert.hpp)
-#if defined(__GNUC__) && ((__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ >= 7))) 
-#define BOOST_CONCEPT_UNUSED_TYPEDEF __attribute__((unused))
-#else
-#define BOOST_CONCEPT_UNUSED_TYPEDEF /**/
-#endif
-
 #  define BOOST_CONCEPT_ASSERT_FN( ModelFnPtr )             \
     typedef ::boost::concepts::detail::instantiate<          \
     &::boost::concepts::requirement_<ModelFnPtr>::failed>    \
       BOOST_PP_CAT(boost_concept_check,__LINE__)             \
-      BOOST_CONCEPT_UNUSED_TYPEDEF
+      BOOST_ATTRIBUTE_UNUSED
 
 }}
 

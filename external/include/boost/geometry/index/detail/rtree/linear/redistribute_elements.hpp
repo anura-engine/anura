@@ -5,6 +5,10 @@
 // Copyright (c) 2008 Federico J. Fernandez.
 // Copyright (c) 2011-2014 Adam Wulkiewicz, Lodz, Poland.
 //
+// This file was modified by Oracle on 2019.
+// Modifications copyright (c) 2019 Oracle and/or its affiliates.
+// Contributed and/or modified by Adam Wulkiewicz, on behalf of Oracle
+//
 // Use, modification and distribution is subject to the Boost Software License,
 // Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
@@ -12,8 +16,10 @@
 #ifndef BOOST_GEOMETRY_INDEX_DETAIL_RTREE_LINEAR_REDISTRIBUTE_ELEMENTS_HPP
 #define BOOST_GEOMETRY_INDEX_DETAIL_RTREE_LINEAR_REDISTRIBUTE_ELEMENTS_HPP
 
+#include <boost/core/ignore_unused.hpp>
 #include <boost/type_traits/is_unsigned.hpp>
 
+#include <boost/geometry/index/detail/algorithms/bounds.hpp>
 #include <boost/geometry/index/detail/algorithms/content.hpp>
 #include <boost/geometry/index/detail/bounded_view.hpp>
 
@@ -89,7 +95,11 @@ struct find_greatest_normalized_separation
 
     typedef typename geometry::point_type<indexable_type>::type point_type;
     typedef geometry::model::box<point_type> bounds_type;
-    typedef index::detail::bounded_view<indexable_type, bounds_type> bounded_view_type;
+    typedef index::detail::bounded_view
+        <
+            indexable_type, bounds_type,
+            typename index::detail::strategy_type<Parameters>::type
+        > bounded_view_type;
 
     static inline void apply(Elements const& elements,
                              Parameters const& parameters,
@@ -102,8 +112,12 @@ struct find_greatest_normalized_separation
         BOOST_GEOMETRY_INDEX_ASSERT(elements.size() == elements_count, "unexpected number of elements");
         BOOST_GEOMETRY_INDEX_ASSERT(2 <= elements_count, "unexpected number of elements");
 
+        typename index::detail::strategy_type<Parameters>::type const&
+            strategy = index::detail::get_strategy(parameters);
+
         // find the lowest low, highest high
-        bounded_view_type bounded_indexable_0(rtree::element_indexable(elements[0], translator));
+        bounded_view_type bounded_indexable_0(rtree::element_indexable(elements[0], translator),
+                                              strategy);
         coordinate_type lowest_low = geometry::get<min_corner, DimensionIndex>(bounded_indexable_0);
         coordinate_type highest_high = geometry::get<max_corner, DimensionIndex>(bounded_indexable_0);
 
@@ -112,7 +126,8 @@ struct find_greatest_normalized_separation
         size_t lowest_high_index = 0;
         for ( size_t i = 1 ; i < elements_count ; ++i )
         {
-            bounded_view_type bounded_indexable(rtree::element_indexable(elements[i], translator));
+            bounded_view_type bounded_indexable(rtree::element_indexable(elements[i], translator),
+                                                strategy);
             coordinate_type min_coord = geometry::get<min_corner, DimensionIndex>(bounded_indexable);
             coordinate_type max_coord = geometry::get<max_corner, DimensionIndex>(bounded_indexable);
 
@@ -131,11 +146,13 @@ struct find_greatest_normalized_separation
 
         // find the highest low
         size_t highest_low_index = lowest_high_index == 0 ? 1 : 0;
-        bounded_view_type bounded_indexable_hl(rtree::element_indexable(elements[highest_low_index], translator));
+        bounded_view_type bounded_indexable_hl(rtree::element_indexable(elements[highest_low_index], translator),
+                                               strategy);
         coordinate_type highest_low = geometry::get<min_corner, DimensionIndex>(bounded_indexable_hl);
         for ( size_t i = highest_low_index ; i < elements_count ; ++i )
         {
-            bounded_view_type bounded_indexable(rtree::element_indexable(elements[i], translator));
+            bounded_view_type bounded_indexable(rtree::element_indexable(elements[i], translator),
+                                                strategy);
             coordinate_type min_coord = geometry::get<min_corner, DimensionIndex>(bounded_indexable);
             if ( highest_low < min_coord &&
                  i != lowest_high_index )
@@ -149,14 +166,14 @@ struct find_greatest_normalized_separation
         
         // highest_low - lowest_high
         separation = difference<separation_type>(lowest_high, highest_low);
-        // BOOST_ASSERT(0 <= width);
+        // BOOST_GEOMETRY_INDEX_ASSERT(0 <= width);
         if ( std::numeric_limits<coordinate_type>::epsilon() < width )
             separation /= width;
 
         seed1 = highest_low_index;
         seed2 = lowest_high_index;
 
-        ::boost::ignore_unused_variable_warning(parameters);
+        ::boost::ignore_unused(parameters);
     }
 };
 
@@ -211,7 +228,7 @@ struct find_greatest_normalized_separation<Elements, Parameters, Translator, poi
         if ( lowest_index == highest_index )
             seed2 = (lowest_index + 1) % elements_count; // % is just in case since if this is true lowest_index is 0
 
-        ::boost::ignore_unused_variable_warning(parameters);
+        ::boost::ignore_unused(parameters);
     }
 };
 
@@ -222,7 +239,6 @@ struct pick_seeds_impl
 
     typedef typename Elements::value_type element_type;
     typedef typename rtree::element_indexable_type<element_type, Translator>::type indexable_type;
-    typedef typename coordinate_type<indexable_type>::type coordinate_type;
 
     typedef find_greatest_normalized_separation<
         Elements, Parameters, Translator,
@@ -282,27 +298,25 @@ struct pick_seeds_impl<Elements, Parameters, Translator, 1>
 // from void linear_pick_seeds(node_pointer const& n, unsigned int &seed1, unsigned int &seed2) const
 
 template <typename Elements, typename Parameters, typename Translator>
-struct pick_seeds
+inline void pick_seeds(Elements const& elements,
+                       Parameters const& parameters,
+                       Translator const& tr,
+                       size_t & seed1,
+                       size_t & seed2)
 {
     typedef typename Elements::value_type element_type;
     typedef typename rtree::element_indexable_type<element_type, Translator>::type indexable_type;
-    typedef typename coordinate_type<indexable_type>::type coordinate_type;
 
-    static const size_t dimension = geometry::dimension<indexable_type>::value;
-
-    typedef pick_seeds_impl<Elements, Parameters, Translator, dimension> impl;
+    typedef pick_seeds_impl
+        <
+            Elements, Parameters, Translator,
+            geometry::dimension<indexable_type>::value
+        > impl;
     typedef typename impl::separation_type separation_type;
 
-    static inline void apply(Elements const& elements,
-                             Parameters const& parameters,
-                             Translator const& tr,
-                             size_t & seed1,
-                             size_t & seed2)
-    {
-        separation_type separation = 0;
-        pick_seeds_impl<Elements, Parameters, Translator, dimension>::apply(elements, parameters, tr, separation, seed1, seed2);
-    }
-};
+    separation_type separation = 0;
+    impl::apply(elements, parameters, tr, separation, seed1, seed2);
+}
 
 } // namespace linear
 
@@ -331,24 +345,25 @@ struct redistribute_elements<Value, Options, Translator, Box, Allocators, linear
         typedef typename rtree::element_indexable_type<element_type, Translator>::type indexable_type;
         typedef typename index::detail::default_content_result<Box>::type content_type;
 
+        typename index::detail::strategy_type<parameters_type>::type const&
+            strategy = index::detail::get_strategy(parameters);
+
         elements_type & elements1 = rtree::elements(n);
         elements_type & elements2 = rtree::elements(second_node);
         const size_t elements1_count = parameters.get_max_elements() + 1;
 
         BOOST_GEOMETRY_INDEX_ASSERT(elements1.size() == elements1_count, "unexpected number of elements");
 
-        // copy original elements
-        // TODO: use container_from_elements_type for std::allocator
-        elements_type elements_copy(elements1);                                                             // MAY THROW, STRONG (alloc, copy)
+        // copy original elements - use in-memory storage (std::allocator)
+        // TODO: move if noexcept
+        typedef typename rtree::container_from_elements_type<elements_type, element_type>::type
+            container_type;
+        container_type elements_copy(elements1.begin(), elements1.end());                                   // MAY THROW, STRONG (alloc, copy)
 
         // calculate initial seeds
         size_t seed1 = 0;
         size_t seed2 = 0;
-        linear::pick_seeds<
-            elements_type,
-            parameters_type,
-            Translator
-        >::apply(elements_copy, parameters, translator, seed1, seed2);
+        linear::pick_seeds(elements_copy, parameters, translator, seed1, seed2);
 
         // prepare nodes' elements containers
         elements1.clear();
@@ -361,8 +376,10 @@ struct redistribute_elements<Value, Options, Translator, Box, Allocators, linear
             elements2.push_back(elements_copy[seed2]);                                                      // MAY THROW, STRONG (alloc, copy)
 
             // calculate boxes
-            detail::bounds(rtree::element_indexable(elements_copy[seed1], translator), box1);
-            detail::bounds(rtree::element_indexable(elements_copy[seed2], translator), box2);
+            detail::bounds(rtree::element_indexable(elements_copy[seed1], translator),
+                           box1, strategy);
+            detail::bounds(rtree::element_indexable(elements_copy[seed2], translator),
+                           box2, strategy);
 
             // initialize areas
             content_type content1 = index::detail::content(box1);
@@ -384,13 +401,13 @@ struct redistribute_elements<Value, Options, Translator, Box, Allocators, linear
                     if ( elements1.size() + remaining <= parameters.get_min_elements() )
                     {
                         elements1.push_back(elem);                                                          // MAY THROW, STRONG (copy)
-                        geometry::expand(box1, indexable);
+                        index::detail::expand(box1, indexable, strategy);
                         content1 = index::detail::content(box1);
                     }
                     else if ( elements2.size() + remaining <= parameters.get_min_elements() )
                     {
                         elements2.push_back(elem);                                                          // MAY THROW, STRONG (alloc, copy)
-                        geometry::expand(box2, indexable);
+                        index::detail::expand(box2, indexable, strategy);
                         content2 = index::detail::content(box2);
                     }
                     // choose better node and insert element
@@ -399,8 +416,8 @@ struct redistribute_elements<Value, Options, Translator, Box, Allocators, linear
                         // calculate enlarged boxes and areas
                         Box enlarged_box1(box1);
                         Box enlarged_box2(box2);
-                        geometry::expand(enlarged_box1, indexable);
-                        geometry::expand(enlarged_box2, indexable);
+                        index::detail::expand(enlarged_box1, indexable, strategy);
+                        index::detail::expand(enlarged_box2, indexable, strategy);
                         content_type enlarged_content1 = index::detail::content(enlarged_box1);
                         content_type enlarged_content2 = index::detail::content(enlarged_box2);
 

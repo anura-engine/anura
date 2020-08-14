@@ -5,12 +5,8 @@
     Distributed under the Boost Software License, Version 1.0. (See accompanying
     file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 =============================================================================*/
-#if !defined(SPIRIT_PLUS_MARCH_13_2007_0127PM)
-#define SPIRIT_PLUS_MARCH_13_2007_0127PM
-
-#if defined(_MSC_VER)
-#pragma once
-#endif
+#if !defined(BOOST_SPIRIT_X3_PLUS_MARCH_13_2007_0127PM)
+#define BOOST_SPIRIT_X3_PLUS_MARCH_13_2007_0127PM
 
 #include <boost/spirit/home/x3/core/parser.hpp>
 #include <boost/spirit/home/x3/support/traits/container_traits.hpp>
@@ -48,7 +44,7 @@ namespace boost { namespace spirit { namespace x3
     inline plus<typename extension::as_parser<Subject>::value_type>
     operator+(Subject const& subject)
     {
-        return {as_parser(subject)};
+        return { as_parser(subject) };
     }
 }}}
 

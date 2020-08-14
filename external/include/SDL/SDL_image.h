@@ -1,6 +1,6 @@
 /*
   SDL_image:  An example image loading library for use with SDL
-  Copyright (C) 1997-2013 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -21,8 +21,8 @@
 
 /* A simple library to load images of various formats as SDL surfaces */
 
-#ifndef _SDL_IMAGE_H
-#define _SDL_IMAGE_H
+#ifndef SDL_IMAGE_H_
+#define SDL_IMAGE_H_
 
 #include "SDL.h"
 #include "SDL_version.h"
@@ -37,7 +37,7 @@ extern "C" {
 */
 #define SDL_IMAGE_MAJOR_VERSION 2
 #define SDL_IMAGE_MINOR_VERSION 0
-#define SDL_IMAGE_PATCHLEVEL    0
+#define SDL_IMAGE_PATCHLEVEL    6
 
 /* This macro can be used to fill a version structure with the compile-time
  * version of the SDL_image library.
@@ -48,6 +48,18 @@ extern "C" {
     (X)->minor = SDL_IMAGE_MINOR_VERSION;           \
     (X)->patch = SDL_IMAGE_PATCHLEVEL;              \
 }
+
+/**
+ *  This is the version number macro for the current SDL_image version.
+ */
+#define SDL_IMAGE_COMPILEDVERSION \
+    SDL_VERSIONNUM(SDL_IMAGE_MAJOR_VERSION, SDL_IMAGE_MINOR_VERSION, SDL_IMAGE_PATCHLEVEL)
+
+/**
+ *  This macro will evaluate to true if compiled with SDL_image at least X.Y.Z.
+ */
+#define SDL_IMAGE_VERSION_ATLEAST(X, Y, Z) \
+    (SDL_IMAGE_COMPILEDVERSION >= SDL_VERSIONNUM(X, Y, Z))
 
 /* This function gets the version of the dynamically linked SDL_image library.
    it should NOT be used to fill a version structure, instead you should
@@ -103,6 +115,7 @@ extern DECLSPEC int SDLCALL IMG_isLBM(SDL_RWops *src);
 extern DECLSPEC int SDLCALL IMG_isPCX(SDL_RWops *src);
 extern DECLSPEC int SDLCALL IMG_isPNG(SDL_RWops *src);
 extern DECLSPEC int SDLCALL IMG_isPNM(SDL_RWops *src);
+extern DECLSPEC int SDLCALL IMG_isSVG(SDL_RWops *src);
 extern DECLSPEC int SDLCALL IMG_isTIF(SDL_RWops *src);
 extern DECLSPEC int SDLCALL IMG_isXCF(SDL_RWops *src);
 extern DECLSPEC int SDLCALL IMG_isXPM(SDL_RWops *src);
@@ -119,6 +132,7 @@ extern DECLSPEC SDL_Surface * SDLCALL IMG_LoadLBM_RW(SDL_RWops *src);
 extern DECLSPEC SDL_Surface * SDLCALL IMG_LoadPCX_RW(SDL_RWops *src);
 extern DECLSPEC SDL_Surface * SDLCALL IMG_LoadPNG_RW(SDL_RWops *src);
 extern DECLSPEC SDL_Surface * SDLCALL IMG_LoadPNM_RW(SDL_RWops *src);
+extern DECLSPEC SDL_Surface * SDLCALL IMG_LoadSVG_RW(SDL_RWops *src);
 extern DECLSPEC SDL_Surface * SDLCALL IMG_LoadTGA_RW(SDL_RWops *src);
 extern DECLSPEC SDL_Surface * SDLCALL IMG_LoadTIF_RW(SDL_RWops *src);
 extern DECLSPEC SDL_Surface * SDLCALL IMG_LoadXCF_RW(SDL_RWops *src);
@@ -131,6 +145,27 @@ extern DECLSPEC SDL_Surface * SDLCALL IMG_ReadXPMFromArray(char **xpm);
 /* Individual saving functions */
 extern DECLSPEC int SDLCALL IMG_SavePNG(SDL_Surface *surface, const char *file);
 extern DECLSPEC int SDLCALL IMG_SavePNG_RW(SDL_Surface *surface, SDL_RWops *dst, int freedst);
+extern DECLSPEC int SDLCALL IMG_SaveJPG(SDL_Surface *surface, const char *file, int quality);
+extern DECLSPEC int SDLCALL IMG_SaveJPG_RW(SDL_Surface *surface, SDL_RWops *dst, int freedst, int quality);
+
+/* Animated image support
+   Currently only animated GIFs are supported.
+ */
+typedef struct
+{
+	int w, h;
+	int count;
+	SDL_Surface **frames;
+	int *delays;
+} IMG_Animation;
+
+extern DECLSPEC IMG_Animation * SDLCALL IMG_LoadAnimation(const char *file);
+extern DECLSPEC IMG_Animation * SDLCALL IMG_LoadAnimation_RW(SDL_RWops *src, int freesrc);
+extern DECLSPEC IMG_Animation * SDLCALL IMG_LoadAnimationTyped_RW(SDL_RWops *src, int freesrc, const char *type);
+extern DECLSPEC void SDLCALL IMG_FreeAnimation(IMG_Animation *anim);
+ 
+/* Individual loading functions */
+extern DECLSPEC IMG_Animation * SDLCALL IMG_LoadGIFAnimation_RW(SDL_RWops *src);
 
 /* We'll use SDL for reporting errors */
 #define IMG_SetError    SDL_SetError
@@ -142,4 +177,4 @@ extern DECLSPEC int SDLCALL IMG_SavePNG_RW(SDL_Surface *surface, SDL_RWops *dst,
 #endif
 #include "close_code.h"
 
-#endif /* _SDL_IMAGE_H */
+#endif /* SDL_IMAGE_H_ */

@@ -1,8 +1,9 @@
 // Boost.Geometry (aka GGL, Generic Geometry Library)
 
-// Copyright (c) 2014, Oracle and/or its affiliates.
+// Copyright (c) 2014, 2019, Oracle and/or its affiliates.
 
 // Contributed and/or modified by Menelaos Karavelas, on behalf of Oracle
+// Contributed and/or modified by Adam Wulkiewicz, on behalf of Oracle
 
 // Licensed under the Boost Software License version 1.0.
 // http://www.boost.org/users/license.html
@@ -11,16 +12,22 @@
 #define BOOST_GEOMETRY_ALGORITHMS_DETAIL_DISTANCE_SEGMENT_TO_SEGMENT_HPP
 
 #include <algorithm>
+#include <iterator>
+
+#include <boost/core/addressof.hpp>
 
 #include <boost/geometry/core/point_type.hpp>
 #include <boost/geometry/core/tags.hpp>
 
+#include <boost/geometry/util/condition.hpp>
+
 #include <boost/geometry/strategies/distance.hpp>
 #include <boost/geometry/strategies/tags.hpp>
-#include <boost/geometry/strategies/distance_comparable_to_regular.hpp>
 
 #include <boost/geometry/algorithms/assign.hpp>
 #include <boost/geometry/algorithms/intersects.hpp>
+
+#include <boost/geometry/algorithms/detail/distance/is_comparable.hpp>
 
 #include <boost/geometry/algorithms/dispatch/distance.hpp>
 
@@ -64,7 +71,7 @@ public:
     apply(Segment1 const& segment1, Segment2 const& segment2,
           Strategy const& strategy)
     {
-        if ( geometry::intersects(segment1, segment2) )
+        if (geometry::intersects(segment1, segment2, strategy.get_relate_segment_segment_strategy()))
         {
             return 0;
         }
@@ -89,10 +96,25 @@ public:
         d[2] = cstrategy.apply(p[0], q[0], q[1]);
         d[3] = cstrategy.apply(p[1], q[0], q[1]);
 
-        return strategy::distance::services::comparable_to_regular
-            <
-                comparable_strategy, Strategy, Segment1, Segment2
-            >::apply( *std::min_element(d, d + 4) );
+        std::size_t imin = std::distance(boost::addressof(d[0]),
+                                         std::min_element(d, d + 4));
+
+        if (BOOST_GEOMETRY_CONDITION(is_comparable<Strategy>::value))
+        {
+            return d[imin];
+        }
+
+        switch (imin)
+        {
+        case 0:
+            return strategy.apply(q[0], p[0], p[1]);
+        case 1:
+            return strategy.apply(q[1], p[0], p[1]);
+        case 2:
+            return strategy.apply(p[0], q[0], q[1]);
+        default:
+            return strategy.apply(p[1], q[0], q[1]);
+        }
     }
 };
 

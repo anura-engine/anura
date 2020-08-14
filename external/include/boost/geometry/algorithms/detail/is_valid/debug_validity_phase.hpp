@@ -1,8 +1,9 @@
 // Boost.Geometry (aka GGL, Generic Geometry Library)
 
-// Copyright (c) 2014, Oracle and/or its affiliates.
+// Copyright (c) 2014, 2018, Oracle and/or its affiliates.
 
 // Contributed and/or modified by Menelaos Karavelas, on behalf of Oracle
+// Contributed and/or modified by Adam Wulkiewicz, on behalf of Oracle
 
 // Licensed under the Boost Software License version 1.0.
 // http://www.boost.org/users/license.html
@@ -12,11 +13,10 @@
 
 #ifdef GEOMETRY_TEST_DEBUG
 #include <iostream>
+#endif
 
 #include <boost/geometry/core/tag.hpp>
 #include <boost/geometry/core/tags.hpp>
-#endif
-
 
 namespace boost { namespace geometry
 {
@@ -50,8 +50,8 @@ struct debug_validity_phase<Polygon, polygon_tag>
             std::cout << "computing and analyzing turns..." << std::endl;
             break;
         case 4:
-            std::cout << "checking if holes are inside the exterior ring..."
-                      << std::endl;
+            std::cout << "checking if interior rings are inside "
+                      << "the exterior ring..." << std::endl;
             break;
         case 5:
             std::cout << "checking connectivity of interior..." << std::endl;

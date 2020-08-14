@@ -1,6 +1,6 @@
 // Boost.Geometry (aka GGL, Generic Geometry Library)
 
-// Copyright (c) 2014, Oracle and/or its affiliates.
+// Copyright (c) 2014-2015, Oracle and/or its affiliates.
 
 // Licensed under the Boost Software License version 1.0.
 // http://www.boost.org/users/license.html
@@ -30,13 +30,14 @@ namespace detail { namespace turns
 // seg_id -> fraction -> other_id -> operation
 template
 <
-    typename IdLess = std::less<int>,
+    typename IdLess = std::less<signed_size_type>,
     int N = 0, int U = 1, int I = 2, int B = 3, int C = 4, int O = 0,
     std::size_t OpId = 0
 >
 struct less_seg_fraction_other_op
 {
     BOOST_STATIC_ASSERT(OpId < 2);
+    static const std::size_t other_op_id = (OpId + 1) % 2;
 
     template <typename Op>
     static inline int order_op(Op const& op)
@@ -59,32 +60,39 @@ struct less_seg_fraction_other_op
         return order_op(left) < order_op(right);
     }
 
-    template <typename Op>
-    static inline bool use_other_id(Op const& left, Op const& right)
+    template <typename Turn>
+    static inline bool use_other_id(Turn const& left, Turn const& right)
     {
-        if ( left.other_id.multi_index != right.other_id.multi_index )
+        segment_identifier const& left_other_seg_id = left.operations[other_op_id].seg_id;
+        segment_identifier const& right_other_seg_id = right.operations[other_op_id].seg_id;
+
+        if ( left_other_seg_id.multi_index != right_other_seg_id.multi_index )
         {
-            return left.other_id.multi_index < right.other_id.multi_index;
+            return left_other_seg_id.multi_index < right_other_seg_id.multi_index;
         }
-        if ( left.other_id.ring_index != right.other_id.ring_index )
+        if ( left_other_seg_id.ring_index != right_other_seg_id.ring_index )
         {
-            return left.other_id.ring_index != right.other_id.ring_index;
+            return left_other_seg_id.ring_index != right_other_seg_id.ring_index;
         }
-        if ( left.other_id.segment_index != right.other_id.segment_index )
+        if ( left_other_seg_id.segment_index != right_other_seg_id.segment_index )
         {
-            return IdLess()(left.other_id.segment_index,
-                            right.other_id.segment_index);
+            return IdLess()(left_other_seg_id.segment_index,
+                            right_other_seg_id.segment_index);
         }
-        return use_operation(left, right);
+        return use_operation(left.operations[OpId], right.operations[OpId]);
     }
 
-    template <typename Op>
-    static inline bool use_fraction(Op const& left, Op const& right)
+    template <typename Turn>
+    static inline bool use_fraction(Turn const& left, Turn const& right)
     {
-        return left.fraction < right.fraction
-           || ( geometry::math::equals(left.fraction, right.fraction) 
-                && use_other_id(left, right)
-              );
+        return
+            geometry::math::equals(left.operations[OpId].fraction,
+                                   right.operations[OpId].fraction)
+            ?
+            use_other_id(left, right)
+            :
+            (left.operations[OpId].fraction < right.operations[OpId].fraction)
+            ;
     }
 
     template <typename Turn>
@@ -93,7 +101,7 @@ struct less_seg_fraction_other_op
         segment_identifier const& sl = left.operations[OpId].seg_id;
         segment_identifier const& sr = right.operations[OpId].seg_id;
 
-        return sl < sr || ( sl == sr && use_fraction(left.operations[OpId], right.operations[OpId]) );
+        return sl < sr || ( sl == sr && use_fraction(left, right) );
     }
 };
 

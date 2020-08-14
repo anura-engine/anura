@@ -28,6 +28,7 @@
 #include <list>
 
 #include "SDL.h"
+#include <string>
 
 // Threading primitives wrapper for SDL_Thread.
 //

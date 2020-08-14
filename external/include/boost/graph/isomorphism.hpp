@@ -501,6 +501,7 @@ fi_adj_loop_k:++fi_adj.first;
       template <typename Graph1, typename Graph2>
       struct isomorphism_impl {
         typedef bool result_type;
+        typedef result_type type;
         template <typename ArgPack>
         bool operator()(const Graph1& g1, const Graph2& g2, const ArgPack& arg_pack) const {
           using namespace boost::graph::keywords;

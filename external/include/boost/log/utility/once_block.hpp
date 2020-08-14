@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2014.
+ *          Copyright Andrey Semashev 2007 - 2015.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -82,7 +82,7 @@ public:
 
     ~once_block_sentry() BOOST_NOEXCEPT
     {
-        if (m_flag.status != once_block_flag::initialized)
+        if (BOOST_UNLIKELY(m_flag.status != once_block_flag::initialized))
             rollback();
     }
 

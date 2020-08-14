@@ -2,7 +2,7 @@
 // error.hpp
 // ~~~~~~~~~
 //
-// Copyright (c) 2003-2014 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2019 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -148,6 +148,11 @@ enum basic_errors
   /// Protocol not available.
   no_protocol_option = BOOST_ASIO_SOCKET_ERROR(ENOPROTOOPT),
 
+  /// No such device.
+  no_such_device = BOOST_ASIO_WIN_OR_POSIX(
+      BOOST_ASIO_NATIVE_ERROR(ERROR_BAD_UNIT),
+      BOOST_ASIO_NATIVE_ERROR(ENODEV)),
+
   /// Transport endpoint is not connected.
   not_connected = BOOST_ASIO_SOCKET_ERROR(ENOTCONN),
 
@@ -250,13 +255,17 @@ inline const boost::system::error_category& get_addrinfo_category()
 extern BOOST_ASIO_DECL
 const boost::system::error_category& get_misc_category();
 
-static const boost::system::error_category& system_category
+static const boost::system::error_category&
+  system_category BOOST_ASIO_UNUSED_VARIABLE
   = boost::asio::error::get_system_category();
-static const boost::system::error_category& netdb_category
+static const boost::system::error_category&
+  netdb_category BOOST_ASIO_UNUSED_VARIABLE
   = boost::asio::error::get_netdb_category();
-static const boost::system::error_category& addrinfo_category
+static const boost::system::error_category&
+  addrinfo_category BOOST_ASIO_UNUSED_VARIABLE
   = boost::asio::error::get_addrinfo_category();
-static const boost::system::error_category& misc_category
+static const boost::system::error_category&
+  misc_category BOOST_ASIO_UNUSED_VARIABLE
   = boost::asio::error::get_misc_category();
 
 } // namespace error
@@ -318,6 +327,22 @@ inline boost::system::error_code make_error_code(misc_errors e)
 }
 
 } // namespace error
+namespace stream_errc {
+  // Simulates the proposed stream_errc scoped enum.
+  using error::eof;
+  using error::not_found;
+} // namespace stream_errc
+namespace socket_errc {
+  // Simulates the proposed socket_errc scoped enum.
+  using error::already_open;
+  using error::not_found;
+} // namespace socket_errc
+namespace resolver_errc {
+  // Simulates the proposed resolver_errc scoped enum.
+  using error::host_not_found;
+  const error::netdb_errors try_again = error::host_not_found_try_again;
+  using error::service_not_found;
+} // namespace resolver_errc
 } // namespace asio
 } // namespace boost
 

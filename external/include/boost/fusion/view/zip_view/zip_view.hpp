@@ -122,11 +122,11 @@ namespace boost { namespace fusion {
         typedef typename fusion::result_of::as_vector<Sequences>::type sequences;
         typedef typename detail::min_size<real_sequences>::type size;
 
-        BOOST_FUSION_GPU_ENABLED
+        BOOST_CONSTEXPR BOOST_FUSION_GPU_ENABLED
         zip_view(
             const Sequences& seqs)
             : sequences_(seqs)
-        {};
+        {}
 
         sequences sequences_;
     };

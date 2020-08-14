@@ -1,7 +1,7 @@
 /* Boost interval/detail/msvc_rounding_control.hpp file
  *
  * Copyright 2000 Maarten Keijzer
- * Copyright 2002 Hervé Brönnimann, Guillaume Melquiond, Sylvain Pion
+ * Copyright 2002 HervÃ© BrÃ¶nnimann, Guillaume Melquiond, Sylvain Pion
  *
  * Distributed under the Boost Software License, Version 1.0.
  * (See accompanying file LICENSE_1_0.txt or
@@ -88,7 +88,20 @@ struct x86_rounding
   static void get_rounding_mode(rounding_mode& mode)
   { mode = msvc2hard(_control87(0, 0)); }
   static void set_rounding_mode(const rounding_mode mode)
-  { _control87(hard2msvc(mode), _MCW_EM | _MCW_RC | _MCW_PC | _MCW_IC); }
+  {
+    _control87(hard2msvc(mode),
+      _MCW_EM | _MCW_RC
+#if !defined(_M_AMD64) && !defined(_M_ARM) && !defined(_M_ARM64)
+      // x64 ignores _MCW_PC and _MCW_IC, and the Debug CRT library actually
+      // asserts when these are passed to _control87.
+      // MSDN says on '_control87' that changing precision (_MCW_PC) or
+      // infinity (_MCW_IC) handling is not supported on the ARM and x64
+      // architectures and that _control87 raises an assertion
+      // and the invalid parameter handler is invoked.
+      | _MCW_PC | _MCW_IC
+#endif
+    );
+  }
   static double to_int(const double& x) { return rint(x); }
 };
 

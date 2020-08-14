@@ -1,44 +1,33 @@
-/*
-    Copyright 2005-2007 Adobe Systems Incorporated
-   
-    Use, modification and distribution are subject to the Boost Software License,
-    Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
-    http://www.boost.org/LICENSE_1_0.txt).
+//
+// Copyright 2005-2007 Adobe Systems Incorporated
+//
+// Distributed under the Boost Software License, Version 1.0
+// See accompanying file LICENSE_1_0.txt or copy at
+// http://www.boost.org/LICENSE_1_0.txt
+//
+#ifndef BOOST_GIL_PIXEL_HPP
+#define BOOST_GIL_PIXEL_HPP
 
-    See http://opensource.adobe.com/gil for most recent version including documentation.
-*/
-/*************************************************************************************************/
+#include <boost/gil/channel.hpp>
+#include <boost/gil/color_base.hpp>
+#include <boost/gil/color_base_algorithm.hpp>
+#include <boost/gil/concepts.hpp>
+#include <boost/gil/metafunctions.hpp>
+#include <boost/gil/utilities.hpp>
 
-#ifndef GIL_PIXEL_H
-#define GIL_PIXEL_H
-
-////////////////////////////////////////////////////////////////////////////////////////
-/// \file               
-/// \brief pixel class and related utilities
-/// \author Lubomir Bourdev and Hailin Jin \n
-///         Adobe Systems Incorporated
-/// \date   2005-2007 \n Last updated on September 28, 2006
-///
-////////////////////////////////////////////////////////////////////////////////////////
-
-#include <functional>
-#include <boost/utility/enable_if.hpp>
+#include <boost/core/ignore_unused.hpp>
 #include <boost/mpl/bool.hpp>
 #include <boost/mpl/front.hpp>
 #include <boost/type_traits.hpp>
-#include "gil_config.hpp"
-#include "color_base.hpp"
-#include "gil_concept.hpp"
-#include "channel.hpp"
-#include "metafunctions.hpp"
-#include "utilities.hpp"
-#include "color_base_algorithm.hpp"
+
+#include <functional>
+#include <type_traits>
 
 namespace boost { namespace gil {
 
 // Forward-declare gray_t
 struct gray_color_t;
-typedef mpl::vector1<gray_color_t> gray_t;
+using gray_t = mpl::vector1<gray_color_t>;
 template <typename PixelBased> struct color_space_type;
 template <typename PixelBased> struct channel_mapping_type;
 template <typename PixelBased> struct channel_type;
@@ -58,40 +47,40 @@ template <typename T> struct is_pixel<const T> : public is_pixel<T> {};
 /// \ingroup PixelBasedAlgorithm
 /// \brief Returns the number of channels of a pixel-based GIL construct
 template <typename PixelBased>
-struct num_channels : public mpl::size<typename color_space_type<PixelBased>::type> {}; 
+struct num_channels : public mpl::size<typename color_space_type<PixelBased>::type> {};
 
 /**
 \addtogroup PixelBasedAlgorithm
 
 Example:
 \code
-BOOST_STATIC_ASSERT((num_channels<rgb8_view_t>::value==3));
-BOOST_STATIC_ASSERT((num_channels<cmyk16_planar_ptr_t>::value==4));
+static_assert(num_channels<rgb8_view_t>::value == 3, "");
+static_assert(num_channels<cmyk16_planar_ptr_t>::value == 4, "");
 
-BOOST_STATIC_ASSERT((is_planar<rgb16_planar_image_t>::value));
-BOOST_STATIC_ASSERT((is_same<color_space_type<rgb8_planar_ref_t>::type, rgb_t>::value));
-BOOST_STATIC_ASSERT((is_same<channel_mapping_type<cmyk8_pixel_t>::type, 
-                             channel_mapping_type<rgba8_pixel_t>::type>::value));
-BOOST_STATIC_ASSERT((is_same<channel_type<bgr8_pixel_t>::type, bits8>::value));
+static_assert(is_planar<rgb16_planar_image_t>::value));
+static_assert(is_same<color_space_type<rgb8_planar_ref_t>::type, rgb_t>::value, "");
+static_assert(is_same<channel_mapping_type<cmyk8_pixel_t>::type,
+                             channel_mapping_type<rgba8_pixel_t>::type>::value, "");
+static_assert(is_same<channel_type<bgr8_pixel_t>::type, uint8_t>::value, "");
 \endcode
 */
 
-/// \defgroup ColorBaseModelPixel pixel 
+/// \defgroup ColorBaseModelPixel pixel
 /// \ingroup ColorBaseModel
 /// \brief A homogeneous color base whose element is a channel value. Models HomogeneousColorBaseValueConcept
 
-/// \defgroup PixelModelPixel pixel 
+/// \defgroup PixelModelPixel pixel
 /// \ingroup PixelModel
 /// \brief A homogeneous pixel value. Models HomogeneousPixelValueConcept
 
 /// \ingroup PixelModelPixel ColorBaseModelPixel PixelBasedModel
 /// \brief Represents a pixel value (a container of channels). Models: HomogeneousColorBaseValueConcept, PixelValueConcept, HomogeneousPixelBasedConcept
-/// 
-/// A pixel is a set of channels defining the color at a given point in an image. Conceptually, a pixel is little more than a color base whose elements 
-/// model \p ChannelConcept. The class \p pixel defines a simple, homogeneous pixel value. It is used to store 
+///
+/// A pixel is a set of channels defining the color at a given point in an image. Conceptually, a pixel is little more than a color base whose elements
+/// model \p ChannelConcept. The class \p pixel defines a simple, homogeneous pixel value. It is used to store
 /// the value of a color. The built-in C++ references to \p pixel, \p pixel& and \p const \p pixel& are used to represent a reference to a pixel
 /// inside an interleaved image view (a view in which all channels are together in memory). Similarly, built-in pointer types \p pixel* and \p const \p pixel*
-/// are used as the standard iterator over a row of interleaved homogeneous pixels. 
+/// are used as the standard iterator over a row of interleaved homogeneous pixels.
 ///
 /// Since \p pixel inherits the properties of color base, assigning, equality comparison and copy-construcion are allowed between compatible pixels.
 /// This means that an 8-bit RGB pixel may be assigned to an 8-bit BGR pixel, or to an 8-bit planar reference. The channels are properly paired semantically.
@@ -103,13 +92,13 @@ BOOST_STATIC_ASSERT((is_same<channel_type<bgr8_pixel_t>::type, bits8>::value));
 template <typename ChannelValue, typename Layout> // = mpl::range_c<int,0,ColorSpace::size> >
 struct pixel : public detail::homogeneous_color_base<ChannelValue,Layout,mpl::size<typename Layout::color_space_t>::value> {
 private:
-    typedef ChannelValue channel_t;
-    typedef detail::homogeneous_color_base<ChannelValue,Layout,mpl::size<typename Layout::color_space_t>::value> parent_t;
+    using channel_t = ChannelValue;
+    using parent_t = detail::homogeneous_color_base<ChannelValue,Layout,mpl::size<typename Layout::color_space_t>::value>;
 public:
-    typedef pixel                               value_type;
-    typedef value_type&                         reference;
-    typedef const value_type&                   const_reference;
-    BOOST_STATIC_CONSTANT(bool,                 is_mutable = channel_traits<channel_t>::is_mutable);
+    using value_type = pixel<ChannelValue, Layout>;
+    using reference = value_type&;
+    using const_reference = value_type const&;
+    static constexpr bool is_mutable = channel_traits<channel_t>::is_mutable;
 
     pixel(){}
     explicit pixel(channel_t v) : parent_t(v) {}  // sets all channels to v
@@ -123,12 +112,16 @@ public:
     pixel&                       operator=(const pixel& p)       { static_copy(p,*this); return *this; }
 
     // Construct from another compatible pixel type
-    template <typename Pixel>    pixel(const Pixel& p, typename enable_if_c<is_pixel<Pixel>::value>::type* dummy = 0) : parent_t(p) { 
+    template <typename Pixel>
+    pixel(Pixel const& p,
+        typename std::enable_if<is_pixel<Pixel>::value>::type* /*dummy*/ = nullptr)
+        : parent_t(p)
+    {
         check_compatible<Pixel>();
-    }   
+    }
 
-    template <typename P> pixel& operator=(const P& p)           { assign(p, mpl::bool_<is_pixel<P>::value>()); return *this; } 
-    template <typename P> bool   operator==(const P& p)    const { return equal(p, mpl::bool_<is_pixel<P>::value>()); } 
+    template <typename P> pixel& operator=(const P& p)           { assign(p, mpl::bool_<is_pixel<P>::value>()); return *this; }
+    template <typename P> bool   operator==(const P& p)    const { return equal(p, mpl::bool_<is_pixel<P>::value>()); }
 
     template <typename P> bool   operator!=(const P& p)    const { return !(*this==p); }
 
@@ -136,15 +129,18 @@ public:
     typename channel_traits<channel_t>::reference       operator[](std::size_t i)       { return dynamic_at_c(*this,i); }
     typename channel_traits<channel_t>::const_reference operator[](std::size_t i) const { return dynamic_at_c(*this,i); }
 private:
-    template <typename Pixel> void assign(const Pixel& p, mpl::true_)       { check_compatible<Pixel>(); static_copy(p,*this); } 
-    template <typename Pixel> bool  equal(const Pixel& p, mpl::true_) const { check_compatible<Pixel>(); return static_equal(*this,p); } 
+    template <typename Pixel> void assign(const Pixel& p, mpl::true_)       { check_compatible<Pixel>(); static_copy(p,*this); }
+    template <typename Pixel> bool  equal(const Pixel& p, mpl::true_) const { check_compatible<Pixel>(); return static_equal(*this,p); }
 
     template <typename Pixel> void check_compatible() const { gil_function_requires<PixelsCompatibleConcept<Pixel,pixel> >(); }
 
 // Support for assignment/equality comparison of a channel with a grayscale pixel
 
 private:
-    static void check_gray() {  BOOST_STATIC_ASSERT((is_same<typename Layout::color_space_t, gray_t>::value)); }
+    static void check_gray()
+    {
+        static_assert(is_same<typename Layout::color_space_t, gray_t>::value, "");
+    }
     template <typename Channel> void assign(const Channel& chan, mpl::false_)       { check_gray(); gil::at_c<0>(*this)=chan; }
     template <typename Channel> bool equal (const Channel& chan, mpl::false_) const { check_gray(); return gil::at_c<0>(*this)==chan; }
 public:
@@ -156,31 +152,31 @@ public:
 //  ColorBasedConcept
 /////////////////////////////
 
-template <typename ChannelValue, typename Layout, int K>  
+template <typename ChannelValue, typename Layout, int K>
 struct kth_element_type<pixel<ChannelValue,Layout>, K> {
-    typedef ChannelValue type;
+    using type = ChannelValue;
 };
 
-template <typename ChannelValue, typename Layout, int K>  
+template <typename ChannelValue, typename Layout, int K>
 struct kth_element_reference_type<pixel<ChannelValue,Layout>, K> {
-    typedef typename channel_traits<ChannelValue>::reference type;
+    using type = typename channel_traits<ChannelValue>::reference;
 };
 
-template <typename ChannelValue, typename Layout, int K>  
+template <typename ChannelValue, typename Layout, int K>
 struct kth_element_reference_type<const pixel<ChannelValue,Layout>, K> {
-    typedef typename channel_traits<ChannelValue>::const_reference type;
+    using type = typename channel_traits<ChannelValue>::const_reference;
 };
 
-template <typename ChannelValue, typename Layout, int K>  
+template <typename ChannelValue, typename Layout, int K>
 struct kth_element_const_reference_type<pixel<ChannelValue,Layout>, K> {
-    typedef typename channel_traits<ChannelValue>::const_reference type;
+    using type = typename channel_traits<ChannelValue>::const_reference;
 };
 
 /////////////////////////////
 //  PixelConcept
 /////////////////////////////
 
-template <typename ChannelValue, typename Layout> 
+template <typename ChannelValue, typename Layout>
 struct is_pixel<pixel<ChannelValue,Layout> > : public mpl::true_{};
 
 /////////////////////////////
@@ -189,26 +185,27 @@ struct is_pixel<pixel<ChannelValue,Layout> > : public mpl::true_{};
 
 template <typename ChannelValue, typename Layout>
 struct color_space_type<pixel<ChannelValue,Layout> > {
-    typedef typename Layout::color_space_t type;
-}; 
+    using type = typename Layout::color_space_t;
+};
 
 template <typename ChannelValue, typename Layout>
 struct channel_mapping_type<pixel<ChannelValue,Layout> > {
-    typedef typename Layout::channel_mapping_t type;
-}; 
+    using type = typename Layout::channel_mapping_t;
+};
 
 template <typename ChannelValue, typename Layout>
 struct is_planar<pixel<ChannelValue,Layout> > : public mpl::false_ {};
 
 template <typename ChannelValue, typename Layout>
 struct channel_type<pixel<ChannelValue,Layout> > {
-    typedef ChannelValue type;
-}; 
+    using type = ChannelValue;
+};
 
-} }  // namespace boost::gil
+}}  // namespace boost::gil
 
 namespace boost {
-    template <typename ChannelValue, typename Layout> 
+    template <typename ChannelValue, typename Layout>
     struct has_trivial_constructor<gil::pixel<ChannelValue,Layout> > : public has_trivial_constructor<ChannelValue> {};
 }
+
 #endif

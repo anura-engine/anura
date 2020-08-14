@@ -11,14 +11,24 @@
 #ifndef BOOST_INTERPROCESS_UNORDERED_MAP_INDEX_HPP
 #define BOOST_INTERPROCESS_UNORDERED_MAP_INDEX_HPP
 
+#ifndef BOOST_CONFIG_HPP
+#  include <boost/config.hpp>
+#endif
+#
+#if defined(BOOST_HAS_PRAGMA_ONCE)
+#  pragma once
+#endif
+
 #include <boost/interprocess/detail/config_begin.hpp>
 #include <boost/interprocess/detail/workaround.hpp>
 
-#include <functional>
-#include <utility>
+#include <boost/intrusive/detail/minimal_pair_header.hpp>
 #include <boost/unordered_map.hpp>
 #include <boost/interprocess/detail/utilities.hpp>
 #include <boost/interprocess/allocators/private_adaptive_pool.hpp>
+
+#include <boost/intrusive/detail/minimal_pair_header.hpp>         //std::pair
+#include <boost/intrusive/detail/minimal_less_equal_header.hpp>   //std::less
 
 //!\file
 //!Describes index adaptor of boost::unordered_map container, to use it
@@ -27,7 +37,7 @@
 namespace boost {
 namespace interprocess {
 
-///@cond
+#if !defined(BOOST_INTERPROCESS_DOXYGEN_INVOKED)
 
 //!Helper class to define typedefs from
 //!IndexTraits
@@ -43,8 +53,10 @@ struct unordered_map_index_aux
                typename MapConfig::
                   segment_manager_base>      allocator_type;
     struct hasher
-      : std::unary_function<key_type, std::size_t>
     {
+        typedef key_type argument_type;
+        typedef std::size_t result_type;
+
         std::size_t operator()(const key_type &val) const
         {
             typedef typename key_type::char_type    char_type;
@@ -57,7 +69,7 @@ struct unordered_map_index_aux
                          key_equal, allocator_type>      index_t;
 };
 
-///@endcond
+#endif   //#ifndef BOOST_INTERPROCESS_DOXYGEN_INVOKED
 
 //!Index type based in unordered_map. Just derives from unordered_map and
 //!defines the interface needed by managed memory segments
@@ -66,12 +78,12 @@ class unordered_map_index
    //Derive class from unordered_map specialization
    : public unordered_map_index_aux<MapConfig>::index_t
 {
-   /// @cond
+   #if !defined(BOOST_INTERPROCESS_DOXYGEN_INVOKED)
    typedef unordered_map_index_aux<MapConfig>   index_aux;
    typedef typename index_aux::index_t          base_type;
    typedef typename
       MapConfig::segment_manager_base     segment_manager_base;
-   /// @endcond
+   #endif   //#ifndef BOOST_INTERPROCESS_DOXYGEN_INVOKED
 
    public:
    //!Constructor. Takes a pointer to the
@@ -93,7 +105,7 @@ class unordered_map_index
    {  base_type::rehash(base_type::size()); }
 };
 
-/// @cond
+#if !defined(BOOST_INTERPROCESS_DOXYGEN_INVOKED)
 
 //!Trait class to detect if an index is a node
 //!index. This allows more efficient operations
@@ -104,7 +116,7 @@ struct is_node_index
 {
    static const bool value = true;
 };
-/// @endcond
+#endif   //#ifndef BOOST_INTERPROCESS_DOXYGEN_INVOKED
 
 }}   //namespace boost { namespace interprocess {
 

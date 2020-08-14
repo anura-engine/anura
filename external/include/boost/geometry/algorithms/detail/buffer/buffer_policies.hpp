@@ -2,13 +2,16 @@
 
 // Copyright (c) 2012-2014 Barend Gehrels, Amsterdam, the Netherlands.
 
+// This file was modified by Oracle on 2017, 2018.
+// Modifications copyright (c) 2017-2018, Oracle and/or its affiliates.
+// Contributed and/or modified by Adam Wulkiewicz, on behalf of Oracle
+
 // Use, modification and distribution is subject to the Boost Software License,
 // Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 
 #ifndef BOOST_GEOMETRY_ALGORITHMS_DETAIL_BUFFER_BUFFER_POLICIES_HPP
 #define BOOST_GEOMETRY_ALGORITHMS_DETAIL_BUFFER_BUFFER_POLICIES_HPP
-
 
 #include <cstddef>
 
@@ -19,6 +22,7 @@
 
 #include <boost/geometry/algorithms/covered_by.hpp>
 #include <boost/geometry/algorithms/detail/overlay/backtrack_check_si.hpp>
+#include <boost/geometry/algorithms/detail/overlay/traversal_info.hpp>
 #include <boost/geometry/algorithms/detail/overlay/turn_info.hpp>
 
 #include <boost/geometry/strategies/buffer.hpp>
@@ -35,7 +39,7 @@ namespace detail { namespace buffer
 
 enum intersection_location_type
 {
-    location_ok, inside_buffer, inside_original
+    location_ok, inside_buffer, location_discard
 };
 
 class backtrack_for_buffer
@@ -43,15 +47,28 @@ class backtrack_for_buffer
 public :
     typedef detail::overlay::backtrack_state state_type;
 
-    template <typename Operation, typename Rings, typename Turns, typename Geometry, typename RobustPolicy>
+    template
+        <
+            typename Operation,
+            typename Rings,
+            typename Turns,
+            typename Geometry,
+            typename Strategy,
+            typename RobustPolicy,
+            typename Visitor
+        >
     static inline void apply(std::size_t size_at_start,
                 Rings& rings, typename boost::range_value<Rings>::type& ring,
-                Turns& turns, Operation& operation,
-                std::string const& /*reason*/,
+                Turns& turns,
+                typename boost::range_value<Turns>::type const& /*turn*/,
+                Operation& operation,
+                detail::overlay::traverse_error_type /*traverse_error*/,
                 Geometry const& ,
                 Geometry const& ,
+                Strategy const& ,
                 RobustPolicy const& ,
-                state_type& state
+                state_type& state,
+                Visitor& /*visitor*/
                 )
     {
 #if defined(BOOST_GEOMETRY_COUNT_BACKTRACK_WARNINGS)
@@ -59,7 +76,7 @@ extern int g_backtrack_warning_count;
 g_backtrack_warning_count++;
 #endif
 //std::cout << "!";
-//std::cout << "WARNING " << reason << std::endl;
+//std::cout << "WARNING " << traverse_error_string(traverse_error) << std::endl;
 
         state.m_good = false;
 
@@ -75,14 +92,53 @@ g_backtrack_warning_count++;
     }
 };
 
+struct buffer_overlay_visitor
+{
+public :
+    void print(char const* /*header*/)
+    {
+    }
+
+    template <typename Turns>
+    void print(char const* /*header*/, Turns const& /*turns*/, int /*turn_index*/)
+    {
+    }
+
+    template <typename Turns>
+    void print(char const* /*header*/, Turns const& /*turns*/, int /*turn_index*/, int /*op_index*/)
+    {
+    }
+
+    template <typename Turns>
+    void visit_turns(int , Turns const& ) {}
+
+    template <typename Clusters, typename Turns>
+    void visit_clusters(Clusters const& , Turns const& ) {}
+
+    template <typename Turns, typename Turn, typename Operation>
+    void visit_traverse(Turns const& /*turns*/, Turn const& /*turn*/, Operation const& /*op*/, const char* /*header*/)
+    {
+    }
+
+    template <typename Turns, typename Turn, typename Operation>
+    void visit_traverse_reject(Turns const& , Turn const& , Operation const& ,
+            detail::overlay::traverse_error_type )
+    {}
+
+    template <typename Rings>
+    void visit_generated_rings(Rings const& )
+    {}
+};
+
+
 // Should follow traversal-turn-concept (enrichment, visit structure)
 // and adds index in piece vector to find it back
 template <typename Point, typename SegmentRatio>
 struct buffer_turn_operation
     : public detail::overlay::traversal_turn_operation<Point, SegmentRatio>
 {
-    int piece_index;
-    int index_in_robust_ring;
+    signed_size_type piece_index;
+    signed_size_type index_in_robust_ring;
 
     inline buffer_turn_operation()
         : piece_index(-1)
@@ -103,7 +159,7 @@ struct buffer_turn_info
     typedef Point point_type;
     typedef RobustPoint robust_point_type;
 
-    int turn_index; // TODO: this might go if partition can operate on non-const input
+    std::size_t turn_index; // TODO: this might go if partition can operate on non-const input
 
     RobustPoint robust_point;
 #if defined(BOOST_GEOMETRY_BUFFER_ENLARGED_CLUSTERS)
@@ -120,21 +176,37 @@ struct buffer_turn_info
         return robust_point;
     }
 
-
     intersection_location_type location;
 
-    int count_within;
-    int count_on_offsetted;
-    int count_on_helper;
-    int count_on_occupied;
-    int count_on_multi;
+    robust_point_type rob_pi, rob_pj, rob_qi, rob_qj;
+
+    std::size_t count_within;
+
+    bool within_original;
+    std::size_t count_on_original_boundary;
+    signed_size_type count_in_original; // increased by +1 for in ext.ring, -1 for int.ring
+
+    std::size_t count_on_offsetted;
+    std::size_t count_on_helper;
+    std::size_t count_within_near_offsetted;
+
+    bool remove_on_multi;
+
+    // Obsolete:
+    std::size_t count_on_occupied;
+    std::size_t count_on_multi;
 
     inline buffer_turn_info()
-        : turn_index(-1)
+        : turn_index(0)
         , location(location_ok)
         , count_within(0)
+        , within_original(false)
+        , count_on_original_boundary(0)
+        , count_in_original(0)
         , count_on_offsetted(0)
         , count_on_helper(0)
+        , count_within_near_offsetted(0)
+        , remove_on_multi(false)
         , count_on_occupied(0)
         , count_on_multi(0)
     {}

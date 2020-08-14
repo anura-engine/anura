@@ -8,6 +8,7 @@
 // Modifications copyright (c) 2014, Oracle and/or its affiliates.
 
 // Contributed and/or modified by Menelaos Karavelas, on behalf of Oracle
+// Contributed and/or modified by Adam Wulkiewicz, on behalf of Oracle
 
 // Parts of Boost.Geometry are redesigned from Geodan's Geographic Library
 // (geolib/GGL), copyright (c) 1995-2010 Geodan, Amsterdam, the Netherlands.
@@ -20,6 +21,12 @@
 #define BOOST_GEOMETRY_ALGORITHMS_APPEND_HPP
 
 
+#include <boost/range.hpp>
+
+#include <boost/variant/apply_visitor.hpp>
+#include <boost/variant/static_visitor.hpp>
+#include <boost/variant/variant_fwd.hpp>
+
 #include <boost/geometry/algorithms/num_interior_rings.hpp>
 #include <boost/geometry/algorithms/detail/convert_point_to_point.hpp>
 #include <boost/geometry/core/access.hpp>
@@ -28,9 +35,7 @@
 #include <boost/geometry/core/tags.hpp>
 #include <boost/geometry/geometries/concepts/check.hpp>
 #include <boost/geometry/geometries/variant.hpp>
-#include <boost/range.hpp>
-#include <boost/variant/static_visitor.hpp>
-#include <boost/variant/apply_visitor.hpp>
+#include <boost/geometry/util/range.hpp>
 
 
 namespace boost { namespace geometry
@@ -86,19 +91,23 @@ template <typename Polygon, typename Point>
 struct point_to_polygon
 {
     typedef typename ring_type<Polygon>::type ring_type;
+    typedef typename ring_return_type<Polygon>::type exterior_ring_type;
+    typedef typename interior_return_type<Polygon>::type interior_ring_range_type;
 
     static inline void apply(Polygon& polygon, Point const& point,
                 int ring_index, int = 0)
     {
         if (ring_index == -1)
         {
+            exterior_ring_type ext_ring = exterior_ring(polygon);
             append_point<ring_type, Point>::apply(
-                        exterior_ring(polygon), point);
+                        ext_ring, point);
         }
         else if (ring_index < int(num_interior_rings(polygon)))
         {
+            interior_ring_range_type int_rings = interior_rings(polygon);
             append_point<ring_type, Point>::apply(
-                        interior_rings(polygon)[ring_index], point);
+                        range::at(int_rings, ring_index), point);
         }
     }
 };
@@ -108,19 +117,23 @@ template <typename Polygon, typename Range>
 struct range_to_polygon
 {
     typedef typename ring_type<Polygon>::type ring_type;
+    typedef typename ring_return_type<Polygon>::type exterior_ring_type;
+    typedef typename interior_return_type<Polygon>::type interior_ring_range_type;
 
     static inline void apply(Polygon& polygon, Range const& range,
                 int ring_index, int = 0)
     {
         if (ring_index == -1)
         {
+            exterior_ring_type ext_ring = exterior_ring(polygon);
             append_range<ring_type, Range>::apply(
-                        exterior_ring(polygon), range);
+                        ext_ring, range);
         }
         else if (ring_index < int(num_interior_rings(polygon)))
         {
+            interior_ring_range_type int_rings = interior_rings(polygon);
             append_range<ring_type, Range>::apply(
-                        interior_rings(polygon)[ring_index], range);
+                        range::at(int_rings, ring_index), range);
         }
     }
 };
@@ -202,6 +215,71 @@ struct append<Geometry, RangeOrPoint, point_tag>
 } // namespace dispatch
 #endif // DOXYGEN_NO_DISPATCH
 
+#ifndef DOXYGEN_NO_DETAIL
+namespace detail { namespace append
+{
+
+template <typename MultiGeometry, typename RangeOrPoint>
+struct append_to_multigeometry
+{
+    static inline void apply(MultiGeometry& multigeometry,
+                             RangeOrPoint const& range_or_point,
+                             int ring_index, int multi_index)
+    {
+
+        dispatch::append
+            <
+                typename boost::range_value<MultiGeometry>::type,
+                RangeOrPoint
+            >::apply(range::at(multigeometry, multi_index), range_or_point, ring_index);
+    }
+};
+
+}} // namespace detail::append
+#endif // DOXYGEN_NO_DETAIL
+
+#ifndef DOXYGEN_NO_DISPATCH
+namespace dispatch
+{
+
+namespace splitted_dispatch
+{
+
+template <typename Geometry, typename Point>
+struct append_point<multi_point_tag, Geometry, Point>
+    : detail::append::append_point<Geometry, Point>
+{};
+
+template <typename Geometry, typename Range>
+struct append_range<multi_point_tag, Geometry, Range>
+    : detail::append::append_range<Geometry, Range>
+{};
+
+template <typename MultiGeometry, typename RangeOrPoint>
+struct append_point<multi_linestring_tag, MultiGeometry, RangeOrPoint>
+    : detail::append::append_to_multigeometry<MultiGeometry, RangeOrPoint>
+{};
+
+template <typename MultiGeometry, typename RangeOrPoint>
+struct append_range<multi_linestring_tag, MultiGeometry, RangeOrPoint>
+    : detail::append::append_to_multigeometry<MultiGeometry, RangeOrPoint>
+{};
+
+template <typename MultiGeometry, typename RangeOrPoint>
+struct append_point<multi_polygon_tag, MultiGeometry, RangeOrPoint>
+    : detail::append::append_to_multigeometry<MultiGeometry, RangeOrPoint>
+{};
+
+template <typename MultiGeometry, typename RangeOrPoint>
+struct append_range<multi_polygon_tag, MultiGeometry, RangeOrPoint>
+    : detail::append::append_to_multigeometry<MultiGeometry, RangeOrPoint>
+{};
+
+} // namespace splitted_dispatch
+
+} // namespace dispatch
+#endif // DOXYGEN_NO_DISPATCH
+
 
 namespace resolve_variant {
 
@@ -214,7 +292,7 @@ struct append
                              int ring_index,
                              int multi_index)
     {
-        concept::check<Geometry>();
+        concepts::check<Geometry>();
         dispatch::append<Geometry, RangeOrPoint>::apply(geometry,
                                                         range_or_point,
                                                         ring_index,
@@ -257,7 +335,7 @@ struct append<boost::variant<BOOST_VARIANT_ENUM_PARAMS(T)> >
                              int ring_index,
                              int multi_index)
     {
-        apply_visitor(
+        boost::apply_visitor(
             visitor<RangeOrPoint>(
                 range_or_point,
                 ring_index,

@@ -19,6 +19,7 @@
 #include <boost/spirit/home/lex/lexer/lexertl/wrap_action.hpp>
 #include <boost/mpl/bool.hpp>
 #include <boost/optional.hpp>
+#include <iterator> // for std::iterator_traits
 
 namespace boost { namespace spirit { namespace lex { namespace lexertl
 { 
@@ -36,7 +37,7 @@ namespace boost { namespace spirit { namespace lex { namespace lexertl
         {
         protected:
             typedef typename 
-                boost::detail::iterator_traits<Iterator>::value_type 
+                std::iterator_traits<Iterator>::value_type 
             char_type;
 
         public:
@@ -168,7 +169,7 @@ namespace boost { namespace spirit { namespace lex { namespace lexertl
             std::size_t get_state() const { return 0; }
             void set_state(std::size_t) {}
 
-            void set_end(Iterator const& it) {}
+            void set_end(Iterator const& /*it*/) {}
 
             Iterator& get_first() { return first_; }
             Iterator const& get_first() const { return first_; }
@@ -192,9 +193,8 @@ namespace boost { namespace spirit { namespace lex { namespace lexertl
 
             bool bol_;      // helper storing whether last character was \n
 
-        private:
             // silence MSVC warning C4512: assignment operator could not be generated
-            data& operator= (data const&);
+            BOOST_DELETED_FUNCTION(data& operator= (data const&))
         };
 
         ///////////////////////////////////////////////////////////////////////
@@ -265,9 +265,8 @@ namespace boost { namespace spirit { namespace lex { namespace lexertl
         protected:
             std::size_t state_;
 
-        private:
             // silence MSVC warning C4512: assignment operator could not be generated
-            data& operator= (data const&);
+            BOOST_DELETED_FUNCTION(data& operator= (data const&))
         };
 
         ///////////////////////////////////////////////////////////////////////
@@ -299,7 +298,7 @@ namespace boost { namespace spirit { namespace lex { namespace lexertl
             template <typename IterData>
             data (IterData const& data_, Iterator& first, Iterator const& last)
               : base_type(data_, first, last)
-              , actions_(data_.actions_), hold_()
+              , actions_(data_.actions_), hold_(), end_()
               , value_(iterator_range<Iterator>(last, last))
               , has_value_(false), has_hold_(false) {}
 
@@ -401,9 +400,8 @@ namespace boost { namespace spirit { namespace lex { namespace lexertl
             mutable bool has_value_;    // 'true' if value_ is valid
             bool has_hold_;     // 'true' if hold_ is valid
 
-        private:
             // silence MSVC warning C4512: assignment operator could not be generated
-            data& operator= (data const&);
+            BOOST_DELETED_FUNCTION(data& operator= (data const&))
         };
 
         ///////////////////////////////////////////////////////////////////////
@@ -541,9 +539,8 @@ namespace boost { namespace spirit { namespace lex { namespace lexertl
             mutable bool has_value_;    // 'true' if value_ is valid
             bool has_hold_;     // 'true' if hold_ is valid
 
-        private:
             // silence MSVC warning C4512: assignment operator could not be generated
-            data& operator= (data const&);
+            BOOST_DELETED_FUNCTION(data& operator= (data const&))
         };
     }
 }}}}

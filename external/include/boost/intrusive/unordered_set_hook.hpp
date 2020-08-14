@@ -16,11 +16,15 @@
 
 #include <boost/intrusive/detail/config_begin.hpp>
 #include <boost/intrusive/intrusive_fwd.hpp>
-#include <boost/intrusive/detail/utilities.hpp>
+
 #include <boost/intrusive/pointer_traits.hpp>
 #include <boost/intrusive/slist_hook.hpp>
 #include <boost/intrusive/options.hpp>
 #include <boost/intrusive/detail/generic_hook.hpp>
+
+#if defined(BOOST_HAS_PRAGMA_ONCE)
+#  pragma once
+#endif
 
 namespace boost {
 namespace intrusive {
@@ -78,22 +82,22 @@ struct unordered_node_traits
    static const bool store_hash        = StoreHash;
    static const bool optimize_multikey = OptimizeMultiKey;
 
-   static node_ptr get_next(const const_node_ptr & n)
+   BOOST_INTRUSIVE_FORCEINLINE static node_ptr get_next(const const_node_ptr & n)
    {  return pointer_traits<node_ptr>::static_cast_from(n->next_);  }
 
-   static void set_next(const node_ptr & n, const node_ptr & next)
+   BOOST_INTRUSIVE_FORCEINLINE static void set_next(node_ptr n, node_ptr next)
    {  n->next_ = next;  }
 
-   static node_ptr get_prev_in_group(const const_node_ptr & n)
+   BOOST_INTRUSIVE_FORCEINLINE static node_ptr get_prev_in_group(const const_node_ptr & n)
    {  return n->prev_in_group_;  }
 
-   static void set_prev_in_group(const node_ptr & n, const node_ptr & prev)
+   BOOST_INTRUSIVE_FORCEINLINE static void set_prev_in_group(node_ptr n, node_ptr prev)
    {  n->prev_in_group_ = prev;  }
 
-   static std::size_t get_hash(const const_node_ptr & n)
+   BOOST_INTRUSIVE_FORCEINLINE static std::size_t get_hash(const const_node_ptr & n)
    {  return n->hash_;  }
 
-   static void set_hash(const node_ptr & n, std::size_t h)
+   BOOST_INTRUSIVE_FORCEINLINE static void set_hash(const node_ptr & n, std::size_t h)
    {  n->hash_ = h;  }
 };
 
@@ -107,7 +111,7 @@ struct unordered_group_adapter
    static node_ptr get_next(const const_node_ptr & n)
    {  return NodeTraits::get_prev_in_group(n);  }
 
-   static void set_next(const node_ptr & n, const node_ptr & next)
+   static void set_next(node_ptr n, node_ptr next)
    {  NodeTraits::set_prev_in_group(n, next);   }
 };
 
@@ -123,39 +127,58 @@ struct unordered_algorithms
    typedef typename NodeTraits::node_ptr           node_ptr;
    typedef typename NodeTraits::const_node_ptr     const_node_ptr;
 
-   static void init(typename base_type::node_ptr n)
+   BOOST_INTRUSIVE_FORCEINLINE static void init(typename base_type::node_ptr n)
    {
       base_type::init(n);
       group_algorithms::init(n);
    }
 
-   static void init_header(typename base_type::node_ptr n)
+   BOOST_INTRUSIVE_FORCEINLINE static void init_header(typename base_type::node_ptr n)
    {
       base_type::init_header(n);
       group_algorithms::init_header(n);
    }
 
-   static void unlink(typename base_type::node_ptr n)
+   BOOST_INTRUSIVE_FORCEINLINE static void unlink(typename base_type::node_ptr n)
    {
       base_type::unlink(n);
       group_algorithms::unlink(n);
    }
 };
 
+//Class to avoid defining the same algo as a circular list, as hooks would be ambiguous between them
+template<class Algo>
+struct uset_algo_wrapper : public Algo
+{};
+
 template<class VoidPointer, bool StoreHash, bool OptimizeMultiKey>
-struct get_uset_node_algo
+struct get_uset_node_traits
 {
    typedef typename detail::if_c
       < (StoreHash || OptimizeMultiKey)
       , unordered_node_traits<VoidPointer, StoreHash, OptimizeMultiKey>
       , slist_node_traits<VoidPointer>
-      >::type node_traits_type;
-   typedef typename detail::if_c
-      < OptimizeMultiKey
-      , unordered_algorithms<node_traits_type>
-      , circular_slist_algorithms<node_traits_type>
       >::type type;
 };
+
+template<bool OptimizeMultiKey>
+struct get_uset_algo_type
+{
+   static const algo_types value = OptimizeMultiKey ? UnorderedAlgorithms : UnorderedCircularSlistAlgorithms;
+};
+
+template<class NodeTraits>
+struct get_algo<UnorderedAlgorithms, NodeTraits>
+{
+   typedef unordered_algorithms<NodeTraits> type;
+};
+
+template<class NodeTraits>
+struct get_algo<UnorderedCircularSlistAlgorithms, NodeTraits>
+{
+   typedef uset_algo_wrapper< circular_slist_algorithms<NodeTraits> > type;
+};
+
 /// @endcond
 
 //! Helper metafunction to define a \c unordered_set_base_hook that yields to the same
@@ -178,10 +201,11 @@ struct make_unordered_set_base_hook
       >::type packed_options;
 
    typedef generic_hook
-   < get_uset_node_algo<typename packed_options::void_pointer
-                       , packed_options::store_hash
-                       , packed_options::optimize_multikey
-                       >
+   < get_uset_algo_type <packed_options::optimize_multikey>::value
+   , typename get_uset_node_traits < typename packed_options::void_pointer
+                                   , packed_options::store_hash
+                                   , packed_options::optimize_multikey
+                                   >::type
    , typename packed_options::tag
    , packed_options::link_mode
    , HashBaseHookId
@@ -317,10 +341,11 @@ struct make_unordered_set_member_hook
       >::type packed_options;
 
    typedef generic_hook
-   < get_uset_node_algo< typename packed_options::void_pointer
-                       , packed_options::store_hash
-                       , packed_options::optimize_multikey
-                       >
+   < get_uset_algo_type <packed_options::optimize_multikey>::value
+   , typename get_uset_node_traits < typename packed_options::void_pointer
+                                   , packed_options::store_hash
+                                   , packed_options::optimize_multikey
+                                   >::type
    , member_tag
    , packed_options::link_mode
    , NoBaseHookId
