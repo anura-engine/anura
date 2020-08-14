@@ -28,7 +28,8 @@
 
 #ifdef USE_IMGUI
 #include "imgui.h"
-#include "imgui_impl_sdl_gl3.h"
+#include "imgui_impl_sdl.h"
+#include "imgui_impl_opengl3.h"
 #endif
 
 namespace input
@@ -38,7 +39,7 @@ namespace input
 		const int result = SDL_PollEvent(event);
 #ifdef USE_IMGUI
 		if(result) {
-			ImGui_ImplSdlGL3_ProcessEvent(event);
+			//ImGui_ImplSdlGL3_ProcessEvent(event);
 		}
 #endif
 		if(result) {
