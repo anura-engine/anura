@@ -11,7 +11,7 @@ xcopy /y/s "%base_dir%data" "%build_dir%\data\"
 if ERRORLEVEL 1 goto return_error
 xcopy /y/s "%base_dir%images" "%build_dir%\images\"
 if ERRORLEVEL 1 goto return_error
-xcopy /y/s "%base_dir%modules" "%build_dir%\modules\"
+xcopy /y/s "%base_dir%modules" "%build_dir%\modules\" /EXCLUDE:%base_dir%vs2013\anura\excluded_from_build_files.txt
 if ERRORLEVEL 1 goto return_error
 xcopy /y/s "%base_dir%update" "%build_dir%\update\"
 if ERRORLEVEL 1 goto return_error
