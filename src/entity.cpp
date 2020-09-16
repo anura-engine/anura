@@ -294,10 +294,18 @@ void Entity::calculateSolidRect()
 		if(area.empty()) {
 			platform_rect_ = rect();
 		} else {
-			if(delta_y < 0) {
-				platform_rect_ = rect(x() + area.x(), y() + area.y(), area.w(), area.h() - delta_y);
+
+			int platform_x;
+			if(isFacingRight()) {
+				platform_x = x() + area.x();
 			} else {
-				platform_rect_ = rect(x() + area.x(), y() + area.y(), area.w(), area.h());
+				platform_x = x() + f.width() - area.x() - area.w();
+			}
+
+			if(delta_y < 0) {
+				platform_rect_ = rect(platform_x, y() + area.y(), area.w(), area.h() - delta_y);
+			} else {
+				platform_rect_ = rect(platform_x, y() + area.y(), area.w(), area.h());
 			}
 		}
 	} else {
