@@ -2,5 +2,5 @@ This is our primary setup for building on macs, which at the time of this writin
 
 
 Well-maintained general instructions for building on OS X are here:
-https://github.com/frogatto/frogatto/wiki/Compiling-Frogatto-on-Mac-OS-10.7
+https://github.com/frogatto/frogatto/wiki/Compiling-Frogatto-on-Mac-OS-X
 
