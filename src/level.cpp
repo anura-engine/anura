@@ -393,7 +393,11 @@ Level::Level(const std::string& level_cfg, variant node)
 
 		id_ = node["id"].as_string();
 
-		if(level_cfg.size() > 4 && std::equal(level_cfg.begin(), level_cfg.begin()+4, "save") == false) {
+		if(!(
+			//Skip checking level ID if it's a savegame. This check is only intended for static level files.
+			(level_cfg.size() > 4 && std::equal(level_cfg.begin(), level_cfg.begin()+4, "save")) ||
+			(level_cfg.size() > 8 && std::equal(level_cfg.begin(), level_cfg.begin()+8, "autosave"))
+		)) {
 			ASSERT_LOG(level_cfg == id_, "Level file " << level_cfg << " has incorrect id: " << id_);
 		}
 	}
