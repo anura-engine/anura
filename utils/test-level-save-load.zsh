@@ -39,14 +39,21 @@ for level in modules/frogatto/data/level/**/*.cfg; do
 		#Clear the save.
 		rm $SAVEFILE >/dev/null 2>&1 || true
 		
-		#Send ctrl-s, ctrl-l. Wait.
-		xdotool key --window $ANURA_WIN_ID --delay 20 ctrl+semicolon ctrl+l
+		#Send ctrl-s, ctrl-l. Wait. (Save twice because it's been tempermental.)
+		xdotool key --window $ANURA_WIN_ID --delay 20 ctrl+semicolon
 		sleep 0.5
 		
 		#Sanity-check a save now exists.
-		if [ ! -f $SAVEFILE ]; then no; continue; fi
-		printf "y, " #the level was at least saveable
+		if [ ! -f $SAVEFILE ]; then #Didn't work first time? Try again.
+			sleep 2
+			xdotool key --window $ANURA_WIN_ID --delay 20 ctrl+semicolon ctrl+semicolon ctrl+semicolon #FFS save already.
+			sleep 1
+			if [ ! -f $SAVEFILE ]; then no; continue; fi #nope, really not saving
+		fi
+		printf "y, " #The level was at saveable. (This should always pass.)
 		
+		xdotool key --window $ANURA_WIN_ID --delay 20 ctrl+l
+		sleep 0.5
 		
 		#If the process is alive, we didn't hard-crash loading.
 		if [ ! -e /proc/$ANURA_PROCESS_ID ]; then no; continue; fi
@@ -75,16 +82,23 @@ for level in modules/frogatto/data/level/**/*.cfg; do
 		#Clear the save.
 		rm $SAVEFILE >/dev/null 2>&1 || true
 		
-		#Send ctrl-s, ctrl-l. Wait.
-		xdotool key --window $ANURA_WIN_ID --delay 20 ctrl+semicolon ctrl+l
+		#Send ctrl-s, ctrl-l. Wait. (Save twice because it's been tempermental.)
+		xdotool key --window $ANURA_WIN_ID --delay 20 ctrl+semicolon
 		sleep 0.5
 		
 		#Sanity-check a save now exists.
-		if [ ! -f $SAVEFILE ]; then no; continue; fi
+		if [ ! -f $SAVEFILE ]; then #Didn't work first time? Try again.
+			sleep 2
+			xdotool key --window $ANURA_WIN_ID --delay 20 ctrl+semicolon ctrl+semicolon ctrl+semicolon #FFS save already.
+			sleep 1
+			if [ ! -f $SAVEFILE ]; then no; continue; fi #nope, really not saving
+		fi
 		printf "y, " #the level passed save 2
 		
 		
 		#If the process is alive, we didn't hard-crash loading.
+		xdotool key --window $ANURA_WIN_ID --delay 20 ctrl+l
+		sleep 0.5
 		if [ ! -e /proc/$ANURA_PROCESS_ID ]; then no; continue; fi
 		
 		#If the current window ID is not Anura, then it's the Anura error box.
