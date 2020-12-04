@@ -1,5 +1,7 @@
 #!/bin/zsh
-#yolo set -eu -o pipefail
+
+#Something occasionally throws x glyph errors, so for now just ignore errors.
+#set -eu -o pipefail
 
 SAVEFILE=~/.frogatto/save.cfg
 
