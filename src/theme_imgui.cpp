@@ -155,6 +155,8 @@ void imgui_theme_ui()
 	ImGuiStyle& style = ImGui::GetStyle();
 
 	ImGui::Begin("ImGui Theme Editor");
+	ImGui::SetWindowFontScale(ImGui::GetIO().DisplayFramebufferScale.y * 1.8);
+
 	if(ImGui::Button("Save theme")) {
 		save_imgui_theme();
 	}
