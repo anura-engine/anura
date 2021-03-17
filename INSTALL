@@ -48,6 +48,8 @@ sudo apt install build-essential ccache git libboost-dev libboost-filesystem-dev
 
 Then, build the project.
 cd anura #(or wherever you downloaded Anura to)
+git submodule init #(first time only)
+git submodule update
 make -j$(nproc)
 
 Building on a 2016 Debian sid
