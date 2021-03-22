@@ -134,9 +134,9 @@ void RectCurrentGenerator::generate(int center_x, int center_y, int target_x, in
 		} else if(yvelocity_ < 0 && *velocity_y > yvelocity_) {
 			int amount = yvelocity_*strength/(target_mass*1000);
 			const int distance = target_y - rect_.y();
-			LOG_INFO("DIST: " << distance << "/" << rect_.h() << " " << *velocity_y);
+			//LOG_INFO("DIST: " << distance << "/" << rect_.h() << " " << *velocity_y);
 			if(distance < rect_.h()/2 && *velocity_y > 0) {
-				LOG_INFO("CANCEL");
+				//LOG_INFO("CANCEL");
 				amount = 0;
 			}
 			*velocity_y += amount;
