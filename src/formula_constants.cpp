@@ -64,7 +64,7 @@ namespace game_logic
 			return variant::from_bool(false);
 #endif
 		} else if(id == "LOW_END_SYSTEM") {
-#if defined(MOBILE_BUILD)
+#if defined(MOBILE_BUILD) || defined(LOW_END_SYSTEM)
 			return variant(1);
 #else
 			return variant(0);
@@ -185,26 +185,6 @@ UNIT_TEST(get_constant_2) {
 	CHECK_EQ(variant::from_bool(true), touch_screen_constant);
 #else
 	CHECK_EQ(variant::from_bool(false), touch_screen_constant);
-#endif
-}
-
-UNIT_TEST(get_constant_3) {
-	const variant low_end_system_constant =
-			game_logic::get_constant("LOW_END_SYSTEM");
-#ifdef MOBILE_BUILD
-	CHECK_EQ(variant(1), low_end_system_constant);
-#else
-	CHECK_EQ(variant(0), low_end_system_constant);
-#endif
-}
-
-UNIT_TEST(get_constant_4) {
-	const variant high_end_system_constant =
-			game_logic::get_constant("HIGH_END_SYSTEM");
-#ifdef MOBILE_BUILD
-	CHECK_EQ(variant(false), high_end_system_constant);
-#else
-	CHECK_EQ(variant(true), high_end_system_constant);
 #endif
 }
 
