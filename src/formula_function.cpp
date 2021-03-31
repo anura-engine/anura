@@ -3647,7 +3647,7 @@ FUNCTION_DEF_IMPL
 			}
 		}
 
-		ASSERT_LOG(found_valid_expr, "Last argument to find_index() function does not contain 'value' or 'index' " << debugPinpointLocation());
+		ASSERT_LOG(found_valid_expr, "Last argument to find_index_or_die() function does not contain 'value' or 'index' " << debugPinpointLocation());
 		END_FUNCTION_DEF(find_index_or_die)
 
 
