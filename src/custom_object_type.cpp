@@ -1706,7 +1706,17 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 				ASSERT_LOG(!entry.init || entry.storage_slot != -1, "Property " << id_ << "." << k << " cannot have initializer since it's not a variable");
 
 
-
+                if(entry.persistent) {
+                    //if this property is persistent then try to check if its type is a custom_object_type that is not serializable and flag it as an error.
+                    const std::string* obj_type_str = entry.type->is_custom_object();
+                    if(obj_type_str != nullptr && obj_type_str->empty() == false) {
+                        ConstCustomObjectTypePtr obj_type = CustomObjectType::get(*obj_type_str);
+                        if(obj_type != nullptr) {
+                            ASSERT_LOG(obj_type->serializable(), "Property " << id_ << "." << k << " is persistent and refers to object of type " << *obj_type_str << " which is not serializable.");
+                        }
+                    }
+                }
+                
 				if(value.has_key("editor_info")) {
 					entry.has_editor_info = true;
 					const game_logic::Formula::StrictCheckScope strict_checking(false);
