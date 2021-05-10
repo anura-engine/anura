@@ -26,14 +26,15 @@
 #endif 
 
 #include "SDL_image.h"
+#include "SDL_pixels.h"
 
 #include "asserts.hpp"
 #include "formatter.hpp"
 #include "SurfaceSDL.hpp"
 
 enum {
-	#ifndef _WIN32
-	//This exists on Windows, and so can't be redefined.
+	#ifdef TARGET_OS_MAC
+	//This exists seemingly everywhere but Mac, and in ~/external/include/SDL/SDL_pixels.h, so I don't know why it's not showing up here given we include that file.
 	SDL_PIXELFORMAT_XRGB8888 =
         SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_PACKED32, SDL_PACKEDORDER_XRGB,
                                SDL_PACKEDLAYOUT_8888, 32, 4),
