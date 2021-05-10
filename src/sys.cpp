@@ -110,7 +110,7 @@ namespace sys
 			return false;
 		}
 
-		struct mallinfo m = mallinfo();
+		struct mallinfo2 m = mallinfo2();
 
 		info->heap_free_kb = m.fordblks/1024;
 		info->heap_used_kb = m.uordblks/1024;
