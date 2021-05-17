@@ -819,6 +819,7 @@
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
     <CustomBuildAfterTargets>Link</CustomBuildAfterTargets>
     <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+    <LibraryPath>..\boost\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseXP|Win32'">
     <LinkIncremental>false</LinkIncremental>
