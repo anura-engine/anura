@@ -49,6 +49,10 @@ public:
       return "A non-recoverable error occurred during database lookup";
     return "asio.netdb error";
   }
+
+#ifdef __APPLE__
+  virtual ~netdb_category(){}
+#endif
 };
 
 } // namespace detail
@@ -77,6 +81,10 @@ public:
       return "Socket type not supported";
     return "asio.addrinfo error";
   }
+
+#ifdef __APPLE__
+  virtual ~addrinfo_category(){}
+#endif
 };
 
 } // namespace detail
@@ -111,6 +119,10 @@ public:
       return "The descriptor does not fit into the select call's fd_set";
     return "asio.misc error";
   }
+
+#ifdef __APPLE__
+  virtual ~misc_category(){}
+#endif
 };
 
 } // namespace detail
