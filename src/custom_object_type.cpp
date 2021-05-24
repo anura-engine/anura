@@ -1709,11 +1709,20 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
                 if(entry.persistent && entry.type.get() != nullptr) {
                     //if this property is persistent then try to check if its type is a custom_object_type that is not serializable and flag it as an error.
                     const std::string* obj_type_str = entry.type->is_custom_object();
-                    if(obj_type_str != nullptr && obj_type_str->empty() == false && std::find(get_custom_object_type_stack().begin(), get_custom_object_type_stack().end(), *obj_type_str) != get_custom_object_type_stack().end()) {
-                        ConstCustomObjectTypePtr obj_type = CustomObjectType::get(*obj_type_str);
-                        if(obj_type != nullptr) {
-                            ASSERT_LOG(obj_type->serializable(), "Property " << id_ << "." << k << " is persistent and refers to object of type " << *obj_type_str << " which is not serializable.");
+                    if(obj_type_str != nullptr && obj_type_str->empty() == false && std::find(get_custom_object_type_stack().begin(), get_custom_object_type_stack().end(), *obj_type_str) == get_custom_object_type_stack().end()) {
+                        
+                        auto dot = std::find(obj_type_str->begin(), obj_type_str->end(), '.');
+                        if(dot == obj_type_str->end() || std::find(get_custom_object_type_stack().begin(), get_custom_object_type_stack().end(), std::string(obj_type_str->begin(), dot)) == get_custom_object_type_stack().end()) {
+
+                            ConstCustomObjectTypePtr obj_type = CustomObjectType::get(*obj_type_str);
+
+                            if(obj_type != nullptr) {
+                                ASSERT_LOG(obj_type->serializable(), "Property " << id_ << "." << k << " is persistent and refers to object of type " << *obj_type_str << " which is not serializable.");
+                            }
                         }
+                        
+                        
+                        
                     }
                 }
                 
