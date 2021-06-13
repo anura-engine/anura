@@ -33,7 +33,7 @@
 #include "SurfaceSDL.hpp"
 
 enum {
-	#ifdef TARGET_OS_MAC
+	#if !(SDL_VERSION_ATLEAST(2,0,14))
 	//This exists seemingly everywhere but Mac, and in ~/external/include/SDL/SDL_pixels.h, so I don't know why it's not showing up here given we include that file.
 	SDL_PIXELFORMAT_XRGB8888 =
         SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_PACKED32, SDL_PACKEDORDER_XRGB,
