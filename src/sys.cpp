@@ -110,7 +110,11 @@ namespace sys
 			return false;
 		}
 
-		struct mallinfo2 m = mallinfo2();
+		#if (__GLIBC__ >= 2 && __GLIBC_MINOR__ >= 33)
+			struct mallinfo2 m = mallinfo2();
+		#else
+			struct mallinfo m = mallinfo();
+		#endif
 
 		info->heap_free_kb = m.fordblks/1024;
 		info->heap_used_kb = m.uordblks/1024;

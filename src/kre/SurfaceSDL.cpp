@@ -33,12 +33,11 @@
 #include "SurfaceSDL.hpp"
 
 enum {
-	#ifdef TARGET_OS_MAC
 	//This exists seemingly everywhere but Mac, and in ~/external/include/SDL/SDL_pixels.h, so I don't know why it's not showing up here given we include that file.
-	SDL_PIXELFORMAT_XRGB8888 =
+	//Wrapping it in #if !(SDL_VERSION_ATLEAST(2,0,14)) ought to work but doesn't. (See https://discourse.libsdl.org/t/sdl-2-0-14-released/28470 for the introduction of the variable.) So we just slap and underscore on it and hope for the best. >_<
+	SDL_PIXELFORMAT_XRGB8888_ =
 		SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_PACKED32, SDL_PACKEDORDER_XRGB,
 		                       SDL_PACKEDLAYOUT_8888, 32, 4),
-	#endif
 	SDL_PIXELFORMAT_R8 = 
 		SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_PACKED8, SDL_PACKEDORDER_NONE,
 		                       SDL_PACKEDLAYOUT_NONE, 8, 1),
@@ -83,7 +82,7 @@ namespace KRE
 				case PixelFormat::PF::PIXELFORMAT_BGR888:	    return SDL_PIXELFORMAT_BGR888;
 				case PixelFormat::PF::PIXELFORMAT_BGRX8888:	    return SDL_PIXELFORMAT_BGRX8888;
 				case PixelFormat::PF::PIXELFORMAT_ARGB8888:	    return SDL_PIXELFORMAT_ARGB8888;
-				case PixelFormat::PF::PIXELFORMAT_XRGB8888:	    return SDL_PIXELFORMAT_XRGB8888;
+				case PixelFormat::PF::PIXELFORMAT_XRGB8888:	    return SDL_PIXELFORMAT_XRGB8888_;
 				case PixelFormat::PF::PIXELFORMAT_RGBA8888:	    return SDL_PIXELFORMAT_RGBA8888;
 				case PixelFormat::PF::PIXELFORMAT_ABGR8888:	    return SDL_PIXELFORMAT_ABGR8888;
 				case PixelFormat::PF::PIXELFORMAT_BGRA8888:	    return SDL_PIXELFORMAT_BGRA8888;
