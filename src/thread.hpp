@@ -26,6 +26,7 @@
 
 #include <functional>
 #include <list>
+#include <string>
 
 #include "SDL.h"
 
