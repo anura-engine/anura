@@ -110,7 +110,7 @@ namespace sys
 			return false;
 		}
 
-		#if (__GLIBC__ > 1 && __GLIBC_MINOR__ > 23)
+		#if (__GLIBC__ >= 2 && __GLIBC_MINOR__ > 27)
 			struct mallinfo2 m = mallinfo2();
 		#else
 			struct mallinfo m = mallinfo();
