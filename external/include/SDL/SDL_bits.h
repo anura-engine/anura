@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2021 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -48,9 +48,10 @@ extern "C" {
  *  \return Index of the most significant bit, or -1 if the value is 0.
  */
 #if defined(__WATCOMC__) && defined(__386__)
-extern _inline int _SDL_bsr_watcom (Uint32);
-#pragma aux _SDL_bsr_watcom = \
+extern _inline int _SDL_clz_watcom (Uint32);
+#pragma aux _SDL_clz_watcom = \
     "bsr eax, eax" \
+    "xor eax, 31" \
     parm [eax] nomemory \
     value [eax] \
     modify exact [eax] nomemory;
@@ -71,13 +72,7 @@ SDL_MostSignificantBitIndex32(Uint32 x)
     if (x == 0) {
         return -1;
     }
-    return _SDL_bsr_watcom(x);
-#elif defined(_MSC_VER)
-    unsigned long index;
-    if (_BitScanReverse(&index, x)) {
-        return index;
-    }
-    return -1;
+    return 31 - _SDL_clz_watcom(x);
 #else
     /* Based off of Bit Twiddling Hacks by Sean Eron Anderson
      * <seander@cs.stanford.edu>, released in the public domain.

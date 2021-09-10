@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2021 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -30,10 +30,6 @@
 
 #include "SDL_stdinc.h"
 
-#if defined(_MSC_VER) && !defined(__clang__)
-#include <intrin.h>
-#endif
-
 /**
  *  \name The two types of endianness
  */
@@ -48,9 +44,6 @@
 #define SDL_BYTEORDER  __BYTE_ORDER
 #elif defined(__OpenBSD__)
 #include <endian.h>
-#define SDL_BYTEORDER  BYTE_ORDER
-#elif defined(__FreeBSD__)
-#include <sys/endian.h>
 #define SDL_BYTEORDER  BYTE_ORDER
 #else
 #if defined(__hppa__) || \
@@ -75,11 +68,8 @@ extern "C" {
 /**
  *  \file SDL_endian.h
  */
-#if (defined(__clang__) && (__clang_major__ > 3 || (__clang_major__ == 3 && __clang_minor__ >= 2))) || \
-    (defined(__GNUC__) && (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 8)))
-#define SDL_Swap16(x) __builtin_bswap16(x)
-#elif defined(__GNUC__) && defined(__i386__) && \
-   !(__GNUC__ == 2 && __GNUC_MINOR__ <= 95 /* broken gcc version */)
+#if defined(__GNUC__) && defined(__i386__) && \
+   !(__GNUC__ == 2 && __GNUC_MINOR__ == 95 /* broken gcc version */)
 SDL_FORCE_INLINE Uint16
 SDL_Swap16(Uint16 x)
 {
@@ -102,23 +92,13 @@ SDL_Swap16(Uint16 x)
   __asm__("rlwimi %0,%2,8,16,23": "=&r"(result):"0"(x >> 8), "r"(x));
     return (Uint16)result;
 }
-#elif defined(__GNUC__) && defined(__aarch64__)
-SDL_FORCE_INLINE Uint16
-SDL_Swap16(Uint16 x)
-{
-  __asm__("rev16 %w1, %w0" : "=r"(x) : "r"(x));
-  return x;
-}
-#elif defined(__GNUC__) && (defined(__m68k__) && !defined(__mcoldfire__))
+#elif defined(__GNUC__) && (defined(__M68000__) || defined(__M68020__)) && !defined(__mcoldfire__)
 SDL_FORCE_INLINE Uint16
 SDL_Swap16(Uint16 x)
 {
   __asm__("rorw #8,%0": "=d"(x): "0"(x):"cc");
     return x;
 }
-#elif defined(_MSC_VER)
-#pragma intrinsic(_byteswap_ushort)
-#define SDL_Swap16(x) _byteswap_ushort(x)
 #elif defined(__WATCOMC__) && defined(__386__)
 extern _inline Uint16 SDL_Swap16(Uint16);
 #pragma aux SDL_Swap16 = \
@@ -133,11 +113,7 @@ SDL_Swap16(Uint16 x)
 }
 #endif
 
-#if (defined(__clang__) && (__clang_major__ > 2 || (__clang_major__ == 2 && __clang_minor__ >= 6))) || \
-    (defined(__GNUC__) && (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 3)))
-#define SDL_Swap32(x) __builtin_bswap32(x)
-#elif defined(__GNUC__) && defined(__i386__) && \
-   !(__GNUC__ == 2 && __GNUC_MINOR__ <= 95 /* broken gcc version */)
+#if defined(__GNUC__) && defined(__i386__)
 SDL_FORCE_INLINE Uint32
 SDL_Swap32(Uint32 x)
 {
@@ -162,14 +138,7 @@ SDL_Swap32(Uint32 x)
   __asm__("rlwimi %0,%2,24,0,7": "=&r"(result):"0"(result), "r"(x));
     return result;
 }
-#elif defined(__GNUC__) && defined(__aarch64__)
-SDL_FORCE_INLINE Uint32
-SDL_Swap32(Uint32 x)
-{
-  __asm__("rev %w1, %w0": "=r"(x):"r"(x));
-  return x;
-}
-#elif defined(__GNUC__) && (defined(__m68k__) && !defined(__mcoldfire__))
+#elif defined(__GNUC__) && (defined(__M68000__) || defined(__M68020__)) && !defined(__mcoldfire__)
 SDL_FORCE_INLINE Uint32
 SDL_Swap32(Uint32 x)
 {
@@ -191,9 +160,6 @@ extern _inline Uint32 SDL_Swap32(Uint32);
   parm   [eax]   \
   modify [eax];
 #endif
-#elif defined(_MSC_VER)
-#pragma intrinsic(_byteswap_ulong)
-#define SDL_Swap32(x) _byteswap_ulong(x)
 #else
 SDL_FORCE_INLINE Uint32
 SDL_Swap32(Uint32 x)
@@ -203,11 +169,7 @@ SDL_Swap32(Uint32 x)
 }
 #endif
 
-#if (defined(__clang__) && (__clang_major__ > 2 || (__clang_major__ == 2 && __clang_minor__ >= 6))) || \
-    (defined(__GNUC__) && (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 3)))
-#define SDL_Swap64(x) __builtin_bswap64(x)
-#elif defined(__GNUC__) && defined(__i386__) && \
-   !(__GNUC__ == 2 && __GNUC_MINOR__ <= 95 /* broken gcc version */)
+#if defined(__GNUC__) && defined(__i386__)
 SDL_FORCE_INLINE Uint64
 SDL_Swap64(Uint64 x)
 {
@@ -232,9 +194,6 @@ SDL_Swap64(Uint64 x)
   __asm__("bswapq %0": "=r"(x):"0"(x));
     return x;
 }
-#elif defined(_MSC_VER)
-#pragma intrinsic(_byteswap_uint64)
-#define SDL_Swap64(x) _byteswap_uint64(x)
 #else
 SDL_FORCE_INLINE Uint64
 SDL_Swap64(Uint64 x)
