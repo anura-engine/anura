@@ -368,6 +368,12 @@ namespace sys
 					LOG_WARN("COULD NOT LISTEN ON FILE " << new_files[n]);
 				}
 			}
+			
+			//Avoid crash where, upon resource exhaustion, inotify_fd would be -1 and cause FD_SET to abort the program with an error.
+			if(inotify_fd < 0) {
+				LOG_WARN("COULD NOT LISTEN ON FILES. CHECK ulimit -n; YOU MAY BE OUT OF FILE DESCRIPTORS.");
+				break;
+			}
 
 			FD_ZERO(&read_set);
 			FD_SET(inotify_fd, &read_set);
