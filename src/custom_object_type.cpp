@@ -1030,6 +1030,25 @@ const std::vector<std::string>& CustomObjectType::possibleIdsIncludingPrototypes
 	return result;
 }
 
+const std::vector<std::string>& CustomObjectType::possibleIdsExcludingPrototypes()
+{
+    static std::vector<std::string> result;
+    if(result.empty()) {
+        auto b = getAllIds(false);
+        result.insert(result.end(), b.begin(), b.end());
+
+        for(std::string& s : result) {
+            auto colon = std::find(s.begin(), s.end(), ':');
+            if(colon != s.end()) {
+                s.erase(s.begin(), colon+1);
+            }
+        }
+
+        std::sort(result.begin(), result.end());
+    }
+
+    return result;
+}
 
 std::map<std::string,CustomObjectType::EditorSummary> CustomObjectType::getEditorCategories()
 {
@@ -1714,10 +1733,12 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
                         auto dot = std::find(obj_type_str->begin(), obj_type_str->end(), '.');
                         if(dot == obj_type_str->end() || std::find(get_custom_object_type_stack().begin(), get_custom_object_type_stack().end(), std::string(obj_type_str->begin(), dot)) == get_custom_object_type_stack().end()) {
 
-                            ConstCustomObjectTypePtr obj_type = CustomObjectType::get(*obj_type_str);
+                            if( std::binary_search(possibleIdsExcludingPrototypes().begin(), possibleIdsExcludingPrototypes().end(), *obj_type_str ) ) {
+                                ConstCustomObjectTypePtr obj_type = CustomObjectType::get(*obj_type_str);
 
-                            if(obj_type != nullptr) {
-                                ASSERT_LOG(obj_type->serializable(), "Property " << id_ << "." << k << " is persistent and refers to object of type " << *obj_type_str << " which is not serializable.");
+                                if(obj_type != nullptr) {
+                                    ASSERT_LOG(obj_type->serializable(), "Property " << id_ << "." << k << " is persistent and refers to object of type " << *obj_type_str << " which is not serializable.");
+                                }
                             }
                         }
                         

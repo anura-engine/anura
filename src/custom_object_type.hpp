@@ -80,6 +80,7 @@ public:
 	static std::vector<ConstCustomObjectTypePtr> getAll();
 	static std::vector<std::string> getAllIds(bool prototypes=false);
 	static const std::vector<std::string>& possibleIdsIncludingPrototypes();
+    static const std::vector<std::string>& possibleIdsExcludingPrototypes();
 
 	static int getObjectTypeIndex(const std::string& id);
 
