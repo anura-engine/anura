@@ -196,7 +196,7 @@ namespace KRE
 						}
 					}
 				}
-				wnd_flags |= SDL_WINDOW_OPENGL;
+				wnd_flags |= SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI;
 			} else if(getDisplayDevice()->ID() == DisplayDevice::DISPLAY_DEVICE_OPENGLES) {
 				// We need to do extra SDL set-up for an OpenGL context.
 				// Since these parameter's need to be set-up before context
