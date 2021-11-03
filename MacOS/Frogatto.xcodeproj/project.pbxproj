@@ -219,6 +219,7 @@
 		63E3EC381B452D55002F8294 /* FontSTB.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 63E3EC321B452D55002F8294 /* FontSTB.cpp */; };
 		63E3EC391B452D55002F8294 /* SurfaceBlur.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 63E3EC351B452D55002F8294 /* SurfaceBlur.cpp */; };
 		63EAECC61D14DA8300F425C3 /* Cursor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 63EAECC41D14DA8300F425C3 /* Cursor.cpp */; };
+		84AE5E9F27322CE3000488E1 /* NSWindowswizzler.m in Sources */ = {isa = PBXBuildFile; fileRef = 84AE5E9E27322CE3000488E1 /* NSWindowswizzler.m */; };
 		C00160C716A29908001DAEB9 /* tbs_bot.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C00160C516A29908001DAEB9 /* tbs_bot.cpp */; };
 		C00160CD16A2991D001DAEB9 /* tbs_server.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C00160C916A2991D001DAEB9 /* tbs_server.cpp */; };
 		C00160CE16A2991D001DAEB9 /* tbs_web_server.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C00160CB16A2991D001DAEB9 /* tbs_web_server.cpp */; };
@@ -934,6 +935,7 @@
 		63E3EC361B452D55002F8294 /* SurfaceBlur.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = SurfaceBlur.hpp; sourceTree = "<group>"; };
 		63EAECC41D14DA8300F425C3 /* Cursor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Cursor.cpp; sourceTree = "<group>"; };
 		63EAECC51D14DA8300F425C3 /* Cursor.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Cursor.hpp; sourceTree = "<group>"; };
+		84AE5E9E27322CE3000488E1 /* NSWindowswizzler.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NSWindowswizzler.m; sourceTree = "<group>"; };
 		C00160C516A29908001DAEB9 /* tbs_bot.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = tbs_bot.cpp; sourceTree = "<group>"; };
 		C00160C616A29908001DAEB9 /* tbs_bot.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = tbs_bot.hpp; sourceTree = "<group>"; };
 		C00160C916A2991D001DAEB9 /* tbs_server.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = tbs_server.cpp; sourceTree = "<group>"; };
@@ -2045,6 +2047,7 @@
 		C010C5BC160AFD4C006E7D90 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				84AE5E9E27322CE3000488E1 /* NSWindowswizzler.m */,
 				C02D939B1E4FDB2300CB0A6A /* theme_imgui.cpp */,
 				C02D939C1E4FDB2300CB0A6A /* theme_imgui.hpp */,
 				C02D938A1E4C3CEF00CB0A6A /* imgui_draw.cpp */,
@@ -2974,6 +2977,7 @@
 				639B547B1AC2183B00ECC4F8 /* anura_shader.cpp in Sources */,
 				C08C43ED174C6BF300A46B15 /* formula_callable_visitor.cpp in Sources */,
 				638CC71F1AF6057700C7A106 /* eris.cpp in Sources */,
+				84AE5E9F27322CE3000488E1 /* NSWindowswizzler.m in Sources */,
 				C08C43EF174C6D8900A46B15 /* formula_callable.cpp in Sources */,
 				C0A1595A19F0F888009C25B3 /* ffl_weak_ptr.cpp in Sources */,
 				639B53851AC20D5A00ECC4F8 /* FboOGL.cpp in Sources */,
