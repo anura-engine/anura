@@ -41,7 +41,8 @@ namespace game_logic
 	{
 		typedef std::map<std::string, variant> constants_map;
 		std::vector<constants_map> constants_stack;
-	}
+        PREF_BOOL(low_end_system, false, "This flag will turn off certain graphical features that may slow the game down on some hardware - what it turns off is fairly arbitrary, but often includes shaders and such.");
+    }
 
 	variant get_constant(const std::string& id)
 	{
@@ -67,7 +68,11 @@ namespace game_logic
 #if defined(MOBILE_BUILD) || defined(LOW_END_SYSTEM)
 			return variant(1);
 #else
-			return variant(0);
+            if(g_low_end_system){
+                return variant(1);
+            } else {
+                return variant(0);
+            }
 #endif
 		} else if(id == "HIGH_END_SYSTEM") {
 			return variant(!get_constant("LOW_END_SYSTEM").as_bool());
