@@ -5319,22 +5319,21 @@ bool CustomObject::isActive(const rect& screen_area) const
 		return true;
 	}
 
+    bool activation_area_intersects_screen = false;
 	if(activation_area_) {
-		return rects_intersect(*activation_area_, screen_area);
+		activation_area_intersects_screen = rects_intersect(*activation_area_, screen_area);
 		//Can we wrap activation area in a call to rotated_scaled_rect_bounds(*activation_area_, rotate_z_.as_float32(), draw_scale_->as_float32());
 	}
 
 	if(text_) {
 		const rect text_area(x(), y(), text_->dimensions.w(), text_->dimensions.h());
-		if(rects_intersect(screen_area, text_area)) {
-			return true;
-		}
+        return rects_intersect(screen_area, text_area) || activation_area_intersects_screen;
 	}
 
 	const rect& area = frameRect();
 	if(draw_area_) {
 		rect draw_area(area.x(), area.y(), draw_area_->w()*2, draw_area_->h()*2);
-		return rects_intersect(draw_area, screen_area);
+		return rects_intersect(draw_area, screen_area) || activation_area_intersects_screen;
 	}
 	
 	if(parallax_scale_millis_.get() != nullptr) {
@@ -5344,7 +5343,7 @@ bool CustomObject::isActive(const rect& screen_area) const
 			rect screen(screen_area.x() - diffx, screen_area.y() - diffy,
 						screen_area.w(), screen_area.h());
 			const rect& area = frameRect();
-			return rects_intersect(screen, area);
+			return rects_intersect(screen, area) || activation_area_intersects_screen;
 		}
 	}
 
@@ -5357,7 +5356,7 @@ bool CustomObject::isActive(const rect& screen_area) const
 	}
 
 	
-	return false;
+	return false || activation_area_intersects_screen;
 }
 
 bool CustomObject::moveToStanding(Level& lvl, int max_displace)
