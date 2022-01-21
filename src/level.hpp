@@ -445,6 +445,7 @@ public:
 	std::vector<SubComponentUsage> getSubComponentUsagesOrdered() const;
 	void applySubComponents();
 
+    void addKnownLayer(int layer);
 
 private:
 	DECLARE_CALLABLE(Level);

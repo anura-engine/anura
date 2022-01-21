@@ -3867,6 +3867,7 @@ void CustomObject::setValue(const std::string& key, const variant& value)
 		}
 	} else if(key == "z" || key == "zorder") {
 		setZOrder(value.as_int());
+        Level::current().addKnownLayer(value.as_int());
 	} else if(key == "zsub_order") {
 		setZSubOrder(value.as_int());
 	} else if(key == "midpoint_x" || key == "mid_x") {
@@ -4288,6 +4289,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 	case CUSTOM_OBJECT_Z:
 	case CUSTOM_OBJECT_ZORDER:
 		setZOrder(value.as_int());
+        Level::current().addKnownLayer(value.as_int());
 		break;
 		
 	case CUSTOM_OBJECT_ZSUB_ORDER:

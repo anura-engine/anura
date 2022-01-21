@@ -2364,7 +2364,7 @@ void Level::frameBufferEnterZorder(int zorder) const
 	if(shaders != active_fb_shaders_ || (render_to_texture_ && !doing_render_to_texture_)) {
 
 		bool need_flush_to_screen = true, need_new_virtual_area = true;
-
+        
 		if(active_fb_shaders_.empty()) {
 			need_flush_to_screen = false;
 		} else if(shaders.empty() && !render_to_texture_) {
@@ -2382,7 +2382,8 @@ void Level::frameBufferEnterZorder(int zorder) const
 			rt_->clear();
 		}
 
-		active_fb_shaders_ = shaders;
+
+        active_fb_shaders_ = shaders;
 
 		doing_render_to_texture_ = render_to_texture_;
 	}
@@ -5022,6 +5023,12 @@ void Level::surrenderReferences(GarbageCollector* gc)
 	}
 }
 
+void Level::addKnownLayer(int layer)
+{
+    layers_.insert(layer);
+}
+                      
+                      
 /*
 UTILITY(correct_solidity)
 {
