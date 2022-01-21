@@ -515,7 +515,7 @@ void render_scene(Level& lvl, const screen_position& pos)
 		const ConstGraphicalFontPtr title_font = GraphicalFont::get("white_outline");
 		const ConstGraphicalFontPtr main_font = GraphicalFont::get("door_label");
 
-		const std::string title_text = _("Achievement seUnlocked!");
+		const std::string title_text = _("Achievement Unlocked!");
 		const std::string name = current_achievement->name();
 		const std::string description = "(" + current_achievement->description() + ")";
 		const int width = std::max<int>(std::max<int>(
