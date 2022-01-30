@@ -97,7 +97,8 @@ TARBALL := /var/www/anura/anura-$(shell date +"%Y%m%d-%H%M").tar.bz2
 BASE_CXXFLAGS += -std=c++0x -g -fno-inline-functions \
 	-fthreadsafe-statics \
 	-Wno-narrowing -Wno-reorder -Wno-unused \
-	-Wno-unknown-pragmas -Wno-overloaded-virtual
+	-Wno-unknown-pragmas -Wno-overloaded-virtual \
+	-DBOOST_BIND_GLOBAL_PLACEHOLDERS
 
 LDFLAGS?=-rdynamic
 
