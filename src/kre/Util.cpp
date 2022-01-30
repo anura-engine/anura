@@ -56,7 +56,7 @@ UNIT_TEST(split_test_0) {
 		"s", " th", "s s", "ftw", "r", " f", "r ", "ny p", "rp", "s" };
 	ASSERT_LOG(strings_vector.size() == expected_vector.size(), "size mismatch");
 	unsigned index = 0;
-	for (const auto string : strings_vector) {
+	for (const auto &string : strings_vector) {
 		CHECK_EQ(expected_vector[index++], string);
 	}
 }
@@ -67,7 +67,7 @@ UNIT_TEST(split_test_1) {
 	const std::vector<std::string> expected_vector { "th", "r" };
 	ASSERT_LOG(strings_vector.size() == expected_vector.size(), "size mismatch");
 	unsigned index = 0;
-	for (const auto string : strings_vector) {
+	for (const auto &string : strings_vector) {
 		CHECK_EQ(expected_vector[index++], string);
 	}
 }
@@ -78,12 +78,12 @@ UNIT_TEST(split_test_2) {
 			"aether", "aeiou",
 			Util::SplitFlags::ALLOW_EMPTY_STRINGS);
 	const std::vector<std::string> expected_vector { "r" };
-	for (const auto string : strings_vector) {
+	for (const auto &string : strings_vector) {
 		LOG_INFO(string);
 	}
 	ASSERT_LOG(strings_vector.size() == expected_vector.size(), "size mismatch");
 	unsigned index = 0;
-	for (const auto string : strings_vector) {
+	for (const auto &string : strings_vector) {
 		CHECK_EQ(expected_vector[index++], string);
 	}
 }
@@ -94,12 +94,12 @@ UNIT_TEST(split_test_3) {
 			"entropia aether", "aeiou",
 			Util::SplitFlags::ALLOW_EMPTY_STRINGS);
 	const std::vector<std::string> expected_vector { "r" };
-	for (const auto string : strings_vector) {
+	for (const auto &string : strings_vector) {
 		LOG_INFO(string);
 	}
 	ASSERT_LOG(strings_vector.size() == expected_vector.size(), "size mismatch");
 	unsigned index = 0;
-	for (const auto string : strings_vector) {
+	for (const auto &string : strings_vector) {
 		CHECK_EQ(expected_vector[index++], string);
 	}
 }
@@ -110,12 +110,12 @@ UNIT_TEST(split_test_4) {
 			"materia entropia aether", "aeiou",
 			Util::SplitFlags::ALLOW_EMPTY_STRINGS);
 	const std::vector<std::string> expected_vector { "r" };
-	for (const auto string : strings_vector) {
+	for (const auto &string : strings_vector) {
 		LOG_INFO(string);
 	}
 	ASSERT_LOG(strings_vector.size() == expected_vector.size(), "size mismatch");
 	unsigned index = 0;
-	for (const auto string : strings_vector) {
+	for (const auto &string : strings_vector) {
 		CHECK_EQ(expected_vector[index++], string);
 	}
 }

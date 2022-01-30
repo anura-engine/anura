@@ -197,7 +197,7 @@ std::string modify_variant_text(const std::string& contents, variant original, v
 
 	if(v.is_map() && original.is_map()) {
 		std::map<variant,variant> old_map = original.as_map(), new_map = v.as_map();
-		for(const variant_pair& item : old_map) {
+		for(const auto& item : old_map) {
 			std::map<variant,variant>::const_iterator itor = new_map.find(item.first);
 			if(itor != new_map.end()) {
 				if(itor->second == item.second) {
@@ -220,7 +220,7 @@ std::string modify_variant_text(const std::string& contents, variant original, v
 			}
 		}
 
-		for(const variant_pair& item : new_map) {
+		for(const auto& item : new_map) {
 			if(old_map.count(item.first)) {
 				continue;
 			}

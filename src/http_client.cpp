@@ -199,7 +199,7 @@ void http_client::handle_connect(const boost::system::error_code& error, connect
 		resolution_state_ = RESOLUTION_DONE;
 
 		//all those connections waiting on DNS resolution can now connect.
-		for(const connection_ptr conn : connections_waiting_on_dns_) {
+		for(const connection_ptr& conn : connections_waiting_on_dns_) {
 			async_connect(conn);
 		}
 

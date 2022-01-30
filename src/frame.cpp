@@ -267,14 +267,14 @@ Frame::Frame(variant node)
 		}
 
 		typedef std::pair<int,std::string> event_pair;
-		for(const event_pair& p : event_map) {
+		for(const auto& p : event_map) {
 			event_frames_.emplace_back(p.first);
 			event_names_.emplace_back(p.second);
 		}
 	}
 
 	static const std::string AreaPostfix = "_area";
-	for(const variant_pair& val : node.as_map()) {
+	for(const auto& val : node.as_map()) {
 		const std::string& attr = val.first.as_string();
 		if(attr.size() <= AreaPostfix.size() || std::equal(AreaPostfix.begin(), AreaPostfix.end(), attr.end() - AreaPostfix.size()) == false || attr == "solid_area" ||attr == "platform_area") {
 			continue;
@@ -352,7 +352,7 @@ Frame::Frame(variant node)
 		buildAlpha();
 	}
 
-	for(const variant_pair& value : node.as_map()) {
+	for(const auto& value : node.as_map()) {
 		static const std::string PivotPrefix = "pivot_";
 		const std::string& attr = value.first.as_string();
 		if(attr.size() > PivotPrefix.size() && std::equal(PivotPrefix.begin(), PivotPrefix.end(), attr.begin())) {

@@ -275,7 +275,7 @@ UTILITY(compile_objects)
 	}
 
 	for(variant node : animation_containing_nodes) {
-		for(const variant_pair& p : node.as_map()) {
+		for(const auto& p : node.as_map()) {
 			std::string attr_name = p.first.as_string();
 			if(attr_name != "animation" && attr_name != "FramedGuiElement" && attr_name != "section") {
 				continue;
@@ -397,7 +397,7 @@ UTILITY(compile_objects)
 	}
 
 	typedef std::pair<variant, animation_area_ptr> anim_pair;
-	for(const anim_pair& a : nodes_to_animation_areas) {
+	for(const auto& a : nodes_to_animation_areas) {
 		variant node = a.first;
 		animation_area_ptr anim = a.second;
 		std::ostringstream fname;

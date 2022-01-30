@@ -253,7 +253,7 @@ namespace
 
 void init_tables(const variant& doc)
 {
-	for(const variant module : doc.getKeys().as_list()) {
+	for(const variant &module : doc.getKeys().as_list()) {
 		init_tables_for_module(module.as_string(), doc[module]);
 	}
 }

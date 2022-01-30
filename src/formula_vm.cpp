@@ -608,7 +608,7 @@ void VirtualMachine::executeInternal(const FormulaCallable& variables, std::vect
 				variables_stack.push_back(callable);
 
 				int index = 0;
-				for(const std::pair<variant,variant>& in : input) {
+				for(const auto& in : input) {
 					if(callable->refcount() != 1) {
 						callable = new map_callable(vars, num_base_slots);
 						variables_stack.back().reset(callable);
@@ -721,7 +721,7 @@ void VirtualMachine::executeInternal(const FormulaCallable& variables, std::vect
 				std::map<variant,variant> res;
 
 				int index = 0;
-				for(const std::pair<variant,variant>& in : input) {
+				for(const auto& in : input) {
 					if(callable->refcount() != 1) {
 						callable = new map_callable(vars, num_base_slots);
 						variables_stack.back().reset(callable);

@@ -355,7 +355,7 @@ void TileMap::init(variant node)
 {
 	files_index.clear();
 
-	for(const variant_pair& value : node.as_map()) {
+	for(const auto& value : node.as_map()) {
 		files_index[value.first.as_string()] = util::split(value.second.as_string());
 	}
 

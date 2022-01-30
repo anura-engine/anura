@@ -1316,7 +1316,7 @@ void CustomObjectType::initEventHandlers(variant node,
 	variant events_node = node["events"];
 
 	if(events_node.is_null() == false) {
-		for(const variant_pair& value : events_node.as_map()) {
+		for(const auto& value : events_node.as_map()) {
 			std::string event = value.first.as_string();
 			if(event.empty() == false && event[0] == '+') {
 				event.erase(event.begin());
@@ -1330,7 +1330,7 @@ void CustomObjectType::initEventHandlers(variant node,
 
 	}
 
-	for(const variant_pair& value : node.as_map()) {
+	for(const auto& value : node.as_map()) {
 		const std::string& key = value.first.as_string();
 		if(key.size() > 3 && std::equal(key.begin(), key.begin() + 3, "on_")) {
 			//ASSERT_LOG(events_node.is_null(), "Object " << node["id"].as_string() << " has an events node but also has " << key << ". Cannot mix old and new-style events");
@@ -1849,7 +1849,7 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 
 	variant variations = node["variations"];
 	if(variations.is_null() == false) {
-		for(const variant_pair& v : variations.as_map()) {
+		for(const auto& v : variations.as_map()) {
 			variations_[v.first.as_string()] = game_logic::Formula::createOptionalFormula(v.second, &get_custom_object_functions_symbol_table());
 		}
 		

@@ -79,7 +79,7 @@ std::map<std::string, std::vector<variant> > load_named_variant_info()
 	const std::string path = module::map_file("data/types.cfg");
 	if(sys::file_exists(path)) {
 		variant node = json::parse_from_file(path);
-		for(const variant::map_pair& p : node.as_map()) {
+		for(const auto& p : node.as_map()) {
 			std::string key = p.first.as_string();
 
 			auto colon = std::find(key.begin(), key.end(), ':');
@@ -108,7 +108,7 @@ std::map<std::string, std::vector<variant> > load_named_variant_info()
 
 		const std::string path = module::map_file("data/types/" + f);
 		variant node = json::parse_from_file(path);
-		for(const variant::map_pair& p : node.as_map()) {
+		for(const auto& p : node.as_map()) {
 			ASSERT_LOG(result.count(p.first.as_string()) == 0, "Multiple definition of type " << p.first.as_string() << " defined in " << definition_file[p.first.as_string()] << " and " << path);
 			std::string key = p.first.as_string();
 			auto colon = std::find(key.begin(), key.end(), ':');
@@ -195,7 +195,7 @@ types_cfg_scope::types_cfg_scope(variant v)
 	ASSERT_LOG(v.is_null() || v.is_map(), "Unrecognized types definition: " << v.write_json() << " " << v.debug_location());
 	std::map<std::string, std::vector<variant> > symbols;
 	if(v.is_map()) {
-		for(const variant::map_pair& p : v.as_map()) {
+		for(const auto& p : v.as_map()) {
 			symbols[p.first.as_string()].push_back(p.second);
 		}
 	}
@@ -1187,7 +1187,7 @@ public:
 			return false;
 		}
 
-		for(const variant::map_pair& p : v.as_map()) {
+		for(const auto& p : v.as_map()) {
 			if(!key_type_->match(p.first) || !value_type_->match(p.second)) {
 				return false;
 			}
@@ -1286,7 +1286,7 @@ public:
 			return false;
 		}
 
-		for(const variant::map_pair& p : v.as_map()) {
+		for(const auto& p : v.as_map()) {
 			std::map<variant, variant_type_ptr>::const_iterator itor = type_map_.find(p.first);
 			if(itor == type_map_.end()) {
 				return false;
@@ -1314,7 +1314,7 @@ public:
 
 		std::ostringstream s;
 
-		for(const variant::map_pair& p : v.as_map()) {
+		for(const auto& p : v.as_map()) {
 			std::map<variant, variant_type_ptr>::const_iterator itor = type_map_.find(p.first);
 			if(itor == type_map_.end()) {
 				s << "Key " << p.first << " not in type";
@@ -1793,7 +1793,7 @@ variant_type_ptr get_variant_type_from_value(const variant& value) {
 	} else if(value.is_map()) {
 
 		bool all_string_keys = true;
-		for(const variant::map_pair& p : value.as_map()) {
+		for(const auto& p : value.as_map()) {
 			if(p.first.is_string() == false) {
 				all_string_keys = false;
 				break;
@@ -1802,7 +1802,7 @@ variant_type_ptr get_variant_type_from_value(const variant& value) {
 
 		if(all_string_keys && !value.as_map().empty()) {
 			std::map<variant, variant_type_ptr> type_map;
-			for(const variant::map_pair& p : value.as_map()) {
+			for(const auto& p : value.as_map()) {
 				type_map[p.first] = get_variant_type_from_value(p.second);
 			}
 
@@ -1811,7 +1811,7 @@ variant_type_ptr get_variant_type_from_value(const variant& value) {
 
 		std::vector<variant_type_ptr> key_types, value_types;
 
-		for(const variant::map_pair& p : value.as_map()) {
+		for(const auto& p : value.as_map()) {
 			variant_type_ptr new_key_type = get_variant_type_from_value(p.first);
 			variant_type_ptr new_value_type = get_variant_type_from_value(p.second);
 

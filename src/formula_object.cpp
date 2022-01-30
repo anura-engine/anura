@@ -1078,7 +1078,7 @@ std::map<std::string, std::string>& class_path_map()
 				FormulaObject::visitVariantsInternal(item, fn, seen);
 			}
 		} else if(node.is_map()) {
-			for(const variant_pair& item : node.as_map()) {
+			for(const auto& item : node.as_map()) {
 				FormulaObject::visitVariantsInternal(item.second, fn, seen);
 			}
 		}
@@ -1123,7 +1123,7 @@ std::map<std::string, std::string>& class_path_map()
 				FormulaObject::visitVariantsInternal(item, fn, seen);
 			}
 		} else if(node.is_map()) {
-			for(const variant_pair& item : node.as_map()) {
+			for(const auto& item : node.as_map()) {
 				FormulaObject::visitVariantsInternal(item.second, fn, seen);
 			}
 		}
@@ -1349,7 +1349,7 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 			v = variant(&result);
 		} else if(v.is_map()) {
 			std::map<variant, variant> result;
-			for(const variant_pair& item : v.as_map()) {
+			for(const auto& item : v.as_map()) {
 				variant key = item.first;
 				variant value = item.second;
 				FormulaObject::mapObjectIntoDifferentTree(key, mapping, seen);
@@ -1397,7 +1397,7 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 			return variant(&items);
 		} else if(v.is_map()) {
 			std::map<variant, variant> m;
-			for(const variant::map_pair& p : v.as_map()) {
+			for(const auto& p : v.as_map()) {
 				m[deepClone(p.first, mapping)] = deepClone(p.second, mapping);
 			}
 
@@ -1555,7 +1555,7 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 			}
 		}
 
-		for(const game_logic::ConstFormulaPtr f : class_->constructor()) {
+		for(const game_logic::ConstFormulaPtr &f : class_->constructor()) {
 			executeCommand(f->execute(*this));
 		}
 	}

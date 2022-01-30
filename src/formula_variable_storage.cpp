@@ -71,7 +71,7 @@ namespace game_logic
 			return;
 		}
 
-		for(const variant_pair& val : node.as_map()) {
+		for(const auto& val : node.as_map()) {
 			add(val.first.as_string(), val.second);
 		}
 	}

@@ -197,7 +197,7 @@ namespace json
 				if(v.is_null()) {
 					return;
 				}
-				for(const variant_pair& value : v.as_map()) {
+				for(const auto& value : v.as_map()) {
 					if(value.first.is_string() && !value.first.as_string().empty() && value.first.as_string()[0] == '@') {
 						continue;
 					}
@@ -560,7 +560,7 @@ namespace json
 		{
 			std::map<std::string, JsonMacroPtr> m = macros_;
 			game_logic::MapFormulaCallable* callable = new game_logic::MapFormulaCallable;
-			for(const variant_pair& p : arg.as_map()) {
+			for(const auto& p : arg.as_map()) {
 				callable->add(p.first.as_string(), p.second);
 			}
 

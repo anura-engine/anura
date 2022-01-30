@@ -473,7 +473,7 @@ namespace gui
 					}
 				}
 			} else if(item.is_map()) {
-				for(const variant_pair& p : item.as_map()) {
+				for(const auto& p : item.as_map()) {
 					variant result = get_map_editing(row, col, p.second);
 					if(result.is_null() == false) {
 						return result;

@@ -3303,7 +3303,7 @@ std::vector<editor::enemy_type>& editor::all_characters() const
 {
 	if(enemy_types.empty()) {
 		typedef std::pair<std::string, CustomObjectType::EditorSummary> type_cat;
-		for(const type_cat& item : CustomObjectType::getEditorCategories()) {
+		for(const auto& item : CustomObjectType::getEditorCategories()) {
 			enemy_types.push_back(enemy_type(item.first, item.second.category, item.second.first_frame));
 			enemy_types.back().help = item.second.help;
 		}

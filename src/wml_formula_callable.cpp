@@ -72,7 +72,7 @@ namespace game_logic
 
 	bool WmlSerializableFormulaCallable::deserializeObj(const variant& var, variant* target)
 	{
-		for(const std::pair<std::string, std::function<variant(variant)> >& p : type_registry()) {
+		for(const auto& p : type_registry()) {
 			if(var.has_key(p.first)) {
 				*target = p.second(var);
 				return true;

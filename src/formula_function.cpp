@@ -3176,7 +3176,7 @@ FUNCTION_DEF_IMPL
 					ffl::IntrusivePtr<map_callable> callable(new map_callable(variables, callable_base_slots));
 					std::map<variant,variant> m;
 					int index = 0;
-					for(const variant_pair& p : items.as_map()) {
+					for(const auto& p : items.as_map()) {
 						callable->set(p.first, p.second, index);
 						const variant val = args().back()->evaluate(*callable);
 						if(val.as_bool()) {
@@ -3656,7 +3656,7 @@ FUNCTION_DEF_IMPL
 			void visit_objects(variant v, std::vector<variant>& res) {
 				if(v.is_map()) {
 					res.push_back(v);
-					for(const variant_pair& value : v.as_map()) {
+					for(const auto& value : v.as_map()) {
 						visit_objects(value.second, res);
 					}
 				} else if(v.is_list()) {
@@ -3788,7 +3788,7 @@ FUNCTION_DEF_IMPL
 					if(items.is_map()) {
 						ffl::IntrusivePtr<map_callable> callable(new map_callable(variables, def_ ? def_->getNumSlots() : 0));
 						int index = 0;
-						for(const variant_pair& p : items.as_map()) {
+						for(const auto& p : items.as_map()) {
 							if(callable->refcount() > 1) {
 								callable.reset(new map_callable(variables, def_ ? def_->getNumSlots() : 0));
 							}
@@ -4979,7 +4979,7 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 				all_backed_maps.insert(this);
 
 				if(m.is_map()) {
-					for(const variant::map_pair& p : m.as_map()) {
+					for(const auto& p : m.as_map()) {
 						map_[p.first.as_string()].value = p.second;
 					}
 				}
@@ -4991,14 +4991,14 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 						if(sys::file_exists(docname_ + ".stats")) {
 							try {
 								variant stats = json::parse(sys::read_file(docname_ + ".stats"));
-								for(const variant::map_pair& p : stats.as_map()) {
+								for(const auto& p : stats.as_map()) {
 									map_[p.first.as_string()] = NodeInfo(p.second);
 								}
 							} catch(json::ParseError&) {
 							}
 						}
 
-						for(const variant::map_pair& p : v.as_map()) {
+						for(const auto& p : v.as_map()) {
 							if(p.first.as_string() != "_stats") {
 								map_[p.first.as_string()].value = p.second;
 							}

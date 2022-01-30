@@ -175,7 +175,7 @@ namespace editor_dialogs
 		}
 
 		typedef std::pair<std::string, const editor::enemy_type*> cat_pair;
-		for(const cat_pair& cp : categories) {
+		for(const auto& cp : categories) {
 			const editor::enemy_type& c = *cp.second;
 
 			ImageWidget* preview = new ImageWidget(c.preview_frame()->img());

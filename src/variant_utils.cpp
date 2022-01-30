@@ -107,7 +107,7 @@ game_logic::FormulaCallablePtr map_into_callable(variant v)
 		return game_logic::FormulaCallablePtr(v.mutable_callable());
 	} else if(v.is_map()) {
 		game_logic::MapFormulaCallable* res = new game_logic::MapFormulaCallable;
-		for(const variant_pair& p : v.as_map()) {
+		for(const auto& p : v.as_map()) {
 			res->add(p.first.as_string(), p.second);
 		}
 
@@ -204,7 +204,7 @@ void visitVariants(variant v, std::function<void (variant)> fn)
 			visitVariants(item, fn);
 		}
 	} else if(v.is_map()) {
-		for(const variant_pair& item : v.as_map()) {
+		for(const auto& item : v.as_map()) {
 			visitVariants(item.second, fn);
 		}
 	}
