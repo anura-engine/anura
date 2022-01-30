@@ -112,7 +112,7 @@ void sendEmail(std::string email_addr, std::string subject, std::string message)
 	fprintf(f, "%s\n", message.c_str());
 	fflush(f);
 
-	fclose(f);
+	pclose(f);
 #endif
 }
 

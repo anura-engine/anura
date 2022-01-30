@@ -83,7 +83,7 @@ namespace
 					servers.push_back(s);
 				}
 
-				fclose(p);
+				pclose(p);
 
 				{
 					threading::lock l(mutex_);
@@ -123,7 +123,7 @@ namespace
 							}
 						}
 
-						fclose(p);
+						pclose(p);
 					}
 				}
 			}
@@ -138,7 +138,7 @@ namespace
 				std::vector<char> buf;
 				buf.resize(10000000);
 				size_t nbytes = fread(&buf[0], 1, buf.size(), p);
-				fclose(p);
+				pclose(p);
 				if(nbytes > 0 && nbytes <= buf.size()) {
 					buf.resize(nbytes);
 					buf.push_back(0);
@@ -170,7 +170,7 @@ namespace
 				std::set<std::string> remove_files;
 
 				typedef std::pair<std::string,std::string> str_pair;
-				for(const str_pair& item : files) {
+				for(const auto& item : files) {
 					std::string contents;
 					if(getFileContents(item.second, &contents)) {
 						results[item.first] = contents;
@@ -185,7 +185,7 @@ namespace
 						files_.erase(fname);
 					}
 
-					for(const str_pair& item : results) {
+					for(const auto& item : results) {
 						if(file_contents_[item.first] != item.second) {
 							LOG_INFO("CONTENTS OF " << item.first << " UPDATED..");
 							file_contents_[item.first] = item.second;
