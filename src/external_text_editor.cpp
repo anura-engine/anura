@@ -35,6 +35,7 @@
 #ifdef _MSC_VER
 // Windows defines popen with an underscore, for reasons that seem "difficult" to fathom.
 #define popen _popen
+#define pclose _pclose
 #endif
 
 namespace 
