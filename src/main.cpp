@@ -330,7 +330,6 @@ namespace
 		SDL_LogSetPriority(SDL_LOG_CATEGORY_APPLICATION, log_priority);
 	}
 
-	std::string g_log_filename;
 	FILE* g_log_file;
 
 	void log_data(void* userdata, int category, SDL_LogPriority priority, const char* message)
@@ -343,11 +342,17 @@ namespace
 
 	void set_log_file(const std::string& fname)
 	{
+		FILE* new_log_file = fopen(fname.c_str(), "w");
+		if (!new_log_file) {
+			LOG_CRITICAL("set_log_file() could not open \"" << fname << "\" for writing.");
+			exit(-1);
+		}
+		
 		if(g_log_file) {
 			fclose(g_log_file);
 		}
 
-		g_log_file = fopen(fname.c_str(), "w");
+		g_log_file = new_log_file;
 
 		SDL_LogSetOutputFunction(log_data, nullptr);
 	}
