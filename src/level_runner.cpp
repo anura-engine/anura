@@ -88,7 +88,7 @@ extern bool g_desktop_fullscreen;
 extern bool g_particle_editor;
 extern int g_vsync;
 
-void auto_select_resolution(const KRE::WindowPtr& wm, int *width, int *height, bool reduce);
+void auto_select_resolution(const KRE::WindowPtr& wm, int *width, int *height, bool reduce, bool isFullscreen);
 
 namespace 
 {
@@ -1622,7 +1622,7 @@ bool LevelRunner::play_cycle()
 								width = preferences::requested_window_width();
 								height = preferences::requested_window_height();
 							} else {
-								auto_select_resolution(wnd, &width, &height, true);
+								auto_select_resolution(wnd, &width, &height, true, false);
 							}
 
 							preferences::adjust_virtual_width_to_match_physical(width, height);

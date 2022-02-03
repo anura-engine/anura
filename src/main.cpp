@@ -360,14 +360,28 @@ namespace
 // behavior of the module. The `frogatto` module does not use this.
 PREF_BOOL(remember_me, true, "Remember me (my gamer account) when connecting to the server");
 
-void auto_select_resolution(const KRE::WindowPtr& wm, int *width, int *height, bool reduce)
+// Seemingly, this is to select the "next common resolution down" for windowed mode.
+// Takes a window, two out params for the best common w/h which will fit in the screen at 2x (?), and "reduce" (?).
+void auto_select_resolution(const KRE::WindowPtr& wm, int *width, int *height, bool reduce, bool isFullscreen)
 {
+	
 	ASSERT_LOG(width != nullptr, "width is null.");
 	ASSERT_LOG(height != nullptr, "height is null.");
 
 	auto mode = wm->getDisplaySize();
 	auto best_mode = mode;
 	bool found = false;
+	
+	if(isFullscreen) {
+		LOG_INFO("RESOLUTION SET TO FULLSCREEN RESOLUTION " << mode.width << "x" << mode.height);
+		
+		*width = mode.width;
+		*height = mode.height;
+		
+		return;
+	}
+	
+	LOG_INFO("TARGET RESOLUTION IS " << mode.width << "x" << mode.height);
 	
 	const float MinReduction = reduce ? 0.9f : 2.0f;
 	for(auto& candidate_mode : wm->getWindowModes([](const KRE::WindowMode&){ return true; })) {
@@ -377,7 +391,8 @@ void auto_select_resolution(const KRE::WindowPtr& wm, int *width, int *height, b
 			}
 
 			if(candidate_mode.width > mode.width * MinReduction) {
-				LOG_INFO("REJECTED MODE IS " << candidate_mode.width << "x" << candidate_mode.height);
+				LOG_INFO("REJECTED MODE IS " << candidate_mode.width << "x" << candidate_mode.height 
+					<< "; (width " << candidate_mode.width << " > " << mode.width * MinReduction << ")");
 				continue;
 			}
 
@@ -977,7 +992,7 @@ int main(int argcount, char* argvec[])
 	hints.add("width", preferences::requested_window_width() > 0 ? preferences::requested_window_width() : 800);
 	hints.add("height", preferences::requested_window_height() > 0 ? preferences::requested_window_height() : 600);
 	hints.add("resizeable", g_resizeable);
-	hints.add("fullscreen", preferences::get_screen_mode() == preferences::ScreenMode::FULLSCREEN_WINDOWED ? true : false);
+	hints.add("fullscreen", preferences::get_screen_mode() != preferences::ScreenMode::WINDOWED ? true : false);
 	if(g_msaa) {
 		hints.add("use_multisampling", true);
 	}
@@ -1012,13 +1027,15 @@ int main(int argcount, char* argvec[])
     KRE::WindowPtr main_wnd = wm.allocateWindow(built_hints);
 	main_wnd->setWindowTitle(module::get_module_pretty_name());
 	
-	if(!g_desktop_fullscreen &&
+	if(!g_desktop_fullscreen && //What the heck is this, where is it defined?
 	   preferences::auto_size_window() 
 		&& preferences::requested_window_width() == 0 
 		&& preferences::requested_window_height() == 0) {
 		int width = 0;
 		int height = 0;
-		auto_select_resolution(main_wnd, &width, &height, true);
+		
+		bool isFullscreen = preferences::get_screen_mode() != preferences::ScreenMode::WINDOWED;
+		auto_select_resolution(main_wnd, &width, &height, true, isFullscreen);
 
 		preferences::adjust_virtual_width_to_match_physical(width, height);
 
