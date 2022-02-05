@@ -398,7 +398,14 @@ Level::Level(const std::string& level_cfg, variant node)
 			(level_cfg.size() > 4 && std::equal(level_cfg.begin(), level_cfg.begin()+4, "save")) ||
 			(level_cfg.size() > 8 && std::equal(level_cfg.begin(), level_cfg.begin()+8, "autosave"))
 		)) {
-			ASSERT_LOG(level_cfg == id_, "Level file " << level_cfg << " has incorrect id: " << id_);
+			auto unprefixed_id_start = level_cfg.find(":") + 1;
+			if(unprefixed_id_start) {
+				ASSERT_LOG(level_cfg.substr(unprefixed_id_start) == id_, 
+					"Level file " << level_cfg << " has incorrect id: " << id_);
+			} else {
+				ASSERT_LOG(level_cfg == id_, 
+					"Level file " << level_cfg << " has incorrect id: " << id_);
+			}
 		}
 	}
 
