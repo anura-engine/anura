@@ -1738,7 +1738,6 @@ variant Level::write() const
 		res.add("next_level", right_portal_.level_dest);
 	}
 
-	LOG_INFO("PREVIOUS LEVEL: " << left_portal_.level_dest);
 	if(left_portal_.level_dest.empty() == false) {
 		res.add("previous_level", left_portal_.level_dest);
 	}
