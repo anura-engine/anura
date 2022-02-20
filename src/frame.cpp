@@ -56,9 +56,8 @@ namespace
 		return *instance;
 	}
 
-	static unsigned int current_palette_mask = 0;
-
-	static const glm::vec3 z_axis(0, 0, 1.0f);
+    static unsigned int current_palette_mask = 0;
+	const glm::vec3 z_axis(0, 0, 1.0f);
 }
 
 void Frame::buildPatterns(variant obj_variant)
@@ -393,10 +392,10 @@ Frame::Frame(variant node)
 
 	if(palettes_recognized_.empty() == false) {
 		palette_frames().insert(this);
-		if(current_palette_mask) {
-			setPalettes(current_palette_mask);
-		}
-	}
+        if(current_palette_mask) {
+            setPalettes(current_palette_mask);
+        }
+    }
 
 	// Need to do stuff with co-ordinates here I think.
 
@@ -472,11 +471,11 @@ variant Frame::write() const
 	*/
 }
 
-void Frame::setPalettes(unsigned int palettes)
+void Frame::setPalettes(uint64_t palettes)
 {
 	int npalette = -1;
 	for(auto palette : palettes_recognized_) {
-		if((1 << palette) & palettes) {
+		if((1L << palette) & palettes) {
 			npalette = palette;
 			break;
 		}
@@ -485,14 +484,6 @@ void Frame::setPalettes(unsigned int palettes)
 	//LOG_DEBUG("Set palette " << npalette << " on " << blit_target_.getTexture()->id() << " from selection: " << std::hex << palettes << ", " << graphics::get_palette_name(npalette));
 }
 
-void Frame::setColorPalette(unsigned int palettes)
-{
-	LOG_DEBUG("Frame::setColorPalette: " << palettes);
-	current_palette_mask = palettes;
-	for(auto i : palette_frames()) {
-		i->setPalettes(palettes);
-	}
-}
 
 void Frame::setImageAsSolid()
 {
@@ -673,6 +664,15 @@ void Frame::buildAlpha()
 		ASSERT_EQ(f.area.w() + f.x_adjust + f.x2_adjust, img_rect_.w());
 		ASSERT_EQ(f.area.h() + f.y_adjust + f.y2_adjust, img_rect_.h());
 	}
+}
+
+void Frame::setColorPalette(uint64_t palettes)
+{
+    LOG_DEBUG("Frame::setColorPalette: " << palettes);
+    current_palette_mask = palettes;
+    for(auto i : palette_frames()) {
+        i->setPalettes(palettes);
+    }
 }
 
 bool Frame::isAlpha(int x, int y, int time, bool face_right) const

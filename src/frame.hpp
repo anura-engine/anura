@@ -51,8 +51,7 @@ public:
 	};
 
 	static void buildPatterns(variant obj_variant);
-
-	static void setColorPalette(unsigned int palettes);
+    static void setColorPalette(uint64_t palettes);
 
 	explicit Frame(variant node);
 	~Frame();
@@ -235,7 +234,7 @@ private:
 
 	std::vector<PivotSchedule> pivots_;
 
-	void setPalettes(unsigned int palettes);
+	void setPalettes(uint64_t palettes);
 
 	mutable KRE::Blittable blit_target_;
 };

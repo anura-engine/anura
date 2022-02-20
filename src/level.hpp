@@ -657,7 +657,7 @@ private:
 	std::set<std::string> hidden_classifications_;
 
 	//color palettes that the level has set.
-	unsigned int palettes_used_;
+	uint64_t palettes_used_;
 
 	int background_palette_;
 

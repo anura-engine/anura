@@ -1760,10 +1760,10 @@ variant Level::write() const
 
 	if(palettes_used_) {
 		std::vector<variant> out;
-		unsigned int p = palettes_used_;
+		uint64_t p = palettes_used_;
 		int id = 0;
 		while(p) {
-			if(p&1) {
+			if(p&1L) {
 				out.push_back(variant(graphics::get_palette_name(id)));
 			}
 
