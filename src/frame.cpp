@@ -56,7 +56,7 @@ namespace
 		return *instance;
 	}
 
-    static unsigned int current_palette_mask = 0;
+    uint64_t current_palette_mask = 0L;
 	const glm::vec3 z_axis(0, 0, 1.0f);
 }
 
@@ -217,7 +217,7 @@ Frame::Frame(variant node)
 	}
 
 	std::vector<std::string> palettes = parse_variant_list_or_csv_string(node["palettes"]);
-	unsigned palettes_bitmap = 0;
+	uint64_t palettes_bitmap = 0;
 	for(const std::string& p : palettes) {
 		int id = graphics::get_palette_id(p);
 		palettes_recognized_.emplace_back(id);
