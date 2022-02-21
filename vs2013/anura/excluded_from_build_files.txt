@@ -1,1 +1,3 @@
-.git
+.git\
+\modules\tbs
+\modules\citadel
