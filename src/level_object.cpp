@@ -311,7 +311,7 @@ palette_scope::palette_scope(const std::vector<std::string>& v)
 	for(const std::string& pal : v) {
 		const int id = graphics::get_palette_id(pal);
 		if(id >= 0) {
-			current_palette_set |= 1L << id;
+			current_palette_set |= static_cast<uint64_t>(1) << id;
 		} else {
 			LOG_ERROR("Unrecognised palette: " << pal);
 		}
@@ -362,7 +362,7 @@ LevelObject::LevelObject(variant node, const char* id)
 		for(const std::string& pal : p) {
 			const int id = graphics::get_palette_id(pal);
 			if(id >= 0) {
-				palettes_recognized_ |= 1L << id;
+				palettes_recognized_ |= static_cast<uint64_t>(1) << id;
 				palettes_id_list.emplace_back(id);
 			} else {
 				LOG_ERROR("Unrecognised palette name: " << pal);
