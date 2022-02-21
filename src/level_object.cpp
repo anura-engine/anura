@@ -295,7 +295,7 @@ void create_compiled_tiles_image()
 
 namespace 
 {
-	unsigned int current_palette_set = 0;
+	uint64_t current_palette_set = 0L;
 	std::set<LevelObject*>& palette_level_objects() {
 		//we never want this to be destroyed, since it's too hard to
 		//guarantee destruction order.
@@ -307,11 +307,11 @@ namespace
 palette_scope::palette_scope(const std::vector<std::string>& v)
   : original_value(current_palette_set)
 {
-	current_palette_set = 0;	
+	current_palette_set = 0L;
 	for(const std::string& pal : v) {
 		const int id = graphics::get_palette_id(pal);
 		if(id >= 0) {
-			current_palette_set |= 1 << id;
+			current_palette_set |= 1L << id;
 		} else {
 			LOG_ERROR("Unrecognised palette: " << pal);
 		}
@@ -323,7 +323,7 @@ palette_scope::~palette_scope()
 	current_palette_set = original_value;
 }
 
-void LevelObject::setCurrentPalette(unsigned int palette)
+void LevelObject::setCurrentPalette(uint64_t palette)
 {
 	LOG_DEBUG("LevelObject::setCurrentPalette: " << palette_level_objects().size() << " LevelObject's, id=" << palette);
 	for(LevelObject* obj : palette_level_objects()) {
@@ -357,12 +357,12 @@ LevelObject::LevelObject(variant node, const char* id)
 
 	std::vector<int> palettes_id_list;
 	if(node.has_key("palettes")) {
-		palettes_recognized_ = 0;
+		palettes_recognized_ = 0L;
 		std::vector<std::string> p = parse_variant_list_or_csv_string(node["palettes"]);
 		for(const std::string& pal : p) {
 			const int id = graphics::get_palette_id(pal);
 			if(id >= 0) {
-				palettes_recognized_ |= 1 << id;
+				palettes_recognized_ |= 1L << id;
 				palettes_id_list.emplace_back(id);
 			} else {
 				LOG_ERROR("Unrecognised palette name: " << pal);
@@ -370,9 +370,9 @@ LevelObject::LevelObject(variant node, const char* id)
 		}
 	} else {
 		int id = 0;
-		unsigned cp = palettes_recognized_;
-		while (cp != 0) {
-			if (cp & 1) {
+		uint64_t cp = palettes_recognized_;
+		while (cp != 0L) {
+			if (cp & 1L) {
 				palettes_id_list.emplace_back(id);
 			}
 			++id;
@@ -786,12 +786,12 @@ LevelObjectPtr LevelObject::recordZorder(int zorder) const
 
 void LevelObject::writeCompiledIndex(char* buf) const
 {
-	if(current_palettes_ == 0) {
+	if(current_palettes_ == 0L) {
 		base64_encode(tile_index_, buf, 3);
 	} else {
-		unsigned int mask = current_palettes_;
+		uint64_t mask = current_palettes_;
 		int npalette = 0;
-		while(!(mask&1)) {
+		while(!(mask&1L)) {
 			mask >>= 1;
 			++npalette;
 		}
@@ -895,17 +895,17 @@ bool LevelObject::calculateDrawArea()
 	return draw_area_ != rect(0, 0, BaseTileSize, BaseTileSize);
 }
 
-void LevelObject::setPalette(unsigned int palette)
+void LevelObject::setPalette(uint64_t palette)
 {
 	if (t_ != nullptr && palette == 0) {
 		t_->setPalette(0);
 		return;
 	}
 	if(t_ != nullptr) {
-		int p = palette & palettes_recognized_;
+		uint64_t p = palette & palettes_recognized_;
 		int id = 0;
-		while(p != 0) {
-			if(p & 1) {
+		while(p != 0L) {
+			if(p & 1L) {
 				t_->setPalette(id);
 				LOG_DEBUG("set palette to id: " << id << "(" << graphics::get_palette_name(id) << ") on texture: " << image_ << ", result: " << t_->getPalette(0) << ", has_palette: " << (t_->isPaletteized() ? "true" : "false"));
 				break;
@@ -918,10 +918,10 @@ void LevelObject::setPalette(unsigned int palette)
 
 void LevelObject::getPalettesUsed(std::vector<int>& v) const
 {
-	unsigned int p = palettes_recognized_;
+	uint64_t p = palettes_recognized_;
 	int palette = 0;
 	while(p) {
-		if(p&1) {
+		if(p&1L) {
 			v.push_back(palette);
 		}
 

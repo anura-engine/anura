@@ -104,7 +104,7 @@ struct palette_scope
 	explicit palette_scope(const std::vector<std::string>& v);
 	~palette_scope();	
 
-	unsigned int original_value;
+	uint64_t original_value;
 };
 
 class LevelObject : public game_logic::FormulaCallable 
@@ -114,7 +114,7 @@ public:
 	static LevelTile buildTile(variant node);
 	static void writeCompiled();
 
-	static void setCurrentPalette(unsigned int palette);
+	static void setCurrentPalette(uint64_t palette);
 	explicit LevelObject(variant node, const char* id=nullptr);
 	~LevelObject();
 
@@ -182,10 +182,10 @@ private:
 	//only used when compiling: records all possible zorders for the object.
 	mutable std::vector<int> zorders_;
 
-	unsigned int palettes_recognized_;
-	unsigned int current_palettes_;
+	uint64_t palettes_recognized_;
+	uint64_t current_palettes_;
 
-	void setPalette(unsigned int palette);
+	void setPalette(uint64_t palette);
 
 	void getPalettesUsed(std::vector<int>& v) const;
 };

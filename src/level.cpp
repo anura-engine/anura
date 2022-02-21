@@ -584,7 +584,7 @@ Level::Level(const std::string& level_cfg, variant node)
 		std::vector<std::string> v = parse_variant_list_or_csv_string(node["palettes"]);
 		for(const std::string& p : v) {
 			const int id = graphics::get_palette_id(p);
-			palettes_used_ |= (1 << id);
+			palettes_used_ |= (1L << id);
 		}
 	}
 
@@ -1760,10 +1760,10 @@ variant Level::write() const
 
 	if(palettes_used_) {
 		std::vector<variant> out;
-		unsigned int p = palettes_used_;
+		uint64_t p = palettes_used_;
 		int id = 0;
 		while(p) {
-			if(p&1) {
+			if(p&1L) {
 				out.push_back(variant(graphics::get_palette_name(id)));
 			}
 
