@@ -475,7 +475,7 @@ void Frame::setPalettes(uint64_t palettes)
 {
 	int npalette = -1;
 	for(auto palette : palettes_recognized_) {
-		if((1L << palette) & palettes) {
+		if((1ULL << palette) & palettes) {
 			npalette = palette;
 			break;
 		}
