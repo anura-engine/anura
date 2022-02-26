@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -48,7 +48,7 @@ namespace KRE
 			SQUARE,
 		};
 
-		struct FixedParams 
+		struct FixedParams
 		{
 			FixedParams() : value(0.0f) {}
 			FixedParams(float v) : value(v) {}
@@ -57,8 +57,8 @@ namespace KRE
 		struct RandomParams
 		{
 			RandomParams() : min_value(0.0f), max_value(0.0f) {}
-			RandomParams(float mnv, float mxv) 
-				: min_value(mnv), max_value(mxv) 
+			RandomParams(float mnv, float mxv)
+				: min_value(mnv), max_value(mxv)
 			{
 				if(min_value > max_value) {
 					max_value = min_value;
@@ -89,7 +89,7 @@ namespace KRE
 		struct OscillationParams
 		{
 			OscillationParams() : osc_type(WaveType::SINE), frequency(1.0f), phase(0.0f), base(0.0f), amplitude(1.0f) {}
-			OscillationParams(WaveType ot, float f, float ph, float bas, float ampl) 
+			OscillationParams(WaveType ot, float f, float ph, float bas, float ampl)
 				: osc_type(ot),
 				  frequency(f),
 				  phase(ph),

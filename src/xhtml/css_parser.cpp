@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -28,7 +28,7 @@
 
 namespace css
 {
-	namespace 
+	namespace
 	{
 		// rules
 		class AtRule : public Token
@@ -64,8 +64,8 @@ namespace css
 		{
 		public:
 			BlockToken() : Token(TokenId::BLOCK_TOKEN) {}
-			explicit BlockToken(const std::vector<TokenPtr>& params) 
-				: Token(TokenId::BLOCK_TOKEN) 
+			explicit BlockToken(const std::vector<TokenPtr>& params)
+				: Token(TokenId::BLOCK_TOKEN)
 			{
 				addParameters(params);
 			}
@@ -96,7 +96,7 @@ namespace css
 		class DeclarationParser
 		{
 		public:
-			DeclarationParser(Tokenizer::const_iterator begin, Tokenizer::const_iterator end) 
+			DeclarationParser(Tokenizer::const_iterator begin, Tokenizer::const_iterator end)
 				: it_(begin),
 				  end_(end),
 				  pp_()
@@ -172,7 +172,7 @@ namespace css
 				}
 				return (*it_)->id() == value;
 			}
-			
+
 			bool isNextToken(TokenId value) {
 				auto next = it_+1;
 				if(next == end_) {
@@ -192,7 +192,7 @@ namespace css
 					}
 					if(isToken(TokenId::EOF_TOKEN) || it_ == end_) {
 						return;
-					}					
+					}
 					try {
 						parseDeclaration(pp);
 					} catch (ParserError& e) {
@@ -223,11 +223,11 @@ namespace css
 					throw ParserError(formatter() << "Expected ':' in declaration, while parsing property: " << property);
 				}
 				advance();
-			
+
 				while(isToken(TokenId::WHITESPACE)) {
 					advance();
 				}
-				
+
 				// check for 'inherit' which is common to all properties
 				if(isToken(TokenId::IDENT) && (*it_)->getStringValue() == "inherit") {
 					advance();
@@ -363,7 +363,7 @@ namespace css
 	PropertyList Parser::parseDeclarationList(const std::string& str)
 	{
 		css::Tokenizer tokens(str);
-		Parser p(nullptr, tokens.getTokens());		
+		Parser p(nullptr, tokens.getTokens());
 		return DeclarationParser::parseTokens(p.parseBraceBlock());
 	}
 
@@ -386,7 +386,7 @@ namespace css
 		} else if(currentTokenType() == TokenId::FUNCTION) {
 			return parseFunction();
 		}
-		
+
 		auto tok = *token_;
 		advance();
 		return tok;

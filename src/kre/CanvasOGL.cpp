@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -83,7 +83,7 @@ namespace KRE
 			vx1, vy2,
 			vx2, vy2,
 		};
-		
+
 		//LOG_DEBUG("blit: " << src << "," << dst);
 		//LOG_DEBUG("blit: " << tx1 << "," << ty1 << "," << tx2 << "," << ty2 << " : " << vx1 << "," << vy1 << "," << vx2 << "," << vy2);
 
@@ -260,14 +260,14 @@ namespace KRE
 		glDisableVertexAttribArray(shader->getVertexAttribute());
 	}
 
-	void CanvasOGL::drawLines(const std::vector<glm::vec2>& varray, float line_width, const Color& color) const 
+	void CanvasOGL::drawLines(const std::vector<glm::vec2>& varray, float line_width, const Color& color) const
 	{
 		/*static OpenGL::ShaderProgramPtr shader = OpenGL::ShaderProgram::factory("complex");
 		shader->makeActive();
 		shader->setUniformValue(shader->getMvUniform(), glm::value_ptr(get_global_model_matrix()));
 		shader->setUniformValue(shader->getPUniform(), glm::value_ptr(mvp_));
 
-		if(shader->getNormalAttribute() == ShaderProgram::INVALID_ATTRIBUTE 
+		if(shader->getNormalAttribute() == ShaderProgram::INVALID_ATTRIBUTE
 			|| shader->getVertexAttribute() == ShaderProgram::INVALID_ATTRIBUTE) {
 			return;
 		}
@@ -276,7 +276,7 @@ namespace KRE
 		vertices.reserve(varray.size() * 2);
 		std::vector<glm::vec2> normals;
 		normals.reserve(varray.size() * 2);
-		
+
 		for(int n = 0; n != varray.size(); n += 2) {
 			const float dx = varray[n+1].x - varray[n+0].x;
 			const float dy = varray[n+1].y - varray[n+0].y;
@@ -287,7 +287,7 @@ namespace KRE
 			vertices.emplace_back(varray[n+0]);
 			vertices.emplace_back(varray[n+1]);
 			vertices.emplace_back(varray[n+1]);
-						
+
 			normals.emplace_back(d1);
 			normals.emplace_back(d2);
 			normals.emplace_back(d1);
@@ -319,7 +319,7 @@ namespace KRE
 		glDisableVertexAttribArray(shader->getVertexAttribute());
 	}
 
-	void CanvasOGL::drawLines(const std::vector<glm::vec2>& varray, float line_width, const std::vector<glm::u8vec4>& carray) const 
+	void CanvasOGL::drawLines(const std::vector<glm::vec2>& varray, float line_width, const std::vector<glm::u8vec4>& carray) const
 	{
 		ASSERT_LOG(varray.size() == carray.size(), "Vertex and color array sizes don't match.");
 		// This draws an aliased line -- consider making this a nicer unaliased line.
@@ -341,7 +341,7 @@ namespace KRE
 		glDisableVertexAttribArray(shader->getVertexAttribute());
 	}
 
-	void CanvasOGL::drawLineStrip(const std::vector<glm::vec2>& varray, float line_width, const Color& color) const 
+	void CanvasOGL::drawLineStrip(const std::vector<glm::vec2>& varray, float line_width, const Color& color) const
 	{
 		// This draws an aliased line -- consider making this a nicer unaliased line.
 		glm::mat4 mvp = getPVMatrix() * get_global_model_matrix();
@@ -358,7 +358,7 @@ namespace KRE
 		glDisableVertexAttribArray(shader->getVertexAttribute());
 	}
 
-	void CanvasOGL::drawLineLoop(const std::vector<glm::vec2>& varray, float line_width, const Color& color) const 
+	void CanvasOGL::drawLineLoop(const std::vector<glm::vec2>& varray, float line_width, const Color& color) const
 	{
 		// This draws an aliased line -- consider making this a nicer unaliased line.
 		glm::mat4 mvp = getPVMatrix() * get_global_model_matrix();
@@ -375,7 +375,7 @@ namespace KRE
 		glDisableVertexAttribArray(shader->getVertexAttribute());
 	}
 
-	void CanvasOGL::drawLine(const pointf& p1, const pointf& p2, const Color& color) const 
+	void CanvasOGL::drawLine(const pointf& p1, const pointf& p2, const Color& color) const
 	{
 		const float vtx_coords_line[] = {
 			p1.x, p1.y,
@@ -395,7 +395,7 @@ namespace KRE
 		glDisableVertexAttribArray(shader->getVertexAttribute());
 	}
 
-	void CanvasOGL::drawPolygon(const std::vector<glm::vec2>& varray, const Color& color) const 
+	void CanvasOGL::drawPolygon(const std::vector<glm::vec2>& varray, const Color& color) const
 	{
 		// This draws an aliased line -- consider making this a nicer unaliased line.
 		glm::mat4 mvp = getPVMatrix() * get_global_model_matrix();
@@ -412,22 +412,22 @@ namespace KRE
 		glDisableVertexAttribArray(shader->getVertexAttribute());
 	}
 
-	void CanvasOGL::drawSolidCircle(const point& centre, float radius, const Color& color) const 
+	void CanvasOGL::drawSolidCircle(const point& centre, float radius, const Color& color) const
 	{
 		drawSolidCircle(pointf(static_cast<float>(centre.x), static_cast<float>(centre.y)), radius, color);
 	}
 
-	void CanvasOGL::drawSolidCircle(const point& centre, float radius, const std::vector<glm::u8vec4>& color) const 
+	void CanvasOGL::drawSolidCircle(const point& centre, float radius, const std::vector<glm::u8vec4>& color) const
 	{
 		drawSolidCircle(pointf(static_cast<float>(centre.x), static_cast<float>(centre.y)), radius, color);
 	}
 
-	void CanvasOGL::drawHollowCircle(const point& centre, float outer_radius, float inner_radius, const Color& color) const 
+	void CanvasOGL::drawHollowCircle(const point& centre, float outer_radius, float inner_radius, const Color& color) const
 	{
 		drawHollowCircle(pointf(static_cast<float>(centre.x), static_cast<float>(centre.y)), outer_radius, inner_radius, color);
 	}
 
-	void CanvasOGL::drawSolidCircle(const pointf& centre, float radius, const Color& color) const 
+	void CanvasOGL::drawSolidCircle(const pointf& centre, float radius, const Color& color) const
 	{
 		glm::mat4 mvp = getPVMatrix() * get_global_model_matrix();
 
@@ -470,7 +470,7 @@ namespace KRE
 		glDisableVertexAttribArray(shader->getVertexAttribute());
 	}
 
-	void CanvasOGL::drawSolidCircle(const pointf& centre, float radius, const std::vector<glm::u8vec4>& color) const 
+	void CanvasOGL::drawSolidCircle(const pointf& centre, float radius, const std::vector<glm::u8vec4>& color) const
 	{
 		glm::mat4 mvp = getPVMatrix() * get_global_model_matrix();
 
@@ -501,7 +501,7 @@ namespace KRE
 
 	}
 
-	void CanvasOGL::drawHollowCircle(const pointf& centre, float outer_radius, float inner_radius, const Color& color) const 
+	void CanvasOGL::drawHollowCircle(const pointf& centre, float outer_radius, float inner_radius, const Color& color) const
 	{
 		glm::mat4 mvp = getPVMatrix() * get_global_model_matrix();
 
@@ -544,7 +544,7 @@ namespace KRE
 		glDisableVertexAttribArray(shader->getVertexAttribute());
 	}
 
-	void CanvasOGL::drawPoints(const std::vector<glm::vec2>& varray, float radius, const Color& color) const 
+	void CanvasOGL::drawPoints(const std::vector<glm::vec2>& varray, float radius, const Color& color) const
 	{
 		// This draws an aliased line -- consider making this a nicer unaliased line.
 		glm::mat4 mvp = getPVMatrix() * get_global_model_matrix();

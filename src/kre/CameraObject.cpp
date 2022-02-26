@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -46,7 +46,7 @@ using boost::math::round;
 
 namespace KRE
 {
-	namespace 
+	namespace
 	{
 		const float default_fov					= 45.0f;
 		const float default_horizontal_angle	= float(M_PI);
@@ -60,57 +60,57 @@ namespace KRE
 	}
 
 	Camera::Camera(const std::string& name)
-		: SceneObject(name), 
-		  fov_(default_fov), 
-		  horizontal_angle_(default_horizontal_angle), 
-		  vertical_angle_(default_vertical_angle), 
-		  speed_(default_speed), 
-		  mouse_speed_(default_mouse_speed), 
-		  near_clip_(default_near_clip), 
+		: SceneObject(name),
+		  fov_(default_fov),
+		  horizontal_angle_(default_horizontal_angle),
+		  vertical_angle_(default_vertical_angle),
+		  speed_(default_speed),
+		  mouse_speed_(default_mouse_speed),
+		  near_clip_(default_near_clip),
 		  far_clip_(default_far_clip),
-		  type_(CAMERA_PERSPECTIVE), 
-		  ortho_left_(0), 
+		  type_(CAMERA_PERSPECTIVE),
+		  ortho_left_(0),
 		  ortho_bottom_(0),
-		  ortho_top_(0), 
+		  ortho_top_(0),
 		  ortho_right_(0),
 		  clip_planes_set_(false),
 		  view_mode_(VIEW_MODE_AUTO)
 	{
 		auto wnd = WindowManager::getMainWindow();
-		ortho_top_ = wnd->logicalHeight(); 
+		ortho_top_ = wnd->logicalHeight();
 		ortho_right_ = wnd->logicalWidth();
 
 		up_ = glm::vec3(0.0f, 1.0f, 0.0f);
-		position_ = glm::vec3(0.0f, 0.0f, 0.7f); 
+		position_ = glm::vec3(0.0f, 0.0f, 0.7f);
 		aspect_ = float(wnd->logicalWidth())/float(wnd->logicalHeight());
-	
+
 		//computeView();
 		//computeProjection();
 	}
 
 	Camera::Camera(const variant& node)
-		: SceneObject(node["name"].as_string()), 
-		  fov_(default_fov), 
-		  horizontal_angle_(default_horizontal_angle), 
-		  vertical_angle_(default_vertical_angle), 
-		  speed_(default_speed), 
-		  mouse_speed_(default_mouse_speed), 
-		  near_clip_(default_near_clip), 
+		: SceneObject(node["name"].as_string()),
+		  fov_(default_fov),
+		  horizontal_angle_(default_horizontal_angle),
+		  vertical_angle_(default_vertical_angle),
+		  speed_(default_speed),
+		  mouse_speed_(default_mouse_speed),
+		  near_clip_(default_near_clip),
 		  far_clip_(default_far_clip),
-		  type_(CAMERA_PERSPECTIVE), 
-		  ortho_left_(0), 
+		  type_(CAMERA_PERSPECTIVE),
+		  ortho_left_(0),
 		  ortho_bottom_(0),
-		  ortho_top_(0), 
+		  ortho_top_(0),
 		  ortho_right_(0),
 		  view_(1.0f),
 		  clip_planes_set_(false),
 		  view_mode_(VIEW_MODE_AUTO)
-	{	  
+	{
 		auto wnd = WindowManager::getMainWindow();
-		ortho_top_ = wnd->logicalHeight(); 
+		ortho_top_ = wnd->logicalHeight();
 		ortho_right_ = wnd->logicalWidth();
 
-		position_ = glm::vec3(0.0f, 0.0f, 10.0f); 
+		position_ = glm::vec3(0.0f, 0.0f, 10.0f);
 		if(node.has_key("fov")) {
 			fov_ = std::min(90.0f, std::max(15.0f, float(node["fov"].as_float())));
 		}
@@ -133,7 +133,7 @@ namespace KRE
 		}
 
 		if(node.has_key("position")) {
-			ASSERT_LOG(node["position"].is_list() && node["position"].num_elements() == 3, 
+			ASSERT_LOG(node["position"].is_list() && node["position"].num_elements() == 3,
 				"position must be a list of 3 decimals.");
 			position_ = glm::vec3(float(node["position"][0].as_float()),
 				float(node["position"][1].as_float()),
@@ -158,14 +158,14 @@ namespace KRE
 			const variant& la = node["lookat"];
 			ASSERT_LOG(la.has_key("position") && la.has_key("target") && la.has_key("up"),
 				"lookat must be a map having 'position', 'target' and 'up' as tuples");
-			glm::vec3 position(la["position"][0].as_float(), 
-				la["position"][1].as_float(), 
+			glm::vec3 position(la["position"][0].as_float(),
+				la["position"][1].as_float(),
 				la["position"][2].as_float());
-			glm::vec3 target(la["target"][0].as_float(), 
-				la["target"][1].as_float(), 
+			glm::vec3 target(la["target"][0].as_float(),
+				la["target"][1].as_float(),
 				la["target"][2].as_float());
-			glm::vec3 up(la["up"][0].as_float(), 
-				la["up"][1].as_float(), 
+			glm::vec3 up(la["up"][0].as_float(),
+				la["up"][1].as_float(),
 				la["up"][2].as_float());
 			lookAt(position, target, up);
 			view_mode_ = VIEW_MODE_MANUAL;
@@ -181,80 +181,80 @@ namespace KRE
 	}
 
 	Camera::Camera(const std::string& name, int left, int right, int top, int bottom)
-		: SceneObject(name), 
-		  fov_(default_fov), 
-		  horizontal_angle_(default_horizontal_angle), 
-		  vertical_angle_(default_vertical_angle), 
-		  speed_(default_speed), 
-		  mouse_speed_(default_mouse_speed), 
-		  near_clip_(default_near_clip), 
+		: SceneObject(name),
+		  fov_(default_fov),
+		  horizontal_angle_(default_horizontal_angle),
+		  vertical_angle_(default_vertical_angle),
+		  speed_(default_speed),
+		  mouse_speed_(default_mouse_speed),
+		  near_clip_(default_near_clip),
 		  far_clip_(default_far_clip),
-		  type_(CAMERA_ORTHOGONAL), 
-		  ortho_left_(left), 
+		  type_(CAMERA_ORTHOGONAL),
+		  ortho_left_(left),
 		  ortho_bottom_(bottom),
-		  ortho_top_(top), 
-		  ortho_right_(right), 
-		  clip_planes_set_(false), 
+		  ortho_top_(top),
+		  ortho_right_(right),
+		  clip_planes_set_(false),
 		  view_(1.0f),
 		  view_mode_(VIEW_MODE_AUTO)
 	{
 		up_ = glm::vec3(0.0f, 1.0f, 0.0f);
-		position_ = glm::vec3(0.0f, 0.0f, 0.70f); 
+		position_ = glm::vec3(0.0f, 0.0f, 0.70f);
 		aspect_ = float(right - left)/float(top - bottom);
-	
+
 		computeProjection();
 	}
 
 	Camera::Camera(const std::string& name, const rect& r)
-		: SceneObject(name), 
-		  fov_(default_fov), 
-		  horizontal_angle_(default_horizontal_angle), 
-		  vertical_angle_(default_vertical_angle), 
-		  speed_(default_speed), 
-		  mouse_speed_(default_mouse_speed), 
-		  near_clip_(default_near_clip), 
+		: SceneObject(name),
+		  fov_(default_fov),
+		  horizontal_angle_(default_horizontal_angle),
+		  vertical_angle_(default_vertical_angle),
+		  speed_(default_speed),
+		  mouse_speed_(default_mouse_speed),
+		  near_clip_(default_near_clip),
 		  far_clip_(default_far_clip),
-		  type_(CAMERA_ORTHOGONAL), 
-		  ortho_left_(r.x()), 
+		  type_(CAMERA_ORTHOGONAL),
+		  ortho_left_(r.x()),
 		  ortho_bottom_(r.y2()),
-		  ortho_top_(r.y()), 
-		  ortho_right_(r.x2()), 
-		  clip_planes_set_(false), 
+		  ortho_top_(r.y()),
+		  ortho_right_(r.x2()),
+		  clip_planes_set_(false),
 		  view_(1.0f),
 		  view_mode_(VIEW_MODE_AUTO)
 	{
 		up_ = glm::vec3(0.0f, 1.0f, 0.0f);
-		position_ = glm::vec3(0.0f, 0.0f, 0.70f); 
+		position_ = glm::vec3(0.0f, 0.0f, 0.70f);
 		aspect_ = float(ortho_right_ - ortho_left_)/float(ortho_top_ - ortho_bottom_);
-	
+
 		computeProjection();
 	}
 
 
 	Camera::Camera(const std::string& name, float fov, float aspect, float near_clip, float far_clip)
-		: SceneObject(name), 
-		  fov_(fov), 
-		  horizontal_angle_(default_horizontal_angle), 
-		  vertical_angle_(default_vertical_angle), 
-		  speed_(default_speed), 
-		  mouse_speed_(default_mouse_speed), 
-		  near_clip_(near_clip), 
+		: SceneObject(name),
+		  fov_(fov),
+		  horizontal_angle_(default_horizontal_angle),
+		  vertical_angle_(default_vertical_angle),
+		  speed_(default_speed),
+		  mouse_speed_(default_mouse_speed),
+		  near_clip_(near_clip),
 		  far_clip_(far_clip),
-		  aspect_(aspect), 
-		  type_(CAMERA_PERSPECTIVE), 
-		  ortho_left_(0), 
+		  aspect_(aspect),
+		  type_(CAMERA_PERSPECTIVE),
+		  ortho_left_(0),
 		  ortho_bottom_(0),
-		  ortho_top_(0), 
+		  ortho_top_(0),
 		  ortho_right_(0),
 		  clip_planes_set_(true),
 		  view_mode_(VIEW_MODE_AUTO)
 	{
 		auto wnd = WindowManager::getMainWindow();
-		ortho_top_ = wnd->logicalHeight(); 
+		ortho_top_ = wnd->logicalHeight();
 		ortho_right_ = wnd->logicalWidth();
 
 		up_ = glm::vec3(0.0f, 1.0f, 0.0f);
-		position_ = glm::vec3(0.0f, 0.0f, 10.0f); 
+		position_ = glm::vec3(0.0f, 0.0f, 10.0f);
 
 		computeView();
 		computeProjection();
@@ -309,16 +309,16 @@ namespace KRE
 	{
 		view_mode_ = VIEW_MODE_AUTO;
 		direction_ = glm::vec3(
-			cos(vertical_angle_) * sin(horizontal_angle_), 
+			cos(vertical_angle_) * sin(horizontal_angle_),
 			sin(vertical_angle_),
 			cos(vertical_angle_) * cos(horizontal_angle_)
 		);
 		right_ = glm::vec3(
-			sin(horizontal_angle_ - float(M_PI)/2.0f), 
+			sin(horizontal_angle_ - float(M_PI)/2.0f),
 			0,
 			cos(horizontal_angle_ - float(M_PI)/2.0f)
 		);
-	
+
 		// Up vector
 		up_ = glm::cross(right_, direction_);
 		target_ = position_ + direction_;
@@ -341,15 +341,15 @@ namespace KRE
 		ortho_right_ = right;
 		ortho_top_ = top;
 		ortho_bottom_ = bottom;
-	
+
 		if(type_ == CAMERA_ORTHOGONAL) {
 			computeProjection();
 		}
 	}
 
-	void Camera::clearClipPlanes() 
-	{ 
-		clip_planes_set_ = false; 
+	void Camera::clearClipPlanes()
+	{
+		clip_planes_set_ = false;
 		if(type_ == CAMERA_ORTHOGONAL) {
 			computeProjection();
 		} else {
@@ -478,7 +478,7 @@ namespace KRE
 	DEFINE_FIELD(type, "string")
 		if(obj.type() == ORTHOGONAL_CAMERA) {
 			return variant("orthogonal");
-		} 
+		}
 		return variant("perspective");
 	DEFINE_SET_FIELD
 		if(value.as_string() == "orthogonal") {
@@ -486,7 +486,7 @@ namespace KRE
 		} else {
 			obj.setType(PERSPECTIVE_CAMERA);
 		}
-	
+
 	DEFINE_FIELD(ortho_window, "[int,int,int,int]")
 		std::vector<variant> v;
 		v.push_back(variant(obj.ortho_left()));
@@ -584,7 +584,7 @@ namespace KRE
 
 	namespace
 	{
-		float dti(float val) 
+		float dti(float val)
 		{
 			return std::abs(val - round(val));
 		}

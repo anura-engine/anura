@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -41,7 +41,7 @@ public:
 	void blit(int x, int y, int w, int h, bool upscaled = 0, const KRE::Color& color=KRE::Color::colorWhite()) const;
 
 	int cornerHeight() const { return cornerHeight_; }
-	
+
 	static std::vector<std::string> getElements();
 private:
 	void blitSubsection(rect subsection, int x, int y, int w, int h, const KRE::Color& color) const;
@@ -50,12 +50,12 @@ private:
 
 	const rect area_;
 	const int cornerHeight_;
-	
+
 	rect  top_right_corner_;
 	rect  top_left_corner_;
 	rect  bottom_right_corner_;
 	rect  bottom_left_corner_;
-	
+
 	rect  top_border_;
 	rect  bottom_border_;
 	rect  left_border_;

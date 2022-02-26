@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -49,7 +49,7 @@ using boost::asio::ip::udp;
 typedef std::shared_ptr<tcp::socket> socket_ptr;
 typedef std::shared_ptr<boost::array<char, 1024> > buffer_ptr;
 
-namespace multiplayer 
+namespace multiplayer
 {
 	class server
 	{
@@ -271,7 +271,7 @@ namespace multiplayer
 
 					if(udp_buf_[0] != 'Z') {
 						GameInfoPtr game = sockets_info_[socket_it->second].game;
-	
+
 						if(game.get() != nullptr) {
 							for(int n = 0; n != game->players.size(); ++n) {
 								if(game->players[n] == socket_it->second) {

@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -130,7 +130,7 @@ extern variant g_auto_update_info;
 
 std::map<std::string, variant> g_user_info_registry;
 
-namespace 
+namespace
 {
 	//these global variables make the EVAL_ARG/NUM_ARGS macros work
 	//for functions not yet converted to the new syntax. Remove eventually.
@@ -163,10 +163,10 @@ namespace
 	}
 }
 
-namespace game_logic 
+namespace game_logic
 {
 	ExpressionPtr createVMExpression(const formula_vm::VirtualMachine vm, variant_type_ptr t, const FormulaExpression& o);
-	
+
 	FormulaExpression::FormulaExpression(const char* name) : FormulaCallable(GARBAGE_COLLECTOR_EXCLUDE), name_(name ? name : "unknown"), begin_str_(EmptyStr().begin()), end_str_(EmptyStr().end()), ntimes_called_(0)
 	{
 	}
@@ -377,9 +377,9 @@ namespace game_logic
 			}
 		}
 	}
-	
 
-	namespace 
+
+	namespace
 	{
 		variant split_variant_if_str(const variant& s)
 		{
@@ -657,7 +657,7 @@ namespace game_logic
 		public:
 			DateTime(time_t unix, const tm* tm) : unix_(unix), tm_(*tm)
 			{}
-			
+
 		private:
 			DECLARE_CALLABLE(DateTime);
 
@@ -702,7 +702,7 @@ namespace game_logic
 		FUNCTION_DEF(time, 0, 1, "time(int unix_time) -> date_time: returns the current real time")
 			Formula::failIfStaticContext();
 			time_t t;
-			
+
 			if(NUM_ARGS == 0) {
 				t = time(nullptr) + g_fake_time_adjust;
 			} else {
@@ -713,7 +713,7 @@ namespace game_logic
 				t = time(nullptr) + g_fake_time_adjust;
 				ltime = localtime(&t);
 				ASSERT_LOG(ltime != nullptr, "Could not get time()");
-				
+
 			}
 			return variant(new DateTime(t, ltime));
 		FUNCTION_ARGS_DEF
@@ -753,7 +753,7 @@ namespace game_logic
 			variant value = EVAL_ARG(1);
 
 			return variant(new FnCommandCallable("set_user_info", [=]() { g_user_info_registry[key] = value; }));
-			
+
 		RETURN_TYPE("commands")
 		END_FUNCTION_DEF(set_user_info)
 
@@ -820,7 +820,7 @@ namespace game_logic
 		END_FUNCTION_DEF(overload)
 
 		FUNCTION_DEF(addr, 1, 1, "addr(obj): Provides the address of the given object as a string. Useful for distinguishing objects")
-	
+
 			variant v = EVAL_ARG(0);
 			FormulaCallable* addr = nullptr;
 			if(!v.is_null()) {
@@ -901,7 +901,7 @@ namespace game_logic
 			variant cache_variant = EVAL_ARG(0);
 			const ffl_cache* cache = cache_variant.try_convert<ffl_cache>();
 			ASSERT_LOG(cache != nullptr, "ILLEGAL CACHE ARGUMENT TO query_cache");
-	
+
 			const variant* result = cache->get(key);
 			if(result != nullptr) {
 				return *result;
@@ -1087,7 +1087,7 @@ namespace game_logic
 
 			std::string message;
 			ASSERT_LOG(fn.function_call_valid(args_list, &message), "Error in bind_command: functions args do not match: " << message);
-	
+
 			return variant(new bound_command(fn, args_list));
 
 		FUNCTION_ARGS_DEF
@@ -1285,11 +1285,11 @@ namespace game_logic
 			ARG_TYPE("string");
 		END_FUNCTION_DEF(eval)
 
-		namespace 
+		namespace
 		{
 			int g_formula_timeout = -1;
 
-			struct timeout_scope 
+			struct timeout_scope
 			{
 				int old_value;
 				explicit timeout_scope(int deadline) : old_value(g_formula_timeout) {
@@ -1646,7 +1646,7 @@ namespace game_logic
 				for(int n = 0; n != NUM_ARGS; ++n) {
 					types.push_back(args()[n]->queryVariantType());
 				}
-        
+
 				return variant_type::get_union(types);
 			}
 		END_FUNCTION_DEF(median)
@@ -1754,7 +1754,7 @@ namespace game_logic
 			ASSERT_LOG(false, "Types given to mix incompatible " << type_a->str() << " vs " << type_b->str() << ": " << debugPinpointLocation());
 
 			return type_a;
-	
+
 		END_FUNCTION_DEF(mix)
 
 		FUNCTION_DEF(disassemble, 1, 1, "disassemble function")
@@ -1937,7 +1937,7 @@ namespace game_logic
 		FUNCTION_TYPE_DEF
 			return variant_type::get_type(variant::VARIANT_TYPE_DECIMAL);
 		END_FUNCTION_DEF(atan2)
-    
+
 		FUNCTION_DEF(sinh, 1, 1, "sinh(x): Standard hyperbolic sine function.")
 			const float angle = EVAL_ARG(0).as_float();
 			return variant(static_cast<decimal>(sinh(angle)));
@@ -2012,8 +2012,8 @@ namespace game_logic
 		FUNCTION_TYPE_DEF
 			return variant_type::get_type(variant::VARIANT_TYPE_DECIMAL);
 		END_FUNCTION_DEF(hypot)
-	
-	
+
+
 		FUNCTION_DEF(exp, 1, 1, "exp(x): Calculate the exponential function of x, whatever that means.")
 			const float input = EVAL_ARG(0).as_float();
 			return variant(static_cast<decimal>(expf(input)));
@@ -2022,7 +2022,7 @@ namespace game_logic
 		FUNCTION_TYPE_DEF
 			return variant_type::get_type(variant::VARIANT_TYPE_DECIMAL);
 		END_FUNCTION_DEF(exp)
-    
+
 		FUNCTION_DEF(angle, 4, 4, "angle(x1, y1, x2, y2) -> int: Returns the angle, from 0°, made by the line described by the two points (x1, y1) and (x2, y2).")
 			const float a = EVAL_ARG(0).as_float();
 			const float b = EVAL_ARG(1).as_float();
@@ -2062,7 +2062,7 @@ namespace game_logic
 			const float y = EVAL_ARG(1).as_float();
 			const float ang = EVAL_ARG(2).as_float();
 			const float dist = EVAL_ARG(3).as_float();
-	
+
 			const float u = (dist * cos(ang/radians_to_degrees)) + x;   //TODO Find out why whole number decimals are returned.
 			const float v = (dist * sin(ang/radians_to_degrees)) + y;
 
@@ -2070,7 +2070,7 @@ namespace game_logic
 			result.reserve(2);
 			result.push_back(variant(decimal(u)));
 			result.push_back(variant(decimal(v)));
-	
+
 			return variant(&result);
 		FUNCTION_ARGS_DEF
 			ARG_TYPE("int|decimal");
@@ -2160,7 +2160,7 @@ namespace game_logic
 			}
 			if(m.size() == 1) {
 				return variant(std::string(m[0].first, m[0].second));
-			} 
+			}
 			std::vector<variant> v;
 			for(int i = 1; i < static_cast<int>(m.size()); i++) {
 				v.emplace_back(std::string(m[i].first, m[i].second));
@@ -2177,7 +2177,7 @@ namespace game_logic
 			return variant_type::get_union(types);
 		END_FUNCTION_DEF(regex_match)
 
-		namespace 
+		namespace
 		{
 
 			class variant_comparator_definition : public FormulaCallableDefinition
@@ -2489,7 +2489,7 @@ FUNCTION_DEF_IMPL
 			ASSERT_LOG(item1.is_list() || item1.is_map(), "zip function arguments must be either lists or maps");
 
 			ffl::IntrusivePtr<variant_comparator> callable;
-	
+
 			if(NUM_ARGS > 2) {
 				callable.reset(new variant_comparator(args()[2], variables));
 			}
@@ -2634,12 +2634,12 @@ FUNCTION_DEF_IMPL
 		FUNCTION_ARGS_DEF
 			ARG_TYPE("[int, int]")
 			RETURN_TYPE("[int, int]")
-		END_FUNCTION_DEF(tile_loc_from_pixel_pos)				
+		END_FUNCTION_DEF(tile_loc_from_pixel_pos)
 
 		FUNCTION_DEF(directed_graph, 2, 2, "directed_graph(list_of_vertexes, adjacent_expression) -> a directed graph")
 			variant vertices = EVAL_ARG(0);
 			pathfinding::graph_edge_list edges;
-	
+
 			std::vector<variant> vertex_list;
 			ffl::IntrusivePtr<MapFormulaCallable> callable(new MapFormulaCallable(&variables));
 			variant& a = callable->addDirectAccess("v");
@@ -2669,16 +2669,16 @@ FUNCTION_DEF_IMPL
 		END_FUNCTION_DEF(directed_graph)
 
 		FUNCTION_DEF(weighted_graph, 2, 2, "weighted_graph(directed_graph, weight_expression) -> a weighted directed graph")
-				variant graph = EVAL_ARG(0);		
+				variant graph = EVAL_ARG(0);
 				pathfinding::DirectedGraphPtr dg = ffl::IntrusivePtr<pathfinding::DirectedGraph>(graph.try_convert<pathfinding::DirectedGraph>());
 				ASSERT_LOG(dg, "Directed graph given is not of the correct type. " /*<< variant::variant_type_to_string(graph.type())*/);
 				pathfinding::edge_weights w;
- 
+
  				variant cmp(EVAL_ARG(1));
 				std::vector<variant> fn_args;
 				fn_args.push_back(variant());
 				fn_args.push_back(variant());
- 
+
 				for(auto edges = dg->getEdges()->begin();
 						edges != dg->getEdges()->end();
 						edges++) {
@@ -2743,9 +2743,9 @@ FUNCTION_DEF_IMPL
 			LevelPtr lvl = curlevel.try_convert<Level>();
 			ASSERT_LOG(lvl, "The level parameter passed to the function was couldn't be converted.");
 			rect b = lvl->boundaries();
-			b.from_coordinates(b.x() - b.x()%tile_size_x, 
-				b.y() - b.y()%tile_size_y, 
-				b.x2()+(tile_size_x-b.x2()%tile_size_x), 
+			b.from_coordinates(b.x() - b.x()%tile_size_x,
+				b.y() - b.y()%tile_size_y,
+				b.x2()+(tile_size_x-b.x2()%tile_size_x),
 				b.y2()+(tile_size_y-b.y2()%tile_size_y));
 
 			pathfinding::graph_edge_list edges;
@@ -2826,7 +2826,7 @@ FUNCTION_DEF_IMPL
 			return args()[0]->queryVariantType();
 		END_FUNCTION_DEF(sort)
 
-		namespace 
+		namespace
 		{
 			//our own shuffle, to guarantee consistency across different machines.
 			template<typename RnIt>
@@ -2847,7 +2847,7 @@ FUNCTION_DEF_IMPL
 				myshuffle(floats.begin(), floats.end());
 				return variant(new FloatArrayCallable(&floats));
 			}
-	
+
 			ffl::IntrusivePtr<ShortArrayCallable> s = list.try_convert<ShortArrayCallable>();
 			if(s != nullptr) {
 				std::vector<short> shorts(s->shorts().begin(), s->shorts().end());
@@ -2880,18 +2880,18 @@ FUNCTION_DEF_IMPL
 		FUNCTION_TYPE_DEF
 			return args()[0]->queryVariantType();
 		END_FUNCTION_DEF(remove_from_map)
-	
+
 		namespace
 		{
 			void flatten_items( variant items, std::vector<variant>* output){
 				for(size_t n = 0; n != items.num_elements(); ++n) {
-			
+
 					if( items[n].is_list() ){
 						flatten_items(items[n], output);
 					} else {
 						output->push_back(items[n]);
 					}
-			
+
 				}
 			}
 
@@ -2914,7 +2914,7 @@ FUNCTION_DEF_IMPL
 					return type;
 				}
 			}
-	
+
 		}
 
 		FUNCTION_DEF(flatten, 1, 1, "flatten(list): Returns a list with a depth of 1 containing the elements of any list passed in.")
@@ -3297,7 +3297,7 @@ FUNCTION_DEF_IMPL
 			variant item = EVAL_ARG(1);
 			size_t a = 0, b = v.num_elements();
 			size_t iterations = 0;
-			
+
 			while(a < b) {
 				size_t mid = (a + b) / 2;
 				const variant& value = v[mid];
@@ -3318,20 +3318,20 @@ FUNCTION_DEF_IMPL
 			}
 
 			return variant::from_bool(false);
-			
+
 		FUNCTION_ARGS_DEF
 			ARG_TYPE("list");
 			ARG_TYPE("any");
 		FUNCTION_TYPE_DEF
 			return variant_type::get_type(variant::VARIANT_TYPE_BOOL);
 		END_FUNCTION_DEF(binary_search)
-	
+
 		FUNCTION_DEF(mapping, -1, -1, "mapping(x): Turns the args passed in into a map. The first arg is a key, the second a value, the third a key, the fourth a value and so on and so forth.")
 			MapFormulaCallable* callable = new MapFormulaCallable;
 			for(size_t n = 0; n < NUM_ARGS-1; n += 2) {
 				callable->add(EVAL_ARG(n).as_string(), EVAL_ARG(n+1));
 			}
-	
+
 			return variant(callable);
 		END_FUNCTION_DEF(mapping)
 
@@ -3392,7 +3392,7 @@ FUNCTION_DEF_IMPL
 			for(ExpressionPtr& a : args_mutable()) {
 				optimizeChildToVM(a);
 			}
-			
+
 			for(auto a : args()) {
 				if(a->canCreateVM() == false) {
 					return ExpressionPtr();
@@ -3494,7 +3494,7 @@ FUNCTION_DEF_IMPL
 			for(ExpressionPtr& a : args_mutable()) {
 				optimizeChildToVM(a);
 			}
-			
+
 			for(auto a : args()) {
 				if(a->canCreateVM() == false) {
 					return ExpressionPtr();
@@ -3651,7 +3651,7 @@ FUNCTION_DEF_IMPL
 		END_FUNCTION_DEF(find_index_or_die)
 
 
-		namespace 
+		namespace
 		{
 			void visit_objects(variant v, std::vector<variant>& res) {
 				if(v.is_map()) {
@@ -3710,7 +3710,7 @@ FUNCTION_DEF_IMPL
 			ffl::IntrusivePtr<map_callable> callable(new map_callable(variables, def_ ? def_->getNumSlots() : 0));
 			for(int n = 0; n != items.num_elements(); ++n) {
 				variant val;
-		
+
 				callable->set(items[n], n);
 				val = args().back()->evaluate(*callable);
 
@@ -3913,7 +3913,7 @@ FUNCTION_DEF_IMPL
 					return static_list.get_list_slice(begin, end);
 				}
 			}
-			
+
 			int start = NUM_ARGS > 1 ? EVAL_ARG(0).as_int() : 0;
 			int end = EVAL_ARG(NUM_ARGS > 1 ? 1 : 0).as_int();
 			int step = NUM_ARGS < 3 ? 1 : EVAL_ARG(2).as_int();
@@ -4115,7 +4115,7 @@ FUNCTION_DEF_IMPL
 		END_FUNCTION_DEF(CompileLua)
 #endif
 
-		namespace 
+		namespace
 		{
 			void evaluate_expr_for_benchmark(const FormulaExpression* expr, const FormulaCallable* variables, int ntimes)
 			{
@@ -4222,7 +4222,7 @@ FUNCTION_DEF_IMPL
 			variant name_;
 			variant cmd_;
 		};
-	
+
 		FUNCTION_DEF(instrument_command, 2, 2, "instrument_command(string, expr): Executes expr and outputs debug instrumentation on the time it took with the given string")
 			variant name = EVAL_ARG(0);
 			const int begin = SDL_GetTicks();
@@ -4254,7 +4254,7 @@ FUNCTION_DEF_IMPL
 			return variant();
 
 		END_FUNCTION_DEF(start_profiling)
-		
+
 
 		FUNCTION_DEF(compress, 1, 2, "compress(string, (optional) compression_level): Compress the given string object")
 			int compression_level = -1;
@@ -4310,7 +4310,7 @@ FUNCTION_DEF_IMPL
 				const std::string& part = chopped[i];
 				res.push_back(variant(part));
 			}
-	
+
 			return variant(&res);
 		FUNCTION_TYPE_DEF
 			return variant_type::get_list(args()[0]->queryVariantType());
@@ -4355,7 +4355,7 @@ FUNCTION_DEF_IMPL
 
 		FUNCTION_DEF(deserialize, 1, 1, "deserialize(obj)")
 
-			Formula::failIfStaticContext();	
+			Formula::failIfStaticContext();
 			return variant::create_variant_under_construction(addr_to_uuid(EVAL_ARG(0).as_string()));
 		RETURN_TYPE("any")
 		END_FUNCTION_DEF(deserialize)
@@ -4433,7 +4433,7 @@ FUNCTION_DEF_IMPL
 			FUNCTION_DEF(mod, 2, 2, "mod(num,den)")
 				int left = EVAL_ARG(0).as_int();
 				int right = EVAL_ARG(1).as_int();
-				
+
 				return variant(right ? (left%right + right)%right : 0);
 			FUNCTION_ARGS_DEF
 				ARG_TYPE("int|decimal")
@@ -4673,7 +4673,7 @@ FUNCTION_DEF_IMPL
 			variant execute(const FormulaCallable& variables) const override {
 				return executeWithArgs(variables, nullptr, -1);
 			}
-			
+
 			variant executeWithArgs(const FormulaCallable& variables, const variant* passed_args, int num_passed_args) const override {
 				if(slot_ != -1) {
 					variant target(&variables);
@@ -4892,13 +4892,13 @@ FUNCTION_DEF_IMPL
 			}
 
 			return variant();
-			
+
 		FUNCTION_TYPE_DEF
 			return variant_type::get_commands();
 		END_FUNCTION_DEF(log)
 
 
-		namespace 
+		namespace
 		{
 			void debug_side_effect(variant v, const variant* v2=nullptr)
 			{
@@ -5060,7 +5060,7 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 
 				NodeInfo(variant v) : last_session_reads(0), lifetime_reads(v["lifetime_reads"].as_int()), value(0)
 				{}
-		
+
 				variant write() const {
 					std::map<variant,variant> m;
 					m[variant("last_session_reads")] = variant(last_session_reads);
@@ -5088,7 +5088,7 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 		backed_map::flush_all();
 	}
 
-	namespace 
+	namespace
 	{
 		FUNCTION_DEF(file_backed_map, 2, 3, "file_backed_map(string filename, function generate_new, map initial_values)")
 			Formula::failIfStaticContext();
@@ -5375,12 +5375,12 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 
 	FormulaFunctionExpression::FormulaFunctionExpression(const std::string& name, const args_list& args, ConstFormulaPtr formula, ConstFormulaPtr precondition, const std::vector<std::string>& arg_names, const std::vector<variant_type_ptr>& variant_types)
 		: FunctionExpression(name, args, static_cast<int>(arg_names.size()), static_cast<int>(arg_names.size())),
-		  formula_(formula), 
-		  precondition_(precondition), 
-		  arg_names_(arg_names), 
-		  variant_types_(variant_types), 
-		  star_arg_(-1), 
-		  has_closure_(false), 
+		  formula_(formula),
+		  precondition_(precondition),
+		  arg_names_(arg_names),
+		  variant_types_(variant_types),
+		  star_arg_(-1),
+		  has_closure_(false),
 		  base_slot_(0)
 	{
 		assert(!precondition_ || !precondition_->str().empty());
@@ -5393,10 +5393,10 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 		}
 	}
 
-	namespace 
+	namespace
 	{
 		std::stack<const FormulaFunctionExpression*> formula_fn_stack;
-		struct formula_function_scope 
+		struct formula_function_scope
 		{
 			explicit formula_function_scope(const FormulaFunctionExpression* f) {
 				formula_fn_stack.push(f);
@@ -5409,7 +5409,7 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 
 		bool is_calculating_recursion = false;
 
-		struct recursion_calculation_scope 
+		struct recursion_calculation_scope
 		{
 			recursion_calculation_scope() { is_calculating_recursion = true; }
 			~recursion_calculation_scope() { is_calculating_recursion = false; }
@@ -5715,7 +5715,7 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 		if(can_vm) {
 			formula_vm::VirtualMachine vm;
 			FunctionExpression* fn = this;
-			
+
 			if(can_use_singleton_version) {
 				const int index = get_builtin_ffl_function_index(module(), name());
 				fn = get_builtin_ffl_function_from_index(index);
@@ -5748,9 +5748,9 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 		}
 	}
 
-	namespace 
+	namespace
 	{
-		bool point_in_triangle(point p, point t[3]) 
+		bool point_in_triangle(point p, point t[3])
 		{
 			point v0(t[2].x - t[0].x, t[2].y - t[0].y);
 			point v1(t[1].x - t[0].x, t[1].y - t[0].y);
@@ -5891,7 +5891,7 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 		std::string username_;
 		std::string password_;
 	public:
-		explicit set_user_details_command(const std::string& username, const std::string& password) 
+		explicit set_user_details_command(const std::string& username, const std::string& password)
 			: username_(username), password_(password)
 		{}
 		virtual void execute(game_logic::FormulaCallable& ob) const override
@@ -5933,7 +5933,7 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 	{
 		variant cookie_;
 	public:
-		explicit set_cookie_command(const variant& cookie) 
+		explicit set_cookie_command(const variant& cookie)
 			: cookie_(cookie)
 		{}
 		virtual void execute(game_logic::FormulaCallable& ob) const override
@@ -6193,7 +6193,7 @@ std::map<std::string, variant>& get_doc_cache(bool prefs_dir) {
 	FUNCTION_DEF(eval_with_temp_modifications, 4, 4, "")
 
 		SimulationScope sim;
-		
+
 		FormulaCallablePtr callable(EVAL_ARG(0).mutable_callable());
 		ASSERT_LOG(callable.get(), "Callable invalid");
 		variant do_cmd = EVAL_ARG(2);
@@ -6343,7 +6343,7 @@ FUNCTION_DEF(points_along_curve, 1, 2, "points_along_curve([[decimal,decimal]], 
 	}
 
 	result.reserve(nout);
-	
+
 	float* p = &points[0];
 
     for(int n = 0; n != nout; ++n) {
@@ -6373,8 +6373,8 @@ FUNCTION_DEF(points_along_curve, 1, 2, "points_along_curve([[decimal,decimal]], 
     }
 
     return variant(&result);
-	
-	
+
+
 FUNCTION_ARGS_DEF
 	ARG_TYPE("[[decimal,decimal]|[decimal,decimal,decimal]|[decimal,decimal,decimal,decimal]]")
 	ARG_TYPE("int|null")
@@ -6448,7 +6448,7 @@ FUNCTION_DEF(hsv, 3, 4, "hsv(decimal h, decimal s, decimal v, decimal alpha) -> 
 	float saturation = EVAL_ARG(1).as_float();
 	float value = EVAL_ARG(2).as_float();
 	float alpha = NUM_ARGS > 3 ? EVAL_ARG(3).as_float() : 1.0f;
-	
+
 	auto color = KRE::Color::from_hsv(hue, saturation, value);
 
 	return variant(new graphics::ColorCallable(color));
@@ -6466,12 +6466,12 @@ FUNCTION_DEF(format, 1, 2, "format(string, [int|decimal]): Put the numbers in th
 	std::string input_str = EVAL_ARG(0).as_string();
 	//If we can't have the magic string formatting, return early.
 	if(input_str.size() < 2) { return EVAL_ARG(0); }
-	
+
 	std::vector<variant> values = EVAL_ARG(1).as_list();
 	std::string output_str(""); output_str.reserve(input_str.size());
 	std::string format_fragment("");
 	std::string format_str("");
-	
+
 	//Step through the string until we find the magic string - eg, the "#{" of "#{12.34}".
 	int char_at = 0;
 	int value_at = 0;
@@ -6480,70 +6480,70 @@ FUNCTION_DEF(format, 1, 2, "format(string, [int|decimal]): Put the numbers in th
 			format_fragment.clear();
 			format_str.clear();
 			char_at+=2;
-			
+
 			while (char_at < input_str.size() && input_str[char_at] != '}') {
 				format_fragment += input_str[char_at];
 				char_at++;
 			}
 			char_at++;
-			
+
 			int decimal_place = format_fragment.find('.');
-			
-			std::stringstream ss1; 
+
+			std::stringstream ss1;
 			if(decimal_place == -1) {
 				ss1 << round(values[value_at].as_float());
 			} else {
 				ss1 << floor(values[value_at].as_float());
 			}
 			format_str += ss1.str();
-			
+
 			int width = decimal_place >= 0 ? decimal_place : format_fragment.length();
 			ASSERT_LOG(width <= 100, "Number width probably shouldn't be greater than 100. (In Anura, numbers only get about 20 digits wide.) #{" << format_fragment << "} in " << input_str);
 			ASSERT_LOG(width > 0, "Number width must be greater than 0. #{" << format_fragment << "} in " << input_str);
-				
-			
+
+
 			if(format_str.length() < width) {
 				format_str.insert(0, width - format_str.length(), '0');
 			}
-			
+
 			output_str += format_str;
-			
+
 			//Process the decimal component, if needed.
 			if(decimal_place >= 0) {
 				format_str.clear();
-				
+
 				int width = format_fragment.length() - decimal_place - 1;
 				ASSERT_LOG(width <= 100, "Number decimal width probably shouldn't be greater than 100. (In Anura, numbers only get about 20 digits wide.) #{" << format_fragment << "} in " << input_str);
 				ASSERT_LOG(width > 0, "Number decimal width must be greater than 0. #{" << format_fragment << "} in " << input_str);
-				
+
 				//Round the decimal component, if it needs to be truncated. This is actually somewhat inaccurate due to floating-point approximations, so tends to go either way.
 				std::stringstream ss2;
-				ss2 << ( round(values[value_at].as_float() * pow(10,width)) / pow(10,width) 
+				ss2 << ( round(values[value_at].as_float() * pow(10,width)) / pow(10,width)
 					- floor(values[value_at].as_float()) );
 				if(ss2.str().find('.') == 1) {
 					format_str += ss2.str().substr(2,20); //Remove the leading 0. from the representation.
 				} else {
 					format_str += '0';
 				}
-				
+
 				//Pad decimal with zeros, iff the format string has a trailing 0.
 				if(format_fragment[format_fragment.length()-1] == '0') {
 					while (format_str.length() < width) {
 						format_str += '0';
 					}
 				}
-				
+
 				output_str += '.';
 				output_str += format_str;
 			}
-			
+
 			value_at++;
 		} else {
 			output_str += input_str[char_at];
 			char_at++;
 		}
 	}
-	
+
 	return variant(output_str);
 FUNCTION_ARGS_DEF
 	ARG_TYPE("string");
@@ -6596,7 +6596,7 @@ UNIT_TEST(flatten_function) {
 }
 
 UNIT_TEST(sqrt_function) {
-	CHECK_EQ(game_logic::Formula(variant("sqrt(2147483)")).execute().as_int(), 1465);	
+	CHECK_EQ(game_logic::Formula(variant("sqrt(2147483)")).execute().as_int(), 1465);
 
 	for(uint64_t n = 0; n < 100000; n += 1000) {
 		CHECK_EQ(game_logic::Formula(variant(formatter() << "sqrt(" << n << ".0^2)")).execute().as_decimal(), decimal::from_int(static_cast<int>(n)));
@@ -6638,7 +6638,7 @@ UNIT_TEST(format) {
 	CHECK_EQ(game_logic::Formula(variant("format('Hello, #{700}.', [700])")).execute(), game_logic::Formula(variant("'Hello, 700.'")).execute());
 	CHECK_EQ(game_logic::Formula(variant("format('Hello, #{700}.', [7.4])")).execute(), game_logic::Formula(variant("'Hello, 007.'")).execute());
 	CHECK_EQ(game_logic::Formula(variant("format('Hello, #{700}.', [7.5])")).execute(), game_logic::Formula(variant("'Hello, 008.'")).execute());
-	
+
 	CHECK_EQ(game_logic::Formula(variant("format('Hello, #{7.0}.', [7])")).execute(), game_logic::Formula(variant("'Hello, 7.0.'")).execute());
 	CHECK_EQ(game_logic::Formula(variant("format('Hello, #{7.7}.', [7])")).execute(), game_logic::Formula(variant("'Hello, 7.0.'")).execute());
 	CHECK_EQ(game_logic::Formula(variant("format('Hello, #{7.7}.', [7.4])")).execute(), game_logic::Formula(variant("'Hello, 7.4.'")).execute());
@@ -6650,7 +6650,7 @@ UNIT_TEST(format) {
 	CHECK_EQ(game_logic::Formula(variant("format('Hello, #{7.7}.', [7.46])")).execute(), game_logic::Formula(variant("'Hello, 7.5.'")).execute());
 	CHECK_EQ(game_logic::Formula(variant("format('Hello, #{70.7}.', [7.4])")).execute(), game_logic::Formula(variant("'Hello, 07.4.'")).execute());
 	CHECK_EQ(game_logic::Formula(variant("format('Hello, #{7.700}.', [7.46])")).execute(), game_logic::Formula(variant("'Hello, 7.460.'")).execute());
-	
+
 	CHECK_EQ(game_logic::Formula(variant("format('Check, #{07.07}, #{007}.', [1.23, 4.56])")).execute(), game_logic::Formula(variant("'Check, 01.23, 005.'")).execute());
 	CHECK_EQ(game_logic::Formula(variant("format('Check, #{07.07}, #{${decimals}}.', [1.23, 4.56]) where decimals = '003'")).execute(), game_logic::Formula(variant("'Check, 01.23, 005.'")).execute());
 }
@@ -6662,7 +6662,7 @@ BENCHMARK(map_function) {
 	static variant callable_var;
 	static variant main_callable_var;
 	static std::vector<variant> v;
-	
+
 	if(callable == nullptr) {
 		callable = new MapFormulaCallable;
 		callable_var = variant(callable);
@@ -6682,7 +6682,7 @@ BENCHMARK(map_function) {
 	}
 }
 
-namespace game_logic 
+namespace game_logic
 {
 	ConstFormulaCallableDefinitionPtr get_map_callable_definition(ConstFormulaCallableDefinitionPtr base_def, variant_type_ptr key_type, variant_type_ptr value_type, const std::string& value_name)
 	{

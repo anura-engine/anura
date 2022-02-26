@@ -368,7 +368,7 @@ pushpath(Info *info, const char* fmt, ...) {     /* perms reftbl var path ... */
     va_end(argp);
     lua_rawseti(info->L, PATHIDX, luaL_len(info->L, PATHIDX) + 1);
   }                                              /* perms reftbl var path ... */
-}  
+}
 
 /* Pops the last added segment from the current path if we're generating one. */
 static void

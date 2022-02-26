@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -31,10 +31,10 @@
 #include "formula_callable_definition.hpp"
 #include "variant.hpp"
 
-namespace zip 
+namespace zip
 {
 
-	struct CompressionException 
+	struct CompressionException
 	{
 		const char* msg;
 	};
@@ -47,7 +47,7 @@ namespace zip
 	std::vector<char> decompress(const std::vector<char>& data);
 	std::vector<char> decompress_known_size(const std::vector<char>& data, int size);
 
-	class CompressedData : public game_logic::FormulaCallable 
+	class CompressedData : public game_logic::FormulaCallable
 	{
 		std::vector<char> data_;
 	public:

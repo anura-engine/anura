@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -38,7 +38,7 @@
 #include "sys.hpp"
 #include "unit_test.hpp"
 
-namespace sys 
+namespace sys
 {
 #if TARGET_OS_IPHONE
 	bool get_available_memory(AvailableMemoryInfo* info)
@@ -63,7 +63,7 @@ namespace sys
 
 		return true;
 	}
-	
+
 #else
 //Add additional implementations here.
 

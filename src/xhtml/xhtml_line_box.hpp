@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2015-2016 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -54,7 +54,7 @@ namespace xhtml
 		void handleRender(const KRE::SceneTreePtr& scene_tree, const point& offset) const override;
 		void handleRenderBackground(const KRE::SceneTreePtr& scene_tree, const point& offset) const override;
 		void handleRenderBorder(const KRE::SceneTreePtr& scene_tree, const point& offset) const override;
-		
+
 		std::vector<TextHolder> text_data_;
 	};
 

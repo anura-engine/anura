@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -44,7 +44,7 @@
 #include "string_utils.hpp"
 #include "variant.hpp"
 
-namespace 
+namespace
 {
 	PREF_BOOL_PERSISTENT(error_message_box, true, "Show a message dialog when an error occurs");
 	PREF_INT_PERSISTENT(error_message_box_max_rows, 30, "Maximum rows in error message dialog");
@@ -52,8 +52,8 @@ namespace
 
 	std::string trim_error_message(std::string msg) {
 		return util::word_wrap(
-			msg, 
-			g_error_message_box_max_cols, "", 
+			msg,
+			g_error_message_box_max_cols, "",
 			g_error_message_box_max_rows, "(error message truncated. See console for more)"
 		);
 	}
@@ -118,7 +118,7 @@ void report_assert_msg(const std::string& m)
 #if defined(__ANDROID__)
 	__android_log_print(ANDROID_LOG_INFO, "Frogatto", m.c_str());
 #endif
-	
+
 	if(g_error_message_box) {
 		std::stringstream ss;
 		ss << "Assertion failed\n\n" << m;
@@ -203,7 +203,7 @@ void output_backtrace()
 	std::string call_stack = get_call_stack();
 	SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION, "%s\n---\n", call_stack.c_str());
 #ifdef _MSC_VER
-	StderrStackWalker sw; 
+	StderrStackWalker sw;
 	sw.ShowCallstack();
 #else
 // disable C++ stack traces for now.

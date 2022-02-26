@@ -38,7 +38,7 @@ public:
 	bool mouseButtonUp(bool claimed, const point& p, unsigned buttons, unsigned keymod, bool in_rect=false);
 	bool mouseButtonDown(bool claimed, const point& p, unsigned buttons, unsigned keymod, bool in_rect=false);
 	bool mouseWheel(bool claimed, const point& p, const point& delta, int direction, bool in_rect=false);
-	
+
 	bool keyDown(bool claimed, const SDL_Keysym& keysym, bool repeat, bool pressed);
 	bool keyUp(bool claimed, const SDL_Keysym& keysym, bool repeat, bool pressed);
 	bool textInput(bool claimed, const std::string& text);
@@ -46,9 +46,9 @@ public:
 private:
 	virtual bool handleMouseMotion(bool claimed, const point& p, unsigned keymod, bool in_rect) = 0;
 	virtual bool handleMouseButtonUp(bool claimed, const point& p, unsigned buttons, unsigned keymod, bool in_rect) = 0;
-	virtual bool handleMouseButtonDown(bool claimed, const point& p, unsigned buttons, unsigned keymod, bool in_rect) = 0;	
+	virtual bool handleMouseButtonDown(bool claimed, const point& p, unsigned buttons, unsigned keymod, bool in_rect) = 0;
 	virtual bool handleMouseWheel(bool claimed, const point& p, const point& delta, int direction, bool in_rect) = 0;
-	
+
 	virtual bool handleKeyDown(bool claimed, const SDL_Keysym& keysym, bool repeat, bool pressed) { return claimed; }
 	virtual bool handleKeyUp(bool claimed, const SDL_Keysym& keysym, bool repeat, bool pressed) { return claimed; }
 	virtual bool handleTextInput(bool claimed, const std::string& text) { return claimed; }

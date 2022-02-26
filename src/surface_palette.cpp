@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -33,7 +33,7 @@
 
 namespace graphics
 {
-	namespace 
+	namespace
 	{
 		typedef boost::bimap<std::string,int> palette_map_type;
 		typedef palette_map_type::value_type palette_pair;
@@ -147,7 +147,7 @@ namespace graphics
 				| (static_cast<uint32_t>(b) << 8)
 				| (static_cast<uint32_t>(a));
 			const int index = x * bpp + y * rp;
-			
+
 			auto it = color_map.find(color);
 			if(it == color_map.end()) {
 				new_pixels[index + 0] = r;

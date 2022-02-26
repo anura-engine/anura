@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -77,14 +77,14 @@ namespace KRE
 	class AttributeDesc
 	{
 	public:
-		explicit AttributeDesc(AttrType type, 
+		explicit AttributeDesc(AttrType type,
 			unsigned num_elements,
 			AttrFormat var_type,
 			bool normalise=false,
 			ptrdiff_t stride=0,
 			ptrdiff_t offset=0,
 			size_t divisor=1);
-		explicit AttributeDesc(const std::string& type_name, 
+		explicit AttributeDesc(const std::string& type_name,
 			unsigned num_elements,
 			AttrFormat var_type,
 			bool normalise=false,
@@ -143,7 +143,7 @@ namespace KRE
 		bool isIndexed() const { return indexed_draw_; }
 		bool isInstanced() const { return instanced_draw_; }
 		IndexType getIndexType() const { return index_type_; }
-		virtual const void* getIndexArray() const { 
+		virtual const void* getIndexArray() const {
 			switch(index_type_) {
 			case IndexType::INDEX_NONE:		break;
 			case IndexType::INDEX_UCHAR:	return &index8_[0];
@@ -192,13 +192,13 @@ namespace KRE
 		void enableMultiDraw(bool en=true) { multi_draw_enabled_ = en; }
 		bool isMultiDrawEnabled() const { return multi_draw_enabled_; }
 		int getMultiDrawCount() const { return multi_draw_instances_; }
-		void clearMultiDrawData() { 
+		void clearMultiDrawData() {
 			multi_draw_count_.clear();
 			multi_draw_offset_.clear();
 			multi_draw_instances_ = 0;
 		}
-		void addMultiDrawData(std::ptrdiff_t offset, std::size_t size) { 
-			multi_draw_count_.emplace_back(static_cast<int>(size)); 
+		void addMultiDrawData(std::ptrdiff_t offset, std::size_t size) {
+			multi_draw_count_.emplace_back(static_cast<int>(size));
 			multi_draw_offset_.emplace_back(static_cast<int>(offset));
 			++multi_draw_instances_;
 		}
@@ -207,7 +207,7 @@ namespace KRE
 
 		virtual AttributeSetPtr clone();
 	protected:
-		const void* getIndexData() const { 
+		const void* getIndexData() const {
 			switch(index_type_) {
 				case IndexType::INDEX_NONE:		break;
 				case IndexType::INDEX_UCHAR:	return &index8_[0];
@@ -256,12 +256,12 @@ namespace KRE
 		void setOffset(ptrdiff_t offs) {
 			offs_ = offs;
 		}
-		ptrdiff_t getOffset() const { return offs_; } 
+		ptrdiff_t getOffset() const { return offs_; }
 		AccessFreqHint getAccessFrequency() const { return access_freq_; }
 		AccessTypeHint getAccessType() const { return access_type_; }
 		HardwareAttributePtr getDeviceBufferData() { return hardware_; }
-		void setDeviceBufferData(const HardwareAttributePtr& hardware) { 
-			hardware_ = hardware; 
+		void setDeviceBufferData(const HardwareAttributePtr& hardware) {
+			hardware_ = hardware;
 			handleAttachHardwareBuffer();
 		}
 		void enable(bool e=true) { enabled_ = e; }
@@ -288,9 +288,9 @@ namespace KRE
 		for us to generate a new hardware buffer from existing data in the case of
 		a context tear down.
 	*/
-	template<typename T, 
-		template<typename E, 
-		         typename = std::allocator<E>> 
+	template<typename T,
+		template<typename E,
+		         typename = std::allocator<E>>
 		class Container = std::vector>
 	class Attribute : public AttributeBase
 	{
@@ -302,7 +302,7 @@ namespace KRE
 		typedef typename Container<T>::size_type size_type;
 		typedef T value_type;
 
-		Attribute(AccessFreqHint freq, AccessTypeHint type=AccessTypeHint::DRAW) 
+		Attribute(AccessFreqHint freq, AccessTypeHint type=AccessTypeHint::DRAW)
 			:  AttributeBase(freq, type) {
 		}
 		void clear() {
@@ -352,13 +352,13 @@ namespace KRE
 			}
 			getParent()->addMultiDrawData(dst1, dst2);
 		}
-		size_t size() const { 
+		size_t size() const {
 			return elements_.size();
 		}
 		void bind() {
 			ASSERT_LOG(getDeviceBufferData() != nullptr, "Bind call on null hardware attribute buffer.");
 			getDeviceBufferData()->bind();
-		}		
+		}
 		void unbind() {
 			ASSERT_LOG(getDeviceBufferData() != nullptr, "Bind call on null hardware attribute buffer.");
 			getDeviceBufferData()->unbind();

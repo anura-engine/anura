@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -31,9 +31,9 @@ namespace gui
 {
 	AnimationWidget::AnimationWidget(int w, int h, const variant& node)
 		: anim_name_("default"),
-		  type_(), 
-		  cycle_(0), 
-  		  play_sequence_count_(0), 
+		  type_(),
+		  cycle_(0),
+  		  play_sequence_count_(0),
 		  max_sequence_plays_(20)
 	{
 		setDim(w,h);
@@ -48,17 +48,17 @@ namespace gui
 	}
 
 	AnimationWidget::AnimationWidget(const variant& v, game_logic::FormulaCallable* e)
-		: Widget(v,e), 
+		: Widget(v,e),
 		  anim_name_("default"),
 		  type_(),
-  		  cycle_(0), 
+  		  cycle_(0),
 		  play_sequence_count_(0)
 	{
 		if(v.has_key("animation")) {
 			nodes_ = v["animation"].as_list();
 		}
 		if(v.has_key("object") && v["object"].is_string()) {
-			type_ = v["object"].as_string();	
+			type_ = v["object"].as_string();
 		}
 		if(v.has_key("name") && v["name"].is_string()) {
 			anim_name_ = v["name"].as_string();
@@ -70,7 +70,7 @@ namespace gui
 		init();
 	}
 
-	AnimationWidget::AnimationWidget(const AnimationWidget& a) 
+	AnimationWidget::AnimationWidget(const AnimationWidget& a)
 		: Widget(a),
 		  anim_name_(a.anim_name_),
 		  type_(a.type_),
@@ -84,12 +84,12 @@ namespace gui
 	{
 		init();
 	}
-	
+
 	void AnimationWidget::surrenderReferences(GarbageCollector* collector)
 	{
 		collector->surrenderPtr(&label_, "ANIMATION_WIDGET:LABEL");
 		collector->surrenderPtr(&frame_, "ANIMATION_WIDGET:FRAME");
-		
+
 		for(auto& n : nodes_) {
 			collector->surrenderVariant(&n, "ANIMATION_WIDGET:NODE");
 		}

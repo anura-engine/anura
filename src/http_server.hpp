@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -29,7 +29,7 @@
 
 #include "variant.hpp"
 
-namespace http 
+namespace http
 {
 	typedef std::map<std::string, std::string> environment;
 
@@ -87,7 +87,7 @@ namespace http
 
 	public:
 		void start_receive(socket_ptr socket, receive_buf_ptr buf=receive_buf_ptr());
-	
+
 	private:
 
 		void handle_receive(socket_ptr socket, buffer_ptr buf, const boost::system::error_code& e, size_t nbytes, receive_buf_ptr recv_buf);

@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -38,7 +38,7 @@
 
 namespace xhtml
 {
-	namespace 
+	namespace
 	{
 		// used for registering/finding object handlers.
 		typedef std::map<std::string, object_create_fn> object_create_type;
@@ -67,7 +67,7 @@ namespace xhtml
 			static ElementRegistry res;
 			return res;
 		}
-		
+
 		std::map<ElementId, std::string>& get_id_registry()
 		{
 			static std::map<ElementId, std::string> res;
@@ -76,7 +76,7 @@ namespace xhtml
 			}
 			return res;
 		}
-		
+
 		void register_factory_function(ElementId id, const std::string& type, ElementFactoryFnType fn)
 		{
 			get_element_registry()[type] = ElementFunctionAndId(id, fn);
@@ -88,7 +88,7 @@ namespace xhtml
 		{
 			ElementRegistrar(ElementId id, const std::string& type)
 			{
-				// register the class factory function 
+				// register the class factory function
 				register_factory_function(id, type, [](ElementId id, const std::string& name, WeakDocumentPtr owner) -> ElementPtr { return std::make_shared<T>(id, name, owner); });
 			}
 		};
@@ -98,7 +98,7 @@ namespace xhtml
 		{
 			ElementRegistrarInt(ElementId id, const std::string& type, int level)
 			{
-				// register the class factory function 
+				// register the class factory function
 				register_factory_function(id, type, [level](ElementId id, const std::string& name, WeakDocumentPtr owner) -> ElementPtr { return std::make_shared<T>(id, name, owner, level); });
 			}
 		};
@@ -181,10 +181,10 @@ namespace xhtml
 
 		struct ImageElement : public Element
 		{
-			explicit ImageElement(ElementId id, const std::string& name, WeakDocumentPtr owner) 
-				: Element(id, name, owner), 
-				  dims_set_(false), 
-				  tex_() 
+			explicit ImageElement(ElementId id, const std::string& name, WeakDocumentPtr owner)
+				: Element(id, name, owner),
+				  dims_set_(false),
+				  tex_()
 			{
 			}
 			void init() override {
@@ -237,7 +237,7 @@ namespace xhtml
 							LOG_ERROR("Unable to convert 'img' tag 'y' attribute to number: " << attr_y->getValue());
 						}
 					}
-					
+
 					if(tex_) {
 						tex_->setSourceRect(0, rect(src_x, src_y, r.w(), r.h()));
 					}
@@ -263,9 +263,9 @@ namespace xhtml
 
 		struct ObjectElement : public Element
 		{
-			explicit ObjectElement(ElementId id, const std::string& name, WeakDocumentPtr owner) 
-				: Element(id, name, owner), 
-				obj_(nullptr) 
+			explicit ObjectElement(ElementId id, const std::string& name, WeakDocumentPtr owner)
+				: Element(id, name, owner),
+				obj_(nullptr)
 			{
 			}
 			bool isReplaced() const override { return true; }
@@ -391,7 +391,7 @@ namespace xhtml
 		};
 		struct InputElement : public Element
 		{
-			explicit InputElement(ElementId id, const std::string& name, WeakDocumentPtr owner) 
+			explicit InputElement(ElementId id, const std::string& name, WeakDocumentPtr owner)
 				: Element(id, name, owner),
 				  is_checked_(false),
 				  width_(16),
@@ -429,10 +429,10 @@ namespace xhtml
 						case InputElementType::BUTTON:
 						case InputElementType::HIDDEN:
 						case InputElementType::FILE:
-						default: 
+						default:
 							ASSERT_LOG(false, "Need to add handleSetDimensions() for InputElement of type: " << static_cast<int>(type_));
 							break;
-					}			
+					}
 				}
 			}
 
@@ -549,12 +549,12 @@ namespace xhtml
 					case InputElementType::BUTTON:
 					case InputElementType::HIDDEN:
 					case InputElementType::FILE:
-					default: 
+					default:
 						break;
 				}
 			}
 			bool handleMouseButtonUpInt(bool* trigger, const point& p) override
-			{ 
+			{
 				if(slider_) {
 					auto buttons = SDL_GetMouseState(nullptr, nullptr);
 					slider_->mouseButtonUp(false, p, buttons, SDL_GetModState(), geometry::pointInRect(p, getActiveRect()));
@@ -565,10 +565,10 @@ namespace xhtml
 						is_checked_ = !is_checked_;
 					}
 				}
-				return true; 
+				return true;
 			}
-			bool handleMouseButtonDownInt(bool* trigger, const point& p) override 
-			{ 
+			bool handleMouseButtonDownInt(bool* trigger, const point& p) override
+			{
 				if(slider_) {
 					auto buttons = SDL_GetMouseState(nullptr, nullptr);
 					slider_->mouseButtonDown(false, p, buttons, SDL_GetModState(), geometry::pointInRect(p, getActiveRect()));
@@ -576,7 +576,7 @@ namespace xhtml
 				if(geometry::pointInRect(p, getActiveRect())) {
 					LOG_DEBUG("test2");
 				}
-				return true; 
+				return true;
 			}
 			bool handleMouseMotionInt(bool* trigger, const point& p) override
 			{
@@ -624,17 +624,17 @@ namespace xhtml
 					case InputElementType::BUTTON:
 					case InputElementType::HIDDEN:
 					case InputElementType::FILE:
-					default: 
+					default:
 						ASSERT_LOG(false, "Need to add getRenderable() for InputElement of type: " << static_cast<int>(type_));
 						break;
 				}
 				return nullptr;
 			}
-			const std::string& getValue() const override 
+			const std::string& getValue() const override
 			{
 				return value_;
 			}
-		
+
 			InputElementType type_;
 			int width_;
 			int height_;
@@ -658,7 +658,7 @@ namespace xhtml
 
 		struct ButtonElement : public Element
 		{
-			explicit ButtonElement(ElementId id, const std::string& name, WeakDocumentPtr owner) 
+			explicit ButtonElement(ElementId id, const std::string& name, WeakDocumentPtr owner)
 				: Element(id, name, owner) ,
 				  width_(240),
 				  height_(100),
@@ -905,157 +905,157 @@ namespace xhtml
 			explicit AcronymElement(ElementId id, const std::string& name, WeakDocumentPtr owner) : Element(id, name, owner) {}
 		};
 		ElementRegistrar<AcronymElement> acronym_element(ElementId::ACRONYM, "acronym");
-		
+
 		struct AddressElement : public Element
 		{
 			explicit AddressElement(ElementId id, const std::string& name, WeakDocumentPtr owner) : Element(id, name, owner) {}
 		};
 		ElementRegistrar<AddressElement> address_element(ElementId::ADDRESS, "address");
-		
+
 		struct BoldElement : public Element
 		{
 			explicit BoldElement(ElementId id, const std::string& name, WeakDocumentPtr owner) : Element(id, name, owner) {}
 		};
 		ElementRegistrar<SpanElement> bold_element(ElementId::B, "b");
-		
+
 		struct BDOElement : public Element
 		{
 			explicit BDOElement(ElementId id, const std::string& name, WeakDocumentPtr owner) : Element(id, name, owner) {}
 		};
 		ElementRegistrar<SpanElement> bdo_element(ElementId::BDO, "bdo");
-		
+
 		struct BigElement : public Element
 		{
 			explicit BigElement(ElementId id, const std::string& name, WeakDocumentPtr owner) : Element(id, name, owner) {}
 		};
 		ElementRegistrar<BigElement> big_element(ElementId::BIG, "big");
-		
+
 		struct CitationElement : public Element
 		{
 			explicit CitationElement(ElementId id, const std::string& name, WeakDocumentPtr owner) : Element(id, name, owner) {}
 		};
 		ElementRegistrar<CitationElement> cite_element(ElementId::CITE, "cite");
-		
+
 		struct CodeElement : public Element
 		{
 			explicit CodeElement(ElementId id, const std::string& name, WeakDocumentPtr owner) : Element(id, name, owner) {}
 		};
 		ElementRegistrar<CodeElement> code_element(ElementId::CODE, "code");
-		
+
 		struct DefinitionDescriptionElement : public Element
 		{
 			explicit DefinitionDescriptionElement(ElementId id, const std::string& name, WeakDocumentPtr owner) : Element(id, name, owner) {}
 		};
 		ElementRegistrar<DefinitionDescriptionElement> dd_element(ElementId::DD, "dd");
-		
+
 		struct InsertedContentElement : public Element
 		{
 			explicit InsertedContentElement(ElementId id, const std::string& name, WeakDocumentPtr owner) : Element(id, name, owner) {}
 		};
 		ElementRegistrar<InsertedContentElement> ins_element(ElementId::INS, "ins");
-		
+
 		struct DeletedContentElement : public Element
 		{
 			explicit DeletedContentElement(ElementId id, const std::string& name, WeakDocumentPtr owner) : Element(id, name, owner) {}
 		};
 		ElementRegistrar<DeletedContentElement> del_element(ElementId::DEL, "del");
-		
+
 		struct DefiningInstanceElement : public Element
 		{
 			explicit DefiningInstanceElement(ElementId id, const std::string& name, WeakDocumentPtr owner) : Element(id, name, owner) {}
 		};
 		ElementRegistrar<DefiningInstanceElement> dfn_element(ElementId::DFN, "dfn");
-		
+
 		struct DefinitionTermElement : public Element
 		{
 			explicit DefinitionTermElement(ElementId id, const std::string& name, WeakDocumentPtr owner) : Element(id, name, owner) {}
 		};
 		ElementRegistrar<DefinitionTermElement> dt_element(ElementId::DT, "dt");
-		
+
 		struct ItalicsElement : public Element
 		{
 			explicit ItalicsElement(ElementId id, const std::string& name, WeakDocumentPtr owner) : Element(id, name, owner) {}
 		};
 		ElementRegistrar<ItalicsElement> italics_element(ElementId::I, "i");
-		
+
 		struct KbdElement : public Element
 		{
 			explicit KbdElement(ElementId id, const std::string& name, WeakDocumentPtr owner) : Element(id, name, owner) {}
 		};
 		ElementRegistrar<KbdElement> kbd_element(ElementId::KBD, "kbd");
-		
+
 		struct NoScriptElement : public Element
 		{
 			explicit NoScriptElement(ElementId id, const std::string& name, WeakDocumentPtr owner) : Element(id, name, owner) {}
 		};
 		ElementRegistrar<NoScriptElement> noscript_element(ElementId::NOSCRIPT, "noscript");
-		
+
 		struct RubyBaseTextElement : public Element
 		{
 			explicit RubyBaseTextElement(ElementId id, const std::string& name, WeakDocumentPtr owner) : Element(id, name, owner) {}
 		};
 		ElementRegistrar<RubyBaseTextElement> rb_element(ElementId::RB, "rb");
-		
+
 		struct RubyBaseContainerElement : public Element
 		{
 			explicit RubyBaseContainerElement(ElementId id, const std::string& name, WeakDocumentPtr owner) : Element(id, name, owner) {}
 		};
 		ElementRegistrar<RubyBaseContainerElement> rbc_element(ElementId::RBC, "rbc");
-		
+
 		struct RubyAnnotationTextElement : public Element
 		{
 			explicit RubyAnnotationTextElement(ElementId id, const std::string& name, WeakDocumentPtr owner) : Element(id, name, owner) {}
 		};
 		ElementRegistrar<RubyAnnotationTextElement> rt_element(ElementId::RT, "rt");
-		
+
 		struct RubyTextContainerElement : public Element
 		{
 			explicit RubyTextContainerElement(ElementId id, const std::string& name, WeakDocumentPtr owner) : Element(id, name, owner) {}
 		};
 		ElementRegistrar<RubyTextContainerElement> rtc_element(ElementId::RTC, "rtc");
-		
+
 		struct RubyAnnotaionElement : public Element
 		{
 			explicit RubyAnnotaionElement(ElementId id, const std::string& name, WeakDocumentPtr owner) : Element(id, name, owner) {}
 		};
 		ElementRegistrar<RubyAnnotaionElement> ruby_element(ElementId::RUBY, "ruby");
-		
+
 		struct SampleOutputElement : public Element
 		{
 			explicit SampleOutputElement(ElementId id, const std::string& name, WeakDocumentPtr owner) : Element(id, name, owner) {}
 		};
 		ElementRegistrar<SpanElement> samp_element(ElementId::SAMP, "samp");
-		
+
 		struct SmallElement : public Element
 		{
 			explicit SmallElement(ElementId id, const std::string& name, WeakDocumentPtr owner) : Element(id, name, owner) {}
 		};
 		ElementRegistrar<SmallElement> small_element(ElementId::SMALL, "small");
-		
+
 		struct StrongElement : public Element
 		{
 			explicit StrongElement(ElementId id, const std::string& name, WeakDocumentPtr owner) : Element(id, name, owner) {}
 		};
 		ElementRegistrar<StrongElement> strong_element(ElementId::STRONG, "strong");
-		
+
 		struct SubscriptElement : public Element
 		{
 			explicit SubscriptElement(ElementId id, const std::string& name, WeakDocumentPtr owner) : Element(id, name, owner) {}
 		};
 		ElementRegistrar<SubscriptElement> subscript_element(ElementId::SUB, "sub");
-		
+
 		struct SuperscriptElement : public Element
 		{
 			explicit SuperscriptElement(ElementId id, const std::string& name, WeakDocumentPtr owner) : Element(id, name, owner) {}
 		};
 		ElementRegistrar<SuperscriptElement> superscript_element(ElementId::SUP, "sup");
-		
+
 		struct TeleTypeElement : public Element
 		{
 			explicit TeleTypeElement(ElementId id, const std::string& name, WeakDocumentPtr owner) : Element(id, name, owner) {}
 		};
 		ElementRegistrar<TeleTypeElement> teletype_element(ElementId::TT, "tt");
-		
+
 		struct VariableElement : public Element
 		{
 			explicit VariableElement(ElementId id, const std::string& name, WeakDocumentPtr owner) : Element(id, name, owner) {}
@@ -1082,10 +1082,10 @@ namespace xhtml
 			it = get_element_registry().find(name);
 			ASSERT_LOG(it != get_element_registry().end(), "Couldn't find factory function for '" << name << "' though one was recently added.");
 		}
-		return it->second.fn(it->second.id, name, owner);	
+		return it->second.fn(it->second.id, name, owner);
 	}
 
-	std::string Element::toString() const 
+	std::string Element::toString() const
 	{
 		std::ostringstream ss;
 		ss << "Element('" << name_ << "' " << nodeToString();
@@ -1112,8 +1112,8 @@ namespace xhtml
 	{
 		LOG_INFO("Creating custom element '" << e << "' with id: " << custom_element_counter);
 
-		register_factory_function(static_cast<ElementId>(custom_element_counter), 
-			e, 
+		register_factory_function(static_cast<ElementId>(custom_element_counter),
+			e,
 			[](ElementId id, const std::string& name, WeakDocumentPtr owner) -> ElementPtr { return std::make_shared<CustomElement>(id, name, owner); });
 
 		--custom_element_counter;
@@ -1170,7 +1170,7 @@ namespace xhtml
 	class ImageObject : public ObjectProxy
 	{
 	public:
-		explicit ImageObject(const AttributeMap& am) 
+		explicit ImageObject(const AttributeMap& am)
 			: ObjectProxy(am),
 			  tex_(nullptr)
 		{

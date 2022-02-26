@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -33,7 +33,7 @@
 namespace KRE
 {
 	template<typename T>
-	T clamp(T value, T min_val, T max_val) 
+	T clamp(T value, T min_val, T max_val)
 	{
 		return std::max(std::min(max_val, value), min_val);
 	}

@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -36,14 +36,14 @@ namespace xhtml
 {
 	using namespace css;
 
-	namespace 
+	namespace
 	{
 		class TextureRenderable : public KRE::SceneObject
 		{
 		public:
-			explicit TextureRenderable(KRE::TexturePtr tex) 
-				: KRE::SceneObject("TextureRenderable"), 
-				  attribs_() 
+			explicit TextureRenderable(KRE::TexturePtr tex)
+				: KRE::SceneObject("TextureRenderable"),
+				  attribs_()
 			{
 				setTexture(tex);
 
@@ -54,7 +54,7 @@ namespace xhtml
 				attribs_->addAttributeDesc(AttributeDesc(AttrType::TEXTURE,  2, AttrFormat::FLOAT, false, sizeof(vertex_texcoord), offsetof(vertex_texcoord, tc)));
 				as->addAttribute(AttributeBasePtr(attribs_));
 				as->setDrawMode(DrawMode::TRIANGLES);
-		
+
 				addAttributeSet(as);
 			}
 			void update(std::vector<KRE::vertex_texcoord>* coords)
@@ -102,7 +102,7 @@ namespace xhtml
 			vc->emplace_back(glm::vec2(x, y2), color);
 			vc->emplace_back(glm::vec2(x+w, y2+y2w), color);
 		}
-		
+
 		void generate_solid_top_side(std::vector<KRE::vertex_color>* vc, float x, float xw, float x2, float x2w, float y, float yw, const glm::u8vec4& color)
 		{
 			vc->emplace_back(glm::vec2(x, y), color);
@@ -175,7 +175,7 @@ namespace xhtml
 				coords->emplace_back(glm::vec2(l, c.x), glm::vec2(u1, v1));
 				coords->emplace_back(glm::vec2(r, c.x), glm::vec2(u2, v1));
 			}
-			
+
 			// Next we need to add the two fractional tiles.
 			// top cap
 			const float trimmed_v1 = v1 + (v2 - v1) * (1.0f - (start_y - t) / ysize); // XXX
@@ -218,7 +218,7 @@ namespace xhtml
 				coords->emplace_back(glm::vec2(c.x, t), glm::vec2(u1, v1));
 				coords->emplace_back(glm::vec2(c.x, b), glm::vec2(u2, v1));
 			}
-			
+
 			// Next we need to add the two fractional tiles.
 			// left cap
 			const float trimmed_u1 = u1 + (u2 - u1) * (1.0f - (start_x - l) / xsize); // XXX
@@ -301,10 +301,10 @@ namespace xhtml
 	{
 	}
 
-	bool BorderInfo::isValid(css::Side side) const 
-	{ 
-		return (styles_ != nullptr && styles_->getBorderStyle()[static_cast<int>(side)] != css::BorderStyle::HIDDEN 
-			&& styles_->getBorderStyle()[static_cast<int>(side)] != css::BorderStyle::NONE) || (styles_ != nullptr && styles_->getBorderImage() != nullptr); 
+	bool BorderInfo::isValid(css::Side side) const
+	{
+		return (styles_ != nullptr && styles_->getBorderStyle()[static_cast<int>(side)] != css::BorderStyle::HIDDEN
+			&& styles_->getBorderStyle()[static_cast<int>(side)] != css::BorderStyle::NONE) || (styles_ != nullptr && styles_->getBorderImage() != nullptr);
 	}
 
 	void BorderInfo::init(const Dimensions& dims)
@@ -327,17 +327,17 @@ namespace xhtml
 		}
 
 		// We adjust the border image area by the outset values.
-		const FixedPoint border_image_width = dims.content_.width 
-			+ dims.padding_.left 
-			+ dims.padding_.right 
-			+ dims.border_.left 
+		const FixedPoint border_image_width = dims.content_.width
+			+ dims.padding_.left
+			+ dims.padding_.right
+			+ dims.border_.left
 			+ dims.border_.right
 			+ static_cast<FixedPoint>((outset_[1] + outset_[3]) * LayoutEngine::getFixedPointScale());
-		const FixedPoint border_image_height = dims.content_.height 
-			+ dims.padding_.top 
-			+ dims.padding_.bottom 
-			+ dims.border_.left 
-			+ dims.border_.right 
+		const FixedPoint border_image_height = dims.content_.height
+			+ dims.padding_.top
+			+ dims.padding_.bottom
+			+ dims.border_.left
+			+ dims.border_.right
 			+ static_cast<FixedPoint>((outset_[0] + outset_[2]) * LayoutEngine::getFixedPointScale());
 
 		auto& slices = styles_->getBorderImageSlice();
@@ -364,7 +364,7 @@ namespace xhtml
 				widths_[side] = slice_[side];
 			} else if(widths[side].getLength().isNumber()) {
 				// is multiple of border width
-				widths_[side] = static_cast<float>(widths[side].getLength().compute()) / LayoutEngine::getFixedPointScaleFloat() 
+				widths_[side] = static_cast<float>(widths[side].getLength().compute()) / LayoutEngine::getFixedPointScaleFloat()
 					* static_cast<float>(border[side]) / LayoutEngine::getFixedPointScaleFloat();
 			} else if(widths[side].getLength().isPercent()) {
 				// is percentage
@@ -400,10 +400,10 @@ namespace xhtml
 		std::array<std::shared_ptr<SolidRenderable>, 4> border;
 
 		FixedPoint bw[4];
-		bw[0] = dims.border_.top; 
-		bw[1] = dims.border_.left; 
+		bw[0] = dims.border_.top;
+		bw[1] = dims.border_.left;
 		bw[2] = dims.border_.bottom;
-		bw[3] = dims.border_.right; 
+		bw[3] = dims.border_.right;
 
 		int draw_border = 0;
 
@@ -432,7 +432,7 @@ namespace xhtml
 			draw_border |= 1;
 			switch(border_style[0]) {
 				case BorderStyle::SOLID:
-					generate_solid_top_side(&vc[0], side_left, left_width, side_right, right_width, side_top, top_width, white.as_u8vec4()); 
+					generate_solid_top_side(&vc[0], side_left, left_width, side_right, right_width, side_top, top_width, white.as_u8vec4());
 					break;
 				case BorderStyle::INSET:
 					generate_solid_top_side(&vc[0], side_left, left_width, side_right, right_width, side_top, top_width, off_white.as_u8vec4());
@@ -441,16 +441,16 @@ namespace xhtml
 					generate_solid_top_side(&vc[0], side_left, left_width, side_right, right_width, side_top, top_width, white.as_u8vec4());
 					break;
 				case BorderStyle::DOUBLE:
-					generate_solid_top_side(&vc[0], side_left, left_width/3.0f, side_right+2.0f*right_width/3.0f, right_width/3.0f, side_top, top_width/3.0f, white.as_u8vec4()); 
-					generate_solid_top_side(&vc[0], side_left+2.0f*left_width/3.0f, left_width/3.0f, side_right, right_width/3.0f, side_top+2.0f*top_width/3.0f, top_width/3.0f, white.as_u8vec4()); 
+					generate_solid_top_side(&vc[0], side_left, left_width/3.0f, side_right+2.0f*right_width/3.0f, right_width/3.0f, side_top, top_width/3.0f, white.as_u8vec4());
+					generate_solid_top_side(&vc[0], side_left+2.0f*left_width/3.0f, left_width/3.0f, side_right, right_width/3.0f, side_top+2.0f*top_width/3.0f, top_width/3.0f, white.as_u8vec4());
 					break;
 				case BorderStyle::GROOVE:
-					generate_solid_top_side(&vc[0], side_left, left_width/2.0f, side_right+right_width/2.0f, right_width/2.0f, side_top, top_width/2.0f, off_white.as_u8vec4()); 
-					generate_solid_top_side(&vc[0], side_left+left_width/2.0f, left_width/2.0f, side_right+right_width/2.0f, right_width/2.0f, side_top+top_width/2.0f, top_width/2.0f, white.as_u8vec4()); 
+					generate_solid_top_side(&vc[0], side_left, left_width/2.0f, side_right+right_width/2.0f, right_width/2.0f, side_top, top_width/2.0f, off_white.as_u8vec4());
+					generate_solid_top_side(&vc[0], side_left+left_width/2.0f, left_width/2.0f, side_right+right_width/2.0f, right_width/2.0f, side_top+top_width/2.0f, top_width/2.0f, white.as_u8vec4());
 					break;
 				case BorderStyle::RIDGE:
-					generate_solid_top_side(&vc[0], side_left, left_width/2.0f, side_right+right_width/2.0f, right_width/2.0f, side_top, top_width/2.0f, white.as_u8vec4()); 
-					generate_solid_top_side(&vc[0], side_left+left_width/2.0f, left_width/2.0f, side_right+right_width/2.0f, right_width/2.0f, side_top+top_width/2.0f, top_width/2.0f, off_white.as_u8vec4()); 
+					generate_solid_top_side(&vc[0], side_left, left_width/2.0f, side_right+right_width/2.0f, right_width/2.0f, side_top, top_width/2.0f, white.as_u8vec4());
+					generate_solid_top_side(&vc[0], side_left+left_width/2.0f, left_width/2.0f, side_right+right_width/2.0f, right_width/2.0f, side_top+top_width/2.0f, top_width/2.0f, off_white.as_u8vec4());
 					break;
 				case BorderStyle::DOTTED:
 				case BorderStyle::DASHED:
@@ -476,16 +476,16 @@ namespace xhtml
 					generate_solid_left_side(&vc[1], side_left, left_width, side_top, top_width, side_bottom, bottom_width, white.as_u8vec4());
 					break;
 				case BorderStyle::DOUBLE:
-					generate_solid_left_side(&vc[1], side_left, left_width/3.0f, side_top, top_width/3.0f, side_bottom+2.0f*bottom_width/3.0f, bottom_width/3.0f, white.as_u8vec4()); 
-					generate_solid_left_side(&vc[1], side_left+2.0f*left_width/3.0f, left_width/3.0f, side_top+2.0f*top_width/3.0f, top_width/3.0f, side_bottom, bottom_width/3.0f, white.as_u8vec4()); 
+					generate_solid_left_side(&vc[1], side_left, left_width/3.0f, side_top, top_width/3.0f, side_bottom+2.0f*bottom_width/3.0f, bottom_width/3.0f, white.as_u8vec4());
+					generate_solid_left_side(&vc[1], side_left+2.0f*left_width/3.0f, left_width/3.0f, side_top+2.0f*top_width/3.0f, top_width/3.0f, side_bottom, bottom_width/3.0f, white.as_u8vec4());
 					break;
 				case BorderStyle::GROOVE:
-					generate_solid_left_side(&vc[1], side_left, left_width/2.0f, side_top, top_width/2.0f, side_bottom+bottom_width/2.0f, bottom_width/2.0f, off_white.as_u8vec4()); 
-					generate_solid_left_side(&vc[1], side_left+left_width/2.0f, left_width/2.0f, side_top+top_width/2.0f, top_width/2.0f, side_bottom, bottom_width/2.0f, white.as_u8vec4()); 
+					generate_solid_left_side(&vc[1], side_left, left_width/2.0f, side_top, top_width/2.0f, side_bottom+bottom_width/2.0f, bottom_width/2.0f, off_white.as_u8vec4());
+					generate_solid_left_side(&vc[1], side_left+left_width/2.0f, left_width/2.0f, side_top+top_width/2.0f, top_width/2.0f, side_bottom, bottom_width/2.0f, white.as_u8vec4());
 					break;
 				case BorderStyle::RIDGE:
-					generate_solid_left_side(&vc[1], side_left, left_width/2.0f, side_top, top_width/2.0f, side_bottom+bottom_width/2.0f, bottom_width/2.0f, white.as_u8vec4()); 
-					generate_solid_left_side(&vc[1], side_left+left_width/2.0f, left_width/2.0f, side_top+top_width/2.0f, top_width/2.0f, side_bottom, bottom_width/2.0f, off_white.as_u8vec4()); 
+					generate_solid_left_side(&vc[1], side_left, left_width/2.0f, side_top, top_width/2.0f, side_bottom+bottom_width/2.0f, bottom_width/2.0f, white.as_u8vec4());
+					generate_solid_left_side(&vc[1], side_left+left_width/2.0f, left_width/2.0f, side_top+top_width/2.0f, top_width/2.0f, side_bottom, bottom_width/2.0f, off_white.as_u8vec4());
 					break;
 				case BorderStyle::DOTTED:
 				case BorderStyle::DASHED:
@@ -511,15 +511,15 @@ namespace xhtml
 					generate_solid_bottom_side(&vc[2], side_left, left_width, side_right, right_width, side_bottom, bottom_width, off_white.as_u8vec4());
 					break;
 				case BorderStyle::DOUBLE:
-					generate_solid_bottom_side(&vc[2], side_left+2.0f*left_width/3.0f, left_width/3.0f, side_right, right_width/3.0f, side_bottom, bottom_width/3.0f, white.as_u8vec4()); 
-					generate_solid_bottom_side(&vc[2], side_left, left_width/3.0f, side_right+2.0f*right_width/3.0f, right_width/3.0f, side_bottom+2.0f*bottom_width/3.0f, bottom_width/3.0f, white.as_u8vec4()); 
+					generate_solid_bottom_side(&vc[2], side_left+2.0f*left_width/3.0f, left_width/3.0f, side_right, right_width/3.0f, side_bottom, bottom_width/3.0f, white.as_u8vec4());
+					generate_solid_bottom_side(&vc[2], side_left, left_width/3.0f, side_right+2.0f*right_width/3.0f, right_width/3.0f, side_bottom+2.0f*bottom_width/3.0f, bottom_width/3.0f, white.as_u8vec4());
 					break;
 				case BorderStyle::GROOVE:
-					generate_solid_bottom_side(&vc[2], side_left+left_width/2.0f, left_width/2.0f, side_right, right_width/2.0f, side_bottom, bottom_width/2.0f, off_white.as_u8vec4()); 
+					generate_solid_bottom_side(&vc[2], side_left+left_width/2.0f, left_width/2.0f, side_right, right_width/2.0f, side_bottom, bottom_width/2.0f, off_white.as_u8vec4());
 					generate_solid_bottom_side(&vc[2], side_left, left_width/2.0f, side_right+right_width/2.0f, right_width/2.0f, side_bottom+bottom_width/2.0f, bottom_width/2.0f, white.as_u8vec4());
 					break;
 				case BorderStyle::RIDGE:
-					generate_solid_bottom_side(&vc[2], side_left+left_width/2.0f, left_width/2.0f, side_right, right_width/2.0f, side_bottom, bottom_width/2.0f, white.as_u8vec4()); 
+					generate_solid_bottom_side(&vc[2], side_left+left_width/2.0f, left_width/2.0f, side_right, right_width/2.0f, side_bottom, bottom_width/2.0f, white.as_u8vec4());
 					generate_solid_bottom_side(&vc[2], side_left, left_width/2.0f, side_right+right_width/2.0f, right_width/2.0f, side_bottom+bottom_width/2.0f, bottom_width/2.0f, off_white.as_u8vec4());
 					break;
 				case BorderStyle::DOTTED:
@@ -537,7 +537,7 @@ namespace xhtml
 			draw_border |= 8;
 			switch(border_style[3]) {
 				case BorderStyle::SOLID:
-					generate_solid_right_side(&vc[3], side_right, right_width, side_top, top_width, side_bottom, bottom_width, white.as_u8vec4()); 
+					generate_solid_right_side(&vc[3], side_right, right_width, side_top, top_width, side_bottom, bottom_width, white.as_u8vec4());
 					break;
 				case BorderStyle::INSET:
 					generate_solid_right_side(&vc[3], side_right, right_width, side_top, top_width, side_bottom, bottom_width, white.as_u8vec4());
@@ -546,15 +546,15 @@ namespace xhtml
 					generate_solid_right_side(&vc[3], side_right, right_width, side_top, top_width, side_bottom, bottom_width, off_white.as_u8vec4());
 					break;
 				case BorderStyle::DOUBLE:
-					generate_solid_right_side(&vc[3], side_right, right_width/3.0f, side_top+2.0f*top_width/3.0f, top_width/3.0f, side_bottom, bottom_width/3.0f, white.as_u8vec4()); 
-					generate_solid_right_side(&vc[3], side_right+2.0f*right_width/3.0f, right_width/3.0f, side_top, top_width/3.0f, side_bottom+2.0f*bottom_width/3.0f, bottom_width/3.0f, white.as_u8vec4()); 
+					generate_solid_right_side(&vc[3], side_right, right_width/3.0f, side_top+2.0f*top_width/3.0f, top_width/3.0f, side_bottom, bottom_width/3.0f, white.as_u8vec4());
+					generate_solid_right_side(&vc[3], side_right+2.0f*right_width/3.0f, right_width/3.0f, side_top, top_width/3.0f, side_bottom+2.0f*bottom_width/3.0f, bottom_width/3.0f, white.as_u8vec4());
 					break;
 				case BorderStyle::GROOVE:
-					generate_solid_right_side(&vc[3], side_right, right_width/2.0f, side_top+top_width/2.0f, top_width/2.0f, side_bottom, bottom_width/2.0f, off_white.as_u8vec4()); 
-					generate_solid_right_side(&vc[3], side_right+right_width/2.0f, right_width/2.0f, side_top, top_width/2.0f, side_bottom+bottom_width/2.0f, bottom_width/2.0f, white.as_u8vec4()); 
+					generate_solid_right_side(&vc[3], side_right, right_width/2.0f, side_top+top_width/2.0f, top_width/2.0f, side_bottom, bottom_width/2.0f, off_white.as_u8vec4());
+					generate_solid_right_side(&vc[3], side_right+right_width/2.0f, right_width/2.0f, side_top, top_width/2.0f, side_bottom+bottom_width/2.0f, bottom_width/2.0f, white.as_u8vec4());
 					break;
 				case BorderStyle::RIDGE:
-					generate_solid_right_side(&vc[3], side_right, right_width/2.0f, side_top+top_width/2.0f, top_width/2.0f, side_bottom, bottom_width/2.0f, white.as_u8vec4()); 
+					generate_solid_right_side(&vc[3], side_right, right_width/2.0f, side_top+top_width/2.0f, top_width/2.0f, side_bottom, bottom_width/2.0f, white.as_u8vec4());
 					generate_solid_right_side(&vc[3], side_right+right_width/2.0f, right_width/2.0f, side_top, top_width/2.0f, side_bottom+bottom_width/2.0f, bottom_width/2.0f, off_white.as_u8vec4());
 					break;
 				case BorderStyle::DOTTED:
@@ -653,7 +653,7 @@ namespace xhtml
 			const float r_u2 = 1.0f;
 			const float r_v2 = 1.0f - vw2;
 			switch(styles_->getBorderImageRepeatVert()) {
-				case CssBorderImageRepeat::STRETCH: 
+				case CssBorderImageRepeat::STRETCH:
 					// left-side
 					coords.emplace_back(glm::vec2(x1, y1+widths_[0]), glm::vec2(l_u1, l_v1));
 					coords.emplace_back(glm::vec2(x1, y2-widths_[2]), glm::vec2(l_u1, l_v2));

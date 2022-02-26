@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -72,7 +72,7 @@ namespace KRE
 		attribs_->addAttributeDesc(AttributeDesc(AttrType::TEXTURE,  2, AttrFormat::FLOAT, false, sizeof(vertex_texcoord), offsetof(vertex_texcoord, tc)));
 		as->addAttribute(AttributeBasePtr(attribs_));
 		as->setDrawMode(DrawMode::TRIANGLE_STRIP);
-		
+
 		addAttributeSet(as);
 	}
 
@@ -88,7 +88,7 @@ namespace KRE
 			float offs_x = 0.0f;
 			float offs_y = 0.0f;
 			switch(centre_) {
-				case Centre::MIDDLE:		
+				case Centre::MIDDLE:
 					offs_x = -draw_rect_.w()/2.0f;
 					offs_y = -draw_rect_.h()/2.0f;
 					break;

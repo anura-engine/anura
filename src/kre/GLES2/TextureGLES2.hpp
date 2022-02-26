@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2016 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -69,13 +69,13 @@ namespace KRE
 		// Whether to store the textures in a registry, with ref-counting.
 		// or what we do here.
 		struct TextureData {
-			TextureData() 
-				: id(), 
-				  surface_format(PixelFormat::PF::PIXELFORMAT_UNKNOWN), 
-				  palette(), 
+			TextureData()
+				: id(),
+				  surface_format(PixelFormat::PF::PIXELFORMAT_UNKNOWN),
+				  palette(),
 				  color_index_map(),
-				  format(GL_RGBA), 
-				  internal_format(GL_RGBA), 
+				  format(GL_RGBA),
+				  internal_format(GL_RGBA),
 				  type(GL_UNSIGNED_BYTE)
 			{
 			}

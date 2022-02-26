@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -66,7 +66,7 @@ namespace xhtml
 		RenderContext& ctx = RenderContext::get();
 		const FixedPoint containing_width = container.width;
 		const FixedPoint containing_height = container.height;
-		
+
 		FixedPoint left = container.x;
 		if(!getStyleNode()->getLeft()->isAuto()) {
 			left = getStyleNode()->getLeft()->getLength().compute(containing_width);

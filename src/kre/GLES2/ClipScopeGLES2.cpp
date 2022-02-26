@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2016 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -45,28 +45,28 @@ namespace KRE
 		stencil_scope_.reset();
 	}
 
-	void ClipScopeGLESv2::apply(const CameraPtr& cam) const 
+	void ClipScopeGLESv2::apply(const CameraPtr& cam) const
 	{
 		stencil_scope_.reset(new StencilScopeGLESv2(get_stencil_mask_settings()));
 
 		glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
 		glDepthMask(GL_FALSE);
 		glClear(GL_STENCIL_BUFFER_BIT);
-	
+
 		const float varray[] = {
 			area().x(), area().y(),
 			area().x2(), area().y(),
 			area().x(), area().y2(),
 			area().x2(), area().y2(),
 		};
-		
+
 		CameraPtr clip_cam = cam;
 		if(cam == nullptr) {
 			clip_cam = DisplayDevice::getCurrent()->getDefaultCamera();
 		}
 
 		glm::mat4 mvp = clip_cam->getProjectionMat() * clip_cam->getViewMat() * get_global_model_matrix();
-		
+
 		static GLESv2::ShaderProgramPtr shader = GLESv2::ShaderProgram::factory("simple");
 		shader->makeActive();
 		shader->setUniformValue(shader->getMvpUniform(), glm::value_ptr(mvp));
@@ -82,7 +82,7 @@ namespace KRE
 		glDepthMask(GL_TRUE);
 	}
 
-	void ClipScopeGLESv2::clear() const 
+	void ClipScopeGLESv2::clear() const
 	{
 		stencil_scope_.reset();
 	}

@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -492,7 +492,7 @@ public:
 		std::string key = "table:" + table + ":" + get_dbdate(time(nullptr));
 		record.add_attr_mutation(variant("timestamp"), variant(static_cast<int>(time(nullptr))));
 		db_client_->put(key.c_str(), record, [](){}, [](){}, DbClient::PUT_APPEND);
-		
+
 	}
 
 #define RESPOND_CUSTOM_MESSAGE(type, msg) { \
@@ -533,7 +533,7 @@ public:
 					cookie_start = NULL;
 				}
 			}
-	
+
 			if(cookie_start) {
 				request_session_id = atoi(cookie_start+8);
 			}
@@ -657,7 +657,7 @@ public:
 					registration_db_client_->put("account:" + user, registration_variant,
 					[=]() {
 						add_logged_in_user(user);
-						
+
 						const int session_id = g_session_id_gen++;
 						SessionInfo& info = sessions_[session_id];
 						info.session_id = session_id;
@@ -686,7 +686,7 @@ public:
 						if(remember) {
 							std::string cookie = write_uuid(generate_uuid());
 							response.add("cookie", cookie);
-	
+
 							variant_builder cookie_info;
 							cookie_info.add("user", user);
 							db_client_->put("cookie:" + cookie, cookie_info.build(),
@@ -716,7 +716,7 @@ public:
 					}, DbClient::PUT_ADD);
 				});
 
-				
+
 
 			} else if(request_type == "login") {
 				std::string given_user = doc["user"].as_string();
@@ -870,7 +870,7 @@ public:
 						info.account_info = &getAccountInfo(username);
 
 						users_to_sessions_[username] = session_id;
-	
+
 						response.add("type", "login_success");
 						response.add("session_id", variant(session_id));
 						response.add("cookie", variant(cookie));
@@ -936,7 +936,7 @@ public:
 					registration_db_client_->put("account:" + info.user_id, user_info,
 					[=]() {
 						RESPOND_MESSAGE("Your password has been reset.");
-					}, 
+					},
 					[=]() {
 						RESPOND_ERROR("There was an error with resetting the password. Please try again.");
 					},
@@ -1042,7 +1042,7 @@ public:
 
 				remove_logged_in_user(info.user_id);
 				sessions_.erase(session_id);
-				
+
 			} else if(request_type == "cancel_matchmake") {
 
 				if(sessions_.count(session_id) == 0) {
@@ -1358,7 +1358,7 @@ public:
 				queue_message(*target, builder.build());
 
 				RESPOND_MESSAGE(formatter() << "Sent request to " << doc["target_user"].as_string() << " to observe their game");
-				
+
 			} else if(request_type == "allow_observe") {
 
 				static int relay_session = 100000;
@@ -1473,7 +1473,7 @@ public:
 
 					if(itor->second.message_queue().empty() == false) {
 						std::string s;
-						
+
 						if(itor->second.message_queue().size() == 1) {
 							s = itor->second.message_queue().front();
 						} else {
@@ -1553,7 +1553,7 @@ public:
 					servers_.erase(itor);
 
 					++terminated_servers_;
-					
+
 					fprintf(stderr, "Child server reported exit. %d servers running\n", (int)servers_.size());
 				}
 
@@ -1818,7 +1818,7 @@ public:
 			variant user_info = info["info"];
 
 			variant recent_games;
-			
+
 			if(user_info.is_map()) {
 				recent_games = user_info["recent_games"];
 			}
@@ -1907,11 +1907,11 @@ public:
 						variant_builder doc;
 						doc.add("records", variant(&records));
 						send_msg(socket, "text/json", doc.build().write_json(), "");
-						
+
 					}
 				}, 0, DbClient::GET_LIST);
 			}
-			
+
 		} else if(url == "/recent_games") {
 
 			auto user = args.find("user");
@@ -2079,7 +2079,7 @@ private:
 			variant game_info;
 
 			std::vector<std::string> users_list;
-			
+
 			std::vector<variant> users;
 			for(int i : match_sessions) {
 				SessionInfo& session_info = sessions_[i];
@@ -2512,7 +2512,7 @@ private:
 		}
 
 		status_doc_.add_attr_mutation(variant("users_queued"), variant(nusers_queued));
-		
+
 		status_doc_.add_attr_mutation(variant("games"), variant(static_cast<int>(servers_.size())));
 
 		status_doc_state_id_++;
@@ -2913,7 +2913,7 @@ private:
 						variant_builder b;
 						b.add("type", "chat_channels");
 						b.add("channels", variant(items));
-						queue_message(username, b.build()); 
+						queue_message(username, b.build());
 						delete count;
 						delete items;
 					}
@@ -3098,7 +3098,7 @@ private:
 				if(privileged) {
 					b.add("privileged", variant::from_bool(true));
 				}
-	
+
 				std::string msg = b.build().write_json();
 				for(const std::string& username : channel.user_list) {
 					queue_message(username, msg);
@@ -3128,7 +3128,7 @@ private:
 			if(privileged) {
 				ack.add("privileged", variant::from_bool(true));
 			}
-			
+
 			variant ack_msg = ack.build();
 			std::string m = b.build().write_json();
 
@@ -3235,7 +3235,7 @@ BEGIN_DEFINE_FN(record_stats, "(map) ->commands")
 	return variant(new game_logic::FnCommandCallable("record_stats", [=]() {
 		mm_obj->record_stats(v);
 	}));
-	
+
 END_DEFINE_FN
 
 END_DEFINE_CALLABLE(matchmaking_server)

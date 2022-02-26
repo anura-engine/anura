@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -59,15 +59,15 @@ private:
 	PREF_INT(tbs_bot_delay_ms, 20, "Artificial delay for tbs bots");
 
 	bot::bot(boost::asio::io_service& service, const std::string& host, const std::string& port, variant v)
-  		: session_id_(v["session_id"].as_int()), 
-  		  service_(service), 
-  		  timer_(service), 
-  		  host_(host), 
-  		  port_(port), 
+  		: session_id_(v["session_id"].as_int()),
+  		  service_(service),
+  		  timer_(service),
+  		  host_(host),
+  		  port_(port),
   		  script_(v["script"].as_list()),
 		  response_pos_(0),
 		  script_pos_(0),
-  		  has_quit_(false), 
+  		  has_quit_(false),
   		  timer_proxy_(nullptr),
 		  on_create_(game_logic::Formula::createOptionalFormula(v["on_create"])),
 		  on_message_(game_logic::Formula::createOptionalFormula(v["on_message"]))

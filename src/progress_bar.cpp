@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -27,16 +27,16 @@
 
 #include "progress_bar.hpp"
 
-namespace gui 
+namespace gui
 {
 	ProgressBar::ProgressBar(int progress, int minv, int maxv, const std::string& gui_set)
-		: progress_(progress), 
-		min_(minv), 
-		max_(maxv), 
+		: progress_(progress),
+		min_(minv),
+		max_(maxv),
 		completion_called_(false),
-		upscale_(false), 
-		color_(128,128,128,255), 
-		hpad_(10), 
+		upscale_(false),
+		color_(128,128,128,255),
+		hpad_(10),
 		vpad_(10)
 	{
 		if(gui_set.empty() == false) {
@@ -45,10 +45,10 @@ namespace gui
 	}
 
 	ProgressBar::ProgressBar(const variant& v, game_logic::FormulaCallable* e)
-		: Widget(v,e), 
+		: Widget(v,e),
 		completion_called_(false),
-		progress_(v["progress"].as_int(0)), 
-		min_(v["min"].as_int(0)), 
+		progress_(v["progress"].as_int(0)),
+		min_(v["min"].as_int(0)),
 		max_(v["max"].as_int(100)),
 		hpad_(10), vpad_(10)
 	{
@@ -61,7 +61,7 @@ namespace gui
 		std::string frame_set = v["frame_set"].as_string_default("");
 		if(frame_set != "none" && frame_set.empty() == false) {
 			frame_image_set_ = FramedGuiElement::get(frame_set);
-		} 
+		}
 		upscale_ = v["resolution"].as_string_default("normal") == "normal" ? false : true;
 		if(v.has_key("color")) {
 			color_ = KRE::Color(v["color"]);
@@ -151,7 +151,7 @@ namespace gui
 			return variant(obj.progress_);
 		DEFINE_SET_FIELD
 			obj.setProgress(value.as_int());
-		
+
 		DEFINE_FIELD(min, "int")
 			return variant(obj.min_);
 		DEFINE_SET_FIELD

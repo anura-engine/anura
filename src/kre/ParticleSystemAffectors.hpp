@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -124,7 +124,7 @@ namespace KRE
 				return std::make_shared<TimeColorAffector>(*this);
 			}
 			virtual void handleWrite(variant_builder* build) const override;
-		
+
 			ColourOperation operation_;
 			std::vector<tc_pair> tc_data_;
 			bool interpolate_;	// interpolate or stepped.
@@ -191,7 +191,7 @@ namespace KRE
 				return std::make_shared<JetAffector>(*this);
 			}
 			virtual void handleWrite(variant_builder* build) const override;
-		
+
 			ParameterPtr acceleration_;
 			JetAffector() = delete;
 		};
@@ -213,7 +213,7 @@ namespace KRE
 				return std::make_shared<GravityAffector>(*this);
 			}
 			virtual void handleWrite(variant_builder* build) const override;
-		
+
 			ParameterPtr gravity_;
 			GravityAffector() = delete;
 		};
@@ -261,7 +261,7 @@ namespace KRE
 				return std::make_shared<ScaleAffector>(*this);
 			}
 			virtual void handleWrite(variant_builder* build) const override;
-		
+
 			ParameterPtr scale_x_;
 			ParameterPtr scale_y_;
 			ParameterPtr scale_z_;
@@ -288,7 +288,7 @@ namespace KRE
 				return std::make_shared<VortexAffector>(*this);
 			}
 			virtual void handleWrite(variant_builder* build) const override;
-		
+
 			glm::vec3 rotation_axis_;
 			ParameterPtr rotation_speed_;
 			VortexAffector() = delete;
@@ -302,15 +302,15 @@ namespace KRE
 			void init(const variant& node) override;
 
 			float getMinDistance() const { return min_distance_; }
-			void setMinDistance(float min_dist) { 
-				min_distance_ = min_dist; 
+			void setMinDistance(float min_dist) {
+				min_distance_ = min_dist;
 				if(min_distance_ > max_distance_ ) {
 					min_distance_ = max_distance_;
 				}
 			}
 			float getMaxDistance() const { return max_distance_; }
-			void setMaxDistance(float max_dist) { 
-				max_distance_ = max_dist; 
+			void setMaxDistance(float max_dist) {
+				max_distance_ = max_dist;
 				if(max_distance_ < min_distance_) {
 					max_distance_ = min_distance_;
 				}
@@ -322,7 +322,7 @@ namespace KRE
 				return std::make_shared<ParticleFollowerAffector>(*this);
 			}
 			virtual void handleWrite(variant_builder* build) const override;
-		
+
 			float min_distance_;
 			float max_distance_;
 			// working variables
@@ -346,8 +346,8 @@ namespace KRE
 				return std::make_shared<AlignAffector>(*this);
 			}
 			virtual void handleWrite(variant_builder* build) const override;
-		
-			bool resize_;			
+
+			bool resize_;
 			std::vector<Particle>::iterator prev_particle_;
 			AlignAffector() = delete;
 		};
@@ -365,7 +365,7 @@ namespace KRE
 				return std::make_shared<FlockCenteringAffector>(*this);
 			}
 			virtual void handleWrite(variant_builder* build) const override;
-		
+
 			glm::vec3 average_;
 			std::vector<Particle>::iterator prev_particle_;
 			FlockCenteringAffector() = delete;
@@ -415,7 +415,7 @@ namespace KRE
 				return std::make_shared<PathFollowerAffector>(*this);
 			}
 			virtual void handleWrite(variant_builder* build) const override;
-		
+
 			std::vector<glm::vec3> points_;
 			// working variables.
 			std::shared_ptr<geometry::spline3d<float>> spl_;
@@ -448,7 +448,7 @@ namespace KRE
 				return std::make_shared<RandomiserAffector>(*this);
 			}
 			virtual void handleWrite(variant_builder* build) const override;
-		
+
 			// randomiser (bool random_direction_, float time_step_ glm::vec3 max_deviation_)
 			bool random_direction_;
 			float time_step_;
@@ -490,7 +490,7 @@ namespace KRE
 				return std::make_shared<SineForceAffector>(*this);
 			}
 			void handleWrite(variant_builder* build) const override;
-		
+
 			glm::vec3 force_vector_;
 			glm::vec3 scale_vector_;
 			float min_frequency_;

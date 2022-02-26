@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -26,7 +26,7 @@
 #include "formula_callable_definition.hpp"
 #include "widget.hpp"
 
-namespace gui 
+namespace gui
 {
 	class Label;
 	class DialogLabel;
@@ -40,9 +40,9 @@ namespace gui
 	{
 	public:
 		static LabelPtr create(const std::string& text,
-								const KRE::Color& color, 
-								int size=14, 
-								const std::string& font="") 
+								const KRE::Color& color,
+								int size=14,
+								const std::string& font="")
 		{
 			return LabelPtr(new Label(text, color, size, font));
 		}

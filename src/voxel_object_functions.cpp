@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -58,13 +58,13 @@ namespace {
 
 const std::string FunctionModule = "voxel_object";
 
-class schedule_command : public voxel_object_command_callable 
+class schedule_command : public voxel_object_command_callable
 {
 public:
 	schedule_command(int cycles, variant cmd) : cycles_(cycles), cmd_(cmd)
 	{}
 
-	virtual void execute(voxel::world& lvl, voxel::user_voxel_object& ob) const 
+	virtual void execute(voxel::world& lvl, voxel::user_voxel_object& ob) const
 	{
 		ob.addScheduledCommand(cycles_, cmd_);
 	}
@@ -84,19 +84,19 @@ FUNCTION_ARGS_DEF
 END_FUNCTION_DEF(schedule)
 
 static int event_depth = 0;
-struct event_depth_scope 
+struct event_depth_scope
 {
-	event_depth_scope() 
-	{ 
+	event_depth_scope()
+	{
 		++event_depth;
 	}
-	~event_depth_scope() 
-	{ 
+	~event_depth_scope()
+	{
 		--event_depth;
 	}
 };
 
-class fire_event_command : public voxel_object_command_callable 
+class fire_event_command : public voxel_object_command_callable
 {
 	const voxel::UserVoxelObjectPtr target_;
 	const std::string event_;

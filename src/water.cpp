@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -37,7 +37,7 @@
 #include "variant_utils.hpp"
 #include "water.hpp"
 
-namespace 
+namespace
 {
 	const int WaterZorder = 15;
 }
@@ -49,7 +49,7 @@ Water::Water()
 	init();
 }
 
-Water::Water(variant water_node) 
+Water::Water(variant water_node)
 	: KRE::SceneObject("water"),
 	zorder_(parse_zorder(water_node["zorder"], variant("water"))),
 	current_x_formula_(game_logic::Formula::createOptionalFormula(water_node["current_x_formula"])),
@@ -194,13 +194,13 @@ void Water::process(const Level& lvl)
 			}
 		}
 
-		a.waves_.erase(std::remove_if(a.waves_.begin(), a.waves_.end(), 
-			[](const Water::wave& w){ return w.height <= 0.5 || w.length <= 0; }), 
+		a.waves_.erase(std::remove_if(a.waves_.begin(), a.waves_.end(),
+			[](const Water::wave& w){ return w.height <= 0.5 || w.length <= 0; }),
 			a.waves_.end());
 	}
 }
 
-void Water::wave::process() 
+void Water::wave::process()
 {
 	xpos += xvelocity;
 	height *= 0.996;
@@ -265,9 +265,9 @@ void Water::initAreaSurfaceSegments(const Level& lvl, Water::area& a)
 }
 
 Water::area::area(const rect& r, const KRE::Color& color, variant obj)
-	: rect_(r), 
-	color_(color), 
-	surface_segments_init_(false), 
+	: rect_(r),
+	color_(color),
+	surface_segments_init_(false),
 	obj_(obj)
 {
 }

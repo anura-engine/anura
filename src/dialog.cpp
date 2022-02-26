@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -42,11 +42,11 @@
 #include "profile_timer.hpp"
 #include "widget_factory.hpp"
 
-namespace gui 
+namespace gui
 {
 	using std::placeholders::_1;
 
-	namespace 
+	namespace
 	{
 		module::module_file_map& get_dialog_path()
 		{
@@ -80,15 +80,15 @@ namespace gui
 	    tab_widgets_(),
 		control_lockout_(0),
 		current_tab_focus_(tab_widgets_.end()),
-	    opened_(false), 
-	    cancelled_(false), 
-		clear_bg_(196), 
+	    opened_(false),
+	    cancelled_(false),
+		clear_bg_(196),
 		padding_(10),
-		add_x_(0), 
-		add_y_(0), 
+		add_x_(0),
+		add_y_(0),
 		bg_(),
-		bg_alpha_(1.0), 
-		last_draw_(-1), 
+		bg_alpha_(1.0),
+		last_draw_(-1),
 		forced_dimensions_(),
 		background_framed_gui_element_(),
 		draw_background_fn_(),
@@ -102,7 +102,7 @@ namespace gui
 
 	Dialog::Dialog(const variant& v, game_logic::FormulaCallable* e)
 		: Widget(v,e),
-		opened_(false), cancelled_(false), 
+		opened_(false), cancelled_(false),
 		add_x_(0), add_y_(0), last_draw_(-1),
 		upscale_frame_(v["upscale_frame"].as_bool(true)),
 		current_tab_focus_(tab_widgets_.end()), control_lockout_(0)
@@ -195,7 +195,7 @@ namespace gui
 		}
 	}
 
-	void Dialog::draw_last_scene() 
+	void Dialog::draw_last_scene()
 	{
 		::draw_last_scene();
 	}
@@ -316,9 +316,9 @@ namespace gui
 		return WidgetPtr(d);
 	}
 
-	void Dialog::clear() { 
+	void Dialog::clear() {
 		add_x_ = add_y_ = 0;
-		widgets_.clear(); 
+		widgets_.clear();
 		tab_widgets_.clear();
 		recalculateDimensions();
 	}
@@ -353,7 +353,7 @@ namespace gui
 		recalculateDimensions();
 	}
 
-	void Dialog::show() 
+	void Dialog::show()
 	{
 		opened_ = true;
 		setVisible(true);
@@ -363,9 +363,9 @@ namespace gui
 	{
 		SDL_Event event;
 		bool running = true;
-		while(running && input::sdl_poll_event(&event)) {  
+		while(running && input::sdl_poll_event(&event)) {
 			bool claimed = false;
-            
+
 			switch(event.type) {
 			case SDL_QUIT:
 				running = false;
@@ -448,7 +448,7 @@ namespace gui
 		addWidget(cancel, width() - 80, height() - 40);
 	}
 
-	void Dialog::handleDrawChildren() const 
+	void Dialog::handleDrawChildren() const
 	{
 		for(const WidgetPtr& w : widgets_) {
 			w->draw(x(), y(), getRotation(), getScale());
@@ -480,7 +480,7 @@ namespace gui
 			// XXX may need to apply the alpha here?
 			window->blit(x(), y(), width(), height(), upscale_frame_);
 		}
-		
+
 		handleDrawChildren();
 	}
 
@@ -502,9 +502,9 @@ namespace gui
 		return claimed;
 	}
 
-	void Dialog::close() 
-	{ 
-		opened_ = false; 
+	void Dialog::close()
+	{
+		opened_ = false;
 		if(on_close_hook_) {
 			opened_ = on_close_hook_(cancelled_);
 		}
@@ -519,11 +519,11 @@ namespace gui
 		if(tab_widgets_.size()) {
 			if(current_tab_focus_ == tab_widgets_.end()) {
 				--current_tab_focus_;
-			} else {			
+			} else {
 				current_tab_focus_->second->setFocus(false);
 				if(current_tab_focus_ == tab_widgets_.begin()) {
 					current_tab_focus_ = tab_widgets_.end();
-				} 
+				}
 				--current_tab_focus_;
 			}
 			if(current_tab_focus_ != tab_widgets_.end()) {
@@ -566,7 +566,7 @@ namespace gui
 
 		if(!claimed && opened_) {
 			if(ev.type == SDL_KEYDOWN) {
-				if(ev.key.keysym.sym == controls::get_keycode(controls::CONTROL_ATTACK) 
+				if(ev.key.keysym.sym == controls::get_keycode(controls::CONTROL_ATTACK)
 					|| ev.key.keysym.sym == controls::get_keycode(controls::CONTROL_JUMP)) {
 					doSelectEvent();
 				}
@@ -583,7 +583,7 @@ namespace gui
 						close();
 						cancelled_ = false;
 						claimed = true;
-						break; 
+						break;
 					case SDLK_ESCAPE:
 						close();
 						cancelled_ = true;
@@ -596,7 +596,7 @@ namespace gui
 					case SDLK_UP:
 						doUpEvent();
 						claimed = true;
-						break;				
+						break;
 					default: break;
 				}
 			}

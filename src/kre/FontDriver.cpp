@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -28,7 +28,7 @@
 
 namespace KRE
 {
-	namespace 
+	namespace
 	{
 		font_path_cache& get_font_path_cache()
 		{
@@ -83,7 +83,7 @@ namespace KRE
 			return res;
 		}
 
-		
+
 		std::map<std::string, font_impl_creation_fn>& get_font_providers()
 		{
 			static std::map<std::string, font_impl_creation_fn> res;
@@ -199,7 +199,7 @@ namespace KRE
 		return get_common_glyphs();
 	}
 
-	FontRenderable::FontRenderable() 
+	FontRenderable::FontRenderable()
 		: SceneObject("font-renderable"),
 		  attribs_(nullptr),
 		  width_(0),
@@ -225,7 +225,7 @@ namespace KRE
 			shader->setUniformValue(u_ignore_alpha, 0);
 			glm::vec4 attr_color(1.0f);
 			shader->setAttributeValue(a_color_attr, glm::value_ptr(attr_color));
-		});				
+		});
 	}
 
 	void FontRenderable::preRender(const WindowPtr& wnd)
@@ -236,7 +236,7 @@ namespace KRE
 		}
 	}
 
-	void FontRenderable::setColorPointer(const ColorPtr& color) 
+	void FontRenderable::setColorPointer(const ColorPtr& color)
 	{
 		ASSERT_LOG(color != nullptr, "Font color was null.");
 		color_ = color;
@@ -252,7 +252,7 @@ namespace KRE
 		attribs_->clear();
 	}
 
-	ColoredFontRenderable::ColoredFontRenderable() 
+	ColoredFontRenderable::ColoredFontRenderable()
 		: SceneObject("colored-font-renderable"),
 		  attribs_(nullptr),
 		  color_attrib_(nullptr),
@@ -282,7 +282,7 @@ namespace KRE
 		int u_ignore_alpha = shader->getUniform("ignore_alpha");
 		shader->setUniformDrawFunction([u_ignore_alpha](ShaderProgramPtr shader) {
 			shader->setUniformValue(u_ignore_alpha, 0);
-		});				
+		});
 	}
 
 	void ColoredFontRenderable::preRender(const WindowPtr& wnd)
@@ -293,7 +293,7 @@ namespace KRE
 		}
 	}
 
-	void ColoredFontRenderable::setColorPointer(const ColorPtr& color) 
+	void ColoredFontRenderable::setColorPointer(const ColorPtr& color)
 	{
 		ASSERT_LOG(color != nullptr, "Font color was null.");
 		color_ = color;
@@ -366,7 +366,7 @@ namespace KRE
 	{
 	}
 
-	int FontHandle::getDescender() 
+	int FontHandle::getDescender()
 	{
 		return impl_->getDescender();
 	}
@@ -407,7 +407,7 @@ namespace KRE
 	{
 		return impl_->calculateCharAdvance(cp);
 	}
-	
+
 	std::vector<unsigned> FontHandle::getGlyphs(const std::string& text)
 	{
 		return impl_->getGlyphs(text);

@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -46,7 +46,7 @@
 
 using boost::asio::ip::tcp;
 
-namespace http 
+namespace http
 {
 	namespace {
 		typedef web_server::socket_ptr socket_ptr;
@@ -165,7 +165,7 @@ namespace http
 	{
 		std::shared_ptr<WebServerProxyInfo> proxy = create_web_server_proxy(*this, session_id, io_service_, host, port);
 		proxies_.push_back(proxy);
-		
+
 	}
 
 	void web_server::start_accept()
@@ -208,9 +208,9 @@ namespace http
 		socket->socket.async_read_some(boost::asio::buffer(*buf), std::bind(&web_server::handle_receive, this, socket, buf, std::placeholders::_1, std::placeholders::_2, recv_buf));
 	}
 
-	void web_server::handle_receive(socket_ptr socket, buffer_ptr buf, 
-		const boost::system::error_code& e, 
-		size_t nbytes, 
+	void web_server::handle_receive(socket_ptr socket, buffer_ptr buf,
+		const boost::system::error_code& e,
+		size_t nbytes,
 		receive_buf_ptr recv_buf)
 	{
 		if(e) {
@@ -437,7 +437,7 @@ namespace http
 			compressed_buf = zip::compress(msg_ref);
 			msg_ptr = &compressed_buf;
 
-			compress_header = "Content-Encoding: deflate\r\n"; 
+			compress_header = "Content-Encoding: deflate\r\n";
 		}
 
 		const std::string& msg = *msg_ptr;
@@ -467,7 +467,7 @@ namespace http
 	void web_server::send_404(socket_ptr socket)
 	{
 		std::stringstream buf;
-		buf << 
+		buf <<
 			"HTTP/1.1 404 NOT FOUND\r\n"
 			"Date: " << get_http_datetime() << "\r\n"
 			"Connection: close\r\n"

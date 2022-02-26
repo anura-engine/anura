@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -39,7 +39,7 @@
 using namespace json;
 using namespace game_logic;
 
-namespace 
+namespace
 {
 	typedef std::pair<const char*, const char*> StringRange;
 
@@ -83,7 +83,7 @@ namespace
 		bool has_comma;
 	};
 
-	NameValuePairLocs find_pair_range(const std::string& contents, int line, int col, variant key) 
+	NameValuePairLocs find_pair_range(const std::string& contents, int line, int col, variant key)
 	{
 		ASSERT_LOG(key.get_debug_info(), "NO DEBUG INFO");
 
@@ -166,11 +166,11 @@ namespace
 		}
 	}
 
-	struct Modification 
+	struct Modification
 	{
 		Modification(std::ptrdiff_t begin, std::ptrdiff_t end, const std::string& ins)
-		  : begin_pos(begin), 
-		    end_pos(end), 
+		  : begin_pos(begin),
+		    end_pos(end),
 		    insert(ins)
 		{}
 		std::ptrdiff_t begin_pos, end_pos;
@@ -187,7 +187,7 @@ namespace
 	};
 }
 
-std::string modify_variant_text(const std::string& contents, variant original, variant v, int line, int col, std::string indent) 
+std::string modify_variant_text(const std::string& contents, variant original, variant v, int line, int col, std::string indent)
 {
 	if(v == original) {
 		return contents;
@@ -286,7 +286,7 @@ std::string modify_variant_text(const std::string& contents, variant original, v
 				}
 
 				b[n].write_json_pretty(s, indent);
-				
+
 			}
 
 			indent.resize(indent.size()-1);
@@ -301,7 +301,7 @@ std::string modify_variant_text(const std::string& contents, variant original, v
 		v.write_json_pretty(s, indent);
 		return s.str();
 	}
-	
+
 	std::string result = contents;
 	std::sort(mods.begin(), mods.end());
 	for(const Modification& mod : mods) {
@@ -311,7 +311,7 @@ std::string modify_variant_text(const std::string& contents, variant original, v
 	return result;
 }
 
-namespace 
+namespace
 {
 	ConstFormulaPtr formula_;
 

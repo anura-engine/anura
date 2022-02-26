@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -28,9 +28,9 @@
 #include "variant_type.hpp"
 #include "widget_factory.hpp"
 
-namespace gui 
+namespace gui
 {
-	namespace 
+	namespace
 	{
 		const std::string UpArrow = "scrollbar-vertical-up-arrow";
 		const std::string DownArrow = "scrollbar-vertical-down-arrow";
@@ -48,14 +48,14 @@ namespace gui
 		  handle_bot_(new GuiSectionWidget(VerticalHandleBot)),
 		  handle_top_(new GuiSectionWidget(VerticalHandleTop)),
 		  background_(new GuiSectionWidget(VerticalBackground)),
-		  window_pos_(0), 
-		  window_size_(0), 
-		  range_(0), 
-		  step_(0), 
+		  window_pos_(0),
+		  window_size_(0),
+		  range_(0),
+		  step_(0),
 		  arrow_step_(0),
 		  focus_override_(false),
 		  dragging_handle_(false),
-		  drag_start_(0), 
+		  drag_start_(0),
 		  drag_anchor_y_(0)
 	{
 		setEnvironment();
@@ -64,14 +64,14 @@ namespace gui
 
 	ScrollBarWidget::ScrollBarWidget(const variant& v, game_logic::FormulaCallable* e)
 		: Widget(v,e),
-		  window_pos_(v["position"].as_int(0)), 
-		  window_size_(0), 
+		  window_pos_(v["position"].as_int(0)),
+		  window_size_(0),
 		  range_(0),
-		  step_(0), 
+		  step_(0),
 		  arrow_step_(v["step_size"].as_int(16)),
 		  focus_override_(v["focus_override"].as_bool(false)),
-		  dragging_handle_(false), 
-		  drag_start_(0), 
+		  dragging_handle_(false),
+		  drag_start_(0),
 		  drag_anchor_y_(0)
 	{
 		ASSERT_LOG(getEnvironment() != 0, "You must specify a callable environment");
@@ -92,7 +92,7 @@ namespace gui
 		}
 
 		handler_ = std::bind(&ScrollBarWidget::handlerDelegate, this, std::placeholders::_1);
-	
+
 		up_arrow_ = v.has_key("up_arrow") ? widget_factory::create(v["up_arrow"], e) : new GuiSectionWidget(UpArrow);
 		down_arrow_ = v.has_key("down_arrow") ? widget_factory::create(v["down_arrow"], e) : new GuiSectionWidget(DownArrow);
 		handle_ = v.has_key("handle") ? widget_factory::create(v["handle"], e) : new GuiSectionWidget(VerticalHandle);
@@ -165,7 +165,7 @@ namespace gui
 		}
 
 		//TODO:  handle range < heightOfEndcaps
-	
+
 		Widget::setDim(w, h);
 	}
 

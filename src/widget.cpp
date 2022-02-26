@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -36,74 +36,74 @@
 
 #include <iostream>
 
-namespace gui 
+namespace gui
 {
-	Widget::Widget() 
-		: x_(0), 
-		  y_(0), 
-		  w_(0), 
-		  h_(0), 
-		  align_h_(HALIGN_LEFT), 
+	Widget::Widget()
+		: x_(0),
+		  y_(0),
+		  w_(0),
+		  h_(0),
+		  align_h_(HALIGN_LEFT),
 		  align_v_(VALIGN_TOP),
-		  true_x_(0), 
-		  true_y_(0), 
-		  disabled_(false), 
+		  true_x_(0),
+		  true_y_(0),
+		  disabled_(false),
 		  disabled_opacity_(127),
-		  tooltip_displayed_(false), 
-		  visible_(true), 
-		  zorder_(0), 
+		  tooltip_displayed_(false),
+		  visible_(true),
+		  zorder_(0),
 		  environ_(0),
-		  tooltip_display_delay_(0), 
-		  tooltip_ticks_(std::numeric_limits<int>::max()), 
+		  tooltip_display_delay_(0),
+		  tooltip_ticks_(std::numeric_limits<int>::max()),
 		  resolution_(0),
-		  display_alpha_(256), 
-		  pad_h_(0), 
-		  pad_w_(0), 
+		  display_alpha_(256),
+		  pad_h_(0),
+		  pad_w_(0),
 		  claim_mouse_events_(true),
-		  draw_with_object_shader_(true), 
+		  draw_with_object_shader_(true),
 		  tooltip_font_size_(18),
-		  swallow_all_events_(false), 
-		  tab_stop_(0), 
+		  swallow_all_events_(false),
+		  tab_stop_(0),
 		  has_focus_(false),
-		  tooltip_color_(255,255,255), 
-		  rotation_(0), 
-		  scale_(1.0f),  
+		  tooltip_color_(255,255,255),
+		  rotation_(0),
+		  scale_(1.0f),
 		  position_(),
 		  color_(),
 		  draw_color_()
 		{
 		}
 
-	Widget::Widget(const variant& v, game_logic::FormulaCallable* e) 
-		: environ_(e), 
-		  w_(0), 
-		  h_(0), 
-		  x_(0), 
-		  y_(0), 
-		  zorder_(0), 
-		  true_x_(0), 
-		  true_y_(0), 
-		  disabled_(false), 
+	Widget::Widget(const variant& v, game_logic::FormulaCallable* e)
+		: environ_(e),
+		  w_(0),
+		  h_(0),
+		  x_(0),
+		  y_(0),
+		  zorder_(0),
+		  true_x_(0),
+		  true_y_(0),
+		  disabled_(false),
 		  disabled_opacity_(v["disabled_opacity"].as_int(127)),
-		  tooltip_displayed_(false), 
-		  id_(v["id"].as_string_default()), 
-		  align_h_(HALIGN_LEFT), 
+		  tooltip_displayed_(false),
+		  id_(v["id"].as_string_default()),
+		  align_h_(HALIGN_LEFT),
 		  align_v_(VALIGN_TOP),
-		  tooltip_display_delay_(v["tooltip_delay"].as_int(0)), 
+		  tooltip_display_delay_(v["tooltip_delay"].as_int(0)),
 		  tooltip_ticks_(std::numeric_limits<int>::max()),
-		  resolution_(v["frame_size"].as_int(0)), 
+		  resolution_(v["frame_size"].as_int(0)),
 		  display_alpha_(v["alpha"].as_int(256)),
-		  pad_w_(0), 
-		  pad_h_(0), 
+		  pad_w_(0),
+		  pad_h_(0),
 		  claim_mouse_events_(v["claim_mouse_events"].as_bool(true)),
-		  draw_with_object_shader_(v["draw_with_object_shader"].as_bool(true)), 
+		  draw_with_object_shader_(v["draw_with_object_shader"].as_bool(true)),
 		  tooltip_font_size_(18),
-		  swallow_all_events_(false), 
-		  tab_stop_(v["tab_stop"].as_int(0)), 
+		  swallow_all_events_(false),
+		  tab_stop_(v["tab_stop"].as_int(0)),
 		  has_focus_(false),
-		  tooltip_color_(255,255,255), 
-		  rotation_(0), 
-		  scale_(1.0f), 
+		  tooltip_color_(255,255,255),
+		  rotation_(0),
+		  scale_(1.0f),
 		  position_(),
 		  color_(),
 		  draw_color_()
@@ -111,10 +111,10 @@ namespace gui
 		setAlpha(display_alpha_ < 0 ? 0 : (display_alpha_ > 256 ? 256 : display_alpha_));
 		if(v.has_key("width")) {
 			w_ = v["width"].as_int();
-		} 
+		}
 		if(v.has_key("height")) {
 			h_ = v["height"].as_int();
-		} 
+		}
 		if(v.has_key("wh")) {
 			std::vector<int> iv = v["wh"].as_list_int();
 			ASSERT_LOG(iv.size() == 2, "WH attribute must be 2 integer elements.");
@@ -126,16 +126,16 @@ namespace gui
 			ASSERT_LOG(r.size() == 4, "Four values must be supplied to the rect attribute");
 			setLoc(r[0], r[1]);
 			setDim(r[2], r[3]);
-		} 
+		}
 		if(v.has_key("draw_area")) {
 			std::vector<int> r = v["draw_area"].as_list_int();
 			ASSERT_LOG(r.size() == 4, "Four values must be supplied to the rect attribute");
 			setLoc(r[0], r[1]);
 			setDim(r[2], r[3]);
-		} 
+		}
 		if(v.has_key("x")) {
 			true_x_ = x_ = v["x"].as_int();
-		} 
+		}
 		if(v.has_key("y")) {
 			true_y_ = y_ = v["y"].as_int();
 		}
@@ -194,7 +194,7 @@ namespace gui
 		if(v.has_key("frame_padding")) {
 			ASSERT_LOG(v["frame_padding"].is_list() && v["frame_padding"].num_elements() == 2, "'pad' must be two element list");
 			setPadding(v["frame_padding"][0].as_int(), v["frame_padding"][1].as_int());
-		} 
+		}
 		if(v.has_key("frame_pad_width")) {
 			setPadding(v["frame_pad_width"].as_int(), getPadHeight());
 		}
@@ -296,13 +296,13 @@ namespace gui
 		int tx, ty;
 		switch(event->type) {
 		case SDL_MOUSEMOTION:
-			tx = event->motion.x; 
+			tx = event->motion.x;
 			ty = event->motion.y;
 			wnd->mapMousePosition(&tx, &ty);
 			break;
 		case SDL_MOUSEBUTTONDOWN:
 		case SDL_MOUSEBUTTONUP:
-			tx = event->button.x; 
+			tx = event->button.x;
 			ty = event->button.y;
 			wnd->mapMousePosition(&tx, &ty);
 			break;
@@ -318,9 +318,9 @@ namespace gui
 		tooltip_color_ = color;
 		tooltip_font_ = font;
 		if(tooltip_displayed_ && tooltip_ != nullptr) {
-			if(tooltip_->text == str 
-				&& tooltip_font_size_ == fontsize 
-				&& tooltip_color_.r() == color.r() && tooltip_color_.g() == color.g() && tooltip_color_.b() == color.b() && tooltip_color_.a() == color.a() 
+			if(tooltip_->text == str
+				&& tooltip_font_size_ == fontsize
+				&& tooltip_color_.r() == color.r() && tooltip_color_.g() == color.g() && tooltip_color_.b() == color.b() && tooltip_color_.a() == color.a()
 				&& tooltip_font_ == font) {
 				return;
 			}
@@ -368,13 +368,13 @@ namespace gui
 	void Widget::draw(int xt, int yt, float rotate, float scale) const
 	{
 		using namespace KRE;
-		if(visible_) {			 
+		if(visible_) {
 			ModelManager2D mm(xt, yt, rotate, scale);
 			Canvas::ColorManager cm(draw_color_);
 			if(frame_set_ != nullptr) {
 				frame_set_->blit(x() - getPadWidth() - frame_set_->cornerHeight(),
-					y() - getPadHeight() - frame_set_->cornerHeight(), 
-					width() + getPadWidth()*2 + 2*frame_set_->cornerHeight(), 
+					y() - getPadHeight() - frame_set_->cornerHeight(),
+					width() + getPadWidth()*2 + 2*frame_set_->cornerHeight(),
 					height() + getPadHeight()*2 + 2*frame_set_->cornerHeight(), resolution_ != 0);
 			}
 
@@ -591,16 +591,16 @@ namespace gui
 		obj.setClipArea(rect(value));
 
 	DEFINE_FIELD(clip_to_dimensions, "bool")
-		if(obj.clipArea() && obj.clipArea()->x() == obj.x() && obj.clipArea()->y() == obj.y() 
+		if(obj.clipArea() && obj.clipArea()->x() == obj.x() && obj.clipArea()->y() == obj.y()
 			&& obj.clipArea()->w() == obj.width() && obj.clipArea()->h() == obj.height()) {
 			return variant::from_bool(true);
 		} else {
 			return variant::from_bool(false);
 		}
 	DEFINE_SET_FIELD
-		if(value.as_bool()) { 
+		if(value.as_bool()) {
 			obj.setClipAreaToDim();
-		} else if(obj.clipArea()->x() == obj.x() && obj.clipArea()->y() == obj.y() 
+		} else if(obj.clipArea()->x() == obj.x() && obj.clipArea()->y() == obj.y()
 			&& obj.clipArea()->w() == obj.width() && obj.clipArea()->h() == obj.height()) {
 			obj.clearClipArea();
 		}
@@ -631,14 +631,14 @@ namespace gui
 				yloc > 0 && yloc < height();
 	}
 
-	void Widget::setFrameSet(const std::string& frame) 
-	{ 
+	void Widget::setFrameSet(const std::string& frame)
+	{
 		if(!frame.empty()) {
-			frame_set_ = FramedGuiElement::get(frame); 
+			frame_set_ = FramedGuiElement::get(frame);
 		} else {
 			frame_set_.reset();
 		}
-		frame_set_name_ = frame; 
+		frame_set_name_ = frame;
 	}
 
 	void Widget::setTooltipText(const std::string& str)
@@ -664,11 +664,11 @@ namespace gui
 	variant Widget::write()
 	{
 		variant v = Widget::handleWrite();
-		merge_variant_over(&v, handleWrite());	
+		merge_variant_over(&v, handleWrite());
 		return v;
 	}
 
-	void Widget::setScale(float s) 
+	void Widget::setScale(float s)
 	{
 		scale_ = s;
 		if(scale_ < FLT_EPSILON) {
@@ -676,8 +676,8 @@ namespace gui
 		}
 	}
 
-	void Widget::setRotation(float r) 
-	{ 
+	void Widget::setRotation(float r)
+	{
 		rotation_ = r;
 	}
 
@@ -694,7 +694,7 @@ namespace gui
 		if(ffl_on_process_) {
 			res.add("on_process", ffl_on_process_->str());
 		}
-		if(tooltipText().empty() == false 
+		if(tooltipText().empty() == false
 			|| tooltipColor().r_int() != 255
 			|| tooltipColor().g_int() != 255
 			|| tooltipColor().b_int() != 255
@@ -749,7 +749,7 @@ namespace gui
 			res.add("alpha", getAlpha());
 		}
 		if(clipArea() != nullptr) {
-			if(clipArea()->x() == x() && clipArea()->y() == y() 
+			if(clipArea()->x() == x() && clipArea()->y() == y()
 				&& clipArea()->w() == width() && clipArea()->h() == height()) {
 				res.add("clip_to_dimensions", true);
 			} else {
@@ -765,7 +765,7 @@ namespace gui
 		if(getScale() != 1.0f) {
 			res.add("scale", getScale());
 		}
-		
+
 		if(getColor() != KRE::Color::colorWhite()) {
 			res.add("color", getColor().write());
 		}
@@ -783,9 +783,9 @@ namespace gui
 
 	bool WidgetSortZOrder::operator()(const WidgetPtr& lhs, const WidgetPtr& rhs) const
 	{
-		return lhs->zorder() < rhs->zorder() 
-			|| (lhs->zorder() == rhs->zorder() && lhs->y() < rhs->y()) 
-			|| (lhs->zorder() == rhs->zorder() && lhs->y() == rhs->y() && lhs->x() < rhs->x()) 
+		return lhs->zorder() < rhs->zorder()
+			|| (lhs->zorder() == rhs->zorder() && lhs->y() < rhs->y())
+			|| (lhs->zorder() == rhs->zorder() && lhs->y() == rhs->y() && lhs->x() < rhs->x())
 			|| (lhs->zorder() == rhs->zorder() && lhs->y() == rhs->y() && lhs->x() == rhs->x() && lhs.get() < rhs.get());
 	}
 

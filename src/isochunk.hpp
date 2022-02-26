@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -85,7 +85,7 @@ namespace voxel
 		Chunk();
 		explicit Chunk(LogicalWorldPtr logic, const variant& node);
 		virtual ~Chunk();
-		
+
 		void init();
 		void build();
 		void draw() const;
@@ -213,7 +213,7 @@ namespace voxel
 	typedef ffl::IntrusivePtr<Chunk> ChunkPtr;
 	typedef ffl::IntrusivePtr<const Chunk> ConstChunkPtr;
 
-	namespace chunk_factory 
+	namespace chunk_factory
 	{
 		ChunkPtr create(LogicalWorldPtr logic, const variant& v);
 	}

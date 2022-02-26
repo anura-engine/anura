@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -28,7 +28,7 @@
 
 #include "widget.hpp"
 
-namespace gui 
+namespace gui
 {
 	std::string get_dialog_file(const std::string& fname);
 	void reset_dialog_paths();
@@ -60,7 +60,7 @@ namespace gui
 		int getCursorX() const { return add_x_; }
 		int getCursorY() const { return add_y_; }
 		bool processEvent(const point& p, const SDL_Event& e, bool claimed);
-	
+
 		void setOnQuit(std::function<void ()> onquit) { on_quit_ = onquit; }
 
 		void setBackgroundFrame(const std::string& id) { background_framed_gui_element_ = id; }
@@ -102,7 +102,7 @@ namespace gui
 		void doUpEvent();
 		void doDownEvent();
 		void doSelectEvent();
-	
+
 		SortedWidgetList widgets_;
 		TabSortedWidgetList tab_widgets_;
 		int control_lockout_;
@@ -112,7 +112,7 @@ namespace gui
 		bool opened_;
 		bool cancelled_;
 		int clear_bg_;
-	
+
 		std::function<void()> on_quit_;
 		std::function<void(bool)> on_close_;
 		std::function<bool(bool)> on_close_hook_;

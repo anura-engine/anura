@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -51,7 +51,7 @@ void addAsynchronousWorkItem(std::function<void()> fn);
 
 void mapSDLEventScreenCoordinatesToVirtual(SDL_Event& event);
 
-class LevelRunner 
+class LevelRunner
 {
 public:
 	static LevelRunner* getCurrent();

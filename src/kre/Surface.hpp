@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -102,7 +102,7 @@ namespace KRE
 	inline SurfaceFlags operator|(SurfaceFlags lhs, SurfaceFlags rhs) {
 		return static_cast<SurfaceFlags>(static_cast<int>(lhs) | static_cast<int>(rhs));
 	}
-	
+
 	//typedef std::unordered_map<Color, int, Color> color_histogram_type;
 	//typedef std::map<Color, int> color_histogram_type;
 	//typedef std::map<uint32_t, int> color_histogram_type;
@@ -138,10 +138,10 @@ namespace KRE
 		virtual void blitTo(SurfacePtr src, const rect& dst_rect) = 0;
 		virtual void blitToScaled(SurfacePtr src, const rect& src_rect, const rect& dst_rect) = 0;
 
-		virtual void writePixels(int bpp, 
-			uint32_t rmask, 
-			uint32_t gmask, 
-			uint32_t bmask, 
+		virtual void writePixels(int bpp,
+			uint32_t rmask,
+			uint32_t gmask,
+			uint32_t bmask,
 			uint32_t amask,
 			const void* pixels) = 0;
 		virtual void writePixels(const void* pixels, int size) = 0;
@@ -180,28 +180,28 @@ namespace KRE
 
 		virtual const std::vector<Color>& getPalette() = 0;
 
-		static bool registerSurfaceCreator(const std::string& name, 
-			SurfaceCreatorFileFn file_fn, 
-			SurfaceCreatorPixelsFn pixels_fn, 
+		static bool registerSurfaceCreator(const std::string& name,
+			SurfaceCreatorFileFn file_fn,
+			SurfaceCreatorPixelsFn pixels_fn,
 			SurfaceCreatorMaskFn mask_fn,
 			SurfaceCreatorFormatFn format_fn);
 		static void unRegisterSurfaceCreator(const std::string& name);
 		static SurfacePtr create(const std::string& filename, SurfaceFlags flags=SurfaceFlags::NONE, PixelFormat::PF fmt=PixelFormat::PF::PIXELFORMAT_UNKNOWN, SurfaceConvertFn convert=nullptr);
-		static SurfacePtr create(int width, 
-			int height, 
-			int bpp, 
-			int row_pitch, 
-			uint32_t rmask, 
-			uint32_t gmask, 
-			uint32_t bmask, 
-			uint32_t amask, 
+		static SurfacePtr create(int width,
+			int height,
+			int bpp,
+			int row_pitch,
+			uint32_t rmask,
+			uint32_t gmask,
+			uint32_t bmask,
+			uint32_t amask,
 			const void* pixels);
-		static SurfacePtr create(int width, 
-			int height, 
-			int bpp, 
-			uint32_t rmask, 
-			uint32_t gmask, 
-			uint32_t bmask, 
+		static SurfacePtr create(int width,
+			int height,
+			int bpp,
+			uint32_t rmask,
+			uint32_t gmask,
+			uint32_t bmask,
 			uint32_t amask);
 		static SurfacePtr create(int width, int height, PixelFormat::PF fmt);
 
@@ -239,7 +239,7 @@ namespace KRE
 		static int getAlphaStripThreshold();
 
 		// load a group of images into a single surface, will try to enlarge the surface up
-		// to a maximum size until all images are packed. 
+		// to a maximum size until all images are packed.
 		/// Returns nullptr if all the images can't be packed into a maximally sized surface.
 		static SurfacePtr packImages(const std::vector<std::string>& filenames, std::vector<rect>* outr, std::vector<std::array<int, 4>>* borders=nullptr);
 	protected:

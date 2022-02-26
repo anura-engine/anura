@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -39,16 +39,16 @@
 
 namespace game_logic
 {
-	namespace 
+	namespace
 	{
-		struct scope_info 
+		struct scope_info
 		{
 			std::set<ConstWmlSerializableFormulaCallablePtr> objects_to_write, objects_written;
 		};
 
 		std::stack<scope_info, std::vector<scope_info>> scopes;
 
-		std::map<std::string, std::function<variant(variant)>>& type_registry() 
+		std::map<std::string, std::function<variant(variant)>>& type_registry()
 		{
 			static std::map<std::string, std::function<variant(variant)>> instance;
 			return instance;
@@ -115,9 +115,9 @@ namespace game_logic
 		scopes.pop();
 	}
 
-	namespace 
+	namespace
 	{
-		void add_object_to_set(variant v, std::set<WmlSerializableFormulaCallable*>* set, std::set<boost::uuids::uuid>* already_recorded) 
+		void add_object_to_set(variant v, std::set<WmlSerializableFormulaCallable*>* set, std::set<boost::uuids::uuid>* already_recorded)
 		{
 			if(v.is_map()) {
 				variant addr = v["_uuid"];
@@ -165,14 +165,14 @@ namespace game_logic
 		return variant(&res);
 	}
 
-	namespace 
+	namespace
 	{
 		std::map<boost::uuids::uuid, WmlSerializableFormulaCallablePtr>& get_registered_objects()
 		{
 			static std::map<boost::uuids::uuid, WmlSerializableFormulaCallablePtr> res;
 			return res;
 		}
-		
+
 	}
 
 	void wmlFormulaCallableReadScope::registerSerializedObject(const boost::uuids::uuid& uuid, WmlSerializableFormulaCallablePtr ptr)
@@ -192,7 +192,7 @@ namespace game_logic
 		}
 	}
 
-	namespace 
+	namespace
 	{
 		int g_nFormulaCallableReadScope = 0;
 	}
@@ -262,7 +262,7 @@ namespace game_logic
 		return v;
 	}
 
-	namespace 
+	namespace
 	{
 		variant deserialize_doc_with_objects_internal(const std::string& msg, bool fname)
 		{
@@ -283,7 +283,7 @@ namespace game_logic
 						ASSERT_LOG(false, "ERROR PROCESSING FSON: --BEGIN--" << msg << "--END-- ERROR: " << e.errorMessage());
 					}
 				}
-	
+
 				if(v.is_map() && v.has_key(variant("serialized_objects"))) {
 					for(variant& obj_node : v["serialized_objects"]["character"].as_list()) {
 						game_logic::WmlSerializableFormulaCallablePtr obj = obj_node.try_convert<game_logic::WmlSerializableFormulaCallable>();

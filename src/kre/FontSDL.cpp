@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -50,7 +50,7 @@ namespace KRE
 			static bool initialised = false;
 			if(!initialised) {
 				initialised = true;
-	
+
 				int res = TTF_Init();
 				ASSERT_LOG(res != -1, "SDL_ttf initialisation failed: " << TTF_GetError());
 
@@ -99,7 +99,7 @@ namespace KRE
 		} else {
 			font = it->second;
 		}
-		return font;	
+		return font;
 	}
 
 	TexturePtr FontSDL::doRenderText(const std::string& text, const Color& color, int size, const std::string& font_name) const
@@ -150,7 +150,7 @@ namespace KRE
 		ASSERT_LOG(res == 0, "Error calculating size of string: " << TTF_GetError());
 	}
 
-	int FontSDL::getCharWidth(int size, const std::string& fn) 
+	int FontSDL::getCharWidth(int size, const std::string& fn)
 	{
 		static std::map<std::string, std::map<int, int>> size_cache;
 		int& width = size_cache[fn][size];
@@ -163,7 +163,7 @@ namespace KRE
 		return width;
 	}
 
-	int FontSDL::getCharHeight(int size, const std::string& fn) 
+	int FontSDL::getCharHeight(int size, const std::string& fn)
 	{
 		static std::map<std::string, std::map<int, int>> size_cache;
 		int& height = size_cache[fn][size];

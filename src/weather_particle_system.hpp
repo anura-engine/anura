@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -29,7 +29,7 @@
 
 #include "particle_system.hpp"
 
-struct WeatherParticleSystemInfo 
+struct WeatherParticleSystemInfo
 {
 	WeatherParticleSystemInfo(variant node)
 	: number_of_particles(node["number_of_particles"].as_int(1500)),
@@ -47,16 +47,16 @@ struct WeatherParticleSystemInfo
 	int velocity_x, velocity_y;
 	int velocity_rand;
 	int line_width, line_length;
-	
+
 	KRE::Color color;
 };
 
-class WeatherParticleSystemFactory : public ParticleSystemFactory 
+class WeatherParticleSystemFactory : public ParticleSystemFactory
 {
 public:
 	explicit WeatherParticleSystemFactory(variant node);
 	~WeatherParticleSystemFactory() {}
-	
+
 	ParticleSystemPtr create(const Entity& e) const override;
 	WeatherParticleSystemInfo info;
 };
@@ -65,23 +65,23 @@ class WeatherParticleSystem : public ParticleSystem
 {
 public:
 	WeatherParticleSystem(const Entity& e, const WeatherParticleSystemFactory& factory);
-	
+
 	bool isDestroyed() const override { return false; }
 	void process(const Entity& e) override;
 	void draw(const KRE::WindowPtr& wm, const rect& area, const Entity& e) const override;
 private:
 	DECLARE_CALLABLE(WeatherParticleSystem);
-	
+
 	const WeatherParticleSystemFactory& factory_;
 	const WeatherParticleSystemInfo& info_;
-	
+
 	int cycle_;
-	
+
 	struct particle {
 		float pos[2];
 		float velocity;
 	};
-	
+
 	float direction[2];
 	float base_velocity;
 

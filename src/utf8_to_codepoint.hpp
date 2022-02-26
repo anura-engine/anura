@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -36,7 +36,7 @@ namespace utils
 		class iterator : public std::iterator<std::forward_iterator_tag, char32_t, std::string::difference_type, const char32_t*, const char32_t&>
 		{
 		public:
-			iterator(std::string::const_iterator it) 
+			iterator(std::string::const_iterator it)
 				: it_(it),
 				utf8_bitmask_1(0x80),
 				utf8_bitmask_2(0x40),
@@ -56,7 +56,7 @@ namespace utils
 			{
 				return it_ != other.it_;
 			}
-			char32_t operator*() 
+			char32_t operator*()
 			{
 				char32_t codepoint = 0;
 				std::string::const_iterator it(it_);
@@ -187,8 +187,8 @@ namespace utils
 		std::string utf8_;
 		utf8_to_codepoint();
 	};
-    
-    inline std::string codepoint_to_utf8(const char32_t cp) 
+
+    inline std::string codepoint_to_utf8(const char32_t cp)
     {
 		char utf8_str[4];		// max length of a utf-8 encoded string is 4 bytes, as per RFC-3629
 		int n = 1;				// Count of characters pushed into array.

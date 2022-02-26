@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -37,7 +37,7 @@
 
 namespace KRE
 {
-	typedef std::map<std::string, std::string> font_path_cache;	
+	typedef std::map<std::string, std::string> font_path_cache;
 
 	struct FontError2 : public std::runtime_error
 	{
@@ -144,7 +144,7 @@ namespace KRE
 
 	struct FontDriverRegistrar
 	{
-		explicit FontDriverRegistrar(const std::string& name, font_impl_creation_fn create_fn) 
+		explicit FontDriverRegistrar(const std::string& name, font_impl_creation_fn create_fn)
 		{
 			FontDriver::registerFontProvider(name, create_fn);
 		}

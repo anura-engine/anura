@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -66,7 +66,7 @@ class name##_function : public FunctionExpression { \
 public: \
 	explicit name##_function(const args_list& myargs) \
 	  : FunctionExpression(#name, myargs, min_args, max_args) {
-			  
+
 #define FUNCTION_DEF_MEMBERS \
 			  } \
 private:

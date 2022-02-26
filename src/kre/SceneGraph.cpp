@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -31,7 +31,7 @@
 
 namespace KRE
 {
-	namespace 
+	namespace
 	{
 		typedef std::map<std::string, std::function<SceneNodePtr(std::weak_ptr<SceneGraph> sg, const variant&)>> SceneNodeRegistry;
 		SceneNodeRegistry& get_scene_node_registry()
@@ -40,13 +40,13 @@ namespace KRE
 			return res;
 		}
 	}
-		
-	SceneGraph::SceneGraph(const std::string& name) 
-		: name_(name) 
+
+	SceneGraph::SceneGraph(const std::string& name)
+		: name_(name)
 	{
 	}
 
-	SceneGraph::~SceneGraph() 
+	SceneGraph::~SceneGraph()
 	{
 	}
 
@@ -55,7 +55,7 @@ namespace KRE
 		return *graph_.begin();
 	}
 
-	void SceneGraph::removeNode(std::weak_ptr<SceneNode> parent, SceneNodePtr node) 
+	void SceneGraph::removeNode(std::weak_ptr<SceneNode> parent, SceneNodePtr node)
 	{
 		the::tree<SceneNodePtr>::pre_iterator it = graph_.begin();
 		for(; it != graph_.end(); ++it) {
@@ -68,7 +68,7 @@ namespace KRE
 		ASSERT_LOG(false, "node not found when removing a child node");
 	}
 
-	void SceneGraph::attachNode(std::weak_ptr<SceneNode> parent, SceneNodePtr node) 
+	void SceneGraph::attachNode(std::weak_ptr<SceneNode> parent, SceneNodePtr node)
 	{
 		if(parent.lock() == nullptr) {
 			graph_.insert(graph_.end_child(), node);
@@ -87,14 +87,14 @@ namespace KRE
 		ASSERT_LOG(false, "parent node not found when attaching a child node");
 	}
 
-	SceneGraphPtr SceneGraph::create(const std::string& name) 
+	SceneGraphPtr SceneGraph::create(const std::string& name)
 	{
 		// Create graph then insert a root node into the tree.
 		auto sg = std::make_shared<SceneGraph>(name);
 		sg->graph_.insert(sg->graph_.end(), sg->createNode());
 		return sg;
 	}
-	
+
 	SceneNodePtr SceneGraph::createNode(const std::string& node_type, const variant& node)
 	{
 		auto it = get_scene_node_registry().find(node_type);
@@ -112,11 +112,11 @@ namespace KRE
 			LOG_WARN("Overwriting the Scene Node Function: " << type);
 		}
 		get_scene_node_registry()[type] = create_fn;
-		
+
 	}
 
-	void SceneGraph::renderSceneHelper(const RenderManagerPtr& renderer, 
-		the::tree<SceneNodePtr>::pre_iterator& it, 
+	void SceneGraph::renderSceneHelper(const RenderManagerPtr& renderer,
+		the::tree<SceneNodePtr>::pre_iterator& it,
 		SceneNodeParams* snp)
 	{
 		if(it == graph_.end()) {

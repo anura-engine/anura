@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -29,12 +29,12 @@
 #include "logger.hpp"
 #include "thread.hpp"
 
-namespace 
+namespace
 {
 	std::vector<SDL_Thread*> detached_threads;
 }
 
-namespace threading 
+namespace threading
 {
 	manager::~manager()
 	{
@@ -43,7 +43,7 @@ namespace threading
 		}
 	}
 
-	namespace 
+	namespace
 	{
 		int call_boost_function(void* arg)
 		{
@@ -53,8 +53,8 @@ namespace threading
 		}
 	}
 
-	thread::thread(const std::string& name, std::function<void()> fn, int flags) 
-		: fn_(fn), 
+	thread::thread(const std::string& name, std::function<void()> fn, int flags)
+		: fn_(fn),
 		thread_(nullptr),
 		allocates_collectible_objects_((flags&THREAD_ALLOCATES_COLLECTIBLE_OBJECTS) != 0)
 	{

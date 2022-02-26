@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -33,7 +33,7 @@
 
 namespace css
 {
-	namespace 
+	namespace
 	{
 		const char32_t NULL_CP = 0x0000;
 		const char32_t CR = 0x000d;
@@ -80,10 +80,10 @@ namespace css
 				return digit(cp2) || (cp2 == '.' && digit(cp3));
 			} else if(cp1 == '.') {
 				return digit(cp2);
-			} 
+			}
 			return digit(cp1);
 		}
-		
+
 		class StringToken : public Token
 		{
 		public:
@@ -130,7 +130,7 @@ namespace css
 			std::string toString() const override {
 				return formatter() << "DimensionToken(" << value_ << " " << units_ << ")";
 			}
-			variant value() override { 
+			variant value() override {
 				variant_builder res;
 				res.add("value", value_);
 				res.add("units", units_);
@@ -195,7 +195,7 @@ namespace css
 		private:
 			double value_;
 		};
-		
+
 		class DelimiterToken : public Token
 		{
 		public:
@@ -216,7 +216,7 @@ namespace css
 			std::string toString() const override {
 				return formatter() << "HashToken(" << (unrestricted_ ? "unrestricted " : "id ") << name_ << ")";
 			}
-			variant value() override { 
+			variant value() override {
 				variant_builder res;
 				res.add("name", name_);
 				res.add("unrestricted", unrestricted_);
@@ -240,17 +240,17 @@ namespace css
 		bool is_lf = false;
 		for(auto ch : utils::utf8_to_codepoint(inp)) {
 			switch(ch) {
-				case NULL_CP: 
+				case NULL_CP:
 					if(is_lf) {
 						is_lf = false;
 						cp_string_.emplace_back(LF);
 					}
-					cp_string_.emplace_back(REPLACEMENT_CHAR); 
+					cp_string_.emplace_back(REPLACEMENT_CHAR);
 					break;
 				case CR: // fallthrough
 				case LF:
 				case FF: is_lf = true; break;
-				default: 
+				default:
 					if(is_lf) {
 						is_lf = false;
 						cp_string_.emplace_back(LF);
@@ -267,7 +267,7 @@ namespace css
 			}
 			//LOG_DEBUG("cp_string: " << ss.str());
 		}
-		
+
 		if(cp_string_.empty()) {
 			return;
 		}
@@ -618,9 +618,9 @@ namespace css
 	TokenPtr Tokenizer::consumeIdentlikeToken()
 	{
 		std::string str = consumeName();
-		if(str.size() >= 3 && (str[0] == 'u' || str[0] == 'U') 
+		if(str.size() >= 3 && (str[0] == 'u' || str[0] == 'U')
 			&& (str[1] == 'r' || str[1] == 'R')
-			&& (str[2] == 'l' || str[2] == 'L') 
+			&& (str[2] == 'l' || str[2] == 'L')
 			&& la0_ == '(') {
 			advance();
 			while(whitespace(la0_) && whitespace(next())) {
@@ -701,7 +701,7 @@ namespace css
 		return tokenIdToString(id_);
 	}
 
-	std::string Token::tokenIdToString(TokenId id) 
+	std::string Token::tokenIdToString(TokenId id)
 	{
 		switch(id) {
 			case TokenId::BAD_STRING:		return "BAD-STRING";

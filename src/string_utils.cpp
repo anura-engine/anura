@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -314,7 +314,7 @@ namespace util
 	{
 		return wildcard_pattern_match(pattern.begin(), pattern.end(), str.begin(), str.end());
 	}
-	
+
 	std::string word_wrap(std::string msg, unsigned short columns) {
 		return word_wrap(msg, columns, "\n    ");
 	}
@@ -324,26 +324,26 @@ namespace util
 	std::string word_wrap(std::string msg, unsigned short columns, const std::string& indent, unsigned short rows, const std::string& trim_msg) {
 		std::string res;
 		int chars_in_line = 0, lines = 0;
-		
+
 		size_t index = 0;
 		size_t max_index = msg.length();
-		
+
 		for(char c : msg) {
 			++chars_in_line;
 			++index;
-			
+
 			if(lines > rows) {
 				res.append(trim_msg);
 				break;
 			}
-			
+
 			//Hard wrap. (Pre-existing.)
 			if(c == '\n') {
 				chars_in_line = 0;
 				++lines;
 				res.push_back('\n');
 			}
-			
+
 			//Soft wrap, either we've ran out of characters on this line or we can't fit another word on this line.
 			else if(chars_in_line > columns || (c == ' ' && (chars_in_line + std::min(msg.find_first_of(" \n", index), max_index) - index > columns))) {
 				res.push_back('\n'); //Indent wrapped lines, so it's easier to read \n-deliminated "paragraphs".
@@ -351,12 +351,12 @@ namespace util
 				chars_in_line = 4;
 				++lines;
 			}
-			
+
 			else {
 				res.push_back(c);
 			}
 		}
-		
+
 		return res;
 	}
 }

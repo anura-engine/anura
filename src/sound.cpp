@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -56,9 +56,9 @@ PREF_INT(audio_cache_size_mb, 30, "Audio data cache size in megabytes");
 
 PREF_BOOL(debug_visualize_audio, false, "Show a graph of audio data");
 
-namespace sound 
+namespace sound
 {
-	namespace 
+	namespace
 	{
 		typedef int (*ov_clear_type)(OggVorbis_File *vf);
 		typedef vorbis_info *(*ov_info_type)(OggVorbis_File *vf,int link);
@@ -76,7 +76,7 @@ namespace sound
 	const double SampleRateDouble = double(SampleRate);
 	const int NumChannels = 2;
 
-	struct MusicInfo 
+	struct MusicInfo
 	{
 		MusicInfo() : volume(1.0f) {}
 		float volume;
@@ -85,7 +85,7 @@ namespace sound
 	//Name of the current music being played. Accessed only by the game thread.
 	std::string g_current_music;
 
-	std::map<std::string,std::string>& get_music_paths() 
+	std::map<std::string,std::string>& get_music_paths()
 	{
 		static std::map<std::string,std::string> res;
 		if(res.empty()) {
@@ -207,7 +207,7 @@ namespace sound
 		ov_time_total_type ov_time_total;
 		ov_time_tell_type ov_time_tell;
 	};
-	
+
 	VorbisDynamicLoad& vorbis()
 	{
 		static VorbisDynamicLoad res;
@@ -284,7 +284,7 @@ namespace sound
 			char buf[4096];
 
 			long nbytes;
-		
+
 			float fadeout_time = 0.0f;
 			float fadeout_current = 0.0f;
 			int nsamples;
@@ -306,7 +306,7 @@ namespace sound
 							force_seek = true;
 						}
 					}
-				
+
 				}
 
 				int max_needed = out_nsamples*sizeof(short)/(numChannels() == 1 ? 2 : 1);
@@ -323,7 +323,7 @@ namespace sound
 					int res = vorbis().ov_time_seek(&file_, loop_point_);
 					ASSERT_LOG(res == 0, "Failed to seek music: " << res << " seek to " << loop_point_);
 				}
-		
+
 				if(nbytes <= 0) {
 					finished_ = true;
 					return 0;
@@ -952,7 +952,7 @@ namespace sound
 		void setPeakGain(float peakGainDB);
 		void setBiquad(BiquadFilterType type, float Fc, float Q, float peakGain);
 		float process(int nchannel, float in);
-		
+
 	protected:
 		void calcBiquad(void);
 
@@ -999,7 +999,7 @@ namespace sound
 		this->peakGain = peakGainDB;
 		calcBiquad();
 	}
-		
+
 	void Biquad::setBiquad(BiquadFilterType type, float Fc, float Q, float peakGainDB) {
 		this->type_ = type;
 		this->Q = Q;
@@ -1020,7 +1020,7 @@ namespace sound
 				b1 = 2 * (K * K - 1) * norm;
 				b2 = (1 - K / Q + K * K) * norm;
 				break;
-				
+
 			case bq_type_highpass:
 				norm = 1 / (1 + K / Q + K * K);
 				a0 = 1 * norm;
@@ -1029,7 +1029,7 @@ namespace sound
 				b1 = 2 * (K * K - 1) * norm;
 				b2 = (1 - K / Q + K * K) * norm;
 				break;
-				
+
 			case bq_type_bandpass:
 				norm = 1 / (1 + K / Q + K * K);
 				a0 = K / Q * norm;
@@ -1038,7 +1038,7 @@ namespace sound
 				b1 = 2 * (K * K - 1) * norm;
 				b2 = (1 - K / Q + K * K) * norm;
 				break;
-				
+
 			case bq_type_notch:
 				norm = 1 / (1 + K / Q + K * K);
 				a0 = (1 + K * K) * norm;
@@ -1047,7 +1047,7 @@ namespace sound
 				b1 = a1;
 				b2 = (1 - K / Q + K * K) * norm;
 				break;
-				
+
 			case bq_type_peak:
 				if (peakGain >= 0) {    // boost
 					norm = 1 / (1 + 1/Q * K + K * K);
@@ -1103,7 +1103,7 @@ namespace sound
 				}
 				break;
 		}
-		
+
 		return;
 	}
 
@@ -1353,7 +1353,7 @@ namespace sound
 		}
 
 		//Once finished(), the game thread may remove this from the list of playing sounds.
-		bool finished() const override 
+		bool finished() const override
 		{
 			return (data_.get() != nullptr && !looped_ && pos_ >= int(data_->nsamples())) || (fade_out_ >= 0.0f && fade_out_current_ >= fade_out_);
 		}
@@ -1711,10 +1711,10 @@ namespace sound
 		} else {
 			obj.setLoopFrom(int(value.as_float()*SampleRate));
 		}
-	
+
 	DEFINE_FIELD(volume, "decimal")
 		return variant(obj.source_->getVolume());
-	
+
 	BEGIN_DEFINE_FN(set_volume, "(decimal,decimal)->commands")
 		float vol = FN_ARG(0).as_float();
 		float t = FN_ARG(1).as_float();
@@ -2217,7 +2217,7 @@ AudioEngine::AudioEngine(ffl::IntrusivePtr<const CustomObject> obj) : obj_(obj)
 
 BEGIN_DEFINE_CALLABLE_NOBASE(AudioEngine)
 	DEFINE_FIELD(status, "string")
-		
+
 		std::ostringstream s;
 		{
 			threading::lock lck(g_music_thread_mutex);
@@ -2295,10 +2295,10 @@ BEGIN_DEFINE_CALLABLE_NOBASE(AudioEngine)
 
 	END_DEFINE_FN
 
-	
+
 	DEFINE_FIELD(current_music, "null|builtin music_player")
 		return variant(g_current_player.get());
-	
+
 	DEFINE_FIELD(current_sounds, "[builtin playing_sound]")
 		std::vector<variant> res;
 
@@ -2309,7 +2309,7 @@ BEGIN_DEFINE_CALLABLE_NOBASE(AudioEngine)
 		}
 
 		return variant(&res);
-	
+
 	BEGIN_DEFINE_FN(low_pass_filter, "(map) ->builtin sound_effect_filter")
 		game_logic::Formula::failIfStaticContext();
 		return variant(new BiQuadSoundEffectFilter(bq_type_lowpass, FN_ARG(0)));
@@ -2344,7 +2344,7 @@ BEGIN_DEFINE_CALLABLE_NOBASE(AudioEngine)
 		game_logic::Formula::failIfStaticContext();
 		return variant(new BiQuadSoundEffectFilter(bq_type_highshelf, FN_ARG(0)));
 	END_DEFINE_FN
-	
+
 	BEGIN_DEFINE_FN(speed_filter, "({ speed: decimal }) ->builtin sound_effect_filter")
 		game_logic::Formula::failIfStaticContext();
 		return variant(new SpeedSoundEffectFilter(FN_ARG(0)));

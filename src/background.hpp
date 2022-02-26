@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -60,7 +60,7 @@ public:
 	void refreshPalette();
 
 private:
-	
+
 	void drawLayers(int x, int y, const rect& area, const std::vector<rect>& opaque_areas, float rotation, float xdelta, float ydelta, int cycle) const;
 	std::string id_, file_;
 	KRE::Color top_, bot_;
@@ -74,16 +74,16 @@ private:
 		mutable KRE::TexturePtr texture;
 		int xscale, yscale_top, yscale_bot;		//scales are how quickly the background scrolls compared to normal ground movement when the player
 								//walks around.  They give us the illusion of 'depth'. 100 is normal ground, less=distant, more=closer
-		
+
 		int xspeed;				//speed is how fast (in millipixels/cycle) the bg moves on its own.  It's for drifting clounds/rivers.
 		int xpad;               //amount of empty space padding we put between
 		int scale;				//a multiplier on the dimensions of the image.  Usually unused.
 		int xoffset;
-		int yoffset;			
+		int yoffset;
 		KRE::Color color;
 
 		KRE::ColorPtr color_above, color_below;
-		
+
 		// Top and bottom edges of the background.
 		mutable int y1, y2;
 

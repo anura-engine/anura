@@ -2,7 +2,7 @@
 #if 0
 /*
 	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -222,8 +222,8 @@ private:
 		// need a Checkbox for relative/absolute mode
 
 		if(selected_widget_) {
-			addWidget(selected_widget_->getSettingsDialog(0, 0, sidebar_width,height()-tools_grid->height()-20), 
-				area_.x2()-sidebar_width, 
+			addWidget(selected_widget_->getSettingsDialog(0, 0, sidebar_width,height()-tools_grid->height()-20),
+				area_.x2()-sidebar_width,
 				tools_grid->height()+20);
 		}
 	}
@@ -276,17 +276,17 @@ void widget_window::handleDraw() const
 	}
 
 	if(highlighted_widget_) {
-		graphics::draw_rect(rect(highlighted_widget_->x()-2, 
-			highlighted_widget_->y()-2, 
-			highlighted_widget_->width()+4, 
-			highlighted_widget_->height()+4), 
+		graphics::draw_rect(rect(highlighted_widget_->x()-2,
+			highlighted_widget_->y()-2,
+			highlighted_widget_->width()+4,
+			highlighted_widget_->height()+4),
 			graphics::color(255,255,255,92));
 	}
 	if(selected_widget_) {
-		graphics::draw_hollow_rect(rect(selected_widget_->x()-2, 
-			selected_widget_->y()-2, 
-			selected_widget_->width()+4, 
-			selected_widget_->height()+4), 
+		graphics::draw_hollow_rect(rect(selected_widget_->x()-2,
+			selected_widget_->y()-2,
+			selected_widget_->width()+4,
+			selected_widget_->height()+4),
 			graphics::color(255,255,255,255));
 	}
 
@@ -407,7 +407,7 @@ UTILITY(widget_editor)
 	if(!fname.empty() && sys::file_exists(fname)) {
 		// load file
 	}
-	
+
 	ffl::IntrusivePtr<widget_editor> editor(new widget_editor(rect(0, 0, preferences::actual_screen_width(), preferences::actual_screen_height()), fname));
 	editor->showModal();
 }

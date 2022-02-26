@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -71,13 +71,13 @@ static const std::string DefaultVertexShaderStr(
 );
 
 // XXX make this a static function in CustomObjectType
-std::map<std::string, std::string>& prototype_file_paths() 
+std::map<std::string, std::string>& prototype_file_paths()
 {
 	static std::map<std::string, std::string> paths;
 	return paths;
 }
 
-namespace 
+namespace
 {
 	PREF_BOOL(strict_mode_warnings, false, "If turned on, all objects will be run in strict mode, with errors non-fatal");
 	PREF_BOOL(suppress_strict_mode, false, "If turned on, turns off strict mode checking on all objects");
@@ -85,7 +85,7 @@ namespace
 
 	bool custom_object_strict_mode = false;
 
-	class StrictModeScope 
+	class StrictModeScope
 	{
 		bool old_value_;
 	public:
@@ -100,14 +100,14 @@ namespace
 
 	//A map of base object filename -> full file paths.
 	//the base filename might include module prefixes.
-	std::map<std::string, std::string>& object_file_paths() 
+	std::map<std::string, std::string>& object_file_paths()
 	{
 		static std::map<std::string, std::string> paths;
 		return paths;
 	}
 
 	//The undecorated path under which we will find object definitions.
-	const std::string& object_path() 
+	const std::string& object_path()
 	{
 		if(preferences::load_compiled()) {
 			static const std::string value =  "data/compiled/objects";
@@ -124,7 +124,7 @@ namespace
 		return value;
 	}
 
-	void load_file_paths() 
+	void load_file_paths()
 	{
 		//find out the paths to all our files
 		module::get_unique_filenames_under_dir(object_path(), &object_file_paths());
@@ -134,7 +134,7 @@ namespace
 
 	typedef std::map<std::string, ConstCustomObjectTypePtr> object_map;
 
-	object_map& cache() 
+	object_map& cache()
 	{
 		static object_map instance;
 		return instance;
@@ -443,7 +443,7 @@ namespace
 			std::string parent = p.second;
 			const int parent_id = CustomObjectType::getObjectTypeIndex(parent);
 			ancestry_index().push_back(std::pair<int,int>(child_id, parent_id));
-			
+
 			auto itor = object_type_inheritance().find(parent);
 			while(itor != object_type_inheritance().end()) {
 				parent = itor->second;
@@ -813,7 +813,7 @@ FormulaCallableDefinitionPtr CustomObjectType::getDefinition(const std::string& 
 	}
 }
 
-void CustomObjectType::ReloadFilePaths() 
+void CustomObjectType::ReloadFilePaths()
 {
 	invalidateAllObjects();
 	load_file_paths();
@@ -917,7 +917,7 @@ CustomObjectTypePtr CustomObjectType::create(const std::string& id)
 	return recreate(id, nullptr);
 }
 
-namespace 
+namespace
 {
 	std::map<std::string, std::vector<std::string> > object_prototype_paths;
 }
@@ -945,7 +945,7 @@ CustomObjectTypePtr CustomObjectType::recreate(const std::string& id,
 		variant node = mergePrototype(json::parse_from_file(path_itor->second), &proto_paths);
 
 		ASSERT_LOG(node["id"].as_string() == module::get_id(id), "IN " << path_itor->second << " OBJECT ID DOES NOT MATCH FILENAME");
-		
+
 		try {
 			std::unique_ptr<assert_recover_scope> recover_scope;
 			if(preferences::edit_and_continue()) {
@@ -1164,7 +1164,7 @@ std::vector<ConstCustomObjectTypePtr> CustomObjectType::getAll()
 }
 
 #ifndef NO_EDITOR
-namespace 
+namespace
 {
 	std::set<std::string> listening_for_files, files_updated;
 
@@ -1228,7 +1228,7 @@ void CustomObjectType::setFileContents(const std::string& file_path, const std::
 	}
 }
 
-namespace 
+namespace
 {
 	int g_numObjectReloads = 0;
 }
@@ -1237,11 +1237,11 @@ void CustomObjectType::reloadObject(const std::string& type)
 {
 	object_map::iterator itor = cache().find(module::get_id(type));
 	ASSERT_LOG(itor != cache().end(), "COULD NOT RELOAD OBJECT " << type);
-	
+
 	ConstCustomObjectTypePtr old_obj = itor->second;
 
 	CustomObjectTypePtr new_obj;
-	
+
 	{
 		const assert_recover_scope scope;
 		new_obj = recreate(type, old_obj.get());
@@ -1340,15 +1340,15 @@ void CustomObjectType::initEventHandlers(variant node,
 	}
 }
 
-namespace 
-{	
+namespace
+{
 	std::vector<std::string>& get_custom_object_type_stack()
 	{
 		static std::vector<std::string> res;
 		return res;
 	}
 
-	struct CustomObjectTypeInitScope 
+	struct CustomObjectTypeInitScope
 	{
 		explicit CustomObjectTypeInitScope(const std::string& id) {
 			get_custom_object_type_stack().push_back(id);
@@ -1386,7 +1386,7 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 	traction_in_water_(node["traction_in_water"].as_int(0)),
 	respawns_(node["respawns"].as_bool(true)),
 	affected_by_currents_(node["affected_by_currents"].as_bool(false)),
-	is_vehicle_(node["vehicle"].as_bool(false)),	
+	is_vehicle_(node["vehicle"].as_bool(false)),
 	passenger_x_(node["passenger_x"].as_int()),
 	passenger_y_(node["passenger_y"].as_int()),
 	feet_width_(node["feet_width"].as_int(0)),
@@ -1414,7 +1414,7 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 	auto_anchor_(node["auto_anchor"].as_bool(g_auto_anchor_objects)),
 	stateless_(node["stateless"].as_bool(false)),
 	platform_offsets_(node["platform_offsets"].as_list_int_optional()),
-	slot_properties_base_(-1), 
+	slot_properties_base_(-1),
 	use_absolute_screen_coordinates_(node["use_absolute_screen_coordinates"].as_bool(false)),
 	mouseover_delay_(node["mouseover_delay"].as_int(0)),
 	mouse_drag_threshold_(node["mouse_drag_threshold"].as_int(-1)),
@@ -1558,7 +1558,7 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 	available_frames_ = variant(&available_frames);
 
 	mass_ = node["mass"].as_int(defaultFrame_->collideW() * defaultFrame_->collideH());
-	
+
 	for(variant child : node["child"].as_list()) {
 		const std::string& child_id = child["child_id"].as_string();
 		children_[child_id] = child;
@@ -1582,7 +1582,7 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 	if(node.has_key("parallax_scale_x") || node.has_key("parallax_scale_y")) {
 		parallax_scale_millis_.reset(new std::pair<int, int>(node["parallax_scale_x"].as_int(1000), node["parallax_scale_y"].as_int(1000)));
 	}
-	
+
 	variant vars = node["vars"];
 	if(vars.is_null() == false) {
 		std::vector<std::string> var_str;
@@ -1729,7 +1729,7 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
                     //if this property is persistent then try to check if its type is a custom_object_type that is not serializable and flag it as an error.
                     const std::string* obj_type_str = entry.type->is_custom_object();
                     if(obj_type_str != nullptr && obj_type_str->empty() == false && std::find(get_custom_object_type_stack().begin(), get_custom_object_type_stack().end(), *obj_type_str) == get_custom_object_type_stack().end()) {
-                        
+
                         auto dot = std::find(obj_type_str->begin(), obj_type_str->end(), '.');
                         if(dot == obj_type_str->end() || std::find(get_custom_object_type_stack().begin(), get_custom_object_type_stack().end(), std::string(obj_type_str->begin(), dot)) == get_custom_object_type_stack().end()) {
 
@@ -1741,12 +1741,12 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
                                 }
                             }
                         }
-                        
-                        
-                        
+
+
+
                     }
                 }
-                
+
 				if(value.has_key("editor_info")) {
 					entry.has_editor_info = true;
 					const game_logic::Formula::StrictCheckScope strict_checking(false);
@@ -1852,7 +1852,7 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 		for(const auto& v : variations.as_map()) {
 			variations_[v.first.as_string()] = game_logic::Formula::createOptionalFormula(v.second, &get_custom_object_functions_symbol_table());
 		}
-		
+
 		node_ = node;
 	}
 
@@ -1900,7 +1900,7 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 					shader_info = shader_info.add_attr(variant("vertex"), DefaultVertexShader);
 				}
 			}
-			
+
 			KRE::ShaderProgram::loadFromVariant(shader_info);
 			shader_ = graphics::AnuraShaderPtr(new graphics::AnuraShader(shader_name));
 
@@ -1970,7 +1970,7 @@ const std::shared_ptr<lua::CompiledChunk> & CustomObjectType::getLuaInit(lua::Lu
 }
 #endif
 
-namespace 
+namespace
 {
 	struct StackScope {
 		StackScope(std::vector<std::string>* stack, const std::string& item)
@@ -2069,7 +2069,7 @@ game_logic::FunctionSymbolTable* CustomObjectType::getFunctionSymbols() const
 	}
 }
 
-namespace 
+namespace
 {
 	void execute_variation_command(variant cmd, game_logic::FormulaCallable& obj)
 	{
@@ -2162,7 +2162,7 @@ graphics::AnuraShaderPtr CustomObjectType::getShaderWithParms(unsigned int flags
 			static variant DefaultVertexShader(DefaultVertexShaderStr);
 			shader_info = shader_info.add_attr(variant("vertex"), DefaultVertexShader);
 		}
-	
+
 		KRE::ShaderProgram::loadFromVariant(shader_info);
 		shader_variants_[flags] = graphics::AnuraShaderPtr(new graphics::AnuraShader(shader_name));
 	}
@@ -2229,7 +2229,7 @@ BENCHMARK(CustomObjectTypeLoad)
 			}
 		}
 		KRE::Surface::clearSurfaceCache();
-		KRE::Texture::clearTextures();		
+		KRE::Texture::clearTextures();
 	}
 }
 
@@ -2239,7 +2239,7 @@ BENCHMARK(CustomObjectTypeFrogattoLoad)
 	BENCHMARK_LOOP {
 		CustomObjectType::create("frogatto_playable");
 		KRE::Surface::clearSurfaceCache();
-		KRE::Texture::clearTextures();		
+		KRE::Texture::clearTextures();
 	}
 }
 
@@ -2255,7 +2255,7 @@ UTILITY(object_definition)
 		if(dot != arg.end()) {
 			baseobj = std::string(arg.begin(), dot);
 		}
-		
+
 		const std::string* fname = CustomObjectType::getObjectPath(baseobj + ".cfg");
 
 		variant json = json::parse_from_file_or_die(*fname);

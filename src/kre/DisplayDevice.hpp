@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -150,8 +150,8 @@ namespace KRE
 		virtual ShaderProgramPtr getShaderProgram(const std::string& name) = 0;
 		virtual ShaderProgramPtr getShaderProgram(const variant& node) = 0;
 		virtual ShaderProgramPtr getDefaultShader() = 0;
-		virtual ShaderProgramPtr createShader(const std::string& name, 
-			const std::vector<ShaderData>& shader_data, 
+		virtual ShaderProgramPtr createShader(const std::string& name,
+			const std::vector<ShaderData>& shader_data,
 			const std::vector<ActiveMapping>& uniform_map,
 			const std::vector<ActiveMapping>& attribute_map) = 0;
 		virtual ShaderProgramPtr createGaussianShader(int radius) = 0;
@@ -164,11 +164,11 @@ namespace KRE
 
 		static void blitTexture(const TexturePtr& tex, int dstx, int dsty, int dstw, int dsth, float rotation, int srcx, int srcy, int srcw, int srch);
 
-		static RenderTargetPtr renderTargetInstance(int width, int height, 
-			int color_plane_count=1, 
-			bool depth=false, 
-			bool stencil=false, 
-			bool use_multi_sampling=false, 
+		static RenderTargetPtr renderTargetInstance(int width, int height,
+			int color_plane_count=1,
+			bool depth=false,
+			bool stencil=false,
+			bool use_multi_sampling=false,
 			int multi_samples=0);
 		static RenderTargetPtr renderTargetInstance(const variant& node);
 
@@ -189,7 +189,7 @@ namespace KRE
 
 		static DisplayDevicePtr factory(const std::string& type, WindowPtr wnd);
 
-		static DisplayDevicePtr getCurrent();		
+		static DisplayDevicePtr getCurrent();
 
 		static bool checkForFeature(DisplayDeviceCapabilties cap);
 
@@ -202,16 +202,16 @@ namespace KRE
 		virtual AttributeSetPtr handleCreateAttributeSet(bool indexed, bool instanced) = 0;
 		virtual HardwareAttributePtr handleCreateAttribute(AttributeBase* parent) = 0;
 
-		virtual RenderTargetPtr handleCreateRenderTarget(int width, int height, 
-			int color_plane_count, 
-			bool depth, 
-			bool stencil, 
-			bool use_multi_sampling, 
+		virtual RenderTargetPtr handleCreateRenderTarget(int width, int height,
+			int color_plane_count,
+			bool depth,
+			bool stencil,
+			bool use_multi_sampling,
 			int multi_samples) = 0;
 		virtual RenderTargetPtr handleCreateRenderTarget(const variant& node) = 0;
 
 		virtual bool handleReadPixels(int x, int y, unsigned width, unsigned height, ReadFormat fmt, AttrFormat type, void* data, int stride) = 0;
-		
+
 		virtual TexturePtr handleCreateTexture(const SurfacePtr& surface, TextureType type, int mipmap_levels) = 0;
 		virtual TexturePtr handleCreateTexture(const SurfacePtr& surface, const variant& node) = 0;
 
@@ -232,7 +232,7 @@ namespace KRE
 	{
 		DisplayDeviceRegistrar(const std::string& type)
 		{
-			// register the class factory function 
+			// register the class factory function
 			DisplayDevice::registerFactoryFunction(type, [](WindowPtr wnd) -> DisplayDevicePtr { return DisplayDevicePtr(new T(wnd));});
 		}
 	};

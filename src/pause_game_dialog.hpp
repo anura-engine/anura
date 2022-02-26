@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -23,20 +23,20 @@
 
 #pragma once
 
-enum class PAUSE_GAME_RESULT { 
-	CONTINUE, 
-	CONTROLS, 
-	QUIT, 
-	GO_TO_TITLESCREEN, 
-	GO_TO_LOBBY 
+enum class PAUSE_GAME_RESULT {
+	CONTINUE,
+	CONTROLS,
+	QUIT,
+	GO_TO_TITLESCREEN,
+	GO_TO_LOBBY
 };
 
 PAUSE_GAME_RESULT show_pause_game_dialog();
 
-struct InterruptGameException 
+struct InterruptGameException
 {
 	PAUSE_GAME_RESULT result;
-	InterruptGameException(PAUSE_GAME_RESULT res=PAUSE_GAME_RESULT::QUIT) 
+	InterruptGameException(PAUSE_GAME_RESULT res=PAUSE_GAME_RESULT::QUIT)
 		: result(res)
 	{}
 };

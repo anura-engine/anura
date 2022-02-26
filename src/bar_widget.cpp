@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -29,14 +29,14 @@
 namespace gui
 {
 	BarWidget::BarWidget(const variant& v, game_logic::FormulaCallable* e)
-		: Widget(v, e), segments_(v["segments"].as_int(1)), 
-		segment_length_(v["segment_length"].as_int(5)), 
+		: Widget(v, e), segments_(v["segments"].as_int(1)),
+		segment_length_(v["segment_length"].as_int(5)),
 		rotate_(v["rotation"].as_float(0)),
 		tick_width_(v["tick_width"].as_int(1)), scale_(2.0f),
 		drained_segments_(v["drained"].as_int(0)), animating_(false),
 		drain_rate_(v["drain_rate"].as_double(10.0)),
 		total_bar_length_(0), drained_bar_length_(0), active_bar_length_(0),
-		left_cap_width_(0), right_cap_width_(0), 
+		left_cap_width_(0), right_cap_width_(0),
 		animation_end_point_unscaled_(0.0f),
 		animation_current_position_(0.0f), drained_segments_after_anim_(0),
 		bar_max_width_(v["max_width"].as_int())
@@ -241,7 +241,7 @@ END_DEFINE_CALLABLE(BarWidget)
 		auto canvas = KRE::Canvas::getInstance();
 		int x_offset = x();
 		{
-			// draw color under end caps.			
+			// draw color under end caps.
 			canvas->drawSolidRect(rect(static_cast<int>(x()+scale_), static_cast<int>(y()+scale_), static_cast<int>(left_cap_width_-2*scale_), static_cast<int>(height()-2*scale_)), bar_color_);
 			canvas->drawSolidRect(rect(x()+left_cap_width_+total_bar_length_, static_cast<int>(y()+scale_), static_cast<int>(right_cap_width_-scale_), static_cast<int>(height()-2*scale_)), drained_segments_ ? drained_bar_color_ : bar_color_);
 
@@ -253,7 +253,7 @@ END_DEFINE_CALLABLE(BarWidget)
 			if(drained_segments_ || animating_) {
 				canvas->drawSolidRect(rect(x()+active_bar_length_+left_cap_width_+anim_offset, y(), drained_bar_length_-anim_offset, height()), drained_bar_color_);
 			}
-			
+
 			drawTicks(static_cast<float>(x()+left_cap_width_), segments_-drained_segments_+(drained_segments_?1:0), tick_mark_color_);
 			drawTicks(static_cast<float>(x()+left_cap_width_+active_bar_length_), drained_segments_, drained_tick_mark_color_);
 		}
@@ -285,7 +285,7 @@ END_DEFINE_CALLABLE(BarWidget)
 	{
 		return claimed;
 	}
-	
+
 	WidgetPtr BarWidget::clone() const
 	{
 		return WidgetPtr(new BarWidget(*this));

@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -34,7 +34,7 @@
 #include "level_object_fwd.hpp"
 #include "variant.hpp"
 
-struct LevelTile 
+struct LevelTile
 {
 	LevelTile() : x(0), y(0), layer_from(0), zorder(0), object(nullptr), face_right(false), draw_disabled(false) {}
 	bool isSolid(int x, int y) const;
@@ -46,7 +46,7 @@ struct LevelTile
 	bool draw_disabled;
 };
 
-struct level_tile_zorder_comparer 
+struct level_tile_zorder_comparer
 {
 	bool operator()(const LevelTile& a, const LevelTile& b) const {
 		return a.zorder < b.zorder;
@@ -61,7 +61,7 @@ struct level_tile_zorder_comparer
 	}
 };
 
-struct level_tile_pos_comparer 
+struct level_tile_pos_comparer
 {
 	bool operator()(const LevelTile& a, const LevelTile& b) const {
 		return a.y < b.y || (a.y == b.y && a.x < b.x);
@@ -76,38 +76,38 @@ struct level_tile_pos_comparer
 	}
 };
 
-struct level_tile_zorder_pos_comparer 
+struct level_tile_zorder_pos_comparer
 {
 	bool operator()(const LevelTile& a, const LevelTile& b) const {
 		return a.zorder < b.zorder || (a.zorder == b.zorder && a.y < b.y) || (a.zorder == b.zorder && a.y == b.y && a.x < b.x);
 	}
 };
 
-struct level_tile_y_pos_comparer 
+struct level_tile_y_pos_comparer
 {
         bool operator()(const LevelTile& a, int b) const {
                 return a.y < b;
         }
- 
+
         bool operator()(int a, const LevelTile& b) const {
                 return a < b.y;
         }
- 
+
         bool operator()(const LevelTile& a, const LevelTile& b) const {
                 return a.y < b.y;
         }
 };
 
 //utility which sets the palette for objects loaded within a scope
-struct palette_scope 
+struct palette_scope
 {
 	explicit palette_scope(const std::vector<std::string>& v);
-	~palette_scope();	
+	~palette_scope();
 
 	uint64_t original_value;
 };
 
-class LevelObject : public game_logic::FormulaCallable 
+class LevelObject : public game_logic::FormulaCallable
 {
 public:
 	static std::vector<ConstLevelObjectPtr> all();

@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -38,10 +38,10 @@
 #include "unit_test.hpp"
 #include "variant.hpp"
 
-namespace checksum 
+namespace checksum
 {
 
-	namespace 
+	namespace
 	{
 		bool verified = false;
 		std::map<std::string, std::string> hashes;
@@ -49,7 +49,7 @@ namespace checksum
 		std::string	g_build_description;
 	}
 
-	manager::manager() 
+	manager::manager()
 	{
 		try {
 			whole_game_signature = md5::sum(sys::read_file("./signature.cfg"));
@@ -84,7 +84,7 @@ namespace checksum
 		}
 	}
 
-	manager::~manager() 
+	manager::~manager()
 	{
 		LOG_INFO("EXITING WITH " << (verified ? "VERIFIED" : "UNVERIFIED") << " SESSION");
 	}
@@ -104,7 +104,7 @@ namespace checksum
 		return verified;
 	}
 
-	namespace 
+	namespace
 	{
 		bool both_slashes(char a, char b) {
 			return a == '/' && b == '/';

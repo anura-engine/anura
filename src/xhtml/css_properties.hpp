@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -182,12 +182,12 @@ namespace css
 				pp.it_ = toks.cbegin();
 				pp.end_ = toks.cend();
 			}
-			~IteratorContext() 
+			~IteratorContext()
 			{
 				pp_.it_ = it_it;
 				pp_.end_ = end_it;
 			}
-			PropertyParser& pp_; 
+			PropertyParser& pp_;
 			const_iterator it_it;
 			const_iterator end_it;
 		};

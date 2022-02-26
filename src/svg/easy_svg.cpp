@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -33,7 +33,7 @@
 
 namespace KRE
 {
-	namespace 
+	namespace
 	{
 		const int max_surface_width = 4096;
 		const int max_surface_height = 4096;
@@ -41,7 +41,7 @@ namespace KRE
 		class CairoContext
 		{
 		public:
-			CairoContext(int width, int height) 
+			CairoContext(int width, int height)
 				: surface_(cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height)),
 				  cairo_(cairo_create(surface_)),
 				  width_(width),

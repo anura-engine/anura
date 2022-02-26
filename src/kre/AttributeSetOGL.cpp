@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -59,7 +59,7 @@ namespace KRE
 
 
 	HardwareAttributeOGL::HardwareAttributeOGL(AttributeBase* parent)
-		: HardwareAttribute(parent), 
+		: HardwareAttribute(parent),
 		buffer_id_(-1),
 		access_pattern_(convert_access_type_and_frequency(parent->getAccessFrequency(), parent->getAccessType())),
 		size_(0)
@@ -70,7 +70,7 @@ namespace KRE
 
 	HardwareAttributePtr HardwareAttributeOGL::create(AttributeBase* parent)
 	{
-		return std::make_shared<HardwareAttributeOGL>(parent);		
+		return std::make_shared<HardwareAttributeOGL>(parent);
 	}
 
 	HardwareAttributeOGL::~HardwareAttributeOGL()
@@ -90,10 +90,10 @@ namespace KRE
 			if(size_ == 0) {
 				glBufferData(GL_ARRAY_BUFFER, size+offset, 0, access_pattern_);
 			}
-			ASSERT_LOG(size+offset <= size_, 
-				"When buffering data offset+size exceeds data store size: " 
-				<< size+offset 
-				<< " > " 
+			ASSERT_LOG(size+offset <= size_,
+				"When buffering data offset+size exceeds data store size: "
+				<< size+offset
+				<< " > "
 				<< size_);
 			glBufferSubData(GL_ARRAY_BUFFER, offset, size, value);
 			size_ = size + offset;
@@ -135,7 +135,7 @@ namespace KRE
 		}
 	}
 
-	AttributeSetPtr AttributeSetOGL::clone() 
+	AttributeSetPtr AttributeSetOGL::clone()
 	{
 		return std::make_shared<AttributeSetOGL>(*this);
 	}

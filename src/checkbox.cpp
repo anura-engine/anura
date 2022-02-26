@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -27,20 +27,20 @@
 #include "image_widget.hpp"
 #include "widget_factory.hpp"
 
-namespace gui 
+namespace gui
 {
 	using std::placeholders::_1;
 
-	namespace 
+	namespace
 	{
-		WidgetPtr create_checkbox_widget(WidgetPtr label, 
-			bool checked, 
+		WidgetPtr create_checkbox_widget(WidgetPtr label,
+			bool checked,
 			BUTTON_RESOLUTION resolution,
 			int hpadding=12) {
 			GridPtr g(new Grid(2));
 			g->setHpad(hpadding);
-			g->addCol(WidgetPtr(new GuiSectionWidget(checked 
-				? "checkbox_ticked" 
+			g->addCol(WidgetPtr(new GuiSectionWidget(checked
+				? "checkbox_ticked"
 				: "checkbox_unticked", -1, -1, resolution == BUTTON_SIZE_NORMAL_RESOLUTION ? 1 : 2)));
 
 			g->addCol(label);
@@ -54,27 +54,27 @@ namespace gui
 	}
 
 	Checkbox::Checkbox(const std::string& label, bool checked, std::function<void(bool)> onclick, BUTTON_RESOLUTION buttonResolution)
-	  : Button(create_checkbox_widget(label, checked, buttonResolution), std::bind(&Checkbox::onClick, this), BUTTON_STYLE_NORMAL,buttonResolution), 
-	    label_(label), 
-		onclick_(onclick), 
-		checked_(checked), 
+	  : Button(create_checkbox_widget(label, checked, buttonResolution), std::bind(&Checkbox::onClick, this), BUTTON_STYLE_NORMAL,buttonResolution),
+	    label_(label),
+		onclick_(onclick),
+		checked_(checked),
 		hpadding_(12)
 	{
 		setEnvironment();
 	}
 
 	Checkbox::Checkbox(WidgetPtr label, bool checked, std::function<void(bool)> onclick, BUTTON_RESOLUTION buttonResolution)
-	  : Button(create_checkbox_widget(label, checked, buttonResolution), std::bind(&Checkbox::onClick, this), BUTTON_STYLE_NORMAL,buttonResolution), 
-	    label_widget_(label), 
-		onclick_(onclick), 
-		checked_(checked), 
+	  : Button(create_checkbox_widget(label, checked, buttonResolution), std::bind(&Checkbox::onClick, this), BUTTON_STYLE_NORMAL,buttonResolution),
+	    label_widget_(label),
+		onclick_(onclick),
+		checked_(checked),
 		hpadding_(12)
 	{
 		setEnvironment();
 	}
 
-	Checkbox::Checkbox(const variant& v, game_logic::FormulaCallable* e) 
-		: Button(v,e), 
+	Checkbox::Checkbox(const variant& v, game_logic::FormulaCallable* e)
+		: Button(v,e),
 		  checked_(false)
 	{
 		hpadding_ = v["hpad"].as_int(12);
@@ -86,15 +86,15 @@ namespace gui
 		variant label_var = v["label"];
 		label_ = (label_var.is_map() || label_var.is_callable()) ? "" : label_var.as_string_default("Checkbox");
 		label_widget_ = (label_var.is_map() || label_var.is_callable())
-			? widget_factory::create(label_var, e) 
+			? widget_factory::create(label_var, e)
 			: WidgetPtr(new GraphicalFontLabel(label_, "door_label", 2));
 		ASSERT_LOG(getEnvironment() != 0, "You must specify a callable environment");
 		click_handler_ = getEnvironment()->createFormula(v["on_click"]);
 		onclick_ = std::bind(&Checkbox::click, this, _1);
 		setClickHandler(std::bind(&Checkbox::onClick, this));
 
-		setLabel(create_checkbox_widget(label_widget_, 
-			checked_, 
+		setLabel(create_checkbox_widget(label_widget_,
+			checked_,
 			buttonResolution(),
 			hpadding_));
 

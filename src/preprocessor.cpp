@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -42,9 +42,9 @@ std::string preprocess(const std::string& input)
 
 	std::string output_string;
 	bool in_comment = false;
-	
+
 	std::string::const_iterator i = input.begin();
-	
+
 	while(i != input.end()){
 		if(*i == '#'){//enter a single-line comment
 			in_comment = true;}
@@ -57,14 +57,14 @@ std::string preprocess(const std::string& input)
 					std::string filename_string;
 
 					i += IncludeString.size(); //skip past the directive - we've tested that it exists
-					
+
 					//test for an argument to @include - e.g. "filename.cfg".  First the open quote:
 					std::string::const_iterator quote = std::find(i, input.end(), '"');
 					if(quote == input.end()) {
 						LOG_ERROR("We didn't find a opening quote. Syntax error.");
 					}
 					if(std::count_if(i, quote, util::c_isspace) != quote - i) {
-					// # of whitespaces != number of intervening chars => something else was present.  Syntax Error. 
+					// # of whitespaces != number of intervening chars => something else was present.  Syntax Error.
 						LOG_ERROR("# of whitespaces != number of intervening chars.");
 					}
 					i = quote + 1; //we've found a quote, advance past it
@@ -73,12 +73,12 @@ std::string preprocess(const std::string& input)
 					if(endQuote == input.end()) {
 						LOG_ERROR("We didn't find a closing quote. Syntax error.");
 					}
-					
+
 					filename_string = std::string(i, endQuote);
-					
+
 					i = endQuote + 1;
-					
-															
+
+
 					output_string += preprocess(sys::read_file(module::map_file(filename_string)));
 			}
 		} else {

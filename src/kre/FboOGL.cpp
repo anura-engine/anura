@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -58,11 +58,11 @@ namespace KRE
 		}
 	}
 
-	FboOpenGL::FboOpenGL(int width, int height, 
-		int color_plane_count, 
-		bool depth, 
-		bool stencil, 
-		bool use_multi_sampling, 
+	FboOpenGL::FboOpenGL(int width, int height,
+		int color_plane_count,
+		bool depth,
+		bool stencil,
+		bool use_multi_sampling,
 		int multi_samples)
 		: RenderTarget(width, height, color_plane_count, depth, stencil, use_multi_sampling, multi_samples),
 		uses_ext_(false),
@@ -125,8 +125,8 @@ namespace KRE
 				setDrawRect(rect(0, 0, width(), height()));
 
 				renderbuffer_id_ = std::shared_ptr<std::vector<GLuint>>(new std::vector<GLuint>, [color_planes](std::vector<GLuint>* id) {
-					glBindRenderbuffer(GL_RENDERBUFFER, 0); 
-					glDeleteRenderbuffers(color_planes, &(*id)[0]); 
+					glBindRenderbuffer(GL_RENDERBUFFER, 0);
+					glDeleteRenderbuffers(color_planes, &(*id)[0]);
 					delete id;
 				});
 				renderbuffer_id_->resize(color_planes);
@@ -137,19 +137,19 @@ namespace KRE
 				}
 				glBindRenderbuffer(GL_RENDERBUFFER, 0);
 				if(getDepthPlane() || getStencilPlane()) {
-					depth_stencil_buffer_id_ = std::shared_ptr<GLuint>(new GLuint, [](GLuint* id){ 
-						glBindRenderbuffer(GL_RENDERBUFFER, 0); 
-						glDeleteRenderbuffers(1, id); 
-						delete id; 
+					depth_stencil_buffer_id_ = std::shared_ptr<GLuint>(new GLuint, [](GLuint* id){
+						glBindRenderbuffer(GL_RENDERBUFFER, 0);
+						glDeleteRenderbuffers(1, id);
+						delete id;
 					});
 					glGenRenderbuffers(1, depth_stencil_buffer_id_.get());
 					glBindRenderbuffer(GL_RENDERBUFFER, *depth_stencil_buffer_id_);
 					glRenderbufferStorageMultisample(GL_RENDERBUFFER, getMultiSamples(), depth_stencil_internal_format, tex_width_, tex_height_);
-					glBindRenderbuffer(GL_RENDERBUFFER, 0);				
+					glBindRenderbuffer(GL_RENDERBUFFER, 0);
 				}
 
 				sample_framebuffer_id_ = std::shared_ptr<GLuint>(new GLuint, [](GLuint* id) {
-					glDeleteFramebuffers(1, id); 
+					glDeleteFramebuffers(1, id);
 					delete id;
 				});
 				glGenFramebuffers(1, sample_framebuffer_id_.get());
@@ -167,10 +167,10 @@ namespace KRE
 
 				// output framebuffer.
 				if(getDepthPlane() || getStencilPlane()) {
-					depth_stencil_buffer_id_ = std::shared_ptr<GLuint>(new GLuint, [](GLuint* id){ 
-						glBindRenderbuffer(GL_RENDERBUFFER, 0); 
-						glDeleteRenderbuffers(1, id); 
-						delete id; 
+					depth_stencil_buffer_id_ = std::shared_ptr<GLuint>(new GLuint, [](GLuint* id){
+						glBindRenderbuffer(GL_RENDERBUFFER, 0);
+						glDeleteRenderbuffers(1, id);
+						delete id;
 					});
 					glGenRenderbuffers(1, depth_stencil_buffer_id_.get());
 					glBindRenderbuffer(GL_RENDERBUFFER, *depth_stencil_buffer_id_);
@@ -179,7 +179,7 @@ namespace KRE
 				}
 
 				framebuffer_id_ = std::shared_ptr<GLuint>(new GLuint, [](GLuint* id) {
-					glDeleteFramebuffers(1, id); 
+					glDeleteFramebuffers(1, id);
 					delete id;
 				});
 				glGenFramebuffers(1, framebuffer_id_.get());
@@ -208,10 +208,10 @@ namespace KRE
 				tex_height_ = tex->actualHeight();
 
 				if(getDepthPlane() || getStencilPlane()) {
-					depth_stencil_buffer_id_ = std::shared_ptr<GLuint>(new GLuint, [](GLuint* id){ 
-						glBindRenderbuffer(GL_RENDERBUFFER, 0); 
-						glDeleteRenderbuffers(1, id); 
-						delete id; 
+					depth_stencil_buffer_id_ = std::shared_ptr<GLuint>(new GLuint, [](GLuint* id){
+						glBindRenderbuffer(GL_RENDERBUFFER, 0);
+						glDeleteRenderbuffers(1, id);
+						delete id;
 					});
 					glGenRenderbuffers(1, depth_stencil_buffer_id_.get());
 					glBindRenderbuffer(GL_RENDERBUFFER, *depth_stencil_buffer_id_);
@@ -220,7 +220,7 @@ namespace KRE
 				}
 
 				framebuffer_id_ = std::shared_ptr<GLuint>(new GLuint, [](GLuint* id) {
-					glDeleteFramebuffers(1, id); 
+					glDeleteFramebuffers(1, id);
 					delete id;
 				});
 				glGenFramebuffers(1, framebuffer_id_.get());
@@ -268,9 +268,9 @@ namespace KRE
 			glBindFramebuffer(GL_READ_FRAMEBUFFER, *sample_framebuffer_id_);
 			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, *framebuffer_id_);
 			glDrawBuffer(GL_BACK);
-			glBlitFramebuffer(0, 0, width(), height(), 
-				0, 0, width(), height(), 
-				GL_COLOR_BUFFER_BIT | (getDepthPlane() ? GL_DEPTH_BUFFER_BIT : 0) | (getStencilPlane() ? GL_STENCIL_BUFFER_BIT : 0), 
+			glBlitFramebuffer(0, 0, width(), height(),
+				0, 0, width(), height(),
+				GL_COLOR_BUFFER_BIT | (getDepthPlane() ? GL_DEPTH_BUFFER_BIT : 0) | (getStencilPlane() ? GL_STENCIL_BUFFER_BIT : 0),
 				GL_NEAREST);
 			glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);

@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -37,13 +37,13 @@
 #include "message_dialog.hpp"
 #include "module.hpp"
 #include "slider.hpp"
- 
-namespace gui 
+
+namespace gui
 {
 	using std::placeholders::_1;
 	using std::placeholders::_2;
 
-	namespace 
+	namespace
 	{
 		int slider_transform(double d)
 		{
@@ -89,7 +89,7 @@ namespace gui
 			(*def_properties)[variant("accel_x")] = variant(std::numeric_limits<int>::min());
 			(*def_properties)[variant("accel_y")] = variant(std::numeric_limits<int>::min());
 			(*def_properties)[variant("scale")] = variant(2);
-		
+
 			(*def_properties)[variant("id")] = variant("id");
 			//(*def_properties)[variant("image")] = variant("");
 
@@ -118,10 +118,10 @@ namespace gui
 
 
 	AnimationCreatorDialog::AnimationCreatorDialog(int x, int y, int w, int h, const variant& anims)
-		: Dialog(x,y,w,h), 
-		selected_frame_(-1), 
-		dragging_slider_(false), 
-		changed_(false), 
+		: Dialog(x,y,w,h),
+		selected_frame_(-1),
+		dragging_slider_(false),
+		changed_(false),
 		simple_options_(true)
 	{
 		setClearBgAmount(255);
@@ -404,9 +404,9 @@ namespace gui
 		f.push_back(gui::filter_pair("Image Files", ".*?\\.(png|jpg|gif|bmp|tif|tiff|tga|webp|xpm|xv|pcx)"));
 		f.push_back(gui::filter_pair("All Files", ".*"));
 		gui::FileChooserDialog open_dlg(
-			static_cast<int>(wnd->width()*0.1f), 
-			static_cast<int>(wnd->height()*0.1f), 
-			static_cast<int>(wnd->width()*0.8f), 
+			static_cast<int>(wnd->width()*0.1f),
+			static_cast<int>(wnd->height()*0.1f),
+			static_cast<int>(wnd->width()*0.8f),
 			static_cast<int>(wnd->height()*0.8f),
 			f);
 		open_dlg.setBackgroundFrame("empty_window");
@@ -567,7 +567,7 @@ namespace gui
 			Dialog d((width()-400)/2, (height()-300)/2, 400, 300);
 			d.setBackgroundFrame("empty_window");
 			d.setPadding(20);
-		
+
 			LabelPtr title = new Label("Animation has changed.", KRE::Color::colorWhite(), 24);
 			d.addWidget(title, (d.width()-title->width())/2, 50);
 			GridPtr g = new Grid(2);
@@ -599,11 +599,11 @@ namespace gui
 	{
 		auto wnd = KRE::WindowManager::getMainWindow();
 		FileChooserDialog dir_dlg(
-			static_cast<int>(wnd->width()*0.2f), 
-			static_cast<int>(wnd->height()*0.2f), 
-			static_cast<int>(wnd->width()*0.6f), 
+			static_cast<int>(wnd->width()*0.2f),
+			static_cast<int>(wnd->height()*0.2f),
+			static_cast<int>(wnd->width()*0.6f),
 			static_cast<int>(wnd->height()*0.6f),
-			gui::filter_list(), 
+			gui::filter_list(),
 			true, module::get_module_path("") + "images");
 		dir_dlg.setBackgroundFrame("empty_window");
 		dir_dlg.setDrawBackgroundFn(draw_last_scene);

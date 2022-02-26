@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -33,7 +33,7 @@
 #include "grid_widget.hpp"
 #include "label.hpp"
 
-namespace 
+namespace
 {
 	const char* default_palette[] =
 	{
@@ -63,22 +63,22 @@ namespace gui
 		  secondary_(),
 		  palette_(),
 		  main_color_selected_(1),
-		  selected_palette_color_(0), 
-		  hue_(0), 
-		  saturation_(0), 
-		  value_(0), 
+		  selected_palette_color_(0),
+		  hue_(0),
+		  saturation_(0),
+		  value_(0),
 		  alpha_(255),
-		  red_(255), 
-		  green_(255), 
-		  blue_(255), 
+		  red_(255),
+		  green_(255),
+		  blue_(255),
 		  g_(),
 		  s_(),
 		  t_(),
 		  copy_to_palette_(),
 		  color_box_length_(0),
 		  wheel_radius_(0),
-		  palette_offset_y_(0), 
-		  dragging_(false), 
+		  palette_offset_y_(0),
+		  dragging_(false),
 		  onchange_(),
 		  change_handler_(),
 		  handler_arg_()
@@ -101,21 +101,21 @@ namespace gui
   		  secondary_(),
 		  palette_(),
 		  main_color_selected_(1),
-		  selected_palette_color_(), 
-		  hue_(0), 
-		  saturation_(0), 
-		  value_(0), 
+		  selected_palette_color_(),
+		  hue_(0),
+		  saturation_(0),
+		  value_(0),
 		  alpha_(255),
-		  red_(255), 
-		  green_(255), 
-		  blue_(255), 
+		  red_(255),
+		  green_(255),
+		  blue_(255),
 		  g_(),
 		  s_(),
 		  t_(),
 		  copy_to_palette_(),
 		  color_box_length_(0),
 		  wheel_radius_(0),
-		  palette_offset_y_(0), 
+		  palette_offset_y_(0),
 		  dragging_(false),
 		  onchange_(change_fun),
 		  change_handler_(),
@@ -135,26 +135,26 @@ namespace gui
 	}
 
 	ColorPicker::ColorPicker(const variant& v, game_logic::FormulaCallable* e)
-		: Widget(v, e), 
+		: Widget(v, e),
 		  primary_(),
   		  secondary_(),
 		  palette_(),
 		  main_color_selected_(1),
-		  selected_palette_color_(), 
-		  hue_(0), 
-		  saturation_(0), 
-		  value_(0), 
+		  selected_palette_color_(),
+		  hue_(0),
+		  saturation_(0),
+		  value_(0),
 		  alpha_(255),
-		  red_(255), 
-		  green_(255), 
-		  blue_(255), 
+		  red_(255),
+		  green_(255),
+		  blue_(255),
 		  g_(),
 		  s_(),
 		  t_(),
 		  copy_to_palette_(),
 		  color_box_length_(0),
 		  wheel_radius_(0),
-		  palette_offset_y_(0), 
+		  palette_offset_y_(0),
 		  dragging_(false),
 		  onchange_(),
 		  change_handler_(),
@@ -174,7 +174,7 @@ namespace gui
 				callable->add("fn", on_change_value);
 
 				handler_arg_.reset(callable);
-			} else { 
+			} else {
 				change_handler_ = getEnvironment()->createFormula(on_change_value);
 			}
 			onchange_ = std::bind(&ColorPicker::change, this);
@@ -241,9 +241,9 @@ namespace gui
 		palette_[size_t(n)] = color;
 	}
 
-	namespace 
+	namespace
 	{
-		void draw_colored_circle(int x, int y, int radius) 
+		void draw_colored_circle(int x, int y, int radius)
 		{
 			auto canvas = KRE::Canvas::getInstance();
 

@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -81,7 +81,7 @@ namespace xhtml
 			void runEventHandler(const NodePtr& element, EventHandlerId evtname, const variant& params) override
 			{
 				ElementObjectPtr eo = document_object_->getElementByNode(element);
-				ASSERT_LOG(eo != nullptr, "Bad juju. ElementObjectPtr == nullptr");				
+				ASSERT_LOG(eo != nullptr, "Bad juju. ElementObjectPtr == nullptr");
 
 				if(document_object_->getEnvironment()) {
 					eo->runHandler(evtname, document_object_->getEnvironment(), params);
@@ -90,10 +90,10 @@ namespace xhtml
 				}
 			}
 		private:
-			DocumentObject* document_object_;		
+			DocumentObject* document_object_;
 		};
 
-		std::vector<std::string> split_string(const std::string& s) 
+		std::vector<std::string> split_string(const std::string& s)
 		{
 			std::vector<std::string> res;
 			boost::split(res, s, boost::is_any_of(" \n\r\t\f"), boost::token_compress_on);
@@ -103,7 +103,7 @@ namespace xhtml
 		class EntityObject : public ObjectProxy
 		{
 		public:
-			EntityObject(const AttributeMap& am) 
+			EntityObject(const AttributeMap& am)
 				: ObjectProxy(am),
 				  entity_(),
 				  handle_process_on_entity_(true),
@@ -126,7 +126,7 @@ namespace xhtml
 
 				handle_process_on_entity_ = v["handle_process"].as_bool(false);
 				if(v["object"].is_string()) {
-					// type name, has obj_x, obj_y, facing			
+					// type name, has obj_x, obj_y, facing
 					entity_ = EntityPtr(new CustomObject(v["object"].as_string(), v["obj_x"].as_int(0), v["obj_y"].as_int(0), v["facing"].as_int(1) > 0 ? true : false));
 					entity_->finishLoading(NULL);
 				} else if(v["object"].is_map()) {
@@ -181,7 +181,7 @@ namespace xhtml
 
 	using namespace KRE;
 	DocumentObject::DocumentObject(const variant& v)
-		: environment_(nullptr), 
+		: environment_(nullptr),
 		  scene_(SceneGraph::create("xhtml::DocumentObject")),
 		  root_(scene_->getRootNode()),
 		  rmanager_(),
@@ -217,7 +217,7 @@ namespace xhtml
 		if(v.has_key("layout_size")) {
 			layout_size_ = rect(v["layout_size"]);
 		} else {
-			auto& gs = graphics::GameScreen::get();			
+			auto& gs = graphics::GameScreen::get();
 			layout_size_ = rect(0, 0, gs.getWidth(), gs.getHeight());
 		}
 	}
@@ -257,7 +257,7 @@ namespace xhtml
 		});
 		*/
 	}
-	
+
 	variant DocumentObject::write()
 	{
 		variant_builder builder;
@@ -278,7 +278,7 @@ namespace xhtml
 			scene_tree_->render(wnd);
 		}
 	}
-	
+
 	void DocumentObject::process()
 	{
 		auto st = doc_->process(style_tree_, layout_size_.x(), layout_size_.y(), layout_size_.w(), layout_size_.h());
@@ -307,7 +307,7 @@ namespace xhtml
 		}
 		last_process_time_ = current_time;
 	}
-	
+
 	bool DocumentObject::handleEvents(const point& p, const SDL_Event& e)
 	{
 		const int adj_x = (e.type == SDL_MOUSEMOTION ? e.motion.x : e.button.x) - p.x - layout_size_.x();
@@ -335,7 +335,7 @@ namespace xhtml
 				eo.reset(new ElementObject(element));
 			}
 			return eo;
-		} 
+		}
 		return nullptr;
 	}
 
@@ -348,7 +348,7 @@ namespace xhtml
 				eo.reset(new ElementObject(element));
 			}
 			return eo;
-		} 
+		}
 		return nullptr;
 	}
 
@@ -453,19 +453,19 @@ namespace xhtml
 	}
 
 	BEGIN_DEFINE_CALLABLE_NOBASE(DocumentObject)
-	
+
 		DEFINE_FIELD(width, "int")
 			return variant(obj.layout_size_.w());
 		DEFINE_SET_FIELD
 			obj.layout_size_.set_w(value.as_int());
 			obj.doc_->triggerLayout();
-		
+
 		DEFINE_FIELD(height, "int")
 			return variant(obj.layout_size_.h());
 		DEFINE_SET_FIELD
 			obj.layout_size_.set_h(value.as_int());
 			obj.doc_->triggerLayout();
-		
+
 		DEFINE_FIELD(wh, "[int,int]")
 			std::vector<variant> v;
 			v.emplace_back(obj.layout_size_.w());
@@ -480,12 +480,12 @@ namespace xhtml
 			return variant(obj.layout_size_.x());
 		DEFINE_SET_FIELD
 			obj.layout_size_.set_x(value.as_int());
-		
+
 		DEFINE_FIELD(y, "int")
 			return variant(obj.layout_size_.y());
 		DEFINE_SET_FIELD
 			obj.layout_size_.set_y(value.as_int());
-		
+
 		DEFINE_FIELD(xy, "[int,int]")
 			std::vector<variant> v;
 			v.emplace_back(obj.layout_size_.x());
@@ -540,7 +540,7 @@ namespace xhtml
 				obj.doc_->rebuildTree();
 			}));
 		END_DEFINE_FN
-		
+
 	END_DEFINE_CALLABLE(DocumentObject)
 
 
@@ -593,7 +593,7 @@ namespace xhtml
 			} else if(ElementObject::isKeyEvent(evtname)) {
 				callable = createKeyEventCallable(environment, params);
 			}
-			
+
 			variant value = handler->execute(callable != nullptr ? *callable : *environment);
 			environment->executeCommand(value);
 		}
@@ -710,7 +710,7 @@ namespace xhtml
 	}
 
 	BEGIN_DEFINE_CALLABLE_NOBASE(ElementObject)
-		
+
 		DEFINE_FIELD(tagName, "string")
 			return variant(obj.element_->getTag());
 
@@ -770,28 +770,28 @@ namespace xhtml
 	BEGIN_DEFINE_CALLABLE_NOBASE(StyleObject)
 
 		DEFINE_FIELD(color, "string")
-			std::stringstream ss; 
+			std::stringstream ss;
 			ss << *obj.style_node_->getColor();
 			return variant(ss.str());
 		DEFINE_SET_FIELD
 			obj.style_node_->setPropertyFromString(css::Property::COLOR, value.as_string());
 
 		DEFINE_FIELD(backgroundColor, "string")
-			std::stringstream ss; 
+			std::stringstream ss;
 			ss << *obj.style_node_->getBackgroundColor();
 			return variant(ss.str());
 		DEFINE_SET_FIELD
 			obj.style_node_->setPropertyFromString(css::Property::BACKGROUND_COLOR, value.as_string());
 
 		DEFINE_FIELD(width, "string")
-			std::stringstream ss; 
+			std::stringstream ss;
 			ss << obj.style_node_->getWidth()->toString(css::Property::WIDTH);
 			return variant(ss.str());
 		DEFINE_SET_FIELD
 			obj.style_node_->setPropertyFromString(css::Property::WIDTH, value.as_string());
 
 		DEFINE_FIELD(height, "string")
-			std::stringstream ss; 
+			std::stringstream ss;
 			ss << obj.style_node_->getHeight()->toString(css::Property::HEIGHT);
 			return variant(ss.str());
 		DEFINE_SET_FIELD

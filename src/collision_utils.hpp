@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -35,9 +35,9 @@ int get_solid_dimension_id(const std::string& key);
 
 //struct which provides information about a surface we collide with.
 struct CollisionInfo {
-	CollisionInfo() 
-		: surf_info(0), friction(0), traction(0), damage(0), 
-		adjust_y(0), platform(false), area_id(0), 
+	CollisionInfo()
+		: surf_info(0), friction(0), traction(0), damage(0),
+		adjust_y(0), platform(false), area_id(0),
 		collide_with_area_id(0)
 	{}
 

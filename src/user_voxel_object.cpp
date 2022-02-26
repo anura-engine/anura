@@ -1,8 +1,8 @@
 // XXX needs fixing
-#if 0 
+#if 0
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -194,11 +194,11 @@ namespace voxel
 				return getValueBySlot(type_->num_base_slots() + slot);
 			}
 		}
- 
+
 		ASSERT_LOG(false, "Unknown property " << type_->id() << "." << key);
 		return variant();
 	}
- 
+
 	void user_voxel_object::setValue(const std::string& key, const variant& value)
 	{
 		for(int slot = 0; slot != type_->getSlotProperties().size(); ++slot) {
@@ -207,7 +207,7 @@ namespace voxel
 				return;
 			}
 		}
- 
+
 		voxel_object::setValue(key, value);
 	}
 }

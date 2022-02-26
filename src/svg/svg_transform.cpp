@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -41,19 +41,19 @@ namespace KRE
 				// [ 0  2  4 ]
 				// [ 1  3  5 ]
 				// which neatly is the same order as cairo expects.
-				ASSERT_LOG(params.size() == 6, 
-					"Parsing transform:matrix found " 
-					<< params.size() 
+				ASSERT_LOG(params.size() == 6,
+					"Parsing transform:matrix found "
+					<< params.size()
 					<< " parameter(s), expected 6");
 				cairo_matrix_init(&mat_, params[0], params[1], params[2], params[3], params[4], params[5]);
 			}
 			virtual ~matrix_transform() {}
 			std::string as_string() const override {
 				std::stringstream str;
-				str << "matrix(" 
-					<< mat_.xx << " " << mat_.yx << " " 
-					<< mat_.xy << " " << mat_.yy << " " 
-					<< mat_.x0 << " " << mat_.y0 
+				str << "matrix("
+					<< mat_.xx << " " << mat_.yx << " "
+					<< mat_.xy << " " << mat_.yy << " "
+					<< mat_.x0 << " " << mat_.y0
 					<< ")";
 				return str.str();
 			}
@@ -92,8 +92,8 @@ namespace KRE
 		class rotation_transform : public transform
 		{
 		public:
-			rotation_transform(double angle, double cx=0, double cy=0) 
-				: transform(TransformType::ROTATE), 
+			rotation_transform(double angle, double cx=0, double cy=0)
+				: transform(TransformType::ROTATE),
 				angle_(angle),
 				cx_(cx),
 				cy_(cy) {
@@ -256,7 +256,7 @@ namespace KRE
 				STATE_TYPE,
 				STATE_NUMBER,
 			} state = STATE_TYPE;
-		
+
 			std::vector<double> parameters;
 
 			TransformType type = TransformType::ERROR;
@@ -336,14 +336,14 @@ namespace KRE
 								assert(false);
 								break;
 						}
-						state = STATE_TYPE;					
+						state = STATE_TYPE;
 					} else {
 						char* end = nullptr;
 						double value = strtod(it->c_str(), &end);
 						if(value == 0 && it->c_str() == end) {
 							ASSERT_LOG(false, "Invalid number value: " << *it);
 						}
-						ASSERT_LOG(errno != ERANGE, "parsed numeric value out-of-range: " << *it);					
+						ASSERT_LOG(errno != ERANGE, "parsed numeric value out-of-range: " << *it);
 						parameters.push_back(value);
 					}
 				}

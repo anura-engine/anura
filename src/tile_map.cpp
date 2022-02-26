@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -46,7 +46,7 @@
 #include "tile_map.hpp"
 #include "variant_utils.hpp"
 
-namespace 
+namespace
 {
 	PREF_INT(tile_pattern_search_border, 1, "How many extra tiles to search for patterns");
 
@@ -64,7 +64,7 @@ namespace
 		return *instance;
 	}
 
-	const std::map<int, variant>& zorder_to_str() 
+	const std::map<int, variant>& zorder_to_str()
 	{
 		static std::map<int, variant>* instance = nullptr;
 		if(!instance) {
@@ -116,12 +116,12 @@ int get_named_zorder(const std::string& key, int default_value)
 	return itor->second;
 }
 
-namespace 
+namespace
 {
 	typedef std::map<const boost::regex*, bool> regex_match_map;
 	std::map<boost::array<char, 4>, regex_match_map> re_matches;
 
-	bool match_regex(boost::array<char, 4> str, const boost::regex* re) 
+	bool match_regex(boost::array<char, 4> str, const boost::regex* re)
 	{
 		if(reinterpret_cast<intptr_t>(re)&1) {
 			//the low bit in the re pointer is set, meaning this is an inverted
@@ -140,17 +140,17 @@ namespace
 		return match;
 	}
 
-	struct is_whitespace 
+	struct is_whitespace
 	{
 		bool operator()(char c) const { return util::c_isspace(c); }
 	};
 }
 
-struct TilePattern 
+struct TilePattern
 {
 	explicit TilePattern(variant node, const std::string& id)
 	  : tile_id(id),
-	    tile(new LevelObject(node, id.c_str())), 
+	    tile(new LevelObject(node, id.c_str())),
 		reverse(node["reverse"].as_bool(true)),
 	    empty(node["empty"].as_bool(false)),
 		filter_formula(game_logic::Formula::createOptionalFormula(node["filter"]))
@@ -209,7 +209,7 @@ struct TilePattern
 			t.object = new_object.get();
 			t.zorder = parse_zorder(var["zorder"]);
 			added_tiles.push_back(t);
-			
+
 		}
 	}
 
@@ -243,20 +243,20 @@ struct TilePattern
 	game_logic::ConstFormulaPtr filter_formula;
 };
 
-namespace 
+namespace
 {
 	std::vector<TilePattern> patterns;
 	int current_patterns_version = 0;
 
 	using namespace game_logic;
 
-	class FilterCallable : public FormulaCallable 
+	class FilterCallable : public FormulaCallable
 	{
 		DECLARE_CALLABLE(FilterCallable);
 		const TileMap& m_;
 		int x_, y_;
 	public:
-		FilterCallable(const TileMap& m, int x, int y) 
+		FilterCallable(const TileMap& m, int x, int y)
 			: m_(m), x_(x), y_(y)
 		{}
 	};
@@ -270,7 +270,7 @@ namespace
 			return variant(obj.y_);
 	END_DEFINE_CALLABLE(FilterCallable)
 
-	class TileAtFunction : public FunctionExpression 
+	class TileAtFunction : public FunctionExpression
 	{
 	public:
 		explicit TileAtFunction(const args_list& args)
@@ -289,8 +289,8 @@ namespace
 	class TileMapFunctionSymbolTable : public FunctionSymbolTable
 	{
 	public:
-		ExpressionPtr createFunction(const std::string& fn, 
-			const std::vector<ExpressionPtr>& args, 
+		ExpressionPtr createFunction(const std::string& fn,
+			const std::vector<ExpressionPtr>& args,
 			ConstFormulaCallableDefinitionPtr callable_def) const  override
 		{
 			if(fn == "tile_at") {
@@ -323,7 +323,7 @@ void TileMap::load(const std::string& fname, const std::string& tile_id)
 	files_loaded.insert(fname);
 
 	variant node;
-	
+
 	try {
 		node = json::parse_from_file("data/tiles/" + fname);
 	} catch(json::ParseError& e) {
@@ -368,33 +368,33 @@ void TileMap::init(variant node)
 }
 
 #ifndef NO_EDITOR
-namespace 
+namespace
 {
-	std::set<TileMap*>& all_tile_maps() 
+	std::set<TileMap*>& all_tile_maps()
 	{
 		static std::set<TileMap*>* all = new std::set<TileMap*>;
 		return *all;
 	}
 
-	threading::mutex& all_tile_maps_mutex() 
+	threading::mutex& all_tile_maps_mutex()
 	{
 		static threading::mutex* m = new threading::mutex;
 		return *m;
 	}
 
-	void create_tile_map(TileMap* t) 
+	void create_tile_map(TileMap* t)
 	{
 		threading::lock l(all_tile_maps_mutex());
 		all_tile_maps().insert(t);
 	}
 
-	void destroy_tile_map(TileMap* t) 
+	void destroy_tile_map(TileMap* t)
 	{
 		threading::lock l(all_tile_maps_mutex());
 		all_tile_maps().erase(t);
 	}
 
-	std::set<TileMap*> copy_tile_maps() 
+	std::set<TileMap*> copy_tile_maps()
 	{
 		threading::lock l(all_tile_maps_mutex());
 		std::set<TileMap*> result = all_tile_maps();
@@ -434,9 +434,9 @@ TileMap::TileMap() : xpos_(0), ypos_(0), x_speed_(100), y_speed_(100), zorder_(0
 }
 
 TileMap::TileMap(variant node)
-  : xpos_(node["x"].as_int()), 
+  : xpos_(node["x"].as_int()),
 	ypos_(node["y"].as_int()),
-	x_speed_(node["x_speed"].as_int(100)), 
+	x_speed_(node["x_speed"].as_int(100)),
 	y_speed_(node["y_speed"].as_int(100)),
     zorder_(parse_zorder(node["zorder"]))
 #ifndef NO_EDITOR
@@ -555,7 +555,7 @@ void TileMap::buildPatterns()
 		if(!p.current_tile_pattern->empty()) {
 			re.push_back(p.current_tile_pattern);
 		}
-		
+
 		for(const TilePattern::SurroundingTile& t : p.surrounding_tiles) {
 			re.push_back(t.pattern);
 		}
@@ -659,7 +659,7 @@ variant TileMap::write() const
 	std::ostringstream tiles;
 	bool first = true;
 	for(const std::vector<int>& row : map_) {
-		
+
 		//cut off any empty cells at the end.
 		auto size = row.size();
 		while(size > 2 && *pattern_index_[row[size-1]].str.data() == 0) {
@@ -679,7 +679,7 @@ variant TileMap::write() const
 			tiles << pattern_index_[row[i]].str.data();
 			unique_tiles.push_back(pattern_index_[row[i]].str);
 		}
-		
+
 		if(row.empty()) {
 			tiles << ",";
 		}
@@ -727,8 +727,8 @@ const char* TileMap::getTileFromPixelPos(int xpos, int ypos) const
 
 const char* TileMap::getTile(int y, int x) const
 {
-	if(x < 0 || y < 0 
-		|| static_cast<std::vector<std::vector<int>>::size_type>(y) >= map_.size() 
+	if(x < 0 || y < 0
+		|| static_cast<std::vector<std::vector<int>>::size_type>(y) >= map_.size()
 		|| static_cast<std::vector<std::vector<int>>::size_type>(x) >= map_[y].size()) {
 		return "";
 	}
@@ -738,8 +738,8 @@ const char* TileMap::getTile(int y, int x) const
 
 const TileMap::PatternIndexEntry& TileMap::getTileEntry(int y, int x) const
 {
-	if(x < 0 || y < 0 
-		|| static_cast<std::vector<std::vector<int>>::size_type>(y) >= map_.size() 
+	if(x < 0 || y < 0
+		|| static_cast<std::vector<std::vector<int>>::size_type>(y) >= map_.size()
 		|| static_cast<std::vector<std::vector<int>>::size_type>(x) >= map_[y].size()) {
 		return pattern_index_.front();
 	}
@@ -747,9 +747,9 @@ const TileMap::PatternIndexEntry& TileMap::getTileEntry(int y, int x) const
 	return pattern_index_[map_[y][x]];
 }
 
-namespace 
+namespace
 {
-	struct cstr_less 
+	struct cstr_less
 	{
 		bool operator()(const char* a, const char* b) const {
 			return strcmp(a, b) < 0;
@@ -757,7 +757,7 @@ namespace
 	};
 
 	typedef std::map<const char*, std::vector<const TilePattern*>, cstr_less> TilePatternCacheMap;
-	struct TilePatternCache 
+	struct TilePatternCache
 	{
 		TilePatternCacheMap cache;
 	};
@@ -779,8 +779,8 @@ int TileMap::getVariations(int x, int y) const
 
 int TileMap::variation(int x, int y) const
 {
-	if(x < 0 || y < 0 
-		|| static_cast<VariationsType::size_type>(y) >= variations_.size() 
+	if(x < 0 || y < 0
+		|| static_cast<VariationsType::size_type>(y) >= variations_.size()
 		|| static_cast<VariationsType::size_type>(x) >= variations_[y].size()) {
 		return 0;
 	}
@@ -824,7 +824,7 @@ void TileMap::prepareForCopyToWorkerThread()
 #endif
 }
 
-namespace 
+namespace
 {
 	//This function is a random hash. It takes an (x,y) position as well as a
 	//zorder, and then a 'n' integer which is used to identify the number of the
@@ -924,7 +924,7 @@ void TileMap::buildTiles(std::vector<LevelTile>* tiles, const rect* r) const
 	for(const MultiTilePattern* p : multi_patterns_) {
 		for(int y = -p->height(); y < static_cast<int>(map_.size()) + p->height(); ++y) {
 			const int ypos = ypos_ + y*TileSize;
-	
+
 			if((r && ypos < r->y()) || (r && ypos > r->y2())) {
 				continue;
 			}

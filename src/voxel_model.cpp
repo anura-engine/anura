@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -32,7 +32,7 @@
 #include "voxel_model.hpp"
 
 
-namespace voxel 
+namespace voxel
 {
 	void get_voxel_pos_adjacent(const VoxelPos& pos, VoxelPos* adj)
 	{
@@ -665,7 +665,7 @@ namespace voxel
 		for(const AttachmentPointRotation& r : dst_attach_itor->second.rotations) {
 			child->rotate_geometry(dst_pivot->second, dst_pivot->second + r.direction, r.amount);
 		}
-	
+
 		child->set_prototype();
 		dst_model->children_.push_back(child);
 	}
@@ -925,9 +925,9 @@ namespace voxel
 			return;
 		}
 
-		model_ = glm::translate(glm::mat4(1.0f), p1) 
-			* glm::rotate(glm::mat4(1.0f), glm::radians(amount), glm::normalize(p2 - p1)) 
-			* glm::translate(glm::mat4(1.0f), -p1) 
+		model_ = glm::translate(glm::mat4(1.0f), p1)
+			* glm::rotate(glm::mat4(1.0f), glm::radians(amount), glm::normalize(p2 - p1))
+			* glm::translate(glm::mat4(1.0f), -p1)
 			* model_;
 	}
 

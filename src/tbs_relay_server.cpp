@@ -271,7 +271,7 @@ COMMAND_LINE_UTILITY(tbs_relay_server)
 	}
 
 	boost::asio::io_service io_service;
-	
+
 	tbs_relay_server server(io_service, incoming_port, outgoing_port);
 
 	io_service.run();
@@ -284,7 +284,7 @@ public:
 	test_web_server(boost::asio::io_service& io_service, int port=23456)
 	  : http::web_server(io_service, port)
 	{}
-		
+
 	void handlePost(socket_ptr socket, variant doc, const http::environment& env, const std::string& raw_msg) override
 	{
 		LOG_INFO("handlePost, responding");
@@ -304,7 +304,7 @@ public:
 COMMAND_LINE_UTILITY(test_tbs_relay_server)
 {
 	boost::asio::io_service io_service;
-	
+
 	test_web_server web_server(io_service, 23456);
 	web_server.connect_proxy(1, "localhost", "23459");
 
@@ -334,8 +334,8 @@ COMMAND_LINE_UTILITY(test_tbs_relay_server)
 
 		client->process();
 
-		
+
 	}
-	
-	
+
+
 }

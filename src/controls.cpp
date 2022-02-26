@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -44,7 +44,7 @@
 
 PREF_INT(max_control_history, 1024, "Maximum number of frames to keep control history for");
 
-namespace controls 
+namespace controls
 {
 	const char** control_names()
 	{
@@ -238,7 +238,7 @@ namespace controls
     	    }
 	}
 
-	
+
 	namespace
 	{
 		//array of keys which we are ignoring. We ignore keys on the end of a dialog.
@@ -700,7 +700,7 @@ namespace controls
 		}
 	}
 
-	key_type get_keycode(CONTROL_ITEM item) 
+	key_type get_keycode(CONTROL_ITEM item)
 	{
 		if (item < NUM_CONTROLS) {
 			return sdlk[item];

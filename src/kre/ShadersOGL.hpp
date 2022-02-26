@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -59,7 +59,7 @@ namespace KRE
 			std::string name;
 			// type of the uniform/attribute variable
 			GLenum type;
-			// If an array type, this is the maximum number of array elements used 
+			// If an array type, this is the maximum number of array elements used
 			// in the program. Value is 1 if type is not an array type.
 			GLsizei num_elements;
 			// Location of the active uniform/attribute
@@ -126,8 +126,8 @@ namespace KRE
 			static ShaderProgramPtr defaultSystemShader();
 			static void loadShadersFromVariant(const variant& node);
 			static ShaderProgramPtr getProgramFromVariant(const variant& node);
-			static ShaderProgramPtr createShader(const std::string& name, 
-				const std::vector<ShaderData>& shader_data, 
+			static ShaderProgramPtr createShader(const std::string& name,
+				const std::vector<ShaderData>& shader_data,
 				const std::vector<ActiveMapping>& uniform_map,
 				const std::vector<ActiveMapping>& attribute_map);
 			static ShaderProgramPtr createGaussianShader(int radius);
@@ -140,12 +140,12 @@ namespace KRE
 			int getMvpUniform() const override { return u_mvp_; }
 			int getTexMapUniform() const override { return u_tex_; }
 			int getDiscardUniform() const override { return u_discard_; }
-			
+
 			int getColorAttribute() const override { return a_color_; }
 			int getVertexAttribute() const override { return a_vertex_; }
 			int getTexcoordAttribute() const override { return a_texcoord_; }
 			int getNormalAttribute() const override { return a_normal_; }
-		
+
 			void applyAttribute(AttributeBasePtr attr) override;
 			void cleanUpAfterDraw() override;
 

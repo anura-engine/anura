@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -31,7 +31,7 @@
 #include "label.hpp"
 #include "widget.hpp"
 
-namespace gui 
+namespace gui
 {
 	class AnimationWidget : public Widget
 	{
@@ -41,13 +41,13 @@ namespace gui
 		AnimationWidget(const AnimationWidget& a);
 
 		void setSequencePlayCount(int count) { max_sequence_plays_ = count; }
-	
+
 		WidgetPtr clone() const override;
 	protected:
 		void surrenderReferences(GarbageCollector* collector) override;
 	private:
 		DECLARE_CALLABLE(AnimationWidget);
-		
+
 		void handleDraw() const override;
 		void handleProcess() override;
 		void init();

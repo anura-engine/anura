@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -32,7 +32,7 @@
 #include "string_utils.hpp"
 #include "variant.hpp"
 
-namespace 
+namespace
 {
 	std::map<std::string,std::string>& get_level_paths() {
 		static std::map<std::string,std::string> res;
@@ -40,18 +40,18 @@ namespace
 	}
 }
 
-void reload_level_paths() 
+void reload_level_paths()
 {
 	get_level_paths().clear();
 	load_level_paths();
 }
 
-void load_level_paths() 
+void load_level_paths()
 {
 	module::get_unique_filenames_under_dir(preferences::load_compiled() ? "data/compiled/level/" : "data/level/", &get_level_paths());
 }
 
-const std::string& get_level_path(const std::string& name) 
+const std::string& get_level_path(const std::string& name)
 {
 	if(get_level_paths().empty()) {
 		load_level_paths();
@@ -110,9 +110,9 @@ ffl::IntrusivePtr<Level> load_level(const std::string& lvl)
 	return res;
 }
 
-namespace 
+namespace
 {
-	bool not_cfg_file(const std::string& filename) 
+	bool not_cfg_file(const std::string& filename)
 	{
 		return filename.size() < 4 || !std::equal(filename.end() - 4, filename.end(), ".cfg");
 	}
@@ -127,8 +127,8 @@ std::vector<std::string> get_known_levels()
 	for(it = file_map.begin(); it != file_map.end(); ) {
 		if(not_cfg_file(it->first)) {
 			file_map.erase(it++);
-		} else { 
-			++it; 
+		} else {
+			++it;
 		}
 	}
 

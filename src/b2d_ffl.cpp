@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2012-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -51,7 +51,7 @@ namespace box2d
 		variant joint_variant_def_;
 	};
 
-	namespace 
+	namespace
 	{
 		b2World *current_world = nullptr;
 		world_ptr this_world;
@@ -67,7 +67,7 @@ namespace box2d
 
 	struct body_destructor
 	{
-		void operator()(b2Body* b) const 
+		void operator()(b2Body* b) const
 		{
 			// if the world has destructed the body will already have been destroyed.
 			if(current_world != nullptr) {
@@ -102,7 +102,7 @@ namespace box2d
 		}
 	};
 
-	manager::manager()	
+	manager::manager()
 	{
 		try {
 			variant w = json::parse_from_file("data/world.cfg");
@@ -136,7 +136,7 @@ namespace box2d
 			position_iterations_ = w["iterations"]["position"].as_int(3);
 		}
 		if(w.has_key("viewport")) {
-			ASSERT_LOG(w["viewport"].is_list() && w["viewport"].num_elements() == 4, 
+			ASSERT_LOG(w["viewport"].is_list() && w["viewport"].num_elements() == 4,
 				"viewport must be a list of four elements.");
 			world_x1_ = float(w["viewport"][0].as_decimal().as_float());
 			world_y1_ = float(w["viewport"][1].as_decimal().as_float());
@@ -247,7 +247,7 @@ namespace box2d
 	void world::setValue(const std::string& key, const variant& value)
 	{
 		if(key == "gravity") {
-			ASSERT_LOG(value.is_list() && value.num_elements() == 2, 
+			ASSERT_LOG(value.is_list() && value.num_elements() == 2,
 				"gravity must be a list of two elements");
 			b2Vec2 gravity;
 			gravity.x = float(value[0].as_decimal().as_float());
@@ -259,7 +259,7 @@ namespace box2d
 			velocity_iterations_ = value["velocity"].as_int();
 			position_iterations_ = value["position"].as_int();
 		} else if(key == "viewport") {
-			ASSERT_LOG(value.is_list() && value.num_elements() == 4, 
+			ASSERT_LOG(value.is_list() && value.num_elements() == 4,
 				"viewport must be a list of four elements.");
 			world_x1_ = float(value[0].as_decimal().as_float());
 			world_y1_ = float(value[1].as_decimal().as_float());
@@ -322,7 +322,7 @@ namespace box2d
 			ASSERT_LOG(shape.is_map() && shape.has_key("type"), "shape in a fixture must be a map with a 'type' field.");
 			const std::string type = shape["type"].as_string();
 			if(type == "polygon") {
-				ASSERT_LOG(shape.has_key("box") && shape["box"].num_elements() > 1, 
+				ASSERT_LOG(shape.has_key("box") && shape["box"].num_elements() > 1,
 					"polygon shape must specify a 'box' parameter of at least two elements");
 				b2PolygonShape* poly_shape = new b2PolygonShape;
 				if(shape["box"][0].is_list()) {
@@ -333,7 +333,7 @@ namespace box2d
 					std::vector<b2Vec2> v;
 					v.reserve(num_elements);
 					for(int n = 0; n != num_elements; ++n) {
-						ASSERT_LOG(shape["box"][n].is_list() && shape["box"][n].num_elements() > 2, 
+						ASSERT_LOG(shape["box"][n].is_list() && shape["box"][n].num_elements() > 2,
 							"Inner elements must be lists of at least two elements.");
 						v.push_back(b2Vec2(float(shape["box"][n][0].as_decimal().as_float()),
 							float(shape["box"][n][1].as_decimal().as_float())));
@@ -366,7 +366,7 @@ namespace box2d
 				b2CircleShape* circle_shape = new b2CircleShape;
 				circle_shape->m_radius = float(shape["radius"].as_decimal().as_float());
 				if(shape.has_key("position")) {
-					ASSERT_LOG(shape["position"].is_list() && shape["position"].num_elements() == 2, 
+					ASSERT_LOG(shape["position"].is_list() && shape["position"].num_elements() == 2,
 						"Position must be a list of two elements.");
 					circle_shape->m_p.Set(float(shape["position"][0].as_decimal().as_float()),
 						float(shape["position"][1].as_decimal().as_float()));
@@ -401,7 +401,7 @@ namespace box2d
 				bool loop = shape["loop"].as_bool(false);
 				std::vector<b2Vec2> vertices;
 				for(int n = 0; n < shape["vertices"].num_elements(); ++n) {
-					ASSERT_LOG(shape["vertices"][n].is_list() && shape["vertices"][n].num_elements() > 2, 
+					ASSERT_LOG(shape["vertices"][n].is_list() && shape["vertices"][n].num_elements() > 2,
 						"Inner items on vertices must be lists of length > 2.");
 					vertices.push_back(b2Vec2(float32(shape["vertices"][n][0].as_decimal().as_float()), float32(shape["vertex3"][n][1].as_decimal().as_float())));
 				}
@@ -425,11 +425,11 @@ namespace box2d
 		return std::shared_ptr<b2FixtureDef>(fix_def);
 	}
 
-	body::body(const variant& value) 
+	body::body(const variant& value)
 	{
 		// value["id"]...
 		if(value.has_key("position")) {
-			ASSERT_LOG(value["position"].is_list() && value["position"].num_elements() == 2, 
+			ASSERT_LOG(value["position"].is_list() && value["position"].num_elements() == 2,
 				"Position must be a list of two elements.");
 			body_def_.position.Set(float(value["position"][0].as_decimal().as_float()),
 				float(value["position"][1].as_decimal().as_float()));
@@ -479,7 +479,7 @@ namespace box2d
 			body_def_.linearDamping = float(value["linear_damping"].as_decimal().as_float());
 		}
 		if(value.has_key("linear_velocity")) {
-			ASSERT_LOG(value["linear_velocity"].is_list() && value["linear_velocity"].num_elements() == 2, 
+			ASSERT_LOG(value["linear_velocity"].is_list() && value["linear_velocity"].num_elements() == 2,
 				"linear_velocity must be a list of two elements.");
 			body_def_.linearVelocity.Set(float(value["linear_velocity"][0].as_decimal().as_float()),
 				float(value["linear_velocity"][1].as_decimal().as_float()));
@@ -497,7 +497,7 @@ namespace box2d
 	{
 	}
 
-	
+
 	void body::finishLoading(EntityPtr e)
 	{
 		world_ptr wp = world::our_world_ptr();
@@ -613,18 +613,18 @@ namespace box2d
 		} else if(key == "linear_damping") {
 			body_->SetLinearDamping(float(value.as_decimal().as_float()));
 		} else if(key == "linear_velocity") {
-			body_->SetLinearVelocity(b2Vec2(float(value[0].as_decimal().as_float()), 
+			body_->SetLinearVelocity(b2Vec2(float(value[0].as_decimal().as_float()),
 				float(value[1].as_decimal().as_float())));
 		} else if(key == "fixtures") {
 			ASSERT_LOG(false, "todo: fix fixtures");
 		} else if(key == "transform") {
 			if(value.num_elements() == 2 && value[0].is_list() && value[1].is_decimal()) {
 				body_->SetTransform(
-					b2Vec2(float(value[0][0].as_decimal().as_float()), float(value[0][1].as_decimal().as_float())), 
+					b2Vec2(float(value[0][0].as_decimal().as_float()), float(value[0][1].as_decimal().as_float())),
 					float(value[1].as_decimal().as_float()));
 			} else if(value.num_elements() == 3) {
 				body_->SetTransform(
-					b2Vec2(float(value[0].as_decimal().as_float()), float(value[1].as_decimal().as_float())), 
+					b2Vec2(float(value[0].as_decimal().as_float()), float(value[1].as_decimal().as_float())),
 					float(value[2].as_decimal().as_float()));
 			} else {
 				ASSERT_LOG(false, "Unrecognised position and angle format for transform command");
@@ -652,7 +652,7 @@ namespace box2d
 					wake = value[4].as_bool();
 				}
 			} else if(value.num_elements() == 2 || value.num_elements() == 3) {
-				ASSERT_LOG(value[0].is_list() && value[1].is_list(), 
+				ASSERT_LOG(value[0].is_list() && value[1].is_list(),
 					"Syntax for linear impulse is [[impx,impy],[pointx,pointy],(optional) bool] or [impx,impy,pointx,pointy,(optional) bool]");
 				impluse.Set(float32(value[0][0].as_decimal().as_float()), float32(value[0][1].as_decimal().as_float()));
 				point.Set(float32(value[1][0].as_decimal().as_float()), float32(value[1][1].as_decimal().as_float()));
@@ -660,7 +660,7 @@ namespace box2d
 					wake = value[2].as_bool();
 				}
 			} else {
-				ASSERT_LOG(false, 
+				ASSERT_LOG(false,
 					"Syntax for linear impulse is [[impx,impy],[pointx,pointy],(optional) bool] or [impx,impy,pointx,pointy,(optional) bool]");
 			}
 			body_->ApplyLinearImpulse(impluse, point, wake);
@@ -705,7 +705,7 @@ namespace box2d
 					wake = value[4].as_bool();
 				}
 			} else if(value.num_elements() == 2 || value.num_elements() == 3) {
-				ASSERT_LOG(value[0].is_list() && value[1].is_list(), 
+				ASSERT_LOG(value[0].is_list() && value[1].is_list(),
 					"Syntax for force impulse is [[forcex,forcey],[pointx,pointy],(optional) bool] or [forcex,forcey,pointx,pointy,(optional) bool]");
 				f.Set(float32(value[0][0].as_decimal().as_float()), float32(value[0][1].as_decimal().as_float()));
 				p.Set(float32(value[1][0].as_decimal().as_float()), float32(value[1][1].as_decimal().as_float()));
@@ -713,10 +713,10 @@ namespace box2d
 					wake = value[2].as_bool();
 				}
 			} else {
-				ASSERT_LOG(false, 
+				ASSERT_LOG(false,
 					"Syntax for force impulse is [[forcex,forcey],[pointx,pointy],(optional) bool] or [forcex,forcey,pointx,pointy,(optional) bool]");
 			}
-			body_->ApplyForce(f, p, wake);		
+			body_->ApplyForce(f, p, wake);
 		} else if(key == "force_to_center" || key == "force_to_centre") {
 			b2Vec2 f;
 			ASSERT_LOG(value.is_list() && value.num_elements() >= 2,
@@ -747,7 +747,7 @@ namespace box2d
 			filter.add("mask_bits", (*it)->filter.maskBits);
 			fix.add("filter", filter.build());
 			fix.add("shape", shape_write((*it)->shape));
-			
+
 			res.add("fixtures", fix.build());
 			++it;
 		}
@@ -798,7 +798,7 @@ namespace box2d
 				vertex.push_back(variant(poly->m_vertices[n].y));
 				vertices.push_back(variant(&vertex));
 			}
-			res.add("box",variant(&vertices)); 
+			res.add("box",variant(&vertices));
 		} else if(shape->GetType() == b2Shape::e_chain) {
 			b2ChainShape* chain = (b2ChainShape*)shape;
 			res.add("type", "chain");
@@ -859,7 +859,7 @@ namespace box2d
 		return res.build();
 	}
 
-	joint_factory::joint_factory(const variant& value) 
+	joint_factory::joint_factory(const variant& value)
 		: joint_variant_def_(value)
 	{
 		ASSERT_LOG(value.has_key("type"), "Joints must specify a 'type' field.");
@@ -877,7 +877,7 @@ namespace box2d
 				ASSERT_LOG(value["anchor"].is_list() && value["anchor"].num_elements() == 2,
 					"'anchor' must be a list of two elements.");
 				anchor.Set(float32(value["anchor"][0].as_decimal().as_float()), float32(value["anchor"][1].as_decimal().as_float()));
-			} 
+			}
 			revolute->Initialize(body_a_->get_raw_body_ptr(), body_b_->get_raw_body_ptr(), anchor);
 			if(value.has_key("lower_angle")) {
 				revolute->lowerAngle = float(value["lower_angle"].as_decimal().as_float()) * b2_pi / 180.0f;
@@ -930,7 +930,7 @@ namespace box2d
 				ASSERT_LOG(value["anchor"].is_list() && value["anchor"].num_elements() == 2,
 					"'anchor' must be a list of two elements.");
 				anchor.Set(float32(value["anchor"][0].as_decimal().as_float()), float32(value["anchor"][1].as_decimal().as_float()));
-			} 
+			}
 			b2Vec2 axis(1.0f, 0.0f);
 			if(value.has_key("axis")) {
 				ASSERT_LOG(value["axis"].is_list() && value["axis"].num_elements() == 2,
@@ -1024,7 +1024,7 @@ namespace box2d
 				ASSERT_LOG(value["anchor"].is_list() && value["anchor"].num_elements() == 2,
 					"'anchor' must be a list of two elements.");
 				anchor.Set(float32(value["anchor"][0].as_decimal().as_float()), float32(value["anchor"][1].as_decimal().as_float()));
-			} 
+			}
 			b2Vec2 axis(1.0f, 0.0f);
 			if(value.has_key("axis")) {
 				ASSERT_LOG(value["axis"].is_list() && value["axis"].num_elements() == 2,
@@ -1539,7 +1539,7 @@ namespace box2d
 		auto canvas = KRE::Canvas::getInstance();
 		std::vector<glm::vec2> varray;
 		for(int n = 0; n != vertexCount; ++n) {
-			varray.emplace_back(static_cast<float>(vertices[n].x * this_world->scale()), 
+			varray.emplace_back(static_cast<float>(vertices[n].x * this_world->scale()),
 				static_cast<float>(vertices[n].y * this_world->scale()));
 		}
 		canvas->drawLineLoop(varray, 1.0f, KRE::Color(color.r, color.g, color.b));
@@ -1550,7 +1550,7 @@ namespace box2d
 		auto canvas = KRE::Canvas::getInstance();
 		std::vector<glm::vec2> varray;
 		for(int n = 0; n != vertexCount; ++n) {
-			varray.emplace_back(static_cast<float>(vertices[n].x * this_world->scale()), 
+			varray.emplace_back(static_cast<float>(vertices[n].x * this_world->scale()),
 				static_cast<float>(vertices[n].y * this_world->scale()));
 		}
 		canvas->drawPolygon(varray, KRE::Color(color.r*0.5f, color.g*0.5f, color.b*0.5f, 0.5f));
@@ -1566,20 +1566,20 @@ namespace box2d
 	void debug_draw::DrawSolidCircle(const b2Vec2& center, float32 radius, const b2Vec2& axis, const b2Color& color)
 	{
 		auto canvas = KRE::Canvas::getInstance();
-		canvas->drawSolidCircle(pointf(center.x * this_world->scale(), center.y * this_world->scale()), 
-			radius, 
+		canvas->drawSolidCircle(pointf(center.x * this_world->scale(), center.y * this_world->scale()),
+			radius,
 			KRE::Color(color.r*0.5f, color.g*0.5f, color.b*0.5f, 0.5f));
 		b2Vec2 p = center + radius * axis;
-		canvas->drawLine(pointf(center.x * this_world->scale(), center.y * this_world->scale()), 
-			pointf(p.x, p.y), 
+		canvas->drawLine(pointf(center.x * this_world->scale(), center.y * this_world->scale()),
+			pointf(p.x, p.y),
 			KRE::Color(color.r, color.g, color.b));
 	}
 
 	void debug_draw::DrawSegment(const b2Vec2& p1, const b2Vec2& p2, const b2Color& color)
 	{
 		auto canvas = KRE::Canvas::getInstance();
-		canvas->drawLine(pointf(p1.x * this_world->scale(), p1.y * this_world->scale()), 
-			pointf(p2.x * this_world->scale(), p2.y * this_world->scale()), 
+		canvas->drawLine(pointf(p1.x * this_world->scale(), p1.y * this_world->scale()),
+			pointf(p2.x * this_world->scale(), p2.y * this_world->scale()),
 			KRE::Color(color.r, color.g, color.b));
 	}
 
@@ -1590,12 +1590,12 @@ namespace box2d
 		p2 = p1 + k_axisScale * xf.q.GetXAxis();
 
 		auto canvas = KRE::Canvas::getInstance();
-		canvas->drawLine(pointf(p1.x * this_world->scale(),p1.y * this_world->scale()), 
-			pointf(p2.x * this_world->scale(),p2.y * this_world->scale()), 
+		canvas->drawLine(pointf(p1.x * this_world->scale(),p1.y * this_world->scale()),
+			pointf(p2.x * this_world->scale(),p2.y * this_world->scale()),
 			KRE::Color::colorRed());
 		p2 = p1 + k_axisScale * xf.q.GetYAxis();
-		canvas->drawLine(pointf(p1.x * this_world->scale(),p1.y * this_world->scale()), 
-			pointf(p2.x * this_world->scale(),p2.y * this_world->scale()), 
+		canvas->drawLine(pointf(p1.x * this_world->scale(),p1.y * this_world->scale()),
+			pointf(p2.x * this_world->scale(),p2.y * this_world->scale()),
 			KRE::Color::colorGreen());
 	}
 

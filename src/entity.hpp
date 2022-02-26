@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -80,7 +80,7 @@ public:
 	void setDistinctLabel();
 
 	virtual void shiftPosition(int x, int y) { x_ += x*100; y_ += y*100; prev_feet_x_ += x; prev_feet_y_ += y; calculateSolidRect(); }
-	
+
 	void setPos(const point& p) { x_ = p.x*100; y_ = p.y*100; calculateSolidRect(); }
 	void setPos(int x, int y) { x_ = x*100; y_ = y*100; calculateSolidRect(); }
 	void setX(int x) { x_ = x*100; calculateSolidRect(); }
@@ -94,7 +94,7 @@ public:
 
 	virtual int parallaxScaleMillisX() const { return 1000;}
 	virtual int parallaxScaleMillisY() const { return 1000;}
-		
+
 	int zorder() const { return zorder_; }
 	int zSubOrder() const { return zsub_order_; }
 
@@ -163,7 +163,7 @@ public:
 	decimal getRotateZ() const { return rotate_z_; }
 	void setRotateZ(decimal new_rotate_z) { rotate_z_ = new_rotate_z; }
 	void setRotateZ(float new_rotate_z);
-	
+
 	virtual decimal getDrawScale() const { return decimal(1.0); };
 	virtual void setDrawScale(float new_scale);
 
@@ -182,9 +182,9 @@ public:
 
 	virtual void dieWithNoEvent() = 0;
 	virtual bool isActive(const rect& screen_area) const = 0;
-	virtual bool diesOnInactive() const { return false; } 
-	virtual bool isAlwaysActive() const { return false; } 
-	
+	virtual bool diesOnInactive() const { return false; }
+	virtual bool isAlwaysActive() const { return false; }
+
 	virtual FormulaCallable* vars() { return nullptr; }
 	virtual const FormulaCallable* vars() const { return nullptr; }
 
@@ -208,7 +208,7 @@ public:
 
 	virtual void setSoundVolume(float volume, float nseconds=0.0) = 0;
 	virtual int weight() const { return 1; }
-	
+
 	virtual int mass() const = 0;
 
 	void drawDebugRects() const;
@@ -418,7 +418,7 @@ private:
 
 	std::vector<ScheduledCommand> scheduled_commands_;
 
-	bool controls_[controls::NUM_CONTROLS];	
+	bool controls_[controls::NUM_CONTROLS];
 	variant controls_user_;
 
 	//attached objects are objects which are also drawn with this object.
@@ -443,7 +443,7 @@ private:
 	double tx_, ty_, tz_;
 };
 
-bool zorder_compare(const EntityPtr& e1, const EntityPtr& e2);	
+bool zorder_compare(const EntityPtr& e1, const EntityPtr& e2);
 struct EntityZOrderCompare
 {
 
@@ -454,7 +454,7 @@ struct EntityZOrderCompare
 		return a->zorder() < b->zorder() ||
 			(a->zorder() == b->zorder() && a->zSubOrder() < b->zSubOrder()) ||
 			(a->zorder() == b->zorder() && a->zSubOrder() == b->zSubOrder() && a->getMidpoint().y < b->getMidpoint().y) ||
-			(a->zorder() == b->zorder() && a->zSubOrder() == b->zSubOrder() && a->getMidpoint().y == b->getMidpoint().y && a.get() < b.get());		
+			(a->zorder() == b->zorder() && a->zSubOrder() == b->zSubOrder() && a->getMidpoint().y == b->getMidpoint().y && a.get() < b.get());
 	}
 		return a->zorder() < b->zorder() ||
 		(a->zorder() == b->zorder() && a->zSubOrder() < b->zSubOrder()) ||

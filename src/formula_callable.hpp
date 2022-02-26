@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -34,7 +34,7 @@
 namespace game_logic
 {
 	enum class FORMULA_ACCESS_TYPE { READ_ONLY, WRITE_ONLY, READ_WRITE };
-	struct FormulaInput 
+	struct FormulaInput
 	{
 		std::string name;
 		FORMULA_ACCESS_TYPE access;
@@ -102,14 +102,14 @@ namespace game_logic
 			serializeToString(str);
 		}
 
-		bool has_key(const std::string& key) const 
+		bool has_key(const std::string& key) const
 			{ return !queryValue(key).is_null(); }
 
 		// In order to provide support for widgets to be able to have FFL handlers for events
 		// The following two functions are provided for them to use to respectively execute
-		// a command and create a new formula from a variant (which is expected to contain FFL 
+		// a command and create a new formula from a variant (which is expected to contain FFL
 		// commands).  If you're making some new that object that provides a custom symbol
-		// table or supports different types of CommandCallable you should override these 
+		// table or supports different types of CommandCallable you should override these
 		// two functions to provide widget support.
 		virtual bool executeCommand(const variant &v);
 		virtual FormulaPtr createFormula(const variant& v);

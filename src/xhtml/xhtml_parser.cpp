@@ -35,7 +35,7 @@
 
 namespace xhtml
 {
-	namespace 
+	namespace
 	{
 		const std::string XmlAttr = "<xmlattr>";
 		const std::string XmlText = "<xmltext>";
@@ -52,7 +52,7 @@ namespace xhtml
 	class ParserAttribute
 	{
 	public:
-		ParserAttribute(const std::string& name, const std::string& value) 
+		ParserAttribute(const std::string& name, const std::string& value)
 			: name_(name),
 			  value_(value)
 		{
@@ -148,7 +148,7 @@ namespace xhtml
 		auto frag = DocumentFragment::create();
 		for(auto& pn : nodes) {
 			frag->addChild(pn->createNode(owner_doc), owner_doc);
-		}		
+		}
 		return frag;
 	}
 }

@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -52,7 +52,7 @@ namespace KRE
 		char32_t first;
 		char32_t last;
 		int size() const { return last - first + 1; }
-		bool operator()(const UnicodeRange& lhs, const UnicodeRange& rhs) const 
+		bool operator()(const UnicodeRange& lhs, const UnicodeRange& rhs) const
 		{
 			return lhs.last < rhs.first;
 		}
@@ -122,7 +122,7 @@ namespace KRE
 			}
 		}
 
-		~stb_impl() 
+		~stb_impl()
 		{
 			stbtt_PackEnd(&pc_);
 		}
@@ -158,7 +158,7 @@ namespace KRE
 			});
 		}
 
-		std::vector<unsigned> getGlyphs(const std::string& text) override		
+		std::vector<unsigned> getGlyphs(const std::string& text) override
 		{
 			std::vector<unsigned> res;
 			for(auto cp : utils::utf8_to_codepoint(text)) {
@@ -192,7 +192,7 @@ namespace KRE
 						continue;
 					}
 				}
-				
+
 				stbtt_packedchar* b = it->second.data() + cp - it->first.first;
 				fn(b);
 			}
@@ -230,7 +230,7 @@ namespace KRE
 						continue;
 					}
 				}
-				
+
 				stbtt_packedchar *b = it->second.data() + cp - it->first.first;
 				pen.x += static_cast<int>(b->xadvance * 65536.0f);
 			}
@@ -240,7 +240,7 @@ namespace KRE
 		}
 
 		FontRenderablePtr createRenderableFromPath(FontRenderablePtr font_renderable, const std::string& text, const std::vector<point>& path) override
-		{			
+		{
 			auto cp_string = utils::utf8_to_codepoint(text);
 			int glyphs_in_text = 0;
 			std::vector<char32_t> glyphs_to_add;
@@ -255,7 +255,7 @@ namespace KRE
 			if(!glyphs_to_add.empty()) {
 				addGlyphsToTexture(glyphs_to_add);
 			}
-			
+
 			if(font_renderable == nullptr) {
 				font_renderable = std::make_shared<FontRenderable>();
 				font_renderable->setTexture(font_texture_);
@@ -329,7 +329,7 @@ namespace KRE
 				addGlyphsToTexture(glyphs_to_add);
 			}
 			ASSERT_LOG(glyphs_in_text == colors.size(), "Not enough/Too many colors for the text.");
-			
+
 			if(font_renderable == nullptr) {
 				font_renderable = std::make_shared<ColoredFontRenderable>();
 				font_renderable->setTexture(font_texture_);
@@ -400,7 +400,7 @@ namespace KRE
 				int bearing = 0;
 				stbtt_GetCodepointHMetrics(&font_handle_, cp, &advance, &bearing);
 				return static_cast<int>(advance * scale_ * 65536.0f);
-			}		
+			}
 			stbtt_packedchar *b = it->second.data() + cp - it->first.first;
 			return static_cast<int>(b->xadvance * 65536.0f);
 		}
@@ -416,7 +416,7 @@ namespace KRE
 			if(font_size_ < 20.0f) {
 				stbtt_PackSetOversampling(&pc_, 2, 2);
 			}
-			
+
 			std::vector<stbtt_pack_range> ranges;
 			char32_t last_cp = codepoints.front();
 			char32_t first_cp = codepoints.front();
@@ -437,7 +437,7 @@ namespace KRE
 					ranges.emplace_back(range);
 
 					num_chars = 1;
-					first_cp = cp;					
+					first_cp = cp;
 				}
 				last_cp = cp;
 			}
@@ -481,7 +481,7 @@ namespace KRE
 		TexturePtr font_texture_;
 	};
 
-	FontDriverRegistrar stb_font_impl("stb", [](const std::string& fnt_name, const std::string& fnt_path, float size, const Color& color, bool init_texture){ 
+	FontDriverRegistrar stb_font_impl("stb", [](const std::string& fnt_name, const std::string& fnt_path, float size, const Color& color, bool init_texture){
 		return std::unique_ptr<stb_impl>(new stb_impl(fnt_name, fnt_path, size, color, init_texture));
 	});
 }

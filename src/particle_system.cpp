@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -42,9 +42,9 @@
 #include "weather_particle_system.hpp"
 #include "water_particle_system.hpp"
 
-namespace 
+namespace
 {
-	class ParticleAnimation 
+	class ParticleAnimation
 	{
 	public:
 		explicit ParticleAnimation(variant node) :
@@ -125,7 +125,7 @@ namespace
 		}
 
 		KRE::TexturePtr getTexture() const { return texture_; }
-	
+
 		int width() const { return width_; }
 		int height() const { return height_; }
 	private:
@@ -186,7 +186,7 @@ namespace
 		int velocity_magnitude_, velocity_magnitude_rand_;
 		int velocity_rotate_, velocity_rotate_rand_;
 		int accel_x_, accel_y_;
-	
+
 		int pre_pump_cycles_;  //# of cycles to pre-emptively simulate so the particle system appears to have been running for a while, rather than visibly starting to emit particles just when the player walks onscreen
 
 		int delta_r_, delta_g_, delta_b_, delta_a_;
@@ -257,9 +257,9 @@ namespace
 	};
 
 	SimpleParticleSystem::SimpleParticleSystem(const Entity& e, const SimpleParticleSystemFactory& factory)
-	  : factory_(factory), 
-	    info_(factory.info_), 
-	    cycle_(0), 
+	  : factory_(factory),
+	    info_(factory.info_),
+	    cycle_(0),
 	    spawn_buildup_(0)
 	{
 		setShader(KRE::ShaderProgram::getProgram("vtc_shader"));
@@ -271,7 +271,7 @@ namespace
 		attrib_->addAttributeDesc(KRE::AttributeDesc(KRE::AttrType::COLOR,    4, KRE::AttrFormat::UNSIGNED_BYTE, true, sizeof(KRE::vertex_texture_color), offsetof(KRE::vertex_texture_color, color)));
 		as->addAttribute(KRE::AttributeBasePtr(attrib_));
 		as->setDrawMode(KRE::DrawMode::TRIANGLES);
-		
+
 		addAttributeSet(as);
 	}
 
@@ -285,7 +285,7 @@ namespace
 		{
 			process(e);
 		}
-	
+
 	}
 
 	void SimpleParticleSystem::process(const Entity& e)
@@ -466,7 +466,7 @@ namespace
 	void SimpleParticleSystem::draw(const KRE::WindowPtr& wm, const rect& area, const Entity& e) const
 	{
 		if(getAttributeSet().back()->getCount() > 0) {
-			wm->render(this);	
+			wm->render(this);
 		}
 	}
 
@@ -665,15 +665,15 @@ namespace
 		int u_point_size_;
 		int u_is_circular_;
 	public:
-		PointParticleSystem(const Entity& obj, const PointParticleInfo& info) 
-			: obj_(obj), 
-			  info_(info), 
-			  particle_generation_(0), 
-			  generation_rate_millis_(info.generation_rate_millis), 
-			  pos_x_(info.pos_x), 
-			  pos_x_rand_(info.pos_x_rand), 
-			  pos_y_(info.pos_y), 
-			  pos_y_rand_(info.pos_y_rand) 
+		PointParticleSystem(const Entity& obj, const PointParticleInfo& info)
+			: obj_(obj),
+			  info_(info),
+			  particle_generation_(0),
+			  generation_rate_millis_(info.generation_rate_millis),
+			  pos_x_(info.pos_x),
+			  pos_x_rand_(info.pos_x_rand),
+			  pos_y_(info.pos_y),
+			  pos_y_rand_(info.pos_y_rand)
 		{
 			setShader(KRE::ShaderProgram::getProgram("point_shader")->clone());
 			getShader()->setUniformDrawFunction(std::bind(&PointParticleSystem::executeOnDraw, this));
@@ -694,10 +694,10 @@ namespace
 			getShader()->setUniformValue(u_point_size_, info_.dot_size);
 			getShader()->setUniformValue(u_is_circular_, true);
 		}
-		
+
 		void process(const Entity& e) override {
 			particle_generation_ += generation_rate_millis_;
-			
+
 			particles_.erase(std::remove_if(particles_.begin(), particles_.end(), particle_destroyed), particles_.end());
 
 			for(auto& p : particles_) {
@@ -741,7 +741,7 @@ namespace
 				if(pos_x_rand_) {
 					p.pos_x += rand()%pos_x_rand_;
 				}
-			
+
 				if(pos_y_rand_) {
 					p.pos_y += rand()%pos_y_rand_;
 				}

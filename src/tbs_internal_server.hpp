@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -55,10 +55,10 @@ namespace tbs
 
 		void handle_process();
 
-		static void send_request(const variant& request, 
+		static void send_request(const variant& request,
 			int session_id,
-			game_logic::MapFormulaCallablePtr callable, 
-			std::function<void(const std::string&)> handler);		
+			game_logic::MapFormulaCallablePtr callable,
+			std::function<void(const std::string&)> handler);
 		static void process();
 		static boost::asio::io_service& get_io_service() { return io_service_; }
 
@@ -67,9 +67,9 @@ namespace tbs
 		virtual void heartbeat_internal(int send_heartbeat, std::map<int, client_info>& clients) override;
 	private:
 		int connection_timeout_ticks() const override;
-		void send_msg(const variant& resp, 
+		void send_msg(const variant& resp,
 			int session_id,
-			std::function<void(const std::string&)> handler, 
+			std::function<void(const std::string&)> handler,
 			game_logic::MapFormulaCallablePtr callable);
 		static boost::asio::io_service io_service_;
 
@@ -77,7 +77,7 @@ namespace tbs
 		bool read_queue(send_function* send_fn, variant* v, int *session_id);
 
 		void finish_socket(send_function send_fn, client_info& cli_info);
-		
+
 		socket_info& create_socket_info(send_function send_fn);
 		void disconnect(int session_id);
 		void queue_msg(int session_id, const std::string& msg, bool has_priority) override;

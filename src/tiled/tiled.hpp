@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -79,7 +79,7 @@ namespace tiled
 		std::string name;
 		std::string value;
 	};
-	
+
 	struct Terrain
 	{
 		explicit Terrain(const std::string& n, uint32_t id) : name(n), tile_id(id) {}
@@ -98,11 +98,11 @@ namespace tiled
 	{
 	public:
 		Tile(int gid, KRE::TexturePtr tex);
-		
-		void setFlipFlags(bool h, bool v, bool d) { 
-			flipped_horizontally_ = h; 
-			flipped_vertically_ = v; 
-			flipped_diagonally_ = d; 
+
+		void setFlipFlags(bool h, bool v, bool d) {
+			flipped_horizontally_ = h;
+			flipped_vertically_ = v;
+			flipped_diagonally_ = d;
 		}
 
 		void setDestRect(const rect& dst) { dest_rect_ = dst; }
@@ -153,7 +153,7 @@ namespace tiled
 		int add_x_;
 		int add_y_;
 		bool tiles_changed_;
-		
+
 		std::weak_ptr<Map> parent_map_;
 
 		std::shared_ptr<KRE::Attribute<KRE::vertex_texcoord>> attr_;
@@ -190,7 +190,7 @@ namespace tiled
 		void setProperties(std::vector<Property>* props) { properties_.swap(*props); }
 		void setProbability(float p) { probability_ = p; }
 		void setTerrain(const std::array<int, 4>& t) { terrain_ = t; }
-		
+
 		int getLocalId() const { return local_id_; }
 		KRE::TexturePtr getTexture() const { return texture_; }
 		void setTexture(KRE::TexturePtr tex) { texture_ = tex; }
@@ -208,7 +208,7 @@ namespace tiled
 	{
 	public:
 		explicit TileSet(int first_gid);
-		
+
 		void setName(const std::string& name) { name_ = name; }
 		void setTileDimensions(int width, int height) { tile_width_ = width; tile_height_ = height; }
 		void setSpacing(int spacing) { spacing_ = spacing; }

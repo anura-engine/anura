@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -43,7 +43,7 @@ namespace KRE
 		bool isYuvPacked() const override;
 		bool isYuvHeightReversed() const override;
 		bool isInterlaced() const override;
-		
+
 		bool isRGB() const override;
 		bool hasRedChannel() const override;
 		bool hasGreenChannel() const override;
@@ -85,7 +85,7 @@ namespace KRE
 		void getRGBA(uint32_t pix, int& r, int& g, int& b, int& a) override;
 
 		void extractRGBA(const void* pixels, int ndx, int& red, int& green, int& blue, int& alpha) override;
-		void encodeRGBA(void* pixels, int red, int green, int blue, int alpha) override; 
+		void encodeRGBA(void* pixels, int red, int green, int blue, int alpha) override;
 
 		bool hasPalette() const override;
 		SDL_PixelFormat* get() { return pf_; }
@@ -98,21 +98,21 @@ namespace KRE
 	class SurfaceSDL : public Surface
 	{
 	public:
-		SurfaceSDL(int width, 
-			int height, 
-			int bpp, 
-			int row_pitch, 
-			uint32_t rmask, 
-			uint32_t gmask, 
-			uint32_t bmask, 
-			uint32_t amask, 
+		SurfaceSDL(int width,
+			int height,
+			int bpp,
+			int row_pitch,
+			uint32_t rmask,
+			uint32_t gmask,
+			uint32_t bmask,
+			uint32_t amask,
 			const void* pixels);
-		SurfaceSDL(int width, 
-			int height, 
-			int bpp, 
-			uint32_t rmask, 
-			uint32_t gmask, 
-			uint32_t bmask, 
+		SurfaceSDL(int width,
+			int height,
+			int bpp,
+			uint32_t rmask,
+			uint32_t gmask,
+			uint32_t bmask,
 			uint32_t amask);
 		SurfaceSDL(const std::string& filename);
 		SurfaceSDL(SDL_Surface* surface);
@@ -120,10 +120,10 @@ namespace KRE
 		virtual ~SurfaceSDL();
 		const void* pixels() const override;
 		void* pixelsWriteable() override;
-		void writePixels(int bpp, 
-			uint32_t rmask, 
-			uint32_t gmask, 
-			uint32_t bmask, 
+		void writePixels(int bpp,
+			uint32_t rmask,
+			uint32_t gmask,
+			uint32_t bmask,
 			uint32_t amask,
 			const void* pixels) override;
 		void writePixels(const void* pixels, int size) override;
@@ -174,21 +174,21 @@ namespace KRE
 		const rect getClipRect() override;
 
 		static SurfacePtr createFromFile(const std::string&, PixelFormat::PF fmt, SurfaceFlags flags, SurfaceConvertFn fn);
-		static SurfacePtr createFromPixels(int width, 
-			int height, 
-			int bpp, 
-			int row_pitch, 
-			uint32_t rmask, 
-			uint32_t gmask, 
-			uint32_t bmask, 
-			uint32_t amask, 
+		static SurfacePtr createFromPixels(int width,
+			int height,
+			int bpp,
+			int row_pitch,
+			uint32_t rmask,
+			uint32_t gmask,
+			uint32_t bmask,
+			uint32_t amask,
 			const void* pixels);
-		static SurfacePtr createFromMask(int width, 
-			int height, 
-			int bpp, 
-			uint32_t rmask, 
-			uint32_t gmask, 
-			uint32_t bmask, 
+		static SurfacePtr createFromMask(int width,
+			int height,
+			int bpp,
+			uint32_t rmask,
+			uint32_t gmask,
+			uint32_t bmask,
 			uint32_t amask);
 		static SurfacePtr createFromFormat(int width,
 			int height,

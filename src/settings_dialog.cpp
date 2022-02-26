@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -39,9 +39,9 @@ void SettingsDialog::draw(bool in_speech_dialog) const
 	auto wnd = KRE::WindowManager::getMainWindow();
 	int sw = wnd->width();
 	int sh = wnd->height();
-	ConstGuiSectionPtr button = GuiSection::get(std::string(in_speech_dialog ? "skip" : "menu") 
-		+ "_button_" 
-		+ std::string(menu_button_state_ ? "down" : "normal") 
+	ConstGuiSectionPtr button = GuiSection::get(std::string(in_speech_dialog ? "skip" : "menu")
+		+ "_button_"
+		+ std::string(menu_button_state_ ? "down" : "normal")
 		+ std::string(sw == 1024 ? "_ipad" : ""));
 	if (sw != 1024) {
 		button->blit(sw - button->width() - padding, padding);
@@ -88,12 +88,12 @@ void SettingsDialog::reset()
 	menu_button_state_ = false;
 }
 
-SettingsDialog::SettingsDialog() 
-	: show_window_(false), 
+SettingsDialog::SettingsDialog()
+	: show_window_(false),
 	menu_button_state_(false)
 {
 }
 
-SettingsDialog::~SettingsDialog() 
+SettingsDialog::~SettingsDialog()
 {
 }

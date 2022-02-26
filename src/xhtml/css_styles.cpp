@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -33,7 +33,7 @@
 
 namespace css
 {
-	namespace 
+	namespace
 	{
 		const int fixed_point_scale = 65536;
 		const float fixed_point_scale_float = 65536.0f;
@@ -53,7 +53,7 @@ namespace css
 				res.emplace_back(std::ceil(min_size * 2.0f));
 				res.emplace_back(std::ceil(min_size * 2.3f));
 			}
-			return res;	
+			return res;
 		}
 
 		std::string print_border_style(BorderStyle bs)
@@ -108,7 +108,7 @@ namespace css
 			return std::string();
 		}
 
-		bool point_compare(const glm::vec2& p, const float x1, const float y1) 
+		bool point_compare(const glm::vec2& p, const float x1, const float y1)
 		{
 			return std::abs(p.x - x1) < FLT_EPSILON && std::abs(p.y - y1) < FLT_EPSILON;
 		}
@@ -127,7 +127,7 @@ namespace css
 		ASSERT_LOG(stored_enum_ != false, "Called Style::isEqual and stored_enum_==false, this is a bug.");
 		return enumeration_ == style->enumeration_;
 	}
-	
+
 	bool Style::requiresLayout(Property p) const
 	{
 		if(!stored_enum_) {
@@ -340,7 +340,7 @@ namespace css
 					default: break;
 				}
 				break;
-			default: 
+			default:
 				LOG_ERROR("Style::toString() called on property: '" << get_property_name(p) << "'");
 				break;
 		}
@@ -391,15 +391,15 @@ namespace css
 	}
 
 	bool CssColor::isEqual(const StylePtr& a) const
-	{		
+	{
 		auto p = std::dynamic_pointer_cast<CssColor>(a);
 		return *color_ == *p->color_;
 	}
 
-	Length::Length(xhtml::FixedPoint value, const std::string& units) 
+	Length::Length(xhtml::FixedPoint value, const std::string& units)
 		: Style(StyleId::LENGTH),
-		  value_(value), 
-		  units_(LengthUnits::NUMBER) 
+		  value_(value),
+		  units_(LengthUnits::NUMBER)
 	{
 		if(units == "em") {
 			units_ = LengthUnits::EM;
@@ -447,7 +447,7 @@ namespace css
 			case LengthUnits::PX:
 				res = static_cast<int>((static_cast<float>(value_)/fixed_point_scale_float) * dpi * 3.0f / (72.0f * 4.0f) * fixed_point_scale_float);
 				break;
-			case LengthUnits::EM: {				
+			case LengthUnits::EM: {
 				float fs = ctx.getFontHandle()->getFontSize() / 72.0f;
 				res = static_cast<xhtml::FixedPoint>(fs * static_cast<float>(value_ * dpi));
 				break;
@@ -472,7 +472,7 @@ namespace css
 				break;
 			case LengthUnits::PERCENT:
 				res = (value_ / fixed_point_scale) * (scale / 100);
-				break; 
+				break;
 			case LengthUnits::VW:
 				res = static_cast<int>((value_ / (fixed_point_scale_float * 100.f)) * (viewport.x * fixed_point_scale_float));
 				break;
@@ -485,7 +485,7 @@ namespace css
 			case LengthUnits::LU_VMAX:
 				res = static_cast<int>((value_ / (fixed_point_scale_float * 100.f)) * (std::max(viewport.x, viewport.y) * fixed_point_scale_float));
 				break;
-			default: 
+			default:
 				ASSERT_LOG(false, "Unrecognised units value: " << static_cast<int>(units_));
 				break;
 		}
@@ -498,7 +498,7 @@ namespace css
 	}
 
 	bool Length::isEqual(const StylePtr& a) const
-	{		
+	{
 		auto p = std::dynamic_pointer_cast<Length>(a);
 		return units_ == p->units_ && value_ == p->value_;
 	}
@@ -523,10 +523,10 @@ namespace css
 		return static_cast<xhtml::FixedPoint>(res * fixed_point_scale);
 	}
 
-	FontFamily::FontFamily() 
-		: Style(StyleId::FONT_FAMILY), 
-		  fonts_() 
-	{ 
+	FontFamily::FontFamily()
+		: Style(StyleId::FONT_FAMILY),
+		  fonts_()
+	{
 		fonts_.emplace_back("sans-serif");
 	}
 
@@ -553,7 +553,7 @@ namespace css
 			}
 			fw = (fw / 100) * 100;
 			return fw;
-		}		
+		}
 		return weight_;
 	}
 
@@ -563,19 +563,19 @@ namespace css
 		return is_relative_ == p->is_relative_ ? is_relative_ ? relative_ == p->relative_ : weight_ == p->weight_ : false;
 	}
 
-	BackgroundPosition::BackgroundPosition() 
+	BackgroundPosition::BackgroundPosition()
 		: Style(StyleId::BACKGROUND_POSITION),
 		  left_(0, true),
 		  top_(0, true)
 	{
 	}
 
-	void BackgroundPosition::setLeft(const Length& left) 
+	void BackgroundPosition::setLeft(const Length& left)
 	{
 		left_ = left;
 	}
 
-	void BackgroundPosition::setTop(const Length& top) 
+	void BackgroundPosition::setTop(const Length& top)
 	{
 		top_ = top;
 	}
@@ -764,7 +764,7 @@ namespace css
 		} else if(units == "grad") {
 			units_ = AngleUnits::GRADIANS;
 		} else if(units == "turn") {
-			units_ = AngleUnits::TURNS;		
+			units_ = AngleUnits::TURNS;
 		} else {
 			ASSERT_LOG(false, "Unrecognised angle units value: " << units);
 		}
@@ -783,7 +783,7 @@ namespace css
 			case AngleUnits::RADIANS:	angle = 180.0f / static_cast<float>(M_PI) * value_; break;
 			case AngleUnits::GRADIANS:	angle = 0.9f * value_; break;
 			case AngleUnits::TURNS:		angle = 360.0f * value_; break;
-			case AngleUnits::DEGREES:	
+			case AngleUnits::DEGREES:
 			default:
 				// no conversion required.
 				break;
@@ -826,7 +826,7 @@ namespace css
 		float time_value = value_;
 		switch(units_) {
 			case TimeUnits::MILLISECONDS:	time_value /= 1000.0f; break;
-			case TimeUnits::SECONDS:	
+			case TimeUnits::SECONDS:
 			default:
 				// no conversion required.
 				break;
@@ -843,8 +843,8 @@ namespace css
 		return time_value;
 	}
 
-	UriStyle::UriStyle(const std::string uri) 
-		: is_none_(false), 
+	UriStyle::UriStyle(const std::string uri)
+		: is_none_(false),
 		  uri_(uri),
 		  handler_(nullptr)
 	{
@@ -852,10 +852,10 @@ namespace css
 		handler_ = xhtml::url_handler::create(filter(uri_));
 	}
 
-	void UriStyle::setURI(const std::string& uri) 
-	{ 
-		uri_ = uri; 
-		is_none_ = false; 
+	void UriStyle::setURI(const std::string& uri)
+	{
+		uri_ = uri;
+		is_none_ = false;
 		auto filter = KRE::Surface::getFileFilter(KRE::FileFilterType::LOAD);
 		handler_ = xhtml::url_handler::create(filter(uri_));
 	}
@@ -870,7 +870,7 @@ namespace css
 		return KRE::Texture::createFromImage(handler_->getResource());
 	}
 
-	// Convert a length value, either dimension or percentage into a value, 
+	// Convert a length value, either dimension or percentage into a value,
 	// 0.0 -> 1.0 on a line.
 	float calculate_color_stop_length(const Length& len, const float len_gradient_line)
 	{
@@ -896,7 +896,7 @@ namespace css
 		// Is the actual value in pixels.
 		const float s_theta = std::abs(sin(angle_ / 180.0f * static_cast<float>(M_PI)));
 		const float c_theta = std::abs(cos(angle_ / 180.0f * static_cast<float>(M_PI)));
-		const float len_gradient_line = std::min(c_theta < FLT_EPSILON ? FLT_MAX : width / c_theta,  
+		const float len_gradient_line = std::min(c_theta < FLT_EPSILON ? FLT_MAX : width / c_theta,
 			s_theta < FLT_EPSILON ? FLT_MAX : height / s_theta);
 
 		if(color_stops_.empty()) {
@@ -1058,19 +1058,19 @@ namespace css
 		return false;
 	}
 
-	TextShadow::TextShadow(const Length& offset_x, const Length& offset_y) 
-		: color_(), 
-		  offset_{}, 
-		  blur_radius_(0, LengthUnits::PX) 
+	TextShadow::TextShadow(const Length& offset_x, const Length& offset_y)
+		: color_(),
+		  offset_{},
+		  blur_radius_(0, LengthUnits::PX)
 	{
 		offset_[0] = offset_x;
 		offset_[1] = offset_y;
 	}
 
-	TextShadow::TextShadow(const Length& offset_x, const Length& offset_y, const CssColor& color, const Length& blur) 
-		: color_(color), 
-		  offset_{}, 
-		  blur_radius_(blur) 
+	TextShadow::TextShadow(const Length& offset_x, const Length& offset_y, const CssColor& color, const Length& blur)
+		: color_(color),
+		  offset_{},
+		  blur_radius_(blur)
 	{
 		offset_[0] = offset_x;
 		offset_[1] = offset_y;
@@ -1155,16 +1155,16 @@ namespace css
 		switch(type_) {
 			case CssContentType::STRING:			return "\"" + str_ + "\"";
 			case CssContentType::URI:				return "uri(" + uri_ + ")";
-			case CssContentType::COUNTER:			
-				return "counter(" 
-					+ counter_name_ 
-					+ (counter_style_ == ListStyleType::DECIMAL ? "" : (", " + print_list_style_type(counter_style_))) 
+			case CssContentType::COUNTER:
+				return "counter("
+					+ counter_name_
+					+ (counter_style_ == ListStyleType::DECIMAL ? "" : (", " + print_list_style_type(counter_style_)))
 					+ ")";
 			case CssContentType::COUNTERS:
-				return "counter(" 
-					+ counter_name_ 
+				return "counter("
+					+ counter_name_
 					+ ", " + counter_seperator_
-					+ (counter_style_ == ListStyleType::DECIMAL ? "" : (", " + print_list_style_type(counter_style_))) 
+					+ (counter_style_ == ListStyleType::DECIMAL ? "" : (", " + print_list_style_type(counter_style_)))
 					+ ")";
 			case CssContentType::OPEN_QUOTE:		return "open-quote";
 			case CssContentType::CLOSE_QUOTE:		return "close-quote";
@@ -1545,14 +1545,14 @@ namespace css
 		ss << index_;
 		return ss.str();
     }
-	
-	Filter::Filter(CssFilterId id) 
-		: id_(id), 
-		  angle_(nullptr), 
-		  value_(nullptr), 
-		  drop_shadow_(nullptr), 
-		  gaussian_(), 
-		  kernel_radius_(7) 
+
+	Filter::Filter(CssFilterId id)
+		: id_(id),
+		  angle_(nullptr),
+		  value_(nullptr),
+		  drop_shadow_(nullptr),
+		  gaussian_(),
+		  kernel_radius_(7)
 	{
 	}
 
@@ -1561,8 +1561,8 @@ namespace css
 		  angle_(std::make_shared<Angle>(a)),
 		  value_(nullptr),
 		  drop_shadow_(nullptr),
-		  gaussian_(), 
-		  kernel_radius_(7) 
+		  gaussian_(),
+		  kernel_radius_(7)
 	{
 	}
 
@@ -1571,8 +1571,8 @@ namespace css
 		  angle_(nullptr),
 		  value_(std::make_shared<Length>(len)),
 		  drop_shadow_(nullptr),
-		  gaussian_(), 
-		  kernel_radius_(7) 
+		  gaussian_(),
+		  kernel_radius_(7)
 	{
 	}
 
@@ -1581,8 +1581,8 @@ namespace css
 		  angle_(nullptr),
 		  value_(nullptr),
 		  drop_shadow_(std::make_shared<BoxShadow>(ds)),
-		  gaussian_(), 
-		  kernel_radius_(7) 
+		  gaussian_(),
+		  kernel_radius_(7)
 	{
 	}
 
@@ -1621,7 +1621,7 @@ namespace css
 				ss << "contrast(" << value_->toString(Property::FILTER) << ")";
 				break;
 			case CssFilterId::DROP_SHADOW:
-				ss << "drop-shadow(" 
+				ss << "drop-shadow("
 					<< drop_shadow_-> getX().toString(Property::FILTER) << " "
 					<< drop_shadow_-> getY().toString(Property::FILTER) << " "
 					<< drop_shadow_-> getBlur().toString(Property::FILTER) << " "
@@ -1673,8 +1673,8 @@ namespace css
 		std::stringstream ss;
 		switch(id_)
 		{
-			case TransformId::NONE:				
-				ss << "none";		
+			case TransformId::NONE:
+				ss << "none";
 				break;
 			case TransformId::MATRIX_2D:
 				ss << "matrix(";
@@ -1682,7 +1682,7 @@ namespace css
 					ss << (n > 0 ? ", " : "") << matrix_[n];
 				}
 				break;
-			case TransformId::TRANSLATE_2D:		
+			case TransformId::TRANSLATE_2D:
 				ss << "translate(" << lengths_[0].toString(Property::TRANSFORM) << ", " << lengths_[1].toString(Property::TRANSFORM) << ")";
 				break;
 			case TransformId::SCALE_2D:
@@ -1732,8 +1732,8 @@ namespace css
 				computed_angles_[0] = angles_[0].getAngle(AngleUnits::RADIANS);
 				computed_angles_[1] = angles_[1].getAngle(AngleUnits::RADIANS);
 				break;
-			case TransformId::NONE:			
-			case TransformId::MATRIX_2D:	
+			case TransformId::NONE:
+			case TransformId::MATRIX_2D:
 			default: break;
 		}
 		modified_ = true;
@@ -1755,7 +1755,7 @@ namespace css
 			auto& trf = *it;
 			trf.clearModified();
 			switch(trf.id()) {
-				case TransformId::NONE:			
+				case TransformId::NONE:
 					break;
 				case TransformId::MATRIX_2D: {
 					const std::array<float, 6>& vals = trf.getMatrix();

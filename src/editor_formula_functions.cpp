@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -36,13 +36,13 @@
 #include "level_solid_map.hpp"
 #include "variant_utils.hpp"
 
-namespace editor_script 
+namespace editor_script
 {
 	using namespace game_logic;
 
-	namespace 
+	namespace
 	{
-		class EditorCommand : public FormulaCallable 
+		class EditorCommand : public FormulaCallable
 		{
 		public:
 			virtual ~EditorCommand() {}
@@ -53,7 +53,7 @@ namespace editor_script
 			}
 		};
 
-		class AddObjectCommand : public EditorCommand 
+		class AddObjectCommand : public EditorCommand
 		{
 			std::string id_;
 			int x_, y_;
@@ -70,7 +70,7 @@ namespace editor_script
 			}
 		};
 
-		class AddObjectFunction : public FunctionExpression 
+		class AddObjectFunction : public FunctionExpression
 		{
 		public:
 			explicit AddObjectFunction(const args_list& args)
@@ -86,7 +86,7 @@ namespace editor_script
 			}
 		};
 
-		class RemoveTileRectCommand : public EditorCommand 
+		class RemoveTileRectCommand : public EditorCommand
 		{
 			std::string tile_id_;
 			int x1_, y1_, x2_, y2_;
@@ -100,7 +100,7 @@ namespace editor_script
 			}
 		};
 
-		class RemoveTilesFunction : public FunctionExpression 
+		class RemoveTilesFunction : public FunctionExpression
 		{
 		public:
 			explicit RemoveTilesFunction(const args_list& args)
@@ -117,7 +117,7 @@ namespace editor_script
 			}
 		};
 
-		class AddTileRectCommand : public EditorCommand 
+		class AddTileRectCommand : public EditorCommand
 		{
 			std::string tile_id_;
 			int x1_, y1_, x2_, y2_;
@@ -159,7 +159,7 @@ namespace editor_script
 			std::string str_;
 		};
 
-		class DebugFunction : public FunctionExpression 
+		class DebugFunction : public FunctionExpression
 		{
 		public:
 			explicit DebugFunction(const args_list& args)
@@ -218,12 +218,12 @@ namespace editor_script
 			}
 		}
 
-		class TileCallable : public FormulaCallable 
+		class TileCallable : public FormulaCallable
 		{
 		public:
 			TileCallable(editor& e, int x, int y)
-			  : editor_(e), 
-			  x_(x), 
+			  : editor_(e),
+			  x_(x),
 			  y_(y)
 			{}
 
@@ -266,7 +266,7 @@ namespace editor_script
 			int x_, y_;
 		};
 
-		class EditorCommandCallable : public FormulaCallable 
+		class EditorCommandCallable : public FormulaCallable
 		{
 		public:
 			explicit EditorCommandCallable(editor& e) : editor_(e)
@@ -327,7 +327,7 @@ namespace editor_script
 		}
 	}
 
-	std::vector<info> all_scripts() 
+	std::vector<info> all_scripts()
 	{
 		load_scripts();
 		return scripts_info;

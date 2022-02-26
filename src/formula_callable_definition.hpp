@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -157,7 +157,7 @@ public: \
 public: \
 	static void init_callable_type(std::vector<CallablePropertyEntry>& v, std::map<std::string, int>& properties); \
 	enum { classname##_DECLARE_CALLABLE_does_not_match_name_of_class = 0 }; \
-private: 
+private:
 
 #define BEGIN_DEFINE_CALLABLE_NOBASE(classname) \
 int classname##_num_base_slots = classname::classname##_DECLARE_CALLABLE_does_not_match_name_of_class; \

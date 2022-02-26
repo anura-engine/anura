@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -36,11 +36,11 @@ namespace KRE
 	namespace Particles
 	{
 		Emitter::Emitter(std::weak_ptr<ParticleSystemContainer> parent, const variant& node, EmitterType type)
-			: EmitObject(parent, node), 
+			: EmitObject(parent, node),
 			  type_(type),
 			  emission_fraction_(0.0f),
 			  force_emission_(node["force_emission"].as_bool(false)),
-			  force_emission_processed_(false), 
+			  force_emission_processed_(false),
 			  can_be_deleted_(node["can_be_deleted"].as_bool(true)),
 			  color_(1.0f,1.0f,1.0f,1.0f),
 			  duration_remaining_(0),
@@ -142,11 +142,11 @@ namespace KRE
 			}
 			if(repeat_delay_) {
 				repeat_delay_remaining_ = repeat_delay_->getValue(0);
-			}			
+			}
 		}
 
 		Emitter::Emitter(std::weak_ptr<ParticleSystemContainer> parent, EmitterType type)
-			: EmitObject(parent), 
+			: EmitObject(parent),
 			  type_(type),
 			  emission_rate_(new Parameter(10.0f)),
 			  time_to_live_(new Parameter(4.0f)),
@@ -164,7 +164,7 @@ namespace KRE
 			  particle_height_(nullptr),
 			  particle_depth_(nullptr),
 			  force_emission_(false),
-			  force_emission_processed_(false), 
+			  force_emission_processed_(false),
 			  can_be_deleted_(false),
 			  emission_fraction_(0.0f),
 			  duration_remaining_(0),
@@ -410,15 +410,15 @@ namespace KRE
 			}
 		}
 
-		void Emitter::handleEmitProcess(float t) 
+		void Emitter::handleEmitProcess(float t)
 		{
 			if(isEnabled()) {
 				visualEmitProcess(t);
-				
+
 				if(duration_) {
 					duration_remaining_ -= t;
 					if(duration_remaining_ < 0.0f) {
-						setEnable(false);					
+						setEnable(false);
 					}
 				}
 			} else if(repeat_delay_) {
@@ -429,9 +429,9 @@ namespace KRE
 			}
 		}
 
-		void Emitter::setEmitOnly2D(bool f) 
-		{ 
-			emit_only_2d_ = f; 
+		void Emitter::setEmitOnly2D(bool f)
+		{
+			emit_only_2d_ = f;
 		}
 
 		int Emitter::calculateParticlesToEmit(float t, int quota, int current_size)
@@ -453,9 +453,9 @@ namespace KRE
 			return cnt;
 		}
 
-		void Emitter::createParticles(std::vector<Particle>& particles, 
-			std::vector<Particle>::iterator& start, 
-			std::vector<Particle>::iterator& end, 
+		void Emitter::createParticles(std::vector<Particle>& particles,
+			std::vector<Particle>::iterator& start,
+			std::vector<Particle>::iterator& end,
 			float t)
 		{
 		}
@@ -575,10 +575,10 @@ namespace KRE
 			return c;
 		}
 
-		const Emitter::color_range& Emitter::getColorRange() const 
-		{ 
+		const Emitter::color_range& Emitter::getColorRange() const
+		{
 			ASSERT_LOG(color_range_ != nullptr, "Color range is empty.");
-			return *color_range_; 
+			return *color_range_;
 		}
 
 		void Emitter::setColorRange(const glm::vec4& start, const glm::vec4& end)
@@ -664,11 +664,11 @@ namespace KRE
 		}
 
 
-		CircleEmitter::CircleEmitter(std::weak_ptr<ParticleSystemContainer> parent, const variant& node) 			
-			: Emitter(parent, node, EmitterType::CIRCLE), 
+		CircleEmitter::CircleEmitter(std::weak_ptr<ParticleSystemContainer> parent, const variant& node)
+			: Emitter(parent, node, EmitterType::CIRCLE),
 			  circle_radius_(Parameter::factory(node["circle_radius"])),
-			  circle_step_(node["circle_step"].as_float(0.1f)), 
-			  circle_angle_(node["circle_angle"].as_float(0)), 
+			  circle_step_(node["circle_step"].as_float(0.1f)),
+			  circle_angle_(node["circle_angle"].as_float(0)),
 			  circle_random_(node["emit_random"].as_bool(true)),
 			  normal_(0.0f, 1.0f, 0.0f)
 		{
@@ -678,16 +678,16 @@ namespace KRE
 		}
 
 		CircleEmitter::CircleEmitter(std::weak_ptr<ParticleSystemContainer> parent)
-			: Emitter(parent, EmitterType::CIRCLE), 
+			: Emitter(parent, EmitterType::CIRCLE),
 			  circle_radius_(new Parameter(1.0f)),
-			  circle_step_(0.1f), 
-			  circle_angle_(0.0f), 
+			  circle_step_(0.1f),
+			  circle_angle_(0.0f),
 			  circle_random_(true),
 			  normal_(0.0f, 1.0f, 0.0f)
 		{
 		}
 
-		void CircleEmitter::handleWrite(variant_builder* build) const 
+		void CircleEmitter::handleWrite(variant_builder* build) const
 		{
 			Emitter::writeInternal(build);
 			if(circle_radius_ != nullptr /*&& circle_radius_->getType() != ParameterType::FIXED && circle_radius_->getValue() != 1.0f*/) {
@@ -742,15 +742,15 @@ namespace KRE
 
 		}
 
-		BoxEmitter::BoxEmitter(std::weak_ptr<ParticleSystemContainer> parent) 
-			: Emitter(parent, EmitterType::BOX), 
-			  box_dimensions_(1.0f) 
+		BoxEmitter::BoxEmitter(std::weak_ptr<ParticleSystemContainer> parent)
+			: Emitter(parent, EmitterType::BOX),
+			  box_dimensions_(1.0f)
 		{
 		}
 
-		BoxEmitter::BoxEmitter(std::weak_ptr<ParticleSystemContainer> parent, const variant& node) 
-			: Emitter(parent, node, EmitterType::BOX), 
-			  box_dimensions_(1.0f) 
+		BoxEmitter::BoxEmitter(std::weak_ptr<ParticleSystemContainer> parent, const variant& node)
+			: Emitter(parent, node, EmitterType::BOX),
+			  box_dimensions_(1.0f)
 		{
 			if(node.has_key("box_width")) {
 				box_dimensions_.x = node["box_width"].as_float();
@@ -763,14 +763,14 @@ namespace KRE
 			}
 		}
 
-		void BoxEmitter::internalCreate(Particle& p, float t) 
+		void BoxEmitter::internalCreate(Particle& p, float t)
 		{
 			p.initial.position.x += get_random_float(0.0f, box_dimensions_.x) - box_dimensions_.x/2;
 			p.initial.position.y += get_random_float(0.0f, box_dimensions_.y) - box_dimensions_.y/2;
 			p.initial.position.z += get_random_float(0.0f, box_dimensions_.z) - box_dimensions_.z/2;
 		}
 
-		void BoxEmitter::handleWrite(variant_builder* build) const 
+		void BoxEmitter::handleWrite(variant_builder* build) const
 		{
 			Emitter::writeInternal(build);
 			if(box_dimensions_.x != 1.0f) {
@@ -785,21 +785,21 @@ namespace KRE
 		}
 
 
-		LineEmitter::LineEmitter(std::weak_ptr<ParticleSystemContainer> parent) 
-			: Emitter(parent, EmitterType::LINE), 
-			  line_end_(0.0f), 
+		LineEmitter::LineEmitter(std::weak_ptr<ParticleSystemContainer> parent)
+			: Emitter(parent, EmitterType::LINE),
+			  line_end_(0.0f),
 			  line_deviation_(0.0f),
-			  min_increment_(0.0f), 
-			  max_increment_(0.0f) 
+			  min_increment_(0.0f),
+			  max_increment_(0.0f)
 		{
 		}
 
-		LineEmitter::LineEmitter(std::weak_ptr<ParticleSystemContainer> parent, const variant& node) 
-			: Emitter(parent, node, EmitterType::LINE), 
-			  line_end_(0.0f), 
+		LineEmitter::LineEmitter(std::weak_ptr<ParticleSystemContainer> parent, const variant& node)
+			: Emitter(parent, node, EmitterType::LINE),
+			  line_end_(0.0f),
 			  line_deviation_(0.0f),
-			  min_increment_(0.0f), 
-			  max_increment_(0.0f) 
+			  min_increment_(0.0f),
+			  max_increment_(0.0f)
 		{
 			if(node.has_key("max_deviation")) {
 				line_deviation_ = node["max_deviation"].as_float();
@@ -818,7 +818,7 @@ namespace KRE
 			// XXX todo
 		}
 
-		void LineEmitter::handleWrite(variant_builder* build) const 
+		void LineEmitter::handleWrite(variant_builder* build) const
 		{
 			Emitter::writeInternal(build);
 			if(line_deviation_!= 0.0f) {
@@ -836,37 +836,37 @@ namespace KRE
 		}
 
 
-		PointEmitter::PointEmitter(std::weak_ptr<ParticleSystemContainer> parent) 
-			: Emitter(parent, EmitterType::POINT) 
+		PointEmitter::PointEmitter(std::weak_ptr<ParticleSystemContainer> parent)
+			: Emitter(parent, EmitterType::POINT)
 		{
 		}
 
-		PointEmitter::PointEmitter(std::weak_ptr<ParticleSystemContainer> parent, const variant& node) 
-			: Emitter(parent, node, EmitterType::POINT) 
+		PointEmitter::PointEmitter(std::weak_ptr<ParticleSystemContainer> parent, const variant& node)
+			: Emitter(parent, node, EmitterType::POINT)
 		{
 		}
 
-		void PointEmitter::internalCreate(Particle& p, float t) 
+		void PointEmitter::internalCreate(Particle& p, float t)
 		{
 			// intentionally does nothing.
 		}
 
-		void PointEmitter::handleWrite(variant_builder* build) const 
+		void PointEmitter::handleWrite(variant_builder* build) const
 		{
 			Emitter::writeInternal(build);
 			// no extra parameters.
 		}
 
 
-		SphereSurfaceEmitter::SphereSurfaceEmitter(std::weak_ptr<ParticleSystemContainer> parent) 
-			: Emitter(parent, EmitterType::SPHERE_SURFACE), 
-			  radius_(new Parameter(1.0f)) 
+		SphereSurfaceEmitter::SphereSurfaceEmitter(std::weak_ptr<ParticleSystemContainer> parent)
+			: Emitter(parent, EmitterType::SPHERE_SURFACE),
+			  radius_(new Parameter(1.0f))
 		{
 		}
 
-		SphereSurfaceEmitter::SphereSurfaceEmitter(std::weak_ptr<ParticleSystemContainer> parent, const variant& node) 
-			: Emitter(parent, node, EmitterType::SPHERE_SURFACE), 
-			  radius_(nullptr) 
+		SphereSurfaceEmitter::SphereSurfaceEmitter(std::weak_ptr<ParticleSystemContainer> parent, const variant& node)
+			: Emitter(parent, node, EmitterType::SPHERE_SURFACE),
+			  radius_(nullptr)
 		{
 			if(node.has_key("radius")) {
 				radius_ = Parameter::factory(node["radius"]);
@@ -875,7 +875,7 @@ namespace KRE
 			}
 		}
 
-		void SphereSurfaceEmitter::internalCreate(Particle& p, float t) 
+		void SphereSurfaceEmitter::internalCreate(Particle& p, float t)
 		{
 			float theta = get_random_float(0, 2.0f * static_cast<float>(M_PI));
 			float phi = acos(get_random_float(-1.0f, 1.0f));
@@ -885,7 +885,7 @@ namespace KRE
 			p.initial.position.z += r * cos(phi);
 		}
 
-		void SphereSurfaceEmitter::handleWrite(variant_builder* build) const 
+		void SphereSurfaceEmitter::handleWrite(variant_builder* build) const
 		{
 			Emitter::writeInternal(build);
 			if(radius_ != nullptr/* && radius_->getType() != ParameterType::FIXED && radius_->getValue() != 1.0f*/) {

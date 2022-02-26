@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -54,9 +54,9 @@ namespace KRE
 		class path_cmd_context
 		{
 		public:
-			path_cmd_context(cairo_t* cairo) 
-				: cairo_(cairo), 
-				cp1x_(0), 
+			path_cmd_context(cairo_t* cairo)
+				: cairo_(cairo),
+				cp1x_(0),
 				cp1y_(0),
 				control_point_set_(false) {
 			}

@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -53,7 +53,7 @@
 
 namespace debug_console
 {
-	namespace 
+	namespace
 	{
 		int g_executing_debug_console;
 
@@ -156,11 +156,11 @@ namespace debug_console
 		canvas->drawSolidRect(graph_area, KRE::Color(255, 255, 255, 64));
 
 		canvas->drawSolidRect(rect(graph_area.x(), graph_area.y(), graph_area.w(), 2), KRE::Color::colorWhite());
-		canvas->blitTexture(KRE::Font::getInstance()->renderText(formatter() << max_value.as_int(), KRE::Color::colorWhite(), 14, false), 
+		canvas->blitTexture(KRE::Font::getInstance()->renderText(formatter() << max_value.as_int(), KRE::Color::colorWhite(), 14, false),
 			0, rect(graph_area.x2() + 4, graph_area.y()));
 
 		canvas->drawSolidRect(rect(graph_area.x(), graph_area.y2(), graph_area.w(), 2), KRE::Color::colorWhite());
-		canvas->blitTexture(KRE::Font::getInstance()->renderText(formatter() << min_value.as_int(), KRE::Color::colorWhite(), 14, false), 
+		canvas->blitTexture(KRE::Font::getInstance()->renderText(formatter() << min_value.as_int(), KRE::Color::colorWhite(), 14, false),
 			0, rect(graph_area.x2() + 4, graph_area.y2() - 12));
 
 		KRE::Color GraphColors[] = {
@@ -223,7 +223,7 @@ namespace debug_console
 		}
 	}
 
-	namespace 
+	namespace
 	{
 		static bool screen_output_enabled = true;
 
@@ -297,7 +297,7 @@ namespace debug_console
 		}
 	}
 
-	namespace 
+	namespace
 	{
 		std::string console_history_path()
 		{

@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -115,7 +115,7 @@ public:
 			return parallax_scale_millis_->second;
 		}
 	}
-	
+
 	virtual int velocityX() const override;
 	virtual int velocityY() const override;
 	virtual int mass() const override { return type_->mass(); }
@@ -218,7 +218,7 @@ public:
 	virtual bool serializable() const override;
 
 	void setSoundVolume(float volume, float nseconds=0.0) override;
-	
+
 	bool executeCommand(const variant& var) override;
 	bool executeCommandOrFn(const variant& var);
 
@@ -400,7 +400,7 @@ private:
 		const int ydiff = current_y - y();
 		setPos(x(), new_mid_y - ydiff);
     }
-    
+
 	std::unique_ptr<std::pair<int, int>> parallax_scale_millis_;
 
 	int hitpoints_, max_hitpoints_;
@@ -411,7 +411,7 @@ private:
 	int invincible_;
 
 	bool use_absolute_screen_coordinates_;
-	
+
 	float sound_volume_;
 
 	game_logic::ConstFormulaPtr next_animation_formula_;
@@ -477,15 +477,15 @@ private:
 
 	std::shared_ptr<decimal> draw_scale_;
 	decimal getDrawScale() const override { return getValueBySlot(CUSTOM_OBJECT_SCALE).as_decimal(); };
-	
+
 	void setDrawScale(float new_scale) override {
 		setValueBySlot(CUSTOM_OBJECT_SCALE, variant(new_scale));
 	}
-	
+
 	std::shared_ptr<rect> draw_area_, activation_area_, clip_area_;
 	bool clip_area_absolute_;
 	int activation_border_;
-	
+
 	bool can_interact_with_;
 
 	std::map<std::string, ParticleSystemPtr> particle_systems_;

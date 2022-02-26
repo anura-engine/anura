@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -102,7 +102,7 @@ namespace KRE
 	{
 		SceneObjectRegistrar(const std::string& type)
 		{
-			// register the class factory function 
+			// register the class factory function
 			SceneNode::registerObjectType(type, [](const std::string& type) -> std::shared_ptr<T> { return std::make_shared<T>(type); });
 		}
 	};

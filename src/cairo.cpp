@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -72,9 +72,9 @@ variant get_default_texture_settings()
 
 namespace graphics
 {
-	namespace 
+	namespace
 	{
-		struct TextFragment 
+		struct TextFragment
 		{
 			float xpos, ypos, width, height, x_advance, y_bearing;
 			std::string font;
@@ -93,7 +93,7 @@ namespace graphics
 			const rect* img_src_area;
 		};
 
-		struct LineOfText 
+		struct LineOfText
 		{
 			LineOfText() : fragment_width(0.0) {}
 			float fragment_width;
@@ -228,7 +228,7 @@ namespace {
 			return g_surface_cache.has(image);
 		}
 
-		cairo_context& dummy_context() 
+		cairo_context& dummy_context()
 		{
 			static cairo_context* res = new cairo_context(8, 8);
 			return *res;
@@ -260,8 +260,8 @@ namespace {
 	}
 
 	cairo_context::cairo_context(int w, int h)
-	  : width_((w+1) & ~1), 
-	    height_((h+1) & ~1), 
+	  : width_((w+1) & ~1),
+	    height_((h+1) & ~1),
 		temp_pattern_(nullptr)
 	{
 		surface_ = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width_, height_);
@@ -328,7 +328,7 @@ namespace {
 		//tex->update2D(0, 0, 0, width_, height_, cairo_image_surface_get_stride(surface_), cairo_image_surface_get_data(surface_));
 		// Use the blend mode below to give correct for pre-multiplied alpha.
 		// If that doesn't work satisfactorily, then creating a texture with PIXELFORMAT_XRGB8888
-		// might be a better option. 
+		// might be a better option.
 		// Naturally if you had the luxury a shader that just ignored the texture alpha would work
 		// just as well.
 		//return tex;
@@ -354,7 +354,7 @@ namespace {
 			std::string real_fname = module::map_file(fname);
 			ASSERT_LOG(sys::file_exists(real_fname), "Could not find svg file: " << fname);
 
-			handle = std::shared_ptr<KRE::SVG::parse>(new KRE::SVG::parse(real_fname));		
+			handle = std::shared_ptr<KRE::SVG::parse>(new KRE::SVG::parse(real_fname));
 			cache[fname] = handle;
 		} else {
 			handle = itor->second;
@@ -363,7 +363,7 @@ namespace {
 
 		KRE::SVG::render_context ctx(cairo_, w, h);
 
-		
+
 		double red = 0, green = 0, blue = 0, alpha = 0;
 		status = cairo_pattern_get_rgba(cairo_get_source(cairo_), &red, &green, &blue, &alpha);
 		if(status == CAIRO_STATUS_SUCCESS) {
@@ -378,7 +378,7 @@ namespace {
 		ASSERT_LOG(status == 0, "SVG rendering error rendering " << w << "x" << h << ": " << fname << ": " << cairo_status_to_string(status));
 	}
 
-	void cairo_context::write_png(const std::string& fname) 
+	void cairo_context::write_png(const std::string& fname)
 	{
 		cairo_surface_write_to_png(surface_, fname.c_str());
 	}
@@ -433,7 +433,7 @@ namespace {
 		bool isCairoOp() const override { return true; }
 	private:
 		DECLARE_CALLABLE(cairo_op);
-	
+
 		CairoOp fn_;
 		std::vector<variant> args_;
 	};
@@ -672,10 +672,10 @@ namespace {
 		END_DEFINE_FN
 	END_DEFINE_CALLABLE(cairo_text_fragment)
 
-	struct MarkupEntry 
+	struct MarkupEntry
 	{
 		const char* tag;
-		char32_t codepoint; 
+		char32_t codepoint;
 	};
 
 	MarkupEntry MarkupMap[] = {
@@ -826,7 +826,7 @@ namespace {
 	DEFINE_FIELD(finished, "bool")
 		return variant::from_bool(obj.finished());
 	DEFINE_FIELD(texture, "builtin texture_object")
-		
+
 		return variant(obj.result().get());
 	END_DEFINE_CALLABLE(TextureObjectFuture)
 
@@ -870,7 +870,7 @@ namespace {
 				cairo_set_font_size(context.get(), font_size);
 
 				cairo_font_extents(context.get(), &font_extents);
-	
+
 				if(font_extents.height > line_height) {
 					line_height = static_cast<float>(font_extents.height);
 				}
@@ -1071,7 +1071,7 @@ namespace {
 					} else if(img.empty() == false) {
 						xpos += static_cast<float>(img_w);
 					}
-				
+
 					svg = "";
 					img = "";
 
@@ -1092,7 +1092,7 @@ namespace {
 
 		for(const LineOfText& line : output) {
 
-			//calculate the baseline. 
+			//calculate the baseline.
 			float line_height = 0.0;
 			float max_ascent = 0.0;
 			float max_descent = 0.0;
@@ -1465,7 +1465,7 @@ namespace {
 			h = 2;
 		}
 
-		return variant(new TextureObjectFuture(w, h, FN_ARG(2), NUM_FN_ARGS > 3 ? FN_ARG(3) : variant())); 
+		return variant(new TextureObjectFuture(w, h, FN_ARG(2), NUM_FN_ARGS > 3 ? FN_ARG(3) : variant()));
 
 	END_DEFINE_FN
 
@@ -1585,7 +1585,7 @@ namespace {
 		} else if(s == "square") {
 			cap = CAIRO_LINE_CAP_SQUARE;
 		}
-		
+
 		cairo_set_line_cap(context.get(), cap);
 
 	END_CAIRO_FN
@@ -1691,7 +1691,7 @@ namespace {
 					 itor = std::find(text.begin(), text.end(), '&')) {
 				auto end_itor = std::find(itor, text.end(), ';');
 				ASSERT_LOG(end_itor != text.end(), "Could not find end of & in ((" << args[0].as_string() << ")) -- & at ((" << std::string(itor, text.end()) << "))");
-	
+
 				if(text.begin() != itor) {
 					lines.back().push_back(std::string(text.begin(), itor));
 				}
@@ -1703,7 +1703,7 @@ namespace {
 			if(!text.empty()) {
 				lines.back().push_back(text);
 			}
-	
+
 			for(;;) {
 				std::vector<float> lengths;
 				float total_length = 0.0;
@@ -2070,7 +2070,7 @@ namespace {
 			if(params["scale"].is_decimal()) {
 				scale = params["scale"].as_float();
 			}
-			
+
 			if(params["scale_line_heights"].is_decimal()) {
 				scale_line_heights = params["scale_line_heights"].as_float();
 			}
@@ -2156,7 +2156,7 @@ namespace {
 			if(items.count(AlignStr)) {
 				fragment.align = items.find(AlignStr)->second;
 			}
-		
+
 			if(items.count(VAlignStr)) {
 				fragment.valign = items.find(VAlignStr)->second;
 			}
@@ -2267,7 +2267,7 @@ namespace {
 		return variant(str);
 	END_DEFINE_CALLABLE(cairo_callable)
 
-	namespace 
+	namespace
 	{
 		std::string fix_svg_path(const std::string& path)
 		{
@@ -2390,7 +2390,7 @@ namespace {
 	}
 }
 
-namespace 
+namespace
 {
 	void handle_node(const boost::property_tree::ptree& ptree, int depth)
 	{

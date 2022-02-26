@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -49,8 +49,8 @@ namespace gui
 		: Widget(v,e)
 	{
 		width_ = v.has_key("width") ? v["width"].as_int() : 1.0f;
-		color_ = v.has_key("color") 
-			? KRE::Color(v["color"]) 
+		color_ = v.has_key("color")
+			? KRE::Color(v["color"])
 			: KRE::Color::colorWhite();
 		if(v.has_key("points")) {
 			for(const variant& pp : v["points"].as_list()) {
@@ -59,7 +59,7 @@ namespace gui
 			calcCoords();
 		}
 	}
-	
+
 	PolyLineWidget::~PolyLineWidget()
 	{
 	}
@@ -122,16 +122,16 @@ namespace gui
 			return variant(&v);
 		DEFINE_SET_FIELD
 			obj.points_.clear();
-			for(const variant& pp : value.as_list()) {				
+			for(const variant& pp : value.as_list()) {
 				obj.points_.emplace_back(pp[0].as_float(), pp[1].as_float());
 			}
 			obj.calcCoords();
-		
+
 		DEFINE_FIELD(width, "decimal")
 			return variant(obj.width_);
 		DEFINE_SET_FIELD_TYPE("int|decimal")
 			obj.width_ = value.as_float();
-		
+
 		DEFINE_FIELD(color, "[int,int,int,int]")
 			return obj.color_.write();
 		DEFINE_SET_FIELD_TYPE("[int,int,int]|[int,int,int,int]|string") // Can also me a map

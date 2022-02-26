@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -26,7 +26,7 @@
 
 #include "to_roman.hpp"
 
-namespace 
+namespace
 {
 	std::vector<std::pair<int, std::string>>& get_roman_numerals()
 	{
@@ -56,7 +56,7 @@ std::string to_roman(int n, bool lower)
 	std::string res;
 	for(auto& roman : get_roman_numerals()) {
 		while(n >= roman.first) {
-			
+
 			n -= roman.first;
 			res += roman.second;
 		}

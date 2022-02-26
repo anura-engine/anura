@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -27,13 +27,13 @@
 
 #pragma GCC diagnostic ignored "-Wchar-subscripts"
 
-namespace base64 
+namespace base64
 {
-	namespace 
+	namespace
 	{
-		static const char _base64chars[] = 
+		static const char _base64chars[] =
 			"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-		static const unsigned char _base64inv[] = 
+		static const unsigned char _base64inv[] =
 			"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
 			"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
 			"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00>\x00\x00\x00?456789:"
@@ -42,7 +42,7 @@ namespace base64
 			"\x18\x19\x00\x00\x00\x00\x00\x00\x1a\x1b\x1c\x1d\x1e\x1f !\"#$%&'"
 			"()*+,-./0123";
 
-		/*! Calculates the amount of buffer space required to encode a string 
+		/*! Calculates the amount of buffer space required to encode a string
 			of length n.
 			\param n Number of characters to be encoded.
 			\return Amount of buffer space required to encode the number of
@@ -101,7 +101,7 @@ namespace base64
 		return dest;
 	}
 
-	/*! \brief Calculate a quick estimate of the amount of bytes required to 
+	/*! \brief Calculate a quick estimate of the amount of bytes required to
 		store the decoded base64 data.  This is only an estimate as it assumes
 		that there are no ignore characters in the data stream.
 		\param n Number of encoded base64 characters.
@@ -130,7 +130,7 @@ namespace base64
 		\param out Pointer to place the 3 plaintext characters.
 	*/
 	static void decodeblock(const char* in, std::vector<char>::iterator& out) {
-		unsigned long nn = (_base64inv[in[0]] << 18) | (_base64inv[in[1]] << 12) 
+		unsigned long nn = (_base64inv[in[0]] << 18) | (_base64inv[in[1]] << 12)
 			| (_base64inv[in[2]] << 6) | (_base64inv[in[3]]);
 		*out++ = (char)(nn >> 16);
 		*out++ = (char)(nn >> 8);
@@ -138,7 +138,7 @@ namespace base64
 	}
 
 	/*! \brief Decode a block of base64 encoded data.
-		\param data Base64 encoded block of data.  Data may contain 
+		\param data Base64 encoded block of data.  Data may contain
 			other characters such as line-terminators and whitespace.
 		\return A block of unencoded data, if unencoding was possible.
 	*/
@@ -187,7 +187,7 @@ UNIT_TEST(base64_encode_bin) {
 	for(int i = 0; i < 256; i++) {
 		in.push_back(i);
 	}
-	std::string ress = 
+	std::string ress =
 		"AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4v\n"
 		"MDEyMzQ1Njc4OTo7PD0+P0BBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWltcXV5f\n"
 		"YGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6e3x9fn+AgYKDhIWGh4iJiouMjY6P\n"

@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -183,8 +183,8 @@ namespace xhtml
 		}
 		// remove any transitions that have stopped.
 		// XXX move to a temporary holding list?
-		transitions_.erase(std::remove_if(transitions_.begin(), transitions_.end(), [](TransitionPtr tx){ 
-			return tx->isStopped(); 
+		transitions_.erase(std::remove_if(transitions_.begin(), transitions_.end(), [](TransitionPtr tx){
+			return tx->isStopped();
 		}), transitions_.end());
 
 		for(auto& child : children_) {
@@ -253,7 +253,7 @@ namespace xhtml
 				if(!wt->isEqual()) {
 					LOG_INFO("create length transition: " << (wt->getStartWidth()/65536) << " to " << (wt->getEndWidth()/65536));
 					addTransitionEffect(wt);
-					// XXXwidth = wt->getWidth();					
+					// XXXwidth = wt->getWidth();
 				}
 			}
 		} else {*/
@@ -304,9 +304,9 @@ namespace xhtml
 
 		background_attachment_style_ = ctx.getComputedValue(Property::BACKGROUND_ATTACHMENT);
 		background_attachment_ = background_attachment_style_->getEnum<BackgroundAttachment>();
-		
+
 		processColor(created, Property::BACKGROUND_COLOR, background_color_);
-		
+
 		auto back_img = ctx.getComputedValue(Property::BACKGROUND_IMAGE);
 		background_image_ = back_img != nullptr ? back_img->asType<ImageSource>() : nullptr;
 		background_position_style_ = ctx.getComputedValue(Property::BACKGROUND_POSITION);
@@ -372,9 +372,9 @@ namespace xhtml
 		minmax_height_[1] = ctx.getComputedValue(Property::MAX_HEIGHT)->asType<Width>();
 		minmax_width_[0] = ctx.getComputedValue(Property::MIN_WIDTH)->asType<Width>();
 		minmax_width_[1] = ctx.getComputedValue(Property::MAX_WIDTH)->asType<Width>();
-		
+
 		processColor(created, Property::OUTLINE_COLOR, outline_color_);
-		
+
 		outline_style_style_ = ctx.getComputedValue(Property::OUTLINE_STYLE);
 		outline_style_ = outline_style_style_->getEnum<BorderStyle>();
 		outline_width_ = ctx.getComputedValue(Property::OUTLINE_WIDTH)->asType<Length>();
@@ -645,7 +645,7 @@ namespace xhtml
 			case Property::CAPTION_SIDE:
 			case Property::BORDER_COLLAPSE:
 				break;
-			default: 
+			default:
 				ASSERT_LOG(false, "Unrecognised property value: " << static_cast<int>(p));
 				break;
 		}
@@ -665,52 +665,52 @@ namespace xhtml
 
 	void StyleNode::inheritProperties(const StyleNodePtr& new_styles)
 	{
-		background_attachment_ = new_styles->background_attachment_; 
-		background_color_ = new_styles->background_color_; 
-		background_image_ = new_styles->background_image_; 
-		background_position_ = new_styles->background_position_; 
-		background_repeat_ = new_styles->background_repeat_; 
-		border_color_ = new_styles->border_color_; 
-		border_style_ = new_styles->border_style_; 
-		border_width_ = new_styles->border_width_; 
-		tlbr_ = new_styles->tlbr_; 
-		clear_ = new_styles->clear_; 
-		clip_ = new_styles->clip_; 
-		color_ = new_styles->color_; 
-		content_ = new_styles->content_; 
-		counter_increment_ = new_styles->counter_increment_; 
-		counter_reset_ = new_styles->counter_reset_; 
-		cursor_ = new_styles->cursor_; 
-		direction_ = new_styles->direction_; 
-		display_ = new_styles->display_; 
-		float_ = new_styles->float_; 
-		font_handle_ = new_styles->font_handle_; 
-		width_height_ = new_styles->width_height_; 
-		letter_spacing_ = new_styles->letter_spacing_; 
-		line_height_ = new_styles->line_height_; 
-		list_style_image_ = new_styles->list_style_image_; 
-		list_style_position_ = new_styles->list_style_position_; 
-		list_style_type_ = new_styles->list_style_type_; 
-		margin_ = new_styles->margin_; 
-		minmax_height_ = new_styles->minmax_height_; 
-		minmax_width_ = new_styles->minmax_width_; 
-		outline_color_ = new_styles->outline_color_; 
-		outline_style_ = new_styles->outline_style_; 
-		outline_width_ = new_styles->outline_width_; 
-		overflow_ = new_styles->overflow_; 
-		padding_ = new_styles->padding_; 
-		position_ = new_styles->position_; 
-		quotes_ = new_styles->quotes_; 
-		text_align_ = new_styles->text_align_; 
-		text_decoration_ = new_styles->text_decoration_; 
-		text_indent_ = new_styles->text_indent_; 
-		text_transform_ = new_styles->text_transform_; 
-		unicode_bidi_ = new_styles->unicode_bidi_; 
-		vertical_align_ = new_styles->vertical_align_; 
-		visibility_ = new_styles->visibility_; 
-		white_space_ = new_styles->white_space_; 
-		word_spacing_ = new_styles->word_spacing_; 
-		zindex_ = new_styles->zindex_; 
+		background_attachment_ = new_styles->background_attachment_;
+		background_color_ = new_styles->background_color_;
+		background_image_ = new_styles->background_image_;
+		background_position_ = new_styles->background_position_;
+		background_repeat_ = new_styles->background_repeat_;
+		border_color_ = new_styles->border_color_;
+		border_style_ = new_styles->border_style_;
+		border_width_ = new_styles->border_width_;
+		tlbr_ = new_styles->tlbr_;
+		clear_ = new_styles->clear_;
+		clip_ = new_styles->clip_;
+		color_ = new_styles->color_;
+		content_ = new_styles->content_;
+		counter_increment_ = new_styles->counter_increment_;
+		counter_reset_ = new_styles->counter_reset_;
+		cursor_ = new_styles->cursor_;
+		direction_ = new_styles->direction_;
+		display_ = new_styles->display_;
+		float_ = new_styles->float_;
+		font_handle_ = new_styles->font_handle_;
+		width_height_ = new_styles->width_height_;
+		letter_spacing_ = new_styles->letter_spacing_;
+		line_height_ = new_styles->line_height_;
+		list_style_image_ = new_styles->list_style_image_;
+		list_style_position_ = new_styles->list_style_position_;
+		list_style_type_ = new_styles->list_style_type_;
+		margin_ = new_styles->margin_;
+		minmax_height_ = new_styles->minmax_height_;
+		minmax_width_ = new_styles->minmax_width_;
+		outline_color_ = new_styles->outline_color_;
+		outline_style_ = new_styles->outline_style_;
+		outline_width_ = new_styles->outline_width_;
+		overflow_ = new_styles->overflow_;
+		padding_ = new_styles->padding_;
+		position_ = new_styles->position_;
+		quotes_ = new_styles->quotes_;
+		text_align_ = new_styles->text_align_;
+		text_decoration_ = new_styles->text_decoration_;
+		text_indent_ = new_styles->text_indent_;
+		text_transform_ = new_styles->text_transform_;
+		unicode_bidi_ = new_styles->unicode_bidi_;
+		vertical_align_ = new_styles->vertical_align_;
+		visibility_ = new_styles->visibility_;
+		white_space_ = new_styles->white_space_;
+		word_spacing_ = new_styles->word_spacing_;
+		zindex_ = new_styles->zindex_;
 		//BORDER_COLLAPSE
 		//CAPTION_SIDE
 		//EMPTY_CELLS
@@ -718,21 +718,21 @@ namespace xhtml
 		//TABLE_LAYOUT
 		//WIDOWS
 		//BORDER_SPACING
-		box_shadow_ = new_styles->box_shadow_; 
-		//text_shadow_ = new_styles->text_shadow_; 
-		transition_properties_ = new_styles->transition_properties_; 
-		transition_duration_ = new_styles->transition_duration_; 
-		transition_timing_function_ = new_styles->transition_timing_function_; 
-		transition_delay_ = new_styles->transition_delay_; 
-		border_radius_ = new_styles->border_radius_; 
-		opacity_ = new_styles->opacity_; 
-		border_image_ = new_styles->border_image_; 
-		border_image_fill_ = new_styles->border_image_fill_; 
-		border_image_slice_ = new_styles->border_image_slice_; 
-		border_image_width_ = new_styles->border_image_width_; 
-		border_image_outset_ = new_styles->border_image_outset_; 
-		border_image_repeat_horiz_ = new_styles->border_image_repeat_horiz_; 
-		border_image_repeat_vert_ = new_styles->border_image_repeat_vert_; 
+		box_shadow_ = new_styles->box_shadow_;
+		//text_shadow_ = new_styles->text_shadow_;
+		transition_properties_ = new_styles->transition_properties_;
+		transition_duration_ = new_styles->transition_duration_;
+		transition_timing_function_ = new_styles->transition_timing_function_;
+		transition_delay_ = new_styles->transition_delay_;
+		border_radius_ = new_styles->border_radius_;
+		opacity_ = new_styles->opacity_;
+		border_image_ = new_styles->border_image_;
+		border_image_fill_ = new_styles->border_image_fill_;
+		border_image_slice_ = new_styles->border_image_slice_;
+		border_image_width_ = new_styles->border_image_width_;
+		border_image_outset_ = new_styles->border_image_outset_;
+		border_image_repeat_horiz_ = new_styles->border_image_repeat_horiz_;
+		border_image_repeat_vert_ = new_styles->border_image_repeat_vert_;
 		background_clip_ = new_styles->background_clip_;
 		filters_ = new_styles->filters_;
 	}

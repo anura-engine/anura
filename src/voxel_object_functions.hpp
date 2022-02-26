@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -34,7 +34,7 @@
 #include "user_voxel_object.hpp"
 #include "variant.hpp"
 
-namespace voxel 
+namespace voxel
 {
 	class voxel_object;
 	class world;
@@ -44,7 +44,7 @@ using game_logic::FunctionSymbolTable;
 FunctionSymbolTable& get_voxel_object_functions_symbol_table();
 void init_voxel_object_functions(variant node);
 
-class voxel_object_command_callable : public game_logic::FormulaCallable 
+class voxel_object_command_callable : public game_logic::FormulaCallable
 {
 public:
 	voxel_object_command_callable() : expr_(nullptr) {}

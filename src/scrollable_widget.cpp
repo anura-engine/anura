@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -23,23 +23,23 @@
 
 #include "scrollable_widget.hpp"
 
-namespace gui 
+namespace gui
 {
-	ScrollableWidget::ScrollableWidget() 
-		: yscroll_(0), 
-		  virtual_height_(0), 
-		  step_(0), 
-		  arrow_step_(0), 
+	ScrollableWidget::ScrollableWidget()
+		: yscroll_(0),
+		  virtual_height_(0),
+		  step_(0),
+		  arrow_step_(0),
 		  auto_scroll_bottom_(false)
 	{
 		setEnvironment();
 	}
 
 	ScrollableWidget::ScrollableWidget(const variant& v, game_logic::FormulaCallable* e)
-		: Widget(v,e), 
-		  yscroll_(0), 
-		  virtual_height_(0), 
-		  step_(0), 
+		: Widget(v,e),
+		  yscroll_(0),
+		  virtual_height_(0),
+		  step_(0),
 		  arrow_step_(0),
 		  auto_scroll_bottom_(v["auto_scroll_bottom"].as_bool())
 	{

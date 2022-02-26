@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -44,10 +44,10 @@ namespace KRE
 	//    misrepresented as being the original software.
 	// 3. This notice may not be removed or altered from any source distribution.
 	//
-	
+
 	// Based on Exponential blur, Jani Huhtanen, 2006
-	
-	namespace 
+
+	namespace
 	{
 		#define APREC 16
 		#define ZPREC 7
@@ -103,7 +103,7 @@ namespace KRE
 		const float sigma = blur * 0.57735f; // 1 / sqrt(3)
 		const int alpha = static_cast<int>((1<<APREC) * (1.0f - expf(-2.3f / (sigma+1.0f))));
 		uint8_t* dst = reinterpret_cast<uint8_t*>(pixels);
-		
+
 		blur_rows(dst, w, h, stride, alpha, 0, 1);
 		blur_cols(dst, w, h, stride, alpha, 0, 1);
 		blur_rows(dst, w, h, stride, alpha, 0, 1);
@@ -124,7 +124,7 @@ namespace KRE
 		const int alpha_offset = surface->getPixelFormat()->getAlphaShift() / 8;
 		const int Bpp = surface->getPixelFormat()->bytesPerPixel();
 		uint8_t* dst = reinterpret_cast<uint8_t*>(surface->pixelsWriteable());
-		
+
 		blur_rows(dst, w, h, stride, alpha, alpha_offset, Bpp);
 		blur_cols(dst, w, h, stride, alpha, alpha_offset, Bpp);
 		blur_rows(dst, w, h, stride, alpha, alpha_offset, Bpp);

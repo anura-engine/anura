@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -52,7 +52,7 @@ namespace xhtml
 
 	struct url_handler_registrar
 	{
-		explicit url_handler_registrar(const std::string& protocol, url_handler::protocol_creator_fn creator_fn) 
+		explicit url_handler_registrar(const std::string& protocol, url_handler::protocol_creator_fn creator_fn)
 		{
 			url_handler::registerHandler(protocol, creator_fn);
 		}

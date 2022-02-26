@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -33,7 +33,7 @@
 #include "string_utils.hpp"
 #include "variant.hpp"
 
-namespace 
+namespace
 {
 	std::map<std::string, AchievementPtr> cache;
 }
@@ -49,7 +49,7 @@ AchievementPtr Achievement::get(const std::string& id)
 			return AchievementPtr();
 		}
 
-		
+
 		for(variant Achievement_node : node["achievement"].as_list()) {
 			AchievementPtr a(new Achievement(Achievement_node));
 			cache[a->id()] = a;
@@ -66,7 +66,7 @@ Achievement::Achievement(variant node)
 {
 }
 
-namespace 
+namespace
 {
 	std::vector<std::string>* achievements = nullptr;
 }
@@ -85,7 +85,7 @@ bool Achievement::attain(const std::string& id)
 	if(std::binary_search(achievements->begin(), achievements->end(), id)) {
 		return false;
 	}
-	
+
 	achievements->push_back(id);
 	std::sort(achievements->begin(), achievements->end());
 

@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -32,9 +32,9 @@
 #include "load_level.hpp"
 #include "widget.hpp"
 
-namespace 
+namespace
 {
-	void do_select_level(gui::Dialog* d, const std::vector<std::string>& levels, int index, std::string* result) 
+	void do_select_level(gui::Dialog* d, const std::vector<std::string>& levels, int index, std::string* result)
 	{
 		if(index >= 0 && static_cast<unsigned>(index) < levels.size()) {
 			d->close();

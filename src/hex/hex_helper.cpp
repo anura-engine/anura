@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2016 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -75,7 +75,7 @@ namespace hex
 		return distance(x1, y1, z1, x2, y2, z2);
 	}
 
-	std::tuple<int,int,int> hex_round(float x, float y, float z) 
+	std::tuple<int,int,int> hex_round(float x, float y, float z)
 	{
 		int rx = static_cast<int>(std::round(x));
 		int ry = static_cast<int>(std::round(y));
@@ -227,7 +227,7 @@ namespace hex
 	{
 		return point(h.x, h.z + (h.x + (h.x&1)) / 2);
 	}
-	
+
 	point get_tile_pos_from_pixel_pos_evenq(const point& np, int HexTileSize)
 	{
 		// in an even-q layout the 0,0 tile is now no longer has a top-left pixel position of 0,0

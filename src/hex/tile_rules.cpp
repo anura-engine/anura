@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2016 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -32,7 +32,7 @@
 #include "random.hpp"
 #include "unit_test.hpp"
 
-namespace 
+namespace
 {
 	std::string rot_replace(const std::string& str, const std::vector<std::string>& rotations, int rot)
 	{
@@ -76,8 +76,8 @@ namespace
 			const int p_from_c_y = y_p - y_c;
 			const int p_from_c_z = z_p - z_c;
 
-			int r_from_c_x = p_from_c_x, 
-				r_from_c_y = p_from_c_y, 
+			int r_from_c_x = p_from_c_x,
+				r_from_c_y = p_from_c_y,
 				r_from_c_z = p_from_c_z;
 			for(int i = 0; i != n; ++i) {
 				const int x = r_from_c_x, y = r_from_c_y, z = r_from_c_z;
@@ -124,7 +124,7 @@ namespace
 		return true;
 	}
 
-	point add_hex_coord(const point& p1, const point& p2) 
+	point add_hex_coord(const point& p1, const point& p2)
 	{
 		int x_p1, y_p1, z_p1;
 		int x_p2, y_p2, z_p2;
@@ -152,7 +152,7 @@ namespace
         const int p_from_c_x = x_p - x_c;
         const int p_from_c_y = y_p - y_c;
         const int p_from_c_z = z_p - z_c;
-			
+
 		int x_r, y_r, z_r;
 		hex::evenq_to_cube_coords(to_center, &x_r, &y_r, &z_r);
 		return hex::cube_to_evenq_coords(x_r + p_from_c_x, y_r + p_from_c_y, z_r + p_from_c_z);
@@ -227,7 +227,7 @@ namespace hex
 		if(v.has_key("map")) {
 			map_ = v["map"].as_list_string();
 		}
-		
+
 		if(v.has_key("image")) {
 			const auto& img_v = v["image"];
 			if(img_v.is_list()) {
@@ -270,7 +270,7 @@ namespace hex
 			}
 			ss << "; ";
 		}
-	
+
 		return ss.str();
 	}
 
@@ -402,7 +402,7 @@ namespace hex
 			return true;
 		}
 
-		// Basically we should check these as part of initialisation and discard if the particular combination specified in the 
+		// Basically we should check these as part of initialisation and discard if the particular combination specified in the
 		// image tag isn't valid.
 		bool ret = false;
 		for(auto& td : tile_data_) {
@@ -505,7 +505,7 @@ namespace hex
             const int p_from_c_x = x_p - x_c;
             const int p_from_c_y = y_p - y_c;
             const int p_from_c_z = z_p - z_c;
-			
+
 			int x_r, y_r, z_r;
 			hex::evenq_to_cube_coords(to_center, &x_r, &y_r, &z_r);
 			p = hex::cube_to_evenq_coords(x_r + p_from_c_x, y_r + p_from_c_y, z_r + p_from_c_z);
@@ -535,7 +535,7 @@ namespace hex
 				}
 			}
 		}
-		
+
 		if(!set_flag_.empty()) {
 			no_comma = true;
 			ss << "; set:";
@@ -566,7 +566,7 @@ namespace hex
 				no_comma = false;
 			}
 		}
-		
+
 		no_comma = true;
 		ss << "; positions:";
 		for(auto& pos : position_) {
@@ -771,7 +771,7 @@ namespace hex
 		auto pos_a = image_name_.find("@A");
 
 		if(pos_a != std::string::npos) {
-			ASSERT_LOG(pos_v == std::string::npos && pos_r == std::string::npos, 
+			ASSERT_LOG(pos_v == std::string::npos && pos_r == std::string::npos,
 				"Found an animation string with @V or @R specifier which isn't valid. " << image_name_);
 			if(!animation_frames_.empty()) {
 				for(const auto& ani : animation_frames_) {

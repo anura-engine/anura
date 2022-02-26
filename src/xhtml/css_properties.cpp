@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -30,7 +30,7 @@
 
 namespace css
 {
-	namespace 
+	namespace
 	{
 		const int fixed_point_scale = 65536;
 
@@ -173,7 +173,7 @@ namespace css
 		};
 
 		using namespace std::placeholders;
-		
+
 		PropertyRegistrar property000("background-color", Property::BACKGROUND_COLOR, false, CssColor::create(CssColorParam::CSS_TRANSPARENT), std::bind(&PropertyParser::parseColor, _1, "background-color", ""));
 		PropertyRegistrar property001("color", Property::COLOR, true, CssColor::create(CssColorParam::VALUE), std::bind(&PropertyParser::parseColor, _1, "color", ""));
 		PropertyRegistrar property002("padding-left", Property::PADDING_LEFT, false, Length::create(0, false), std::bind(&PropertyParser::parseLength, _1, "padding-left", ""));
@@ -200,11 +200,11 @@ namespace css
 		PropertyRegistrar property023("border-left-style", Property::BORDER_LEFT_STYLE, false, Style::create<BorderStyle>(StyleId::BORDER_STYLE, BorderStyle::NONE), std::bind(&PropertyParser::parseBorderStyle, _1, "border-left-style", ""));
 		PropertyRegistrar property024("border-bottom-style", Property::BORDER_BOTTOM_STYLE, false, Style::create<BorderStyle>(StyleId::BORDER_STYLE, BorderStyle::NONE), std::bind(&PropertyParser::parseBorderStyle, _1, "border-bottom-style", ""));
 		PropertyRegistrar property025("border-right-style", Property::BORDER_RIGHT_STYLE, false, Style::create<BorderStyle>(StyleId::BORDER_STYLE, BorderStyle::NONE), std::bind(&PropertyParser::parseBorderStyle, _1, "border-right-style", ""));
-		PropertyRegistrar property026("display", Property::DISPLAY, false, Style::create<Display>(StyleId::DISPLAY, Display::INLINE), std::bind(&PropertyParser::parseDisplay, _1, "display", ""));	
-		PropertyRegistrar property027("width", Property::WIDTH, false, Width::create(true), std::bind(&PropertyParser::parseWidth, _1, "width", ""));	
+		PropertyRegistrar property026("display", Property::DISPLAY, false, Style::create<Display>(StyleId::DISPLAY, Display::INLINE), std::bind(&PropertyParser::parseDisplay, _1, "display", ""));
+		PropertyRegistrar property027("width", Property::WIDTH, false, Width::create(true), std::bind(&PropertyParser::parseWidth, _1, "width", ""));
 		PropertyRegistrar property028("height", Property::HEIGHT, false, Width::create(true), std::bind(&PropertyParser::parseWidth, _1, "height", ""));
-		PropertyRegistrar property029("white-space", Property::WHITE_SPACE, true, Style::create<Whitespace>(StyleId::WHITE_SPACE, Whitespace::NORMAL), std::bind(&PropertyParser::parseWhitespace, _1, "white-space", ""));	
-		PropertyRegistrar property030("font-family", Property::FONT_FAMILY, true, FontFamily::create(get_default_fonts()), std::bind(&PropertyParser::parseFontFamily, _1, "font-family", ""));	
+		PropertyRegistrar property029("white-space", Property::WHITE_SPACE, true, Style::create<Whitespace>(StyleId::WHITE_SPACE, Whitespace::NORMAL), std::bind(&PropertyParser::parseWhitespace, _1, "white-space", ""));
+		PropertyRegistrar property030("font-family", Property::FONT_FAMILY, true, FontFamily::create(get_default_fonts()), std::bind(&PropertyParser::parseFontFamily, _1, "font-family", ""));
 		PropertyRegistrar property031("font-size", Property::FONT_SIZE, true, FontSize::create(Length(default_font_size, LengthUnits::PT)), std::bind(&PropertyParser::parseFontSize, _1, "font-size", ""));
 		PropertyRegistrar property032("font-style", Property::FONT_STYLE, true, Style::create<FontStyle>(StyleId::FONT_STYLE, FontStyle::NORMAL), std::bind(&PropertyParser::parseFontStyle, _1, "font-style", ""));
 		PropertyRegistrar property033("font-variant", Property::FONT_VARIANT, true, Style::create<FontVariant>(StyleId::FONT_VARIANT, FontVariant::NORMAL), std::bind(&PropertyParser::parseFontVariant, _1, "font-variant", ""));
@@ -232,7 +232,7 @@ namespace css
 		PropertyRegistrar property055("outline", std::bind(&PropertyParser::parseBorder, _1, "outline", ""));
 		PropertyRegistrar property056("outline-width", Property::OUTLINE_WIDTH, false, Length::create(border_width_medium, LengthUnits::PX), std::bind(&PropertyParser::parseBorderWidth, _1, "outline-width", ""));
 		PropertyRegistrar property057("outline-style", Property::OUTLINE_STYLE, false, Style::create<BorderStyle>(StyleId::BORDER_STYLE, BorderStyle::NONE), std::bind(&PropertyParser::parseBorderStyle, _1, "outline-style", ""));
-		PropertyRegistrar property058("outline-color", Property::OUTLINE_COLOR, false, CssColor::create(CssColorParam::CURRENT), std::bind(&PropertyParser::parseColor, _1, "outline-color", ""));		
+		PropertyRegistrar property058("outline-color", Property::OUTLINE_COLOR, false, CssColor::create(CssColorParam::CURRENT), std::bind(&PropertyParser::parseColor, _1, "outline-color", ""));
 		PropertyRegistrar property059("background-attachment", Property::BACKGROUND_ATTACHMENT, false, Style::create<BackgroundAttachment>(StyleId::BACKGROUND_ATTACHMENT, BackgroundAttachment::FIXED), std::bind(&PropertyParser::parseBackgroundAttachment, _1, "background-attachment", ""));
 		PropertyRegistrar property060("clear", Property::CLEAR, false, Style::create<Clear>(StyleId::ClEAR, Clear::NONE), std::bind(&PropertyParser::parseClear, _1, "clear", ""));
 		PropertyRegistrar property061("clip", Property::CLIP, false, Clip::create(), std::bind(&PropertyParser::parseClip, _1, "clip", ""));
@@ -265,7 +265,7 @@ namespace css
 		PropertyRegistrar property213("border-image-outset", Property::BORDER_IMAGE_OUTSET, false, WidthList::create(0.0f), std::bind(&PropertyParser::parseWidthList2, _1, "border-image-outset", ""));
 		PropertyRegistrar property214("border-image-slice", Property::BORDER_IMAGE_SLICE, false, BorderImageSlice::create(), std::bind(&PropertyParser::parseBorderImageSlice, _1, "border-image-slice", ""));
 		PropertyRegistrar property215("border-image", std::bind(&PropertyParser::parseBorderImage, _1, "border-image", ""));
-		
+
 		PropertyRegistrar property216("border-top-left-radius", Property::BORDER_TOP_LEFT_RADIUS, false, BorderRadius::create(), std::bind(&PropertyParser::parseSingleBorderRadius, _1, "border-top-left-radius", ""));
 		PropertyRegistrar property217("border-top-right-radius", Property::BORDER_TOP_RIGHT_RADIUS, false, BorderRadius::create(), std::bind(&PropertyParser::parseSingleBorderRadius, _1, "border-top-right-radius", ""));
 		PropertyRegistrar property218("border-bottom-left-radius", Property::BORDER_BOTTOM_LEFT_RADIUS, false, BorderRadius::create(), std::bind(&PropertyParser::parseSingleBorderRadius, _1, "border-bottom-left-radius", ""));
@@ -283,7 +283,7 @@ namespace css
 		PropertyRegistrar property254("transition", std::bind(&PropertyParser::parseTransition, _1, "transition", ""));
 
 		PropertyRegistrar property260("filter", Property::FILTER, false, FilterStyle::create(), std::bind(&PropertyParser::parseFilters, _1, "filter", ""));
-		
+
 		PropertyRegistrar property270("transform", Property::TRANSFORM, false, TransformStyle::create(), std::bind(&PropertyParser::parseTransform, _1, "transform", ""));
 		PropertyRegistrar property271("transform-origin", Property::TRANSFORM_ORIGIN, false, TransformStyle::create(), std::bind(&PropertyParser::parseBackgroundPosition, _1, "transform-origin", ""));
 
@@ -296,7 +296,7 @@ namespace css
 		// caption-side
 		// empty-cells
 		// table-layout
-		
+
 		// Paged -- probably won't implement.
 		// orphans
 		// widows
@@ -312,7 +312,7 @@ namespace css
 		// border-image-outset
 		// border-image-stretch
 	}
-	
+
 	PropertyList::PropertyList()
 		: properties_()
 	{
@@ -331,7 +331,7 @@ namespace css
 			// check for important flag before merging.
 			/*LOG_INFO("property: " << get_property_info_table()[static_cast<int>(p)].name << ", current spec: "
 				<< it->second.specificity[0] << "," << it->second.specificity[1] << "," << it->second.specificity[2]
-				<< ", new spec: " << specificity[0] << "," << specificity[1] << "," << specificity[2] 
+				<< ", new spec: " << specificity[0] << "," << specificity[1] << "," << specificity[2]
 				<< ", test: " << (it->second.specificity <= specificity ? "true" : "false"));*/
 			if(((it->second.style->isImportant() && o->isImportant()) || !it->second.style->isImportant()) && it->second.specificity <= specificity) {
 				it->second = PropertyStyle(o, specificity);
@@ -382,7 +382,7 @@ namespace css
 			return;
 		}
 		const std::vector<float>& duration = dura_it->second.style->asType<TransitionTiming>()->getTiming();
-		
+
 		// Find delays, if any
 		auto delay_it = properties_.find(Property::TRANSITION_DELAY);
 		std::vector<float> delay;
@@ -409,7 +409,7 @@ namespace css
 		}
 
 		auto tprops = it->second.style->asType<TransitionProperties>();
-		// we already know the properties here are transitional ones. 
+		// we already know the properties here are transitional ones.
 		// since we checked when parsing. Except MAX_PROPERTY which is
 		// a holder meaning all.
 		int index = 0;
@@ -421,7 +421,7 @@ namespace css
 					if(pit != get_transitional_properties().end()) {
 						// is transitional
 						if(!prop.second.style->hasTransition()) {
-							prop.second.style->addTransition(duration[index % duration.size()], 
+							prop.second.style->addTransition(duration[index % duration.size()],
 								ttfns[index % ttfns.size()],
 								delay[index % delay.size()]);
 						}
@@ -435,7 +435,7 @@ namespace css
 					continue;
 				}
 				if(!it->second.style->hasTransition()) {
-					it->second.style->addTransition(duration[index % duration.size()], 
+					it->second.style->addTransition(duration[index % duration.size()],
 						ttfns[index % ttfns.size()],
 						delay[index % delay.size()]);
 				}
@@ -457,7 +457,7 @@ namespace css
 	const std::string& get_property_name(Property p)
 	{
 		const int ndx = static_cast<int>(p);
-		ASSERT_LOG(ndx < static_cast<int>(get_property_info_table().size()), 
+		ASSERT_LOG(ndx < static_cast<int>(get_property_info_table().size()),
 			"Requested name of property, index not in table: " << ndx);
 		return get_property_info_table()[ndx].name;
 	}
@@ -465,7 +465,7 @@ namespace css
 	const PropertyInfo& get_default_property_info(Property p)
 	{
 		const int ndx = static_cast<int>(p);
-		ASSERT_LOG(ndx < static_cast<int>(get_property_info_table().size()), 
+		ASSERT_LOG(ndx < static_cast<int>(get_property_info_table().size()),
 			"Requested property info, index not in table: " << ndx);
 		return get_property_info_table()[ndx];
 	}
@@ -528,7 +528,7 @@ namespace css
 		return isToken(TokenId::DELIM) && (*it_)->getStringValue() == delim;
 	}
 
-	bool PropertyParser::isEndToken() const 
+	bool PropertyParser::isEndToken() const
 	{
 		return isToken(TokenId::EOF_TOKEN) || isToken(TokenId::RBRACE) || isToken(TokenId::SEMICOLON) || isTokenDelimiter("!");
 	}
@@ -585,8 +585,8 @@ namespace css
 		}
 	}
 
-	void PropertyParser::parseCSVNumberListFromIt(std::vector<TokenPtr>::const_iterator start, 
-		std::vector<TokenPtr>::const_iterator end, 
+	void PropertyParser::parseCSVNumberListFromIt(std::vector<TokenPtr>::const_iterator start,
+		std::vector<TokenPtr>::const_iterator end,
 		std::function<void(int, float, bool)> fn)
 	{
 		int n = 0;
@@ -608,7 +608,7 @@ namespace css
 			const std::string& ref = (*it_)->getStringValue();
 			if(ref == "rgb") {
 				int values[3] = { 255, 255, 255 };
-				parseCSVNumberListFromIt((*it_)->getParameters().cbegin(), (*it_)->getParameters().cend(), 
+				parseCSVNumberListFromIt((*it_)->getParameters().cbegin(), (*it_)->getParameters().cend(),
 					[&values](int n, float value, bool is_percent) {
 					if(n < 3) {
 						if(is_percent) {
@@ -621,7 +621,7 @@ namespace css
 				color->setColor(KRE::Color(values[0], values[1], values[2]));
 			} else if(ref == "rgba") {
 				int values[4] = { 255, 255, 255, 255 };
-				parseCSVNumberListFromIt((*it_)->getParameters().cbegin(), (*it_)->getParameters().cend(), 
+				parseCSVNumberListFromIt((*it_)->getParameters().cbegin(), (*it_)->getParameters().cend(),
 					[&values](int n, float value, bool is_percent) {
 					if(n < 4) {
 						if(is_percent) {
@@ -635,7 +635,7 @@ namespace css
 			} else if(ref == "hsl") {
 				float values[3];
 				const float multipliers[3] = { 360.0f, 1.0f, 1.0f };
-				parseCSVNumberListFromIt((*it_)->getParameters().cbegin(), (*it_)->getParameters().cend(), 
+				parseCSVNumberListFromIt((*it_)->getParameters().cbegin(), (*it_)->getParameters().cend(),
 					[&values, &multipliers](int n, float value, bool is_percent) {
 					if(n < 3) {
 						if(is_percent) {
@@ -643,13 +643,13 @@ namespace css
 						}
 						values[n] = value;
 					}
-				});					
+				});
 				advance();
 				color->setColor(hsla_to_color(values[0], values[1], values[2], 1.0));
 			} else if(ref == "hsla") {
 				float values[4];
 				const float multipliers[4] = { 360.0f, 1.0f, 1.0f, 1.0f };
-				parseCSVNumberListFromIt((*it_)->getParameters().cbegin(), (*it_)->getParameters().cend(), 
+				parseCSVNumberListFromIt((*it_)->getParameters().cbegin(), (*it_)->getParameters().cend(),
 					[&values, &multipliers](int n, float value, bool is_percent) {
 					if(n < 4) {
 						if(is_percent) {
@@ -657,7 +657,7 @@ namespace css
 						}
 						values[n] = value;
 					}
-				});					
+				});
 				advance();
 				color->setColor(hsla_to_color(values[0], values[1], values[2], values[3]));
 			} else {
@@ -794,7 +794,7 @@ namespace css
 			} else {
 				throw ParserError(formatter() << "Unrecognised identifier for width value, property: " << ref);
 			}
-		}	
+		}
 		return std::make_shared<Length>(parseLengthInternal());
 	}
 
@@ -932,7 +932,7 @@ namespace css
 		plist_.addProperty(prefix + "-top-" + suffix, w1);
 		plist_.addProperty(prefix + "-right-" + suffix, w2);
 		plist_.addProperty(prefix + "-bottom-" + suffix, w3);
-		plist_.addProperty(prefix + "-left-" + suffix, w4);	
+		plist_.addProperty(prefix + "-left-" + suffix, w4);
 	}
 
 	StylePtr PropertyParser::parseBorderStyleInternal()
@@ -1012,7 +1012,7 @@ namespace css
 		plist_.addProperty(prefix + "-top-" + suffix, w1);
 		plist_.addProperty(prefix + "-right-" + suffix, w2);
 		plist_.addProperty(prefix + "-bottom-" + suffix, w3);
-		plist_.addProperty(prefix + "-left-" + suffix, w4);	
+		plist_.addProperty(prefix + "-left-" + suffix, w4);
 	}
 
 	void PropertyParser::parseDisplay(const std::string& prefix, const std::string& suffix)
@@ -1077,7 +1077,7 @@ namespace css
 				ws = Whitespace::PRE_LINE;
 			} else {
 				throw ParserError(formatter() << "Unrecognised token for display property: " << ref);
-			}			
+			}
 		} else {
 			throw ParserError(formatter() << "Expected identifier for property: " << prefix << " found " << Token::tokenIdToString((*it_)->id()));
 		}
@@ -1092,7 +1092,7 @@ namespace css
 		});
 		plist_.addProperty(prefix, FontFamily::create(font_list));
 	}
-	
+
 	void PropertyParser::parseFontSize(const std::string& prefix, const std::string& suffix)
 	{
 		FontSize fs;
@@ -1135,7 +1135,7 @@ namespace css
 			fs.setFontSize(Length(d, false));
 		} else {
 			throw ParserError(formatter() << "Unrecognised value for property '" << prefix << "': "  << (*it_)->toString());
-		}		
+		}
 		plist_.addProperty(prefix, FontSize::create(fs));
 	}
 
@@ -1457,13 +1457,13 @@ namespace css
 				advance();
 				if(ref == "left") {
 					pos->setLeft(Length(0, true));
-					was_horiz_set = true; 
+					was_horiz_set = true;
 				} else if(ref == "top") {
 					pos->setTop(Length(0, true));
 					was_vert_set = true;
 				} else if(ref == "right") {
 					pos->setLeft(Length(100 * fixed_point_scale, true));
-					was_horiz_set = true; 
+					was_horiz_set = true;
 				} else if(ref == "bottom") {
 					pos->setTop(Length(100 * fixed_point_scale, true));
 					was_vert_set = true;
@@ -1484,7 +1484,7 @@ namespace css
 			} else if(cnt > 0) {
 				throw ParserError(formatter() << "Unrecognised value for property '" << prefix << "': "  << (*it_)->toString());
 			}
-			
+
 			skipWhitespace();
 		}
 		if(was_horiz_set && !was_vert_set) {
@@ -1588,7 +1588,7 @@ namespace css
 				const std::string ref = (*it_)->getStringValue();
 				advance();
 				if(ref == "invert") {
-					// not supporting invert color at the moment so we just 
+					// not supporting invert color at the moment so we just
 					// set to current color.
 					color->setParam(CssColorParam::CURRENT);
 				} else if(ref == "thin") {
@@ -1721,7 +1721,7 @@ namespace css
 			const std::string& ref = (*it_)->getStringValue();
 			if(ref == "rect") {
 				std::vector<xhtml::FixedPoint> values;
-				parseCSVNumberListFromIt((*it_)->getParameters().cbegin(), (*it_)->getParameters().end(), 
+				parseCSVNumberListFromIt((*it_)->getParameters().cbegin(), (*it_)->getParameters().end(),
 					[&values](int n, float value, bool is_percent) {
 						values.emplace_back(static_cast<int>(value * fixed_point_scale));
 					}
@@ -1920,7 +1920,7 @@ namespace css
 				throw ParserError(formatter() << "Unrecognised value for property '" << prefix << "': "  << (*it_)->toString());
 			}
 			quotes.emplace_back(first_quote, second_quote);
-			
+
 			skipWhitespace();
 			if(isEndToken()) {
 				done = true;
@@ -2059,7 +2059,7 @@ namespace css
 					}
 					if(params.size() == 1) {
 						ct.emplace_back(ListStyleType::DECIMAL, params.front()->getStringValue());
-					} else {						
+					} else {
 						try {
 							ListStyleType lst = parseListStyleTypeInt(params[1]->getStringValue());
 							ct.emplace_back(lst, params.front()->getStringValue());
@@ -2073,7 +2073,7 @@ namespace css
 					}
 					if(params.size() == 2) {
 						ct.emplace_back(ListStyleType::DECIMAL, params[0]->getStringValue(), params[1]->getStringValue());
-					} else {						
+					} else {
 						try {
 							ListStyleType lst = parseListStyleTypeInt(params[2]->getStringValue());
 							ct.emplace_back(lst, params[0]->getStringValue(), params[1]->getStringValue());
@@ -2130,13 +2130,13 @@ namespace css
 					ba = BackgroundAttachment::FIXED;
 				} else if(ref == "left") {
 					bp->setLeft(Length(0, true));
-					was_horiz_set = true; 
+					was_horiz_set = true;
 				} else if(ref == "top") {
 					bp->setTop(Length(0, true));
 					was_vert_set = true;
 				} else if(ref == "right") {
 					bp->setLeft(Length(100 * fixed_point_scale, true));
-					was_horiz_set = true; 
+					was_horiz_set = true;
 				} else if(ref == "bottom") {
 					bp->setTop(Length(100 * fixed_point_scale, true));
 					was_vert_set = true;
@@ -2280,7 +2280,7 @@ namespace css
 					ASSERT_LOG(false, "XXX: write repeating-linear-gradient parser");
 				} else if(ref == "repeating-radial-gradient") {
 					ASSERT_LOG(false, "XXX: write repeating-radial-gradient parser");
-				}				
+				}
 			} else {
 				throw ParserError(formatter() << "Unrecognised value for property '" << prefix << "': "  << (*it_)->toString());
 			}
@@ -2484,7 +2484,7 @@ namespace css
 				ASSERT_LOG(false, "XXX: write repeating-linear-gradient parser");
 			} else if(ref == "repeating-radial-gradient") {
 				ASSERT_LOG(false, "XXX: write repeating-radial-gradient parser");
-			}			
+			}
 		} else {
 			throw ParserError(formatter() << "expected uri, found: " << (*it_)->toString());
 		}
@@ -2564,7 +2564,7 @@ namespace css
 			plist_.addProperty("border-image-width", WidthList::create(1.0f));
 		} else {
 			plist_.addProperty("border-image-width", WidthList::create(widths));
-		}			
+		}
 		if(outset.empty()) {
 			plist_.addProperty("border-image-outset", WidthList::create(0.0f));
 		} else {
@@ -2638,7 +2638,7 @@ namespace css
 					vert_lengths.emplace_back(lengths1[0]);
 					vert_lengths.emplace_back(lengths1[0]);
 					vert_lengths.emplace_back(lengths1[0]);
-					vert_lengths.emplace_back(lengths1[0]);					
+					vert_lengths.emplace_back(lengths1[0]);
 				}
 				break;
 			case 2:
@@ -2650,7 +2650,7 @@ namespace css
 					vert_lengths.emplace_back(lengths1[0]);
 					vert_lengths.emplace_back(lengths1[1]);
 					vert_lengths.emplace_back(lengths1[0]);
-					vert_lengths.emplace_back(lengths1[1]);					
+					vert_lengths.emplace_back(lengths1[1]);
 				}
 				break;
 			case 3:
@@ -2665,7 +2665,7 @@ namespace css
 					vert_lengths.push_back(lengths1[1]);
 				}
 				break;
-			default: 
+			default:
 				// is 4 or more already.
 				horiz_lengths = lengths1;
 				if(!extended_syntax) {
@@ -2680,21 +2680,21 @@ namespace css
 					vert_lengths.emplace_back(lengths2[0]);
 					vert_lengths.emplace_back(lengths2[0]);
 					vert_lengths.emplace_back(lengths2[0]);
-					vert_lengths.emplace_back(lengths2[0]);					
+					vert_lengths.emplace_back(lengths2[0]);
 					break;
 				case 2:
 					vert_lengths.emplace_back(lengths2[0]);
 					vert_lengths.emplace_back(lengths2[1]);
 					vert_lengths.emplace_back(lengths2[0]);
-					vert_lengths.emplace_back(lengths2[1]);					
+					vert_lengths.emplace_back(lengths2[1]);
 					break;
 				case 3:
 					vert_lengths.emplace_back(lengths2[0]);
 					vert_lengths.emplace_back(lengths2[1]);
 					vert_lengths.emplace_back(lengths2[2]);
-					vert_lengths.emplace_back(lengths2[1]);					
+					vert_lengths.emplace_back(lengths2[1]);
 					break;
-				default: 
+				default:
 					// is 4 or more already.
 					vert_lengths = lengths2;
 					break;
@@ -2847,7 +2847,7 @@ namespace css
 
 			lingrad->addColorStop(LinearGradient::ColorStop(cs_color, len));
 		}
-		
+
 		if(lingrad->getColorStops().empty()) {
 			throw ParserError(formatter() << "No color stops where found while processing linear-gradient");
 		}
@@ -3264,10 +3264,10 @@ namespace css
 						}
 					}
 					if(lengths.size() >= 2 && lengths.size() <= 4) {
-						filter_list.emplace_back(std::make_shared<Filter>(CssFilterId::DROP_SHADOW, BoxShadow(inset, 
-							lengths[0], 
-							lengths[1], 
-							lengths.size() < 3 ? Length() : lengths[2], 
+						filter_list.emplace_back(std::make_shared<Filter>(CssFilterId::DROP_SHADOW, BoxShadow(inset,
+							lengths[0],
+							lengths[1],
+							lengths.size() < 3 ? Length() : lengths[2],
 							lengths.size() < 4 ? Length() : lengths[3],
 							*color)));
 					} else {
@@ -3301,7 +3301,7 @@ namespace css
 		}
 		plist_.addProperty(prefix, FilterStyle::create(filter_list));
 	}
-	
+
 	void PropertyParser::parseTransform(const std::string& prefix, const std::string& suffix)
 	{
 		std::vector<Transform> transforms;

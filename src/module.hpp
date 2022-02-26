@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -40,7 +40,7 @@ namespace module
 {
 	enum BASE_PATH_TYPE { BASE_PATH_GAME, BASE_PATH_USER, NUM_PATH_TYPES };
 
-	struct modules 
+	struct modules
 	{
 		std::string name_;
 		std::string pretty_name_;
@@ -168,7 +168,7 @@ namespace module
 
 		void set_module_description(const std::string& str) { module_description_ = str; }
 	private:
-		
+
 		bool install_module_confirmed_out_of_date(const std::string& module_name);
 
 		enum OPERATION_TYPE { OPERATION_NONE, OPERATION_PENDING_INSTALL, OPERATION_INSTALL, OPERATION_QUERY_VERSION_FOR_INSTALL, OPERATION_PREPARE_INSTALL, OPERATION_GET_CHUNKS, OPERATION_GET_STATUS, OPERATION_GET_ICONS, OPERATION_RATE };

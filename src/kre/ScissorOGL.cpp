@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -46,7 +46,7 @@ namespace KRE
 	{
 	}
 
-	void ScissorOGL::apply() 
+	void ScissorOGL::apply()
 	{
 		if(get_scissor_stack().empty()) {
 			glEnable(GL_SCISSOR_TEST);
@@ -55,7 +55,7 @@ namespace KRE
 		get_scissor_stack().emplace(getArea());
 	}
 
-	void ScissorOGL::clear() 
+	void ScissorOGL::clear()
 	{
 		get_scissor_stack().pop();
 		if(get_scissor_stack().empty()) {

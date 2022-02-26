@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2015-2016 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -111,7 +111,7 @@ namespace xhtml
 			vt.emplace_back(glm::vec2(r.x2(), r.y1()), glm::vec2(t.x2(), t.y1()));
 			vt.emplace_back(glm::vec2(r.x1(), r.y2()), glm::vec2(t.x1(), t.y2()));
 			vt.emplace_back(glm::vec2(r.x2(), r.y2()), glm::vec2(t.x2(), t.y2()));
-			
+
 			attr_->update(&vt);
 		}
 	}
@@ -128,16 +128,16 @@ namespace xhtml
 		return pixel_fraction * (max_range_ - min_range_) + min_range_;
 	}
 
-	bool Slider::handleMouseMotion(bool claimed, const point& p, unsigned keymod, bool in_rect) 
+	bool Slider::handleMouseMotion(bool claimed, const point& p, unsigned keymod, bool in_rect)
 	{
 		if(dragging_) {
 			setHandlePosition(positionFromPixelPos(p.x));
 			return true;
-		}	
+		}
 		return false;
 	}
 
-	bool Slider::handleMouseButtonUp(bool claimed, const point& p, unsigned buttons, unsigned keymod, bool in_rect) 
+	bool Slider::handleMouseButtonUp(bool claimed, const point& p, unsigned buttons, unsigned keymod, bool in_rect)
 	{
 		if(dragging_) {
 			dragging_ = false;
@@ -146,8 +146,8 @@ namespace xhtml
 		}
 		return claimed;
 	}
-	
-	bool Slider::handleMouseButtonDown(bool claimed, const point& p, unsigned buttons, unsigned keymod, bool in_rect) 
+
+	bool Slider::handleMouseButtonDown(bool claimed, const point& p, unsigned buttons, unsigned keymod, bool in_rect)
 	{
 		if(claimed) {
 			return claimed;
@@ -167,20 +167,20 @@ namespace xhtml
 		}
 		return false;
 	}
-	
+
 	bool Slider::handleMouseWheel(bool claimed, const point& p, const point& delta, int direction, bool in_rect)
 	{
 		// XXX
 		return claimed;
 	}
-		
-	bool Slider::handleKeyDown(bool claimed, const SDL_Keysym& keysym, bool repeat, bool pressed) 
+
+	bool Slider::handleKeyDown(bool claimed, const SDL_Keysym& keysym, bool repeat, bool pressed)
 	{
 		// XXX
 		return claimed;
 	}
-	
-	bool Slider::handleKeyUp(bool claimed, const SDL_Keysym& keysym, bool repeat, bool pressed) 
+
+	bool Slider::handleKeyUp(bool claimed, const SDL_Keysym& keysym, bool repeat, bool pressed)
 	{
 		// XXX
 		return claimed;

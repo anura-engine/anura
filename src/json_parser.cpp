@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -43,14 +43,14 @@
 #include "variant_utils.hpp"
 #include "wml_formula_callable.hpp"
 
-namespace game_logic 
+namespace game_logic
 {
 	void remove_formula_function_cached_doc(const std::string& name);
 }
 
-namespace json 
+namespace json
 {
-	namespace 
+	namespace
 	{
 		std::map<std::string, std::string> pseudo_file_contents;
 	}
@@ -72,17 +72,17 @@ namespace json
 	}
 
 	ParseError::ParseError(const std::string& msg)
-	  : message(msg), 
-	    line(-1), 
+	  : message(msg),
+	    line(-1),
 	    col(-1)
 	{
 		//std::cerr << errorMessage() << "\n";
 	}
 
 	ParseError::ParseError(const std::string& msg, const std::string& filename, std::ptrdiff_t line, std::ptrdiff_t col)
-	  : message(msg), 
-	    fname(filename), 
-	    line(line), 
+	  : message(msg),
+	    fname(filename),
+	    line(line),
 	    col(col)
 	{
 		//std::cerr << errorMessage() << "\n";
@@ -97,14 +97,14 @@ namespace json
 		}
 	}
 
-	namespace 
+	namespace
 	{
-		std::ptrdiff_t get_line_num(const std::string& doc, std::ptrdiff_t pos) 
+		std::ptrdiff_t get_line_num(const std::string& doc, std::ptrdiff_t pos)
 		{
 			return 1 + std::count(doc.begin(), doc.begin() + pos, '\n');
 		}
 
-		std::ptrdiff_t get_col_number(const std::string& doc, std::ptrdiff_t pos) 
+		std::ptrdiff_t get_col_number(const std::string& doc, std::ptrdiff_t pos)
 		{
 			const auto init = pos;
 			while(pos >= 0 && doc[pos] != '\n' && doc[pos] != '\r') {
@@ -114,7 +114,7 @@ namespace json
 			return 1 + init - pos;
 		}
 
-		void escape_string(std::string& s) 
+		void escape_string(std::string& s)
 		{
 			for(size_t n = 0; n < s.size(); ++n) {
 				if(s[n] == '\\') {
@@ -134,7 +134,7 @@ namespace json
 			throw ParseError((msg), fname, ln, col);	\
 		} } while(0)
 
-	namespace 
+	namespace
 	{
 		class JsonMacro;
 		typedef std::shared_ptr<JsonMacro> JsonMacroPtr;
@@ -148,27 +148,27 @@ namespace json
 			variant call(variant arg) const;
 		};
 
-		JsonMacro::JsonMacro(const std::string& code, std::map<std::string, JsonMacroPtr> macros) 
-			:code_(code), 
+		JsonMacro::JsonMacro(const std::string& code, std::map<std::string, JsonMacroPtr> macros)
+			:code_(code),
 			macros_(macros)
 		{
 		}
 
 		enum class VAL_TYPE { NONE, OBJ, ARRAY };
-		struct JsonObject 
+		struct JsonObject
 		{
-			JsonObject(variant::debug_info debug_info, bool preprocess) 
-				: type(VAL_TYPE::NONE), 
-				  is_base(false), 
-				  is_call(false), 
-				  is_deriving(false), 
-				  is_merging(false), 
-				  require_comma(false), 
-				  require_colon(false), 
-				  flatten(false), 
-				  info(debug_info), 
-				  begin_macro(nullptr), 
-				  use_preprocessor(preprocess) 
+			JsonObject(variant::debug_info debug_info, bool preprocess)
+				: type(VAL_TYPE::NONE),
+				  is_base(false),
+				  is_call(false),
+				  is_deriving(false),
+				  is_merging(false),
+				  require_comma(false),
+				  require_colon(false),
+				  flatten(false),
+				  info(debug_info),
+				  begin_macro(nullptr),
+				  use_preprocessor(preprocess)
 			{}
 			std::map<variant, variant> obj;
 			std::vector<variant> array;
@@ -424,7 +424,7 @@ namespace json
 						}
 
 						variant v;
-				
+
 						bool is_macro = false;
 						bool is_flatten = false;
 						if(use_preprocessor) {
@@ -543,7 +543,7 @@ namespace json
 
 						break;
 					}
-				
+
 					default: assert(false);
 					}
 				}
@@ -596,7 +596,7 @@ namespace json
 			}
 
 			variant result;
-		
+
 			try {
 				result = parse_internal(data, fname, options, nullptr, nullptr);
 			} catch(ParseError& e) {
@@ -610,8 +610,8 @@ namespace json
 				}
 
 				in_edit_and_continue = true;
-				edit_and_continue_fn(module::map_file(fname), 
-					formatter() << "At " << module::map_file(fname) << " " << e.line << ": " << e.message, 
+				edit_and_continue_fn(module::map_file(fname),
+					formatter() << "At " << module::map_file(fname) << " " << e.line << ": " << e.message,
 					[=](){ parse_from_file(fname, options); });
 				in_edit_and_continue = false;
 				return parse_from_file(fname, options);

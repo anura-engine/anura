@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -37,8 +37,8 @@ namespace editor_dialogs
 	using std::placeholders::_1;
 
 	EditorLayersDialog::EditorLayersDialog(editor& e)
-		: Dialog(KRE::WindowManager::getMainWindow()->width() - 200, 40, LAYERS_DIALOG_WIDTH, KRE::WindowManager::getMainWindow()->height() - 40), 
-		editor_(e), 
+		: Dialog(KRE::WindowManager::getMainWindow()->width() - 200, 40, LAYERS_DIALOG_WIDTH, KRE::WindowManager::getMainWindow()->height() - 40),
+		editor_(e),
 		locked_(false)
 	{
 		setClearBgAmount(255);
@@ -73,7 +73,7 @@ namespace editor_dialogs
 		g->allowSelection();
 		g->registerSelectionCallback(std::bind(&EditorLayersDialog::rowSelected, this, _1));
 		g->registerMouseoverCallback(std::bind(&EditorLayersDialog::rowMouseover, this, _1));
-	
+
 		addWidget(g, 0, 0);
 
 		const int ypos = g->y() + g->height();
@@ -147,7 +147,7 @@ namespace editor_dialogs
 			init();
 			return;
 		}
-	
+
 		if(nrow < 0 || static_cast<unsigned>(nrow) >= rows_.size()) {
 			return;
 		}

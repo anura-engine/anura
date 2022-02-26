@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -169,7 +169,7 @@ void merge_variant_over(variant* aptr, variant b)
 	for(variant key : b.getKeys().as_list()) {
 		a = a.add_attr(key, append_variants(a[key], b[key]));
 	}
-	
+
 	if(!a.get_debug_info() && b.get_debug_info()) {
 		a.setDebugInfo(*b.get_debug_info());
 	}

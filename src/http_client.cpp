@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -70,7 +70,7 @@ void http_client::send_request(std::string method_path, std::string request, std
 	}
 
 	++in_flight_;
-	
+
 	bool already_connected = false;
 	connection_ptr conn;
 	if(usable_connections_.empty() == false) {
@@ -153,7 +153,7 @@ void http_client::async_connect(connection_ptr conn)
 
 	try {
 #if BOOST_VERSION >= 104700
-		boost::asio::async_connect(*conn->socket, 
+		boost::asio::async_connect(*conn->socket,
 			endpoint_iterator_,
 			std::bind(&http_client::handle_connect, this,
 				std::placeholders::_1, conn, endpoint_iterator_));
@@ -224,11 +224,11 @@ void http_client::send_connection_request(connection_ptr conn)
 		   "Content-Type: text/plain\r\n"
 		   "Accept-Encoding: deflate\r\n"
 		   "Connection: close\r\n";
-	
+
 	if(session_id_ != -1) {
 		msg << "Cookie: session=" << session_id_ << "\r\n";
 	}
-	// replace all the tab characters with spaces before calculating the request size, so 
+	// replace all the tab characters with spaces before calculating the request size, so
 	// some http server doesn't get all upset about the length being wrong.
 	boost::replace_all(conn->request, "\t", "    ");
 	msg << "Content-Length: " << conn->request.length() << "\r\n\r\n" << conn->request;
@@ -330,7 +330,7 @@ void http_client::handle_receive(connection_ptr conn, const boost::system::error
 	if(conn->aborted) {
 		return;
 	}
-	
+
 	if(e) {
 		--in_flight_;
 		const bool retry = conn->retry_fn && conn->retry_on_error;
@@ -456,7 +456,7 @@ void http_client::process()
 	connections_monitor_timeout_.erase(std::remove_if(connections_monitor_timeout_.begin(), connections_monitor_timeout_.end(), [](const std::weak_ptr<Connection>& ptr) { return ptr.lock().get() == nullptr || ptr.lock()->aborted; }), connections_monitor_timeout_.end());
 
 	std::vector<connection_ptr> connections_to_monitor;
-	
+
 	for(auto& p : connections_monitor_timeout_) {
 		auto conn = p.lock();
 		if(!conn || !conn->retry_fn || conn->aborted) {

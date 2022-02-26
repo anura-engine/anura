@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -33,7 +33,7 @@
 
 enum class VARIABLE_TYPE { INTEGER, XPOSITION, YPOSITION, LEVEL, LABEL, TEXT, BOOLEAN, ENUM, POINTS };
 
-class EditorVariableInfo 
+class EditorVariableInfo
 {
 public:
 	explicit EditorVariableInfo(const variant& node);
@@ -72,7 +72,7 @@ private:
 	decimal numeric_min_, numeric_max_;
 };
 
-class EditorEntityInfo 
+class EditorEntityInfo
 {
 public:
 	explicit EditorEntityInfo(const variant& node);

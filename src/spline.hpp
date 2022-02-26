@@ -4,13 +4,13 @@
 */
 /**
 	Spline interpolation of a parametric function.
- 
+
 	INPUT: std::vector<double> x
 	A list of double values that represent sampled
 	points. The array index of each point will be
 	taken as the parameter t by which x will be
 	represented as a function.
- 
+
 	OUTPUT: std::vector<cv::Vec4d> P
 	A list of cv::Vec4d representing polynomials. To
 	interpret segment [i]:
@@ -28,7 +28,7 @@
 #include <vector>
 #include <glm/glm.hpp>
 
-namespace geometry 
+namespace geometry
 {
 	typedef glm::dvec2 control_point;
 	typedef std::vector<control_point> control_point_vector;
@@ -44,21 +44,21 @@ namespace geometry
 			spline(const control_point_vector& cps) : control_points_(cps) {
 				// spline size
 				size_t n = cps.size();
- 
+
 				// loop counter
 				size_t i;
- 
+
 				// working variables
 				double p;
 				std::vector<double> u;
- 
+
 				u.resize(n);
 				z_prime_prime_.resize(n);
- 
+
 				// set the second derivative to 0 at the ends
 				z_prime_prime_[0] = u[0] = 0;
 				z_prime_prime_[n-1] = 0;
- 
+
 				// decomposition loop
 				for(i = 1; i < n-1; i++) {
 					const double sig = (cps[i].x-cps[i-1].x)/(cps[i+1].x-cps[i-1].x);
@@ -67,7 +67,7 @@ namespace geometry
 					u[i] = (cps[i+1].y-cps[i].y)/(cps[i+1].x-cps[i].x) - (cps[i].y-cps[i-1].y)/(cps[i].x-cps[i-1].x);
 					u[i] = (6.0*u[i]/(cps[i+1].x-cps[i-1].x)-sig*u[i-1])/p;
 				}
- 
+
 				// back-substitution loop
 				for(i = n - 1; i > 0; i--) {
 					z_prime_prime_[i] = z_prime_prime_[i] * z_prime_prime_[i+1] + u[i];
@@ -98,7 +98,7 @@ namespace geometry
 			control_point_vector control_points_;
 			// array of second derivatives
 			std::vector<double> z_prime_prime_;
-		
+
 			spline(const spline&);
 	};
 }

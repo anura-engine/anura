@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -33,7 +33,7 @@
 #include "message_dialog.hpp"
 #include "string_utils.hpp"
 
-namespace 
+namespace
 {
 	const int FontSize = 22;
 
@@ -125,14 +125,14 @@ MessageDialog::MessageDialog(const std::string& text, const rect& pos,
 	}
 
 	if(options != nullptr) {
-		for(const std::string& option : *options) 
+		for(const std::string& option : *options)
 		{
 			options_.emplace_back(KRE::Font::getInstance()->renderText(option, KRE::Color::colorBlack(), FontSize));
 		}
 	}
 }
 
-namespace 
+namespace
 {
 	void draw_frame(const rect& r)
 	{
@@ -143,7 +143,7 @@ namespace
 		auto canvas = KRE::Canvas::getInstance();
 		canvas->drawSolidRect(rect(r.x() - Padding - Border, r.y() - Padding - Border, r.w() + + Padding*2 + Border*2, r.h() + Padding*2 + Border*2),
 			KRE::Color(0xa2, 0x64, 0x76));
-		canvas->drawSolidRect(rect(r.x() - Padding, r.y() - Padding, r.w() + Padding*2, r.h() + Padding*2), 
+		canvas->drawSolidRect(rect(r.x() - Padding, r.y() - Padding, r.w() + Padding*2, r.h() + Padding*2),
 			KRE::Color(0xbe, 0xa2, 0x8f));
 	}
 }

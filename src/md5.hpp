@@ -49,7 +49,7 @@ class MD5
 public:
 	MD5() {
 	}
-	virtual ~MD5() { 
+	virtual ~MD5() {
 	}
 
 	static std::string calc(const std::string& s) {

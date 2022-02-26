@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -135,13 +135,13 @@ namespace xhtml
 		FixedPoint getWidth() const { return dimensions_.content_.width; }
 		FixedPoint getHeight() const { return dimensions_.content_.height; }
 
-		FixedPoint getMBPWidth() const { 
+		FixedPoint getMBPWidth() const {
 			return dimensions_.margin_.left + dimensions_.margin_.right
 				+ dimensions_.padding_.left + dimensions_.padding_.right
 				+ dimensions_.border_.left + dimensions_.border_.right;
 		}
 
-		FixedPoint getMBPHeight() const { 
+		FixedPoint getMBPHeight() const {
 			return dimensions_.margin_.top + dimensions_.margin_.bottom
 				+ dimensions_.padding_.top + dimensions_.padding_.bottom
 				+ dimensions_.border_.top + dimensions_.border_.bottom;
@@ -172,8 +172,8 @@ namespace xhtml
 		}
 
 		Rect getAbsBoundingBox() const {
-			return Rect(dimensions_.content_.x - getMBPLeft() + getOffset().x, 
-				dimensions_.content_.y - getMBPTop() + getOffset().y, 
+			return Rect(dimensions_.content_.x - getMBPLeft() + getOffset().x,
+				dimensions_.content_.y - getMBPTop() + getOffset().y,
 				getMBPWidth() + getWidth(),
 				getMBPHeight() + getHeight());
 		}
@@ -216,7 +216,7 @@ namespace xhtml
 		void setParent(BoxPtr parent) { parent_ = parent; }
 		KRE::SceneTreePtr createSceneTree(KRE::SceneTreePtr scene_parent);
 	protected:
-		void clearChildren() { boxes_.clear(); } 
+		void clearChildren() { boxes_.clear(); }
 		virtual void handleRenderBackground(const KRE::SceneTreePtr& scene_tree, const point& offset) const;
 		virtual void handleRenderBorder(const KRE::SceneTreePtr& scene_tree, const point& offset) const;
 		virtual void handleRenderFilters(const KRE::SceneTreePtr& scene_tree, const point& offset) const;

@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -147,11 +147,11 @@ namespace KRE
 		allTextures().insert(this);
 	}
 
-	Texture::Texture(int count, 
-		int width, 
-		int height, 
+	Texture::Texture(int count,
+		int width,
+		int height,
 		int depth,
-		PixelFormat::PF fmt, 
+		PixelFormat::PF fmt,
 		TextureType type)
 		: is_paletteized_(false),
 		  mix_ratio_(0.0f),
@@ -311,9 +311,9 @@ namespace KRE
 			ASSERT_LOG(node["rect"].num_elements() >= 4, "'rect' attribute must have at least 4 elements.");
 			tp->src_rect = rect(node["rect"]);
 			const int n = static_cast<int>(std::distance(texture_params_.begin(), tp));
-			tp->src_rect_norm = rectf::from_coordinates(getTextureCoordW(n, tp->src_rect.x1()), 
-				getTextureCoordH(n, tp->src_rect.y1()), 
-				getTextureCoordW(n, tp->src_rect.x2()), 
+			tp->src_rect_norm = rectf::from_coordinates(getTextureCoordW(n, tp->src_rect.x1()),
+				getTextureCoordH(n, tp->src_rect.y1()),
+				getTextureCoordW(n, tp->src_rect.x2()),
 				getTextureCoordH(n, tp->src_rect.y2()));
 		}
 	}
@@ -347,9 +347,9 @@ namespace KRE
 
 		tp->src_rect = rect(0, 0, tp->surface_width, tp->surface_height);
 		const int n = static_cast<int>(std::distance(texture_params_.begin(), tp));
-		tp->src_rect_norm = rectf::from_coordinates(getTextureCoordW(n, tp->src_rect.x1()), 
-			getTextureCoordH(n, tp->src_rect.y1()), 
-			getTextureCoordW(n, tp->src_rect.x2()), 
+		tp->src_rect_norm = rectf::from_coordinates(getTextureCoordW(n, tp->src_rect.x1()),
+			getTextureCoordH(n, tp->src_rect.y1()),
+			getTextureCoordW(n, tp->src_rect.x2()),
 			getTextureCoordH(n, tp->src_rect.y2()));
 	}
 
@@ -453,7 +453,7 @@ namespace KRE
 	void Texture::setUnpackAlignment(int n, int align)
 	{
 		ASSERT_LOG(n < static_cast<int>(texture_params_.size()), "index exceeds number of textures present.");
-		ASSERT_LOG(align == 1 || align == 2 || align == 4 || align == 8, 
+		ASSERT_LOG(align == 1 || align == 2 || align == 4 || align == 8,
 			"texture unpacking alignment must be either 1,2,4 or 8: " << align);
 		if(n < 0) {
 			for(auto& tp : texture_params_) {
@@ -471,16 +471,16 @@ namespace KRE
 			for(auto tp = texture_params_.begin(); tp != texture_params_.end(); ++tp) {
 				tp->src_rect = r;
 				const int n = static_cast<int>(std::distance(texture_params_.begin(), tp));
-				tp->src_rect_norm = rectf::from_coordinates(getTextureCoordW(n, tp->src_rect.x1()), 
-					getTextureCoordH(n, tp->src_rect.y1()), 
-					getTextureCoordW(n, tp->src_rect.x2()), 
+				tp->src_rect_norm = rectf::from_coordinates(getTextureCoordW(n, tp->src_rect.x1()),
+					getTextureCoordH(n, tp->src_rect.y1()),
+					getTextureCoordW(n, tp->src_rect.x2()),
 					getTextureCoordH(n, tp->src_rect.y2()));
 			}
 		} else {
 			texture_params_[n].src_rect = r;
-			texture_params_[n].src_rect_norm = rectf::from_coordinates(getTextureCoordW(n, texture_params_[n].src_rect.x1()), 
-				getTextureCoordH(n, texture_params_[n].src_rect.y1()), 
-				getTextureCoordW(n, texture_params_[n].src_rect.x2()), 
+			texture_params_[n].src_rect_norm = rectf::from_coordinates(getTextureCoordW(n, texture_params_[n].src_rect.x1()),
+				getTextureCoordH(n, texture_params_[n].src_rect.y1()),
+				getTextureCoordW(n, texture_params_[n].src_rect.x2()),
 				getTextureCoordH(n, texture_params_[n].src_rect.y2()));
 		}
 	}
@@ -677,7 +677,7 @@ namespace KRE
 		for(int x = 0; x != surf->width(); ++x) {
 			if(surf->getColorAt(x, 0) == color) {
 				return surf->getColorAt(x, it->second);
-			}			
+			}
 		}
 		return color;
 	}

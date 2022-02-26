@@ -147,18 +147,18 @@ namespace geometry
 		void set_w(const T& new_w) { bottom_right_.x = top_left_.x + new_w; }
 		void set_h(const T& new_h) { bottom_right_.y = top_left_.y + new_h; }
 
-		void set_top_left(const T& new_x, const T& new_y) { 
-			top_left_.x = new_x; 
-			top_left_.y = new_y; 
+		void set_top_left(const T& new_x, const T& new_y) {
+			top_left_.x = new_x;
+			top_left_.y = new_y;
 		}
 		void set_xy(const T& new_x, const T& new_y) { set_top_left(new_x, new_y); }
-		void set_bottom_right(const T& new_x2, const T& new_y2) { 
-			bottom_right_.x = new_x2; 
-			bottom_right_.y = new_y2; 
+		void set_bottom_right(const T& new_x2, const T& new_y2) {
+			bottom_right_.x = new_x2;
+			bottom_right_.y = new_y2;
 		}
-		void set_width_height(const T& new_w, const T& new_h) { 
-			bottom_right_.x = top_left_.x + new_w; 
-			bottom_right_.y = top_left_.y + new_h; 
+		void set_width_height(const T& new_w, const T& new_h) {
+			bottom_right_.x = top_left_.x + new_w;
+			bottom_right_.y = top_left_.y + new_h;
 		}
 		void set_wh(const T& new_w, const T& new_h) { set_width_height(new_w, new_h); }
 		void set(const T x, const T y, const T w, const T h) {
@@ -266,7 +266,7 @@ namespace geometry
 	template<typename T> inline
 	Rect<T> operator+(const Rect<T>& r, const Point<T>& p);
 
-	template<> inline 
+	template<> inline
 	Rect<int>::Rect(const variant& v)
 	{
 		if(v.is_list()) {
@@ -274,7 +274,7 @@ namespace geometry
 			return;
 		} else if(v.is_map()) {
 			ASSERT_LOG((v.has_key("x") && v.has_key("y") && v.has_key("w") && v.has_key("h"))
-				|| (v.has_key("x1") && v.has_key("y1") && v.has_key("x2") && v.has_key("y2")), 
+				|| (v.has_key("x1") && v.has_key("y1") && v.has_key("x2") && v.has_key("y2")),
 				"map must have 'x','y','w','h' or 'x1','y1','x2','y2' attributes.");
 			if(v.has_key("x")) {
 				*this = Rect<int>(v["x"].as_int32(),v["y"].as_int32(),v["w"].as_int32(),v["h"].as_int32());
@@ -286,7 +286,7 @@ namespace geometry
 		}
 	}
 
-	template<> inline 
+	template<> inline
 	Rect<float>::Rect(const variant& v)
 	{
 		if(v.is_list()) {
@@ -298,7 +298,7 @@ namespace geometry
 			return;
 		} else if(v.is_map()) {
 			ASSERT_LOG((v.has_key("x") && v.has_key("y") && v.has_key("w") && v.has_key("h"))
-				|| (v.has_key("x1") && v.has_key("y1") && v.has_key("x2") && v.has_key("y2")), 
+				|| (v.has_key("x1") && v.has_key("y1") && v.has_key("x2") && v.has_key("y2")),
 				"map must have 'x','y','w','h' or 'x1','y1','x2','y2' attributes.");
 			if(v.has_key("x")) {
 				*this = Rect<float>(v["x"].as_float(),v["y"].as_float(),v["w"].as_float(),v["h"].as_float());

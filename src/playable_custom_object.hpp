@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -89,7 +89,7 @@ private:
 	bool underwater_controls_;
 
 	int can_interact_;
-	
+
 	std::unique_ptr<controls::local_controls_lock> control_lock_;
 
 	variant ctrl_keys_, prev_ctrl_keys_;

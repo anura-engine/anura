@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2016 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -75,14 +75,14 @@ namespace breakpad
 
 		// Finally, send a report
 		google_breakpad::ReportResult r = sender.SendCrashReport(get_server_address(), params, files, 0);
- 
+
 		// Possibly notify user about success/failure
 		if (r == google_breakpad::RESULT_SUCCEEDED) {
 			SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, "Crash report", "Crash report was sent. Thank you!", NULL);
 		} else {
 			SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_WARNING, "Crash report", "Could not send crash report. Thank you for trying, though!", NULL);
 		}
- 
+
 		return false;
 	}
 
@@ -91,14 +91,14 @@ namespace breakpad
 		std::wstringstream dump_path;
 		dump_path << preferences::save_file_path();
 
-		google_breakpad::ExceptionHandler *pHandler = new google_breakpad::ExceptionHandler( 
-			  dump_path.str(), 
-			  mini_dump_filter_callback, 
-			  mini_dump_handler_callback, 
-			  0, 
-			  google_breakpad::ExceptionHandler::HANDLER_ALL, 
-			  MiniDumpNormal, 
-			  L"", 
+		google_breakpad::ExceptionHandler *pHandler = new google_breakpad::ExceptionHandler(
+			  dump_path.str(),
+			  mini_dump_filter_callback,
+			  mini_dump_handler_callback,
+			  0,
+			  google_breakpad::ExceptionHandler::HANDLER_ALL,
+			  MiniDumpNormal,
+			  L"",
 			  0 );
 	}
 }

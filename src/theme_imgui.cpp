@@ -36,7 +36,7 @@
 
 namespace
 {
-	const std::string imgui_theme_file = "data/imgui.cfg"; 
+	const std::string imgui_theme_file = "data/imgui.cfg";
 }
 
 // A default theme

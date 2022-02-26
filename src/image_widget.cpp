@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -28,11 +28,11 @@
 
 #include <iostream>
 
-namespace gui 
+namespace gui
 {
 	ImageWidget::ImageWidget(const std::string& fname, int w, int h)
-	  : texture_(KRE::Texture::createTexture(fname)), 
-	    rotate_(0.0f), 
+	  : texture_(KRE::Texture::createTexture(fname)),
+	    rotate_(0.0f),
 	    image_name_(fname)
 	{
 		setEnvironment();
@@ -40,14 +40,14 @@ namespace gui
 	}
 
 	ImageWidget::ImageWidget(KRE::TexturePtr tex, int w, int h)
-	  : texture_(tex), 
+	  : texture_(tex),
 		rotate_(0.0)
 	{
 		setEnvironment();
 		init(w, h);
 	}
 
-	ImageWidget::ImageWidget(const variant& v, game_logic::FormulaCallable* e) 
+	ImageWidget::ImageWidget(const variant& v, game_logic::FormulaCallable* e)
 		: Widget(v, e)
 	{
 		if(v.has_key("area")) {
@@ -107,7 +107,7 @@ namespace gui
 			} else {
 				obj.texture_ = KRE::Texture::createTexture(value);
 			}
-			
+
 		DEFINE_FIELD(area, "[int,int,int,int]")
 			return obj.area_.write();
 		DEFINE_SET_FIELD
@@ -137,7 +137,7 @@ namespace gui
 	END_DEFINE_CALLABLE(ImageWidget)
 
 	GuiSectionWidget::GuiSectionWidget(const std::string& id, int w, int h, int scale)
-	  : section_(GuiSection::get(id)), 
+	  : section_(GuiSection::get(id)),
 	    scale_(scale)
 	{
 		setEnvironment();
@@ -148,7 +148,7 @@ namespace gui
 		}
 	}
 
-	GuiSectionWidget::GuiSectionWidget(const variant& v, game_logic::FormulaCallable* e) 
+	GuiSectionWidget::GuiSectionWidget(const variant& v, game_logic::FormulaCallable* e)
 		: Widget(v,e),
  		  section_(GuiSection::get(v)),
 		  scale_(v["scale"].as_int(1))

@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -27,7 +27,7 @@
 #include "formula_callable_definition.hpp"
 #include "variant.hpp"
 
-class GameRegistry : public game_logic::FormulaCallable 
+class GameRegistry : public game_logic::FormulaCallable
 {
 public:
 	static GameRegistry& getInstance();

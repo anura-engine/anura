@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -33,7 +33,7 @@
 #include "utf8_to_codepoint.hpp"
 #include "variant_utils.hpp"
 
-namespace 
+namespace
 {
 	typedef std::map<std::string, GraphicalFontPtr> cache_map;
 	cache_map& get_cache()
@@ -64,7 +64,7 @@ ConstGraphicalFontPtr GraphicalFont::get(const std::string& id)
 }
 
 GraphicalFont::GraphicalFont(variant node)
-  : id_(node["id"].as_string()), 
+  : id_(node["id"].as_string()),
     texture_file_(node["texture"].as_string()),
 	texture_(KRE::Texture::createTexture(node["texture"].as_string())),
     kerning_(node["kerning"].as_int(2))
@@ -73,7 +73,7 @@ GraphicalFont::GraphicalFont(variant node)
 	if (node.has_key("pad")){
 		pad = node["pad"].as_int(2);
 	}
-	
+
 	rect current_rect;
 	for(const variant& char_node : node["chars"].as_list()) {
 		if(char_node.has_key("pad")) {
@@ -130,7 +130,7 @@ rect GraphicalFont::doDraw(int x, int y, const std::string& text, bool draw_text
 
 	for(auto codepoint : utils::utf8_to_codepoint(text)) {
 		// ASCII \n character and Unicode code point are the same
-		// going to ignore the other Unicode line seperators, 
+		// going to ignore the other Unicode line seperators,
 		// due to uncommon usage.
 		if(codepoint == '\n') {
 			ypos = ypos + ((highest+4)*size)/2;
@@ -168,7 +168,7 @@ rect GraphicalFont::doDraw(int x, int y, const std::string& text, bool draw_text
 		if(ypos + r.h()*size > y2) {
 			y2 = ypos + static_cast<int>(r.h()*size);
 		}
-		
+
 		xpos += static_cast<int>(r.w()*size) + kerning_*size;
 
 		if(xpos > x2) {
@@ -200,7 +200,7 @@ rect GraphicalFont::dimensions(const std::string& text, int size) const
 }
 
 // Initialize the graphical font for the given locale
-void GraphicalFont::initForLocale(const std::string& locale) 
+void GraphicalFont::initForLocale(const std::string& locale)
 {
 	if(!g_enable_graphical_fonts) {
 		return;

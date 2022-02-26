@@ -125,7 +125,7 @@ void b2PolygonShape::Set(const b2Vec2* vertices, int32 count)
 		SetAsBox(1.0f, 1.0f);
 		return;
 	}
-	
+
 	int32 n = b2Min(count, b2_maxPolygonVertices);
 
 	// Perform welding and copy vertices into local buffer.
@@ -216,7 +216,7 @@ void b2PolygonShape::Set(const b2Vec2* vertices, int32 count)
 			break;
 		}
 	}
-	
+
 	m_count = m;
 
 	// Copy vertices.
@@ -279,7 +279,7 @@ bool b2PolygonShape::RayCast(b2RayCastOutput* output, const b2RayCastInput& inpu
 		float32 denominator = b2Dot(m_normals[i], d);
 
 		if (denominator == 0.0f)
-		{	
+		{
 			if (numerator < 0.0f)
 			{
 				return false;
@@ -425,7 +425,7 @@ void b2PolygonShape::ComputeMass(b2MassData* massData, float32 density) const
 
 	// Inertia tensor relative to the local origin (point s).
 	massData->I = density * I;
-	
+
 	// Shift to center of mass then to original body origin.
 	massData->I += massData->mass * (b2Dot(massData->center, massData->center) - b2Dot(center, center));
 }

@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -39,7 +39,7 @@ using namespace game_logic;
 
 namespace voxel
 {
-	namespace 
+	namespace
 	{
 		std::map<std::string, ConstFormulaCallableDefinitionPtr> defs_cache;
 		std::map<std::string, const_voxel_object_type_ptr> types_cache;
@@ -206,7 +206,7 @@ namespace voxel
 						variant default_value = value["default"];
 						if(!type->match(default_value)) {
 							ASSERT_LOG(default_value.is_null(), "Default value for " << id_ << "." << k << " is " << default_value.write_json() << " of type " << get_variant_type_from_value(default_value)->to_string() << " does not match type " << type->to_string());
-	
+
 							if(value["variable"].as_bool(true) && !value["dynamic_initialization"].as_bool(false)) {
 								requires_initialization = true;
 							}
@@ -326,7 +326,7 @@ namespace voxel
 					}
 					properties_requiring_initialization_.push_back(nslot);
 				}
-	
+
 				if(dynamic_initialization) {
 					properties_requiring_dynamic_initialization_.push_back(nslot);
 				}

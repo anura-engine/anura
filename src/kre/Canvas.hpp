@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -52,7 +52,7 @@ namespace KRE
 	inline CanvasBlitFlags operator|(CanvasBlitFlags lhs, CanvasBlitFlags rhs) {
 		return static_cast<CanvasBlitFlags>(static_cast<int>(lhs) | static_cast<int>(rhs));
 	}
-	
+
 	inline bool operator&(CanvasBlitFlags lhs, CanvasBlitFlags rhs) {
 		return (static_cast<int>(lhs) & static_cast<int>(rhs)) == static_cast<int>(rhs);
 	}
@@ -86,7 +86,7 @@ namespace KRE
 		virtual void drawLineStrip(const std::vector<glm::vec2>& points, float line_width, const Color& color) const = 0;
 		virtual void drawLineLoop(const std::vector<glm::vec2>& varray, float line_width, const Color& color) const = 0;
 		virtual void drawLine(const pointf& p1, const pointf& p2, const Color& color) const = 0;
-		// Draw filled polygon (i.e. triangle fan) using given color	
+		// Draw filled polygon (i.e. triangle fan) using given color
 		// Should add a version taking fill and stroke color.
 		virtual void drawPolygon(const std::vector<glm::vec2>& points, const Color& color=Color::colorWhite()) const = 0;
 
@@ -117,8 +117,8 @@ namespace KRE
 
 		struct CameraScope
 		{
-			CameraScope(CameraPtr cam) 
-				: canvas_(Canvas::getInstance()), 
+			CameraScope(CameraPtr cam)
+				: canvas_(Canvas::getInstance()),
 				  saved_cam_(canvas_->camera_)
 			{
 				canvas_->camera_ = cam;

@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2012-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -74,7 +74,7 @@ namespace box2d
 		void DrawSegment(const b2Vec2& p1, const b2Vec2& p2, const b2Color& color);
 		void DrawTransform(const b2Transform& xf);
 		void DrawPoint(const b2Vec2& p, float32 size, const b2Color& color);
-		void DrawString(int x, int y, const char* string, ...); 
+		void DrawString(int x, int y, const char* string, ...);
 		void DrawAABB(b2AABB* aabb, const b2Color& color);
 	};
 
@@ -116,7 +116,7 @@ namespace box2d
 		explicit joint(b2Joint* j);
 		virtual variant getValue(const std::string& key) const;
 		virtual void setValue(const std::string& key, const variant& value);
-		
+
 		b2Joint* get_b2Joint() { return joint_; }
 	private:
 		b2Joint* joint_;

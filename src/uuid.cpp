@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -28,16 +28,16 @@
 #include "unit_test.hpp"
 #include "uuid.hpp"
 
-namespace 
+namespace
 {
-	boost::mt19937* twister_rng() 
+	boost::mt19937* twister_rng()
 	{
 		static boost::mt19937 ran;
 		ran.seed(static_cast<unsigned>(boost::posix_time::microsec_clock::local_time().time_of_day().total_milliseconds()));
 		return &ran;
 	}
 
-	UNIT_TEST(serialize_uuid) 
+	UNIT_TEST(serialize_uuid)
 	{
 		for(int i = 0; i != 8; ++i) {
 			boost::uuids::uuid id = generate_uuid();
@@ -47,13 +47,13 @@ namespace
 	}
 }
 
-boost::uuids::uuid generate_uuid() 
+boost::uuids::uuid generate_uuid()
 {
 	static boost::uuids::basic_random_generator<boost::mt19937> gen(twister_rng());
 	return gen();
 }
 
-std::string write_uuid(const boost::uuids::uuid& id) 
+std::string write_uuid(const boost::uuids::uuid& id)
 {
 	char result[33];
 	char* ptr = result;
@@ -64,7 +64,7 @@ std::string write_uuid(const boost::uuids::uuid& id)
 	return std::string(result, result+32);
 }
 
-boost::uuids::uuid read_uuid(const std::string& s) 
+boost::uuids::uuid read_uuid(const std::string& s)
 {
 	boost::uuids::uuid result;
 

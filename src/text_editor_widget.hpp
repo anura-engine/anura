@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -27,7 +27,7 @@
 
 #include "scrollable_widget.hpp"
 
-namespace gui 
+namespace gui
 {
 	class TextEditorWidget;
 	typedef ffl::IntrusivePtr<TextEditorWidget> TextEditorWidgetPtr;
@@ -173,7 +173,7 @@ namespace gui
 		size_t xscroll_pos_;
 
 		size_t begin_highlight_line_, end_highlight_line_;
-	
+
 	bool editable_;
 		bool has_focus_;
 		bool is_dragging_;

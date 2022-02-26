@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -68,11 +68,11 @@ namespace KRE
 
 		bool setWindowSize(int width, int height, int flags=WindowSizeChangeFlags::NONE);
 		virtual bool autoWindowSize(int& width, int& height) = 0;
-		
+
 		bool setLogicalWindowSize(int width, int height);
 
 		void setWindowTitle(const std::string& title);
-		
+
 		virtual void setWindowIcon(const std::string& name) = 0;
 
 		virtual unsigned getWindowID() const = 0;
@@ -108,7 +108,7 @@ namespace KRE
 		void setClearColor(uint8_t r, uint8_t g, uint8_t b, uint8_t a=255) const;
 		void setClearColor(float r, float g, float b, float a=1.0f) const;
 		void setClearColor(const Color& color) const;
-		
+
 		Color getClearColor() const { return clear_color_; }
 
 		virtual void clear(ClearFlags f) = 0;
@@ -172,7 +172,7 @@ namespace KRE
 		// set the parameters, then actually create the window.
 		WindowPtr allocateWindow(const variant& hints=variant());
 		void createWindow(WindowPtr wnd);
-		
+
 		static std::vector<WindowPtr> getWindowList();
 		static WindowPtr getWindowFromID(unsigned id);
 		static WindowPtr getMainWindow();

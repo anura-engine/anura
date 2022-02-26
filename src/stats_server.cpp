@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -29,7 +29,7 @@
 #include "formula_callable.hpp"
 #include "stats_server.hpp"
 
-namespace 
+namespace
 {
 	using namespace game_logic;
 
@@ -63,7 +63,7 @@ namespace
 	{
 	}
 
-	namespace 
+	namespace
 	{
 		class variant_callable : public FormulaCallable {
 			variant var_;
@@ -108,7 +108,7 @@ namespace
 	}
 
 	//the tables that are used for a single message type.
-	struct msg_type_info 
+	struct msg_type_info
 	{
 		msg_type_info() : record_all(false) {}
 		std::string name;
@@ -258,7 +258,7 @@ void init_tables(const variant& doc)
 	}
 }
 
-namespace 
+namespace
 {
 	std::map<variant,variant> module_definitions;
 	std::map<std::string,std::string> module_errors;
@@ -364,7 +364,7 @@ void process_stats(const variant& doc)
 	data_table_key[0] = "";
 	data_store[1] = &data_table[data_table_key];
 
-	variant levels = doc["levels"];	
+	variant levels = doc["levels"];
 	if(!levels.is_list()) {
 		return;
 	}
@@ -391,7 +391,7 @@ void process_stats(const variant& doc)
 			if(!type.is_string()) {
 				continue;
 			}
-			
+
 			const std::string& type_str = type.as_string();
 			const msg_type_info& msg_info = message_type_index[module_str][type_str];
 			if(msg_info.record_all) {

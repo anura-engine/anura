@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -62,7 +62,7 @@ namespace sys
 {
 	using namespace boost::filesystem;
 
-	namespace 
+	namespace
 	{
 #ifdef HAVE_CONFIG_H
 		const std::string data_dir = DATADIR ;
@@ -249,7 +249,7 @@ namespace sys
 
 		std::string normalise_path(const std::string& path)
 		{
-			if(is_path_absolute(path)) { 
+			if(is_path_absolute(path)) {
 				return path;
 			}
 			std::vector<std::string> cur_path;
@@ -297,10 +297,10 @@ namespace sys
 		return back + common_part;
 	}
 
-	namespace 
+	namespace
 	{
 		typedef std::map<std::string, std::vector<std::function<void()> > > file_mod_handler_map;
-		file_mod_handler_map& get_mod_map() 
+		file_mod_handler_map& get_mod_map()
 		{
 			static file_mod_handler_map instance;
 			return instance;
@@ -322,7 +322,7 @@ namespace sys
 
 	std::vector<std::string> new_files_listening;
 
-	threading::mutex& get_mod_map_mutex() 
+	threading::mutex& get_mod_map_mutex()
 	{
 		static threading::mutex instance;
 		return instance;
@@ -368,7 +368,7 @@ namespace sys
 					LOG_WARN("COULD NOT LISTEN ON FILE " << new_files[n]);
 				}
 			}
-			
+
 			//Avoid crash where, upon resource exhaustion, inotify_fd would be -1 and cause FD_SET to abort the program with an error.
 			if(inotify_fd < 0) {
 				LOG_WARN("COULD NOT LISTEN ON FILES. CHECK ulimit -n; YOU MAY BE OUT OF FILE DESCRIPTORS.");

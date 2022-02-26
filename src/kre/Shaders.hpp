@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -47,7 +47,7 @@ namespace KRE
 	{
 		ShaderAttributeError(const char* what) : std::runtime_error(what) {}
 	};
-	
+
 	typedef std::function<void(ShaderProgramPtr shader)> UniformSetFn;
 
 	enum class ProgramType {
@@ -137,7 +137,7 @@ namespace KRE
 		virtual int getNormalAttribute() const = 0;
 
 		virtual void setUniformsForTexture(const TexturePtr& tex) const = 0;
-		
+
 		void setUniformDrawFunction(UniformSetFn fn) { uniform_draw_fn_ = fn; }
 		UniformSetFn getUniformDrawFunction() const { return uniform_draw_fn_; }
 
@@ -149,8 +149,8 @@ namespace KRE
 		//! loads the internal store of shader programs from the given data.
 		static void loadFromVariant(const variant& node);
 
-		static ShaderProgramPtr createShader(const std::string& name, 
-			const std::vector<ShaderData>& shader_data, 
+		static ShaderProgramPtr createShader(const std::string& name,
+			const std::vector<ShaderData>& shader_data,
 			const std::vector<ActiveMapping>& uniform_map = std::vector<ActiveMapping>(),
 			const std::vector<ActiveMapping>& attribute_map = std::vector<ActiveMapping>());
 

@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -56,14 +56,14 @@
 
 void UTILITY_query(const std::vector<std::string>& args);
 
-namespace 
+namespace
 {
 	const int TextureImageSize = 1024;
 
-	struct animation_area 
+	struct animation_area
 	{
-		explicit animation_area(variant node) 
-			: anim(new Frame(node)), 
+		explicit animation_area(variant node)
+			: anim(new Frame(node)),
 			  is_particle(false)
 		{
 			width = 0;
@@ -78,7 +78,7 @@ namespace
 			src_image = node["image"].as_string();
 			dst_image = -1;
 		}
-	    
+
 		ffl::IntrusivePtr<Frame> anim;
 		int width, height;
 
@@ -138,7 +138,7 @@ namespace
 	}
 }
 
-namespace 
+namespace
 {
 	bool animation_area_has_alpha_channel(animation_area_ptr anim)
 	{
@@ -172,7 +172,7 @@ namespace
 				}
 			}
 		}
-	
+
 		return false;
 	}
 }
@@ -410,7 +410,7 @@ UTILITY(compile_objects)
 		node.remove_attr_mutation(variant("pad"));
 
 		const auto& first_frame = anim->anim->frameLayout().front();
-		
+
 		rect r(anim->dst_area.x() - first_frame.x_adjust, anim->dst_area.y() - first_frame.y_adjust, anim->anim->area().w(), anim->anim->area().h());
 		node.add_attr_mutation(variant("rect"), r.write());
 
@@ -1147,7 +1147,7 @@ COMMAND_LINE_UTILITY(bake_spritesheet)
 	}
 }
 
-namespace 
+namespace
 {
 	KRE::SurfacePtr getAndScaleImage(const std::string& img, const std::string& algo, int scale)
 	{
@@ -1231,7 +1231,7 @@ COMMAND_LINE_UTILITY(build_spritesheet_from_images)
 	std::vector<int> row_heights;
 	cell_widths.push_back(0);
 	row_heights.push_back(0);
-	
+
 	for(auto itor = image_files.begin(); itor != image_files.end(); ) {
 		auto path = *itor;
 		if(path.empty() == false && path[0] != '-' && sys::is_directory(path)) {
@@ -1251,7 +1251,7 @@ COMMAND_LINE_UTILITY(build_spritesheet_from_images)
 			image_files.insert(image_files.begin() + index, png.begin(), png.end());
 
 			itor = image_files.begin() + index;
-			
+
 		} else {
 			++itor;
 		}
@@ -1488,7 +1488,7 @@ COMMAND_LINE_UTILITY(make_image_wrap)
 						begin_line[i] = int(target[i]*(1.0 - mix_ratio) + begin_line[i]*mix_ratio);
 						end_line[i] = int(target[i]*(1.0 - mix_ratio) + end_line[i]*mix_ratio);
 					}
-					
+
 					begin_line += 4;
 					end_line -= 4;
 				}
@@ -1520,7 +1520,7 @@ COMMAND_LINE_UTILITY(generate_wesnoth_spritesheet)
 	std::string prefix_override;
 
 	std::deque<std::string> argv;
-	
+
 	for(auto s : args) {
 		if(s == "--effect") {
 			obj_type = "halo_effect";
@@ -1685,7 +1685,7 @@ COMMAND_LINE_UTILITY(generate_wesnoth_spritesheet)
 	}
 
 	fprintf(stderr, "Creating sheet: %dx%d\n", sheet_width, sheet_height);
-	
+
 	using namespace KRE;
 	SurfacePtr sheet_surf = Surface::create(sheet_width, sheet_height, PixelFormat::PF::PIXELFORMAT_ARGB8888);
 	SDL_Surface* sheet = dynamic_cast<KRE::SurfaceSDL*>(sheet_surf.get())->get();
@@ -1845,13 +1845,13 @@ COMMAND_LINE_UTILITY(format_json)
 }
 
 
-namespace 
+namespace
 {
-	void process_terrain_folder(variant_builder& res, 
-		const std::vector<std::string>& names, 
-		const std::string& file_name, 
-		const std::string& base_folder, 
-		bool keep_borders, 
+	void process_terrain_folder(variant_builder& res,
+		const std::vector<std::string>& names,
+		const std::string& file_name,
+		const std::string& base_folder,
+		bool keep_borders,
 		bool add_file_name=false)
 	{
 		LOG_INFO("Process base folder: " << base_folder);
@@ -1897,7 +1897,7 @@ namespace
 		using namespace KRE;
 
 		std::vector<rect> outr;
-		std::vector<std::array<int, 4>> borders;	
+		std::vector<std::array<int, 4>> borders;
 		auto s = Surface::packImages(filenames, &outr, keep_borders ? nullptr : &borders);
 		ASSERT_LOG(s != nullptr, "Couldn't fit all the images into a single spritesheet.");
 		s->savePng(file_name + ".png");
@@ -1976,7 +1976,7 @@ COMMAND_LINE_UTILITY(generate_terrain_spritesheet)
 		}
 	}
 
-	ASSERT_LOG(!base_folder.empty(), "No base folder was given. Use --base <folder> to specify.");	
+	ASSERT_LOG(!base_folder.empty(), "No base folder was given. Use --base <folder> to specify.");
 	LOG_DEBUG("Base Folder: " << base_folder);
 
 	variant_builder res;
@@ -2056,7 +2056,7 @@ void blit_tile(SurfacePtr surf, unsigned char* pixels, int src_tile_x, int src_t
 			memcpy(dp, p, 4);
 		}
 	}
-	
+
 }
 
 }

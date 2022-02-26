@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -41,7 +41,7 @@ bool in_speech_dialog();
 using game_logic::FunctionSymbolTable;
 FunctionSymbolTable& get_custom_object_functions_symbol_table();
 
-class EntityCommandCallable : public game_logic::FormulaCallable 
+class EntityCommandCallable : public game_logic::FormulaCallable
 {
 public:
 	EntityCommandCallable() : expr_(nullptr) {}
@@ -62,7 +62,7 @@ private:
 	ffl::IntrusivePtr<const reference_counted_object> expr_holder_;
 };
 
-class CustomObjectCommandCallable : public game_logic::FormulaCallable 
+class CustomObjectCommandCallable : public game_logic::FormulaCallable
 {
 public:
 	CustomObjectCommandCallable() : expr_(nullptr) {}
@@ -76,14 +76,14 @@ private:
 	virtual void execute(Level& lvl, CustomObject& ob) const = 0;
 	variant getValue(const std::string& key) const override { return variant(); }
 	void getInputs(std::vector<game_logic::FormulaInput>* inputs) const override {}
-	
+
 	//these two members are used as a more compiler-friendly version of a
 	//intrusive_ptr<FormulaExpression>
 	const game_logic::FormulaExpression* expr_;
 	ffl::IntrusivePtr<const reference_counted_object> expr_holder_;
 };
 
-class SwallowObjectCommandCallable : public game_logic::FormulaCallable 
+class SwallowObjectCommandCallable : public game_logic::FormulaCallable
 {
 public:
 	bool isCommand() const override { return true; }
@@ -92,7 +92,7 @@ private:
 	void getInputs(std::vector<game_logic::FormulaInput>* inputs) const override {}
 };
 
-class SwallowMouseCommandCallable : public game_logic::FormulaCallable 
+class SwallowMouseCommandCallable : public game_logic::FormulaCallable
 {
 public:
 	bool isCommand() const override { return true; }

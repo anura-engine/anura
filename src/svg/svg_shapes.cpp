@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -96,7 +96,7 @@ namespace KRE
 				if(std::abs(x1-x2) < DBL_EPSILON && std::abs(y1-y2) < DBL_EPSILON) {
 					return;
 				}
-			
+
 				const double r1 = (x1-x2)/2.0;
 				const double r2 = (y1-y2)/2.0;
 
@@ -134,7 +134,7 @@ namespace KRE
 				const double k4 = (-y1_prime - yc_prime)/b;
 
 				const double k5 = sqrt(fabs(k1*k1 + k2*k2));
-				if(std::abs(k5) < DBL_EPSILON) { 
+				if(std::abs(k5) < DBL_EPSILON) {
 					return;
 				}
 
@@ -160,12 +160,12 @@ namespace KRE
 					const double y3 = b*std::sin(th1);
 					const double x2 = x3 + a*(t * std::sin(th1));
 					const double y2 = y3 + b*(-t * std::cos(th1));
-					cairo_curve_to(ctx, 
-						xc + cosp*x1 - sinp*y1, 
-						yc + sinp*x1 + cosp*y1, 
-						xc + cosp*x2 - sinp*y2, 
-						yc + sinp*x2 + cosp*y2, 
-						xc + cosp*x3 - sinp*y3, 
+					cairo_curve_to(ctx,
+						xc + cosp*x1 - sinp*y1,
+						yc + sinp*x1 + cosp*y1,
+						xc + cosp*x2 - sinp*y2,
+						yc + sinp*x2 + cosp*y2,
+						xc + cosp*x3 - sinp*y3,
 						yc + sinp*x3 + cosp*y3);
 				}
 			}
@@ -183,11 +183,11 @@ namespace KRE
 			}
 		}
 
-		shape::~shape() 
+		shape::~shape()
 		{
 		}
 
-		void shape::handle_render(render_context& ctx) const 
+		void shape::handle_render(render_context& ctx) const
 		{
 			render_path(ctx);
 		}
@@ -211,7 +211,7 @@ namespace KRE
 			cairo_new_path(ctx.cairo());
 		}
 
-		void shape::render_path(render_context& ctx) const 
+		void shape::render_path(render_context& ctx) const
 		{
 			if(!path_.empty()) {
 				path_cmd_context path_ctx(ctx.cairo());
@@ -234,8 +234,8 @@ namespace KRE
 		}
 
 		// list_of here is a hack because MSVC doesn't support C++11 initialiser_lists
-		circle::circle(element* doc, const ptree& pt) 
-			: shape(doc, pt) 
+		circle::circle(element* doc, const ptree& pt)
+			: shape(doc, pt)
 		{
 			auto attributes = pt.get_child_optional("<xmlattr>");
 			if(attributes) {
@@ -260,7 +260,7 @@ namespace KRE
 			}
 		}
 
-		circle::~circle() 
+		circle::~circle()
 		{
 		}
 
@@ -271,8 +271,8 @@ namespace KRE
 			double r  = radius_.value_in_specified_units(svg_length::SVG_LENGTHTYPE_NUMBER);
 			cairo_arc(ctx.cairo(), cx, cy, r, 0.0, 2 * M_PI);
 		}
-		
-		void circle::handle_render(render_context& ctx) const 
+
+		void circle::handle_render(render_context& ctx) const
 		{
 			render_circle(ctx);
 			stroke_and_fill(ctx);
@@ -319,7 +319,7 @@ namespace KRE
 		{
 		}
 
-		void ellipse::handle_render(render_context& ctx) const 
+		void ellipse::handle_render(render_context& ctx) const
 		{
 			double cx = cx_.value_in_specified_units(svg_length::SVG_LENGTHTYPE_NUMBER);
 			double cy = cy_.value_in_specified_units(svg_length::SVG_LENGTHTYPE_NUMBER);
@@ -353,9 +353,9 @@ namespace KRE
 			shape::clip_render_path(ctx);
 		}
 
-		rectangle::rectangle(element* doc, const ptree& pt) 
-			: shape(doc, pt), 
-			is_rounded_(false) 
+		rectangle::rectangle(element* doc, const ptree& pt)
+			: shape(doc, pt),
+			is_rounded_(false)
 		{
 			auto attributes = pt.get_child_optional("<xmlattr>");
 			if(attributes) {
@@ -389,7 +389,7 @@ namespace KRE
 			}
 		}
 
-		rectangle::~rectangle() 
+		rectangle::~rectangle()
 		{
 		}
 
@@ -416,7 +416,7 @@ namespace KRE
 				if(ry < 0) {
 					ry = 0;
 				}
-				
+
 				cairo_new_path(ctx.cairo());
 				cairo_move_to(ctx.cairo(), x + rx, y);
 				cairo_line_to(ctx.cairo(), x + w - rx, y);
@@ -433,7 +433,7 @@ namespace KRE
 			}
 		}
 
-		void rectangle::handle_render(render_context& ctx) const 
+		void rectangle::handle_render(render_context& ctx) const
 		{
 			render_rectangle(ctx);
 			stroke_and_fill(ctx);
@@ -447,7 +447,7 @@ namespace KRE
 			shape::clip_render_path(ctx);
 		}
 
-		polygon::polygon(element* doc, const ptree& pt) 
+		polygon::polygon(element* doc, const ptree& pt)
 			: shape(doc, pt)
 		{
 			auto attributes = pt.get_child_optional("<xmlattr>");
@@ -459,26 +459,26 @@ namespace KRE
 			}
 		}
 
-		polygon::~polygon() 
+		polygon::~polygon()
 		{
 		}
 
 		void polygon::render_polygon(render_context& ctx) const
 		{
 			auto it = points_.begin();
-			cairo_move_to(ctx.cairo(), 
-				it->first.value_in_specified_units(svg_length::SVG_LENGTHTYPE_NUMBER), 
+			cairo_move_to(ctx.cairo(),
+				it->first.value_in_specified_units(svg_length::SVG_LENGTHTYPE_NUMBER),
 				it->second.value_in_specified_units(svg_length::SVG_LENGTHTYPE_NUMBER));
 			while(it != points_.end()) {
-				cairo_line_to(ctx.cairo(), 
-					it->first.value_in_specified_units(svg_length::SVG_LENGTHTYPE_NUMBER), 
+				cairo_line_to(ctx.cairo(),
+					it->first.value_in_specified_units(svg_length::SVG_LENGTHTYPE_NUMBER),
 					it->second.value_in_specified_units(svg_length::SVG_LENGTHTYPE_NUMBER));
 				++it;
 			}
 			cairo_close_path(ctx.cairo());
 		}
 
-		void polygon::handle_render(render_context& ctx) const 
+		void polygon::handle_render(render_context& ctx) const
 		{
 			render_polygon(ctx);
 			stroke_and_fill(ctx);
@@ -492,7 +492,7 @@ namespace KRE
 			shape::clip_render_path(ctx);
 		}
 
-		text::text(element* doc, const ptree& pt, bool is_tspan) 
+		text::text(element* doc, const ptree& pt, bool is_tspan)
 			: shape(doc, pt),
 			 adjust_(LengthAdjust::SPACING),
 			 is_tspan_(is_tspan)
@@ -539,7 +539,7 @@ namespace KRE
 			}
 		}
 
-		text::~text() 
+		text::~text()
 		{
 		}
 
@@ -569,7 +569,7 @@ namespace KRE
 				x += extent.x_advance;
 				if(letter_spacing > 0) {
 					x += letter_spacing;
-				} 
+				}
 				y += extent.y_advance;
 			}
 			cairo_glyph_path(ctx.cairo(), &glyphs[0], static_cast<int>(glyphs.size()));
@@ -577,7 +577,7 @@ namespace KRE
 			ctx.set_text_xy(x, y);
 		}
 
-		void text::handle_render(render_context& ctx) const 
+		void text::handle_render(render_context& ctx) const
 		{
 			if(!text_.empty()) {
 				render_text(ctx);
@@ -634,7 +634,7 @@ namespace KRE
 			double y1 = y1_.value_in_specified_units(svg_length::SVG_LENGTHTYPE_NUMBER);
 			double x2 = x2_.value_in_specified_units(svg_length::SVG_LENGTHTYPE_NUMBER);
 			double y2 = y2_.value_in_specified_units(svg_length::SVG_LENGTHTYPE_NUMBER);
-			
+
 			cairo_move_to(ctx.cairo(), x1, y1);
 			cairo_line_to(ctx.cairo(), x2, y2);
 		}

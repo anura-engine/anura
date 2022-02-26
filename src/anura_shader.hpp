@@ -172,7 +172,7 @@ namespace graphics
 		std::map<int, variant> uniforms_to_set_;
 
 		std::string name_;
-		
+
 		ShaderRenderable renderable_;
 		std::vector<ffl::IntrusivePtr<TextureObject>> textures_;
 

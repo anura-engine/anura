@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -44,7 +44,7 @@ int get_named_zorder(const std::string& key, int default_value=0);
 struct TilePattern;
 class MultiTilePattern;
 
-namespace 
+namespace
 {
 	struct TilePatternCache;
 }
@@ -105,7 +105,7 @@ private:
 
 	//an entry which holds one of the strings found in this map, as well
 	//as the patterns it matches.
-	struct PatternIndexEntry 
+	struct PatternIndexEntry
 	{
 		PatternIndexEntry() { for(int n = 0; n != str.size(); ++n) { str[n] = 0; } }
 		tile_string str;

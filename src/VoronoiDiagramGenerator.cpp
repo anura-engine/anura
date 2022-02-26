@@ -12,9 +12,9 @@
 * OF THIS SOFTWARE OR ITS FITNESS FOR ANY PARTICULAR PURPOSE.
 */
 
-/* 
-* This code was originally written by Stephan Fortune in C code.  I, Shane O'Sullivan, 
-* have since modified it, encapsulating it in a C++ class and, fixing memory leaks and 
+/*
+* This code was originally written by Stephan Fortune in C code.  I, Shane O'Sullivan,
+* have since modified it, encapsulating it in a C++ class and, fixing memory leaks and
 * adding accessors to the Voronoi Edges.
 * Permission to use, copy, modify, and distribute this software for any
 * purpose without fee is hereby granted, provided that this entire notice
@@ -200,7 +200,7 @@ struct Halfedge * VoronoiDiagramGenerator::ELgethash(int b)
 
 	/* Hash table points to deleted half edge.  Patch as necessary. */
 	ELhash[b] = (struct Halfedge *) nullptr;
-	if ((he -> ELrefcnt -= 1) == 0) 
+	if ((he -> ELrefcnt -= 1) == 0)
 		makefree((Freenode*)he, &hfl);
 	return ((struct Halfedge *) nullptr);
 }
@@ -232,7 +232,7 @@ struct Halfedge * VoronoiDiagramGenerator::ELleftbnd(struct Point *p)
 	/* Now search linear list of halfedges for the correct one */
 	if (he==ELleftend  || (he != ELrightend && right_of(he,p)))
 	{
-		do 
+		do
 		{
 			he = he -> ELright;
 		} while (he!=ELrightend && right_of(he,p));	//keep going right on the list until either the end is reached, or you find the 1st edge which the point
@@ -247,7 +247,7 @@ struct Halfedge * VoronoiDiagramGenerator::ELleftbnd(struct Point *p)
 	/* Update hash table and reference counts */
 	if(bucket > 0 && bucket <ELhashsize-1)
 	{
-		if(ELhash[bucket] != (struct Halfedge *) nullptr) 
+		if(ELhash[bucket] != (struct Halfedge *) nullptr)
 		{
 			ELhash[bucket] -> ELrefcnt -= 1;
 		}
@@ -495,7 +495,7 @@ void VoronoiDiagramGenerator::endpoint(struct Edge *e1,int lr,struct Site * s, s
                 makefree((Freenode*)e3, &efl);
         }
 
-	return;	
+	return;
 }
 
 
@@ -519,7 +519,7 @@ void VoronoiDiagramGenerator::makevertex(struct Site *v)
 void VoronoiDiagramGenerator::deref(struct Site *v)
 {
 	v -> refcnt -= 1;
-	if (v -> refcnt == 0 ) 
+	if (v -> refcnt == 0 )
 		makefree((Freenode*)v, &sfl);
 }
 
@@ -1036,7 +1036,7 @@ void VoronoiDiagramGenerator::clip_line(struct Edge *e)
 			x1 = pxmin;
 			if (s1!=(struct Site *)nullptr && s1->coord.x > pxmin)
 				x1 = s1->coord.x;
-			if(x1>pxmax) 
+			if(x1>pxmax)
 			{
 				//printf("\nClipped (3) x1 = %f to %f",x1,pxmin);
 				//return;
@@ -1130,7 +1130,7 @@ bool VoronoiDiagramGenerator::voronoi(int triangulate)
 			newintstar = PQ_min();
 
 		//if the lowest site has a smaller y value than the lowest vector intersection, process the site
-		//otherwise process the vector intersection		
+		//otherwise process the vector intersection
 
 		if (newsite != (struct Site *)nullptr 	&& (PQempty() || newsite -> coord.y < newintstar.y
 			|| (newsite->coord.y == newintstar.y && newsite->coord.x < newintstar.x)))
@@ -1139,16 +1139,16 @@ bool VoronoiDiagramGenerator::voronoi(int triangulate)
 			lbnd = ELleftbnd(&(newsite->coord));				//get the first HalfEdge to the LEFT of the new site
 			rbnd = ELright(lbnd);						//get the first HalfEdge to the RIGHT of the new site
 			bot = rightreg(lbnd);						//if this halfedge has no edge, , bot = bottom site (whatever that is)
-			e = bisect(bot, newsite);					//create a new edge that bisects 
-			bisector = HEcreate(e, le);					//create a new HalfEdge, setting its ELpm field to 0			
-			ELinsert(lbnd, bisector);					//insert this new bisector edge between the left and right vectors in a linked list	
+			e = bisect(bot, newsite);					//create a new edge that bisects
+			bisector = HEcreate(e, le);					//create a new HalfEdge, setting its ELpm field to 0
+			ELinsert(lbnd, bisector);					//insert this new bisector edge between the left and right vectors in a linked list
 
 			if ((p = intersect(lbnd, bisector)) != (struct Site *) nullptr) 	//if the new bisector intersects with the left edge, remove the left edge's vertex, and put in the new one
-			{	
+			{
 				PQdelete(lbnd);
 				PQinsert(lbnd, p, dist(p,newsite));
 			};
-			lbnd = bisector;						
+			lbnd = bisector;
 			bisector = HEcreate(e, re);					//create a new HalfEdge, setting its ELpm field to 1
 			ELinsert(lbnd, bisector);					//insert the new HE to the right of the original bisector earlier in the IF stmt
 
@@ -1160,10 +1160,10 @@ bool VoronoiDiagramGenerator::voronoi(int triangulate)
 		}
 		else if (!PQempty()) /* intersection is smallest - this is a vector event */
 		{
-			lbnd = PQextractmin();						//pop the HalfEdge with the lowest vector off the ordered list of vectors				
+			lbnd = PQextractmin();						//pop the HalfEdge with the lowest vector off the ordered list of vectors
 			llbnd = ELleft(lbnd);						//get the HalfEdge to the left of the above HE
 			rbnd = ELright(lbnd);						//get the HalfEdge to the right of the above HE
-			rrbnd = ELright(rbnd);						//get the HalfEdge to the right of the HE to the right of the lowest HE 
+			rrbnd = ELright(rbnd);						//get the HalfEdge to the right of the HE to the right of the lowest HE
 			bot = leftreg(lbnd);						//get the Site to the left of the left HE which it bisects
 			top = rightreg(rbnd);						//get the Site to the right of the right HE which it bisects
 
@@ -1175,9 +1175,9 @@ bool VoronoiDiagramGenerator::voronoi(int triangulate)
 			e3 = rbnd->ELedge;
 			endpoint(lbnd->ELedge,lbnd->ELpm,v);	//set the endpoint of the left HalfEdge to be this vector
 			endpoint(rbnd->ELedge,rbnd->ELpm,v);	//set the endpoint of the right HalfEdge to be this vector
-			ELdelete(lbnd);							//mark the lowest HE for deletion - can't delete yet because there might be pointers to it in Hash Map	
+			ELdelete(lbnd);							//mark the lowest HE for deletion - can't delete yet because there might be pointers to it in Hash Map
 			PQdelete(rbnd);							//remove all vertex events to do with the  right HE
-			ELdelete(rbnd);							//mark the right HE for deletion - can't delete yet because there might be pointers to it in Hash Map	
+			ELdelete(rbnd);							//mark the right HE for deletion - can't delete yet because there might be pointers to it in Hash Map
 			pm = le;								//set the pm variable to zero
 
 			if (bot->coord.y > top->coord.y)		//if the site to the left of the event is higher than the Site

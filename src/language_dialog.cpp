@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by Yaohan Chen <yaohan.com@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -31,21 +31,21 @@
 #include "preferences.hpp"
 #include "screen_handling.hpp"
 
-namespace 
+namespace
 {
 	void end_dialog(gui::Dialog* d)
 	{
 		d->close();
 	}
 
-	void setLocale(const std::string& value) 
+	void setLocale(const std::string& value)
 	{
 		preferences::setLocale(value);
 		i18n::init();
 		GraphicalFont::initForLocale(i18n::get_locale());
 	}
 
-	class Grid 
+	class Grid
 	{
 		gui::Dialog& dialog_;
 		int cell_width_;
@@ -58,15 +58,15 @@ namespace
 		int widget_count_;
 
 		public:
-		Grid(gui::Dialog& dialog, int cell_width, int cell_height, int h_padding, int v_padding, int start_x, int start_y, int column_count) 
-			: dialog_(dialog), 
-			cell_width_(cell_width), 
-			cell_height_(cell_height), 
-			h_padding_(h_padding), 
-			v_padding_(v_padding), 
-			start_x_(start_x), 
-			start_y_(start_y), 
-			column_count_(column_count), 
+		Grid(gui::Dialog& dialog, int cell_width, int cell_height, int h_padding, int v_padding, int start_x, int start_y, int column_count)
+			: dialog_(dialog),
+			cell_width_(cell_width),
+			cell_height_(cell_height),
+			h_padding_(h_padding),
+			v_padding_(v_padding),
+			start_x_(start_x),
+			start_y_(start_y),
+			column_count_(column_count),
 			widget_count_(0) {
 		}
 

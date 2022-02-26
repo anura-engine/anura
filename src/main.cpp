@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -124,7 +124,7 @@ extern int g_vsync;
 
 PREF_BOOL(desktop_fullscreen, false, "Sets the game window to be a fullscreen window the size of the desktop");
 
-namespace 
+namespace
 {
 	PREF_BOOL(auto_update_module, false, "Auto updates the module from the module server on startup (number of milliseconds to spend attempting to update the module)");
 	PREF_BOOL(force_auto_update, false, "Will do a forced sync of auto-updates");
@@ -279,7 +279,7 @@ namespace
 			}
 
 			argv->insert(argv->begin() + insertion_point, arguments.begin(), arguments.end());
-		}	
+		}
 		return 0;
 	}
 
@@ -293,7 +293,7 @@ namespace
 		auto surf = Surface::create("alpha-colors.png");
 		surf->iterateOverSurface([&alpha_colors](int x, int y, int r, int g, int b, int a) {
 			alpha_colors.emplace_back(r, g, b);
-			LOG_INFO("Added alpha color: (" << r << "," << g << "," << b << ")");	
+			LOG_INFO("Added alpha color: (" << r << "," << g << "," << b << ")");
 		});
 
 		Surface::setAlphaFilter([=](int r, int g, int b) {
@@ -347,7 +347,7 @@ namespace
 			LOG_CRITICAL("set_log_file() could not open \"" << fname << "\" for writing.");
 			exit(-1);
 		}
-		
+
 		if(g_log_file) {
 			fclose(g_log_file);
 		}
@@ -369,25 +369,25 @@ PREF_BOOL(remember_me, true, "Remember me (my gamer account) when connecting to 
 // Takes a window, two out params for the best common w/h which will fit in the screen at 2x (?), and "reduce" (?).
 void auto_select_resolution(const KRE::WindowPtr& wm, int *width, int *height, bool reduce, bool isFullscreen)
 {
-	
+
 	ASSERT_LOG(width != nullptr, "width is null.");
 	ASSERT_LOG(height != nullptr, "height is null.");
 
 	auto mode = wm->getDisplaySize();
 	auto best_mode = mode;
 	bool found = false;
-	
+
 	if(isFullscreen) {
 		LOG_INFO("RESOLUTION SET TO FULLSCREEN RESOLUTION " << mode.width << "x" << mode.height);
-		
+
 		*width = mode.width;
 		*height = mode.height;
-		
+
 		return;
 	}
-	
+
 	LOG_INFO("TARGET RESOLUTION IS " << mode.width << "x" << mode.height);
-	
+
 	const float MinReduction = reduce ? 0.9f : 2.0f;
 	for(auto& candidate_mode : wm->getWindowModes([](const KRE::WindowMode&){ return true; })) {
 		if(g_auto_size_ideal_width && g_auto_size_ideal_height) {
@@ -396,7 +396,7 @@ void auto_select_resolution(const KRE::WindowPtr& wm, int *width, int *height, b
 			}
 
 			if(candidate_mode.width > mode.width * MinReduction) {
-				LOG_INFO("REJECTED MODE IS " << candidate_mode.width << "x" << candidate_mode.height 
+				LOG_INFO("REJECTED MODE IS " << candidate_mode.width << "x" << candidate_mode.height
 					<< "; (width " << candidate_mode.width << " > " << mode.width * MinReduction << ")");
 				continue;
 			}
@@ -425,7 +425,7 @@ void auto_select_resolution(const KRE::WindowPtr& wm, int *width, int *height, b
 			LOG_INFO("REJECTED MODE IS " << candidate_mode.width << "x" << candidate_mode.height);
 		}
 	}
-	
+
 	if (best_mode.width < g_min_window_width ||
 			best_mode.height < g_min_window_height) {
 
@@ -541,7 +541,7 @@ int main(int argcount, char* argvec[])
 
 	std::vector<std::string> argv;
 	for(int n = 1; n < argcount; ++n) {
-		argv.push_back(argvec[n]);        
+		argv.push_back(argvec[n]);
         if(argv.size() >= 2 && argv[argv.size()-2] == "-NSDocumentRevisionsDebugMode" && argv.back() == "YES") {
             //XCode passes these arguments by default when debugging -- make sure they are ignored.
             argv.resize(argv.size()-2);
@@ -559,7 +559,7 @@ int main(int argcount, char* argvec[])
 	if(sys::file_exists("./master-config.cfg")) {
 		LOG_INFO("LOADING CONFIGURATION FROM master-config.cfg");
 		variant cfg;
-		
+
 		try {
 			cfg = json::parse_from_file("./master-config.cfg");
 		} catch(json::ParseError& error) {
@@ -770,7 +770,7 @@ int main(int argcount, char* argvec[])
 							args.push_back(*a);
 						}
 						args.push_back(nullptr);
-				
+
 						exe_name.resize(exe_name.size() - anura_exe_name.size());
 						exe_name += match;
 						args[0] = const_cast<char*>(exe_name.c_str());
@@ -812,7 +812,7 @@ int main(int argcount, char* argvec[])
 		}
 
 		ffl::IntrusivePtr<module::client> cl, anura_cl;
-		
+
 		if(g_auto_update_module) {
 			cl.reset(new module::client);
 			cl->install_module(module::get_module_name(), g_force_auto_update);
@@ -953,7 +953,7 @@ int main(int argcount, char* argvec[])
 
 	const tbs::internal_server_manager internal_server_manager_scope(preferences::internal_tbs_server());
 
-	if(utility_program.empty() == false 
+	if(utility_program.empty() == false
 		&& test::utility_needs_video(utility_program) == false) {
 #ifdef _MSC_VER
 		std::freopen("CON", "w", stderr);
@@ -1031,14 +1031,14 @@ int main(int argcount, char* argvec[])
 
     KRE::WindowPtr main_wnd = wm.allocateWindow(built_hints);
 	main_wnd->setWindowTitle(module::get_module_pretty_name());
-	
+
 	if(!g_desktop_fullscreen && //What the heck is this, where is it defined?
-	   preferences::auto_size_window() 
-		&& preferences::requested_window_width() == 0 
+	   preferences::auto_size_window()
+		&& preferences::requested_window_width() == 0
 		&& preferences::requested_window_height() == 0) {
 		int width = 0;
 		int height = 0;
-		
+
 		bool isFullscreen = preferences::get_screen_mode() != preferences::ScreenMode::WINDOWED;
 		auto_select_resolution(main_wnd, &width, &height, true, isFullscreen);
 
@@ -1047,18 +1047,18 @@ int main(int argcount, char* argvec[])
 		main_wnd->setWindowSize(width, height);
 	}
 
-	int vw = preferences::requested_virtual_window_width() > 0 
-		? preferences::requested_virtual_window_width() 
+	int vw = preferences::requested_virtual_window_width() > 0
+		? preferences::requested_virtual_window_width()
 		: main_wnd->width();
-	int vh = preferences::requested_virtual_window_height() > 0 
-		? preferences::requested_virtual_window_height() 
+	int vh = preferences::requested_virtual_window_height() > 0
+		? preferences::requested_virtual_window_height()
 		: main_wnd->height();
 
 	wm.createWindow(main_wnd);
-	
+
 	auto canvas = Canvas::getInstance();
 	LOG_INFO("canvas size: " << canvas->width() << "x" << canvas->height());
-	
+
 	//WindowManager::getMainWindow()->setWindowSize(main_wnd->width(), main_wnd->height());
 
 	graphics::GameScreen::get().setDimensions(main_wnd->width(), main_wnd->height());
@@ -1070,7 +1070,7 @@ int main(int argcount, char* argvec[])
 	if(swap_result != 0 && g_vsync != 0) {
 		swap_result = SDL_GL_SetSwapInterval(1);
 	}
-	
+
 	if(swap_result != 0) {
 		LOG_ERROR("Could not set swap interval with SDL_GL_SetSwapInterval: " << SDL_GetError());
 	}
@@ -1108,8 +1108,8 @@ int main(int argcount, char* argvec[])
 
 	// Set the default font to use for rendering. This can of course be overridden when rendering the
 	// text to a texture.
-	Font::setDefaultFont(module::get_default_font() == "bitmap" 
-		? "FreeMono" 
+	Font::setDefaultFont(module::get_default_font() == "bitmap"
+		? "FreeMono"
 		: module::get_default_font());
 	std::map<std::string,std::string> font_paths;
 	std::map<std::string,std::string> font_paths2;
@@ -1129,7 +1129,7 @@ int main(int argcount, char* argvec[])
 	LOG_DEBUG("After i18n::init()");
 
 	// Read auto-save file if it exists.
-	if(sys::file_exists(preferences::auto_save_file_path()) 
+	if(sys::file_exists(preferences::auto_save_file_path())
 		&& sys::read_file(std::string(preferences::auto_save_file_path()) + ".stat") == "1") {
 		level_cfg = "autosave.cfg";
 		sys::write_file(std::string(preferences::auto_save_file_path()) + ".stat", "0");
@@ -1153,7 +1153,7 @@ int main(int argcount, char* argvec[])
 	{ //manager scope
 	const sound::Manager sound_manager;
 	const joystick::Manager joystick_manager;
-	
+
 #ifndef NO_EDITOR
 	editor::manager editor_manager;
 #endif
@@ -1228,7 +1228,7 @@ int main(int argcount, char* argvec[])
 		if(!lvl) {
 			lvl = load_level(level_cfg);
 		}
-		
+
 		//see if we're loading a multiplayer level, in which case we
 		//connect to the server.
 		multiplayer::Manager mp_manager(lvl->is_multiplayer());

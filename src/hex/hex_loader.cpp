@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2016 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -61,7 +61,7 @@ namespace
 		return res;
 	}
 
-	typedef std::map<std::string, KRE::TexturePtr> texture_map_type; 
+	typedef std::map<std::string, KRE::TexturePtr> texture_map_type;
 	texture_map_type& get_textures()
 	{
 		static texture_map_type res;
@@ -85,7 +85,7 @@ namespace hex
 		module::get_files_in_dir("images/terrain/", &files, &dirs);
 		for(const auto& p : files) {
 			//auto pos = p.find("images/");
-			//std::string fname = p.substr(pos + 7);			
+			//std::string fname = p.substr(pos + 7);
 			get_textures().emplace(p, KRE::Texture::createTexture("terrain/" + p));
 		}
 
@@ -104,22 +104,22 @@ namespace hex
 
 		try {
 			hex::load_tile_data(json::parse_from_file(base_path + "terrain.cfg"));
-		} catch(json::ParseError& e) {		
+		} catch(json::ParseError& e) {
 			ASSERT_LOG(false, "Error parsing hex " << (base_path + "terrain.cfg") << " file data: " << e.errorMessage());
 		}
 
 		try {
 			hex::load_terrain_data(json::parse_from_file(base_path + "terrain-graphics.cfg"));
-		} catch(json::ParseError& e) {		
+		} catch(json::ParseError& e) {
 			ASSERT_LOG(false, "Error parsing hex " << (base_path + "terrain-graphics.cfg") << " file data: " << e.errorMessage());
 		}
-	
+
 	}
 
 	void load_tile_data(const variant& v)
 	{
 		profile::manager pman("load_tile_data");
-		ASSERT_LOG(v.is_map() && v.has_key("terrain_type") && v["terrain_type"].is_list(), 
+		ASSERT_LOG(v.is_map() && v.has_key("terrain_type") && v["terrain_type"].is_list(),
 			"Expected hex tile data to be a map with 'terrain_type' key.");
 		const auto& tt_data = v["terrain_type"].as_list();
 		for(const auto& tt : tt_data) {
@@ -136,7 +136,7 @@ namespace hex
 	void load_terrain_data(const variant& v)
 	{
 		profile::manager pman("load_terrain_data");
-		ASSERT_LOG(v.is_map() && v.has_key("terrain_graphics") && v["terrain_graphics"].is_list(), 
+		ASSERT_LOG(v.is_map() && v.has_key("terrain_graphics") && v["terrain_graphics"].is_list(),
 			"Expected hex tile data to be a map with 'terrain_type' key.");
 		const auto& tg_data = v["terrain_graphics"].as_list();
 		for(const auto& tg : tg_data) {

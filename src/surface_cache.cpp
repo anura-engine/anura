@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -33,13 +33,13 @@ namespace graphics
 {
 	namespace
 	{
-		struct CacheEntry 
+		struct CacheEntry
 		{
 			KRE::SurfacePtr surf;
 			std::string fname;
 			int64_t mod_time;
 		};
-	
+
 		typedef ConcurrentCache<std::string,CacheEntry> SurfaceMap;
 		SurfaceMap& cache()
 		{
@@ -69,7 +69,7 @@ namespace graphics
 			}
 			return surf;
 		}
-		
+
 		std::string fname = image_path + key;
 		KRE::SurfacePtr surf;
 		if(key.empty() == false && key[0] == '#') {
@@ -117,5 +117,5 @@ namespace graphics
 	{
 		cache().clear();
 	}
-	
+
 }

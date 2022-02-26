@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -130,7 +130,7 @@ namespace xhtml
 				top = getStyleNode()->getTop()->getLength().compute(containing_height);
 			}
 		}
-	
+
 		setContentX(left);
 		setContentY(top);
 	}
@@ -164,7 +164,7 @@ namespace xhtml
 		const auto& css_margin_right = getStyleNode()->getMargin()[static_cast<int>(Side::RIGHT)];
 
 		FixedPoint total = getMBPWidth() + width;
-			
+
 		if(!css_width->isAuto() && total > containing.content_.width) {
 			if(css_margin_left->isAuto()) {
 				setMarginLeft(0);
@@ -201,7 +201,7 @@ namespace xhtml
 		} else if(css_margin_left->isAuto() && css_margin_right->isAuto()) {
 			setMarginLeft(underflow / 2);
 			setMarginRight(underflow / 2);
-		} 
+		}
 
 		if(isFloat()) {
 			setMarginLeft(0);
@@ -229,7 +229,7 @@ namespace xhtml
 			setContentHeight(child_height_);
 		}
 	}
-	
+
 	void BlockBox::layoutHeight(const Dimensions& containing)
 	{
 		// a set height value overrides the calculated value.

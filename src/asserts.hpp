@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -34,7 +34,7 @@
 void report_assert_msg(const std::string& m );
 
 //An exception we intend to recover from.
-struct validation_failure_exception 
+struct validation_failure_exception
 {
 	explicit validation_failure_exception(const std::string& m);
 	std::string msg;
@@ -45,7 +45,7 @@ bool throw_validation_failure_on_assert();
 
 void output_backtrace();
 
-class assert_edit_and_continue_fn_scope 
+class assert_edit_and_continue_fn_scope
 {
 	std::function<void()> fn_;
 public:
@@ -56,7 +56,7 @@ public:
 enum AssertOptions { SilenceAsserts = 1 };
 
 //Scope to make us recover
-class assert_recover_scope 
+class assert_recover_scope
 {
 	int options_;
 	int fatal_;
@@ -67,7 +67,7 @@ public:
 
 //An exception we intend to die from, but at a location we'll have better
 //error reporting from.
-struct fatal_assert_failure_exception 
+struct fatal_assert_failure_exception
 {
 	explicit fatal_assert_failure_exception(const std::string& m);
 	std::string msg;
@@ -78,7 +78,7 @@ bool throw_fatal_error_on_assert();
 
 //Scope to make us throw a fatal error on assert (as opposed to throwing
 //a recoverable error, or just dying on the spot).
-class fatal_assert_scope 
+class fatal_assert_scope
 {
 public:
 	fatal_assert_scope();

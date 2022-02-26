@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -72,20 +72,20 @@ namespace KRE
 		// velocity matching
 
 		Affector::Affector(std::weak_ptr<ParticleSystemContainer> parent, AffectorType type)
-			: EmitObject(parent), 
+			: EmitObject(parent),
 			  type_(type),
 			  mass_(1.0f),
-			  position_(0.0f), 
+			  position_(0.0f),
 			  scale_(1.0f),
 			  node_()
 		{
 		}
 
 		Affector::Affector(std::weak_ptr<ParticleSystemContainer> parent, const variant& node, AffectorType type)
-			: EmitObject(parent, node), 
+			: EmitObject(parent, node),
 			  type_(type),
 			  mass_(float(node["mass_affector"].as_float(1.0f))),
-			  position_(0.0f), 
+			  position_(0.0f),
 			  scale_(1.0f),
 			  node_(node)
 		{
@@ -96,7 +96,7 @@ namespace KRE
 				scale_ = variant_to_vec3(node["scale"]);
 			}
 		}
-		
+
 		Affector::~Affector()
 		{
 		}
@@ -167,11 +167,11 @@ namespace KRE
 			return res.build();
 		}
 
-		void Affector::handleEmitProcess(float t) 
+		void Affector::handleEmitProcess(float t)
 		{
 			auto& psystem = getParentContainer()->getParticleSystem();
 			internalApply(*psystem->getEmitter(),t);
-			
+
 			for(auto& p : psystem->getActiveParticles()) {
 				internalApply(p,t);
 			}
@@ -260,15 +260,15 @@ namespace KRE
 
 
 		TimeColorAffector::TimeColorAffector(std::weak_ptr<ParticleSystemContainer> parent)
-			: Affector(parent, AffectorType::COLOR), 
+			: Affector(parent, AffectorType::COLOR),
 			  operation_(ColourOperation::COLOR_OP_SET),
 			  tc_data_(),
 			  interpolate_(true)
-		{			
+		{
 		}
 
 		TimeColorAffector::TimeColorAffector(std::weak_ptr<ParticleSystemContainer> parent, const variant& node)
-			: Affector(parent, node, AffectorType::COLOR), 
+			: Affector(parent, node, AffectorType::COLOR),
 			  operation_(ColourOperation::COLOR_OP_SET),
 			  tc_data_(),
 			  interpolate_(true)
@@ -376,20 +376,20 @@ namespace KRE
 				c = it1->second;
 			}
 			if(operation_ == ColourOperation::COLOR_OP_SET) {
-				p.current.color = color_vector(color_vector::value_type(c.r*255.0f), 
-					color_vector::value_type(c.g*255.0f), 
-					color_vector::value_type(c.b*255.0f), 
+				p.current.color = color_vector(color_vector::value_type(c.r*255.0f),
+					color_vector::value_type(c.g*255.0f),
+					color_vector::value_type(c.b*255.0f),
 					color_vector::value_type(c.a*255.0f));
 			} else {
-				p.current.color = color_vector(color_vector::value_type(c.r*p.initial.color.r), 
-					color_vector::value_type(c.g*p.initial.color.g), 
-					color_vector::value_type(c.b*p.initial.color.b), 
+				p.current.color = color_vector(color_vector::value_type(c.r*p.initial.color.r),
+					color_vector::value_type(c.g*p.initial.color.g),
+					color_vector::value_type(c.b*p.initial.color.b),
 					color_vector::value_type(c.a*p.initial.color.a));
 			}
 		}
 
 
-		void TimeColorAffector::handleWrite(variant_builder* build) const 
+		void TimeColorAffector::handleWrite(variant_builder* build) const
 		{
 			build->add("color_operation", operation_ == ColourOperation::COLOR_OP_SET ? "set" : "multiply");
 			build->add("interpolate", interpolate_);
@@ -412,7 +412,7 @@ namespace KRE
 					} else {
 						return --it;
 					}
-				} 
+				}
 			}
 			return --it;
 		}
@@ -449,7 +449,7 @@ namespace KRE
 			}
 		}
 
-		void JetAffector::handleWrite(variant_builder* build) const 
+		void JetAffector::handleWrite(variant_builder* build) const
 		{
 			if(acceleration_) {
 				build->add("acceleration", acceleration_->write());
@@ -457,14 +457,14 @@ namespace KRE
 		}
 
 		VortexAffector::VortexAffector(std::weak_ptr<ParticleSystemContainer> parent)
-			: Affector(parent, AffectorType::VORTEX), 
+			: Affector(parent, AffectorType::VORTEX),
 			  rotation_axis_(0.0f, 1.0f, 0.0f),
 			  rotation_speed_(new Parameter(1.0f))
 		{
 		}
 
 		VortexAffector::VortexAffector(std::weak_ptr<ParticleSystemContainer> parent, const variant& node)
-			: Affector(parent, node, AffectorType::VORTEX), 
+			: Affector(parent, node, AffectorType::VORTEX),
 			  rotation_axis_(0.0f, 1.0f, 0.0f),
 			  rotation_speed_(new Parameter(1.0f))
 		{
@@ -493,7 +493,7 @@ namespace KRE
 			p.current.direction = rotation * p.current.direction;
 		}
 
-		void VortexAffector::handleWrite(variant_builder* build) const 
+		void VortexAffector::handleWrite(variant_builder* build) const
 		{
 			if(rotation_speed_ && rotation_speed_->getType() != ParameterType::FIXED && rotation_speed_->getValue() != 1.0f) {
 				build->add("rotation_speed", rotation_speed_->write());
@@ -504,13 +504,13 @@ namespace KRE
 		}
 
 		GravityAffector::GravityAffector(std::weak_ptr<ParticleSystemContainer> parent)
-			: Affector(parent, AffectorType::GRAVITY), 
+			: Affector(parent, AffectorType::GRAVITY),
 			  gravity_(new Parameter(1.0f))
 		{
 		}
 
 		GravityAffector::GravityAffector(std::weak_ptr<ParticleSystemContainer> parent, const variant& node)
-			: Affector(parent, node, AffectorType::GRAVITY), 
+			: Affector(parent, node, AffectorType::GRAVITY),
 			  gravity_()
 		{
 			init(node);
@@ -535,7 +535,7 @@ namespace KRE
 			}
 		}
 
-		void GravityAffector::handleWrite(variant_builder* build) const 
+		void GravityAffector::handleWrite(variant_builder* build) const
 		{
 			if(gravity_ && gravity_->getType() != ParameterType::FIXED && gravity_->getValue() != 1.0f) {
 				build->add("gravity", gravity_->write());
@@ -543,7 +543,7 @@ namespace KRE
 		}
 
 		ScaleAffector::ScaleAffector(std::weak_ptr<ParticleSystemContainer> parent)
-			: Affector(parent, AffectorType::SCALE), 
+			: Affector(parent, AffectorType::SCALE),
 			  scale_x_(nullptr),
 			  scale_y_(nullptr),
 			  scale_z_(nullptr),
@@ -553,7 +553,7 @@ namespace KRE
 		}
 
 		ScaleAffector::ScaleAffector(std::weak_ptr<ParticleSystemContainer> parent, const variant& node)
-			: Affector(parent, node, AffectorType::SCALE), 
+			: Affector(parent, node, AffectorType::SCALE),
 			  scale_x_(nullptr),
 			  scale_y_(nullptr),
 			  scale_z_(nullptr),
@@ -635,7 +635,7 @@ namespace KRE
 			}
 		}
 
-		void ScaleAffector::handleWrite(variant_builder* build) const 
+		void ScaleAffector::handleWrite(variant_builder* build) const
 		{
 			if(since_system_start_) {
 				build->add("since_system_start", since_system_start_);
@@ -681,13 +681,13 @@ namespace KRE
 			direction_ = variant_to_vec3(node["direction"]);
 		}
 
-		void LinearForceAffector::internalApply(Particle& p, float t) 
+		void LinearForceAffector::internalApply(Particle& p, float t)
 		{
 			float scale = t * force_->getValue(1.0f - p.current.time_to_live/p.initial.time_to_live);
 			p.current.direction += direction_*scale;
 		}
 
-		void LinearForceAffector::handleWrite(variant_builder* build) const 
+		void LinearForceAffector::handleWrite(variant_builder* build) const
 		{
 			if(force_) {
 				build->add("force", force_->write());
@@ -714,11 +714,11 @@ namespace KRE
 			init(node);
 		}
 
-		void ParticleFollowerAffector::init(const variant& node) 
+		void ParticleFollowerAffector::init(const variant& node)
 		{
 		}
 
-		void ParticleFollowerAffector::handleEmitProcess(float t) 
+		void ParticleFollowerAffector::handleEmitProcess(float t)
 		{
 			auto& psystem = getParentContainer()->getParticleSystem();
 			std::vector<Particle>& particles = psystem->getActiveParticles();
@@ -733,7 +733,7 @@ namespace KRE
 			}
 		}
 
-		void ParticleFollowerAffector::internalApply(Particle& p, float t) 
+		void ParticleFollowerAffector::internalApply(Particle& p, float t)
 		{
 			auto distance = glm::length(p.current.position - prev_particle_->current.position);
 			if(distance > min_distance_ && distance < max_distance_) {
@@ -741,7 +741,7 @@ namespace KRE
 			}
 		}
 
-		void ParticleFollowerAffector::handleWrite(variant_builder* build) const 
+		void ParticleFollowerAffector::handleWrite(variant_builder* build) const
 		{
 			if(min_distance_ != 1.0f) {
 				build->add("min_distance", min_distance_);
@@ -751,27 +751,27 @@ namespace KRE
 			}
 		}
 
-		AlignAffector::AlignAffector(std::weak_ptr<ParticleSystemContainer> parent) 
-			: Affector(parent, AffectorType::ALIGN), 
+		AlignAffector::AlignAffector(std::weak_ptr<ParticleSystemContainer> parent)
+			: Affector(parent, AffectorType::ALIGN),
 			  resize_(false),
 			  prev_particle_()
 		{
 		}
 
-		AlignAffector::AlignAffector(std::weak_ptr<ParticleSystemContainer> parent, const variant& node) 
-			: Affector(parent, node, AffectorType::ALIGN), 
+		AlignAffector::AlignAffector(std::weak_ptr<ParticleSystemContainer> parent, const variant& node)
+			: Affector(parent, node, AffectorType::ALIGN),
 			  resize_(false),
-			  prev_particle_() 
+			  prev_particle_()
 		{
 			init(node);
 		}
 
-		void AlignAffector::init(const variant& node) 
+		void AlignAffector::init(const variant& node)
 		{
 			resize_ = (node["resize"].as_bool(false));
 		}
 
-		void AlignAffector::internalApply(Particle& p, float t) 
+		void AlignAffector::internalApply(Particle& p, float t)
 		{
 			glm::vec3 distance = prev_particle_->current.position - p.current.position;
 			if(resize_) {
@@ -785,52 +785,52 @@ namespace KRE
 			p.current.orientation.z = distance.z;
 		}
 
-		void AlignAffector::handleEmitProcess(float t) 
+		void AlignAffector::handleEmitProcess(float t)
 		{
 			auto& psystem = getParentContainer()->getParticleSystem();
 			std::vector<Particle>& particles = psystem->getActiveParticles();
 			if(particles.size() < 1) {
 				return;
 			}
-			prev_particle_ = particles.begin();				
+			prev_particle_ = particles.begin();
 			for(auto p = particles.begin(); p != particles.end(); ++p) {
 				internalApply(*p, t);
 				prev_particle_ = p;
 			}
 		}
 
-		void AlignAffector::handleWrite(variant_builder* build) const 
+		void AlignAffector::handleWrite(variant_builder* build) const
 		{
 			if(resize_) {
 				build->add("resize", resize_);
 			}
 		}
 
-		FlockCenteringAffector::FlockCenteringAffector(std::weak_ptr<ParticleSystemContainer> parent) 
-			: Affector(parent, AffectorType::FLOCK_CENTERING), 
+		FlockCenteringAffector::FlockCenteringAffector(std::weak_ptr<ParticleSystemContainer> parent)
+			: Affector(parent, AffectorType::FLOCK_CENTERING),
 			  average_(0.0f),
 			  prev_particle_()
 		{
 		}
 
-		FlockCenteringAffector::FlockCenteringAffector(std::weak_ptr<ParticleSystemContainer> parent, const variant& node) 
-			: Affector(parent, node, AffectorType::FLOCK_CENTERING), 
+		FlockCenteringAffector::FlockCenteringAffector(std::weak_ptr<ParticleSystemContainer> parent, const variant& node)
+			: Affector(parent, node, AffectorType::FLOCK_CENTERING),
 		 	  average_(0.0f),
 			  prev_particle_()
 		{
 			init(node);
 		}
 
-		void FlockCenteringAffector::init(const variant& node) 
+		void FlockCenteringAffector::init(const variant& node)
 		{
 		}
 
-		void FlockCenteringAffector::internalApply(Particle& p, float t) 
+		void FlockCenteringAffector::internalApply(Particle& p, float t)
 		{
 			p.current.direction = (average_ - p.current.position) * t;
 		}
 
-		void FlockCenteringAffector::handleEmitProcess(float t) 
+		void FlockCenteringAffector::handleEmitProcess(float t)
 		{
 			auto& psystem = getParentContainer()->getParticleSystem();
 			std::vector<Particle>& particles = psystem->getActiveParticles();
@@ -844,36 +844,36 @@ namespace KRE
 			}
 			average_ /= static_cast<float>(count);
 
-			prev_particle_ = particles.begin();				
+			prev_particle_ = particles.begin();
 			for(auto p = particles.begin(); p != particles.end(); ++p) {
 				internalApply(*p, t);
 				prev_particle_ = p;
 			}
 		}
 
-		void FlockCenteringAffector::handleWrite(variant_builder* build) const 
+		void FlockCenteringAffector::handleWrite(variant_builder* build) const
 		{
 			// nothing needed
 		}
 
-		BlackHoleAffector::BlackHoleAffector(std::weak_ptr<ParticleSystemContainer> parent) 
-			: Affector(parent, AffectorType::BLACK_HOLE), 
-			  velocity_(new Parameter(1.0f)), 
+		BlackHoleAffector::BlackHoleAffector(std::weak_ptr<ParticleSystemContainer> parent)
+			: Affector(parent, AffectorType::BLACK_HOLE),
+			  velocity_(new Parameter(1.0f)),
 			  acceleration_(new Parameter(1.0f)),
 			  wvelocity_(0.0f)
 		{
 		}
 
-		BlackHoleAffector::BlackHoleAffector(std::weak_ptr<ParticleSystemContainer> parent, const variant& node) 
-			: Affector(parent, node, AffectorType::BLACK_HOLE), 
-			  velocity_(nullptr), 
+		BlackHoleAffector::BlackHoleAffector(std::weak_ptr<ParticleSystemContainer> parent, const variant& node)
+			: Affector(parent, node, AffectorType::BLACK_HOLE),
+			  velocity_(nullptr),
 			  acceleration_(nullptr),
 			  wvelocity_(0.0f)
 		{
 			init(node);
 		}
 
-		void BlackHoleAffector::init(const variant& node) 
+		void BlackHoleAffector::init(const variant& node)
 		{
 			if(node.has_key("velocity")) {
 				velocity_ = Parameter::factory(node["velocity"]);
@@ -888,13 +888,13 @@ namespace KRE
 			}
 		}
 
-		void BlackHoleAffector::handleEmitProcess(float t) 
+		void BlackHoleAffector::handleEmitProcess(float t)
 		{
 			wvelocity_ += acceleration_->getValue(t);
 			Affector::handleEmitProcess(t);
 		}
 
-		void BlackHoleAffector::internalApply(Particle& p, float t) 
+		void BlackHoleAffector::internalApply(Particle& p, float t)
 		{
 			glm::vec3 diff = getPosition() - p.current.position;
 			float len = glm::length(diff);
@@ -907,7 +907,7 @@ namespace KRE
 			p.current.position += diff;
 		}
 
-		void BlackHoleAffector::handleWrite(variant_builder* build) const 
+		void BlackHoleAffector::handleWrite(variant_builder* build) const
 		{
 			if(velocity_ && velocity_->getType() != ParameterType::FIXED && velocity_->getValue() != 1.0f) {
 				build->add("velocity", velocity_->write());
@@ -917,14 +917,14 @@ namespace KRE
 			}
 		}
 
-		PathFollowerAffector::PathFollowerAffector(std::weak_ptr<ParticleSystemContainer> parent) 
+		PathFollowerAffector::PathFollowerAffector(std::weak_ptr<ParticleSystemContainer> parent)
 			: Affector(parent, AffectorType::PATH_FOLLOWER),
 			  points_(),
 			  spl_()
 		{
 		}
 
-		PathFollowerAffector::PathFollowerAffector(std::weak_ptr<ParticleSystemContainer> parent, const variant& node) 
+		PathFollowerAffector::PathFollowerAffector(std::weak_ptr<ParticleSystemContainer> parent, const variant& node)
 			: Affector(parent, node, AffectorType::PATH_FOLLOWER),
 			  points_(),
 			  spl_()
@@ -932,11 +932,11 @@ namespace KRE
 			init(node);
 		}
 
-		void PathFollowerAffector::init(const variant& node) 
+		void PathFollowerAffector::init(const variant& node)
 		{
 			ASSERT_LOG(node.has_key("path") && node["path"].is_list(),
 				"path_follower must have a 'path' attribute.");
-			
+
 			setPoints(node["path"]);
 		}
 
@@ -973,7 +973,7 @@ namespace KRE
 			spl_ = std::make_shared<geometry::spline3d<float>>(points_);
 		}
 
-		void PathFollowerAffector::internalApply(Particle& p, float t) 
+		void PathFollowerAffector::internalApply(Particle& p, float t)
 		{
 			const float time_fraction = (p.initial.time_to_live - p.current.time_to_live) / p.initial.time_to_live;
 			const float time_fraction_next = std::min<float>(1.0f, (p.initial.time_to_live - (p.current.time_to_live - t)) / p.initial.time_to_live);
@@ -982,7 +982,7 @@ namespace KRE
 			p.current.position += spl_->interpolate(time_fraction_next) - spl_->interpolate(time_fraction);
 		}
 
-		void PathFollowerAffector::handleEmitProcess(float t) 
+		void PathFollowerAffector::handleEmitProcess(float t)
 		{
 			if(spl_ == nullptr) {
 				return;
@@ -993,34 +993,34 @@ namespace KRE
 				return;
 			}
 
-			prev_particle_ = particles.begin();				
+			prev_particle_ = particles.begin();
 			for(auto p = particles.begin(); p != particles.end(); ++p) {
 				internalApply(*p, t);
 				prev_particle_ = p;
 			}
 		}
 
-		void PathFollowerAffector::handleWrite(variant_builder* build) const 
+		void PathFollowerAffector::handleWrite(variant_builder* build) const
 		{
 			for(const auto& pt : points_) {
 				build->add("path", vec3_to_variant(pt));
 			}
 		}
 
-		RandomiserAffector::RandomiserAffector(std::weak_ptr<ParticleSystemContainer> parent) 
-			: Affector(parent, AffectorType::RANDOMISER), 
+		RandomiserAffector::RandomiserAffector(std::weak_ptr<ParticleSystemContainer> parent)
+			: Affector(parent, AffectorType::RANDOMISER),
 			  random_direction_(true),
 			  time_step_(0),
-			  max_deviation_(0.0f), 
+			  max_deviation_(0.0f),
 			  last_update_time_()
 		{
 		}
 
-		RandomiserAffector::RandomiserAffector(std::weak_ptr<ParticleSystemContainer> parent, const variant& node) 
-			: Affector(parent, node, AffectorType::RANDOMISER), 
+		RandomiserAffector::RandomiserAffector(std::weak_ptr<ParticleSystemContainer> parent, const variant& node)
+			: Affector(parent, node, AffectorType::RANDOMISER),
 			  random_direction_(true),
 			  time_step_(0),
-			  max_deviation_(0.0f), 
+			  max_deviation_(0.0f),
 			  last_update_time_()
 		{
 			init(node);
@@ -1069,7 +1069,7 @@ namespace KRE
 			}
 		}
 
-		void RandomiserAffector::handle_apply(const EmitterPtr& objs, float t) 
+		void RandomiserAffector::handle_apply(const EmitterPtr& objs, float t)
 		{
 			last_update_time_[1] += t;
 			if(last_update_time_[1] > time_step_) {
@@ -1077,15 +1077,15 @@ namespace KRE
 				internalApply(*objs, t);
 			}
 		}
-		
-		void RandomiserAffector::handleProcess(float t) 
+
+		void RandomiserAffector::handleProcess(float t)
 		{
 			auto& psystem = getParentContainer()->getParticleSystem();
 			handle_apply(psystem->getActiveParticles(), t);
 			handle_apply(psystem->getEmitter(), t);
 		}
 
-		void RandomiserAffector::handleWrite(variant_builder* build) const 
+		void RandomiserAffector::handleWrite(variant_builder* build) const
 		{
 			if(time_step_ != 0.0f) {
 				build->add("time_step", time_step_);
@@ -1104,7 +1104,7 @@ namespace KRE
 			}
 		}
 
-		SineForceAffector::SineForceAffector(std::weak_ptr<ParticleSystemContainer> parent) 
+		SineForceAffector::SineForceAffector(std::weak_ptr<ParticleSystemContainer> parent)
 			: Affector(parent, AffectorType::SINE_FORCE),
 			  force_vector_(0.0f),
 			  scale_vector_(0.0f),
@@ -1116,7 +1116,7 @@ namespace KRE
 		{
 		}
 
-		SineForceAffector::SineForceAffector(std::weak_ptr<ParticleSystemContainer> parent, const variant& node) 
+		SineForceAffector::SineForceAffector(std::weak_ptr<ParticleSystemContainer> parent, const variant& node)
 			: Affector(parent, node, AffectorType::SINE_FORCE),
 			  force_vector_(0.0f),
 			  scale_vector_(0.0f),
@@ -1136,7 +1136,7 @@ namespace KRE
 				frequency_ = max_frequency_;
 			}
 			if(node.has_key("min_frequency")) {
-				min_frequency_ = static_cast<float>(node["min_frequency"].as_float());					
+				min_frequency_ = static_cast<float>(node["min_frequency"].as_float());
 				if(min_frequency_ > max_frequency_) {
 					frequency_ = min_frequency_;
 				}
@@ -1180,7 +1180,7 @@ namespace KRE
 			}
 		}
 
-		void SineForceAffector::handleWrite(variant_builder* build) const 
+		void SineForceAffector::handleWrite(variant_builder* build) const
 		{
 			build->add("force_application", fa_ == ForceApplication::FA_AVERAGE ? "average" : "add");
 			if(min_frequency_ != 0.0f) {
@@ -1209,7 +1209,7 @@ namespace KRE
 			init(node);
 		}
 
-		void TextureRotatorAffector::init(const variant& node) 
+		void TextureRotatorAffector::init(const variant& node)
 		{
 			if(node.has_key("angle")) {
 				angle_ = Parameter::factory(node["angle"]);
@@ -1232,7 +1232,7 @@ namespace KRE
 			p.current.orientation = qaxis * p.current.orientation;
 		}
 
-		void TextureRotatorAffector::handleWrite(variant_builder* build) const 
+		void TextureRotatorAffector::handleWrite(variant_builder* build) const
 		{
 			if(angle_) {
 				build->add("angle", angle_->write());
@@ -1243,7 +1243,7 @@ namespace KRE
 		}
 
 		AnimationAffector::AnimationAffector(std::weak_ptr<ParticleSystemContainer> parent)
-			: Affector(parent, AffectorType::ANIMATION), 
+			: Affector(parent, AffectorType::ANIMATION),
 			  pixel_coords_(false),
 			  use_mass_instead_of_time_(false),
 			  uv_data_(),
@@ -1252,7 +1252,7 @@ namespace KRE
 		}
 
 		AnimationAffector::AnimationAffector(std::weak_ptr<ParticleSystemContainer> parent, const variant& node)
-			: Affector(parent, AffectorType::ANIMATION), 
+			: Affector(parent, AffectorType::ANIMATION),
 			  pixel_coords_(false),
 			  uv_data_(),
 			  trf_uv_data_()
@@ -1260,7 +1260,7 @@ namespace KRE
 			init(node);
 		}
 
-		void AnimationAffector::init(const variant& node) 
+		void AnimationAffector::init(const variant& node)
 		{
 			uv_data_.clear();
 			if(node.has_key("pixel_coords")) {
@@ -1310,7 +1310,7 @@ namespace KRE
 			}
 		}
 
-		void AnimationAffector::internalApply(Particle& p, float t) 
+		void AnimationAffector::internalApply(Particle& p, float t)
 		{
 			if(uv_data_.empty()) {
 				return;
@@ -1323,7 +1323,7 @@ namespace KRE
 			p.current.area = it1->second;
 		}
 
-		void AnimationAffector::handleWrite(variant_builder* build) const 
+		void AnimationAffector::handleWrite(variant_builder* build) const
 		{
 			build->add("pixel_coords", pixel_coords_);
 			build->add("use_mass_instead_of_time", use_mass_instead_of_time_);
@@ -1356,7 +1356,7 @@ namespace KRE
 					} else {
 						return --it;
 					}
-				} 
+				}
 			}
 			return --it;
 		}

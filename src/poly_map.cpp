@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2012-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -36,7 +36,7 @@ namespace geometry
 	{
 		static bool draw_borders = true;
 
-		// XXX: centralise the hsv->rgb, rgb->hsv conversion functions 
+		// XXX: centralise the hsv->rgb, rgb->hsv conversion functions
 		// somewhere (maybe add to graphics::color as well)
 		struct rgb
 		{
@@ -89,7 +89,7 @@ namespace geometry
 				out.r = out.g = out.b = v;
 			} else {
 				region = h / 43;
-				remainder = (h - (region * 43)) * 6; 
+				remainder = (h - (region * 43)) * 6;
 
 				p = (v * (255 - s)) >> 8;
 				q = (v * (255 - ((s * remainder) >> 8))) >> 8;
@@ -208,7 +208,7 @@ namespace geometry
 		return os;
 	}
 
-	PolyMap::PolyMap(int npts, int relaxations, int width, int height) 
+	PolyMap::PolyMap(int npts, int relaxations, int width, int height)
 		: npts_(npts), relaxations_(relaxations), noise_seed_(0)
 	{
 		setEnvironment();
@@ -216,7 +216,7 @@ namespace geometry
 		init();
 	}
 
-	PolyMap::PolyMap(const variant& v, game_logic::FormulaCallable* e) 
+	PolyMap::PolyMap(const variant& v, game_logic::FormulaCallable* e)
 		: Widget(v,e), npts_(v["points"].as_int(10)), relaxations_(v["relaxations"].as_int(2)),
 		noise_seed_(v["noise_seed"].as_int(0)), noise_multiplier_(1.5f)
 	{
@@ -247,7 +247,7 @@ namespace geometry
 			vec[0] = static_cast<float>(p->getCentroid().x/width()*noise_multiplier_);
 			vec[1] = static_cast<float>(p->getCentroid().y/height()*noise_multiplier_);
 			p->setHeight(static_cast<int>(noise::simplex::noise2(&vec[0])*256.0f));
-			
+
 			if(p->height() < 0) {
 				p->setColor(KRE::Color(52, 58, 94));
 			} else {
@@ -297,7 +297,7 @@ namespace geometry
 			return variant();
 	END_DEFINE_CALLABLE(PolyMap)
 
-	void Polygon::draw(int xt, int yt, float rotate, float scale) const 
+	void Polygon::draw(int xt, int yt, float rotate, float scale) const
 	{
 		auto canvas = KRE::Canvas::getInstance();
 		if(varray_.size() > 0) {
@@ -309,10 +309,10 @@ namespace geometry
 		}
 	}
 
-	void Polygon::init() 
+	void Polygon::init()
 	{
 		if(pts_.size() > 0) {
-			varray_.emplace_back(static_cast<float>(getCentroid().x), static_cast<float>(getCentroid().y)); 
+			varray_.emplace_back(static_cast<float>(getCentroid().x), static_cast<float>(getCentroid().y));
 			for(auto& p : pts_) {
 				varray_.emplace_back(static_cast<float>(p.x), static_cast<float>(p.y));
 			}

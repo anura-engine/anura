@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2015-2016 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -58,9 +58,9 @@ namespace xhtml
 
 		bool handleMouseMotion(bool claimed, const point& p, unsigned keymod, bool in_rect) override;
 		bool handleMouseButtonUp(bool claimed, const point& p, unsigned buttons, unsigned keymod, bool in_rect) override;
-		bool handleMouseButtonDown(bool claimed, const point& p, unsigned buttons, unsigned keymod, bool in_rect) override;	
+		bool handleMouseButtonDown(bool claimed, const point& p, unsigned buttons, unsigned keymod, bool in_rect) override;
 		bool handleMouseWheel(bool claimed, const point& p, const point& delta, int direction, bool in_rect) override;
-		
+
 		bool handleKeyDown(bool claimed, const SDL_Keysym& keysym, bool repeat, bool pressed) override;
 		bool handleKeyUp(bool claimed, const SDL_Keysym& keysym, bool repeat, bool pressed) override;
 		float min_range_;

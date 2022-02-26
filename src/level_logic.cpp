@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -41,7 +41,7 @@ int distance_to_cliff(const Level& lvl, int xpos, int ypos, int facing)
 	const int cliff_drop = 2;
 
 	bool found = false;
-	
+
 	//search for up to three pixels below us to try to get a starting
 	//position which is standable.
 	for(int n = 0; n != 3; ++n) {

@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -27,24 +27,24 @@
 #include "thread.hpp"
 #include "variant.hpp"
 
-void http_upload(const std::string& payload, 
-	const std::string& script, 
-	const char* hostname=nullptr, 
+void http_upload(const std::string& payload,
+	const std::string& script,
+	const char* hostname=nullptr,
 	const char* port=nullptr);
 
-namespace stats 
+namespace stats
 {
 	//download stats for a given level.
 	bool download(const std::string& lvl);
 
-	class Manager 
+	class Manager
 	{
 	public:
 		Manager();
 		~Manager();
 	};
 
-	class Entry 
+	class Entry
 	{
 	public:
 		explicit Entry(const std::string& type);

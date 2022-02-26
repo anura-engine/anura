@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -41,7 +41,7 @@ namespace KRE
 		virtual bool isYuvPacked() const = 0;
 		virtual bool isYuvHeightReversed() const = 0;
 		virtual bool isInterlaced() const = 0;
-		
+
 		virtual bool isRGB() const = 0;
 		virtual bool hasRedChannel() const = 0;
 		virtual bool hasGreenChannel() const = 0;
@@ -123,11 +123,11 @@ namespace KRE
 		virtual Color mapRGBA(int r, int g, int b, int a) = 0;
 		virtual Color mapRGBA(float r, float g, float b, float a) = 0;
 
-		virtual void getRGBA(uint32_t pix, int& r, int& g, int& b, int& a) = 0; 
+		virtual void getRGBA(uint32_t pix, int& r, int& g, int& b, int& a) = 0;
 
 		virtual void extractRGBA(const void* pixels, int ndx, int& red, int& green, int& blue, int& alpha) = 0;
 		virtual void encodeRGBA(void* pixels, int red, int green, int blue, int alpha) = 0;
-		
+
 		static bool isIndexedFormat(PixelFormat::PF pf);
 	private:
 		PixelFormat(const PixelFormat&);

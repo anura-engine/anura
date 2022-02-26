@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -25,15 +25,15 @@
 #include "custom_object_callable.hpp"
 #include "formula_object.hpp"
 
-namespace 
+namespace
 {
-	std::vector<CustomObjectCallable::Entry>& global_entries() 
+	std::vector<CustomObjectCallable::Entry>& global_entries()
 	{
 		static std::vector<CustomObjectCallable::Entry> instance;
 		return instance;
 	}
 
-	std::map<std::string, int>& keys_to_slots() 
+	std::map<std::string, int>& keys_to_slots()
 	{
 		static std::map<std::string, int> instance;
 		return instance;
@@ -52,9 +52,9 @@ const CustomObjectCallable& CustomObjectCallable::instance()
 	return *obj;
 }
 
-namespace 
+namespace
 {
-	struct Property 
+	struct Property
 	{
 		std::string id, type;
 	};

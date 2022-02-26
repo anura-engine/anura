@@ -129,7 +129,7 @@ void MD5Update(struct MD5Context *ctx, uint8_t *buf, unsigned len)
 }
 
 /*
- * Final wrapup - pad to 64-byte boundary with the bit pattern 
+ * Final wrapup - pad to 64-byte boundary with the bit pattern
  * 1 0* (64-bit count of bits processed, MSB-first)
  */
 void MD5Final(uint8_t digest[16], struct MD5Context *ctx)
@@ -293,7 +293,7 @@ UNIT_TEST(md5_test3) {
 	uint8_t result[16] = { 0 };
 	uint8_t values[3] = { 'a', 'b', 'c' };
 	uint8_t good_result[16] = {
-		'\x90', '\x01', '\x50', '\x98', '\x3C', '\xD2', '\x4F', '\xB0', 
+		'\x90', '\x01', '\x50', '\x98', '\x3C', '\xD2', '\x4F', '\xB0',
 		'\xD6', '\x96', '\x3F', '\x7D', '\x28', '\xE1', '\x7F', '\x72',
 	};
 	struct md5::MD5Context ctx;

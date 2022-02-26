@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -30,8 +30,8 @@
 
 namespace KRE
 {
-	// This is basically a helper class that lets you blit a 
-	// texture to the screen in what should be a relatively 
+	// This is basically a helper class that lets you blit a
+	// texture to the screen in what should be a relatively
 	// optimised manner.
 	class Blittable : public SceneObject
 	{

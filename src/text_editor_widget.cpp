@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -42,9 +42,9 @@
 #include "text_editor_widget.hpp"
 #include "unit_test.hpp"
 
-namespace gui 
+namespace gui
 {
-	namespace 
+	namespace
 	{
 		const int BorderSize = 3;
 		const int TabWidth = 4;
@@ -79,9 +79,9 @@ namespace gui
 			for(auto& i : char_to_area) {
 				str.push_back(i.first);
 
-				char_to_area[i.first] = rectf(static_cast<float>(col), 
-					static_cast<float>(row), 
-					static_cast<float>(char_width), 
+				char_to_area[i.first] = rectf(static_cast<float>(col),
+					static_cast<float>(row),
+					static_cast<float>(char_width),
 					static_cast<float>(char_height));
 
 				col += char_width;
@@ -131,16 +131,16 @@ namespace gui
 		font_size_(14),
 		char_width_(KRE::Font::charWidth(font_size_, monofont())),
 		char_height_(KRE::Font::charHeight(font_size_, monofont())),
-		select_(0,0), 
+		select_(0,0),
 		cursor_(0,0),
 		nrows_((height - BorderSize*2)/char_height_),
 		ncols_((width - 20 - BorderSize*2)/char_width_),
-		scroll_pos_(0), 
+		scroll_pos_(0),
 		xscroll_pos_(0),
-		begin_highlight_line_(-1), 
+		begin_highlight_line_(-1),
 		end_highlight_line_(-1),
-		has_focus_(false), 
-		editable_(true), 
+		has_focus_(false),
+		editable_(true),
 		is_dragging_(false),
 		begin_enter_return_(true),
 		last_click_at_(-1),
@@ -169,17 +169,17 @@ namespace gui
 	}
 
 	TextEditorWidget::TextEditorWidget(const variant& v, game_logic::FormulaCallable* e)
-		: ScrollableWidget(v,e), 
-		  last_op_type_(nullptr), 
-		  font_size_(14), 
-		  select_(0,0), 
-		  cursor_(0,0), 
-		  scroll_pos_(0), 
+		: ScrollableWidget(v,e),
+		  last_op_type_(nullptr),
+		  font_size_(14),
+		  select_(0,0),
+		  cursor_(0,0),
+		  scroll_pos_(0),
 		  xscroll_pos_(0),
-		  begin_highlight_line_(-1), 
+		  begin_highlight_line_(-1),
 		  end_highlight_line_(-1),
-		  has_focus_(v["focus"].as_bool(false)), 
-		  editable_(v["editable"].as_bool(true)), 
+		  has_focus_(v["focus"].as_bool(false)),
+		  editable_(v["editable"].as_bool(true)),
 		  is_dragging_(false),
 		  begin_enter_return_(true),
 		  last_click_at_(-1),
@@ -200,8 +200,8 @@ namespace gui
 
 		int width = v.has_key("width") ? v["width"].as_int() : 0;
 		int height = v.has_key("height") ? v["height"].as_int() : 0;
-		if(v.has_key("font_size")) { 
-			font_size_ = v["font_size"].as_int(); 
+		if(v.has_key("font_size")) {
+			font_size_ = v["font_size"].as_int();
 		}
 		if(v.has_key("color")) {
 			text_color_ = KRE::Color(v["color"]);
@@ -385,7 +385,7 @@ namespace gui
 		refreshScrollbar();
 	}
 
-	namespace 
+	namespace
 	{
 		struct RectDraw {
 			rect area;
@@ -495,7 +495,7 @@ namespace gui
 					queue.emplace_back(glm::vec2(x2, y2), glm::vec2(area.x2(), area.y2()));
 					queue.emplace_back(glm::vec2(x1, y1), glm::vec2(area.x1(), area.y1()));
 					queue.emplace_back(glm::vec2(x1, y2), glm::vec2(area.x1(), area.y2()));
-					
+
 					//canvas->drawSolidRect(rect::from_coordinates(x1, y1, x2, y2), KRE::Color::colorBlue());
 					//canvas->blitTexture(char_textures[font_size_], area.as_type<int>(), 0, rect::from_coordinates(x1, y1, x2, y2), col);
 				}
@@ -586,8 +586,8 @@ namespace gui
 				if(text_.size() > 2 && static_cast<unsigned>(cursor_.row) < text_.size()-3) {
 					cursor_.row += 3;
 					scroll_pos_ += 3;
-					if(scroll_pos_ > static_cast<int>(text_.size())){ 
-						scroll_pos_ = static_cast<int>(text_.size()); 
+					if(scroll_pos_ > static_cast<int>(text_.size())){
+						scroll_pos_ = static_cast<int>(text_.size());
 					}
 					cursor_.col = findEquivalentCol(cursor_.col, cursor_.row-3, cursor_.row);
 					onMoveCursor();
@@ -628,7 +628,7 @@ namespace gui
 		}
 
 		cursor_ = Loc(row, col);
-	
+
 		if(move_selection) {
 			select_ = cursor_;
 		}
@@ -726,7 +726,7 @@ namespace gui
 	{
 		recordOp();
 		is_dragging_ = false;
-	
+
 		return false;
 	}
 
@@ -827,7 +827,7 @@ namespace gui
 		if(editable_ && (event.keysym.mod&KMOD_CTRL)) {
 			if(event.keysym.sym == SDLK_BACKSPACE) {
 				if(select_ == cursor_) {
-					//We delete the current word behind us. 
+					//We delete the current word behind us.
 					truncateColPosition();
 
 					if(cursor_.col > 0) {
@@ -866,7 +866,7 @@ namespace gui
 			} else if(event.keysym.sym == SDLK_d) {
 				setFocus(false);// Lose focus when debug console is opened
 				return false;	// Let the input fall through so the console is opened
-			} else { 
+			} else {
 				recordOp();
 				return false;
 			}
@@ -1094,7 +1094,7 @@ namespace gui
 
 			deleteSelection();
 			truncateColPosition();
-		
+
 			std::string new_line(text_[cursor_.row].begin() + cursor_.col, text_[cursor_.row].end());
 			text_[cursor_.row].erase(text_[cursor_.row].begin() + cursor_.col, text_[cursor_.row].end());
 
@@ -1118,7 +1118,7 @@ namespace gui
 			if(on_enter_) {
 				on_enter_();
 			}
-		
+
 			break;
 		}
 		case SDLK_TAB: {
@@ -1606,7 +1606,7 @@ namespace gui
 			// The std::pair<Loc, Loc> represents the beginning and the end
 			// of the match.
 			std::vector<std::pair<Loc, Loc> >::const_iterator search_itor;
-			
+
 			// Jump to the next match.
 			search_itor = std::lower_bound(search_matches_.begin(), search_matches_.end(),
 								 		   std::pair<Loc,Loc>(cursor_, cursor_));
@@ -1630,15 +1630,15 @@ namespace gui
 	{
 		/*if(!search_matches_.empty()) {
 			std::vector<std::pair<Loc, Loc> >::const_iterator search_itor;
-			
-			// First, we want to find where the 
-			
+
+			// First, we want to find where the
+
 			if(search_itor == search_matches_.begin()) {
 				search_itor = search_matches_.end();
 			}
 			else
 			{
-				
+
 			}
 
 			select_ = cursor_ = search_itor->first;
@@ -1656,7 +1656,7 @@ namespace gui
 			cursor_.col++;
 			select_ = cursor_;
 			searchForward();
-		} // end if(!search_matches_.empty()) 
+		} // end if(!search_matches_.empty())
 	}
 
 	// This function searches in reverse. Note that it is like
@@ -1688,12 +1688,12 @@ namespace gui
 					const Loc begin(n, base + match.position());
 					const Loc end(n, base + match.position() + match.length());
 					search_matches_.push_back(std::pair<Loc,Loc>(begin,end));
-	
+
 					const auto advance = match.position() + match.length();
 					if(advance == 0) {
 						break;
 					}
-	
+
 					ptr += advance;
 				}
 			}
@@ -1705,7 +1705,7 @@ namespace gui
 	{
 		recordOp();
 		saveUndoState();
-	
+
 		//we have to get the end itor here because some compilers don't
 		//support comparing a const and non-const reverse iterator
 		const std::vector<std::pair<Loc, Loc> >::const_reverse_iterator end_itor = search_matches_.rend();
@@ -1722,7 +1722,7 @@ namespace gui
 
 		onChange();
 	}
-	
+
 	void TextEditorWidget::onChange()
 	{
 		if(on_change_) {
@@ -1865,7 +1865,7 @@ namespace gui
 #include "dialog.hpp"
 #include "filesystem.hpp"
 
-namespace 
+namespace
 {
 	void on_change_search(const gui::TextEditorWidgetPtr search_entry, gui::TextEditorWidgetPtr editor)
 	{

@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -57,7 +57,7 @@ namespace KRE
 
 	namespace
 	{
-		glm::vec4 normalize(const glm::vec4& v) 
+		glm::vec4 normalize(const glm::vec4& v)
 		{
 			return v / glm::length(glm::vec3(v.x,v.y,v.z));
 		}

@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -50,7 +50,7 @@ namespace xhtml
 
 		bool is_white_space(char32_t cp) {  return cp == '\r' || cp == '\t' || cp == ' ' || cp == '\n'; }
 
-		void tokenize_text(const std::string& text, bool collapse_ws, bool break_at_newline, Line& res) 
+		void tokenize_text(const std::string& text, bool collapse_ws, bool break_at_newline, Line& res)
 		{
 			bool in_ws = false;
 			for(auto cp : utils::utf8_to_codepoint(text)) {
@@ -73,7 +73,7 @@ namespace xhtml
 						if(!res.line.empty() && !res.line.back().word.empty()) {
 							res.line.emplace_back(std::string());
 						}
-					}					
+					}
 					if(res.line.empty()) {
 						res.line.emplace_back(std::string());
 					}
@@ -97,7 +97,7 @@ namespace xhtml
 		return std::make_shared<TextImpl>(txt, owner);
 	}
 
-	std::string Text::toString() const 
+	std::string Text::toString() const
 	{
 		std::ostringstream ss;
 		ss << "Text('" << text_ << "' " << nodeToString() << ")";
@@ -113,8 +113,8 @@ namespace xhtml
 		boost::locale::generator gen;
 		std::locale::global(gen(""));
 
-		// Apply transform text_ based on "text-transform" property		
-		
+		// Apply transform text_ based on "text-transform" property
+
 		css::TextTransform text_transform = style_node->getTextTransform();
 		std::string transformed_text = text_;
 		switch(text_transform) {
@@ -232,7 +232,7 @@ namespace xhtml
 	}
 }
 
-std::ostream& operator<<(std::ostream& os, const xhtml::Line& line) 
+std::ostream& operator<<(std::ostream& os, const xhtml::Line& line)
 {
 	for(auto& word : line.line) {
 		os << word.word << " ";
@@ -257,13 +257,13 @@ UNIT_TEST(text_tokenize)
 {
 	/*auto res = xhtml::tokenize_text("This \t\nis \t a \ntest \t", true, false);
 	CHECK(res == xhtml::Line({xhtml::Word("This"), xhtml::Word("is"), xhtml::Word("a"), xhtml::Word("test")}), "collapse white-space test failed.");
-	
+
 	res = xhtml::tokenize_text("This \t\nis \t a \ntest \t", true, true);
 	CHECK(res == xhtml::Line({xhtml::Word("This"), xhtml::Word("\n"), xhtml::Word("is"), xhtml::Word("a"), xhtml::Word("\n"), xhtml::Word("test")}), "collapse white-space+break at newline test failed.");
-	
-	res = xhtml::tokenize_text("This \t\nis \t a \ntest", false, false);	
+
+	res = xhtml::tokenize_text("This \t\nis \t a \ntest", false, false);
 	CHECK(res == xhtml::Line({xhtml::Word("This \t\nis \t a \ntest")}), "no collapse, no break at newline test failed.");
-	
+
 	res = xhtml::tokenize_text("This \t\nis \t a \ntest \t", false, true);
 	CHECK(res == xhtml::Line({xhtml::Word("This \t"), xhtml::Word("\n"), xhtml::Word("is \t a "), xhtml::Word("\n"), xhtml::Word("test \t")}), "no collapse, break at newline test failed.");
 

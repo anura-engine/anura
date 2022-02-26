@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -125,7 +125,7 @@ namespace KRE
 		TexturePtr texture_;
 		RenderTargetPtr render_target_;
 		ShaderProgramPtr shader_;
-		
+
 		StencilSettings stencil_settings_;
 		RenderablePtr stencil_mask_;
 

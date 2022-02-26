@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -51,8 +51,8 @@ namespace KRE
 		return DisplayDevice::getCurrent()->getDefaultShader();
 	}
 
-	ShaderProgramPtr ShaderProgram::createShader(const std::string& name, 
-		const std::vector<ShaderData>& shader_data, 
+	ShaderProgramPtr ShaderProgram::createShader(const std::string& name,
+		const std::vector<ShaderData>& shader_data,
 		const std::vector<ActiveMapping>& uniform_map,
 		const std::vector<ActiveMapping>& attribute_map)
 	{

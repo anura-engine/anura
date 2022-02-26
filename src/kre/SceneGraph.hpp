@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -42,7 +42,7 @@ namespace KRE
 		SceneNodePtr getRootNode();
 		void renderScene(const RenderManagerPtr& renderer);
 		void renderSceneHelper(const RenderManagerPtr& renderer, the::tree<SceneNodePtr>::pre_iterator& it, SceneNodeParams* snp);
-	
+
 		void process(float);
 
 		static void registerFactoryFunction(const std::string& type, std::function<SceneNodePtr(std::weak_ptr<SceneGraph>,const variant&)>);
@@ -61,7 +61,7 @@ namespace KRE
 	{
 		SceneNodeRegistrar(const std::string& type)
 		{
-			// register the class factory function 
+			// register the class factory function
 			SceneGraph::registerFactoryFunction(type, [](std::weak_ptr<SceneGraph> sg, const variant& node) -> SceneNodePtr { return T::create(sg, node); });
 		}
 	};

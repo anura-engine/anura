@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -36,7 +36,7 @@
 
 namespace movie
 {
-	namespace 
+	namespace
 	{
 		unsigned mem_get_le32(const std::vector<uint8_t>& mem) {
 			return (static_cast<unsigned>(mem[3]) << 24)|(static_cast<unsigned>(mem[2]) << 16)|(static_cast<unsigned>(mem[1]) << 8)|static_cast<unsigned>(mem[0]);
@@ -65,10 +65,10 @@ namespace movie
 	}
 
 	vpx::vpx(const std::string& file, int x, int y, int width, int height, bool loop, bool cancel_on_keypress)
-		: loop_(loop), 
-		  cancel_on_keypress_(cancel_on_keypress), 
-		  playing_(false), 
-		  flags_(0), 
+		: loop_(loop),
+		  cancel_on_keypress_(cancel_on_keypress),
+		  playing_(false),
+		  flags_(0),
 		  img_(nullptr)
 	{
 		file_name_ = module::map_file(file);
@@ -78,11 +78,11 @@ namespace movie
 	}
 
 	vpx::vpx(const variant& v, game_logic::FormulaCallable* e)
-		: Widget(v, e), 
-		  loop_(false), 
-		  cancel_on_keypress_(false), 
-		  playing_(false), 
-		  flags_(0), 
+		: Widget(v, e),
+		  loop_(false),
+		  cancel_on_keypress_(false),
+		  playing_(false),
+		  flags_(0),
 		  img_(nullptr)
 	{
 		ASSERT_LOG(v.has_key("filename") && v["filename"].is_string(), "Must have at least a 'filename' key or type string");
@@ -102,7 +102,7 @@ namespace movie
 		ASSERT_LOG(file_.is_open(), "Unable to open file: " << file_name_);
 		file_hdr_.resize(IVF_FILE_HDR_SZ);
 		file_.read(&file_hdr_[0], IVF_FILE_HDR_SZ);
-		ASSERT_LOG(file_hdr_[0] == 'D' && file_hdr_[1] == 'K' && file_hdr_[2] == 'I' && file_hdr_[3] == 'F', 
+		ASSERT_LOG(file_hdr_[0] == 'D' && file_hdr_[1] == 'K' && file_hdr_[2] == 'I' && file_hdr_[3] == 'F',
 			"Unknown file header found: " << std::string(&file_hdr_[0], &file_hdr_[4]));
 		frame_hdr_.resize(IVF_FRAME_HDR_SZ);
 
@@ -157,13 +157,13 @@ namespace movie
 				file_.clear();
 				file_.seekg(0, std::ios::beg);
 				file_.read(&file_hdr_[0], IVF_FILE_HDR_SZ);
-				ASSERT_LOG(file_hdr_[0] == 'D' && file_hdr_[1] == 'K' && file_hdr_[2] == 'I' && file_hdr_[3] == 'F', 
+				ASSERT_LOG(file_hdr_[0] == 'D' && file_hdr_[1] == 'K' && file_hdr_[2] == 'I' && file_hdr_[3] == 'F',
 					"Unknown file header found: " << std::string(&file_hdr_[0], &file_hdr_[4]));
 				frame_hdr_.resize(IVF_FRAME_HDR_SZ);
 
 				iter_ = nullptr;
 				img_ = nullptr;
-			
+
 				file_.read(reinterpret_cast<char*>(&frame_hdr_[0]), IVF_FRAME_HDR_SZ);
 				frame_size_ = mem_get_le32(frame_hdr_);
 				++frame_cnt_;
@@ -229,7 +229,7 @@ namespace movie
 				stop();
 				claimed = true;
 				break;
-			
+
 			case SDL_MOUSEBUTTONDOWN:
 			case SDL_MOUSEBUTTONUP:
 				if(inWidget(evt.button.x, evt.button.y)) {
@@ -254,7 +254,7 @@ namespace movie
 			pixels[n] = img_->planes[n];
 		}
 		texture_->updateYUV(0, 0, img_->d_w, img_->d_h, stride, pixels);
-		
+
 		KRE::ShaderProgramPtr yuv_shader = get_shader();
 		KRE::Canvas::ShaderScope sm(yuv_shader);
 		KRE::Canvas::getInstance()->blitTexture(texture_, 0, rect(0, 0, width(), height()));

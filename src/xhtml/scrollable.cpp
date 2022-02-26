@@ -15,18 +15,18 @@ namespace scrollable
 
 	namespace
 	{
-		static const std::vector<std::string> arrow_files{ 
-			"scrollbar-up-arrow.svg", 
-			"scrollbar-down-arrow.svg", 
-			"scrollbar-left-arrow.svg", 
-			"scrollbar-right-arrow.svg", 
+		static const std::vector<std::string> arrow_files{
+			"scrollbar-up-arrow.svg",
+			"scrollbar-down-arrow.svg",
+			"scrollbar-left-arrow.svg",
+			"scrollbar-right-arrow.svg",
 			"scrollbar-background.svg",
 			"scrollbar-thumb.svg",
 		};
-		static std::vector<point> arrow_sizes{ 
-			point(64, 64), 
-			point(64, 64), 
-			point(64, 64), 
+		static std::vector<point> arrow_sizes{
+			point(64, 64),
+			point(64, 64),
+			point(64, 64),
 			point(64, 64),
 			point(64, 64),
 			point(64, 64),
@@ -50,7 +50,7 @@ namespace scrollable
 			static std::vector<rectf> tex_coords;
 			if(tex == nullptr) {
 				tex = svgs_to_single_texture(arrow_files, arrow_sizes, &tex_coords);
-				tex->setAddressModes(0, Texture::AddressMode::WRAP, Texture::AddressMode::WRAP);		
+				tex->setAddressModes(0, Texture::AddressMode::WRAP, Texture::AddressMode::WRAP);
 			}
 			if(tc != nullptr) {
 				*tc = tex_coords;
@@ -59,7 +59,7 @@ namespace scrollable
 		}
 
 		template<typename D=float>
-		inline D ease_in(D t, D p1, D p2, D d) 
+		inline D ease_in(D t, D p1, D p2, D d)
 		{
 			D c = p2 - p1;
 			t /= d;
@@ -68,7 +68,7 @@ namespace scrollable
 		}
 
 		template<typename D=float>
-		inline D ease_out(D t, D p1, D p2, D d) 
+		inline D ease_out(D t, D p1, D p2, D d)
 		{
 			D c = p2 - p1;
 			t /= d;
@@ -152,8 +152,8 @@ namespace scrollable
 		}
 	}
 
-	void Scrollbar::setOnChange(change_handler onchange) 
-	{ 
+	void Scrollbar::setOnChange(change_handler onchange)
+	{
 		on_change_ = onchange;
 		if(on_change_) {
 			on_change_(scroll_pos_);
@@ -224,7 +224,7 @@ namespace scrollable
 		if(thumb_dragging_ || mouse_in_scrollbar_) {
 			alpha_ = 255;
 		}
-		
+
 		if(attr_background_) {
 			Color c = background_color_;
 			if(fade_enabled_) {
@@ -390,7 +390,7 @@ namespace scrollable
 		} else {
 			mouse_in_scrollbar_ = false;
 			thumb_mouseover_ = false;
-	
+
 			if(fade_enabled_ && fade_out_on_mouseleave_ && fade_triggered_ == false) {
 				triggerFadeOut();
 			}
@@ -432,7 +432,7 @@ namespace scrollable
 			if(geometry::pointInRect(p, dir_ == Direction::VERTICAL ? up_arrow_area_ : left_arrow_area_)) {
 				setScrollPosition(scroll_pos_ - getLineSize());
 			} else if (geometry::pointInRect(p, dir_ == Direction::VERTICAL ? down_arrow_area_ : right_arrow_area_)) {
-				setScrollPosition(scroll_pos_ + getLineSize()); 
+				setScrollPosition(scroll_pos_ + getLineSize());
 			} else if (geometry::pointInRect(p, thumb_area_)) {
 				thumb_dragging_ = true;
 				drag_start_position_ = p;
@@ -480,10 +480,10 @@ namespace scrollable
 		}
 	}
 
-	void Scrollbar::setRange(int minr, int maxr) 
-	{ 
-		min_range_ = minr; 
-		max_range_ = maxr; 
+	void Scrollbar::setRange(int minr, int maxr)
+	{
+		min_range_ = minr;
+		max_range_ = maxr;
 		if(min_range_ > max_range_) {
 			LOG_ERROR("Swapping min and max ranges as they do not satisfy the ordering criterion. " << min_range_ << " > " << max_range_);
 			std::swap(min_range_, max_range_);

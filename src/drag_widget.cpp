@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2012-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -34,7 +34,7 @@ namespace
 {
 	const int HOT_X = 16;
 	const int HOT_Y = 16;
-	
+
 	const int CURSOR_WIDTH	= 32;
 	const int CURSOR_HEIGHT	= 32;
 
@@ -85,21 +85,21 @@ namespace
 	};
 }
 
-namespace gui 
+namespace gui
 {
 
-	namespace 
+	namespace
 	{
 		const std::string DraggerImageVert  = "drag-widget-vertical";
 		const std::string DraggerImageHoriz = "drag-widget-horizontal";
-	}	
+	}
 
 	DragWidget::DragWidget(const int x, const int y, const int w, const int h,
 		const Direction dir,
-		std::function<void(int, int)> drag_start, 
-		std::function<void(int, int)> drag_end, 
+		std::function<void(int, int)> drag_start,
+		std::function<void(int, int)> drag_end,
 		std::function<void(int, int)> drag_move)
-		: x_(x), y_(y), w_(w), h_(h), dir_(dir), 
+		: x_(x), y_(y), w_(w), h_(h), dir_(dir),
 		drag_start_(drag_start), drag_end_(drag_end), drag_move_(drag_move),
 		old_cursor_(nullptr), dragging_handle_(0)
 	{
@@ -107,7 +107,7 @@ namespace gui
 		init();
 	}
 
-	DragWidget::DragWidget(const variant& v, game_logic::FormulaCallable* e) 
+	DragWidget::DragWidget(const variant& v, game_logic::FormulaCallable* e)
 		: Widget(v,e), old_cursor_(nullptr), dragging_handle_(0)
 	{
 		using std::placeholders::_1;
@@ -139,11 +139,11 @@ namespace gui
 	{
 		SDL_Cursor* curs;
 		if(dir_ == Direction::HORIZONTAL) {
-			curs = SDL_CreateCursor(const_cast<Uint8*>(horiz_cursor_data), const_cast<Uint8*>(horiz_cursor_mask), 
+			curs = SDL_CreateCursor(const_cast<Uint8*>(horiz_cursor_data), const_cast<Uint8*>(horiz_cursor_mask),
 				CURSOR_WIDTH, CURSOR_HEIGHT, HOT_X, HOT_Y);
 			dragger_ = WidgetPtr(new GuiSectionWidget(DraggerImageHoriz));
 		} else if(dir_ == Direction::VERTICAL) {
-			curs = SDL_CreateCursor(const_cast<Uint8*>(vert_cursor_data), const_cast<Uint8*>(vert_cursor_mask), 
+			curs = SDL_CreateCursor(const_cast<Uint8*>(vert_cursor_data), const_cast<Uint8*>(vert_cursor_mask),
 				CURSOR_WIDTH, CURSOR_HEIGHT, HOT_X, HOT_Y);
 			drag_cursor_ = CursorPtr(curs, SDL_FreeCursor);
 
@@ -226,7 +226,7 @@ namespace gui
 	{
 		if(dir_ == Direction::HORIZONTAL) {
 			return rect(x_ - BORDER_THICKNESS/2, y_, BORDER_THICKNESS, h_);
-		} 
+		}
 		return rect(x_, y_ - BORDER_THICKNESS/2, w_, BORDER_THICKNESS);
 	}
 

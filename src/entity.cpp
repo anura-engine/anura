@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -76,7 +76,7 @@ Entity::Entity(int x, int y, bool face_right)
 	zorder_(0), zsub_order_(0),
     face_right_(face_right), upside_down_(false), group_(-1), id_(-1),
 	respawn_(true), solid_dimensions_(0), collide_dimensions_(0),
-	weak_solid_dimensions_(0), weak_collide_dimensions_(0),	platform_motion_x_(0), 
+	weak_solid_dimensions_(0), weak_collide_dimensions_(0),	platform_motion_x_(0),
 	mouse_over_entity_(false), being_dragged_(false), mouse_button_state_(0),
 	mouseover_delay_(0), mouseover_trigger_cycle_(std::numeric_limits<int>::max()),
 	true_z_(false), tx_(double(x)), ty_(double(y)), tz_(0.0f)
@@ -262,7 +262,7 @@ void Entity::calculateSolidRect()
 	const Frame& f = getCurrentFrame();
 
 	frame_rect_ = rect(x(), y(), f.width(), f.height());
-	
+
 	solid_ = calculateSolid();
 	if(solid_) {
 		const rect& area = solid_->area();
@@ -290,7 +290,7 @@ void Entity::calculateSolidRect()
 	if(platform_) {
 		const int delta_y = getLastMoveY();
 		const rect& area = platform_->area();
-		
+
 		if(area.empty()) {
 			platform_rect_ = rect();
 		} else {

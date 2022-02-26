@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -32,11 +32,11 @@
 
 namespace background_task_pool
 {
-	namespace 
+	namespace
 	{
 		int next_task_id = 0;
 
-		struct task 
+		struct task
 		{
 			std::function<void()> job, on_complete;
 			std::shared_ptr<threading::thread> thread;

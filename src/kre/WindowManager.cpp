@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -42,11 +42,11 @@
 
 namespace KRE
 {
-	namespace 
+	namespace
 	{
 		typedef std::shared_ptr<SDL_Window> SDL_WindowPtr;
 
-		uint32_t next_pow2(uint32_t v) 
+		uint32_t next_pow2(uint32_t v)
 		{
 			--v;
 			v |= v >> 1;
@@ -75,13 +75,13 @@ namespace KRE
 			static std::weak_ptr<Window> res;
 			return res;
 		}
-		
+
 	}
 
 	class SDLWindow : public Window
 	{
 	public:
-		explicit SDLWindow(int width, int height, const variant& hints) 
+		explicit SDLWindow(int width, int height, const variant& hints)
 			: Window(width, height, hints),
 			  renderer_hint_(),
 			  context_(nullptr),
@@ -204,7 +204,7 @@ namespace KRE
 				SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
 				SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
 				SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
-				
+
 				SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 				SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
 				if(use16bpp()) {
@@ -282,7 +282,7 @@ namespace KRE
 
 			ASSERT_LOG(window_ != nullptr, "Failed to create window: " << SDL_GetError());
 			if(getDisplayDevice()->ID() == DisplayDevice::DISPLAY_DEVICE_OPENGL ||getDisplayDevice()->ID() == DisplayDevice::DISPLAY_DEVICE_OPENGLES) {
-				context_ = SDL_GL_CreateContext(window_.get());	
+				context_ = SDL_GL_CreateContext(window_.get());
 				ASSERT_LOG(context_ != nullptr, "Failed to GL Context: " << SDL_GetError());
 			}
 
@@ -346,7 +346,7 @@ namespace KRE
 			SurfaceSDL icon(name);
 			SDL_SetWindowIcon(window_.get(), icon.get());
 		}
-		
+
 		bool autoWindowSize(int& width, int& height) override {
 			std::vector<WindowMode> res;
 			int num_displays = SDL_GetNumVideoDisplays();
@@ -506,7 +506,7 @@ namespace KRE
 	};
 
 	Window::Window(int width, int height, const variant& hints)
-		: width_(hints["width"].as_int32(width)), 
+		: width_(hints["width"].as_int32(width)),
 		  height_(hints["height"].as_int32(height)),
 		  logical_width_(hints["logical_width"].as_int32(width_)),
 		  logical_height_(hints["logical_height"].as_int32(height_)),
@@ -564,7 +564,7 @@ namespace KRE
 		use_vsync_ = en;
 	}
 
-	void Window::mapMousePosition(int* x, int* y) 
+	void Window::mapMousePosition(int* x, int* y)
 	{
 		if(x) {
 			*x = int(*x * double(logical_width_) / width_);
@@ -679,7 +679,7 @@ namespace KRE
 		dimensions_changed_observers_.erase(it);
 	}
 
-	void Window::setViewPort(int x, int y, int w, int h) 
+	void Window::setViewPort(int x, int y, int w, int h)
 	{
 		view_port_ = rect(x, y, w, h);
 		handleSetViewPort();

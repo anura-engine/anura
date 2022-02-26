@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -34,7 +34,7 @@
 #define strtoll _strtoi64
 #endif
 
-namespace tbs 
+namespace tbs
 {
 	PREF_BOOL(tbs_client_prediction, false, "Use client-side prediction for tbs games");
 	PREF_INT(tbs_fake_error_rate, 0, "Percentage error rate for tbs connections; used to debug issues");
@@ -55,10 +55,10 @@ namespace tbs
 
 		std::string request_str = game_logic::serialize_doc_with_objects(request).write_json();
 
-		http_client::send_request("POST /tbs", 
+		http_client::send_request("POST /tbs",
 			request_str,
-			std::bind(&client::recv_handler, this, _1), 
-			std::bind(&client::error_handler, this, _1), 
+			std::bind(&client::recv_handler, this, _1),
+			std::bind(&client::error_handler, this, _1),
 			[](size_t,size_t,bool){});
 
 		if(local_game_cache_ && request["type"].as_string() == "moves" && request["state_id"].as_int() == local_game_cache_->state_id()) {
@@ -87,7 +87,7 @@ namespace tbs
 	{
 		if(handler_) {
 			variant v;
-			
+
 			try {
 				const assert_recover_scope guard;
 				v = game_logic::deserialize_doc_with_objects(msg);

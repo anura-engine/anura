@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -40,7 +40,7 @@
 namespace editor_dialogs
 {
 	EditorStatsDialog::EditorStatsDialog(editor& e)
-	  : Dialog(0, 0, KRE::WindowManager::getMainWindow()->width(), KRE::WindowManager::getMainWindow()->height()), 
+	  : Dialog(0, 0, KRE::WindowManager::getMainWindow()->width(), KRE::WindowManager::getMainWindow()->height()),
 	  editor_(e)
 	{
 		setClearBgAmount(255);

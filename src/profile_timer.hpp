@@ -20,7 +20,7 @@
 #include <iostream>
 #include <string>
 
-namespace profile 
+namespace profile
 {
 	struct manager
 	{
@@ -62,12 +62,12 @@ namespace profile
 		}
 	};
 
-	inline void sleep(unsigned long t) 
+	inline void sleep(unsigned long t)
 	{
 		SDL_Delay(t);
 	}
 
-	inline void delay(unsigned long t) 
+	inline void delay(unsigned long t)
 	{
 		sleep(t);
 	}

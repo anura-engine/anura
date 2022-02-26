@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -32,11 +32,11 @@
 
 namespace css
 {
-	struct TokenizerError : public std::runtime_error 
+	struct TokenizerError : public std::runtime_error
 	{
 		TokenizerError(const char* str) : std::runtime_error(str) {}
 	};
-	
+
 	enum class TokenId {
 		IDENT,
 		FUNCTION,
@@ -85,7 +85,7 @@ namespace css
 	class Token;
 	typedef std::shared_ptr<Token> TokenPtr;
 
-	class Token 
+	class Token
 	{
 	public:
 		explicit Token(TokenId id) : id_(id) {}
@@ -99,10 +99,10 @@ namespace css
 		void addParameters(std::vector<TokenPtr> tok) { params_.insert(params_.end(), tok.begin(), tok.end()); }
 		void addParameter(TokenPtr tok) { params_.emplace_back(tok); }
 		const std::vector<TokenPtr>& getParameters() const { return params_; }
-		
+
 		void setValue(TokenPtr tok) { value_ = tok; }
 		TokenPtr getValue() const { return value_; }
-		
+
 		static std::string tokenIdToString(TokenId id);
 	private:
 		TokenId id_;

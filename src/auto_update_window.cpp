@@ -70,7 +70,7 @@ void run_auto_updater()
 			return;
 		}
 	}
-	
+
 	auto v = preferences::argv();
 	std::vector<char*> anura_args;
 	for(const std::string& s : v) {
@@ -88,7 +88,7 @@ void run_auto_updater()
 	return;
 }
 
-namespace 
+namespace
 {
 	variant get_update_config(const std::string& name)
 	{
@@ -297,7 +297,7 @@ void auto_update_window::draw() const
 	KRE::TexturePtr percent_surf(render_updater_text(percent_stream.str(), get_update_color("percent_text_color", "white"), get_update_config("percent_font_size").as_int(24)));
 
 	if(percent_surf != nullptr) {
-		canvas->blitTexture(percent_surf, 0, 
+		canvas->blitTexture(percent_surf, 0,
 			(window_->width() - percent_surf->width()) / 2, get_update_config("percent_ypos").as_int(440));
 	}
 
@@ -312,7 +312,7 @@ void auto_update_window::draw() const
 			canvas->blitTexture(message_surf, 0, window_->width()/2 - message_surf->width()/2, get_update_config("error_ypos").as_int(540));
 		}
 	}
-	
+
 	progress_animation& anim = progress_animation::get();
 	auto anim_tex = anim.tex();
 	if(anim_tex != nullptr) {
@@ -556,7 +556,7 @@ bool do_auto_update(std::deque<std::string> argv, auto_update_window& update_win
 				} \
 			} \
 		}
-			
+
 
 		if(update_module) {
 			cl.reset(new module_updater_client(update_window));
@@ -777,7 +777,7 @@ bool do_auto_update(std::deque<std::string> argv, auto_update_window& update_win
 	LOG_INFO("EXECUTING: " << command_line);
 
 	anura_args.push_back(nullptr);
-	
+
 	execv(anura_args[0], &anura_args[0]);
 
 	const bool has_file = sys::file_exists(anura_exe);
@@ -924,7 +924,7 @@ COMMAND_LINE_UTILITY(window_test)
 			prev = t;
 		}
 	}
-	
+
 	SDL_Delay(1000);
 	SDL_DestroyWindow(win);
 	SDL_Quit();

@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -29,7 +29,7 @@
 #include "scrollable_widget.hpp"
 #include "widget.hpp"
 
-namespace gui 
+namespace gui
 {
 	enum class ColumnAlign {LEFT, CENTER, RIGHT };
 
@@ -86,7 +86,7 @@ namespace gui
 		virtual ConstWidgetPtr getWidgetById(const std::string& id) const override;
 
 		virtual std::vector<WidgetPtr> getChildren() const override;
-		
+
 		WidgetPtr clone() const override;
 	protected:
 		bool handleEvent(const SDL_Event& event, bool claimed) override;

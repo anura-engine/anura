@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -27,9 +27,9 @@
 #include "framed_gui_element.hpp"
 #include "widget_factory.hpp"
 
-namespace gui 
+namespace gui
 {
-	namespace 
+	namespace
 	{
 		const int vpadding = 4;
 		const int hpadding = 10;
@@ -47,7 +47,7 @@ namespace gui
 
 	}
 
-	std::string KeyButton::getKeyName(key_type key) 
+	std::string KeyButton::getKeyName(key_type key)
 	{
 		switch(key) {
 		case SDLK_LEFT:
@@ -86,13 +86,13 @@ namespace gui
 		depressed_button_image_set_(FramedGuiElement::get("regular_button_pressed")),
 		focus_button_image_set_(FramedGuiElement::get("regular_button_focus")),
 		current_button_image_set_(normal_button_image_set_), grab_keys_(false)
-	
+
 	{
 		setEnvironment();
 		setDim(label_->width()+hpadding*2,label_->height()+vpadding*2);
 	}
 
-	KeyButton::KeyButton(const variant& v, game_logic::FormulaCallable* e) 
+	KeyButton::KeyButton(const variant& v, game_logic::FormulaCallable* e)
 		: Widget(v,e), 	normal_button_image_set_(FramedGuiElement::get("regular_button")),
 		depressed_button_image_set_(FramedGuiElement::get("regular_button_pressed")),
 		focus_button_image_set_(FramedGuiElement::get("regular_button_focus")),

@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -39,21 +39,21 @@
 #include "playable_custom_object.hpp"
 #include "stats.hpp"
 
-namespace 
+namespace
 {
-	std::string get_stats_dir() 
+	std::string get_stats_dir()
 	{
 		return sys::get_dir(std::string(preferences::user_data_path()) + "stats/") + "/";
 	}
 }
 
-namespace stats 
+namespace stats
 {
 	using std::placeholders::_1;
 	using std::placeholders::_2;
 	using std::placeholders::_3;
 
-	namespace 
+	namespace
 	{
 		PREF_BOOL(force_send_stats, false, "");
 		PREF_STRING(stats_server, "theargentlark.com", "");
@@ -64,13 +64,13 @@ namespace stats
 
 		std::vector<std::pair<std::string, std::string>> upload_queue;
 
-		threading::mutex& upload_queue_mutex() 
+		threading::mutex& upload_queue_mutex()
 		{
 			static threading::mutex m;
 			return m;
 		}
 
-		threading::condition& send_stats_signal() 
+		threading::condition& send_stats_signal()
 		{
 			static threading::condition c;
 			return c;
@@ -78,7 +78,7 @@ namespace stats
 
 		bool send_stats_should_exit = false;
 
-		void send_stats(std::map<std::string, std::vector<variant>>& queue) 
+		void send_stats(std::map<std::string, std::vector<variant>>& queue)
 		{
 			if(queue.empty() || (!checksum::is_verified() && !g_force_send_stats)) {
 				return;
@@ -116,7 +116,7 @@ namespace stats
 			upload_queue.push_back(std::pair<std::string,std::string>("upload-frogatto", msg_str));
 		}
 
-		namespace 
+		namespace
 		{
 			void finish_upload(std::string response, bool* flag)
 			{
@@ -130,7 +130,7 @@ namespace stats
 			}
 		}
 
-		void send_stats_thread() 
+		void send_stats_thread()
 		{
 			if(preferences::send_stats() == false) {
 				return;
@@ -155,11 +155,11 @@ namespace stats
 				for(int n = 0; n != queue.size(); ++n) {
 					try {
 						http_client client(g_stats_server, g_stats_port);
-						client.send_request("POST /cgi-bin/" + queue[n].first, 
-							queue[n].second, 
+						client.send_request("POST /cgi-bin/" + queue[n].first,
+							queue[n].second,
 							std::bind(finish_upload, _1, &done),
 							std::bind(finish_upload, _1, &done),
-							std::bind(upload_progress, _1, _2, _3));				
+							std::bind(upload_progress, _1, _2, _3));
 						while(!done) {
 							client.process();
 						}
@@ -194,18 +194,18 @@ namespace stats
 		bool done = false;
 		bool err = false;
 		http_client client("www.wesnoth.org", "80");
-		client.send_request("GET /files/dave/frogatto-stats/" + lvl, 
-			"", 
+		client.send_request("GET /files/dave/frogatto-stats/" + lvl,
+			"",
 			std::bind(download_finish, _1, &done, lvl),
 			std::bind(download_error, _1, &done, &err),
-			std::bind(download_progress, _1, _2, _3));				
+			std::bind(download_progress, _1, _2, _3));
 		while(!done) {
 			client.process();
 		}
 		return !err;
 	}
 
-	namespace 
+	namespace
 	{
 		threading::thread* background_thread = nullptr;
 	}
@@ -219,12 +219,12 @@ namespace stats
 #endif
 	}
 
-	Manager::~Manager() 
+	Manager::~Manager()
 	{
 		flush_and_quit();
 	}
 
-	void flush_and_quit() 
+	void flush_and_quit()
 	{
 		if(background_thread) {
 			send_stats_should_exit = true;
@@ -242,14 +242,14 @@ namespace stats
 		send_stats_signal().notify_one();
 	}
 
-	Entry::Entry(const std::string& type) 
+	Entry::Entry(const std::string& type)
 		: level_id_(Level::current().id())
 	{
 		static const variant TypeStr("type");
 		records_[TypeStr] = variant(type);
 	}
 
-	Entry::Entry(const std::string& type, const std::string& level_id) 
+	Entry::Entry(const std::string& type, const std::string& level_id)
 		: level_id_(level_id)
 	{
 		static const variant TypeStr("type");

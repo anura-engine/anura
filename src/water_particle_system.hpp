@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -27,7 +27,7 @@
 
 #include "particle_system.hpp"
 
-struct WaterParticleSystemInfo 
+struct WaterParticleSystemInfo
 {
 	WaterParticleSystemInfo(variant node);
 
@@ -39,12 +39,12 @@ struct WaterParticleSystemInfo
 	KRE::Color color;
 };
 
-class WaterParticleSystemFactory : public ParticleSystemFactory 
+class WaterParticleSystemFactory : public ParticleSystemFactory
 {
 public:
 	explicit WaterParticleSystemFactory(variant node);
 	~WaterParticleSystemFactory() {}
-	
+
 	ParticleSystemPtr create(const Entity& e) const override;
 	WaterParticleSystemInfo info;
 };
@@ -53,7 +53,7 @@ class WaterParticleSystem : public ParticleSystem
 {
 public:
 	WaterParticleSystem(const Entity& e, const WaterParticleSystemFactory& factory);
-	
+
 	bool isDestroyed() const override { return false; }
 	void process(const Entity& e) override;
 	void draw(const KRE::WindowPtr& wm, const rect& area, const Entity& e) const override;
@@ -64,22 +64,22 @@ private:
 
 	const WaterParticleSystemFactory& factory_;
 	const WaterParticleSystemInfo& info_;
-	
+
 	int cycle_;
-	
+
 	rect area_;
-	
+
 	struct particle {
 		float pos[2];
 		float velocity;
 	};
-	
+
 	float direction[2];
 	float base_velocity;
 	int velocity_x_, velocity_y_;
-	
+
 	std::shared_ptr<KRE::Attribute<glm::u16vec2>> attribs_;
-	
+
 	std::vector<particle> particles_;
 	int u_point_size_;
 };

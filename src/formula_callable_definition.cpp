@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -121,7 +121,7 @@ namespace game_logic
 				}
 
 				slot -= getBaseNumSlots();
-			
+
 				if(!hasSymbolIndexes()) {
 					return false;
 				}
@@ -158,7 +158,7 @@ namespace game_logic
 					return -1;
 				}
 			}
-			
+
 
 			void add(const std::string& id) {
 				entries_.push_back(Entry(id));
@@ -199,7 +199,7 @@ namespace game_logic
 		class modified_definition : public FormulaCallableDefinition
 		{
 		public:
-			modified_definition(ConstFormulaCallableDefinitionPtr base, int modified_slot, const Entry& modification) 
+			modified_definition(ConstFormulaCallableDefinitionPtr base, int modified_slot, const Entry& modification)
 				: base_(base), slot_(modified_slot), mod_(modification)
 			{
 				setSupportsSlotLookups(base_->supportsSlotLookups());
@@ -229,7 +229,7 @@ namespace game_logic
 			}
 
 			int getNumSlots() const override { return base_->getNumSlots(); }
-			
+
 			int getSubsetSlotBase(const FormulaCallableDefinition* subset) const override
 			{
 				return base_->querySubsetSlotBase(subset);
@@ -325,7 +325,7 @@ namespace game_logic
 		return FormulaCallableDefinitionPtr(def);
 	}
 
-	namespace 
+	namespace
 	{
 		std::map<std::string, ConstFormulaCallableDefinitionPtr> registry;
 		int num_definitions = 0;
@@ -341,7 +341,7 @@ namespace game_logic
 			return instance;
 		}
 	}
-	
+
 	std::string modify_class_id(const std::string& id)
 	{
 		std::string modified_id;
@@ -445,7 +445,7 @@ namespace game_logic
 COMMAND_LINE_UTILITY(document_builtins)
 {
 	using namespace game_logic;
-	
+
 	for(auto i = registry.begin(); i != registry.end(); ++i) {
 		auto item = i->second;
 		std::cout << i->first << " ::";

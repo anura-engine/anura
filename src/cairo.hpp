@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -44,7 +44,7 @@ namespace graphics
 
 		cairo_t* get() const;
 		KRE::TexturePtr write(const variant& node) const;
-	
+
 		void render_svg(const std::string& fname, int w, int h);
 		void write_png(const std::string& fname);
 

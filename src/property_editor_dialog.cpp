@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -82,7 +82,7 @@ namespace editor_dialogs
 		ASSERT_LOG(obj, "ENTITY IS NOT AN OBJECT");
 		std::string min_difficulty = difficulty::to_string(obj->getMinDifficulty());
 		std::string max_difficulty = difficulty::to_string(obj->getMaxDifficulty());
-	
+
 		if(min_difficulty.empty()) {
 			min_difficulty = formatter() << obj->getMinDifficulty();
 		}
@@ -116,7 +116,7 @@ namespace editor_dialogs
 
 
 		preview_grid->addCol(difficulty_grid);
-	
+
 		addWidget(preview_grid, 10, 10);
 
 		addWidget(WidgetPtr(new Label(obj->getDebugDescription(), KRE::Color::colorWhite())));
@@ -279,7 +279,7 @@ namespace editor_dialogs
 					addWidget(WidgetPtr(new Button(
 							 WidgetPtr(new Label(current_value.empty() ? "(set label)" : current_value, KRE::Color::colorWhite())),
 							 std::bind(&PropertyEditorDialog::changeLevelProperty, this, info.getVariableName()))));
-				
+
 				} else if(info.getType() == VARIABLE_TYPE::BOOLEAN) {
 					variant current_value = getStaticEntity()->queryValue(info.getVariableName());
 
@@ -490,7 +490,7 @@ namespace editor_dialogs
 			pos = 1.0f;
 		}
 		w->second->setPosition(pos);
-	
+
 		mutateValue(id, v);
 	}
 
@@ -511,7 +511,7 @@ namespace editor_dialogs
 		}
 
 		w->first->setText(new_value.write_json());
-	
+
 		mutateValue(id, new_value);
 	}
 
@@ -553,9 +553,9 @@ namespace editor_dialogs
 		addWidget(context_menu_, mousex, mousey);
 	}
 
-	namespace 
+	namespace
 	{
-		bool hidden_label(const std::string& label) 
+		bool hidden_label(const std::string& label)
 		{
 			return label.empty() || label[0] == '_';
 		}
@@ -569,7 +569,7 @@ namespace editor_dialogs
 		if(!var_info) {
 			return;
 		}
-	
+
 		bool loaded_level = false;
 		std::vector<std::string> labels;
 		if(var_info->getInfo().empty() == false && var_info->getInfo() != editor_.get_level().id()) {
@@ -689,7 +689,7 @@ namespace editor_dialogs
 		const std::string text = text_editor->text();
 		try {
 			game_logic::FormulaPtr f(new game_logic::Formula(variant(text), &get_custom_object_functions_symbol_table(), custom_object_definition));
-		
+
 			for(LevelPtr lvl : editor_.get_level_list()) {
 				for(EntityPtr entity_obj : entity_) {
 					EntityPtr e = lvl->get_entity_by_label(entity_obj->label());

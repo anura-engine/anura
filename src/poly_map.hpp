@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2012-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -30,7 +30,7 @@
 namespace geometry
 {
 	typedef geometry::Point<double> fpoint;
-	typedef std::vector<fpoint> fpoint_list;	
+	typedef std::vector<fpoint> fpoint_list;
 
 	struct edge
 	{
@@ -44,7 +44,7 @@ namespace geometry
 	public:
 		Polygon(int id) : id_(id), height_(0) {}
 		virtual ~Polygon() {}
-		
+
 		void addPoint(double x, double y) {
 			pts_.push_back(fpoint(x,y));
 		}
@@ -123,8 +123,8 @@ namespace geometry
 		private:
 			// bounding box
 			double left_;
-			double top_; 
-			double right_; 
+			double top_;
+			double right_;
 			double bottom_;
 
 			fpoint_list sites_;

@@ -1,6 +1,6 @@
 /*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
+
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
 	arising from the use of this software.
@@ -40,8 +40,8 @@
 
 PREF_STRING(loading_screen_bg_color, "#000000", "Color to use for the background of the loading screen");
 
-LoadingScreen::LoadingScreen(int items) 
-	: items_(items), 
+LoadingScreen::LoadingScreen(int items)
+	: items_(items),
 	status_(0),
 	started_at_(profile::get_tick_time())
 {
@@ -82,11 +82,11 @@ void LoadingScreen::draw(const std::string& message)
 
 	if(splash_) {
 		//draw the splash screen while loading
-		KRE::Canvas::getInstance()->blitTexture(splash_, 0, rect(0, 0, wnd->width(), wnd->height())); 
+		KRE::Canvas::getInstance()->blitTexture(splash_, 0, rect(0, 0, wnd->width(), wnd->height()));
 	} else {
 		drawInternal(message);
 	}
-	
+
 	wnd->swap();
 }
 
@@ -106,7 +106,7 @@ void LoadingScreen::drawInternal(const std::string& message)
 	int bg_w = background_->width();
 	int bg_h = background_->height();
 //	canvas->blitTexture(background_, 0, rect(screen_w/2-bg_w, std::max(screen_h/2-bg_h, 0), bg_w*2, bg_h*2));
-	
+
 	int bar_origin_x = screen_w/2 - bar_width/2;
 	rect bg(screen_w/2 - bar_width/2, screen_h/2 - bar_height/2, bar_width, bar_height);
 	canvas->drawSolidRect(bg, KRE::Color(96, 96, 96, 255));
@@ -116,7 +116,7 @@ void LoadingScreen::drawInternal(const std::string& message)
 		rect bar(screen_w/2 - bar_width/2, screen_h/2 - bar_height/2, static_cast<int>(bar_width*amount_done), bar_height);
 		canvas->drawSolidRect(bar, KRE::Color::colorWhite());
 	}
-	
+
 	std::string font = module::get_default_font();
 	if(font == "bitmap") {
 		ConstGraphicalFontPtr font = GraphicalFont::get("door_label");

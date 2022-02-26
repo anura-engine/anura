@@ -112,13 +112,13 @@ namespace KRE
 			bool is_empty_leaf() const { return is_leaf() && surface_ == nullptr; }
 			bool is_leaf() const { return child_[0] == nullptr && child_[1] == nullptr; }
 			bool can_contain(const rect& r) const { return r.w() <= r_.w() && r.h() <= r_.h(); }
-			
+
 			tex_node* get_left_child() { return child_[0]; }
-			
+
 			tex_node* get_right_child() { return child_[1]; }
-			
+
 			const rect& get_rect() const { return r_; }
-			
+
 			void blit(SurfacePtr dest, std::vector<rect>* rects) {
 				if(child_[0]) {
 					child_[0]->blit(dest, rects);
@@ -137,7 +137,7 @@ namespace KRE
 			SurfacePtr surface_;
 		};
 
-		tex_node* find_empty_leaf(tex_node* tn, SurfacePtr surface, const rect& r) 
+		tex_node* find_empty_leaf(tex_node* tn, SurfacePtr surface, const rect& r)
 		{
 			if(tn->is_empty_leaf()) {
 				return tn->can_contain(rect(0, 0, r.w(), r.h())) ? tn : nullptr;
@@ -146,7 +146,7 @@ namespace KRE
 				return nullptr;
 			}
 			auto leaf = find_empty_leaf(tn->get_left_child(), surface, r);
-			if(leaf) { 
+			if(leaf) {
 				return leaf;
 			}
 			return find_empty_leaf(tn->get_right_child(), surface, r);
