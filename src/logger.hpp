@@ -26,7 +26,7 @@
 #include <sstream>
 #include <cstring>
 
-#include "SDL.h"
+#include "SDL2/SDL.h"
 
 #if defined(_MSC_VER)
 #define __SHORT_FORM_OF_FILE__	\

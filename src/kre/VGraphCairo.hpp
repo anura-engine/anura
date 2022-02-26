@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include <cairo.h>
+#include <cairo/cairo.h>
 
 #include "AttributeSet.hpp"
 #include "geometry.hpp"

@@ -25,7 +25,7 @@
 
 #include <string>
 
-#include "SDL.h"
+#include "SDL2/SDL.h"
 
 #include "formatter.hpp"
 #include "formula.hpp"

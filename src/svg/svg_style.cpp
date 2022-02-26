@@ -25,7 +25,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/tokenizer.hpp>
 
-#include <cairo-ft.h>
+#include <cairo/cairo-ft.h>
 
 #include "asserts.hpp"
 #include "svg_element.hpp"

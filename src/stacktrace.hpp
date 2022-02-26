@@ -8,7 +8,7 @@
 #include <execinfo.h>
 #include <cxxabi.h>
 
-#include "SDL.h"
+#include "SDL2/SDL.h"
 
 /** Print a demangled stack backtrace of the caller function to FILE* out. */
 static inline void print_stacktrace(unsigned int max_frames = 63)

@@ -26,7 +26,7 @@
 #include "exception_handler.h"
 #include "client/windows/sender/crash_report_sender.h"
 
-#include "SDL.h"
+#include "SDL2/SDL.h"
 #include "breakpad.hpp"
 #include "preferences.hpp"
 

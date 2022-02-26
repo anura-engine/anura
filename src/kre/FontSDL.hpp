@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include "SDL_ttf.h"
+#include "SDL2/SDL_ttf.h"
 #include "Font.hpp"
 
 namespace KRE

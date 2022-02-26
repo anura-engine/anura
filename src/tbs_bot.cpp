@@ -21,7 +21,7 @@
 	   distribution.
 */
 
-#include <SDL.h>
+#include <SDL2/SDL.h>
 
 #include <boost/bind.hpp>
 #include <cstdint>

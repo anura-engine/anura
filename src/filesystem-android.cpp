@@ -55,7 +55,7 @@
 #include <vector>
 
 #include <jni.h>
-#include "SDL.h"
+#include "SDL2/SDL.h"
 #include <android/asset_manager_jni.h>
 #include <android/log.h>
 #include "SDL_rwops.h"
@@ -426,4 +426,3 @@ void notify_on_file_modification(const std::string& path, std::function<void()> 
 }
 
 #endif // ANDROID
-

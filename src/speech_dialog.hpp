@@ -26,7 +26,7 @@
 #include <string>
 #include <vector>
 
-#include "SDL_events.h"
+#include "SDL2/SDL_events.h"
 
 #include "Color.hpp"
 #include "entity_fwd.hpp"

@@ -34,7 +34,7 @@
 #include <map>
 #include <vector>
 
-#include "SDL.h"
+#include "SDL2/SDL.h"
 
 #include "border_widget.hpp"
 #include "button.hpp"

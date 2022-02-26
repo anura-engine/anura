@@ -30,7 +30,7 @@
 #include <fstream>
 #include <memory>
 #include <string>
-#include "SDL.h"
+#include "SDL2/SDL.h"
 
 #include "vpx/vpx_decoder.h"
 #include "vpx/vp8dx.h"

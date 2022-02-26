@@ -1,6 +1,6 @@
 #include <algorithm>
 
-#include <SDL.h>
+#include <SDL2/SDL.h>
 
 #include "asserts.hpp"
 #include "profile_timer.hpp"

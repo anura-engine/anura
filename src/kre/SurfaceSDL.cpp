@@ -25,8 +25,8 @@
 #	define _USE_MATH_DEFINES	1
 #endif
 
-#include "SDL_image.h"
-#include "SDL_pixels.h"
+#include "SDL2/SDL_image.h"
+#include "SDL2/SDL_pixels.h"
 
 #include "asserts.hpp"
 #include "formatter.hpp"

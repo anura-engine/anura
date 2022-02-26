@@ -26,7 +26,7 @@
 #include <tuple>
 
 #include "Surface.hpp"
-#include "SDL.h"
+#include "SDL2/SDL.h"
 
 namespace KRE
 {

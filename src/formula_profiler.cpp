@@ -25,8 +25,8 @@
 
 #include <glm/glm.hpp>
 
-#include <SDL_thread.h>
-#include <SDL_timer.h>
+#include <SDL2/SDL_thread.h>
+#include <SDL2/SDL_timer.h>
 
 #include <assert.h>
 #include <iostream>

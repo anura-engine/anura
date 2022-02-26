@@ -21,7 +21,7 @@
 	   distribution.
 */
 
-#include <SDL.h>
+#include <SDL2/SDL.h>
 
 #include <boost/interprocess/sync/named_semaphore.hpp>
 #include <boost/exception/diagnostic_information.hpp>

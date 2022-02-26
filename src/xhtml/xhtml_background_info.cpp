@@ -21,7 +21,7 @@
 	   distribution.
 */
 
-#include <cairo.h>
+#include <cairo/cairo.h>
 
 #include "AttributeSet.hpp"
 #include "Blittable.hpp"

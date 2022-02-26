@@ -23,8 +23,8 @@
 
 #include <map>
 
-#include <cairo.h>
-#include <cairo-ft.h>
+#include <cairo/cairo.h>
+#include <cairo/cairo-ft.h>
 
 #include "unit_test.hpp"
 

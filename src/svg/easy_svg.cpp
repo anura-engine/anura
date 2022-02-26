@@ -24,7 +24,7 @@
 #include <algorithm>
 #include <future>
 #include <thread>
-#include <cairo.h>
+#include <cairo/cairo.h>
 
 #include "asserts.hpp"
 #include "easy_svg.hpp"

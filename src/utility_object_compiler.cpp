@@ -36,7 +36,7 @@
 #include "kre/SurfaceSDL.hpp"
 #include "kre/SurfaceScale.hpp"
 
-#include "SDL_image.h"
+#include "SDL2/SDL_image.h"
 
 #include "Surface.hpp"
 

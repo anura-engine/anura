@@ -29,7 +29,7 @@
 #include <string.h>
 #include <sstream>
 
-#include <cairo-ft.h>
+#include <cairo/cairo-ft.h>
 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/xml_parser.hpp>

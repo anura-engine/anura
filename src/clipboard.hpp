@@ -23,7 +23,7 @@
 #pragma once
 
 #include <string>
-#include "SDL.h"		// For SDL_Event
+#include "SDL2/SDL.h"		// For SDL_Event
 
 void init_clipboard();
 
