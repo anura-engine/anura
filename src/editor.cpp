@@ -27,12 +27,6 @@
 #include <algorithm>
 
 #include <boost/algorithm/string.hpp>
-#if defined(_MSC_VER)
-#include <boost/math/special_functions/round.hpp>
-#define bmround	boost::math::round
-#else
-#define bmround	round
-#endif
 
 #include "Canvas.hpp"
 #include "ColorScope.hpp"
