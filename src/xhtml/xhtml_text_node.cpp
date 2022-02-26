@@ -22,7 +22,6 @@
 */
 
 #include <boost/locale.hpp>
-#include <boost/thread.hpp>
 
 #include "asserts.hpp"
 #include "profile_timer.hpp"
