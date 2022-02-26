@@ -1,0 +1,35 @@
+{
+    "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg/master/scripts/vcpkg.schema.json",
+    "name": "anura-dependencies",
+    "version": "0.0.1",
+    "dependencies": [
+      "sdl2",
+      "sdl2-ttf",
+      "sdl2-image",
+      {
+        "name": "sdl2-mixer",
+        "features": [ "libvorbis" ]
+      },
+      "bzip2",
+      "zlib",
+      "glew",
+      "glm",
+      "libvorbis",
+      "libogg",
+      "cairo",
+      "boost-iostreams",
+      "boost-interprocess",
+      "boost-filesystem",
+      "boost-regex",
+      "boost-asio",
+      "boost-system",
+      "boost-uuid",
+      "boost-property-tree",
+      "boost-math",
+      "boost-bimap",
+      {
+        "name": "boost-locale",
+        "features": [ "icu" ]
+      }
+    ]
+  }
