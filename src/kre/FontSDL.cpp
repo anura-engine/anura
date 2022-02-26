@@ -21,7 +21,9 @@
 	   distribution.
 */
 
+#ifndef _MSC_VER
 #pragma comment(lib, "SDL2_ttf")
+#endif
 
 #include "DisplayDevice.hpp"
 #include "FontSDL.hpp"

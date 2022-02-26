@@ -21,9 +21,9 @@
 	   distribution.
 */
 
-#pragma comment(lib, "SDL2")
+//#pragma comment(lib, "SDL2")
 #pragma comment(lib, "SDL2main")
-#pragma comment(lib, "SDL2_image")
+//#pragma comment(lib, "SDL2_image")
 
 #include <cctype>
 #include <sstream>

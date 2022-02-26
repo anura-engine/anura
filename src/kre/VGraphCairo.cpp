@@ -21,7 +21,9 @@
 	   distribution.
 */
 
+#ifndef _MSC_VER
 #pragma comment(lib, "libcairo-2")
+#endif
 
 #include "asserts.hpp"
 #include "AttributeSet.hpp"

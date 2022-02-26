@@ -28,7 +28,9 @@
 #include "module.hpp"
 #include "utf8_to_codepoint.hpp"
 
+#ifndef _MSC_VER
 #pragma comment(lib, "libfreetype-6")
+#endif
 
 namespace KRE
 {

@@ -21,10 +21,12 @@
 	   distribution.
 */
 
+#ifndef _MSC_VER
 #if defined(_DEBUG)
 #pragma comment(lib, "freetype2412_D")
 #else
 #pragma comment(lib, "freetype2412")
+#endif
 #endif
 
 #include <ft2build.h>

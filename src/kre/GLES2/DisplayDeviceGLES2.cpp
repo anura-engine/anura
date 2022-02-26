@@ -21,8 +21,10 @@
 	   distribution.
 */
 
+#ifndef _MSC_VER
 #pragma comment(lib, "libGLESv2")
 #pragma comment(lib, "libEGL")
+#endif
 
 #include <numeric>
 
@@ -737,4 +739,3 @@ namespace KRE
 		return GLESv2::ShaderProgram::createGaussianShader(radius);
 	}
 }
-
