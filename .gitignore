@@ -83,3 +83,8 @@ build-Win32/
 build/xhtml/*.o*
 anura.kdev4
 .kdev4/
+
+vcpkg_installed/
+windows/build/
+windows/*-Release/
+windows/*-Debug/
