@@ -1229,7 +1229,7 @@ namespace sound
 
 			}
 
-            const int nsamples_delay = int(std::abs<float>(delay_)*SampleRate);
+            const int nsamples_delay = int(std::abs(delay_)*SampleRate);
 
 			//The delayed channel
 			{
