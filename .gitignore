@@ -85,7 +85,10 @@ build/xhtml/*.o*
 anura.kdev4
 .kdev4/
 
+
+#Visual Studio
 vcpkg_installed/
 windows/build/
 windows/*-Release/
 windows/*-Debug/
+*resouces.aps
